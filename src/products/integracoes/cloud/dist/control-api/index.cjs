@@ -4998,118 +4998,6 @@ function getSecretName(parts) {
   return `projects/${config.projectId}/secrets/${secretId}`;
 }
 
-// src/products/integracoes/cloud/src/lib/oauth.ts
-function base64UrlEncode(value) {
-  return Buffer.from(value, "utf8").toString("base64url");
-}
-function base64UrlDecode(value) {
-  return Buffer.from(value, "base64url").toString("utf8");
-}
-function getStateSecret() {
-  return process.env.INTEGRATIONS_OAUTH_STATE_SECRET || process.env.INTEGRATIONS_INTERNAL_API_KEY || getIntegrationsCloudConfig().secrets.internalApiKey;
-}
-function sign(value) {
-  return (0, import_node_crypto.createHmac)("sha256", getStateSecret()).update(value).digest("base64url");
-}
-function verifySignature(value, signature) {
-  const expected = Buffer.from(sign(value));
-  const actual = Buffer.from(signature);
-  return expected.length === actual.length && (0, import_node_crypto.timingSafeEqual)(expected, actual);
-}
-function envName(provider, suffix) {
-  return `INTEGRATIONS_OAUTH_${provider.toUpperCase().replace(/[^A-Z0-9]+/g, "_")}_${suffix}`;
-}
-function getOAuthProviderConfig(provider) {
-  return {
-    clientId: process.env[envName(provider, "CLIENT_ID")]?.trim() || "",
-    clientSecret: process.env[envName(provider, "CLIENT_SECRET")]?.trim() || "",
-    authorizeUrl: process.env[envName(provider, "AUTHORIZE_URL")]?.trim() || "",
-    tokenUrl: process.env[envName(provider, "TOKEN_URL")]?.trim() || "",
-    redirectUri: process.env[envName(provider, "REDIRECT_URI")]?.trim() || process.env.INTEGRATIONS_OAUTH_REDIRECT_URI?.trim() || "",
-    scopes: process.env[envName(provider, "SCOPES")]?.trim() || ""
-  };
-}
-function createOAuthState(input) {
-  const payload = {
-    tenantId: input.tenantId,
-    connectionId: input.connectionId,
-    provider: input.provider,
-    nonce: (0, import_node_crypto.randomBytes)(12).toString("base64url"),
-    expiresAt: Date.now() + (input.ttlSeconds || 900) * 1e3
-  };
-  const encoded = base64UrlEncode(JSON.stringify(payload));
-  return `${encoded}.${sign(encoded)}`;
-}
-function parseOAuthState(state) {
-  const [encoded, signature] = state.split(".");
-  if (!encoded || !signature || !verifySignature(encoded, signature)) {
-    throw new Error("OAuth state invalido.");
-  }
-  const payload = JSON.parse(base64UrlDecode(encoded));
-  if (!payload.expiresAt || payload.expiresAt < Date.now()) {
-    throw new Error("OAuth state expirado.");
-  }
-  return payload;
-}
-function buildOAuthAuthorizationUrl(provider, state) {
-  const config = getOAuthProviderConfig(provider);
-  const missing = [
-    ["clientId", config.clientId],
-    ["authorizeUrl", config.authorizeUrl],
-    ["redirectUri", config.redirectUri]
-  ].filter(([, value]) => !value).map(([key]) => key);
-  if (missing.length) return { ready: false, missing };
-  const url = new URL(config.authorizeUrl);
-  url.searchParams.set("client_id", config.clientId);
-  url.searchParams.set("redirect_uri", config.redirectUri);
-  url.searchParams.set("response_type", "code");
-  url.searchParams.set("state", state);
-  if (config.scopes) url.searchParams.set("scope", config.scopes);
-  return {
-    ready: true,
-    authorizationUrl: url.toString()
-  };
-}
-function mapTokenResponse(payload) {
-  if (!payload.access_token) return null;
-  return {
-    accessToken: payload.access_token,
-    refreshToken: payload.refresh_token,
-    expiresAt: payload.expires_in ? new Date(Date.now() + payload.expires_in * 1e3).toISOString() : void 0,
-    tokenType: payload.token_type,
-    scope: payload.scope
-  };
-}
-async function postTokenRequest(provider, body) {
-  const config = getOAuthProviderConfig(provider);
-  if (!config.clientId || !config.clientSecret || !config.tokenUrl) {
-    throw new Error(`OAuth ${provider} nao configurado.`);
-  }
-  body.set("client_id", config.clientId);
-  body.set("client_secret", config.clientSecret);
-  const response = await fetch(config.tokenUrl, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/x-www-form-urlencoded"
-    },
-    body,
-    signal: AbortSignal.timeout(Number(process.env.INTEGRATIONS_OAUTH_TIMEOUT_MS || 3e4))
-  });
-  const payload = await response.json().catch(() => null);
-  if (!response.ok) {
-    throw new Error(`Falha OAuth ${provider}: ${response.status}`);
-  }
-  return payload ? mapTokenResponse(payload) : null;
-}
-async function exchangeOAuthCode(provider, code, redirectUri) {
-  const config = getOAuthProviderConfig(provider);
-  const body = new URLSearchParams();
-  body.set("grant_type", "authorization_code");
-  body.set("code", code);
-  body.set("redirect_uri", redirectUri || config.redirectUri);
-  return postTokenRequest(provider, body);
-}
-
 // src/products/integracoes/cloud/src/lib/retry.ts
 function delay(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms));
@@ -5202,6 +5090,15 @@ async function authorizedJsonRequest(url, init = {}) {
 function encodeBase64(value) {
   return Buffer.from(value, "utf8").toString("base64");
 }
+function decodeBase64(value) {
+  return Buffer.from(value, "base64").toString("utf8");
+}
+function normalizeSecretVersionRef(secretRef) {
+  const ref = secretRef.trim();
+  if (!ref) throw new Error("secretRef vazio");
+  if (ref.includes("/versions/")) return ref;
+  return `${ref.replace(/\/+$/, "")}/versions/latest`;
+}
 async function ensureSecret(secretName) {
   const segments = secretName.split("/secrets/");
   const parent = segments[0];
@@ -5224,6 +5121,14 @@ async function ensureSecret(secretName) {
     }
   );
 }
+async function readSecret(secretRef) {
+  const response = await authorizedJsonRequest(
+    `https://secretmanager.googleapis.com/v1/${normalizeSecretVersionRef(secretRef)}:access`,
+    { method: "GET", allowNotFound: true }
+  );
+  const encoded = response.payload?.payload?.data;
+  return encoded ? decodeBase64(encoded) : null;
+}
 async function writeSecret(name, value) {
   const secretName = name.startsWith("projects/") ? name : getSecretName([name]);
   await ensureSecret(secretName);
@@ -5245,6 +5150,131 @@ async function writeSecret(name, value) {
 }
 async function writeConnectionCredentialsSecret(input) {
   return writeSecret(`${input.tenantId}-${input.connectionId}-credentials`, input.value);
+}
+
+// src/products/integracoes/cloud/src/lib/oauth.ts
+function base64UrlEncode(value) {
+  return Buffer.from(value, "utf8").toString("base64url");
+}
+function base64UrlDecode(value) {
+  return Buffer.from(value, "base64url").toString("utf8");
+}
+function getStateSecret() {
+  return process.env.INTEGRATIONS_OAUTH_STATE_SECRET || process.env.INTEGRATIONS_INTERNAL_API_KEY || getIntegrationsCloudConfig().secrets.internalApiKey;
+}
+function sign(value) {
+  return (0, import_node_crypto.createHmac)("sha256", getStateSecret()).update(value).digest("base64url");
+}
+function verifySignature(value, signature) {
+  const expected = Buffer.from(sign(value));
+  const actual = Buffer.from(signature);
+  return expected.length === actual.length && (0, import_node_crypto.timingSafeEqual)(expected, actual);
+}
+function envName(provider, suffix) {
+  return `INTEGRATIONS_OAUTH_${provider.toUpperCase().replace(/[^A-Z0-9]+/g, "_")}_${suffix}`;
+}
+function normalizeProviderForSecret(provider) {
+  return provider.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "");
+}
+function providerSecretRef(provider, suffix) {
+  const config = getIntegrationsCloudConfig();
+  const providerPart = normalizeProviderForSecret(provider);
+  return `projects/${config.projectId}/secrets/${config.secrets.prefix}-oauth-${providerPart}-${suffix}`;
+}
+async function envOrSecret(provider, envSuffix, secretSuffix) {
+  const envValue = process.env[envName(provider, envSuffix)]?.trim();
+  if (envValue) return envValue;
+  return (await readSecret(providerSecretRef(provider, secretSuffix)))?.trim() || "";
+}
+async function getOAuthProviderConfig(provider) {
+  return {
+    clientId: await envOrSecret(provider, "CLIENT_ID", "client-id"),
+    clientSecret: await envOrSecret(provider, "CLIENT_SECRET", "client-secret"),
+    authorizeUrl: await envOrSecret(provider, "AUTHORIZE_URL", "authorize-url"),
+    tokenUrl: await envOrSecret(provider, "TOKEN_URL", "token-url"),
+    redirectUri: process.env[envName(provider, "REDIRECT_URI")]?.trim() || process.env.INTEGRATIONS_OAUTH_REDIRECT_URI?.trim() || "",
+    scopes: await envOrSecret(provider, "SCOPES", "scopes")
+  };
+}
+function createOAuthState(input) {
+  const payload = {
+    tenantId: input.tenantId,
+    connectionId: input.connectionId,
+    provider: input.provider,
+    nonce: (0, import_node_crypto.randomBytes)(12).toString("base64url"),
+    expiresAt: Date.now() + (input.ttlSeconds || 900) * 1e3
+  };
+  const encoded = base64UrlEncode(JSON.stringify(payload));
+  return `${encoded}.${sign(encoded)}`;
+}
+function parseOAuthState(state) {
+  const [encoded, signature] = state.split(".");
+  if (!encoded || !signature || !verifySignature(encoded, signature)) {
+    throw new Error("OAuth state invalido.");
+  }
+  const payload = JSON.parse(base64UrlDecode(encoded));
+  if (!payload.expiresAt || payload.expiresAt < Date.now()) {
+    throw new Error("OAuth state expirado.");
+  }
+  return payload;
+}
+async function buildOAuthAuthorizationUrl(provider, state) {
+  const config = await getOAuthProviderConfig(provider);
+  const missing = [
+    ["clientId", config.clientId],
+    ["authorizeUrl", config.authorizeUrl],
+    ["redirectUri", config.redirectUri]
+  ].filter(([, value]) => !value).map(([key]) => key);
+  if (missing.length) return { ready: false, missing };
+  const url = new URL(config.authorizeUrl);
+  url.searchParams.set("client_id", config.clientId);
+  url.searchParams.set("redirect_uri", config.redirectUri);
+  url.searchParams.set("response_type", "code");
+  url.searchParams.set("state", state);
+  if (config.scopes) url.searchParams.set("scope", config.scopes);
+  return {
+    ready: true,
+    authorizationUrl: url.toString()
+  };
+}
+function mapTokenResponse(payload) {
+  if (!payload.access_token) return null;
+  return {
+    accessToken: payload.access_token,
+    refreshToken: payload.refresh_token,
+    expiresAt: payload.expires_in ? new Date(Date.now() + payload.expires_in * 1e3).toISOString() : void 0,
+    tokenType: payload.token_type,
+    scope: payload.scope
+  };
+}
+async function postTokenRequest(provider, body) {
+  const config = await getOAuthProviderConfig(provider);
+  if (!config.clientId || !config.clientSecret || !config.tokenUrl) {
+    throw new Error(`OAuth ${provider} nao configurado.`);
+  }
+  body.set("client_id", config.clientId);
+  body.set("client_secret", config.clientSecret);
+  const response = await fetch(config.tokenUrl, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/x-www-form-urlencoded"
+    },
+    body,
+    signal: AbortSignal.timeout(Number(process.env.INTEGRATIONS_OAUTH_TIMEOUT_MS || 3e4))
+  });
+  const payload = await response.json().catch(() => null);
+  if (!response.ok) {
+    throw new Error(`Falha OAuth ${provider}: ${response.status}`);
+  }
+  return payload ? mapTokenResponse(payload) : null;
+}
+async function exchangeOAuthCode(provider, code, redirectUri) {
+  const config = await getOAuthProviderConfig(provider);
+  const body = new URLSearchParams();
+  body.set("grant_type", "authorization_code");
+  body.set("code", code);
+  body.set("redirect_uri", redirectUri || config.redirectUri);
+  return postTokenRequest(provider, body);
 }
 
 // node_modules/.pnpm/pg@8.16.3/node_modules/pg/esm/index.mjs
@@ -5278,6 +5308,190 @@ function getPool() {
     });
   }
   return pool;
+}
+function asStringArray(value) {
+  if (Array.isArray(value)) return value.map((item) => String(item || "").trim()).filter(Boolean);
+  if (typeof value === "string") {
+    try {
+      return asStringArray(JSON.parse(value));
+    } catch {
+      return [];
+    }
+  }
+  return [];
+}
+async function claimDueScheduledConnections(input) {
+  const result = await getPool().query(
+    `WITH due_connections AS (
+       SELECT id, tenant_id
+       FROM mcp_app.integration_connections
+       WHERE
+         sync_enabled = true
+         AND sync_frequency = ANY($5::text[])
+         AND next_sync_at IS NOT NULL
+         AND next_sync_at <= now()
+         AND status IN ('connected', 'warning')
+         AND jsonb_array_length(COALESCE(selected_resources, '[]'::jsonb)) > 0
+         AND (sync_locked_until IS NULL OR sync_locked_until < now())
+       ORDER BY next_sync_at ASC, updated_at ASC
+       LIMIT $1
+       FOR UPDATE SKIP LOCKED
+     )
+     UPDATE mcp_app.integration_connections connections
+     SET
+       sync_lock_token = $2,
+       sync_lock_owner = $3,
+       sync_locked_until = now() + make_interval(secs => $4),
+       updated_at = now()
+     FROM due_connections
+     WHERE connections.id = due_connections.id
+       AND connections.tenant_id = due_connections.tenant_id
+     RETURNING
+       connections.id::text,
+       connections.tenant_id,
+       connections.provider,
+       connections.selected_resources,
+       connections.sync_frequency,
+       connections.next_sync_at`,
+    [
+      input.limit,
+      input.lockToken,
+      input.lockOwner,
+      input.lockTtlSeconds,
+      input.syncFrequencies
+    ]
+  );
+  return result.rows.map((row) => ({
+    id: String(row.id),
+    tenantId: Number(row.tenant_id),
+    provider: String(row.provider || ""),
+    selectedResources: asStringArray(row.selected_resources),
+    syncFrequency: String(row.sync_frequency || ""),
+    nextSyncAt: row.next_sync_at == null ? null : new Date(row.next_sync_at).toISOString()
+  }));
+}
+async function createQueuedCloudSyncRun(input) {
+  const result = await getPool().query(
+    `INSERT INTO mcp_app.integration_sync_runs
+      (tenant_id, connection_id, trigger, status, started_at, finished_at, records_in, records_updated, records_failed, metadata_json)
+     VALUES
+      ($1, $2, 'scheduled', 'queued', NULL, NULL, 0, 0, 0, $3::jsonb)
+     RETURNING id::text, status`,
+    [
+      input.tenantId,
+      input.connectionId,
+      JSON.stringify({
+        mode: "scheduled_sync",
+        resources: input.resources,
+        requestedBy: input.requestedBy,
+        ...input.metadata || {}
+      })
+    ]
+  );
+  await createIntegrationEvent({
+    tenantId: input.tenantId,
+    connectionId: input.connectionId,
+    eventType: "sync.requested",
+    severity: "info",
+    actor: input.requestedBy,
+    message: "Sincronizacao agendada enviada ao worker GCP.",
+    metadata: {
+      resources: input.resources,
+      trigger: "scheduled",
+      ...input.metadata || {}
+    }
+  });
+  return {
+    id: String(result.rows[0]?.id),
+    status: String(result.rows[0]?.status || "queued")
+  };
+}
+async function failQueuedCloudSyncRun(input) {
+  await getPool().query(
+    `UPDATE mcp_app.integration_sync_runs
+     SET
+       status = 'error',
+       finished_at = now(),
+       error_message = $4,
+       metadata_json = metadata_json || $5::jsonb
+     WHERE id = $1
+       AND tenant_id = $2
+       AND connection_id = $3
+       AND status = 'queued'`,
+    [
+      input.runId,
+      input.tenantId,
+      input.connectionId,
+      input.errorMessage,
+      JSON.stringify({
+        dispatchFailedAt: (/* @__PURE__ */ new Date()).toISOString()
+      })
+    ]
+  );
+}
+async function completeScheduledConnectionDispatch(input) {
+  await getPool().query(
+    `UPDATE mcp_app.integration_connections
+     SET
+       next_sync_at = $4,
+       sync_lock_token = NULL,
+       sync_lock_owner = NULL,
+       sync_locked_until = NULL,
+       metadata_json = metadata_json || $5::jsonb,
+       updated_at = now()
+     WHERE id = $1
+       AND tenant_id = $2
+       AND sync_lock_token = $3`,
+    [
+      input.connectionId,
+      input.tenantId,
+      input.lockToken,
+      input.nextSyncAt.toISOString(),
+      JSON.stringify({
+        lastScheduledDispatchAt: (/* @__PURE__ */ new Date()).toISOString(),
+        lastScheduledMessageId: input.messageId,
+        lastScheduledRunId: input.runId
+      })
+    ]
+  );
+}
+async function releaseScheduledConnectionLock(input) {
+  await getPool().query(
+    `UPDATE mcp_app.integration_connections
+     SET
+       sync_lock_token = NULL,
+       sync_lock_owner = NULL,
+       sync_locked_until = NULL,
+       last_error = COALESCE($4, last_error),
+       metadata_json = metadata_json || $5::jsonb,
+       updated_at = now()
+     WHERE id = $1
+       AND tenant_id = $2
+       AND sync_lock_token = $3`,
+    [
+      input.connectionId,
+      input.tenantId,
+      input.lockToken,
+      input.errorMessage || null,
+      JSON.stringify({
+        lastScheduledDispatchError: input.errorMessage || null,
+        lastScheduledDispatchErrorAt: input.errorMessage ? (/* @__PURE__ */ new Date()).toISOString() : null,
+        lastScheduledRunId: input.runId || null
+      })
+    ]
+  );
+  await createIntegrationEvent({
+    tenantId: input.tenantId,
+    connectionId: input.connectionId,
+    eventType: "sync.dispatch_failed",
+    severity: "error",
+    actor: "scheduled-sync",
+    message: "Falha ao publicar sincronizacao agendada no Pub/Sub.",
+    metadata: {
+      runId: input.runId || null,
+      errorMessage: input.errorMessage || null
+    }
+  });
 }
 async function updateConnectionSecret(input) {
   await getPool().query(
@@ -5478,6 +5692,1343 @@ function validateProviderCredentials(provider, value) {
   };
 }
 
+// src/products/integracoes/cloud/src/connectors/stubConnector.ts
+var STUB_RESULT = {
+  status: "success",
+  recordsIn: 0,
+  recordsUpdated: 0,
+  recordsFailed: 0,
+  metadata: {
+    mode: "stub"
+  }
+};
+function createStubConnector(params) {
+  return {
+    domain: params.domain,
+    provider: params.provider,
+    async testConnection() {
+      return STUB_RESULT;
+    },
+    async syncResource() {
+      return STUB_RESULT;
+    },
+    async refreshToken() {
+      return STUB_RESULT;
+    }
+  };
+}
+
+// src/products/integracoes/cloud/src/connectors/crm/hubspotConnector.ts
+var hubspotConnector = createStubConnector({
+  domain: "crm",
+  provider: "hubspot"
+});
+
+// src/products/integracoes/cloud/src/connectors/crm/pipedriveConnector.ts
+var pipedriveConnector = createStubConnector({
+  domain: "crm",
+  provider: "pipedrive"
+});
+
+// src/products/integracoes/cloud/src/connectors/crm/rdStationConnector.ts
+var rdStationConnector = createStubConnector({
+  domain: "crm",
+  provider: "rd_station_crm"
+});
+
+// src/products/integracoes/cloud/src/connectors/crm/salesforceConnector.ts
+var salesforceConnector = createStubConnector({
+  domain: "crm",
+  provider: "salesforce"
+});
+
+// src/products/integracoes/cloud/src/providers/crmProviderRegistry.ts
+var CRM_CONNECTORS = [
+  hubspotConnector,
+  pipedriveConnector,
+  salesforceConnector,
+  rdStationConnector
+];
+
+// src/products/integracoes/cloud/src/lib/rateLimit.ts
+var lastRequestByProvider = /* @__PURE__ */ new Map();
+function delay2(ms) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+function envRateLimitMs(provider) {
+  const envKey = `INTEGRATIONS_RATE_LIMIT_${provider.toUpperCase().replace(/[^A-Z0-9]+/g, "_")}_MS`;
+  return Number(process.env[envKey] || process.env.INTEGRATIONS_RATE_LIMIT_DEFAULT_MS || 0);
+}
+async function waitForProviderRateLimit(provider, minIntervalMs = envRateLimitMs(provider)) {
+  if (!minIntervalMs || minIntervalMs <= 0) return;
+  const key = provider.trim().toLowerCase();
+  const now = Date.now();
+  const lastRequestAt = lastRequestByProvider.get(key) || 0;
+  const waitMs = Math.max(0, lastRequestAt + minIntervalMs - now);
+  if (waitMs > 0) await delay2(waitMs);
+  lastRequestByProvider.set(key, Date.now());
+}
+
+// src/products/integracoes/cloud/src/lib/providerErrors.ts
+var ProviderError = class extends Error {
+  kind;
+  provider;
+  resource;
+  status;
+  retryable;
+  details;
+  constructor(input) {
+    super(input.message);
+    this.name = "ProviderError";
+    this.kind = input.kind || "unknown";
+    this.provider = input.provider;
+    this.resource = input.resource;
+    this.status = input.status;
+    this.retryable = input.retryable ?? false;
+    this.details = input.details;
+  }
+};
+function classifyHttpStatus(status) {
+  if (status === 401 || status === 403) return { kind: "auth", retryable: false };
+  if (status === 404) return { kind: "not_found", retryable: false };
+  if (status === 408 || status === 429) return { kind: "rate_limit", retryable: true };
+  if (status >= 500) return { kind: "server", retryable: true };
+  return { kind: "unknown", retryable: false };
+}
+
+// src/products/integracoes/cloud/src/lib/connectorHttp.ts
+function serializeBody(body) {
+  if (body == null) return void 0;
+  if (typeof body === "string" || body instanceof URLSearchParams || body instanceof FormData) return body;
+  return JSON.stringify(body);
+}
+function defaultHeaders(body) {
+  if (body == null || typeof body === "string" || body instanceof URLSearchParams || body instanceof FormData) return {};
+  return { "Content-Type": "application/json" };
+}
+function shouldRetryNetworkError(error) {
+  if (error instanceof TypeError) return true;
+  if (!error || typeof error !== "object") return false;
+  const status = Number(error.status || 0);
+  if (status === 408 || status === 409 || status === 425 || status === 429) return true;
+  if (status >= 500 && status <= 599) return true;
+  const code = String(error.code || "");
+  return code === "ETIMEDOUT" || code === "ECONNRESET" || code === "EAI_AGAIN";
+}
+async function parsePayload(response) {
+  const text = await response.text();
+  if (!text) return null;
+  try {
+    return JSON.parse(text);
+  } catch {
+    return text;
+  }
+}
+async function connectorJsonRequest(request) {
+  const timeoutMs = request.timeoutMs ?? Number(process.env.INTEGRATIONS_HTTP_TIMEOUT_MS || 3e4);
+  const retry = request.retry || {
+    attempts: Number(process.env.INTEGRATIONS_HTTP_RETRY_ATTEMPTS || 3)
+  };
+  const customShouldRetry = retry.shouldRetry;
+  return withRetry(async () => {
+    await waitForProviderRateLimit(request.provider, request.rateLimitMs);
+    const response = await fetch(request.url, {
+      method: request.method || "GET",
+      headers: {
+        ...defaultHeaders(request.body),
+        ...request.headers || {}
+      },
+      body: serializeBody(request.body),
+      signal: AbortSignal.timeout(timeoutMs)
+    });
+    const payload = await parsePayload(response);
+    if (!response.ok) {
+      const classification = classifyHttpStatus(response.status);
+      throw new ProviderError({
+        provider: request.provider,
+        resource: request.resource,
+        status: response.status,
+        kind: classification.kind,
+        retryable: classification.retryable,
+        message: `Chamada ${request.provider} falhou com status ${response.status}`,
+        details: { payload }
+      });
+    }
+    return {
+      status: response.status,
+      headers: response.headers,
+      payload
+    };
+  }, {
+    ...retry,
+    shouldRetry: (error, attempt) => {
+      if (error instanceof ProviderError) return error.retryable;
+      return customShouldRetry ? customShouldRetry(error, attempt) : shouldRetryNetworkError(error);
+    }
+  });
+}
+
+// src/products/integracoes/cloud/src/connectors/erp/bling/blingClient.ts
+var DEFAULT_BASE_URL = "https://api.bling.com.br/Api/v3";
+var DEFAULT_MAX_PAGES = 100;
+var DEFAULT_RATE_LIMIT_MS = 350;
+function isRecord2(value) {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
+}
+function parseCredentials2(value) {
+  if (isRecord2(value)) return value;
+  if (typeof value !== "string") return null;
+  try {
+    const parsed = JSON.parse(value);
+    return isRecord2(parsed) ? parsed : null;
+  } catch {
+    return null;
+  }
+}
+function nonEmptyString2(value) {
+  return typeof value === "string" && value.trim().length > 0;
+}
+function normalizeBlingCredentials(value) {
+  const credentials = parseCredentials2(value);
+  const accessToken = credentials?.accessToken ?? credentials?.access_token;
+  if (!credentials || !nonEmptyString2(accessToken)) {
+    throw new ProviderError({
+      provider: "bling",
+      kind: "auth",
+      message: "Credenciais Bling invalidas. OAuth precisa retornar accessToken.",
+      retryable: false
+    });
+  }
+  return {
+    accessToken: accessToken.trim(),
+    refreshToken: nonEmptyString2(credentials.refreshToken) ? credentials.refreshToken.trim() : nonEmptyString2(credentials.refresh_token) ? credentials.refresh_token.trim() : void 0,
+    expiresAt: nonEmptyString2(credentials.expiresAt) ? credentials.expiresAt.trim() : nonEmptyString2(credentials.expires_at) ? credentials.expires_at.trim() : void 0,
+    tokenType: nonEmptyString2(credentials.tokenType) ? credentials.tokenType.trim() : nonEmptyString2(credentials.token_type) ? credentials.token_type.trim() : void 0,
+    scope: nonEmptyString2(credentials.scope) ? credentials.scope.trim() : void 0
+  };
+}
+function validateBlingConnectorCredentials(value) {
+  try {
+    normalizeBlingCredentials(value);
+    return { ok: true };
+  } catch (error) {
+    return { ok: false, error: error instanceof Error ? error.message : "Credenciais Bling invalidas." };
+  }
+}
+function getBaseUrl() {
+  return (process.env.BLING_API_BASE_URL || DEFAULT_BASE_URL).replace(/\/+$/, "");
+}
+function buildUrl(config, query) {
+  const url = new URL(`${getBaseUrl()}${config.path.startsWith("/") ? config.path : `/${config.path}`}`);
+  for (const [key, value] of Object.entries(query || {})) {
+    if (value !== void 0 && value !== null && value !== "") url.searchParams.set(key, String(value));
+  }
+  return url.toString();
+}
+function asNumber(value) {
+  const parsed = Number(value);
+  return Number.isFinite(parsed) && parsed > 0 ? parsed : void 0;
+}
+function extractTotalPages(payload) {
+  if (!isRecord2(payload)) return void 0;
+  return asNumber(payload.totalPaginas ?? payload.total_paginas ?? payload.totalPages ?? payload.pages);
+}
+function extractTotalRecords(payload) {
+  if (!isRecord2(payload)) return void 0;
+  return asNumber(payload.totalRegistros ?? payload.total_registros ?? payload.totalItems ?? payload.total);
+}
+function extractItems(payload, itemKeys) {
+  if (Array.isArray(payload)) {
+    return payload.filter((item) => isRecord2(item));
+  }
+  for (const key of itemKeys) {
+    const value = payload[key];
+    if (Array.isArray(value)) {
+      return value.filter((item) => isRecord2(item));
+    }
+  }
+  const arrays = Object.values(payload).filter(Array.isArray);
+  if (arrays.length === 1) {
+    return arrays[0].filter((item) => isRecord2(item));
+  }
+  return [];
+}
+function getMaxPages() {
+  const value = Number(process.env.BLING_MAX_PAGES_PER_RESOURCE || DEFAULT_MAX_PAGES);
+  return Number.isFinite(value) && value > 0 ? Math.floor(value) : DEFAULT_MAX_PAGES;
+}
+function getRateLimitMs() {
+  const value = Number(process.env.INTEGRATIONS_RATE_LIMIT_BLING_MS || DEFAULT_RATE_LIMIT_MS);
+  return Number.isFinite(value) && value >= 0 ? value : DEFAULT_RATE_LIMIT_MS;
+}
+var BlingClient = class {
+  credentials;
+  constructor(credentials) {
+    this.credentials = credentials;
+  }
+  async request(config, input) {
+    const response = await connectorJsonRequest({
+      provider: "bling",
+      resource: config.resource,
+      url: buildUrl(config, config.buildQuery?.(input)),
+      method: "GET",
+      headers: {
+        Authorization: `Bearer ${this.credentials.accessToken}`
+      },
+      rateLimitMs: getRateLimitMs()
+    });
+    return response.payload;
+  }
+  async *paginate(config, input) {
+    const pageSize = input?.pageSize || Number(process.env.BLING_PAGE_SIZE || config.defaultPageSize);
+    const maxPages = getMaxPages();
+    let page = Math.max(Number(input?.initialPage || input?.cursor?.page || 1), 1);
+    let loadedPages = 0;
+    while (loadedPages < maxPages) {
+      const payload = await this.request(config, {
+        page,
+        pageSize,
+        cursor: input?.cursor
+      });
+      const items = extractItems(payload, config.itemKeys);
+      const totalPages = extractTotalPages(payload);
+      const totalRecords = extractTotalRecords(payload);
+      loadedPages += 1;
+      const hasMoreByTotal = totalPages ? page < totalPages : void 0;
+      const hasMore = hasMoreByTotal ?? items.length >= pageSize;
+      const truncated = hasMore && loadedPages >= maxPages;
+      yield {
+        page,
+        pageSize,
+        items,
+        payload,
+        totalPages,
+        totalRecords,
+        hasMore,
+        truncated
+      };
+      if (!hasMore || truncated) return;
+      page += 1;
+    }
+  }
+};
+function createBlingClient(credentials) {
+  return new BlingClient(normalizeBlingCredentials(credentials));
+}
+
+// src/products/integracoes/cloud/src/connectors/erp/bling/blingMappers.ts
+var EXTERNAL_ID_CANDIDATES = [
+  "id",
+  "uuid",
+  "codigo",
+  "numero",
+  "numeroPedido",
+  "pedido.id",
+  "contato.id",
+  "produto.id",
+  "categoria.id"
+];
+function getNestedValue(row, path) {
+  return path.split(".").reduce((current, key) => {
+    if (!current || typeof current !== "object" || Array.isArray(current)) return void 0;
+    return current[key];
+  }, row);
+}
+function getExternalId(row, index) {
+  for (const key of EXTERNAL_ID_CANDIDATES) {
+    const value = getNestedValue(row, key);
+    if (typeof value === "string" && value.trim()) return value.trim();
+    if (typeof value === "number" && Number.isFinite(value)) return String(value);
+  }
+  return `bling_row_${index + 1}`;
+}
+function mapBlingRow(input) {
+  return {
+    external_id: getExternalId(input.row, input.index),
+    bling_resource: input.resource,
+    bling_page: input.page,
+    raw: input.row
+  };
+}
+function mapBlingRows(input) {
+  return input.rows.map((row, index) => mapBlingRow({
+    resource: input.resource,
+    row,
+    page: input.page,
+    index
+  }));
+}
+
+// src/products/integracoes/cloud/src/connectors/erp/bling/blingResources.ts
+var DEFAULT_PAGE_SIZE = 100;
+function pageQuery({ page, pageSize }) {
+  return {
+    pagina: page,
+    limite: pageSize
+  };
+}
+var BLING_RESOURCE_CONFIGS = [
+  {
+    resource: "clientes",
+    path: "/contatos",
+    itemKeys: ["data", "itens", "items", "contatos"],
+    defaultPageSize: DEFAULT_PAGE_SIZE,
+    supportsIncremental: false,
+    buildQuery: pageQuery
+  },
+  {
+    resource: "fornecedores",
+    path: "/contatos",
+    itemKeys: ["data", "itens", "items", "contatos"],
+    defaultPageSize: DEFAULT_PAGE_SIZE,
+    supportsIncremental: false,
+    buildQuery: pageQuery
+  },
+  {
+    resource: "produtos",
+    path: "/produtos",
+    itemKeys: ["data", "itens", "items", "produtos"],
+    defaultPageSize: DEFAULT_PAGE_SIZE,
+    supportsIncremental: false,
+    buildQuery: pageQuery
+  },
+  {
+    resource: "pedidos_venda",
+    path: "/pedidos/vendas",
+    itemKeys: ["data", "itens", "items", "pedidos"],
+    defaultPageSize: DEFAULT_PAGE_SIZE,
+    supportsIncremental: false,
+    buildQuery: pageQuery
+  },
+  {
+    resource: "compras",
+    path: "/pedidos/compras",
+    itemKeys: ["data", "itens", "items", "pedidos"],
+    defaultPageSize: DEFAULT_PAGE_SIZE,
+    supportsIncremental: false,
+    buildQuery: pageQuery
+  },
+  {
+    resource: "contas_receber",
+    path: "/contas/receber",
+    itemKeys: ["data", "itens", "items", "contas"],
+    defaultPageSize: DEFAULT_PAGE_SIZE,
+    supportsIncremental: false,
+    buildQuery: pageQuery
+  },
+  {
+    resource: "contas_pagar",
+    path: "/contas/pagar",
+    itemKeys: ["data", "itens", "items", "contas"],
+    defaultPageSize: DEFAULT_PAGE_SIZE,
+    supportsIncremental: false,
+    buildQuery: pageQuery
+  },
+  {
+    resource: "notas_fiscais",
+    path: "/nfe",
+    itemKeys: ["data", "itens", "items", "notas"],
+    defaultPageSize: DEFAULT_PAGE_SIZE,
+    supportsIncremental: false,
+    buildQuery: pageQuery
+  },
+  {
+    resource: "estoque",
+    path: "/estoques/saldos",
+    itemKeys: ["data", "itens", "items", "saldos"],
+    defaultPageSize: DEFAULT_PAGE_SIZE,
+    supportsIncremental: false,
+    buildQuery: pageQuery
+  },
+  {
+    resource: "categorias",
+    path: "/categorias/produtos",
+    itemKeys: ["data", "itens", "items", "categorias"],
+    defaultPageSize: DEFAULT_PAGE_SIZE,
+    supportsIncremental: false,
+    buildQuery: pageQuery
+  }
+];
+var BLING_RESOURCE_MAP = new Map(BLING_RESOURCE_CONFIGS.map((config) => [config.resource, config]));
+var BLING_RESOURCE_MANIFEST = BLING_RESOURCE_CONFIGS.map((config) => ({
+  resource: config.resource,
+  supportsIncremental: config.supportsIncremental,
+  defaultPageSize: config.defaultPageSize,
+  requiredFields: ["accessToken"]
+}));
+function getBlingResourceConfig(resource) {
+  return BLING_RESOURCE_MAP.get(resource);
+}
+function listBlingSupportedResources() {
+  return BLING_RESOURCE_CONFIGS.map((config) => config.resource);
+}
+
+// src/products/integracoes/cloud/src/connectors/erp/bling/blingConnector.ts
+function warningResult(resource, message) {
+  return {
+    status: "warning",
+    recordsIn: 0,
+    recordsUpdated: 0,
+    recordsFailed: 0,
+    errorMessage: message,
+    metadata: {
+      resource,
+      supportedResources: listBlingSupportedResources()
+    }
+  };
+}
+var blingConnector = {
+  domain: "erp",
+  provider: "bling",
+  resources: BLING_RESOURCE_MANIFEST,
+  validateCredentials: validateBlingConnectorCredentials,
+  async testConnection(context) {
+    const config = getBlingResourceConfig("produtos");
+    if (!config) return warningResult("produtos", "Recurso de teste Bling nao configurado.");
+    const client = createBlingClient(context.credentials);
+    const page = await client.paginate(config, { pageSize: 1 }).next();
+    return {
+      status: "success",
+      recordsIn: 0,
+      recordsUpdated: 0,
+      recordsFailed: 0,
+      metadata: {
+        mode: "bling_api_v3",
+        testResource: "produtos",
+        totalPages: page.value?.totalPages ?? null,
+        totalRecords: page.value?.totalRecords ?? null
+      }
+    };
+  },
+  async syncResource(context, resource) {
+    const config = getBlingResourceConfig(resource);
+    if (!config) {
+      return warningResult(resource, `Recurso Bling ainda nao mapeado para sincronizacao: ${resource}.`);
+    }
+    const client = createBlingClient(context.credentials);
+    const batches = [];
+    let recordsIn = 0;
+    let truncated = false;
+    let totalPages;
+    let totalRecords;
+    for await (const page of client.paginate(config, {
+      cursor: context.cursor
+    })) {
+      const rows = mapBlingRows({
+        resource,
+        rows: page.items,
+        page: page.page
+      });
+      recordsIn += rows.length;
+      totalPages = page.totalPages ?? totalPages;
+      totalRecords = page.totalRecords ?? totalRecords;
+      truncated = truncated || page.truncated;
+      batches.push({
+        resource,
+        rows,
+        nextCursor: page.hasMore && !page.truncated ? { page: page.page + 1 } : void 0
+      });
+    }
+    return {
+      status: truncated ? "warning" : "success",
+      recordsIn,
+      recordsUpdated: recordsIn,
+      recordsFailed: 0,
+      batches,
+      metadata: {
+        mode: "bling_api_v3",
+        resource,
+        totalPages: totalPages ?? null,
+        totalRecords: totalRecords ?? null,
+        truncated
+      }
+    };
+  },
+  async refreshToken() {
+    return {
+      status: "warning",
+      recordsIn: 0,
+      recordsUpdated: 0,
+      recordsFailed: 0,
+      errorMessage: "Refresh OAuth do Bling ainda precisa ser acionado pelo job de refresh token.",
+      metadata: {
+        mode: "oauth2",
+        refreshed: false
+      }
+    };
+  }
+};
+
+// src/products/integracoes/cloud/src/connectors/erp/contaAzul/contaAzulClient.ts
+var DEFAULT_BASE_URL2 = "https://api-v2.contaazul.com";
+var DEFAULT_MAX_PAGES2 = 100;
+function isRecord3(value) {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
+}
+function parseCredentials3(value) {
+  if (isRecord3(value)) return value;
+  if (typeof value !== "string") return null;
+  try {
+    const parsed = JSON.parse(value);
+    return isRecord3(parsed) ? parsed : null;
+  } catch {
+    return null;
+  }
+}
+function nonEmptyString3(value) {
+  return typeof value === "string" && value.trim().length > 0;
+}
+function normalizeContaAzulCredentials(value) {
+  const credentials = parseCredentials3(value);
+  const accessToken = credentials?.accessToken ?? credentials?.access_token;
+  if (!credentials || !nonEmptyString3(accessToken)) {
+    throw new ProviderError({
+      provider: "conta_azul",
+      kind: "auth",
+      message: "Credenciais Conta Azul invalidas. OAuth precisa retornar accessToken.",
+      retryable: false
+    });
+  }
+  return {
+    accessToken: accessToken.trim(),
+    refreshToken: nonEmptyString3(credentials.refreshToken) ? credentials.refreshToken.trim() : nonEmptyString3(credentials.refresh_token) ? credentials.refresh_token.trim() : void 0,
+    expiresAt: nonEmptyString3(credentials.expiresAt) ? credentials.expiresAt.trim() : nonEmptyString3(credentials.expires_at) ? credentials.expires_at.trim() : void 0,
+    tokenType: nonEmptyString3(credentials.tokenType) ? credentials.tokenType.trim() : nonEmptyString3(credentials.token_type) ? credentials.token_type.trim() : void 0,
+    scope: nonEmptyString3(credentials.scope) ? credentials.scope.trim() : void 0
+  };
+}
+function validateContaAzulConnectorCredentials(value) {
+  try {
+    normalizeContaAzulCredentials(value);
+    return { ok: true };
+  } catch (error) {
+    return { ok: false, error: error instanceof Error ? error.message : "Credenciais Conta Azul invalidas." };
+  }
+}
+function getBaseUrl2() {
+  return (process.env.CONTA_AZUL_API_BASE_URL || DEFAULT_BASE_URL2).replace(/\/+$/, "");
+}
+function buildUrl2(config, query) {
+  const url = new URL(`${getBaseUrl2()}${config.path.startsWith("/") ? config.path : `/${config.path}`}`);
+  for (const [key, value] of Object.entries(query || {})) {
+    if (value !== void 0 && value !== null && value !== "") url.searchParams.set(key, String(value));
+  }
+  return url.toString();
+}
+function asNumber2(value) {
+  const parsed = Number(value);
+  return Number.isFinite(parsed) && parsed > 0 ? parsed : void 0;
+}
+function extractTotalPages2(payload) {
+  if (!isRecord3(payload)) return void 0;
+  return asNumber2(payload.total_paginas ?? payload.totalPages ?? payload.total_de_paginas ?? payload.pages);
+}
+function extractTotalRecords2(payload) {
+  if (!isRecord3(payload)) return void 0;
+  return asNumber2(payload.total_itens ?? payload.totalItems ?? payload.total ?? payload.total_de_registros);
+}
+function getMaxPages2() {
+  const value = Number(process.env.CONTA_AZUL_MAX_PAGES_PER_RESOURCE || DEFAULT_MAX_PAGES2);
+  return Number.isFinite(value) && value > 0 ? Math.floor(value) : DEFAULT_MAX_PAGES2;
+}
+function extractItems2(payload, itemKeys) {
+  if (Array.isArray(payload)) {
+    return payload.filter((item) => isRecord3(item));
+  }
+  for (const key of itemKeys) {
+    const value = payload[key];
+    if (Array.isArray(value)) {
+      return value.filter((item) => isRecord3(item));
+    }
+  }
+  const arrays = Object.values(payload).filter(Array.isArray);
+  if (arrays.length === 1) {
+    return arrays[0].filter((item) => isRecord3(item));
+  }
+  return [];
+}
+var ContaAzulClient = class {
+  credentials;
+  constructor(credentials) {
+    this.credentials = credentials;
+  }
+  async request(config, input) {
+    const method = config.method || "GET";
+    const query = method === "GET" ? config.buildQuery?.(input) : void 0;
+    const body = method === "POST" ? config.buildBody?.(input) : void 0;
+    const response = await connectorJsonRequest({
+      provider: "conta_azul",
+      resource: config.resource,
+      url: buildUrl2(config, query),
+      method,
+      headers: {
+        Authorization: `Bearer ${this.credentials.accessToken}`
+      },
+      body
+    });
+    return response.payload;
+  }
+  async *paginate(config, input) {
+    const pageSize = input?.pageSize || Number(process.env.CONTA_AZUL_PAGE_SIZE || config.defaultPageSize);
+    const maxPages = getMaxPages2();
+    let page = Math.max(Number(input?.initialPage || input?.cursor?.page || 1), 1);
+    let loadedPages = 0;
+    while (loadedPages < maxPages) {
+      const payload = await this.request(config, {
+        page,
+        pageSize,
+        cursor: input?.cursor
+      });
+      const items = extractItems2(payload, config.itemKeys);
+      const totalPages = extractTotalPages2(payload);
+      const totalRecords = extractTotalRecords2(payload);
+      loadedPages += 1;
+      const hasMoreByTotal = totalPages ? page < totalPages : void 0;
+      const hasMore = hasMoreByTotal ?? items.length >= pageSize;
+      const truncated = hasMore && loadedPages >= maxPages;
+      yield {
+        page,
+        pageSize,
+        items,
+        payload,
+        totalPages,
+        totalRecords,
+        hasMore,
+        truncated
+      };
+      if (!hasMore || truncated) return;
+      page += 1;
+    }
+  }
+};
+function createContaAzulClient(credentials) {
+  return new ContaAzulClient(normalizeContaAzulCredentials(credentials));
+}
+
+// src/products/integracoes/cloud/src/connectors/erp/contaAzul/contaAzulMappers.ts
+var EXTERNAL_ID_CANDIDATES2 = [
+  "id",
+  "uuid",
+  "codigo",
+  "numero",
+  "id_legado",
+  "legacy_id",
+  "referencia",
+  "evento.id",
+  "parcela.id"
+];
+function getNestedValue2(row, path) {
+  return path.split(".").reduce((current, key) => {
+    if (!current || typeof current !== "object" || Array.isArray(current)) return void 0;
+    return current[key];
+  }, row);
+}
+function getExternalId2(row, index) {
+  for (const key of EXTERNAL_ID_CANDIDATES2) {
+    const value = getNestedValue2(row, key);
+    if (typeof value === "string" && value.trim()) return value.trim();
+    if (typeof value === "number" && Number.isFinite(value)) return String(value);
+  }
+  return `conta_azul_row_${index + 1}`;
+}
+function mapContaAzulRow(input) {
+  return {
+    external_id: getExternalId2(input.row, input.index),
+    conta_azul_resource: input.resource,
+    conta_azul_page: input.page,
+    raw: input.row
+  };
+}
+function mapContaAzulRows(input) {
+  return input.rows.map((row, index) => mapContaAzulRow({
+    resource: input.resource,
+    row,
+    page: input.page,
+    index
+  }));
+}
+
+// src/products/integracoes/cloud/src/connectors/erp/contaAzul/contaAzulResources.ts
+var DEFAULT_PAGE_SIZE2 = 50;
+function pageQuery2({ page, pageSize }) {
+  return {
+    pagina: page,
+    tamanho_pagina: pageSize
+  };
+}
+function payableReceivableBody({ page, pageSize }) {
+  return {
+    pagina: page,
+    tamanho_pagina: pageSize
+  };
+}
+var CONTA_AZUL_RESOURCE_CONFIGS = [
+  {
+    resource: "clientes",
+    path: "/v1/pessoas",
+    itemKeys: ["itens", "items", "data", "content", "pessoas"],
+    defaultPageSize: DEFAULT_PAGE_SIZE2,
+    supportsIncremental: false,
+    buildQuery: pageQuery2
+  },
+  {
+    resource: "fornecedores",
+    path: "/v1/pessoas",
+    itemKeys: ["itens", "items", "data", "content", "pessoas"],
+    defaultPageSize: DEFAULT_PAGE_SIZE2,
+    supportsIncremental: false,
+    buildQuery: pageQuery2
+  },
+  {
+    resource: "produtos",
+    path: "/v1/produtos",
+    itemKeys: ["itens", "items", "data", "content", "produtos"],
+    defaultPageSize: DEFAULT_PAGE_SIZE2,
+    supportsIncremental: false,
+    buildQuery: pageQuery2
+  },
+  {
+    resource: "categorias",
+    path: "/v1/categorias",
+    itemKeys: ["itens", "items", "data", "content", "categorias"],
+    defaultPageSize: DEFAULT_PAGE_SIZE2,
+    supportsIncremental: false,
+    buildQuery: pageQuery2
+  },
+  {
+    resource: "centros_custo",
+    path: "/v1/centro-de-custo",
+    itemKeys: ["itens", "items", "data", "content", "centros_custo"],
+    defaultPageSize: DEFAULT_PAGE_SIZE2,
+    supportsIncremental: false,
+    buildQuery: pageQuery2
+  },
+  {
+    resource: "contas_receber",
+    path: "/v1/financeiro/eventos-financeiros/contas-a-receber/buscar",
+    method: "POST",
+    itemKeys: ["itens", "items", "data", "content", "eventos", "parcelas"],
+    defaultPageSize: DEFAULT_PAGE_SIZE2,
+    supportsIncremental: false,
+    buildBody: payableReceivableBody
+  },
+  {
+    resource: "contas_pagar",
+    path: "/v1/financeiro/eventos-financeiros/contas-a-pagar/buscar",
+    method: "POST",
+    itemKeys: ["itens", "items", "data", "content", "eventos", "parcelas"],
+    defaultPageSize: DEFAULT_PAGE_SIZE2,
+    supportsIncremental: false,
+    buildBody: payableReceivableBody
+  }
+];
+var CONTA_AZUL_RESOURCE_MAP = new Map(CONTA_AZUL_RESOURCE_CONFIGS.map((config) => [config.resource, config]));
+var CONTA_AZUL_RESOURCE_MANIFEST = CONTA_AZUL_RESOURCE_CONFIGS.map((config) => ({
+  resource: config.resource,
+  supportsIncremental: config.supportsIncremental,
+  defaultPageSize: config.defaultPageSize,
+  requiredFields: ["accessToken"]
+}));
+function getContaAzulResourceConfig(resource) {
+  return CONTA_AZUL_RESOURCE_MAP.get(resource);
+}
+function listContaAzulSupportedResources() {
+  return CONTA_AZUL_RESOURCE_CONFIGS.map((config) => config.resource);
+}
+
+// src/products/integracoes/cloud/src/connectors/erp/contaAzul/contaAzulConnector.ts
+function warningResult2(resource, message) {
+  return {
+    status: "warning",
+    recordsIn: 0,
+    recordsUpdated: 0,
+    recordsFailed: 0,
+    errorMessage: message,
+    metadata: {
+      resource,
+      supportedResources: listContaAzulSupportedResources()
+    }
+  };
+}
+var contaAzulConnector = {
+  domain: "erp",
+  provider: "conta_azul",
+  resources: CONTA_AZUL_RESOURCE_MANIFEST,
+  validateCredentials: validateContaAzulConnectorCredentials,
+  async testConnection(context) {
+    const config = getContaAzulResourceConfig("clientes");
+    if (!config) return warningResult2("clientes", "Recurso de teste Conta Azul nao configurado.");
+    const client = createContaAzulClient(context.credentials);
+    const page = await client.paginate(config, { pageSize: 1 }).next();
+    return {
+      status: "success",
+      recordsIn: 0,
+      recordsUpdated: 0,
+      recordsFailed: 0,
+      metadata: {
+        mode: "conta_azul_api",
+        testResource: "clientes",
+        totalPages: page.value?.totalPages ?? null,
+        totalRecords: page.value?.totalRecords ?? null
+      }
+    };
+  },
+  async syncResource(context, resource) {
+    const config = getContaAzulResourceConfig(resource);
+    if (!config) {
+      return warningResult2(resource, `Recurso Conta Azul ainda nao mapeado para sincronizacao: ${resource}.`);
+    }
+    const client = createContaAzulClient(context.credentials);
+    const batches = [];
+    let recordsIn = 0;
+    let truncated = false;
+    let totalPages;
+    let totalRecords;
+    for await (const page of client.paginate(config, {
+      cursor: context.cursor
+    })) {
+      const rows = mapContaAzulRows({
+        resource,
+        rows: page.items,
+        page: page.page
+      });
+      recordsIn += rows.length;
+      totalPages = page.totalPages ?? totalPages;
+      totalRecords = page.totalRecords ?? totalRecords;
+      truncated = truncated || page.truncated;
+      batches.push({
+        resource,
+        rows,
+        nextCursor: page.hasMore && !page.truncated ? { page: page.page + 1 } : void 0
+      });
+    }
+    return {
+      status: truncated ? "warning" : "success",
+      recordsIn,
+      recordsUpdated: recordsIn,
+      recordsFailed: 0,
+      batches,
+      metadata: {
+        mode: "conta_azul_api",
+        resource,
+        totalPages: totalPages ?? null,
+        totalRecords: totalRecords ?? null,
+        truncated
+      }
+    };
+  },
+  async refreshToken() {
+    return {
+      status: "warning",
+      recordsIn: 0,
+      recordsUpdated: 0,
+      recordsFailed: 0,
+      errorMessage: "Refresh OAuth da Conta Azul ainda precisa ser acionado pelo job de refresh token.",
+      metadata: {
+        mode: "oauth2",
+        refreshed: false
+      }
+    };
+  }
+};
+
+// src/products/integracoes/cloud/src/connectors/erp/omie/omieClient.ts
+var DEFAULT_BASE_URL3 = "https://app.omie.com.br/api/v1";
+var DEFAULT_MAX_PAGES3 = 100;
+function isRecord4(value) {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
+}
+function parseCredentials4(value) {
+  if (isRecord4(value)) return value;
+  if (typeof value !== "string") return null;
+  try {
+    const parsed = JSON.parse(value);
+    return isRecord4(parsed) ? parsed : null;
+  } catch {
+    return null;
+  }
+}
+function nonEmptyString4(value) {
+  return typeof value === "string" && value.trim().length > 0;
+}
+function normalizeOmieCredentials(value) {
+  const credentials = parseCredentials4(value);
+  if (!credentials || !nonEmptyString4(credentials.app_key) || !nonEmptyString4(credentials.app_secret)) {
+    throw new ProviderError({
+      provider: "omie",
+      kind: "auth",
+      message: "Credenciais Omie invalidas. Informe app_key e app_secret.",
+      retryable: false
+    });
+  }
+  return {
+    app_key: credentials.app_key.trim(),
+    app_secret: credentials.app_secret.trim()
+  };
+}
+function validateOmieConnectorCredentials(value) {
+  try {
+    normalizeOmieCredentials(value);
+    return { ok: true };
+  } catch (error) {
+    return { ok: false, error: error instanceof Error ? error.message : "Credenciais Omie invalidas." };
+  }
+}
+function getBaseUrl3() {
+  return (process.env.OMIE_API_BASE_URL || DEFAULT_BASE_URL3).replace(/\/+$/, "");
+}
+function buildUrl3(endpoint) {
+  return `${getBaseUrl3()}${endpoint.startsWith("/") ? endpoint : `/${endpoint}`}`;
+}
+function asNumber3(value) {
+  const parsed = Number(value);
+  return Number.isFinite(parsed) && parsed > 0 ? parsed : void 0;
+}
+function getTotalPages(payload) {
+  return asNumber3(payload.total_de_paginas ?? payload.nTotPaginas);
+}
+function getTotalRecords(payload) {
+  return asNumber3(payload.total_de_registros ?? payload.nTotRegistros);
+}
+function getMaxPages3() {
+  const value = Number(process.env.OMIE_MAX_PAGES_PER_RESOURCE || DEFAULT_MAX_PAGES3);
+  return Number.isFinite(value) && value > 0 ? Math.floor(value) : DEFAULT_MAX_PAGES3;
+}
+function extractItems3(payload, itemKeys) {
+  for (const key of itemKeys) {
+    const value = payload[key];
+    if (Array.isArray(value)) {
+      return value.filter((item) => isRecord4(item));
+    }
+  }
+  const arrays = Object.values(payload).filter(Array.isArray);
+  if (arrays.length === 1) {
+    return arrays[0].filter((item) => isRecord4(item));
+  }
+  return [];
+}
+function assertNoOmieFault(payload, resource) {
+  if (!isRecord4(payload)) return;
+  const fault = payload.faultstring ?? payload.faultcode ?? payload.error ?? payload.message;
+  if (!fault) return;
+  throw new ProviderError({
+    provider: "omie",
+    resource,
+    kind: "validation",
+    message: String(payload.faultstring || payload.message || fault),
+    retryable: false,
+    details: { payload }
+  });
+}
+var OmieClient = class {
+  credentials;
+  constructor(credentials) {
+    this.credentials = credentials;
+  }
+  async call(config, params) {
+    const body = {
+      call: config.call,
+      app_key: this.credentials.app_key,
+      app_secret: this.credentials.app_secret,
+      param: [params]
+    };
+    const response = await connectorJsonRequest({
+      provider: "omie",
+      resource: config.resource,
+      url: buildUrl3(config.endpoint),
+      method: "POST",
+      body
+    });
+    assertNoOmieFault(response.payload, config.resource);
+    return response.payload;
+  }
+  async *paginate(config, input) {
+    const pageSize = input?.pageSize || Number(process.env.OMIE_PAGE_SIZE || config.defaultPageSize);
+    const maxPages = getMaxPages3();
+    let page = Math.max(Number(input?.initialPage || input?.cursor?.page || 1), 1);
+    let loadedPages = 0;
+    while (loadedPages < maxPages) {
+      const payload = await this.call(config, (config.buildParams || ((params) => params))({
+        page,
+        pageSize,
+        cursor: input?.cursor
+      }));
+      const items = extractItems3(payload, config.itemKeys);
+      const totalPages = getTotalPages(payload);
+      const totalRecords = getTotalRecords(payload);
+      loadedPages += 1;
+      const hasMoreByTotal = totalPages ? page < totalPages : void 0;
+      const hasMore = hasMoreByTotal ?? items.length >= pageSize;
+      const truncated = hasMore && loadedPages >= maxPages;
+      yield {
+        page,
+        pageSize,
+        items,
+        payload,
+        totalPages,
+        totalRecords,
+        hasMore,
+        truncated
+      };
+      if (!hasMore || truncated) return;
+      page += 1;
+    }
+  }
+};
+function createOmieClient(credentials) {
+  return new OmieClient(normalizeOmieCredentials(credentials));
+}
+
+// src/products/integracoes/cloud/src/connectors/erp/omie/omieMappers.ts
+var EXTERNAL_ID_CANDIDATES3 = [
+  "codigo_cliente_omie",
+  "codigo_cliente_integracao",
+  "codigo_produto",
+  "codigo_produto_integracao",
+  "codigo_lancamento_omie",
+  "codigo_lancamento_integracao",
+  "codigo_pedido",
+  "codigo_pedido_integracao",
+  "numero_pedido",
+  "numero_pedido_integracao",
+  "codigo_categoria",
+  "codigo",
+  "id"
+];
+function getNestedValue3(row, path) {
+  return path.split(".").reduce((current, key) => {
+    if (!current || typeof current !== "object" || Array.isArray(current)) return void 0;
+    return current[key];
+  }, row);
+}
+function getExternalId3(row, index) {
+  for (const key of EXTERNAL_ID_CANDIDATES3) {
+    const value = getNestedValue3(row, key);
+    if (typeof value === "string" && value.trim()) return value.trim();
+    if (typeof value === "number" && Number.isFinite(value)) return String(value);
+  }
+  return `omie_row_${index + 1}`;
+}
+function mapOmieRow(input) {
+  return {
+    external_id: getExternalId3(input.row, input.index),
+    omie_resource: input.resource,
+    omie_page: input.page,
+    raw: input.row
+  };
+}
+function mapOmieRows(input) {
+  return input.rows.map((row, index) => mapOmieRow({
+    resource: input.resource,
+    row,
+    page: input.page,
+    index
+  }));
+}
+
+// src/products/integracoes/cloud/src/connectors/erp/omie/omieResources.ts
+var DEFAULT_PAGE_SIZE3 = 50;
+function defaultParams({ page, pageSize }) {
+  return {
+    pagina: page,
+    registros_por_pagina: pageSize,
+    apenas_importado_api: "N"
+  };
+}
+var OMIE_RESOURCE_CONFIGS = [
+  {
+    resource: "clientes",
+    endpoint: "/geral/clientes/",
+    call: "ListarClientes",
+    itemKeys: ["clientes_cadastro"],
+    defaultPageSize: DEFAULT_PAGE_SIZE3,
+    supportsIncremental: false,
+    buildParams: defaultParams
+  },
+  {
+    resource: "fornecedores",
+    endpoint: "/geral/clientes/",
+    call: "ListarClientes",
+    itemKeys: ["clientes_cadastro"],
+    defaultPageSize: DEFAULT_PAGE_SIZE3,
+    supportsIncremental: false,
+    buildParams: defaultParams
+  },
+  {
+    resource: "produtos",
+    endpoint: "/geral/produtos/",
+    call: "ListarProdutos",
+    itemKeys: ["produto_servico_cadastro", "produtos_servico_cadastro"],
+    defaultPageSize: DEFAULT_PAGE_SIZE3,
+    supportsIncremental: false,
+    buildParams: defaultParams
+  },
+  {
+    resource: "pedidos_venda",
+    endpoint: "/produtos/pedido/",
+    call: "ListarPedidos",
+    itemKeys: ["pedido_venda_produto", "pedidos_venda_produto"],
+    defaultPageSize: DEFAULT_PAGE_SIZE3,
+    supportsIncremental: false,
+    buildParams: defaultParams
+  },
+  {
+    resource: "contas_receber",
+    endpoint: "/financas/contareceber/",
+    call: "ListarContasReceber",
+    itemKeys: ["conta_receber_cadastro", "contas_receber_cadastro"],
+    defaultPageSize: DEFAULT_PAGE_SIZE3,
+    supportsIncremental: false,
+    buildParams: defaultParams
+  },
+  {
+    resource: "contas_pagar",
+    endpoint: "/financas/contapagar/",
+    call: "ListarContasPagar",
+    itemKeys: ["conta_pagar_cadastro", "contas_pagar_cadastro"],
+    defaultPageSize: DEFAULT_PAGE_SIZE3,
+    supportsIncremental: false,
+    buildParams: defaultParams
+  },
+  {
+    resource: "categorias",
+    endpoint: "/geral/categorias/",
+    call: "ListarCategorias",
+    itemKeys: ["categoria_cadastro", "categorias_cadastro"],
+    defaultPageSize: DEFAULT_PAGE_SIZE3,
+    supportsIncremental: false,
+    buildParams: defaultParams
+  }
+];
+var OMIE_RESOURCE_MAP = new Map(OMIE_RESOURCE_CONFIGS.map((config) => [config.resource, config]));
+var OMIE_RESOURCE_MANIFEST = OMIE_RESOURCE_CONFIGS.map((config) => ({
+  resource: config.resource,
+  supportsIncremental: config.supportsIncremental,
+  defaultPageSize: config.defaultPageSize,
+  requiredFields: ["app_key", "app_secret"]
+}));
+function getOmieResourceConfig(resource) {
+  return OMIE_RESOURCE_MAP.get(resource);
+}
+function listOmieSupportedResources() {
+  return OMIE_RESOURCE_CONFIGS.map((config) => config.resource);
+}
+
+// src/products/integracoes/cloud/src/connectors/erp/omie/omieConnector.ts
+function warningResult3(resource, message) {
+  return {
+    status: "warning",
+    recordsIn: 0,
+    recordsUpdated: 0,
+    recordsFailed: 0,
+    errorMessage: message,
+    metadata: {
+      resource,
+      supportedResources: listOmieSupportedResources()
+    }
+  };
+}
+var omieConnector = {
+  domain: "erp",
+  provider: "omie",
+  resources: OMIE_RESOURCE_MANIFEST,
+  validateCredentials: validateOmieConnectorCredentials,
+  async testConnection(context) {
+    const config = getOmieResourceConfig("clientes");
+    if (!config) return warningResult3("clientes", "Recurso de teste Omie nao configurado.");
+    const client = createOmieClient(context.credentials);
+    const payload = await client.call(config, {
+      pagina: 1,
+      registros_por_pagina: 1,
+      apenas_importado_api: "N"
+    });
+    return {
+      status: "success",
+      recordsIn: 0,
+      recordsUpdated: 0,
+      recordsFailed: 0,
+      metadata: {
+        mode: "omie_api",
+        testResource: "clientes",
+        totalPages: payload.total_de_paginas ?? payload.nTotPaginas ?? null,
+        totalRecords: payload.total_de_registros ?? payload.nTotRegistros ?? null
+      }
+    };
+  },
+  async syncResource(context, resource) {
+    const config = getOmieResourceConfig(resource);
+    if (!config) {
+      return warningResult3(resource, `Recurso Omie ainda nao mapeado para sincronizacao: ${resource}.`);
+    }
+    const client = createOmieClient(context.credentials);
+    const batches = [];
+    let recordsIn = 0;
+    let truncated = false;
+    let totalPages;
+    let totalRecords;
+    for await (const page of client.paginate(config, {
+      cursor: context.cursor
+    })) {
+      const rows = mapOmieRows({
+        resource,
+        rows: page.items,
+        page: page.page
+      });
+      recordsIn += rows.length;
+      totalPages = page.totalPages ?? totalPages;
+      totalRecords = page.totalRecords ?? totalRecords;
+      truncated = truncated || page.truncated;
+      batches.push({
+        resource,
+        rows,
+        nextCursor: page.hasMore && !page.truncated ? { page: page.page + 1 } : void 0
+      });
+    }
+    return {
+      status: truncated ? "warning" : "success",
+      recordsIn,
+      recordsUpdated: recordsIn,
+      recordsFailed: 0,
+      batches,
+      metadata: {
+        mode: "omie_api",
+        resource,
+        totalPages: totalPages ?? null,
+        totalRecords: totalRecords ?? null,
+        truncated
+      }
+    };
+  },
+  async refreshToken() {
+    return {
+      status: "success",
+      recordsIn: 0,
+      recordsUpdated: 0,
+      recordsFailed: 0,
+      metadata: {
+        mode: "api_key",
+        refreshed: false
+      }
+    };
+  }
+};
+
+// src/products/integracoes/cloud/src/providers/erpProviderRegistry.ts
+var ERP_CONNECTORS = [
+  contaAzulConnector,
+  omieConnector,
+  blingConnector
+];
+
+// src/products/integracoes/cloud/src/providers/providerRegistry.ts
+var CLOUD_CONNECTORS = [
+  ...ERP_CONNECTORS,
+  ...CRM_CONNECTORS
+];
+function getCloudConnector(provider) {
+  return CLOUD_CONNECTORS.find((connector) => connector.provider === provider);
+}
+
 // src/products/integracoes/shared/providers/crmProviders.ts
 var CRM_RESOURCES = [
   {
@@ -5572,37 +7123,48 @@ var CRM_PROVIDERS = [
   })
 ];
 
-// src/products/integracoes/shared/providers/erpProviders.ts
-var ERP_RESOURCES = [
+// src/products/integracoes/shared/providers/erp/erpProviderFactory.ts
+function erpProvider(provider) {
+  return {
+    ...provider,
+    domain: "erp",
+    syncModes: ["manual", "scheduled"],
+    supportsIncrementalSync: provider.supportsIncrementalSync || false,
+    tags: ["erp", "financeiro", "operacional", ...provider.tags || []]
+  };
+}
+
+// src/products/integracoes/shared/providers/erp/blingProvider.ts
+var BLING_RESOURCES = [
   {
     slug: "clientes",
     name: "Clientes",
-    description: "Cadastro de clientes, documentos e dados comerciais.",
+    description: "Contatos do tipo cliente, documentos e dados comerciais.",
     defaultEnabled: true
   },
   {
     slug: "fornecedores",
     name: "Fornecedores",
-    description: "Cadastro de fornecedores e parceiros de compra.",
+    description: "Contatos do tipo fornecedor e parceiros de compra.",
     defaultEnabled: true
   },
   {
     slug: "produtos",
     name: "Produtos",
-    description: "Catalogo de produtos, servicos e precos.",
+    description: "Catalogo de produtos, precos e informacoes comerciais.",
     defaultEnabled: true
   },
   {
     slug: "pedidos_venda",
     name: "Pedidos de venda",
-    description: "Pedidos, itens, descontos e situacao comercial.",
+    description: "Pedidos, itens e situacao comercial.",
     defaultEnabled: true
   },
   {
     slug: "compras",
-    name: "Compras",
-    description: "Pedidos de compra, itens e recebimentos.",
-    defaultEnabled: true
+    name: "Pedidos de compra",
+    description: "Pedidos de compra, itens e fornecedores.",
+    defaultEnabled: false
   },
   {
     slug: "contas_receber",
@@ -5625,8 +7187,58 @@ var ERP_RESOURCES = [
   {
     slug: "estoque",
     name: "Estoque",
-    description: "Saldos, movimentacoes e almoxarifados.",
+    description: "Saldos de estoque por produto.",
     defaultEnabled: false
+  },
+  {
+    slug: "categorias",
+    name: "Categorias",
+    description: "Categorias de produtos e classificacoes comerciais.",
+    defaultEnabled: false
+  }
+];
+var BLING_PROVIDER = erpProvider({
+  slug: "bling",
+  toolkitSlug: "BLING",
+  name: "Bling",
+  description: "ERP para ecommerce, estoque, pedidos, notas fiscais e marketplaces.",
+  authType: "oauth2",
+  supportsOAuthCallback: true,
+  resources: BLING_RESOURCES,
+  tags: ["brasil", "ecommerce", "marketplace"]
+});
+
+// src/products/integracoes/shared/providers/erp/contaAzulProvider.ts
+var CONTA_AZUL_RESOURCES = [
+  {
+    slug: "clientes",
+    name: "Clientes",
+    description: "Cadastro de clientes, documentos e dados comerciais.",
+    defaultEnabled: true
+  },
+  {
+    slug: "fornecedores",
+    name: "Fornecedores",
+    description: "Cadastro de fornecedores e parceiros de compra.",
+    defaultEnabled: true
+  },
+  {
+    slug: "produtos",
+    name: "Produtos",
+    description: "Catalogo de produtos, servicos e precos.",
+    defaultEnabled: true
+  },
+  {
+    slug: "contas_receber",
+    name: "Contas a receber",
+    description: "Titulos, vencimentos, recebimentos e inadimplencia.",
+    defaultEnabled: true
+  },
+  {
+    slug: "contas_pagar",
+    name: "Contas a pagar",
+    description: "Titulos, vencimentos, pagamentos e fornecedores.",
+    defaultEnabled: true
   },
   {
     slug: "categorias",
@@ -5641,71 +7253,78 @@ var ERP_RESOURCES = [
     defaultEnabled: false
   }
 ];
-function erpProvider(provider) {
-  return {
-    ...provider,
-    domain: "erp",
-    resources: provider.resources || ERP_RESOURCES,
-    syncModes: ["manual", "scheduled"],
-    supportsIncrementalSync: true,
-    tags: ["erp", "financeiro", "operacional", ...provider.tags || []]
-  };
-}
+var CONTA_AZUL_PROVIDER = erpProvider({
+  slug: "conta_azul",
+  toolkitSlug: "CONTA_AZUL",
+  name: "Conta Azul",
+  description: "ERP financeiro, faturamento, vendas e conciliacao para pequenas e medias empresas.",
+  authType: "oauth2",
+  supportsOAuthCallback: true,
+  resources: CONTA_AZUL_RESOURCES,
+  tags: ["brasil", "pme", "financeiro"]
+});
+
+// src/products/integracoes/shared/providers/erp/omieProvider.ts
+var OMIE_RESOURCES = [
+  {
+    slug: "clientes",
+    name: "Clientes",
+    description: "Cadastro de clientes, documentos e dados comerciais.",
+    defaultEnabled: true
+  },
+  {
+    slug: "fornecedores",
+    name: "Fornecedores",
+    description: "Cadastro de fornecedores e parceiros de compra.",
+    defaultEnabled: true
+  },
+  {
+    slug: "produtos",
+    name: "Produtos",
+    description: "Produtos, servicos, unidades, precos e classificacoes.",
+    defaultEnabled: true
+  },
+  {
+    slug: "pedidos_venda",
+    name: "Pedidos de venda",
+    description: "Pedidos, itens, descontos e situacao comercial.",
+    defaultEnabled: true
+  },
+  {
+    slug: "contas_receber",
+    name: "Contas a receber",
+    description: "Titulos, vencimentos, recebimentos e inadimplencia.",
+    defaultEnabled: true
+  },
+  {
+    slug: "contas_pagar",
+    name: "Contas a pagar",
+    description: "Titulos, vencimentos, pagamentos e fornecedores.",
+    defaultEnabled: true
+  },
+  {
+    slug: "categorias",
+    name: "Categorias",
+    description: "Categorias financeiras e classificacoes operacionais.",
+    defaultEnabled: false
+  }
+];
+var OMIE_PROVIDER = erpProvider({
+  slug: "omie",
+  toolkitSlug: "OMIE",
+  name: "Omie",
+  description: "ERP com financeiro, fiscal, pedidos, estoque e automacao operacional.",
+  authType: "api_key",
+  supportsOAuthCallback: false,
+  resources: OMIE_RESOURCES,
+  tags: ["brasil", "pme", "fiscal"]
+});
+
+// src/products/integracoes/shared/providers/erpProviders.ts
 var ERP_PROVIDERS = [
-  erpProvider({
-    slug: "conta_azul",
-    toolkitSlug: "CONTA_AZUL",
-    name: "Conta Azul",
-    description: "ERP financeiro, faturamento, vendas e conciliacao para pequenas e medias empresas.",
-    authType: "oauth2",
-    supportsOAuthCallback: true,
-    tags: ["brasil", "pme", "financeiro"]
-  }),
-  erpProvider({
-    slug: "omie",
-    toolkitSlug: "OMIE",
-    name: "Omie",
-    description: "ERP com financeiro, fiscal, pedidos, estoque e automacao operacional.",
-    authType: "api_key",
-    supportsOAuthCallback: false,
-    tags: ["brasil", "pme", "fiscal"]
-  }),
-  erpProvider({
-    slug: "bling",
-    toolkitSlug: "BLING",
-    name: "Bling",
-    description: "ERP para ecommerce, estoque, pedidos, notas fiscais e marketplaces.",
-    authType: "oauth2",
-    supportsOAuthCallback: true,
-    tags: ["brasil", "ecommerce", "marketplace"]
-  }),
-  erpProvider({
-    slug: "tiny",
-    toolkitSlug: "TINY",
-    name: "Tiny",
-    description: "ERP para vendas online, catalogo, estoque, pedidos e emissao fiscal.",
-    authType: "oauth2",
-    supportsOAuthCallback: true,
-    tags: ["brasil", "ecommerce", "marketplace"]
-  }),
-  erpProvider({
-    slug: "linx",
-    toolkitSlug: "LINX",
-    name: "Linx",
-    description: "ERP e plataforma de varejo para lojas, PDV, estoque, vendas e operacao omnichannel.",
-    authType: "oauth2",
-    supportsOAuthCallback: true,
-    tags: ["brasil", "varejo", "loja-fisica", "omnichannel", "pme"]
-  }),
-  erpProvider({
-    slug: "totvs",
-    toolkitSlug: "TOTVS",
-    name: "TOTVS",
-    description: "ERP corporativo para dados financeiros, comerciais, fiscais e operacionais.",
-    authType: "manual",
-    supportsOAuthCallback: false,
-    tags: ["brasil", "enterprise", "operacional"]
-  })
+  CONTA_AZUL_PROVIDER,
+  OMIE_PROVIDER,
+  BLING_PROVIDER
 ];
 
 // src/products/integracoes/shared/providers/providerTypes.ts
@@ -5760,11 +7379,11 @@ function requireIntegrationProvider(slug) {
 }
 
 // src/products/integracoes/cloud/src/control-api/routes/connections.ts
-function isRecord2(value) {
+function isRecord5(value) {
   return typeof value === "object" && value !== null && !Array.isArray(value);
 }
 function parseBody(body) {
-  if (!isRecord2(body)) return {};
+  if (!isRecord5(body)) return {};
   return {
     tenantId: typeof body.tenantId === "number" ? body.tenantId : void 0,
     connectionId: typeof body.connectionId === "string" ? body.connectionId : void 0,
@@ -5797,6 +7416,35 @@ async function handleConnectionSetup(request) {
             error: validation.error || "Credenciais invalidas."
           }
         };
+      }
+      const connector = getCloudConnector(provider.slug);
+      if (connector) {
+        try {
+          const test = await connector.testConnection({
+            tenantId: body.tenantId,
+            connectionId: body.connectionId,
+            provider: provider.slug,
+            credentials: validation.normalized || JSON.parse(validation.serialized),
+            selectedResources: body.resources || []
+          });
+          if (test.status === "error") {
+            return {
+              status: 400,
+              body: {
+                ok: false,
+                error: test.errorMessage || "Credenciais recusadas pelo provider."
+              }
+            };
+          }
+        } catch (error) {
+          return {
+            status: 400,
+            body: {
+              ok: false,
+              error: error instanceof Error ? error.message : "Falha ao validar credenciais no provider."
+            }
+          };
+        }
       }
       const secret = await writeConnectionCredentialsSecret({
         tenantId: body.tenantId,
@@ -5844,7 +7492,7 @@ async function handleConnectionSetup(request) {
         connectionId: body.connectionId,
         provider: provider.slug
       });
-      const authorization = buildOAuthAuthorizationUrl(provider.slug, state);
+      const authorization = await buildOAuthAuthorizationUrl(provider.slug, state);
       await updateConnectionStatus({
         tenantId: body.tenantId,
         connectionId: body.connectionId,
@@ -5865,7 +7513,7 @@ async function handleConnectionSetup(request) {
           status: "pending_auth",
           authType: provider.authType,
           authorizationUrl: authorization.authorizationUrl,
-          message: authorization.ready ? "Conexao aguardando autorizacao OAuth." : "OAuth ainda precisa de variaveis de ambiente do provider."
+          message: authorization.ready ? "Conexao aguardando autorizacao OAuth." : "OAuth ainda precisa de configuracao do provider no Secret Manager."
         }
       };
     }
@@ -5913,6 +7561,9 @@ async function handleHealthCheck() {
     }
   };
 }
+
+// src/products/integracoes/cloud/src/control-api/routes/scheduledSync.ts
+var import_node_crypto2 = require("node:crypto");
 
 // src/products/integracoes/cloud/src/lib/pubsub.ts
 async function publishSyncMessage(input) {
@@ -5963,13 +7614,173 @@ async function publishSyncMessage(input) {
   };
 }
 
+// src/products/integracoes/cloud/src/control-api/routes/scheduledSync.ts
+var supportedFrequencyMinutes = {
+  hourly: 60,
+  "1h": 60,
+  every_2_hours: 120,
+  "2h": 120,
+  every_3_hours: 180,
+  "3h": 180,
+  every_6_hours: 360,
+  "6h": 360,
+  every_8_hours: 480,
+  "8h": 480,
+  every_12_hours: 720,
+  "12h": 720,
+  daily: 1440,
+  "24h": 1440
+};
+var supportedFrequencies = Object.keys(supportedFrequencyMinutes);
+function isRecord6(value) {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
+}
+function parsePositiveInteger(value, fallback, max) {
+  const parsed = typeof value === "number" ? value : typeof value === "string" ? Number(value) : NaN;
+  if (!Number.isFinite(parsed) || parsed <= 0) return fallback;
+  return Math.min(Math.floor(parsed), max);
+}
+function parseScheduledSyncBody(body) {
+  if (!isRecord6(body)) return {};
+  return {
+    limit: parsePositiveInteger(body.limit, 25, 100),
+    lockTtlSeconds: parsePositiveInteger(body.lockTtlSeconds, 600, 3600),
+    requestedBy: typeof body.requestedBy === "string" ? body.requestedBy : void 0
+  };
+}
+function calculateNextSyncAt(syncFrequency, from = /* @__PURE__ */ new Date()) {
+  const minutes = supportedFrequencyMinutes[syncFrequency];
+  if (!minutes) return null;
+  return new Date(from.getTime() + minutes * 6e4);
+}
+async function handleScheduledSync(request) {
+  const body = parseScheduledSyncBody(request.body);
+  const lockToken = (0, import_node_crypto2.randomUUID)();
+  const requestedBy = body.requestedBy || "scheduled-sync";
+  const items = [];
+  try {
+    const dueConnections = await claimDueScheduledConnections({
+      limit: body.limit || 25,
+      lockToken,
+      lockOwner: requestedBy,
+      lockTtlSeconds: body.lockTtlSeconds || 600,
+      syncFrequencies: supportedFrequencies
+    });
+    let published = 0;
+    let failed = 0;
+    for (const connection of dueConnections) {
+      let runId = null;
+      try {
+        const nextSyncAt = calculateNextSyncAt(connection.syncFrequency);
+        if (!nextSyncAt) {
+          failed += 1;
+          await releaseScheduledConnectionLock({
+            tenantId: connection.tenantId,
+            connectionId: connection.id,
+            lockToken,
+            errorMessage: `Frequencia de sync nao suportada: ${connection.syncFrequency}`
+          });
+          items.push({
+            connectionId: connection.id,
+            tenantId: connection.tenantId,
+            ok: false,
+            error: "Frequencia de sync nao suportada."
+          });
+          continue;
+        }
+        const run = await createQueuedCloudSyncRun({
+          tenantId: connection.tenantId,
+          connectionId: connection.id,
+          resources: connection.selectedResources,
+          requestedBy,
+          metadata: {
+            provider: connection.provider,
+            syncFrequency: connection.syncFrequency,
+            previousNextSyncAt: connection.nextSyncAt
+          }
+        });
+        runId = run.id;
+        const publish = await publishSyncMessage({
+          tenantId: connection.tenantId,
+          connectionId: connection.id,
+          runId,
+          trigger: "scheduled",
+          resources: connection.selectedResources,
+          requestedBy
+        });
+        await completeScheduledConnectionDispatch({
+          tenantId: connection.tenantId,
+          connectionId: connection.id,
+          lockToken,
+          nextSyncAt,
+          messageId: publish.messageId,
+          runId
+        });
+        published += 1;
+        items.push({
+          connectionId: connection.id,
+          tenantId: connection.tenantId,
+          ok: true,
+          runId,
+          messageId: publish.messageId,
+          nextSyncAt: nextSyncAt.toISOString()
+        });
+      } catch (error) {
+        failed += 1;
+        const errorMessage = error instanceof Error ? error.message : "Falha ao publicar sync agendado.";
+        if (runId) {
+          await failQueuedCloudSyncRun({
+            tenantId: connection.tenantId,
+            connectionId: connection.id,
+            runId,
+            errorMessage
+          });
+        }
+        await releaseScheduledConnectionLock({
+          tenantId: connection.tenantId,
+          connectionId: connection.id,
+          lockToken,
+          runId,
+          errorMessage
+        });
+        items.push({
+          connectionId: connection.id,
+          tenantId: connection.tenantId,
+          ok: false,
+          runId,
+          error: errorMessage
+        });
+      }
+    }
+    return {
+      status: 202,
+      body: {
+        ok: true,
+        mode: "scheduled_sync",
+        claimed: dueConnections.length,
+        published,
+        failed,
+        items
+      }
+    };
+  } catch (error) {
+    return {
+      status: 500,
+      body: {
+        ok: false,
+        error: error instanceof Error ? error.message : "Falha ao processar sync agendado."
+      }
+    };
+  }
+}
+
 // src/products/integracoes/cloud/src/control-api/routes/sync.ts
 var syncTriggers = ["manual", "scheduled", "webhook", "initial"];
-function isRecord3(value) {
+function isRecord7(value) {
   return typeof value === "object" && value !== null && !Array.isArray(value);
 }
 function parseSyncDispatchBody(body) {
-  if (!isRecord3(body)) return {};
+  if (!isRecord7(body)) return {};
   return {
     tenantId: typeof body.tenantId === "number" ? body.tenantId : void 0,
     connectionId: typeof body.connectionId === "string" ? body.connectionId : void 0,
@@ -6022,7 +7833,7 @@ async function handleSyncDispatch(request) {
 }
 
 // src/products/integracoes/cloud/src/lib/internalAuth.ts
-var import_node_crypto2 = require("node:crypto");
+var import_node_crypto3 = require("node:crypto");
 function headerValue(headers, name) {
   if (!headers) return void 0;
   const value = headers[name] || headers[name.toLowerCase()];
@@ -6033,7 +7844,7 @@ function safeEquals(left, right) {
   const leftBuffer = Buffer.from(left);
   const rightBuffer = Buffer.from(right);
   if (leftBuffer.length !== rightBuffer.length) return false;
-  return (0, import_node_crypto2.timingSafeEqual)(leftBuffer, rightBuffer);
+  return (0, import_node_crypto3.timingSafeEqual)(leftBuffer, rightBuffer);
 }
 function getInternalApiKey() {
   const value = process.env.INTEGRATIONS_INTERNAL_API_KEY?.trim();
@@ -6056,7 +7867,7 @@ function createControlApiServer() {
   return {
     async handle(request) {
       if (request.path === "/health") return handleHealthCheck();
-      if ((request.path === "/connections/setup" || request.path === "/sync") && !isInternalRequestAuthorized(request.headers)) {
+      if ((request.path === "/connections/setup" || request.path === "/sync" || request.path === "/scheduled-sync") && !isInternalRequestAuthorized(request.headers)) {
         return {
           status: 401,
           body: {
@@ -6068,6 +7879,7 @@ function createControlApiServer() {
       if (request.path === "/connections/setup") return handleConnectionSetup(request);
       if (request.path === "/callbacks/provider") return handleProviderCallback(request);
       if (request.path === "/sync") return handleSyncDispatch(request);
+      if (request.path === "/scheduled-sync") return handleScheduledSync(request);
       return {
         status: 404,
         body: {

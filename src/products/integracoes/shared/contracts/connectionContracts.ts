@@ -20,6 +20,11 @@ export type IntegrationConnection = {
   secretRef?: string | null
   selectedResources: string[]
   syncFrequency: string
+  syncEnabled?: boolean
+  nextSyncAt?: string | null
+  syncLockedUntil?: string | null
+  syncLockToken?: string | null
+  syncLockOwner?: string | null
   syncModes: IntegrationSyncMode[]
   lastSyncAt?: string | null
   lastSuccessAt?: string | null
@@ -36,6 +41,8 @@ export type CreateIntegrationConnectionInput = {
   displayName?: string
   selectedResources?: string[]
   syncFrequency?: string
+  syncEnabled?: boolean
+  nextSyncAt?: string | null
   syncModes?: IntegrationSyncMode[]
   credentials?: Record<string, unknown>
   metadata?: Record<string, unknown>
@@ -46,6 +53,8 @@ export type UpdateIntegrationConnectionInput = {
   status?: IntegrationConnectionStatus
   selectedResources?: string[]
   syncFrequency?: string
+  syncEnabled?: boolean
+  nextSyncAt?: string | null
   syncModes?: IntegrationSyncMode[]
   metadata?: Record<string, unknown>
 }

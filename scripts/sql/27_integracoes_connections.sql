@@ -12,6 +12,11 @@ CREATE TABLE IF NOT EXISTS mcp_app.integration_connections (
   secret_ref text NULL,
   selected_resources jsonb NOT NULL DEFAULT '[]'::jsonb,
   sync_frequency text NOT NULL DEFAULT 'manual',
+  sync_enabled boolean NOT NULL DEFAULT true,
+  next_sync_at timestamptz NULL,
+  sync_locked_until timestamptz NULL,
+  sync_lock_token text NULL,
+  sync_lock_owner text NULL,
   sync_modes_json jsonb NOT NULL DEFAULT '["manual"]'::jsonb,
   last_sync_at timestamptz NULL,
   last_success_at timestamptz NULL,
@@ -51,6 +56,17 @@ CREATE INDEX IF NOT EXISTS integration_connections_tenant_status_idx
 
 CREATE INDEX IF NOT EXISTS integration_connections_last_sync_idx
   ON mcp_app.integration_connections (tenant_id, last_sync_at DESC);
+
+CREATE INDEX IF NOT EXISTS integration_connections_due_sync_idx
+  ON mcp_app.integration_connections (tenant_id, next_sync_at)
+  WHERE sync_enabled = true
+    AND next_sync_at IS NOT NULL
+    AND sync_frequency <> 'manual'
+    AND status IN ('connected', 'warning');
+
+CREATE INDEX IF NOT EXISTS integration_connections_sync_lock_idx
+  ON mcp_app.integration_connections (sync_locked_until)
+  WHERE sync_locked_until IS NOT NULL;
 
 CREATE TABLE IF NOT EXISTS mcp_app.integration_sync_runs (
   id bigserial PRIMARY KEY,

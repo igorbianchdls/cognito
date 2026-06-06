@@ -17,6 +17,15 @@ export type CloudSyncRun = {
   status: string
 }
 
+export type ScheduledCloudIntegrationConnection = {
+  id: string
+  tenantId: number
+  provider: string
+  selectedResources: string[]
+  syncFrequency: string
+  nextSyncAt: string | null
+}
+
 let pool: InstanceType<typeof Pool> | null = null
 
 function getDatabaseUrl() {
@@ -174,6 +183,218 @@ export async function startCloudSyncRun(input: {
     id: String(result.rows[0]?.id),
     status: String(result.rows[0]?.status),
   }
+}
+
+export async function claimDueScheduledConnections(input: {
+  limit: number
+  lockToken: string
+  lockOwner: string
+  lockTtlSeconds: number
+  syncFrequencies: string[]
+}): Promise<ScheduledCloudIntegrationConnection[]> {
+  const result = await getPool().query(
+    `WITH due_connections AS (
+       SELECT id, tenant_id
+       FROM mcp_app.integration_connections
+       WHERE
+         sync_enabled = true
+         AND sync_frequency = ANY($5::text[])
+         AND next_sync_at IS NOT NULL
+         AND next_sync_at <= now()
+         AND status IN ('connected', 'warning')
+         AND jsonb_array_length(COALESCE(selected_resources, '[]'::jsonb)) > 0
+         AND (sync_locked_until IS NULL OR sync_locked_until < now())
+       ORDER BY next_sync_at ASC, updated_at ASC
+       LIMIT $1
+       FOR UPDATE SKIP LOCKED
+     )
+     UPDATE mcp_app.integration_connections connections
+     SET
+       sync_lock_token = $2,
+       sync_lock_owner = $3,
+       sync_locked_until = now() + make_interval(secs => $4),
+       updated_at = now()
+     FROM due_connections
+     WHERE connections.id = due_connections.id
+       AND connections.tenant_id = due_connections.tenant_id
+     RETURNING
+       connections.id::text,
+       connections.tenant_id,
+       connections.provider,
+       connections.selected_resources,
+       connections.sync_frequency,
+       connections.next_sync_at`,
+    [
+      input.limit,
+      input.lockToken,
+      input.lockOwner,
+      input.lockTtlSeconds,
+      input.syncFrequencies,
+    ],
+  )
+
+  return result.rows.map((row: Record<string, unknown>) => ({
+    id: String(row.id),
+    tenantId: Number(row.tenant_id),
+    provider: String(row.provider || ''),
+    selectedResources: asStringArray(row.selected_resources),
+    syncFrequency: String(row.sync_frequency || ''),
+    nextSyncAt: row.next_sync_at == null ? null : new Date(row.next_sync_at as string | Date).toISOString(),
+  }))
+}
+
+export async function createQueuedCloudSyncRun(input: {
+  tenantId: number
+  connectionId: string
+  resources: string[]
+  requestedBy: string
+  metadata?: Record<string, unknown>
+}): Promise<CloudSyncRun> {
+  const result = await getPool().query(
+    `INSERT INTO mcp_app.integration_sync_runs
+      (tenant_id, connection_id, trigger, status, started_at, finished_at, records_in, records_updated, records_failed, metadata_json)
+     VALUES
+      ($1, $2, 'scheduled', 'queued', NULL, NULL, 0, 0, 0, $3::jsonb)
+     RETURNING id::text, status`,
+    [
+      input.tenantId,
+      input.connectionId,
+      JSON.stringify({
+        mode: 'scheduled_sync',
+        resources: input.resources,
+        requestedBy: input.requestedBy,
+        ...(input.metadata || {}),
+      }),
+    ],
+  )
+
+  await createIntegrationEvent({
+    tenantId: input.tenantId,
+    connectionId: input.connectionId,
+    eventType: 'sync.requested',
+    severity: 'info',
+    actor: input.requestedBy,
+    message: 'Sincronizacao agendada enviada ao worker GCP.',
+    metadata: {
+      resources: input.resources,
+      trigger: 'scheduled',
+      ...(input.metadata || {}),
+    },
+  })
+
+  return {
+    id: String(result.rows[0]?.id),
+    status: String(result.rows[0]?.status || 'queued'),
+  }
+}
+
+export async function failQueuedCloudSyncRun(input: {
+  tenantId: number
+  connectionId: string
+  runId: string
+  errorMessage: string
+}) {
+  await getPool().query(
+    `UPDATE mcp_app.integration_sync_runs
+     SET
+       status = 'error',
+       finished_at = now(),
+       error_message = $4,
+       metadata_json = metadata_json || $5::jsonb
+     WHERE id = $1
+       AND tenant_id = $2
+       AND connection_id = $3
+       AND status = 'queued'`,
+    [
+      input.runId,
+      input.tenantId,
+      input.connectionId,
+      input.errorMessage,
+      JSON.stringify({
+        dispatchFailedAt: new Date().toISOString(),
+      }),
+    ],
+  )
+}
+
+export async function completeScheduledConnectionDispatch(input: {
+  tenantId: number
+  connectionId: string
+  lockToken: string
+  nextSyncAt: Date
+  messageId: string
+  runId: string
+}) {
+  await getPool().query(
+    `UPDATE mcp_app.integration_connections
+     SET
+       next_sync_at = $4,
+       sync_lock_token = NULL,
+       sync_lock_owner = NULL,
+       sync_locked_until = NULL,
+       metadata_json = metadata_json || $5::jsonb,
+       updated_at = now()
+     WHERE id = $1
+       AND tenant_id = $2
+       AND sync_lock_token = $3`,
+    [
+      input.connectionId,
+      input.tenantId,
+      input.lockToken,
+      input.nextSyncAt.toISOString(),
+      JSON.stringify({
+        lastScheduledDispatchAt: new Date().toISOString(),
+        lastScheduledMessageId: input.messageId,
+        lastScheduledRunId: input.runId,
+      }),
+    ],
+  )
+}
+
+export async function releaseScheduledConnectionLock(input: {
+  tenantId: number
+  connectionId: string
+  lockToken: string
+  errorMessage?: string | null
+  runId?: string | null
+}) {
+  await getPool().query(
+    `UPDATE mcp_app.integration_connections
+     SET
+       sync_lock_token = NULL,
+       sync_lock_owner = NULL,
+       sync_locked_until = NULL,
+       last_error = COALESCE($4, last_error),
+       metadata_json = metadata_json || $5::jsonb,
+       updated_at = now()
+     WHERE id = $1
+       AND tenant_id = $2
+       AND sync_lock_token = $3`,
+    [
+      input.connectionId,
+      input.tenantId,
+      input.lockToken,
+      input.errorMessage || null,
+      JSON.stringify({
+        lastScheduledDispatchError: input.errorMessage || null,
+        lastScheduledDispatchErrorAt: input.errorMessage ? new Date().toISOString() : null,
+        lastScheduledRunId: input.runId || null,
+      }),
+    ],
+  )
+
+  await createIntegrationEvent({
+    tenantId: input.tenantId,
+    connectionId: input.connectionId,
+    eventType: 'sync.dispatch_failed',
+    severity: 'error',
+    actor: 'scheduled-sync',
+    message: 'Falha ao publicar sincronizacao agendada no Pub/Sub.',
+    metadata: {
+      runId: input.runId || null,
+      errorMessage: input.errorMessage || null,
+    },
+  })
 }
 
 export async function finishCloudSyncRun(input: {

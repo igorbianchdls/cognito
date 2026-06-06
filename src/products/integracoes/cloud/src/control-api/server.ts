@@ -1,6 +1,7 @@
 import { handleProviderCallback } from '@/products/integracoes/cloud/src/control-api/routes/callbacks'
 import { handleConnectionSetup } from '@/products/integracoes/cloud/src/control-api/routes/connections'
 import { handleHealthCheck } from '@/products/integracoes/cloud/src/control-api/routes/health'
+import { handleScheduledSync } from '@/products/integracoes/cloud/src/control-api/routes/scheduledSync'
 import { handleSyncDispatch } from '@/products/integracoes/cloud/src/control-api/routes/sync'
 import { isInternalRequestAuthorized } from '@/products/integracoes/cloud/src/lib/internalAuth'
 
@@ -25,7 +26,14 @@ export function createControlApiServer(): ControlApiServer {
   return {
     async handle(request) {
       if (request.path === '/health') return handleHealthCheck()
-      if ((request.path === '/connections/setup' || request.path === '/sync') && !isInternalRequestAuthorized(request.headers)) {
+      if (
+        (
+          request.path === '/connections/setup'
+          || request.path === '/sync'
+          || request.path === '/scheduled-sync'
+        )
+        && !isInternalRequestAuthorized(request.headers)
+      ) {
         return {
           status: 401,
           body: {
@@ -38,6 +46,7 @@ export function createControlApiServer(): ControlApiServer {
       if (request.path === '/connections/setup') return handleConnectionSetup(request)
       if (request.path === '/callbacks/provider') return handleProviderCallback(request)
       if (request.path === '/sync') return handleSyncDispatch(request)
+      if (request.path === '/scheduled-sync') return handleScheduledSync(request)
 
       return {
         status: 404,

@@ -39,6 +39,11 @@ type DbConnectionRow = {
   secret_ref: string | null
   selected_resources: unknown
   sync_frequency: string
+  sync_enabled?: boolean | null
+  next_sync_at?: string | Date | null
+  sync_locked_until?: string | Date | null
+  sync_lock_token?: string | null
+  sync_lock_owner?: string | null
   sync_modes_json: unknown
   last_sync_at: string | Date | null
   last_success_at: string | Date | null
@@ -122,6 +127,11 @@ function toConnection(row: DbConnectionRow): IntegrationConnection {
     secretRef: row.secret_ref,
     selectedResources: asStringArray(row.selected_resources),
     syncFrequency: row.sync_frequency,
+    syncEnabled: row.sync_enabled == null ? true : Boolean(row.sync_enabled),
+    nextSyncAt: toIsoString(row.next_sync_at),
+    syncLockedUntil: toIsoString(row.sync_locked_until),
+    syncLockToken: row.sync_lock_token || null,
+    syncLockOwner: row.sync_lock_owner || null,
     syncModes: asStringArray(row.sync_modes_json) as IntegrationSyncMode[],
     lastSyncAt: toIsoString(row.last_sync_at),
     lastSuccessAt: toIsoString(row.last_success_at),
@@ -306,9 +316,9 @@ export async function createIntegrationConnection(
   return withTransaction(async (client) => {
     const result = await client.query(
       `INSERT INTO mcp_app.integration_connections
-        (tenant_id, domain, provider, display_name, status, auth_type, selected_resources, sync_frequency, sync_modes_json, metadata_json, updated_at)
+        (tenant_id, domain, provider, display_name, status, auth_type, selected_resources, sync_frequency, sync_enabled, next_sync_at, sync_modes_json, metadata_json, updated_at)
        VALUES
-        ($1, $2, $3, $4, 'pending_auth', $5, $6::jsonb, $7, $8::jsonb, $9::jsonb, now())
+        ($1, $2, $3, $4, 'pending_auth', $5, $6::jsonb, $7, $8, $9, $10::jsonb, $11::jsonb, now())
        RETURNING *`,
       [
         tenantId,
@@ -318,6 +328,8 @@ export async function createIntegrationConnection(
         provider.authType,
         JSON.stringify(selectedResources),
         input.syncFrequency || 'manual',
+        input.syncEnabled ?? true,
+        input.nextSyncAt || null,
         JSON.stringify(syncModes),
         JSON.stringify({
           ...(input.metadata || {}),
@@ -362,6 +374,8 @@ export async function updateIntegrationConnection(
       ? normalizeRequestedResources(provider, input.selectedResources)
       : current.selectedResources
     const syncModes = input.syncModes?.length ? input.syncModes : current.syncModes
+    const syncEnabled = input.syncEnabled == null ? current.syncEnabled !== false : Boolean(input.syncEnabled)
+    const nextSyncAt = input.nextSyncAt === undefined ? current.nextSyncAt : input.nextSyncAt
     const metadata = input.metadata ? { ...(current.metadata || {}), ...compactMetadata(input.metadata) } : current.metadata || {}
 
     const result = await client.query(
@@ -371,8 +385,10 @@ export async function updateIntegrationConnection(
          status = $4,
          selected_resources = $5::jsonb,
          sync_frequency = $6,
-         sync_modes_json = $7::jsonb,
-         metadata_json = $8::jsonb,
+         sync_enabled = $7,
+         next_sync_at = $8,
+         sync_modes_json = $9::jsonb,
+         metadata_json = $10::jsonb,
          updated_at = now()
        WHERE id = $1 AND tenant_id = $2
        RETURNING *`,
@@ -383,6 +399,8 @@ export async function updateIntegrationConnection(
         status,
         JSON.stringify(selectedResources),
         input.syncFrequency || current.syncFrequency,
+        syncEnabled,
+        nextSyncAt || null,
         JSON.stringify(syncModes),
         JSON.stringify(metadata),
       ],
