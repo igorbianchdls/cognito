@@ -102,8 +102,6 @@ const DATA_SLUGS = new Set([
   'CONTA_AZUL',
   'OMIE',
   'BLING',
-  'TINY',
-  'TOTVS',
   'RD_STATION_CRM',
 ])
 

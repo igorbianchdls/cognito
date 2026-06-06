@@ -199,13 +199,13 @@ providers AS (
   SELECT 'erp', 'bling', 'Bling', 'ERP para ecommerce, estoque, pedidos, notas fiscais e marketplaces.', 'oauth2', true, true, jsonb_build_array('manual', 'scheduled'), erp_resources.resources_json, jsonb_build_array('erp', 'ecommerce', 'marketplace', 'brasil'), 'available', jsonb_build_object('toolkitSlug', 'BLING')
   FROM erp_resources
   UNION ALL
-  SELECT 'erp', 'tiny', 'Tiny', 'ERP para vendas online, catalogo, estoque, pedidos e emissao fiscal.', 'oauth2', true, true, jsonb_build_array('manual', 'scheduled'), erp_resources.resources_json, jsonb_build_array('erp', 'ecommerce', 'marketplace', 'brasil'), 'available', jsonb_build_object('toolkitSlug', 'TINY')
+  SELECT 'erp', 'tiny', 'Tiny', 'ERP para vendas online, catalogo, estoque, pedidos e emissao fiscal.', 'oauth2', true, true, jsonb_build_array('manual', 'scheduled'), erp_resources.resources_json, jsonb_build_array('erp', 'ecommerce', 'marketplace', 'brasil'), 'planned', jsonb_build_object('toolkitSlug', 'TINY')
   FROM erp_resources
   UNION ALL
-  SELECT 'erp', 'linx', 'Linx', 'ERP e plataforma de varejo para lojas, PDV, estoque, vendas e operacao omnichannel.', 'oauth2', true, true, jsonb_build_array('manual', 'scheduled'), erp_resources.resources_json, jsonb_build_array('erp', 'varejo', 'loja-fisica', 'omnichannel', 'brasil', 'pme'), 'available', jsonb_build_object('toolkitSlug', 'LINX')
+  SELECT 'erp', 'linx', 'Linx', 'ERP e plataforma de varejo para lojas, PDV, estoque, vendas e operacao omnichannel.', 'oauth2', true, true, jsonb_build_array('manual', 'scheduled'), erp_resources.resources_json, jsonb_build_array('erp', 'varejo', 'loja-fisica', 'omnichannel', 'brasil', 'pme'), 'planned', jsonb_build_object('toolkitSlug', 'LINX')
   FROM erp_resources
   UNION ALL
-  SELECT 'erp', 'totvs', 'TOTVS', 'ERP corporativo para dados financeiros, comerciais, fiscais e operacionais.', 'manual', false, true, jsonb_build_array('manual', 'scheduled'), erp_resources.resources_json, jsonb_build_array('erp', 'enterprise', 'operacional', 'brasil'), 'available', jsonb_build_object('toolkitSlug', 'TOTVS')
+  SELECT 'erp', 'totvs', 'TOTVS', 'ERP corporativo para dados financeiros, comerciais, fiscais e operacionais.', 'manual', false, true, jsonb_build_array('manual', 'scheduled'), erp_resources.resources_json, jsonb_build_array('erp', 'enterprise', 'operacional', 'brasil'), 'planned', jsonb_build_object('toolkitSlug', 'TOTVS')
   FROM erp_resources
   UNION ALL
   SELECT 'crm', 'hubspot', 'HubSpot', 'CRM para contatos, empresas, negocios, atividades e automacao comercial.', 'oauth2', true, true, jsonb_build_array('manual', 'scheduled'), crm_resources.resources_json, jsonb_build_array('crm', 'vendas', 'relacionamento', 'marketing', 'sales'), 'planned', jsonb_build_object('toolkitSlug', 'HUBSPOT')

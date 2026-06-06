@@ -113,33 +113,6 @@ export const ERP_PROVIDERS: IntegrationProvider[] = [
     supportsOAuthCallback: true,
     tags: ['brasil', 'ecommerce', 'marketplace'],
   }),
-  erpProvider({
-    slug: 'tiny',
-    toolkitSlug: 'TINY',
-    name: 'Tiny',
-    description: 'ERP para vendas online, catalogo, estoque, pedidos e emissao fiscal.',
-    authType: 'oauth2',
-    supportsOAuthCallback: true,
-    tags: ['brasil', 'ecommerce', 'marketplace'],
-  }),
-  erpProvider({
-    slug: 'linx',
-    toolkitSlug: 'LINX',
-    name: 'Linx',
-    description: 'ERP e plataforma de varejo para lojas, PDV, estoque, vendas e operacao omnichannel.',
-    authType: 'oauth2',
-    supportsOAuthCallback: true,
-    tags: ['brasil', 'varejo', 'loja-fisica', 'omnichannel', 'pme'],
-  }),
-  erpProvider({
-    slug: 'totvs',
-    toolkitSlug: 'TOTVS',
-    name: 'TOTVS',
-    description: 'ERP corporativo para dados financeiros, comerciais, fiscais e operacionais.',
-    authType: 'manual',
-    supportsOAuthCallback: false,
-    tags: ['brasil', 'enterprise', 'operacional'],
-  }),
 ]
 
 export default ERP_PROVIDERS
