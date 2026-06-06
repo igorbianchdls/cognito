@@ -1,6 +1,7 @@
 import { createHmac, randomBytes, timingSafeEqual } from 'node:crypto'
 
 import { getIntegrationsCloudConfig } from '@/products/integracoes/cloud/src/config/gcpConfig'
+import { readSecret } from '@/products/integracoes/cloud/src/lib/secretManager'
 
 export type OAuthTokenSet = {
   accessToken: string
@@ -54,14 +55,39 @@ function envName(provider: string, suffix: string) {
   return `INTEGRATIONS_OAUTH_${provider.toUpperCase().replace(/[^A-Z0-9]+/g, '_')}_${suffix}`
 }
 
-function getOAuthProviderConfig(provider: string) {
+type OAuthProviderConfig = {
+  clientId: string
+  clientSecret: string
+  authorizeUrl: string
+  tokenUrl: string
+  redirectUri: string
+  scopes: string
+}
+
+function normalizeProviderForSecret(provider: string) {
+  return provider.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '')
+}
+
+function providerSecretRef(provider: string, suffix: string) {
+  const config = getIntegrationsCloudConfig()
+  const providerPart = normalizeProviderForSecret(provider)
+  return `projects/${config.projectId}/secrets/${config.secrets.prefix}-oauth-${providerPart}-${suffix}`
+}
+
+async function envOrSecret(provider: string, envSuffix: string, secretSuffix: string): Promise<string> {
+  const envValue = process.env[envName(provider, envSuffix)]?.trim()
+  if (envValue) return envValue
+  return (await readSecret(providerSecretRef(provider, secretSuffix)))?.trim() || ''
+}
+
+async function getOAuthProviderConfig(provider: string): Promise<OAuthProviderConfig> {
   return {
-    clientId: process.env[envName(provider, 'CLIENT_ID')]?.trim() || '',
-    clientSecret: process.env[envName(provider, 'CLIENT_SECRET')]?.trim() || '',
-    authorizeUrl: process.env[envName(provider, 'AUTHORIZE_URL')]?.trim() || '',
-    tokenUrl: process.env[envName(provider, 'TOKEN_URL')]?.trim() || '',
+    clientId: await envOrSecret(provider, 'CLIENT_ID', 'client-id'),
+    clientSecret: await envOrSecret(provider, 'CLIENT_SECRET', 'client-secret'),
+    authorizeUrl: await envOrSecret(provider, 'AUTHORIZE_URL', 'authorize-url'),
+    tokenUrl: await envOrSecret(provider, 'TOKEN_URL', 'token-url'),
     redirectUri: process.env[envName(provider, 'REDIRECT_URI')]?.trim() || process.env.INTEGRATIONS_OAUTH_REDIRECT_URI?.trim() || '',
-    scopes: process.env[envName(provider, 'SCOPES')]?.trim() || '',
+    scopes: await envOrSecret(provider, 'SCOPES', 'scopes'),
   }
 }
 
@@ -95,12 +121,12 @@ export function parseOAuthState(state: string): OAuthStatePayload {
   return payload
 }
 
-export function buildOAuthAuthorizationUrl(provider: string, state: string): {
+export async function buildOAuthAuthorizationUrl(provider: string, state: string): Promise<{
   ready: boolean
   authorizationUrl?: string
   missing?: string[]
-} {
-  const config = getOAuthProviderConfig(provider)
+}> {
+  const config = await getOAuthProviderConfig(provider)
   const missing = [
     ['clientId', config.clientId],
     ['authorizeUrl', config.authorizeUrl],
@@ -134,7 +160,7 @@ function mapTokenResponse(payload: TokenResponse): OAuthTokenSet | null {
 }
 
 async function postTokenRequest(provider: string, body: URLSearchParams): Promise<OAuthTokenSet | null> {
-  const config = getOAuthProviderConfig(provider)
+  const config = await getOAuthProviderConfig(provider)
   if (!config.clientId || !config.clientSecret || !config.tokenUrl) {
     throw new Error(`OAuth ${provider} nao configurado.`)
   }
@@ -157,7 +183,7 @@ async function postTokenRequest(provider: string, body: URLSearchParams): Promis
 }
 
 export async function exchangeOAuthCode(provider: string, code: string, redirectUri?: string): Promise<OAuthTokenSet | null> {
-  const config = getOAuthProviderConfig(provider)
+  const config = await getOAuthProviderConfig(provider)
   const body = new URLSearchParams()
   body.set('grant_type', 'authorization_code')
   body.set('code', code)

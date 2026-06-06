@@ -5,6 +5,7 @@ import type {
 import { validateProviderCredentials } from '@/products/integracoes/cloud/src/lib/credentials'
 import { buildOAuthAuthorizationUrl, createOAuthState } from '@/products/integracoes/cloud/src/lib/oauth'
 import { writeConnectionCredentialsSecret } from '@/products/integracoes/cloud/src/lib/secretManager'
+import { getCloudConnector } from '@/products/integracoes/cloud/src/providers/providerRegistry'
 import {
   createIntegrationEvent,
   updateConnectionSecret,
@@ -65,6 +66,36 @@ export async function handleConnectionSetup(request: ControlApiRequest): Promise
         }
       }
 
+      const connector = getCloudConnector(provider.slug)
+      if (connector) {
+        try {
+          const test = await connector.testConnection({
+            tenantId: body.tenantId,
+            connectionId: body.connectionId,
+            provider: provider.slug,
+            credentials: validation.normalized || JSON.parse(validation.serialized),
+            selectedResources: body.resources || [],
+          })
+          if (test.status === 'error') {
+            return {
+              status: 400,
+              body: {
+                ok: false,
+                error: test.errorMessage || 'Credenciais recusadas pelo provider.',
+              },
+            }
+          }
+        } catch (error) {
+          return {
+            status: 400,
+            body: {
+              ok: false,
+              error: error instanceof Error ? error.message : 'Falha ao validar credenciais no provider.',
+            },
+          }
+        }
+      }
+
       const secret = await writeConnectionCredentialsSecret({
         tenantId: body.tenantId,
         connectionId: body.connectionId,
@@ -113,7 +144,7 @@ export async function handleConnectionSetup(request: ControlApiRequest): Promise
         connectionId: body.connectionId,
         provider: provider.slug,
       })
-      const authorization = buildOAuthAuthorizationUrl(provider.slug, state)
+      const authorization = await buildOAuthAuthorizationUrl(provider.slug, state)
       await updateConnectionStatus({
         tenantId: body.tenantId,
         connectionId: body.connectionId,
@@ -137,7 +168,7 @@ export async function handleConnectionSetup(request: ControlApiRequest): Promise
           authorizationUrl: authorization.authorizationUrl,
           message: authorization.ready
             ? 'Conexao aguardando autorizacao OAuth.'
-            : 'OAuth ainda precisa de variaveis de ambiente do provider.',
+            : 'OAuth ainda precisa de configuracao do provider no Secret Manager.',
         },
       }
     }
