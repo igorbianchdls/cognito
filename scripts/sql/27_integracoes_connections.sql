@@ -151,13 +151,49 @@ CREATE TABLE IF NOT EXISTS mcp_app.integration_provider_capabilities (
 CREATE INDEX IF NOT EXISTS integration_provider_capabilities_domain_idx
   ON mcp_app.integration_provider_capabilities (domain, status);
 
-WITH erp_resources AS (
+WITH conta_azul_resources AS (
+  SELECT jsonb_build_array(
+    jsonb_build_object('slug', 'clientes', 'name', 'Clientes', 'defaultEnabled', true),
+    jsonb_build_object('slug', 'fornecedores', 'name', 'Fornecedores', 'defaultEnabled', true),
+    jsonb_build_object('slug', 'produtos', 'name', 'Produtos', 'defaultEnabled', true),
+    jsonb_build_object('slug', 'contas_receber', 'name', 'Contas a receber', 'defaultEnabled', true),
+    jsonb_build_object('slug', 'contas_pagar', 'name', 'Contas a pagar', 'defaultEnabled', true),
+    jsonb_build_object('slug', 'categorias', 'name', 'Categorias', 'defaultEnabled', false),
+    jsonb_build_object('slug', 'centros_custo', 'name', 'Centros de custo', 'defaultEnabled', false)
+  ) AS resources_json
+),
+omie_resources AS (
   SELECT jsonb_build_array(
     jsonb_build_object('slug', 'clientes', 'name', 'Clientes', 'defaultEnabled', true),
     jsonb_build_object('slug', 'fornecedores', 'name', 'Fornecedores', 'defaultEnabled', true),
     jsonb_build_object('slug', 'produtos', 'name', 'Produtos', 'defaultEnabled', true),
     jsonb_build_object('slug', 'pedidos_venda', 'name', 'Pedidos de venda', 'defaultEnabled', true),
-    jsonb_build_object('slug', 'compras', 'name', 'Compras', 'defaultEnabled', true),
+    jsonb_build_object('slug', 'contas_receber', 'name', 'Contas a receber', 'defaultEnabled', true),
+    jsonb_build_object('slug', 'contas_pagar', 'name', 'Contas a pagar', 'defaultEnabled', true),
+    jsonb_build_object('slug', 'categorias', 'name', 'Categorias', 'defaultEnabled', false)
+  ) AS resources_json
+),
+bling_resources AS (
+  SELECT jsonb_build_array(
+    jsonb_build_object('slug', 'clientes', 'name', 'Clientes', 'defaultEnabled', true),
+    jsonb_build_object('slug', 'fornecedores', 'name', 'Fornecedores', 'defaultEnabled', true),
+    jsonb_build_object('slug', 'produtos', 'name', 'Produtos', 'defaultEnabled', true),
+    jsonb_build_object('slug', 'pedidos_venda', 'name', 'Pedidos de venda', 'defaultEnabled', true),
+    jsonb_build_object('slug', 'compras', 'name', 'Pedidos de compra', 'defaultEnabled', false),
+    jsonb_build_object('slug', 'contas_receber', 'name', 'Contas a receber', 'defaultEnabled', true),
+    jsonb_build_object('slug', 'contas_pagar', 'name', 'Contas a pagar', 'defaultEnabled', true),
+    jsonb_build_object('slug', 'notas_fiscais', 'name', 'Notas fiscais', 'defaultEnabled', false),
+    jsonb_build_object('slug', 'estoque', 'name', 'Estoque', 'defaultEnabled', false),
+    jsonb_build_object('slug', 'categorias', 'name', 'Categorias', 'defaultEnabled', false)
+  ) AS resources_json
+),
+erp_resources AS (
+  SELECT jsonb_build_array(
+    jsonb_build_object('slug', 'clientes', 'name', 'Clientes', 'defaultEnabled', true),
+    jsonb_build_object('slug', 'fornecedores', 'name', 'Fornecedores', 'defaultEnabled', true),
+    jsonb_build_object('slug', 'produtos', 'name', 'Produtos', 'defaultEnabled', true),
+    jsonb_build_object('slug', 'pedidos_venda', 'name', 'Pedidos de venda', 'defaultEnabled', true),
+    jsonb_build_object('slug', 'compras', 'name', 'Compras', 'defaultEnabled', false),
     jsonb_build_object('slug', 'contas_receber', 'name', 'Contas a receber', 'defaultEnabled', true),
     jsonb_build_object('slug', 'contas_pagar', 'name', 'Contas a pagar', 'defaultEnabled', true),
     jsonb_build_object('slug', 'notas_fiscais', 'name', 'Notas fiscais', 'defaultEnabled', false),
@@ -185,19 +221,19 @@ providers AS (
     'ERP financeiro, faturamento, vendas e conciliacao para pequenas e medias empresas.'::text AS description,
     'oauth2'::text AS auth_type,
     true AS supports_oauth_callback,
-    true AS supports_incremental_sync,
+    false AS supports_incremental_sync,
     jsonb_build_array('manual', 'scheduled') AS sync_modes_json,
-    erp_resources.resources_json,
+    conta_azul_resources.resources_json,
     jsonb_build_array('erp', 'financeiro', 'operacional', 'brasil', 'pme') AS tags_json,
     'available'::text AS status,
     jsonb_build_object('toolkitSlug', 'CONTA_AZUL') AS metadata_json
-  FROM erp_resources
+  FROM conta_azul_resources
   UNION ALL
-  SELECT 'erp', 'omie', 'Omie', 'ERP com financeiro, fiscal, pedidos, estoque e automacao operacional.', 'api_key', false, true, jsonb_build_array('manual', 'scheduled'), erp_resources.resources_json, jsonb_build_array('erp', 'financeiro', 'operacional', 'brasil', 'pme', 'fiscal'), 'available', jsonb_build_object('toolkitSlug', 'OMIE')
-  FROM erp_resources
+  SELECT 'erp', 'omie', 'Omie', 'ERP com financeiro, fiscal, pedidos, estoque e automacao operacional.', 'api_key', false, false, jsonb_build_array('manual', 'scheduled'), omie_resources.resources_json, jsonb_build_array('erp', 'financeiro', 'operacional', 'brasil', 'pme', 'fiscal'), 'available', jsonb_build_object('toolkitSlug', 'OMIE')
+  FROM omie_resources
   UNION ALL
-  SELECT 'erp', 'bling', 'Bling', 'ERP para ecommerce, estoque, pedidos, notas fiscais e marketplaces.', 'oauth2', true, true, jsonb_build_array('manual', 'scheduled'), erp_resources.resources_json, jsonb_build_array('erp', 'ecommerce', 'marketplace', 'brasil'), 'available', jsonb_build_object('toolkitSlug', 'BLING')
-  FROM erp_resources
+  SELECT 'erp', 'bling', 'Bling', 'ERP para ecommerce, estoque, pedidos, notas fiscais e marketplaces.', 'oauth2', true, false, jsonb_build_array('manual', 'scheduled'), bling_resources.resources_json, jsonb_build_array('erp', 'ecommerce', 'marketplace', 'brasil'), 'available', jsonb_build_object('toolkitSlug', 'BLING')
+  FROM bling_resources
   UNION ALL
   SELECT 'erp', 'tiny', 'Tiny', 'ERP para vendas online, catalogo, estoque, pedidos e emissao fiscal.', 'oauth2', true, true, jsonb_build_array('manual', 'scheduled'), erp_resources.resources_json, jsonb_build_array('erp', 'ecommerce', 'marketplace', 'brasil'), 'planned', jsonb_build_object('toolkitSlug', 'TINY')
   FROM erp_resources
