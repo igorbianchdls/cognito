@@ -7,6 +7,8 @@ import { executeConnectedCrmTool } from '@/products/mcp-apps/server/domain-adapt
 import { CONNECTED_CRM_RESOURCES } from '@/products/mcp-apps/server/domain-adapters/crm/crmTypes'
 import { executeConnectedErpTool } from '@/products/mcp-apps/server/domain-adapters/erp/connectedErpService'
 import { CONNECTED_ERP_RESOURCES } from '@/products/mcp-apps/server/domain-adapters/erp/erpTypes'
+import { executeEcommerceConnectedTool } from '@/products/mcp-apps/server/domain-adapters/ecommerce-connected/ecommerceConnectedService'
+import { ECOMMERCE_CONNECTED_RESOURCES } from '@/products/mcp-apps/server/domain-adapters/ecommerce-connected/ecommerceConnectedTypes'
 import { executePaidMediaTool } from '@/products/mcp-apps/server/domain-adapters/paid-media/paidMediaService'
 import { PAID_MEDIA_RESOURCES } from '@/products/mcp-apps/server/domain-adapters/paid-media/paidMediaTypes'
 import { executeSocialTool } from '@/products/mcp-apps/server/domain-adapters/social/socialService'
@@ -519,6 +521,11 @@ const ANALYTICS_SCHEMA = createCrudSchema(
   'Resource canonico de analytics/SEO conectado via /integracoes. Use propriedades, paginas, landing-pages, eventos, conversoes, canais, consultas, perfil-negocio ou reviews.',
 )
 
+const ECOMMERCE_CONNECTED_SCHEMA = createCrudSchema(
+  [...ECOMMERCE_CONNECTED_RESOURCES],
+  'Resource canonico de ecommerce conectado via /integracoes. Use lojas, pedidos, itens-pedido, produtos, clientes, pagamentos, frete, cupons ou assinaturas.',
+)
+
 const CRUD_OUTPUT_SCHEMA = {
   type: 'object',
   properties: {
@@ -845,6 +852,7 @@ export const MCP_APP_DOMAIN_TOOL_NAMES = {
   sqlExecution: 'sql_execution',
   financialStatement: 'financial_statement',
   ecommerce: 'ecommerce',
+  ecommerceConnected: 'ecommerce_connected',
   marketing: 'marketing',
   paidMedia: 'paid_media',
   social: 'social',
@@ -924,6 +932,18 @@ const ECOMMERCE_DOMAIN_TOOL_DEFINITION = {
     'Retorna metricas prontas de ecommerce sem SQL livre. Use para perguntas sobre pedidos, receita, ticket medio, canais, status, faturamento mensal, produtos e frete em Shopify, Shopee, Amazon e Mercado Livre.',
   inputSchema: ECOMMERCE_SCHEMA,
   outputSchema: METRICS_OUTPUT_SCHEMA,
+  securitySchemes: READ_SECURITY_SCHEMES,
+  annotations: READ_ONLY_ANNOTATIONS,
+  _meta: TOOL_META,
+} as const satisfies DomainToolDefinition
+
+const ECOMMERCE_CONNECTED_DOMAIN_TOOL_DEFINITION = {
+  name: MCP_APP_DOMAIN_TOOL_NAMES.ecommerceConnected,
+  title: 'Ecommerce connected',
+  description:
+    'Consulta ecommerce conectado pelo cliente em /integracoes usando contrato canonico Cognito e adapters por provider. Use para Shopify, Nuvemshop, Olist, WooCommerce, Eduzz, Hotmart, Kiwify e iFood. Acoes suportadas nesta fase: listar e ler.',
+  inputSchema: ECOMMERCE_CONNECTED_SCHEMA,
+  outputSchema: CONNECTED_DOMAIN_OUTPUT_SCHEMA,
   securitySchemes: READ_SECURITY_SCHEMES,
   annotations: READ_ONLY_ANNOTATIONS,
   _meta: TOOL_META,
@@ -1021,6 +1041,7 @@ export function listMcpAppDomainToolDefinitions() {
     CRM_DOMAIN_TOOL_DEFINITION,
     CONNECTED_CRM_DOMAIN_TOOL_DEFINITION,
     ECOMMERCE_DOMAIN_TOOL_DEFINITION,
+    ECOMMERCE_CONNECTED_DOMAIN_TOOL_DEFINITION,
     SQL_DOMAIN_TOOL_DEFINITION,
     FINANCIAL_STATEMENT_TOOL_DEFINITION,
     MARKETING_DOMAIN_TOOL_DEFINITION,
@@ -1038,6 +1059,7 @@ export const MCP_APP_DOMAIN_TOOL_DEFINITIONS = [
   CRM_DOMAIN_TOOL_DEFINITION,
   CONNECTED_CRM_DOMAIN_TOOL_DEFINITION,
   ECOMMERCE_DOMAIN_TOOL_DEFINITION,
+  ECOMMERCE_CONNECTED_DOMAIN_TOOL_DEFINITION,
   SQL_DOMAIN_TOOL_DEFINITION,
   FINANCIAL_STATEMENT_TOOL_DEFINITION,
   MARKETING_DOMAIN_TOOL_DEFINITION,
@@ -4227,6 +4249,8 @@ export async function callMcpAppDomainTool(
       return callConnectedCrm(args, context)
     case MCP_APP_DOMAIN_TOOL_NAMES.ecommerce:
       return callEcommerce(args, context)
+    case MCP_APP_DOMAIN_TOOL_NAMES.ecommerceConnected:
+      return callConnectedDomain(executeEcommerceConnectedTool, args, context)
     case MCP_APP_DOMAIN_TOOL_NAMES.sql:
       return callSqlExecution(args, context, MCP_APP_DOMAIN_TOOL_NAMES.sql)
     case MCP_APP_DOMAIN_TOOL_NAMES.sqlExecution:
