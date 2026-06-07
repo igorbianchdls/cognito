@@ -4961,64 +4961,6 @@ __export(index_exports, {
 module.exports = __toCommonJS(index_exports);
 var import_node_http = require("node:http");
 
-// src/products/integracoes/cloud/src/connectors/stubConnector.ts
-var STUB_RESULT = {
-  status: "success",
-  recordsIn: 0,
-  recordsUpdated: 0,
-  recordsFailed: 0,
-  metadata: {
-    mode: "stub"
-  }
-};
-function createStubConnector(params) {
-  return {
-    domain: params.domain,
-    provider: params.provider,
-    async testConnection() {
-      return STUB_RESULT;
-    },
-    async syncResource() {
-      return STUB_RESULT;
-    },
-    async refreshToken() {
-      return STUB_RESULT;
-    }
-  };
-}
-
-// src/products/integracoes/cloud/src/connectors/crm/hubspotConnector.ts
-var hubspotConnector = createStubConnector({
-  domain: "crm",
-  provider: "hubspot"
-});
-
-// src/products/integracoes/cloud/src/connectors/crm/pipedriveConnector.ts
-var pipedriveConnector = createStubConnector({
-  domain: "crm",
-  provider: "pipedrive"
-});
-
-// src/products/integracoes/cloud/src/connectors/crm/rdStationConnector.ts
-var rdStationConnector = createStubConnector({
-  domain: "crm",
-  provider: "rd_station_crm"
-});
-
-// src/products/integracoes/cloud/src/connectors/crm/salesforceConnector.ts
-var salesforceConnector = createStubConnector({
-  domain: "crm",
-  provider: "salesforce"
-});
-
-// src/products/integracoes/cloud/src/providers/crmProviderRegistry.ts
-var CRM_CONNECTORS = [
-  hubspotConnector,
-  pipedriveConnector,
-  salesforceConnector,
-  rdStationConnector
-];
-
 // src/products/integracoes/cloud/src/lib/rateLimit.ts
 var lastRequestByProvider = /* @__PURE__ */ new Map();
 function delay(ms) {
@@ -5179,14 +5121,11 @@ async function connectorJsonRequest(request) {
   });
 }
 
-// src/products/integracoes/cloud/src/connectors/erp/bling/blingClient.ts
-var DEFAULT_BASE_URL = "https://api.bling.com.br/Api/v3";
-var DEFAULT_MAX_PAGES = 100;
-var DEFAULT_RATE_LIMIT_MS = 350;
+// src/products/integracoes/cloud/src/connectors/crm/common/oauthRestCrmConnector.ts
 function isRecord(value) {
   return typeof value === "object" && value !== null && !Array.isArray(value);
 }
-function parseCredentials(value) {
+function asRecord(value) {
   if (isRecord(value)) return value;
   if (typeof value !== "string") return null;
   try {
@@ -5199,10 +5138,646 @@ function parseCredentials(value) {
 function nonEmptyString(value) {
   return typeof value === "string" && value.trim().length > 0;
 }
+function normalizeOAuthCredentials(provider, value) {
+  const credentials = asRecord(value);
+  const accessToken = credentials?.accessToken ?? credentials?.access_token;
+  if (!credentials || !nonEmptyString(accessToken)) {
+    throw new ProviderError({
+      provider,
+      kind: "auth",
+      message: `Credenciais ${provider} invalidas. OAuth precisa retornar accessToken.`,
+      retryable: false
+    });
+  }
+  return {
+    accessToken: accessToken.trim(),
+    refreshToken: nonEmptyString(credentials.refreshToken) ? credentials.refreshToken.trim() : nonEmptyString(credentials.refresh_token) ? credentials.refresh_token.trim() : void 0,
+    expiresAt: nonEmptyString(credentials.expiresAt) ? credentials.expiresAt.trim() : nonEmptyString(credentials.expires_at) ? credentials.expires_at.trim() : void 0,
+    tokenType: nonEmptyString(credentials.tokenType) ? credentials.tokenType.trim() : nonEmptyString(credentials.token_type) ? credentials.token_type.trim() : void 0,
+    scope: nonEmptyString(credentials.scope) ? credentials.scope.trim() : void 0,
+    baseUrl: nonEmptyString(credentials.baseUrl) ? credentials.baseUrl.trim() : nonEmptyString(credentials.base_url) ? credentials.base_url.trim() : void 0,
+    portalUrl: nonEmptyString(credentials.portalUrl) ? credentials.portalUrl.trim() : nonEmptyString(credentials.portal_url) ? credentials.portal_url.trim() : void 0,
+    domain: nonEmptyString(credentials.domain) ? credentials.domain.trim() : void 0
+  };
+}
+function defaultMapRow(provider, input) {
+  const externalId = input.row.id ?? input.row.ID ?? input.row.uuid ?? input.row.key ?? `${provider}_row_${input.index + 1}`;
+  return {
+    external_id: typeof externalId === "string" || typeof externalId === "number" ? String(externalId) : `${provider}_row_${input.index + 1}`,
+    crm_resource: input.resource,
+    crm_page: input.page,
+    raw: input.row
+  };
+}
+function extractItems(payload, itemKeys) {
+  if (Array.isArray(payload)) return payload.filter((item) => isRecord(item));
+  if (!isRecord(payload)) return [];
+  for (const key of itemKeys) {
+    const value = key.split(".").reduce((current, part) => {
+      if (!isRecord(current)) return void 0;
+      return current[part];
+    }, payload);
+    if (Array.isArray(value)) return value.filter((item) => isRecord(item));
+  }
+  const arrays = Object.values(payload).filter(Array.isArray);
+  if (arrays.length === 1) return arrays[0].filter((item) => isRecord(item));
+  return [];
+}
+function buildUrl(baseUrl, path, query) {
+  const url = new URL(`${baseUrl.replace(/\/+$/, "")}${path.startsWith("/") ? path : `/${path}`}`);
+  for (const [key, value] of Object.entries(query || {})) {
+    if (value !== void 0 && value !== null && value !== "") url.searchParams.set(key, String(value));
+  }
+  return url.toString();
+}
+function getBaseUrl(input, credentials) {
+  return (process.env[input.envBaseUrlKey] || credentials.baseUrl || credentials.portalUrl || (credentials.domain ? `https://${credentials.domain}` : "") || input.defaultBaseUrl).replace(/\/+$/, "");
+}
+function defaultNextCursor(payload, items, input) {
+  const paging = isRecord(payload.paging) ? payload.paging : void 0;
+  const next = isRecord(paging?.next) ? paging.next : void 0;
+  const after = next?.after;
+  if (typeof after === "string" || typeof after === "number") return { after };
+  const additionalData = isRecord(payload.additional_data) ? payload.additional_data : void 0;
+  const pagination = isRecord(additionalData?.pagination) ? additionalData.pagination : void 0;
+  if (pagination?.more_items_in_collection === true && (typeof pagination.next_start === "number" || typeof pagination.next_start === "string")) {
+    return { start: pagination.next_start };
+  }
+  const nextPage = payload.next_page ?? payload.nextPage;
+  if (typeof nextPage === "number" || typeof nextPage === "string") return { page: Number(nextPage) };
+  const total = Number(payload.total ?? payload.total_count ?? payload.totalCount ?? 0);
+  if (Number.isFinite(total) && total > input.page * input.pageSize) return { page: input.page + 1 };
+  if (items.length >= input.pageSize) return { page: input.page + 1 };
+  return void 0;
+}
+function createOAuthRestCrmConnector(input) {
+  const resourceMap = new Map(input.resources.map((resource) => [resource.resource, resource]));
+  const manifest = input.resources.map((resource) => ({
+    resource: resource.resource,
+    supportsIncremental: resource.supportsIncremental,
+    defaultPageSize: resource.defaultPageSize,
+    requiredFields: resource.requiredFields || ["accessToken"]
+  }));
+  async function requestPage(context, resource, pageInput) {
+    const credentials = normalizeOAuthCredentials(input.provider, context.credentials);
+    const method = resource.method || "GET";
+    const query = resource.buildQuery?.(pageInput) || {};
+    const body = method === "POST" ? resource.buildBody?.(pageInput) : void 0;
+    if (input.authPlacement === "query_auth") query.auth = credentials.accessToken;
+    const response = await connectorJsonRequest({
+      provider: input.provider,
+      resource: resource.resource,
+      url: buildUrl(getBaseUrl(input, credentials), resource.path, query),
+      method,
+      headers: input.authPlacement === "query_auth" ? void 0 : {
+        Authorization: `Bearer ${credentials.accessToken}`
+      },
+      body,
+      rateLimitMs: input.rateLimitMs
+    });
+    return response.payload;
+  }
+  return {
+    domain: "crm",
+    provider: input.provider,
+    resources: manifest,
+    validateCredentials(credentials) {
+      try {
+        normalizeOAuthCredentials(input.provider, credentials);
+        return { ok: true };
+      } catch (error) {
+        return { ok: false, error: error instanceof Error ? error.message : `Credenciais ${input.provider} invalidas.` };
+      }
+    },
+    async testConnection(context) {
+      const resource = resourceMap.get(input.testResource) || input.resources[0];
+      const payload = await requestPage(context, resource, { page: 1, pageSize: 1, cursor: void 0 });
+      const items = extractItems(payload, resource.itemKeys);
+      return {
+        status: "success",
+        recordsIn: 0,
+        recordsUpdated: 0,
+        recordsFailed: 0,
+        metadata: {
+          mode: `${input.provider}_api`,
+          testResource: resource.resource,
+          sampleCount: items.length
+        }
+      };
+    },
+    async syncResource(context, resourceName) {
+      const resource = resourceMap.get(resourceName);
+      if (!resource) {
+        return {
+          status: "warning",
+          recordsIn: 0,
+          recordsUpdated: 0,
+          recordsFailed: 0,
+          errorMessage: `Recurso ${input.provider} nao mapeado: ${resourceName}.`,
+          metadata: { supportedResources: input.resources.map((item) => item.resource) }
+        };
+      }
+      const pageSize = Number(process.env[`${input.provider.toUpperCase()}_PAGE_SIZE`] || resource.defaultPageSize);
+      const maxPages = Number(process.env[`${input.provider.toUpperCase()}_MAX_PAGES_PER_RESOURCE`] || 100);
+      const batches = [];
+      let page = Math.max(Number(context.cursor?.page || 1), 1);
+      let cursor = context.cursor;
+      let recordsIn = 0;
+      let truncated = false;
+      for (let loadedPages = 0; loadedPages < maxPages; loadedPages += 1) {
+        const payload = await requestPage(context, resource, { page, pageSize, cursor });
+        const payloadRecord = isRecord(payload) ? payload : { data: payload };
+        const rawItems = extractItems(payload, resource.itemKeys);
+        const items = resource.transformItems ? resource.transformItems(rawItems, payloadRecord) : rawItems;
+        const rows = items.map((row, index) => (input.mapRow || ((rowInput) => defaultMapRow(input.provider, rowInput)))({
+          resource: resource.resource,
+          row,
+          page,
+          index
+        }));
+        recordsIn += rows.length;
+        const nextCursor = (resource.getNextCursor || defaultNextCursor)(payloadRecord, items, { page, pageSize, cursor });
+        batches.push({
+          resource: resource.resource,
+          rows,
+          nextCursor
+        });
+        if (!nextCursor) break;
+        if (loadedPages + 1 >= maxPages) {
+          truncated = true;
+          break;
+        }
+        cursor = nextCursor;
+        page = Number(nextCursor.page || page + 1);
+      }
+      return {
+        status: truncated ? "warning" : "success",
+        recordsIn,
+        recordsUpdated: recordsIn,
+        recordsFailed: 0,
+        batches,
+        metadata: {
+          mode: `${input.provider}_api`,
+          resource: resource.resource,
+          truncated
+        }
+      };
+    },
+    async refreshToken() {
+      return {
+        status: "success",
+        recordsIn: 0,
+        recordsUpdated: 0,
+        recordsFailed: 0,
+        metadata: { mode: "oauth2", refreshed: false }
+      };
+    }
+  };
+}
+
+// src/products/integracoes/cloud/src/connectors/crm/bitrix24/bitrix24Resources.ts
+var DEFAULT_PAGE_SIZE = 50;
+function startQuery({ pageSize, cursor }) {
+  return {
+    start: typeof cursor?.start === "number" || typeof cursor?.start === "string" ? cursor.start : 0,
+    limit: pageSize
+  };
+}
+function bitrixNextCursor(payload) {
+  const next = payload.next;
+  if (typeof next === "number" || typeof next === "string") return { start: next };
+  return void 0;
+}
+var BITRIX24_RESOURCES = [
+  {
+    resource: "contas",
+    path: "/rest/crm.company.list.json",
+    itemKeys: ["result"],
+    defaultPageSize: DEFAULT_PAGE_SIZE,
+    supportsIncremental: true,
+    buildQuery: startQuery,
+    getNextCursor: bitrixNextCursor
+  },
+  {
+    resource: "contatos",
+    path: "/rest/crm.contact.list.json",
+    itemKeys: ["result"],
+    defaultPageSize: DEFAULT_PAGE_SIZE,
+    supportsIncremental: true,
+    buildQuery: startQuery,
+    getNextCursor: bitrixNextCursor
+  },
+  {
+    resource: "leads",
+    path: "/rest/crm.lead.list.json",
+    itemKeys: ["result"],
+    defaultPageSize: DEFAULT_PAGE_SIZE,
+    supportsIncremental: true,
+    buildQuery: startQuery,
+    getNextCursor: bitrixNextCursor
+  },
+  {
+    resource: "oportunidades",
+    path: "/rest/crm.deal.list.json",
+    itemKeys: ["result"],
+    defaultPageSize: DEFAULT_PAGE_SIZE,
+    supportsIncremental: true,
+    buildQuery: startQuery,
+    getNextCursor: bitrixNextCursor
+  },
+  {
+    resource: "atividades",
+    path: "/rest/crm.activity.list.json",
+    itemKeys: ["result"],
+    defaultPageSize: DEFAULT_PAGE_SIZE,
+    supportsIncremental: true,
+    buildQuery: startQuery,
+    getNextCursor: bitrixNextCursor
+  },
+  {
+    resource: "usuarios",
+    path: "/rest/user.get.json",
+    itemKeys: ["result"],
+    defaultPageSize: DEFAULT_PAGE_SIZE,
+    supportsIncremental: false,
+    buildQuery: startQuery,
+    getNextCursor: bitrixNextCursor
+  },
+  {
+    resource: "pipelines",
+    path: "/rest/crm.category.list.json",
+    itemKeys: ["result.categories", "result"],
+    defaultPageSize: DEFAULT_PAGE_SIZE,
+    supportsIncremental: false,
+    buildQuery: ({ pageSize, cursor }) => ({
+      entityTypeId: 2,
+      start: typeof cursor?.start === "number" || typeof cursor?.start === "string" ? cursor.start : 0,
+      limit: pageSize
+    }),
+    getNextCursor: bitrixNextCursor
+  },
+  {
+    resource: "fases_pipeline",
+    path: "/rest/crm.status.list.json",
+    itemKeys: ["result"],
+    defaultPageSize: DEFAULT_PAGE_SIZE,
+    supportsIncremental: false,
+    buildQuery: ({ pageSize, cursor }) => ({
+      "filter[ENTITY_ID]": "DEAL_STAGE",
+      start: typeof cursor?.start === "number" || typeof cursor?.start === "string" ? cursor.start : 0,
+      limit: pageSize
+    }),
+    getNextCursor: bitrixNextCursor
+  }
+];
+
+// src/products/integracoes/cloud/src/connectors/crm/bitrix24/bitrix24Connector.ts
+var bitrix24Connector = createOAuthRestCrmConnector({
+  provider: "bitrix24",
+  defaultBaseUrl: "https://example.bitrix24.com",
+  envBaseUrlKey: "BITRIX24_API_BASE_URL",
+  resources: BITRIX24_RESOURCES,
+  testResource: "contatos",
+  rateLimitMs: Number(process.env.INTEGRATIONS_RATE_LIMIT_BITRIX24_MS || 300),
+  authPlacement: "query_auth"
+});
+
+// src/products/integracoes/cloud/src/connectors/crm/hubspot/hubspotResources.ts
+var DEFAULT_PAGE_SIZE2 = 100;
+function objectQuery(objectType, properties) {
+  return ({ pageSize, cursor }) => ({
+    limit: pageSize,
+    after: typeof cursor?.after === "string" || typeof cursor?.after === "number" ? cursor.after : void 0,
+    archived: false,
+    properties: properties.join(","),
+    associations: objectType === "deals" ? "companies,contacts" : void 0
+  });
+}
+var HUBSPOT_RESOURCES = [
+  {
+    resource: "contas",
+    path: "/crm/v3/objects/companies",
+    itemKeys: ["results"],
+    defaultPageSize: DEFAULT_PAGE_SIZE2,
+    supportsIncremental: true,
+    buildQuery: objectQuery("companies", ["name", "domain", "industry", "phone", "city", "state", "country", "createdate", "hs_lastmodifieddate"])
+  },
+  {
+    resource: "contatos",
+    path: "/crm/v3/objects/contacts",
+    itemKeys: ["results"],
+    defaultPageSize: DEFAULT_PAGE_SIZE2,
+    supportsIncremental: true,
+    buildQuery: objectQuery("contacts", ["firstname", "lastname", "email", "phone", "company", "jobtitle", "createdate", "lastmodifieddate"])
+  },
+  {
+    resource: "leads",
+    path: "/crm/v3/objects/0-136",
+    itemKeys: ["results"],
+    defaultPageSize: DEFAULT_PAGE_SIZE2,
+    supportsIncremental: true,
+    buildQuery: objectQuery("0-136", ["hs_lead_name", "hs_pipeline", "hs_pipeline_stage", "hs_associated_contact_email", "hs_createdate", "hs_lastmodifieddate"])
+  },
+  {
+    resource: "oportunidades",
+    path: "/crm/v3/objects/deals",
+    itemKeys: ["results"],
+    defaultPageSize: DEFAULT_PAGE_SIZE2,
+    supportsIncremental: true,
+    buildQuery: objectQuery("deals", ["dealname", "amount", "dealstage", "pipeline", "closedate", "createdate", "hs_lastmodifieddate", "hubspot_owner_id"])
+  },
+  {
+    resource: "atividades",
+    path: "/crm/v3/objects/tasks",
+    itemKeys: ["results"],
+    defaultPageSize: DEFAULT_PAGE_SIZE2,
+    supportsIncremental: true,
+    buildQuery: objectQuery("tasks", ["hs_task_subject", "hs_task_status", "hs_task_priority", "hs_timestamp", "hs_createdate", "hs_lastmodifieddate", "hubspot_owner_id"])
+  },
+  {
+    resource: "usuarios",
+    path: "/crm/v3/owners",
+    itemKeys: ["results"],
+    defaultPageSize: DEFAULT_PAGE_SIZE2,
+    supportsIncremental: false,
+    buildQuery: ({ pageSize, cursor }) => ({
+      limit: pageSize,
+      after: typeof cursor?.after === "string" || typeof cursor?.after === "number" ? cursor.after : void 0,
+      archived: false
+    })
+  },
+  {
+    resource: "pipelines",
+    path: "/crm/v3/pipelines/deals",
+    itemKeys: ["results"],
+    defaultPageSize: DEFAULT_PAGE_SIZE2,
+    supportsIncremental: false,
+    buildQuery: () => ({}),
+    getNextCursor: () => void 0
+  },
+  {
+    resource: "fases_pipeline",
+    path: "/crm/v3/pipelines/deals",
+    itemKeys: ["results"],
+    defaultPageSize: DEFAULT_PAGE_SIZE2,
+    supportsIncremental: false,
+    buildQuery: () => ({}),
+    getNextCursor: () => void 0,
+    transformItems: (pipelines) => pipelines.flatMap((pipeline) => {
+      const stages = Array.isArray(pipeline.stages) ? pipeline.stages : [];
+      return stages.filter((stage) => Boolean(stage && typeof stage === "object" && !Array.isArray(stage))).map((stage) => ({ ...stage, pipelineId: pipeline.id, pipelineLabel: pipeline.label }));
+    })
+  }
+];
+
+// src/products/integracoes/cloud/src/connectors/crm/hubspot/hubspotConnector.ts
+var hubspotConnector = createOAuthRestCrmConnector({
+  provider: "hubspot",
+  defaultBaseUrl: "https://api.hubapi.com",
+  envBaseUrlKey: "HUBSPOT_API_BASE_URL",
+  resources: HUBSPOT_RESOURCES,
+  testResource: "contatos",
+  rateLimitMs: Number(process.env.INTEGRATIONS_RATE_LIMIT_HUBSPOT_MS || 150)
+});
+
+// src/products/integracoes/cloud/src/connectors/crm/pipedrive/pipedriveResources.ts
+var DEFAULT_PAGE_SIZE3 = 100;
+function startLimitQuery({ pageSize, cursor }) {
+  return {
+    start: typeof cursor?.start === "number" || typeof cursor?.start === "string" ? cursor.start : 0,
+    limit: pageSize
+  };
+}
+var PIPEDRIVE_RESOURCES = [
+  {
+    resource: "contas",
+    path: "/v1/organizations",
+    itemKeys: ["data"],
+    defaultPageSize: DEFAULT_PAGE_SIZE3,
+    supportsIncremental: true,
+    buildQuery: startLimitQuery
+  },
+  {
+    resource: "contatos",
+    path: "/v1/persons",
+    itemKeys: ["data"],
+    defaultPageSize: DEFAULT_PAGE_SIZE3,
+    supportsIncremental: true,
+    buildQuery: startLimitQuery
+  },
+  {
+    resource: "leads",
+    path: "/v1/leads",
+    itemKeys: ["data"],
+    defaultPageSize: DEFAULT_PAGE_SIZE3,
+    supportsIncremental: true,
+    buildQuery: startLimitQuery
+  },
+  {
+    resource: "oportunidades",
+    path: "/v1/deals",
+    itemKeys: ["data"],
+    defaultPageSize: DEFAULT_PAGE_SIZE3,
+    supportsIncremental: true,
+    buildQuery: startLimitQuery
+  },
+  {
+    resource: "atividades",
+    path: "/v1/activities",
+    itemKeys: ["data"],
+    defaultPageSize: DEFAULT_PAGE_SIZE3,
+    supportsIncremental: true,
+    buildQuery: startLimitQuery
+  },
+  {
+    resource: "usuarios",
+    path: "/v1/users",
+    itemKeys: ["data"],
+    defaultPageSize: DEFAULT_PAGE_SIZE3,
+    supportsIncremental: false,
+    buildQuery: startLimitQuery
+  },
+  {
+    resource: "pipelines",
+    path: "/v1/pipelines",
+    itemKeys: ["data"],
+    defaultPageSize: DEFAULT_PAGE_SIZE3,
+    supportsIncremental: false,
+    buildQuery: startLimitQuery
+  },
+  {
+    resource: "fases_pipeline",
+    path: "/v1/stages",
+    itemKeys: ["data"],
+    defaultPageSize: DEFAULT_PAGE_SIZE3,
+    supportsIncremental: false,
+    buildQuery: startLimitQuery
+  }
+];
+
+// src/products/integracoes/cloud/src/connectors/crm/pipedrive/pipedriveConnector.ts
+var pipedriveConnector = createOAuthRestCrmConnector({
+  provider: "pipedrive",
+  defaultBaseUrl: "https://api.pipedrive.com",
+  envBaseUrlKey: "PIPEDRIVE_API_BASE_URL",
+  resources: PIPEDRIVE_RESOURCES,
+  testResource: "contatos",
+  rateLimitMs: Number(process.env.INTEGRATIONS_RATE_LIMIT_PIPEDRIVE_MS || 250)
+});
+
+// src/products/integracoes/cloud/src/connectors/crm/rdStation/rdStationResources.ts
+var DEFAULT_PAGE_SIZE4 = 100;
+function pageQuery({ page, pageSize }) {
+  return {
+    page,
+    limit: pageSize
+  };
+}
+function envPath(resource, fallback) {
+  return process.env[`RD_STATION_CRM_RESOURCE_${resource.toUpperCase()}_PATH`]?.trim() || fallback;
+}
+var RD_STATION_RESOURCES = [
+  {
+    resource: "contas",
+    path: envPath("contas", "/api/v1/organizations"),
+    itemKeys: ["organizations", "data", "items"],
+    defaultPageSize: DEFAULT_PAGE_SIZE4,
+    supportsIncremental: true,
+    buildQuery: pageQuery
+  },
+  {
+    resource: "contatos",
+    path: envPath("contatos", "/api/v1/contacts"),
+    itemKeys: ["contacts", "data", "items"],
+    defaultPageSize: DEFAULT_PAGE_SIZE4,
+    supportsIncremental: true,
+    buildQuery: pageQuery
+  },
+  {
+    resource: "leads",
+    path: envPath("leads", "/api/v1/leads"),
+    itemKeys: ["leads", "data", "items"],
+    defaultPageSize: DEFAULT_PAGE_SIZE4,
+    supportsIncremental: true,
+    buildQuery: pageQuery
+  },
+  {
+    resource: "oportunidades",
+    path: envPath("oportunidades", "/api/v1/deals"),
+    itemKeys: ["deals", "data", "items"],
+    defaultPageSize: DEFAULT_PAGE_SIZE4,
+    supportsIncremental: true,
+    buildQuery: pageQuery
+  },
+  {
+    resource: "atividades",
+    path: envPath("atividades", "/api/v1/activities"),
+    itemKeys: ["activities", "tasks", "data", "items"],
+    defaultPageSize: DEFAULT_PAGE_SIZE4,
+    supportsIncremental: true,
+    buildQuery: pageQuery
+  },
+  {
+    resource: "usuarios",
+    path: envPath("usuarios", "/api/v1/users"),
+    itemKeys: ["users", "data", "items"],
+    defaultPageSize: DEFAULT_PAGE_SIZE4,
+    supportsIncremental: false,
+    buildQuery: pageQuery
+  },
+  {
+    resource: "pipelines",
+    path: envPath("pipelines", "/api/v1/deal_pipelines"),
+    itemKeys: ["deal_pipelines", "pipelines", "data", "items"],
+    defaultPageSize: DEFAULT_PAGE_SIZE4,
+    supportsIncremental: false,
+    buildQuery: pageQuery
+  },
+  {
+    resource: "fases_pipeline",
+    path: envPath("fases_pipeline", "/api/v1/deal_stages"),
+    itemKeys: ["deal_stages", "stages", "data", "items"],
+    defaultPageSize: DEFAULT_PAGE_SIZE4,
+    supportsIncremental: false,
+    buildQuery: pageQuery
+  }
+];
+
+// src/products/integracoes/cloud/src/connectors/crm/rdStation/rdStationConnector.ts
+var rdStationConnector = createOAuthRestCrmConnector({
+  provider: "rd_station_crm",
+  defaultBaseUrl: "https://crm.rdstation.com",
+  envBaseUrlKey: "RD_STATION_CRM_API_BASE_URL",
+  resources: RD_STATION_RESOURCES,
+  testResource: "contatos",
+  rateLimitMs: Number(process.env.INTEGRATIONS_RATE_LIMIT_RD_STATION_CRM_MS || 300)
+});
+
+// src/products/integracoes/cloud/src/connectors/stubConnector.ts
+var STUB_RESULT = {
+  status: "success",
+  recordsIn: 0,
+  recordsUpdated: 0,
+  recordsFailed: 0,
+  metadata: {
+    mode: "stub"
+  }
+};
+function createStubConnector(params) {
+  return {
+    domain: params.domain,
+    provider: params.provider,
+    async testConnection() {
+      return STUB_RESULT;
+    },
+    async syncResource() {
+      return STUB_RESULT;
+    },
+    async refreshToken() {
+      return STUB_RESULT;
+    }
+  };
+}
+
+// src/products/integracoes/cloud/src/connectors/crm/salesforceConnector.ts
+var salesforceConnector = createStubConnector({
+  domain: "crm",
+  provider: "salesforce"
+});
+
+// src/products/integracoes/cloud/src/providers/crmProviderRegistry.ts
+var CRM_CONNECTORS = [
+  bitrix24Connector,
+  hubspotConnector,
+  pipedriveConnector,
+  salesforceConnector,
+  rdStationConnector
+];
+
+// src/products/integracoes/cloud/src/connectors/erp/bling/blingClient.ts
+var DEFAULT_BASE_URL = "https://api.bling.com.br/Api/v3";
+var DEFAULT_MAX_PAGES = 100;
+var DEFAULT_RATE_LIMIT_MS = 350;
+function isRecord2(value) {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
+}
+function parseCredentials(value) {
+  if (isRecord2(value)) return value;
+  if (typeof value !== "string") return null;
+  try {
+    const parsed = JSON.parse(value);
+    return isRecord2(parsed) ? parsed : null;
+  } catch {
+    return null;
+  }
+}
+function nonEmptyString2(value) {
+  return typeof value === "string" && value.trim().length > 0;
+}
 function normalizeBlingCredentials(value) {
   const credentials = parseCredentials(value);
   const accessToken = credentials?.accessToken ?? credentials?.access_token;
-  if (!credentials || !nonEmptyString(accessToken)) {
+  if (!credentials || !nonEmptyString2(accessToken)) {
     throw new ProviderError({
       provider: "bling",
       kind: "auth",
@@ -5212,10 +5787,10 @@ function normalizeBlingCredentials(value) {
   }
   return {
     accessToken: accessToken.trim(),
-    refreshToken: nonEmptyString(credentials.refreshToken) ? credentials.refreshToken.trim() : nonEmptyString(credentials.refresh_token) ? credentials.refresh_token.trim() : void 0,
-    expiresAt: nonEmptyString(credentials.expiresAt) ? credentials.expiresAt.trim() : nonEmptyString(credentials.expires_at) ? credentials.expires_at.trim() : void 0,
-    tokenType: nonEmptyString(credentials.tokenType) ? credentials.tokenType.trim() : nonEmptyString(credentials.token_type) ? credentials.token_type.trim() : void 0,
-    scope: nonEmptyString(credentials.scope) ? credentials.scope.trim() : void 0
+    refreshToken: nonEmptyString2(credentials.refreshToken) ? credentials.refreshToken.trim() : nonEmptyString2(credentials.refresh_token) ? credentials.refresh_token.trim() : void 0,
+    expiresAt: nonEmptyString2(credentials.expiresAt) ? credentials.expiresAt.trim() : nonEmptyString2(credentials.expires_at) ? credentials.expires_at.trim() : void 0,
+    tokenType: nonEmptyString2(credentials.tokenType) ? credentials.tokenType.trim() : nonEmptyString2(credentials.token_type) ? credentials.token_type.trim() : void 0,
+    scope: nonEmptyString2(credentials.scope) ? credentials.scope.trim() : void 0
   };
 }
 function validateBlingConnectorCredentials(value) {
@@ -5226,11 +5801,11 @@ function validateBlingConnectorCredentials(value) {
     return { ok: false, error: error instanceof Error ? error.message : "Credenciais Bling invalidas." };
   }
 }
-function getBaseUrl() {
+function getBaseUrl2() {
   return (process.env.BLING_API_BASE_URL || DEFAULT_BASE_URL).replace(/\/+$/, "");
 }
-function buildUrl(config, query) {
-  const url = new URL(`${getBaseUrl()}${config.path.startsWith("/") ? config.path : `/${config.path}`}`);
+function buildUrl2(config, query) {
+  const url = new URL(`${getBaseUrl2()}${config.path.startsWith("/") ? config.path : `/${config.path}`}`);
   for (const [key, value] of Object.entries(query || {})) {
     if (value !== void 0 && value !== null && value !== "") url.searchParams.set(key, String(value));
   }
@@ -5241,26 +5816,26 @@ function asNumber(value) {
   return Number.isFinite(parsed) && parsed > 0 ? parsed : void 0;
 }
 function extractTotalPages(payload) {
-  if (!isRecord(payload)) return void 0;
+  if (!isRecord2(payload)) return void 0;
   return asNumber(payload.totalPaginas ?? payload.total_paginas ?? payload.totalPages ?? payload.pages);
 }
 function extractTotalRecords(payload) {
-  if (!isRecord(payload)) return void 0;
+  if (!isRecord2(payload)) return void 0;
   return asNumber(payload.totalRegistros ?? payload.total_registros ?? payload.totalItems ?? payload.total);
 }
-function extractItems(payload, itemKeys) {
+function extractItems2(payload, itemKeys) {
   if (Array.isArray(payload)) {
-    return payload.filter((item) => isRecord(item));
+    return payload.filter((item) => isRecord2(item));
   }
   for (const key of itemKeys) {
     const value = payload[key];
     if (Array.isArray(value)) {
-      return value.filter((item) => isRecord(item));
+      return value.filter((item) => isRecord2(item));
     }
   }
   const arrays = Object.values(payload).filter(Array.isArray);
   if (arrays.length === 1) {
-    return arrays[0].filter((item) => isRecord(item));
+    return arrays[0].filter((item) => isRecord2(item));
   }
   return [];
 }
@@ -5281,7 +5856,7 @@ var BlingClient = class {
     const response = await connectorJsonRequest({
       provider: "bling",
       resource: config.resource,
-      url: buildUrl(config, config.buildQuery?.(input)),
+      url: buildUrl2(config, config.buildQuery?.(input)),
       method: "GET",
       headers: {
         Authorization: `Bearer ${this.credentials.accessToken}`
@@ -5301,7 +5876,7 @@ var BlingClient = class {
         pageSize,
         cursor: input?.cursor
       });
-      const items = extractItems(payload, config.itemKeys);
+      const items = extractItems2(payload, config.itemKeys);
       const totalPages = extractTotalPages(payload);
       const totalRecords = extractTotalRecords(payload);
       loadedPages += 1;
@@ -5381,12 +5956,12 @@ function mapBlingRows(input) {
 }
 
 // src/products/integracoes/cloud/src/connectors/erp/bling/blingResources.ts
-var DEFAULT_PAGE_SIZE = 100;
+var DEFAULT_PAGE_SIZE5 = 100;
 function envResourcePath(resource, fallback) {
   const key = `BLING_RESOURCE_${resource.toUpperCase()}_PATH`;
   return process.env[key]?.trim() || fallback;
 }
-function pageQuery({ page, pageSize }) {
+function pageQuery2({ page, pageSize }) {
   return {
     pagina: page,
     limite: pageSize
@@ -5397,161 +5972,161 @@ var BLING_RESOURCE_CONFIGS = [
     resource: "clientes",
     path: envResourcePath("clientes", "/contatos"),
     itemKeys: ["data", "itens", "items", "contatos"],
-    defaultPageSize: DEFAULT_PAGE_SIZE,
+    defaultPageSize: DEFAULT_PAGE_SIZE5,
     supportsIncremental: false,
-    buildQuery: pageQuery
+    buildQuery: pageQuery2
   },
   {
     resource: "fornecedores",
     path: envResourcePath("fornecedores", "/contatos"),
     itemKeys: ["data", "itens", "items", "contatos"],
-    defaultPageSize: DEFAULT_PAGE_SIZE,
+    defaultPageSize: DEFAULT_PAGE_SIZE5,
     supportsIncremental: false,
-    buildQuery: pageQuery
+    buildQuery: pageQuery2
   },
   {
     resource: "produtos",
     path: envResourcePath("produtos", "/produtos"),
     itemKeys: ["data", "itens", "items", "produtos"],
-    defaultPageSize: DEFAULT_PAGE_SIZE,
+    defaultPageSize: DEFAULT_PAGE_SIZE5,
     supportsIncremental: false,
-    buildQuery: pageQuery
+    buildQuery: pageQuery2
   },
   {
     resource: "pedidos_venda",
     path: envResourcePath("pedidos_venda", "/pedidos/vendas"),
     itemKeys: ["data", "itens", "items", "pedidos"],
-    defaultPageSize: DEFAULT_PAGE_SIZE,
+    defaultPageSize: DEFAULT_PAGE_SIZE5,
     supportsIncremental: false,
-    buildQuery: pageQuery
+    buildQuery: pageQuery2
   },
   {
     resource: "compras",
     path: envResourcePath("compras", "/pedidos/compras"),
     itemKeys: ["data", "itens", "items", "pedidos"],
-    defaultPageSize: DEFAULT_PAGE_SIZE,
+    defaultPageSize: DEFAULT_PAGE_SIZE5,
     supportsIncremental: false,
-    buildQuery: pageQuery
+    buildQuery: pageQuery2
   },
   {
     resource: "contas_receber",
     path: envResourcePath("contas_receber", "/contas/receber"),
     itemKeys: ["data", "itens", "items", "contas"],
-    defaultPageSize: DEFAULT_PAGE_SIZE,
+    defaultPageSize: DEFAULT_PAGE_SIZE5,
     supportsIncremental: false,
-    buildQuery: pageQuery
+    buildQuery: pageQuery2
   },
   {
     resource: "contas_pagar",
     path: envResourcePath("contas_pagar", "/contas/pagar"),
     itemKeys: ["data", "itens", "items", "contas"],
-    defaultPageSize: DEFAULT_PAGE_SIZE,
+    defaultPageSize: DEFAULT_PAGE_SIZE5,
     supportsIncremental: false,
-    buildQuery: pageQuery
+    buildQuery: pageQuery2
   },
   {
     resource: "notas_fiscais",
     path: envResourcePath("notas_fiscais", "/nfe"),
     itemKeys: ["data", "itens", "items", "notas"],
-    defaultPageSize: DEFAULT_PAGE_SIZE,
+    defaultPageSize: DEFAULT_PAGE_SIZE5,
     supportsIncremental: false,
-    buildQuery: pageQuery
+    buildQuery: pageQuery2
   },
   {
     resource: "estoque",
     path: envResourcePath("estoque", "/estoques/saldos"),
     itemKeys: ["data", "itens", "items", "saldos"],
-    defaultPageSize: DEFAULT_PAGE_SIZE,
+    defaultPageSize: DEFAULT_PAGE_SIZE5,
     supportsIncremental: false,
-    buildQuery: pageQuery
+    buildQuery: pageQuery2
   },
   {
     resource: "categorias",
     path: envResourcePath("categorias", "/categorias/produtos"),
     itemKeys: ["data", "itens", "items", "categorias"],
-    defaultPageSize: DEFAULT_PAGE_SIZE,
+    defaultPageSize: DEFAULT_PAGE_SIZE5,
     supportsIncremental: false,
-    buildQuery: pageQuery
+    buildQuery: pageQuery2
   },
   {
     resource: "servicos",
     path: envResourcePath("servicos", "/servicos"),
     itemKeys: ["data", "itens", "items", "servicos"],
-    defaultPageSize: DEFAULT_PAGE_SIZE,
+    defaultPageSize: DEFAULT_PAGE_SIZE5,
     supportsIncremental: false,
-    buildQuery: pageQuery
+    buildQuery: pageQuery2
   },
   {
     resource: "notas_servico",
     path: envResourcePath("notas_servico", "/nfse"),
     itemKeys: ["data", "itens", "items", "notas", "nfse"],
-    defaultPageSize: DEFAULT_PAGE_SIZE,
+    defaultPageSize: DEFAULT_PAGE_SIZE5,
     supportsIncremental: false,
-    buildQuery: pageQuery
+    buildQuery: pageQuery2
   },
   {
     resource: "notas_consumidor",
     path: envResourcePath("notas_consumidor", "/nfce"),
     itemKeys: ["data", "itens", "items", "notas", "nfce"],
-    defaultPageSize: DEFAULT_PAGE_SIZE,
+    defaultPageSize: DEFAULT_PAGE_SIZE5,
     supportsIncremental: false,
-    buildQuery: pageQuery
+    buildQuery: pageQuery2
   },
   {
     resource: "formas_pagamento",
     path: envResourcePath("formas_pagamento", "/formas-pagamentos"),
     itemKeys: ["data", "itens", "items", "formas_pagamento", "formasPagamento"],
-    defaultPageSize: DEFAULT_PAGE_SIZE,
+    defaultPageSize: DEFAULT_PAGE_SIZE5,
     supportsIncremental: false,
-    buildQuery: pageQuery
+    buildQuery: pageQuery2
   },
   {
     resource: "vendedores",
     path: envResourcePath("vendedores", "/vendedores"),
     itemKeys: ["data", "itens", "items", "vendedores"],
-    defaultPageSize: DEFAULT_PAGE_SIZE,
+    defaultPageSize: DEFAULT_PAGE_SIZE5,
     supportsIncremental: false,
-    buildQuery: pageQuery
+    buildQuery: pageQuery2
   },
   {
     resource: "transportadoras",
     path: envResourcePath("transportadoras", "/transportadoras"),
     itemKeys: ["data", "itens", "items", "transportadoras"],
-    defaultPageSize: DEFAULT_PAGE_SIZE,
+    defaultPageSize: DEFAULT_PAGE_SIZE5,
     supportsIncremental: false,
-    buildQuery: pageQuery
+    buildQuery: pageQuery2
   },
   {
     resource: "canais_venda",
     path: envResourcePath("canais_venda", "/canais-venda"),
     itemKeys: ["data", "itens", "items", "canais_venda", "canaisVenda"],
-    defaultPageSize: DEFAULT_PAGE_SIZE,
+    defaultPageSize: DEFAULT_PAGE_SIZE5,
     supportsIncremental: false,
-    buildQuery: pageQuery
+    buildQuery: pageQuery2
   },
   {
     resource: "lojas",
     path: envResourcePath("lojas", "/lojas"),
     itemKeys: ["data", "itens", "items", "lojas"],
-    defaultPageSize: DEFAULT_PAGE_SIZE,
+    defaultPageSize: DEFAULT_PAGE_SIZE5,
     supportsIncremental: false,
-    buildQuery: pageQuery
+    buildQuery: pageQuery2
   },
   {
     resource: "categorias_receitas_despesas",
     path: envResourcePath("categorias_receitas_despesas", "/categorias/receitas-despesas"),
     itemKeys: ["data", "itens", "items", "categorias"],
-    defaultPageSize: DEFAULT_PAGE_SIZE,
+    defaultPageSize: DEFAULT_PAGE_SIZE5,
     supportsIncremental: false,
-    buildQuery: pageQuery
+    buildQuery: pageQuery2
   },
   {
     resource: "depositos",
     path: envResourcePath("depositos", "/depositos"),
     itemKeys: ["data", "itens", "items", "depositos"],
-    defaultPageSize: DEFAULT_PAGE_SIZE,
+    defaultPageSize: DEFAULT_PAGE_SIZE5,
     supportsIncremental: false,
-    buildQuery: pageQuery
+    buildQuery: pageQuery2
   }
 ];
 var BLING_RESOURCE_MAP = new Map(BLING_RESOURCE_CONFIGS.map((config) => [config.resource, config]));
@@ -5667,26 +6242,26 @@ var blingConnector = {
 // src/products/integracoes/cloud/src/connectors/erp/contaAzul/contaAzulClient.ts
 var DEFAULT_BASE_URL2 = "https://api-v2.contaazul.com";
 var DEFAULT_MAX_PAGES2 = 100;
-function isRecord2(value) {
+function isRecord3(value) {
   return typeof value === "object" && value !== null && !Array.isArray(value);
 }
 function parseCredentials2(value) {
-  if (isRecord2(value)) return value;
+  if (isRecord3(value)) return value;
   if (typeof value !== "string") return null;
   try {
     const parsed = JSON.parse(value);
-    return isRecord2(parsed) ? parsed : null;
+    return isRecord3(parsed) ? parsed : null;
   } catch {
     return null;
   }
 }
-function nonEmptyString2(value) {
+function nonEmptyString3(value) {
   return typeof value === "string" && value.trim().length > 0;
 }
 function normalizeContaAzulCredentials(value) {
   const credentials = parseCredentials2(value);
   const accessToken = credentials?.accessToken ?? credentials?.access_token;
-  if (!credentials || !nonEmptyString2(accessToken)) {
+  if (!credentials || !nonEmptyString3(accessToken)) {
     throw new ProviderError({
       provider: "conta_azul",
       kind: "auth",
@@ -5696,10 +6271,10 @@ function normalizeContaAzulCredentials(value) {
   }
   return {
     accessToken: accessToken.trim(),
-    refreshToken: nonEmptyString2(credentials.refreshToken) ? credentials.refreshToken.trim() : nonEmptyString2(credentials.refresh_token) ? credentials.refresh_token.trim() : void 0,
-    expiresAt: nonEmptyString2(credentials.expiresAt) ? credentials.expiresAt.trim() : nonEmptyString2(credentials.expires_at) ? credentials.expires_at.trim() : void 0,
-    tokenType: nonEmptyString2(credentials.tokenType) ? credentials.tokenType.trim() : nonEmptyString2(credentials.token_type) ? credentials.token_type.trim() : void 0,
-    scope: nonEmptyString2(credentials.scope) ? credentials.scope.trim() : void 0
+    refreshToken: nonEmptyString3(credentials.refreshToken) ? credentials.refreshToken.trim() : nonEmptyString3(credentials.refresh_token) ? credentials.refresh_token.trim() : void 0,
+    expiresAt: nonEmptyString3(credentials.expiresAt) ? credentials.expiresAt.trim() : nonEmptyString3(credentials.expires_at) ? credentials.expires_at.trim() : void 0,
+    tokenType: nonEmptyString3(credentials.tokenType) ? credentials.tokenType.trim() : nonEmptyString3(credentials.token_type) ? credentials.token_type.trim() : void 0,
+    scope: nonEmptyString3(credentials.scope) ? credentials.scope.trim() : void 0
   };
 }
 function validateContaAzulConnectorCredentials(value) {
@@ -5710,11 +6285,11 @@ function validateContaAzulConnectorCredentials(value) {
     return { ok: false, error: error instanceof Error ? error.message : "Credenciais Conta Azul invalidas." };
   }
 }
-function getBaseUrl2() {
+function getBaseUrl3() {
   return (process.env.CONTA_AZUL_API_BASE_URL || DEFAULT_BASE_URL2).replace(/\/+$/, "");
 }
-function buildUrl2(config, query) {
-  const url = new URL(`${getBaseUrl2()}${config.path.startsWith("/") ? config.path : `/${config.path}`}`);
+function buildUrl3(config, query) {
+  const url = new URL(`${getBaseUrl3()}${config.path.startsWith("/") ? config.path : `/${config.path}`}`);
   for (const [key, value] of Object.entries(query || {})) {
     if (value !== void 0 && value !== null && value !== "") url.searchParams.set(key, String(value));
   }
@@ -5725,30 +6300,30 @@ function asNumber2(value) {
   return Number.isFinite(parsed) && parsed > 0 ? parsed : void 0;
 }
 function extractTotalPages2(payload) {
-  if (!isRecord2(payload)) return void 0;
+  if (!isRecord3(payload)) return void 0;
   return asNumber2(payload.total_paginas ?? payload.totalPages ?? payload.total_de_paginas ?? payload.pages);
 }
 function extractTotalRecords2(payload) {
-  if (!isRecord2(payload)) return void 0;
+  if (!isRecord3(payload)) return void 0;
   return asNumber2(payload.total_itens ?? payload.totalItems ?? payload.total ?? payload.total_de_registros);
 }
 function getMaxPages2() {
   const value = Number(process.env.CONTA_AZUL_MAX_PAGES_PER_RESOURCE || DEFAULT_MAX_PAGES2);
   return Number.isFinite(value) && value > 0 ? Math.floor(value) : DEFAULT_MAX_PAGES2;
 }
-function extractItems2(payload, itemKeys) {
+function extractItems3(payload, itemKeys) {
   if (Array.isArray(payload)) {
-    return payload.filter((item) => isRecord2(item));
+    return payload.filter((item) => isRecord3(item));
   }
   for (const key of itemKeys) {
     const value = payload[key];
     if (Array.isArray(value)) {
-      return value.filter((item) => isRecord2(item));
+      return value.filter((item) => isRecord3(item));
     }
   }
   const arrays = Object.values(payload).filter(Array.isArray);
   if (arrays.length === 1) {
-    return arrays[0].filter((item) => isRecord2(item));
+    return arrays[0].filter((item) => isRecord3(item));
   }
   return [];
 }
@@ -5764,7 +6339,7 @@ var ContaAzulClient = class {
     const response = await connectorJsonRequest({
       provider: "conta_azul",
       resource: config.resource,
-      url: buildUrl2(config, query),
+      url: buildUrl3(config, query),
       method,
       headers: {
         Authorization: `Bearer ${this.credentials.accessToken}`
@@ -5784,7 +6359,7 @@ var ContaAzulClient = class {
         pageSize,
         cursor: input?.cursor
       });
-      const items = extractItems2(payload, config.itemKeys);
+      const items = extractItems3(payload, config.itemKeys);
       const totalPages = extractTotalPages2(payload);
       const totalRecords = extractTotalRecords2(payload);
       loadedPages += 1;
@@ -5868,12 +6443,12 @@ function mapContaAzulRows(input) {
 }
 
 // src/products/integracoes/cloud/src/connectors/erp/contaAzul/contaAzulResources.ts
-var DEFAULT_PAGE_SIZE2 = 50;
+var DEFAULT_PAGE_SIZE6 = 50;
 function envResourcePath2(resource, fallback) {
   const key = `CONTA_AZUL_RESOURCE_${resource.toUpperCase()}_PATH`;
   return process.env[key]?.trim() || fallback;
 }
-function pageQuery2({ page, pageSize }) {
+function pageQuery3({ page, pageSize }) {
   return {
     pagina: page,
     tamanho_pagina: pageSize
@@ -5890,48 +6465,48 @@ var CONTA_AZUL_RESOURCE_CONFIGS = [
     resource: "clientes",
     path: envResourcePath2("clientes", "/v1/pessoas"),
     itemKeys: ["itens", "items", "data", "content", "pessoas"],
-    defaultPageSize: DEFAULT_PAGE_SIZE2,
+    defaultPageSize: DEFAULT_PAGE_SIZE6,
     supportsIncremental: false,
-    buildQuery: pageQuery2
+    buildQuery: pageQuery3
   },
   {
     resource: "fornecedores",
     path: envResourcePath2("fornecedores", "/v1/pessoas"),
     itemKeys: ["itens", "items", "data", "content", "pessoas"],
-    defaultPageSize: DEFAULT_PAGE_SIZE2,
+    defaultPageSize: DEFAULT_PAGE_SIZE6,
     supportsIncremental: false,
-    buildQuery: pageQuery2
+    buildQuery: pageQuery3
   },
   {
     resource: "produtos",
     path: envResourcePath2("produtos", "/v1/produtos"),
     itemKeys: ["itens", "items", "data", "content", "produtos"],
-    defaultPageSize: DEFAULT_PAGE_SIZE2,
+    defaultPageSize: DEFAULT_PAGE_SIZE6,
     supportsIncremental: false,
-    buildQuery: pageQuery2
+    buildQuery: pageQuery3
   },
   {
     resource: "categorias",
     path: envResourcePath2("categorias", "/v1/categorias"),
     itemKeys: ["itens", "items", "data", "content", "categorias"],
-    defaultPageSize: DEFAULT_PAGE_SIZE2,
+    defaultPageSize: DEFAULT_PAGE_SIZE6,
     supportsIncremental: false,
-    buildQuery: pageQuery2
+    buildQuery: pageQuery3
   },
   {
     resource: "centros_custo",
     path: envResourcePath2("centros_custo", "/v1/centro-de-custo"),
     itemKeys: ["itens", "items", "data", "content", "centros_custo"],
-    defaultPageSize: DEFAULT_PAGE_SIZE2,
+    defaultPageSize: DEFAULT_PAGE_SIZE6,
     supportsIncremental: false,
-    buildQuery: pageQuery2
+    buildQuery: pageQuery3
   },
   {
     resource: "contas_receber",
     path: envResourcePath2("contas_receber", "/v1/financeiro/eventos-financeiros/contas-a-receber/buscar"),
     method: "POST",
     itemKeys: ["itens", "items", "data", "content", "eventos", "parcelas"],
-    defaultPageSize: DEFAULT_PAGE_SIZE2,
+    defaultPageSize: DEFAULT_PAGE_SIZE6,
     supportsIncremental: false,
     buildBody: payableReceivableBody
   },
@@ -5940,7 +6515,7 @@ var CONTA_AZUL_RESOURCE_CONFIGS = [
     path: envResourcePath2("contas_pagar", "/v1/financeiro/eventos-financeiros/contas-a-pagar/buscar"),
     method: "POST",
     itemKeys: ["itens", "items", "data", "content", "eventos", "parcelas"],
-    defaultPageSize: DEFAULT_PAGE_SIZE2,
+    defaultPageSize: DEFAULT_PAGE_SIZE6,
     supportsIncremental: false,
     buildBody: payableReceivableBody
   },
@@ -5948,81 +6523,81 @@ var CONTA_AZUL_RESOURCE_CONFIGS = [
     resource: "servicos",
     path: envResourcePath2("servicos", "/v1/servicos"),
     itemKeys: ["itens", "items", "data", "content", "servicos", "services"],
-    defaultPageSize: DEFAULT_PAGE_SIZE2,
+    defaultPageSize: DEFAULT_PAGE_SIZE6,
     supportsIncremental: false,
-    buildQuery: pageQuery2
+    buildQuery: pageQuery3
   },
   {
     resource: "vendas",
     path: envResourcePath2("vendas", "/v1/vendas"),
     itemKeys: ["itens", "items", "data", "content", "vendas", "sales"],
-    defaultPageSize: DEFAULT_PAGE_SIZE2,
+    defaultPageSize: DEFAULT_PAGE_SIZE6,
     supportsIncremental: false,
-    buildQuery: pageQuery2
+    buildQuery: pageQuery3
   },
   {
     resource: "itens_venda",
     path: envResourcePath2("itens_venda", "/v1/vendas/itens"),
     itemKeys: ["itens", "items", "data", "content", "itens_venda", "saleItems"],
-    defaultPageSize: DEFAULT_PAGE_SIZE2,
+    defaultPageSize: DEFAULT_PAGE_SIZE6,
     supportsIncremental: false,
-    buildQuery: pageQuery2
+    buildQuery: pageQuery3
   },
   {
     resource: "parcelas_venda",
     path: envResourcePath2("parcelas_venda", "/v1/vendas/parcelas"),
     itemKeys: ["itens", "items", "data", "content", "parcelas_venda", "installments"],
-    defaultPageSize: DEFAULT_PAGE_SIZE2,
+    defaultPageSize: DEFAULT_PAGE_SIZE6,
     supportsIncremental: false,
-    buildQuery: pageQuery2
+    buildQuery: pageQuery3
   },
   {
     resource: "contratos",
     path: envResourcePath2("contratos", "/v1/contratos"),
     itemKeys: ["itens", "items", "data", "content", "contratos", "contracts"],
-    defaultPageSize: DEFAULT_PAGE_SIZE2,
+    defaultPageSize: DEFAULT_PAGE_SIZE6,
     supportsIncremental: false,
-    buildQuery: pageQuery2
+    buildQuery: pageQuery3
   },
   {
     resource: "contas_bancarias",
     path: envResourcePath2("contas_bancarias", "/v1/contas-bancarias"),
     itemKeys: ["itens", "items", "data", "content", "contas_bancarias", "bankAccounts"],
-    defaultPageSize: DEFAULT_PAGE_SIZE2,
+    defaultPageSize: DEFAULT_PAGE_SIZE6,
     supportsIncremental: false,
-    buildQuery: pageQuery2
+    buildQuery: pageQuery3
   },
   {
     resource: "vendedores",
     path: envResourcePath2("vendedores", "/v1/vendedores"),
     itemKeys: ["itens", "items", "data", "content", "vendedores", "sellers"],
-    defaultPageSize: DEFAULT_PAGE_SIZE2,
+    defaultPageSize: DEFAULT_PAGE_SIZE6,
     supportsIncremental: false,
-    buildQuery: pageQuery2
+    buildQuery: pageQuery3
   },
   {
     resource: "notas_fiscais",
     path: envResourcePath2("notas_fiscais", "/v1/notas-fiscais"),
     itemKeys: ["itens", "items", "data", "content", "notas_fiscais", "invoices"],
-    defaultPageSize: DEFAULT_PAGE_SIZE2,
+    defaultPageSize: DEFAULT_PAGE_SIZE6,
     supportsIncremental: false,
-    buildQuery: pageQuery2
+    buildQuery: pageQuery3
   },
   {
     resource: "estoque",
     path: envResourcePath2("estoque", "/v1/estoque"),
     itemKeys: ["itens", "items", "data", "content", "estoque", "saldos", "stock"],
-    defaultPageSize: DEFAULT_PAGE_SIZE2,
+    defaultPageSize: DEFAULT_PAGE_SIZE6,
     supportsIncremental: false,
-    buildQuery: pageQuery2
+    buildQuery: pageQuery3
   },
   {
     resource: "movimentacoes_estoque",
     path: envResourcePath2("movimentacoes_estoque", "/v1/estoque/movimentacoes"),
     itemKeys: ["itens", "items", "data", "content", "movimentacoes_estoque", "movements"],
-    defaultPageSize: DEFAULT_PAGE_SIZE2,
+    defaultPageSize: DEFAULT_PAGE_SIZE6,
     supportsIncremental: false,
-    buildQuery: pageQuery2
+    buildQuery: pageQuery3
   }
 ];
 var CONTA_AZUL_RESOURCE_MAP = new Map(CONTA_AZUL_RESOURCE_CONFIGS.map((config) => [config.resource, config]));
@@ -6138,25 +6713,25 @@ var contaAzulConnector = {
 // src/products/integracoes/cloud/src/connectors/erp/omie/omieClient.ts
 var DEFAULT_BASE_URL3 = "https://app.omie.com.br/api/v1";
 var DEFAULT_MAX_PAGES3 = 100;
-function isRecord3(value) {
+function isRecord4(value) {
   return typeof value === "object" && value !== null && !Array.isArray(value);
 }
 function parseCredentials3(value) {
-  if (isRecord3(value)) return value;
+  if (isRecord4(value)) return value;
   if (typeof value !== "string") return null;
   try {
     const parsed = JSON.parse(value);
-    return isRecord3(parsed) ? parsed : null;
+    return isRecord4(parsed) ? parsed : null;
   } catch {
     return null;
   }
 }
-function nonEmptyString3(value) {
+function nonEmptyString4(value) {
   return typeof value === "string" && value.trim().length > 0;
 }
 function normalizeOmieCredentials(value) {
   const credentials = parseCredentials3(value);
-  if (!credentials || !nonEmptyString3(credentials.app_key) || !nonEmptyString3(credentials.app_secret)) {
+  if (!credentials || !nonEmptyString4(credentials.app_key) || !nonEmptyString4(credentials.app_secret)) {
     throw new ProviderError({
       provider: "omie",
       kind: "auth",
@@ -6177,11 +6752,11 @@ function validateOmieConnectorCredentials(value) {
     return { ok: false, error: error instanceof Error ? error.message : "Credenciais Omie invalidas." };
   }
 }
-function getBaseUrl3() {
+function getBaseUrl4() {
   return (process.env.OMIE_API_BASE_URL || DEFAULT_BASE_URL3).replace(/\/+$/, "");
 }
-function buildUrl3(endpoint) {
-  return `${getBaseUrl3()}${endpoint.startsWith("/") ? endpoint : `/${endpoint}`}`;
+function buildUrl4(endpoint) {
+  return `${getBaseUrl4()}${endpoint.startsWith("/") ? endpoint : `/${endpoint}`}`;
 }
 function asNumber3(value) {
   const parsed = Number(value);
@@ -6197,21 +6772,21 @@ function getMaxPages3() {
   const value = Number(process.env.OMIE_MAX_PAGES_PER_RESOURCE || DEFAULT_MAX_PAGES3);
   return Number.isFinite(value) && value > 0 ? Math.floor(value) : DEFAULT_MAX_PAGES3;
 }
-function extractItems3(payload, itemKeys) {
+function extractItems4(payload, itemKeys) {
   for (const key of itemKeys) {
     const value = payload[key];
     if (Array.isArray(value)) {
-      return value.filter((item) => isRecord3(item));
+      return value.filter((item) => isRecord4(item));
     }
   }
   const arrays = Object.values(payload).filter(Array.isArray);
   if (arrays.length === 1) {
-    return arrays[0].filter((item) => isRecord3(item));
+    return arrays[0].filter((item) => isRecord4(item));
   }
   return [];
 }
 function assertNoOmieFault(payload, resource) {
-  if (!isRecord3(payload)) return;
+  if (!isRecord4(payload)) return;
   const fault = payload.faultstring ?? payload.faultcode ?? payload.error ?? payload.message;
   if (!fault) return;
   throw new ProviderError({
@@ -6238,7 +6813,7 @@ var OmieClient = class {
     const response = await connectorJsonRequest({
       provider: "omie",
       resource: config.resource,
-      url: buildUrl3(config.endpoint),
+      url: buildUrl4(config.endpoint),
       method: "POST",
       body
     });
@@ -6256,7 +6831,7 @@ var OmieClient = class {
         pageSize,
         cursor: input?.cursor
       }));
-      const items = extractItems3(payload, config.itemKeys);
+      const items = extractItems4(payload, config.itemKeys);
       const totalPages = getTotalPages(payload);
       const totalRecords = getTotalRecords(payload);
       loadedPages += 1;
@@ -6352,7 +6927,7 @@ function mapOmieRows(input) {
 }
 
 // src/products/integracoes/cloud/src/connectors/erp/omie/omieResources.ts
-var DEFAULT_PAGE_SIZE3 = 50;
+var DEFAULT_PAGE_SIZE7 = 50;
 function formatOmieDate(value) {
   const day = String(value.getDate()).padStart(2, "0");
   const month = String(value.getMonth() + 1).padStart(2, "0");
@@ -6384,7 +6959,7 @@ var OMIE_RESOURCE_CONFIGS = [
     endpoint: "/geral/clientes/",
     call: "ListarClientes",
     itemKeys: ["clientes_cadastro"],
-    defaultPageSize: DEFAULT_PAGE_SIZE3,
+    defaultPageSize: DEFAULT_PAGE_SIZE7,
     supportsIncremental: false,
     buildParams: defaultParams
   },
@@ -6393,7 +6968,7 @@ var OMIE_RESOURCE_CONFIGS = [
     endpoint: "/geral/clientes/",
     call: "ListarClientes",
     itemKeys: ["clientes_cadastro"],
-    defaultPageSize: DEFAULT_PAGE_SIZE3,
+    defaultPageSize: DEFAULT_PAGE_SIZE7,
     supportsIncremental: false,
     buildParams: defaultParams
   },
@@ -6402,7 +6977,7 @@ var OMIE_RESOURCE_CONFIGS = [
     endpoint: "/geral/produtos/",
     call: "ListarProdutos",
     itemKeys: ["produto_servico_cadastro", "produtos_servico_cadastro"],
-    defaultPageSize: DEFAULT_PAGE_SIZE3,
+    defaultPageSize: DEFAULT_PAGE_SIZE7,
     supportsIncremental: false,
     buildParams: defaultParams
   },
@@ -6411,7 +6986,7 @@ var OMIE_RESOURCE_CONFIGS = [
     endpoint: "/produtos/pedido/",
     call: "ListarPedidos",
     itemKeys: ["pedido_venda_produto", "pedidos_venda_produto"],
-    defaultPageSize: DEFAULT_PAGE_SIZE3,
+    defaultPageSize: DEFAULT_PAGE_SIZE7,
     supportsIncremental: false,
     buildParams: defaultParams
   },
@@ -6420,7 +6995,7 @@ var OMIE_RESOURCE_CONFIGS = [
     endpoint: "/financas/contareceber/",
     call: "ListarContasReceber",
     itemKeys: ["conta_receber_cadastro", "contas_receber_cadastro"],
-    defaultPageSize: DEFAULT_PAGE_SIZE3,
+    defaultPageSize: DEFAULT_PAGE_SIZE7,
     supportsIncremental: false,
     buildParams: defaultParams
   },
@@ -6429,7 +7004,7 @@ var OMIE_RESOURCE_CONFIGS = [
     endpoint: "/financas/contapagar/",
     call: "ListarContasPagar",
     itemKeys: ["conta_pagar_cadastro", "contas_pagar_cadastro"],
-    defaultPageSize: DEFAULT_PAGE_SIZE3,
+    defaultPageSize: DEFAULT_PAGE_SIZE7,
     supportsIncremental: false,
     buildParams: defaultParams
   },
@@ -6438,7 +7013,7 @@ var OMIE_RESOURCE_CONFIGS = [
     endpoint: "/geral/categorias/",
     call: "ListarCategorias",
     itemKeys: ["categoria_cadastro", "categorias_cadastro"],
-    defaultPageSize: DEFAULT_PAGE_SIZE3,
+    defaultPageSize: DEFAULT_PAGE_SIZE7,
     supportsIncremental: false,
     buildParams: defaultParams
   },
@@ -6447,7 +7022,7 @@ var OMIE_RESOURCE_CONFIGS = [
     endpoint: "/produtos/pedidocompra/",
     call: "PesquisarPedCompra",
     itemKeys: ["pedidos_pesquisa", "pedido_pesquisa", "pedidos_compra", "pedidos"],
-    defaultPageSize: DEFAULT_PAGE_SIZE3,
+    defaultPageSize: DEFAULT_PAGE_SIZE7,
     supportsIncremental: false,
     buildParams: ({ page, pageSize }) => ({
       nPagina: page,
@@ -6470,7 +7045,7 @@ var OMIE_RESOURCE_CONFIGS = [
     endpoint: "/produtos/nfconsultar/",
     call: "ListarNF",
     itemKeys: ["nfCadastro", "notas_fiscais", "notas"],
-    defaultPageSize: DEFAULT_PAGE_SIZE3,
+    defaultPageSize: DEFAULT_PAGE_SIZE7,
     supportsIncremental: false,
     buildParams: ({ page, pageSize }) => ({
       pagina: page,
@@ -6485,7 +7060,7 @@ var OMIE_RESOURCE_CONFIGS = [
     endpoint: "/servicos/nfse/",
     call: "ListarNFSEs",
     itemKeys: ["nfseEncontradas", "notas_servico", "notas"],
-    defaultPageSize: DEFAULT_PAGE_SIZE3,
+    defaultPageSize: DEFAULT_PAGE_SIZE7,
     supportsIncremental: false,
     buildParams: omieNParams
   },
@@ -6494,7 +7069,7 @@ var OMIE_RESOURCE_CONFIGS = [
     endpoint: "/estoque/consulta/",
     call: "ListarPosEstoque",
     itemKeys: ["produtos", "saldos", "estoques"],
-    defaultPageSize: DEFAULT_PAGE_SIZE3,
+    defaultPageSize: DEFAULT_PAGE_SIZE7,
     supportsIncremental: false,
     buildParams: ({ page, pageSize }) => ({
       nPagina: page,
@@ -6509,7 +7084,7 @@ var OMIE_RESOURCE_CONFIGS = [
     endpoint: "/estoque/consulta/",
     call: "ListarMovimentoEstoque",
     itemKeys: ["movProdutoListar", "movProduto", "movimentos", "cadastros"],
-    defaultPageSize: DEFAULT_PAGE_SIZE3,
+    defaultPageSize: DEFAULT_PAGE_SIZE7,
     supportsIncremental: false,
     buildParams: ({ page, pageSize }) => ({
       nPagina: page,
@@ -6977,7 +7552,7 @@ function asStringArray(value) {
   }
   return [];
 }
-function asRecord(value) {
+function asRecord2(value) {
   if (value && typeof value === "object" && !Array.isArray(value)) return value;
   if (typeof value === "string") {
     try {
@@ -7018,7 +7593,7 @@ async function getCloudIntegrationConnection(input) {
     displayName: String(row.display_name || ""),
     secretRef: row.secret_ref == null ? null : String(row.secret_ref),
     selectedResources: asStringArray(row.selected_resources),
-    metadata: asRecord(row.metadata_json)
+    metadata: asRecord2(row.metadata_json)
   };
 }
 async function getCloudIntegrationDestination(input) {
@@ -7037,9 +7612,9 @@ async function getCloudIntegrationDestination(input) {
     type: String(row.type || ""),
     name: String(row.name || ""),
     status: String(row.status || ""),
-    config: asRecord(row.config_json),
+    config: asRecord2(row.config_json),
     secretRef: row.secret_ref == null ? null : String(row.secret_ref),
-    metadata: asRecord(row.metadata_json)
+    metadata: asRecord2(row.metadata_json)
   };
 }
 async function getCloudIntegrationPipeline(input) {
@@ -7062,7 +7637,7 @@ async function getCloudIntegrationPipeline(input) {
     selectedResources: asStringArray(row.selected_resources),
     syncFrequency: String(row.sync_frequency || ""),
     nextSyncAt: row.next_sync_at == null ? null : new Date(row.next_sync_at).toISOString(),
-    metadata: asRecord(row.metadata_json)
+    metadata: asRecord2(row.metadata_json)
   };
 }
 async function startCloudSyncRun(input) {
@@ -7218,7 +7793,7 @@ async function readIntegrationCursor(input) {
     [input.tenantId, input.connectionId, input.resource, input.cursorKey || "default"]
   );
   const row = result.rows[0];
-  return row ? asRecord(row.cursor_json) : void 0;
+  return row ? asRecord2(row.cursor_json) : void 0;
 }
 async function writeIntegrationCursor(input) {
   await getPool().query(
@@ -7502,11 +8077,11 @@ function parsePayloadFromEnv() {
   const payload = JSON.parse(rawPayload);
   return payload;
 }
-function isRecord4(value) {
+function isRecord5(value) {
   return typeof value === "object" && value !== null && !Array.isArray(value);
 }
 function normalizePayload(value) {
-  if (!isRecord4(value)) return {};
+  if (!isRecord5(value)) return {};
   return {
     tenantId: typeof value.tenantId === "number" ? value.tenantId : void 0,
     connectionId: typeof value.connectionId === "string" ? value.connectionId : void 0,
@@ -7519,7 +8094,7 @@ function normalizePayload(value) {
   };
 }
 function parsePubSubPushBody(body) {
-  if (!isRecord4(body)) return {};
+  if (!isRecord5(body)) return {};
   const pubSubBody = body;
   const encodedData = pubSubBody.message?.data;
   if (!encodedData) return normalizePayload(body);

@@ -363,7 +363,8 @@ crm_resources AS (
     jsonb_build_object('slug', 'oportunidades', 'name', 'Oportunidades', 'defaultEnabled', true),
     jsonb_build_object('slug', 'atividades', 'name', 'Atividades', 'defaultEnabled', false),
     jsonb_build_object('slug', 'usuarios', 'name', 'Usuarios', 'defaultEnabled', false),
-    jsonb_build_object('slug', 'pipelines', 'name', 'Pipelines', 'defaultEnabled', false)
+    jsonb_build_object('slug', 'pipelines', 'name', 'Pipelines', 'defaultEnabled', false),
+    jsonb_build_object('slug', 'fases_pipeline', 'name', 'Fases do pipeline', 'defaultEnabled', false)
   ) AS resources_json
 ),
 providers AS (
@@ -397,16 +398,19 @@ providers AS (
   SELECT 'erp', 'totvs', 'TOTVS', 'ERP corporativo para dados financeiros, comerciais, fiscais e operacionais.', 'manual', false, true, jsonb_build_array('manual', 'scheduled'), erp_resources.resources_json, jsonb_build_array('erp', 'enterprise', 'operacional', 'brasil'), 'planned', jsonb_build_object('toolkitSlug', 'TOTVS')
   FROM erp_resources
   UNION ALL
-  SELECT 'crm', 'hubspot', 'HubSpot', 'CRM para contatos, empresas, negocios, atividades e automacao comercial.', 'oauth2', true, true, jsonb_build_array('manual', 'scheduled'), crm_resources.resources_json, jsonb_build_array('crm', 'vendas', 'relacionamento', 'marketing', 'sales'), 'planned', jsonb_build_object('toolkitSlug', 'HUBSPOT')
+  SELECT 'crm', 'bitrix24', 'Bitrix24', 'CRM e plataforma operacional para leads, contatos, empresas, negocios e atividades.', 'oauth2', true, true, jsonb_build_array('manual', 'scheduled'), crm_resources.resources_json, jsonb_build_array('crm', 'vendas', 'relacionamento', 'pipeline', 'sales', 'operacional'), 'available', jsonb_build_object('toolkitSlug', 'BITRIX24')
   FROM crm_resources
   UNION ALL
-  SELECT 'crm', 'pipedrive', 'Pipedrive', 'CRM de vendas com pipeline, negocios, atividades e previsibilidade comercial.', 'oauth2', true, true, jsonb_build_array('manual', 'scheduled'), crm_resources.resources_json, jsonb_build_array('crm', 'vendas', 'relacionamento', 'pipeline', 'sales'), 'planned', jsonb_build_object('toolkitSlug', 'PIPEDRIVE')
+  SELECT 'crm', 'hubspot', 'HubSpot', 'CRM para contatos, empresas, negocios, atividades e automacao comercial.', 'oauth2', true, true, jsonb_build_array('manual', 'scheduled'), crm_resources.resources_json, jsonb_build_array('crm', 'vendas', 'relacionamento', 'marketing', 'sales'), 'available', jsonb_build_object('toolkitSlug', 'HUBSPOT')
+  FROM crm_resources
+  UNION ALL
+  SELECT 'crm', 'pipedrive', 'Pipedrive', 'CRM de vendas com pipeline, negocios, atividades e previsibilidade comercial.', 'oauth2', true, true, jsonb_build_array('manual', 'scheduled'), crm_resources.resources_json, jsonb_build_array('crm', 'vendas', 'relacionamento', 'pipeline', 'sales'), 'available', jsonb_build_object('toolkitSlug', 'PIPEDRIVE')
   FROM crm_resources
   UNION ALL
   SELECT 'crm', 'salesforce', 'Salesforce', 'CRM corporativo para contas, contatos, leads, oportunidades e atividades.', 'oauth2', true, true, jsonb_build_array('manual', 'scheduled'), crm_resources.resources_json, jsonb_build_array('crm', 'vendas', 'relacionamento', 'enterprise', 'sales'), 'planned', jsonb_build_object('toolkitSlug', 'SALESFORCE')
   FROM crm_resources
   UNION ALL
-  SELECT 'crm', 'rd_station_crm', 'RD Station CRM', 'CRM brasileiro para leads, contatos, oportunidades, funis e atividades.', 'oauth2', true, true, jsonb_build_array('manual', 'scheduled'), crm_resources.resources_json, jsonb_build_array('crm', 'vendas', 'relacionamento', 'brasil', 'sales'), 'planned', jsonb_build_object('toolkitSlug', 'RD_STATION_CRM')
+  SELECT 'crm', 'rd_station_crm', 'RD Station CRM', 'CRM brasileiro para leads, contatos, oportunidades, funis e atividades.', 'oauth2', true, true, jsonb_build_array('manual', 'scheduled'), crm_resources.resources_json, jsonb_build_array('crm', 'vendas', 'relacionamento', 'brasil', 'sales'), 'available', jsonb_build_object('toolkitSlug', 'RD_STATION_CRM')
   FROM crm_resources
 )
 INSERT INTO mcp_app.integration_provider_capabilities

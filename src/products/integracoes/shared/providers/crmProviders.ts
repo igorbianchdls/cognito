@@ -43,6 +43,12 @@ export const CRM_RESOURCES: IntegrationResource[] = [
     description: 'Funis, etapas e configuracoes comerciais.',
     defaultEnabled: false,
   },
+  {
+    slug: 'fases_pipeline',
+    name: 'Fases do pipeline',
+    description: 'Etapas dos funis comerciais, ordem e probabilidade.',
+    defaultEnabled: false,
+  },
 ]
 
 function crmProvider(
@@ -62,6 +68,15 @@ function crmProvider(
 }
 
 export const CRM_PROVIDERS: IntegrationProvider[] = [
+  crmProvider({
+    slug: 'bitrix24',
+    toolkitSlug: 'BITRIX24',
+    name: 'Bitrix24',
+    description: 'CRM e plataforma operacional para leads, contatos, empresas, negocios e atividades.',
+    authType: 'oauth2',
+    supportsOAuthCallback: true,
+    tags: ['pipeline', 'sales', 'operacional'],
+  }),
   crmProvider({
     slug: 'hubspot',
     toolkitSlug: 'HUBSPOT',
