@@ -3,6 +3,11 @@ import type { BlingResourceConfig } from '@/products/integracoes/cloud/src/conne
 
 const DEFAULT_PAGE_SIZE = 100
 
+function envResourcePath(resource: string, fallback: string) {
+  const key = `BLING_RESOURCE_${resource.toUpperCase()}_PATH`
+  return process.env[key]?.trim() || fallback
+}
+
 function pageQuery({ page, pageSize }: { page: number; pageSize: number }) {
   return {
     pagina: page,
@@ -13,7 +18,7 @@ function pageQuery({ page, pageSize }: { page: number; pageSize: number }) {
 export const BLING_RESOURCE_CONFIGS: BlingResourceConfig[] = [
   {
     resource: 'clientes',
-    path: '/contatos',
+    path: envResourcePath('clientes', '/contatos'),
     itemKeys: ['data', 'itens', 'items', 'contatos'],
     defaultPageSize: DEFAULT_PAGE_SIZE,
     supportsIncremental: false,
@@ -21,7 +26,7 @@ export const BLING_RESOURCE_CONFIGS: BlingResourceConfig[] = [
   },
   {
     resource: 'fornecedores',
-    path: '/contatos',
+    path: envResourcePath('fornecedores', '/contatos'),
     itemKeys: ['data', 'itens', 'items', 'contatos'],
     defaultPageSize: DEFAULT_PAGE_SIZE,
     supportsIncremental: false,
@@ -29,7 +34,7 @@ export const BLING_RESOURCE_CONFIGS: BlingResourceConfig[] = [
   },
   {
     resource: 'produtos',
-    path: '/produtos',
+    path: envResourcePath('produtos', '/produtos'),
     itemKeys: ['data', 'itens', 'items', 'produtos'],
     defaultPageSize: DEFAULT_PAGE_SIZE,
     supportsIncremental: false,
@@ -37,7 +42,7 @@ export const BLING_RESOURCE_CONFIGS: BlingResourceConfig[] = [
   },
   {
     resource: 'pedidos_venda',
-    path: '/pedidos/vendas',
+    path: envResourcePath('pedidos_venda', '/pedidos/vendas'),
     itemKeys: ['data', 'itens', 'items', 'pedidos'],
     defaultPageSize: DEFAULT_PAGE_SIZE,
     supportsIncremental: false,
@@ -45,7 +50,7 @@ export const BLING_RESOURCE_CONFIGS: BlingResourceConfig[] = [
   },
   {
     resource: 'compras',
-    path: '/pedidos/compras',
+    path: envResourcePath('compras', '/pedidos/compras'),
     itemKeys: ['data', 'itens', 'items', 'pedidos'],
     defaultPageSize: DEFAULT_PAGE_SIZE,
     supportsIncremental: false,
@@ -53,7 +58,7 @@ export const BLING_RESOURCE_CONFIGS: BlingResourceConfig[] = [
   },
   {
     resource: 'contas_receber',
-    path: '/contas/receber',
+    path: envResourcePath('contas_receber', '/contas/receber'),
     itemKeys: ['data', 'itens', 'items', 'contas'],
     defaultPageSize: DEFAULT_PAGE_SIZE,
     supportsIncremental: false,
@@ -61,7 +66,7 @@ export const BLING_RESOURCE_CONFIGS: BlingResourceConfig[] = [
   },
   {
     resource: 'contas_pagar',
-    path: '/contas/pagar',
+    path: envResourcePath('contas_pagar', '/contas/pagar'),
     itemKeys: ['data', 'itens', 'items', 'contas'],
     defaultPageSize: DEFAULT_PAGE_SIZE,
     supportsIncremental: false,
@@ -69,7 +74,7 @@ export const BLING_RESOURCE_CONFIGS: BlingResourceConfig[] = [
   },
   {
     resource: 'notas_fiscais',
-    path: '/nfe',
+    path: envResourcePath('notas_fiscais', '/nfe'),
     itemKeys: ['data', 'itens', 'items', 'notas'],
     defaultPageSize: DEFAULT_PAGE_SIZE,
     supportsIncremental: false,
@@ -77,7 +82,7 @@ export const BLING_RESOURCE_CONFIGS: BlingResourceConfig[] = [
   },
   {
     resource: 'estoque',
-    path: '/estoques/saldos',
+    path: envResourcePath('estoque', '/estoques/saldos'),
     itemKeys: ['data', 'itens', 'items', 'saldos'],
     defaultPageSize: DEFAULT_PAGE_SIZE,
     supportsIncremental: false,
@@ -85,8 +90,88 @@ export const BLING_RESOURCE_CONFIGS: BlingResourceConfig[] = [
   },
   {
     resource: 'categorias',
-    path: '/categorias/produtos',
+    path: envResourcePath('categorias', '/categorias/produtos'),
     itemKeys: ['data', 'itens', 'items', 'categorias'],
+    defaultPageSize: DEFAULT_PAGE_SIZE,
+    supportsIncremental: false,
+    buildQuery: pageQuery,
+  },
+  {
+    resource: 'servicos',
+    path: envResourcePath('servicos', '/servicos'),
+    itemKeys: ['data', 'itens', 'items', 'servicos'],
+    defaultPageSize: DEFAULT_PAGE_SIZE,
+    supportsIncremental: false,
+    buildQuery: pageQuery,
+  },
+  {
+    resource: 'notas_servico',
+    path: envResourcePath('notas_servico', '/nfse'),
+    itemKeys: ['data', 'itens', 'items', 'notas', 'nfse'],
+    defaultPageSize: DEFAULT_PAGE_SIZE,
+    supportsIncremental: false,
+    buildQuery: pageQuery,
+  },
+  {
+    resource: 'notas_consumidor',
+    path: envResourcePath('notas_consumidor', '/nfce'),
+    itemKeys: ['data', 'itens', 'items', 'notas', 'nfce'],
+    defaultPageSize: DEFAULT_PAGE_SIZE,
+    supportsIncremental: false,
+    buildQuery: pageQuery,
+  },
+  {
+    resource: 'formas_pagamento',
+    path: envResourcePath('formas_pagamento', '/formas-pagamentos'),
+    itemKeys: ['data', 'itens', 'items', 'formas_pagamento', 'formasPagamento'],
+    defaultPageSize: DEFAULT_PAGE_SIZE,
+    supportsIncremental: false,
+    buildQuery: pageQuery,
+  },
+  {
+    resource: 'vendedores',
+    path: envResourcePath('vendedores', '/vendedores'),
+    itemKeys: ['data', 'itens', 'items', 'vendedores'],
+    defaultPageSize: DEFAULT_PAGE_SIZE,
+    supportsIncremental: false,
+    buildQuery: pageQuery,
+  },
+  {
+    resource: 'transportadoras',
+    path: envResourcePath('transportadoras', '/transportadoras'),
+    itemKeys: ['data', 'itens', 'items', 'transportadoras'],
+    defaultPageSize: DEFAULT_PAGE_SIZE,
+    supportsIncremental: false,
+    buildQuery: pageQuery,
+  },
+  {
+    resource: 'canais_venda',
+    path: envResourcePath('canais_venda', '/canais-venda'),
+    itemKeys: ['data', 'itens', 'items', 'canais_venda', 'canaisVenda'],
+    defaultPageSize: DEFAULT_PAGE_SIZE,
+    supportsIncremental: false,
+    buildQuery: pageQuery,
+  },
+  {
+    resource: 'lojas',
+    path: envResourcePath('lojas', '/lojas'),
+    itemKeys: ['data', 'itens', 'items', 'lojas'],
+    defaultPageSize: DEFAULT_PAGE_SIZE,
+    supportsIncremental: false,
+    buildQuery: pageQuery,
+  },
+  {
+    resource: 'categorias_receitas_despesas',
+    path: envResourcePath('categorias_receitas_despesas', '/categorias/receitas-despesas'),
+    itemKeys: ['data', 'itens', 'items', 'categorias'],
+    defaultPageSize: DEFAULT_PAGE_SIZE,
+    supportsIncremental: false,
+    buildQuery: pageQuery,
+  },
+  {
+    resource: 'depositos',
+    path: envResourcePath('depositos', '/depositos'),
+    itemKeys: ['data', 'itens', 'items', 'depositos'],
     defaultPageSize: DEFAULT_PAGE_SIZE,
     supportsIncremental: false,
     buildQuery: pageQuery,

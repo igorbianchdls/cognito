@@ -33,6 +33,8 @@ export async function POST(
     const result = await requestLocalSync({
       tenantId: asTenantId(payload.tenantId || payload.tenant_id || req.nextUrl.searchParams.get('tenantId')),
       connectionId: id,
+      pipelineId: typeof payload.pipelineId === 'string' ? payload.pipelineId : typeof payload.pipeline_id === 'string' ? payload.pipeline_id : undefined,
+      destinationId: typeof payload.destinationId === 'string' ? payload.destinationId : typeof payload.destination_id === 'string' ? payload.destination_id : undefined,
       trigger: asTrigger(payload.trigger),
       resources: asStringArray(payload.resources),
       requestedBy: payload.requestedBy == null && payload.requested_by == null

@@ -8,8 +8,22 @@ const EXTERNAL_ID_CANDIDATES = [
   'id_legado',
   'legacy_id',
   'referencia',
+  'reference',
+  'nome',
+  'name',
+  'chave',
+  'chave_acesso',
+  'access_key',
+  'numero_nota',
+  'sale.id',
+  'contract.id',
+  'bankAccount.id',
+  'seller.id',
   'evento.id',
   'parcela.id',
+  'item.id',
+  'produto.id',
+  'servico.id',
 ]
 
 function getNestedValue(row: Record<string, unknown>, path: string): unknown {

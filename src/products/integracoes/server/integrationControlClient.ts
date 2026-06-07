@@ -131,6 +131,8 @@ export async function requestLocalReconnect(params: {
 export async function requestLocalSync(params: {
   tenantId: number
   connectionId: string
+  pipelineId?: string
+  destinationId?: string
   trigger?: IntegrationSyncTrigger
   resources?: string[]
   requestedBy?: string
@@ -139,6 +141,8 @@ export async function requestLocalSync(params: {
   const run = await createIntegrationSyncRun({
     tenantId: params.tenantId,
     connectionId: params.connectionId,
+    pipelineId: params.pipelineId,
+    destinationId: params.destinationId,
     trigger: params.trigger || 'manual',
     status: hasCloudControlApi ? 'queued' : 'success',
     resources: params.resources,
@@ -154,6 +158,8 @@ export async function requestLocalSync(params: {
     await requestCloudControlApi('/sync', {
       tenantId: params.tenantId,
       connectionId: params.connectionId,
+      pipelineId: params.pipelineId,
+      destinationId: params.destinationId,
       runId: run.id,
       trigger: params.trigger || 'manual',
       resources: params.resources,
@@ -163,6 +169,8 @@ export async function requestLocalSync(params: {
 
   return {
     connectionId: run.connectionId,
+    pipelineId: run.pipelineId,
+    destinationId: run.destinationId,
     runId: run.id,
     status: run.status,
     recordsIn: run.recordsIn,

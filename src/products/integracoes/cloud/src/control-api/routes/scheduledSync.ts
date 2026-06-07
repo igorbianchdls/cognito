@@ -7,10 +7,13 @@ import type {
 import { publishSyncMessage } from '@/products/integracoes/cloud/src/lib/pubsub'
 import {
   claimDueScheduledConnections,
+  claimDueScheduledPipelines,
   completeScheduledConnectionDispatch,
+  completeScheduledPipelineDispatch,
   createQueuedCloudSyncRun,
   failQueuedCloudSyncRun,
   releaseScheduledConnectionLock,
+  releaseScheduledPipelineLock,
 } from '@/products/integracoes/cloud/src/lib/postgresStatus'
 
 type ScheduledSyncBody = {
@@ -71,7 +74,7 @@ export async function handleScheduledSync(request: ControlApiRequest): Promise<C
   const items: Array<Record<string, unknown>> = []
 
   try {
-    const dueConnections = await claimDueScheduledConnections({
+    const duePipelines = await claimDueScheduledPipelines({
       limit: body.limit || 25,
       lockToken,
       lockOwner: requestedBy,
@@ -81,6 +84,117 @@ export async function handleScheduledSync(request: ControlApiRequest): Promise<C
 
     let published = 0
     let failed = 0
+
+    for (const pipeline of duePipelines) {
+      let runId: string | null = null
+
+      try {
+        const nextSyncAt = calculateNextSyncAt(pipeline.syncFrequency)
+        if (!nextSyncAt) {
+          failed += 1
+          await releaseScheduledPipelineLock({
+            tenantId: pipeline.tenantId,
+            pipelineId: pipeline.id,
+            connectionId: pipeline.sourceConnectionId,
+            lockToken,
+            errorMessage: `Frequencia de sync nao suportada: ${pipeline.syncFrequency}`,
+          })
+          items.push({
+            pipelineId: pipeline.id,
+            connectionId: pipeline.sourceConnectionId,
+            tenantId: pipeline.tenantId,
+            ok: false,
+            error: 'Frequencia de sync nao suportada.',
+          })
+          continue
+        }
+
+        const run = await createQueuedCloudSyncRun({
+          tenantId: pipeline.tenantId,
+          connectionId: pipeline.sourceConnectionId,
+          pipelineId: pipeline.id,
+          destinationId: pipeline.destinationId,
+          resources: pipeline.selectedResources,
+          requestedBy,
+          metadata: {
+            provider: pipeline.provider,
+            syncFrequency: pipeline.syncFrequency,
+            previousNextSyncAt: pipeline.nextSyncAt,
+          },
+        })
+        runId = run.id
+
+        const publish = await publishSyncMessage({
+          tenantId: pipeline.tenantId,
+          connectionId: pipeline.sourceConnectionId,
+          pipelineId: pipeline.id,
+          destinationId: pipeline.destinationId,
+          runId,
+          trigger: 'scheduled',
+          resources: pipeline.selectedResources,
+          requestedBy,
+        })
+
+        await completeScheduledPipelineDispatch({
+          tenantId: pipeline.tenantId,
+          pipelineId: pipeline.id,
+          lockToken,
+          nextSyncAt,
+          messageId: publish.messageId,
+          runId,
+        })
+
+        published += 1
+        items.push({
+          pipelineId: pipeline.id,
+          connectionId: pipeline.sourceConnectionId,
+          destinationId: pipeline.destinationId,
+          tenantId: pipeline.tenantId,
+          ok: true,
+          runId,
+          messageId: publish.messageId,
+          nextSyncAt: nextSyncAt.toISOString(),
+        })
+      } catch (error) {
+        failed += 1
+        const errorMessage = error instanceof Error ? error.message : 'Falha ao publicar sync agendado.'
+        if (runId) {
+          await failQueuedCloudSyncRun({
+            tenantId: pipeline.tenantId,
+            connectionId: pipeline.sourceConnectionId,
+            runId,
+            errorMessage,
+          })
+        }
+        await releaseScheduledPipelineLock({
+          tenantId: pipeline.tenantId,
+          pipelineId: pipeline.id,
+          connectionId: pipeline.sourceConnectionId,
+          lockToken,
+          runId,
+          errorMessage,
+        })
+        items.push({
+          pipelineId: pipeline.id,
+          connectionId: pipeline.sourceConnectionId,
+          tenantId: pipeline.tenantId,
+          ok: false,
+          runId,
+          error: errorMessage,
+        })
+      }
+    }
+
+    const remainingLimit = Math.max((body.limit || 25) - duePipelines.length, 0)
+    const dueConnections = remainingLimit
+      ? await claimDueScheduledConnections({
+        limit: remainingLimit,
+        lockToken,
+        lockOwner: requestedBy,
+        lockTtlSeconds: body.lockTtlSeconds || 600,
+        syncFrequencies: supportedFrequencies,
+      })
+      : []
 
     for (const connection of dueConnections) {
       let runId: string | null = null
@@ -95,12 +209,7 @@ export async function handleScheduledSync(request: ControlApiRequest): Promise<C
             lockToken,
             errorMessage: `Frequencia de sync nao suportada: ${connection.syncFrequency}`,
           })
-          items.push({
-            connectionId: connection.id,
-            tenantId: connection.tenantId,
-            ok: false,
-            error: 'Frequencia de sync nao suportada.',
-          })
+          items.push({ connectionId: connection.id, tenantId: connection.tenantId, ok: false, error: 'Frequencia de sync nao suportada.' })
           continue
         }
 
@@ -113,6 +222,7 @@ export async function handleScheduledSync(request: ControlApiRequest): Promise<C
             provider: connection.provider,
             syncFrequency: connection.syncFrequency,
             previousNextSyncAt: connection.nextSyncAt,
+            legacyConnectionSchedule: true,
           },
         })
         runId = run.id
@@ -136,39 +246,15 @@ export async function handleScheduledSync(request: ControlApiRequest): Promise<C
         })
 
         published += 1
-        items.push({
-          connectionId: connection.id,
-          tenantId: connection.tenantId,
-          ok: true,
-          runId,
-          messageId: publish.messageId,
-          nextSyncAt: nextSyncAt.toISOString(),
-        })
+        items.push({ connectionId: connection.id, tenantId: connection.tenantId, ok: true, runId, messageId: publish.messageId, nextSyncAt: nextSyncAt.toISOString(), legacyConnectionSchedule: true })
       } catch (error) {
         failed += 1
         const errorMessage = error instanceof Error ? error.message : 'Falha ao publicar sync agendado.'
         if (runId) {
-          await failQueuedCloudSyncRun({
-            tenantId: connection.tenantId,
-            connectionId: connection.id,
-            runId,
-            errorMessage,
-          })
+          await failQueuedCloudSyncRun({ tenantId: connection.tenantId, connectionId: connection.id, runId, errorMessage })
         }
-        await releaseScheduledConnectionLock({
-          tenantId: connection.tenantId,
-          connectionId: connection.id,
-          lockToken,
-          runId,
-          errorMessage,
-        })
-        items.push({
-          connectionId: connection.id,
-          tenantId: connection.tenantId,
-          ok: false,
-          runId,
-          error: errorMessage,
-        })
+        await releaseScheduledConnectionLock({ tenantId: connection.tenantId, connectionId: connection.id, lockToken, runId, errorMessage })
+        items.push({ connectionId: connection.id, tenantId: connection.tenantId, ok: false, runId, error: errorMessage, legacyConnectionSchedule: true })
       }
     }
 
@@ -177,7 +263,9 @@ export async function handleScheduledSync(request: ControlApiRequest): Promise<C
       body: {
         ok: true,
         mode: 'scheduled_sync',
-        claimed: dueConnections.length,
+        claimed: duePipelines.length + dueConnections.length,
+        claimedPipelines: duePipelines.length,
+        claimedLegacyConnections: dueConnections.length,
         published,
         failed,
         items,

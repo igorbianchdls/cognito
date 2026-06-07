@@ -5334,10 +5334,20 @@ var EXTERNAL_ID_CANDIDATES = [
   "codigo",
   "numero",
   "numeroPedido",
+  "numeroNota",
+  "chaveAcesso",
+  "codigoRastreamento",
   "pedido.id",
   "contato.id",
   "produto.id",
-  "categoria.id"
+  "categoria.id",
+  "deposito.id",
+  "vendedor.id",
+  "transportador.id",
+  "transportadora.id",
+  "loja.id",
+  "canalVenda.id",
+  "formaPagamento.id"
 ];
 function getNestedValue(row, path) {
   return path.split(".").reduce((current, key) => {
@@ -5372,6 +5382,10 @@ function mapBlingRows(input) {
 
 // src/products/integracoes/cloud/src/connectors/erp/bling/blingResources.ts
 var DEFAULT_PAGE_SIZE = 100;
+function envResourcePath(resource, fallback) {
+  const key = `BLING_RESOURCE_${resource.toUpperCase()}_PATH`;
+  return process.env[key]?.trim() || fallback;
+}
 function pageQuery({ page, pageSize }) {
   return {
     pagina: page,
@@ -5381,7 +5395,7 @@ function pageQuery({ page, pageSize }) {
 var BLING_RESOURCE_CONFIGS = [
   {
     resource: "clientes",
-    path: "/contatos",
+    path: envResourcePath("clientes", "/contatos"),
     itemKeys: ["data", "itens", "items", "contatos"],
     defaultPageSize: DEFAULT_PAGE_SIZE,
     supportsIncremental: false,
@@ -5389,7 +5403,7 @@ var BLING_RESOURCE_CONFIGS = [
   },
   {
     resource: "fornecedores",
-    path: "/contatos",
+    path: envResourcePath("fornecedores", "/contatos"),
     itemKeys: ["data", "itens", "items", "contatos"],
     defaultPageSize: DEFAULT_PAGE_SIZE,
     supportsIncremental: false,
@@ -5397,7 +5411,7 @@ var BLING_RESOURCE_CONFIGS = [
   },
   {
     resource: "produtos",
-    path: "/produtos",
+    path: envResourcePath("produtos", "/produtos"),
     itemKeys: ["data", "itens", "items", "produtos"],
     defaultPageSize: DEFAULT_PAGE_SIZE,
     supportsIncremental: false,
@@ -5405,7 +5419,7 @@ var BLING_RESOURCE_CONFIGS = [
   },
   {
     resource: "pedidos_venda",
-    path: "/pedidos/vendas",
+    path: envResourcePath("pedidos_venda", "/pedidos/vendas"),
     itemKeys: ["data", "itens", "items", "pedidos"],
     defaultPageSize: DEFAULT_PAGE_SIZE,
     supportsIncremental: false,
@@ -5413,7 +5427,7 @@ var BLING_RESOURCE_CONFIGS = [
   },
   {
     resource: "compras",
-    path: "/pedidos/compras",
+    path: envResourcePath("compras", "/pedidos/compras"),
     itemKeys: ["data", "itens", "items", "pedidos"],
     defaultPageSize: DEFAULT_PAGE_SIZE,
     supportsIncremental: false,
@@ -5421,7 +5435,7 @@ var BLING_RESOURCE_CONFIGS = [
   },
   {
     resource: "contas_receber",
-    path: "/contas/receber",
+    path: envResourcePath("contas_receber", "/contas/receber"),
     itemKeys: ["data", "itens", "items", "contas"],
     defaultPageSize: DEFAULT_PAGE_SIZE,
     supportsIncremental: false,
@@ -5429,7 +5443,7 @@ var BLING_RESOURCE_CONFIGS = [
   },
   {
     resource: "contas_pagar",
-    path: "/contas/pagar",
+    path: envResourcePath("contas_pagar", "/contas/pagar"),
     itemKeys: ["data", "itens", "items", "contas"],
     defaultPageSize: DEFAULT_PAGE_SIZE,
     supportsIncremental: false,
@@ -5437,7 +5451,7 @@ var BLING_RESOURCE_CONFIGS = [
   },
   {
     resource: "notas_fiscais",
-    path: "/nfe",
+    path: envResourcePath("notas_fiscais", "/nfe"),
     itemKeys: ["data", "itens", "items", "notas"],
     defaultPageSize: DEFAULT_PAGE_SIZE,
     supportsIncremental: false,
@@ -5445,7 +5459,7 @@ var BLING_RESOURCE_CONFIGS = [
   },
   {
     resource: "estoque",
-    path: "/estoques/saldos",
+    path: envResourcePath("estoque", "/estoques/saldos"),
     itemKeys: ["data", "itens", "items", "saldos"],
     defaultPageSize: DEFAULT_PAGE_SIZE,
     supportsIncremental: false,
@@ -5453,8 +5467,88 @@ var BLING_RESOURCE_CONFIGS = [
   },
   {
     resource: "categorias",
-    path: "/categorias/produtos",
+    path: envResourcePath("categorias", "/categorias/produtos"),
     itemKeys: ["data", "itens", "items", "categorias"],
+    defaultPageSize: DEFAULT_PAGE_SIZE,
+    supportsIncremental: false,
+    buildQuery: pageQuery
+  },
+  {
+    resource: "servicos",
+    path: envResourcePath("servicos", "/servicos"),
+    itemKeys: ["data", "itens", "items", "servicos"],
+    defaultPageSize: DEFAULT_PAGE_SIZE,
+    supportsIncremental: false,
+    buildQuery: pageQuery
+  },
+  {
+    resource: "notas_servico",
+    path: envResourcePath("notas_servico", "/nfse"),
+    itemKeys: ["data", "itens", "items", "notas", "nfse"],
+    defaultPageSize: DEFAULT_PAGE_SIZE,
+    supportsIncremental: false,
+    buildQuery: pageQuery
+  },
+  {
+    resource: "notas_consumidor",
+    path: envResourcePath("notas_consumidor", "/nfce"),
+    itemKeys: ["data", "itens", "items", "notas", "nfce"],
+    defaultPageSize: DEFAULT_PAGE_SIZE,
+    supportsIncremental: false,
+    buildQuery: pageQuery
+  },
+  {
+    resource: "formas_pagamento",
+    path: envResourcePath("formas_pagamento", "/formas-pagamentos"),
+    itemKeys: ["data", "itens", "items", "formas_pagamento", "formasPagamento"],
+    defaultPageSize: DEFAULT_PAGE_SIZE,
+    supportsIncremental: false,
+    buildQuery: pageQuery
+  },
+  {
+    resource: "vendedores",
+    path: envResourcePath("vendedores", "/vendedores"),
+    itemKeys: ["data", "itens", "items", "vendedores"],
+    defaultPageSize: DEFAULT_PAGE_SIZE,
+    supportsIncremental: false,
+    buildQuery: pageQuery
+  },
+  {
+    resource: "transportadoras",
+    path: envResourcePath("transportadoras", "/transportadoras"),
+    itemKeys: ["data", "itens", "items", "transportadoras"],
+    defaultPageSize: DEFAULT_PAGE_SIZE,
+    supportsIncremental: false,
+    buildQuery: pageQuery
+  },
+  {
+    resource: "canais_venda",
+    path: envResourcePath("canais_venda", "/canais-venda"),
+    itemKeys: ["data", "itens", "items", "canais_venda", "canaisVenda"],
+    defaultPageSize: DEFAULT_PAGE_SIZE,
+    supportsIncremental: false,
+    buildQuery: pageQuery
+  },
+  {
+    resource: "lojas",
+    path: envResourcePath("lojas", "/lojas"),
+    itemKeys: ["data", "itens", "items", "lojas"],
+    defaultPageSize: DEFAULT_PAGE_SIZE,
+    supportsIncremental: false,
+    buildQuery: pageQuery
+  },
+  {
+    resource: "categorias_receitas_despesas",
+    path: envResourcePath("categorias_receitas_despesas", "/categorias/receitas-despesas"),
+    itemKeys: ["data", "itens", "items", "categorias"],
+    defaultPageSize: DEFAULT_PAGE_SIZE,
+    supportsIncremental: false,
+    buildQuery: pageQuery
+  },
+  {
+    resource: "depositos",
+    path: envResourcePath("depositos", "/depositos"),
+    itemKeys: ["data", "itens", "items", "depositos"],
     defaultPageSize: DEFAULT_PAGE_SIZE,
     supportsIncremental: false,
     buildQuery: pageQuery
@@ -5725,8 +5819,22 @@ var EXTERNAL_ID_CANDIDATES2 = [
   "id_legado",
   "legacy_id",
   "referencia",
+  "reference",
+  "nome",
+  "name",
+  "chave",
+  "chave_acesso",
+  "access_key",
+  "numero_nota",
+  "sale.id",
+  "contract.id",
+  "bankAccount.id",
+  "seller.id",
   "evento.id",
-  "parcela.id"
+  "parcela.id",
+  "item.id",
+  "produto.id",
+  "servico.id"
 ];
 function getNestedValue2(row, path) {
   return path.split(".").reduce((current, key) => {
@@ -5761,6 +5869,10 @@ function mapContaAzulRows(input) {
 
 // src/products/integracoes/cloud/src/connectors/erp/contaAzul/contaAzulResources.ts
 var DEFAULT_PAGE_SIZE2 = 50;
+function envResourcePath2(resource, fallback) {
+  const key = `CONTA_AZUL_RESOURCE_${resource.toUpperCase()}_PATH`;
+  return process.env[key]?.trim() || fallback;
+}
 function pageQuery2({ page, pageSize }) {
   return {
     pagina: page,
@@ -5776,7 +5888,7 @@ function payableReceivableBody({ page, pageSize }) {
 var CONTA_AZUL_RESOURCE_CONFIGS = [
   {
     resource: "clientes",
-    path: "/v1/pessoas",
+    path: envResourcePath2("clientes", "/v1/pessoas"),
     itemKeys: ["itens", "items", "data", "content", "pessoas"],
     defaultPageSize: DEFAULT_PAGE_SIZE2,
     supportsIncremental: false,
@@ -5784,7 +5896,7 @@ var CONTA_AZUL_RESOURCE_CONFIGS = [
   },
   {
     resource: "fornecedores",
-    path: "/v1/pessoas",
+    path: envResourcePath2("fornecedores", "/v1/pessoas"),
     itemKeys: ["itens", "items", "data", "content", "pessoas"],
     defaultPageSize: DEFAULT_PAGE_SIZE2,
     supportsIncremental: false,
@@ -5792,7 +5904,7 @@ var CONTA_AZUL_RESOURCE_CONFIGS = [
   },
   {
     resource: "produtos",
-    path: "/v1/produtos",
+    path: envResourcePath2("produtos", "/v1/produtos"),
     itemKeys: ["itens", "items", "data", "content", "produtos"],
     defaultPageSize: DEFAULT_PAGE_SIZE2,
     supportsIncremental: false,
@@ -5800,7 +5912,7 @@ var CONTA_AZUL_RESOURCE_CONFIGS = [
   },
   {
     resource: "categorias",
-    path: "/v1/categorias",
+    path: envResourcePath2("categorias", "/v1/categorias"),
     itemKeys: ["itens", "items", "data", "content", "categorias"],
     defaultPageSize: DEFAULT_PAGE_SIZE2,
     supportsIncremental: false,
@@ -5808,7 +5920,7 @@ var CONTA_AZUL_RESOURCE_CONFIGS = [
   },
   {
     resource: "centros_custo",
-    path: "/v1/centro-de-custo",
+    path: envResourcePath2("centros_custo", "/v1/centro-de-custo"),
     itemKeys: ["itens", "items", "data", "content", "centros_custo"],
     defaultPageSize: DEFAULT_PAGE_SIZE2,
     supportsIncremental: false,
@@ -5816,7 +5928,7 @@ var CONTA_AZUL_RESOURCE_CONFIGS = [
   },
   {
     resource: "contas_receber",
-    path: "/v1/financeiro/eventos-financeiros/contas-a-receber/buscar",
+    path: envResourcePath2("contas_receber", "/v1/financeiro/eventos-financeiros/contas-a-receber/buscar"),
     method: "POST",
     itemKeys: ["itens", "items", "data", "content", "eventos", "parcelas"],
     defaultPageSize: DEFAULT_PAGE_SIZE2,
@@ -5825,12 +5937,92 @@ var CONTA_AZUL_RESOURCE_CONFIGS = [
   },
   {
     resource: "contas_pagar",
-    path: "/v1/financeiro/eventos-financeiros/contas-a-pagar/buscar",
+    path: envResourcePath2("contas_pagar", "/v1/financeiro/eventos-financeiros/contas-a-pagar/buscar"),
     method: "POST",
     itemKeys: ["itens", "items", "data", "content", "eventos", "parcelas"],
     defaultPageSize: DEFAULT_PAGE_SIZE2,
     supportsIncremental: false,
     buildBody: payableReceivableBody
+  },
+  {
+    resource: "servicos",
+    path: envResourcePath2("servicos", "/v1/servicos"),
+    itemKeys: ["itens", "items", "data", "content", "servicos", "services"],
+    defaultPageSize: DEFAULT_PAGE_SIZE2,
+    supportsIncremental: false,
+    buildQuery: pageQuery2
+  },
+  {
+    resource: "vendas",
+    path: envResourcePath2("vendas", "/v1/vendas"),
+    itemKeys: ["itens", "items", "data", "content", "vendas", "sales"],
+    defaultPageSize: DEFAULT_PAGE_SIZE2,
+    supportsIncremental: false,
+    buildQuery: pageQuery2
+  },
+  {
+    resource: "itens_venda",
+    path: envResourcePath2("itens_venda", "/v1/vendas/itens"),
+    itemKeys: ["itens", "items", "data", "content", "itens_venda", "saleItems"],
+    defaultPageSize: DEFAULT_PAGE_SIZE2,
+    supportsIncremental: false,
+    buildQuery: pageQuery2
+  },
+  {
+    resource: "parcelas_venda",
+    path: envResourcePath2("parcelas_venda", "/v1/vendas/parcelas"),
+    itemKeys: ["itens", "items", "data", "content", "parcelas_venda", "installments"],
+    defaultPageSize: DEFAULT_PAGE_SIZE2,
+    supportsIncremental: false,
+    buildQuery: pageQuery2
+  },
+  {
+    resource: "contratos",
+    path: envResourcePath2("contratos", "/v1/contratos"),
+    itemKeys: ["itens", "items", "data", "content", "contratos", "contracts"],
+    defaultPageSize: DEFAULT_PAGE_SIZE2,
+    supportsIncremental: false,
+    buildQuery: pageQuery2
+  },
+  {
+    resource: "contas_bancarias",
+    path: envResourcePath2("contas_bancarias", "/v1/contas-bancarias"),
+    itemKeys: ["itens", "items", "data", "content", "contas_bancarias", "bankAccounts"],
+    defaultPageSize: DEFAULT_PAGE_SIZE2,
+    supportsIncremental: false,
+    buildQuery: pageQuery2
+  },
+  {
+    resource: "vendedores",
+    path: envResourcePath2("vendedores", "/v1/vendedores"),
+    itemKeys: ["itens", "items", "data", "content", "vendedores", "sellers"],
+    defaultPageSize: DEFAULT_PAGE_SIZE2,
+    supportsIncremental: false,
+    buildQuery: pageQuery2
+  },
+  {
+    resource: "notas_fiscais",
+    path: envResourcePath2("notas_fiscais", "/v1/notas-fiscais"),
+    itemKeys: ["itens", "items", "data", "content", "notas_fiscais", "invoices"],
+    defaultPageSize: DEFAULT_PAGE_SIZE2,
+    supportsIncremental: false,
+    buildQuery: pageQuery2
+  },
+  {
+    resource: "estoque",
+    path: envResourcePath2("estoque", "/v1/estoque"),
+    itemKeys: ["itens", "items", "data", "content", "estoque", "saldos", "stock"],
+    defaultPageSize: DEFAULT_PAGE_SIZE2,
+    supportsIncremental: false,
+    buildQuery: pageQuery2
+  },
+  {
+    resource: "movimentacoes_estoque",
+    path: envResourcePath2("movimentacoes_estoque", "/v1/estoque/movimentacoes"),
+    itemKeys: ["itens", "items", "data", "content", "movimentacoes_estoque", "movements"],
+    defaultPageSize: DEFAULT_PAGE_SIZE2,
+    supportsIncremental: false,
+    buildQuery: pageQuery2
   }
 ];
 var CONTA_AZUL_RESOURCE_MAP = new Map(CONTA_AZUL_RESOURCE_CONFIGS.map((config) => [config.resource, config]));
@@ -6698,6 +6890,50 @@ async function writeRowsToBigQuery(input) {
   };
 }
 
+// src/products/integracoes/cloud/src/destinations/bigQueryDestinationWriter.ts
+function asString(value) {
+  return typeof value === "string" && value.trim() ? value.trim() : void 0;
+}
+var bigQueryDestinationWriter = {
+  type: "bigquery",
+  async writeRows(input) {
+    const write = await writeRowsToBigQuery({
+      dataset: asString(input.destination.config.rawDataset),
+      tenantId: input.tenantId,
+      connectionId: input.connectionId,
+      provider: input.provider,
+      resource: input.resource,
+      runId: input.runId,
+      table: input.table,
+      rows: input.rows
+    });
+    return {
+      ok: write.ok,
+      mode: write.mode,
+      destinationType: input.destination.type,
+      insertedRows: write.insertedRows,
+      metadata: {
+        dataset: write.dataset,
+        table: write.table,
+        pipelineId: input.pipelineId || null,
+        destinationId: input.destination.id
+      }
+    };
+  }
+};
+
+// src/products/integracoes/cloud/src/destinations/destinationWriterRegistry.ts
+var writers = /* @__PURE__ */ new Map([
+  [bigQueryDestinationWriter.type, bigQueryDestinationWriter]
+]);
+async function writeRowsToDestination(input) {
+  const writer = writers.get(input.destination.type);
+  if (!writer) {
+    throw new Error(`Destino ${input.destination.type} ainda nao possui writer implementado.`);
+  }
+  return writer.writeRows(input);
+}
+
 // node_modules/.pnpm/pg@8.16.3/node_modules/pg/esm/index.mjs
 var import_lib = __toESM(require_lib2(), 1);
 var Client = import_lib.default.Client;
@@ -6785,6 +7021,50 @@ async function getCloudIntegrationConnection(input) {
     metadata: asRecord(row.metadata_json)
   };
 }
+async function getCloudIntegrationDestination(input) {
+  const result = await getPool().query(
+    `SELECT *
+     FROM mcp_app.integration_destinations
+     WHERE id = $1 AND tenant_id = $2
+     LIMIT 1`,
+    [input.destinationId, input.tenantId]
+  );
+  const row = result.rows[0];
+  if (!row) return null;
+  return {
+    id: String(row.id),
+    tenantId: Number(row.tenant_id),
+    type: String(row.type || ""),
+    name: String(row.name || ""),
+    status: String(row.status || ""),
+    config: asRecord(row.config_json),
+    secretRef: row.secret_ref == null ? null : String(row.secret_ref),
+    metadata: asRecord(row.metadata_json)
+  };
+}
+async function getCloudIntegrationPipeline(input) {
+  const result = await getPool().query(
+    `SELECT *
+     FROM mcp_app.integration_pipelines
+     WHERE id = $1 AND tenant_id = $2
+     LIMIT 1`,
+    [input.pipelineId, input.tenantId]
+  );
+  const row = result.rows[0];
+  if (!row) return null;
+  return {
+    id: String(row.id),
+    tenantId: Number(row.tenant_id),
+    sourceConnectionId: String(row.source_connection_id),
+    destinationId: String(row.destination_id),
+    name: String(row.name || ""),
+    status: String(row.status || ""),
+    selectedResources: asStringArray(row.selected_resources),
+    syncFrequency: String(row.sync_frequency || ""),
+    nextSyncAt: row.next_sync_at == null ? null : new Date(row.next_sync_at).toISOString(),
+    metadata: asRecord(row.metadata_json)
+  };
+}
 async function startCloudSyncRun(input) {
   if (input.runId) {
     const result2 = await getPool().query(
@@ -6801,6 +7081,8 @@ async function startCloudSyncRun(input) {
         input.connectionId,
         JSON.stringify({
           mode: "gcp_worker",
+          pipelineId: input.pipelineId || null,
+          destinationId: input.destinationId || null,
           resources: input.resources,
           requestedBy: input.requestedBy || "worker",
           workerStartedAt: (/* @__PURE__ */ new Date()).toISOString()
@@ -6817,16 +7099,20 @@ async function startCloudSyncRun(input) {
   }
   const result = await getPool().query(
     `INSERT INTO mcp_app.integration_sync_runs
-      (tenant_id, connection_id, trigger, status, started_at, metadata_json)
+      (tenant_id, connection_id, pipeline_id, destination_id, trigger, status, started_at, metadata_json)
      VALUES
-      ($1, $2, $3, 'running', now(), $4::jsonb)
+      ($1, $2, $3, $4, $5, 'running', now(), $6::jsonb)
      RETURNING id::text, status`,
     [
       input.tenantId,
       input.connectionId,
+      input.pipelineId || null,
+      input.destinationId || null,
       input.trigger,
       JSON.stringify({
         mode: "gcp_worker",
+        pipelineId: input.pipelineId || null,
+        destinationId: input.destinationId || null,
         resources: input.resources,
         requestedBy: input.requestedBy || "worker"
       })
@@ -6904,6 +7190,24 @@ async function finishCloudSyncRun(input) {
       ...input.metadata || {}
     }
   });
+  if (input.pipelineId) {
+    await getPool().query(
+      `UPDATE mcp_app.integration_pipelines
+       SET
+         last_sync_at = now(),
+         last_success_at = CASE WHEN $3 IN ('success', 'warning') THEN now() ELSE last_success_at END,
+         last_error = CASE WHEN $3 IN ('success', 'warning') THEN NULL ELSE $4 END,
+         records_synced = CASE WHEN $3 IN ('success', 'warning') THEN records_synced + $5 ELSE records_synced END,
+         status = CASE
+           WHEN $3 IN ('success', 'warning') THEN 'active'
+           WHEN $3 = 'error' THEN 'error'
+           ELSE status
+         END,
+         updated_at = now()
+       WHERE id = $1 AND tenant_id = $2`,
+      [input.pipelineId, input.tenantId, status, input.errorMessage || null, input.recordsUpdated]
+    );
+  }
 }
 async function readIntegrationCursor(input) {
   const result = await getPool().query(
@@ -6957,6 +7261,21 @@ async function createIntegrationEvent(input) {
 }
 
 // src/products/integracoes/cloud/src/worker/jobs/runSyncJob.ts
+function defaultBigQueryDestination(tenantId) {
+  return {
+    id: "default-bigquery",
+    tenantId,
+    type: "bigquery",
+    name: "BigQuery padrao",
+    status: "active",
+    config: {
+      rawDataset: process.env.BIGQUERY_CUSTOM_RAW_DATASET || "integrations_custom_raw",
+      normalizedDataset: process.env.BIGQUERY_NORMALIZED_DATASET || "integrations_normalized"
+    },
+    secretRef: null,
+    metadata: { implicit: true }
+  };
+}
 function parseCredentials4(value) {
   if (!value) return null;
   try {
@@ -6976,24 +7295,45 @@ function aggregateStatus(current, next) {
   return "success";
 }
 async function runSyncJob(input) {
+  const pipeline = input.pipelineId ? await getCloudIntegrationPipeline({
+    tenantId: input.tenantId,
+    pipelineId: input.pipelineId
+  }) : null;
+  if (input.pipelineId && !pipeline) {
+    throw new Error(`Pipeline ${input.pipelineId} nao encontrado para tenant ${input.tenantId}`);
+  }
+  const connectionId = pipeline?.sourceConnectionId || input.connectionId;
   const connection = await getCloudIntegrationConnection({
     tenantId: input.tenantId,
-    connectionId: input.connectionId
+    connectionId
   });
   if (!connection) {
-    throw new Error(`Conexao ${input.connectionId} nao encontrada para tenant ${input.tenantId}`);
+    throw new Error(`Conexao ${connectionId} nao encontrada para tenant ${input.tenantId}`);
+  }
+  const destinationId = pipeline?.destinationId || input.destinationId;
+  const destination = destinationId ? await getCloudIntegrationDestination({
+    tenantId: input.tenantId,
+    destinationId
+  }) : defaultBigQueryDestination(input.tenantId);
+  if (!destination) {
+    throw new Error(`Destino ${destinationId} nao encontrado para tenant ${input.tenantId}`);
+  }
+  if (destination.status !== "active") {
+    throw new Error(`Destino ${destination.id} esta com status ${destination.status}`);
   }
   const connector = getCloudConnector(connection.provider);
   if (!connector) {
     throw new Error(`Connector cloud nao registrado para provider ${connection.provider}`);
   }
-  const resources = input.resources?.length ? input.resources : connection.selectedResources;
+  const resources = input.resources?.length ? input.resources : pipeline?.selectedResources?.length ? pipeline.selectedResources : connection.selectedResources;
   if (!resources.length) {
-    throw new Error(`Conexao ${input.connectionId} nao possui resources selecionados`);
+    throw new Error(`Conexao ${connection.id} nao possui resources selecionados`);
   }
   const run = await startCloudSyncRun({
     tenantId: input.tenantId,
-    connectionId: input.connectionId,
+    connectionId: connection.id,
+    pipelineId: pipeline?.id || null,
+    destinationId: destination.id === "default-bigquery" ? null : destination.id,
     runId: input.runId,
     trigger: input.trigger,
     resources,
@@ -7009,7 +7349,7 @@ async function runSyncJob(input) {
     for (const resource of resources) {
       await createIntegrationEvent({
         tenantId: input.tenantId,
-        connectionId: input.connectionId,
+        connectionId: connection.id,
         eventType: "sync.resource.started",
         actor: "integrations-worker",
         message: `Sincronizacao do recurso ${resource} iniciada.`,
@@ -7018,12 +7358,12 @@ async function runSyncJob(input) {
       try {
         const cursor = await readIntegrationCursor({
           tenantId: input.tenantId,
-          connectionId: input.connectionId,
+          connectionId: connection.id,
           resource
         });
         const result = await connector.syncResource({
           tenantId: input.tenantId,
-          connectionId: input.connectionId,
+          connectionId: connection.id,
           provider: connection.provider,
           secretRef: connection.secretRef,
           credentials,
@@ -7040,9 +7380,11 @@ async function runSyncJob(input) {
         for (const batch of batches) {
           const batchRows = normalizeRows(batch.rows);
           if (batchRows.length) {
-            const write = await writeRowsToBigQuery({
+            const write = await writeRowsToDestination({
               tenantId: input.tenantId,
-              connectionId: input.connectionId,
+              connectionId: connection.id,
+              pipelineId: pipeline?.id || null,
+              destination,
               provider: connection.provider,
               resource: batch.resource || resource,
               runId: run.id,
@@ -7054,7 +7396,7 @@ async function runSyncJob(input) {
           if (batch.nextCursor) {
             await writeIntegrationCursor({
               tenantId: input.tenantId,
-              connectionId: input.connectionId,
+              connectionId: connection.id,
               resource: batch.resource || resource,
               cursor: batch.nextCursor
             });
@@ -7075,7 +7417,7 @@ async function runSyncJob(input) {
         });
         await createIntegrationEvent({
           tenantId: input.tenantId,
-          connectionId: input.connectionId,
+          connectionId: connection.id,
           eventType: "sync.resource.completed",
           severity: result.status === "error" ? "error" : result.status === "warning" ? "warning" : "info",
           actor: "integrations-worker",
@@ -7097,7 +7439,7 @@ async function runSyncJob(input) {
         });
         await createIntegrationEvent({
           tenantId: input.tenantId,
-          connectionId: input.connectionId,
+          connectionId: connection.id,
           eventType: "sync.resource.failed",
           severity: "error",
           actor: "integrations-worker",
@@ -7108,7 +7450,9 @@ async function runSyncJob(input) {
     }
     await finishCloudSyncRun({
       tenantId: input.tenantId,
-      connectionId: input.connectionId,
+      connectionId: connection.id,
+      pipelineId: pipeline?.id || null,
+      destinationId: destination.id === "default-bigquery" ? null : destination.id,
       runId: run.id,
       status,
       recordsIn,
@@ -7119,7 +7463,9 @@ async function runSyncJob(input) {
     return {
       ok: status !== "error",
       mode: "gcp_worker",
-      connectionId: input.connectionId,
+      connectionId: connection.id,
+      pipelineId: pipeline?.id || null,
+      destinationId: destination.id === "default-bigquery" ? null : destination.id,
       runId: run.id,
       provider: connection.provider,
       resources,
@@ -7133,7 +7479,9 @@ async function runSyncJob(input) {
     recordsFailed = Math.max(recordsFailed, 1);
     await finishCloudSyncRun({
       tenantId: input.tenantId,
-      connectionId: input.connectionId,
+      connectionId: connection.id,
+      pipelineId: pipeline?.id || null,
+      destinationId: destination.id === "default-bigquery" ? null : destination.id,
       runId: run.id,
       status: "error",
       recordsIn,
@@ -7162,6 +7510,8 @@ function normalizePayload(value) {
   return {
     tenantId: typeof value.tenantId === "number" ? value.tenantId : void 0,
     connectionId: typeof value.connectionId === "string" ? value.connectionId : void 0,
+    pipelineId: typeof value.pipelineId === "string" ? value.pipelineId : void 0,
+    destinationId: typeof value.destinationId === "string" ? value.destinationId : void 0,
     runId: typeof value.runId === "string" ? value.runId : void 0,
     trigger: typeof value.trigger === "string" && syncTriggers.includes(value.trigger) ? value.trigger : void 0,
     resources: Array.isArray(value.resources) ? value.resources.filter((resource) => typeof resource === "string") : void 0,
@@ -7206,6 +7556,8 @@ async function executeWorker(payload) {
   const result = await runSyncJob({
     tenantId: payload.tenantId || Number(process.env.SYNC_TENANT_ID || 1),
     connectionId: payload.connectionId || process.env.SYNC_CONNECTION_ID || "stub",
+    pipelineId: payload.pipelineId || process.env.SYNC_PIPELINE_ID,
+    destinationId: payload.destinationId || process.env.SYNC_DESTINATION_ID,
     runId: payload.runId || process.env.SYNC_RUN_ID,
     trigger: payload.trigger || parseTrigger(process.env.SYNC_TRIGGER),
     resources: payload.resources,

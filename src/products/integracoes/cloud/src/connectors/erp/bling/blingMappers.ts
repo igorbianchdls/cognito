@@ -6,10 +6,20 @@ const EXTERNAL_ID_CANDIDATES = [
   'codigo',
   'numero',
   'numeroPedido',
+  'numeroNota',
+  'chaveAcesso',
+  'codigoRastreamento',
   'pedido.id',
   'contato.id',
   'produto.id',
   'categoria.id',
+  'deposito.id',
+  'vendedor.id',
+  'transportador.id',
+  'transportadora.id',
+  'loja.id',
+  'canalVenda.id',
+  'formaPagamento.id',
 ]
 
 function getNestedValue(row: Record<string, unknown>, path: string): unknown {

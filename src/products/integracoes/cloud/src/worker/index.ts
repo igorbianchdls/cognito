@@ -8,6 +8,8 @@ const syncTriggers: IntegrationSyncTrigger[] = ['manual', 'scheduled', 'webhook'
 type WorkerPayload = {
   tenantId?: number
   connectionId?: string
+  pipelineId?: string
+  destinationId?: string
   runId?: string
   trigger?: IntegrationSyncTrigger
   resources?: string[]
@@ -38,6 +40,8 @@ function normalizePayload(value: unknown): WorkerPayload {
   return {
     tenantId: typeof value.tenantId === 'number' ? value.tenantId : undefined,
     connectionId: typeof value.connectionId === 'string' ? value.connectionId : undefined,
+    pipelineId: typeof value.pipelineId === 'string' ? value.pipelineId : undefined,
+    destinationId: typeof value.destinationId === 'string' ? value.destinationId : undefined,
     runId: typeof value.runId === 'string' ? value.runId : undefined,
     trigger: typeof value.trigger === 'string' && syncTriggers.includes(value.trigger as IntegrationSyncTrigger)
       ? value.trigger as IntegrationSyncTrigger
@@ -95,6 +99,8 @@ async function executeWorker(payload: WorkerPayload) {
   const result = await runSyncJob({
     tenantId: payload.tenantId || Number(process.env.SYNC_TENANT_ID || 1),
     connectionId: payload.connectionId || process.env.SYNC_CONNECTION_ID || 'stub',
+    pipelineId: payload.pipelineId || process.env.SYNC_PIPELINE_ID,
+    destinationId: payload.destinationId || process.env.SYNC_DESTINATION_ID,
     runId: payload.runId || process.env.SYNC_RUN_ID,
     trigger: payload.trigger || parseTrigger(process.env.SYNC_TRIGGER),
     resources: payload.resources,

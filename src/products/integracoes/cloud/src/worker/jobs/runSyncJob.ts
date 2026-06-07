@@ -1,19 +1,24 @@
 import type { IntegrationSyncTrigger } from '@/products/integracoes/shared/contracts/syncContracts'
 import { getCloudConnector } from '@/products/integracoes/cloud/src/providers/providerRegistry'
 import { readSecret } from '@/products/integracoes/cloud/src/lib/secretManager'
-import { writeRowsToBigQuery } from '@/products/integracoes/cloud/src/lib/bigquery'
+import { writeRowsToDestination } from '@/products/integracoes/cloud/src/destinations/destinationWriterRegistry'
 import {
   createIntegrationEvent,
   startCloudSyncRun,
   finishCloudSyncRun,
   getCloudIntegrationConnection,
+  getCloudIntegrationDestination,
+  getCloudIntegrationPipeline,
   readIntegrationCursor,
   writeIntegrationCursor,
+  type CloudIntegrationDestination,
 } from '@/products/integracoes/cloud/src/lib/postgresStatus'
 
 export type RunSyncJobInput = {
   tenantId: number
   connectionId: string
+  pipelineId?: string
+  destinationId?: string
   runId?: string
   trigger: IntegrationSyncTrigger
   resources?: string[]
@@ -24,6 +29,8 @@ export type RunSyncJobOutput = {
   ok: boolean
   mode: 'gcp_worker'
   connectionId: string
+  pipelineId?: string | null
+  destinationId?: string | null
   runId: string
   provider: string
   resources: string[]
@@ -32,6 +39,22 @@ export type RunSyncJobOutput = {
   recordsFailed: number
   status: 'success' | 'warning' | 'error'
   message: string
+}
+
+function defaultBigQueryDestination(tenantId: number): CloudIntegrationDestination {
+  return {
+    id: 'default-bigquery',
+    tenantId,
+    type: 'bigquery',
+    name: 'BigQuery padrao',
+    status: 'active',
+    config: {
+      rawDataset: process.env.BIGQUERY_CUSTOM_RAW_DATASET || 'integrations_custom_raw',
+      normalizedDataset: process.env.BIGQUERY_NORMALIZED_DATASET || 'integrations_normalized',
+    },
+    secretRef: null,
+    metadata: { implicit: true },
+  }
 }
 
 function parseCredentials(value: string | null): Record<string, unknown> | string | null {
@@ -58,12 +81,37 @@ function aggregateStatus(current: 'success' | 'warning' | 'error', next: string)
 }
 
 export async function runSyncJob(input: RunSyncJobInput): Promise<RunSyncJobOutput> {
+  const pipeline = input.pipelineId
+    ? await getCloudIntegrationPipeline({
+      tenantId: input.tenantId,
+      pipelineId: input.pipelineId,
+    })
+    : null
+  if (input.pipelineId && !pipeline) {
+    throw new Error(`Pipeline ${input.pipelineId} nao encontrado para tenant ${input.tenantId}`)
+  }
+
+  const connectionId = pipeline?.sourceConnectionId || input.connectionId
   const connection = await getCloudIntegrationConnection({
     tenantId: input.tenantId,
-    connectionId: input.connectionId,
+    connectionId,
   })
   if (!connection) {
-    throw new Error(`Conexao ${input.connectionId} nao encontrada para tenant ${input.tenantId}`)
+    throw new Error(`Conexao ${connectionId} nao encontrada para tenant ${input.tenantId}`)
+  }
+
+  const destinationId = pipeline?.destinationId || input.destinationId
+  const destination = destinationId
+    ? await getCloudIntegrationDestination({
+      tenantId: input.tenantId,
+      destinationId,
+    })
+    : defaultBigQueryDestination(input.tenantId)
+  if (!destination) {
+    throw new Error(`Destino ${destinationId} nao encontrado para tenant ${input.tenantId}`)
+  }
+  if (destination.status !== 'active') {
+    throw new Error(`Destino ${destination.id} esta com status ${destination.status}`)
   }
 
   const connector = getCloudConnector(connection.provider)
@@ -71,14 +119,20 @@ export async function runSyncJob(input: RunSyncJobInput): Promise<RunSyncJobOutp
     throw new Error(`Connector cloud nao registrado para provider ${connection.provider}`)
   }
 
-  const resources = input.resources?.length ? input.resources : connection.selectedResources
+  const resources = input.resources?.length
+    ? input.resources
+    : pipeline?.selectedResources?.length
+      ? pipeline.selectedResources
+      : connection.selectedResources
   if (!resources.length) {
-    throw new Error(`Conexao ${input.connectionId} nao possui resources selecionados`)
+    throw new Error(`Conexao ${connection.id} nao possui resources selecionados`)
   }
 
   const run = await startCloudSyncRun({
     tenantId: input.tenantId,
-    connectionId: input.connectionId,
+    connectionId: connection.id,
+    pipelineId: pipeline?.id || null,
+    destinationId: destination.id === 'default-bigquery' ? null : destination.id,
     runId: input.runId,
     trigger: input.trigger,
     resources,
@@ -97,7 +151,7 @@ export async function runSyncJob(input: RunSyncJobInput): Promise<RunSyncJobOutp
     for (const resource of resources) {
       await createIntegrationEvent({
         tenantId: input.tenantId,
-        connectionId: input.connectionId,
+        connectionId: connection.id,
         eventType: 'sync.resource.started',
         actor: 'integrations-worker',
         message: `Sincronizacao do recurso ${resource} iniciada.`,
@@ -107,12 +161,12 @@ export async function runSyncJob(input: RunSyncJobInput): Promise<RunSyncJobOutp
       try {
         const cursor = await readIntegrationCursor({
           tenantId: input.tenantId,
-          connectionId: input.connectionId,
+          connectionId: connection.id,
           resource,
         })
         const result = await connector.syncResource({
           tenantId: input.tenantId,
-          connectionId: input.connectionId,
+          connectionId: connection.id,
           provider: connection.provider,
           secretRef: connection.secretRef,
           credentials,
@@ -133,9 +187,11 @@ export async function runSyncJob(input: RunSyncJobInput): Promise<RunSyncJobOutp
         for (const batch of batches) {
           const batchRows = normalizeRows(batch.rows)
           if (batchRows.length) {
-            const write = await writeRowsToBigQuery({
+            const write = await writeRowsToDestination({
               tenantId: input.tenantId,
-              connectionId: input.connectionId,
+              connectionId: connection.id,
+              pipelineId: pipeline?.id || null,
+              destination,
               provider: connection.provider,
               resource: batch.resource || resource,
               runId: run.id,
@@ -147,7 +203,7 @@ export async function runSyncJob(input: RunSyncJobInput): Promise<RunSyncJobOutp
           if (batch.nextCursor) {
             await writeIntegrationCursor({
               tenantId: input.tenantId,
-              connectionId: input.connectionId,
+              connectionId: connection.id,
               resource: batch.resource || resource,
               cursor: batch.nextCursor,
             })
@@ -170,7 +226,7 @@ export async function runSyncJob(input: RunSyncJobInput): Promise<RunSyncJobOutp
 
         await createIntegrationEvent({
           tenantId: input.tenantId,
-          connectionId: input.connectionId,
+          connectionId: connection.id,
           eventType: 'sync.resource.completed',
           severity: result.status === 'error' ? 'error' : result.status === 'warning' ? 'warning' : 'info',
           actor: 'integrations-worker',
@@ -192,7 +248,7 @@ export async function runSyncJob(input: RunSyncJobInput): Promise<RunSyncJobOutp
         })
         await createIntegrationEvent({
           tenantId: input.tenantId,
-          connectionId: input.connectionId,
+          connectionId: connection.id,
           eventType: 'sync.resource.failed',
           severity: 'error',
           actor: 'integrations-worker',
@@ -204,7 +260,9 @@ export async function runSyncJob(input: RunSyncJobInput): Promise<RunSyncJobOutp
 
     await finishCloudSyncRun({
       tenantId: input.tenantId,
-      connectionId: input.connectionId,
+      connectionId: connection.id,
+      pipelineId: pipeline?.id || null,
+      destinationId: destination.id === 'default-bigquery' ? null : destination.id,
       runId: run.id,
       status,
       recordsIn,
@@ -216,7 +274,9 @@ export async function runSyncJob(input: RunSyncJobInput): Promise<RunSyncJobOutp
     return {
       ok: status !== 'error',
       mode: 'gcp_worker',
-      connectionId: input.connectionId,
+      connectionId: connection.id,
+      pipelineId: pipeline?.id || null,
+      destinationId: destination.id === 'default-bigquery' ? null : destination.id,
       runId: run.id,
       provider: connection.provider,
       resources,
@@ -230,7 +290,9 @@ export async function runSyncJob(input: RunSyncJobInput): Promise<RunSyncJobOutp
     recordsFailed = Math.max(recordsFailed, 1)
     await finishCloudSyncRun({
       tenantId: input.tenantId,
-      connectionId: input.connectionId,
+      connectionId: connection.id,
+      pipelineId: pipeline?.id || null,
+      destinationId: destination.id === 'default-bigquery' ? null : destination.id,
       runId: run.id,
       status: 'error',
       recordsIn,

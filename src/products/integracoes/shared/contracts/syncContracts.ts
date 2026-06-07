@@ -6,6 +6,8 @@ export type IntegrationSyncRun = {
   id: string
   tenantId: number
   connectionId: string
+  pipelineId?: string | null
+  destinationId?: string | null
   trigger: IntegrationSyncTrigger
   status: IntegrationSyncRunStatus
   startedAt?: string | null
@@ -22,6 +24,8 @@ export type IntegrationSyncRun = {
 export type TriggerIntegrationSyncInput = {
   connectionId: string
   tenantId: number
+  pipelineId?: string
+  destinationId?: string
   trigger: IntegrationSyncTrigger
   resources?: string[]
   requestedBy?: string
@@ -29,6 +33,8 @@ export type TriggerIntegrationSyncInput = {
 
 export type IntegrationSyncResult = {
   connectionId: string
+  pipelineId?: string | null
+  destinationId?: string | null
   runId: string
   status: IntegrationSyncRunStatus
   recordsIn: number

@@ -5320,6 +5320,18 @@ function asStringArray(value) {
   }
   return [];
 }
+function asRecord(value) {
+  if (value && typeof value === "object" && !Array.isArray(value)) return value;
+  if (typeof value === "string") {
+    try {
+      const parsed = JSON.parse(value);
+      return parsed && typeof parsed === "object" && !Array.isArray(parsed) ? parsed : {};
+    } catch {
+      return {};
+    }
+  }
+  return {};
+}
 async function claimDueScheduledConnections(input) {
   const result = await getPool().query(
     `WITH due_connections AS (
@@ -5370,18 +5382,97 @@ async function claimDueScheduledConnections(input) {
     nextSyncAt: row.next_sync_at == null ? null : new Date(row.next_sync_at).toISOString()
   }));
 }
+async function claimDueScheduledPipelines(input) {
+  const result = await getPool().query(
+    `WITH due_pipelines AS (
+       SELECT pipelines.id, pipelines.tenant_id
+       FROM mcp_app.integration_pipelines pipelines
+       JOIN mcp_app.integration_connections connections
+         ON connections.id = pipelines.source_connection_id
+        AND connections.tenant_id = pipelines.tenant_id
+       JOIN mcp_app.integration_destinations destinations
+         ON destinations.id = pipelines.destination_id
+        AND destinations.tenant_id = pipelines.tenant_id
+       WHERE
+         pipelines.sync_enabled = true
+         AND pipelines.sync_frequency = ANY($5::text[])
+         AND pipelines.next_sync_at IS NOT NULL
+         AND pipelines.next_sync_at <= now()
+         AND pipelines.status = 'active'
+         AND destinations.status = 'active'
+         AND connections.status IN ('connected', 'warning')
+         AND jsonb_array_length(COALESCE(pipelines.selected_resources, '[]'::jsonb)) > 0
+         AND (pipelines.sync_locked_until IS NULL OR pipelines.sync_locked_until < now())
+       ORDER BY pipelines.next_sync_at ASC, pipelines.updated_at ASC
+       LIMIT $1
+       FOR UPDATE SKIP LOCKED
+     )
+     UPDATE mcp_app.integration_pipelines pipelines
+     SET
+       sync_lock_token = $2,
+       sync_lock_owner = $3,
+       sync_locked_until = now() + make_interval(secs => $4),
+       updated_at = now()
+     FROM due_pipelines
+     JOIN mcp_app.integration_connections connections
+       ON connections.id = (
+         SELECT source_connection_id
+         FROM mcp_app.integration_pipelines
+         WHERE id = due_pipelines.id AND tenant_id = due_pipelines.tenant_id
+       )
+      AND connections.tenant_id = due_pipelines.tenant_id
+     WHERE pipelines.id = due_pipelines.id
+       AND pipelines.tenant_id = due_pipelines.tenant_id
+     RETURNING
+       pipelines.id::text,
+       pipelines.tenant_id,
+       pipelines.source_connection_id::text,
+       pipelines.destination_id::text,
+       pipelines.name,
+       pipelines.status,
+       pipelines.selected_resources,
+       pipelines.sync_frequency,
+       pipelines.next_sync_at,
+       pipelines.metadata_json,
+       connections.provider`,
+    [
+      input.limit,
+      input.lockToken,
+      input.lockOwner,
+      input.lockTtlSeconds,
+      input.syncFrequencies
+    ]
+  );
+  return result.rows.map((row) => ({
+    id: String(row.id),
+    tenantId: Number(row.tenant_id),
+    sourceConnectionId: String(row.source_connection_id),
+    destinationId: String(row.destination_id),
+    name: String(row.name || ""),
+    status: String(row.status || ""),
+    selectedResources: asStringArray(row.selected_resources),
+    syncFrequency: String(row.sync_frequency || ""),
+    nextSyncAt: row.next_sync_at == null ? null : new Date(row.next_sync_at).toISOString(),
+    metadata: asRecord(row.metadata_json),
+    provider: String(row.provider || "")
+  }));
+}
 async function createQueuedCloudSyncRun(input) {
   const result = await getPool().query(
     `INSERT INTO mcp_app.integration_sync_runs
-      (tenant_id, connection_id, trigger, status, started_at, finished_at, records_in, records_updated, records_failed, metadata_json)
+      (tenant_id, connection_id, pipeline_id, destination_id, trigger, status, started_at, finished_at, records_in, records_updated, records_failed, metadata_json)
      VALUES
-      ($1, $2, 'scheduled', 'queued', NULL, NULL, 0, 0, 0, $3::jsonb)
+      ($1, $2, $3, $4, 'scheduled', 'queued', NULL, NULL, 0, 0, 0, $5::jsonb)
      RETURNING id::text, status`,
     [
       input.tenantId,
       input.connectionId,
+      input.pipelineId || null,
+      input.destinationId || null,
       JSON.stringify({
         mode: "scheduled_sync",
+        pipelineId: input.pipelineId || null,
+        destinationId: input.destinationId || null,
         resources: input.resources,
         requestedBy: input.requestedBy,
         ...input.metadata || {}
@@ -5455,6 +5546,32 @@ async function completeScheduledConnectionDispatch(input) {
     ]
   );
 }
+async function completeScheduledPipelineDispatch(input) {
+  await getPool().query(
+    `UPDATE mcp_app.integration_pipelines
+     SET
+       next_sync_at = $4,
+       sync_lock_token = NULL,
+       sync_lock_owner = NULL,
+       sync_locked_until = NULL,
+       metadata_json = metadata_json || $5::jsonb,
+       updated_at = now()
+     WHERE id = $1
+       AND tenant_id = $2
+       AND sync_lock_token = $3`,
+    [
+      input.pipelineId,
+      input.tenantId,
+      input.lockToken,
+      input.nextSyncAt.toISOString(),
+      JSON.stringify({
+        lastScheduledDispatchAt: (/* @__PURE__ */ new Date()).toISOString(),
+        lastScheduledMessageId: input.messageId,
+        lastScheduledRunId: input.runId
+      })
+    ]
+  );
+}
 async function releaseScheduledConnectionLock(input) {
   await getPool().query(
     `UPDATE mcp_app.integration_connections
@@ -5488,6 +5605,45 @@ async function releaseScheduledConnectionLock(input) {
     actor: "scheduled-sync",
     message: "Falha ao publicar sincronizacao agendada no Pub/Sub.",
     metadata: {
+      runId: input.runId || null,
+      errorMessage: input.errorMessage || null
+    }
+  });
+}
+async function releaseScheduledPipelineLock(input) {
+  await getPool().query(
+    `UPDATE mcp_app.integration_pipelines
+     SET
+       sync_lock_token = NULL,
+       sync_lock_owner = NULL,
+       sync_locked_until = NULL,
+       last_error = COALESCE($4, last_error),
+       metadata_json = metadata_json || $5::jsonb,
+       updated_at = now()
+     WHERE id = $1
+       AND tenant_id = $2
+       AND sync_lock_token = $3`,
+    [
+      input.pipelineId,
+      input.tenantId,
+      input.lockToken,
+      input.errorMessage || null,
+      JSON.stringify({
+        lastScheduledDispatchError: input.errorMessage || null,
+        lastScheduledDispatchErrorAt: input.errorMessage ? (/* @__PURE__ */ new Date()).toISOString() : null,
+        lastScheduledRunId: input.runId || null
+      })
+    ]
+  );
+  await createIntegrationEvent({
+    tenantId: input.tenantId,
+    connectionId: input.connectionId,
+    eventType: "sync.dispatch_failed",
+    severity: "error",
+    actor: "scheduled-sync",
+    message: "Falha ao publicar pipeline agendado no Pub/Sub.",
+    metadata: {
+      pipelineId: input.pipelineId,
       runId: input.runId || null,
       errorMessage: input.errorMessage || null
     }
@@ -6023,10 +6179,20 @@ var EXTERNAL_ID_CANDIDATES = [
   "codigo",
   "numero",
   "numeroPedido",
+  "numeroNota",
+  "chaveAcesso",
+  "codigoRastreamento",
   "pedido.id",
   "contato.id",
   "produto.id",
-  "categoria.id"
+  "categoria.id",
+  "deposito.id",
+  "vendedor.id",
+  "transportador.id",
+  "transportadora.id",
+  "loja.id",
+  "canalVenda.id",
+  "formaPagamento.id"
 ];
 function getNestedValue(row, path) {
   return path.split(".").reduce((current, key) => {
@@ -6061,6 +6227,10 @@ function mapBlingRows(input) {
 
 // src/products/integracoes/cloud/src/connectors/erp/bling/blingResources.ts
 var DEFAULT_PAGE_SIZE = 100;
+function envResourcePath(resource, fallback) {
+  const key = `BLING_RESOURCE_${resource.toUpperCase()}_PATH`;
+  return process.env[key]?.trim() || fallback;
+}
 function pageQuery({ page, pageSize }) {
   return {
     pagina: page,
@@ -6070,7 +6240,7 @@ function pageQuery({ page, pageSize }) {
 var BLING_RESOURCE_CONFIGS = [
   {
     resource: "clientes",
-    path: "/contatos",
+    path: envResourcePath("clientes", "/contatos"),
     itemKeys: ["data", "itens", "items", "contatos"],
     defaultPageSize: DEFAULT_PAGE_SIZE,
     supportsIncremental: false,
@@ -6078,7 +6248,7 @@ var BLING_RESOURCE_CONFIGS = [
   },
   {
     resource: "fornecedores",
-    path: "/contatos",
+    path: envResourcePath("fornecedores", "/contatos"),
     itemKeys: ["data", "itens", "items", "contatos"],
     defaultPageSize: DEFAULT_PAGE_SIZE,
     supportsIncremental: false,
@@ -6086,7 +6256,7 @@ var BLING_RESOURCE_CONFIGS = [
   },
   {
     resource: "produtos",
-    path: "/produtos",
+    path: envResourcePath("produtos", "/produtos"),
     itemKeys: ["data", "itens", "items", "produtos"],
     defaultPageSize: DEFAULT_PAGE_SIZE,
     supportsIncremental: false,
@@ -6094,7 +6264,7 @@ var BLING_RESOURCE_CONFIGS = [
   },
   {
     resource: "pedidos_venda",
-    path: "/pedidos/vendas",
+    path: envResourcePath("pedidos_venda", "/pedidos/vendas"),
     itemKeys: ["data", "itens", "items", "pedidos"],
     defaultPageSize: DEFAULT_PAGE_SIZE,
     supportsIncremental: false,
@@ -6102,7 +6272,7 @@ var BLING_RESOURCE_CONFIGS = [
   },
   {
     resource: "compras",
-    path: "/pedidos/compras",
+    path: envResourcePath("compras", "/pedidos/compras"),
     itemKeys: ["data", "itens", "items", "pedidos"],
     defaultPageSize: DEFAULT_PAGE_SIZE,
     supportsIncremental: false,
@@ -6110,7 +6280,7 @@ var BLING_RESOURCE_CONFIGS = [
   },
   {
     resource: "contas_receber",
-    path: "/contas/receber",
+    path: envResourcePath("contas_receber", "/contas/receber"),
     itemKeys: ["data", "itens", "items", "contas"],
     defaultPageSize: DEFAULT_PAGE_SIZE,
     supportsIncremental: false,
@@ -6118,7 +6288,7 @@ var BLING_RESOURCE_CONFIGS = [
   },
   {
     resource: "contas_pagar",
-    path: "/contas/pagar",
+    path: envResourcePath("contas_pagar", "/contas/pagar"),
     itemKeys: ["data", "itens", "items", "contas"],
     defaultPageSize: DEFAULT_PAGE_SIZE,
     supportsIncremental: false,
@@ -6126,7 +6296,7 @@ var BLING_RESOURCE_CONFIGS = [
   },
   {
     resource: "notas_fiscais",
-    path: "/nfe",
+    path: envResourcePath("notas_fiscais", "/nfe"),
     itemKeys: ["data", "itens", "items", "notas"],
     defaultPageSize: DEFAULT_PAGE_SIZE,
     supportsIncremental: false,
@@ -6134,7 +6304,7 @@ var BLING_RESOURCE_CONFIGS = [
   },
   {
     resource: "estoque",
-    path: "/estoques/saldos",
+    path: envResourcePath("estoque", "/estoques/saldos"),
     itemKeys: ["data", "itens", "items", "saldos"],
     defaultPageSize: DEFAULT_PAGE_SIZE,
     supportsIncremental: false,
@@ -6142,8 +6312,88 @@ var BLING_RESOURCE_CONFIGS = [
   },
   {
     resource: "categorias",
-    path: "/categorias/produtos",
+    path: envResourcePath("categorias", "/categorias/produtos"),
     itemKeys: ["data", "itens", "items", "categorias"],
+    defaultPageSize: DEFAULT_PAGE_SIZE,
+    supportsIncremental: false,
+    buildQuery: pageQuery
+  },
+  {
+    resource: "servicos",
+    path: envResourcePath("servicos", "/servicos"),
+    itemKeys: ["data", "itens", "items", "servicos"],
+    defaultPageSize: DEFAULT_PAGE_SIZE,
+    supportsIncremental: false,
+    buildQuery: pageQuery
+  },
+  {
+    resource: "notas_servico",
+    path: envResourcePath("notas_servico", "/nfse"),
+    itemKeys: ["data", "itens", "items", "notas", "nfse"],
+    defaultPageSize: DEFAULT_PAGE_SIZE,
+    supportsIncremental: false,
+    buildQuery: pageQuery
+  },
+  {
+    resource: "notas_consumidor",
+    path: envResourcePath("notas_consumidor", "/nfce"),
+    itemKeys: ["data", "itens", "items", "notas", "nfce"],
+    defaultPageSize: DEFAULT_PAGE_SIZE,
+    supportsIncremental: false,
+    buildQuery: pageQuery
+  },
+  {
+    resource: "formas_pagamento",
+    path: envResourcePath("formas_pagamento", "/formas-pagamentos"),
+    itemKeys: ["data", "itens", "items", "formas_pagamento", "formasPagamento"],
+    defaultPageSize: DEFAULT_PAGE_SIZE,
+    supportsIncremental: false,
+    buildQuery: pageQuery
+  },
+  {
+    resource: "vendedores",
+    path: envResourcePath("vendedores", "/vendedores"),
+    itemKeys: ["data", "itens", "items", "vendedores"],
+    defaultPageSize: DEFAULT_PAGE_SIZE,
+    supportsIncremental: false,
+    buildQuery: pageQuery
+  },
+  {
+    resource: "transportadoras",
+    path: envResourcePath("transportadoras", "/transportadoras"),
+    itemKeys: ["data", "itens", "items", "transportadoras"],
+    defaultPageSize: DEFAULT_PAGE_SIZE,
+    supportsIncremental: false,
+    buildQuery: pageQuery
+  },
+  {
+    resource: "canais_venda",
+    path: envResourcePath("canais_venda", "/canais-venda"),
+    itemKeys: ["data", "itens", "items", "canais_venda", "canaisVenda"],
+    defaultPageSize: DEFAULT_PAGE_SIZE,
+    supportsIncremental: false,
+    buildQuery: pageQuery
+  },
+  {
+    resource: "lojas",
+    path: envResourcePath("lojas", "/lojas"),
+    itemKeys: ["data", "itens", "items", "lojas"],
+    defaultPageSize: DEFAULT_PAGE_SIZE,
+    supportsIncremental: false,
+    buildQuery: pageQuery
+  },
+  {
+    resource: "categorias_receitas_despesas",
+    path: envResourcePath("categorias_receitas_despesas", "/categorias/receitas-despesas"),
+    itemKeys: ["data", "itens", "items", "categorias"],
+    defaultPageSize: DEFAULT_PAGE_SIZE,
+    supportsIncremental: false,
+    buildQuery: pageQuery
+  },
+  {
+    resource: "depositos",
+    path: envResourcePath("depositos", "/depositos"),
+    itemKeys: ["data", "itens", "items", "depositos"],
     defaultPageSize: DEFAULT_PAGE_SIZE,
     supportsIncremental: false,
     buildQuery: pageQuery
@@ -6414,8 +6664,22 @@ var EXTERNAL_ID_CANDIDATES2 = [
   "id_legado",
   "legacy_id",
   "referencia",
+  "reference",
+  "nome",
+  "name",
+  "chave",
+  "chave_acesso",
+  "access_key",
+  "numero_nota",
+  "sale.id",
+  "contract.id",
+  "bankAccount.id",
+  "seller.id",
   "evento.id",
-  "parcela.id"
+  "parcela.id",
+  "item.id",
+  "produto.id",
+  "servico.id"
 ];
 function getNestedValue2(row, path) {
   return path.split(".").reduce((current, key) => {
@@ -6450,6 +6714,10 @@ function mapContaAzulRows(input) {
 
 // src/products/integracoes/cloud/src/connectors/erp/contaAzul/contaAzulResources.ts
 var DEFAULT_PAGE_SIZE2 = 50;
+function envResourcePath2(resource, fallback) {
+  const key = `CONTA_AZUL_RESOURCE_${resource.toUpperCase()}_PATH`;
+  return process.env[key]?.trim() || fallback;
+}
 function pageQuery2({ page, pageSize }) {
   return {
     pagina: page,
@@ -6465,7 +6733,7 @@ function payableReceivableBody({ page, pageSize }) {
 var CONTA_AZUL_RESOURCE_CONFIGS = [
   {
     resource: "clientes",
-    path: "/v1/pessoas",
+    path: envResourcePath2("clientes", "/v1/pessoas"),
     itemKeys: ["itens", "items", "data", "content", "pessoas"],
     defaultPageSize: DEFAULT_PAGE_SIZE2,
     supportsIncremental: false,
@@ -6473,7 +6741,7 @@ var CONTA_AZUL_RESOURCE_CONFIGS = [
   },
   {
     resource: "fornecedores",
-    path: "/v1/pessoas",
+    path: envResourcePath2("fornecedores", "/v1/pessoas"),
     itemKeys: ["itens", "items", "data", "content", "pessoas"],
     defaultPageSize: DEFAULT_PAGE_SIZE2,
     supportsIncremental: false,
@@ -6481,7 +6749,7 @@ var CONTA_AZUL_RESOURCE_CONFIGS = [
   },
   {
     resource: "produtos",
-    path: "/v1/produtos",
+    path: envResourcePath2("produtos", "/v1/produtos"),
     itemKeys: ["itens", "items", "data", "content", "produtos"],
     defaultPageSize: DEFAULT_PAGE_SIZE2,
     supportsIncremental: false,
@@ -6489,7 +6757,7 @@ var CONTA_AZUL_RESOURCE_CONFIGS = [
   },
   {
     resource: "categorias",
-    path: "/v1/categorias",
+    path: envResourcePath2("categorias", "/v1/categorias"),
     itemKeys: ["itens", "items", "data", "content", "categorias"],
     defaultPageSize: DEFAULT_PAGE_SIZE2,
     supportsIncremental: false,
@@ -6497,7 +6765,7 @@ var CONTA_AZUL_RESOURCE_CONFIGS = [
   },
   {
     resource: "centros_custo",
-    path: "/v1/centro-de-custo",
+    path: envResourcePath2("centros_custo", "/v1/centro-de-custo"),
     itemKeys: ["itens", "items", "data", "content", "centros_custo"],
     defaultPageSize: DEFAULT_PAGE_SIZE2,
     supportsIncremental: false,
@@ -6505,7 +6773,7 @@ var CONTA_AZUL_RESOURCE_CONFIGS = [
   },
   {
     resource: "contas_receber",
-    path: "/v1/financeiro/eventos-financeiros/contas-a-receber/buscar",
+    path: envResourcePath2("contas_receber", "/v1/financeiro/eventos-financeiros/contas-a-receber/buscar"),
     method: "POST",
     itemKeys: ["itens", "items", "data", "content", "eventos", "parcelas"],
     defaultPageSize: DEFAULT_PAGE_SIZE2,
@@ -6514,12 +6782,92 @@ var CONTA_AZUL_RESOURCE_CONFIGS = [
   },
   {
     resource: "contas_pagar",
-    path: "/v1/financeiro/eventos-financeiros/contas-a-pagar/buscar",
+    path: envResourcePath2("contas_pagar", "/v1/financeiro/eventos-financeiros/contas-a-pagar/buscar"),
     method: "POST",
     itemKeys: ["itens", "items", "data", "content", "eventos", "parcelas"],
     defaultPageSize: DEFAULT_PAGE_SIZE2,
     supportsIncremental: false,
     buildBody: payableReceivableBody
+  },
+  {
+    resource: "servicos",
+    path: envResourcePath2("servicos", "/v1/servicos"),
+    itemKeys: ["itens", "items", "data", "content", "servicos", "services"],
+    defaultPageSize: DEFAULT_PAGE_SIZE2,
+    supportsIncremental: false,
+    buildQuery: pageQuery2
+  },
+  {
+    resource: "vendas",
+    path: envResourcePath2("vendas", "/v1/vendas"),
+    itemKeys: ["itens", "items", "data", "content", "vendas", "sales"],
+    defaultPageSize: DEFAULT_PAGE_SIZE2,
+    supportsIncremental: false,
+    buildQuery: pageQuery2
+  },
+  {
+    resource: "itens_venda",
+    path: envResourcePath2("itens_venda", "/v1/vendas/itens"),
+    itemKeys: ["itens", "items", "data", "content", "itens_venda", "saleItems"],
+    defaultPageSize: DEFAULT_PAGE_SIZE2,
+    supportsIncremental: false,
+    buildQuery: pageQuery2
+  },
+  {
+    resource: "parcelas_venda",
+    path: envResourcePath2("parcelas_venda", "/v1/vendas/parcelas"),
+    itemKeys: ["itens", "items", "data", "content", "parcelas_venda", "installments"],
+    defaultPageSize: DEFAULT_PAGE_SIZE2,
+    supportsIncremental: false,
+    buildQuery: pageQuery2
+  },
+  {
+    resource: "contratos",
+    path: envResourcePath2("contratos", "/v1/contratos"),
+    itemKeys: ["itens", "items", "data", "content", "contratos", "contracts"],
+    defaultPageSize: DEFAULT_PAGE_SIZE2,
+    supportsIncremental: false,
+    buildQuery: pageQuery2
+  },
+  {
+    resource: "contas_bancarias",
+    path: envResourcePath2("contas_bancarias", "/v1/contas-bancarias"),
+    itemKeys: ["itens", "items", "data", "content", "contas_bancarias", "bankAccounts"],
+    defaultPageSize: DEFAULT_PAGE_SIZE2,
+    supportsIncremental: false,
+    buildQuery: pageQuery2
+  },
+  {
+    resource: "vendedores",
+    path: envResourcePath2("vendedores", "/v1/vendedores"),
+    itemKeys: ["itens", "items", "data", "content", "vendedores", "sellers"],
+    defaultPageSize: DEFAULT_PAGE_SIZE2,
+    supportsIncremental: false,
+    buildQuery: pageQuery2
+  },
+  {
+    resource: "notas_fiscais",
+    path: envResourcePath2("notas_fiscais", "/v1/notas-fiscais"),
+    itemKeys: ["itens", "items", "data", "content", "notas_fiscais", "invoices"],
+    defaultPageSize: DEFAULT_PAGE_SIZE2,
+    supportsIncremental: false,
+    buildQuery: pageQuery2
+  },
+  {
+    resource: "estoque",
+    path: envResourcePath2("estoque", "/v1/estoque"),
+    itemKeys: ["itens", "items", "data", "content", "estoque", "saldos", "stock"],
+    defaultPageSize: DEFAULT_PAGE_SIZE2,
+    supportsIncremental: false,
+    buildQuery: pageQuery2
+  },
+  {
+    resource: "movimentacoes_estoque",
+    path: envResourcePath2("movimentacoes_estoque", "/v1/estoque/movimentacoes"),
+    itemKeys: ["itens", "items", "data", "content", "movimentacoes_estoque", "movements"],
+    defaultPageSize: DEFAULT_PAGE_SIZE2,
+    supportsIncremental: false,
+    buildQuery: pageQuery2
   }
 ];
 var CONTA_AZUL_RESOURCE_MAP = new Map(CONTA_AZUL_RESOURCE_CONFIGS.map((config) => [config.resource, config]));
@@ -7332,6 +7680,66 @@ var BLING_RESOURCES = [
     name: "Categorias",
     description: "Categorias de produtos e classificacoes comerciais.",
     defaultEnabled: false
+  },
+  {
+    slug: "servicos",
+    name: "Servicos",
+    description: "Servicos cadastrados para vendas e emissao fiscal.",
+    defaultEnabled: false
+  },
+  {
+    slug: "notas_servico",
+    name: "Notas de servico",
+    description: "NFS-e, valores, tomadores e status fiscal.",
+    defaultEnabled: false
+  },
+  {
+    slug: "notas_consumidor",
+    name: "Notas de consumidor",
+    description: "NFC-e emitidas no varejo e frente de caixa.",
+    defaultEnabled: false
+  },
+  {
+    slug: "formas_pagamento",
+    name: "Formas de pagamento",
+    description: "Formas de pagamento usadas em pedidos, contas e notas.",
+    defaultEnabled: false
+  },
+  {
+    slug: "vendedores",
+    name: "Vendedores",
+    description: "Cadastro de vendedores e responsaveis comerciais.",
+    defaultEnabled: false
+  },
+  {
+    slug: "transportadoras",
+    name: "Transportadoras",
+    description: "Transportadoras e dados de frete.",
+    defaultEnabled: false
+  },
+  {
+    slug: "canais_venda",
+    name: "Canais de venda",
+    description: "Canais, marketplaces e origens comerciais.",
+    defaultEnabled: false
+  },
+  {
+    slug: "lojas",
+    name: "Lojas",
+    description: "Lojas e contas comerciais conectadas ao Bling.",
+    defaultEnabled: false
+  },
+  {
+    slug: "categorias_receitas_despesas",
+    name: "Categorias financeiras",
+    description: "Categorias de receitas e despesas.",
+    defaultEnabled: false
+  },
+  {
+    slug: "depositos",
+    name: "Depositos",
+    description: "Depositos e locais de estoque.",
+    defaultEnabled: false
   }
 ];
 var BLING_PROVIDER = erpProvider({
@@ -7387,6 +7795,66 @@ var CONTA_AZUL_RESOURCES = [
     slug: "centros_custo",
     name: "Centros de custo",
     description: "Estrutura gerencial para rateios e analises.",
+    defaultEnabled: false
+  },
+  {
+    slug: "servicos",
+    name: "Servicos",
+    description: "Catalogo de servicos, precos e informacoes comerciais.",
+    defaultEnabled: false
+  },
+  {
+    slug: "vendas",
+    name: "Vendas",
+    description: "Vendas, clientes, valores, situacao e dados comerciais.",
+    defaultEnabled: false
+  },
+  {
+    slug: "itens_venda",
+    name: "Itens de venda",
+    description: "Produtos e servicos vinculados as vendas.",
+    defaultEnabled: false
+  },
+  {
+    slug: "parcelas_venda",
+    name: "Parcelas de venda",
+    description: "Parcelas, vencimentos, valores e situacao de pagamento das vendas.",
+    defaultEnabled: false
+  },
+  {
+    slug: "contratos",
+    name: "Contratos",
+    description: "Contratos recorrentes, clientes, valores e periodicidade.",
+    defaultEnabled: false
+  },
+  {
+    slug: "contas_bancarias",
+    name: "Contas bancarias",
+    description: "Contas bancarias e carteiras usadas no financeiro.",
+    defaultEnabled: false
+  },
+  {
+    slug: "vendedores",
+    name: "Vendedores",
+    description: "Cadastro de vendedores e responsaveis comerciais.",
+    defaultEnabled: false
+  },
+  {
+    slug: "notas_fiscais",
+    name: "Notas fiscais",
+    description: "Notas fiscais emitidas, chaves, valores e status fiscais.",
+    defaultEnabled: false
+  },
+  {
+    slug: "estoque",
+    name: "Estoque",
+    description: "Saldos e posicao de estoque quando disponivel na conta.",
+    defaultEnabled: false
+  },
+  {
+    slug: "movimentacoes_estoque",
+    name: "Movimentacoes de estoque",
+    description: "Entradas, saidas e ajustes de estoque.",
     defaultEnabled: false
   }
 ];
@@ -7753,6 +8221,8 @@ async function publishSyncMessage(input) {
     type: "integration.sync.requested",
     tenantId: input.tenantId,
     connectionId: input.connectionId,
+    pipelineId: input.pipelineId,
+    destinationId: input.destinationId,
     runId: input.runId,
     trigger: input.trigger,
     resources: input.resources || [],
@@ -7771,6 +8241,8 @@ async function publishSyncMessage(input) {
         attributes: {
           tenantId: String(input.tenantId),
           connectionId: input.connectionId,
+          ...input.pipelineId ? { pipelineId: input.pipelineId } : {},
+          ...input.destinationId ? { destinationId: input.destinationId } : {},
           ...input.runId ? { runId: input.runId } : {},
           trigger: input.trigger
         }
@@ -7838,7 +8310,7 @@ async function handleScheduledSync(request) {
   const requestedBy = body.requestedBy || "scheduled-sync";
   const items = [];
   try {
-    const dueConnections = await claimDueScheduledConnections({
+    const duePipelines = await claimDueScheduledPipelines({
       limit: body.limit || 25,
       lockToken,
       lockOwner: requestedBy,
@@ -7847,6 +8319,108 @@ async function handleScheduledSync(request) {
     });
     let published = 0;
     let failed = 0;
+    for (const pipeline of duePipelines) {
+      let runId = null;
+      try {
+        const nextSyncAt = calculateNextSyncAt(pipeline.syncFrequency);
+        if (!nextSyncAt) {
+          failed += 1;
+          await releaseScheduledPipelineLock({
+            tenantId: pipeline.tenantId,
+            pipelineId: pipeline.id,
+            connectionId: pipeline.sourceConnectionId,
+            lockToken,
+            errorMessage: `Frequencia de sync nao suportada: ${pipeline.syncFrequency}`
+          });
+          items.push({
+            pipelineId: pipeline.id,
+            connectionId: pipeline.sourceConnectionId,
+            tenantId: pipeline.tenantId,
+            ok: false,
+            error: "Frequencia de sync nao suportada."
+          });
+          continue;
+        }
+        const run = await createQueuedCloudSyncRun({
+          tenantId: pipeline.tenantId,
+          connectionId: pipeline.sourceConnectionId,
+          pipelineId: pipeline.id,
+          destinationId: pipeline.destinationId,
+          resources: pipeline.selectedResources,
+          requestedBy,
+          metadata: {
+            provider: pipeline.provider,
+            syncFrequency: pipeline.syncFrequency,
+            previousNextSyncAt: pipeline.nextSyncAt
+          }
+        });
+        runId = run.id;
+        const publish = await publishSyncMessage({
+          tenantId: pipeline.tenantId,
+          connectionId: pipeline.sourceConnectionId,
+          pipelineId: pipeline.id,
+          destinationId: pipeline.destinationId,
+          runId,
+          trigger: "scheduled",
+          resources: pipeline.selectedResources,
+          requestedBy
+        });
+        await completeScheduledPipelineDispatch({
+          tenantId: pipeline.tenantId,
+          pipelineId: pipeline.id,
+          lockToken,
+          nextSyncAt,
+          messageId: publish.messageId,
+          runId
+        });
+        published += 1;
+        items.push({
+          pipelineId: pipeline.id,
+          connectionId: pipeline.sourceConnectionId,
+          destinationId: pipeline.destinationId,
+          tenantId: pipeline.tenantId,
+          ok: true,
+          runId,
+          messageId: publish.messageId,
+          nextSyncAt: nextSyncAt.toISOString()
+        });
+      } catch (error) {
+        failed += 1;
+        const errorMessage = error instanceof Error ? error.message : "Falha ao publicar sync agendado.";
+        if (runId) {
+          await failQueuedCloudSyncRun({
+            tenantId: pipeline.tenantId,
+            connectionId: pipeline.sourceConnectionId,
+            runId,
+            errorMessage
+          });
+        }
+        await releaseScheduledPipelineLock({
+          tenantId: pipeline.tenantId,
+          pipelineId: pipeline.id,
+          connectionId: pipeline.sourceConnectionId,
+          lockToken,
+          runId,
+          errorMessage
+        });
+        items.push({
+          pipelineId: pipeline.id,
+          connectionId: pipeline.sourceConnectionId,
+          tenantId: pipeline.tenantId,
+          ok: false,
+          runId,
+          error: errorMessage
+        });
+      }
+    }
+    const remainingLimit = Math.max((body.limit || 25) - duePipelines.length, 0);
+    const dueConnections = remainingLimit ? await claimDueScheduledConnections({
+      limit: remainingLimit,
+      lockToken,
+      lockOwner: requestedBy,
+      lockTtlSeconds: body.lockTtlSeconds || 600,
+      syncFrequencies: supportedFrequencies
+    }) : [];
     for (const connection of dueConnections) {
       let runId = null;
       try {
@@ -7859,12 +8433,7 @@ async function handleScheduledSync(request) {
             lockToken,
             errorMessage: `Frequencia de sync nao suportada: ${connection.syncFrequency}`
           });
-          items.push({
-            connectionId: connection.id,
-            tenantId: connection.tenantId,
-            ok: false,
-            error: "Frequencia de sync nao suportada."
-          });
+          items.push({ connectionId: connection.id, tenantId: connection.tenantId, ok: false, error: "Frequencia de sync nao suportada." });
           continue;
         }
         const run = await createQueuedCloudSyncRun({
@@ -7875,7 +8444,8 @@ async function handleScheduledSync(request) {
           metadata: {
             provider: connection.provider,
             syncFrequency: connection.syncFrequency,
-            previousNextSyncAt: connection.nextSyncAt
+            previousNextSyncAt: connection.nextSyncAt,
+            legacyConnectionSchedule: true
           }
         });
         runId = run.id;
@@ -7896,39 +8466,15 @@ async function handleScheduledSync(request) {
           runId
         });
         published += 1;
-        items.push({
-          connectionId: connection.id,
-          tenantId: connection.tenantId,
-          ok: true,
-          runId,
-          messageId: publish.messageId,
-          nextSyncAt: nextSyncAt.toISOString()
-        });
+        items.push({ connectionId: connection.id, tenantId: connection.tenantId, ok: true, runId, messageId: publish.messageId, nextSyncAt: nextSyncAt.toISOString(), legacyConnectionSchedule: true });
       } catch (error) {
         failed += 1;
         const errorMessage = error instanceof Error ? error.message : "Falha ao publicar sync agendado.";
         if (runId) {
-          await failQueuedCloudSyncRun({
-            tenantId: connection.tenantId,
-            connectionId: connection.id,
-            runId,
-            errorMessage
-          });
+          await failQueuedCloudSyncRun({ tenantId: connection.tenantId, connectionId: connection.id, runId, errorMessage });
         }
-        await releaseScheduledConnectionLock({
-          tenantId: connection.tenantId,
-          connectionId: connection.id,
-          lockToken,
-          runId,
-          errorMessage
-        });
-        items.push({
-          connectionId: connection.id,
-          tenantId: connection.tenantId,
-          ok: false,
-          runId,
-          error: errorMessage
-        });
+        await releaseScheduledConnectionLock({ tenantId: connection.tenantId, connectionId: connection.id, lockToken, runId, errorMessage });
+        items.push({ connectionId: connection.id, tenantId: connection.tenantId, ok: false, runId, error: errorMessage, legacyConnectionSchedule: true });
       }
     }
     return {
@@ -7936,7 +8482,9 @@ async function handleScheduledSync(request) {
       body: {
         ok: true,
         mode: "scheduled_sync",
-        claimed: dueConnections.length,
+        claimed: duePipelines.length + dueConnections.length,
+        claimedPipelines: duePipelines.length,
+        claimedLegacyConnections: dueConnections.length,
         published,
         failed,
         items
@@ -7963,6 +8511,8 @@ function parseSyncDispatchBody(body) {
   return {
     tenantId: typeof body.tenantId === "number" ? body.tenantId : void 0,
     connectionId: typeof body.connectionId === "string" ? body.connectionId : void 0,
+    pipelineId: typeof body.pipelineId === "string" ? body.pipelineId : void 0,
+    destinationId: typeof body.destinationId === "string" ? body.destinationId : void 0,
     runId: typeof body.runId === "string" ? body.runId : void 0,
     trigger: typeof body.trigger === "string" && syncTriggers.includes(body.trigger) ? body.trigger : void 0,
     resources: Array.isArray(body.resources) ? body.resources.filter((resource) => typeof resource === "string") : void 0,
@@ -7984,6 +8534,8 @@ async function handleSyncDispatch(request) {
     const publish = await publishSyncMessage({
       tenantId: body.tenantId,
       connectionId: body.connectionId,
+      pipelineId: body.pipelineId,
+      destinationId: body.destinationId,
       runId: body.runId,
       trigger: body.trigger || "manual",
       resources: body.resources,

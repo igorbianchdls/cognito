@@ -44,6 +44,66 @@ export const CONTA_AZUL_RESOURCES: IntegrationResource[] = [
     description: 'Estrutura gerencial para rateios e analises.',
     defaultEnabled: false,
   },
+  {
+    slug: 'servicos',
+    name: 'Servicos',
+    description: 'Catalogo de servicos, precos e informacoes comerciais.',
+    defaultEnabled: false,
+  },
+  {
+    slug: 'vendas',
+    name: 'Vendas',
+    description: 'Vendas, clientes, valores, situacao e dados comerciais.',
+    defaultEnabled: false,
+  },
+  {
+    slug: 'itens_venda',
+    name: 'Itens de venda',
+    description: 'Produtos e servicos vinculados as vendas.',
+    defaultEnabled: false,
+  },
+  {
+    slug: 'parcelas_venda',
+    name: 'Parcelas de venda',
+    description: 'Parcelas, vencimentos, valores e situacao de pagamento das vendas.',
+    defaultEnabled: false,
+  },
+  {
+    slug: 'contratos',
+    name: 'Contratos',
+    description: 'Contratos recorrentes, clientes, valores e periodicidade.',
+    defaultEnabled: false,
+  },
+  {
+    slug: 'contas_bancarias',
+    name: 'Contas bancarias',
+    description: 'Contas bancarias e carteiras usadas no financeiro.',
+    defaultEnabled: false,
+  },
+  {
+    slug: 'vendedores',
+    name: 'Vendedores',
+    description: 'Cadastro de vendedores e responsaveis comerciais.',
+    defaultEnabled: false,
+  },
+  {
+    slug: 'notas_fiscais',
+    name: 'Notas fiscais',
+    description: 'Notas fiscais emitidas, chaves, valores e status fiscais.',
+    defaultEnabled: false,
+  },
+  {
+    slug: 'estoque',
+    name: 'Estoque',
+    description: 'Saldos e posicao de estoque quando disponivel na conta.',
+    defaultEnabled: false,
+  },
+  {
+    slug: 'movimentacoes_estoque',
+    name: 'Movimentacoes de estoque',
+    description: 'Entradas, saidas e ajustes de estoque.',
+    defaultEnabled: false,
+  },
 ]
 
 export const CONTA_AZUL_PROVIDER = erpProvider({

@@ -5,6 +5,8 @@ import type { IntegrationSyncTrigger } from '@/products/integracoes/shared/contr
 export type PublishSyncMessageInput = {
   connectionId: string
   tenantId: number
+  pipelineId?: string
+  destinationId?: string
   runId?: string
   trigger: IntegrationSyncTrigger
   resources?: string[]
@@ -30,6 +32,8 @@ export async function publishSyncMessage(input: PublishSyncMessageInput): Promis
     type: 'integration.sync.requested',
     tenantId: input.tenantId,
     connectionId: input.connectionId,
+    pipelineId: input.pipelineId,
+    destinationId: input.destinationId,
     runId: input.runId,
     trigger: input.trigger,
     resources: input.resources || [],
@@ -49,6 +53,8 @@ export async function publishSyncMessage(input: PublishSyncMessageInput): Promis
         attributes: {
           tenantId: String(input.tenantId),
           connectionId: input.connectionId,
+          ...(input.pipelineId ? { pipelineId: input.pipelineId } : {}),
+          ...(input.destinationId ? { destinationId: input.destinationId } : {}),
           ...(input.runId ? { runId: input.runId } : {}),
           trigger: input.trigger,
         },

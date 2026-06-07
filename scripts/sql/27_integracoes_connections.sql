@@ -68,10 +68,112 @@ CREATE INDEX IF NOT EXISTS integration_connections_sync_lock_idx
   ON mcp_app.integration_connections (sync_locked_until)
   WHERE sync_locked_until IS NOT NULL;
 
+CREATE TABLE IF NOT EXISTS mcp_app.integration_destinations (
+  id bigserial PRIMARY KEY,
+  tenant_id integer NOT NULL DEFAULT 1,
+  type text NOT NULL,
+  name text NOT NULL,
+  status text NOT NULL DEFAULT 'active',
+  config_json jsonb NOT NULL DEFAULT '{}'::jsonb,
+  secret_ref text NULL,
+  metadata_json jsonb NOT NULL DEFAULT '{}'::jsonb,
+  created_at timestamptz NOT NULL DEFAULT now(),
+  updated_at timestamptz NOT NULL DEFAULT now(),
+  CONSTRAINT integration_destinations_type_check
+    CHECK (type IN ('bigquery', 'google_sheets', 'excel', 'postgres', 'supabase', 'snowflake', 's3')),
+  CONSTRAINT integration_destinations_status_check
+    CHECK (status IN ('active', 'disabled', 'error')),
+  CONSTRAINT integration_destinations_config_object_check
+    CHECK (jsonb_typeof(config_json) = 'object'),
+  CONSTRAINT integration_destinations_metadata_object_check
+    CHECK (jsonb_typeof(metadata_json) = 'object')
+);
+
+CREATE UNIQUE INDEX IF NOT EXISTS integration_destinations_default_bigquery_uidx
+  ON mcp_app.integration_destinations (tenant_id, type)
+  WHERE type = 'bigquery' AND (metadata_json->>'isDefault') = 'true';
+
+CREATE INDEX IF NOT EXISTS integration_destinations_tenant_type_idx
+  ON mcp_app.integration_destinations (tenant_id, type, status);
+
+CREATE TABLE IF NOT EXISTS mcp_app.integration_pipelines (
+  id bigserial PRIMARY KEY,
+  tenant_id integer NOT NULL DEFAULT 1,
+  source_connection_id bigint NOT NULL REFERENCES mcp_app.integration_connections(id) ON DELETE CASCADE,
+  destination_id bigint NOT NULL REFERENCES mcp_app.integration_destinations(id) ON DELETE CASCADE,
+  name text NOT NULL,
+  status text NOT NULL DEFAULT 'active',
+  selected_resources jsonb NOT NULL DEFAULT '[]'::jsonb,
+  sync_frequency text NOT NULL DEFAULT 'manual',
+  sync_enabled boolean NOT NULL DEFAULT true,
+  next_sync_at timestamptz NULL,
+  sync_locked_until timestamptz NULL,
+  sync_lock_token text NULL,
+  sync_lock_owner text NULL,
+  last_sync_at timestamptz NULL,
+  last_success_at timestamptz NULL,
+  last_error text NULL,
+  records_synced integer NOT NULL DEFAULT 0,
+  metadata_json jsonb NOT NULL DEFAULT '{}'::jsonb,
+  created_at timestamptz NOT NULL DEFAULT now(),
+  updated_at timestamptz NOT NULL DEFAULT now(),
+  CONSTRAINT integration_pipelines_status_check
+    CHECK (status IN ('draft', 'active', 'paused', 'error', 'disabled')),
+  CONSTRAINT integration_pipelines_selected_resources_array_check
+    CHECK (jsonb_typeof(selected_resources) = 'array'),
+  CONSTRAINT integration_pipelines_records_synced_check
+    CHECK (records_synced >= 0),
+  CONSTRAINT integration_pipelines_metadata_object_check
+    CHECK (jsonb_typeof(metadata_json) = 'object')
+);
+
+CREATE INDEX IF NOT EXISTS integration_pipelines_tenant_source_idx
+  ON mcp_app.integration_pipelines (tenant_id, source_connection_id);
+
+CREATE INDEX IF NOT EXISTS integration_pipelines_tenant_destination_idx
+  ON mcp_app.integration_pipelines (tenant_id, destination_id);
+
+CREATE INDEX IF NOT EXISTS integration_pipelines_due_sync_idx
+  ON mcp_app.integration_pipelines (tenant_id, next_sync_at)
+  WHERE sync_enabled = true
+    AND next_sync_at IS NOT NULL
+    AND sync_frequency <> 'manual'
+    AND status = 'active';
+
+CREATE INDEX IF NOT EXISTS integration_pipelines_sync_lock_idx
+  ON mcp_app.integration_pipelines (sync_locked_until)
+  WHERE sync_locked_until IS NOT NULL;
+
+CREATE TABLE IF NOT EXISTS mcp_app.integration_mcp_permissions (
+  id bigserial PRIMARY KEY,
+  tenant_id integer NOT NULL DEFAULT 1,
+  connection_id bigint NOT NULL REFERENCES mcp_app.integration_connections(id) ON DELETE CASCADE,
+  enabled boolean NOT NULL DEFAULT false,
+  read_resources jsonb NOT NULL DEFAULT '[]'::jsonb,
+  write_resources jsonb NOT NULL DEFAULT '[]'::jsonb,
+  destructive_resources jsonb NOT NULL DEFAULT '[]'::jsonb,
+  require_confirmation boolean NOT NULL DEFAULT true,
+  metadata_json jsonb NOT NULL DEFAULT '{}'::jsonb,
+  created_at timestamptz NOT NULL DEFAULT now(),
+  updated_at timestamptz NOT NULL DEFAULT now(),
+  CONSTRAINT integration_mcp_permissions_read_array_check
+    CHECK (jsonb_typeof(read_resources) = 'array'),
+  CONSTRAINT integration_mcp_permissions_write_array_check
+    CHECK (jsonb_typeof(write_resources) = 'array'),
+  CONSTRAINT integration_mcp_permissions_destructive_array_check
+    CHECK (jsonb_typeof(destructive_resources) = 'array'),
+  CONSTRAINT integration_mcp_permissions_metadata_object_check
+    CHECK (jsonb_typeof(metadata_json) = 'object'),
+  CONSTRAINT integration_mcp_permissions_connection_unique
+    UNIQUE (tenant_id, connection_id)
+);
+
 CREATE TABLE IF NOT EXISTS mcp_app.integration_sync_runs (
   id bigserial PRIMARY KEY,
   tenant_id integer NOT NULL DEFAULT 1,
   connection_id bigint NOT NULL REFERENCES mcp_app.integration_connections(id) ON DELETE CASCADE,
+  pipeline_id bigint NULL REFERENCES mcp_app.integration_pipelines(id) ON DELETE SET NULL,
+  destination_id bigint NULL REFERENCES mcp_app.integration_destinations(id) ON DELETE SET NULL,
   trigger text NOT NULL DEFAULT 'manual',
   status text NOT NULL DEFAULT 'queued',
   resource text NULL,
@@ -106,6 +208,14 @@ CREATE INDEX IF NOT EXISTS integration_sync_runs_tenant_created_idx
 CREATE INDEX IF NOT EXISTS integration_sync_runs_external_job_idx
   ON mcp_app.integration_sync_runs (external_job_id)
   WHERE external_job_id IS NOT NULL;
+
+CREATE INDEX IF NOT EXISTS integration_sync_runs_pipeline_created_idx
+  ON mcp_app.integration_sync_runs (pipeline_id, created_at DESC)
+  WHERE pipeline_id IS NOT NULL;
+
+CREATE INDEX IF NOT EXISTS integration_sync_runs_destination_created_idx
+  ON mcp_app.integration_sync_runs (destination_id, created_at DESC)
+  WHERE destination_id IS NOT NULL;
 
 CREATE TABLE IF NOT EXISTS mcp_app.integration_sync_cursors (
   id bigserial PRIMARY KEY,
@@ -175,7 +285,17 @@ WITH conta_azul_resources AS (
     jsonb_build_object('slug', 'contas_receber', 'name', 'Contas a receber', 'defaultEnabled', true),
     jsonb_build_object('slug', 'contas_pagar', 'name', 'Contas a pagar', 'defaultEnabled', true),
     jsonb_build_object('slug', 'categorias', 'name', 'Categorias', 'defaultEnabled', false),
-    jsonb_build_object('slug', 'centros_custo', 'name', 'Centros de custo', 'defaultEnabled', false)
+    jsonb_build_object('slug', 'centros_custo', 'name', 'Centros de custo', 'defaultEnabled', false),
+    jsonb_build_object('slug', 'servicos', 'name', 'Servicos', 'defaultEnabled', false),
+    jsonb_build_object('slug', 'vendas', 'name', 'Vendas', 'defaultEnabled', false),
+    jsonb_build_object('slug', 'itens_venda', 'name', 'Itens de venda', 'defaultEnabled', false),
+    jsonb_build_object('slug', 'parcelas_venda', 'name', 'Parcelas de venda', 'defaultEnabled', false),
+    jsonb_build_object('slug', 'contratos', 'name', 'Contratos', 'defaultEnabled', false),
+    jsonb_build_object('slug', 'contas_bancarias', 'name', 'Contas bancarias', 'defaultEnabled', false),
+    jsonb_build_object('slug', 'vendedores', 'name', 'Vendedores', 'defaultEnabled', false),
+    jsonb_build_object('slug', 'notas_fiscais', 'name', 'Notas fiscais', 'defaultEnabled', false),
+    jsonb_build_object('slug', 'estoque', 'name', 'Estoque', 'defaultEnabled', false),
+    jsonb_build_object('slug', 'movimentacoes_estoque', 'name', 'Movimentacoes de estoque', 'defaultEnabled', false)
   ) AS resources_json
 ),
 omie_resources AS (
@@ -207,7 +327,17 @@ bling_resources AS (
     jsonb_build_object('slug', 'contas_pagar', 'name', 'Contas a pagar', 'defaultEnabled', true),
     jsonb_build_object('slug', 'notas_fiscais', 'name', 'Notas fiscais', 'defaultEnabled', false),
     jsonb_build_object('slug', 'estoque', 'name', 'Estoque', 'defaultEnabled', false),
-    jsonb_build_object('slug', 'categorias', 'name', 'Categorias', 'defaultEnabled', false)
+    jsonb_build_object('slug', 'categorias', 'name', 'Categorias', 'defaultEnabled', false),
+    jsonb_build_object('slug', 'servicos', 'name', 'Servicos', 'defaultEnabled', false),
+    jsonb_build_object('slug', 'notas_servico', 'name', 'Notas de servico', 'defaultEnabled', false),
+    jsonb_build_object('slug', 'notas_consumidor', 'name', 'Notas de consumidor', 'defaultEnabled', false),
+    jsonb_build_object('slug', 'formas_pagamento', 'name', 'Formas de pagamento', 'defaultEnabled', false),
+    jsonb_build_object('slug', 'vendedores', 'name', 'Vendedores', 'defaultEnabled', false),
+    jsonb_build_object('slug', 'transportadoras', 'name', 'Transportadoras', 'defaultEnabled', false),
+    jsonb_build_object('slug', 'canais_venda', 'name', 'Canais de venda', 'defaultEnabled', false),
+    jsonb_build_object('slug', 'lojas', 'name', 'Lojas', 'defaultEnabled', false),
+    jsonb_build_object('slug', 'categorias_receitas_despesas', 'name', 'Categorias financeiras', 'defaultEnabled', false),
+    jsonb_build_object('slug', 'depositos', 'name', 'Depositos', 'defaultEnabled', false)
   ) AS resources_json
 ),
 erp_resources AS (

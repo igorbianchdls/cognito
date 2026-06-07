@@ -5,6 +5,13 @@ import type {
   UpdateIntegrationConnectionInput,
 } from '@/products/integracoes/shared/contracts/connectionContracts'
 import type {
+  CreateIntegrationDestinationInput,
+  IntegrationDestination,
+  IntegrationDestinationStatus,
+  IntegrationDestinationType,
+  UpdateIntegrationDestinationInput,
+} from '@/products/integracoes/shared/contracts/destinationContracts'
+import type {
   CreateIntegrationEventInput,
   IntegrationEvent,
   IntegrationEventSeverity,
@@ -15,6 +22,16 @@ import type {
   IntegrationSyncRunStatus,
   IntegrationSyncTrigger,
 } from '@/products/integracoes/shared/contracts/syncContracts'
+import type {
+  CreateIntegrationPipelineInput,
+  IntegrationPipeline,
+  IntegrationPipelineStatus,
+  UpdateIntegrationPipelineInput,
+} from '@/products/integracoes/shared/contracts/pipelineContracts'
+import type {
+  IntegrationMcpPermissions,
+  UpsertIntegrationMcpPermissionsInput,
+} from '@/products/integracoes/shared/contracts/mcpPermissionContracts'
 import type { IntegrationSyncMode } from '@/products/integracoes/shared/providers/providerTypes'
 import {
   normalizeRequestedResources,
@@ -58,6 +75,8 @@ type DbSyncRunRow = {
   id: string | number
   tenant_id: number
   connection_id: string | number
+  pipeline_id?: string | number | null
+  destination_id?: string | number | null
   trigger: string
   status: string
   resource: string | null
@@ -69,6 +88,56 @@ type DbSyncRunRow = {
   error_message: string | null
   metadata_json: unknown
   created_at: string | Date
+}
+
+type DbDestinationRow = {
+  id: string | number
+  tenant_id: number
+  type: string
+  name: string
+  status: string
+  config_json: unknown
+  secret_ref: string | null
+  metadata_json: unknown
+  created_at: string | Date
+  updated_at: string | Date
+}
+
+type DbPipelineRow = {
+  id: string | number
+  tenant_id: number
+  source_connection_id: string | number
+  destination_id: string | number
+  name: string
+  status: string
+  selected_resources: unknown
+  sync_frequency: string
+  sync_enabled: boolean
+  next_sync_at: string | Date | null
+  sync_locked_until: string | Date | null
+  sync_lock_token: string | null
+  sync_lock_owner: string | null
+  last_sync_at: string | Date | null
+  last_success_at: string | Date | null
+  last_error: string | null
+  records_synced: number
+  metadata_json: unknown
+  created_at: string | Date
+  updated_at: string | Date
+}
+
+type DbMcpPermissionsRow = {
+  id: string | number
+  tenant_id: number
+  connection_id: string | number
+  enabled: boolean
+  read_resources: unknown
+  write_resources: unknown
+  destructive_resources: unknown
+  require_confirmation: boolean
+  metadata_json: unknown
+  created_at: string | Date
+  updated_at: string | Date
 }
 
 type DbEventRow = {
@@ -148,6 +217,8 @@ function toSyncRun(row: DbSyncRunRow): IntegrationSyncRun {
     id: String(row.id),
     tenantId: Number(row.tenant_id),
     connectionId: String(row.connection_id),
+    pipelineId: row.pipeline_id == null ? null : String(row.pipeline_id),
+    destinationId: row.destination_id == null ? null : String(row.destination_id),
     trigger: row.trigger as IntegrationSyncTrigger,
     status: normalizeSyncRunStatus(row.status),
     startedAt: toIsoString(row.started_at),
@@ -159,6 +230,88 @@ function toSyncRun(row: DbSyncRunRow): IntegrationSyncRun {
     errorMessage: row.error_message,
     metadata: asJsonObject(row.metadata_json),
     createdAt: toIsoString(row.created_at) || '',
+  }
+}
+
+function normalizeDestinationType(value: unknown): IntegrationDestinationType {
+  const type = String(value || '').trim()
+  if (
+    type === 'bigquery' ||
+    type === 'google_sheets' ||
+    type === 'excel' ||
+    type === 'postgres' ||
+    type === 'supabase' ||
+    type === 'snowflake' ||
+    type === 's3'
+  ) return type
+  return 'bigquery'
+}
+
+function normalizeDestinationStatus(value: unknown): IntegrationDestinationStatus {
+  const status = String(value || '').trim()
+  if (status === 'disabled' || status === 'error') return status
+  return 'active'
+}
+
+function normalizePipelineStatus(value: unknown): IntegrationPipelineStatus {
+  const status = String(value || '').trim()
+  if (status === 'draft' || status === 'paused' || status === 'error' || status === 'disabled') return status
+  return 'active'
+}
+
+function toDestination(row: DbDestinationRow): IntegrationDestination {
+  return {
+    id: String(row.id),
+    tenantId: Number(row.tenant_id),
+    type: normalizeDestinationType(row.type),
+    name: row.name,
+    status: normalizeDestinationStatus(row.status),
+    config: asJsonObject(row.config_json),
+    secretRef: row.secret_ref,
+    metadata: asJsonObject(row.metadata_json),
+    createdAt: toIsoString(row.created_at) || '',
+    updatedAt: toIsoString(row.updated_at) || '',
+  }
+}
+
+function toPipeline(row: DbPipelineRow): IntegrationPipeline {
+  return {
+    id: String(row.id),
+    tenantId: Number(row.tenant_id),
+    sourceConnectionId: String(row.source_connection_id),
+    destinationId: String(row.destination_id),
+    name: row.name,
+    status: normalizePipelineStatus(row.status),
+    selectedResources: asStringArray(row.selected_resources),
+    syncFrequency: row.sync_frequency,
+    syncEnabled: Boolean(row.sync_enabled),
+    nextSyncAt: toIsoString(row.next_sync_at),
+    syncLockedUntil: toIsoString(row.sync_locked_until),
+    syncLockToken: row.sync_lock_token,
+    syncLockOwner: row.sync_lock_owner,
+    lastSyncAt: toIsoString(row.last_sync_at),
+    lastSuccessAt: toIsoString(row.last_success_at),
+    lastError: row.last_error,
+    recordsSynced: Number(row.records_synced || 0),
+    metadata: asJsonObject(row.metadata_json),
+    createdAt: toIsoString(row.created_at) || '',
+    updatedAt: toIsoString(row.updated_at) || '',
+  }
+}
+
+function toMcpPermissions(row: DbMcpPermissionsRow): IntegrationMcpPermissions {
+  return {
+    id: String(row.id),
+    tenantId: Number(row.tenant_id),
+    connectionId: String(row.connection_id),
+    enabled: Boolean(row.enabled),
+    readResources: asStringArray(row.read_resources),
+    writeResources: asStringArray(row.write_resources),
+    destructiveResources: asStringArray(row.destructive_resources),
+    requireConfirmation: Boolean(row.require_confirmation),
+    metadata: asJsonObject(row.metadata_json),
+    createdAt: toIsoString(row.created_at) || '',
+    updatedAt: toIsoString(row.updated_at) || '',
   }
 }
 
@@ -226,6 +379,95 @@ async function queryConnectionById(
   return row ? toConnection(row) : null
 }
 
+async function queryDestinationById(
+  client: Pick<SQLClient, 'query'>,
+  id: string,
+  tenantId: number,
+): Promise<IntegrationDestination | null> {
+  const result = await client.query(
+    `SELECT *
+     FROM mcp_app.integration_destinations
+     WHERE id = $1 AND tenant_id = $2
+     LIMIT 1`,
+    [id, tenantId],
+  )
+  const row = result.rows[0] as DbDestinationRow | undefined
+  return row ? toDestination(row) : null
+}
+
+async function ensureDefaultBigQueryDestination(
+  client: Pick<SQLClient, 'query'>,
+  tenantId: number,
+): Promise<IntegrationDestination> {
+  const existing = await client.query(
+    `SELECT *
+     FROM mcp_app.integration_destinations
+     WHERE tenant_id = $1
+       AND type = 'bigquery'
+       AND (metadata_json->>'isDefault') = 'true'
+     ORDER BY id ASC
+     LIMIT 1`,
+    [tenantId],
+  )
+  const existingRow = existing.rows[0] as DbDestinationRow | undefined
+  if (existingRow) return toDestination(existingRow)
+
+  const result = await client.query(
+    `INSERT INTO mcp_app.integration_destinations
+      (tenant_id, type, name, status, config_json, metadata_json, updated_at)
+     VALUES
+      ($1, 'bigquery', 'BigQuery padrao', 'active', $2::jsonb, $3::jsonb, now())
+     RETURNING *`,
+    [
+      tenantId,
+      JSON.stringify({
+        projectId: process.env.GCP_PROJECT_ID || 'creatto-463117',
+        rawDataset: process.env.BIGQUERY_CUSTOM_RAW_DATASET || 'integrations_custom_raw',
+        normalizedDataset: process.env.BIGQUERY_NORMALIZED_DATASET || 'integrations_normalized',
+      }),
+      JSON.stringify({ isDefault: true, createdBy: 'integracoes-api' }),
+    ],
+  )
+  return toDestination(result.rows[0] as DbDestinationRow)
+}
+
+async function insertIntegrationPipeline(
+  client: Pick<SQLClient, 'query'>,
+  input: CreateIntegrationPipelineInput,
+): Promise<IntegrationPipeline | null> {
+  const tenantId = Number(input.tenantId || 1)
+  const connection = await queryConnectionById(client, input.sourceConnectionId, tenantId)
+  if (!connection) return null
+  const destination = await queryDestinationById(client, input.destinationId, tenantId)
+  if (!destination) return null
+
+  const provider = requireIntegrationProvider(connection.provider)
+  const selectedResources = normalizeRequestedResources(provider, input.selectedResources || connection.selectedResources)
+  const name = String(input.name || `${connection.displayName} -> ${destination.name}`).trim()
+
+  const result = await client.query(
+    `INSERT INTO mcp_app.integration_pipelines
+      (tenant_id, source_connection_id, destination_id, name, status, selected_resources, sync_frequency, sync_enabled, next_sync_at, metadata_json, updated_at)
+     VALUES
+      ($1, $2, $3, $4, $5, $6::jsonb, $7, $8, $9, $10::jsonb, now())
+     RETURNING *`,
+    [
+      tenantId,
+      input.sourceConnectionId,
+      input.destinationId,
+      name || `${connection.displayName} -> ${destination.name}`,
+      input.status || 'active',
+      JSON.stringify(selectedResources),
+      input.syncFrequency || 'manual',
+      input.syncEnabled ?? true,
+      input.nextSyncAt || null,
+      JSON.stringify(input.metadata || {}),
+    ],
+  )
+
+  return toPipeline(result.rows[0] as DbPipelineRow)
+}
+
 async function insertIntegrationEvent(
   client: Pick<SQLClient, 'query'>,
   input: CreateIntegrationEventInput,
@@ -252,6 +494,243 @@ async function insertIntegrationEvent(
 
 export async function createIntegrationEvent(input: CreateIntegrationEventInput): Promise<IntegrationEvent> {
   return withTransaction((client) => insertIntegrationEvent(client, input))
+}
+
+export async function listIntegrationDestinations(params?: {
+  tenantId?: number
+  type?: IntegrationDestinationType
+  status?: IntegrationDestinationStatus
+  limit?: number
+}): Promise<IntegrationDestination[]> {
+  const tenantId = Number(params?.tenantId || 1)
+  const conditions = ['tenant_id = $1']
+  const values: unknown[] = [tenantId]
+
+  if (params?.type) {
+    values.push(params.type)
+    conditions.push(`type = $${values.length}`)
+  }
+  if (params?.status) {
+    values.push(params.status)
+    conditions.push(`status = $${values.length}`)
+  }
+
+  const limit = Math.min(Math.max(Number(params?.limit || 100), 1), 200)
+  values.push(limit)
+
+  const rows = await runQuery<DbDestinationRow>(
+    `SELECT *
+     FROM mcp_app.integration_destinations
+     WHERE ${conditions.join(' AND ')}
+     ORDER BY updated_at DESC, id DESC
+     LIMIT $${values.length}`,
+    values,
+  )
+  return rows.map(toDestination)
+}
+
+export async function createIntegrationDestination(
+  input: CreateIntegrationDestinationInput,
+): Promise<IntegrationDestination> {
+  const result = await runQuery<DbDestinationRow>(
+    `INSERT INTO mcp_app.integration_destinations
+      (tenant_id, type, name, status, config_json, secret_ref, metadata_json, updated_at)
+     VALUES
+      ($1, $2, $3, $4, $5::jsonb, $6, $7::jsonb, now())
+     RETURNING *`,
+    [
+      Number(input.tenantId || 1),
+      normalizeDestinationType(input.type),
+      input.name,
+      normalizeDestinationStatus(input.status),
+      JSON.stringify(input.config || {}),
+      input.secretRef || null,
+      JSON.stringify(input.metadata || {}),
+    ],
+  )
+  return toDestination(result[0])
+}
+
+export async function updateIntegrationDestination(
+  id: string,
+  tenantId: number,
+  input: UpdateIntegrationDestinationInput,
+): Promise<IntegrationDestination | null> {
+  const current = await runQuery<DbDestinationRow>(
+    `SELECT *
+     FROM mcp_app.integration_destinations
+     WHERE id = $1 AND tenant_id = $2
+     LIMIT 1`,
+    [id, tenantId],
+  )
+  const row = current[0]
+  if (!row) return null
+
+  const result = await runQuery<DbDestinationRow>(
+    `UPDATE mcp_app.integration_destinations
+     SET
+       name = $3,
+       status = $4,
+       config_json = $5::jsonb,
+       secret_ref = $6,
+       metadata_json = $7::jsonb,
+       updated_at = now()
+     WHERE id = $1 AND tenant_id = $2
+     RETURNING *`,
+    [
+      id,
+      tenantId,
+      input.name == null ? row.name : input.name,
+      input.status == null ? row.status : normalizeDestinationStatus(input.status),
+      JSON.stringify(input.config == null ? asJsonObject(row.config_json) : input.config),
+      input.secretRef === undefined ? row.secret_ref : input.secretRef,
+      JSON.stringify(input.metadata ? { ...asJsonObject(row.metadata_json), ...input.metadata } : asJsonObject(row.metadata_json)),
+    ],
+  )
+  return result[0] ? toDestination(result[0]) : null
+}
+
+export async function listIntegrationPipelines(params?: {
+  tenantId?: number
+  sourceConnectionId?: string
+  destinationId?: string
+  status?: IntegrationPipelineStatus
+  limit?: number
+}): Promise<IntegrationPipeline[]> {
+  const tenantId = Number(params?.tenantId || 1)
+  const conditions = ['tenant_id = $1']
+  const values: unknown[] = [tenantId]
+
+  if (params?.sourceConnectionId) {
+    values.push(params.sourceConnectionId)
+    conditions.push(`source_connection_id = $${values.length}`)
+  }
+  if (params?.destinationId) {
+    values.push(params.destinationId)
+    conditions.push(`destination_id = $${values.length}`)
+  }
+  if (params?.status) {
+    values.push(params.status)
+    conditions.push(`status = $${values.length}`)
+  }
+
+  const limit = Math.min(Math.max(Number(params?.limit || 100), 1), 200)
+  values.push(limit)
+
+  const rows = await runQuery<DbPipelineRow>(
+    `SELECT *
+     FROM mcp_app.integration_pipelines
+     WHERE ${conditions.join(' AND ')}
+     ORDER BY updated_at DESC, id DESC
+     LIMIT $${values.length}`,
+    values,
+  )
+  return rows.map(toPipeline)
+}
+
+export async function createIntegrationPipeline(
+  input: CreateIntegrationPipelineInput,
+): Promise<IntegrationPipeline | null> {
+  return withTransaction((client) => insertIntegrationPipeline(client, input))
+}
+
+export async function updateIntegrationPipeline(
+  id: string,
+  tenantId: number,
+  input: UpdateIntegrationPipelineInput,
+): Promise<IntegrationPipeline | null> {
+  return withTransaction(async (client) => {
+    const current = await client.query(
+      `SELECT *
+       FROM mcp_app.integration_pipelines
+       WHERE id = $1 AND tenant_id = $2
+       LIMIT 1`,
+      [id, tenantId],
+    )
+    const row = current.rows[0] as DbPipelineRow | undefined
+    if (!row) return null
+
+    const connection = await queryConnectionById(client, String(row.source_connection_id), tenantId)
+    if (!connection) return null
+    const provider = requireIntegrationProvider(connection.provider)
+    const selectedResources = input.selectedResources
+      ? normalizeRequestedResources(provider, input.selectedResources)
+      : asStringArray(row.selected_resources)
+
+    const result = await client.query(
+      `UPDATE mcp_app.integration_pipelines
+       SET
+         name = $3,
+         status = $4,
+         selected_resources = $5::jsonb,
+         sync_frequency = $6,
+         sync_enabled = $7,
+         next_sync_at = $8,
+         metadata_json = $9::jsonb,
+         updated_at = now()
+       WHERE id = $1 AND tenant_id = $2
+       RETURNING *`,
+      [
+        id,
+        tenantId,
+        input.name == null ? row.name : input.name,
+        input.status == null ? row.status : normalizePipelineStatus(input.status),
+        JSON.stringify(selectedResources),
+        input.syncFrequency || row.sync_frequency,
+        input.syncEnabled == null ? row.sync_enabled : Boolean(input.syncEnabled),
+        input.nextSyncAt === undefined ? row.next_sync_at : input.nextSyncAt,
+        JSON.stringify(input.metadata ? { ...asJsonObject(row.metadata_json), ...input.metadata } : asJsonObject(row.metadata_json)),
+      ],
+    )
+    return toPipeline(result.rows[0] as DbPipelineRow)
+  })
+}
+
+export async function getIntegrationMcpPermissions(
+  connectionId: string,
+  tenantId = 1,
+): Promise<IntegrationMcpPermissions | null> {
+  const rows = await runQuery<DbMcpPermissionsRow>(
+    `SELECT *
+     FROM mcp_app.integration_mcp_permissions
+     WHERE connection_id = $1 AND tenant_id = $2
+     LIMIT 1`,
+    [connectionId, tenantId],
+  )
+  return rows[0] ? toMcpPermissions(rows[0]) : null
+}
+
+export async function upsertIntegrationMcpPermissions(
+  input: UpsertIntegrationMcpPermissionsInput,
+): Promise<IntegrationMcpPermissions> {
+  const tenantId = Number(input.tenantId || 1)
+  const result = await runQuery<DbMcpPermissionsRow>(
+    `INSERT INTO mcp_app.integration_mcp_permissions
+      (tenant_id, connection_id, enabled, read_resources, write_resources, destructive_resources, require_confirmation, metadata_json, updated_at)
+     VALUES
+      ($1, $2, $3, $4::jsonb, $5::jsonb, $6::jsonb, $7, $8::jsonb, now())
+     ON CONFLICT (tenant_id, connection_id)
+     DO UPDATE SET
+       enabled = EXCLUDED.enabled,
+       read_resources = EXCLUDED.read_resources,
+       write_resources = EXCLUDED.write_resources,
+       destructive_resources = EXCLUDED.destructive_resources,
+       require_confirmation = EXCLUDED.require_confirmation,
+       metadata_json = mcp_app.integration_mcp_permissions.metadata_json || EXCLUDED.metadata_json,
+       updated_at = now()
+     RETURNING *`,
+    [
+      tenantId,
+      input.connectionId,
+      input.enabled ?? false,
+      JSON.stringify(input.readResources || []),
+      JSON.stringify(input.writeResources || []),
+      JSON.stringify(input.destructiveResources || []),
+      input.requireConfirmation ?? true,
+      JSON.stringify(input.metadata || {}),
+    ],
+  )
+  return toMcpPermissions(result[0])
 }
 
 export async function listIntegrationConnections(params?: {
@@ -353,6 +832,25 @@ export async function createIntegrationConnection(
         syncFrequency: input.syncFrequency || 'manual',
       },
     })
+
+    if (selectedResources.length && (input.syncFrequency || 'manual') !== 'manual') {
+      const destination = await ensureDefaultBigQueryDestination(client, tenantId)
+      await insertIntegrationPipeline(client, {
+        tenantId,
+        sourceConnectionId: connection.id,
+        destinationId: destination.id,
+        name: `${connection.displayName} -> ${destination.name}`,
+        status: connection.status === 'connected' || connection.status === 'warning' ? 'active' : 'draft',
+        selectedResources,
+        syncFrequency: input.syncFrequency || 'manual',
+        syncEnabled: input.syncEnabled ?? true,
+        nextSyncAt: input.nextSyncAt || null,
+        metadata: {
+          createdBy: 'connection_create',
+          legacyConnectionSchedule: true,
+        },
+      })
+    }
 
     return connection
   })
@@ -478,6 +976,8 @@ export async function listIntegrationSyncRuns(params: {
 export async function createIntegrationSyncRun(params: {
   tenantId?: number
   connectionId: string
+  pipelineId?: string | null
+  destinationId?: string | null
   trigger: IntegrationSyncTrigger
   status?: IntegrationSyncRunStatus
   resources?: string[]
@@ -505,13 +1005,15 @@ export async function createIntegrationSyncRun(params: {
 
     const result = await client.query(
       `INSERT INTO mcp_app.integration_sync_runs
-        (tenant_id, connection_id, trigger, status, started_at, finished_at, records_in, records_updated, records_failed, metadata_json)
+        (tenant_id, connection_id, pipeline_id, destination_id, trigger, status, started_at, finished_at, records_in, records_updated, records_failed, metadata_json)
        VALUES
-        ($1, $2, $3, $4, CASE WHEN $4 = 'queued' THEN NULL ELSE now() END, CASE WHEN $4 = 'queued' THEN NULL ELSE now() END, 0, 0, 0, $5::jsonb)
+        ($1, $2, $3, $4, $5, $6, CASE WHEN $6 = 'queued' THEN NULL ELSE now() END, CASE WHEN $6 = 'queued' THEN NULL ELSE now() END, 0, 0, 0, $7::jsonb)
        RETURNING *`,
       [
         tenantId,
         params.connectionId,
+        params.pipelineId || null,
+        params.destinationId || null,
         params.trigger,
         status,
         JSON.stringify({
