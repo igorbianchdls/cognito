@@ -1,6 +1,7 @@
 import type { ErpAdapter } from '@/products/mcp-apps/server/domain-adapters/erp/ErpAdapter'
 import type {
   ConnectedErpAction,
+  ConnectedErpAdapterResult,
   ConnectedErpResource,
 } from '@/products/mcp-apps/server/domain-adapters/erp/erpTypes'
 import { DomainAdapterError } from '@/products/mcp-apps/server/domain-adapters/shared/adapterErrors'
@@ -13,7 +14,7 @@ export function createPendingErpAdapter(
     return (action === 'listar' || action === 'ler') && supportedResources.includes(resource)
   }
 
-  async function pending(resource: ConnectedErpResource) {
+  async function pending(resource: ConnectedErpResource): Promise<ConnectedErpAdapterResult> {
     throw new DomainAdapterError(
       `Adapter connected_erp para ${provider}/${resource} ainda nao implementa leitura de dados.`,
       {

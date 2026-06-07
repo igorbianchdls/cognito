@@ -1,6 +1,7 @@
 import type { CrmAdapter } from '@/products/mcp-apps/server/domain-adapters/crm/CrmAdapter'
 import type {
   ConnectedCrmAction,
+  ConnectedCrmAdapterResult,
   ConnectedCrmResource,
 } from '@/products/mcp-apps/server/domain-adapters/crm/crmTypes'
 import { DomainAdapterError } from '@/products/mcp-apps/server/domain-adapters/shared/adapterErrors'
@@ -13,7 +14,7 @@ export function createPendingCrmAdapter(
     return (action === 'listar' || action === 'ler') && supportedResources.includes(resource)
   }
 
-  async function pending(resource: ConnectedCrmResource) {
+  async function pending(resource: ConnectedCrmResource): Promise<ConnectedCrmAdapterResult> {
     throw new DomainAdapterError(
       `Adapter connected_crm para ${provider}/${resource} ainda nao implementa leitura de dados.`,
       {
