@@ -15,7 +15,9 @@ function normalizeDomain(value: string | null): IntegrationDomain | undefined {
     value === 'erp' ||
     value === 'crm' ||
     value === 'ecommerce' ||
+    value === 'analytics' ||
     value === 'marketing' ||
+    value === 'advertising' ||
     value === 'database' ||
     value === 'bi' ||
     value === 'automation'

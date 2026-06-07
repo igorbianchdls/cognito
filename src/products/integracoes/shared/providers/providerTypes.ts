@@ -2,6 +2,7 @@ export type IntegrationDomain =
   | 'erp'
   | 'crm'
   | 'ecommerce'
+  | 'analytics'
   | 'marketing'
   | 'advertising'
   | 'database'

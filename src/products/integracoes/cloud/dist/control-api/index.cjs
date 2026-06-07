@@ -5998,6 +5998,8 @@ function normalizeCredentials(provider, value) {
     accessToken: accessToken.trim(),
     baseUrl: nonEmptyString2(credentials.baseUrl) ? credentials.baseUrl.trim() : nonEmptyString2(credentials.base_url) ? credentials.base_url.trim() : void 0,
     accountId: nonEmptyString2(credentials.accountId) ? credentials.accountId.trim() : nonEmptyString2(credentials.account_id) ? credentials.account_id.trim() : void 0,
+    storeId: nonEmptyString2(credentials.storeId) ? credentials.storeId.trim() : nonEmptyString2(credentials.store_id) ? credentials.store_id.trim() : void 0,
+    locationId: nonEmptyString2(credentials.locationId) ? credentials.locationId.trim() : nonEmptyString2(credentials.location_id) ? credentials.location_id.trim() : void 0,
     propertyId: nonEmptyString2(credentials.propertyId) ? credentials.propertyId.trim() : nonEmptyString2(credentials.property_id) ? credentials.property_id.trim() : void 0,
     siteUrl: nonEmptyString2(credentials.siteUrl) ? credentials.siteUrl.trim() : nonEmptyString2(credentials.site_url) ? credentials.site_url.trim() : void 0,
     customerId: nonEmptyString2(credentials.customerId) ? credentials.customerId.trim() : nonEmptyString2(credentials.customer_id) ? credentials.customer_id.trim() : void 0,
@@ -6032,7 +6034,7 @@ function extractItems(payload, itemKeys) {
   return [];
 }
 function buildUrl(baseUrl, path2, query9) {
-  const url = new URL(`${baseUrl.replace(/\/+$/, "")}${path2.startsWith("/") ? path2 : `/${path2}`}`);
+  const url = new URL(/^https?:\/\//.test(path2) ? path2 : `${baseUrl.replace(/\/+$/, "")}${path2.startsWith("/") ? path2 : `/${path2}`}`);
   for (const [key, value] of Object.entries(query9 || {})) {
     if (value !== void 0 && value !== null && value !== "") url.searchParams.set(key, String(value));
   }
@@ -6355,6 +6357,251 @@ var ADVERTISING_CONNECTORS = [
   googleAdsConnector
 ];
 
+// src/products/integracoes/cloud/src/connectors/analytics/googleMyBusiness/googleMyBusinessResources.ts
+var DEFAULT_PAGE_SIZE3 = 100;
+function accountName(credentials) {
+  const accountId = credentials.accountId || process.env.GOOGLE_MY_BUSINESS_ACCOUNT_ID || "";
+  return accountId.startsWith("accounts/") ? accountId : `accounts/${accountId || "missing_account_id"}`;
+}
+function locationName(credentials) {
+  const locationId = credentials.locationId || credentials.storeId || process.env.GOOGLE_MY_BUSINESS_LOCATION_ID || "";
+  return locationId.startsWith("locations/") ? locationId : `locations/${locationId || "missing_location_id"}`;
+}
+function pageQuery({ pageSize, cursor }) {
+  return { pageSize, pageToken: cursor?.pageToken };
+}
+function nextPageToken(payload) {
+  const token = payload.nextPageToken;
+  return typeof token === "string" && token ? { pageToken: token } : void 0;
+}
+function performanceQuery({ credentials, dateStart, dateEnd }) {
+  const [startYear, startMonth, startDay] = dateStart.split("-").map(Number);
+  const [endYear, endMonth, endDay] = dateEnd.split("-").map(Number);
+  return {
+    dailyMetrics: process.env.GOOGLE_MY_BUSINESS_DAILY_METRIC || "BUSINESS_IMPRESSIONS_DESKTOP_MAPS",
+    "dailyRange.startDate.year": startYear,
+    "dailyRange.startDate.month": startMonth,
+    "dailyRange.startDate.day": startDay,
+    "dailyRange.endDate.year": endYear,
+    "dailyRange.endDate.month": endMonth,
+    "dailyRange.endDate.day": endDay,
+    location: locationName(credentials)
+  };
+}
+var GOOGLE_MY_BUSINESS_RESOURCES = [
+  {
+    resource: "accounts",
+    path: "https://mybusinessaccountmanagement.googleapis.com/v1/accounts",
+    itemKeys: ["accounts"],
+    defaultPageSize: DEFAULT_PAGE_SIZE3,
+    supportsIncremental: false,
+    buildQuery: pageQuery,
+    getNextCursor: nextPageToken
+  },
+  {
+    resource: "locations",
+    path: "https://mybusinessbusinessinformation.googleapis.com/v1/accounts/missing_account_id/locations",
+    itemKeys: ["locations"],
+    defaultPageSize: DEFAULT_PAGE_SIZE3,
+    supportsIncremental: true,
+    buildPath: ({ credentials }) => `https://mybusinessbusinessinformation.googleapis.com/v1/${accountName(credentials)}/locations`,
+    buildQuery: ({ pageSize, cursor }) => ({
+      pageSize,
+      pageToken: cursor?.pageToken,
+      readMask: "name,title,storeCode,phoneNumbers,categories,storefrontAddress,websiteUri,regularHours,metadata"
+    }),
+    getNextCursor: nextPageToken
+  },
+  {
+    resource: "reviews",
+    path: "https://mybusiness.googleapis.com/v4/accounts/missing_account_id/locations/missing_location_id/reviews",
+    itemKeys: ["reviews"],
+    defaultPageSize: DEFAULT_PAGE_SIZE3,
+    supportsIncremental: true,
+    buildPath: ({ credentials }) => `https://mybusiness.googleapis.com/v4/${accountName(credentials)}/${locationName(credentials)}/reviews`,
+    buildQuery: pageQuery,
+    getNextCursor: nextPageToken
+  },
+  {
+    resource: "local_posts",
+    path: "https://mybusiness.googleapis.com/v4/accounts/missing_account_id/locations/missing_location_id/localPosts",
+    itemKeys: ["localPosts"],
+    defaultPageSize: DEFAULT_PAGE_SIZE3,
+    supportsIncremental: true,
+    buildPath: ({ credentials }) => `https://mybusiness.googleapis.com/v4/${accountName(credentials)}/${locationName(credentials)}/localPosts`,
+    buildQuery: pageQuery,
+    getNextCursor: nextPageToken
+  },
+  {
+    resource: "traffic_daily",
+    path: "https://businessprofileperformance.googleapis.com/v1/locations/missing_location_id:fetchMultiDailyMetricsTimeSeries",
+    itemKeys: ["multiDailyMetricTimeSeries"],
+    defaultPageSize: DEFAULT_PAGE_SIZE3,
+    supportsIncremental: true,
+    buildPath: ({ credentials }) => `https://businessprofileperformance.googleapis.com/v1/${locationName(credentials)}:fetchMultiDailyMetricsTimeSeries`,
+    buildQuery: performanceQuery
+  }
+];
+
+// src/products/integracoes/cloud/src/connectors/analytics/googleMyBusiness/googleMyBusinessConnector.ts
+var googleMyBusinessConnector = createDateRangeReportConnector({
+  domain: "analytics",
+  provider: "google_my_business",
+  defaultBaseUrl: "https://mybusiness.googleapis.com",
+  envBaseUrlKey: "GOOGLE_MY_BUSINESS_API_BASE_URL",
+  resources: GOOGLE_MY_BUSINESS_RESOURCES,
+  testResource: "accounts",
+  rateLimitMs: Number(process.env.GOOGLE_MY_BUSINESS_RATE_LIMIT_MS || 250)
+});
+
+// src/products/integracoes/cloud/src/connectors/marketing/googleAnalytics4/googleAnalytics4Resources.ts
+var DEFAULT_PAGE_SIZE4 = 1e4;
+function propertyId(credentials) {
+  return credentials.propertyId || process.env.GA4_PROPERTY_ID || process.env.GOOGLE_ANALYTICS_4_PROPERTY_ID || "missing_property_id";
+}
+function reportPath(credentials) {
+  return `/properties/${propertyId(credentials)}:runReport`;
+}
+function metadataPath(credentials) {
+  return `/properties/${propertyId(credentials)}/metadata`;
+}
+function nextOffset(_, items, page) {
+  return items.length >= DEFAULT_PAGE_SIZE4 ? { page: page + 1 } : void 0;
+}
+function reportBody(input) {
+  return ({ dateStart, dateEnd, page, pageSize }) => ({
+    dateRanges: [{ startDate: dateStart, endDate: dateEnd }],
+    dimensions: input.dimensions.map((name) => ({ name })),
+    metrics: input.metrics.map((name) => ({ name })),
+    limit: String(pageSize),
+    offset: String(Math.max(page - 1, 0) * pageSize)
+  });
+}
+var reportBase = {
+  path: "/properties/missing_property_id:runReport",
+  itemKeys: ["rows"],
+  defaultPageSize: DEFAULT_PAGE_SIZE4,
+  supportsIncremental: true,
+  method: "POST",
+  buildPath: ({ credentials }) => reportPath(credentials),
+  getNextCursor: nextOffset
+};
+var GOOGLE_ANALYTICS_4_RESOURCES = [
+  {
+    resource: "accounts",
+    path: "/properties/missing_property_id/metadata",
+    itemKeys: ["dimensions", "metrics"],
+    defaultPageSize: 1e3,
+    supportsIncremental: false,
+    buildPath: ({ credentials }) => metadataPath(credentials)
+  },
+  {
+    ...reportBase,
+    resource: "traffic_daily",
+    buildBody: reportBody({
+      dimensions: ["date"],
+      metrics: ["activeUsers", "totalUsers", "sessions", "screenPageViews", "conversions"]
+    })
+  },
+  {
+    ...reportBase,
+    resource: "pages_daily",
+    buildBody: reportBody({
+      dimensions: ["date", "pagePath"],
+      metrics: ["screenPageViews", "activeUsers", "sessions"]
+    })
+  },
+  {
+    ...reportBase,
+    resource: "events_daily",
+    buildBody: reportBody({
+      dimensions: ["date", "eventName"],
+      metrics: ["eventCount", "totalUsers"]
+    })
+  }
+];
+
+// src/products/integracoes/cloud/src/connectors/marketing/googleAnalytics4/googleAnalytics4Connector.ts
+var googleAnalytics4Connector = createDateRangeReportConnector({
+  domain: "analytics",
+  provider: "google_analytics_4",
+  defaultBaseUrl: "https://analyticsdata.googleapis.com/v1beta",
+  envBaseUrlKey: "GOOGLE_ANALYTICS_4_API_BASE_URL",
+  resources: GOOGLE_ANALYTICS_4_RESOURCES,
+  testResource: "accounts",
+  rateLimitMs: Number(process.env.GOOGLE_ANALYTICS_4_RATE_LIMIT_MS || 100)
+});
+
+// src/products/integracoes/cloud/src/connectors/marketing/googleSearchConsole/googleSearchConsoleResources.ts
+var DEFAULT_PAGE_SIZE5 = 25e3;
+function sitePath(credentials) {
+  const siteUrl = credentials.siteUrl || process.env.GOOGLE_SEARCH_CONSOLE_SITE_URL || "";
+  return `/sites/${encodeURIComponent(siteUrl || "missing_site_url")}/searchAnalytics/query`;
+}
+function nextOffset2(_, items, page) {
+  return items.length >= DEFAULT_PAGE_SIZE5 ? { page: page + 1 } : void 0;
+}
+function body(dimensions) {
+  return ({ dateStart, dateEnd, page, pageSize }) => ({
+    startDate: dateStart,
+    endDate: dateEnd,
+    dimensions,
+    rowLimit: pageSize,
+    startRow: Math.max(page - 1, 0) * pageSize
+  });
+}
+var reportBase2 = {
+  path: "/sites/missing_site_url/searchAnalytics/query",
+  itemKeys: ["rows"],
+  defaultPageSize: DEFAULT_PAGE_SIZE5,
+  supportsIncremental: true,
+  method: "POST",
+  buildPath: ({ credentials }) => sitePath(credentials),
+  getNextCursor: nextOffset2
+};
+var GOOGLE_SEARCH_CONSOLE_RESOURCES = [
+  {
+    resource: "accounts",
+    path: "/sites",
+    itemKeys: ["siteEntry"],
+    defaultPageSize: 1e3,
+    supportsIncremental: false
+  },
+  {
+    ...reportBase2,
+    resource: "traffic_daily",
+    buildBody: body(["date"])
+  },
+  {
+    ...reportBase2,
+    resource: "pages_daily",
+    buildBody: body(["date", "page"])
+  },
+  {
+    ...reportBase2,
+    resource: "queries_daily",
+    buildBody: body(["date", "query"])
+  }
+];
+
+// src/products/integracoes/cloud/src/connectors/marketing/googleSearchConsole/googleSearchConsoleConnector.ts
+var googleSearchConsoleConnector = createDateRangeReportConnector({
+  domain: "analytics",
+  provider: "google_search_console",
+  defaultBaseUrl: "https://www.googleapis.com/webmasters/v3",
+  envBaseUrlKey: "GOOGLE_SEARCH_CONSOLE_API_BASE_URL",
+  resources: GOOGLE_SEARCH_CONSOLE_RESOURCES,
+  testResource: "accounts",
+  rateLimitMs: Number(process.env.GOOGLE_SEARCH_CONSOLE_RATE_LIMIT_MS || 100)
+});
+
+// src/products/integracoes/cloud/src/providers/analyticsProviderRegistry.ts
+var ANALYTICS_CONNECTORS = [
+  googleAnalytics4Connector,
+  googleMyBusinessConnector,
+  googleSearchConsoleConnector
+];
+
 // src/products/integracoes/cloud/src/connectors/crm/common/oauthRestCrmConnector.ts
 function isRecord3(value) {
   return typeof value === "object" && value !== null && !Array.isArray(value);
@@ -6570,7 +6817,7 @@ function createOAuthRestCrmConnector(input) {
 }
 
 // src/products/integracoes/cloud/src/connectors/crm/bitrix24/bitrix24Resources.ts
-var DEFAULT_PAGE_SIZE3 = 50;
+var DEFAULT_PAGE_SIZE6 = 50;
 function startQuery({ pageSize, cursor }) {
   return {
     start: typeof cursor?.start === "number" || typeof cursor?.start === "string" ? cursor.start : 0,
@@ -6587,7 +6834,7 @@ var BITRIX24_RESOURCES = [
     resource: "contas",
     path: "/rest/crm.company.list.json",
     itemKeys: ["result"],
-    defaultPageSize: DEFAULT_PAGE_SIZE3,
+    defaultPageSize: DEFAULT_PAGE_SIZE6,
     supportsIncremental: true,
     buildQuery: startQuery,
     getNextCursor: bitrixNextCursor
@@ -6596,7 +6843,7 @@ var BITRIX24_RESOURCES = [
     resource: "contatos",
     path: "/rest/crm.contact.list.json",
     itemKeys: ["result"],
-    defaultPageSize: DEFAULT_PAGE_SIZE3,
+    defaultPageSize: DEFAULT_PAGE_SIZE6,
     supportsIncremental: true,
     buildQuery: startQuery,
     getNextCursor: bitrixNextCursor
@@ -6605,7 +6852,7 @@ var BITRIX24_RESOURCES = [
     resource: "leads",
     path: "/rest/crm.lead.list.json",
     itemKeys: ["result"],
-    defaultPageSize: DEFAULT_PAGE_SIZE3,
+    defaultPageSize: DEFAULT_PAGE_SIZE6,
     supportsIncremental: true,
     buildQuery: startQuery,
     getNextCursor: bitrixNextCursor
@@ -6614,7 +6861,7 @@ var BITRIX24_RESOURCES = [
     resource: "oportunidades",
     path: "/rest/crm.deal.list.json",
     itemKeys: ["result"],
-    defaultPageSize: DEFAULT_PAGE_SIZE3,
+    defaultPageSize: DEFAULT_PAGE_SIZE6,
     supportsIncremental: true,
     buildQuery: startQuery,
     getNextCursor: bitrixNextCursor
@@ -6623,7 +6870,7 @@ var BITRIX24_RESOURCES = [
     resource: "atividades",
     path: "/rest/crm.activity.list.json",
     itemKeys: ["result"],
-    defaultPageSize: DEFAULT_PAGE_SIZE3,
+    defaultPageSize: DEFAULT_PAGE_SIZE6,
     supportsIncremental: true,
     buildQuery: startQuery,
     getNextCursor: bitrixNextCursor
@@ -6632,7 +6879,7 @@ var BITRIX24_RESOURCES = [
     resource: "usuarios",
     path: "/rest/user.get.json",
     itemKeys: ["result"],
-    defaultPageSize: DEFAULT_PAGE_SIZE3,
+    defaultPageSize: DEFAULT_PAGE_SIZE6,
     supportsIncremental: false,
     buildQuery: startQuery,
     getNextCursor: bitrixNextCursor
@@ -6641,7 +6888,7 @@ var BITRIX24_RESOURCES = [
     resource: "pipelines",
     path: "/rest/crm.category.list.json",
     itemKeys: ["result.categories", "result"],
-    defaultPageSize: DEFAULT_PAGE_SIZE3,
+    defaultPageSize: DEFAULT_PAGE_SIZE6,
     supportsIncremental: false,
     buildQuery: ({ pageSize, cursor }) => ({
       entityTypeId: 2,
@@ -6654,7 +6901,7 @@ var BITRIX24_RESOURCES = [
     resource: "fases_pipeline",
     path: "/rest/crm.status.list.json",
     itemKeys: ["result"],
-    defaultPageSize: DEFAULT_PAGE_SIZE3,
+    defaultPageSize: DEFAULT_PAGE_SIZE6,
     supportsIncremental: false,
     buildQuery: ({ pageSize, cursor }) => ({
       "filter[ENTITY_ID]": "DEAL_STAGE",
@@ -6677,7 +6924,7 @@ var bitrix24Connector = createOAuthRestCrmConnector({
 });
 
 // src/products/integracoes/cloud/src/connectors/crm/hubspot/hubspotResources.ts
-var DEFAULT_PAGE_SIZE4 = 100;
+var DEFAULT_PAGE_SIZE7 = 100;
 function objectQuery(objectType, properties) {
   return ({ pageSize, cursor }) => ({
     limit: pageSize,
@@ -6692,7 +6939,7 @@ var HUBSPOT_RESOURCES = [
     resource: "contas",
     path: "/crm/v3/objects/companies",
     itemKeys: ["results"],
-    defaultPageSize: DEFAULT_PAGE_SIZE4,
+    defaultPageSize: DEFAULT_PAGE_SIZE7,
     supportsIncremental: true,
     buildQuery: objectQuery("companies", ["name", "domain", "industry", "phone", "city", "state", "country", "createdate", "hs_lastmodifieddate"])
   },
@@ -6700,7 +6947,7 @@ var HUBSPOT_RESOURCES = [
     resource: "contatos",
     path: "/crm/v3/objects/contacts",
     itemKeys: ["results"],
-    defaultPageSize: DEFAULT_PAGE_SIZE4,
+    defaultPageSize: DEFAULT_PAGE_SIZE7,
     supportsIncremental: true,
     buildQuery: objectQuery("contacts", ["firstname", "lastname", "email", "phone", "company", "jobtitle", "createdate", "lastmodifieddate"])
   },
@@ -6708,7 +6955,7 @@ var HUBSPOT_RESOURCES = [
     resource: "leads",
     path: "/crm/v3/objects/0-136",
     itemKeys: ["results"],
-    defaultPageSize: DEFAULT_PAGE_SIZE4,
+    defaultPageSize: DEFAULT_PAGE_SIZE7,
     supportsIncremental: true,
     buildQuery: objectQuery("0-136", ["hs_lead_name", "hs_pipeline", "hs_pipeline_stage", "hs_associated_contact_email", "hs_createdate", "hs_lastmodifieddate"])
   },
@@ -6716,7 +6963,7 @@ var HUBSPOT_RESOURCES = [
     resource: "oportunidades",
     path: "/crm/v3/objects/deals",
     itemKeys: ["results"],
-    defaultPageSize: DEFAULT_PAGE_SIZE4,
+    defaultPageSize: DEFAULT_PAGE_SIZE7,
     supportsIncremental: true,
     buildQuery: objectQuery("deals", ["dealname", "amount", "dealstage", "pipeline", "closedate", "createdate", "hs_lastmodifieddate", "hubspot_owner_id"])
   },
@@ -6724,7 +6971,7 @@ var HUBSPOT_RESOURCES = [
     resource: "atividades",
     path: "/crm/v3/objects/tasks",
     itemKeys: ["results"],
-    defaultPageSize: DEFAULT_PAGE_SIZE4,
+    defaultPageSize: DEFAULT_PAGE_SIZE7,
     supportsIncremental: true,
     buildQuery: objectQuery("tasks", ["hs_task_subject", "hs_task_status", "hs_task_priority", "hs_timestamp", "hs_createdate", "hs_lastmodifieddate", "hubspot_owner_id"])
   },
@@ -6732,7 +6979,7 @@ var HUBSPOT_RESOURCES = [
     resource: "usuarios",
     path: "/crm/v3/owners",
     itemKeys: ["results"],
-    defaultPageSize: DEFAULT_PAGE_SIZE4,
+    defaultPageSize: DEFAULT_PAGE_SIZE7,
     supportsIncremental: false,
     buildQuery: ({ pageSize, cursor }) => ({
       limit: pageSize,
@@ -6744,7 +6991,7 @@ var HUBSPOT_RESOURCES = [
     resource: "pipelines",
     path: "/crm/v3/pipelines/deals",
     itemKeys: ["results"],
-    defaultPageSize: DEFAULT_PAGE_SIZE4,
+    defaultPageSize: DEFAULT_PAGE_SIZE7,
     supportsIncremental: false,
     buildQuery: () => ({}),
     getNextCursor: () => void 0
@@ -6753,7 +7000,7 @@ var HUBSPOT_RESOURCES = [
     resource: "fases_pipeline",
     path: "/crm/v3/pipelines/deals",
     itemKeys: ["results"],
-    defaultPageSize: DEFAULT_PAGE_SIZE4,
+    defaultPageSize: DEFAULT_PAGE_SIZE7,
     supportsIncremental: false,
     buildQuery: () => ({}),
     getNextCursor: () => void 0,
@@ -6775,7 +7022,7 @@ var hubspotConnector = createOAuthRestCrmConnector({
 });
 
 // src/products/integracoes/cloud/src/connectors/crm/pipedrive/pipedriveResources.ts
-var DEFAULT_PAGE_SIZE5 = 100;
+var DEFAULT_PAGE_SIZE8 = 100;
 function startLimitQuery({ pageSize, cursor }) {
   return {
     start: typeof cursor?.start === "number" || typeof cursor?.start === "string" ? cursor.start : 0,
@@ -6787,7 +7034,7 @@ var PIPEDRIVE_RESOURCES = [
     resource: "contas",
     path: "/v1/organizations",
     itemKeys: ["data"],
-    defaultPageSize: DEFAULT_PAGE_SIZE5,
+    defaultPageSize: DEFAULT_PAGE_SIZE8,
     supportsIncremental: true,
     buildQuery: startLimitQuery
   },
@@ -6795,7 +7042,7 @@ var PIPEDRIVE_RESOURCES = [
     resource: "contatos",
     path: "/v1/persons",
     itemKeys: ["data"],
-    defaultPageSize: DEFAULT_PAGE_SIZE5,
+    defaultPageSize: DEFAULT_PAGE_SIZE8,
     supportsIncremental: true,
     buildQuery: startLimitQuery
   },
@@ -6803,7 +7050,7 @@ var PIPEDRIVE_RESOURCES = [
     resource: "leads",
     path: "/v1/leads",
     itemKeys: ["data"],
-    defaultPageSize: DEFAULT_PAGE_SIZE5,
+    defaultPageSize: DEFAULT_PAGE_SIZE8,
     supportsIncremental: true,
     buildQuery: startLimitQuery
   },
@@ -6811,7 +7058,7 @@ var PIPEDRIVE_RESOURCES = [
     resource: "oportunidades",
     path: "/v1/deals",
     itemKeys: ["data"],
-    defaultPageSize: DEFAULT_PAGE_SIZE5,
+    defaultPageSize: DEFAULT_PAGE_SIZE8,
     supportsIncremental: true,
     buildQuery: startLimitQuery
   },
@@ -6819,7 +7066,7 @@ var PIPEDRIVE_RESOURCES = [
     resource: "atividades",
     path: "/v1/activities",
     itemKeys: ["data"],
-    defaultPageSize: DEFAULT_PAGE_SIZE5,
+    defaultPageSize: DEFAULT_PAGE_SIZE8,
     supportsIncremental: true,
     buildQuery: startLimitQuery
   },
@@ -6827,7 +7074,7 @@ var PIPEDRIVE_RESOURCES = [
     resource: "usuarios",
     path: "/v1/users",
     itemKeys: ["data"],
-    defaultPageSize: DEFAULT_PAGE_SIZE5,
+    defaultPageSize: DEFAULT_PAGE_SIZE8,
     supportsIncremental: false,
     buildQuery: startLimitQuery
   },
@@ -6835,7 +7082,7 @@ var PIPEDRIVE_RESOURCES = [
     resource: "pipelines",
     path: "/v1/pipelines",
     itemKeys: ["data"],
-    defaultPageSize: DEFAULT_PAGE_SIZE5,
+    defaultPageSize: DEFAULT_PAGE_SIZE8,
     supportsIncremental: false,
     buildQuery: startLimitQuery
   },
@@ -6843,7 +7090,7 @@ var PIPEDRIVE_RESOURCES = [
     resource: "fases_pipeline",
     path: "/v1/stages",
     itemKeys: ["data"],
-    defaultPageSize: DEFAULT_PAGE_SIZE5,
+    defaultPageSize: DEFAULT_PAGE_SIZE8,
     supportsIncremental: false,
     buildQuery: startLimitQuery
   }
@@ -6860,8 +7107,8 @@ var pipedriveConnector = createOAuthRestCrmConnector({
 });
 
 // src/products/integracoes/cloud/src/connectors/crm/rdStation/rdStationResources.ts
-var DEFAULT_PAGE_SIZE6 = 100;
-function pageQuery({ page, pageSize }) {
+var DEFAULT_PAGE_SIZE9 = 100;
+function pageQuery2({ page, pageSize }) {
   return {
     page,
     limit: pageSize
@@ -6875,65 +7122,65 @@ var RD_STATION_RESOURCES = [
     resource: "contas",
     path: envPath("contas", "/api/v1/organizations"),
     itemKeys: ["organizations", "data", "items"],
-    defaultPageSize: DEFAULT_PAGE_SIZE6,
+    defaultPageSize: DEFAULT_PAGE_SIZE9,
     supportsIncremental: true,
-    buildQuery: pageQuery
+    buildQuery: pageQuery2
   },
   {
     resource: "contatos",
     path: envPath("contatos", "/api/v1/contacts"),
     itemKeys: ["contacts", "data", "items"],
-    defaultPageSize: DEFAULT_PAGE_SIZE6,
+    defaultPageSize: DEFAULT_PAGE_SIZE9,
     supportsIncremental: true,
-    buildQuery: pageQuery
+    buildQuery: pageQuery2
   },
   {
     resource: "leads",
     path: envPath("leads", "/api/v1/leads"),
     itemKeys: ["leads", "data", "items"],
-    defaultPageSize: DEFAULT_PAGE_SIZE6,
+    defaultPageSize: DEFAULT_PAGE_SIZE9,
     supportsIncremental: true,
-    buildQuery: pageQuery
+    buildQuery: pageQuery2
   },
   {
     resource: "oportunidades",
     path: envPath("oportunidades", "/api/v1/deals"),
     itemKeys: ["deals", "data", "items"],
-    defaultPageSize: DEFAULT_PAGE_SIZE6,
+    defaultPageSize: DEFAULT_PAGE_SIZE9,
     supportsIncremental: true,
-    buildQuery: pageQuery
+    buildQuery: pageQuery2
   },
   {
     resource: "atividades",
     path: envPath("atividades", "/api/v1/activities"),
     itemKeys: ["activities", "tasks", "data", "items"],
-    defaultPageSize: DEFAULT_PAGE_SIZE6,
+    defaultPageSize: DEFAULT_PAGE_SIZE9,
     supportsIncremental: true,
-    buildQuery: pageQuery
+    buildQuery: pageQuery2
   },
   {
     resource: "usuarios",
     path: envPath("usuarios", "/api/v1/users"),
     itemKeys: ["users", "data", "items"],
-    defaultPageSize: DEFAULT_PAGE_SIZE6,
+    defaultPageSize: DEFAULT_PAGE_SIZE9,
     supportsIncremental: false,
-    buildQuery: pageQuery
+    buildQuery: pageQuery2
   },
   {
     resource: "pipelines",
     path: envPath("pipelines", "/api/v1/deal_pipelines"),
     itemKeys: ["deal_pipelines", "pipelines", "data", "items"],
-    defaultPageSize: DEFAULT_PAGE_SIZE6,
+    defaultPageSize: DEFAULT_PAGE_SIZE9,
     supportsIncremental: false,
-    buildQuery: pageQuery
+    buildQuery: pageQuery2
   },
   {
     resource: "fases_pipeline",
     path: envPath("fases_pipeline", "/api/v1/deal_stages"),
     itemKeys: ["deal_stages", "stages", "data", "items"],
-    defaultPageSize: DEFAULT_PAGE_SIZE6,
+    defaultPageSize: DEFAULT_PAGE_SIZE9,
     supportsIncremental: false,
-    buildQuery: pageQuery
+    buildQuery: pageQuery2
   }
 ];
 
@@ -7204,18 +7451,18 @@ function createPaginatedEcommerceConnector(input) {
 }
 
 // src/products/integracoes/cloud/src/connectors/ecommerce/eduzz/eduzzResources.ts
-var DEFAULT_PAGE_SIZE7 = 100;
+var DEFAULT_PAGE_SIZE10 = 100;
 function query({ page, pageSize }) {
   return { page, per_page: pageSize };
 }
 var EDUZZ_RESOURCES = [
   { resource: "stores", path: "/api/1.0/myeduzz/user", itemKeys: ["data", "items"], defaultPageSize: 1, supportsIncremental: false },
-  { resource: "customers", path: "/api/1.0/sale/get_sale_list", itemKeys: ["data", "items"], defaultPageSize: DEFAULT_PAGE_SIZE7, supportsIncremental: true, buildQuery: query },
-  { resource: "products", path: "/api/1.0/producer/product_list", itemKeys: ["data", "items"], defaultPageSize: DEFAULT_PAGE_SIZE7, supportsIncremental: true, buildQuery: query },
-  { resource: "orders", path: "/api/1.0/sale/get_sale_list", itemKeys: ["data", "items"], defaultPageSize: DEFAULT_PAGE_SIZE7, supportsIncremental: true, buildQuery: query },
-  { resource: "order_items", path: "/api/1.0/sale/get_sale_list", itemKeys: ["data", "items"], defaultPageSize: DEFAULT_PAGE_SIZE7, supportsIncremental: true, buildQuery: query },
-  { resource: "payments", path: "/api/1.0/sale/get_sale_list", itemKeys: ["data", "items"], defaultPageSize: DEFAULT_PAGE_SIZE7, supportsIncremental: true, buildQuery: query },
-  { resource: "refunds", path: "/api/1.0/sale/get_sale_list", itemKeys: ["data", "items"], defaultPageSize: DEFAULT_PAGE_SIZE7, supportsIncremental: true, buildQuery: query }
+  { resource: "customers", path: "/api/1.0/sale/get_sale_list", itemKeys: ["data", "items"], defaultPageSize: DEFAULT_PAGE_SIZE10, supportsIncremental: true, buildQuery: query },
+  { resource: "products", path: "/api/1.0/producer/product_list", itemKeys: ["data", "items"], defaultPageSize: DEFAULT_PAGE_SIZE10, supportsIncremental: true, buildQuery: query },
+  { resource: "orders", path: "/api/1.0/sale/get_sale_list", itemKeys: ["data", "items"], defaultPageSize: DEFAULT_PAGE_SIZE10, supportsIncremental: true, buildQuery: query },
+  { resource: "order_items", path: "/api/1.0/sale/get_sale_list", itemKeys: ["data", "items"], defaultPageSize: DEFAULT_PAGE_SIZE10, supportsIncremental: true, buildQuery: query },
+  { resource: "payments", path: "/api/1.0/sale/get_sale_list", itemKeys: ["data", "items"], defaultPageSize: DEFAULT_PAGE_SIZE10, supportsIncremental: true, buildQuery: query },
+  { resource: "refunds", path: "/api/1.0/sale/get_sale_list", itemKeys: ["data", "items"], defaultPageSize: DEFAULT_PAGE_SIZE10, supportsIncremental: true, buildQuery: query }
 ];
 
 // src/products/integracoes/cloud/src/connectors/ecommerce/eduzz/eduzzConnector.ts
@@ -7231,18 +7478,18 @@ var eduzzConnector = createPaginatedEcommerceConnector({
 });
 
 // src/products/integracoes/cloud/src/connectors/ecommerce/hotmart/hotmartResources.ts
-var DEFAULT_PAGE_SIZE8 = 100;
+var DEFAULT_PAGE_SIZE11 = 100;
 function query2({ page, pageSize }) {
   return { page, max_results: pageSize };
 }
 var HOTMART_RESOURCES = [
-  { resource: "stores", path: "/products/api/v1/products", itemKeys: ["items", "products"], defaultPageSize: DEFAULT_PAGE_SIZE8, supportsIncremental: false, buildQuery: query2 },
-  { resource: "customers", path: "/payments/api/v1/sales/history", itemKeys: ["items", "sales"], defaultPageSize: DEFAULT_PAGE_SIZE8, supportsIncremental: true, buildQuery: query2, transformItems: (items) => items.map((sale) => typeof sale.buyer === "object" && sale.buyer !== null && !Array.isArray(sale.buyer) ? sale.buyer : sale) },
-  { resource: "products", path: "/products/api/v1/products", itemKeys: ["items", "products"], defaultPageSize: DEFAULT_PAGE_SIZE8, supportsIncremental: true, buildQuery: query2 },
-  { resource: "orders", path: "/payments/api/v1/sales/history", itemKeys: ["items", "sales"], defaultPageSize: DEFAULT_PAGE_SIZE8, supportsIncremental: true, buildQuery: query2 },
-  { resource: "order_items", path: "/payments/api/v1/sales/history", itemKeys: ["items", "sales"], defaultPageSize: DEFAULT_PAGE_SIZE8, supportsIncremental: true, buildQuery: query2, transformItems: (items) => items.map((sale) => ({ ...typeof sale.product === "object" && sale.product !== null && !Array.isArray(sale.product) ? sale.product : {}, sale_id: sale.purchase, transaction: sale.transaction })) },
-  { resource: "payments", path: "/payments/api/v1/sales/history", itemKeys: ["items", "sales"], defaultPageSize: DEFAULT_PAGE_SIZE8, supportsIncremental: true, buildQuery: query2 },
-  { resource: "refunds", path: "/payments/api/v1/sales/history", itemKeys: ["items", "sales"], defaultPageSize: DEFAULT_PAGE_SIZE8, supportsIncremental: true, buildQuery: query2 }
+  { resource: "stores", path: "/products/api/v1/products", itemKeys: ["items", "products"], defaultPageSize: DEFAULT_PAGE_SIZE11, supportsIncremental: false, buildQuery: query2 },
+  { resource: "customers", path: "/payments/api/v1/sales/history", itemKeys: ["items", "sales"], defaultPageSize: DEFAULT_PAGE_SIZE11, supportsIncremental: true, buildQuery: query2, transformItems: (items) => items.map((sale) => typeof sale.buyer === "object" && sale.buyer !== null && !Array.isArray(sale.buyer) ? sale.buyer : sale) },
+  { resource: "products", path: "/products/api/v1/products", itemKeys: ["items", "products"], defaultPageSize: DEFAULT_PAGE_SIZE11, supportsIncremental: true, buildQuery: query2 },
+  { resource: "orders", path: "/payments/api/v1/sales/history", itemKeys: ["items", "sales"], defaultPageSize: DEFAULT_PAGE_SIZE11, supportsIncremental: true, buildQuery: query2 },
+  { resource: "order_items", path: "/payments/api/v1/sales/history", itemKeys: ["items", "sales"], defaultPageSize: DEFAULT_PAGE_SIZE11, supportsIncremental: true, buildQuery: query2, transformItems: (items) => items.map((sale) => ({ ...typeof sale.product === "object" && sale.product !== null && !Array.isArray(sale.product) ? sale.product : {}, sale_id: sale.purchase, transaction: sale.transaction })) },
+  { resource: "payments", path: "/payments/api/v1/sales/history", itemKeys: ["items", "sales"], defaultPageSize: DEFAULT_PAGE_SIZE11, supportsIncremental: true, buildQuery: query2 },
+  { resource: "refunds", path: "/payments/api/v1/sales/history", itemKeys: ["items", "sales"], defaultPageSize: DEFAULT_PAGE_SIZE11, supportsIncremental: true, buildQuery: query2 }
 ];
 
 // src/products/integracoes/cloud/src/connectors/ecommerce/hotmart/hotmartConnector.ts
@@ -7257,7 +7504,7 @@ var hotmartConnector = createPaginatedEcommerceConnector({
 });
 
 // src/products/integracoes/cloud/src/connectors/ecommerce/ifood/ifoodResources.ts
-var DEFAULT_PAGE_SIZE9 = 100;
+var DEFAULT_PAGE_SIZE12 = 100;
 function merchantPath(credentials, suffix) {
   return `/merchant/v1.0/merchants/${credentials.storeId || process.env.IFOOD_MERCHANT_ID || "missing_merchant_id"}${suffix}`;
 }
@@ -7265,12 +7512,12 @@ function query3({ page, pageSize }) {
   return { page, size: pageSize };
 }
 var IFOOD_RESOURCES = [
-  { resource: "stores", path: "/merchant/v1.0/merchants", itemKeys: ["data", "items", "merchants"], defaultPageSize: DEFAULT_PAGE_SIZE9, supportsIncremental: false, buildQuery: query3 },
-  { resource: "products", path: "/merchant/v1.0/merchants/missing_merchant_id/catalogs", itemKeys: ["data", "items", "catalogs"], defaultPageSize: DEFAULT_PAGE_SIZE9, supportsIncremental: true, buildPath: ({ credentials }) => merchantPath(credentials, "/catalogs"), buildQuery: query3 },
-  { resource: "orders", path: "/order/v1.0/orders", itemKeys: ["data", "items", "orders"], defaultPageSize: DEFAULT_PAGE_SIZE9, supportsIncremental: true, buildQuery: query3 },
-  { resource: "order_items", path: "/order/v1.0/orders", itemKeys: ["data", "items", "orders"], defaultPageSize: DEFAULT_PAGE_SIZE9, supportsIncremental: true, buildQuery: query3, transformItems: (items) => items.flatMap((order) => Array.isArray(order.items) ? order.items.filter((item) => typeof item === "object" && item !== null && !Array.isArray(item)).map((item) => ({ ...item, order_id: order.id })) : []) },
-  { resource: "payments", path: "/order/v1.0/orders", itemKeys: ["data", "items", "orders"], defaultPageSize: DEFAULT_PAGE_SIZE9, supportsIncremental: true, buildQuery: query3 },
-  { resource: "refunds", path: "/order/v1.0/orders", itemKeys: ["data", "items", "orders"], defaultPageSize: DEFAULT_PAGE_SIZE9, supportsIncremental: true, buildQuery: query3 }
+  { resource: "stores", path: "/merchant/v1.0/merchants", itemKeys: ["data", "items", "merchants"], defaultPageSize: DEFAULT_PAGE_SIZE12, supportsIncremental: false, buildQuery: query3 },
+  { resource: "products", path: "/merchant/v1.0/merchants/missing_merchant_id/catalogs", itemKeys: ["data", "items", "catalogs"], defaultPageSize: DEFAULT_PAGE_SIZE12, supportsIncremental: true, buildPath: ({ credentials }) => merchantPath(credentials, "/catalogs"), buildQuery: query3 },
+  { resource: "orders", path: "/order/v1.0/orders", itemKeys: ["data", "items", "orders"], defaultPageSize: DEFAULT_PAGE_SIZE12, supportsIncremental: true, buildQuery: query3 },
+  { resource: "order_items", path: "/order/v1.0/orders", itemKeys: ["data", "items", "orders"], defaultPageSize: DEFAULT_PAGE_SIZE12, supportsIncremental: true, buildQuery: query3, transformItems: (items) => items.flatMap((order) => Array.isArray(order.items) ? order.items.filter((item) => typeof item === "object" && item !== null && !Array.isArray(item)).map((item) => ({ ...item, order_id: order.id })) : []) },
+  { resource: "payments", path: "/order/v1.0/orders", itemKeys: ["data", "items", "orders"], defaultPageSize: DEFAULT_PAGE_SIZE12, supportsIncremental: true, buildQuery: query3 },
+  { resource: "refunds", path: "/order/v1.0/orders", itemKeys: ["data", "items", "orders"], defaultPageSize: DEFAULT_PAGE_SIZE12, supportsIncremental: true, buildQuery: query3 }
 ];
 
 // src/products/integracoes/cloud/src/connectors/ecommerce/ifood/ifoodConnector.ts
@@ -7285,18 +7532,18 @@ var ifoodConnector = createPaginatedEcommerceConnector({
 });
 
 // src/products/integracoes/cloud/src/connectors/ecommerce/kiwify/kiwifyResources.ts
-var DEFAULT_PAGE_SIZE10 = 100;
+var DEFAULT_PAGE_SIZE13 = 100;
 function query4({ page, pageSize }) {
   return { page, per_page: pageSize };
 }
 var KIWIFY_RESOURCES = [
   { resource: "stores", path: "/v1/account", itemKeys: ["data", "account"], defaultPageSize: 1, supportsIncremental: false },
-  { resource: "customers", path: "/v1/sales", itemKeys: ["data", "items"], defaultPageSize: DEFAULT_PAGE_SIZE10, supportsIncremental: true, buildQuery: query4, transformItems: (items) => items.map((sale) => typeof sale.customer === "object" && sale.customer !== null && !Array.isArray(sale.customer) ? sale.customer : sale) },
-  { resource: "products", path: "/v1/products", itemKeys: ["data", "items"], defaultPageSize: DEFAULT_PAGE_SIZE10, supportsIncremental: true, buildQuery: query4 },
-  { resource: "orders", path: "/v1/sales", itemKeys: ["data", "items"], defaultPageSize: DEFAULT_PAGE_SIZE10, supportsIncremental: true, buildQuery: query4 },
-  { resource: "order_items", path: "/v1/sales", itemKeys: ["data", "items"], defaultPageSize: DEFAULT_PAGE_SIZE10, supportsIncremental: true, buildQuery: query4, transformItems: (items) => items.map((sale) => ({ ...typeof sale.product === "object" && sale.product !== null && !Array.isArray(sale.product) ? sale.product : {}, sale_id: sale.id })) },
-  { resource: "payments", path: "/v1/sales", itemKeys: ["data", "items"], defaultPageSize: DEFAULT_PAGE_SIZE10, supportsIncremental: true, buildQuery: query4 },
-  { resource: "refunds", path: "/v1/sales", itemKeys: ["data", "items"], defaultPageSize: DEFAULT_PAGE_SIZE10, supportsIncremental: true, buildQuery: query4 }
+  { resource: "customers", path: "/v1/sales", itemKeys: ["data", "items"], defaultPageSize: DEFAULT_PAGE_SIZE13, supportsIncremental: true, buildQuery: query4, transformItems: (items) => items.map((sale) => typeof sale.customer === "object" && sale.customer !== null && !Array.isArray(sale.customer) ? sale.customer : sale) },
+  { resource: "products", path: "/v1/products", itemKeys: ["data", "items"], defaultPageSize: DEFAULT_PAGE_SIZE13, supportsIncremental: true, buildQuery: query4 },
+  { resource: "orders", path: "/v1/sales", itemKeys: ["data", "items"], defaultPageSize: DEFAULT_PAGE_SIZE13, supportsIncremental: true, buildQuery: query4 },
+  { resource: "order_items", path: "/v1/sales", itemKeys: ["data", "items"], defaultPageSize: DEFAULT_PAGE_SIZE13, supportsIncremental: true, buildQuery: query4, transformItems: (items) => items.map((sale) => ({ ...typeof sale.product === "object" && sale.product !== null && !Array.isArray(sale.product) ? sale.product : {}, sale_id: sale.id })) },
+  { resource: "payments", path: "/v1/sales", itemKeys: ["data", "items"], defaultPageSize: DEFAULT_PAGE_SIZE13, supportsIncremental: true, buildQuery: query4 },
+  { resource: "refunds", path: "/v1/sales", itemKeys: ["data", "items"], defaultPageSize: DEFAULT_PAGE_SIZE13, supportsIncremental: true, buildQuery: query4 }
 ];
 
 // src/products/integracoes/cloud/src/connectors/ecommerce/kiwify/kiwifyConnector.ts
@@ -7311,7 +7558,7 @@ var kiwifyConnector = createPaginatedEcommerceConnector({
 });
 
 // src/products/integracoes/cloud/src/connectors/ecommerce/nuvemshop/nuvemshopResources.ts
-var DEFAULT_PAGE_SIZE11 = 100;
+var DEFAULT_PAGE_SIZE14 = 100;
 function storePath(credentials, suffix) {
   return `/${credentials.storeId || process.env.NUVEMSHOP_STORE_ID || "missing_store_id"}${suffix}`;
 }
@@ -7320,17 +7567,17 @@ function query5({ page, pageSize }) {
 }
 var NUVEMSHOP_RESOURCES = [
   { resource: "stores", path: "/store", itemKeys: ["store"], defaultPageSize: 1, supportsIncremental: false },
-  { resource: "customers", path: "/missing_store_id/customers", itemKeys: ["customers", "data"], defaultPageSize: DEFAULT_PAGE_SIZE11, supportsIncremental: true, buildPath: ({ credentials }) => storePath(credentials, "/customers"), buildQuery: query5 },
-  { resource: "products", path: "/missing_store_id/products", itemKeys: ["products", "data"], defaultPageSize: DEFAULT_PAGE_SIZE11, supportsIncremental: true, buildPath: ({ credentials }) => storePath(credentials, "/products"), buildQuery: query5 },
-  { resource: "variants", path: "/missing_store_id/products", itemKeys: ["products", "data"], defaultPageSize: DEFAULT_PAGE_SIZE11, supportsIncremental: true, buildPath: ({ credentials }) => storePath(credentials, "/products"), buildQuery: query5, transformItems: (items) => items.flatMap((product) => Array.isArray(product.variants) ? product.variants.filter((item) => typeof item === "object" && item !== null && !Array.isArray(item)).map((variant) => ({ ...variant, product_id: product.id })) : []) },
-  { resource: "orders", path: "/missing_store_id/orders", itemKeys: ["orders", "data"], defaultPageSize: DEFAULT_PAGE_SIZE11, supportsIncremental: true, buildPath: ({ credentials }) => storePath(credentials, "/orders"), buildQuery: query5 },
-  { resource: "order_items", path: "/missing_store_id/orders", itemKeys: ["orders", "data"], defaultPageSize: DEFAULT_PAGE_SIZE11, supportsIncremental: true, buildPath: ({ credentials }) => storePath(credentials, "/orders"), buildQuery: query5, transformItems: (items) => items.flatMap((order) => Array.isArray(order.products) ? order.products.filter((item) => typeof item === "object" && item !== null && !Array.isArray(item)).map((item) => ({ ...item, order_id: order.id, order_number: order.number })) : []) },
-  { resource: "payments", path: "/missing_store_id/orders", itemKeys: ["orders", "data"], defaultPageSize: DEFAULT_PAGE_SIZE11, supportsIncremental: true, buildPath: ({ credentials }) => storePath(credentials, "/orders"), buildQuery: query5 },
-  { resource: "refunds", path: "/missing_store_id/orders", itemKeys: ["orders", "data"], defaultPageSize: DEFAULT_PAGE_SIZE11, supportsIncremental: true, buildPath: ({ credentials }) => storePath(credentials, "/orders"), buildQuery: query5 },
-  { resource: "shipping", path: "/missing_store_id/orders", itemKeys: ["orders", "data"], defaultPageSize: DEFAULT_PAGE_SIZE11, supportsIncremental: true, buildPath: ({ credentials }) => storePath(credentials, "/orders"), buildQuery: query5 },
-  { resource: "inventory", path: "/missing_store_id/products", itemKeys: ["products", "data"], defaultPageSize: DEFAULT_PAGE_SIZE11, supportsIncremental: true, buildPath: ({ credentials }) => storePath(credentials, "/products"), buildQuery: query5 },
-  { resource: "categories", path: "/missing_store_id/categories", itemKeys: ["categories", "data"], defaultPageSize: DEFAULT_PAGE_SIZE11, supportsIncremental: false, buildPath: ({ credentials }) => storePath(credentials, "/categories"), buildQuery: query5 },
-  { resource: "coupons", path: "/missing_store_id/coupons", itemKeys: ["coupons", "data"], defaultPageSize: DEFAULT_PAGE_SIZE11, supportsIncremental: false, buildPath: ({ credentials }) => storePath(credentials, "/coupons"), buildQuery: query5 }
+  { resource: "customers", path: "/missing_store_id/customers", itemKeys: ["customers", "data"], defaultPageSize: DEFAULT_PAGE_SIZE14, supportsIncremental: true, buildPath: ({ credentials }) => storePath(credentials, "/customers"), buildQuery: query5 },
+  { resource: "products", path: "/missing_store_id/products", itemKeys: ["products", "data"], defaultPageSize: DEFAULT_PAGE_SIZE14, supportsIncremental: true, buildPath: ({ credentials }) => storePath(credentials, "/products"), buildQuery: query5 },
+  { resource: "variants", path: "/missing_store_id/products", itemKeys: ["products", "data"], defaultPageSize: DEFAULT_PAGE_SIZE14, supportsIncremental: true, buildPath: ({ credentials }) => storePath(credentials, "/products"), buildQuery: query5, transformItems: (items) => items.flatMap((product) => Array.isArray(product.variants) ? product.variants.filter((item) => typeof item === "object" && item !== null && !Array.isArray(item)).map((variant) => ({ ...variant, product_id: product.id })) : []) },
+  { resource: "orders", path: "/missing_store_id/orders", itemKeys: ["orders", "data"], defaultPageSize: DEFAULT_PAGE_SIZE14, supportsIncremental: true, buildPath: ({ credentials }) => storePath(credentials, "/orders"), buildQuery: query5 },
+  { resource: "order_items", path: "/missing_store_id/orders", itemKeys: ["orders", "data"], defaultPageSize: DEFAULT_PAGE_SIZE14, supportsIncremental: true, buildPath: ({ credentials }) => storePath(credentials, "/orders"), buildQuery: query5, transformItems: (items) => items.flatMap((order) => Array.isArray(order.products) ? order.products.filter((item) => typeof item === "object" && item !== null && !Array.isArray(item)).map((item) => ({ ...item, order_id: order.id, order_number: order.number })) : []) },
+  { resource: "payments", path: "/missing_store_id/orders", itemKeys: ["orders", "data"], defaultPageSize: DEFAULT_PAGE_SIZE14, supportsIncremental: true, buildPath: ({ credentials }) => storePath(credentials, "/orders"), buildQuery: query5 },
+  { resource: "refunds", path: "/missing_store_id/orders", itemKeys: ["orders", "data"], defaultPageSize: DEFAULT_PAGE_SIZE14, supportsIncremental: true, buildPath: ({ credentials }) => storePath(credentials, "/orders"), buildQuery: query5 },
+  { resource: "shipping", path: "/missing_store_id/orders", itemKeys: ["orders", "data"], defaultPageSize: DEFAULT_PAGE_SIZE14, supportsIncremental: true, buildPath: ({ credentials }) => storePath(credentials, "/orders"), buildQuery: query5 },
+  { resource: "inventory", path: "/missing_store_id/products", itemKeys: ["products", "data"], defaultPageSize: DEFAULT_PAGE_SIZE14, supportsIncremental: true, buildPath: ({ credentials }) => storePath(credentials, "/products"), buildQuery: query5 },
+  { resource: "categories", path: "/missing_store_id/categories", itemKeys: ["categories", "data"], defaultPageSize: DEFAULT_PAGE_SIZE14, supportsIncremental: false, buildPath: ({ credentials }) => storePath(credentials, "/categories"), buildQuery: query5 },
+  { resource: "coupons", path: "/missing_store_id/coupons", itemKeys: ["coupons", "data"], defaultPageSize: DEFAULT_PAGE_SIZE14, supportsIncremental: false, buildPath: ({ credentials }) => storePath(credentials, "/coupons"), buildQuery: query5 }
 ];
 
 // src/products/integracoes/cloud/src/connectors/ecommerce/nuvemshop/nuvemshopConnector.ts
@@ -7345,21 +7592,21 @@ var nuvemshopConnector = createPaginatedEcommerceConnector({
 });
 
 // src/products/integracoes/cloud/src/connectors/ecommerce/olist/olistResources.ts
-var DEFAULT_PAGE_SIZE12 = 100;
+var DEFAULT_PAGE_SIZE15 = 100;
 function query6({ page, pageSize }) {
   return { page, limit: pageSize };
 }
 var OLIST_RESOURCES = [
-  { resource: "stores", path: "/stores", itemKeys: ["data", "items", "stores"], defaultPageSize: DEFAULT_PAGE_SIZE12, supportsIncremental: false, buildQuery: query6 },
-  { resource: "customers", path: "/customers", itemKeys: ["data", "items", "customers"], defaultPageSize: DEFAULT_PAGE_SIZE12, supportsIncremental: true, buildQuery: query6 },
-  { resource: "products", path: "/products", itemKeys: ["data", "items", "products"], defaultPageSize: DEFAULT_PAGE_SIZE12, supportsIncremental: true, buildQuery: query6 },
-  { resource: "variants", path: "/products", itemKeys: ["data", "items", "products"], defaultPageSize: DEFAULT_PAGE_SIZE12, supportsIncremental: true, buildQuery: query6 },
-  { resource: "orders", path: "/orders", itemKeys: ["data", "items", "orders"], defaultPageSize: DEFAULT_PAGE_SIZE12, supportsIncremental: true, buildQuery: query6 },
-  { resource: "order_items", path: "/orders", itemKeys: ["data", "items", "orders"], defaultPageSize: DEFAULT_PAGE_SIZE12, supportsIncremental: true, buildQuery: query6, transformItems: (items) => items.flatMap((order) => Array.isArray(order.items) ? order.items.filter((item) => typeof item === "object" && item !== null && !Array.isArray(item)).map((item) => ({ ...item, order_id: order.id })) : []) },
-  { resource: "payments", path: "/orders", itemKeys: ["data", "items", "orders"], defaultPageSize: DEFAULT_PAGE_SIZE12, supportsIncremental: true, buildQuery: query6 },
-  { resource: "refunds", path: "/orders", itemKeys: ["data", "items", "orders"], defaultPageSize: DEFAULT_PAGE_SIZE12, supportsIncremental: true, buildQuery: query6 },
-  { resource: "shipping", path: "/shipments", itemKeys: ["data", "items", "shipments"], defaultPageSize: DEFAULT_PAGE_SIZE12, supportsIncremental: true, buildQuery: query6 },
-  { resource: "inventory", path: "/inventory", itemKeys: ["data", "items", "inventory"], defaultPageSize: DEFAULT_PAGE_SIZE12, supportsIncremental: true, buildQuery: query6 }
+  { resource: "stores", path: "/stores", itemKeys: ["data", "items", "stores"], defaultPageSize: DEFAULT_PAGE_SIZE15, supportsIncremental: false, buildQuery: query6 },
+  { resource: "customers", path: "/customers", itemKeys: ["data", "items", "customers"], defaultPageSize: DEFAULT_PAGE_SIZE15, supportsIncremental: true, buildQuery: query6 },
+  { resource: "products", path: "/products", itemKeys: ["data", "items", "products"], defaultPageSize: DEFAULT_PAGE_SIZE15, supportsIncremental: true, buildQuery: query6 },
+  { resource: "variants", path: "/products", itemKeys: ["data", "items", "products"], defaultPageSize: DEFAULT_PAGE_SIZE15, supportsIncremental: true, buildQuery: query6 },
+  { resource: "orders", path: "/orders", itemKeys: ["data", "items", "orders"], defaultPageSize: DEFAULT_PAGE_SIZE15, supportsIncremental: true, buildQuery: query6 },
+  { resource: "order_items", path: "/orders", itemKeys: ["data", "items", "orders"], defaultPageSize: DEFAULT_PAGE_SIZE15, supportsIncremental: true, buildQuery: query6, transformItems: (items) => items.flatMap((order) => Array.isArray(order.items) ? order.items.filter((item) => typeof item === "object" && item !== null && !Array.isArray(item)).map((item) => ({ ...item, order_id: order.id })) : []) },
+  { resource: "payments", path: "/orders", itemKeys: ["data", "items", "orders"], defaultPageSize: DEFAULT_PAGE_SIZE15, supportsIncremental: true, buildQuery: query6 },
+  { resource: "refunds", path: "/orders", itemKeys: ["data", "items", "orders"], defaultPageSize: DEFAULT_PAGE_SIZE15, supportsIncremental: true, buildQuery: query6 },
+  { resource: "shipping", path: "/shipments", itemKeys: ["data", "items", "shipments"], defaultPageSize: DEFAULT_PAGE_SIZE15, supportsIncremental: true, buildQuery: query6 },
+  { resource: "inventory", path: "/inventory", itemKeys: ["data", "items", "inventory"], defaultPageSize: DEFAULT_PAGE_SIZE15, supportsIncremental: true, buildQuery: query6 }
 ];
 
 // src/products/integracoes/cloud/src/connectors/ecommerce/olist/olistConnector.ts
@@ -7375,7 +7622,7 @@ var olistConnector = createPaginatedEcommerceConnector({
 
 // src/products/integracoes/cloud/src/connectors/ecommerce/shopify/shopifyResources.ts
 var API_VERSION = process.env.SHOPIFY_API_VERSION || "2024-10";
-var DEFAULT_PAGE_SIZE13 = 100;
+var DEFAULT_PAGE_SIZE16 = 100;
 function path(resource) {
   return `/admin/api/${API_VERSION}/${resource}.json`;
 }
@@ -7388,18 +7635,18 @@ function query7(root) {
 }
 var SHOPIFY_RESOURCES = [
   { resource: "stores", path: `/admin/api/${API_VERSION}/shop.json`, itemKeys: ["shop"], defaultPageSize: 1, supportsIncremental: false },
-  { resource: "customers", path: path("customers"), itemKeys: ["customers"], defaultPageSize: DEFAULT_PAGE_SIZE13, supportsIncremental: true, buildQuery: query7("customers") },
-  { resource: "products", path: path("products"), itemKeys: ["products"], defaultPageSize: DEFAULT_PAGE_SIZE13, supportsIncremental: true, buildQuery: query7("products") },
-  { resource: "variants", path: path("products"), itemKeys: ["products"], defaultPageSize: DEFAULT_PAGE_SIZE13, supportsIncremental: true, buildQuery: query7("products"), transformItems: (items) => items.flatMap((product) => Array.isArray(product.variants) ? product.variants.filter((item) => typeof item === "object" && item !== null && !Array.isArray(item)).map((variant) => ({ ...variant, product_id: product.id })) : []) },
-  { resource: "orders", path: path("orders"), itemKeys: ["orders"], defaultPageSize: DEFAULT_PAGE_SIZE13, supportsIncremental: true, buildQuery: query7("orders") },
-  { resource: "order_items", path: path("orders"), itemKeys: ["orders"], defaultPageSize: DEFAULT_PAGE_SIZE13, supportsIncremental: true, buildQuery: query7("orders"), transformItems: (items) => items.flatMap((order) => Array.isArray(order.line_items) ? order.line_items.filter((item) => typeof item === "object" && item !== null && !Array.isArray(item)).map((item) => ({ ...item, order_id: order.id, order_name: order.name })) : []) },
-  { resource: "payments", path: path("transactions"), itemKeys: ["transactions"], defaultPageSize: DEFAULT_PAGE_SIZE13, supportsIncremental: true, buildQuery: query7("transactions") },
-  { resource: "refunds", path: path("orders"), itemKeys: ["orders"], defaultPageSize: DEFAULT_PAGE_SIZE13, supportsIncremental: true, buildQuery: query7("orders"), transformItems: (items) => items.flatMap((order) => Array.isArray(order.refunds) ? order.refunds.filter((item) => typeof item === "object" && item !== null && !Array.isArray(item)).map((refund) => ({ ...refund, order_id: order.id })) : []) },
-  { resource: "shipping", path: path("orders"), itemKeys: ["orders"], defaultPageSize: DEFAULT_PAGE_SIZE13, supportsIncremental: true, buildQuery: query7("orders"), transformItems: (items) => items.flatMap((order) => Array.isArray(order.fulfillments) ? order.fulfillments.filter((item) => typeof item === "object" && item !== null && !Array.isArray(item)).map((fulfillment) => ({ ...fulfillment, order_id: order.id })) : []) },
-  { resource: "inventory", path: path("inventory_levels"), itemKeys: ["inventory_levels"], defaultPageSize: DEFAULT_PAGE_SIZE13, supportsIncremental: true, buildQuery: query7("inventory_levels") },
-  { resource: "categories", path: path("custom_collections"), itemKeys: ["custom_collections"], defaultPageSize: DEFAULT_PAGE_SIZE13, supportsIncremental: false, buildQuery: query7("custom_collections") },
-  { resource: "coupons", path: path("price_rules"), itemKeys: ["price_rules"], defaultPageSize: DEFAULT_PAGE_SIZE13, supportsIncremental: false, buildQuery: query7("price_rules") },
-  { resource: "abandoned_checkouts", path: path("checkouts"), itemKeys: ["checkouts"], defaultPageSize: DEFAULT_PAGE_SIZE13, supportsIncremental: true, buildQuery: query7("checkouts") }
+  { resource: "customers", path: path("customers"), itemKeys: ["customers"], defaultPageSize: DEFAULT_PAGE_SIZE16, supportsIncremental: true, buildQuery: query7("customers") },
+  { resource: "products", path: path("products"), itemKeys: ["products"], defaultPageSize: DEFAULT_PAGE_SIZE16, supportsIncremental: true, buildQuery: query7("products") },
+  { resource: "variants", path: path("products"), itemKeys: ["products"], defaultPageSize: DEFAULT_PAGE_SIZE16, supportsIncremental: true, buildQuery: query7("products"), transformItems: (items) => items.flatMap((product) => Array.isArray(product.variants) ? product.variants.filter((item) => typeof item === "object" && item !== null && !Array.isArray(item)).map((variant) => ({ ...variant, product_id: product.id })) : []) },
+  { resource: "orders", path: path("orders"), itemKeys: ["orders"], defaultPageSize: DEFAULT_PAGE_SIZE16, supportsIncremental: true, buildQuery: query7("orders") },
+  { resource: "order_items", path: path("orders"), itemKeys: ["orders"], defaultPageSize: DEFAULT_PAGE_SIZE16, supportsIncremental: true, buildQuery: query7("orders"), transformItems: (items) => items.flatMap((order) => Array.isArray(order.line_items) ? order.line_items.filter((item) => typeof item === "object" && item !== null && !Array.isArray(item)).map((item) => ({ ...item, order_id: order.id, order_name: order.name })) : []) },
+  { resource: "payments", path: path("transactions"), itemKeys: ["transactions"], defaultPageSize: DEFAULT_PAGE_SIZE16, supportsIncremental: true, buildQuery: query7("transactions") },
+  { resource: "refunds", path: path("orders"), itemKeys: ["orders"], defaultPageSize: DEFAULT_PAGE_SIZE16, supportsIncremental: true, buildQuery: query7("orders"), transformItems: (items) => items.flatMap((order) => Array.isArray(order.refunds) ? order.refunds.filter((item) => typeof item === "object" && item !== null && !Array.isArray(item)).map((refund) => ({ ...refund, order_id: order.id })) : []) },
+  { resource: "shipping", path: path("orders"), itemKeys: ["orders"], defaultPageSize: DEFAULT_PAGE_SIZE16, supportsIncremental: true, buildQuery: query7("orders"), transformItems: (items) => items.flatMap((order) => Array.isArray(order.fulfillments) ? order.fulfillments.filter((item) => typeof item === "object" && item !== null && !Array.isArray(item)).map((fulfillment) => ({ ...fulfillment, order_id: order.id })) : []) },
+  { resource: "inventory", path: path("inventory_levels"), itemKeys: ["inventory_levels"], defaultPageSize: DEFAULT_PAGE_SIZE16, supportsIncremental: true, buildQuery: query7("inventory_levels") },
+  { resource: "categories", path: path("custom_collections"), itemKeys: ["custom_collections"], defaultPageSize: DEFAULT_PAGE_SIZE16, supportsIncremental: false, buildQuery: query7("custom_collections") },
+  { resource: "coupons", path: path("price_rules"), itemKeys: ["price_rules"], defaultPageSize: DEFAULT_PAGE_SIZE16, supportsIncremental: false, buildQuery: query7("price_rules") },
+  { resource: "abandoned_checkouts", path: path("checkouts"), itemKeys: ["checkouts"], defaultPageSize: DEFAULT_PAGE_SIZE16, supportsIncremental: true, buildQuery: query7("checkouts") }
 ];
 
 // src/products/integracoes/cloud/src/connectors/ecommerce/shopify/shopifyConnector.ts
@@ -7415,23 +7662,23 @@ var shopifyConnector = createPaginatedEcommerceConnector({
 });
 
 // src/products/integracoes/cloud/src/connectors/ecommerce/woocommerce/woocommerceResources.ts
-var DEFAULT_PAGE_SIZE14 = 100;
+var DEFAULT_PAGE_SIZE17 = 100;
 function query8({ page, pageSize }) {
   return { page, per_page: pageSize };
 }
 var WOOCOMMERCE_RESOURCES = [
   { resource: "stores", path: "/wp-json/wc/v3/system_status", itemKeys: ["environment"], defaultPageSize: 1, supportsIncremental: false },
-  { resource: "customers", path: "/wp-json/wc/v3/customers", itemKeys: ["data"], defaultPageSize: DEFAULT_PAGE_SIZE14, supportsIncremental: true, buildQuery: query8 },
-  { resource: "products", path: "/wp-json/wc/v3/products", itemKeys: ["data"], defaultPageSize: DEFAULT_PAGE_SIZE14, supportsIncremental: true, buildQuery: query8 },
-  { resource: "variants", path: "/wp-json/wc/v3/products", itemKeys: ["data"], defaultPageSize: DEFAULT_PAGE_SIZE14, supportsIncremental: true, buildQuery: query8 },
-  { resource: "orders", path: "/wp-json/wc/v3/orders", itemKeys: ["data"], defaultPageSize: DEFAULT_PAGE_SIZE14, supportsIncremental: true, buildQuery: query8 },
-  { resource: "order_items", path: "/wp-json/wc/v3/orders", itemKeys: ["data"], defaultPageSize: DEFAULT_PAGE_SIZE14, supportsIncremental: true, buildQuery: query8, transformItems: (items) => items.flatMap((order) => Array.isArray(order.line_items) ? order.line_items.filter((item) => typeof item === "object" && item !== null && !Array.isArray(item)).map((item) => ({ ...item, order_id: order.id, order_number: order.number })) : []) },
-  { resource: "payments", path: "/wp-json/wc/v3/orders", itemKeys: ["data"], defaultPageSize: DEFAULT_PAGE_SIZE14, supportsIncremental: true, buildQuery: query8 },
-  { resource: "refunds", path: "/wp-json/wc/v3/refunds", itemKeys: ["data"], defaultPageSize: DEFAULT_PAGE_SIZE14, supportsIncremental: true, buildQuery: query8 },
-  { resource: "shipping", path: "/wp-json/wc/v3/orders", itemKeys: ["data"], defaultPageSize: DEFAULT_PAGE_SIZE14, supportsIncremental: true, buildQuery: query8 },
-  { resource: "inventory", path: "/wp-json/wc/v3/products", itemKeys: ["data"], defaultPageSize: DEFAULT_PAGE_SIZE14, supportsIncremental: true, buildQuery: query8 },
-  { resource: "categories", path: "/wp-json/wc/v3/products/categories", itemKeys: ["data"], defaultPageSize: DEFAULT_PAGE_SIZE14, supportsIncremental: false, buildQuery: query8 },
-  { resource: "coupons", path: "/wp-json/wc/v3/coupons", itemKeys: ["data"], defaultPageSize: DEFAULT_PAGE_SIZE14, supportsIncremental: false, buildQuery: query8 }
+  { resource: "customers", path: "/wp-json/wc/v3/customers", itemKeys: ["data"], defaultPageSize: DEFAULT_PAGE_SIZE17, supportsIncremental: true, buildQuery: query8 },
+  { resource: "products", path: "/wp-json/wc/v3/products", itemKeys: ["data"], defaultPageSize: DEFAULT_PAGE_SIZE17, supportsIncremental: true, buildQuery: query8 },
+  { resource: "variants", path: "/wp-json/wc/v3/products", itemKeys: ["data"], defaultPageSize: DEFAULT_PAGE_SIZE17, supportsIncremental: true, buildQuery: query8 },
+  { resource: "orders", path: "/wp-json/wc/v3/orders", itemKeys: ["data"], defaultPageSize: DEFAULT_PAGE_SIZE17, supportsIncremental: true, buildQuery: query8 },
+  { resource: "order_items", path: "/wp-json/wc/v3/orders", itemKeys: ["data"], defaultPageSize: DEFAULT_PAGE_SIZE17, supportsIncremental: true, buildQuery: query8, transformItems: (items) => items.flatMap((order) => Array.isArray(order.line_items) ? order.line_items.filter((item) => typeof item === "object" && item !== null && !Array.isArray(item)).map((item) => ({ ...item, order_id: order.id, order_number: order.number })) : []) },
+  { resource: "payments", path: "/wp-json/wc/v3/orders", itemKeys: ["data"], defaultPageSize: DEFAULT_PAGE_SIZE17, supportsIncremental: true, buildQuery: query8 },
+  { resource: "refunds", path: "/wp-json/wc/v3/refunds", itemKeys: ["data"], defaultPageSize: DEFAULT_PAGE_SIZE17, supportsIncremental: true, buildQuery: query8 },
+  { resource: "shipping", path: "/wp-json/wc/v3/orders", itemKeys: ["data"], defaultPageSize: DEFAULT_PAGE_SIZE17, supportsIncremental: true, buildQuery: query8 },
+  { resource: "inventory", path: "/wp-json/wc/v3/products", itemKeys: ["data"], defaultPageSize: DEFAULT_PAGE_SIZE17, supportsIncremental: true, buildQuery: query8 },
+  { resource: "categories", path: "/wp-json/wc/v3/products/categories", itemKeys: ["data"], defaultPageSize: DEFAULT_PAGE_SIZE17, supportsIncremental: false, buildQuery: query8 },
+  { resource: "coupons", path: "/wp-json/wc/v3/coupons", itemKeys: ["data"], defaultPageSize: DEFAULT_PAGE_SIZE17, supportsIncremental: false, buildQuery: query8 }
 ];
 
 // src/products/integracoes/cloud/src/connectors/ecommerce/woocommerce/woocommerceConnector.ts
@@ -7659,12 +7906,12 @@ function mapBlingRows(input) {
 }
 
 // src/products/integracoes/cloud/src/connectors/erp/bling/blingResources.ts
-var DEFAULT_PAGE_SIZE15 = 100;
+var DEFAULT_PAGE_SIZE18 = 100;
 function envResourcePath(resource, fallback) {
   const key = `BLING_RESOURCE_${resource.toUpperCase()}_PATH`;
   return process.env[key]?.trim() || fallback;
 }
-function pageQuery2({ page, pageSize }) {
+function pageQuery3({ page, pageSize }) {
   return {
     pagina: page,
     limite: pageSize
@@ -7675,161 +7922,161 @@ var BLING_RESOURCE_CONFIGS = [
     resource: "clientes",
     path: envResourcePath("clientes", "/contatos"),
     itemKeys: ["data", "itens", "items", "contatos"],
-    defaultPageSize: DEFAULT_PAGE_SIZE15,
+    defaultPageSize: DEFAULT_PAGE_SIZE18,
     supportsIncremental: false,
-    buildQuery: pageQuery2
+    buildQuery: pageQuery3
   },
   {
     resource: "fornecedores",
     path: envResourcePath("fornecedores", "/contatos"),
     itemKeys: ["data", "itens", "items", "contatos"],
-    defaultPageSize: DEFAULT_PAGE_SIZE15,
+    defaultPageSize: DEFAULT_PAGE_SIZE18,
     supportsIncremental: false,
-    buildQuery: pageQuery2
+    buildQuery: pageQuery3
   },
   {
     resource: "produtos",
     path: envResourcePath("produtos", "/produtos"),
     itemKeys: ["data", "itens", "items", "produtos"],
-    defaultPageSize: DEFAULT_PAGE_SIZE15,
+    defaultPageSize: DEFAULT_PAGE_SIZE18,
     supportsIncremental: false,
-    buildQuery: pageQuery2
+    buildQuery: pageQuery3
   },
   {
     resource: "pedidos_venda",
     path: envResourcePath("pedidos_venda", "/pedidos/vendas"),
     itemKeys: ["data", "itens", "items", "pedidos"],
-    defaultPageSize: DEFAULT_PAGE_SIZE15,
+    defaultPageSize: DEFAULT_PAGE_SIZE18,
     supportsIncremental: false,
-    buildQuery: pageQuery2
+    buildQuery: pageQuery3
   },
   {
     resource: "compras",
     path: envResourcePath("compras", "/pedidos/compras"),
     itemKeys: ["data", "itens", "items", "pedidos"],
-    defaultPageSize: DEFAULT_PAGE_SIZE15,
+    defaultPageSize: DEFAULT_PAGE_SIZE18,
     supportsIncremental: false,
-    buildQuery: pageQuery2
+    buildQuery: pageQuery3
   },
   {
     resource: "contas_receber",
     path: envResourcePath("contas_receber", "/contas/receber"),
     itemKeys: ["data", "itens", "items", "contas"],
-    defaultPageSize: DEFAULT_PAGE_SIZE15,
+    defaultPageSize: DEFAULT_PAGE_SIZE18,
     supportsIncremental: false,
-    buildQuery: pageQuery2
+    buildQuery: pageQuery3
   },
   {
     resource: "contas_pagar",
     path: envResourcePath("contas_pagar", "/contas/pagar"),
     itemKeys: ["data", "itens", "items", "contas"],
-    defaultPageSize: DEFAULT_PAGE_SIZE15,
+    defaultPageSize: DEFAULT_PAGE_SIZE18,
     supportsIncremental: false,
-    buildQuery: pageQuery2
+    buildQuery: pageQuery3
   },
   {
     resource: "notas_fiscais",
     path: envResourcePath("notas_fiscais", "/nfe"),
     itemKeys: ["data", "itens", "items", "notas"],
-    defaultPageSize: DEFAULT_PAGE_SIZE15,
+    defaultPageSize: DEFAULT_PAGE_SIZE18,
     supportsIncremental: false,
-    buildQuery: pageQuery2
+    buildQuery: pageQuery3
   },
   {
     resource: "estoque",
     path: envResourcePath("estoque", "/estoques/saldos"),
     itemKeys: ["data", "itens", "items", "saldos"],
-    defaultPageSize: DEFAULT_PAGE_SIZE15,
+    defaultPageSize: DEFAULT_PAGE_SIZE18,
     supportsIncremental: false,
-    buildQuery: pageQuery2
+    buildQuery: pageQuery3
   },
   {
     resource: "categorias",
     path: envResourcePath("categorias", "/categorias/produtos"),
     itemKeys: ["data", "itens", "items", "categorias"],
-    defaultPageSize: DEFAULT_PAGE_SIZE15,
+    defaultPageSize: DEFAULT_PAGE_SIZE18,
     supportsIncremental: false,
-    buildQuery: pageQuery2
+    buildQuery: pageQuery3
   },
   {
     resource: "servicos",
     path: envResourcePath("servicos", "/servicos"),
     itemKeys: ["data", "itens", "items", "servicos"],
-    defaultPageSize: DEFAULT_PAGE_SIZE15,
+    defaultPageSize: DEFAULT_PAGE_SIZE18,
     supportsIncremental: false,
-    buildQuery: pageQuery2
+    buildQuery: pageQuery3
   },
   {
     resource: "notas_servico",
     path: envResourcePath("notas_servico", "/nfse"),
     itemKeys: ["data", "itens", "items", "notas", "nfse"],
-    defaultPageSize: DEFAULT_PAGE_SIZE15,
+    defaultPageSize: DEFAULT_PAGE_SIZE18,
     supportsIncremental: false,
-    buildQuery: pageQuery2
+    buildQuery: pageQuery3
   },
   {
     resource: "notas_consumidor",
     path: envResourcePath("notas_consumidor", "/nfce"),
     itemKeys: ["data", "itens", "items", "notas", "nfce"],
-    defaultPageSize: DEFAULT_PAGE_SIZE15,
+    defaultPageSize: DEFAULT_PAGE_SIZE18,
     supportsIncremental: false,
-    buildQuery: pageQuery2
+    buildQuery: pageQuery3
   },
   {
     resource: "formas_pagamento",
     path: envResourcePath("formas_pagamento", "/formas-pagamentos"),
     itemKeys: ["data", "itens", "items", "formas_pagamento", "formasPagamento"],
-    defaultPageSize: DEFAULT_PAGE_SIZE15,
+    defaultPageSize: DEFAULT_PAGE_SIZE18,
     supportsIncremental: false,
-    buildQuery: pageQuery2
+    buildQuery: pageQuery3
   },
   {
     resource: "vendedores",
     path: envResourcePath("vendedores", "/vendedores"),
     itemKeys: ["data", "itens", "items", "vendedores"],
-    defaultPageSize: DEFAULT_PAGE_SIZE15,
+    defaultPageSize: DEFAULT_PAGE_SIZE18,
     supportsIncremental: false,
-    buildQuery: pageQuery2
+    buildQuery: pageQuery3
   },
   {
     resource: "transportadoras",
     path: envResourcePath("transportadoras", "/transportadoras"),
     itemKeys: ["data", "itens", "items", "transportadoras"],
-    defaultPageSize: DEFAULT_PAGE_SIZE15,
+    defaultPageSize: DEFAULT_PAGE_SIZE18,
     supportsIncremental: false,
-    buildQuery: pageQuery2
+    buildQuery: pageQuery3
   },
   {
     resource: "canais_venda",
     path: envResourcePath("canais_venda", "/canais-venda"),
     itemKeys: ["data", "itens", "items", "canais_venda", "canaisVenda"],
-    defaultPageSize: DEFAULT_PAGE_SIZE15,
+    defaultPageSize: DEFAULT_PAGE_SIZE18,
     supportsIncremental: false,
-    buildQuery: pageQuery2
+    buildQuery: pageQuery3
   },
   {
     resource: "lojas",
     path: envResourcePath("lojas", "/lojas"),
     itemKeys: ["data", "itens", "items", "lojas"],
-    defaultPageSize: DEFAULT_PAGE_SIZE15,
+    defaultPageSize: DEFAULT_PAGE_SIZE18,
     supportsIncremental: false,
-    buildQuery: pageQuery2
+    buildQuery: pageQuery3
   },
   {
     resource: "categorias_receitas_despesas",
     path: envResourcePath("categorias_receitas_despesas", "/categorias/receitas-despesas"),
     itemKeys: ["data", "itens", "items", "categorias"],
-    defaultPageSize: DEFAULT_PAGE_SIZE15,
+    defaultPageSize: DEFAULT_PAGE_SIZE18,
     supportsIncremental: false,
-    buildQuery: pageQuery2
+    buildQuery: pageQuery3
   },
   {
     resource: "depositos",
     path: envResourcePath("depositos", "/depositos"),
     itemKeys: ["data", "itens", "items", "depositos"],
-    defaultPageSize: DEFAULT_PAGE_SIZE15,
+    defaultPageSize: DEFAULT_PAGE_SIZE18,
     supportsIncremental: false,
-    buildQuery: pageQuery2
+    buildQuery: pageQuery3
   }
 ];
 var BLING_RESOURCE_MAP = new Map(BLING_RESOURCE_CONFIGS.map((config) => [config.resource, config]));
@@ -8146,12 +8393,12 @@ function mapContaAzulRows(input) {
 }
 
 // src/products/integracoes/cloud/src/connectors/erp/contaAzul/contaAzulResources.ts
-var DEFAULT_PAGE_SIZE16 = 50;
+var DEFAULT_PAGE_SIZE19 = 50;
 function envResourcePath2(resource, fallback) {
   const key = `CONTA_AZUL_RESOURCE_${resource.toUpperCase()}_PATH`;
   return process.env[key]?.trim() || fallback;
 }
-function pageQuery3({ page, pageSize }) {
+function pageQuery4({ page, pageSize }) {
   return {
     pagina: page,
     tamanho_pagina: pageSize
@@ -8168,48 +8415,48 @@ var CONTA_AZUL_RESOURCE_CONFIGS = [
     resource: "clientes",
     path: envResourcePath2("clientes", "/v1/pessoas"),
     itemKeys: ["itens", "items", "data", "content", "pessoas"],
-    defaultPageSize: DEFAULT_PAGE_SIZE16,
+    defaultPageSize: DEFAULT_PAGE_SIZE19,
     supportsIncremental: false,
-    buildQuery: pageQuery3
+    buildQuery: pageQuery4
   },
   {
     resource: "fornecedores",
     path: envResourcePath2("fornecedores", "/v1/pessoas"),
     itemKeys: ["itens", "items", "data", "content", "pessoas"],
-    defaultPageSize: DEFAULT_PAGE_SIZE16,
+    defaultPageSize: DEFAULT_PAGE_SIZE19,
     supportsIncremental: false,
-    buildQuery: pageQuery3
+    buildQuery: pageQuery4
   },
   {
     resource: "produtos",
     path: envResourcePath2("produtos", "/v1/produtos"),
     itemKeys: ["itens", "items", "data", "content", "produtos"],
-    defaultPageSize: DEFAULT_PAGE_SIZE16,
+    defaultPageSize: DEFAULT_PAGE_SIZE19,
     supportsIncremental: false,
-    buildQuery: pageQuery3
+    buildQuery: pageQuery4
   },
   {
     resource: "categorias",
     path: envResourcePath2("categorias", "/v1/categorias"),
     itemKeys: ["itens", "items", "data", "content", "categorias"],
-    defaultPageSize: DEFAULT_PAGE_SIZE16,
+    defaultPageSize: DEFAULT_PAGE_SIZE19,
     supportsIncremental: false,
-    buildQuery: pageQuery3
+    buildQuery: pageQuery4
   },
   {
     resource: "centros_custo",
     path: envResourcePath2("centros_custo", "/v1/centro-de-custo"),
     itemKeys: ["itens", "items", "data", "content", "centros_custo"],
-    defaultPageSize: DEFAULT_PAGE_SIZE16,
+    defaultPageSize: DEFAULT_PAGE_SIZE19,
     supportsIncremental: false,
-    buildQuery: pageQuery3
+    buildQuery: pageQuery4
   },
   {
     resource: "contas_receber",
     path: envResourcePath2("contas_receber", "/v1/financeiro/eventos-financeiros/contas-a-receber/buscar"),
     method: "POST",
     itemKeys: ["itens", "items", "data", "content", "eventos", "parcelas"],
-    defaultPageSize: DEFAULT_PAGE_SIZE16,
+    defaultPageSize: DEFAULT_PAGE_SIZE19,
     supportsIncremental: false,
     buildBody: payableReceivableBody
   },
@@ -8218,7 +8465,7 @@ var CONTA_AZUL_RESOURCE_CONFIGS = [
     path: envResourcePath2("contas_pagar", "/v1/financeiro/eventos-financeiros/contas-a-pagar/buscar"),
     method: "POST",
     itemKeys: ["itens", "items", "data", "content", "eventos", "parcelas"],
-    defaultPageSize: DEFAULT_PAGE_SIZE16,
+    defaultPageSize: DEFAULT_PAGE_SIZE19,
     supportsIncremental: false,
     buildBody: payableReceivableBody
   },
@@ -8226,81 +8473,81 @@ var CONTA_AZUL_RESOURCE_CONFIGS = [
     resource: "servicos",
     path: envResourcePath2("servicos", "/v1/servicos"),
     itemKeys: ["itens", "items", "data", "content", "servicos", "services"],
-    defaultPageSize: DEFAULT_PAGE_SIZE16,
+    defaultPageSize: DEFAULT_PAGE_SIZE19,
     supportsIncremental: false,
-    buildQuery: pageQuery3
+    buildQuery: pageQuery4
   },
   {
     resource: "vendas",
     path: envResourcePath2("vendas", "/v1/vendas"),
     itemKeys: ["itens", "items", "data", "content", "vendas", "sales"],
-    defaultPageSize: DEFAULT_PAGE_SIZE16,
+    defaultPageSize: DEFAULT_PAGE_SIZE19,
     supportsIncremental: false,
-    buildQuery: pageQuery3
+    buildQuery: pageQuery4
   },
   {
     resource: "itens_venda",
     path: envResourcePath2("itens_venda", "/v1/vendas/itens"),
     itemKeys: ["itens", "items", "data", "content", "itens_venda", "saleItems"],
-    defaultPageSize: DEFAULT_PAGE_SIZE16,
+    defaultPageSize: DEFAULT_PAGE_SIZE19,
     supportsIncremental: false,
-    buildQuery: pageQuery3
+    buildQuery: pageQuery4
   },
   {
     resource: "parcelas_venda",
     path: envResourcePath2("parcelas_venda", "/v1/vendas/parcelas"),
     itemKeys: ["itens", "items", "data", "content", "parcelas_venda", "installments"],
-    defaultPageSize: DEFAULT_PAGE_SIZE16,
+    defaultPageSize: DEFAULT_PAGE_SIZE19,
     supportsIncremental: false,
-    buildQuery: pageQuery3
+    buildQuery: pageQuery4
   },
   {
     resource: "contratos",
     path: envResourcePath2("contratos", "/v1/contratos"),
     itemKeys: ["itens", "items", "data", "content", "contratos", "contracts"],
-    defaultPageSize: DEFAULT_PAGE_SIZE16,
+    defaultPageSize: DEFAULT_PAGE_SIZE19,
     supportsIncremental: false,
-    buildQuery: pageQuery3
+    buildQuery: pageQuery4
   },
   {
     resource: "contas_bancarias",
     path: envResourcePath2("contas_bancarias", "/v1/contas-bancarias"),
     itemKeys: ["itens", "items", "data", "content", "contas_bancarias", "bankAccounts"],
-    defaultPageSize: DEFAULT_PAGE_SIZE16,
+    defaultPageSize: DEFAULT_PAGE_SIZE19,
     supportsIncremental: false,
-    buildQuery: pageQuery3
+    buildQuery: pageQuery4
   },
   {
     resource: "vendedores",
     path: envResourcePath2("vendedores", "/v1/vendedores"),
     itemKeys: ["itens", "items", "data", "content", "vendedores", "sellers"],
-    defaultPageSize: DEFAULT_PAGE_SIZE16,
+    defaultPageSize: DEFAULT_PAGE_SIZE19,
     supportsIncremental: false,
-    buildQuery: pageQuery3
+    buildQuery: pageQuery4
   },
   {
     resource: "notas_fiscais",
     path: envResourcePath2("notas_fiscais", "/v1/notas-fiscais"),
     itemKeys: ["itens", "items", "data", "content", "notas_fiscais", "invoices"],
-    defaultPageSize: DEFAULT_PAGE_SIZE16,
+    defaultPageSize: DEFAULT_PAGE_SIZE19,
     supportsIncremental: false,
-    buildQuery: pageQuery3
+    buildQuery: pageQuery4
   },
   {
     resource: "estoque",
     path: envResourcePath2("estoque", "/v1/estoque"),
     itemKeys: ["itens", "items", "data", "content", "estoque", "saldos", "stock"],
-    defaultPageSize: DEFAULT_PAGE_SIZE16,
+    defaultPageSize: DEFAULT_PAGE_SIZE19,
     supportsIncremental: false,
-    buildQuery: pageQuery3
+    buildQuery: pageQuery4
   },
   {
     resource: "movimentacoes_estoque",
     path: envResourcePath2("movimentacoes_estoque", "/v1/estoque/movimentacoes"),
     itemKeys: ["itens", "items", "data", "content", "movimentacoes_estoque", "movements"],
-    defaultPageSize: DEFAULT_PAGE_SIZE16,
+    defaultPageSize: DEFAULT_PAGE_SIZE19,
     supportsIncremental: false,
-    buildQuery: pageQuery3
+    buildQuery: pageQuery4
   }
 ];
 var CONTA_AZUL_RESOURCE_MAP = new Map(CONTA_AZUL_RESOURCE_CONFIGS.map((config) => [config.resource, config]));
@@ -8630,7 +8877,7 @@ function mapOmieRows(input) {
 }
 
 // src/products/integracoes/cloud/src/connectors/erp/omie/omieResources.ts
-var DEFAULT_PAGE_SIZE17 = 50;
+var DEFAULT_PAGE_SIZE20 = 50;
 function formatOmieDate(value) {
   const day = String(value.getDate()).padStart(2, "0");
   const month = String(value.getMonth() + 1).padStart(2, "0");
@@ -8662,7 +8909,7 @@ var OMIE_RESOURCE_CONFIGS = [
     endpoint: "/geral/clientes/",
     call: "ListarClientes",
     itemKeys: ["clientes_cadastro"],
-    defaultPageSize: DEFAULT_PAGE_SIZE17,
+    defaultPageSize: DEFAULT_PAGE_SIZE20,
     supportsIncremental: false,
     buildParams: defaultParams
   },
@@ -8671,7 +8918,7 @@ var OMIE_RESOURCE_CONFIGS = [
     endpoint: "/geral/clientes/",
     call: "ListarClientes",
     itemKeys: ["clientes_cadastro"],
-    defaultPageSize: DEFAULT_PAGE_SIZE17,
+    defaultPageSize: DEFAULT_PAGE_SIZE20,
     supportsIncremental: false,
     buildParams: defaultParams
   },
@@ -8680,7 +8927,7 @@ var OMIE_RESOURCE_CONFIGS = [
     endpoint: "/geral/produtos/",
     call: "ListarProdutos",
     itemKeys: ["produto_servico_cadastro", "produtos_servico_cadastro"],
-    defaultPageSize: DEFAULT_PAGE_SIZE17,
+    defaultPageSize: DEFAULT_PAGE_SIZE20,
     supportsIncremental: false,
     buildParams: defaultParams
   },
@@ -8689,7 +8936,7 @@ var OMIE_RESOURCE_CONFIGS = [
     endpoint: "/produtos/pedido/",
     call: "ListarPedidos",
     itemKeys: ["pedido_venda_produto", "pedidos_venda_produto"],
-    defaultPageSize: DEFAULT_PAGE_SIZE17,
+    defaultPageSize: DEFAULT_PAGE_SIZE20,
     supportsIncremental: false,
     buildParams: defaultParams
   },
@@ -8698,7 +8945,7 @@ var OMIE_RESOURCE_CONFIGS = [
     endpoint: "/financas/contareceber/",
     call: "ListarContasReceber",
     itemKeys: ["conta_receber_cadastro", "contas_receber_cadastro"],
-    defaultPageSize: DEFAULT_PAGE_SIZE17,
+    defaultPageSize: DEFAULT_PAGE_SIZE20,
     supportsIncremental: false,
     buildParams: defaultParams
   },
@@ -8707,7 +8954,7 @@ var OMIE_RESOURCE_CONFIGS = [
     endpoint: "/financas/contapagar/",
     call: "ListarContasPagar",
     itemKeys: ["conta_pagar_cadastro", "contas_pagar_cadastro"],
-    defaultPageSize: DEFAULT_PAGE_SIZE17,
+    defaultPageSize: DEFAULT_PAGE_SIZE20,
     supportsIncremental: false,
     buildParams: defaultParams
   },
@@ -8716,7 +8963,7 @@ var OMIE_RESOURCE_CONFIGS = [
     endpoint: "/geral/categorias/",
     call: "ListarCategorias",
     itemKeys: ["categoria_cadastro", "categorias_cadastro"],
-    defaultPageSize: DEFAULT_PAGE_SIZE17,
+    defaultPageSize: DEFAULT_PAGE_SIZE20,
     supportsIncremental: false,
     buildParams: defaultParams
   },
@@ -8725,7 +8972,7 @@ var OMIE_RESOURCE_CONFIGS = [
     endpoint: "/produtos/pedidocompra/",
     call: "PesquisarPedCompra",
     itemKeys: ["pedidos_pesquisa", "pedido_pesquisa", "pedidos_compra", "pedidos"],
-    defaultPageSize: DEFAULT_PAGE_SIZE17,
+    defaultPageSize: DEFAULT_PAGE_SIZE20,
     supportsIncremental: false,
     buildParams: ({ page, pageSize }) => ({
       nPagina: page,
@@ -8748,7 +8995,7 @@ var OMIE_RESOURCE_CONFIGS = [
     endpoint: "/produtos/nfconsultar/",
     call: "ListarNF",
     itemKeys: ["nfCadastro", "notas_fiscais", "notas"],
-    defaultPageSize: DEFAULT_PAGE_SIZE17,
+    defaultPageSize: DEFAULT_PAGE_SIZE20,
     supportsIncremental: false,
     buildParams: ({ page, pageSize }) => ({
       pagina: page,
@@ -8763,7 +9010,7 @@ var OMIE_RESOURCE_CONFIGS = [
     endpoint: "/servicos/nfse/",
     call: "ListarNFSEs",
     itemKeys: ["nfseEncontradas", "notas_servico", "notas"],
-    defaultPageSize: DEFAULT_PAGE_SIZE17,
+    defaultPageSize: DEFAULT_PAGE_SIZE20,
     supportsIncremental: false,
     buildParams: omieNParams
   },
@@ -8772,7 +9019,7 @@ var OMIE_RESOURCE_CONFIGS = [
     endpoint: "/estoque/consulta/",
     call: "ListarPosEstoque",
     itemKeys: ["produtos", "saldos", "estoques"],
-    defaultPageSize: DEFAULT_PAGE_SIZE17,
+    defaultPageSize: DEFAULT_PAGE_SIZE20,
     supportsIncremental: false,
     buildParams: ({ page, pageSize }) => ({
       nPagina: page,
@@ -8787,7 +9034,7 @@ var OMIE_RESOURCE_CONFIGS = [
     endpoint: "/estoque/consulta/",
     call: "ListarMovimentoEstoque",
     itemKeys: ["movProdutoListar", "movProduto", "movimentos", "cadastros"],
-    defaultPageSize: DEFAULT_PAGE_SIZE17,
+    defaultPageSize: DEFAULT_PAGE_SIZE20,
     supportsIncremental: false,
     buildParams: ({ page, pageSize }) => ({
       nPagina: page,
@@ -8938,158 +9185,15 @@ var ERP_CONNECTORS = [
   blingConnector
 ];
 
-// src/products/integracoes/cloud/src/connectors/marketing/googleAnalytics4/googleAnalytics4Resources.ts
-var DEFAULT_PAGE_SIZE18 = 1e4;
-function propertyId(credentials) {
-  return credentials.propertyId || process.env.GA4_PROPERTY_ID || process.env.GOOGLE_ANALYTICS_4_PROPERTY_ID || "missing_property_id";
-}
-function reportPath(credentials) {
-  return `/properties/${propertyId(credentials)}:runReport`;
-}
-function metadataPath(credentials) {
-  return `/properties/${propertyId(credentials)}/metadata`;
-}
-function nextOffset(_, items, page) {
-  return items.length >= DEFAULT_PAGE_SIZE18 ? { page: page + 1 } : void 0;
-}
-function reportBody(input) {
-  return ({ dateStart, dateEnd, page, pageSize }) => ({
-    dateRanges: [{ startDate: dateStart, endDate: dateEnd }],
-    dimensions: input.dimensions.map((name) => ({ name })),
-    metrics: input.metrics.map((name) => ({ name })),
-    limit: String(pageSize),
-    offset: String(Math.max(page - 1, 0) * pageSize)
-  });
-}
-var reportBase = {
-  path: "/properties/missing_property_id:runReport",
-  itemKeys: ["rows"],
-  defaultPageSize: DEFAULT_PAGE_SIZE18,
-  supportsIncremental: true,
-  method: "POST",
-  buildPath: ({ credentials }) => reportPath(credentials),
-  getNextCursor: nextOffset
-};
-var GOOGLE_ANALYTICS_4_RESOURCES = [
-  {
-    resource: "accounts",
-    path: "/properties/missing_property_id/metadata",
-    itemKeys: ["dimensions", "metrics"],
-    defaultPageSize: 1e3,
-    supportsIncremental: false,
-    buildPath: ({ credentials }) => metadataPath(credentials)
-  },
-  {
-    ...reportBase,
-    resource: "traffic_daily",
-    buildBody: reportBody({
-      dimensions: ["date"],
-      metrics: ["activeUsers", "totalUsers", "sessions", "screenPageViews", "conversions"]
-    })
-  },
-  {
-    ...reportBase,
-    resource: "pages_daily",
-    buildBody: reportBody({
-      dimensions: ["date", "pagePath"],
-      metrics: ["screenPageViews", "activeUsers", "sessions"]
-    })
-  },
-  {
-    ...reportBase,
-    resource: "events_daily",
-    buildBody: reportBody({
-      dimensions: ["date", "eventName"],
-      metrics: ["eventCount", "totalUsers"]
-    })
-  }
-];
-
-// src/products/integracoes/cloud/src/connectors/marketing/googleAnalytics4/googleAnalytics4Connector.ts
-var googleAnalytics4Connector = createDateRangeReportConnector({
-  domain: "marketing",
-  provider: "google_analytics_4",
-  defaultBaseUrl: "https://analyticsdata.googleapis.com/v1beta",
-  envBaseUrlKey: "GOOGLE_ANALYTICS_4_API_BASE_URL",
-  resources: GOOGLE_ANALYTICS_4_RESOURCES,
-  testResource: "accounts",
-  rateLimitMs: Number(process.env.GOOGLE_ANALYTICS_4_RATE_LIMIT_MS || 100)
-});
-
-// src/products/integracoes/cloud/src/connectors/marketing/googleSearchConsole/googleSearchConsoleResources.ts
-var DEFAULT_PAGE_SIZE19 = 25e3;
-function sitePath(credentials) {
-  const siteUrl = credentials.siteUrl || process.env.GOOGLE_SEARCH_CONSOLE_SITE_URL || "";
-  return `/sites/${encodeURIComponent(siteUrl || "missing_site_url")}/searchAnalytics/query`;
-}
-function nextOffset2(_, items, page) {
-  return items.length >= DEFAULT_PAGE_SIZE19 ? { page: page + 1 } : void 0;
-}
-function body(dimensions) {
-  return ({ dateStart, dateEnd, page, pageSize }) => ({
-    startDate: dateStart,
-    endDate: dateEnd,
-    dimensions,
-    rowLimit: pageSize,
-    startRow: Math.max(page - 1, 0) * pageSize
-  });
-}
-var reportBase2 = {
-  path: "/sites/missing_site_url/searchAnalytics/query",
-  itemKeys: ["rows"],
-  defaultPageSize: DEFAULT_PAGE_SIZE19,
-  supportsIncremental: true,
-  method: "POST",
-  buildPath: ({ credentials }) => sitePath(credentials),
-  getNextCursor: nextOffset2
-};
-var GOOGLE_SEARCH_CONSOLE_RESOURCES = [
-  {
-    resource: "accounts",
-    path: "/sites",
-    itemKeys: ["siteEntry"],
-    defaultPageSize: 1e3,
-    supportsIncremental: false
-  },
-  {
-    ...reportBase2,
-    resource: "traffic_daily",
-    buildBody: body(["date"])
-  },
-  {
-    ...reportBase2,
-    resource: "pages_daily",
-    buildBody: body(["date", "page"])
-  },
-  {
-    ...reportBase2,
-    resource: "queries_daily",
-    buildBody: body(["date", "query"])
-  }
-];
-
-// src/products/integracoes/cloud/src/connectors/marketing/googleSearchConsole/googleSearchConsoleConnector.ts
-var googleSearchConsoleConnector = createDateRangeReportConnector({
-  domain: "marketing",
-  provider: "google_search_console",
-  defaultBaseUrl: "https://www.googleapis.com/webmasters/v3",
-  envBaseUrlKey: "GOOGLE_SEARCH_CONSOLE_API_BASE_URL",
-  resources: GOOGLE_SEARCH_CONSOLE_RESOURCES,
-  testResource: "accounts",
-  rateLimitMs: Number(process.env.GOOGLE_SEARCH_CONSOLE_RATE_LIMIT_MS || 100)
-});
-
 // src/products/integracoes/cloud/src/providers/marketingProviderRegistry.ts
-var MARKETING_CONNECTORS = [
-  googleSearchConsoleConnector,
-  googleAnalytics4Connector
-];
+var MARKETING_CONNECTORS = [];
 
 // src/products/integracoes/cloud/src/providers/providerRegistry.ts
 var CLOUD_CONNECTORS = [
   ...ERP_CONNECTORS,
   ...CRM_CONNECTORS,
   ...ECOMMERCE_CONNECTORS,
+  ...ANALYTICS_CONNECTORS,
   ...MARKETING_CONNECTORS,
   ...ADVERTISING_CONNECTORS
 ];
@@ -9164,6 +9268,103 @@ var ADVERTISING_PROVIDERS = [
     authType: "oauth2",
     supportsOAuthCallback: true,
     tags: ["google", "search", "paid-search"]
+  })
+];
+
+// src/products/integracoes/shared/providers/analyticsProviders.ts
+var ANALYTICS_RESOURCES = [
+  {
+    slug: "accounts",
+    name: "Contas",
+    description: "Contas, propriedades, sites ou perfis conectados.",
+    defaultEnabled: true
+  },
+  {
+    slug: "locations",
+    name: "Locais",
+    description: "Unidades, lojas ou perfis locais quando disponiveis.",
+    defaultEnabled: true
+  },
+  {
+    slug: "traffic_daily",
+    name: "Trafego diario",
+    description: "Metricas diarias de usuarios, sessoes, cliques, impressoes e buscas.",
+    defaultEnabled: true
+  },
+  {
+    slug: "pages_daily",
+    name: "Paginas diarias",
+    description: "Desempenho diario por pagina, URL ou landing page.",
+    defaultEnabled: true
+  },
+  {
+    slug: "queries_daily",
+    name: "Consultas diarias",
+    description: "Consultas, termos de busca e performance organica.",
+    defaultEnabled: false
+  },
+  {
+    slug: "events_daily",
+    name: "Eventos diarios",
+    description: "Eventos, conversoes e interacoes por dia.",
+    defaultEnabled: false
+  },
+  {
+    slug: "reviews",
+    name: "Avaliacoes",
+    description: "Reviews, notas e respostas de perfis locais.",
+    defaultEnabled: false
+  },
+  {
+    slug: "local_posts",
+    name: "Posts locais",
+    description: "Postagens publicadas em perfis locais.",
+    defaultEnabled: false
+  }
+];
+var GA4_RESOURCES = ANALYTICS_RESOURCES.filter((resource) => ["accounts", "traffic_daily", "pages_daily", "events_daily"].includes(resource.slug));
+var SEARCH_CONSOLE_RESOURCES = ANALYTICS_RESOURCES.filter((resource) => ["accounts", "traffic_daily", "pages_daily", "queries_daily"].includes(resource.slug));
+var GOOGLE_BUSINESS_RESOURCES = ANALYTICS_RESOURCES.filter((resource) => ["accounts", "locations", "traffic_daily", "reviews", "local_posts"].includes(resource.slug));
+function analyticsProvider(provider) {
+  return {
+    ...provider,
+    domain: "analytics",
+    resources: provider.resources || ANALYTICS_RESOURCES,
+    syncModes: ["manual", "scheduled"],
+    supportsIncrementalSync: true,
+    tags: ["analytics", ...provider.tags || []]
+  };
+}
+var ANALYTICS_PROVIDERS = [
+  analyticsProvider({
+    slug: "google_analytics_4",
+    toolkitSlug: "GOOGLE_ANALYTICS_4",
+    name: "Google Analytics",
+    description: "Trafego, paginas, eventos e conversoes de propriedades GA4.",
+    authType: "oauth2",
+    supportsOAuthCallback: true,
+    resources: GA4_RESOURCES,
+    tags: ["google", "web-analytics"]
+  }),
+  analyticsProvider({
+    slug: "google_my_business",
+    toolkitSlug: "GOOGLE_MY_BUSINESS",
+    name: "Google My Business",
+    description: "Perfis locais do Google com locais, avaliacoes, posts e metricas de performance.",
+    authType: "oauth2",
+    supportsOAuthCallback: true,
+    resources: GOOGLE_BUSINESS_RESOURCES,
+    tags: ["google", "local", "business-profile"]
+  }),
+  analyticsProvider({
+    slug: "google_search_console",
+    toolkitSlug: "GOOGLE_SEARCH_CONSOLE",
+    name: "Google Search Console",
+    description: "Performance organica de busca, consultas, paginas, paises e dispositivos.",
+    authType: "oauth2",
+    supportsOAuthCallback: true,
+    resources: SEARCH_CONSOLE_RESOURCES,
+    tags: ["google", "seo"]
   })
 ];
 
@@ -9814,68 +10015,7 @@ var ERP_PROVIDERS = [
 ];
 
 // src/products/integracoes/shared/providers/marketingProviders.ts
-var ORGANIC_MARKETING_RESOURCES = [
-  {
-    slug: "accounts",
-    name: "Contas",
-    description: "Contas, propriedades, sites ou perfis conectados.",
-    defaultEnabled: true
-  },
-  {
-    slug: "traffic_daily",
-    name: "Trafego diario",
-    description: "Metricas diarias de usuarios, sessoes, cliques e impressoes.",
-    defaultEnabled: true
-  },
-  {
-    slug: "pages_daily",
-    name: "Paginas diarias",
-    description: "Desempenho diario por pagina, URL ou landing page.",
-    defaultEnabled: true
-  },
-  {
-    slug: "queries_daily",
-    name: "Consultas diarias",
-    description: "Consultas, termos de busca e performance organica.",
-    defaultEnabled: false
-  },
-  {
-    slug: "events_daily",
-    name: "Eventos diarios",
-    description: "Eventos, conversoes e interacoes por dia.",
-    defaultEnabled: false
-  }
-];
-function marketingProvider(provider) {
-  return {
-    ...provider,
-    domain: "marketing",
-    resources: provider.resources || ORGANIC_MARKETING_RESOURCES,
-    syncModes: ["manual", "scheduled"],
-    supportsIncrementalSync: true,
-    tags: ["marketing", "organico", ...provider.tags || []]
-  };
-}
-var MARKETING_PROVIDERS = [
-  marketingProvider({
-    slug: "google_search_console",
-    toolkitSlug: "GOOGLE_SEARCH_CONSOLE",
-    name: "Google Search Console",
-    description: "Performance organica de busca, consultas, paginas, paises e dispositivos.",
-    authType: "oauth2",
-    supportsOAuthCallback: true,
-    tags: ["seo", "google"]
-  }),
-  marketingProvider({
-    slug: "google_analytics_4",
-    toolkitSlug: "GOOGLE_ANALYTICS_4",
-    name: "Google Analytics 4",
-    description: "Trafego, paginas, eventos e conversoes de propriedades GA4.",
-    authType: "oauth2",
-    supportsOAuthCallback: true,
-    tags: ["analytics", "google"]
-  })
-];
+var MARKETING_PROVIDERS = [];
 
 // src/products/integracoes/shared/providers/providerTypes.ts
 function normalizeProviderSlug(slug) {
@@ -9890,6 +10030,7 @@ var INTEGRATION_PROVIDERS = [
   ...ERP_PROVIDERS,
   ...CRM_PROVIDERS,
   ...ECOMMERCE_PROVIDERS,
+  ...ANALYTICS_PROVIDERS,
   ...MARKETING_PROVIDERS,
   ...ADVERTISING_PROVIDERS
 ];

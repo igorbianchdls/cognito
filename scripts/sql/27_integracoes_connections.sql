@@ -26,7 +26,7 @@ CREATE TABLE IF NOT EXISTS mcp_app.integration_connections (
   created_at timestamptz NOT NULL DEFAULT now(),
   updated_at timestamptz NOT NULL DEFAULT now(),
   CONSTRAINT integration_connections_domain_check
-    CHECK (domain IN ('erp', 'crm', 'ecommerce', 'marketing', 'advertising', 'database', 'bi', 'automation')),
+    CHECK (domain IN ('erp', 'crm', 'ecommerce', 'analytics', 'marketing', 'advertising', 'database', 'bi', 'automation')),
   CONSTRAINT integration_connections_status_check
     CHECK (status IN ('draft', 'pending_auth', 'connected', 'syncing', 'warning', 'error', 'disabled')),
   CONSTRAINT integration_connections_auth_type_check
@@ -257,7 +257,7 @@ CREATE TABLE IF NOT EXISTS mcp_app.integration_provider_capabilities (
   created_at timestamptz NOT NULL DEFAULT now(),
   updated_at timestamptz NOT NULL DEFAULT now(),
   CONSTRAINT integration_provider_capabilities_domain_check
-    CHECK (domain IN ('erp', 'crm', 'ecommerce', 'marketing', 'advertising', 'database', 'bi', 'automation')),
+    CHECK (domain IN ('erp', 'crm', 'ecommerce', 'analytics', 'marketing', 'advertising', 'database', 'bi', 'automation')),
   CONSTRAINT integration_provider_capabilities_auth_type_check
     CHECK (auth_type IN ('oauth2', 'api_key', 'basic', 'manual')),
   CONSTRAINT integration_provider_capabilities_status_check
@@ -404,6 +404,24 @@ marketing_resources AS (
     jsonb_build_object('slug', 'events_daily', 'name', 'Eventos por dia', 'defaultEnabled', false)
   ) AS resources_json
 ),
+analytics_resources AS (
+  SELECT jsonb_build_array(
+    jsonb_build_object('slug', 'accounts', 'name', 'Contas', 'defaultEnabled', true),
+    jsonb_build_object('slug', 'traffic_daily', 'name', 'Trafego diario', 'defaultEnabled', true),
+    jsonb_build_object('slug', 'pages_daily', 'name', 'Paginas por dia', 'defaultEnabled', true),
+    jsonb_build_object('slug', 'queries_daily', 'name', 'Consultas por dia', 'defaultEnabled', false),
+    jsonb_build_object('slug', 'events_daily', 'name', 'Eventos por dia', 'defaultEnabled', false)
+  ) AS resources_json
+),
+google_business_resources AS (
+  SELECT jsonb_build_array(
+    jsonb_build_object('slug', 'accounts', 'name', 'Contas', 'defaultEnabled', true),
+    jsonb_build_object('slug', 'locations', 'name', 'Locais', 'defaultEnabled', true),
+    jsonb_build_object('slug', 'traffic_daily', 'name', 'Performance diaria', 'defaultEnabled', true),
+    jsonb_build_object('slug', 'reviews', 'name', 'Avaliacoes', 'defaultEnabled', false),
+    jsonb_build_object('slug', 'local_posts', 'name', 'Posts locais', 'defaultEnabled', false)
+  ) AS resources_json
+),
 advertising_resources AS (
   SELECT jsonb_build_array(
     jsonb_build_object('slug', 'accounts', 'name', 'Contas de anuncio', 'defaultEnabled', true),
@@ -484,11 +502,14 @@ providers AS (
   SELECT 'ecommerce', 'ifood', 'iFood', 'Pedidos, lojas, itens, pagamentos e operacao de delivery.', 'oauth2', true, true, jsonb_build_array('manual', 'scheduled'), ecommerce_resources.resources_json, jsonb_build_array('ecommerce', 'delivery', 'brasil'), 'available', jsonb_build_object('toolkitSlug', 'IFOOD')
   FROM ecommerce_resources
   UNION ALL
-  SELECT 'marketing', 'google_search_console', 'Google Search Console', 'Marketing organico de busca com paginas, consultas e desempenho diario.', 'oauth2', true, true, jsonb_build_array('manual', 'scheduled'), marketing_resources.resources_json, jsonb_build_array('marketing', 'organico', 'seo', 'google'), 'available', jsonb_build_object('toolkitSlug', 'GOOGLE_SEARCH_CONSOLE')
-  FROM marketing_resources
+  SELECT 'analytics', 'google_analytics_4', 'Google Analytics', 'Trafego, paginas, eventos e conversoes de propriedades GA4.', 'oauth2', true, true, jsonb_build_array('manual', 'scheduled'), analytics_resources.resources_json, jsonb_build_array('analytics', 'web-analytics', 'google'), 'available', jsonb_build_object('toolkitSlug', 'GOOGLE_ANALYTICS_4')
+  FROM analytics_resources
   UNION ALL
-  SELECT 'marketing', 'google_analytics_4', 'Google Analytics 4', 'Marketing organico e analytics com trafego, paginas e eventos.', 'oauth2', true, true, jsonb_build_array('manual', 'scheduled'), marketing_resources.resources_json, jsonb_build_array('marketing', 'organico', 'analytics', 'google'), 'available', jsonb_build_object('toolkitSlug', 'GOOGLE_ANALYTICS_4')
-  FROM marketing_resources
+  SELECT 'analytics', 'google_my_business', 'Google My Business', 'Perfis locais do Google com locais, avaliacoes, posts e metricas de performance.', 'oauth2', true, true, jsonb_build_array('manual', 'scheduled'), google_business_resources.resources_json, jsonb_build_array('analytics', 'local', 'business-profile', 'google'), 'available', jsonb_build_object('toolkitSlug', 'GOOGLE_MY_BUSINESS')
+  FROM google_business_resources
+  UNION ALL
+  SELECT 'analytics', 'google_search_console', 'Google Search Console', 'Performance organica de busca, consultas, paginas, paises e dispositivos.', 'oauth2', true, true, jsonb_build_array('manual', 'scheduled'), analytics_resources.resources_json, jsonb_build_array('analytics', 'seo', 'google'), 'available', jsonb_build_object('toolkitSlug', 'GOOGLE_SEARCH_CONSOLE')
+  FROM analytics_resources
   UNION ALL
   SELECT 'advertising', 'meta_ads', 'Meta Ads', 'Publicidade paga em Facebook e Instagram com campanhas, anuncios e metricas diarias.', 'oauth2', true, true, jsonb_build_array('manual', 'scheduled'), advertising_resources.resources_json, jsonb_build_array('advertising', 'publicidade', 'paid-media', 'meta'), 'available', jsonb_build_object('toolkitSlug', 'META_ADS')
   FROM advertising_resources

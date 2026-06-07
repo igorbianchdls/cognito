@@ -1,5 +1,6 @@
 import type { ToolkitDefinition } from '@/products/integracoes/shared/types'
 import { ADVERTISING_PROVIDERS } from '@/products/integracoes/shared/providers/advertisingProviders'
+import { ANALYTICS_PROVIDERS } from '@/products/integracoes/shared/providers/analyticsProviders'
 import { CRM_PROVIDERS } from '@/products/integracoes/shared/providers/crmProviders'
 import { ECOMMERCE_PROVIDERS } from '@/products/integracoes/shared/providers/ecommerceProviders'
 import { ERP_PROVIDERS } from '@/products/integracoes/shared/providers/erpProviders'
@@ -11,6 +12,7 @@ export const INTEGRATION_PROVIDERS: IntegrationProvider[] = [
   ...ERP_PROVIDERS,
   ...CRM_PROVIDERS,
   ...ECOMMERCE_PROVIDERS,
+  ...ANALYTICS_PROVIDERS,
   ...MARKETING_PROVIDERS,
   ...ADVERTISING_PROVIDERS,
 ]

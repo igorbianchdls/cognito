@@ -9,6 +9,8 @@ type Credentials = {
   accessToken: string
   baseUrl?: string
   accountId?: string
+  storeId?: string
+  locationId?: string
   propertyId?: string
   siteUrl?: string
   customerId?: string
@@ -85,6 +87,8 @@ function normalizeCredentials(provider: string, value: unknown): Credentials {
     accessToken: accessToken.trim(),
     baseUrl: nonEmptyString(credentials.baseUrl) ? credentials.baseUrl.trim() : nonEmptyString(credentials.base_url) ? credentials.base_url.trim() : undefined,
     accountId: nonEmptyString(credentials.accountId) ? credentials.accountId.trim() : nonEmptyString(credentials.account_id) ? credentials.account_id.trim() : undefined,
+    storeId: nonEmptyString(credentials.storeId) ? credentials.storeId.trim() : nonEmptyString(credentials.store_id) ? credentials.store_id.trim() : undefined,
+    locationId: nonEmptyString(credentials.locationId) ? credentials.locationId.trim() : nonEmptyString(credentials.location_id) ? credentials.location_id.trim() : undefined,
     propertyId: nonEmptyString(credentials.propertyId) ? credentials.propertyId.trim() : nonEmptyString(credentials.property_id) ? credentials.property_id.trim() : undefined,
     siteUrl: nonEmptyString(credentials.siteUrl) ? credentials.siteUrl.trim() : nonEmptyString(credentials.site_url) ? credentials.site_url.trim() : undefined,
     customerId: nonEmptyString(credentials.customerId) ? credentials.customerId.trim() : nonEmptyString(credentials.customer_id) ? credentials.customer_id.trim() : undefined,
@@ -125,7 +129,7 @@ function extractItems(payload: unknown, itemKeys: string[]): Record<string, unkn
 }
 
 function buildUrl(baseUrl: string, path: string, query?: Record<string, string | number | boolean | undefined>) {
-  const url = new URL(`${baseUrl.replace(/\/+$/, '')}${path.startsWith('/') ? path : `/${path}`}`)
+  const url = new URL(/^https?:\/\//.test(path) ? path : `${baseUrl.replace(/\/+$/, '')}${path.startsWith('/') ? path : `/${path}`}`)
   for (const [key, value] of Object.entries(query || {})) {
     if (value !== undefined && value !== null && value !== '') url.searchParams.set(key, String(value))
   }

@@ -2,7 +2,7 @@ import { createDateRangeReportConnector } from '@/products/integracoes/cloud/src
 import { GOOGLE_SEARCH_CONSOLE_RESOURCES } from '@/products/integracoes/cloud/src/connectors/marketing/googleSearchConsole/googleSearchConsoleResources'
 
 export const googleSearchConsoleConnector = createDateRangeReportConnector({
-  domain: 'marketing',
+  domain: 'analytics',
   provider: 'google_search_console',
   defaultBaseUrl: 'https://www.googleapis.com/webmasters/v3',
   envBaseUrlKey: 'GOOGLE_SEARCH_CONSOLE_API_BASE_URL',

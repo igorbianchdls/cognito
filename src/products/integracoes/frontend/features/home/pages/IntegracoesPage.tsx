@@ -26,13 +26,14 @@ import { getIntegrationProvider } from '@/products/integracoes/shared/providers/
 import type { ToolkitDefinition, ToolkitStatusMap } from '@/products/integracoes/shared/types'
 
 type IntegrationKind = 'mcp' | 'data-connectors'
-type CatalogCategory = 'all' | 'erp' | 'crm' | 'communication' | 'data' | 'productivity' | 'marketing' | 'support' | 'other'
+type CatalogCategory = 'all' | 'erp' | 'crm' | 'analytics' | 'communication' | 'data' | 'productivity' | 'marketing' | 'support' | 'other'
 type SortMode = 'popular' | 'name' | 'connected'
 
 const CATEGORY_TABS: Array<{ value: CatalogCategory; label: string }> = [
   { value: 'all', label: 'Todas' },
   { value: 'erp', label: 'ERP' },
   { value: 'crm', label: 'CRM' },
+  { value: 'analytics', label: 'Analytics' },
   { value: 'communication', label: 'Comunicação' },
   { value: 'data', label: 'Dados & Relatórios' },
   { value: 'productivity', label: 'Produtividade' },
@@ -158,6 +159,7 @@ function categorizeToolkit(slug: string): CatalogCategory {
   const provider = getIntegrationProvider(key)
   if (provider?.domain === 'erp') return 'erp'
   if (provider?.domain === 'crm') return 'crm'
+  if (provider?.domain === 'analytics') return 'analytics'
   if (COMMUNICATION_SLUGS.has(key)) return 'communication'
   if (DATA_SLUGS.has(key)) return 'data'
   if (PRODUCTIVITY_SLUGS.has(key)) return 'productivity'
