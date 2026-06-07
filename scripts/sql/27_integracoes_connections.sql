@@ -26,7 +26,7 @@ CREATE TABLE IF NOT EXISTS mcp_app.integration_connections (
   created_at timestamptz NOT NULL DEFAULT now(),
   updated_at timestamptz NOT NULL DEFAULT now(),
   CONSTRAINT integration_connections_domain_check
-    CHECK (domain IN ('erp', 'crm', 'ecommerce', 'marketing', 'database', 'bi', 'automation')),
+    CHECK (domain IN ('erp', 'crm', 'ecommerce', 'marketing', 'advertising', 'database', 'bi', 'automation')),
   CONSTRAINT integration_connections_status_check
     CHECK (status IN ('draft', 'pending_auth', 'connected', 'syncing', 'warning', 'error', 'disabled')),
   CONSTRAINT integration_connections_auth_type_check
@@ -257,7 +257,7 @@ CREATE TABLE IF NOT EXISTS mcp_app.integration_provider_capabilities (
   created_at timestamptz NOT NULL DEFAULT now(),
   updated_at timestamptz NOT NULL DEFAULT now(),
   CONSTRAINT integration_provider_capabilities_domain_check
-    CHECK (domain IN ('erp', 'crm', 'ecommerce', 'marketing', 'database', 'bi', 'automation')),
+    CHECK (domain IN ('erp', 'crm', 'ecommerce', 'marketing', 'advertising', 'database', 'bi', 'automation')),
   CONSTRAINT integration_provider_capabilities_auth_type_check
     CHECK (auth_type IN ('oauth2', 'api_key', 'basic', 'manual')),
   CONSTRAINT integration_provider_capabilities_status_check
@@ -367,6 +367,25 @@ crm_resources AS (
     jsonb_build_object('slug', 'fases_pipeline', 'name', 'Fases do pipeline', 'defaultEnabled', false)
   ) AS resources_json
 ),
+marketing_resources AS (
+  SELECT jsonb_build_array(
+    jsonb_build_object('slug', 'accounts', 'name', 'Contas e propriedades', 'defaultEnabled', true),
+    jsonb_build_object('slug', 'traffic_daily', 'name', 'Trafego diario', 'defaultEnabled', true),
+    jsonb_build_object('slug', 'pages_daily', 'name', 'Paginas por dia', 'defaultEnabled', true),
+    jsonb_build_object('slug', 'queries_daily', 'name', 'Consultas por dia', 'defaultEnabled', false),
+    jsonb_build_object('slug', 'events_daily', 'name', 'Eventos por dia', 'defaultEnabled', false)
+  ) AS resources_json
+),
+advertising_resources AS (
+  SELECT jsonb_build_array(
+    jsonb_build_object('slug', 'accounts', 'name', 'Contas de anuncio', 'defaultEnabled', true),
+    jsonb_build_object('slug', 'campaigns', 'name', 'Campanhas', 'defaultEnabled', true),
+    jsonb_build_object('slug', 'ad_groups', 'name', 'Grupos de anuncios', 'defaultEnabled', true),
+    jsonb_build_object('slug', 'ads', 'name', 'Anuncios', 'defaultEnabled', true),
+    jsonb_build_object('slug', 'insights_campaign_daily', 'name', 'Metricas de campanha por dia', 'defaultEnabled', true),
+    jsonb_build_object('slug', 'insights_ad_daily', 'name', 'Metricas de anuncio por dia', 'defaultEnabled', false)
+  ) AS resources_json
+),
 providers AS (
   SELECT
     'erp'::text AS domain,
@@ -412,6 +431,18 @@ providers AS (
   UNION ALL
   SELECT 'crm', 'rd_station_crm', 'RD Station CRM', 'CRM brasileiro para leads, contatos, oportunidades, funis e atividades.', 'oauth2', true, true, jsonb_build_array('manual', 'scheduled'), crm_resources.resources_json, jsonb_build_array('crm', 'vendas', 'relacionamento', 'brasil', 'sales'), 'available', jsonb_build_object('toolkitSlug', 'RD_STATION_CRM')
   FROM crm_resources
+  UNION ALL
+  SELECT 'marketing', 'google_search_console', 'Google Search Console', 'Marketing organico de busca com paginas, consultas e desempenho diario.', 'oauth2', true, true, jsonb_build_array('manual', 'scheduled'), marketing_resources.resources_json, jsonb_build_array('marketing', 'organico', 'seo', 'google'), 'available', jsonb_build_object('toolkitSlug', 'GOOGLE_SEARCH_CONSOLE')
+  FROM marketing_resources
+  UNION ALL
+  SELECT 'marketing', 'google_analytics_4', 'Google Analytics 4', 'Marketing organico e analytics com trafego, paginas e eventos.', 'oauth2', true, true, jsonb_build_array('manual', 'scheduled'), marketing_resources.resources_json, jsonb_build_array('marketing', 'organico', 'analytics', 'google'), 'available', jsonb_build_object('toolkitSlug', 'GOOGLE_ANALYTICS_4')
+  FROM marketing_resources
+  UNION ALL
+  SELECT 'advertising', 'meta_ads', 'Meta Ads', 'Publicidade paga em Facebook e Instagram com campanhas, anuncios e metricas diarias.', 'oauth2', true, true, jsonb_build_array('manual', 'scheduled'), advertising_resources.resources_json, jsonb_build_array('advertising', 'publicidade', 'paid-media', 'meta'), 'available', jsonb_build_object('toolkitSlug', 'META_ADS')
+  FROM advertising_resources
+  UNION ALL
+  SELECT 'advertising', 'google_ads', 'Google Ads', 'Publicidade paga no Google Ads com campanhas, grupos, anuncios e metricas diarias.', 'oauth2', true, true, jsonb_build_array('manual', 'scheduled'), advertising_resources.resources_json, jsonb_build_array('advertising', 'publicidade', 'paid-media', 'google'), 'available', jsonb_build_object('toolkitSlug', 'GOOGLE_ADS')
+  FROM advertising_resources
 )
 INSERT INTO mcp_app.integration_provider_capabilities
   (domain, provider, name, description, auth_type, supports_oauth_callback, supports_incremental_sync, sync_modes_json, resources_json, tags_json, status, metadata_json, updated_at)

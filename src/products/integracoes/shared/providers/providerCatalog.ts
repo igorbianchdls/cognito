@@ -1,12 +1,16 @@
 import type { ToolkitDefinition } from '@/products/integracoes/shared/types'
+import { ADVERTISING_PROVIDERS } from '@/products/integracoes/shared/providers/advertisingProviders'
 import { CRM_PROVIDERS } from '@/products/integracoes/shared/providers/crmProviders'
 import { ERP_PROVIDERS } from '@/products/integracoes/shared/providers/erpProviders'
+import { MARKETING_PROVIDERS } from '@/products/integracoes/shared/providers/marketingProviders'
 import type { IntegrationDomain, IntegrationProvider } from '@/products/integracoes/shared/providers/providerTypes'
 import { normalizeProviderSlug, normalizeToolkitSlug } from '@/products/integracoes/shared/providers/providerTypes'
 
 export const INTEGRATION_PROVIDERS: IntegrationProvider[] = [
   ...ERP_PROVIDERS,
   ...CRM_PROVIDERS,
+  ...MARKETING_PROVIDERS,
+  ...ADVERTISING_PROVIDERS,
 ]
 
 export function getIntegrationProvider(slug: string): IntegrationProvider | undefined {

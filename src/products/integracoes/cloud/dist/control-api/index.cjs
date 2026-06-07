@@ -5247,19 +5247,19 @@ function mapTokenResponse(payload) {
     scope: payload.scope
   };
 }
-async function postTokenRequest(provider, body) {
+async function postTokenRequest(provider, body2) {
   const config = await getOAuthProviderConfig(provider);
   if (!config.clientId || !config.clientSecret || !config.tokenUrl) {
     throw new Error(`OAuth ${provider} nao configurado.`);
   }
-  body.set("client_id", config.clientId);
-  body.set("client_secret", config.clientSecret);
+  body2.set("client_id", config.clientId);
+  body2.set("client_secret", config.clientSecret);
   const response = await fetch(config.tokenUrl, {
     method: "POST",
     headers: {
       "Content-Type": "application/x-www-form-urlencoded"
     },
-    body,
+    body: body2,
     signal: AbortSignal.timeout(Number(process.env.INTEGRATIONS_OAUTH_TIMEOUT_MS || 3e4))
   });
   const payload = await response.json().catch(() => null);
@@ -5270,11 +5270,11 @@ async function postTokenRequest(provider, body) {
 }
 async function exchangeOAuthCode(provider, code, redirectUri) {
   const config = await getOAuthProviderConfig(provider);
-  const body = new URLSearchParams();
-  body.set("grant_type", "authorization_code");
-  body.set("code", code);
-  body.set("redirect_uri", redirectUri || config.redirectUri);
-  return postTokenRequest(provider, body);
+  const body2 = new URLSearchParams();
+  body2.set("grant_type", "authorization_code");
+  body2.set("code", code);
+  body2.set("redirect_uri", redirectUri || config.redirectUri);
+  return postTokenRequest(provider, body2);
 }
 
 // node_modules/.pnpm/pg@8.16.3/node_modules/pg/esm/index.mjs
@@ -5895,13 +5895,13 @@ function classifyHttpStatus(status) {
 }
 
 // src/products/integracoes/cloud/src/lib/connectorHttp.ts
-function serializeBody(body) {
-  if (body == null) return void 0;
-  if (typeof body === "string" || body instanceof URLSearchParams || body instanceof FormData) return body;
-  return JSON.stringify(body);
+function serializeBody(body2) {
+  if (body2 == null) return void 0;
+  if (typeof body2 === "string" || body2 instanceof URLSearchParams || body2 instanceof FormData) return body2;
+  return JSON.stringify(body2);
 }
-function defaultHeaders(body) {
-  if (body == null || typeof body === "string" || body instanceof URLSearchParams || body instanceof FormData) return {};
+function defaultHeaders(body2) {
+  if (body2 == null || typeof body2 === "string" || body2 instanceof URLSearchParams || body2 instanceof FormData) return {};
   return { "Content-Type": "application/json" };
 }
 function shouldRetryNetworkError(error) {
@@ -5966,11 +5966,11 @@ async function connectorJsonRequest(request) {
   });
 }
 
-// src/products/integracoes/cloud/src/connectors/crm/common/oauthRestCrmConnector.ts
+// src/products/integracoes/cloud/src/connectors/marketing/common/dateRangeReportConnector.ts
 function isRecord2(value) {
   return typeof value === "object" && value !== null && !Array.isArray(value);
 }
-function asRecord2(value) {
+function parseRecord(value) {
   if (isRecord2(value)) return value;
   if (typeof value !== "string") return null;
   try {
@@ -5983,8 +5983,8 @@ function asRecord2(value) {
 function nonEmptyString2(value) {
   return typeof value === "string" && value.trim().length > 0;
 }
-function normalizeOAuthCredentials(provider, value) {
-  const credentials = asRecord2(value);
+function normalizeCredentials(provider, value) {
+  const credentials = parseRecord(value);
   const accessToken = credentials?.accessToken ?? credentials?.access_token;
   if (!credentials || !nonEmptyString2(accessToken)) {
     throw new ProviderError({
@@ -5996,13 +5996,402 @@ function normalizeOAuthCredentials(provider, value) {
   }
   return {
     accessToken: accessToken.trim(),
-    refreshToken: nonEmptyString2(credentials.refreshToken) ? credentials.refreshToken.trim() : nonEmptyString2(credentials.refresh_token) ? credentials.refresh_token.trim() : void 0,
-    expiresAt: nonEmptyString2(credentials.expiresAt) ? credentials.expiresAt.trim() : nonEmptyString2(credentials.expires_at) ? credentials.expires_at.trim() : void 0,
-    tokenType: nonEmptyString2(credentials.tokenType) ? credentials.tokenType.trim() : nonEmptyString2(credentials.token_type) ? credentials.token_type.trim() : void 0,
-    scope: nonEmptyString2(credentials.scope) ? credentials.scope.trim() : void 0,
     baseUrl: nonEmptyString2(credentials.baseUrl) ? credentials.baseUrl.trim() : nonEmptyString2(credentials.base_url) ? credentials.base_url.trim() : void 0,
-    portalUrl: nonEmptyString2(credentials.portalUrl) ? credentials.portalUrl.trim() : nonEmptyString2(credentials.portal_url) ? credentials.portal_url.trim() : void 0,
-    domain: nonEmptyString2(credentials.domain) ? credentials.domain.trim() : void 0
+    accountId: nonEmptyString2(credentials.accountId) ? credentials.accountId.trim() : nonEmptyString2(credentials.account_id) ? credentials.account_id.trim() : void 0,
+    propertyId: nonEmptyString2(credentials.propertyId) ? credentials.propertyId.trim() : nonEmptyString2(credentials.property_id) ? credentials.property_id.trim() : void 0,
+    siteUrl: nonEmptyString2(credentials.siteUrl) ? credentials.siteUrl.trim() : nonEmptyString2(credentials.site_url) ? credentials.site_url.trim() : void 0,
+    customerId: nonEmptyString2(credentials.customerId) ? credentials.customerId.trim() : nonEmptyString2(credentials.customer_id) ? credentials.customer_id.trim() : void 0,
+    developerToken: nonEmptyString2(credentials.developerToken) ? credentials.developerToken.trim() : nonEmptyString2(credentials.developer_token) ? credentials.developer_token.trim() : void 0,
+    loginCustomerId: nonEmptyString2(credentials.loginCustomerId) ? credentials.loginCustomerId.trim() : nonEmptyString2(credentials.login_customer_id) ? credentials.login_customer_id.trim() : void 0
+  };
+}
+function formatDate(value) {
+  return value.toISOString().slice(0, 10);
+}
+function resolveDateWindow(context) {
+  const metadata = context.metadata || {};
+  const lookbackDays = Number(metadata.lookbackDays || metadata.lookback_days || process.env.INTEGRATIONS_MARKETING_LOOKBACK_DAYS || 30);
+  const end = /* @__PURE__ */ new Date();
+  const start = new Date(end);
+  start.setDate(start.getDate() - (Number.isFinite(lookbackDays) && lookbackDays > 0 ? lookbackDays : 30));
+  return {
+    dateStart: typeof metadata.dateStart === "string" ? metadata.dateStart : formatDate(start),
+    dateEnd: typeof metadata.dateEnd === "string" ? metadata.dateEnd : formatDate(end)
+  };
+}
+function extractItems(payload, itemKeys) {
+  const normalizeArray = (items) => items.map((item) => isRecord2(item) ? item : { value: item }).filter((item) => item.value !== void 0 || Object.keys(item).length > 0);
+  if (Array.isArray(payload)) return normalizeArray(payload);
+  if (!isRecord2(payload)) return [];
+  for (const key of itemKeys) {
+    const value = key.split(".").reduce((current, part) => isRecord2(current) ? current[part] : void 0, payload);
+    if (Array.isArray(value)) return normalizeArray(value);
+  }
+  const arrays = Object.values(payload).filter(Array.isArray);
+  if (arrays.length === 1) return normalizeArray(arrays[0]);
+  return [];
+}
+function buildUrl(baseUrl, path, query) {
+  const url = new URL(`${baseUrl.replace(/\/+$/, "")}${path.startsWith("/") ? path : `/${path}`}`);
+  for (const [key, value] of Object.entries(query || {})) {
+    if (value !== void 0 && value !== null && value !== "") url.searchParams.set(key, String(value));
+  }
+  return url.toString();
+}
+function mapRow(provider, resource, row, page, index) {
+  const externalId = row.id ?? row.resourceName ?? row.name ?? row.date ?? `${provider}_${resource}_${page}_${index + 1}`;
+  return {
+    external_id: typeof externalId === "string" || typeof externalId === "number" ? String(externalId) : `${provider}_${resource}_${page}_${index + 1}`,
+    marketing_resource: resource,
+    report_page: page,
+    raw: row
+  };
+}
+function createDateRangeReportConnector(input) {
+  const resourceMap = new Map(input.resources.map((resource) => [resource.resource, resource]));
+  const manifest = input.resources.map((resource) => ({
+    resource: resource.resource,
+    supportsIncremental: resource.supportsIncremental,
+    defaultPageSize: resource.defaultPageSize,
+    requiredFields: ["accessToken"]
+  }));
+  async function request(context, resource, page, pageSize, cursor) {
+    const credentials = normalizeCredentials(input.provider, context.credentials);
+    const { dateStart, dateEnd } = resolveDateWindow(context);
+    const baseUrl = (process.env[input.envBaseUrlKey] || credentials.baseUrl || input.defaultBaseUrl).replace(/\/+$/, "");
+    const method = resource.method || "GET";
+    const buildInput = { page, pageSize, cursor, credentials, dateStart, dateEnd };
+    const path = resource.buildPath?.(buildInput) || resource.path;
+    const query = resource.buildQuery?.(buildInput);
+    const body2 = method === "POST" ? resource.buildBody?.(buildInput) : void 0;
+    const response = await connectorJsonRequest({
+      provider: input.provider,
+      resource: resource.resource,
+      url: buildUrl(baseUrl, path, query),
+      method,
+      headers: {
+        Authorization: `Bearer ${credentials.accessToken}`,
+        ...resource.headers?.(credentials) || {}
+      },
+      body: body2,
+      rateLimitMs: input.rateLimitMs
+    });
+    return { payload: response.payload, dateStart, dateEnd };
+  }
+  return {
+    domain: input.domain,
+    provider: input.provider,
+    resources: manifest,
+    validateCredentials(credentials) {
+      try {
+        normalizeCredentials(input.provider, credentials);
+        return { ok: true };
+      } catch (error) {
+        return { ok: false, error: error instanceof Error ? error.message : `Credenciais ${input.provider} invalidas.` };
+      }
+    },
+    async testConnection(context) {
+      const resource = resourceMap.get(input.testResource) || input.resources[0];
+      const { payload } = await request(context, resource, 1, 1);
+      return { status: "success", recordsIn: 0, recordsUpdated: 0, recordsFailed: 0, metadata: { mode: `${input.provider}_api`, sampleCount: extractItems(payload, resource.itemKeys).length } };
+    },
+    async syncResource(context, resourceName) {
+      const resource = resourceMap.get(resourceName);
+      if (!resource) return { status: "warning", recordsIn: 0, recordsUpdated: 0, recordsFailed: 0, errorMessage: `Recurso nao mapeado: ${resourceName}` };
+      const pageSize = Number(process.env[`${input.provider.toUpperCase()}_PAGE_SIZE`] || resource.defaultPageSize);
+      const maxPages = Number(process.env[`${input.provider.toUpperCase()}_MAX_PAGES_PER_RESOURCE`] || 50);
+      const batches = [];
+      let cursor = context.cursor;
+      let page = Math.max(Number(cursor?.page || 1), 1);
+      let recordsIn = 0;
+      let truncated = false;
+      let dateStart = "";
+      let dateEnd = "";
+      for (let loaded = 0; loaded < maxPages; loaded += 1) {
+        const result = await request(context, resource, page, pageSize, cursor);
+        dateStart = result.dateStart;
+        dateEnd = result.dateEnd;
+        const payloadRecord = isRecord2(result.payload) ? result.payload : { data: result.payload };
+        const rawItems = extractItems(result.payload, resource.itemKeys);
+        const items = resource.transformItems ? resource.transformItems(rawItems, payloadRecord) : rawItems;
+        const rows = items.map((row, index) => mapRow(input.provider, resource.resource, row, page, index));
+        recordsIn += rows.length;
+        const nextCursor = resource.getNextCursor?.(payloadRecord, items, page);
+        batches.push({ resource: resource.resource, rows, nextCursor });
+        if (!nextCursor) break;
+        if (loaded + 1 >= maxPages) {
+          truncated = true;
+          break;
+        }
+        cursor = nextCursor;
+        page = Number(nextCursor.page || page + 1);
+      }
+      return {
+        status: truncated ? "warning" : "success",
+        recordsIn,
+        recordsUpdated: recordsIn,
+        recordsFailed: 0,
+        batches,
+        metadata: { mode: `${input.provider}_api`, resource: resource.resource, dateStart, dateEnd, truncated }
+      };
+    },
+    async refreshToken() {
+      return { status: "success", recordsIn: 0, recordsUpdated: 0, recordsFailed: 0, metadata: { mode: "oauth2", refreshed: false } };
+    }
+  };
+}
+
+// src/products/integracoes/cloud/src/connectors/advertising/googleAds/googleAdsResources.ts
+var DEFAULT_PAGE_SIZE = 1e3;
+function normalizeCustomerId(value) {
+  return (value || process.env.GOOGLE_ADS_CUSTOMER_ID || "").replace(/\D/g, "");
+}
+function customerPath(credentials) {
+  const customerId = normalizeCustomerId(credentials.customerId);
+  return `/customers/${customerId || "missing_customer_id"}/googleAds:searchStream`;
+}
+function headers(credentials) {
+  const developerToken = credentials.developerToken || process.env.GOOGLE_ADS_DEVELOPER_TOKEN || "";
+  const loginCustomerId = (credentials.loginCustomerId || process.env.GOOGLE_ADS_LOGIN_CUSTOMER_ID || "").replace(/\D/g, "");
+  return {
+    ...developerToken ? { "developer-token": developerToken } : {},
+    ...loginCustomerId ? { "login-customer-id": loginCustomerId } : {}
+  };
+}
+function flattenSearchStream(items) {
+  return items.flatMap((chunk) => Array.isArray(chunk.results) ? chunk.results.filter((item) => typeof item === "object" && item !== null && !Array.isArray(item)) : []);
+}
+function datedGaql(build) {
+  return ({ dateStart, dateEnd }) => ({ query: build(dateStart, dateEnd) });
+}
+var baseSearchResource = {
+  path: "/customers/missing_customer_id/googleAds:searchStream",
+  itemKeys: ["results"],
+  defaultPageSize: DEFAULT_PAGE_SIZE,
+  supportsIncremental: true,
+  method: "POST",
+  buildPath: ({ credentials }) => customerPath(credentials),
+  headers,
+  transformItems: flattenSearchStream
+};
+var GOOGLE_ADS_RESOURCES = [
+  {
+    resource: "accounts",
+    path: "/customers:listAccessibleCustomers",
+    itemKeys: ["resourceNames"],
+    defaultPageSize: DEFAULT_PAGE_SIZE,
+    supportsIncremental: false,
+    headers
+  },
+  {
+    ...baseSearchResource,
+    resource: "campaigns",
+    buildBody: datedGaql((dateStart, dateEnd) => `
+      SELECT campaign.id, campaign.name, campaign.status, campaign.advertising_channel_type,
+             metrics.impressions, metrics.clicks, metrics.cost_micros, segments.date
+      FROM campaign
+      WHERE segments.date BETWEEN '${dateStart}' AND '${dateEnd}'
+    `)
+  },
+  {
+    ...baseSearchResource,
+    resource: "ad_groups",
+    buildBody: datedGaql((dateStart, dateEnd) => `
+      SELECT ad_group.id, ad_group.name, ad_group.status, campaign.id,
+             metrics.impressions, metrics.clicks, metrics.cost_micros, segments.date
+      FROM ad_group
+      WHERE segments.date BETWEEN '${dateStart}' AND '${dateEnd}'
+    `)
+  },
+  {
+    ...baseSearchResource,
+    resource: "ads",
+    buildBody: datedGaql((dateStart, dateEnd) => `
+      SELECT ad_group_ad.ad.id, ad_group_ad.ad.name, ad_group_ad.status, ad_group.id, campaign.id,
+             metrics.impressions, metrics.clicks, metrics.cost_micros, segments.date
+      FROM ad_group_ad
+      WHERE segments.date BETWEEN '${dateStart}' AND '${dateEnd}'
+    `)
+  },
+  {
+    ...baseSearchResource,
+    resource: "insights_campaign_daily",
+    buildBody: datedGaql((dateStart, dateEnd) => `
+      SELECT segments.date, campaign.id, campaign.name,
+             metrics.impressions, metrics.clicks, metrics.cost_micros, metrics.conversions
+      FROM campaign
+      WHERE segments.date BETWEEN '${dateStart}' AND '${dateEnd}'
+    `)
+  },
+  {
+    ...baseSearchResource,
+    resource: "insights_ad_daily",
+    buildBody: datedGaql((dateStart, dateEnd) => `
+      SELECT segments.date, campaign.id, ad_group.id, ad_group_ad.ad.id,
+             metrics.impressions, metrics.clicks, metrics.cost_micros, metrics.conversions
+      FROM ad_group_ad
+      WHERE segments.date BETWEEN '${dateStart}' AND '${dateEnd}'
+    `)
+  }
+];
+
+// src/products/integracoes/cloud/src/connectors/advertising/googleAds/googleAdsConnector.ts
+var googleAdsConnector = createDateRangeReportConnector({
+  domain: "advertising",
+  provider: "google_ads",
+  defaultBaseUrl: "https://googleads.googleapis.com/v18",
+  envBaseUrlKey: "GOOGLE_ADS_API_BASE_URL",
+  resources: GOOGLE_ADS_RESOURCES,
+  testResource: "accounts",
+  rateLimitMs: Number(process.env.GOOGLE_ADS_RATE_LIMIT_MS || 250)
+});
+
+// src/products/integracoes/cloud/src/connectors/advertising/metaAds/metaAdsResources.ts
+var DEFAULT_PAGE_SIZE2 = 100;
+var FIELDS = "id,name,status,effective_status,created_time,updated_time";
+var INSIGHT_FIELDS = "date_start,date_stop,account_id,campaign_id,campaign_name,adset_id,adset_name,ad_id,ad_name,impressions,reach,clicks,spend,cpc,cpm,ctr,actions,conversions,purchase_roas";
+function accountPath(credentials, suffix) {
+  const accountId = credentials.accountId || process.env.META_ADS_ACCOUNT_ID || "act_missing";
+  return `/${accountId}${suffix}`;
+}
+function pagingCursor(payload) {
+  const paging = payload.paging;
+  if (!paging || typeof paging !== "object" || Array.isArray(paging)) return void 0;
+  const cursors = paging.cursors;
+  if (!cursors || typeof cursors !== "object" || Array.isArray(cursors)) return void 0;
+  const after = cursors.after;
+  return typeof after === "string" ? { after } : void 0;
+}
+var META_ADS_RESOURCES = [
+  {
+    resource: "accounts",
+    path: "/me/adaccounts",
+    itemKeys: ["data"],
+    defaultPageSize: DEFAULT_PAGE_SIZE2,
+    supportsIncremental: false,
+    buildQuery: ({ pageSize, cursor }) => ({ limit: pageSize, after: cursor?.after, fields: "id,name,account_id,account_status,currency,timezone_name" }),
+    getNextCursor: pagingCursor
+  },
+  {
+    resource: "campaigns",
+    path: "/act_missing/campaigns",
+    itemKeys: ["data"],
+    defaultPageSize: DEFAULT_PAGE_SIZE2,
+    supportsIncremental: true,
+    buildPath: ({ credentials }) => accountPath(credentials, "/campaigns"),
+    buildQuery: ({ pageSize, cursor }) => ({ limit: pageSize, after: cursor?.after, fields: `${FIELDS},objective` }),
+    getNextCursor: pagingCursor
+  },
+  {
+    resource: "ad_groups",
+    path: "/act_missing/adsets",
+    itemKeys: ["data"],
+    defaultPageSize: DEFAULT_PAGE_SIZE2,
+    supportsIncremental: true,
+    buildPath: ({ credentials }) => accountPath(credentials, "/adsets"),
+    buildQuery: ({ pageSize, cursor }) => ({ limit: pageSize, after: cursor?.after, fields: `${FIELDS},campaign_id,daily_budget,lifetime_budget` }),
+    getNextCursor: pagingCursor
+  },
+  {
+    resource: "ads",
+    path: "/act_missing/ads",
+    itemKeys: ["data"],
+    defaultPageSize: DEFAULT_PAGE_SIZE2,
+    supportsIncremental: true,
+    buildPath: ({ credentials }) => accountPath(credentials, "/ads"),
+    buildQuery: ({ pageSize, cursor }) => ({ limit: pageSize, after: cursor?.after, fields: `${FIELDS},campaign_id,adset_id,creative` }),
+    getNextCursor: pagingCursor
+  },
+  {
+    resource: "insights_campaign_daily",
+    path: "/act_missing/insights",
+    itemKeys: ["data"],
+    defaultPageSize: DEFAULT_PAGE_SIZE2,
+    supportsIncremental: true,
+    buildPath: ({ credentials }) => accountPath(credentials, "/insights"),
+    buildQuery: ({ pageSize, cursor, dateStart, dateEnd }) => ({
+      limit: pageSize,
+      after: cursor?.after,
+      level: "campaign",
+      time_increment: 1,
+      time_range: JSON.stringify({ since: dateStart, until: dateEnd }),
+      fields: INSIGHT_FIELDS
+    }),
+    getNextCursor: pagingCursor
+  },
+  {
+    resource: "insights_ad_daily",
+    path: "/act_missing/insights",
+    itemKeys: ["data"],
+    defaultPageSize: DEFAULT_PAGE_SIZE2,
+    supportsIncremental: true,
+    buildPath: ({ credentials }) => accountPath(credentials, "/insights"),
+    buildQuery: ({ pageSize, cursor, dateStart, dateEnd }) => ({
+      limit: pageSize,
+      after: cursor?.after,
+      level: "ad",
+      time_increment: 1,
+      time_range: JSON.stringify({ since: dateStart, until: dateEnd }),
+      fields: INSIGHT_FIELDS
+    }),
+    getNextCursor: pagingCursor
+  }
+];
+
+// src/products/integracoes/cloud/src/connectors/advertising/metaAds/metaAdsConnector.ts
+var metaAdsConnector = createDateRangeReportConnector({
+  domain: "advertising",
+  provider: "meta_ads",
+  defaultBaseUrl: "https://graph.facebook.com/v20.0",
+  envBaseUrlKey: "META_ADS_API_BASE_URL",
+  resources: META_ADS_RESOURCES,
+  testResource: "accounts",
+  rateLimitMs: Number(process.env.INTEGRATIONS_RATE_LIMIT_META_ADS_MS || 300)
+});
+
+// src/products/integracoes/cloud/src/providers/advertisingProviderRegistry.ts
+var ADVERTISING_CONNECTORS = [
+  metaAdsConnector,
+  googleAdsConnector
+];
+
+// src/products/integracoes/cloud/src/connectors/crm/common/oauthRestCrmConnector.ts
+function isRecord3(value) {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
+}
+function asRecord2(value) {
+  if (isRecord3(value)) return value;
+  if (typeof value !== "string") return null;
+  try {
+    const parsed = JSON.parse(value);
+    return isRecord3(parsed) ? parsed : null;
+  } catch {
+    return null;
+  }
+}
+function nonEmptyString3(value) {
+  return typeof value === "string" && value.trim().length > 0;
+}
+function normalizeOAuthCredentials(provider, value) {
+  const credentials = asRecord2(value);
+  const accessToken = credentials?.accessToken ?? credentials?.access_token;
+  if (!credentials || !nonEmptyString3(accessToken)) {
+    throw new ProviderError({
+      provider,
+      kind: "auth",
+      message: `Credenciais ${provider} invalidas. OAuth precisa retornar accessToken.`,
+      retryable: false
+    });
+  }
+  return {
+    accessToken: accessToken.trim(),
+    refreshToken: nonEmptyString3(credentials.refreshToken) ? credentials.refreshToken.trim() : nonEmptyString3(credentials.refresh_token) ? credentials.refresh_token.trim() : void 0,
+    expiresAt: nonEmptyString3(credentials.expiresAt) ? credentials.expiresAt.trim() : nonEmptyString3(credentials.expires_at) ? credentials.expires_at.trim() : void 0,
+    tokenType: nonEmptyString3(credentials.tokenType) ? credentials.tokenType.trim() : nonEmptyString3(credentials.token_type) ? credentials.token_type.trim() : void 0,
+    scope: nonEmptyString3(credentials.scope) ? credentials.scope.trim() : void 0,
+    baseUrl: nonEmptyString3(credentials.baseUrl) ? credentials.baseUrl.trim() : nonEmptyString3(credentials.base_url) ? credentials.base_url.trim() : void 0,
+    portalUrl: nonEmptyString3(credentials.portalUrl) ? credentials.portalUrl.trim() : nonEmptyString3(credentials.portal_url) ? credentials.portal_url.trim() : void 0,
+    domain: nonEmptyString3(credentials.domain) ? credentials.domain.trim() : void 0
   };
 }
 function defaultMapRow(provider, input) {
@@ -6014,21 +6403,21 @@ function defaultMapRow(provider, input) {
     raw: input.row
   };
 }
-function extractItems(payload, itemKeys) {
-  if (Array.isArray(payload)) return payload.filter((item) => isRecord2(item));
-  if (!isRecord2(payload)) return [];
+function extractItems2(payload, itemKeys) {
+  if (Array.isArray(payload)) return payload.filter((item) => isRecord3(item));
+  if (!isRecord3(payload)) return [];
   for (const key of itemKeys) {
     const value = key.split(".").reduce((current, part) => {
-      if (!isRecord2(current)) return void 0;
+      if (!isRecord3(current)) return void 0;
       return current[part];
     }, payload);
-    if (Array.isArray(value)) return value.filter((item) => isRecord2(item));
+    if (Array.isArray(value)) return value.filter((item) => isRecord3(item));
   }
   const arrays = Object.values(payload).filter(Array.isArray);
-  if (arrays.length === 1) return arrays[0].filter((item) => isRecord2(item));
+  if (arrays.length === 1) return arrays[0].filter((item) => isRecord3(item));
   return [];
 }
-function buildUrl(baseUrl, path, query) {
+function buildUrl2(baseUrl, path, query) {
   const url = new URL(`${baseUrl.replace(/\/+$/, "")}${path.startsWith("/") ? path : `/${path}`}`);
   for (const [key, value] of Object.entries(query || {})) {
     if (value !== void 0 && value !== null && value !== "") url.searchParams.set(key, String(value));
@@ -6039,12 +6428,12 @@ function getBaseUrl(input, credentials) {
   return (process.env[input.envBaseUrlKey] || credentials.baseUrl || credentials.portalUrl || (credentials.domain ? `https://${credentials.domain}` : "") || input.defaultBaseUrl).replace(/\/+$/, "");
 }
 function defaultNextCursor(payload, items, input) {
-  const paging = isRecord2(payload.paging) ? payload.paging : void 0;
-  const next = isRecord2(paging?.next) ? paging.next : void 0;
+  const paging = isRecord3(payload.paging) ? payload.paging : void 0;
+  const next = isRecord3(paging?.next) ? paging.next : void 0;
   const after = next?.after;
   if (typeof after === "string" || typeof after === "number") return { after };
-  const additionalData = isRecord2(payload.additional_data) ? payload.additional_data : void 0;
-  const pagination = isRecord2(additionalData?.pagination) ? additionalData.pagination : void 0;
+  const additionalData = isRecord3(payload.additional_data) ? payload.additional_data : void 0;
+  const pagination = isRecord3(additionalData?.pagination) ? additionalData.pagination : void 0;
   if (pagination?.more_items_in_collection === true && (typeof pagination.next_start === "number" || typeof pagination.next_start === "string")) {
     return { start: pagination.next_start };
   }
@@ -6067,17 +6456,17 @@ function createOAuthRestCrmConnector(input) {
     const credentials = normalizeOAuthCredentials(input.provider, context.credentials);
     const method = resource.method || "GET";
     const query = resource.buildQuery?.(pageInput) || {};
-    const body = method === "POST" ? resource.buildBody?.(pageInput) : void 0;
+    const body2 = method === "POST" ? resource.buildBody?.(pageInput) : void 0;
     if (input.authPlacement === "query_auth") query.auth = credentials.accessToken;
     const response = await connectorJsonRequest({
       provider: input.provider,
       resource: resource.resource,
-      url: buildUrl(getBaseUrl(input, credentials), resource.path, query),
+      url: buildUrl2(getBaseUrl(input, credentials), resource.path, query),
       method,
       headers: input.authPlacement === "query_auth" ? void 0 : {
         Authorization: `Bearer ${credentials.accessToken}`
       },
-      body,
+      body: body2,
       rateLimitMs: input.rateLimitMs
     });
     return response.payload;
@@ -6097,7 +6486,7 @@ function createOAuthRestCrmConnector(input) {
     async testConnection(context) {
       const resource = resourceMap.get(input.testResource) || input.resources[0];
       const payload = await requestPage(context, resource, { page: 1, pageSize: 1, cursor: void 0 });
-      const items = extractItems(payload, resource.itemKeys);
+      const items = extractItems2(payload, resource.itemKeys);
       return {
         status: "success",
         recordsIn: 0,
@@ -6131,8 +6520,8 @@ function createOAuthRestCrmConnector(input) {
       let truncated = false;
       for (let loadedPages = 0; loadedPages < maxPages; loadedPages += 1) {
         const payload = await requestPage(context, resource, { page, pageSize, cursor });
-        const payloadRecord = isRecord2(payload) ? payload : { data: payload };
-        const rawItems = extractItems(payload, resource.itemKeys);
+        const payloadRecord = isRecord3(payload) ? payload : { data: payload };
+        const rawItems = extractItems2(payload, resource.itemKeys);
         const items = resource.transformItems ? resource.transformItems(rawItems, payloadRecord) : rawItems;
         const rows = items.map((row, index) => (input.mapRow || ((rowInput) => defaultMapRow(input.provider, rowInput)))({
           resource: resource.resource,
@@ -6181,7 +6570,7 @@ function createOAuthRestCrmConnector(input) {
 }
 
 // src/products/integracoes/cloud/src/connectors/crm/bitrix24/bitrix24Resources.ts
-var DEFAULT_PAGE_SIZE = 50;
+var DEFAULT_PAGE_SIZE3 = 50;
 function startQuery({ pageSize, cursor }) {
   return {
     start: typeof cursor?.start === "number" || typeof cursor?.start === "string" ? cursor.start : 0,
@@ -6198,7 +6587,7 @@ var BITRIX24_RESOURCES = [
     resource: "contas",
     path: "/rest/crm.company.list.json",
     itemKeys: ["result"],
-    defaultPageSize: DEFAULT_PAGE_SIZE,
+    defaultPageSize: DEFAULT_PAGE_SIZE3,
     supportsIncremental: true,
     buildQuery: startQuery,
     getNextCursor: bitrixNextCursor
@@ -6207,7 +6596,7 @@ var BITRIX24_RESOURCES = [
     resource: "contatos",
     path: "/rest/crm.contact.list.json",
     itemKeys: ["result"],
-    defaultPageSize: DEFAULT_PAGE_SIZE,
+    defaultPageSize: DEFAULT_PAGE_SIZE3,
     supportsIncremental: true,
     buildQuery: startQuery,
     getNextCursor: bitrixNextCursor
@@ -6216,7 +6605,7 @@ var BITRIX24_RESOURCES = [
     resource: "leads",
     path: "/rest/crm.lead.list.json",
     itemKeys: ["result"],
-    defaultPageSize: DEFAULT_PAGE_SIZE,
+    defaultPageSize: DEFAULT_PAGE_SIZE3,
     supportsIncremental: true,
     buildQuery: startQuery,
     getNextCursor: bitrixNextCursor
@@ -6225,7 +6614,7 @@ var BITRIX24_RESOURCES = [
     resource: "oportunidades",
     path: "/rest/crm.deal.list.json",
     itemKeys: ["result"],
-    defaultPageSize: DEFAULT_PAGE_SIZE,
+    defaultPageSize: DEFAULT_PAGE_SIZE3,
     supportsIncremental: true,
     buildQuery: startQuery,
     getNextCursor: bitrixNextCursor
@@ -6234,7 +6623,7 @@ var BITRIX24_RESOURCES = [
     resource: "atividades",
     path: "/rest/crm.activity.list.json",
     itemKeys: ["result"],
-    defaultPageSize: DEFAULT_PAGE_SIZE,
+    defaultPageSize: DEFAULT_PAGE_SIZE3,
     supportsIncremental: true,
     buildQuery: startQuery,
     getNextCursor: bitrixNextCursor
@@ -6243,7 +6632,7 @@ var BITRIX24_RESOURCES = [
     resource: "usuarios",
     path: "/rest/user.get.json",
     itemKeys: ["result"],
-    defaultPageSize: DEFAULT_PAGE_SIZE,
+    defaultPageSize: DEFAULT_PAGE_SIZE3,
     supportsIncremental: false,
     buildQuery: startQuery,
     getNextCursor: bitrixNextCursor
@@ -6252,7 +6641,7 @@ var BITRIX24_RESOURCES = [
     resource: "pipelines",
     path: "/rest/crm.category.list.json",
     itemKeys: ["result.categories", "result"],
-    defaultPageSize: DEFAULT_PAGE_SIZE,
+    defaultPageSize: DEFAULT_PAGE_SIZE3,
     supportsIncremental: false,
     buildQuery: ({ pageSize, cursor }) => ({
       entityTypeId: 2,
@@ -6265,7 +6654,7 @@ var BITRIX24_RESOURCES = [
     resource: "fases_pipeline",
     path: "/rest/crm.status.list.json",
     itemKeys: ["result"],
-    defaultPageSize: DEFAULT_PAGE_SIZE,
+    defaultPageSize: DEFAULT_PAGE_SIZE3,
     supportsIncremental: false,
     buildQuery: ({ pageSize, cursor }) => ({
       "filter[ENTITY_ID]": "DEAL_STAGE",
@@ -6288,7 +6677,7 @@ var bitrix24Connector = createOAuthRestCrmConnector({
 });
 
 // src/products/integracoes/cloud/src/connectors/crm/hubspot/hubspotResources.ts
-var DEFAULT_PAGE_SIZE2 = 100;
+var DEFAULT_PAGE_SIZE4 = 100;
 function objectQuery(objectType, properties) {
   return ({ pageSize, cursor }) => ({
     limit: pageSize,
@@ -6303,7 +6692,7 @@ var HUBSPOT_RESOURCES = [
     resource: "contas",
     path: "/crm/v3/objects/companies",
     itemKeys: ["results"],
-    defaultPageSize: DEFAULT_PAGE_SIZE2,
+    defaultPageSize: DEFAULT_PAGE_SIZE4,
     supportsIncremental: true,
     buildQuery: objectQuery("companies", ["name", "domain", "industry", "phone", "city", "state", "country", "createdate", "hs_lastmodifieddate"])
   },
@@ -6311,7 +6700,7 @@ var HUBSPOT_RESOURCES = [
     resource: "contatos",
     path: "/crm/v3/objects/contacts",
     itemKeys: ["results"],
-    defaultPageSize: DEFAULT_PAGE_SIZE2,
+    defaultPageSize: DEFAULT_PAGE_SIZE4,
     supportsIncremental: true,
     buildQuery: objectQuery("contacts", ["firstname", "lastname", "email", "phone", "company", "jobtitle", "createdate", "lastmodifieddate"])
   },
@@ -6319,7 +6708,7 @@ var HUBSPOT_RESOURCES = [
     resource: "leads",
     path: "/crm/v3/objects/0-136",
     itemKeys: ["results"],
-    defaultPageSize: DEFAULT_PAGE_SIZE2,
+    defaultPageSize: DEFAULT_PAGE_SIZE4,
     supportsIncremental: true,
     buildQuery: objectQuery("0-136", ["hs_lead_name", "hs_pipeline", "hs_pipeline_stage", "hs_associated_contact_email", "hs_createdate", "hs_lastmodifieddate"])
   },
@@ -6327,7 +6716,7 @@ var HUBSPOT_RESOURCES = [
     resource: "oportunidades",
     path: "/crm/v3/objects/deals",
     itemKeys: ["results"],
-    defaultPageSize: DEFAULT_PAGE_SIZE2,
+    defaultPageSize: DEFAULT_PAGE_SIZE4,
     supportsIncremental: true,
     buildQuery: objectQuery("deals", ["dealname", "amount", "dealstage", "pipeline", "closedate", "createdate", "hs_lastmodifieddate", "hubspot_owner_id"])
   },
@@ -6335,7 +6724,7 @@ var HUBSPOT_RESOURCES = [
     resource: "atividades",
     path: "/crm/v3/objects/tasks",
     itemKeys: ["results"],
-    defaultPageSize: DEFAULT_PAGE_SIZE2,
+    defaultPageSize: DEFAULT_PAGE_SIZE4,
     supportsIncremental: true,
     buildQuery: objectQuery("tasks", ["hs_task_subject", "hs_task_status", "hs_task_priority", "hs_timestamp", "hs_createdate", "hs_lastmodifieddate", "hubspot_owner_id"])
   },
@@ -6343,7 +6732,7 @@ var HUBSPOT_RESOURCES = [
     resource: "usuarios",
     path: "/crm/v3/owners",
     itemKeys: ["results"],
-    defaultPageSize: DEFAULT_PAGE_SIZE2,
+    defaultPageSize: DEFAULT_PAGE_SIZE4,
     supportsIncremental: false,
     buildQuery: ({ pageSize, cursor }) => ({
       limit: pageSize,
@@ -6355,7 +6744,7 @@ var HUBSPOT_RESOURCES = [
     resource: "pipelines",
     path: "/crm/v3/pipelines/deals",
     itemKeys: ["results"],
-    defaultPageSize: DEFAULT_PAGE_SIZE2,
+    defaultPageSize: DEFAULT_PAGE_SIZE4,
     supportsIncremental: false,
     buildQuery: () => ({}),
     getNextCursor: () => void 0
@@ -6364,7 +6753,7 @@ var HUBSPOT_RESOURCES = [
     resource: "fases_pipeline",
     path: "/crm/v3/pipelines/deals",
     itemKeys: ["results"],
-    defaultPageSize: DEFAULT_PAGE_SIZE2,
+    defaultPageSize: DEFAULT_PAGE_SIZE4,
     supportsIncremental: false,
     buildQuery: () => ({}),
     getNextCursor: () => void 0,
@@ -6386,7 +6775,7 @@ var hubspotConnector = createOAuthRestCrmConnector({
 });
 
 // src/products/integracoes/cloud/src/connectors/crm/pipedrive/pipedriveResources.ts
-var DEFAULT_PAGE_SIZE3 = 100;
+var DEFAULT_PAGE_SIZE5 = 100;
 function startLimitQuery({ pageSize, cursor }) {
   return {
     start: typeof cursor?.start === "number" || typeof cursor?.start === "string" ? cursor.start : 0,
@@ -6398,7 +6787,7 @@ var PIPEDRIVE_RESOURCES = [
     resource: "contas",
     path: "/v1/organizations",
     itemKeys: ["data"],
-    defaultPageSize: DEFAULT_PAGE_SIZE3,
+    defaultPageSize: DEFAULT_PAGE_SIZE5,
     supportsIncremental: true,
     buildQuery: startLimitQuery
   },
@@ -6406,7 +6795,7 @@ var PIPEDRIVE_RESOURCES = [
     resource: "contatos",
     path: "/v1/persons",
     itemKeys: ["data"],
-    defaultPageSize: DEFAULT_PAGE_SIZE3,
+    defaultPageSize: DEFAULT_PAGE_SIZE5,
     supportsIncremental: true,
     buildQuery: startLimitQuery
   },
@@ -6414,7 +6803,7 @@ var PIPEDRIVE_RESOURCES = [
     resource: "leads",
     path: "/v1/leads",
     itemKeys: ["data"],
-    defaultPageSize: DEFAULT_PAGE_SIZE3,
+    defaultPageSize: DEFAULT_PAGE_SIZE5,
     supportsIncremental: true,
     buildQuery: startLimitQuery
   },
@@ -6422,7 +6811,7 @@ var PIPEDRIVE_RESOURCES = [
     resource: "oportunidades",
     path: "/v1/deals",
     itemKeys: ["data"],
-    defaultPageSize: DEFAULT_PAGE_SIZE3,
+    defaultPageSize: DEFAULT_PAGE_SIZE5,
     supportsIncremental: true,
     buildQuery: startLimitQuery
   },
@@ -6430,7 +6819,7 @@ var PIPEDRIVE_RESOURCES = [
     resource: "atividades",
     path: "/v1/activities",
     itemKeys: ["data"],
-    defaultPageSize: DEFAULT_PAGE_SIZE3,
+    defaultPageSize: DEFAULT_PAGE_SIZE5,
     supportsIncremental: true,
     buildQuery: startLimitQuery
   },
@@ -6438,7 +6827,7 @@ var PIPEDRIVE_RESOURCES = [
     resource: "usuarios",
     path: "/v1/users",
     itemKeys: ["data"],
-    defaultPageSize: DEFAULT_PAGE_SIZE3,
+    defaultPageSize: DEFAULT_PAGE_SIZE5,
     supportsIncremental: false,
     buildQuery: startLimitQuery
   },
@@ -6446,7 +6835,7 @@ var PIPEDRIVE_RESOURCES = [
     resource: "pipelines",
     path: "/v1/pipelines",
     itemKeys: ["data"],
-    defaultPageSize: DEFAULT_PAGE_SIZE3,
+    defaultPageSize: DEFAULT_PAGE_SIZE5,
     supportsIncremental: false,
     buildQuery: startLimitQuery
   },
@@ -6454,7 +6843,7 @@ var PIPEDRIVE_RESOURCES = [
     resource: "fases_pipeline",
     path: "/v1/stages",
     itemKeys: ["data"],
-    defaultPageSize: DEFAULT_PAGE_SIZE3,
+    defaultPageSize: DEFAULT_PAGE_SIZE5,
     supportsIncremental: false,
     buildQuery: startLimitQuery
   }
@@ -6471,7 +6860,7 @@ var pipedriveConnector = createOAuthRestCrmConnector({
 });
 
 // src/products/integracoes/cloud/src/connectors/crm/rdStation/rdStationResources.ts
-var DEFAULT_PAGE_SIZE4 = 100;
+var DEFAULT_PAGE_SIZE6 = 100;
 function pageQuery({ page, pageSize }) {
   return {
     page,
@@ -6486,7 +6875,7 @@ var RD_STATION_RESOURCES = [
     resource: "contas",
     path: envPath("contas", "/api/v1/organizations"),
     itemKeys: ["organizations", "data", "items"],
-    defaultPageSize: DEFAULT_PAGE_SIZE4,
+    defaultPageSize: DEFAULT_PAGE_SIZE6,
     supportsIncremental: true,
     buildQuery: pageQuery
   },
@@ -6494,7 +6883,7 @@ var RD_STATION_RESOURCES = [
     resource: "contatos",
     path: envPath("contatos", "/api/v1/contacts"),
     itemKeys: ["contacts", "data", "items"],
-    defaultPageSize: DEFAULT_PAGE_SIZE4,
+    defaultPageSize: DEFAULT_PAGE_SIZE6,
     supportsIncremental: true,
     buildQuery: pageQuery
   },
@@ -6502,7 +6891,7 @@ var RD_STATION_RESOURCES = [
     resource: "leads",
     path: envPath("leads", "/api/v1/leads"),
     itemKeys: ["leads", "data", "items"],
-    defaultPageSize: DEFAULT_PAGE_SIZE4,
+    defaultPageSize: DEFAULT_PAGE_SIZE6,
     supportsIncremental: true,
     buildQuery: pageQuery
   },
@@ -6510,7 +6899,7 @@ var RD_STATION_RESOURCES = [
     resource: "oportunidades",
     path: envPath("oportunidades", "/api/v1/deals"),
     itemKeys: ["deals", "data", "items"],
-    defaultPageSize: DEFAULT_PAGE_SIZE4,
+    defaultPageSize: DEFAULT_PAGE_SIZE6,
     supportsIncremental: true,
     buildQuery: pageQuery
   },
@@ -6518,7 +6907,7 @@ var RD_STATION_RESOURCES = [
     resource: "atividades",
     path: envPath("atividades", "/api/v1/activities"),
     itemKeys: ["activities", "tasks", "data", "items"],
-    defaultPageSize: DEFAULT_PAGE_SIZE4,
+    defaultPageSize: DEFAULT_PAGE_SIZE6,
     supportsIncremental: true,
     buildQuery: pageQuery
   },
@@ -6526,7 +6915,7 @@ var RD_STATION_RESOURCES = [
     resource: "usuarios",
     path: envPath("usuarios", "/api/v1/users"),
     itemKeys: ["users", "data", "items"],
-    defaultPageSize: DEFAULT_PAGE_SIZE4,
+    defaultPageSize: DEFAULT_PAGE_SIZE6,
     supportsIncremental: false,
     buildQuery: pageQuery
   },
@@ -6534,7 +6923,7 @@ var RD_STATION_RESOURCES = [
     resource: "pipelines",
     path: envPath("pipelines", "/api/v1/deal_pipelines"),
     itemKeys: ["deal_pipelines", "pipelines", "data", "items"],
-    defaultPageSize: DEFAULT_PAGE_SIZE4,
+    defaultPageSize: DEFAULT_PAGE_SIZE6,
     supportsIncremental: false,
     buildQuery: pageQuery
   },
@@ -6542,7 +6931,7 @@ var RD_STATION_RESOURCES = [
     resource: "fases_pipeline",
     path: envPath("fases_pipeline", "/api/v1/deal_stages"),
     itemKeys: ["deal_stages", "stages", "data", "items"],
-    defaultPageSize: DEFAULT_PAGE_SIZE4,
+    defaultPageSize: DEFAULT_PAGE_SIZE6,
     supportsIncremental: false,
     buildQuery: pageQuery
   }
@@ -6603,26 +6992,26 @@ var CRM_CONNECTORS = [
 var DEFAULT_BASE_URL = "https://api.bling.com.br/Api/v3";
 var DEFAULT_MAX_PAGES = 100;
 var DEFAULT_RATE_LIMIT_MS = 350;
-function isRecord3(value) {
+function isRecord4(value) {
   return typeof value === "object" && value !== null && !Array.isArray(value);
 }
 function parseCredentials2(value) {
-  if (isRecord3(value)) return value;
+  if (isRecord4(value)) return value;
   if (typeof value !== "string") return null;
   try {
     const parsed = JSON.parse(value);
-    return isRecord3(parsed) ? parsed : null;
+    return isRecord4(parsed) ? parsed : null;
   } catch {
     return null;
   }
 }
-function nonEmptyString3(value) {
+function nonEmptyString4(value) {
   return typeof value === "string" && value.trim().length > 0;
 }
 function normalizeBlingCredentials(value) {
   const credentials = parseCredentials2(value);
   const accessToken = credentials?.accessToken ?? credentials?.access_token;
-  if (!credentials || !nonEmptyString3(accessToken)) {
+  if (!credentials || !nonEmptyString4(accessToken)) {
     throw new ProviderError({
       provider: "bling",
       kind: "auth",
@@ -6632,10 +7021,10 @@ function normalizeBlingCredentials(value) {
   }
   return {
     accessToken: accessToken.trim(),
-    refreshToken: nonEmptyString3(credentials.refreshToken) ? credentials.refreshToken.trim() : nonEmptyString3(credentials.refresh_token) ? credentials.refresh_token.trim() : void 0,
-    expiresAt: nonEmptyString3(credentials.expiresAt) ? credentials.expiresAt.trim() : nonEmptyString3(credentials.expires_at) ? credentials.expires_at.trim() : void 0,
-    tokenType: nonEmptyString3(credentials.tokenType) ? credentials.tokenType.trim() : nonEmptyString3(credentials.token_type) ? credentials.token_type.trim() : void 0,
-    scope: nonEmptyString3(credentials.scope) ? credentials.scope.trim() : void 0
+    refreshToken: nonEmptyString4(credentials.refreshToken) ? credentials.refreshToken.trim() : nonEmptyString4(credentials.refresh_token) ? credentials.refresh_token.trim() : void 0,
+    expiresAt: nonEmptyString4(credentials.expiresAt) ? credentials.expiresAt.trim() : nonEmptyString4(credentials.expires_at) ? credentials.expires_at.trim() : void 0,
+    tokenType: nonEmptyString4(credentials.tokenType) ? credentials.tokenType.trim() : nonEmptyString4(credentials.token_type) ? credentials.token_type.trim() : void 0,
+    scope: nonEmptyString4(credentials.scope) ? credentials.scope.trim() : void 0
   };
 }
 function validateBlingConnectorCredentials(value) {
@@ -6649,7 +7038,7 @@ function validateBlingConnectorCredentials(value) {
 function getBaseUrl2() {
   return (process.env.BLING_API_BASE_URL || DEFAULT_BASE_URL).replace(/\/+$/, "");
 }
-function buildUrl2(config, query) {
+function buildUrl3(config, query) {
   const url = new URL(`${getBaseUrl2()}${config.path.startsWith("/") ? config.path : `/${config.path}`}`);
   for (const [key, value] of Object.entries(query || {})) {
     if (value !== void 0 && value !== null && value !== "") url.searchParams.set(key, String(value));
@@ -6661,26 +7050,26 @@ function asNumber(value) {
   return Number.isFinite(parsed) && parsed > 0 ? parsed : void 0;
 }
 function extractTotalPages(payload) {
-  if (!isRecord3(payload)) return void 0;
+  if (!isRecord4(payload)) return void 0;
   return asNumber(payload.totalPaginas ?? payload.total_paginas ?? payload.totalPages ?? payload.pages);
 }
 function extractTotalRecords(payload) {
-  if (!isRecord3(payload)) return void 0;
+  if (!isRecord4(payload)) return void 0;
   return asNumber(payload.totalRegistros ?? payload.total_registros ?? payload.totalItems ?? payload.total);
 }
-function extractItems2(payload, itemKeys) {
+function extractItems3(payload, itemKeys) {
   if (Array.isArray(payload)) {
-    return payload.filter((item) => isRecord3(item));
+    return payload.filter((item) => isRecord4(item));
   }
   for (const key of itemKeys) {
     const value = payload[key];
     if (Array.isArray(value)) {
-      return value.filter((item) => isRecord3(item));
+      return value.filter((item) => isRecord4(item));
     }
   }
   const arrays = Object.values(payload).filter(Array.isArray);
   if (arrays.length === 1) {
-    return arrays[0].filter((item) => isRecord3(item));
+    return arrays[0].filter((item) => isRecord4(item));
   }
   return [];
 }
@@ -6701,7 +7090,7 @@ var BlingClient = class {
     const response = await connectorJsonRequest({
       provider: "bling",
       resource: config.resource,
-      url: buildUrl2(config, config.buildQuery?.(input)),
+      url: buildUrl3(config, config.buildQuery?.(input)),
       method: "GET",
       headers: {
         Authorization: `Bearer ${this.credentials.accessToken}`
@@ -6721,7 +7110,7 @@ var BlingClient = class {
         pageSize,
         cursor: input?.cursor
       });
-      const items = extractItems2(payload, config.itemKeys);
+      const items = extractItems3(payload, config.itemKeys);
       const totalPages = extractTotalPages(payload);
       const totalRecords = extractTotalRecords(payload);
       loadedPages += 1;
@@ -6801,7 +7190,7 @@ function mapBlingRows(input) {
 }
 
 // src/products/integracoes/cloud/src/connectors/erp/bling/blingResources.ts
-var DEFAULT_PAGE_SIZE5 = 100;
+var DEFAULT_PAGE_SIZE7 = 100;
 function envResourcePath(resource, fallback) {
   const key = `BLING_RESOURCE_${resource.toUpperCase()}_PATH`;
   return process.env[key]?.trim() || fallback;
@@ -6817,7 +7206,7 @@ var BLING_RESOURCE_CONFIGS = [
     resource: "clientes",
     path: envResourcePath("clientes", "/contatos"),
     itemKeys: ["data", "itens", "items", "contatos"],
-    defaultPageSize: DEFAULT_PAGE_SIZE5,
+    defaultPageSize: DEFAULT_PAGE_SIZE7,
     supportsIncremental: false,
     buildQuery: pageQuery2
   },
@@ -6825,7 +7214,7 @@ var BLING_RESOURCE_CONFIGS = [
     resource: "fornecedores",
     path: envResourcePath("fornecedores", "/contatos"),
     itemKeys: ["data", "itens", "items", "contatos"],
-    defaultPageSize: DEFAULT_PAGE_SIZE5,
+    defaultPageSize: DEFAULT_PAGE_SIZE7,
     supportsIncremental: false,
     buildQuery: pageQuery2
   },
@@ -6833,7 +7222,7 @@ var BLING_RESOURCE_CONFIGS = [
     resource: "produtos",
     path: envResourcePath("produtos", "/produtos"),
     itemKeys: ["data", "itens", "items", "produtos"],
-    defaultPageSize: DEFAULT_PAGE_SIZE5,
+    defaultPageSize: DEFAULT_PAGE_SIZE7,
     supportsIncremental: false,
     buildQuery: pageQuery2
   },
@@ -6841,7 +7230,7 @@ var BLING_RESOURCE_CONFIGS = [
     resource: "pedidos_venda",
     path: envResourcePath("pedidos_venda", "/pedidos/vendas"),
     itemKeys: ["data", "itens", "items", "pedidos"],
-    defaultPageSize: DEFAULT_PAGE_SIZE5,
+    defaultPageSize: DEFAULT_PAGE_SIZE7,
     supportsIncremental: false,
     buildQuery: pageQuery2
   },
@@ -6849,7 +7238,7 @@ var BLING_RESOURCE_CONFIGS = [
     resource: "compras",
     path: envResourcePath("compras", "/pedidos/compras"),
     itemKeys: ["data", "itens", "items", "pedidos"],
-    defaultPageSize: DEFAULT_PAGE_SIZE5,
+    defaultPageSize: DEFAULT_PAGE_SIZE7,
     supportsIncremental: false,
     buildQuery: pageQuery2
   },
@@ -6857,7 +7246,7 @@ var BLING_RESOURCE_CONFIGS = [
     resource: "contas_receber",
     path: envResourcePath("contas_receber", "/contas/receber"),
     itemKeys: ["data", "itens", "items", "contas"],
-    defaultPageSize: DEFAULT_PAGE_SIZE5,
+    defaultPageSize: DEFAULT_PAGE_SIZE7,
     supportsIncremental: false,
     buildQuery: pageQuery2
   },
@@ -6865,7 +7254,7 @@ var BLING_RESOURCE_CONFIGS = [
     resource: "contas_pagar",
     path: envResourcePath("contas_pagar", "/contas/pagar"),
     itemKeys: ["data", "itens", "items", "contas"],
-    defaultPageSize: DEFAULT_PAGE_SIZE5,
+    defaultPageSize: DEFAULT_PAGE_SIZE7,
     supportsIncremental: false,
     buildQuery: pageQuery2
   },
@@ -6873,7 +7262,7 @@ var BLING_RESOURCE_CONFIGS = [
     resource: "notas_fiscais",
     path: envResourcePath("notas_fiscais", "/nfe"),
     itemKeys: ["data", "itens", "items", "notas"],
-    defaultPageSize: DEFAULT_PAGE_SIZE5,
+    defaultPageSize: DEFAULT_PAGE_SIZE7,
     supportsIncremental: false,
     buildQuery: pageQuery2
   },
@@ -6881,7 +7270,7 @@ var BLING_RESOURCE_CONFIGS = [
     resource: "estoque",
     path: envResourcePath("estoque", "/estoques/saldos"),
     itemKeys: ["data", "itens", "items", "saldos"],
-    defaultPageSize: DEFAULT_PAGE_SIZE5,
+    defaultPageSize: DEFAULT_PAGE_SIZE7,
     supportsIncremental: false,
     buildQuery: pageQuery2
   },
@@ -6889,7 +7278,7 @@ var BLING_RESOURCE_CONFIGS = [
     resource: "categorias",
     path: envResourcePath("categorias", "/categorias/produtos"),
     itemKeys: ["data", "itens", "items", "categorias"],
-    defaultPageSize: DEFAULT_PAGE_SIZE5,
+    defaultPageSize: DEFAULT_PAGE_SIZE7,
     supportsIncremental: false,
     buildQuery: pageQuery2
   },
@@ -6897,7 +7286,7 @@ var BLING_RESOURCE_CONFIGS = [
     resource: "servicos",
     path: envResourcePath("servicos", "/servicos"),
     itemKeys: ["data", "itens", "items", "servicos"],
-    defaultPageSize: DEFAULT_PAGE_SIZE5,
+    defaultPageSize: DEFAULT_PAGE_SIZE7,
     supportsIncremental: false,
     buildQuery: pageQuery2
   },
@@ -6905,7 +7294,7 @@ var BLING_RESOURCE_CONFIGS = [
     resource: "notas_servico",
     path: envResourcePath("notas_servico", "/nfse"),
     itemKeys: ["data", "itens", "items", "notas", "nfse"],
-    defaultPageSize: DEFAULT_PAGE_SIZE5,
+    defaultPageSize: DEFAULT_PAGE_SIZE7,
     supportsIncremental: false,
     buildQuery: pageQuery2
   },
@@ -6913,7 +7302,7 @@ var BLING_RESOURCE_CONFIGS = [
     resource: "notas_consumidor",
     path: envResourcePath("notas_consumidor", "/nfce"),
     itemKeys: ["data", "itens", "items", "notas", "nfce"],
-    defaultPageSize: DEFAULT_PAGE_SIZE5,
+    defaultPageSize: DEFAULT_PAGE_SIZE7,
     supportsIncremental: false,
     buildQuery: pageQuery2
   },
@@ -6921,7 +7310,7 @@ var BLING_RESOURCE_CONFIGS = [
     resource: "formas_pagamento",
     path: envResourcePath("formas_pagamento", "/formas-pagamentos"),
     itemKeys: ["data", "itens", "items", "formas_pagamento", "formasPagamento"],
-    defaultPageSize: DEFAULT_PAGE_SIZE5,
+    defaultPageSize: DEFAULT_PAGE_SIZE7,
     supportsIncremental: false,
     buildQuery: pageQuery2
   },
@@ -6929,7 +7318,7 @@ var BLING_RESOURCE_CONFIGS = [
     resource: "vendedores",
     path: envResourcePath("vendedores", "/vendedores"),
     itemKeys: ["data", "itens", "items", "vendedores"],
-    defaultPageSize: DEFAULT_PAGE_SIZE5,
+    defaultPageSize: DEFAULT_PAGE_SIZE7,
     supportsIncremental: false,
     buildQuery: pageQuery2
   },
@@ -6937,7 +7326,7 @@ var BLING_RESOURCE_CONFIGS = [
     resource: "transportadoras",
     path: envResourcePath("transportadoras", "/transportadoras"),
     itemKeys: ["data", "itens", "items", "transportadoras"],
-    defaultPageSize: DEFAULT_PAGE_SIZE5,
+    defaultPageSize: DEFAULT_PAGE_SIZE7,
     supportsIncremental: false,
     buildQuery: pageQuery2
   },
@@ -6945,7 +7334,7 @@ var BLING_RESOURCE_CONFIGS = [
     resource: "canais_venda",
     path: envResourcePath("canais_venda", "/canais-venda"),
     itemKeys: ["data", "itens", "items", "canais_venda", "canaisVenda"],
-    defaultPageSize: DEFAULT_PAGE_SIZE5,
+    defaultPageSize: DEFAULT_PAGE_SIZE7,
     supportsIncremental: false,
     buildQuery: pageQuery2
   },
@@ -6953,7 +7342,7 @@ var BLING_RESOURCE_CONFIGS = [
     resource: "lojas",
     path: envResourcePath("lojas", "/lojas"),
     itemKeys: ["data", "itens", "items", "lojas"],
-    defaultPageSize: DEFAULT_PAGE_SIZE5,
+    defaultPageSize: DEFAULT_PAGE_SIZE7,
     supportsIncremental: false,
     buildQuery: pageQuery2
   },
@@ -6961,7 +7350,7 @@ var BLING_RESOURCE_CONFIGS = [
     resource: "categorias_receitas_despesas",
     path: envResourcePath("categorias_receitas_despesas", "/categorias/receitas-despesas"),
     itemKeys: ["data", "itens", "items", "categorias"],
-    defaultPageSize: DEFAULT_PAGE_SIZE5,
+    defaultPageSize: DEFAULT_PAGE_SIZE7,
     supportsIncremental: false,
     buildQuery: pageQuery2
   },
@@ -6969,7 +7358,7 @@ var BLING_RESOURCE_CONFIGS = [
     resource: "depositos",
     path: envResourcePath("depositos", "/depositos"),
     itemKeys: ["data", "itens", "items", "depositos"],
-    defaultPageSize: DEFAULT_PAGE_SIZE5,
+    defaultPageSize: DEFAULT_PAGE_SIZE7,
     supportsIncremental: false,
     buildQuery: pageQuery2
   }
@@ -7087,26 +7476,26 @@ var blingConnector = {
 // src/products/integracoes/cloud/src/connectors/erp/contaAzul/contaAzulClient.ts
 var DEFAULT_BASE_URL2 = "https://api-v2.contaazul.com";
 var DEFAULT_MAX_PAGES2 = 100;
-function isRecord4(value) {
+function isRecord5(value) {
   return typeof value === "object" && value !== null && !Array.isArray(value);
 }
 function parseCredentials3(value) {
-  if (isRecord4(value)) return value;
+  if (isRecord5(value)) return value;
   if (typeof value !== "string") return null;
   try {
     const parsed = JSON.parse(value);
-    return isRecord4(parsed) ? parsed : null;
+    return isRecord5(parsed) ? parsed : null;
   } catch {
     return null;
   }
 }
-function nonEmptyString4(value) {
+function nonEmptyString5(value) {
   return typeof value === "string" && value.trim().length > 0;
 }
 function normalizeContaAzulCredentials(value) {
   const credentials = parseCredentials3(value);
   const accessToken = credentials?.accessToken ?? credentials?.access_token;
-  if (!credentials || !nonEmptyString4(accessToken)) {
+  if (!credentials || !nonEmptyString5(accessToken)) {
     throw new ProviderError({
       provider: "conta_azul",
       kind: "auth",
@@ -7116,10 +7505,10 @@ function normalizeContaAzulCredentials(value) {
   }
   return {
     accessToken: accessToken.trim(),
-    refreshToken: nonEmptyString4(credentials.refreshToken) ? credentials.refreshToken.trim() : nonEmptyString4(credentials.refresh_token) ? credentials.refresh_token.trim() : void 0,
-    expiresAt: nonEmptyString4(credentials.expiresAt) ? credentials.expiresAt.trim() : nonEmptyString4(credentials.expires_at) ? credentials.expires_at.trim() : void 0,
-    tokenType: nonEmptyString4(credentials.tokenType) ? credentials.tokenType.trim() : nonEmptyString4(credentials.token_type) ? credentials.token_type.trim() : void 0,
-    scope: nonEmptyString4(credentials.scope) ? credentials.scope.trim() : void 0
+    refreshToken: nonEmptyString5(credentials.refreshToken) ? credentials.refreshToken.trim() : nonEmptyString5(credentials.refresh_token) ? credentials.refresh_token.trim() : void 0,
+    expiresAt: nonEmptyString5(credentials.expiresAt) ? credentials.expiresAt.trim() : nonEmptyString5(credentials.expires_at) ? credentials.expires_at.trim() : void 0,
+    tokenType: nonEmptyString5(credentials.tokenType) ? credentials.tokenType.trim() : nonEmptyString5(credentials.token_type) ? credentials.token_type.trim() : void 0,
+    scope: nonEmptyString5(credentials.scope) ? credentials.scope.trim() : void 0
   };
 }
 function validateContaAzulConnectorCredentials(value) {
@@ -7133,7 +7522,7 @@ function validateContaAzulConnectorCredentials(value) {
 function getBaseUrl3() {
   return (process.env.CONTA_AZUL_API_BASE_URL || DEFAULT_BASE_URL2).replace(/\/+$/, "");
 }
-function buildUrl3(config, query) {
+function buildUrl4(config, query) {
   const url = new URL(`${getBaseUrl3()}${config.path.startsWith("/") ? config.path : `/${config.path}`}`);
   for (const [key, value] of Object.entries(query || {})) {
     if (value !== void 0 && value !== null && value !== "") url.searchParams.set(key, String(value));
@@ -7145,30 +7534,30 @@ function asNumber2(value) {
   return Number.isFinite(parsed) && parsed > 0 ? parsed : void 0;
 }
 function extractTotalPages2(payload) {
-  if (!isRecord4(payload)) return void 0;
+  if (!isRecord5(payload)) return void 0;
   return asNumber2(payload.total_paginas ?? payload.totalPages ?? payload.total_de_paginas ?? payload.pages);
 }
 function extractTotalRecords2(payload) {
-  if (!isRecord4(payload)) return void 0;
+  if (!isRecord5(payload)) return void 0;
   return asNumber2(payload.total_itens ?? payload.totalItems ?? payload.total ?? payload.total_de_registros);
 }
 function getMaxPages2() {
   const value = Number(process.env.CONTA_AZUL_MAX_PAGES_PER_RESOURCE || DEFAULT_MAX_PAGES2);
   return Number.isFinite(value) && value > 0 ? Math.floor(value) : DEFAULT_MAX_PAGES2;
 }
-function extractItems3(payload, itemKeys) {
+function extractItems4(payload, itemKeys) {
   if (Array.isArray(payload)) {
-    return payload.filter((item) => isRecord4(item));
+    return payload.filter((item) => isRecord5(item));
   }
   for (const key of itemKeys) {
     const value = payload[key];
     if (Array.isArray(value)) {
-      return value.filter((item) => isRecord4(item));
+      return value.filter((item) => isRecord5(item));
     }
   }
   const arrays = Object.values(payload).filter(Array.isArray);
   if (arrays.length === 1) {
-    return arrays[0].filter((item) => isRecord4(item));
+    return arrays[0].filter((item) => isRecord5(item));
   }
   return [];
 }
@@ -7180,16 +7569,16 @@ var ContaAzulClient = class {
   async request(config, input) {
     const method = config.method || "GET";
     const query = method === "GET" ? config.buildQuery?.(input) : void 0;
-    const body = method === "POST" ? config.buildBody?.(input) : void 0;
+    const body2 = method === "POST" ? config.buildBody?.(input) : void 0;
     const response = await connectorJsonRequest({
       provider: "conta_azul",
       resource: config.resource,
-      url: buildUrl3(config, query),
+      url: buildUrl4(config, query),
       method,
       headers: {
         Authorization: `Bearer ${this.credentials.accessToken}`
       },
-      body
+      body: body2
     });
     return response.payload;
   }
@@ -7204,7 +7593,7 @@ var ContaAzulClient = class {
         pageSize,
         cursor: input?.cursor
       });
-      const items = extractItems3(payload, config.itemKeys);
+      const items = extractItems4(payload, config.itemKeys);
       const totalPages = extractTotalPages2(payload);
       const totalRecords = extractTotalRecords2(payload);
       loadedPages += 1;
@@ -7288,7 +7677,7 @@ function mapContaAzulRows(input) {
 }
 
 // src/products/integracoes/cloud/src/connectors/erp/contaAzul/contaAzulResources.ts
-var DEFAULT_PAGE_SIZE6 = 50;
+var DEFAULT_PAGE_SIZE8 = 50;
 function envResourcePath2(resource, fallback) {
   const key = `CONTA_AZUL_RESOURCE_${resource.toUpperCase()}_PATH`;
   return process.env[key]?.trim() || fallback;
@@ -7310,7 +7699,7 @@ var CONTA_AZUL_RESOURCE_CONFIGS = [
     resource: "clientes",
     path: envResourcePath2("clientes", "/v1/pessoas"),
     itemKeys: ["itens", "items", "data", "content", "pessoas"],
-    defaultPageSize: DEFAULT_PAGE_SIZE6,
+    defaultPageSize: DEFAULT_PAGE_SIZE8,
     supportsIncremental: false,
     buildQuery: pageQuery3
   },
@@ -7318,7 +7707,7 @@ var CONTA_AZUL_RESOURCE_CONFIGS = [
     resource: "fornecedores",
     path: envResourcePath2("fornecedores", "/v1/pessoas"),
     itemKeys: ["itens", "items", "data", "content", "pessoas"],
-    defaultPageSize: DEFAULT_PAGE_SIZE6,
+    defaultPageSize: DEFAULT_PAGE_SIZE8,
     supportsIncremental: false,
     buildQuery: pageQuery3
   },
@@ -7326,7 +7715,7 @@ var CONTA_AZUL_RESOURCE_CONFIGS = [
     resource: "produtos",
     path: envResourcePath2("produtos", "/v1/produtos"),
     itemKeys: ["itens", "items", "data", "content", "produtos"],
-    defaultPageSize: DEFAULT_PAGE_SIZE6,
+    defaultPageSize: DEFAULT_PAGE_SIZE8,
     supportsIncremental: false,
     buildQuery: pageQuery3
   },
@@ -7334,7 +7723,7 @@ var CONTA_AZUL_RESOURCE_CONFIGS = [
     resource: "categorias",
     path: envResourcePath2("categorias", "/v1/categorias"),
     itemKeys: ["itens", "items", "data", "content", "categorias"],
-    defaultPageSize: DEFAULT_PAGE_SIZE6,
+    defaultPageSize: DEFAULT_PAGE_SIZE8,
     supportsIncremental: false,
     buildQuery: pageQuery3
   },
@@ -7342,7 +7731,7 @@ var CONTA_AZUL_RESOURCE_CONFIGS = [
     resource: "centros_custo",
     path: envResourcePath2("centros_custo", "/v1/centro-de-custo"),
     itemKeys: ["itens", "items", "data", "content", "centros_custo"],
-    defaultPageSize: DEFAULT_PAGE_SIZE6,
+    defaultPageSize: DEFAULT_PAGE_SIZE8,
     supportsIncremental: false,
     buildQuery: pageQuery3
   },
@@ -7351,7 +7740,7 @@ var CONTA_AZUL_RESOURCE_CONFIGS = [
     path: envResourcePath2("contas_receber", "/v1/financeiro/eventos-financeiros/contas-a-receber/buscar"),
     method: "POST",
     itemKeys: ["itens", "items", "data", "content", "eventos", "parcelas"],
-    defaultPageSize: DEFAULT_PAGE_SIZE6,
+    defaultPageSize: DEFAULT_PAGE_SIZE8,
     supportsIncremental: false,
     buildBody: payableReceivableBody
   },
@@ -7360,7 +7749,7 @@ var CONTA_AZUL_RESOURCE_CONFIGS = [
     path: envResourcePath2("contas_pagar", "/v1/financeiro/eventos-financeiros/contas-a-pagar/buscar"),
     method: "POST",
     itemKeys: ["itens", "items", "data", "content", "eventos", "parcelas"],
-    defaultPageSize: DEFAULT_PAGE_SIZE6,
+    defaultPageSize: DEFAULT_PAGE_SIZE8,
     supportsIncremental: false,
     buildBody: payableReceivableBody
   },
@@ -7368,7 +7757,7 @@ var CONTA_AZUL_RESOURCE_CONFIGS = [
     resource: "servicos",
     path: envResourcePath2("servicos", "/v1/servicos"),
     itemKeys: ["itens", "items", "data", "content", "servicos", "services"],
-    defaultPageSize: DEFAULT_PAGE_SIZE6,
+    defaultPageSize: DEFAULT_PAGE_SIZE8,
     supportsIncremental: false,
     buildQuery: pageQuery3
   },
@@ -7376,7 +7765,7 @@ var CONTA_AZUL_RESOURCE_CONFIGS = [
     resource: "vendas",
     path: envResourcePath2("vendas", "/v1/vendas"),
     itemKeys: ["itens", "items", "data", "content", "vendas", "sales"],
-    defaultPageSize: DEFAULT_PAGE_SIZE6,
+    defaultPageSize: DEFAULT_PAGE_SIZE8,
     supportsIncremental: false,
     buildQuery: pageQuery3
   },
@@ -7384,7 +7773,7 @@ var CONTA_AZUL_RESOURCE_CONFIGS = [
     resource: "itens_venda",
     path: envResourcePath2("itens_venda", "/v1/vendas/itens"),
     itemKeys: ["itens", "items", "data", "content", "itens_venda", "saleItems"],
-    defaultPageSize: DEFAULT_PAGE_SIZE6,
+    defaultPageSize: DEFAULT_PAGE_SIZE8,
     supportsIncremental: false,
     buildQuery: pageQuery3
   },
@@ -7392,7 +7781,7 @@ var CONTA_AZUL_RESOURCE_CONFIGS = [
     resource: "parcelas_venda",
     path: envResourcePath2("parcelas_venda", "/v1/vendas/parcelas"),
     itemKeys: ["itens", "items", "data", "content", "parcelas_venda", "installments"],
-    defaultPageSize: DEFAULT_PAGE_SIZE6,
+    defaultPageSize: DEFAULT_PAGE_SIZE8,
     supportsIncremental: false,
     buildQuery: pageQuery3
   },
@@ -7400,7 +7789,7 @@ var CONTA_AZUL_RESOURCE_CONFIGS = [
     resource: "contratos",
     path: envResourcePath2("contratos", "/v1/contratos"),
     itemKeys: ["itens", "items", "data", "content", "contratos", "contracts"],
-    defaultPageSize: DEFAULT_PAGE_SIZE6,
+    defaultPageSize: DEFAULT_PAGE_SIZE8,
     supportsIncremental: false,
     buildQuery: pageQuery3
   },
@@ -7408,7 +7797,7 @@ var CONTA_AZUL_RESOURCE_CONFIGS = [
     resource: "contas_bancarias",
     path: envResourcePath2("contas_bancarias", "/v1/contas-bancarias"),
     itemKeys: ["itens", "items", "data", "content", "contas_bancarias", "bankAccounts"],
-    defaultPageSize: DEFAULT_PAGE_SIZE6,
+    defaultPageSize: DEFAULT_PAGE_SIZE8,
     supportsIncremental: false,
     buildQuery: pageQuery3
   },
@@ -7416,7 +7805,7 @@ var CONTA_AZUL_RESOURCE_CONFIGS = [
     resource: "vendedores",
     path: envResourcePath2("vendedores", "/v1/vendedores"),
     itemKeys: ["itens", "items", "data", "content", "vendedores", "sellers"],
-    defaultPageSize: DEFAULT_PAGE_SIZE6,
+    defaultPageSize: DEFAULT_PAGE_SIZE8,
     supportsIncremental: false,
     buildQuery: pageQuery3
   },
@@ -7424,7 +7813,7 @@ var CONTA_AZUL_RESOURCE_CONFIGS = [
     resource: "notas_fiscais",
     path: envResourcePath2("notas_fiscais", "/v1/notas-fiscais"),
     itemKeys: ["itens", "items", "data", "content", "notas_fiscais", "invoices"],
-    defaultPageSize: DEFAULT_PAGE_SIZE6,
+    defaultPageSize: DEFAULT_PAGE_SIZE8,
     supportsIncremental: false,
     buildQuery: pageQuery3
   },
@@ -7432,7 +7821,7 @@ var CONTA_AZUL_RESOURCE_CONFIGS = [
     resource: "estoque",
     path: envResourcePath2("estoque", "/v1/estoque"),
     itemKeys: ["itens", "items", "data", "content", "estoque", "saldos", "stock"],
-    defaultPageSize: DEFAULT_PAGE_SIZE6,
+    defaultPageSize: DEFAULT_PAGE_SIZE8,
     supportsIncremental: false,
     buildQuery: pageQuery3
   },
@@ -7440,7 +7829,7 @@ var CONTA_AZUL_RESOURCE_CONFIGS = [
     resource: "movimentacoes_estoque",
     path: envResourcePath2("movimentacoes_estoque", "/v1/estoque/movimentacoes"),
     itemKeys: ["itens", "items", "data", "content", "movimentacoes_estoque", "movements"],
-    defaultPageSize: DEFAULT_PAGE_SIZE6,
+    defaultPageSize: DEFAULT_PAGE_SIZE8,
     supportsIncremental: false,
     buildQuery: pageQuery3
   }
@@ -7558,25 +7947,25 @@ var contaAzulConnector = {
 // src/products/integracoes/cloud/src/connectors/erp/omie/omieClient.ts
 var DEFAULT_BASE_URL3 = "https://app.omie.com.br/api/v1";
 var DEFAULT_MAX_PAGES3 = 100;
-function isRecord5(value) {
+function isRecord6(value) {
   return typeof value === "object" && value !== null && !Array.isArray(value);
 }
 function parseCredentials4(value) {
-  if (isRecord5(value)) return value;
+  if (isRecord6(value)) return value;
   if (typeof value !== "string") return null;
   try {
     const parsed = JSON.parse(value);
-    return isRecord5(parsed) ? parsed : null;
+    return isRecord6(parsed) ? parsed : null;
   } catch {
     return null;
   }
 }
-function nonEmptyString5(value) {
+function nonEmptyString6(value) {
   return typeof value === "string" && value.trim().length > 0;
 }
 function normalizeOmieCredentials(value) {
   const credentials = parseCredentials4(value);
-  if (!credentials || !nonEmptyString5(credentials.app_key) || !nonEmptyString5(credentials.app_secret)) {
+  if (!credentials || !nonEmptyString6(credentials.app_key) || !nonEmptyString6(credentials.app_secret)) {
     throw new ProviderError({
       provider: "omie",
       kind: "auth",
@@ -7600,7 +7989,7 @@ function validateOmieConnectorCredentials(value) {
 function getBaseUrl4() {
   return (process.env.OMIE_API_BASE_URL || DEFAULT_BASE_URL3).replace(/\/+$/, "");
 }
-function buildUrl4(endpoint) {
+function buildUrl5(endpoint) {
   return `${getBaseUrl4()}${endpoint.startsWith("/") ? endpoint : `/${endpoint}`}`;
 }
 function asNumber3(value) {
@@ -7617,21 +8006,21 @@ function getMaxPages3() {
   const value = Number(process.env.OMIE_MAX_PAGES_PER_RESOURCE || DEFAULT_MAX_PAGES3);
   return Number.isFinite(value) && value > 0 ? Math.floor(value) : DEFAULT_MAX_PAGES3;
 }
-function extractItems4(payload, itemKeys) {
+function extractItems5(payload, itemKeys) {
   for (const key of itemKeys) {
     const value = payload[key];
     if (Array.isArray(value)) {
-      return value.filter((item) => isRecord5(item));
+      return value.filter((item) => isRecord6(item));
     }
   }
   const arrays = Object.values(payload).filter(Array.isArray);
   if (arrays.length === 1) {
-    return arrays[0].filter((item) => isRecord5(item));
+    return arrays[0].filter((item) => isRecord6(item));
   }
   return [];
 }
 function assertNoOmieFault(payload, resource) {
-  if (!isRecord5(payload)) return;
+  if (!isRecord6(payload)) return;
   const fault = payload.faultstring ?? payload.faultcode ?? payload.error ?? payload.message;
   if (!fault) return;
   throw new ProviderError({
@@ -7649,7 +8038,7 @@ var OmieClient = class {
     this.credentials = credentials;
   }
   async call(config, params) {
-    const body = {
+    const body2 = {
       call: config.call,
       app_key: this.credentials.app_key,
       app_secret: this.credentials.app_secret,
@@ -7658,9 +8047,9 @@ var OmieClient = class {
     const response = await connectorJsonRequest({
       provider: "omie",
       resource: config.resource,
-      url: buildUrl4(config.endpoint),
+      url: buildUrl5(config.endpoint),
       method: "POST",
-      body
+      body: body2
     });
     assertNoOmieFault(response.payload, config.resource);
     return response.payload;
@@ -7676,7 +8065,7 @@ var OmieClient = class {
         pageSize,
         cursor: input?.cursor
       }));
-      const items = extractItems4(payload, config.itemKeys);
+      const items = extractItems5(payload, config.itemKeys);
       const totalPages = getTotalPages(payload);
       const totalRecords = getTotalRecords(payload);
       loadedPages += 1;
@@ -7772,7 +8161,7 @@ function mapOmieRows(input) {
 }
 
 // src/products/integracoes/cloud/src/connectors/erp/omie/omieResources.ts
-var DEFAULT_PAGE_SIZE7 = 50;
+var DEFAULT_PAGE_SIZE9 = 50;
 function formatOmieDate(value) {
   const day = String(value.getDate()).padStart(2, "0");
   const month = String(value.getMonth() + 1).padStart(2, "0");
@@ -7804,7 +8193,7 @@ var OMIE_RESOURCE_CONFIGS = [
     endpoint: "/geral/clientes/",
     call: "ListarClientes",
     itemKeys: ["clientes_cadastro"],
-    defaultPageSize: DEFAULT_PAGE_SIZE7,
+    defaultPageSize: DEFAULT_PAGE_SIZE9,
     supportsIncremental: false,
     buildParams: defaultParams
   },
@@ -7813,7 +8202,7 @@ var OMIE_RESOURCE_CONFIGS = [
     endpoint: "/geral/clientes/",
     call: "ListarClientes",
     itemKeys: ["clientes_cadastro"],
-    defaultPageSize: DEFAULT_PAGE_SIZE7,
+    defaultPageSize: DEFAULT_PAGE_SIZE9,
     supportsIncremental: false,
     buildParams: defaultParams
   },
@@ -7822,7 +8211,7 @@ var OMIE_RESOURCE_CONFIGS = [
     endpoint: "/geral/produtos/",
     call: "ListarProdutos",
     itemKeys: ["produto_servico_cadastro", "produtos_servico_cadastro"],
-    defaultPageSize: DEFAULT_PAGE_SIZE7,
+    defaultPageSize: DEFAULT_PAGE_SIZE9,
     supportsIncremental: false,
     buildParams: defaultParams
   },
@@ -7831,7 +8220,7 @@ var OMIE_RESOURCE_CONFIGS = [
     endpoint: "/produtos/pedido/",
     call: "ListarPedidos",
     itemKeys: ["pedido_venda_produto", "pedidos_venda_produto"],
-    defaultPageSize: DEFAULT_PAGE_SIZE7,
+    defaultPageSize: DEFAULT_PAGE_SIZE9,
     supportsIncremental: false,
     buildParams: defaultParams
   },
@@ -7840,7 +8229,7 @@ var OMIE_RESOURCE_CONFIGS = [
     endpoint: "/financas/contareceber/",
     call: "ListarContasReceber",
     itemKeys: ["conta_receber_cadastro", "contas_receber_cadastro"],
-    defaultPageSize: DEFAULT_PAGE_SIZE7,
+    defaultPageSize: DEFAULT_PAGE_SIZE9,
     supportsIncremental: false,
     buildParams: defaultParams
   },
@@ -7849,7 +8238,7 @@ var OMIE_RESOURCE_CONFIGS = [
     endpoint: "/financas/contapagar/",
     call: "ListarContasPagar",
     itemKeys: ["conta_pagar_cadastro", "contas_pagar_cadastro"],
-    defaultPageSize: DEFAULT_PAGE_SIZE7,
+    defaultPageSize: DEFAULT_PAGE_SIZE9,
     supportsIncremental: false,
     buildParams: defaultParams
   },
@@ -7858,7 +8247,7 @@ var OMIE_RESOURCE_CONFIGS = [
     endpoint: "/geral/categorias/",
     call: "ListarCategorias",
     itemKeys: ["categoria_cadastro", "categorias_cadastro"],
-    defaultPageSize: DEFAULT_PAGE_SIZE7,
+    defaultPageSize: DEFAULT_PAGE_SIZE9,
     supportsIncremental: false,
     buildParams: defaultParams
   },
@@ -7867,7 +8256,7 @@ var OMIE_RESOURCE_CONFIGS = [
     endpoint: "/produtos/pedidocompra/",
     call: "PesquisarPedCompra",
     itemKeys: ["pedidos_pesquisa", "pedido_pesquisa", "pedidos_compra", "pedidos"],
-    defaultPageSize: DEFAULT_PAGE_SIZE7,
+    defaultPageSize: DEFAULT_PAGE_SIZE9,
     supportsIncremental: false,
     buildParams: ({ page, pageSize }) => ({
       nPagina: page,
@@ -7890,7 +8279,7 @@ var OMIE_RESOURCE_CONFIGS = [
     endpoint: "/produtos/nfconsultar/",
     call: "ListarNF",
     itemKeys: ["nfCadastro", "notas_fiscais", "notas"],
-    defaultPageSize: DEFAULT_PAGE_SIZE7,
+    defaultPageSize: DEFAULT_PAGE_SIZE9,
     supportsIncremental: false,
     buildParams: ({ page, pageSize }) => ({
       pagina: page,
@@ -7905,7 +8294,7 @@ var OMIE_RESOURCE_CONFIGS = [
     endpoint: "/servicos/nfse/",
     call: "ListarNFSEs",
     itemKeys: ["nfseEncontradas", "notas_servico", "notas"],
-    defaultPageSize: DEFAULT_PAGE_SIZE7,
+    defaultPageSize: DEFAULT_PAGE_SIZE9,
     supportsIncremental: false,
     buildParams: omieNParams
   },
@@ -7914,7 +8303,7 @@ var OMIE_RESOURCE_CONFIGS = [
     endpoint: "/estoque/consulta/",
     call: "ListarPosEstoque",
     itemKeys: ["produtos", "saldos", "estoques"],
-    defaultPageSize: DEFAULT_PAGE_SIZE7,
+    defaultPageSize: DEFAULT_PAGE_SIZE9,
     supportsIncremental: false,
     buildParams: ({ page, pageSize }) => ({
       nPagina: page,
@@ -7929,7 +8318,7 @@ var OMIE_RESOURCE_CONFIGS = [
     endpoint: "/estoque/consulta/",
     call: "ListarMovimentoEstoque",
     itemKeys: ["movProdutoListar", "movProduto", "movimentos", "cadastros"],
-    defaultPageSize: DEFAULT_PAGE_SIZE7,
+    defaultPageSize: DEFAULT_PAGE_SIZE9,
     supportsIncremental: false,
     buildParams: ({ page, pageSize }) => ({
       nPagina: page,
@@ -8080,14 +8469,233 @@ var ERP_CONNECTORS = [
   blingConnector
 ];
 
+// src/products/integracoes/cloud/src/connectors/marketing/googleAnalytics4/googleAnalytics4Resources.ts
+var DEFAULT_PAGE_SIZE10 = 1e4;
+function propertyId(credentials) {
+  return credentials.propertyId || process.env.GA4_PROPERTY_ID || process.env.GOOGLE_ANALYTICS_4_PROPERTY_ID || "missing_property_id";
+}
+function reportPath(credentials) {
+  return `/properties/${propertyId(credentials)}:runReport`;
+}
+function metadataPath(credentials) {
+  return `/properties/${propertyId(credentials)}/metadata`;
+}
+function nextOffset(_, items, page) {
+  return items.length >= DEFAULT_PAGE_SIZE10 ? { page: page + 1 } : void 0;
+}
+function reportBody(input) {
+  return ({ dateStart, dateEnd, page, pageSize }) => ({
+    dateRanges: [{ startDate: dateStart, endDate: dateEnd }],
+    dimensions: input.dimensions.map((name) => ({ name })),
+    metrics: input.metrics.map((name) => ({ name })),
+    limit: String(pageSize),
+    offset: String(Math.max(page - 1, 0) * pageSize)
+  });
+}
+var reportBase = {
+  path: "/properties/missing_property_id:runReport",
+  itemKeys: ["rows"],
+  defaultPageSize: DEFAULT_PAGE_SIZE10,
+  supportsIncremental: true,
+  method: "POST",
+  buildPath: ({ credentials }) => reportPath(credentials),
+  getNextCursor: nextOffset
+};
+var GOOGLE_ANALYTICS_4_RESOURCES = [
+  {
+    resource: "accounts",
+    path: "/properties/missing_property_id/metadata",
+    itemKeys: ["dimensions", "metrics"],
+    defaultPageSize: 1e3,
+    supportsIncremental: false,
+    buildPath: ({ credentials }) => metadataPath(credentials)
+  },
+  {
+    ...reportBase,
+    resource: "traffic_daily",
+    buildBody: reportBody({
+      dimensions: ["date"],
+      metrics: ["activeUsers", "totalUsers", "sessions", "screenPageViews", "conversions"]
+    })
+  },
+  {
+    ...reportBase,
+    resource: "pages_daily",
+    buildBody: reportBody({
+      dimensions: ["date", "pagePath"],
+      metrics: ["screenPageViews", "activeUsers", "sessions"]
+    })
+  },
+  {
+    ...reportBase,
+    resource: "events_daily",
+    buildBody: reportBody({
+      dimensions: ["date", "eventName"],
+      metrics: ["eventCount", "totalUsers"]
+    })
+  }
+];
+
+// src/products/integracoes/cloud/src/connectors/marketing/googleAnalytics4/googleAnalytics4Connector.ts
+var googleAnalytics4Connector = createDateRangeReportConnector({
+  domain: "marketing",
+  provider: "google_analytics_4",
+  defaultBaseUrl: "https://analyticsdata.googleapis.com/v1beta",
+  envBaseUrlKey: "GOOGLE_ANALYTICS_4_API_BASE_URL",
+  resources: GOOGLE_ANALYTICS_4_RESOURCES,
+  testResource: "accounts",
+  rateLimitMs: Number(process.env.GOOGLE_ANALYTICS_4_RATE_LIMIT_MS || 100)
+});
+
+// src/products/integracoes/cloud/src/connectors/marketing/googleSearchConsole/googleSearchConsoleResources.ts
+var DEFAULT_PAGE_SIZE11 = 25e3;
+function sitePath(credentials) {
+  const siteUrl = credentials.siteUrl || process.env.GOOGLE_SEARCH_CONSOLE_SITE_URL || "";
+  return `/sites/${encodeURIComponent(siteUrl || "missing_site_url")}/searchAnalytics/query`;
+}
+function nextOffset2(_, items, page) {
+  return items.length >= DEFAULT_PAGE_SIZE11 ? { page: page + 1 } : void 0;
+}
+function body(dimensions) {
+  return ({ dateStart, dateEnd, page, pageSize }) => ({
+    startDate: dateStart,
+    endDate: dateEnd,
+    dimensions,
+    rowLimit: pageSize,
+    startRow: Math.max(page - 1, 0) * pageSize
+  });
+}
+var reportBase2 = {
+  path: "/sites/missing_site_url/searchAnalytics/query",
+  itemKeys: ["rows"],
+  defaultPageSize: DEFAULT_PAGE_SIZE11,
+  supportsIncremental: true,
+  method: "POST",
+  buildPath: ({ credentials }) => sitePath(credentials),
+  getNextCursor: nextOffset2
+};
+var GOOGLE_SEARCH_CONSOLE_RESOURCES = [
+  {
+    resource: "accounts",
+    path: "/sites",
+    itemKeys: ["siteEntry"],
+    defaultPageSize: 1e3,
+    supportsIncremental: false
+  },
+  {
+    ...reportBase2,
+    resource: "traffic_daily",
+    buildBody: body(["date"])
+  },
+  {
+    ...reportBase2,
+    resource: "pages_daily",
+    buildBody: body(["date", "page"])
+  },
+  {
+    ...reportBase2,
+    resource: "queries_daily",
+    buildBody: body(["date", "query"])
+  }
+];
+
+// src/products/integracoes/cloud/src/connectors/marketing/googleSearchConsole/googleSearchConsoleConnector.ts
+var googleSearchConsoleConnector = createDateRangeReportConnector({
+  domain: "marketing",
+  provider: "google_search_console",
+  defaultBaseUrl: "https://www.googleapis.com/webmasters/v3",
+  envBaseUrlKey: "GOOGLE_SEARCH_CONSOLE_API_BASE_URL",
+  resources: GOOGLE_SEARCH_CONSOLE_RESOURCES,
+  testResource: "accounts",
+  rateLimitMs: Number(process.env.GOOGLE_SEARCH_CONSOLE_RATE_LIMIT_MS || 100)
+});
+
+// src/products/integracoes/cloud/src/providers/marketingProviderRegistry.ts
+var MARKETING_CONNECTORS = [
+  googleSearchConsoleConnector,
+  googleAnalytics4Connector
+];
+
 // src/products/integracoes/cloud/src/providers/providerRegistry.ts
 var CLOUD_CONNECTORS = [
   ...ERP_CONNECTORS,
-  ...CRM_CONNECTORS
+  ...CRM_CONNECTORS,
+  ...MARKETING_CONNECTORS,
+  ...ADVERTISING_CONNECTORS
 ];
 function getCloudConnector(provider) {
   return CLOUD_CONNECTORS.find((connector) => connector.provider === provider);
 }
+
+// src/products/integracoes/shared/providers/advertisingProviders.ts
+var ADVERTISING_RESOURCES = [
+  {
+    slug: "accounts",
+    name: "Contas de anuncio",
+    description: "Contas, customers ou ad accounts disponiveis.",
+    defaultEnabled: true
+  },
+  {
+    slug: "campaigns",
+    name: "Campanhas",
+    description: "Campanhas, status, orcamentos e objetivos.",
+    defaultEnabled: true
+  },
+  {
+    slug: "ad_groups",
+    name: "Grupos de anuncios",
+    description: "Conjuntos, grupos, segmentacoes e status.",
+    defaultEnabled: true
+  },
+  {
+    slug: "ads",
+    name: "Anuncios",
+    description: "Anuncios, criativos, status e relacionamento com campanha.",
+    defaultEnabled: true
+  },
+  {
+    slug: "insights_campaign_daily",
+    name: "Metricas por campanha",
+    description: "Gasto, impressoes, cliques e conversoes por campanha e dia.",
+    defaultEnabled: true
+  },
+  {
+    slug: "insights_ad_daily",
+    name: "Metricas por anuncio",
+    description: "Gasto, impressoes, cliques e conversoes por anuncio e dia.",
+    defaultEnabled: false
+  }
+];
+function advertisingProvider(provider) {
+  return {
+    ...provider,
+    domain: "advertising",
+    resources: provider.resources || ADVERTISING_RESOURCES,
+    syncModes: ["manual", "scheduled"],
+    supportsIncrementalSync: true,
+    tags: ["publicidade", "midia-paga", ...provider.tags || []]
+  };
+}
+var ADVERTISING_PROVIDERS = [
+  advertisingProvider({
+    slug: "meta_ads",
+    toolkitSlug: "META_ADS",
+    name: "Meta Ads",
+    description: "Campanhas, conjuntos, anuncios, criativos e insights de Meta Ads.",
+    authType: "oauth2",
+    supportsOAuthCallback: true,
+    tags: ["facebook", "instagram", "paid-social"]
+  }),
+  advertisingProvider({
+    slug: "google_ads",
+    toolkitSlug: "GOOGLE_ADS",
+    name: "Google Ads",
+    description: "Customers, campanhas, grupos, anuncios, keywords e metricas de Google Ads.",
+    authType: "oauth2",
+    supportsOAuthCallback: true,
+    tags: ["google", "search", "paid-search"]
+  })
+];
 
 // src/products/integracoes/shared/providers/crmProviders.ts
 var CRM_RESOURCES = [
@@ -8564,6 +9172,70 @@ var ERP_PROVIDERS = [
   BLING_PROVIDER
 ];
 
+// src/products/integracoes/shared/providers/marketingProviders.ts
+var ORGANIC_MARKETING_RESOURCES = [
+  {
+    slug: "accounts",
+    name: "Contas",
+    description: "Contas, propriedades, sites ou perfis conectados.",
+    defaultEnabled: true
+  },
+  {
+    slug: "traffic_daily",
+    name: "Trafego diario",
+    description: "Metricas diarias de usuarios, sessoes, cliques e impressoes.",
+    defaultEnabled: true
+  },
+  {
+    slug: "pages_daily",
+    name: "Paginas diarias",
+    description: "Desempenho diario por pagina, URL ou landing page.",
+    defaultEnabled: true
+  },
+  {
+    slug: "queries_daily",
+    name: "Consultas diarias",
+    description: "Consultas, termos de busca e performance organica.",
+    defaultEnabled: false
+  },
+  {
+    slug: "events_daily",
+    name: "Eventos diarios",
+    description: "Eventos, conversoes e interacoes por dia.",
+    defaultEnabled: false
+  }
+];
+function marketingProvider(provider) {
+  return {
+    ...provider,
+    domain: "marketing",
+    resources: provider.resources || ORGANIC_MARKETING_RESOURCES,
+    syncModes: ["manual", "scheduled"],
+    supportsIncrementalSync: true,
+    tags: ["marketing", "organico", ...provider.tags || []]
+  };
+}
+var MARKETING_PROVIDERS = [
+  marketingProvider({
+    slug: "google_search_console",
+    toolkitSlug: "GOOGLE_SEARCH_CONSOLE",
+    name: "Google Search Console",
+    description: "Performance organica de busca, consultas, paginas, paises e dispositivos.",
+    authType: "oauth2",
+    supportsOAuthCallback: true,
+    tags: ["seo", "google"]
+  }),
+  marketingProvider({
+    slug: "google_analytics_4",
+    toolkitSlug: "GOOGLE_ANALYTICS_4",
+    name: "Google Analytics 4",
+    description: "Trafego, paginas, eventos e conversoes de propriedades GA4.",
+    authType: "oauth2",
+    supportsOAuthCallback: true,
+    tags: ["analytics", "google"]
+  })
+];
+
 // src/products/integracoes/shared/providers/providerTypes.ts
 function normalizeProviderSlug(slug) {
   return slug.trim().toLowerCase().replace(/[^a-z0-9]+/g, "_").replace(/^_+|_+$/g, "");
@@ -8575,7 +9247,9 @@ function normalizeToolkitSlug(slug) {
 // src/products/integracoes/shared/providers/providerCatalog.ts
 var INTEGRATION_PROVIDERS = [
   ...ERP_PROVIDERS,
-  ...CRM_PROVIDERS
+  ...CRM_PROVIDERS,
+  ...MARKETING_PROVIDERS,
+  ...ADVERTISING_PROVIDERS
 ];
 function getIntegrationProvider(slug) {
   const providerSlug = normalizeProviderSlug(slug);
@@ -8616,24 +9290,24 @@ function requireIntegrationProvider(slug) {
 }
 
 // src/products/integracoes/cloud/src/control-api/routes/connections.ts
-function isRecord6(value) {
+function isRecord7(value) {
   return typeof value === "object" && value !== null && !Array.isArray(value);
 }
-function parseBody(body) {
-  if (!isRecord6(body)) return {};
+function parseBody(body2) {
+  if (!isRecord7(body2)) return {};
   return {
-    tenantId: typeof body.tenantId === "number" ? body.tenantId : void 0,
-    connectionId: typeof body.connectionId === "string" ? body.connectionId : void 0,
-    provider: typeof body.provider === "string" ? body.provider : void 0,
-    credentials: body.credentials,
-    reconnect: body.reconnect === true,
-    resources: Array.isArray(body.resources) ? body.resources.filter((resource) => typeof resource === "string") : void 0
+    tenantId: typeof body2.tenantId === "number" ? body2.tenantId : void 0,
+    connectionId: typeof body2.connectionId === "string" ? body2.connectionId : void 0,
+    provider: typeof body2.provider === "string" ? body2.provider : void 0,
+    credentials: body2.credentials,
+    reconnect: body2.reconnect === true,
+    resources: Array.isArray(body2.resources) ? body2.resources.filter((resource) => typeof resource === "string") : void 0
   };
 }
 async function handleConnectionSetup(request) {
   try {
-    const body = parseBody(request.body);
-    if (!body.tenantId || !body.connectionId || !body.provider) {
+    const body2 = parseBody(request.body);
+    if (!body2.tenantId || !body2.connectionId || !body2.provider) {
       return {
         status: 400,
         body: {
@@ -8642,9 +9316,9 @@ async function handleConnectionSetup(request) {
         }
       };
     }
-    const provider = requireIntegrationProvider(body.provider);
-    if (body.credentials != null) {
-      const validation = validateProviderCredentials(provider, body.credentials);
+    const provider = requireIntegrationProvider(body2.provider);
+    if (body2.credentials != null) {
+      const validation = validateProviderCredentials(provider, body2.credentials);
       if (!validation.ok || !validation.serialized) {
         return {
           status: 400,
@@ -8658,11 +9332,11 @@ async function handleConnectionSetup(request) {
       if (connector) {
         try {
           const test = await connector.testConnection({
-            tenantId: body.tenantId,
-            connectionId: body.connectionId,
+            tenantId: body2.tenantId,
+            connectionId: body2.connectionId,
             provider: provider.slug,
             credentials: validation.normalized || JSON.parse(validation.serialized),
-            selectedResources: body.resources || []
+            selectedResources: body2.resources || []
           });
           if (test.status === "error") {
             return {
@@ -8684,25 +9358,25 @@ async function handleConnectionSetup(request) {
         }
       }
       const secret = await writeConnectionCredentialsSecret({
-        tenantId: body.tenantId,
-        connectionId: body.connectionId,
+        tenantId: body2.tenantId,
+        connectionId: body2.connectionId,
         value: validation.serialized
       });
       await updateConnectionSecret({
-        tenantId: body.tenantId,
-        connectionId: body.connectionId,
+        tenantId: body2.tenantId,
+        connectionId: body2.connectionId,
         secretRef: secret.secretRef,
         status: "connected",
         metadata: {
           setupMode: "gcp",
           authType: provider.authType,
           credentialsStoredAt: (/* @__PURE__ */ new Date()).toISOString(),
-          reconnect: body.reconnect === true
+          reconnect: body2.reconnect === true
         }
       });
       await createIntegrationEvent({
-        tenantId: body.tenantId,
-        connectionId: body.connectionId,
+        tenantId: body2.tenantId,
+        connectionId: body2.connectionId,
         eventType: "connection.updated",
         actor: "integrations-control-api",
         message: "Credenciais armazenadas no Secret Manager.",
@@ -8725,20 +9399,20 @@ async function handleConnectionSetup(request) {
     }
     if (provider.authType === "oauth2") {
       const state = createOAuthState({
-        tenantId: body.tenantId,
-        connectionId: body.connectionId,
+        tenantId: body2.tenantId,
+        connectionId: body2.connectionId,
         provider: provider.slug
       });
       const authorization = await buildOAuthAuthorizationUrl(provider.slug, state);
       await updateConnectionStatus({
-        tenantId: body.tenantId,
-        connectionId: body.connectionId,
+        tenantId: body2.tenantId,
+        connectionId: body2.connectionId,
         status: "pending_auth",
         metadata: {
           setupMode: "gcp",
           authType: provider.authType,
           oauthRequired: true,
-          reconnect: body.reconnect === true,
+          reconnect: body2.reconnect === true,
           oauthStateCreatedAt: (/* @__PURE__ */ new Date()).toISOString()
         }
       });
@@ -8755,15 +9429,15 @@ async function handleConnectionSetup(request) {
       };
     }
     await updateConnectionStatus({
-      tenantId: body.tenantId,
-      connectionId: body.connectionId,
+      tenantId: body2.tenantId,
+      connectionId: body2.connectionId,
       status: "pending_auth",
       metadata: {
         setupMode: "gcp",
         authType: provider.authType,
         credentialsRequired: true,
         oauthRequired: false,
-        reconnect: body.reconnect === true
+        reconnect: body2.reconnect === true
       }
     });
     return {
@@ -8873,7 +9547,7 @@ var supportedFrequencyMinutes = {
   "24h": 1440
 };
 var supportedFrequencies = Object.keys(supportedFrequencyMinutes);
-function isRecord7(value) {
+function isRecord8(value) {
   return typeof value === "object" && value !== null && !Array.isArray(value);
 }
 function parsePositiveInteger(value, fallback, max) {
@@ -8881,12 +9555,12 @@ function parsePositiveInteger(value, fallback, max) {
   if (!Number.isFinite(parsed) || parsed <= 0) return fallback;
   return Math.min(Math.floor(parsed), max);
 }
-function parseScheduledSyncBody(body) {
-  if (!isRecord7(body)) return {};
+function parseScheduledSyncBody(body2) {
+  if (!isRecord8(body2)) return {};
   return {
-    limit: parsePositiveInteger(body.limit, 25, 100),
-    lockTtlSeconds: parsePositiveInteger(body.lockTtlSeconds, 600, 3600),
-    requestedBy: typeof body.requestedBy === "string" ? body.requestedBy : void 0
+    limit: parsePositiveInteger(body2.limit, 25, 100),
+    lockTtlSeconds: parsePositiveInteger(body2.lockTtlSeconds, 600, 3600),
+    requestedBy: typeof body2.requestedBy === "string" ? body2.requestedBy : void 0
   };
 }
 function calculateNextSyncAt(syncFrequency, from = /* @__PURE__ */ new Date()) {
@@ -8895,16 +9569,16 @@ function calculateNextSyncAt(syncFrequency, from = /* @__PURE__ */ new Date()) {
   return new Date(from.getTime() + minutes * 6e4);
 }
 async function handleScheduledSync(request) {
-  const body = parseScheduledSyncBody(request.body);
+  const body2 = parseScheduledSyncBody(request.body);
   const lockToken = (0, import_node_crypto2.randomUUID)();
-  const requestedBy = body.requestedBy || "scheduled-sync";
+  const requestedBy = body2.requestedBy || "scheduled-sync";
   const items = [];
   try {
     const duePipelines = await claimDueScheduledPipelines({
-      limit: body.limit || 25,
+      limit: body2.limit || 25,
       lockToken,
       lockOwner: requestedBy,
-      lockTtlSeconds: body.lockTtlSeconds || 600,
+      lockTtlSeconds: body2.lockTtlSeconds || 600,
       syncFrequencies: supportedFrequencies
     });
     let published = 0;
@@ -9003,12 +9677,12 @@ async function handleScheduledSync(request) {
         });
       }
     }
-    const remainingLimit = Math.max((body.limit || 25) - duePipelines.length, 0);
+    const remainingLimit = Math.max((body2.limit || 25) - duePipelines.length, 0);
     const dueConnections = remainingLimit ? await claimDueScheduledConnections({
       limit: remainingLimit,
       lockToken,
       lockOwner: requestedBy,
-      lockTtlSeconds: body.lockTtlSeconds || 600,
+      lockTtlSeconds: body2.lockTtlSeconds || 600,
       syncFrequencies: supportedFrequencies
     }) : [];
     for (const connection of dueConnections) {
@@ -9093,26 +9767,26 @@ async function handleScheduledSync(request) {
 
 // src/products/integracoes/cloud/src/control-api/routes/sync.ts
 var syncTriggers = ["manual", "scheduled", "webhook", "initial"];
-function isRecord8(value) {
+function isRecord9(value) {
   return typeof value === "object" && value !== null && !Array.isArray(value);
 }
-function parseSyncDispatchBody(body) {
-  if (!isRecord8(body)) return {};
+function parseSyncDispatchBody(body2) {
+  if (!isRecord9(body2)) return {};
   return {
-    tenantId: typeof body.tenantId === "number" ? body.tenantId : void 0,
-    connectionId: typeof body.connectionId === "string" ? body.connectionId : void 0,
-    pipelineId: typeof body.pipelineId === "string" ? body.pipelineId : void 0,
-    destinationId: typeof body.destinationId === "string" ? body.destinationId : void 0,
-    runId: typeof body.runId === "string" ? body.runId : void 0,
-    trigger: typeof body.trigger === "string" && syncTriggers.includes(body.trigger) ? body.trigger : void 0,
-    resources: Array.isArray(body.resources) ? body.resources.filter((resource) => typeof resource === "string") : void 0,
-    requestedBy: typeof body.requestedBy === "string" ? body.requestedBy : void 0
+    tenantId: typeof body2.tenantId === "number" ? body2.tenantId : void 0,
+    connectionId: typeof body2.connectionId === "string" ? body2.connectionId : void 0,
+    pipelineId: typeof body2.pipelineId === "string" ? body2.pipelineId : void 0,
+    destinationId: typeof body2.destinationId === "string" ? body2.destinationId : void 0,
+    runId: typeof body2.runId === "string" ? body2.runId : void 0,
+    trigger: typeof body2.trigger === "string" && syncTriggers.includes(body2.trigger) ? body2.trigger : void 0,
+    resources: Array.isArray(body2.resources) ? body2.resources.filter((resource) => typeof resource === "string") : void 0,
+    requestedBy: typeof body2.requestedBy === "string" ? body2.requestedBy : void 0
   };
 }
 async function handleSyncDispatch(request) {
   try {
-    const body = parseSyncDispatchBody(request.body);
-    if (!body.tenantId || !body.connectionId) {
+    const body2 = parseSyncDispatchBody(request.body);
+    if (!body2.tenantId || !body2.connectionId) {
       return {
         status: 400,
         body: {
@@ -9122,14 +9796,14 @@ async function handleSyncDispatch(request) {
       };
     }
     const publish = await publishSyncMessage({
-      tenantId: body.tenantId,
-      connectionId: body.connectionId,
-      pipelineId: body.pipelineId,
-      destinationId: body.destinationId,
-      runId: body.runId,
-      trigger: body.trigger || "manual",
-      resources: body.resources,
-      requestedBy: body.requestedBy
+      tenantId: body2.tenantId,
+      connectionId: body2.connectionId,
+      pipelineId: body2.pipelineId,
+      destinationId: body2.destinationId,
+      runId: body2.runId,
+      trigger: body2.trigger || "manual",
+      resources: body2.resources,
+      requestedBy: body2.requestedBy
     });
     return {
       status: 202,
@@ -9138,7 +9812,7 @@ async function handleSyncDispatch(request) {
         mode: publish.mode,
         message: "Sync publicado no Pub/Sub.",
         messageId: publish.messageId,
-        runId: body.runId,
+        runId: body2.runId,
         topic: publish.topic
       }
     };
@@ -9155,9 +9829,9 @@ async function handleSyncDispatch(request) {
 
 // src/products/integracoes/cloud/src/lib/internalAuth.ts
 var import_node_crypto3 = require("node:crypto");
-function headerValue(headers, name) {
-  if (!headers) return void 0;
-  const value = headers[name] || headers[name.toLowerCase()];
+function headerValue(headers2, name) {
+  if (!headers2) return void 0;
+  const value = headers2[name] || headers2[name.toLowerCase()];
   if (Array.isArray(value)) return value[0];
   return value;
 }
@@ -9171,15 +9845,15 @@ function getInternalApiKey() {
   const value = process.env.INTEGRATIONS_INTERNAL_API_KEY?.trim();
   return value || null;
 }
-function isInternalRequestAuthorized(headers) {
+function isInternalRequestAuthorized(headers2) {
   const expected = getInternalApiKey();
   if (!expected) return false;
-  const authorization = headerValue(headers, "authorization")?.trim();
+  const authorization = headerValue(headers2, "authorization")?.trim();
   const bearerPrefix = "Bearer ";
   if (authorization?.startsWith(bearerPrefix)) {
     return safeEquals(authorization.slice(bearerPrefix.length).trim(), expected);
   }
-  const apiKey = headerValue(headers, "x-internal-api-key")?.trim();
+  const apiKey = headerValue(headers2, "x-internal-api-key")?.trim();
   return Boolean(apiKey && safeEquals(apiKey, expected));
 }
 
