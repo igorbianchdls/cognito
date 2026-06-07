@@ -61,12 +61,12 @@ type DbConnectionRow = {
   sync_locked_until?: string | Date | null
   sync_lock_token?: string | null
   sync_lock_owner?: string | null
-  sync_modes_json: unknown
+  sync_modes: unknown
   last_sync_at: string | Date | null
   last_success_at: string | Date | null
   last_error: string | null
   records_synced: number
-  metadata_json: unknown
+  metadata: unknown
   created_at: string | Date
   updated_at: string | Date
 }
@@ -86,7 +86,7 @@ type DbSyncRunRow = {
   records_updated: number
   records_failed: number
   error_message: string | null
-  metadata_json: unknown
+  metadata: unknown
   created_at: string | Date
 }
 
@@ -96,9 +96,9 @@ type DbDestinationRow = {
   type: string
   name: string
   status: string
-  config_json: unknown
+  config: unknown
   secret_ref: string | null
-  metadata_json: unknown
+  metadata: unknown
   created_at: string | Date
   updated_at: string | Date
 }
@@ -121,7 +121,7 @@ type DbPipelineRow = {
   last_success_at: string | Date | null
   last_error: string | null
   records_synced: number
-  metadata_json: unknown
+  metadata: unknown
   created_at: string | Date
   updated_at: string | Date
 }
@@ -135,7 +135,7 @@ type DbMcpPermissionsRow = {
   write_resources: unknown
   destructive_resources: unknown
   require_confirmation: boolean
-  metadata_json: unknown
+  metadata: unknown
   created_at: string | Date
   updated_at: string | Date
 }
@@ -148,7 +148,7 @@ type DbEventRow = {
   severity: string
   actor: string | null
   message: string
-  metadata_json: unknown
+  metadata: unknown
   created_at: string | Date
 }
 
@@ -201,12 +201,12 @@ function toConnection(row: DbConnectionRow): IntegrationConnection {
     syncLockedUntil: toIsoString(row.sync_locked_until),
     syncLockToken: row.sync_lock_token || null,
     syncLockOwner: row.sync_lock_owner || null,
-    syncModes: asStringArray(row.sync_modes_json) as IntegrationSyncMode[],
+    syncModes: asStringArray(row.sync_modes) as IntegrationSyncMode[],
     lastSyncAt: toIsoString(row.last_sync_at),
     lastSuccessAt: toIsoString(row.last_success_at),
     lastError: row.last_error,
     recordsSynced: Number(row.records_synced || 0),
-    metadata: asJsonObject(row.metadata_json),
+    metadata: asJsonObject(row.metadata),
     createdAt: toIsoString(row.created_at) || '',
     updatedAt: toIsoString(row.updated_at) || '',
   }
@@ -228,7 +228,7 @@ function toSyncRun(row: DbSyncRunRow): IntegrationSyncRun {
     recordsUpdated: Number(row.records_updated || 0),
     recordsFailed: Number(row.records_failed || 0),
     errorMessage: row.error_message,
-    metadata: asJsonObject(row.metadata_json),
+    metadata: asJsonObject(row.metadata),
     createdAt: toIsoString(row.created_at) || '',
   }
 }
@@ -266,9 +266,9 @@ function toDestination(row: DbDestinationRow): IntegrationDestination {
     type: normalizeDestinationType(row.type),
     name: row.name,
     status: normalizeDestinationStatus(row.status),
-    config: asJsonObject(row.config_json),
+    config: asJsonObject(row.config),
     secretRef: row.secret_ref,
-    metadata: asJsonObject(row.metadata_json),
+    metadata: asJsonObject(row.metadata),
     createdAt: toIsoString(row.created_at) || '',
     updatedAt: toIsoString(row.updated_at) || '',
   }
@@ -293,7 +293,7 @@ function toPipeline(row: DbPipelineRow): IntegrationPipeline {
     lastSuccessAt: toIsoString(row.last_success_at),
     lastError: row.last_error,
     recordsSynced: Number(row.records_synced || 0),
-    metadata: asJsonObject(row.metadata_json),
+    metadata: asJsonObject(row.metadata),
     createdAt: toIsoString(row.created_at) || '',
     updatedAt: toIsoString(row.updated_at) || '',
   }
@@ -309,7 +309,7 @@ function toMcpPermissions(row: DbMcpPermissionsRow): IntegrationMcpPermissions {
     writeResources: asStringArray(row.write_resources),
     destructiveResources: asStringArray(row.destructive_resources),
     requireConfirmation: Boolean(row.require_confirmation),
-    metadata: asJsonObject(row.metadata_json),
+    metadata: asJsonObject(row.metadata),
     createdAt: toIsoString(row.created_at) || '',
     updatedAt: toIsoString(row.updated_at) || '',
   }
@@ -352,7 +352,7 @@ function toEvent(row: DbEventRow): IntegrationEvent {
     severity: normalizeEventSeverity(row.severity),
     actor: row.actor,
     message: row.message,
-    metadata: asJsonObject(row.metadata_json),
+    metadata: asJsonObject(row.metadata),
     createdAt: toIsoString(row.created_at) || '',
   }
 }
@@ -370,7 +370,7 @@ async function queryConnectionById(
 ): Promise<IntegrationConnection | null> {
   const result = await client.query(
     `SELECT *
-     FROM mcp_app.integration_connections
+     FROM integrations.connections
      WHERE id = $1 AND tenant_id = $2
      LIMIT 1`,
     [id, tenantId],
@@ -386,7 +386,7 @@ async function queryDestinationById(
 ): Promise<IntegrationDestination | null> {
   const result = await client.query(
     `SELECT *
-     FROM mcp_app.integration_destinations
+     FROM integrations.destinations
      WHERE id = $1 AND tenant_id = $2
      LIMIT 1`,
     [id, tenantId],
@@ -401,10 +401,10 @@ async function ensureDefaultBigQueryDestination(
 ): Promise<IntegrationDestination> {
   const existing = await client.query(
     `SELECT *
-     FROM mcp_app.integration_destinations
+     FROM integrations.destinations
      WHERE tenant_id = $1
        AND type = 'bigquery'
-       AND (metadata_json->>'isDefault') = 'true'
+       AND (metadata->>'isDefault') = 'true'
      ORDER BY id ASC
      LIMIT 1`,
     [tenantId],
@@ -413,8 +413,8 @@ async function ensureDefaultBigQueryDestination(
   if (existingRow) return toDestination(existingRow)
 
   const result = await client.query(
-    `INSERT INTO mcp_app.integration_destinations
-      (tenant_id, type, name, status, config_json, metadata_json, updated_at)
+    `INSERT INTO integrations.destinations
+      (tenant_id, type, name, status, config, metadata, updated_at)
      VALUES
       ($1, 'bigquery', 'BigQuery padrao', 'active', $2::jsonb, $3::jsonb, now())
      RETURNING *`,
@@ -446,8 +446,8 @@ async function insertIntegrationPipeline(
   const name = String(input.name || `${connection.displayName} -> ${destination.name}`).trim()
 
   const result = await client.query(
-    `INSERT INTO mcp_app.integration_pipelines
-      (tenant_id, source_connection_id, destination_id, name, status, selected_resources, sync_frequency, sync_enabled, next_sync_at, metadata_json, updated_at)
+    `INSERT INTO integrations.pipelines
+      (tenant_id, source_connection_id, destination_id, name, status, selected_resources, sync_frequency, sync_enabled, next_sync_at, metadata, updated_at)
      VALUES
       ($1, $2, $3, $4, $5, $6::jsonb, $7, $8, $9, $10::jsonb, now())
      RETURNING *`,
@@ -473,8 +473,8 @@ async function insertIntegrationEvent(
   input: CreateIntegrationEventInput,
 ): Promise<IntegrationEvent> {
   const result = await client.query(
-    `INSERT INTO mcp_app.integration_events
-      (tenant_id, connection_id, event_type, severity, actor, message, metadata_json)
+    `INSERT INTO integrations.events
+      (tenant_id, connection_id, event_type, severity, actor, message, metadata)
      VALUES
       ($1, $2, $3, $4, $5, $6, $7::jsonb)
      RETURNING *`,
@@ -520,7 +520,7 @@ export async function listIntegrationDestinations(params?: {
 
   const rows = await runQuery<DbDestinationRow>(
     `SELECT *
-     FROM mcp_app.integration_destinations
+     FROM integrations.destinations
      WHERE ${conditions.join(' AND ')}
      ORDER BY updated_at DESC, id DESC
      LIMIT $${values.length}`,
@@ -533,8 +533,8 @@ export async function createIntegrationDestination(
   input: CreateIntegrationDestinationInput,
 ): Promise<IntegrationDestination> {
   const result = await runQuery<DbDestinationRow>(
-    `INSERT INTO mcp_app.integration_destinations
-      (tenant_id, type, name, status, config_json, secret_ref, metadata_json, updated_at)
+    `INSERT INTO integrations.destinations
+      (tenant_id, type, name, status, config, secret_ref, metadata, updated_at)
      VALUES
       ($1, $2, $3, $4, $5::jsonb, $6, $7::jsonb, now())
      RETURNING *`,
@@ -558,7 +558,7 @@ export async function updateIntegrationDestination(
 ): Promise<IntegrationDestination | null> {
   const current = await runQuery<DbDestinationRow>(
     `SELECT *
-     FROM mcp_app.integration_destinations
+     FROM integrations.destinations
      WHERE id = $1 AND tenant_id = $2
      LIMIT 1`,
     [id, tenantId],
@@ -567,13 +567,13 @@ export async function updateIntegrationDestination(
   if (!row) return null
 
   const result = await runQuery<DbDestinationRow>(
-    `UPDATE mcp_app.integration_destinations
+    `UPDATE integrations.destinations
      SET
        name = $3,
        status = $4,
-       config_json = $5::jsonb,
+       config = $5::jsonb,
        secret_ref = $6,
-       metadata_json = $7::jsonb,
+       metadata = $7::jsonb,
        updated_at = now()
      WHERE id = $1 AND tenant_id = $2
      RETURNING *`,
@@ -582,9 +582,9 @@ export async function updateIntegrationDestination(
       tenantId,
       input.name == null ? row.name : input.name,
       input.status == null ? row.status : normalizeDestinationStatus(input.status),
-      JSON.stringify(input.config == null ? asJsonObject(row.config_json) : input.config),
+      JSON.stringify(input.config == null ? asJsonObject(row.config) : input.config),
       input.secretRef === undefined ? row.secret_ref : input.secretRef,
-      JSON.stringify(input.metadata ? { ...asJsonObject(row.metadata_json), ...input.metadata } : asJsonObject(row.metadata_json)),
+      JSON.stringify(input.metadata ? { ...asJsonObject(row.metadata), ...input.metadata } : asJsonObject(row.metadata)),
     ],
   )
   return result[0] ? toDestination(result[0]) : null
@@ -619,7 +619,7 @@ export async function listIntegrationPipelines(params?: {
 
   const rows = await runQuery<DbPipelineRow>(
     `SELECT *
-     FROM mcp_app.integration_pipelines
+     FROM integrations.pipelines
      WHERE ${conditions.join(' AND ')}
      ORDER BY updated_at DESC, id DESC
      LIMIT $${values.length}`,
@@ -642,7 +642,7 @@ export async function updateIntegrationPipeline(
   return withTransaction(async (client) => {
     const current = await client.query(
       `SELECT *
-       FROM mcp_app.integration_pipelines
+       FROM integrations.pipelines
        WHERE id = $1 AND tenant_id = $2
        LIMIT 1`,
       [id, tenantId],
@@ -658,7 +658,7 @@ export async function updateIntegrationPipeline(
       : asStringArray(row.selected_resources)
 
     const result = await client.query(
-      `UPDATE mcp_app.integration_pipelines
+      `UPDATE integrations.pipelines
        SET
          name = $3,
          status = $4,
@@ -666,7 +666,7 @@ export async function updateIntegrationPipeline(
          sync_frequency = $6,
          sync_enabled = $7,
          next_sync_at = $8,
-         metadata_json = $9::jsonb,
+         metadata = $9::jsonb,
          updated_at = now()
        WHERE id = $1 AND tenant_id = $2
        RETURNING *`,
@@ -679,7 +679,7 @@ export async function updateIntegrationPipeline(
         input.syncFrequency || row.sync_frequency,
         input.syncEnabled == null ? row.sync_enabled : Boolean(input.syncEnabled),
         input.nextSyncAt === undefined ? row.next_sync_at : input.nextSyncAt,
-        JSON.stringify(input.metadata ? { ...asJsonObject(row.metadata_json), ...input.metadata } : asJsonObject(row.metadata_json)),
+        JSON.stringify(input.metadata ? { ...asJsonObject(row.metadata), ...input.metadata } : asJsonObject(row.metadata)),
       ],
     )
     return toPipeline(result.rows[0] as DbPipelineRow)
@@ -692,7 +692,7 @@ export async function getIntegrationMcpPermissions(
 ): Promise<IntegrationMcpPermissions | null> {
   const rows = await runQuery<DbMcpPermissionsRow>(
     `SELECT *
-     FROM mcp_app.integration_mcp_permissions
+     FROM integrations.mcp_permissions
      WHERE connection_id = $1 AND tenant_id = $2
      LIMIT 1`,
     [connectionId, tenantId],
@@ -705,8 +705,8 @@ export async function upsertIntegrationMcpPermissions(
 ): Promise<IntegrationMcpPermissions> {
   const tenantId = Number(input.tenantId || 1)
   const result = await runQuery<DbMcpPermissionsRow>(
-    `INSERT INTO mcp_app.integration_mcp_permissions
-      (tenant_id, connection_id, enabled, read_resources, write_resources, destructive_resources, require_confirmation, metadata_json, updated_at)
+    `INSERT INTO integrations.mcp_permissions
+      (tenant_id, connection_id, enabled, read_resources, write_resources, destructive_resources, require_confirmation, metadata, updated_at)
      VALUES
       ($1, $2, $3, $4::jsonb, $5::jsonb, $6::jsonb, $7, $8::jsonb, now())
      ON CONFLICT (tenant_id, connection_id)
@@ -716,7 +716,7 @@ export async function upsertIntegrationMcpPermissions(
        write_resources = EXCLUDED.write_resources,
        destructive_resources = EXCLUDED.destructive_resources,
        require_confirmation = EXCLUDED.require_confirmation,
-       metadata_json = mcp_app.integration_mcp_permissions.metadata_json || EXCLUDED.metadata_json,
+       metadata = integrations.mcp_permissions.metadata || EXCLUDED.metadata,
        updated_at = now()
      RETURNING *`,
     [
@@ -762,7 +762,7 @@ export async function listIntegrationConnections(params?: {
 
   const rows = await runQuery<DbConnectionRow>(
     `SELECT *
-     FROM mcp_app.integration_connections
+     FROM integrations.connections
      WHERE ${conditions.join(' AND ')}
      ORDER BY updated_at DESC, id DESC
      LIMIT $${values.length}`,
@@ -775,7 +775,7 @@ export async function listIntegrationConnections(params?: {
 export async function getIntegrationConnection(id: string, tenantId = 1): Promise<IntegrationConnection | null> {
   const rows = await runQuery<DbConnectionRow>(
     `SELECT *
-     FROM mcp_app.integration_connections
+     FROM integrations.connections
      WHERE id = $1 AND tenant_id = $2
      LIMIT 1`,
     [id, tenantId],
@@ -794,8 +794,8 @@ export async function createIntegrationConnection(
 
   return withTransaction(async (client) => {
     const result = await client.query(
-      `INSERT INTO mcp_app.integration_connections
-        (tenant_id, domain, provider, display_name, status, auth_type, selected_resources, sync_frequency, sync_enabled, next_sync_at, sync_modes_json, metadata_json, updated_at)
+      `INSERT INTO integrations.connections
+        (tenant_id, domain, provider, display_name, status, auth_type, selected_resources, sync_frequency, sync_enabled, next_sync_at, sync_modes, metadata, updated_at)
        VALUES
         ($1, $2, $3, $4, 'pending_auth', $5, $6::jsonb, $7, $8, $9, $10::jsonb, $11::jsonb, now())
        RETURNING *`,
@@ -877,7 +877,7 @@ export async function updateIntegrationConnection(
     const metadata = input.metadata ? { ...(current.metadata || {}), ...compactMetadata(input.metadata) } : current.metadata || {}
 
     const result = await client.query(
-      `UPDATE mcp_app.integration_connections
+      `UPDATE integrations.connections
        SET
          display_name = $3,
          status = $4,
@@ -885,8 +885,8 @@ export async function updateIntegrationConnection(
          sync_frequency = $6,
          sync_enabled = $7,
          next_sync_at = $8,
-         sync_modes_json = $9::jsonb,
-         metadata_json = $10::jsonb,
+         sync_modes = $9::jsonb,
+         metadata = $10::jsonb,
          updated_at = now()
        WHERE id = $1 AND tenant_id = $2
        RETURNING *`,
@@ -944,7 +944,7 @@ export async function listIntegrationEvents(params: {
 
   const rows = await runQuery<DbEventRow>(
     `SELECT *
-     FROM mcp_app.integration_events
+     FROM integrations.events
      WHERE ${conditions.join(' AND ')}
      ORDER BY created_at DESC, id DESC
      LIMIT $${values.length}`,
@@ -963,7 +963,7 @@ export async function listIntegrationSyncRuns(params: {
   const limit = Math.min(Math.max(Number(params.limit || 20), 1), 100)
   const rows = await runQuery<DbSyncRunRow>(
     `SELECT *
-     FROM mcp_app.integration_sync_runs
+     FROM integrations.sync_runs
      WHERE tenant_id = $1 AND connection_id = $2
      ORDER BY created_at DESC, id DESC
      LIMIT $3`,
@@ -1004,8 +1004,8 @@ export async function createIntegrationSyncRun(params: {
     })
 
     const result = await client.query(
-      `INSERT INTO mcp_app.integration_sync_runs
-        (tenant_id, connection_id, pipeline_id, destination_id, trigger, status, started_at, finished_at, records_in, records_updated, records_failed, metadata_json)
+      `INSERT INTO integrations.sync_runs
+        (tenant_id, connection_id, pipeline_id, destination_id, trigger, status, started_at, finished_at, records_in, records_updated, records_failed, metadata)
        VALUES
         ($1, $2, $3, $4, $5, $6, CASE WHEN $6 = 'queued' THEN NULL ELSE now() END, CASE WHEN $6 = 'queued' THEN NULL ELSE now() END, 0, 0, 0, $7::jsonb)
        RETURNING *`,
@@ -1025,7 +1025,7 @@ export async function createIntegrationSyncRun(params: {
     )
 
     await client.query(
-      `UPDATE mcp_app.integration_connections
+      `UPDATE integrations.connections
        SET
          last_sync_at = now(),
          last_success_at = CASE WHEN $3 = 'success' THEN now() ELSE last_success_at END,

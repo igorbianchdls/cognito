@@ -119,7 +119,7 @@ export async function getCloudIntegrationConnection(input: {
 }): Promise<CloudIntegrationConnection | null> {
   const result = await getPool().query(
     `SELECT *
-     FROM mcp_app.integration_connections
+     FROM integrations.connections
      WHERE id = $1 AND tenant_id = $2
      LIMIT 1`,
     [input.connectionId, input.tenantId],
@@ -136,7 +136,7 @@ export async function getCloudIntegrationConnection(input: {
     displayName: String(row.display_name || ''),
     secretRef: row.secret_ref == null ? null : String(row.secret_ref),
     selectedResources: asStringArray(row.selected_resources),
-    metadata: asRecord(row.metadata_json),
+    metadata: asRecord(row.metadata),
   }
 }
 
@@ -146,7 +146,7 @@ export async function getCloudIntegrationDestination(input: {
 }): Promise<CloudIntegrationDestination | null> {
   const result = await getPool().query(
     `SELECT *
-     FROM mcp_app.integration_destinations
+     FROM integrations.destinations
      WHERE id = $1 AND tenant_id = $2
      LIMIT 1`,
     [input.destinationId, input.tenantId],
@@ -160,9 +160,9 @@ export async function getCloudIntegrationDestination(input: {
     type: String(row.type || ''),
     name: String(row.name || ''),
     status: String(row.status || ''),
-    config: asRecord(row.config_json),
+    config: asRecord(row.config),
     secretRef: row.secret_ref == null ? null : String(row.secret_ref),
-    metadata: asRecord(row.metadata_json),
+    metadata: asRecord(row.metadata),
   }
 }
 
@@ -172,7 +172,7 @@ export async function getCloudIntegrationPipeline(input: {
 }): Promise<CloudIntegrationPipeline | null> {
   const result = await getPool().query(
     `SELECT *
-     FROM mcp_app.integration_pipelines
+     FROM integrations.pipelines
      WHERE id = $1 AND tenant_id = $2
      LIMIT 1`,
     [input.pipelineId, input.tenantId],
@@ -190,7 +190,7 @@ export async function getCloudIntegrationPipeline(input: {
     selectedResources: asStringArray(row.selected_resources),
     syncFrequency: String(row.sync_frequency || ''),
     nextSyncAt: row.next_sync_at == null ? null : new Date(row.next_sync_at as string | Date).toISOString(),
-    metadata: asRecord(row.metadata_json),
+    metadata: asRecord(row.metadata),
   }
 }
 
@@ -206,11 +206,11 @@ export async function startCloudSyncRun(input: {
 }): Promise<CloudSyncRun> {
   if (input.runId) {
     const result = await getPool().query(
-      `UPDATE mcp_app.integration_sync_runs
+      `UPDATE integrations.sync_runs
        SET
          status = 'running',
          started_at = COALESCE(started_at, now()),
-         metadata_json = metadata_json || $4::jsonb
+         metadata = metadata || $4::jsonb
        WHERE id = $1 AND tenant_id = $2 AND connection_id = $3
        RETURNING id::text, status`,
       [
@@ -238,8 +238,8 @@ export async function startCloudSyncRun(input: {
   }
 
   const result = await getPool().query(
-    `INSERT INTO mcp_app.integration_sync_runs
-      (tenant_id, connection_id, pipeline_id, destination_id, trigger, status, started_at, metadata_json)
+    `INSERT INTO integrations.sync_runs
+      (tenant_id, connection_id, pipeline_id, destination_id, trigger, status, started_at, metadata)
      VALUES
       ($1, $2, $3, $4, $5, 'running', now(), $6::jsonb)
      RETURNING id::text, status`,
@@ -285,7 +285,7 @@ export async function claimDueScheduledConnections(input: {
   const result = await getPool().query(
     `WITH due_connections AS (
        SELECT id, tenant_id
-       FROM mcp_app.integration_connections
+       FROM integrations.connections
        WHERE
          sync_enabled = true
          AND sync_frequency = ANY($5::text[])
@@ -298,7 +298,7 @@ export async function claimDueScheduledConnections(input: {
        LIMIT $1
        FOR UPDATE SKIP LOCKED
      )
-     UPDATE mcp_app.integration_connections connections
+     UPDATE integrations.connections connections
      SET
        sync_lock_token = $2,
        sync_lock_owner = $3,
@@ -343,11 +343,11 @@ export async function claimDueScheduledPipelines(input: {
   const result = await getPool().query(
     `WITH due_pipelines AS (
        SELECT pipelines.id, pipelines.tenant_id
-       FROM mcp_app.integration_pipelines pipelines
-       JOIN mcp_app.integration_connections connections
+       FROM integrations.pipelines pipelines
+       JOIN integrations.connections connections
          ON connections.id = pipelines.source_connection_id
         AND connections.tenant_id = pipelines.tenant_id
-       JOIN mcp_app.integration_destinations destinations
+       JOIN integrations.destinations destinations
          ON destinations.id = pipelines.destination_id
         AND destinations.tenant_id = pipelines.tenant_id
        WHERE
@@ -364,17 +364,17 @@ export async function claimDueScheduledPipelines(input: {
        LIMIT $1
        FOR UPDATE SKIP LOCKED
      )
-     UPDATE mcp_app.integration_pipelines pipelines
+     UPDATE integrations.pipelines pipelines
      SET
        sync_lock_token = $2,
        sync_lock_owner = $3,
        sync_locked_until = now() + make_interval(secs => $4),
        updated_at = now()
      FROM due_pipelines
-     JOIN mcp_app.integration_connections connections
+     JOIN integrations.connections connections
        ON connections.id = (
          SELECT source_connection_id
-         FROM mcp_app.integration_pipelines
+         FROM integrations.pipelines
          WHERE id = due_pipelines.id AND tenant_id = due_pipelines.tenant_id
        )
       AND connections.tenant_id = due_pipelines.tenant_id
@@ -390,7 +390,7 @@ export async function claimDueScheduledPipelines(input: {
        pipelines.selected_resources,
        pipelines.sync_frequency,
        pipelines.next_sync_at,
-       pipelines.metadata_json,
+       pipelines.metadata,
        connections.provider`,
     [
       input.limit,
@@ -411,7 +411,7 @@ export async function claimDueScheduledPipelines(input: {
     selectedResources: asStringArray(row.selected_resources),
     syncFrequency: String(row.sync_frequency || ''),
     nextSyncAt: row.next_sync_at == null ? null : new Date(row.next_sync_at as string | Date).toISOString(),
-    metadata: asRecord(row.metadata_json),
+    metadata: asRecord(row.metadata),
     provider: String(row.provider || ''),
   }))
 }
@@ -426,8 +426,8 @@ export async function createQueuedCloudSyncRun(input: {
   metadata?: Record<string, unknown>
 }): Promise<CloudSyncRun> {
   const result = await getPool().query(
-    `INSERT INTO mcp_app.integration_sync_runs
-      (tenant_id, connection_id, pipeline_id, destination_id, trigger, status, started_at, finished_at, records_in, records_updated, records_failed, metadata_json)
+    `INSERT INTO integrations.sync_runs
+      (tenant_id, connection_id, pipeline_id, destination_id, trigger, status, started_at, finished_at, records_in, records_updated, records_failed, metadata)
      VALUES
       ($1, $2, $3, $4, 'scheduled', 'queued', NULL, NULL, 0, 0, 0, $5::jsonb)
      RETURNING id::text, status`,
@@ -474,12 +474,12 @@ export async function failQueuedCloudSyncRun(input: {
   errorMessage: string
 }) {
   await getPool().query(
-    `UPDATE mcp_app.integration_sync_runs
+    `UPDATE integrations.sync_runs
      SET
        status = 'error',
        finished_at = now(),
        error_message = $4,
-       metadata_json = metadata_json || $5::jsonb
+       metadata = metadata || $5::jsonb
      WHERE id = $1
        AND tenant_id = $2
        AND connection_id = $3
@@ -505,13 +505,13 @@ export async function completeScheduledConnectionDispatch(input: {
   runId: string
 }) {
   await getPool().query(
-    `UPDATE mcp_app.integration_connections
+    `UPDATE integrations.connections
      SET
        next_sync_at = $4,
        sync_lock_token = NULL,
        sync_lock_owner = NULL,
        sync_locked_until = NULL,
-       metadata_json = metadata_json || $5::jsonb,
+       metadata = metadata || $5::jsonb,
        updated_at = now()
      WHERE id = $1
        AND tenant_id = $2
@@ -539,13 +539,13 @@ export async function completeScheduledPipelineDispatch(input: {
   runId: string
 }) {
   await getPool().query(
-    `UPDATE mcp_app.integration_pipelines
+    `UPDATE integrations.pipelines
      SET
        next_sync_at = $4,
        sync_lock_token = NULL,
        sync_lock_owner = NULL,
        sync_locked_until = NULL,
-       metadata_json = metadata_json || $5::jsonb,
+       metadata = metadata || $5::jsonb,
        updated_at = now()
      WHERE id = $1
        AND tenant_id = $2
@@ -572,13 +572,13 @@ export async function releaseScheduledConnectionLock(input: {
   runId?: string | null
 }) {
   await getPool().query(
-    `UPDATE mcp_app.integration_connections
+    `UPDATE integrations.connections
      SET
        sync_lock_token = NULL,
        sync_lock_owner = NULL,
        sync_locked_until = NULL,
        last_error = COALESCE($4, last_error),
-       metadata_json = metadata_json || $5::jsonb,
+       metadata = metadata || $5::jsonb,
        updated_at = now()
      WHERE id = $1
        AND tenant_id = $2
@@ -619,13 +619,13 @@ export async function releaseScheduledPipelineLock(input: {
   runId?: string | null
 }) {
   await getPool().query(
-    `UPDATE mcp_app.integration_pipelines
+    `UPDATE integrations.pipelines
      SET
        sync_lock_token = NULL,
        sync_lock_owner = NULL,
        sync_locked_until = NULL,
        last_error = COALESCE($4, last_error),
-       metadata_json = metadata_json || $5::jsonb,
+       metadata = metadata || $5::jsonb,
        updated_at = now()
      WHERE id = $1
        AND tenant_id = $2
@@ -673,7 +673,7 @@ export async function finishCloudSyncRun(input: {
 }) {
   const status = normalizeStatus(input.status)
   await getPool().query(
-    `UPDATE mcp_app.integration_sync_runs
+    `UPDATE integrations.sync_runs
      SET
        status = $4,
        finished_at = now(),
@@ -681,7 +681,7 @@ export async function finishCloudSyncRun(input: {
        records_updated = $6,
        records_failed = $7,
        error_message = $8,
-       metadata_json = metadata_json || $9::jsonb
+       metadata = metadata || $9::jsonb
      WHERE id = $1 AND tenant_id = $2 AND connection_id = $3`,
     [
       input.runId,
@@ -697,7 +697,7 @@ export async function finishCloudSyncRun(input: {
   )
 
   await getPool().query(
-    `UPDATE mcp_app.integration_connections
+    `UPDATE integrations.connections
      SET
        last_sync_at = now(),
        last_success_at = CASE WHEN $3 IN ('success', 'warning') THEN now() ELSE last_success_at END,
@@ -733,7 +733,7 @@ export async function finishCloudSyncRun(input: {
 
   if (input.pipelineId) {
     await getPool().query(
-      `UPDATE mcp_app.integration_pipelines
+      `UPDATE integrations.pipelines
        SET
          last_sync_at = now(),
          last_success_at = CASE WHEN $3 IN ('success', 'warning') THEN now() ELSE last_success_at END,
@@ -758,14 +758,14 @@ export async function readIntegrationCursor(input: {
   cursorKey?: string
 }): Promise<Record<string, unknown> | undefined> {
   const result = await getPool().query(
-    `SELECT cursor_json
-     FROM mcp_app.integration_sync_cursors
+    `SELECT cursor
+     FROM integrations.sync_cursors
      WHERE tenant_id = $1 AND connection_id = $2 AND resource = $3 AND cursor_key = $4
      LIMIT 1`,
     [input.tenantId, input.connectionId, input.resource, input.cursorKey || 'default'],
   )
-  const row = result.rows[0] as { cursor_json?: unknown } | undefined
-  return row ? asRecord(row.cursor_json) : undefined
+  const row = result.rows[0] as { cursor?: unknown } | undefined
+  return row ? asRecord(row.cursor) : undefined
 }
 
 export async function writeIntegrationCursor(input: {
@@ -776,14 +776,14 @@ export async function writeIntegrationCursor(input: {
   cursorKey?: string
 }) {
   await getPool().query(
-    `INSERT INTO mcp_app.integration_sync_cursors
-      (tenant_id, connection_id, resource, cursor_key, cursor_value, cursor_json, last_synced_at, updated_at)
+    `INSERT INTO integrations.sync_cursors
+      (tenant_id, connection_id, resource, cursor_key, cursor_value, cursor, last_synced_at, updated_at)
      VALUES
       ($1, $2, $3, $4, $5, $6::jsonb, now(), now())
      ON CONFLICT (tenant_id, connection_id, resource, cursor_key)
      DO UPDATE SET
        cursor_value = EXCLUDED.cursor_value,
-       cursor_json = EXCLUDED.cursor_json,
+       cursor = EXCLUDED.cursor,
        last_synced_at = now(),
        updated_at = now()`,
     [
@@ -805,11 +805,11 @@ export async function updateConnectionSecret(input: {
   metadata?: Record<string, unknown>
 }) {
   await getPool().query(
-    `UPDATE mcp_app.integration_connections
+    `UPDATE integrations.connections
      SET
        secret_ref = $3,
        status = $4,
-       metadata_json = metadata_json || $5::jsonb,
+       metadata = metadata || $5::jsonb,
        updated_at = now()
      WHERE id = $1 AND tenant_id = $2`,
     [
@@ -832,8 +832,8 @@ export async function createIntegrationEvent(input: {
   metadata?: Record<string, unknown>
 }) {
   await getPool().query(
-    `INSERT INTO mcp_app.integration_events
-      (tenant_id, connection_id, event_type, severity, actor, message, metadata_json)
+    `INSERT INTO integrations.events
+      (tenant_id, connection_id, event_type, severity, actor, message, metadata)
      VALUES
       ($1, $2, $3, $4, $5, $6, $7::jsonb)`,
     [
@@ -855,8 +855,8 @@ export async function updateConnectionStatus(input: {
   metadata?: Record<string, unknown>
 }): Promise<{ ok: boolean; mode: 'postgres' }> {
   await getPool().query(
-    `UPDATE mcp_app.integration_connections
-     SET status = $3, metadata_json = metadata_json || $4::jsonb, updated_at = now()
+    `UPDATE integrations.connections
+     SET status = $3, metadata = metadata || $4::jsonb, updated_at = now()
      WHERE id = $1 AND tenant_id = $2`,
     [input.connectionId, input.tenantId, input.status, JSON.stringify(input.metadata || {})],
   )

@@ -4960,7 +4960,7 @@ __export(index_exports, {
 module.exports = __toCommonJS(index_exports);
 var import_node_http = require("node:http");
 
-// src/products/integracoes/cloud/src/lib/oauth.ts
+// src/products/integracoes/cloud/src/oauth/oauth.ts
 var import_node_crypto = require("node:crypto");
 
 // src/products/integracoes/cloud/src/config/gcpConfig.ts
@@ -5152,7 +5152,7 @@ async function writeConnectionCredentialsSecret(input) {
   return writeSecret(`${input.tenantId}-${input.connectionId}-credentials`, input.value);
 }
 
-// src/products/integracoes/cloud/src/lib/oauth.ts
+// src/products/integracoes/cloud/src/oauth/oauth.ts
 function base64UrlEncode(value) {
   return Buffer.from(value, "utf8").toString("base64url");
 }
@@ -5336,7 +5336,7 @@ async function claimDueScheduledConnections(input) {
   const result = await getPool().query(
     `WITH due_connections AS (
        SELECT id, tenant_id
-       FROM mcp_app.integration_connections
+       FROM integrations.connections
        WHERE
          sync_enabled = true
          AND sync_frequency = ANY($5::text[])
@@ -5349,7 +5349,7 @@ async function claimDueScheduledConnections(input) {
        LIMIT $1
        FOR UPDATE SKIP LOCKED
      )
-     UPDATE mcp_app.integration_connections connections
+     UPDATE integrations.connections connections
      SET
        sync_lock_token = $2,
        sync_lock_owner = $3,
@@ -5386,11 +5386,11 @@ async function claimDueScheduledPipelines(input) {
   const result = await getPool().query(
     `WITH due_pipelines AS (
        SELECT pipelines.id, pipelines.tenant_id
-       FROM mcp_app.integration_pipelines pipelines
-       JOIN mcp_app.integration_connections connections
+       FROM integrations.pipelines pipelines
+       JOIN integrations.connections connections
          ON connections.id = pipelines.source_connection_id
         AND connections.tenant_id = pipelines.tenant_id
-       JOIN mcp_app.integration_destinations destinations
+       JOIN integrations.destinations destinations
          ON destinations.id = pipelines.destination_id
         AND destinations.tenant_id = pipelines.tenant_id
        WHERE
@@ -5407,17 +5407,17 @@ async function claimDueScheduledPipelines(input) {
        LIMIT $1
        FOR UPDATE SKIP LOCKED
      )
-     UPDATE mcp_app.integration_pipelines pipelines
+     UPDATE integrations.pipelines pipelines
      SET
        sync_lock_token = $2,
        sync_lock_owner = $3,
        sync_locked_until = now() + make_interval(secs => $4),
        updated_at = now()
      FROM due_pipelines
-     JOIN mcp_app.integration_connections connections
+     JOIN integrations.connections connections
        ON connections.id = (
          SELECT source_connection_id
-         FROM mcp_app.integration_pipelines
+         FROM integrations.pipelines
          WHERE id = due_pipelines.id AND tenant_id = due_pipelines.tenant_id
        )
       AND connections.tenant_id = due_pipelines.tenant_id
@@ -5433,7 +5433,7 @@ async function claimDueScheduledPipelines(input) {
        pipelines.selected_resources,
        pipelines.sync_frequency,
        pipelines.next_sync_at,
-       pipelines.metadata_json,
+       pipelines.metadata,
        connections.provider`,
     [
       input.limit,
@@ -5453,14 +5453,14 @@ async function claimDueScheduledPipelines(input) {
     selectedResources: asStringArray(row.selected_resources),
     syncFrequency: String(row.sync_frequency || ""),
     nextSyncAt: row.next_sync_at == null ? null : new Date(row.next_sync_at).toISOString(),
-    metadata: asRecord(row.metadata_json),
+    metadata: asRecord(row.metadata),
     provider: String(row.provider || "")
   }));
 }
 async function createQueuedCloudSyncRun(input) {
   const result = await getPool().query(
-    `INSERT INTO mcp_app.integration_sync_runs
-      (tenant_id, connection_id, pipeline_id, destination_id, trigger, status, started_at, finished_at, records_in, records_updated, records_failed, metadata_json)
+    `INSERT INTO integrations.sync_runs
+      (tenant_id, connection_id, pipeline_id, destination_id, trigger, status, started_at, finished_at, records_in, records_updated, records_failed, metadata)
      VALUES
       ($1, $2, $3, $4, 'scheduled', 'queued', NULL, NULL, 0, 0, 0, $5::jsonb)
      RETURNING id::text, status`,
@@ -5499,12 +5499,12 @@ async function createQueuedCloudSyncRun(input) {
 }
 async function failQueuedCloudSyncRun(input) {
   await getPool().query(
-    `UPDATE mcp_app.integration_sync_runs
+    `UPDATE integrations.sync_runs
      SET
        status = 'error',
        finished_at = now(),
        error_message = $4,
-       metadata_json = metadata_json || $5::jsonb
+       metadata = metadata || $5::jsonb
      WHERE id = $1
        AND tenant_id = $2
        AND connection_id = $3
@@ -5522,13 +5522,13 @@ async function failQueuedCloudSyncRun(input) {
 }
 async function completeScheduledConnectionDispatch(input) {
   await getPool().query(
-    `UPDATE mcp_app.integration_connections
+    `UPDATE integrations.connections
      SET
        next_sync_at = $4,
        sync_lock_token = NULL,
        sync_lock_owner = NULL,
        sync_locked_until = NULL,
-       metadata_json = metadata_json || $5::jsonb,
+       metadata = metadata || $5::jsonb,
        updated_at = now()
      WHERE id = $1
        AND tenant_id = $2
@@ -5548,13 +5548,13 @@ async function completeScheduledConnectionDispatch(input) {
 }
 async function completeScheduledPipelineDispatch(input) {
   await getPool().query(
-    `UPDATE mcp_app.integration_pipelines
+    `UPDATE integrations.pipelines
      SET
        next_sync_at = $4,
        sync_lock_token = NULL,
        sync_lock_owner = NULL,
        sync_locked_until = NULL,
-       metadata_json = metadata_json || $5::jsonb,
+       metadata = metadata || $5::jsonb,
        updated_at = now()
      WHERE id = $1
        AND tenant_id = $2
@@ -5574,13 +5574,13 @@ async function completeScheduledPipelineDispatch(input) {
 }
 async function releaseScheduledConnectionLock(input) {
   await getPool().query(
-    `UPDATE mcp_app.integration_connections
+    `UPDATE integrations.connections
      SET
        sync_lock_token = NULL,
        sync_lock_owner = NULL,
        sync_locked_until = NULL,
        last_error = COALESCE($4, last_error),
-       metadata_json = metadata_json || $5::jsonb,
+       metadata = metadata || $5::jsonb,
        updated_at = now()
      WHERE id = $1
        AND tenant_id = $2
@@ -5612,13 +5612,13 @@ async function releaseScheduledConnectionLock(input) {
 }
 async function releaseScheduledPipelineLock(input) {
   await getPool().query(
-    `UPDATE mcp_app.integration_pipelines
+    `UPDATE integrations.pipelines
      SET
        sync_lock_token = NULL,
        sync_lock_owner = NULL,
        sync_locked_until = NULL,
        last_error = COALESCE($4, last_error),
-       metadata_json = metadata_json || $5::jsonb,
+       metadata = metadata || $5::jsonb,
        updated_at = now()
      WHERE id = $1
        AND tenant_id = $2
@@ -5651,11 +5651,11 @@ async function releaseScheduledPipelineLock(input) {
 }
 async function updateConnectionSecret(input) {
   await getPool().query(
-    `UPDATE mcp_app.integration_connections
+    `UPDATE integrations.connections
      SET
        secret_ref = $3,
        status = $4,
-       metadata_json = metadata_json || $5::jsonb,
+       metadata = metadata || $5::jsonb,
        updated_at = now()
      WHERE id = $1 AND tenant_id = $2`,
     [
@@ -5669,8 +5669,8 @@ async function updateConnectionSecret(input) {
 }
 async function createIntegrationEvent(input) {
   await getPool().query(
-    `INSERT INTO mcp_app.integration_events
-      (tenant_id, connection_id, event_type, severity, actor, message, metadata_json)
+    `INSERT INTO integrations.events
+      (tenant_id, connection_id, event_type, severity, actor, message, metadata)
      VALUES
       ($1, $2, $3, $4, $5, $6, $7::jsonb)`,
     [
@@ -5686,8 +5686,8 @@ async function createIntegrationEvent(input) {
 }
 async function updateConnectionStatus(input) {
   await getPool().query(
-    `UPDATE mcp_app.integration_connections
-     SET status = $3, metadata_json = metadata_json || $4::jsonb, updated_at = now()
+    `UPDATE integrations.connections
+     SET status = $3, metadata = metadata || $4::jsonb, updated_at = now()
      WHERE id = $1 AND tenant_id = $2`,
     [input.connectionId, input.tenantId, input.status, JSON.stringify(input.metadata || {})]
   );

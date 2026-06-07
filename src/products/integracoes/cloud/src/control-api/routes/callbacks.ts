@@ -2,7 +2,7 @@ import type {
   ControlApiRequest,
   ControlApiResponse,
 } from '@/products/integracoes/cloud/src/control-api/server'
-import { exchangeOAuthCode, parseOAuthState } from '@/products/integracoes/cloud/src/lib/oauth'
+import { exchangeOAuthCode, parseOAuthState } from '@/products/integracoes/cloud/src/oauth'
 import { writeConnectionCredentialsSecret } from '@/products/integracoes/cloud/src/lib/secretManager'
 import {
   createIntegrationEvent,

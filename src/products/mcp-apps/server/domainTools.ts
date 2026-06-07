@@ -1,5 +1,9 @@
 import { runQuery } from '@/lib/postgres'
 import { DASHBOARD_WIDGET_RESOURCE_URI } from '@/products/mcp-apps/server/appResources'
+import { executeConnectedCrmTool } from '@/products/mcp-apps/server/domain-adapters/crm/connectedCrmService'
+import { CONNECTED_CRM_RESOURCES } from '@/products/mcp-apps/server/domain-adapters/crm/crmTypes'
+import { executeConnectedErpTool } from '@/products/mcp-apps/server/domain-adapters/erp/connectedErpService'
+import { CONNECTED_ERP_RESOURCES } from '@/products/mcp-apps/server/domain-adapters/erp/erpTypes'
 import type { CognitoMcpServerContext } from '@/products/mcp/server/cognitoMcpServer'
 import type { McpToolInputSchema } from '@/products/mcp/tools/dashboardSchemas'
 
@@ -483,6 +487,16 @@ const CRM_SCHEMA = createCrudSchema(
   'Resource canonico do CRM. Use crm/contas, crm/contatos, crm/leads, crm/oportunidades ou crm/atividades.',
 )
 
+const CONNECTED_ERP_SCHEMA = createCrudSchema(
+  [...CONNECTED_ERP_RESOURCES],
+  'Resource canonico de ERP conectado via /integracoes. Use clientes, fornecedores, contas-a-receber, contas-a-pagar, pedidos-venda, produtos ou estoque-atual.',
+)
+
+const CONNECTED_CRM_SCHEMA = createCrudSchema(
+  [...CONNECTED_CRM_RESOURCES],
+  'Resource canonico de CRM conectado via /integracoes. Use contas, contatos, leads, oportunidades ou atividades.',
+)
+
 const CRUD_OUTPUT_SCHEMA = {
   type: 'object',
   properties: {
@@ -505,6 +519,46 @@ const CRUD_OUTPUT_SCHEMA = {
     count: { type: 'integer' },
   },
   required: ['success', 'tool', 'action', 'resource', 'title', 'rows', 'columns', 'count'],
+  additionalProperties: true,
+} as const satisfies McpToolInputSchema
+
+const CONNECTED_DOMAIN_OUTPUT_SCHEMA = {
+  type: 'object',
+  properties: {
+    success: { type: 'boolean' },
+    tool: { type: 'string' },
+    action: { type: 'string' },
+    resource: { type: 'string' },
+    title: { type: 'string' },
+    rows: {
+      type: 'array',
+      items: {
+        type: 'object',
+        additionalProperties: true,
+      },
+    },
+    columns: {
+      type: 'array',
+      items: { type: 'string' },
+    },
+    count: { type: 'integer' },
+    providers: {
+      type: 'array',
+      items: {
+        type: 'object',
+        additionalProperties: true,
+      },
+    },
+    errors: {
+      type: 'array',
+      items: { type: 'string' },
+    },
+    warnings: {
+      type: 'array',
+      items: { type: 'string' },
+    },
+  },
+  required: ['success', 'tool', 'action', 'resource', 'title', 'rows', 'columns', 'count', 'providers'],
   additionalProperties: true,
 } as const satisfies McpToolInputSchema
 
@@ -762,7 +816,9 @@ const FINANCIAL_STATEMENT_OUTPUT_SCHEMA = {
 export const MCP_APP_DOMAIN_TOOL_NAMES = {
   erp: 'erp',
   erpAcoes: 'erp_acoes',
+  connectedErp: 'connected_erp',
   crm: 'crm',
+  connectedCrm: 'connected_crm',
   sql: 'sql',
   sqlExecution: 'sql_execution',
   financialStatement: 'financial_statement',
@@ -807,6 +863,30 @@ const CRM_DOMAIN_TOOL_DEFINITION = {
     'Consulta registros operacionais do CRM em modo leitura. Use para contas, contatos, leads, oportunidades, atividades e interacoes. Acoes suportadas: listar e ler. Recursos retornam colunas de negocio com nomes resolvidos por join quando disponivel: crm/contas, crm/contatos, crm/leads, crm/oportunidades, crm/atividades e crm/interacoes.',
   inputSchema: CRM_SCHEMA,
   outputSchema: CRUD_OUTPUT_SCHEMA,
+  securitySchemes: READ_SECURITY_SCHEMES,
+  annotations: READ_ONLY_ANNOTATIONS,
+  _meta: TOOL_META,
+} as const satisfies DomainToolDefinition
+
+const CONNECTED_ERP_DOMAIN_TOOL_DEFINITION = {
+  name: MCP_APP_DOMAIN_TOOL_NAMES.connectedErp,
+  title: 'Connected ERP',
+  description:
+    'Consulta ERPs conectados pelo cliente em /integracoes usando contrato canonico Cognito e adapters por provider. Mantem a tool erp atual separada. Acoes suportadas nesta fase: listar e ler.',
+  inputSchema: CONNECTED_ERP_SCHEMA,
+  outputSchema: CONNECTED_DOMAIN_OUTPUT_SCHEMA,
+  securitySchemes: READ_SECURITY_SCHEMES,
+  annotations: READ_ONLY_ANNOTATIONS,
+  _meta: TOOL_META,
+} as const satisfies DomainToolDefinition
+
+const CONNECTED_CRM_DOMAIN_TOOL_DEFINITION = {
+  name: MCP_APP_DOMAIN_TOOL_NAMES.connectedCrm,
+  title: 'Connected CRM',
+  description:
+    'Consulta CRMs conectados pelo cliente em /integracoes usando contrato canonico Cognito e adapters por provider. Mantem a tool crm atual separada. Acoes suportadas nesta fase: listar e ler.',
+  inputSchema: CONNECTED_CRM_SCHEMA,
+  outputSchema: CONNECTED_DOMAIN_OUTPUT_SCHEMA,
   securitySchemes: READ_SECURITY_SCHEMES,
   annotations: READ_ONLY_ANNOTATIONS,
   _meta: TOOL_META,
@@ -876,7 +956,9 @@ export function listMcpAppDomainToolDefinitions() {
   return [
     ERP_DOMAIN_TOOL_DEFINITION,
     ERP_ACOES_DOMAIN_TOOL_DEFINITION,
+    CONNECTED_ERP_DOMAIN_TOOL_DEFINITION,
     CRM_DOMAIN_TOOL_DEFINITION,
+    CONNECTED_CRM_DOMAIN_TOOL_DEFINITION,
     ECOMMERCE_DOMAIN_TOOL_DEFINITION,
     SQL_DOMAIN_TOOL_DEFINITION,
     FINANCIAL_STATEMENT_TOOL_DEFINITION,
@@ -888,7 +970,9 @@ export function listMcpAppDomainToolDefinitions() {
 export const MCP_APP_DOMAIN_TOOL_DEFINITIONS = [
   ERP_DOMAIN_TOOL_DEFINITION,
   ERP_ACOES_DOMAIN_TOOL_DEFINITION,
+  CONNECTED_ERP_DOMAIN_TOOL_DEFINITION,
   CRM_DOMAIN_TOOL_DEFINITION,
+  CONNECTED_CRM_DOMAIN_TOOL_DEFINITION,
   ECOMMERCE_DOMAIN_TOOL_DEFINITION,
   SQL_DOMAIN_TOOL_DEFINITION,
   FINANCIAL_STATEMENT_TOOL_DEFINITION,
@@ -4023,6 +4107,24 @@ async function callSqlExecution(
   }
 }
 
+async function callConnectedErp(args: unknown, context: CognitoMcpServerContext) {
+  const structuredContent = await executeConnectedErpTool(args, context)
+  return {
+    content: [{ type: 'text', text: JSON.stringify(structuredContent, null, 2) }],
+    structuredContent,
+    isError: !structuredContent.success,
+  }
+}
+
+async function callConnectedCrm(args: unknown, context: CognitoMcpServerContext) {
+  const structuredContent = await executeConnectedCrmTool(args, context)
+  return {
+    content: [{ type: 'text', text: JSON.stringify(structuredContent, null, 2) }],
+    structuredContent,
+    isError: !structuredContent.success,
+  }
+}
+
 export function isMcpAppDomainTool(name: string) {
   return MCP_APP_DOMAIN_TOOL_NAME_SET.has(name)
 }
@@ -4037,8 +4139,12 @@ export async function callMcpAppDomainTool(
       return callCrud(args, context, MCP_APP_DOMAIN_TOOL_NAMES.erp, ERP_ALLOWED_RESOURCES)
     case MCP_APP_DOMAIN_TOOL_NAMES.erpAcoes:
       return callErpAcoes(args, context)
+    case MCP_APP_DOMAIN_TOOL_NAMES.connectedErp:
+      return callConnectedErp(args, context)
     case MCP_APP_DOMAIN_TOOL_NAMES.crm:
       return callCrud(args, context, MCP_APP_DOMAIN_TOOL_NAMES.crm, CRM_ALLOWED_RESOURCES)
+    case MCP_APP_DOMAIN_TOOL_NAMES.connectedCrm:
+      return callConnectedCrm(args, context)
     case MCP_APP_DOMAIN_TOOL_NAMES.ecommerce:
       return callEcommerce(args, context)
     case MCP_APP_DOMAIN_TOOL_NAMES.sql:

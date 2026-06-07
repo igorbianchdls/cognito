@@ -3,7 +3,7 @@ import type {
   ControlApiResponse,
 } from '@/products/integracoes/cloud/src/control-api/server'
 import { validateProviderCredentials } from '@/products/integracoes/cloud/src/lib/credentials'
-import { buildOAuthAuthorizationUrl, createOAuthState } from '@/products/integracoes/cloud/src/lib/oauth'
+import { buildOAuthAuthorizationUrl, createOAuthState } from '@/products/integracoes/cloud/src/oauth'
 import { writeConnectionCredentialsSecret } from '@/products/integracoes/cloud/src/lib/secretManager'
 import { getCloudConnector } from '@/products/integracoes/cloud/src/providers/providerRegistry'
 import {

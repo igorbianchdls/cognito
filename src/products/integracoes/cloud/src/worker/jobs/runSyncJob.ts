@@ -1,6 +1,7 @@
 import type { IntegrationSyncTrigger } from '@/products/integracoes/shared/contracts/syncContracts'
 import { getCloudConnector } from '@/products/integracoes/cloud/src/providers/providerRegistry'
 import { readSecret } from '@/products/integracoes/cloud/src/lib/secretManager'
+import { refreshOAuthCredentialsIfNeeded } from '@/products/integracoes/cloud/src/oauth/credentials'
 import { writeRowsToDestination } from '@/products/integracoes/cloud/src/destinations/destinationWriterRegistry'
 import {
   createIntegrationEvent,
@@ -146,7 +147,13 @@ export async function runSyncJob(input: RunSyncJobInput): Promise<RunSyncJobOutp
   const resourceSummaries: Record<string, unknown>[] = []
 
   try {
-    const credentials = parseCredentials(connection.secretRef ? await readSecret(connection.secretRef) : null)
+    const rawCredentials = parseCredentials(connection.secretRef ? await readSecret(connection.secretRef) : null)
+    const credentials = await refreshOAuthCredentialsIfNeeded({
+      tenantId: input.tenantId,
+      connectionId: connection.id,
+      provider: connection.provider,
+      credentials: rawCredentials,
+    })
 
     for (const resource of resources) {
       await createIntegrationEvent({

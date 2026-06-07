@@ -8385,6 +8385,11 @@ function getIntegrationsCloudConfig() {
     }
   };
 }
+function getSecretName(parts) {
+  const config = getIntegrationsCloudConfig();
+  const secretId = [config.secrets.prefix, ...parts].map((part) => String(part).trim().toLowerCase().replace(/[^a-z0-9_-]+/g, "-").replace(/^-+|-+$/g, "")).filter(Boolean).join("-");
+  return `projects/${config.projectId}/secrets/${secretId}`;
+}
 
 // src/products/integracoes/cloud/src/lib/googleAuth.ts
 async function getCloudAccessToken() {
@@ -8433,6 +8438,9 @@ async function authorizedJsonRequest(url, init = {}) {
 }
 
 // src/products/integracoes/cloud/src/lib/secretManager.ts
+function encodeBase64(value) {
+  return Buffer.from(value, "utf8").toString("base64");
+}
 function decodeBase64(value) {
   return Buffer.from(value, "base64").toString("utf8");
 }
@@ -8442,6 +8450,28 @@ function normalizeSecretVersionRef(secretRef) {
   if (ref.includes("/versions/")) return ref;
   return `${ref.replace(/\/+$/, "")}/versions/latest`;
 }
+async function ensureSecret(secretName) {
+  const segments = secretName.split("/secrets/");
+  const parent = segments[0];
+  const secretId = segments[1];
+  if (!parent || !secretId) throw new Error(`Secret name invalido: ${secretName}`);
+  const existing = await authorizedJsonRequest(
+    `https://secretmanager.googleapis.com/v1/${secretName}`,
+    { method: "GET", allowNotFound: true }
+  );
+  if (existing.ok) return;
+  await authorizedJsonRequest(
+    `https://secretmanager.googleapis.com/v1/${parent}/secrets?secretId=${encodeURIComponent(secretId)}`,
+    {
+      method: "POST",
+      body: JSON.stringify({
+        replication: {
+          automatic: {}
+        }
+      })
+    }
+  );
+}
 async function readSecret(secretRef) {
   const response = await authorizedJsonRequest(
     `https://secretmanager.googleapis.com/v1/${normalizeSecretVersionRef(secretRef)}:access`,
@@ -8449,6 +8479,547 @@ async function readSecret(secretRef) {
   );
   const encoded = response.payload?.payload?.data;
   return encoded ? decodeBase64(encoded) : null;
+}
+async function writeSecret(name, value) {
+  const secretName = name.startsWith("projects/") ? name : getSecretName([name]);
+  await ensureSecret(secretName);
+  await authorizedJsonRequest(
+    `https://secretmanager.googleapis.com/v1/${secretName}:addVersion`,
+    {
+      method: "POST",
+      body: JSON.stringify({
+        payload: {
+          data: encodeBase64(value)
+        }
+      })
+    }
+  );
+  return {
+    secretRef: secretName,
+    mode: "secret_manager"
+  };
+}
+async function writeConnectionCredentialsSecret(input) {
+  return writeSecret(`${input.tenantId}-${input.connectionId}-credentials`, input.value);
+}
+
+// node_modules/.pnpm/pg@8.16.3/node_modules/pg/esm/index.mjs
+var import_lib = __toESM(require_lib2(), 1);
+var Client = import_lib.default.Client;
+var Pool = import_lib.default.Pool;
+var Connection = import_lib.default.Connection;
+var types = import_lib.default.types;
+var Query = import_lib.default.Query;
+var DatabaseError = import_lib.default.DatabaseError;
+var escapeIdentifier = import_lib.default.escapeIdentifier;
+var escapeLiteral = import_lib.default.escapeLiteral;
+var Result = import_lib.default.Result;
+var TypeOverrides = import_lib.default.TypeOverrides;
+var defaults = import_lib.default.defaults;
+
+// src/products/integracoes/cloud/src/lib/postgresStatus.ts
+var pool = null;
+function getDatabaseUrl() {
+  return process.env.SUPABASE_DB_URL?.trim() || process.env.DATABASE_URL?.trim() || "";
+}
+function getPool() {
+  const connectionString = getDatabaseUrl();
+  if (!connectionString) {
+    throw new Error("SUPABASE_DB_URL ou DATABASE_URL precisa estar configurada no Cloud Run.");
+  }
+  if (!pool) {
+    pool = new Pool({
+      connectionString,
+      max: Number(process.env.POSTGRES_POOL_MAX || 3)
+    });
+  }
+  return pool;
+}
+function asStringArray(value) {
+  if (Array.isArray(value)) return value.map((item) => String(item || "").trim()).filter(Boolean);
+  if (typeof value === "string") {
+    try {
+      return asStringArray(JSON.parse(value));
+    } catch {
+      return [];
+    }
+  }
+  return [];
+}
+function asRecord2(value) {
+  if (value && typeof value === "object" && !Array.isArray(value)) return value;
+  if (typeof value === "string") {
+    try {
+      const parsed = JSON.parse(value);
+      return parsed && typeof parsed === "object" && !Array.isArray(parsed) ? parsed : {};
+    } catch {
+      return {};
+    }
+  }
+  return {};
+}
+function normalizeStatus(value) {
+  if (value === "success" || value === "warning" || value === "error" || value === "cancelled") return value;
+  if (value === "running" || value === "queued") return value;
+  return "error";
+}
+function eventForStatus(status) {
+  if (status === "success" || status === "warning") return "sync.completed";
+  if (status === "error") return "sync.failed";
+  return "system.note";
+}
+async function getCloudIntegrationConnection(input) {
+  const result = await getPool().query(
+    `SELECT *
+     FROM integrations.connections
+     WHERE id = $1 AND tenant_id = $2
+     LIMIT 1`,
+    [input.connectionId, input.tenantId]
+  );
+  const row = result.rows[0];
+  if (!row) return null;
+  return {
+    id: String(row.id),
+    tenantId: Number(row.tenant_id),
+    domain: String(row.domain || ""),
+    provider: String(row.provider || ""),
+    status: String(row.status || ""),
+    displayName: String(row.display_name || ""),
+    secretRef: row.secret_ref == null ? null : String(row.secret_ref),
+    selectedResources: asStringArray(row.selected_resources),
+    metadata: asRecord2(row.metadata)
+  };
+}
+async function getCloudIntegrationDestination(input) {
+  const result = await getPool().query(
+    `SELECT *
+     FROM integrations.destinations
+     WHERE id = $1 AND tenant_id = $2
+     LIMIT 1`,
+    [input.destinationId, input.tenantId]
+  );
+  const row = result.rows[0];
+  if (!row) return null;
+  return {
+    id: String(row.id),
+    tenantId: Number(row.tenant_id),
+    type: String(row.type || ""),
+    name: String(row.name || ""),
+    status: String(row.status || ""),
+    config: asRecord2(row.config),
+    secretRef: row.secret_ref == null ? null : String(row.secret_ref),
+    metadata: asRecord2(row.metadata)
+  };
+}
+async function getCloudIntegrationPipeline(input) {
+  const result = await getPool().query(
+    `SELECT *
+     FROM integrations.pipelines
+     WHERE id = $1 AND tenant_id = $2
+     LIMIT 1`,
+    [input.pipelineId, input.tenantId]
+  );
+  const row = result.rows[0];
+  if (!row) return null;
+  return {
+    id: String(row.id),
+    tenantId: Number(row.tenant_id),
+    sourceConnectionId: String(row.source_connection_id),
+    destinationId: String(row.destination_id),
+    name: String(row.name || ""),
+    status: String(row.status || ""),
+    selectedResources: asStringArray(row.selected_resources),
+    syncFrequency: String(row.sync_frequency || ""),
+    nextSyncAt: row.next_sync_at == null ? null : new Date(row.next_sync_at).toISOString(),
+    metadata: asRecord2(row.metadata)
+  };
+}
+async function startCloudSyncRun(input) {
+  if (input.runId) {
+    const result2 = await getPool().query(
+      `UPDATE integrations.sync_runs
+       SET
+         status = 'running',
+         started_at = COALESCE(started_at, now()),
+         metadata = metadata || $4::jsonb
+       WHERE id = $1 AND tenant_id = $2 AND connection_id = $3
+       RETURNING id::text, status`,
+      [
+        input.runId,
+        input.tenantId,
+        input.connectionId,
+        JSON.stringify({
+          mode: "gcp_worker",
+          pipelineId: input.pipelineId || null,
+          destinationId: input.destinationId || null,
+          resources: input.resources,
+          requestedBy: input.requestedBy || "worker",
+          workerStartedAt: (/* @__PURE__ */ new Date()).toISOString()
+        })
+      ]
+    );
+    const row = result2.rows[0];
+    if (row?.id) {
+      return {
+        id: String(row.id),
+        status: String(row.status || "running")
+      };
+    }
+  }
+  const result = await getPool().query(
+    `INSERT INTO integrations.sync_runs
+      (tenant_id, connection_id, pipeline_id, destination_id, trigger, status, started_at, metadata)
+     VALUES
+      ($1, $2, $3, $4, $5, 'running', now(), $6::jsonb)
+     RETURNING id::text, status`,
+    [
+      input.tenantId,
+      input.connectionId,
+      input.pipelineId || null,
+      input.destinationId || null,
+      input.trigger,
+      JSON.stringify({
+        mode: "gcp_worker",
+        pipelineId: input.pipelineId || null,
+        destinationId: input.destinationId || null,
+        resources: input.resources,
+        requestedBy: input.requestedBy || "worker"
+      })
+    ]
+  );
+  await createIntegrationEvent({
+    tenantId: input.tenantId,
+    connectionId: input.connectionId,
+    eventType: "sync.requested",
+    severity: "info",
+    actor: input.requestedBy || "integrations-worker",
+    message: "Sincronizacao enviada ao worker GCP.",
+    metadata: { resources: input.resources, trigger: input.trigger }
+  });
+  return {
+    id: String(result.rows[0]?.id),
+    status: String(result.rows[0]?.status)
+  };
+}
+async function finishCloudSyncRun(input) {
+  const status = normalizeStatus(input.status);
+  await getPool().query(
+    `UPDATE integrations.sync_runs
+     SET
+       status = $4,
+       finished_at = now(),
+       records_in = $5,
+       records_updated = $6,
+       records_failed = $7,
+       error_message = $8,
+       metadata = metadata || $9::jsonb
+     WHERE id = $1 AND tenant_id = $2 AND connection_id = $3`,
+    [
+      input.runId,
+      input.tenantId,
+      input.connectionId,
+      status,
+      input.recordsIn,
+      input.recordsUpdated,
+      input.recordsFailed,
+      input.errorMessage || null,
+      JSON.stringify(input.metadata || {})
+    ]
+  );
+  await getPool().query(
+    `UPDATE integrations.connections
+     SET
+       last_sync_at = now(),
+       last_success_at = CASE WHEN $3 IN ('success', 'warning') THEN now() ELSE last_success_at END,
+       last_error = CASE WHEN $3 IN ('success', 'warning') THEN NULL ELSE $4 END,
+       records_synced = CASE WHEN $3 IN ('success', 'warning') THEN records_synced + $5 ELSE records_synced END,
+       status = CASE
+         WHEN $3 = 'success' THEN 'connected'
+         WHEN $3 = 'warning' THEN 'warning'
+         WHEN $3 = 'error' THEN 'error'
+         ELSE status
+       END,
+       updated_at = now()
+     WHERE id = $1 AND tenant_id = $2`,
+    [input.connectionId, input.tenantId, status, input.errorMessage || null, input.recordsUpdated]
+  );
+  await createIntegrationEvent({
+    tenantId: input.tenantId,
+    connectionId: input.connectionId,
+    eventType: eventForStatus(status),
+    severity: status === "error" ? "error" : status === "warning" ? "warning" : "info",
+    actor: "integrations-worker",
+    message: status === "error" ? "Sincronizacao GCP falhou." : "Sincronizacao GCP concluida.",
+    metadata: {
+      runId: input.runId,
+      recordsIn: input.recordsIn,
+      recordsUpdated: input.recordsUpdated,
+      recordsFailed: input.recordsFailed,
+      errorMessage: input.errorMessage || null,
+      ...input.metadata || {}
+    }
+  });
+  if (input.pipelineId) {
+    await getPool().query(
+      `UPDATE integrations.pipelines
+       SET
+         last_sync_at = now(),
+         last_success_at = CASE WHEN $3 IN ('success', 'warning') THEN now() ELSE last_success_at END,
+         last_error = CASE WHEN $3 IN ('success', 'warning') THEN NULL ELSE $4 END,
+         records_synced = CASE WHEN $3 IN ('success', 'warning') THEN records_synced + $5 ELSE records_synced END,
+         status = CASE
+           WHEN $3 IN ('success', 'warning') THEN 'active'
+           WHEN $3 = 'error' THEN 'error'
+           ELSE status
+         END,
+         updated_at = now()
+       WHERE id = $1 AND tenant_id = $2`,
+      [input.pipelineId, input.tenantId, status, input.errorMessage || null, input.recordsUpdated]
+    );
+  }
+}
+async function readIntegrationCursor(input) {
+  const result = await getPool().query(
+    `SELECT cursor
+     FROM integrations.sync_cursors
+     WHERE tenant_id = $1 AND connection_id = $2 AND resource = $3 AND cursor_key = $4
+     LIMIT 1`,
+    [input.tenantId, input.connectionId, input.resource, input.cursorKey || "default"]
+  );
+  const row = result.rows[0];
+  return row ? asRecord2(row.cursor) : void 0;
+}
+async function writeIntegrationCursor(input) {
+  await getPool().query(
+    `INSERT INTO integrations.sync_cursors
+      (tenant_id, connection_id, resource, cursor_key, cursor_value, cursor, last_synced_at, updated_at)
+     VALUES
+      ($1, $2, $3, $4, $5, $6::jsonb, now(), now())
+     ON CONFLICT (tenant_id, connection_id, resource, cursor_key)
+     DO UPDATE SET
+       cursor_value = EXCLUDED.cursor_value,
+       cursor = EXCLUDED.cursor,
+       last_synced_at = now(),
+       updated_at = now()`,
+    [
+      input.tenantId,
+      input.connectionId,
+      input.resource,
+      input.cursorKey || "default",
+      input.cursor.updatedAt || input.cursor.updated_at || input.cursor.next || null,
+      JSON.stringify(input.cursor)
+    ]
+  );
+}
+async function updateConnectionSecret(input) {
+  await getPool().query(
+    `UPDATE integrations.connections
+     SET
+       secret_ref = $3,
+       status = $4,
+       metadata = metadata || $5::jsonb,
+       updated_at = now()
+     WHERE id = $1 AND tenant_id = $2`,
+    [
+      input.connectionId,
+      input.tenantId,
+      input.secretRef,
+      input.status,
+      JSON.stringify(input.metadata || {})
+    ]
+  );
+}
+async function createIntegrationEvent(input) {
+  await getPool().query(
+    `INSERT INTO integrations.events
+      (tenant_id, connection_id, event_type, severity, actor, message, metadata)
+     VALUES
+      ($1, $2, $3, $4, $5, $6, $7::jsonb)`,
+    [
+      input.tenantId,
+      input.connectionId || null,
+      input.eventType,
+      input.severity || "info",
+      input.actor || null,
+      input.message,
+      JSON.stringify(input.metadata || {})
+    ]
+  );
+}
+async function updateConnectionStatus(input) {
+  await getPool().query(
+    `UPDATE integrations.connections
+     SET status = $3, metadata = metadata || $4::jsonb, updated_at = now()
+     WHERE id = $1 AND tenant_id = $2`,
+    [input.connectionId, input.tenantId, input.status, JSON.stringify(input.metadata || {})]
+  );
+  return { ok: true, mode: "postgres" };
+}
+
+// src/products/integracoes/cloud/src/oauth/oauth.ts
+function envName(provider, suffix) {
+  return `INTEGRATIONS_OAUTH_${provider.toUpperCase().replace(/[^A-Z0-9]+/g, "_")}_${suffix}`;
+}
+function normalizeProviderForSecret(provider) {
+  return provider.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "");
+}
+function providerSecretRef(provider, suffix) {
+  const config = getIntegrationsCloudConfig();
+  const providerPart = normalizeProviderForSecret(provider);
+  return `projects/${config.projectId}/secrets/${config.secrets.prefix}-oauth-${providerPart}-${suffix}`;
+}
+async function envOrSecret(provider, envSuffix, secretSuffix) {
+  const envValue = process.env[envName(provider, envSuffix)]?.trim();
+  if (envValue) return envValue;
+  return (await readSecret(providerSecretRef(provider, secretSuffix)))?.trim() || "";
+}
+async function getOAuthProviderConfig(provider) {
+  return {
+    clientId: await envOrSecret(provider, "CLIENT_ID", "client-id"),
+    clientSecret: await envOrSecret(provider, "CLIENT_SECRET", "client-secret"),
+    authorizeUrl: await envOrSecret(provider, "AUTHORIZE_URL", "authorize-url"),
+    tokenUrl: await envOrSecret(provider, "TOKEN_URL", "token-url"),
+    redirectUri: process.env[envName(provider, "REDIRECT_URI")]?.trim() || process.env.INTEGRATIONS_OAUTH_REDIRECT_URI?.trim() || "",
+    scopes: await envOrSecret(provider, "SCOPES", "scopes")
+  };
+}
+function mapTokenResponse(payload) {
+  if (!payload.access_token) return null;
+  return {
+    accessToken: payload.access_token,
+    refreshToken: payload.refresh_token,
+    expiresAt: payload.expires_in ? new Date(Date.now() + payload.expires_in * 1e3).toISOString() : void 0,
+    tokenType: payload.token_type,
+    scope: payload.scope
+  };
+}
+async function postTokenRequest(provider, body2) {
+  const config = await getOAuthProviderConfig(provider);
+  if (!config.clientId || !config.clientSecret || !config.tokenUrl) {
+    throw new Error(`OAuth ${provider} nao configurado.`);
+  }
+  body2.set("client_id", config.clientId);
+  body2.set("client_secret", config.clientSecret);
+  const response = await fetch(config.tokenUrl, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/x-www-form-urlencoded"
+    },
+    body: body2,
+    signal: AbortSignal.timeout(Number(process.env.INTEGRATIONS_OAUTH_TIMEOUT_MS || 3e4))
+  });
+  const payload = await response.json().catch(() => null);
+  if (!response.ok) {
+    throw new Error(`Falha OAuth ${provider}: ${response.status}`);
+  }
+  return payload ? mapTokenResponse(payload) : null;
+}
+async function refreshOAuthToken(provider, refreshToken) {
+  const body2 = new URLSearchParams();
+  body2.set("grant_type", "refresh_token");
+  body2.set("refresh_token", refreshToken);
+  return postTokenRequest(provider, body2);
+}
+
+// src/products/integracoes/cloud/src/oauth/credentials.ts
+function isRecord7(value) {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
+}
+function nonEmptyString7(value) {
+  return typeof value === "string" && value.trim().length > 0;
+}
+function getString(credentials, ...keys) {
+  for (const key of keys) {
+    const value = credentials[key];
+    if (nonEmptyString7(value)) return value.trim();
+  }
+  return void 0;
+}
+function shouldRefresh(credentials, refreshWindowMs) {
+  const refreshToken = getString(credentials, "refreshToken", "refresh_token");
+  if (!refreshToken) return false;
+  const expiresAtValue = getString(credentials, "expiresAt", "expires_at");
+  if (!expiresAtValue) return false;
+  const expiresAt = Date.parse(expiresAtValue);
+  if (!Number.isFinite(expiresAt)) return false;
+  return expiresAt - Date.now() <= refreshWindowMs;
+}
+function mergeTokenSet(credentials, refreshed) {
+  const refreshToken = refreshed.refreshToken || getString(credentials, "refreshToken", "refresh_token");
+  return {
+    ...credentials,
+    authType: credentials.authType || credentials.auth_type || "oauth2",
+    accessToken: refreshed.accessToken,
+    refreshToken,
+    expiresAt: refreshed.expiresAt || credentials.expiresAt || credentials.expires_at,
+    tokenType: refreshed.tokenType || credentials.tokenType || credentials.token_type,
+    scope: refreshed.scope || credentials.scope
+  };
+}
+async function refreshOAuthCredentialsIfNeeded(input) {
+  if (!isRecord7(input.credentials)) return input.credentials;
+  const refreshWindowMs = input.refreshWindowMs ?? Number(process.env.INTEGRATIONS_OAUTH_REFRESH_WINDOW_MS || 10 * 60 * 1e3);
+  if (!shouldRefresh(input.credentials, refreshWindowMs)) return input.credentials;
+  const refreshToken = getString(input.credentials, "refreshToken", "refresh_token");
+  if (!refreshToken) return input.credentials;
+  try {
+    const refreshed = await refreshOAuthToken(input.provider, refreshToken);
+    if (!refreshed?.accessToken) {
+      throw new Error(`OAuth ${input.provider} nao retornou access token no refresh.`);
+    }
+    const merged = mergeTokenSet(input.credentials, refreshed);
+    const secret = await writeConnectionCredentialsSecret({
+      tenantId: input.tenantId,
+      connectionId: input.connectionId,
+      value: JSON.stringify(merged)
+    });
+    await updateConnectionSecret({
+      tenantId: input.tenantId,
+      connectionId: input.connectionId,
+      secretRef: secret.secretRef,
+      status: "connected",
+      metadata: {
+        oauthRefreshedAt: (/* @__PURE__ */ new Date()).toISOString(),
+        tokenExpiresAt: merged.expiresAt || null
+      }
+    });
+    await createIntegrationEvent({
+      tenantId: input.tenantId,
+      connectionId: input.connectionId,
+      eventType: "connection.oauth.refreshed",
+      actor: "integrations-worker",
+      message: "Token OAuth renovado antes do sync.",
+      metadata: {
+        provider: input.provider,
+        tokenExpiresAt: merged.expiresAt || null
+      }
+    });
+    return merged;
+  } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : "Falha ao renovar token OAuth.";
+    await updateConnectionStatus({
+      tenantId: input.tenantId,
+      connectionId: input.connectionId,
+      status: "pending_auth",
+      metadata: {
+        oauthRefreshFailedAt: (/* @__PURE__ */ new Date()).toISOString(),
+        oauthRefreshError: errorMessage
+      }
+    });
+    await createIntegrationEvent({
+      tenantId: input.tenantId,
+      connectionId: input.connectionId,
+      eventType: "connection.oauth.refresh_failed",
+      severity: "error",
+      actor: "integrations-worker",
+      message: "Falha ao renovar token OAuth. Reautenticacao necessaria.",
+      metadata: {
+        provider: input.provider,
+        errorMessage
+      }
+    });
+    throw new Error(errorMessage);
+  }
 }
 
 // src/products/integracoes/cloud/src/lib/bigquery.ts
@@ -8621,332 +9192,6 @@ async function writeRowsToDestination(input) {
   return writer.writeRows(input);
 }
 
-// node_modules/.pnpm/pg@8.16.3/node_modules/pg/esm/index.mjs
-var import_lib = __toESM(require_lib2(), 1);
-var Client = import_lib.default.Client;
-var Pool = import_lib.default.Pool;
-var Connection = import_lib.default.Connection;
-var types = import_lib.default.types;
-var Query = import_lib.default.Query;
-var DatabaseError = import_lib.default.DatabaseError;
-var escapeIdentifier = import_lib.default.escapeIdentifier;
-var escapeLiteral = import_lib.default.escapeLiteral;
-var Result = import_lib.default.Result;
-var TypeOverrides = import_lib.default.TypeOverrides;
-var defaults = import_lib.default.defaults;
-
-// src/products/integracoes/cloud/src/lib/postgresStatus.ts
-var pool = null;
-function getDatabaseUrl() {
-  return process.env.SUPABASE_DB_URL?.trim() || process.env.DATABASE_URL?.trim() || "";
-}
-function getPool() {
-  const connectionString = getDatabaseUrl();
-  if (!connectionString) {
-    throw new Error("SUPABASE_DB_URL ou DATABASE_URL precisa estar configurada no Cloud Run.");
-  }
-  if (!pool) {
-    pool = new Pool({
-      connectionString,
-      max: Number(process.env.POSTGRES_POOL_MAX || 3)
-    });
-  }
-  return pool;
-}
-function asStringArray(value) {
-  if (Array.isArray(value)) return value.map((item) => String(item || "").trim()).filter(Boolean);
-  if (typeof value === "string") {
-    try {
-      return asStringArray(JSON.parse(value));
-    } catch {
-      return [];
-    }
-  }
-  return [];
-}
-function asRecord2(value) {
-  if (value && typeof value === "object" && !Array.isArray(value)) return value;
-  if (typeof value === "string") {
-    try {
-      const parsed = JSON.parse(value);
-      return parsed && typeof parsed === "object" && !Array.isArray(parsed) ? parsed : {};
-    } catch {
-      return {};
-    }
-  }
-  return {};
-}
-function normalizeStatus(value) {
-  if (value === "success" || value === "warning" || value === "error" || value === "cancelled") return value;
-  if (value === "running" || value === "queued") return value;
-  return "error";
-}
-function eventForStatus(status) {
-  if (status === "success" || status === "warning") return "sync.completed";
-  if (status === "error") return "sync.failed";
-  return "system.note";
-}
-async function getCloudIntegrationConnection(input) {
-  const result = await getPool().query(
-    `SELECT *
-     FROM mcp_app.integration_connections
-     WHERE id = $1 AND tenant_id = $2
-     LIMIT 1`,
-    [input.connectionId, input.tenantId]
-  );
-  const row = result.rows[0];
-  if (!row) return null;
-  return {
-    id: String(row.id),
-    tenantId: Number(row.tenant_id),
-    domain: String(row.domain || ""),
-    provider: String(row.provider || ""),
-    status: String(row.status || ""),
-    displayName: String(row.display_name || ""),
-    secretRef: row.secret_ref == null ? null : String(row.secret_ref),
-    selectedResources: asStringArray(row.selected_resources),
-    metadata: asRecord2(row.metadata_json)
-  };
-}
-async function getCloudIntegrationDestination(input) {
-  const result = await getPool().query(
-    `SELECT *
-     FROM mcp_app.integration_destinations
-     WHERE id = $1 AND tenant_id = $2
-     LIMIT 1`,
-    [input.destinationId, input.tenantId]
-  );
-  const row = result.rows[0];
-  if (!row) return null;
-  return {
-    id: String(row.id),
-    tenantId: Number(row.tenant_id),
-    type: String(row.type || ""),
-    name: String(row.name || ""),
-    status: String(row.status || ""),
-    config: asRecord2(row.config_json),
-    secretRef: row.secret_ref == null ? null : String(row.secret_ref),
-    metadata: asRecord2(row.metadata_json)
-  };
-}
-async function getCloudIntegrationPipeline(input) {
-  const result = await getPool().query(
-    `SELECT *
-     FROM mcp_app.integration_pipelines
-     WHERE id = $1 AND tenant_id = $2
-     LIMIT 1`,
-    [input.pipelineId, input.tenantId]
-  );
-  const row = result.rows[0];
-  if (!row) return null;
-  return {
-    id: String(row.id),
-    tenantId: Number(row.tenant_id),
-    sourceConnectionId: String(row.source_connection_id),
-    destinationId: String(row.destination_id),
-    name: String(row.name || ""),
-    status: String(row.status || ""),
-    selectedResources: asStringArray(row.selected_resources),
-    syncFrequency: String(row.sync_frequency || ""),
-    nextSyncAt: row.next_sync_at == null ? null : new Date(row.next_sync_at).toISOString(),
-    metadata: asRecord2(row.metadata_json)
-  };
-}
-async function startCloudSyncRun(input) {
-  if (input.runId) {
-    const result2 = await getPool().query(
-      `UPDATE mcp_app.integration_sync_runs
-       SET
-         status = 'running',
-         started_at = COALESCE(started_at, now()),
-         metadata_json = metadata_json || $4::jsonb
-       WHERE id = $1 AND tenant_id = $2 AND connection_id = $3
-       RETURNING id::text, status`,
-      [
-        input.runId,
-        input.tenantId,
-        input.connectionId,
-        JSON.stringify({
-          mode: "gcp_worker",
-          pipelineId: input.pipelineId || null,
-          destinationId: input.destinationId || null,
-          resources: input.resources,
-          requestedBy: input.requestedBy || "worker",
-          workerStartedAt: (/* @__PURE__ */ new Date()).toISOString()
-        })
-      ]
-    );
-    const row = result2.rows[0];
-    if (row?.id) {
-      return {
-        id: String(row.id),
-        status: String(row.status || "running")
-      };
-    }
-  }
-  const result = await getPool().query(
-    `INSERT INTO mcp_app.integration_sync_runs
-      (tenant_id, connection_id, pipeline_id, destination_id, trigger, status, started_at, metadata_json)
-     VALUES
-      ($1, $2, $3, $4, $5, 'running', now(), $6::jsonb)
-     RETURNING id::text, status`,
-    [
-      input.tenantId,
-      input.connectionId,
-      input.pipelineId || null,
-      input.destinationId || null,
-      input.trigger,
-      JSON.stringify({
-        mode: "gcp_worker",
-        pipelineId: input.pipelineId || null,
-        destinationId: input.destinationId || null,
-        resources: input.resources,
-        requestedBy: input.requestedBy || "worker"
-      })
-    ]
-  );
-  await createIntegrationEvent({
-    tenantId: input.tenantId,
-    connectionId: input.connectionId,
-    eventType: "sync.requested",
-    severity: "info",
-    actor: input.requestedBy || "integrations-worker",
-    message: "Sincronizacao enviada ao worker GCP.",
-    metadata: { resources: input.resources, trigger: input.trigger }
-  });
-  return {
-    id: String(result.rows[0]?.id),
-    status: String(result.rows[0]?.status)
-  };
-}
-async function finishCloudSyncRun(input) {
-  const status = normalizeStatus(input.status);
-  await getPool().query(
-    `UPDATE mcp_app.integration_sync_runs
-     SET
-       status = $4,
-       finished_at = now(),
-       records_in = $5,
-       records_updated = $6,
-       records_failed = $7,
-       error_message = $8,
-       metadata_json = metadata_json || $9::jsonb
-     WHERE id = $1 AND tenant_id = $2 AND connection_id = $3`,
-    [
-      input.runId,
-      input.tenantId,
-      input.connectionId,
-      status,
-      input.recordsIn,
-      input.recordsUpdated,
-      input.recordsFailed,
-      input.errorMessage || null,
-      JSON.stringify(input.metadata || {})
-    ]
-  );
-  await getPool().query(
-    `UPDATE mcp_app.integration_connections
-     SET
-       last_sync_at = now(),
-       last_success_at = CASE WHEN $3 IN ('success', 'warning') THEN now() ELSE last_success_at END,
-       last_error = CASE WHEN $3 IN ('success', 'warning') THEN NULL ELSE $4 END,
-       records_synced = CASE WHEN $3 IN ('success', 'warning') THEN records_synced + $5 ELSE records_synced END,
-       status = CASE
-         WHEN $3 = 'success' THEN 'connected'
-         WHEN $3 = 'warning' THEN 'warning'
-         WHEN $3 = 'error' THEN 'error'
-         ELSE status
-       END,
-       updated_at = now()
-     WHERE id = $1 AND tenant_id = $2`,
-    [input.connectionId, input.tenantId, status, input.errorMessage || null, input.recordsUpdated]
-  );
-  await createIntegrationEvent({
-    tenantId: input.tenantId,
-    connectionId: input.connectionId,
-    eventType: eventForStatus(status),
-    severity: status === "error" ? "error" : status === "warning" ? "warning" : "info",
-    actor: "integrations-worker",
-    message: status === "error" ? "Sincronizacao GCP falhou." : "Sincronizacao GCP concluida.",
-    metadata: {
-      runId: input.runId,
-      recordsIn: input.recordsIn,
-      recordsUpdated: input.recordsUpdated,
-      recordsFailed: input.recordsFailed,
-      errorMessage: input.errorMessage || null,
-      ...input.metadata || {}
-    }
-  });
-  if (input.pipelineId) {
-    await getPool().query(
-      `UPDATE mcp_app.integration_pipelines
-       SET
-         last_sync_at = now(),
-         last_success_at = CASE WHEN $3 IN ('success', 'warning') THEN now() ELSE last_success_at END,
-         last_error = CASE WHEN $3 IN ('success', 'warning') THEN NULL ELSE $4 END,
-         records_synced = CASE WHEN $3 IN ('success', 'warning') THEN records_synced + $5 ELSE records_synced END,
-         status = CASE
-           WHEN $3 IN ('success', 'warning') THEN 'active'
-           WHEN $3 = 'error' THEN 'error'
-           ELSE status
-         END,
-         updated_at = now()
-       WHERE id = $1 AND tenant_id = $2`,
-      [input.pipelineId, input.tenantId, status, input.errorMessage || null, input.recordsUpdated]
-    );
-  }
-}
-async function readIntegrationCursor(input) {
-  const result = await getPool().query(
-    `SELECT cursor_json
-     FROM mcp_app.integration_sync_cursors
-     WHERE tenant_id = $1 AND connection_id = $2 AND resource = $3 AND cursor_key = $4
-     LIMIT 1`,
-    [input.tenantId, input.connectionId, input.resource, input.cursorKey || "default"]
-  );
-  const row = result.rows[0];
-  return row ? asRecord2(row.cursor_json) : void 0;
-}
-async function writeIntegrationCursor(input) {
-  await getPool().query(
-    `INSERT INTO mcp_app.integration_sync_cursors
-      (tenant_id, connection_id, resource, cursor_key, cursor_value, cursor_json, last_synced_at, updated_at)
-     VALUES
-      ($1, $2, $3, $4, $5, $6::jsonb, now(), now())
-     ON CONFLICT (tenant_id, connection_id, resource, cursor_key)
-     DO UPDATE SET
-       cursor_value = EXCLUDED.cursor_value,
-       cursor_json = EXCLUDED.cursor_json,
-       last_synced_at = now(),
-       updated_at = now()`,
-    [
-      input.tenantId,
-      input.connectionId,
-      input.resource,
-      input.cursorKey || "default",
-      input.cursor.updatedAt || input.cursor.updated_at || input.cursor.next || null,
-      JSON.stringify(input.cursor)
-    ]
-  );
-}
-async function createIntegrationEvent(input) {
-  await getPool().query(
-    `INSERT INTO mcp_app.integration_events
-      (tenant_id, connection_id, event_type, severity, actor, message, metadata_json)
-     VALUES
-      ($1, $2, $3, $4, $5, $6, $7::jsonb)`,
-    [
-      input.tenantId,
-      input.connectionId || null,
-      input.eventType,
-      input.severity || "info",
-      input.actor || null,
-      input.message,
-      JSON.stringify(input.metadata || {})
-    ]
-  );
-}
-
 // src/products/integracoes/cloud/src/worker/jobs/runSyncJob.ts
 function defaultBigQueryDestination(tenantId) {
   return {
@@ -9032,7 +9277,13 @@ async function runSyncJob(input) {
   let status = "success";
   const resourceSummaries = [];
   try {
-    const credentials = parseCredentials4(connection.secretRef ? await readSecret(connection.secretRef) : null);
+    const rawCredentials = parseCredentials4(connection.secretRef ? await readSecret(connection.secretRef) : null);
+    const credentials = await refreshOAuthCredentialsIfNeeded({
+      tenantId: input.tenantId,
+      connectionId: connection.id,
+      provider: connection.provider,
+      credentials: rawCredentials
+    });
     for (const resource of resources) {
       await createIntegrationEvent({
         tenantId: input.tenantId,
@@ -9189,11 +9440,11 @@ function parsePayloadFromEnv() {
   const payload = JSON.parse(rawPayload);
   return payload;
 }
-function isRecord7(value) {
+function isRecord8(value) {
   return typeof value === "object" && value !== null && !Array.isArray(value);
 }
 function normalizePayload(value) {
-  if (!isRecord7(value)) return {};
+  if (!isRecord8(value)) return {};
   return {
     tenantId: typeof value.tenantId === "number" ? value.tenantId : void 0,
     connectionId: typeof value.connectionId === "string" ? value.connectionId : void 0,
@@ -9206,7 +9457,7 @@ function normalizePayload(value) {
   };
 }
 function parsePubSubPushBody(body2) {
-  if (!isRecord7(body2)) return {};
+  if (!isRecord8(body2)) return {};
   const pubSubBody = body2;
   const encodedData = pubSubBody.message?.data;
   if (!encodedData) return normalizePayload(body2);
