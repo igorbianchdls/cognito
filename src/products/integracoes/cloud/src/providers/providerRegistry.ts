@@ -5,12 +5,14 @@ import { CRM_CONNECTORS } from '@/products/integracoes/cloud/src/providers/crmPr
 import { ECOMMERCE_CONNECTORS } from '@/products/integracoes/cloud/src/providers/ecommerceProviderRegistry'
 import { ERP_CONNECTORS } from '@/products/integracoes/cloud/src/providers/erpProviderRegistry'
 import { MARKETING_CONNECTORS } from '@/products/integracoes/cloud/src/providers/marketingProviderRegistry'
+import { SOCIAL_CONNECTORS } from '@/products/integracoes/cloud/src/providers/socialProviderRegistry'
 
 export const CLOUD_CONNECTORS: Connector[] = [
   ...ERP_CONNECTORS,
   ...CRM_CONNECTORS,
   ...ECOMMERCE_CONNECTORS,
   ...ANALYTICS_CONNECTORS,
+  ...SOCIAL_CONNECTORS,
   ...MARKETING_CONNECTORS,
   ...ADVERTISING_CONNECTORS,
 ]

@@ -5,6 +5,7 @@ import { CRM_PROVIDERS } from '@/products/integracoes/shared/providers/crmProvid
 import { ECOMMERCE_PROVIDERS } from '@/products/integracoes/shared/providers/ecommerceProviders'
 import { ERP_PROVIDERS } from '@/products/integracoes/shared/providers/erpProviders'
 import { MARKETING_PROVIDERS } from '@/products/integracoes/shared/providers/marketingProviders'
+import { SOCIAL_PROVIDERS } from '@/products/integracoes/shared/providers/socialProviders'
 import type { IntegrationDomain, IntegrationProvider } from '@/products/integracoes/shared/providers/providerTypes'
 import { normalizeProviderSlug, normalizeToolkitSlug } from '@/products/integracoes/shared/providers/providerTypes'
 
@@ -13,6 +14,7 @@ export const INTEGRATION_PROVIDERS: IntegrationProvider[] = [
   ...CRM_PROVIDERS,
   ...ECOMMERCE_PROVIDERS,
   ...ANALYTICS_PROVIDERS,
+  ...SOCIAL_PROVIDERS,
   ...MARKETING_PROVIDERS,
   ...ADVERTISING_PROVIDERS,
 ]

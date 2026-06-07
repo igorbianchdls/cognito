@@ -1,9 +1,16 @@
 import { runQuery } from '@/lib/postgres'
 import { DASHBOARD_WIDGET_RESOURCE_URI } from '@/products/mcp-apps/server/appResources'
+import type { ConnectedDomainToolResult } from '@/products/mcp-apps/server/domain-adapters/shared/adapterTypes'
+import { executeAnalyticsTool } from '@/products/mcp-apps/server/domain-adapters/analytics/analyticsService'
+import { ANALYTICS_RESOURCES } from '@/products/mcp-apps/server/domain-adapters/analytics/analyticsTypes'
 import { executeConnectedCrmTool } from '@/products/mcp-apps/server/domain-adapters/crm/connectedCrmService'
 import { CONNECTED_CRM_RESOURCES } from '@/products/mcp-apps/server/domain-adapters/crm/crmTypes'
 import { executeConnectedErpTool } from '@/products/mcp-apps/server/domain-adapters/erp/connectedErpService'
 import { CONNECTED_ERP_RESOURCES } from '@/products/mcp-apps/server/domain-adapters/erp/erpTypes'
+import { executePaidMediaTool } from '@/products/mcp-apps/server/domain-adapters/paid-media/paidMediaService'
+import { PAID_MEDIA_RESOURCES } from '@/products/mcp-apps/server/domain-adapters/paid-media/paidMediaTypes'
+import { executeSocialTool } from '@/products/mcp-apps/server/domain-adapters/social/socialService'
+import { SOCIAL_RESOURCES } from '@/products/mcp-apps/server/domain-adapters/social/socialTypes'
 import type { CognitoMcpServerContext } from '@/products/mcp/server/cognitoMcpServer'
 import type { McpToolInputSchema } from '@/products/mcp/tools/dashboardSchemas'
 
@@ -497,6 +504,21 @@ const CONNECTED_CRM_SCHEMA = createCrudSchema(
   'Resource canonico de CRM conectado via /integracoes. Use contas, contatos, leads, oportunidades ou atividades.',
 )
 
+const PAID_MEDIA_SCHEMA = createCrudSchema(
+  [...PAID_MEDIA_RESOURCES],
+  'Resource canonico de midia paga conectada via /integracoes. Use contas, campanhas, grupos, anuncios, criativos, keywords, desempenho-diario ou conversoes.',
+)
+
+const SOCIAL_SCHEMA = createCrudSchema(
+  [...SOCIAL_RESOURCES],
+  'Resource canonico de social organico conectado via /integracoes. Use perfis, posts, videos, comentarios, audiencia, desempenho-diario ou engajamento.',
+)
+
+const ANALYTICS_SCHEMA = createCrudSchema(
+  [...ANALYTICS_RESOURCES],
+  'Resource canonico de analytics/SEO conectado via /integracoes. Use propriedades, paginas, landing-pages, eventos, conversoes, canais, consultas, perfil-negocio ou reviews.',
+)
+
 const CRUD_OUTPUT_SCHEMA = {
   type: 'object',
   properties: {
@@ -824,6 +846,9 @@ export const MCP_APP_DOMAIN_TOOL_NAMES = {
   financialStatement: 'financial_statement',
   ecommerce: 'ecommerce',
   marketing: 'marketing',
+  paidMedia: 'paid_media',
+  social: 'social',
+  analytics: 'analytics',
   dataCatalog: 'data_catalog',
 } as const
 
@@ -940,6 +965,42 @@ const MARKETING_DOMAIN_TOOL_DEFINITION = {
   _meta: TOOL_META,
 } as const satisfies DomainToolDefinition
 
+const PAID_MEDIA_DOMAIN_TOOL_DEFINITION = {
+  name: MCP_APP_DOMAIN_TOOL_NAMES.paidMedia,
+  title: 'Paid media',
+  description:
+    'Consulta midia paga conectada pelo cliente em /integracoes. Use para Meta Ads, Google Ads e futuros providers pagos; recursos incluem contas, campanhas, grupos, anuncios, criativos, keywords, desempenho diario e conversoes.',
+  inputSchema: PAID_MEDIA_SCHEMA,
+  outputSchema: CONNECTED_DOMAIN_OUTPUT_SCHEMA,
+  securitySchemes: READ_SECURITY_SCHEMES,
+  annotations: READ_ONLY_ANNOTATIONS,
+  _meta: TOOL_META,
+} as const satisfies DomainToolDefinition
+
+const SOCIAL_DOMAIN_TOOL_DEFINITION = {
+  name: MCP_APP_DOMAIN_TOOL_NAMES.social,
+  title: 'Social',
+  description:
+    'Consulta social organico conectado pelo cliente em /integracoes. Use para Instagram, YouTube, LinkedIn e TikTok; recursos incluem perfis, posts, videos, comentarios, audiencia, desempenho diario e engajamento.',
+  inputSchema: SOCIAL_SCHEMA,
+  outputSchema: CONNECTED_DOMAIN_OUTPUT_SCHEMA,
+  securitySchemes: READ_SECURITY_SCHEMES,
+  annotations: READ_ONLY_ANNOTATIONS,
+  _meta: TOOL_META,
+} as const satisfies DomainToolDefinition
+
+const ANALYTICS_DOMAIN_TOOL_DEFINITION = {
+  name: MCP_APP_DOMAIN_TOOL_NAMES.analytics,
+  title: 'Analytics',
+  description:
+    'Consulta analytics, SEO e perfil local conectados pelo cliente em /integracoes. Use para GA4, Google Search Console e Google Business Profile; recursos incluem propriedades, paginas, eventos, conversoes, canais, consultas, perfil-negocio e reviews.',
+  inputSchema: ANALYTICS_SCHEMA,
+  outputSchema: CONNECTED_DOMAIN_OUTPUT_SCHEMA,
+  securitySchemes: READ_SECURITY_SCHEMES,
+  annotations: READ_ONLY_ANNOTATIONS,
+  _meta: TOOL_META,
+} as const satisfies DomainToolDefinition
+
 const DATA_CATALOG_DOMAIN_TOOL_DEFINITION = {
   name: MCP_APP_DOMAIN_TOOL_NAMES.dataCatalog,
   title: 'Data catalog',
@@ -963,6 +1024,9 @@ export function listMcpAppDomainToolDefinitions() {
     SQL_DOMAIN_TOOL_DEFINITION,
     FINANCIAL_STATEMENT_TOOL_DEFINITION,
     MARKETING_DOMAIN_TOOL_DEFINITION,
+    PAID_MEDIA_DOMAIN_TOOL_DEFINITION,
+    SOCIAL_DOMAIN_TOOL_DEFINITION,
+    ANALYTICS_DOMAIN_TOOL_DEFINITION,
     DATA_CATALOG_DOMAIN_TOOL_DEFINITION,
   ]
 }
@@ -977,6 +1041,9 @@ export const MCP_APP_DOMAIN_TOOL_DEFINITIONS = [
   SQL_DOMAIN_TOOL_DEFINITION,
   FINANCIAL_STATEMENT_TOOL_DEFINITION,
   MARKETING_DOMAIN_TOOL_DEFINITION,
+  PAID_MEDIA_DOMAIN_TOOL_DEFINITION,
+  SOCIAL_DOMAIN_TOOL_DEFINITION,
+  ANALYTICS_DOMAIN_TOOL_DEFINITION,
   DATA_CATALOG_DOMAIN_TOOL_DEFINITION,
 ] as const satisfies readonly DomainToolDefinition[]
 
@@ -4125,6 +4192,19 @@ async function callConnectedCrm(args: unknown, context: CognitoMcpServerContext)
   }
 }
 
+async function callConnectedDomain(
+  execute: (args: unknown, context: CognitoMcpServerContext) => Promise<ConnectedDomainToolResult>,
+  args: unknown,
+  context: CognitoMcpServerContext,
+) {
+  const structuredContent = await execute(args, context)
+  return {
+    content: [{ type: 'text', text: JSON.stringify(structuredContent, null, 2) }],
+    structuredContent,
+    isError: structuredContent.success === false,
+  }
+}
+
 export function isMcpAppDomainTool(name: string) {
   return MCP_APP_DOMAIN_TOOL_NAME_SET.has(name)
 }
@@ -4155,6 +4235,12 @@ export async function callMcpAppDomainTool(
       return callFinancialStatement(args, context)
     case MCP_APP_DOMAIN_TOOL_NAMES.marketing:
       return callMarketing(args, context)
+    case MCP_APP_DOMAIN_TOOL_NAMES.paidMedia:
+      return callConnectedDomain(executePaidMediaTool, args, context)
+    case MCP_APP_DOMAIN_TOOL_NAMES.social:
+      return callConnectedDomain(executeSocialTool, args, context)
+    case MCP_APP_DOMAIN_TOOL_NAMES.analytics:
+      return callConnectedDomain(executeAnalyticsTool, args, context)
     case MCP_APP_DOMAIN_TOOL_NAMES.dataCatalog:
       return callDataCatalog(args, context)
     default:
