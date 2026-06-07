@@ -1,9 +1,3 @@
-import { createPendingCrmAdapter } from '@/products/mcp-apps/server/domain-adapters/crm/providers/createPendingCrmAdapter'
+import { createPostgresCrmAdapter } from '@/products/mcp-apps/server/domain-adapters/crm/providers/createPostgresCrmAdapter'
 
-export const salesforceCrmAdapter = createPendingCrmAdapter('salesforce', [
-  'contas',
-  'contatos',
-  'leads',
-  'oportunidades',
-  'atividades',
-])
+export const salesforceCrmAdapter = createPostgresCrmAdapter('salesforce')

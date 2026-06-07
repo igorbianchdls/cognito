@@ -1,9 +1,3 @@
-import { createPendingCrmAdapter } from '@/products/mcp-apps/server/domain-adapters/crm/providers/createPendingCrmAdapter'
+import { createPostgresCrmAdapter } from '@/products/mcp-apps/server/domain-adapters/crm/providers/createPostgresCrmAdapter'
 
-export const bitrix24CrmAdapter = createPendingCrmAdapter('bitrix24', [
-  'contas',
-  'contatos',
-  'leads',
-  'oportunidades',
-  'atividades',
-])
+export const bitrix24CrmAdapter = createPostgresCrmAdapter('bitrix24')

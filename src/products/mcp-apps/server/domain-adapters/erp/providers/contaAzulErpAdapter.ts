@@ -1,11 +1,14 @@
-import { createPendingErpAdapter } from '@/products/mcp-apps/server/domain-adapters/erp/providers/createPendingErpAdapter'
+import {
+  createPostgresErpAdapter,
+  makeErpConfigs,
+} from '@/products/mcp-apps/server/domain-adapters/erp/providers/createPostgresErpAdapter'
 
-export const contaAzulErpAdapter = createPendingErpAdapter('conta_azul', [
-  'clientes',
-  'fornecedores',
-  'contas-a-receber',
-  'contas-a-pagar',
-  'pedidos-venda',
-  'produtos',
-  'estoque-atual',
-])
+export const contaAzulErpAdapter = createPostgresErpAdapter('conta_azul', makeErpConfigs({
+  clientes: 'clientes',
+  fornecedores: 'fornecedores',
+  'contas-a-receber': 'contas_receber',
+  'contas-a-pagar': 'contas_pagar',
+  'pedidos-venda': 'vendas',
+  produtos: 'produtos',
+  'estoque-atual': 'estoque',
+}))

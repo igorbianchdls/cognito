@@ -1,9 +1,3 @@
-import { createPendingCrmAdapter } from '@/products/mcp-apps/server/domain-adapters/crm/providers/createPendingCrmAdapter'
+import { createPostgresCrmAdapter } from '@/products/mcp-apps/server/domain-adapters/crm/providers/createPostgresCrmAdapter'
 
-export const hubspotCrmAdapter = createPendingCrmAdapter('hubspot', [
-  'contas',
-  'contatos',
-  'leads',
-  'oportunidades',
-  'atividades',
-])
+export const hubspotCrmAdapter = createPostgresCrmAdapter('hubspot')
