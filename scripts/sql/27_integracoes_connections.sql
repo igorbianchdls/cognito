@@ -367,6 +367,34 @@ crm_resources AS (
     jsonb_build_object('slug', 'fases_pipeline', 'name', 'Fases do pipeline', 'defaultEnabled', false)
   ) AS resources_json
 ),
+ecommerce_resources AS (
+  SELECT jsonb_build_array(
+    jsonb_build_object('slug', 'stores', 'name', 'Lojas', 'defaultEnabled', true),
+    jsonb_build_object('slug', 'customers', 'name', 'Clientes', 'defaultEnabled', true),
+    jsonb_build_object('slug', 'products', 'name', 'Produtos', 'defaultEnabled', true),
+    jsonb_build_object('slug', 'variants', 'name', 'Variantes', 'defaultEnabled', false),
+    jsonb_build_object('slug', 'orders', 'name', 'Pedidos', 'defaultEnabled', true),
+    jsonb_build_object('slug', 'order_items', 'name', 'Itens de pedido', 'defaultEnabled', true),
+    jsonb_build_object('slug', 'payments', 'name', 'Pagamentos', 'defaultEnabled', true),
+    jsonb_build_object('slug', 'refunds', 'name', 'Reembolsos', 'defaultEnabled', false),
+    jsonb_build_object('slug', 'shipping', 'name', 'Entregas', 'defaultEnabled', false),
+    jsonb_build_object('slug', 'inventory', 'name', 'Estoque', 'defaultEnabled', false),
+    jsonb_build_object('slug', 'categories', 'name', 'Categorias', 'defaultEnabled', false),
+    jsonb_build_object('slug', 'coupons', 'name', 'Cupons', 'defaultEnabled', false),
+    jsonb_build_object('slug', 'abandoned_checkouts', 'name', 'Carrinhos abandonados', 'defaultEnabled', false)
+  ) AS resources_json
+),
+digital_commerce_resources AS (
+  SELECT jsonb_build_array(
+    jsonb_build_object('slug', 'stores', 'name', 'Contas', 'defaultEnabled', true),
+    jsonb_build_object('slug', 'customers', 'name', 'Clientes', 'defaultEnabled', true),
+    jsonb_build_object('slug', 'products', 'name', 'Produtos', 'defaultEnabled', true),
+    jsonb_build_object('slug', 'orders', 'name', 'Vendas', 'defaultEnabled', true),
+    jsonb_build_object('slug', 'order_items', 'name', 'Itens de venda', 'defaultEnabled', true),
+    jsonb_build_object('slug', 'payments', 'name', 'Pagamentos', 'defaultEnabled', true),
+    jsonb_build_object('slug', 'refunds', 'name', 'Reembolsos', 'defaultEnabled', false)
+  ) AS resources_json
+),
 marketing_resources AS (
   SELECT jsonb_build_array(
     jsonb_build_object('slug', 'accounts', 'name', 'Contas e propriedades', 'defaultEnabled', true),
@@ -431,6 +459,30 @@ providers AS (
   UNION ALL
   SELECT 'crm', 'rd_station_crm', 'RD Station CRM', 'CRM brasileiro para leads, contatos, oportunidades, funis e atividades.', 'oauth2', true, true, jsonb_build_array('manual', 'scheduled'), crm_resources.resources_json, jsonb_build_array('crm', 'vendas', 'relacionamento', 'brasil', 'sales'), 'available', jsonb_build_object('toolkitSlug', 'RD_STATION_CRM')
   FROM crm_resources
+  UNION ALL
+  SELECT 'ecommerce', 'shopify', 'Shopify', 'Loja online com pedidos, produtos, clientes, estoque, pagamentos e checkouts.', 'oauth2', true, true, jsonb_build_array('manual', 'scheduled'), ecommerce_resources.resources_json, jsonb_build_array('ecommerce', 'loja-online', 'global'), 'available', jsonb_build_object('toolkitSlug', 'SHOPIFY')
+  FROM ecommerce_resources
+  UNION ALL
+  SELECT 'ecommerce', 'nuvemshop', 'Nuvemshop', 'Ecommerce brasileiro com pedidos, produtos, clientes, categorias e variantes.', 'oauth2', true, true, jsonb_build_array('manual', 'scheduled'), ecommerce_resources.resources_json, jsonb_build_array('ecommerce', 'loja-online', 'brasil'), 'available', jsonb_build_object('toolkitSlug', 'NUVEMSHOP')
+  FROM ecommerce_resources
+  UNION ALL
+  SELECT 'ecommerce', 'olist', 'Olist', 'Operacao de ecommerce e marketplace com pedidos, produtos, estoque e entregas.', 'api_key', false, true, jsonb_build_array('manual', 'scheduled'), ecommerce_resources.resources_json, jsonb_build_array('ecommerce', 'marketplace', 'brasil'), 'available', jsonb_build_object('toolkitSlug', 'OLIST')
+  FROM ecommerce_resources
+  UNION ALL
+  SELECT 'ecommerce', 'woocommerce', 'WooCommerce', 'Loja WooCommerce com pedidos, produtos, clientes, cupons e reembolsos.', 'basic', false, true, jsonb_build_array('manual', 'scheduled'), ecommerce_resources.resources_json, jsonb_build_array('ecommerce', 'loja-online', 'wordpress'), 'available', jsonb_build_object('toolkitSlug', 'WOOCOMMERCE')
+  FROM ecommerce_resources
+  UNION ALL
+  SELECT 'ecommerce', 'eduzz', 'Eduzz', 'Infoprodutos e vendas digitais com compradores, vendas, transacoes e reembolsos.', 'api_key', false, true, jsonb_build_array('manual', 'scheduled'), digital_commerce_resources.resources_json, jsonb_build_array('ecommerce', 'infoprodutos', 'brasil'), 'available', jsonb_build_object('toolkitSlug', 'EDUZZ')
+  FROM digital_commerce_resources
+  UNION ALL
+  SELECT 'ecommerce', 'hotmart', 'Hotmart', 'Infoprodutos, assinaturas e vendas digitais com compras, compradores e reembolsos.', 'oauth2', true, true, jsonb_build_array('manual', 'scheduled'), digital_commerce_resources.resources_json, jsonb_build_array('ecommerce', 'infoprodutos', 'global'), 'available', jsonb_build_object('toolkitSlug', 'HOTMART')
+  FROM digital_commerce_resources
+  UNION ALL
+  SELECT 'ecommerce', 'kiwify', 'Kiwify', 'Vendas digitais e infoprodutos com pedidos, produtos, compradores e transacoes.', 'api_key', false, true, jsonb_build_array('manual', 'scheduled'), digital_commerce_resources.resources_json, jsonb_build_array('ecommerce', 'infoprodutos', 'brasil'), 'available', jsonb_build_object('toolkitSlug', 'KIWIFY')
+  FROM digital_commerce_resources
+  UNION ALL
+  SELECT 'ecommerce', 'ifood', 'iFood', 'Pedidos, lojas, itens, pagamentos e operacao de delivery.', 'oauth2', true, true, jsonb_build_array('manual', 'scheduled'), ecommerce_resources.resources_json, jsonb_build_array('ecommerce', 'delivery', 'brasil'), 'available', jsonb_build_object('toolkitSlug', 'IFOOD')
+  FROM ecommerce_resources
   UNION ALL
   SELECT 'marketing', 'google_search_console', 'Google Search Console', 'Marketing organico de busca com paginas, consultas e desempenho diario.', 'oauth2', true, true, jsonb_build_array('manual', 'scheduled'), marketing_resources.resources_json, jsonb_build_array('marketing', 'organico', 'seo', 'google'), 'available', jsonb_build_object('toolkitSlug', 'GOOGLE_SEARCH_CONSOLE')
   FROM marketing_resources

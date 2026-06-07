@@ -1,6 +1,7 @@
 import type { ToolkitDefinition } from '@/products/integracoes/shared/types'
 import { ADVERTISING_PROVIDERS } from '@/products/integracoes/shared/providers/advertisingProviders'
 import { CRM_PROVIDERS } from '@/products/integracoes/shared/providers/crmProviders'
+import { ECOMMERCE_PROVIDERS } from '@/products/integracoes/shared/providers/ecommerceProviders'
 import { ERP_PROVIDERS } from '@/products/integracoes/shared/providers/erpProviders'
 import { MARKETING_PROVIDERS } from '@/products/integracoes/shared/providers/marketingProviders'
 import type { IntegrationDomain, IntegrationProvider } from '@/products/integracoes/shared/providers/providerTypes'
@@ -9,6 +10,7 @@ import { normalizeProviderSlug, normalizeToolkitSlug } from '@/products/integrac
 export const INTEGRATION_PROVIDERS: IntegrationProvider[] = [
   ...ERP_PROVIDERS,
   ...CRM_PROVIDERS,
+  ...ECOMMERCE_PROVIDERS,
   ...MARKETING_PROVIDERS,
   ...ADVERTISING_PROVIDERS,
 ]

@@ -2481,23 +2481,23 @@ var require_serializer = __commonJS({
         /* code.startup */
       );
     };
-    var query = (text) => {
+    var query9 = (text) => {
       return writer.addCString(text).flush(
         81
         /* code.query */
       );
     };
     var emptyArray = [];
-    var parse = (query2) => {
-      const name = query2.name || "";
+    var parse = (query10) => {
+      const name = query10.name || "";
       if (name.length > 63) {
         console.error("Warning! Postgres only supports 63 characters for query names.");
         console.error("You supplied %s (%s)", name, name.length);
         console.error("This can cause conflicts and silent errors executing queries");
       }
-      const types2 = query2.types || emptyArray;
+      const types2 = query10.types || emptyArray;
       const len = types2.length;
-      const buffer = writer.addCString(name).addCString(query2.text).addInt16(len);
+      const buffer = writer.addCString(name).addCString(query10.text).addInt16(len);
       for (let i = 0; i < len; i++) {
         buffer.addInt32(types2[i]);
       }
@@ -2637,7 +2637,7 @@ var require_serializer = __commonJS({
       requestSsl,
       sendSASLInitialResponseMessage,
       sendSCRAMClientFinalMessage,
-      query,
+      query: query9,
       parse,
       bind,
       execute,
@@ -3235,8 +3235,8 @@ var require_connection = __commonJS({
         this._send(serialize.query(text));
       }
       // send parse message
-      parse(query) {
-        this._send(serialize.parse(query));
+      parse(query9) {
+        this._send(serialize.parse(query9));
       }
       // send bind message
       bind(config) {
@@ -3396,7 +3396,7 @@ var require_split2 = __commonJS({
 var require_helper = __commonJS({
   "node_modules/.pnpm/pgpass@1.0.5/node_modules/pgpass/lib/helper.js"(exports2, module2) {
     "use strict";
-    var path = require("path");
+    var path2 = require("path");
     var Stream = require("stream").Stream;
     var split = require_split2();
     var util = require("util");
@@ -3435,7 +3435,7 @@ var require_helper = __commonJS({
     };
     module2.exports.getFileName = function(rawEnv) {
       var env2 = rawEnv || process.env;
-      var file = env2.PGPASSFILE || (isWin ? path.join(env2.APPDATA || "./", "postgresql", "pgpass.conf") : path.join(env2.HOME || "./", ".pgpass"));
+      var file = env2.PGPASSFILE || (isWin ? path2.join(env2.APPDATA || "./", "postgresql", "pgpass.conf") : path2.join(env2.HOME || "./", ".pgpass"));
       return file;
     };
     module2.exports.usePgPass = function(stats, fname) {
@@ -3567,7 +3567,7 @@ var require_helper = __commonJS({
 var require_lib = __commonJS({
   "node_modules/.pnpm/pgpass@1.0.5/node_modules/pgpass/lib/index.js"(exports2, module2) {
     "use strict";
-    var path = require("path");
+    var path2 = require("path");
     var fs = require("fs");
     var helper = require_helper();
     module2.exports = function(connInfo, cb) {
@@ -3642,9 +3642,9 @@ var require_client = __commonJS({
         this._connectionTimeoutMillis = c.connectionTimeoutMillis || 0;
       }
       _errorAllQueries(err) {
-        const enqueueError = (query) => {
+        const enqueueError = (query9) => {
           process.nextTick(() => {
-            query.handleError(err, this.connection);
+            query9.handleError(err, this.connection);
           });
         };
         if (this.activeQuery) {
@@ -3958,8 +3958,8 @@ var require_client = __commonJS({
         }
         return data;
       }
-      cancel(client, query) {
-        if (client.activeQuery === query) {
+      cancel(client, query9) {
+        if (client.activeQuery === query9) {
           const con = this.connection;
           if (this.host && this.host.indexOf("/") === 0) {
             con.connect(this.host + "/.s.PGSQL." + this.port);
@@ -3969,8 +3969,8 @@ var require_client = __commonJS({
           con.on("connect", function() {
             con.cancel(client.processID, client.secretKey);
           });
-        } else if (client.queryQueue.indexOf(query) !== -1) {
-          client.queryQueue.splice(client.queryQueue.indexOf(query), 1);
+        } else if (client.queryQueue.indexOf(query9) !== -1) {
+          client.queryQueue.splice(client.queryQueue.indexOf(query9), 1);
         }
       }
       setTypeParser(oid, format, parseFn) {
@@ -4009,7 +4009,7 @@ var require_client = __commonJS({
         }
       }
       query(config, values, callback) {
-        let query;
+        let query9;
         let result;
         let readTimeout;
         let readTimeoutTimer;
@@ -4018,16 +4018,16 @@ var require_client = __commonJS({
           throw new TypeError("Client was passed a null or undefined query");
         } else if (typeof config.submit === "function") {
           readTimeout = config.query_timeout || this.connectionParameters.query_timeout;
-          result = query = config;
+          result = query9 = config;
           if (typeof values === "function") {
-            query.callback = query.callback || values;
+            query9.callback = query9.callback || values;
           }
         } else {
           readTimeout = config.query_timeout || this.connectionParameters.query_timeout;
-          query = new Query2(config, values, callback);
-          if (!query.callback) {
+          query9 = new Query2(config, values, callback);
+          if (!query9.callback) {
             result = new this._Promise((resolve, reject) => {
-              query.callback = (err, res) => err ? reject(err) : resolve(res);
+              query9.callback = (err, res) => err ? reject(err) : resolve(res);
             }).catch((err) => {
               Error.captureStackTrace(err);
               throw err;
@@ -4035,45 +4035,45 @@ var require_client = __commonJS({
           }
         }
         if (readTimeout) {
-          queryCallback = query.callback;
+          queryCallback = query9.callback;
           readTimeoutTimer = setTimeout(() => {
             const error = new Error("Query read timeout");
             process.nextTick(() => {
-              query.handleError(error, this.connection);
+              query9.handleError(error, this.connection);
             });
             queryCallback(error);
-            query.callback = () => {
+            query9.callback = () => {
             };
-            const index = this.queryQueue.indexOf(query);
+            const index = this.queryQueue.indexOf(query9);
             if (index > -1) {
               this.queryQueue.splice(index, 1);
             }
             this._pulseQueryQueue();
           }, readTimeout);
-          query.callback = (err, res) => {
+          query9.callback = (err, res) => {
             clearTimeout(readTimeoutTimer);
             queryCallback(err, res);
           };
         }
-        if (this.binary && !query.binary) {
-          query.binary = true;
+        if (this.binary && !query9.binary) {
+          query9.binary = true;
         }
-        if (query._result && !query._result._types) {
-          query._result._types = this._types;
+        if (query9._result && !query9._result._types) {
+          query9._result._types = this._types;
         }
         if (!this._queryable) {
           process.nextTick(() => {
-            query.handleError(new Error("Client has encountered a connection error and is not queryable"), this.connection);
+            query9.handleError(new Error("Client has encountered a connection error and is not queryable"), this.connection);
           });
           return result;
         }
         if (this._ending) {
           process.nextTick(() => {
-            query.handleError(new Error("Client was closed and is not queryable"), this.connection);
+            query9.handleError(new Error("Client was closed and is not queryable"), this.connection);
           });
           return result;
         }
-        this.queryQueue.push(query);
+        this.queryQueue.push(query9);
         this._pulseQueryQueue();
         return result;
       }
@@ -4688,10 +4688,10 @@ var require_client2 = __commonJS({
     Client2.Query = NativeQuery;
     util.inherits(Client2, EventEmitter);
     Client2.prototype._errorAllQueries = function(err) {
-      const enqueueError = (query) => {
+      const enqueueError = (query9) => {
         process.nextTick(() => {
-          query.native = this.native;
-          query.handleError(err);
+          query9.native = this.native;
+          query9.handleError(err);
         });
       };
       if (this._hasActiveQuery()) {
@@ -4750,7 +4750,7 @@ var require_client2 = __commonJS({
       });
     };
     Client2.prototype.query = function(config, values, callback) {
-      let query;
+      let query9;
       let result;
       let readTimeout;
       let readTimeoutTimer;
@@ -4759,14 +4759,14 @@ var require_client2 = __commonJS({
         throw new TypeError("Client was passed a null or undefined query");
       } else if (typeof config.submit === "function") {
         readTimeout = config.query_timeout || this.connectionParameters.query_timeout;
-        result = query = config;
+        result = query9 = config;
         if (typeof values === "function") {
           config.callback = values;
         }
       } else {
         readTimeout = config.query_timeout || this.connectionParameters.query_timeout;
-        query = new NativeQuery(config, values, callback);
-        if (!query.callback) {
+        query9 = new NativeQuery(config, values, callback);
+        if (!query9.callback) {
           let resolveOut, rejectOut;
           result = new this._Promise((resolve, reject) => {
             resolveOut = resolve;
@@ -4775,45 +4775,45 @@ var require_client2 = __commonJS({
             Error.captureStackTrace(err);
             throw err;
           });
-          query.callback = (err, res) => err ? rejectOut(err) : resolveOut(res);
+          query9.callback = (err, res) => err ? rejectOut(err) : resolveOut(res);
         }
       }
       if (readTimeout) {
-        queryCallback = query.callback;
+        queryCallback = query9.callback;
         readTimeoutTimer = setTimeout(() => {
           const error = new Error("Query read timeout");
           process.nextTick(() => {
-            query.handleError(error, this.connection);
+            query9.handleError(error, this.connection);
           });
           queryCallback(error);
-          query.callback = () => {
+          query9.callback = () => {
           };
-          const index = this._queryQueue.indexOf(query);
+          const index = this._queryQueue.indexOf(query9);
           if (index > -1) {
             this._queryQueue.splice(index, 1);
           }
           this._pulseQueryQueue();
         }, readTimeout);
-        query.callback = (err, res) => {
+        query9.callback = (err, res) => {
           clearTimeout(readTimeoutTimer);
           queryCallback(err, res);
         };
       }
       if (!this._queryable) {
-        query.native = this.native;
+        query9.native = this.native;
         process.nextTick(() => {
-          query.handleError(new Error("Client has encountered a connection error and is not queryable"));
+          query9.handleError(new Error("Client has encountered a connection error and is not queryable"));
         });
         return result;
       }
       if (this._ending) {
-        query.native = this.native;
+        query9.native = this.native;
         process.nextTick(() => {
-          query.handleError(new Error("Client was closed and is not queryable"));
+          query9.handleError(new Error("Client was closed and is not queryable"));
         });
         return result;
       }
-      this._queryQueue.push(query);
+      this._queryQueue.push(query9);
       this._pulseQueryQueue();
       return result;
     };
@@ -4848,26 +4848,26 @@ var require_client2 = __commonJS({
       if (this._hasActiveQuery()) {
         return;
       }
-      const query = this._queryQueue.shift();
-      if (!query) {
+      const query9 = this._queryQueue.shift();
+      if (!query9) {
         if (!initialConnection) {
           this.emit("drain");
         }
         return;
       }
-      this._activeQuery = query;
-      query.submit(this);
+      this._activeQuery = query9;
+      query9.submit(this);
       const self = this;
-      query.once("_done", function() {
+      query9.once("_done", function() {
         self._pulseQueryQueue();
       });
     };
-    Client2.prototype.cancel = function(query) {
-      if (this._activeQuery === query) {
+    Client2.prototype.cancel = function(query9) {
+      if (this._activeQuery === query9) {
         this.native.cancel(function() {
         });
-      } else if (this._queryQueue.indexOf(query) !== -1) {
-        this._queryQueue.splice(this._queryQueue.indexOf(query), 1);
+      } else if (this._queryQueue.indexOf(query9) !== -1) {
+        this._queryQueue.splice(this._queryQueue.indexOf(query9), 1);
       }
     };
     Client2.prototype.ref = function() {
@@ -6031,9 +6031,9 @@ function extractItems(payload, itemKeys) {
   if (arrays.length === 1) return normalizeArray(arrays[0]);
   return [];
 }
-function buildUrl(baseUrl, path, query) {
-  const url = new URL(`${baseUrl.replace(/\/+$/, "")}${path.startsWith("/") ? path : `/${path}`}`);
-  for (const [key, value] of Object.entries(query || {})) {
+function buildUrl(baseUrl, path2, query9) {
+  const url = new URL(`${baseUrl.replace(/\/+$/, "")}${path2.startsWith("/") ? path2 : `/${path2}`}`);
+  for (const [key, value] of Object.entries(query9 || {})) {
     if (value !== void 0 && value !== null && value !== "") url.searchParams.set(key, String(value));
   }
   return url.toString();
@@ -6061,13 +6061,13 @@ function createDateRangeReportConnector(input) {
     const baseUrl = (process.env[input.envBaseUrlKey] || credentials.baseUrl || input.defaultBaseUrl).replace(/\/+$/, "");
     const method = resource.method || "GET";
     const buildInput = { page, pageSize, cursor, credentials, dateStart, dateEnd };
-    const path = resource.buildPath?.(buildInput) || resource.path;
-    const query = resource.buildQuery?.(buildInput);
+    const path2 = resource.buildPath?.(buildInput) || resource.path;
+    const query9 = resource.buildQuery?.(buildInput);
     const body2 = method === "POST" ? resource.buildBody?.(buildInput) : void 0;
     const response = await connectorJsonRequest({
       provider: input.provider,
       resource: resource.resource,
-      url: buildUrl(baseUrl, path, query),
+      url: buildUrl(baseUrl, path2, query9),
       method,
       headers: {
         Authorization: `Bearer ${credentials.accessToken}`,
@@ -6417,9 +6417,9 @@ function extractItems2(payload, itemKeys) {
   if (arrays.length === 1) return arrays[0].filter((item) => isRecord3(item));
   return [];
 }
-function buildUrl2(baseUrl, path, query) {
-  const url = new URL(`${baseUrl.replace(/\/+$/, "")}${path.startsWith("/") ? path : `/${path}`}`);
-  for (const [key, value] of Object.entries(query || {})) {
+function buildUrl2(baseUrl, path2, query9) {
+  const url = new URL(`${baseUrl.replace(/\/+$/, "")}${path2.startsWith("/") ? path2 : `/${path2}`}`);
+  for (const [key, value] of Object.entries(query9 || {})) {
     if (value !== void 0 && value !== null && value !== "") url.searchParams.set(key, String(value));
   }
   return url.toString();
@@ -6455,13 +6455,13 @@ function createOAuthRestCrmConnector(input) {
   async function requestPage(context, resource, pageInput) {
     const credentials = normalizeOAuthCredentials(input.provider, context.credentials);
     const method = resource.method || "GET";
-    const query = resource.buildQuery?.(pageInput) || {};
+    const query9 = resource.buildQuery?.(pageInput) || {};
     const body2 = method === "POST" ? resource.buildBody?.(pageInput) : void 0;
-    if (input.authPlacement === "query_auth") query.auth = credentials.accessToken;
+    if (input.authPlacement === "query_auth") query9.auth = credentials.accessToken;
     const response = await connectorJsonRequest({
       provider: input.provider,
       resource: resource.resource,
-      url: buildUrl2(getBaseUrl(input, credentials), resource.path, query),
+      url: buildUrl2(getBaseUrl(input, credentials), resource.path, query9),
       method,
       headers: input.authPlacement === "query_auth" ? void 0 : {
         Authorization: `Bearer ${credentials.accessToken}`
@@ -6988,14 +6988,11 @@ var CRM_CONNECTORS = [
   rdStationConnector
 ];
 
-// src/products/integracoes/cloud/src/connectors/erp/bling/blingClient.ts
-var DEFAULT_BASE_URL = "https://api.bling.com.br/Api/v3";
-var DEFAULT_MAX_PAGES = 100;
-var DEFAULT_RATE_LIMIT_MS = 350;
+// src/products/integracoes/cloud/src/connectors/ecommerce/common/paginatedEcommerceConnector.ts
 function isRecord4(value) {
   return typeof value === "object" && value !== null && !Array.isArray(value);
 }
-function parseCredentials2(value) {
+function parseRecord2(value) {
   if (isRecord4(value)) return value;
   if (typeof value !== "string") return null;
   try {
@@ -7008,10 +7005,482 @@ function parseCredentials2(value) {
 function nonEmptyString4(value) {
   return typeof value === "string" && value.trim().length > 0;
 }
+function pickString(record, ...keys) {
+  for (const key of keys) {
+    const value = record[key];
+    if (nonEmptyString4(value)) return value.trim();
+  }
+  return void 0;
+}
+function normalizeCredentials2(provider, value) {
+  const credentials = parseRecord2(value);
+  if (!credentials) {
+    throw new ProviderError({
+      provider,
+      kind: "auth",
+      message: `Credenciais ${provider} invalidas.`,
+      retryable: false
+    });
+  }
+  const normalized = {
+    accessToken: pickString(credentials, "accessToken", "access_token", "token"),
+    apiKey: pickString(credentials, "apiKey", "api_key", "key"),
+    apiSecret: pickString(credentials, "apiSecret", "api_secret", "secret"),
+    consumerKey: pickString(credentials, "consumerKey", "consumer_key"),
+    consumerSecret: pickString(credentials, "consumerSecret", "consumer_secret"),
+    baseUrl: pickString(credentials, "baseUrl", "base_url", "url"),
+    shop: pickString(credentials, "shop", "shopDomain", "shop_domain", "domain"),
+    storeId: pickString(credentials, "storeId", "store_id"),
+    accountId: pickString(credentials, "accountId", "account_id"),
+    sellerId: pickString(credentials, "sellerId", "seller_id"),
+    appKey: pickString(credentials, "appKey", "app_key"),
+    appToken: pickString(credentials, "appToken", "app_token"),
+    userAgent: pickString(credentials, "userAgent", "user_agent")
+  };
+  if (!normalized.accessToken && !normalized.apiKey && !normalized.consumerKey && !normalized.appKey) {
+    throw new ProviderError({
+      provider,
+      kind: "auth",
+      message: `Credenciais ${provider} invalidas. Informe accessToken, apiKey, consumerKey ou appKey.`,
+      retryable: false
+    });
+  }
+  return normalized;
+}
+function extractItems3(payload, itemKeys) {
+  const normalizeArray = (items) => items.map((item) => isRecord4(item) ? item : { value: item }).filter((item) => item.value !== void 0 || Object.keys(item).length > 0);
+  if (Array.isArray(payload)) return normalizeArray(payload);
+  if (!isRecord4(payload)) return [];
+  for (const key of itemKeys) {
+    const value = key.split(".").reduce((current, part) => isRecord4(current) ? current[part] : void 0, payload);
+    if (Array.isArray(value)) return normalizeArray(value);
+    if (isRecord4(value)) return [value];
+  }
+  const arrays = Object.values(payload).filter(Array.isArray);
+  if (arrays.length === 1) return normalizeArray(arrays[0]);
+  return [];
+}
+function buildUrl3(baseUrl, path2, query9) {
+  const url = new URL(`${baseUrl.replace(/\/+$/, "")}${path2.startsWith("/") ? path2 : `/${path2}`}`);
+  for (const [key, value] of Object.entries(query9 || {})) {
+    if (value !== void 0 && value !== null && value !== "") url.searchParams.set(key, String(value));
+  }
+  return url.toString();
+}
+function defaultHeaders2(input, credentials) {
+  if (input.authMode === "custom") return {};
+  if (input.authMode === "api_key_header") {
+    const token2 = credentials.apiKey || credentials.accessToken || credentials.appToken;
+    return token2 ? { [input.apiKeyHeader || "X-API-Key"]: token2 } : {};
+  }
+  if (input.authMode === "basic" && credentials.consumerKey && credentials.consumerSecret) {
+    return { Authorization: `Basic ${Buffer.from(`${credentials.consumerKey}:${credentials.consumerSecret}`).toString("base64")}` };
+  }
+  const token = credentials.accessToken || credentials.apiKey || credentials.appToken;
+  if (!token) return {};
+  return { Authorization: `Bearer ${token}` };
+}
+function defaultNextCursor2(payload, items, input) {
+  const paging = isRecord4(payload.paging) ? payload.paging : void 0;
+  const next = isRecord4(paging?.next) ? paging.next : void 0;
+  const after = next?.after ?? payload.next_cursor ?? payload.nextCursor;
+  if (typeof after === "string" || typeof after === "number") return { after };
+  const total = Number(payload.total ?? payload.total_count ?? payload.totalCount ?? payload.count ?? 0);
+  if (Number.isFinite(total) && total > input.page * input.pageSize) return { page: input.page + 1 };
+  if (payload.has_more === true || payload.hasMore === true) return { page: input.page + 1 };
+  if (items.length >= input.pageSize) return { page: input.page + 1 };
+  return void 0;
+}
+function mapRow2(provider, resource, row, page, index) {
+  const externalId = row.id ?? row.ID ?? row.uuid ?? row.code ?? row.order_number ?? row.number ?? row.reference ?? `${provider}_${resource}_${page}_${index + 1}`;
+  return {
+    external_id: typeof externalId === "string" || typeof externalId === "number" ? String(externalId) : `${provider}_${resource}_${page}_${index + 1}`,
+    ecommerce_resource: resource,
+    ecommerce_page: page,
+    raw: row
+  };
+}
+function resolveBaseUrl(input, credentials) {
+  if (process.env[input.envBaseUrlKey]) return process.env[input.envBaseUrlKey];
+  if (credentials.baseUrl) return credentials.baseUrl;
+  if (input.provider === "shopify" && credentials.shop) return `https://${credentials.shop.replace(/^https?:\/\//, "")}`;
+  return input.defaultBaseUrl;
+}
+function createPaginatedEcommerceConnector(input) {
+  const resourceMap = new Map(input.resources.map((resource) => [resource.resource, resource]));
+  const manifest = input.resources.map((resource) => ({
+    resource: resource.resource,
+    supportsIncremental: resource.supportsIncremental,
+    defaultPageSize: resource.defaultPageSize,
+    requiredFields: resource.requiredFields || ["accessToken"]
+  }));
+  async function requestPage(context, resource, pageInput) {
+    const credentials = normalizeCredentials2(input.provider, context.credentials);
+    const buildInput = { ...pageInput, credentials };
+    const method = resource.method || "GET";
+    const query9 = resource.buildQuery?.(buildInput) || {};
+    if (input.authMode === "api_key_query" && credentials.apiKey) query9.api_key = credentials.apiKey;
+    const body2 = method === "POST" ? resource.buildBody?.(buildInput) : void 0;
+    const baseUrl = resolveBaseUrl(input, credentials);
+    const path2 = resource.buildPath?.(buildInput) || resource.path;
+    const response = await connectorJsonRequest({
+      provider: input.provider,
+      resource: resource.resource,
+      url: buildUrl3(baseUrl, path2, query9),
+      method,
+      headers: {
+        ...defaultHeaders2(input, credentials),
+        ...credentials.userAgent ? { "User-Agent": credentials.userAgent } : {},
+        ...resource.headers?.(credentials) || {}
+      },
+      body: body2,
+      rateLimitMs: input.rateLimitMs
+    });
+    return response.payload;
+  }
+  return {
+    domain: "ecommerce",
+    provider: input.provider,
+    resources: manifest,
+    validateCredentials(credentials) {
+      try {
+        normalizeCredentials2(input.provider, credentials);
+        return { ok: true };
+      } catch (error) {
+        return { ok: false, error: error instanceof Error ? error.message : `Credenciais ${input.provider} invalidas.` };
+      }
+    },
+    async testConnection(context) {
+      const resource = resourceMap.get(input.testResource) || input.resources[0];
+      const payload = await requestPage(context, resource, { page: 1, pageSize: 1, cursor: void 0 });
+      return {
+        status: "success",
+        recordsIn: 0,
+        recordsUpdated: 0,
+        recordsFailed: 0,
+        metadata: { mode: `${input.provider}_api`, testResource: resource.resource, sampleCount: extractItems3(payload, resource.itemKeys).length }
+      };
+    },
+    async syncResource(context, resourceName) {
+      const resource = resourceMap.get(resourceName);
+      if (!resource) return { status: "warning", recordsIn: 0, recordsUpdated: 0, recordsFailed: 0, errorMessage: `Recurso nao mapeado: ${resourceName}` };
+      const pageSize = Number(process.env[`${input.provider.toUpperCase()}_PAGE_SIZE`] || resource.defaultPageSize);
+      const maxPages = Number(process.env[`${input.provider.toUpperCase()}_MAX_PAGES_PER_RESOURCE`] || 100);
+      const batches = [];
+      let cursor = context.cursor;
+      let page = Math.max(Number(cursor?.page || 1), 1);
+      let recordsIn = 0;
+      let truncated = false;
+      for (let loaded = 0; loaded < maxPages; loaded += 1) {
+        const payload = await requestPage(context, resource, { page, pageSize, cursor });
+        const payloadRecord = isRecord4(payload) ? payload : { data: payload };
+        const rawItems = extractItems3(payload, resource.itemKeys);
+        const items = resource.transformItems ? resource.transformItems(rawItems, payloadRecord) : rawItems;
+        const rows = items.map((row, index) => mapRow2(input.provider, resource.resource, row, page, index));
+        recordsIn += rows.length;
+        const nextCursor = (resource.getNextCursor || defaultNextCursor2)(payloadRecord, items, { page, pageSize, cursor });
+        batches.push({ resource: resource.resource, rows, nextCursor });
+        if (!nextCursor) break;
+        if (loaded + 1 >= maxPages) {
+          truncated = true;
+          break;
+        }
+        cursor = nextCursor;
+        page = Number(nextCursor.page || page + 1);
+      }
+      return {
+        status: truncated ? "warning" : "success",
+        recordsIn,
+        recordsUpdated: recordsIn,
+        recordsFailed: 0,
+        batches,
+        metadata: { mode: `${input.provider}_api`, resource: resource.resource, truncated }
+      };
+    },
+    async refreshToken() {
+      return { status: "success", recordsIn: 0, recordsUpdated: 0, recordsFailed: 0, metadata: { mode: "oauth2", refreshed: false } };
+    }
+  };
+}
+
+// src/products/integracoes/cloud/src/connectors/ecommerce/eduzz/eduzzResources.ts
+var DEFAULT_PAGE_SIZE7 = 100;
+function query({ page, pageSize }) {
+  return { page, per_page: pageSize };
+}
+var EDUZZ_RESOURCES = [
+  { resource: "stores", path: "/api/1.0/myeduzz/user", itemKeys: ["data", "items"], defaultPageSize: 1, supportsIncremental: false },
+  { resource: "customers", path: "/api/1.0/sale/get_sale_list", itemKeys: ["data", "items"], defaultPageSize: DEFAULT_PAGE_SIZE7, supportsIncremental: true, buildQuery: query },
+  { resource: "products", path: "/api/1.0/producer/product_list", itemKeys: ["data", "items"], defaultPageSize: DEFAULT_PAGE_SIZE7, supportsIncremental: true, buildQuery: query },
+  { resource: "orders", path: "/api/1.0/sale/get_sale_list", itemKeys: ["data", "items"], defaultPageSize: DEFAULT_PAGE_SIZE7, supportsIncremental: true, buildQuery: query },
+  { resource: "order_items", path: "/api/1.0/sale/get_sale_list", itemKeys: ["data", "items"], defaultPageSize: DEFAULT_PAGE_SIZE7, supportsIncremental: true, buildQuery: query },
+  { resource: "payments", path: "/api/1.0/sale/get_sale_list", itemKeys: ["data", "items"], defaultPageSize: DEFAULT_PAGE_SIZE7, supportsIncremental: true, buildQuery: query },
+  { resource: "refunds", path: "/api/1.0/sale/get_sale_list", itemKeys: ["data", "items"], defaultPageSize: DEFAULT_PAGE_SIZE7, supportsIncremental: true, buildQuery: query }
+];
+
+// src/products/integracoes/cloud/src/connectors/ecommerce/eduzz/eduzzConnector.ts
+var eduzzConnector = createPaginatedEcommerceConnector({
+  provider: "eduzz",
+  defaultBaseUrl: "https://api.eduzz.com",
+  envBaseUrlKey: "EDUZZ_API_BASE_URL",
+  resources: EDUZZ_RESOURCES,
+  testResource: "stores",
+  rateLimitMs: Number(process.env.EDUZZ_RATE_LIMIT_MS || 250),
+  authMode: "api_key_header",
+  apiKeyHeader: "Authorization"
+});
+
+// src/products/integracoes/cloud/src/connectors/ecommerce/hotmart/hotmartResources.ts
+var DEFAULT_PAGE_SIZE8 = 100;
+function query2({ page, pageSize }) {
+  return { page, max_results: pageSize };
+}
+var HOTMART_RESOURCES = [
+  { resource: "stores", path: "/products/api/v1/products", itemKeys: ["items", "products"], defaultPageSize: DEFAULT_PAGE_SIZE8, supportsIncremental: false, buildQuery: query2 },
+  { resource: "customers", path: "/payments/api/v1/sales/history", itemKeys: ["items", "sales"], defaultPageSize: DEFAULT_PAGE_SIZE8, supportsIncremental: true, buildQuery: query2, transformItems: (items) => items.map((sale) => typeof sale.buyer === "object" && sale.buyer !== null && !Array.isArray(sale.buyer) ? sale.buyer : sale) },
+  { resource: "products", path: "/products/api/v1/products", itemKeys: ["items", "products"], defaultPageSize: DEFAULT_PAGE_SIZE8, supportsIncremental: true, buildQuery: query2 },
+  { resource: "orders", path: "/payments/api/v1/sales/history", itemKeys: ["items", "sales"], defaultPageSize: DEFAULT_PAGE_SIZE8, supportsIncremental: true, buildQuery: query2 },
+  { resource: "order_items", path: "/payments/api/v1/sales/history", itemKeys: ["items", "sales"], defaultPageSize: DEFAULT_PAGE_SIZE8, supportsIncremental: true, buildQuery: query2, transformItems: (items) => items.map((sale) => ({ ...typeof sale.product === "object" && sale.product !== null && !Array.isArray(sale.product) ? sale.product : {}, sale_id: sale.purchase, transaction: sale.transaction })) },
+  { resource: "payments", path: "/payments/api/v1/sales/history", itemKeys: ["items", "sales"], defaultPageSize: DEFAULT_PAGE_SIZE8, supportsIncremental: true, buildQuery: query2 },
+  { resource: "refunds", path: "/payments/api/v1/sales/history", itemKeys: ["items", "sales"], defaultPageSize: DEFAULT_PAGE_SIZE8, supportsIncremental: true, buildQuery: query2 }
+];
+
+// src/products/integracoes/cloud/src/connectors/ecommerce/hotmart/hotmartConnector.ts
+var hotmartConnector = createPaginatedEcommerceConnector({
+  provider: "hotmart",
+  defaultBaseUrl: "https://developers.hotmart.com",
+  envBaseUrlKey: "HOTMART_API_BASE_URL",
+  resources: HOTMART_RESOURCES,
+  testResource: "stores",
+  rateLimitMs: Number(process.env.HOTMART_RATE_LIMIT_MS || 250),
+  authMode: "bearer"
+});
+
+// src/products/integracoes/cloud/src/connectors/ecommerce/ifood/ifoodResources.ts
+var DEFAULT_PAGE_SIZE9 = 100;
+function merchantPath(credentials, suffix) {
+  return `/merchant/v1.0/merchants/${credentials.storeId || process.env.IFOOD_MERCHANT_ID || "missing_merchant_id"}${suffix}`;
+}
+function query3({ page, pageSize }) {
+  return { page, size: pageSize };
+}
+var IFOOD_RESOURCES = [
+  { resource: "stores", path: "/merchant/v1.0/merchants", itemKeys: ["data", "items", "merchants"], defaultPageSize: DEFAULT_PAGE_SIZE9, supportsIncremental: false, buildQuery: query3 },
+  { resource: "products", path: "/merchant/v1.0/merchants/missing_merchant_id/catalogs", itemKeys: ["data", "items", "catalogs"], defaultPageSize: DEFAULT_PAGE_SIZE9, supportsIncremental: true, buildPath: ({ credentials }) => merchantPath(credentials, "/catalogs"), buildQuery: query3 },
+  { resource: "orders", path: "/order/v1.0/orders", itemKeys: ["data", "items", "orders"], defaultPageSize: DEFAULT_PAGE_SIZE9, supportsIncremental: true, buildQuery: query3 },
+  { resource: "order_items", path: "/order/v1.0/orders", itemKeys: ["data", "items", "orders"], defaultPageSize: DEFAULT_PAGE_SIZE9, supportsIncremental: true, buildQuery: query3, transformItems: (items) => items.flatMap((order) => Array.isArray(order.items) ? order.items.filter((item) => typeof item === "object" && item !== null && !Array.isArray(item)).map((item) => ({ ...item, order_id: order.id })) : []) },
+  { resource: "payments", path: "/order/v1.0/orders", itemKeys: ["data", "items", "orders"], defaultPageSize: DEFAULT_PAGE_SIZE9, supportsIncremental: true, buildQuery: query3 },
+  { resource: "refunds", path: "/order/v1.0/orders", itemKeys: ["data", "items", "orders"], defaultPageSize: DEFAULT_PAGE_SIZE9, supportsIncremental: true, buildQuery: query3 }
+];
+
+// src/products/integracoes/cloud/src/connectors/ecommerce/ifood/ifoodConnector.ts
+var ifoodConnector = createPaginatedEcommerceConnector({
+  provider: "ifood",
+  defaultBaseUrl: "https://merchant-api.ifood.com.br",
+  envBaseUrlKey: "IFOOD_API_BASE_URL",
+  resources: IFOOD_RESOURCES,
+  testResource: "stores",
+  rateLimitMs: Number(process.env.IFOOD_RATE_LIMIT_MS || 250),
+  authMode: "bearer"
+});
+
+// src/products/integracoes/cloud/src/connectors/ecommerce/kiwify/kiwifyResources.ts
+var DEFAULT_PAGE_SIZE10 = 100;
+function query4({ page, pageSize }) {
+  return { page, per_page: pageSize };
+}
+var KIWIFY_RESOURCES = [
+  { resource: "stores", path: "/v1/account", itemKeys: ["data", "account"], defaultPageSize: 1, supportsIncremental: false },
+  { resource: "customers", path: "/v1/sales", itemKeys: ["data", "items"], defaultPageSize: DEFAULT_PAGE_SIZE10, supportsIncremental: true, buildQuery: query4, transformItems: (items) => items.map((sale) => typeof sale.customer === "object" && sale.customer !== null && !Array.isArray(sale.customer) ? sale.customer : sale) },
+  { resource: "products", path: "/v1/products", itemKeys: ["data", "items"], defaultPageSize: DEFAULT_PAGE_SIZE10, supportsIncremental: true, buildQuery: query4 },
+  { resource: "orders", path: "/v1/sales", itemKeys: ["data", "items"], defaultPageSize: DEFAULT_PAGE_SIZE10, supportsIncremental: true, buildQuery: query4 },
+  { resource: "order_items", path: "/v1/sales", itemKeys: ["data", "items"], defaultPageSize: DEFAULT_PAGE_SIZE10, supportsIncremental: true, buildQuery: query4, transformItems: (items) => items.map((sale) => ({ ...typeof sale.product === "object" && sale.product !== null && !Array.isArray(sale.product) ? sale.product : {}, sale_id: sale.id })) },
+  { resource: "payments", path: "/v1/sales", itemKeys: ["data", "items"], defaultPageSize: DEFAULT_PAGE_SIZE10, supportsIncremental: true, buildQuery: query4 },
+  { resource: "refunds", path: "/v1/sales", itemKeys: ["data", "items"], defaultPageSize: DEFAULT_PAGE_SIZE10, supportsIncremental: true, buildQuery: query4 }
+];
+
+// src/products/integracoes/cloud/src/connectors/ecommerce/kiwify/kiwifyConnector.ts
+var kiwifyConnector = createPaginatedEcommerceConnector({
+  provider: "kiwify",
+  defaultBaseUrl: "https://public-api.kiwify.com",
+  envBaseUrlKey: "KIWIFY_API_BASE_URL",
+  resources: KIWIFY_RESOURCES,
+  testResource: "stores",
+  rateLimitMs: Number(process.env.KIWIFY_RATE_LIMIT_MS || 250),
+  authMode: "bearer"
+});
+
+// src/products/integracoes/cloud/src/connectors/ecommerce/nuvemshop/nuvemshopResources.ts
+var DEFAULT_PAGE_SIZE11 = 100;
+function storePath(credentials, suffix) {
+  return `/${credentials.storeId || process.env.NUVEMSHOP_STORE_ID || "missing_store_id"}${suffix}`;
+}
+function query5({ page, pageSize }) {
+  return { page, per_page: pageSize };
+}
+var NUVEMSHOP_RESOURCES = [
+  { resource: "stores", path: "/store", itemKeys: ["store"], defaultPageSize: 1, supportsIncremental: false },
+  { resource: "customers", path: "/missing_store_id/customers", itemKeys: ["customers", "data"], defaultPageSize: DEFAULT_PAGE_SIZE11, supportsIncremental: true, buildPath: ({ credentials }) => storePath(credentials, "/customers"), buildQuery: query5 },
+  { resource: "products", path: "/missing_store_id/products", itemKeys: ["products", "data"], defaultPageSize: DEFAULT_PAGE_SIZE11, supportsIncremental: true, buildPath: ({ credentials }) => storePath(credentials, "/products"), buildQuery: query5 },
+  { resource: "variants", path: "/missing_store_id/products", itemKeys: ["products", "data"], defaultPageSize: DEFAULT_PAGE_SIZE11, supportsIncremental: true, buildPath: ({ credentials }) => storePath(credentials, "/products"), buildQuery: query5, transformItems: (items) => items.flatMap((product) => Array.isArray(product.variants) ? product.variants.filter((item) => typeof item === "object" && item !== null && !Array.isArray(item)).map((variant) => ({ ...variant, product_id: product.id })) : []) },
+  { resource: "orders", path: "/missing_store_id/orders", itemKeys: ["orders", "data"], defaultPageSize: DEFAULT_PAGE_SIZE11, supportsIncremental: true, buildPath: ({ credentials }) => storePath(credentials, "/orders"), buildQuery: query5 },
+  { resource: "order_items", path: "/missing_store_id/orders", itemKeys: ["orders", "data"], defaultPageSize: DEFAULT_PAGE_SIZE11, supportsIncremental: true, buildPath: ({ credentials }) => storePath(credentials, "/orders"), buildQuery: query5, transformItems: (items) => items.flatMap((order) => Array.isArray(order.products) ? order.products.filter((item) => typeof item === "object" && item !== null && !Array.isArray(item)).map((item) => ({ ...item, order_id: order.id, order_number: order.number })) : []) },
+  { resource: "payments", path: "/missing_store_id/orders", itemKeys: ["orders", "data"], defaultPageSize: DEFAULT_PAGE_SIZE11, supportsIncremental: true, buildPath: ({ credentials }) => storePath(credentials, "/orders"), buildQuery: query5 },
+  { resource: "refunds", path: "/missing_store_id/orders", itemKeys: ["orders", "data"], defaultPageSize: DEFAULT_PAGE_SIZE11, supportsIncremental: true, buildPath: ({ credentials }) => storePath(credentials, "/orders"), buildQuery: query5 },
+  { resource: "shipping", path: "/missing_store_id/orders", itemKeys: ["orders", "data"], defaultPageSize: DEFAULT_PAGE_SIZE11, supportsIncremental: true, buildPath: ({ credentials }) => storePath(credentials, "/orders"), buildQuery: query5 },
+  { resource: "inventory", path: "/missing_store_id/products", itemKeys: ["products", "data"], defaultPageSize: DEFAULT_PAGE_SIZE11, supportsIncremental: true, buildPath: ({ credentials }) => storePath(credentials, "/products"), buildQuery: query5 },
+  { resource: "categories", path: "/missing_store_id/categories", itemKeys: ["categories", "data"], defaultPageSize: DEFAULT_PAGE_SIZE11, supportsIncremental: false, buildPath: ({ credentials }) => storePath(credentials, "/categories"), buildQuery: query5 },
+  { resource: "coupons", path: "/missing_store_id/coupons", itemKeys: ["coupons", "data"], defaultPageSize: DEFAULT_PAGE_SIZE11, supportsIncremental: false, buildPath: ({ credentials }) => storePath(credentials, "/coupons"), buildQuery: query5 }
+];
+
+// src/products/integracoes/cloud/src/connectors/ecommerce/nuvemshop/nuvemshopConnector.ts
+var nuvemshopConnector = createPaginatedEcommerceConnector({
+  provider: "nuvemshop",
+  defaultBaseUrl: "https://api.tiendanube.com/v1",
+  envBaseUrlKey: "NUVEMSHOP_API_BASE_URL",
+  resources: NUVEMSHOP_RESOURCES,
+  testResource: "stores",
+  rateLimitMs: Number(process.env.NUVEMSHOP_RATE_LIMIT_MS || 250),
+  authMode: "bearer"
+});
+
+// src/products/integracoes/cloud/src/connectors/ecommerce/olist/olistResources.ts
+var DEFAULT_PAGE_SIZE12 = 100;
+function query6({ page, pageSize }) {
+  return { page, limit: pageSize };
+}
+var OLIST_RESOURCES = [
+  { resource: "stores", path: "/stores", itemKeys: ["data", "items", "stores"], defaultPageSize: DEFAULT_PAGE_SIZE12, supportsIncremental: false, buildQuery: query6 },
+  { resource: "customers", path: "/customers", itemKeys: ["data", "items", "customers"], defaultPageSize: DEFAULT_PAGE_SIZE12, supportsIncremental: true, buildQuery: query6 },
+  { resource: "products", path: "/products", itemKeys: ["data", "items", "products"], defaultPageSize: DEFAULT_PAGE_SIZE12, supportsIncremental: true, buildQuery: query6 },
+  { resource: "variants", path: "/products", itemKeys: ["data", "items", "products"], defaultPageSize: DEFAULT_PAGE_SIZE12, supportsIncremental: true, buildQuery: query6 },
+  { resource: "orders", path: "/orders", itemKeys: ["data", "items", "orders"], defaultPageSize: DEFAULT_PAGE_SIZE12, supportsIncremental: true, buildQuery: query6 },
+  { resource: "order_items", path: "/orders", itemKeys: ["data", "items", "orders"], defaultPageSize: DEFAULT_PAGE_SIZE12, supportsIncremental: true, buildQuery: query6, transformItems: (items) => items.flatMap((order) => Array.isArray(order.items) ? order.items.filter((item) => typeof item === "object" && item !== null && !Array.isArray(item)).map((item) => ({ ...item, order_id: order.id })) : []) },
+  { resource: "payments", path: "/orders", itemKeys: ["data", "items", "orders"], defaultPageSize: DEFAULT_PAGE_SIZE12, supportsIncremental: true, buildQuery: query6 },
+  { resource: "refunds", path: "/orders", itemKeys: ["data", "items", "orders"], defaultPageSize: DEFAULT_PAGE_SIZE12, supportsIncremental: true, buildQuery: query6 },
+  { resource: "shipping", path: "/shipments", itemKeys: ["data", "items", "shipments"], defaultPageSize: DEFAULT_PAGE_SIZE12, supportsIncremental: true, buildQuery: query6 },
+  { resource: "inventory", path: "/inventory", itemKeys: ["data", "items", "inventory"], defaultPageSize: DEFAULT_PAGE_SIZE12, supportsIncremental: true, buildQuery: query6 }
+];
+
+// src/products/integracoes/cloud/src/connectors/ecommerce/olist/olistConnector.ts
+var olistConnector = createPaginatedEcommerceConnector({
+  provider: "olist",
+  defaultBaseUrl: "https://api.olist.com",
+  envBaseUrlKey: "OLIST_API_BASE_URL",
+  resources: OLIST_RESOURCES,
+  testResource: "stores",
+  rateLimitMs: Number(process.env.OLIST_RATE_LIMIT_MS || 250),
+  authMode: "bearer"
+});
+
+// src/products/integracoes/cloud/src/connectors/ecommerce/shopify/shopifyResources.ts
+var API_VERSION = process.env.SHOPIFY_API_VERSION || "2024-10";
+var DEFAULT_PAGE_SIZE13 = 100;
+function path(resource) {
+  return `/admin/api/${API_VERSION}/${resource}.json`;
+}
+function query7(root) {
+  return ({ pageSize, cursor }) => ({
+    limit: pageSize,
+    page_info: cursor?.page_info,
+    status: root === "orders" ? "any" : void 0
+  });
+}
+var SHOPIFY_RESOURCES = [
+  { resource: "stores", path: `/admin/api/${API_VERSION}/shop.json`, itemKeys: ["shop"], defaultPageSize: 1, supportsIncremental: false },
+  { resource: "customers", path: path("customers"), itemKeys: ["customers"], defaultPageSize: DEFAULT_PAGE_SIZE13, supportsIncremental: true, buildQuery: query7("customers") },
+  { resource: "products", path: path("products"), itemKeys: ["products"], defaultPageSize: DEFAULT_PAGE_SIZE13, supportsIncremental: true, buildQuery: query7("products") },
+  { resource: "variants", path: path("products"), itemKeys: ["products"], defaultPageSize: DEFAULT_PAGE_SIZE13, supportsIncremental: true, buildQuery: query7("products"), transformItems: (items) => items.flatMap((product) => Array.isArray(product.variants) ? product.variants.filter((item) => typeof item === "object" && item !== null && !Array.isArray(item)).map((variant) => ({ ...variant, product_id: product.id })) : []) },
+  { resource: "orders", path: path("orders"), itemKeys: ["orders"], defaultPageSize: DEFAULT_PAGE_SIZE13, supportsIncremental: true, buildQuery: query7("orders") },
+  { resource: "order_items", path: path("orders"), itemKeys: ["orders"], defaultPageSize: DEFAULT_PAGE_SIZE13, supportsIncremental: true, buildQuery: query7("orders"), transformItems: (items) => items.flatMap((order) => Array.isArray(order.line_items) ? order.line_items.filter((item) => typeof item === "object" && item !== null && !Array.isArray(item)).map((item) => ({ ...item, order_id: order.id, order_name: order.name })) : []) },
+  { resource: "payments", path: path("transactions"), itemKeys: ["transactions"], defaultPageSize: DEFAULT_PAGE_SIZE13, supportsIncremental: true, buildQuery: query7("transactions") },
+  { resource: "refunds", path: path("orders"), itemKeys: ["orders"], defaultPageSize: DEFAULT_PAGE_SIZE13, supportsIncremental: true, buildQuery: query7("orders"), transformItems: (items) => items.flatMap((order) => Array.isArray(order.refunds) ? order.refunds.filter((item) => typeof item === "object" && item !== null && !Array.isArray(item)).map((refund) => ({ ...refund, order_id: order.id })) : []) },
+  { resource: "shipping", path: path("orders"), itemKeys: ["orders"], defaultPageSize: DEFAULT_PAGE_SIZE13, supportsIncremental: true, buildQuery: query7("orders"), transformItems: (items) => items.flatMap((order) => Array.isArray(order.fulfillments) ? order.fulfillments.filter((item) => typeof item === "object" && item !== null && !Array.isArray(item)).map((fulfillment) => ({ ...fulfillment, order_id: order.id })) : []) },
+  { resource: "inventory", path: path("inventory_levels"), itemKeys: ["inventory_levels"], defaultPageSize: DEFAULT_PAGE_SIZE13, supportsIncremental: true, buildQuery: query7("inventory_levels") },
+  { resource: "categories", path: path("custom_collections"), itemKeys: ["custom_collections"], defaultPageSize: DEFAULT_PAGE_SIZE13, supportsIncremental: false, buildQuery: query7("custom_collections") },
+  { resource: "coupons", path: path("price_rules"), itemKeys: ["price_rules"], defaultPageSize: DEFAULT_PAGE_SIZE13, supportsIncremental: false, buildQuery: query7("price_rules") },
+  { resource: "abandoned_checkouts", path: path("checkouts"), itemKeys: ["checkouts"], defaultPageSize: DEFAULT_PAGE_SIZE13, supportsIncremental: true, buildQuery: query7("checkouts") }
+];
+
+// src/products/integracoes/cloud/src/connectors/ecommerce/shopify/shopifyConnector.ts
+var shopifyConnector = createPaginatedEcommerceConnector({
+  provider: "shopify",
+  defaultBaseUrl: "https://missing-shop.myshopify.com",
+  envBaseUrlKey: "SHOPIFY_API_BASE_URL",
+  resources: SHOPIFY_RESOURCES,
+  testResource: "stores",
+  rateLimitMs: Number(process.env.SHOPIFY_RATE_LIMIT_MS || 250),
+  authMode: "api_key_header",
+  apiKeyHeader: "X-Shopify-Access-Token"
+});
+
+// src/products/integracoes/cloud/src/connectors/ecommerce/woocommerce/woocommerceResources.ts
+var DEFAULT_PAGE_SIZE14 = 100;
+function query8({ page, pageSize }) {
+  return { page, per_page: pageSize };
+}
+var WOOCOMMERCE_RESOURCES = [
+  { resource: "stores", path: "/wp-json/wc/v3/system_status", itemKeys: ["environment"], defaultPageSize: 1, supportsIncremental: false },
+  { resource: "customers", path: "/wp-json/wc/v3/customers", itemKeys: ["data"], defaultPageSize: DEFAULT_PAGE_SIZE14, supportsIncremental: true, buildQuery: query8 },
+  { resource: "products", path: "/wp-json/wc/v3/products", itemKeys: ["data"], defaultPageSize: DEFAULT_PAGE_SIZE14, supportsIncremental: true, buildQuery: query8 },
+  { resource: "variants", path: "/wp-json/wc/v3/products", itemKeys: ["data"], defaultPageSize: DEFAULT_PAGE_SIZE14, supportsIncremental: true, buildQuery: query8 },
+  { resource: "orders", path: "/wp-json/wc/v3/orders", itemKeys: ["data"], defaultPageSize: DEFAULT_PAGE_SIZE14, supportsIncremental: true, buildQuery: query8 },
+  { resource: "order_items", path: "/wp-json/wc/v3/orders", itemKeys: ["data"], defaultPageSize: DEFAULT_PAGE_SIZE14, supportsIncremental: true, buildQuery: query8, transformItems: (items) => items.flatMap((order) => Array.isArray(order.line_items) ? order.line_items.filter((item) => typeof item === "object" && item !== null && !Array.isArray(item)).map((item) => ({ ...item, order_id: order.id, order_number: order.number })) : []) },
+  { resource: "payments", path: "/wp-json/wc/v3/orders", itemKeys: ["data"], defaultPageSize: DEFAULT_PAGE_SIZE14, supportsIncremental: true, buildQuery: query8 },
+  { resource: "refunds", path: "/wp-json/wc/v3/refunds", itemKeys: ["data"], defaultPageSize: DEFAULT_PAGE_SIZE14, supportsIncremental: true, buildQuery: query8 },
+  { resource: "shipping", path: "/wp-json/wc/v3/orders", itemKeys: ["data"], defaultPageSize: DEFAULT_PAGE_SIZE14, supportsIncremental: true, buildQuery: query8 },
+  { resource: "inventory", path: "/wp-json/wc/v3/products", itemKeys: ["data"], defaultPageSize: DEFAULT_PAGE_SIZE14, supportsIncremental: true, buildQuery: query8 },
+  { resource: "categories", path: "/wp-json/wc/v3/products/categories", itemKeys: ["data"], defaultPageSize: DEFAULT_PAGE_SIZE14, supportsIncremental: false, buildQuery: query8 },
+  { resource: "coupons", path: "/wp-json/wc/v3/coupons", itemKeys: ["data"], defaultPageSize: DEFAULT_PAGE_SIZE14, supportsIncremental: false, buildQuery: query8 }
+];
+
+// src/products/integracoes/cloud/src/connectors/ecommerce/woocommerce/woocommerceConnector.ts
+var woocommerceConnector = createPaginatedEcommerceConnector({
+  provider: "woocommerce",
+  defaultBaseUrl: "https://missing-woocommerce-store.example",
+  envBaseUrlKey: "WOOCOMMERCE_API_BASE_URL",
+  resources: WOOCOMMERCE_RESOURCES,
+  testResource: "stores",
+  rateLimitMs: Number(process.env.WOOCOMMERCE_RATE_LIMIT_MS || 250),
+  authMode: "basic"
+});
+
+// src/products/integracoes/cloud/src/providers/ecommerceProviderRegistry.ts
+var ECOMMERCE_CONNECTORS = [
+  shopifyConnector,
+  nuvemshopConnector,
+  olistConnector,
+  woocommerceConnector,
+  eduzzConnector,
+  hotmartConnector,
+  kiwifyConnector,
+  ifoodConnector
+];
+
+// src/products/integracoes/cloud/src/connectors/erp/bling/blingClient.ts
+var DEFAULT_BASE_URL = "https://api.bling.com.br/Api/v3";
+var DEFAULT_MAX_PAGES = 100;
+var DEFAULT_RATE_LIMIT_MS = 350;
+function isRecord5(value) {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
+}
+function parseCredentials2(value) {
+  if (isRecord5(value)) return value;
+  if (typeof value !== "string") return null;
+  try {
+    const parsed = JSON.parse(value);
+    return isRecord5(parsed) ? parsed : null;
+  } catch {
+    return null;
+  }
+}
+function nonEmptyString5(value) {
+  return typeof value === "string" && value.trim().length > 0;
+}
 function normalizeBlingCredentials(value) {
   const credentials = parseCredentials2(value);
   const accessToken = credentials?.accessToken ?? credentials?.access_token;
-  if (!credentials || !nonEmptyString4(accessToken)) {
+  if (!credentials || !nonEmptyString5(accessToken)) {
     throw new ProviderError({
       provider: "bling",
       kind: "auth",
@@ -7021,10 +7490,10 @@ function normalizeBlingCredentials(value) {
   }
   return {
     accessToken: accessToken.trim(),
-    refreshToken: nonEmptyString4(credentials.refreshToken) ? credentials.refreshToken.trim() : nonEmptyString4(credentials.refresh_token) ? credentials.refresh_token.trim() : void 0,
-    expiresAt: nonEmptyString4(credentials.expiresAt) ? credentials.expiresAt.trim() : nonEmptyString4(credentials.expires_at) ? credentials.expires_at.trim() : void 0,
-    tokenType: nonEmptyString4(credentials.tokenType) ? credentials.tokenType.trim() : nonEmptyString4(credentials.token_type) ? credentials.token_type.trim() : void 0,
-    scope: nonEmptyString4(credentials.scope) ? credentials.scope.trim() : void 0
+    refreshToken: nonEmptyString5(credentials.refreshToken) ? credentials.refreshToken.trim() : nonEmptyString5(credentials.refresh_token) ? credentials.refresh_token.trim() : void 0,
+    expiresAt: nonEmptyString5(credentials.expiresAt) ? credentials.expiresAt.trim() : nonEmptyString5(credentials.expires_at) ? credentials.expires_at.trim() : void 0,
+    tokenType: nonEmptyString5(credentials.tokenType) ? credentials.tokenType.trim() : nonEmptyString5(credentials.token_type) ? credentials.token_type.trim() : void 0,
+    scope: nonEmptyString5(credentials.scope) ? credentials.scope.trim() : void 0
   };
 }
 function validateBlingConnectorCredentials(value) {
@@ -7038,9 +7507,9 @@ function validateBlingConnectorCredentials(value) {
 function getBaseUrl2() {
   return (process.env.BLING_API_BASE_URL || DEFAULT_BASE_URL).replace(/\/+$/, "");
 }
-function buildUrl3(config, query) {
+function buildUrl4(config, query9) {
   const url = new URL(`${getBaseUrl2()}${config.path.startsWith("/") ? config.path : `/${config.path}`}`);
-  for (const [key, value] of Object.entries(query || {})) {
+  for (const [key, value] of Object.entries(query9 || {})) {
     if (value !== void 0 && value !== null && value !== "") url.searchParams.set(key, String(value));
   }
   return url.toString();
@@ -7050,26 +7519,26 @@ function asNumber(value) {
   return Number.isFinite(parsed) && parsed > 0 ? parsed : void 0;
 }
 function extractTotalPages(payload) {
-  if (!isRecord4(payload)) return void 0;
+  if (!isRecord5(payload)) return void 0;
   return asNumber(payload.totalPaginas ?? payload.total_paginas ?? payload.totalPages ?? payload.pages);
 }
 function extractTotalRecords(payload) {
-  if (!isRecord4(payload)) return void 0;
+  if (!isRecord5(payload)) return void 0;
   return asNumber(payload.totalRegistros ?? payload.total_registros ?? payload.totalItems ?? payload.total);
 }
-function extractItems3(payload, itemKeys) {
+function extractItems4(payload, itemKeys) {
   if (Array.isArray(payload)) {
-    return payload.filter((item) => isRecord4(item));
+    return payload.filter((item) => isRecord5(item));
   }
   for (const key of itemKeys) {
     const value = payload[key];
     if (Array.isArray(value)) {
-      return value.filter((item) => isRecord4(item));
+      return value.filter((item) => isRecord5(item));
     }
   }
   const arrays = Object.values(payload).filter(Array.isArray);
   if (arrays.length === 1) {
-    return arrays[0].filter((item) => isRecord4(item));
+    return arrays[0].filter((item) => isRecord5(item));
   }
   return [];
 }
@@ -7090,7 +7559,7 @@ var BlingClient = class {
     const response = await connectorJsonRequest({
       provider: "bling",
       resource: config.resource,
-      url: buildUrl3(config, config.buildQuery?.(input)),
+      url: buildUrl4(config, config.buildQuery?.(input)),
       method: "GET",
       headers: {
         Authorization: `Bearer ${this.credentials.accessToken}`
@@ -7110,7 +7579,7 @@ var BlingClient = class {
         pageSize,
         cursor: input?.cursor
       });
-      const items = extractItems3(payload, config.itemKeys);
+      const items = extractItems4(payload, config.itemKeys);
       const totalPages = extractTotalPages(payload);
       const totalRecords = extractTotalRecords(payload);
       loadedPages += 1;
@@ -7158,8 +7627,8 @@ var EXTERNAL_ID_CANDIDATES = [
   "canalVenda.id",
   "formaPagamento.id"
 ];
-function getNestedValue(row, path) {
-  return path.split(".").reduce((current, key) => {
+function getNestedValue(row, path2) {
+  return path2.split(".").reduce((current, key) => {
     if (!current || typeof current !== "object" || Array.isArray(current)) return void 0;
     return current[key];
   }, row);
@@ -7190,7 +7659,7 @@ function mapBlingRows(input) {
 }
 
 // src/products/integracoes/cloud/src/connectors/erp/bling/blingResources.ts
-var DEFAULT_PAGE_SIZE7 = 100;
+var DEFAULT_PAGE_SIZE15 = 100;
 function envResourcePath(resource, fallback) {
   const key = `BLING_RESOURCE_${resource.toUpperCase()}_PATH`;
   return process.env[key]?.trim() || fallback;
@@ -7206,7 +7675,7 @@ var BLING_RESOURCE_CONFIGS = [
     resource: "clientes",
     path: envResourcePath("clientes", "/contatos"),
     itemKeys: ["data", "itens", "items", "contatos"],
-    defaultPageSize: DEFAULT_PAGE_SIZE7,
+    defaultPageSize: DEFAULT_PAGE_SIZE15,
     supportsIncremental: false,
     buildQuery: pageQuery2
   },
@@ -7214,7 +7683,7 @@ var BLING_RESOURCE_CONFIGS = [
     resource: "fornecedores",
     path: envResourcePath("fornecedores", "/contatos"),
     itemKeys: ["data", "itens", "items", "contatos"],
-    defaultPageSize: DEFAULT_PAGE_SIZE7,
+    defaultPageSize: DEFAULT_PAGE_SIZE15,
     supportsIncremental: false,
     buildQuery: pageQuery2
   },
@@ -7222,7 +7691,7 @@ var BLING_RESOURCE_CONFIGS = [
     resource: "produtos",
     path: envResourcePath("produtos", "/produtos"),
     itemKeys: ["data", "itens", "items", "produtos"],
-    defaultPageSize: DEFAULT_PAGE_SIZE7,
+    defaultPageSize: DEFAULT_PAGE_SIZE15,
     supportsIncremental: false,
     buildQuery: pageQuery2
   },
@@ -7230,7 +7699,7 @@ var BLING_RESOURCE_CONFIGS = [
     resource: "pedidos_venda",
     path: envResourcePath("pedidos_venda", "/pedidos/vendas"),
     itemKeys: ["data", "itens", "items", "pedidos"],
-    defaultPageSize: DEFAULT_PAGE_SIZE7,
+    defaultPageSize: DEFAULT_PAGE_SIZE15,
     supportsIncremental: false,
     buildQuery: pageQuery2
   },
@@ -7238,7 +7707,7 @@ var BLING_RESOURCE_CONFIGS = [
     resource: "compras",
     path: envResourcePath("compras", "/pedidos/compras"),
     itemKeys: ["data", "itens", "items", "pedidos"],
-    defaultPageSize: DEFAULT_PAGE_SIZE7,
+    defaultPageSize: DEFAULT_PAGE_SIZE15,
     supportsIncremental: false,
     buildQuery: pageQuery2
   },
@@ -7246,7 +7715,7 @@ var BLING_RESOURCE_CONFIGS = [
     resource: "contas_receber",
     path: envResourcePath("contas_receber", "/contas/receber"),
     itemKeys: ["data", "itens", "items", "contas"],
-    defaultPageSize: DEFAULT_PAGE_SIZE7,
+    defaultPageSize: DEFAULT_PAGE_SIZE15,
     supportsIncremental: false,
     buildQuery: pageQuery2
   },
@@ -7254,7 +7723,7 @@ var BLING_RESOURCE_CONFIGS = [
     resource: "contas_pagar",
     path: envResourcePath("contas_pagar", "/contas/pagar"),
     itemKeys: ["data", "itens", "items", "contas"],
-    defaultPageSize: DEFAULT_PAGE_SIZE7,
+    defaultPageSize: DEFAULT_PAGE_SIZE15,
     supportsIncremental: false,
     buildQuery: pageQuery2
   },
@@ -7262,7 +7731,7 @@ var BLING_RESOURCE_CONFIGS = [
     resource: "notas_fiscais",
     path: envResourcePath("notas_fiscais", "/nfe"),
     itemKeys: ["data", "itens", "items", "notas"],
-    defaultPageSize: DEFAULT_PAGE_SIZE7,
+    defaultPageSize: DEFAULT_PAGE_SIZE15,
     supportsIncremental: false,
     buildQuery: pageQuery2
   },
@@ -7270,7 +7739,7 @@ var BLING_RESOURCE_CONFIGS = [
     resource: "estoque",
     path: envResourcePath("estoque", "/estoques/saldos"),
     itemKeys: ["data", "itens", "items", "saldos"],
-    defaultPageSize: DEFAULT_PAGE_SIZE7,
+    defaultPageSize: DEFAULT_PAGE_SIZE15,
     supportsIncremental: false,
     buildQuery: pageQuery2
   },
@@ -7278,7 +7747,7 @@ var BLING_RESOURCE_CONFIGS = [
     resource: "categorias",
     path: envResourcePath("categorias", "/categorias/produtos"),
     itemKeys: ["data", "itens", "items", "categorias"],
-    defaultPageSize: DEFAULT_PAGE_SIZE7,
+    defaultPageSize: DEFAULT_PAGE_SIZE15,
     supportsIncremental: false,
     buildQuery: pageQuery2
   },
@@ -7286,7 +7755,7 @@ var BLING_RESOURCE_CONFIGS = [
     resource: "servicos",
     path: envResourcePath("servicos", "/servicos"),
     itemKeys: ["data", "itens", "items", "servicos"],
-    defaultPageSize: DEFAULT_PAGE_SIZE7,
+    defaultPageSize: DEFAULT_PAGE_SIZE15,
     supportsIncremental: false,
     buildQuery: pageQuery2
   },
@@ -7294,7 +7763,7 @@ var BLING_RESOURCE_CONFIGS = [
     resource: "notas_servico",
     path: envResourcePath("notas_servico", "/nfse"),
     itemKeys: ["data", "itens", "items", "notas", "nfse"],
-    defaultPageSize: DEFAULT_PAGE_SIZE7,
+    defaultPageSize: DEFAULT_PAGE_SIZE15,
     supportsIncremental: false,
     buildQuery: pageQuery2
   },
@@ -7302,7 +7771,7 @@ var BLING_RESOURCE_CONFIGS = [
     resource: "notas_consumidor",
     path: envResourcePath("notas_consumidor", "/nfce"),
     itemKeys: ["data", "itens", "items", "notas", "nfce"],
-    defaultPageSize: DEFAULT_PAGE_SIZE7,
+    defaultPageSize: DEFAULT_PAGE_SIZE15,
     supportsIncremental: false,
     buildQuery: pageQuery2
   },
@@ -7310,7 +7779,7 @@ var BLING_RESOURCE_CONFIGS = [
     resource: "formas_pagamento",
     path: envResourcePath("formas_pagamento", "/formas-pagamentos"),
     itemKeys: ["data", "itens", "items", "formas_pagamento", "formasPagamento"],
-    defaultPageSize: DEFAULT_PAGE_SIZE7,
+    defaultPageSize: DEFAULT_PAGE_SIZE15,
     supportsIncremental: false,
     buildQuery: pageQuery2
   },
@@ -7318,7 +7787,7 @@ var BLING_RESOURCE_CONFIGS = [
     resource: "vendedores",
     path: envResourcePath("vendedores", "/vendedores"),
     itemKeys: ["data", "itens", "items", "vendedores"],
-    defaultPageSize: DEFAULT_PAGE_SIZE7,
+    defaultPageSize: DEFAULT_PAGE_SIZE15,
     supportsIncremental: false,
     buildQuery: pageQuery2
   },
@@ -7326,7 +7795,7 @@ var BLING_RESOURCE_CONFIGS = [
     resource: "transportadoras",
     path: envResourcePath("transportadoras", "/transportadoras"),
     itemKeys: ["data", "itens", "items", "transportadoras"],
-    defaultPageSize: DEFAULT_PAGE_SIZE7,
+    defaultPageSize: DEFAULT_PAGE_SIZE15,
     supportsIncremental: false,
     buildQuery: pageQuery2
   },
@@ -7334,7 +7803,7 @@ var BLING_RESOURCE_CONFIGS = [
     resource: "canais_venda",
     path: envResourcePath("canais_venda", "/canais-venda"),
     itemKeys: ["data", "itens", "items", "canais_venda", "canaisVenda"],
-    defaultPageSize: DEFAULT_PAGE_SIZE7,
+    defaultPageSize: DEFAULT_PAGE_SIZE15,
     supportsIncremental: false,
     buildQuery: pageQuery2
   },
@@ -7342,7 +7811,7 @@ var BLING_RESOURCE_CONFIGS = [
     resource: "lojas",
     path: envResourcePath("lojas", "/lojas"),
     itemKeys: ["data", "itens", "items", "lojas"],
-    defaultPageSize: DEFAULT_PAGE_SIZE7,
+    defaultPageSize: DEFAULT_PAGE_SIZE15,
     supportsIncremental: false,
     buildQuery: pageQuery2
   },
@@ -7350,7 +7819,7 @@ var BLING_RESOURCE_CONFIGS = [
     resource: "categorias_receitas_despesas",
     path: envResourcePath("categorias_receitas_despesas", "/categorias/receitas-despesas"),
     itemKeys: ["data", "itens", "items", "categorias"],
-    defaultPageSize: DEFAULT_PAGE_SIZE7,
+    defaultPageSize: DEFAULT_PAGE_SIZE15,
     supportsIncremental: false,
     buildQuery: pageQuery2
   },
@@ -7358,7 +7827,7 @@ var BLING_RESOURCE_CONFIGS = [
     resource: "depositos",
     path: envResourcePath("depositos", "/depositos"),
     itemKeys: ["data", "itens", "items", "depositos"],
-    defaultPageSize: DEFAULT_PAGE_SIZE7,
+    defaultPageSize: DEFAULT_PAGE_SIZE15,
     supportsIncremental: false,
     buildQuery: pageQuery2
   }
@@ -7476,26 +7945,26 @@ var blingConnector = {
 // src/products/integracoes/cloud/src/connectors/erp/contaAzul/contaAzulClient.ts
 var DEFAULT_BASE_URL2 = "https://api-v2.contaazul.com";
 var DEFAULT_MAX_PAGES2 = 100;
-function isRecord5(value) {
+function isRecord6(value) {
   return typeof value === "object" && value !== null && !Array.isArray(value);
 }
 function parseCredentials3(value) {
-  if (isRecord5(value)) return value;
+  if (isRecord6(value)) return value;
   if (typeof value !== "string") return null;
   try {
     const parsed = JSON.parse(value);
-    return isRecord5(parsed) ? parsed : null;
+    return isRecord6(parsed) ? parsed : null;
   } catch {
     return null;
   }
 }
-function nonEmptyString5(value) {
+function nonEmptyString6(value) {
   return typeof value === "string" && value.trim().length > 0;
 }
 function normalizeContaAzulCredentials(value) {
   const credentials = parseCredentials3(value);
   const accessToken = credentials?.accessToken ?? credentials?.access_token;
-  if (!credentials || !nonEmptyString5(accessToken)) {
+  if (!credentials || !nonEmptyString6(accessToken)) {
     throw new ProviderError({
       provider: "conta_azul",
       kind: "auth",
@@ -7505,10 +7974,10 @@ function normalizeContaAzulCredentials(value) {
   }
   return {
     accessToken: accessToken.trim(),
-    refreshToken: nonEmptyString5(credentials.refreshToken) ? credentials.refreshToken.trim() : nonEmptyString5(credentials.refresh_token) ? credentials.refresh_token.trim() : void 0,
-    expiresAt: nonEmptyString5(credentials.expiresAt) ? credentials.expiresAt.trim() : nonEmptyString5(credentials.expires_at) ? credentials.expires_at.trim() : void 0,
-    tokenType: nonEmptyString5(credentials.tokenType) ? credentials.tokenType.trim() : nonEmptyString5(credentials.token_type) ? credentials.token_type.trim() : void 0,
-    scope: nonEmptyString5(credentials.scope) ? credentials.scope.trim() : void 0
+    refreshToken: nonEmptyString6(credentials.refreshToken) ? credentials.refreshToken.trim() : nonEmptyString6(credentials.refresh_token) ? credentials.refresh_token.trim() : void 0,
+    expiresAt: nonEmptyString6(credentials.expiresAt) ? credentials.expiresAt.trim() : nonEmptyString6(credentials.expires_at) ? credentials.expires_at.trim() : void 0,
+    tokenType: nonEmptyString6(credentials.tokenType) ? credentials.tokenType.trim() : nonEmptyString6(credentials.token_type) ? credentials.token_type.trim() : void 0,
+    scope: nonEmptyString6(credentials.scope) ? credentials.scope.trim() : void 0
   };
 }
 function validateContaAzulConnectorCredentials(value) {
@@ -7522,9 +7991,9 @@ function validateContaAzulConnectorCredentials(value) {
 function getBaseUrl3() {
   return (process.env.CONTA_AZUL_API_BASE_URL || DEFAULT_BASE_URL2).replace(/\/+$/, "");
 }
-function buildUrl4(config, query) {
+function buildUrl5(config, query9) {
   const url = new URL(`${getBaseUrl3()}${config.path.startsWith("/") ? config.path : `/${config.path}`}`);
-  for (const [key, value] of Object.entries(query || {})) {
+  for (const [key, value] of Object.entries(query9 || {})) {
     if (value !== void 0 && value !== null && value !== "") url.searchParams.set(key, String(value));
   }
   return url.toString();
@@ -7534,30 +8003,30 @@ function asNumber2(value) {
   return Number.isFinite(parsed) && parsed > 0 ? parsed : void 0;
 }
 function extractTotalPages2(payload) {
-  if (!isRecord5(payload)) return void 0;
+  if (!isRecord6(payload)) return void 0;
   return asNumber2(payload.total_paginas ?? payload.totalPages ?? payload.total_de_paginas ?? payload.pages);
 }
 function extractTotalRecords2(payload) {
-  if (!isRecord5(payload)) return void 0;
+  if (!isRecord6(payload)) return void 0;
   return asNumber2(payload.total_itens ?? payload.totalItems ?? payload.total ?? payload.total_de_registros);
 }
 function getMaxPages2() {
   const value = Number(process.env.CONTA_AZUL_MAX_PAGES_PER_RESOURCE || DEFAULT_MAX_PAGES2);
   return Number.isFinite(value) && value > 0 ? Math.floor(value) : DEFAULT_MAX_PAGES2;
 }
-function extractItems4(payload, itemKeys) {
+function extractItems5(payload, itemKeys) {
   if (Array.isArray(payload)) {
-    return payload.filter((item) => isRecord5(item));
+    return payload.filter((item) => isRecord6(item));
   }
   for (const key of itemKeys) {
     const value = payload[key];
     if (Array.isArray(value)) {
-      return value.filter((item) => isRecord5(item));
+      return value.filter((item) => isRecord6(item));
     }
   }
   const arrays = Object.values(payload).filter(Array.isArray);
   if (arrays.length === 1) {
-    return arrays[0].filter((item) => isRecord5(item));
+    return arrays[0].filter((item) => isRecord6(item));
   }
   return [];
 }
@@ -7568,12 +8037,12 @@ var ContaAzulClient = class {
   }
   async request(config, input) {
     const method = config.method || "GET";
-    const query = method === "GET" ? config.buildQuery?.(input) : void 0;
+    const query9 = method === "GET" ? config.buildQuery?.(input) : void 0;
     const body2 = method === "POST" ? config.buildBody?.(input) : void 0;
     const response = await connectorJsonRequest({
       provider: "conta_azul",
       resource: config.resource,
-      url: buildUrl4(config, query),
+      url: buildUrl5(config, query9),
       method,
       headers: {
         Authorization: `Bearer ${this.credentials.accessToken}`
@@ -7593,7 +8062,7 @@ var ContaAzulClient = class {
         pageSize,
         cursor: input?.cursor
       });
-      const items = extractItems4(payload, config.itemKeys);
+      const items = extractItems5(payload, config.itemKeys);
       const totalPages = extractTotalPages2(payload);
       const totalRecords = extractTotalRecords2(payload);
       loadedPages += 1;
@@ -7645,8 +8114,8 @@ var EXTERNAL_ID_CANDIDATES2 = [
   "produto.id",
   "servico.id"
 ];
-function getNestedValue2(row, path) {
-  return path.split(".").reduce((current, key) => {
+function getNestedValue2(row, path2) {
+  return path2.split(".").reduce((current, key) => {
     if (!current || typeof current !== "object" || Array.isArray(current)) return void 0;
     return current[key];
   }, row);
@@ -7677,7 +8146,7 @@ function mapContaAzulRows(input) {
 }
 
 // src/products/integracoes/cloud/src/connectors/erp/contaAzul/contaAzulResources.ts
-var DEFAULT_PAGE_SIZE8 = 50;
+var DEFAULT_PAGE_SIZE16 = 50;
 function envResourcePath2(resource, fallback) {
   const key = `CONTA_AZUL_RESOURCE_${resource.toUpperCase()}_PATH`;
   return process.env[key]?.trim() || fallback;
@@ -7699,7 +8168,7 @@ var CONTA_AZUL_RESOURCE_CONFIGS = [
     resource: "clientes",
     path: envResourcePath2("clientes", "/v1/pessoas"),
     itemKeys: ["itens", "items", "data", "content", "pessoas"],
-    defaultPageSize: DEFAULT_PAGE_SIZE8,
+    defaultPageSize: DEFAULT_PAGE_SIZE16,
     supportsIncremental: false,
     buildQuery: pageQuery3
   },
@@ -7707,7 +8176,7 @@ var CONTA_AZUL_RESOURCE_CONFIGS = [
     resource: "fornecedores",
     path: envResourcePath2("fornecedores", "/v1/pessoas"),
     itemKeys: ["itens", "items", "data", "content", "pessoas"],
-    defaultPageSize: DEFAULT_PAGE_SIZE8,
+    defaultPageSize: DEFAULT_PAGE_SIZE16,
     supportsIncremental: false,
     buildQuery: pageQuery3
   },
@@ -7715,7 +8184,7 @@ var CONTA_AZUL_RESOURCE_CONFIGS = [
     resource: "produtos",
     path: envResourcePath2("produtos", "/v1/produtos"),
     itemKeys: ["itens", "items", "data", "content", "produtos"],
-    defaultPageSize: DEFAULT_PAGE_SIZE8,
+    defaultPageSize: DEFAULT_PAGE_SIZE16,
     supportsIncremental: false,
     buildQuery: pageQuery3
   },
@@ -7723,7 +8192,7 @@ var CONTA_AZUL_RESOURCE_CONFIGS = [
     resource: "categorias",
     path: envResourcePath2("categorias", "/v1/categorias"),
     itemKeys: ["itens", "items", "data", "content", "categorias"],
-    defaultPageSize: DEFAULT_PAGE_SIZE8,
+    defaultPageSize: DEFAULT_PAGE_SIZE16,
     supportsIncremental: false,
     buildQuery: pageQuery3
   },
@@ -7731,7 +8200,7 @@ var CONTA_AZUL_RESOURCE_CONFIGS = [
     resource: "centros_custo",
     path: envResourcePath2("centros_custo", "/v1/centro-de-custo"),
     itemKeys: ["itens", "items", "data", "content", "centros_custo"],
-    defaultPageSize: DEFAULT_PAGE_SIZE8,
+    defaultPageSize: DEFAULT_PAGE_SIZE16,
     supportsIncremental: false,
     buildQuery: pageQuery3
   },
@@ -7740,7 +8209,7 @@ var CONTA_AZUL_RESOURCE_CONFIGS = [
     path: envResourcePath2("contas_receber", "/v1/financeiro/eventos-financeiros/contas-a-receber/buscar"),
     method: "POST",
     itemKeys: ["itens", "items", "data", "content", "eventos", "parcelas"],
-    defaultPageSize: DEFAULT_PAGE_SIZE8,
+    defaultPageSize: DEFAULT_PAGE_SIZE16,
     supportsIncremental: false,
     buildBody: payableReceivableBody
   },
@@ -7749,7 +8218,7 @@ var CONTA_AZUL_RESOURCE_CONFIGS = [
     path: envResourcePath2("contas_pagar", "/v1/financeiro/eventos-financeiros/contas-a-pagar/buscar"),
     method: "POST",
     itemKeys: ["itens", "items", "data", "content", "eventos", "parcelas"],
-    defaultPageSize: DEFAULT_PAGE_SIZE8,
+    defaultPageSize: DEFAULT_PAGE_SIZE16,
     supportsIncremental: false,
     buildBody: payableReceivableBody
   },
@@ -7757,7 +8226,7 @@ var CONTA_AZUL_RESOURCE_CONFIGS = [
     resource: "servicos",
     path: envResourcePath2("servicos", "/v1/servicos"),
     itemKeys: ["itens", "items", "data", "content", "servicos", "services"],
-    defaultPageSize: DEFAULT_PAGE_SIZE8,
+    defaultPageSize: DEFAULT_PAGE_SIZE16,
     supportsIncremental: false,
     buildQuery: pageQuery3
   },
@@ -7765,7 +8234,7 @@ var CONTA_AZUL_RESOURCE_CONFIGS = [
     resource: "vendas",
     path: envResourcePath2("vendas", "/v1/vendas"),
     itemKeys: ["itens", "items", "data", "content", "vendas", "sales"],
-    defaultPageSize: DEFAULT_PAGE_SIZE8,
+    defaultPageSize: DEFAULT_PAGE_SIZE16,
     supportsIncremental: false,
     buildQuery: pageQuery3
   },
@@ -7773,7 +8242,7 @@ var CONTA_AZUL_RESOURCE_CONFIGS = [
     resource: "itens_venda",
     path: envResourcePath2("itens_venda", "/v1/vendas/itens"),
     itemKeys: ["itens", "items", "data", "content", "itens_venda", "saleItems"],
-    defaultPageSize: DEFAULT_PAGE_SIZE8,
+    defaultPageSize: DEFAULT_PAGE_SIZE16,
     supportsIncremental: false,
     buildQuery: pageQuery3
   },
@@ -7781,7 +8250,7 @@ var CONTA_AZUL_RESOURCE_CONFIGS = [
     resource: "parcelas_venda",
     path: envResourcePath2("parcelas_venda", "/v1/vendas/parcelas"),
     itemKeys: ["itens", "items", "data", "content", "parcelas_venda", "installments"],
-    defaultPageSize: DEFAULT_PAGE_SIZE8,
+    defaultPageSize: DEFAULT_PAGE_SIZE16,
     supportsIncremental: false,
     buildQuery: pageQuery3
   },
@@ -7789,7 +8258,7 @@ var CONTA_AZUL_RESOURCE_CONFIGS = [
     resource: "contratos",
     path: envResourcePath2("contratos", "/v1/contratos"),
     itemKeys: ["itens", "items", "data", "content", "contratos", "contracts"],
-    defaultPageSize: DEFAULT_PAGE_SIZE8,
+    defaultPageSize: DEFAULT_PAGE_SIZE16,
     supportsIncremental: false,
     buildQuery: pageQuery3
   },
@@ -7797,7 +8266,7 @@ var CONTA_AZUL_RESOURCE_CONFIGS = [
     resource: "contas_bancarias",
     path: envResourcePath2("contas_bancarias", "/v1/contas-bancarias"),
     itemKeys: ["itens", "items", "data", "content", "contas_bancarias", "bankAccounts"],
-    defaultPageSize: DEFAULT_PAGE_SIZE8,
+    defaultPageSize: DEFAULT_PAGE_SIZE16,
     supportsIncremental: false,
     buildQuery: pageQuery3
   },
@@ -7805,7 +8274,7 @@ var CONTA_AZUL_RESOURCE_CONFIGS = [
     resource: "vendedores",
     path: envResourcePath2("vendedores", "/v1/vendedores"),
     itemKeys: ["itens", "items", "data", "content", "vendedores", "sellers"],
-    defaultPageSize: DEFAULT_PAGE_SIZE8,
+    defaultPageSize: DEFAULT_PAGE_SIZE16,
     supportsIncremental: false,
     buildQuery: pageQuery3
   },
@@ -7813,7 +8282,7 @@ var CONTA_AZUL_RESOURCE_CONFIGS = [
     resource: "notas_fiscais",
     path: envResourcePath2("notas_fiscais", "/v1/notas-fiscais"),
     itemKeys: ["itens", "items", "data", "content", "notas_fiscais", "invoices"],
-    defaultPageSize: DEFAULT_PAGE_SIZE8,
+    defaultPageSize: DEFAULT_PAGE_SIZE16,
     supportsIncremental: false,
     buildQuery: pageQuery3
   },
@@ -7821,7 +8290,7 @@ var CONTA_AZUL_RESOURCE_CONFIGS = [
     resource: "estoque",
     path: envResourcePath2("estoque", "/v1/estoque"),
     itemKeys: ["itens", "items", "data", "content", "estoque", "saldos", "stock"],
-    defaultPageSize: DEFAULT_PAGE_SIZE8,
+    defaultPageSize: DEFAULT_PAGE_SIZE16,
     supportsIncremental: false,
     buildQuery: pageQuery3
   },
@@ -7829,7 +8298,7 @@ var CONTA_AZUL_RESOURCE_CONFIGS = [
     resource: "movimentacoes_estoque",
     path: envResourcePath2("movimentacoes_estoque", "/v1/estoque/movimentacoes"),
     itemKeys: ["itens", "items", "data", "content", "movimentacoes_estoque", "movements"],
-    defaultPageSize: DEFAULT_PAGE_SIZE8,
+    defaultPageSize: DEFAULT_PAGE_SIZE16,
     supportsIncremental: false,
     buildQuery: pageQuery3
   }
@@ -7947,25 +8416,25 @@ var contaAzulConnector = {
 // src/products/integracoes/cloud/src/connectors/erp/omie/omieClient.ts
 var DEFAULT_BASE_URL3 = "https://app.omie.com.br/api/v1";
 var DEFAULT_MAX_PAGES3 = 100;
-function isRecord6(value) {
+function isRecord7(value) {
   return typeof value === "object" && value !== null && !Array.isArray(value);
 }
 function parseCredentials4(value) {
-  if (isRecord6(value)) return value;
+  if (isRecord7(value)) return value;
   if (typeof value !== "string") return null;
   try {
     const parsed = JSON.parse(value);
-    return isRecord6(parsed) ? parsed : null;
+    return isRecord7(parsed) ? parsed : null;
   } catch {
     return null;
   }
 }
-function nonEmptyString6(value) {
+function nonEmptyString7(value) {
   return typeof value === "string" && value.trim().length > 0;
 }
 function normalizeOmieCredentials(value) {
   const credentials = parseCredentials4(value);
-  if (!credentials || !nonEmptyString6(credentials.app_key) || !nonEmptyString6(credentials.app_secret)) {
+  if (!credentials || !nonEmptyString7(credentials.app_key) || !nonEmptyString7(credentials.app_secret)) {
     throw new ProviderError({
       provider: "omie",
       kind: "auth",
@@ -7989,7 +8458,7 @@ function validateOmieConnectorCredentials(value) {
 function getBaseUrl4() {
   return (process.env.OMIE_API_BASE_URL || DEFAULT_BASE_URL3).replace(/\/+$/, "");
 }
-function buildUrl5(endpoint) {
+function buildUrl6(endpoint) {
   return `${getBaseUrl4()}${endpoint.startsWith("/") ? endpoint : `/${endpoint}`}`;
 }
 function asNumber3(value) {
@@ -8006,21 +8475,21 @@ function getMaxPages3() {
   const value = Number(process.env.OMIE_MAX_PAGES_PER_RESOURCE || DEFAULT_MAX_PAGES3);
   return Number.isFinite(value) && value > 0 ? Math.floor(value) : DEFAULT_MAX_PAGES3;
 }
-function extractItems5(payload, itemKeys) {
+function extractItems6(payload, itemKeys) {
   for (const key of itemKeys) {
     const value = payload[key];
     if (Array.isArray(value)) {
-      return value.filter((item) => isRecord6(item));
+      return value.filter((item) => isRecord7(item));
     }
   }
   const arrays = Object.values(payload).filter(Array.isArray);
   if (arrays.length === 1) {
-    return arrays[0].filter((item) => isRecord6(item));
+    return arrays[0].filter((item) => isRecord7(item));
   }
   return [];
 }
 function assertNoOmieFault(payload, resource) {
-  if (!isRecord6(payload)) return;
+  if (!isRecord7(payload)) return;
   const fault = payload.faultstring ?? payload.faultcode ?? payload.error ?? payload.message;
   if (!fault) return;
   throw new ProviderError({
@@ -8047,7 +8516,7 @@ var OmieClient = class {
     const response = await connectorJsonRequest({
       provider: "omie",
       resource: config.resource,
-      url: buildUrl5(config.endpoint),
+      url: buildUrl6(config.endpoint),
       method: "POST",
       body: body2
     });
@@ -8065,7 +8534,7 @@ var OmieClient = class {
         pageSize,
         cursor: input?.cursor
       }));
-      const items = extractItems5(payload, config.itemKeys);
+      const items = extractItems6(payload, config.itemKeys);
       const totalPages = getTotalPages(payload);
       const totalRecords = getTotalRecords(payload);
       loadedPages += 1;
@@ -8129,8 +8598,8 @@ var EXTERNAL_ID_CANDIDATES3 = [
   "codigo",
   "id"
 ];
-function getNestedValue3(row, path) {
-  return path.split(".").reduce((current, key) => {
+function getNestedValue3(row, path2) {
+  return path2.split(".").reduce((current, key) => {
     if (!current || typeof current !== "object" || Array.isArray(current)) return void 0;
     return current[key];
   }, row);
@@ -8161,7 +8630,7 @@ function mapOmieRows(input) {
 }
 
 // src/products/integracoes/cloud/src/connectors/erp/omie/omieResources.ts
-var DEFAULT_PAGE_SIZE9 = 50;
+var DEFAULT_PAGE_SIZE17 = 50;
 function formatOmieDate(value) {
   const day = String(value.getDate()).padStart(2, "0");
   const month = String(value.getMonth() + 1).padStart(2, "0");
@@ -8193,7 +8662,7 @@ var OMIE_RESOURCE_CONFIGS = [
     endpoint: "/geral/clientes/",
     call: "ListarClientes",
     itemKeys: ["clientes_cadastro"],
-    defaultPageSize: DEFAULT_PAGE_SIZE9,
+    defaultPageSize: DEFAULT_PAGE_SIZE17,
     supportsIncremental: false,
     buildParams: defaultParams
   },
@@ -8202,7 +8671,7 @@ var OMIE_RESOURCE_CONFIGS = [
     endpoint: "/geral/clientes/",
     call: "ListarClientes",
     itemKeys: ["clientes_cadastro"],
-    defaultPageSize: DEFAULT_PAGE_SIZE9,
+    defaultPageSize: DEFAULT_PAGE_SIZE17,
     supportsIncremental: false,
     buildParams: defaultParams
   },
@@ -8211,7 +8680,7 @@ var OMIE_RESOURCE_CONFIGS = [
     endpoint: "/geral/produtos/",
     call: "ListarProdutos",
     itemKeys: ["produto_servico_cadastro", "produtos_servico_cadastro"],
-    defaultPageSize: DEFAULT_PAGE_SIZE9,
+    defaultPageSize: DEFAULT_PAGE_SIZE17,
     supportsIncremental: false,
     buildParams: defaultParams
   },
@@ -8220,7 +8689,7 @@ var OMIE_RESOURCE_CONFIGS = [
     endpoint: "/produtos/pedido/",
     call: "ListarPedidos",
     itemKeys: ["pedido_venda_produto", "pedidos_venda_produto"],
-    defaultPageSize: DEFAULT_PAGE_SIZE9,
+    defaultPageSize: DEFAULT_PAGE_SIZE17,
     supportsIncremental: false,
     buildParams: defaultParams
   },
@@ -8229,7 +8698,7 @@ var OMIE_RESOURCE_CONFIGS = [
     endpoint: "/financas/contareceber/",
     call: "ListarContasReceber",
     itemKeys: ["conta_receber_cadastro", "contas_receber_cadastro"],
-    defaultPageSize: DEFAULT_PAGE_SIZE9,
+    defaultPageSize: DEFAULT_PAGE_SIZE17,
     supportsIncremental: false,
     buildParams: defaultParams
   },
@@ -8238,7 +8707,7 @@ var OMIE_RESOURCE_CONFIGS = [
     endpoint: "/financas/contapagar/",
     call: "ListarContasPagar",
     itemKeys: ["conta_pagar_cadastro", "contas_pagar_cadastro"],
-    defaultPageSize: DEFAULT_PAGE_SIZE9,
+    defaultPageSize: DEFAULT_PAGE_SIZE17,
     supportsIncremental: false,
     buildParams: defaultParams
   },
@@ -8247,7 +8716,7 @@ var OMIE_RESOURCE_CONFIGS = [
     endpoint: "/geral/categorias/",
     call: "ListarCategorias",
     itemKeys: ["categoria_cadastro", "categorias_cadastro"],
-    defaultPageSize: DEFAULT_PAGE_SIZE9,
+    defaultPageSize: DEFAULT_PAGE_SIZE17,
     supportsIncremental: false,
     buildParams: defaultParams
   },
@@ -8256,7 +8725,7 @@ var OMIE_RESOURCE_CONFIGS = [
     endpoint: "/produtos/pedidocompra/",
     call: "PesquisarPedCompra",
     itemKeys: ["pedidos_pesquisa", "pedido_pesquisa", "pedidos_compra", "pedidos"],
-    defaultPageSize: DEFAULT_PAGE_SIZE9,
+    defaultPageSize: DEFAULT_PAGE_SIZE17,
     supportsIncremental: false,
     buildParams: ({ page, pageSize }) => ({
       nPagina: page,
@@ -8279,7 +8748,7 @@ var OMIE_RESOURCE_CONFIGS = [
     endpoint: "/produtos/nfconsultar/",
     call: "ListarNF",
     itemKeys: ["nfCadastro", "notas_fiscais", "notas"],
-    defaultPageSize: DEFAULT_PAGE_SIZE9,
+    defaultPageSize: DEFAULT_PAGE_SIZE17,
     supportsIncremental: false,
     buildParams: ({ page, pageSize }) => ({
       pagina: page,
@@ -8294,7 +8763,7 @@ var OMIE_RESOURCE_CONFIGS = [
     endpoint: "/servicos/nfse/",
     call: "ListarNFSEs",
     itemKeys: ["nfseEncontradas", "notas_servico", "notas"],
-    defaultPageSize: DEFAULT_PAGE_SIZE9,
+    defaultPageSize: DEFAULT_PAGE_SIZE17,
     supportsIncremental: false,
     buildParams: omieNParams
   },
@@ -8303,7 +8772,7 @@ var OMIE_RESOURCE_CONFIGS = [
     endpoint: "/estoque/consulta/",
     call: "ListarPosEstoque",
     itemKeys: ["produtos", "saldos", "estoques"],
-    defaultPageSize: DEFAULT_PAGE_SIZE9,
+    defaultPageSize: DEFAULT_PAGE_SIZE17,
     supportsIncremental: false,
     buildParams: ({ page, pageSize }) => ({
       nPagina: page,
@@ -8318,7 +8787,7 @@ var OMIE_RESOURCE_CONFIGS = [
     endpoint: "/estoque/consulta/",
     call: "ListarMovimentoEstoque",
     itemKeys: ["movProdutoListar", "movProduto", "movimentos", "cadastros"],
-    defaultPageSize: DEFAULT_PAGE_SIZE9,
+    defaultPageSize: DEFAULT_PAGE_SIZE17,
     supportsIncremental: false,
     buildParams: ({ page, pageSize }) => ({
       nPagina: page,
@@ -8470,7 +8939,7 @@ var ERP_CONNECTORS = [
 ];
 
 // src/products/integracoes/cloud/src/connectors/marketing/googleAnalytics4/googleAnalytics4Resources.ts
-var DEFAULT_PAGE_SIZE10 = 1e4;
+var DEFAULT_PAGE_SIZE18 = 1e4;
 function propertyId(credentials) {
   return credentials.propertyId || process.env.GA4_PROPERTY_ID || process.env.GOOGLE_ANALYTICS_4_PROPERTY_ID || "missing_property_id";
 }
@@ -8481,7 +8950,7 @@ function metadataPath(credentials) {
   return `/properties/${propertyId(credentials)}/metadata`;
 }
 function nextOffset(_, items, page) {
-  return items.length >= DEFAULT_PAGE_SIZE10 ? { page: page + 1 } : void 0;
+  return items.length >= DEFAULT_PAGE_SIZE18 ? { page: page + 1 } : void 0;
 }
 function reportBody(input) {
   return ({ dateStart, dateEnd, page, pageSize }) => ({
@@ -8495,7 +8964,7 @@ function reportBody(input) {
 var reportBase = {
   path: "/properties/missing_property_id:runReport",
   itemKeys: ["rows"],
-  defaultPageSize: DEFAULT_PAGE_SIZE10,
+  defaultPageSize: DEFAULT_PAGE_SIZE18,
   supportsIncremental: true,
   method: "POST",
   buildPath: ({ credentials }) => reportPath(credentials),
@@ -8548,13 +9017,13 @@ var googleAnalytics4Connector = createDateRangeReportConnector({
 });
 
 // src/products/integracoes/cloud/src/connectors/marketing/googleSearchConsole/googleSearchConsoleResources.ts
-var DEFAULT_PAGE_SIZE11 = 25e3;
+var DEFAULT_PAGE_SIZE19 = 25e3;
 function sitePath(credentials) {
   const siteUrl = credentials.siteUrl || process.env.GOOGLE_SEARCH_CONSOLE_SITE_URL || "";
   return `/sites/${encodeURIComponent(siteUrl || "missing_site_url")}/searchAnalytics/query`;
 }
 function nextOffset2(_, items, page) {
-  return items.length >= DEFAULT_PAGE_SIZE11 ? { page: page + 1 } : void 0;
+  return items.length >= DEFAULT_PAGE_SIZE19 ? { page: page + 1 } : void 0;
 }
 function body(dimensions) {
   return ({ dateStart, dateEnd, page, pageSize }) => ({
@@ -8568,7 +9037,7 @@ function body(dimensions) {
 var reportBase2 = {
   path: "/sites/missing_site_url/searchAnalytics/query",
   itemKeys: ["rows"],
-  defaultPageSize: DEFAULT_PAGE_SIZE11,
+  defaultPageSize: DEFAULT_PAGE_SIZE19,
   supportsIncremental: true,
   method: "POST",
   buildPath: ({ credentials }) => sitePath(credentials),
@@ -8620,6 +9089,7 @@ var MARKETING_CONNECTORS = [
 var CLOUD_CONNECTORS = [
   ...ERP_CONNECTORS,
   ...CRM_CONNECTORS,
+  ...ECOMMERCE_CONNECTORS,
   ...MARKETING_CONNECTORS,
   ...ADVERTISING_CONNECTORS
 ];
@@ -8803,6 +9273,177 @@ var CRM_PROVIDERS = [
     authType: "oauth2",
     supportsOAuthCallback: true,
     tags: ["brasil", "sales"]
+  })
+];
+
+// src/products/integracoes/shared/providers/ecommerceProviders.ts
+var ECOMMERCE_RESOURCES = [
+  {
+    slug: "stores",
+    name: "Lojas",
+    description: "Lojas, contas, sellers ou propriedades conectadas.",
+    defaultEnabled: true
+  },
+  {
+    slug: "customers",
+    name: "Clientes",
+    description: "Clientes, compradores e contatos de ecommerce.",
+    defaultEnabled: true
+  },
+  {
+    slug: "products",
+    name: "Produtos",
+    description: "Catalogo de produtos, ofertas e SKUs.",
+    defaultEnabled: true
+  },
+  {
+    slug: "variants",
+    name: "Variantes",
+    description: "Variantes, grades e SKUs derivados de produtos.",
+    defaultEnabled: false
+  },
+  {
+    slug: "orders",
+    name: "Pedidos",
+    description: "Pedidos, vendas e compras realizadas.",
+    defaultEnabled: true
+  },
+  {
+    slug: "order_items",
+    name: "Itens de pedido",
+    description: "Itens, linhas e produtos vendidos dentro de pedidos.",
+    defaultEnabled: true
+  },
+  {
+    slug: "payments",
+    name: "Pagamentos",
+    description: "Pagamentos, transacoes, repasses e status financeiro.",
+    defaultEnabled: true
+  },
+  {
+    slug: "refunds",
+    name: "Reembolsos",
+    description: "Reembolsos, cancelamentos e chargebacks.",
+    defaultEnabled: false
+  },
+  {
+    slug: "shipping",
+    name: "Entregas",
+    description: "Fretes, entregas, fulfillments e transportadoras.",
+    defaultEnabled: false
+  },
+  {
+    slug: "inventory",
+    name: "Estoque",
+    description: "Niveis e movimentacoes basicas de estoque quando disponiveis.",
+    defaultEnabled: false
+  },
+  {
+    slug: "categories",
+    name: "Categorias",
+    description: "Categorias, colecoes e agrupamentos de produtos.",
+    defaultEnabled: false
+  },
+  {
+    slug: "coupons",
+    name: "Cupons",
+    description: "Cupons, descontos e promocoes.",
+    defaultEnabled: false
+  },
+  {
+    slug: "abandoned_checkouts",
+    name: "Carrinhos abandonados",
+    description: "Checkouts, carrinhos e compras nao finalizadas.",
+    defaultEnabled: false
+  }
+];
+var DIGITAL_COMMERCE_RESOURCES = ECOMMERCE_RESOURCES.filter((resource) => ["stores", "customers", "products", "orders", "order_items", "payments", "refunds"].includes(resource.slug));
+function ecommerceProvider(provider) {
+  return {
+    ...provider,
+    domain: "ecommerce",
+    resources: provider.resources || ECOMMERCE_RESOURCES,
+    syncModes: ["manual", "scheduled"],
+    supportsIncrementalSync: true,
+    tags: ["ecommerce", ...provider.tags || []]
+  };
+}
+var ECOMMERCE_PROVIDERS = [
+  ecommerceProvider({
+    slug: "shopify",
+    toolkitSlug: "SHOPIFY",
+    name: "Shopify",
+    description: "Loja online com pedidos, produtos, clientes, estoque, pagamentos e checkouts.",
+    authType: "oauth2",
+    supportsOAuthCallback: true,
+    tags: ["loja-online", "global"]
+  }),
+  ecommerceProvider({
+    slug: "nuvemshop",
+    toolkitSlug: "NUVEMSHOP",
+    name: "Nuvemshop",
+    description: "Ecommerce brasileiro com pedidos, produtos, clientes, categorias e variantes.",
+    authType: "oauth2",
+    supportsOAuthCallback: true,
+    tags: ["loja-online", "brasil"]
+  }),
+  ecommerceProvider({
+    slug: "olist",
+    toolkitSlug: "OLIST",
+    name: "Olist",
+    description: "Operacao de ecommerce e marketplace com pedidos, produtos, estoque e entregas.",
+    authType: "api_key",
+    supportsOAuthCallback: false,
+    tags: ["marketplace", "brasil"]
+  }),
+  ecommerceProvider({
+    slug: "woocommerce",
+    toolkitSlug: "WOOCOMMERCE",
+    name: "WooCommerce",
+    description: "Loja WooCommerce com pedidos, produtos, clientes, cupons e reembolsos.",
+    authType: "basic",
+    supportsOAuthCallback: false,
+    tags: ["loja-online", "wordpress"]
+  }),
+  ecommerceProvider({
+    slug: "eduzz",
+    toolkitSlug: "EDUZZ",
+    name: "Eduzz",
+    description: "Infoprodutos e vendas digitais com compradores, vendas, transacoes e reembolsos.",
+    authType: "api_key",
+    supportsOAuthCallback: false,
+    resources: DIGITAL_COMMERCE_RESOURCES,
+    tags: ["infoprodutos", "brasil"]
+  }),
+  ecommerceProvider({
+    slug: "hotmart",
+    toolkitSlug: "HOTMART",
+    name: "Hotmart",
+    description: "Infoprodutos, assinaturas e vendas digitais com compras, compradores e reembolsos.",
+    authType: "oauth2",
+    supportsOAuthCallback: true,
+    resources: DIGITAL_COMMERCE_RESOURCES,
+    tags: ["infoprodutos", "global"]
+  }),
+  ecommerceProvider({
+    slug: "kiwify",
+    toolkitSlug: "KIWIFY",
+    name: "Kiwify",
+    description: "Vendas digitais e infoprodutos com pedidos, produtos, compradores e transacoes.",
+    authType: "api_key",
+    supportsOAuthCallback: false,
+    resources: DIGITAL_COMMERCE_RESOURCES,
+    tags: ["infoprodutos", "brasil"]
+  }),
+  ecommerceProvider({
+    slug: "ifood",
+    toolkitSlug: "IFOOD",
+    name: "iFood",
+    description: "Pedidos, lojas, itens, pagamentos e operacao de delivery.",
+    authType: "oauth2",
+    supportsOAuthCallback: true,
+    resources: ECOMMERCE_RESOURCES.filter((resource) => ["stores", "products", "orders", "order_items", "payments", "refunds"].includes(resource.slug)),
+    tags: ["delivery", "brasil"]
   })
 ];
 
@@ -9248,6 +9889,7 @@ function normalizeToolkitSlug(slug) {
 var INTEGRATION_PROVIDERS = [
   ...ERP_PROVIDERS,
   ...CRM_PROVIDERS,
+  ...ECOMMERCE_PROVIDERS,
   ...MARKETING_PROVIDERS,
   ...ADVERTISING_PROVIDERS
 ];
@@ -9290,11 +9932,11 @@ function requireIntegrationProvider(slug) {
 }
 
 // src/products/integracoes/cloud/src/control-api/routes/connections.ts
-function isRecord7(value) {
+function isRecord8(value) {
   return typeof value === "object" && value !== null && !Array.isArray(value);
 }
 function parseBody(body2) {
-  if (!isRecord7(body2)) return {};
+  if (!isRecord8(body2)) return {};
   return {
     tenantId: typeof body2.tenantId === "number" ? body2.tenantId : void 0,
     connectionId: typeof body2.connectionId === "string" ? body2.connectionId : void 0,
@@ -9547,7 +10189,7 @@ var supportedFrequencyMinutes = {
   "24h": 1440
 };
 var supportedFrequencies = Object.keys(supportedFrequencyMinutes);
-function isRecord8(value) {
+function isRecord9(value) {
   return typeof value === "object" && value !== null && !Array.isArray(value);
 }
 function parsePositiveInteger(value, fallback, max) {
@@ -9556,7 +10198,7 @@ function parsePositiveInteger(value, fallback, max) {
   return Math.min(Math.floor(parsed), max);
 }
 function parseScheduledSyncBody(body2) {
-  if (!isRecord8(body2)) return {};
+  if (!isRecord9(body2)) return {};
   return {
     limit: parsePositiveInteger(body2.limit, 25, 100),
     lockTtlSeconds: parsePositiveInteger(body2.lockTtlSeconds, 600, 3600),
@@ -9767,11 +10409,11 @@ async function handleScheduledSync(request) {
 
 // src/products/integracoes/cloud/src/control-api/routes/sync.ts
 var syncTriggers = ["manual", "scheduled", "webhook", "initial"];
-function isRecord9(value) {
+function isRecord10(value) {
   return typeof value === "object" && value !== null && !Array.isArray(value);
 }
 function parseSyncDispatchBody(body2) {
-  if (!isRecord9(body2)) return {};
+  if (!isRecord10(body2)) return {};
   return {
     tenantId: typeof body2.tenantId === "number" ? body2.tenantId : void 0,
     connectionId: typeof body2.connectionId === "string" ? body2.connectionId : void 0,
