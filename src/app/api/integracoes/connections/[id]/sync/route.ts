@@ -49,12 +49,14 @@ export async function POST(
       result,
       message: result.status === 'queued'
         ? 'Sync enviado ao GCP e registrado como aguardando processamento.'
-        : 'Sync local registrado. Configure INTEGRATIONS_CONTROL_API_URL para processar no GCP.',
+        : 'Sync local de desenvolvimento registrado como ponto de atencao.',
     })
   } catch (error) {
+    const message = error instanceof Error ? error.message : 'Erro ao disparar sync'
+    const status = message.includes('ainda nao pode sincronizar') || message.includes('Sync real indisponivel') ? 409 : 500
     return Response.json(
-      { ok: false, error: error instanceof Error ? error.message : 'Erro ao disparar sync' },
-      { status: 500 },
+      { ok: false, error: message },
+      { status },
     )
   }
 }

@@ -1,6 +1,7 @@
 import {
   createIntegrationEvent,
   createIntegrationSyncRun,
+  getIntegrationConnection,
   updateIntegrationConnection,
 } from '@/products/integracoes/server/integrationConnectionRepository'
 import type { IntegrationConnection } from '@/products/integracoes/shared/contracts/connectionContracts'
@@ -27,6 +28,8 @@ type CloudControlApiResponse = {
   secretRef?: string
   authorizationUrl?: string
 }
+
+const SYNC_READY_CONNECTION_STATUSES = new Set(['connected', 'syncing', 'warning'])
 
 function getCloudControlApiUrl(): string | null {
   const value = process.env.INTEGRATIONS_CONTROL_API_URL?.trim()
@@ -138,13 +141,24 @@ export async function requestLocalSync(params: {
   requestedBy?: string
 }): Promise<IntegrationSyncResult | null> {
   const hasCloudControlApi = Boolean(getCloudControlApiUrl())
+  const connection = await getIntegrationConnection(params.connectionId, params.tenantId)
+  if (!connection) return null
+
+  if (!SYNC_READY_CONNECTION_STATUSES.has(connection.status)) {
+    throw new Error(`Conexao ${params.connectionId} esta com status ${connection.status} e ainda nao pode sincronizar. Conclua a autorizacao real primeiro.`)
+  }
+
+  if (!hasCloudControlApi && process.env.INTEGRATIONS_ALLOW_LOCAL_SYNC_STUB !== 'true') {
+    throw new Error('Sync real indisponivel sem INTEGRATIONS_CONTROL_API_URL. Para desenvolvimento local, defina INTEGRATIONS_ALLOW_LOCAL_SYNC_STUB=true.')
+  }
+
   const run = await createIntegrationSyncRun({
     tenantId: params.tenantId,
     connectionId: params.connectionId,
     pipelineId: params.pipelineId,
     destinationId: params.destinationId,
     trigger: params.trigger || 'manual',
-    status: hasCloudControlApi ? 'queued' : 'success',
+    status: hasCloudControlApi ? 'queued' : 'warning',
     resources: params.resources,
     metadata: {
       requestedBy: params.requestedBy || 'api',

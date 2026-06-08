@@ -12,6 +12,7 @@ import {
 } from '@/components/ui/dialog'
 import { renderIntegrationLogo } from '@/products/integracoes/shared/iconMaps'
 import { getIntegrationProvider } from '@/products/integracoes/shared/providers/providerCatalog'
+import { getProviderSetupStage } from '@/products/integracoes/shared/providers/providerSetupStage'
 import type { ToolkitDefinition } from '@/products/integracoes/shared/types'
 
 type ProviderSetupModalProps = {
@@ -44,6 +45,7 @@ export default function ProviderSetupModal({
   onCreate,
 }: ProviderSetupModalProps) {
   const provider = useMemo(() => connector ? getIntegrationProvider(connector.slug) : undefined, [connector])
+  const setupStage = useMemo(() => getProviderSetupStage(provider), [provider])
   const [selectedResources, setSelectedResources] = useState<string[]>([])
   const [syncFrequency, setSyncFrequency] = useState('manual')
   const [omieAppKey, setOmieAppKey] = useState('')
@@ -61,7 +63,7 @@ export default function ProviderSetupModal({
 
   const isOmie = provider?.slug === 'omie'
   const credentialsReady = !isOmie || Boolean(omieAppKey.trim() && omieAppSecret.trim())
-  const canCreate = Boolean(provider && selectedResources.length && credentialsReady)
+  const canCreate = Boolean(provider && setupStage.canCreateConnection && selectedResources.length && credentialsReady)
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -73,7 +75,7 @@ export default function ProviderSetupModal({
             </div>
             <div className="min-w-0">
               <div className="inline-flex rounded-full bg-[#EEF4FF] px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.08em] text-[#2F6FE4]">
-                {provider ? `${provider.domain.toUpperCase()} · ${provider.authType}` : 'Conector de dados'}
+                {provider ? `${provider.domain.toUpperCase()} · ${provider.authType} · ${setupStage.label}` : setupStage.label}
               </div>
               <DialogTitle className="mt-3 text-[28px] font-semibold tracking-[-0.04em] text-[#17203A]">
                 {connector.name}
@@ -82,14 +84,19 @@ export default function ProviderSetupModal({
                 {isOmie
                   ? 'Informe as credenciais da API Omie e escolha os recursos que serão sincronizados.'
                   : provider
-                    ? 'Configure os recursos e a frequência inicial. A autenticação real será conectada em uma etapa futura.'
-                  : 'Este conector ainda está no catálogo visual; o contrato de conexão será adicionado depois.'}
+                    ? 'Escolha recursos e frequência. A conexão ficará salva aguardando a autorização real do provider.'
+                  : 'Este item está no catálogo para planejamento; o contrato de conexão será ativado depois.'}
               </DialogDescription>
             </div>
           </div>
         </DialogHeader>
 
         <div className="space-y-5 px-7 py-6">
+          <div className="rounded-[16px] border border-[#E6EAF4] bg-[#FAFBFD] px-4 py-3">
+            <div className="text-[13px] font-semibold text-[#24304A]">{setupStage.label}</div>
+            <div className="mt-1 text-[12px] leading-5 text-[#66748D]">{setupStage.description}</div>
+          </div>
+
           {provider ? (
             <>
               {isOmie ? (
@@ -205,7 +212,7 @@ export default function ProviderSetupModal({
             }}
             className="inline-flex h-11 items-center justify-center rounded-[14px] bg-[#17203A] px-5 text-[14px] font-semibold text-white transition hover:bg-[#0F172C] disabled:opacity-50"
           >
-            {busy ? 'Salvando...' : 'Salvar conexão'}
+            {busy ? 'Salvando...' : isOmie ? 'Salvar conexão' : 'Salvar preparação'}
           </button>
         </DialogFooter>
       </DialogContent>

@@ -11,6 +11,7 @@ import ConnectionDetailDrawer from '@/products/integracoes/frontend/features/con
 import ConnectionStatusPanel from '@/products/integracoes/frontend/features/connections/components/ConnectionStatusPanel'
 import useIntegrationConnections from '@/products/integracoes/frontend/features/connections/hooks/useIntegrationConnections'
 import ProviderSetupModal from '@/products/integracoes/frontend/features/home/components/ProviderSetupModal'
+import useCurrentIntegrationTenant from '@/products/integracoes/frontend/hooks/useCurrentIntegrationTenant'
 import useIntegracoesComposio from '@/products/integracoes/frontend/hooks/useIntegracoesComposio'
 import type { IntegrationConnectionWithUi } from '@/products/integracoes/frontend/services/integracoesApi'
 import { renderIntegrationLogo, toolkitHasIcon } from '@/products/integracoes/shared/iconMaps'
@@ -23,6 +24,7 @@ import {
 import { DATA_CONNECTOR_EXTRA_TOOLKITS } from '@/products/integracoes/shared/dataConnectorExtras'
 import { TOOLKITS } from '@/products/integracoes/shared/toolkits'
 import { getIntegrationProvider } from '@/products/integracoes/shared/providers/providerCatalog'
+import { getProviderSetupStage } from '@/products/integracoes/shared/providers/providerSetupStage'
 import type { ToolkitDefinition, ToolkitStatusMap } from '@/products/integracoes/shared/types'
 
 type IntegrationKind = 'mcp' | 'data-connectors'
@@ -173,6 +175,10 @@ function isToolkitConnected(slug: string, tkStatus: ToolkitStatusMap) {
   return Boolean(tkStatus[slug] ?? tkStatus[lowerSlug])
 }
 
+function isDataConnectionActive(connection?: IntegrationConnectionWithUi | null) {
+  return Boolean(connection && ['connected', 'syncing', 'warning'].includes(connection.status))
+}
+
 function sortByPriority(
   items: ToolkitDefinition[],
   priorityOrder: readonly string[],
@@ -307,18 +313,29 @@ function CatalogCard({
   dataConnection?: IntegrationConnectionWithUi | null
   onAction: (toolkit: ToolkitDefinition) => void
 }) {
-  const connected = kind === 'data-connectors' ? Boolean(dataConnection) : isToolkitConnected(toolkit.slug, tkStatus)
+  const provider = kind === 'data-connectors' ? getIntegrationProvider(toolkit.slug) : undefined
+  const setupStage = getProviderSetupStage(provider)
+  const hasDataConnection = Boolean(dataConnection)
+  const dataConnectionActive = isDataConnectionActive(dataConnection)
+  const connected = kind === 'data-connectors' ? dataConnectionActive : isToolkitConnected(toolkit.slug, tkStatus)
   const category = CATEGORY_TABS.find((tab) => tab.value === categorizeToolkit(toolkit.slug))?.label ?? 'Outros'
-  const statusLabel = dataConnection?.uiStatus?.label || (connected ? 'Conectado' : kind === 'mcp' ? 'Pronto para automação' : 'Pronto para sincronizar')
-  const helperText = connected
+  const statusLabel = dataConnection?.uiStatus?.label || (connected ? 'Conectado' : kind === 'mcp' ? 'Pronto para automação' : setupStage.label)
+  const helperText = hasDataConnection && !dataConnectionActive
+    ? dataConnection?.uiStatus?.description || 'Configuracao salva aguardando autorizacao real.'
+    : connected
     ? kind === 'mcp'
       ? 'Disponível para ações do agente neste workspace.'
       : dataConnection?.uiStatus?.description || 'Sincronização de dados pronta para uso em dashboards.'
     : kind === 'mcp'
       ? 'Conecte para liberar ações do agente e fluxos operacionais.'
-      : 'Conecte para alimentar relatórios e análises contínuas.'
+      : setupStage.description
   const isBusy = busySlug === toolkit.slug || busySlug === dataConnection?.id
-  const buttonLabel = isBusy ? 'Abrindo...' : connected ? 'Gerenciar' : kind === 'mcp' ? 'Conectar' : 'Configurar'
+  const buttonLabel = isBusy ? 'Abrindo...' : hasDataConnection || connected ? 'Gerenciar' : kind === 'mcp' ? 'Conectar' : 'Configurar'
+  const statusClassName = connected
+    ? 'bg-[#EBFFF5] text-[#108A55]'
+    : hasDataConnection
+      ? 'bg-[#FFF7E6] text-[#A05A00]'
+      : 'bg-[#F2F4FA] text-[#66748D]'
 
   return (
     <article className="flex h-full min-h-[252px] flex-col rounded-[22px] border border-[#E6EAF4] bg-white p-5 shadow-[0_12px_30px_rgba(23,32,58,0.06)]">
@@ -330,7 +347,7 @@ function CatalogCard({
           <span
             className={[
               'inline-flex rounded-full px-3 py-1 text-[11px] font-semibold',
-              connected ? 'bg-[#EBFFF5] text-[#108A55]' : 'bg-[#F2F4FA] text-[#66748D]',
+              statusClassName,
             ].join(' ')}
           >
             {statusLabel}
@@ -379,6 +396,7 @@ function CatalogCard({
 }
 
 export default function IntegracoesPage() {
+  const tenantId = useCurrentIntegrationTenant()
   const [activeKind, setActiveKind] = useState<IntegrationKind>('data-connectors')
   const [activeCategory, setActiveCategory] = useState<CatalogCategory>('all')
   const [search, setSearch] = useState('')
@@ -410,7 +428,7 @@ export default function IntegracoesPage() {
     loadConnectionDetail,
     reconnectConnection,
     syncConnection,
-  } = useIntegrationConnections(1)
+  } = useIntegrationConnections(tenantId)
   const mcpToolkits = useMemo(
     () => applyToolkitDescriptionOverrides(TOOLKITS, MCP_DESCRIPTION_OVERRIDES),
     [],
@@ -599,6 +617,9 @@ export default function IntegracoesPage() {
                             <h2 className="text-xl font-semibold text-gray-900">Conectores de Dados (Dashboards)</h2>
                             <p className="text-sm text-gray-600 mt-1">
                               Conectores para sincronização contínua/periódica e ingestão de dados em BI/dashboard.
+                            </p>
+                            <p className="mt-1 text-xs text-gray-500">
+                              Workspace tenant {tenantId}. Conexões pendentes ficam salvas, mas só sincronizam após autorização real.
                             </p>
                           </div>
                           <span className="rounded-full bg-gray-100 px-3 py-1 text-xs font-medium text-gray-700">

@@ -54,6 +54,7 @@ export default function ConnectionDetailDrawer({
   onReconnect,
 }: ConnectionDetailDrawerProps) {
   const toolkitSlug = String(connection?.metadata?.toolkitSlug || connection?.provider || '').toUpperCase()
+  const canSync = Boolean(connection && ['connected', 'syncing', 'warning'].includes(connection.status))
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
@@ -90,6 +91,23 @@ export default function ConnectionDetailDrawer({
                 </div>
               </section>
 
+              <section className="grid gap-3 sm:grid-cols-2">
+                <div className="rounded-[16px] border border-[#E6EAF4] bg-[#FAFBFD] p-4">
+                  <div className="text-[12px] font-semibold uppercase tracking-[0.08em] text-[#98A4BA]">Frequência</div>
+                  <div className="mt-2 text-[16px] font-semibold text-[#17203A]">{connection.syncFrequency}</div>
+                  <div className="mt-1 text-[13px] leading-5 text-[#66748D]">
+                    {connection.syncEnabled === false ? 'Sincronização pausada.' : 'Frequência planejada para esta conexão.'}
+                  </div>
+                </div>
+                <div className="rounded-[16px] border border-[#E6EAF4] bg-[#FAFBFD] p-4">
+                  <div className="text-[12px] font-semibold uppercase tracking-[0.08em] text-[#98A4BA]">Próximo sync</div>
+                  <div className="mt-2 text-[16px] font-semibold text-[#17203A]">{formatDate(connection.nextSyncAt)}</div>
+                  <div className="mt-1 text-[13px] leading-5 text-[#66748D]">
+                    {canSync ? 'Disponível quando houver agenda configurada.' : 'Disponível somente após autorização real.'}
+                  </div>
+                </div>
+              </section>
+
               <section>
                 <div className="mb-3 text-[14px] font-semibold text-[#24304A]">Recursos ativos</div>
                 <div className="flex flex-wrap gap-2">
@@ -118,12 +136,12 @@ export default function ConnectionDetailDrawer({
               <div className="flex flex-col gap-3 sm:flex-row">
                 <button
                   type="button"
-                  disabled={busy}
+                  disabled={busy || !canSync}
                   onClick={() => onSync(connection)}
                   className="inline-flex h-11 flex-1 items-center justify-center gap-2 rounded-[14px] bg-[#17203A] px-4 text-[14px] font-semibold text-white transition hover:bg-[#0F172C] disabled:opacity-60"
                 >
                   <RefreshCw className="h-4 w-4" />
-                  Sincronizar agora
+                  {canSync ? 'Sincronizar agora' : 'Aguardando autorização'}
                 </button>
                 <button
                   type="button"
