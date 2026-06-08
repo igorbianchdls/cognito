@@ -70,9 +70,9 @@ integrations-worker (job legado)
 URLs atuais:
 
 ```txt
-https://cognito-lth6cvwldq-rj.a.run.app
-https://integrations-control-api-lth6cvwldq-rj.a.run.app
-https://integrations-worker-service-lth6cvwldq-rj.a.run.app
+https://cognito-305346154546.southamerica-east1.run.app
+https://integrations-control-api-305346154546.southamerica-east1.run.app
+https://integrations-worker-service-305346154546.southamerica-east1.run.app
 ```
 
 Cloud Build:
@@ -144,6 +144,7 @@ Variaveis OAuth por provedor:
 ```txt
 INTEGRATIONS_OAUTH_STATE_SECRET
 INTEGRATIONS_OAUTH_REDIRECT_URI
+INTEGRATIONS_APP_CALLBACK_URL
 INTEGRATIONS_OAUTH_{PROVIDER}_CLIENT_ID
 INTEGRATIONS_OAUTH_{PROVIDER}_CLIENT_SECRET
 INTEGRATIONS_OAUTH_{PROVIDER}_AUTHORIZE_URL
@@ -267,7 +268,7 @@ gcloud iam service-accounts list \
 Health publico do Control API:
 
 ```bash
-curl -sS https://integrations-control-api-lth6cvwldq-rj.a.run.app/health
+curl -sS https://integrations-control-api-305346154546.southamerica-east1.run.app/health
 ```
 
 O Worker nao deve responder publicamente sem autenticacao. `403` em `/health` publico
@@ -289,7 +290,7 @@ KEY="$(gcloud secrets versions access latest \
   --secret=integrations-internal-api-key \
   --project=creatto-463117)"
 
-curl -sS -X POST https://integrations-control-api-lth6cvwldq-rj.a.run.app/sync \
+curl -sS -X POST https://integrations-control-api-305346154546.southamerica-east1.run.app/sync \
   -H "Authorization: Bearer ${KEY}" \
   -H 'Content-Type: application/json' \
   -d '{"tenantId":1,"connectionId":"smoke-gcloud","trigger":"manual","resources":["health"],"requestedBy":"runbook"}'

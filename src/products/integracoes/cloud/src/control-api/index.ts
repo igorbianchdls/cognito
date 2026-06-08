@@ -37,7 +37,10 @@ export function main() {
       body: await readRequestBody(request),
     })
 
-    response.writeHead(result.status, { 'content-type': 'application/json; charset=utf-8' })
+    response.writeHead(result.status, {
+      'content-type': 'application/json; charset=utf-8',
+      ...(result.headers || {}),
+    })
     response.end(JSON.stringify(result.body))
   })
 

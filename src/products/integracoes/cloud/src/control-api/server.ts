@@ -16,6 +16,7 @@ export type ControlApiRequest = {
 export type ControlApiResponse = {
   status: number
   body: Record<string, unknown>
+  headers?: Record<string, string>
 }
 
 export type ControlApiServer = {

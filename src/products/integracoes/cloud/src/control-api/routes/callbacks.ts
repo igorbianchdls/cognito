@@ -15,30 +15,68 @@ function getQueryString(request: ControlApiRequest, name: string) {
   return typeof value === 'string' ? value : undefined
 }
 
+function getAppCallbackUrl(params: {
+  status: 'connected' | 'error'
+  provider?: string
+  connectionId?: string
+  tenantId?: number
+  error?: string
+}) {
+  const baseUrl = process.env.INTEGRATIONS_APP_CALLBACK_URL?.trim()
+    || 'https://cognito-305346154546.southamerica-east1.run.app/integracoes/callback'
+  const url = new URL(baseUrl)
+  url.searchParams.set('status', params.status)
+  if (params.provider) url.searchParams.set('provider', params.provider)
+  if (params.connectionId) url.searchParams.set('connectionId', params.connectionId)
+  if (params.tenantId) url.searchParams.set('tenantId', String(params.tenantId))
+  if (params.error) url.searchParams.set('error', params.error)
+  return url.toString()
+}
+
+function redirectToApp(url: string): ControlApiResponse {
+  return {
+    status: 302,
+    headers: {
+      Location: url,
+    },
+    body: {
+      ok: true,
+      redirectUrl: url,
+    },
+  }
+}
+
 export async function handleProviderCallback(request: ControlApiRequest): Promise<ControlApiResponse> {
+  let callbackContext: {
+    provider?: string
+    connectionId?: string
+    tenantId?: number
+  } = {}
+
   try {
     const code = getQueryString(request, 'code')
     const state = getQueryString(request, 'state')
     if (!code || !state) {
-      return {
-        status: 400,
-        body: {
-          ok: false,
-          error: 'OAuth callback exige code e state.',
-        },
-      }
+      return redirectToApp(getAppCallbackUrl({
+        status: 'error',
+        error: 'OAuth callback exige code e state.',
+      }))
     }
 
     const parsedState = parseOAuthState(state)
+    callbackContext = {
+      provider: parsedState.provider,
+      connectionId: parsedState.connectionId,
+      tenantId: parsedState.tenantId,
+    }
+
     const tokenSet = await exchangeOAuthCode(parsedState.provider, code)
     if (!tokenSet) {
-      return {
-        status: 502,
-        body: {
-          ok: false,
-          error: 'Provider OAuth nao retornou access token.',
-        },
-      }
+      return redirectToApp(getAppCallbackUrl({
+        ...callbackContext,
+        status: 'error',
+        error: 'Provider OAuth nao retornou access token.',
+      }))
     }
 
     const secret = await writeConnectionCredentialsSecret({
@@ -74,23 +112,15 @@ export async function handleProviderCallback(request: ControlApiRequest): Promis
       },
     })
 
-    return {
-      status: 202,
-      body: {
-        ok: true,
-        mode: 'gcp',
-        status: 'connected',
-        provider: parsedState.provider,
-        message: 'OAuth conectado.',
-      },
-    }
+    return redirectToApp(getAppCallbackUrl({
+      ...callbackContext,
+      status: 'connected',
+    }))
   } catch (error) {
-    return {
-      status: 500,
-      body: {
-        ok: false,
-        error: error instanceof Error ? error.message : 'Falha no callback OAuth.',
-      },
-    }
+    return redirectToApp(getAppCallbackUrl({
+      ...callbackContext,
+      status: 'error',
+      error: error instanceof Error ? error.message : 'Falha no callback OAuth.',
+    }))
   }
 }

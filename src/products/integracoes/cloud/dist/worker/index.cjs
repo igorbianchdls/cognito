@@ -8343,12 +8343,21 @@ var ERP_CONNECTORS = [
 // src/products/integracoes/cloud/src/providers/marketingProviderRegistry.ts
 var MARKETING_CONNECTORS = [];
 
+// src/products/integracoes/cloud/src/providers/socialProviderRegistry.ts
+var SOCIAL_CONNECTORS = [
+  createStubConnector({ domain: "social", provider: "instagram" }),
+  createStubConnector({ domain: "social", provider: "youtube" }),
+  createStubConnector({ domain: "social", provider: "linkedin" }),
+  createStubConnector({ domain: "social", provider: "tiktok" })
+];
+
 // src/products/integracoes/cloud/src/providers/providerRegistry.ts
 var CLOUD_CONNECTORS = [
   ...ERP_CONNECTORS,
   ...CRM_CONNECTORS,
   ...ECOMMERCE_CONNECTORS,
   ...ANALYTICS_CONNECTORS,
+  ...SOCIAL_CONNECTORS,
   ...MARKETING_CONNECTORS,
   ...ADVERTISING_CONNECTORS
 ];

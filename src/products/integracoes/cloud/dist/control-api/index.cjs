@@ -5700,29 +5700,52 @@ function getQueryString(request, name) {
   if (Array.isArray(value)) return value[0];
   return typeof value === "string" ? value : void 0;
 }
+function getAppCallbackUrl(params) {
+  const baseUrl = process.env.INTEGRATIONS_APP_CALLBACK_URL?.trim() || "https://cognito-305346154546.southamerica-east1.run.app/integracoes/callback";
+  const url = new URL(baseUrl);
+  url.searchParams.set("status", params.status);
+  if (params.provider) url.searchParams.set("provider", params.provider);
+  if (params.connectionId) url.searchParams.set("connectionId", params.connectionId);
+  if (params.tenantId) url.searchParams.set("tenantId", String(params.tenantId));
+  if (params.error) url.searchParams.set("error", params.error);
+  return url.toString();
+}
+function redirectToApp(url) {
+  return {
+    status: 302,
+    headers: {
+      Location: url
+    },
+    body: {
+      ok: true,
+      redirectUrl: url
+    }
+  };
+}
 async function handleProviderCallback(request) {
+  let callbackContext = {};
   try {
     const code = getQueryString(request, "code");
     const state = getQueryString(request, "state");
     if (!code || !state) {
-      return {
-        status: 400,
-        body: {
-          ok: false,
-          error: "OAuth callback exige code e state."
-        }
-      };
+      return redirectToApp(getAppCallbackUrl({
+        status: "error",
+        error: "OAuth callback exige code e state."
+      }));
     }
     const parsedState = parseOAuthState(state);
+    callbackContext = {
+      provider: parsedState.provider,
+      connectionId: parsedState.connectionId,
+      tenantId: parsedState.tenantId
+    };
     const tokenSet = await exchangeOAuthCode(parsedState.provider, code);
     if (!tokenSet) {
-      return {
-        status: 502,
-        body: {
-          ok: false,
-          error: "Provider OAuth nao retornou access token."
-        }
-      };
+      return redirectToApp(getAppCallbackUrl({
+        ...callbackContext,
+        status: "error",
+        error: "Provider OAuth nao retornou access token."
+      }));
     }
     const secret = await writeConnectionCredentialsSecret({
       tenantId: parsedState.tenantId,
@@ -5756,24 +5779,16 @@ async function handleProviderCallback(request) {
         tokenExpiresAt: tokenSet.expiresAt || null
       }
     });
-    return {
-      status: 202,
-      body: {
-        ok: true,
-        mode: "gcp",
-        status: "connected",
-        provider: parsedState.provider,
-        message: "OAuth conectado."
-      }
-    };
+    return redirectToApp(getAppCallbackUrl({
+      ...callbackContext,
+      status: "connected"
+    }));
   } catch (error) {
-    return {
-      status: 500,
-      body: {
-        ok: false,
-        error: error instanceof Error ? error.message : "Falha no callback OAuth."
-      }
-    };
+    return redirectToApp(getAppCallbackUrl({
+      ...callbackContext,
+      status: "error",
+      error: error instanceof Error ? error.message : "Falha no callback OAuth."
+    }));
   }
 }
 
@@ -9188,12 +9203,21 @@ var ERP_CONNECTORS = [
 // src/products/integracoes/cloud/src/providers/marketingProviderRegistry.ts
 var MARKETING_CONNECTORS = [];
 
+// src/products/integracoes/cloud/src/providers/socialProviderRegistry.ts
+var SOCIAL_CONNECTORS = [
+  createStubConnector({ domain: "social", provider: "instagram" }),
+  createStubConnector({ domain: "social", provider: "youtube" }),
+  createStubConnector({ domain: "social", provider: "linkedin" }),
+  createStubConnector({ domain: "social", provider: "tiktok" })
+];
+
 // src/products/integracoes/cloud/src/providers/providerRegistry.ts
 var CLOUD_CONNECTORS = [
   ...ERP_CONNECTORS,
   ...CRM_CONNECTORS,
   ...ECOMMERCE_CONNECTORS,
   ...ANALYTICS_CONNECTORS,
+  ...SOCIAL_CONNECTORS,
   ...MARKETING_CONNECTORS,
   ...ADVERTISING_CONNECTORS
 ];
@@ -10017,6 +10041,100 @@ var ERP_PROVIDERS = [
 // src/products/integracoes/shared/providers/marketingProviders.ts
 var MARKETING_PROVIDERS = [];
 
+// src/products/integracoes/shared/providers/socialProviders.ts
+var SOCIAL_RESOURCES = [
+  {
+    slug: "profiles",
+    name: "Perfis",
+    description: "Perfis, canais, paginas ou contas sociais conectadas.",
+    defaultEnabled: true
+  },
+  {
+    slug: "posts",
+    name: "Posts",
+    description: "Publicacoes organicas, legendas, links e metricas por post.",
+    defaultEnabled: true
+  },
+  {
+    slug: "videos",
+    name: "Videos",
+    description: "Videos, shorts, reels e metricas de visualizacao.",
+    defaultEnabled: true
+  },
+  {
+    slug: "comments",
+    name: "Comentarios",
+    description: "Comentarios e interacoes textuais quando disponiveis.",
+    defaultEnabled: false
+  },
+  {
+    slug: "audience_daily",
+    name: "Audiencia diaria",
+    description: "Seguidores, inscritos e audiencia por dia.",
+    defaultEnabled: true
+  },
+  {
+    slug: "performance_daily",
+    name: "Desempenho diario",
+    description: "Alcance, impressoes, visualizacoes e engajamento por dia.",
+    defaultEnabled: true
+  },
+  {
+    slug: "engagement_daily",
+    name: "Engajamento diario",
+    description: "Curtidas, comentarios, compartilhamentos, salvamentos e taxa de engajamento.",
+    defaultEnabled: true
+  }
+];
+function socialProvider(provider) {
+  return {
+    ...provider,
+    domain: "social",
+    resources: provider.resources || SOCIAL_RESOURCES,
+    syncModes: ["manual", "scheduled"],
+    supportsIncrementalSync: true,
+    tags: ["social", "organico", ...provider.tags || []]
+  };
+}
+var SOCIAL_PROVIDERS = [
+  socialProvider({
+    slug: "instagram",
+    toolkitSlug: "INSTAGRAM",
+    name: "Instagram",
+    description: "Perfis, posts, reels, audiencia e engajamento organico do Instagram.",
+    authType: "oauth2",
+    supportsOAuthCallback: true,
+    tags: ["meta", "creator", "posts"]
+  }),
+  socialProvider({
+    slug: "youtube",
+    toolkitSlug: "YOUTUBE",
+    name: "YouTube",
+    description: "Canais, videos, inscritos, visualizacoes e engajamento organico do YouTube.",
+    authType: "oauth2",
+    supportsOAuthCallback: true,
+    tags: ["video", "creator"]
+  }),
+  socialProvider({
+    slug: "linkedin",
+    toolkitSlug: "LINKEDIN",
+    name: "LinkedIn",
+    description: "Paginas, posts, audiencia e engajamento organico do LinkedIn.",
+    authType: "oauth2",
+    supportsOAuthCallback: true,
+    tags: ["b2b", "professional"]
+  }),
+  socialProvider({
+    slug: "tiktok",
+    toolkitSlug: "TIKTOK",
+    name: "TikTok",
+    description: "Perfis, videos, audiencia e engajamento organico do TikTok.",
+    authType: "oauth2",
+    supportsOAuthCallback: true,
+    tags: ["video", "creator"]
+  })
+];
+
 // src/products/integracoes/shared/providers/providerTypes.ts
 function normalizeProviderSlug(slug) {
   return slug.trim().toLowerCase().replace(/[^a-z0-9]+/g, "_").replace(/^_+|_+$/g, "");
@@ -10031,6 +10149,7 @@ var INTEGRATION_PROVIDERS = [
   ...CRM_PROVIDERS,
   ...ECOMMERCE_PROVIDERS,
   ...ANALYTICS_PROVIDERS,
+  ...SOCIAL_PROVIDERS,
   ...MARKETING_PROVIDERS,
   ...ADVERTISING_PROVIDERS
 ];
@@ -10701,7 +10820,10 @@ function main() {
       headers: request.headers,
       body: await readRequestBody(request)
     });
-    response.writeHead(result.status, { "content-type": "application/json; charset=utf-8" });
+    response.writeHead(result.status, {
+      "content-type": "application/json; charset=utf-8",
+      ...result.headers || {}
+    });
     response.end(JSON.stringify(result.body));
   });
   httpServer.listen(port, "0.0.0.0");

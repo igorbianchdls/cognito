@@ -18,10 +18,13 @@ Runbook operacional:
 
 ```txt
 GCP_RUNBOOK.md
+PRE_OAUTH_PROVIDERS.md
 ```
 
 Use o runbook para recuperar contexto rapido, conectar com `gcloud`, validar recursos e
 executar smoke tests do pipeline.
+Use o plano pre-OAuth para cadastrar providers, scopes e secrets sem colocar credenciais
+no repositorio.
 
 Recursos GCP criados/esperados:
 
