@@ -1,3 +1,3 @@
-import { createPostgresCrmAdapter } from '@/products/mcp-apps/server/domain-adapters/crm/providers/createPostgresCrmAdapter'
+import { createBigQueryCrmAdapter } from '@/products/mcp-apps/server/domain-adapters/crm/providers/createBigQueryCrmAdapter'
 
-export const salesforceCrmAdapter = createPostgresCrmAdapter('salesforce')
+export const salesforceCrmAdapter = createBigQueryCrmAdapter('salesforce')

@@ -1,4 +1,7 @@
-import { listIntegrationConnections } from '@/products/integracoes/server/integrationConnectionRepository'
+import {
+  getIntegrationMcpPermissions,
+  listIntegrationConnections,
+} from '@/products/integracoes/server/integrationConnectionRepository'
 import type { IntegrationDomain } from '@/products/integracoes/shared/providers/providerTypes'
 import type {
   ConnectedDomainAction,
@@ -142,6 +145,14 @@ export async function executeGenericConnectedTool<Resource extends string>(
   const warnings: string[] = []
 
   for (const connection of connections) {
+    const permissions = await getIntegrationMcpPermissions(connection.id, tenantId)
+    if (!permissions?.enabled) {
+      const error = `MCP nao esta habilitado para a conexao ${connection.displayName}.`
+      providers.push(connectionStatus(connection.provider, connection.id, connection.displayName, false, error))
+      errors.push(error)
+      continue
+    }
+
     const adapter = config.getAdapter(connection.provider)
     if (!adapter) {
       const error = `Provider sem adapter registrado para ${config.tool}: ${connection.provider}. Registrados: ${config.listAdapterProviders().join(', ')}.`

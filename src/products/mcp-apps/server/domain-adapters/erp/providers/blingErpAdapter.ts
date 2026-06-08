@@ -1,9 +1,9 @@
 import {
-  createPostgresErpAdapter,
+  createBigQueryErpAdapter,
   makeErpConfigs,
-} from '@/products/mcp-apps/server/domain-adapters/erp/providers/createPostgresErpAdapter'
+} from '@/products/mcp-apps/server/domain-adapters/erp/providers/createBigQueryErpAdapter'
 
-export const blingErpAdapter = createPostgresErpAdapter('bling', makeErpConfigs({
+export const blingErpAdapter = createBigQueryErpAdapter('bling', makeErpConfigs({
   clientes: 'clientes',
   fornecedores: 'fornecedores',
   'contas-a-receber': 'contas_receber',

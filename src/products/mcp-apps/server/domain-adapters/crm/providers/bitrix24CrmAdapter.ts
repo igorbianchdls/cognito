@@ -1,3 +1,3 @@
-import { createPostgresCrmAdapter } from '@/products/mcp-apps/server/domain-adapters/crm/providers/createPostgresCrmAdapter'
+import { createBigQueryCrmAdapter } from '@/products/mcp-apps/server/domain-adapters/crm/providers/createBigQueryCrmAdapter'
 
-export const bitrix24CrmAdapter = createPostgresCrmAdapter('bitrix24')
+export const bitrix24CrmAdapter = createBigQueryCrmAdapter('bitrix24')

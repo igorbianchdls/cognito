@@ -833,6 +833,28 @@ export async function createIntegrationConnection(
       },
     })
 
+    await client.query(
+      `INSERT INTO integrations.mcp_permissions
+        (tenant_id, connection_id, enabled, read_resources, write_resources, destructive_resources, require_confirmation, metadata, updated_at)
+       VALUES
+        ($1, $2, true, $3::jsonb, '[]'::jsonb, '[]'::jsonb, true, $4::jsonb, now())
+       ON CONFLICT (tenant_id, connection_id)
+       DO UPDATE SET
+         enabled = EXCLUDED.enabled,
+         read_resources = EXCLUDED.read_resources,
+         metadata = integrations.mcp_permissions.metadata || EXCLUDED.metadata,
+         updated_at = now()`,
+      [
+        tenantId,
+        connection.id,
+        JSON.stringify(selectedResources),
+        JSON.stringify({
+          createdBy: 'connection_create',
+          defaultReadGrant: true,
+        }),
+      ],
+    )
+
     if (selectedResources.length && (input.syncFrequency || 'manual') !== 'manual') {
       const destination = await ensureDefaultBigQueryDestination(client, tenantId)
       await insertIntegrationPipeline(client, {
@@ -908,6 +930,25 @@ export async function updateIntegrationConnection(
     if (!row) return null
 
     const connection = toConnection(row)
+    if (input.selectedResources) {
+      await client.query(
+        `UPDATE integrations.mcp_permissions
+         SET
+           read_resources = $3::jsonb,
+           metadata = metadata || $4::jsonb,
+           updated_at = now()
+         WHERE tenant_id = $1 AND connection_id = $2`,
+        [
+          tenantId,
+          connection.id,
+          JSON.stringify(selectedResources),
+          JSON.stringify({
+            resourcesSyncedFromConnectionAt: new Date().toISOString(),
+          }),
+        ],
+      )
+    }
+
     await insertIntegrationEvent(client, {
       tenantId,
       connectionId: connection.id,
