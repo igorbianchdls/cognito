@@ -42,8 +42,8 @@ function getTenantId(context: CognitoMcpServerContext) {
 
 function normalizeAction(value: unknown): ConnectedCrmAction {
   const action = toText(value || 'listar').toLowerCase()
-  if (action === 'listar' || action === 'ler') return action
-  throw new DomainAdapterError('action invalida para connected_crm. Use listar ou ler.', {
+  if (action === 'listar' || action === 'ler' || action === 'listar_live' || action === 'ler_live') return action
+  throw new DomainAdapterError('action invalida para connected_crm. Use listar, ler, listar_live ou ler_live.', {
     code: 'connected_crm_invalid_action',
     details: { action },
   })
@@ -121,8 +121,8 @@ export async function executeConnectedCrmTool(
   const includeProviderFields = Boolean(input.include_provider_fields)
   const id = toText(input.id ?? filters.id)
 
-  if (action === 'ler' && !id) {
-    throw new DomainAdapterError('id e obrigatorio para connected_crm/action=ler', {
+  if ((action === 'ler' || action === 'ler_live') && !id) {
+    throw new DomainAdapterError(`id e obrigatorio para connected_crm/action=${action}`, {
       code: 'connected_crm_missing_id',
     })
   }
@@ -142,6 +142,13 @@ export async function executeConnectedCrmTool(
   const errors: string[] = []
 
   for (const connection of connections) {
+    if (action === 'listar_live' || action === 'ler_live') {
+      const error = `Leitura live via API do provider ainda nao implementada para ${connection.provider}/${resource}.`
+      providers.push(connectionStatus(connection, false, error))
+      errors.push(error)
+      continue
+    }
+
     const adapter = getCrmAdapter(connection.provider)
     if (!adapter) {
       const error = `Provider CRM sem adapter registrado: ${connection.provider}. Registrados: ${listCrmAdapterProviders().join(', ')}.`

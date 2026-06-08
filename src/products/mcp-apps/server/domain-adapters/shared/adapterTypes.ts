@@ -1,6 +1,6 @@
 import type { IntegrationConnection } from '@/products/integracoes/shared/contracts/connectionContracts'
 
-export type ConnectedDomainAction = 'listar' | 'ler'
+export type ConnectedDomainAction = 'listar' | 'ler' | 'listar_live' | 'ler_live'
 
 export type ConnectedDomainProviderStatus = {
   provider: string

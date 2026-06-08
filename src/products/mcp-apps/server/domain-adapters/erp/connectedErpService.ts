@@ -42,8 +42,8 @@ function getTenantId(context: CognitoMcpServerContext) {
 
 function normalizeAction(value: unknown): ConnectedErpAction {
   const action = toText(value || 'listar').toLowerCase()
-  if (action === 'listar' || action === 'ler') return action
-  throw new DomainAdapterError('action invalida para connected_erp. Use listar ou ler.', {
+  if (action === 'listar' || action === 'ler' || action === 'listar_live' || action === 'ler_live') return action
+  throw new DomainAdapterError('action invalida para connected_erp. Use listar, ler, listar_live ou ler_live.', {
     code: 'connected_erp_invalid_action',
     details: { action },
   })
@@ -121,8 +121,8 @@ export async function executeConnectedErpTool(
   const includeProviderFields = Boolean(input.include_provider_fields)
   const id = toText(input.id ?? filters.id)
 
-  if (action === 'ler' && !id) {
-    throw new DomainAdapterError('id e obrigatorio para connected_erp/action=ler', {
+  if ((action === 'ler' || action === 'ler_live') && !id) {
+    throw new DomainAdapterError(`id e obrigatorio para connected_erp/action=${action}`, {
       code: 'connected_erp_missing_id',
     })
   }
@@ -142,6 +142,13 @@ export async function executeConnectedErpTool(
   const errors: string[] = []
 
   for (const connection of connections) {
+    if (action === 'listar_live' || action === 'ler_live') {
+      const error = `Leitura live via API do provider ainda nao implementada para ${connection.provider}/${resource}.`
+      providers.push(connectionStatus(connection, false, error))
+      errors.push(error)
+      continue
+    }
+
     const adapter = getErpAdapter(connection.provider)
     if (!adapter) {
       const error = `Provider ERP sem adapter registrado: ${connection.provider}. Registrados: ${listErpAdapterProviders().join(', ')}.`

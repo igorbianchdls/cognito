@@ -1,4 +1,8 @@
 import { runQuery } from '@/lib/postgres'
+import {
+  getIntegrationMcpPermissions,
+  listIntegrationConnections,
+} from '@/products/integracoes/server/integrationConnectionRepository'
 import { DASHBOARD_WIDGET_RESOURCE_URI } from '@/products/mcp-apps/server/appResources'
 import type { ConnectedDomainToolResult } from '@/products/mcp-apps/server/domain-adapters/shared/adapterTypes'
 import { executeAnalyticsTool } from '@/products/mcp-apps/server/domain-adapters/analytics/analyticsService'
@@ -79,8 +83,29 @@ type DataCatalogAction =
 type DataCatalogDomain = 'erp' | 'crm' | 'marketing' | 'ecommerce'
 
 type CrudAction = 'listar' | 'ler'
+type ConnectedReadAction = 'listar' | 'ler' | 'listar_live' | 'ler_live'
 
 type ErpAcoesAction = 'criar' | 'atualizar' | 'baixar' | 'cancelar' | 'estornar' | 'reabrir'
+type ConnectedErpAction =
+  | 'criar'
+  | 'atualizar'
+  | 'baixar'
+  | 'cancelar'
+  | 'estornar'
+  | 'reabrir'
+  | 'alterar_status'
+type ConnectedCrmAction =
+  | 'criar'
+  | 'atualizar'
+  | 'arquivar'
+  | 'reativar'
+  | 'converter'
+  | 'mover_estagio'
+  | 'ganhar'
+  | 'perder'
+  | 'concluir'
+  | 'reabrir'
+  | 'cancelar'
 
 type SqlExecutionAction = 'execute'
 type FinancialStatementKind = 'dre' | 'cash_flow'
@@ -460,14 +485,20 @@ const ERP_ACOES_SCHEMA = {
   additionalProperties: true,
 } as const satisfies McpToolInputSchema
 
-function createCrudSchema(allowedResources: string[], description: string) {
+function createCrudSchema(
+  allowedResources: string[],
+  description: string,
+  actions: readonly string[] = ['listar', 'ler'],
+) {
   return {
     type: 'object',
     properties: {
       action: {
         type: 'string',
-        enum: ['listar', 'ler'],
-        description: 'Use listar para consultar registros e ler para buscar um registro especifico por params.id.',
+        enum: actions,
+        description: actions.includes('listar_live')
+          ? 'Use listar/ler para dados sincronizados no BigQuery. Use listar_live/ler_live para consultar diretamente a API do provider quando precisar do estado atual.'
+          : 'Use listar para consultar registros e ler para buscar um registro especifico por params.id.',
       },
       resource: {
         type: 'string',
@@ -499,12 +530,118 @@ const CRM_SCHEMA = createCrudSchema(
 const CONNECTED_ERP_SCHEMA = createCrudSchema(
   [...CONNECTED_ERP_RESOURCES],
   'Resource canonico de ERP conectado via /integracoes. Use clientes, fornecedores, contas-a-receber, contas-a-pagar, pedidos-venda, produtos ou estoque-atual.',
+  ['listar', 'ler', 'listar_live', 'ler_live'] satisfies ConnectedReadAction[],
 )
 
 const CONNECTED_CRM_SCHEMA = createCrudSchema(
   [...CONNECTED_CRM_RESOURCES],
   'Resource canonico de CRM conectado via /integracoes. Use contas, contatos, leads, oportunidades ou atividades.',
+  ['listar', 'ler', 'listar_live', 'ler_live'] satisfies ConnectedReadAction[],
 )
+
+const CONNECTED_ERP_ACTIONS_ALLOWED_RESOURCES = [
+  'clientes',
+  'fornecedores',
+  'contas-a-receber',
+  'contas-a-pagar',
+  'pedidos-venda',
+  'produtos',
+  'movimentacoes-estoque',
+] as const
+
+const CONNECTED_CRM_ACTIONS_ALLOWED_RESOURCES = [
+  'contas',
+  'contatos',
+  'leads',
+  'oportunidades',
+  'atividades',
+] as const
+
+const CONNECTED_ERP_ACTIONS_SCHEMA = {
+  type: 'object',
+  properties: {
+    provider: {
+      type: 'string',
+      description: 'Provider conectado em /integracoes, como omie, conta_azul ou bling. Opcional quando houver apenas uma conexao ativa.',
+    },
+    resource: {
+      type: 'string',
+      enum: CONNECTED_ERP_ACTIONS_ALLOWED_RESOURCES,
+      description: 'Recurso transacional do ERP conectado.',
+    },
+    action: {
+      type: 'string',
+      enum: ['criar', 'atualizar', 'baixar', 'cancelar', 'estornar', 'reabrir', 'alterar_status'],
+      description: 'Acao executada diretamente na API do provider. dry_run=true por padrao.',
+    },
+    id: {
+      type: 'string',
+      description: 'ID externo ou ID do provider. Obrigatorio para atualizar, baixar, cancelar, estornar, reabrir e alterar_status.',
+    },
+    payload: {
+      type: 'object',
+      description: 'Campos da operacao enviados ao provider. O contrato exato varia por resource/provider.',
+      additionalProperties: true,
+    },
+    dry_run: {
+      type: 'boolean',
+      description: 'Default true. Quando true, valida intencao/permissao e retorna preview sem chamar a API.',
+    },
+    confirmed: {
+      type: 'boolean',
+      description: 'Obrigatorio como true para execucao real quando a conexao exige confirmacao.',
+    },
+    idempotency_key: {
+      type: 'string',
+      description: 'Chave opcional para rastrear operacoes sensiveis e evitar duplicidade.',
+    },
+  },
+  required: ['resource', 'action'],
+  additionalProperties: true,
+} as const satisfies McpToolInputSchema
+
+const CONNECTED_CRM_ACTIONS_SCHEMA = {
+  type: 'object',
+  properties: {
+    provider: {
+      type: 'string',
+      description: 'Provider conectado em /integracoes, como hubspot, pipedrive, salesforce, bitrix24 ou rd_station_crm.',
+    },
+    resource: {
+      type: 'string',
+      enum: CONNECTED_CRM_ACTIONS_ALLOWED_RESOURCES,
+      description: 'Recurso transacional do CRM conectado.',
+    },
+    action: {
+      type: 'string',
+      enum: ['criar', 'atualizar', 'arquivar', 'reativar', 'converter', 'mover_estagio', 'ganhar', 'perder', 'concluir', 'reabrir', 'cancelar'],
+      description: 'Acao executada diretamente na API do provider. dry_run=true por padrao.',
+    },
+    id: {
+      type: 'string',
+      description: 'ID externo ou ID do provider. Obrigatorio para atualizar, arquivar, reativar, converter, mover_estagio, ganhar, perder, concluir, reabrir e cancelar.',
+    },
+    payload: {
+      type: 'object',
+      description: 'Campos da operacao enviados ao provider. O contrato exato varia por resource/provider.',
+      additionalProperties: true,
+    },
+    dry_run: {
+      type: 'boolean',
+      description: 'Default true. Quando true, valida intencao/permissao e retorna preview sem chamar a API.',
+    },
+    confirmed: {
+      type: 'boolean',
+      description: 'Obrigatorio como true para execucao real quando a conexao exige confirmacao.',
+    },
+    idempotency_key: {
+      type: 'string',
+      description: 'Chave opcional para rastrear operacoes sensiveis e evitar duplicidade.',
+    },
+  },
+  required: ['resource', 'action'],
+  additionalProperties: true,
+} as const satisfies McpToolInputSchema
 
 const PAID_MEDIA_SCHEMA = createCrudSchema(
   [...PAID_MEDIA_RESOURCES],
@@ -846,8 +983,10 @@ export const MCP_APP_DOMAIN_TOOL_NAMES = {
   erp: 'erp',
   erpAcoes: 'erp_acoes',
   connectedErp: 'connected_erp',
+  connectedErpActions: 'connected_erp_actions',
   crm: 'crm',
   connectedCrm: 'connected_crm',
+  connectedCrmActions: 'connected_crm_actions',
   sql: 'sql',
   sqlExecution: 'sql_execution',
   financialStatement: 'financial_statement',
@@ -905,7 +1044,7 @@ const CONNECTED_ERP_DOMAIN_TOOL_DEFINITION = {
   name: MCP_APP_DOMAIN_TOOL_NAMES.connectedErp,
   title: 'Connected ERP',
   description:
-    'Consulta ERPs conectados pelo cliente em /integracoes usando contrato canonico Cognito e adapters por provider. Mantem a tool erp atual separada. Acoes suportadas nesta fase: listar e ler.',
+    'Consulta ERPs conectados pelo cliente em /integracoes. listar/ler usam BigQuery sincronizado; listar_live/ler_live sao reservadas para leitura direta na API do provider quando o adapter live estiver implementado. Mantem a tool erp atual separada.',
   inputSchema: CONNECTED_ERP_SCHEMA,
   outputSchema: CONNECTED_DOMAIN_OUTPUT_SCHEMA,
   securitySchemes: READ_SECURITY_SCHEMES,
@@ -913,15 +1052,39 @@ const CONNECTED_ERP_DOMAIN_TOOL_DEFINITION = {
   _meta: TOOL_META,
 } as const satisfies DomainToolDefinition
 
+const CONNECTED_ERP_ACTIONS_DOMAIN_TOOL_DEFINITION = {
+  name: MCP_APP_DOMAIN_TOOL_NAMES.connectedErpActions,
+  title: 'Connected ERP actions',
+  description:
+    'Executa acoes transacionais diretamente na API do ERP conectado em /integracoes. Use para criar, atualizar, baixar, cancelar, estornar, reabrir e alterar status. dry_run=true por padrao; dry_run=false exige confirmacao e adapter provider implementado.',
+  inputSchema: CONNECTED_ERP_ACTIONS_SCHEMA,
+  outputSchema: ERP_ACOES_OUTPUT_SCHEMA,
+  securitySchemes: READ_SECURITY_SCHEMES,
+  annotations: WRITE_ANNOTATIONS,
+  _meta: TOOL_META,
+} as const satisfies DomainToolDefinition
+
 const CONNECTED_CRM_DOMAIN_TOOL_DEFINITION = {
   name: MCP_APP_DOMAIN_TOOL_NAMES.connectedCrm,
   title: 'Connected CRM',
   description:
-    'Consulta CRMs conectados pelo cliente em /integracoes usando contrato canonico Cognito e adapters por provider. Mantem a tool crm atual separada. Acoes suportadas nesta fase: listar e ler.',
+    'Consulta CRMs conectados pelo cliente em /integracoes. listar/ler usam BigQuery sincronizado; listar_live/ler_live sao reservadas para leitura direta na API do provider quando o adapter live estiver implementado. Mantem a tool crm atual separada.',
   inputSchema: CONNECTED_CRM_SCHEMA,
   outputSchema: CONNECTED_DOMAIN_OUTPUT_SCHEMA,
   securitySchemes: READ_SECURITY_SCHEMES,
   annotations: READ_ONLY_ANNOTATIONS,
+  _meta: TOOL_META,
+} as const satisfies DomainToolDefinition
+
+const CONNECTED_CRM_ACTIONS_DOMAIN_TOOL_DEFINITION = {
+  name: MCP_APP_DOMAIN_TOOL_NAMES.connectedCrmActions,
+  title: 'Connected CRM actions',
+  description:
+    'Executa acoes transacionais diretamente na API do CRM conectado em /integracoes. Use para criar, atualizar, arquivar, reativar, converter, mover estagio, ganhar, perder, concluir, reabrir e cancelar. dry_run=true por padrao; dry_run=false exige confirmacao e adapter provider implementado.',
+  inputSchema: CONNECTED_CRM_ACTIONS_SCHEMA,
+  outputSchema: ERP_ACOES_OUTPUT_SCHEMA,
+  securitySchemes: READ_SECURITY_SCHEMES,
+  annotations: WRITE_ANNOTATIONS,
   _meta: TOOL_META,
 } as const satisfies DomainToolDefinition
 
@@ -1038,8 +1201,10 @@ export function listMcpAppDomainToolDefinitions() {
     ERP_DOMAIN_TOOL_DEFINITION,
     ERP_ACOES_DOMAIN_TOOL_DEFINITION,
     CONNECTED_ERP_DOMAIN_TOOL_DEFINITION,
+    CONNECTED_ERP_ACTIONS_DOMAIN_TOOL_DEFINITION,
     CRM_DOMAIN_TOOL_DEFINITION,
     CONNECTED_CRM_DOMAIN_TOOL_DEFINITION,
+    CONNECTED_CRM_ACTIONS_DOMAIN_TOOL_DEFINITION,
     ECOMMERCE_DOMAIN_TOOL_DEFINITION,
     ECOMMERCE_CONNECTED_DOMAIN_TOOL_DEFINITION,
     SQL_DOMAIN_TOOL_DEFINITION,
@@ -1056,8 +1221,10 @@ export const MCP_APP_DOMAIN_TOOL_DEFINITIONS = [
   ERP_DOMAIN_TOOL_DEFINITION,
   ERP_ACOES_DOMAIN_TOOL_DEFINITION,
   CONNECTED_ERP_DOMAIN_TOOL_DEFINITION,
+  CONNECTED_ERP_ACTIONS_DOMAIN_TOOL_DEFINITION,
   CRM_DOMAIN_TOOL_DEFINITION,
   CONNECTED_CRM_DOMAIN_TOOL_DEFINITION,
+  CONNECTED_CRM_ACTIONS_DOMAIN_TOOL_DEFINITION,
   ECOMMERCE_DOMAIN_TOOL_DEFINITION,
   ECOMMERCE_CONNECTED_DOMAIN_TOOL_DEFINITION,
   SQL_DOMAIN_TOOL_DEFINITION,
@@ -4214,6 +4381,342 @@ async function callConnectedCrm(args: unknown, context: CognitoMcpServerContext)
   }
 }
 
+const CONNECTED_ERP_ACTIONS_BY_RESOURCE: Record<string, readonly ConnectedErpAction[]> = {
+  clientes: ['criar', 'atualizar', 'alterar_status'],
+  fornecedores: ['criar', 'atualizar', 'alterar_status'],
+  produtos: ['criar', 'atualizar', 'alterar_status'],
+  'contas-a-receber': ['criar', 'atualizar', 'baixar', 'cancelar', 'estornar', 'reabrir'],
+  'contas-a-pagar': ['criar', 'atualizar', 'baixar', 'cancelar', 'estornar', 'reabrir'],
+  'pedidos-venda': ['criar', 'atualizar', 'cancelar', 'alterar_status'],
+  'movimentacoes-estoque': ['criar', 'cancelar'],
+}
+
+const CONNECTED_CRM_ACTIONS_BY_RESOURCE: Record<string, readonly ConnectedCrmAction[]> = {
+  contas: ['criar', 'atualizar', 'arquivar', 'reativar'],
+  contatos: ['criar', 'atualizar', 'arquivar', 'reativar'],
+  leads: ['criar', 'atualizar', 'converter', 'arquivar', 'reativar'],
+  oportunidades: ['criar', 'atualizar', 'mover_estagio', 'ganhar', 'perder', 'reabrir', 'arquivar'],
+  atividades: ['criar', 'atualizar', 'concluir', 'cancelar', 'reabrir'],
+}
+
+const CONNECTED_DESTRUCTIVE_ACTIONS = new Set([
+  'cancelar',
+  'estornar',
+  'arquivar',
+  'perder',
+])
+
+const CONNECTED_ACTIONS_REQUIRING_ID = new Set([
+  'atualizar',
+  'baixar',
+  'cancelar',
+  'estornar',
+  'reabrir',
+  'alterar_status',
+  'arquivar',
+  'reativar',
+  'converter',
+  'mover_estagio',
+  'ganhar',
+  'perder',
+  'concluir',
+])
+
+function hasResourceGrant(resources: string[], resource: string) {
+  return resources.includes('*') || resources.includes(resource)
+}
+
+function inferActionPermissionKind(action: string): 'write' | 'destructive' {
+  return CONNECTED_DESTRUCTIVE_ACTIONS.has(action) ? 'destructive' : 'write'
+}
+
+function buildConnectedActionResponse(input: {
+  tool: string
+  domain: 'erp' | 'crm'
+  provider: string | null
+  connectionId?: string | null
+  displayName?: string | null
+  action: string
+  resource: string
+  dryRun: boolean
+  success: boolean
+  message: string
+  id?: string | null
+  idempotencyKey?: string | null
+  payload?: JsonRecord
+  permissionKind?: 'write' | 'destructive'
+}) {
+  const row = {
+    status_operacao: input.success ? (input.dryRun ? 'preview' : 'executado') : 'bloqueado',
+    domain: input.domain,
+    provider: input.provider,
+    connection_id: input.connectionId || null,
+    display_name: input.displayName || null,
+    recurso: input.resource,
+    acao: input.action,
+    dry_run: input.dryRun,
+    permissao: input.permissionKind || null,
+    mensagem: input.message,
+    id: input.id || null,
+    idempotency_key: input.idempotencyKey || null,
+  }
+  const rows = [row]
+  const structuredContent = {
+    success: input.success,
+    tool: input.tool,
+    action: input.action,
+    resource: input.resource,
+    title: `${input.tool} - ${input.resource}`,
+    dry_run: input.dryRun,
+    rows,
+    columns: inferColumns(rows),
+    count: rows.length,
+    result: {
+      ...row,
+      payload: input.payload || {},
+    },
+  }
+  return {
+    content: [{ type: 'text', text: JSON.stringify(structuredContent, null, 2) }],
+    structuredContent,
+    isError: !input.success,
+  }
+}
+
+async function callConnectedProviderAction(params: {
+  args: unknown
+  context: CognitoMcpServerContext
+  domain: 'erp' | 'crm'
+  tool: string
+  resources: readonly string[]
+  actionsByResource: Record<string, readonly string[]>
+}) {
+  const input = toObj(params.args)
+  const tenantId = getTenantId(params.context)
+  const provider = toOptionalText(input.provider)
+  const resource = toText(input.resource)
+  const action = toText(input.action).toLowerCase()
+  const payload = toObj(input.payload)
+  const id = toOptionalText(input.id ?? payload.id ?? payload.external_id)
+  const dryRun = input.dry_run !== false
+  const idempotencyKey = toOptionalText(input.idempotency_key)
+  const permissionKind = inferActionPermissionKind(action)
+
+  if (!params.resources.includes(resource)) {
+    return buildConnectedActionResponse({
+      tool: params.tool,
+      domain: params.domain,
+      provider,
+      action,
+      resource,
+      dryRun,
+      success: false,
+      message: `resource invalido. Permitidos: ${params.resources.join(', ')}.`,
+      id,
+      idempotencyKey,
+      payload,
+      permissionKind,
+    })
+  }
+
+  const allowedActions = params.actionsByResource[resource] || []
+  if (!allowedActions.includes(action)) {
+    return buildConnectedActionResponse({
+      tool: params.tool,
+      domain: params.domain,
+      provider,
+      action,
+      resource,
+      dryRun,
+      success: false,
+      message: `action ${action || '(vazia)'} nao permitida para ${resource}. Permitidas: ${allowedActions.join(', ')}.`,
+      id,
+      idempotencyKey,
+      payload,
+      permissionKind,
+    })
+  }
+
+  if (CONNECTED_ACTIONS_REQUIRING_ID.has(action) && !id) {
+    return buildConnectedActionResponse({
+      tool: params.tool,
+      domain: params.domain,
+      provider,
+      action,
+      resource,
+      dryRun,
+      success: false,
+      message: `id e obrigatorio para ${resource}/${action}.`,
+      id,
+      idempotencyKey,
+      payload,
+      permissionKind,
+    })
+  }
+
+  const connections = (await listIntegrationConnections({
+    tenantId,
+    domain: params.domain,
+    provider: provider || undefined,
+    limit: 2,
+  })).filter((connection) => connection.status === 'connected' || connection.status === 'warning' || connection.status === 'syncing')
+
+  if (!connections.length) {
+    return buildConnectedActionResponse({
+      tool: params.tool,
+      domain: params.domain,
+      provider,
+      action,
+      resource,
+      dryRun,
+      success: false,
+      message: provider
+        ? `Nenhuma conexao ativa encontrada para provider ${provider}.`
+        : `Nenhuma conexao ${params.domain.toUpperCase()} ativa encontrada.`,
+      id,
+      idempotencyKey,
+      payload,
+      permissionKind,
+    })
+  }
+  if (!provider && connections.length > 1) {
+    return buildConnectedActionResponse({
+      tool: params.tool,
+      domain: params.domain,
+      provider,
+      action,
+      resource,
+      dryRun,
+      success: false,
+      message: 'Mais de uma conexao ativa encontrada. Informe provider para escolher a API de destino.',
+      id,
+      idempotencyKey,
+      payload,
+      permissionKind,
+    })
+  }
+
+  const connection = connections[0]
+  const permissions = await getIntegrationMcpPermissions(connection.id, tenantId)
+  if (!permissions?.enabled) {
+    return buildConnectedActionResponse({
+      tool: params.tool,
+      domain: params.domain,
+      provider: connection.provider,
+      connectionId: connection.id,
+      displayName: connection.displayName,
+      action,
+      resource,
+      dryRun,
+      success: false,
+      message: `MCP nao esta habilitado para a conexao ${connection.displayName}.`,
+      id,
+      idempotencyKey,
+      payload,
+      permissionKind,
+    })
+  }
+
+  if (!dryRun) {
+    const granted = permissionKind === 'destructive'
+      ? hasResourceGrant(permissions.destructiveResources, resource)
+      : hasResourceGrant(permissions.writeResources, resource)
+    if (!granted) {
+      return buildConnectedActionResponse({
+        tool: params.tool,
+        domain: params.domain,
+        provider: connection.provider,
+        connectionId: connection.id,
+        displayName: connection.displayName,
+        action,
+        resource,
+        dryRun,
+        success: false,
+        message: `Permissao ${permissionKind} ausente para ${resource}.`,
+        id,
+        idempotencyKey,
+        payload,
+        permissionKind,
+      })
+    }
+
+    if (permissions.requireConfirmation && input.confirmed !== true) {
+      return buildConnectedActionResponse({
+        tool: params.tool,
+        domain: params.domain,
+        provider: connection.provider,
+        connectionId: connection.id,
+        displayName: connection.displayName,
+        action,
+        resource,
+        dryRun,
+        success: false,
+        message: 'Confirmacao explicita obrigatoria para executar esta acao no provider.',
+        id,
+        idempotencyKey,
+        payload,
+        permissionKind,
+      })
+    }
+
+    return buildConnectedActionResponse({
+      tool: params.tool,
+      domain: params.domain,
+      provider: connection.provider,
+      connectionId: connection.id,
+      displayName: connection.displayName,
+      action,
+      resource,
+      dryRun,
+      success: false,
+      message: 'Adapter de escrita via API do provider ainda nao implementado. OAuth/credenciais serao usados aqui na proxima etapa.',
+      id,
+      idempotencyKey,
+      payload,
+      permissionKind,
+    })
+  }
+
+  return buildConnectedActionResponse({
+    tool: params.tool,
+    domain: params.domain,
+    provider: connection.provider,
+    connectionId: connection.id,
+    displayName: connection.displayName,
+    action,
+    resource,
+    dryRun,
+    success: true,
+    message: 'Preview validado. Nenhuma chamada foi enviada ao provider.',
+    id,
+    idempotencyKey,
+    payload,
+    permissionKind,
+  })
+}
+
+async function callConnectedErpActions(args: unknown, context: CognitoMcpServerContext) {
+  return callConnectedProviderAction({
+    args,
+    context,
+    domain: 'erp',
+    tool: MCP_APP_DOMAIN_TOOL_NAMES.connectedErpActions,
+    resources: CONNECTED_ERP_ACTIONS_ALLOWED_RESOURCES,
+    actionsByResource: CONNECTED_ERP_ACTIONS_BY_RESOURCE,
+  })
+}
+
+async function callConnectedCrmActions(args: unknown, context: CognitoMcpServerContext) {
+  return callConnectedProviderAction({
+    args,
+    context,
+    domain: 'crm',
+    tool: MCP_APP_DOMAIN_TOOL_NAMES.connectedCrmActions,
+    resources: CONNECTED_CRM_ACTIONS_ALLOWED_RESOURCES,
+    actionsByResource: CONNECTED_CRM_ACTIONS_BY_RESOURCE,
+  })
+}
+
 async function callConnectedDomain(
   execute: (args: unknown, context: CognitoMcpServerContext) => Promise<ConnectedDomainToolResult>,
   args: unknown,
@@ -4243,10 +4746,14 @@ export async function callMcpAppDomainTool(
       return callErpAcoes(args, context)
     case MCP_APP_DOMAIN_TOOL_NAMES.connectedErp:
       return callConnectedErp(args, context)
+    case MCP_APP_DOMAIN_TOOL_NAMES.connectedErpActions:
+      return callConnectedErpActions(args, context)
     case MCP_APP_DOMAIN_TOOL_NAMES.crm:
       return callCrud(args, context, MCP_APP_DOMAIN_TOOL_NAMES.crm, CRM_ALLOWED_RESOURCES)
     case MCP_APP_DOMAIN_TOOL_NAMES.connectedCrm:
       return callConnectedCrm(args, context)
+    case MCP_APP_DOMAIN_TOOL_NAMES.connectedCrmActions:
+      return callConnectedCrmActions(args, context)
     case MCP_APP_DOMAIN_TOOL_NAMES.ecommerce:
       return callEcommerce(args, context)
     case MCP_APP_DOMAIN_TOOL_NAMES.ecommerceConnected:
