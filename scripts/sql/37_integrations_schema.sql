@@ -179,6 +179,7 @@ CREATE TABLE IF NOT EXISTS integrations.mcp_permissions (
   connection_id bigint NOT NULL,
   enabled boolean NOT NULL DEFAULT false,
   read_resources jsonb NOT NULL DEFAULT '[]'::jsonb,
+  live_read_resources jsonb NOT NULL DEFAULT '[]'::jsonb,
   write_resources jsonb NOT NULL DEFAULT '[]'::jsonb,
   destructive_resources jsonb NOT NULL DEFAULT '[]'::jsonb,
   require_confirmation boolean NOT NULL DEFAULT true,
@@ -187,6 +188,8 @@ CREATE TABLE IF NOT EXISTS integrations.mcp_permissions (
   updated_at timestamptz NOT NULL DEFAULT now(),
   CONSTRAINT mcp_permissions_read_array_check
     CHECK (jsonb_typeof(read_resources) = 'array'),
+  CONSTRAINT mcp_permissions_live_read_array_check
+    CHECK (jsonb_typeof(live_read_resources) = 'array'),
   CONSTRAINT mcp_permissions_write_array_check
     CHECK (jsonb_typeof(write_resources) = 'array'),
   CONSTRAINT mcp_permissions_destructive_array_check
@@ -428,9 +431,9 @@ FROM mcp_app.integration_pipelines
 ON CONFLICT (id) DO NOTHING;
 
 INSERT INTO integrations.mcp_permissions
-  (id, tenant_id, connection_id, enabled, read_resources, write_resources, destructive_resources, require_confirmation, metadata, created_at, updated_at)
+  (id, tenant_id, connection_id, enabled, read_resources, live_read_resources, write_resources, destructive_resources, require_confirmation, metadata, created_at, updated_at)
 SELECT
-  id, tenant_id, connection_id, enabled, read_resources, write_resources, destructive_resources, require_confirmation, metadata_json, created_at, updated_at
+  id, tenant_id, connection_id, enabled, read_resources, '[]'::jsonb, write_resources, destructive_resources, require_confirmation, metadata_json, created_at, updated_at
 FROM mcp_app.integration_mcp_permissions
 ON CONFLICT (id) DO NOTHING;
 

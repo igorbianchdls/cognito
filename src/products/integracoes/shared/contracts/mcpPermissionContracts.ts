@@ -4,6 +4,7 @@ export type IntegrationMcpPermissions = {
   connectionId: string
   enabled: boolean
   readResources: string[]
+  liveReadResources: string[]
   writeResources: string[]
   destructiveResources: string[]
   requireConfirmation: boolean
@@ -17,6 +18,7 @@ export type UpsertIntegrationMcpPermissionsInput = {
   connectionId: string
   enabled?: boolean
   readResources?: string[]
+  liveReadResources?: string[]
   writeResources?: string[]
   destructiveResources?: string[]
   requireConfirmation?: boolean

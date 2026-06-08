@@ -132,6 +132,7 @@ type DbMcpPermissionsRow = {
   connection_id: string | number
   enabled: boolean
   read_resources: unknown
+  live_read_resources?: unknown
   write_resources: unknown
   destructive_resources: unknown
   require_confirmation: boolean
@@ -306,6 +307,7 @@ function toMcpPermissions(row: DbMcpPermissionsRow): IntegrationMcpPermissions {
     connectionId: String(row.connection_id),
     enabled: Boolean(row.enabled),
     readResources: asStringArray(row.read_resources),
+    liveReadResources: asStringArray(row.live_read_resources),
     writeResources: asStringArray(row.write_resources),
     destructiveResources: asStringArray(row.destructive_resources),
     requireConfirmation: Boolean(row.require_confirmation),
@@ -704,15 +706,24 @@ export async function upsertIntegrationMcpPermissions(
   input: UpsertIntegrationMcpPermissionsInput,
 ): Promise<IntegrationMcpPermissions> {
   const tenantId = Number(input.tenantId || 1)
+  const current = await getIntegrationMcpPermissions(input.connectionId, tenantId)
+  const enabled = input.enabled ?? current?.enabled ?? false
+  const readResources = input.readResources ?? current?.readResources ?? []
+  const liveReadResources = input.liveReadResources ?? current?.liveReadResources ?? []
+  const writeResources = input.writeResources ?? current?.writeResources ?? []
+  const destructiveResources = input.destructiveResources ?? current?.destructiveResources ?? []
+  const requireConfirmation = input.requireConfirmation ?? current?.requireConfirmation ?? true
+
   const result = await runQuery<DbMcpPermissionsRow>(
     `INSERT INTO integrations.mcp_permissions
-      (tenant_id, connection_id, enabled, read_resources, write_resources, destructive_resources, require_confirmation, metadata, updated_at)
+      (tenant_id, connection_id, enabled, read_resources, live_read_resources, write_resources, destructive_resources, require_confirmation, metadata, updated_at)
      VALUES
-      ($1, $2, $3, $4::jsonb, $5::jsonb, $6::jsonb, $7, $8::jsonb, now())
+      ($1, $2, $3, $4::jsonb, $5::jsonb, $6::jsonb, $7::jsonb, $8, $9::jsonb, now())
      ON CONFLICT (tenant_id, connection_id)
      DO UPDATE SET
        enabled = EXCLUDED.enabled,
        read_resources = EXCLUDED.read_resources,
+       live_read_resources = EXCLUDED.live_read_resources,
        write_resources = EXCLUDED.write_resources,
        destructive_resources = EXCLUDED.destructive_resources,
        require_confirmation = EXCLUDED.require_confirmation,
@@ -722,11 +733,12 @@ export async function upsertIntegrationMcpPermissions(
     [
       tenantId,
       input.connectionId,
-      input.enabled ?? false,
-      JSON.stringify(input.readResources || []),
-      JSON.stringify(input.writeResources || []),
-      JSON.stringify(input.destructiveResources || []),
-      input.requireConfirmation ?? true,
+      enabled,
+      JSON.stringify(readResources),
+      JSON.stringify(liveReadResources),
+      JSON.stringify(writeResources),
+      JSON.stringify(destructiveResources),
+      requireConfirmation,
       JSON.stringify(input.metadata || {}),
     ],
   )
@@ -835,9 +847,9 @@ export async function createIntegrationConnection(
 
     await client.query(
       `INSERT INTO integrations.mcp_permissions
-        (tenant_id, connection_id, enabled, read_resources, write_resources, destructive_resources, require_confirmation, metadata, updated_at)
+        (tenant_id, connection_id, enabled, read_resources, live_read_resources, write_resources, destructive_resources, require_confirmation, metadata, updated_at)
        VALUES
-        ($1, $2, true, $3::jsonb, '[]'::jsonb, '[]'::jsonb, true, $4::jsonb, now())
+        ($1, $2, true, $3::jsonb, '[]'::jsonb, '[]'::jsonb, '[]'::jsonb, true, $4::jsonb, now())
        ON CONFLICT (tenant_id, connection_id)
        DO UPDATE SET
          enabled = EXCLUDED.enabled,

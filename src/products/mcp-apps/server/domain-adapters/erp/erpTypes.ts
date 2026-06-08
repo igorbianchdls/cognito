@@ -17,6 +17,14 @@ export const CONNECTED_ERP_RESOURCES = [
 
 export type ConnectedErpResource = (typeof CONNECTED_ERP_RESOURCES)[number]
 export type ConnectedErpAction = ConnectedDomainAction
+export type ConnectedErpProviderAction =
+  | 'criar'
+  | 'atualizar'
+  | 'baixar'
+  | 'cancelar'
+  | 'estornar'
+  | 'reabrir'
+  | 'alterar_status'
 
 export type ConnectedErpToolInput = {
   action?: unknown

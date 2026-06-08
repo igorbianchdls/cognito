@@ -5,11 +5,20 @@ import {
 } from '@/products/integracoes/server/integrationConnectionRepository'
 import { DASHBOARD_WIDGET_RESOURCE_URI } from '@/products/mcp-apps/server/appResources'
 import type { ConnectedDomainToolResult } from '@/products/mcp-apps/server/domain-adapters/shared/adapterTypes'
+import type { ConnectedProviderApiAdapter } from '@/products/mcp-apps/server/domain-adapters/shared/connectedProviderApiAdapter'
 import { executeAnalyticsTool } from '@/products/mcp-apps/server/domain-adapters/analytics/analyticsService'
 import { ANALYTICS_RESOURCES } from '@/products/mcp-apps/server/domain-adapters/analytics/analyticsTypes'
 import { executeConnectedCrmTool } from '@/products/mcp-apps/server/domain-adapters/crm/connectedCrmService'
+import {
+  getCrmApiAdapter,
+  listCrmApiAdapterProviders,
+} from '@/products/mcp-apps/server/domain-adapters/crm/crmApiAdapterRegistry'
 import { CONNECTED_CRM_RESOURCES } from '@/products/mcp-apps/server/domain-adapters/crm/crmTypes'
 import { executeConnectedErpTool } from '@/products/mcp-apps/server/domain-adapters/erp/connectedErpService'
+import {
+  getErpApiAdapter,
+  listErpApiAdapterProviders,
+} from '@/products/mcp-apps/server/domain-adapters/erp/erpApiAdapterRegistry'
 import { CONNECTED_ERP_RESOURCES } from '@/products/mcp-apps/server/domain-adapters/erp/erpTypes'
 import { executeEcommerceConnectedTool } from '@/products/mcp-apps/server/domain-adapters/ecommerce-connected/ecommerceConnectedService'
 import { ECOMMERCE_CONNECTED_RESOURCES } from '@/products/mcp-apps/server/domain-adapters/ecommerce-connected/ecommerceConnectedTypes'
@@ -4659,22 +4668,103 @@ async function callConnectedProviderAction(params: {
       })
     }
 
-    return buildConnectedActionResponse({
-      tool: params.tool,
-      domain: params.domain,
-      provider: connection.provider,
-      connectionId: connection.id,
-      displayName: connection.displayName,
-      action,
-      resource,
-      dryRun,
-      success: false,
-      message: 'Adapter de escrita via API do provider ainda nao implementado. OAuth/credenciais serao usados aqui na proxima etapa.',
-      id,
-      idempotencyKey,
-      payload,
-      permissionKind,
-    })
+    const apiAdapter = (params.domain === 'erp'
+      ? getErpApiAdapter(connection.provider)
+      : getCrmApiAdapter(connection.provider)) as ConnectedProviderApiAdapter<string, string> | undefined
+    const registeredAdapters = params.domain === 'erp'
+      ? listErpApiAdapterProviders()
+      : listCrmApiAdapterProviders()
+
+    if (!apiAdapter) {
+      return buildConnectedActionResponse({
+        tool: params.tool,
+        domain: params.domain,
+        provider: connection.provider,
+        connectionId: connection.id,
+        displayName: connection.displayName,
+        action,
+        resource,
+        dryRun,
+        success: false,
+        message: `Provider ${connection.provider} ainda nao possui adapter API de escrita registrado. Registrados: ${registeredAdapters.join(', ') || 'nenhum'}.`,
+        id,
+        idempotencyKey,
+        payload,
+        permissionKind,
+      })
+    }
+
+    if (!apiAdapter.supportsAction(resource, action)) {
+      return buildConnectedActionResponse({
+        tool: params.tool,
+        domain: params.domain,
+        provider: connection.provider,
+        connectionId: connection.id,
+        displayName: connection.displayName,
+        action,
+        resource,
+        dryRun,
+        success: false,
+        message: `Provider ${connection.provider} nao suporta ${resource}/${action} via API.`,
+        id,
+        idempotencyKey,
+        payload,
+        permissionKind,
+      })
+    }
+
+    try {
+      const result = await apiAdapter.executeAction({
+        tenantId,
+        connection,
+        resource,
+        action,
+        id,
+        payload,
+        idempotencyKey,
+        dryRun,
+      })
+
+      return buildConnectedActionResponse({
+        tool: params.tool,
+        domain: params.domain,
+        provider: connection.provider,
+        connectionId: connection.id,
+        displayName: connection.displayName,
+        action,
+        resource,
+        dryRun,
+        success: result.ok,
+        message: result.message,
+        id: result.id || id,
+        idempotencyKey,
+        payload: {
+          ...payload,
+          ...(result.metadata || {}),
+          status: result.status || null,
+          previousStatus: result.previousStatus || null,
+          nextStatus: result.nextStatus || null,
+        },
+        permissionKind,
+      })
+    } catch (error) {
+      return buildConnectedActionResponse({
+        tool: params.tool,
+        domain: params.domain,
+        provider: connection.provider,
+        connectionId: connection.id,
+        displayName: connection.displayName,
+        action,
+        resource,
+        dryRun,
+        success: false,
+        message: error instanceof Error ? error.message : 'Falha ao executar acao no provider.',
+        id,
+        idempotencyKey,
+        payload,
+        permissionKind,
+      })
+    }
   }
 
   return buildConnectedActionResponse({

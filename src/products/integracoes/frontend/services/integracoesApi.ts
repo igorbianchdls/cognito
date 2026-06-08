@@ -6,6 +6,10 @@ import type {
 } from '@/products/integracoes/shared/contracts/connectionContracts'
 import type { IntegrationEvent } from '@/products/integracoes/shared/contracts/eventContracts'
 import type {
+  IntegrationMcpPermissions,
+  UpsertIntegrationMcpPermissionsInput,
+} from '@/products/integracoes/shared/contracts/mcpPermissionContracts'
+import type {
   IntegrationSyncResult,
   IntegrationSyncRun,
   TriggerIntegrationSyncInput,
@@ -104,6 +108,12 @@ type SyncResponse = {
   ok?: boolean
   error?: string
   result?: IntegrationSyncResult
+}
+
+type McpPermissionsResponse = {
+  ok?: boolean
+  error?: string
+  permissions?: IntegrationMcpPermissions
 }
 
 function buildQuery(params: Record<string, string | undefined>): string {
@@ -287,4 +297,32 @@ export async function requestIntegrationReconnect(id: string, tenantId = 1): Pro
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ tenantId }),
   })
+}
+
+export async function fetchIntegrationMcpPermissions(
+  connectionId: string,
+  tenantId = 1,
+): Promise<IntegrationMcpPermissions> {
+  const query = buildQuery({ tenantId: String(tenantId) })
+  const payload = await requestJson<McpPermissionsResponse>(
+    `/api/integracoes/connections/${encodeURIComponent(connectionId)}/mcp-permissions?${query}`,
+  )
+  if (!payload.permissions) throw new Error('Permissoes MCP nao retornadas')
+  return payload.permissions
+}
+
+export async function updateIntegrationMcpPermissions(
+  connectionId: string,
+  input: Omit<UpsertIntegrationMcpPermissionsInput, 'connectionId'>,
+): Promise<IntegrationMcpPermissions> {
+  const payload = await requestJson<McpPermissionsResponse>(
+    `/api/integracoes/connections/${encodeURIComponent(connectionId)}/mcp-permissions`,
+    {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(input),
+    },
+  )
+  if (!payload.permissions) throw new Error('Permissoes MCP nao retornadas')
+  return payload.permissions
 }

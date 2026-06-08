@@ -15,6 +15,18 @@ export const CONNECTED_CRM_RESOURCES = [
 
 export type ConnectedCrmResource = (typeof CONNECTED_CRM_RESOURCES)[number]
 export type ConnectedCrmAction = ConnectedDomainAction
+export type ConnectedCrmProviderAction =
+  | 'criar'
+  | 'atualizar'
+  | 'arquivar'
+  | 'reativar'
+  | 'converter'
+  | 'mover_estagio'
+  | 'ganhar'
+  | 'perder'
+  | 'concluir'
+  | 'reabrir'
+  | 'cancelar'
 
 export type ConnectedCrmToolInput = {
   action?: unknown

@@ -1,5 +1,12 @@
-import { listIntegrationConnections } from '@/products/integracoes/server/integrationConnectionRepository'
+import {
+  getIntegrationMcpPermissions,
+  listIntegrationConnections,
+} from '@/products/integracoes/server/integrationConnectionRepository'
 import type { IntegrationConnection } from '@/products/integracoes/shared/contracts/connectionContracts'
+import {
+  getCrmApiAdapter,
+  listCrmApiAdapterProviders,
+} from '@/products/mcp-apps/server/domain-adapters/crm/crmApiAdapterRegistry'
 import {
   getCrmAdapter,
   listCrmAdapterProviders,
@@ -97,6 +104,10 @@ function connectionStatus(connection: IntegrationConnection, ok: boolean, error?
   }
 }
 
+function hasResourceGrant(resources: string[], resource: string) {
+  return resources.includes('*') || resources.includes(resource)
+}
+
 async function listActiveConnections(tenantId: number, provider: string | null) {
   const connections = await listIntegrationConnections({
     tenantId,
@@ -143,9 +154,40 @@ export async function executeConnectedCrmTool(
 
   for (const connection of connections) {
     if (action === 'listar_live' || action === 'ler_live') {
-      const error = `Leitura live via API do provider ainda nao implementada para ${connection.provider}/${resource}.`
-      providers.push(connectionStatus(connection, false, error))
-      errors.push(error)
+      const permissions = await getIntegrationMcpPermissions(connection.id, tenantId)
+      if (!permissions?.enabled || !hasResourceGrant(permissions.liveReadResources, resource)) {
+        const error = `MCP nao tem permissao de leitura live para ${resource} na conexao ${connection.displayName}.`
+        providers.push(connectionStatus(connection, false, error))
+        errors.push(error)
+        continue
+      }
+
+      const apiAdapter = getCrmApiAdapter(connection.provider)
+      if (!apiAdapter) {
+        const error = `Provider CRM sem adapter API live registrado: ${connection.provider}. Registrados: ${listCrmApiAdapterProviders().join(', ') || 'nenhum'}.`
+        providers.push(connectionStatus(connection, false, error))
+        errors.push(error)
+        continue
+      }
+      if (!apiAdapter.supportsLiveRead(resource)) {
+        const error = `Provider ${connection.provider} nao suporta leitura live de ${resource}.`
+        providers.push(connectionStatus(connection, false, error))
+        errors.push(error)
+        continue
+      }
+
+      try {
+        const result = action === 'listar_live'
+          ? await apiAdapter.listLive({ tenantId, connection, resource, filters, limit, includeProviderFields })
+          : await apiAdapter.readLive({ tenantId, connection, resource, filters, limit, includeProviderFields, id })
+        rows.push(...result.rows)
+        warnings.push(...(result.warnings || []))
+        providers.push(connectionStatus(connection, true))
+      } catch (error) {
+        const message = error instanceof Error ? error.message : 'Erro desconhecido no adapter API connected_crm.'
+        providers.push(connectionStatus(connection, false, message))
+        errors.push(message)
+      }
       continue
     }
 
