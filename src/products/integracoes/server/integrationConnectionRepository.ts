@@ -32,6 +32,11 @@ import type {
   IntegrationMcpPermissions,
   UpsertIntegrationMcpPermissionsInput,
 } from '@/products/integracoes/shared/contracts/mcpPermissionContracts'
+import type {
+  CreateIntegrationMcpActionAuditInput,
+  IntegrationMcpActionAudit,
+  IntegrationMcpActionAuditStatus,
+} from '@/products/integracoes/shared/contracts/mcpActionAuditContracts'
 import type { IntegrationSyncMode } from '@/products/integracoes/shared/providers/providerTypes'
 import {
   normalizeRequestedResources,
@@ -139,6 +144,28 @@ type DbMcpPermissionsRow = {
   metadata: unknown
   created_at: string | Date
   updated_at: string | Date
+}
+
+type DbMcpActionAuditRow = {
+  id: string | number
+  tenant_id: number
+  connection_id: string | number | null
+  domain: string
+  provider: string | null
+  tool: string
+  resource: string
+  action: string
+  dry_run: boolean
+  permission_kind: string | null
+  status: string
+  success: boolean
+  message: string
+  target_id: string | null
+  idempotency_key: string | null
+  payload: unknown
+  metadata: unknown
+  actor: string | null
+  created_at: string | Date
 }
 
 type DbEventRow = {
@@ -314,6 +341,35 @@ function toMcpPermissions(row: DbMcpPermissionsRow): IntegrationMcpPermissions {
     metadata: asJsonObject(row.metadata),
     createdAt: toIsoString(row.created_at) || '',
     updatedAt: toIsoString(row.updated_at) || '',
+  }
+}
+
+function normalizeMcpActionAuditStatus(status: unknown): IntegrationMcpActionAuditStatus {
+  if (status === 'preview' || status === 'executed' || status === 'blocked' || status === 'error') return status
+  return 'error'
+}
+
+function toMcpActionAudit(row: DbMcpActionAuditRow): IntegrationMcpActionAudit {
+  return {
+    id: String(row.id),
+    tenantId: Number(row.tenant_id),
+    connectionId: row.connection_id == null ? null : String(row.connection_id),
+    domain: row.domain === 'crm' ? 'crm' : 'erp',
+    provider: row.provider,
+    tool: row.tool,
+    resource: row.resource,
+    action: row.action,
+    dryRun: Boolean(row.dry_run),
+    permissionKind: row.permission_kind === 'destructive' ? 'destructive' : row.permission_kind === 'write' ? 'write' : null,
+    status: normalizeMcpActionAuditStatus(row.status),
+    success: Boolean(row.success),
+    message: row.message,
+    targetId: row.target_id,
+    idempotencyKey: row.idempotency_key,
+    payload: asJsonObject(row.payload),
+    metadata: asJsonObject(row.metadata),
+    actor: row.actor,
+    createdAt: toIsoString(row.created_at) || '',
   }
 }
 
@@ -743,6 +799,72 @@ export async function upsertIntegrationMcpPermissions(
     ],
   )
   return toMcpPermissions(result[0])
+}
+
+export async function createIntegrationMcpActionAudit(
+  input: CreateIntegrationMcpActionAuditInput,
+): Promise<IntegrationMcpActionAudit> {
+  const result = await runQuery<DbMcpActionAuditRow>(
+    `INSERT INTO integrations.mcp_action_audit
+      (tenant_id, connection_id, domain, provider, tool, resource, action, dry_run, permission_kind, status, success, message, target_id, idempotency_key, payload, metadata, actor)
+     VALUES
+      ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15::jsonb, $16::jsonb, $17)
+     RETURNING *`,
+    [
+      Number(input.tenantId || 1),
+      input.connectionId || null,
+      input.domain,
+      input.provider || null,
+      input.tool,
+      input.resource,
+      input.action,
+      input.dryRun,
+      input.permissionKind || null,
+      input.status,
+      input.success,
+      input.message,
+      input.targetId || null,
+      input.idempotencyKey || null,
+      JSON.stringify(input.payload || {}),
+      JSON.stringify(input.metadata || {}),
+      input.actor || null,
+    ],
+  )
+  return toMcpActionAudit(result[0])
+}
+
+export async function listIntegrationMcpActionAudit(params: {
+  tenantId?: number
+  connectionId?: string
+  status?: IntegrationMcpActionAuditStatus
+  limit?: number
+}): Promise<IntegrationMcpActionAudit[]> {
+  const tenantId = Number(params.tenantId || 1)
+  const conditions = ['tenant_id = $1']
+  const values: unknown[] = [tenantId]
+
+  if (params.connectionId) {
+    values.push(params.connectionId)
+    conditions.push(`connection_id = $${values.length}`)
+  }
+  if (params.status) {
+    values.push(params.status)
+    conditions.push(`status = $${values.length}`)
+  }
+
+  const limit = Math.min(Math.max(Number(params.limit || 50), 1), 200)
+  values.push(limit)
+
+  const rows = await runQuery<DbMcpActionAuditRow>(
+    `SELECT *
+     FROM integrations.mcp_action_audit
+     WHERE ${conditions.join(' AND ')}
+     ORDER BY created_at DESC, id DESC
+     LIMIT $${values.length}`,
+    values,
+  )
+
+  return rows.map(toMcpActionAudit)
 }
 
 export async function listIntegrationConnections(params?: {

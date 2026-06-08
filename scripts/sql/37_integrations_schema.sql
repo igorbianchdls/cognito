@@ -203,6 +203,42 @@ CREATE TABLE IF NOT EXISTS integrations.mcp_permissions (
     ON DELETE CASCADE
 );
 
+CREATE TABLE IF NOT EXISTS integrations.mcp_action_audit (
+  id bigserial PRIMARY KEY,
+  tenant_id integer NOT NULL,
+  connection_id bigint,
+  domain text NOT NULL,
+  provider text,
+  tool text NOT NULL,
+  resource text NOT NULL,
+  action text NOT NULL,
+  dry_run boolean NOT NULL DEFAULT true,
+  permission_kind text,
+  status text NOT NULL,
+  success boolean NOT NULL DEFAULT false,
+  message text NOT NULL,
+  target_id text,
+  idempotency_key text,
+  payload jsonb NOT NULL DEFAULT '{}'::jsonb,
+  metadata jsonb NOT NULL DEFAULT '{}'::jsonb,
+  actor text,
+  created_at timestamptz NOT NULL DEFAULT now(),
+  CONSTRAINT mcp_action_audit_domain_check
+    CHECK (domain IN ('erp', 'crm')),
+  CONSTRAINT mcp_action_audit_permission_kind_check
+    CHECK (permission_kind IS NULL OR permission_kind IN ('write', 'destructive')),
+  CONSTRAINT mcp_action_audit_status_check
+    CHECK (status IN ('preview', 'executed', 'blocked', 'error')),
+  CONSTRAINT mcp_action_audit_payload_object_check
+    CHECK (jsonb_typeof(payload) = 'object'),
+  CONSTRAINT mcp_action_audit_metadata_object_check
+    CHECK (jsonb_typeof(metadata) = 'object'),
+  CONSTRAINT mcp_action_audit_connection_fkey
+    FOREIGN KEY (connection_id)
+    REFERENCES integrations.connections (id)
+    ON DELETE SET NULL
+);
+
 CREATE TABLE IF NOT EXISTS integrations.sync_runs (
   id bigserial PRIMARY KEY,
   tenant_id integer NOT NULL,
@@ -363,6 +399,19 @@ CREATE INDEX IF NOT EXISTS events_tenant_created_idx
 CREATE INDEX IF NOT EXISTS events_tenant_type_idx
   ON integrations.events (tenant_id, event_type, created_at DESC);
 
+CREATE INDEX IF NOT EXISTS mcp_action_audit_connection_created_idx
+  ON integrations.mcp_action_audit (connection_id, created_at DESC);
+
+CREATE INDEX IF NOT EXISTS mcp_action_audit_tenant_created_idx
+  ON integrations.mcp_action_audit (tenant_id, created_at DESC);
+
+CREATE INDEX IF NOT EXISTS mcp_action_audit_tenant_status_idx
+  ON integrations.mcp_action_audit (tenant_id, status);
+
+CREATE INDEX IF NOT EXISTS mcp_action_audit_idempotency_idx
+  ON integrations.mcp_action_audit (tenant_id, idempotency_key)
+  WHERE idempotency_key IS NOT NULL;
+
 CREATE INDEX IF NOT EXISTS sync_cursors_connection_idx
   ON integrations.sync_cursors (connection_id);
 
@@ -464,6 +513,7 @@ SELECT setval(pg_get_serial_sequence('integrations.connections', 'id'), COALESCE
 SELECT setval(pg_get_serial_sequence('integrations.destinations', 'id'), COALESCE((SELECT max(id) FROM integrations.destinations), 1), true);
 SELECT setval(pg_get_serial_sequence('integrations.pipelines', 'id'), COALESCE((SELECT max(id) FROM integrations.pipelines), 1), true);
 SELECT setval(pg_get_serial_sequence('integrations.mcp_permissions', 'id'), COALESCE((SELECT max(id) FROM integrations.mcp_permissions), 1), true);
+SELECT setval(pg_get_serial_sequence('integrations.mcp_action_audit', 'id'), COALESCE((SELECT max(id) FROM integrations.mcp_action_audit), 1), true);
 SELECT setval(pg_get_serial_sequence('integrations.sync_runs', 'id'), COALESCE((SELECT max(id) FROM integrations.sync_runs), 1), true);
 SELECT setval(pg_get_serial_sequence('integrations.sync_cursors', 'id'), COALESCE((SELECT max(id) FROM integrations.sync_cursors), 1), true);
 SELECT setval(pg_get_serial_sequence('integrations.events', 'id'), COALESCE((SELECT max(id) FROM integrations.events), 1), true);

@@ -1,5 +1,6 @@
 import { runQuery } from '@/lib/postgres'
 import {
+  createIntegrationMcpActionAudit,
   getIntegrationMcpPermissions,
   listIntegrationConnections,
 } from '@/products/integracoes/server/integrationConnectionRepository'
@@ -4439,7 +4440,8 @@ function inferActionPermissionKind(action: string): 'write' | 'destructive' {
   return CONNECTED_DESTRUCTIVE_ACTIONS.has(action) ? 'destructive' : 'write'
 }
 
-function buildConnectedActionResponse(input: {
+async function buildConnectedActionResponse(input: {
+  tenantId?: number
   tool: string
   domain: 'erp' | 'crm'
   provider: string | null
@@ -4455,6 +4457,43 @@ function buildConnectedActionResponse(input: {
   payload?: JsonRecord
   permissionKind?: 'write' | 'destructive'
 }) {
+  const auditStatus = input.success
+    ? input.dryRun ? 'preview' : 'executed'
+    : input.message.toLowerCase().includes('falha') || input.message.toLowerCase().includes('erro')
+      ? 'error'
+      : 'blocked'
+  let auditId: string | null = null
+  let auditWarning: string | null = null
+
+  if (input.tenantId) {
+    try {
+      const audit = await createIntegrationMcpActionAudit({
+        tenantId: input.tenantId,
+        connectionId: input.connectionId || null,
+        domain: input.domain,
+        provider: input.provider,
+        tool: input.tool,
+        resource: input.resource,
+        action: input.action,
+        dryRun: input.dryRun,
+        permissionKind: input.permissionKind || null,
+        status: auditStatus,
+        success: input.success,
+        message: input.message,
+        targetId: input.id || null,
+        idempotencyKey: input.idempotencyKey || null,
+        payload: input.payload || {},
+        metadata: {
+          displayName: input.displayName || null,
+        },
+        actor: 'mcp',
+      })
+      auditId = audit.id
+    } catch (error) {
+      auditWarning = error instanceof Error ? error.message : 'Falha ao gravar audit MCP.'
+    }
+  }
+
   const row = {
     status_operacao: input.success ? (input.dryRun ? 'preview' : 'executado') : 'bloqueado',
     domain: input.domain,
@@ -4468,6 +4507,7 @@ function buildConnectedActionResponse(input: {
     mensagem: input.message,
     id: input.id || null,
     idempotency_key: input.idempotencyKey || null,
+    audit_id: auditId,
   }
   const rows = [row]
   const structuredContent = {
@@ -4484,6 +4524,7 @@ function buildConnectedActionResponse(input: {
       ...row,
       payload: input.payload || {},
     },
+    ...(auditWarning ? { warnings: [`Audit MCP nao gravado: ${auditWarning}`] } : {}),
   }
   return {
     content: [{ type: 'text', text: JSON.stringify(structuredContent, null, 2) }],
@@ -4513,6 +4554,7 @@ async function callConnectedProviderAction(params: {
 
   if (!params.resources.includes(resource)) {
     return buildConnectedActionResponse({
+      tenantId,
       tool: params.tool,
       domain: params.domain,
       provider,
@@ -4531,6 +4573,7 @@ async function callConnectedProviderAction(params: {
   const allowedActions = params.actionsByResource[resource] || []
   if (!allowedActions.includes(action)) {
     return buildConnectedActionResponse({
+      tenantId,
       tool: params.tool,
       domain: params.domain,
       provider,
@@ -4548,6 +4591,7 @@ async function callConnectedProviderAction(params: {
 
   if (CONNECTED_ACTIONS_REQUIRING_ID.has(action) && !id) {
     return buildConnectedActionResponse({
+      tenantId,
       tool: params.tool,
       domain: params.domain,
       provider,
@@ -4572,6 +4616,7 @@ async function callConnectedProviderAction(params: {
 
   if (!connections.length) {
     return buildConnectedActionResponse({
+      tenantId,
       tool: params.tool,
       domain: params.domain,
       provider,
@@ -4590,6 +4635,7 @@ async function callConnectedProviderAction(params: {
   }
   if (!provider && connections.length > 1) {
     return buildConnectedActionResponse({
+      tenantId,
       tool: params.tool,
       domain: params.domain,
       provider,
@@ -4609,6 +4655,7 @@ async function callConnectedProviderAction(params: {
   const permissions = await getIntegrationMcpPermissions(connection.id, tenantId)
   if (!permissions?.enabled) {
     return buildConnectedActionResponse({
+      tenantId,
       tool: params.tool,
       domain: params.domain,
       provider: connection.provider,
@@ -4632,6 +4679,7 @@ async function callConnectedProviderAction(params: {
       : hasResourceGrant(permissions.writeResources, resource)
     if (!granted) {
       return buildConnectedActionResponse({
+        tenantId,
         tool: params.tool,
         domain: params.domain,
         provider: connection.provider,
@@ -4651,6 +4699,7 @@ async function callConnectedProviderAction(params: {
 
     if (permissions.requireConfirmation && input.confirmed !== true) {
       return buildConnectedActionResponse({
+        tenantId,
         tool: params.tool,
         domain: params.domain,
         provider: connection.provider,
@@ -4677,6 +4726,7 @@ async function callConnectedProviderAction(params: {
 
     if (!apiAdapter) {
       return buildConnectedActionResponse({
+        tenantId,
         tool: params.tool,
         domain: params.domain,
         provider: connection.provider,
@@ -4696,6 +4746,7 @@ async function callConnectedProviderAction(params: {
 
     if (!apiAdapter.supportsAction(resource, action)) {
       return buildConnectedActionResponse({
+        tenantId,
         tool: params.tool,
         domain: params.domain,
         provider: connection.provider,
@@ -4726,6 +4777,7 @@ async function callConnectedProviderAction(params: {
       })
 
       return buildConnectedActionResponse({
+        tenantId,
         tool: params.tool,
         domain: params.domain,
         provider: connection.provider,
@@ -4749,6 +4801,7 @@ async function callConnectedProviderAction(params: {
       })
     } catch (error) {
       return buildConnectedActionResponse({
+        tenantId,
         tool: params.tool,
         domain: params.domain,
         provider: connection.provider,
@@ -4768,6 +4821,7 @@ async function callConnectedProviderAction(params: {
   }
 
   return buildConnectedActionResponse({
+    tenantId,
     tool: params.tool,
     domain: params.domain,
     provider: connection.provider,

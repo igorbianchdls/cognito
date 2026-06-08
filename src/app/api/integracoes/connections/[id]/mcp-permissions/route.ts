@@ -5,6 +5,11 @@ import {
   getIntegrationMcpPermissions,
   upsertIntegrationMcpPermissions,
 } from '@/products/integracoes/server/integrationConnectionRepository'
+import {
+  assertCanManageIntegrationConnection,
+  assertIntegrationTenantRequest,
+  IntegrationApiAuthError,
+} from '@/products/integracoes/server/integrationApiAuth'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -31,8 +36,10 @@ export async function GET(
   try {
     const { id } = await context.params
     const tenantId = asTenantId(req.nextUrl.searchParams.get('tenantId') || req.nextUrl.searchParams.get('tenant_id'))
+    assertIntegrationTenantRequest(req, tenantId)
     const connection = await getIntegrationConnection(id, tenantId)
     if (!connection) return Response.json({ ok: false, error: 'Conexao nao encontrada' }, { status: 404 })
+    assertCanManageIntegrationConnection(req, connection)
 
     const permissions = await getIntegrationMcpPermissions(id, tenantId)
     return Response.json({
@@ -53,6 +60,9 @@ export async function GET(
       },
     })
   } catch (error) {
+    if (error instanceof IntegrationApiAuthError) {
+      return Response.json({ ok: false, code: error.code, error: error.message }, { status: error.status })
+    }
     return Response.json(
       { ok: false, error: error instanceof Error ? error.message : 'Erro ao carregar permissoes MCP' },
       { status: 500 },
@@ -68,8 +78,10 @@ export async function PATCH(
     const { id } = await context.params
     const payload = (await req.json().catch(() => ({}))) as Record<string, unknown>
     const tenantId = asTenantId(payload.tenantId || payload.tenant_id || req.nextUrl.searchParams.get('tenantId'))
+    assertIntegrationTenantRequest(req, tenantId)
     const connection = await getIntegrationConnection(id, tenantId)
     if (!connection) return Response.json({ ok: false, error: 'Conexao nao encontrada' }, { status: 404 })
+    assertCanManageIntegrationConnection(req, connection)
 
     const permissions = await upsertIntegrationMcpPermissions({
       tenantId,
@@ -91,6 +103,9 @@ export async function PATCH(
 
     return Response.json({ ok: true, permissions })
   } catch (error) {
+    if (error instanceof IntegrationApiAuthError) {
+      return Response.json({ ok: false, code: error.code, error: error.message }, { status: error.status })
+    }
     return Response.json(
       { ok: false, error: error instanceof Error ? error.message : 'Erro ao salvar permissoes MCP' },
       { status: 500 },
