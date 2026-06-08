@@ -10,9 +10,4 @@ export type ToolkitDefinition = {
   description: string
 }
 
-export type IntegracaoUserItem = {
-  id: string
-  label: string
-}
-
 export type ToolkitStatusMap = Record<string, boolean>

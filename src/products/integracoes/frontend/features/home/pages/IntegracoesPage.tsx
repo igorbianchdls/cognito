@@ -12,7 +12,6 @@ import ConnectionStatusPanel from '@/products/integracoes/frontend/features/conn
 import useIntegrationConnections from '@/products/integracoes/frontend/features/connections/hooks/useIntegrationConnections'
 import ProviderSetupModal from '@/products/integracoes/frontend/features/home/components/ProviderSetupModal'
 import useCurrentIntegrationTenant from '@/products/integracoes/frontend/hooks/useCurrentIntegrationTenant'
-import useIntegracoesComposio from '@/products/integracoes/frontend/hooks/useIntegracoesComposio'
 import type { IntegrationConnectionWithUi } from '@/products/integracoes/frontend/services/integracoesApi'
 import { renderIntegrationLogo, toolkitHasIcon } from '@/products/integracoes/shared/iconMaps'
 import {
@@ -406,16 +405,6 @@ export default function IntegracoesPage() {
   const [isConnectionDrawerOpen, setIsConnectionDrawerOpen] = useState(false)
 
   const {
-    busySlug,
-    error,
-    tkStatus,
-    userItems,
-    selectedUserId,
-    setSelectedUserId,
-    loadUsers,
-    handleIntegrate,
-  } = useIntegracoesComposio()
-  const {
     busyId: integrationBusyId,
     connections,
     connectionsByToolkit,
@@ -429,6 +418,10 @@ export default function IntegracoesPage() {
     reconnectConnection,
     syncConnection,
   } = useIntegrationConnections(tenantId)
+  const connectionStatusMap = useMemo(
+    () => Object.fromEntries(Array.from(connectionsByToolkit.keys()).map((slug) => [slug, true])),
+    [connectionsByToolkit],
+  )
   const mcpToolkits = useMemo(
     () => applyToolkitDescriptionOverrides(TOOLKITS, MCP_DESCRIPTION_OVERRIDES),
     [],
@@ -444,9 +437,7 @@ export default function IntegracoesPage() {
   const catalogToolkits = useMemo(() => {
     const source = activeKind === 'mcp' ? mcpToolkits : dataConnectorSamples
     const priority = activeKind === 'mcp' ? MCP_TOP_PRIORITY_ORDER : DATA_CONNECTOR_TOP_PRIORITY_ORDER
-    const statusMap = activeKind === 'mcp'
-      ? tkStatus
-      : Object.fromEntries(Array.from(connectionsByToolkit.keys()).map((slug) => [slug, true]))
+    const statusMap = connectionStatusMap
     const query = search.trim().toLowerCase()
 
     const filtered = source.filter((toolkit) => {
@@ -457,7 +448,7 @@ export default function IntegracoesPage() {
     })
 
     return sortByPriority(filtered, priority, statusMap, sortMode)
-  }, [activeCategory, activeKind, connectionsByToolkit, dataConnectorSamples, mcpToolkits, search, sortMode, tkStatus])
+  }, [activeCategory, activeKind, connectionStatusMap, dataConnectorSamples, mcpToolkits, search, sortMode])
 
   const openDataConnectorModal = (toolkit: ToolkitDefinition) => {
     const existingConnection = connectionsByToolkit.get(String(toolkit.slug).toUpperCase())
@@ -471,7 +462,7 @@ export default function IntegracoesPage() {
   }
 
   const handleMcpAction = (toolkit: ToolkitDefinition) => {
-    handleIntegrate(toolkit.slug)
+    openDataConnectorModal(toolkit)
   }
 
   return (
@@ -513,30 +504,7 @@ export default function IntegracoesPage() {
                       />
                     </div>
 
-                    {activeKind === 'mcp' && (
-                      <div className="mb-6 flex items-center gap-2">
-                        <label className="text-sm text-gray-700">Usuário:</label>
-                        <select
-                          value={selectedUserId}
-                          onChange={(event) => setSelectedUserId(event.target.value)}
-                          className="border rounded px-2 py-1 text-sm"
-                        >
-                          {userItems.map((user) => (
-                            <option key={user.id} value={user.id}>
-                              {user.label} ({user.id})
-                            </option>
-                          ))}
-                        </select>
-                        <button
-                          onClick={() => loadUsers()}
-                          className="px-2 py-1 text-sm border rounded"
-                        >
-                          Atualizar
-                        </button>
-                      </div>
-                    )}
-
-                    {(error || integrationError) && <div className="text-sm text-red-600 mb-3">{error || integrationError}</div>}
+                    {integrationError && <div className="text-sm text-red-600 mb-3">{integrationError}</div>}
 
                     <div className="mb-5 flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
                       <Tabs value={activeCategory} onValueChange={(value) => setActiveCategory(value as CatalogCategory)} className="min-w-0">
@@ -602,8 +570,8 @@ export default function IntegracoesPage() {
                               key={toolkit.slug}
                               toolkit={toolkit}
                               kind="mcp"
-                              tkStatus={tkStatus}
-                              busySlug={busySlug}
+                              tkStatus={connectionStatusMap}
+                              busySlug={integrationBusyId}
                               onAction={handleMcpAction}
                             />
                           ))}
@@ -632,7 +600,7 @@ export default function IntegracoesPage() {
                               key={toolkit.slug}
                               toolkit={toolkit}
                               kind="data-connectors"
-                              tkStatus={Object.fromEntries(Array.from(connectionsByToolkit.keys()).map((slug) => [slug, true]))}
+                              tkStatus={connectionStatusMap}
                               busySlug={integrationBusyId}
                               dataConnection={connectionsByToolkit.get(String(toolkit.slug).toUpperCase())}
                               onAction={openDataConnectorModal}
