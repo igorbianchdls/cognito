@@ -1,4 +1,4 @@
-CREATE TABLE IF NOT EXISTS mcp_app.integration_destinations (
+CREATE TABLE IF NOT EXISTS plugin.integration_destinations (
   id bigserial PRIMARY KEY,
   tenant_id integer NOT NULL DEFAULT 1,
   type text NOT NULL,
@@ -20,17 +20,17 @@ CREATE TABLE IF NOT EXISTS mcp_app.integration_destinations (
 );
 
 CREATE UNIQUE INDEX IF NOT EXISTS integration_destinations_default_bigquery_uidx
-  ON mcp_app.integration_destinations (tenant_id, type)
+  ON plugin.integration_destinations (tenant_id, type)
   WHERE type = 'bigquery' AND (metadata_json->>'isDefault') = 'true';
 
 CREATE INDEX IF NOT EXISTS integration_destinations_tenant_type_idx
-  ON mcp_app.integration_destinations (tenant_id, type, status);
+  ON plugin.integration_destinations (tenant_id, type, status);
 
-CREATE TABLE IF NOT EXISTS mcp_app.integration_pipelines (
+CREATE TABLE IF NOT EXISTS plugin.integration_pipelines (
   id bigserial PRIMARY KEY,
   tenant_id integer NOT NULL DEFAULT 1,
-  source_connection_id bigint NOT NULL REFERENCES mcp_app.integration_connections(id) ON DELETE CASCADE,
-  destination_id bigint NOT NULL REFERENCES mcp_app.integration_destinations(id) ON DELETE CASCADE,
+  source_connection_id bigint NOT NULL REFERENCES plugin.integration_connections(id) ON DELETE CASCADE,
+  destination_id bigint NOT NULL REFERENCES plugin.integration_destinations(id) ON DELETE CASCADE,
   name text NOT NULL,
   status text NOT NULL DEFAULT 'active',
   selected_resources jsonb NOT NULL DEFAULT '[]'::jsonb,
@@ -58,26 +58,26 @@ CREATE TABLE IF NOT EXISTS mcp_app.integration_pipelines (
 );
 
 CREATE INDEX IF NOT EXISTS integration_pipelines_tenant_source_idx
-  ON mcp_app.integration_pipelines (tenant_id, source_connection_id);
+  ON plugin.integration_pipelines (tenant_id, source_connection_id);
 
 CREATE INDEX IF NOT EXISTS integration_pipelines_tenant_destination_idx
-  ON mcp_app.integration_pipelines (tenant_id, destination_id);
+  ON plugin.integration_pipelines (tenant_id, destination_id);
 
 CREATE INDEX IF NOT EXISTS integration_pipelines_due_sync_idx
-  ON mcp_app.integration_pipelines (tenant_id, next_sync_at)
+  ON plugin.integration_pipelines (tenant_id, next_sync_at)
   WHERE sync_enabled = true
     AND next_sync_at IS NOT NULL
     AND sync_frequency <> 'manual'
     AND status = 'active';
 
 CREATE INDEX IF NOT EXISTS integration_pipelines_sync_lock_idx
-  ON mcp_app.integration_pipelines (sync_locked_until)
+  ON plugin.integration_pipelines (sync_locked_until)
   WHERE sync_locked_until IS NOT NULL;
 
-CREATE TABLE IF NOT EXISTS mcp_app.integration_mcp_permissions (
+CREATE TABLE IF NOT EXISTS plugin.integration_plugin_permissions (
   id bigserial PRIMARY KEY,
   tenant_id integer NOT NULL DEFAULT 1,
-  connection_id bigint NOT NULL REFERENCES mcp_app.integration_connections(id) ON DELETE CASCADE,
+  connection_id bigint NOT NULL REFERENCES plugin.integration_connections(id) ON DELETE CASCADE,
   enabled boolean NOT NULL DEFAULT false,
   read_resources jsonb NOT NULL DEFAULT '[]'::jsonb,
   write_resources jsonb NOT NULL DEFAULT '[]'::jsonb,
@@ -86,36 +86,36 @@ CREATE TABLE IF NOT EXISTS mcp_app.integration_mcp_permissions (
   metadata_json jsonb NOT NULL DEFAULT '{}'::jsonb,
   created_at timestamptz NOT NULL DEFAULT now(),
   updated_at timestamptz NOT NULL DEFAULT now(),
-  CONSTRAINT integration_mcp_permissions_read_array_check
+  CONSTRAINT integration_plugin_permissions_read_array_check
     CHECK (jsonb_typeof(read_resources) = 'array'),
-  CONSTRAINT integration_mcp_permissions_write_array_check
+  CONSTRAINT integration_plugin_permissions_write_array_check
     CHECK (jsonb_typeof(write_resources) = 'array'),
-  CONSTRAINT integration_mcp_permissions_destructive_array_check
+  CONSTRAINT integration_plugin_permissions_destructive_array_check
     CHECK (jsonb_typeof(destructive_resources) = 'array'),
-  CONSTRAINT integration_mcp_permissions_metadata_object_check
+  CONSTRAINT integration_plugin_permissions_metadata_object_check
     CHECK (jsonb_typeof(metadata_json) = 'object'),
-  CONSTRAINT integration_mcp_permissions_connection_unique
+  CONSTRAINT integration_plugin_permissions_connection_unique
     UNIQUE (tenant_id, connection_id)
 );
 
-ALTER TABLE mcp_app.integration_sync_runs
-  ADD COLUMN IF NOT EXISTS pipeline_id bigint NULL REFERENCES mcp_app.integration_pipelines(id) ON DELETE SET NULL,
-  ADD COLUMN IF NOT EXISTS destination_id bigint NULL REFERENCES mcp_app.integration_destinations(id) ON DELETE SET NULL;
+ALTER TABLE plugin.integration_sync_runs
+  ADD COLUMN IF NOT EXISTS pipeline_id bigint NULL REFERENCES plugin.integration_pipelines(id) ON DELETE SET NULL,
+  ADD COLUMN IF NOT EXISTS destination_id bigint NULL REFERENCES plugin.integration_destinations(id) ON DELETE SET NULL;
 
 CREATE INDEX IF NOT EXISTS integration_sync_runs_pipeline_created_idx
-  ON mcp_app.integration_sync_runs (pipeline_id, created_at DESC)
+  ON plugin.integration_sync_runs (pipeline_id, created_at DESC)
   WHERE pipeline_id IS NOT NULL;
 
 CREATE INDEX IF NOT EXISTS integration_sync_runs_destination_created_idx
-  ON mcp_app.integration_sync_runs (destination_id, created_at DESC)
+  ON plugin.integration_sync_runs (destination_id, created_at DESC)
   WHERE destination_id IS NOT NULL;
 
 WITH tenants AS (
   SELECT DISTINCT tenant_id
-  FROM mcp_app.integration_connections
+  FROM plugin.integration_connections
 ),
 default_bigquery AS (
-  INSERT INTO mcp_app.integration_destinations
+  INSERT INTO plugin.integration_destinations
     (tenant_id, type, name, status, config_json, metadata_json, updated_at)
   SELECT
     tenant_id,
@@ -138,7 +138,7 @@ all_default_bigquery AS (
   FROM default_bigquery
   UNION
   SELECT id, tenant_id
-  FROM mcp_app.integration_destinations
+  FROM plugin.integration_destinations
   WHERE type = 'bigquery'
     AND (metadata_json->>'isDefault') = 'true'
 ),
@@ -146,20 +146,20 @@ scheduled_connections AS (
   SELECT
     connections.*,
     destinations.id AS destination_id
-  FROM mcp_app.integration_connections connections
+  FROM plugin.integration_connections connections
   JOIN all_default_bigquery destinations
     ON destinations.tenant_id = connections.tenant_id
   WHERE jsonb_array_length(COALESCE(connections.selected_resources, '[]'::jsonb)) > 0
     AND connections.sync_frequency <> 'manual'
     AND NOT EXISTS (
       SELECT 1
-      FROM mcp_app.integration_pipelines pipelines
+      FROM plugin.integration_pipelines pipelines
       WHERE pipelines.tenant_id = connections.tenant_id
         AND pipelines.source_connection_id = connections.id
         AND pipelines.destination_id = destinations.id
     )
 )
-INSERT INTO mcp_app.integration_pipelines
+INSERT INTO plugin.integration_pipelines
   (tenant_id, source_connection_id, destination_id, name, status, selected_resources, sync_frequency, sync_enabled, next_sync_at, metadata_json, updated_at)
 SELECT
   tenant_id,

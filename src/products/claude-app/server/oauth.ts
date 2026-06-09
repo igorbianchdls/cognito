@@ -34,6 +34,7 @@ function base64UrlDecode(input: string) {
 function getOAuthSecret() {
   return String(
     process.env.COGNITO_CLAUDE_APP_OAUTH_SECRET ||
+      process.env.COGNITO_PLUGIN_OAUTH_SECRET ||
       process.env.COGNITO_MCP_APPS_OAUTH_SECRET ||
       process.env.COGNITO_MCP_TOKEN ||
       '',

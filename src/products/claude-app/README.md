@@ -1,6 +1,6 @@
 # Cognito Claude App
 
-Claude-facing wrapper for the shared `src/products/mcp-apps` dashboard UI and tools.
+Claude-facing wrapper for the shared `src/products/plugin` dashboard UI and tools.
 
 Current endpoint:
 

@@ -2,11 +2,11 @@
 
 ChatGPT App layer for Cognito dashboards.
 
-This product reuses the generic MCP dashboard tools from `src/products/mcp`, the MCP Apps UI layer from `src/products/mcp-apps`, and adds the ChatGPT-specific app surface:
+This product reuses the generic MCP dashboard tools from `src/products/mcp`, the Plugin UI layer from `src/products/plugin`, and adds the ChatGPT-specific app surface:
 
 - app metadata for discovery in ChatGPT
-- OpenAI-specific metadata for MCP Apps UI resources
-- OpenAI-specific metadata for public MCP Apps tools
+- OpenAI-specific metadata for Plugin UI resources
+- OpenAI-specific metadata for public Plugin tools
 - signed dashboard embed tokens
 
 The generic MCP endpoint remains separate at `/api/mcp`. The ChatGPT App endpoint will live at `/api/chatgpt-app/mcp`.

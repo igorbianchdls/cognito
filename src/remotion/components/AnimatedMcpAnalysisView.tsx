@@ -1,5 +1,5 @@
-import type { AnalysisStructuredContent } from '@/products/mcp-apps/web/src/types/toolResult'
-import { AnalysisView } from '@/products/mcp-apps/web/src/views/AnalysisView'
+import type { AnalysisStructuredContent } from '@/products/plugin/web/src/types/toolResult'
+import { AnalysisView } from '@/products/plugin/web/src/views/AnalysisView'
 import { McpMobileResultFrame } from '@/remotion/components/McpMobileResultFrame'
 
 export function AnimatedMcpAnalysisView({ data, startFrame = 0 }: { data: AnalysisStructuredContent; startFrame?: number }) {

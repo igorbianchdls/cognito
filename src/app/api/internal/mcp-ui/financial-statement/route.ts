@@ -4,8 +4,8 @@ import { resolveTenantId } from '@/lib/tenant'
 import {
   buildFinancialStatementQuery,
   resolveFinancialPeriod,
-} from '@/products/mcp-apps/server/domainTools'
-import type { TableStructuredContent } from '@/products/mcp-apps/web/src/types/toolResult'
+} from '@/products/plugin/server/domainTools'
+import type { TableStructuredContent } from '@/products/plugin/web/src/types/toolResult'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'

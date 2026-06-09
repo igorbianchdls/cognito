@@ -1,13 +1,13 @@
 # Cleanup Inventory
 
 Este inventario orienta a limpeza do codigo para o novo foco do SaaS:
-ChatGPT App, Claude MCP App, tools MCP, artifacts e integracoes.
+ChatGPT App, Claude App, Plugin, tools MCP, artifacts e integracoes.
 
 ## Nucleo ativo
 
-- `src/products/mcp-apps`: tools, schemas, widgets, renderizacao interativa e handlers compartilhados.
+- `src/products/plugin`: tools, schemas, widgets, renderizacao interativa e handlers compartilhados.
 - `src/products/chatgpt-app`: adaptador ChatGPT App, OAuth, metadata, MCP endpoint e embed token.
-- `src/products/claude-app`: adaptador Claude MCP App, OAuth, metadata e MCP endpoint.
+- `src/products/claude-app`: adaptador Claude App, OAuth, metadata e MCP endpoint.
 - `src/products/artifacts`: backend, contracts, templates, renderers e paginas publicas usadas por `open_artifact` e `artifact_authoring`.
 - `src/products/integracoes`: UI propria principal para conectar e administrar fontes.
 - `src/app/.well-known`: discovery dos hosts externos.
@@ -27,7 +27,7 @@ ChatGPT App, Claude MCP App, tools MCP, artifacts e integracoes.
 ## Rotas candidatas a remocao restante
 
 - Nenhuma rota antiga das fases 3 a 6 deve permanecer ativa.
-- Revisar apenas rotas auxiliares fora do foco MCP Apps se voltarem a aparecer no inventario.
+- Revisar apenas rotas auxiliares fora do foco Plugin se voltarem a aparecer no inventario.
 
 ## Modulos candidatos a remocao restante
 
@@ -43,7 +43,7 @@ ChatGPT App, Claude MCP App, tools MCP, artifacts e integracoes.
 ## Validacao minima por fase
 
 - `pnpm exec tsc --noEmit`
-- `pnpm mcp-apps:smoke`
+- `pnpm plugin:smoke`
 - abrir `/integracoes`
 - abrir `/internal/mcp-ui`
 - confirmar que `/artifacts/dashboards`, `/api/artifacts/dashboards`, `open_artifact` e `artifact_authoring` seguem funcionando.

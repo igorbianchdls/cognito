@@ -15,7 +15,7 @@ import type {
   DataCatalogStructuredContent,
   DataResultStructuredContent,
   TableStructuredContent,
-} from '@/products/mcp-apps/web/src/types/toolResult'
+} from '@/products/plugin/web/src/types/toolResult'
 import { AnimatedMcpAnalysisView } from '@/remotion/components/AnimatedMcpAnalysisView'
 import { AnimatedMcpChartView } from '@/remotion/components/AnimatedMcpChartView'
 import { AnimatedMcpConnectorsView } from '@/remotion/components/AnimatedMcpConnectorsView'

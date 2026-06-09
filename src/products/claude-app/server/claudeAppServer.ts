@@ -4,13 +4,13 @@ import {
   getCognitoClaudeAppMetadata,
 } from '@/products/claude-app/server/appMetadata'
 import {
-  listCognitoMcpAppResources,
-  readCognitoMcpAppResource,
-} from '@/products/mcp-apps/server/appResources'
+  listCognitoPluginResources,
+  readCognitoPluginResource,
+} from '@/products/plugin/server/appResources'
 import {
-  callCognitoMcpAppTool,
-  listCognitoMcpAppTools,
-} from '@/products/mcp-apps/server/appTools'
+  callCognitoPluginTool,
+  listCognitoPluginTools,
+} from '@/products/plugin/server/appTools'
 import { COGNITO_MCP_PROTOCOL_VERSION, type CognitoMcpServerContext } from '@/products/mcp/server/cognitoMcpServer'
 import { McpDashboardToolInputError } from '@/products/mcp/tools/dashboardTools'
 
@@ -147,7 +147,7 @@ async function handleJsonRpcMessage(
         return jsonRpcResult(id, {})
 
       case 'tools/list':
-        return jsonRpcResult(id, listCognitoMcpAppTools())
+        return jsonRpcResult(id, listCognitoPluginTools())
 
       case 'tools/call': {
         const name = typeof params.name === 'string' ? params.name : ''
@@ -157,12 +157,12 @@ async function handleJsonRpcMessage(
 
         return jsonRpcResult(
           id,
-          await callCognitoMcpAppTool(name, params.arguments, context),
+          await callCognitoPluginTool(name, params.arguments, context),
         )
       }
 
       case 'resources/list':
-        return jsonRpcResult(id, listCognitoMcpAppResources())
+        return jsonRpcResult(id, listCognitoPluginResources())
 
       case 'resources/read': {
         const uri = typeof params.uri === 'string' ? params.uri : ''
@@ -170,7 +170,7 @@ async function handleJsonRpcMessage(
           return jsonRpcError(id, JSON_RPC_ERRORS.invalidParams, 'params.uri e obrigatorio')
         }
 
-        const resource = readCognitoMcpAppResource(uri)
+        const resource = readCognitoPluginResource(uri)
         if (!resource) {
           return jsonRpcError(id, JSON_RPC_ERRORS.invalidParams, `Resource nao encontrado: ${uri}`)
         }

@@ -11,18 +11,18 @@ import type {
   DataCatalogStructuredContent,
   DataResultStructuredContent,
   TableStructuredContent,
-} from '@/products/mcp-apps/web/src/types/toolResult'
-import { AnalysisView } from '@/products/mcp-apps/web/src/views/AnalysisView'
-import { AutomationView } from '@/products/mcp-apps/web/src/views/AutomationView'
-import { ChartResultView } from '@/products/mcp-apps/web/src/views/ChartResultView'
-import { ConnectorsView } from '@/products/mcp-apps/web/src/views/ConnectorsView'
-import { DashboardListView } from '@/products/mcp-apps/web/src/views/DashboardListView'
-import { DashboardPreviewView } from '@/products/mcp-apps/web/src/views/DashboardPreviewView'
-import { DataCatalogView } from '@/products/mcp-apps/web/src/views/DataCatalogView'
-import { DataResultView } from '@/products/mcp-apps/web/src/views/DataResultView'
-import { EmptyState } from '@/products/mcp-apps/web/src/components/EmptyState'
-import { LoadingState } from '@/products/mcp-apps/web/src/components/LoadingState'
-import { TableResultView } from '@/products/mcp-apps/web/src/views/TableResultView'
+} from '@/products/plugin/web/src/types/toolResult'
+import { AnalysisView } from '@/products/plugin/web/src/views/AnalysisView'
+import { AutomationView } from '@/products/plugin/web/src/views/AutomationView'
+import { ChartResultView } from '@/products/plugin/web/src/views/ChartResultView'
+import { ConnectorsView } from '@/products/plugin/web/src/views/ConnectorsView'
+import { DashboardListView } from '@/products/plugin/web/src/views/DashboardListView'
+import { DashboardPreviewView } from '@/products/plugin/web/src/views/DashboardPreviewView'
+import { DataCatalogView } from '@/products/plugin/web/src/views/DataCatalogView'
+import { DataResultView } from '@/products/plugin/web/src/views/DataResultView'
+import { EmptyState } from '@/products/plugin/web/src/components/EmptyState'
+import { LoadingState } from '@/products/plugin/web/src/components/LoadingState'
+import { TableResultView } from '@/products/plugin/web/src/views/TableResultView'
 
 type PreviewItem = {
   id: string

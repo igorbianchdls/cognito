@@ -1,8 +1,8 @@
 import { DASHBOARD_WIDGET_RESOURCE_URI } from '@/products/chatgpt-app/server/appResources'
 import {
-  callCognitoMcpAppTool,
-  listCognitoMcpAppTools,
-} from '@/products/mcp-apps/server/appTools'
+  callCognitoPluginTool,
+  listCognitoPluginTools,
+} from '@/products/plugin/server/appTools'
 import type { CognitoMcpServerContext } from '@/products/mcp/server/cognitoMcpServer'
 
 type JsonRecord = Record<string, unknown>
@@ -98,7 +98,7 @@ function withOpenAiToolMeta(tool: JsonRecord): ChatGptAppTool {
 }
 
 export function listCognitoChatGptAppTools(): { tools: ChatGptAppTool[] } {
-  const result = listCognitoMcpAppTools()
+  const result = listCognitoPluginTools()
   return {
     tools: result.tools.map((tool) => withOpenAiToolMeta(tool as JsonRecord)),
   }
@@ -109,5 +109,5 @@ export async function callCognitoChatGptAppTool(
   args: unknown,
   context: CognitoMcpServerContext = {},
 ) {
-  return callCognitoMcpAppTool(name, args, context)
+  return callCognitoPluginTool(name, args, context)
 }

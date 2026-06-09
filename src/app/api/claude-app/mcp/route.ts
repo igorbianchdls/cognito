@@ -17,7 +17,7 @@ export async function GET() {
     status: 'ready',
     transport: 'http-json-rpc',
     server: COGNITO_CLAUDE_APP_SERVER_INFO,
-    message: 'Endpoint MCP Apps do Claude pronto para POST JSON-RPC autenticado.',
+    message: 'Endpoint Plugin do Claude pronto para POST JSON-RPC autenticado.',
   })
 }
 

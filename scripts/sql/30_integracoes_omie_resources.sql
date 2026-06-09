@@ -16,7 +16,7 @@ WITH omie_resources AS (
     jsonb_build_object('slug', 'contas_correntes', 'name', 'Contas correntes', 'defaultEnabled', false)
   ) AS resources_json
 )
-UPDATE mcp_app.integration_provider_capabilities
+UPDATE plugin.integration_provider_capabilities
 SET
   resources_json = omie_resources.resources_json,
   sync_modes_json = jsonb_build_array('manual', 'scheduled'),

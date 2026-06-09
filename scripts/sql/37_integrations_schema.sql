@@ -173,7 +173,7 @@ CREATE TABLE IF NOT EXISTS integrations.pipelines (
     ON DELETE CASCADE
 );
 
-CREATE TABLE IF NOT EXISTS integrations.mcp_permissions (
+CREATE TABLE IF NOT EXISTS integrations.plugin_permissions (
   id bigserial PRIMARY KEY,
   tenant_id integer NOT NULL,
   connection_id bigint NOT NULL,
@@ -186,24 +186,24 @@ CREATE TABLE IF NOT EXISTS integrations.mcp_permissions (
   metadata jsonb NOT NULL DEFAULT '{}'::jsonb,
   created_at timestamptz NOT NULL DEFAULT now(),
   updated_at timestamptz NOT NULL DEFAULT now(),
-  CONSTRAINT mcp_permissions_read_array_check
+  CONSTRAINT plugin_permissions_read_array_check
     CHECK (jsonb_typeof(read_resources) = 'array'),
-  CONSTRAINT mcp_permissions_live_read_array_check
+  CONSTRAINT plugin_permissions_live_read_array_check
     CHECK (jsonb_typeof(live_read_resources) = 'array'),
-  CONSTRAINT mcp_permissions_write_array_check
+  CONSTRAINT plugin_permissions_write_array_check
     CHECK (jsonb_typeof(write_resources) = 'array'),
-  CONSTRAINT mcp_permissions_destructive_array_check
+  CONSTRAINT plugin_permissions_destructive_array_check
     CHECK (jsonb_typeof(destructive_resources) = 'array'),
-  CONSTRAINT mcp_permissions_metadata_object_check
+  CONSTRAINT plugin_permissions_metadata_object_check
     CHECK (jsonb_typeof(metadata) = 'object'),
-  CONSTRAINT mcp_permissions_connection_unique UNIQUE (tenant_id, connection_id),
-  CONSTRAINT mcp_permissions_connection_fkey
+  CONSTRAINT plugin_permissions_connection_unique UNIQUE (tenant_id, connection_id),
+  CONSTRAINT plugin_permissions_connection_fkey
     FOREIGN KEY (tenant_id, connection_id)
     REFERENCES integrations.connections (tenant_id, id)
     ON DELETE CASCADE
 );
 
-CREATE TABLE IF NOT EXISTS integrations.mcp_action_audit (
+CREATE TABLE IF NOT EXISTS integrations.plugin_action_audit (
   id bigserial PRIMARY KEY,
   tenant_id integer NOT NULL,
   connection_id bigint,
@@ -223,17 +223,17 @@ CREATE TABLE IF NOT EXISTS integrations.mcp_action_audit (
   metadata jsonb NOT NULL DEFAULT '{}'::jsonb,
   actor text,
   created_at timestamptz NOT NULL DEFAULT now(),
-  CONSTRAINT mcp_action_audit_domain_check
+  CONSTRAINT plugin_action_audit_domain_check
     CHECK (domain IN ('erp', 'crm')),
-  CONSTRAINT mcp_action_audit_permission_kind_check
+  CONSTRAINT plugin_action_audit_permission_kind_check
     CHECK (permission_kind IS NULL OR permission_kind IN ('write', 'destructive')),
-  CONSTRAINT mcp_action_audit_status_check
+  CONSTRAINT plugin_action_audit_status_check
     CHECK (status IN ('preview', 'executed', 'blocked', 'error')),
-  CONSTRAINT mcp_action_audit_payload_object_check
+  CONSTRAINT plugin_action_audit_payload_object_check
     CHECK (jsonb_typeof(payload) = 'object'),
-  CONSTRAINT mcp_action_audit_metadata_object_check
+  CONSTRAINT plugin_action_audit_metadata_object_check
     CHECK (jsonb_typeof(metadata) = 'object'),
-  CONSTRAINT mcp_action_audit_connection_fkey
+  CONSTRAINT plugin_action_audit_connection_fkey
     FOREIGN KEY (connection_id)
     REFERENCES integrations.connections (id)
     ON DELETE SET NULL
@@ -399,17 +399,17 @@ CREATE INDEX IF NOT EXISTS events_tenant_created_idx
 CREATE INDEX IF NOT EXISTS events_tenant_type_idx
   ON integrations.events (tenant_id, event_type, created_at DESC);
 
-CREATE INDEX IF NOT EXISTS mcp_action_audit_connection_created_idx
-  ON integrations.mcp_action_audit (connection_id, created_at DESC);
+CREATE INDEX IF NOT EXISTS plugin_action_audit_connection_created_idx
+  ON integrations.plugin_action_audit (connection_id, created_at DESC);
 
-CREATE INDEX IF NOT EXISTS mcp_action_audit_tenant_created_idx
-  ON integrations.mcp_action_audit (tenant_id, created_at DESC);
+CREATE INDEX IF NOT EXISTS plugin_action_audit_tenant_created_idx
+  ON integrations.plugin_action_audit (tenant_id, created_at DESC);
 
-CREATE INDEX IF NOT EXISTS mcp_action_audit_tenant_status_idx
-  ON integrations.mcp_action_audit (tenant_id, status);
+CREATE INDEX IF NOT EXISTS plugin_action_audit_tenant_status_idx
+  ON integrations.plugin_action_audit (tenant_id, status);
 
-CREATE INDEX IF NOT EXISTS mcp_action_audit_idempotency_idx
-  ON integrations.mcp_action_audit (tenant_id, idempotency_key)
+CREATE INDEX IF NOT EXISTS plugin_action_audit_idempotency_idx
+  ON integrations.plugin_action_audit (tenant_id, idempotency_key)
   WHERE idempotency_key IS NOT NULL;
 
 CREATE INDEX IF NOT EXISTS sync_cursors_connection_idx
@@ -443,7 +443,7 @@ INSERT INTO integrations.providers
   (id, domain, provider, name, description, auth_type, supports_oauth_callback, supports_incremental_sync, sync_modes, resources, tags, status, metadata, created_at, updated_at)
 SELECT
   id, domain, provider, name, description, auth_type, supports_oauth_callback, supports_incremental_sync, sync_modes_json, resources_json, tags_json, status, metadata_json, created_at, updated_at
-FROM mcp_app.integration_provider_capabilities
+FROM plugin.integration_provider_capabilities
 ON CONFLICT (domain, provider)
 DO UPDATE SET
   name = EXCLUDED.name,
@@ -462,49 +462,49 @@ INSERT INTO integrations.connections
   (id, tenant_id, domain, provider, display_name, status, auth_type, external_account_id, secret_ref, selected_resources, sync_frequency, sync_modes, sync_enabled, next_sync_at, sync_locked_until, sync_lock_token, sync_lock_owner, last_sync_at, last_success_at, last_error, records_synced, metadata, created_at, updated_at)
 SELECT
   id, tenant_id, domain, provider, display_name, status, auth_type, external_account_id, secret_ref, selected_resources, sync_frequency, sync_modes_json, sync_enabled, next_sync_at, sync_locked_until, sync_lock_token, sync_lock_owner, last_sync_at, last_success_at, last_error, records_synced, metadata_json, created_at, updated_at
-FROM mcp_app.integration_connections
+FROM plugin.integration_connections
 ON CONFLICT (id) DO NOTHING;
 
 INSERT INTO integrations.destinations
   (id, tenant_id, type, name, status, config, secret_ref, metadata, created_at, updated_at)
 SELECT
   id, tenant_id, type, name, status, config_json, secret_ref, metadata_json, created_at, updated_at
-FROM mcp_app.integration_destinations
+FROM plugin.integration_destinations
 ON CONFLICT (id) DO NOTHING;
 
 INSERT INTO integrations.pipelines
   (id, tenant_id, source_connection_id, destination_id, name, status, selected_resources, sync_frequency, sync_enabled, next_sync_at, sync_locked_until, sync_lock_token, sync_lock_owner, last_sync_at, last_success_at, last_error, records_synced, metadata, created_at, updated_at)
 SELECT
   id, tenant_id, source_connection_id, destination_id, name, status, selected_resources, sync_frequency, sync_enabled, next_sync_at, sync_locked_until, sync_lock_token, sync_lock_owner, last_sync_at, last_success_at, last_error, records_synced, metadata_json, created_at, updated_at
-FROM mcp_app.integration_pipelines
+FROM plugin.integration_pipelines
 ON CONFLICT (id) DO NOTHING;
 
-INSERT INTO integrations.mcp_permissions
+INSERT INTO integrations.plugin_permissions
   (id, tenant_id, connection_id, enabled, read_resources, live_read_resources, write_resources, destructive_resources, require_confirmation, metadata, created_at, updated_at)
 SELECT
   id, tenant_id, connection_id, enabled, read_resources, '[]'::jsonb, write_resources, destructive_resources, require_confirmation, metadata_json, created_at, updated_at
-FROM mcp_app.integration_mcp_permissions
+FROM plugin.integration_plugin_permissions
 ON CONFLICT (id) DO NOTHING;
 
 INSERT INTO integrations.sync_runs
   (id, tenant_id, connection_id, pipeline_id, destination_id, trigger, status, resource, external_job_id, started_at, finished_at, records_in, records_updated, records_failed, error_message, metadata, created_at)
 SELECT
   id, tenant_id, connection_id, pipeline_id, destination_id, trigger, status, resource, external_job_id, started_at, finished_at, records_in, records_updated, records_failed, error_message, metadata_json, created_at
-FROM mcp_app.integration_sync_runs
+FROM plugin.integration_sync_runs
 ON CONFLICT (id) DO NOTHING;
 
 INSERT INTO integrations.sync_cursors
   (id, tenant_id, connection_id, resource, cursor_key, cursor_value, cursor, last_synced_at, created_at, updated_at)
 SELECT
   id, tenant_id, connection_id, resource, cursor_key, cursor_value, cursor_json, last_synced_at, created_at, updated_at
-FROM mcp_app.integration_sync_cursors
+FROM plugin.integration_sync_cursors
 ON CONFLICT (id) DO NOTHING;
 
 INSERT INTO integrations.events
   (id, tenant_id, connection_id, event_type, severity, actor, message, metadata, created_at)
 SELECT
   id, tenant_id, connection_id, event_type, severity, actor, message, metadata_json, created_at
-FROM mcp_app.integration_events
+FROM plugin.integration_events
 ON CONFLICT (id) DO NOTHING;
 
 SELECT setval(pg_get_serial_sequence('integrations.providers', 'id'), COALESCE((SELECT max(id) FROM integrations.providers), 1), true);
@@ -512,8 +512,8 @@ SELECT setval(pg_get_serial_sequence('integrations.connected_accounts', 'id'), C
 SELECT setval(pg_get_serial_sequence('integrations.connections', 'id'), COALESCE((SELECT max(id) FROM integrations.connections), 1), true);
 SELECT setval(pg_get_serial_sequence('integrations.destinations', 'id'), COALESCE((SELECT max(id) FROM integrations.destinations), 1), true);
 SELECT setval(pg_get_serial_sequence('integrations.pipelines', 'id'), COALESCE((SELECT max(id) FROM integrations.pipelines), 1), true);
-SELECT setval(pg_get_serial_sequence('integrations.mcp_permissions', 'id'), COALESCE((SELECT max(id) FROM integrations.mcp_permissions), 1), true);
-SELECT setval(pg_get_serial_sequence('integrations.mcp_action_audit', 'id'), COALESCE((SELECT max(id) FROM integrations.mcp_action_audit), 1), true);
+SELECT setval(pg_get_serial_sequence('integrations.plugin_permissions', 'id'), COALESCE((SELECT max(id) FROM integrations.plugin_permissions), 1), true);
+SELECT setval(pg_get_serial_sequence('integrations.plugin_action_audit', 'id'), COALESCE((SELECT max(id) FROM integrations.plugin_action_audit), 1), true);
 SELECT setval(pg_get_serial_sequence('integrations.sync_runs', 'id'), COALESCE((SELECT max(id) FROM integrations.sync_runs), 1), true);
 SELECT setval(pg_get_serial_sequence('integrations.sync_cursors', 'id'), COALESCE((SELECT max(id) FROM integrations.sync_cursors), 1), true);
 SELECT setval(pg_get_serial_sequence('integrations.events', 'id'), COALESCE((SELECT max(id) FROM integrations.events), 1), true);

@@ -48,7 +48,7 @@ updates AS (
   UNION ALL
   SELECT 'erp'::text AS domain, 'bling'::text AS provider, resources_json FROM bling_resources
 )
-UPDATE mcp_app.integration_provider_capabilities capabilities
+UPDATE plugin.integration_provider_capabilities capabilities
 SET
   resources_json = updates.resources_json,
   sync_modes_json = jsonb_build_array('manual', 'scheduled'),

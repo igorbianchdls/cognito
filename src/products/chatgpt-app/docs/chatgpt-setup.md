@@ -28,19 +28,19 @@ Generic MCP tools and dashboard execution logic.
 src/products/chatgpt-app/server
 ```
 
-ChatGPT App metadata, OAuth, endpoint wrapper, and OpenAI-specific MCP Apps metadata.
+ChatGPT App metadata, OAuth, endpoint wrapper, and OpenAI-specific Plugin metadata.
 
 ```txt
-src/products/mcp-apps
+src/products/plugin
 ```
 
-Shared MCP Apps tools, UI resources, widget source, and built widget HTML.
+Shared Plugin tools, UI resources, widget source, and built widget HTML.
 
 ```txt
 src/products/chatgpt-app/web
 ```
 
-Legacy ChatGPT widget source retained for compatibility. The active shared widget lives in `src/products/mcp-apps/web`.
+Legacy ChatGPT widget source retained for compatibility. The active shared widget lives in `src/products/plugin/web`.
 
 ```txt
 src/app/api/chatgpt-app/mcp
@@ -149,11 +149,11 @@ Run the remote smoke test after deploy:
 COGNITO_MCP_TOKEN=... pnpm chatgpt-app:smoke
 ```
 
-Before host-specific smoke tests, validate the shared MCP Apps layer locally:
+Before host-specific smoke tests, validate the shared Plugin layer locally:
 
 ```txt
-pnpm mcp-apps:build
-pnpm mcp-apps:smoke
+pnpm plugin:build
+pnpm plugin:smoke
 ```
 
 Print the manual ChatGPT validation checklist:
@@ -179,7 +179,7 @@ OpenAI tool metadata
 resources/list
 resources/read ui://widget/dashboard-v4.html
 OpenAI widget metadata
-MCP Apps widget metadata
+Plugin widget metadata
 widget CSP domains
 POST /api/chatgpt-app/embed-token
 tools/call dashboards

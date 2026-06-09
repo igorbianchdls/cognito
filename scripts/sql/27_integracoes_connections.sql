@@ -1,6 +1,6 @@
-CREATE SCHEMA IF NOT EXISTS mcp_app;
+CREATE SCHEMA IF NOT EXISTS plugin;
 
-CREATE TABLE IF NOT EXISTS mcp_app.integration_connections (
+CREATE TABLE IF NOT EXISTS plugin.integration_connections (
   id bigserial PRIMARY KEY,
   tenant_id integer NOT NULL DEFAULT 1,
   domain text NOT NULL,
@@ -42,33 +42,33 @@ CREATE TABLE IF NOT EXISTS mcp_app.integration_connections (
 );
 
 CREATE UNIQUE INDEX IF NOT EXISTS integration_connections_external_account_uidx
-  ON mcp_app.integration_connections (tenant_id, domain, provider, external_account_id)
+  ON plugin.integration_connections (tenant_id, domain, provider, external_account_id)
   WHERE external_account_id IS NOT NULL;
 
 CREATE INDEX IF NOT EXISTS integration_connections_tenant_domain_idx
-  ON mcp_app.integration_connections (tenant_id, domain);
+  ON plugin.integration_connections (tenant_id, domain);
 
 CREATE INDEX IF NOT EXISTS integration_connections_tenant_provider_idx
-  ON mcp_app.integration_connections (tenant_id, provider);
+  ON plugin.integration_connections (tenant_id, provider);
 
 CREATE INDEX IF NOT EXISTS integration_connections_tenant_status_idx
-  ON mcp_app.integration_connections (tenant_id, status);
+  ON plugin.integration_connections (tenant_id, status);
 
 CREATE INDEX IF NOT EXISTS integration_connections_last_sync_idx
-  ON mcp_app.integration_connections (tenant_id, last_sync_at DESC);
+  ON plugin.integration_connections (tenant_id, last_sync_at DESC);
 
 CREATE INDEX IF NOT EXISTS integration_connections_due_sync_idx
-  ON mcp_app.integration_connections (tenant_id, next_sync_at)
+  ON plugin.integration_connections (tenant_id, next_sync_at)
   WHERE sync_enabled = true
     AND next_sync_at IS NOT NULL
     AND sync_frequency <> 'manual'
     AND status IN ('connected', 'warning');
 
 CREATE INDEX IF NOT EXISTS integration_connections_sync_lock_idx
-  ON mcp_app.integration_connections (sync_locked_until)
+  ON plugin.integration_connections (sync_locked_until)
   WHERE sync_locked_until IS NOT NULL;
 
-CREATE TABLE IF NOT EXISTS mcp_app.integration_destinations (
+CREATE TABLE IF NOT EXISTS plugin.integration_destinations (
   id bigserial PRIMARY KEY,
   tenant_id integer NOT NULL DEFAULT 1,
   type text NOT NULL,
@@ -90,17 +90,17 @@ CREATE TABLE IF NOT EXISTS mcp_app.integration_destinations (
 );
 
 CREATE UNIQUE INDEX IF NOT EXISTS integration_destinations_default_bigquery_uidx
-  ON mcp_app.integration_destinations (tenant_id, type)
+  ON plugin.integration_destinations (tenant_id, type)
   WHERE type = 'bigquery' AND (metadata_json->>'isDefault') = 'true';
 
 CREATE INDEX IF NOT EXISTS integration_destinations_tenant_type_idx
-  ON mcp_app.integration_destinations (tenant_id, type, status);
+  ON plugin.integration_destinations (tenant_id, type, status);
 
-CREATE TABLE IF NOT EXISTS mcp_app.integration_pipelines (
+CREATE TABLE IF NOT EXISTS plugin.integration_pipelines (
   id bigserial PRIMARY KEY,
   tenant_id integer NOT NULL DEFAULT 1,
-  source_connection_id bigint NOT NULL REFERENCES mcp_app.integration_connections(id) ON DELETE CASCADE,
-  destination_id bigint NOT NULL REFERENCES mcp_app.integration_destinations(id) ON DELETE CASCADE,
+  source_connection_id bigint NOT NULL REFERENCES plugin.integration_connections(id) ON DELETE CASCADE,
+  destination_id bigint NOT NULL REFERENCES plugin.integration_destinations(id) ON DELETE CASCADE,
   name text NOT NULL,
   status text NOT NULL DEFAULT 'active',
   selected_resources jsonb NOT NULL DEFAULT '[]'::jsonb,
@@ -128,26 +128,26 @@ CREATE TABLE IF NOT EXISTS mcp_app.integration_pipelines (
 );
 
 CREATE INDEX IF NOT EXISTS integration_pipelines_tenant_source_idx
-  ON mcp_app.integration_pipelines (tenant_id, source_connection_id);
+  ON plugin.integration_pipelines (tenant_id, source_connection_id);
 
 CREATE INDEX IF NOT EXISTS integration_pipelines_tenant_destination_idx
-  ON mcp_app.integration_pipelines (tenant_id, destination_id);
+  ON plugin.integration_pipelines (tenant_id, destination_id);
 
 CREATE INDEX IF NOT EXISTS integration_pipelines_due_sync_idx
-  ON mcp_app.integration_pipelines (tenant_id, next_sync_at)
+  ON plugin.integration_pipelines (tenant_id, next_sync_at)
   WHERE sync_enabled = true
     AND next_sync_at IS NOT NULL
     AND sync_frequency <> 'manual'
     AND status = 'active';
 
 CREATE INDEX IF NOT EXISTS integration_pipelines_sync_lock_idx
-  ON mcp_app.integration_pipelines (sync_locked_until)
+  ON plugin.integration_pipelines (sync_locked_until)
   WHERE sync_locked_until IS NOT NULL;
 
-CREATE TABLE IF NOT EXISTS mcp_app.integration_mcp_permissions (
+CREATE TABLE IF NOT EXISTS plugin.integration_plugin_permissions (
   id bigserial PRIMARY KEY,
   tenant_id integer NOT NULL DEFAULT 1,
-  connection_id bigint NOT NULL REFERENCES mcp_app.integration_connections(id) ON DELETE CASCADE,
+  connection_id bigint NOT NULL REFERENCES plugin.integration_connections(id) ON DELETE CASCADE,
   enabled boolean NOT NULL DEFAULT false,
   read_resources jsonb NOT NULL DEFAULT '[]'::jsonb,
   write_resources jsonb NOT NULL DEFAULT '[]'::jsonb,
@@ -156,24 +156,24 @@ CREATE TABLE IF NOT EXISTS mcp_app.integration_mcp_permissions (
   metadata_json jsonb NOT NULL DEFAULT '{}'::jsonb,
   created_at timestamptz NOT NULL DEFAULT now(),
   updated_at timestamptz NOT NULL DEFAULT now(),
-  CONSTRAINT integration_mcp_permissions_read_array_check
+  CONSTRAINT integration_plugin_permissions_read_array_check
     CHECK (jsonb_typeof(read_resources) = 'array'),
-  CONSTRAINT integration_mcp_permissions_write_array_check
+  CONSTRAINT integration_plugin_permissions_write_array_check
     CHECK (jsonb_typeof(write_resources) = 'array'),
-  CONSTRAINT integration_mcp_permissions_destructive_array_check
+  CONSTRAINT integration_plugin_permissions_destructive_array_check
     CHECK (jsonb_typeof(destructive_resources) = 'array'),
-  CONSTRAINT integration_mcp_permissions_metadata_object_check
+  CONSTRAINT integration_plugin_permissions_metadata_object_check
     CHECK (jsonb_typeof(metadata_json) = 'object'),
-  CONSTRAINT integration_mcp_permissions_connection_unique
+  CONSTRAINT integration_plugin_permissions_connection_unique
     UNIQUE (tenant_id, connection_id)
 );
 
-CREATE TABLE IF NOT EXISTS mcp_app.integration_sync_runs (
+CREATE TABLE IF NOT EXISTS plugin.integration_sync_runs (
   id bigserial PRIMARY KEY,
   tenant_id integer NOT NULL DEFAULT 1,
-  connection_id bigint NOT NULL REFERENCES mcp_app.integration_connections(id) ON DELETE CASCADE,
-  pipeline_id bigint NULL REFERENCES mcp_app.integration_pipelines(id) ON DELETE SET NULL,
-  destination_id bigint NULL REFERENCES mcp_app.integration_destinations(id) ON DELETE SET NULL,
+  connection_id bigint NOT NULL REFERENCES plugin.integration_connections(id) ON DELETE CASCADE,
+  pipeline_id bigint NULL REFERENCES plugin.integration_pipelines(id) ON DELETE SET NULL,
+  destination_id bigint NULL REFERENCES plugin.integration_destinations(id) ON DELETE SET NULL,
   trigger text NOT NULL DEFAULT 'manual',
   status text NOT NULL DEFAULT 'queued',
   resource text NULL,
@@ -197,30 +197,30 @@ CREATE TABLE IF NOT EXISTS mcp_app.integration_sync_runs (
 );
 
 CREATE INDEX IF NOT EXISTS integration_sync_runs_connection_created_idx
-  ON mcp_app.integration_sync_runs (connection_id, created_at DESC);
+  ON plugin.integration_sync_runs (connection_id, created_at DESC);
 
 CREATE INDEX IF NOT EXISTS integration_sync_runs_tenant_status_idx
-  ON mcp_app.integration_sync_runs (tenant_id, status);
+  ON plugin.integration_sync_runs (tenant_id, status);
 
 CREATE INDEX IF NOT EXISTS integration_sync_runs_tenant_created_idx
-  ON mcp_app.integration_sync_runs (tenant_id, created_at DESC);
+  ON plugin.integration_sync_runs (tenant_id, created_at DESC);
 
 CREATE INDEX IF NOT EXISTS integration_sync_runs_external_job_idx
-  ON mcp_app.integration_sync_runs (external_job_id)
+  ON plugin.integration_sync_runs (external_job_id)
   WHERE external_job_id IS NOT NULL;
 
 CREATE INDEX IF NOT EXISTS integration_sync_runs_pipeline_created_idx
-  ON mcp_app.integration_sync_runs (pipeline_id, created_at DESC)
+  ON plugin.integration_sync_runs (pipeline_id, created_at DESC)
   WHERE pipeline_id IS NOT NULL;
 
 CREATE INDEX IF NOT EXISTS integration_sync_runs_destination_created_idx
-  ON mcp_app.integration_sync_runs (destination_id, created_at DESC)
+  ON plugin.integration_sync_runs (destination_id, created_at DESC)
   WHERE destination_id IS NOT NULL;
 
-CREATE TABLE IF NOT EXISTS mcp_app.integration_sync_cursors (
+CREATE TABLE IF NOT EXISTS plugin.integration_sync_cursors (
   id bigserial PRIMARY KEY,
   tenant_id integer NOT NULL DEFAULT 1,
-  connection_id bigint NOT NULL REFERENCES mcp_app.integration_connections(id) ON DELETE CASCADE,
+  connection_id bigint NOT NULL REFERENCES plugin.integration_connections(id) ON DELETE CASCADE,
   resource text NOT NULL,
   cursor_key text NOT NULL DEFAULT 'default',
   cursor_value text NULL,
@@ -235,12 +235,12 @@ CREATE TABLE IF NOT EXISTS mcp_app.integration_sync_cursors (
 );
 
 CREATE INDEX IF NOT EXISTS integration_sync_cursors_connection_idx
-  ON mcp_app.integration_sync_cursors (connection_id);
+  ON plugin.integration_sync_cursors (connection_id);
 
 CREATE INDEX IF NOT EXISTS integration_sync_cursors_tenant_resource_idx
-  ON mcp_app.integration_sync_cursors (tenant_id, resource);
+  ON plugin.integration_sync_cursors (tenant_id, resource);
 
-CREATE TABLE IF NOT EXISTS mcp_app.integration_provider_capabilities (
+CREATE TABLE IF NOT EXISTS plugin.integration_provider_capabilities (
   id bigserial PRIMARY KEY,
   domain text NOT NULL,
   provider text NOT NULL,
@@ -275,7 +275,7 @@ CREATE TABLE IF NOT EXISTS mcp_app.integration_provider_capabilities (
 );
 
 CREATE INDEX IF NOT EXISTS integration_provider_capabilities_domain_idx
-  ON mcp_app.integration_provider_capabilities (domain, status);
+  ON plugin.integration_provider_capabilities (domain, status);
 
 WITH conta_azul_resources AS (
   SELECT jsonb_build_array(
@@ -517,7 +517,7 @@ providers AS (
   SELECT 'advertising', 'google_ads', 'Google Ads', 'Publicidade paga no Google Ads com campanhas, grupos, anuncios e metricas diarias.', 'oauth2', true, true, jsonb_build_array('manual', 'scheduled'), advertising_resources.resources_json, jsonb_build_array('advertising', 'publicidade', 'paid-media', 'google'), 'available', jsonb_build_object('toolkitSlug', 'GOOGLE_ADS')
   FROM advertising_resources
 )
-INSERT INTO mcp_app.integration_provider_capabilities
+INSERT INTO plugin.integration_provider_capabilities
   (domain, provider, name, description, auth_type, supports_oauth_callback, supports_incremental_sync, sync_modes_json, resources_json, tags_json, status, metadata_json, updated_at)
 SELECT
   domain, provider, name, description, auth_type, supports_oauth_callback, supports_incremental_sync, sync_modes_json, resources_json, tags_json, status, metadata_json, now()

@@ -208,10 +208,10 @@ assert(!toolNames.includes('sql_execution'), 'tools/list should not expose depre
 const dashboardsTool = (toolsList?.tools || []).find((tool) => tool.name === 'dashboards')
 assert(dashboardsTool?._meta?.['openai/outputTemplate'] === 'ui://widget/dashboard-v4.html', 'dashboards missing OpenAI outputTemplate')
 assert(dashboardsTool?._meta?.['openai/widgetAccessible'] === true, 'dashboards missing OpenAI widgetAccessible')
-assert(dashboardsTool?._meta?.ui?.resourceUri === 'ui://widget/dashboard-v4.html', 'dashboards missing MCP Apps ui.resourceUri')
+assert(dashboardsTool?._meta?.ui?.resourceUri === 'ui://widget/dashboard-v4.html', 'dashboards missing Plugin ui.resourceUri')
 const openArtifactTool = (toolsList?.tools || []).find((tool) => tool.name === 'open_artifact')
 assert(openArtifactTool?._meta?.['openai/outputTemplate'] === 'ui://widget/dashboard-v4.html', 'open_artifact missing OpenAI outputTemplate')
-assert(openArtifactTool?._meta?.ui?.resourceUri === 'ui://widget/dashboard-v4.html', 'open_artifact missing MCP Apps ui.resourceUri')
+assert(openArtifactTool?._meta?.ui?.resourceUri === 'ui://widget/dashboard-v4.html', 'open_artifact missing Plugin ui.resourceUri')
 console.log(`tools/list ok: ${toolNames.join(', ')}`)
 
 const resourcesList = await callMcp('resources/list')
@@ -233,7 +233,7 @@ assert(html.includes('dashboard-embed-frame'), 'dashboard widget HTML missing em
 const widgetCsp = widgetContent?._meta?.['openai/widgetCSP']
 assert(widgetCsp?.resource_domains?.includes(baseUrl), 'widget CSP missing app resource domain')
 assert(widgetCsp?.connect_domains?.includes(baseUrl), 'widget CSP missing app connect domain')
-assert(widgetContent?._meta?.ui?.csp?.resourceDomains?.includes(baseUrl), 'widget MCP Apps CSP missing app resource domain')
+assert(widgetContent?._meta?.ui?.csp?.resourceDomains?.includes(baseUrl), 'widget Plugin CSP missing app resource domain')
 assert(widgetContent?._meta?.['openai/widgetDescription'], 'widget missing OpenAI widgetDescription')
 console.log('resources/read ok')
 

@@ -1,6 +1,6 @@
 import { interpolate, useCurrentFrame } from 'remotion'
 
-import type { AnalysisStructuredContent, DataResultStructuredContent } from '@/products/mcp-apps/web/src/types/toolResult'
+import type { AnalysisStructuredContent, DataResultStructuredContent } from '@/products/plugin/web/src/types/toolResult'
 import { AnimatedMcpAnalysisView } from '@/remotion/components/AnimatedMcpAnalysisView'
 import { AnimatedMcpTableView } from '@/remotion/components/AnimatedMcpTableView'
 import {

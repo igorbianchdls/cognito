@@ -204,7 +204,7 @@ assert(!toolNames.includes('dashboard_embed_preview'), 'tools/list should not ex
 assert(!toolNames.includes('dashboard_render_list'), 'tools/list should not expose deprecated dashboard_render_list')
 assert(!toolNames.includes('dashboard_render_preview'), 'tools/list should not expose deprecated dashboard_render_preview')
 const openArtifactTool = (toolsList?.tools || []).find((tool) => tool.name === 'open_artifact')
-assert(openArtifactTool?._meta?.ui?.resourceUri === 'ui://widget/dashboard-v4.html', 'open_artifact missing MCP Apps ui.resourceUri')
+assert(openArtifactTool?._meta?.ui?.resourceUri === 'ui://widget/dashboard-v4.html', 'open_artifact missing Plugin ui.resourceUri')
 assert(!openArtifactTool?._meta?.['openai/outputTemplate'], 'Claude App should not expose OpenAI outputTemplate')
 console.log(`tools/list ok: ${toolNames.join(', ')}`)
 
@@ -221,10 +221,10 @@ const widget = await callMcp('resources/read', {
 const widgetContent = widget?.contents?.[0] || {}
 const html = widgetContent.text || ''
 assert(html.includes('Cognito Dashboards'), 'dashboard widget HTML missing title')
-assert(html.includes('CognitoMcpApp'), 'dashboard widget HTML missing MCP Apps runtime')
+assert(html.includes('CognitoPlugin'), 'dashboard widget HTML missing Plugin runtime')
 assert(html.includes('iframe'), 'dashboard widget HTML missing iframe renderer')
 assert(html.includes('dashboard-embed-frame'), 'dashboard widget HTML missing embed frame styles')
-assert(widgetContent?._meta?.ui?.csp?.resourceDomains?.includes(baseUrl), 'widget MCP Apps CSP missing app resource domain')
+assert(widgetContent?._meta?.ui?.csp?.resourceDomains?.includes(baseUrl), 'widget Plugin CSP missing app resource domain')
 assert(!widgetContent?._meta?.['openai/widgetCSP'], 'Claude App resource should not expose OpenAI widgetCSP')
 console.log('resources/read ok')
 

@@ -2,14 +2,14 @@ import {
   DASHBOARD_WIDGET_MIME_TYPE,
   DASHBOARD_WIDGET_RESOURCE_URI,
   getDashboardWidgetHtml,
-  listCognitoMcpAppResources,
-  readCognitoMcpAppResource,
-  type McpAppResourceContent,
-} from '@/products/mcp-apps/server/appResources'
+  listCognitoPluginResources,
+  readCognitoPluginResource,
+  type PluginResourceContent,
+} from '@/products/plugin/server/appResources'
 
 export { DASHBOARD_WIDGET_MIME_TYPE, DASHBOARD_WIDGET_RESOURCE_URI, getDashboardWidgetHtml }
 
-export type ChatGptAppResourceContent = McpAppResourceContent
+export type ChatGptAppResourceContent = PluginResourceContent
 
 function toOpenAiWidgetCsp(meta: Record<string, unknown> | undefined) {
   const ui = meta?.ui && typeof meta.ui === 'object' ? meta.ui as Record<string, unknown> : {}
@@ -27,7 +27,7 @@ function toOpenAiWidgetCsp(meta: Record<string, unknown> | undefined) {
   }
 }
 
-function withOpenAiResourceMeta(content: McpAppResourceContent): ChatGptAppResourceContent {
+function withOpenAiResourceMeta(content: PluginResourceContent): ChatGptAppResourceContent {
   const meta = content._meta || {}
   const ui = meta.ui && typeof meta.ui === 'object' ? meta.ui as Record<string, unknown> : {}
 
@@ -46,11 +46,11 @@ function withOpenAiResourceMeta(content: McpAppResourceContent): ChatGptAppResou
 }
 
 export function listCognitoChatGptAppResources() {
-  return listCognitoMcpAppResources()
+  return listCognitoPluginResources()
 }
 
 export function readCognitoChatGptAppResource(uri: string) {
-  const resource = readCognitoMcpAppResource(uri)
+  const resource = readCognitoPluginResource(uri)
   if (!resource) return null
 
   return {

@@ -54,7 +54,7 @@ providers AS (
   SELECT 'ecommerce', 'ifood', 'iFood', 'Pedidos, lojas, itens, pagamentos e operacao de delivery.', 'oauth2', true, true, jsonb_build_array('manual', 'scheduled'), ecommerce_resources.resources_json, jsonb_build_array('ecommerce', 'delivery', 'brasil'), 'available', jsonb_build_object('toolkitSlug', 'IFOOD')
   FROM ecommerce_resources
 )
-INSERT INTO mcp_app.integration_provider_capabilities
+INSERT INTO plugin.integration_provider_capabilities
   (domain, provider, name, description, auth_type, supports_oauth_callback, supports_incremental_sync, sync_modes_json, resources_json, tags_json, status, metadata_json, updated_at)
 SELECT
   domain, provider, name, description, auth_type, supports_oauth_callback, supports_incremental_sync, sync_modes_json, resources_json, tags_json, status, metadata_json, now()

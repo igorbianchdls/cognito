@@ -35,7 +35,7 @@ providers AS (
   SELECT 'crm', 'rd_station_crm', 'RD Station CRM', 'CRM brasileiro para leads, contatos, oportunidades, funis e atividades.', 'oauth2', true, true, jsonb_build_array('manual', 'scheduled'), crm_resources.resources_json, jsonb_build_array('crm', 'vendas', 'relacionamento', 'brasil', 'sales'), 'available', jsonb_build_object('toolkitSlug', 'RD_STATION_CRM')
   FROM crm_resources
 )
-INSERT INTO mcp_app.integration_provider_capabilities
+INSERT INTO plugin.integration_provider_capabilities
   (domain, provider, name, description, auth_type, supports_oauth_callback, supports_incremental_sync, sync_modes_json, resources_json, tags_json, status, metadata_json, updated_at)
 SELECT
   domain, provider, name, description, auth_type, supports_oauth_callback, supports_incremental_sync, sync_modes_json, resources_json, tags_json, status, metadata_json, now()

@@ -1,12 +1,12 @@
 # Claude App Setup
 
-Use this endpoint for the Claude MCP Apps wrapper:
+Use this endpoint for the Claude Plugin wrapper:
 
 ```txt
 https://cognito-seven.vercel.app/api/claude-app/mcp
 ```
 
-This wrapper reuses `src/products/mcp-apps` for tools, resources, widget HTML, dashboard embed URLs, and structured UI responses.
+This wrapper reuses `src/products/plugin` for tools, resources, widget HTML, dashboard embed URLs, and structured UI responses.
 
 ## Current Status
 
@@ -14,7 +14,7 @@ Implemented:
 
 - Claude product wrapper.
 - MCP JSON-RPC endpoint.
-- MCP Apps tools/resources from `mcp-apps`.
+- Plugin tools/resources from `plugin`.
 - Bearer token auth using `COGNITO_CLAUDE_APP_TOKEN` or `COGNITO_MCP_TOKEN`.
 - OAuth routes and protected resource discovery.
 - `open_dashboard` tool for one-call dashboard iframe rendering.
@@ -42,6 +42,8 @@ COGNITO_CLAUDE_APP_EMBED_SECRET=...
 Fallbacks:
 
 ```txt
+COGNITO_PLUGIN_OAUTH_SECRET
+COGNITO_PLUGIN_EMBED_SECRET
 COGNITO_MCP_APPS_OAUTH_SECRET
 COGNITO_MCP_APPS_EMBED_SECRET
 COGNITO_MCP_TOKEN
@@ -49,7 +51,7 @@ COGNITO_MCP_TOKEN
 
 ## Dashboard Embed
 
-Use this tool when Claude should render a dashboard in the MCP Apps iframe with a single call:
+Use this tool when Claude should render a dashboard in the Plugin iframe with a single call:
 
 ```txt
 open_dashboard
@@ -116,6 +118,6 @@ Expected behavior:
 
 ```txt
 Claude calls open_dashboard with only { id }.
-The MCP Apps widget opens.
+The Plugin widget opens.
 The widget renders the Cognito dashboard iframe.
 ```

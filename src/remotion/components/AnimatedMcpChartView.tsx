@@ -1,5 +1,5 @@
-import type { ChartResultStructuredContent } from '@/products/mcp-apps/web/src/types/toolResult'
-import { ChartResultView } from '@/products/mcp-apps/web/src/views/ChartResultView'
+import type { ChartResultStructuredContent } from '@/products/plugin/web/src/types/toolResult'
+import { ChartResultView } from '@/products/plugin/web/src/views/ChartResultView'
 import { McpMobileResultFrame } from '@/remotion/components/McpMobileResultFrame'
 
 export function AnimatedMcpChartView({ data, startFrame = 0 }: { data: ChartResultStructuredContent; startFrame?: number }) {

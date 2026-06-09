@@ -487,7 +487,7 @@ WITH totals AS (
     )::timestamptz AS last_sync_at
 ),
 upsert_connector AS (
-  INSERT INTO mcp_app.connectors
+  INSERT INTO plugin.connectors
     (tenant_id, domain, provider, name, status, external_account_id, scopes_json, last_sync_at, records_synced, source_table, source_id, metadata_json, updated_at)
   SELECT
     tenant_id,
@@ -513,7 +513,7 @@ upsert_connector AS (
     updated_at = now()
   RETURNING id, tenant_id, last_sync_at, records_synced
 )
-INSERT INTO mcp_app.connector_sync_runs
+INSERT INTO plugin.connector_sync_runs
   (tenant_id, connector_id, status, started_at, finished_at, records_in, records_updated, records_failed, metadata_json)
 SELECT
   tenant_id,

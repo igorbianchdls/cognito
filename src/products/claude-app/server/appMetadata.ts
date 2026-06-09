@@ -5,7 +5,7 @@ export const COGNITO_CLAUDE_APP_METADATA = {
   title: 'Cognito Dashboards',
   version: COGNITO_CLAUDE_APP_VERSION,
   description:
-    'Create, inspect, and manage Cognito dashboards with MCP Apps-compatible interactive UI.',
+    'Create, inspect, and manage Cognito dashboards with Plugin-compatible interactive UI.',
   publisher: 'Cognito',
   categories: ['dashboards', 'analytics', 'business-intelligence'],
 } as const

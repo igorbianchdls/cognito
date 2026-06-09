@@ -29,14 +29,14 @@ import type {
   UpdateIntegrationPipelineInput,
 } from '@/products/integracoes/shared/contracts/pipelineContracts'
 import type {
-  IntegrationMcpPermissions,
-  UpsertIntegrationMcpPermissionsInput,
-} from '@/products/integracoes/shared/contracts/mcpPermissionContracts'
+  IntegrationPluginPermissions,
+  UpsertIntegrationPluginPermissionsInput,
+} from '@/products/integracoes/shared/contracts/pluginPermissionContracts'
 import type {
-  CreateIntegrationMcpActionAuditInput,
-  IntegrationMcpActionAudit,
-  IntegrationMcpActionAuditStatus,
-} from '@/products/integracoes/shared/contracts/mcpActionAuditContracts'
+  CreateIntegrationPluginActionAuditInput,
+  IntegrationPluginActionAudit,
+  IntegrationPluginActionAuditStatus,
+} from '@/products/integracoes/shared/contracts/pluginActionAuditContracts'
 import type { IntegrationSyncMode } from '@/products/integracoes/shared/providers/providerTypes'
 import {
   normalizeRequestedResources,
@@ -131,7 +131,7 @@ type DbPipelineRow = {
   updated_at: string | Date
 }
 
-type DbMcpPermissionsRow = {
+type DbPluginPermissionsRow = {
   id: string | number
   tenant_id: number
   connection_id: string | number
@@ -146,7 +146,7 @@ type DbMcpPermissionsRow = {
   updated_at: string | Date
 }
 
-type DbMcpActionAuditRow = {
+type DbPluginActionAuditRow = {
   id: string | number
   tenant_id: number
   connection_id: string | number | null
@@ -327,7 +327,7 @@ function toPipeline(row: DbPipelineRow): IntegrationPipeline {
   }
 }
 
-function toMcpPermissions(row: DbMcpPermissionsRow): IntegrationMcpPermissions {
+function toPluginPermissions(row: DbPluginPermissionsRow): IntegrationPluginPermissions {
   return {
     id: String(row.id),
     tenantId: Number(row.tenant_id),
@@ -344,12 +344,12 @@ function toMcpPermissions(row: DbMcpPermissionsRow): IntegrationMcpPermissions {
   }
 }
 
-function normalizeMcpActionAuditStatus(status: unknown): IntegrationMcpActionAuditStatus {
+function normalizePluginActionAuditStatus(status: unknown): IntegrationPluginActionAuditStatus {
   if (status === 'preview' || status === 'executed' || status === 'blocked' || status === 'error') return status
   return 'error'
 }
 
-function toMcpActionAudit(row: DbMcpActionAuditRow): IntegrationMcpActionAudit {
+function toPluginActionAudit(row: DbPluginActionAuditRow): IntegrationPluginActionAudit {
   return {
     id: String(row.id),
     tenantId: Number(row.tenant_id),
@@ -361,7 +361,7 @@ function toMcpActionAudit(row: DbMcpActionAuditRow): IntegrationMcpActionAudit {
     action: row.action,
     dryRun: Boolean(row.dry_run),
     permissionKind: row.permission_kind === 'destructive' ? 'destructive' : row.permission_kind === 'write' ? 'write' : null,
-    status: normalizeMcpActionAuditStatus(row.status),
+    status: normalizePluginActionAuditStatus(row.status),
     success: Boolean(row.success),
     message: row.message,
     targetId: row.target_id,
@@ -744,25 +744,25 @@ export async function updateIntegrationPipeline(
   })
 }
 
-export async function getIntegrationMcpPermissions(
+export async function getIntegrationPluginPermissions(
   connectionId: string,
   tenantId = 1,
-): Promise<IntegrationMcpPermissions | null> {
-  const rows = await runQuery<DbMcpPermissionsRow>(
+): Promise<IntegrationPluginPermissions | null> {
+  const rows = await runQuery<DbPluginPermissionsRow>(
     `SELECT *
-     FROM integrations.mcp_permissions
+     FROM integrations.plugin_permissions
      WHERE connection_id = $1 AND tenant_id = $2
      LIMIT 1`,
     [connectionId, tenantId],
   )
-  return rows[0] ? toMcpPermissions(rows[0]) : null
+  return rows[0] ? toPluginPermissions(rows[0]) : null
 }
 
-export async function upsertIntegrationMcpPermissions(
-  input: UpsertIntegrationMcpPermissionsInput,
-): Promise<IntegrationMcpPermissions> {
+export async function upsertIntegrationPluginPermissions(
+  input: UpsertIntegrationPluginPermissionsInput,
+): Promise<IntegrationPluginPermissions> {
   const tenantId = Number(input.tenantId || 1)
-  const current = await getIntegrationMcpPermissions(input.connectionId, tenantId)
+  const current = await getIntegrationPluginPermissions(input.connectionId, tenantId)
   const enabled = input.enabled ?? current?.enabled ?? false
   const readResources = input.readResources ?? current?.readResources ?? []
   const liveReadResources = input.liveReadResources ?? current?.liveReadResources ?? []
@@ -770,8 +770,8 @@ export async function upsertIntegrationMcpPermissions(
   const destructiveResources = input.destructiveResources ?? current?.destructiveResources ?? []
   const requireConfirmation = input.requireConfirmation ?? current?.requireConfirmation ?? true
 
-  const result = await runQuery<DbMcpPermissionsRow>(
-    `INSERT INTO integrations.mcp_permissions
+  const result = await runQuery<DbPluginPermissionsRow>(
+    `INSERT INTO integrations.plugin_permissions
       (tenant_id, connection_id, enabled, read_resources, live_read_resources, write_resources, destructive_resources, require_confirmation, metadata, updated_at)
      VALUES
       ($1, $2, $3, $4::jsonb, $5::jsonb, $6::jsonb, $7::jsonb, $8, $9::jsonb, now())
@@ -783,7 +783,7 @@ export async function upsertIntegrationMcpPermissions(
        write_resources = EXCLUDED.write_resources,
        destructive_resources = EXCLUDED.destructive_resources,
        require_confirmation = EXCLUDED.require_confirmation,
-       metadata = integrations.mcp_permissions.metadata || EXCLUDED.metadata,
+       metadata = integrations.plugin_permissions.metadata || EXCLUDED.metadata,
        updated_at = now()
      RETURNING *`,
     [
@@ -798,14 +798,14 @@ export async function upsertIntegrationMcpPermissions(
       JSON.stringify(input.metadata || {}),
     ],
   )
-  return toMcpPermissions(result[0])
+  return toPluginPermissions(result[0])
 }
 
-export async function createIntegrationMcpActionAudit(
-  input: CreateIntegrationMcpActionAuditInput,
-): Promise<IntegrationMcpActionAudit> {
-  const result = await runQuery<DbMcpActionAuditRow>(
-    `INSERT INTO integrations.mcp_action_audit
+export async function createIntegrationPluginActionAudit(
+  input: CreateIntegrationPluginActionAuditInput,
+): Promise<IntegrationPluginActionAudit> {
+  const result = await runQuery<DbPluginActionAuditRow>(
+    `INSERT INTO integrations.plugin_action_audit
       (tenant_id, connection_id, domain, provider, tool, resource, action, dry_run, permission_kind, status, success, message, target_id, idempotency_key, payload, metadata, actor)
      VALUES
       ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15::jsonb, $16::jsonb, $17)
@@ -830,15 +830,15 @@ export async function createIntegrationMcpActionAudit(
       input.actor || null,
     ],
   )
-  return toMcpActionAudit(result[0])
+  return toPluginActionAudit(result[0])
 }
 
-export async function listIntegrationMcpActionAudit(params: {
+export async function listIntegrationPluginActionAudit(params: {
   tenantId?: number
   connectionId?: string
-  status?: IntegrationMcpActionAuditStatus
+  status?: IntegrationPluginActionAuditStatus
   limit?: number
-}): Promise<IntegrationMcpActionAudit[]> {
+}): Promise<IntegrationPluginActionAudit[]> {
   const tenantId = Number(params.tenantId || 1)
   const conditions = ['tenant_id = $1']
   const values: unknown[] = [tenantId]
@@ -855,16 +855,16 @@ export async function listIntegrationMcpActionAudit(params: {
   const limit = Math.min(Math.max(Number(params.limit || 50), 1), 200)
   values.push(limit)
 
-  const rows = await runQuery<DbMcpActionAuditRow>(
+  const rows = await runQuery<DbPluginActionAuditRow>(
     `SELECT *
-     FROM integrations.mcp_action_audit
+     FROM integrations.plugin_action_audit
      WHERE ${conditions.join(' AND ')}
      ORDER BY created_at DESC, id DESC
      LIMIT $${values.length}`,
     values,
   )
 
-  return rows.map(toMcpActionAudit)
+  return rows.map(toPluginActionAudit)
 }
 
 export async function listIntegrationConnections(params?: {
@@ -968,7 +968,7 @@ export async function createIntegrationConnection(
     })
 
     await client.query(
-      `INSERT INTO integrations.mcp_permissions
+      `INSERT INTO integrations.plugin_permissions
         (tenant_id, connection_id, enabled, read_resources, live_read_resources, write_resources, destructive_resources, require_confirmation, metadata, updated_at)
        VALUES
         ($1, $2, true, $3::jsonb, '[]'::jsonb, '[]'::jsonb, '[]'::jsonb, true, $4::jsonb, now())
@@ -976,7 +976,7 @@ export async function createIntegrationConnection(
        DO UPDATE SET
          enabled = EXCLUDED.enabled,
          read_resources = EXCLUDED.read_resources,
-         metadata = integrations.mcp_permissions.metadata || EXCLUDED.metadata,
+         metadata = integrations.plugin_permissions.metadata || EXCLUDED.metadata,
          updated_at = now()`,
       [
         tenantId,
@@ -1066,7 +1066,7 @@ export async function updateIntegrationConnection(
     const connection = toConnection(row)
     if (input.selectedResources) {
       await client.query(
-        `UPDATE integrations.mcp_permissions
+        `UPDATE integrations.plugin_permissions
          SET
            read_resources = $3::jsonb,
            metadata = metadata || $4::jsonb,

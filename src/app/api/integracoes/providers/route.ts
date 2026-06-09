@@ -5,7 +5,7 @@ import {
 } from '@/products/integracoes/server/integrationProviderRegistry'
 import type { IntegrationDomain } from '@/products/integracoes/shared/providers/providerTypes'
 import { mapProviderToToolkitDefinition } from '@/products/integracoes/shared/providers/providerCatalog'
-import { getIntegrationProviderMcpCapabilities } from '@/products/integracoes/shared/providers/mcpProviderCapabilities'
+import { getIntegrationProviderPluginCapabilities } from '@/products/integracoes/shared/providers/pluginProviderCapabilities'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -32,10 +32,14 @@ function normalizeDomain(value: string | null): IntegrationDomain | undefined {
 export async function GET(req: NextRequest) {
   const domain = normalizeDomain(req.nextUrl.searchParams.get('domain'))
   const providers = listRegisteredIntegrationProviders(domain)
-  const providersWithCapabilities = providers.map((provider) => ({
-    ...provider,
-    mcpCapabilities: getIntegrationProviderMcpCapabilities(provider.slug) || null,
-  }))
+  const providersWithCapabilities = providers.map((provider) => {
+    const pluginCapabilities = getIntegrationProviderPluginCapabilities(provider.slug) || null
+    return {
+      ...provider,
+      pluginCapabilities,
+      mcpCapabilities: pluginCapabilities,
+    }
+  })
 
   return Response.json({
     ok: true,

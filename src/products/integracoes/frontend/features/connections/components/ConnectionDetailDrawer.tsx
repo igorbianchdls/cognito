@@ -12,15 +12,15 @@ import {
   SheetTitle,
 } from '@/components/ui/sheet'
 import { renderIntegrationLogo } from '@/products/integracoes/shared/iconMaps'
-import type { IntegrationMcpPermissions } from '@/products/integracoes/shared/contracts/mcpPermissionContracts'
+import type { IntegrationPluginPermissions } from '@/products/integracoes/shared/contracts/pluginPermissionContracts'
 import type {
   IntegrationConnectionWithUi,
   IntegrationEventWithUi,
   IntegrationSyncRunWithUi,
 } from '@/products/integracoes/frontend/services/integracoesApi'
 import {
-  fetchIntegrationMcpPermissions,
-  updateIntegrationMcpPermissions,
+  fetchIntegrationPluginPermissions,
+  updateIntegrationPluginPermissions,
 } from '@/products/integracoes/frontend/services/integracoesApi'
 import IntegrationEventTimeline from '@/products/integracoes/frontend/features/connections/components/IntegrationEventTimeline'
 import SyncRunsTable from '@/products/integracoes/frontend/features/connections/components/SyncRunsTable'
@@ -76,7 +76,7 @@ export default function ConnectionDetailDrawer({
 }: ConnectionDetailDrawerProps) {
   const toolkitSlug = String(connection?.metadata?.toolkitSlug || connection?.provider || '').toUpperCase()
   const canSync = Boolean(connection && ['connected', 'syncing', 'warning'].includes(connection.status))
-  const [permissions, setPermissions] = useState<IntegrationMcpPermissions | null>(null)
+  const [permissions, setPermissions] = useState<IntegrationPluginPermissions | null>(null)
   const [permissionsBusy, setPermissionsBusy] = useState(false)
   const [permissionsError, setPermissionsError] = useState<string | null>(null)
 
@@ -90,7 +90,7 @@ export default function ConnectionDetailDrawer({
     let active = true
     setPermissionsBusy(true)
     setPermissionsError(null)
-    void fetchIntegrationMcpPermissions(connection.id, connection.tenantId)
+    void fetchIntegrationPluginPermissions(connection.id, connection.tenantId)
       .then((nextPermissions) => {
         if (active) setPermissions(nextPermissions)
       })
@@ -106,13 +106,13 @@ export default function ConnectionDetailDrawer({
     }
   }, [connection, open])
 
-  async function savePermissions(nextPermissions: IntegrationMcpPermissions) {
+  async function savePermissions(nextPermissions: IntegrationPluginPermissions) {
     if (!connection) return
     setPermissions(nextPermissions)
     setPermissionsBusy(true)
     setPermissionsError(null)
     try {
-      const saved = await updateIntegrationMcpPermissions(connection.id, {
+      const saved = await updateIntegrationPluginPermissions(connection.id, {
         tenantId: connection.tenantId,
         enabled: nextPermissions.enabled,
         readResources: nextPermissions.readResources,

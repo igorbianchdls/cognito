@@ -26,7 +26,7 @@ const checks = [
     prompt: 'Liste meus dashboards.',
     expected: [
       'Claude calls dashboards.',
-      'The MCP Apps widget renders dashboard cards.',
+      'The Plugin widget renders dashboard cards.',
     ],
   },
   {
@@ -34,7 +34,7 @@ const checks = [
     prompt: 'Abra o dashboard <id> como app interativo.',
     expected: [
       'Claude calls open_artifact with { kind: "dashboard", id }.',
-      'The MCP Apps widget opens.',
+      'The Plugin widget opens.',
       'The widget renders the full Cognito dashboard iframe.',
       'The iframe URL contains embed=1 and a signed token.',
     ],
@@ -44,7 +44,7 @@ const checks = [
     prompt: 'Mostre um resumo de ecommerce como app interativo.',
     expected: [
       'Claude calls ecommerce.',
-      'The MCP Apps widget renders cards, chart, or table from structuredContent.',
+      'The Plugin widget renders cards, chart, or table from structuredContent.',
     ],
   },
 ]
@@ -66,4 +66,4 @@ for (const [index, check] of checks.entries()) {
   console.log('')
 }
 
-console.log('If the UI does not appear, remove and recreate the connector so Claude reloads the MCP Apps resource.')
+console.log('If the UI does not appear, remove and recreate the connector so Claude reloads the Plugin resource.')

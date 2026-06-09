@@ -1,16 +1,16 @@
 BEGIN;
 
-ALTER TABLE mcp_app.integration_connections
+ALTER TABLE plugin.integration_connections
   DROP CONSTRAINT IF EXISTS integration_connections_domain_check;
 
-ALTER TABLE mcp_app.integration_connections
+ALTER TABLE plugin.integration_connections
   ADD CONSTRAINT integration_connections_domain_check
   CHECK (domain IN ('erp', 'crm', 'ecommerce', 'marketing', 'advertising', 'database', 'bi', 'automation'));
 
-ALTER TABLE mcp_app.integration_provider_capabilities
+ALTER TABLE plugin.integration_provider_capabilities
   DROP CONSTRAINT IF EXISTS integration_provider_capabilities_domain_check;
 
-ALTER TABLE mcp_app.integration_provider_capabilities
+ALTER TABLE plugin.integration_provider_capabilities
   ADD CONSTRAINT integration_provider_capabilities_domain_check
   CHECK (domain IN ('erp', 'crm', 'ecommerce', 'marketing', 'advertising', 'database', 'bi', 'automation'));
 
@@ -47,7 +47,7 @@ providers AS (
   SELECT 'advertising', 'google_ads', 'Google Ads', 'Publicidade paga no Google Ads com campanhas, grupos, anuncios e metricas diarias.', 'oauth2', true, true, jsonb_build_array('manual', 'scheduled'), advertising_resources.resources_json, jsonb_build_array('advertising', 'publicidade', 'paid-media', 'google'), 'available', jsonb_build_object('toolkitSlug', 'GOOGLE_ADS')
   FROM advertising_resources
 )
-INSERT INTO mcp_app.integration_provider_capabilities
+INSERT INTO plugin.integration_provider_capabilities
   (domain, provider, name, description, auth_type, supports_oauth_callback, supports_incremental_sync, sync_modes_json, resources_json, tags_json, status, metadata_json, updated_at)
 SELECT
   domain, provider, name, description, auth_type, supports_oauth_callback, supports_incremental_sync, sync_modes_json, resources_json, tags_json, status, metadata_json, now()
