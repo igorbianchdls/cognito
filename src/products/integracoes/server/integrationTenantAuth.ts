@@ -8,6 +8,11 @@ import {
 
 type AccessKind = 'read' | 'manage'
 
+// TEMPORARIO: remover depois dos testes Conta Azul em producao.
+const SMOKE_TEST_HEADER = 'x-integracoes-smoke-test'
+const SMOKE_TEST_HEADER_VALUE = 'conta-azul-tenant-1'
+const SMOKE_TEST_TENANT_ID = 1
+
 type TenantMembershipRow = {
   tenant_id: string | number
   tenant_name: string
@@ -23,7 +28,7 @@ export type ResolvedIntegrationTenant = {
   userId?: string
   sharedUserId?: number
   role?: string
-  authMode: 'supabase' | 'api_token' | 'dev_fallback'
+  authMode: 'supabase' | 'api_token' | 'dev_fallback' | 'smoke_test'
 }
 
 function normalizeTenantId(value: unknown): number | null {
@@ -50,6 +55,10 @@ function roleCanAccess(role: string, access: AccessKind) {
 function getDevFallbackTenantId() {
   if (process.env.NODE_ENV === 'production') return null
   return normalizeTenantId(process.env.INTEGRACOES_DEV_TENANT_ID)
+}
+
+function hasSmokeTestBypass(req: Request) {
+  return req.headers.get(SMOKE_TEST_HEADER) === SMOKE_TEST_HEADER_VALUE
 }
 
 async function linkSharedUserToAuthUser(authUserId: string, email: string | null | undefined) {
@@ -114,6 +123,23 @@ export async function resolveIntegrationTenant(
     return {
       tenantId: explicitTenantId || normalizeTenantId(process.env.INTEGRACOES_API_TENANT_ID) || 1,
       authMode: 'api_token',
+    }
+  }
+
+  if (hasSmokeTestBypass(req)) {
+    if (explicitTenantId && explicitTenantId !== SMOKE_TEST_TENANT_ID) {
+      throw new IntegrationApiAuthError('Tenant solicitado nao corresponde ao tenant do smoke test.', {
+        status: 403,
+        code: 'tenant_mismatch',
+      })
+    }
+
+    return {
+      tenantId: SMOKE_TEST_TENANT_ID,
+      tenantName: 'Smoke test tenant',
+      tenantSlug: 'smoke-test',
+      role: 'owner',
+      authMode: 'smoke_test',
     }
   }
 

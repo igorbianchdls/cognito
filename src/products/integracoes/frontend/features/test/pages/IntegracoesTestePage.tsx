@@ -87,7 +87,14 @@ function getArray(value: unknown): JsonRecord[] {
 }
 
 async function requestJson(url: string, init?: RequestInit) {
-  const response = await fetch(url, init)
+  const headers = new Headers(init?.headers)
+  // TEMPORARIO: remover junto com o bypass smoke_test depois dos testes Conta Azul em producao.
+  headers.set('x-integracoes-smoke-test', 'conta-azul-tenant-1')
+
+  const response = await fetch(url, {
+    ...init,
+    headers,
+  })
   const payload = await response.json().catch(() => ({}))
   if (!response.ok || asRecord(payload).ok === false) {
     throw new Error(toText(asRecord(payload).error) || `HTTP ${response.status}`)
