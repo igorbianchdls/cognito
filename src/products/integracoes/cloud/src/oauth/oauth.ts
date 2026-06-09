@@ -27,6 +27,8 @@ type TokenResponse = {
   scope?: string
 }
 
+type OAuthTokenAuthMethod = 'client_secret_post' | 'client_secret_basic'
+
 function base64UrlEncode(value: string) {
   return Buffer.from(value, 'utf8').toString('base64url')
 }
@@ -62,6 +64,7 @@ type OAuthProviderConfig = {
   tokenUrl: string
   redirectUri: string
   scopes: string
+  tokenAuthMethod: OAuthTokenAuthMethod
 }
 
 function normalizeProviderForSecret(provider: string) {
@@ -80,7 +83,19 @@ async function envOrSecret(provider: string, envSuffix: string, secretSuffix: st
   return (await readSecret(providerSecretRef(provider, secretSuffix)))?.trim() || ''
 }
 
+function normalizeTokenAuthMethod(provider: string, value: string): OAuthTokenAuthMethod {
+  const method = value.trim().toLowerCase()
+  if (method === 'basic' || method === 'client_secret_basic') return 'client_secret_basic'
+  if (method === 'post' || method === 'body' || method === 'client_secret_post') return 'client_secret_post'
+
+  return normalizeProviderForSecret(provider) === 'conta-azul'
+    ? 'client_secret_basic'
+    : 'client_secret_post'
+}
+
 async function getOAuthProviderConfig(provider: string): Promise<OAuthProviderConfig> {
+  const tokenAuthMethod = await envOrSecret(provider, 'TOKEN_AUTH_METHOD', 'token-auth-method')
+
   return {
     clientId: await envOrSecret(provider, 'CLIENT_ID', 'client-id'),
     clientSecret: await envOrSecret(provider, 'CLIENT_SECRET', 'client-secret'),
@@ -88,6 +103,7 @@ async function getOAuthProviderConfig(provider: string): Promise<OAuthProviderCo
     tokenUrl: await envOrSecret(provider, 'TOKEN_URL', 'token-url'),
     redirectUri: process.env[envName(provider, 'REDIRECT_URI')]?.trim() || process.env.INTEGRATIONS_OAUTH_REDIRECT_URI?.trim() || '',
     scopes: await envOrSecret(provider, 'SCOPES', 'scopes'),
+    tokenAuthMethod: normalizeTokenAuthMethod(provider, tokenAuthMethod),
   }
 }
 
@@ -159,19 +175,30 @@ function mapTokenResponse(payload: TokenResponse): OAuthTokenSet | null {
   }
 }
 
+function createBasicAuthHeader(clientId: string, clientSecret: string) {
+  return `Basic ${Buffer.from(`${clientId}:${clientSecret}`, 'utf8').toString('base64')}`
+}
+
 async function postTokenRequest(provider: string, body: URLSearchParams): Promise<OAuthTokenSet | null> {
   const config = await getOAuthProviderConfig(provider)
   if (!config.clientId || !config.clientSecret || !config.tokenUrl) {
     throw new Error(`OAuth ${provider} nao configurado.`)
   }
 
-  body.set('client_id', config.clientId)
-  body.set('client_secret', config.clientSecret)
+  const headers: Record<string, string> = {
+    'Content-Type': 'application/x-www-form-urlencoded',
+  }
+
+  if (config.tokenAuthMethod === 'client_secret_basic') {
+    headers.Authorization = createBasicAuthHeader(config.clientId, config.clientSecret)
+  } else {
+    body.set('client_id', config.clientId)
+    body.set('client_secret', config.clientSecret)
+  }
+
   const response = await fetch(config.tokenUrl, {
     method: 'POST',
-    headers: {
-      'Content-Type': 'application/x-www-form-urlencoded',
-    },
+    headers,
     body,
     signal: AbortSignal.timeout(Number(process.env.INTEGRATIONS_OAUTH_TIMEOUT_MS || 30000)),
   })

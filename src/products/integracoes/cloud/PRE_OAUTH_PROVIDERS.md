@@ -61,7 +61,11 @@ integrations-oauth-{provider}-client-secret
 integrations-oauth-{provider}-authorize-url
 integrations-oauth-{provider}-token-url
 integrations-oauth-{provider}-scopes
+integrations-oauth-{provider}-token-auth-method
 ```
+
+`token-auth-method` e opcional. Valores aceitos: `client_secret_post`
+ou `client_secret_basic`. Conta Azul usa `client_secret_basic` por padrao.
 
 Exemplo HubSpot:
 
@@ -81,6 +85,7 @@ integrations-oauth-conta-azul-client-secret
 integrations-oauth-conta-azul-authorize-url
 integrations-oauth-conta-azul-token-url
 integrations-oauth-conta-azul-scopes
+integrations-oauth-conta-azul-token-auth-method
 ```
 
 ## Comandos modelo
