@@ -8,18 +8,6 @@ import {
 } from '@/products/mcp/adapters/artifactsAdapter'
 import { MCP_ARTIFACT_TOOL_NAMES, type McpArtifactToolName } from '@/products/mcp/shared/toolNames'
 import { getDashboardContract, McpDashboardToolInputError } from '@/products/mcp/tools/dashboardTools'
-import { REPORT_TEMPLATE_SOURCE } from '@/products/artifacts/report/templates/reportTemplate'
-import {
-  REPORT_SUPPORTED_CHART_TYPES,
-  REPORT_SUPPORTED_COMPONENTS,
-  REPORT_SUPPORTED_HTML_TAGS,
-} from '@/products/artifacts/report/contract/reportContract'
-import { SLIDE_TEMPLATE_SOURCE } from '@/products/artifacts/slide/templates/slideTemplate'
-import {
-  SLIDE_SUPPORTED_CHART_TYPES,
-  SLIDE_SUPPORTED_COMPONENTS,
-  SLIDE_SUPPORTED_HTML_TAGS,
-} from '@/products/artifacts/slide/contract/slideContract'
 
 type JsonRecord = Record<string, unknown>
 type ArtifactAction = 'get_contract' | 'create' | 'patch' | 'update_full'
@@ -33,8 +21,6 @@ export type McpArtifactToolExecutionResult = {
   tool: McpArtifactToolName
   result: unknown
 }
-
-const ARTIFACT_FORMATS = ['currency', 'number', 'percent', 'integer', 'date', 'datetime', 'text'] as const
 
 function asRecord(value: unknown): JsonRecord {
   if (!value || typeof value !== 'object' || Array.isArray(value)) return {}
@@ -66,8 +52,8 @@ function optionalPositiveInt(value: unknown): number | null {
 
 function normalizeArtifactKind(value: unknown): McpArtifactKind {
   const kind = String(value || '').trim()
-  if (kind === 'dashboard' || kind === 'slide' || kind === 'report') return kind
-  throw new McpDashboardToolInputError('kind deve ser dashboard, slide ou report', { field: 'kind' })
+  if (kind === 'dashboard') return kind
+  throw new McpDashboardToolInputError('kind deve ser dashboard', { field: 'kind' })
 }
 
 function normalizeAction(value: unknown): ArtifactAction {
@@ -106,11 +92,8 @@ function directRootTag(source: string) {
 function assertSourceMatchesKind(kind: McpArtifactKind, source: string) {
   const tag = directRootTag(source)
   if (!tag) return
-  const allowed = kind === 'dashboard'
-    ? ['Dashboard', 'DashboardTemplate']
-    : kind === 'report'
-      ? ['Report', 'ReportTemplate']
-      : ['Slide', 'SlideTemplate']
+  const allowed = ['Dashboard', 'DashboardTemplate']
+  void kind
 
   if (!allowed.includes(tag)) {
     throw new McpDashboardToolInputError(`source incompativel: kind=${kind} nao aceita root <${tag}>`, {
@@ -121,91 +104,9 @@ function assertSourceMatchesKind(kind: McpArtifactKind, source: string) {
   }
 }
 
-function getPagedArtifactContract(kind: 'report' | 'slide', includeExample: boolean) {
-  const isReport = kind === 'report'
-  return {
-    artifact_type: kind,
-    dsl_version: `${kind}.v1`,
-    source_path: `app/${kind}.tsx`,
-    source_format:
-      `TSX declarativo completo exportando um componente default ou comecando diretamente em um root <${isReport ? 'ReportTemplate' : 'SlideTemplate'}>.`,
-    authoring_model:
-      'Use TSX como DSL declarativa. Nao gere React livre fora dos componentes e HTML suportados.',
-    supported_components: [...(isReport ? REPORT_SUPPORTED_COMPONENTS : SLIDE_SUPPORTED_COMPONENTS)],
-    supported_html_tags: [...(isReport ? REPORT_SUPPORTED_HTML_TAGS : SLIDE_SUPPORTED_HTML_TAGS)],
-    supported_chart_types: [...(isReport ? REPORT_SUPPORTED_CHART_TYPES : SLIDE_SUPPORTED_CHART_TYPES)],
-    supported_formats: [...ARTIFACT_FORMATS],
-    component_props: {
-      [isReport ? 'ReportTemplate' : 'SlideTemplate']: {
-        required: ['name', 'title'],
-        props: {
-          name: 'string estavel, sem espacos',
-          title: 'string',
-          children: isReport ? 'paginas <Report>' : 'slides <Slide>',
-        },
-      },
-      [isReport ? 'Report' : 'Slide']: {
-        required: [],
-        props: {
-          title: 'string opcional',
-          width: 'number opcional em px',
-          height: 'number opcional em px',
-          children: 'HTML suportado, Card, Chart, Table, PivotTable e Query',
-        },
-      },
-      Chart: {
-        required: ['type', 'dataQuery'],
-        props: {
-          type: isReport ? [...REPORT_SUPPORTED_CHART_TYPES] : [...SLIDE_SUPPORTED_CHART_TYPES],
-          dataQuery: 'objeto com query SQL',
-          xAxis: "{ dataKey: 'label' }",
-          series: "array como [{ dataKey: 'value', label: 'Receita' }]",
-          format: ARTIFACT_FORMATS,
-        },
-      },
-      Table: {
-        required: ['dataQuery'],
-        props: {
-          dataQuery: 'objeto com query SQL',
-          columns: 'array opcional com key, label, format, align',
-        },
-      },
-      Card: {
-        required: [],
-        props: {
-          children: 'conteudo visual, texto ou componentes de dados',
-        },
-      },
-    },
-    data_query_contract: {
-      shape: {
-        query: 'SQL SELECT/CTE em string.',
-        limit: 'number opcional',
-      },
-      placeholders: ['{{tenant_id}}', '{{de}}', '{{ate}}'],
-      aliases: {
-        Chart: ['label', 'value'],
-        Table: ['aliases estaveis que batem com columns[].key quando columns for usado'],
-      },
-      rules: [
-        'Use SELECT/CTE de leitura; nao use INSERT, UPDATE, DELETE, DDL ou multiplas instrucoes.',
-        'Sempre filtre por tenant_id quando consultar tabelas multi-tenant.',
-        'Retorne numero bruto para moeda/percentual e use format no componente.',
-      ],
-    },
-    rules: [
-      `O root deve ser <${isReport ? 'ReportTemplate' : 'SlideTemplate'}> para multiplas paginas ou <${isReport ? 'Report' : 'Slide'}> para uma pagina unica.`,
-      'Nao use imports externos nao suportados pelo preview do workspace.',
-      'Nao invente componentes fora de supported_components nem props de dados fora de component_props.',
-      'Para edicoes, leia a versao draft atual e use expected_version.',
-    ],
-    example_source: includeExample ? (isReport ? REPORT_TEMPLATE_SOURCE : SLIDE_TEMPLATE_SOURCE) : null,
-  }
-}
-
 export function getArtifactContract(kind: McpArtifactKind, includeExample: boolean) {
-  if (kind === 'dashboard') return getDashboardContract(includeExample)
-  return getPagedArtifactContract(kind, includeExample)
+  void kind
+  return getDashboardContract(includeExample)
 }
 
 async function getExpectedVersion(kind: McpArtifactKind, artifactId: string, explicitVersion: unknown) {

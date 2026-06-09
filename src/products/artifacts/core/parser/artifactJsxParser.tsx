@@ -3,7 +3,6 @@
 import React, { isValidElement, ReactNode } from 'react'
 
 import { resolveDashboardTemplateThemeTokens as resolveDashboardThemeTokens } from '@/products/artifacts/dashboard/templates/dashboardTemplateThemes'
-import { SLIDE_RUNTIME_COMPONENT_NAMES } from '@/products/artifacts/slide/components/slideComponentRegistry'
 import type {
   ArtifactKind,
   ArtifactTreeNode,
@@ -25,20 +24,10 @@ function leafComponent(name: string): RuntimeComponent {
   return Comp
 }
 
-function createSlideRuntimeScope(): Record<string, RuntimeComponent> {
-  return Object.fromEntries(
-    SLIDE_RUNTIME_COMPONENT_NAMES.map((name) => [name, passthroughComponent(name)]),
-  )
-}
-
 const runtimeScope = {
   DashboardTemplate: passthroughComponent('DashboardTemplate'),
-  ReportTemplate: passthroughComponent('ReportTemplate'),
-  SlideTemplate: passthroughComponent('SlideTemplate'),
   Theme: passthroughComponent('Theme'),
   Dashboard: passthroughComponent('Dashboard'),
-  Report: passthroughComponent('Report'),
-  Slide: passthroughComponent('Slide'),
   Grid: passthroughComponent('Grid'),
   Vertical: passthroughComponent('Vertical'),
   Horizontal: passthroughComponent('Horizontal'),
@@ -63,7 +52,6 @@ const runtimeScope = {
   DatePicker: leafComponent('DatePicker'),
   Insights: leafComponent('Insights'),
   Text: passthroughComponent('Text'),
-  ...createSlideRuntimeScope(),
 } satisfies Record<string, RuntimeComponent>
 
 function getElementTypeName(type: unknown): string {
@@ -139,15 +127,6 @@ function wrapArtifactRootSource(source: string) {
 `
   }
 
-  if (rootTag === 'Report' || rootTag === 'ReportTemplate' || rootTag === 'Slide' || rootTag === 'SlideTemplate') {
-    return `export default function __ArtifactEntry() {
-  return (
-    ${cleanSource}
-  )
-}
-`
-  }
-
   return cleanSource
 }
 
@@ -203,7 +182,7 @@ function resolveArtifactExport(moduleExports: Record<string, unknown>) {
   if (typeof directDefault === 'function') return directDefault as (...args: any[]) => ReactNode
 
   const firstNamedArtifact = Object.entries(moduleExports).find(
-    ([key, value]) => /^(Dashboard|Report|Slide)[A-Z_]/.test(key) && typeof value === 'function',
+    ([key, value]) => /^Dashboard[A-Z_]/.test(key) && typeof value === 'function',
   )
   if (firstNamedArtifact) return firstNamedArtifact[1] as (...args: any[]) => ReactNode
 
@@ -215,8 +194,6 @@ function resolveArtifactExport(moduleExports: Record<string, unknown>) {
 
 function resolveArtifactKindFromTree(tree: ArtifactTreeNode): ArtifactKind {
   if (tree.type === 'Dashboard' || tree.type === 'DashboardTemplate') return 'dashboard'
-  if (tree.type === 'Report' || tree.type === 'ReportTemplate') return 'report'
-  if (tree.type === 'Slide' || tree.type === 'SlideTemplate') return 'slide'
   throw new Error(`Tipo de artefato nao suportado no preview: ${tree.type}`)
 }
 

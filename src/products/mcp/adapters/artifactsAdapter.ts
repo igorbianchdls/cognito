@@ -4,7 +4,6 @@ import {
   patchArtifact,
   type ArtifactKind,
 } from '@/products/artifacts/backend/artifactService'
-import { runQuery } from '@/lib/postgres'
 import {
   deleteDashboardArtifact,
   listDashboards,
@@ -17,7 +16,7 @@ import {
 
 export type McpJsonMap = Record<string, unknown>
 export type McpArtifactKind = ArtifactKind
-export type McpArtifactListKind = McpArtifactKind | 'all'
+export type McpArtifactListKind = McpArtifactKind
 
 export type McpDashboardListInput = {
   limit?: number | null
@@ -35,8 +34,6 @@ export type McpArtifactListItem = Omit<DashboardListItem, 'id' | 'thumbnail_data
   has_thumbnail: boolean
   url: string
 }
-
-type McpArtifactListRow = Omit<McpArtifactListItem, 'has_thumbnail' | 'url'>
 
 export type McpDashboardReadInput = {
   artifactId: string
@@ -138,12 +135,8 @@ export function buildDashboardArtifactUrl(artifactId: string) {
 }
 
 export function buildArtifactUrl(artifactType: McpArtifactKind, artifactId: string) {
-  const collection = artifactType === 'dashboard'
-    ? 'dashboards'
-    : artifactType === 'report'
-      ? 'reports'
-      : 'slides'
-  const path = `/artifacts/${collection}/${artifactId}`
+  void artifactType
+  const path = `/artifacts/dashboards/${artifactId}`
   const baseUrl = getCognitoBaseUrl()
   return baseUrl ? `${baseUrl}${path}` : path
 }
@@ -167,7 +160,7 @@ function withListDashboardUrl(dashboard: DashboardListItem) {
 }
 
 function isArtifactListKind(value: unknown): value is McpArtifactListKind {
-  return value === 'dashboard' || value === 'slide' || value === 'report' || value === 'all'
+  return value === 'dashboard'
 }
 
 function normalizeArtifactListKind(value: unknown): McpArtifactListKind {
@@ -180,16 +173,6 @@ function normalizeListLimit(value: unknown) {
   return Math.min(parsed, 200)
 }
 
-function withListArtifactUrl(artifact: McpArtifactListRow) {
-  const { thumbnail_data_url: thumbnailDataUrl, ...artifactWithoutThumbnail } = artifact
-  return {
-    ...artifactWithoutThumbnail,
-    has_thumbnail: Boolean(thumbnailDataUrl),
-    thumbnail_data_url: thumbnailDataUrl || null,
-    url: buildArtifactUrl(artifact.artifact_type, artifact.id),
-  }
-}
-
 export async function listMcpDashboards(input: McpDashboardListInput = {}) {
   const dashboards = await listDashboards(input.limit ?? 100)
   return dashboards.map(withListDashboardUrl)
@@ -199,33 +182,8 @@ export async function listMcpArtifacts(input: McpArtifactListInput = {}) {
   const kind = normalizeArtifactListKind(input.kind)
   const limit = normalizeListLimit(input.limit)
 
-  if (kind === 'dashboard') {
-    return listMcpDashboards({ limit })
-  }
-
-  const rows = await runQuery<McpArtifactListRow>(
-    `
-      SELECT
-        id::text AS id,
-        artifact_type,
-        workspace_id::text AS workspace_id,
-        title,
-        slug,
-        status,
-        current_draft_version,
-        current_published_version,
-        thumbnail_data_url,
-        created_at,
-        updated_at
-      FROM artifacts.artifacts
-      WHERE ($1::text = 'all' OR artifact_type = $1::text)
-      ORDER BY updated_at DESC NULLS LAST, created_at DESC NULLS LAST
-      LIMIT $2::int
-    `,
-    [kind, limit],
-  )
-
-  return rows.map(withListArtifactUrl)
+  void kind
+  return listMcpDashboards({ limit })
 }
 
 export async function readMcpDashboard(input: McpDashboardReadInput) {
@@ -239,12 +197,9 @@ export async function readMcpDashboard(input: McpDashboardReadInput) {
 }
 
 function withArtifactUrl<T extends { artifact_id: string; artifact_type?: string }>(artifact: T) {
-  const artifactType = (artifact.artifact_type === 'report' || artifact.artifact_type === 'slide')
-    ? artifact.artifact_type
-    : 'dashboard'
   return {
     ...artifact,
-    url: buildArtifactUrl(artifactType, artifact.artifact_id),
+    url: buildArtifactUrl('dashboard', artifact.artifact_id),
   }
 }
 

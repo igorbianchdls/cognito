@@ -87,18 +87,4 @@ assert(structuredContract?.contract?.artifact_type === 'dashboard', 'artifact_au
 assert(typeof structuredContract?.contract?.example_source === 'string', 'artifact_authoring missing dashboard example_source')
 console.log('artifact_authoring dashboard contract ok')
 
-const reportContract = await callMcp('tools/call', {
-  name: 'artifact_authoring',
-  arguments: {
-    kind: 'report',
-    action: 'get_contract',
-    include_example: true,
-  },
-})
-const structuredReportContract = reportContract?.structuredContent
-assert(structuredReportContract?.kind === 'report', 'artifact_authoring report contract returned invalid kind')
-assert(structuredReportContract?.contract?.dsl_version === 'report.v1', 'artifact_authoring missing report.v1 contract')
-assert(typeof structuredReportContract?.contract?.example_source === 'string', 'artifact_authoring missing report example_source')
-console.log('artifact_authoring report contract ok')
-
 console.log('MCP smoke test passed')

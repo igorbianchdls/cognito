@@ -9,8 +9,6 @@
     "start": "next start",
     "lint": "next lint",
     "mcp:smoke": "node scripts/mcp/smoke-test.mjs",
-    "slides:pptx:smoke": "node scripts/artifacts/slides/export-pptx-smoke.mjs",
-    "reports:canva-pptx:smoke": "node scripts/artifacts/reports/export-canva-pptx-smoke.mjs",
     "plugin:build": "node scripts/plugin/build-widget.mjs",
     "plugin:smoke": "node scripts/plugin/smoke-test.mjs",
     "chatgpt-app:build": "node scripts/chatgpt-app/build-widget.mjs",

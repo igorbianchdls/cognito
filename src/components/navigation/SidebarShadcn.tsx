@@ -4,10 +4,8 @@ import * as React from "react"
 import { usePathname } from "next/navigation"
 import {
   IconChartBar,
-  IconFileText,
   IconGridDots,
   IconPlugConnected,
-  IconPresentation,
 } from "@tabler/icons-react"
 
 import MetaIcon from "@/components/icons/MetaIcon"
@@ -35,8 +33,6 @@ import {
 const BrandIcon = (props: { className?: string; style?: React.CSSProperties }) => <IconGridDots stroke={1.75} {...props} />
 const IntegrationsIcon = (props: { className?: string; style?: React.CSSProperties }) => <IconPlugConnected stroke={1.75} {...props} />
 const DashboardsArtifactIcon = (props: { className?: string; style?: React.CSSProperties }) => <IconChartBar stroke={1.75} {...props} />
-const ReportsArtifactIcon = (props: { className?: string; style?: React.CSSProperties }) => <IconFileText stroke={1.75} {...props} />
-const SlidesArtifactIcon = (props: { className?: string; style?: React.CSSProperties }) => <IconPresentation stroke={1.75} {...props} />
 
 // Font variable mapping helper
 function fontVar(name?: string) {
@@ -130,16 +126,6 @@ const navigationData = {
       title: "Dashboards",
       url: "/artifacts/dashboards",
       icon: DashboardsArtifactIcon,
-    },
-    {
-      title: "Reports",
-      url: "/artifacts/reports",
-      icon: ReportsArtifactIcon,
-    },
-    {
-      title: "Slides",
-      url: "/artifacts/slides",
-      icon: SlidesArtifactIcon,
     },
   ],
 }

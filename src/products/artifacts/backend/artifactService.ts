@@ -4,7 +4,7 @@ import {
   type ArtifactSourceKind,
 } from '@/products/artifacts/backend/dashboardArtifactsService'
 
-export type ArtifactKind = 'dashboard' | 'report' | 'slide'
+export type ArtifactKind = 'dashboard'
 type JsonMap = Record<string, unknown>
 
 type ArtifactRow = {

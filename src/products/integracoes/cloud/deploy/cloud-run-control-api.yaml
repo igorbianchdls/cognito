@@ -21,6 +21,12 @@ spec:
               value: creatto-463117
             - name: GCP_REGION
               value: southamerica-east1
+            - name: INTEGRATIONS_CONTROL_API_URL
+              value: https://integrations-control-api-305346154546.southamerica-east1.run.app
+            - name: INTEGRATIONS_SCHEDULER_OIDC_AUDIENCE
+              value: https://integrations-control-api-305346154546.southamerica-east1.run.app/scheduled-sync
+            - name: INTEGRATIONS_ALLOWED_OIDC_EMAILS
+              value: integrations-scheduler-invoker@creatto-463117.iam.gserviceaccount.com
             - name: PUBSUB_SYNC_TOPIC
               value: integrations-sync-requests
             - name: PUBSUB_DEAD_LETTER_TOPIC

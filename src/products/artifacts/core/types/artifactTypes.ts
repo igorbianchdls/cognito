@@ -11,7 +11,7 @@ export type ArtifactTreeNode = {
   children: Array<ArtifactTreeNode | string>
 }
 
-export type ArtifactKind = 'dashboard' | 'report' | 'slide'
+export type ArtifactKind = 'dashboard'
 
 export type ParsedArtifactJsx = {
   kind: ArtifactKind

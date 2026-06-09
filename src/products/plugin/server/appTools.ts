@@ -3,7 +3,6 @@ import { runQuery } from '@/lib/postgres'
 import { callCognitoMcpTool, type CognitoMcpServerContext } from '@/products/mcp/server/cognitoMcpServer'
 import { DASHBOARD_WIDGET_RESOURCE_URI } from '@/products/plugin/server/appResources'
 import {
-  buildArtifactUrl,
   buildDashboardArtifactUrl,
   listMcpArtifacts,
   listMcpDashboards,
@@ -57,15 +56,15 @@ type PluginToolDefinition = {
 }
 
 type JsonRecord = Record<string, unknown>
-type ArtifactListKind = 'dashboard' | 'slide' | 'report' | 'all'
+type ArtifactListKind = 'dashboard'
 
 const DASHBOARDS_SCHEMA = {
   type: 'object',
   properties: {
     kind: {
       type: 'string',
-      enum: ['dashboard', 'slide', 'report', 'all'],
-      description: 'Tipo de artifact a listar. Default dashboard. Use all para dashboards, slides e reports.',
+      enum: ['dashboard'],
+      description: 'Tipo de artifact a listar. Default dashboard.',
     },
     query: {
       type: 'string',
@@ -84,7 +83,7 @@ const OPEN_ARTIFACT_SCHEMA = {
   properties: {
     kind: {
       type: 'string',
-      enum: ['dashboard', 'slide', 'report'],
+      enum: ['dashboard'],
       description: 'Tipo do artifact a abrir.',
     },
     id: {
@@ -101,8 +100,8 @@ const ARTIFACT_AUTHORING_SCHEMA = {
   properties: {
     kind: {
       type: 'string',
-      enum: ['dashboard', 'slide', 'report'],
-      description: 'Tipo de artifact: dashboard, slide ou report.',
+      enum: ['dashboard'],
+      description: 'Tipo de artifact: dashboard.',
     },
     action: {
       type: 'string',
@@ -285,7 +284,7 @@ const RENDER_LIST_OUTPUT_SCHEMA = {
     tool: { type: 'string' },
     view: { type: 'string', enum: ['dashboard_list'] },
     title: { type: 'string' },
-    artifact_kind: { type: 'string', enum: ['dashboard', 'slide', 'report', 'all'] },
+    artifact_kind: { type: 'string', enum: ['dashboard'] },
     artifact_label: { type: 'string' },
     artifact_label_plural: { type: 'string' },
     dashboards: {
@@ -476,7 +475,7 @@ const SCHEDULES_SCHEMA = {
     ...AUTOMATION_ACTION_SCHEMA.properties,
     artifact_kind: {
       type: 'string',
-      enum: ['dashboard', 'slide', 'report'],
+      enum: ['dashboard'],
       description: 'Tipo de artifact a gerar quando aplicavel.',
     },
     prompt: { type: 'string', description: 'Prompt recorrente que sera executado pelo orquestrador.' },
@@ -651,7 +650,7 @@ const ARTIFACT_AUTHORING_OUTPUT_SCHEMA = {
   properties: {
     ok: { type: 'boolean' },
     tool: { type: 'string' },
-    kind: { type: 'string', enum: ['dashboard', 'slide', 'report'] },
+    kind: { type: 'string', enum: ['dashboard'] },
     action: { type: 'string' },
     contract: {
       type: 'object',
@@ -892,34 +891,24 @@ function buildDashboardEmbedUrl(artifactId: string, version?: unknown) {
 
 function getArtifactKind(value: unknown) {
   const kind = String(value || '').trim()
-  if (kind === 'dashboard' || kind === 'slide' || kind === 'report') return kind
+  if (kind === 'dashboard') return kind
   return null
 }
 
 function getArtifactListKind(value: unknown): ArtifactListKind {
   const kind = String(value || '').trim()
-  if (kind === 'dashboard' || kind === 'slide' || kind === 'report' || kind === 'all') return kind
+  if (kind === 'dashboard') return kind
   return 'dashboard'
 }
 
-function getArtifactListLabels(kind: ArtifactListKind) {
-  switch (kind) {
-    case 'slide':
-      return { singular: 'slide', plural: 'slides', title: 'Slides' }
-    case 'report':
-      return { singular: 'report', plural: 'reports', title: 'Reports' }
-    case 'all':
-      return { singular: 'artifact', plural: 'artifacts', title: 'Artifacts' }
-    default:
-      return { singular: 'dashboard', plural: 'dashboards', title: 'Dashboards' }
-  }
+function getArtifactListLabels(_kind: ArtifactListKind) {
+  return { singular: 'dashboard', plural: 'dashboards', title: 'Dashboards' }
 }
 
-function buildArtifactEmbedUrl(kind: 'dashboard' | 'slide' | 'report', artifactId: string, version?: unknown) {
+function buildArtifactEmbedUrl(kind: 'dashboard', artifactId: string, version?: unknown) {
   const token = createDashboardEmbedToken(artifactId)
-  const baseUrl = kind === 'dashboard'
-    ? buildDashboardArtifactUrl(artifactId)
-    : buildArtifactUrl(kind, artifactId)
+  void kind
+  const baseUrl = buildDashboardArtifactUrl(artifactId)
   const params = new URLSearchParams({
     embed: '1',
     token,
@@ -940,7 +929,7 @@ function withDashboardEmbedUrl<T extends JsonRecord>(dashboard: T): T & { embed_
   }
 }
 
-function withArtifactEmbedUrl<T extends JsonRecord>(artifact: T, fallbackKind?: 'dashboard' | 'slide' | 'report'): T & { embed_url?: string } {
+function withArtifactEmbedUrl<T extends JsonRecord>(artifact: T, fallbackKind?: 'dashboard'): T & { embed_url?: string } {
   const artifactId = getDashboardArtifactId(artifact)
   const kind = getArtifactKind(artifact.artifact_type || artifact.kind || fallbackKind) || 'dashboard'
   if (!artifactId) return artifact
@@ -1234,14 +1223,14 @@ async function callOpenArtifact(args: unknown) {
   }
 }
 
-async function callArtifactAuthoring(args: unknown, context: CognitoMcpServerContext, forcedKind?: 'dashboard' | 'slide' | 'report') {
+async function callArtifactAuthoring(args: unknown, context: CognitoMcpServerContext, forcedKind?: 'dashboard') {
   const input = asRecord(args)
   const kind = forcedKind || getArtifactKind(input.kind)
   if (!kind) {
     const structuredContent = {
       ok: false,
       tool: PLUGIN_PUBLIC_TOOL_NAMES.artifactAuthoring,
-      error: 'kind invalido. Use dashboard, slide ou report.',
+      error: 'kind invalido. Use dashboard.',
     }
 
     return {
@@ -2188,7 +2177,7 @@ export function listCognitoPluginTools() {
         name: PLUGIN_PUBLIC_TOOL_NAMES.dashboards,
         title: 'Dashboards',
         description:
-          'Lista ou busca artifacts Cognito e renderiza cards no app. Use kind=dashboard, slide, report ou all. Default dashboard. Use antes de open_artifact quando o usuario nao souber o id.',
+          'Lista ou busca dashboards Cognito e renderiza cards no app. Use kind=dashboard. Use antes de open_artifact quando o usuario nao souber o id.',
         inputSchema: DASHBOARDS_SCHEMA,
         outputSchema: RENDER_LIST_OUTPUT_SCHEMA,
         securitySchemes: COGNITO_READ_SECURITY_SCHEMES,
@@ -2202,7 +2191,7 @@ export function listCognitoPluginTools() {
         name: PLUGIN_PUBLIC_TOOL_NAMES.openArtifact,
         title: 'Open artifact',
         description:
-          'Abre um artifact completo no app interativo. Use com kind=dashboard, slide ou report e id retornado por artifact_authoring.',
+          'Abre um dashboard completo no app interativo. Use com kind=dashboard e id retornado por artifact_authoring.',
         inputSchema: OPEN_ARTIFACT_SCHEMA,
         outputSchema: RENDER_PREVIEW_OUTPUT_SCHEMA,
         securitySchemes: COGNITO_READ_SECURITY_SCHEMES,
@@ -2286,7 +2275,7 @@ export function listCognitoPluginTools() {
         name: PLUGIN_PUBLIC_TOOL_NAMES.schedules,
         title: 'Schedules',
         description:
-          'Cria, lista, atualiza, pausa, remove e executa agendamentos recorrentes de analises, relatorios, slides ou dashboards.',
+          'Cria, lista, atualiza, pausa, remove e executa agendamentos recorrentes de analises ou dashboards.',
         inputSchema: SCHEDULES_SCHEMA,
         outputSchema: GENERIC_APP_OUTPUT_SCHEMA,
         securitySchemes: COGNITO_WRITE_SECURITY_SCHEMES,
@@ -2314,7 +2303,7 @@ export function listCognitoPluginTools() {
         name: PLUGIN_PUBLIC_TOOL_NAMES.artifactAuthoring,
         title: 'Artifact authoring',
         description:
-          'Cria e edita artifacts Cognito usando TSX declarativo versionado. Use kind=dashboard, slide ou report; action=get_contract, create, patch ou update_full.',
+          'Cria e edita dashboards Cognito usando TSX declarativo versionado. Use kind=dashboard; action=get_contract, create, patch ou update_full.',
         inputSchema: ARTIFACT_AUTHORING_SCHEMA,
         outputSchema: ARTIFACT_AUTHORING_OUTPUT_SCHEMA,
         securitySchemes: COGNITO_WRITE_SECURITY_SCHEMES,

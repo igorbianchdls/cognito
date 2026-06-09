@@ -14,15 +14,15 @@ function assert(condition, message) {
 }
 
 function main() {
-  const capabilities = read('src/products/integracoes/shared/providers/mcpProviderCapabilities.ts')
+  const capabilities = read('src/products/integracoes/shared/providers/pluginProviderCapabilities.ts')
   for (const provider of ['omie', 'conta_azul', 'bling', 'hubspot', 'pipedrive', 'salesforce', 'bitrix24', 'rd_station_crm']) {
     assert(capabilities.includes(`provider: '${provider}'`) || capabilities.includes(`'${provider}'`), `capability ausente: ${provider}`)
   }
   for (const resource of ['contas-a-receber', 'pedidos-venda', 'oportunidades', 'atividades']) {
-    assert(capabilities.includes(resource), `resource MCP ausente nas capabilities: ${resource}`)
+    assert(capabilities.includes(resource), `resource Plugin ausente nas capabilities: ${resource}`)
   }
   for (const action of ['baixar', 'estornar', 'mover_estagio', 'ganhar', 'perder']) {
-    assert(capabilities.includes(action), `action MCP ausente nas capabilities: ${action}`)
+    assert(capabilities.includes(action), `action Plugin ausente nas capabilities: ${action}`)
   }
 
   const erpRegistry = read('src/products/plugin/server/domain-adapters/erp/erpApiAdapterRegistry.ts')
@@ -31,17 +31,17 @@ function main() {
   assert(crmRegistry.includes('preOAuthCrmApiAdapters'), 'registry API CRM nao usa skeleton pre-OAuth')
 
   const domainTools = read('src/products/plugin/server/domainTools.ts')
-  assert(domainTools.includes('createIntegrationMcpActionAudit'), 'actions MCP nao gravam audit')
+  assert(domainTools.includes('createIntegrationPluginActionAudit'), 'actions Plugin nao gravam audit')
   assert(domainTools.includes('listar_live') && domainTools.includes('ler_live'), 'actions live nao estao expostas')
 
-  const route = read('src/app/api/integracoes/connections/[id]/mcp-permissions/route.ts')
+  const route = read('src/app/api/integracoes/connections/[id]/plugin-permissions/route.ts')
   assert(route.includes('assertCanManageIntegrationConnection'), 'rota de permissoes sem authz')
   assert(route.includes('liveReadResources'), 'rota de permissoes sem liveReadResources')
 
-  const migration38 = read('scripts/sql/38_integracoes_mcp_live_read_permissions.sql')
-  const migration39 = read('scripts/sql/39_integracoes_mcp_action_audit.sql')
+  const migration38 = read('scripts/sql/38_integracoes_plugin_live_read_permissions.sql')
+  const migration39 = read('scripts/sql/39_integracoes_plugin_action_audit.sql')
   assert(migration38.includes('live_read_resources'), 'migration 38 sem live_read_resources')
-  assert(migration39.includes('mcp_action_audit'), 'migration 39 sem mcp_action_audit')
+  assert(migration39.includes('plugin_action_audit'), 'migration 39 sem plugin_action_audit')
 
   console.log('connected pre-oauth smoke ok')
 }

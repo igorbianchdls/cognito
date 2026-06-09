@@ -12,7 +12,7 @@ ChatGPT App, Claude App, Plugin, tools MCP, artifacts e integracoes.
 - `src/products/integracoes`: UI propria principal para conectar e administrar fontes.
 - `src/app/.well-known`: discovery dos hosts externos.
 - `src/app/api/chatgpt-app`, `src/app/api/claude-app`, `src/app/api/integracoes`, `src/app/api/artifacts`: APIs que continuam ativas.
-- `src/app/artifacts`: rotas publicas de dashboards, reports e slides.
+- `src/app/artifacts`: rotas publicas de dashboards.
 - `src/app/internal/mcp-ui`: galeria interna para validar as UIs das tools.
 
 ## Fases executadas
@@ -31,7 +31,7 @@ ChatGPT App, Claude App, Plugin, tools MCP, artifacts e integracoes.
 
 ## Modulos candidatos a remocao restante
 
-- `src/products/bi/json-render`: ainda e usado pelos renderers de dashboard, report e slide; mover para `src/products/artifacts` em uma refatoracao dedicada se quiser eliminar o namespace `bi`.
+- `src/products/bi/json-render`: ainda e usado pelos renderers de dashboard; mover para `src/products/artifacts` em uma refatoracao dedicada se quiser eliminar o namespace `bi`.
 
 ## Dependencias candidatas a remocao futura
 

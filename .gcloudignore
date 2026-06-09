@@ -1,0 +1,9 @@
+.git
+.next
+node_modules
+**/node_modules
+*.log
+.env
+.env.*
+!.env.example
+src/products/integracoes/cloud/.env.example

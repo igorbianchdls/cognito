@@ -33,7 +33,9 @@ export function createControlApiServer(): ControlApiServer {
           || request.path === '/sync'
           || request.path === '/scheduled-sync'
         )
-        && !isInternalRequestAuthorized(request.headers)
+        && !(await isInternalRequestAuthorized(request.headers, {
+          allowGoogleOidc: request.path === '/scheduled-sync',
+        }))
       ) {
         return {
           status: 401,
