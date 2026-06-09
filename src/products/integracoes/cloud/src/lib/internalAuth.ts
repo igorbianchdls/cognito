@@ -1,4 +1,4 @@
-import { createPublicKey, createVerify, timingSafeEqual, type KeyObject } from 'node:crypto'
+import { createPublicKey, createVerify, timingSafeEqual, type JsonWebKey, type KeyObject } from 'node:crypto'
 
 type HeaderValue = string | string[] | undefined
 type JwtPayload = {
