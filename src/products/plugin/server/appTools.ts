@@ -889,7 +889,7 @@ function buildDashboardEmbedUrl(artifactId: string, version?: unknown) {
   return `${baseUrl}${baseUrl.includes('?') ? '&' : '?'}${params.toString()}`
 }
 
-function getArtifactKind(value: unknown) {
+function getArtifactKind(value: unknown): 'dashboard' | null {
   const kind = String(value || '').trim()
   if (kind === 'dashboard') return kind
   return null
@@ -995,7 +995,7 @@ async function callDashboards(args: unknown) {
   const labels = getArtifactListLabels(artifactKind)
   const query = getSearchQuery(input)
   const limit = normalizeLimit(input.limit, 20, 50)
-  const fetchLimit = Math.max(limit, 20) * (artifactKind === 'all' ? 3 : 1)
+  const fetchLimit = Math.max(limit, 20)
   const artifacts = await listMcpArtifacts({ kind: artifactKind, limit: fetchLimit })
   const filteredArtifacts = artifacts
     .map((dashboard) => withDashboardListEmbedUrl(dashboard as JsonRecord))
