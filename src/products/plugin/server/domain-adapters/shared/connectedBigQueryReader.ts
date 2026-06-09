@@ -1,6 +1,14 @@
-import { BigQuery } from '@google-cloud/bigquery'
+import type { BigQuery } from '@google-cloud/bigquery'
 
-import { getIntegrationPluginPermissions } from '@/products/integracoes/server/integrationConnectionRepository'
+import {
+  createBigQueryClient,
+  getBigQueryProjectId,
+} from '@/lib/bigqueryClient'
+import {
+  getIntegrationBigQueryDestinationForConnection,
+  getIntegrationPluginPermissions,
+} from '@/products/integracoes/server/integrationConnectionRepository'
+import { getTenantBigQueryDatasets } from '@/products/integracoes/shared/tenantBigQueryDatasets'
 import type {
   ConnectedDomainAction,
   ConnectedDomainAdapterInput,
@@ -30,12 +38,7 @@ let bigQueryClient: BigQuery | null = null
 
 function getBigQueryClient() {
   if (!bigQueryClient) {
-    bigQueryClient = new BigQuery({
-      projectId: process.env.GCP_PROJECT_ID
-        || process.env.GOOGLE_CLOUD_PROJECT
-        || process.env.BIGQUERY_PROJECT_ID
-        || undefined,
-    })
+    bigQueryClient = createBigQueryClient()
   }
   return bigQueryClient
 }
@@ -88,9 +91,20 @@ function normalizeProjectId(value: string) {
   return projectId
 }
 
-function getDataset(config: ConnectedBigQueryResourceConfig<string>) {
+async function getDataset<Resource extends string>(
+  input: ReadInput<Resource>,
+  config: ConnectedBigQueryResourceConfig<Resource>,
+) {
+  const destination = await getIntegrationBigQueryDestinationForConnection(input.connection.id, input.tenantId)
+  const destinationConfig = asRecord(destination?.config)
+  const tenantDatasets = getTenantBigQueryDatasets(input.tenantId)
+
   return normalizeBigQueryIdentifier(
     config.dataset
+      || toText(destinationConfig.rawDataset)
+      || toText(destinationConfig.raw_dataset)
+      || toText(destinationConfig.dataset)
+      || tenantDatasets.rawDataset
       || process.env.PLUGIN_BIGQUERY_DATASET
       || process.env.MCP_APPS_BIGQUERY_DATASET
       || process.env.BIGQUERY_CUSTOM_RAW_DATASET
@@ -212,13 +226,8 @@ export async function readConnectedBigQueryResource<Resource extends string>(
     )
   }
 
-  const projectId = normalizeProjectId(
-    process.env.GCP_PROJECT_ID
-      || process.env.GOOGLE_CLOUD_PROJECT
-      || process.env.BIGQUERY_PROJECT_ID
-      || 'creatto-463117',
-  )
-  const dataset = getDataset(config)
+  const projectId = normalizeProjectId(getBigQueryProjectId('creatto-463117') || 'creatto-463117')
+  const dataset = await getDataset(input, config)
   const table = getTable(input.connection.provider, config)
   const fullTable = `\`${projectId}.${dataset}.${table}\``
   const params: JsonRecord = {

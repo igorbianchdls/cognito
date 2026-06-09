@@ -8882,14 +8882,22 @@ async function envOrSecret(provider, envSuffix, secretSuffix) {
   if (envValue) return envValue;
   return (await readSecret(providerSecretRef(provider, secretSuffix)))?.trim() || "";
 }
+function normalizeTokenAuthMethod(provider, value) {
+  const method = value.trim().toLowerCase();
+  if (method === "basic" || method === "client_secret_basic") return "client_secret_basic";
+  if (method === "post" || method === "body" || method === "client_secret_post") return "client_secret_post";
+  return normalizeProviderForSecret(provider) === "conta-azul" ? "client_secret_basic" : "client_secret_post";
+}
 async function getOAuthProviderConfig(provider) {
+  const tokenAuthMethod = await envOrSecret(provider, "TOKEN_AUTH_METHOD", "token-auth-method");
   return {
     clientId: await envOrSecret(provider, "CLIENT_ID", "client-id"),
     clientSecret: await envOrSecret(provider, "CLIENT_SECRET", "client-secret"),
     authorizeUrl: await envOrSecret(provider, "AUTHORIZE_URL", "authorize-url"),
     tokenUrl: await envOrSecret(provider, "TOKEN_URL", "token-url"),
     redirectUri: process.env[envName(provider, "REDIRECT_URI")]?.trim() || process.env.INTEGRATIONS_OAUTH_REDIRECT_URI?.trim() || "",
-    scopes: await envOrSecret(provider, "SCOPES", "scopes")
+    scopes: await envOrSecret(provider, "SCOPES", "scopes"),
+    tokenAuthMethod: normalizeTokenAuthMethod(provider, tokenAuthMethod)
   };
 }
 function mapTokenResponse(payload) {
@@ -8902,18 +8910,26 @@ function mapTokenResponse(payload) {
     scope: payload.scope
   };
 }
+function createBasicAuthHeader(clientId, clientSecret) {
+  return `Basic ${Buffer.from(`${clientId}:${clientSecret}`, "utf8").toString("base64")}`;
+}
 async function postTokenRequest(provider, body2) {
   const config = await getOAuthProviderConfig(provider);
   if (!config.clientId || !config.clientSecret || !config.tokenUrl) {
     throw new Error(`OAuth ${provider} nao configurado.`);
   }
-  body2.set("client_id", config.clientId);
-  body2.set("client_secret", config.clientSecret);
+  const headers2 = {
+    "Content-Type": "application/x-www-form-urlencoded"
+  };
+  if (config.tokenAuthMethod === "client_secret_basic") {
+    headers2.Authorization = createBasicAuthHeader(config.clientId, config.clientSecret);
+  } else {
+    body2.set("client_id", config.clientId);
+    body2.set("client_secret", config.clientSecret);
+  }
   const response = await fetch(config.tokenUrl, {
     method: "POST",
-    headers: {
-      "Content-Type": "application/x-www-form-urlencoded"
-    },
+    headers: headers2,
     body: body2,
     signal: AbortSignal.timeout(Number(process.env.INTEGRATIONS_OAUTH_TIMEOUT_MS || 3e4))
   });
@@ -9044,6 +9060,30 @@ function normalizeBigQueryIdentifier(value, label) {
 function getTableApiPath(projectId, dataset, table) {
   return `https://bigquery.googleapis.com/bigquery/v2/projects/${projectId}/datasets/${dataset}/tables/${table}`;
 }
+async function ensureDataset(projectId, dataset) {
+  const existing = await authorizedJsonRequest(
+    `https://bigquery.googleapis.com/bigquery/v2/projects/${projectId}/datasets/${dataset}`,
+    { method: "GET", allowNotFound: true }
+  );
+  if (existing.ok) return;
+  await authorizedJsonRequest(
+    `https://bigquery.googleapis.com/bigquery/v2/projects/${projectId}/datasets`,
+    {
+      method: "POST",
+      body: JSON.stringify({
+        datasetReference: {
+          projectId,
+          datasetId: dataset
+        },
+        location: process.env.BIGQUERY_LOCATION || process.env.GCP_BIGQUERY_LOCATION || "US",
+        labels: {
+          managed_by: "integracoes",
+          dataset_mode: "per_tenant"
+        }
+      })
+    }
+  );
+}
 async function ensureRawTable(projectId, dataset, table) {
   const tableUrl = getTableApiPath(projectId, dataset, table);
   const existing = await authorizedJsonRequest(tableUrl, { method: "GET", allowNotFound: true });
@@ -9112,6 +9152,7 @@ async function writeRowsToBigQuery(input) {
   if (!input.rows.length) {
     return { ok: true, mode: "bigquery", dataset, table, insertedRows: 0 };
   }
+  await ensureDataset(config.projectId, dataset);
   await ensureRawTable(config.projectId, dataset, table);
   const syncedAt = (/* @__PURE__ */ new Date()).toISOString();
   let insertedRows = 0;
@@ -9201,6 +9242,54 @@ async function writeRowsToDestination(input) {
   return writer.writeRows(input);
 }
 
+// src/products/integracoes/shared/tenantBigQueryDatasets.ts
+function toText(value) {
+  return typeof value === "string" ? value.trim() : "";
+}
+function normalizeBigQueryDatasetId(value, label = "dataset") {
+  const normalized = value.trim().toLowerCase().replace(/[^a-z0-9_]+/g, "_").replace(/^_+|_+$/g, "");
+  if (!/^[a-z_][a-z0-9_]{0,1023}$/.test(normalized)) {
+    throw new Error(`${label} BigQuery invalido: ${value}`);
+  }
+  return normalized;
+}
+function getTenantBigQueryDatasets(tenantId) {
+  const normalizedTenantId = Number(tenantId);
+  if (!Number.isInteger(normalizedTenantId) || normalizedTenantId <= 0) {
+    throw new Error(`tenantId invalido para dataset BigQuery: ${tenantId}`);
+  }
+  return {
+    rawDataset: normalizeBigQueryDatasetId(`integrations_tenant_${normalizedTenantId}_raw`, "rawDataset"),
+    normalizedDataset: normalizeBigQueryDatasetId(
+      `integrations_tenant_${normalizedTenantId}_normalized`,
+      "normalizedDataset"
+    )
+  };
+}
+function buildTenantBigQueryDestinationConfig(tenantId, input, fallbackProjectId) {
+  const config = input || {};
+  const requestedMode = toText(config.datasetMode ?? config.dataset_mode);
+  const datasetMode = requestedMode === "shared" ? "shared" : "per_tenant";
+  const tenantDatasets = getTenantBigQueryDatasets(tenantId);
+  const rawDataset = datasetMode === "shared" ? normalizeBigQueryDatasetId(
+    toText(config.rawDataset ?? config.raw_dataset ?? config.dataset) || tenantDatasets.rawDataset,
+    "rawDataset"
+  ) : tenantDatasets.rawDataset;
+  const normalizedDataset = datasetMode === "shared" ? normalizeBigQueryDatasetId(
+    toText(config.normalizedDataset ?? config.normalized_dataset) || tenantDatasets.normalizedDataset,
+    "normalizedDataset"
+  ) : tenantDatasets.normalizedDataset;
+  const projectId = toText(config.projectId ?? config.project_id) || toText(fallbackProjectId) || void 0;
+  return {
+    ...config,
+    ...projectId ? { projectId } : {},
+    datasetMode,
+    dataset: rawDataset,
+    rawDataset,
+    normalizedDataset
+  };
+}
+
 // src/products/integracoes/cloud/src/worker/jobs/runSyncJob.ts
 function defaultBigQueryDestination(tenantId) {
   return {
@@ -9209,10 +9298,7 @@ function defaultBigQueryDestination(tenantId) {
     type: "bigquery",
     name: "BigQuery padrao",
     status: "active",
-    config: {
-      rawDataset: process.env.BIGQUERY_CUSTOM_RAW_DATASET || "integrations_custom_raw",
-      normalizedDataset: process.env.BIGQUERY_NORMALIZED_DATASET || "integrations_normalized"
-    },
+    config: buildTenantBigQueryDestinationConfig(tenantId, {}, process.env.GCP_PROJECT_ID || "creatto-463117"),
     secretRef: null,
     metadata: { implicit: true }
   };

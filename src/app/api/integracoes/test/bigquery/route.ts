@@ -1,11 +1,16 @@
-import { BigQuery } from '@google-cloud/bigquery'
+import type { BigQuery } from '@google-cloud/bigquery'
 import { NextRequest } from 'next/server'
 
+import {
+  createBigQueryClient,
+  getBigQueryProjectId,
+} from '@/lib/bigqueryClient'
 import {
   integrationAuthErrorResponse,
   resolveIntegrationTenant,
 } from '@/products/integracoes/server/integrationTenantAuth'
 import { getIntegrationsCloudConfig } from '@/products/integracoes/cloud/src/config/gcpConfig'
+import { getTenantBigQueryDatasets } from '@/products/integracoes/shared/tenantBigQueryDatasets'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -82,15 +87,12 @@ export async function GET(req: NextRequest) {
       access: 'manage',
     })
     const config = getIntegrationsCloudConfig()
-    const projectId = process.env.GCP_PROJECT_ID
-      || process.env.GOOGLE_CLOUD_PROJECT
-      || process.env.BIGQUERY_PROJECT_ID
-      || config.projectId
-    const client = new BigQuery({ projectId })
+    const projectId = getBigQueryProjectId(config.projectId) || config.projectId
+    const client = createBigQueryClient({ projectId })
+    const tenantDatasets = getTenantBigQueryDatasets(tenant.tenantId)
     const datasets = [
-      config.bigQuery.customRawDataset,
-      config.bigQuery.fivetranRawDataset,
-      config.bigQuery.normalizedDataset,
+      tenantDatasets.rawDataset,
+      tenantDatasets.normalizedDataset,
     ]
 
     const diagnostics = await Promise.all(

@@ -46,6 +46,7 @@ import {
   normalizeConnectionStatus,
   normalizeSyncRunStatus,
 } from '@/products/integracoes/server/integrationStatusMapper'
+import { buildTenantBigQueryDestinationConfig } from '@/products/integracoes/shared/tenantBigQueryDatasets'
 
 type JsonObject = Record<string, unknown>
 
@@ -421,6 +422,20 @@ function compactMetadata(metadata: unknown): JsonObject {
     : {}
 }
 
+function getDefaultBigQueryProjectId() {
+  return process.env.GCP_PROJECT_ID || 'creatto-463117'
+}
+
+function normalizeDestinationConfig(
+  tenantId: number,
+  type: IntegrationDestinationType,
+  config: unknown,
+): JsonObject {
+  const normalizedConfig = asJsonObject(config)
+  if (type !== 'bigquery') return normalizedConfig
+  return buildTenantBigQueryDestinationConfig(tenantId, normalizedConfig, getDefaultBigQueryProjectId())
+}
+
 async function queryConnectionById(
   client: Pick<SQLClient, 'query'>,
   id: string,
@@ -468,7 +483,35 @@ async function ensureDefaultBigQueryDestination(
     [tenantId],
   )
   const existingRow = existing.rows[0] as DbDestinationRow | undefined
-  if (existingRow) return toDestination(existingRow)
+  if (existingRow) {
+    const currentConfig = asJsonObject(existingRow.config)
+    const desiredConfig = normalizeDestinationConfig(tenantId, 'bigquery', currentConfig)
+    const needsTenantDataset = currentConfig.datasetMode !== 'per_tenant'
+      || currentConfig.rawDataset !== desiredConfig.rawDataset
+      || currentConfig.normalizedDataset !== desiredConfig.normalizedDataset
+
+    if (!needsTenantDataset) return toDestination(existingRow)
+
+    const updated = await client.query(
+      `UPDATE integrations.destinations
+       SET
+         config = $3::jsonb,
+         metadata = metadata || $4::jsonb,
+         updated_at = now()
+       WHERE id = $1 AND tenant_id = $2
+       RETURNING *`,
+      [
+        existingRow.id,
+        tenantId,
+        JSON.stringify(desiredConfig),
+        JSON.stringify({
+          datasetModeMigratedAt: new Date().toISOString(),
+          datasetMode: 'per_tenant',
+        }),
+      ],
+    )
+    return toDestination(updated.rows[0] as DbDestinationRow)
+  }
 
   const result = await client.query(
     `INSERT INTO integrations.destinations
@@ -478,11 +521,7 @@ async function ensureDefaultBigQueryDestination(
      RETURNING *`,
     [
       tenantId,
-      JSON.stringify({
-        projectId: process.env.GCP_PROJECT_ID || 'creatto-463117',
-        rawDataset: process.env.BIGQUERY_CUSTOM_RAW_DATASET || 'integrations_custom_raw',
-        normalizedDataset: process.env.BIGQUERY_NORMALIZED_DATASET || 'integrations_normalized',
-      }),
+      JSON.stringify(normalizeDestinationConfig(tenantId, 'bigquery', {})),
       JSON.stringify({ isDefault: true, createdBy: 'integracoes-api' }),
     ],
   )
@@ -590,6 +629,8 @@ export async function listIntegrationDestinations(params?: {
 export async function createIntegrationDestination(
   input: CreateIntegrationDestinationInput,
 ): Promise<IntegrationDestination> {
+  const tenantId = Number(input.tenantId || 1)
+  const destinationType = normalizeDestinationType(input.type)
   const result = await runQuery<DbDestinationRow>(
     `INSERT INTO integrations.destinations
       (tenant_id, type, name, status, config, secret_ref, metadata, updated_at)
@@ -597,11 +638,11 @@ export async function createIntegrationDestination(
       ($1, $2, $3, $4, $5::jsonb, $6, $7::jsonb, now())
      RETURNING *`,
     [
-      Number(input.tenantId || 1),
-      normalizeDestinationType(input.type),
+      tenantId,
+      destinationType,
       input.name,
       normalizeDestinationStatus(input.status),
-      JSON.stringify(input.config || {}),
+      JSON.stringify(normalizeDestinationConfig(tenantId, destinationType, input.config || {})),
       input.secretRef || null,
       JSON.stringify(input.metadata || {}),
     ],
@@ -623,6 +664,10 @@ export async function updateIntegrationDestination(
   )
   const row = current[0]
   if (!row) return null
+  const destinationType = normalizeDestinationType(row.type)
+  const nextConfig = input.config == null
+    ? asJsonObject(row.config)
+    : normalizeDestinationConfig(tenantId, destinationType, input.config)
 
   const result = await runQuery<DbDestinationRow>(
     `UPDATE integrations.destinations
@@ -640,12 +685,50 @@ export async function updateIntegrationDestination(
       tenantId,
       input.name == null ? row.name : input.name,
       input.status == null ? row.status : normalizeDestinationStatus(input.status),
-      JSON.stringify(input.config == null ? asJsonObject(row.config) : input.config),
+      JSON.stringify(nextConfig),
       input.secretRef === undefined ? row.secret_ref : input.secretRef,
       JSON.stringify(input.metadata ? { ...asJsonObject(row.metadata), ...input.metadata } : asJsonObject(row.metadata)),
     ],
   )
   return result[0] ? toDestination(result[0]) : null
+}
+
+export async function getIntegrationBigQueryDestinationForConnection(
+  connectionId: string,
+  tenantId = 1,
+): Promise<IntegrationDestination | null> {
+  const rows = await runQuery<DbDestinationRow>(
+    `SELECT d.*
+     FROM integrations.pipelines p
+     JOIN integrations.destinations d
+       ON d.id = p.destination_id
+      AND d.tenant_id = p.tenant_id
+     WHERE p.tenant_id = $1
+       AND p.source_connection_id = $2
+       AND p.status IN ('active', 'draft')
+       AND d.type = 'bigquery'
+       AND d.status = 'active'
+     ORDER BY
+       CASE WHEN p.status = 'active' THEN 0 ELSE 1 END,
+       p.updated_at DESC,
+       p.id DESC
+     LIMIT 1`,
+    [tenantId, connectionId],
+  )
+  if (rows[0]) return toDestination(rows[0])
+
+  const defaults = await runQuery<DbDestinationRow>(
+    `SELECT *
+     FROM integrations.destinations
+     WHERE tenant_id = $1
+       AND type = 'bigquery'
+       AND status = 'active'
+       AND (metadata->>'isDefault') = 'true'
+     ORDER BY id ASC
+     LIMIT 1`,
+    [tenantId],
+  )
+  return defaults[0] ? toDestination(defaults[0]) : null
 }
 
 export async function listIntegrationPipelines(params?: {

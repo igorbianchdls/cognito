@@ -39,6 +39,32 @@ function getTableApiPath(projectId: string, dataset: string, table: string) {
   return `https://bigquery.googleapis.com/bigquery/v2/projects/${projectId}/datasets/${dataset}/tables/${table}`
 }
 
+async function ensureDataset(projectId: string, dataset: string) {
+  const existing = await authorizedJsonRequest<unknown>(
+    `https://bigquery.googleapis.com/bigquery/v2/projects/${projectId}/datasets/${dataset}`,
+    { method: 'GET', allowNotFound: true },
+  )
+  if (existing.ok) return
+
+  await authorizedJsonRequest<unknown>(
+    `https://bigquery.googleapis.com/bigquery/v2/projects/${projectId}/datasets`,
+    {
+      method: 'POST',
+      body: JSON.stringify({
+        datasetReference: {
+          projectId,
+          datasetId: dataset,
+        },
+        location: process.env.BIGQUERY_LOCATION || process.env.GCP_BIGQUERY_LOCATION || 'US',
+        labels: {
+          managed_by: 'integracoes',
+          dataset_mode: 'per_tenant',
+        },
+      }),
+    },
+  )
+}
+
 async function ensureRawTable(projectId: string, dataset: string, table: string) {
   const tableUrl = getTableApiPath(projectId, dataset, table)
   const existing = await authorizedJsonRequest<unknown>(tableUrl, { method: 'GET', allowNotFound: true })
@@ -115,6 +141,7 @@ export async function writeRowsToBigQuery(input: BigQueryWriteInput): Promise<Bi
     return { ok: true, mode: 'bigquery', dataset, table, insertedRows: 0 }
   }
 
+  await ensureDataset(config.projectId, dataset)
   await ensureRawTable(config.projectId, dataset, table)
 
   const syncedAt = new Date().toISOString()

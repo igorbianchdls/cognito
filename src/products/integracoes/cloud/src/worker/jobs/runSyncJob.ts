@@ -14,6 +14,7 @@ import {
   writeIntegrationCursor,
   type CloudIntegrationDestination,
 } from '@/products/integracoes/cloud/src/lib/postgresStatus'
+import { buildTenantBigQueryDestinationConfig } from '@/products/integracoes/shared/tenantBigQueryDatasets'
 
 export type RunSyncJobInput = {
   tenantId: number
@@ -49,10 +50,7 @@ function defaultBigQueryDestination(tenantId: number): CloudIntegrationDestinati
     type: 'bigquery',
     name: 'BigQuery padrao',
     status: 'active',
-    config: {
-      rawDataset: process.env.BIGQUERY_CUSTOM_RAW_DATASET || 'integrations_custom_raw',
-      normalizedDataset: process.env.BIGQUERY_NORMALIZED_DATASET || 'integrations_normalized',
-    },
+    config: buildTenantBigQueryDestinationConfig(tenantId, {}, process.env.GCP_PROJECT_ID || 'creatto-463117'),
     secretRef: null,
     metadata: { implicit: true },
   }

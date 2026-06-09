@@ -306,7 +306,7 @@ export default function IntegracoesTestePage() {
           status: 'active',
           config: {
             projectId: 'creatto-463117',
-            dataset: 'integrations_custom_raw',
+            datasetMode: 'per_tenant',
           },
           metadata: {
             smokeTest: true,
