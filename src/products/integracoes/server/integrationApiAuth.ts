@@ -26,6 +26,14 @@ function getBearerToken(req: Request) {
   return auth.toLowerCase().startsWith('bearer ') ? auth.slice(7).trim() : ''
 }
 
+export function hasValidIntegracoesApiToken(req: Request) {
+  const expectedToken = String(process.env.INTEGRACOES_API_TOKEN || '').trim()
+  if (!expectedToken) return false
+
+  const token = getBearerToken(req) || String(req.headers.get('x-integracoes-api-token') || '').trim()
+  return Boolean(token && timingSafeTextEqual(token, expectedToken))
+}
+
 export function getIntegrationRequestTenantId(req: Request): number | null {
   const headerTenant = Number.parseInt((req.headers.get('x-tenant-id') || '').trim(), 10)
   return Number.isFinite(headerTenant) && headerTenant > 0 ? headerTenant : null
@@ -45,8 +53,7 @@ export function assertIntegracoesApiToken(req: Request) {
   const expectedToken = String(process.env.INTEGRACOES_API_TOKEN || '').trim()
   if (!expectedToken) return
 
-  const token = getBearerToken(req) || String(req.headers.get('x-integracoes-api-token') || '').trim()
-  if (!token || !timingSafeTextEqual(token, expectedToken)) {
+  if (!hasValidIntegracoesApiToken(req)) {
     throw new IntegrationApiAuthError('Token de integracoes invalido.', {
       status: 401,
       code: 'integracoes_unauthorized',

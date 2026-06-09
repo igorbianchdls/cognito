@@ -4,16 +4,15 @@ import {
   createIntegrationPipeline,
   listIntegrationPipelines,
 } from '@/products/integracoes/server/integrationConnectionRepository'
+import {
+  integrationAuthErrorResponse,
+  resolveIntegrationTenant,
+} from '@/products/integracoes/server/integrationTenantAuth'
 import type { IntegrationPipelineStatus } from '@/products/integracoes/shared/contracts/pipelineContracts'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
 export const revalidate = 0
-
-function asTenantId(value: unknown): number {
-  const parsed = Number(value || 1)
-  return Number.isFinite(parsed) && parsed > 0 ? parsed : 1
-}
 
 function asRecord(value: unknown): Record<string, unknown> {
   return value && typeof value === 'object' && !Array.isArray(value) ? value as Record<string, unknown> : {}
@@ -31,20 +30,38 @@ function asPipelineStatus(value: unknown): IntegrationPipelineStatus | undefined
 }
 
 export async function GET(req: NextRequest) {
-  const pipelines = await listIntegrationPipelines({
-    tenantId: asTenantId(req.nextUrl.searchParams.get('tenantId')),
-    sourceConnectionId: req.nextUrl.searchParams.get('sourceConnectionId') || req.nextUrl.searchParams.get('connectionId') || undefined,
-    destinationId: req.nextUrl.searchParams.get('destinationId') || undefined,
-    status: asPipelineStatus(req.nextUrl.searchParams.get('status')),
-  })
-  return Response.json({ ok: true, pipelines })
+  try {
+    const { tenantId } = await resolveIntegrationTenant(req, {
+      requestedTenantId: req.nextUrl.searchParams.get('tenantId') || req.nextUrl.searchParams.get('tenant_id'),
+      access: 'read',
+    })
+    const pipelines = await listIntegrationPipelines({
+      tenantId,
+      sourceConnectionId: req.nextUrl.searchParams.get('sourceConnectionId') || req.nextUrl.searchParams.get('connectionId') || undefined,
+      destinationId: req.nextUrl.searchParams.get('destinationId') || undefined,
+      status: asPipelineStatus(req.nextUrl.searchParams.get('status')),
+    })
+    return Response.json({ ok: true, pipelines })
+  } catch (error) {
+    const authResponse = integrationAuthErrorResponse(error)
+    if (authResponse) return authResponse
+
+    return Response.json(
+      { ok: false, error: error instanceof Error ? error.message : 'Erro ao listar pipelines' },
+      { status: 500 },
+    )
+  }
 }
 
 export async function POST(req: NextRequest) {
   try {
     const payload = (await req.json().catch(() => ({}))) as Record<string, unknown>
+    const { tenantId } = await resolveIntegrationTenant(req, {
+      requestedTenantId: payload.tenantId ?? payload.tenant_id,
+      access: 'manage',
+    })
     const pipeline = await createIntegrationPipeline({
-      tenantId: asTenantId(payload.tenantId ?? payload.tenant_id),
+      tenantId,
       sourceConnectionId: String(payload.sourceConnectionId ?? payload.source_connection_id ?? payload.connectionId ?? ''),
       destinationId: String(payload.destinationId ?? payload.destination_id ?? ''),
       name: payload.name == null ? undefined : String(payload.name),
@@ -58,6 +75,9 @@ export async function POST(req: NextRequest) {
     if (!pipeline) return Response.json({ ok: false, error: 'Conexao ou destino nao encontrado' }, { status: 404 })
     return Response.json({ ok: true, pipeline }, { status: 201 })
   } catch (error) {
+    const authResponse = integrationAuthErrorResponse(error)
+    if (authResponse) return authResponse
+
     return Response.json(
       { ok: false, error: error instanceof Error ? error.message : 'Erro ao criar pipeline' },
       { status: 500 },

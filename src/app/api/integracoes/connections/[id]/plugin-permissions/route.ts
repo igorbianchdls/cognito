@@ -7,18 +7,16 @@ import {
 } from '@/products/integracoes/server/integrationConnectionRepository'
 import {
   assertCanManageIntegrationConnection,
-  assertIntegrationTenantRequest,
   IntegrationApiAuthError,
 } from '@/products/integracoes/server/integrationApiAuth'
+import {
+  integrationAuthErrorResponse,
+  resolveIntegrationTenant,
+} from '@/products/integracoes/server/integrationTenantAuth'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
 export const revalidate = 0
-
-function asTenantId(value: unknown): number {
-  const parsed = Number(value || 1)
-  return Number.isFinite(parsed) && parsed > 0 ? parsed : 1
-}
 
 function asStringArray(value: unknown): string[] | undefined {
   if (!Array.isArray(value)) return undefined
@@ -35,11 +33,13 @@ export async function GET(
 ) {
   try {
     const { id } = await context.params
-    const tenantId = asTenantId(req.nextUrl.searchParams.get('tenantId') || req.nextUrl.searchParams.get('tenant_id'))
-    assertIntegrationTenantRequest(req, tenantId)
+    const { tenantId, authMode } = await resolveIntegrationTenant(req, {
+      requestedTenantId: req.nextUrl.searchParams.get('tenantId') || req.nextUrl.searchParams.get('tenant_id'),
+      access: 'manage',
+    })
     const connection = await getIntegrationConnection(id, tenantId)
     if (!connection) return Response.json({ ok: false, error: 'Conexao nao encontrada' }, { status: 404 })
-    assertCanManageIntegrationConnection(req, connection)
+    if (authMode === 'api_token') assertCanManageIntegrationConnection(req, connection)
 
     const permissions = await getIntegrationPluginPermissions(id, tenantId)
     return Response.json({
@@ -60,6 +60,9 @@ export async function GET(
       },
     })
   } catch (error) {
+    const authResponse = integrationAuthErrorResponse(error)
+    if (authResponse) return authResponse
+
     if (error instanceof IntegrationApiAuthError) {
       return Response.json({ ok: false, code: error.code, error: error.message }, { status: error.status })
     }
@@ -77,11 +80,13 @@ export async function PATCH(
   try {
     const { id } = await context.params
     const payload = (await req.json().catch(() => ({}))) as Record<string, unknown>
-    const tenantId = asTenantId(payload.tenantId || payload.tenant_id || req.nextUrl.searchParams.get('tenantId'))
-    assertIntegrationTenantRequest(req, tenantId)
+    const { tenantId, authMode } = await resolveIntegrationTenant(req, {
+      requestedTenantId: payload.tenantId || payload.tenant_id || req.nextUrl.searchParams.get('tenantId'),
+      access: 'manage',
+    })
     const connection = await getIntegrationConnection(id, tenantId)
     if (!connection) return Response.json({ ok: false, error: 'Conexao nao encontrada' }, { status: 404 })
-    assertCanManageIntegrationConnection(req, connection)
+    if (authMode === 'api_token') assertCanManageIntegrationConnection(req, connection)
 
     const permissions = await upsertIntegrationPluginPermissions({
       tenantId,
@@ -103,6 +108,9 @@ export async function PATCH(
 
     return Response.json({ ok: true, permissions })
   } catch (error) {
+    const authResponse = integrationAuthErrorResponse(error)
+    if (authResponse) return authResponse
+
     if (error instanceof IntegrationApiAuthError) {
       return Response.json({ ok: false, code: error.code, error: error.message }, { status: error.status })
     }

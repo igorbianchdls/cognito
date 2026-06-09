@@ -13,17 +13,16 @@ import {
   mapIntegrationEventTypeToUi,
   mapSyncRunStatusToUi,
 } from '@/products/integracoes/server/integrationStatusMapper'
+import {
+  integrationAuthErrorResponse,
+  resolveIntegrationTenant,
+} from '@/products/integracoes/server/integrationTenantAuth'
 import type { IntegrationConnectionStatus } from '@/products/integracoes/shared/contracts/connectionContracts'
 import type { IntegrationSyncMode } from '@/products/integracoes/shared/providers/providerTypes'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
 export const revalidate = 0
-
-function asTenantId(value: unknown): number {
-  const parsed = Number(value || 1)
-  return Number.isFinite(parsed) && parsed > 0 ? parsed : 1
-}
 
 function asStringArray(value: unknown): string[] | undefined {
   if (!Array.isArray(value)) return undefined
@@ -36,7 +35,10 @@ export async function GET(
 ) {
   try {
     const { id } = await context.params
-    const tenantId = asTenantId(req.nextUrl.searchParams.get('tenantId') || req.nextUrl.searchParams.get('tenant_id'))
+    const { tenantId } = await resolveIntegrationTenant(req, {
+      requestedTenantId: req.nextUrl.searchParams.get('tenantId') || req.nextUrl.searchParams.get('tenant_id'),
+      access: 'read',
+    })
     const connection = await getIntegrationConnection(id, tenantId)
     if (!connection) return Response.json({ ok: false, error: 'Conexao nao encontrada' }, { status: 404 })
 
@@ -68,6 +70,9 @@ export async function GET(
       })),
     })
   } catch (error) {
+    const authResponse = integrationAuthErrorResponse(error)
+    if (authResponse) return authResponse
+
     return Response.json(
       { ok: false, error: error instanceof Error ? error.message : 'Erro ao carregar conexao' },
       { status: 500 },
@@ -82,7 +87,10 @@ export async function PATCH(
   try {
     const { id } = await context.params
     const payload = (await req.json().catch(() => ({}))) as Record<string, unknown>
-    const tenantId = asTenantId(payload.tenantId || payload.tenant_id || req.nextUrl.searchParams.get('tenantId'))
+    const { tenantId } = await resolveIntegrationTenant(req, {
+      requestedTenantId: payload.tenantId || payload.tenant_id || req.nextUrl.searchParams.get('tenantId'),
+      access: 'manage',
+    })
 
     const connection = await updateIntegrationConnection(id, tenantId, {
       displayName: payload.displayName == null && payload.display_name == null
@@ -109,6 +117,9 @@ export async function PATCH(
       },
     })
   } catch (error) {
+    const authResponse = integrationAuthErrorResponse(error)
+    if (authResponse) return authResponse
+
     if (error instanceof IntegrationProviderError) {
       return Response.json(
         { ok: false, code: error.code, error: error.message },

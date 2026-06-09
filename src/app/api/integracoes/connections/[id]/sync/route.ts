@@ -1,16 +1,15 @@
 import { NextRequest } from 'next/server'
 
 import { requestLocalSync } from '@/products/integracoes/server/integrationControlClient'
+import {
+  integrationAuthErrorResponse,
+  resolveIntegrationTenant,
+} from '@/products/integracoes/server/integrationTenantAuth'
 import type { IntegrationSyncTrigger } from '@/products/integracoes/shared/contracts/syncContracts'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
 export const revalidate = 0
-
-function asTenantId(value: unknown): number {
-  const parsed = Number(value || 1)
-  return Number.isFinite(parsed) && parsed > 0 ? parsed : 1
-}
 
 function asStringArray(value: unknown): string[] | undefined {
   if (!Array.isArray(value)) return undefined
@@ -30,15 +29,19 @@ export async function POST(
   try {
     const { id } = await context.params
     const payload = (await req.json().catch(() => ({}))) as Record<string, unknown>
+    const { tenantId, userId, authMode } = await resolveIntegrationTenant(req, {
+      requestedTenantId: payload.tenantId || payload.tenant_id || req.nextUrl.searchParams.get('tenantId'),
+      access: 'manage',
+    })
     const result = await requestLocalSync({
-      tenantId: asTenantId(payload.tenantId || payload.tenant_id || req.nextUrl.searchParams.get('tenantId')),
+      tenantId,
       connectionId: id,
       pipelineId: typeof payload.pipelineId === 'string' ? payload.pipelineId : typeof payload.pipeline_id === 'string' ? payload.pipeline_id : undefined,
       destinationId: typeof payload.destinationId === 'string' ? payload.destinationId : typeof payload.destination_id === 'string' ? payload.destination_id : undefined,
       trigger: asTrigger(payload.trigger),
       resources: asStringArray(payload.resources),
       requestedBy: payload.requestedBy == null && payload.requested_by == null
-        ? 'api'
+        ? userId || authMode
         : String(payload.requestedBy ?? payload.requested_by),
     })
 
@@ -52,6 +55,9 @@ export async function POST(
         : 'Sync local de desenvolvimento registrado como ponto de atencao.',
     })
   } catch (error) {
+    const authResponse = integrationAuthErrorResponse(error)
+    if (authResponse) return authResponse
+
     const message = error instanceof Error ? error.message : 'Erro ao disparar sync'
     const status = message.includes('ainda nao pode sincronizar') || message.includes('Sync real indisponivel') ? 409 : 500
     return Response.json(

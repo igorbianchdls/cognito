@@ -8,16 +8,15 @@ import {
 import { prepareConnectionSetup } from '@/products/integracoes/server/integrationControlClient'
 import { IntegrationProviderError } from '@/products/integracoes/server/integrationProviderRegistry'
 import { mapConnectionStatusToUi } from '@/products/integracoes/server/integrationStatusMapper'
+import {
+  integrationAuthErrorResponse,
+  resolveIntegrationTenant,
+} from '@/products/integracoes/server/integrationTenantAuth'
 import type { IntegrationSyncMode } from '@/products/integracoes/shared/providers/providerTypes'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
 export const revalidate = 0
-
-function asTenantId(value: unknown): number {
-  const parsed = Number(value || 1)
-  return Number.isFinite(parsed) && parsed > 0 ? parsed : 1
-}
 
 function asStringArray(value: unknown): string[] | undefined {
   if (!Array.isArray(value)) return undefined
@@ -39,7 +38,10 @@ function serializeConnection(connection: Awaited<ReturnType<typeof createIntegra
 export async function GET(req: NextRequest) {
   try {
     const search = req.nextUrl.searchParams
-    const tenantId = asTenantId(search.get('tenantId') || search.get('tenant_id'))
+    const { tenantId } = await resolveIntegrationTenant(req, {
+      requestedTenantId: search.get('tenantId') || search.get('tenant_id'),
+      access: 'read',
+    })
     const connections = await listIntegrationConnections({
       tenantId,
       domain: search.get('domain') || undefined,
@@ -56,6 +58,9 @@ export async function GET(req: NextRequest) {
       })),
     })
   } catch (error) {
+    const authResponse = integrationAuthErrorResponse(error)
+    if (authResponse) return authResponse
+
     return Response.json(
       { ok: false, error: error instanceof Error ? error.message : 'Erro ao listar conexoes' },
       { status: 500 },
@@ -71,7 +76,10 @@ export async function POST(req: NextRequest) {
       return Response.json({ ok: false, error: 'provider obrigatorio' }, { status: 400 })
     }
 
-    const tenantId = asTenantId(payload.tenantId || payload.tenant_id)
+    const { tenantId } = await resolveIntegrationTenant(req, {
+      requestedTenantId: payload.tenantId || payload.tenant_id,
+      access: 'manage',
+    })
     const credentials = asCredentials(payload.credentials)
     const connection = await createIntegrationConnection({
       tenantId,
@@ -97,6 +105,9 @@ export async function POST(req: NextRequest) {
       setup,
     }, { status: 201 })
   } catch (error) {
+    const authResponse = integrationAuthErrorResponse(error)
+    if (authResponse) return authResponse
+
     if (error instanceof IntegrationProviderError) {
       return Response.json(
         { ok: false, code: error.code, error: error.message },
