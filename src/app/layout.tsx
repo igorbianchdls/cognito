@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { ClerkProvider } from "@clerk/nextjs";
 import { Geist, Geist_Mono, Inter, PT_Serif, Noto_Serif, Libre_Baskerville, Crimson_Text, Amiri, Radley, IBM_Plex_Mono, Space_Mono, Roboto_Mono, EB_Garamond, Barlow } from "next/font/google";
 import "./globals.css";
 
@@ -103,7 +104,9 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} ${inter.variable} ${ptSerif.variable} ${notoSerif.variable} ${libreBaskerville.variable} ${crimsonText.variable} ${amiri.variable} ${radley.variable} ${ibmPlexMono.variable} ${spaceMono.variable} ${robotoMono.variable} ${ebGaramond.variable} ${barlow.variable} antialiased bg-gray-100 font-geist`}
       >
-        {children}
+        <ClerkProvider>
+          {children}
+        </ClerkProvider>
       </body>
     </html>
   );
