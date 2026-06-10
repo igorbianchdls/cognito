@@ -34,6 +34,8 @@ type ClerkProfile = {
   avatarUrl: string | null
 }
 
+export type ClerkProfileInput = ClerkProfile
+
 function toText(value: unknown) {
   return typeof value === 'string' ? value.trim() : ''
 }
@@ -60,6 +62,17 @@ function getTenantName(profile: ClerkProfile) {
   const domain = getEmailDomain(profile.email)
   if (domain) return domain.replace(/(^|-)([a-z])/g, (_, prefix: string, letter: string) => `${prefix}${letter.toUpperCase()}`)
   return profile.fullName ? `${profile.fullName} Workspace` : `${profile.email} Workspace`
+}
+
+function normalizeCompanyName(value: unknown) {
+  const name = toText(value).replace(/\s+/g, ' ')
+  if (name.length < 2) {
+    throw new Error('Nome da empresa deve ter pelo menos 2 caracteres.')
+  }
+  if (name.length > 120) {
+    throw new Error('Nome da empresa deve ter no maximo 120 caracteres.')
+  }
+  return name
 }
 
 function normalizeMembership(row: TenantMembershipRow): AuthTenantMembership {
@@ -159,10 +172,22 @@ async function touchSharedUser(
        email = $2,
        full_name = COALESCE(NULLIF($3, ''), full_name),
        avatar_url = COALESCE(NULLIF($4, ''), avatar_url),
+       metadata = (metadata - 'clerkDeletedAt' - 'clerkDeleted') || jsonb_build_object('source', 'clerk'),
        updated_at = now()
      WHERE id = $1`,
     [user.id, profile.email, profile.fullName || '', profile.avatarUrl || ''],
   )
+}
+
+async function syncSharedUser(
+  client: Pick<SQLClient, 'query'>,
+  profile: ClerkProfile,
+): Promise<SharedUserRow> {
+  let user = await findUserByClerkId(client, profile.clerkUserId)
+  if (!user) user = await linkUserByEmail(client, profile)
+  if (!user) return createSharedUser(client, profile)
+  await touchSharedUser(client, user, profile)
+  return user
 }
 
 async function listMemberships(
@@ -199,8 +224,9 @@ async function createInitialTenant(
   client: Pick<SQLClient, 'query'>,
   sharedUserId: number,
   profile: ClerkProfile,
+  companyName?: string,
 ): Promise<AuthTenantMembership> {
-  const tenantName = getTenantName(profile)
+  const tenantName = companyName ? normalizeCompanyName(companyName) : getTenantName(profile)
   const baseSlug = slugify(tenantName)
   const suffix = profile.clerkUserId.slice(-8).toLowerCase().replace(/[^a-z0-9]+/g, '')
   const slug = `${baseSlug}-${suffix || sharedUserId}`
@@ -219,6 +245,7 @@ async function createInitialTenant(
         createdBy: 'clerk_bootstrap',
         source: 'clerk',
         ownerClerkUserId: profile.clerkUserId,
+        onboardingCompletedAt: new Date().toISOString(),
       }),
     ],
   )
@@ -238,7 +265,7 @@ async function createInitialTenant(
     [
       tenant.id,
       sharedUserId,
-      JSON.stringify({ createdBy: 'clerk_bootstrap', source: 'clerk' }),
+      JSON.stringify({ createdBy: 'clerk_bootstrap', source: 'clerk', onboardingRole: 'owner' }),
     ],
   )
 
@@ -250,29 +277,89 @@ async function createInitialTenant(
   }
 }
 
+function buildBootstrapResult(
+  profile: ClerkProfile,
+  sharedUserId: number,
+  memberships: AuthTenantMembership[],
+): ClerkTenantBootstrapResult {
+  return {
+    clerkUserId: profile.clerkUserId,
+    sharedUserId,
+    email: profile.email,
+    fullName: profile.fullName,
+    avatarUrl: profile.avatarUrl,
+    memberships,
+    needsOnboarding: memberships.length === 0,
+    activeTenant: memberships[0] || null,
+  }
+}
+
 export async function ensureClerkTenantBootstrap(): Promise<ClerkTenantBootstrapResult | null> {
   const profile = await getCurrentClerkProfile()
   if (!profile) return null
 
   return withTransaction(async (client) => {
-    let user = await findUserByClerkId(client, profile.clerkUserId)
-    if (!user) user = await linkUserByEmail(client, profile)
-    if (!user) user = await createSharedUser(client, profile)
-    else await touchSharedUser(client, user, profile)
+    const user = await syncSharedUser(client, profile)
+    const sharedUserId = Number(user.id)
+    const memberships = await listMemberships(client, sharedUserId)
 
+    return buildBootstrapResult(profile, sharedUserId, memberships)
+  })
+}
+
+export async function createClerkOnboardingTenant(companyName: string): Promise<ClerkTenantBootstrapResult | null> {
+  const profile = await getCurrentClerkProfile()
+  if (!profile) return null
+
+  return withTransaction(async (client) => {
+    const user = await syncSharedUser(client, profile)
     const sharedUserId = Number(user.id)
     let memberships = await listMemberships(client, sharedUserId)
+
     if (!memberships.length) {
-      memberships = [await createInitialTenant(client, sharedUserId, profile)]
+      memberships = [await createInitialTenant(client, sharedUserId, profile, companyName)]
     }
 
-    return {
-      clerkUserId: profile.clerkUserId,
-      sharedUserId,
-      email: profile.email,
-      fullName: profile.fullName,
-      avatarUrl: profile.avatarUrl,
-      memberships,
-    }
+    return buildBootstrapResult(profile, sharedUserId, memberships)
+  })
+}
+
+export async function syncClerkProfile(profile: ClerkProfileInput): Promise<ClerkTenantBootstrapResult> {
+  return withTransaction(async (client) => {
+    const user = await syncSharedUser(client, profile)
+    const sharedUserId = Number(user.id)
+    const memberships = await listMemberships(client, sharedUserId)
+    return buildBootstrapResult(profile, sharedUserId, memberships)
+  })
+}
+
+export async function markClerkUserDeleted(clerkUserId: string): Promise<boolean> {
+  const id = toText(clerkUserId)
+  if (!id) return false
+
+  return withTransaction(async (client) => {
+    const result = await client.query(
+      `UPDATE shared.users
+       SET
+         metadata = metadata || jsonb_build_object('clerkDeleted', true, 'clerkDeletedAt', now()),
+         updated_at = now()
+       WHERE clerk_user_id = $1
+       RETURNING id`,
+      [id],
+    )
+    const userId = result.rows[0]?.id
+    if (!userId) return false
+
+    await client.query(
+      `UPDATE shared.tenant_memberships
+       SET
+         status = 'suspended',
+         metadata = metadata || jsonb_build_object('suspendedBy', 'clerk_webhook', 'suspendedAt', now()),
+         updated_at = now()
+       WHERE user_id = $1
+         AND status = 'active'`,
+      [userId],
+    )
+    return true
   })
 }

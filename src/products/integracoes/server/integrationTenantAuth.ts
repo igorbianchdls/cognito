@@ -11,11 +11,6 @@ import {
 
 type AccessKind = 'read' | 'manage'
 
-// TEMPORARIO: remover depois dos testes Conta Azul em producao.
-const SMOKE_TEST_HEADER = 'x-integracoes-smoke-test'
-const SMOKE_TEST_HEADER_VALUE = 'conta-azul-tenant-1'
-const SMOKE_TEST_TENANT_ID = 1
-
 export type ResolvedIntegrationTenant = {
   tenantId: number
   tenantName?: string
@@ -23,7 +18,7 @@ export type ResolvedIntegrationTenant = {
   userId?: string
   sharedUserId?: number
   role?: string
-  authMode: 'clerk' | 'api_token' | 'dev_fallback' | 'smoke_test'
+  authMode: 'clerk' | 'api_token' | 'dev_fallback'
 }
 
 function normalizeTenantId(value: unknown): number | null {
@@ -47,10 +42,6 @@ function getDevFallbackTenantId() {
   return normalizeTenantId(process.env.INTEGRACOES_DEV_TENANT_ID)
 }
 
-function hasSmokeTestBypass(req: Request) {
-  return req.headers.get(SMOKE_TEST_HEADER) === SMOKE_TEST_HEADER_VALUE
-}
-
 export async function resolveIntegrationTenant(
   req: Request,
   options?: {
@@ -70,23 +61,6 @@ export async function resolveIntegrationTenant(
     }
   }
 
-  if (hasSmokeTestBypass(req)) {
-    if (explicitTenantId && explicitTenantId !== SMOKE_TEST_TENANT_ID) {
-      throw new IntegrationApiAuthError('Tenant solicitado nao corresponde ao tenant do smoke test.', {
-        status: 403,
-        code: 'tenant_mismatch',
-      })
-    }
-
-    return {
-      tenantId: SMOKE_TEST_TENANT_ID,
-      tenantName: 'Smoke test tenant',
-      tenantSlug: 'smoke-test',
-      role: 'owner',
-      authMode: 'smoke_test',
-    }
-  }
-
   const clerkTenant = await resolveAuthTenant({ requestedTenantId: explicitTenantId, access })
   if (clerkTenant) {
     return {
@@ -101,6 +75,13 @@ export async function resolveIntegrationTenant(
   }
   const clerkBootstrap = await getClerkTenantBootstrapState()
   if (clerkBootstrap) {
+    if (clerkBootstrap.needsOnboarding) {
+      throw new IntegrationApiAuthError('Usuario precisa concluir o onboarding antes de acessar integracoes.', {
+        status: 409,
+        code: 'onboarding_required',
+      })
+    }
+
     const membership = explicitTenantId
       ? clerkBootstrap.memberships.find((item) => item.tenantId === explicitTenantId)
       : clerkBootstrap.memberships[0]

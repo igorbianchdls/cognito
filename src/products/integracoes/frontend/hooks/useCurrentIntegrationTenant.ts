@@ -1,15 +1,13 @@
 'use client'
 
-import { useMemo } from 'react'
-
-const DEFAULT_TENANT_ID = 1
+import { useEffect, useMemo, useState } from 'react'
 
 function parseTenantId(value: unknown): number | null {
   const parsed = Number.parseInt(String(value || '').trim(), 10)
   return Number.isFinite(parsed) && parsed > 0 ? parsed : null
 }
 
-function resolveBrowserTenantId(): number {
+function resolveBrowserTenantId(): number | null {
   if (typeof window !== 'undefined') {
     const params = new URLSearchParams(window.location.search)
     const queryTenant = parseTenantId(params.get('tenantId') || params.get('tenant_id'))
@@ -19,9 +17,47 @@ function resolveBrowserTenantId(): number {
     if (storedTenant) return storedTenant
   }
 
-  return parseTenantId(process.env.NEXT_PUBLIC_DEFAULT_TENANT_ID) || DEFAULT_TENANT_ID
+  return parseTenantId(process.env.NEXT_PUBLIC_DEFAULT_TENANT_ID)
 }
 
 export default function useCurrentIntegrationTenant(): number {
-  return useMemo(() => resolveBrowserTenantId(), [])
+  const initialTenantId = useMemo(() => resolveBrowserTenantId(), [])
+  const [tenantId, setTenantId] = useState(initialTenantId || 0)
+
+  useEffect(() => {
+    let cancelled = false
+
+    async function loadBootstrapTenant() {
+      try {
+        const response = await fetch('/api/auth/bootstrap')
+        const payload = await response.json().catch(() => ({}))
+        if (!response.ok || payload?.ok === false) {
+          if (response.status === 401 && typeof window !== 'undefined') {
+            window.location.assign('/sign-in')
+          }
+          return
+        }
+
+        if (payload?.needsOnboarding && typeof window !== 'undefined') {
+          window.location.assign('/onboarding')
+          return
+        }
+
+        const activeTenantId = parseTenantId(payload?.activeTenant?.tenantId)
+        if (!cancelled && activeTenantId && !initialTenantId) {
+          setTenantId(activeTenantId)
+          window.localStorage.setItem('cognito:tenantId', String(activeTenantId))
+        }
+      } catch {
+        if (!cancelled) setTenantId(initialTenantId || 0)
+      }
+    }
+
+    void loadBootstrapTenant()
+    return () => {
+      cancelled = true
+    }
+  }, [initialTenantId])
+
+  return tenantId
 }

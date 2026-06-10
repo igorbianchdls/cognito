@@ -587,7 +587,9 @@ export default function IntegracoesPage() {
                               Conectores para sincronização contínua/periódica e ingestão de dados em BI/dashboard.
                             </p>
                             <p className="mt-1 text-xs text-gray-500">
-                              Workspace tenant {tenantId}. Conexões pendentes ficam salvas, mas só sincronizam após autorização real.
+                              {tenantId
+                                ? `Workspace tenant ${tenantId}. Conexões pendentes ficam salvas, mas só sincronizam após autorização real.`
+                                : 'Carregando workspace...'}
                             </p>
                           </div>
                           <span className="rounded-full bg-gray-100 px-3 py-1 text-xs font-medium text-gray-700">

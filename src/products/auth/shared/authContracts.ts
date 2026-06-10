@@ -21,4 +21,10 @@ export type AuthTenantContext = AuthUserIdentity & AuthTenantMembership & {
 
 export type ClerkTenantBootstrapResult = AuthUserIdentity & {
   memberships: AuthTenantMembership[]
+  needsOnboarding: boolean
+  activeTenant?: AuthTenantMembership | null
+}
+
+export type AuthBootstrapState = ClerkTenantBootstrapResult & {
+  isAuthenticated: true
 }

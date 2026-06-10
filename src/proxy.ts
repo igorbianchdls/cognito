@@ -5,6 +5,7 @@ const isPublicRoute = createRouteMatcher([
   '/sign-in(.*)',
   '/sign-up(.*)',
   '/__clerk/:path*',
+  '/api/clerk/webhooks(.*)',
   '/api/integracoes(.*)',
   '/api/mcp(.*)',
   '/api/chatgpt-app(.*)',

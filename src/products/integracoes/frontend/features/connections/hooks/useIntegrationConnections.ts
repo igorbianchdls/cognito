@@ -19,7 +19,7 @@ function toolkitKeyFromConnection(connection: IntegrationConnectionWithUi): stri
   return String(toolkitSlug || connection.provider || '').toUpperCase()
 }
 
-export default function useIntegrationConnections(tenantId = 1) {
+export default function useIntegrationConnections(tenantId = 0) {
   const [connections, setConnections] = useState<IntegrationConnectionWithUi[]>([])
   const [selectedConnection, setSelectedConnection] = useState<IntegrationConnectionWithUi | null>(null)
   const [selectedEvents, setSelectedEvents] = useState<IntegrationEventWithUi[]>([])
@@ -29,6 +29,11 @@ export default function useIntegrationConnections(tenantId = 1) {
   const [error, setError] = useState<string | null>(null)
 
   const refreshConnections = useCallback(async () => {
+    if (!tenantId) {
+      setConnections([])
+      return
+    }
+
     setLoading(true)
     setError(null)
     try {
@@ -60,6 +65,7 @@ export default function useIntegrationConnections(tenantId = 1) {
     syncFrequency?: string
     credentials?: Record<string, unknown>
   }) => {
+    if (!tenantId) throw new Error('Tenant ainda nao carregado.')
     setBusyId(params.provider)
     setError(null)
     try {
@@ -82,6 +88,7 @@ export default function useIntegrationConnections(tenantId = 1) {
   }, [refreshConnections, tenantId])
 
   const loadConnectionDetail = useCallback(async (id: string) => {
+    if (!tenantId) throw new Error('Tenant ainda nao carregado.')
     setBusyId(id)
     setError(null)
     try {
@@ -99,6 +106,7 @@ export default function useIntegrationConnections(tenantId = 1) {
   }, [tenantId])
 
   const syncConnection = useCallback(async (connectionId: string, resources?: string[]) => {
+    if (!tenantId) throw new Error('Tenant ainda nao carregado.')
     setBusyId(`sync:${connectionId}`)
     setError(null)
     try {
@@ -121,6 +129,7 @@ export default function useIntegrationConnections(tenantId = 1) {
   }, [loadConnectionDetail, refreshConnections, tenantId])
 
   const reconnectConnection = useCallback(async (connectionId: string) => {
+    if (!tenantId) throw new Error('Tenant ainda nao carregado.')
     setBusyId(`reconnect:${connectionId}`)
     setError(null)
     try {

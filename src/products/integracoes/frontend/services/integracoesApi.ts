@@ -139,14 +139,15 @@ export async function fetchIntegrationConnections(params?: {
 
 export async function fetchIntegrationConnectionDetail(
   id: string,
-  tenantId = 1,
+  tenantId?: number,
 ): Promise<{
   connection: IntegrationConnectionWithUi
   syncRuns: IntegrationSyncRunWithUi[]
   events: IntegrationEventWithUi[]
 }> {
-  const query = buildQuery({ tenantId: String(tenantId) })
-  const payload = await requestJson<ConnectionResponse>(`/api/integracoes/connections/${encodeURIComponent(id)}?${query}`)
+  const query = buildQuery({ tenantId: tenantId ? String(tenantId) : undefined })
+  const suffix = query ? `?${query}` : ''
+  const payload = await requestJson<ConnectionResponse>(`/api/integracoes/connections/${encodeURIComponent(id)}${suffix}`)
 
   if (!payload.connection) throw new Error('Conexão não encontrada')
 
@@ -163,7 +164,7 @@ export async function createIntegrationConnection(
   const payload = await requestJson<CreateConnectionResponse>('/api/integracoes/connections', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ tenantId: input.tenantId || 1, ...input }),
+    body: JSON.stringify(input),
   })
 
   if (!payload.connection) throw new Error('Conexão não retornada')
@@ -195,7 +196,7 @@ export async function requestIntegrationSync(
   const payload = await requestJson<SyncResponse>(`/api/integracoes/connections/${encodeURIComponent(input.connectionId)}/sync`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ tenantId: input.tenantId || 1, ...input }),
+    body: JSON.stringify(input),
   })
 
   if (!payload.result) throw new Error('Resultado de sync não retornado')
@@ -203,19 +204,19 @@ export async function requestIntegrationSync(
   return payload.result
 }
 
-export async function requestIntegrationReconnect(id: string, tenantId = 1): Promise<void> {
+export async function requestIntegrationReconnect(id: string, tenantId?: number): Promise<void> {
   await requestJson(`/api/integracoes/connections/${encodeURIComponent(id)}/reconnect`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ tenantId }),
+    body: JSON.stringify(tenantId ? { tenantId } : {}),
   })
 }
 
 export async function fetchIntegrationPluginPermissions(
   connectionId: string,
-  tenantId = 1,
+  tenantId?: number,
 ): Promise<IntegrationPluginPermissions> {
-  const query = buildQuery({ tenantId: String(tenantId) })
+  const query = buildQuery({ tenantId: tenantId ? String(tenantId) : undefined })
   const payload = await requestJson<PluginPermissionsResponse>(
     `/api/integracoes/connections/${encodeURIComponent(connectionId)}/plugin-permissions?${query}`,
   )

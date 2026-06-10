@@ -50,6 +50,14 @@ import { buildTenantBigQueryDestinationConfig } from '@/products/integracoes/sha
 
 type JsonObject = Record<string, unknown>
 
+function requireTenantId(value: unknown): number {
+  const tenantId = Number(value)
+  if (!Number.isFinite(tenantId) || tenantId <= 0) {
+    throw new Error('tenantId obrigatorio para operacao de integracoes.')
+  }
+  return tenantId
+}
+
 type DbConnectionRow = {
   id: string | number
   tenant_id: number
@@ -532,7 +540,7 @@ async function insertIntegrationPipeline(
   client: Pick<SQLClient, 'query'>,
   input: CreateIntegrationPipelineInput,
 ): Promise<IntegrationPipeline | null> {
-  const tenantId = Number(input.tenantId || 1)
+  const tenantId = requireTenantId(input.tenantId)
   const connection = await queryConnectionById(client, input.sourceConnectionId, tenantId)
   if (!connection) return null
   const destination = await queryDestinationById(client, input.destinationId, tenantId)
@@ -576,7 +584,7 @@ async function insertIntegrationEvent(
       ($1, $2, $3, $4, $5, $6, $7::jsonb)
      RETURNING *`,
     [
-      Number(input.tenantId || 1),
+      requireTenantId(input.tenantId),
       input.connectionId || null,
       normalizeEventType(input.eventType),
       normalizeEventSeverity(input.severity || 'info'),
@@ -599,7 +607,7 @@ export async function listIntegrationDestinations(params?: {
   status?: IntegrationDestinationStatus
   limit?: number
 }): Promise<IntegrationDestination[]> {
-  const tenantId = Number(params?.tenantId || 1)
+  const tenantId = requireTenantId(params?.tenantId)
   const conditions = ['tenant_id = $1']
   const values: unknown[] = [tenantId]
 
@@ -629,7 +637,7 @@ export async function listIntegrationDestinations(params?: {
 export async function createIntegrationDestination(
   input: CreateIntegrationDestinationInput,
 ): Promise<IntegrationDestination> {
-  const tenantId = Number(input.tenantId || 1)
+  const tenantId = requireTenantId(input.tenantId)
   const destinationType = normalizeDestinationType(input.type)
   const result = await runQuery<DbDestinationRow>(
     `INSERT INTO integrations.destinations
@@ -695,7 +703,7 @@ export async function updateIntegrationDestination(
 
 export async function getIntegrationBigQueryDestinationForConnection(
   connectionId: string,
-  tenantId = 1,
+  tenantId: number,
 ): Promise<IntegrationDestination | null> {
   const rows = await runQuery<DbDestinationRow>(
     `SELECT d.*
@@ -738,7 +746,7 @@ export async function listIntegrationPipelines(params?: {
   status?: IntegrationPipelineStatus
   limit?: number
 }): Promise<IntegrationPipeline[]> {
-  const tenantId = Number(params?.tenantId || 1)
+  const tenantId = requireTenantId(params?.tenantId)
   const conditions = ['tenant_id = $1']
   const values: unknown[] = [tenantId]
 
@@ -829,7 +837,7 @@ export async function updateIntegrationPipeline(
 
 export async function getIntegrationPluginPermissions(
   connectionId: string,
-  tenantId = 1,
+  tenantId: number,
 ): Promise<IntegrationPluginPermissions | null> {
   const rows = await runQuery<DbPluginPermissionsRow>(
     `SELECT *
@@ -844,7 +852,7 @@ export async function getIntegrationPluginPermissions(
 export async function upsertIntegrationPluginPermissions(
   input: UpsertIntegrationPluginPermissionsInput,
 ): Promise<IntegrationPluginPermissions> {
-  const tenantId = Number(input.tenantId || 1)
+  const tenantId = requireTenantId(input.tenantId)
   const current = await getIntegrationPluginPermissions(input.connectionId, tenantId)
   const enabled = input.enabled ?? current?.enabled ?? false
   const readResources = input.readResources ?? current?.readResources ?? []
@@ -894,7 +902,7 @@ export async function createIntegrationPluginActionAudit(
       ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15::jsonb, $16::jsonb, $17)
      RETURNING *`,
     [
-      Number(input.tenantId || 1),
+      requireTenantId(input.tenantId),
       input.connectionId || null,
       input.domain,
       input.provider || null,
@@ -922,7 +930,7 @@ export async function listIntegrationPluginActionAudit(params: {
   status?: IntegrationPluginActionAuditStatus
   limit?: number
 }): Promise<IntegrationPluginActionAudit[]> {
-  const tenantId = Number(params.tenantId || 1)
+  const tenantId = requireTenantId(params.tenantId)
   const conditions = ['tenant_id = $1']
   const values: unknown[] = [tenantId]
 
@@ -957,7 +965,7 @@ export async function listIntegrationConnections(params?: {
   status?: string
   limit?: number
 }): Promise<IntegrationConnection[]> {
-  const tenantId = Number(params?.tenantId || 1)
+  const tenantId = requireTenantId(params?.tenantId)
   const conditions = ['tenant_id = $1']
   const values: unknown[] = [tenantId]
 
@@ -989,7 +997,7 @@ export async function listIntegrationConnections(params?: {
   return rows.map(toConnection)
 }
 
-export async function getIntegrationConnection(id: string, tenantId = 1): Promise<IntegrationConnection | null> {
+export async function getIntegrationConnection(id: string, tenantId: number): Promise<IntegrationConnection | null> {
   const rows = await runQuery<DbConnectionRow>(
     `SELECT *
      FROM integrations.connections
@@ -1003,7 +1011,7 @@ export async function getIntegrationConnection(id: string, tenantId = 1): Promis
 export async function createIntegrationConnection(
   input: CreateIntegrationConnectionInput,
 ): Promise<IntegrationConnection> {
-  const tenantId = Number(input.tenantId || 1)
+  const tenantId = requireTenantId(input.tenantId)
   const provider = requireIntegrationProvider(input.provider)
   const selectedResources = normalizeRequestedResources(provider, input.selectedResources)
   const syncModes = input.syncModes?.length ? input.syncModes : provider.syncModes
@@ -1188,7 +1196,7 @@ export async function listIntegrationEvents(params: {
   connectionId?: string
   limit?: number
 }): Promise<IntegrationEvent[]> {
-  const tenantId = Number(params.tenantId || 1)
+  const tenantId = requireTenantId(params.tenantId)
   const limit = Math.min(Math.max(Number(params.limit || 30), 1), 100)
   const conditions = ['tenant_id = $1']
   const values: unknown[] = [tenantId]
@@ -1217,7 +1225,7 @@ export async function listIntegrationSyncRuns(params: {
   connectionId: string
   limit?: number
 }): Promise<IntegrationSyncRun[]> {
-  const tenantId = Number(params.tenantId || 1)
+  const tenantId = requireTenantId(params.tenantId)
   const limit = Math.min(Math.max(Number(params.limit || 20), 1), 100)
   const rows = await runQuery<DbSyncRunRow>(
     `SELECT *
@@ -1241,7 +1249,7 @@ export async function createIntegrationSyncRun(params: {
   resources?: string[]
   metadata?: JsonObject
 }): Promise<IntegrationSyncRun | null> {
-  const tenantId = Number(params.tenantId || 1)
+  const tenantId = requireTenantId(params.tenantId)
   const status = params.status || 'success'
 
   return withTransaction(async (client) => {
