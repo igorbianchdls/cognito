@@ -1,31 +1,13 @@
-import { useCurrentFrame } from 'remotion'
+import { interpolate, useCurrentFrame } from 'remotion'
 
-import type { DataResultStructuredContent } from '@/products/plugin/web/src/types/toolResult'
-import { AnimatedMcpTableView } from '@/remotion/components/AnimatedMcpTableView'
 import {
   ChatGptActionRow,
   ChatGptFlowAssistantText,
   ChatGptFlowUserBubble,
   ChatGptMobileShell,
   ChatGptToolCallCard,
-  ChatGptToolResultCard,
   chatGptSequenceStyle,
 } from '@/remotion/compositions/ChatGptMobileBase'
-
-const toolCallDemoData = {
-  ok: true,
-  tool: 'get_data',
-  view: 'table',
-  title: 'Dados retornados',
-  resource: 'marketing/campaigns',
-  count: 3,
-  columns: ['Campanha', 'Receita', 'ROAS', 'Status'],
-  rows: [
-    { Campanha: 'Search Brand', Receita: 'R$ 42.100', ROAS: '5.8x', Status: 'Forte' },
-    { Campanha: 'Meta Retargeting', Receita: 'R$ 28.900', ROAS: '4.1x', Status: 'Estavel' },
-    { Campanha: 'Shopping Gen', Receita: 'R$ 18.400', ROAS: '2.2x', Status: 'Revisar' },
-  ],
-} satisfies DataResultStructuredContent
 
 export function ChatGptMobileMarketingAnimation() {
   const frame = useCurrentFrame()
@@ -58,24 +40,45 @@ export function ChatGptMobileMarketingAnimation() {
 
 export function ChatGptToolCallDemoAnimation() {
   const frame = useCurrentFrame()
+  const conversationY = interpolate(frame, [0, 240, 420, 620], [0, 0, -220, -430], {
+    extrapolateLeft: 'clamp',
+    extrapolateRight: 'clamp',
+  })
 
   return (
-    <ChatGptMobileShell>
+    <ChatGptMobileShell conversationY={conversationY}>
       <ChatGptFlowUserBubble style={chatGptSequenceStyle(frame, 12, 18)}>
-        Busque os dados das campanhas
+        Analise minhas campanhas de hoje
       </ChatGptFlowUserBubble>
       <ChatGptFlowAssistantText style={chatGptSequenceStyle(frame, 54, 22)}>
-        Vou consultar as campanhas ativas e trazer o resumo.
+        Vou chamar get_data para buscar as campanhas ativas.
       </ChatGptFlowAssistantText>
       <ChatGptToolCallCard
-        status={frame >= 178 ? 'completed' : 'running'}
-        style={chatGptSequenceStyle(frame, 124, 18)}
+        style={chatGptSequenceStyle(frame, 126, 18)}
         toolName="get_data"
       />
-      <ChatGptToolResultCard style={chatGptSequenceStyle(frame, 190, 22)}>
-        <AnimatedMcpTableView data={toolCallDemoData} startFrame={190} />
-      </ChatGptToolResultCard>
-      <div style={chatGptSequenceStyle(frame, 330, 14)}>
+      <ChatGptFlowAssistantText style={chatGptSequenceStyle(frame, 190, 22)}>
+        Agora vou chamar normalize_metrics para padronizar receita, gasto e ROAS.
+      </ChatGptFlowAssistantText>
+      <ChatGptToolCallCard
+        style={chatGptSequenceStyle(frame, 272, 18)}
+        toolName="normalize_metrics"
+      />
+      <ChatGptFlowAssistantText style={chatGptSequenceStyle(frame, 336, 22)}>
+        Vou chamar detect_anomalies para encontrar campanhas fora do padrao.
+      </ChatGptFlowAssistantText>
+      <ChatGptToolCallCard
+        style={chatGptSequenceStyle(frame, 418, 18)}
+        toolName="detect_anomalies"
+      />
+      <ChatGptFlowAssistantText style={chatGptSequenceStyle(frame, 482, 22)}>
+        Por fim vou chamar summarize_actions para montar as proximas acoes.
+      </ChatGptFlowAssistantText>
+      <ChatGptToolCallCard
+        style={chatGptSequenceStyle(frame, 564, 18)}
+        toolName="summarize_actions"
+      />
+      <div style={chatGptSequenceStyle(frame, 642, 14)}>
         <div style={{ padding: '10px 0 0 45px' }}>
           <ChatGptActionRow />
         </div>

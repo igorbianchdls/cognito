@@ -2857,7 +2857,7 @@ const catalog: CatalogItem[] = [
   {
     code: '<ChatGptToolCallDemoAnimation />',
     component: ChatGptToolCallDemoAnimation,
-    description: 'ChatGPT mobile com chamada de tool transparente, borda sutil e resultado estruturado.',
+    description: 'ChatGPT mobile com quatro chamadas de tool transparentes e borda sutil.',
     duration: MCP_SINGLE_ANIMATION_DURATION,
     height: 1920,
     kind: 'Marketing',
