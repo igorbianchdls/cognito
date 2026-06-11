@@ -1,7 +1,9 @@
 import type { CSSProperties, ReactNode } from 'react'
-import { AbsoluteFill, interpolate } from 'remotion'
+import { AbsoluteFill, interpolate, useCurrentFrame } from 'remotion'
 import {
+  CheckCircle2,
   Copy,
+  LoaderCircle,
   Menu,
   Mic,
   MoreHorizontal,
@@ -11,6 +13,7 @@ import {
   ThumbsUp,
   Upload,
   Volume2,
+  Wrench,
 } from 'lucide-react'
 
 import { IOS_REMOTION_FONT_STACK, loadSfProFonts } from '@/remotion/fonts/sfPro'
@@ -168,6 +171,74 @@ export function ChatGptToolResultCard({ children, style }: { children: ReactNode
       }}
     >
       {children}
+    </div>
+  )
+}
+
+export type ChatGptToolCallStatus = 'running' | 'completed'
+
+export function ChatGptToolCallCard({
+  status = 'running',
+  style,
+  toolName,
+}: {
+  status?: ChatGptToolCallStatus
+  style?: CSSProperties
+  toolName: string
+}) {
+  const frame = useCurrentFrame()
+  const pulse = interpolate(Math.sin(frame / 7), [-1, 1], [0.35, 1])
+  const isCompleted = status === 'completed'
+  const StatusIcon = isCompleted ? CheckCircle2 : LoaderCircle
+
+  return (
+    <div
+      style={{
+        ...style,
+        alignItems: 'center',
+        background: 'transparent',
+        border: '1px solid #e4e4e4',
+        borderRadius: 18,
+        boxSizing: 'border-box',
+        color: '#111111',
+        display: 'flex',
+        fontFamily: CHATGPT_MOBILE_FONT_STACK,
+        gap: 18,
+        margin: '0 42px',
+        minHeight: 82,
+        padding: '19px 23px',
+      }}
+    >
+      <div
+        style={{
+          alignItems: 'center',
+          border: '1px solid #dddddd',
+          borderRadius: 14,
+          display: 'flex',
+          height: 44,
+          justifyContent: 'center',
+          width: 44,
+        }}
+      >
+        <Wrench color="#111111" size={25} strokeWidth={2.4} />
+      </div>
+      <div style={{ display: 'grid', gap: 4, minWidth: 0 }}>
+        <span style={{ color: '#111111', fontSize: 30, fontWeight: 620, letterSpacing: 0, lineHeight: 1.05 }}>
+          {toolName}
+        </span>
+        <span style={{ alignItems: 'center', color: '#777777', display: 'flex', fontSize: 23, fontWeight: 520, gap: 8, letterSpacing: 0, lineHeight: 1.05 }}>
+          <StatusIcon
+            color={isCompleted ? '#225f42' : '#777777'}
+            size={22}
+            strokeWidth={2.5}
+            style={{
+              opacity: isCompleted ? 1 : pulse,
+              transform: isCompleted ? 'none' : `rotate(${frame * 7}deg)`,
+            }}
+          />
+          {isCompleted ? 'Concluido' : 'Executando'}
+        </span>
+      </div>
     </div>
   )
 }

@@ -86,7 +86,7 @@ import {
   TableDrilldownAnimation,
   TweetAnimation,
 } from '@/remotion/compositions/McpOperationsDemo'
-import { ChatGptMobileAnimation } from '@/remotion/compositions/ChatGptMobileMarketing'
+import { ChatGptMobileAnimation, ChatGptToolCallDemoAnimation } from '@/remotion/compositions/ChatGptMobileMarketing'
 import { ChatGptOperationalFlowsVideo } from '@/remotion/compositions/ChatGptOperationalFlowsVideo'
 import { ChatGptTaskLauncherAnimation } from '@/remotion/compositions/ChatGptTaskLauncherAnimation'
 import { ClaudeMobileAnimation } from '@/remotion/compositions/ClaudeMobileMarketing'
@@ -2852,6 +2852,18 @@ const catalog: CatalogItem[] = [
     label: 'ChatGPT Task Launcher',
     tags: ['ChatGPT', 'Mobile', 'Prompt', 'Cursor'],
     value: 'marketing-chatgpt-task-launcher',
+    width: 1080,
+  },
+  {
+    code: '<ChatGptToolCallDemoAnimation />',
+    component: ChatGptToolCallDemoAnimation,
+    description: 'ChatGPT mobile com chamada de tool transparente, borda sutil e resultado estruturado.',
+    duration: MCP_SINGLE_ANIMATION_DURATION,
+    height: 1920,
+    kind: 'Marketing',
+    label: 'ChatGPT Tool Call',
+    tags: ['ChatGPT', 'Mobile', 'Tool', 'Assistant'],
+    value: 'marketing-chatgpt-tool-call',
     width: 1080,
   },
   {
