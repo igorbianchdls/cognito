@@ -91,6 +91,11 @@ import { ChatGptOperationalFlowsVideo } from '@/remotion/compositions/ChatGptOpe
 import { ChatGptTaskLauncherAnimation } from '@/remotion/compositions/ChatGptTaskLauncherAnimation'
 import { ClaudeMobileAnimation } from '@/remotion/compositions/ClaudeMobileMarketing'
 import { ClaudeOperationalFlowsVideo } from '@/remotion/compositions/ClaudeOperationalFlowsVideo'
+import {
+  ExpenseClassificationFoldersAction,
+  ExpenseClassificationMatchingAction,
+  ExpenseClassificationTableAction,
+} from '@/remotion/compositions/ExpenseClassificationActions'
 import { TaskLauncherAnimation } from '@/remotion/compositions/TaskLauncherAnimation'
 import {
   AIChatWorkspaceMock,
@@ -153,7 +158,7 @@ import {
   RotatingWords,
 } from '@/remotion/saas/index'
 
-type CatalogKind = 'Componentes' | 'Mockups' | 'Motion' | 'Tipografia Animada' | 'Marketing' | 'Vídeos criados' | 'Galerias' | 'Animações' | 'Logo' | 'Templates'
+type CatalogKind = 'Componentes' | 'Mockups' | 'Motion' | 'Tipografia Animada' | 'Marketing' | 'Vídeos criados' | 'Galerias' | 'Animações' | 'Actions' | 'Logo' | 'Templates'
 
 type CatalogItem = {
   code: string
@@ -1862,7 +1867,7 @@ const catalog: CatalogItem[] = [
     code: '<IntegrationHubMock apps={apps} centerLabel="Ledger AI" theme={theme} />',
     component: IntegrationHubDemo,
     description: 'Hub radial de integrações e sistemas conectados.',
-    kind: 'Marketing',
+    kind: 'Actions',
     label: 'IntegrationHubMock',
     tags: ['Integrations', 'Hub', 'Network'],
     value: 'integration-hub',
@@ -1873,7 +1878,7 @@ const catalog: CatalogItem[] = [
     description: 'Variação de integration hub com mocks orbitando o centro.',
     duration: MCP_SINGLE_ANIMATION_DURATION,
     height: 1920,
-    kind: 'Marketing',
+    kind: 'Actions',
     label: 'Integration Hub Orbit',
     tags: ['SaaS', 'Integration', 'Hub', 'Orbit'],
     value: 'marketing-integration-hub-orbit',
@@ -1885,7 +1890,7 @@ const catalog: CatalogItem[] = [
     description: 'Variação de integration hub com conectores em anéis concêntricos.',
     duration: MCP_SINGLE_ANIMATION_DURATION,
     height: 1920,
-    kind: 'Marketing',
+    kind: 'Actions',
     label: 'Integration Hub Rings',
     tags: ['Integrations', 'Hub', 'Rings'],
     value: 'marketing-integration-hub-rings',
@@ -1897,7 +1902,7 @@ const catalog: CatalogItem[] = [
     description: 'Variação de integration hub com conectores em malha viva.',
     duration: MCP_SINGLE_ANIMATION_DURATION,
     height: 1920,
-    kind: 'Marketing',
+    kind: 'Actions',
     label: 'Integration Hub Mesh',
     tags: ['Integrations', 'Hub', 'Mesh'],
     value: 'marketing-integration-hub-mesh',
@@ -1909,7 +1914,7 @@ const catalog: CatalogItem[] = [
     description: 'Variação de integration hub com docks laterais alimentando o centro.',
     duration: MCP_SINGLE_ANIMATION_DURATION,
     height: 1920,
-    kind: 'Marketing',
+    kind: 'Actions',
     label: 'Integration Hub Dock',
     tags: ['Integrations', 'Hub', 'Dock'],
     value: 'marketing-integration-hub-dock',
@@ -1921,7 +1926,7 @@ const catalog: CatalogItem[] = [
     description: 'Integração em timeline, com cada conector como etapa de sincronização.',
     duration: MCP_SINGLE_ANIMATION_DURATION,
     height: 1920,
-    kind: 'Marketing',
+    kind: 'Actions',
     label: 'Integration Timeline',
     tags: ['Integrations', 'Timeline', 'Sync'],
     value: 'marketing-integration-timeline',
@@ -1933,7 +1938,7 @@ const catalog: CatalogItem[] = [
     description: 'Integração em ponte, conectando fontes de um lado ao destino do outro.',
     duration: MCP_SINGLE_ANIMATION_DURATION,
     height: 1920,
-    kind: 'Marketing',
+    kind: 'Actions',
     label: 'Integration Bridge',
     tags: ['Integrations', 'Bridge', 'Data'],
     value: 'marketing-integration-bridge',
@@ -1945,7 +1950,7 @@ const catalog: CatalogItem[] = [
     description: 'Integração em stack, consolidando conectores em uma camada única.',
     duration: MCP_SINGLE_ANIMATION_DURATION,
     height: 1920,
-    kind: 'Marketing',
+    kind: 'Actions',
     label: 'Integration Sync Stack',
     tags: ['Integrations', 'Stack', 'Sync'],
     value: 'marketing-integration-sync-stack',
@@ -3023,6 +3028,42 @@ const catalog: CatalogItem[] = [
     width: 1080,
   },
   {
+    code: '<ExpenseClassificationTableAction />',
+    component: ExpenseClassificationTableAction,
+    description: 'Classificação automática de despesas com tabela, IA central e categorias com confiança.',
+    duration: MCP_SINGLE_ANIMATION_DURATION,
+    height: 1920,
+    kind: 'Actions',
+    label: 'Classificação IA Tabela',
+    tags: ['Despesas', 'IA', 'Classificação'],
+    value: 'actions-expense-classification-table',
+    width: 1080,
+  },
+  {
+    code: '<ExpenseClassificationMatchingAction />',
+    component: ExpenseClassificationMatchingAction,
+    description: 'Despesas conectadas por linhas pontilhadas até suas categorias finais.',
+    duration: MCP_SINGLE_ANIMATION_DURATION,
+    height: 1920,
+    kind: 'Actions',
+    label: 'Classificação IA Match',
+    tags: ['Despesas', 'Categorias', 'Automação'],
+    value: 'actions-expense-classification-match',
+    width: 1080,
+  },
+  {
+    code: '<ExpenseClassificationFoldersAction />',
+    component: ExpenseClassificationFoldersAction,
+    description: 'Recibos e transações organizados automaticamente em pastas de despesa.',
+    duration: MCP_SINGLE_ANIMATION_DURATION,
+    height: 1920,
+    kind: 'Actions',
+    label: 'Classificação IA Pastas',
+    tags: ['Despesas', 'Pastas', 'IA'],
+    value: 'actions-expense-classification-folders',
+    width: 1080,
+  },
+  {
     code: '<SaaSIntroVideo config={ledgerAIIntroConfig} />',
     component: SaaSIntroTemplateDemo,
     description: 'Template completo gerado por config, usando os blocos da biblioteca.',
@@ -3036,10 +3077,10 @@ const catalog: CatalogItem[] = [
   },
 ]
 
-const kinds: Array<'Todos' | CatalogKind> = ['Todos', 'Logo', 'Componentes', 'Mockups', 'Motion', 'Tipografia Animada', 'Marketing', 'Vídeos criados', 'Galerias', 'Animações', 'Templates']
+const kinds: Array<'Todos' | CatalogKind> = ['Todos', 'Logo', 'Componentes', 'Mockups', 'Motion', 'Tipografia Animada', 'Marketing', 'Vídeos criados', 'Galerias', 'Animações', 'Actions', 'Templates']
 
 function Thumbnail({ item }: { item: CatalogItem }) {
-  const color = item.kind === 'Motion' ? '#245BDB' : item.kind === 'Tipografia Animada' ? '#DB2777' : item.kind === 'Marketing' ? '#C28F2C' : item.kind === 'Vídeos criados' ? '#0F766E' : item.kind === 'Galerias' ? '#7C3AED' : item.kind === 'Animações' ? '#0EA5E9' : item.kind === 'Logo' ? '#111827' : item.kind === 'Templates' ? '#9333EA' : item.kind === 'Mockups' ? '#22A06B' : '#101828'
+  const color = item.kind === 'Motion' ? '#245BDB' : item.kind === 'Tipografia Animada' ? '#DB2777' : item.kind === 'Marketing' ? '#C28F2C' : item.kind === 'Vídeos criados' ? '#0F766E' : item.kind === 'Galerias' ? '#7C3AED' : item.kind === 'Animações' ? '#0EA5E9' : item.kind === 'Actions' ? '#1677F2' : item.kind === 'Logo' ? '#111827' : item.kind === 'Templates' ? '#9333EA' : item.kind === 'Mockups' ? '#22A06B' : '#101828'
   return (
     <div style={{ background: '#F8FBF9', border: '1px solid #E3E8EF', borderRadius: 12, display: 'grid', gap: 10, height: 96, padding: 12 }}>
       <div style={{ alignItems: 'center', display: 'flex', justifyContent: 'space-between' }}>
@@ -3051,7 +3092,7 @@ function Thumbnail({ item }: { item: CatalogItem }) {
           <span style={{ background: '#D9E2F1', borderRadius: 999, display: 'block', height: 3, marginTop: 30, width: '100%' }} />
           <span style={{ background: color, borderRadius: 999, display: 'block', height: 18, left: '54%', position: 'absolute', top: 21, width: 18 }} />
         </div>
-      ) : item.kind === 'Marketing' ? (
+      ) : item.kind === 'Marketing' || item.kind === 'Actions' ? (
         <div style={{ display: 'grid', gap: 7, gridTemplateColumns: 'repeat(3, 1fr)' }}>
           {[0, 1, 2].map((index) => <span key={index} style={{ background: index === 1 ? color : '#E3E8EF', borderRadius: 10, height: 42 }} />)}
         </div>
