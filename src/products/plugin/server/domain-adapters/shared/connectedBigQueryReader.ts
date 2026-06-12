@@ -8,7 +8,7 @@ import {
   getIntegrationBigQueryDestinationForConnection,
   getIntegrationPluginPermissions,
 } from '@/products/integracoes/server/integrationConnectionRepository'
-import { getTenantBigQueryDatasets } from '@/products/integracoes/shared/tenantBigQueryDatasets'
+import { getTenantBigQueryDatasets } from '@/products/integracoes/datawarehouse/tenantBigQueryDatasets'
 import type {
   ConnectedDomainAction,
   ConnectedDomainAdapterInput,
