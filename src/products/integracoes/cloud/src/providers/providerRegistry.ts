@@ -1,4 +1,4 @@
-import type { Connector } from '@/products/integracoes/cloud/src/connectors/base/Connector'
+import type { Connector } from '@/products/integracoes/connectors/base/Connector'
 import { ADVERTISING_CONNECTORS } from '@/products/integracoes/cloud/src/providers/advertisingProviderRegistry'
 import { ANALYTICS_CONNECTORS } from '@/products/integracoes/cloud/src/providers/analyticsProviderRegistry'
 import { CRM_CONNECTORS } from '@/products/integracoes/cloud/src/providers/crmProviderRegistry'

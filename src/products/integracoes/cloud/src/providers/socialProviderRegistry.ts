@@ -1,4 +1,4 @@
-import { createStubConnector } from '@/products/integracoes/cloud/src/connectors/stubConnector'
+import { createStubConnector } from '@/products/integracoes/connectors/stubConnector'
 
 export const SOCIAL_CONNECTORS = [
   createStubConnector({ domain: 'social', provider: 'instagram' }),
