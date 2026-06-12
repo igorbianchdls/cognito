@@ -1,7 +1,7 @@
 'use client'
 
 import { useMemo, useState } from 'react'
-import { ArrowRight, ChevronDown, Database, LockKeyhole, MoreHorizontal, Search, ShieldCheck, Zap } from 'lucide-react'
+import { ArrowRight, ChevronDown, Database, LockKeyhole, MoreHorizontal, Search, ShieldCheck } from 'lucide-react'
 
 import PageContainer from '@/components/layout/PageContainer'
 import { SidebarShadcn } from '@/components/navigation/SidebarShadcn'
@@ -15,18 +15,13 @@ import useCurrentIntegrationTenant from '@/products/integracoes/frontend/hooks/u
 import type { IntegrationConnectionWithUi } from '@/products/integracoes/frontend/services/integracoesApi'
 import { renderIntegrationLogo, toolkitHasIcon } from '@/products/integracoes/shared/iconMaps'
 import {
-  applyToolkitDescriptionOverrides,
   DATA_CONNECTOR_TOP_PRIORITY_ORDER,
-  MCP_DESCRIPTION_OVERRIDES,
-  MCP_TOP_PRIORITY_ORDER,
 } from '@/products/integracoes/shared/catalogPresentation'
 import { DATA_CONNECTOR_EXTRA_TOOLKITS } from '@/products/integracoes/shared/dataConnectorExtras'
 import { TOOLKITS } from '@/products/integracoes/shared/toolkits'
 import { getIntegrationProvider } from '@/products/integracoes/shared/providers/providerCatalog'
-import { getProviderSetupStage } from '@/products/integracoes/shared/providers/providerSetupStage'
 import type { ToolkitDefinition, ToolkitStatusMap } from '@/products/integracoes/shared/types'
 
-type IntegrationKind = 'mcp' | 'data-connectors'
 type CatalogCategory = 'all' | 'erp' | 'crm' | 'analytics' | 'communication' | 'data' | 'productivity' | 'marketing' | 'support' | 'other'
 type SortMode = 'popular' | 'name' | 'connected'
 
@@ -216,120 +211,29 @@ function sortByPriority(
   })
 }
 
-const KIND_META: Record<
-  IntegrationKind,
-  {
-    icon: typeof Zap
-    title: string
-    subtitle: string
-    countLabel: string
-    surfaceClassName: string
-    iconWrapClassName: string
-    iconClassName: string
-    badgeClassName: string
-  }
-> = {
-  mcp: {
-    icon: Zap,
-    title: 'Automação (agir)',
-    subtitle: 'Conecte ferramentas de comunicação e produtividade para automatizar tarefas e processos.',
-    countLabel: '500+ integrações',
-    surfaceClassName: 'border-[#E9E2FF] bg-[#FBF9FF]',
-    iconWrapClassName: 'bg-[#EEE8FF] ring-1 ring-[#DDD2FF]',
-    iconClassName: 'text-[#6A50F0]',
-    badgeClassName: 'bg-[#EEE8FF] text-[#6A50F0]',
-  },
-  'data-connectors': {
-    icon: Database,
-    title: 'Dados (analisar)',
-    subtitle: 'Conecte fontes de dados para centralizar informações e gerar insights nos seus dashboards.',
-    countLabel: '700+ conectores',
-    surfaceClassName: 'border-[#D9E9FF] bg-[#F7FBFF]',
-    iconWrapClassName: 'bg-[#EEF6FF] ring-1 ring-[#D8E8FF]',
-    iconClassName: 'text-[#2383E2]',
-    badgeClassName: 'bg-[#E6F1FF] text-[#2383E2]',
-  },
-}
-
-function SegmentButton({
-  active,
-  kind,
-  title,
-  subtitle,
-  countLabel,
-  onClick,
-}: {
-  active: boolean
-  kind: IntegrationKind
-  title: string
-  subtitle: string
-  countLabel: string
-  onClick: () => void
-}) {
-  const meta = KIND_META[kind]
-  const Icon = meta.icon
-
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      className={[
-        'w-full rounded-[24px] border px-6 py-6 text-left transition-all',
-        meta.surfaceClassName,
-        active
-          ? 'shadow-[0_18px_40px_rgba(42,58,92,0.10)]'
-          : 'opacity-90 hover:opacity-100 hover:shadow-[0_14px_30px_rgba(42,58,92,0.08)]',
-      ].join(' ')}
-    >
-      <div className="flex items-start gap-5">
-        <div className={['grid h-16 w-16 shrink-0 place-items-center rounded-[18px]', meta.iconWrapClassName].join(' ')}>
-          <Icon className={['h-8 w-8', meta.iconClassName].join(' ')} />
-        </div>
-        <div className="min-w-0">
-          <div className="text-[18px] font-semibold tracking-[-0.02em] text-[#172033]">{title}</div>
-          <div className="mt-2 max-w-[56ch] text-[14px] leading-6 text-[#536179]">{subtitle}</div>
-          <span className={['mt-4 inline-flex rounded-full px-3 py-1 text-[12px] font-semibold', meta.badgeClassName].join(' ')}>
-            {countLabel}
-          </span>
-        </div>
-      </div>
-    </button>
-  )
-}
-
 function CatalogCard({
   toolkit,
-  kind,
-  tkStatus,
   busySlug,
   dataConnection,
   onAction,
 }: {
   toolkit: ToolkitDefinition
-  kind: IntegrationKind
-  tkStatus: ToolkitStatusMap
   busySlug: string | null
   dataConnection?: IntegrationConnectionWithUi | null
   onAction: (toolkit: ToolkitDefinition) => void
 }) {
-  const provider = kind === 'data-connectors' ? getIntegrationProvider(toolkit.slug) : undefined
-  const setupStage = getProviderSetupStage(provider)
   const hasDataConnection = Boolean(dataConnection)
   const dataConnectionActive = isDataConnectionActive(dataConnection)
-  const connected = kind === 'data-connectors' ? dataConnectionActive : isToolkitConnected(toolkit.slug, tkStatus)
+  const connected = dataConnectionActive
   const category = CATEGORY_TABS.find((tab) => tab.value === categorizeToolkit(toolkit.slug))?.label ?? 'Outros'
-  const statusLabel = dataConnection?.uiStatus?.label || (connected ? 'Conectado' : kind === 'mcp' ? 'Pronto para automação' : setupStage.label)
+  const statusLabel = dataConnection?.uiStatus?.label || (connected ? 'Conectado' : hasDataConnection ? 'Pendente' : 'Não conectado')
   const helperText = hasDataConnection && !dataConnectionActive
-    ? dataConnection?.uiStatus?.description || 'Configuracao salva aguardando autorizacao real.'
+    ? dataConnection?.uiStatus?.description || 'Conexão salva aguardando autorização.'
     : connected
-    ? kind === 'mcp'
-      ? 'Disponível para ações do agente neste workspace.'
-      : dataConnection?.uiStatus?.description || 'Sincronização de dados pronta para uso em dashboards.'
-    : kind === 'mcp'
-      ? 'Conecte para liberar ações do agente e fluxos operacionais.'
-      : setupStage.description
+      ? dataConnection?.uiStatus?.description || 'Conexão pronta. Configure data warehouse, Otto IA e sincronização quando quiser.'
+      : 'Conecte sua conta para trazer os dados principais automaticamente.'
   const isBusy = busySlug === toolkit.slug || busySlug === dataConnection?.id
-  const buttonLabel = isBusy ? 'Abrindo...' : hasDataConnection || connected ? 'Gerenciar' : kind === 'mcp' ? 'Conectar' : 'Configurar'
+  const buttonLabel = isBusy ? 'Abrindo...' : hasDataConnection ? 'Configurar' : 'Conectar'
   const statusClassName = connected
     ? 'bg-[#EBFFF5] text-[#108A55]'
     : hasDataConnection
@@ -372,7 +276,7 @@ function CatalogCard({
       <div className="mt-5 flex items-end justify-between gap-4 border-t border-[#EEF1F6] pt-4">
         <div className="min-w-0">
           <div className="text-[12px] font-medium uppercase tracking-[0.08em] text-[#A0AAC0]">
-            {kind === 'mcp' ? 'Automação' : 'Dados'}
+            Conexão
           </div>
           <div className="mt-1 text-[13px] leading-5 text-[#66748D]">{helperText}</div>
         </div>
@@ -396,7 +300,6 @@ function CatalogCard({
 
 export default function IntegracoesPage() {
   const tenantId = useCurrentIntegrationTenant()
-  const [activeKind, setActiveKind] = useState<IntegrationKind>('data-connectors')
   const [activeCategory, setActiveCategory] = useState<CatalogCategory>('all')
   const [search, setSearch] = useState('')
   const [sortMode, setSortMode] = useState<SortMode>('popular')
@@ -422,10 +325,6 @@ export default function IntegracoesPage() {
     () => Object.fromEntries(Array.from(connectionsByToolkit.keys()).map((slug) => [slug, true])),
     [connectionsByToolkit],
   )
-  const mcpToolkits = useMemo(
-    () => applyToolkitDescriptionOverrides(TOOLKITS, MCP_DESCRIPTION_OVERRIDES),
-    [],
-  )
   const dataConnectorSamples = useMemo(() => {
     const map = new Map<string, ToolkitDefinition>()
     for (const tk of [...TOOLKITS, ...DATA_CONNECTOR_EXTRA_TOOLKITS]) {
@@ -435,8 +334,8 @@ export default function IntegracoesPage() {
   }, [])
 
   const catalogToolkits = useMemo(() => {
-    const source = activeKind === 'mcp' ? mcpToolkits : dataConnectorSamples
-    const priority = activeKind === 'mcp' ? MCP_TOP_PRIORITY_ORDER : DATA_CONNECTOR_TOP_PRIORITY_ORDER
+    const source = dataConnectorSamples
+    const priority = DATA_CONNECTOR_TOP_PRIORITY_ORDER
     const statusMap = connectionStatusMap
     const query = search.trim().toLowerCase()
 
@@ -448,7 +347,7 @@ export default function IntegracoesPage() {
     })
 
     return sortByPriority(filtered, priority, statusMap, sortMode)
-  }, [activeCategory, activeKind, connectionStatusMap, dataConnectorSamples, mcpToolkits, search, sortMode])
+  }, [activeCategory, connectionStatusMap, dataConnectorSamples, search, sortMode])
 
   const openDataConnectorModal = (toolkit: ToolkitDefinition) => {
     const existingConnection = connectionsByToolkit.get(String(toolkit.slug).toUpperCase())
@@ -459,10 +358,6 @@ export default function IntegracoesPage() {
 
     setSelectedDataConnector(toolkit)
     setIsDataConnectorModalOpen(true)
-  }
-
-  const handleMcpAction = (toolkit: ToolkitDefinition) => {
-    openDataConnectorModal(toolkit)
   }
 
   return (
@@ -479,32 +374,15 @@ export default function IntegracoesPage() {
                       className="mb-2 text-[42px] font-semibold tracking-[-0.04em] text-[#16203A]"
                       style={{ fontFamily: 'var(--font-eb-garamond), "EB Garamond", serif' }}
                     >
-                      Integrações
+                      Conexões
                     </h1>
                     <p className="mb-8 text-[18px] leading-7 text-[#647089]">
-                      Conecte suas ferramentas e automatize seu negócio.
+                      Conecte seus apps uma vez e configure data warehouse, Otto IA e sincronização depois.
                     </p>
 
-                    <div className="mb-8 grid grid-cols-1 gap-4 xl:grid-cols-2">
-                      <SegmentButton
-                        active={activeKind === 'mcp'}
-                        kind="mcp"
-                        title={KIND_META.mcp.title}
-                        subtitle={KIND_META.mcp.subtitle}
-                        countLabel={KIND_META.mcp.countLabel}
-                        onClick={() => setActiveKind('mcp')}
-                      />
-                      <SegmentButton
-                        active={activeKind === 'data-connectors'}
-                        kind="data-connectors"
-                        title={KIND_META['data-connectors'].title}
-                        subtitle={KIND_META['data-connectors'].subtitle}
-                        countLabel={KIND_META['data-connectors'].countLabel}
-                        onClick={() => setActiveKind('data-connectors')}
-                      />
-                    </div>
-
                     {integrationError && <div className="text-sm text-red-600 mb-3">{integrationError}</div>}
+
+                    <ConnectionStatusPanel connections={connections} loading={integrationLoading} />
 
                     <div className="mb-5 flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
                       <Tabs value={activeCategory} onValueChange={(value) => setActiveCategory(value as CatalogCategory)} className="min-w-0">
@@ -553,64 +431,33 @@ export default function IntegracoesPage() {
                       </div>
                     </div>
 
-                    {activeKind === 'mcp' ? (
-                      <>
-                        <div className="mb-4 flex items-center justify-between">
-                          <div>
-                            <h2 className="text-xl font-semibold text-gray-900">MCP (Ações)</h2>
-                            <p className="text-sm text-gray-600 mt-1">
-                              Ferramentas acionadas pelo agente sob demanda (email, docs, tarefas, CRM, mensagens).
-                            </p>
-                          </div>
-                        </div>
-
-                        <div className="mb-6 grid grid-cols-1 gap-5 md:grid-cols-2 2xl:grid-cols-3">
-                          {catalogToolkits.map((toolkit) => (
-                            <CatalogCard
-                              key={toolkit.slug}
-                              toolkit={toolkit}
-                              kind="mcp"
-                              tkStatus={connectionStatusMap}
-                              busySlug={integrationBusyId}
-                              onAction={handleMcpAction}
-                            />
-                          ))}
-                        </div>
-                      </>
-                    ) : (
-                      <>
-                        <ConnectionStatusPanel connections={connections} loading={integrationLoading} />
-                        <div className="mb-4 flex items-center justify-between">
-                          <div>
-                            <h2 className="text-xl font-semibold text-gray-900">Conectores de Dados (Dashboards)</h2>
-                            <p className="text-sm text-gray-600 mt-1">
-                              Conectores para sincronização contínua/periódica e ingestão de dados em BI/dashboard.
-                            </p>
-                            <p className="mt-1 text-xs text-gray-500">
-                              {tenantId
-                                ? `Workspace tenant ${tenantId}. Conexões pendentes ficam salvas, mas só sincronizam após autorização real.`
-                                : 'Carregando workspace...'}
-                            </p>
-                          </div>
-                          <span className="rounded-full bg-gray-100 px-3 py-1 text-xs font-medium text-gray-700">
-                            {catalogToolkits.length} conectores
-                          </span>
-                        </div>
-                        <div className="mb-6 grid grid-cols-1 gap-5 md:grid-cols-2 2xl:grid-cols-3">
-                          {catalogToolkits.map((toolkit) => (
-                            <CatalogCard
-                              key={toolkit.slug}
-                              toolkit={toolkit}
-                              kind="data-connectors"
-                              tkStatus={connectionStatusMap}
-                              busySlug={integrationBusyId}
-                              dataConnection={connectionsByToolkit.get(String(toolkit.slug).toUpperCase())}
-                              onAction={openDataConnectorModal}
-                            />
-                          ))}
-                        </div>
-                      </>
-                    )}
+                    <div className="mb-4 flex items-center justify-between">
+                      <div>
+                        <h2 className="text-xl font-semibold text-gray-900">Apps disponíveis</h2>
+                        <p className="text-sm text-gray-600 mt-1">
+                          Escolha um app, conecte a conta e configure o que fazer com os dados depois.
+                        </p>
+                        <p className="mt-1 text-xs text-gray-500">
+                          {tenantId
+                            ? `Workspace tenant ${tenantId}. Recursos e frequência são aplicados automaticamente e podem ser ajustados em Configurar.`
+                            : 'Carregando workspace...'}
+                        </p>
+                      </div>
+                      <span className="rounded-full bg-gray-100 px-3 py-1 text-xs font-medium text-gray-700">
+                        {catalogToolkits.length} apps
+                      </span>
+                    </div>
+                    <div className="mb-6 grid grid-cols-1 gap-5 md:grid-cols-2 2xl:grid-cols-3">
+                      {catalogToolkits.map((toolkit) => (
+                        <CatalogCard
+                          key={toolkit.slug}
+                          toolkit={toolkit}
+                          busySlug={integrationBusyId}
+                          dataConnection={connectionsByToolkit.get(String(toolkit.slug).toUpperCase())}
+                          onAction={openDataConnectorModal}
+                        />
+                      ))}
+                    </div>
 
                     {catalogToolkits.length === 0 && (
                       <section className="mb-6 rounded-[24px] border border-dashed border-[#D9DFEB] bg-white px-6 py-10 text-center">
@@ -716,7 +563,7 @@ export default function IntegracoesPage() {
           busy={Boolean(integrationBusyId)}
           onOpenChange={setIsConnectionDrawerOpen}
           onSync={(connection) => {
-            void syncConnection(connection.id, connection.selectedResources)
+            void syncConnection(connection.id)
           }}
           onReconnect={(connection) => {
             void reconnectConnection(connection.id)

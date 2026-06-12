@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { RefreshCw, RotateCcw } from 'lucide-react'
+import { Bot, CheckCircle2, Database, RefreshCw, RotateCcw } from 'lucide-react'
 
 import {
   Sheet,
@@ -13,13 +13,19 @@ import {
 } from '@/components/ui/sheet'
 import { renderIntegrationLogo } from '@/products/integracoes/shared/iconMaps'
 import type { IntegrationPluginPermissions } from '@/products/integracoes/shared/contracts/pluginPermissionContracts'
+import type { IntegrationDestination } from '@/products/integracoes/destinations/shared/destinationContracts'
+import type { IntegrationPipeline } from '@/products/integracoes/shared/contracts/pipelineContracts'
 import type {
   IntegrationConnectionWithUi,
   IntegrationEventWithUi,
   IntegrationSyncRunWithUi,
 } from '@/products/integracoes/frontend/services/integracoesApi'
 import {
+  createIntegrationDestination,
+  createIntegrationPipeline,
+  fetchIntegrationDestinations,
   fetchIntegrationPluginPermissions,
+  fetchIntegrationPipelines,
   updateIntegrationPluginPermissions,
 } from '@/products/integracoes/frontend/services/integracoesApi'
 import IntegrationEventTimeline from '@/products/integracoes/frontend/features/connections/components/IntegrationEventTimeline'
@@ -79,6 +85,10 @@ export default function ConnectionDetailDrawer({
   const [permissions, setPermissions] = useState<IntegrationPluginPermissions | null>(null)
   const [permissionsBusy, setPermissionsBusy] = useState(false)
   const [permissionsError, setPermissionsError] = useState<string | null>(null)
+  const [destinations, setDestinations] = useState<IntegrationDestination[]>([])
+  const [pipelines, setPipelines] = useState<IntegrationPipeline[]>([])
+  const [dataWarehouseBusy, setDataWarehouseBusy] = useState(false)
+  const [dataWarehouseError, setDataWarehouseError] = useState<string | null>(null)
 
   useEffect(() => {
     if (!open || !connection) {
@@ -99,6 +109,38 @@ export default function ConnectionDetailDrawer({
       })
       .finally(() => {
         if (active) setPermissionsBusy(false)
+      })
+
+    return () => {
+      active = false
+    }
+  }, [connection, open])
+
+  useEffect(() => {
+    if (!open || !connection) {
+      setDestinations([])
+      setPipelines([])
+      setDataWarehouseError(null)
+      return
+    }
+
+    let active = true
+    setDataWarehouseBusy(true)
+    setDataWarehouseError(null)
+    void Promise.all([
+      fetchIntegrationDestinations({ tenantId: connection.tenantId, type: 'bigquery' }),
+      fetchIntegrationPipelines({ tenantId: connection.tenantId, sourceConnectionId: connection.id }),
+    ])
+      .then(([nextDestinations, nextPipelines]) => {
+        if (!active) return
+        setDestinations(nextDestinations)
+        setPipelines(nextPipelines)
+      })
+      .catch((error) => {
+        if (active) setDataWarehouseError(error instanceof Error ? error.message : 'Erro ao carregar data warehouse')
+      })
+      .finally(() => {
+        if (active) setDataWarehouseBusy(false)
       })
 
     return () => {
@@ -128,6 +170,57 @@ export default function ConnectionDetailDrawer({
       setPermissionsBusy(false)
     }
   }
+
+  async function enableBigQuery() {
+    if (!connection) return
+    setDataWarehouseBusy(true)
+    setDataWarehouseError(null)
+    try {
+      let destination = destinations.find((item) => item.type === 'bigquery' && item.status === 'active')
+      if (!destination) {
+        destination = await createIntegrationDestination({
+          tenantId: connection.tenantId,
+          type: 'bigquery',
+          name: 'BigQuery padrao',
+          status: 'active',
+          config: {},
+          metadata: { createdFrom: 'integracoes-ui' },
+        })
+      }
+
+      const existingPipeline = pipelines.find((pipeline) => pipeline.destinationId === destination?.id && pipeline.status !== 'disabled')
+      if (!existingPipeline) {
+        await createIntegrationPipeline({
+          tenantId: connection.tenantId,
+          sourceConnectionId: connection.id,
+          destinationId: destination.id,
+          name: `${connection.displayName} -> ${destination.name}`,
+          status: 'active',
+          syncFrequency: connection.syncFrequency,
+          syncEnabled: true,
+          metadata: { createdFrom: 'integracoes-ui' },
+        })
+      }
+
+      const [nextDestinations, nextPipelines] = await Promise.all([
+        fetchIntegrationDestinations({ tenantId: connection.tenantId, type: 'bigquery' }),
+        fetchIntegrationPipelines({ tenantId: connection.tenantId, sourceConnectionId: connection.id }),
+      ])
+      setDestinations(nextDestinations)
+      setPipelines(nextPipelines)
+    } catch (error) {
+      setDataWarehouseError(error instanceof Error ? error.message : 'Erro ao ativar BigQuery')
+    } finally {
+      setDataWarehouseBusy(false)
+    }
+  }
+
+  const bigQueryDestination = destinations.find((item) => item.type === 'bigquery' && item.status === 'active') || null
+  const bigQueryPipeline = bigQueryDestination
+    ? pipelines.find((pipeline) => pipeline.destinationId === bigQueryDestination.id && pipeline.status !== 'disabled') || null
+    : null
+  const bigQueryEnabled = Boolean(bigQueryDestination && bigQueryPipeline)
+  const ottoEnabled = Boolean(permissions?.enabled)
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
@@ -182,7 +275,7 @@ export default function ConnectionDetailDrawer({
               </section>
 
               <section>
-                <div className="mb-3 text-[14px] font-semibold text-[#24304A]">Recursos ativos</div>
+                <div className="mb-3 text-[14px] font-semibold text-[#24304A]">Dados sincronizados</div>
                 <div className="flex flex-wrap gap-2">
                   {connection.selectedResources.length ? connection.selectedResources.map((resource) => (
                     <span key={resource} className="rounded-full bg-[#F2F4FA] px-3 py-1 text-[12px] font-medium text-[#475569]">
@@ -195,10 +288,68 @@ export default function ConnectionDetailDrawer({
               </section>
 
               <section>
-                <div className="mb-3 flex items-center justify-between gap-3">
-                  <div className="text-[14px] font-semibold text-[#24304A]">Permissões MCP</div>
-                  {permissions ? (
-                    <label className="inline-flex items-center gap-2 text-[12px] font-semibold text-[#475569]">
+                <div className="mb-3 text-[14px] font-semibold text-[#24304A]">Data warehouse</div>
+                <div className="rounded-[16px] border border-[#E6EAF4] bg-[#FAFBFD] p-4">
+                  <div className="flex items-start justify-between gap-4">
+                    <div className="flex min-w-0 gap-3">
+                      <div className="grid h-10 w-10 shrink-0 place-items-center rounded-[14px] bg-white text-[#2563EB] ring-1 ring-[#E1E8F8]">
+                        <Database className="h-5 w-5" />
+                      </div>
+                      <div className="min-w-0">
+                        <div className="flex flex-wrap items-center gap-2">
+                          <div className="text-[14px] font-semibold text-[#24304A]">BigQuery</div>
+                          <span className={[
+                            'rounded-full px-2.5 py-1 text-[11px] font-semibold',
+                            bigQueryEnabled ? 'bg-[#E9FDF3] text-[#108A55]' : 'bg-white text-[#66748D]',
+                          ].join(' ')}>
+                            {bigQueryEnabled ? 'Ativo' : 'Inativo'}
+                          </span>
+                        </div>
+                        <div className="mt-1 text-[13px] leading-5 text-[#66748D]">
+                          {bigQueryEnabled
+                            ? `Enviando dados para ${bigQueryDestination?.name || 'BigQuery'}.`
+                            : 'Envie os dados desta conexão para o data warehouse.'}
+                        </div>
+                      </div>
+                    </div>
+                    <button
+                      type="button"
+                      disabled={dataWarehouseBusy || bigQueryEnabled}
+                      onClick={() => void enableBigQuery()}
+                      className="inline-flex h-9 shrink-0 items-center justify-center rounded-[12px] bg-[#17203A] px-3 text-[12px] font-semibold text-white transition hover:bg-[#0F172C] disabled:bg-[#E5EAF3] disabled:text-[#7B879B]"
+                    >
+                      {dataWarehouseBusy ? 'Ativando...' : bigQueryEnabled ? 'Ativo' : 'Ativar'}
+                    </button>
+                  </div>
+                  {dataWarehouseError ? <div className="mt-3 text-[12px] font-medium text-red-600">{dataWarehouseError}</div> : null}
+                </div>
+              </section>
+
+              <section>
+                <div className="mb-3 text-[14px] font-semibold text-[#24304A]">Otto IA</div>
+                <div className="rounded-[16px] border border-[#E6EAF4] bg-[#FAFBFD] p-4">
+                  <div className="mb-4 flex items-start justify-between gap-4">
+                    <div className="flex min-w-0 gap-3">
+                      <div className="grid h-10 w-10 shrink-0 place-items-center rounded-[14px] bg-white text-[#6A50F0] ring-1 ring-[#E1E8F8]">
+                        <Bot className="h-5 w-5" />
+                      </div>
+                      <div className="min-w-0">
+                        <div className="flex flex-wrap items-center gap-2">
+                          <div className="text-[14px] font-semibold text-[#24304A]">Acesso da IA</div>
+                          <span className={[
+                            'rounded-full px-2.5 py-1 text-[11px] font-semibold',
+                            ottoEnabled ? 'bg-[#E9FDF3] text-[#108A55]' : 'bg-white text-[#66748D]',
+                          ].join(' ')}>
+                            {ottoEnabled ? 'Permitido' : 'Bloqueado'}
+                          </span>
+                        </div>
+                        <div className="mt-1 text-[13px] leading-5 text-[#66748D]">
+                          Permita que a Otto consulte os dados desta conexão e respeite confirmações para ações sensíveis.
+                        </div>
+                      </div>
+                    </div>
+                    {permissions ? (
+                      <label className="inline-flex h-9 shrink-0 items-center gap-2 rounded-[12px] border border-[#DCE3F0] bg-white px-3 text-[12px] font-semibold text-[#475569]">
                       <input
                         type="checkbox"
                         checked={permissions.enabled}
@@ -208,13 +359,16 @@ export default function ConnectionDetailDrawer({
                         }}
                         className="h-4 w-4"
                       />
-                      Habilitado
+                      Permitir
                     </label>
                   ) : null}
-                </div>
-                <div className="rounded-[16px] border border-[#E6EAF4] bg-[#FAFBFD] p-4">
+                  </div>
                   {permissions ? (
                     <div className="space-y-4">
+                      <div className="flex items-center gap-2 rounded-[14px] bg-white px-3 py-2 text-[12px] font-medium text-[#66748D] ring-1 ring-[#E4E8F0]">
+                        <CheckCircle2 className="h-4 w-4 text-[#168256]" />
+                        Configuração avançada por tipo de permissão
+                      </div>
                       {RESOURCE_PERMISSION_SECTIONS.map(([label, key]) => {
                         const resources = permissions[key]
                         return (

@@ -3,7 +3,15 @@ import type {
   IntegrationConnection,
   UpdateIntegrationConnectionInput,
 } from '@/products/integracoes/shared/contracts/connectionContracts'
+import type {
+  CreateIntegrationDestinationInput,
+  IntegrationDestination,
+} from '@/products/integracoes/destinations/shared/destinationContracts'
 import type { IntegrationEvent } from '@/products/integracoes/shared/contracts/eventContracts'
+import type {
+  CreateIntegrationPipelineInput,
+  IntegrationPipeline,
+} from '@/products/integracoes/shared/contracts/pipelineContracts'
 import type {
   IntegrationPluginPermissions,
   UpsertIntegrationPluginPermissionsInput,
@@ -86,6 +94,30 @@ type PluginPermissionsResponse = {
   ok?: boolean
   error?: string
   permissions?: IntegrationPluginPermissions
+}
+
+type DestinationsResponse = {
+  ok?: boolean
+  error?: string
+  destinations?: IntegrationDestination[]
+}
+
+type DestinationResponse = {
+  ok?: boolean
+  error?: string
+  destination?: IntegrationDestination
+}
+
+type PipelinesResponse = {
+  ok?: boolean
+  error?: string
+  pipelines?: IntegrationPipeline[]
+}
+
+type PipelineResponse = {
+  ok?: boolean
+  error?: string
+  pipeline?: IntegrationPipeline
 }
 
 function buildQuery(params: Record<string, string | undefined>): string {
@@ -238,4 +270,66 @@ export async function updateIntegrationPluginPermissions(
   )
   if (!payload.permissions) throw new Error('Permissoes do plugin nao retornadas')
   return payload.permissions
+}
+
+export async function fetchIntegrationDestinations(params?: {
+  tenantId?: number
+  type?: string
+  status?: string
+}): Promise<IntegrationDestination[]> {
+  const query = buildQuery({
+    tenantId: params?.tenantId ? String(params.tenantId) : undefined,
+    type: params?.type,
+    status: params?.status,
+  })
+  const suffix = query ? `?${query}` : ''
+  const payload = await requestJson<DestinationsResponse>(`/api/integracoes/destinations${suffix}`)
+
+  return Array.isArray(payload.destinations) ? payload.destinations : []
+}
+
+export async function createIntegrationDestination(
+  input: Omit<CreateIntegrationDestinationInput, 'tenantId'> & { tenantId?: number },
+): Promise<IntegrationDestination> {
+  const payload = await requestJson<DestinationResponse>('/api/integracoes/destinations', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(input),
+  })
+
+  if (!payload.destination) throw new Error('Destino nao retornado')
+
+  return payload.destination
+}
+
+export async function fetchIntegrationPipelines(params?: {
+  tenantId?: number
+  sourceConnectionId?: string
+  destinationId?: string
+  status?: string
+}): Promise<IntegrationPipeline[]> {
+  const query = buildQuery({
+    tenantId: params?.tenantId ? String(params.tenantId) : undefined,
+    sourceConnectionId: params?.sourceConnectionId,
+    destinationId: params?.destinationId,
+    status: params?.status,
+  })
+  const suffix = query ? `?${query}` : ''
+  const payload = await requestJson<PipelinesResponse>(`/api/integracoes/pipelines${suffix}`)
+
+  return Array.isArray(payload.pipelines) ? payload.pipelines : []
+}
+
+export async function createIntegrationPipeline(
+  input: Omit<CreateIntegrationPipelineInput, 'tenantId'> & { tenantId?: number },
+): Promise<IntegrationPipeline> {
+  const payload = await requestJson<PipelineResponse>('/api/integracoes/pipelines', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(input),
+  })
+
+  if (!payload.pipeline) throw new Error('Pipeline nao retornado')
+
+  return payload.pipeline
 }
