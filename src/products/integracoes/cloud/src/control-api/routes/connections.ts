@@ -5,7 +5,7 @@ import type {
 import { validateProviderCredentials } from '@/products/integracoes/cloud/src/lib/credentials'
 import { buildOAuthAuthorizationUrl, createOAuthState } from '@/products/integracoes/cloud/src/oauth'
 import { writeConnectionCredentialsSecret } from '@/products/integracoes/cloud/src/lib/secretManager'
-import { getCloudConnector } from '@/products/integracoes/cloud/src/providers/providerRegistry'
+import { getCloudConnector } from '@/products/integracoes/connectors/registry/providerRegistry'
 import {
   createIntegrationEvent,
   updateConnectionSecret,
