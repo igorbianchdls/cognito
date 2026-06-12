@@ -1,30 +1,128 @@
 "use client"
 
-import { Show, SignInButton, SignUpButton, UserButton, useUser } from '@clerk/nextjs'
-import { LogIn, UserPlus } from 'lucide-react'
+import { useState } from 'react'
+import Link from 'next/link'
+import { Show, SignInButton, SignUpButton, UserProfile, useClerk, useUser } from '@clerk/nextjs'
+import { ChevronsUpDown, LogIn, LogOut, Plug, Settings, UserPlus } from 'lucide-react'
 
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
 import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
 } from '@/components/ui/sidebar'
+import { clerkAuthAppearance } from '@/products/auth/frontend/components/ClerkAuthShell'
+
+function getInitials(name: string, email: string) {
+  const source = name && name !== 'Conta' ? name : email
+  const parts = source
+    .replace(/@.*/, '')
+    .split(/\s|[._-]/)
+    .filter(Boolean)
+
+  return (parts[0]?.[0] || 'C').concat(parts[1]?.[0] || '').toUpperCase()
+}
 
 export function AuthUserMenu() {
+  const { signOut } = useClerk()
   const { user } = useUser()
+  const [isProfileOpen, setIsProfileOpen] = useState(false)
   const displayName = user?.fullName || user?.primaryEmailAddress?.emailAddress || 'Conta'
   const email = user?.primaryEmailAddress?.emailAddress || ''
+  const avatarUrl = user?.imageUrl || ''
+  const initials = getInitials(displayName, email)
 
   return (
     <SidebarMenu>
       <SidebarMenuItem>
         <Show when="signed-in">
-          <div className="flex min-h-12 items-center gap-2 rounded-md px-2 py-1.5 text-sm group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:px-0">
-            <UserButton />
-            <div className="grid min-w-0 flex-1 text-left leading-tight group-data-[collapsible=icon]:hidden">
-              <span className="truncate font-medium">{displayName}</span>
-              {email ? <span className="truncate text-xs text-sidebar-foreground/70">{email}</span> : null}
-            </div>
-          </div>
+          <>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <SidebarMenuButton
+                  className="min-h-12 gap-2 px-2 py-1.5 group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:px-0"
+                >
+                  <Avatar className="size-8 rounded-md">
+                    <AvatarImage alt={displayName} src={avatarUrl} />
+                    <AvatarFallback className="rounded-md bg-sidebar-accent text-xs font-semibold text-sidebar-accent-foreground">
+                      {initials}
+                    </AvatarFallback>
+                  </Avatar>
+                  <div className="grid min-w-0 flex-1 text-left leading-tight group-data-[collapsible=icon]:hidden">
+                    <span className="truncate font-medium">{displayName}</span>
+                    {email ? <span className="truncate text-xs text-sidebar-foreground/70">{email}</span> : null}
+                  </div>
+                  <ChevronsUpDown className="ml-auto size-4 text-sidebar-foreground/60 group-data-[collapsible=icon]:hidden" />
+                </SidebarMenuButton>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-64" side="right" sideOffset={8}>
+                <DropdownMenuLabel className="p-0 font-normal">
+                  <div className="flex items-center gap-3 px-2 py-2">
+                    <Avatar className="size-9 rounded-md">
+                      <AvatarImage alt={displayName} src={avatarUrl} />
+                      <AvatarFallback className="rounded-md bg-slate-100 text-xs font-semibold text-slate-700">
+                        {initials}
+                      </AvatarFallback>
+                    </Avatar>
+                    <div className="grid min-w-0 flex-1 leading-tight">
+                      <span className="truncate text-sm font-medium text-slate-950">{displayName}</span>
+                      {email ? <span className="truncate text-xs text-slate-500">{email}</span> : null}
+                    </div>
+                  </div>
+                </DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onSelect={() => setIsProfileOpen(true)}>
+                  <Settings className="size-4" />
+                  <span>Gerenciar conta</span>
+                </DropdownMenuItem>
+                <DropdownMenuItem asChild>
+                  <Link href="/integracoes">
+                    <Plug className="size-4" />
+                    <span>Integrações</span>
+                  </Link>
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem
+                  className="text-red-600 focus:text-red-700"
+                  onSelect={() => {
+                    void signOut({ redirectUrl: '/sign-in' })
+                  }}
+                >
+                  <LogOut className="size-4" />
+                  <span>Sair</span>
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+
+            <Dialog open={isProfileOpen} onOpenChange={setIsProfileOpen}>
+              <DialogContent className="max-h-[88vh] max-w-3xl overflow-hidden p-0">
+                <DialogHeader className="border-b border-slate-200 px-6 py-5">
+                  <DialogTitle>Gerenciar conta</DialogTitle>
+                  <DialogDescription>
+                    Atualize dados pessoais, segurança e sessões da sua conta.
+                  </DialogDescription>
+                </DialogHeader>
+                <div className="max-h-[calc(88vh-105px)] overflow-y-auto px-6 py-5">
+                  <UserProfile appearance={clerkAuthAppearance} routing="hash" />
+                </div>
+              </DialogContent>
+            </Dialog>
+          </>
         </Show>
         <Show when="signed-out">
           <div className="grid gap-1 p-1 group-data-[collapsible=icon]:hidden">
