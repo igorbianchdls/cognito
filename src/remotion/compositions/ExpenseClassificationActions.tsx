@@ -124,15 +124,39 @@ function CategoryPill({ item, iconSize = 33 }: { item: Pick<ExpenseRow, 'categor
 
 function DottedArrow({ color, progressValue }: { color: string; progressValue: number }) {
   const dotCount = 8
+  const nodeX = 6 + progressValue * 170
   return (
-    <div style={{ alignItems: 'center', display: 'flex', gap: 15, width: 205 }}>
+    <div style={{ alignItems: 'center', display: 'flex', gap: 15, position: 'relative', width: 205 }}>
       {Array.from({ length: dotCount }).map((_, index) => {
         const active = progressValue > index / dotCount
         return <span key={index} style={{ background: color, borderRadius: 999, height: active ? 7 : 5, opacity: active ? 1 : 0.28, width: active ? 7 : 5 }} />
       })}
+      <span
+        style={{
+          background: '#ffffff',
+          border: `5px solid ${color}`,
+          borderRadius: 999,
+          boxShadow: `0 0 0 8px ${color}1f, 0 0 28px ${color}66`,
+          height: 14,
+          left: nodeX,
+          opacity: progressValue,
+          position: 'absolute',
+          top: '50%',
+          transform: 'translate(-50%, -50%)',
+          width: 14,
+        }}
+      />
       <span style={{ color, fontSize: 40, fontWeight: 820, lineHeight: 1, opacity: progressValue }}>→</span>
     </div>
   )
+}
+
+function cubicPoint(t: number, p0: { x: number; y: number }, p1: { x: number; y: number }, p2: { x: number; y: number }, p3: { x: number; y: number }) {
+  const mt = 1 - t
+  return {
+    x: mt ** 3 * p0.x + 3 * mt ** 2 * t * p1.x + 3 * mt * t ** 2 * p2.x + t ** 3 * p3.x,
+    y: mt ** 3 * p0.y + 3 * mt ** 2 * t * p1.y + 3 * mt * t ** 2 * p2.y + t ** 3 * p3.y,
+  }
 }
 
 export function ExpenseClassificationTableAction() {
@@ -218,6 +242,9 @@ export function ExpenseClassificationMatchingAction() {
           const Icon = item.icon
           const y = index * 270
           const p = ease(frame, 60 + index * 44, 42)
+          const nodeX = interpolate(frame, [82 + index * 44, 150 + index * 44], [0, 238], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' })
+          const trailX = Math.max(0, nodeX - 42)
+          const targetPulse = interpolate(Math.sin(frame / 8 + index), [-1, 1], [0.45, 1])
           return (
             <div key={item.source} style={{ opacity: p, position: 'absolute', top: y, transform: `translateY(${(1 - p) * 18}px)` }}>
               <div style={{ alignItems: 'center', background: '#ffffff', border: `1px solid ${SOFT_BORDER}`, borderRadius: 32, boxShadow: '0 24px 70px rgba(7,20,61,0.07)', display: 'flex', gap: 42, height: 152, left: 0, padding: '0 30px', position: 'absolute', width: 455 }}>
@@ -233,7 +260,11 @@ export function ExpenseClassificationMatchingAction() {
               <svg height="152" style={{ left: 410, overflow: 'visible', position: 'absolute', top: 0 }} width="330">
                 <line stroke={item.tone} strokeDasharray="24 18" strokeLinecap="round" strokeWidth="7" x1="0" x2="238" y1="76" y2="76" />
                 <circle cx="0" cy="76" fill={item.tone} opacity="0.4" r="8" />
-                <circle cx={interpolate(frame, [82 + index * 44, 150 + index * 44], [0, 238], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' })} cy="76" fill={item.tone} r="10" />
+                <circle cx={trailX} cy="76" fill={item.tone} opacity="0.24" r="7" />
+                <circle cx={Math.max(0, nodeX - 20)} cy="76" fill={item.tone} opacity="0.42" r="8" />
+                <circle cx={nodeX} cy="76" fill="#ffffff" r="15" stroke={item.tone} strokeWidth="6" />
+                <circle cx={nodeX} cy="76" fill={item.tone} opacity="0.18" r="28" />
+                <circle cx="238" cy="76" fill="#ffffff" r={8 + targetPulse * 5} stroke={item.tone} strokeWidth="4" />
               </svg>
 
               <div style={{ alignItems: 'center', background: '#ffffff', border: `1px solid ${SOFT_BORDER}`, borderRadius: 29, boxShadow: '0 22px 64px rgba(7,20,61,0.07)', color: item.tone, display: 'flex', gap: 23, height: 122, justifyContent: 'center', left: 655, position: 'absolute', top: 15, width: 290 }}>
@@ -303,11 +334,31 @@ export function ExpenseClassificationFoldersAction() {
           const y1 = [120, 260, 410, 540, 690][index]
           const y2 = folder.y - 320 + 63
           const path = `M 0 ${y1} C 160 ${y1 + 10}, 135 ${y2 - 75}, 360 ${y2}`
+          const nodeT = interpolate(frame, [95 + index * 28, 210 + index * 28], [0, 1], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' })
+          const node = cubicPoint(
+            nodeT,
+            { x: 0, y: y1 },
+            { x: 160, y: y1 + 10 },
+            { x: 135, y: y2 - 75 },
+            { x: 360, y: y2 },
+          )
+          const trailingNode = cubicPoint(
+            Math.max(0, nodeT - 0.16),
+            { x: 0, y: y1 },
+            { x: 160, y: y1 + 10 },
+            { x: 135, y: y2 - 75 },
+            { x: 360, y: y2 },
+          )
+          const endpointPulse = interpolate(Math.sin(frame / 9 + index), [-1, 1], [0.35, 1])
           return (
             <g key={folder.label} opacity={lineProgress}>
               <path d={path} fill="none" stroke={folder.tone} strokeDasharray="8 12" strokeLinecap="round" strokeWidth="6" />
               <path d={path} fill="none" pathLength={1} stroke={folder.tone} strokeDasharray={`${lineProgress} 1`} strokeLinecap="round" strokeWidth="5" />
               <circle cx="0" cy={y1} fill="#ffffff" r="9" stroke={folder.tone} strokeWidth="5" />
+              <circle cx={trailingNode.x} cy={trailingNode.y} fill={folder.tone} opacity="0.28" r="7" />
+              <circle cx={node.x} cy={node.y} fill={folder.tone} opacity="0.18" r="26" />
+              <circle cx={node.x} cy={node.y} fill="#ffffff" r="13" stroke={folder.tone} strokeWidth="5" />
+              <circle cx="360" cy={y2} fill={folder.tone} opacity="0.18" r={16 + endpointPulse * 9} />
               <circle cx="360" cy={y2} fill="#ffffff" r="9" stroke={folder.tone} strokeWidth="5" />
             </g>
           )

@@ -50,28 +50,28 @@ export function ChatGptToolCallDemoAnimation() {
       <ChatGptFlowUserBubble style={chatGptSequenceStyle(frame, 12, 18)}>
         Analise minhas campanhas de hoje
       </ChatGptFlowUserBubble>
-      <ChatGptFlowAssistantText style={chatGptSequenceStyle(frame, 54, 22)}>
+      <ChatGptFlowAssistantText showHeader={false} style={chatGptSequenceStyle(frame, 54, 22)}>
         Vou chamar get_data para buscar as campanhas ativas.
       </ChatGptFlowAssistantText>
       <ChatGptToolCallCard
         style={chatGptSequenceStyle(frame, 126, 18)}
         toolName="get_data"
       />
-      <ChatGptFlowAssistantText style={chatGptSequenceStyle(frame, 190, 22)}>
+      <ChatGptFlowAssistantText showHeader={false} style={chatGptSequenceStyle(frame, 190, 22)}>
         Agora vou chamar normalize_metrics para padronizar receita, gasto e ROAS.
       </ChatGptFlowAssistantText>
       <ChatGptToolCallCard
         style={chatGptSequenceStyle(frame, 272, 18)}
         toolName="normalize_metrics"
       />
-      <ChatGptFlowAssistantText style={chatGptSequenceStyle(frame, 336, 22)}>
+      <ChatGptFlowAssistantText showHeader={false} style={chatGptSequenceStyle(frame, 336, 22)}>
         Vou chamar detect_anomalies para encontrar campanhas fora do padrao.
       </ChatGptFlowAssistantText>
       <ChatGptToolCallCard
         style={chatGptSequenceStyle(frame, 418, 18)}
         toolName="detect_anomalies"
       />
-      <ChatGptFlowAssistantText style={chatGptSequenceStyle(frame, 482, 22)}>
+      <ChatGptFlowAssistantText showHeader={false} style={chatGptSequenceStyle(frame, 482, 22)}>
         Por fim vou chamar summarize_actions para montar as proximas acoes.
       </ChatGptFlowAssistantText>
       <ChatGptToolCallCard

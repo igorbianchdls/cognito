@@ -135,7 +135,7 @@ export function ChatGptFlowUserBubble({ children, style }: { children: ReactNode
   )
 }
 
-export function ChatGptFlowAssistantText({ children, style }: { children: ReactNode; style: CSSProperties }) {
+export function ChatGptFlowAssistantText({ children, showHeader = true, style }: { children: ReactNode; showHeader?: boolean; style: CSSProperties }) {
   return (
     <div
       style={{
@@ -149,7 +149,7 @@ export function ChatGptFlowAssistantText({ children, style }: { children: ReactN
         padding: '0 42px',
       }}
     >
-      <OttoAssistantHeader />
+      {showHeader ? <OttoAssistantHeader /> : null}
       {fastCharacterTyping(children, style)}
     </div>
   )
@@ -212,9 +212,6 @@ export function ChatGptToolCallCard({
         <Wrench color="#111111" size={25} strokeWidth={2.4} />
       </div>
       <div style={{ alignItems: 'center', display: 'flex', gap: 12, minWidth: 0 }}>
-        <span style={{ color: '#777777', fontSize: 23, fontWeight: 560, letterSpacing: 0, lineHeight: 1.05 }}>
-          Tool
-        </span>
         <span style={{ color: '#111111', fontSize: 30, fontWeight: 620, letterSpacing: 0, lineHeight: 1.05 }}>
           {toolName}
         </span>

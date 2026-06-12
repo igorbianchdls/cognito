@@ -1,9 +1,15 @@
 import { SignUp } from '@clerk/nextjs'
 
+import { ClerkAuthShell, clerkAuthAppearance } from '@/products/auth/frontend/components/ClerkAuthShell'
+
 export default function SignUpPage() {
   return (
-    <main className="flex min-h-screen items-center justify-center bg-gray-100 p-6">
-      <SignUp fallbackRedirectUrl="/onboarding" signInFallbackRedirectUrl="/onboarding" />
-    </main>
+    <ClerkAuthShell mode="sign-up">
+      <SignUp
+        appearance={clerkAuthAppearance}
+        fallbackRedirectUrl="/onboarding"
+        signInFallbackRedirectUrl="/onboarding"
+      />
+    </ClerkAuthShell>
   )
 }
