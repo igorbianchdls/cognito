@@ -1,8 +1,8 @@
 import type { Connector, ConnectorResourceManifest } from '@/products/integracoes/connectors/base/Connector'
 import type { ConnectorContext } from '@/products/integracoes/connectors/base/ConnectorContext'
 import type { ConnectorRow } from '@/products/integracoes/connectors/base/ConnectorResult'
-import { connectorJsonRequest } from '@/products/integracoes/cloud/src/lib/connectorHttp'
-import { ProviderError } from '@/products/integracoes/cloud/src/lib/providerErrors'
+import { connectorJsonRequest } from '@/products/integracoes/connectors/runtime/connectorHttp'
+import { ProviderError } from '@/products/integracoes/connectors/runtime/providerErrors'
 
 export type EcommerceCredentials = {
   accessToken?: string

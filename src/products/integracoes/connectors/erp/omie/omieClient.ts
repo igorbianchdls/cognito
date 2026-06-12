@@ -1,5 +1,5 @@
-import { connectorJsonRequest } from '@/products/integracoes/cloud/src/lib/connectorHttp'
-import { ProviderError } from '@/products/integracoes/cloud/src/lib/providerErrors'
+import { connectorJsonRequest } from '@/products/integracoes/connectors/runtime/connectorHttp'
+import { ProviderError } from '@/products/integracoes/connectors/runtime/providerErrors'
 import type {
   OmieCredentials,
   OmiePagePayload,

@@ -1,7 +1,7 @@
 import type { IntegrationSyncTrigger } from '@/products/integracoes/shared/contracts/syncContracts'
 import { getCloudConnector } from '@/products/integracoes/connectors/registry/providerRegistry'
 import { readSecret } from '@/products/integracoes/cloud/src/lib/secretManager'
-import { refreshOAuthCredentialsIfNeeded } from '@/products/integracoes/cloud/src/oauth/credentials'
+import { refreshOAuthCredentialsIfNeeded } from '@/products/integracoes/connectors/oauth/credentials'
 import { writeRowsToDestination } from '@/products/integracoes/destinations/cloud/destinationWriterRegistry'
 import {
   createIntegrationEvent,

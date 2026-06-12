@@ -1,6 +1,6 @@
-import { waitForProviderRateLimit } from '@/products/integracoes/cloud/src/lib/rateLimit'
-import { withRetry, type RetryOptions } from '@/products/integracoes/cloud/src/lib/retry'
-import { classifyHttpStatus, ProviderError } from '@/products/integracoes/cloud/src/lib/providerErrors'
+import { waitForProviderRateLimit } from '@/products/integracoes/connectors/runtime/rateLimit'
+import { withRetry, type RetryOptions } from '@/products/integracoes/connectors/runtime/retry'
+import { classifyHttpStatus, ProviderError } from '@/products/integracoes/connectors/runtime/providerErrors'
 
 export type ConnectorHttpRequest = {
   provider: string

@@ -4,7 +4,7 @@ import {
   updateConnectionSecret,
   updateConnectionStatus,
 } from '@/products/integracoes/cloud/src/lib/postgresStatus'
-import { refreshOAuthToken } from '@/products/integracoes/cloud/src/oauth/oauth'
+import { refreshOAuthToken } from '@/products/integracoes/connectors/oauth/oauth'
 
 export type ParsedCredentials = Record<string, unknown> | string | null
 

@@ -1,4 +1,4 @@
-import { withRetry, type RetryOptions } from '@/products/integracoes/cloud/src/lib/retry'
+import { withRetry, type RetryOptions } from '@/products/integracoes/connectors/runtime/retry'
 
 type MetadataTokenResponse = {
   access_token?: string
