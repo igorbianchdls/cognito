@@ -1,9 +1,9 @@
-import { writeRowsToBigQuery } from '@/products/integracoes/cloud/src/lib/bigquery'
+import { writeRowsToBigQuery } from '@/products/integracoes/datawarehouse/bigquery/bigquery'
 import type {
   DestinationWriteInput,
   DestinationWriteOutput,
   DestinationWriter,
-} from '@/products/integracoes/cloud/src/destinations/DestinationWriter'
+} from '@/products/integracoes/destinations/cloud/DestinationWriter'
 
 function asString(value: unknown): string | undefined {
   return typeof value === 'string' && value.trim() ? value.trim() : undefined

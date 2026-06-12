@@ -2,8 +2,8 @@ import type {
   DestinationWriteInput,
   DestinationWriteOutput,
   DestinationWriter,
-} from '@/products/integracoes/cloud/src/destinations/DestinationWriter'
-import { bigQueryDestinationWriter } from '@/products/integracoes/cloud/src/destinations/bigQueryDestinationWriter'
+} from '@/products/integracoes/destinations/cloud/DestinationWriter'
+import { bigQueryDestinationWriter } from '@/products/integracoes/destinations/cloud/bigQueryDestinationWriter'
 
 const writers = new Map<string, DestinationWriter>([
   [bigQueryDestinationWriter.type, bigQueryDestinationWriter],

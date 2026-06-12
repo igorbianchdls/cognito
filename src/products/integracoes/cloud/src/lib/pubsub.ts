@@ -1,4 +1,4 @@
-import { getIntegrationsCloudConfig } from '@/products/integracoes/cloud/src/config/gcpConfig'
+import { getIntegrationsCloudConfig } from '@/products/integracoes/datawarehouse/config/gcpConfig'
 import { getCloudAccessToken } from '@/products/integracoes/cloud/src/lib/googleAuth'
 import type { IntegrationSyncTrigger } from '@/products/integracoes/shared/contracts/syncContracts'
 

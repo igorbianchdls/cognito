@@ -11,7 +11,7 @@ import {
 import type {
   IntegrationDestinationStatus,
   IntegrationDestinationType,
-} from '@/products/integracoes/shared/contracts/destinationContracts'
+} from '@/products/integracoes/destinations/shared/destinationContracts'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'

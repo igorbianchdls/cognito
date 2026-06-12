@@ -1,4 +1,4 @@
-import { getSecretName } from '@/products/integracoes/cloud/src/config/gcpConfig'
+import { getSecretName } from '@/products/integracoes/datawarehouse/config/gcpConfig'
 import { authorizedJsonRequest } from '@/products/integracoes/cloud/src/lib/googleAuth'
 
 type SecretAccessResponse = {

@@ -10,7 +10,7 @@ import type {
   IntegrationDestinationStatus,
   IntegrationDestinationType,
   UpdateIntegrationDestinationInput,
-} from '@/products/integracoes/shared/contracts/destinationContracts'
+} from '@/products/integracoes/destinations/shared/destinationContracts'
 import type {
   CreateIntegrationEventInput,
   IntegrationEvent,
@@ -46,7 +46,7 @@ import {
   normalizeConnectionStatus,
   normalizeSyncRunStatus,
 } from '@/products/integracoes/server/integrationStatusMapper'
-import { buildTenantBigQueryDestinationConfig } from '@/products/integracoes/shared/tenantBigQueryDatasets'
+import { buildTenantBigQueryDestinationConfig } from '@/products/integracoes/datawarehouse/tenantBigQueryDatasets'
 
 type JsonObject = Record<string, unknown>
 

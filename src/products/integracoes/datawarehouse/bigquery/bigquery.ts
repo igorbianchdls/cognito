@@ -1,4 +1,4 @@
-import { getIntegrationsCloudConfig } from '@/products/integracoes/cloud/src/config/gcpConfig'
+import { getIntegrationsCloudConfig } from '@/products/integracoes/datawarehouse/config/gcpConfig'
 import { authorizedJsonRequest } from '@/products/integracoes/cloud/src/lib/googleAuth'
 
 export type BigQueryWriteInput = {

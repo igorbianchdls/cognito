@@ -1,6 +1,6 @@
 import { createHmac, randomBytes, timingSafeEqual } from 'node:crypto'
 
-import { getIntegrationsCloudConfig } from '@/products/integracoes/cloud/src/config/gcpConfig'
+import { getIntegrationsCloudConfig } from '@/products/integracoes/datawarehouse/config/gcpConfig'
 import { readSecret } from '@/products/integracoes/cloud/src/lib/secretManager'
 
 export type OAuthTokenSet = {

@@ -2,7 +2,7 @@ import type { IntegrationSyncTrigger } from '@/products/integracoes/shared/contr
 import { getCloudConnector } from '@/products/integracoes/cloud/src/providers/providerRegistry'
 import { readSecret } from '@/products/integracoes/cloud/src/lib/secretManager'
 import { refreshOAuthCredentialsIfNeeded } from '@/products/integracoes/cloud/src/oauth/credentials'
-import { writeRowsToDestination } from '@/products/integracoes/cloud/src/destinations/destinationWriterRegistry'
+import { writeRowsToDestination } from '@/products/integracoes/destinations/cloud/destinationWriterRegistry'
 import {
   createIntegrationEvent,
   startCloudSyncRun,
@@ -14,7 +14,7 @@ import {
   writeIntegrationCursor,
   type CloudIntegrationDestination,
 } from '@/products/integracoes/cloud/src/lib/postgresStatus'
-import { buildTenantBigQueryDestinationConfig } from '@/products/integracoes/shared/tenantBigQueryDatasets'
+import { buildTenantBigQueryDestinationConfig } from '@/products/integracoes/datawarehouse/tenantBigQueryDatasets'
 
 export type RunSyncJobInput = {
   tenantId: number

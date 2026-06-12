@@ -9,8 +9,8 @@ import {
   integrationAuthErrorResponse,
   resolveIntegrationTenant,
 } from '@/products/integracoes/server/integrationTenantAuth'
-import { getIntegrationsCloudConfig } from '@/products/integracoes/cloud/src/config/gcpConfig'
-import { getTenantBigQueryDatasets } from '@/products/integracoes/shared/tenantBigQueryDatasets'
+import { getIntegrationsCloudConfig } from '@/products/integracoes/datawarehouse/config/gcpConfig'
+import { getTenantBigQueryDatasets } from '@/products/integracoes/datawarehouse/tenantBigQueryDatasets'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
