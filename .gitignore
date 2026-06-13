@@ -28,6 +28,7 @@ a
 
 # production
 /build
+src/products/integracoes/cloud/dist/
 
 # misc
 .DS_Store

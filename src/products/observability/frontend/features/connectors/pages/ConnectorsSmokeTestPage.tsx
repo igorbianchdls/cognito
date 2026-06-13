@@ -43,6 +43,7 @@ type StepKey =
 type JsonRecord = Record<string, unknown>
 
 const CONTA_AZUL_PROVIDER = 'conta_azul'
+const INTERNAL_TEST_API_BASE = '/api/internal/observability/connectors/test'
 const SELECTED_RESOURCES = ['clientes', 'fornecedores', 'produtos', 'contas_receber', 'contas_pagar', 'vendas', 'estoque']
 const PLUGIN_READ_RESOURCES = [
   '*',
@@ -197,7 +198,7 @@ function Metric({ label, value }: { label: string; value: unknown }) {
   )
 }
 
-export default function IntegracoesTestePage() {
+export default function ConnectorsSmokeTestPage() {
   const [steps, setSteps] = useState<Record<StepKey, StepState>>(INITIAL_STEPS)
   const [tenantId, setTenantId] = useState<number | null>(null)
   const [connectionId, setConnectionId] = useState('')
@@ -233,7 +234,7 @@ export default function IntegracoesTestePage() {
   }
 
   async function testTenant() {
-    const data = await runStep('tenant', () => requestJson(`/api/integracoes/test/tenant${tenantQuery}`))
+    const data = await runStep('tenant', () => requestJson(`${INTERNAL_TEST_API_BASE}/tenant${tenantQuery}`))
     const resolvedTenantId = Number(asRecord(asRecord(data).tenant).tenantId || 0)
     if (resolvedTenantId > 0) setTenantId(resolvedTenantId)
   }
@@ -275,7 +276,7 @@ export default function IntegracoesTestePage() {
           syncModes: ['manual'],
           metadata: {
             smokeTest: true,
-            source: 'integracoes-teste',
+            source: 'observability-connectors-test',
           },
         }),
       })
@@ -377,7 +378,7 @@ export default function IntegracoesTestePage() {
           requireConfirmation: true,
           metadata: {
             smokeTest: true,
-            source: 'integracoes-teste',
+            source: 'observability-connectors-test',
           },
         }),
       })
@@ -396,7 +397,7 @@ export default function IntegracoesTestePage() {
           destinationId: destinationId || undefined,
           trigger: 'manual',
           resources: ['clientes'],
-          requestedBy: 'integracoes-teste',
+          requestedBy: 'observability-connectors-test',
         }),
       })
     })
@@ -411,17 +412,17 @@ export default function IntegracoesTestePage() {
   }
 
   async function testGcloud() {
-    await runStep('gcloud', () => requestJson(`/api/integracoes/test/gcloud${tenantQuery}`))
+    await runStep('gcloud', () => requestJson(`${INTERNAL_TEST_API_BASE}/gcloud${tenantQuery}`))
   }
 
   async function testBigQuery() {
-    await runStep('bigquery', () => requestJson(`/api/integracoes/test/bigquery${tenantQuery}`))
+    await runStep('bigquery', () => requestJson(`${INTERNAL_TEST_API_BASE}/bigquery${tenantQuery}`))
   }
 
   async function testPlugin() {
     await runStep('plugin', async () => {
       if (!connectionId) throw new Error('connectionId ausente.')
-      return requestJson('/api/integracoes/test/plugin', {
+      return requestJson(`${INTERNAL_TEST_API_BASE}/plugin`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -459,7 +460,7 @@ export default function IntegracoesTestePage() {
           <div>
             <div className="flex items-center gap-2 text-sm font-medium text-slate-500">
               <Plug className="h-4 w-4" />
-              Integracoes
+              Internal observability
             </div>
             <h1 className="mt-2 text-2xl font-semibold tracking-normal text-slate-950">Teste de fluxo Conta Azul</h1>
           </div>
