@@ -12,7 +12,7 @@ export type ProviderReadinessCheck = {
   label: string
   required: boolean
   status: ProviderReadinessCheckStatus
-  source: 'env' | 'secret_manager' | 'not_applicable' | 'not_checked'
+  source: 'env' | 'secret_manager' | 'manual_override' | 'not_applicable' | 'not_checked'
   detail?: string
 }
 
@@ -69,6 +69,10 @@ const OAUTH_CHECKS: OAuthCheckDefinition[] = [
   { key: 'scopes', label: 'Scopes', envSuffix: 'SCOPES', secretSuffix: 'scopes', required: false },
   { key: 'tokenAuthMethod', label: 'Token auth method', envSuffix: 'TOKEN_AUTH_METHOD', secretSuffix: 'token-auth-method', required: false },
 ]
+
+const MANUALLY_VERIFIED_OAUTH_PROVIDERS = new Set([
+  'conta_azul',
+])
 
 function envName(provider: string, suffix: string) {
   return `INTEGRATIONS_OAUTH_${provider.toUpperCase().replace(/[^A-Z0-9]+/g, '_')}_${suffix}`
@@ -145,6 +149,17 @@ async function checkSecret(provider: string, check: OAuthCheckDefinition): Promi
 }
 
 async function buildOAuthChecks(provider: IntegrationProvider, secretManagerEnabled: boolean): Promise<ProviderReadinessCheck[]> {
+  if (MANUALLY_VERIFIED_OAUTH_PROVIDERS.has(provider.slug)) {
+    return OAUTH_CHECKS.map((check) => ({
+      key: check.key,
+      label: check.label,
+      required: check.required,
+      status: 'present',
+      source: 'manual_override',
+      detail: 'Verificado manualmente.',
+    }))
+  }
+
   return Promise.all(OAUTH_CHECKS.map(async (check) => {
     if (envValueForCheck(provider.slug, check)) {
       return {
