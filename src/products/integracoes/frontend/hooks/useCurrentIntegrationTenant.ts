@@ -7,6 +7,10 @@ function parseTenantId(value: unknown): number | null {
   return Number.isFinite(parsed) && parsed > 0 ? parsed : null
 }
 
+type BootstrapMembership = {
+  tenantId?: unknown
+}
+
 function resolveBrowserTenantId(): number | null {
   if (typeof window !== 'undefined') {
     const params = new URLSearchParams(window.location.search)
@@ -44,7 +48,16 @@ export default function useCurrentIntegrationTenant(): number {
         }
 
         const activeTenantId = parseTenantId(payload?.activeTenant?.tenantId)
-        if (!cancelled && activeTenantId && !initialTenantId) {
+        const membershipTenantIds = Array.isArray(payload?.memberships)
+          ? payload.memberships
+              .map((membership: BootstrapMembership) => parseTenantId(membership?.tenantId))
+              .filter((id: number | null): id is number => Boolean(id))
+          : []
+        const initialTenantAllowed = initialTenantId
+          ? membershipTenantIds.includes(initialTenantId)
+          : false
+
+        if (!cancelled && activeTenantId && (!initialTenantId || !initialTenantAllowed)) {
           setTenantId(activeTenantId)
           window.localStorage.setItem('cognito:tenantId', String(activeTenantId))
         }

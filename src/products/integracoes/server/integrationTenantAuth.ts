@@ -99,6 +99,16 @@ export async function resolveIntegrationTenant(
         code: 'tenant_role_forbidden',
       })
     }
+
+    return {
+      tenantId: membership.tenantId,
+      tenantName: membership.tenantName,
+      tenantSlug: membership.tenantSlug,
+      userId: clerkBootstrap.clerkUserId,
+      sharedUserId: clerkBootstrap.sharedUserId,
+      role: membership.role,
+      authMode: 'clerk',
+    }
   }
 
   const devTenantId = getDevFallbackTenantId()

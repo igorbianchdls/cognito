@@ -7,7 +7,9 @@ export default function SignInPage() {
     <ClerkAuthShell mode="sign-in">
       <SignIn
         appearance={clerkAuthAppearance}
+        forceRedirectUrl="/onboarding"
         fallbackRedirectUrl="/onboarding"
+        signUpForceRedirectUrl="/onboarding"
         signUpFallbackRedirectUrl="/onboarding"
       />
     </ClerkAuthShell>

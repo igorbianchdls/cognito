@@ -126,13 +126,25 @@ export function AuthUserMenu() {
         </Show>
         <Show when="signed-out">
           <div className="grid gap-1 p-1 group-data-[collapsible=icon]:hidden">
-            <SignInButton mode="modal" fallbackRedirectUrl="/onboarding" signUpFallbackRedirectUrl="/onboarding">
+            <SignInButton
+              mode="modal"
+              forceRedirectUrl="/onboarding"
+              fallbackRedirectUrl="/onboarding"
+              signUpForceRedirectUrl="/onboarding"
+              signUpFallbackRedirectUrl="/onboarding"
+            >
               <SidebarMenuButton size="sm">
                 <LogIn className="size-4" />
                 <span>Entrar</span>
               </SidebarMenuButton>
             </SignInButton>
-            <SignUpButton mode="modal" fallbackRedirectUrl="/onboarding" signInFallbackRedirectUrl="/onboarding">
+            <SignUpButton
+              mode="modal"
+              forceRedirectUrl="/onboarding"
+              fallbackRedirectUrl="/onboarding"
+              signInForceRedirectUrl="/onboarding"
+              signInFallbackRedirectUrl="/onboarding"
+            >
               <SidebarMenuButton size="sm">
                 <UserPlus className="size-4" />
                 <span>Criar conta</span>
