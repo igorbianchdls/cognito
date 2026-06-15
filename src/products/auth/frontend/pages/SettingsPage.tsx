@@ -80,6 +80,7 @@ function MemberAvatar({ member }: { member: SettingsMember }) {
 }
 
 export default function SettingsPage({ initialState }: SettingsPageProps) {
+  const [activeTab, setActiveTab] = useState('profile')
   const [state, setState] = useState(initialState)
   const [profileName, setProfileName] = useState(initialState.profile.fullName || '')
   const [workspaceName, setWorkspaceName] = useState(initialState.workspace.name)
@@ -160,7 +161,7 @@ export default function SettingsPage({ initialState }: SettingsPageProps) {
               </Badge>
             </header>
 
-            <Tabs defaultValue="profile" className="grid gap-5">
+            <Tabs value={activeTab} onValueChange={setActiveTab} className="grid gap-5">
               <TabsList className="h-auto w-full justify-start overflow-x-auto rounded-md border border-slate-200 bg-white p-1">
                 <TabsTrigger value="profile" className="gap-2 rounded-sm">
                   <User className="size-4" />
