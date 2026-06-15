@@ -204,6 +204,13 @@ export async function createIntegrationConnection(
     window.location.assign(payload.setup.authorizationUrl)
   }
 
+  if (!payload.setup?.authorizationUrl && (payload.setup?.status === 'pending_auth' || payload.setup?.mode === 'local_stub')) {
+    throw new Error(
+      payload.setup.message
+        || 'OAuth pendente, mas a URL de autorizacao nao foi retornada. Verifique INTEGRATIONS_CONTROL_API_URL no deploy web.',
+    )
+  }
+
   return payload.connection
 }
 

@@ -90,7 +90,7 @@ export async function prepareConnectionSetup(params: {
   return {
     mode: 'local_stub',
     connection,
-    message: 'Setup local criado. A autenticacao real sera conectada ao Cloud Run em etapa futura.',
+    message: 'OAuth real indisponivel: INTEGRATIONS_CONTROL_API_URL nao esta configurada no deploy web.',
   }
 }
 
