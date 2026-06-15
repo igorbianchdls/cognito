@@ -1,6 +1,7 @@
 import type {
   SettingsMember,
   SettingsProfile,
+  SettingsState,
   SettingsWorkspace,
   UpdateMemberInput,
   UpdateProfileInput,
@@ -20,6 +21,12 @@ async function requestJson<T>(url: string, init: RequestInit): Promise<T> {
     throw new Error(payload?.error || 'Nao foi possivel salvar as alteracoes.')
   }
   return payload as T
+}
+
+export async function fetchSettingsState(): Promise<SettingsState> {
+  return requestJson<SettingsState>('/api/settings', {
+    method: 'GET',
+  })
 }
 
 export async function updateSettingsProfile(input: UpdateProfileInput): Promise<SettingsProfile> {

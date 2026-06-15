@@ -1,10 +1,17 @@
 "use client"
 
+import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { Show, SignInButton, SignUpButton, useClerk, useUser } from '@clerk/nextjs'
-import { ChevronsUpDown, LogIn, LogOut, Plug, Settings, UserPlus } from 'lucide-react'
+import { ChevronsUpDown, Loader2, LogIn, LogOut, Plug, Settings, UserPlus } from 'lucide-react'
 
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogTitle,
+} from '@/components/ui/dialog'
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -18,6 +25,9 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from '@/components/ui/sidebar'
+import SettingsPanel from '@/products/auth/frontend/components/SettingsPanel'
+import { fetchSettingsState } from '@/products/auth/frontend/services/settingsApi'
+import type { SettingsState } from '@/products/auth/shared/settingsContracts'
 
 function getInitials(name: string, email: string) {
   const source = name && name !== 'Conta' ? name : email
@@ -32,10 +42,37 @@ function getInitials(name: string, email: string) {
 export function AuthUserMenu() {
   const { signOut } = useClerk()
   const { user } = useUser()
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false)
+  const [settingsState, setSettingsState] = useState<SettingsState | null>(null)
+  const [settingsError, setSettingsError] = useState<string | null>(null)
+  const [isSettingsLoading, setIsSettingsLoading] = useState(false)
   const displayName = user?.fullName || user?.primaryEmailAddress?.emailAddress || 'Conta'
   const email = user?.primaryEmailAddress?.emailAddress || ''
   const avatarUrl = user?.imageUrl || ''
   const initials = getInitials(displayName, email)
+
+  useEffect(() => {
+    if (!isSettingsOpen) return
+    let isCurrent = true
+    setIsSettingsLoading(true)
+    setSettingsError(null)
+    void fetchSettingsState()
+      .then((state) => {
+        if (isCurrent) setSettingsState(state)
+      })
+      .catch((error) => {
+        if (isCurrent) {
+          setSettingsError(error instanceof Error ? error.message : 'Nao foi possivel carregar configuracoes.')
+        }
+      })
+      .finally(() => {
+        if (isCurrent) setIsSettingsLoading(false)
+      })
+
+    return () => {
+      isCurrent = false
+    }
+  }, [isSettingsOpen])
 
   return (
     <SidebarMenu>
@@ -76,11 +113,9 @@ export function AuthUserMenu() {
                   </div>
                 </DropdownMenuLabel>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem asChild>
-                  <Link href="/configuracoes">
-                    <Settings className="size-4" />
-                    <span>Gerenciar conta</span>
-                  </Link>
+                <DropdownMenuItem onSelect={() => setIsSettingsOpen(true)}>
+                  <Settings className="size-4" />
+                  <span>Gerenciar conta</span>
                 </DropdownMenuItem>
                 <DropdownMenuItem asChild>
                   <Link href="/integracoes">
@@ -101,6 +136,31 @@ export function AuthUserMenu() {
               </DropdownMenuContent>
             </DropdownMenu>
 
+            <Dialog open={isSettingsOpen} onOpenChange={setIsSettingsOpen}>
+              <DialogContent className="max-h-[88vh] w-[calc(100vw-32px)] max-w-[880px] overflow-hidden border-0 bg-transparent p-0 shadow-2xl sm:rounded-lg">
+                <DialogTitle className="sr-only">Gerenciar conta</DialogTitle>
+                <DialogDescription className="sr-only">
+                  Atualize perfil, seguranca, workspace e membros.
+                </DialogDescription>
+                {isSettingsLoading && !settingsState ? (
+                  <div className="grid h-[min(704px,88vh)] place-items-center rounded-lg bg-white text-slate-700">
+                    <div className="flex items-center gap-2 text-sm font-medium">
+                      <Loader2 className="size-4 animate-spin" />
+                      Carregando configuracoes...
+                    </div>
+                  </div>
+                ) : null}
+                {settingsError && !settingsState ? (
+                  <div className="grid h-[min(704px,88vh)] place-items-center rounded-lg bg-white px-8 text-center">
+                    <div className="grid gap-2">
+                      <p className="text-sm font-semibold text-slate-950">Nao foi possivel abrir a conta.</p>
+                      <p className="text-sm text-slate-600">{settingsError}</p>
+                    </div>
+                  </div>
+                ) : null}
+                {settingsState ? <SettingsPanel initialState={settingsState} /> : null}
+              </DialogContent>
+            </Dialog>
           </>
         </Show>
         <Show when="signed-out">
