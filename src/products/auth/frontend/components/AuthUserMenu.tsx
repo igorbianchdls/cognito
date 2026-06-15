@@ -1,18 +1,10 @@
 "use client"
 
-import { useState } from 'react'
 import Link from 'next/link'
-import { Show, SignInButton, SignUpButton, UserProfile, useClerk, useUser } from '@clerk/nextjs'
+import { Show, SignInButton, SignUpButton, useClerk, useUser } from '@clerk/nextjs'
 import { ChevronsUpDown, LogIn, LogOut, Plug, Settings, UserPlus } from 'lucide-react'
 
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog'
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -26,7 +18,6 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from '@/components/ui/sidebar'
-import { clerkAuthAppearance } from '@/products/auth/frontend/components/ClerkAuthShell'
 
 function getInitials(name: string, email: string) {
   const source = name && name !== 'Conta' ? name : email
@@ -41,7 +32,6 @@ function getInitials(name: string, email: string) {
 export function AuthUserMenu() {
   const { signOut } = useClerk()
   const { user } = useUser()
-  const [isProfileOpen, setIsProfileOpen] = useState(false)
   const displayName = user?.fullName || user?.primaryEmailAddress?.emailAddress || 'Conta'
   const email = user?.primaryEmailAddress?.emailAddress || ''
   const avatarUrl = user?.imageUrl || ''
@@ -86,9 +76,11 @@ export function AuthUserMenu() {
                   </div>
                 </DropdownMenuLabel>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem onSelect={() => setIsProfileOpen(true)}>
-                  <Settings className="size-4" />
-                  <span>Gerenciar conta</span>
+                <DropdownMenuItem asChild>
+                  <Link href="/configuracoes">
+                    <Settings className="size-4" />
+                    <span>Gerenciar conta</span>
+                  </Link>
                 </DropdownMenuItem>
                 <DropdownMenuItem asChild>
                   <Link href="/integracoes">
@@ -109,19 +101,6 @@ export function AuthUserMenu() {
               </DropdownMenuContent>
             </DropdownMenu>
 
-            <Dialog open={isProfileOpen} onOpenChange={setIsProfileOpen}>
-              <DialogContent className="max-h-[88vh] max-w-3xl overflow-hidden p-0">
-                <DialogHeader className="border-b border-slate-200 px-6 py-5">
-                  <DialogTitle>Gerenciar conta</DialogTitle>
-                  <DialogDescription>
-                    Atualize dados pessoais, segurança e sessões da sua conta.
-                  </DialogDescription>
-                </DialogHeader>
-                <div className="max-h-[calc(88vh-105px)] overflow-y-auto px-6 py-5">
-                  <UserProfile appearance={clerkAuthAppearance} routing="hash" />
-                </div>
-              </DialogContent>
-            </Dialog>
           </>
         </Show>
         <Show when="signed-out">
