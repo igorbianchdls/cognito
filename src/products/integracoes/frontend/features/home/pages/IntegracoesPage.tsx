@@ -20,9 +20,7 @@ import { renderIntegrationLogo, toolkitHasIcon } from '@/products/integracoes/sh
 import {
   DATA_CONNECTOR_TOP_PRIORITY_ORDER,
 } from '@/products/integracoes/shared/catalogPresentation'
-import { DATA_CONNECTOR_EXTRA_TOOLKITS } from '@/products/integracoes/shared/dataConnectorExtras'
-import { TOOLKITS } from '@/products/integracoes/shared/toolkits'
-import { getIntegrationProvider } from '@/products/integracoes/shared/providers/providerCatalog'
+import { getIntegrationProvider, INTEGRATION_PROVIDER_TOOLKITS } from '@/products/integracoes/shared/providers/providerCatalog'
 import type { IntegrationProvider } from '@/products/integracoes/shared/providers/providerTypes'
 import type { ToolkitDefinition, ToolkitStatusMap } from '@/products/integracoes/shared/types'
 
@@ -160,6 +158,9 @@ function categorizeToolkit(slug: string): CatalogCategory {
   if (provider?.domain === 'erp') return 'erp'
   if (provider?.domain === 'crm') return 'crm'
   if (provider?.domain === 'analytics') return 'analytics'
+  if (provider?.domain === 'ecommerce') return 'marketing'
+  if (provider?.domain === 'social') return 'marketing'
+  if (provider?.domain === 'advertising') return 'marketing'
   if (COMMUNICATION_SLUGS.has(key)) return 'communication'
   if (DATA_SLUGS.has(key)) return 'data'
   if (PRODUCTIVITY_SLUGS.has(key)) return 'productivity'
@@ -348,7 +349,7 @@ export default function IntegracoesPage() {
   )
   const dataConnectorSamples = useMemo(() => {
     const map = new Map<string, ToolkitDefinition>()
-    for (const tk of [...TOOLKITS, ...DATA_CONNECTOR_EXTRA_TOOLKITS]) {
+    for (const tk of INTEGRATION_PROVIDER_TOOLKITS) {
       map.set(String(tk.slug).toUpperCase(), tk)
     }
     return Array.from(map.values())
