@@ -15,6 +15,7 @@ import {
   type CloudIntegrationDestination,
 } from '@/products/integracoes/cloud/src/lib/postgresStatus'
 import { buildTenantBigQueryDestinationConfig } from '@/products/integracoes/datawarehouse/tenantBigQueryDatasets'
+import { runNormalization } from '@/products/integracoes/datawarehouse/normalization/runNormalization'
 
 export type RunSyncJobInput = {
   tenantId: number
@@ -181,6 +182,8 @@ export async function runSyncJob(input: RunSyncJobInput): Promise<RunSyncJobOutp
         }, resource)
 
         let rowsWritten = 0
+        let normalizedRowsWritten = 0
+        const normalizationWarnings: string[] = []
         const batches = result.batches?.length
           ? result.batches
           : [{
@@ -192,18 +195,46 @@ export async function runSyncJob(input: RunSyncJobInput): Promise<RunSyncJobOutp
         for (const batch of batches) {
           const batchRows = normalizeRows(batch.rows)
           if (batchRows.length) {
+            const batchResource = batch.resource || resource
+            const sourceTable = `${connection.provider}_${batchResource}`
             const write = await writeRowsToDestination({
               tenantId: input.tenantId,
               connectionId: connection.id,
               pipelineId: pipeline?.id || null,
               destination,
               provider: connection.provider,
-              resource: batch.resource || resource,
+              resource: batchResource,
               runId: run.id,
-              table: `${connection.provider}_${batch.resource || resource}`,
+              table: sourceTable,
               rows: batchRows,
             })
             rowsWritten += write.insertedRows
+
+            try {
+              const normalized = await runNormalization({
+                tenantId: input.tenantId,
+                connectionId: connection.id,
+                provider: connection.provider,
+                resource: batchResource,
+                runId: run.id,
+                sourceTable,
+                rows: batchRows,
+              })
+              normalizedRowsWritten += normalized.write?.insertedRows || 0
+            } catch (error) {
+              const warning = error instanceof Error ? error.message : String(error)
+              normalizationWarnings.push(warning)
+              status = aggregateStatus(status, 'warning')
+              await createIntegrationEvent({
+                tenantId: input.tenantId,
+                connectionId: connection.id,
+                eventType: 'system.note',
+                severity: 'warning',
+                actor: 'integrations-worker',
+                message: `Normalizacao do recurso ${batchResource} falhou; raw preservado.`,
+                metadata: { runId: run.id, resource: batchResource, errorMessage: warning },
+              })
+            }
           }
           if (batch.nextCursor) {
             await writeIntegrationCursor({
@@ -219,13 +250,16 @@ export async function runSyncJob(input: RunSyncJobInput): Promise<RunSyncJobOutp
         recordsUpdated += result.recordsUpdated || rowsWritten
         recordsFailed += result.recordsFailed
         status = aggregateStatus(status, result.status)
+        const resourceStatus = normalizationWarnings.length && result.status === 'success' ? 'warning' : result.status
         resourceSummaries.push({
           resource,
-          status: result.status,
+          status: resourceStatus,
           recordsIn: result.recordsIn,
           recordsUpdated: result.recordsUpdated || rowsWritten,
           recordsFailed: result.recordsFailed,
           rowsWritten,
+          normalizedRowsWritten,
+          normalizationWarnings,
           errorMessage: result.errorMessage || null,
         })
 
@@ -233,10 +267,17 @@ export async function runSyncJob(input: RunSyncJobInput): Promise<RunSyncJobOutp
           tenantId: input.tenantId,
           connectionId: connection.id,
           eventType: 'sync.resource.completed',
-          severity: result.status === 'error' ? 'error' : result.status === 'warning' ? 'warning' : 'info',
+          severity: resourceStatus === 'error' ? 'error' : resourceStatus === 'warning' ? 'warning' : 'info',
           actor: 'integrations-worker',
           message: `Sincronizacao do recurso ${resource} concluida.`,
-          metadata: { runId: run.id, resource, rowsWritten, status: result.status },
+          metadata: {
+            runId: run.id,
+            resource,
+            rowsWritten,
+            normalizedRowsWritten,
+            normalizationWarnings,
+            status: resourceStatus,
+          },
         })
       } catch (error) {
         recordsFailed += 1
