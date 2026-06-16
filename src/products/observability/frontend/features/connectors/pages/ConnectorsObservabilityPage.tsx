@@ -1,14 +1,18 @@
 import Link from 'next/link'
 import type { ReactNode } from 'react'
 
+import BigQueryTenantsDashboard from '@/products/observability/frontend/features/connectors/components/BigQueryTenantsDashboard'
 import ProviderCoverageDashboard from '@/products/observability/frontend/features/connectors/components/ProviderCoverageDashboard'
 import ProviderReadinessDashboard from '@/products/observability/frontend/features/connectors/components/ProviderReadinessDashboard'
 import { buildConnectorsCoverage } from '@/products/observability/frontend/features/connectors/lib/providerCoverage'
 import { buildProviderReadinessSnapshot } from '@/products/observability/frontend/features/connectors/lib/providerReadiness'
-import { getConnectorsObservabilitySnapshot } from '@/products/observability/server/connectorsObservabilityRepository'
+import {
+  getConnectorsObservabilitySnapshot,
+  getTenantBigQueryObservabilitySnapshot,
+} from '@/products/observability/server/connectorsObservabilityRepository'
 import { listIntegrationProviders } from '@/products/integracoes/shared/providers/providerCatalog'
 
-export type ConnectorsObservabilityTab = 'connections' | 'providers'
+export type ConnectorsObservabilityTab = 'connections' | 'providers' | 'bigquery'
 
 function tabClass(active: boolean) {
   return active
@@ -23,12 +27,37 @@ export default async function ConnectorsObservabilityPage({
 }) {
   const providers = listIntegrationProviders()
   const isProvidersTab = activeTab === 'providers'
+  const isBigQueryTab = activeTab === 'bigquery'
 
   let generatedAt = new Date().toISOString()
   let errorMessage: string | null = null
   let content: ReactNode = null
 
-  if (isProvidersTab) {
+  if (isBigQueryTab) {
+    const snapshot = await getTenantBigQueryObservabilitySnapshot().catch((error) => ({
+      error: error instanceof Error ? error.message : 'Falha ao carregar BigQuery por tenant.',
+      projectId: '',
+      summary: {
+        totalTenants: 0,
+        okTenants: 0,
+        attentionTenants: 0,
+        missingDestinations: 0,
+        missingDatasets: 0,
+      },
+      rows: [],
+      generatedAt: new Date().toISOString(),
+    }))
+    generatedAt = snapshot.generatedAt
+    errorMessage = 'error' in snapshot ? snapshot.error : null
+    content = (
+      <BigQueryTenantsDashboard
+        generatedAt={snapshot.generatedAt}
+        projectId={snapshot.projectId}
+        rows={snapshot.rows}
+        summary={snapshot.summary}
+      />
+    )
+  } else if (isProvidersTab) {
     const snapshot = await buildProviderReadinessSnapshot(providers).catch((error) => ({
       error: error instanceof Error ? error.message : 'Falha ao carregar readiness de providers.',
       summary: {
@@ -79,7 +108,7 @@ export default async function ConnectorsObservabilityPage({
             <p className="text-xs font-semibold uppercase tracking-[0.12em] text-slate-500">Internal observability</p>
             <h1 className="mt-2 text-3xl font-semibold tracking-tight text-slate-950">Connectors</h1>
             <p className="mt-2 max-w-2xl text-sm text-slate-500">
-              Observability separada entre providers habilitados e conexoes criadas por tenant.
+              Observability separada entre tenants, BigQuery, providers habilitados e conexoes criadas.
             </p>
           </div>
           <div className="rounded-md border border-slate-200 bg-white px-3 py-2 text-xs text-slate-500 shadow-sm">
@@ -105,6 +134,12 @@ export default async function ConnectorsObservabilityPage({
             className={`rounded-md border px-3 py-2 text-sm font-semibold transition ${tabClass(activeTab === 'providers')}`}
           >
             Providers habilitados
+          </Link>
+          <Link
+            href="/internal/observability/connectors?tab=bigquery"
+            className={`rounded-md border px-3 py-2 text-sm font-semibold transition ${tabClass(activeTab === 'bigquery')}`}
+          >
+            Tenants & BigQuery
           </Link>
         </nav>
 

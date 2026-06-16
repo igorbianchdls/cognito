@@ -19,6 +19,7 @@ function parseAllowlist(value: string | undefined) {
 
 function parseTab(value: string | string[] | undefined): ConnectorsObservabilityTab {
   const tab = Array.isArray(value) ? value[0] : value
+  if (tab === 'bigquery') return 'bigquery'
   return tab === 'providers' ? 'providers' : 'connections'
 }
 
