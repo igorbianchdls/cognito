@@ -1,6 +1,12 @@
 import { auth, clerkClient } from '@clerk/nextjs/server'
 
 import { withTransaction, type SQLClient } from '@/lib/postgres'
+import {
+  createClerkOrganization,
+  updateClerkOrganizationMetadata,
+  type ClerkOrganizationPayload,
+} from '@/products/auth/server/clerkOrganizationClient'
+import { provisionTenantBigQuery } from '@/products/integracoes/datawarehouse/provisioning/tenantBigQueryProvisioning'
 import type {
   AuthTenantMembership,
   ClerkTenantBootstrapResult,
@@ -15,6 +21,9 @@ type SharedUserRow = {
 }
 
 type TenantMembershipRow = {
+  clerk_membership_id: string | null
+  clerk_organization_id: string | null
+  clerk_organization_slug: string | null
   tenant_id: string | number
   tenant_name: string
   tenant_slug: string | null
@@ -22,6 +31,8 @@ type TenantMembershipRow = {
 }
 
 type TenantRow = {
+  clerk_organization_id?: string | null
+  clerk_organization_slug?: string | null
   id: string | number
   name: string
   slug: string | null
@@ -78,6 +89,9 @@ function normalizeCompanyName(value: unknown) {
 function normalizeMembership(row: TenantMembershipRow): AuthTenantMembership {
   const role = toText(row.role)
   return {
+    clerkMembershipId: row.clerk_membership_id,
+    clerkOrganizationId: row.clerk_organization_id,
+    clerkOrganizationSlug: row.clerk_organization_slug,
     tenantId: Number(row.tenant_id),
     tenantName: row.tenant_name,
     tenantSlug: row.tenant_slug,
@@ -199,6 +213,9 @@ async function listMemberships(
        tenants.id::text AS tenant_id,
        tenants.name::text AS tenant_name,
        tenants.slug::text AS tenant_slug,
+       tenants.clerk_organization_id::text AS clerk_organization_id,
+       tenants.clerk_organization_slug::text AS clerk_organization_slug,
+       memberships.clerk_membership_id::text AS clerk_membership_id,
        memberships.role::text AS role
      FROM shared.tenant_memberships AS memberships
      JOIN shared.tenants AS tenants
@@ -224,36 +241,63 @@ async function createInitialTenant(
   client: Pick<SQLClient, 'query'>,
   sharedUserId: number,
   profile: ClerkProfile,
-  companyName?: string,
+  options: {
+    clerkOrganization?: ClerkOrganizationPayload | null
+    companyName?: string
+    tenantName?: string
+  } = {},
 ): Promise<AuthTenantMembership> {
-  const tenantName = companyName ? normalizeCompanyName(companyName) : getTenantName(profile)
+  const tenantName = options.tenantName || (options.companyName ? normalizeCompanyName(options.companyName) : getTenantName(profile))
   const baseSlug = slugify(tenantName)
   const suffix = profile.clerkUserId.slice(-8).toLowerCase().replace(/[^a-z0-9]+/g, '')
-  const slug = `${baseSlug}-${suffix || sharedUserId}`
+  const slug = options.clerkOrganization?.slug || `${baseSlug}-${suffix || sharedUserId}`
+  const metadata = {
+    clerkOrganizationId: options.clerkOrganization?.id || null,
+    createdBy: 'clerk_bootstrap',
+    source: options.clerkOrganization ? 'clerk_organization' : 'clerk',
+    ownerClerkUserId: profile.clerkUserId,
+    onboardingCompletedAt: new Date().toISOString(),
+  }
 
-  const tenantResult = await client.query(
-    `INSERT INTO shared.tenants (name, slug, status, metadata, updated_at)
-     VALUES ($1, $2, 'active', $3::jsonb, now())
-     ON CONFLICT (slug)
-     DO UPDATE SET
-       updated_at = now()
-     RETURNING id, name, slug`,
-    [
-      tenantName,
-      slug,
-      JSON.stringify({
-        createdBy: 'clerk_bootstrap',
-        source: 'clerk',
-        ownerClerkUserId: profile.clerkUserId,
-        onboardingCompletedAt: new Date().toISOString(),
-      }),
-    ],
-  )
+  const tenantResult = options.clerkOrganization
+    ? await client.query(
+      `INSERT INTO shared.tenants
+         (name, slug, status, clerk_organization_id, clerk_organization_slug, metadata, updated_at)
+       VALUES
+         ($1, $2, 'active', $3, $4, $5::jsonb, now())
+       ON CONFLICT (clerk_organization_id)
+       DO UPDATE SET
+         name = EXCLUDED.name,
+         slug = COALESCE(EXCLUDED.slug, shared.tenants.slug),
+         status = 'active',
+         clerk_organization_slug = EXCLUDED.clerk_organization_slug,
+         metadata = COALESCE(shared.tenants.metadata, '{}'::jsonb) || EXCLUDED.metadata,
+         updated_at = now()
+       RETURNING id, name, slug, clerk_organization_id, clerk_organization_slug`,
+      [
+        tenantName,
+        slug,
+        options.clerkOrganization.id,
+        options.clerkOrganization.slug || null,
+        JSON.stringify(metadata),
+      ],
+    )
+    : await client.query(
+      `INSERT INTO shared.tenants (name, slug, status, metadata, updated_at)
+       VALUES ($1, $2, 'active', $3::jsonb, now())
+       ON CONFLICT (slug)
+       DO UPDATE SET
+         updated_at = now()
+       RETURNING id, name, slug`,
+      [tenantName, slug, JSON.stringify(metadata)],
+    )
   const tenant = tenantResult.rows[0] as TenantRow
 
   await client.query(
-    `INSERT INTO shared.tenant_memberships (tenant_id, user_id, role, status, metadata)
-     VALUES ($1, $2, 'owner', 'active', $3::jsonb)
+    `INSERT INTO shared.tenant_memberships
+       (tenant_id, user_id, role, status, clerk_organization_id, clerk_role, metadata, updated_at)
+     VALUES
+       ($1, $2, 'owner', 'active', $3, $4, $5::jsonb, now())
      ON CONFLICT (tenant_id, user_id)
      DO UPDATE SET
        role = CASE
@@ -261,15 +305,28 @@ async function createInitialTenant(
          ELSE EXCLUDED.role
        END,
        status = 'active',
-       metadata = shared.tenant_memberships.metadata || EXCLUDED.metadata`,
+       clerk_organization_id = COALESCE(EXCLUDED.clerk_organization_id, shared.tenant_memberships.clerk_organization_id),
+       clerk_role = COALESCE(EXCLUDED.clerk_role, shared.tenant_memberships.clerk_role),
+       metadata = COALESCE(shared.tenant_memberships.metadata, '{}'::jsonb) || EXCLUDED.metadata,
+       updated_at = now()`,
     [
       tenant.id,
       sharedUserId,
-      JSON.stringify({ createdBy: 'clerk_bootstrap', source: 'clerk', onboardingRole: 'owner' }),
+      options.clerkOrganization?.id || null,
+      options.clerkOrganization ? 'org:admin' : null,
+      JSON.stringify({
+        clerkOrganizationId: options.clerkOrganization?.id || null,
+        createdBy: 'clerk_bootstrap',
+        source: options.clerkOrganization ? 'clerk_organization' : 'clerk',
+        onboardingRole: 'owner',
+      }),
     ],
   )
 
   return {
+    clerkMembershipId: null,
+    clerkOrganizationId: tenant.clerk_organization_id || options.clerkOrganization?.id || null,
+    clerkOrganizationSlug: tenant.clerk_organization_slug || options.clerkOrganization?.slug || null,
     tenantId: Number(tenant.id),
     tenantName: tenant.name,
     tenantSlug: tenant.slug,
@@ -311,17 +368,68 @@ export async function createClerkOnboardingTenant(companyName: string): Promise<
   const profile = await getCurrentClerkProfile()
   if (!profile) return null
 
-  return withTransaction(async (client) => {
+  const initialState = await withTransaction(async (client) => {
+    const user = await syncSharedUser(client, profile)
+    const sharedUserId = Number(user.id)
+    const memberships = await listMemberships(client, sharedUserId)
+    return buildBootstrapResult(profile, sharedUserId, memberships)
+  })
+
+  if (!initialState.needsOnboarding) return initialState
+
+  const tenantName = companyName ? normalizeCompanyName(companyName) : getTenantName(profile)
+  const baseSlug = slugify(tenantName)
+  const suffix = profile.clerkUserId.slice(-8).toLowerCase().replace(/[^a-z0-9]+/g, '')
+  const slug = `${baseSlug}-${suffix || initialState.sharedUserId}`
+  const organization = await createClerkOrganization({
+    createdByClerkUserId: profile.clerkUserId,
+    name: tenantName,
+    privateMetadata: {
+      ownerClerkUserId: profile.clerkUserId,
+      source: 'cognito_onboarding',
+    },
+    publicMetadata: {
+      app: 'cognito',
+    },
+    slug,
+  })
+
+  const state = await withTransaction(async (client) => {
     const user = await syncSharedUser(client, profile)
     const sharedUserId = Number(user.id)
     let memberships = await listMemberships(client, sharedUserId)
 
     if (!memberships.length) {
-      memberships = [await createInitialTenant(client, sharedUserId, profile, companyName)]
+      memberships = [await createInitialTenant(client, sharedUserId, profile, {
+        clerkOrganization: organization,
+        tenantName,
+      })]
     }
 
     return buildBootstrapResult(profile, sharedUserId, memberships)
   })
+
+  const tenantId = state.activeTenant?.tenantId
+  if (tenantId) {
+    await updateClerkOrganizationMetadata({
+      organizationId: organization.id,
+      privateMetadata: {
+        ownerClerkUserId: profile.clerkUserId,
+        source: 'cognito_onboarding',
+        tenantId,
+      },
+      publicMetadata: {
+        app: 'cognito',
+      },
+    }).catch(() => undefined)
+
+    await provisionTenantBigQuery({
+      tenantId,
+      reason: 'clerk_onboarding',
+    }).catch(() => undefined)
+  }
+
+  return state
 }
 
 export async function syncClerkProfile(profile: ClerkProfileInput): Promise<ClerkTenantBootstrapResult> {

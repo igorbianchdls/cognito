@@ -1,11 +1,19 @@
 import { verifyWebhook } from '@clerk/nextjs/webhooks'
 import type { NextRequest } from 'next/server'
 
+import { withTransaction } from '@/lib/postgres'
+import {
+  markClerkOrganizationDeleted,
+  syncClerkOrganization,
+  syncClerkOrganizationInvitation,
+  syncClerkOrganizationMembership,
+} from '@/products/auth/server/clerkOrganizationSync'
 import {
   markClerkUserDeleted,
   syncClerkProfile,
   type ClerkProfileInput,
 } from '@/products/auth/server/clerkTenantBootstrap'
+import { provisionTenantBigQuery } from '@/products/integracoes/datawarehouse/provisioning/tenantBigQueryProvisioning'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -45,11 +53,20 @@ function getWebhookProfile(data: JsonRecord): ClerkProfileInput | null {
   }
 }
 
+function isOrganizationMembershipEvent(type: string) {
+  return type.startsWith('organizationmembership.') || type.startsWith('organization_membership.')
+}
+
+function isOrganizationInvitationEvent(type: string) {
+  return type.startsWith('organizationinvitation.') || type.startsWith('organization_invitation.')
+}
+
 export async function POST(req: NextRequest) {
   try {
     const signingSecret = process.env.CLERK_WEBHOOK_SECRET || process.env.CLERK_WEBHOOK_SIGNING_SECRET
     const event = await verifyWebhook(req, signingSecret ? { signingSecret } : undefined)
     const data = asRecord(event.data)
+    const eventType = String(event.type || '').toLowerCase()
 
     if (event.type === 'user.deleted') {
       await markClerkUserDeleted(toText(data.id))
@@ -72,6 +89,38 @@ export async function POST(req: NextRequest) {
         },
         memberships: state.memberships.length,
       })
+    }
+
+    if (eventType === 'organization.deleted') {
+      await markClerkOrganizationDeleted(toText(data.id))
+      return Response.json({ ok: true })
+    }
+
+    if (eventType === 'organization.created' || eventType === 'organization.updated') {
+      const tenantId = await withTransaction((client) => syncClerkOrganization(client, data))
+      const provisioning = tenantId
+        ? await provisionTenantBigQuery({ tenantId, reason: `clerk_webhook:${eventType}` }).catch((error) => ({
+          ok: false,
+          error: error instanceof Error ? error.message : String(error),
+        }))
+        : null
+      return Response.json({ ok: true, tenantId, provisioning })
+    }
+
+    if (isOrganizationMembershipEvent(eventType)) {
+      const synced = await withTransaction(async (client) => {
+        await syncClerkOrganization(client, data)
+        return syncClerkOrganizationMembership(client, data, { deleted: eventType.endsWith('.deleted') })
+      })
+      return Response.json({ ok: true, synced })
+    }
+
+    if (isOrganizationInvitationEvent(eventType)) {
+      const synced = await withTransaction(async (client) => {
+        await syncClerkOrganization(client, data)
+        return syncClerkOrganizationInvitation(client, data)
+      })
+      return Response.json({ ok: true, synced })
     }
 
     return Response.json({ ok: true, ignored: true, type: event.type })

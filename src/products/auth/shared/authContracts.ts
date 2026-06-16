@@ -9,6 +9,9 @@ export type AuthUserIdentity = {
 }
 
 export type AuthTenantMembership = {
+  clerkMembershipId?: string | null
+  clerkOrganizationId?: string | null
+  clerkOrganizationSlug?: string | null
   tenantId: number
   tenantName: string
   tenantSlug?: string | null

@@ -1,4 +1,8 @@
 import { runQuery, withTransaction } from '@/lib/postgres'
+import {
+  updateClerkOrganization,
+  updateClerkOrganizationMembership,
+} from '@/products/auth/server/clerkOrganizationClient'
 import type {
   SettingsMember,
   SettingsProfile,
@@ -12,6 +16,9 @@ import type { AuthTenantRole } from '@/products/auth/shared/authContracts'
 
 type SettingsRow = {
   avatar_url: string | null
+  clerk_membership_id: string | null
+  clerk_organization_id: string | null
+  clerk_organization_slug: string | null
   clerk_user_id: string | null
   email: string
   full_name: string | null
@@ -66,6 +73,9 @@ export function normalizeFullName(value: string) {
 function toMember(row: SettingsRow): SettingsMember {
   return {
     avatarUrl: row.avatar_url,
+    clerkMembershipId: row.clerk_membership_id,
+    clerkOrganizationId: row.clerk_organization_id,
+    clerkUserId: row.clerk_user_id,
     email: row.email,
     fullName: row.full_name,
     role: normalizeRole(row.role),
@@ -88,7 +98,10 @@ export async function getSettingsState(input: {
        tenants.id::text AS tenant_id,
        tenants.name::text AS tenant_name,
        tenants.slug::text AS tenant_slug,
+       tenants.clerk_organization_id::text AS clerk_organization_id,
+       tenants.clerk_organization_slug::text AS clerk_organization_slug,
        tenants.status::text AS tenant_status,
+       memberships.clerk_membership_id::text AS clerk_membership_id,
        memberships.role::text AS role,
        memberships.status::text AS status
      FROM shared.tenant_memberships AS memberships
@@ -122,6 +135,8 @@ export async function getSettingsState(input: {
   }
 
   const workspace: SettingsWorkspace = {
+    clerkOrganizationId: current.clerk_organization_id,
+    clerkOrganizationSlug: current.clerk_organization_slug,
     id: Number(current.tenant_id),
     name: current.tenant_name,
     slug: current.tenant_slug,
@@ -159,7 +174,10 @@ export async function updateSharedUserProfile(input: {
        0::text AS tenant_id,
        ''::text AS tenant_name,
        NULL::text AS tenant_slug,
+       NULL::text AS clerk_organization_id,
+       NULL::text AS clerk_organization_slug,
        ''::text AS tenant_status,
+       NULL::text AS clerk_membership_id,
        'owner'::text AS role,
        'active'::text AS status`,
     [input.sharedUserId, fullName, input.avatarUrl || null],
@@ -181,7 +199,23 @@ export async function updateWorkspace(input: {
 }): Promise<SettingsWorkspace> {
   const name = normalizeWorkspaceName(input.values.name)
   const slug = normalizeWorkspaceSlug(input.values.slug)
+  const currentRows = await runQuery<{
+    clerk_organization_id: string | null
+  }>(
+    `SELECT clerk_organization_id::text AS clerk_organization_id
+     FROM shared.tenants
+     WHERE id = $1
+     LIMIT 1`,
+    [input.tenantId],
+  )
+  const clerkOrganizationId = currentRows[0]?.clerk_organization_id || null
+  const clerkOrganization = clerkOrganizationId
+    ? await updateClerkOrganization({ organizationId: clerkOrganizationId, name, slug })
+    : null
+
   const rows = await runQuery<{
+    clerk_organization_id: string | null
+    clerk_organization_slug: string | null
     id: string | number
     name: string
     slug: string | null
@@ -191,15 +225,18 @@ export async function updateWorkspace(input: {
      SET
        name = $2,
        slug = $3,
+       clerk_organization_slug = COALESCE($4, clerk_organization_slug),
        metadata = COALESCE(metadata, '{}'::jsonb) || jsonb_build_object('updatedBy', 'settings_workspace', 'updatedAt', now()),
        updated_at = now()
      WHERE id = $1
-     RETURNING id, name, slug, status`,
-    [input.tenantId, name, slug],
+     RETURNING id, name, slug, status, clerk_organization_id, clerk_organization_slug`,
+    [input.tenantId, name, slug, clerkOrganization?.slug || null],
   )
   const row = rows[0]
   if (!row) throw new Error('Workspace nao encontrado.')
   return {
+    clerkOrganizationId: row.clerk_organization_id,
+    clerkOrganizationSlug: row.clerk_organization_slug,
     id: Number(row.id),
     name: row.name,
     slug: row.slug,
@@ -231,11 +268,42 @@ export async function updateWorkspaceMember(input: {
       }
     }
 
+    if (role) {
+      const clerkRows = await client.query(
+        `SELECT
+           tenants.clerk_organization_id::text AS clerk_organization_id,
+           users.clerk_user_id::text AS clerk_user_id
+         FROM shared.tenant_memberships AS memberships
+         JOIN shared.tenants AS tenants
+           ON tenants.id = memberships.tenant_id
+         JOIN shared.users AS users
+           ON users.id = memberships.user_id
+         WHERE memberships.tenant_id = $1
+           AND memberships.user_id = $2
+         LIMIT 1`,
+        [input.tenantId, input.values.userId],
+      )
+      const clerkOrganizationId = String(clerkRows.rows[0]?.clerk_organization_id || '')
+      const clerkUserId = String(clerkRows.rows[0]?.clerk_user_id || '')
+      if (clerkOrganizationId && clerkUserId) {
+        await updateClerkOrganizationMembership({
+          appRole: role,
+          clerkUserId,
+          organizationId: clerkOrganizationId,
+        })
+      }
+    }
+
     const result = await client.query(
       `UPDATE shared.tenant_memberships
        SET
          role = COALESCE($3, role),
          status = COALESCE($4, status),
+         clerk_role = CASE
+           WHEN $3 IN ('owner', 'admin') THEN 'org:admin'
+           WHEN $3 IN ('member', 'viewer') THEN 'org:member'
+           ELSE clerk_role
+         END,
          metadata = COALESCE(metadata, '{}'::jsonb) || jsonb_build_object('updatedBy', 'settings_members', 'updatedAt', now()),
          updated_at = now()
        WHERE tenant_id = $1
@@ -252,9 +320,12 @@ export async function updateWorkspaceMember(input: {
          users.full_name::text AS full_name,
          users.avatar_url::text AS avatar_url,
          users.clerk_user_id::text AS clerk_user_id,
+         memberships.clerk_organization_id::text AS clerk_organization_id,
+         memberships.clerk_membership_id::text AS clerk_membership_id,
          memberships.tenant_id::text AS tenant_id,
          ''::text AS tenant_name,
          NULL::text AS tenant_slug,
+         NULL::text AS clerk_organization_slug,
          ''::text AS tenant_status,
          memberships.role::text AS role,
          memberships.status::text AS status

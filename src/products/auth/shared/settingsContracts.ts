@@ -11,6 +11,8 @@ export type SettingsProfile = {
 }
 
 export type SettingsWorkspace = {
+  clerkOrganizationId?: string | null
+  clerkOrganizationSlug?: string | null
   id: number
   name: string
   slug?: string | null
@@ -19,6 +21,9 @@ export type SettingsWorkspace = {
 
 export type SettingsMember = {
   avatarUrl?: string | null
+  clerkMembershipId?: string | null
+  clerkOrganizationId?: string | null
+  clerkUserId?: string | null
   email: string
   fullName?: string | null
   role: AuthTenantRole

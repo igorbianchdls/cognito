@@ -15,7 +15,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { clerkAuthAppearance } from '@/products/auth/frontend/components/ClerkAuthShell'
+import { clerkUserProfileAppearance } from '@/products/auth/frontend/components/ClerkAuthShell'
 import {
   updateSettingsMember,
   updateSettingsProfile,
@@ -260,8 +260,8 @@ export default function SettingsPanel({ initialState, variant = 'modal' }: Setti
         {activeSection === 'security' ? (
           <div>
             <SectionHeader>Security</SectionHeader>
-            <div className="pt-6">
-              <UserProfile appearance={clerkAuthAppearance} routing="hash" />
+            <div className="max-w-2xl pt-6 [&_.cl-footer]:hidden [&_.cl-profileSection__danger]:rounded-md [&_.cl-profileSection__danger]:border [&_.cl-profileSection__danger]:border-red-200 [&_.cl-profileSection__danger]:bg-red-50/60 [&_.cl-profileSection__danger]:px-4">
+              <UserProfile appearance={clerkUserProfileAppearance} routing="hash" />
             </div>
           </div>
         ) : null}

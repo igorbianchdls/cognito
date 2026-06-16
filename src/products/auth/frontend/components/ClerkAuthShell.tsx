@@ -51,6 +51,54 @@ export const clerkAuthAppearance = {
   },
 }
 
+export const clerkUserProfileAppearance = {
+  variables: {
+    ...clerkAuthAppearance.variables,
+    borderRadius: '0.375rem',
+    colorNeutral: '#64748b',
+    colorPrimary: '#0f172a',
+  },
+  elements: {
+    ...clerkAuthAppearance.elements,
+    accordionTriggerButton: 'rounded-md px-0 py-3 text-sm font-medium text-slate-950 hover:bg-transparent',
+    badge: 'rounded-md border border-slate-200 bg-slate-100 px-1.5 py-0.5 text-[11px] font-medium text-slate-600',
+    breadcrumbLink: 'text-sm font-medium text-slate-500 hover:text-slate-950',
+    breadcrumbLinkText: 'text-sm font-medium',
+    card: 'w-full border-0 bg-transparent p-0 shadow-none',
+    cardBox: 'w-full border-0 bg-transparent p-0 shadow-none',
+    form: 'grid gap-4',
+    formButtonPrimary: 'h-9 rounded-md bg-slate-950 px-3 text-sm font-semibold text-white shadow-none hover:bg-slate-800 focus:ring-2 focus:ring-slate-300 focus:ring-offset-2',
+    formButtonReset: 'h-9 rounded-md px-3 text-sm font-medium text-slate-700 hover:bg-slate-100',
+    formFieldInput: 'h-10 rounded-md border border-slate-300 bg-white px-3 text-sm text-slate-950 shadow-none outline-none placeholder:text-slate-400 focus:border-slate-950 focus:ring-2 focus:ring-slate-200',
+    formFieldLabel: 'text-sm font-medium text-slate-900',
+    formFieldRow: 'gap-2',
+    formFieldSuccessText: 'text-xs font-medium text-emerald-700',
+    formFieldWarningText: 'text-xs font-medium text-amber-700',
+    formHeader: 'hidden',
+    header: 'hidden',
+    headerSubtitle: 'hidden',
+    headerTitle: 'hidden',
+    main: 'gap-0',
+    navbar: 'hidden',
+    navbarMobileMenuButton: 'hidden',
+    page: 'w-full p-0',
+    pageScrollBox: 'p-0',
+    profileSection: 'border-b border-slate-200 py-5 first:pt-0 last:border-b-0 last:pb-0',
+    profileSectionContent: 'grid gap-3',
+    profileSectionItem: 'rounded-md border-0 px-0 py-2',
+    profileSectionItemList: 'grid gap-1',
+    profileSectionPrimaryButton: 'h-9 rounded-md px-3 text-sm font-medium text-slate-950 hover:bg-slate-100',
+    profileSectionTitle: 'text-sm font-semibold text-slate-950',
+    profileSectionTitleText: 'text-sm font-semibold text-slate-950',
+    profileSectionContent__activeDevices: 'grid gap-2',
+    rootBox: 'w-full',
+    scrollBox: 'p-0',
+    userPreview: 'rounded-md border border-slate-200 bg-slate-50 px-3 py-2',
+    userPreviewMainIdentifier: 'text-sm font-medium text-slate-950',
+    userPreviewSecondaryIdentifier: 'text-xs text-slate-500',
+  },
+}
+
 export function ClerkAuthShell({ children, mode }: ClerkAuthShellProps) {
   const isSignUp = mode === 'sign-up'
 

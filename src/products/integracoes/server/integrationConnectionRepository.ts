@@ -47,6 +47,7 @@ import {
   normalizeSyncRunStatus,
 } from '@/products/integracoes/server/integrationStatusMapper'
 import { buildTenantBigQueryDestinationConfig } from '@/products/integracoes/datawarehouse/tenantBigQueryDatasets'
+import { ensureDefaultTenantBigQueryDestination } from '@/products/integracoes/datawarehouse/provisioning/tenantBigQueryRepository'
 
 type JsonObject = Record<string, unknown>
 
@@ -480,60 +481,11 @@ async function ensureDefaultBigQueryDestination(
   client: Pick<SQLClient, 'query'>,
   tenantId: number,
 ): Promise<IntegrationDestination> {
-  const existing = await client.query(
-    `SELECT *
-     FROM integrations.destinations
-     WHERE tenant_id = $1
-       AND type = 'bigquery'
-       AND (metadata->>'isDefault') = 'true'
-     ORDER BY id ASC
-     LIMIT 1`,
-    [tenantId],
-  )
-  const existingRow = existing.rows[0] as DbDestinationRow | undefined
-  if (existingRow) {
-    const currentConfig = asJsonObject(existingRow.config)
-    const desiredConfig = normalizeDestinationConfig(tenantId, 'bigquery', currentConfig)
-    const needsTenantDataset = currentConfig.datasetMode !== 'per_tenant'
-      || currentConfig.rawDataset !== desiredConfig.rawDataset
-      || currentConfig.normalizedDataset !== desiredConfig.normalizedDataset
-
-    if (!needsTenantDataset) return toDestination(existingRow)
-
-    const updated = await client.query(
-      `UPDATE integrations.destinations
-       SET
-         config = $3::jsonb,
-         metadata = metadata || $4::jsonb,
-         updated_at = now()
-       WHERE id = $1 AND tenant_id = $2
-       RETURNING *`,
-      [
-        existingRow.id,
-        tenantId,
-        JSON.stringify(desiredConfig),
-        JSON.stringify({
-          datasetModeMigratedAt: new Date().toISOString(),
-          datasetMode: 'per_tenant',
-        }),
-      ],
-    )
-    return toDestination(updated.rows[0] as DbDestinationRow)
-  }
-
-  const result = await client.query(
-    `INSERT INTO integrations.destinations
-      (tenant_id, type, name, status, config, metadata, updated_at)
-     VALUES
-      ($1, 'bigquery', 'BigQuery padrao', 'active', $2::jsonb, $3::jsonb, now())
-     RETURNING *`,
-    [
-      tenantId,
-      JSON.stringify(normalizeDestinationConfig(tenantId, 'bigquery', {})),
-      JSON.stringify({ isDefault: true, createdBy: 'integracoes-api' }),
-    ],
-  )
-  return toDestination(result.rows[0] as DbDestinationRow)
+  return ensureDefaultTenantBigQueryDestination({
+    client,
+    tenantId,
+    reason: 'connection_create',
+  })
 }
 
 async function insertIntegrationPipeline(
