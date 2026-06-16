@@ -7,9 +7,9 @@ import PageContainer from '@/components/layout/PageContainer'
 import { SidebarShadcn } from '@/components/navigation/SidebarShadcn'
 import { SidebarInset, SidebarProvider } from '@/components/ui/sidebar'
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import ConnectionDetailDrawer from '@/products/integracoes/frontend/features/connections/components/ConnectionDetailDrawer'
 import ConnectionStatusPanel from '@/products/integracoes/frontend/features/connections/components/ConnectionStatusPanel'
 import useIntegrationConnections from '@/products/integracoes/frontend/features/connections/hooks/useIntegrationConnections'
+import ConnectionConfigurationModal from '@/products/integracoes/frontend/features/configuration/components/ConnectionConfigurationModal'
 import ProviderSetupModal from '@/products/integracoes/frontend/features/home/components/ProviderSetupModal'
 import useCurrentIntegrationTenant from '@/products/integracoes/frontend/hooks/useCurrentIntegrationTenant'
 import {
@@ -324,7 +324,7 @@ export default function IntegracoesPage() {
   const [sortMode, setSortMode] = useState<SortMode>('popular')
   const [selectedDataConnector, setSelectedDataConnector] = useState<ToolkitDefinition | null>(null)
   const [isDataConnectorModalOpen, setIsDataConnectorModalOpen] = useState(false)
-  const [isConnectionDrawerOpen, setIsConnectionDrawerOpen] = useState(false)
+  const [isConnectionConfigurationOpen, setIsConnectionConfigurationOpen] = useState(false)
   const [providersByToolkit, setProvidersByToolkit] = useState<Map<string, IntegrationProvider>>(new Map())
   const [providerReadinessLoaded, setProviderReadinessLoaded] = useState(false)
 
@@ -335,11 +335,10 @@ export default function IntegracoesPage() {
     error: integrationError,
     loading: integrationLoading,
     selectedConnection,
-    selectedEvents,
-    selectedSyncRuns,
     createConnection,
     loadConnectionDetail,
     reconnectConnection,
+    refreshConnections,
     syncConnection,
     setError: setIntegrationError,
   } = useIntegrationConnections(tenantId)
@@ -398,7 +397,7 @@ export default function IntegracoesPage() {
   const openDataConnectorModal = (toolkit: ToolkitDefinition) => {
     const existingConnection = connectionsByToolkit.get(String(toolkit.slug).toUpperCase())
     if (existingConnection) {
-      void loadConnectionDetail(existingConnection.id).then(() => setIsConnectionDrawerOpen(true))
+      void loadConnectionDetail(existingConnection.id).then(() => setIsConnectionConfigurationOpen(true))
       return
     }
     const provider = providersByToolkit.get(String(toolkit.slug).toUpperCase()) || getIntegrationProvider(toolkit.slug)
@@ -609,16 +608,18 @@ export default function IntegracoesPage() {
             setIsDataConnectorModalOpen(false)
             setSelectedDataConnector(null)
             await loadConnectionDetail(connection.id)
-            setIsConnectionDrawerOpen(true)
+            setIsConnectionConfigurationOpen(true)
           }}
         />
-        <ConnectionDetailDrawer
+        <ConnectionConfigurationModal
           connection={selectedConnection}
-          events={selectedEvents}
-          syncRuns={selectedSyncRuns}
-          open={isConnectionDrawerOpen}
+          open={isConnectionConfigurationOpen}
           busy={Boolean(integrationBusyId)}
-          onOpenChange={setIsConnectionDrawerOpen}
+          onOpenChange={setIsConnectionConfigurationOpen}
+          onSaved={async (configuration) => {
+            await refreshConnections()
+            await loadConnectionDetail(configuration.connection.id)
+          }}
           onSync={(connection) => {
             void syncConnection(connection.id)
           }}

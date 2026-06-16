@@ -132,6 +132,42 @@ type PipelineResponse = {
   pipeline?: IntegrationPipeline
 }
 
+export type IntegrationConnectionConfiguration = {
+  connection: IntegrationConnectionWithUi
+  destination: IntegrationDestination | null
+  pipeline: IntegrationPipeline | null
+  permissions: IntegrationPluginPermissions
+  datasets: {
+    projectId?: string
+    rawDataset: string
+    normalizedDataset: string
+  }
+}
+
+export type IntegrationConnectionConfigurationInput = {
+  tenantId?: number
+  dataWarehouse?: {
+    enabled?: boolean
+    selectedResources?: string[]
+    syncFrequency?: string
+  }
+  mcp?: {
+    enabled?: boolean
+    preset?: string
+    readResources?: string[]
+    liveReadResources?: string[]
+    writeResources?: string[]
+    destructiveResources?: string[]
+    requireConfirmation?: boolean
+  }
+}
+
+type ConnectionConfigurationResponse = {
+  ok?: boolean
+  error?: string
+  configuration?: IntegrationConnectionConfiguration
+}
+
 function buildQuery(params: Record<string, string | undefined>): string {
   const query = new URLSearchParams()
 
@@ -364,4 +400,37 @@ export async function createIntegrationPipeline(
   if (!payload.pipeline) throw new Error('Pipeline nao retornado')
 
   return payload.pipeline
+}
+
+export async function fetchIntegrationConnectionConfiguration(
+  connectionId: string,
+  tenantId?: number,
+): Promise<IntegrationConnectionConfiguration> {
+  const query = buildQuery({ tenantId: tenantId ? String(tenantId) : undefined })
+  const suffix = query ? `?${query}` : ''
+  const payload = await requestJson<ConnectionConfigurationResponse>(
+    `/api/integracoes/connections/${encodeURIComponent(connectionId)}/configuration${suffix}`,
+  )
+
+  if (!payload.configuration) throw new Error('Configuracao da conexao nao retornada')
+
+  return payload.configuration
+}
+
+export async function saveIntegrationConnectionConfiguration(
+  connectionId: string,
+  input: IntegrationConnectionConfigurationInput,
+): Promise<IntegrationConnectionConfiguration> {
+  const payload = await requestJson<ConnectionConfigurationResponse>(
+    `/api/integracoes/connections/${encodeURIComponent(connectionId)}/configuration`,
+    {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(input),
+    },
+  )
+
+  if (!payload.configuration) throw new Error('Configuracao da conexao nao retornada')
+
+  return payload.configuration
 }
