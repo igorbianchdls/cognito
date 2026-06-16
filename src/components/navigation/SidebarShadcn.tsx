@@ -155,7 +155,7 @@ export function SidebarShadcn({ bgColor, textColor, itemTextColor, itemTextStyle
   }
 
   // Apply default values consistently (no localStorage overrides)
-  const finalBgColor = bgColor ?? '#F7F7F7'
+  const finalBgColor = bgColor ?? '#FAFAFA'
   const finalTextColor = textColor ?? '#4D4D4D'
   const finalItemTextColor = itemTextColor ?? '#4D4D4D'
   const finalSectionTitleStyle = sectionTitleStyle ?? DEFAULT_SECTION_TITLE_STYLE

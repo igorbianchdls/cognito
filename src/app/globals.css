@@ -30,7 +30,7 @@
   --radius: 8px;
   --radius-min: 8px;
   --radius-max: 40px;
-  --sidebar: hsl(0 0% 98%);
+  --sidebar: #fafafa;
   --sidebar-foreground: #181818;
   --sidebar-primary: #181818;
   --sidebar-primary-foreground: hsl(0 0% 98%);
@@ -180,15 +180,15 @@
   --text-sm: 14px;
   --text-base: 16px;
   --text-lg: 18px;
-  --text-xl: 18px;
-  --text-2xl: 18px;
-  --text-3xl: 18px;
-  --text-4xl: 18px;
-  --text-5xl: 18px;
-  --text-6xl: 18px;
-  --text-7xl: 18px;
-  --text-8xl: 18px;
-  --text-9xl: 18px;
+  --text-xl: 20px;
+  --text-2xl: 24px;
+  --text-3xl: 30px;
+  --text-4xl: 36px;
+  --text-5xl: 48px;
+  --text-6xl: 60px;
+  --text-7xl: 72px;
+  --text-8xl: 96px;
+  --text-9xl: 128px;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -238,44 +238,15 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 p, li, label, input, textarea, select, button {
-  font-size: var(--ui-body-font-size) !important;
-}
-
-[class*="text-[10px]"],
-[class*="text-[11px]"],
-[class*="text-[12px]"],
-[class*="text-[13px]"],
-[class*="text-[14px]"],
-[class*="text-[15px]"] {
-  font-size: var(--ui-body-font-size) !important;
-}
-
-[class*="text-[16px]"] {
-  font-size: var(--ui-font-size) !important;
-}
-
-[class*="text-[17px]"],
-[class*="text-[18px]"],
-[class*="text-[20px]"],
-[class*="text-[22px]"],
-[class*="text-[24px]"],
-[class*="text-[26px]"],
-[class*="text-[28px]"],
-[class*="text-[30px]"],
-[class*="text-[32px]"],
-[class*="text-[36px]"],
-[class*="text-[40px]"],
-[class*="text-[48px]"],
-[class*="text-[56px]"],
-[class*="text-[64px]"],
-[class*="text-[72px]"],
-[class*="text-[80px]"],
-[class*="text-[96px]"] {
-  font-size: var(--ui-title-font-size) !important;
+  font-size: var(--ui-body-font-size);
 }
 
 [class*="tracking-"] {
   letter-spacing: 0 !important;
+}
+
+.integracoes-page-title {
+  font-size: 24px !important;
 }
 
 .text-primary,
