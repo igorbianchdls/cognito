@@ -4432,8 +4432,73 @@ const CONNECTED_ACTIONS_REQUIRING_ID = new Set([
   'concluir',
 ])
 
-function hasResourceGrant(resources: string[], resource: string) {
-  return resources.includes('*') || resources.includes(resource)
+const CONNECTED_ERP_PROVIDER_RESOURCE_ALIASES: Record<string, Record<string, string>> = {
+  bling: {
+    clientes: 'clientes',
+    fornecedores: 'fornecedores',
+    produtos: 'produtos',
+    'contas-a-receber': 'contas_receber',
+    'contas-a-pagar': 'contas_pagar',
+    'pedidos-venda': 'pedidos_venda',
+    'estoque-atual': 'estoque',
+  },
+  conta_azul: {
+    clientes: 'clientes',
+    fornecedores: 'fornecedores',
+    produtos: 'produtos',
+    'contas-a-receber': 'contas_receber',
+    'contas-a-pagar': 'contas_pagar',
+    'pedidos-venda': 'vendas',
+    'estoque-atual': 'estoque',
+  },
+  omie: {
+    clientes: 'clientes',
+    fornecedores: 'fornecedores',
+    produtos: 'produtos',
+    'contas-a-receber': 'contas_receber',
+    'contas-a-pagar': 'contas_pagar',
+    'pedidos-venda': 'pedidos_venda',
+    'estoque-atual': 'estoque_saldos',
+  },
+}
+
+function normalizeResourceAlias(resource: string) {
+  return resource.replace(/_/g, '-')
+}
+
+function getConnectedPermissionResourceAliases(input: {
+  domain: 'erp' | 'crm'
+  provider: string
+  resource: string
+  selectedResources?: string[]
+}) {
+  const aliases = new Set<string>([
+    input.resource,
+    normalizeResourceAlias(input.resource),
+  ])
+  const providerResource = input.domain === 'erp'
+    ? CONNECTED_ERP_PROVIDER_RESOURCE_ALIASES[input.provider]?.[input.resource]
+    : undefined
+
+  if (providerResource) {
+    aliases.add(providerResource)
+    aliases.add(normalizeResourceAlias(providerResource))
+  }
+
+  for (const selectedResource of input.selectedResources || []) {
+    if (normalizeResourceAlias(selectedResource) === normalizeResourceAlias(input.resource)) {
+      aliases.add(selectedResource)
+    }
+    if (providerResource && normalizeResourceAlias(selectedResource) === normalizeResourceAlias(providerResource)) {
+      aliases.add(selectedResource)
+    }
+  }
+
+  return [...aliases].filter(Boolean)
+}
+
+function hasConnectedResourceGrant(resources: string[], aliases: string[]) {
+  return resources.includes('*') || aliases.some((alias) => resources.includes(alias))
 }
 
 function inferActionPermissionKind(action: string): 'write' | 'destructive' {
@@ -4674,9 +4739,15 @@ async function callConnectedProviderAction(params: {
   }
 
   if (!dryRun) {
+    const permissionResourceAliases = getConnectedPermissionResourceAliases({
+      domain: params.domain,
+      provider: connection.provider,
+      resource,
+      selectedResources: connection.selectedResources,
+    })
     const granted = permissionKind === 'destructive'
-      ? hasResourceGrant(permissions.destructiveResources, resource)
-      : hasResourceGrant(permissions.writeResources, resource)
+      ? hasConnectedResourceGrant(permissions.destructiveResources, permissionResourceAliases)
+      : hasConnectedResourceGrant(permissions.writeResources, permissionResourceAliases)
     if (!granted) {
       return buildConnectedActionResponse({
         tenantId,
@@ -4689,7 +4760,7 @@ async function callConnectedProviderAction(params: {
         resource,
         dryRun,
         success: false,
-        message: `Permissao ${permissionKind} ausente para ${resource}.`,
+        message: `Permissao ${permissionKind} ausente para ${resource}. Aliases aceitos: ${permissionResourceAliases.join(', ')}.`,
         id,
         idempotencyKey,
         payload,
