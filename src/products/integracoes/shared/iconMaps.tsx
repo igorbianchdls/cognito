@@ -2,10 +2,20 @@ import type { ComponentType, ReactNode } from 'react'
 
 import { Icon, addCollection } from '@iconify/react'
 import { icons as simpleIcons } from '@iconify-json/simple-icons'
+import Bitrix24Icon from '@/components/icons/Bitrix24Icon'
 import BlingIcon from '@/components/icons/BlingIcon'
 import ContaAzulIcon from '@/components/icons/ContaAzulIcon'
+import EduzzIcon from '@/components/icons/EduzzIcon'
+import GoogleAdsIcon from '@/components/icons/GoogleAdsIcon'
+import GoogleAnalyticsIcon from '@/components/icons/GoogleAnalyticsIcon'
+import HotmartIcon from '@/components/icons/HotmartIcon'
+import KiwifyIcon from '@/components/icons/KiwifyIcon'
 import MercadoLivreIcon from '@/components/icons/MercadoLivreIcon'
+import MetaIcon from '@/components/icons/MetaIcon'
+import NuvemshopIcon from '@/components/icons/NuvemshopIcon'
 import OmieIcon from '@/components/icons/OmieIcon'
+import OlistIcon from '@/components/icons/OlistIcon'
+import PipedriveIcon from '@/components/icons/PipedriveIcon'
 import RdStationIcon from '@/components/icons/RdStationIcon'
 import TinyIcon from '@/components/icons/TinyIcon'
 import TotvsIcon from '@/components/icons/TotvsIcon'
@@ -63,10 +73,20 @@ import {
 let iconCollectionRegistered = false
 
 const CUSTOM_ICON_BY_SLUG: Record<string, ComponentType<any>> = {
+  BITRIX24: Bitrix24Icon,
   BLING: BlingIcon,
   CONTA_AZUL: ContaAzulIcon,
+  EDUZZ: EduzzIcon,
+  GOOGLE_ADS: GoogleAdsIcon,
+  GOOGLE_ANALYTICS_4: GoogleAnalyticsIcon,
+  HOTMART: HotmartIcon,
+  KIWIFY: KiwifyIcon,
   MERCADO_LIVRE: MercadoLivreIcon,
+  META_ADS: MetaIcon,
+  NUVEMSHOP: NuvemshopIcon,
   OMIE: OmieIcon,
+  OLIST: OlistIcon,
+  PIPEDRIVE: PipedriveIcon,
   RD_STATION_CRM: RdStationIcon,
   TINY: TinyIcon,
   TOTVS: TotvsIcon,
@@ -87,11 +107,18 @@ export const ICON_KEY_BY_SLUG: Record<string, string> = {
   GOOGLESHEETS: 'googlesheets',
   GOOGLESLIDES: 'googleslides',
   GOOGLE_ANALYTICS: 'googleanalytics',
+  GOOGLE_ANALYTICS_4: 'googleanalytics',
+  GOOGLE_MY_BUSINESS: 'googlemybusiness',
+  GOOGLE_SEARCH_CONSOLE: 'googlesearchconsole',
   GOOGLEADS: 'googleads',
+  GOOGLE_ADS: 'googleads',
   METAADS: 'meta',
+  META_ADS: 'meta',
   AMAZON: 'amazon',
   SLACK: 'slack',
   SHOPIFY: 'shopify',
+  WOOCOMMERCE: 'woocommerce',
+  IFOOD: 'ifood',
   HUBSPOT: 'hubspot',
   FACEBOOK: 'facebook',
   INSTAGRAM: 'instagram',
@@ -187,8 +214,11 @@ export const SIMPLE_ICON_BY_SLUG: Record<string, ComponentType<any>> = {
   GOOGLESHEETS: SiGooglesheets,
   GOOGLESLIDES: SiGoogleslides,
   GOOGLE_ANALYTICS: SiGoogleanalytics,
+  GOOGLE_ANALYTICS_4: SiGoogleanalytics,
   GOOGLEADS: SiGoogleads,
+  GOOGLE_ADS: SiGoogleads,
   METAADS: SiMeta,
+  META_ADS: SiMeta,
   SLACK: SiSlack,
   SHOPIFY: SiShopify,
   HUBSPOT: SiHubspot,
