@@ -32,7 +32,7 @@ import {
 
 const BrandIcon = (props: { className?: string; style?: React.CSSProperties }) => <IconGridDots stroke={1.75} {...props} />
 const IntegrationsIcon = (props: { className?: string; style?: React.CSSProperties }) => <IconPlugConnected stroke={1.75} {...props} />
-const DashboardsArtifactIcon = (props: { className?: string; style?: React.CSSProperties }) => <IconChartBar stroke={1.75} {...props} />
+const DashboardsIcon = (props: { className?: string; style?: React.CSSProperties }) => <IconChartBar stroke={1.75} {...props} />
 
 // Font variable mapping helper
 function fontVar(name?: string) {
@@ -90,6 +90,11 @@ const navigationData = {
       url: "/integracoes",
       icon: IntegrationsIcon,
     },
+    {
+      title: "Dashboards",
+      url: "/artifacts/dashboards",
+      icon: DashboardsIcon,
+    },
   ],
   integrations: [
     {
@@ -121,13 +126,6 @@ const navigationData = {
       icon: ContaAzulIcon,
     },
   ],
-  artifacts: [
-    {
-      title: "Dashboards",
-      url: "/artifacts/dashboards",
-      icon: DashboardsArtifactIcon,
-    },
-  ],
 }
 
 import { cn } from "@/lib/utils"
@@ -148,10 +146,6 @@ export function SidebarShadcn({ bgColor, textColor, itemTextColor, itemTextStyle
   const dataWithActiveState = {
     ...navigationData,
     navMain: navMainWithActiveState,
-    artifacts: navigationData.artifacts.map(item => ({
-      ...item,
-      isActive: pathname === item.url,
-    })),
   }
 
   // Apply default values consistently (no localStorage overrides)
@@ -187,15 +181,6 @@ export function SidebarShadcn({ bgColor, textColor, itemTextColor, itemTextStyle
       </SidebarHeader>
       <SidebarContent className="ui-text">
         <NavMainSimple items={dataWithActiveState.navMain} groupLabelStyle={finalSectionTitleStyle} itemTextStyle={finalItemTextStyle} iconSizePx={finalIconSizePx} />
-        <div className="group-data-[collapsible=icon]:hidden">
-          <NavMainSimple
-            items={dataWithActiveState.artifacts}
-            groupLabel="Artifacts"
-            groupLabelStyle={finalSectionTitleStyle}
-            itemTextStyle={finalItemTextStyle}
-            iconSizePx={finalIconSizePx}
-          />
-        </div>
 
         <SidebarGroup>
           <SidebarGroupLabel style={finalSectionTitleStyle}>Integrações</SidebarGroupLabel>
