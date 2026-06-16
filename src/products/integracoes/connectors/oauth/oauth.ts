@@ -2,6 +2,7 @@ import { createHmac, randomBytes, timingSafeEqual } from 'node:crypto'
 
 import { getIntegrationsCloudConfig } from '@/products/integracoes/datawarehouse/config/gcpConfig'
 import { readSecret } from '@/products/integracoes/cloud/src/lib/secretManager'
+import type { IntegrationProviderOAuthReadiness } from '@/products/integracoes/shared/providers/providerTypes'
 
 export type OAuthTokenSet = {
   accessToken: string
@@ -161,6 +162,27 @@ export async function buildOAuthAuthorizationUrl(provider: string, state: string
   return {
     ready: true,
     authorizationUrl: url.toString(),
+  }
+}
+
+export async function getOAuthProviderReadiness(provider: string): Promise<IntegrationProviderOAuthReadiness> {
+  const config = await getOAuthProviderConfig(provider)
+  const missing = [
+    ['clientId', config.clientId],
+    ['clientSecret', config.clientSecret],
+    ['authorizeUrl', config.authorizeUrl],
+    ['tokenUrl', config.tokenUrl],
+    ['redirectUri', config.redirectUri],
+  ].filter(([, value]) => !value).map(([key]) => key)
+  const ready = missing.length === 0
+
+  return {
+    ready,
+    configured: ready,
+    missing,
+    message: ready
+      ? 'OAuth configurado.'
+      : `OAuth em configuracao: faltam ${missing.join(', ')}.`,
   }
 }
 

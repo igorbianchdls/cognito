@@ -48,4 +48,4 @@ spec:
             - name: INTEGRATIONS_OAUTH_REDIRECT_URI
               value: https://integrations-control-api-305346154546.southamerica-east1.run.app/callbacks/provider
             - name: INTEGRATIONS_APP_CALLBACK_URL
-              value: https://cognito-305346154546.southamerica-east1.run.app/integracoes/callback
+              value: https://cognito-seven.vercel.app/integracoes/callback

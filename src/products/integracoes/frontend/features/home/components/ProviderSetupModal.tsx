@@ -13,6 +13,7 @@ import {
 import { renderIntegrationLogo } from '@/products/integracoes/shared/iconMaps'
 import { getIntegrationProvider } from '@/products/integracoes/shared/providers/providerCatalog'
 import { getProviderSetupStage } from '@/products/integracoes/shared/providers/providerSetupStage'
+import type { IntegrationProvider } from '@/products/integracoes/shared/providers/providerTypes'
 import type { ToolkitDefinition } from '@/products/integracoes/shared/types'
 
 type ProviderSetupModalProps = {
@@ -20,6 +21,8 @@ type ProviderSetupModalProps = {
   open: boolean
   busy?: boolean
   error?: string | null
+  providerOverride?: IntegrationProvider | null
+  readinessLoaded?: boolean
   onOpenChange: (open: boolean) => void
   onCreate: (params: {
     provider: string
@@ -35,10 +38,12 @@ export default function ProviderSetupModal({
   open,
   busy = false,
   error,
+  providerOverride,
+  readinessLoaded = true,
   onOpenChange,
   onCreate,
 }: ProviderSetupModalProps) {
-  const provider = useMemo(() => connector ? getIntegrationProvider(connector.slug) : undefined, [connector])
+  const provider = useMemo(() => providerOverride || (connector ? getIntegrationProvider(connector.slug) : undefined), [connector, providerOverride])
   const setupStage = useMemo(() => getProviderSetupStage(provider), [provider])
   const [omieAppKey, setOmieAppKey] = useState('')
   const [omieAppSecret, setOmieAppSecret] = useState('')
@@ -53,8 +58,14 @@ export default function ProviderSetupModal({
 
   const isOmie = provider?.slug === 'omie'
   const credentialsReady = !isOmie || Boolean(omieAppKey.trim() && omieAppSecret.trim())
-  const canCreate = Boolean(provider && setupStage.canCreateConnection && credentialsReady)
   const isOAuth = provider?.authType === 'oauth2'
+  const oauthInConfiguration = Boolean(
+    provider
+    && provider.authType === 'oauth2'
+    && provider.supportsOAuthCallback
+    && (!readinessLoaded || provider.oauthReadiness?.ready !== true),
+  )
+  const canCreate = Boolean(provider && setupStage.canCreateConnection && credentialsReady && !oauthInConfiguration)
   const includedResources = provider?.resources.filter((resource) => resource.defaultEnabled) || []
 
   return (
@@ -95,7 +106,9 @@ export default function ProviderSetupModal({
                 <section className="rounded-[18px] border border-[#E6EAF4] bg-white p-4">
                   <div className="text-[14px] font-semibold text-[#24304A]">Autorização segura</div>
                   <p className="mt-2 text-[13px] leading-6 text-[#66748D]">
-                    Você será direcionado para autorizar o acesso. Depois disso, a conexão volta para cá como conectada ou pendente de autenticação.
+                    {oauthInConfiguration
+                      ? provider?.oauthReadiness?.message || 'OAuth em configuração. Este conector ficará disponível em breve.'
+                      : 'Você será direcionado para autorizar o acesso. Depois disso, a conexão volta para cá como conectada ou pendente de autenticação.'}
                   </p>
                 </section>
               ) : null}
@@ -183,7 +196,7 @@ export default function ProviderSetupModal({
             }}
             className="inline-flex h-11 items-center justify-center rounded-[14px] bg-[#17203A] px-5 text-[14px] font-semibold text-white transition hover:bg-[#0F172C] disabled:opacity-50"
           >
-            {busy ? 'Conectando...' : isOAuth ? 'Conectar' : 'Salvar credenciais'}
+            {oauthInConfiguration ? 'Em configuração' : busy ? 'Conectando...' : isOAuth ? 'Conectar' : 'Salvar credenciais'}
           </button>
         </DialogFooter>
       </DialogContent>

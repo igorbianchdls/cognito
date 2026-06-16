@@ -21,6 +21,13 @@ export type IntegrationResource = {
   defaultEnabled: boolean
 }
 
+export type IntegrationProviderOAuthReadiness = {
+  ready: boolean
+  configured: boolean
+  missing: string[]
+  message?: string
+}
+
 export type IntegrationProvider = {
   slug: string
   toolkitSlug: string
@@ -33,6 +40,7 @@ export type IntegrationProvider = {
   syncModes: IntegrationSyncMode[]
   resources: IntegrationResource[]
   tags: string[]
+  oauthReadiness?: IntegrationProviderOAuthReadiness
 }
 
 export function normalizeProviderSlug(slug: string): string {

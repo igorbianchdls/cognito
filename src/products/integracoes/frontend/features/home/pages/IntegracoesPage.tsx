@@ -1,6 +1,6 @@
 'use client'
 
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { ArrowRight, ChevronDown, Database, LockKeyhole, MoreHorizontal, Search, ShieldCheck } from 'lucide-react'
 
 import PageContainer from '@/components/layout/PageContainer'
@@ -12,7 +12,10 @@ import ConnectionStatusPanel from '@/products/integracoes/frontend/features/conn
 import useIntegrationConnections from '@/products/integracoes/frontend/features/connections/hooks/useIntegrationConnections'
 import ProviderSetupModal from '@/products/integracoes/frontend/features/home/components/ProviderSetupModal'
 import useCurrentIntegrationTenant from '@/products/integracoes/frontend/hooks/useCurrentIntegrationTenant'
-import type { IntegrationConnectionWithUi } from '@/products/integracoes/frontend/services/integracoesApi'
+import {
+  fetchIntegrationProviders,
+  type IntegrationConnectionWithUi,
+} from '@/products/integracoes/frontend/services/integracoesApi'
 import { renderIntegrationLogo, toolkitHasIcon } from '@/products/integracoes/shared/iconMaps'
 import {
   DATA_CONNECTOR_TOP_PRIORITY_ORDER,
@@ -20,6 +23,7 @@ import {
 import { DATA_CONNECTOR_EXTRA_TOOLKITS } from '@/products/integracoes/shared/dataConnectorExtras'
 import { TOOLKITS } from '@/products/integracoes/shared/toolkits'
 import { getIntegrationProvider } from '@/products/integracoes/shared/providers/providerCatalog'
+import type { IntegrationProvider } from '@/products/integracoes/shared/providers/providerTypes'
 import type { ToolkitDefinition, ToolkitStatusMap } from '@/products/integracoes/shared/types'
 
 type CatalogCategory = 'all' | 'erp' | 'crm' | 'analytics' | 'communication' | 'data' | 'productivity' | 'marketing' | 'support' | 'other'
@@ -173,6 +177,12 @@ function isDataConnectionActive(connection?: IntegrationConnectionWithUi | null)
   return Boolean(connection && ['connected', 'syncing', 'warning'].includes(connection.status))
 }
 
+function isOAuthInConfiguration(provider?: IntegrationProvider | null, readinessLoaded = true) {
+  if (!provider || provider.authType !== 'oauth2' || !provider.supportsOAuthCallback) return false
+  if (!readinessLoaded) return true
+  return provider.oauthReadiness?.ready !== true
+}
+
 function sortByPriority(
   items: ToolkitDefinition[],
   priorityOrder: readonly string[],
@@ -215,28 +225,37 @@ function CatalogCard({
   toolkit,
   busySlug,
   dataConnection,
+  provider,
+  readinessLoaded,
   onAction,
 }: {
   toolkit: ToolkitDefinition
   busySlug: string | null
   dataConnection?: IntegrationConnectionWithUi | null
+  provider?: IntegrationProvider | null
+  readinessLoaded: boolean
   onAction: (toolkit: ToolkitDefinition) => void
 }) {
   const hasDataConnection = Boolean(dataConnection)
   const dataConnectionActive = isDataConnectionActive(dataConnection)
+  const oauthInConfiguration = !hasDataConnection && isOAuthInConfiguration(provider, readinessLoaded)
   const connected = dataConnectionActive
   const category = CATEGORY_TABS.find((tab) => tab.value === categorizeToolkit(toolkit.slug))?.label ?? 'Outros'
-  const statusLabel = dataConnection?.uiStatus?.label || (connected ? 'Conectado' : hasDataConnection ? 'Pendente' : 'Não conectado')
+  const statusLabel = oauthInConfiguration
+    ? 'Em configuração'
+    : dataConnection?.uiStatus?.label || (connected ? 'Conectado' : hasDataConnection ? 'Pendente' : 'Não conectado')
   const helperText = hasDataConnection && !dataConnectionActive
     ? dataConnection?.uiStatus?.description || 'Conexão salva aguardando autorização.'
     : connected
       ? dataConnection?.uiStatus?.description || 'Conexão pronta. Configure data warehouse, Otto IA e sincronização quando quiser.'
-      : 'Conecte sua conta para trazer os dados principais automaticamente.'
+      : oauthInConfiguration
+        ? provider?.oauthReadiness?.message || 'OAuth em configuração. Este conector ficará disponível em breve.'
+        : 'Conecte sua conta para trazer os dados principais automaticamente.'
   const isBusy = busySlug === toolkit.slug || busySlug === dataConnection?.id
-  const buttonLabel = isBusy ? 'Abrindo...' : hasDataConnection ? 'Configurar' : 'Conectar'
+  const buttonLabel = oauthInConfiguration ? 'Em configuração' : isBusy ? 'Abrindo...' : hasDataConnection ? 'Configurar' : 'Conectar'
   const statusClassName = connected
     ? 'bg-[#EBFFF5] text-[#108A55]'
-    : hasDataConnection
+    : hasDataConnection || oauthInConfiguration
       ? 'bg-[#FFF7E6] text-[#A05A00]'
       : 'bg-[#F2F4FA] text-[#66748D]'
 
@@ -283,10 +302,10 @@ function CatalogCard({
         <button
           type="button"
           onClick={() => onAction(toolkit)}
-          disabled={isBusy}
+          disabled={isBusy || oauthInConfiguration}
           className={[
             'shrink-0 rounded-[14px] px-4 py-2.5 text-[14px] font-semibold transition disabled:opacity-60',
-            connected
+            connected || oauthInConfiguration
               ? 'border border-[#DCE3F0] bg-white text-[#3A4760] hover:bg-[#F7F8FC]'
               : 'bg-[#17203A] text-white hover:bg-[#0F172C]',
           ].join(' ')}
@@ -306,6 +325,8 @@ export default function IntegracoesPage() {
   const [selectedDataConnector, setSelectedDataConnector] = useState<ToolkitDefinition | null>(null)
   const [isDataConnectorModalOpen, setIsDataConnectorModalOpen] = useState(false)
   const [isConnectionDrawerOpen, setIsConnectionDrawerOpen] = useState(false)
+  const [providersByToolkit, setProvidersByToolkit] = useState<Map<string, IntegrationProvider>>(new Map())
+  const [providerReadinessLoaded, setProviderReadinessLoaded] = useState(false)
 
   const {
     busyId: integrationBusyId,
@@ -320,6 +341,7 @@ export default function IntegracoesPage() {
     loadConnectionDetail,
     reconnectConnection,
     syncConnection,
+    setError: setIntegrationError,
   } = useIntegrationConnections(tenantId)
   const connectionStatusMap = useMemo(
     () => Object.fromEntries(Array.from(connectionsByToolkit.keys()).map((slug) => [slug, true])),
@@ -332,6 +354,30 @@ export default function IntegracoesPage() {
     }
     return Array.from(map.values())
   }, [])
+
+  useEffect(() => {
+    let active = true
+    setProviderReadinessLoaded(false)
+    void fetchIntegrationProviders()
+      .then((providers) => {
+        if (!active) return
+        const map = new Map<string, IntegrationProvider>()
+        for (const provider of providers) {
+          map.set(provider.toolkitSlug.toUpperCase(), provider)
+          map.set(provider.slug.toUpperCase(), provider)
+        }
+        setProvidersByToolkit(map)
+        setProviderReadinessLoaded(true)
+      })
+      .catch((error) => {
+        if (!active) return
+        setProviderReadinessLoaded(true)
+        setIntegrationError(error instanceof Error ? error.message : 'Erro ao carregar readiness de integrações.')
+      })
+    return () => {
+      active = false
+    }
+  }, [setIntegrationError])
 
   const catalogToolkits = useMemo(() => {
     const source = dataConnectorSamples
@@ -353,6 +399,11 @@ export default function IntegracoesPage() {
     const existingConnection = connectionsByToolkit.get(String(toolkit.slug).toUpperCase())
     if (existingConnection) {
       void loadConnectionDetail(existingConnection.id).then(() => setIsConnectionDrawerOpen(true))
+      return
+    }
+    const provider = providersByToolkit.get(String(toolkit.slug).toUpperCase()) || getIntegrationProvider(toolkit.slug)
+    if (isOAuthInConfiguration(provider, providerReadinessLoaded)) {
+      setIntegrationError(`${toolkit.name} ainda esta em configuracao OAuth.`)
       return
     }
 
@@ -454,6 +505,8 @@ export default function IntegracoesPage() {
                           toolkit={toolkit}
                           busySlug={integrationBusyId}
                           dataConnection={connectionsByToolkit.get(String(toolkit.slug).toUpperCase())}
+                          provider={providersByToolkit.get(String(toolkit.slug).toUpperCase()) || getIntegrationProvider(toolkit.slug)}
+                          readinessLoaded={providerReadinessLoaded}
                           onAction={openDataConnectorModal}
                         />
                       ))}
@@ -543,6 +596,10 @@ export default function IntegracoesPage() {
           open={isDataConnectorModalOpen}
           busy={Boolean(integrationBusyId)}
           error={integrationError}
+          providerOverride={selectedDataConnector
+            ? providersByToolkit.get(String(selectedDataConnector.slug).toUpperCase()) || null
+            : null}
+          readinessLoaded={providerReadinessLoaded}
           onOpenChange={(open) => {
             setIsDataConnectorModalOpen(open)
             if (!open) setSelectedDataConnector(null)

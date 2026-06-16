@@ -84,6 +84,18 @@ type CreateConnectionResponse = {
   }
 }
 
+type ReconnectResponse = {
+  ok?: boolean
+  error?: string
+  reconnect?: {
+    mode?: string
+    message?: string
+    authorizationUrl?: string
+    status?: string
+    connection?: IntegrationConnectionWithUi
+  }
+}
+
 type SyncResponse = {
   ok?: boolean
   error?: string
@@ -243,12 +255,25 @@ export async function requestIntegrationSync(
   return payload.result
 }
 
-export async function requestIntegrationReconnect(id: string, tenantId?: number): Promise<void> {
-  await requestJson(`/api/integracoes/connections/${encodeURIComponent(id)}/reconnect`, {
+export async function requestIntegrationReconnect(id: string, tenantId?: number): Promise<ReconnectResponse['reconnect']> {
+  const payload = await requestJson<ReconnectResponse>(`/api/integracoes/connections/${encodeURIComponent(id)}/reconnect`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(tenantId ? { tenantId } : {}),
   })
+
+  if (payload.reconnect?.authorizationUrl && typeof window !== 'undefined') {
+    window.location.assign(payload.reconnect.authorizationUrl)
+  }
+
+  if (!payload.reconnect?.authorizationUrl && (payload.reconnect?.status === 'pending_auth' || payload.reconnect?.mode === 'local_stub')) {
+    throw new Error(
+      payload.reconnect.message
+        || 'OAuth pendente, mas a URL de autorizacao nao foi retornada. Verifique a configuracao do provider.',
+    )
+  }
+
+  return payload.reconnect
 }
 
 export async function fetchIntegrationPluginPermissions(

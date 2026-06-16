@@ -9,6 +9,7 @@ import type {
   IntegrationSyncResult,
   IntegrationSyncTrigger,
 } from '@/products/integracoes/shared/contracts/syncContracts'
+import type { IntegrationProviderOAuthReadiness } from '@/products/integracoes/shared/providers/providerTypes'
 
 export type LocalSetupResult = {
   mode: 'cloud' | 'local_stub'
@@ -27,6 +28,7 @@ type CloudControlApiResponse = {
   status?: string
   secretRef?: string
   authorizationUrl?: string
+  providers?: Record<string, IntegrationProviderOAuthReadiness>
 }
 
 const SYNC_READY_CONNECTION_STATUSES = new Set(['connected', 'syncing', 'warning'])
@@ -94,6 +96,14 @@ export async function prepareConnectionSetup(params: {
   }
 }
 
+export async function getCloudOAuthProviderReadiness(providerSlugs: string[]): Promise<Map<string, IntegrationProviderOAuthReadiness>> {
+  const cloud = await requestCloudControlApi('/providers/oauth-readiness', {
+    providers: providerSlugs,
+  })
+  const providers = cloud?.providers || {}
+  return new Map(Object.entries(providers))
+}
+
 export async function requestLocalReconnect(params: {
   tenantId: number
   connection: IntegrationConnection
@@ -128,6 +138,8 @@ export async function requestLocalReconnect(params: {
     mode: cloud ? 'cloud' : 'local_stub',
     connection: updated || params.connection,
     message: cloud?.message || 'Reconexao registrada localmente. O fluxo real de autenticacao sera adicionado depois.',
+    authorizationUrl: cloud?.authorizationUrl,
+    status: cloud?.status,
   }
 }
 

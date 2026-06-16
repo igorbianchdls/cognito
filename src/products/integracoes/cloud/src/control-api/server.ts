@@ -1,6 +1,7 @@
 import { handleProviderCallback } from '@/products/integracoes/cloud/src/control-api/routes/callbacks'
 import { handleConnectionSetup } from '@/products/integracoes/cloud/src/control-api/routes/connections'
 import { handleHealthCheck } from '@/products/integracoes/cloud/src/control-api/routes/health'
+import { handleProviderOAuthReadiness } from '@/products/integracoes/cloud/src/control-api/routes/providerReadiness'
 import { handleScheduledSync } from '@/products/integracoes/cloud/src/control-api/routes/scheduledSync'
 import { handleSyncDispatch } from '@/products/integracoes/cloud/src/control-api/routes/sync'
 import { isInternalRequestAuthorized } from '@/products/integracoes/cloud/src/lib/internalAuth'
@@ -30,6 +31,7 @@ export function createControlApiServer(): ControlApiServer {
       if (
         (
           request.path === '/connections/setup'
+          || request.path === '/providers/oauth-readiness'
           || request.path === '/sync'
           || request.path === '/scheduled-sync'
         )
@@ -47,6 +49,7 @@ export function createControlApiServer(): ControlApiServer {
       }
 
       if (request.path === '/connections/setup') return handleConnectionSetup(request)
+      if (request.path === '/providers/oauth-readiness') return handleProviderOAuthReadiness(request)
       if (request.path === '/callbacks/provider') return handleProviderCallback(request)
       if (request.path === '/sync') return handleSyncDispatch(request)
       if (request.path === '/scheduled-sync') return handleScheduledSync(request)
