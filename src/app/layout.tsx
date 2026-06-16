@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { ClerkProvider } from "@clerk/nextjs";
-import { Geist, Geist_Mono, Inter, PT_Serif, Noto_Serif, Libre_Baskerville, Crimson_Text, Amiri, Radley, IBM_Plex_Mono, Space_Mono, Roboto_Mono, EB_Garamond, Barlow } from "next/font/google";
+import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -11,82 +11,6 @@ const geistSans = Geist({
 const geistMono = Geist_Mono({
   variable: "--font-geist-mono",
   subsets: ["latin"],
-});
-
-const inter = Inter({
-  variable: "--font-inter",
-  subsets: ["latin"],
-});
-
-const ibmPlexMono = IBM_Plex_Mono({
-  variable: "--font-ibm-plex-mono",
-  subsets: ["latin"],
-  weight: ["400","500","600","700"],
-});
-
-const spaceMono = Space_Mono({
-  variable: "--font-space-mono",
-  subsets: ["latin"],
-  weight: ["400","700"],
-});
-
-const robotoMono = Roboto_Mono({
-  variable: "--font-roboto-mono",
-  subsets: ["latin"],
-  weight: ["400","500","700"],
-});
-
-const ptSerif = PT_Serif({
-  variable: "--font-pt-serif",
-  subsets: ["latin"],
-  weight: ["400","700"],
-  style: ["normal","italic"],
-});
-
-const notoSerif = Noto_Serif({
-  variable: "--font-noto-serif",
-  subsets: ["latin"],
-  weight: ["400","700"],
-});
-
-const libreBaskerville = Libre_Baskerville({
-  variable: "--font-libre-baskerville",
-  subsets: ["latin"],
-  weight: ["400","700"],
-  style: ["normal","italic"],
-});
-
-const crimsonText = Crimson_Text({
-  variable: "--font-crimson-text",
-  subsets: ["latin"],
-  weight: ["400","600","700"],
-  style: ["normal","italic"],
-});
-
-const amiri = Amiri({
-  variable: "--font-amiri",
-  subsets: ["latin"],
-  weight: ["400","700"],
-  style: ["normal","italic"],
-});
-
-const radley = Radley({
-  variable: "--font-radley",
-  subsets: ["latin"],
-  weight: ["400"],
-  style: ["normal","italic"],
-});
-
-const ebGaramond = EB_Garamond({
-  variable: "--font-eb-garamond",
-  subsets: ["latin"],
-  weight: ["400","500","600","700","800"],
-});
-
-const barlow = Barlow({
-  variable: "--font-barlow",
-  subsets: ["latin"],
-  weight: ["100","200","300","400","500","600","700","800","900"],
 });
 
 export const metadata: Metadata = {
@@ -102,7 +26,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body
-        className={`${geistSans.variable} ${geistMono.variable} ${inter.variable} ${ptSerif.variable} ${notoSerif.variable} ${libreBaskerville.variable} ${crimsonText.variable} ${amiri.variable} ${radley.variable} ${ibmPlexMono.variable} ${spaceMono.variable} ${robotoMono.variable} ${ebGaramond.variable} ${barlow.variable} antialiased bg-gray-100 font-geist`}
+        className={`${geistSans.variable} ${geistMono.variable} antialiased bg-background`}
       >
         <ClerkProvider>
           {children}
