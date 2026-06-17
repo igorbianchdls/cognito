@@ -1,6 +1,7 @@
 import { EmptyState } from '@/products/plugin/web/src/components/EmptyState'
 import { ErrorState } from '@/products/plugin/web/src/components/ErrorState'
 import { LoadingState } from '@/products/plugin/web/src/components/LoadingState'
+import { ToolCallCard } from '@/products/plugin/web/src/components/ToolCallCard'
 import { usePluginToolResult } from '@/products/plugin/web/src/bridge'
 import type {
   AnalysisStructuredContent,
@@ -33,7 +34,7 @@ function getView(structuredContent: unknown) {
 }
 
 export function App() {
-  const { structuredContent, isError } = usePluginToolResult()
+  const { toolInput, structuredContent, isError } = usePluginToolResult()
 
   if (isError) {
     return (
@@ -46,6 +47,7 @@ export function App() {
   if (!structuredContent) {
     return (
       <main className="app-shell">
+        <ToolCallCard toolInput={toolInput} status="running" />
         <LoadingState />
       </main>
     )
@@ -59,6 +61,7 @@ export function App() {
 
   return (
     <main className="app-shell">
+      <ToolCallCard structuredContent={structuredContent} toolInput={toolInput} status="done" />
       {view === 'dashboard_list' ? (
         <DashboardListView data={structuredContent as DashboardListStructuredContent} />
       ) : null}
