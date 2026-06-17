@@ -103,6 +103,7 @@ export type ObservabilityDatasetStatus = {
   expected: boolean
   exists: boolean
   ok: boolean
+  issueType: 'none' | 'not_found' | 'auth_error' | 'query_error'
   tableCount: number
   totalRows: number
   tables: Array<{
@@ -223,6 +224,30 @@ function toBigQueryDate(value: unknown): string | null {
   return String(value)
 }
 
+function classifyBigQueryError(error: unknown): {
+  issueType: ObservabilityDatasetStatus['issueType']
+  message: string
+} {
+  const message = error instanceof Error ? error.message : 'Falha ao consultar dataset BigQuery'
+  const normalized = message.toLowerCase()
+  if (
+    normalized.includes('invalid_grant')
+    || normalized.includes('account not found')
+    || normalized.includes('permission denied')
+    || normalized.includes('could not load the default credentials')
+  ) {
+    return {
+      issueType: 'auth_error',
+      message,
+    }
+  }
+
+  return {
+    issueType: 'query_error',
+    message,
+  }
+}
+
 async function inspectBigQueryDataset(
   client: BigQuery,
   dataset: string,
@@ -237,6 +262,7 @@ async function inspectBigQueryDataset(
         expected: true,
         exists: false,
         ok: false,
+        issueType: 'not_found',
         tableCount: 0,
         totalRows: 0,
         tables: [],
@@ -258,20 +284,23 @@ async function inspectBigQueryDataset(
       expected: true,
       exists: true,
       ok: true,
+      issueType: 'none',
       tableCount: tableRows.length,
       totalRows: tableRows.reduce((sum, table) => sum + table.rowCount, 0),
       tables: tableRows,
     }
   } catch (error) {
+    const classified = classifyBigQueryError(error)
     return {
       dataset,
       expected: true,
       exists: false,
       ok: false,
+      issueType: classified.issueType,
       tableCount: 0,
       totalRows: 0,
       tables: [],
-      error: error instanceof Error ? error.message : 'Falha ao consultar dataset BigQuery',
+      error: classified.message,
     }
   }
 }
@@ -413,13 +442,18 @@ export async function getTenantBigQueryObservabilitySnapshot(params?: {
       && destinationConfig.rawDataset === expectedDatasets.rawDataset
       && destinationConfig.normalizedDataset === expectedDatasets.normalizedDataset
     const ok = destinationOk && raw.ok && normalized.ok
+    const authError = raw.issueType === 'auth_error' || normalized.issueType === 'auth_error'
     const issue = ok
       ? null
       : !destinationRow
         ? 'Destino BigQuery default ausente'
         : !destinationOk
           ? 'Config do destino diverge dos datasets esperados'
-          : raw.error || normalized.error || 'Dataset BigQuery ausente'
+          : authError
+            ? 'Credencial Google/BigQuery invalida ou sem permissao para consultar datasets.'
+            : raw.issueType === 'not_found' || normalized.issueType === 'not_found'
+              ? 'Dataset BigQuery ausente'
+              : raw.error || normalized.error || 'Falha ao consultar BigQuery'
 
     return {
       tenantId,
@@ -462,8 +496,8 @@ export async function getTenantBigQueryObservabilitySnapshot(params?: {
       missingDestinations: rows.filter((row) => !row.destination).length,
       missingDatasets: rows.reduce((count, row) => (
         count
-        + (row.datasets.raw.exists ? 0 : 1)
-        + (row.datasets.normalized.exists ? 0 : 1)
+        + (row.datasets.raw.issueType === 'not_found' ? 1 : 0)
+        + (row.datasets.normalized.issueType === 'not_found' ? 1 : 0)
       ), 0),
     },
     rows,

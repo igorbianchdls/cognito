@@ -73,6 +73,14 @@ function KpiCard({
 
 function datasetCell(row: ObservabilityBigQueryTenantRow, kind: 'raw' | 'normalized') {
   const dataset = row.datasets[kind]
+  const detail = dataset.exists
+    ? `${dataset.tableCount} tabelas / ${dataset.totalRows} linhas`
+    : dataset.issueType === 'auth_error'
+      ? 'erro de credencial Google'
+      : dataset.issueType === 'not_found'
+        ? 'dataset ausente'
+        : 'falha na consulta'
+
   return (
     <div className="space-y-1">
       <div className="flex items-center gap-2">
@@ -84,7 +92,7 @@ function datasetCell(row: ObservabilityBigQueryTenantRow, kind: 'raw' | 'normali
         <span className="font-mono text-xs font-semibold text-slate-950">{dataset.dataset}</span>
       </div>
       <div className="text-xs text-slate-500">
-        {dataset.exists ? `${dataset.tableCount} tabelas / ${dataset.totalRows} linhas` : 'dataset ausente'}
+        {detail}
       </div>
       {dataset.error ? <div className="max-w-xs truncate text-xs text-red-700">{dataset.error}</div> : null}
     </div>
@@ -94,7 +102,7 @@ function datasetCell(row: ObservabilityBigQueryTenantRow, kind: 'raw' | 'normali
 function matchesFilter(row: ObservabilityBigQueryTenantRow, filter: FilterMode) {
   if (filter === 'ok') return row.ok
   if (filter === 'attention') return !row.ok
-  if (filter === 'missing_dataset') return !row.datasets.raw.exists || !row.datasets.normalized.exists
+  if (filter === 'missing_dataset') return row.datasets.raw.issueType === 'not_found' || row.datasets.normalized.issueType === 'not_found'
   if (filter === 'failed') return row.provisioningStatus === 'failed'
   return true
 }

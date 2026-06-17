@@ -13,6 +13,12 @@ import {
   type IntegrationSyncRunWithUi,
 } from '@/products/integracoes/frontend/services/integracoesApi'
 
+type SyncConnectionOptions = {
+  pipelineId?: string
+  destinationId?: string
+  resources?: string[]
+}
+
 function toolkitKeyFromConnection(connection: IntegrationConnectionWithUi): string {
   const metadata = connection.metadata || {}
   const toolkitSlug = metadata.toolkitSlug || metadata.toolkit_slug
@@ -105,7 +111,7 @@ export default function useIntegrationConnections(tenantId = 0) {
     }
   }, [tenantId])
 
-  const syncConnection = useCallback(async (connectionId: string, resources?: string[]) => {
+  const syncConnection = useCallback(async (connectionId: string, options?: SyncConnectionOptions) => {
     if (!tenantId) throw new Error('Tenant ainda nao carregado.')
     setBusyId(`sync:${connectionId}`)
     setError(null)
@@ -113,8 +119,10 @@ export default function useIntegrationConnections(tenantId = 0) {
       const result = await requestIntegrationSync({
         tenantId,
         connectionId,
+        pipelineId: options?.pipelineId,
+        destinationId: options?.destinationId,
         trigger: 'manual',
-        resources,
+        resources: options?.resources,
         requestedBy: 'integracoes-ui',
       })
       await refreshConnections()

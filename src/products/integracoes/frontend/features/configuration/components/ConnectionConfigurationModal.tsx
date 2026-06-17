@@ -51,7 +51,7 @@ type ConnectionConfigurationModalProps = {
   busy?: boolean
   onOpenChange: (open: boolean) => void
   onSaved?: (configuration: IntegrationConnectionConfiguration) => void | Promise<void>
-  onSync?: (connection: IntegrationConnectionWithUi) => void
+  onSync?: (connection: IntegrationConnectionWithUi, configuration?: IntegrationConnectionConfiguration) => void | Promise<void>
   onReconnect?: (connection: IntegrationConnectionWithUi) => void
 }
 
@@ -117,6 +117,7 @@ export default function ConnectionConfigurationModal({
   })
   const [loading, setLoading] = useState(false)
   const [saving, setSaving] = useState(false)
+  const [savingAndSyncing, setSavingAndSyncing] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
   const toolkitSlug = String(connection?.metadata?.toolkitSlug || connection?.provider || '').toUpperCase()
@@ -126,6 +127,7 @@ export default function ConnectionConfigurationModal({
   }, [configuration, connection])
   const canSync = Boolean(connection && ['connected', 'syncing', 'warning'].includes(connection.status))
   const canReconnect = Boolean(connection && ['pending_auth', 'error', 'warning'].includes(connection.status))
+  const canSaveAndSync = canSync && dataWarehouse.enabled
 
   useEffect(() => {
     if (!open || !connection) {
@@ -177,6 +179,30 @@ export default function ConnectionConfigurationModal({
       setError(nextError instanceof Error ? nextError.message : 'Erro ao salvar configuracao')
     } finally {
       setSaving(false)
+    }
+  }
+
+  async function saveConfigurationAndSync() {
+    if (!connection) return
+    setSavingAndSyncing(true)
+    setError(null)
+    try {
+      const saved = await saveIntegrationConnectionConfiguration(connection.id, {
+        tenantId: connection.tenantId,
+        dataWarehouse,
+        mcp,
+      })
+      const nextState = buildState(saved)
+      setConfiguration(saved)
+      setDataWarehouse(nextState.dataWarehouse)
+      setMcp(nextState.mcp)
+      await onSaved?.(saved)
+      await onSync?.(saved.connection, saved)
+      onOpenChange(false)
+    } catch (nextError) {
+      setError(nextError instanceof Error ? nextError.message : 'Erro ao salvar e enviar dados')
+    } finally {
+      setSavingAndSyncing(false)
     }
   }
 
@@ -236,7 +262,7 @@ export default function ConnectionConfigurationModal({
                   <button
                     type="button"
                     onClick={() => onReconnect?.(connection)}
-                    disabled={busy || saving}
+                    disabled={busy || saving || savingAndSyncing}
                     className="inline-flex h-10 items-center justify-center gap-2 rounded-[12px] border border-[#DCE3F0] bg-white px-4 text-[13px] font-semibold text-[#33405A] transition hover:bg-[#F7F8FC] disabled:opacity-60"
                   >
                     <RotateCcw className="h-4 w-4" />
@@ -247,7 +273,7 @@ export default function ConnectionConfigurationModal({
                   <button
                     type="button"
                     onClick={() => onSync?.(connection)}
-                    disabled={busy || saving}
+                    disabled={busy || saving || savingAndSyncing}
                     className="inline-flex h-10 items-center justify-center gap-2 rounded-[12px] border border-[#DCE3F0] bg-white px-4 text-[13px] font-semibold text-[#33405A] transition hover:bg-[#F7F8FC] disabled:opacity-60"
                   >
                     <RefreshCw className="h-4 w-4" />
@@ -256,15 +282,32 @@ export default function ConnectionConfigurationModal({
                 ) : null}
               </div>
 
-              <button
-                type="button"
-                onClick={saveConfiguration}
-                disabled={loading || saving || busy || !connection}
-                className="inline-flex h-10 items-center justify-center gap-2 rounded-[12px] bg-[#17203A] px-5 text-[13px] font-semibold text-white transition hover:bg-[#0F172C] disabled:opacity-60"
-              >
-                {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
-                Salvar configuração
-              </button>
+              <div className="flex flex-col gap-2 sm:flex-row">
+                <button
+                  type="button"
+                  onClick={saveConfiguration}
+                  disabled={loading || saving || savingAndSyncing || busy || !connection}
+                  className={`inline-flex h-10 items-center justify-center gap-2 rounded-[12px] px-5 text-[13px] font-semibold transition disabled:opacity-60 ${
+                    canSaveAndSync
+                      ? 'border border-[#DCE3F0] bg-white text-[#33405A] hover:bg-[#F7F8FC]'
+                      : 'bg-[#17203A] text-white hover:bg-[#0F172C]'
+                  }`}
+                >
+                  {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
+                  Salvar configuração
+                </button>
+                {canSaveAndSync ? (
+                  <button
+                    type="button"
+                    onClick={saveConfigurationAndSync}
+                    disabled={loading || saving || savingAndSyncing || busy || !connection}
+                    className="inline-flex h-10 items-center justify-center gap-2 rounded-[12px] bg-[#17203A] px-5 text-[13px] font-semibold text-white transition hover:bg-[#0F172C] disabled:opacity-60"
+                  >
+                    {savingAndSyncing ? <Loader2 className="h-4 w-4 animate-spin" /> : <RefreshCw className="h-4 w-4" />}
+                    {savingAndSyncing ? 'Enviando dados...' : 'Salvar e enviar agora'}
+                  </button>
+                ) : null}
+              </div>
             </DialogFooter>
           </>
         ) : null}

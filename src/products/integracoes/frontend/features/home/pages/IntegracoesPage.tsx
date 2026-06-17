@@ -618,8 +618,14 @@ export default function IntegracoesPage() {
             await refreshConnections()
             await loadConnectionDetail(configuration.connection.id)
           }}
-          onSync={(connection) => {
-            void syncConnection(connection.id)
+          onSync={async (connection, configuration) => {
+            await syncConnection(connection.id, configuration?.pipeline
+              ? {
+                pipelineId: configuration.pipeline.id,
+                destinationId: configuration.destination?.id,
+                resources: configuration.pipeline.selectedResources,
+              }
+              : undefined)
           }}
           onReconnect={(connection) => {
             void reconnectConnection(connection.id)
