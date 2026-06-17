@@ -1,4 +1,5 @@
 import Link from 'next/link'
+import { sfPro, sfProLandingStyle } from '@/assets/landingpages/otto/fonts'
 import {
   ArrowRight,
   BarChart3,
@@ -243,7 +244,7 @@ function ProductScene({ copy }: { copy: VariantCopy }) {
 
 function OttoLandingExperimentPage({ copy }: { copy: VariantCopy }) {
   return (
-    <main className="min-h-screen bg-white text-[#181818]">
+    <main className={`${sfPro.variable} min-h-screen bg-white text-[#181818]`} style={sfProLandingStyle}>
       <section className="relative isolate min-h-[88svh] overflow-hidden border-b border-[#e8e8e8]">
         <ProductScene copy={copy} />
         <div className="relative z-10 flex min-h-[88svh] max-w-[1180px] flex-col justify-between px-6 py-6 sm:px-8 lg:mx-auto">
