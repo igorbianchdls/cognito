@@ -122,8 +122,9 @@ export default function ConnectionConfigurationModal({
 
   const toolkitSlug = String(connection?.metadata?.toolkitSlug || connection?.provider || '').toUpperCase()
   const resources = useMemo(() => {
-    const configResources = configuration?.connection.selectedResources || connection?.selectedResources || []
-    return normalizeResources(configResources)
+    const providerResources = configuration?.provider.resources.map((resource) => resource.slug) || []
+    const selectedResources = configuration?.connection.selectedResources || connection?.selectedResources || []
+    return normalizeResources([...providerResources, ...selectedResources])
   }, [configuration, connection])
   const canSync = Boolean(connection && ['connected', 'syncing', 'warning'].includes(connection.status))
   const canReconnect = Boolean(connection && ['pending_auth', 'error', 'warning'].includes(connection.status))

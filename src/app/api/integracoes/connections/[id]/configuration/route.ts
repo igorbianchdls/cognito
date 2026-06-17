@@ -198,11 +198,14 @@ function buildConfiguration(input: {
   pipeline: IntegrationPipeline | null
   permissions: IntegrationPluginPermissions
 }) {
+  const provider = requireIntegrationProvider(input.connection.provider)
+
   return {
     connection: {
       ...input.connection,
       uiStatus: mapConnectionStatusToUi(input.connection.status),
     },
+    provider,
     destination: input.destination,
     pipeline: input.pipeline,
     permissions: input.permissions,

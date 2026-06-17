@@ -134,6 +134,7 @@ type PipelineResponse = {
 
 export type IntegrationConnectionConfiguration = {
   connection: IntegrationConnectionWithUi
+  provider: IntegrationProvider
   destination: IntegrationDestination | null
   pipeline: IntegrationPipeline | null
   permissions: IntegrationPluginPermissions
