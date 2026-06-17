@@ -212,6 +212,7 @@ export async function startCloudSyncRun(input: {
          started_at = COALESCE(started_at, now()),
          metadata = metadata || $4::jsonb
        WHERE id = $1 AND tenant_id = $2 AND connection_id = $3
+         AND status IN ('queued', 'running')
        RETURNING id::text, status`,
       [
         input.runId,
@@ -233,6 +234,21 @@ export async function startCloudSyncRun(input: {
       return {
         id: String(row.id),
         status: String(row.status || 'running'),
+      }
+    }
+
+    const existing = await getPool().query(
+      `SELECT id::text, status
+       FROM integrations.sync_runs
+       WHERE id = $1 AND tenant_id = $2 AND connection_id = $3
+       LIMIT 1`,
+      [input.runId, input.tenantId, input.connectionId],
+    )
+    const existingRow = existing.rows[0] as { id?: unknown, status?: unknown } | undefined
+    if (existingRow?.id) {
+      return {
+        id: String(existingRow.id),
+        status: String(existingRow.status || 'running'),
       }
     }
   }

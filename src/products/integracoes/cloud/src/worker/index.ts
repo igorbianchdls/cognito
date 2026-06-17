@@ -95,6 +95,19 @@ function parseTrigger(value: string | undefined): IntegrationSyncTrigger {
   return 'manual'
 }
 
+function isNonRetryableWorkerError(error: unknown) {
+  const message = error instanceof Error ? error.message : String(error)
+  return [
+    'Falha OAuth',
+    'Reautenticacao',
+    "Permission 'secretmanager.",
+    'nao encontrado',
+    'nao possui resources selecionados',
+    'Connector cloud nao registrado',
+    'esta com status',
+  ].some((pattern) => message.includes(pattern))
+}
+
 async function executeWorker(payload: WorkerPayload) {
   const result = await runSyncJob({
     tenantId: payload.tenantId || Number(process.env.SYNC_TENANT_ID || 1),
@@ -142,13 +155,17 @@ export function startHttpServer() {
       response.end()
       void result
     } catch (error) {
+      const nonRetryable = isNonRetryableWorkerError(error)
       console.error(JSON.stringify({
         severity: 'ERROR',
-        message: 'Integration worker HTTP request failed.',
+        message: nonRetryable
+          ? 'Integration worker HTTP request failed with non-retryable error.'
+          : 'Integration worker HTTP request failed.',
         error: error instanceof Error ? error.message : String(error),
+        nonRetryable,
       }))
-      response.writeHead(500, { 'content-type': 'application/json; charset=utf-8' })
-      response.end(JSON.stringify({ ok: false, error: 'Falha ao processar mensagem Pub/Sub.' }))
+      response.writeHead(nonRetryable ? 204 : 500, { 'content-type': 'application/json; charset=utf-8' })
+      response.end(nonRetryable ? undefined : JSON.stringify({ ok: false, error: 'Falha ao processar mensagem Pub/Sub.' }))
     }
   })
 

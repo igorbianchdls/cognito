@@ -1,7 +1,12 @@
 import { NextRequest } from 'next/server'
 
-import { ensureDefaultTenantBigQueryDestination } from '@/products/integracoes/datawarehouse/provisioning/tenantBigQueryRepository'
+import { createBigQueryClient, getBigQueryProjectId } from '@/lib/bigqueryClient'
 import { getTenantBigQueryDatasets } from '@/products/integracoes/datawarehouse/provisioning/tenantBigQueryNaming'
+import { getIntegrationsCloudConfig } from '@/products/integracoes/datawarehouse/config/gcpConfig'
+import {
+  ensureDefaultTenantBigQueryDestination,
+  markTenantBigQueryProvisioningSucceeded,
+} from '@/products/integracoes/datawarehouse/provisioning/tenantBigQueryRepository'
 import {
   createIntegrationEvent,
   createIntegrationPipeline,
@@ -122,6 +127,29 @@ function normalizePermissionResources(provider: ReturnType<typeof requireIntegra
 
 function nextSyncAtFor(frequency: string) {
   return frequency === 'manual' ? null : new Date().toISOString()
+}
+
+async function markBigQueryProvisioningSucceededIfDatasetsExist(input: {
+  tenantId: number
+  destination: IntegrationDestination
+  reason: string
+}) {
+  const config = getIntegrationsCloudConfig()
+  const projectId = getBigQueryProjectId(getProjectId(input.destination) || config.projectId) || config.projectId
+  const datasets = getTenantBigQueryDatasets(input.tenantId)
+  const client = createBigQueryClient({ projectId })
+  const [rawExists] = await client.dataset(datasets.rawDataset).exists()
+  const [normalizedExists] = await client.dataset(datasets.normalizedDataset).exists()
+  if (!rawExists || !normalizedExists) return
+
+  await markTenantBigQueryProvisioningSucceeded({
+    tenantId: input.tenantId,
+    destinationId: input.destination.id,
+    projectId,
+    rawDataset: datasets.rawDataset,
+    normalizedDataset: datasets.normalizedDataset,
+    reason: input.reason,
+  })
 }
 
 async function findConfigurationParts(input: {
@@ -257,6 +285,11 @@ export async function PATCH(
           })
         }
         const destination = parts.destination
+        await markBigQueryProvisioningSucceededIfDatasetsExist({
+          tenantId,
+          destination,
+          reason: 'connection_configuration',
+        }).catch(() => undefined)
 
         if (!parts.pipeline) {
           parts.pipeline = await createIntegrationPipeline({

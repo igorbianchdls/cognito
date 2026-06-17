@@ -138,6 +138,24 @@ export async function runSyncJob(input: RunSyncJobInput): Promise<RunSyncJobOutp
     resources,
     requestedBy: input.requestedBy,
   })
+  if (run.status !== 'running' && run.status !== 'queued') {
+    const terminalStatus = run.status === 'success' || run.status === 'warning' ? run.status : 'error'
+    return {
+      ok: terminalStatus === 'success' || terminalStatus === 'warning',
+      mode: 'gcp_worker',
+      connectionId: connection.id,
+      pipelineId: pipeline?.id || null,
+      destinationId: destination.id === 'default-bigquery' ? null : destination.id,
+      runId: run.id,
+      provider: connection.provider,
+      resources,
+      recordsIn: 0,
+      recordsUpdated: 0,
+      recordsFailed: 0,
+      status: terminalStatus,
+      message: 'Run ja estava finalizada; retry do Pub/Sub ignorado.',
+    }
+  }
 
   let recordsIn = 0
   let recordsUpdated = 0
