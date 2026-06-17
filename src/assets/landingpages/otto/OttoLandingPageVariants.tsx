@@ -6,9 +6,7 @@ import {
   Bot,
   Brain,
   Check,
-  Database,
   FileText,
-  MessageSquare,
   PlugZap,
   ShieldCheck,
   Sparkles,
@@ -148,92 +146,53 @@ const variantB: VariantCopy = {
 }
 
 function ProductScene({ copy }: { copy: VariantCopy }) {
+  const theme = getTheme(copy)
+
   return (
-    <div className="pointer-events-none absolute inset-0 overflow-hidden" aria-hidden="true">
-      <div className="absolute inset-y-0 right-0 w-[72%] min-w-[720px] bg-[#f7f7f7]" />
-      <div className="absolute right-[-40px] top-[76px] grid w-[780px] gap-4 rounded-[32px] border border-[#dedede] bg-white p-4 shadow-[0_24px_80px_rgba(24,24,24,0.12)]">
-        <div className="flex items-center justify-between border-b border-[#eeeeee] pb-4">
-          <div className="flex items-center gap-3">
-            <div className="grid size-9 place-items-center rounded-2xl bg-[#181818] text-sm font-semibold text-white">
-              O
-            </div>
-            <div>
-              <p className="text-sm font-semibold leading-none text-[#181818]">Otto workspace</p>
-              <p className="mt-1 text-xs text-[#6a6a6a]">empresa conectada</p>
-            </div>
+    <div className="pointer-events-none absolute inset-0 overflow-hidden bg-[#040404]" aria-hidden="true">
+      <div className="absolute inset-0 opacity-[0.14] [background-image:linear-gradient(#ffffff_1px,transparent_1px),linear-gradient(90deg,#ffffff_1px,transparent_1px)] [background-size:72px_72px]" />
+      <div className="absolute right-[-72px] top-[96px] hidden w-[660px] rounded-[36px] border border-white/10 bg-[#0d0d0f] p-5 shadow-[0_24px_100px_rgba(0,0,0,0.72)] lg:block">
+        <div className="flex items-center justify-between border-b border-white/10 pb-4">
+          <div>
+            <p className="text-sm font-semibold text-white">Otto</p>
+            <p className="mt-1 text-xs text-white/45">{copy.workflowTitle}</p>
           </div>
-          <div className="rounded-full border border-[#e6e6e6] px-3 py-1 text-xs font-medium text-[#4c4c4c]">
-            IA ativa
-          </div>
+          <span className={`rounded-full border px-3 py-1 text-xs font-medium ${theme.badge}`}>
+            em execucao
+          </span>
         </div>
 
-        <div className="grid grid-cols-[1.05fr_0.95fr] gap-4">
-          <div className="grid gap-3">
-            <div className="rounded-3xl border border-[#e6e6e6] bg-[#fbfbfb] p-4">
-              <div className="mb-4 flex items-center justify-between">
-                <p className="text-sm font-semibold text-[#181818]">Chat com a empresa</p>
-                <MessageSquare size={18} strokeWidth={1.5} className="text-[#6a6a6a]" />
-              </div>
-              <div className="grid gap-3">
-                <div className="ml-auto max-w-[78%] rounded-[20px] bg-[#181818] px-4 py-3 text-sm leading-snug text-white">
-                  {copy.heroPrompt}
-                </div>
-                <div className="max-w-[86%] rounded-[20px] border border-[#e5e5e5] bg-white px-4 py-3 text-sm leading-snug text-[#181818]">
-                  {copy.heroReply}
-                </div>
-                <div className="flex min-h-[64px] items-center gap-3 rounded-[20px] border border-[#e4e4e4] bg-transparent px-4 py-3">
-                  <div className="grid size-9 place-items-center rounded-2xl border border-[#dddddd]">
-                    <Sparkles size={18} strokeWidth={1.5} />
-                  </div>
-                  <div>
-                    <p className="text-base font-semibold leading-none text-[#181818]">{copy.workerName}</p>
-                    <p className="mt-1 text-xs text-[#6a6a6a]">{copy.workerStatus}</p>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <div className="grid grid-cols-3 gap-3">
-              {copy.stats.map(([label, value]) => (
-                <div key={label} className="rounded-3xl border border-[#e8e8e8] bg-white p-4">
-                  <p className="text-xs font-medium text-[#6a6a6a]">{label}</p>
-                  <p className="mt-2 text-xl font-semibold tracking-[-0.03em] text-[#181818]">{value}</p>
-                </div>
-              ))}
-            </div>
+        <div className="grid gap-3 pt-5">
+          <div className="rounded-[28px] border border-white/10 bg-white/[0.04] p-5">
+            <p className="text-sm text-white/48">Pedido</p>
+            <p className="mt-2 max-w-[460px] text-xl font-semibold leading-tight tracking-[-0.03em] text-white">
+              {copy.heroPrompt}
+            </p>
           </div>
 
-          <div className="grid gap-4">
-            <div className="rounded-3xl border border-[#e6e6e6] bg-white p-4">
-              <div className="mb-4 flex items-center justify-between">
-                <p className="text-sm font-semibold text-[#181818]">{copy.sourceTitle}</p>
-                <Database size={18} strokeWidth={1.5} className="text-[#6a6a6a]" />
-              </div>
-              <div className="grid gap-2 text-sm">
-                {copy.sources.map((source) => (
-                  <div key={source} className="flex items-center justify-between rounded-2xl border border-[#eeeeee] px-3 py-2">
-                    <span className="font-medium text-[#181818]">{source}</span>
-                    <Check size={16} strokeWidth={1.5} className="text-[#225f42]" />
-                  </div>
-                ))}
-              </div>
-            </div>
+          <div className="rounded-[28px] border border-white/10 bg-[#141416] p-5">
+            <p className="text-sm text-white/48">Resposta</p>
+            <p className="mt-2 max-w-[500px] text-base leading-6 text-white/78">
+              {copy.heroReply}
+            </p>
+          </div>
 
-            <div className="rounded-3xl border border-[#e6e6e6] bg-[#fbfbfb] p-4">
-              <div className="mb-4 flex items-center justify-between">
-                <p className="text-sm font-semibold text-[#181818]">Areas conectadas</p>
-                <Brain size={18} strokeWidth={1.5} className="text-[#6a6a6a]" />
+          <div className="grid grid-cols-3 gap-3">
+            {copy.sources.map((source) => (
+              <div key={source} className="rounded-[24px] border border-white/10 bg-white/[0.04] p-4">
+                <Check size={16} strokeWidth={1.5} className={theme.icon} />
+                <p className="mt-4 text-sm font-semibold text-white">{source}</p>
               </div>
-              <div className="grid gap-3">
-                {['Financeiro', 'Vendas', 'Marketing', 'Operacoes'].map((area, index) => (
-                  <div key={area} className="grid grid-cols-[1fr_auto] items-center gap-3">
-                    <span className="text-sm font-medium text-[#181818]">{area}</span>
-                    <span className="rounded-full bg-white px-2 py-1 text-xs text-[#6a6a6a]">
-                      {index === 3 ? 'config' : 'ativo'}
-                    </span>
-                  </div>
-                ))}
-              </div>
+            ))}
+          </div>
+
+          <div className={`flex items-center gap-3 rounded-[28px] border p-4 ${theme.result}`}>
+            <div className={`grid size-10 place-items-center rounded-2xl ${theme.iconBox}`}>
+              <Sparkles size={18} strokeWidth={1.5} />
+            </div>
+            <div>
+              <p className="text-base font-semibold text-white">{copy.workerName}</p>
+              <p className="text-sm text-white/60">{copy.workerStatus}</p>
             </div>
           </div>
         </div>
@@ -242,20 +201,42 @@ function ProductScene({ copy }: { copy: VariantCopy }) {
   )
 }
 
+function getTheme(copy: VariantCopy) {
+  if (copy.route === '/lp-a') {
+    return {
+      accent: 'text-violet-200',
+      badge: 'border-violet-400/20 bg-violet-400/10 text-violet-200',
+      icon: 'text-violet-200',
+      iconBox: 'bg-violet-300 text-[#16091f]',
+      result: 'border-violet-400/20 bg-violet-400/10',
+    }
+  }
+
+  return {
+    accent: 'text-cyan-200',
+    badge: 'border-cyan-400/20 bg-cyan-400/10 text-cyan-200',
+    icon: 'text-cyan-200',
+    iconBox: 'bg-cyan-300 text-[#061218]',
+    result: 'border-cyan-400/20 bg-cyan-400/10',
+  }
+}
+
 function OttoLandingExperimentPage({ copy }: { copy: VariantCopy }) {
+  const theme = getTheme(copy)
+
   return (
-    <main className={`${sfPro.variable} min-h-screen bg-white text-[#181818]`} style={sfProLandingStyle}>
-      <section className="relative isolate min-h-[88svh] overflow-hidden border-b border-[#e8e8e8]">
+    <main className={`${sfPro.variable} min-h-screen bg-[#040404] text-white`} style={sfProLandingStyle}>
+      <section className="relative isolate min-h-[88svh] overflow-hidden border-b border-white/10">
         <ProductScene copy={copy} />
         <div className="relative z-10 flex min-h-[88svh] max-w-[1180px] flex-col justify-between px-6 py-6 sm:px-8 lg:mx-auto">
           <header className="flex items-center justify-between">
             <Link href={copy.route} className="flex items-center gap-3">
-              <span className="grid size-9 place-items-center rounded-2xl bg-[#181818] text-sm font-semibold text-white">
+              <span className="grid size-9 place-items-center rounded-2xl bg-white text-sm font-semibold text-[#040404]">
                 O
               </span>
-              <span className="text-lg font-semibold tracking-[-0.03em]">Otto</span>
+              <span className="text-lg font-semibold tracking-[-0.03em] text-white">Otto</span>
             </Link>
-            <nav className="hidden items-center gap-6 text-sm font-medium text-[#6a6a6a] md:flex">
+            <nav className="hidden items-center gap-6 text-sm font-medium text-white/55 md:flex">
               <a href="#produto">Produto</a>
               <a href="#workflow">Workflow</a>
               <a href="#seguranca">Seguranca</a>
@@ -263,26 +244,26 @@ function OttoLandingExperimentPage({ copy }: { copy: VariantCopy }) {
           </header>
 
           <div className="max-w-[600px] pb-16 pt-28 sm:pt-36">
-            <p className="mb-4 text-sm font-semibold uppercase tracking-[0.08em] text-[#6a6a6a]">
+            <p className={`mb-4 text-sm font-semibold uppercase tracking-[0.08em] ${theme.accent}`}>
               {copy.eyebrow}
             </p>
-            <h1 className="text-5xl font-semibold leading-[0.95] tracking-[-0.03em] text-[#181818] sm:text-7xl">
+            <h1 className="max-w-[620px] text-5xl font-semibold leading-[0.95] tracking-[-0.03em] text-white sm:text-7xl">
               {copy.headline}
             </h1>
-            <p className="mt-6 max-w-[560px] text-lg leading-7 tracking-[-0.02em] text-[#4f4f4f]">
+            <p className="mt-6 max-w-[560px] text-lg leading-7 tracking-[-0.02em] text-white/68">
               {copy.subtitle}
             </p>
             <div className="mt-8 flex flex-wrap gap-3">
               <Link
                 href="/integracoes"
-                className="inline-flex min-h-11 items-center gap-2 rounded-full bg-[#181818] px-5 py-3 text-sm font-semibold text-white"
+                className="inline-flex min-h-11 items-center gap-2 rounded-full bg-white px-5 py-3 text-sm font-semibold text-[#040404]"
               >
                 {copy.primaryCta}
                 <ArrowRight size={18} strokeWidth={1.5} />
               </Link>
               <Link
                 href="/sign-up"
-                className="inline-flex min-h-11 items-center gap-2 rounded-full border border-[#dcdcdc] bg-white px-5 py-3 text-sm font-semibold text-[#181818]"
+                className="inline-flex min-h-11 items-center gap-2 rounded-full border border-white/15 bg-white/5 px-5 py-3 text-sm font-semibold text-white"
               >
                 {copy.secondaryCta}
                 <ArrowRight size={18} strokeWidth={1.5} />
@@ -292,11 +273,11 @@ function OttoLandingExperimentPage({ copy }: { copy: VariantCopy }) {
         </div>
       </section>
 
-      <section id="produto" className="border-b border-[#e8e8e8] bg-white px-6 py-16 sm:px-8">
+      <section id="produto" className="border-b border-white/10 bg-[#040404] px-6 py-16 sm:px-8">
         <div className="mx-auto grid max-w-[1180px] gap-10 lg:grid-cols-[0.95fr_1.05fr]">
           <div>
-            <p className="text-sm font-semibold uppercase tracking-[0.08em] text-[#6a6a6a]">{copy.productEyebrow}</p>
-            <h2 className="mt-4 max-w-[560px] text-3xl font-semibold leading-tight tracking-[-0.03em] text-[#181818] sm:text-5xl">
+            <p className={`text-sm font-semibold uppercase tracking-[0.08em] ${theme.accent}`}>{copy.productEyebrow}</p>
+            <h2 className="mt-4 max-w-[560px] text-3xl font-semibold leading-tight tracking-[-0.03em] text-white sm:text-5xl">
               {copy.productTitle}
             </h2>
           </div>
@@ -304,10 +285,10 @@ function OttoLandingExperimentPage({ copy }: { copy: VariantCopy }) {
             {copy.cards.map((card, index) => {
               const Icon = cardIcons[index] || FileText
               return (
-                <article key={card.title} className="rounded-[28px] border border-[#e5e5e5] bg-[#fbfbfb] p-5">
-                  <Icon size={18} strokeWidth={1.5} className="text-[#181818]" />
-                  <h3 className="mt-5 text-lg font-semibold tracking-[-0.03em] text-[#181818]">{card.title}</h3>
-                  <p className="mt-2 text-sm leading-6 text-[#6a6a6a]">{card.description}</p>
+                <article key={card.title} className="rounded-[28px] border border-white/10 bg-white/[0.04] p-5">
+                  <Icon size={18} strokeWidth={1.5} className={theme.icon} />
+                  <h3 className="mt-5 text-lg font-semibold tracking-[-0.03em] text-white">{card.title}</h3>
+                  <p className="mt-2 text-sm leading-6 text-white/58">{card.description}</p>
                 </article>
               )
             })}
@@ -315,54 +296,54 @@ function OttoLandingExperimentPage({ copy }: { copy: VariantCopy }) {
         </div>
       </section>
 
-      <section id="workflow" className="border-b border-[#e8e8e8] bg-[#f7f7f7] px-6 py-16 sm:px-8">
+      <section id="workflow" className="border-b border-white/10 bg-[#0a0a0b] px-6 py-16 sm:px-8">
         <div className="mx-auto grid max-w-[1180px] gap-8 lg:grid-cols-[1.05fr_0.95fr]">
-          <div className="rounded-[32px] border border-[#dfdfdf] bg-white p-5">
-            <div className="flex items-center justify-between border-b border-[#eeeeee] pb-4">
-              <p className="text-sm font-semibold text-[#181818]">{copy.workflowTitle}</p>
-              <BarChart3 size={18} strokeWidth={1.5} className="text-[#6a6a6a]" />
+          <div className="rounded-[32px] border border-white/10 bg-[#111114] p-5">
+            <div className="flex items-center justify-between border-b border-white/10 pb-4">
+              <p className="text-sm font-semibold text-white">{copy.workflowTitle}</p>
+              <BarChart3 size={18} strokeWidth={1.5} className="text-white/50" />
             </div>
             <div className="mt-5 grid gap-3">
               {copy.workflowItems.map((item) => (
-                <div key={item} className="flex items-center gap-3 rounded-2xl border border-[#eeeeee] px-4 py-3">
-                  <span className="grid size-6 place-items-center rounded-full bg-[#181818] text-white">
+                <div key={item} className="flex items-center gap-3 rounded-2xl border border-white/10 bg-white/[0.03] px-4 py-3">
+                  <span className={`grid size-6 place-items-center rounded-full ${theme.iconBox}`}>
                     <Check size={14} strokeWidth={1.5} />
                   </span>
-                  <span className="text-sm font-medium text-[#181818]">{item}</span>
+                  <span className="text-sm font-medium text-white">{item}</span>
                 </div>
               ))}
             </div>
           </div>
           <div className="flex flex-col justify-center">
-            <p className="text-sm font-semibold uppercase tracking-[0.08em] text-[#6a6a6a]">{copy.workflowEyebrow}</p>
-            <h2 className="mt-4 text-3xl font-semibold leading-tight tracking-[-0.03em] text-[#181818] sm:text-5xl">
+            <p className={`text-sm font-semibold uppercase tracking-[0.08em] ${theme.accent}`}>{copy.workflowEyebrow}</p>
+            <h2 className="mt-4 text-3xl font-semibold leading-tight tracking-[-0.03em] text-white sm:text-5xl">
               {copy.workflowHeading}
             </h2>
-            <p className="mt-5 text-base leading-7 text-[#5f5f5f]">
+            <p className="mt-5 text-base leading-7 text-white/60">
               {copy.workflowDescription}
             </p>
           </div>
         </div>
       </section>
 
-      <section id="seguranca" className="bg-white px-6 py-16 sm:px-8">
+      <section id="seguranca" className="bg-[#040404] px-6 py-16 sm:px-8">
         <div className="mx-auto grid max-w-[1180px] gap-10 lg:grid-cols-[0.8fr_1.2fr]">
           <div>
-            <div className="mb-5 grid size-12 place-items-center rounded-3xl border border-[#e5e5e5]">
+            <div className={`mb-5 grid size-12 place-items-center rounded-3xl border ${theme.result}`}>
               <ShieldCheck size={20} strokeWidth={1.5} />
             </div>
-            <h2 className="text-3xl font-semibold leading-tight tracking-[-0.03em] text-[#181818] sm:text-5xl">
+            <h2 className="text-3xl font-semibold leading-tight tracking-[-0.03em] text-white sm:text-5xl">
               {copy.securityHeading}
             </h2>
-            <p className="mt-5 text-base leading-7 text-[#5f5f5f]">
+            <p className="mt-5 text-base leading-7 text-white/60">
               {copy.securityDescription}
             </p>
           </div>
           <div className="grid gap-3 sm:grid-cols-2">
             {copy.proofPoints.map((point) => (
-              <div key={point} className="flex items-center gap-3 rounded-[24px] border border-[#e5e5e5] bg-[#fbfbfb] p-4">
-                <Brain size={18} strokeWidth={1.5} className="shrink-0 text-[#181818]" />
-                <span className="text-sm font-medium text-[#181818]">{point}</span>
+              <div key={point} className="flex items-center gap-3 rounded-[24px] border border-white/10 bg-white/[0.04] p-4">
+                <Brain size={18} strokeWidth={1.5} className={`shrink-0 ${theme.icon}`} />
+                <span className="text-sm font-medium text-white">{point}</span>
               </div>
             ))}
           </div>
