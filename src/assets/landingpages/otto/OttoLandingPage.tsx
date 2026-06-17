@@ -16,26 +16,26 @@ const integrations = ['Meta Ads', 'Google Ads', 'HubSpot', 'Shopify', 'TOTVS', '
 const workflowSteps = [
   {
     icon: PlugZap,
-    title: 'Conecte as fontes',
-    description: 'OAuth, conectores e datasets por tenant em um fluxo unico.',
+    title: 'Conecte suas fontes',
+    description: 'Integre ERPs, CRMs, bancos, planilhas, documentos e ferramentas de marketing.',
   },
   {
     icon: Database,
-    title: 'Organize o warehouse',
-    description: 'Raw e normalized prontos para consulta, auditoria e MCP.',
+    title: 'Crie funcionarios de IA',
+    description: 'Configure agentes para atendimento, financeiro, vendas, marketing, operacoes e gestao.',
   },
   {
     icon: MessageSquare,
-    title: 'Use no chat',
-    description: 'ChatGPT e Claude consultam dados e executam tools com contexto.',
+    title: 'Automatize o trabalho',
+    description: 'Transforme rotinas manuais em analises, relatorios, alertas e acoes acompanhaveis.',
   },
 ]
 
 const proofPoints = [
-  'Datasets por organizacao',
-  'Permissoes para leitura e acao',
-  'Observabilidade de conectores',
-  'Dashboards e artifacts acionaveis',
+  'Permissoes por funcionario de IA',
+  'Fontes conectadas com rastreabilidade',
+  'Relatorios e analises auditaveis',
+  'Automacao com aprovacao quando necessario',
 ]
 
 function ProductScene() {
@@ -50,11 +50,11 @@ function ProductScene() {
             </div>
             <div>
               <p className="text-sm font-semibold leading-none text-[#181818]">Otto workspace</p>
-              <p className="mt-1 text-xs text-[#6a6a6a]">tenant_org_82</p>
+              <p className="mt-1 text-xs text-[#6a6a6a]">empresa conectada</p>
             </div>
           </div>
           <div className="rounded-full border border-[#e6e6e6] px-3 py-1 text-xs font-medium text-[#4c4c4c]">
-            datasets synced
+            fontes conectadas
           </div>
         </div>
 
@@ -67,18 +67,18 @@ function ProductScene() {
               </div>
               <div className="grid gap-3">
                 <div className="ml-auto max-w-[76%] rounded-[20px] bg-[#181818] px-4 py-3 text-sm leading-snug text-white">
-                  Analise campanhas de hoje e mostre os gargalos.
+                  Analise vendas, contas a pagar e campanhas desta semana.
                 </div>
                 <div className="max-w-[84%] rounded-[20px] border border-[#e5e5e5] bg-white px-4 py-3 text-sm leading-snug text-[#181818]">
-                  Vou chamar marketing para buscar spend, receita e ROAS.
+                  Vou cruzar sistemas, planilhas e documentos para montar o resumo.
                 </div>
                 <div className="flex min-h-[64px] items-center gap-3 rounded-[20px] border border-[#e4e4e4] bg-transparent px-4 py-3">
                   <div className="grid size-9 place-items-center rounded-2xl border border-[#dddddd]">
                     <Workflow size={18} strokeWidth={1.5} />
                   </div>
                   <div>
-                    <p className="text-base font-semibold leading-none text-[#181818]">marketing</p>
-                    <p className="mt-1 text-xs text-[#6a6a6a]">tool call concluida</p>
+                    <p className="text-base font-semibold leading-none text-[#181818]">Analista financeiro</p>
+                    <p className="mt-1 text-xs text-[#6a6a6a]">tarefa concluida</p>
                   </div>
                 </div>
               </div>
@@ -86,8 +86,8 @@ function ProductScene() {
 
             <div className="grid grid-cols-3 gap-3">
               {[
-                ['ROAS', '4.8x'],
-                ['Spend', 'R$ 82k'],
+                ['Relatorios', '18'],
+                ['Tarefas', '42'],
                 ['Alertas', '7'],
               ].map(([label, value]) => (
                 <div key={label} className="rounded-3xl border border-[#e8e8e8] bg-white p-4">
@@ -105,9 +105,9 @@ function ProductScene() {
                 <Database size={18} strokeWidth={1.5} className="text-[#6a6a6a]" />
               </div>
               <div className="grid gap-2 text-sm">
-                {['org_82_raw', 'org_82_normalized', 'connector_events'].map((dataset) => (
-                  <div key={dataset} className="flex items-center justify-between rounded-2xl border border-[#eeeeee] px-3 py-2">
-                    <span className="font-medium text-[#181818]">{dataset}</span>
+                {['Sistemas', 'Documentos', 'Planilhas'].map((source) => (
+                  <div key={source} className="flex items-center justify-between rounded-2xl border border-[#eeeeee] px-3 py-2">
+                    <span className="font-medium text-[#181818]">{source}</span>
                     <Check size={16} strokeWidth={1.5} className="text-[#225f42]" />
                   </div>
                 ))}
@@ -159,20 +159,20 @@ export function OttoLandingPage() {
 
           <div className="max-w-[560px] pb-16 pt-28 sm:pt-36">
             <p className="mb-4 text-sm font-semibold uppercase tracking-[0.08em] text-[#6a6a6a]">
-              SaaS operacional para dados e agentes
+              Camada de inteligencia para PMEs
             </p>
             <h1 className="text-5xl font-semibold leading-[0.95] tracking-[-0.03em] text-[#181818] sm:text-7xl">
               Otto
             </h1>
             <p className="mt-6 max-w-[520px] text-lg leading-7 tracking-[-0.02em] text-[#4f4f4f]">
-              Conecte ferramentas, organize datasets no warehouse e permita que ChatGPT e Claude consultem dados reais com permissoes claras.
+              Conecte sistemas, documentos, bancos e planilhas. Crie funcionarios de IA que entendem sua operacao, automatizam tarefas, analisam dados e geram relatorios para sua empresa.
             </p>
             <div className="mt-8 flex flex-wrap gap-3">
               <Link
                 href="/integracoes"
                 className="inline-flex min-h-11 items-center gap-2 rounded-full bg-[#181818] px-5 py-3 text-sm font-semibold text-white"
               >
-                Abrir integracoes
+                Conectar minha empresa
                 <ArrowRight size={18} strokeWidth={1.5} />
               </Link>
               <Link
@@ -192,7 +192,7 @@ export function OttoLandingPage() {
           <div>
             <p className="text-sm font-semibold uppercase tracking-[0.08em] text-[#6a6a6a]">Produto</p>
             <h2 className="mt-4 max-w-[520px] text-3xl font-semibold leading-tight tracking-[-0.03em] text-[#181818] sm:text-5xl">
-              Um plano de controle para integracoes, warehouse e MCP.
+              Tudo que sua empresa sabe, em um lugar onde a IA consegue trabalhar.
             </h2>
           </div>
           <div className="grid gap-3 sm:grid-cols-2">
@@ -211,11 +211,11 @@ export function OttoLandingPage() {
         <div className="mx-auto grid max-w-[1180px] gap-8 lg:grid-cols-[1.05fr_0.95fr]">
           <div className="rounded-[32px] border border-[#dfdfdf] bg-white p-5">
             <div className="flex items-center justify-between border-b border-[#eeeeee] pb-4">
-              <p className="text-sm font-semibold text-[#181818]">Pipeline do tenant</p>
+              <p className="text-sm font-semibold text-[#181818]">Funcionario de IA</p>
               <LineChart size={18} strokeWidth={1.5} className="text-[#6a6a6a]" />
             </div>
             <div className="mt-5 grid gap-3">
-              {['OAuth conectado', 'Dataset raw criado', 'Normalizer executado', 'MCP liberado para leitura'].map((item) => (
+              {['Fontes conectadas', 'Documentos e planilhas interpretados', 'Dados organizados', 'Funcionario de IA pronto para trabalhar'].map((item) => (
                 <div key={item} className="flex items-center gap-3 rounded-2xl border border-[#eeeeee] px-4 py-3">
                   <span className="grid size-6 place-items-center rounded-full bg-[#181818] text-white">
                     <Check size={14} strokeWidth={1.5} />
@@ -228,10 +228,10 @@ export function OttoLandingPage() {
           <div className="flex flex-col justify-center">
             <p className="text-sm font-semibold uppercase tracking-[0.08em] text-[#6a6a6a]">Workflow</p>
             <h2 className="mt-4 text-3xl font-semibold leading-tight tracking-[-0.03em] text-[#181818] sm:text-5xl">
-              Da conexao ao insight sem costurar sistemas manualmente.
+              Funcionarios de IA que trabalham com os dados reais da empresa.
             </h2>
             <p className="mt-5 text-base leading-7 text-[#5f5f5f]">
-              Otto observa conectores, provisiona datasets, normaliza dados e entrega uma interface MCP para agentes trabalharem em cima da operacao.
+              Otto organiza o conhecimento operacional do negocio e entrega contexto para cada funcionario de IA executar tarefas com seguranca.
             </p>
           </div>
         </div>
@@ -244,10 +244,10 @@ export function OttoLandingPage() {
               <ShieldCheck size={20} strokeWidth={1.5} />
             </div>
             <h2 className="text-3xl font-semibold leading-tight tracking-[-0.03em] text-[#181818] sm:text-5xl">
-              Permissoes explicitas para agentes.
+              Controle o que cada funcionario de IA pode ler, analisar e executar.
             </h2>
             <p className="mt-5 text-base leading-7 text-[#5f5f5f]">
-              Defina leitura, acoes permitidas e destino dos dados antes de liberar ferramentas para cada tenant.
+              Defina permissoes por funcao, fonte de dados e tipo de acao antes de liberar automacoes no negocio.
             </p>
           </div>
           <div className="grid gap-3 sm:grid-cols-2">
