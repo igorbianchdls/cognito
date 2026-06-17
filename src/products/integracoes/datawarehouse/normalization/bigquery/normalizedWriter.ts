@@ -129,6 +129,13 @@ function groupByTable(rows: NormalizedRow[]) {
   return grouped
 }
 
+function serializeJsonFields(row: Record<string, unknown>) {
+  return {
+    ...row,
+    source_payload: JSON.stringify(row.source_payload ?? null),
+  }
+}
+
 export async function writeNormalizedRowsToBigQuery(input: WriteNormalizedRowsInput): Promise<WriteNormalizedRowsOutput> {
   const config = getIntegrationsCloudConfig()
   const dataset = normalizeBigQueryIdentifier(getTenantBigQueryDatasets(input.tenantId).normalizedDataset, 'dataset')
@@ -156,7 +163,7 @@ export async function writeNormalizedRowsToBigQuery(input: WriteNormalizedRowsIn
             ignoreUnknownValues: false,
             rows: batch.map((row) => ({
               insertId: row.insertId,
-              json: row.data,
+              json: serializeJsonFields(row.data),
             })),
           }),
         },

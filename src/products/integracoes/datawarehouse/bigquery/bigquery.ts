@@ -167,7 +167,7 @@ export async function writeRowsToBigQuery(input: BigQueryWriteInput): Promise<Bi
                 run_id: input.runId || null,
                 external_id: externalId,
                 synced_at: syncedAt,
-                raw_payload: row,
+                raw_payload: JSON.stringify(row),
               },
             }
           }),
