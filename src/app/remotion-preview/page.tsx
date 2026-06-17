@@ -85,18 +85,18 @@ import {
   SaaSWallGalleryAnimation,
   TableDrilldownAnimation,
   TweetAnimation,
-} from '@/remotion/compositions/McpOperationsDemo'
-import { ChatGptMobileAnimation, ChatGptToolCallDemoAnimation } from '@/remotion/compositions/ChatGptMobileMarketing'
-import { ChatGptOperationalFlowsVideo } from '@/remotion/compositions/ChatGptOperationalFlowsVideo'
-import { ChatGptTaskLauncherAnimation } from '@/remotion/compositions/ChatGptTaskLauncherAnimation'
-import { ClaudeMobileAnimation } from '@/remotion/compositions/ClaudeMobileMarketing'
-import { ClaudeOperationalFlowsVideo } from '@/remotion/compositions/ClaudeOperationalFlowsVideo'
+} from '@/assets/remotion/compositions/McpOperationsDemo'
+import { ChatGptMobileAnimation, ChatGptToolCallDemoAnimation } from '@/assets/remotion/compositions/ChatGptMobileMarketing'
+import { ChatGptOperationalFlowsVideo } from '@/assets/remotion/compositions/ChatGptOperationalFlowsVideo'
+import { ChatGptTaskLauncherAnimation } from '@/assets/remotion/compositions/ChatGptTaskLauncherAnimation'
+import { ClaudeMobileAnimation } from '@/assets/remotion/compositions/ClaudeMobileMarketing'
+import { ClaudeOperationalFlowsVideo } from '@/assets/remotion/compositions/ClaudeOperationalFlowsVideo'
 import {
   ExpenseClassificationFoldersAction,
   ExpenseClassificationMatchingAction,
   ExpenseClassificationTableAction,
-} from '@/remotion/compositions/ExpenseClassificationActions'
-import { TaskLauncherAnimation } from '@/remotion/compositions/TaskLauncherAnimation'
+} from '@/assets/remotion/compositions/ExpenseClassificationActions'
+import { TaskLauncherAnimation } from '@/assets/remotion/compositions/TaskLauncherAnimation'
 import {
   AIChatWorkspaceMock,
   AnimatedBarGroup,
@@ -156,7 +156,7 @@ import {
   WordReveal,
   ZoomToRegion,
   RotatingWords,
-} from '@/remotion/saas/index'
+} from '@/assets/remotion/saas/index'
 
 type CatalogKind = 'Componentes' | 'Mockups' | 'Motion' | 'Tipografia Animada' | 'Marketing' | 'Vídeos criados' | 'Galerias' | 'Animações' | 'Actions' | 'Logo' | 'Templates'
 
