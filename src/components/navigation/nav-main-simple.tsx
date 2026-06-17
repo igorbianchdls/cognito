@@ -24,7 +24,7 @@ export function NavMainSimple({
 }: {
   items: {
     title: string
-    url: string
+    url?: string
     icon?: SidebarIconComponent
     isActive?: boolean
   }[]
@@ -35,7 +35,8 @@ export function NavMainSimple({
 }) {
   const router = useRouter()
 
-  const handleNavigation = (url: string) => {
+  const handleNavigation = (url?: string) => {
+    if (!url) return
     router.push(url)
   }
 

@@ -5,6 +5,8 @@ import { usePathname } from "next/navigation"
 import {
   IconChartBar,
   IconGridDots,
+  IconHistory,
+  IconMessageCircle,
   IconPlugConnected,
 } from "@tabler/icons-react"
 
@@ -33,6 +35,8 @@ import {
 const BrandIcon = (props: { className?: string; style?: React.CSSProperties }) => <IconGridDots stroke={1.75} {...props} />
 const IntegrationsIcon = (props: { className?: string; style?: React.CSSProperties }) => <IconPlugConnected stroke={1.75} {...props} />
 const DashboardsIcon = (props: { className?: string; style?: React.CSSProperties }) => <IconChartBar stroke={1.75} {...props} />
+const ChatIcon = (props: { className?: string; style?: React.CSSProperties }) => <IconMessageCircle stroke={1.75} {...props} />
+const HistoryIcon = (props: { className?: string; style?: React.CSSProperties }) => <IconHistory stroke={1.75} {...props} />
 
 // Font variable mapping helper
 function fontVar(name?: string) {
@@ -85,6 +89,14 @@ const navigationData = {
     },
   ],
   navMain: [
+    {
+      title: "Chat",
+      icon: ChatIcon,
+    },
+    {
+      title: "Histórico",
+      icon: HistoryIcon,
+    },
     {
       title: "Integrações",
       url: "/integracoes",
