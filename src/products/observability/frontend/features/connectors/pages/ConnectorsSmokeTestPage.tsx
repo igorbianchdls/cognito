@@ -31,6 +31,8 @@ type StepKey =
   | 'providers'
   | 'connections'
   | 'createConnection'
+  | 'flow'
+  | 'e2e'
   | 'destination'
   | 'pipeline'
   | 'permissions'
@@ -44,7 +46,38 @@ type JsonRecord = Record<string, unknown>
 
 const CONTA_AZUL_PROVIDER = 'conta_azul'
 const INTERNAL_TEST_API_BASE = '/api/internal/observability/connectors/test'
-const SELECTED_RESOURCES = ['clientes', 'fornecedores', 'produtos', 'contas_receber', 'contas_pagar', 'vendas', 'estoque']
+const CONTA_AZUL_FLOW_TEST_API = `${INTERNAL_TEST_API_BASE}/conta-azul-flow`
+const SELECTED_RESOURCES = [
+  'clientes',
+  'fornecedores',
+  'empresa_conectada',
+  'produtos',
+  'produto_categorias',
+  'produto_cest',
+  'produto_ecommerce_marcas',
+  'produto_ncm',
+  'produto_unidades_medida',
+  'categorias',
+  'categorias_dre',
+  'centros_custo',
+  'contas_receber',
+  'contas_pagar',
+  'contas_financeiras',
+  'saldos_contas_financeiras',
+  'transferencias',
+  'eventos_financeiros_alteracoes',
+  'saldos_iniciais',
+  'servicos',
+  'vendedores',
+  'vendas',
+  'venda_detalhes',
+  'itens_venda',
+  'venda_proximo_numero',
+  'contratos',
+  'contrato_proximo_numero',
+  'notas_fiscais',
+  'notas_fiscais_servico',
+]
 const PLUGIN_READ_RESOURCES = [
   '*',
   'clientes',
@@ -65,6 +98,8 @@ const INITIAL_STEPS: Record<StepKey, StepState> = {
   providers: { status: 'idle' },
   connections: { status: 'idle' },
   createConnection: { status: 'idle' },
+  flow: { status: 'idle' },
+  e2e: { status: 'idle' },
   destination: { status: 'idle' },
   pipeline: { status: 'idle' },
   permissions: { status: 'idle' },
@@ -85,6 +120,10 @@ function toText(value: unknown) {
 
 function getArray(value: unknown): JsonRecord[] {
   return Array.isArray(value) ? value.filter((item): item is JsonRecord => Boolean(item && typeof item === 'object')) : []
+}
+
+function getStringArray(value: unknown): string[] {
+  return Array.isArray(value) ? value.map((item) => toText(item)).filter(Boolean) : []
 }
 
 async function requestJson(url: string, init?: RequestInit) {
@@ -198,12 +237,55 @@ function Metric({ label, value }: { label: string; value: unknown }) {
   )
 }
 
+function FlowSummary({ data }: { data: unknown }) {
+  const flow = asRecord(asRecord(data).flow)
+  const connection = asRecord(flow.connection)
+  const destination = asRecord(flow.destination)
+  const pipeline = asRecord(flow.pipeline)
+  const datasets = asRecord(flow.datasets)
+  const raw = asRecord(datasets.raw)
+  const normalized = asRecord(datasets.normalized)
+  const selectedRun = asRecord(flow.selectedRun)
+  const issues = getStringArray(flow.issues)
+
+  if (!Object.keys(flow).length) {
+    return <p className="text-sm text-slate-500">Rode a verificacao para carregar o estado do fluxo.</p>
+  }
+
+  return (
+    <div className="space-y-3">
+      <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
+        <Metric label="Conexao" value={`${toText(connection.status) || '-'} #${toText(connection.id) || '-'}`} />
+        <Metric label="Pipeline" value={`${toText(pipeline.status) || '-'} #${toText(pipeline.id) || '-'}`} />
+        <Metric label="Destination" value={`${toText(destination.status) || '-'} #${toText(destination.id) || '-'}`} />
+        <Metric label="Pode rodar E2E" value={flow.canRunE2E ? 'sim' : 'nao'} />
+        <Metric label="Raw" value={`${raw.tableCount || 0} tabelas / ${raw.totalRows || 0} linhas`} />
+        <Metric label="Normalized" value={`${normalized.tableCount || 0} tabelas / ${normalized.totalRows || 0} linhas`} />
+        <Metric label="Recursos" value={getStringArray(flow.resources).length} />
+        <Metric label="Ultima run" value={`${toText(selectedRun.status) || '-'} #${toText(selectedRun.id) || '-'}`} />
+      </div>
+      {issues.length ? (
+        <div className="rounded-md border border-amber-200 bg-amber-50 p-3 text-xs text-amber-800">
+          {issues.map((issue) => (
+            <div key={issue}>{issue}</div>
+          ))}
+        </div>
+      ) : (
+        <div className="rounded-md border border-emerald-200 bg-emerald-50 p-3 text-xs font-medium text-emerald-700">
+          Fluxo Conta Azul para BigQuery sem pendencias no diagnostico.
+        </div>
+      )}
+    </div>
+  )
+}
+
 export default function ConnectorsSmokeTestPage() {
   const [steps, setSteps] = useState<Record<StepKey, StepState>>(INITIAL_STEPS)
   const [tenantId, setTenantId] = useState<number | null>(null)
   const [connectionId, setConnectionId] = useState('')
   const [destinationId, setDestinationId] = useState('')
   const [pipelineId, setPipelineId] = useState('')
+  const [e2eRunId, setE2eRunId] = useState('')
 
   const busy = useMemo(() => Object.values(steps).some((step) => step.status === 'running'), [steps])
   const tenantQuery = tenantId ? `?tenantId=${tenantId}` : ''
@@ -231,6 +313,74 @@ export default function ConnectorsSmokeTestPage() {
       })
       throw error
     }
+  }
+
+  function flowQuery(input?: { runId?: string }) {
+    const query = new URLSearchParams()
+    if (tenantId) query.set('tenantId', String(tenantId))
+    if (connectionId) query.set('connectionId', connectionId)
+    if (input?.runId) query.set('runId', input.runId)
+    const suffix = query.toString()
+    return suffix ? `?${suffix}` : ''
+  }
+
+  function adoptFlowIds(data: unknown) {
+    const flow = asRecord(asRecord(data).flow)
+    const connection = asRecord(flow.connection)
+    const destination = asRecord(flow.destination)
+    const pipeline = asRecord(flow.pipeline)
+    const selectedRun = asRecord(flow.selectedRun)
+    const nextTenantId = Number(flow.tenantId || 0)
+    const nextConnectionId = toText(connection.id)
+    const nextDestinationId = toText(destination.id)
+    const nextPipelineId = toText(pipeline.id)
+    const nextRunId = toText(selectedRun.id)
+
+    if (nextTenantId > 0) setTenantId(nextTenantId)
+    if (nextConnectionId) setConnectionId(nextConnectionId)
+    if (nextDestinationId) setDestinationId(nextDestinationId)
+    if (nextPipelineId) setPipelineId(nextPipelineId)
+    if (nextRunId) setE2eRunId(nextRunId)
+  }
+
+  async function testContaAzulFlow(input?: { runId?: string }) {
+    const data = await runStep('flow', () => requestJson(`${CONTA_AZUL_FLOW_TEST_API}${flowQuery(input)}`))
+    adoptFlowIds(data)
+    return data
+  }
+
+  async function triggerContaAzulE2E() {
+    let completedRunId = ''
+    await runStep('e2e', async () => {
+      const initial = await requestJson(CONTA_AZUL_FLOW_TEST_API, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          tenantId,
+          connectionId: connectionId || undefined,
+        }),
+      })
+      const result = asRecord(asRecord(initial).result)
+      const runId = toText(result.runId)
+      if (!runId) throw new Error('E2E nao retornou runId.')
+      setE2eRunId(runId)
+      completedRunId = runId
+
+      let latest: unknown = initial
+      for (let attempt = 0; attempt < 40; attempt += 1) {
+        await new Promise((resolve) => window.setTimeout(resolve, 3000))
+        latest = await requestJson(`${CONTA_AZUL_FLOW_TEST_API}${flowQuery({ runId })}`)
+        const selectedRun = asRecord(asRecord(asRecord(latest).flow).selectedRun)
+        const status = toText(selectedRun.status)
+        if (status && !['queued', 'running'].includes(status)) {
+          adoptFlowIds(latest)
+          return latest
+        }
+      }
+
+      throw new Error(`Timeout aguardando sync_run ${runId}.`)
+    })
+    await testContaAzulFlow({ runId: completedRunId || e2eRunId || undefined }).catch(() => undefined)
   }
 
   async function testTenant() {
@@ -396,7 +546,6 @@ export default function ConnectorsSmokeTestPage() {
           pipelineId: pipelineId || undefined,
           destinationId: destinationId || undefined,
           trigger: 'manual',
-          resources: ['clientes'],
           requestedBy: 'observability-connectors-test',
         }),
       })
@@ -440,17 +589,8 @@ export default function ConnectorsSmokeTestPage() {
   async function runCoreFlow() {
     await testTenant()
     await testProviders()
-    let nextConnectionId = connectionId || await listConnections()
-    if (!nextConnectionId) nextConnectionId = await createConnection()
-    const nextDestinationId = destinationId || await ensureDestination()
-    const nextPipelineId = pipelineId || await ensurePipeline({
-      connectionId: nextConnectionId,
-      destinationId: nextDestinationId,
-    })
-    if (nextPipelineId) setPipelineId(nextPipelineId)
-    await enablePlugin(nextConnectionId)
     await testGcloud()
-    await testBigQuery()
+    await testContaAzulFlow()
   }
 
   return (
@@ -480,9 +620,41 @@ export default function ConnectorsSmokeTestPage() {
           <Metric label="tenantId" value={tenantId || '-'} />
           <Metric label="connectionId" value={connectionId || '-'} />
           <Metric label="destinationId / pipelineId" value={[destinationId, pipelineId].filter(Boolean).join(' / ') || '-'} />
+          <Metric label="e2e runId" value={e2eRunId || '-'} />
         </section>
 
         <section className="grid gap-4 xl:grid-cols-2">
+          <div className="xl:col-span-2">
+            <StepPanel
+              title="Conta Azul para BigQuery"
+              icon={<Workflow className="h-4 w-4" />}
+              state={steps.flow}
+              action={
+                <div className="flex items-center gap-2">
+                  <ActionButton disabled={busy} onClick={() => void testContaAzulFlow()}>
+                    <Activity className="h-4 w-4" />
+                    Verificar fluxo
+                  </ActionButton>
+                  <ActionButton disabled={busy} onClick={() => void triggerContaAzulE2E()}>
+                    <RefreshCw className="h-4 w-4" />
+                    Disparar E2E
+                  </ActionButton>
+                </div>
+              }
+            >
+              <FlowSummary data={steps.flow.data} />
+            </StepPanel>
+          </div>
+
+          <div className="xl:col-span-2">
+            <StepPanel
+              title="E2E sync real"
+              icon={<RefreshCw className="h-4 w-4" />}
+              state={steps.e2e}
+              action={<ActionButton disabled={busy} onClick={() => void triggerContaAzulE2E()}>Disparar</ActionButton>}
+            />
+          </div>
+
           <StepPanel
             title="Tenant e membership"
             icon={<ShieldCheck className="h-4 w-4" />}
