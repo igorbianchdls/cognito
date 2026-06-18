@@ -12,6 +12,10 @@ function parseCredentialsJson(value: string): ServiceAccountCredentials | null {
 
   const candidates = [
     trimmed,
+    trimmed.replace(
+      /("private_key"\s*:\s*")([\s\S]*?)("\s*,\s*"client_email")/,
+      (_match, prefix: string, privateKey: string, suffix: string) => `${prefix}${privateKey.replace(/\r?\n/g, '\\n')}${suffix}`,
+    ),
     Buffer.from(trimmed, 'base64').toString('utf8'),
   ]
 
