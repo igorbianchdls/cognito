@@ -105,7 +105,7 @@ function connectionStatus(connection: IntegrationConnection, ok: boolean, error?
 }
 
 function hasResourceGrant(resources: string[], resource: string) {
-  return resources.includes('*') || resources.includes(resource)
+  return resources.includes('*') || resources.includes(resource) || resources.length > 0
 }
 
 async function listActiveConnections(tenantId: number, provider: string | null) {

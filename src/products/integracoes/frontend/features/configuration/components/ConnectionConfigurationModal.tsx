@@ -59,6 +59,10 @@ function normalizeResources(resources?: string[]) {
   return Array.from(new Set((resources || []).map((resource) => String(resource || '').trim()).filter(Boolean)))
 }
 
+function normalizeMcpCapability(resources?: string[]) {
+  return normalizeResources(resources).length ? ['*'] : []
+}
+
 function getFrequency(value: unknown): SyncFrequencyOption {
   return isSupportedSyncFrequency(value) ? value : 'manual'
 }
@@ -82,10 +86,10 @@ function buildState(configuration: IntegrationConnectionConfiguration): {
     mcp: {
       preset,
       enabled: configuration.permissions.enabled,
-      readResources: normalizeResources(configuration.permissions.readResources),
-      liveReadResources: normalizeResources(configuration.permissions.liveReadResources),
-      writeResources: normalizeResources(configuration.permissions.writeResources),
-      destructiveResources: normalizeResources(configuration.permissions.destructiveResources),
+      readResources: normalizeMcpCapability(configuration.permissions.readResources),
+      liveReadResources: normalizeMcpCapability(configuration.permissions.liveReadResources),
+      writeResources: normalizeMcpCapability(configuration.permissions.writeResources),
+      destructiveResources: normalizeMcpCapability(configuration.permissions.destructiveResources),
       requireConfirmation: configuration.permissions.requireConfirmation,
     },
   }
@@ -250,7 +254,6 @@ export default function ConnectionConfigurationModal({
                   />
                   <McpPermissionsSettingsPanel
                     value={mcp}
-                    resources={resources}
                     onChange={setMcp}
                   />
                 </>

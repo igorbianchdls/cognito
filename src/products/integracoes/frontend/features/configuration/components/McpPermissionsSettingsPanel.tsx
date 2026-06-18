@@ -18,40 +18,53 @@ type PermissionKey = 'readResources' | 'liveReadResources' | 'writeResources' | 
 
 type McpPermissionsSettingsPanelProps = {
   value: McpPermissionsSettings
-  resources: string[]
   onChange: (value: McpPermissionsSettings) => void
 }
 
-const PERMISSION_SECTIONS: Array<{ key: PermissionKey; label: string }> = [
-  { key: 'readResources', label: 'Leitura do warehouse' },
-  { key: 'liveReadResources', label: 'Leitura live no app' },
-  { key: 'writeResources', label: 'Ações de escrita' },
-  { key: 'destructiveResources', label: 'Ações sensíveis' },
+const PERMISSION_SECTIONS: Array<{ key: PermissionKey; label: string; description: string }> = [
+  {
+    key: 'readResources',
+    label: 'Leitura do warehouse',
+    description: 'Permite consultar dados sincronizados no BigQuery.',
+  },
+  {
+    key: 'liveReadResources',
+    label: 'Leitura live',
+    description: 'Permite consultar a API do provider quando houver adapter live.',
+  },
+  {
+    key: 'writeResources',
+    label: 'Ações de escrita',
+    description: 'Permite criar ou atualizar registros quando houver adapter de ação.',
+  },
+  {
+    key: 'destructiveResources',
+    label: 'Ações sensíveis',
+    description: 'Permite cancelar, excluir, estornar ou executar ações destrutivas.',
+  },
 ]
 
-function formatResourceLabel(resource: string) {
-  return resource
-    .split(/[_-]+/g)
-    .filter(Boolean)
-    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
-    .join(' ')
-}
-
-function toggleResource(resources: string[], resource: string) {
-  return resources.includes(resource)
-    ? resources.filter((item) => item !== resource)
-    : [...resources, resource]
+function wildcard(enabled: boolean) {
+  return enabled ? ['*'] : []
 }
 
 export default function McpPermissionsSettingsPanel({
   value,
-  resources,
   onChange,
 }: McpPermissionsSettingsPanelProps) {
   function applyPreset(preset: McpPermissionPreset) {
     onChange({
       preset,
-      ...applyMcpPermissionPreset(preset, resources),
+      ...applyMcpPermissionPreset(preset, ['*']),
+    })
+  }
+
+  function togglePermission(key: PermissionKey, checked: boolean) {
+    onChange({
+      ...value,
+      enabled: checked ? true : value.enabled,
+      preset: value.preset === 'blocked' && checked ? 'read_only' : value.preset,
+      [key]: wildcard(checked),
     })
   }
 
@@ -97,28 +110,21 @@ export default function McpPermissionsSettingsPanel({
 
       <div className="mt-5 grid gap-3 lg:grid-cols-2">
         {PERMISSION_SECTIONS.map((section) => (
-          <div key={section.key} className="rounded-[12px] border border-[#E7EAF2] p-3">
-            <div className="text-[12px] font-semibold uppercase tracking-[0.08em] text-[#98A4BA]">
-              {section.label}
+          <div key={section.key} className="flex items-start justify-between gap-4 rounded-[12px] border border-[#E7EAF2] p-3">
+            <div className="min-w-0">
+              <div className="text-[13px] font-semibold text-[#33405A]">
+                {section.label}
+              </div>
+              <div className="mt-1 text-[12px] leading-4 text-[#66748D]">
+                {section.description}
+              </div>
             </div>
-            <div className="mt-2 grid gap-2">
-              {resources.map((resource) => (
-                <label key={resource} className="flex items-center gap-2 text-[13px] font-medium text-[#33405A]">
-                  <input
-                    type="checkbox"
-                    checked={value[section.key].includes(resource)}
-                    disabled={!value.enabled}
-                    onChange={() => onChange({
-                      ...value,
-                      preset: value.preset === 'blocked' ? 'read_only' : value.preset,
-                      [section.key]: toggleResource(value[section.key], resource),
-                    })}
-                    className="h-4 w-4 accent-[#17203A]"
-                  />
-                  <span className="min-w-0 truncate">{formatResourceLabel(resource)}</span>
-                </label>
-              ))}
-            </div>
+            <Switch
+              checked={value[section.key].includes('*')}
+              disabled={!value.enabled}
+              onCheckedChange={(checked) => togglePermission(section.key, checked)}
+              aria-label={section.label}
+            />
           </div>
         ))}
       </div>

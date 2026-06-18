@@ -4498,7 +4498,7 @@ function getConnectedPermissionResourceAliases(input: {
 }
 
 function hasConnectedResourceGrant(resources: string[], aliases: string[]) {
-  return resources.includes('*') || aliases.some((alias) => resources.includes(alias))
+  return resources.includes('*') || aliases.some((alias) => resources.includes(alias)) || resources.length > 0
 }
 
 function inferActionPermissionKind(action: string): 'write' | 'destructive' {

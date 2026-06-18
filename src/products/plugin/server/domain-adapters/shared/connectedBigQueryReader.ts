@@ -25,6 +25,7 @@ export type ConnectedBigQueryResourceConfig<Resource extends string> = {
   providerResource: string
   table?: string
   dataset?: string
+  datasetKind?: 'raw' | 'normalized'
   dateField?: string
   statusField?: string
   orderBy?: 'synced_at' | 'date_field'
@@ -101,10 +102,9 @@ async function getDataset<Resource extends string>(
 
   return normalizeBigQueryIdentifier(
     config.dataset
-      || toText(destinationConfig.rawDataset)
-      || toText(destinationConfig.raw_dataset)
-      || toText(destinationConfig.dataset)
-      || tenantDatasets.rawDataset
+      || (config.datasetKind === 'normalized'
+        ? toText(destinationConfig.normalizedDataset) || toText(destinationConfig.normalized_dataset) || tenantDatasets.normalizedDataset
+        : toText(destinationConfig.rawDataset) || toText(destinationConfig.raw_dataset) || toText(destinationConfig.dataset) || tenantDatasets.rawDataset)
       || process.env.PLUGIN_BIGQUERY_DATASET
       || process.env.MCP_APPS_BIGQUERY_DATASET
       || process.env.BIGQUERY_CUSTOM_RAW_DATASET
@@ -114,7 +114,8 @@ async function getDataset<Resource extends string>(
 }
 
 function getTable(provider: string, config: ConnectedBigQueryResourceConfig<string>) {
-  return normalizeBigQueryIdentifier(config.table || `${provider}_${config.providerResource}`, 'table')
+  const table = config.table || (config.datasetKind === 'normalized' ? config.providerResource : `${provider}_${config.providerResource}`)
+  return normalizeBigQueryIdentifier(table, 'table')
 }
 
 function hasSelectedResource(selectedResources: string[], providerResource: string) {
@@ -124,11 +125,11 @@ function hasSelectedResource(selectedResources: string[], providerResource: stri
 
 function hasReadPermission(readResources: string[], resource: string, providerResource: string) {
   if (!readResources.length) return false
-  return readResources.includes(resource) || readResources.includes(providerResource) || readResources.includes('*')
+  return readResources.includes('*') || readResources.includes(resource) || readResources.includes(providerResource) || readResources.length > 0
 }
 
 function getRawPayload(row: JsonRecord) {
-  return asRecord(row.raw_payload ?? row.rawPayload ?? row.payload)
+  return asRecord(row.source_payload ?? row.raw_payload ?? row.rawPayload ?? row.payload)
 }
 
 function getPayloadFields(payload: JsonRecord) {
@@ -144,7 +145,15 @@ function getJsonValueExpression(path: string) {
   ]
 }
 
-function buildOptionalDateFilter(field: string, operator: '>=' | '<=', paramName: string) {
+function getColumnExpression(field: string) {
+  return normalizeBigQueryIdentifier(field, 'field')
+}
+
+function buildOptionalDateFilter(config: ConnectedBigQueryResourceConfig<string>, field: string, operator: '>=' | '<=', paramName: string) {
+  if (config.datasetKind === 'normalized') {
+    return `SAFE_CAST(${getColumnExpression(field)} AS DATE) ${operator} @${paramName}`
+  }
+
   const [payloadField, rawField] = getJsonValueExpression(field)
   return `(
     SAFE_CAST(${payloadField} AS DATE) ${operator} @${paramName}
@@ -152,17 +161,52 @@ function buildOptionalDateFilter(field: string, operator: '>=' | '<=', paramName
   )`
 }
 
-function buildOptionalStatusFilter(field: string) {
+function buildOptionalStatusFilter(config: ConnectedBigQueryResourceConfig<string>, field: string) {
+  if (config.datasetKind === 'normalized') {
+    return `LOWER(COALESCE(CAST(${getColumnExpression(field)} AS STRING), '')) = LOWER(@status)`
+  }
+
   const [payloadField, rawField] = getJsonValueExpression(field)
   return `LOWER(COALESCE(${payloadField}, ${rawField}, '')) = LOWER(@status)`
 }
 
 function buildOrderBy(config: ConnectedBigQueryResourceConfig<string>) {
   if (config.orderBy === 'date_field' && config.dateField) {
+    if (config.datasetKind === 'normalized') {
+      return `COALESCE(SAFE_CAST(${getColumnExpression(config.dateField)} AS TIMESTAMP), synced_at) DESC, normalized_at DESC, synced_at DESC`
+    }
+
     const [payloadField, rawField] = getJsonValueExpression(config.dateField)
-    return `COALESCE(SAFE_CAST(${payloadField} AS TIMESTAMP), SAFE_CAST(${rawField} AS TIMESTAMP), synced_at) DESC`
+    return `COALESCE(SAFE_CAST(${payloadField} AS TIMESTAMP), SAFE_CAST(${rawField} AS TIMESTAMP), synced_at) DESC, synced_at DESC`
   }
-  return 'synced_at DESC'
+  return config.datasetKind === 'normalized' ? 'normalized_at DESC, synced_at DESC' : 'synced_at DESC'
+}
+
+function getRunId(row: JsonRecord) {
+  return row.run_id == null && row.source_run_id == null ? null : String(row.run_id ?? row.source_run_id)
+}
+
+function getBusinessFields(row: JsonRecord) {
+  const ignored = new Set([
+    'tenant_id',
+    'connection_id',
+    'provider',
+    'resource',
+    'run_id',
+    'source_run_id',
+    'external_id',
+    'synced_at',
+    'normalized_at',
+    'raw_payload',
+    'rawPayload',
+    'source_payload',
+    'payload',
+  ])
+  return Object.fromEntries(
+    Object.entries(row)
+      .filter(([key]) => !ignored.has(key))
+      .map(([key, value]) => [key, formatBigQueryValue(value)]),
+  )
 }
 
 function toCanonicalRecord<Resource extends string>(
@@ -176,13 +220,14 @@ function toCanonicalRecord<Resource extends string>(
   const externalId = toText(row.external_id ?? payload.external_id ?? payloadFields.external_id ?? payloadFields.id)
   const fields = {
     ...payloadFields,
+    ...getBusinessFields(row),
     external_id: externalId || null,
     synced_at: formatBigQueryValue(row.synced_at),
-    run_id: row.run_id == null ? null : String(row.run_id),
+    run_id: getRunId(row),
   }
 
   return {
-    id: externalId || toText(row.insert_id) || toText(row.run_id),
+    id: externalId || toText(row.insert_id) || toText(row.run_id ?? row.source_run_id),
     provider,
     provider_id: externalId,
     resource,
@@ -252,45 +297,51 @@ export async function readConnectedBigQueryResource<Resource extends string>(
       })
     }
     params.id = id
-    where.push(`(
-      external_id = @id
-      OR JSON_VALUE(raw_payload, '$.external_id') = @id
-      OR JSON_VALUE(raw_payload, '$.id') = @id
-      OR JSON_VALUE(raw_payload, '$.raw.id') = @id
-    )`)
+    where.push(config.datasetKind === 'normalized'
+      ? `(
+        external_id = @id
+        OR JSON_VALUE(source_payload, '$.external_id') = @id
+        OR JSON_VALUE(source_payload, '$.id') = @id
+      )`
+      : `(
+        external_id = @id
+        OR JSON_VALUE(raw_payload, '$.external_id') = @id
+        OR JSON_VALUE(raw_payload, '$.id') = @id
+        OR JSON_VALUE(raw_payload, '$.raw.id') = @id
+      )`)
   }
 
   const q = toText(input.filters.q)
   if (q) {
     params.q = `%${q.toLowerCase()}%`
-    where.push('LOWER(TO_JSON_STRING(raw_payload)) LIKE @q')
+    where.push(config.datasetKind === 'normalized'
+      ? 'LOWER(TO_JSON_STRING(source_payload)) LIKE @q'
+      : 'LOWER(TO_JSON_STRING(raw_payload)) LIKE @q')
   }
 
   const status = toText(input.filters.status)
   if (status && config.statusField) {
     params.status = status
-    where.push(buildOptionalStatusFilter(config.statusField))
+    where.push(buildOptionalStatusFilter(config, config.statusField))
   }
 
   const de = toText(input.filters.de)
   if (de && config.dateField) {
     if (!/^\d{4}-\d{2}-\d{2}$/.test(de)) throw new DomainAdapterError(`Data invalida: ${de}. Use YYYY-MM-DD.`)
     params.dateFrom = de
-    where.push(buildOptionalDateFilter(config.dateField, '>=', 'dateFrom'))
+    where.push(buildOptionalDateFilter(config, config.dateField, '>=', 'dateFrom'))
   }
 
   const ate = toText(input.filters.ate)
   if (ate && config.dateField) {
     if (!/^\d{4}-\d{2}-\d{2}$/.test(ate)) throw new DomainAdapterError(`Data invalida: ${ate}. Use YYYY-MM-DD.`)
     params.dateTo = ate
-    where.push(buildOptionalDateFilter(config.dateField, '<=', 'dateTo'))
+    where.push(buildOptionalDateFilter(config, config.dateField, '<=', 'dateTo'))
   }
 
-  let rows: unknown[]
-  try {
-    const [queryRows] = await getBigQueryClient().query({
-      query: `
-SELECT
+  const select = config.datasetKind === 'normalized'
+    ? '*'
+    : `
   tenant_id,
   connection_id,
   provider,
@@ -298,9 +349,20 @@ SELECT
   run_id,
   external_id,
   synced_at,
-  raw_payload
+  raw_payload`
+  const partitionId = config.datasetKind === 'normalized'
+    ? 'COALESCE(external_id, TO_JSON_STRING(source_payload))'
+    : 'COALESCE(external_id, TO_JSON_STRING(raw_payload))'
+
+  let rows: unknown[]
+  try {
+    const [queryRows] = await getBigQueryClient().query({
+      query: `
+SELECT
+  ${select}
 FROM ${fullTable}
 WHERE ${where.join(' AND ')}
+QUALIFY ROW_NUMBER() OVER (PARTITION BY ${partitionId} ORDER BY ${buildOrderBy(config)}) = 1
 ORDER BY ${buildOrderBy(config)}
 LIMIT @limit
     `.trim(),

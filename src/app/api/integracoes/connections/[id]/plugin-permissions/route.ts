@@ -23,6 +23,12 @@ function asStringArray(value: unknown): string[] | undefined {
   return value.map((item) => String(item || '').trim()).filter(Boolean)
 }
 
+function asMcpCapability(value: unknown): string[] | undefined {
+  const resources = asStringArray(value)
+  if (resources === undefined) return undefined
+  return resources.length ? ['*'] : []
+}
+
 function asRecord(value: unknown): Record<string, unknown> {
   return value && typeof value === 'object' && !Array.isArray(value) ? value as Record<string, unknown> : {}
 }
@@ -92,10 +98,10 @@ export async function PATCH(
       tenantId,
       connectionId: id,
       enabled: payload.enabled == null ? undefined : Boolean(payload.enabled),
-      readResources: asStringArray(payload.readResources ?? payload.read_resources),
-      liveReadResources: asStringArray(payload.liveReadResources ?? payload.live_read_resources),
-      writeResources: asStringArray(payload.writeResources ?? payload.write_resources),
-      destructiveResources: asStringArray(payload.destructiveResources ?? payload.destructive_resources),
+      readResources: asMcpCapability(payload.readResources ?? payload.read_resources),
+      liveReadResources: asMcpCapability(payload.liveReadResources ?? payload.live_read_resources),
+      writeResources: asMcpCapability(payload.writeResources ?? payload.write_resources),
+      destructiveResources: asMcpCapability(payload.destructiveResources ?? payload.destructive_resources),
       requireConfirmation: payload.requireConfirmation == null && payload.require_confirmation == null
         ? undefined
         : Boolean(payload.requireConfirmation ?? payload.require_confirmation),

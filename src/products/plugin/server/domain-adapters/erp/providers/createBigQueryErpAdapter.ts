@@ -66,10 +66,12 @@ export function makeErpConfigs(
     },
   ]
 
-  return base
-    .map((config) => {
-      const providerResource = providerResources[config.resource]
-      return providerResource ? { ...config, providerResource } : null
-    })
-    .filter((config): config is ConnectedBigQueryResourceConfig<ConnectedErpResource> => Boolean(config))
+  const configs: ConnectedBigQueryResourceConfig<ConnectedErpResource>[] = []
+  for (const config of base) {
+    const providerResource = providerResources[config.resource]
+    if (providerResource) {
+      configs.push({ ...config, providerResource, datasetKind: 'normalized' })
+    }
+  }
+  return configs
 }

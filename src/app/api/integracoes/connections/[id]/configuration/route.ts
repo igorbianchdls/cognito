@@ -85,11 +85,11 @@ function normalizeMcpPreset(value: unknown): McpPreset {
   return 'blocked'
 }
 
-function applyMcpPreset(preset: McpPreset, resources: string[]) {
+function applyMcpPreset(preset: McpPreset, _resources: string[]) {
   if (preset === 'read_only') {
     return {
       enabled: true,
-      readResources: resources,
+      readResources: ['*'],
       liveReadResources: [],
       writeResources: [],
       destructiveResources: [],
@@ -100,9 +100,9 @@ function applyMcpPreset(preset: McpPreset, resources: string[]) {
   if (preset === 'actions_with_confirmation') {
     return {
       enabled: true,
-      readResources: resources,
-      liveReadResources: resources,
-      writeResources: resources,
+      readResources: ['*'],
+      liveReadResources: ['*'],
+      writeResources: ['*'],
       destructiveResources: [],
       requireConfirmation: true,
     }
@@ -118,11 +118,11 @@ function applyMcpPreset(preset: McpPreset, resources: string[]) {
   }
 }
 
-function normalizePermissionResources(provider: ReturnType<typeof requireIntegrationProvider>, value: unknown, fallback: string[]) {
+function normalizePermissionResources(_provider: ReturnType<typeof requireIntegrationProvider>, value: unknown, fallback: string[]) {
   const requested = asStringArray(value)
   const source = requested === undefined ? fallback : requested
-  const validResources = new Set(provider.resources.map((resource) => resource.slug))
-  return Array.from(new Set(source.filter((resource) => validResources.has(resource))))
+  if (source.includes('*')) return ['*']
+  return source.length ? ['*'] : []
 }
 
 function nextSyncAtFor(frequency: string) {

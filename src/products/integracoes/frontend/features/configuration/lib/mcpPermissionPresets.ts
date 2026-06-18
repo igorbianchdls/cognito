@@ -33,12 +33,12 @@ export const MCP_PERMISSION_PRESETS: Array<{
 
 export function applyMcpPermissionPreset(
   preset: McpPermissionPreset,
-  resources: string[],
+  _resources: string[],
 ): McpPermissionPresetState {
   if (preset === 'read_only') {
     return {
       enabled: true,
-      readResources: resources,
+      readResources: ['*'],
       liveReadResources: [],
       writeResources: [],
       destructiveResources: [],
@@ -49,9 +49,9 @@ export function applyMcpPermissionPreset(
   if (preset === 'actions_with_confirmation') {
     return {
       enabled: true,
-      readResources: resources,
-      liveReadResources: resources,
-      writeResources: resources,
+      readResources: ['*'],
+      liveReadResources: ['*'],
+      writeResources: ['*'],
       destructiveResources: [],
       requireConfirmation: true,
     }
