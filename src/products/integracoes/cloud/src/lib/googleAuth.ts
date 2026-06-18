@@ -1,12 +1,102 @@
 import { withRetry, type RetryOptions } from '@/products/integracoes/connectors/runtime/retry'
+import crypto from 'crypto'
 
 type MetadataTokenResponse = {
   access_token?: string
 }
 
+type ServiceAccountCredentials = {
+  client_email?: string
+  private_key?: string
+  token_uri?: string
+}
+
+function base64Url(value: string | Buffer) {
+  return Buffer.from(value)
+    .toString('base64')
+    .replace(/=/g, '')
+    .replace(/\+/g, '-')
+    .replace(/\//g, '_')
+}
+
+function parseServiceAccountCredentials(value: string): ServiceAccountCredentials | null {
+  const trimmed = value.trim()
+  if (!trimmed) return null
+
+  const candidates = [
+    trimmed,
+    trimmed.replace(
+      /("private_key"\s*:\s*")([\s\S]*?)("\s*,\s*"client_email")/,
+      (_match, prefix: string, privateKey: string, suffix: string) => `${prefix}${privateKey.replace(/\r?\n/g, '\\n')}${suffix}`,
+    ),
+    Buffer.from(trimmed, 'base64').toString('utf8'),
+  ]
+
+  for (const candidate of candidates) {
+    try {
+      const parsed = JSON.parse(candidate) as unknown
+      if (parsed && typeof parsed === 'object' && !Array.isArray(parsed)) {
+        return parsed as ServiceAccountCredentials
+      }
+    } catch {
+      // Try the next format.
+    }
+  }
+
+  return null
+}
+
+function getServiceAccountCredentials() {
+  const raw = process.env.BIGQUERY_CREDENTIALS_JSON
+    || process.env.GOOGLE_APPLICATION_CREDENTIALS_JSON
+    || ''
+  const credentials = parseServiceAccountCredentials(raw)
+  if (!credentials?.client_email || !credentials.private_key) return null
+  return credentials
+}
+
+async function getServiceAccountAccessToken(): Promise<string | null> {
+  const credentials = getServiceAccountCredentials()
+  if (!credentials) return null
+
+  const tokenUri = credentials.token_uri || 'https://oauth2.googleapis.com/token'
+  const now = Math.floor(Date.now() / 1000)
+  const header = base64Url(JSON.stringify({ alg: 'RS256', typ: 'JWT' }))
+  const payload = base64Url(JSON.stringify({
+    iss: credentials.client_email,
+    scope: 'https://www.googleapis.com/auth/cloud-platform',
+    aud: tokenUri,
+    iat: now,
+    exp: now + 3600,
+  }))
+  const unsigned = `${header}.${payload}`
+  const signature = crypto.createSign('RSA-SHA256').update(unsigned).sign(credentials.private_key)
+  const assertion = `${unsigned}.${base64Url(signature)}`
+  const body = new URLSearchParams()
+  body.set('grant_type', 'urn:ietf:params:oauth:grant-type:jwt-bearer')
+  body.set('assertion', assertion)
+
+  const response = await fetch(tokenUri, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    body,
+    signal: AbortSignal.timeout(Number(process.env.GCP_TOKEN_TIMEOUT_MS || 10000)),
+  })
+  const payloadJson = await response.json().catch(() => null) as MetadataTokenResponse | { error?: string; error_description?: string } | null
+  if (!response.ok) {
+    const errorPayload = payloadJson as { error?: string; error_description?: string } | null
+    throw new Error(errorPayload?.error_description || errorPayload?.error || `Falha ao obter token OAuth GCP: ${response.status}`)
+  }
+
+  return (payloadJson as MetadataTokenResponse | null)?.access_token || null
+}
+
 export async function getCloudAccessToken(): Promise<string> {
   const explicitToken = process.env.GOOGLE_OAUTH_ACCESS_TOKEN?.trim()
   if (explicitToken) return explicitToken
+
+  const serviceAccountToken = await getServiceAccountAccessToken()
+  if (serviceAccountToken) return serviceAccountToken
 
   const response = await fetch('http://metadata.google.internal/computeMetadata/v1/instance/service-accounts/default/token', {
     headers: {

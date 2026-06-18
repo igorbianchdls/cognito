@@ -550,13 +550,8 @@ const CONNECTED_CRM_SCHEMA = createCrudSchema(
 )
 
 const CONNECTED_ERP_ACTIONS_ALLOWED_RESOURCES = [
-  'clientes',
-  'fornecedores',
   'contas-a-receber',
   'contas-a-pagar',
-  'pedidos-venda',
-  'produtos',
-  'movimentacoes-estoque',
 ] as const
 
 const CONNECTED_CRM_ACTIONS_ALLOWED_RESOURCES = [
@@ -581,7 +576,7 @@ const CONNECTED_ERP_ACTIONS_SCHEMA = {
     },
     action: {
       type: 'string',
-      enum: ['criar', 'atualizar', 'baixar', 'cancelar', 'estornar', 'reabrir', 'alterar_status'],
+      enum: ['criar', 'atualizar', 'baixar', 'cancelar'],
       description: 'Acao executada diretamente na API do provider. dry_run=true por padrao.',
     },
     id: {
@@ -4392,13 +4387,8 @@ async function callConnectedCrm(args: unknown, context: CognitoMcpServerContext)
 }
 
 const CONNECTED_ERP_ACTIONS_BY_RESOURCE: Record<string, readonly ConnectedErpAction[]> = {
-  clientes: ['criar', 'atualizar', 'alterar_status'],
-  fornecedores: ['criar', 'atualizar', 'alterar_status'],
-  produtos: ['criar', 'atualizar', 'alterar_status'],
-  'contas-a-receber': ['criar', 'atualizar', 'baixar', 'cancelar', 'estornar', 'reabrir'],
-  'contas-a-pagar': ['criar', 'atualizar', 'baixar', 'cancelar', 'estornar', 'reabrir'],
-  'pedidos-venda': ['criar', 'atualizar', 'cancelar', 'alterar_status'],
-  'movimentacoes-estoque': ['criar', 'cancelar'],
+  'contas-a-receber': ['criar', 'atualizar', 'baixar', 'cancelar'],
+  'contas-a-pagar': ['criar', 'atualizar', 'baixar', 'cancelar'],
 }
 
 const CONNECTED_CRM_ACTIONS_BY_RESOURCE: Record<string, readonly ConnectedCrmAction[]> = {

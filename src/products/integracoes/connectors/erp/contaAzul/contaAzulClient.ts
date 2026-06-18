@@ -185,7 +185,7 @@ export class ContaAzulClient {
     input: {
       resource: string
       path: string
-      method?: 'GET' | 'POST'
+      method?: 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE'
       query?: Record<string, string | number | boolean>
       body?: Record<string, unknown>
     },

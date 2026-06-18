@@ -45,6 +45,11 @@ const ERP_ACTIONS_BY_RESOURCE: Record<string, string[]> = {
   'movimentacoes-estoque': ['criar', 'cancelar'],
 }
 
+const CONTA_AZUL_ERP_ACTIONS_BY_RESOURCE: Record<string, string[]> = {
+  'contas-a-receber': ['criar', 'atualizar'],
+  'contas-a-pagar': ['criar', 'atualizar'],
+}
+
 const CRM_READ_RESOURCES = ['contas', 'contatos', 'leads', 'oportunidades', 'atividades'] as const
 
 const CRM_ACTIONS_BY_RESOURCE: Record<string, string[]> = {
@@ -162,7 +167,7 @@ export const INTEGRATION_PLUGIN_PROVIDER_CAPABILITIES: IntegrationProviderPlugin
     credentialMode: 'oauth2',
     scopeReviewStatus: 'planned',
     scopeHints: ERP_SCOPE_HINTS.conta_azul,
-    resources: resourceCapabilities(ERP_READ_RESOURCES, ERP_ACTIONS_BY_RESOURCE),
+    resources: resourceCapabilities(ERP_READ_RESOURCES, CONTA_AZUL_ERP_ACTIONS_BY_RESOURCE),
   },
   {
     provider: 'bling',
