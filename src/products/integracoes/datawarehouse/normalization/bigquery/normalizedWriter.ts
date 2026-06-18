@@ -11,6 +11,7 @@ type BigQueryInsertResponse = {
 type WriteNormalizedRowsInput = {
   tenantId: number
   rows: NormalizedRow[]
+  ensureTables?: NormalizedTableName[]
 }
 
 export type WriteNormalizedRowsOutput = {
@@ -139,7 +140,8 @@ function serializeJsonFields(row: Record<string, unknown>) {
 export async function writeNormalizedRowsToBigQuery(input: WriteNormalizedRowsInput): Promise<WriteNormalizedRowsOutput> {
   const config = getIntegrationsCloudConfig()
   const dataset = normalizeBigQueryIdentifier(getTenantBigQueryDatasets(input.tenantId).normalizedDataset, 'dataset')
-  if (!input.rows.length) {
+  const ensureTables = Array.from(new Set(input.ensureTables || []))
+  if (!input.rows.length && !ensureTables.length) {
     return { ok: true, mode: 'bigquery_normalized', dataset, insertedRows: 0, tables: [] }
   }
 
@@ -147,8 +149,14 @@ export async function writeNormalizedRowsToBigQuery(input: WriteNormalizedRowsIn
 
   let insertedRows = 0
   const tables: WriteNormalizedRowsOutput['tables'] = []
+  const grouped = groupByTable(input.rows)
 
-  for (const [table, rows] of groupByTable(input.rows).entries()) {
+  for (const table of ensureTables) {
+    await ensureNormalizedTable(config.projectId, dataset, table)
+    if (!grouped.has(table)) tables.push({ table, insertedRows: 0 })
+  }
+
+  for (const [table, rows] of grouped.entries()) {
     await ensureNormalizedTable(config.projectId, dataset, table)
     let tableInsertedRows = 0
     const tableId = normalizeBigQueryIdentifier(table, 'table')

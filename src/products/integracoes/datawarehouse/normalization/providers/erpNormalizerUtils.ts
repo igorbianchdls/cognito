@@ -170,6 +170,101 @@ function saleFields(payload: JsonRecord) {
   }
 }
 
+function saleItemFields(payload: JsonRecord) {
+  const quantidade = numberValue(payload, ['quantidade', 'qtd', 'quantity'])
+  const valorUnitario = numberValue(payload, ['valor_unitario', 'valor', 'preco', 'preco_venda', 'unit_price'])
+  return {
+    venda_id: text(payload, ['parent_id', 'venda_id', 'id_venda', 'venda.id']),
+    item_id: text(payload, ['id', 'uuid', 'id_item', 'item.id']),
+    produto_id: text(payload, ['produto.id', 'id_produto', 'produto_id', 'id_item', 'item.id']),
+    nome: text(payload, ['nome', 'produto.nome', 'item.nome', 'descricao']),
+    descricao: text(payload, ['descricao', 'description', 'produto.descricao', 'item.descricao']),
+    tipo: text(payload, ['tipo', 'produto.tipo', 'item.tipo']),
+    quantidade,
+    valor_unitario: valorUnitario,
+    custo: numberValue(payload, ['custo', 'valor_custo', 'preco_custo']),
+    valor_total: numberValue(payload, ['valor_total', 'total']) ?? (
+      quantidade != null && valorUnitario != null ? quantidade * valorUnitario : null
+    ),
+  }
+}
+
+function saleDetailFields(payload: JsonRecord) {
+  return {
+    ...saleFields(payload),
+    vendedor_id: text(payload, ['vendedor.id', 'id_vendedor', 'vendedor_id']),
+    vendedor_nome: text(payload, ['vendedor.nome', 'nome_vendedor', 'vendedor.name']),
+    categoria_id: text(payload, ['categoria.id', 'id_categoria', 'categoria_id']),
+    centro_custo_id: text(payload, ['centro_custo.id', 'id_centro_custo', 'centro_custo_id']),
+    observacoes: text(payload, ['observacoes', 'observacao', 'descricao', 'comentarios']),
+  }
+}
+
+function invoiceFields(payload: JsonRecord) {
+  return {
+    chave_acesso: text(payload, ['chave_acesso', 'chave', 'access_key']),
+    numero_nota: text(payload, ['numero_nota', 'numero', 'numero_nf', 'numero_nfse']),
+    destinatario_nome: text(payload, ['nome_destinatario', 'destinatario.nome', 'cliente.nome', 'nome_cliente']),
+    data_emissao: dateValue(payload, ['data_emissao', 'emissao', 'created_at']),
+    status: normalizeStatus(text(payload, ['status', 'situacao'])),
+    valor_total: numberValue(payload, ['valor_total', 'valor_total_nota', 'valor', 'total']),
+  }
+}
+
+function serviceInvoiceFields(payload: JsonRecord) {
+  return {
+    id: text(payload, ['id', 'uuid']),
+    id_venda: text(payload, ['id_venda', 'venda.id']),
+    id_contrato: text(payload, ['id_contrato', 'contrato.id']),
+    numero_nfse: text(payload, ['numero_nfse']),
+    numero_rps: text(payload, ['numero_rps']),
+    cliente_nome: text(payload, ['nome_cliente', 'cliente.nome', 'razao_social']),
+    data_competencia: dateValue(payload, ['data_competencia', 'competencia']),
+    status: normalizeStatus(text(payload, ['status', 'situacao'])),
+    valor_total: numberValue(payload, ['valor_total_nfse', 'valor_total', 'valor', 'total']),
+  }
+}
+
+function categoryFields(payload: JsonRecord) {
+  return {
+    nome: text(payload, ['nome', 'descricao', 'name']),
+    codigo: text(payload, ['codigo', 'code', 'id_legado']),
+    tipo: text(payload, ['tipo', 'type']),
+    categoria_pai_id: text(payload, ['categoria_pai.id', 'categoriaPai.id', 'id_categoria_pai', 'parent_id']),
+    status: normalizeStatus(text(payload, ['status', 'situacao', 'ativo'])),
+  }
+}
+
+function costCenterFields(payload: JsonRecord) {
+  return {
+    nome: text(payload, ['nome', 'descricao', 'name']),
+    codigo: text(payload, ['codigo', 'code', 'id_legado']),
+    status: normalizeStatus(text(payload, ['status', 'situacao', 'ativo'])),
+  }
+}
+
+function financialAccountFields(payload: JsonRecord) {
+  return {
+    nome: text(payload, ['nome', 'name', 'descricao']),
+    tipo: text(payload, ['tipo', 'type']),
+    banco: text(payload, ['banco', 'banco.nome', 'bank', 'bank_name']),
+    agencia: text(payload, ['agencia', 'agency']),
+    conta: text(payload, ['conta', 'numero_conta', 'account', 'account_number']),
+    status: normalizeStatus(text(payload, ['status', 'situacao', 'ativo'])),
+  }
+}
+
+function transferFields(payload: JsonRecord) {
+  return {
+    conta_origem_id: text(payload, ['conta_origem.id', 'id_conta_origem', 'origem.id', 'conta_financeira_origem.id']),
+    conta_destino_id: text(payload, ['conta_destino.id', 'id_conta_destino', 'destino.id', 'conta_financeira_destino.id']),
+    valor: numberValue(payload, ['valor', 'valor_transferencia', 'amount']),
+    data_transferencia: dateValue(payload, ['data_transferencia', 'data', 'data_lancamento']),
+    descricao: text(payload, ['descricao', 'description', 'observacao']),
+    status: normalizeStatus(text(payload, ['status', 'situacao'])),
+  }
+}
+
 function stockFields(payload: JsonRecord) {
   return {
     produto_id: text(payload, ['produto.id', 'id_produto', 'codigo_produto', 'nCodProd', 'idProd']),
@@ -188,6 +283,14 @@ function fieldsFor(table: NormalizedTableName, payload: JsonRecord) {
   if (table === 'produtos') return productFields(payload)
   if (table === 'contas_receber' || table === 'contas_pagar') return financialFields(payload)
   if (table === 'vendas') return saleFields(payload)
+  if (table === 'itens_venda') return saleItemFields(payload)
+  if (table === 'venda_detalhes') return saleDetailFields(payload)
+  if (table === 'notas_fiscais') return invoiceFields(payload)
+  if (table === 'notas_fiscais_servico') return serviceInvoiceFields(payload)
+  if (table === 'categorias') return categoryFields(payload)
+  if (table === 'centros_custo') return costCenterFields(payload)
+  if (table === 'contas_financeiras') return financialAccountFields(payload)
+  if (table === 'transferencias') return transferFields(payload)
   return stockFields(payload)
 }
 
@@ -218,6 +321,7 @@ export function normalizeErpRows(input: NormalizationInput, resourceMap: Provide
     provider: input.provider,
     resource: input.resource,
     status: 'normalized',
+    tables: [table],
     rows,
     skippedRows: 0,
   }

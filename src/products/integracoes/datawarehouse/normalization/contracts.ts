@@ -5,6 +5,14 @@ export type NormalizedTableName =
   | 'contas_receber'
   | 'contas_pagar'
   | 'vendas'
+  | 'itens_venda'
+  | 'venda_detalhes'
+  | 'notas_fiscais'
+  | 'notas_fiscais_servico'
+  | 'categorias'
+  | 'centros_custo'
+  | 'contas_financeiras'
+  | 'transferencias'
   | 'estoque_atual'
 
 export type NormalizationInput = {
@@ -27,6 +35,7 @@ export type NormalizationResult = {
   provider: string
   resource: string
   status: 'normalized' | 'skipped'
+  tables?: NormalizedTableName[]
   rows: NormalizedRow[]
   skippedRows: number
   message?: string

@@ -26,7 +26,7 @@ export async function runNormalization(input: NormalizationInput): Promise<RunNo
   }
 
   const normalization = normalizer.normalize(input)
-  if (!normalization.rows.length) {
+  if (!normalization.rows.length && !normalization.tables?.length) {
     return {
       status: 'skipped',
       normalization,
@@ -37,6 +37,7 @@ export async function runNormalization(input: NormalizationInput): Promise<RunNo
   const write = await writeNormalizedRowsToBigQuery({
     tenantId: input.tenantId,
     rows: normalization.rows,
+    ensureTables: normalization.tables,
   })
 
   return {

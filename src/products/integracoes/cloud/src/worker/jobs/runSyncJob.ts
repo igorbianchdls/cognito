@@ -227,32 +227,30 @@ export async function runSyncJob(input: RunSyncJobInput): Promise<RunSyncJobOutp
           })
           rowsWritten += write.insertedRows
 
-          if (batchRows.length) {
-            try {
-              const normalized = await runNormalization({
-                tenantId: input.tenantId,
-                connectionId: connection.id,
-                provider: connection.provider,
-                resource: batchResource,
-                runId: run.id,
-                sourceTable,
-                rows: batchRows,
-              })
-              normalizedRowsWritten += normalized.write?.insertedRows || 0
-            } catch (error) {
-              const warning = error instanceof Error ? error.message : String(error)
-              normalizationWarnings.push(warning)
-              status = aggregateStatus(status, 'warning')
-              await createIntegrationEvent({
-                tenantId: input.tenantId,
-                connectionId: connection.id,
-                eventType: 'system.note',
-                severity: 'warning',
-                actor: 'integrations-worker',
-                message: `Normalizacao do recurso ${batchResource} falhou; raw preservado.`,
-                metadata: { runId: run.id, resource: batchResource, errorMessage: warning },
-              })
-            }
+          try {
+            const normalized = await runNormalization({
+              tenantId: input.tenantId,
+              connectionId: connection.id,
+              provider: connection.provider,
+              resource: batchResource,
+              runId: run.id,
+              sourceTable,
+              rows: batchRows,
+            })
+            normalizedRowsWritten += normalized.write?.insertedRows || 0
+          } catch (error) {
+            const warning = error instanceof Error ? error.message : String(error)
+            normalizationWarnings.push(warning)
+            status = aggregateStatus(status, 'warning')
+            await createIntegrationEvent({
+              tenantId: input.tenantId,
+              connectionId: connection.id,
+              eventType: 'system.note',
+              severity: 'warning',
+              actor: 'integrations-worker',
+              message: `Normalizacao do recurso ${batchResource} falhou; raw preservado.`,
+              metadata: { runId: run.id, resource: batchResource, errorMessage: warning },
+            })
           }
           if (batch.nextCursor) {
             await writeIntegrationCursor({

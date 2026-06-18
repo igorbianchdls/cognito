@@ -273,7 +273,7 @@ export default function ConnectionConfigurationModal({
                 {canSync ? (
                   <button
                     type="button"
-                    onClick={() => onSync?.(connection)}
+                    onClick={() => onSync?.(connection, configuration || undefined)}
                     disabled={busy || saving || savingAndSyncing}
                     className="inline-flex h-10 items-center justify-center gap-2 rounded-[12px] border border-[#DCE3F0] bg-white px-4 text-[13px] font-semibold text-[#33405A] transition hover:bg-[#F7F8FC] disabled:opacity-60"
                   >
