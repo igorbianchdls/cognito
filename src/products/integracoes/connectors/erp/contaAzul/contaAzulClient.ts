@@ -75,8 +75,8 @@ function getBaseUrl() {
   return (process.env.CONTA_AZUL_API_BASE_URL || DEFAULT_BASE_URL).replace(/\/+$/, '')
 }
 
-function buildUrl(config: ContaAzulResourceConfig, query?: Record<string, string | number | boolean>) {
-  const url = new URL(`${getBaseUrl()}${config.path.startsWith('/') ? config.path : `/${config.path}`}`)
+function buildUrl(path: string, query?: Record<string, string | number | boolean>) {
+  const url = new URL(`${getBaseUrl()}${path.startsWith('/') ? path : `/${path}`}`)
   for (const [key, value] of Object.entries(query || {})) {
     if (value !== undefined && value !== null && value !== '') url.searchParams.set(key, String(value))
   }
@@ -90,12 +90,28 @@ function asNumber(value: unknown): number | undefined {
 
 function extractTotalPages(payload: ContaAzulPagePayload): number | undefined {
   if (!isRecord(payload)) return undefined
-  return asNumber(payload.total_paginas ?? payload.totalPages ?? payload.total_de_paginas ?? payload.pages)
+  const pagination = isRecord(payload.paginacao) ? payload.paginacao : {}
+  return asNumber(
+    payload.total_paginas
+    ?? payload.totalPages
+    ?? payload.total_de_paginas
+    ?? payload.pages
+    ?? pagination.total_paginas
+    ?? pagination.totalPages,
+  )
 }
 
 function extractTotalRecords(payload: ContaAzulPagePayload): number | undefined {
   if (!isRecord(payload)) return undefined
-  return asNumber(payload.total_itens ?? payload.totalItems ?? payload.total ?? payload.total_de_registros)
+  const pagination = isRecord(payload.paginacao) ? payload.paginacao : {}
+  return asNumber(
+    payload.total_itens
+    ?? payload.totalItems
+    ?? payload.total
+    ?? payload.total_de_registros
+    ?? pagination.total_itens
+    ?? pagination.totalItems,
+  )
 }
 
 function getMaxPages() {
@@ -103,7 +119,16 @@ function getMaxPages() {
   return Number.isFinite(value) && value > 0 ? Math.floor(value) : DEFAULT_MAX_PAGES
 }
 
-function extractItems(payload: ContaAzulPagePayload, itemKeys: string[]): Record<string, unknown>[] {
+export function extractContaAzulItems(
+  payload: ContaAzulPagePayload,
+  itemKeys: string[],
+  responseMode: ContaAzulResourceConfig['responseMode'] = 'paginated',
+): Record<string, unknown>[] {
+  if (responseMode === 'single') {
+    if (isRecord(payload)) return [payload]
+    return [{ value: payload }]
+  }
+
   if (Array.isArray(payload)) {
     return payload.filter((item): item is Record<string, unknown> => isRecord(item))
   }
@@ -145,12 +170,35 @@ export class ContaAzulClient {
     const response = await connectorJsonRequest<T>({
       provider: 'conta_azul',
       resource: config.resource,
-      url: buildUrl(config, query),
+      url: buildUrl(config.path, query),
       method,
       headers: {
         Authorization: `Bearer ${this.credentials.accessToken}`,
       },
       body,
+    })
+
+    return response.payload
+  }
+
+  async requestPath<T extends ContaAzulPagePayload = ContaAzulPagePayload>(
+    input: {
+      resource: string
+      path: string
+      method?: 'GET' | 'POST'
+      query?: Record<string, string | number | boolean>
+      body?: Record<string, unknown>
+    },
+  ): Promise<T> {
+    const response = await connectorJsonRequest<T>({
+      provider: 'conta_azul',
+      resource: input.resource,
+      url: buildUrl(input.path, input.query),
+      method: input.method || 'GET',
+      headers: {
+        Authorization: `Bearer ${this.credentials.accessToken}`,
+      },
+      body: input.body,
     })
 
     return response.payload
@@ -175,13 +223,15 @@ export class ContaAzulClient {
         pageSize,
         cursor: input?.cursor,
       })
-      const items = extractItems(payload, config.itemKeys)
+      const items = extractContaAzulItems(payload, config.itemKeys, config.responseMode)
       const totalPages = extractTotalPages(payload)
       const totalRecords = extractTotalRecords(payload)
       loadedPages += 1
 
       const hasMoreByTotal = totalPages ? page < totalPages : undefined
-      const hasMore = hasMoreByTotal ?? items.length >= pageSize
+      const hasMore = config.responseMode === 'single' || config.paginationMode === 'none'
+        ? false
+        : hasMoreByTotal ?? items.length >= pageSize
       const truncated = hasMore && loadedPages >= maxPages
 
       yield {

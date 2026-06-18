@@ -11,7 +11,6 @@ export const contaAzulNormalizer: Normalizer = {
       contas_receber: 'contas_receber',
       contas_pagar: 'contas_pagar',
       vendas: 'vendas',
-      estoque: 'estoque_atual',
     })
   },
 }

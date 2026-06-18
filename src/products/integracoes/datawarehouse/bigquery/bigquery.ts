@@ -137,12 +137,12 @@ export async function writeRowsToBigQuery(input: BigQueryWriteInput): Promise<Bi
   const dataset = normalizeBigQueryIdentifier(input.dataset || config.bigQuery.customRawDataset, 'dataset')
   const table = normalizeBigQueryIdentifier(input.table, 'table')
 
+  await ensureDataset(config.projectId, dataset)
+  await ensureRawTable(config.projectId, dataset, table)
+
   if (!input.rows.length) {
     return { ok: true, mode: 'bigquery', dataset, table, insertedRows: 0 }
   }
-
-  await ensureDataset(config.projectId, dataset)
-  await ensureRawTable(config.projectId, dataset, table)
 
   const syncedAt = new Date().toISOString()
   let insertedRows = 0

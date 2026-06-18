@@ -212,22 +212,22 @@ export async function runSyncJob(input: RunSyncJobInput): Promise<RunSyncJobOutp
 
         for (const batch of batches) {
           const batchRows = normalizeRows(batch.rows)
-          if (batchRows.length) {
-            const batchResource = batch.resource || resource
-            const sourceTable = `${connection.provider}_${batchResource}`
-            const write = await writeRowsToDestination({
-              tenantId: input.tenantId,
-              connectionId: connection.id,
-              pipelineId: pipeline?.id || null,
-              destination,
-              provider: connection.provider,
-              resource: batchResource,
-              runId: run.id,
-              table: sourceTable,
-              rows: batchRows,
-            })
-            rowsWritten += write.insertedRows
+          const batchResource = batch.resource || resource
+          const sourceTable = `${connection.provider}_${batchResource}`
+          const write = await writeRowsToDestination({
+            tenantId: input.tenantId,
+            connectionId: connection.id,
+            pipelineId: pipeline?.id || null,
+            destination,
+            provider: connection.provider,
+            resource: batchResource,
+            runId: run.id,
+            table: sourceTable,
+            rows: batchRows,
+          })
+          rowsWritten += write.insertedRows
 
+          if (batchRows.length) {
             try {
               const normalized = await runNormalization({
                 tenantId: input.tenantId,

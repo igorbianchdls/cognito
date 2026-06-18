@@ -12,9 +12,18 @@ export type ContaAzulResourceConfig = {
   resource: string
   path: string
   method?: 'GET' | 'POST'
+  responseMode?: 'paginated' | 'single'
+  paginationMode?: 'paged' | 'none'
   itemKeys: string[]
   defaultPageSize: number
   supportsIncremental?: boolean
+  derivedFrom?: {
+    resource: string
+    path: string
+    idKeys: string[]
+    responseMode?: 'paginated' | 'single'
+    itemKeys?: string[]
+  }
   buildQuery?: (input: {
     page: number
     pageSize: number

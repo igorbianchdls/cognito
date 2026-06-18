@@ -15,10 +15,108 @@ function pageQuery({ page, pageSize }: { page: number; pageSize: number }) {
   }
 }
 
-function payableReceivableBody({ page, pageSize }: { page: number; pageSize: number }) {
+function dateRangeQuery({ page, pageSize }: { page: number; pageSize: number }) {
+  const range = currentYearRange()
   return {
     pagina: page,
     tamanho_pagina: pageSize,
+    data_inicio: process.env.CONTA_AZUL_SYNC_START_DATE?.trim() || range.start,
+    data_fim: process.env.CONTA_AZUL_SYNC_END_DATE?.trim() || range.end,
+  }
+}
+
+function isoDate(date: Date) {
+  return date.toISOString().slice(0, 10)
+}
+
+function addDays(date: Date, days: number) {
+  const nextDate = new Date(date)
+  nextDate.setUTCDate(nextDate.getUTCDate() + days)
+  return nextDate
+}
+
+function currentYearRange() {
+  const now = new Date()
+  const year = now.getUTCFullYear()
+  return {
+    start: `${year}-01-01`,
+    end: `${year}-12-31`,
+  }
+}
+
+function recentFifteenDayRange() {
+  const end = new Date()
+  return {
+    start: isoDate(addDays(end, -14)),
+    end: isoDate(end),
+  }
+}
+
+function currentYearDateTimeRange() {
+  const range = currentYearRange()
+  return {
+    start: `${range.start}T00:00:00`,
+    end: `${range.end}T23:59:59`,
+  }
+}
+
+function payableReceivableQuery({ page, pageSize }: { page: number; pageSize: number }) {
+  const range = currentYearRange()
+  return {
+    pagina: page,
+    tamanho_pagina: pageSize,
+    data_vencimento_de: process.env.CONTA_AZUL_FINANCEIRO_START_DATE?.trim() || range.start,
+    data_vencimento_ate: process.env.CONTA_AZUL_FINANCEIRO_END_DATE?.trim() || range.end,
+  }
+}
+
+function financialDateTimeQuery({ page, pageSize }: { page: number; pageSize: number }) {
+  const range = currentYearDateTimeRange()
+  return {
+    pagina: page,
+    tamanho_pagina: pageSize,
+    data_inicio: process.env.CONTA_AZUL_FINANCEIRO_START_DATETIME?.trim() || range.start,
+    data_fim: process.env.CONTA_AZUL_FINANCEIRO_END_DATETIME?.trim() || range.end,
+  }
+}
+
+function contratosQuery({ page, pageSize }: { page: number; pageSize: number }) {
+  const range = currentYearRange()
+  return {
+    pagina: page,
+    tamanho_pagina: pageSize,
+    data_inicio: process.env.CONTA_AZUL_CONTRATOS_START_DATE?.trim() || range.start,
+    data_fim: process.env.CONTA_AZUL_CONTRATOS_END_DATE?.trim() || range.end,
+  }
+}
+
+function vendasQuery({ page, pageSize }: { page: number; pageSize: number }) {
+  const range = currentYearRange()
+  return {
+    pagina: page,
+    tamanho_pagina: pageSize,
+    data_inicio: process.env.CONTA_AZUL_VENDAS_START_DATE?.trim() || range.start,
+    data_fim: process.env.CONTA_AZUL_VENDAS_END_DATE?.trim() || range.end,
+  }
+}
+
+function notasFiscaisQuery({ page, pageSize }: { page: number; pageSize: number }) {
+  const range = recentFifteenDayRange()
+  return {
+    pagina: page,
+    tamanho_pagina: pageSize,
+    data_inicial: process.env.CONTA_AZUL_NOTAS_FISCAIS_START_DATE?.trim() || range.start,
+    data_final: process.env.CONTA_AZUL_NOTAS_FISCAIS_END_DATE?.trim() || range.end,
+  }
+}
+
+function notasFiscaisServicoQuery({ page, pageSize }: { page: number; pageSize: number }) {
+  const range = recentFifteenDayRange()
+  return {
+    pagina: page,
+    tamanho_pagina: Math.min(pageSize, 100),
+    data_competencia_de: process.env.CONTA_AZUL_NOTAS_FISCAIS_SERVICO_START_DATE?.trim() || range.start,
+    data_competencia_ate: process.env.CONTA_AZUL_NOTAS_FISCAIS_SERVICO_END_DATE?.trim() || range.end,
   }
 }
 
@@ -40,6 +138,14 @@ export const CONTA_AZUL_RESOURCE_CONFIGS: ContaAzulResourceConfig[] = [
     buildQuery: pageQuery,
   },
   {
+    resource: 'empresa_conectada',
+    path: envResourcePath('empresa_conectada', '/v1/pessoas/conta-conectada'),
+    responseMode: 'single',
+    itemKeys: [],
+    defaultPageSize: 1,
+    supportsIncremental: false,
+  },
+  {
     resource: 'produtos',
     path: envResourcePath('produtos', '/v1/produtos'),
     itemKeys: ['itens', 'items', 'data', 'content', 'produtos'],
@@ -48,8 +154,56 @@ export const CONTA_AZUL_RESOURCE_CONFIGS: ContaAzulResourceConfig[] = [
     buildQuery: pageQuery,
   },
   {
+    resource: 'produto_categorias',
+    path: envResourcePath('produto_categorias', '/v1/produtos/categorias'),
+    itemKeys: ['itens', 'items', 'data', 'content', 'categorias'],
+    defaultPageSize: DEFAULT_PAGE_SIZE,
+    supportsIncremental: false,
+    buildQuery: pageQuery,
+  },
+  {
+    resource: 'produto_cest',
+    path: envResourcePath('produto_cest', '/v1/produtos/cest'),
+    itemKeys: ['itens', 'items', 'data', 'content', 'cests'],
+    defaultPageSize: DEFAULT_PAGE_SIZE,
+    supportsIncremental: false,
+    buildQuery: pageQuery,
+  },
+  {
+    resource: 'produto_ecommerce_marcas',
+    path: envResourcePath('produto_ecommerce_marcas', '/v1/produtos/ecommerce-marcas'),
+    itemKeys: ['itens', 'items', 'data', 'content', 'marcas'],
+    defaultPageSize: DEFAULT_PAGE_SIZE,
+    supportsIncremental: false,
+    buildQuery: pageQuery,
+  },
+  {
+    resource: 'produto_ncm',
+    path: envResourcePath('produto_ncm', '/v1/produtos/ncm'),
+    itemKeys: ['itens', 'items', 'data', 'content', 'ncms'],
+    defaultPageSize: 1000,
+    supportsIncremental: false,
+    buildQuery: pageQuery,
+  },
+  {
+    resource: 'produto_unidades_medida',
+    path: envResourcePath('produto_unidades_medida', '/v1/produtos/unidades-medida'),
+    itemKeys: ['itens', 'items', 'data', 'content', 'unidades'],
+    defaultPageSize: DEFAULT_PAGE_SIZE,
+    supportsIncremental: false,
+    buildQuery: pageQuery,
+  },
+  {
     resource: 'categorias',
     path: envResourcePath('categorias', '/v1/categorias'),
+    itemKeys: ['itens', 'items', 'data', 'content', 'categorias'],
+    defaultPageSize: DEFAULT_PAGE_SIZE,
+    supportsIncremental: false,
+    buildQuery: pageQuery,
+  },
+  {
+    resource: 'categorias_dre',
+    path: envResourcePath('categorias_dre', '/v1/financeiro/categorias-dre'),
     itemKeys: ['itens', 'items', 'data', 'content', 'categorias'],
     defaultPageSize: DEFAULT_PAGE_SIZE,
     supportsIncremental: false,
@@ -66,20 +220,64 @@ export const CONTA_AZUL_RESOURCE_CONFIGS: ContaAzulResourceConfig[] = [
   {
     resource: 'contas_receber',
     path: envResourcePath('contas_receber', '/v1/financeiro/eventos-financeiros/contas-a-receber/buscar'),
-    method: 'POST',
     itemKeys: ['itens', 'items', 'data', 'content', 'eventos', 'parcelas'],
     defaultPageSize: DEFAULT_PAGE_SIZE,
     supportsIncremental: false,
-    buildBody: payableReceivableBody,
+    buildQuery: payableReceivableQuery,
   },
   {
     resource: 'contas_pagar',
     path: envResourcePath('contas_pagar', '/v1/financeiro/eventos-financeiros/contas-a-pagar/buscar'),
-    method: 'POST',
     itemKeys: ['itens', 'items', 'data', 'content', 'eventos', 'parcelas'],
     defaultPageSize: DEFAULT_PAGE_SIZE,
     supportsIncremental: false,
-    buildBody: payableReceivableBody,
+    buildQuery: payableReceivableQuery,
+  },
+  {
+    resource: 'contas_financeiras',
+    path: envResourcePath('contas_financeiras', '/v1/conta-financeira'),
+    itemKeys: ['itens', 'items', 'data', 'content', 'contas'],
+    defaultPageSize: DEFAULT_PAGE_SIZE,
+    supportsIncremental: false,
+    buildQuery: pageQuery,
+  },
+  {
+    resource: 'saldos_contas_financeiras',
+    path: envResourcePath('contas_financeiras', '/v1/conta-financeira'),
+    itemKeys: ['itens', 'items', 'data', 'content', 'contas'],
+    defaultPageSize: DEFAULT_PAGE_SIZE,
+    supportsIncremental: false,
+    buildQuery: pageQuery,
+    derivedFrom: {
+      resource: 'contas_financeiras',
+      path: envResourcePath('saldos_contas_financeiras', '/v1/conta-financeira/{id_conta_financeira}/saldo-atual'),
+      idKeys: ['id', 'uuid'],
+      responseMode: 'single',
+    },
+  },
+  {
+    resource: 'transferencias',
+    path: envResourcePath('transferencias', '/v1/financeiro/transferencias'),
+    itemKeys: ['itens', 'items', 'data', 'content', 'transferencias'],
+    defaultPageSize: DEFAULT_PAGE_SIZE,
+    supportsIncremental: false,
+    buildQuery: dateRangeQuery,
+  },
+  {
+    resource: 'eventos_financeiros_alteracoes',
+    path: envResourcePath('eventos_financeiros_alteracoes', '/v1/financeiro/eventos-financeiros/alteracoes'),
+    itemKeys: ['itens', 'items', 'data', 'content', 'eventos'],
+    defaultPageSize: DEFAULT_PAGE_SIZE,
+    supportsIncremental: false,
+    buildQuery: financialDateTimeQuery,
+  },
+  {
+    resource: 'saldos_iniciais',
+    path: envResourcePath('saldos_iniciais', '/v1/financeiro/eventos-financeiros/saldo-inicial'),
+    itemKeys: ['itens', 'items', 'data', 'content', 'saldos'],
+    defaultPageSize: DEFAULT_PAGE_SIZE,
+    supportsIncremental: false,
+    buildQuery: financialDateTimeQuery,
   },
   {
     resource: 'servicos',
@@ -90,28 +288,56 @@ export const CONTA_AZUL_RESOURCE_CONFIGS: ContaAzulResourceConfig[] = [
     buildQuery: pageQuery,
   },
   {
-    resource: 'vendas',
-    path: envResourcePath('vendas', '/v1/vendas'),
-    itemKeys: ['itens', 'items', 'data', 'content', 'vendas', 'sales'],
+    resource: 'vendedores',
+    path: envResourcePath('vendedores', '/v1/venda/vendedores'),
+    paginationMode: 'none',
+    itemKeys: ['itens', 'items', 'data', 'content', 'vendedores'],
     defaultPageSize: DEFAULT_PAGE_SIZE,
     supportsIncremental: false,
-    buildQuery: pageQuery,
+  },
+  {
+    resource: 'vendas',
+    path: envResourcePath('vendas', '/v1/venda/busca'),
+    itemKeys: ['itens', 'items', 'data', 'content', 'vendas'],
+    defaultPageSize: DEFAULT_PAGE_SIZE,
+    supportsIncremental: false,
+    buildQuery: vendasQuery,
+  },
+  {
+    resource: 'venda_detalhes',
+    path: envResourcePath('vendas', '/v1/venda/busca'),
+    itemKeys: ['itens', 'items', 'data', 'content', 'vendas'],
+    defaultPageSize: DEFAULT_PAGE_SIZE,
+    supportsIncremental: false,
+    buildQuery: vendasQuery,
+    derivedFrom: {
+      resource: 'vendas',
+      path: envResourcePath('venda_detalhes', '/v1/venda/{id}'),
+      idKeys: ['id', 'uuid', 'id_legado'],
+      responseMode: 'single',
+    },
   },
   {
     resource: 'itens_venda',
-    path: envResourcePath('itens_venda', '/v1/vendas/itens'),
-    itemKeys: ['itens', 'items', 'data', 'content', 'itens_venda', 'saleItems'],
+    path: envResourcePath('vendas', '/v1/venda/busca'),
+    itemKeys: ['itens', 'items', 'data', 'content', 'vendas'],
     defaultPageSize: DEFAULT_PAGE_SIZE,
     supportsIncremental: false,
-    buildQuery: pageQuery,
+    buildQuery: vendasQuery,
+    derivedFrom: {
+      resource: 'vendas',
+      path: envResourcePath('itens_venda', '/v1/venda/{id_venda}/itens'),
+      idKeys: ['id', 'uuid'],
+      itemKeys: ['itens', 'items', 'data', 'content'],
+    },
   },
   {
-    resource: 'parcelas_venda',
-    path: envResourcePath('parcelas_venda', '/v1/vendas/parcelas'),
-    itemKeys: ['itens', 'items', 'data', 'content', 'parcelas_venda', 'installments'],
-    defaultPageSize: DEFAULT_PAGE_SIZE,
+    resource: 'venda_proximo_numero',
+    path: envResourcePath('venda_proximo_numero', '/v1/venda/proximo-numero'),
+    responseMode: 'single',
+    itemKeys: [],
+    defaultPageSize: 1,
     supportsIncremental: false,
-    buildQuery: pageQuery,
   },
   {
     resource: 'contratos',
@@ -119,23 +345,15 @@ export const CONTA_AZUL_RESOURCE_CONFIGS: ContaAzulResourceConfig[] = [
     itemKeys: ['itens', 'items', 'data', 'content', 'contratos', 'contracts'],
     defaultPageSize: DEFAULT_PAGE_SIZE,
     supportsIncremental: false,
-    buildQuery: pageQuery,
+    buildQuery: contratosQuery,
   },
   {
-    resource: 'contas_bancarias',
-    path: envResourcePath('contas_bancarias', '/v1/contas-bancarias'),
-    itemKeys: ['itens', 'items', 'data', 'content', 'contas_bancarias', 'bankAccounts'],
-    defaultPageSize: DEFAULT_PAGE_SIZE,
+    resource: 'contrato_proximo_numero',
+    path: envResourcePath('contrato_proximo_numero', '/v1/contratos/proximo-numero'),
+    responseMode: 'single',
+    itemKeys: [],
+    defaultPageSize: 1,
     supportsIncremental: false,
-    buildQuery: pageQuery,
-  },
-  {
-    resource: 'vendedores',
-    path: envResourcePath('vendedores', '/v1/vendedores'),
-    itemKeys: ['itens', 'items', 'data', 'content', 'vendedores', 'sellers'],
-    defaultPageSize: DEFAULT_PAGE_SIZE,
-    supportsIncremental: false,
-    buildQuery: pageQuery,
   },
   {
     resource: 'notas_fiscais',
@@ -143,23 +361,15 @@ export const CONTA_AZUL_RESOURCE_CONFIGS: ContaAzulResourceConfig[] = [
     itemKeys: ['itens', 'items', 'data', 'content', 'notas_fiscais', 'invoices'],
     defaultPageSize: DEFAULT_PAGE_SIZE,
     supportsIncremental: false,
-    buildQuery: pageQuery,
+    buildQuery: notasFiscaisQuery,
   },
   {
-    resource: 'estoque',
-    path: envResourcePath('estoque', '/v1/estoque'),
-    itemKeys: ['itens', 'items', 'data', 'content', 'estoque', 'saldos', 'stock'],
+    resource: 'notas_fiscais_servico',
+    path: envResourcePath('notas_fiscais_servico', '/v1/notas-fiscais-servico'),
+    itemKeys: ['itens', 'items', 'data', 'content', 'notas_fiscais'],
     defaultPageSize: DEFAULT_PAGE_SIZE,
     supportsIncremental: false,
-    buildQuery: pageQuery,
-  },
-  {
-    resource: 'movimentacoes_estoque',
-    path: envResourcePath('movimentacoes_estoque', '/v1/estoque/movimentacoes'),
-    itemKeys: ['itens', 'items', 'data', 'content', 'movimentacoes_estoque', 'movements'],
-    defaultPageSize: DEFAULT_PAGE_SIZE,
-    supportsIncremental: false,
-    buildQuery: pageQuery,
+    buildQuery: notasFiscaisServicoQuery,
   },
 ]
 
