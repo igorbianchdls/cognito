@@ -59,7 +59,16 @@ export function makeErpConfigs(
       orderBy: 'date_field',
     },
     {
+      resource: 'centros-custo',
+    },
+    {
       resource: 'produtos',
+    },
+    {
+      resource: 'servicos',
+    },
+    {
+      resource: 'contratos',
     },
     {
       resource: 'estoque-atual',

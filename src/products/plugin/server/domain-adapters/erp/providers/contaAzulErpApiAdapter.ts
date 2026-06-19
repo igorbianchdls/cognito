@@ -13,13 +13,32 @@ import type {
 } from '@/products/plugin/server/domain-adapters/shared/connectedProviderApiAdapter'
 
 type JsonRecord = Record<string, unknown>
+type ContaAzulActionResource =
+  | 'clientes'
+  | 'fornecedores'
+  | 'contas-a-pagar'
+  | 'contas-a-receber'
+  | 'pedidos-venda'
+  | 'centros-custo'
+  | 'produtos'
+  | 'servicos'
+  | 'contratos'
+type ContaAzulFinancialResource = 'contas-a-pagar' | 'contas-a-receber'
+type ContaAzulPersonResource = 'clientes' | 'fornecedores'
 
 const SUPPORTED_ACTIONS: Partial<Record<ConnectedErpResource, ConnectedErpProviderAction[]>> = {
-  'contas-a-pagar': ['criar', 'atualizar'],
-  'contas-a-receber': ['criar', 'atualizar'],
+  clientes: ['criar', 'atualizar'],
+  fornecedores: ['criar', 'atualizar'],
+  'contas-a-pagar': ['criar', 'atualizar', 'baixar'],
+  'contas-a-receber': ['criar', 'atualizar', 'baixar'],
+  'pedidos-venda': ['criar', 'atualizar', 'cancelar'],
+  'centros-custo': ['criar'],
+  produtos: ['criar'],
+  servicos: ['criar'],
+  contratos: ['criar'],
 }
 
-const RESOURCE_PATH_PART: Record<'contas-a-pagar' | 'contas-a-receber', string> = {
+const RESOURCE_PATH_PART: Record<ContaAzulFinancialResource, string> = {
   'contas-a-pagar': 'contas-a-pagar',
   'contas-a-receber': 'contas-a-receber',
 }
@@ -53,18 +72,34 @@ async function loadCredentials(input: {
   return refreshed || credentials
 }
 
-function envPath(resource: 'contas-a-pagar' | 'contas-a-receber', action: ConnectedErpProviderAction) {
+function envPath(resource: ContaAzulActionResource, action: ConnectedErpProviderAction) {
   const envKey = `CONTA_AZUL_ACTION_${resource.replace(/-/g, '_').toUpperCase()}_${action.toUpperCase()}_PATH`
   const configured = process.env[envKey]?.trim()
   if (configured) return configured
 
+  if (resource === 'pedidos-venda') {
+    if (action === 'criar') return '/v1/venda'
+    if (action === 'atualizar') return '/v1/venda/{id}'
+    if (action === 'cancelar') return '/v1/venda/exclusao-lote'
+    return '/v1/venda'
+  }
+  if (resource === 'clientes' || resource === 'fornecedores') {
+    if (action === 'atualizar') return '/v1/pessoas/{id}'
+    return '/v1/pessoas'
+  }
+  if (resource === 'centros-custo') return '/v1/centro-de-custo'
+  if (resource === 'produtos') return '/v1/produtos'
+  if (resource === 'servicos') return '/v1/servicos'
+  if (resource === 'contratos') return '/v1/contratos'
+
   const base = `/v1/financeiro/eventos-financeiros/${RESOURCE_PATH_PART[resource]}`
   if (action === 'criar') return base
   if (action === 'atualizar') return '/v1/financeiro/eventos-financeiros/parcelas/{id}'
+  if (action === 'baixar') return '/v1/financeiro/eventos-financeiros/parcelas/{id}/baixa'
   return base
 }
 
-function pathFor(resource: 'contas-a-pagar' | 'contas-a-receber', action: ConnectedErpProviderAction, id?: string | null) {
+function pathFor(resource: ContaAzulActionResource, action: ConnectedErpProviderAction, id?: string | null) {
   const path = envPath(resource, action)
   if (path.includes('{id}')) {
     if (!id) throw new Error(`id e obrigatorio para ${resource}/${action}.`)
@@ -73,7 +108,8 @@ function pathFor(resource: 'contas-a-pagar' | 'contas-a-receber', action: Connec
   return path
 }
 
-function methodFor(action: ConnectedErpProviderAction) {
+function methodFor(resource: ContaAzulActionResource, action: ConnectedErpProviderAction) {
+  if (resource === 'pedidos-venda' && action === 'atualizar') return 'PUT' as const
   if (action === 'atualizar') return 'PATCH' as const
   return 'POST' as const
 }
@@ -97,6 +133,12 @@ function firstNumber(payload: JsonRecord, keys: string[]) {
     if (Number.isFinite(parsed)) return parsed
   }
   return undefined
+}
+
+function firstInteger(payload: JsonRecord, keys: string[]) {
+  const value = firstNumber(payload, keys)
+  if (value === undefined) return undefined
+  return Math.trunc(value)
 }
 
 function firstBoolean(payload: JsonRecord, keys: string[]) {
@@ -187,7 +229,7 @@ function buildRateio(payload: JsonRecord, valor: number) {
   ]
 }
 
-function buildCreatePayload(resource: 'contas-a-pagar' | 'contas-a-receber', payload: JsonRecord) {
+function buildCreatePayload(resource: ContaAzulFinancialResource, payload: JsonRecord) {
   const valor = firstNumber(payload, ['valor', 'total', 'valor_total'])
   const dataVencimento = firstText(payload, ['data_vencimento', 'vencimento', 'due_date']) || todayIsoDate()
   const dataCompetencia = firstText(payload, ['data_competencia', 'competencia', 'accrual_date']) || dataVencimento
@@ -277,14 +319,373 @@ function buildUpdatePayload(payload: JsonRecord) {
   }
 }
 
+function buildSettlementPayload(payload: JsonRecord) {
+  const explicit = optionalRecord(payload.baixa)
+    || optionalRecord(payload.liquidacao)
+    || optionalRecord(payload.pagamento)
+    || optionalRecord(payload.recebimento)
+  if (explicit) return explicit
+
+  const valor = firstNumber(payload, ['valor', 'total', 'valor_total', 'valor_pago', 'valor_recebido'])
+  const dataPagamento = firstText(payload, [
+    'data_pagamento',
+    'data_recebimento',
+    'data_baixa',
+    'pagamento_em',
+    'recebimento_em',
+    'payment_date',
+  ]) || todayIsoDate()
+  const idContaFinanceira = firstText(payload, [
+    'id_conta_financeira',
+    'conta_financeira_id',
+    'conta_financeira',
+    'financial_account_id',
+  ])
+  const metodoPagamento = firstText(payload, ['metodo_pagamento', 'forma_pagamento', 'payment_method'])
+  const nsu = firstText(payload, ['nsu'])
+  const observacao = firstText(payload, ['observacao', 'nota', 'note'])
+  const composicaoValor = financialValueComposition(payload, valor)
+
+  requireFields({
+    data_pagamento: dataPagamento,
+    ...(valor === undefined ? {} : { composicao_valor: composicaoValor }),
+  })
+
+  return {
+    data_pagamento: dataPagamento,
+    ...(valor !== undefined ? { valor } : {}),
+    ...(composicaoValor !== undefined ? { composicao_valor: composicaoValor } : {}),
+    ...(idContaFinanceira !== undefined ? { id_conta_financeira: idContaFinanceira } : {}),
+    ...(metodoPagamento !== undefined ? { metodo_pagamento: metodoPagamento } : {}),
+    ...(nsu !== undefined ? { nsu } : {}),
+    ...(observacao !== undefined ? { observacao } : {}),
+  }
+}
+
 function normalizeFinancialPayload(
-  resource: 'contas-a-pagar' | 'contas-a-receber',
+  resource: ContaAzulFinancialResource,
   action: ConnectedErpProviderAction,
   payload: JsonRecord,
 ) {
   if (action === 'criar') return buildCreatePayload(resource, payload)
   if (action === 'atualizar') return buildUpdatePayload(payload)
+  if (action === 'baixar') return buildSettlementPayload(payload)
   throw new Error(`Conta Azul nao suporta ${resource}/${action} neste adapter.`)
+}
+
+function saleItems(payload: JsonRecord) {
+  const items = Array.isArray(payload.itens)
+    ? payload.itens
+    : Array.isArray(payload.items)
+      ? payload.items
+      : []
+
+  return items
+    .filter(isRecord)
+    .map((item) => {
+      const id = firstText(item, ['id', 'item_id', 'produto_id', 'servico_id', 'product_id', 'service_id'])
+      const quantidade = firstNumber(item, ['quantidade', 'quantity', 'qtd']) ?? 1
+      const valor = firstNumber(item, ['valor', 'preco', 'price', 'unit_price'])
+      const descricao = firstText(item, ['descricao', 'description'])
+      const valorCusto = firstNumber(item, ['valor_custo', 'cost'])
+
+      return {
+        ...(descricao ? { descricao } : {}),
+        quantidade,
+        valor,
+        id,
+        ...(valorCusto === undefined ? {} : { valor_custo: valorCusto }),
+        ...(Array.isArray(item.itens_kit) ? { itens_kit: item.itens_kit } : {}),
+      }
+    })
+}
+
+function saleTotal(payload: JsonRecord, items: JsonRecord[]) {
+  const explicit = firstNumber(payload, ['valor', 'total', 'valor_total'])
+  if (explicit !== undefined) return explicit
+  const total = items.reduce((sum, item) => {
+    const quantity = Number(item.quantidade)
+    const value = Number(item.valor)
+    return Number.isFinite(quantity) && Number.isFinite(value) ? sum + quantity * value : sum
+  }, 0)
+  return total > 0 ? total : undefined
+}
+
+function salePaymentCondition(payload: JsonRecord, total?: number, dueDate?: string) {
+  const explicit = optionalRecord(payload.condicao_pagamento)
+  if (explicit) return explicit
+  if (total === undefined) return undefined
+
+  const paymentOption = firstText(payload, ['opcao_condicao_pagamento', 'payment_terms']) || 'À vista'
+  const paymentType = firstText(payload, ['tipo_pagamento', 'payment_method'])
+  const financialAccountId = firstText(payload, [
+    'id_conta_financeira',
+    'conta_financeira_id',
+    'conta_financeira',
+    'financial_account_id',
+  ])
+  const nsu = firstText(payload, ['nsu'])
+
+  return {
+    ...(paymentType ? { tipo_pagamento: paymentType } : {}),
+    ...(financialAccountId ? { id_conta_financeira: financialAccountId } : {}),
+    opcao_condicao_pagamento: paymentOption,
+    ...(nsu ? { nsu } : {}),
+    parcelas: [
+      {
+        data_vencimento: dueDate || todayIsoDate(),
+        valor: total,
+        ...(firstText(payload, ['descricao_parcela', 'installment_description'])
+          ? { descricao: firstText(payload, ['descricao_parcela', 'installment_description']) }
+          : {}),
+      },
+    ],
+  }
+}
+
+function buildSalePayload(payload: JsonRecord, numero: number | undefined, update: boolean) {
+  const idCliente = firstText(payload, ['id_cliente', 'cliente_id', 'customer_id'])
+  const items = saleItems(payload)
+  const total = saleTotal(payload, items)
+  const dataVenda = firstText(payload, ['data_venda', 'data', 'sale_date']) || todayIsoDate()
+  const dataVencimento = firstText(payload, ['data_vencimento', 'vencimento', 'due_date']) || dataVenda
+  const condicaoPagamento = salePaymentCondition(payload, total, dataVencimento)
+  const saleNumber = firstInteger(payload, ['numero', 'number']) ?? numero
+  const situacao = firstText(payload, ['situacao', 'status']) || 'EM_ANDAMENTO'
+  const versao = firstInteger(payload, ['versao', 'version'])
+
+  requireFields({
+    ...(update ? { versao } : {}),
+    id_cliente: idCliente,
+    numero: saleNumber,
+    situacao,
+    data_venda: dataVenda,
+    itens: items,
+    condicao_pagamento: condicaoPagamento,
+  })
+  for (let index = 0; index < items.length; index += 1) {
+    requireFields({
+      [`itens[${index}].id`]: items[index].id,
+      [`itens[${index}].quantidade`]: items[index].quantidade,
+      [`itens[${index}].valor`]: items[index].valor,
+    })
+  }
+
+  return {
+    ...(update ? { versao } : {}),
+    id_cliente: idCliente,
+    numero: saleNumber,
+    situacao,
+    data_venda: dataVenda,
+    ...(firstText(payload, ['id_categoria', 'categoria_id', 'category_id'])
+      ? { id_categoria: firstText(payload, ['id_categoria', 'categoria_id', 'category_id']) }
+      : {}),
+    ...(firstText(payload, ['id_centro_custo', 'centro_custo_id', 'cost_center_id'])
+      ? { id_centro_custo: firstText(payload, ['id_centro_custo', 'centro_custo_id', 'cost_center_id']) }
+      : {}),
+    ...(firstText(payload, ['id_vendedor', 'vendedor_id', 'seller_id'])
+      ? { id_vendedor: firstText(payload, ['id_vendedor', 'vendedor_id', 'seller_id']) }
+      : {}),
+    ...(firstText(payload, ['observacoes', 'observacao', 'notes'])
+      ? { observacoes: firstText(payload, ['observacoes', 'observacao', 'notes']) }
+      : {}),
+    ...(firstText(payload, ['observacoes_pagamento', 'payment_notes'])
+      ? { observacoes_pagamento: firstText(payload, ['observacoes_pagamento', 'payment_notes']) }
+      : {}),
+    ...(firstText(payload, ['id_natureza_operacao', 'natureza_operacao_id'])
+      ? { id_natureza_operacao: firstText(payload, ['id_natureza_operacao', 'natureza_operacao_id']) }
+      : {}),
+    itens: items,
+    ...(optionalRecord(payload.composicao_de_valor) ? { composicao_de_valor: payload.composicao_de_valor } : {}),
+    condicao_pagamento: condicaoPagamento,
+  }
+}
+
+function buildCancelSalePayload(id: string | null | undefined, payload: JsonRecord) {
+  const ids = Array.isArray(payload.ids) ? payload.ids : id ? [id] : []
+  const normalizedIds = ids.map((value) => String(value).trim()).filter(Boolean)
+  requireFields({ ids: normalizedIds })
+  return { ids: normalizedIds.slice(0, 10) }
+}
+
+function extractSaleNextNumber(payload: unknown) {
+  const direct = Number(payload)
+  if (Number.isFinite(direct) && direct > 0) return Math.trunc(direct)
+  if (!isRecord(payload)) return undefined
+  return firstInteger(payload, ['numero', 'next_number', 'proximo_numero', 'proximoNumero'])
+    ?? firstInteger(isRecord(payload.data) ? payload.data : {}, ['numero', 'next_number', 'proximo_numero', 'proximoNumero'])
+}
+
+function buildCostCenterPayload(payload: JsonRecord) {
+  const nome = firstText(payload, ['nome', 'name'])
+  const codigo = firstText(payload, ['codigo', 'code'])
+  requireFields({ nome })
+  return {
+    ...(codigo ? { codigo } : {}),
+    nome,
+  }
+}
+
+function buildProductPayload(payload: JsonRecord) {
+  const nome = firstText(payload, ['nome', 'name', 'descricao'])
+  const codigo = firstText(payload, ['codigo', 'code', 'sku'])
+  const descricao = firstText(payload, ['descricao', 'description'])
+  const valorVenda = firstNumber(payload, ['valor_venda', 'preco_venda', 'preco', 'valor', 'price'])
+  const custoMedio = firstNumber(payload, ['custo_medio', 'custo', 'cost'])
+  const unidadeMedida = firstText(payload, ['unidade_medida', 'unidade', 'unit'])
+  const categoriaId = firstText(payload, ['id_categoria', 'categoria_id', 'category_id'])
+  const ativo = firstBoolean(payload, ['ativo', 'active'])
+
+  requireFields({ nome })
+
+  return {
+    nome,
+    ...(codigo ? { codigo } : {}),
+    ...(descricao ? { descricao } : {}),
+    ...(valorVenda === undefined ? {} : { valor_venda: valorVenda }),
+    ...(custoMedio === undefined ? {} : { custo_medio: custoMedio }),
+    ...(unidadeMedida ? { unidade_medida: unidadeMedida } : {}),
+    ...(categoriaId ? { id_categoria: categoriaId } : {}),
+    ...(firstText(payload, ['ean']) ? { ean: firstText(payload, ['ean']) } : {}),
+    ...(firstText(payload, ['ncm']) ? { ncm: firstText(payload, ['ncm']) } : {}),
+    ...(firstText(payload, ['cest']) ? { cest: firstText(payload, ['cest']) } : {}),
+    ...(ativo === undefined ? {} : { ativo }),
+    ...(optionalRecord(payload.estoque) ? { estoque: payload.estoque } : {}),
+    ...(optionalRecord(payload.impostos) ? { impostos: payload.impostos } : {}),
+  }
+}
+
+function buildServicePayload(payload: JsonRecord) {
+  const nome = firstText(payload, ['nome', 'name', 'descricao'])
+  const codigo = firstText(payload, ['codigo', 'code'])
+  const descricao = firstText(payload, ['descricao', 'description'])
+  const valor = firstNumber(payload, ['valor', 'valor_venda', 'preco', 'price'])
+  const categoriaId = firstText(payload, ['id_categoria', 'categoria_id', 'category_id'])
+  const ativo = firstBoolean(payload, ['ativo', 'active'])
+
+  requireFields({ nome, valor })
+
+  return {
+    nome,
+    valor,
+    ...(codigo ? { codigo } : {}),
+    ...(descricao ? { descricao } : {}),
+    ...(categoriaId ? { id_categoria: categoriaId } : {}),
+    ...(firstText(payload, ['codigo_servico_municipal', 'service_code'])
+      ? { codigo_servico_municipal: firstText(payload, ['codigo_servico_municipal', 'service_code']) }
+      : {}),
+    ...(ativo === undefined ? {} : { ativo }),
+    ...(optionalRecord(payload.impostos) ? { impostos: payload.impostos } : {}),
+  }
+}
+
+function contractTerms(payload: JsonRecord, numero: number | undefined) {
+  const explicit = optionalRecord(payload.termos)
+  if (explicit) return explicit
+
+  const tipoFrequencia = firstText(payload, ['tipo_frequencia', 'frequencia', 'frequency'])
+  const tipoExpiracao = firstText(payload, ['tipo_expiracao', 'expiracao', 'expiration_type'])
+  const dataInicio = firstText(payload, ['data_inicio', 'inicio', 'start_date'])
+  const dataFim = firstText(payload, ['data_fim', 'fim', 'end_date'])
+  const numeroContrato = firstInteger(payload, ['numero', 'number']) ?? numero
+
+  requireFields({
+    tipo_frequencia: tipoFrequencia,
+    tipo_expiracao: tipoExpiracao,
+    data_inicio: dataInicio,
+    data_fim: dataFim,
+    numero: numeroContrato,
+  })
+
+  return {
+    tipo_frequencia: tipoFrequencia,
+    tipo_expiracao: tipoExpiracao,
+    data_inicio: dataInicio,
+    data_fim: dataFim,
+    numero: numeroContrato,
+  }
+}
+
+function contractPaymentCondition(payload: JsonRecord) {
+  const explicit = optionalRecord(payload.condicao_pagamento)
+  if (explicit) return explicit
+
+  const diaVencimento = firstInteger(payload, ['dia_vencimento', 'due_day'])
+  const primeiraDataVencimento = firstText(payload, [
+    'primeira_data_vencimento',
+    'primeiro_vencimento',
+    'data_primeiro_vencimento',
+    'first_due_date',
+  ])
+
+  requireFields({
+    dia_vencimento: diaVencimento,
+    primeira_data_vencimento: primeiraDataVencimento,
+  })
+
+  return {
+    dia_vencimento: diaVencimento,
+    primeira_data_vencimento: primeiraDataVencimento,
+  }
+}
+
+function buildContractPayload(payload: JsonRecord, numero: number | undefined) {
+  const idCliente = firstText(payload, ['id_cliente', 'cliente_id', 'customer_id'])
+  const items = saleItems(payload)
+  const termos = contractTerms(payload, numero)
+  const condicaoPagamento = contractPaymentCondition(payload)
+
+  requireFields({
+    id_cliente: idCliente,
+    itens: items,
+    termos,
+    condicao_pagamento: condicaoPagamento,
+  })
+  for (let index = 0; index < items.length; index += 1) {
+    requireFields({
+      [`itens[${index}].id`]: items[index].id,
+      [`itens[${index}].quantidade`]: items[index].quantidade,
+      [`itens[${index}].valor`]: items[index].valor,
+    })
+  }
+
+  return {
+    id_cliente: idCliente,
+    itens: items,
+    condicao_pagamento: condicaoPagamento,
+    termos,
+    ...(firstText(payload, ['observacoes', 'observacao', 'notes'])
+      ? { observacoes: firstText(payload, ['observacoes', 'observacao', 'notes']) }
+      : {}),
+  }
+}
+
+function personProfileFor(resource: ContaAzulPersonResource) {
+  return resource === 'clientes' ? 'Cliente' : 'Fornecedor'
+}
+
+function buildPersonPayload(resource: ContaAzulPersonResource, payload: JsonRecord) {
+  const nome = firstText(payload, ['nome', 'name', 'razao_social'])
+  const tipoPessoa = firstText(payload, ['tipo_pessoa', 'tipoPessoa', 'tipo']) || 'Física'
+  const perfil = firstText(payload, ['tipo_perfil', 'perfil', 'profile']) || personProfileFor(resource)
+  const email = firstText(payload, ['email'])
+  const telefone = firstText(payload, ['telefone', 'phone'])
+  const documento = firstText(payload, ['documento', 'cpf_cnpj', 'cpfCnpj', 'tax_id'])
+  const ativo = firstBoolean(payload, ['ativo', 'active'])
+  const estrangeiro = firstBoolean(payload, ['estrangeiro', 'foreign'])
+
+  requireFields({ nome, tipo_pessoa: tipoPessoa })
+
+  return {
+    nome,
+    tipo_pessoa: tipoPessoa,
+    perfis: Array.isArray(payload.perfis) ? payload.perfis : [{ tipo_perfil: perfil }],
+    ...(email ? { email } : {}),
+    ...(telefone ? { telefone } : {}),
+    ...(documento ? { documento } : {}),
+    ...(ativo === undefined ? {} : { ativo }),
+    ...(estrangeiro === undefined ? {} : { estrangeiro }),
+  }
 }
 
 function extractId(payload: unknown) {
@@ -320,20 +721,55 @@ function extractStatus(payload: unknown) {
   return null
 }
 
-async function executeFinancialAction(
+async function executeContaAzulAction(
   input: ConnectedProviderActionInput<ConnectedErpResource, ConnectedErpProviderAction>,
 ): Promise<ConnectedProviderActionResult> {
-  const resource = input.resource as 'contas-a-pagar' | 'contas-a-receber'
+  const resource = input.resource as ContaAzulActionResource
   const credentials = await loadCredentials({
     tenantId: input.tenantId,
     connection: input.connection,
   })
   const client = createContaAzulClient(credentials)
-  const payload = normalizeFinancialPayload(resource, input.action, input.payload || {})
+  let payload: JsonRecord
+
+  if (resource === 'pedidos-venda') {
+    if (input.action === 'cancelar') {
+      payload = buildCancelSalePayload(input.id, input.payload || {})
+    } else {
+      const nextNumber = firstInteger(input.payload || {}, ['numero', 'number']) === undefined && input.action === 'criar'
+        ? extractSaleNextNumber(await client.requestPath({
+          resource,
+          path: '/v1/venda/proximo-numero',
+          method: 'GET',
+        }))
+        : undefined
+      payload = buildSalePayload(input.payload || {}, nextNumber, input.action === 'atualizar')
+    }
+  } else if (resource === 'clientes' || resource === 'fornecedores') {
+    payload = buildPersonPayload(resource, input.payload || {})
+  } else if (resource === 'centros-custo') {
+    payload = buildCostCenterPayload(input.payload || {})
+  } else if (resource === 'produtos') {
+    payload = buildProductPayload(input.payload || {})
+  } else if (resource === 'servicos') {
+    payload = buildServicePayload(input.payload || {})
+  } else if (resource === 'contratos') {
+    const nextNumber = firstInteger(input.payload || {}, ['numero', 'number']) === undefined
+      ? extractSaleNextNumber(await client.requestPath({
+        resource,
+        path: '/v1/contratos/proximo-numero',
+        method: 'GET',
+      }))
+      : undefined
+    payload = buildContractPayload(input.payload || {}, nextNumber)
+  } else {
+    payload = normalizeFinancialPayload(resource, input.action, input.payload || {})
+  }
+
   const response = await client.requestPath({
     resource,
     path: pathFor(resource, input.action, input.id),
-    method: methodFor(input.action),
+    method: methodFor(resource, input.action),
     body: payload,
   })
 
@@ -370,6 +806,6 @@ export const contaAzulErpApiAdapter: ErpApiAdapter = {
         id: input.id || null,
       }
     }
-    return executeFinancialAction(input)
+    return executeContaAzulAction(input)
   },
 }

@@ -35,6 +35,19 @@ const ERP_READ_RESOURCES = [
   'estoque-atual',
 ] as const
 
+const CONTA_AZUL_ERP_READ_RESOURCES = [
+  'clientes',
+  'fornecedores',
+  'produtos',
+  'servicos',
+  'contas-a-receber',
+  'contas-a-pagar',
+  'pedidos-venda',
+  'centros-custo',
+  'contratos',
+  'estoque-atual',
+] as const
+
 const ERP_ACTIONS_BY_RESOURCE: Record<string, string[]> = {
   clientes: ['criar', 'atualizar', 'alterar_status'],
   fornecedores: ['criar', 'atualizar', 'alterar_status'],
@@ -46,8 +59,15 @@ const ERP_ACTIONS_BY_RESOURCE: Record<string, string[]> = {
 }
 
 const CONTA_AZUL_ERP_ACTIONS_BY_RESOURCE: Record<string, string[]> = {
-  'contas-a-receber': ['criar', 'atualizar'],
-  'contas-a-pagar': ['criar', 'atualizar'],
+  clientes: ['criar', 'atualizar'],
+  fornecedores: ['criar', 'atualizar'],
+  'contas-a-receber': ['criar', 'atualizar', 'baixar'],
+  'contas-a-pagar': ['criar', 'atualizar', 'baixar'],
+  'pedidos-venda': ['criar', 'atualizar', 'cancelar'],
+  'centros-custo': ['criar'],
+  produtos: ['criar'],
+  servicos: ['criar'],
+  contratos: ['criar'],
 }
 
 const CRM_READ_RESOURCES = ['contas', 'contatos', 'leads', 'oportunidades', 'atividades'] as const
@@ -167,7 +187,7 @@ export const INTEGRATION_PLUGIN_PROVIDER_CAPABILITIES: IntegrationProviderPlugin
     credentialMode: 'oauth2',
     scopeReviewStatus: 'planned',
     scopeHints: ERP_SCOPE_HINTS.conta_azul,
-    resources: resourceCapabilities(ERP_READ_RESOURCES, CONTA_AZUL_ERP_ACTIONS_BY_RESOURCE),
+    resources: resourceCapabilities(CONTA_AZUL_ERP_READ_RESOURCES, CONTA_AZUL_ERP_ACTIONS_BY_RESOURCE),
   },
   {
     provider: 'bling',

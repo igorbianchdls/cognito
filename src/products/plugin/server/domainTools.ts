@@ -539,7 +539,7 @@ const CRM_SCHEMA = createCrudSchema(
 
 const CONNECTED_ERP_SCHEMA = createCrudSchema(
   [...CONNECTED_ERP_RESOURCES],
-  'Resource canonico de ERP conectado via /integracoes. Use clientes, fornecedores, contas-a-receber, contas-a-pagar, pedidos-venda, produtos ou estoque-atual.',
+  'Resource canonico de ERP conectado via /integracoes. Use clientes, fornecedores, contas-a-receber, contas-a-pagar, pedidos-venda, produtos, servicos, contratos ou estoque-atual.',
   ['listar', 'ler', 'listar_live', 'ler_live'] satisfies ConnectedReadAction[],
 )
 
@@ -550,8 +550,15 @@ const CONNECTED_CRM_SCHEMA = createCrudSchema(
 )
 
 const CONNECTED_ERP_ACTIONS_ALLOWED_RESOURCES = [
+  'clientes',
+  'fornecedores',
   'contas-a-receber',
   'contas-a-pagar',
+  'pedidos-venda',
+  'centros-custo',
+  'produtos',
+  'servicos',
+  'contratos',
 ] as const
 
 const CONNECTED_CRM_ACTIONS_ALLOWED_RESOURCES = [
@@ -581,7 +588,7 @@ const CONNECTED_ERP_ACTIONS_SCHEMA = {
     },
     id: {
       type: 'string',
-      description: 'ID externo ou ID do provider. Obrigatorio para atualizar, baixar, cancelar, estornar, reabrir e alterar_status.',
+      description: 'ID externo ou ID do provider. Obrigatorio para atualizar, baixar e cancelar.',
     },
     payload: {
       type: 'object',
@@ -1061,7 +1068,7 @@ const CONNECTED_ERP_ACTIONS_DOMAIN_TOOL_DEFINITION = {
   name: PLUGIN_DOMAIN_TOOL_NAMES.connectedErpActions,
   title: 'Connected ERP actions',
   description:
-    'Executa acoes transacionais diretamente na API do ERP conectado em /integracoes. Use para criar, atualizar, baixar, cancelar, estornar, reabrir e alterar status. dry_run=true por padrao; dry_run=false exige confirmacao e adapter provider implementado.',
+    'Executa acoes transacionais diretamente na API do ERP conectado em /integracoes. Use para criar, atualizar, baixar e cancelar quando o provider/resource suportar. dry_run=true por padrao; dry_run=false exige confirmacao e adapter provider implementado.',
   inputSchema: CONNECTED_ERP_ACTIONS_SCHEMA,
   outputSchema: ERP_ACOES_OUTPUT_SCHEMA,
   securitySchemes: READ_SECURITY_SCHEMES,
@@ -4387,8 +4394,15 @@ async function callConnectedCrm(args: unknown, context: CognitoMcpServerContext)
 }
 
 const CONNECTED_ERP_ACTIONS_BY_RESOURCE: Record<string, readonly ConnectedErpAction[]> = {
-  'contas-a-receber': ['criar', 'atualizar', 'baixar', 'cancelar'],
-  'contas-a-pagar': ['criar', 'atualizar', 'baixar', 'cancelar'],
+  clientes: ['criar', 'atualizar'],
+  fornecedores: ['criar', 'atualizar'],
+  'contas-a-receber': ['criar', 'atualizar', 'baixar'],
+  'contas-a-pagar': ['criar', 'atualizar', 'baixar'],
+  'pedidos-venda': ['criar', 'atualizar', 'cancelar'],
+  'centros-custo': ['criar'],
+  produtos: ['criar'],
+  servicos: ['criar'],
+  contratos: ['criar'],
 }
 
 const CONNECTED_CRM_ACTIONS_BY_RESOURCE: Record<string, readonly ConnectedCrmAction[]> = {
@@ -4439,6 +4453,9 @@ const CONNECTED_ERP_PROVIDER_RESOURCE_ALIASES: Record<string, Record<string, str
     'contas-a-receber': 'contas_receber',
     'contas-a-pagar': 'contas_pagar',
     'pedidos-venda': 'vendas',
+    'centros-custo': 'centros_custo',
+    servicos: 'servicos',
+    contratos: 'contratos',
     'estoque-atual': 'estoque',
   },
   omie: {
@@ -4488,7 +4505,7 @@ function getConnectedPermissionResourceAliases(input: {
 }
 
 function hasConnectedResourceGrant(resources: string[], aliases: string[]) {
-  return resources.includes('*') || aliases.some((alias) => resources.includes(alias)) || resources.length > 0
+  return resources.includes('*') || aliases.some((alias) => resources.includes(alias))
 }
 
 function inferActionPermissionKind(action: string): 'write' | 'destructive' {

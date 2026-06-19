@@ -9,6 +9,9 @@ export const contaAzulErpAdapter = createBigQueryErpAdapter('conta_azul', makeEr
   'contas-a-receber': 'contas_receber',
   'contas-a-pagar': 'contas_pagar',
   'pedidos-venda': 'vendas',
+  'centros-custo': 'centros_custo',
   produtos: 'produtos',
+  servicos: 'servicos',
+  contratos: 'contratos',
   'estoque-atual': 'estoque',
 }))

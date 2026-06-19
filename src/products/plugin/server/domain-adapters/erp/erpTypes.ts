@@ -11,7 +11,10 @@ export const CONNECTED_ERP_RESOURCES = [
   'contas-a-receber',
   'contas-a-pagar',
   'pedidos-venda',
+  'centros-custo',
   'produtos',
+  'servicos',
+  'contratos',
   'estoque-atual',
 ] as const
 
