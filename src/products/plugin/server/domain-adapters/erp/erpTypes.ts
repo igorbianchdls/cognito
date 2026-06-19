@@ -25,6 +25,7 @@ export type ConnectedErpProviderAction =
   | 'atualizar'
   | 'baixar'
   | 'cancelar'
+  | 'deletar'
   | 'estornar'
   | 'reabrir'
   | 'alterar_status'

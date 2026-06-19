@@ -33,9 +33,9 @@ const SUPPORTED_ACTIONS: Partial<Record<ConnectedErpResource, ConnectedErpProvid
   'contas-a-receber': ['criar', 'atualizar', 'baixar'],
   'pedidos-venda': ['criar', 'atualizar', 'cancelar'],
   'centros-custo': ['criar'],
-  produtos: ['criar'],
-  servicos: ['criar'],
-  contratos: ['criar'],
+  produtos: ['criar', 'atualizar', 'deletar'],
+  servicos: ['criar', 'atualizar'],
+  contratos: ['criar', 'deletar'],
 }
 
 const RESOURCE_PATH_PART: Record<ContaAzulFinancialResource, string> = {
@@ -88,9 +88,9 @@ function envPath(resource: ContaAzulActionResource, action: ConnectedErpProvider
     return '/v1/pessoas'
   }
   if (resource === 'centros-custo') return '/v1/centro-de-custo'
-  if (resource === 'produtos') return '/v1/produtos'
-  if (resource === 'servicos') return '/v1/servicos'
-  if (resource === 'contratos') return '/v1/contratos'
+  if (resource === 'produtos') return action === 'criar' ? '/v1/produtos' : '/v1/produtos/{id}'
+  if (resource === 'servicos') return action === 'criar' ? '/v1/servicos' : '/v1/servicos/{id}'
+  if (resource === 'contratos') return action === 'criar' ? '/v1/contratos' : '/v1/contratos/{id}'
 
   const base = `/v1/financeiro/eventos-financeiros/${RESOURCE_PATH_PART[resource]}`
   if (action === 'criar') return base
@@ -109,6 +109,7 @@ function pathFor(resource: ContaAzulActionResource, action: ConnectedErpProvider
 }
 
 function methodFor(resource: ContaAzulActionResource, action: ConnectedErpProviderAction) {
+  if (action === 'deletar') return 'DELETE' as const
   if (resource === 'pedidos-venda' && action === 'atualizar') return 'PUT' as const
   if (action === 'atualizar') return 'PATCH' as const
   return 'POST' as const
@@ -170,6 +171,12 @@ function requireFields(fields: Record<string, unknown>) {
     .map(([field]) => field)
   if (missing.length > 0) {
     throw new Error(`Payload Conta Azul incompleto. Campos obrigatorios ausentes: ${missing.join(', ')}.`)
+  }
+}
+
+function requireNonEmptyPayload(resource: string, action: string, payload: JsonRecord) {
+  if (Object.keys(payload).length === 0) {
+    throw new Error(`Payload Conta Azul incompleto. Informe ao menos um campo para ${resource}/${action}.`)
   }
 }
 
@@ -526,8 +533,8 @@ function buildCostCenterPayload(payload: JsonRecord) {
   }
 }
 
-function buildProductPayload(payload: JsonRecord) {
-  const nome = firstText(payload, ['nome', 'name', 'descricao'])
+function buildProductPayload(payload: JsonRecord, update = false) {
+  const nome = firstText(payload, update ? ['nome', 'name'] : ['nome', 'name', 'descricao'])
   const codigo = firstText(payload, ['codigo', 'code', 'sku'])
   const descricao = firstText(payload, ['descricao', 'description'])
   const valorVenda = firstNumber(payload, ['valor_venda', 'preco_venda', 'preco', 'valor', 'price'])
@@ -535,17 +542,19 @@ function buildProductPayload(payload: JsonRecord) {
   const unidadeMedida = firstText(payload, ['unidade_medida', 'unidade', 'unit'])
   const categoriaId = firstText(payload, ['id_categoria', 'categoria_id', 'category_id'])
   const ativo = firstBoolean(payload, ['ativo', 'active'])
+  const status = firstText(payload, ['status', 'situacao'])
 
-  requireFields({ nome })
+  if (!update) requireFields({ nome })
 
-  return {
-    nome,
+  const body = {
+    ...(nome ? { nome } : {}),
     ...(codigo ? { codigo } : {}),
     ...(descricao ? { descricao } : {}),
     ...(valorVenda === undefined ? {} : { valor_venda: valorVenda }),
     ...(custoMedio === undefined ? {} : { custo_medio: custoMedio }),
     ...(unidadeMedida ? { unidade_medida: unidadeMedida } : {}),
     ...(categoriaId ? { id_categoria: categoriaId } : {}),
+    ...(status ? { status } : {}),
     ...(firstText(payload, ['ean']) ? { ean: firstText(payload, ['ean']) } : {}),
     ...(firstText(payload, ['ncm']) ? { ncm: firstText(payload, ['ncm']) } : {}),
     ...(firstText(payload, ['cest']) ? { cest: firstText(payload, ['cest']) } : {}),
@@ -553,30 +562,40 @@ function buildProductPayload(payload: JsonRecord) {
     ...(optionalRecord(payload.estoque) ? { estoque: payload.estoque } : {}),
     ...(optionalRecord(payload.impostos) ? { impostos: payload.impostos } : {}),
   }
+  if (update) requireNonEmptyPayload('produtos', 'atualizar', body)
+  return body
 }
 
-function buildServicePayload(payload: JsonRecord) {
-  const nome = firstText(payload, ['nome', 'name', 'descricao'])
+function buildServicePayload(payload: JsonRecord, update = false) {
+  const nome = firstText(payload, ['nome', 'name'])
   const codigo = firstText(payload, ['codigo', 'code'])
-  const descricao = firstText(payload, ['descricao', 'description'])
+  const descricao = firstText(payload, update ? ['descricao', 'description', 'nome', 'name'] : ['descricao', 'description'])
   const valor = firstNumber(payload, ['valor', 'valor_venda', 'preco', 'price'])
+  const custo = firstNumber(payload, ['custo', 'cost'])
   const categoriaId = firstText(payload, ['id_categoria', 'categoria_id', 'category_id'])
   const ativo = firstBoolean(payload, ['ativo', 'active'])
+  const status = firstText(payload, ['status', 'situacao'])
+  const tipoServico = firstText(payload, ['tipo_servico', 'tipo', 'service_type'])
 
-  requireFields({ nome, valor })
+  if (!update) requireFields({ nome, valor })
 
-  return {
-    nome,
-    valor,
+  const body = {
+    ...(nome ? { nome } : {}),
+    ...(valor === undefined ? {} : { valor, preco: valor }),
     ...(codigo ? { codigo } : {}),
     ...(descricao ? { descricao } : {}),
+    ...(custo === undefined ? {} : { custo }),
     ...(categoriaId ? { id_categoria: categoriaId } : {}),
+    ...(status ? { status } : {}),
+    ...(tipoServico ? { tipo_servico: tipoServico } : {}),
     ...(firstText(payload, ['codigo_servico_municipal', 'service_code'])
       ? { codigo_servico_municipal: firstText(payload, ['codigo_servico_municipal', 'service_code']) }
       : {}),
     ...(ativo === undefined ? {} : { ativo }),
     ...(optionalRecord(payload.impostos) ? { impostos: payload.impostos } : {}),
   }
+  if (update) requireNonEmptyPayload('servicos', 'atualizar', body)
+  return body
 }
 
 function contractTerms(payload: JsonRecord, numero: number | undefined) {
@@ -730,9 +749,11 @@ async function executeContaAzulAction(
     connection: input.connection,
   })
   const client = createContaAzulClient(credentials)
-  let payload: JsonRecord
+  let payload: JsonRecord = {}
 
-  if (resource === 'pedidos-venda') {
+  if (input.action === 'deletar') {
+    payload = {}
+  } else if (resource === 'pedidos-venda') {
     if (input.action === 'cancelar') {
       payload = buildCancelSalePayload(input.id, input.payload || {})
     } else {
@@ -750,9 +771,9 @@ async function executeContaAzulAction(
   } else if (resource === 'centros-custo') {
     payload = buildCostCenterPayload(input.payload || {})
   } else if (resource === 'produtos') {
-    payload = buildProductPayload(input.payload || {})
+    payload = buildProductPayload(input.payload || {}, input.action === 'atualizar')
   } else if (resource === 'servicos') {
-    payload = buildServicePayload(input.payload || {})
+    payload = buildServicePayload(input.payload || {}, input.action === 'atualizar')
   } else if (resource === 'contratos') {
     const nextNumber = firstInteger(input.payload || {}, ['numero', 'number']) === undefined
       ? extractSaleNextNumber(await client.requestPath({
@@ -770,7 +791,7 @@ async function executeContaAzulAction(
     resource,
     path: pathFor(resource, input.action, input.id),
     method: methodFor(resource, input.action),
-    body: payload,
+    body: input.action === 'deletar' ? undefined : payload,
   })
 
   return {

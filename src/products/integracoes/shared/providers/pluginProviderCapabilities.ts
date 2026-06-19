@@ -65,9 +65,9 @@ const CONTA_AZUL_ERP_ACTIONS_BY_RESOURCE: Record<string, string[]> = {
   'contas-a-pagar': ['criar', 'atualizar', 'baixar'],
   'pedidos-venda': ['criar', 'atualizar', 'cancelar'],
   'centros-custo': ['criar'],
-  produtos: ['criar'],
-  servicos: ['criar'],
-  contratos: ['criar'],
+  produtos: ['criar', 'atualizar', 'deletar'],
+  servicos: ['criar', 'atualizar'],
+  contratos: ['criar', 'deletar'],
 }
 
 const CRM_READ_RESOURCES = ['contas', 'contatos', 'leads', 'oportunidades', 'atividades'] as const
@@ -80,7 +80,7 @@ const CRM_ACTIONS_BY_RESOURCE: Record<string, string[]> = {
   atividades: ['criar', 'atualizar', 'concluir', 'cancelar', 'reabrir'],
 }
 
-const DESTRUCTIVE_ACTIONS = new Set(['cancelar', 'estornar', 'arquivar', 'perder'])
+const DESTRUCTIVE_ACTIONS = new Set(['cancelar', 'deletar', 'estornar', 'arquivar', 'perder'])
 
 function resourceCapabilities(
   resources: readonly string[],

@@ -101,6 +101,7 @@ type ConnectedErpAction =
   | 'atualizar'
   | 'baixar'
   | 'cancelar'
+  | 'deletar'
   | 'estornar'
   | 'reabrir'
   | 'alterar_status'
@@ -583,12 +584,12 @@ const CONNECTED_ERP_ACTIONS_SCHEMA = {
     },
     action: {
       type: 'string',
-      enum: ['criar', 'atualizar', 'baixar', 'cancelar'],
-      description: 'Acao executada diretamente na API do provider. dry_run=true por padrao.',
+      enum: ['criar', 'atualizar', 'baixar', 'cancelar', 'deletar'],
+      description: 'Acao executada diretamente na API do provider quando suportada. dry_run=true por padrao.',
     },
     id: {
       type: 'string',
-      description: 'ID externo ou ID do provider. Obrigatorio para atualizar, baixar e cancelar.',
+      description: 'ID externo ou ID do provider. Obrigatorio para atualizar, baixar, cancelar e deletar.',
     },
     payload: {
       type: 'object',
@@ -1068,7 +1069,7 @@ const CONNECTED_ERP_ACTIONS_DOMAIN_TOOL_DEFINITION = {
   name: PLUGIN_DOMAIN_TOOL_NAMES.connectedErpActions,
   title: 'Connected ERP actions',
   description:
-    'Executa acoes transacionais diretamente na API do ERP conectado em /integracoes. Use para criar, atualizar, baixar e cancelar quando o provider/resource suportar. dry_run=true por padrao; dry_run=false exige confirmacao e adapter provider implementado.',
+    'Executa acoes transacionais diretamente na API do ERP conectado em /integracoes. Use para criar, atualizar, baixar, cancelar e deletar quando o provider/resource suportar. dry_run=true por padrao; dry_run=false exige confirmacao e adapter provider implementado.',
   inputSchema: CONNECTED_ERP_ACTIONS_SCHEMA,
   outputSchema: ERP_ACOES_OUTPUT_SCHEMA,
   securitySchemes: READ_SECURITY_SCHEMES,
@@ -4400,9 +4401,9 @@ const CONNECTED_ERP_ACTIONS_BY_RESOURCE: Record<string, readonly ConnectedErpAct
   'contas-a-pagar': ['criar', 'atualizar', 'baixar'],
   'pedidos-venda': ['criar', 'atualizar', 'cancelar'],
   'centros-custo': ['criar'],
-  produtos: ['criar'],
-  servicos: ['criar'],
-  contratos: ['criar'],
+  produtos: ['criar', 'atualizar', 'deletar'],
+  servicos: ['criar', 'atualizar'],
+  contratos: ['criar', 'deletar'],
 }
 
 const CONNECTED_CRM_ACTIONS_BY_RESOURCE: Record<string, readonly ConnectedCrmAction[]> = {
@@ -4415,6 +4416,7 @@ const CONNECTED_CRM_ACTIONS_BY_RESOURCE: Record<string, readonly ConnectedCrmAct
 
 const CONNECTED_DESTRUCTIVE_ACTIONS = new Set([
   'cancelar',
+  'deletar',
   'estornar',
   'arquivar',
   'perder',
@@ -4424,6 +4426,7 @@ const CONNECTED_ACTIONS_REQUIRING_ID = new Set([
   'atualizar',
   'baixar',
   'cancelar',
+  'deletar',
   'estornar',
   'reabrir',
   'alterar_status',
