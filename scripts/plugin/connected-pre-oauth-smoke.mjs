@@ -27,8 +27,9 @@ function main() {
 
   const erpRegistry = read('src/products/plugin/server/domain-adapters/erp/erpApiAdapterRegistry.ts')
   const crmRegistry = read('src/products/plugin/server/domain-adapters/crm/crmApiAdapterRegistry.ts')
-  assert(erpRegistry.includes('preOAuthErpApiAdapters'), 'registry API ERP nao usa skeleton pre-OAuth')
   assert(erpRegistry.includes('providers/omieErpApiAdapter'), 'registry API ERP deve usar adapter real do Omie')
+  assert(erpRegistry.includes('providers/blingErpApiAdapter'), 'registry API ERP deve usar adapter real do Bling')
+  assert(erpRegistry.includes('providers/contaAzulErpApiAdapter'), 'registry API ERP deve usar adapter real da Conta Azul')
   assert(crmRegistry.includes('preOAuthCrmApiAdapters'), 'registry API CRM nao usa skeleton pre-OAuth')
 
   const domainTools = read('src/products/plugin/server/domainTools.ts')
@@ -60,6 +61,14 @@ function main() {
   assert(omieApiAdapter.includes('IncluirCliente'), 'adapter API real Omie deve implementar criar cliente')
   assert(omieApiAdapter.includes('LancarPagamento'), 'adapter API real Omie deve implementar baixa de conta a pagar')
   assert(omieApiAdapter.includes('LancarRecebimento'), 'adapter API real Omie deve implementar baixa de conta a receber')
+  const blingNormalizer = read('src/products/integracoes/datawarehouse/normalization/providers/blingNormalizer.ts')
+  assert(blingNormalizer.includes("servicos: 'servicos'"), 'normalizer Bling deve normalizar servicos')
+  assert(blingNormalizer.includes("notas_fiscais: 'notas_fiscais'"), 'normalizer Bling deve normalizar notas_fiscais')
+  assert(blingNormalizer.includes("notas_servico: 'notas_fiscais_servico'"), 'normalizer Bling deve normalizar notas_servico')
+  const blingApiAdapter = read('src/products/plugin/server/domain-adapters/erp/providers/blingErpApiAdapter.ts')
+  assert(blingApiAdapter.includes("provider: 'bling'"), 'adapter API real Bling deve declarar provider')
+  assert(blingApiAdapter.includes("'/contas/receber'"), 'adapter API real Bling deve mapear contas a receber')
+  assert(blingApiAdapter.includes("'/pedidos/vendas'"), 'adapter API real Bling deve mapear pedidos de venda')
 
   const route = read('src/app/api/integracoes/connections/[id]/plugin-permissions/route.ts')
   assert(route.includes('assertCanManageIntegrationConnection'), 'rota de permissoes sem authz')

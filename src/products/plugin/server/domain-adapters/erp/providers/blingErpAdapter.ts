@@ -10,5 +10,6 @@ export const blingErpAdapter = createBigQueryErpAdapter('bling', makeErpConfigs(
   'contas-a-pagar': 'contas_pagar',
   'pedidos-venda': 'pedidos_venda',
   produtos: 'produtos',
+  servicos: 'servicos',
   'estoque-atual': 'estoque',
 }))

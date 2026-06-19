@@ -109,6 +109,7 @@ const LIVE_PERMISSION_PROVIDER_ALIASES: Record<string, Partial<Record<ConnectedE
     'contas-a-receber': 'contas_receber',
     'contas-a-pagar': 'contas_pagar',
     'pedidos-venda': 'pedidos_venda',
+    servicos: 'servicos',
     'estoque-atual': 'estoque',
   },
   conta_azul: {

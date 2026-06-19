@@ -11,6 +11,11 @@ export const blingNormalizer: Normalizer = {
       contas_receber: 'contas_receber',
       contas_pagar: 'contas_pagar',
       pedidos_venda: 'vendas',
+      servicos: 'servicos',
+      notas_fiscais: 'notas_fiscais',
+      notas_servico: 'notas_fiscais_servico',
+      categorias: 'categorias',
+      categorias_receitas_despesas: 'categorias',
       estoque: 'estoque_atual',
     })
   },

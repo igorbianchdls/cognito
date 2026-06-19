@@ -4449,6 +4449,7 @@ const CONNECTED_ERP_PROVIDER_RESOURCE_ALIASES: Record<string, Record<string, str
     'contas-a-receber': 'contas_receber',
     'contas-a-pagar': 'contas_pagar',
     'pedidos-venda': 'pedidos_venda',
+    servicos: 'servicos',
     'estoque-atual': 'estoque',
   },
   conta_azul: {

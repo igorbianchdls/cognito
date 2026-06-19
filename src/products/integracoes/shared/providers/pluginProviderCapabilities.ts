@@ -61,6 +61,17 @@ const OMIE_ERP_READ_RESOURCES = [
   'estoque-atual',
 ] as const
 
+const BLING_ERP_READ_RESOURCES = [
+  'clientes',
+  'fornecedores',
+  'produtos',
+  'servicos',
+  'contas-a-receber',
+  'contas-a-pagar',
+  'pedidos-venda',
+  'estoque-atual',
+] as const
+
 const ERP_ACTIONS_BY_RESOURCE: Record<string, string[]> = {
   clientes: ['criar', 'atualizar', 'alterar_status'],
   fornecedores: ['criar', 'atualizar', 'alterar_status'],
@@ -93,6 +104,16 @@ const OMIE_ERP_ACTIONS_BY_RESOURCE: Record<string, string[]> = {
   produtos: ['criar', 'atualizar', 'deletar'],
   servicos: ['criar', 'atualizar'],
   contratos: ['criar', 'atualizar'],
+}
+
+const BLING_ERP_ACTIONS_BY_RESOURCE: Record<string, string[]> = {
+  clientes: ['criar', 'atualizar'],
+  fornecedores: ['criar', 'atualizar'],
+  'contas-a-receber': ['criar', 'atualizar', 'baixar'],
+  'contas-a-pagar': ['criar', 'atualizar', 'baixar'],
+  'pedidos-venda': ['criar', 'atualizar', 'cancelar'],
+  produtos: ['criar', 'atualizar', 'deletar'],
+  servicos: ['criar', 'atualizar'],
 }
 
 const CRM_READ_RESOURCES = ['contas', 'contatos', 'leads', 'oportunidades', 'atividades'] as const
@@ -221,7 +242,7 @@ export const INTEGRATION_PLUGIN_PROVIDER_CAPABILITIES: IntegrationProviderPlugin
     credentialMode: 'oauth2',
     scopeReviewStatus: 'planned',
     scopeHints: ERP_SCOPE_HINTS.bling,
-    resources: resourceCapabilities(ERP_READ_RESOURCES, ERP_ACTIONS_BY_RESOURCE),
+    resources: resourceCapabilities(BLING_ERP_READ_RESOURCES, BLING_ERP_ACTIONS_BY_RESOURCE),
   },
   ...(['bitrix24', 'hubspot', 'pipedrive', 'salesforce', 'rd_station_crm'] as const).map((provider) => ({
     provider,

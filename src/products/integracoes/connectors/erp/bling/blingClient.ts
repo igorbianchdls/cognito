@@ -76,12 +76,16 @@ function getBaseUrl() {
   return (process.env.BLING_API_BASE_URL || DEFAULT_BASE_URL).replace(/\/+$/, '')
 }
 
-function buildUrl(config: BlingResourceConfig, query?: Record<string, string | number | boolean>) {
-  const url = new URL(`${getBaseUrl()}${config.path.startsWith('/') ? config.path : `/${config.path}`}`)
+function buildUrlFromPath(path: string, query?: Record<string, string | number | boolean>) {
+  const url = new URL(`${getBaseUrl()}${path.startsWith('/') ? path : `/${path}`}`)
   for (const [key, value] of Object.entries(query || {})) {
     if (value !== undefined && value !== null && value !== '') url.searchParams.set(key, String(value))
   }
   return url.toString()
+}
+
+function buildUrl(config: BlingResourceConfig, query?: Record<string, string | number | boolean>) {
+  return buildUrlFromPath(config.path, query)
 }
 
 function asNumber(value: unknown): number | undefined {
@@ -152,6 +156,30 @@ export class BlingClient {
       headers: {
         Authorization: `Bearer ${this.credentials.accessToken}`,
       },
+      rateLimitMs: getRateLimitMs(),
+    })
+
+    return response.payload
+  }
+
+  async requestPath<T extends BlingPagePayload = BlingPagePayload>(
+    input: {
+      resource: string
+      path: string
+      method?: 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE'
+      query?: Record<string, string | number | boolean>
+      body?: Record<string, unknown>
+    },
+  ): Promise<T> {
+    const response = await connectorJsonRequest<T>({
+      provider: 'bling',
+      resource: input.resource,
+      url: buildUrlFromPath(input.path, input.query),
+      method: input.method || 'GET',
+      headers: {
+        Authorization: `Bearer ${this.credentials.accessToken}`,
+      },
+      body: input.body,
       rateLimitMs: getRateLimitMs(),
     })
 
