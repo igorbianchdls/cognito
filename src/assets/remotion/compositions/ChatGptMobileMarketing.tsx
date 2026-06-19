@@ -89,7 +89,7 @@ export function ChatGptToolCallDemoAnimation() {
 
 export function ChatGptAccountingToolActionsAnimation() {
   const frame = useCurrentFrame()
-  const conversationY = interpolate(frame, [0, 220, 390, 560, 740, 900], [0, 0, -230, -500, -760, -1010], {
+  const conversationY = interpolate(frame, [0, 360, 560, 740, 900], [0, 0, -90, -180, -260], {
     extrapolateLeft: 'clamp',
     extrapolateRight: 'clamp',
   })
