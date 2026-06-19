@@ -95,12 +95,12 @@ export function ChatGptAccountingToolActionsAnimation() {
   })
 
   return (
-    <ChatGptMobileShell conversationY={conversationY}>
+    <ChatGptMobileShell conversationY={conversationY} promptInputBottom={44}>
       <ChatGptFlowUserBubble style={chatGptSequenceStyle(frame, 12, 18)}>
         Classifique as despesas, concilie o banco e lance no ERP.
       </ChatGptFlowUserBubble>
 
-      <ChatGptFlowAssistantText style={chatGptSequenceStyle(frame, 62, 22)}>
+      <ChatGptFlowAssistantText showHeader={false} style={chatGptSequenceStyle(frame, 62, 22)}>
         Entendi. Vou executar em tres etapas e te devolver o resumo de cada uma.
       </ChatGptFlowAssistantText>
 
@@ -109,7 +109,7 @@ export function ChatGptAccountingToolActionsAnimation() {
       </ChatGptFlowAssistantText>
       <ChatGptToolCallCard
         style={chatGptSequenceStyle(frame, 232, 18)}
-        toolName="connected_erp.classificar_despesas"
+        toolName="classificar_despesa"
       />
       <ChatGptFlowAssistantText showHeader={false} style={chatGptSequenceStyle(frame, 306, 22)}>
         Classifiquei 4 despesas: 3 aplicadas com alta confianca e 1 mantida para revisao.
@@ -120,7 +120,7 @@ export function ChatGptAccountingToolActionsAnimation() {
       </ChatGptFlowAssistantText>
       <ChatGptToolCallCard
         style={chatGptSequenceStyle(frame, 486, 18)}
-        toolName="connected_erp.conciliar_banco"
+        toolName="conciliar_banco"
       />
       <ChatGptFlowAssistantText showHeader={false} style={chatGptSequenceStyle(frame, 560, 22)}>
         Conciliei 14 movimentos automaticamente e deixei 3 divergencias pendentes.
@@ -131,7 +131,7 @@ export function ChatGptAccountingToolActionsAnimation() {
       </ChatGptFlowAssistantText>
       <ChatGptToolCallCard
         style={chatGptSequenceStyle(frame, 738, 18)}
-        toolName="connected_erp_acoes.criar_lancamento"
+        toolName="criar_lancamento"
       />
       <ChatGptFlowAssistantText showHeader={false} style={chatGptSequenceStyle(frame, 812, 22)}>
         Lancamento criado no ERP, vinculado ao extrato e marcado como aberto.

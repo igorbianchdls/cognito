@@ -121,7 +121,7 @@ export function ChatGptFlowUserBubble({ children, style }: { children: ReactNode
           fontSize: 38,
           fontWeight: 400,
           justifyContent: 'center',
-          letterSpacing: '-0.76px',
+          letterSpacing: 0,
           lineHeight: 1.12,
           maxWidth: 760,
           minHeight: 91,
@@ -144,7 +144,7 @@ export function ChatGptFlowAssistantText({ children, showHeader = true, style }:
         fontFamily: CHATGPT_MOBILE_FONT_STACK,
         fontSize: 38,
         fontWeight: 400,
-        letterSpacing: '-0.76px',
+        letterSpacing: 0,
         lineHeight: 1.34,
         padding: '0 42px',
       }}
@@ -230,7 +230,15 @@ export function ChatGptVoiceButton() {
   )
 }
 
-export function ChatGptMobileShell({ children, conversationY = 0 }: { children: ReactNode; conversationY?: number }) {
+export function ChatGptMobileShell({
+  children,
+  conversationY = 0,
+  promptInputBottom,
+}: {
+  children: ReactNode
+  conversationY?: number
+  promptInputBottom?: number
+}) {
   return (
     <AbsoluteFill style={{ background: '#ffffff', color: '#111111', fontFamily: CHATGPT_MOBILE_FONT_STACK, overflow: 'hidden' }}>
       <ChatGptStatusBar />
@@ -249,7 +257,7 @@ export function ChatGptMobileShell({ children, conversationY = 0 }: { children: 
       </div>
 
       <div style={{ background: '#ffffff', bottom: 0, height: 264, left: 0, position: 'absolute', right: 0 }}>
-        <div style={{ alignItems: 'center', display: 'flex', gap: 21, left: 31, position: 'absolute', right: 31, top: 0 }}>
+        <div style={{ alignItems: 'center', bottom: promptInputBottom, display: 'flex', gap: 21, left: 31, position: 'absolute', right: 31, top: promptInputBottom === undefined ? 0 : undefined }}>
           <div style={{ alignItems: 'center', background: '#f0f0f0', borderRadius: 999, display: 'flex', height: 84, justifyContent: 'center', width: 84 }}>
             <Plus color="#555555" size={47} strokeWidth={2.4} />
           </div>
