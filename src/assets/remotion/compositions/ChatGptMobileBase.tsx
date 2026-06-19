@@ -365,12 +365,12 @@ export function ChatGptMobileShell({
 
       <div style={{ borderBottom: '1px solid #e8e8e8', height: 244, left: 0, position: 'absolute', right: 0, top: 0 }} />
 
-      <ChatGptMenuIcon color="#333333" size={50} strokeWidth={2} style={{ left: 48, position: 'absolute', top: 157 }} />
+      <ChatGptMenuIcon color="#555555" size={46} strokeWidth={1.9} style={{ left: 50, position: 'absolute', top: 159 }} />
       <div style={{ alignItems: 'center', color: '#111111', display: 'flex', fontSize: 46, fontWeight: 600, gap: 5, left: 161, letterSpacing: 0, lineHeight: 1, position: 'absolute', top: 153 }}>
         ChatGPT
       </div>
-      <ChatGptComposeIcon color="#333333" size={54} strokeWidth={2.05} style={{ left: 854, position: 'absolute', top: 147 }} />
-      <ChatGptMoreIcon color="#333333" dotRadius={1.2} size={54} style={{ left: 976, position: 'absolute', top: 156 }} />
+      <ChatGptComposeIcon color="#555555" size={50} strokeWidth={1.95} style={{ left: 856, position: 'absolute', top: 149 }} />
+      <ChatGptMoreIcon color="#555555" dotRadius={1.1} size={50} style={{ left: 978, position: 'absolute', top: 158 }} />
 
       <div style={{ bottom: conversationBottom, left: 0, overflow: 'hidden', position: 'absolute', right: 0, top: 244 }}>
         <div style={{ display: 'grid', gap: 28, padding: '20px 0 760px', transform: `translateY(${conversationY}px)` }}>
