@@ -340,9 +340,9 @@ export function ChatGptToolCallCard({
 
 export function ChatGptVoiceButton() {
   return (
-    <div style={{ alignItems: 'center', background: '#007aff', borderRadius: 999, display: 'flex', gap: 7, height: 86, justifyContent: 'center', width: 86 }}>
-      {[22, 39, 53, 39, 22].map((height, index) => (
-        <span key={`${height}-${index}`} style={{ background: '#ffffff', borderRadius: 999, height, width: 7 }} />
+    <div style={{ alignItems: 'center', background: '#007aff', borderRadius: 999, display: 'flex', gap: 6, height: 78, justifyContent: 'center', width: 78 }}>
+      {[20, 35, 48, 35, 20].map((height, index) => (
+        <span key={`${height}-${index}`} style={{ background: '#ffffff', borderRadius: 999, height, width: 6 }} />
       ))}
     </div>
   )
@@ -365,12 +365,12 @@ export function ChatGptMobileShell({
 
       <div style={{ borderBottom: '1px solid #e8e8e8', height: 244, left: 0, position: 'absolute', right: 0, top: 0 }} />
 
-      <ChatGptMenuIcon color="#050505" size={72} strokeWidth={3.2} style={{ left: 40, position: 'absolute', top: 146 }} />
+      <ChatGptMenuIcon color="#050505" size={54} strokeWidth={2.5} style={{ left: 46, position: 'absolute', top: 155 }} />
       <div style={{ alignItems: 'center', color: '#111111', display: 'flex', fontSize: 46, fontWeight: 600, gap: 5, left: 161, letterSpacing: 0, lineHeight: 1, position: 'absolute', top: 153 }}>
         ChatGPT
       </div>
-      <ChatGptComposeIcon color="#050505" size={78} strokeWidth={3.5} style={{ left: 836, position: 'absolute', top: 132 }} />
-      <ChatGptMoreIcon color="#050505" size={88} strokeWidth={4.2} style={{ left: 946, position: 'absolute', top: 138 }} />
+      <ChatGptComposeIcon color="#050505" size={58} strokeWidth={2.6} style={{ left: 852, position: 'absolute', top: 145 }} />
+      <ChatGptMoreIcon color="#050505" size={58} style={{ left: 974, position: 'absolute', top: 154 }} />
 
       <div style={{ bottom: conversationBottom, left: 0, overflow: 'hidden', position: 'absolute', right: 0, top: 244 }}>
         <div style={{ display: 'grid', gap: 28, padding: '20px 0 760px', transform: `translateY(${conversationY}px)` }}>
@@ -379,11 +379,11 @@ export function ChatGptMobileShell({
       </div>
 
       <div style={{ background: '#ffffff', bottom: 0, height: 264, left: 0, position: 'absolute', right: 0 }}>
-        <div style={{ alignItems: 'center', background: '#f1f1f1', borderRadius: 999, bottom: promptInputBottom, display: 'flex', height: 110, left: 68, position: 'absolute', right: 68, top: promptInputBottom === undefined ? 0 : undefined }}>
-          <ChatGptPlusIcon color="#111111" size={76} strokeWidth={2.75} style={{ left: 24, position: 'absolute', top: 17 }} />
-          <span style={{ color: '#8a8a8a', fontSize: 40, fontWeight: 400, left: 138, letterSpacing: 0, lineHeight: 1, position: 'absolute', top: 35 }}>Pergunte ao ChatGPT</span>
-          <ChatGptMicIcon color="#111111" size={76} strokeWidth={3.1} style={{ position: 'absolute', right: 122, top: 17 }} />
-          <div style={{ position: 'absolute', right: 12, top: 12 }}>
+        <div style={{ alignItems: 'center', background: '#f1f1f1', borderRadius: 999, bottom: promptInputBottom, display: 'flex', height: 104, left: 68, position: 'absolute', right: 68, top: promptInputBottom === undefined ? 0 : undefined }}>
+          <ChatGptPlusIcon color="#111111" size={58} strokeWidth={2.3} style={{ left: 31, position: 'absolute', top: 23 }} />
+          <span style={{ color: '#8a8a8a', fontSize: 40, fontWeight: 400, left: 130, letterSpacing: 0, lineHeight: 1, position: 'absolute', top: 32 }}>Pergunte ao ChatGPT</span>
+          <ChatGptMicIcon color="#111111" size={58} strokeWidth={2.5} style={{ position: 'absolute', right: 116, top: 23 }} />
+          <div style={{ position: 'absolute', right: 13, top: 13 }}>
             <ChatGptVoiceButton />
           </div>
         </div>
