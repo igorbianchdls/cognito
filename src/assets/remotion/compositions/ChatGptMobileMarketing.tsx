@@ -42,10 +42,9 @@ function IntegrationOrbitLogo({ active = false, integration }: { active?: boolea
         border: `1px solid ${active ? integration.accent : '#e3e8ef'}`,
         borderRadius: 30,
         boxShadow: active ? '0 26px 70px rgba(15, 23, 42, 0.18)' : '0 18px 46px rgba(15, 23, 42, 0.10)',
-        display: 'grid',
-        gap: 12,
+        display: 'flex',
         height: 152,
-        justifyItems: 'center',
+        justifyContent: 'center',
         padding: 18,
         width: 152,
       }}
@@ -53,9 +52,6 @@ function IntegrationOrbitLogo({ active = false, integration }: { active?: boolea
       <div style={{ alignItems: 'center', display: 'flex', height: 70, justifyContent: 'center', overflow: 'hidden', width: 70 }}>
         <Icon className="h-full w-full" />
       </div>
-      <span style={{ color: '#344054', fontSize: 18, fontWeight: 760, letterSpacing: 0, lineHeight: 1, textAlign: 'center' }}>
-        {integration.label}
-      </span>
     </div>
   )
 }
@@ -139,9 +135,6 @@ export function IntegrationHubOrbitOnlyAnimation() {
         <strong style={{ color: '#ffffff', fontSize: 76, fontWeight: 780, letterSpacing: 0, lineHeight: 1 }}>
           Otto
         </strong>
-        <span style={{ color: 'rgba(255,255,255,0.68)', fontSize: 24, fontWeight: 640, letterSpacing: 0, lineHeight: 1, marginTop: -36 }}>
-          Integracoes conectadas
-        </span>
       </div>
     </AbsoluteFill>
   )
