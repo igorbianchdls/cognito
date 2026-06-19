@@ -108,7 +108,7 @@ export function ChatGptActionRow() {
 
 export function ChatGptFlowUserBubble({ children, style }: { children: ReactNode; style: CSSProperties }) {
   return (
-    <div style={{ ...style, display: 'flex', justifyContent: 'flex-end', paddingRight: 42 }}>
+    <div style={{ ...style, display: 'flex', justifyContent: 'flex-end', paddingRight: 36 }}>
       <div
         style={{
           alignItems: 'center',
@@ -118,14 +118,14 @@ export function ChatGptFlowUserBubble({ children, style }: { children: ReactNode
           color: '#111111',
           display: 'flex',
           fontFamily: CHATGPT_MOBILE_FONT_STACK,
-          fontSize: 38,
+          fontSize: 42,
           fontWeight: 400,
           justifyContent: 'center',
           letterSpacing: 0,
-          lineHeight: 1.12,
+          lineHeight: 1.18,
           maxWidth: 760,
           minHeight: 91,
-          padding: '23px 42px',
+          padding: '24px 42px',
           width: 'max-content',
         }}
       >
@@ -142,11 +142,11 @@ export function ChatGptFlowAssistantText({ children, showHeader = true, style }:
         ...style,
         color: '#111111',
         fontFamily: CHATGPT_MOBILE_FONT_STACK,
-        fontSize: 38,
+        fontSize: 42,
         fontWeight: 400,
         letterSpacing: 0,
         lineHeight: 1.34,
-        padding: '0 42px',
+        padding: '0 36px',
       }}
     >
       {showHeader ? <OttoAssistantHeader /> : null}
@@ -161,10 +161,10 @@ export function ChatGptToolResultCard({ children, style }: { children: ReactNode
       style={{
         ...style,
         background: '#ffffff',
-        border: '1px solid #e6e6e6',
-        borderRadius: 28,
+        border: '1px solid #eeeeee',
+        borderRadius: 16,
         boxShadow: '0 14px 38px rgba(15, 23, 42, 0.08)',
-        margin: '0 42px',
+        margin: '0 36px',
         overflow: 'hidden',
       }}
     >
@@ -186,33 +186,33 @@ export function ChatGptToolCallCard({
         ...style,
         alignItems: 'center',
         background: 'transparent',
-        border: '1px solid #e4e4e4',
-        borderRadius: 18,
+        border: '1px solid #eeeeee',
+        borderRadius: 12,
         boxSizing: 'border-box',
         color: '#111111',
         display: 'flex',
         fontFamily: CHATGPT_MOBILE_FONT_STACK,
-        gap: 18,
-        margin: '0 42px',
-        minHeight: 76,
-        padding: '19px 23px',
+        gap: 16,
+        margin: '0 36px',
+        minHeight: 84,
+        padding: '20px 22px',
       }}
     >
       <div
         style={{
           alignItems: 'center',
-          border: '1px solid #dddddd',
-          borderRadius: 14,
+          border: '1px solid #e3e3e3',
+          borderRadius: 12,
           display: 'flex',
-          height: 44,
+          height: 42,
           justifyContent: 'center',
-          width: 44,
+          width: 42,
         }}
       >
-        <Wrench color="#111111" size={25} strokeWidth={2.4} />
+        <Wrench color="#606060" size={22} strokeWidth={2.2} />
       </div>
       <div style={{ alignItems: 'center', display: 'flex', gap: 12, minWidth: 0 }}>
-        <span style={{ color: '#111111', fontSize: 30, fontWeight: 620, letterSpacing: 0, lineHeight: 1.05 }}>
+        <span style={{ color: '#111111', fontSize: 32, fontWeight: 600, letterSpacing: 0, lineHeight: 1.05 }}>
           {toolName}
         </span>
       </div>
@@ -243,28 +243,30 @@ export function ChatGptMobileShell({
     <AbsoluteFill style={{ background: '#ffffff', color: '#111111', fontFamily: CHATGPT_MOBILE_FONT_STACK, overflow: 'hidden' }}>
       <ChatGptStatusBar />
 
-      <Menu color="#050505" size={48} strokeWidth={2.7} style={{ left: 48, position: 'absolute', top: 158 }} />
-      <div style={{ alignItems: 'center', color: '#111111', display: 'flex', fontSize: 43, fontWeight: 600, gap: 5, left: 161, letterSpacing: 0, lineHeight: 1, position: 'absolute', top: 156 }}>
+      <div style={{ borderBottom: '1px solid #e8e8e8', height: 244, left: 0, position: 'absolute', right: 0, top: 0 }} />
+
+      <Menu color="#050505" size={50} strokeWidth={2.7} style={{ left: 48, position: 'absolute', top: 157 }} />
+      <div style={{ alignItems: 'center', color: '#111111', display: 'flex', fontSize: 46, fontWeight: 600, gap: 5, left: 161, letterSpacing: 0, lineHeight: 1, position: 'absolute', top: 153 }}>
         ChatGPT
       </div>
-      <SquarePen color="#050505" size={47} strokeWidth={2.8} style={{ left: 861, position: 'absolute', top: 149 }} />
-      <MoreHorizontal color="#050505" size={51} strokeWidth={3.2} style={{ left: 974, position: 'absolute', top: 157 }} />
+      <SquarePen color="#050505" size={49} strokeWidth={2.7} style={{ left: 861, position: 'absolute', top: 147 }} />
+      <MoreHorizontal color="#050505" size={52} strokeWidth={3} style={{ left: 974, position: 'absolute', top: 156 }} />
 
       <div style={{ bottom: 264, left: 0, overflow: 'hidden', position: 'absolute', right: 0, top: 244 }}>
-        <div style={{ display: 'grid', gap: 34, padding: '20px 0 760px', transform: `translateY(${conversationY}px)` }}>
+        <div style={{ display: 'grid', gap: 28, padding: '20px 0 760px', transform: `translateY(${conversationY}px)` }}>
           {children}
         </div>
       </div>
 
       <div style={{ background: '#ffffff', bottom: 0, height: 264, left: 0, position: 'absolute', right: 0 }}>
-        <div style={{ alignItems: 'center', bottom: promptInputBottom, display: 'flex', gap: 21, left: 31, position: 'absolute', right: 31, top: promptInputBottom === undefined ? 0 : undefined }}>
-          <div style={{ alignItems: 'center', background: '#f0f0f0', borderRadius: 999, display: 'flex', height: 84, justifyContent: 'center', width: 84 }}>
-            <Plus color="#555555" size={47} strokeWidth={2.4} />
+        <div style={{ alignItems: 'center', bottom: promptInputBottom, display: 'flex', gap: 18, left: 68, position: 'absolute', right: 68, top: promptInputBottom === undefined ? 0 : undefined }}>
+          <div style={{ alignItems: 'center', background: '#f1f1f1', borderRadius: 999, display: 'flex', height: 96, justifyContent: 'center', width: 96 }}>
+            <Plus color="#1f1f1f" size={50} strokeWidth={2.4} />
           </div>
-          <div style={{ alignItems: 'center', background: '#f0f0f0', borderRadius: 999, display: 'flex', flex: 1, height: 84, minWidth: 0, position: 'relative' }}>
-            <span style={{ color: '#858585', fontSize: 40, fontWeight: 430, left: 41, letterSpacing: 0, lineHeight: 1, position: 'absolute', top: 23 }}>Pergunte ao ChatGPT</span>
-            <Mic color="#777777" size={44} strokeWidth={2.8} style={{ position: 'absolute', right: 103, top: 18 }} />
-            <div style={{ position: 'absolute', right: 8, top: 6 }}>
+          <div style={{ alignItems: 'center', background: '#f1f1f1', borderRadius: 999, display: 'flex', flex: 1, height: 96, minWidth: 0, position: 'relative' }}>
+            <span style={{ color: '#8a8a8a', fontSize: 40, fontWeight: 400, left: 38, letterSpacing: 0, lineHeight: 1, position: 'absolute', top: 28 }}>Pergunte ao ChatGPT</span>
+            <Mic color="#111111" size={47} strokeWidth={2.7} style={{ position: 'absolute', right: 104, top: 24 }} />
+            <div style={{ position: 'absolute', right: 9, top: 9 }}>
               <ChatGptVoiceButton />
             </div>
           </div>
