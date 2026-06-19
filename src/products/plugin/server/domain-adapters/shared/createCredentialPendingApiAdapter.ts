@@ -32,8 +32,8 @@ export function createCredentialPendingApiAdapter<Resource extends string, Actio
 
   return {
     provider: capability.provider,
-    supportsLiveRead(resource) {
-      return Boolean(resources.get(resource)?.liveRead)
+    supportsLiveRead() {
+      return false
     },
     supportsAction(resource, action) {
       return Boolean(resources.get(resource)?.actions.includes(action))

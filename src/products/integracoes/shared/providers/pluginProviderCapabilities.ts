@@ -85,6 +85,7 @@ const DESTRUCTIVE_ACTIONS = new Set(['cancelar', 'deletar', 'estornar', 'arquiva
 function resourceCapabilities(
   resources: readonly string[],
   actionsByResource: Record<string, string[]>,
+  liveReadResources: readonly string[] = [],
 ): IntegrationProviderPluginResourceCapability[] {
   const actionResources = Object.keys(actionsByResource).filter((resource) => !resources.includes(resource))
 
@@ -92,7 +93,7 @@ function resourceCapabilities(
     const actions = actionsByResource[resource] || []
     return {
       resource,
-      liveRead: resources.includes(resource),
+      liveRead: liveReadResources.includes(resource),
       actions,
       destructiveActions: actions.filter((action) => DESTRUCTIVE_ACTIONS.has(action)),
     }

@@ -34,6 +34,22 @@ function main() {
   assert(domainTools.includes('createIntegrationPluginActionAudit'), 'actions Plugin nao gravam audit')
   assert(domainTools.includes('listar_live') && domainTools.includes('ler_live'), 'actions live nao estao expostas')
 
+  const bigQueryReader = read('src/products/plugin/server/domain-adapters/shared/connectedBigQueryReader.ts')
+  assert(!bigQueryReader.includes('readResources.length > 0'), 'connected_erp leitura BigQuery nao deve liberar qualquer recurso quando ha permissoes parciais')
+
+  const bigQueryErpAdapter = read('src/products/plugin/server/domain-adapters/erp/providers/createBigQueryErpAdapter.ts')
+  assert(bigQueryErpAdapter.includes("resource: 'pedidos-venda',\n      table: 'vendas'"), 'connected_erp pedidos-venda deve ler tabela normalized vendas')
+  assert(bigQueryErpAdapter.includes("resource: 'estoque-atual',\n      table: 'estoque_atual'"), 'connected_erp estoque-atual deve ler tabela normalized estoque_atual')
+  assert(bigQueryErpAdapter.includes("resource: 'servicos',\n      table: 'servicos'"), 'connected_erp servicos deve mapear tabela normalized servicos')
+  assert(bigQueryErpAdapter.includes("resource: 'contratos',\n      table: 'contratos'"), 'connected_erp contratos deve mapear tabela normalized contratos')
+
+  const normalizationContracts = read('src/products/integracoes/datawarehouse/normalization/contracts.ts')
+  assert(normalizationContracts.includes("| 'servicos'"), 'normalizacao deve declarar tabela servicos')
+  assert(normalizationContracts.includes("| 'contratos'"), 'normalizacao deve declarar tabela contratos')
+  const contaAzulNormalizer = read('src/products/integracoes/datawarehouse/normalization/providers/contaAzulNormalizer.ts')
+  assert(contaAzulNormalizer.includes("servicos: 'servicos'"), 'normalizer Conta Azul deve normalizar servicos')
+  assert(contaAzulNormalizer.includes("contratos: 'contratos'"), 'normalizer Conta Azul deve normalizar contratos')
+
   const route = read('src/app/api/integracoes/connections/[id]/plugin-permissions/route.ts')
   assert(route.includes('assertCanManageIntegrationConnection'), 'rota de permissoes sem authz')
   assert(route.includes('liveReadResources'), 'rota de permissoes sem liveReadResources')

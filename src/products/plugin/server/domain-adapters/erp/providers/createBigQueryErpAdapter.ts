@@ -36,42 +36,52 @@ export function makeErpConfigs(
   const base: Omit<ConnectedBigQueryResourceConfig<ConnectedErpResource>, 'providerResource'>[] = [
     {
       resource: 'clientes',
+      table: 'clientes',
     },
     {
       resource: 'fornecedores',
+      table: 'fornecedores',
     },
     {
       resource: 'contas-a-receber',
+      table: 'contas_receber',
       dateField: 'data_vencimento',
       statusField: 'status',
       orderBy: 'date_field',
     },
     {
       resource: 'contas-a-pagar',
+      table: 'contas_pagar',
       dateField: 'data_vencimento',
       statusField: 'status',
       orderBy: 'date_field',
     },
     {
       resource: 'pedidos-venda',
+      table: 'vendas',
       dateField: 'data_pedido',
       statusField: 'status',
       orderBy: 'date_field',
     },
     {
       resource: 'centros-custo',
+      table: 'centros_custo',
     },
     {
       resource: 'produtos',
+      table: 'produtos',
     },
     {
       resource: 'servicos',
+      table: 'servicos',
     },
     {
       resource: 'contratos',
+      table: 'contratos',
     },
     {
       resource: 'estoque-atual',
+      table: 'estoque_atual',
     },
   ]
 

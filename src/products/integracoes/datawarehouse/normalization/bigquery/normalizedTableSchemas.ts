@@ -42,6 +42,15 @@ const TABLE_FIELDS: Record<NormalizedTableName, BigQueryFieldSchema[]> = {
     { name: 'custo', type: 'NUMERIC' },
     { name: 'status', type: 'STRING' },
   ],
+  servicos: [
+    { name: 'nome', type: 'STRING' },
+    { name: 'codigo', type: 'STRING' },
+    { name: 'descricao', type: 'STRING' },
+    { name: 'preco', type: 'NUMERIC' },
+    { name: 'custo', type: 'NUMERIC' },
+    { name: 'tipo_servico', type: 'STRING' },
+    { name: 'status', type: 'STRING' },
+  ],
   contas_receber: [
     { name: 'pessoa_id', type: 'STRING' },
     { name: 'pessoa_nome', type: 'STRING' },
@@ -75,6 +84,16 @@ const TABLE_FIELDS: Record<NormalizedTableName, BigQueryFieldSchema[]> = {
     { name: 'valor_total', type: 'NUMERIC' },
     { name: 'data_emissao', type: 'DATE' },
     { name: 'data_pedido', type: 'DATE' },
+    { name: 'status', type: 'STRING' },
+  ],
+  contratos: [
+    { name: 'cliente_id', type: 'STRING' },
+    { name: 'cliente_nome', type: 'STRING' },
+    { name: 'numero', type: 'STRING' },
+    { name: 'valor_total', type: 'NUMERIC' },
+    { name: 'data_inicio', type: 'DATE' },
+    { name: 'data_fim', type: 'DATE' },
+    { name: 'frequencia', type: 'STRING' },
     { name: 'status', type: 'STRING' },
   ],
   itens_venda: [

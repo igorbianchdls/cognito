@@ -125,7 +125,7 @@ function hasSelectedResource(selectedResources: string[], providerResource: stri
 
 function hasReadPermission(readResources: string[], resource: string, providerResource: string) {
   if (!readResources.length) return false
-  return readResources.includes('*') || readResources.includes(resource) || readResources.includes(providerResource) || readResources.length > 0
+  return readResources.includes('*') || readResources.includes(resource) || readResources.includes(providerResource)
 }
 
 function getRawPayload(row: JsonRecord) {

@@ -142,6 +142,18 @@ function productFields(payload: JsonRecord) {
   }
 }
 
+function serviceFields(payload: JsonRecord) {
+  return {
+    nome: text(payload, ['nome', 'name', 'descricao', 'description']),
+    codigo: text(payload, ['codigo', 'code', 'codigo_servico', 'id_servico']),
+    descricao: text(payload, ['descricao', 'description', 'nome']),
+    preco: numberValue(payload, ['preco', 'valor', 'valor_venda', 'price']),
+    custo: numberValue(payload, ['custo', 'cost', 'valor_custo']),
+    tipo_servico: text(payload, ['tipo_servico', 'tipo', 'service_type']),
+    status: normalizeStatus(text(payload, ['status', 'situacao', 'ativo'])),
+  }
+}
+
 function financialFields(payload: JsonRecord) {
   return {
     pessoa_id: text(payload, ['cliente.id', 'fornecedor.id', 'pessoa.id', 'codigo_cliente_omie', 'codigo_cliente_fornecedor', 'idPessoa']),
@@ -167,6 +179,19 @@ function saleFields(payload: JsonRecord) {
     data_emissao: dateValue(payload, ['data_emissao', 'dataEmissao', 'emissao', 'dDtEmissao']),
     data_pedido: dateValue(payload, ['data_pedido', 'dataPedido', 'data', 'dDtPrevisao']),
     status: normalizeStatus(text(payload, ['status', 'situacao', 'etapa', 'cStatus'])),
+  }
+}
+
+function contractFields(payload: JsonRecord) {
+  return {
+    cliente_id: text(payload, ['cliente.id', 'id_cliente', 'cliente_id', 'contato.id']),
+    cliente_nome: text(payload, ['cliente.nome', 'nome_cliente', 'contato.nome', 'razao_social']),
+    numero: text(payload, ['numero', 'numero_contrato', 'contrato.numero']),
+    valor_total: numberValue(payload, ['valor_total', 'valor', 'total']),
+    data_inicio: dateValue(payload, ['data_inicio', 'inicio', 'termos.data_inicio']),
+    data_fim: dateValue(payload, ['data_fim', 'fim', 'termos.data_fim']),
+    frequencia: text(payload, ['frequencia', 'tipo_frequencia', 'termos.tipo_frequencia']),
+    status: normalizeStatus(text(payload, ['status', 'situacao', 'ativo'])),
   }
 }
 
@@ -281,8 +306,10 @@ function stockFields(payload: JsonRecord) {
 function fieldsFor(table: NormalizedTableName, payload: JsonRecord) {
   if (table === 'clientes' || table === 'fornecedores') return contactFields(payload)
   if (table === 'produtos') return productFields(payload)
+  if (table === 'servicos') return serviceFields(payload)
   if (table === 'contas_receber' || table === 'contas_pagar') return financialFields(payload)
   if (table === 'vendas') return saleFields(payload)
+  if (table === 'contratos') return contractFields(payload)
   if (table === 'itens_venda') return saleItemFields(payload)
   if (table === 'venda_detalhes') return saleDetailFields(payload)
   if (table === 'notas_fiscais') return invoiceFields(payload)

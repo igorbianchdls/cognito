@@ -104,8 +104,47 @@ function connectionStatus(connection: IntegrationConnection, ok: boolean, error?
   }
 }
 
-function hasResourceGrant(resources: string[], resource: string) {
-  return resources.includes('*') || resources.includes(resource) || resources.length > 0
+const LIVE_PERMISSION_PROVIDER_ALIASES: Record<string, Partial<Record<ConnectedErpResource, string>>> = {
+  bling: {
+    'contas-a-receber': 'contas_receber',
+    'contas-a-pagar': 'contas_pagar',
+    'pedidos-venda': 'pedidos_venda',
+    'estoque-atual': 'estoque',
+  },
+  conta_azul: {
+    'contas-a-receber': 'contas_receber',
+    'contas-a-pagar': 'contas_pagar',
+    'pedidos-venda': 'vendas',
+    'centros-custo': 'centros_custo',
+    'estoque-atual': 'estoque',
+  },
+  omie: {
+    'contas-a-receber': 'contas_receber',
+    'contas-a-pagar': 'contas_pagar',
+    'pedidos-venda': 'pedidos_venda',
+    'estoque-atual': 'estoque_saldos',
+  },
+}
+
+function normalizeResourceAlias(resource: string) {
+  return resource.replace(/_/g, '-')
+}
+
+function getPermissionAliases(provider: string, resource: ConnectedErpResource) {
+  const providerResource = LIVE_PERMISSION_PROVIDER_ALIASES[provider]?.[resource]
+  const aliases = new Set<string>([
+    resource,
+    normalizeResourceAlias(resource),
+  ])
+  if (providerResource) {
+    aliases.add(providerResource)
+    aliases.add(normalizeResourceAlias(providerResource))
+  }
+  return [...aliases].filter(Boolean)
+}
+
+function hasResourceGrant(resources: string[], aliases: string[]) {
+  return resources.includes('*') || aliases.some((alias) => resources.includes(alias))
 }
 
 async function listActiveConnections(tenantId: number, provider: string | null) {
@@ -155,7 +194,8 @@ export async function executeConnectedErpTool(
   for (const connection of connections) {
     if (action === 'listar_live' || action === 'ler_live') {
       const permissions = await getIntegrationPluginPermissions(connection.id, tenantId)
-      if (!permissions?.enabled || !hasResourceGrant(permissions.liveReadResources, resource)) {
+      const permissionAliases = getPermissionAliases(connection.provider, resource)
+      if (!permissions?.enabled || !hasResourceGrant(permissions.liveReadResources, permissionAliases)) {
         const error = `MCP nao tem permissao de leitura live para ${resource} na conexao ${connection.displayName}.`
         providers.push(connectionStatus(connection, false, error))
         errors.push(error)
