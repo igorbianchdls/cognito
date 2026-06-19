@@ -8,10 +8,10 @@ import {
 } from '@/products/integracoes/server/integrationConnectionRepository'
 import { IntegrationProviderError } from '@/products/integracoes/server/integrationProviderRegistry'
 import {
-  mapConnectionStatusToUi,
   mapIntegrationEventSeverityToUi,
   mapIntegrationEventTypeToUi,
   mapSyncRunStatusToUi,
+  serializeConnectionWithUi,
 } from '@/products/integracoes/server/integrationStatusMapper'
 import {
   integrationAuthErrorResponse,
@@ -55,10 +55,7 @@ export async function GET(
 
     return Response.json({
       ok: true,
-      connection: {
-        ...connection,
-        uiStatus: mapConnectionStatusToUi(connection.status),
-      },
+      connection: serializeConnectionWithUi(connection),
       syncRuns: runs.map((run) => ({
         ...run,
         uiStatus: mapSyncRunStatusToUi(run.status),
@@ -111,10 +108,7 @@ export async function PATCH(
 
     return Response.json({
       ok: true,
-      connection: {
-        ...connection,
-        uiStatus: mapConnectionStatusToUi(connection.status),
-      },
+      connection: serializeConnectionWithUi(connection),
     })
   } catch (error) {
     const authResponse = integrationAuthErrorResponse(error)

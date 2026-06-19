@@ -22,7 +22,7 @@ import {
   IntegrationApiAuthError,
 } from '@/products/integracoes/server/integrationApiAuth'
 import { normalizeRequestedResources, requireIntegrationProvider } from '@/products/integracoes/server/integrationProviderRegistry'
-import { mapConnectionStatusToUi } from '@/products/integracoes/server/integrationStatusMapper'
+import { serializeConnectionWithUi } from '@/products/integracoes/server/integrationStatusMapper'
 import {
   integrationAuthErrorResponse,
   resolveIntegrationTenant,
@@ -201,10 +201,7 @@ function buildConfiguration(input: {
   const provider = requireIntegrationProvider(input.connection.provider)
 
   return {
-    connection: {
-      ...input.connection,
-      uiStatus: mapConnectionStatusToUi(input.connection.status),
-    },
+    connection: serializeConnectionWithUi(input.connection),
     provider,
     destination: input.destination,
     pipeline: input.pipeline,

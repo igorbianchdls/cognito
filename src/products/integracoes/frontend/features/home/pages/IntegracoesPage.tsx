@@ -178,6 +178,11 @@ function isDataConnectionActive(connection?: IntegrationConnectionWithUi | null)
   return Boolean(connection && ['connected', 'syncing', 'warning'].includes(connection.status))
 }
 
+function connectionNeedsReconnect(connection?: IntegrationConnectionWithUi | null) {
+  const oauthError = connection?.metadata?.oauthRefreshError
+  return Boolean(connection?.status === 'pending_auth' || (typeof oauthError === 'string' && oauthError.trim()))
+}
+
 function isOAuthInConfiguration(provider?: IntegrationProvider | null, readinessLoaded = true) {
   if (!provider || provider.authType !== 'oauth2' || !provider.supportsOAuthCallback) return false
   if (!readinessLoaded) return true
@@ -239,14 +244,19 @@ function CatalogCard({
 }) {
   const hasDataConnection = Boolean(dataConnection)
   const dataConnectionActive = isDataConnectionActive(dataConnection)
+  const needsReconnect = connectionNeedsReconnect(dataConnection)
   const oauthInConfiguration = !hasDataConnection && isOAuthInConfiguration(provider, readinessLoaded)
-  const connected = dataConnectionActive
+  const connected = dataConnectionActive && !needsReconnect
   const category = CATEGORY_TABS.find((tab) => tab.value === categorizeToolkit(toolkit.slug))?.label ?? 'Outros'
   const statusLabel = oauthInConfiguration
     ? 'Em configuração'
-    : dataConnection?.uiStatus?.label || (connected ? 'Conectado' : hasDataConnection ? 'Pendente' : 'Não conectado')
-  const helperText = hasDataConnection && !dataConnectionActive
-    ? dataConnection?.uiStatus?.description || 'Conexão salva aguardando autorização.'
+    : needsReconnect
+      ? 'Reautenticar'
+      : dataConnection?.uiStatus?.label || (connected ? 'Conectado' : hasDataConnection ? 'Pendente' : 'Não conectado')
+  const helperText = needsReconnect
+    ? 'A autorização expirou ou foi recusada. Abra para reconectar.'
+    : hasDataConnection && !dataConnectionActive
+      ? dataConnection?.uiStatus?.description || 'Conexão salva aguardando autorização.'
     : connected
       ? dataConnection?.uiStatus?.description || 'Conexão pronta. Configure data warehouse, Otto IA e sincronização quando quiser.'
       : oauthInConfiguration

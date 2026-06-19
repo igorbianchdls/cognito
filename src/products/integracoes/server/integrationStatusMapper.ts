@@ -1,4 +1,5 @@
 import type { IntegrationConnectionStatus } from '@/products/integracoes/shared/contracts/connectionContracts'
+import type { IntegrationConnection } from '@/products/integracoes/shared/contracts/connectionContracts'
 import type { IntegrationEventSeverity, IntegrationEventType } from '@/products/integracoes/shared/contracts/eventContracts'
 import type { IntegrationSyncRunStatus } from '@/products/integracoes/shared/contracts/syncContracts'
 import {
@@ -9,6 +10,25 @@ import {
 
 export function mapConnectionStatusToUi(status: IntegrationConnectionStatus): IntegrationUiStatus {
   return CONNECTION_STATUS_UI[status] || CONNECTION_STATUS_UI.draft
+}
+
+function hasOAuthRefreshError(connection: Pick<IntegrationConnection, 'metadata'>) {
+  const error = connection.metadata?.oauthRefreshError
+  return typeof error === 'string' && error.trim().length > 0
+}
+
+export function getEffectiveConnectionStatus(connection: IntegrationConnection): IntegrationConnectionStatus {
+  if (hasOAuthRefreshError(connection)) return 'pending_auth'
+  return connection.status
+}
+
+export function serializeConnectionWithUi<T extends IntegrationConnection>(connection: T) {
+  const effectiveStatus = getEffectiveConnectionStatus(connection)
+  return {
+    ...connection,
+    status: effectiveStatus,
+    uiStatus: mapConnectionStatusToUi(effectiveStatus),
+  }
 }
 
 export function mapSyncRunStatusToUi(status: IntegrationSyncRunStatus): IntegrationUiStatus {

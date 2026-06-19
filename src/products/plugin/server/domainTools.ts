@@ -1,8 +1,10 @@
 import { runQuery } from '@/lib/postgres'
 import {
+  createIntegrationEvent,
   createIntegrationPluginActionAudit,
   getIntegrationPluginPermissions,
   listIntegrationConnections,
+  updateIntegrationConnection,
 } from '@/products/integracoes/server/integrationConnectionRepository'
 import { DASHBOARD_WIDGET_RESOURCE_URI } from '@/products/plugin/server/appResources'
 import type { ConnectedDomainToolResult } from '@/products/plugin/server/domain-adapters/shared/adapterTypes'
@@ -4515,6 +4517,44 @@ function inferActionPermissionKind(action: string): 'write' | 'destructive' {
   return CONNECTED_DESTRUCTIVE_ACTIONS.has(action) ? 'destructive' : 'write'
 }
 
+function isProviderAuthError(message: string) {
+  const value = message.toLowerCase()
+  return value.includes('invalid grant')
+    || value.includes('account not found')
+    || value.includes('refresh token')
+    || value.includes('unauthorized')
+    || value.includes('401')
+    || value.includes('403')
+}
+
+async function markConnectionPendingAuth(input: {
+  tenantId: number
+  connectionId: string
+  provider: string
+  message: string
+}) {
+  await updateIntegrationConnection(input.connectionId, input.tenantId, {
+    status: 'pending_auth',
+    metadata: {
+      oauthRefreshFailedAt: new Date().toISOString(),
+      oauthRefreshError: input.message,
+      authFailureSource: 'plugin_action',
+    },
+  })
+  await createIntegrationEvent({
+    tenantId: input.tenantId,
+    connectionId: input.connectionId,
+    eventType: 'connection.reconnect_requested',
+    severity: 'error',
+    actor: 'mcp',
+    message: 'Falha OAuth ao executar acao no provider. Reautenticacao necessaria.',
+    metadata: {
+      provider: input.provider,
+      errorMessage: input.message,
+    },
+  })
+}
+
 async function buildConnectedActionResponse(input: {
   tenantId?: number
   tool: string
@@ -4881,6 +4921,16 @@ async function callConnectedProviderAction(params: {
         permissionKind,
       })
     } catch (error) {
+      const message = error instanceof Error ? error.message : 'Falha ao executar acao no provider.'
+      if (isProviderAuthError(message)) {
+        await markConnectionPendingAuth({
+          tenantId,
+          connectionId: connection.id,
+          provider: connection.provider,
+          message,
+        }).catch(() => {})
+      }
+
       return buildConnectedActionResponse({
         tenantId,
         tool: params.tool,
@@ -4892,7 +4942,7 @@ async function callConnectedProviderAction(params: {
         resource,
         dryRun,
         success: false,
-        message: error instanceof Error ? error.message : 'Falha ao executar acao no provider.',
+        message,
         id,
         idempotencyKey,
         payload,

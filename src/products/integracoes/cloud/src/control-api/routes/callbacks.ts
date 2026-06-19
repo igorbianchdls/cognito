@@ -98,6 +98,8 @@ export async function handleProviderCallback(request: ControlApiRequest): Promis
         provider: parsedState.provider,
         tokenStoredAt: new Date().toISOString(),
         tokenExpiresAt: tokenSet.expiresAt || null,
+        oauthRefreshError: null,
+        oauthRefreshFailedAt: null,
       },
     })
     await createIntegrationEvent({

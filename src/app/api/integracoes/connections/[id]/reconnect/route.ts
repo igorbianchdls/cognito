@@ -2,7 +2,7 @@ import { NextRequest } from 'next/server'
 
 import { getIntegrationConnection } from '@/products/integracoes/server/integrationConnectionRepository'
 import { requestLocalReconnect } from '@/products/integracoes/server/integrationControlClient'
-import { mapConnectionStatusToUi } from '@/products/integracoes/server/integrationStatusMapper'
+import { serializeConnectionWithUi } from '@/products/integracoes/server/integrationStatusMapper'
 import {
   integrationAuthErrorResponse,
   resolveIntegrationTenant,
@@ -32,10 +32,7 @@ export async function POST(
       ok: true,
       reconnect: {
         ...reconnect,
-        connection: {
-          ...reconnect.connection,
-          uiStatus: mapConnectionStatusToUi(reconnect.connection.status),
-        },
+        connection: serializeConnectionWithUi(reconnect.connection),
       },
     })
   } catch (error) {

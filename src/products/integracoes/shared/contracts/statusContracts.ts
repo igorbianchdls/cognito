@@ -16,9 +16,9 @@ export const CONNECTION_STATUS_UI: Record<IntegrationConnectionStatus, Integrati
     description: 'Configuracao iniciada, mas ainda nao ativada.',
   },
   pending_auth: {
-    label: 'Pendente',
+    label: 'Reautenticar',
     tone: 'warning',
-    description: 'A conexao ainda precisa de autorizacao ou credenciais.',
+    description: 'A conexão precisa de nova autorização para continuar.',
   },
   connected: {
     label: 'Conectado',

@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { Bot, CheckCircle2, Database, RefreshCw, RotateCcw } from 'lucide-react'
+import { AlertTriangle, Bot, CheckCircle2, Database, RefreshCw, RotateCcw } from 'lucide-react'
 
 import {
   Sheet,
@@ -68,6 +68,11 @@ function toggleResource(resources: string[], resource: string) {
   return resources.includes(resource)
     ? resources.filter((item) => item !== resource)
     : [...resources, resource]
+}
+
+function oauthErrorFromConnection(connection: IntegrationConnectionWithUi | null) {
+  const value = connection?.metadata?.oauthRefreshError
+  return typeof value === 'string' && value.trim() ? value.trim() : null
 }
 
 export default function ConnectionDetailDrawer({
@@ -221,6 +226,8 @@ export default function ConnectionDetailDrawer({
     : null
   const bigQueryEnabled = Boolean(bigQueryDestination && bigQueryPipeline)
   const ottoEnabled = Boolean(permissions?.enabled)
+  const oauthError = oauthErrorFromConnection(connection)
+  const needsReconnect = Boolean(connection && (connection.status === 'pending_auth' || oauthError))
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
@@ -244,6 +251,33 @@ export default function ConnectionDetailDrawer({
             </SheetHeader>
 
             <div className="space-y-6 px-6 py-6">
+              {needsReconnect ? (
+                <section className="rounded-[16px] border border-[#FED7AA] bg-[#FFF7ED] p-4">
+                  <div className="flex items-start gap-3">
+                    <div className="mt-0.5 grid h-9 w-9 shrink-0 place-items-center rounded-[12px] bg-white text-[#C2410C] ring-1 ring-[#FDBA74]">
+                      <AlertTriangle className="h-5 w-5" />
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <div className="text-[14px] font-semibold text-[#7C2D12]">
+                        {connection.displayName} precisa ser reautenticada.
+                      </div>
+                      <div className="mt-1 text-[13px] leading-5 text-[#9A3412]">
+                        {oauthError || connection.uiStatus?.description || 'A autorização OAuth expirou ou foi recusada pelo provider.'}
+                      </div>
+                      <button
+                        type="button"
+                        disabled={busy}
+                        onClick={() => onReconnect(connection)}
+                        className="mt-3 inline-flex h-9 items-center justify-center gap-2 rounded-[12px] bg-[#C2410C] px-3 text-[12px] font-semibold text-white transition hover:bg-[#9A3412] disabled:opacity-60"
+                      >
+                        <RotateCcw className="h-4 w-4" />
+                        Reconectar {connection.displayName}
+                      </button>
+                    </div>
+                  </div>
+                </section>
+              ) : null}
+
               <section className="grid gap-3 sm:grid-cols-2">
                 <div className="rounded-[16px] border border-[#E6EAF4] bg-[#FAFBFD] p-4">
                   <div className="text-[12px] font-semibold uppercase tracking-[0.08em] text-[#98A4BA]">Status</div>

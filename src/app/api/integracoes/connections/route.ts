@@ -7,7 +7,7 @@ import {
 } from '@/products/integracoes/server/integrationConnectionRepository'
 import { prepareConnectionSetup } from '@/products/integracoes/server/integrationControlClient'
 import { IntegrationProviderError } from '@/products/integracoes/server/integrationProviderRegistry'
-import { mapConnectionStatusToUi } from '@/products/integracoes/server/integrationStatusMapper'
+import { serializeConnectionWithUi } from '@/products/integracoes/server/integrationStatusMapper'
 import {
   integrationAuthErrorResponse,
   resolveIntegrationTenant,
@@ -29,10 +29,7 @@ function asCredentials(value: unknown): Record<string, unknown> | undefined {
 }
 
 function serializeConnection(connection: Awaited<ReturnType<typeof createIntegrationConnection>>) {
-  return {
-    ...connection,
-    uiStatus: mapConnectionStatusToUi(connection.status),
-  }
+  return serializeConnectionWithUi(connection)
 }
 
 export async function GET(req: NextRequest) {
@@ -52,10 +49,7 @@ export async function GET(req: NextRequest) {
 
     return Response.json({
       ok: true,
-      connections: connections.map((connection) => ({
-        ...connection,
-        uiStatus: mapConnectionStatusToUi(connection.status),
-      })),
+      connections: connections.map(serializeConnectionWithUi),
     })
   } catch (error) {
     const authResponse = integrationAuthErrorResponse(error)

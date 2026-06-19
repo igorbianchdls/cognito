@@ -95,6 +95,8 @@ export async function refreshOAuthCredentialsIfNeeded(input: RefreshOAuthCredent
       status: 'connected',
       metadata: {
         oauthRefreshedAt: new Date().toISOString(),
+        oauthRefreshError: null,
+        oauthRefreshFailedAt: null,
         tokenExpiresAt: merged.expiresAt || null,
       },
     })
