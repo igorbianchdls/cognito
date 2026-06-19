@@ -1,4 +1,5 @@
-import { interpolate, useCurrentFrame } from 'remotion'
+import type { ComponentType } from 'react'
+import { AbsoluteFill, interpolate, useCurrentFrame } from 'remotion'
 
 import {
   ChatGptActionRow,
@@ -8,6 +9,143 @@ import {
   ChatGptToolCallCard,
   chatGptSequenceStyle,
 } from '@/assets/remotion/compositions/ChatGptMobileBase'
+import BlingIcon from '@/components/icons/BlingIcon'
+import ContaAzulIcon from '@/components/icons/ContaAzulIcon'
+import GoogleAdsIcon from '@/components/icons/GoogleAdsIcon'
+import MercadoLivreIcon from '@/components/icons/MercadoLivreIcon'
+import MetaIcon from '@/components/icons/MetaIcon'
+import ShopifyIcon from '@/components/icons/ShopifyIcon'
+
+type OrbitIntegration = {
+  accent: string
+  icon: ComponentType<{ className?: string }>
+  label: string
+}
+
+const orbitIntegrations: OrbitIntegration[] = [
+  { accent: '#1877f2', icon: MetaIcon, label: 'Meta' },
+  { accent: '#4285f4', icon: GoogleAdsIcon, label: 'Google Ads' },
+  { accent: '#1474c4', icon: ContaAzulIcon, label: 'Conta Azul' },
+  { accent: '#95bf47', icon: ShopifyIcon, label: 'Shopify' },
+  { accent: '#ffe000', icon: MercadoLivreIcon, label: 'Mercado Livre' },
+  { accent: '#16a34a', icon: BlingIcon, label: 'Bling' },
+]
+
+function IntegrationOrbitLogo({ active = false, integration }: { active?: boolean; integration: OrbitIntegration }) {
+  const Icon = integration.icon
+
+  return (
+    <div
+      style={{
+        alignItems: 'center',
+        background: '#ffffff',
+        border: `1px solid ${active ? integration.accent : '#e3e8ef'}`,
+        borderRadius: 30,
+        boxShadow: active ? '0 26px 70px rgba(15, 23, 42, 0.18)' : '0 18px 46px rgba(15, 23, 42, 0.10)',
+        display: 'grid',
+        gap: 12,
+        height: 152,
+        justifyItems: 'center',
+        padding: 18,
+        width: 152,
+      }}
+    >
+      <div style={{ alignItems: 'center', display: 'flex', height: 70, justifyContent: 'center', overflow: 'hidden', width: 70 }}>
+        <Icon className="h-full w-full" />
+      </div>
+      <span style={{ color: '#344054', fontSize: 18, fontWeight: 760, letterSpacing: 0, lineHeight: 1, textAlign: 'center' }}>
+        {integration.label}
+      </span>
+    </div>
+  )
+}
+
+export function IntegrationHubOrbitOnlyAnimation() {
+  const frame = useCurrentFrame()
+  const sceneIn = interpolate(frame, [0, 34], [0, 1], {
+    extrapolateLeft: 'clamp',
+    extrapolateRight: 'clamp',
+  })
+  const pulse = interpolate(frame % 80, [0, 40, 80], [0.96, 1.04, 0.96])
+  const activeIndex = Math.floor(frame / 42) % orbitIntegrations.length
+  const centerX = 540
+  const centerY = 930
+
+  return (
+    <AbsoluteFill style={{ background: '#f7f9fc', color: '#101828', fontFamily: 'Inter, Arial, sans-serif', overflow: 'hidden' }}>
+      <div style={{ background: 'radial-gradient(circle at 50% 48%, rgba(34, 95, 66, 0.16), rgba(247, 249, 252, 0) 58%)', bottom: -180, left: -180, position: 'absolute', right: -180, top: -180 }} />
+
+      <svg height="100%" style={{ left: 0, opacity: sceneIn, position: 'absolute', top: 0 }} viewBox="0 0 1080 1920" width="100%">
+        {[235, 360, 485].map((radius) => (
+          <circle cx={centerX} cy={centerY} fill="none" key={radius} r={radius} stroke="rgba(34, 95, 66, 0.13)" strokeDasharray={radius === 360 ? '18 18' : undefined} strokeWidth="3" />
+        ))}
+        {orbitIntegrations.map((integration, index) => {
+          const angle = frame / 74 + index * ((Math.PI * 2) / orbitIntegrations.length)
+          const radius = index % 2 === 0 ? 430 : 315
+          const x = centerX + Math.cos(angle) * radius
+          const y = centerY + Math.sin(angle) * radius
+          return <path d={`M ${centerX} ${centerY} L ${x} ${y}`} fill="none" key={integration.label} opacity="0.22" stroke={integration.accent} strokeDasharray="14 16" strokeWidth="4" />
+        })}
+      </svg>
+
+      <div style={{ opacity: sceneIn, position: 'absolute' }}>
+        {orbitIntegrations.map((integration, index) => {
+          const angle = frame / 74 + index * ((Math.PI * 2) / orbitIntegrations.length)
+          const radius = index % 2 === 0 ? 430 : 315
+          const x = centerX + Math.cos(angle) * radius
+          const y = centerY + Math.sin(angle) * radius
+          const depth = (Math.sin(angle) + 1) / 2
+          const active = index === activeIndex
+          const scale = 0.82 + depth * 0.14 + (active ? 0.12 : 0)
+
+          return (
+            <div
+              key={integration.label}
+              style={{
+                left: x,
+                opacity: 0.68 + depth * 0.32,
+                position: 'absolute',
+                top: y,
+                transform: `translate(-50%, -50%) scale(${scale})`,
+                zIndex: Math.round(depth * 20) + (active ? 30 : 8),
+              }}
+            >
+              <IntegrationOrbitLogo active={active} integration={integration} />
+            </div>
+          )
+        })}
+      </div>
+
+      <div
+        style={{
+          alignItems: 'center',
+          background: '#102019',
+          border: '1px solid #102019',
+          borderRadius: 999,
+          boxShadow: '0 42px 110px rgba(16, 32, 25, 0.24)',
+          display: 'grid',
+          height: 300,
+          justifyItems: 'center',
+          left: '50%',
+          opacity: sceneIn,
+          padding: 34,
+          position: 'absolute',
+          top: centerY,
+          transform: `translate(-50%, -50%) scale(${pulse})`,
+          width: 300,
+          zIndex: 50,
+        }}
+      >
+        <strong style={{ color: '#ffffff', fontSize: 76, fontWeight: 780, letterSpacing: 0, lineHeight: 1 }}>
+          Otto
+        </strong>
+        <span style={{ color: 'rgba(255,255,255,0.68)', fontSize: 24, fontWeight: 640, letterSpacing: 0, lineHeight: 1, marginTop: -36 }}>
+          Integracoes conectadas
+        </span>
+      </div>
+    </AbsoluteFill>
+  )
+}
 
 export function ChatGptMobileMarketingAnimation() {
   const frame = useCurrentFrame()
