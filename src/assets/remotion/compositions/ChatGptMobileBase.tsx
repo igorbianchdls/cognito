@@ -1,24 +1,142 @@
 import type { CSSProperties, ReactNode } from 'react'
 import { AbsoluteFill, interpolate } from 'remotion'
-import {
-  Copy,
-  Menu,
-  Mic,
-  MoreHorizontal,
-  Plus,
-  SquarePen,
-  ThumbsDown,
-  ThumbsUp,
-  Upload,
-  Volume2,
-  Wrench,
-} from 'lucide-react'
 
 import { IOS_REMOTION_FONT_STACK, loadSfProFonts } from '@/assets/remotion/fonts/sfPro'
 
 loadSfProFonts()
 
 export const CHATGPT_MOBILE_FONT_STACK = IOS_REMOTION_FONT_STACK
+
+type ChatGptIconProps = {
+  color?: string
+  size?: number
+  strokeWidth?: number
+  style?: CSSProperties
+}
+
+function ChatGptIconSvg({ children, color = '#050505', size = 24, strokeWidth = 2.4, style, viewBox = '0 0 24 24' }: ChatGptIconProps & { children: ReactNode; viewBox?: string }) {
+  return (
+    <svg
+      fill="none"
+      height={size}
+      stroke={color}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      strokeWidth={strokeWidth}
+      style={{ display: 'block', flexShrink: 0, ...style }}
+      viewBox={viewBox}
+      width={size}
+      xmlns="http://www.w3.org/2000/svg"
+    >
+      {children}
+    </svg>
+  )
+}
+
+function ChatGptMenuIcon(props: ChatGptIconProps) {
+  return (
+    <ChatGptIconSvg {...props}>
+      <path d="M4 7h16" />
+      <path d="M4 17h16" />
+    </ChatGptIconSvg>
+  )
+}
+
+function ChatGptComposeIcon(props: ChatGptIconProps) {
+  return (
+    <ChatGptIconSvg {...props}>
+      <path d="M12 4H6a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-6" />
+      <path d="M14 5.5 18.5 10" />
+      <path d="M20.2 3.8a1.9 1.9 0 0 1 0 2.7L9.5 17.2 5.8 18.2l1-3.7L17.5 3.8a1.9 1.9 0 0 1 2.7 0Z" />
+    </ChatGptIconSvg>
+  )
+}
+
+function ChatGptMoreIcon({ color = '#050505', size = 24, style }: ChatGptIconProps) {
+  return (
+    <svg fill="none" height={size} style={{ display: 'block', flexShrink: 0, ...style }} viewBox="0 0 24 24" width={size} xmlns="http://www.w3.org/2000/svg">
+      {[6, 12, 18].map((cx) => (
+        <circle key={cx} cx={cx} cy="12" fill={color} r="1.75" />
+      ))}
+    </svg>
+  )
+}
+
+function ChatGptPlusIcon(props: ChatGptIconProps) {
+  return (
+    <ChatGptIconSvg {...props}>
+      <path d="M12 5v14" />
+      <path d="M5 12h14" />
+    </ChatGptIconSvg>
+  )
+}
+
+function ChatGptMicIcon(props: ChatGptIconProps) {
+  return (
+    <ChatGptIconSvg {...props}>
+      <path d="M12 3a3 3 0 0 0-3 3v6a3 3 0 0 0 6 0V6a3 3 0 0 0-3-3Z" />
+      <path d="M5 10v2a7 7 0 0 0 14 0v-2" />
+      <path d="M12 19v3" />
+    </ChatGptIconSvg>
+  )
+}
+
+function ChatGptWrenchIcon(props: ChatGptIconProps) {
+  return (
+    <ChatGptIconSvg {...props}>
+      <path d="M14.7 6.3a4.5 4.5 0 0 0-5.4 5.4l-4.7 4.7a2 2 0 1 0 2.8 2.8l4.7-4.7a4.5 4.5 0 0 0 5.6-5.6l-3 3-2.8-2.8 2.8-2.8Z" />
+    </ChatGptIconSvg>
+  )
+}
+
+function ChatGptCopyIcon(props: ChatGptIconProps) {
+  return (
+    <ChatGptIconSvg {...props}>
+      <rect height="12" rx="2" width="12" x="8" y="8" />
+      <path d="M4 14V6a2 2 0 0 1 2-2h8" />
+    </ChatGptIconSvg>
+  )
+}
+
+function ChatGptVolumeIcon(props: ChatGptIconProps) {
+  return (
+    <ChatGptIconSvg {...props}>
+      <path d="M4 9v6h4l5 4V5L8 9H4Z" />
+      <path d="M17 9.5a4 4 0 0 1 0 5" />
+      <path d="M19.5 7a8 8 0 0 1 0 10" />
+    </ChatGptIconSvg>
+  )
+}
+
+function ChatGptThumbsUpIcon(props: ChatGptIconProps) {
+  return (
+    <ChatGptIconSvg {...props}>
+      <path d="M7 21V10" />
+      <path d="M7 10 11 3a2 2 0 0 1 3 1.7V8h4a2 2 0 0 1 2 2.3l-1.4 8A3 3 0 0 1 15.6 21H7Z" />
+      <path d="M3 10h4v11H3a1 1 0 0 1-1-1v-9a1 1 0 0 1 1-1Z" />
+    </ChatGptIconSvg>
+  )
+}
+
+function ChatGptThumbsDownIcon(props: ChatGptIconProps) {
+  return (
+    <ChatGptIconSvg {...props}>
+      <path d="M7 3v11" />
+      <path d="M7 14 11 21a2 2 0 0 0 3-1.7V16h4a2 2 0 0 0 2-2.3l-1.4-8A3 3 0 0 0 15.6 3H7Z" />
+      <path d="M3 3h4v11H3a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1Z" />
+    </ChatGptIconSvg>
+  )
+}
+
+function ChatGptUploadIcon(props: ChatGptIconProps) {
+  return (
+    <ChatGptIconSvg {...props}>
+      <path d="M12 16V4" />
+      <path d="m7 9 5-5 5 5" />
+      <path d="M5 16v3a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-3" />
+    </ChatGptIconSvg>
+  )
+}
 
 export function chatGptMobileProgress(frame: number, start: number, end: number) {
   if (frame <= start) return 0
@@ -95,7 +213,7 @@ export function ChatGptStatusBar() {
 }
 
 export function ChatGptActionRow() {
-  const icons = [Copy, Volume2, ThumbsUp, ThumbsDown, Upload, MoreHorizontal]
+  const icons = [ChatGptCopyIcon, ChatGptVolumeIcon, ChatGptThumbsUpIcon, ChatGptThumbsDownIcon, ChatGptUploadIcon, ChatGptMoreIcon]
 
   return (
     <div style={{ alignItems: 'center', display: 'flex', gap: 32 }}>
@@ -209,7 +327,7 @@ export function ChatGptToolCallCard({
           width: 42,
         }}
       >
-        <Wrench color="#606060" size={22} strokeWidth={2.2} />
+        <ChatGptWrenchIcon color="#606060" size={22} strokeWidth={2.2} />
       </div>
       <div style={{ alignItems: 'center', display: 'flex', gap: 12, minWidth: 0 }}>
         <span style={{ color: '#111111', fontSize: 32, fontWeight: 600, letterSpacing: 0, lineHeight: 1.05 }}>
@@ -247,12 +365,12 @@ export function ChatGptMobileShell({
 
       <div style={{ borderBottom: '1px solid #e8e8e8', height: 244, left: 0, position: 'absolute', right: 0, top: 0 }} />
 
-      <Menu color="#050505" size={72} strokeWidth={3.2} style={{ left: 40, position: 'absolute', top: 146 }} />
+      <ChatGptMenuIcon color="#050505" size={72} strokeWidth={3.2} style={{ left: 40, position: 'absolute', top: 146 }} />
       <div style={{ alignItems: 'center', color: '#111111', display: 'flex', fontSize: 46, fontWeight: 600, gap: 5, left: 161, letterSpacing: 0, lineHeight: 1, position: 'absolute', top: 153 }}>
         ChatGPT
       </div>
-      <SquarePen color="#050505" size={78} strokeWidth={3.5} style={{ left: 836, position: 'absolute', top: 132 }} />
-      <MoreHorizontal color="#050505" size={88} strokeWidth={4.2} style={{ left: 946, position: 'absolute', top: 138 }} />
+      <ChatGptComposeIcon color="#050505" size={78} strokeWidth={3.5} style={{ left: 836, position: 'absolute', top: 132 }} />
+      <ChatGptMoreIcon color="#050505" size={88} strokeWidth={4.2} style={{ left: 946, position: 'absolute', top: 138 }} />
 
       <div style={{ bottom: conversationBottom, left: 0, overflow: 'hidden', position: 'absolute', right: 0, top: 244 }}>
         <div style={{ display: 'grid', gap: 28, padding: '20px 0 760px', transform: `translateY(${conversationY}px)` }}>
@@ -262,9 +380,9 @@ export function ChatGptMobileShell({
 
       <div style={{ background: '#ffffff', bottom: 0, height: 264, left: 0, position: 'absolute', right: 0 }}>
         <div style={{ alignItems: 'center', background: '#f1f1f1', borderRadius: 999, bottom: promptInputBottom, display: 'flex', height: 110, left: 68, position: 'absolute', right: 68, top: promptInputBottom === undefined ? 0 : undefined }}>
-          <Plus color="#111111" size={76} strokeWidth={2.75} style={{ left: 24, position: 'absolute', top: 17 }} />
+          <ChatGptPlusIcon color="#111111" size={76} strokeWidth={2.75} style={{ left: 24, position: 'absolute', top: 17 }} />
           <span style={{ color: '#8a8a8a', fontSize: 40, fontWeight: 400, left: 138, letterSpacing: 0, lineHeight: 1, position: 'absolute', top: 35 }}>Pergunte ao ChatGPT</span>
-          <Mic color="#111111" size={76} strokeWidth={3.1} style={{ position: 'absolute', right: 122, top: 17 }} />
+          <ChatGptMicIcon color="#111111" size={76} strokeWidth={3.1} style={{ position: 'absolute', right: 122, top: 17 }} />
           <div style={{ position: 'absolute', right: 12, top: 12 }}>
             <ChatGptVoiceButton />
           </div>
