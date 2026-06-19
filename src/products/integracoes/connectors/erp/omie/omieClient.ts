@@ -142,6 +142,19 @@ export class OmieClient {
     return response.payload
   }
 
+  async requestCall<T extends OmiePagePayload = OmiePagePayload>(input: {
+    resource: string
+    endpoint: string
+    call: string
+    params: Record<string, unknown>
+  }): Promise<T> {
+    return this.call<T>({
+      resource: input.resource,
+      endpoint: input.endpoint,
+      call: input.call,
+    }, input.params)
+  }
+
   async *paginate(
     config: OmieResourceConfig,
     input?: {

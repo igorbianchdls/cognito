@@ -1,8 +1,8 @@
 import type { ConnectedErpProviderAction, ConnectedErpResource } from '@/products/plugin/server/domain-adapters/erp/erpTypes'
 import { contaAzulErpApiAdapter } from '@/products/plugin/server/domain-adapters/erp/providers/contaAzulErpApiAdapter'
+import { omieErpApiAdapter } from '@/products/plugin/server/domain-adapters/erp/providers/omieErpApiAdapter'
 import {
   blingErpApiAdapter,
-  omieErpApiAdapter,
 } from '@/products/plugin/server/domain-adapters/erp/providers/preOAuthErpApiAdapters'
 import type { ConnectedProviderApiAdapter } from '@/products/plugin/server/domain-adapters/shared/connectedProviderApiAdapter'
 

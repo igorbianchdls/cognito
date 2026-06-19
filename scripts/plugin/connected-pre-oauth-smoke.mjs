@@ -28,6 +28,7 @@ function main() {
   const erpRegistry = read('src/products/plugin/server/domain-adapters/erp/erpApiAdapterRegistry.ts')
   const crmRegistry = read('src/products/plugin/server/domain-adapters/crm/crmApiAdapterRegistry.ts')
   assert(erpRegistry.includes('preOAuthErpApiAdapters'), 'registry API ERP nao usa skeleton pre-OAuth')
+  assert(erpRegistry.includes('providers/omieErpApiAdapter'), 'registry API ERP deve usar adapter real do Omie')
   assert(crmRegistry.includes('preOAuthCrmApiAdapters'), 'registry API CRM nao usa skeleton pre-OAuth')
 
   const domainTools = read('src/products/plugin/server/domainTools.ts')
@@ -49,6 +50,16 @@ function main() {
   const contaAzulNormalizer = read('src/products/integracoes/datawarehouse/normalization/providers/contaAzulNormalizer.ts')
   assert(contaAzulNormalizer.includes("servicos: 'servicos'"), 'normalizer Conta Azul deve normalizar servicos')
   assert(contaAzulNormalizer.includes("contratos: 'contratos'"), 'normalizer Conta Azul deve normalizar contratos')
+  const omieNormalizer = read('src/products/integracoes/datawarehouse/normalization/providers/omieNormalizer.ts')
+  assert(omieNormalizer.includes("departamentos: 'centros_custo'"), 'normalizer Omie deve normalizar departamentos como centros_custo')
+  assert(omieNormalizer.includes("servicos: 'servicos'"), 'normalizer Omie deve normalizar servicos')
+  assert(omieNormalizer.includes("contratos: 'contratos'"), 'normalizer Omie deve normalizar contratos')
+
+  const omieApiAdapter = read('src/products/plugin/server/domain-adapters/erp/providers/omieErpApiAdapter.ts')
+  assert(omieApiAdapter.includes("provider: 'omie'"), 'adapter API real Omie deve declarar provider')
+  assert(omieApiAdapter.includes('IncluirCliente'), 'adapter API real Omie deve implementar criar cliente')
+  assert(omieApiAdapter.includes('LancarPagamento'), 'adapter API real Omie deve implementar baixa de conta a pagar')
+  assert(omieApiAdapter.includes('LancarRecebimento'), 'adapter API real Omie deve implementar baixa de conta a receber')
 
   const route = read('src/app/api/integracoes/connections/[id]/plugin-permissions/route.ts')
   assert(route.includes('assertCanManageIntegrationConnection'), 'rota de permissoes sem authz')

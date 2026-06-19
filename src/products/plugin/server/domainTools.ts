@@ -4405,7 +4405,7 @@ const CONNECTED_ERP_ACTIONS_BY_RESOURCE: Record<string, readonly ConnectedErpAct
   'centros-custo': ['criar'],
   produtos: ['criar', 'atualizar', 'deletar'],
   servicos: ['criar', 'atualizar'],
-  contratos: ['criar', 'deletar'],
+  contratos: ['criar', 'atualizar', 'deletar'],
 }
 
 const CONNECTED_CRM_ACTIONS_BY_RESOURCE: Record<string, readonly ConnectedCrmAction[]> = {
@@ -4470,6 +4470,9 @@ const CONNECTED_ERP_PROVIDER_RESOURCE_ALIASES: Record<string, Record<string, str
     'contas-a-receber': 'contas_receber',
     'contas-a-pagar': 'contas_pagar',
     'pedidos-venda': 'pedidos_venda',
+    'centros-custo': 'departamentos',
+    servicos: 'servicos',
+    contratos: 'contratos',
     'estoque-atual': 'estoque_saldos',
   },
 }

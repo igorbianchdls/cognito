@@ -9,6 +9,9 @@ export const omieErpAdapter = createBigQueryErpAdapter('omie', makeErpConfigs({
   'contas-a-receber': 'contas_receber',
   'contas-a-pagar': 'contas_pagar',
   'pedidos-venda': 'pedidos_venda',
+  'centros-custo': 'departamentos',
   produtos: 'produtos',
+  servicos: 'servicos',
+  contratos: 'contratos',
   'estoque-atual': 'estoque_saldos',
 }))

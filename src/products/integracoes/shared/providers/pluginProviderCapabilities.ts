@@ -48,6 +48,19 @@ const CONTA_AZUL_ERP_READ_RESOURCES = [
   'estoque-atual',
 ] as const
 
+const OMIE_ERP_READ_RESOURCES = [
+  'clientes',
+  'fornecedores',
+  'produtos',
+  'contas-a-receber',
+  'contas-a-pagar',
+  'pedidos-venda',
+  'centros-custo',
+  'servicos',
+  'contratos',
+  'estoque-atual',
+] as const
+
 const ERP_ACTIONS_BY_RESOURCE: Record<string, string[]> = {
   clientes: ['criar', 'atualizar', 'alterar_status'],
   fornecedores: ['criar', 'atualizar', 'alterar_status'],
@@ -68,6 +81,18 @@ const CONTA_AZUL_ERP_ACTIONS_BY_RESOURCE: Record<string, string[]> = {
   produtos: ['criar', 'atualizar', 'deletar'],
   servicos: ['criar', 'atualizar'],
   contratos: ['criar', 'deletar'],
+}
+
+const OMIE_ERP_ACTIONS_BY_RESOURCE: Record<string, string[]> = {
+  clientes: ['criar', 'atualizar'],
+  fornecedores: ['criar', 'atualizar'],
+  'contas-a-receber': ['criar', 'atualizar', 'baixar'],
+  'contas-a-pagar': ['criar', 'atualizar', 'baixar'],
+  'pedidos-venda': ['criar', 'atualizar', 'cancelar'],
+  'centros-custo': ['criar'],
+  produtos: ['criar', 'atualizar', 'deletar'],
+  servicos: ['criar', 'atualizar'],
+  contratos: ['criar', 'atualizar'],
 }
 
 const CRM_READ_RESOURCES = ['contas', 'contatos', 'leads', 'oportunidades', 'atividades'] as const
@@ -180,7 +205,7 @@ export const INTEGRATION_PLUGIN_PROVIDER_CAPABILITIES: IntegrationProviderPlugin
     credentialRequirements: ['app_key', 'app_secret'],
     scopeReviewStatus: 'planned',
     scopeHints: ERP_SCOPE_HINTS.omie,
-    resources: resourceCapabilities(ERP_READ_RESOURCES, ERP_ACTIONS_BY_RESOURCE),
+    resources: resourceCapabilities(OMIE_ERP_READ_RESOURCES, OMIE_ERP_ACTIONS_BY_RESOURCE),
   },
   {
     provider: 'conta_azul',

@@ -11,6 +11,9 @@ export const omieNormalizer: Normalizer = {
       contas_receber: 'contas_receber',
       contas_pagar: 'contas_pagar',
       pedidos_venda: 'vendas',
+      departamentos: 'centros_custo',
+      servicos: 'servicos',
+      contratos: 'contratos',
       estoque_saldos: 'estoque_atual',
     })
   },
