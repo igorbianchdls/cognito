@@ -11,6 +11,11 @@ type ServiceAccountCredentials = {
   token_uri?: string
 }
 
+type ValidServiceAccountCredentials = ServiceAccountCredentials & {
+  client_email: string
+  private_key: string
+}
+
 function base64Url(value: string | Buffer) {
   return Buffer.from(value)
     .toString('base64')
@@ -46,13 +51,17 @@ function parseServiceAccountCredentials(value: string): ServiceAccountCredential
   return null
 }
 
-function getServiceAccountCredentials() {
+function getServiceAccountCredentials(): ValidServiceAccountCredentials | null {
   const raw = process.env.BIGQUERY_CREDENTIALS_JSON
     || process.env.GOOGLE_APPLICATION_CREDENTIALS_JSON
     || ''
   const credentials = parseServiceAccountCredentials(raw)
   if (!credentials?.client_email || !credentials.private_key) return null
-  return credentials
+  return {
+    ...credentials,
+    client_email: credentials.client_email,
+    private_key: credentials.private_key,
+  }
 }
 
 async function getServiceAccountAccessToken(): Promise<string | null> {
