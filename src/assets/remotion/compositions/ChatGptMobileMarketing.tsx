@@ -87,6 +87,65 @@ export function ChatGptToolCallDemoAnimation() {
   )
 }
 
+export function ChatGptAccountingToolActionsAnimation() {
+  const frame = useCurrentFrame()
+  const conversationY = interpolate(frame, [0, 220, 390, 560, 740, 900], [0, 0, -230, -500, -760, -1010], {
+    extrapolateLeft: 'clamp',
+    extrapolateRight: 'clamp',
+  })
+
+  return (
+    <ChatGptMobileShell conversationY={conversationY}>
+      <ChatGptFlowUserBubble style={chatGptSequenceStyle(frame, 12, 18)}>
+        Classifique as despesas, concilie o banco e lance no ERP.
+      </ChatGptFlowUserBubble>
+
+      <ChatGptFlowAssistantText style={chatGptSequenceStyle(frame, 62, 22)}>
+        Entendi. Vou executar em tres etapas e te devolver o resumo de cada uma.
+      </ChatGptFlowAssistantText>
+
+      <ChatGptFlowAssistantText showHeader={false} style={chatGptSequenceStyle(frame, 144, 22)}>
+        Primeiro vou classificar as despesas sem categoria usando regras do financeiro.
+      </ChatGptFlowAssistantText>
+      <ChatGptToolCallCard
+        style={chatGptSequenceStyle(frame, 232, 18)}
+        toolName="connected_erp.classificar_despesas"
+      />
+      <ChatGptFlowAssistantText showHeader={false} style={chatGptSequenceStyle(frame, 306, 22)}>
+        Classifiquei 4 despesas: 3 aplicadas com alta confianca e 1 mantida para revisao.
+      </ChatGptFlowAssistantText>
+
+      <ChatGptFlowAssistantText showHeader={false} style={chatGptSequenceStyle(frame, 406, 22)}>
+        Agora vou conciliar o extrato bancario com os lancamentos do ERP.
+      </ChatGptFlowAssistantText>
+      <ChatGptToolCallCard
+        style={chatGptSequenceStyle(frame, 486, 18)}
+        toolName="connected_erp.conciliar_banco"
+      />
+      <ChatGptFlowAssistantText showHeader={false} style={chatGptSequenceStyle(frame, 560, 22)}>
+        Conciliei 14 movimentos automaticamente e deixei 3 divergencias pendentes.
+      </ChatGptFlowAssistantText>
+
+      <ChatGptFlowAssistantText showHeader={false} style={chatGptSequenceStyle(frame, 660, 22)}>
+        Por fim, vou criar o lancamento no ERP para a despesa validada.
+      </ChatGptFlowAssistantText>
+      <ChatGptToolCallCard
+        style={chatGptSequenceStyle(frame, 738, 18)}
+        toolName="connected_erp_acoes.criar_lancamento"
+      />
+      <ChatGptFlowAssistantText showHeader={false} style={chatGptSequenceStyle(frame, 812, 22)}>
+        Lancamento criado no ERP, vinculado ao extrato e marcado como aberto.
+      </ChatGptFlowAssistantText>
+
+      <div style={chatGptSequenceStyle(frame, 902, 14)}>
+        <div style={{ padding: '10px 0 0 45px' }}>
+          <ChatGptActionRow />
+        </div>
+      </div>
+    </ChatGptMobileShell>
+  )
+}
+
 export function ChatGptMobileAnimation() {
   return <ChatGptMobileMarketingAnimation />
 }
