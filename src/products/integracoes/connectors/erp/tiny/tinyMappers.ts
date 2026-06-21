@@ -28,18 +28,38 @@ function getExternalId(row: Record<string, unknown>, index: number) {
   return `tiny_row_${index + 1}`
 }
 
+function mapProviderRow(input: {
+  provider: 'tiny' | 'olist_erp'
+  resource: string
+  row: Record<string, unknown>
+  page: number
+  index: number
+}): ConnectorRow {
+  const providerPrefix = input.provider === 'olist_erp' ? 'olist_erp' : 'tiny'
+  return {
+    external_id: getExternalId(input.row, input.index),
+    [`${providerPrefix}_resource`]: input.resource,
+    [`${providerPrefix}_page`]: input.page,
+    raw: input.row,
+  }
+}
+
 export function mapTinyRow(input: {
   resource: string
   row: Record<string, unknown>
   page: number
   index: number
 }): ConnectorRow {
-  return {
-    external_id: getExternalId(input.row, input.index),
-    tiny_resource: input.resource,
-    tiny_page: input.page,
-    raw: input.row,
-  }
+  return mapProviderRow({ ...input, provider: 'tiny' })
+}
+
+export function mapOlistErpRow(input: {
+  resource: string
+  row: Record<string, unknown>
+  page: number
+  index: number
+}): ConnectorRow {
+  return mapProviderRow({ ...input, provider: 'olist_erp' })
 }
 
 export function mapTinyRows(input: {
@@ -48,6 +68,19 @@ export function mapTinyRows(input: {
   page: number
 }): ConnectorRow[] {
   return input.rows.map((row, index) => mapTinyRow({
+    resource: input.resource,
+    row,
+    page: input.page,
+    index,
+  }))
+}
+
+export function mapOlistErpRows(input: {
+  resource: string
+  rows: Record<string, unknown>[]
+  page: number
+}): ConnectorRow[] {
+  return input.rows.map((row, index) => mapOlistErpRow({
     resource: input.resource,
     row,
     page: input.page,

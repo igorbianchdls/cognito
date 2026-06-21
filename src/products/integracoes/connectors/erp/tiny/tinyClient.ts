@@ -234,3 +234,6 @@ export class TinyClient {
 export function createTinyClient(credentials: unknown): TinyClient {
   return new TinyClient(normalizeTinyCredentials(credentials))
 }
+
+export const createOlistErpClient = createTinyClient
+export const validateOlistErpConnectorCredentials = validateTinyConnectorCredentials

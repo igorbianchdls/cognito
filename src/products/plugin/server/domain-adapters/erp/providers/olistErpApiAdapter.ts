@@ -1,5 +1,5 @@
 import { readSecret } from '@/products/integracoes/cloud/src/lib/secretManager'
-import { createTinyClient } from '@/products/integracoes/connectors/erp/tiny/tinyClient'
+import { createOlistErpClient } from '@/products/integracoes/connectors/erp/tiny/tinyClient'
 import { refreshOAuthCredentialsIfNeeded } from '@/products/integracoes/connectors/oauth/credentials'
 import type { IntegrationConnection } from '@/products/integracoes/shared/contracts/connectionContracts'
 import type { ErpApiAdapter } from '@/products/plugin/server/domain-adapters/erp/erpApiAdapterRegistry'
@@ -257,7 +257,7 @@ async function executeOlistErpAction(
     tenantId: input.tenantId,
     connection: input.connection,
   })
-  const client = createTinyClient(credentials)
+  const client = createOlistErpClient(credentials)
   const requestPayload = buildFinancialPayload(resource, input.action, input.id, input.payload || {}, input)
   const path = pathFor(resource, input.action, input.id)
   const method = methodFor(input.action)
@@ -308,9 +308,4 @@ export const olistErpApiAdapter: ErpApiAdapter = {
     }
     return executeOlistErpAction(input)
   },
-}
-
-export const tinyErpApiAdapter: ErpApiAdapter = {
-  ...olistErpApiAdapter,
-  provider: 'tiny',
 }

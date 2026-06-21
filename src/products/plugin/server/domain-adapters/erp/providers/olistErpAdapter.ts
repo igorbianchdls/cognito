@@ -33,4 +33,3 @@ const OLIST_ERP_RESOURCE_MAP = {
 } as const
 
 export const olistErpAdapter = createBigQueryErpAdapter('olist_erp', makeErpConfigs(OLIST_ERP_RESOURCE_MAP))
-export const tinyErpAdapter = createBigQueryErpAdapter('tiny', makeErpConfigs(OLIST_ERP_RESOURCE_MAP))

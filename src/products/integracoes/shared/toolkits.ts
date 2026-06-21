@@ -46,6 +46,7 @@ export const TOOLKITS: ToolkitDefinition[] = [
   { slug: 'MIXPANEL', name: 'Mixpanel', description: 'Analytics de produto' },
   { slug: 'MONDAY', name: 'Monday.com', description: 'Projetos e workflows' },
   { slug: 'NETSUITE', name: 'NetSuite', description: 'ERP da Oracle' },
+  { slug: 'OLIST_ERP', name: 'Olist ERP', description: 'ERP para ecommerce, pedidos, estoque, financeiro e fiscal' },
   { slug: 'ONE_DRIVE', name: 'OneDrive', description: 'Arquivos e armazenamento' },
   { slug: 'OUTLOOK', name: 'Outlook', description: 'Email e calendário' },
   { slug: 'PIPEDRIVE', name: 'Pipedrive', description: 'CRM de vendas' },

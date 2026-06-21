@@ -258,3 +258,8 @@ export function getTinyResourceConfig(resource: string): TinyResourceConfig | un
 export function listTinySupportedResources(): string[] {
   return TINY_RESOURCE_CONFIGS.map((config) => config.resource)
 }
+
+export const OLIST_ERP_RESOURCE_CONFIGS = TINY_RESOURCE_CONFIGS
+export const OLIST_ERP_RESOURCE_MANIFEST = TINY_RESOURCE_MANIFEST
+export const getOlistErpResourceConfig = getTinyResourceConfig
+export const listOlistErpSupportedResources = listTinySupportedResources

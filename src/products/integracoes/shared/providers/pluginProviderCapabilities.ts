@@ -205,12 +205,6 @@ const ERP_SCOPE_HINTS: Record<string, IntegrationProviderPluginScopeGroup> = {
     write: ['financeiro.write'],
     destructive: ['financeiro.write'],
   },
-  tiny: {
-    read: ['contatos.read', 'produtos.read', 'pedidos.read', 'financeiro.read', 'estoque.read', 'fiscal.read'],
-    liveRead: ['contatos.read', 'produtos.read', 'pedidos.read', 'financeiro.read', 'estoque.read', 'fiscal.read'],
-    write: ['financeiro.write'],
-    destructive: ['financeiro.write'],
-  },
 }
 
 const CRM_SCOPE_HINTS: Record<string, IntegrationProviderPluginScopeGroup> = {
@@ -296,14 +290,6 @@ export const INTEGRATION_PLUGIN_PROVIDER_CAPABILITIES: IntegrationProviderPlugin
     credentialMode: 'oauth2',
     scopeReviewStatus: 'planned',
     scopeHints: ERP_SCOPE_HINTS.olist_erp,
-    resources: resourceCapabilities(OLIST_ERP_READ_RESOURCES, OLIST_ERP_ACTIONS_BY_RESOURCE),
-  },
-  {
-    provider: 'tiny',
-    domain: 'erp',
-    credentialMode: 'oauth2',
-    scopeReviewStatus: 'planned',
-    scopeHints: ERP_SCOPE_HINTS.tiny,
     resources: resourceCapabilities(OLIST_ERP_READ_RESOURCES, OLIST_ERP_ACTIONS_BY_RESOURCE),
   },
   ...(['bitrix24', 'hubspot', 'pipedrive', 'salesforce', 'rd_station_crm'] as const).map((provider) => ({

@@ -577,7 +577,7 @@ const CONNECTED_ERP_ACTIONS_SCHEMA = {
   properties: {
     provider: {
       type: 'string',
-      description: 'Provider conectado em /integracoes, como omie, conta_azul ou bling. Opcional quando houver apenas uma conexao ativa.',
+      description: 'Provider conectado em /integracoes, como omie, conta_azul, bling ou olist_erp. Opcional quando houver apenas uma conexao ativa.',
     },
     resource: {
       type: 'string',
@@ -586,7 +586,7 @@ const CONNECTED_ERP_ACTIONS_SCHEMA = {
     },
     action: {
       type: 'string',
-      enum: ['criar', 'atualizar', 'baixar', 'cancelar', 'deletar'],
+      enum: ['criar', 'atualizar', 'baixar', 'cancelar', 'deletar', 'estornar', 'reabrir', 'alterar_status'],
       description: 'Acao executada diretamente na API do provider quando suportada. dry_run=true por padrao.',
     },
     id: {
