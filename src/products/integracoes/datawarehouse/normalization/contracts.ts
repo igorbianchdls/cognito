@@ -57,6 +57,13 @@ export type NormalizedTableName =
   | 'usuarios'
   | 'pipelines'
   | 'fases_pipeline'
+  | 'social_profiles'
+  | 'social_posts'
+  | 'social_videos'
+  | 'social_comments'
+  | 'social_audience_daily'
+  | 'social_performance_daily'
+  | 'social_engagement_daily'
 
 export type NormalizationInput = {
   tenantId: number

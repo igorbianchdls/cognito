@@ -666,6 +666,7 @@ const PAID_MEDIA_SCHEMA = createCrudSchema(
 const SOCIAL_SCHEMA = createCrudSchema(
   [...SOCIAL_RESOURCES],
   'Resource canonico de social organico conectado via /integracoes. Use perfis, posts, videos, comentarios, audiencia, desempenho-diario ou engajamento.',
+  ['listar', 'ler', 'listar_live', 'ler_live'] satisfies ConnectedReadAction[],
 )
 
 const ANALYTICS_SCHEMA = createCrudSchema(

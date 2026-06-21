@@ -68,6 +68,36 @@ const CRM_PIPELINE_FIELDS: BigQueryFieldSchema[] = [
   { name: 'atualizado_em', type: 'TIMESTAMP' },
 ]
 
+const SOCIAL_CONTENT_FIELDS: BigQueryFieldSchema[] = [
+  { name: 'profile_id', type: 'STRING' },
+  { name: 'titulo', type: 'STRING' },
+  { name: 'texto', type: 'STRING' },
+  { name: 'url', type: 'STRING' },
+  { name: 'tipo', type: 'STRING' },
+  { name: 'published_at', type: 'TIMESTAMP' },
+  { name: 'views', type: 'NUMERIC' },
+  { name: 'likes', type: 'NUMERIC' },
+  { name: 'comments', type: 'NUMERIC' },
+  { name: 'shares', type: 'NUMERIC' },
+  { name: 'saves', type: 'NUMERIC' },
+  { name: 'status', type: 'STRING' },
+]
+
+const SOCIAL_DAILY_METRIC_FIELDS: BigQueryFieldSchema[] = [
+  { name: 'profile_id', type: 'STRING' },
+  { name: 'data_ref', type: 'DATE' },
+  { name: 'metric', type: 'STRING' },
+  { name: 'value', type: 'NUMERIC' },
+  { name: 'views', type: 'NUMERIC' },
+  { name: 'impressions', type: 'NUMERIC' },
+  { name: 'reach', type: 'NUMERIC' },
+  { name: 'likes', type: 'NUMERIC' },
+  { name: 'comments', type: 'NUMERIC' },
+  { name: 'shares', type: 'NUMERIC' },
+  { name: 'followers', type: 'NUMERIC' },
+  { name: 'engagement_rate', type: 'NUMERIC' },
+]
+
 const TABLE_FIELDS: Record<NormalizedTableName, BigQueryFieldSchema[]> = {
   clientes: CONTACT_FIELDS,
   fornecedores: CONTACT_FIELDS,
@@ -418,6 +448,31 @@ const TABLE_FIELDS: Record<NormalizedTableName, BigQueryFieldSchema[]> = {
     { name: 'criado_em', type: 'TIMESTAMP' },
     { name: 'atualizado_em', type: 'TIMESTAMP' },
   ],
+  social_profiles: [
+    { name: 'nome', type: 'STRING' },
+    { name: 'username', type: 'STRING' },
+    { name: 'url', type: 'STRING' },
+    { name: 'avatar_url', type: 'STRING' },
+    { name: 'followers', type: 'NUMERIC' },
+    { name: 'following', type: 'NUMERIC' },
+    { name: 'posts_count', type: 'NUMERIC' },
+    { name: 'status', type: 'STRING' },
+  ],
+  social_posts: SOCIAL_CONTENT_FIELDS,
+  social_videos: SOCIAL_CONTENT_FIELDS,
+  social_comments: [
+    { name: 'post_id', type: 'STRING' },
+    { name: 'profile_id', type: 'STRING' },
+    { name: 'author_id', type: 'STRING' },
+    { name: 'author_name', type: 'STRING' },
+    { name: 'texto', type: 'STRING' },
+    { name: 'created_at', type: 'TIMESTAMP' },
+    { name: 'likes', type: 'NUMERIC' },
+    { name: 'status', type: 'STRING' },
+  ],
+  social_audience_daily: SOCIAL_DAILY_METRIC_FIELDS,
+  social_performance_daily: SOCIAL_DAILY_METRIC_FIELDS,
+  social_engagement_daily: SOCIAL_DAILY_METRIC_FIELDS,
 }
 
 export function getNormalizedTableSchema(table: NormalizedTableName): BigQueryFieldSchema[] {

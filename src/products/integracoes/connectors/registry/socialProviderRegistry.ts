@@ -1,8 +1,11 @@
-import { createStubConnector } from '@/products/integracoes/connectors/stubConnector'
+import { instagramConnector } from '@/products/integracoes/connectors/social/instagramConnector'
+import { linkedinConnector } from '@/products/integracoes/connectors/social/linkedinConnector'
+import { tiktokConnector } from '@/products/integracoes/connectors/social/tiktokConnector'
+import { youtubeConnector } from '@/products/integracoes/connectors/social/youtubeConnector'
 
 export const SOCIAL_CONNECTORS = [
-  createStubConnector({ domain: 'social', provider: 'instagram' }),
-  createStubConnector({ domain: 'social', provider: 'youtube' }),
-  createStubConnector({ domain: 'social', provider: 'linkedin' }),
-  createStubConnector({ domain: 'social', provider: 'tiktok' }),
+  instagramConnector,
+  youtubeConnector,
+  linkedinConnector,
+  tiktokConnector,
 ]
