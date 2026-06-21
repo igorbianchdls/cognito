@@ -72,6 +72,35 @@ const BLING_ERP_READ_RESOURCES = [
   'estoque-atual',
 ] as const
 
+const OLIST_ERP_READ_RESOURCES = [
+  'clientes',
+  'fornecedores',
+  'vendedores',
+  'produtos',
+  'variacoes',
+  'marcas',
+  'contas-a-receber',
+  'contas-a-pagar',
+  'pedidos-venda',
+  'itens-venda',
+  'parcelas-venda',
+  'pedidos-compra',
+  'notas-fiscais',
+  'notas-consumidor',
+  'expedicoes',
+  'separacoes',
+  'estoque-atual',
+  'movimentacoes-estoque',
+  'listas-preco',
+  'formas-envio',
+  'formas-pagamento',
+  'intermediadores',
+  'categorias',
+  'empresa-conectada',
+  'uso-api',
+  'gatilhos',
+] as const
+
 const ERP_ACTIONS_BY_RESOURCE: Record<string, string[]> = {
   clientes: ['criar', 'atualizar', 'alterar_status'],
   fornecedores: ['criar', 'atualizar', 'alterar_status'],
@@ -114,6 +143,11 @@ const BLING_ERP_ACTIONS_BY_RESOURCE: Record<string, string[]> = {
   'pedidos-venda': ['criar', 'atualizar', 'cancelar'],
   produtos: ['criar', 'atualizar', 'deletar'],
   servicos: ['criar', 'atualizar'],
+}
+
+const OLIST_ERP_ACTIONS_BY_RESOURCE: Record<string, string[]> = {
+  'contas-a-receber': ['criar', 'atualizar', 'baixar'],
+  'contas-a-pagar': ['criar', 'atualizar', 'baixar'],
 }
 
 const CRM_READ_RESOURCES = ['contas', 'contatos', 'leads', 'oportunidades', 'atividades'] as const
@@ -164,6 +198,18 @@ const ERP_SCOPE_HINTS: Record<string, IntegrationProviderPluginScopeGroup> = {
     liveRead: ['contacts.read', 'products.read', 'orders.read', 'finance.read', 'stock.read'],
     write: ['contacts.write', 'products.write', 'orders.write', 'finance.write', 'stock.write'],
     destructive: ['orders.write', 'finance.write', 'stock.write'],
+  },
+  olist_erp: {
+    read: ['contatos.read', 'produtos.read', 'pedidos.read', 'financeiro.read', 'estoque.read', 'fiscal.read'],
+    liveRead: ['contatos.read', 'produtos.read', 'pedidos.read', 'financeiro.read', 'estoque.read', 'fiscal.read'],
+    write: ['financeiro.write'],
+    destructive: ['financeiro.write'],
+  },
+  tiny: {
+    read: ['contatos.read', 'produtos.read', 'pedidos.read', 'financeiro.read', 'estoque.read', 'fiscal.read'],
+    liveRead: ['contatos.read', 'produtos.read', 'pedidos.read', 'financeiro.read', 'estoque.read', 'fiscal.read'],
+    write: ['financeiro.write'],
+    destructive: ['financeiro.write'],
   },
 }
 
@@ -243,6 +289,22 @@ export const INTEGRATION_PLUGIN_PROVIDER_CAPABILITIES: IntegrationProviderPlugin
     scopeReviewStatus: 'planned',
     scopeHints: ERP_SCOPE_HINTS.bling,
     resources: resourceCapabilities(BLING_ERP_READ_RESOURCES, BLING_ERP_ACTIONS_BY_RESOURCE),
+  },
+  {
+    provider: 'olist_erp',
+    domain: 'erp',
+    credentialMode: 'oauth2',
+    scopeReviewStatus: 'planned',
+    scopeHints: ERP_SCOPE_HINTS.olist_erp,
+    resources: resourceCapabilities(OLIST_ERP_READ_RESOURCES, OLIST_ERP_ACTIONS_BY_RESOURCE),
+  },
+  {
+    provider: 'tiny',
+    domain: 'erp',
+    credentialMode: 'oauth2',
+    scopeReviewStatus: 'planned',
+    scopeHints: ERP_SCOPE_HINTS.tiny,
+    resources: resourceCapabilities(OLIST_ERP_READ_RESOURCES, OLIST_ERP_ACTIONS_BY_RESOURCE),
   },
   ...(['bitrix24', 'hubspot', 'pipedrive', 'salesforce', 'rd_station_crm'] as const).map((provider) => ({
     provider,

@@ -16,6 +16,22 @@ export type NormalizedTableName =
   | 'contas_financeiras'
   | 'transferencias'
   | 'estoque_atual'
+  | 'compras'
+  | 'parcelas_venda'
+  | 'vendedores'
+  | 'variacoes'
+  | 'marcas'
+  | 'notas_consumidor'
+  | 'expedicoes'
+  | 'separacoes'
+  | 'estoque_movimentacoes'
+  | 'listas_preco'
+  | 'formas_envio'
+  | 'formas_pagamento'
+  | 'intermediadores'
+  | 'empresa_conectada'
+  | 'uso_api'
+  | 'gatilhos'
 
 export type NormalizationInput = {
   tenantId: number

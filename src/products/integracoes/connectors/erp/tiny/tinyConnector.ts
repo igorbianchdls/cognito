@@ -25,7 +25,7 @@ function warningResult(resource: string, message: string): ConnectorResult {
 
 export const tinyConnector: Connector = {
   domain: 'erp',
-  provider: 'tiny',
+  provider: 'olist_erp',
   resources: TINY_RESOURCE_MANIFEST,
   validateCredentials: validateTinyConnectorCredentials,
 
@@ -42,7 +42,7 @@ export const tinyConnector: Connector = {
       recordsUpdated: 0,
       recordsFailed: 0,
       metadata: {
-        mode: 'tiny_api_v3',
+        mode: 'olist_erp_api_v3',
         testResource: 'produtos',
         totalPages: page.value?.totalPages ?? null,
         totalRecords: page.value?.totalRecords ?? null,
@@ -53,7 +53,7 @@ export const tinyConnector: Connector = {
   async syncResource(context: ConnectorContext, resource: string): Promise<ConnectorResult> {
     const config = getTinyResourceConfig(resource)
     if (!config) {
-      return warningResult(resource, `Recurso Tiny ainda nao mapeado para sincronizacao: ${resource}.`)
+      return warningResult(resource, `Recurso Olist ERP ainda nao mapeado para sincronizacao: ${resource}.`)
     }
 
     const client = createTinyClient(context.credentials)
@@ -66,9 +66,10 @@ export const tinyConnector: Connector = {
     for await (const page of client.paginate(config, {
       cursor: context.cursor,
     })) {
+      const items = config.transformItems ? config.transformItems(page.items) : page.items
       const rows = mapTinyRows({
         resource,
-        rows: page.items,
+        rows: items,
         page: page.page,
       })
       recordsIn += rows.length
@@ -90,7 +91,7 @@ export const tinyConnector: Connector = {
       recordsFailed: 0,
       batches,
       metadata: {
-        mode: 'tiny_api_v3',
+        mode: 'olist_erp_api_v3',
         resource,
         totalPages: totalPages ?? null,
         totalRecords: totalRecords ?? null,
@@ -105,7 +106,7 @@ export const tinyConnector: Connector = {
       recordsIn: 0,
       recordsUpdated: 0,
       recordsFailed: 0,
-      errorMessage: 'Refresh OAuth do Tiny ainda precisa ser acionado pelo job de refresh token.',
+      errorMessage: 'Refresh OAuth do Olist ERP ainda precisa ser acionado pelo job de refresh token.',
       metadata: {
         mode: 'oauth2',
         refreshed: false,

@@ -19,6 +19,7 @@ export type TinyResourceConfig = {
     pageSize: number
     cursor?: Record<string, unknown>
   }) => Record<string, string | number | boolean>
+  transformItems?: (items: Record<string, unknown>[]) => Record<string, unknown>[]
 }
 
 export type TinyPagePayload =

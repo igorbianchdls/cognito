@@ -303,21 +303,146 @@ function stockFields(payload: JsonRecord) {
   }
 }
 
+function purchaseFields(payload: JsonRecord) {
+  return {
+    fornecedor_id: text(payload, ['fornecedor.id', 'fornecedor_id', 'contato.id', 'id_fornecedor']),
+    fornecedor_nome: text(payload, ['fornecedor.nome', 'nome_fornecedor', 'contato.nome', 'razao_social']),
+    numero: text(payload, ['numero', 'numero_pedido', 'numeroPedido', 'codigo']),
+    valor_total: numberValue(payload, ['valor_total', 'valorTotal', 'total']),
+    data_emissao: dateValue(payload, ['data_emissao', 'dataEmissao', 'emissao']),
+    data_compra: dateValue(payload, ['data_compra', 'dataCompra', 'data', 'data_pedido']),
+    status: normalizeStatus(text(payload, ['status', 'situacao', 'etapa'])),
+  }
+}
+
+function saleInstallmentFields(payload: JsonRecord) {
+  return {
+    venda_id: text(payload, ['venda_id', 'pedido_id', 'parent_id']),
+    parcela_id: text(payload, ['id', 'uuid', 'parcela_id']),
+    numero: text(payload, ['numero', 'numero_parcela']),
+    valor: numberValue(payload, ['valor', 'valor_total', 'total']),
+    data_vencimento: dateValue(payload, ['data_vencimento', 'vencimento', 'due_date']),
+    data_pagamento: dateValue(payload, ['data_pagamento', 'pagamento', 'recebimento']),
+    status: normalizeStatus(text(payload, ['status', 'situacao'])),
+  }
+}
+
+function variationFields(payload: JsonRecord) {
+  return {
+    produto_id: text(payload, ['produto.id', 'produto_id', 'id_produto', 'parent_id']),
+    nome: text(payload, ['nome', 'name', 'descricao', 'description']),
+    codigo: text(payload, ['codigo', 'code', 'codigo_produto']),
+    sku: text(payload, ['sku', 'referencia', 'codigo_sku']),
+    descricao: text(payload, ['descricao', 'description']),
+    preco: numberValue(payload, ['preco', 'preco_venda', 'valor', 'price']),
+    status: normalizeStatus(text(payload, ['status', 'situacao', 'ativo'])),
+  }
+}
+
+function registryFields(payload: JsonRecord) {
+  return {
+    nome: text(payload, ['nome', 'name', 'descricao', 'description']),
+    codigo: text(payload, ['codigo', 'code', 'id_legado']),
+    descricao: text(payload, ['descricao', 'description', 'nome']),
+    tipo: text(payload, ['tipo', 'type']),
+    status: normalizeStatus(text(payload, ['status', 'situacao', 'ativo'])),
+  }
+}
+
+function expeditionFields(payload: JsonRecord) {
+  return {
+    pedido_id: text(payload, ['pedido.id', 'pedido_id', 'id_pedido', 'venda_id']),
+    numero: text(payload, ['numero', 'numero_expedicao', 'codigo']),
+    transportadora: text(payload, ['transportadora.nome', 'transportadora', 'forma_envio.nome', 'formaEnvio.nome']),
+    codigo_rastreio: text(payload, ['codigo_rastreio', 'rastreamento', 'tracking_code', 'objeto.codigo']),
+    data_envio: dateValue(payload, ['data_envio', 'data_postagem', 'data', 'enviado_em']),
+    status: normalizeStatus(text(payload, ['status', 'situacao'])),
+  }
+}
+
+function separationFields(payload: JsonRecord) {
+  return {
+    pedido_id: text(payload, ['pedido.id', 'pedido_id', 'id_pedido', 'venda_id']),
+    numero: text(payload, ['numero', 'codigo']),
+    responsavel: text(payload, ['responsavel.nome', 'responsavel', 'usuario.nome']),
+    data: dateValue(payload, ['data', 'created_at', 'criado_em']),
+    status: normalizeStatus(text(payload, ['status', 'situacao'])),
+  }
+}
+
+function stockMovementFields(payload: JsonRecord) {
+  return {
+    produto_id: text(payload, ['produto.id', 'id_produto', 'produto_id', 'codigo_produto']),
+    produto_nome: text(payload, ['produto.nome', 'nome_produto', 'descricao']),
+    codigo: text(payload, ['codigo', 'produto.codigo', 'codigo_produto']),
+    sku: text(payload, ['sku', 'referencia', 'produto.sku']),
+    quantidade: numberValue(payload, ['quantidade', 'qtd', 'saldo', 'estoque']),
+    tipo: text(payload, ['tipo', 'type', 'operacao']),
+    local: text(payload, ['local', 'deposito.nome', 'deposito', 'almoxarifado']),
+    data: dateValue(payload, ['data', 'data_movimentacao', 'created_at']),
+  }
+}
+
+function companyFields(payload: JsonRecord) {
+  return {
+    nome: text(payload, ['nome', 'name', 'razao_social', 'razaoSocial', 'empresa.nome']),
+    documento: text(payload, ['documento', 'cnpj', 'cpf_cnpj', 'empresa.cnpj']),
+    email: text(payload, ['email', 'empresa.email']),
+    telefone: text(payload, ['telefone', 'phone', 'empresa.telefone']),
+    cidade: text(payload, ['cidade', 'endereco.cidade', 'empresa.cidade']),
+    uf: text(payload, ['uf', 'estado', 'endereco.uf', 'empresa.uf']),
+    status: normalizeStatus(text(payload, ['status', 'situacao', 'ativo'])),
+  }
+}
+
+function apiUsageFields(payload: JsonRecord) {
+  return {
+    nome: text(payload, ['nome', 'name', 'descricao', 'description', 'recurso']),
+    limite: numberValue(payload, ['limite', 'limit', 'total', 'quota']),
+    utilizado: numberValue(payload, ['utilizado', 'used', 'consumido', 'uso']),
+    disponivel: numberValue(payload, ['disponivel', 'available', 'restante', 'remaining']),
+    periodo: text(payload, ['periodo', 'period', 'janela']),
+    status: normalizeStatus(text(payload, ['status', 'situacao'])),
+  }
+}
+
+function eventFields(payload: JsonRecord) {
+  return {
+    numero: text(payload, ['numero', 'codigo', 'id']),
+    descricao: text(payload, ['descricao', 'description', 'nome']),
+    status: normalizeStatus(text(payload, ['status', 'situacao', 'ativo'])),
+    data: dateValue(payload, ['data', 'created_at', 'criado_em']),
+    valor_total: numberValue(payload, ['valor_total', 'valor', 'total']),
+  }
+}
+
 function fieldsFor(table: NormalizedTableName, payload: JsonRecord) {
   if (table === 'clientes' || table === 'fornecedores') return contactFields(payload)
   if (table === 'produtos') return productFields(payload)
   if (table === 'servicos') return serviceFields(payload)
   if (table === 'contas_receber' || table === 'contas_pagar') return financialFields(payload)
   if (table === 'vendas') return saleFields(payload)
+  if (table === 'compras') return purchaseFields(payload)
   if (table === 'contratos') return contractFields(payload)
   if (table === 'itens_venda') return saleItemFields(payload)
+  if (table === 'parcelas_venda') return saleInstallmentFields(payload)
   if (table === 'venda_detalhes') return saleDetailFields(payload)
   if (table === 'notas_fiscais') return invoiceFields(payload)
+  if (table === 'notas_consumidor') return invoiceFields(payload)
   if (table === 'notas_fiscais_servico') return serviceInvoiceFields(payload)
   if (table === 'categorias') return categoryFields(payload)
   if (table === 'centros_custo') return costCenterFields(payload)
   if (table === 'contas_financeiras') return financialAccountFields(payload)
   if (table === 'transferencias') return transferFields(payload)
+  if (table === 'vendedores') return contactFields(payload)
+  if (table === 'variacoes') return variationFields(payload)
+  if (table === 'marcas' || table === 'listas_preco' || table === 'formas_envio' || table === 'formas_pagamento' || table === 'intermediadores') return registryFields(payload)
+  if (table === 'expedicoes') return expeditionFields(payload)
+  if (table === 'separacoes') return separationFields(payload)
+  if (table === 'estoque_movimentacoes') return stockMovementFields(payload)
+  if (table === 'empresa_conectada') return companyFields(payload)
+  if (table === 'uso_api') return apiUsageFields(payload)
+  if (table === 'gatilhos') return eventFields(payload)
   return stockFields(payload)
 }
 

@@ -1,10 +1,11 @@
 import type { ErpAdapter } from '@/products/plugin/server/domain-adapters/erp/ErpAdapter'
 import { blingErpAdapter } from '@/products/plugin/server/domain-adapters/erp/providers/blingErpAdapter'
 import { contaAzulErpAdapter } from '@/products/plugin/server/domain-adapters/erp/providers/contaAzulErpAdapter'
+import { olistErpAdapter, tinyErpAdapter } from '@/products/plugin/server/domain-adapters/erp/providers/olistErpAdapter'
 import { omieErpAdapter } from '@/products/plugin/server/domain-adapters/erp/providers/omieErpAdapter'
 
 const ERP_ADAPTERS = new Map<string, ErpAdapter>(
-  [omieErpAdapter, contaAzulErpAdapter, blingErpAdapter].map((adapter) => [adapter.provider, adapter] as const),
+  [omieErpAdapter, contaAzulErpAdapter, blingErpAdapter, olistErpAdapter, tinyErpAdapter].map((adapter) => [adapter.provider, adapter] as const),
 )
 
 export function getErpAdapter(provider: string) {

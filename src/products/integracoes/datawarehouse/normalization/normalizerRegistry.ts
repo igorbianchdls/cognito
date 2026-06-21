@@ -1,10 +1,11 @@
 import type { Normalizer } from '@/products/integracoes/datawarehouse/normalization/contracts'
 import { blingNormalizer } from '@/products/integracoes/datawarehouse/normalization/providers/blingNormalizer'
 import { contaAzulNormalizer } from '@/products/integracoes/datawarehouse/normalization/providers/contaAzulNormalizer'
+import { olistErpNormalizer, tinyNormalizer } from '@/products/integracoes/datawarehouse/normalization/providers/olistErpNormalizer'
 import { omieNormalizer } from '@/products/integracoes/datawarehouse/normalization/providers/omieNormalizer'
 
 const normalizers = new Map<string, Normalizer>(
-  [contaAzulNormalizer, omieNormalizer, blingNormalizer].map((normalizer) => [normalizer.provider, normalizer] as const),
+  [contaAzulNormalizer, omieNormalizer, blingNormalizer, olistErpNormalizer, tinyNormalizer].map((normalizer) => [normalizer.provider, normalizer] as const),
 )
 
 export function getNormalizer(provider: string): Normalizer | undefined {

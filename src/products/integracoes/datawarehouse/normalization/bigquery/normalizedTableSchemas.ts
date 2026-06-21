@@ -29,6 +29,22 @@ const CONTACT_FIELDS: BigQueryFieldSchema[] = [
   { name: 'status', type: 'STRING' },
 ]
 
+const BASIC_REGISTRY_FIELDS: BigQueryFieldSchema[] = [
+  { name: 'nome', type: 'STRING' },
+  { name: 'codigo', type: 'STRING' },
+  { name: 'descricao', type: 'STRING' },
+  { name: 'tipo', type: 'STRING' },
+  { name: 'status', type: 'STRING' },
+]
+
+const OPERATIONAL_EVENT_FIELDS: BigQueryFieldSchema[] = [
+  { name: 'numero', type: 'STRING' },
+  { name: 'descricao', type: 'STRING' },
+  { name: 'status', type: 'STRING' },
+  { name: 'data', type: 'DATE' },
+  { name: 'valor_total', type: 'NUMERIC' },
+]
+
 const TABLE_FIELDS: Record<NormalizedTableName, BigQueryFieldSchema[]> = {
   clientes: CONTACT_FIELDS,
   fornecedores: CONTACT_FIELDS,
@@ -179,6 +195,90 @@ const TABLE_FIELDS: Record<NormalizedTableName, BigQueryFieldSchema[]> = {
     { name: 'local', type: 'STRING' },
     { name: 'updated_at', type: 'DATE' },
   ],
+  compras: [
+    { name: 'fornecedor_id', type: 'STRING' },
+    { name: 'fornecedor_nome', type: 'STRING' },
+    { name: 'numero', type: 'STRING' },
+    { name: 'valor_total', type: 'NUMERIC' },
+    { name: 'data_emissao', type: 'DATE' },
+    { name: 'data_compra', type: 'DATE' },
+    { name: 'status', type: 'STRING' },
+  ],
+  parcelas_venda: [
+    { name: 'venda_id', type: 'STRING' },
+    { name: 'parcela_id', type: 'STRING' },
+    { name: 'numero', type: 'STRING' },
+    { name: 'valor', type: 'NUMERIC' },
+    { name: 'data_vencimento', type: 'DATE' },
+    { name: 'data_pagamento', type: 'DATE' },
+    { name: 'status', type: 'STRING' },
+  ],
+  vendedores: CONTACT_FIELDS,
+  variacoes: [
+    { name: 'produto_id', type: 'STRING' },
+    { name: 'nome', type: 'STRING' },
+    { name: 'codigo', type: 'STRING' },
+    { name: 'sku', type: 'STRING' },
+    { name: 'descricao', type: 'STRING' },
+    { name: 'preco', type: 'NUMERIC' },
+    { name: 'status', type: 'STRING' },
+  ],
+  marcas: BASIC_REGISTRY_FIELDS,
+  notas_consumidor: [
+    { name: 'chave_acesso', type: 'STRING' },
+    { name: 'numero_nota', type: 'STRING' },
+    { name: 'destinatario_nome', type: 'STRING' },
+    { name: 'data_emissao', type: 'DATE' },
+    { name: 'status', type: 'STRING' },
+    { name: 'valor_total', type: 'NUMERIC' },
+  ],
+  expedicoes: [
+    { name: 'pedido_id', type: 'STRING' },
+    { name: 'numero', type: 'STRING' },
+    { name: 'transportadora', type: 'STRING' },
+    { name: 'codigo_rastreio', type: 'STRING' },
+    { name: 'data_envio', type: 'DATE' },
+    { name: 'status', type: 'STRING' },
+  ],
+  separacoes: [
+    { name: 'pedido_id', type: 'STRING' },
+    { name: 'numero', type: 'STRING' },
+    { name: 'responsavel', type: 'STRING' },
+    { name: 'data', type: 'DATE' },
+    { name: 'status', type: 'STRING' },
+  ],
+  estoque_movimentacoes: [
+    { name: 'produto_id', type: 'STRING' },
+    { name: 'produto_nome', type: 'STRING' },
+    { name: 'codigo', type: 'STRING' },
+    { name: 'sku', type: 'STRING' },
+    { name: 'quantidade', type: 'NUMERIC' },
+    { name: 'tipo', type: 'STRING' },
+    { name: 'local', type: 'STRING' },
+    { name: 'data', type: 'DATE' },
+  ],
+  listas_preco: BASIC_REGISTRY_FIELDS,
+  formas_envio: BASIC_REGISTRY_FIELDS,
+  formas_pagamento: BASIC_REGISTRY_FIELDS,
+  intermediadores: BASIC_REGISTRY_FIELDS,
+  empresa_conectada: [
+    { name: 'nome', type: 'STRING' },
+    { name: 'documento', type: 'STRING' },
+    { name: 'email', type: 'STRING' },
+    { name: 'telefone', type: 'STRING' },
+    { name: 'cidade', type: 'STRING' },
+    { name: 'uf', type: 'STRING' },
+    { name: 'status', type: 'STRING' },
+  ],
+  uso_api: [
+    { name: 'nome', type: 'STRING' },
+    { name: 'limite', type: 'NUMERIC' },
+    { name: 'utilizado', type: 'NUMERIC' },
+    { name: 'disponivel', type: 'NUMERIC' },
+    { name: 'periodo', type: 'STRING' },
+    { name: 'status', type: 'STRING' },
+  ],
+  gatilhos: OPERATIONAL_EVENT_FIELDS,
 }
 
 export function getNormalizedTableSchema(table: NormalizedTableName): BigQueryFieldSchema[] {

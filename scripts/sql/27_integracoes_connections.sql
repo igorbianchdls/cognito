@@ -358,6 +358,36 @@ erp_resources AS (
     jsonb_build_object('slug', 'centros_custo', 'name', 'Centros de custo', 'defaultEnabled', false)
   ) AS resources_json
 ),
+olist_erp_resources AS (
+  SELECT jsonb_build_array(
+    jsonb_build_object('slug', 'clientes', 'name', 'Clientes', 'defaultEnabled', true),
+    jsonb_build_object('slug', 'fornecedores', 'name', 'Fornecedores', 'defaultEnabled', true),
+    jsonb_build_object('slug', 'vendedores', 'name', 'Vendedores', 'defaultEnabled', false),
+    jsonb_build_object('slug', 'produtos', 'name', 'Produtos', 'defaultEnabled', true),
+    jsonb_build_object('slug', 'variacoes', 'name', 'Variacoes', 'defaultEnabled', false),
+    jsonb_build_object('slug', 'marcas', 'name', 'Marcas', 'defaultEnabled', false),
+    jsonb_build_object('slug', 'pedidos_venda', 'name', 'Pedidos de venda', 'defaultEnabled', true),
+    jsonb_build_object('slug', 'itens_venda', 'name', 'Itens de venda', 'defaultEnabled', true),
+    jsonb_build_object('slug', 'parcelas_venda', 'name', 'Parcelas de venda', 'defaultEnabled', false),
+    jsonb_build_object('slug', 'compras', 'name', 'Pedidos de compra', 'defaultEnabled', false),
+    jsonb_build_object('slug', 'contas_receber', 'name', 'Contas a receber', 'defaultEnabled', true),
+    jsonb_build_object('slug', 'contas_pagar', 'name', 'Contas a pagar', 'defaultEnabled', true),
+    jsonb_build_object('slug', 'notas_fiscais', 'name', 'Notas fiscais', 'defaultEnabled', false),
+    jsonb_build_object('slug', 'notas_consumidor', 'name', 'Notas de consumidor', 'defaultEnabled', false),
+    jsonb_build_object('slug', 'expedicoes', 'name', 'Expedicoes', 'defaultEnabled', false),
+    jsonb_build_object('slug', 'separacoes', 'name', 'Separacoes', 'defaultEnabled', false),
+    jsonb_build_object('slug', 'estoque', 'name', 'Saldos de estoque', 'defaultEnabled', false),
+    jsonb_build_object('slug', 'estoque_movimentacoes', 'name', 'Movimentacoes de estoque', 'defaultEnabled', false),
+    jsonb_build_object('slug', 'listas_preco', 'name', 'Listas de preco', 'defaultEnabled', false),
+    jsonb_build_object('slug', 'formas_envio', 'name', 'Formas de envio', 'defaultEnabled', false),
+    jsonb_build_object('slug', 'formas_pagamento', 'name', 'Formas de pagamento', 'defaultEnabled', false),
+    jsonb_build_object('slug', 'intermediadores', 'name', 'Intermediadores', 'defaultEnabled', false),
+    jsonb_build_object('slug', 'categorias', 'name', 'Categorias', 'defaultEnabled', false),
+    jsonb_build_object('slug', 'empresa_conectada', 'name', 'Empresa conectada', 'defaultEnabled', false),
+    jsonb_build_object('slug', 'uso_api', 'name', 'Uso da API', 'defaultEnabled', false),
+    jsonb_build_object('slug', 'gatilhos', 'name', 'Gatilhos', 'defaultEnabled', false)
+  ) AS resources_json
+),
 crm_resources AS (
   SELECT jsonb_build_array(
     jsonb_build_object('slug', 'contas', 'name', 'Contas', 'defaultEnabled', true),
@@ -456,6 +486,9 @@ providers AS (
   UNION ALL
   SELECT 'erp', 'bling', 'Bling', 'ERP para ecommerce, estoque, pedidos, notas fiscais e marketplaces.', 'oauth2', true, false, jsonb_build_array('manual', 'scheduled'), bling_resources.resources_json, jsonb_build_array('erp', 'ecommerce', 'marketplace', 'brasil'), 'available', jsonb_build_object('toolkitSlug', 'BLING')
   FROM bling_resources
+  UNION ALL
+  SELECT 'erp', 'olist_erp', 'Olist ERP', 'ERP da Olist para ecommerce, financeiro, fiscal, pedidos, estoque e operacao multicanal.', 'oauth2', true, false, jsonb_build_array('manual', 'scheduled'), olist_erp_resources.resources_json, jsonb_build_array('erp', 'ecommerce', 'marketplace', 'brasil', 'fiscal'), 'available', jsonb_build_object('toolkitSlug', 'OLIST_ERP', 'legacyProvider', 'tiny', 'apiVersion', 'v3', 'baseUrl', 'https://erp.tiny.com.br/public-api/v3')
+  FROM olist_erp_resources
   UNION ALL
   SELECT 'erp', 'tiny', 'Tiny', 'ERP para vendas online, catalogo, estoque, pedidos e emissao fiscal.', 'oauth2', true, true, jsonb_build_array('manual', 'scheduled'), erp_resources.resources_json, jsonb_build_array('erp', 'ecommerce', 'marketplace', 'brasil'), 'planned', jsonb_build_object('toolkitSlug', 'TINY')
   FROM erp_resources

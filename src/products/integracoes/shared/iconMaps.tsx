@@ -86,6 +86,7 @@ const CUSTOM_ICON_BY_SLUG: Record<string, ComponentType<any>> = {
   NUVEMSHOP: NuvemshopIcon,
   OMIE: OmieIcon,
   OLIST: OlistIcon,
+  OLIST_ERP: TinyIcon,
   PIPEDRIVE: PipedriveIcon,
   RD_STATION_CRM: RdStationIcon,
   TINY: TinyIcon,
