@@ -1,5 +1,6 @@
 import { readSecret } from '@/products/integracoes/cloud/src/lib/secretManager'
 import { createBlingClient } from '@/products/integracoes/connectors/erp/bling/blingClient'
+import { getBlingResourceConfig } from '@/products/integracoes/connectors/erp/bling/blingResources'
 import { refreshOAuthCredentialsIfNeeded } from '@/products/integracoes/connectors/oauth/credentials'
 import type { IntegrationConnection } from '@/products/integracoes/shared/contracts/connectionContracts'
 import type { ErpApiAdapter } from '@/products/plugin/server/domain-adapters/erp/erpApiAdapterRegistry'
@@ -11,6 +12,10 @@ import type {
   ConnectedProviderActionInput,
   ConnectedProviderActionResult,
 } from '@/products/plugin/server/domain-adapters/shared/connectedProviderApiAdapter'
+import {
+  listLiveFromPaginatedApi,
+  readLiveFromPaginatedApi,
+} from '@/products/plugin/server/domain-adapters/shared/livePaginatedApiReader'
 
 type JsonRecord = Record<string, unknown>
 type BlingActionResource =
@@ -42,6 +47,28 @@ const RESOURCE_BASE_PATHS: Record<BlingActionResource, string> = {
   'pedidos-venda': '/pedidos/vendas',
   produtos: '/produtos',
   servicos: '/servicos',
+}
+
+const LIVE_RESOURCE_MAP: Partial<Record<ConnectedErpResource, string>> = {
+  clientes: 'clientes',
+  fornecedores: 'fornecedores',
+  produtos: 'produtos',
+  servicos: 'servicos',
+  'contas-a-receber': 'contas_receber',
+  'contas-a-pagar': 'contas_pagar',
+  'pedidos-venda': 'pedidos_venda',
+  'pedidos-compra': 'compras',
+  'notas-fiscais': 'notas_fiscais',
+  'notas-fiscais-servico': 'notas_servico',
+  'notas-consumidor': 'notas_consumidor',
+  'formas-pagamento': 'formas_pagamento',
+  vendedores: 'vendedores',
+  transportadoras: 'transportadoras',
+  'canais-venda': 'canais_venda',
+  lojas: 'lojas',
+  depositos: 'depositos',
+  categorias: 'categorias',
+  'estoque-atual': 'estoque',
 }
 
 function isRecord(value: unknown): value is JsonRecord {
@@ -469,17 +496,36 @@ async function executeBlingAction(
 
 export const blingErpApiAdapter: ErpApiAdapter = {
   provider: 'bling',
-  supportsLiveRead() {
-    return false
+  supportsLiveRead(resource) {
+    const providerResource = LIVE_RESOURCE_MAP[resource]
+    return Boolean(providerResource && getBlingResourceConfig(providerResource))
   },
   supportsAction(resource, action) {
     return Boolean(SUPPORTED_ACTIONS[resource]?.includes(action))
   },
-  async listLive() {
-    throw new Error('Leitura live Bling ainda nao implementada neste adapter.')
+  async listLive(input) {
+    const providerResource = LIVE_RESOURCE_MAP[input.resource]
+    const config = providerResource ? getBlingResourceConfig(providerResource) : undefined
+    if (!config) throw new Error(`Bling nao suporta leitura live de ${input.resource}.`)
+    const client = createBlingClient(await loadCredentials({ tenantId: input.tenantId, connection: input.connection }))
+    return listLiveFromPaginatedApi({
+      provider: 'bling',
+      client,
+      config,
+      toolInput: input,
+    })
   },
-  async readLive() {
-    throw new Error('Leitura live Bling ainda nao implementada neste adapter.')
+  async readLive(input) {
+    const providerResource = LIVE_RESOURCE_MAP[input.resource]
+    const config = providerResource ? getBlingResourceConfig(providerResource) : undefined
+    if (!config) throw new Error(`Bling nao suporta leitura live de ${input.resource}.`)
+    const client = createBlingClient(await loadCredentials({ tenantId: input.tenantId, connection: input.connection }))
+    return readLiveFromPaginatedApi({
+      provider: 'bling',
+      client,
+      config,
+      toolInput: input,
+    })
   },
   async executeAction(input) {
     if (!this.supportsAction(input.resource, input.action)) {

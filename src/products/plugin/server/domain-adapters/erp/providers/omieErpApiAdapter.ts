@@ -1,5 +1,6 @@
 import { readSecret } from '@/products/integracoes/cloud/src/lib/secretManager'
 import { createOmieClient } from '@/products/integracoes/connectors/erp/omie/omieClient'
+import { getOmieResourceConfig } from '@/products/integracoes/connectors/erp/omie/omieResources'
 import type { IntegrationConnection } from '@/products/integracoes/shared/contracts/connectionContracts'
 import type { ErpApiAdapter } from '@/products/plugin/server/domain-adapters/erp/erpApiAdapterRegistry'
 import type {
@@ -10,6 +11,10 @@ import type {
   ConnectedProviderActionInput,
   ConnectedProviderActionResult,
 } from '@/products/plugin/server/domain-adapters/shared/connectedProviderApiAdapter'
+import {
+  listLiveFromPaginatedApi,
+  readLiveFromPaginatedApi,
+} from '@/products/plugin/server/domain-adapters/shared/livePaginatedApiReader'
 
 type JsonRecord = Record<string, unknown>
 type OmieActionResource =
@@ -89,6 +94,26 @@ const RESOURCE_CALLS: Record<OmieActionResource, Partial<Record<ConnectedErpProv
     criar: 'IncluirContrato',
     atualizar: 'AlterarContrato',
   },
+}
+
+const LIVE_RESOURCE_MAP: Partial<Record<ConnectedErpResource, string>> = {
+  clientes: 'clientes',
+  fornecedores: 'fornecedores',
+  produtos: 'produtos',
+  servicos: 'servicos',
+  contratos: 'contratos',
+  'contas-a-receber': 'contas_receber',
+  'contas-a-pagar': 'contas_pagar',
+  'pedidos-venda': 'pedidos_venda',
+  'pedidos-compra': 'pedidos_compra',
+  'notas-fiscais': 'notas_fiscais',
+  'notas-fiscais-servico': 'notas_servico',
+  categorias: 'categorias',
+  'centros-custo': 'departamentos',
+  'estoque-atual': 'estoque_saldos',
+  'movimentacoes-estoque': 'estoque_movimentacoes',
+  'lancamentos-financeiros': 'lancamentos_financeiros',
+  'contas-correntes': 'contas_correntes',
 }
 
 function isRecord(value: unknown): value is JsonRecord {
@@ -694,17 +719,36 @@ async function executeOmieAction(
 
 export const omieErpApiAdapter: ErpApiAdapter = {
   provider: 'omie',
-  supportsLiveRead() {
-    return false
+  supportsLiveRead(resource) {
+    const providerResource = LIVE_RESOURCE_MAP[resource]
+    return Boolean(providerResource && getOmieResourceConfig(providerResource))
   },
   supportsAction(resource, action) {
     return Boolean(SUPPORTED_ACTIONS[resource]?.includes(action))
   },
-  async listLive() {
-    throw new Error('Leitura live Omie ainda nao implementada neste adapter.')
+  async listLive(input) {
+    const providerResource = LIVE_RESOURCE_MAP[input.resource]
+    const config = providerResource ? getOmieResourceConfig(providerResource) : undefined
+    if (!config) throw new Error(`Omie nao suporta leitura live de ${input.resource}.`)
+    const client = createOmieClient(await loadCredentials({ connection: input.connection }))
+    return listLiveFromPaginatedApi({
+      provider: 'omie',
+      client,
+      config,
+      toolInput: input,
+    })
   },
-  async readLive() {
-    throw new Error('Leitura live Omie ainda nao implementada neste adapter.')
+  async readLive(input) {
+    const providerResource = LIVE_RESOURCE_MAP[input.resource]
+    const config = providerResource ? getOmieResourceConfig(providerResource) : undefined
+    if (!config) throw new Error(`Omie nao suporta leitura live de ${input.resource}.`)
+    const client = createOmieClient(await loadCredentials({ connection: input.connection }))
+    return readLiveFromPaginatedApi({
+      provider: 'omie',
+      client,
+      config,
+      toolInput: input,
+    })
   },
   async executeAction(input) {
     if (!this.supportsAction(input.resource, input.action)) {

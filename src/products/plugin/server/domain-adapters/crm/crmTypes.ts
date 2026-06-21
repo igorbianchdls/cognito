@@ -11,6 +11,9 @@ export const CONNECTED_CRM_RESOURCES = [
   'leads',
   'oportunidades',
   'atividades',
+  'usuarios',
+  'pipelines',
+  'fases_pipeline',
 ] as const
 
 export type ConnectedCrmResource = (typeof CONNECTED_CRM_RESOURCES)[number]

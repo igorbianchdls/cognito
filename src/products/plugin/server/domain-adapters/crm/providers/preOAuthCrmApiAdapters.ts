@@ -4,6 +4,10 @@ import {
   bitrix24CrmApiAdapter,
   pipedriveCrmApiAdapter,
 } from '@/products/plugin/server/domain-adapters/crm/providers/restCrmApiAdapters'
+import {
+  hubspotCrmApiAdapter,
+  rdStationCrmApiAdapter,
+} from '@/products/plugin/server/domain-adapters/crm/providers/hubspotRdCrmApiAdapters'
 import { createCredentialPendingApiAdapter } from '@/products/plugin/server/domain-adapters/shared/createCredentialPendingApiAdapter'
 
 function requireCrmCapability(provider: string) {
@@ -14,7 +18,6 @@ function requireCrmCapability(provider: string) {
   return capability
 }
 
-export const hubspotCrmApiAdapter = createCredentialPendingApiAdapter(requireCrmCapability('hubspot')) as CrmApiAdapter
 export const salesforceCrmApiAdapter = createCredentialPendingApiAdapter(requireCrmCapability('salesforce')) as CrmApiAdapter
-export const rdStationCrmApiAdapter = createCredentialPendingApiAdapter(requireCrmCapability('rd_station_crm')) as CrmApiAdapter
 export { bitrix24CrmApiAdapter, pipedriveCrmApiAdapter }
+export { hubspotCrmApiAdapter, rdStationCrmApiAdapter }

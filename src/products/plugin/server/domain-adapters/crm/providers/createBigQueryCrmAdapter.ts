@@ -47,6 +47,24 @@ const CRM_CONFIGS: ConnectedBigQueryResourceConfig<ConnectedCrmResource>[] = [
     statusField: 'status',
     orderBy: 'date_field',
   },
+  {
+    resource: 'usuarios',
+    providerResource: 'usuarios',
+    datasetKind: 'normalized',
+    statusField: 'status',
+  },
+  {
+    resource: 'pipelines',
+    providerResource: 'pipelines',
+    datasetKind: 'normalized',
+    statusField: 'status',
+  },
+  {
+    resource: 'fases_pipeline',
+    providerResource: 'fases_pipeline',
+    datasetKind: 'normalized',
+    statusField: 'status',
+  },
 ]
 
 export function createBigQueryCrmAdapter(provider: string): CrmAdapter {

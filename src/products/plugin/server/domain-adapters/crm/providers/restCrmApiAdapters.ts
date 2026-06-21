@@ -32,7 +32,7 @@ const READ_RESOURCES = new Set<ConnectedCrmResource>([
   'atividades',
 ])
 
-const SUPPORTED_ACTIONS: Record<ConnectedCrmResource, ConnectedCrmProviderAction[]> = {
+const SUPPORTED_ACTIONS: Partial<Record<ConnectedCrmResource, ConnectedCrmProviderAction[]>> = {
   contas: ['criar', 'atualizar', 'arquivar', 'reativar'],
   contatos: ['criar', 'atualizar', 'arquivar', 'reativar'],
   leads: ['criar', 'atualizar', 'arquivar', 'reativar'],
@@ -40,7 +40,7 @@ const SUPPORTED_ACTIONS: Record<ConnectedCrmResource, ConnectedCrmProviderAction
   atividades: ['criar', 'atualizar', 'concluir', 'cancelar', 'reabrir'],
 }
 
-const BITRIX_ENTITY: Record<ConnectedCrmResource, string> = {
+const BITRIX_ENTITY: Partial<Record<ConnectedCrmResource, string>> = {
   contas: 'crm.company',
   contatos: 'crm.contact',
   leads: 'crm.lead',
@@ -54,6 +54,9 @@ const PIPEDRIVE_PATHS: Record<ConnectedCrmResource, string> = {
   leads: '/v1/leads',
   oportunidades: '/v1/deals',
   atividades: '/v1/activities',
+  usuarios: '/v1/users',
+  pipelines: '/v1/pipelines',
+  fases_pipeline: '/v1/stages',
 }
 
 function isRecord(value: unknown): value is JsonRecord {
@@ -256,7 +259,9 @@ async function requestProvider(input: {
 }
 
 function bitrixPath(resource: ConnectedCrmResource, action: 'list' | 'get' | 'add' | 'update' | 'delete') {
-  return `/rest/${BITRIX_ENTITY[resource]}.${action}.json`
+  const entity = BITRIX_ENTITY[resource]
+  if (!entity) throw new Error(`Bitrix24 nao suporta leitura live de ${resource} neste adapter.`)
+  return `/rest/${entity}.${action}.json`
 }
 
 async function listLive(provider: CrmProvider, input: Parameters<CrmApiAdapter['listLive']>[0]) {
@@ -500,6 +505,7 @@ export function createRestCrmApiAdapter(provider: CrmProvider): CrmApiAdapter {
   return {
     provider,
     supportsLiveRead(resource) {
+      if (provider === 'pipedrive') return Boolean(PIPEDRIVE_PATHS[resource])
       return READ_RESOURCES.has(resource)
     },
     supportsAction(resource, action) {

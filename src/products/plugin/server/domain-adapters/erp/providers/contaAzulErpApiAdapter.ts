@@ -1,6 +1,7 @@
 import { readSecret } from '@/products/integracoes/cloud/src/lib/secretManager'
 import { refreshOAuthCredentialsIfNeeded } from '@/products/integracoes/connectors/oauth/credentials'
 import { createContaAzulClient } from '@/products/integracoes/connectors/erp/contaAzul/contaAzulClient'
+import { getContaAzulResourceConfig } from '@/products/integracoes/connectors/erp/contaAzul/contaAzulResources'
 import type { IntegrationConnection } from '@/products/integracoes/shared/contracts/connectionContracts'
 import type { ErpApiAdapter } from '@/products/plugin/server/domain-adapters/erp/erpApiAdapterRegistry'
 import type {
@@ -11,6 +12,10 @@ import type {
   ConnectedProviderActionInput,
   ConnectedProviderActionResult,
 } from '@/products/plugin/server/domain-adapters/shared/connectedProviderApiAdapter'
+import {
+  listLiveFromPaginatedApi,
+  readLiveFromPaginatedApi,
+} from '@/products/plugin/server/domain-adapters/shared/livePaginatedApiReader'
 
 type JsonRecord = Record<string, unknown>
 type ContaAzulActionResource =
@@ -41,6 +46,38 @@ const SUPPORTED_ACTIONS: Partial<Record<ConnectedErpResource, ConnectedErpProvid
 const RESOURCE_PATH_PART: Record<ContaAzulFinancialResource, string> = {
   'contas-a-pagar': 'contas-a-pagar',
   'contas-a-receber': 'contas-a-receber',
+}
+
+const LIVE_RESOURCE_MAP: Partial<Record<ConnectedErpResource, string>> = {
+  clientes: 'clientes',
+  fornecedores: 'fornecedores',
+  produtos: 'produtos',
+  'produto-categorias': 'produto_categorias',
+  'produto-cest': 'produto_cest',
+  'produto-ecommerce-marcas': 'produto_ecommerce_marcas',
+  'produto-ncm': 'produto_ncm',
+  'produto-unidades-medida': 'produto_unidades_medida',
+  servicos: 'servicos',
+  'contas-a-receber': 'contas_receber',
+  'contas-a-pagar': 'contas_pagar',
+  'pedidos-venda': 'vendas',
+  'venda-detalhes': 'venda_detalhes',
+  'venda-proximo-numero': 'venda_proximo_numero',
+  'centros-custo': 'centros_custo',
+  'contas-financeiras': 'contas_financeiras',
+  'saldos-contas-financeiras': 'saldos_contas_financeiras',
+  transferencias: 'transferencias',
+  'eventos-financeiros-alteracoes': 'eventos_financeiros_alteracoes',
+  'saldos-iniciais': 'saldos_iniciais',
+  vendedores: 'vendedores',
+  categorias: 'categorias',
+  'categorias-dre': 'categorias_dre',
+  'itens-venda': 'itens_venda',
+  'notas-fiscais': 'notas_fiscais',
+  'notas-fiscais-servico': 'notas_fiscais_servico',
+  'contrato-proximo-numero': 'contrato_proximo_numero',
+  contratos: 'contratos',
+  'empresa-conectada': 'empresa_conectada',
 }
 
 function isRecord(value: unknown): value is JsonRecord {
@@ -807,17 +844,37 @@ async function executeContaAzulAction(
 
 export const contaAzulErpApiAdapter: ErpApiAdapter = {
   provider: 'conta_azul',
-  supportsLiveRead() {
-    return false
+  supportsLiveRead(resource) {
+    const providerResource = LIVE_RESOURCE_MAP[resource]
+    const config = providerResource ? getContaAzulResourceConfig(providerResource) : undefined
+    return Boolean(config && !config.derivedFrom)
   },
   supportsAction(resource, action) {
     return Boolean(SUPPORTED_ACTIONS[resource]?.includes(action))
   },
-  async listLive() {
-    throw new Error('Leitura live Conta Azul ainda nao implementada neste adapter.')
+  async listLive(input) {
+    const providerResource = LIVE_RESOURCE_MAP[input.resource]
+    const config = providerResource ? getContaAzulResourceConfig(providerResource) : undefined
+    if (!config || config.derivedFrom) throw new Error(`Conta Azul nao suporta leitura live de ${input.resource}.`)
+    const client = createContaAzulClient(await loadCredentials({ tenantId: input.tenantId, connection: input.connection }))
+    return listLiveFromPaginatedApi({
+      provider: 'conta_azul',
+      client,
+      config,
+      toolInput: input,
+    })
   },
-  async readLive() {
-    throw new Error('Leitura live Conta Azul ainda nao implementada neste adapter.')
+  async readLive(input) {
+    const providerResource = LIVE_RESOURCE_MAP[input.resource]
+    const config = providerResource ? getContaAzulResourceConfig(providerResource) : undefined
+    if (!config || config.derivedFrom) throw new Error(`Conta Azul nao suporta leitura live de ${input.resource}.`)
+    const client = createContaAzulClient(await loadCredentials({ tenantId: input.tenantId, connection: input.connection }))
+    return readLiveFromPaginatedApi({
+      provider: 'conta_azul',
+      client,
+      config,
+      toolInput: input,
+    })
   },
   async executeAction(input) {
     if (!this.supportsAction(input.resource, input.action)) {

@@ -1,5 +1,6 @@
 import { readSecret } from '@/products/integracoes/cloud/src/lib/secretManager'
 import { createOlistErpClient } from '@/products/integracoes/connectors/erp/tiny/tinyClient'
+import { getOlistErpResourceConfig } from '@/products/integracoes/connectors/erp/tiny/tinyResources'
 import { refreshOAuthCredentialsIfNeeded } from '@/products/integracoes/connectors/oauth/credentials'
 import type { IntegrationConnection } from '@/products/integracoes/shared/contracts/connectionContracts'
 import type { ErpApiAdapter } from '@/products/plugin/server/domain-adapters/erp/erpApiAdapterRegistry'
@@ -11,6 +12,10 @@ import type {
   ConnectedProviderActionInput,
   ConnectedProviderActionResult,
 } from '@/products/plugin/server/domain-adapters/shared/connectedProviderApiAdapter'
+import {
+  listLiveFromPaginatedApi,
+  readLiveFromPaginatedApi,
+} from '@/products/plugin/server/domain-adapters/shared/livePaginatedApiReader'
 
 type JsonRecord = Record<string, unknown>
 type OlistFinancialResource = 'contas-a-pagar' | 'contas-a-receber'
@@ -23,6 +28,35 @@ const SUPPORTED_ACTIONS: Partial<Record<ConnectedErpResource, ConnectedErpProvid
 const RESOURCE_BASE_PATHS: Record<OlistFinancialResource, string> = {
   'contas-a-pagar': '/contas-pagar',
   'contas-a-receber': '/contas-receber',
+}
+
+const LIVE_RESOURCE_MAP: Partial<Record<ConnectedErpResource, string>> = {
+  clientes: 'clientes',
+  fornecedores: 'fornecedores',
+  vendedores: 'vendedores',
+  produtos: 'produtos',
+  variacoes: 'variacoes',
+  marcas: 'marcas',
+  'pedidos-venda': 'pedidos_venda',
+  'itens-venda': 'itens_venda',
+  'parcelas-venda': 'parcelas_venda',
+  'pedidos-compra': 'compras',
+  'contas-a-receber': 'contas_receber',
+  'contas-a-pagar': 'contas_pagar',
+  'notas-fiscais': 'notas_fiscais',
+  'notas-consumidor': 'notas_consumidor',
+  expedicoes: 'expedicoes',
+  separacoes: 'separacoes',
+  'estoque-atual': 'estoque',
+  'movimentacoes-estoque': 'estoque_movimentacoes',
+  'listas-preco': 'listas_preco',
+  'formas-envio': 'formas_envio',
+  'formas-pagamento': 'formas_pagamento',
+  intermediadores: 'intermediadores',
+  categorias: 'categorias',
+  'empresa-conectada': 'empresa_conectada',
+  'uso-api': 'uso_api',
+  gatilhos: 'gatilhos',
 }
 
 function isRecord(value: unknown): value is JsonRecord {
@@ -286,17 +320,36 @@ async function executeOlistErpAction(
 
 export const olistErpApiAdapter: ErpApiAdapter = {
   provider: 'olist_erp',
-  supportsLiveRead() {
-    return false
+  supportsLiveRead(resource) {
+    const providerResource = LIVE_RESOURCE_MAP[resource]
+    return Boolean(providerResource && getOlistErpResourceConfig(providerResource))
   },
   supportsAction(resource, action) {
     return Boolean(SUPPORTED_ACTIONS[resource]?.includes(action))
   },
-  async listLive() {
-    throw new Error('Leitura live Olist ERP ainda nao implementada neste adapter.')
+  async listLive(input) {
+    const providerResource = LIVE_RESOURCE_MAP[input.resource]
+    const config = providerResource ? getOlistErpResourceConfig(providerResource) : undefined
+    if (!config) throw new Error(`Olist ERP nao suporta leitura live de ${input.resource}.`)
+    const client = createOlistErpClient(await loadCredentials({ tenantId: input.tenantId, connection: input.connection }))
+    return listLiveFromPaginatedApi({
+      provider: 'olist_erp',
+      client,
+      config,
+      toolInput: input,
+    })
   },
-  async readLive() {
-    throw new Error('Leitura live Olist ERP ainda nao implementada neste adapter.')
+  async readLive(input) {
+    const providerResource = LIVE_RESOURCE_MAP[input.resource]
+    const config = providerResource ? getOlistErpResourceConfig(providerResource) : undefined
+    if (!config) throw new Error(`Olist ERP nao suporta leitura live de ${input.resource}.`)
+    const client = createOlistErpClient(await loadCredentials({ tenantId: input.tenantId, connection: input.connection }))
+    return readLiveFromPaginatedApi({
+      provider: 'olist_erp',
+      client,
+      config,
+      toolInput: input,
+    })
   },
   async executeAction(input) {
     if (!this.supportsAction(input.resource, input.action)) {

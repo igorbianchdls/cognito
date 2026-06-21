@@ -43,9 +43,28 @@ const CONTA_AZUL_ERP_READ_RESOURCES = [
   'contas-a-receber',
   'contas-a-pagar',
   'pedidos-venda',
+  'venda-detalhes',
+  'venda-proximo-numero',
+  'itens-venda',
+  'notas-fiscais',
+  'notas-fiscais-servico',
   'centros-custo',
+  'contas-financeiras',
+  'saldos-contas-financeiras',
+  'transferencias',
+  'eventos-financeiros-alteracoes',
+  'saldos-iniciais',
+  'contrato-proximo-numero',
+  'vendedores',
+  'categorias',
+  'categorias-dre',
+  'empresa-conectada',
   'contratos',
-  'estoque-atual',
+  'produto-categorias',
+  'produto-cest',
+  'produto-ecommerce-marcas',
+  'produto-ncm',
+  'produto-unidades-medida',
 ] as const
 
 const OMIE_ERP_READ_RESOURCES = [
@@ -55,10 +74,17 @@ const OMIE_ERP_READ_RESOURCES = [
   'contas-a-receber',
   'contas-a-pagar',
   'pedidos-venda',
+  'pedidos-compra',
+  'notas-fiscais',
+  'notas-fiscais-servico',
   'centros-custo',
+  'categorias',
   'servicos',
   'contratos',
   'estoque-atual',
+  'movimentacoes-estoque',
+  'lancamentos-financeiros',
+  'contas-correntes',
 ] as const
 
 const BLING_ERP_READ_RESOURCES = [
@@ -69,6 +95,17 @@ const BLING_ERP_READ_RESOURCES = [
   'contas-a-receber',
   'contas-a-pagar',
   'pedidos-venda',
+  'pedidos-compra',
+  'notas-fiscais',
+  'notas-fiscais-servico',
+  'notas-consumidor',
+  'formas-pagamento',
+  'vendedores',
+  'transportadoras',
+  'canais-venda',
+  'lojas',
+  'depositos',
+  'categorias',
   'estoque-atual',
 ] as const
 
@@ -150,14 +187,45 @@ const OLIST_ERP_ACTIONS_BY_RESOURCE: Record<string, string[]> = {
   'contas-a-pagar': ['criar', 'atualizar', 'baixar'],
 }
 
-const CRM_READ_RESOURCES = ['contas', 'contatos', 'leads', 'oportunidades', 'atividades'] as const
+const CRM_READ_RESOURCES = [
+  'contas',
+  'contatos',
+  'leads',
+  'oportunidades',
+  'atividades',
+  'usuarios',
+  'pipelines',
+  'fases_pipeline',
+] as const
+
+const CRM_PRIMARY_LIVE_READ_RESOURCES = ['contas', 'contatos', 'leads', 'oportunidades', 'atividades'] as const
 
 const CRM_ACTIONS_BY_RESOURCE: Record<string, string[]> = {
   contas: ['criar', 'atualizar', 'arquivar', 'reativar'],
   contatos: ['criar', 'atualizar', 'arquivar', 'reativar'],
-  leads: ['criar', 'atualizar', 'converter', 'arquivar', 'reativar'],
+  leads: ['criar', 'atualizar', 'arquivar', 'reativar'],
   oportunidades: ['criar', 'atualizar', 'mover_estagio', 'ganhar', 'perder', 'reabrir', 'arquivar'],
   atividades: ['criar', 'atualizar', 'concluir', 'cancelar', 'reabrir'],
+}
+
+const HUBSPOT_RD_CRM_ACTIONS_BY_RESOURCE: Record<string, string[]> = {
+  contas: ['criar', 'atualizar', 'arquivar'],
+  contatos: ['criar', 'atualizar', 'arquivar'],
+  leads: ['criar', 'atualizar', 'arquivar'],
+  oportunidades: ['criar', 'atualizar', 'mover_estagio', 'ganhar', 'perder', 'arquivar'],
+  atividades: ['criar', 'atualizar', 'concluir', 'cancelar', 'reabrir'],
+}
+
+function crmActionsForProvider(provider: string) {
+  if (provider === 'hubspot' || provider === 'rd_station_crm') return HUBSPOT_RD_CRM_ACTIONS_BY_RESOURCE
+  if (provider === 'salesforce') return {}
+  return CRM_ACTIONS_BY_RESOURCE
+}
+
+function crmLiveReadResourcesForProvider(provider: string) {
+  if (provider === 'bitrix24') return CRM_PRIMARY_LIVE_READ_RESOURCES
+  if (provider === 'salesforce') return []
+  return CRM_READ_RESOURCES
 }
 
 const DESTRUCTIVE_ACTIONS = new Set(['cancelar', 'deletar', 'estornar', 'arquivar', 'perder'])
@@ -266,7 +334,7 @@ export const INTEGRATION_PLUGIN_PROVIDER_CAPABILITIES: IntegrationProviderPlugin
     credentialRequirements: ['app_key', 'app_secret'],
     scopeReviewStatus: 'planned',
     scopeHints: ERP_SCOPE_HINTS.omie,
-    resources: resourceCapabilities(OMIE_ERP_READ_RESOURCES, OMIE_ERP_ACTIONS_BY_RESOURCE),
+    resources: resourceCapabilities(OMIE_ERP_READ_RESOURCES, OMIE_ERP_ACTIONS_BY_RESOURCE, OMIE_ERP_READ_RESOURCES),
   },
   {
     provider: 'conta_azul',
@@ -274,7 +342,7 @@ export const INTEGRATION_PLUGIN_PROVIDER_CAPABILITIES: IntegrationProviderPlugin
     credentialMode: 'oauth2',
     scopeReviewStatus: 'planned',
     scopeHints: ERP_SCOPE_HINTS.conta_azul,
-    resources: resourceCapabilities(CONTA_AZUL_ERP_READ_RESOURCES, CONTA_AZUL_ERP_ACTIONS_BY_RESOURCE),
+    resources: resourceCapabilities(CONTA_AZUL_ERP_READ_RESOURCES, CONTA_AZUL_ERP_ACTIONS_BY_RESOURCE, CONTA_AZUL_ERP_READ_RESOURCES),
   },
   {
     provider: 'bling',
@@ -282,7 +350,7 @@ export const INTEGRATION_PLUGIN_PROVIDER_CAPABILITIES: IntegrationProviderPlugin
     credentialMode: 'oauth2',
     scopeReviewStatus: 'planned',
     scopeHints: ERP_SCOPE_HINTS.bling,
-    resources: resourceCapabilities(BLING_ERP_READ_RESOURCES, BLING_ERP_ACTIONS_BY_RESOURCE),
+    resources: resourceCapabilities(BLING_ERP_READ_RESOURCES, BLING_ERP_ACTIONS_BY_RESOURCE, BLING_ERP_READ_RESOURCES),
   },
   {
     provider: 'olist_erp',
@@ -290,7 +358,7 @@ export const INTEGRATION_PLUGIN_PROVIDER_CAPABILITIES: IntegrationProviderPlugin
     credentialMode: 'oauth2',
     scopeReviewStatus: 'planned',
     scopeHints: ERP_SCOPE_HINTS.olist_erp,
-    resources: resourceCapabilities(OLIST_ERP_READ_RESOURCES, OLIST_ERP_ACTIONS_BY_RESOURCE),
+    resources: resourceCapabilities(OLIST_ERP_READ_RESOURCES, OLIST_ERP_ACTIONS_BY_RESOURCE, OLIST_ERP_READ_RESOURCES),
   },
   ...(['bitrix24', 'hubspot', 'pipedrive', 'salesforce', 'rd_station_crm'] as const).map((provider) => ({
     provider,
@@ -298,7 +366,11 @@ export const INTEGRATION_PLUGIN_PROVIDER_CAPABILITIES: IntegrationProviderPlugin
     credentialMode: 'oauth2' as const,
     scopeReviewStatus: 'planned' as const,
     scopeHints: CRM_SCOPE_HINTS[provider],
-    resources: resourceCapabilities(CRM_READ_RESOURCES, CRM_ACTIONS_BY_RESOURCE),
+    resources: resourceCapabilities(
+      CRM_READ_RESOURCES,
+      crmActionsForProvider(provider),
+      crmLiveReadResourcesForProvider(provider),
+    ),
   })),
 ]
 

@@ -64,6 +64,20 @@ export function makeErpConfigs(
       orderBy: 'date_field',
     },
     {
+      resource: 'venda-detalhes',
+      table: 'venda_detalhes',
+      dateField: 'data_pedido',
+      statusField: 'status',
+      orderBy: 'date_field',
+    },
+    {
+      resource: 'venda-proximo-numero',
+      table: 'venda_proximo_numero',
+      dateField: 'data',
+      statusField: 'status',
+      orderBy: 'date_field',
+    },
+    {
       resource: 'pedidos-compra',
       table: 'compras',
       dateField: 'data_compra',
@@ -85,6 +99,13 @@ export function makeErpConfigs(
       resource: 'notas-fiscais',
       table: 'notas_fiscais',
       dateField: 'data_emissao',
+      statusField: 'status',
+      orderBy: 'date_field',
+    },
+    {
+      resource: 'notas-fiscais-servico',
+      table: 'notas_fiscais_servico',
+      dateField: 'data_competencia',
       statusField: 'status',
       orderBy: 'date_field',
     },
@@ -151,8 +172,33 @@ export function makeErpConfigs(
       statusField: 'status',
     },
     {
+      resource: 'transportadoras',
+      table: 'transportadoras',
+      statusField: 'status',
+    },
+    {
+      resource: 'canais-venda',
+      table: 'canais_venda',
+      statusField: 'status',
+    },
+    {
+      resource: 'lojas',
+      table: 'lojas',
+      statusField: 'status',
+    },
+    {
+      resource: 'depositos',
+      table: 'depositos',
+      statusField: 'status',
+    },
+    {
       resource: 'categorias',
       table: 'categorias',
+      statusField: 'status',
+    },
+    {
+      resource: 'categorias-dre',
+      table: 'categorias_dre',
       statusField: 'status',
     },
     {
@@ -175,6 +221,81 @@ export function makeErpConfigs(
     {
       resource: 'centros-custo',
       table: 'centros_custo',
+    },
+    {
+      resource: 'contas-financeiras',
+      table: 'contas_financeiras',
+      statusField: 'status',
+    },
+    {
+      resource: 'saldos-contas-financeiras',
+      table: 'saldos_contas_financeiras',
+      statusField: 'status',
+    },
+    {
+      resource: 'transferencias',
+      table: 'transferencias',
+      dateField: 'data_transferencia',
+      statusField: 'status',
+      orderBy: 'date_field',
+    },
+    {
+      resource: 'eventos-financeiros-alteracoes',
+      table: 'eventos_financeiros_alteracoes',
+      dateField: 'data',
+      statusField: 'status',
+      orderBy: 'date_field',
+    },
+    {
+      resource: 'saldos-iniciais',
+      table: 'saldos_iniciais',
+      dateField: 'data',
+      statusField: 'status',
+      orderBy: 'date_field',
+    },
+    {
+      resource: 'contrato-proximo-numero',
+      table: 'contrato_proximo_numero',
+      dateField: 'data',
+      statusField: 'status',
+      orderBy: 'date_field',
+    },
+    {
+      resource: 'lancamentos-financeiros',
+      table: 'lancamentos_financeiros',
+      dateField: 'data',
+      statusField: 'status',
+      orderBy: 'date_field',
+    },
+    {
+      resource: 'contas-correntes',
+      table: 'contas_correntes',
+      statusField: 'status',
+    },
+    {
+      resource: 'produto-categorias',
+      table: 'produto_categorias',
+      statusField: 'status',
+    },
+    {
+      resource: 'produto-cest',
+      table: 'produto_cest',
+      statusField: 'status',
+    },
+    {
+      resource: 'produto-ecommerce-marcas',
+      table: 'produto_ecommerce_marcas',
+      statusField: 'status',
+    },
+    {
+      resource: 'produto-ncm',
+      table: 'produto_ncm',
+      statusField: 'status',
+    },
+    {
+      resource: 'produto-unidades-medida',
+      table: 'produto_unidades_medida',
+      statusField: 'status',
     },
     {
       resource: 'produtos',

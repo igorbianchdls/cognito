@@ -436,7 +436,25 @@ function fieldsFor(table: NormalizedTableName, payload: JsonRecord) {
   if (table === 'transferencias') return transferFields(payload)
   if (table === 'vendedores') return contactFields(payload)
   if (table === 'variacoes') return variationFields(payload)
-  if (table === 'marcas' || table === 'listas_preco' || table === 'formas_envio' || table === 'formas_pagamento' || table === 'intermediadores') return registryFields(payload)
+  if (
+    table === 'marcas'
+    || table === 'listas_preco'
+    || table === 'formas_envio'
+    || table === 'formas_pagamento'
+    || table === 'intermediadores'
+    || table === 'transportadoras'
+    || table === 'canais_venda'
+    || table === 'lojas'
+    || table === 'depositos'
+    || table === 'produto_categorias'
+    || table === 'produto_cest'
+    || table === 'produto_ecommerce_marcas'
+    || table === 'produto_ncm'
+    || table === 'produto_unidades_medida'
+    || table === 'categorias_dre'
+  ) return registryFields(payload)
+  if (table === 'saldos_contas_financeiras' || table === 'contas_correntes') return financialAccountFields(payload)
+  if (table === 'eventos_financeiros_alteracoes' || table === 'saldos_iniciais' || table === 'venda_proximo_numero' || table === 'contrato_proximo_numero' || table === 'lancamentos_financeiros') return eventFields(payload)
   if (table === 'expedicoes') return expeditionFields(payload)
   if (table === 'separacoes') return separationFields(payload)
   if (table === 'estoque_movimentacoes') return stockMovementFields(payload)
