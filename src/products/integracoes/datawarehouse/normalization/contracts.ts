@@ -32,6 +32,14 @@ export type NormalizedTableName =
   | 'empresa_conectada'
   | 'uso_api'
   | 'gatilhos'
+  | 'contas'
+  | 'contatos'
+  | 'leads'
+  | 'oportunidades'
+  | 'atividades'
+  | 'usuarios'
+  | 'pipelines'
+  | 'fases_pipeline'
 
 export type NormalizationInput = {
   tenantId: number

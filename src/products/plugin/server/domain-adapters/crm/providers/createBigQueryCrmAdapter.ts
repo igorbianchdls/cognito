@@ -12,18 +12,21 @@ const CRM_CONFIGS: ConnectedBigQueryResourceConfig<ConnectedCrmResource>[] = [
   {
     resource: 'contas',
     providerResource: 'contas',
+    datasetKind: 'normalized',
     dateField: 'criado_em',
     orderBy: 'date_field',
   },
   {
     resource: 'contatos',
     providerResource: 'contatos',
+    datasetKind: 'normalized',
     dateField: 'criado_em',
     orderBy: 'date_field',
   },
   {
     resource: 'leads',
     providerResource: 'leads',
+    datasetKind: 'normalized',
     dateField: 'criado_em',
     statusField: 'status',
     orderBy: 'date_field',
@@ -31,6 +34,7 @@ const CRM_CONFIGS: ConnectedBigQueryResourceConfig<ConnectedCrmResource>[] = [
   {
     resource: 'oportunidades',
     providerResource: 'oportunidades',
+    datasetKind: 'normalized',
     dateField: 'criado_em',
     statusField: 'status',
     orderBy: 'date_field',
@@ -38,6 +42,7 @@ const CRM_CONFIGS: ConnectedBigQueryResourceConfig<ConnectedCrmResource>[] = [
   {
     resource: 'atividades',
     providerResource: 'atividades',
+    datasetKind: 'normalized',
     dateField: 'criado_em',
     statusField: 'status',
     orderBy: 'date_field',
