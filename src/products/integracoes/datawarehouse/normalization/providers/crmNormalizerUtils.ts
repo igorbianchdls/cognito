@@ -46,7 +46,7 @@ function firstValue(row: JsonRecord, paths: string[]): unknown {
   return null
 }
 
-function text(row: JsonRecord, paths: string[]) {
+function text(row: JsonRecord, paths: string[]): string | null {
   const value = firstValue(row, paths)
   if (value == null) return null
   if (typeof value === 'string') return value.trim() || null
