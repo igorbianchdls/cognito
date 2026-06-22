@@ -661,6 +661,7 @@ const CONNECTED_CRM_ACTIONS_SCHEMA = {
 const PAID_MEDIA_SCHEMA = createCrudSchema(
   [...PAID_MEDIA_RESOURCES],
   'Resource canonico de midia paga conectada via /integracoes. Use contas, campanhas, grupos, anuncios, criativos, keywords, desempenho-diario ou conversoes.',
+  ['listar', 'ler', 'listar_live', 'ler_live'] satisfies ConnectedReadAction[],
 )
 
 const SOCIAL_SCHEMA = createCrudSchema(

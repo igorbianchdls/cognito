@@ -90,6 +90,36 @@ export const GOOGLE_ADS_RESOURCES: ReportResourceConfig[] = [
   },
   {
     ...baseSearchResource,
+    resource: 'creatives',
+    buildBody: gaql(`
+      SELECT asset.id, asset.name, asset.type, asset.text_asset.text,
+             asset.image_asset.full_size.url, asset.youtube_video_asset.youtube_video_id
+      FROM asset
+    `),
+  },
+  {
+    ...baseSearchResource,
+    resource: 'keywords',
+    buildBody: datedGaql((dateStart, dateEnd) => `
+      SELECT segments.date, campaign.id, ad_group.id, ad_group_criterion.criterion_id,
+             ad_group_criterion.keyword.text, ad_group_criterion.keyword.match_type,
+             ad_group_criterion.status, metrics.impressions, metrics.clicks,
+             metrics.cost_micros, metrics.conversions
+      FROM keyword_view
+      WHERE segments.date BETWEEN '${dateStart}' AND '${dateEnd}'
+    `),
+  },
+  {
+    ...baseSearchResource,
+    resource: 'conversions',
+    buildBody: gaql(`
+      SELECT conversion_action.id, conversion_action.name, conversion_action.status,
+             conversion_action.type, conversion_action.category
+      FROM conversion_action
+    `),
+  },
+  {
+    ...baseSearchResource,
     resource: 'insights_campaign_daily',
     buildBody: datedGaql((dateStart, dateEnd) => `
       SELECT segments.date, campaign.id, campaign.name,

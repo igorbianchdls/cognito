@@ -3,8 +3,10 @@ import { bitrix24Normalizer } from '@/products/integracoes/datawarehouse/normali
 import { blingNormalizer } from '@/products/integracoes/datawarehouse/normalization/providers/blingNormalizer'
 import { contaAzulNormalizer } from '@/products/integracoes/datawarehouse/normalization/providers/contaAzulNormalizer'
 import { hubspotNormalizer } from '@/products/integracoes/datawarehouse/normalization/providers/hubspotNormalizer'
+import { googleAdsNormalizer } from '@/products/integracoes/datawarehouse/normalization/providers/googleAdsNormalizer'
 import { instagramNormalizer } from '@/products/integracoes/datawarehouse/normalization/providers/instagramNormalizer'
 import { linkedinNormalizer } from '@/products/integracoes/datawarehouse/normalization/providers/linkedinNormalizer'
+import { metaAdsNormalizer } from '@/products/integracoes/datawarehouse/normalization/providers/metaAdsNormalizer'
 import { olistErpNormalizer, tinyNormalizer } from '@/products/integracoes/datawarehouse/normalization/providers/olistErpNormalizer'
 import { omieNormalizer } from '@/products/integracoes/datawarehouse/normalization/providers/omieNormalizer'
 import { pipedriveNormalizer } from '@/products/integracoes/datawarehouse/normalization/providers/pipedriveNormalizer'
@@ -27,6 +29,8 @@ const normalizers = new Map<string, Normalizer>(
     youtubeNormalizer,
     linkedinNormalizer,
     tiktokNormalizer,
+    metaAdsNormalizer,
+    googleAdsNormalizer,
   ].map((normalizer) => [normalizer.provider, normalizer] as const),
 )
 

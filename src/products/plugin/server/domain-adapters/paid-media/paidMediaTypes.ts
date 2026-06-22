@@ -1,4 +1,5 @@
 import type { GenericConnectedAdapter } from '@/products/plugin/server/domain-adapters/shared/connectedDomainService'
+import type { ConnectedProviderApiAdapter } from '@/products/plugin/server/domain-adapters/shared/connectedProviderApiAdapter'
 
 export const PAID_MEDIA_RESOURCES = [
   'contas',
@@ -13,3 +14,4 @@ export const PAID_MEDIA_RESOURCES = [
 
 export type PaidMediaResource = (typeof PAID_MEDIA_RESOURCES)[number]
 export type PaidMediaAdapter = GenericConnectedAdapter<PaidMediaResource>
+export type PaidMediaApiAdapter = ConnectedProviderApiAdapter<PaidMediaResource, never>

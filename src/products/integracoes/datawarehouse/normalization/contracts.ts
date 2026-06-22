@@ -64,6 +64,14 @@ export type NormalizedTableName =
   | 'social_audience_daily'
   | 'social_performance_daily'
   | 'social_engagement_daily'
+  | 'paid_media_accounts'
+  | 'paid_media_campaigns'
+  | 'paid_media_ad_groups'
+  | 'paid_media_ads'
+  | 'paid_media_creatives'
+  | 'paid_media_keywords'
+  | 'paid_media_conversions'
+  | 'paid_media_insights_daily'
 
 export type NormalizationInput = {
   tenantId: number

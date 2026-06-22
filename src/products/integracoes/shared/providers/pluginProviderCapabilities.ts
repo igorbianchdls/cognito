@@ -17,7 +17,7 @@ export type IntegrationProviderPluginResourceCapability = {
 
 export type IntegrationProviderPluginCapabilities = {
   provider: string
-  domain: Extract<IntegrationDomain, 'erp' | 'crm'>
+  domain: Extract<IntegrationDomain, 'erp' | 'crm' | 'advertising'>
   credentialMode: 'oauth2' | 'api_key'
   credentialRequirements?: string[]
   scopeReviewStatus: 'planned' | 'provider_verified'
@@ -198,6 +198,22 @@ const CRM_READ_RESOURCES = [
   'fases_pipeline',
 ] as const
 
+const PAID_MEDIA_READ_RESOURCES = [
+  'contas',
+  'campanhas',
+  'grupos',
+  'anuncios',
+  'criativos',
+  'keywords',
+  'desempenho-diario',
+  'conversoes',
+] as const
+
+function paidMediaReadResourcesForProvider(provider: string) {
+  if (provider === 'meta_ads') return PAID_MEDIA_READ_RESOURCES.filter((resource) => resource !== 'keywords')
+  return PAID_MEDIA_READ_RESOURCES
+}
+
 const CRM_PRIMARY_LIVE_READ_RESOURCES = ['contas', 'contatos', 'leads', 'oportunidades', 'atividades'] as const
 
 const CRM_ACTIONS_BY_RESOURCE: Record<string, string[]> = {
@@ -326,6 +342,17 @@ const CRM_SCOPE_HINTS: Record<string, IntegrationProviderPluginScopeGroup> = {
   },
 }
 
+const PAID_MEDIA_SCOPE_HINTS: Record<string, IntegrationProviderPluginScopeGroup> = {
+  meta_ads: {
+    read: ['ads_read'],
+    liveRead: ['ads_read'],
+  },
+  google_ads: {
+    read: ['https://www.googleapis.com/auth/adwords'],
+    liveRead: ['https://www.googleapis.com/auth/adwords'],
+  },
+}
+
 export const INTEGRATION_PLUGIN_PROVIDER_CAPABILITIES: IntegrationProviderPluginCapabilities[] = [
   {
     provider: 'omie',
@@ -372,6 +399,18 @@ export const INTEGRATION_PLUGIN_PROVIDER_CAPABILITIES: IntegrationProviderPlugin
       crmLiveReadResourcesForProvider(provider),
     ),
   })),
+  ...(['meta_ads', 'google_ads'] as const).map((provider) => ({
+    provider,
+    domain: 'advertising' as const,
+    credentialMode: 'oauth2' as const,
+    scopeReviewStatus: 'planned' as const,
+    scopeHints: PAID_MEDIA_SCOPE_HINTS[provider],
+    resources: resourceCapabilities(
+      paidMediaReadResourcesForProvider(provider),
+      {},
+      paidMediaReadResourcesForProvider(provider),
+    ),
+  })),
 ]
 
 const CAPABILITY_BY_PROVIDER = new Map(
@@ -382,7 +421,7 @@ export function getIntegrationProviderPluginCapabilities(provider: string) {
   return CAPABILITY_BY_PROVIDER.get(provider)
 }
 
-export function listIntegrationProviderPluginCapabilities(domain?: 'erp' | 'crm') {
+export function listIntegrationProviderPluginCapabilities(domain?: IntegrationProviderPluginCapabilities['domain']) {
   return domain
     ? INTEGRATION_PLUGIN_PROVIDER_CAPABILITIES.filter((capability) => capability.domain === domain)
     : INTEGRATION_PLUGIN_PROVIDER_CAPABILITIES

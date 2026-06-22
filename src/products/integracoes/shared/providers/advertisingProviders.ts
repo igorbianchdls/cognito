@@ -26,6 +26,24 @@ export const ADVERTISING_RESOURCES: IntegrationResource[] = [
     defaultEnabled: true,
   },
   {
+    slug: 'creatives',
+    name: 'Criativos',
+    description: 'Criativos, assets e textos usados nos anuncios.',
+    defaultEnabled: true,
+  },
+  {
+    slug: 'keywords',
+    name: 'Keywords',
+    description: 'Palavras-chave e criterios de busca quando suportados pelo provider.',
+    defaultEnabled: true,
+  },
+  {
+    slug: 'conversions',
+    name: 'Conversoes',
+    description: 'Acoes ou eventos de conversao configurados e reportados pelo provider.',
+    defaultEnabled: true,
+  },
+  {
     slug: 'insights_campaign_daily',
     name: 'Metricas por campanha',
     description: 'Gasto, impressoes, cliques e conversoes por campanha e dia.',
@@ -63,6 +81,7 @@ export const ADVERTISING_PROVIDERS: IntegrationProvider[] = [
     description: 'Campanhas, conjuntos, anuncios, criativos e insights de Meta Ads.',
     authType: 'oauth2',
     supportsOAuthCallback: true,
+    resources: ADVERTISING_RESOURCES.filter((resource) => resource.slug !== 'keywords'),
     tags: ['facebook', 'instagram', 'paid-social'],
   }),
   advertisingProvider({
