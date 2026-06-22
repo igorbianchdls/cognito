@@ -729,7 +729,8 @@ const SOCIAL_SCHEMA = createCrudSchema(
 
 const ANALYTICS_SCHEMA = createCrudSchema(
   [...ANALYTICS_RESOURCES],
-  'Resource canonico de analytics/SEO conectado via /integracoes. Use propriedades, paginas, landing-pages, eventos, conversoes, canais, consultas, perfil-negocio ou reviews.',
+  'Resource canonico de analytics/SEO conectado via /integracoes. Use propriedades, paginas, landing-pages, eventos, conversoes, canais, consultas, perfil-negocio, reviews ou posts-locais.',
+  ['listar', 'ler', 'listar_live', 'ler_live'] satisfies ConnectedReadAction[],
 )
 
 const ECOMMERCE_CONNECTED_SCHEMA = createCrudSchema(
@@ -1264,7 +1265,7 @@ const ANALYTICS_DOMAIN_TOOL_DEFINITION = {
   name: PLUGIN_DOMAIN_TOOL_NAMES.analytics,
   title: 'Analytics',
   description:
-    'Consulta analytics, SEO e perfil local conectados pelo cliente em /integracoes. Use para GA4, Google Search Console e Google Business Profile; recursos incluem propriedades, paginas, eventos, conversoes, canais, consultas, perfil-negocio e reviews.',
+    'Consulta analytics, SEO e perfil local conectados pelo cliente em /integracoes. listar/ler usam BigQuery normalized; listar_live/ler_live leem direto na API do provider. Use para GA4, Google Search Console e Google Business Profile; recursos incluem propriedades, paginas, eventos, conversoes, canais, consultas, perfil-negocio, reviews e posts-locais.',
   inputSchema: ANALYTICS_SCHEMA,
   outputSchema: CONNECTED_DOMAIN_OUTPUT_SCHEMA,
   securitySchemes: READ_SECURITY_SCHEMES,

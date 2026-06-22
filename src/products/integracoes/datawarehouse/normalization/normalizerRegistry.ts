@@ -4,6 +4,9 @@ import { blingNormalizer } from '@/products/integracoes/datawarehouse/normalizat
 import { contaAzulNormalizer } from '@/products/integracoes/datawarehouse/normalization/providers/contaAzulNormalizer'
 import { hubspotNormalizer } from '@/products/integracoes/datawarehouse/normalization/providers/hubspotNormalizer'
 import { googleAdsNormalizer } from '@/products/integracoes/datawarehouse/normalization/providers/googleAdsNormalizer'
+import { googleAnalytics4Normalizer } from '@/products/integracoes/datawarehouse/normalization/providers/googleAnalytics4Normalizer'
+import { googleMyBusinessNormalizer } from '@/products/integracoes/datawarehouse/normalization/providers/googleMyBusinessNormalizer'
+import { googleSearchConsoleNormalizer } from '@/products/integracoes/datawarehouse/normalization/providers/googleSearchConsoleNormalizer'
 import { instagramNormalizer } from '@/products/integracoes/datawarehouse/normalization/providers/instagramNormalizer'
 import { linkedinNormalizer } from '@/products/integracoes/datawarehouse/normalization/providers/linkedinNormalizer'
 import { lojaIntegradaNormalizer } from '@/products/integracoes/datawarehouse/normalization/providers/lojaIntegradaNormalizer'
@@ -34,6 +37,9 @@ const normalizers = new Map<string, Normalizer>(
     tiktokNormalizer,
     metaAdsNormalizer,
     googleAdsNormalizer,
+    googleAnalytics4Normalizer,
+    googleSearchConsoleNormalizer,
+    googleMyBusinessNormalizer,
     shopifyNormalizer,
     nuvemshopNormalizer,
     lojaIntegradaNormalizer,

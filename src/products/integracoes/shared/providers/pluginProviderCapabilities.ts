@@ -17,7 +17,7 @@ export type IntegrationProviderPluginResourceCapability = {
 
 export type IntegrationProviderPluginCapabilities = {
   provider: string
-  domain: Extract<IntegrationDomain, 'erp' | 'crm' | 'advertising' | 'ecommerce'>
+  domain: Extract<IntegrationDomain, 'erp' | 'crm' | 'advertising' | 'ecommerce' | 'analytics'>
   credentialMode: 'oauth2' | 'api_key'
   credentialRequirements?: string[]
   scopeReviewStatus: 'planned' | 'provider_verified'
@@ -225,6 +225,19 @@ const ECOMMERCE_READ_RESOURCES = [
   'carrinhos-abandonados',
 ] as const
 
+const ANALYTICS_READ_RESOURCES = [
+  'propriedades',
+  'paginas',
+  'landing-pages',
+  'eventos',
+  'conversoes',
+  'canais',
+  'consultas',
+  'perfil-negocio',
+  'reviews',
+  'posts-locais',
+] as const
+
 function paidMediaReadResourcesForProvider(provider: string) {
   if (provider === 'meta_ads') return PAID_MEDIA_READ_RESOURCES.filter((resource) => resource !== 'keywords')
   return PAID_MEDIA_READ_RESOURCES
@@ -239,6 +252,33 @@ function ecommerceReadResourcesForProvider(provider: string) {
     ))
   }
   return ECOMMERCE_READ_RESOURCES
+}
+
+function analyticsReadResourcesForProvider(provider: string) {
+  if (provider === 'google_analytics_4') {
+    return ANALYTICS_READ_RESOURCES.filter((resource) => (
+      resource !== 'consultas'
+        && resource !== 'perfil-negocio'
+        && resource !== 'reviews'
+        && resource !== 'posts-locais'
+    ))
+  }
+  if (provider === 'google_search_console') {
+    return ANALYTICS_READ_RESOURCES.filter((resource) => (
+      resource !== 'eventos'
+        && resource !== 'conversoes'
+        && resource !== 'perfil-negocio'
+        && resource !== 'reviews'
+        && resource !== 'posts-locais'
+    ))
+  }
+  return ANALYTICS_READ_RESOURCES.filter((resource) => (
+    resource !== 'paginas'
+      && resource !== 'landing-pages'
+      && resource !== 'eventos'
+      && resource !== 'conversoes'
+      && resource !== 'consultas'
+  ))
 }
 
 const CRM_PRIMARY_LIVE_READ_RESOURCES = ['contas', 'contatos', 'leads', 'oportunidades', 'atividades'] as const
@@ -426,6 +466,21 @@ const ECOMMERCE_SCOPE_HINTS: Record<string, IntegrationProviderPluginScopeGroup>
   },
 }
 
+const ANALYTICS_SCOPE_HINTS: Record<string, IntegrationProviderPluginScopeGroup> = {
+  google_analytics_4: {
+    read: ['https://www.googleapis.com/auth/analytics.readonly'],
+    liveRead: ['https://www.googleapis.com/auth/analytics.readonly'],
+  },
+  google_search_console: {
+    read: ['https://www.googleapis.com/auth/webmasters.readonly'],
+    liveRead: ['https://www.googleapis.com/auth/webmasters.readonly'],
+  },
+  google_my_business: {
+    read: ['https://www.googleapis.com/auth/business.manage'],
+    liveRead: ['https://www.googleapis.com/auth/business.manage'],
+  },
+}
+
 export const INTEGRATION_PLUGIN_PROVIDER_CAPABILITIES: IntegrationProviderPluginCapabilities[] = [
   {
     provider: 'omie',
@@ -495,6 +550,18 @@ export const INTEGRATION_PLUGIN_PROVIDER_CAPABILITIES: IntegrationProviderPlugin
       ecommerceReadResourcesForProvider(provider),
       ecommerceActionsForProvider(provider),
       ecommerceReadResourcesForProvider(provider),
+    ),
+  })),
+  ...(['google_analytics_4', 'google_search_console', 'google_my_business'] as const).map((provider) => ({
+    provider,
+    domain: 'analytics' as const,
+    credentialMode: 'oauth2' as const,
+    scopeReviewStatus: 'planned' as const,
+    scopeHints: ANALYTICS_SCOPE_HINTS[provider],
+    resources: resourceCapabilities(
+      analyticsReadResourcesForProvider(provider),
+      {},
+      analyticsReadResourcesForProvider(provider),
     ),
   })),
 ]
