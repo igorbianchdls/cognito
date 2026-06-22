@@ -17,7 +17,7 @@ export type IntegrationProviderPluginResourceCapability = {
 
 export type IntegrationProviderPluginCapabilities = {
   provider: string
-  domain: Extract<IntegrationDomain, 'erp' | 'crm' | 'advertising'>
+  domain: Extract<IntegrationDomain, 'erp' | 'crm' | 'advertising' | 'ecommerce'>
   credentialMode: 'oauth2' | 'api_key'
   credentialRequirements?: string[]
   scopeReviewStatus: 'planned' | 'provider_verified'
@@ -209,9 +209,36 @@ const PAID_MEDIA_READ_RESOURCES = [
   'conversoes',
 ] as const
 
+const ECOMMERCE_READ_RESOURCES = [
+  'lojas',
+  'pedidos',
+  'itens-pedido',
+  'produtos',
+  'variantes',
+  'clientes',
+  'pagamentos',
+  'reembolsos',
+  'frete',
+  'estoque',
+  'categorias',
+  'cupons',
+  'carrinhos-abandonados',
+] as const
+
 function paidMediaReadResourcesForProvider(provider: string) {
   if (provider === 'meta_ads') return PAID_MEDIA_READ_RESOURCES.filter((resource) => resource !== 'keywords')
   return PAID_MEDIA_READ_RESOURCES
+}
+
+function ecommerceReadResourcesForProvider(provider: string) {
+  if (provider === 'loja_integrada') {
+    return ECOMMERCE_READ_RESOURCES.filter((resource) => (
+      resource !== 'reembolsos'
+        && resource !== 'cupons'
+        && resource !== 'carrinhos-abandonados'
+    ))
+  }
+  return ECOMMERCE_READ_RESOURCES
 }
 
 const CRM_PRIMARY_LIVE_READ_RESOURCES = ['contas', 'contatos', 'leads', 'oportunidades', 'atividades'] as const
@@ -353,6 +380,52 @@ const PAID_MEDIA_SCOPE_HINTS: Record<string, IntegrationProviderPluginScopeGroup
   },
 }
 
+const ECOMMERCE_ACTIONS_BY_RESOURCE: Record<string, string[]> = {
+  produtos: ['criar', 'atualizar', 'deletar'],
+  variantes: ['criar', 'atualizar', 'deletar'],
+  cupons: ['criar', 'atualizar', 'deletar'],
+  pedidos: ['cancelar'],
+}
+
+function ecommerceActionsForProvider(provider: string) {
+  if (provider === 'shopify') {
+    return {
+      produtos: ['criar', 'atualizar', 'deletar'],
+      variantes: ['atualizar'],
+      cupons: ['criar', 'atualizar', 'deletar'],
+      pedidos: ['cancelar'],
+    }
+  }
+  if (provider === 'nuvemshop') {
+    return {
+      produtos: ['criar', 'atualizar', 'deletar'],
+      variantes: ['criar', 'atualizar', 'deletar'],
+      cupons: ['criar', 'atualizar', 'deletar'],
+    }
+  }
+  if (provider === 'loja_integrada') return {}
+  return ECOMMERCE_ACTIONS_BY_RESOURCE
+}
+
+const ECOMMERCE_SCOPE_HINTS: Record<string, IntegrationProviderPluginScopeGroup> = {
+  shopify: {
+    read: ['read_products', 'read_orders', 'read_customers', 'read_inventory', 'read_discounts'],
+    liveRead: ['read_products', 'read_orders', 'read_customers', 'read_inventory', 'read_discounts'],
+    write: ['write_products', 'write_orders', 'write_discounts'],
+    destructive: ['write_products', 'write_orders', 'write_discounts'],
+  },
+  nuvemshop: {
+    read: ['read_products', 'read_orders', 'read_customers', 'read_coupons'],
+    liveRead: ['read_products', 'read_orders', 'read_customers', 'read_coupons'],
+    write: ['write_products', 'write_coupons'],
+    destructive: ['write_products', 'write_coupons'],
+  },
+  loja_integrada: {
+    read: ['api_key'],
+    liveRead: ['api_key'],
+  },
+}
+
 export const INTEGRATION_PLUGIN_PROVIDER_CAPABILITIES: IntegrationProviderPluginCapabilities[] = [
   {
     provider: 'omie',
@@ -409,6 +482,19 @@ export const INTEGRATION_PLUGIN_PROVIDER_CAPABILITIES: IntegrationProviderPlugin
       paidMediaReadResourcesForProvider(provider),
       {},
       paidMediaReadResourcesForProvider(provider),
+    ),
+  })),
+  ...(['shopify', 'nuvemshop', 'loja_integrada'] as const).map((provider) => ({
+    provider,
+    domain: 'ecommerce' as const,
+    credentialMode: provider === 'loja_integrada' ? 'api_key' as const : 'oauth2' as const,
+    credentialRequirements: provider === 'loja_integrada' ? ['api_key', 'app_key'] : undefined,
+    scopeReviewStatus: 'planned' as const,
+    scopeHints: ECOMMERCE_SCOPE_HINTS[provider],
+    resources: resourceCapabilities(
+      ecommerceReadResourcesForProvider(provider),
+      ecommerceActionsForProvider(provider),
+      ecommerceReadResourcesForProvider(provider),
     ),
   })),
 ]

@@ -81,10 +81,6 @@ export const ECOMMERCE_RESOURCES: IntegrationResource[] = [
   },
 ]
 
-const DIGITAL_COMMERCE_RESOURCES = ECOMMERCE_RESOURCES.filter((resource) => (
-  ['stores', 'customers', 'products', 'orders', 'order_items', 'payments', 'refunds'].includes(resource.slug)
-))
-
 function ecommerceProvider(
   provider: Omit<IntegrationProvider, 'domain' | 'resources' | 'syncModes' | 'supportsIncrementalSync' | 'tags'> & {
     resources?: IntegrationResource[]
@@ -121,64 +117,13 @@ export const ECOMMERCE_PROVIDERS: IntegrationProvider[] = [
     tags: ['loja-online', 'brasil'],
   }),
   ecommerceProvider({
-    slug: 'olist',
-    toolkitSlug: 'OLIST',
-    name: 'Olist',
-    description: 'Operacao de ecommerce e marketplace com pedidos, produtos, estoque e entregas.',
+    slug: 'loja_integrada',
+    toolkitSlug: 'LOJA_INTEGRADA',
+    name: 'Loja Integrada',
+    description: 'Plataforma brasileira de ecommerce com pedidos, produtos, clientes e categorias.',
     authType: 'api_key',
     supportsOAuthCallback: false,
     tags: ['marketplace', 'brasil'],
-  }),
-  ecommerceProvider({
-    slug: 'woocommerce',
-    toolkitSlug: 'WOOCOMMERCE',
-    name: 'WooCommerce',
-    description: 'Loja WooCommerce com pedidos, produtos, clientes, cupons e reembolsos.',
-    authType: 'basic',
-    supportsOAuthCallback: false,
-    tags: ['loja-online', 'wordpress'],
-  }),
-  ecommerceProvider({
-    slug: 'eduzz',
-    toolkitSlug: 'EDUZZ',
-    name: 'Eduzz',
-    description: 'Infoprodutos e vendas digitais com compradores, vendas, transacoes e reembolsos.',
-    authType: 'api_key',
-    supportsOAuthCallback: false,
-    resources: DIGITAL_COMMERCE_RESOURCES,
-    tags: ['infoprodutos', 'brasil'],
-  }),
-  ecommerceProvider({
-    slug: 'hotmart',
-    toolkitSlug: 'HOTMART',
-    name: 'Hotmart',
-    description: 'Infoprodutos, assinaturas e vendas digitais com compras, compradores e reembolsos.',
-    authType: 'oauth2',
-    supportsOAuthCallback: true,
-    resources: DIGITAL_COMMERCE_RESOURCES,
-    tags: ['infoprodutos', 'global'],
-  }),
-  ecommerceProvider({
-    slug: 'kiwify',
-    toolkitSlug: 'KIWIFY',
-    name: 'Kiwify',
-    description: 'Vendas digitais e infoprodutos com pedidos, produtos, compradores e transacoes.',
-    authType: 'api_key',
-    supportsOAuthCallback: false,
-    resources: DIGITAL_COMMERCE_RESOURCES,
-    tags: ['infoprodutos', 'brasil'],
-  }),
-  ecommerceProvider({
-    slug: 'ifood',
-    toolkitSlug: 'IFOOD',
-    name: 'iFood',
-    description: 'Pedidos, lojas, itens, pagamentos e operacao de delivery.',
-    authType: 'oauth2',
-    supportsOAuthCallback: true,
-    resources: ECOMMERCE_RESOURCES.filter((resource) => (
-      ['stores', 'products', 'orders', 'order_items', 'payments', 'refunds'].includes(resource.slug)
-    )),
-    tags: ['delivery', 'brasil'],
   }),
 ]
 

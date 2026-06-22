@@ -72,6 +72,19 @@ export type NormalizedTableName =
   | 'paid_media_keywords'
   | 'paid_media_conversions'
   | 'paid_media_insights_daily'
+  | 'ecommerce_stores'
+  | 'ecommerce_customers'
+  | 'ecommerce_products'
+  | 'ecommerce_variants'
+  | 'ecommerce_orders'
+  | 'ecommerce_order_items'
+  | 'ecommerce_payments'
+  | 'ecommerce_refunds'
+  | 'ecommerce_shipping'
+  | 'ecommerce_inventory'
+  | 'ecommerce_categories'
+  | 'ecommerce_coupons'
+  | 'ecommerce_abandoned_checkouts'
 
 export type NormalizationInput = {
   tenantId: number

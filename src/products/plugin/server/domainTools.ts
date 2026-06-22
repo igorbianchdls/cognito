@@ -24,7 +24,14 @@ import {
 } from '@/products/plugin/server/domain-adapters/erp/erpApiAdapterRegistry'
 import { CONNECTED_ERP_RESOURCES } from '@/products/plugin/server/domain-adapters/erp/erpTypes'
 import { executeEcommerceConnectedTool } from '@/products/plugin/server/domain-adapters/ecommerce-connected/ecommerceConnectedService'
-import { ECOMMERCE_CONNECTED_RESOURCES } from '@/products/plugin/server/domain-adapters/ecommerce-connected/ecommerceConnectedTypes'
+import {
+  getEcommerceConnectedApiAdapter,
+  listEcommerceConnectedApiAdapterProviders,
+} from '@/products/plugin/server/domain-adapters/ecommerce-connected/ecommerceConnectedApiAdapterRegistry'
+import {
+  ECOMMERCE_CONNECTED_RESOURCES,
+  type EcommerceConnectedProviderAction,
+} from '@/products/plugin/server/domain-adapters/ecommerce-connected/ecommerceConnectedTypes'
 import { executePaidMediaTool } from '@/products/plugin/server/domain-adapters/paid-media/paidMediaService'
 import { PAID_MEDIA_RESOURCES } from '@/products/plugin/server/domain-adapters/paid-media/paidMediaTypes'
 import { executeSocialTool } from '@/products/plugin/server/domain-adapters/social/socialService'
@@ -572,6 +579,13 @@ const CONNECTED_CRM_ACTIONS_ALLOWED_RESOURCES = [
   'atividades',
 ] as const
 
+const ECOMMERCE_CONNECTED_ACTIONS_ALLOWED_RESOURCES = [
+  'produtos',
+  'variantes',
+  'cupons',
+  'pedidos',
+] as const
+
 const CONNECTED_ERP_ACTIONS_SCHEMA = {
   type: 'object',
   properties: {
@@ -658,6 +672,49 @@ const CONNECTED_CRM_ACTIONS_SCHEMA = {
   additionalProperties: true,
 } as const satisfies McpToolInputSchema
 
+const ECOMMERCE_CONNECTED_ACTIONS_SCHEMA = {
+  type: 'object',
+  properties: {
+    provider: {
+      type: 'string',
+      description: 'Provider ecommerce conectado em /integracoes, como shopify, nuvemshop ou loja_integrada.',
+    },
+    resource: {
+      type: 'string',
+      enum: ECOMMERCE_CONNECTED_ACTIONS_ALLOWED_RESOURCES,
+      description: 'Recurso transacional do ecommerce conectado.',
+    },
+    action: {
+      type: 'string',
+      enum: ['criar', 'atualizar', 'cancelar', 'deletar', 'alterar_status'],
+      description: 'Acao executada diretamente na API do provider quando suportada. dry_run=true por padrao.',
+    },
+    id: {
+      type: 'string',
+      description: 'ID externo ou ID do provider. Obrigatorio para atualizar, cancelar, deletar e alterar_status.',
+    },
+    payload: {
+      type: 'object',
+      description: 'Campos da operacao enviados ao provider. O contrato exato varia por resource/provider.',
+      additionalProperties: true,
+    },
+    dry_run: {
+      type: 'boolean',
+      description: 'Default true. Quando true, valida intencao/permissao e retorna preview sem chamar a API.',
+    },
+    confirmed: {
+      type: 'boolean',
+      description: 'Obrigatorio como true para execucao real quando a conexao exige confirmacao.',
+    },
+    idempotency_key: {
+      type: 'string',
+      description: 'Chave opcional para rastrear operacoes sensiveis e evitar duplicidade.',
+    },
+  },
+  required: ['resource', 'action'],
+  additionalProperties: true,
+} as const satisfies McpToolInputSchema
+
 const PAID_MEDIA_SCHEMA = createCrudSchema(
   [...PAID_MEDIA_RESOURCES],
   'Resource canonico de midia paga conectada via /integracoes. Use contas, campanhas, grupos, anuncios, criativos, keywords, desempenho-diario ou conversoes.',
@@ -677,7 +734,8 @@ const ANALYTICS_SCHEMA = createCrudSchema(
 
 const ECOMMERCE_CONNECTED_SCHEMA = createCrudSchema(
   [...ECOMMERCE_CONNECTED_RESOURCES],
-  'Resource canonico de ecommerce conectado via /integracoes. Use lojas, pedidos, itens-pedido, produtos, clientes, pagamentos, frete, cupons ou assinaturas.',
+  'Resource canonico de ecommerce conectado via /integracoes. Use lojas, pedidos, itens-pedido, produtos, variantes, clientes, pagamentos, reembolsos, frete, estoque, categorias, cupons ou carrinhos-abandonados.',
+  ['listar', 'ler', 'listar_live', 'ler_live'] satisfies ConnectedReadAction[],
 )
 
 const CRUD_OUTPUT_SCHEMA = {
@@ -1009,6 +1067,7 @@ export const PLUGIN_DOMAIN_TOOL_NAMES = {
   financialStatement: 'financial_statement',
   ecommerce: 'ecommerce',
   ecommerceConnected: 'ecommerce_connected',
+  ecommerceConnectedActions: 'ecommerce_connected_actions',
   marketing: 'marketing',
   paidMedia: 'paid_media',
   social: 'social',
@@ -1121,11 +1180,23 @@ const ECOMMERCE_CONNECTED_DOMAIN_TOOL_DEFINITION = {
   name: PLUGIN_DOMAIN_TOOL_NAMES.ecommerceConnected,
   title: 'Ecommerce connected',
   description:
-    'Consulta ecommerce conectado pelo cliente em /integracoes usando contrato canonico Cognito e adapters por provider. Use para Shopify, Nuvemshop, Olist, WooCommerce, Eduzz, Hotmart, Kiwify e iFood. Acoes suportadas nesta fase: listar e ler.',
+    'Consulta ecommerce conectado pelo cliente em /integracoes. listar/ler usam BigQuery normalized; listar_live/ler_live leem direto na API do provider quando suportado. Providers: Shopify, Nuvemshop e Loja Integrada.',
   inputSchema: ECOMMERCE_CONNECTED_SCHEMA,
   outputSchema: CONNECTED_DOMAIN_OUTPUT_SCHEMA,
   securitySchemes: READ_SECURITY_SCHEMES,
   annotations: READ_ONLY_ANNOTATIONS,
+  _meta: TOOL_META,
+} as const satisfies DomainToolDefinition
+
+const ECOMMERCE_CONNECTED_ACTIONS_DOMAIN_TOOL_DEFINITION = {
+  name: PLUGIN_DOMAIN_TOOL_NAMES.ecommerceConnectedActions,
+  title: 'Ecommerce connected actions',
+  description:
+    'Executa acoes transacionais diretamente na API do ecommerce conectado em /integracoes. Use para criar, atualizar, cancelar e deletar quando o provider/resource suportar. dry_run=true por padrao; dry_run=false exige confirmacao e adapter provider implementado.',
+  inputSchema: ECOMMERCE_CONNECTED_ACTIONS_SCHEMA,
+  outputSchema: ERP_ACOES_OUTPUT_SCHEMA,
+  securitySchemes: READ_SECURITY_SCHEMES,
+  annotations: WRITE_ANNOTATIONS,
   _meta: TOOL_META,
 } as const satisfies DomainToolDefinition
 
@@ -1224,6 +1295,7 @@ export function listPluginDomainToolDefinitions() {
     CONNECTED_CRM_ACTIONS_DOMAIN_TOOL_DEFINITION,
     ECOMMERCE_DOMAIN_TOOL_DEFINITION,
     ECOMMERCE_CONNECTED_DOMAIN_TOOL_DEFINITION,
+    ECOMMERCE_CONNECTED_ACTIONS_DOMAIN_TOOL_DEFINITION,
     SQL_DOMAIN_TOOL_DEFINITION,
     FINANCIAL_STATEMENT_TOOL_DEFINITION,
     MARKETING_DOMAIN_TOOL_DEFINITION,
@@ -1244,6 +1316,7 @@ export const PLUGIN_DOMAIN_TOOL_DEFINITIONS = [
   CONNECTED_CRM_ACTIONS_DOMAIN_TOOL_DEFINITION,
   ECOMMERCE_DOMAIN_TOOL_DEFINITION,
   ECOMMERCE_CONNECTED_DOMAIN_TOOL_DEFINITION,
+  ECOMMERCE_CONNECTED_ACTIONS_DOMAIN_TOOL_DEFINITION,
   SQL_DOMAIN_TOOL_DEFINITION,
   FINANCIAL_STATEMENT_TOOL_DEFINITION,
   MARKETING_DOMAIN_TOOL_DEFINITION,
@@ -4418,6 +4491,13 @@ const CONNECTED_CRM_ACTIONS_BY_RESOURCE: Record<string, readonly ConnectedCrmAct
   atividades: ['criar', 'atualizar', 'concluir', 'cancelar', 'reabrir'],
 }
 
+const ECOMMERCE_CONNECTED_ACTIONS_BY_RESOURCE: Record<string, readonly EcommerceConnectedProviderAction[]> = {
+  produtos: ['criar', 'atualizar', 'deletar'],
+  variantes: ['criar', 'atualizar', 'deletar'],
+  cupons: ['criar', 'atualizar', 'deletar'],
+  pedidos: ['cancelar'],
+}
+
 const CONNECTED_DESTRUCTIVE_ACTIONS = new Set([
   'cancelar',
   'deletar',
@@ -4541,7 +4621,7 @@ function normalizeResourceAlias(resource: string) {
 }
 
 function getConnectedPermissionResourceAliases(input: {
-  domain: 'erp' | 'crm'
+  domain: 'erp' | 'crm' | 'ecommerce'
   provider: string
   resource: string
   selectedResources?: string[]
@@ -4620,7 +4700,7 @@ async function markConnectionPendingAuth(input: {
 async function buildConnectedActionResponse(input: {
   tenantId?: number
   tool: string
-  domain: 'erp' | 'crm'
+  domain: 'erp' | 'crm' | 'ecommerce'
   provider: string | null
   connectionId?: string | null
   displayName?: string | null
@@ -4713,7 +4793,7 @@ async function buildConnectedActionResponse(input: {
 async function callConnectedProviderAction(params: {
   args: unknown
   context: CognitoMcpServerContext
-  domain: 'erp' | 'crm'
+  domain: 'erp' | 'crm' | 'ecommerce'
   tool: string
   resources: readonly string[]
   actionsByResource: Record<string, readonly string[]>
@@ -4902,10 +4982,14 @@ async function callConnectedProviderAction(params: {
 
     const apiAdapter = (params.domain === 'erp'
       ? getErpApiAdapter(connection.provider)
-      : getCrmApiAdapter(connection.provider)) as ConnectedProviderApiAdapter<string, string> | undefined
+      : params.domain === 'crm'
+        ? getCrmApiAdapter(connection.provider)
+        : getEcommerceConnectedApiAdapter(connection.provider)) as ConnectedProviderApiAdapter<string, string> | undefined
     const registeredAdapters = params.domain === 'erp'
       ? listErpApiAdapterProviders()
-      : listCrmApiAdapterProviders()
+      : params.domain === 'crm'
+        ? listCrmApiAdapterProviders()
+        : listEcommerceConnectedApiAdapterProviders()
 
     if (!apiAdapter) {
       return buildConnectedActionResponse({
@@ -5054,6 +5138,17 @@ async function callConnectedCrmActions(args: unknown, context: CognitoMcpServerC
   })
 }
 
+async function callEcommerceConnectedActions(args: unknown, context: CognitoMcpServerContext) {
+  return callConnectedProviderAction({
+    args,
+    context,
+    domain: 'ecommerce',
+    tool: PLUGIN_DOMAIN_TOOL_NAMES.ecommerceConnectedActions,
+    resources: ECOMMERCE_CONNECTED_ACTIONS_ALLOWED_RESOURCES,
+    actionsByResource: ECOMMERCE_CONNECTED_ACTIONS_BY_RESOURCE,
+  })
+}
+
 async function callConnectedDomain(
   execute: (args: unknown, context: CognitoMcpServerContext) => Promise<ConnectedDomainToolResult>,
   args: unknown,
@@ -5095,6 +5190,8 @@ export async function callPluginDomainTool(
       return callEcommerce(args, context)
     case PLUGIN_DOMAIN_TOOL_NAMES.ecommerceConnected:
       return callConnectedDomain(executeEcommerceConnectedTool, args, context)
+    case PLUGIN_DOMAIN_TOOL_NAMES.ecommerceConnectedActions:
+      return callEcommerceConnectedActions(args, context)
     case PLUGIN_DOMAIN_TOOL_NAMES.sql:
       return callSqlExecution(args, context, PLUGIN_DOMAIN_TOOL_NAMES.sql)
     case PLUGIN_DOMAIN_TOOL_NAMES.sqlExecution:
