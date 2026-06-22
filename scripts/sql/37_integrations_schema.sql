@@ -224,7 +224,7 @@ CREATE TABLE IF NOT EXISTS integrations.plugin_action_audit (
   actor text,
   created_at timestamptz NOT NULL DEFAULT now(),
   CONSTRAINT plugin_action_audit_domain_check
-    CHECK (domain IN ('erp', 'crm')),
+    CHECK (domain IN ('erp', 'crm', 'ecommerce')),
   CONSTRAINT plugin_action_audit_permission_kind_check
     CHECK (permission_kind IS NULL OR permission_kind IN ('write', 'destructive')),
   CONSTRAINT plugin_action_audit_status_check

@@ -1,10 +1,11 @@
 export type IntegrationPluginActionAuditStatus = 'preview' | 'executed' | 'blocked' | 'error'
+export type IntegrationPluginActionAuditDomain = 'erp' | 'crm' | 'ecommerce'
 
 export type IntegrationPluginActionAudit = {
   id: string
   tenantId: number
   connectionId?: string | null
-  domain: 'erp' | 'crm'
+  domain: IntegrationPluginActionAuditDomain
   provider?: string | null
   tool: string
   resource: string
@@ -25,7 +26,7 @@ export type IntegrationPluginActionAudit = {
 export type CreateIntegrationPluginActionAuditInput = {
   tenantId: number
   connectionId?: string | null
-  domain: 'erp' | 'crm'
+  domain: IntegrationPluginActionAuditDomain
   provider?: string | null
   tool: string
   resource: string

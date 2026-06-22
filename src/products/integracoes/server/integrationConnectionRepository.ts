@@ -35,6 +35,7 @@ import type {
 import type {
   CreateIntegrationPluginActionAuditInput,
   IntegrationPluginActionAudit,
+  IntegrationPluginActionAuditDomain,
   IntegrationPluginActionAuditStatus,
 } from '@/products/integracoes/shared/contracts/pluginActionAuditContracts'
 import type { IntegrationSyncMode } from '@/products/integracoes/shared/providers/providerTypes'
@@ -359,12 +360,17 @@ function normalizePluginActionAuditStatus(status: unknown): IntegrationPluginAct
   return 'error'
 }
 
+function normalizePluginActionAuditDomain(domain: unknown): IntegrationPluginActionAuditDomain {
+  if (domain === 'crm' || domain === 'ecommerce') return domain
+  return 'erp'
+}
+
 function toPluginActionAudit(row: DbPluginActionAuditRow): IntegrationPluginActionAudit {
   return {
     id: String(row.id),
     tenantId: Number(row.tenant_id),
     connectionId: row.connection_id == null ? null : String(row.connection_id),
-    domain: row.domain === 'crm' ? 'crm' : 'erp',
+    domain: normalizePluginActionAuditDomain(row.domain),
     provider: row.provider,
     tool: row.tool,
     resource: row.resource,
