@@ -21,9 +21,11 @@ assert(compiler.includes('compileArtifactJsxToTree'), 'generic artifact compiler
 const manifest = await source('src/products/artifacts/dashboard/language/dashboardLanguageManifest.ts')
 const definition = await source('src/products/artifacts/dashboard/language/dashboardLanguageDefinition.tsx')
 const dashboardTools = await source('src/products/mcp/tools/dashboardTools.ts')
+const chartPalettes = await source('src/products/artifacts/dashboard/chartPalettes.ts')
 assert(manifest.includes("DASHBOARD_DSL_VERSION = 'dashboard.v1'"), 'dashboard DSL version missing')
 assert(definition.includes('dashboardLanguageManifest'), 'dashboard language definition must derive from manifest')
 assert(dashboardTools.includes('dashboardLanguageManifest') || dashboardTools.includes('DASHBOARD_SUPPORTED_COMPONENTS'), 'MCP contract must derive from dashboard manifest')
+assert(!chartPalettes.startsWith("'use client'") && !chartPalettes.startsWith('"use client"'), 'server language manifest dependencies must not be client modules')
 
 const registry = await source('src/products/artifacts/dashboard/runtime/registry/dashboardRegistry.tsx')
 for (const registryName of [

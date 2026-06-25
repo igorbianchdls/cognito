@@ -1,5 +1,3 @@
-'use client'
-
 export type DashboardBorderPreset =
   | 'theme_default'
   | 'hud_compact'

@@ -1,5 +1,3 @@
-'use client'
-
 export type DashboardChartPaletteOption = {
   value: string
   label: string
