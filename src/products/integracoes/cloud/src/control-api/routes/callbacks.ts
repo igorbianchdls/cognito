@@ -6,8 +6,10 @@ import { exchangeOAuthCode, parseOAuthState } from '@/products/integracoes/conne
 import { writeConnectionCredentialsSecret } from '@/products/integracoes/cloud/src/lib/secretManager'
 import {
   createIntegrationEvent,
+  getCloudIntegrationConnection,
   updateConnectionSecret,
 } from '@/products/integracoes/cloud/src/lib/postgresStatus'
+import { finalizeConnectedIntegration } from '@/products/integracoes/server/finalizeConnectedIntegration'
 
 function getQueryString(request: ControlApiRequest, name: string) {
   const value = request.query?.[name]
@@ -113,6 +115,20 @@ export async function handleProviderCallback(request: ControlApiRequest): Promis
         tokenExpiresAt: tokenSet.expiresAt || null,
       },
     })
+    const connection = await getCloudIntegrationConnection({
+      tenantId: parsedState.tenantId,
+      connectionId: parsedState.connectionId,
+    })
+    if (connection) {
+      await finalizeConnectedIntegration({
+        tenantId: parsedState.tenantId,
+        connectionId: parsedState.connectionId,
+        displayName: connection.displayName,
+        resources: connection.selectedResources,
+        syncFrequency: connection.syncFrequency,
+        requestedBy: 'oauth-callback',
+      })
+    }
 
     return redirectToApp(getAppCallbackUrl({
       ...callbackContext,

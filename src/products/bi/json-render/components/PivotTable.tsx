@@ -4,6 +4,7 @@ import React from "react";
 import { ChevronDown, ChevronRight, Download } from "lucide-react";
 import { useData } from "@/products/bi/json-render/context";
 import { applyPrimaryDateRange } from "@/products/bi/json-render/dateFilters";
+import { requestDashboardQueryRows } from "@/products/artifacts/dashboard/query/dashboardQueryClient";
 
 type AnyRecord = Record<string, any>;
 type AggregateMode = "sum" | "avg" | "count" | "min" | "max";
@@ -315,10 +316,10 @@ export default function JsonRenderPivotTable({ element }: { element: any }) {
           }
         }
 
-        throw new Error("Consultas legacy de modulos foram removidas.");
+        const rows = await requestDashboardQueryRows(dq, filters);
 
         if (!cancelled) {
-          setRawRows(normalizeRows([]));
+          setRawRows(normalizeRows(rows));
           setQueryError(null);
         }
       } catch (error) {

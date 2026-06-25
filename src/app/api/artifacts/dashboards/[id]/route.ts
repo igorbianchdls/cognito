@@ -2,6 +2,7 @@ import { NextRequest } from 'next/server'
 
 import {
   ArtifactToolError,
+  assignDashboardTenant,
   deleteDashboardArtifact,
   listDashboardSourceVersions,
   readDashboardArtifact,
@@ -9,6 +10,7 @@ import {
   updateDashboardThumbnail,
   writeDashboardArtifact,
 } from '@/products/artifacts/dashboard/persistence/dashboardArtifactsService'
+import { resolveAuthTenant } from '@/products/auth/server/authTenantResolver'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -20,6 +22,8 @@ export async function GET(
   context: { params: Promise<{ id: string }> },
 ) {
   try {
+    const tenant = await resolveAuthTenant({ access: 'read' })
+    if (!tenant) return Response.json({ ok: false, error: 'Não autenticado' }, { status: 401 })
     const { id } = await context.params
     const url = new URL(req.url)
     const rawVersion = url.searchParams.get('version')
@@ -28,8 +32,8 @@ export async function GET(
       : undefined
 
     const [artifact, versions] = await Promise.all([
-      readDashboardArtifact({ artifactId: id, kind: 'draft', ...(version ? { version } : {}) }),
-      listDashboardSourceVersions(id, 'draft'),
+      readDashboardArtifact({ artifactId: id, tenantId: tenant.tenantId, kind: 'draft', ...(version ? { version } : {}) }),
+      listDashboardSourceVersions(id, 'draft', 100, tenant.tenantId),
     ])
 
     return Response.json({
@@ -65,6 +69,8 @@ export async function PATCH(
   context: { params: Promise<{ id: string }> },
 ) {
   try {
+    const tenant = await resolveAuthTenant({ access: 'manage' })
+    if (!tenant) return Response.json({ ok: false, error: 'Sem permissão' }, { status: 403 })
     const { id } = await context.params
     const payload = (await req.json().catch(() => ({}))) as Record<string, unknown>
     const action = String(payload.action ?? '').trim().toLowerCase()
@@ -72,7 +78,17 @@ export async function PATCH(
     if (action === 'rename') {
       const result = await renameDashboardArtifact({
         artifactId: id,
+        tenantId: tenant.tenantId,
         title: payload.title == null ? '' : String(payload.title),
+        actorId: null,
+      })
+      return Response.json({ ok: true, ...result })
+    }
+
+    if (action === 'assign-tenant') {
+      const result = await assignDashboardTenant({
+        artifactId: id,
+        tenantId: tenant.tenantId,
         actorId: null,
       })
       return Response.json({ ok: true, ...result })
@@ -80,6 +96,7 @@ export async function PATCH(
 
     const result = await writeDashboardArtifact({
       artifactId: id,
+      tenantId: tenant.tenantId,
       expectedVersion: payload.expected_version == null ? null : Number(payload.expected_version),
       title: payload.title == null ? null : String(payload.title),
       source: String(payload.source ?? ''),
@@ -121,6 +138,8 @@ export async function POST(
   context: { params: Promise<{ id: string }> },
 ) {
   try {
+    const tenant = await resolveAuthTenant({ access: 'manage' })
+    if (!tenant) return Response.json({ ok: false, error: 'Sem permissão' }, { status: 403 })
     const { id } = await context.params
     const payload = (await req.json().catch(() => ({}))) as Record<string, unknown>
     const action = String(payload.action ?? '').trim().toLowerCase()
@@ -137,6 +156,7 @@ export async function POST(
 
     const result = await updateDashboardThumbnail({
       artifactId: id,
+      tenantId: tenant.tenantId,
       thumbnailDataUrl: payload.thumbnail_data_url == null ? null : String(payload.thumbnail_data_url),
       actorId: null,
     })
@@ -170,8 +190,10 @@ export async function DELETE(
   context: { params: Promise<{ id: string }> },
 ) {
   try {
+    const tenant = await resolveAuthTenant({ access: 'manage' })
+    if (!tenant) return Response.json({ ok: false, error: 'Sem permissão' }, { status: 403 })
     const { id } = await context.params
-    const result = await deleteDashboardArtifact({ artifactId: id })
+    const result = await deleteDashboardArtifact({ artifactId: id, tenantId: tenant.tenantId })
     return Response.json({ ok: true, ...result })
   } catch (error) {
     if (error instanceof ArtifactToolError) {

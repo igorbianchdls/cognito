@@ -142,6 +142,7 @@ export type IntegrationConnectionConfiguration = {
     projectId?: string
     rawDataset: string
     normalizedDataset: string
+    analyticsDataset: string
   }
 }
 

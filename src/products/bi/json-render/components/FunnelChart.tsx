@@ -4,6 +4,7 @@ import React from "react";
 import { useData } from "@/products/bi/json-render/context";
 import { useThemeOverrides } from "@/products/bi/json-render/theme/ThemeContext";
 import { applyPrimaryDateRange } from "@/products/bi/json-render/dateFilters";
+import { requestDashboardQueryRows } from "@/products/artifacts/dashboard/query/dashboardQueryClient";
 import { resolveInteractionFilterField, resolveInteractionFilterStorePath } from "@/products/bi/json-render/interactionFilters";
 import {
   Funnel,
@@ -136,7 +137,11 @@ export default function JsonRenderFunnelChart({ element }: { element: any }) {
             if ((filters as AnyRecord)[k] === undefined) (filters as AnyRecord)[k] = v as any;
           }
         }
-        throw new Error("Consultas legacy de modulos foram removidas.");
+        const rows = await requestDashboardQueryRows(dq, filters);
+        if (!cancelled) {
+          setServerRows(rows);
+          setQueryError(null);
+        }
       } catch (e) {
         console.error("[BI/FunnelChart] query failed", e);
         if (!cancelled) {

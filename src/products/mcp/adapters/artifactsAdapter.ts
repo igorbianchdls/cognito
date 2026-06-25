@@ -19,10 +19,12 @@ export type McpArtifactKind = ArtifactKind
 export type McpArtifactListKind = McpArtifactKind
 
 export type McpDashboardListInput = {
+  tenantId?: number | null
   limit?: number | null
 }
 
 export type McpArtifactListInput = {
+  tenantId?: number | null
   kind?: McpArtifactListKind | null
   limit?: number | null
 }
@@ -36,12 +38,14 @@ export type McpArtifactListItem = Omit<DashboardListItem, 'id' | 'thumbnail_data
 }
 
 export type McpDashboardReadInput = {
+  tenantId?: number | null
   artifactId: string
   kind?: ArtifactSourceKind
   version?: number | null
 }
 
 export type McpDashboardCreateInput = {
+  tenantId?: number | null
   title: string
   source: string
   workspaceId?: string | null
@@ -53,6 +57,7 @@ export type McpDashboardCreateInput = {
 }
 
 export type McpDashboardUpdateFullInput = {
+  tenantId?: number | null
   artifactId: string
   expectedVersion: number
   source: string
@@ -64,6 +69,7 @@ export type McpDashboardUpdateFullInput = {
 }
 
 export type McpDashboardPatchInput = {
+  tenantId?: number | null
   artifactId: string
   expectedVersion: number
   operation: {
@@ -78,10 +84,12 @@ export type McpDashboardPatchInput = {
 }
 
 export type McpDashboardDeleteInput = {
+  tenantId?: number | null
   artifactId: string
 }
 
 export type McpArtifactReadInput = {
+  tenantId?: number | null
   artifactType: McpArtifactKind
   artifactId: string
   kind?: ArtifactSourceKind
@@ -89,6 +97,7 @@ export type McpArtifactReadInput = {
 }
 
 export type McpArtifactCreateInput = {
+  tenantId?: number | null
   artifactType: McpArtifactKind
   title: string
   source: string
@@ -107,6 +116,7 @@ export type McpArtifactUpdateFullInput = Omit<McpArtifactCreateInput, 'title'> &
 }
 
 export type McpArtifactPatchInput = {
+  tenantId?: number | null
   artifactType: McpArtifactKind
   artifactId: string
   expectedVersion: number
@@ -174,7 +184,7 @@ function normalizeListLimit(value: unknown) {
 }
 
 export async function listMcpDashboards(input: McpDashboardListInput = {}) {
-  const dashboards = await listDashboards(input.limit ?? 100)
+  const dashboards = await listDashboards(input.limit ?? 100, input.tenantId)
   return dashboards.map(withListDashboardUrl)
 }
 
@@ -183,12 +193,13 @@ export async function listMcpArtifacts(input: McpArtifactListInput = {}) {
   const limit = normalizeListLimit(input.limit)
 
   void kind
-  return listMcpDashboards({ limit })
+  return listMcpDashboards({ limit, tenantId: input.tenantId })
 }
 
 export async function readMcpDashboard(input: McpDashboardReadInput) {
   const artifact = await readDashboardArtifact({
     artifactId: input.artifactId,
+    tenantId: input.tenantId,
     kind: input.kind,
     version: input.version,
   })
@@ -207,6 +218,7 @@ export async function readMcpArtifact(input: McpArtifactReadInput) {
   const artifact = await readArtifact({
     artifactType: input.artifactType,
     artifactId: input.artifactId,
+    tenantId: input.tenantId,
     kind: input.kind,
     version: input.version,
   })
@@ -216,6 +228,7 @@ export async function readMcpArtifact(input: McpArtifactReadInput) {
 
 export async function createMcpDashboard(input: McpDashboardCreateInput) {
   const artifact = await writeDashboardArtifact({
+    tenantId: input.tenantId,
     title: input.title,
     source: input.source,
     workspaceId: input.workspaceId,
@@ -232,6 +245,7 @@ export async function createMcpDashboard(input: McpDashboardCreateInput) {
 export async function createMcpArtifact(input: McpArtifactCreateInput) {
   const artifact = await writeArtifact({
     artifactType: input.artifactType,
+    tenantId: input.tenantId,
     title: input.title,
     source: input.source,
     workspaceId: input.workspaceId,
@@ -248,6 +262,7 @@ export async function createMcpArtifact(input: McpArtifactCreateInput) {
 export async function updateMcpDashboardFull(input: McpDashboardUpdateFullInput) {
   const artifact = await writeDashboardArtifact({
     artifactId: input.artifactId,
+    tenantId: input.tenantId,
     expectedVersion: input.expectedVersion,
     title: input.title,
     source: input.source,
@@ -264,6 +279,7 @@ export async function updateMcpArtifactFull(input: McpArtifactUpdateFullInput) {
   const artifact = await writeArtifact({
     artifactType: input.artifactType,
     artifactId: input.artifactId,
+    tenantId: input.tenantId,
     expectedVersion: input.expectedVersion,
     title: input.title,
     source: input.source,
@@ -279,6 +295,7 @@ export async function updateMcpArtifactFull(input: McpArtifactUpdateFullInput) {
 export async function patchMcpDashboard(input: McpDashboardPatchInput) {
   const artifact = await patchDashboardArtifact({
     artifactId: input.artifactId,
+    tenantId: input.tenantId,
     expectedVersion: input.expectedVersion,
     operation: input.operation,
     actorId: input.actorId,
@@ -291,6 +308,7 @@ export async function patchMcpArtifact(input: McpArtifactPatchInput) {
   const artifact = await patchArtifact({
     artifactType: input.artifactType,
     artifactId: input.artifactId,
+    tenantId: input.tenantId,
     expectedVersion: input.expectedVersion,
     operation: input.operation,
     actorId: input.actorId,
@@ -302,5 +320,6 @@ export async function patchMcpArtifact(input: McpArtifactPatchInput) {
 export async function deleteMcpDashboard(input: McpDashboardDeleteInput) {
   return deleteDashboardArtifact({
     artifactId: input.artifactId,
+    tenantId: input.tenantId,
   })
 }

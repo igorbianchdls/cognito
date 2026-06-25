@@ -10,9 +10,22 @@
     "src/products/artifacts/**/*.tsx",
     "src/products/mcp/tools/dashboardTools.ts",
     "src/products/mcp/adapters/artifactsAdapter.ts",
+    "src/products/integracoes/datawarehouse/analytics/semanticViews.ts",
+    "src/products/integracoes/datawarehouse/normalization/bigquery/normalizedTableSchemas.ts",
+    "src/products/integracoes/datawarehouse/normalization/bigquery/normalizedWriter.ts",
+    "src/products/integracoes/datawarehouse/provisioning/tenantBigQueryNaming.ts",
+    "src/products/integracoes/datawarehouse/provisioning/tenantBigQueryProvisioning.ts",
+    "src/products/integracoes/datawarehouse/provisioning/tenantBigQueryRepository.ts",
+    "src/products/integracoes/server/finalizeConnectedIntegration.ts",
+    "src/products/integracoes/cloud/src/lib/postgresStatus.ts",
+    "src/products/integracoes/cloud/src/control-api/routes/callbacks.ts",
+    "src/products/integracoes/cloud/src/control-api/routes/connections.ts",
+    "src/products/integracoes/frontend/features/configuration/components/DataWarehouseSettingsPanel.tsx",
+    "src/products/integracoes/frontend/services/integracoesApi.ts",
     "src/app/artifacts/**/*.ts",
     "src/app/artifacts/**/*.tsx",
-    "src/app/api/artifacts/**/*.ts"
+    "src/app/api/artifacts/**/*.ts",
+    "src/app/api/integracoes/connections/[id]/configuration/route.ts"
   ],
   "exclude": [
     "node_modules"

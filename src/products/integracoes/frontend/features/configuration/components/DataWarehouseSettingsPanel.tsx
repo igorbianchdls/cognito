@@ -18,6 +18,7 @@ type DataWarehouseSettingsPanelProps = {
     projectId?: string
     rawDataset: string
     normalizedDataset: string
+    analyticsDataset: string
   }
   onChange: (value: DataWarehouseSettings) => void
 }
@@ -66,15 +67,18 @@ export default function DataWarehouseSettingsPanel({
       </div>
 
       {datasets ? (
-        <div className="mt-4 grid gap-2 rounded-[12px] bg-[#F7F8FC] p-3 text-[12px] text-[#5F6D85] sm:grid-cols-2">
+        <div className="mt-4 grid gap-2 rounded-[12px] bg-[#F7F8FC] p-3 text-[12px] text-[#5F6D85] sm:grid-cols-3">
           <div className="min-w-0">
             <span className="font-semibold text-[#33405A]">Raw:</span> {datasets.rawDataset}
           </div>
           <div className="min-w-0">
             <span className="font-semibold text-[#33405A]">Normalized:</span> {datasets.normalizedDataset}
           </div>
+          <div className="min-w-0">
+            <span className="font-semibold text-[#33405A]">Analytics:</span> {datasets.analyticsDataset}
+          </div>
           {datasets.projectId ? (
-            <div className="min-w-0 sm:col-span-2">
+            <div className="min-w-0 sm:col-span-3">
               <span className="font-semibold text-[#33405A]">Projeto:</span> {datasets.projectId}
             </div>
           ) : null}

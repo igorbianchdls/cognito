@@ -4,6 +4,7 @@ import React from "react";
 import { useData } from "@/products/bi/json-render/context";
 import { useThemeOverrides } from "@/products/bi/json-render/theme/ThemeContext";
 import { applyPrimaryDateRange } from "@/products/bi/json-render/dateFilters";
+import { requestDashboardQueryRows } from "@/products/artifacts/dashboard/query/dashboardQueryClient";
 
 type AnyRecord = Record<string, any>;
 
@@ -57,8 +58,7 @@ export default function JsonRenderSparkline({ element }: { element: any }) {
           }
         }
 
-        throw new Error("Consultas legacy de modulos foram removidas.");
-        const rows: unknown[] = [];
+        const rows = await requestDashboardQueryRows(dq, filters);
         if (!cancelled) {
           setServerRows(rows as any);
           setQueryError(null);

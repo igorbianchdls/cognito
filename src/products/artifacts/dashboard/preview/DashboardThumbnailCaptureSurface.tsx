@@ -135,7 +135,11 @@ export function DashboardThumbnailCaptureSurface({
           height: DASHBOARD_THUMBNAIL_CAPTURE_HEIGHT,
         }}
       >
-        <DashboardRenderer tree={tree} appearanceOverrides={activeRequest.appearanceOverrides} />
+        <DashboardRenderer
+          tree={tree}
+          artifactId={activeRequest.artifactId}
+          appearanceOverrides={activeRequest.appearanceOverrides}
+        />
       </div>
     </div>
   )

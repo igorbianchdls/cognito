@@ -41,4 +41,19 @@ assert(genericService.includes('readDashboardArtifact'), 'generic artifact servi
 assert(genericService.includes('writeDashboardArtifact'), 'generic artifact service must delegate writes')
 assert(!genericService.includes('SELECT '), 'generic artifact service must not duplicate SQL persistence')
 
+const queryService = await source('src/products/artifacts/dashboard/query/dashboardQueryService.ts')
+assert(queryService.includes('defaultDataset'), 'dashboard query must resolve a tenant dataset server-side')
+assert(queryService.includes('dryRun: true'), 'dashboard query must perform a BigQuery dry run')
+assert(queryService.includes('maximumBytesBilled'), 'dashboard query must enforce a processing limit')
+assert(queryService.includes('artifact_tenant_required'), 'legacy dashboards must not query tenant data')
+
+const integrationFinalizer = await source('src/products/integracoes/server/finalizeConnectedIntegration.ts')
+assert(integrationFinalizer.includes('provisionTenantBigQuery'), 'post-auth flow must provision BigQuery')
+assert(integrationFinalizer.includes("trigger: 'initial'"), 'post-auth flow must enqueue initial sync')
+assert(integrationFinalizer.includes('publishSyncMessage'), 'post-auth flow must publish initial sync')
+
+const semanticViews = await source('src/products/integracoes/datawarehouse/analytics/semanticViews.ts')
+assert(semanticViews.includes('ROW_NUMBER() OVER'), 'analytics current views must deduplicate normalized rows')
+assert(semanticViews.includes('_history'), 'analytics history views must be exposed')
+
 console.log('artifacts architecture smoke ok')

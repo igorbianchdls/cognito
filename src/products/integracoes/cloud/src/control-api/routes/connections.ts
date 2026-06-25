@@ -8,10 +8,12 @@ import { writeConnectionCredentialsSecret } from '@/products/integracoes/cloud/s
 import { getCloudConnector } from '@/products/integracoes/connectors/registry/providerRegistry'
 import {
   createIntegrationEvent,
+  getCloudIntegrationConnection,
   updateConnectionSecret,
   updateConnectionStatus,
 } from '@/products/integracoes/cloud/src/lib/postgresStatus'
 import { requireIntegrationProvider } from '@/products/integracoes/server/integrationProviderRegistry'
+import { finalizeConnectedIntegration } from '@/products/integracoes/server/finalizeConnectedIntegration'
 
 type ConnectionSetupBody = {
   tenantId?: number
@@ -124,6 +126,18 @@ export async function handleConnectionSetup(request: ControlApiRequest): Promise
           authType: provider.authType,
           secretRef: secret.secretRef,
         },
+      })
+      const connection = await getCloudIntegrationConnection({
+        tenantId: body.tenantId,
+        connectionId: body.connectionId,
+      })
+      await finalizeConnectedIntegration({
+        tenantId: body.tenantId,
+        connectionId: body.connectionId,
+        displayName: connection?.displayName || provider.name,
+        resources: body.resources || connection?.selectedResources || [],
+        syncFrequency: connection?.syncFrequency,
+        requestedBy: 'credentials-setup',
       })
 
       return {

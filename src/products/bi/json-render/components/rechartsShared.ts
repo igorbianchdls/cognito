@@ -5,6 +5,7 @@ import * as React from "react";
 import { applyPrimaryDateRange } from "@/products/bi/json-render/dateFilters";
 import { resolveInteractionFilterField, resolveInteractionFilterStorePath } from "@/products/bi/json-render/interactionFilters";
 import { useThemeOverrides } from "@/products/bi/json-render/theme/ThemeContext";
+import { useDashboardQueryRows } from "@/products/artifacts/dashboard/query/dashboardQueryClient";
 
 type AnyRecord = Record<string, any>;
 
@@ -209,10 +210,23 @@ export function useChartServerRows(
   const isSqlQueryMode = Boolean(typeof dq?.query === "string" && dq.query.trim());
   const [serverRows, setServerRows] = React.useState<Array<Record<string, unknown>> | null>(null);
   const [queryError, setQueryError] = React.useState<string | null>(null);
+  const queryFilters = React.useMemo(() => {
+    const filters = applyPrimaryDateRange({ ...(dq?.filters || {}) } as AnyRecord, data);
+    const globalFilters = (data as any)?.filters;
+    if (globalFilters && typeof globalFilters === "object") {
+      for (const [key, value] of Object.entries(globalFilters)) {
+        if (key === "dateRange") continue;
+        if (filters[key] === undefined) filters[key] = value;
+      }
+    }
+    return filters;
+  }, [JSON.stringify(dq?.filters || {}), JSON.stringify((data as any)?.filters)]);
+  const dashboardQuery = useDashboardQueryRows(isSqlQueryMode ? dq : undefined, queryFilters);
 
   React.useEffect(() => {
     let cancelled = false;
     async function run() {
+      if (isSqlQueryMode) return;
       if (!dq || (!isSqlQueryMode && (!dq.model || !dq.dimension || !dq.measure))) {
         setServerRows(null);
         setQueryError(null);
@@ -251,5 +265,12 @@ export function useChartServerRows(
     };
   }, [JSON.stringify(dq), JSON.stringify((data as any)?.filters), JSON.stringify(resolvedFields), isSqlQueryMode]);
 
-  return { queryError, serverRows };
+  if (isSqlQueryMode) {
+    return {
+      queryError: dashboardQuery.error,
+      serverRows: dashboardQuery.rows,
+      loading: dashboardQuery.loading,
+    };
+  }
+  return { queryError, serverRows, loading: false };
 }

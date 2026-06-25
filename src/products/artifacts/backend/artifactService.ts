@@ -11,6 +11,7 @@ type JsonMap = Record<string, unknown>
 
 type WriteArtifactInput = {
   artifactType: ArtifactKind
+  tenantId?: number | null
   artifactId?: string | null
   expectedVersion?: number | null
   title?: string | null
@@ -25,6 +26,7 @@ type WriteArtifactInput = {
 
 type PatchArtifactInput = {
   artifactType: ArtifactKind
+  tenantId?: number | null
   artifactId: string
   expectedVersion: number
   operation: {
@@ -47,12 +49,14 @@ function assertSupportedArtifactKind(kind: ArtifactKind) {
 export async function readArtifact(input: {
   artifactType: ArtifactKind
   artifactId: string
+  tenantId?: number | null
   kind?: ArtifactSourceKind
   version?: number | null
 }) {
   assertSupportedArtifactKind(input.artifactType)
   return readDashboardArtifact({
     artifactId: input.artifactId,
+    tenantId: input.tenantId,
     kind: input.kind,
     version: input.version,
   })
@@ -62,6 +66,7 @@ export async function writeArtifact(input: WriteArtifactInput) {
   assertSupportedArtifactKind(input.artifactType)
   return writeDashboardArtifact({
     artifactId: input.artifactId,
+    tenantId: input.tenantId,
     expectedVersion: input.expectedVersion,
     title: input.title,
     source: input.source,
@@ -78,6 +83,7 @@ export async function patchArtifact(input: PatchArtifactInput) {
   assertSupportedArtifactKind(input.artifactType)
   return patchDashboardArtifact({
     artifactId: input.artifactId,
+    tenantId: input.tenantId,
     expectedVersion: input.expectedVersion,
     operation: input.operation,
     actorId: input.actorId,

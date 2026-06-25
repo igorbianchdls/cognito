@@ -6,6 +6,7 @@ import BITable, { type BITableColumn, type BITableRow, type BITableAggregateMode
 import { useData } from "@/products/bi/json-render/context";
 import { useThemeOverrides } from "@/products/bi/json-render/theme/ThemeContext";
 import { applyPrimaryDateRange } from "@/products/bi/json-render/dateFilters";
+import { useDashboardQueryRows } from "@/products/artifacts/dashboard/query/dashboardQueryClient";
 
 type AnyRecord = Record<string, any>;
 type TableRow = BITableRow;
@@ -96,11 +97,31 @@ export default function JsonRenderTable({ element }: { element: any }) {
     return Array.isArray(value) ? value : [];
   }, [data, dataPath]);
   const dataPathSignature = React.useMemo(() => JSON.stringify(dataPathRaw), [dataPathRaw]);
+  const resolvedQueryFilters = React.useMemo(() => {
+    const filters = applyPrimaryDateRange({ ...(dq.filters || {}) } as AnyRecord, data);
+    const globalFilters = (data as AnyRecord)?.filters;
+    if (globalFilters && typeof globalFilters === "object") {
+      for (const [key, value] of Object.entries(globalFilters)) {
+        if (key === "dateRange") continue;
+        if (filters[key] === undefined) filters[key] = value;
+      }
+    }
+    return filters;
+  }, [JSON.stringify(dq.filters || {}), filtersSignature]);
+  const dashboardQuery = useDashboardQueryRows(dq, resolvedQueryFilters);
 
   React.useEffect(() => {
     let cancelled = false;
     async function run() {
       const isSqlQueryMode = Boolean(typeof dq?.query === "string" && dq.query.trim());
+      if (isSqlQueryMode) {
+        if (!cancelled) {
+          setRows(normalizeRows(dashboardQuery.rows));
+          setQueryError(dashboardQuery.error);
+          setIsLoading(dashboardQuery.loading);
+        }
+        return;
+      }
       if (!isSqlQueryMode) {
         if (!cancelled) {
           setRows(normalizeRows(dataPathRaw));
@@ -149,7 +170,7 @@ export default function JsonRenderTable({ element }: { element: any }) {
     return () => {
       cancelled = true;
     };
-  }, [JSON.stringify(dq), filtersSignature, dataPathSignature, data]);
+  }, [JSON.stringify(dq), filtersSignature, dataPathSignature, data, dashboardQuery.rows, dashboardQuery.error, dashboardQuery.loading]);
 
   const defaultColumn = (props?.defaultColumn || {}) as AnyRecord;
   const totals = (props?.totals || {}) as AnyRecord;

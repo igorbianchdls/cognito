@@ -13,6 +13,7 @@ import {
   resolveDashboardKpiTheme,
   useDashboardThemeSelection,
 } from '@/products/artifacts/dashboard/runtime/theme'
+import { useDashboardQueryRows } from '@/products/artifacts/dashboard/query/dashboardQueryClient'
 
 type AnyRecord = Record<string, any>
 type ValueFormat = 'currency' | 'percent' | 'number'
@@ -172,6 +173,18 @@ export default function DashboardKpi({
   }))
 
   const { data } = useData()
+  const resolvedQueryFilters = React.useMemo(() => {
+    const filters = applyPrimaryDateRange({ ...(dataQuery.filters || {}) } as AnyRecord, data)
+    const globalFilters = (data as AnyRecord)?.filters
+    if (globalFilters && typeof globalFilters === 'object') {
+      for (const [key, value] of Object.entries(globalFilters)) {
+        if (key === 'dateRange') continue
+        if (filters[key] === undefined) filters[key] = value
+      }
+    }
+    return filters
+  }, [JSON.stringify(dataQuery.filters || {}), JSON.stringify((data as AnyRecord)?.filters)])
+  const dashboardQuery = useDashboardQueryRows(dataQuery, resolvedQueryFilters)
   const valueFromPath = useDataValue(valuePath || '', undefined)
   const [queryState, setQueryState] = React.useState<{
     value: number | null
@@ -199,6 +212,19 @@ export default function DashboardKpi({
             rawRow: undefined,
             error: null,
             loading: false,
+          })
+        }
+        return
+      }
+      if (typeof dataQuery.query === 'string' && dataQuery.query.trim()) {
+        const row = dashboardQuery.rows[0]
+        if (!cancelled) {
+          setQueryState({
+            value: pickFirstNumericValue(row, [valueKey, 'value', 'total', 'count']),
+            previousValue: pickFirstNumericValue(row, ['previous_value', 'previousValue', 'comparison_value']),
+            rawRow: row,
+            error: dashboardQuery.error,
+            loading: dashboardQuery.loading,
           })
         }
         return
@@ -241,7 +267,15 @@ export default function DashboardKpi({
     return () => {
       cancelled = true
     }
-  }, [JSON.stringify(dataQuery), JSON.stringify((data as AnyRecord)?.filters), comparisonMode, valueKey])
+  }, [
+    JSON.stringify(dataQuery),
+    JSON.stringify((data as AnyRecord)?.filters),
+    comparisonMode,
+    valueKey,
+    dashboardQuery.rows,
+    dashboardQuery.error,
+    dashboardQuery.loading,
+  ])
 
   const pathNumericValue = Number(valueFromPath)
   const displayValue = hasServerQuery(dataQuery)

@@ -109,10 +109,15 @@ export function getArtifactContract(kind: McpArtifactKind, includeExample: boole
   return getDashboardContract(includeExample)
 }
 
-async function getExpectedVersion(kind: McpArtifactKind, artifactId: string, explicitVersion: unknown) {
+async function getExpectedVersion(
+  kind: McpArtifactKind,
+  artifactId: string,
+  explicitVersion: unknown,
+  tenantId?: number,
+) {
   const expectedVersion = optionalPositiveInt(explicitVersion)
   if (expectedVersion) return expectedVersion
-  const current = await readMcpArtifact({ artifactType: kind, artifactId, kind: 'draft' })
+  const current = await readMcpArtifact({ artifactType: kind, artifactId, tenantId, kind: 'draft' })
   const currentVersion = Number(asRecord(current).current_draft_version || asRecord(current).version)
   if (!Number.isInteger(currentVersion) || currentVersion <= 0) {
     throw new McpDashboardToolInputError('Nao foi possivel identificar a versao draft atual do artifact.', {
@@ -126,7 +131,7 @@ async function getExpectedVersion(kind: McpArtifactKind, artifactId: string, exp
 export async function executeMcpArtifactTool(
   toolName: string,
   rawArgs: unknown,
-  _context: McpArtifactToolContext = {},
+  context: McpArtifactToolContext = {},
 ): Promise<McpArtifactToolExecutionResult> {
   if (toolName !== MCP_ARTIFACT_TOOL_NAMES.artifactAuthoring) {
     throw new McpDashboardToolInputError(`Tool MCP desconhecida: ${toolName}`, { toolName })
@@ -155,6 +160,7 @@ export async function executeMcpArtifactTool(
     assertSourceMatchesKind(kind, source)
     const artifact = await createMcpArtifact({
       artifactType: kind,
+      tenantId: context.tenantId,
       title: requiredText(args, 'title'),
       source,
       workspaceId: optionalText(args.workspace_id),
@@ -173,7 +179,7 @@ export async function executeMcpArtifactTool(
   if (!artifactId) {
     throw new McpDashboardToolInputError('id e obrigatorio para patch/update_full', { field: 'id' })
   }
-  const expectedVersion = await getExpectedVersion(kind, artifactId, args.expected_version)
+  const expectedVersion = await getExpectedVersion(kind, artifactId, args.expected_version, context.tenantId)
 
   if (action === 'patch') {
     const operation = normalizePatchOperation(args.operation)
@@ -182,6 +188,7 @@ export async function executeMcpArtifactTool(
     }
     const artifact = await patchMcpArtifact({
       artifactType: kind,
+      tenantId: context.tenantId,
       artifactId,
       expectedVersion,
       operation,
@@ -197,6 +204,7 @@ export async function executeMcpArtifactTool(
   assertSourceMatchesKind(kind, source)
   const artifact = await updateMcpArtifactFull({
     artifactType: kind,
+    tenantId: context.tenantId,
     artifactId,
     expectedVersion,
     title: optionalText(args.title),

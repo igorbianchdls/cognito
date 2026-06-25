@@ -1,6 +1,7 @@
 export type TenantBigQueryDatasets = {
   rawDataset: string
   normalizedDataset: string
+  analyticsDataset: string
 }
 
 export type TenantBigQueryDestinationConfig = TenantBigQueryDatasets & {
@@ -32,6 +33,7 @@ export function getTenantBigQueryDatasets(tenantId: number): TenantBigQueryDatas
   return {
     rawDataset: normalizeBigQueryDatasetId(`org_${normalizedTenantId}_raw`, 'rawDataset'),
     normalizedDataset: normalizeBigQueryDatasetId(`org_${normalizedTenantId}_normalized`, 'normalizedDataset'),
+    analyticsDataset: normalizeBigQueryDatasetId(`org_${normalizedTenantId}_analytics`, 'analyticsDataset'),
   }
 }
 
@@ -56,6 +58,12 @@ export function buildTenantBigQueryDestinationConfig(
       'normalizedDataset',
     )
     : tenantDatasets.normalizedDataset
+  const analyticsDataset = datasetMode === 'shared'
+    ? normalizeBigQueryDatasetId(
+      toText(config.analyticsDataset ?? config.analytics_dataset) || tenantDatasets.analyticsDataset,
+      'analyticsDataset',
+    )
+    : tenantDatasets.analyticsDataset
   const projectId = toText(config.projectId ?? config.project_id) || toText(fallbackProjectId) || undefined
 
   return {
@@ -65,5 +73,6 @@ export function buildTenantBigQueryDestinationConfig(
     dataset: rawDataset,
     rawDataset,
     normalizedDataset,
+    analyticsDataset,
   }
 }

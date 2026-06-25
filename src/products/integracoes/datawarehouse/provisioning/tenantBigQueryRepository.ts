@@ -150,6 +150,7 @@ export async function markTenantBigQueryProvisioningSucceeded(input: {
   projectId: string
   rawDataset: string
   normalizedDataset: string
+  analyticsDataset: string
   reason?: string
 }) {
   await withTransaction(async (client) => {
@@ -157,6 +158,7 @@ export async function markTenantBigQueryProvisioningSucceeded(input: {
       projectId: input.projectId,
       rawDataset: input.rawDataset,
       normalizedDataset: input.normalizedDataset,
+      analyticsDataset: input.analyticsDataset,
       reason: input.reason || 'provision',
     })
     await client.query(

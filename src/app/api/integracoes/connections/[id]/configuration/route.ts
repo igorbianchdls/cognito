@@ -7,6 +7,7 @@ import {
   ensureDefaultTenantBigQueryDestination,
   markTenantBigQueryProvisioningSucceeded,
 } from '@/products/integracoes/datawarehouse/provisioning/tenantBigQueryRepository'
+import { provisionTenantBigQuery } from '@/products/integracoes/datawarehouse/provisioning/tenantBigQueryProvisioning'
 import {
   createIntegrationEvent,
   createIntegrationPipeline,
@@ -140,7 +141,8 @@ async function markBigQueryProvisioningSucceededIfDatasetsExist(input: {
   const client = createBigQueryClient({ projectId })
   const [rawExists] = await client.dataset(datasets.rawDataset).exists()
   const [normalizedExists] = await client.dataset(datasets.normalizedDataset).exists()
-  if (!rawExists || !normalizedExists) return
+  const [analyticsExists] = await client.dataset(datasets.analyticsDataset).exists()
+  if (!rawExists || !normalizedExists || !analyticsExists) return
 
   await markTenantBigQueryProvisioningSucceeded({
     tenantId: input.tenantId,
@@ -148,6 +150,7 @@ async function markBigQueryProvisioningSucceededIfDatasetsExist(input: {
     projectId,
     rawDataset: datasets.rawDataset,
     normalizedDataset: datasets.normalizedDataset,
+    analyticsDataset: datasets.analyticsDataset,
     reason: input.reason,
   })
 }
@@ -278,6 +281,13 @@ export async function PATCH(
       const syncFrequency = normalizeSyncFrequency(dataWarehouse.syncFrequency ?? dataWarehouse.sync_frequency, connection.syncFrequency)
 
       if (dataWarehouseEnabled) {
+        const provision = await provisionTenantBigQuery({
+          tenantId,
+          reason: 'connection_configuration',
+        })
+        if (!provision.ok) {
+          throw new Error(provision.error || 'Falha ao provisionar datasets BigQuery')
+        }
         if (!parts.destination) {
           parts.destination = await ensureDefaultTenantBigQueryDestination({
             tenantId,

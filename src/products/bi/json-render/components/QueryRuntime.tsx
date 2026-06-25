@@ -4,6 +4,7 @@ import React from 'react'
 
 import { useData } from '@/products/bi/json-render/context'
 import { applyPrimaryDateRange } from '@/products/bi/json-render/dateFilters'
+import { useDashboardQueryRows } from '@/products/artifacts/dashboard/query/dashboardQueryClient'
 
 type AnyRecord = Record<string, any>
 type QueryFormat = 'currency' | 'percent' | 'number'
@@ -319,6 +320,18 @@ export default function JsonRenderQuery({
     props.format === 'currency' || props.format === 'percent' || props.format === 'number' ? props.format : 'number'
 
   const [result, setResult] = React.useState<QueryResult>(EMPTY_RESULT)
+  const resolvedQueryFilters = React.useMemo(() => {
+    const filters = applyPrimaryDateRange({ ...(dq.filters || {}) } as AnyRecord, data)
+    const globalFilters = (data as AnyRecord)?.filters
+    if (globalFilters && typeof globalFilters === 'object') {
+      for (const [key, value] of Object.entries(globalFilters)) {
+        if (key === 'dateRange') continue
+        if (filters[key] === undefined) filters[key] = value
+      }
+    }
+    return filters
+  }, [JSON.stringify(dq.filters || {}), JSON.stringify((data as AnyRecord)?.filters)])
+  const dashboardQuery = useDashboardQueryRows(dq, resolvedQueryFilters)
 
   React.useEffect(() => {
     let cancelled = false
@@ -339,6 +352,22 @@ export default function JsonRenderQuery({
         if (!cancelled) {
           setResult(emptyResult)
           if (resultPath) setData((prev) => setByPath((prev || {}) as AnyRecord, resultPath, undefined))
+        }
+        return
+      }
+      if (isSqlQueryMode) {
+        const nextResult = dashboardQuery.error
+          ? { ...EMPTY_RESULT, loading: false, error: dashboardQuery.error }
+          : buildQueryResult({
+            comparisonMode,
+            format,
+            row: dashboardQuery.rows[0],
+            valueKey,
+          })
+        nextResult.loading = dashboardQuery.loading
+        if (!cancelled) {
+          setResult(nextResult)
+          if (resultPath) setData((prev) => setByPath((prev || {}) as AnyRecord, resultPath, nextResult))
         }
         return
       }
@@ -440,7 +469,19 @@ export default function JsonRenderQuery({
     return () => {
       cancelled = true
     }
-  }, [JSON.stringify(dq), JSON.stringify((data as AnyRecord)?.filters), comparisonMode, format, resultPath, setData, valueKey, data])
+  }, [
+    JSON.stringify(dq),
+    JSON.stringify((data as AnyRecord)?.filters),
+    comparisonMode,
+    format,
+    resultPath,
+    setData,
+    valueKey,
+    data,
+    dashboardQuery.rows,
+    dashboardQuery.error,
+    dashboardQuery.loading,
+  ])
 
   return <QueryContext.Provider value={result}>{children}</QueryContext.Provider>
 }

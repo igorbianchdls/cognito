@@ -4,6 +4,7 @@ import React from "react";
 import { useData, useDataValue } from "@/products/bi/json-render/context";
 import { useThemeOverrides } from "@/products/bi/json-render/theme/ThemeContext";
 import { applyPrimaryDateRange } from "@/products/bi/json-render/dateFilters";
+import { requestDashboardQueryRows } from "@/products/artifacts/dashboard/query/dashboardQueryClient";
 
 type AnyRecord = Record<string, any>;
 
@@ -94,8 +95,7 @@ export default function JsonRenderGauge({ element }: { element?: { props?: AnyRe
             if ((filters as any)[k] === undefined) (filters as any)[k] = v as any;
           }
         }
-        throw new Error("Consultas legacy de modulos foram removidas.");
-        const rows: unknown[] = [];
+        const rows = await requestDashboardQueryRows(dq, filters);
         const firstRow = rows.length > 0 && rows[0] && typeof rows[0] === "object"
           ? ({ ...(rows[0] as AnyRecord) } as AnyRecord)
           : null;

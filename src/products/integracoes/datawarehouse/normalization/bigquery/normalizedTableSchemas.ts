@@ -787,6 +787,10 @@ const TABLE_FIELDS: Record<NormalizedTableName, BigQueryFieldSchema[]> = {
   ],
 }
 
+export const NORMALIZED_TABLE_NAMES = Object.freeze(
+  Object.keys(TABLE_FIELDS) as NormalizedTableName[],
+)
+
 export function getNormalizedTableSchema(table: NormalizedTableName): BigQueryFieldSchema[] {
   return [
     ...COMMON_FIELDS,

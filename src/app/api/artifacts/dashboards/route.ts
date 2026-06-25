@@ -1,4 +1,5 @@
 import { listDashboards } from '@/products/artifacts/dashboard/persistence/dashboardArtifactsService'
+import { resolveAuthTenant } from '@/products/auth/server/authTenantResolver'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -8,8 +9,10 @@ export const maxDuration = 60
 export async function GET(req: Request) {
   try {
     const url = new URL(req.url)
+    const tenant = await resolveAuthTenant({ access: 'read' })
+    if (!tenant) return Response.json({ ok: false, error: 'Não autenticado' }, { status: 401 })
     const rawLimit = Number(url.searchParams.get('limit') || '100')
-    const dashboards = await listDashboards(rawLimit)
+    const dashboards = await listDashboards(rawLimit, tenant.tenantId)
     return Response.json({
       ok: true,
       count: dashboards.length,

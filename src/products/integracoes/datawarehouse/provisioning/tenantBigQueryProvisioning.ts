@@ -22,6 +22,7 @@ export type TenantBigQueryProvisioningResult = {
   destinationId: string | null
   rawDataset: string
   normalizedDataset: string
+  analyticsDataset: string
   error?: string
 }
 
@@ -82,6 +83,12 @@ export async function provisionTenantBigQuery(
       }),
       ensureBigQueryDataset({
         projectId: config.projectId,
+        dataset: datasets.analyticsDataset,
+        tenantId,
+        reason: input.reason,
+      }),
+      ensureBigQueryDataset({
+        projectId: config.projectId,
         dataset: datasets.normalizedDataset,
         tenantId,
         reason: input.reason,
@@ -94,6 +101,7 @@ export async function provisionTenantBigQuery(
       projectId: config.projectId,
       rawDataset: datasets.rawDataset,
       normalizedDataset: datasets.normalizedDataset,
+      analyticsDataset: datasets.analyticsDataset,
       reason: input.reason,
     })
 
@@ -104,6 +112,7 @@ export async function provisionTenantBigQuery(
       destinationId,
       rawDataset: datasets.rawDataset,
       normalizedDataset: datasets.normalizedDataset,
+      analyticsDataset: datasets.analyticsDataset,
     }
   } catch (error) {
     await markTenantBigQueryProvisioningFailed({
@@ -121,6 +130,7 @@ export async function provisionTenantBigQuery(
       destinationId,
       rawDataset: datasets.rawDataset,
       normalizedDataset: datasets.normalizedDataset,
+      analyticsDataset: datasets.analyticsDataset,
       error: error instanceof Error ? error.message : String(error),
     }
   }

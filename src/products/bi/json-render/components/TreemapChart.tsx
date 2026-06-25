@@ -4,6 +4,7 @@ import React from "react";
 import { useData } from "@/products/bi/json-render/context";
 import { useThemeOverrides } from "@/products/bi/json-render/theme/ThemeContext";
 import { applyPrimaryDateRange } from "@/products/bi/json-render/dateFilters";
+import { requestDashboardQueryRows } from "@/products/artifacts/dashboard/query/dashboardQueryClient";
 import { resolveInteractionFilterField, resolveInteractionFilterStorePath } from "@/products/bi/json-render/interactionFilters";
 import { ResponsiveContainer, Tooltip, Treemap } from "recharts";
 
@@ -151,9 +152,9 @@ export default function JsonRenderTreemapChart({ element }: { element: any }) {
             if ((filters as AnyRecord)[k] === undefined) (filters as AnyRecord)[k] = v as any;
           }
         }
-        throw new Error("Consultas legacy de modulos foram removidas.");
+        const rows = await requestDashboardQueryRows(dq, filters);
         if (!cancelled) {
-          setServerRows([]);
+          setServerRows(rows);
           setQueryError(null);
         }
       } catch (e) {

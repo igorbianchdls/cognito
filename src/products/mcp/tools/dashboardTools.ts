@@ -228,10 +228,10 @@ const DASHBOARD_COMPONENT_PROPS = {
 
 const DASHBOARD_DATA_QUERY_CONTRACT = {
   shape: {
-    query: 'SQL SELECT/CTE em string. Use apenas placeholders suportados pelo ambiente.',
+    query: 'SQL BigQuery SELECT/CTE usando nomes logicos do dataset analytics do tenant.',
     limit: 'number opcional',
   },
-  placeholders: ['{{tenant_id}}', '{{de}}', '{{ate}}', 'placeholders de filtros definidos no dashboard'],
+  placeholders: ['@de', '@ate', 'parametros nomeados de filtros definidos no dashboard'],
   aliases: {
     KPI: ['value'],
     Chart: ['key opcional', 'label', 'value'],
@@ -239,7 +239,10 @@ const DASHBOARD_DATA_QUERY_CONTRACT = {
   },
   rules: [
     'Use SELECT/CTE de leitura; nao use INSERT, UPDATE, DELETE, DDL ou multiplas instrucoes.',
-    'Sempre filtre por tenant_id quando consultar tabelas multi-tenant.',
+    'Nao informe project ou dataset. Use FROM vendas, FROM clientes, FROM contas_receber etc.',
+    'As views logicas ja pertencem ao tenant autenticado e representam o estado atual deduplicado.',
+    'Use o sufixo _history apenas quando precisar consultar todas as cargas.',
+    'Para filtros de data recebidos como texto ISO, use DATE(@de) e DATE(@ate) na SQL.',
     'Para moeda/percentual, retorne numero bruto e use format no componente.',
   ],
 } as const
@@ -258,9 +261,8 @@ const DASHBOARD_VALID_EXAMPLE = `<Dashboard
         format="currency"
         dataQuery={{
           query: \`
-            SELECT COALESCE(SUM(p.valor_total), 0)::float AS value
-            FROM vendas.pedidos p
-            WHERE p.tenant_id = {{tenant_id}}::int
+            SELECT COALESCE(SUM(valor_total), 0) AS value
+            FROM vendas
           \`,
           limit: 1,
         }}
@@ -276,10 +278,9 @@ const DASHBOARD_VALID_EXAMPLE = `<Dashboard
         dataQuery={{
           query: \`
             SELECT
-              TO_CHAR(DATE_TRUNC('month', p.data_pedido), 'YYYY-MM') AS label,
-              COALESCE(SUM(p.valor_total), 0)::float AS value
-            FROM vendas.pedidos p
-            WHERE p.tenant_id = {{tenant_id}}::int
+              FORMAT_DATE('%Y-%m', DATE_TRUNC(DATE(data_pedido), MONTH)) AS label,
+              COALESCE(SUM(valor_total), 0) AS value
+            FROM vendas
             GROUP BY 1
             ORDER BY 1
           \`,
@@ -418,7 +419,7 @@ export function getDashboardContract(includeExample: boolean) {
 export async function executeMcpDashboardTool(
   toolName: string,
   rawArgs: unknown,
-  _context: McpDashboardToolContext = {},
+  context: McpDashboardToolContext = {},
 ): Promise<McpDashboardToolExecutionResult> {
   const args = asRecord(rawArgs)
 
@@ -427,7 +428,7 @@ export async function executeMcpDashboardTool(
       return {
         ok: true,
         tool: MCP_DASHBOARD_TOOL_NAMES.dashboardList,
-        result: await listMcpDashboards({ limit: optionalPositiveInt(args.limit) }),
+        result: await listMcpDashboards({ limit: optionalPositiveInt(args.limit), tenantId: context.tenantId }),
       }
 
     case MCP_DASHBOARD_TOOL_NAMES.dashboardRead:
@@ -436,6 +437,7 @@ export async function executeMcpDashboardTool(
         tool: MCP_DASHBOARD_TOOL_NAMES.dashboardRead,
         result: await readMcpDashboard({
           artifactId: requiredText(args, 'artifact_id'),
+          tenantId: context.tenantId,
           kind: args.kind === 'published' ? 'published' : 'draft',
           version: optionalPositiveInt(args.version),
         }),
@@ -447,6 +449,7 @@ export async function executeMcpDashboardTool(
         tool: MCP_DASHBOARD_TOOL_NAMES.dashboardCreate,
         result: await createMcpDashboard({
           title: requiredText(args, 'title'),
+          tenantId: context.tenantId,
           source: requiredText(args, 'source'),
           workspaceId: optionalText(args.workspace_id),
           slug: optionalText(args.slug),
@@ -461,6 +464,7 @@ export async function executeMcpDashboardTool(
         tool: MCP_DASHBOARD_TOOL_NAMES.dashboardPatch,
         result: await patchMcpDashboard({
           artifactId: requiredText(args, 'artifact_id'),
+          tenantId: context.tenantId,
           expectedVersion: requiredPositiveInt(args, 'expected_version'),
           operation: normalizePatchOperation(args.operation),
         }),
@@ -472,6 +476,7 @@ export async function executeMcpDashboardTool(
         tool: MCP_DASHBOARD_TOOL_NAMES.dashboardUpdateFull,
         result: await updateMcpDashboardFull({
           artifactId: requiredText(args, 'artifact_id'),
+          tenantId: context.tenantId,
           expectedVersion: requiredPositiveInt(args, 'expected_version'),
           title: optionalText(args.title),
           source: requiredText(args, 'source'),

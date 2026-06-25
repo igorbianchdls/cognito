@@ -9,6 +9,7 @@ export type CloudIntegrationConnection = {
   displayName: string
   secretRef: string | null
   selectedResources: string[]
+  syncFrequency: string
   metadata: Record<string, unknown>
 }
 
@@ -136,6 +137,7 @@ export async function getCloudIntegrationConnection(input: {
     displayName: String(row.display_name || ''),
     secretRef: row.secret_ref == null ? null : String(row.secret_ref),
     selectedResources: asStringArray(row.selected_resources),
+    syncFrequency: String(row.sync_frequency || 'manual'),
     metadata: asRecord(row.metadata),
   }
 }
@@ -725,9 +727,21 @@ export async function finishCloudSyncRun(input: {
          WHEN $3 = 'error' THEN 'error'
          ELSE status
        END,
+       metadata = metadata || $6::jsonb,
        updated_at = now()
      WHERE id = $1 AND tenant_id = $2`,
-    [input.connectionId, input.tenantId, status, input.errorMessage || null, input.recordsUpdated],
+    [
+      input.connectionId,
+      input.tenantId,
+      status,
+      input.errorMessage || null,
+      input.recordsUpdated,
+      JSON.stringify({
+        dataReadiness: status === 'error' ? 'error' : 'ready',
+        dataReadinessError: status === 'error' ? input.errorMessage || 'Sync falhou.' : null,
+        dataReadinessUpdatedAt: new Date().toISOString(),
+      }),
+    ],
   )
 
   await createIntegrationEvent({

@@ -24,6 +24,7 @@ import {
   type DashboardAppearanceOverrides,
 } from '@/products/artifacts/dashboard/runtime/theme'
 import { resolveDashboardComponent } from '@/products/artifacts/dashboard/runtime/registry/dashboardRegistry'
+import { DashboardQueryRuntimeProvider } from '@/products/artifacts/dashboard/query/DashboardQueryContext'
 
 type AnyRecord = Record<string, any>
 
@@ -123,6 +124,7 @@ export function DashboardRenderer({
   onStructuralMove,
   onPanelLayoutChange,
   appearanceOverrides,
+  artifactId,
 }: {
   tree: any
   data?: AnyRecord
@@ -131,6 +133,7 @@ export function DashboardRenderer({
   onStructuralMove?: (sourcePath: number[], targetPath: number[], targetType: 'vertical' | 'horizontal') => void
   onPanelLayoutChange?: (nextLayout: Layout[]) => void
   appearanceOverrides?: DashboardAppearanceOverrides
+  artifactId?: string | null
 }) {
   const [structuralDrag, setStructuralDrag] = React.useState<{ panelId: string; panelPath: number[]; span: number } | null>(null)
   const [hoverTargetKey, setHoverTargetKey] = React.useState<string | null>(null)
@@ -204,16 +207,17 @@ export function DashboardRenderer({
 
   if (Array.isArray(tree)) {
     return (
-      <DashboardThemeSelectionProvider appearanceOverrides={appearanceOverrides}>
-        <DashboardLayoutEditContext.Provider value={layoutEditValue}>
-          <DndContext
-            sensors={sensors}
-            collisionDetection={closestCenter}
-            onDragStart={handleStructuralDragStart}
-            onDragOver={handleStructuralDragOver}
-            onDragEnd={handleStructuralDragEnd}
-            onDragCancel={resetStructuralDrag}
-          >
+      <DashboardQueryRuntimeProvider artifactId={artifactId}>
+        <DashboardThemeSelectionProvider appearanceOverrides={appearanceOverrides}>
+          <DashboardLayoutEditContext.Provider value={layoutEditValue}>
+            <DndContext
+              sensors={sensors}
+              collisionDetection={closestCenter}
+              onDragStart={handleStructuralDragStart}
+              onDragOver={handleStructuralDragOver}
+              onDragEnd={handleStructuralDragEnd}
+              onDragCancel={resetStructuralDrag}
+            >
             {tree.map((node, index) => (
               <RenderDashboardNode key={getNodeKey(node, index, [index])} node={node} data={data} onAction={onAction} path={[index]} />
             ))}
@@ -235,23 +239,25 @@ export function DashboardRenderer({
                 </div>
               ) : null}
             </DragOverlay>
-          </DndContext>
-        </DashboardLayoutEditContext.Provider>
-      </DashboardThemeSelectionProvider>
+            </DndContext>
+          </DashboardLayoutEditContext.Provider>
+        </DashboardThemeSelectionProvider>
+      </DashboardQueryRuntimeProvider>
     )
   }
 
   return (
-    <DashboardThemeSelectionProvider appearanceOverrides={appearanceOverrides}>
-      <DashboardLayoutEditContext.Provider value={layoutEditValue}>
-        <DndContext
-          sensors={sensors}
-          collisionDetection={closestCenter}
-          onDragStart={handleStructuralDragStart}
-          onDragOver={handleStructuralDragOver}
-          onDragEnd={handleStructuralDragEnd}
-          onDragCancel={resetStructuralDrag}
-        >
+    <DashboardQueryRuntimeProvider artifactId={artifactId}>
+      <DashboardThemeSelectionProvider appearanceOverrides={appearanceOverrides}>
+        <DashboardLayoutEditContext.Provider value={layoutEditValue}>
+          <DndContext
+            sensors={sensors}
+            collisionDetection={closestCenter}
+            onDragStart={handleStructuralDragStart}
+            onDragOver={handleStructuralDragOver}
+            onDragEnd={handleStructuralDragEnd}
+            onDragCancel={resetStructuralDrag}
+          >
           <RenderDashboardNode node={tree} data={data} onAction={onAction} path={[]} />
           <DragOverlay>
             {structuralDrag ? (
@@ -271,8 +277,9 @@ export function DashboardRenderer({
               </div>
             ) : null}
           </DragOverlay>
-        </DndContext>
-      </DashboardLayoutEditContext.Provider>
-    </DashboardThemeSelectionProvider>
+          </DndContext>
+        </DashboardLayoutEditContext.Provider>
+      </DashboardThemeSelectionProvider>
+    </DashboardQueryRuntimeProvider>
   )
 }
