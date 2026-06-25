@@ -1,0 +1,20 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "incremental": false,
+    "plugins": []
+  },
+  "include": [
+    "next-env.d.ts",
+    "src/products/artifacts/**/*.ts",
+    "src/products/artifacts/**/*.tsx",
+    "src/products/mcp/tools/dashboardTools.ts",
+    "src/products/mcp/adapters/artifactsAdapter.ts",
+    "src/app/artifacts/**/*.ts",
+    "src/app/artifacts/**/*.tsx",
+    "src/app/api/artifacts/**/*.ts"
+  ],
+  "exclude": [
+    "node_modules"
+  ]
+}

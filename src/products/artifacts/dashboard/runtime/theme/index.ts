@@ -1,0 +1,5 @@
+export * from '@/products/artifacts/dashboard/runtime/theme/catalog'
+export * from '@/products/artifacts/dashboard/runtime/theme/context'
+export * from '@/products/artifacts/dashboard/runtime/theme/resolvers'
+export * from '@/products/artifacts/dashboard/runtime/theme/types'
+export { buildDashboardThemeConfigFileSource } from '@/products/artifacts/dashboard/runtime/theme/dashboardThemeConfig'

@@ -1,4 +1,1 @@
-export const DASHBOARD_THUMBNAIL_SOURCE_PATH = 'app/dashboard.tsx'
-export const DASHBOARD_THUMBNAIL_CAPTURE_WIDTH = 1440
-export const DASHBOARD_THUMBNAIL_CAPTURE_HEIGHT = 900
-export const DASHBOARD_THUMBNAIL_CAPTURE_DELAY_MS = 350
+export * from '@/products/artifacts/dashboard/preview/dashboardThumbnailConstants'

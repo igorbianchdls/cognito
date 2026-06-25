@@ -1,5 +1,5 @@
-import { DashboardListPage } from '@/products/artifacts/dashboard/DashboardListPage'
-import { listDashboards } from '@/products/artifacts/backend/dashboardArtifactsService'
+import { DashboardListPage } from '@/products/artifacts/dashboard/pages/DashboardListPage'
+import { listDashboards } from '@/products/artifacts/dashboard/persistence/dashboardArtifactsService'
 import { SidebarShadcn } from '@/components/navigation/SidebarShadcn'
 import { SidebarInset, SidebarProvider } from '@/components/ui/sidebar'
 

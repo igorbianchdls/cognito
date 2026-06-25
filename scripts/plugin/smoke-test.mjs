@@ -166,7 +166,12 @@ async function main() {
   console.log('domain tools source ok')
 
   const dashboardToolsSource = await readFile(path.join(root, 'src/products/mcp/tools/dashboardTools.ts'), 'utf8')
-  assert(dashboardToolsSource.includes("const DASHBOARD_DSL_VERSION = 'dashboard.v1'"), 'dashboard DSL version missing')
+  const dashboardManifestSource = await readFile(
+    path.join(root, 'src/products/artifacts/dashboard/language/dashboardLanguageManifest.ts'),
+    'utf8',
+  )
+  assert(dashboardManifestSource.includes("DASHBOARD_DSL_VERSION = 'dashboard.v1'"), 'dashboard DSL version missing')
+  assert(dashboardToolsSource.includes('dashboardLanguageManifest') || dashboardToolsSource.includes('dashboardLanguageManifest'.toUpperCase()) || dashboardToolsSource.includes('DASHBOARD_SUPPORTED_COMPONENTS'), 'dashboard tools should derive supported values from the language manifest')
   assert(dashboardToolsSource.includes('component_props: DASHBOARD_COMPONENT_PROPS'), 'dashboard contract should expose component props')
   assert(dashboardToolsSource.includes('data_query_contract: DASHBOARD_DATA_QUERY_CONTRACT'), 'dashboard contract should expose data query contract')
   assert(dashboardToolsSource.includes('supported_html_tags'), 'dashboard contract should expose supported HTML tags')

@@ -8,7 +8,7 @@ import {
   renameDashboardArtifact,
   updateDashboardThumbnail,
   writeDashboardArtifact,
-} from '@/products/artifacts/backend/dashboardArtifactsService'
+} from '@/products/artifacts/dashboard/persistence/dashboardArtifactsService'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'

@@ -9,6 +9,8 @@
     "start": "next start",
     "lint": "next lint",
     "mcp:smoke": "node scripts/mcp/smoke-test.mjs",
+    "artifacts:smoke": "node scripts/artifacts/architecture-smoke.mjs",
+    "artifacts:typecheck": "tsc -p tsconfig.artifacts.json --pretty false",
     "plugin:build": "node scripts/plugin/build-widget.mjs",
     "plugin:smoke": "node scripts/plugin/smoke-test.mjs",
     "chatgpt-app:build": "node scripts/chatgpt-app/build-widget.mjs",

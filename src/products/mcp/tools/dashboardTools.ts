@@ -7,92 +7,42 @@ import {
   type McpJsonMap,
 } from '@/products/mcp/adapters/artifactsAdapter'
 import { MCP_DASHBOARD_TOOL_NAMES, type McpDashboardToolName } from '@/products/mcp/shared/toolNames'
+import {
+  DASHBOARD_DSL_VERSION,
+  DASHBOARD_SUPPORTED_CHART_PALETTES,
+  DASHBOARD_SUPPORTED_CHART_TYPES,
+  DASHBOARD_SUPPORTED_COMPONENTS,
+  DASHBOARD_SUPPORTED_DATE_PICKER_PRESETS,
+  DASHBOARD_SUPPORTED_HTML_TAGS,
+} from '@/products/artifacts/dashboard/language/dashboardLanguageManifest'
 
 type JsonRecord = Record<string, unknown>
 
-const DASHBOARD_DSL_VERSION = 'dashboard.v1'
+const DASHBOARD_INTERNAL_COMPONENTS = new Set([
+  'DashboardTemplate',
+  'Theme',
+  'BarChart',
+  'LineChart',
+  'PieChart',
+  'HorizontalBarChart',
+  'ScatterChart',
+  'RadarChart',
+  'TreemapChart',
+  'ComposedChart',
+  'FunnelChart',
+  'SankeyChart',
+  'Gauge',
+  'Select',
+  'OptionList',
+  'TextNode',
+  'Br',
+])
 
-const DASHBOARD_AUTHORING_COMPONENTS = [
-  'Dashboard',
-  'Grid',
-  'Vertical',
-  'Horizontal',
-  'Panel',
-  'Card',
-  'Icon',
-  'Tabs',
-  'Tab',
-  'TabPanel',
-  'Query',
-  'Chart',
-  'KPI',
-  'KPICompare',
-  'Table',
-  'PivotTable',
-  'Filter',
-  'DatePicker',
-  'Insights',
-  'Text',
-] as const
+const DASHBOARD_AUTHORING_COMPONENTS = DASHBOARD_SUPPORTED_COMPONENTS.filter(
+  (component) => !DASHBOARD_INTERNAL_COMPONENTS.has(component),
+)
 
-const DASHBOARD_SUPPORTED_HTML_TAGS = [
-  'div',
-  'section',
-  'article',
-  'header',
-  'footer',
-  'main',
-  'aside',
-  'p',
-  'span',
-  'strong',
-  'h1',
-  'h2',
-  'h3',
-  'ul',
-  'ol',
-  'li',
-] as const
-
-const DASHBOARD_SUPPORTED_CHART_TYPES = [
-  'bar',
-  'line',
-  'pie',
-  'horizontal-bar',
-  'scatter',
-  'radar',
-  'treemap',
-  'composed',
-  'funnel',
-  'sankey',
-  'gauge',
-] as const
-
-const DASHBOARD_SUPPORTED_CHART_PALETTES = [
-  'teal',
-  'blue',
-  'indigo',
-  'purple',
-  'pink',
-  'orange',
-  'amber',
-  'red',
-  'rose',
-  'lime',
-  'green',
-  'emerald',
-  'cyan',
-  'slate',
-  'nivo',
-  'categorical',
-  'tableau',
-  'pastel',
-  'sunset',
-  'tropical',
-  'default',
-] as const
-
-const DASHBOARD_DATE_PICKER_PRESETS = ['7d', '14d', '30d', '90d', 'month', 'quarter'] as const
+const DASHBOARD_DATE_PICKER_PRESETS = DASHBOARD_SUPPORTED_DATE_PICKER_PRESETS
 
 const DASHBOARD_FORMATS = ['currency', 'number', 'percent', 'integer', 'date', 'datetime', 'text'] as const
 

@@ -3,8 +3,8 @@ import { notFound } from 'next/navigation'
 import {
   readDashboardArtifact,
   ArtifactToolError,
-} from '@/products/artifacts/backend/dashboardArtifactsService'
-import { DashboardArtifactPage } from '@/products/artifacts/dashboard/DashboardArtifactPage'
+} from '@/products/artifacts/dashboard/persistence/dashboardArtifactsService'
+import { DashboardArtifactPage } from '@/products/artifacts/dashboard/pages/DashboardArtifactPage'
 
 export const dynamic = 'force-dynamic'
 export const revalidate = 0

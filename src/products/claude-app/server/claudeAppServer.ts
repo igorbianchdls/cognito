@@ -1,4 +1,4 @@
-import { ArtifactToolError } from '@/products/artifacts/backend/dashboardArtifactsService'
+import { ArtifactToolError } from '@/products/artifacts/dashboard/persistence/dashboardArtifactsService'
 import {
   COGNITO_CLAUDE_APP_VERSION,
   getCognitoClaudeAppMetadata,

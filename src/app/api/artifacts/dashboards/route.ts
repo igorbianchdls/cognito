@@ -1,4 +1,4 @@
-import { listDashboards } from '@/products/artifacts/backend/dashboardArtifactsService'
+import { listDashboards } from '@/products/artifacts/dashboard/persistence/dashboardArtifactsService'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'

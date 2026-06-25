@@ -12,7 +12,7 @@ import {
   writeDashboardArtifact,
   type ArtifactSourceKind,
   type DashboardListItem,
-} from '@/products/artifacts/backend/dashboardArtifactsService'
+} from '@/products/artifacts/dashboard/persistence/dashboardArtifactsService'
 
 export type McpJsonMap = Record<string, unknown>
 export type McpArtifactKind = ArtifactKind
