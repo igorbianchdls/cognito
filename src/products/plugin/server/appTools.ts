@@ -989,14 +989,15 @@ function toSearchResult(dashboard: JsonRecord) {
   }
 }
 
-async function callDashboards(args: unknown) {
+async function callDashboards(args: unknown, context: CognitoMcpServerContext) {
   const input = asRecord(args)
+  const tenantId = getTenantId(context)
   const artifactKind = getArtifactListKind(input.kind || input.artifact_kind || input.type)
   const labels = getArtifactListLabels(artifactKind)
   const query = getSearchQuery(input)
   const limit = normalizeLimit(input.limit, 20, 50)
   const fetchLimit = Math.max(limit, 20)
-  const artifacts = await listMcpArtifacts({ kind: artifactKind, limit: fetchLimit })
+  const artifacts = await listMcpArtifacts({ kind: artifactKind, limit: fetchLimit, tenantId })
   const filteredArtifacts = artifacts
     .map((dashboard) => withDashboardListEmbedUrl(dashboard as JsonRecord))
     .filter((dashboard) => dashboardMatchesQuery(dashboard, query))
@@ -1023,9 +1024,10 @@ async function callDashboards(args: unknown) {
   }
 }
 
-async function callConnectorSearch(args: unknown) {
+async function callConnectorSearch(args: unknown, context: CognitoMcpServerContext) {
   const query = getSearchQuery(asRecord(args))
-  const dashboards = await listMcpDashboards({ limit: 20 })
+  const tenantId = getTenantId(context)
+  const dashboards = await listMcpDashboards({ limit: 20, tenantId })
   const results = dashboards
     .map((dashboard) => dashboard as JsonRecord)
     .filter((dashboard) => dashboardMatchesQuery(dashboard, query))
@@ -1046,7 +1048,7 @@ async function callConnectorSearch(args: unknown) {
   }
 }
 
-async function callConnectorFetch(args: unknown) {
+async function callConnectorFetch(args: unknown, context: CognitoMcpServerContext) {
   const id = getFetchId(asRecord(args))
   if (!id) {
     const structuredContent = {
@@ -1064,7 +1066,7 @@ async function callConnectorFetch(args: unknown) {
     }
   }
 
-  const dashboard = await readMcpDashboard({ artifactId: id, kind: 'draft' })
+  const dashboard = await readMcpDashboard({ artifactId: id, kind: 'draft', tenantId: getTenantId(context) })
   const record = dashboard as JsonRecord
   const title = String(record.title || record.slug || record.id || 'Dashboard')
   const url = String(record.url || '')
@@ -1137,7 +1139,7 @@ function makeRenderResult(toolName: PluginDashboardRenderToolName, args: unknown
   }
 }
 
-async function callDashboardEmbedPreview(args: unknown) {
+async function callDashboardEmbedPreview(args: unknown, context: CognitoMcpServerContext) {
   const input = asRecord(args)
   const artifactId = optionalText(input.artifact_id || input.artifactId || input.id)
   if (!artifactId) {
@@ -1161,6 +1163,7 @@ async function callDashboardEmbedPreview(args: unknown) {
     artifactId,
     kind: input.kind === 'published' ? 'published' : 'draft',
     version: Number.isInteger(versionNumber) && versionNumber > 0 ? versionNumber : undefined,
+    tenantId: getTenantId(context),
   })
   const dashboardWithEmbed = withDashboardEmbedUrl(dashboard as JsonRecord)
   const title = optionalText(input.title) || String(dashboardWithEmbed.title || dashboardWithEmbed.slug || artifactId)
@@ -1182,7 +1185,7 @@ async function callDashboardEmbedPreview(args: unknown) {
   }
 }
 
-async function callOpenArtifact(args: unknown) {
+async function callOpenArtifact(args: unknown, context: CognitoMcpServerContext) {
   const input = asRecord(args)
   const kind = getArtifactKind(input.kind)
   const id = optionalText(input.id || input.artifact_id)
@@ -1202,7 +1205,7 @@ async function callOpenArtifact(args: unknown) {
     }
   }
 
-  const artifact = await readMcpArtifact({ artifactType: kind, artifactId: id, kind: 'draft' })
+  const artifact = await readMcpArtifact({ artifactType: kind, artifactId: id, kind: 'draft', tenantId: getTenantId(context) })
   const artifactWithEmbed = withArtifactEmbedUrl(artifact as JsonRecord, kind)
   const title = String(artifactWithEmbed.title || artifactWithEmbed.slug || id)
   const structuredContent = {
@@ -2354,11 +2357,11 @@ export async function callCognitoPluginTool(
   context: CognitoMcpServerContext = {},
 ) {
   if (name === PLUGIN_PUBLIC_TOOL_NAMES.dashboards) {
-    return callDashboards(args)
+    return callDashboards(args, context)
   }
 
   if (name === PLUGIN_PUBLIC_TOOL_NAMES.openArtifact) {
-    return callOpenArtifact(args)
+    return callOpenArtifact(args, context)
   }
 
   if (name === PLUGIN_PUBLIC_TOOL_NAMES.chart) {
@@ -2398,13 +2401,13 @@ export async function callCognitoPluginTool(
   }
 
   if (PLUGIN_CONNECTOR_TOOL_NAME_SET.has(name)) {
-    if (name === PLUGIN_CONNECTOR_TOOL_NAMES.search) return callConnectorSearch(args)
-    return callConnectorFetch(args)
+    if (name === PLUGIN_CONNECTOR_TOOL_NAMES.search) return callConnectorSearch(args, context)
+    return callConnectorFetch(args, context)
   }
 
   if (PLUGIN_RENDER_TOOL_NAME_SET.has(name)) {
     if (name === PLUGIN_DASHBOARD_RENDER_TOOL_NAMES.dashboardEmbedPreview) {
-      return callDashboardEmbedPreview(args)
+      return callDashboardEmbedPreview(args, context)
     }
     return makeRenderResult(name as PluginDashboardRenderToolName, args)
   }
