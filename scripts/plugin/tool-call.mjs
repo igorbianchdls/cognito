@@ -147,7 +147,8 @@ function loadEnvFileIfExists(filePath) {
 
 function hasBigQueryCredentials() {
   return Boolean(
-    process.env.BIGQUERY_CREDENTIALS_JSON?.trim()
+    process.env.GOOGLE_OAUTH_ACCESS_TOKEN?.trim()
+      || process.env.BIGQUERY_CREDENTIALS_JSON?.trim()
       || process.env.GOOGLE_APPLICATION_CREDENTIALS_JSON?.trim()
       || process.env.GOOGLE_APPLICATION_CREDENTIALS?.trim(),
   )
@@ -216,13 +217,26 @@ function detectGcloudAdcFile() {
   return candidates.find((candidate) => existsSync(candidate)) || ''
 }
 
+function detectGcloudAccessToken() {
+  const linuxToken = tryRun('gcloud', ['auth', 'print-access-token'])
+  if (linuxToken) return linuxToken
+
+  return tryRun('cmd.exe', ['/c', 'gcloud', 'auth', 'print-access-token'])
+}
+
 function loadGcloudAdc(parsed) {
-  if (parsed.flags.has('--no-gcloud-adc') || hasBigQueryCredentials()) return
+  if (parsed.flags.has('--no-gcloud-adc')) return
 
   const explicitFile = resolvePath(parsed.values.get('--gcloud-adc-file'))
   const adcFile = explicitFile || detectGcloudAdcFile()
   if (adcFile && existsSync(adcFile)) {
     process.env.GOOGLE_APPLICATION_CREDENTIALS ||= adcFile
+    return
+  }
+
+  const accessToken = detectGcloudAccessToken()
+  if (accessToken) {
+    process.env.GOOGLE_OAUTH_ACCESS_TOKEN ||= accessToken
   }
 }
 
