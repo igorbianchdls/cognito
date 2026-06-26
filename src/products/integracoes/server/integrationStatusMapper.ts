@@ -14,7 +14,11 @@ export function mapConnectionStatusToUi(status: IntegrationConnectionStatus): In
 
 function hasOAuthRefreshError(connection: Pick<IntegrationConnection, 'metadata'>) {
   const error = connection.metadata?.oauthRefreshError
-  return typeof error === 'string' && error.trim().length > 0
+  if (typeof error !== 'string' || !error.trim()) return false
+  const source = connection.metadata?.lastAuthErrorSource
+  if (source === 'provider_oauth' || source === 'provider_api') return true
+  if (source === 'gcp_auth' || source === 'gcp_secret_manager' || source === 'gcp_api' || source === 'network' || source === 'internal') return false
+  return true
 }
 
 export function getEffectiveConnectionStatus(connection: IntegrationConnection): IntegrationConnectionStatus {

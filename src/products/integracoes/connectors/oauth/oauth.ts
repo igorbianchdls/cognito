@@ -3,6 +3,10 @@ import { createHmac, randomBytes, timingSafeEqual } from 'node:crypto'
 import { getIntegrationsCloudConfig } from '@/products/integracoes/datawarehouse/config/gcpConfig'
 import { readSecret } from '@/products/integracoes/cloud/src/lib/secretManager'
 import type { IntegrationProviderOAuthReadiness } from '@/products/integracoes/shared/providers/providerTypes'
+import {
+  createIntegrationRuntimeError,
+  redactErrorPayload,
+} from '@/products/integracoes/shared/integrationErrors'
 
 export type OAuthTokenSet = {
   accessToken: string
@@ -26,6 +30,8 @@ type TokenResponse = {
   expires_in?: number
   token_type?: string
   scope?: string
+  error?: string
+  error_description?: string
 }
 
 type OAuthTokenAuthMethod = 'client_secret_post' | 'client_secret_basic'
@@ -226,7 +232,16 @@ async function postTokenRequest(provider: string, body: URLSearchParams): Promis
   })
   const payload = await response.json().catch(() => null) as TokenResponse | null
   if (!response.ok) {
-    throw new Error(`Falha OAuth ${provider}: ${response.status}`)
+    throw createIntegrationRuntimeError({
+      source: 'provider_oauth',
+      provider,
+      operation: body.get('grant_type') || 'token',
+      code: payload?.error || `http_${response.status}`,
+      httpStatus: response.status,
+      safeMessage: payload?.error_description || payload?.error || `Falha OAuth ${provider}: ${response.status}`,
+      retryable: response.status >= 500 || response.status === 429,
+      rawErrorRedacted: redactErrorPayload(payload),
+    })
   }
   return payload ? mapTokenResponse(payload) : null
 }

@@ -180,7 +180,11 @@ function isDataConnectionActive(connection?: IntegrationConnectionWithUi | null)
 
 function connectionNeedsReconnect(connection?: IntegrationConnectionWithUi | null) {
   const oauthError = connection?.metadata?.oauthRefreshError
-  return Boolean(connection?.status === 'pending_auth' || (typeof oauthError === 'string' && oauthError.trim()))
+  const source = connection?.metadata?.lastAuthErrorSource
+  const hasProviderAuthError = typeof oauthError === 'string'
+    && oauthError.trim().length > 0
+    && (source === 'provider_oauth' || source === 'provider_api' || source == null)
+  return Boolean(connection?.status === 'pending_auth' || hasProviderAuthError)
 }
 
 function isOAuthInConfiguration(provider?: IntegrationProvider | null, readinessLoaded = true) {

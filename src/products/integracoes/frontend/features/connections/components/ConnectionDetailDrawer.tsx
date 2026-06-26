@@ -72,6 +72,13 @@ function toggleResource(resources: string[], resource: string) {
 
 function oauthErrorFromConnection(connection: IntegrationConnectionWithUi | null) {
   const value = connection?.metadata?.oauthRefreshError
+  const source = connection?.metadata?.lastAuthErrorSource
+  if (source && source !== 'provider_oauth' && source !== 'provider_api') return null
+  return typeof value === 'string' && value.trim() ? value.trim() : null
+}
+
+function infraErrorFromConnection(connection: IntegrationConnectionWithUi | null) {
+  const value = connection?.metadata?.lastInfraErrorMessage
   return typeof value === 'string' && value.trim() ? value.trim() : null
 }
 
@@ -227,6 +234,7 @@ export default function ConnectionDetailDrawer({
   const bigQueryEnabled = Boolean(bigQueryDestination && bigQueryPipeline)
   const ottoEnabled = Boolean(permissions?.enabled)
   const oauthError = oauthErrorFromConnection(connection)
+  const infraError = infraErrorFromConnection(connection)
   const needsReconnect = Boolean(connection && (connection.status === 'pending_auth' || oauthError))
 
   return (
@@ -274,6 +282,16 @@ export default function ConnectionDetailDrawer({
                         Reconectar {connection.displayName}
                       </button>
                     </div>
+                  </div>
+                </section>
+              ) : null}
+              {!needsReconnect && infraError ? (
+                <section className="rounded-[16px] border border-[#BFDBFE] bg-[#EFF6FF] p-4">
+                  <div className="text-[14px] font-semibold text-[#1E3A8A]">
+                    Falha interna temporária na integração.
+                  </div>
+                  <div className="mt-1 text-[13px] leading-5 text-[#1D4ED8]">
+                    {infraError}
                   </div>
                 </section>
               ) : null}

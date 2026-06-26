@@ -1,10 +1,20 @@
-import { writeConnectionCredentialsSecret } from '@/products/integracoes/cloud/src/lib/secretManager'
+import { randomUUID } from 'node:crypto'
+
+import { readSecret, writeConnectionCredentialsSecret } from '@/products/integracoes/cloud/src/lib/secretManager'
 import {
+  acquireConnectionOAuthRefreshLock,
   createIntegrationEvent,
+  getCloudIntegrationConnection,
+  releaseConnectionOAuthRefreshLock,
   updateConnectionSecret,
   updateConnectionStatus,
 } from '@/products/integracoes/cloud/src/lib/postgresStatus'
 import { refreshOAuthToken } from '@/products/integracoes/connectors/oauth/oauth'
+import {
+  createIntegrationRuntimeError,
+  integrationErrorInfoFromUnknown,
+  isProviderReauthError,
+} from '@/products/integracoes/shared/integrationErrors'
 
 export type ParsedCredentials = Record<string, unknown> | string | null
 
@@ -64,6 +74,16 @@ function mergeTokenSet(credentials: Record<string, unknown>, refreshed: {
   }
 }
 
+function parseCredentials(value: string | null): ParsedCredentials {
+  if (!value) return null
+  try {
+    const parsed = JSON.parse(value) as unknown
+    return isRecord(parsed) ? parsed : value
+  } catch {
+    return value
+  }
+}
+
 export async function refreshOAuthCredentialsIfNeeded(input: RefreshOAuthCredentialsInput): Promise<ParsedCredentials> {
   if (!isRecord(input.credentials)) return input.credentials
 
@@ -74,6 +94,31 @@ export async function refreshOAuthCredentialsIfNeeded(input: RefreshOAuthCredent
 
   const refreshToken = getString(input.credentials, 'refreshToken', 'refresh_token')
   if (!refreshToken) return input.credentials
+  const lockToken = randomUUID()
+  const lockAcquired = await acquireConnectionOAuthRefreshLock({
+    tenantId: input.tenantId,
+    connectionId: input.connectionId,
+    lockToken,
+    owner: `oauth-refresh:${input.provider}`,
+  })
+
+  if (!lockAcquired) {
+    const connection = await getCloudIntegrationConnection({
+      tenantId: input.tenantId,
+      connectionId: input.connectionId,
+    })
+    const currentCredentials = parseCredentials(connection?.secretRef
+      ? await readSecret(connection.secretRef).catch(() => null)
+      : null)
+    if (isRecord(currentCredentials) && !shouldRefresh(currentCredentials, refreshWindowMs)) return currentCredentials
+    throw createIntegrationRuntimeError({
+      source: 'internal',
+      operation: 'oauth_refresh_lock',
+      code: 'refresh_lock_busy',
+      safeMessage: `Refresh OAuth ${input.provider} ja esta em andamento para esta conexao.`,
+      retryable: true,
+    })
+  }
 
   try {
     const refreshed = await refreshOAuthToken(input.provider, refreshToken)
@@ -97,8 +142,16 @@ export async function refreshOAuthCredentialsIfNeeded(input: RefreshOAuthCredent
         oauthRefreshedAt: new Date().toISOString(),
         oauthRefreshError: null,
         oauthRefreshFailedAt: null,
+        lastAuthErrorSource: null,
+        lastAuthErrorCode: null,
+        lastAuthErrorMessage: null,
         tokenExpiresAt: merged.expiresAt || null,
       },
+    })
+    await releaseConnectionOAuthRefreshLock({
+      tenantId: input.tenantId,
+      connectionId: input.connectionId,
+      lockToken,
     })
 
     await createIntegrationEvent({
@@ -115,28 +168,70 @@ export async function refreshOAuthCredentialsIfNeeded(input: RefreshOAuthCredent
 
     return merged
   } catch (error) {
-    const errorMessage = error instanceof Error ? error.message : 'Falha ao renovar token OAuth.'
+    const info = integrationErrorInfoFromUnknown(error)
+    const connection = await getCloudIntegrationConnection({
+      tenantId: input.tenantId,
+      connectionId: input.connectionId,
+    }).catch(() => null)
+    const currentCredentials = parseCredentials(connection?.secretRef
+      ? await readSecret(connection.secretRef).catch(() => null)
+      : null)
+    if (isRecord(currentCredentials) && !shouldRefresh(currentCredentials, refreshWindowMs)) {
+      await releaseConnectionOAuthRefreshLock({
+        tenantId: input.tenantId,
+        connectionId: input.connectionId,
+        lockToken,
+      }).catch(() => {})
+      return currentCredentials
+    }
+
+    const requiresReauth = isProviderReauthError(error)
     await updateConnectionStatus({
       tenantId: input.tenantId,
       connectionId: input.connectionId,
-      status: 'pending_auth',
-      metadata: {
-        oauthRefreshFailedAt: new Date().toISOString(),
-        oauthRefreshError: errorMessage,
-      },
+      status: requiresReauth ? 'pending_auth' : (connection?.status || 'warning'),
+      metadata: requiresReauth
+        ? {
+            oauthRefreshFailedAt: new Date().toISOString(),
+            oauthRefreshError: info.safeMessage,
+            lastAuthErrorSource: info.source,
+            lastAuthErrorCode: info.code,
+            lastAuthErrorMessage: info.safeMessage,
+            lastAuthErrorHttpStatus: info.httpStatus || null,
+            lastAuthErrorRaw: info.rawErrorRedacted || null,
+          }
+        : {
+            lastInfraErrorAt: new Date().toISOString(),
+            lastInfraErrorSource: info.source,
+            lastInfraErrorCode: info.code,
+            lastInfraErrorMessage: info.safeMessage,
+            lastInfraErrorHttpStatus: info.httpStatus || null,
+            lastInfraErrorRaw: info.rawErrorRedacted || null,
+          },
     })
+    await releaseConnectionOAuthRefreshLock({
+      tenantId: input.tenantId,
+      connectionId: input.connectionId,
+      lockToken,
+    }).catch(() => {})
     await createIntegrationEvent({
       tenantId: input.tenantId,
       connectionId: input.connectionId,
-      eventType: 'connection.oauth.refresh_failed',
+      eventType: requiresReauth ? 'connection.oauth.refresh_failed' : 'system.note',
       severity: 'error',
       actor: 'integrations-worker',
-      message: 'Falha ao renovar token OAuth. Reautenticacao necessaria.',
+      message: requiresReauth
+        ? 'Falha OAuth do provider ao renovar token. Reautenticacao necessaria.'
+        : 'Falha de infraestrutura ao renovar token OAuth. Reautenticacao nao confirmada.',
       metadata: {
         provider: input.provider,
-        errorMessage,
+        errorSource: info.source,
+        errorCode: info.code,
+        errorMessage: info.safeMessage,
+        httpStatus: info.httpStatus || null,
+        rawErrorRedacted: info.rawErrorRedacted || null,
       },
     })
-    throw new Error(errorMessage)
+    throw error
   }
 }

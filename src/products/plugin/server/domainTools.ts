@@ -38,6 +38,10 @@ import { executeSocialTool } from '@/products/plugin/server/domain-adapters/soci
 import { SOCIAL_RESOURCES } from '@/products/plugin/server/domain-adapters/social/socialTypes'
 import type { CognitoMcpServerContext } from '@/products/mcp/server/cognitoMcpServer'
 import type { McpToolInputSchema } from '@/products/mcp/tools/dashboardSchemas'
+import {
+  integrationErrorInfoFromUnknown,
+  isProviderReauthError,
+} from '@/products/integracoes/shared/integrationErrors'
 
 type JsonRecord = Record<string, unknown>
 
@@ -4660,27 +4664,23 @@ function inferActionPermissionKind(action: string): 'write' | 'destructive' {
   return CONNECTED_DESTRUCTIVE_ACTIONS.has(action) ? 'destructive' : 'write'
 }
 
-function isProviderAuthError(message: string) {
-  const value = message.toLowerCase()
-  return value.includes('invalid grant')
-    || value.includes('account not found')
-    || value.includes('refresh token')
-    || value.includes('unauthorized')
-    || value.includes('401')
-    || value.includes('403')
-}
-
 async function markConnectionPendingAuth(input: {
   tenantId: number
   connectionId: string
   provider: string
-  message: string
+  error: unknown
 }) {
+  const info = integrationErrorInfoFromUnknown(input.error)
   await updateIntegrationConnection(input.connectionId, input.tenantId, {
     status: 'pending_auth',
     metadata: {
       oauthRefreshFailedAt: new Date().toISOString(),
-      oauthRefreshError: input.message,
+      oauthRefreshError: info.safeMessage,
+      lastAuthErrorSource: info.source,
+      lastAuthErrorCode: info.code,
+      lastAuthErrorMessage: info.safeMessage,
+      lastAuthErrorHttpStatus: info.httpStatus || null,
+      lastAuthErrorRaw: info.rawErrorRedacted || null,
       authFailureSource: 'plugin_action',
     },
   })
@@ -4693,7 +4693,11 @@ async function markConnectionPendingAuth(input: {
     message: 'Falha OAuth ao executar acao no provider. Reautenticacao necessaria.',
     metadata: {
       provider: input.provider,
-      errorMessage: input.message,
+      errorSource: info.source,
+      errorCode: info.code,
+      errorMessage: info.safeMessage,
+      httpStatus: info.httpStatus || null,
+      rawErrorRedacted: info.rawErrorRedacted || null,
     },
   })
 }
@@ -5069,12 +5073,12 @@ async function callConnectedProviderAction(params: {
       })
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Falha ao executar acao no provider.'
-      if (isProviderAuthError(message)) {
+      if (isProviderReauthError(error)) {
         await markConnectionPendingAuth({
           tenantId,
           connectionId: connection.id,
           provider: connection.provider,
-          message,
+          error,
         }).catch(() => {})
       }
 

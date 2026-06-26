@@ -1,4 +1,8 @@
 import { withRetry, type RetryOptions } from '@/products/integracoes/connectors/runtime/retry'
+import {
+  createIntegrationRuntimeError,
+  redactErrorPayload,
+} from '@/products/integracoes/shared/integrationErrors'
 import crypto from 'crypto'
 
 type MetadataTokenResponse = {
@@ -94,7 +98,15 @@ async function getServiceAccountAccessToken(): Promise<string | null> {
   const payloadJson = await response.json().catch(() => null) as MetadataTokenResponse | { error?: string; error_description?: string } | null
   if (!response.ok) {
     const errorPayload = payloadJson as { error?: string; error_description?: string } | null
-    throw new Error(errorPayload?.error_description || errorPayload?.error || `Falha ao obter token OAuth GCP: ${response.status}`)
+    throw createIntegrationRuntimeError({
+      source: 'gcp_auth',
+      operation: 'service_account_access_token',
+      code: errorPayload?.error || `http_${response.status}`,
+      httpStatus: response.status,
+      safeMessage: errorPayload?.error_description || errorPayload?.error || `Falha ao obter token OAuth GCP: ${response.status}`,
+      retryable: response.status >= 500 || response.status === 429,
+      rawErrorRedacted: redactErrorPayload(errorPayload),
+    })
   }
 
   return (payloadJson as MetadataTokenResponse | null)?.access_token || null
@@ -115,12 +127,25 @@ export async function getCloudAccessToken(): Promise<string> {
   })
 
   if (!response.ok) {
-    throw new Error(`Falha ao obter token da metadata server: ${response.status}`)
+    throw createIntegrationRuntimeError({
+      source: 'gcp_auth',
+      operation: 'metadata_access_token',
+      code: `http_${response.status}`,
+      httpStatus: response.status,
+      safeMessage: `Falha ao obter token da metadata server: ${response.status}`,
+      retryable: response.status >= 500 || response.status === 429,
+    })
   }
 
   const payload = await response.json() as MetadataTokenResponse
   if (!payload.access_token) {
-    throw new Error('Metadata server nao retornou access_token')
+    throw createIntegrationRuntimeError({
+      source: 'gcp_auth',
+      operation: 'metadata_access_token',
+      code: 'missing_access_token',
+      safeMessage: 'Metadata server nao retornou access_token',
+      retryable: false,
+    })
   }
 
   return payload.access_token
@@ -146,9 +171,18 @@ export async function authorizedJsonRequest<T>(
 
     if (!nextResponse.ok && !(allowNotFound && nextResponse.status === 404)) {
       const errorPayload = payload as { error?: { message?: string } } | null
-      const retryableError = new Error(errorPayload?.error?.message || `Falha na chamada GCP: ${nextResponse.status}`) as Error & { status?: number }
-      retryableError.status = nextResponse.status
-      throw retryableError
+      const source = url.includes('secretmanager.googleapis.com') ? 'gcp_secret_manager' : 'gcp_api'
+      throw createIntegrationRuntimeError({
+        source,
+        operation: 'gcp_json_request',
+        code: errorPayload?.error?.message?.includes('account not found')
+          ? 'google_account_not_found'
+          : `http_${nextResponse.status}`,
+        httpStatus: nextResponse.status,
+        safeMessage: errorPayload?.error?.message || `Falha na chamada GCP: ${nextResponse.status}`,
+        retryable: nextResponse.status >= 500 || nextResponse.status === 429,
+        rawErrorRedacted: redactErrorPayload(errorPayload),
+      })
     }
 
     return { status: nextResponse.status, ok: nextResponse.ok, payload }

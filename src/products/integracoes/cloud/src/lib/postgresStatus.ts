@@ -991,6 +991,67 @@ export async function updateConnectionSecret(input: {
   )
 }
 
+export async function acquireConnectionOAuthRefreshLock(input: {
+  tenantId: number
+  connectionId: string
+  lockToken: string
+  owner?: string
+  ttlMs?: number
+}): Promise<boolean> {
+  const expiresAt = new Date(Date.now() + (input.ttlMs || 60_000)).toISOString()
+  const result = await getPool().query(
+    `UPDATE integrations.connections
+     SET
+       metadata = COALESCE(metadata, '{}'::jsonb) || $4::jsonb,
+       updated_at = now()
+     WHERE id = $1
+       AND tenant_id = $2
+       AND (
+         COALESCE(metadata, '{}'::jsonb)->'oauthRefreshLock' IS NULL
+         OR NULLIF(COALESCE(metadata, '{}'::jsonb)->'oauthRefreshLock'->>'expiresAt', '')::timestamptz < now()
+         OR COALESCE(metadata, '{}'::jsonb)->'oauthRefreshLock'->>'token' = $3
+       )
+     RETURNING id`,
+    [
+      input.connectionId,
+      input.tenantId,
+      input.lockToken,
+      JSON.stringify({
+        oauthRefreshLock: {
+          token: input.lockToken,
+          owner: input.owner || 'integrations-worker',
+          expiresAt,
+          createdAt: new Date().toISOString(),
+        },
+      }),
+    ],
+  )
+  return Boolean(result.rowCount)
+}
+
+export async function releaseConnectionOAuthRefreshLock(input: {
+  tenantId: number
+  connectionId: string
+  lockToken: string
+  metadata?: Record<string, unknown>
+}) {
+  await getPool().query(
+    `UPDATE integrations.connections
+     SET
+       metadata = (COALESCE(metadata, '{}'::jsonb) - 'oauthRefreshLock') || $4::jsonb,
+       updated_at = now()
+     WHERE id = $1
+       AND tenant_id = $2
+       AND COALESCE(metadata, '{}'::jsonb)->'oauthRefreshLock'->>'token' = $3`,
+    [
+      input.connectionId,
+      input.tenantId,
+      input.lockToken,
+      JSON.stringify(input.metadata || {}),
+    ],
+  )
+}
+
 export async function createIntegrationEvent(input: {
   tenantId: number
   connectionId?: string | null
