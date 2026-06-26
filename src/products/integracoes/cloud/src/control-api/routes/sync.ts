@@ -57,7 +57,8 @@ export async function handleSyncDispatch(request: ControlApiRequest): Promise<Co
     const dispatch = await handleDispatchOutbox({
       ...request,
       body: {
-        limit: 25,
+        limit: body.runId ? 1 : 25,
+        runId: body.runId,
         requestedBy: body.requestedBy,
       },
     })

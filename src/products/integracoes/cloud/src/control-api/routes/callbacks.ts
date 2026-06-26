@@ -9,6 +9,7 @@ import {
   getCloudIntegrationConnection,
   updateConnectionSecret,
 } from '@/products/integracoes/cloud/src/lib/postgresStatus'
+import { dispatchPostAuthInitialSync } from '@/products/integracoes/cloud/src/control-api/routes/postAuthSyncDispatch'
 import { finalizeConnectedIntegration } from '@/products/integracoes/server/finalizeConnectedIntegration'
 
 function getQueryString(request: ControlApiRequest, name: string) {
@@ -120,13 +121,20 @@ export async function handleProviderCallback(request: ControlApiRequest): Promis
       connectionId: parsedState.connectionId,
     })
     if (connection) {
-      await finalizeConnectedIntegration({
+      const finalizeResult = await finalizeConnectedIntegration({
         tenantId: parsedState.tenantId,
         connectionId: parsedState.connectionId,
         displayName: connection.displayName,
         resources: connection.selectedResources,
         syncFrequency: connection.syncFrequency,
         requestedBy: 'oauth-callback',
+      })
+      await dispatchPostAuthInitialSync({
+        request,
+        tenantId: parsedState.tenantId,
+        connectionId: parsedState.connectionId,
+        requestedBy: 'oauth-callback',
+        finalizeResult,
       })
     }
 

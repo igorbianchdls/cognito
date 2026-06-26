@@ -30,15 +30,21 @@ function stringArray(value: unknown) {
     : undefined
 }
 
+function optionalRunId(value: unknown) {
+  const runId = String(value || '').trim()
+  return /^\d+$/.test(runId) ? runId : null
+}
+
 export async function handleDispatchOutbox(request: ControlApiRequest): Promise<ControlApiResponse> {
   const body = isRecord(request.body) ? request.body : {}
   const lockToken = randomUUID()
   const items: Array<Record<string, unknown>> = []
   const limit = parsePositiveInteger(body.limit, 50, 200)
   const lockTtlSeconds = parsePositiveInteger(body.lockTtlSeconds, 300, 1800)
+  const runId = optionalRunId(body.runId || body.run_id)
 
   try {
-    const claimed = await claimSyncDispatchOutbox({ limit, lockToken, lockTtlSeconds })
+    const claimed = await claimSyncDispatchOutbox({ limit, lockToken, lockTtlSeconds, runId })
     let published = 0
     let failed = 0
 
@@ -91,6 +97,7 @@ export async function handleDispatchOutbox(request: ControlApiRequest): Promise<
       body: {
         ok: true,
         mode: 'sync_dispatch_outbox',
+        runId,
         claimed: claimed.length,
         published,
         failed,

@@ -12,6 +12,7 @@ import {
   updateConnectionSecret,
   updateConnectionStatus,
 } from '@/products/integracoes/cloud/src/lib/postgresStatus'
+import { dispatchPostAuthInitialSync } from '@/products/integracoes/cloud/src/control-api/routes/postAuthSyncDispatch'
 import { requireIntegrationProvider } from '@/products/integracoes/server/integrationProviderRegistry'
 import { finalizeConnectedIntegration } from '@/products/integracoes/server/finalizeConnectedIntegration'
 
@@ -131,13 +132,20 @@ export async function handleConnectionSetup(request: ControlApiRequest): Promise
         tenantId: body.tenantId,
         connectionId: body.connectionId,
       })
-      await finalizeConnectedIntegration({
+      const finalizeResult = await finalizeConnectedIntegration({
         tenantId: body.tenantId,
         connectionId: body.connectionId,
         displayName: connection?.displayName || provider.name,
         resources: body.resources || connection?.selectedResources || [],
         syncFrequency: connection?.syncFrequency,
         requestedBy: 'credentials-setup',
+      })
+      const dispatch = await dispatchPostAuthInitialSync({
+        request,
+        tenantId: body.tenantId,
+        connectionId: body.connectionId,
+        requestedBy: 'credentials-setup',
+        finalizeResult,
       })
 
       return {
@@ -147,6 +155,7 @@ export async function handleConnectionSetup(request: ControlApiRequest): Promise
           mode: 'gcp',
           status: 'connected',
           secretRef: secret.secretRef,
+          dispatch,
           message: 'Credenciais armazenadas no Secret Manager e conexao marcada como conectada.',
         },
       }

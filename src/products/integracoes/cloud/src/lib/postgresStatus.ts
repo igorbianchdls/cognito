@@ -540,6 +540,7 @@ export async function claimSyncDispatchOutbox(input: {
   limit: number
   lockToken: string
   lockTtlSeconds: number
+  runId?: string | null
 }): Promise<CloudSyncDispatchOutboxItem[]> {
   const result = await getPool().query(
     `WITH due AS (
@@ -549,6 +550,7 @@ export async function claimSyncDispatchOutbox(input: {
          AND attempts < 10
          AND next_attempt_at <= now()
          AND (locked_until IS NULL OR locked_until <= now())
+         AND ($4::bigint IS NULL OR run_id = $4::bigint)
        ORDER BY next_attempt_at ASC, id ASC
        LIMIT $1
        FOR UPDATE SKIP LOCKED
@@ -571,7 +573,7 @@ export async function claimSyncDispatchOutbox(input: {
        outbox.run_id::text,
        outbox.trigger,
        outbox.payload`,
-    [input.limit, input.lockToken, input.lockTtlSeconds],
+    [input.limit, input.lockToken, input.lockTtlSeconds, input.runId || null],
   )
   return result.rows.map((row: Record<string, unknown>) => ({
     id: String(row.id),
