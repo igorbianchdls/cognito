@@ -422,13 +422,17 @@ export async function executeMcpDashboardTool(
   context: McpDashboardToolContext = {},
 ): Promise<McpDashboardToolExecutionResult> {
   const args = asRecord(rawArgs)
+  if (toolName !== MCP_DASHBOARD_TOOL_NAMES.dashboardGetContract && !context.tenantId) {
+    throw new McpDashboardToolInputError('tenant autenticado e obrigatorio para operar dashboards')
+  }
+  const tenantId = context.tenantId as number
 
   switch (toolName) {
     case MCP_DASHBOARD_TOOL_NAMES.dashboardList:
       return {
         ok: true,
         tool: MCP_DASHBOARD_TOOL_NAMES.dashboardList,
-        result: await listMcpDashboards({ limit: optionalPositiveInt(args.limit), tenantId: context.tenantId }),
+        result: await listMcpDashboards({ limit: optionalPositiveInt(args.limit), tenantId }),
       }
 
     case MCP_DASHBOARD_TOOL_NAMES.dashboardRead:
@@ -437,7 +441,7 @@ export async function executeMcpDashboardTool(
         tool: MCP_DASHBOARD_TOOL_NAMES.dashboardRead,
         result: await readMcpDashboard({
           artifactId: requiredText(args, 'artifact_id'),
-          tenantId: context.tenantId,
+          tenantId,
           kind: args.kind === 'published' ? 'published' : 'draft',
           version: optionalPositiveInt(args.version),
         }),
@@ -449,7 +453,7 @@ export async function executeMcpDashboardTool(
         tool: MCP_DASHBOARD_TOOL_NAMES.dashboardCreate,
         result: await createMcpDashboard({
           title: requiredText(args, 'title'),
-          tenantId: context.tenantId,
+          tenantId,
           source: requiredText(args, 'source'),
           workspaceId: optionalText(args.workspace_id),
           slug: optionalText(args.slug),
@@ -464,7 +468,7 @@ export async function executeMcpDashboardTool(
         tool: MCP_DASHBOARD_TOOL_NAMES.dashboardPatch,
         result: await patchMcpDashboard({
           artifactId: requiredText(args, 'artifact_id'),
-          tenantId: context.tenantId,
+          tenantId,
           expectedVersion: requiredPositiveInt(args, 'expected_version'),
           operation: normalizePatchOperation(args.operation),
         }),
@@ -476,7 +480,7 @@ export async function executeMcpDashboardTool(
         tool: MCP_DASHBOARD_TOOL_NAMES.dashboardUpdateFull,
         result: await updateMcpDashboardFull({
           artifactId: requiredText(args, 'artifact_id'),
-          tenantId: context.tenantId,
+          tenantId,
           expectedVersion: requiredPositiveInt(args, 'expected_version'),
           title: optionalText(args.title),
           source: requiredText(args, 'source'),

@@ -1,4 +1,3 @@
-import { publishSyncMessage } from '@/products/integracoes/cloud/src/lib/pubsub'
 import { provisionTenantBigQuery } from '@/products/integracoes/datawarehouse/provisioning/tenantBigQueryProvisioning'
 import {
   createIntegrationPipeline,
@@ -49,7 +48,7 @@ export async function finalizeConnectedIntegration(input: {
   })
   const existing = existingPipelines.find((pipeline) => pipeline.status !== 'disabled')
   const syncFrequency = input.syncFrequency || 'manual'
-  const pipeline = existing
+  let pipeline = existing
     ? await updateIntegrationPipeline(existing.id, input.tenantId, {
       status: 'active',
       selectedResources: input.resources,
@@ -60,20 +59,46 @@ export async function finalizeConnectedIntegration(input: {
         postAuthUpdatedAt: new Date().toISOString(),
       },
     })
-    : await createIntegrationPipeline({
-      tenantId: input.tenantId,
-      sourceConnectionId: input.connectionId,
-      destinationId: provision.destinationId,
-      name: `${input.displayName} -> BigQuery padrao`,
-      status: 'active',
-      selectedResources: input.resources,
-      syncFrequency,
-      syncEnabled: true,
-      metadata: {
-        postAuthManaged: true,
-        postAuthCreatedAt: new Date().toISOString(),
-      },
-    })
+    : null
+  if (!pipeline) {
+    try {
+      pipeline = await createIntegrationPipeline({
+        tenantId: input.tenantId,
+        sourceConnectionId: input.connectionId,
+        destinationId: provision.destinationId,
+        name: `${input.displayName} -> BigQuery padrao`,
+        status: 'active',
+        selectedResources: input.resources,
+        syncFrequency,
+        syncEnabled: true,
+        metadata: {
+          postAuthManaged: true,
+          postAuthCreatedAt: new Date().toISOString(),
+        },
+      })
+    } catch (error) {
+      if ((error as { code?: string })?.code !== '23505') throw error
+      const concurrentPipelines = await listIntegrationPipelines({
+        tenantId: input.tenantId,
+        sourceConnectionId: input.connectionId,
+        destinationId: provision.destinationId,
+        limit: 20,
+      })
+      const concurrent = concurrentPipelines.find((item) => item.status !== 'disabled')
+      pipeline = concurrent
+        ? await updateIntegrationPipeline(concurrent.id, input.tenantId, {
+          status: 'active',
+          selectedResources: input.resources,
+          syncFrequency,
+          syncEnabled: true,
+          metadata: {
+            postAuthManaged: true,
+            postAuthUpdatedAt: new Date().toISOString(),
+          },
+        })
+        : null
+    }
+  }
   if (!pipeline) throw new Error('Nao foi possivel criar o pipeline BigQuery.')
 
   const runs = await listIntegrationSyncRuns({
@@ -122,16 +147,6 @@ export async function finalizeConnectedIntegration(input: {
   }
   if (!run) throw new Error('Nao foi possivel registrar o sync inicial.')
 
-  await publishSyncMessage({
-    tenantId: input.tenantId,
-    connectionId: input.connectionId,
-    pipelineId: pipeline.id,
-    destinationId: provision.destinationId,
-    runId: run.id,
-    trigger: 'initial',
-    resources: input.resources,
-    requestedBy,
-  })
   await updateIntegrationConnection(input.connectionId, input.tenantId, {
     status: 'syncing',
     metadata: {
@@ -141,5 +156,5 @@ export async function finalizeConnectedIntegration(input: {
     },
   })
 
-  return { provision, pipeline, initialSync: run, published: true }
+  return { provision, pipeline, initialSync: run, published: false, dispatchQueued: true }
 }

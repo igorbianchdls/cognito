@@ -113,7 +113,7 @@ async function getExpectedVersion(
   kind: McpArtifactKind,
   artifactId: string,
   explicitVersion: unknown,
-  tenantId?: number,
+  tenantId: number,
 ) {
   const expectedVersion = optionalPositiveInt(explicitVersion)
   if (expectedVersion) return expectedVersion
@@ -153,6 +153,10 @@ export async function executeMcpArtifactTool(
         contract: getArtifactContract(kind, Boolean(args.include_example)),
       },
     }
+  }
+
+  if (!context.tenantId) {
+    throw new McpDashboardToolInputError('tenant autenticado e obrigatorio para operar artifacts')
   }
 
   if (action === 'create') {

@@ -5,6 +5,7 @@ import { useData, useDataValue } from "@/products/bi/json-render/context";
 import { useThemeOverrides } from "@/products/bi/json-render/theme/ThemeContext";
 import { applyPrimaryDateRange } from "@/products/bi/json-render/dateFilters";
 import { requestDashboardQueryRows } from "@/products/artifacts/dashboard/query/dashboardQueryClient";
+import { useDashboardArtifactId } from "@/products/artifacts/dashboard/query/DashboardQueryContext";
 
 type AnyRecord = Record<string, any>;
 
@@ -66,6 +67,7 @@ function clamp01(value: number) {
 }
 
 export default function JsonRenderGauge({ element }: { element?: { props?: AnyRecord } }) {
+  const artifactId = useDashboardArtifactId();
   const p = (element?.props || {}) as AnyRecord;
   const rootStyle = p.style && typeof p.style === "object" ? p.style as React.CSSProperties : undefined;
   const theme = useThemeOverrides();
@@ -95,7 +97,7 @@ export default function JsonRenderGauge({ element }: { element?: { props?: AnyRe
             if ((filters as any)[k] === undefined) (filters as any)[k] = v as any;
           }
         }
-        const rows = await requestDashboardQueryRows(dq, filters);
+        const rows = await requestDashboardQueryRows(artifactId, dq, filters);
         const firstRow = rows.length > 0 && rows[0] && typeof rows[0] === "object"
           ? ({ ...(rows[0] as AnyRecord) } as AnyRecord)
           : null;
@@ -115,7 +117,7 @@ export default function JsonRenderGauge({ element }: { element?: { props?: AnyRe
     return () => {
       cancelled = true;
     };
-  }, [JSON.stringify(dq), JSON.stringify((data as any)?.filters), isSqlQueryMode]);
+  }, [artifactId, JSON.stringify(dq), JSON.stringify((data as any)?.filters), isSqlQueryMode]);
 
   const format = (p.format ?? "number") as "currency" | "percent" | "number";
   const width = Math.max(120, Number(p.width ?? p.size ?? 220));

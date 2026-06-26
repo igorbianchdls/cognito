@@ -1269,6 +1269,33 @@ export async function createIntegrationSyncRun(params: {
     if (!row) return null
 
     const run = toSyncRun(row)
+    if (status === 'queued') {
+      await client.query(
+        `INSERT INTO integrations.sync_dispatch_outbox
+          (tenant_id, connection_id, pipeline_id, destination_id, run_id, trigger, payload)
+         VALUES
+          ($1, $2, $3, $4, $5, $6, $7::jsonb)
+         ON CONFLICT (run_id) DO NOTHING`,
+        [
+          tenantId,
+          params.connectionId,
+          params.pipelineId || null,
+          params.destinationId || null,
+          run.id,
+          params.trigger,
+          JSON.stringify({
+            tenantId,
+            connectionId: params.connectionId,
+            pipelineId: params.pipelineId || undefined,
+            destinationId: params.destinationId || undefined,
+            runId: run.id,
+            trigger: params.trigger,
+            resources: params.resources || connection.selectedResources,
+            requestedBy: String(params.metadata?.requestedBy || 'api'),
+          }),
+        ],
+      )
+    }
     if (status !== 'queued' && status !== 'running') {
       await insertIntegrationEvent(client, {
         tenantId,

@@ -27,6 +27,7 @@ FROM (
   FROM ${source} AS source
 )
 WHERE __row_number = 1
+  AND COALESCE(is_deleted, false) = false
   `.trim()
 }
 

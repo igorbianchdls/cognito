@@ -5,6 +5,7 @@ import { ChevronDown, ChevronRight, Download } from "lucide-react";
 import { useData } from "@/products/bi/json-render/context";
 import { applyPrimaryDateRange } from "@/products/bi/json-render/dateFilters";
 import { requestDashboardQueryRows } from "@/products/artifacts/dashboard/query/dashboardQueryClient";
+import { useDashboardArtifactId } from "@/products/artifacts/dashboard/query/DashboardQueryContext";
 
 type AnyRecord = Record<string, any>;
 type AggregateMode = "sum" | "avg" | "count" | "min" | "max";
@@ -273,6 +274,7 @@ function toCsvValue(value: string): string {
 }
 
 export default function JsonRenderPivotTable({ element }: { element: any }) {
+  const artifactId = useDashboardArtifactId();
   const { data } = useData();
   const props = (element?.props || {}) as AnyRecord;
   const dq = (props?.dataQuery || {}) as AnyRecord;
@@ -316,7 +318,7 @@ export default function JsonRenderPivotTable({ element }: { element: any }) {
           }
         }
 
-        const rows = await requestDashboardQueryRows(dq, filters);
+        const rows = await requestDashboardQueryRows(artifactId, dq, filters);
 
         if (!cancelled) {
           setRawRows(normalizeRows(rows));

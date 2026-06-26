@@ -21,6 +21,7 @@ export async function POST(
     const result = await executeDashboardQuery({
       artifactId: id,
       tenantId: tenant.tenantId,
+      actorId: tenant.sharedUserId,
       query: String(payload.query || ''),
       filters: payload.filters && typeof payload.filters === 'object' && !Array.isArray(payload.filters)
         ? payload.filters as Record<string, unknown>

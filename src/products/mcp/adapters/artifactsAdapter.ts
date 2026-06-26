@@ -19,12 +19,12 @@ export type McpArtifactKind = ArtifactKind
 export type McpArtifactListKind = McpArtifactKind
 
 export type McpDashboardListInput = {
-  tenantId?: number | null
+  tenantId: number
   limit?: number | null
 }
 
 export type McpArtifactListInput = {
-  tenantId?: number | null
+  tenantId: number
   kind?: McpArtifactListKind | null
   limit?: number | null
 }
@@ -38,14 +38,14 @@ export type McpArtifactListItem = Omit<DashboardListItem, 'id' | 'thumbnail_data
 }
 
 export type McpDashboardReadInput = {
-  tenantId?: number | null
+  tenantId: number
   artifactId: string
   kind?: ArtifactSourceKind
   version?: number | null
 }
 
 export type McpDashboardCreateInput = {
-  tenantId?: number | null
+  tenantId: number
   title: string
   source: string
   workspaceId?: string | null
@@ -57,7 +57,7 @@ export type McpDashboardCreateInput = {
 }
 
 export type McpDashboardUpdateFullInput = {
-  tenantId?: number | null
+  tenantId: number
   artifactId: string
   expectedVersion: number
   source: string
@@ -69,7 +69,7 @@ export type McpDashboardUpdateFullInput = {
 }
 
 export type McpDashboardPatchInput = {
-  tenantId?: number | null
+  tenantId: number
   artifactId: string
   expectedVersion: number
   operation: {
@@ -84,12 +84,12 @@ export type McpDashboardPatchInput = {
 }
 
 export type McpDashboardDeleteInput = {
-  tenantId?: number | null
+  tenantId: number
   artifactId: string
 }
 
 export type McpArtifactReadInput = {
-  tenantId?: number | null
+  tenantId: number
   artifactType: McpArtifactKind
   artifactId: string
   kind?: ArtifactSourceKind
@@ -97,7 +97,7 @@ export type McpArtifactReadInput = {
 }
 
 export type McpArtifactCreateInput = {
-  tenantId?: number | null
+  tenantId: number
   artifactType: McpArtifactKind
   title: string
   source: string
@@ -116,7 +116,7 @@ export type McpArtifactUpdateFullInput = Omit<McpArtifactCreateInput, 'title'> &
 }
 
 export type McpArtifactPatchInput = {
-  tenantId?: number | null
+  tenantId: number
   artifactType: McpArtifactKind
   artifactId: string
   expectedVersion: number
@@ -183,12 +183,12 @@ function normalizeListLimit(value: unknown) {
   return Math.min(parsed, 200)
 }
 
-export async function listMcpDashboards(input: McpDashboardListInput = {}) {
+export async function listMcpDashboards(input: McpDashboardListInput) {
   const dashboards = await listDashboards(input.limit ?? 100, input.tenantId)
   return dashboards.map(withListDashboardUrl)
 }
 
-export async function listMcpArtifacts(input: McpArtifactListInput = {}) {
+export async function listMcpArtifacts(input: McpArtifactListInput) {
   const kind = normalizeArtifactListKind(input.kind)
   const limit = normalizeListLimit(input.limit)
 

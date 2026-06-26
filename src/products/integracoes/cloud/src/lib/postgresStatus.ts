@@ -18,6 +18,17 @@ export type CloudSyncRun = {
   status: string
 }
 
+export type CloudSyncDispatchOutboxItem = {
+  id: string
+  tenantId: number
+  connectionId: string
+  pipelineId: string | null
+  destinationId: string | null
+  runId: string
+  trigger: string
+  payload: Record<string, unknown>
+}
+
 export type CloudIntegrationDestination = {
   id: string
   tenantId: number
@@ -214,7 +225,7 @@ export async function startCloudSyncRun(input: {
          started_at = COALESCE(started_at, now()),
          metadata = metadata || $4::jsonb
        WHERE id = $1 AND tenant_id = $2 AND connection_id = $3
-         AND status IN ('queued', 'running')
+         AND status = 'queued'
        RETURNING id::text, status`,
       [
         input.runId,
@@ -248,9 +259,10 @@ export async function startCloudSyncRun(input: {
     )
     const existingRow = existing.rows[0] as { id?: unknown, status?: unknown } | undefined
     if (existingRow?.id) {
+      const status = String(existingRow.status || 'already_processed')
       return {
         id: String(existingRow.id),
-        status: String(existingRow.status || 'running'),
+        status: status === 'running' ? 'already_running' : status,
       }
     }
   }
@@ -443,46 +455,171 @@ export async function createQueuedCloudSyncRun(input: {
   requestedBy: string
   metadata?: Record<string, unknown>
 }): Promise<CloudSyncRun> {
-  const result = await getPool().query(
-    `INSERT INTO integrations.sync_runs
-      (tenant_id, connection_id, pipeline_id, destination_id, trigger, status, started_at, finished_at, records_in, records_updated, records_failed, metadata)
-     VALUES
-      ($1, $2, $3, $4, 'scheduled', 'queued', NULL, NULL, 0, 0, 0, $5::jsonb)
-     RETURNING id::text, status`,
-    [
-      input.tenantId,
-      input.connectionId,
-      input.pipelineId || null,
-      input.destinationId || null,
-      JSON.stringify({
-        mode: 'scheduled_sync',
-        pipelineId: input.pipelineId || null,
-        destinationId: input.destinationId || null,
-        resources: input.resources,
-        requestedBy: input.requestedBy,
-        ...(input.metadata || {}),
-      }),
-    ],
-  )
+  const client = await getPool().connect()
+  try {
+    await client.query('BEGIN')
+    const result = await client.query(
+      `INSERT INTO integrations.sync_runs
+        (tenant_id, connection_id, pipeline_id, destination_id, trigger, status, started_at, finished_at, records_in, records_updated, records_failed, metadata)
+       VALUES
+        ($1, $2, $3, $4, 'scheduled', 'queued', NULL, NULL, 0, 0, 0, $5::jsonb)
+       RETURNING id::text, status`,
+      [
+        input.tenantId,
+        input.connectionId,
+        input.pipelineId || null,
+        input.destinationId || null,
+        JSON.stringify({
+          mode: 'scheduled_sync',
+          pipelineId: input.pipelineId || null,
+          destinationId: input.destinationId || null,
+          resources: input.resources,
+          requestedBy: input.requestedBy,
+          ...(input.metadata || {}),
+        }),
+      ],
+    )
+    const runId = String(result.rows[0]?.id)
+    await client.query(
+      `INSERT INTO integrations.sync_dispatch_outbox
+        (tenant_id, connection_id, pipeline_id, destination_id, run_id, trigger, payload)
+       VALUES
+        ($1, $2, $3, $4, $5, 'scheduled', $6::jsonb)
+       ON CONFLICT (run_id) DO NOTHING`,
+      [
+        input.tenantId,
+        input.connectionId,
+        input.pipelineId || null,
+        input.destinationId || null,
+        runId,
+        JSON.stringify({
+          tenantId: input.tenantId,
+          connectionId: input.connectionId,
+          pipelineId: input.pipelineId || undefined,
+          destinationId: input.destinationId || undefined,
+          runId,
+          trigger: 'scheduled',
+          resources: input.resources,
+          requestedBy: input.requestedBy,
+        }),
+      ],
+    )
 
-  await createIntegrationEvent({
-    tenantId: input.tenantId,
-    connectionId: input.connectionId,
-    eventType: 'sync.requested',
-    severity: 'info',
-    actor: input.requestedBy,
-    message: 'Sincronizacao agendada enviada ao worker GCP.',
-    metadata: {
-      resources: input.resources,
-      trigger: 'scheduled',
-      ...(input.metadata || {}),
-    },
-  })
+    await client.query(
+      `INSERT INTO integrations.events
+        (tenant_id, connection_id, event_type, severity, actor, message, metadata)
+       VALUES
+        ($1, $2, 'sync.requested', 'info', $3, 'Sincronizacao agendada enfileirada para dispatch.', $4::jsonb)`,
+      [
+        input.tenantId,
+        input.connectionId,
+        input.requestedBy,
+        JSON.stringify({
+          resources: input.resources,
+          trigger: 'scheduled',
+          runId,
+          ...(input.metadata || {}),
+        }),
+      ],
+    )
+    await client.query('COMMIT')
 
-  return {
-    id: String(result.rows[0]?.id),
-    status: String(result.rows[0]?.status || 'queued'),
+    return {
+      id: runId,
+      status: String(result.rows[0]?.status || 'queued'),
+    }
+  } catch (error) {
+    await client.query('ROLLBACK').catch(() => undefined)
+    throw error
+  } finally {
+    client.release()
   }
+}
+
+export async function claimSyncDispatchOutbox(input: {
+  limit: number
+  lockToken: string
+  lockTtlSeconds: number
+}): Promise<CloudSyncDispatchOutboxItem[]> {
+  const result = await getPool().query(
+    `WITH due AS (
+       SELECT id
+       FROM integrations.sync_dispatch_outbox
+       WHERE status IN ('pending', 'publishing')
+         AND attempts < 10
+         AND next_attempt_at <= now()
+         AND (locked_until IS NULL OR locked_until <= now())
+       ORDER BY next_attempt_at ASC, id ASC
+       LIMIT $1
+       FOR UPDATE SKIP LOCKED
+     )
+     UPDATE integrations.sync_dispatch_outbox outbox
+     SET
+       status = 'publishing',
+       lock_token = $2,
+       locked_until = now() + ($3::int || ' seconds')::interval,
+       attempts = attempts + 1,
+       updated_at = now()
+     FROM due
+     WHERE outbox.id = due.id
+     RETURNING
+       outbox.id::text,
+       outbox.tenant_id,
+       outbox.connection_id::text,
+       outbox.pipeline_id::text,
+       outbox.destination_id::text,
+       outbox.run_id::text,
+       outbox.trigger,
+       outbox.payload`,
+    [input.limit, input.lockToken, input.lockTtlSeconds],
+  )
+  return result.rows.map((row: Record<string, unknown>) => ({
+    id: String(row.id),
+    tenantId: Number(row.tenant_id),
+    connectionId: String(row.connection_id),
+    pipelineId: row.pipeline_id == null ? null : String(row.pipeline_id),
+    destinationId: row.destination_id == null ? null : String(row.destination_id),
+    runId: String(row.run_id),
+    trigger: String(row.trigger),
+    payload: asRecord(row.payload),
+  }))
+}
+
+export async function markSyncDispatchPublished(input: {
+  id: string
+  lockToken: string
+  messageId: string
+}) {
+  await getPool().query(
+    `UPDATE integrations.sync_dispatch_outbox
+     SET status = 'published',
+         message_id = $3,
+         published_at = now(),
+         lock_token = NULL,
+         locked_until = NULL,
+         last_error = NULL,
+         updated_at = now()
+     WHERE id = $1 AND lock_token = $2`,
+    [input.id, input.lockToken, input.messageId],
+  )
+}
+
+export async function markSyncDispatchFailed(input: {
+  id: string
+  lockToken: string
+  errorMessage: string
+}) {
+  await getPool().query(
+    `UPDATE integrations.sync_dispatch_outbox
+     SET status = CASE WHEN attempts >= 10 THEN 'failed' ELSE 'pending' END,
+         next_attempt_at = now() + (LEAST(3600, GREATEST(30, POWER(2, attempts)::int * 30)) || ' seconds')::interval,
+         lock_token = NULL,
+         locked_until = NULL,
+         last_error = $3,
+         updated_at = now()
+     WHERE id = $1 AND lock_token = $2`,
+    [input.id, input.lockToken, input.errorMessage.slice(0, 1000)],
+  )
 }
 
 export async function failQueuedCloudSyncRun(input: {

@@ -74,7 +74,20 @@ async function ensureNormalizedTable(projectId: string, dataset: string, table: 
     tableApiPath(projectId, dataset, normalizedTable),
     { method: 'GET', allowNotFound: true },
   )
-  if (existing.ok) return
+  if (existing.ok) {
+    await authorizedJsonRequest<unknown>(
+      tableApiPath(projectId, dataset, normalizedTable),
+      {
+        method: 'PATCH',
+        body: JSON.stringify({
+          schema: {
+            fields: getNormalizedTableSchema(table),
+          },
+        }),
+      },
+    )
+    return
+  }
 
   await authorizedJsonRequest<unknown>(
     `https://bigquery.googleapis.com/bigquery/v2/projects/${projectId}/datasets/${dataset}/tables`,
@@ -132,8 +145,21 @@ function groupByTable(rows: NormalizedRow[]) {
 }
 
 function serializeJsonFields(row: Record<string, unknown>) {
+  const payload = row.source_payload && typeof row.source_payload === 'object' && !Array.isArray(row.source_payload)
+    ? row.source_payload as Record<string, unknown>
+    : {}
+  const deletedRaw = row.is_deleted ?? payload.is_deleted ?? payload.deleted ?? payload.excluido ?? payload.removido
+  const isDeleted = deletedRaw === true || deletedRaw === 1 || ['true', '1', 'deleted', 'excluido', 'removido'].includes(String(deletedRaw || '').toLowerCase())
+  const sourceUpdatedAt = row.source_updated_at
+    ?? payload.updated_at
+    ?? payload.updatedAt
+    ?? payload.alterado_em
+    ?? payload.data_alteracao
+    ?? null
   return {
     ...row,
+    source_updated_at: sourceUpdatedAt,
+    is_deleted: isDeleted,
     source_payload: JSON.stringify(row.source_payload ?? null),
   }
 }

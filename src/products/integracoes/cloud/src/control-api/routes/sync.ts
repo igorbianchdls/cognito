@@ -2,7 +2,7 @@ import type {
   ControlApiRequest,
   ControlApiResponse,
 } from '@/products/integracoes/cloud/src/control-api/server'
-import { publishSyncMessage } from '@/products/integracoes/cloud/src/lib/pubsub'
+import { handleDispatchOutbox } from '@/products/integracoes/cloud/src/control-api/routes/dispatchOutbox'
 import type { IntegrationSyncTrigger } from '@/products/integracoes/shared/contracts/syncContracts'
 
 const syncTriggers: IntegrationSyncTrigger[] = ['manual', 'scheduled', 'webhook', 'initial']
@@ -54,26 +54,22 @@ export async function handleSyncDispatch(request: ControlApiRequest): Promise<Co
       }
     }
 
-    const publish = await publishSyncMessage({
-      tenantId: body.tenantId,
-      connectionId: body.connectionId,
-      pipelineId: body.pipelineId,
-      destinationId: body.destinationId,
-      runId: body.runId,
-      trigger: body.trigger || 'manual',
-      resources: body.resources,
-      requestedBy: body.requestedBy,
+    const dispatch = await handleDispatchOutbox({
+      ...request,
+      body: {
+        limit: 25,
+        requestedBy: body.requestedBy,
+      },
     })
 
     return {
-      status: 202,
+      status: dispatch.status,
       body: {
         ok: true,
-        mode: publish.mode,
-        message: 'Sync publicado no Pub/Sub.',
-        messageId: publish.messageId,
+        mode: 'sync_dispatch_outbox',
+        message: 'Sync registrado na outbox e dispatcher acionado.',
         runId: body.runId,
-        topic: publish.topic,
+        dispatch: dispatch.body,
       },
     }
   } catch (error) {

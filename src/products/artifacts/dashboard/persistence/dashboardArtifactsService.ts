@@ -57,13 +57,13 @@ type DashboardSourceRow = {
 
 type ReadArtifactInput = {
   artifactId: string
-  tenantId?: number | null
+  tenantId: number
   kind?: ArtifactSourceKind
   version?: number | null
 }
 
 type WriteArtifactInput = {
-  tenantId?: number | null
+  tenantId: number
   artifactId?: string | null
   expectedVersion?: number | null
   title?: string | null
@@ -78,7 +78,7 @@ type WriteArtifactInput = {
 
 type PatchArtifactInput = {
   artifactId: string
-  tenantId?: number | null
+  tenantId: number
   expectedVersion: number
   operation: {
     type: 'replace_text' | 'replace_full_source'
@@ -93,7 +93,7 @@ type PatchArtifactInput = {
 
 type UpdateDashboardThumbnailInput = {
   artifactId: string
-  tenantId?: number | null
+  tenantId: number
   thumbnailDataUrl?: string | null
   actorId?: string | null
 }
@@ -155,7 +155,7 @@ async function getDashboardById(
   client: Pick<SQLClient, 'query'>,
   artifactId: string,
   forUpdate = false,
-  tenantId?: number | null,
+  tenantId: number,
 ) {
   const rows = await client.query(
     `SELECT
@@ -177,9 +177,9 @@ async function getDashboardById(
      FROM artifacts.artifacts
      WHERE id = $1::uuid
        AND artifact_type = 'dashboard'
-       ${tenantId ? 'AND tenant_id = $2::bigint' : ''}
+       AND tenant_id = $2::bigint
      ${forUpdate ? 'FOR UPDATE' : ''}`,
-    tenantId ? [artifactId, tenantId] : [artifactId],
+    [artifactId, tenantId],
   )
   const row = (rows.rows?.[0] || null) as DashboardRow | null
   if (!row) {
@@ -299,7 +299,7 @@ function mapDbError(error: unknown): never {
   throw new ArtifactToolError(500, 'artifact_persistence_error', err?.message || 'erro interno ao persistir artifact')
 }
 
-export async function listDashboards(limit = 100, tenantId?: number | null): Promise<DashboardListItem[]> {
+export async function listDashboards(limit = 100, tenantId: number): Promise<DashboardListItem[]> {
   const safeLimit = Number.isInteger(limit) && limit > 0 ? Math.min(limit, 200) : 100
   try {
     return await runQuery<DashboardListItem>(
@@ -318,10 +318,10 @@ export async function listDashboards(limit = 100, tenantId?: number | null): Pro
          updated_at
        FROM artifacts.artifacts
        WHERE artifact_type = 'dashboard'
-         ${tenantId ? 'AND (tenant_id = $2::bigint OR tenant_id IS NULL)' : ''}
+         AND tenant_id = $2::bigint
        ORDER BY updated_at DESC, created_at DESC
        LIMIT $1::int`,
-      tenantId ? [safeLimit, tenantId] : [safeLimit],
+      [safeLimit, tenantId],
     )
   } catch (error) {
     return mapDbError(error)
@@ -331,7 +331,7 @@ export async function listDashboards(limit = 100, tenantId?: number | null): Pro
 export async function renameDashboardArtifact(input: {
   artifactId: string
   title: string
-  tenantId?: number | null
+  tenantId: number
   actorId?: string | null
 }) {
   const artifactId = toText(input.artifactId)
@@ -354,7 +354,7 @@ export async function renameDashboardArtifact(input: {
          updated_at = now()
        WHERE id = $1::uuid
          AND artifact_type = 'dashboard'
-         ${input.tenantId ? 'AND tenant_id = $4::bigint' : ''}
+         AND tenant_id = $4::bigint
        RETURNING
          id::text,
          tenant_id,
@@ -368,7 +368,7 @@ export async function renameDashboardArtifact(input: {
          thumbnail_data_url,
          created_at,
          updated_at`,
-      input.tenantId ? [artifactId, title, actorId, input.tenantId] : [artifactId, title, actorId],
+      [artifactId, title, actorId, input.tenantId],
     )
     const row = rows[0] || null
     if (!row) {
@@ -383,73 +383,9 @@ export async function renameDashboardArtifact(input: {
   }
 }
 
-export async function assignDashboardTenant(input: {
-  artifactId: string
-  tenantId: number
-  actorId?: string | null
-}) {
-  const artifactId = toText(input.artifactId)
-  const tenantId = normalizeTenantId(input.tenantId)
-  const actorId = toNullableText(input.actorId)
-  if (!artifactId) {
-    throw new ArtifactToolError(400, 'invalid_input', 'artifact_id é obrigatório')
-  }
-  if (!tenantId) {
-    throw new ArtifactToolError(400, 'artifact_tenant_required', 'tenant_id é obrigatório')
-  }
-
-  try {
-    const rows = await runQuery<DashboardListItem>(
-      `UPDATE artifacts.artifacts
-       SET
-         tenant_id = $2::bigint,
-         updated_by = COALESCE($3::uuid, updated_by),
-         updated_at = now()
-       WHERE id = $1::uuid
-         AND artifact_type = 'dashboard'
-         AND tenant_id IS NULL
-       RETURNING
-         id::text,
-         tenant_id,
-         title,
-         slug,
-         status,
-         workspace_id::text AS workspace_id,
-         created_from_chat_id,
-         current_draft_version,
-         current_published_version,
-         thumbnail_data_url,
-         created_at,
-         updated_at`,
-      [artifactId, tenantId, actorId],
-    )
-    const row = rows[0]
-    if (!row) {
-      const current = await runQuery<{ tenant_id: number | null }>(
-        `SELECT tenant_id
-         FROM artifacts.artifacts
-         WHERE id = $1::uuid
-           AND artifact_type = 'dashboard'
-         LIMIT 1`,
-        [artifactId],
-      )
-      if (!current[0]) {
-        throw new ArtifactToolError(404, 'artifact_not_found', 'artifact não encontrado', { artifact_id: artifactId })
-      }
-      if (current[0].tenant_id === tenantId) {
-        return { success: true, dashboard: await readDashboardArtifact({ artifactId, tenantId }) }
-      }
-      throw new ArtifactToolError(409, 'artifact_tenant_conflict', 'Dashboard já pertence a outro tenant')
-    }
-    return { success: true, dashboard: row }
-  } catch (error) {
-    return mapDbError(error)
-  }
-}
-
 export async function deleteDashboardArtifact(input: {
   artifactId: string
-  tenantId?: number | null
+  tenantId: number
 }) {
   const artifactId = toText(input.artifactId)
   if (!artifactId) {
@@ -462,9 +398,9 @@ export async function deleteDashboardArtifact(input: {
         `DELETE FROM artifacts.artifacts
          WHERE id = $1::uuid
            AND artifact_type = 'dashboard'
-           ${input.tenantId ? 'AND tenant_id = $2::bigint' : ''}
+           AND tenant_id = $2::bigint
          RETURNING id::text AS id, title`,
-        input.tenantId ? [artifactId, input.tenantId] : [artifactId],
+        [artifactId, input.tenantId],
       )
       const row = rows.rows?.[0] as { id: string; title: string } | undefined
       if (!row) {
@@ -486,7 +422,7 @@ export async function listDashboardSourceVersions(
   artifactId: string,
   kind: ArtifactSourceKind = 'draft',
   limit = 100,
-  tenantId?: number | null,
+  tenantId: number,
 ): Promise<DashboardSourceVersionListItem[]> {
   const normalizedArtifactId = toText(artifactId)
   if (!normalizedArtifactId) {
@@ -505,15 +441,15 @@ export async function listDashboardSourceVersions(
        FROM artifacts.artifact_sources
        WHERE artifact_id = $1::uuid
          AND kind = $2::text
-         ${tenantId ? `AND EXISTS (
+         AND EXISTS (
            SELECT 1
            FROM artifacts.artifacts artifact
            WHERE artifact.id = artifact_id
-             AND (artifact.tenant_id = $4::bigint OR artifact.tenant_id IS NULL)
-         )` : ''}
+             AND artifact.tenant_id = $4::bigint
+         )
        ORDER BY version DESC
        LIMIT $3::int`,
-      tenantId ? [normalizedArtifactId, kind, safeLimit, tenantId] : [normalizedArtifactId, kind, safeLimit],
+      [normalizedArtifactId, kind, safeLimit, tenantId],
     )
   } catch (error) {
     return mapDbError(error)
@@ -546,8 +482,8 @@ export async function readDashboardArtifact(input: ReadArtifactInput) {
        FROM artifacts.artifacts
        WHERE id = $1::uuid
          AND artifact_type = 'dashboard'
-         ${input.tenantId ? 'AND (tenant_id = $2::bigint OR tenant_id IS NULL)' : ''}`,
-      input.tenantId ? [artifactId, input.tenantId] : [artifactId],
+         AND tenant_id = $2::bigint`,
+      [artifactId, input.tenantId],
     ))[0]
     if (!dashboard) {
       throw new ArtifactToolError(404, 'artifact_not_found', 'artifact não encontrado', { artifact_id: artifactId })
@@ -595,12 +531,12 @@ export async function writeDashboardArtifact(input: WriteArtifactInput) {
   const chatId = toNullableText(input.chatId)
   const actorId = toNullableText(input.actorId)
   const tenantId = normalizeTenantId(input.tenantId)
+  if (tenantId == null) {
+    throw new ArtifactToolError(400, 'artifact_tenant_required', 'tenant_id é obrigatório para dashboard')
+  }
 
   if (!artifactId && !title) {
     throw new ArtifactToolError(400, 'invalid_input', 'title é obrigatório para criar artifact novo')
-  }
-  if (!artifactId && tenantId == null) {
-    throw new ArtifactToolError(400, 'artifact_tenant_required', 'tenant_id é obrigatório para criar dashboard')
   }
   if (artifactId && expectedVersion == null) {
     throw new ArtifactToolError(400, 'invalid_input', 'expected_version é obrigatório ao sobrescrever artifact existente')
@@ -860,11 +796,11 @@ export async function updateDashboardThumbnail(input: UpdateDashboardThumbnailIn
          updated_at = now()
        WHERE id = $1::uuid
          AND artifact_type = 'dashboard'
-         ${input.tenantId ? 'AND tenant_id = $4::bigint' : ''}
+         AND tenant_id = $4::bigint
        RETURNING
          id::text,
          thumbnail_data_url`,
-      input.tenantId ? [artifactId, thumbnailDataUrl, actorId, input.tenantId] : [artifactId, thumbnailDataUrl, actorId],
+      [artifactId, thumbnailDataUrl, actorId, input.tenantId],
     )
 
     const row = rows[0] || null

@@ -82,6 +82,7 @@ export async function ensureDefaultTenantBigQueryDestination(
   const run = async (client: Pick<SQLClient, 'query'>) => {
     const tenantId = Number(input.tenantId)
     const desiredConfig = buildTenantBigQueryDestinationConfig(tenantId, {}, getDefaultBigQueryProjectId())
+    await client.query('SELECT pg_advisory_xact_lock($1)', [tenantId])
     const existing = await client.query(
       `SELECT *
        FROM integrations.destinations

@@ -47,12 +47,17 @@ const queryService = await source('src/products/artifacts/dashboard/query/dashbo
 assert(queryService.includes('defaultDataset'), 'dashboard query must resolve a tenant dataset server-side')
 assert(queryService.includes('dryRun: true'), 'dashboard query must perform a BigQuery dry run')
 assert(queryService.includes('maximumBytesBilled'), 'dashboard query must enforce a processing limit')
-assert(queryService.includes('artifact_tenant_required'), 'legacy dashboards must not query tenant data')
+assert(queryService.includes('referencedTables'), 'dashboard query must validate BigQuery resolved table references')
+assert(queryService.includes('dashboard_query_audit'), 'dashboard query must write audit records')
+assert(!queryService.includes('Dashboard legado'), 'legacy dashboard query flow must be removed')
 
 const integrationFinalizer = await source('src/products/integracoes/server/finalizeConnectedIntegration.ts')
 assert(integrationFinalizer.includes('provisionTenantBigQuery'), 'post-auth flow must provision BigQuery')
 assert(integrationFinalizer.includes("trigger: 'initial'"), 'post-auth flow must enqueue initial sync')
-assert(integrationFinalizer.includes('publishSyncMessage'), 'post-auth flow must publish initial sync')
+assert(!integrationFinalizer.includes('publishSyncMessage'), 'post-auth flow must use sync dispatch outbox')
+
+const dispatchOutbox = await source('src/products/integracoes/cloud/src/control-api/routes/dispatchOutbox.ts')
+assert(dispatchOutbox.includes('claimSyncDispatchOutbox'), 'integrations cloud must expose sync outbox dispatcher')
 
 const semanticViews = await source('src/products/integracoes/datawarehouse/analytics/semanticViews.ts')
 assert(semanticViews.includes('ROW_NUMBER() OVER'), 'analytics current views must deduplicate normalized rows')

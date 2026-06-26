@@ -5,6 +5,7 @@ import { useData } from "@/products/bi/json-render/context";
 import { useThemeOverrides } from "@/products/bi/json-render/theme/ThemeContext";
 import { applyPrimaryDateRange } from "@/products/bi/json-render/dateFilters";
 import { requestDashboardQueryRows } from "@/products/artifacts/dashboard/query/dashboardQueryClient";
+import { useDashboardArtifactId } from "@/products/artifacts/dashboard/query/DashboardQueryContext";
 
 type AnyRecord = Record<string, any>;
 
@@ -30,6 +31,7 @@ function formatValue(val: number, fmt: "currency" | "percent" | "number"): strin
 }
 
 export default function JsonRenderSparkline({ element }: { element: any }) {
+  const artifactId = useDashboardArtifactId();
   const { data } = useData();
   const theme = useThemeOverrides();
   const p = (element?.props || {}) as AnyRecord;
@@ -58,7 +60,7 @@ export default function JsonRenderSparkline({ element }: { element: any }) {
           }
         }
 
-        const rows = await requestDashboardQueryRows(dq, filters);
+        const rows = await requestDashboardQueryRows(artifactId, dq, filters);
         if (!cancelled) {
           setServerRows(rows as any);
           setQueryError(null);

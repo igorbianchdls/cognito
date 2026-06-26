@@ -2,7 +2,6 @@ import { NextRequest } from 'next/server'
 
 import {
   ArtifactToolError,
-  assignDashboardTenant,
   deleteDashboardArtifact,
   listDashboardSourceVersions,
   readDashboardArtifact,
@@ -80,15 +79,6 @@ export async function PATCH(
         artifactId: id,
         tenantId: tenant.tenantId,
         title: payload.title == null ? '' : String(payload.title),
-        actorId: null,
-      })
-      return Response.json({ ok: true, ...result })
-    }
-
-    if (action === 'assign-tenant') {
-      const result = await assignDashboardTenant({
-        artifactId: id,
-        tenantId: tenant.tenantId,
         actorId: null,
       })
       return Response.json({ ok: true, ...result })

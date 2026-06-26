@@ -12,29 +12,75 @@ type QueryResponse = {
   metadata?: { bytesProcessed?: number; durationMs?: number }
 }
 
-const cache = new Map<string, Promise<QueryResponse>>()
+type CacheEntry = {
+  expiresAt: number
+  request: Promise<QueryResponse>
+}
 
-export async function requestDashboardQueryRows(
-  dataQuery: JsonRecord,
-  filters: JsonRecord = {},
-): Promise<JsonRecord[]> {
-  const match = typeof window !== 'undefined'
-    ? window.location.pathname.match(/\/artifacts\/dashboards\/([^/]+)/)
-    : null
-  const artifactId = match?.[1]
-  if (!artifactId) throw new Error('Artifact sem contexto para executar query.')
-  const response = await fetch(`/api/artifacts/dashboards/${artifactId}/query`, {
+const CACHE_TTL_MS = 60_000
+const CACHE_MAX_ENTRIES = 200
+const cache = new Map<string, CacheEntry>()
+
+function pruneCache() {
+  const now = Date.now()
+  for (const [key, entry] of cache) {
+    if (entry.expiresAt <= now) cache.delete(key)
+  }
+  while (cache.size > CACHE_MAX_ENTRIES) {
+    const oldest = cache.keys().next().value
+    if (!oldest) break
+    cache.delete(oldest)
+  }
+}
+
+function fetchDashboardQuery(input: {
+  artifactId: string
+  query: string
+  filters: JsonRecord
+  limit: number
+}) {
+  pruneCache()
+  const signature = JSON.stringify(input)
+  const cached = cache.get(signature)
+  if (cached && cached.expiresAt > Date.now()) {
+    cache.delete(signature)
+    cache.set(signature, cached)
+    return { signature, request: cached.request }
+  }
+  const request = fetch(`/api/artifacts/dashboards/${input.artifactId}/query`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
-      query: String(dataQuery.query || ''),
-      filters,
-      limit: Number(dataQuery.limit || 1000),
+      query: input.query,
+      filters: input.filters,
+      limit: input.limit,
     }),
+  }).then(async (response) => {
+    const payload = await response.json().catch(() => ({})) as QueryResponse & { error?: string }
+    if (!response.ok) throw new Error(payload.error || 'Falha ao executar query do dashboard')
+    return payload
+  }).catch((error) => {
+    cache.delete(signature)
+    throw error
   })
-  const payload = await response.json().catch(() => ({})) as QueryResponse & { error?: string }
-  if (!response.ok) throw new Error(payload.error || 'Falha ao executar query do dashboard')
-  return payload.rows || []
+  cache.set(signature, { expiresAt: Date.now() + CACHE_TTL_MS, request })
+  pruneCache()
+  return { signature, request }
+}
+
+export async function requestDashboardQueryRows(
+  artifactId: string | null,
+  dataQuery: JsonRecord,
+  filters: JsonRecord = {},
+): Promise<JsonRecord[]> {
+  if (!artifactId) throw new Error('Artifact sem contexto para executar query.')
+  const { request } = fetchDashboardQuery({
+    artifactId,
+    query: String(dataQuery.query || ''),
+    filters,
+    limit: Number(dataQuery.limit || 1000),
+  })
+  return (await request).rows || []
 }
 
 export function useDashboardQueryRows(
@@ -61,23 +107,18 @@ export function useDashboardQueryRows(
       return
     }
     let cancelled = false
-    const request = cache.get(signature) || fetch(`/api/artifacts/dashboards/${artifactId}/query`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ query, filters: filters || {}, limit }),
-    }).then(async (response) => {
-      const payload = await response.json().catch(() => ({})) as QueryResponse & { error?: string }
-      if (!response.ok) throw new Error(payload.error || 'Falha ao executar query do dashboard')
-      return payload
-    })
-    cache.set(signature, request)
+    const request = fetchDashboardQuery({
+      artifactId,
+      query,
+      filters: filters || {},
+      limit,
+    }).request
     setState((current) => ({ ...current, loading: true, error: null }))
     request
       .then((result) => {
         if (!cancelled) setState({ rows: result.rows || [], loading: false, error: null })
       })
       .catch((error) => {
-        cache.delete(signature)
         if (!cancelled) setState({ rows: [], loading: false, error: error instanceof Error ? error.message : 'Falha na query' })
       })
     return () => {

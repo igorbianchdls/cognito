@@ -41,7 +41,6 @@ export default async function ArtifactDashboardByIdPage({
         artifactId={id}
         title={artifact.title}
         source={artifact.source}
-        tenantAssigned={artifact.tenant_id != null}
         embedMode={embedMode}
       />
     )

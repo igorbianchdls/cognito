@@ -1,5 +1,6 @@
 import { handleProviderCallback } from '@/products/integracoes/cloud/src/control-api/routes/callbacks'
 import { handleConnectionSetup } from '@/products/integracoes/cloud/src/control-api/routes/connections'
+import { handleDispatchOutbox } from '@/products/integracoes/cloud/src/control-api/routes/dispatchOutbox'
 import { handleHealthCheck } from '@/products/integracoes/cloud/src/control-api/routes/health'
 import { handleProviderOAuthReadiness } from '@/products/integracoes/cloud/src/control-api/routes/providerReadiness'
 import { handleScheduledSync } from '@/products/integracoes/cloud/src/control-api/routes/scheduledSync'
@@ -34,6 +35,7 @@ export function createControlApiServer(): ControlApiServer {
           || request.path === '/providers/oauth-readiness'
           || request.path === '/sync'
           || request.path === '/scheduled-sync'
+          || request.path === '/dispatch-outbox'
         )
         && !(await isInternalRequestAuthorized(request.headers, {
           allowGoogleOidc: request.path === '/scheduled-sync',
@@ -53,6 +55,7 @@ export function createControlApiServer(): ControlApiServer {
       if (request.path === '/callbacks/provider') return handleProviderCallback(request)
       if (request.path === '/sync') return handleSyncDispatch(request)
       if (request.path === '/scheduled-sync') return handleScheduledSync(request)
+      if (request.path === '/dispatch-outbox') return handleDispatchOutbox(request)
 
       return {
         status: 404,

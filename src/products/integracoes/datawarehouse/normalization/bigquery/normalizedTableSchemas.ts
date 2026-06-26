@@ -2,7 +2,7 @@ import type { NormalizedTableName } from '@/products/integracoes/datawarehouse/n
 
 export type BigQueryFieldSchema = {
   name: string
-  type: 'STRING' | 'INTEGER' | 'NUMERIC' | 'DATE' | 'TIMESTAMP' | 'JSON'
+  type: 'STRING' | 'INTEGER' | 'NUMERIC' | 'DATE' | 'TIMESTAMP' | 'JSON' | 'BOOLEAN'
   mode?: 'REQUIRED' | 'NULLABLE'
 }
 
@@ -14,6 +14,8 @@ const COMMON_FIELDS: BigQueryFieldSchema[] = [
   { name: 'external_id', type: 'STRING' },
   { name: 'source_run_id', type: 'STRING' },
   { name: 'source_table', type: 'STRING' },
+  { name: 'source_updated_at', type: 'TIMESTAMP' },
+  { name: 'is_deleted', type: 'BOOLEAN' },
   { name: 'synced_at', type: 'TIMESTAMP', mode: 'REQUIRED' },
   { name: 'normalized_at', type: 'TIMESTAMP', mode: 'REQUIRED' },
 ]

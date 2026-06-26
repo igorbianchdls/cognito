@@ -5,6 +5,7 @@ import { useData } from "@/products/bi/json-render/context";
 import { useThemeOverrides } from "@/products/bi/json-render/theme/ThemeContext";
 import { applyPrimaryDateRange } from "@/products/bi/json-render/dateFilters";
 import { requestDashboardQueryRows } from "@/products/artifacts/dashboard/query/dashboardQueryClient";
+import { useDashboardArtifactId } from "@/products/artifacts/dashboard/query/DashboardQueryContext";
 import { resolveInteractionFilterField, resolveInteractionFilterStorePath } from "@/products/bi/json-render/interactionFilters";
 import {
   Bar,
@@ -166,6 +167,7 @@ function normalizeSeries(rawSeries: unknown): ComposedSeriesDef[] {
 }
 
 export default function JsonRenderComposedChart({ element }: { element: any }) {
+  const artifactId = useDashboardArtifactId();
   const { data, setData } = useData();
   const theme = useThemeOverrides();
   const props = (element?.props || {}) as AnyRecord;
@@ -204,7 +206,7 @@ export default function JsonRenderComposedChart({ element }: { element: any }) {
             if ((filters as AnyRecord)[k] === undefined) (filters as AnyRecord)[k] = v as any;
           }
         }
-        const rows = await requestDashboardQueryRows(dq, filters);
+        const rows = await requestDashboardQueryRows(artifactId, dq, filters);
         if (!cancelled) {
           setServerRows(rows);
           setQueryError(null);

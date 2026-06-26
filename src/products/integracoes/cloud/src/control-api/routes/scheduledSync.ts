@@ -4,7 +4,7 @@ import type {
   ControlApiRequest,
   ControlApiResponse,
 } from '@/products/integracoes/cloud/src/control-api/server'
-import { publishSyncMessage } from '@/products/integracoes/cloud/src/lib/pubsub'
+import { handleDispatchOutbox } from '@/products/integracoes/cloud/src/control-api/routes/dispatchOutbox'
 import {
   claimDueScheduledConnections,
   claimDueScheduledPipelines,
@@ -124,23 +124,12 @@ export async function handleScheduledSync(request: ControlApiRequest): Promise<C
         })
         runId = run.id
 
-        const publish = await publishSyncMessage({
-          tenantId: pipeline.tenantId,
-          connectionId: pipeline.sourceConnectionId,
-          pipelineId: pipeline.id,
-          destinationId: pipeline.destinationId,
-          runId,
-          trigger: 'scheduled',
-          resources: pipeline.selectedResources,
-          requestedBy,
-        })
-
         await completeScheduledPipelineDispatch({
           tenantId: pipeline.tenantId,
           pipelineId: pipeline.id,
           lockToken,
           nextSyncAt,
-          messageId: publish.messageId,
+          messageId: 'queued-in-outbox',
           runId,
         })
 
@@ -152,7 +141,7 @@ export async function handleScheduledSync(request: ControlApiRequest): Promise<C
           tenantId: pipeline.tenantId,
           ok: true,
           runId,
-          messageId: publish.messageId,
+          dispatchQueued: true,
           nextSyncAt: nextSyncAt.toISOString(),
         })
       } catch (error) {
@@ -227,26 +216,17 @@ export async function handleScheduledSync(request: ControlApiRequest): Promise<C
         })
         runId = run.id
 
-        const publish = await publishSyncMessage({
-          tenantId: connection.tenantId,
-          connectionId: connection.id,
-          runId,
-          trigger: 'scheduled',
-          resources: connection.selectedResources,
-          requestedBy,
-        })
-
         await completeScheduledConnectionDispatch({
           tenantId: connection.tenantId,
           connectionId: connection.id,
           lockToken,
           nextSyncAt,
-          messageId: publish.messageId,
+          messageId: 'queued-in-outbox',
           runId,
         })
 
         published += 1
-        items.push({ connectionId: connection.id, tenantId: connection.tenantId, ok: true, runId, messageId: publish.messageId, nextSyncAt: nextSyncAt.toISOString(), legacyConnectionSchedule: true })
+        items.push({ connectionId: connection.id, tenantId: connection.tenantId, ok: true, runId, dispatchQueued: true, nextSyncAt: nextSyncAt.toISOString(), legacyConnectionSchedule: true })
       } catch (error) {
         failed += 1
         const errorMessage = error instanceof Error ? error.message : 'Falha ao publicar sync agendado.'
@@ -258,6 +238,11 @@ export async function handleScheduledSync(request: ControlApiRequest): Promise<C
       }
     }
 
+    const dispatch = await handleDispatchOutbox({
+      ...request,
+      body: { limit: body.limit || 25, requestedBy },
+    })
+
     return {
       status: 202,
       body: {
@@ -268,6 +253,7 @@ export async function handleScheduledSync(request: ControlApiRequest): Promise<C
         claimedLegacyConnections: dueConnections.length,
         published,
         failed,
+        dispatch: dispatch.body,
         items,
       },
     }

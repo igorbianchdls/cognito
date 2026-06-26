@@ -139,7 +139,11 @@ export async function runSyncJob(input: RunSyncJobInput): Promise<RunSyncJobOutp
     requestedBy: input.requestedBy,
   })
   if (run.status !== 'running' && run.status !== 'queued') {
-    const terminalStatus = run.status === 'success' || run.status === 'warning' ? run.status : 'error'
+    const terminalStatus = run.status === 'already_running'
+      ? 'warning'
+      : run.status === 'success' || run.status === 'warning'
+        ? run.status
+        : 'error'
     return {
       ok: terminalStatus === 'success' || terminalStatus === 'warning',
       mode: 'gcp_worker',
@@ -153,7 +157,9 @@ export async function runSyncJob(input: RunSyncJobInput): Promise<RunSyncJobOutp
       recordsUpdated: 0,
       recordsFailed: 0,
       status: terminalStatus,
-      message: 'Run ja estava finalizada; retry do Pub/Sub ignorado.',
+      message: run.status === 'already_running'
+        ? 'Run ja esta em processamento; retry do Pub/Sub ignorado.'
+        : 'Run ja estava finalizada; retry do Pub/Sub ignorado.',
     }
   }
 
