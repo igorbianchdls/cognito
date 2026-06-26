@@ -32,8 +32,8 @@ type ContaAzulFinancialResource = 'contas-a-pagar' | 'contas-a-receber'
 type ContaAzulPersonResource = 'clientes' | 'fornecedores'
 
 const SUPPORTED_ACTIONS: Partial<Record<ConnectedErpResource, ConnectedErpProviderAction[]>> = {
-  clientes: ['criar', 'atualizar'],
-  fornecedores: ['criar', 'atualizar'],
+  clientes: ['criar', 'atualizar', 'deletar'],
+  fornecedores: ['criar', 'atualizar', 'deletar'],
   'contas-a-pagar': ['criar', 'atualizar', 'baixar'],
   'contas-a-receber': ['criar', 'atualizar', 'baixar'],
   'pedidos-venda': ['criar', 'atualizar', 'cancelar'],
@@ -121,6 +121,7 @@ function envPath(resource: ContaAzulActionResource, action: ConnectedErpProvider
     return '/v1/venda'
   }
   if (resource === 'clientes' || resource === 'fornecedores') {
+    if (action === 'deletar') return '/v1/pessoas/excluir'
     if (action === 'atualizar') return '/v1/pessoas/{id}'
     return '/v1/pessoas'
   }
@@ -146,6 +147,7 @@ function pathFor(resource: ContaAzulActionResource, action: ConnectedErpProvider
 }
 
 function methodFor(resource: ContaAzulActionResource, action: ConnectedErpProviderAction) {
+  if ((resource === 'clientes' || resource === 'fornecedores') && action === 'deletar') return 'POST' as const
   if (action === 'deletar') return 'DELETE' as const
   if (resource === 'pedidos-venda' && action === 'atualizar') return 'PUT' as const
   if (action === 'atualizar') return 'PATCH' as const
@@ -788,7 +790,10 @@ async function executeContaAzulAction(
   const client = createContaAzulClient(credentials)
   let payload: JsonRecord = {}
 
-  if (input.action === 'deletar') {
+  if ((resource === 'clientes' || resource === 'fornecedores') && input.action === 'deletar') {
+    if (!input.id) throw new Error(`id e obrigatorio para ${resource}/deletar.`)
+    payload = { uuids: [input.id] }
+  } else if (input.action === 'deletar') {
     payload = {}
   } else if (resource === 'pedidos-venda') {
     if (input.action === 'cancelar') {
@@ -828,7 +833,7 @@ async function executeContaAzulAction(
     resource,
     path: pathFor(resource, input.action, input.id),
     method: methodFor(resource, input.action),
-    body: input.action === 'deletar' ? undefined : payload,
+    body: input.action === 'deletar' && !(resource === 'clientes' || resource === 'fornecedores') ? undefined : payload,
   })
 
   return {

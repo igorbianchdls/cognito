@@ -4477,8 +4477,8 @@ async function callConnectedCrm(args: unknown, context: CognitoMcpServerContext)
 }
 
 const CONNECTED_ERP_ACTIONS_BY_RESOURCE: Record<string, readonly ConnectedErpAction[]> = {
-  clientes: ['criar', 'atualizar'],
-  fornecedores: ['criar', 'atualizar'],
+  clientes: ['criar', 'atualizar', 'deletar'],
+  fornecedores: ['criar', 'atualizar', 'deletar'],
   'contas-a-receber': ['criar', 'atualizar', 'baixar'],
   'contas-a-pagar': ['criar', 'atualizar', 'baixar'],
   'pedidos-venda': ['criar', 'atualizar', 'cancelar'],
