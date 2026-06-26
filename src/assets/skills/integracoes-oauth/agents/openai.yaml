@@ -1,0 +1,7 @@
+interface:
+  display_name: "Integrações OAuth"
+  short_description: "OAuth, tokens e Supabase."
+  default_prompt: "Use $integracoes-oauth para diagnosticar OAuth de integrações, refresh tokens, Supabase e erros reais de autenticação."
+
+policy:
+  allow_implicit_invocation: true
