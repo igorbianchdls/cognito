@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react'
-import { ArrowRight, BadgeCheck, LockKeyhole, Sparkles } from 'lucide-react'
+import { BadgeCheck, Building2, LockKeyhole, Sparkles } from 'lucide-react'
 
 import { Card, CardContent } from '@/components/ui/card'
 
@@ -10,7 +10,7 @@ type ClerkAuthShellProps = {
 
 export const clerkAuthAppearance = {
   variables: {
-    borderRadius: '0.5rem',
+    borderRadius: '0.75rem',
     colorBackground: '#ffffff',
     colorDanger: '#dc2626',
     colorInputBackground: '#ffffff',
@@ -22,18 +22,23 @@ export const clerkAuthAppearance = {
     fontSize: '14px',
   },
   elements: {
-    alert: 'rounded-md border border-red-200 bg-red-50 text-red-700',
+    alert: 'rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-red-700',
+    badge: 'rounded-full border border-slate-200 bg-slate-50 px-2 py-0.5 text-[11px] font-medium text-slate-500',
     card: 'w-full border-0 bg-transparent p-0 shadow-none',
-    cardBox: 'w-full border-0 bg-transparent shadow-none',
+    cardBox: 'w-full border-0 bg-transparent p-0 shadow-none',
     dividerLine: 'bg-slate-200',
-    dividerText: 'text-slate-500 text-xs font-medium',
-    footer: 'bg-transparent p-0',
-    footerActionLink: 'font-semibold text-slate-950 hover:text-slate-700',
+    dividerText: 'px-3 text-xs font-medium uppercase tracking-[0.16em] text-slate-400',
+    footer: 'bg-transparent px-0 pb-0 pt-2',
+    footerAction: 'justify-center gap-1 text-sm',
+    footerActionLink: 'font-semibold text-slate-950 underline-offset-4 hover:text-slate-700 hover:underline',
     footerActionText: 'text-slate-500',
-    formButtonPrimary: 'h-10 rounded-md bg-slate-950 text-sm font-semibold text-white shadow-sm hover:bg-slate-800 focus:ring-2 focus:ring-slate-400 focus:ring-offset-2',
-    formFieldInput: 'h-10 rounded-md border border-slate-300 bg-white px-3 text-sm text-slate-950 shadow-sm outline-none placeholder:text-slate-400 focus:border-slate-950 focus:ring-2 focus:ring-slate-200',
-    formFieldLabel: 'text-sm font-medium text-slate-800',
-    formFieldRow: 'gap-2',
+    form: 'grid gap-4',
+    formButtonPrimary:
+      'h-11 rounded-xl bg-slate-950 text-sm font-semibold text-white shadow-sm shadow-slate-900/10 transition hover:bg-slate-800 focus:ring-2 focus:ring-slate-400 focus:ring-offset-2',
+    formFieldInput:
+      'h-11 rounded-xl border border-slate-200 bg-white px-3 text-sm text-slate-950 shadow-sm shadow-slate-100 outline-none placeholder:text-slate-400 focus:border-slate-950 focus:ring-4 focus:ring-slate-200/80',
+    formFieldLabel: 'text-sm font-semibold text-slate-800',
+    formFieldRow: 'gap-2.5',
     formFieldSuccessText: 'text-emerald-700',
     formFieldWarningText: 'text-amber-700',
     formHeader: 'hidden',
@@ -41,15 +46,52 @@ export const clerkAuthAppearance = {
     header: 'hidden',
     headerSubtitle: 'hidden',
     headerTitle: 'hidden',
-    identityPreview: 'rounded-md border border-slate-200 bg-slate-50',
+    identityPreview: 'rounded-xl border border-slate-200 bg-slate-50 shadow-none',
     identityPreviewText: 'text-slate-700',
-    main: 'gap-5',
-    otpCodeFieldInput: 'rounded-md border border-slate-300 text-slate-950',
+    main: 'gap-5 p-0',
+    otpCodeFieldInput: 'rounded-lg border border-slate-300 text-slate-950',
     rootBox: 'w-full',
-    socialButtonsBlockButton: 'h-10 rounded-md border border-slate-300 bg-white text-sm font-medium text-slate-900 shadow-sm hover:bg-slate-50',
-    socialButtonsBlockButtonText: 'text-sm font-medium text-slate-900',
+    socialButtons: 'grid gap-2',
+    socialButtonsBlockButton:
+      'h-11 rounded-xl border border-slate-200 bg-white text-sm font-semibold text-slate-900 shadow-sm shadow-slate-100 transition hover:border-slate-300 hover:bg-slate-50 focus:ring-4 focus:ring-slate-200/80',
+    socialButtonsBlockButtonText: 'text-sm font-semibold text-slate-900',
+    socialButtonsProviderIcon: 'h-4 w-4',
   },
 }
+
+export const clerkPtBrLocalization = {
+  formButtonPrimary: 'Continuar',
+  dividerText: 'ou',
+  footerActionLink__signIn: 'Entrar',
+  footerActionLink__signUp: 'Criar conta',
+  footerActionText__signIn: 'Já tem uma conta?',
+  footerActionText__signUp: 'Ainda não tem conta?',
+  formFieldLabel__emailAddress: 'Email',
+  formFieldLabel__identifier: 'Email',
+  formFieldLabel__password: 'Senha',
+  formFieldLabel__username: 'Usuário',
+  formFieldInputPlaceholder__emailAddress: 'Digite seu email',
+  formFieldInputPlaceholder__identifier: 'Digite seu email',
+  formFieldInputPlaceholder__password: 'Digite sua senha',
+  formFieldInputPlaceholder__username: 'Digite seu usuário',
+  signIn: {
+    start: {
+      actionLink: 'Criar conta',
+      actionText: 'Ainda não tem conta?',
+      subtitle: 'Acesse sua empresa para continuar.',
+      title: 'Entrar no Cognito',
+    },
+  },
+  signUp: {
+    start: {
+      actionLink: 'Entrar',
+      actionText: 'Já tem uma conta?',
+      subtitle: 'Crie seu acesso e depois cadastre sua empresa.',
+      title: 'Criar conta',
+    },
+  },
+  socialButtonsBlockButton: 'Continuar com {{provider|titleize}}',
+} as const
 
 export const clerkUserProfileAppearance = {
   variables: {
@@ -101,35 +143,36 @@ export const clerkUserProfileAppearance = {
 
 export function ClerkAuthShell({ children, mode }: ClerkAuthShellProps) {
   const isSignUp = mode === 'sign-up'
+  const benefits = [
+    'Dashboards automáticos com dados reais',
+    'Integrações com ERP, CRM e marketing',
+    'Ambiente seguro para sua empresa',
+  ]
 
   return (
-    <main className="min-h-dvh bg-slate-100 px-4 py-8 text-slate-950 sm:px-6 lg:px-8">
+    <main className="min-h-dvh bg-[radial-gradient(circle_at_top_left,#f8fafc_0,#eef2f7_44%,#e8eef6_100%)] px-4 py-8 text-slate-950 sm:px-6 lg:px-8">
       <div className="mx-auto grid min-h-[calc(100dvh-4rem)] w-full max-w-6xl items-center gap-8 lg:grid-cols-[minmax(0,1fr)_460px]">
         <section className="hidden max-w-xl lg:grid lg:gap-8">
           <div className="grid gap-5">
-            <div className="flex h-11 w-11 items-center justify-center rounded-md border border-slate-200 bg-white shadow-sm">
+            <div className="flex h-11 w-11 items-center justify-center rounded-xl border border-slate-200 bg-white shadow-sm shadow-slate-200/70">
               <Sparkles className="h-5 w-5 text-slate-950" />
             </div>
             <div className="grid gap-4">
               <p className="text-sm font-semibold uppercase tracking-[0.18em] text-slate-500">Cognito</p>
               <h1 className="max-w-lg text-4xl font-semibold leading-[1.05] tracking-tight text-slate-950">
-                {isSignUp ? 'Crie seu workspace operacional.' : 'Entre no seu workspace Cognito.'}
+                {isSignUp ? 'Crie sua conta e organize os dados da empresa.' : 'Entre no Cognito e acompanhe sua operação.'}
               </h1>
               <p className="max-w-md text-base leading-7 text-slate-600">
                 {isSignUp
-                  ? 'Conecte dados, ferramentas e fluxos de trabalho em um ambiente seguro para sua equipe.'
-                  : 'Acesse dashboards, integrações e automações com a mesma conta usada no seu workspace.'}
+                  ? 'Depois do cadastro, você informa os dados da empresa e conecta as primeiras integrações.'
+                  : 'Conecte suas ferramentas e acompanhe os dados da sua empresa em um só lugar.'}
               </p>
             </div>
           </div>
 
           <div className="grid max-w-md gap-3">
-            {[
-              'Autenticação e sessão gerenciadas pelo Clerk',
-              'Onboarding preservado após login ou cadastro',
-              'Acesso protegido por tenant e permissões',
-            ].map((item) => (
-              <div key={item} className="flex items-center gap-3 rounded-md border border-slate-200 bg-white px-4 py-3 shadow-sm">
+            {benefits.map((item) => (
+              <div key={item} className="flex items-center gap-3 rounded-xl border border-white/80 bg-white/90 px-4 py-3 shadow-sm shadow-slate-200/70 backdrop-blur">
                 <BadgeCheck className="h-4 w-4 text-emerald-600" />
                 <span className="text-sm font-medium text-slate-700">{item}</span>
               </div>
@@ -137,27 +180,24 @@ export function ClerkAuthShell({ children, mode }: ClerkAuthShellProps) {
           </div>
         </section>
 
-        <Card className="mx-auto w-full max-w-[460px] rounded-lg border-slate-200 bg-white py-0 shadow-xl shadow-slate-200/70">
+        <Card className="mx-auto w-full max-w-[460px] rounded-2xl border border-white/80 bg-white/95 py-0 shadow-2xl shadow-slate-300/50 backdrop-blur">
           <CardContent className="grid gap-6 px-6 py-7 sm:px-8 sm:py-8">
             <div className="grid gap-3">
-              <div className="flex h-10 w-10 items-center justify-center rounded-md border border-slate-200 bg-slate-50">
-                <LockKeyhole className="h-5 w-5 text-slate-800" />
+              <div className="flex h-11 w-11 items-center justify-center rounded-xl border border-slate-200 bg-slate-50">
+                {isSignUp ? <Building2 className="h-5 w-5 text-slate-800" /> : <LockKeyhole className="h-5 w-5 text-slate-800" />}
               </div>
               <div className="grid gap-1">
                 <h2 className="text-2xl font-semibold tracking-tight text-slate-950">
-                  {isSignUp ? 'Criar conta' : 'Entrar'}
+                  {isSignUp ? 'Criar conta' : 'Entrar no Cognito'}
                 </h2>
                 <p className="text-sm leading-6 text-slate-600">
-                  {isSignUp ? 'Cadastre-se para continuar para o onboarding.' : 'Use sua conta para continuar para o workspace.'}
+                  {isSignUp ? 'Crie seu acesso e depois cadastre sua empresa.' : 'Acesse sua empresa para continuar.'}
                 </p>
               </div>
             </div>
 
-            {children}
-
-            <div className="flex items-center gap-2 border-t border-slate-200 pt-5 text-xs font-medium text-slate-500">
-              <ArrowRight className="h-3.5 w-3.5" />
-              Redirecionamento mantido para onboarding.
+            <div className="[&_.cl-card]:!bg-transparent [&_.cl-card]:!shadow-none [&_.cl-card]:!border-0 [&_.cl-cardBox]:!bg-transparent [&_.cl-cardBox]:!shadow-none [&_.cl-cardBox]:!border-0 [&_.cl-footer]:!bg-transparent [&_.cl-footer]:!p-0 [&_.cl-main]:!p-0">
+              {children}
             </div>
           </CardContent>
         </Card>
