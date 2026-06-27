@@ -27,6 +27,7 @@ type PaginatedClient<Config> = {
 
 type ResourceConfig = {
   resource: string
+  minPageSize?: number
   transformItems?: (items: JsonRecord[], payload?: JsonRecord) => JsonRecord[]
 }
 
@@ -162,7 +163,8 @@ export async function listLiveFromPaginatedApi<Resource extends string, Config e
   toolInput: ConnectedDomainAdapterInput<Resource>
 }): Promise<ConnectedDomainAdapterResult> {
   const rows: ConnectedDomainRecord[] = []
-  const pageSize = Math.max(1, Math.min(input.toolInput.limit, 200))
+  const minPageSize = Math.max(1, Number(input.config.minPageSize || 1))
+  const pageSize = Math.max(minPageSize, Math.min(input.toolInput.limit, 200))
   let truncated = false
 
   for await (const page of input.client.paginate(input.config, { pageSize })) {

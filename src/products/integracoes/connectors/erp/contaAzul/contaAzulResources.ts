@@ -2,6 +2,7 @@ import type { ConnectorResourceManifest } from '@/products/integracoes/connector
 import type { ContaAzulResourceConfig } from '@/products/integracoes/connectors/erp/contaAzul/contaAzulTypes'
 
 const DEFAULT_PAGE_SIZE = 50
+const MIN_PAGE_SIZE = 10
 
 function envResourcePath(resource: string, fallback: string) {
   const key = `CONTA_AZUL_RESOURCE_${resource.toUpperCase()}_PATH`
@@ -13,6 +14,26 @@ function pageQuery({ page, pageSize }: { page: number; pageSize: number }) {
     pagina: page,
     tamanho_pagina: pageSize,
   }
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return Boolean(value && typeof value === 'object' && !Array.isArray(value))
+}
+
+function profileMatches(item: Record<string, unknown>, profile: 'Cliente' | 'Fornecedor') {
+  const profiles = Array.isArray(item.perfis) ? item.perfis : []
+  return profiles.some((entry) => {
+    if (typeof entry === 'string') return entry.toLowerCase() === profile.toLowerCase()
+    if (isRecord(entry)) {
+      const value = entry.tipo_perfil ?? entry.tipoPerfil ?? entry.nome ?? entry.name
+      return typeof value === 'string' && value.toLowerCase() === profile.toLowerCase()
+    }
+    return false
+  })
+}
+
+function filterPersonProfile(profile: 'Cliente' | 'Fornecedor') {
+  return (items: Record<string, unknown>[]) => items.filter((item) => profileMatches(item, profile))
 }
 
 function dateRangeQuery({ page, pageSize }: { page: number; pageSize: number }) {
@@ -126,16 +147,20 @@ export const CONTA_AZUL_RESOURCE_CONFIGS: ContaAzulResourceConfig[] = [
     path: envResourcePath('clientes', '/v1/pessoas'),
     itemKeys: ['itens', 'items', 'data', 'content', 'pessoas'],
     defaultPageSize: DEFAULT_PAGE_SIZE,
+    minPageSize: MIN_PAGE_SIZE,
     supportsIncremental: false,
     buildQuery: pageQuery,
+    transformItems: filterPersonProfile('Cliente'),
   },
   {
     resource: 'fornecedores',
     path: envResourcePath('fornecedores', '/v1/pessoas'),
     itemKeys: ['itens', 'items', 'data', 'content', 'pessoas'],
     defaultPageSize: DEFAULT_PAGE_SIZE,
+    minPageSize: MIN_PAGE_SIZE,
     supportsIncremental: false,
     buildQuery: pageQuery,
+    transformItems: filterPersonProfile('Fornecedor'),
   },
   {
     resource: 'empresa_conectada',

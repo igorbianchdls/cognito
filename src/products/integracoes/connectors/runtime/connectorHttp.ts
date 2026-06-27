@@ -51,6 +51,44 @@ async function parsePayload<T>(response: Response): Promise<T> {
   }
 }
 
+function nestedMessage(value: unknown): string | null {
+  if (typeof value === 'string' && value.trim()) return value.trim()
+  if (!value || typeof value !== 'object') return null
+
+  if (Array.isArray(value)) {
+    for (const item of value) {
+      const message = nestedMessage(item)
+      if (message) return message
+    }
+    return null
+  }
+
+  const record = value as Record<string, unknown>
+  const directKeys = [
+    'message',
+    'mensagem',
+    'error',
+    'erro',
+    'detail',
+    'details',
+    'descricao',
+    'description',
+    'title',
+  ]
+  for (const key of directKeys) {
+    const message = nestedMessage(record[key])
+    if (message) return message
+  }
+
+  return null
+}
+
+function providerFailureMessage(provider: string, status: number, payload: unknown) {
+  const providerMessage = nestedMessage(payload)
+  const suffix = providerMessage ? `: ${providerMessage.slice(0, 500)}` : ''
+  return `Chamada ${provider} falhou com status ${status}${suffix}`
+}
+
 export async function connectorJsonRequest<T = unknown>(request: ConnectorHttpRequest): Promise<ConnectorHttpResponse<T>> {
   const timeoutMs = request.timeoutMs ?? Number(process.env.INTEGRATIONS_HTTP_TIMEOUT_MS || 30000)
   const retry = request.retry || {
@@ -79,7 +117,7 @@ export async function connectorJsonRequest<T = unknown>(request: ConnectorHttpRe
         status: response.status,
         kind: classification.kind,
         retryable: classification.retryable,
-        message: `Chamada ${request.provider} falhou com status ${response.status}`,
+        message: providerFailureMessage(request.provider, response.status, payload),
         details: { payload },
       })
     }

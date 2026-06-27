@@ -38,7 +38,7 @@ const SUPPORTED_ACTIONS: Partial<Record<ConnectedErpResource, ConnectedErpProvid
   'contas-a-receber': ['criar', 'atualizar', 'baixar'],
   'pedidos-venda': ['criar', 'atualizar', 'cancelar'],
   'centros-custo': ['criar'],
-  produtos: ['criar', 'deletar'],
+  produtos: ['criar', 'atualizar', 'deletar'],
   servicos: ['criar', 'atualizar'],
   contratos: ['criar', 'deletar'],
 }
@@ -126,7 +126,11 @@ function envPath(resource: ContaAzulActionResource, action: ConnectedErpProvider
     return '/v1/pessoas'
   }
   if (resource === 'centros-custo') return '/v1/centro-de-custo'
-  if (resource === 'produtos') return action === 'criar' ? '/v1/produto' : '/v1/produto/{id}'
+  if (resource === 'produtos') {
+    if (action === 'criar') return '/v1/produto'
+    if (action === 'atualizar') return '/v1/produtos/{id}'
+    return '/v1/produto/{id}'
+  }
   if (resource === 'servicos') return action === 'criar' ? '/v1/servicos' : '/v1/servicos/{id}'
   if (resource === 'contratos') return action === 'criar' ? '/v1/contratos' : '/v1/contratos/{id}'
 
@@ -298,10 +302,16 @@ function buildCreatePayload(resource: ContaAzulFinancialResource, payload: JsonR
   const detalheValor = financialValueComposition(payload, valor)
   const rateio = valor === undefined ? undefined : buildRateio(payload, valor)
 
+  if (!contaFinanceira) {
+    throw new Error(
+      `Payload Conta Azul incompleto. ${resource}/criar exige conta_financeira. `
+      + 'Liste contas-financeiras e envie conta_financeira_id; se a listagem vier vazia, crie uma conta financeira na Conta Azul antes.',
+    )
+  }
+
   requireFields({
     valor,
     contato,
-    conta_financeira: contaFinanceira,
     rateio,
     detalhe_valor: detalheValor,
   })
@@ -772,6 +782,8 @@ function extractId(payload: unknown) {
 function extractStatus(payload: unknown) {
   if (!isRecord(payload)) return null
   const candidates = [
+    isRecord(payload.situacao) ? payload.situacao.nome : null,
+    isRecord(payload.status) ? payload.status.nome : null,
     payload.status,
     payload.situacao,
     payload.status_traduzido,

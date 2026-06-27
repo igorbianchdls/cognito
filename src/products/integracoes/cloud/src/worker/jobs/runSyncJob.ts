@@ -80,6 +80,31 @@ function aggregateStatus(current: 'success' | 'warning' | 'error', next: string)
   return 'success'
 }
 
+const RESOURCE_ALIASES_BY_PROVIDER: Record<string, Record<string, string>> = {
+  conta_azul: {
+    'contas-a-pagar': 'contas_pagar',
+    'contas-a-receber': 'contas_receber',
+    'contas-financeiras': 'contas_financeiras',
+    'centros-custo': 'centros_custo',
+    'pedidos-venda': 'vendas',
+    'categorias-dre': 'categorias_dre',
+    'produto-categorias': 'produto_categorias',
+    'produto-cest': 'produto_cest',
+    'produto-ecommerce-marcas': 'produto_ecommerce_marcas',
+    'produto-ncm': 'produto_ncm',
+    'produto-unidades-medida': 'produto_unidades_medida',
+  },
+}
+
+function normalizeResource(provider: string, resource: string) {
+  const value = String(resource || '').trim()
+  return RESOURCE_ALIASES_BY_PROVIDER[provider]?.[value] || value
+}
+
+function normalizeResources(provider: string, resources: string[]) {
+  return Array.from(new Set(resources.map((resource) => normalizeResource(provider, resource)).filter(Boolean)))
+}
+
 export async function runSyncJob(input: RunSyncJobInput): Promise<RunSyncJobOutput> {
   const pipeline = input.pipelineId
     ? await getCloudIntegrationPipeline({
@@ -119,11 +144,11 @@ export async function runSyncJob(input: RunSyncJobInput): Promise<RunSyncJobOutp
     throw new Error(`Connector cloud nao registrado para provider ${connection.provider}`)
   }
 
-  const resources = input.resources?.length
+  const resources = normalizeResources(connection.provider, input.resources?.length
     ? input.resources
     : pipeline?.selectedResources?.length
       ? pipeline.selectedResources
-      : connection.selectedResources
+      : connection.selectedResources)
   if (!resources.length) {
     throw new Error(`Conexao ${connection.id} nao possui resources selecionados`)
   }

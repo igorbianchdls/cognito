@@ -119,11 +119,11 @@ function applyMcpPreset(preset: McpPreset, _resources: string[]) {
   }
 }
 
-function normalizePermissionResources(_provider: ReturnType<typeof requireIntegrationProvider>, value: unknown, fallback: string[]) {
+function normalizePermissionResources(provider: ReturnType<typeof requireIntegrationProvider>, value: unknown, fallback: string[]) {
   const requested = asStringArray(value)
   const source = requested === undefined ? fallback : requested
-  if (source.includes('*')) return ['*']
-  return source.length ? ['*'] : []
+  if (source.includes('*')) return provider.resources.map((resource) => resource.slug)
+  return normalizeRequestedResources(provider, source)
 }
 
 function nextSyncAtFor(frequency: string) {
@@ -332,6 +332,15 @@ export async function PATCH(
             },
           })
         }
+        parts.permissions = await upsertIntegrationPluginPermissions({
+          tenantId,
+          connectionId: connection.id,
+          readResources: selectedResources,
+          metadata: {
+            readResourcesSyncedFromDataWarehouseAt: configuredAt,
+            configuredFrom: 'connection_configuration_modal',
+          },
+        })
       } else if (parts.pipeline) {
         parts.pipeline = await updateIntegrationPipeline(parts.pipeline.id, tenantId, {
           status: 'paused',

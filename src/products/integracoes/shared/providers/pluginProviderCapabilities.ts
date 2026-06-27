@@ -155,7 +155,7 @@ const CONTA_AZUL_ERP_ACTIONS_BY_RESOURCE: Record<string, string[]> = {
   'contas-a-pagar': ['criar', 'atualizar', 'baixar'],
   'pedidos-venda': ['criar', 'atualizar', 'cancelar'],
   'centros-custo': ['criar'],
-  produtos: ['criar', 'deletar'],
+  produtos: ['criar', 'atualizar', 'deletar'],
   servicos: ['criar', 'atualizar'],
   contratos: ['criar', 'deletar'],
 }

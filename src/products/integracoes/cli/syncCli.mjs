@@ -13,6 +13,21 @@ import { formatRun, printInfo } from './shared/output.mjs'
 
 const READY_CONNECTION_STATUSES = new Set(['connected', 'syncing', 'warning'])
 const TERMINAL_RUN_STATUSES = new Set(['success', 'warning', 'error', 'cancelled'])
+const RESOURCE_ALIASES_BY_PROVIDER = {
+  conta_azul: {
+    'contas-a-pagar': 'contas_pagar',
+    'contas-a-receber': 'contas_receber',
+    'contas-financeiras': 'contas_financeiras',
+    'centros-custo': 'centros_custo',
+    'pedidos-venda': 'vendas',
+    'categorias-dre': 'categorias_dre',
+    'produto-categorias': 'produto_categorias',
+    'produto-cest': 'produto_cest',
+    'produto-ecommerce-marcas': 'produto_ecommerce_marcas',
+    'produto-ncm': 'produto_ncm',
+    'produto-unidades-medida': 'produto_unidades_medida',
+  },
+}
 
 function usage() {
   return [
@@ -48,6 +63,15 @@ function sleep(ms) {
 
 function asJsonArray(value) {
   return Array.isArray(value) ? value : []
+}
+
+function normalizeResource(provider, resource) {
+  const value = String(resource || '').trim()
+  return RESOURCE_ALIASES_BY_PROVIDER[provider]?.[value] || value
+}
+
+function normalizeResources(provider, resources) {
+  return Array.from(new Set((resources || []).map((resource) => normalizeResource(provider, resource)).filter(Boolean)))
 }
 
 async function fetchConnection(client, tenantId, connectionId) {
@@ -306,7 +330,10 @@ export async function runSyncCli(argv = process.argv.slice(2)) {
     await assertPipeline(client, tenantId, connectionId, pipelineId)
     await assertDestination(client, tenantId, destinationId)
 
-    const selectedResources = resources || asJsonArray(connection.selected_resources).map(String).filter(Boolean)
+    const selectedResources = normalizeResources(
+      connection.provider,
+      resources || asJsonArray(connection.selected_resources).map(String).filter(Boolean),
+    )
     if (!selectedResources.length) {
       throw new Error(`Conexao ${connectionId} nao possui resources selecionados. Informe --resources.`)
     }

@@ -43,6 +43,7 @@ The current implementation has been validated for:
 - `contas-a-pagar/criar`
 - `pedidos-venda/criar`
 - `produtos/criar`
+- `produtos/atualizar`
 - `produtos/deletar`
 - `produtos/listar_live`
 
@@ -52,9 +53,9 @@ The action adapter supports more resources, but verify with dry-run or read-only
 
 - `produtos` uses the current Conta Azul Inventory API:
   - create: `POST /v1/produto`
+  - update: `PATCH /v1/produtos/{id}`
   - delete: `DELETE /v1/produto/{id}`
   - live list: `GET /v1/produto/busca`
-- `produtos/atualizar` is not supported by the current API and must stay blocked unless Conta Azul publishes an update endpoint.
 - Product create requires `nome`, `formato`, `estoque` and `dimensao` at the provider payload level. The adapter supplies defaults for `formato`, `estoque` and `dimensao` when the caller provides simple fields.
 - Product `codigo_sku` must have at most 20 characters.
 - `categorias`, `categorias-dre`, `contas-financeiras` and related lookup resources should be treated as read/live-read unless the provider adapter explicitly supports writes.

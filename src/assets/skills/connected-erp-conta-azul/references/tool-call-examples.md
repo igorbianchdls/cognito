@@ -137,7 +137,7 @@ node scripts/plugin/tool-call.mjs \
 
 ## Create product dry-run
 
-`codigo_sku` must have at most 20 characters. Product update is not supported by the current Conta Azul API.
+`codigo_sku` must have at most 20 characters.
 
 ```bash
 node scripts/plugin/tool-call.mjs \
@@ -162,6 +162,24 @@ node scripts/plugin/tool-call.mjs \
   --action criar \
   --resource produtos \
   --payload-json '{"nome":"Produto Teste","codigo":"PRODTESTE001","valor_venda":123.45,"estoque_disponivel":0,"descricao":"Produto temporario de teste"}' \
+  --execute \
+  --confirm \
+  --allow-error
+```
+
+## Update product real write
+
+Use only after explicit user confirmation.
+
+```bash
+node scripts/plugin/tool-call.mjs \
+  --tenant <TENANT_ID> \
+  --tool connected_erp_api \
+  --provider conta_azul \
+  --action atualizar \
+  --resource produtos \
+  --id <CONTA_AZUL_PRODUTO_ID> \
+  --payload-json '{"nome":"Produto Teste Atualizado","codigo":"PRODTESTE001","valor_venda":150.00}' \
   --execute \
   --confirm \
   --allow-error

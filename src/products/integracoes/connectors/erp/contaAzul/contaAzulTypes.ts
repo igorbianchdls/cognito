@@ -16,7 +16,9 @@ export type ContaAzulResourceConfig = {
   paginationMode?: 'paged' | 'none'
   itemKeys: string[]
   defaultPageSize: number
+  minPageSize?: number
   supportsIncremental?: boolean
+  transformItems?: (items: Record<string, unknown>[]) => Record<string, unknown>[]
   derivedFrom?: {
     resource: string
     path: string

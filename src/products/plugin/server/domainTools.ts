@@ -4731,7 +4731,7 @@ const CONNECTED_ERP_ACTIONS_BY_RESOURCE: Record<string, readonly ConnectedErpAct
   'contas-a-pagar': ['criar', 'atualizar', 'baixar'],
   'pedidos-venda': ['criar', 'atualizar', 'cancelar'],
   'centros-custo': ['criar'],
-  produtos: ['criar', 'deletar'],
+  produtos: ['criar', 'atualizar', 'deletar'],
   servicos: ['criar', 'atualizar'],
   contratos: ['criar', 'atualizar', 'deletar'],
 }

@@ -84,6 +84,10 @@ function parseCredentials(value: string | null): ParsedCredentials {
   }
 }
 
+function sleep(ms: number) {
+  return new Promise((resolve) => setTimeout(resolve, ms))
+}
+
 export async function refreshOAuthCredentialsIfNeeded(input: RefreshOAuthCredentialsInput): Promise<ParsedCredentials> {
   if (!isRecord(input.credentials)) return input.credentials
 
@@ -103,19 +107,27 @@ export async function refreshOAuthCredentialsIfNeeded(input: RefreshOAuthCredent
   })
 
   if (!lockAcquired) {
-    const connection = await getCloudIntegrationConnection({
-      tenantId: input.tenantId,
-      connectionId: input.connectionId,
-    })
-    const currentCredentials = parseCredentials(connection?.secretRef
-      ? await readSecret(connection.secretRef).catch(() => null)
-      : null)
-    if (isRecord(currentCredentials) && !shouldRefresh(currentCredentials, refreshWindowMs)) return currentCredentials
+    const waitMs = Math.max(0, Number(process.env.INTEGRATIONS_OAUTH_REFRESH_LOCK_WAIT_MS || 15000))
+    const pollMs = Math.max(250, Number(process.env.INTEGRATIONS_OAUTH_REFRESH_LOCK_POLL_MS || 750))
+    const startedAt = Date.now()
+
+    while (Date.now() - startedAt <= waitMs) {
+      const connection = await getCloudIntegrationConnection({
+        tenantId: input.tenantId,
+        connectionId: input.connectionId,
+      }).catch(() => null)
+      const currentCredentials = parseCredentials(connection?.secretRef
+        ? await readSecret(connection.secretRef).catch(() => null)
+        : null)
+      if (isRecord(currentCredentials) && !shouldRefresh(currentCredentials, refreshWindowMs)) return currentCredentials
+      await sleep(pollMs)
+    }
+
     throw createIntegrationRuntimeError({
       source: 'internal',
       operation: 'oauth_refresh_lock',
       code: 'refresh_lock_busy',
-      safeMessage: `Refresh OAuth ${input.provider} ja esta em andamento para esta conexao.`,
+      safeMessage: `Refresh OAuth ${input.provider} ja esta em andamento para esta conexao. Tente novamente em alguns segundos.`,
       retryable: true,
     })
   }

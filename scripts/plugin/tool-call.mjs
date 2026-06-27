@@ -202,7 +202,7 @@ function windowsPathToWslPath(value) {
 }
 
 function detectWindowsGcloudAdcFile() {
-  const configDir = tryRun('cmd.exe', ['/c', 'gcloud', 'info', '--format=value(config.paths.global_config_dir)'])
+  const configDir = tryRun('cmd.exe', ['/c', 'gcloud', 'info', '--format="value(config.paths.global_config_dir)"'])
   if (!configDir) return ''
   return path.join(windowsPathToWslPath(configDir), 'application_default_credentials.json')
 }
@@ -237,6 +237,23 @@ function loadGcloudAdc(parsed) {
   const accessToken = detectGcloudAccessToken()
   if (accessToken) {
     process.env.GOOGLE_OAUTH_ACCESS_TOKEN ||= accessToken
+  }
+}
+
+function assertBigQueryToolCredentials(tool) {
+  if (tool !== 'connected_erp_bigquery') return
+  if (
+    process.env.BIGQUERY_CREDENTIALS_JSON?.trim()
+    || process.env.GOOGLE_APPLICATION_CREDENTIALS_JSON?.trim()
+    || process.env.GOOGLE_APPLICATION_CREDENTIALS?.trim()
+  ) return
+
+  if (process.env.GOOGLE_OAUTH_ACCESS_TOKEN?.trim()) {
+    throw new Error(
+      'Credencial BigQuery local incompleta: gcloud retornou access token, mas o client precisa de service account JSON ou ADC. '
+      + 'Defina BIGQUERY_CREDENTIALS_JSON/GOOGLE_APPLICATION_CREDENTIALS_JSON, rode gcloud auth application-default login, '
+      + 'ou use --gcloud-adc-file <arquivo>.',
+    )
   }
 }
 
@@ -386,6 +403,7 @@ async function main(argv = process.argv.slice(2)) {
 
   const tenantId = requiredPositiveInt(parsed, '--tenant')
   const tool = requiredValue(parsed, '--tool')
+  assertBigQueryToolCredentials(tool)
   const toolArgs = buildToolArgs(parsed)
   prepareActionSafety(tool, toolArgs, parsed)
 

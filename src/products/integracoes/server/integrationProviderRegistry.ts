@@ -38,6 +38,27 @@ export function getDefaultResourceSlugs(provider: IntegrationProvider): string[]
     .map((resource) => resource.slug)
 }
 
+const RESOURCE_ALIASES_BY_PROVIDER: Record<string, Record<string, string>> = {
+  conta_azul: {
+    'contas-a-pagar': 'contas_pagar',
+    'contas-a-receber': 'contas_receber',
+    'contas-financeiras': 'contas_financeiras',
+    'centros-custo': 'centros_custo',
+    'pedidos-venda': 'vendas',
+    'categorias-dre': 'categorias_dre',
+    'produto-categorias': 'produto_categorias',
+    'produto-cest': 'produto_cest',
+    'produto-ecommerce-marcas': 'produto_ecommerce_marcas',
+    'produto-ncm': 'produto_ncm',
+    'produto-unidades-medida': 'produto_unidades_medida',
+  },
+}
+
+export function normalizeProviderResourceSlug(provider: IntegrationProvider, resource: string): string {
+  const value = String(resource || '').trim()
+  return RESOURCE_ALIASES_BY_PROVIDER[provider.slug]?.[value] || value
+}
+
 export function normalizeRequestedResources(provider: IntegrationProvider, resources?: string[]): string[] {
   const validResources = new Set(provider.resources.map((resource) => resource.slug))
   const requested = Array.isArray(resources) && resources.length
@@ -45,7 +66,7 @@ export function normalizeRequestedResources(provider: IntegrationProvider, resou
     : getDefaultResourceSlugs(provider)
 
   const normalized = requested
-    .map((resource) => String(resource || '').trim())
+    .map((resource) => normalizeProviderResourceSlug(provider, resource))
     .filter((resource) => resource && validResources.has(resource))
 
   return Array.from(new Set(normalized))
