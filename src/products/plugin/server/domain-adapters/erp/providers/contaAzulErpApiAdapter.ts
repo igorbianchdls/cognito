@@ -38,7 +38,7 @@ const SUPPORTED_ACTIONS: Partial<Record<ConnectedErpResource, ConnectedErpProvid
   'contas-a-receber': ['criar', 'atualizar', 'baixar'],
   'pedidos-venda': ['criar', 'atualizar', 'cancelar'],
   'centros-custo': ['criar'],
-  produtos: ['criar', 'atualizar', 'deletar'],
+  produtos: ['criar', 'deletar'],
   servicos: ['criar', 'atualizar'],
   contratos: ['criar', 'deletar'],
 }
@@ -126,7 +126,7 @@ function envPath(resource: ContaAzulActionResource, action: ConnectedErpProvider
     return '/v1/pessoas'
   }
   if (resource === 'centros-custo') return '/v1/centro-de-custo'
-  if (resource === 'produtos') return action === 'criar' ? '/v1/produtos' : '/v1/produtos/{id}'
+  if (resource === 'produtos') return action === 'criar' ? '/v1/produto' : '/v1/produto/{id}'
   if (resource === 'servicos') return action === 'criar' ? '/v1/servicos' : '/v1/servicos/{id}'
   if (resource === 'contratos') return action === 'criar' ? '/v1/contratos' : '/v1/contratos/{id}'
 
@@ -572,36 +572,41 @@ function buildCostCenterPayload(payload: JsonRecord) {
   }
 }
 
-function buildProductPayload(payload: JsonRecord, update = false) {
-  const nome = firstText(payload, update ? ['nome', 'name'] : ['nome', 'name', 'descricao'])
-  const codigo = firstText(payload, ['codigo', 'code', 'sku'])
+function buildProductPayload(payload: JsonRecord) {
+  const nome = firstText(payload, ['nome', 'name', 'descricao'])
+  const codigo = firstText(payload, ['codigo_sku', 'codigo', 'code', 'sku'])
   const descricao = firstText(payload, ['descricao', 'description'])
   const valorVenda = firstNumber(payload, ['valor_venda', 'preco_venda', 'preco', 'valor', 'price'])
   const custoMedio = firstNumber(payload, ['custo_medio', 'custo', 'cost'])
-  const unidadeMedida = firstText(payload, ['unidade_medida', 'unidade', 'unit'])
-  const categoriaId = firstText(payload, ['id_categoria', 'categoria_id', 'category_id'])
-  const ativo = firstBoolean(payload, ['ativo', 'active'])
-  const status = firstText(payload, ['status', 'situacao'])
+  const estoqueDisponivel = firstNumber(payload, ['estoque_disponivel', 'estoque_atual', 'quantidade_estoque', 'estoque', 'stock'])
+  const estoqueMinimo = firstNumber(payload, ['estoque_minimo', 'minimum_stock'])
+  const estoqueMaximo = firstNumber(payload, ['estoque_maximo', 'maximum_stock'])
+  const formato = firstText(payload, ['formato', 'format']) || 'SIMPLES'
+  const explicitEstoque = optionalRecord(payload.estoque)
+  const explicitDimensao = optionalRecord(payload.dimensao) || optionalRecord(payload.dimension)
 
-  if (!update) requireFields({ nome })
+  requireFields({ nome })
+  if (codigo && codigo.length > 20) {
+    throw new Error('Payload Conta Azul invalido. codigo_sku de produto deve ter no maximo 20 caracteres.')
+  }
 
   const body = {
-    ...(nome ? { nome } : {}),
-    ...(codigo ? { codigo } : {}),
-    ...(descricao ? { descricao } : {}),
-    ...(valorVenda === undefined ? {} : { valor_venda: valorVenda }),
-    ...(custoMedio === undefined ? {} : { custo_medio: custoMedio }),
-    ...(unidadeMedida ? { unidade_medida: unidadeMedida } : {}),
-    ...(categoriaId ? { id_categoria: categoriaId } : {}),
-    ...(status ? { status } : {}),
-    ...(firstText(payload, ['ean']) ? { ean: firstText(payload, ['ean']) } : {}),
-    ...(firstText(payload, ['ncm']) ? { ncm: firstText(payload, ['ncm']) } : {}),
-    ...(firstText(payload, ['cest']) ? { cest: firstText(payload, ['cest']) } : {}),
-    ...(ativo === undefined ? {} : { ativo }),
-    ...(optionalRecord(payload.estoque) ? { estoque: payload.estoque } : {}),
-    ...(optionalRecord(payload.impostos) ? { impostos: payload.impostos } : {}),
+    nome,
+    ...(codigo ? { codigo_sku: codigo } : {}),
+    ...(firstText(payload, ['codigo_ean', 'ean']) ? { codigo_ean: firstText(payload, ['codigo_ean', 'ean']) } : {}),
+    ...(descricao ? { observacao: descricao } : {}),
+    formato,
+    estoque: explicitEstoque || {
+      ...(valorVenda === undefined ? {} : { valor_venda: valorVenda }),
+      ...(custoMedio === undefined ? {} : { custo_medio: custoMedio }),
+      estoque_disponivel: estoqueDisponivel ?? 0,
+      ...(estoqueMinimo === undefined ? {} : { estoque_minimo: estoqueMinimo }),
+      ...(estoqueMaximo === undefined ? {} : { estoque_maximo: estoqueMaximo }),
+    },
+    dimensao: explicitDimensao || {},
+    ...(optionalRecord(payload.variacao) ? { variacao: payload.variacao } : {}),
+    ...(optionalRecord(payload.ecommerce) ? { ecommerce: payload.ecommerce } : {}),
   }
-  if (update) requireNonEmptyPayload('produtos', 'atualizar', body)
   return body
 }
 
@@ -813,7 +818,7 @@ async function executeContaAzulAction(
   } else if (resource === 'centros-custo') {
     payload = buildCostCenterPayload(input.payload || {})
   } else if (resource === 'produtos') {
-    payload = buildProductPayload(input.payload || {}, input.action === 'atualizar')
+    payload = buildProductPayload(input.payload || {})
   } else if (resource === 'servicos') {
     payload = buildServicePayload(input.payload || {}, input.action === 'atualizar')
   } else if (resource === 'contratos') {

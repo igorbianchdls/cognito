@@ -13,7 +13,7 @@ import { printError } from '../../src/products/integracoes/cli/shared/output.mjs
 
 const root = process.cwd()
 const cacheDir = path.join(root, '.next/cache/plugin-cli')
-const runnerPath = path.join(cacheDir, 'tool-call-runner.cjs')
+const runnerPath = path.join(cacheDir, `tool-call-runner-${process.pid}.cjs`)
 const booleanFlags = new Set([
   '--allow-error',
   '--confirm',
@@ -30,13 +30,13 @@ function usage() {
     '  node scripts/plugin/tool-call.mjs --tenant <id> --tool <tool> [opcoes]',
     '',
     'Exemplos:',
-    '  node scripts/plugin/tool-call.mjs --tenant 3 --tool connected_erp --provider conta_azul --action listar --resource produtos --limit 2',
-    '  node scripts/plugin/tool-call.mjs --tenant 3 --tool connected_erp --provider conta_azul --action listar_live --resource produtos --limit 2 --allow-error',
-    '  node scripts/plugin/tool-call.mjs --tenant 3 --tool connected_erp_actions --provider conta_azul --action criar --resource clientes --payload-json \'{"nome":"Cliente Teste CLI"}\'',
+    '  node scripts/plugin/tool-call.mjs --tenant 3 --tool connected_erp_bigquery --provider conta_azul --action listar --resource produtos --limit 2',
+    '  node scripts/plugin/tool-call.mjs --tenant 3 --tool connected_erp_api --provider conta_azul --action listar --resource produtos --limit 2 --allow-error',
+    '  node scripts/plugin/tool-call.mjs --tenant 3 --tool connected_erp_api --provider conta_azul --action criar --resource clientes --payload-json \'{"nome":"Cliente Teste CLI"}\'',
     '',
     'Opcoes:',
     '  --tenant <id>                  Tenant usado no contexto da tool.',
-    '  --tool <nome>                  Tool do plugin, ex: connected_erp ou connected_erp_actions.',
+    '  --tool <nome>                  Tool do plugin, ex: connected_erp_bigquery, connected_erp_api, connected_erp ou connected_erp_actions.',
     '  --args <json>                  Args completos da tool. Alias: --args-json.',
     '  --provider <slug>              Provider conectado, ex: conta_azul.',
     '  --action <acao>                Acao da tool.',
@@ -53,7 +53,7 @@ function usage() {
     '  --no-vercel-env                Nao tenta puxar envs do Vercel automaticamente.',
     '  --gcloud-adc-file <path>       Arquivo ADC explicitamente usado em GOOGLE_APPLICATION_CREDENTIALS.',
     '  --no-gcloud-adc                Nao tenta detectar ADC local do gcloud.',
-    '  --execute --confirm           Permite dry_run=false em connected_erp_actions.',
+    '  --execute --confirm           Permite dry_run=false em acoes de escrita via connected_erp_api ou connected_erp_actions.',
     '  --allow-error                  Retorna exit code 0 mesmo quando a tool falhar.',
     '  --help                        Mostra esta ajuda.',
   ].join('\n')
@@ -279,13 +279,23 @@ function buildToolArgs(parsed) {
   return toolArgs
 }
 
+function isConnectedErpReadAction(action) {
+  return action === 'listar' || action === 'ler' || action === 'listar_live' || action === 'ler_live'
+}
+
+function requiresConnectedErpWriteSafety(tool, toolArgs) {
+  if (tool === 'connected_erp_actions') return true
+  if (tool !== 'connected_erp_api') return false
+  return !isConnectedErpReadAction(String(toolArgs.action || 'listar').toLowerCase())
+}
+
 function prepareActionSafety(tool, toolArgs, parsed) {
-  if (tool !== 'connected_erp_actions') return
+  if (!requiresConnectedErpWriteSafety(tool, toolArgs)) return
 
   const wantsExecute = parsed.flags.has('--execute')
   const confirmed = parsed.flags.has('--confirm')
   if (wantsExecute && !confirmed) {
-    throw new Error('Use --confirm junto com --execute para executar connected_erp_actions com dry_run=false.')
+    throw new Error(`Use --confirm junto com --execute para executar ${tool} com dry_run=false.`)
   }
 
   if (wantsExecute && confirmed) {
@@ -295,7 +305,7 @@ function prepareActionSafety(tool, toolArgs, parsed) {
   }
 
   if (toolArgs.dry_run === false) {
-    throw new Error('dry_run=false exige --execute --confirm em connected_erp_actions.')
+    throw new Error(`dry_run=false exige --execute --confirm em ${tool}.`)
   }
   toolArgs.dry_run = true
 }

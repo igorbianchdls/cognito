@@ -36,6 +36,7 @@ function getTenantDatasets(tenantId) {
   return {
     rawDataset: normalizeDatasetId(`org_${id}_raw`, 'rawDataset'),
     normalizedDataset: normalizeDatasetId(`org_${id}_normalized`, 'normalizedDataset'),
+    analyticsDataset: normalizeDatasetId(`org_${id}_analytics`, 'analyticsDataset'),
   }
 }
 
@@ -47,6 +48,7 @@ function destinationConfig(tenantId, projectId) {
     dataset: datasets.rawDataset,
     rawDataset: datasets.rawDataset,
     normalizedDataset: datasets.normalizedDataset,
+    analyticsDataset: datasets.analyticsDataset,
   }
 }
 
@@ -246,10 +248,12 @@ try {
     try {
       await ensureDataset(projectId, tenantId, config.rawDataset)
       await ensureDataset(projectId, tenantId, config.normalizedDataset)
+      await ensureDataset(projectId, tenantId, config.analyticsDataset)
       await markProvisioning(client, tenantId, destination.id, 'succeeded', {
         projectId,
         rawDataset: config.rawDataset,
         normalizedDataset: config.normalizedDataset,
+        analyticsDataset: config.analyticsDataset,
         reason,
       })
       results.push({ ok: true, tenantId, destinationId: String(destination.id), projectId, ...datasets })

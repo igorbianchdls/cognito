@@ -35,6 +35,8 @@ function main() {
   const domainTools = read('src/products/plugin/server/domainTools.ts')
   assert(domainTools.includes('createIntegrationPluginActionAudit'), 'actions Plugin nao gravam audit')
   assert(domainTools.includes('listar_live') && domainTools.includes('ler_live'), 'actions live nao estao expostas')
+  assert(domainTools.includes("connectedErpBigQuery: 'connected_erp_bigquery'"), 'tool connected_erp_bigquery nao registrada')
+  assert(domainTools.includes("connectedErpApi: 'connected_erp_api'"), 'tool connected_erp_api nao registrada')
 
   const bigQueryReader = read('src/products/plugin/server/domain-adapters/shared/connectedBigQueryReader.ts')
   assert(!bigQueryReader.includes('readResources.length > 0'), 'connected_erp leitura BigQuery nao deve liberar qualquer recurso quando ha permissoes parciais')

@@ -1,9 +1,10 @@
 'use client'
 
-import { ChevronDown, Database } from 'lucide-react'
+import { ChevronDown, Database, Loader2, RefreshCw } from 'lucide-react'
 
 import { Switch } from '@/components/ui/switch'
 import { SYNC_FREQUENCY_OPTIONS, type SyncFrequencyOption } from '@/products/integracoes/frontend/features/configuration/lib/syncFrequencyOptions'
+import type { IntegrationConnectionWithUi } from '@/products/integracoes/frontend/services/integracoesApi'
 
 type DataWarehouseSettings = {
   enabled: boolean
@@ -20,6 +21,15 @@ type DataWarehouseSettingsPanelProps = {
     normalizedDataset: string
     analyticsDataset: string
   }
+  connection?: IntegrationConnectionWithUi | null
+  canSync?: boolean
+  syncing?: boolean
+  syncDisabledReason?: string | null
+  syncFeedback?: {
+    tone: 'success' | 'error' | 'info'
+    message: string
+  } | null
+  onSyncNow?: () => void | Promise<void>
   onChange: (value: DataWarehouseSettings) => void
 }
 
@@ -37,13 +47,43 @@ function toggleResource(resources: string[], resource: string) {
     : [...resources, resource]
 }
 
+function formatDateTime(value?: string | null) {
+  if (!value) return 'Ainda não sincronizado'
+  const date = new Date(value)
+  if (Number.isNaN(date.getTime())) return 'Ainda não sincronizado'
+
+  return new Intl.DateTimeFormat('pt-BR', {
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+  }).format(date)
+}
+
+function formatFrequency(value: SyncFrequencyOption) {
+  return SYNC_FREQUENCY_OPTIONS.find((option) => option.value === value)?.label || value
+}
+
 export default function DataWarehouseSettingsPanel({
   value,
   resources,
   datasets,
+  connection,
+  canSync = false,
+  syncing = false,
+  syncDisabledReason,
+  syncFeedback,
+  onSyncNow,
   onChange,
 }: DataWarehouseSettingsPanelProps) {
   const selectedCount = value.selectedResources.length
+  const syncButtonDisabled = !canSync || syncing || Boolean(syncDisabledReason)
+  const syncFeedbackClassName = syncFeedback?.tone === 'error'
+    ? 'border-red-200 bg-red-50 text-red-700'
+    : syncFeedback?.tone === 'success'
+      ? 'border-emerald-200 bg-emerald-50 text-emerald-700'
+      : 'border-[#DCE3F0] bg-[#F7F8FC] text-[#66748D]'
 
   return (
     <section className="rounded-[16px] border border-[#E6EAF4] bg-white p-5">
@@ -128,6 +168,50 @@ export default function DataWarehouseSettingsPanel({
           </select>
           <ChevronDown className="pointer-events-none absolute bottom-3.5 right-3 h-4 w-4 text-[#95A1B8]" />
         </label>
+      </div>
+
+      <div className="mt-5 rounded-[14px] border border-[#E6EAF4] bg-[#FBFCFE] p-4">
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+          <div>
+            <div className="text-[12px] font-semibold uppercase tracking-[0.08em] text-[#98A4BA]">
+              Sincronização
+            </div>
+            <div className="mt-2 space-y-1 text-[13px] text-[#66748D]">
+              <div>
+                <span className="font-semibold text-[#33405A]">Última execução:</span>{' '}
+                {formatDateTime(connection?.lastSyncAt)}
+              </div>
+              <div>
+                <span className="font-semibold text-[#33405A]">Frequência:</span>{' '}
+                {formatFrequency(value.syncFrequency)}
+              </div>
+              {connection?.lastError ? (
+                <div className="text-red-700">
+                  <span className="font-semibold">Último erro:</span> {connection.lastError}
+                </div>
+              ) : null}
+              {syncDisabledReason ? (
+                <div className="text-[#7B879B]">{syncDisabledReason}</div>
+              ) : null}
+            </div>
+          </div>
+
+          <button
+            type="button"
+            onClick={() => void onSyncNow?.()}
+            disabled={syncButtonDisabled}
+            className="inline-flex h-10 shrink-0 items-center justify-center gap-2 rounded-[12px] bg-[#17203A] px-4 text-[13px] font-semibold text-white transition hover:bg-[#0F172C] disabled:cursor-not-allowed disabled:bg-[#D8DEE9] disabled:text-[#748199]"
+          >
+            {syncing ? <Loader2 className="h-4 w-4 animate-spin" /> : <RefreshCw className="h-4 w-4" />}
+            {syncing ? 'Sincronizando...' : 'Sincronizar agora'}
+          </button>
+        </div>
+
+        {syncFeedback ? (
+          <div className={`mt-3 rounded-[10px] border px-3 py-2 text-[12px] ${syncFeedbackClassName}`}>
+            {syncFeedback.message}
+          </div>
+        ) : null}
       </div>
     </section>
   )

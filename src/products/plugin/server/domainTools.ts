@@ -107,6 +107,7 @@ type DataCatalogDomain = 'erp' | 'crm' | 'marketing' | 'ecommerce'
 
 type CrudAction = 'listar' | 'ler'
 type ConnectedReadAction = 'listar' | 'ler' | 'listar_live' | 'ler_live'
+type ConnectedApiReadAction = 'listar' | 'ler' | 'listar_live' | 'ler_live'
 
 type ErpAcoesAction = 'criar' | 'atualizar' | 'baixar' | 'cancelar' | 'estornar' | 'reabrir'
 type ConnectedErpAction =
@@ -118,6 +119,7 @@ type ConnectedErpAction =
   | 'estornar'
   | 'reabrir'
   | 'alterar_status'
+type ConnectedErpApiAction = ConnectedApiReadAction | ConnectedErpAction
 type ConnectedCrmAction =
   | 'criar'
   | 'atualizar'
@@ -557,6 +559,12 @@ const CONNECTED_ERP_SCHEMA = createCrudSchema(
   ['listar', 'ler', 'listar_live', 'ler_live'] satisfies ConnectedReadAction[],
 )
 
+const CONNECTED_ERP_BIGQUERY_SCHEMA = createCrudSchema(
+  [...CONNECTED_ERP_RESOURCES],
+  'Resource canonico de ERP conectado via /integracoes. Consulta somente dados sincronizados/normalizados no BigQuery. Use para dashboards, historico e analises. Use connected_erp_api quando precisar ler diretamente a API do provider.',
+  ['listar', 'ler'] satisfies CrudAction[],
+)
+
 const CONNECTED_CRM_SCHEMA = createCrudSchema(
   [...CONNECTED_CRM_RESOURCES],
   'Resource canonico de CRM conectado via /integracoes. Use contas, contatos, leads, oportunidades ou atividades.',
@@ -630,6 +638,67 @@ const CONNECTED_ERP_ACTIONS_SCHEMA = {
     },
   },
   required: ['resource', 'action'],
+  additionalProperties: true,
+} as const satisfies McpToolInputSchema
+
+const CONNECTED_ERP_API_SCHEMA = {
+  type: 'object',
+  properties: {
+    provider: {
+      type: 'string',
+      description: 'Provider conectado em /integracoes, como omie, conta_azul, bling ou olist_erp. Opcional quando houver apenas uma conexao ativa.',
+    },
+    resource: {
+      type: 'string',
+      enum: [...CONNECTED_ERP_RESOURCES],
+      description: 'Recurso do ERP conectado operado diretamente via API do provider.',
+    },
+    action: {
+      type: 'string',
+      enum: ['listar', 'ler', 'listar_live', 'ler_live', 'criar', 'atualizar', 'baixar', 'cancelar', 'deletar', 'estornar', 'reabrir', 'alterar_status'] satisfies ConnectedErpApiAction[],
+      description: 'Use listar/ler para leitura live na API do provider. Use criar/atualizar/baixar/cancelar/deletar somente quando suportado pelo provider/resource. dry_run=true por padrao para escritas.',
+    },
+    id: {
+      type: 'string',
+      description: 'ID externo ou ID do provider. Obrigatorio para ler, atualizar, baixar, cancelar e deletar.',
+    },
+    limit: {
+      type: 'integer',
+      description: 'Limite de linhas para listar/listar_live.',
+    },
+    params: {
+      type: 'object',
+      description: 'Filtros de leitura live enviados ao adapter da API.',
+      additionalProperties: true,
+    },
+    filters: {
+      type: 'object',
+      description: 'Alias de params para filtros de leitura live.',
+      additionalProperties: true,
+    },
+    include_provider_fields: {
+      type: 'boolean',
+      description: 'Inclui campos brutos/provider quando suportado.',
+    },
+    payload: {
+      type: 'object',
+      description: 'Campos da operacao enviados ao provider em acoes de escrita. O contrato exato varia por resource/provider.',
+      additionalProperties: true,
+    },
+    dry_run: {
+      type: 'boolean',
+      description: 'Default true para acoes de escrita. Quando true, valida intencao/permissao e retorna preview sem chamar a API.',
+    },
+    confirmed: {
+      type: 'boolean',
+      description: 'Obrigatorio como true para execucao real quando a conexao exige confirmacao.',
+    },
+    idempotency_key: {
+      type: 'string',
+      description: 'Chave opcional para rastrear operacoes sensiveis e evitar duplicidade.',
+    },
+  },
+  required: ['action', 'resource'],
   additionalProperties: true,
 } as const satisfies McpToolInputSchema
 
@@ -835,6 +904,51 @@ const ERP_ACOES_OUTPUT_SCHEMA = {
     },
   },
   required: ['success', 'tool', 'action', 'resource', 'title', 'dry_run', 'rows', 'columns', 'count'],
+  additionalProperties: true,
+} as const satisfies McpToolInputSchema
+
+const CONNECTED_ERP_API_OUTPUT_SCHEMA = {
+  type: 'object',
+  properties: {
+    success: { type: 'boolean' },
+    tool: { type: 'string' },
+    action: { type: 'string' },
+    resource: { type: 'string' },
+    title: { type: 'string' },
+    dry_run: { type: 'boolean' },
+    rows: {
+      type: 'array',
+      items: {
+        type: 'object',
+        additionalProperties: true,
+      },
+    },
+    columns: {
+      type: 'array',
+      items: { type: 'string' },
+    },
+    count: { type: 'integer' },
+    providers: {
+      type: 'array',
+      items: {
+        type: 'object',
+        additionalProperties: true,
+      },
+    },
+    result: {
+      type: 'object',
+      additionalProperties: true,
+    },
+    errors: {
+      type: 'array',
+      items: { type: 'string' },
+    },
+    warnings: {
+      type: 'array',
+      items: { type: 'string' },
+    },
+  },
+  required: ['success', 'tool', 'action', 'resource', 'title', 'rows', 'columns', 'count'],
   additionalProperties: true,
 } as const satisfies McpToolInputSchema
 
@@ -1063,6 +1177,8 @@ export const PLUGIN_DOMAIN_TOOL_NAMES = {
   erp: 'erp',
   erpAcoes: 'erp_acoes',
   connectedErp: 'connected_erp',
+  connectedErpBigQuery: 'connected_erp_bigquery',
+  connectedErpApi: 'connected_erp_api',
   connectedErpActions: 'connected_erp_actions',
   crm: 'crm',
   connectedCrm: 'connected_crm',
@@ -1125,7 +1241,7 @@ const CONNECTED_ERP_DOMAIN_TOOL_DEFINITION = {
   name: PLUGIN_DOMAIN_TOOL_NAMES.connectedErp,
   title: 'Connected ERP',
   description:
-    'Consulta ERPs conectados pelo cliente em /integracoes. listar/ler usam BigQuery sincronizado; listar_live/ler_live sao reservadas para leitura direta na API do provider quando o adapter live estiver implementado. Mantem a tool erp atual separada.',
+    'Compatibilidade/deprecated. Consulta ERPs conectados pelo cliente em /integracoes. Preferir connected_erp_bigquery para dados sincronizados/normalizados e connected_erp_api para leitura live/API.',
   inputSchema: CONNECTED_ERP_SCHEMA,
   outputSchema: CONNECTED_DOMAIN_OUTPUT_SCHEMA,
   securitySchemes: READ_SECURITY_SCHEMES,
@@ -1133,11 +1249,35 @@ const CONNECTED_ERP_DOMAIN_TOOL_DEFINITION = {
   _meta: TOOL_META,
 } as const satisfies DomainToolDefinition
 
+const CONNECTED_ERP_BIGQUERY_DOMAIN_TOOL_DEFINITION = {
+  name: PLUGIN_DOMAIN_TOOL_NAMES.connectedErpBigQuery,
+  title: 'Connected ERP BigQuery',
+  description:
+    'Consulta dados de ERPs conectados ja sincronizados e normalizados no BigQuery. Use para dashboards, analises historicas, relatorios e consultas sem efeito colateral. Acoes suportadas: listar e ler. Nao chama a API do ERP.',
+  inputSchema: CONNECTED_ERP_BIGQUERY_SCHEMA,
+  outputSchema: CONNECTED_DOMAIN_OUTPUT_SCHEMA,
+  securitySchemes: READ_SECURITY_SCHEMES,
+  annotations: READ_ONLY_ANNOTATIONS,
+  _meta: TOOL_META,
+} as const satisfies DomainToolDefinition
+
+const CONNECTED_ERP_API_DOMAIN_TOOL_DEFINITION = {
+  name: PLUGIN_DOMAIN_TOOL_NAMES.connectedErpApi,
+  title: 'Connected ERP API',
+  description:
+    'Opera diretamente na API do ERP conectado em /integracoes. Use listar/ler para leitura live do provider e criar/atualizar/baixar/cancelar/deletar para acoes transacionais quando suportadas. Escritas usam dry_run=true por padrao e dry_run=false exige confirmacao.',
+  inputSchema: CONNECTED_ERP_API_SCHEMA,
+  outputSchema: CONNECTED_ERP_API_OUTPUT_SCHEMA,
+  securitySchemes: READ_SECURITY_SCHEMES,
+  annotations: WRITE_ANNOTATIONS,
+  _meta: TOOL_META,
+} as const satisfies DomainToolDefinition
+
 const CONNECTED_ERP_ACTIONS_DOMAIN_TOOL_DEFINITION = {
   name: PLUGIN_DOMAIN_TOOL_NAMES.connectedErpActions,
   title: 'Connected ERP actions',
   description:
-    'Executa acoes transacionais diretamente na API do ERP conectado em /integracoes. Use para criar, atualizar, baixar, cancelar e deletar quando o provider/resource suportar. dry_run=true por padrao; dry_run=false exige confirmacao e adapter provider implementado.',
+    'Compatibilidade/deprecated. Executa acoes transacionais diretamente na API do ERP conectado em /integracoes. Preferir connected_erp_api para novas chamadas. dry_run=true por padrao; dry_run=false exige confirmacao e adapter provider implementado.',
   inputSchema: CONNECTED_ERP_ACTIONS_SCHEMA,
   outputSchema: ERP_ACOES_OUTPUT_SCHEMA,
   securitySchemes: READ_SECURITY_SCHEMES,
@@ -1293,6 +1433,8 @@ export function listPluginDomainToolDefinitions() {
   return [
     ERP_DOMAIN_TOOL_DEFINITION,
     ERP_ACOES_DOMAIN_TOOL_DEFINITION,
+    CONNECTED_ERP_BIGQUERY_DOMAIN_TOOL_DEFINITION,
+    CONNECTED_ERP_API_DOMAIN_TOOL_DEFINITION,
     CONNECTED_ERP_DOMAIN_TOOL_DEFINITION,
     CONNECTED_ERP_ACTIONS_DOMAIN_TOOL_DEFINITION,
     CRM_DOMAIN_TOOL_DEFINITION,
@@ -1314,6 +1456,8 @@ export function listPluginDomainToolDefinitions() {
 export const PLUGIN_DOMAIN_TOOL_DEFINITIONS = [
   ERP_DOMAIN_TOOL_DEFINITION,
   ERP_ACOES_DOMAIN_TOOL_DEFINITION,
+  CONNECTED_ERP_BIGQUERY_DOMAIN_TOOL_DEFINITION,
+  CONNECTED_ERP_API_DOMAIN_TOOL_DEFINITION,
   CONNECTED_ERP_DOMAIN_TOOL_DEFINITION,
   CONNECTED_ERP_ACTIONS_DOMAIN_TOOL_DEFINITION,
   CRM_DOMAIN_TOOL_DEFINITION,
@@ -4467,6 +4611,110 @@ async function callConnectedErp(args: unknown, context: CognitoMcpServerContext)
   }
 }
 
+function connectedReadResponse(
+  structuredContent: ConnectedDomainToolResult,
+  toolName: string,
+  source: 'bigquery' | 'api',
+  actionOverride?: string,
+) {
+  const patched = {
+    ...structuredContent,
+    tool: toolName,
+    ...(actionOverride ? { action: actionOverride } : {}),
+    title: `${toolName} - ${structuredContent.resource}`,
+    source,
+  }
+  return {
+    content: [{ type: 'text', text: JSON.stringify(patched, null, 2) }],
+    structuredContent: patched,
+    isError: !patched.success,
+  }
+}
+
+function connectedErpErrorResponse(input: {
+  tool: string
+  action: string
+  resource: string
+  message: string
+}) {
+  const structuredContent = {
+    success: false,
+    tool: input.tool,
+    action: input.action,
+    resource: input.resource,
+    title: `${input.tool} - ${input.resource || 'recurso invalido'}`,
+    rows: [],
+    columns: [],
+    count: 0,
+    providers: [],
+    errors: [input.message],
+  }
+  return {
+    content: [{ type: 'text', text: JSON.stringify(structuredContent, null, 2) }],
+    structuredContent,
+    isError: true,
+  }
+}
+
+async function callConnectedErpBigQuery(args: unknown, context: CognitoMcpServerContext) {
+  const input = toObj(args)
+  const action = toText(input.action || 'listar').toLowerCase()
+  const resource = toText(input.resource)
+
+  if (action === 'listar_live' || action === 'ler_live') {
+    return connectedErpErrorResponse({
+      tool: PLUGIN_DOMAIN_TOOL_NAMES.connectedErpBigQuery,
+      action,
+      resource,
+      message: 'connected_erp_bigquery consulta somente dados sincronizados no BigQuery. Use connected_erp_api para leitura live na API do provider.',
+    })
+  }
+
+  const structuredContent = await executeConnectedErpTool({
+    ...input,
+    action: action || 'listar',
+  }, context)
+  return connectedReadResponse(structuredContent, PLUGIN_DOMAIN_TOOL_NAMES.connectedErpBigQuery, 'bigquery')
+}
+
+function isConnectedErpApiReadAction(action: string): action is ConnectedApiReadAction {
+  return action === 'listar' || action === 'ler' || action === 'listar_live' || action === 'ler_live'
+}
+
+function toConnectedErpLiveAction(action: ConnectedApiReadAction) {
+  if (action === 'listar') return 'listar_live'
+  if (action === 'ler') return 'ler_live'
+  return action
+}
+
+async function callConnectedErpApi(args: unknown, context: CognitoMcpServerContext) {
+  const input = toObj(args)
+  const action = toText(input.action || 'listar').toLowerCase()
+
+  if (isConnectedErpApiReadAction(action)) {
+    const liveAction = toConnectedErpLiveAction(action)
+    const structuredContent = await executeConnectedErpTool({
+      ...input,
+      action: liveAction,
+    }, context)
+    return connectedReadResponse(
+      structuredContent,
+      PLUGIN_DOMAIN_TOOL_NAMES.connectedErpApi,
+      'api',
+      action === 'listar' || action === 'ler' ? action : undefined,
+    )
+  }
+
+  return callConnectedProviderAction({
+    args,
+    context,
+    domain: 'erp',
+    tool: PLUGIN_DOMAIN_TOOL_NAMES.connectedErpApi,
+    resources: CONNECTED_ERP_ACTIONS_ALLOWED_RESOURCES,
+    actionsByResource: CONNECTED_ERP_ACTIONS_BY_RESOURCE,
+  })
+}
+
 async function callConnectedCrm(args: unknown, context: CognitoMcpServerContext) {
   const structuredContent = await executeConnectedCrmTool(args, context)
   return {
@@ -4483,7 +4731,7 @@ const CONNECTED_ERP_ACTIONS_BY_RESOURCE: Record<string, readonly ConnectedErpAct
   'contas-a-pagar': ['criar', 'atualizar', 'baixar'],
   'pedidos-venda': ['criar', 'atualizar', 'cancelar'],
   'centros-custo': ['criar'],
-  produtos: ['criar', 'atualizar', 'deletar'],
+  produtos: ['criar', 'deletar'],
   servicos: ['criar', 'atualizar'],
   contratos: ['criar', 'atualizar', 'deletar'],
 }
@@ -5181,6 +5429,10 @@ export async function callPluginDomainTool(
       return callCrud(args, context, PLUGIN_DOMAIN_TOOL_NAMES.erp, ERP_ALLOWED_RESOURCES)
     case PLUGIN_DOMAIN_TOOL_NAMES.erpAcoes:
       return callErpAcoes(args, context)
+    case PLUGIN_DOMAIN_TOOL_NAMES.connectedErpBigQuery:
+      return callConnectedErpBigQuery(args, context)
+    case PLUGIN_DOMAIN_TOOL_NAMES.connectedErpApi:
+      return callConnectedErpApi(args, context)
     case PLUGIN_DOMAIN_TOOL_NAMES.connectedErp:
       return callConnectedErp(args, context)
     case PLUGIN_DOMAIN_TOOL_NAMES.connectedErpActions:

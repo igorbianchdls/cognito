@@ -139,6 +139,47 @@ async function createQueuedRun(client, input) {
         }),
       ],
     )
+    const run = result.rows[0]
+    await client.query(
+      `INSERT INTO integrations.sync_dispatch_outbox
+        (tenant_id, connection_id, pipeline_id, destination_id, run_id, trigger, payload)
+       VALUES
+        ($1, $2, $3, $4, $5, 'manual', $6::jsonb)
+       ON CONFLICT (run_id) DO UPDATE
+       SET status = CASE
+             WHEN integrations.sync_dispatch_outbox.status = 'published' THEN integrations.sync_dispatch_outbox.status
+             ELSE 'pending'
+           END,
+           attempts = CASE
+             WHEN integrations.sync_dispatch_outbox.status = 'published' THEN integrations.sync_dispatch_outbox.attempts
+             ELSE 0
+           END,
+           next_attempt_at = now(),
+           locked_until = NULL,
+           lock_token = NULL,
+           last_error = NULL,
+           payload = EXCLUDED.payload,
+           updated_at = now()`,
+      [
+        input.tenantId,
+        input.connectionId,
+        input.pipelineId || null,
+        input.destinationId || null,
+        run.id,
+        JSON.stringify({
+          tenantId: input.tenantId,
+          connectionId: String(input.connectionId),
+          pipelineId: input.pipelineId ? String(input.pipelineId) : undefined,
+          destinationId: input.destinationId ? String(input.destinationId) : undefined,
+          runId: String(run.id),
+          trigger: 'manual',
+          resources: input.resources,
+          requestedBy: input.requestedBy,
+          setupMode: 'cloud',
+          cli: true,
+        }),
+      ],
+    )
     await client.query(
       `UPDATE integrations.connections
        SET last_sync_at = now(), updated_at = now()
@@ -146,7 +187,7 @@ async function createQueuedRun(client, input) {
       [input.tenantId, input.connectionId],
     )
     await client.query('COMMIT')
-    return result.rows[0]
+    return run
   } catch (error) {
     await client.query('ROLLBACK').catch(() => {})
     throw error

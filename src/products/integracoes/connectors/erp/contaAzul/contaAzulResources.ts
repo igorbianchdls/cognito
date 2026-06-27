@@ -147,7 +147,7 @@ export const CONTA_AZUL_RESOURCE_CONFIGS: ContaAzulResourceConfig[] = [
   },
   {
     resource: 'produtos',
-    path: envResourcePath('produtos', '/v1/produtos'),
+    path: envResourcePath('produtos', '/v1/produto/busca'),
     itemKeys: ['itens', 'items', 'data', 'content', 'produtos'],
     defaultPageSize: DEFAULT_PAGE_SIZE,
     supportsIncremental: false,

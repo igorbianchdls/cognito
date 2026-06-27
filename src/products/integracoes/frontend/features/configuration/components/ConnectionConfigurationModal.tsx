@@ -122,6 +122,11 @@ export default function ConnectionConfigurationModal({
   const [loading, setLoading] = useState(false)
   const [saving, setSaving] = useState(false)
   const [savingAndSyncing, setSavingAndSyncing] = useState(false)
+  const [syncing, setSyncing] = useState(false)
+  const [syncFeedback, setSyncFeedback] = useState<{
+    tone: 'success' | 'error' | 'info'
+    message: string
+  } | null>(null)
   const [error, setError] = useState<string | null>(null)
 
   const toolkitSlug = String(connection?.metadata?.toolkitSlug || connection?.provider || '').toUpperCase()
@@ -133,17 +138,37 @@ export default function ConnectionConfigurationModal({
   const canSync = Boolean(connection && ['connected', 'syncing', 'warning'].includes(connection.status))
   const canReconnect = Boolean(connection && ['pending_auth', 'error', 'warning'].includes(connection.status))
   const canSaveAndSync = canSync && dataWarehouse.enabled
+  const hasUnsavedChanges = useMemo(() => {
+    if (!configuration) return false
+    const baseline = buildState(configuration)
+    return (
+      JSON.stringify(baseline.dataWarehouse) !== JSON.stringify(dataWarehouse)
+      || JSON.stringify(baseline.mcp) !== JSON.stringify(mcp)
+    )
+  }, [configuration, dataWarehouse, mcp])
+  const syncDisabledReason = (() => {
+    if (!dataWarehouse.enabled) return 'Ative o data warehouse para sincronizar os dados para o BigQuery.'
+    if (!configuration) return 'Carregue a configuração antes de sincronizar.'
+    if (!dataWarehouse.selectedResources.length) return 'Selecione pelo menos um recurso para sincronizar.'
+    if (hasUnsavedChanges) return 'Salve as alterações antes de sincronizar, ou use "Salvar e enviar agora".'
+    if (!onSync) return 'Sincronização manual indisponível nesta tela.'
+    if (busy || saving || savingAndSyncing || syncing) return 'Aguarde a operação atual terminar antes de sincronizar.'
+    if (!canSync) return 'A conexão precisa estar conectada antes de sincronizar.'
+    return null
+  })()
 
   useEffect(() => {
     if (!open || !connection) {
       setConfiguration(null)
       setError(null)
+      setSyncFeedback(null)
       return
     }
 
     let active = true
     setLoading(true)
     setError(null)
+    setSyncFeedback(null)
     void fetchIntegrationConnectionConfiguration(connection.id, connection.tenantId)
       .then((nextConfiguration) => {
         if (!active) return
@@ -168,6 +193,7 @@ export default function ConnectionConfigurationModal({
     if (!connection) return
     setSaving(true)
     setError(null)
+    setSyncFeedback(null)
     try {
       const saved = await saveIntegrationConnectionConfiguration(connection.id, {
         tenantId: connection.tenantId,
@@ -191,6 +217,7 @@ export default function ConnectionConfigurationModal({
     if (!connection) return
     setSavingAndSyncing(true)
     setError(null)
+    setSyncFeedback(null)
     try {
       const saved = await saveIntegrationConnectionConfiguration(connection.id, {
         tenantId: connection.tenantId,
@@ -208,6 +235,27 @@ export default function ConnectionConfigurationModal({
       setError(nextError instanceof Error ? nextError.message : 'Erro ao salvar e enviar dados')
     } finally {
       setSavingAndSyncing(false)
+    }
+  }
+
+  async function syncNow() {
+    if (!connection || !configuration || syncing || syncDisabledReason) return
+    setSyncing(true)
+    setError(null)
+    setSyncFeedback(null)
+    try {
+      await onSync?.(connection, configuration)
+      setSyncFeedback({
+        tone: 'success',
+        message: 'Sincronização enviada. O processamento roda em segundo plano e o BigQuery será atualizado quando o run terminar.',
+      })
+    } catch (nextError) {
+      setSyncFeedback({
+        tone: 'error',
+        message: nextError instanceof Error ? nextError.message : 'Erro ao solicitar sincronização',
+      })
+    } finally {
+      setSyncing(false)
     }
   }
 
@@ -250,6 +298,12 @@ export default function ConnectionConfigurationModal({
                     value={dataWarehouse}
                     resources={resources}
                     datasets={configuration?.datasets}
+                    connection={connection}
+                    canSync={canSync && dataWarehouse.enabled && Boolean(configuration) && Boolean(onSync)}
+                    syncing={syncing}
+                    syncDisabledReason={syncDisabledReason}
+                    syncFeedback={syncFeedback}
+                    onSyncNow={syncNow}
                     onChange={setDataWarehouse}
                   />
                   <McpPermissionsSettingsPanel
@@ -271,17 +325,6 @@ export default function ConnectionConfigurationModal({
                   >
                     <RotateCcw className="h-4 w-4" />
                     Reconectar
-                  </button>
-                ) : null}
-                {canSync ? (
-                  <button
-                    type="button"
-                    onClick={() => onSync?.(connection, configuration || undefined)}
-                    disabled={busy || saving || savingAndSyncing}
-                    className="inline-flex h-10 items-center justify-center gap-2 rounded-[12px] border border-[#DCE3F0] bg-white px-4 text-[13px] font-semibold text-[#33405A] transition hover:bg-[#F7F8FC] disabled:opacity-60"
-                  >
-                    <RefreshCw className="h-4 w-4" />
-                    Sincronizar agora
                   </button>
                 ) : null}
               </div>
