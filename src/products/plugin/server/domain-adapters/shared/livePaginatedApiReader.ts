@@ -63,6 +63,24 @@ function numberValue(row: JsonRecord, keys: string[]) {
   return Number.isFinite(parsed) ? parsed : undefined
 }
 
+function normalizeDate(value: unknown) {
+  const raw = text({ value }, ['value'])
+  if (!raw) return undefined
+  const match = raw.match(/^(\d{4}-\d{2}-\d{2})/)
+  if (match) return match[1]
+  const parsed = new Date(raw)
+  if (Number.isNaN(parsed.getTime())) return undefined
+  return parsed.toISOString().slice(0, 10)
+}
+
+function normalizeBoolean(value: unknown) {
+  const raw = text({ value }, ['value'])?.toLowerCase()
+  if (!raw) return undefined
+  if (['1', 'true', 'sim', 'yes', 'ativo', 'active'].includes(raw)) return true
+  if (['0', 'false', 'nao', 'não', 'no', 'inativo', 'inactive'].includes(raw)) return false
+  return undefined
+}
+
 function providerId(row: JsonRecord) {
   return text(row, [
     'id',
@@ -139,6 +157,110 @@ function commonFields(resource: string, row: JsonRecord) {
   }
 }
 
+function filterDateValue(resource: string, row: JsonRecord, preferredField?: string) {
+  const keys = [
+    preferredField,
+    'data',
+    'date',
+    'created_at',
+    'updated_at',
+    'criado_em',
+    'atualizado_em',
+    'data_pedido',
+    'data_emissao',
+    'data_vencimento',
+    'vencimento',
+    'due_date',
+    'data_compra',
+    'data_transferencia',
+    resource === 'contas-a-receber' || resource === 'contas-a-pagar' ? 'data_vencimento' : undefined,
+  ].filter(Boolean) as string[]
+  return normalizeDate(text(row, keys))
+}
+
+function rowMatchesText(row: JsonRecord, query: string) {
+  return JSON.stringify(row).toLowerCase().includes(query.toLowerCase())
+}
+
+function getFilterText(filters: JsonRecord, keys: string[]) {
+  for (const key of keys) {
+    const value = text(filters, [key])
+    if (value) return value
+  }
+  return undefined
+}
+
+function matchesExactFilter(row: JsonRecord, filters: JsonRecord, filterKey: string, rowKeys: string[]) {
+  const expected = getFilterText(filters, [filterKey])
+  if (!expected) return true
+  const found = text(row, rowKeys)
+  return found ? found === expected : false
+}
+
+function rowMatchesFilters(resource: string, row: JsonRecord, filters: JsonRecord) {
+  const q = getFilterText(filters, ['q', 'search', 'query'])
+  if (q && !rowMatchesText(row, q)) return false
+
+  const expectedStatus = getFilterText(filters, ['status', 'situacao'])
+  if (expectedStatus) {
+    const currentStatus = text(row, ['status', 'situacao', 'ativo', 'inativo'])
+    if (!currentStatus || currentStatus.toLowerCase() !== expectedStatus.toLowerCase()) return false
+  }
+
+  const expectedActive = normalizeBoolean(filters.ativo)
+  if (expectedActive !== undefined) {
+    const currentActive = normalizeBoolean(text(row, ['ativo', 'active', 'situacao', 'status']))
+    if (currentActive !== expectedActive) return false
+  }
+
+  const de = normalizeDate(filters.de ?? filters.date_from ?? filters.start_date)
+  const ate = normalizeDate(filters.ate ?? filters.date_to ?? filters.end_date)
+  if (de || ate) {
+    const rowDate = filterDateValue(resource, row, getFilterText(filters, ['date_field', 'data_campo']))
+    if (!rowDate) return false
+    if (de && rowDate < de) return false
+    if (ate && rowDate > ate) return false
+  }
+
+  const minValue = numberValue(filters, ['valor_min', 'min_value'])
+  const maxValue = numberValue(filters, ['valor_max', 'max_value'])
+  if (minValue !== undefined || maxValue !== undefined) {
+    const value = numberValue(row, ['valor', 'valor_total', 'total', 'amount', 'preco', 'preco_venda'])
+    if (value === undefined) return false
+    if (minValue !== undefined && value < minValue) return false
+    if (maxValue !== undefined && value > maxValue) return false
+  }
+
+  return [
+    matchesExactFilter(row, filters, 'external_id', ['id', 'uuid', 'external_id', 'codigo', 'numero']),
+    matchesExactFilter(row, filters, 'cliente_id', ['cliente.id', 'cliente_id', 'id_cliente', 'contato.id']),
+    matchesExactFilter(row, filters, 'fornecedor_id', ['fornecedor.id', 'fornecedor_id', 'id_fornecedor', 'contato.id']),
+    matchesExactFilter(row, filters, 'produto_id', ['produto.id', 'produto_id', 'id_produto', 'codigo_produto']),
+    matchesExactFilter(row, filters, 'categoria_id', ['categoria.id', 'categoria_id', 'id_categoria']),
+    matchesExactFilter(row, filters, 'centro_custo_id', ['centro_custo.id', 'centro_custo_id', 'id_centro_custo']),
+    matchesExactFilter(row, filters, 'vendedor_id', ['vendedor.id', 'vendedor_id', 'id_vendedor']),
+    matchesExactFilter(row, filters, 'conta_financeira_id', ['conta_financeira.id', 'conta_financeira_id', 'id_conta_financeira']),
+    matchesExactFilter(row, filters, 'documento', ['documento', 'cpf_cnpj', 'cnpj_cpf', 'cnpj', 'cpf']),
+    matchesExactFilter(row, filters, 'numero', ['numero', 'number', 'codigo']),
+  ].every(Boolean)
+}
+
+function compareRows(resource: string, sortBy: string, sortDir: string) {
+  const direction = sortDir.toLowerCase() === 'asc' ? 1 : -1
+  return (left: JsonRecord, right: JsonRecord) => {
+    const leftValue = sortBy === 'data'
+      ? filterDateValue(resource, left)
+      : text(left, [sortBy]) ?? numberValue(left, [sortBy])
+    const rightValue = sortBy === 'data'
+      ? filterDateValue(resource, right)
+      : text(right, [sortBy]) ?? numberValue(right, [sortBy])
+    if (leftValue === rightValue) return 0
+    if (leftValue == null) return 1
+    if (rightValue == null) return -1
+    return String(leftValue).localeCompare(String(rightValue), 'pt-BR', { numeric: true }) * direction
+  }
+}
+
 function toDomainRecord(input: {
   provider: string
   resource: string
@@ -163,6 +285,8 @@ export async function listLiveFromPaginatedApi<Resource extends string, Config e
   toolInput: ConnectedDomainAdapterInput<Resource>
 }): Promise<ConnectedDomainAdapterResult> {
   const rows: ConnectedDomainRecord[] = []
+  const filteredItems: JsonRecord[] = []
+  const filters = input.toolInput.filters || {}
   const minPageSize = Math.max(1, Number(input.config.minPageSize || 1))
   const pageSize = Math.max(minPageSize, Math.min(input.toolInput.limit, 200))
   let truncated = false
@@ -170,16 +294,27 @@ export async function listLiveFromPaginatedApi<Resource extends string, Config e
   for await (const page of input.client.paginate(input.config, { pageSize })) {
     const items = input.config.transformItems ? input.config.transformItems(page.items) : page.items
     for (const item of items) {
-      rows.push(toDomainRecord({
-        provider: input.provider,
-        resource: input.toolInput.resource,
-        row: item,
-        includeProviderFields: input.toolInput.includeProviderFields,
-      }))
-      if (rows.length >= input.toolInput.limit) break
+      if (!rowMatchesFilters(input.toolInput.resource, item, filters)) continue
+      filteredItems.push(item)
+      if (filteredItems.length >= input.toolInput.limit) break
     }
-    truncated = truncated || page.truncated || (page.hasMore && rows.length >= input.toolInput.limit)
-    if (rows.length >= input.toolInput.limit) break
+    truncated = truncated || page.truncated || (page.hasMore && filteredItems.length >= input.toolInput.limit)
+    if (filteredItems.length >= input.toolInput.limit) break
+  }
+
+  const sortBy = getFilterText(filters, ['sort_by', 'order_by'])
+  const sortDir = getFilterText(filters, ['sort_dir', 'order_dir']) || 'desc'
+  const finalItems = sortBy
+    ? [...filteredItems].sort(compareRows(input.toolInput.resource, sortBy, sortDir))
+    : filteredItems
+
+  for (const item of finalItems.slice(0, input.toolInput.limit)) {
+    rows.push(toDomainRecord({
+      provider: input.provider,
+      resource: input.toolInput.resource,
+      row: item,
+      includeProviderFields: input.toolInput.includeProviderFields,
+    }))
   }
 
   return {

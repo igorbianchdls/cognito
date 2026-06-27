@@ -561,7 +561,7 @@ const CONNECTED_ERP_SCHEMA = createCrudSchema(
 
 const CONNECTED_ERP_BIGQUERY_SCHEMA = createCrudSchema(
   [...CONNECTED_ERP_RESOURCES],
-  'Resource canonico de ERP conectado via /integracoes. Consulta somente dados sincronizados/normalizados no BigQuery. Use para dashboards, historico e analises. Use connected_erp_api quando precisar ler diretamente a API do provider.',
+  'Resource canonico de ERP conectado via /integracoes. Consulta somente dados sincronizados/normalizados no BigQuery. Use para dashboards, historico e analises. Suporta params/filters com q/search, de/date_from, ate/date_to, date_field/data_campo, status/situacao, valor_min/max, value_field, sort_by/sort_dir, filtros *_id, documento e numero. Para analises agregadas use mode=aggregate, metric=count|sum|avg|min|max, value_field e group_by/granularity=day|week|month|year. Use connected_erp_api quando precisar ler diretamente a API do provider.',
   ['listar', 'ler'] satisfies CrudAction[],
 )
 
@@ -668,7 +668,7 @@ const CONNECTED_ERP_API_SCHEMA = {
     },
     params: {
       type: 'object',
-      description: 'Filtros de leitura live enviados ao adapter da API.',
+      description: 'Filtros de leitura live enviados/aplicados pelo adapter da API. Suporta q/search, status/situacao, de/date_from, ate/date_to, date_field/data_campo, valor_min/max, sort_by/sort_dir, external_id, cliente_id, fornecedor_id, produto_id, categoria_id, centro_custo_id, vendedor_id, conta_financeira_id, documento e numero quando o provider/resource expuser esses campos.',
       additionalProperties: true,
     },
     filters: {

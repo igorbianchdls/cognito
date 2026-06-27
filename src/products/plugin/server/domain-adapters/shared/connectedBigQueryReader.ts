@@ -29,6 +29,7 @@ export type ConnectedBigQueryResourceConfig<Resource extends string> = {
   dateField?: string
   statusField?: string
   orderBy?: 'synced_at' | 'date_field'
+  defaultMetricField?: string
 }
 
 type ReadInput<Resource extends string> =
@@ -68,6 +69,33 @@ function formatBigQueryValue(value: unknown) {
     if (typeof record.value === 'string') return record.value
   }
   return String(value)
+}
+
+function toBoolean(value: unknown) {
+  const normalized = toText(value).toLowerCase()
+  if (['1', 'true', 'sim', 'yes', 'on'].includes(normalized)) return true
+  if (['0', 'false', 'nao', 'não', 'no', 'off'].includes(normalized)) return false
+  return false
+}
+
+function firstText(record: JsonRecord, keys: string[]) {
+  for (const key of keys) {
+    const value = toText(record[key])
+    if (value) return value
+  }
+  return ''
+}
+
+function normalizeDateValue(value: unknown, label: string) {
+  const raw = toText(value)
+  if (!raw) return ''
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(raw)) {
+    throw new DomainAdapterError(`Data invalida em ${label}: ${raw}. Use YYYY-MM-DD.`, {
+      code: 'connected_bigquery_invalid_date',
+      details: { label, value: raw },
+    })
+  }
+  return raw
 }
 
 function normalizeBigQueryIdentifier(value: string, label: string) {
@@ -149,16 +177,17 @@ function getColumnExpression(field: string) {
   return normalizeBigQueryIdentifier(field, 'field')
 }
 
-function buildOptionalDateFilter(config: ConnectedBigQueryResourceConfig<string>, field: string, operator: '>=' | '<=', paramName: string) {
+function getDateExpression(config: ConnectedBigQueryResourceConfig<string>, field: string) {
   if (config.datasetKind === 'normalized') {
-    return `SAFE_CAST(${getColumnExpression(field)} AS DATE) ${operator} @${paramName}`
+    return `SAFE_CAST(${getColumnExpression(field)} AS DATE)`
   }
 
   const [payloadField, rawField] = getJsonValueExpression(field)
-  return `(
-    SAFE_CAST(${payloadField} AS DATE) ${operator} @${paramName}
-    OR SAFE_CAST(${rawField} AS DATE) ${operator} @${paramName}
-  )`
+  return `COALESCE(SAFE_CAST(${payloadField} AS DATE), SAFE_CAST(${rawField} AS DATE))`
+}
+
+function buildOptionalDateFilter(config: ConnectedBigQueryResourceConfig<string>, field: string, operator: '>=' | '<=', paramName: string) {
+  return `${getDateExpression(config, field)} ${operator} @${paramName}`
 }
 
 function buildOptionalStatusFilter(config: ConnectedBigQueryResourceConfig<string>, field: string) {
@@ -180,6 +209,159 @@ function buildOrderBy(config: ConnectedBigQueryResourceConfig<string>) {
     return `COALESCE(SAFE_CAST(${payloadField} AS TIMESTAMP), SAFE_CAST(${rawField} AS TIMESTAMP), synced_at) DESC, synced_at DESC`
   }
   return config.datasetKind === 'normalized' ? 'normalized_at DESC, synced_at DESC' : 'synced_at DESC'
+}
+
+function buildRequestedOrderBy(config: ConnectedBigQueryResourceConfig<string>, filters: JsonRecord) {
+  const sortBy = firstText(filters, ['sort_by', 'order_by'])
+  if (!sortBy) return buildOrderBy(config)
+  const direction = firstText(filters, ['sort_dir', 'order_dir']).toLowerCase() === 'asc' ? 'ASC' : 'DESC'
+  if (sortBy === 'data' || sortBy === 'date') {
+    const field = firstText(filters, ['date_field', 'data_campo']) || config.dateField
+    if (field) return `${getDateExpression(config, field)} ${direction}, ${buildOrderBy(config)}`
+  }
+  return `${getColumnExpression(sortBy)} ${direction}, ${buildOrderBy(config)}`
+}
+
+function getPartitionId(config: ConnectedBigQueryResourceConfig<string>) {
+  return config.datasetKind === 'normalized'
+    ? 'COALESCE(external_id, TO_JSON_STRING(source_payload))'
+    : 'COALESCE(external_id, TO_JSON_STRING(raw_payload))'
+}
+
+function getSelect(config: ConnectedBigQueryResourceConfig<string>) {
+  return config.datasetKind === 'normalized'
+    ? '*'
+    : `
+  tenant_id,
+  connection_id,
+  provider,
+  resource,
+  run_id,
+  external_id,
+  synced_at,
+  raw_payload`
+}
+
+function requestedDateField(config: ConnectedBigQueryResourceConfig<string>, filters: JsonRecord) {
+  return firstText(filters, ['date_field', 'data_campo']) || config.dateField || ''
+}
+
+function isAggregateRequest(filters: JsonRecord) {
+  const mode = firstText(filters, ['mode', 'modo']).toLowerCase()
+  return mode === 'aggregate' || mode === 'agregar' || toBoolean(filters.aggregate)
+}
+
+function parseList(value: unknown) {
+  if (Array.isArray(value)) return value.map(toText).filter(Boolean)
+  return toText(value)
+    .split(',')
+    .map((item) => item.trim())
+    .filter(Boolean)
+}
+
+function defaultMetricField(config: ConnectedBigQueryResourceConfig<string>, filters: JsonRecord) {
+  return firstText(filters, ['value_field', 'valor_campo', 'metric_field'])
+    || config.defaultMetricField
+    || 'valor_total'
+}
+
+function metricExpression(operation: string, field: string) {
+  const normalizedOperation = operation.toLowerCase()
+  if (normalizedOperation === 'count') return 'COUNT(*)'
+  const value = `SAFE_CAST(${getColumnExpression(field)} AS FLOAT64)`
+  if (normalizedOperation === 'avg' || normalizedOperation === 'media') return `AVG(${value})`
+  if (normalizedOperation === 'min') return `MIN(${value})`
+  if (normalizedOperation === 'max') return `MAX(${value})`
+  return `SUM(${value})`
+}
+
+function parseMetrics(config: ConnectedBigQueryResourceConfig<string>, filters: JsonRecord) {
+  const metrics = filters.metrics
+  if (Array.isArray(metrics) && metrics.length) {
+    return metrics
+      .map((metric, index) => {
+        const record = asRecord(metric)
+        const operation = firstText(record, ['operation', 'op', 'metric']) || 'sum'
+        const field = firstText(record, ['field', 'value_field', 'valor_campo']) || defaultMetricField(config, filters)
+        const name = firstText(record, ['name', 'alias']) || `${operation}_${operation === 'count' ? 'registros' : field}`
+        return {
+          name: normalizeBigQueryIdentifier(name || `metric_${index + 1}`, 'metric'),
+          expression: metricExpression(operation, field),
+        }
+      })
+  }
+
+  const operation = firstText(filters, ['metric', 'operation', 'op']) || 'sum'
+  const field = defaultMetricField(config, filters)
+  const name = operation.toLowerCase() === 'count' ? 'count' : `${operation}_${field}`
+  return [{
+    name: normalizeBigQueryIdentifier(name, 'metric'),
+    expression: metricExpression(operation, field),
+  }]
+}
+
+function buildGroupExpression(config: ConnectedBigQueryResourceConfig<string>, group: string, filters: JsonRecord) {
+  const normalized = group.trim().toLowerCase()
+  const dateField = requestedDateField(config, filters)
+  if (['day', 'dia'].includes(normalized) && dateField) {
+    return { name: 'day', expression: `FORMAT_DATE('%Y-%m-%d', ${getDateExpression(config, dateField)})` }
+  }
+  if (['week', 'semana'].includes(normalized) && dateField) {
+    return { name: 'week', expression: `FORMAT_DATE('%G-W%V', ${getDateExpression(config, dateField)})` }
+  }
+  if (['month', 'mes', 'mês'].includes(normalized) && dateField) {
+    return { name: 'month', expression: `FORMAT_DATE('%Y-%m', ${getDateExpression(config, dateField)})` }
+  }
+  if (['year', 'ano'].includes(normalized) && dateField) {
+    return { name: 'year', expression: `FORMAT_DATE('%Y', ${getDateExpression(config, dateField)})` }
+  }
+
+  const field = getColumnExpression(group)
+  return {
+    name: normalizeBigQueryIdentifier(group, 'group_by'),
+    expression: `CAST(${field} AS STRING)`,
+  }
+}
+
+function getAggregateGroups(config: ConnectedBigQueryResourceConfig<string>, filters: JsonRecord) {
+  const groupBy = parseList(filters.group_by ?? filters.groupBy)
+  const granularity = firstText(filters, ['granularity', 'periodo'])
+  const groups = groupBy.length ? groupBy : (granularity ? [granularity] : [])
+  return groups.map((group) => buildGroupExpression(config, group, filters))
+}
+
+function aggregateRecord<Resource extends string>(
+  provider: string,
+  resource: Resource,
+  row: JsonRecord,
+  index: number,
+): ConnectedDomainRecord {
+  return {
+    id: `aggregate:${resource}:${index + 1}`,
+    provider,
+    provider_id: '',
+    resource,
+    fields: Object.fromEntries(Object.entries(row).map(([key, value]) => [key, formatBigQueryValue(value)])),
+  }
+}
+
+function bigQueryFieldError(error: unknown, dataset: string, table: string) {
+  const errorRecord = asRecord(error)
+  const message = toText(errorRecord.message) || String(error)
+  const fieldMatch = message.match(/Unrecognized name:\s*([A-Za-z_][A-Za-z0-9_]*)/i)
+  if (!fieldMatch) return null
+  return new DomainAdapterError(
+    `Campo BigQuery nao encontrado em ${dataset}.${table}: ${fieldMatch[1]}. Ajuste filters/sort_by/group_by/value_field para uma coluna existente na tabela normalizada.`,
+    {
+      code: 'connected_bigquery_unknown_field',
+      details: {
+        dataset,
+        table,
+        field: fieldMatch[1],
+        originalMessage: message,
+      },
+    },
+  )
 }
 
 function getRunId(row: JsonRecord) {
@@ -312,6 +494,8 @@ export async function readConnectedBigQueryResource<Resource extends string>(
   }
 
   const q = toText(input.filters.q)
+    || toText(input.filters.search)
+    || toText(input.filters.query)
   if (q) {
     params.q = `%${q.toLowerCase()}%`
     where.push(config.datasetKind === 'normalized'
@@ -319,40 +503,148 @@ export async function readConnectedBigQueryResource<Resource extends string>(
       : 'LOWER(TO_JSON_STRING(raw_payload)) LIKE @q')
   }
 
-  const status = toText(input.filters.status)
+  const status = toText(input.filters.status) || toText(input.filters.situacao)
   if (status && config.statusField) {
     params.status = status
     where.push(buildOptionalStatusFilter(config, config.statusField))
   }
 
-  const de = toText(input.filters.de)
-  if (de && config.dateField) {
-    if (!/^\d{4}-\d{2}-\d{2}$/.test(de)) throw new DomainAdapterError(`Data invalida: ${de}. Use YYYY-MM-DD.`)
+  const dateField = requestedDateField(config, input.filters)
+  const de = normalizeDateValue(
+    input.filters.de ?? input.filters.date_from ?? input.filters.start_date,
+    'de/date_from',
+  )
+  if (de && dateField) {
     params.dateFrom = de
-    where.push(buildOptionalDateFilter(config, config.dateField, '>=', 'dateFrom'))
+    where.push(buildOptionalDateFilter(config, dateField, '>=', 'dateFrom'))
   }
 
-  const ate = toText(input.filters.ate)
-  if (ate && config.dateField) {
-    if (!/^\d{4}-\d{2}-\d{2}$/.test(ate)) throw new DomainAdapterError(`Data invalida: ${ate}. Use YYYY-MM-DD.`)
+  const ate = normalizeDateValue(
+    input.filters.ate ?? input.filters.date_to ?? input.filters.end_date,
+    'ate/date_to',
+  )
+  if (ate && dateField) {
     params.dateTo = ate
-    where.push(buildOptionalDateFilter(config, config.dateField, '<=', 'dateTo'))
+    where.push(buildOptionalDateFilter(config, dateField, '<=', 'dateTo'))
   }
 
-  const select = config.datasetKind === 'normalized'
-    ? '*'
-    : `
-  tenant_id,
-  connection_id,
-  provider,
-  resource,
-  run_id,
-  external_id,
-  synced_at,
-  raw_payload`
-  const partitionId = config.datasetKind === 'normalized'
-    ? 'COALESCE(external_id, TO_JSON_STRING(source_payload))'
-    : 'COALESCE(external_id, TO_JSON_STRING(raw_payload))'
+  const minValue = toText(input.filters.valor_min ?? input.filters.min_value)
+  const maxValue = toText(input.filters.valor_max ?? input.filters.max_value)
+  if ((minValue || maxValue) && config.datasetKind === 'normalized') {
+    const valueField = defaultMetricField(config, input.filters)
+    if (minValue) {
+      const numericMinValue = Number(minValue)
+      if (!Number.isFinite(numericMinValue)) throw new DomainAdapterError(`valor_min invalido: ${minValue}`)
+      params.valueMin = numericMinValue
+      where.push(`SAFE_CAST(${getColumnExpression(valueField)} AS FLOAT64) >= @valueMin`)
+    }
+    if (maxValue) {
+      const numericMaxValue = Number(maxValue)
+      if (!Number.isFinite(numericMaxValue)) throw new DomainAdapterError(`valor_max invalido: ${maxValue}`)
+      params.valueMax = numericMaxValue
+      where.push(`SAFE_CAST(${getColumnExpression(valueField)} AS FLOAT64) <= @valueMax`)
+    }
+  }
+
+  const exactFilterFields = [
+    'external_id',
+    'cliente_id',
+    'fornecedor_id',
+    'produto_id',
+    'categoria_id',
+    'centro_custo_id',
+    'vendedor_id',
+    'conta_financeira_id',
+    'documento',
+    'numero',
+  ]
+  if (config.datasetKind === 'normalized') {
+    for (const field of exactFilterFields) {
+      const value = toText(input.filters[field])
+      if (!value) continue
+      const paramName = `filter_${field}`
+      params[paramName] = value
+      where.push(`CAST(${getColumnExpression(field)} AS STRING) = @${paramName}`)
+    }
+  }
+
+  const select = getSelect(config)
+  const partitionId = getPartitionId(config)
+  const orderBy = buildRequestedOrderBy(config, input.filters)
+  const aggregate = isAggregateRequest(input.filters)
+
+  if (aggregate) {
+    if (action === 'ler') {
+      throw new DomainAdapterError('mode=aggregate deve ser usado com action=listar.', {
+        code: 'connected_bigquery_invalid_aggregate_action',
+      })
+    }
+    if (config.datasetKind !== 'normalized') {
+      throw new DomainAdapterError('mode=aggregate exige tabela normalizada no BigQuery.', {
+        code: 'connected_bigquery_aggregate_requires_normalized',
+      })
+    }
+
+    const groups = getAggregateGroups(config, input.filters)
+    const metrics = parseMetrics(config, input.filters)
+    const groupSelect = groups.map((group) => `${group.expression} AS ${group.name}`)
+    const metricSelect = metrics.map((metric) => `${metric.expression} AS ${metric.name}`)
+    const groupBy = groups.length ? `GROUP BY ${groups.map((_, index) => String(index + 1)).join(', ')}` : ''
+    const aggregateOrderBy = groups.length
+      ? `ORDER BY ${groups.map((group) => group.name).join(', ')}`
+      : `ORDER BY ${metrics[0]?.name || 'count'} DESC`
+
+    let rows: unknown[]
+    try {
+      const [queryRows] = await getBigQueryClient().query({
+        query: `
+WITH latest AS (
+  SELECT
+    ${select}
+  FROM ${fullTable}
+  WHERE ${where.join(' AND ')}
+  QUALIFY ROW_NUMBER() OVER (PARTITION BY ${partitionId} ORDER BY ${orderBy}) = 1
+)
+SELECT
+  ${[...groupSelect, ...metricSelect].join(',\n  ')}
+FROM latest
+${groupBy}
+${aggregateOrderBy}
+LIMIT @limit
+        `.trim(),
+        params,
+      })
+      rows = queryRows
+    } catch (error) {
+      const errorRecord = asRecord(error)
+      const message = toText(errorRecord.message)
+      const code = toText(errorRecord.code)
+      if (code === '404' || /not found/i.test(message)) {
+        return {
+          rows: [],
+          columns: [],
+          count: 0,
+          warnings: [`Tabela BigQuery sem dados sincronizados: ${dataset}.${table}.`],
+        }
+      }
+      const fieldError = bigQueryFieldError(error, dataset, table)
+      if (fieldError) throw fieldError
+      throw error
+    }
+
+    const aggregateRows = (rows as JsonRecord[]).map((row, index) => (
+      aggregateRecord(input.connection.provider, config.resource, row, index)
+    ))
+
+    return {
+      rows: aggregateRows,
+      columns: aggregateRows.length ? Object.keys(aggregateRows[0].fields) : [],
+      count: aggregateRows.length,
+      warnings: [
+        `Consulta agregada em ${dataset}.${table}. Dados dependem da ultima sincronizacao do pipeline.`,
+      ],
+    }
+  }
 
   let rows: unknown[]
   try {
@@ -362,8 +654,8 @@ SELECT
   ${select}
 FROM ${fullTable}
 WHERE ${where.join(' AND ')}
-QUALIFY ROW_NUMBER() OVER (PARTITION BY ${partitionId} ORDER BY ${buildOrderBy(config)}) = 1
-ORDER BY ${buildOrderBy(config)}
+QUALIFY ROW_NUMBER() OVER (PARTITION BY ${partitionId} ORDER BY ${orderBy}) = 1
+ORDER BY ${orderBy}
 LIMIT @limit
     `.trim(),
       params,
@@ -381,6 +673,8 @@ LIMIT @limit
         warnings: [`Tabela BigQuery sem dados sincronizados: ${dataset}.${table}.`],
       }
     }
+    const fieldError = bigQueryFieldError(error, dataset, table)
+    if (fieldError) throw fieldError
     throw error
   }
 

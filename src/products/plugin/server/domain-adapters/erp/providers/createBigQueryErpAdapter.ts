@@ -48,6 +48,7 @@ export function makeErpConfigs(
       dateField: 'data_vencimento',
       statusField: 'status',
       orderBy: 'date_field',
+      defaultMetricField: 'valor',
     },
     {
       resource: 'contas-a-pagar',
@@ -55,6 +56,7 @@ export function makeErpConfigs(
       dateField: 'data_vencimento',
       statusField: 'status',
       orderBy: 'date_field',
+      defaultMetricField: 'valor',
     },
     {
       resource: 'pedidos-venda',
@@ -62,6 +64,7 @@ export function makeErpConfigs(
       dateField: 'data_pedido',
       statusField: 'status',
       orderBy: 'date_field',
+      defaultMetricField: 'valor_total',
     },
     {
       resource: 'venda-detalhes',
@@ -69,6 +72,7 @@ export function makeErpConfigs(
       dateField: 'data_pedido',
       statusField: 'status',
       orderBy: 'date_field',
+      defaultMetricField: 'valor_total',
     },
     {
       resource: 'venda-proximo-numero',
@@ -83,6 +87,7 @@ export function makeErpConfigs(
       dateField: 'data_compra',
       statusField: 'status',
       orderBy: 'date_field',
+      defaultMetricField: 'valor_total',
     },
     {
       resource: 'itens-venda',
@@ -94,6 +99,7 @@ export function makeErpConfigs(
       dateField: 'data_vencimento',
       statusField: 'status',
       orderBy: 'date_field',
+      defaultMetricField: 'valor',
     },
     {
       resource: 'notas-fiscais',
@@ -101,6 +107,7 @@ export function makeErpConfigs(
       dateField: 'data_emissao',
       statusField: 'status',
       orderBy: 'date_field',
+      defaultMetricField: 'valor_total',
     },
     {
       resource: 'notas-fiscais-servico',
@@ -108,6 +115,7 @@ export function makeErpConfigs(
       dateField: 'data_competencia',
       statusField: 'status',
       orderBy: 'date_field',
+      defaultMetricField: 'valor_total',
     },
     {
       resource: 'notas-consumidor',
@@ -115,6 +123,7 @@ export function makeErpConfigs(
       dateField: 'data_emissao',
       statusField: 'status',
       orderBy: 'date_field',
+      defaultMetricField: 'valor_total',
     },
     {
       resource: 'expedicoes',
@@ -238,6 +247,7 @@ export function makeErpConfigs(
       dateField: 'data_transferencia',
       statusField: 'status',
       orderBy: 'date_field',
+      defaultMetricField: 'valor',
     },
     {
       resource: 'eventos-financeiros-alteracoes',
@@ -245,6 +255,7 @@ export function makeErpConfigs(
       dateField: 'data',
       statusField: 'status',
       orderBy: 'date_field',
+      defaultMetricField: 'valor',
     },
     {
       resource: 'saldos-iniciais',
@@ -252,6 +263,7 @@ export function makeErpConfigs(
       dateField: 'data',
       statusField: 'status',
       orderBy: 'date_field',
+      defaultMetricField: 'valor',
     },
     {
       resource: 'contrato-proximo-numero',

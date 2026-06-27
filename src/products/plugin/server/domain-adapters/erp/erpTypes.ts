@@ -79,6 +79,7 @@ export type ConnectedErpToolInput = {
   id?: unknown
   limit?: unknown
   include_provider_fields?: unknown
+  [key: string]: unknown
 }
 
 export type ConnectedErpAdapterListInput = ConnectedDomainAdapterInput<ConnectedErpResource>

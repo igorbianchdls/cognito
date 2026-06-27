@@ -68,7 +68,54 @@ function normalizeResource(value: unknown): ConnectedErpResource {
 }
 
 function normalizeFilters(input: ConnectedErpToolInput) {
+  const topLevelFilters: JsonRecord = {}
+  const passthroughKeys = [
+    'q',
+    'search',
+    'query',
+    'status',
+    'situacao',
+    'de',
+    'ate',
+    'date_from',
+    'date_to',
+    'start_date',
+    'end_date',
+    'data_campo',
+    'date_field',
+    'sort_by',
+    'sort_dir',
+    'order_by',
+    'order_dir',
+    'mode',
+    'aggregate',
+    'metric',
+    'metrics',
+    'value_field',
+    'valor_campo',
+    'group_by',
+    'granularity',
+    'valor_min',
+    'valor_max',
+    'min_value',
+    'max_value',
+    'external_id',
+    'cliente_id',
+    'fornecedor_id',
+    'produto_id',
+    'categoria_id',
+    'centro_custo_id',
+    'vendedor_id',
+    'conta_financeira_id',
+    'documento',
+    'numero',
+  ] as const
+  for (const key of passthroughKeys) {
+    const value = input[key as keyof ConnectedErpToolInput]
+    if (value !== undefined) topLevelFilters[key] = value
+  }
   return {
+    ...topLevelFilters,
     ...asRecord(input.params),
     ...asRecord(input.filters),
   }
