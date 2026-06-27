@@ -89,6 +89,25 @@ function providerFailureMessage(provider: string, status: number, payload: unkno
   return `Chamada ${provider} falhou com status ${status}${suffix}`
 }
 
+function networkErrorInfo(error: unknown) {
+  const record = error && typeof error === 'object' ? error as Record<string, unknown> : {}
+  const cause = record.cause && typeof record.cause === 'object' ? record.cause as Record<string, unknown> : {}
+  const message = error instanceof Error ? error.message : String(error || 'erro desconhecido')
+  const causeMessage = typeof cause.message === 'string' ? cause.message : ''
+  const code = typeof cause.code === 'string'
+    ? cause.code
+    : typeof record.code === 'string'
+      ? record.code
+      : ''
+  const details = [code, causeMessage].filter(Boolean).join(' - ')
+  return {
+    code,
+    message,
+    causeMessage,
+    formatted: details ? `${message}: ${details}` : message,
+  }
+}
+
 export async function connectorJsonRequest<T = unknown>(request: ConnectorHttpRequest): Promise<ConnectorHttpResponse<T>> {
   const timeoutMs = request.timeoutMs ?? Number(process.env.INTEGRATIONS_HTTP_TIMEOUT_MS || 30000)
   const retry = request.retry || {
@@ -98,15 +117,32 @@ export async function connectorJsonRequest<T = unknown>(request: ConnectorHttpRe
 
   return withRetry(async () => {
     await waitForProviderRateLimit(request.provider, request.rateLimitMs)
-    const response = await fetch(request.url, {
-      method: request.method || 'GET',
-      headers: {
-        ...defaultHeaders(request.body),
-        ...(request.headers || {}),
-      },
-      body: serializeBody(request.body),
-      signal: AbortSignal.timeout(timeoutMs),
-    })
+    let response: Response
+    try {
+      response = await fetch(request.url, {
+        method: request.method || 'GET',
+        headers: {
+          ...defaultHeaders(request.body),
+          ...(request.headers || {}),
+        },
+        body: serializeBody(request.body),
+        signal: AbortSignal.timeout(timeoutMs),
+      })
+    } catch (error) {
+      const info = networkErrorInfo(error)
+      throw new ProviderError({
+        provider: request.provider,
+        resource: request.resource,
+        kind: info.code === 'ETIMEDOUT' || info.message.toLowerCase().includes('timeout') ? 'timeout' : 'network',
+        retryable: true,
+        message: `Chamada ${request.provider} falhou antes da resposta HTTP: ${info.formatted}`,
+        details: {
+          code: info.code,
+          causeMessage: info.causeMessage,
+          url: request.url,
+        },
+      })
+    }
     const payload = await parsePayload<T>(response)
 
     if (!response.ok) {

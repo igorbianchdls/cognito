@@ -92,6 +92,103 @@ node scripts/plugin/tool-call.mjs \
   --allow-error
 ```
 
+## List customers live with filters
+
+Use API live reads when the user needs the current provider state, not the last synced snapshot.
+
+```bash
+node scripts/plugin/tool-call.mjs \
+  --tenant <TENANT_ID> \
+  --tool connected_erp_api \
+  --provider conta_azul \
+  --action listar \
+  --resource clientes \
+  --limit 10 \
+  --params-json '{"q":"teste","sort_by":"nome","sort_dir":"asc"}' \
+  --include-provider-fields \
+  --allow-error
+```
+
+Common live-read filters:
+
+- `q`, `search` or `query` for text search.
+- `status` or `situacao`.
+- `de`/`date_from` and `ate`/`date_to`, with optional `date_field`.
+- `valor_min`, `valor_max`.
+- `external_id`, `cliente_id`, `fornecedor_id`, `produto_id`, `categoria_id`, `centro_custo_id`, `vendedor_id`, `conta_financeira_id`, `documento`, `numero`.
+- `sort_by`, `sort_dir`.
+
+These filters are applied by the adapter when the provider endpoint does not expose an equivalent query parameter.
+
+## Read synced customers from BigQuery
+
+Use BigQuery for dashboards, historical reports and analytical questions. These reads do not call Conta Azul.
+
+```bash
+node scripts/plugin/tool-call.mjs \
+  --tenant <TENANT_ID> \
+  --tool connected_erp_bigquery \
+  --provider conta_azul \
+  --action listar \
+  --resource clientes \
+  --limit 10 \
+  --params-json '{"q":"teste","sort_by":"nome","sort_dir":"asc"}' \
+  --allow-error
+```
+
+## Aggregate receivables by status from BigQuery
+
+```bash
+node scripts/plugin/tool-call.mjs \
+  --tenant <TENANT_ID> \
+  --tool connected_erp_bigquery \
+  --provider conta_azul \
+  --action listar \
+  --resource contas-a-receber \
+  --limit 20 \
+  --params-json '{"mode":"aggregate","metric":"sum","group_by":"status"}' \
+  --allow-error
+```
+
+Expected aggregate rows use metric aliases such as `sum_valor`, `sum_valor_total`, `count`, `avg_valor`, depending on `metric` and `value_field`.
+
+## Aggregate sales by month from BigQuery
+
+```bash
+node scripts/plugin/tool-call.mjs \
+  --tenant <TENANT_ID> \
+  --tool connected_erp_bigquery \
+  --provider conta_azul \
+  --action listar \
+  --resource pedidos-venda \
+  --limit 24 \
+  --params-json '{"mode":"aggregate","metric":"sum","value_field":"valor_total","granularity":"month","date_from":"2026-01-01","date_to":"2026-12-31"}' \
+  --allow-error
+```
+
+Use `granularity=day|week|month|year` for date buckets. Use `date_field` only when the default resource date field is not the desired one.
+
+## BigQuery environment checks
+
+Before diagnosing query logic, confirm the environment has BigQuery credentials. Do not print secret values.
+
+```bash
+node -e "const fs=require('fs'),dotenv=require('dotenv'); const p=dotenv.parse(fs.readFileSync('/tmp/cognito-vercel-preview.env','utf8')); for (const k of ['BIGQUERY_CREDENTIALS_JSON','GOOGLE_APPLICATION_CREDENTIALS_JSON','GOOGLE_PROJECT_ID','BIGQUERY_PROJECT_ID']) console.log(k, Boolean(p[k]), p[k]?.length||0)"
+```
+
+In the tested development environment:
+
+- Preview/development env had `BIGQUERY_CREDENTIALS_JSON` and `GOOGLE_APPLICATION_CREDENTIALS_JSON` populated.
+- Production env had those keys present but empty. BigQuery reads failed locally with default-credential errors in that case.
+
+If local ADC is required:
+
+```bash
+cmd.exe /c gcloud auth application-default print-access-token
+```
+
+If ADC is missing, either use a service account env var or set up application-default credentials. Do not paste service account JSON or tokens into the chat.
+
 ## Create cost center dry-run
 
 ```bash
@@ -228,6 +325,21 @@ node scripts/integracoes/diagnose-conta-azul-oauth.mjs \
 
 Use `--skip-refresh` when you only want to test the saved access token.
 
+## Diagnose common failures
+
+Interpret failures by subsystem before asking the customer to reconnect:
+
+| Error text | Meaning | Next action |
+| --- | --- | --- |
+| `Permission 'secretmanager.versions.access' denied` | Service account cannot read Secret Manager credentials. | Fix GCP IAM for the service account used by this environment. |
+| `Could not load the default credentials` | BigQuery client has no usable service account/ADC. | Check `BIGQUERY_CREDENTIALS_JSON`, `GOOGLE_APPLICATION_CREDENTIALS_JSON`, `GOOGLE_APPLICATION_CREDENTIALS` or ADC. |
+| `Unable to detect a Project Id` | BigQuery project/env credentials incomplete. | Set `GOOGLE_PROJECT_ID`, `BIGQUERY_PROJECT_ID` or service account JSON with `project_id`. |
+| `MCP nao tem permissao de leitura para vendas` | Connection/plugin read permissions do not include the provider resource. | Update plugin permissions/configuration for that connection. |
+| `fetch failed`, `EAI_AGAIN`, `ECONNRESET`, timeout | Network/DNS/provider runtime issue. | Retry, test host connectivity, inspect `cause.code`; do not assume OAuth. |
+| Conta Azul HTTP `401`/`403` after refresh | Provider authorization is invalid/refused. | Run OAuth diagnostic; reconnect only if provider auth is confirmed invalid. |
+
+For API reads/actions, Secret Manager access is required because credentials are loaded from the connection. BigQuery reads can work without Secret Manager if the normalized tables and BigQuery credentials are available.
+
 ## Validated development case
 
 Use these only when the user explicitly asks to operate on the tested development tenant:
@@ -248,5 +360,33 @@ node scripts/plugin/tool-call.mjs \
   --resource produtos \
   --limit 10 \
   --include-provider-fields \
+  --allow-error
+```
+
+Validated BigQuery reads with preview env:
+
+```bash
+node scripts/plugin/tool-call.mjs \
+  --tenant 3 \
+  --tool connected_erp_bigquery \
+  --provider conta_azul \
+  --action listar \
+  --resource clientes \
+  --limit 10 \
+  --params-json '{"q":"teste"}' \
+  --allow-error
+```
+
+Validated BigQuery aggregate:
+
+```bash
+node scripts/plugin/tool-call.mjs \
+  --tenant 3 \
+  --tool connected_erp_bigquery \
+  --provider conta_azul \
+  --action listar \
+  --resource contas-a-receber \
+  --limit 20 \
+  --params-json '{"mode":"aggregate","metric":"sum","group_by":"status"}' \
   --allow-error
 ```
