@@ -31,8 +31,8 @@ function buildContainersDashboardSource(themeName: string) {
 
                 <div style={{ width: 340 }}>
                   <DatePicker
-                    table="vendas.pedidos"
-                    field="data_pedido"
+                    table="vendas"
+                    field="data_venda"
                     presets={['7d', '30d', 'month']}
                     labelStyle={{ margin: 0, fontSize: 11, color: theme.headerDatePickerLabel, textTransform: 'uppercase', letterSpacing: '0.06em' }}
                     fieldStyle={{ minHeight: 38, padding: '0 10px', border: '1px solid ' + theme.headerDatePickerBorder, borderRadius: 10, backgroundColor: theme.headerDatePickerBg, color: theme.headerDatePickerColor, fontSize: 14, fontWeight: 500 }}
@@ -51,10 +51,10 @@ function buildContainersDashboardSource(themeName: string) {
                     title="Receita"
                     dataQuery={{
                       query: \`
-                        SELECT COALESCE(SUM(src.valor_total), 0)::float AS value
-                        FROM vendas.pedidos src
-                        WHERE src.tenant_id = {{tenant_id}}::int
-                          {{filters:src}}
+                        SELECT CAST(COALESCE(SUM(src.valor_total), 0) AS FLOAT64) AS value
+                        FROM vendas src
+                        WHERE 1=1
+                          {{filters}}
                       \`,
                       limit: 1,
                     }}
@@ -70,10 +70,10 @@ function buildContainersDashboardSource(themeName: string) {
                     title="Pedidos"
                     dataQuery={{
                       query: \`
-                        SELECT COUNT(*)::float AS value
-                        FROM vendas.pedidos src
-                        WHERE src.tenant_id = {{tenant_id}}::int
-                          {{filters:src}}
+                        SELECT CAST(COUNT(*) AS FLOAT64) AS value
+                        FROM vendas src
+                        WHERE 1=1
+                          {{filters}}
                       \`,
                       limit: 1,
                     }}
@@ -89,10 +89,10 @@ function buildContainersDashboardSource(themeName: string) {
                     title="Ticket medio"
                     dataQuery={{
                       query: \`
-                        SELECT COALESCE(AVG(src.valor_total), 0)::float AS value
-                        FROM vendas.pedidos src
-                        WHERE src.tenant_id = {{tenant_id}}::int
-                          {{filters:src}}
+                        SELECT CAST(COALESCE(AVG(src.valor_total), 0) AS FLOAT64) AS value
+                        FROM vendas src
+                        WHERE 1=1
+                          {{filters}}
                       \`,
                       limit: 1,
                     }}
@@ -115,11 +115,11 @@ function buildContainersDashboardSource(themeName: string) {
                       query: \`
                         SELECT
                           COALESCE(cv.nome, '-') AS canal,
-                          COALESCE(SUM(src.valor_total), 0)::float AS valor
-                        FROM vendas.pedidos src
-                        LEFT JOIN vendas.canais_venda cv ON cv.id = src.canal_venda_id
-                        WHERE src.tenant_id = {{tenant_id}}::int
-                          {{filters:src}}
+                          CAST(COALESCE(SUM(src.valor_total), 0) AS FLOAT64) AS valor
+                        FROM vendas src
+                        LEFT JOIN canais_venda cv ON cv.id = src.canal_venda_id
+                        WHERE 1=1
+                          {{filters}}
                         GROUP BY 1
                         ORDER BY 2 DESC
                       \`,
@@ -136,7 +136,7 @@ function buildContainersDashboardSource(themeName: string) {
                     <Text as="h2" variant="section-title-sm">Canal</Text>
                     <Filter
                       label="Canal"
-                      table="vendas.pedidos"
+                      table="vendas"
                       field="canal_venda_id"
                       mode="multiple"
                       search
@@ -144,10 +144,9 @@ function buildContainersDashboardSource(themeName: string) {
                       width="100%"
                       query={\`
                         SELECT
-                          cv.id::text AS value,
+                          CAST(cv.id AS STRING) AS value,
                           COALESCE(cv.nome, '-') AS label
-                        FROM vendas.canais_venda cv
-                        WHERE cv.tenant_id = {{tenant_id}}::int
+                        FROM canais_venda cv
                         ORDER BY 2 ASC
                       \`}
                     >

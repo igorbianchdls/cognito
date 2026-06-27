@@ -180,17 +180,109 @@ function validateReferencedTables(input: {
   }
 }
 
+function isPlainRecord(value: unknown): value is JsonRecord {
+  return !!value && typeof value === 'object' && !Array.isArray(value) && !(value instanceof Date)
+}
+
+function isScalarParam(value: unknown) {
+  return (
+    value == null
+    || typeof value === 'string'
+    || typeof value === 'number'
+    || typeof value === 'boolean'
+  )
+}
+
+function normalizeIdentifier(value: unknown) {
+  const identifier = String(value || '').trim()
+  if (!/^[a-z_][a-z0-9_]*$/i.test(identifier)) return null
+  return identifier
+}
+
+function getFieldFilterMetadata(filters: JsonRecord | undefined) {
+  const fields = filters?.__fields
+  if (!isPlainRecord(fields)) return []
+  const output: Array<{ key: string; field: string }> = []
+  for (const [key, rawMetadata] of Object.entries(fields)) {
+    if (!normalizeIdentifier(key) || !isPlainRecord(rawMetadata)) continue
+    const field = normalizeIdentifier(rawMetadata.field)
+    if (!field) continue
+    if (rawMetadata.table != null) {
+      const table = normalizeIdentifier(rawMetadata.table)
+      if (!table || !TABLE_SET.has(table)) continue
+    }
+    output.push({ key, field })
+  }
+  return output
+}
+
+function getDateFilterMetadata(filters: JsonRecord | undefined) {
+  const date = filters?.__date
+  if (!isPlainRecord(date)) return null
+  const field = normalizeIdentifier(date.field)
+  if (!field) return null
+  if (date.table != null) {
+    const table = normalizeIdentifier(date.table)
+    if (!table || !TABLE_SET.has(table)) return null
+  }
+  return { field }
+}
+
+function buildDashboardFilterSql(filters: JsonRecord | undefined, params: JsonRecord) {
+  const clauses: string[] = []
+  const dateFilter = getDateFilterMetadata(filters)
+  if (dateFilter && 'de' in params) {
+    clauses.push(`DATE(${dateFilter.field}) >= DATE(@de)`)
+  }
+  if (dateFilter && 'ate' in params) {
+    clauses.push(`DATE(${dateFilter.field}) <= DATE(@ate)`)
+  }
+
+  for (const filter of getFieldFilterMetadata(filters)) {
+    const value = params[filter.key]
+    if (value == null || value === '') continue
+    if (Array.isArray(value)) {
+      const values = value.filter((item) => item != null && item !== '')
+      if (!values.length) continue
+      params[filter.key] = values
+      clauses.push(`CAST(${filter.field} AS STRING) IN (SELECT CAST(value AS STRING) FROM UNNEST(@${filter.key}) AS value)`)
+    } else {
+      clauses.push(`CAST(${filter.field} AS STRING) = CAST(@${filter.key} AS STRING)`)
+    }
+  }
+
+  return clauses.length ? ` AND ${clauses.join(' AND ')}` : ''
+}
+
+function compileDashboardQuery(sql: string, filters: JsonRecord | undefined) {
+  const rawQuery = String(sql || '')
+  const params = normalizeParams(filters)
+  for (const placeholder of rawQuery.matchAll(/\{\{\s*([^}\s]+)\s*\}\}/g)) {
+    if (placeholder[1] !== 'filters') {
+      throw new ArtifactToolError(
+        400,
+        'dashboard_query_placeholder_not_supported',
+        `Placeholder não suportado: ${placeholder[1]}`,
+      )
+    }
+  }
+  const filterSql = buildDashboardFilterSql(filters, params)
+  return {
+    query: rawQuery.replace(/\{\{\s*filters\s*\}\}/g, filterSql),
+    params,
+  }
+}
+
 function normalizeParams(filters: JsonRecord | undefined) {
   const params: JsonRecord = {}
   for (const [key, value] of Object.entries(filters || {})) {
     if (!/^[a-z_][a-z0-9_]*$/i.test(key)) continue
-    if (
-      value == null ||
-      typeof value === 'string' ||
-      typeof value === 'number' ||
-      typeof value === 'boolean' ||
-      Array.isArray(value)
-    ) {
+    if (Array.isArray(value)) {
+      const values = value.filter(isScalarParam)
+      if (values.length) params[key] = values
+      continue
+    }
+    if (isScalarParam(value)) {
       params[key] = value
     }
   }
@@ -238,8 +330,11 @@ export async function executeDashboardQuery(input: {
 
   const hash = queryHash(String(input.query || ''))
   let safeQuery: string
+  let params: JsonRecord
   try {
-    safeQuery = normalizeQuery(input.query)
+    const compiled = compileDashboardQuery(input.query, input.filters)
+    safeQuery = normalizeQuery(compiled.query)
+    params = compiled.params
   } catch (error) {
     const artifactError = error instanceof ArtifactToolError ? error : null
     await writeQueryAudit({
@@ -258,7 +353,6 @@ export async function executeDashboardQuery(input: {
   const datasets = getTenantBigQueryDatasets(input.tenantId)
   const datasetId = datasets.analyticsDataset
   const client = createBigQueryClient({ projectId })
-  const params = normalizeParams(input.filters)
   const maximumBytesBilled = String(process.env.DASHBOARD_QUERY_MAX_BYTES || 100_000_000)
   const jobTimeoutMs = Number(process.env.DASHBOARD_QUERY_TIMEOUT_MS || 30_000)
   const query = `SELECT * FROM (${safeQuery}) AS dashboard_query LIMIT ${limit}`
