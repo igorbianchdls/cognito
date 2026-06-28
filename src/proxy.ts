@@ -11,6 +11,8 @@ const isPublicRoute = createRouteMatcher([
   '/api/chatgpt-app(.*)',
   '/api/claude-app(.*)',
   '/artifacts/dashboards/:path*',
+  '/artifacts/reports/:path*',
+  '/artifacts/slides/:path*',
   '/internal/mcp-ui(.*)',
 ])
 

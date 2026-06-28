@@ -1,12 +1,14 @@
 import {
   ArtifactToolError,
-  patchDashboardArtifact,
-  readDashboardArtifact,
-  writeDashboardArtifact,
+  patchArtifactByType,
+  readArtifactByType,
+  writeArtifactByType,
   type ArtifactSourceKind,
 } from '@/products/artifacts/dashboard/persistence/dashboardArtifactsService'
+import type { ArtifactKind } from '@/products/artifacts/core/types/artifactTypes'
 
-export type ArtifactKind = 'dashboard'
+export type { ArtifactKind }
+
 type JsonMap = Record<string, unknown>
 
 type WriteArtifactInput = {
@@ -41,7 +43,7 @@ type PatchArtifactInput = {
 }
 
 function assertSupportedArtifactKind(kind: ArtifactKind) {
-  if (kind !== 'dashboard') {
+  if (kind !== 'dashboard' && kind !== 'report' && kind !== 'slide') {
     throw new ArtifactToolError(400, 'unsupported_artifact_type', `artifact_type não suportado: ${kind}`)
   }
 }
@@ -54,7 +56,8 @@ export async function readArtifact(input: {
   version?: number | null
 }) {
   assertSupportedArtifactKind(input.artifactType)
-  return readDashboardArtifact({
+  return readArtifactByType({
+    artifactType: input.artifactType,
     artifactId: input.artifactId,
     tenantId: input.tenantId,
     kind: input.kind,
@@ -64,7 +67,8 @@ export async function readArtifact(input: {
 
 export async function writeArtifact(input: WriteArtifactInput) {
   assertSupportedArtifactKind(input.artifactType)
-  return writeDashboardArtifact({
+  return writeArtifactByType({
+    artifactType: input.artifactType,
     artifactId: input.artifactId,
     tenantId: input.tenantId,
     expectedVersion: input.expectedVersion,
@@ -81,7 +85,8 @@ export async function writeArtifact(input: WriteArtifactInput) {
 
 export async function patchArtifact(input: PatchArtifactInput) {
   assertSupportedArtifactKind(input.artifactType)
-  return patchDashboardArtifact({
+  return patchArtifactByType({
+    artifactType: input.artifactType,
     artifactId: input.artifactId,
     tenantId: input.tenantId,
     expectedVersion: input.expectedVersion,

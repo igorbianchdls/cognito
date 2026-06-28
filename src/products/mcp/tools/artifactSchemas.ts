@@ -6,7 +6,7 @@ export const ARTIFACT_AUTHORING_SCHEMA = {
   properties: {
     kind: {
       type: 'string',
-      enum: ['dashboard'],
+      enum: ['dashboard', 'report', 'slide'],
       description: 'Tipo de artifact a criar ou editar.',
     },
     action: {
@@ -62,7 +62,7 @@ export const ARTIFACT_AUTHORING_OUTPUT_SCHEMA = {
   properties: {
     ok: { type: 'boolean' },
     tool: { type: 'string' },
-    kind: { type: 'string', enum: ['dashboard'] },
+    kind: { type: 'string', enum: ['dashboard', 'report', 'slide'] },
     action: { type: 'string' },
     contract: {
       type: 'object',
@@ -81,7 +81,7 @@ export const ARTIFACT_MCP_TOOL_DEFINITIONS = [
   {
     name: MCP_ARTIFACT_TOOL_NAMES.artifactAuthoring,
     description:
-      'Cria e edita dashboards Cognito usando TSX declarativo versionado. Use kind=dashboard; action=get_contract, create, patch ou update_full.',
+      'Cria e edita artifacts Cognito usando TSX declarativo versionado. Use kind=dashboard, report ou slide; action=get_contract, create, patch ou update_full.',
     inputSchema: ARTIFACT_AUTHORING_SCHEMA,
   },
 ] as const satisfies readonly McpToolDefinition[]

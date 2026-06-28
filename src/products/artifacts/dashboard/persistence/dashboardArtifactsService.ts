@@ -1,11 +1,13 @@
 import { runQuery, withTransaction, type SQLClient } from '@/lib/postgres'
+import type { ArtifactKind } from '@/products/artifacts/core/types/artifactTypes'
 
 type JsonMap = Record<string, unknown>
 
 export type ArtifactSourceKind = 'draft' | 'published'
 
-export type DashboardListItem = {
+export type ArtifactListItem = {
   id: string
+  artifact_type: ArtifactKind
   tenant_id: number | null
   title: string
   slug: string | null
@@ -19,6 +21,8 @@ export type DashboardListItem = {
   updated_at: string
 }
 
+export type DashboardListItem = ArtifactListItem
+
 export type DashboardSourceVersionListItem = {
   version: number
   kind: ArtifactSourceKind
@@ -26,8 +30,9 @@ export type DashboardSourceVersionListItem = {
   created_at: string
 }
 
-type DashboardRow = {
+type ArtifactRow = {
   id: string
+  artifact_type: ArtifactKind
   tenant_id: number | null
   workspace_id: string | null
   created_from_chat_id: string | null
@@ -44,7 +49,9 @@ type DashboardRow = {
   updated_at: string
 }
 
-type DashboardSourceRow = {
+type DashboardRow = ArtifactRow
+
+type ArtifactSourceRow = {
   id: string
   artifact_id: string
   version: number
@@ -55,7 +62,10 @@ type DashboardSourceRow = {
   created_at: string
 }
 
+type DashboardSourceRow = ArtifactSourceRow
+
 type ReadArtifactInput = {
+  artifactType?: ArtifactKind
   artifactId: string
   tenantId: number
   kind?: ArtifactSourceKind
@@ -63,6 +73,7 @@ type ReadArtifactInput = {
 }
 
 type WriteArtifactInput = {
+  artifactType?: ArtifactKind
   tenantId: number
   artifactId?: string | null
   expectedVersion?: number | null
@@ -77,6 +88,7 @@ type WriteArtifactInput = {
 }
 
 type PatchArtifactInput = {
+  artifactType?: ArtifactKind
   artifactId: string
   tenantId: number
   expectedVersion: number
@@ -91,11 +103,20 @@ type PatchArtifactInput = {
   actorId?: string | null
 }
 
-type UpdateDashboardThumbnailInput = {
+type UpdateArtifactThumbnailInput = {
+  artifactType?: ArtifactKind
   artifactId: string
   tenantId: number
   thumbnailDataUrl?: string | null
   actorId?: string | null
+}
+
+type UpdateDashboardThumbnailInput = UpdateArtifactThumbnailInput
+
+function normalizeArtifactType(value: unknown): ArtifactKind {
+  const artifactType = String(value || 'dashboard').trim()
+  if (artifactType === 'dashboard' || artifactType === 'report' || artifactType === 'slide') return artifactType
+  throw new ArtifactToolError(400, 'unsupported_artifact_type', `artifact_type não suportado: ${artifactType}`)
 }
 
 export class ArtifactToolError extends Error {
@@ -151,8 +172,9 @@ function normalizeSource(value: unknown, field = 'source'): string {
   return source
 }
 
-async function getDashboardById(
+async function getArtifactById(
   client: Pick<SQLClient, 'query'>,
+  artifactType: ArtifactKind,
   artifactId: string,
   forUpdate = false,
   tenantId: number,
@@ -160,6 +182,7 @@ async function getDashboardById(
   const rows = await client.query(
     `SELECT
        id::text,
+       artifact_type,
        tenant_id,
        workspace_id::text AS workspace_id,
        created_from_chat_id,
@@ -176,16 +199,25 @@ async function getDashboardById(
        updated_at
      FROM artifacts.artifacts
      WHERE id = $1::uuid
-       AND artifact_type = 'dashboard'
-       AND tenant_id = $2::bigint
+       AND artifact_type = $2::text
+       AND tenant_id = $3::bigint
      ${forUpdate ? 'FOR UPDATE' : ''}`,
-    [artifactId, tenantId],
+    [artifactId, artifactType, tenantId],
   )
-  const row = (rows.rows?.[0] || null) as DashboardRow | null
+  const row = (rows.rows?.[0] || null) as ArtifactRow | null
   if (!row) {
     throw new ArtifactToolError(404, 'artifact_not_found', 'artifact não encontrado', { artifact_id: artifactId })
   }
   return row
+}
+
+async function getDashboardById(
+  client: Pick<SQLClient, 'query'>,
+  artifactId: string,
+  forUpdate = false,
+  tenantId: number,
+) {
+  return getArtifactById(client, 'dashboard', artifactId, forUpdate, tenantId)
 }
 
 async function getDashboardSource(
@@ -225,27 +257,27 @@ async function getDashboardSource(
   return row
 }
 
-function buildArtifactResponse(dashboard: DashboardRow, source: DashboardSourceRow) {
+function buildArtifactResponse(artifact: ArtifactRow, source: ArtifactSourceRow) {
   return {
     success: true,
-    artifact_id: dashboard.id,
-    artifact_type: 'dashboard',
-    tenant_id: dashboard.tenant_id,
-    title: dashboard.title,
-    slug: dashboard.slug,
-    status: dashboard.status,
-    workspace_id: dashboard.workspace_id,
-    created_from_chat_id: dashboard.created_from_chat_id,
-    current_draft_version: dashboard.current_draft_version,
-    current_published_version: dashboard.current_published_version,
-    thumbnail_data_url: dashboard.thumbnail_data_url,
-    metadata: toObj(dashboard.metadata),
+    artifact_id: artifact.id,
+    artifact_type: artifact.artifact_type,
+    tenant_id: artifact.tenant_id,
+    title: artifact.title,
+    slug: artifact.slug,
+    status: artifact.status,
+    workspace_id: artifact.workspace_id,
+    created_from_chat_id: artifact.created_from_chat_id,
+    current_draft_version: artifact.current_draft_version,
+    current_published_version: artifact.current_published_version,
+    thumbnail_data_url: artifact.thumbnail_data_url,
+    metadata: toObj(artifact.metadata),
     source_kind: source.kind,
     version: source.version,
     source: source.source,
     change_summary: source.change_summary,
-    created_at: dashboard.created_at,
-    updated_at: dashboard.updated_at,
+    created_at: artifact.created_at,
+    updated_at: artifact.updated_at,
   }
 }
 
@@ -299,12 +331,18 @@ function mapDbError(error: unknown): never {
   throw new ArtifactToolError(500, 'artifact_persistence_error', err?.message || 'erro interno ao persistir artifact')
 }
 
-export async function listDashboards(limit = 100, tenantId: number): Promise<DashboardListItem[]> {
+export async function listArtifactsByType(
+  artifactType: ArtifactKind,
+  limit = 100,
+  tenantId: number,
+): Promise<ArtifactListItem[]> {
+  const normalizedArtifactType = normalizeArtifactType(artifactType)
   const safeLimit = Number.isInteger(limit) && limit > 0 ? Math.min(limit, 200) : 100
   try {
-    return await runQuery<DashboardListItem>(
+    return await runQuery<ArtifactListItem>(
       `SELECT
          id::text,
+         artifact_type,
          tenant_id,
          title,
          slug,
@@ -317,23 +355,29 @@ export async function listDashboards(limit = 100, tenantId: number): Promise<Das
          created_at,
          updated_at
        FROM artifacts.artifacts
-       WHERE artifact_type = 'dashboard'
-         AND tenant_id = $2::bigint
+       WHERE artifact_type = $2::text
+         AND tenant_id = $3::bigint
        ORDER BY updated_at DESC, created_at DESC
        LIMIT $1::int`,
-      [safeLimit, tenantId],
+      [safeLimit, normalizedArtifactType, tenantId],
     )
   } catch (error) {
     return mapDbError(error)
   }
 }
 
-export async function renameDashboardArtifact(input: {
+export async function listDashboards(limit = 100, tenantId: number): Promise<DashboardListItem[]> {
+  return listArtifactsByType('dashboard', limit, tenantId)
+}
+
+export async function renameArtifact(input: {
+  artifactType: ArtifactKind
   artifactId: string
   title: string
   tenantId: number
   actorId?: string | null
 }) {
+  const artifactType = normalizeArtifactType(input.artifactType)
   const artifactId = toText(input.artifactId)
   const title = toText(input.title)
   const actorId = toNullableText(input.actorId)
@@ -346,17 +390,18 @@ export async function renameDashboardArtifact(input: {
   }
 
   try {
-    const rows = await runQuery<DashboardListItem>(
+    const rows = await runQuery<ArtifactListItem>(
       `UPDATE artifacts.artifacts
        SET
          title = $2::text,
          updated_by = COALESCE($3::uuid, updated_by),
          updated_at = now()
        WHERE id = $1::uuid
-         AND artifact_type = 'dashboard'
-         AND tenant_id = $4::bigint
+         AND artifact_type = $4::text
+         AND tenant_id = $5::bigint
        RETURNING
          id::text,
+         artifact_type,
          tenant_id,
          title,
          slug,
@@ -368,7 +413,7 @@ export async function renameDashboardArtifact(input: {
          thumbnail_data_url,
          created_at,
          updated_at`,
-      [artifactId, title, actorId, input.tenantId],
+      [artifactId, title, actorId, artifactType, input.tenantId],
     )
     const row = rows[0] || null
     if (!row) {
@@ -376,6 +421,7 @@ export async function renameDashboardArtifact(input: {
     }
     return {
       success: true,
+      artifact: row,
       dashboard: row,
     }
   } catch (error) {
@@ -383,10 +429,21 @@ export async function renameDashboardArtifact(input: {
   }
 }
 
-export async function deleteDashboardArtifact(input: {
+export async function renameDashboardArtifact(input: {
+  artifactId: string
+  title: string
+  tenantId: number
+  actorId?: string | null
+}) {
+  return renameArtifact({ ...input, artifactType: 'dashboard' })
+}
+
+export async function deleteArtifact(input: {
+  artifactType: ArtifactKind
   artifactId: string
   tenantId: number
 }) {
+  const artifactType = normalizeArtifactType(input.artifactType)
   const artifactId = toText(input.artifactId)
   if (!artifactId) {
     throw new ArtifactToolError(400, 'invalid_input', 'artifact_id é obrigatório')
@@ -397,18 +454,21 @@ export async function deleteDashboardArtifact(input: {
       const rows = await client.query(
         `DELETE FROM artifacts.artifacts
          WHERE id = $1::uuid
-           AND artifact_type = 'dashboard'
-           AND tenant_id = $2::bigint
-         RETURNING id::text AS id, title`,
-        [artifactId, input.tenantId],
+           AND artifact_type = $2::text
+           AND tenant_id = $3::bigint
+         RETURNING id::text AS id, title, artifact_type`,
+        [artifactId, artifactType, input.tenantId],
       )
-      const row = rows.rows?.[0] as { id: string; title: string } | undefined
+      const row = rows.rows?.[0] as { id: string; title: string; artifact_type: ArtifactKind } | undefined
       if (!row) {
         throw new ArtifactToolError(404, 'artifact_not_found', 'artifact não encontrado', { artifact_id: artifactId })
       }
 
       return {
         success: true,
+        deleted_artifact_id: row.id,
+        deleted_artifact_title: row.title,
+        deleted_artifact_type: row.artifact_type,
         deleted_dashboard_id: row.id,
         deleted_dashboard_title: row.title,
       }
@@ -418,12 +478,21 @@ export async function deleteDashboardArtifact(input: {
   }
 }
 
-export async function listDashboardSourceVersions(
+export async function deleteDashboardArtifact(input: {
+  artifactId: string
+  tenantId: number
+}) {
+  return deleteArtifact({ ...input, artifactType: 'dashboard' })
+}
+
+export async function listArtifactSourceVersions(
+  artifactType: ArtifactKind,
   artifactId: string,
   kind: ArtifactSourceKind = 'draft',
   limit = 100,
   tenantId: number,
 ): Promise<DashboardSourceVersionListItem[]> {
+  const normalizedArtifactType = normalizeArtifactType(artifactType)
   const normalizedArtifactId = toText(artifactId)
   if (!normalizedArtifactId) {
     throw new ArtifactToolError(400, 'invalid_input', 'artifact_id é obrigatório')
@@ -445,26 +514,38 @@ export async function listDashboardSourceVersions(
            SELECT 1
            FROM artifacts.artifacts artifact
            WHERE artifact.id = artifact_id
-             AND artifact.tenant_id = $4::bigint
+             AND artifact.artifact_type = $4::text
+             AND artifact.tenant_id = $5::bigint
          )
        ORDER BY version DESC
        LIMIT $3::int`,
-      [normalizedArtifactId, kind, safeLimit, tenantId],
+      [normalizedArtifactId, kind, safeLimit, normalizedArtifactType, tenantId],
     )
   } catch (error) {
     return mapDbError(error)
   }
 }
 
-export async function readDashboardArtifact(input: ReadArtifactInput) {
+export async function listDashboardSourceVersions(
+  artifactId: string,
+  kind: ArtifactSourceKind = 'draft',
+  limit = 100,
+  tenantId: number,
+): Promise<DashboardSourceVersionListItem[]> {
+  return listArtifactSourceVersions('dashboard', artifactId, kind, limit, tenantId)
+}
+
+export async function readArtifactByType(input: ReadArtifactInput) {
   try {
+    const artifactType = normalizeArtifactType(input.artifactType)
     const artifactId = toText(input.artifactId)
     if (!artifactId) throw new ArtifactToolError(400, 'invalid_input', 'artifact_id é obrigatório')
     const kind = input.kind === 'published' ? 'published' : 'draft'
     const version = normalizePositiveInt(input.version, 'version')
-    const dashboard = (await runQuery<DashboardRow>(
+    const artifact = (await runQuery<ArtifactRow>(
       `SELECT
          id::text,
+         artifact_type,
          tenant_id,
          workspace_id::text AS workspace_id,
          created_from_chat_id,
@@ -481,14 +562,14 @@ export async function readDashboardArtifact(input: ReadArtifactInput) {
          updated_at
        FROM artifacts.artifacts
        WHERE id = $1::uuid
-         AND artifact_type = 'dashboard'
-         AND tenant_id = $2::bigint`,
-      [artifactId, input.tenantId],
+         AND artifact_type = $2::text
+         AND tenant_id = $3::bigint`,
+      [artifactId, artifactType, input.tenantId],
     ))[0]
-    if (!dashboard) {
+    if (!artifact) {
       throw new ArtifactToolError(404, 'artifact_not_found', 'artifact não encontrado', { artifact_id: artifactId })
     }
-    const source = (await runQuery<DashboardSourceRow>(
+    const source = (await runQuery<ArtifactSourceRow>(
       `SELECT
          id::text,
          artifact_id::text AS artifact_id,
@@ -513,13 +594,18 @@ export async function readDashboardArtifact(input: ReadArtifactInput) {
         ...(version ? { version } : {}),
       })
     }
-    return buildArtifactResponse(dashboard, source)
+    return buildArtifactResponse(artifact, source)
   } catch (error) {
     return mapDbError(error)
   }
 }
 
-export async function writeDashboardArtifact(input: WriteArtifactInput) {
+export async function readDashboardArtifact(input: ReadArtifactInput) {
+  return readArtifactByType({ ...input, artifactType: 'dashboard' })
+}
+
+export async function writeArtifactByType(input: WriteArtifactInput) {
+  const artifactType = normalizeArtifactType(input.artifactType)
   const artifactId = toNullableText(input.artifactId)
   const expectedVersion = normalizePositiveInt(input.expectedVersion, 'expected_version')
   const title = toNullableText(input.title)
@@ -532,7 +618,7 @@ export async function writeDashboardArtifact(input: WriteArtifactInput) {
   const actorId = toNullableText(input.actorId)
   const tenantId = normalizeTenantId(input.tenantId)
   if (tenantId == null) {
-    throw new ArtifactToolError(400, 'artifact_tenant_required', 'tenant_id é obrigatório para dashboard')
+    throw new ArtifactToolError(400, 'artifact_tenant_required', `tenant_id é obrigatório para ${artifactType}`)
   }
 
   if (!artifactId && !title) {
@@ -559,7 +645,7 @@ export async function writeDashboardArtifact(input: WriteArtifactInput) {
              created_by,
              updated_by
            ) VALUES (
-             'dashboard',
+             $8::text,
              $1::bigint,
              $2::uuid,
              $3::text,
@@ -573,6 +659,7 @@ export async function writeDashboardArtifact(input: WriteArtifactInput) {
            )
            RETURNING
              id::text,
+             artifact_type,
              tenant_id,
              workspace_id::text AS workspace_id,
              created_from_chat_id,
@@ -587,9 +674,9 @@ export async function writeDashboardArtifact(input: WriteArtifactInput) {
              updated_by::text AS updated_by,
              created_at,
              updated_at`,
-          [tenantId, workspaceId, chatId, title, slug, metadata, actorId],
+          [tenantId, workspaceId, chatId, title, slug, metadata, actorId, artifactType],
         )
-        const dashboard = createdRows.rows[0] as DashboardRow
+        const artifact = createdRows.rows[0] as ArtifactRow
         await client.query(
           `INSERT INTO artifacts.artifact_sources (
              artifact_id,
@@ -606,20 +693,20 @@ export async function writeDashboardArtifact(input: WriteArtifactInput) {
              $3::text,
              $4::uuid
            )`,
-          [dashboard.id, source, changeSummary, actorId],
+          [artifact.id, source, changeSummary, actorId],
         )
-        const sourceRow = await getDashboardSource(client, dashboard.id, 'draft', 1)
+        const sourceRow = await getDashboardSource(client, artifact.id, 'draft', 1)
         return {
-          ...buildArtifactResponse(dashboard, sourceRow),
+          ...buildArtifactResponse(artifact, sourceRow),
           created: true,
           previous_version: null,
           next_version: 1,
         }
       }
 
-      const dashboard = await getDashboardById(client, artifactId, true, tenantId)
-      assertExpectedVersion(dashboard.current_draft_version, expectedVersion as number, artifactId)
-      const nextVersion = (dashboard.current_draft_version || 0) + 1
+      const artifact = await getArtifactById(client, artifactType, artifactId, true, tenantId)
+      assertExpectedVersion(artifact.current_draft_version, expectedVersion as number, artifactId)
+      const nextVersion = (artifact.current_draft_version || 0) + 1
 
       const updatedRows = await client.query(
         `UPDATE artifacts.artifacts
@@ -631,9 +718,10 @@ export async function writeDashboardArtifact(input: WriteArtifactInput) {
            updated_by = COALESCE($6::uuid, updated_by),
            updated_at = now()
          WHERE id = $1::uuid
-           AND artifact_type = 'dashboard'
+           AND artifact_type = $7::text
          RETURNING
            id::text,
+           artifact_type,
            tenant_id,
            workspace_id::text AS workspace_id,
            created_from_chat_id,
@@ -648,7 +736,7 @@ export async function writeDashboardArtifact(input: WriteArtifactInput) {
            updated_by::text AS updated_by,
            created_at,
            updated_at`,
-        [artifactId, title, slug, metadata, nextVersion, actorId],
+        [artifactId, title, slug, metadata, nextVersion, actorId, artifactType],
       )
       await client.query(
         `INSERT INTO artifacts.artifact_sources (
@@ -669,7 +757,7 @@ export async function writeDashboardArtifact(input: WriteArtifactInput) {
         [artifactId, nextVersion, source, changeSummary, actorId],
       )
 
-      const updated = updatedRows.rows[0] as DashboardRow
+      const updated = updatedRows.rows[0] as ArtifactRow
       const sourceRow = await getDashboardSource(client, artifactId, 'draft', nextVersion)
       return {
         ...buildArtifactResponse(updated, sourceRow),
@@ -683,7 +771,12 @@ export async function writeDashboardArtifact(input: WriteArtifactInput) {
   }
 }
 
-export async function patchDashboardArtifact(input: PatchArtifactInput) {
+export async function writeDashboardArtifact(input: WriteArtifactInput) {
+  return writeArtifactByType({ ...input, artifactType: 'dashboard' })
+}
+
+export async function patchArtifactByType(input: PatchArtifactInput) {
+  const artifactType = normalizeArtifactType(input.artifactType)
   const artifactId = toText(input.artifactId)
   if (!artifactId) throw new ArtifactToolError(400, 'invalid_input', 'artifact_id é obrigatório')
   const expectedVersion = normalizePositiveInt(input.expectedVersion, 'expected_version')
@@ -696,8 +789,8 @@ export async function patchDashboardArtifact(input: PatchArtifactInput) {
 
   try {
     return await withTransaction(async (client) => {
-      const dashboard = await getDashboardById(client, artifactId, true, input.tenantId)
-      assertExpectedVersion(dashboard.current_draft_version, expectedVersion as number, artifactId)
+      const artifact = await getArtifactById(client, artifactType, artifactId, true, input.tenantId)
+      assertExpectedVersion(artifact.current_draft_version, expectedVersion as number, artifactId)
       const currentSource = await getDashboardSource(client, artifactId, 'draft', expectedVersion)
 
       let nextSource = currentSource.source
@@ -715,7 +808,7 @@ export async function patchDashboardArtifact(input: PatchArtifactInput) {
         nextSource = normalizeSource(operation.source, 'operation.source')
       }
 
-      const nextVersion = (dashboard.current_draft_version || 0) + 1
+      const nextVersion = (artifact.current_draft_version || 0) + 1
       const changeSummary = toNullableText(operation.changeSummary)
 
       await client.query(
@@ -744,9 +837,10 @@ export async function patchDashboardArtifact(input: PatchArtifactInput) {
            updated_by = COALESCE($3::uuid, updated_by),
            updated_at = now()
          WHERE id = $1::uuid
-           AND artifact_type = 'dashboard'
+           AND artifact_type = $4::text
          RETURNING
            id::text,
+           artifact_type,
            tenant_id,
            workspace_id::text AS workspace_id,
            created_from_chat_id,
@@ -761,10 +855,10 @@ export async function patchDashboardArtifact(input: PatchArtifactInput) {
            updated_by::text AS updated_by,
            created_at,
            updated_at`,
-        [artifactId, nextVersion, actorId],
+        [artifactId, nextVersion, actorId, artifactType],
       )
 
-      const updated = updatedRows.rows[0] as DashboardRow
+      const updated = updatedRows.rows[0] as ArtifactRow
       const sourceRow = await getDashboardSource(client, artifactId, 'draft', nextVersion)
 
       return {
@@ -780,7 +874,12 @@ export async function patchDashboardArtifact(input: PatchArtifactInput) {
   }
 }
 
-export async function updateDashboardThumbnail(input: UpdateDashboardThumbnailInput) {
+export async function patchDashboardArtifact(input: PatchArtifactInput) {
+  return patchArtifactByType({ ...input, artifactType: 'dashboard' })
+}
+
+export async function updateArtifactThumbnail(input: UpdateArtifactThumbnailInput) {
+  const artifactType = normalizeArtifactType(input.artifactType)
   const artifactId = toText(input.artifactId)
   if (!artifactId) throw new ArtifactToolError(400, 'invalid_input', 'artifact_id é obrigatório')
 
@@ -795,12 +894,12 @@ export async function updateDashboardThumbnail(input: UpdateDashboardThumbnailIn
          updated_by = COALESCE($3::uuid, updated_by),
          updated_at = now()
        WHERE id = $1::uuid
-         AND artifact_type = 'dashboard'
-         AND tenant_id = $4::bigint
+         AND artifact_type = $4::text
+         AND tenant_id = $5::bigint
        RETURNING
          id::text,
          thumbnail_data_url`,
-      [artifactId, thumbnailDataUrl, actorId, input.tenantId],
+      [artifactId, thumbnailDataUrl, actorId, artifactType, input.tenantId],
     )
 
     const row = rows[0] || null
@@ -816,4 +915,8 @@ export async function updateDashboardThumbnail(input: UpdateDashboardThumbnailIn
   } catch (error) {
     return mapDbError(error)
   }
+}
+
+export async function updateDashboardThumbnail(input: UpdateDashboardThumbnailInput) {
+  return updateArtifactThumbnail({ ...input, artifactType: 'dashboard' })
 }

@@ -2,9 +2,10 @@
 
 import Link from 'next/link'
 import { KeyboardEvent, useEffect, useMemo, useRef, useState } from 'react'
-import { Edit3, LayoutGrid, MoreHorizontal, Plus, Search, Trash2 } from 'lucide-react'
+import { Edit3, FileText, LayoutGrid, MoreHorizontal, Plus, Presentation, Search, Trash2 } from 'lucide-react'
 
-import type { DashboardListItem } from '@/products/artifacts/dashboard/persistence/dashboardArtifactsService'
+import type { ArtifactKind } from '@/products/artifacts/core/types/artifactTypes'
+import type { ArtifactListItem, DashboardListItem } from '@/products/artifacts/dashboard/persistence/dashboardArtifactsService'
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -46,7 +47,65 @@ function hashTitle(value: string) {
   return Math.abs(hash)
 }
 
-function getThumbnailPalette(title: string, status: DashboardListItem['status']) {
+type ArtifactCatalogConfig = {
+  artifactType: ArtifactKind
+  title: string
+  singularLabel: string
+  pluralLabel: string
+  routeSegment: string
+  newButtonLabel: string
+  searchPlaceholder: string
+  description: string
+  emptyTitle: string
+  emptyDescription: string
+}
+
+const ARTIFACT_CATALOG_CONFIG: Record<ArtifactKind, ArtifactCatalogConfig> = {
+  dashboard: {
+    artifactType: 'dashboard',
+    title: 'Dashboards',
+    singularLabel: 'dashboard',
+    pluralLabel: 'dashboards',
+    routeSegment: 'dashboards',
+    newButtonLabel: 'Novo Dashboard',
+    searchPlaceholder: 'Buscar dashboard',
+    description: 'Gerencie e acesse todos os dashboards do Creatto.',
+    emptyTitle: 'No dashboards yet',
+    emptyDescription: 'Dashboards persisted in the database will appear here as soon as the creation flow is connected to this catalog.',
+  },
+  report: {
+    artifactType: 'report',
+    title: 'Reports',
+    singularLabel: 'report',
+    pluralLabel: 'reports',
+    routeSegment: 'reports',
+    newButtonLabel: 'Novo Report',
+    searchPlaceholder: 'Buscar report',
+    description: 'Gerencie e acesse todos os reports do Creatto.',
+    emptyTitle: 'No reports yet',
+    emptyDescription: 'Reports criados via MCP aparecerão aqui assim que forem persistidos.',
+  },
+  slide: {
+    artifactType: 'slide',
+    title: 'Slides',
+    singularLabel: 'slide',
+    pluralLabel: 'slides',
+    routeSegment: 'slides',
+    newButtonLabel: 'Novo Slide',
+    searchPlaceholder: 'Buscar slide',
+    description: 'Gerencie e acesse todas as apresentações do Creatto.',
+    emptyTitle: 'No slides yet',
+    emptyDescription: 'Decks criados via MCP aparecerão aqui assim que forem persistidos.',
+  },
+}
+
+function getArtifactIcon(artifactType: ArtifactKind) {
+  if (artifactType === 'report') return FileText
+  if (artifactType === 'slide') return Presentation
+  return LayoutGrid
+}
+
+function getThumbnailPalette(title: string, status: ArtifactListItem['status']) {
   const palettes = [
     {
       shell: 'from-[#f8fafc] via-[#eef4ff] to-[#e0ecff]',
@@ -90,13 +149,13 @@ function getInitials(title: string) {
   return `${parts[0][0] || ''}${parts[1][0] || ''}`.toUpperCase()
 }
 
-function DashboardThumbnail({ dashboard }: { dashboard: DashboardListItem }) {
-  if (dashboard.thumbnail_data_url) {
+function ArtifactThumbnail({ artifact }: { artifact: ArtifactListItem }) {
+  if (artifact.thumbnail_data_url) {
     return (
       <div className="relative aspect-[1.75/1] overflow-hidden rounded-2xl border border-[#e5e7eb] bg-white">
         <img
-          src={dashboard.thumbnail_data_url}
-          alt={`Preview de ${dashboard.title}`}
+          src={artifact.thumbnail_data_url}
+          alt={`Preview de ${artifact.title}`}
           className="h-full w-full object-cover object-top"
           draggable={false}
         />
@@ -104,8 +163,8 @@ function DashboardThumbnail({ dashboard }: { dashboard: DashboardListItem }) {
     )
   }
 
-  const palette = getThumbnailPalette(dashboard.title, dashboard.status)
-  const initials = getInitials(dashboard.title)
+  const palette = getThumbnailPalette(artifact.title, artifact.status)
+  const initials = getInitials(artifact.title)
 
   return (
     <div className={`relative aspect-[1.75/1] overflow-hidden rounded-2xl border ${palette.border} bg-gradient-to-br ${palette.shell}`}>
@@ -115,13 +174,13 @@ function DashboardThumbnail({ dashboard }: { dashboard: DashboardListItem }) {
           {initials}
         </div>
         <div className={`rounded-full border ${palette.border} ${palette.card} px-2 py-1 text-[10px] font-semibold uppercase tracking-[0.14em] ${palette.text}`}>
-          {dashboard.status}
+          {artifact.status}
         </div>
       </div>
 
       <div className="absolute inset-x-4 bottom-4 top-[30%] flex flex-col gap-3">
         <div className={`rounded-2xl border ${palette.border} ${palette.card} p-4 shadow-[0_10px_30px_rgba(15,23,42,0.04)]`}>
-          <div className={`text-sm font-semibold tracking-[-0.03em] ${palette.text}`}>{dashboard.title}</div>
+          <div className={`text-sm font-semibold tracking-[-0.03em] ${palette.text}`}>{artifact.title}</div>
           <div className="mt-2 flex gap-2">
             <div className={`h-2.5 w-16 rounded-full ${palette.accent} opacity-80`} />
             <div className="h-2.5 w-10 rounded-full bg-black/10" />
@@ -148,8 +207,9 @@ function DashboardThumbnail({ dashboard }: { dashboard: DashboardListItem }) {
   )
 }
 
-function DashboardCard({
-  dashboard,
+function ArtifactCard({
+  artifact,
+  config,
   isEditing,
   draftTitle,
   isSaving,
@@ -159,17 +219,19 @@ function DashboardCard({
   onCancelRename,
   onDelete,
 }: {
-  dashboard: DashboardListItem
+  artifact: ArtifactListItem
+  config: ArtifactCatalogConfig
   isEditing: boolean
   draftTitle: string
   isSaving: boolean
-  onStartRename: (dashboard: DashboardListItem) => void
+  onStartRename: (artifact: ArtifactListItem) => void
   onDraftTitleChange: (value: string) => void
   onSaveRename: () => void
   onCancelRename: () => void
-  onDelete: (dashboard: DashboardListItem) => void
+  onDelete: (artifact: ArtifactListItem) => void
 }) {
   const inputRef = useRef<HTMLInputElement | null>(null)
+  const Icon = getArtifactIcon(config.artifactType)
 
   useEffect(() => {
     if (!isEditing) return
@@ -194,14 +256,14 @@ function DashboardCard({
 
   return (
     <article className="group">
-      <Link href={`/artifacts/dashboards/${dashboard.id}`} className="block">
-        <DashboardThumbnail dashboard={dashboard} />
+      <Link href={`/artifacts/${config.routeSegment}/${artifact.id}`} className="block">
+        <ArtifactThumbnail artifact={artifact} />
       </Link>
 
       <div className="flex items-start justify-between gap-3 px-1 pt-3">
         <div className="min-w-0 flex items-start gap-3">
           <div className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-black text-white">
-            <LayoutGrid className="h-3.5 w-3.5" />
+            <Icon className="h-3.5 w-3.5" />
           </div>
           <div className="min-w-0">
             {isEditing ? (
@@ -219,17 +281,17 @@ function DashboardCard({
               />
             ) : (
               <Link
-                href={`/artifacts/dashboards/${dashboard.id}`}
+                href={`/artifacts/${config.routeSegment}/${artifact.id}`}
                 className="block truncate text-[18px] font-semibold tracking-[-0.03em] text-[#171717]"
                 onDoubleClick={(event) => {
                   event.preventDefault()
-                  onStartRename(dashboard)
+                  onStartRename(artifact)
                 }}
               >
-                {dashboard.title}
+                {artifact.title}
               </Link>
             )}
-            <div className="mt-0.5 text-[14px] text-[#7a7a75]">{formatRelativeDate(dashboard.updated_at)}</div>
+            <div className="mt-0.5 text-[14px] text-[#7a7a75]">{formatRelativeDate(artifact.updated_at)}</div>
           </div>
         </div>
 
@@ -258,7 +320,7 @@ function DashboardCard({
               <button
                 type="button"
                 className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-[#5f5f5a] transition hover:bg-[#f0f0ee]"
-                aria-label={`More actions for ${dashboard.title}`}
+                aria-label={`More actions for ${artifact.title}`}
               >
                 <MoreHorizontal className="h-4 w-4" />
               </button>
@@ -269,7 +331,7 @@ function DashboardCard({
                 onClick={(event) => {
                   event.preventDefault()
                   event.stopPropagation()
-                  onStartRename(dashboard)
+                  onStartRename(artifact)
                 }}
               >
                 <Edit3 className="h-4 w-4" />
@@ -281,7 +343,7 @@ function DashboardCard({
                 onClick={(event) => {
                   event.preventDefault()
                   event.stopPropagation()
-                  onDelete(dashboard)
+                  onDelete(artifact)
                 }}
               >
                 <Trash2 className="h-4 w-4" />
@@ -295,8 +357,15 @@ function DashboardCard({
   )
 }
 
-export function DashboardListPage({ dashboards }: { dashboards: DashboardListItem[] }) {
-  const [items, setItems] = useState(dashboards)
+export function ArtifactListPage({
+  artifacts,
+  artifactType,
+}: {
+  artifacts: ArtifactListItem[]
+  artifactType: ArtifactKind
+}) {
+  const config = ARTIFACT_CATALOG_CONFIG[artifactType]
+  const [items, setItems] = useState(artifacts)
   const [query, setQuery] = useState('')
   const [editingDashboardId, setEditingDashboardId] = useState<string | null>(null)
   const [draftTitle, setDraftTitle] = useState('')
@@ -304,12 +373,12 @@ export function DashboardListPage({ dashboards }: { dashboards: DashboardListIte
   const [deletingDashboardId, setDeletingDashboardId] = useState<string | null>(null)
 
   useEffect(() => {
-    setItems(dashboards)
-  }, [dashboards])
+    setItems(artifacts)
+  }, [artifacts])
 
-  const startRename = (dashboard: DashboardListItem) => {
-    setEditingDashboardId(dashboard.id)
-    setDraftTitle(dashboard.title)
+  const startRename = (artifact: ArtifactListItem) => {
+    setEditingDashboardId(artifact.id)
+    setDraftTitle(artifact.title)
   }
 
   const cancelRename = () => {
@@ -335,7 +404,7 @@ export function DashboardListPage({ dashboards }: { dashboards: DashboardListIte
 
     setSavingDashboardId(dashboardId)
     try {
-      const response = await fetch(`/api/artifacts/dashboards/${dashboardId}`, {
+      const response = await fetch(`/api/artifacts/${config.routeSegment}/${dashboardId}`, {
         method: 'PATCH',
         headers: {
           'content-type': 'application/json',
@@ -346,11 +415,11 @@ export function DashboardListPage({ dashboards }: { dashboards: DashboardListIte
         }),
       })
       const json = await response.json().catch(() => ({}))
-      if (!response.ok || !json?.dashboard) {
-        throw new Error(json?.error || 'Falha ao renomear dashboard')
+      if (!response.ok || (!json?.artifact && !json?.dashboard)) {
+        throw new Error(json?.error || `Falha ao renomear ${config.singularLabel}`)
       }
 
-      const updatedDashboard = json.dashboard as DashboardListItem
+      const updatedDashboard = (json.artifact || json.dashboard) as ArtifactListItem
       setItems((current) => {
         const nextItems = current.map((item) => (item.id === updatedDashboard.id ? updatedDashboard : item))
         return nextItems.sort((left, right) => {
@@ -369,22 +438,22 @@ export function DashboardListPage({ dashboards }: { dashboards: DashboardListIte
     }
   }
 
-  const deleteDashboard = async (dashboard: DashboardListItem) => {
-    const confirmed = window.confirm(`Apagar o dashboard "${dashboard.title}"?`)
+  const deleteDashboard = async (artifact: ArtifactListItem) => {
+    const confirmed = window.confirm(`Apagar o ${config.singularLabel} "${artifact.title}"?`)
     if (!confirmed) return
 
-    setDeletingDashboardId(dashboard.id)
+    setDeletingDashboardId(artifact.id)
     try {
-      const response = await fetch(`/api/artifacts/dashboards/${dashboard.id}`, {
+      const response = await fetch(`/api/artifacts/${config.routeSegment}/${artifact.id}`, {
         method: 'DELETE',
       })
       const json = await response.json().catch(() => ({}))
       if (!response.ok) {
-        throw new Error(json?.error || 'Falha ao apagar dashboard')
+        throw new Error(json?.error || `Falha ao apagar ${config.singularLabel}`)
       }
 
-      setItems((current) => current.filter((item) => item.id !== dashboard.id))
-      if (editingDashboardId === dashboard.id) {
+      setItems((current) => current.filter((item) => item.id !== artifact.id))
+      if (editingDashboardId === artifact.id) {
         setEditingDashboardId(null)
         setDraftTitle('')
       }
@@ -421,7 +490,7 @@ export function DashboardListPage({ dashboards }: { dashboards: DashboardListIte
               className="text-[52px] font-semibold tracking-[-0.05em] text-[#101828]"
               style={{ fontFamily: 'var(--font-eb-garamond), "EB Garamond", serif' }}
             >
-              Dashboards
+            {config.title}
             </h1>
 
             <div className="flex w-full flex-col gap-3 sm:flex-row sm:items-center xl:w-auto xl:justify-end">
@@ -431,7 +500,7 @@ export function DashboardListPage({ dashboards }: { dashboards: DashboardListIte
                   type="text"
                   value={query}
                   onChange={(event) => setQuery(event.target.value)}
-                  placeholder="Buscar dashboard"
+                  placeholder={config.searchPlaceholder}
                   className="h-11 w-full rounded-[12px] border border-[#E1E6F0] bg-white pl-11 pr-4 text-[14px] text-[#1E2942] outline-none transition placeholder:text-[#9AA6BC] focus:border-[#B3BDED]"
                 />
               </label>
@@ -440,43 +509,44 @@ export function DashboardListPage({ dashboards }: { dashboards: DashboardListIte
                 type="button"
                 disabled
                 className="inline-flex h-11 items-center justify-center gap-2 self-start rounded-[14px] bg-black px-5 text-[14px] font-semibold text-white shadow-[0_14px_28px_rgba(15,23,42,0.18)] transition disabled:cursor-not-allowed disabled:opacity-55"
-                title="Criação de dashboard ainda não foi ligada nesta tela"
+                title={`Criação de ${config.singularLabel} ainda não foi ligada nesta tela`}
               >
                 <Plus className="h-4 w-4" />
-                Novo Dashboard
+                {config.newButtonLabel}
               </button>
             </div>
           </div>
 
-          <p className="mt-2 text-[16px] text-[#6d7689]">Gerencie e acesse todos os dashboards do Creatto.</p>
+          <p className="mt-2 text-[16px] text-[#6d7689]">{config.description}</p>
         </header>
 
         <section className="mb-8 flex items-center justify-between">
           <div className="text-[14px] text-[#7b8496]">
-            {filteredDashboards.length} dashboards encontrados
+            {filteredDashboards.length} {filteredDashboards.length === 1 ? config.singularLabel : config.pluralLabel} encontrados
           </div>
         </section>
 
         {items.length === 0 ? (
           <section className="rounded-[28px] border border-[#ecece8] bg-[#fafaf9] px-8 py-14">
-            <h2 className="text-[22px] font-semibold tracking-[-0.03em] text-[#111111]">No dashboards yet</h2>
+            <h2 className="text-[22px] font-semibold tracking-[-0.03em] text-[#111111]">{config.emptyTitle}</h2>
             <p className="mt-2 max-w-xl text-[15px] leading-7 text-[#6f6f6a]">
-              Dashboards persisted in the database will appear here as soon as the creation flow is connected to this catalog.
+              {config.emptyDescription}
             </p>
           </section>
         ) : filteredDashboards.length === 0 ? (
           <section className="rounded-[28px] border border-[#ecece8] bg-[#fafaf9] px-8 py-14">
             <h2 className="text-[22px] font-semibold tracking-[-0.03em] text-[#111111]">No results</h2>
             <p className="mt-2 max-w-xl text-[15px] leading-7 text-[#6f6f6a]">
-              No dashboard matches <span className="font-medium text-[#171717]">{query}</span>.
+              No {config.singularLabel} matches <span className="font-medium text-[#171717]">{query}</span>.
             </p>
           </section>
         ) : (
           <section className="grid grid-cols-1 gap-x-5 gap-y-10 md:grid-cols-2 xl:grid-cols-3">
             {filteredDashboards.map((dashboard) => (
-              <DashboardCard
+              <ArtifactCard
                 key={dashboard.id}
-                dashboard={dashboard}
+                artifact={dashboard}
+                config={config}
                 isEditing={editingDashboardId === dashboard.id}
                 draftTitle={editingDashboardId === dashboard.id ? draftTitle : dashboard.title}
                 isSaving={savingDashboardId === dashboard.id || deletingDashboardId === dashboard.id}
@@ -492,4 +562,8 @@ export function DashboardListPage({ dashboards }: { dashboards: DashboardListIte
       </div>
     </main>
   )
+}
+
+export function DashboardListPage({ dashboards }: { dashboards: DashboardListItem[] }) {
+  return <ArtifactListPage artifacts={dashboards} artifactType="dashboard" />
 }

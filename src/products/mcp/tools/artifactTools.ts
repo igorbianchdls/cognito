@@ -8,6 +8,12 @@ import {
 } from '@/products/mcp/adapters/artifactsAdapter'
 import { MCP_ARTIFACT_TOOL_NAMES, type McpArtifactToolName } from '@/products/mcp/shared/toolNames'
 import { getDashboardContract, McpDashboardToolInputError } from '@/products/mcp/tools/dashboardTools'
+import {
+  DOCUMENT_SUPPORTED_HTML_TAGS,
+  DOCUMENT_SPECIAL_COMPONENTS,
+  REPORT_DSL_VERSION,
+  SLIDE_DSL_VERSION,
+} from '@/products/artifacts/document/language/documentLanguageManifest'
 
 type JsonRecord = Record<string, unknown>
 type ArtifactAction = 'get_contract' | 'create' | 'patch' | 'update_full'
@@ -52,8 +58,8 @@ function optionalPositiveInt(value: unknown): number | null {
 
 function normalizeArtifactKind(value: unknown): McpArtifactKind {
   const kind = String(value || '').trim()
-  if (kind === 'dashboard') return kind
-  throw new McpDashboardToolInputError('kind deve ser dashboard', { field: 'kind' })
+  if (kind === 'dashboard' || kind === 'report' || kind === 'slide') return kind
+  throw new McpDashboardToolInputError('kind deve ser dashboard, report ou slide', { field: 'kind' })
 }
 
 function normalizeAction(value: unknown): ArtifactAction {
@@ -92,8 +98,12 @@ function directRootTag(source: string) {
 function assertSourceMatchesKind(kind: McpArtifactKind, source: string) {
   const tag = directRootTag(source)
   if (!tag) return
-  const allowed = ['Dashboard', 'DashboardTemplate']
-  void kind
+  const allowedByKind: Record<McpArtifactKind, string[]> = {
+    dashboard: ['Dashboard', 'DashboardTemplate'],
+    report: ['Report'],
+    slide: ['Deck'],
+  }
+  const allowed = allowedByKind[kind]
 
   if (!allowed.includes(tag)) {
     throw new McpDashboardToolInputError(`source incompativel: kind=${kind} nao aceita root <${tag}>`, {
@@ -104,9 +114,70 @@ function assertSourceMatchesKind(kind: McpArtifactKind, source: string) {
   }
 }
 
+const REPORT_VALID_EXAMPLE = `<Report title="Relatorio Comercial - Junho 2026" size="a4">
+  <page>
+    <section style={{ padding: 48 }}>
+      <p style={{ fontSize: 13, color: '#64748b' }}>Resumo executivo</p>
+      <h1 style={{ fontSize: 34, margin: 0 }}>Vendas cresceram, mas margem pressionou</h1>
+
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 16, marginTop: 24 }}>
+        <div style={{ border: '1px solid #e5e7eb', padding: 20 }}>
+          <p>Receita</p>
+          <h2>R$ 1,24M</h2>
+        </div>
+      </div>
+
+      <Chart type="bar" title="Receita por canal" />
+    </section>
+  </page>
+</Report>`
+
+const SLIDE_VALID_EXAMPLE = `<Deck title="Plano Comercial Q3" size="16:9">
+  <slide>
+    <section style={{ padding: 64, background: '#111827', color: 'white' }}>
+      <p style={{ color: '#93c5fd' }}>Board update</p>
+      <h1 style={{ fontSize: 56, margin: 0 }}>Plano Comercial Q3</h1>
+      <p style={{ fontSize: 22 }}>Crescimento com eficiencia de margem</p>
+    </section>
+  </slide>
+</Deck>`
+
+function getHtmlLikeArtifactContract(kind: Extract<McpArtifactKind, 'report' | 'slide'>, includeExample: boolean) {
+  const isReport = kind === 'report'
+  return {
+    artifact_type: kind,
+    dsl_version: isReport ? REPORT_DSL_VERSION : SLIDE_DSL_VERSION,
+    source_path: isReport ? 'app/report.tsx' : 'app/deck.tsx',
+    source_format:
+      `TSX declarativo HTML-like completo com root <${isReport ? 'Report' : 'Deck'}>. Use HTML comum sempre que possivel.`,
+    authoring_model:
+      'Modelo proximo do Paper: poucos componentes proprios, tags HTML controladas e style inline para layout visual. Nao gere React livre.',
+    root: isReport ? 'Report' : 'Deck',
+    unit_tag: isReport ? 'page' : 'slide',
+    supported_html_tags: [...DOCUMENT_SUPPORTED_HTML_TAGS],
+    supported_special_components: [...DOCUMENT_SPECIAL_COMPONENTS],
+    rules: [
+      'Prefira tags HTML comuns como div, section, p, h1, ul, table e img.',
+      'Use style inline para layout, espacamento, cor, tipografia e grids.',
+      'Nao invente componentes semanticos como Metric, Insight, Columns ou Bullet.',
+      'Use Chart ou DataTable somente quando precisar representar dados/visualizacao.',
+      `O root deve ser <${isReport ? 'Report' : 'Deck'}>.`,
+      `Use <${isReport ? 'page' : 'slide'}> para cada ${isReport ? 'pagina' : 'slide'}.`,
+      'Antes de editar artifact existente, use artifact_authoring com action=patch ou update_full.',
+    ],
+    create_flow: [
+      `Chame artifact_authoring com kind=${kind} e action=get_contract se precisar relembrar o formato.`,
+      'Gere source TSX HTML-like.',
+      `Chame artifact_authoring com kind=${kind}, action=create, title e source.`,
+      'Retorne artifact_id, version e url ao usuario.',
+    ],
+    example_source: includeExample ? (isReport ? REPORT_VALID_EXAMPLE : SLIDE_VALID_EXAMPLE) : null,
+  }
+}
+
 export function getArtifactContract(kind: McpArtifactKind, includeExample: boolean) {
-  void kind
-  return getDashboardContract(includeExample)
+  if (kind === 'dashboard') return getDashboardContract(includeExample)
+  return getHtmlLikeArtifactContract(kind, includeExample)
 }
 
 async function getExpectedVersion(

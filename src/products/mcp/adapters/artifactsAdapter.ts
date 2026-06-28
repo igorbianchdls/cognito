@@ -6,7 +6,7 @@ import {
 } from '@/products/artifacts/backend/artifactService'
 import {
   deleteDashboardArtifact,
-  listDashboards,
+  listArtifactsByType,
   patchDashboardArtifact,
   readDashboardArtifact,
   writeDashboardArtifact,
@@ -145,8 +145,13 @@ export function buildDashboardArtifactUrl(artifactId: string) {
 }
 
 export function buildArtifactUrl(artifactType: McpArtifactKind, artifactId: string) {
-  void artifactType
-  const path = `/artifacts/dashboards/${artifactId}`
+  const segment =
+    artifactType === 'report'
+      ? 'reports'
+      : artifactType === 'slide'
+        ? 'slides'
+        : 'dashboards'
+  const path = `/artifacts/${segment}/${artifactId}`
   const baseUrl = getCognitoBaseUrl()
   return baseUrl ? `${baseUrl}${path}` : path
 }
@@ -170,7 +175,7 @@ function withListDashboardUrl(dashboard: DashboardListItem) {
 }
 
 function isArtifactListKind(value: unknown): value is McpArtifactListKind {
-  return value === 'dashboard'
+  return value === 'dashboard' || value === 'report' || value === 'slide'
 }
 
 function normalizeArtifactListKind(value: unknown): McpArtifactListKind {
@@ -184,7 +189,7 @@ function normalizeListLimit(value: unknown) {
 }
 
 export async function listMcpDashboards(input: McpDashboardListInput) {
-  const dashboards = await listDashboards(input.limit ?? 100, input.tenantId)
+  const dashboards = await listArtifactsByType('dashboard', input.limit ?? 100, input.tenantId)
   return dashboards.map(withListDashboardUrl)
 }
 
@@ -192,8 +197,17 @@ export async function listMcpArtifacts(input: McpArtifactListInput) {
   const kind = normalizeArtifactListKind(input.kind)
   const limit = normalizeListLimit(input.limit)
 
-  void kind
-  return listMcpDashboards({ limit, tenantId: input.tenantId })
+  const artifacts = await listArtifactsByType(kind, limit, input.tenantId)
+  return artifacts.map((artifact) => {
+    const { thumbnail_data_url: thumbnailDataUrl, ...artifactWithoutThumbnail } = artifact
+    return {
+      ...artifactWithoutThumbnail,
+      artifact_type: kind,
+      has_thumbnail: Boolean(thumbnailDataUrl),
+      thumbnail_data_url: thumbnailDataUrl || null,
+      url: buildArtifactUrl(kind, artifact.id),
+    }
+  })
 }
 
 export async function readMcpDashboard(input: McpDashboardReadInput) {
@@ -208,9 +222,13 @@ export async function readMcpDashboard(input: McpDashboardReadInput) {
 }
 
 function withArtifactUrl<T extends { artifact_id: string; artifact_type?: string }>(artifact: T) {
+  const artifactType =
+    artifact.artifact_type === 'report' || artifact.artifact_type === 'slide' || artifact.artifact_type === 'dashboard'
+      ? artifact.artifact_type
+      : 'dashboard'
   return {
     ...artifact,
-    url: buildArtifactUrl('dashboard', artifact.artifact_id),
+    url: buildArtifactUrl(artifactType, artifact.artifact_id),
   }
 }
 

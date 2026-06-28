@@ -3,6 +3,7 @@ import { runQuery } from '@/lib/postgres'
 import { callCognitoMcpTool, type CognitoMcpServerContext } from '@/products/mcp/server/cognitoMcpServer'
 import { DASHBOARD_WIDGET_RESOURCE_URI } from '@/products/plugin/server/appResources'
 import {
+  buildArtifactUrl,
   buildDashboardArtifactUrl,
   listMcpArtifacts,
   listMcpDashboards,
@@ -56,14 +57,14 @@ type PluginToolDefinition = {
 }
 
 type JsonRecord = Record<string, unknown>
-type ArtifactListKind = 'dashboard'
+type ArtifactListKind = 'dashboard' | 'report' | 'slide'
 
 const DASHBOARDS_SCHEMA = {
   type: 'object',
   properties: {
     kind: {
       type: 'string',
-      enum: ['dashboard'],
+      enum: ['dashboard', 'report', 'slide'],
       description: 'Tipo de artifact a listar. Default dashboard.',
     },
     query: {
@@ -83,7 +84,7 @@ const OPEN_ARTIFACT_SCHEMA = {
   properties: {
     kind: {
       type: 'string',
-      enum: ['dashboard'],
+      enum: ['dashboard', 'report', 'slide'],
       description: 'Tipo do artifact a abrir.',
     },
     id: {
@@ -100,8 +101,8 @@ const ARTIFACT_AUTHORING_SCHEMA = {
   properties: {
     kind: {
       type: 'string',
-      enum: ['dashboard'],
-      description: 'Tipo de artifact: dashboard.',
+      enum: ['dashboard', 'report', 'slide'],
+      description: 'Tipo de artifact: dashboard, report ou slide.',
     },
     action: {
       type: 'string',
@@ -284,7 +285,7 @@ const RENDER_LIST_OUTPUT_SCHEMA = {
     tool: { type: 'string' },
     view: { type: 'string', enum: ['dashboard_list'] },
     title: { type: 'string' },
-    artifact_kind: { type: 'string', enum: ['dashboard'] },
+    artifact_kind: { type: 'string', enum: ['dashboard', 'report', 'slide'] },
     artifact_label: { type: 'string' },
     artifact_label_plural: { type: 'string' },
     dashboards: {
@@ -475,7 +476,7 @@ const SCHEDULES_SCHEMA = {
     ...AUTOMATION_ACTION_SCHEMA.properties,
     artifact_kind: {
       type: 'string',
-      enum: ['dashboard'],
+      enum: ['dashboard', 'report', 'slide'],
       description: 'Tipo de artifact a gerar quando aplicavel.',
     },
     prompt: { type: 'string', description: 'Prompt recorrente que sera executado pelo orquestrador.' },
@@ -650,7 +651,7 @@ const ARTIFACT_AUTHORING_OUTPUT_SCHEMA = {
   properties: {
     ok: { type: 'boolean' },
     tool: { type: 'string' },
-    kind: { type: 'string', enum: ['dashboard'] },
+    kind: { type: 'string', enum: ['dashboard', 'report', 'slide'] },
     action: { type: 'string' },
     contract: {
       type: 'object',
@@ -889,26 +890,27 @@ function buildDashboardEmbedUrl(artifactId: string, version?: unknown) {
   return `${baseUrl}${baseUrl.includes('?') ? '&' : '?'}${params.toString()}`
 }
 
-function getArtifactKind(value: unknown): 'dashboard' | null {
+function getArtifactKind(value: unknown): ArtifactListKind | null {
   const kind = String(value || '').trim()
-  if (kind === 'dashboard') return kind
+  if (kind === 'dashboard' || kind === 'report' || kind === 'slide') return kind
   return null
 }
 
 function getArtifactListKind(value: unknown): ArtifactListKind {
   const kind = String(value || '').trim()
-  if (kind === 'dashboard') return kind
+  if (kind === 'dashboard' || kind === 'report' || kind === 'slide') return kind
   return 'dashboard'
 }
 
-function getArtifactListLabels(_kind: ArtifactListKind) {
+function getArtifactListLabels(kind: ArtifactListKind) {
+  if (kind === 'report') return { singular: 'report', plural: 'reports', title: 'Reports' }
+  if (kind === 'slide') return { singular: 'slide', plural: 'slides', title: 'Slides' }
   return { singular: 'dashboard', plural: 'dashboards', title: 'Dashboards' }
 }
 
-function buildArtifactEmbedUrl(kind: 'dashboard', artifactId: string, version?: unknown) {
+function buildArtifactEmbedUrl(kind: ArtifactListKind, artifactId: string, version?: unknown) {
   const token = createDashboardEmbedToken(artifactId)
-  void kind
-  const baseUrl = buildDashboardArtifactUrl(artifactId)
+  const baseUrl = kind === 'dashboard' ? buildDashboardArtifactUrl(artifactId) : buildArtifactUrl(kind, artifactId)
   const params = new URLSearchParams({
     embed: '1',
     token,
@@ -929,7 +931,7 @@ function withDashboardEmbedUrl<T extends JsonRecord>(dashboard: T): T & { embed_
   }
 }
 
-function withArtifactEmbedUrl<T extends JsonRecord>(artifact: T, fallbackKind?: 'dashboard'): T & { embed_url?: string } {
+function withArtifactEmbedUrl<T extends JsonRecord>(artifact: T, fallbackKind?: ArtifactListKind): T & { embed_url?: string } {
   const artifactId = getDashboardArtifactId(artifact)
   const kind = getArtifactKind(artifact.artifact_type || artifact.kind || fallbackKind) || 'dashboard'
   if (!artifactId) return artifact
@@ -974,11 +976,12 @@ function dashboardMatchesQuery(dashboard: JsonRecord, query: string) {
 
 function toSearchResult(dashboard: JsonRecord) {
   const id = String(dashboard.id || '')
+  const kind = getArtifactKind(dashboard.artifact_type) || 'dashboard'
   return {
     id,
     title: String(dashboard.title || dashboard.slug || dashboard.id || 'Dashboard'),
     url: String(dashboard.url || ''),
-    embed_url: id ? buildDashboardEmbedUrl(id) : '',
+    embed_url: id ? buildArtifactEmbedUrl(kind, id) : '',
     metadata: {
       slug: dashboard.slug || null,
       status: dashboard.status || null,
@@ -1226,14 +1229,14 @@ async function callOpenArtifact(args: unknown, context: CognitoMcpServerContext)
   }
 }
 
-async function callArtifactAuthoring(args: unknown, context: CognitoMcpServerContext, forcedKind?: 'dashboard') {
+async function callArtifactAuthoring(args: unknown, context: CognitoMcpServerContext, forcedKind?: ArtifactListKind) {
   const input = asRecord(args)
   const kind = forcedKind || getArtifactKind(input.kind)
   if (!kind) {
     const structuredContent = {
       ok: false,
       tool: PLUGIN_PUBLIC_TOOL_NAMES.artifactAuthoring,
-      error: 'kind invalido. Use dashboard.',
+      error: 'kind invalido. Use dashboard, report ou slide.',
     }
 
     return {
@@ -2306,7 +2309,7 @@ export function listCognitoPluginTools() {
         name: PLUGIN_PUBLIC_TOOL_NAMES.artifactAuthoring,
         title: 'Artifact authoring',
         description:
-          'Cria e edita dashboards Cognito usando TSX declarativo versionado. Use kind=dashboard; action=get_contract, create, patch ou update_full.',
+          'Cria e edita artifacts Cognito usando TSX declarativo versionado. Use kind=dashboard, report ou slide; action=get_contract, create, patch ou update_full.',
         inputSchema: ARTIFACT_AUTHORING_SCHEMA,
         outputSchema: ARTIFACT_AUTHORING_OUTPUT_SCHEMA,
         securitySchemes: COGNITO_WRITE_SECURITY_SCHEMES,

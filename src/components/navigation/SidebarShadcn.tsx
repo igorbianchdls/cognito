@@ -4,9 +4,11 @@ import * as React from "react"
 import { usePathname } from "next/navigation"
 import {
   IconChartBar,
+  IconFileText,
   IconGridDots,
   IconHistory,
   IconMessageCircle,
+  IconPresentation,
   IconPlugConnected,
 } from "@tabler/icons-react"
 
@@ -35,6 +37,8 @@ import {
 const BrandIcon = (props: { className?: string; style?: React.CSSProperties }) => <IconGridDots stroke={1.75} {...props} />
 const IntegrationsIcon = (props: { className?: string; style?: React.CSSProperties }) => <IconPlugConnected stroke={1.75} {...props} />
 const DashboardsIcon = (props: { className?: string; style?: React.CSSProperties }) => <IconChartBar stroke={1.75} {...props} />
+const SlidesIcon = (props: { className?: string; style?: React.CSSProperties }) => <IconPresentation stroke={1.75} {...props} />
+const ReportsIcon = (props: { className?: string; style?: React.CSSProperties }) => <IconFileText stroke={1.75} {...props} />
 const ChatIcon = (props: { className?: string; style?: React.CSSProperties }) => <IconMessageCircle stroke={1.75} {...props} />
 const HistoryIcon = (props: { className?: string; style?: React.CSSProperties }) => <IconHistory stroke={1.75} {...props} />
 
@@ -106,6 +110,16 @@ const navigationData = {
       title: "Dashboards",
       url: "/artifacts/dashboards",
       icon: DashboardsIcon,
+    },
+    {
+      title: "Slides",
+      url: "/artifacts/slides",
+      icon: SlidesIcon,
+    },
+    {
+      title: "Reports",
+      url: "/artifacts/reports",
+      icon: ReportsIcon,
     },
   ],
   integrations: [

@@ -39,9 +39,14 @@ for (const registryName of [
 }
 
 const genericService = await source('src/products/artifacts/backend/artifactService.ts')
-assert(genericService.includes('readDashboardArtifact'), 'generic artifact service must delegate reads')
-assert(genericService.includes('writeDashboardArtifact'), 'generic artifact service must delegate writes')
+assert(genericService.includes('readArtifactByType'), 'generic artifact service must delegate typed reads')
+assert(genericService.includes('writeArtifactByType'), 'generic artifact service must delegate typed writes')
 assert(!genericService.includes('SELECT '), 'generic artifact service must not duplicate SQL persistence')
+
+const documentManifest = await source('src/products/artifacts/document/language/documentLanguageManifest.ts')
+assert(documentManifest.includes("REPORT_DSL_VERSION = 'report.v1'"), 'report DSL version missing')
+assert(documentManifest.includes("SLIDE_DSL_VERSION = 'slide.v1'"), 'slide DSL version missing')
+assert(documentManifest.includes('DOCUMENT_SUPPORTED_HTML_TAGS'), 'document HTML-like manifest missing')
 
 const queryService = await source('src/products/artifacts/dashboard/query/dashboardQueryService.ts')
 assert(queryService.includes('defaultDataset'), 'dashboard query must resolve a tenant dataset server-side')
