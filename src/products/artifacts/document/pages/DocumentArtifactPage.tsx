@@ -1,8 +1,8 @@
 'use client'
 
-import { useEffect, useRef, useState, type FormEvent } from 'react'
+import { useEffect, useRef, useState, type ComponentProps, type FormEvent } from 'react'
 import { useRouter } from 'next/navigation'
-import { Copy, ExternalLink, MoreHorizontal, Presentation } from 'lucide-react'
+import { Check, Copy, ExternalLink, MoreHorizontal, Pencil, Presentation, Trash2 } from 'lucide-react'
 
 import { Button } from '@/components/ui/button'
 import {
@@ -17,9 +17,12 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { Input } from '@/components/ui/input'
+import { Separator } from '@/components/ui/separator'
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
 import { ArtifactWorkspacePage } from '@/products/artifacts/core/workspace/ArtifactWorkspacePage'
 import type { ArtifactKind, ArtifactTreeNode } from '@/products/artifacts/core/types/artifactTypes'
 import { parseDocumentJsxToTree } from '@/products/artifacts/document/language/parseDocumentJsx'
@@ -36,6 +39,23 @@ type DocumentArtifactPageProps = {
 }
 
 type PendingAction = 'copy' | 'present' | 'rename' | 'delete' | null
+
+function HeaderIconButton({
+  label,
+  children,
+  ...props
+}: ComponentProps<typeof Button> & {
+  label: string
+}) {
+  return (
+    <Tooltip>
+      <TooltipTrigger asChild>
+        <Button {...props}>{children}</Button>
+      </TooltipTrigger>
+      <TooltipContent side="bottom">{label}</TooltipContent>
+    </Tooltip>
+  )
+}
 
 export function DocumentArtifactPage({
   artifactId,
@@ -56,6 +76,9 @@ export function DocumentArtifactPage({
   const [deleteOpen, setDeleteOpen] = useState(false)
   const [pendingAction, setPendingAction] = useState<PendingAction>(null)
   const [actionError, setActionError] = useState<string | null>(null)
+  const artifactLabel = kind === 'slide' ? 'Slides' : 'Report'
+  const artifactPluralLabel = kind === 'slide' ? 'slides' : 'report'
+  const artifactCollectionPath = kind === 'slide' ? 'slides' : 'reports'
 
   useEffect(() => {
     const nextTitle = title || fallbackTitle
@@ -142,7 +165,7 @@ export function DocumentArtifactPage({
     setPendingAction('rename')
     setActionError(null)
     try {
-      const response = await fetch(`/api/artifacts/${kind === 'slide' ? 'slides' : 'reports'}/${artifactId}`, {
+      const response = await fetch(`/api/artifacts/${artifactCollectionPath}/${artifactId}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ action: 'rename', title: nextTitle }),
@@ -162,11 +185,11 @@ export function DocumentArtifactPage({
     setPendingAction('delete')
     setActionError(null)
     try {
-      const response = await fetch(`/api/artifacts/${kind === 'slide' ? 'slides' : 'reports'}/${artifactId}`, {
+      const response = await fetch(`/api/artifacts/${artifactCollectionPath}/${artifactId}`, {
         method: 'DELETE',
       })
       if (!response.ok) throw new Error('delete failed')
-      router.push(`/artifacts/${kind === 'slide' ? 'slides' : 'reports'}`)
+      router.push(`/artifacts/${artifactCollectionPath}`)
       router.refresh()
     } catch {
       setActionError('Não foi possível excluir.')
@@ -179,49 +202,85 @@ export function DocumentArtifactPage({
     <ArtifactWorkspacePage initialData={{ ui: {}, filters: {}, document: {} }}>
       <main className={embedMode ? 'min-h-screen bg-white' : 'min-h-screen bg-[#f7f7f6]'}>
         {!embedMode ? (
-          <header className="flex items-center justify-between gap-4 border-b border-black/10 bg-white px-5 py-3">
-            <h1 className="min-w-0 truncate text-sm font-medium text-neutral-900">{displayTitle}</h1>
-            <div className="flex shrink-0 items-center gap-2">
-              <Button
+          <header className="sticky top-0 z-30 flex min-h-14 items-center justify-between gap-4 border-b border-neutral-200/80 bg-white/95 px-4 py-2.5 backdrop-blur">
+            <div className="min-w-0">
+              <div className="text-[11px] font-medium uppercase tracking-[0.12em] text-neutral-500">{artifactLabel}</div>
+              <h1 className="mt-0.5 min-w-0 truncate text-[15px] font-semibold leading-5 text-neutral-950">{displayTitle}</h1>
+            </div>
+
+            <div className="flex shrink-0 items-center rounded-lg border border-neutral-200 bg-neutral-50/70 p-1 shadow-xs">
+              <HeaderIconButton
+                label={copied ? 'Link copiado' : 'Copiar link'}
                 type="button"
                 variant="ghost"
-                size="sm"
+                size="icon"
                 onClick={copyCurrentLink}
                 disabled={pendingAction === 'copy'}
+                className="size-8 text-neutral-700 hover:bg-white hover:text-neutral-950"
               >
-                <Copy className="h-4 w-4" />
-                <span className="hidden sm:inline">{copied ? 'Copiado' : 'Copiar link'}</span>
-              </Button>
-              {kind === 'slide' ? (
-                <Button
-                  type="button"
-                  variant="default"
-                  size="sm"
-                  onClick={presentSlides}
-                  disabled={pendingAction === 'present'}
-                >
-                  <Presentation className="h-4 w-4" />
-                  <span className="hidden sm:inline">Apresentar</span>
-                </Button>
-              ) : null}
-              <Button type="button" variant="ghost" size="sm" onClick={openInNewTab}>
+                {copied ? <Check className="h-4 w-4 text-emerald-600" /> : <Copy className="h-4 w-4" />}
+                <span className="sr-only">{copied ? 'Link copiado' : 'Copiar link'}</span>
+              </HeaderIconButton>
+
+              <HeaderIconButton
+                label="Abrir em nova aba"
+                type="button"
+                variant="ghost"
+                size="icon"
+                onClick={openInNewTab}
+                className="size-8 text-neutral-700 hover:bg-white hover:text-neutral-950"
+              >
                 <ExternalLink className="h-4 w-4" />
-                <span className="hidden sm:inline">Abrir em nova aba</span>
-              </Button>
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button type="button" variant="ghost" size="icon" aria-label="Mais ações">
-                    <MoreHorizontal className="h-4 w-4" />
+                <span className="sr-only">Abrir em nova aba</span>
+              </HeaderIconButton>
+
+              {kind === 'slide' ? (
+                <>
+                  <Separator orientation="vertical" className="mx-1 h-5 bg-neutral-200" />
+                  <Button
+                    type="button"
+                    variant="default"
+                    size="sm"
+                    onClick={presentSlides}
+                    disabled={pendingAction === 'present'}
+                    className="h-8 rounded-md px-3 shadow-xs"
+                  >
+                    <Presentation className="h-4 w-4" />
+                    <span className="hidden sm:inline">Apresentar</span>
                   </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="min-w-[10rem]">
-                  <DropdownMenuItem onSelect={() => setRenameOpen(true)}>
+                </>
+              ) : null}
+
+              <Separator orientation="vertical" className="mx-1 h-5 bg-neutral-200" />
+
+              <DropdownMenu>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <DropdownMenuTrigger asChild>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        aria-label="Mais ações"
+                        className="size-8 text-neutral-700 hover:bg-white hover:text-neutral-950"
+                      >
+                        <MoreHorizontal className="h-4 w-4" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                  </TooltipTrigger>
+                  <TooltipContent side="bottom">Mais ações</TooltipContent>
+                </Tooltip>
+                <DropdownMenuContent align="end" className="min-w-[12rem]">
+                  <DropdownMenuItem className="gap-2" onSelect={() => setRenameOpen(true)}>
+                    <Pencil className="h-4 w-4 text-neutral-500" />
                     Renomear
                   </DropdownMenuItem>
+                  <DropdownMenuSeparator />
                   <DropdownMenuItem
-                    className="text-red-700 focus:text-red-700"
+                    className="gap-2 text-red-700 focus:text-red-700"
                     onSelect={() => setDeleteOpen(true)}
                   >
+                    <Trash2 className="h-4 w-4" />
                     Excluir
                   </DropdownMenuItem>
                 </DropdownMenuContent>
@@ -230,7 +289,9 @@ export function DocumentArtifactPage({
           </header>
         ) : null}
         {actionError ? (
-          <div className="border-b border-red-200 bg-red-50 px-5 py-2 text-sm text-red-700">{actionError}</div>
+          <div className="px-4 pt-3">
+            <div className="rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">{actionError}</div>
+          </div>
         ) : null}
         {error ? (
           <div className="p-4 text-sm text-red-700">{error}</div>
@@ -244,18 +305,19 @@ export function DocumentArtifactPage({
       </main>
 
       <Dialog open={renameOpen} onOpenChange={setRenameOpen}>
-        <DialogContent>
+        <DialogContent className="sm:max-w-md">
           <form onSubmit={renameArtifact}>
             <DialogHeader>
-              <DialogTitle>Renomear {kind === 'slide' ? 'slides' : 'report'}</DialogTitle>
-              <DialogDescription>Atualize o título exibido na lista e no header.</DialogDescription>
+              <DialogTitle>Renomear {artifactPluralLabel}</DialogTitle>
+              <DialogDescription>Atualize o título exibido no header e na lista.</DialogDescription>
             </DialogHeader>
-            <div className="py-4">
+            <div className="py-5">
               <Input
                 value={renameTitle}
                 onChange={(event) => setRenameTitle(event.target.value)}
                 autoFocus
                 aria-label="Título"
+                className="border border-neutral-200 bg-white"
               />
             </div>
             <DialogFooter>
@@ -271,14 +333,14 @@ export function DocumentArtifactPage({
       </Dialog>
 
       <Dialog open={deleteOpen} onOpenChange={setDeleteOpen}>
-        <DialogContent>
+        <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle>Excluir {kind === 'slide' ? 'slides' : 'report'}</DialogTitle>
+            <DialogTitle>Excluir {artifactPluralLabel}</DialogTitle>
             <DialogDescription>
               Esta ação remove o artifact da lista. Não será possível desfazer.
             </DialogDescription>
           </DialogHeader>
-          <DialogFooter>
+          <DialogFooter className="pt-2">
             <Button type="button" variant="ghost" onClick={() => setDeleteOpen(false)}>
               Cancelar
             </Button>
