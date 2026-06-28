@@ -130,6 +130,10 @@ export function DocumentRenderer({
   tree: ArtifactTreeNode
   kind: DocumentKind
 }) {
+  if (kind === 'slide') {
+    return <SlideDeckPlayer tree={tree} />
+  }
+
   const rootClassName = kind === 'report'
     ? 'min-h-screen bg-[#f3f4f6] px-4 py-8'
     : 'min-h-screen bg-[#eceff4] px-4 py-8'
@@ -137,6 +141,111 @@ export function DocumentRenderer({
   return (
     <div className={rootClassName}>
       <RenderDocumentNode node={tree} kind={kind} path={[]} />
+    </div>
+  )
+}
+
+function collectDeckSlides(tree: ArtifactTreeNode) {
+  const rootChildren = Array.isArray(tree.children) ? tree.children : []
+  return rootChildren.filter(
+    (child): child is ArtifactTreeNode => typeof child === 'object' && child !== null && child.type === 'slide',
+  )
+}
+
+function getTextContent(node: ArtifactTreeNode | string): string {
+  if (typeof node === 'string') return node
+  if (!node || typeof node !== 'object') return ''
+  return (node.children || []).map((child) => getTextContent(child)).join(' ').replace(/\s+/g, ' ').trim()
+}
+
+function findHeadingText(node: ArtifactTreeNode): string | null {
+  if (node.type === 'h1' || node.type === 'h2') {
+    const text = getTextContent(node)
+    return text || null
+  }
+
+  for (const child of node.children || []) {
+    if (typeof child !== 'object' || child === null) continue
+    const text = findHeadingText(child)
+    if (text) return text
+  }
+
+  return null
+}
+
+function getSlideLabel(slide: ArtifactTreeNode, index: number) {
+  const explicitTitle = typeof slide.props?.title === 'string' ? slide.props.title.trim() : ''
+  return explicitTitle || findHeadingText(slide) || `Slide ${index + 1}`
+}
+
+function SlideDeckPlayer({ tree }: { tree: ArtifactTreeNode }) {
+  const slides = React.useMemo(() => collectDeckSlides(tree), [tree])
+  const [activeSlideIndex, setActiveSlideIndex] = React.useState(0)
+
+  React.useEffect(() => {
+    setActiveSlideIndex((current) => {
+      if (slides.length === 0) return 0
+      return Math.min(current, slides.length - 1)
+    })
+  }, [slides.length])
+
+  if (slides.length === 0) {
+    return (
+      <div className="min-h-screen bg-[#eceff4] px-4 py-8">
+        <div className="mx-auto max-w-2xl rounded-lg border border-[#d9e0ec] bg-white p-6 text-sm text-[#475569]">
+          Nenhum slide encontrado neste deck.
+        </div>
+      </div>
+    )
+  }
+
+  const activeSlide = slides[activeSlideIndex] || slides[0]
+
+  if (slides.length === 1) {
+    return (
+      <div className="min-h-screen bg-[#eceff4] px-4 py-8">
+        <RenderDocumentNode node={activeSlide} kind="slide" path={[0]} />
+      </div>
+    )
+  }
+
+  return (
+    <div className="min-h-screen bg-[#eceff4] lg:flex">
+      <aside className="border-b border-black/10 bg-white/95 px-4 py-3 lg:h-screen lg:w-64 lg:shrink-0 lg:overflow-y-auto lg:border-b-0 lg:border-r lg:px-3 lg:py-4">
+        <div className="flex gap-2 overflow-x-auto lg:flex-col lg:overflow-x-visible">
+          {slides.map((slide, index) => {
+            const active = index === activeSlideIndex
+            return (
+              <button
+                key={getNodeKey(slide, index, [index])}
+                type="button"
+                onClick={() => setActiveSlideIndex(index)}
+                className={[
+                  'flex min-w-[128px] shrink-0 items-center gap-3 rounded-md border px-3 py-2 text-left text-sm transition lg:min-w-0',
+                  active
+                    ? 'border-[#111827] bg-[#111827] text-white'
+                    : 'border-[#e2e8f0] bg-white text-[#334155] hover:border-[#cbd5e1] hover:bg-[#f8fafc]',
+                ].join(' ')}
+                aria-current={active ? 'page' : undefined}
+              >
+                <span
+                  className={[
+                    'flex h-7 w-7 shrink-0 items-center justify-center rounded border text-xs font-semibold',
+                    active ? 'border-white/20 bg-white/10 text-white' : 'border-[#e2e8f0] bg-[#f8fafc] text-[#475569]',
+                  ].join(' ')}
+                >
+                  {index + 1}
+                </span>
+                <span className="min-w-0 truncate">{getSlideLabel(slide, index)}</span>
+              </button>
+            )
+          })}
+        </div>
+      </aside>
+
+      <main className="min-w-0 flex-1 px-4 py-8">
+        <RenderDocumentNode node={activeSlide} kind="slide" path={[activeSlideIndex]} />
+      </main>
     </div>
   )
 }
