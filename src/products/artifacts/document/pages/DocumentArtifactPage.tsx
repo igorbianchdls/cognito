@@ -21,7 +21,6 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { Input } from '@/components/ui/input'
-import { Separator } from '@/components/ui/separator'
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
 import { ArtifactWorkspacePage } from '@/products/artifacts/core/workspace/ArtifactWorkspacePage'
 import type { ArtifactKind, ArtifactTreeNode } from '@/products/artifacts/core/types/artifactTypes'
@@ -208,15 +207,15 @@ export function DocumentArtifactPage({
               <h1 className="mt-0.5 min-w-0 truncate text-[15px] font-semibold leading-5 text-neutral-950">{displayTitle}</h1>
             </div>
 
-            <div className="flex shrink-0 items-center rounded-lg border border-neutral-200 bg-neutral-50/70 p-1 shadow-xs">
+            <div className="flex shrink-0 items-center gap-2">
               <HeaderIconButton
                 label={copied ? 'Link copiado' : 'Copiar link'}
                 type="button"
-                variant="ghost"
+                variant="outline"
                 size="icon"
                 onClick={copyCurrentLink}
                 disabled={pendingAction === 'copy'}
-                className="size-8 text-neutral-700 hover:bg-white hover:text-neutral-950"
+                className="size-8 bg-white text-neutral-700 shadow-xs hover:bg-neutral-50 hover:text-neutral-950"
               >
                 {copied ? <Check className="h-4 w-4 text-emerald-600" /> : <Copy className="h-4 w-4" />}
                 <span className="sr-only">{copied ? 'Link copiado' : 'Copiar link'}</span>
@@ -225,33 +224,28 @@ export function DocumentArtifactPage({
               <HeaderIconButton
                 label="Abrir em nova aba"
                 type="button"
-                variant="ghost"
+                variant="outline"
                 size="icon"
                 onClick={openInNewTab}
-                className="size-8 text-neutral-700 hover:bg-white hover:text-neutral-950"
+                className="size-8 bg-white text-neutral-700 shadow-xs hover:bg-neutral-50 hover:text-neutral-950"
               >
                 <ExternalLink className="h-4 w-4" />
                 <span className="sr-only">Abrir em nova aba</span>
               </HeaderIconButton>
 
               {kind === 'slide' ? (
-                <>
-                  <Separator orientation="vertical" className="mx-1 h-5 bg-neutral-200" />
-                  <Button
-                    type="button"
-                    variant="default"
-                    size="sm"
-                    onClick={presentSlides}
-                    disabled={pendingAction === 'present'}
-                    className="h-8 rounded-md px-3 shadow-xs"
-                  >
-                    <Presentation className="h-4 w-4" />
-                    <span className="hidden sm:inline">Apresentar</span>
-                  </Button>
-                </>
+                <Button
+                  type="button"
+                  variant="default"
+                  size="sm"
+                  onClick={presentSlides}
+                  disabled={pendingAction === 'present'}
+                  className="h-8 rounded-md px-3 shadow-xs"
+                >
+                  <Presentation className="h-4 w-4" />
+                  <span className="hidden sm:inline">Apresentar</span>
+                </Button>
               ) : null}
-
-              <Separator orientation="vertical" className="mx-1 h-5 bg-neutral-200" />
 
               <DropdownMenu>
                 <Tooltip>
@@ -259,10 +253,10 @@ export function DocumentArtifactPage({
                     <DropdownMenuTrigger asChild>
                       <Button
                         type="button"
-                        variant="ghost"
+                        variant="outline"
                         size="icon"
                         aria-label="Mais ações"
-                        className="size-8 text-neutral-700 hover:bg-white hover:text-neutral-950"
+                        className="size-8 bg-white text-neutral-700 shadow-xs hover:bg-neutral-50 hover:text-neutral-950"
                       >
                         <MoreHorizontal className="h-4 w-4" />
                       </Button>

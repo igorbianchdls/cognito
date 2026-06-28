@@ -1,9 +1,20 @@
 'use client'
 
 import Link from 'next/link'
-import { KeyboardEvent, useEffect, useMemo, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState, type KeyboardEvent, type ReactNode } from 'react'
 import { Edit3, FileText, LayoutGrid, MoreHorizontal, Plus, Presentation, Search, Trash2 } from 'lucide-react'
 
+import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
+import { Card, CardContent } from '@/components/ui/card'
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog'
 import type { ArtifactKind } from '@/products/artifacts/core/types/artifactTypes'
 import type { ArtifactListItem, DashboardListItem } from '@/products/artifacts/dashboard/persistence/dashboardArtifactsService'
 import {
@@ -13,6 +24,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
+import { Input } from '@/components/ui/input'
 
 function formatRelativeDate(value: string) {
   const date = new Date(value)
@@ -22,7 +34,7 @@ function formatRelativeDate(value: string) {
   const diffMinutes = Math.round(diffMs / 60000)
   const absMinutes = Math.abs(diffMinutes)
 
-  const rtf = new Intl.RelativeTimeFormat('en', { numeric: 'auto' })
+  const rtf = new Intl.RelativeTimeFormat('pt-BR', { numeric: 'auto' })
   if (absMinutes < 60) return rtf.format(diffMinutes, 'minute')
 
   const diffHours = Math.round(diffMinutes / 60)
@@ -70,8 +82,8 @@ const ARTIFACT_CATALOG_CONFIG: Record<ArtifactKind, ArtifactCatalogConfig> = {
     newButtonLabel: 'Novo Dashboard',
     searchPlaceholder: 'Buscar dashboard',
     description: 'Gerencie e acesse todos os dashboards do Creatto.',
-    emptyTitle: 'No dashboards yet',
-    emptyDescription: 'Dashboards persisted in the database will appear here as soon as the creation flow is connected to this catalog.',
+    emptyTitle: 'Nenhum dashboard ainda',
+    emptyDescription: 'Os dashboards persistidos no banco aparecem aqui assim que forem criados.',
   },
   report: {
     artifactType: 'report',
@@ -82,7 +94,7 @@ const ARTIFACT_CATALOG_CONFIG: Record<ArtifactKind, ArtifactCatalogConfig> = {
     newButtonLabel: 'Novo Report',
     searchPlaceholder: 'Buscar report',
     description: 'Gerencie e acesse todos os reports do Creatto.',
-    emptyTitle: 'No reports yet',
+    emptyTitle: 'Nenhum report ainda',
     emptyDescription: 'Reports criados via MCP aparecerão aqui assim que forem persistidos.',
   },
   slide: {
@@ -94,7 +106,7 @@ const ARTIFACT_CATALOG_CONFIG: Record<ArtifactKind, ArtifactCatalogConfig> = {
     newButtonLabel: 'Novo Slide',
     searchPlaceholder: 'Buscar slide',
     description: 'Gerencie e acesse todas as apresentações do Creatto.',
-    emptyTitle: 'No slides yet',
+    emptyTitle: 'Nenhum slide ainda',
     emptyDescription: 'Decks criados via MCP aparecerão aqui assim que forem persistidos.',
   },
 }
@@ -149,10 +161,48 @@ function getInitials(title: string) {
   return `${parts[0][0] || ''}${parts[1][0] || ''}`.toUpperCase()
 }
 
+function getStatusLabel(status: ArtifactListItem['status']) {
+  if (status === 'published') return 'Publicado'
+  if (status === 'archived') return 'Arquivado'
+  return 'Rascunho'
+}
+
+function getStatusVariant(status: ArtifactListItem['status']) {
+  if (status === 'published') return 'default'
+  if (status === 'archived') return 'outline'
+  return 'secondary'
+}
+
+function ArtifactEmptyState({
+  config,
+  title,
+  description,
+}: {
+  config: ArtifactCatalogConfig
+  title: string
+  description: ReactNode
+}) {
+  const Icon = getArtifactIcon(config.artifactType)
+
+  return (
+    <Card className="rounded-lg border-dashed bg-muted/25 py-0 shadow-none">
+      <CardContent className="flex flex-col items-start gap-4 p-8 sm:flex-row sm:items-center">
+        <div className="flex size-11 shrink-0 items-center justify-center rounded-lg border bg-background text-muted-foreground">
+          <Icon className="h-5 w-5" />
+        </div>
+        <div className="min-w-0">
+          <h2 className="text-base font-semibold text-foreground">{title}</h2>
+          <p className="mt-1 max-w-xl text-sm leading-6 text-muted-foreground">{description}</p>
+        </div>
+      </CardContent>
+    </Card>
+  )
+}
+
 function ArtifactThumbnail({ artifact }: { artifact: ArtifactListItem }) {
   if (artifact.thumbnail_data_url) {
     return (
-      <div className="relative aspect-[1.75/1] overflow-hidden rounded-2xl border border-[#e5e7eb] bg-white">
+      <div className="relative aspect-video overflow-hidden border-b bg-muted">
         <img
           src={artifact.thumbnail_data_url}
           alt={`Preview de ${artifact.title}`}
@@ -167,20 +217,19 @@ function ArtifactThumbnail({ artifact }: { artifact: ArtifactListItem }) {
   const initials = getInitials(artifact.title)
 
   return (
-    <div className={`relative aspect-[1.75/1] overflow-hidden rounded-2xl border ${palette.border} bg-gradient-to-br ${palette.shell}`}>
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(255,255,255,0.85),transparent_42%)]" />
+    <div className={`relative aspect-video overflow-hidden border-b ${palette.border} bg-gradient-to-br ${palette.shell}`}>
       <div className="absolute inset-x-0 top-0 flex items-center justify-between px-4 py-3">
-        <div className={`inline-flex h-9 w-9 items-center justify-center rounded-full ${palette.accent} text-xs font-semibold text-white shadow-sm`}>
+        <div className={`inline-flex h-9 w-9 items-center justify-center rounded-md ${palette.accent} text-xs font-semibold text-white shadow-sm`}>
           {initials}
         </div>
-        <div className={`rounded-full border ${palette.border} ${palette.card} px-2 py-1 text-[10px] font-semibold uppercase tracking-[0.14em] ${palette.text}`}>
-          {artifact.status}
-        </div>
+        <Badge variant={getStatusVariant(artifact.status)} className="bg-background/85">
+          {getStatusLabel(artifact.status)}
+        </Badge>
       </div>
 
-      <div className="absolute inset-x-4 bottom-4 top-[30%] flex flex-col gap-3">
-        <div className={`rounded-2xl border ${palette.border} ${palette.card} p-4 shadow-[0_10px_30px_rgba(15,23,42,0.04)]`}>
-          <div className={`text-sm font-semibold tracking-[-0.03em] ${palette.text}`}>{artifact.title}</div>
+      <div className="absolute inset-x-4 bottom-4 top-[34%] flex flex-col gap-3">
+        <div className={`rounded-lg border ${palette.border} ${palette.card} p-4 shadow-[0_10px_30px_rgba(15,23,42,0.04)]`}>
+          <div className={`truncate text-sm font-semibold ${palette.text}`}>{artifact.title}</div>
           <div className="mt-2 flex gap-2">
             <div className={`h-2.5 w-16 rounded-full ${palette.accent} opacity-80`} />
             <div className="h-2.5 w-10 rounded-full bg-black/10" />
@@ -191,7 +240,7 @@ function ArtifactThumbnail({ artifact }: { artifact: ArtifactListItem }) {
           {Array.from({ length: 3 }).map((_, index) => (
             <div
               key={index}
-              className={`rounded-xl border ${palette.border} ${palette.card} px-3 py-2 shadow-[0_6px_16px_rgba(15,23,42,0.04)]`}
+              className={`rounded-md border ${palette.border} ${palette.card} px-3 py-2 shadow-[0_6px_16px_rgba(15,23,42,0.04)]`}
             >
               <div
                 className={`h-2 w-7 rounded-full ${palette.accent}`}
@@ -255,19 +304,19 @@ function ArtifactCard({
   }
 
   return (
-    <article className="group">
+    <Card className="group gap-0 overflow-hidden rounded-lg py-0 shadow-xs transition hover:shadow-md">
       <Link href={`/artifacts/${config.routeSegment}/${artifact.id}`} className="block">
         <ArtifactThumbnail artifact={artifact} />
       </Link>
 
-      <div className="flex items-start justify-between gap-3 px-1 pt-3">
+      <CardContent className="flex items-start justify-between gap-3 p-4">
         <div className="min-w-0 flex items-start gap-3">
-          <div className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-black text-white">
+          <div className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-primary text-primary-foreground">
             <Icon className="h-3.5 w-3.5" />
           </div>
           <div className="min-w-0">
             {isEditing ? (
-              <input
+              <Input
                 ref={inputRef}
                 value={draftTitle}
                 onChange={(event) => onDraftTitleChange(event.target.value)}
@@ -277,12 +326,12 @@ function ArtifactCard({
                   void onSaveRename()
                 }}
                 disabled={isSaving}
-                className="block w-full rounded-md border border-[#d9deea] bg-white px-2 py-1 text-[18px] font-semibold tracking-[-0.03em] text-[#171717] outline-none transition focus:border-[#aab7cf] disabled:opacity-70"
+                className="h-9 border bg-background text-sm font-medium"
               />
             ) : (
               <Link
                 href={`/artifacts/${config.routeSegment}/${artifact.id}`}
-                className="block truncate text-[18px] font-semibold tracking-[-0.03em] text-[#171717]"
+                className="block truncate text-sm font-semibold text-foreground hover:underline"
                 onDoubleClick={(event) => {
                   event.preventDefault()
                   onStartRename(artifact)
@@ -291,39 +340,47 @@ function ArtifactCard({
                 {artifact.title}
               </Link>
             )}
-            <div className="mt-0.5 text-[14px] text-[#7a7a75]">{formatRelativeDate(artifact.updated_at)}</div>
+            <div className="mt-1 flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
+              <Badge variant={getStatusVariant(artifact.status)}>{getStatusLabel(artifact.status)}</Badge>
+              <span>Atualizado {formatRelativeDate(artifact.updated_at)}</span>
+            </div>
           </div>
         </div>
 
         {isEditing ? (
           <div className="flex shrink-0 items-center gap-2">
-            <button
+            <Button
               type="button"
+              size="sm"
               onClick={() => void onSaveRename()}
+              onMouseDown={(event) => event.preventDefault()}
               disabled={isSaving}
-              className="rounded-full border border-[#d9deea] px-3 py-1 text-[12px] font-semibold text-[#334155] transition hover:bg-[#f8fafc] disabled:opacity-60"
             >
               {isSaving ? 'Salvando...' : 'Salvar'}
-            </button>
-            <button
+            </Button>
+            <Button
               type="button"
+              variant="ghost"
+              size="sm"
               onClick={onCancelRename}
+              onMouseDown={(event) => event.preventDefault()}
               disabled={isSaving}
-              className="rounded-full px-2 py-1 text-[12px] font-semibold text-[#64748b] transition hover:bg-[#f0f0ee] disabled:opacity-60"
             >
               Cancelar
-            </button>
+            </Button>
           </div>
         ) : (
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <button
+              <Button
                 type="button"
-                className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-[#5f5f5a] transition hover:bg-[#f0f0ee]"
+                variant="ghost"
+                size="icon"
+                className="size-8 shrink-0"
                 aria-label={`More actions for ${artifact.title}`}
               >
                 <MoreHorizontal className="h-4 w-4" />
-              </button>
+              </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="min-w-[10rem]">
               <DropdownMenuItem
@@ -352,8 +409,8 @@ function ArtifactCard({
             </DropdownMenuContent>
           </DropdownMenu>
         )}
-      </div>
-    </article>
+      </CardContent>
+    </Card>
   )
 }
 
@@ -371,6 +428,8 @@ export function ArtifactListPage({
   const [draftTitle, setDraftTitle] = useState('')
   const [savingDashboardId, setSavingDashboardId] = useState<string | null>(null)
   const [deletingDashboardId, setDeletingDashboardId] = useState<string | null>(null)
+  const [deleteTarget, setDeleteTarget] = useState<ArtifactListItem | null>(null)
+  const [actionError, setActionError] = useState<string | null>(null)
 
   useEffect(() => {
     setItems(artifacts)
@@ -379,6 +438,7 @@ export function ArtifactListPage({
   const startRename = (artifact: ArtifactListItem) => {
     setEditingDashboardId(artifact.id)
     setDraftTitle(artifact.title)
+    setActionError(null)
   }
 
   const cancelRename = () => {
@@ -403,6 +463,7 @@ export function ArtifactListPage({
     }
 
     setSavingDashboardId(dashboardId)
+    setActionError(null)
     try {
       const response = await fetch(`/api/artifacts/${config.routeSegment}/${dashboardId}`, {
         method: 'PATCH',
@@ -433,16 +494,18 @@ export function ArtifactListPage({
       setDraftTitle('')
     } catch (error) {
       console.error(error)
+      setActionError(error instanceof Error ? error.message : `Falha ao renomear ${config.singularLabel}.`)
     } finally {
       setSavingDashboardId(null)
     }
   }
 
-  const deleteDashboard = async (artifact: ArtifactListItem) => {
-    const confirmed = window.confirm(`Apagar o ${config.singularLabel} "${artifact.title}"?`)
-    if (!confirmed) return
+  const deleteDashboard = async () => {
+    const artifact = deleteTarget
+    if (!artifact) return
 
     setDeletingDashboardId(artifact.id)
+    setActionError(null)
     try {
       const response = await fetch(`/api/artifacts/${config.routeSegment}/${artifact.id}`, {
         method: 'DELETE',
@@ -457,8 +520,10 @@ export function ArtifactListPage({
         setEditingDashboardId(null)
         setDraftTitle('')
       }
+      setDeleteTarget(null)
     } catch (error) {
       console.error(error)
+      setActionError(error instanceof Error ? error.message : `Falha ao apagar ${config.singularLabel}.`)
     } finally {
       setDeletingDashboardId(null)
     }
@@ -482,66 +547,62 @@ export function ArtifactListPage({
   }, [items, query])
 
   return (
-    <main className="min-h-screen bg-white px-8 py-9 text-[#171717]">
-      <div className="mx-auto max-w-[1360px]">
-        <header className="mb-5">
-          <div className="flex flex-col gap-5 xl:flex-row xl:items-center xl:justify-between">
-            <h1
-              className="text-[52px] font-semibold tracking-[-0.05em] text-[#101828]"
-              style={{ fontFamily: 'var(--font-eb-garamond), "EB Garamond", serif' }}
-            >
-            {config.title}
-            </h1>
+    <main className="min-h-screen bg-background px-5 py-6 text-foreground md:px-8">
+      <div className="mx-auto max-w-[1280px]">
+        <header className="mb-6">
+          <div className="flex flex-col gap-4 xl:flex-row xl:items-end xl:justify-between">
+            <div className="min-w-0">
+              <h1 className="text-2xl font-semibold tracking-normal text-foreground">{config.title}</h1>
+              <p className="mt-1 text-sm text-muted-foreground">{config.description}</p>
+            </div>
 
             <div className="flex w-full flex-col gap-3 sm:flex-row sm:items-center xl:w-auto xl:justify-end">
               <label className="relative block w-full sm:w-[280px] xl:w-[320px]">
-                <Search className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-[#97A2B8]" />
-                <input
+                <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                <Input
                   type="text"
                   value={query}
                   onChange={(event) => setQuery(event.target.value)}
                   placeholder={config.searchPlaceholder}
-                  className="h-11 w-full rounded-[12px] border border-[#E1E6F0] bg-white pl-11 pr-4 text-[14px] text-[#1E2942] outline-none transition placeholder:text-[#9AA6BC] focus:border-[#B3BDED]"
+                  className="h-10 border bg-background pl-9"
                 />
               </label>
 
-              <button
+              <Button
                 type="button"
+                variant="secondary"
                 disabled
-                className="inline-flex h-11 items-center justify-center gap-2 self-start rounded-[14px] bg-black px-5 text-[14px] font-semibold text-white shadow-[0_14px_28px_rgba(15,23,42,0.18)] transition disabled:cursor-not-allowed disabled:opacity-55"
+                className="h-10 justify-start sm:justify-center"
                 title={`Criação de ${config.singularLabel} ainda não foi ligada nesta tela`}
               >
                 <Plus className="h-4 w-4" />
                 {config.newButtonLabel}
-              </button>
+              </Button>
             </div>
           </div>
-
-          <p className="mt-2 text-[16px] text-[#6d7689]">{config.description}</p>
         </header>
 
-        <section className="mb-8 flex items-center justify-between">
-          <div className="text-[14px] text-[#7b8496]">
+        <section className="mb-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <div className="text-sm text-muted-foreground">
             {filteredDashboards.length} {filteredDashboards.length === 1 ? config.singularLabel : config.pluralLabel} encontrados
           </div>
+          {actionError ? (
+            <div className="rounded-md border border-destructive/30 bg-destructive/10 px-3 py-2 text-sm text-destructive">
+              {actionError}
+            </div>
+          ) : null}
         </section>
 
         {items.length === 0 ? (
-          <section className="rounded-[28px] border border-[#ecece8] bg-[#fafaf9] px-8 py-14">
-            <h2 className="text-[22px] font-semibold tracking-[-0.03em] text-[#111111]">{config.emptyTitle}</h2>
-            <p className="mt-2 max-w-xl text-[15px] leading-7 text-[#6f6f6a]">
-              {config.emptyDescription}
-            </p>
-          </section>
+          <ArtifactEmptyState config={config} title={config.emptyTitle} description={config.emptyDescription} />
         ) : filteredDashboards.length === 0 ? (
-          <section className="rounded-[28px] border border-[#ecece8] bg-[#fafaf9] px-8 py-14">
-            <h2 className="text-[22px] font-semibold tracking-[-0.03em] text-[#111111]">No results</h2>
-            <p className="mt-2 max-w-xl text-[15px] leading-7 text-[#6f6f6a]">
-              No {config.singularLabel} matches <span className="font-medium text-[#171717]">{query}</span>.
-            </p>
-          </section>
+          <ArtifactEmptyState
+            config={config}
+            title="Nenhum resultado"
+            description={<>Nenhum {config.singularLabel} corresponde a <span className="font-medium text-foreground">{query}</span>.</>}
+          />
         ) : (
-          <section className="grid grid-cols-1 gap-x-5 gap-y-10 md:grid-cols-2 xl:grid-cols-3">
+          <section className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
             {filteredDashboards.map((dashboard) => (
               <ArtifactCard
                 key={dashboard.id}
@@ -554,12 +615,37 @@ export function ArtifactListPage({
                 onDraftTitleChange={setDraftTitle}
                 onSaveRename={saveRename}
                 onCancelRename={cancelRename}
-                onDelete={deleteDashboard}
+                onDelete={setDeleteTarget}
               />
             ))}
           </section>
         )}
       </div>
+
+      <Dialog open={Boolean(deleteTarget)} onOpenChange={(open) => {
+        if (!open && !deletingDashboardId) setDeleteTarget(null)
+      }}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Apagar {config.singularLabel}</DialogTitle>
+            <DialogDescription>
+              {deleteTarget ? (
+                <>Esta ação remove "{deleteTarget.title}" da lista. Não será possível desfazer.</>
+              ) : (
+                'Esta ação não poderá ser desfeita.'
+              )}
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button type="button" variant="ghost" onClick={() => setDeleteTarget(null)} disabled={Boolean(deletingDashboardId)}>
+              Cancelar
+            </Button>
+            <Button type="button" variant="destructive" onClick={deleteDashboard} disabled={Boolean(deletingDashboardId)}>
+              {deletingDashboardId ? 'Apagando...' : 'Apagar'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </main>
   )
 }
