@@ -39,6 +39,7 @@ export default async function ArtifactSlideByIdPage({
 
     return (
       <DocumentArtifactPage
+        artifactId={id}
         kind="slide"
         title={artifact.title}
         source={artifact.source}

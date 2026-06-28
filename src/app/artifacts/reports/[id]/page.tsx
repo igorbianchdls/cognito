@@ -39,6 +39,7 @@ export default async function ArtifactReportByIdPage({
 
     return (
       <DocumentArtifactPage
+        artifactId={id}
         kind="report"
         title={artifact.title}
         source={artifact.source}
