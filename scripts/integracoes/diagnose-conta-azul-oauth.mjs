@@ -35,7 +35,8 @@ function usage() {
     '  --tenant <id>          Tenant da conexao.',
     '  --connection <id>      ID da conexao Conta Azul.',
     '  --provider <slug>      Provider. Default: conta_azul.',
-    '  --skip-refresh         Nao testa refresh token.',
+    '  --refresh-and-save     Executa refresh real e persiste imediatamente o novo token no Secret Manager.',
+    '  --skip-refresh         Alias legado; diagnostico ja e read-only por padrao.',
     '  --timeout <ms>         Timeout HTTP. Default: 30000.',
     '  --help                 Mostra esta ajuda.',
   ].join('\n')
@@ -290,6 +291,25 @@ async function readSecret(secretRef) {
   return encoded ? Buffer.from(encoded, 'base64').toString('utf8') : ''
 }
 
+function normalizeSecretNameRef(secretRef) {
+  return text(secretRef).replace(/\/versions\/[^/]+$/, '').replace(/\/+$/, '')
+}
+
+async function addSecretVersion(secretRef, value) {
+  const response = await gcpJson(
+    `https://secretmanager.googleapis.com/v1/${normalizeSecretNameRef(secretRef)}:addVersion`,
+    {
+      method: 'POST',
+      body: JSON.stringify({
+        payload: {
+          data: Buffer.from(value, 'utf8').toString('base64'),
+        },
+      }),
+    },
+  )
+  return response.payload?.name || `${normalizeSecretNameRef(secretRef)}/versions/latest`
+}
+
 function getCloudConfig() {
   return {
     projectId: text(process.env.GCP_PROJECT_ID) || 'creatto-463117',
@@ -398,6 +418,65 @@ async function tokenRequest(input) {
   }
 }
 
+function mergeRefreshedCredentials(credentials, tokenPayload) {
+  if (!tokenPayload?.access_token) throw new Error('OAuth refresh nao retornou access_token.')
+  return {
+    ...credentials,
+    authType: credentials.authType || credentials.auth_type || 'oauth2',
+    accessToken: tokenPayload.access_token,
+    refreshToken: tokenPayload.refresh_token || text(credentials.refreshToken) || text(credentials.refresh_token),
+    expiresAt: tokenPayload.expires_in
+      ? new Date(Date.now() + Number(tokenPayload.expires_in) * 1000).toISOString()
+      : text(credentials.expiresAt) || text(credentials.expires_at) || null,
+    tokenType: tokenPayload.token_type || credentials.tokenType || credentials.token_type || null,
+    scope: tokenPayload.scope || credentials.scope || null,
+  }
+}
+
+async function persistRefreshedCredentials(client, input) {
+  const secretRef = await addSecretVersion(input.secretRef, JSON.stringify(input.credentials))
+  await client.query(
+    `UPDATE integrations.connections
+     SET secret_ref = $3,
+         status = 'connected',
+         metadata = COALESCE(metadata, '{}'::jsonb) || $4::jsonb,
+         updated_at = now()
+     WHERE tenant_id = $1 AND id = $2`,
+    [
+      input.tenantId,
+      String(input.connectionId),
+      secretRef,
+      JSON.stringify({
+        oauthRefreshedAt: new Date().toISOString(),
+        oauthRefreshError: null,
+        oauthRefreshFailedAt: null,
+        lastAuthErrorSource: null,
+        lastAuthErrorCode: null,
+        lastAuthErrorMessage: null,
+        tokenExpiresAt: input.credentials.expiresAt || null,
+      }),
+    ],
+  )
+  await client.query(
+    `INSERT INTO integrations.events
+      (tenant_id, connection_id, event_type, severity, actor, message, metadata)
+     VALUES
+      ($1, $2, 'connection.oauth.refreshed', 'info', 'diagnostics', $3, $4::jsonb)`,
+    [
+      input.tenantId,
+      String(input.connectionId),
+      'Token OAuth renovado e persistido pelo diagnostico seguro.',
+      JSON.stringify({
+        provider: input.provider,
+        tokenExpiresAt: input.credentials.expiresAt || null,
+        persisted: true,
+        diagnostic: true,
+      }),
+    ],
+  )
+  return secretRef
+}
+
 function summarizeProviderPayload(payload) {
   if (Array.isArray(payload)) return { type: 'array', length: payload.length }
   if (!isRecord(payload)) return { type: typeof payload }
@@ -496,6 +575,10 @@ async function main() {
   const connectionId = requiredPositiveInt('--connection')
   const provider = text(getArg('--provider')) || 'conta_azul'
   const timeoutMs = optionalPositiveInt('--timeout', 30000)
+  const refreshAndSave = hasFlag('--refresh-and-save')
+  if (hasFlag('--refresh')) {
+    throw new Error('Refresh sem persistencia e bloqueado. Conta Azul pode rotacionar refresh token; use --refresh-and-save.')
+  }
   const dbUrl = text(process.env.SUPABASE_DB_URL) || text(process.env.DATABASE_URL)
   if (!dbUrl) throw new Error('SUPABASE_DB_URL/DATABASE_URL ausente.')
 
@@ -515,8 +598,13 @@ async function main() {
       cause: error?.cause?.code || error?.cause?.message || null,
     }))
 
-    let refreshResult = { skipped: true, reason: 'flag --skip-refresh usada' }
-    if (!hasFlag('--skip-refresh')) {
+    let refreshResult = {
+      skipped: true,
+      reason: refreshAndSave
+        ? 'refresh ainda nao executado'
+        : 'diagnostico read-only por padrao; use --refresh-and-save para renovar e persistir',
+    }
+    if (refreshAndSave) {
       if (!refreshToken) {
         refreshResult = { skipped: true, reason: 'refresh token ausente' }
       } else if (!oauthConfig.clientId.value || !oauthConfig.clientSecret.value || !oauthConfig.tokenUrl.value) {
@@ -529,15 +617,40 @@ async function main() {
           tokenUrl: oauthConfig.tokenUrl.value,
           tokenAuthMethod: oauthConfig.tokenAuthMethod.value,
           timeoutMs,
-        }).then((result) => ({
-          ok: result.ok,
-          status: result.status,
-          returnedAccessToken: Boolean(result.payload?.access_token),
-          returnedRefreshToken: Boolean(result.payload?.refresh_token),
-          returnedExpiresIn: result.payload?.expires_in ?? null,
-          error: result.ok ? null : result.payload,
-        })).catch((error) => ({
+        }).then(async (result) => {
+          if (!result.ok) {
+            return {
+              ok: false,
+              status: result.status,
+              returnedAccessToken: Boolean(result.payload?.access_token),
+              returnedRefreshToken: Boolean(result.payload?.refresh_token),
+              returnedExpiresIn: result.payload?.expires_in ?? null,
+              persisted: false,
+              error: result.payload,
+            }
+          }
+          const merged = mergeRefreshedCredentials(credentials, result.payload)
+          const persistedSecretRef = await persistRefreshedCredentials(client, {
+            tenantId,
+            connectionId,
+            provider,
+            secretRef: connection.secret_ref,
+            credentials: merged,
+          })
+          return {
+            ok: true,
+            status: result.status,
+            returnedAccessToken: Boolean(result.payload?.access_token),
+            returnedRefreshToken: Boolean(result.payload?.refresh_token),
+            returnedExpiresIn: result.payload?.expires_in ?? null,
+            persisted: true,
+            secretRef: `${String(persistedSecretRef).split('/versions/')[0]}/versions/latest`,
+            tokenExpiresAt: merged.expiresAt || null,
+            error: null,
+          }
+        }).catch((error) => ({
           ok: false,
+          persisted: false,
           networkError: error instanceof Error ? error.message : String(error),
           cause: error?.cause?.code || error?.cause?.message || null,
         }))

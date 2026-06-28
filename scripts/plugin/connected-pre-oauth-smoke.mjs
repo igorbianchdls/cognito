@@ -76,6 +76,18 @@ function main() {
   assert(route.includes('assertCanManageIntegrationConnection'), 'rota de permissoes sem authz')
   assert(route.includes('liveReadResources'), 'rota de permissoes sem liveReadResources')
 
+  const oauthLifecycle = read('src/products/integracoes/connectors/oauth/credentialLifecycle.ts')
+  const oauthStore = read('src/products/integracoes/connectors/oauth/credentialStore.ts')
+  const oauthDiagnostics = read('src/products/integracoes/connectors/oauth/diagnostics.ts')
+  const contaAzulDiagnosis = read('scripts/integracoes/diagnose-conta-azul-oauth.mjs')
+  assert(oauthLifecycle.includes('refreshAndPersistOAuthCredentials'), 'OAuth lifecycle deve centralizar refresh persistente')
+  assert(oauthLifecycle.includes('persistConnectionOAuthCredentials'), 'OAuth refresh deve persistir novo token')
+  assert(oauthStore.includes('writeConnectionCredentialsSecret'), 'OAuth store deve gravar Secret Manager')
+  assert(oauthDiagnostics.includes('--refresh-and-save'), 'OAuth diagnostics deve exigir refresh-and-save')
+  assert(contaAzulDiagnosis.includes('diagnostico read-only por padrao'), 'diagnostico Conta Azul deve ser read-only por padrao')
+  assert(contaAzulDiagnosis.includes('Refresh sem persistencia e bloqueado'), 'diagnostico deve bloquear refresh sem persistencia')
+  assert(contaAzulDiagnosis.includes('persistRefreshedCredentials'), 'diagnostico refresh-and-save deve persistir tokens')
+
   const migration38 = read('scripts/sql/38_integracoes_plugin_live_read_permissions.sql')
   const migration39 = read('scripts/sql/39_integracoes_plugin_action_audit.sql')
   assert(migration38.includes('live_read_resources'), 'migration 38 sem live_read_resources')

@@ -1,20 +1,18 @@
 import { createHmac, randomBytes, timingSafeEqual } from 'node:crypto'
 
-import { getIntegrationsCloudConfig } from '@/products/integracoes/datawarehouse/config/gcpConfig'
-import { readSecret } from '@/products/integracoes/cloud/src/lib/secretManager'
-import type { IntegrationProviderOAuthReadiness } from '@/products/integracoes/shared/providers/providerTypes'
 import {
-  createIntegrationRuntimeError,
-  redactErrorPayload,
-} from '@/products/integracoes/shared/integrationErrors'
+  getOAuthProviderConfig,
+  getOAuthProviderReadiness,
+} from '@/products/integracoes/connectors/oauth/providerConfig'
+import {
+  exchangeOAuthCode,
+  refreshOAuthToken,
+  type OAuthTokenSet,
+} from '@/products/integracoes/connectors/oauth/tokenExchange'
+import { getIntegrationsCloudConfig } from '@/products/integracoes/datawarehouse/config/gcpConfig'
 
-export type OAuthTokenSet = {
-  accessToken: string
-  refreshToken?: string
-  expiresAt?: string
-  tokenType?: string
-  scope?: string
-}
+export type { OAuthTokenSet }
+export { exchangeOAuthCode, getOAuthProviderReadiness, refreshOAuthToken }
 
 export type OAuthStatePayload = {
   tenantId: number
@@ -23,18 +21,6 @@ export type OAuthStatePayload = {
   nonce: string
   expiresAt: number
 }
-
-type TokenResponse = {
-  access_token?: string
-  refresh_token?: string
-  expires_in?: number
-  token_type?: string
-  scope?: string
-  error?: string
-  error_description?: string
-}
-
-type OAuthTokenAuthMethod = 'client_secret_post' | 'client_secret_basic'
 
 function base64UrlEncode(value: string) {
   return Buffer.from(value, 'utf8').toString('base64url')
@@ -58,60 +44,6 @@ function verifySignature(value: string, signature: string) {
   const expected = Buffer.from(sign(value))
   const actual = Buffer.from(signature)
   return expected.length === actual.length && timingSafeEqual(expected, actual)
-}
-
-function envName(provider: string, suffix: string) {
-  return `INTEGRATIONS_OAUTH_${provider.toUpperCase().replace(/[^A-Z0-9]+/g, '_')}_${suffix}`
-}
-
-type OAuthProviderConfig = {
-  clientId: string
-  clientSecret: string
-  authorizeUrl: string
-  tokenUrl: string
-  redirectUri: string
-  scopes: string
-  tokenAuthMethod: OAuthTokenAuthMethod
-}
-
-function normalizeProviderForSecret(provider: string) {
-  return provider.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '')
-}
-
-function providerSecretRef(provider: string, suffix: string) {
-  const config = getIntegrationsCloudConfig()
-  const providerPart = normalizeProviderForSecret(provider)
-  return `projects/${config.projectId}/secrets/${config.secrets.prefix}-oauth-${providerPart}-${suffix}`
-}
-
-async function envOrSecret(provider: string, envSuffix: string, secretSuffix: string): Promise<string> {
-  const envValue = process.env[envName(provider, envSuffix)]?.trim()
-  if (envValue) return envValue
-  return (await readSecret(providerSecretRef(provider, secretSuffix)))?.trim() || ''
-}
-
-function normalizeTokenAuthMethod(provider: string, value: string): OAuthTokenAuthMethod {
-  const method = value.trim().toLowerCase()
-  if (method === 'basic' || method === 'client_secret_basic') return 'client_secret_basic'
-  if (method === 'post' || method === 'body' || method === 'client_secret_post') return 'client_secret_post'
-
-  return normalizeProviderForSecret(provider) === 'conta-azul'
-    ? 'client_secret_basic'
-    : 'client_secret_post'
-}
-
-async function getOAuthProviderConfig(provider: string): Promise<OAuthProviderConfig> {
-  const tokenAuthMethod = await envOrSecret(provider, 'TOKEN_AUTH_METHOD', 'token-auth-method')
-
-  return {
-    clientId: await envOrSecret(provider, 'CLIENT_ID', 'client-id'),
-    clientSecret: await envOrSecret(provider, 'CLIENT_SECRET', 'client-secret'),
-    authorizeUrl: await envOrSecret(provider, 'AUTHORIZE_URL', 'authorize-url'),
-    tokenUrl: await envOrSecret(provider, 'TOKEN_URL', 'token-url'),
-    redirectUri: process.env[envName(provider, 'REDIRECT_URI')]?.trim() || process.env.INTEGRATIONS_OAUTH_REDIRECT_URI?.trim() || '',
-    scopes: await envOrSecret(provider, 'SCOPES', 'scopes'),
-    tokenAuthMethod: normalizeTokenAuthMethod(provider, tokenAuthMethod),
-  }
 }
 
 export function createOAuthState(input: {
@@ -169,95 +101,4 @@ export async function buildOAuthAuthorizationUrl(provider: string, state: string
     ready: true,
     authorizationUrl: url.toString(),
   }
-}
-
-export async function getOAuthProviderReadiness(provider: string): Promise<IntegrationProviderOAuthReadiness> {
-  const config = await getOAuthProviderConfig(provider)
-  const missing = [
-    ['clientId', config.clientId],
-    ['clientSecret', config.clientSecret],
-    ['authorizeUrl', config.authorizeUrl],
-    ['tokenUrl', config.tokenUrl],
-    ['redirectUri', config.redirectUri],
-  ].filter(([, value]) => !value).map(([key]) => key)
-  const ready = missing.length === 0
-
-  return {
-    ready,
-    configured: ready,
-    missing,
-    message: ready
-      ? 'OAuth configurado.'
-      : `OAuth em configuracao: faltam ${missing.join(', ')}.`,
-  }
-}
-
-function mapTokenResponse(payload: TokenResponse): OAuthTokenSet | null {
-  if (!payload.access_token) return null
-  return {
-    accessToken: payload.access_token,
-    refreshToken: payload.refresh_token,
-    expiresAt: payload.expires_in ? new Date(Date.now() + payload.expires_in * 1000).toISOString() : undefined,
-    tokenType: payload.token_type,
-    scope: payload.scope,
-  }
-}
-
-function createBasicAuthHeader(clientId: string, clientSecret: string) {
-  return `Basic ${Buffer.from(`${clientId}:${clientSecret}`, 'utf8').toString('base64')}`
-}
-
-async function postTokenRequest(provider: string, body: URLSearchParams): Promise<OAuthTokenSet | null> {
-  const config = await getOAuthProviderConfig(provider)
-  if (!config.clientId || !config.clientSecret || !config.tokenUrl) {
-    throw new Error(`OAuth ${provider} nao configurado.`)
-  }
-
-  const headers: Record<string, string> = {
-    'Content-Type': 'application/x-www-form-urlencoded',
-  }
-
-  if (config.tokenAuthMethod === 'client_secret_basic') {
-    headers.Authorization = createBasicAuthHeader(config.clientId, config.clientSecret)
-  } else {
-    body.set('client_id', config.clientId)
-    body.set('client_secret', config.clientSecret)
-  }
-
-  const response = await fetch(config.tokenUrl, {
-    method: 'POST',
-    headers,
-    body,
-    signal: AbortSignal.timeout(Number(process.env.INTEGRATIONS_OAUTH_TIMEOUT_MS || 30000)),
-  })
-  const payload = await response.json().catch(() => null) as TokenResponse | null
-  if (!response.ok) {
-    throw createIntegrationRuntimeError({
-      source: 'provider_oauth',
-      provider,
-      operation: body.get('grant_type') || 'token',
-      code: payload?.error || `http_${response.status}`,
-      httpStatus: response.status,
-      safeMessage: payload?.error_description || payload?.error || `Falha OAuth ${provider}: ${response.status}`,
-      retryable: response.status >= 500 || response.status === 429,
-      rawErrorRedacted: redactErrorPayload(payload),
-    })
-  }
-  return payload ? mapTokenResponse(payload) : null
-}
-
-export async function exchangeOAuthCode(provider: string, code: string, redirectUri?: string): Promise<OAuthTokenSet | null> {
-  const config = await getOAuthProviderConfig(provider)
-  const body = new URLSearchParams()
-  body.set('grant_type', 'authorization_code')
-  body.set('code', code)
-  body.set('redirect_uri', redirectUri || config.redirectUri)
-  return postTokenRequest(provider, body)
-}
-
-export async function refreshOAuthToken(provider: string, refreshToken: string): Promise<OAuthTokenSet | null> {
-  const body = new URLSearchParams()
-  body.set('grant_type', 'refresh_token')
-  body.set('refresh_token', refreshToken)
-  return postTokenRequest(provider, body)
 }

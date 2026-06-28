@@ -321,10 +321,11 @@ export async function executeDashboardQuery(input: {
     artifactId: input.artifactId,
     tenantId: input.tenantId,
   })
-  if (!artifact.tenant_id) {
+  const artifactTenantId = Number(artifact.tenant_id)
+  if (!artifactTenantId) {
     throw new ArtifactToolError(409, 'artifact_tenant_required', 'Dashboard precisa pertencer a um tenant antes de consultar dados')
   }
-  if (artifact.tenant_id !== input.tenantId) {
+  if (artifactTenantId !== input.tenantId) {
     throw new ArtifactToolError(403, 'artifact_tenant_forbidden', 'Dashboard não pertence ao tenant autenticado')
   }
 
