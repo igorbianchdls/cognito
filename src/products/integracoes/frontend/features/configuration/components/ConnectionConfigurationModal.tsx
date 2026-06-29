@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Loader2, RefreshCw, RotateCcw, Save } from 'lucide-react'
 
+import { Button } from '@/components/ui/button'
 import {
   Dialog,
   DialogContent,
@@ -317,42 +318,40 @@ export default function ConnectionConfigurationModal({
             <DialogFooter className="border-t border-[#E6EAF4] bg-white px-6 py-4 sm:justify-between sm:space-x-0">
               <div className="flex flex-col gap-2 sm:flex-row">
                 {canReconnect ? (
-                  <button
+                  <Button
                     type="button"
+                    variant="outline"
                     onClick={() => onReconnect?.(connection)}
                     disabled={busy || saving || savingAndSyncing}
-                    className="inline-flex h-10 items-center justify-center gap-2 rounded-[12px] border border-[#DCE3F0] bg-white px-4 text-[13px] font-semibold text-[#33405A] transition hover:bg-[#F7F8FC] disabled:opacity-60"
+                    className="h-10 bg-white"
                   >
                     <RotateCcw className="h-4 w-4" />
                     Reconectar
-                  </button>
+                  </Button>
                 ) : null}
               </div>
 
               <div className="flex flex-col gap-2 sm:flex-row">
-                <button
+                <Button
                   type="button"
+                  variant={canSaveAndSync ? 'outline' : 'default'}
                   onClick={saveConfiguration}
                   disabled={loading || saving || savingAndSyncing || busy || !connection}
-                  className={`inline-flex h-10 items-center justify-center gap-2 rounded-[12px] px-5 text-[13px] font-semibold transition disabled:opacity-60 ${
-                    canSaveAndSync
-                      ? 'border border-[#DCE3F0] bg-white text-[#33405A] hover:bg-[#F7F8FC]'
-                      : 'bg-[#17203A] text-white hover:bg-[#0F172C]'
-                  }`}
+                  className={canSaveAndSync ? 'h-10 bg-white' : 'h-10'}
                 >
                   {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
                   Salvar configuração
-                </button>
+                </Button>
                 {canSaveAndSync ? (
-                  <button
+                  <Button
                     type="button"
                     onClick={saveConfigurationAndSync}
                     disabled={loading || saving || savingAndSyncing || busy || !connection}
-                    className="inline-flex h-10 items-center justify-center gap-2 rounded-[12px] bg-[#17203A] px-5 text-[13px] font-semibold text-white transition hover:bg-[#0F172C] disabled:opacity-60"
+                    className="h-10"
                   >
                     {savingAndSyncing ? <Loader2 className="h-4 w-4 animate-spin" /> : <RefreshCw className="h-4 w-4" />}
                     {savingAndSyncing ? 'Enviando dados...' : 'Salvar e enviar agora'}
-                  </button>
+                  </Button>
                 ) : null}
               </div>
             </DialogFooter>

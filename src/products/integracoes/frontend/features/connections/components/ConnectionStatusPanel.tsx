@@ -2,6 +2,7 @@
 
 import { AlertCircle, CheckCircle2, Clock3, PlugZap } from 'lucide-react'
 
+import { Card, CardContent } from '@/components/ui/card'
 import type { IntegrationConnectionWithUi } from '@/products/integracoes/frontend/services/integracoesApi'
 
 type ConnectionStatusPanelProps = {
@@ -26,7 +27,8 @@ export default function ConnectionStatusPanel({ connections, loading = false }: 
       {items.map((item) => {
         const Icon = item.icon
         return (
-          <div key={item.label} className="rounded-[18px] border border-[#E6EAF4] bg-white px-5 py-4 shadow-[0_10px_24px_rgba(23,32,58,0.05)]">
+          <Card key={item.label} className="rounded-lg bg-white py-0 shadow-[0_10px_24px_rgba(23,32,58,0.05)]">
+            <CardContent className="px-5 py-4">
             <div className="flex items-center justify-between gap-3">
               <div>
                 <div className="text-[12px] font-semibold uppercase tracking-[0.08em] text-[#98A4BA]">{item.label}</div>
@@ -38,7 +40,8 @@ export default function ConnectionStatusPanel({ connections, loading = false }: 
                 <Icon className="h-5 w-5" />
               </div>
             </div>
-          </div>
+            </CardContent>
+          </Card>
         )
       })}
     </section>

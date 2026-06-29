@@ -1,5 +1,6 @@
 import { AlertCircle, CheckCircle2, Clock3, Info } from 'lucide-react'
 
+import { Card, CardContent } from '@/components/ui/card'
 import type { IntegrationEventWithUi } from '@/products/integracoes/frontend/services/integracoesApi'
 
 type IntegrationEventTimelineProps = {
@@ -28,16 +29,19 @@ function EventIcon({ severity }: { severity: IntegrationEventWithUi['severity'] 
 export default function IntegrationEventTimeline({ events }: IntegrationEventTimelineProps) {
   if (!events.length) {
     return (
-      <div className="rounded-[12px] border border-dashed border-[#DCE3F0] bg-[#FAFBFD] px-4 py-5 text-[13px] text-[#66748D]">
+      <Card className="rounded-lg border-dashed bg-[#FAFBFD] py-0 shadow-none">
+        <CardContent className="px-4 py-5 text-[13px] text-[#66748D]">
         Nenhum evento operacional registrado.
-      </div>
+        </CardContent>
+      </Card>
     )
   }
 
   return (
     <div className="space-y-3">
       {events.map((event) => (
-        <div key={event.id} className="flex gap-3 rounded-[12px] border border-[#E8ECF4] bg-white p-3">
+        <Card key={event.id} className="rounded-lg bg-white py-0 shadow-none">
+          <CardContent className="flex gap-3 p-3">
           <div className="mt-0.5 grid h-8 w-8 shrink-0 place-items-center rounded-full bg-[#F3F6FB]">
             <EventIcon severity={event.severity} />
           </div>
@@ -49,7 +53,8 @@ export default function IntegrationEventTimeline({ events }: IntegrationEventTim
             <div className="mt-1 text-[13px] leading-5 text-[#66748D]">{event.message}</div>
             {event.actor ? <div className="mt-1 text-[12px] text-[#98A4BA]">Origem: {event.actor}</div> : null}
           </div>
-        </div>
+          </CardContent>
+        </Card>
       ))}
     </div>
   )

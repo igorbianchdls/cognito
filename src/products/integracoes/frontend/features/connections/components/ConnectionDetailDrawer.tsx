@@ -3,6 +3,10 @@
 import { useEffect, useState } from 'react'
 import { AlertTriangle, Bot, CheckCircle2, Database, RefreshCw, RotateCcw } from 'lucide-react'
 
+import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
+import { Card, CardContent } from '@/components/ui/card'
+import { Checkbox } from '@/components/ui/checkbox'
 import {
   Sheet,
   SheetContent,
@@ -260,7 +264,8 @@ export default function ConnectionDetailDrawer({
 
             <div className="space-y-6 px-6 py-6">
               {needsReconnect ? (
-                <section className="rounded-[16px] border border-[#FED7AA] bg-[#FFF7ED] p-4">
+                <Card className="rounded-lg border-[#FED7AA] bg-[#FFF7ED] py-0 shadow-none">
+                  <CardContent className="p-4">
                   <div className="flex items-start gap-3">
                     <div className="mt-0.5 grid h-9 w-9 shrink-0 place-items-center rounded-[12px] bg-white text-[#C2410C] ring-1 ring-[#FDBA74]">
                       <AlertTriangle className="h-5 w-5" />
@@ -272,28 +277,32 @@ export default function ConnectionDetailDrawer({
                       <div className="mt-1 text-[13px] leading-5 text-[#9A3412]">
                         {oauthError || connection.uiStatus?.description || 'A autorização OAuth expirou ou foi recusada pelo provider.'}
                       </div>
-                      <button
+                      <Button
                         type="button"
+                        variant="destructive"
                         disabled={busy}
                         onClick={() => onReconnect(connection)}
-                        className="mt-3 inline-flex h-9 items-center justify-center gap-2 rounded-[12px] bg-[#C2410C] px-3 text-[12px] font-semibold text-white transition hover:bg-[#9A3412] disabled:opacity-60"
+                        className="mt-3 h-9"
                       >
                         <RotateCcw className="h-4 w-4" />
                         Reconectar {connection.displayName}
-                      </button>
+                      </Button>
                     </div>
                   </div>
-                </section>
+                  </CardContent>
+                </Card>
               ) : null}
               {!needsReconnect && infraError ? (
-                <section className="rounded-[16px] border border-[#BFDBFE] bg-[#EFF6FF] p-4">
+                <Card className="rounded-lg border-[#BFDBFE] bg-[#EFF6FF] py-0 shadow-none">
+                  <CardContent className="p-4">
                   <div className="text-[14px] font-semibold text-[#1E3A8A]">
                     Falha interna temporária na integração.
                   </div>
                   <div className="mt-1 text-[13px] leading-5 text-[#1D4ED8]">
                     {infraError}
                   </div>
-                </section>
+                  </CardContent>
+                </Card>
               ) : null}
 
               <section className="grid gap-3 sm:grid-cols-2">
@@ -330,9 +339,9 @@ export default function ConnectionDetailDrawer({
                 <div className="mb-3 text-[14px] font-semibold text-[#24304A]">Dados sincronizados</div>
                 <div className="flex flex-wrap gap-2">
                   {connection.selectedResources.length ? connection.selectedResources.map((resource) => (
-                    <span key={resource} className="rounded-full bg-[#F2F4FA] px-3 py-1 text-[12px] font-medium text-[#475569]">
+                    <Badge key={resource} variant="secondary">
                       {resource}
-                    </span>
+                    </Badge>
                   )) : (
                     <span className="text-[13px] text-[#66748D]">Nenhum recurso selecionado.</span>
                   )}
@@ -350,12 +359,9 @@ export default function ConnectionDetailDrawer({
                       <div className="min-w-0">
                         <div className="flex flex-wrap items-center gap-2">
                           <div className="text-[14px] font-semibold text-[#24304A]">BigQuery</div>
-                          <span className={[
-                            'rounded-full px-2.5 py-1 text-[11px] font-semibold',
-                            bigQueryEnabled ? 'bg-[#E9FDF3] text-[#108A55]' : 'bg-white text-[#66748D]',
-                          ].join(' ')}>
+                          <Badge variant={bigQueryEnabled ? 'default' : 'outline'} className="bg-white">
                             {bigQueryEnabled ? 'Ativo' : 'Inativo'}
-                          </span>
+                          </Badge>
                         </div>
                         <div className="mt-1 text-[13px] leading-5 text-[#66748D]">
                           {bigQueryEnabled
@@ -364,14 +370,15 @@ export default function ConnectionDetailDrawer({
                         </div>
                       </div>
                     </div>
-                    <button
+                    <Button
                       type="button"
+                      size="sm"
                       disabled={dataWarehouseBusy || bigQueryEnabled}
                       onClick={() => void enableBigQuery()}
-                      className="inline-flex h-9 shrink-0 items-center justify-center rounded-[12px] bg-[#17203A] px-3 text-[12px] font-semibold text-white transition hover:bg-[#0F172C] disabled:bg-[#E5EAF3] disabled:text-[#7B879B]"
+                      className="h-9 shrink-0"
                     >
                       {dataWarehouseBusy ? 'Ativando...' : bigQueryEnabled ? 'Ativo' : 'Ativar'}
-                    </button>
+                    </Button>
                   </div>
                   {dataWarehouseError ? <div className="mt-3 text-[12px] font-medium text-red-600">{dataWarehouseError}</div> : null}
                 </div>
@@ -388,12 +395,9 @@ export default function ConnectionDetailDrawer({
                       <div className="min-w-0">
                         <div className="flex flex-wrap items-center gap-2">
                           <div className="text-[14px] font-semibold text-[#24304A]">Acesso da IA</div>
-                          <span className={[
-                            'rounded-full px-2.5 py-1 text-[11px] font-semibold',
-                            ottoEnabled ? 'bg-[#E9FDF3] text-[#108A55]' : 'bg-white text-[#66748D]',
-                          ].join(' ')}>
+                          <Badge variant={ottoEnabled ? 'default' : 'outline'} className="bg-white">
                             {ottoEnabled ? 'Permitido' : 'Bloqueado'}
-                          </span>
+                          </Badge>
                         </div>
                         <div className="mt-1 text-[13px] leading-5 text-[#66748D]">
                           Permita que a Otto consulte os dados desta conexão e respeite confirmações para ações sensíveis.
@@ -401,15 +405,13 @@ export default function ConnectionDetailDrawer({
                       </div>
                     </div>
                     {permissions ? (
-                      <label className="inline-flex h-9 shrink-0 items-center gap-2 rounded-[12px] border border-[#DCE3F0] bg-white px-3 text-[12px] font-semibold text-[#475569]">
-                      <input
-                        type="checkbox"
+                      <label className="inline-flex h-9 shrink-0 items-center gap-2 rounded-md border border-[#DCE3F0] bg-white px-3 text-[12px] font-semibold text-[#475569]">
+                      <Checkbox
                         checked={permissions.enabled}
                         disabled={permissionsBusy}
-                        onChange={(event) => {
-                          void savePermissions({ ...permissions, enabled: event.target.checked })
+                        onCheckedChange={(checked) => {
+                          void savePermissions({ ...permissions, enabled: checked === true })
                         }}
-                        className="h-4 w-4"
                       />
                       Permitir
                     </label>
@@ -437,17 +439,15 @@ export default function ConnectionDetailDrawer({
                                       : 'border-[#E1E6F0] bg-white text-[#64748B]',
                                   ].join(' ')}
                                 >
-                                  <input
-                                    type="checkbox"
+                                  <Checkbox
                                     checked={resources.includes(resource)}
                                     disabled={permissionsBusy}
-                                    onChange={() => {
+                                    onCheckedChange={() => {
                                       void savePermissions({
                                         ...permissions,
                                         [key]: toggleResource(resources, resource),
                                       })
                                     }}
-                                    className="h-3.5 w-3.5"
                                   />
                                   {resource}
                                 </label>
@@ -459,14 +459,12 @@ export default function ConnectionDetailDrawer({
                         )
                       })}
                       <label className="inline-flex items-center gap-2 text-[12px] font-semibold text-[#475569]">
-                        <input
-                          type="checkbox"
+                        <Checkbox
                           checked={permissions.requireConfirmation}
                           disabled={permissionsBusy}
-                          onChange={(event) => {
-                            void savePermissions({ ...permissions, requireConfirmation: event.target.checked })
+                          onCheckedChange={(checked) => {
+                            void savePermissions({ ...permissions, requireConfirmation: checked === true })
                           }}
-                          className="h-4 w-4"
                         />
                         Exigir confirmação
                       </label>
@@ -491,24 +489,25 @@ export default function ConnectionDetailDrawer({
 
             <SheetFooter className="border-t border-[#EEF1F6] px-6 py-5">
               <div className="flex flex-col gap-3 sm:flex-row">
-                <button
+                <Button
                   type="button"
                   disabled={busy || !canSync}
                   onClick={() => onSync(connection)}
-                  className="inline-flex h-11 flex-1 items-center justify-center gap-2 rounded-[14px] bg-[#17203A] px-4 text-[14px] font-semibold text-white transition hover:bg-[#0F172C] disabled:opacity-60"
+                  className="h-11 flex-1"
                 >
                   <RefreshCw className="h-4 w-4" />
                   {canSync ? 'Sincronizar agora' : 'Aguardando autorização'}
-                </button>
-                <button
+                </Button>
+                <Button
                   type="button"
+                  variant="outline"
                   disabled={busy}
                   onClick={() => onReconnect(connection)}
-                  className="inline-flex h-11 flex-1 items-center justify-center gap-2 rounded-[14px] border border-[#DCE3F0] bg-white px-4 text-[14px] font-semibold text-[#334155] transition hover:bg-[#F7F8FC] disabled:opacity-60"
+                  className="h-11 flex-1 bg-white"
                 >
                   <RotateCcw className="h-4 w-4" />
                   Reconectar
-                </button>
+                </Button>
               </div>
             </SheetFooter>
           </>

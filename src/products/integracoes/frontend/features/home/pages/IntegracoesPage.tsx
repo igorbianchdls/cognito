@@ -1,10 +1,15 @@
 'use client'
 
 import { useEffect, useMemo, useState } from 'react'
-import { ArrowRight, ChevronDown, Database, LockKeyhole, MoreHorizontal, Search, ShieldCheck } from 'lucide-react'
+import { ArrowRight, Database, LockKeyhole, MoreHorizontal, Search, ShieldCheck } from 'lucide-react'
 
 import PageContainer from '@/components/layout/PageContainer'
 import { SidebarShadcn } from '@/components/navigation/SidebarShadcn'
+import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
+import { Card, CardContent } from '@/components/ui/card'
+import { Input } from '@/components/ui/input'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { SidebarInset, SidebarProvider } from '@/components/ui/sidebar'
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import ConnectionStatusPanel from '@/products/integracoes/frontend/features/connections/components/ConnectionStatusPanel'
@@ -268,67 +273,56 @@ function CatalogCard({
         : 'Conecte sua conta para trazer os dados principais automaticamente.'
   const isBusy = busySlug === toolkit.slug || busySlug === dataConnection?.id
   const buttonLabel = oauthInConfiguration ? 'Em configuração' : isBusy ? 'Abrindo...' : hasDataConnection ? 'Configurar' : 'Conectar'
-  const statusClassName = connected
-    ? 'bg-[#EBFFF5] text-[#108A55]'
-    : hasDataConnection || oauthInConfiguration
-      ? 'bg-[#FFF7E6] text-[#A05A00]'
-      : 'bg-[#F2F4FA] text-[#66748D]'
+  const statusVariant = connected ? 'default' : hasDataConnection || oauthInConfiguration ? 'secondary' : 'outline'
 
   return (
-    <article className="flex h-full min-h-[252px] flex-col rounded-[22px] border border-[#E6EAF4] bg-white p-5 shadow-[0_12px_30px_rgba(23,32,58,0.06)]">
-      <div className="flex items-start justify-between gap-4">
-        <div className="grid h-14 w-14 shrink-0 place-items-center rounded-[18px] bg-[#F7F8FC] ring-1 ring-[#E8ECF4]">
-          {renderIntegrationLogo(toolkit.slug, toolkit.name)}
-        </div>
-        <div className="flex items-center gap-2">
-          <span
-            className={[
-              'inline-flex rounded-full px-3 py-1 text-[11px] font-semibold',
-              statusClassName,
-            ].join(' ')}
-          >
-            {statusLabel}
-          </span>
-          <button
-            type="button"
-            aria-label={`Mais opções para ${toolkit.name}`}
-            className="grid h-9 w-9 shrink-0 place-items-center rounded-[12px] border border-[#E7EAF2] text-[#7B879B] transition hover:bg-[#F7F8FC]"
-          >
-            <MoreHorizontal className="h-4 w-4" />
-          </button>
-        </div>
-      </div>
-
-      <div className="mt-5 min-h-[104px] flex-1">
-        <div className="text-[19px] font-semibold tracking-[-0.03em] text-[#1A2340]">{toolkit.name}</div>
-        <div className="mt-2 line-clamp-3 text-[14px] leading-6 text-[#5F6D85]">{toolkit.description}</div>
-        <div className="mt-4 inline-flex rounded-full bg-[#F5F7FC] px-3 py-1 text-[12px] font-medium text-[#68758C]">
-          {category}
-        </div>
-      </div>
-
-      <div className="mt-5 flex items-end justify-between gap-4 border-t border-[#EEF1F6] pt-4">
-        <div className="min-w-0">
-          <div className="text-[12px] font-medium uppercase tracking-[0.08em] text-[#A0AAC0]">
-            Conexão
+    <Card className="h-full min-h-[252px] gap-0 rounded-xl py-0 shadow-[0_12px_30px_rgba(23,32,58,0.06)]">
+      <CardContent className="flex h-full flex-col p-5">
+        <div className="flex items-start justify-between gap-4">
+          <div className="grid h-14 w-14 shrink-0 place-items-center rounded-xl bg-muted ring-1 ring-border">
+            {renderIntegrationLogo(toolkit.slug, toolkit.name)}
           </div>
-          <div className="mt-1 text-[13px] leading-5 text-[#66748D]">{helperText}</div>
+          <div className="flex items-center gap-2">
+            <Badge variant={statusVariant}>{statusLabel}</Badge>
+            <Button
+              type="button"
+              variant="outline"
+              size="icon"
+              aria-label={`Mais opções para ${toolkit.name}`}
+              className="size-9 shrink-0 bg-background"
+            >
+              <MoreHorizontal className="h-4 w-4" />
+            </Button>
+          </div>
         </div>
-        <button
-          type="button"
-          onClick={() => onAction(toolkit)}
-          disabled={isBusy || oauthInConfiguration}
-          className={[
-            'shrink-0 rounded-[14px] px-4 py-2.5 text-[14px] font-semibold transition disabled:opacity-60',
-            connected || oauthInConfiguration
-              ? 'border border-[#DCE3F0] bg-white text-[#3A4760] hover:bg-[#F7F8FC]'
-              : 'bg-[#17203A] text-white hover:bg-[#0F172C]',
-          ].join(' ')}
-        >
-          {buttonLabel}
-        </button>
-      </div>
-    </article>
+
+        <div className="mt-5 min-h-[104px] flex-1">
+          <div className="text-[19px] font-semibold tracking-[-0.03em] text-foreground">{toolkit.name}</div>
+          <div className="mt-2 line-clamp-3 text-sm leading-6 text-muted-foreground">{toolkit.description}</div>
+          <Badge variant="secondary" className="mt-4">
+            {category}
+          </Badge>
+        </div>
+
+        <div className="mt-5 flex items-end justify-between gap-4 border-t pt-4">
+          <div className="min-w-0">
+            <div className="text-xs font-medium uppercase tracking-[0.08em] text-muted-foreground">
+              Conexão
+            </div>
+            <div className="mt-1 text-[13px] leading-5 text-muted-foreground">{helperText}</div>
+          </div>
+          <Button
+            type="button"
+            onClick={() => onAction(toolkit)}
+            disabled={isBusy || oauthInConfiguration}
+            variant={connected || oauthInConfiguration ? 'outline' : 'default'}
+            className="h-10 shrink-0"
+          >
+            {buttonLabel}
+          </Button>
+        </div>
+      </CardContent>
+    </Card>
   )
 }
 
@@ -467,29 +461,30 @@ export default function IntegracoesPage() {
 
                       <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
                         <label className="relative min-w-[280px]">
-                          <Search className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-[#97A2B8]" />
-                          <input
+                          <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                          <Input
                             value={search}
                             onChange={(event) => setSearch(event.target.value)}
                             placeholder="Buscar integração..."
-                            className="h-11 w-full rounded-[12px] border border-[#E1E6F0] bg-white pl-11 pr-4 text-[14px] text-[#1E2942] outline-none transition placeholder:text-[#9AA6BC] focus:border-[#B3BDED]"
+                            className="h-11 bg-white pl-10"
                           />
                         </label>
 
-                        <label className="relative min-w-[168px]">
-                          <select
+                        <Select
                             value={sortMode}
-                            onChange={(event) => setSortMode(event.target.value as SortMode)}
-                            className="h-11 w-full appearance-none rounded-[12px] border border-[#E1E6F0] bg-white px-4 pr-10 text-[14px] font-medium text-[#2A3550] outline-none transition focus:border-[#B3BDED]"
+                            onValueChange={(value) => setSortMode(value as SortMode)}
                           >
+                          <SelectTrigger className="h-11 min-w-[168px] bg-white">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
                             {Object.entries(SORT_LABELS).map(([value, label]) => (
-                              <option key={value} value={value}>
+                              <SelectItem key={value} value={value}>
                                 {label}
-                              </option>
+                              </SelectItem>
                             ))}
-                          </select>
-                          <ChevronDown className="pointer-events-none absolute right-4 top-1/2 h-4 w-4 -translate-y-1/2 text-[#95A1B8]" />
-                        </label>
+                          </SelectContent>
+                        </Select>
                       </div>
                     </div>
 
@@ -505,9 +500,9 @@ export default function IntegracoesPage() {
                             : 'Carregando workspace...'}
                         </p>
                       </div>
-                      <span className="rounded-full bg-gray-100 px-3 py-1 text-xs font-medium text-gray-700">
+                      <Badge variant="secondary">
                         {catalogToolkits.length} apps
-                      </span>
+                      </Badge>
                     </div>
                     <div className="mb-6 grid grid-cols-1 gap-5 md:grid-cols-2 2xl:grid-cols-3">
                       {catalogToolkits.map((toolkit) => (
@@ -524,14 +519,16 @@ export default function IntegracoesPage() {
                     </div>
 
                     {catalogToolkits.length === 0 && (
-                      <section className="mb-6 rounded-[24px] border border-dashed border-[#D9DFEB] bg-white px-6 py-10 text-center">
+                      <Card className="mb-6 rounded-xl border-dashed bg-white py-0 text-center">
+                        <CardContent className="px-6 py-10">
                         <div className="mx-auto max-w-[36rem]">
                           <div className="text-[22px] font-semibold tracking-[-0.03em] text-[#1C2541]">Nenhuma integração encontrada</div>
                           <p className="mt-3 text-[15px] leading-6 text-[#68758C]">
                             Ajuste a busca ou troque a categoria para encontrar uma ferramenta compatível com o seu fluxo.
                           </p>
                         </div>
-                      </section>
+                        </CardContent>
+                      </Card>
                     )}
 
                     <section className="grid gap-5 xl:grid-cols-[1.35fr_0.95fr]">
@@ -549,12 +546,13 @@ export default function IntegracoesPage() {
                         </div>
 
                         <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:items-center">
-                          <button
+                          <Button
                             type="button"
-                            className="inline-flex h-11 items-center justify-center rounded-[14px] bg-white px-5 text-[14px] font-semibold text-[#17203A] transition hover:bg-[#F3F5FA]"
+                            variant="secondary"
+                            className="h-11 bg-white text-[#17203A] hover:bg-[#F3F5FA]"
                           >
                             Sugerir integração
-                          </button>
+                          </Button>
                           <div className="text-[13px] text-[#AEB9CF]">
                             Resposta prioritária para integrações com impacto em operação, dados ou atendimento.
                           </div>

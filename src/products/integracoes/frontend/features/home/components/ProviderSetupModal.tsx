@@ -2,6 +2,9 @@
 
 import { useEffect, useMemo, useState } from 'react'
 
+import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
+import { Card, CardContent } from '@/components/ui/card'
 import {
   Dialog,
   DialogContent,
@@ -10,6 +13,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog'
+import { Input } from '@/components/ui/input'
 import { renderIntegrationLogo } from '@/products/integracoes/shared/iconMaps'
 import { getIntegrationProvider } from '@/products/integracoes/shared/providers/providerCatalog'
 import { getProviderSetupStage } from '@/products/integracoes/shared/providers/providerSetupStage'
@@ -77,9 +81,9 @@ export default function ProviderSetupModal({
               {renderIntegrationLogo(connector.slug, connector.name)}
             </div>
             <div className="min-w-0">
-              <div className="inline-flex rounded-full bg-[#EEF4FF] px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.08em] text-[#2F6FE4]">
+              <Badge variant="secondary" className="uppercase tracking-[0.08em]">
                 {provider ? `${provider.domain.toUpperCase()} · ${provider.authType} · ${setupStage.label}` : setupStage.label}
-              </div>
+              </Badge>
               <DialogTitle className="mt-3 text-[28px] font-semibold tracking-[-0.04em] text-[#17203A]">
                 {connector.name}
               </DialogTitle>
@@ -95,22 +99,26 @@ export default function ProviderSetupModal({
         </DialogHeader>
 
         <div className="space-y-5 px-7 py-6">
-          <div className="rounded-[16px] border border-[#E6EAF4] bg-[#FAFBFD] px-4 py-3">
+          <Card className="rounded-lg bg-[#FAFBFD] py-0 shadow-none">
+            <CardContent className="px-4 py-3">
             <div className="text-[13px] font-semibold text-[#24304A]">{setupStage.label}</div>
             <div className="mt-1 text-[12px] leading-5 text-[#66748D]">{setupStage.description}</div>
-          </div>
+            </CardContent>
+          </Card>
 
           {provider ? (
             <>
               {isOAuth ? (
-                <section className="rounded-[18px] border border-[#E6EAF4] bg-white p-4">
+                <Card className="rounded-lg py-0 shadow-none">
+                  <CardContent className="p-4">
                   <div className="text-[14px] font-semibold text-[#24304A]">Autorização segura</div>
                   <p className="mt-2 text-[13px] leading-6 text-[#66748D]">
                     {oauthInConfiguration
                       ? provider?.oauthReadiness?.message || 'OAuth em configuração. Este conector ficará disponível em breve.'
                       : 'Você será direcionado para autorizar o acesso. Depois disso, a conexão volta para cá como conectada ou pendente de autenticação.'}
                   </p>
-                </section>
+                  </CardContent>
+                </Card>
               ) : null}
 
               {isOmie ? (
@@ -119,28 +127,29 @@ export default function ProviderSetupModal({
                   <div className="grid gap-3 sm:grid-cols-2">
                     <label className="block">
                       <span className="text-[12px] font-semibold uppercase tracking-[0.08em] text-[#7B879B]">App key</span>
-                      <input
+                      <Input
                         value={omieAppKey}
                         onChange={(event) => setOmieAppKey(event.target.value)}
                         autoComplete="off"
-                        className="mt-2 h-11 w-full rounded-[12px] border border-[#E1E6F0] bg-white px-4 text-[14px] font-medium text-[#2A3550] outline-none transition focus:border-[#B3BDED]"
+                        className="mt-2 h-11 border bg-white font-medium"
                       />
                     </label>
                     <label className="block">
                       <span className="text-[12px] font-semibold uppercase tracking-[0.08em] text-[#7B879B]">App secret</span>
-                      <input
+                      <Input
                         type="password"
                         value={omieAppSecret}
                         onChange={(event) => setOmieAppSecret(event.target.value)}
                         autoComplete="new-password"
-                        className="mt-2 h-11 w-full rounded-[12px] border border-[#E1E6F0] bg-white px-4 text-[14px] font-medium text-[#2A3550] outline-none transition focus:border-[#B3BDED]"
+                        className="mt-2 h-11 border bg-white font-medium"
                       />
                     </label>
                   </div>
                 </section>
               ) : null}
 
-              <section className="rounded-[18px] border border-[#E6EAF4] bg-[#FAFBFD] p-4">
+              <Card className="rounded-lg bg-[#FAFBFD] py-0 shadow-none">
+                <CardContent className="p-4">
                 <div className="text-[14px] font-semibold text-[#24304A]">Dados configurados automaticamente</div>
                 <p className="mt-2 text-[13px] leading-6 text-[#66748D]">
                   Vamos sincronizar os dados principais recomendados para este app. Você pode ajustar isso depois em Configurar.
@@ -148,37 +157,41 @@ export default function ProviderSetupModal({
                 {includedResources.length ? (
                   <div className="mt-3 flex flex-wrap gap-2">
                     {includedResources.slice(0, 6).map((resource) => (
-                      <span key={resource.slug} className="rounded-full bg-white px-3 py-1 text-[12px] font-medium text-[#526079] ring-1 ring-[#E3E8F2]">
+                      <Badge key={resource.slug} variant="outline" className="bg-white">
                         {resource.name}
-                      </span>
+                      </Badge>
                     ))}
                     {includedResources.length > 6 ? (
-                      <span className="rounded-full bg-white px-3 py-1 text-[12px] font-medium text-[#526079] ring-1 ring-[#E3E8F2]">
+                      <Badge variant="outline" className="bg-white">
                         +{includedResources.length - 6}
-                      </span>
+                      </Badge>
                     ) : null}
                   </div>
                 ) : null}
-              </section>
+                </CardContent>
+              </Card>
             </>
           ) : (
-            <div className="rounded-[18px] border border-dashed border-[#D8DEEB] bg-white px-4 py-5 text-[13px] leading-6 text-[#6B7790]">
+            <Card className="rounded-lg border-dashed bg-white py-0 shadow-none">
+              <CardContent className="px-4 py-5 text-[13px] leading-6 text-[#6B7790]">
               A base de ERPs e CRMs já está pronta. Este item será conectado ao backend quando entrar no escopo de provider tipado.
-            </div>
+              </CardContent>
+            </Card>
           )}
 
           {error ? <div className="text-[13px] font-medium text-red-600">{error}</div> : null}
         </div>
 
         <DialogFooter className="border-t border-[#EEF1F6] px-7 py-5 sm:justify-between sm:space-x-0">
-          <button
+          <Button
             type="button"
+            variant="outline"
             onClick={() => onOpenChange(false)}
-            className="inline-flex h-11 items-center justify-center rounded-[14px] border border-[#DCE3F0] bg-white px-5 text-[14px] font-semibold text-[#334155] transition hover:bg-[#F7F8FC]"
+            className="h-11 bg-white"
           >
             Cancelar
-          </button>
-          <button
+          </Button>
+          <Button
             type="button"
             disabled={!canCreate || busy}
             onClick={() => {
@@ -194,10 +207,10 @@ export default function ProviderSetupModal({
                   : undefined,
               })
             }}
-            className="inline-flex h-11 items-center justify-center rounded-[14px] bg-[#17203A] px-5 text-[14px] font-semibold text-white transition hover:bg-[#0F172C] disabled:opacity-50"
+            className="h-11"
           >
             {oauthInConfiguration ? 'Em configuração' : busy ? 'Conectando...' : isOAuth ? 'Conectar' : 'Salvar credenciais'}
-          </button>
+          </Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>

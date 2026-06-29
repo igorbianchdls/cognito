@@ -2,6 +2,9 @@
 
 import { Bot } from 'lucide-react'
 
+import { Button } from '@/components/ui/button'
+import { Card, CardContent } from '@/components/ui/card'
+import { Checkbox } from '@/components/ui/checkbox'
 import { Switch } from '@/components/ui/switch'
 import {
   applyMcpPermissionPreset,
@@ -69,7 +72,8 @@ export default function McpPermissionsSettingsPanel({
   }
 
   return (
-    <section className="rounded-[16px] border border-[#E6EAF4] bg-white p-5">
+    <Card className="rounded-lg bg-white py-0 shadow-none">
+      <CardContent className="p-5">
       <div className="flex items-start justify-between gap-4">
         <div className="flex min-w-0 items-start gap-3">
           <div className="grid h-10 w-10 shrink-0 place-items-center rounded-[12px] bg-[#F1EEFF] text-[#5B49E6]">
@@ -91,20 +95,25 @@ export default function McpPermissionsSettingsPanel({
 
       <div className="mt-5 grid gap-2 sm:grid-cols-3">
         {MCP_PERMISSION_PRESETS.map((preset) => (
-          <button
+          <Button
             key={preset.value}
             type="button"
+            variant={value.preset === preset.value ? 'default' : 'outline'}
             onClick={() => applyPreset(preset.value)}
             className={[
-              'min-h-[84px] rounded-[12px] border px-3 py-3 text-left transition',
+              'h-auto min-h-[84px] justify-start whitespace-normal rounded-lg px-3 py-3 text-left transition',
               value.preset === preset.value
-                ? 'border-[#5B49E6] bg-[#F6F4FF] text-[#261B74]'
-                : 'border-[#E7EAF2] bg-white text-[#33405A] hover:bg-[#F7F8FC]',
+                ? 'bg-[#17203A] text-white'
+                : 'bg-white text-[#33405A] hover:bg-[#F7F8FC]',
             ].join(' ')}
           >
-            <div className="text-[13px] font-semibold">{preset.label}</div>
-            <div className="mt-1 text-[12px] leading-4 text-[#66748D]">{preset.description}</div>
-          </button>
+            <span>
+              <span className="block text-[13px] font-semibold">{preset.label}</span>
+              <span className={['mt-1 block text-[12px] leading-4', value.preset === preset.value ? 'text-white/75' : 'text-[#66748D]'].join(' ')}>
+                {preset.description}
+              </span>
+            </span>
+          </Button>
         ))}
       </div>
 
@@ -130,15 +139,14 @@ export default function McpPermissionsSettingsPanel({
       </div>
 
       <label className="mt-4 flex items-center gap-2 text-[13px] font-medium text-[#33405A]">
-        <input
-          type="checkbox"
+        <Checkbox
           checked={value.requireConfirmation}
           disabled={!value.enabled}
-          onChange={(event) => onChange({ ...value, requireConfirmation: event.target.checked })}
-          className="h-4 w-4 accent-[#17203A]"
+          onCheckedChange={(checked) => onChange({ ...value, requireConfirmation: checked === true })}
         />
         Exigir confirmação antes de ações MCP
       </label>
-    </section>
+      </CardContent>
+    </Card>
   )
 }

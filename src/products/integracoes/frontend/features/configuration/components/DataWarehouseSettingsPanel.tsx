@@ -1,7 +1,11 @@
 'use client'
 
-import { ChevronDown, Database, Loader2, RefreshCw } from 'lucide-react'
+import { Database, Loader2, RefreshCw } from 'lucide-react'
 
+import { Button } from '@/components/ui/button'
+import { Card, CardContent } from '@/components/ui/card'
+import { Checkbox } from '@/components/ui/checkbox'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Switch } from '@/components/ui/switch'
 import { SYNC_FREQUENCY_OPTIONS, type SyncFrequencyOption } from '@/products/integracoes/frontend/features/configuration/lib/syncFrequencyOptions'
 import type { IntegrationConnectionWithUi } from '@/products/integracoes/frontend/services/integracoesApi'
@@ -86,7 +90,8 @@ export default function DataWarehouseSettingsPanel({
       : 'border-[#DCE3F0] bg-[#F7F8FC] text-[#66748D]'
 
   return (
-    <section className="rounded-[16px] border border-[#E6EAF4] bg-white p-5">
+    <Card className="rounded-lg bg-white py-0 shadow-none">
+      <CardContent className="p-5">
       <div className="flex items-start justify-between gap-4">
         <div className="flex min-w-0 items-start gap-3">
           <div className="grid h-10 w-10 shrink-0 place-items-center rounded-[12px] bg-[#ECF8F1] text-[#178654]">
@@ -136,12 +141,10 @@ export default function DataWarehouseSettingsPanel({
                 key={resource}
                 className="flex min-h-10 items-center gap-2 rounded-[10px] border border-[#E7EAF2] px-3 py-2 text-[13px] font-medium text-[#33405A]"
               >
-                <input
-                  type="checkbox"
+                <Checkbox
                   checked={value.selectedResources.includes(resource)}
                   disabled={!value.enabled}
-                  onChange={() => onChange({ ...value, selectedResources: toggleResource(value.selectedResources, resource) })}
-                  className="h-4 w-4 accent-[#17203A]"
+                  onCheckedChange={() => onChange({ ...value, selectedResources: toggleResource(value.selectedResources, resource) })}
                 />
                 <span className="min-w-0 truncate">{formatResourceLabel(resource)}</span>
               </label>
@@ -150,24 +153,27 @@ export default function DataWarehouseSettingsPanel({
           <div className="mt-2 text-[12px] text-[#7B879B]">{selectedCount} selecionados</div>
         </div>
 
-        <label className="relative">
+        <div>
           <div className="mb-2 text-[12px] font-semibold uppercase tracking-[0.08em] text-[#98A4BA]">
             Frequência
           </div>
-          <select
+          <Select
             value={value.syncFrequency}
             disabled={!value.enabled}
-            onChange={(event) => onChange({ ...value, syncFrequency: event.target.value as SyncFrequencyOption })}
-            className="h-11 w-full appearance-none rounded-[12px] border border-[#E1E6F0] bg-white px-3 pr-9 text-[14px] font-medium text-[#2A3550] outline-none transition disabled:bg-[#F7F8FC] disabled:text-[#98A4BA] focus:border-[#B3BDED]"
+            onValueChange={(nextValue) => onChange({ ...value, syncFrequency: nextValue as SyncFrequencyOption })}
           >
-            {SYNC_FREQUENCY_OPTIONS.map((option) => (
-              <option key={option.value} value={option.value}>
-                {option.label}
-              </option>
-            ))}
-          </select>
-          <ChevronDown className="pointer-events-none absolute bottom-3.5 right-3 h-4 w-4 text-[#95A1B8]" />
-        </label>
+            <SelectTrigger className="h-11 w-full bg-white">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {SYNC_FREQUENCY_OPTIONS.map((option) => (
+                <SelectItem key={option.value} value={option.value}>
+                  {option.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
       </div>
 
       <div className="mt-5 rounded-[14px] border border-[#E6EAF4] bg-[#FBFCFE] p-4">
@@ -196,15 +202,15 @@ export default function DataWarehouseSettingsPanel({
             </div>
           </div>
 
-          <button
+          <Button
             type="button"
             onClick={() => void onSyncNow?.()}
             disabled={syncButtonDisabled}
-            className="inline-flex h-10 shrink-0 items-center justify-center gap-2 rounded-[12px] bg-[#17203A] px-4 text-[13px] font-semibold text-white transition hover:bg-[#0F172C] disabled:cursor-not-allowed disabled:bg-[#D8DEE9] disabled:text-[#748199]"
+            className="h-10 shrink-0"
           >
             {syncing ? <Loader2 className="h-4 w-4 animate-spin" /> : <RefreshCw className="h-4 w-4" />}
             {syncing ? 'Sincronizando...' : 'Sincronizar agora'}
-          </button>
+          </Button>
         </div>
 
         {syncFeedback ? (
@@ -213,6 +219,7 @@ export default function DataWarehouseSettingsPanel({
           </div>
         ) : null}
       </div>
-    </section>
+      </CardContent>
+    </Card>
   )
 }
