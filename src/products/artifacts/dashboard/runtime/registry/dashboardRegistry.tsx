@@ -15,14 +15,12 @@ import {
   useDashboardThemeSelection,
 } from '@/products/artifacts/dashboard/runtime/theme'
 import DashboardChart from '@/products/artifacts/dashboard/runtime/components/chart/DashboardChart'
-import DashboardCardSurface from '@/products/artifacts/dashboard/runtime/components/layout/DashboardCardSurface'
 import DashboardDatePicker from '@/products/artifacts/dashboard/runtime/components/filters/DashboardDatePicker'
 import DashboardFilter from '@/products/artifacts/dashboard/runtime/components/filters/DashboardFilter'
-import DashboardIcon from '@/products/artifacts/dashboard/runtime/components/content/DashboardIcon'
 import DashboardInsights from '@/products/artifacts/dashboard/runtime/components/insights/DashboardInsights'
 import DashboardKpi from '@/products/artifacts/dashboard/runtime/components/kpi/DashboardKpi'
 import { DashboardKpiCompare } from '@/products/artifacts/dashboard/runtime/components/kpi/DashboardKpiCompare'
-import { DashboardGrid, DashboardHorizontal, DashboardPanel, DashboardVertical } from '@/products/artifacts/dashboard/runtime/components/layout/DashboardLayout'
+import { DashboardHorizontal } from '@/products/artifacts/dashboard/runtime/components/layout/DashboardLayout'
 import DashboardPivotTable from '@/products/artifacts/dashboard/runtime/components/table/DashboardPivotTable'
 import DashboardQuery, {
   getDashboardQueryDeltaColor,
@@ -30,7 +28,6 @@ import DashboardQuery, {
   useDashboardQueryResult,
 } from '@/products/artifacts/dashboard/runtime/components/content/DashboardQuery'
 import DashboardTable from '@/products/artifacts/dashboard/runtime/components/table/DashboardTable'
-import DashboardText from '@/products/artifacts/dashboard/runtime/components/content/DashboardText'
 import {
   DASHBOARD_SUPPORTED_COMPONENTS,
   DASHBOARD_SUPPORTED_HTML_TAG_SET,
@@ -324,11 +321,6 @@ function DashboardTabPanel({
   )
 }
 
-const DashboardTextNode: DashboardRenderComponent = ({ element }) => {
-  const queryResult = useDashboardQueryResult()
-  return <>{resolveDashboardQueryTemplate(String((element?.props?.text as string | undefined) || ''), queryResult)}</>
-}
-
 export const dashboardShellRegistry: Record<string, DashboardRenderComponent> = {
   DashboardTemplate: ({ children }) => <DashboardRoot>{children}</DashboardRoot>,
   Theme: ({ element, children }) => <DashboardTheme element={element}>{children}</DashboardTheme>,
@@ -336,11 +328,7 @@ export const dashboardShellRegistry: Record<string, DashboardRenderComponent> = 
 }
 
 export const dashboardLayoutRegistry: Record<string, DashboardRenderComponent> = {
-  Grid: ({ element, children }) => <DashboardGrid element={element}>{children}</DashboardGrid>,
-  Vertical: ({ element, children }) => <DashboardVertical element={element}>{children}</DashboardVertical>,
   Horizontal: ({ element, children }) => <DashboardHorizontal element={element}>{children}</DashboardHorizontal>,
-  Panel: ({ element, children }) => <DashboardPanel element={element}>{children}</DashboardPanel>,
-  Card: ({ element, children }) => <DashboardCardSurface element={element}>{children}</DashboardCardSurface>,
   Tabs: ({ element, children }) => <DashboardTabs element={element}>{children}</DashboardTabs>,
   Tab: ({ element, children }) => <DashboardTab element={element}>{children}</DashboardTab>,
   TabPanel: ({ element, children }) => <DashboardTabPanel element={element}>{children}</DashboardTabPanel>,
@@ -375,10 +363,6 @@ export const dashboardDataRegistry: Record<string, DashboardRenderComponent> = {
 }
 
 export const dashboardContentRegistry: Record<string, DashboardRenderComponent> = {
-  Icon: ({ element }) => <DashboardIcon element={element} />,
-  Text: ({ element, children }) => <DashboardText element={element}>{children}</DashboardText>,
-  TextNode: DashboardTextNode,
-  Br: () => <br />,
 }
 
 export const dashboardRegistry: Record<string, DashboardRenderComponent> = {

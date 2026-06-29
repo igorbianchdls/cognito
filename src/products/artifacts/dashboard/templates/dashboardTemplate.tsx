@@ -446,7 +446,7 @@ const CLASSIC_GRID_DASHBOARD_VARIANT: StandaloneDashboardVariant = {
   fileName: 'dashboard-classico-grid.tsx',
   name: 'dashboard_classico_grid',
   path: 'app/dashboard-classico-grid.tsx',
-  title: 'Dashboard Classico Grid',
+  title: 'Dashboard Classico Layout',
 }
 
 function buildClassicDashboardTemplateMarkup(title: string, themeName: string) {
@@ -454,7 +454,7 @@ function buildClassicDashboardTemplateMarkup(title: string, themeName: string) {
         <div style={{ boxSizing: 'border-box', minWidth: 0, display: 'flex', flexDirection: 'column', gap: 0, width: '100%', minHeight: '100%', backgroundColor: theme.pageBg }}>
           <header id="classic-header" style={{ width: '100%', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 20, padding: '20px 24px', borderRadius: theme.cardFrame ? 0 : 24, border: '1px solid ' + theme.surfaceBorder, borderTop: 'none', backgroundColor: theme.headerBg, color: theme.headerText }}>
             <div style={{ boxSizing: 'border-box', minWidth: 0, display: 'flex', flexDirection: 'column', gap: 8 }}>
-              <Text as="h1" variant="page-title-sm">Performance overview with the classic BI layout</Text>
+              <h1 data-ui="page-title-sm">Performance overview with the classic BI layout</h1>
             </div>
 
             <div style={{ boxSizing: 'border-box', minWidth: 0, display: 'flex', flexDirection: 'column', gap: 10, alignItems: 'flex-end', minWidth: 240 }}>
@@ -487,15 +487,8 @@ function buildClassicDashboardTemplateMarkup(title: string, themeName: string) {
 
           <article id="classic-kpi-receita" style={{ boxSizing: 'border-box', minWidth: 0, display: 'flex', flexDirection: 'column', padding: 18, border: '1px solid ' + theme.surfaceBorder, borderRadius: theme.cardFrame ? 0 : 16, backgroundColor: theme.surfaceBg, boxShadow: theme.cardFrame ? 'none' : '0 1px 2px rgba(15, 23, 42, 0.04)', gridColumn: 'span 5', minHeight: 80, height: 'auto', display: 'flex', flexDirection: 'column', gap: 14 }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                  <Icon
-                    name="DollarSign"
-                    size={18}
-                    padding={10}
-                    color="#1D4ED8"
-                    backgroundColor="#DBEAFE"
-                    borderColor="#BFDBFE"
-                  />
-                  <Text variant="eyebrow">Receita</Text>
+                  <span data-ui="icon-placeholder" />
+                  <p data-ui="eyebrow">Receita</p>
                 </div>
                 <KPI
                   dataQuery={{
@@ -517,15 +510,8 @@ function buildClassicDashboardTemplateMarkup(title: string, themeName: string) {
 
           <article id="classic-kpi-pedidos" style={{ boxSizing: 'border-box', minWidth: 0, display: 'flex', flexDirection: 'column', padding: 18, border: '1px solid ' + theme.surfaceBorder, borderRadius: theme.cardFrame ? 0 : 16, backgroundColor: theme.surfaceBg, boxShadow: theme.cardFrame ? 'none' : '0 1px 2px rgba(15, 23, 42, 0.04)', gridColumn: 'span 5', minHeight: 80, height: 'auto', display: 'flex', flexDirection: 'column', gap: 14 }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                  <Icon
-                    name="ShoppingCart"
-                    size={18}
-                    padding={10}
-                    color="#15803D"
-                    backgroundColor="#DCFCE7"
-                    borderColor="#BBF7D0"
-                  />
-                  <Text variant="eyebrow">Pedidos</Text>
+                  <span data-ui="icon-placeholder" />
+                  <p data-ui="eyebrow">Pedidos</p>
                 </div>
                 <KPI
                   dataQuery={{
@@ -547,15 +533,8 @@ function buildClassicDashboardTemplateMarkup(title: string, themeName: string) {
 
           <article id="classic-kpi-ticket" style={{ boxSizing: 'border-box', minWidth: 0, display: 'flex', flexDirection: 'column', padding: 18, border: '1px solid ' + theme.surfaceBorder, borderRadius: theme.cardFrame ? 0 : 16, backgroundColor: theme.surfaceBg, boxShadow: theme.cardFrame ? 'none' : '0 1px 2px rgba(15, 23, 42, 0.04)', gridColumn: 'span 5', minHeight: 80, height: 'auto', display: 'flex', flexDirection: 'column', gap: 14 }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                  <Icon
-                    name="Ticket"
-                    size={18}
-                    padding={10}
-                    color="#C2410C"
-                    backgroundColor="#FFEDD5"
-                    borderColor="#FED7AA"
-                  />
-                  <Text variant="eyebrow">Ticket medio</Text>
+                  <span data-ui="icon-placeholder" />
+                  <p data-ui="eyebrow">Ticket medio</p>
                 </div>
                 <KPI
                   dataQuery={{
@@ -577,15 +556,8 @@ function buildClassicDashboardTemplateMarkup(title: string, themeName: string) {
 
           <article id="classic-kpi-canais" style={{ boxSizing: 'border-box', minWidth: 0, display: 'flex', flexDirection: 'column', padding: 18, border: '1px solid ' + theme.surfaceBorder, borderRadius: theme.cardFrame ? 0 : 16, backgroundColor: theme.surfaceBg, boxShadow: theme.cardFrame ? 'none' : '0 1px 2px rgba(15, 23, 42, 0.04)', gridColumn: 'span 5', minHeight: 80, height: 'auto', display: 'flex', flexDirection: 'column', gap: 14 }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                  <Icon
-                    name="Network"
-                    size={18}
-                    padding={10}
-                    color="#7C3AED"
-                    backgroundColor="#F3E8FF"
-                    borderColor="#DDD6FE"
-                  />
-                  <Text variant="eyebrow">Canais ativos</Text>
+                  <span data-ui="icon-placeholder" />
+                  <p data-ui="eyebrow">Canais ativos</p>
                 </div>
                 <KPI
                   dataQuery={{
@@ -607,15 +579,8 @@ function buildClassicDashboardTemplateMarkup(title: string, themeName: string) {
 
           <article id="classic-kpi-aprovacao" style={{ boxSizing: 'border-box', minWidth: 0, display: 'flex', flexDirection: 'column', padding: 18, border: '1px solid ' + theme.surfaceBorder, borderRadius: theme.cardFrame ? 0 : 16, backgroundColor: theme.surfaceBg, boxShadow: theme.cardFrame ? 'none' : '0 1px 2px rgba(15, 23, 42, 0.04)', gridColumn: 'span 4', minHeight: 80, height: 'auto', display: 'flex', flexDirection: 'column', gap: 14 }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                  <Icon
-                    name="ShieldCheck"
-                    size={18}
-                    padding={10}
-                    color="#0F766E"
-                    backgroundColor="#CCFBF1"
-                    borderColor="#99F6E4"
-                  />
-                  <Text variant="eyebrow">Aprovacao</Text>
+                  <span data-ui="icon-placeholder" />
+                  <p data-ui="eyebrow">Aprovacao</p>
                 </div>
                 <KPI
                   dataQuery={{
@@ -637,8 +602,8 @@ function buildClassicDashboardTemplateMarkup(title: string, themeName: string) {
 
           <article id="classic-chart-mix" style={{ boxSizing: 'border-box', minWidth: 0, display: 'flex', flexDirection: 'column', padding: 18, border: '1px solid ' + theme.surfaceBorder, borderRadius: theme.cardFrame ? 0 : 16, backgroundColor: theme.surfaceBg, boxShadow: theme.cardFrame ? 'none' : '0 1px 2px rgba(15, 23, 42, 0.04)', gridColumn: 'span 12', minHeight: 192, height: '100%', display: 'flex', flexDirection: 'column', gap: 14 }}>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-                <Text variant="eyebrow">Receita por canal</Text>
-                <Text as="h2" variant="section-title-md">Mix comercial</Text>
+                <p data-ui="eyebrow">Receita por canal</p>
+                <h2 data-ui="section-title-md">Mix comercial</h2>
               </div>
               <Chart
                 type="bar"
@@ -672,8 +637,8 @@ function buildClassicDashboardTemplateMarkup(title: string, themeName: string) {
 
           <article id="classic-chart-share" style={{ boxSizing: 'border-box', minWidth: 0, display: 'flex', flexDirection: 'column', padding: 18, border: '1px solid ' + theme.surfaceBorder, borderRadius: theme.cardFrame ? 0 : 16, backgroundColor: theme.surfaceBg, boxShadow: theme.cardFrame ? 'none' : '0 1px 2px rgba(15, 23, 42, 0.04)', gridColumn: 'span 12', minHeight: 192, height: '100%', display: 'flex', flexDirection: 'column', gap: 14 }}>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-                <Text variant="eyebrow">Participacao</Text>
-                <Text as="h2" variant="section-title-md">Share por canal</Text>
+                <p data-ui="eyebrow">Participacao</p>
+                <h2 data-ui="section-title-md">Share por canal</h2>
               </div>
               <Chart
                 type="pie"
@@ -715,8 +680,8 @@ function buildClassicDashboardTemplateMarkup(title: string, themeName: string) {
               gap: 14,
               minHeight: '100%', }}>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-                <Text variant="eyebrow">Tendencia diaria</Text>
-                <Text as="h2" variant="section-title-md">Receita ao longo do periodo</Text>
+                <p data-ui="eyebrow">Tendencia diaria</p>
+                <h2 data-ui="section-title-md">Receita ao longo do periodo</h2>
               </div>
               <Chart
                 type="line"
@@ -748,8 +713,8 @@ function buildClassicDashboardTemplateMarkup(title: string, themeName: string) {
 
           <article id="classic-table-pedidos" style={{ boxSizing: 'border-box', minWidth: 0, display: 'flex', flexDirection: 'column', padding: 18, border: '1px solid ' + theme.surfaceBorder, borderRadius: theme.cardFrame ? 0 : 16, backgroundColor: theme.surfaceBg, boxShadow: theme.cardFrame ? 'none' : '0 1px 2px rgba(15, 23, 42, 0.04)', gridColumn: 'span 12', minHeight: 448, display: 'flex', flexDirection: 'column', gap: 12, minWidth: 0, height: '100%' }}>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-                <Text variant="eyebrow">Detalhamento</Text>
-                <Text as="h2" variant="section-title-md">Pedidos filtrados</Text>
+                <p data-ui="eyebrow">Detalhamento</p>
+                <h2 data-ui="section-title-md">Pedidos filtrados</h2>
               </div>
               <Table
                 bordered
@@ -792,8 +757,8 @@ function buildClassicDashboardTemplateMarkup(title: string, themeName: string) {
 
           <article id="classic-chart-status" style={{ boxSizing: 'border-box', minWidth: 0, display: 'flex', flexDirection: 'column', padding: 18, border: '1px solid ' + theme.surfaceBorder, borderRadius: theme.cardFrame ? 0 : 16, backgroundColor: theme.surfaceBg, boxShadow: theme.cardFrame ? 'none' : '0 1px 2px rgba(15, 23, 42, 0.04)', gridColumn: 'span 12', minHeight: 192, height: '100%', display: 'flex', flexDirection: 'column', gap: 14 }}>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-                <Text variant="eyebrow">Status mix</Text>
-                <Text as="h2" variant="section-title-md">Volume por status</Text>
+                <p data-ui="eyebrow">Status mix</p>
+                <h2 data-ui="section-title-md">Volume por status</h2>
               </div>
               <Chart
                 type="horizontal-bar"
@@ -822,8 +787,8 @@ function buildClassicDashboardTemplateMarkup(title: string, themeName: string) {
 
           <article id="classic-pivot-canal-status" style={{ boxSizing: 'border-box', minWidth: 0, display: 'flex', flexDirection: 'column', padding: 18, border: '1px solid ' + theme.surfaceBorder, borderRadius: theme.cardFrame ? 0 : 16, backgroundColor: theme.surfaceBg, boxShadow: theme.cardFrame ? 'none' : '0 1px 2px rgba(15, 23, 42, 0.04)', gridColumn: 'span 12', minHeight: 192, height: '100%', display: 'flex', flexDirection: 'column', gap: 14 }}>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-                <Text variant="eyebrow">Cruzamento</Text>
-                <Text as="h2" variant="section-title-md">Receita por canal e status</Text>
+                <p data-ui="eyebrow">Cruzamento</p>
+                <h2 data-ui="section-title-md">Receita por canal e status</h2>
               </div>
               <PivotTable
                 bordered
@@ -861,8 +826,8 @@ function buildClassicDashboardTemplateMarkup(title: string, themeName: string) {
           </article>
 
           <article id="classic-filter-canal" style={{ boxSizing: 'border-box', minWidth: 0, display: 'flex', flexDirection: 'column', padding: 18, border: '1px solid ' + theme.surfaceBorder, borderRadius: theme.cardFrame ? 0 : 16, backgroundColor: theme.surfaceBg, boxShadow: theme.cardFrame ? 'none' : '0 1px 2px rgba(15, 23, 42, 0.04)', gridColumn: 'span 8', minHeight: 192, height: '100%', display: 'flex', flexDirection: 'column', gap: 14 }}>
-              <Text variant="eyebrow">Filtro</Text>
-              <Text as="h2" variant="section-title-sm">Canal</Text>
+              <p data-ui="eyebrow">Filtro</p>
+              <h2 data-ui="section-title-sm">Canal</h2>
               <Filter
                 label="Canal"
                 table="vendas.pedidos"
@@ -884,8 +849,8 @@ function buildClassicDashboardTemplateMarkup(title: string, themeName: string) {
           </article>
 
           <article id="classic-filter-cliente" style={{ boxSizing: 'border-box', minWidth: 0, display: 'flex', flexDirection: 'column', padding: 18, border: '1px solid ' + theme.surfaceBorder, borderRadius: theme.cardFrame ? 0 : 16, backgroundColor: theme.surfaceBg, boxShadow: theme.cardFrame ? 'none' : '0 1px 2px rgba(15, 23, 42, 0.04)', gridColumn: 'span 8', minHeight: 192, height: '100%', display: 'flex', flexDirection: 'column', gap: 14 }}>
-              <Text variant="eyebrow">Filtro</Text>
-              <Text as="h2" variant="section-title-sm">Cliente</Text>
+              <p data-ui="eyebrow">Filtro</p>
+              <h2 data-ui="section-title-sm">Cliente</h2>
               <Filter
                 label="Cliente"
                 table="vendas.pedidos"
@@ -907,8 +872,8 @@ function buildClassicDashboardTemplateMarkup(title: string, themeName: string) {
           </article>
 
           <article id="classic-filter-status" style={{ boxSizing: 'border-box', minWidth: 0, display: 'flex', flexDirection: 'column', padding: 18, border: '1px solid ' + theme.surfaceBorder, borderRadius: theme.cardFrame ? 0 : 16, backgroundColor: theme.surfaceBg, boxShadow: theme.cardFrame ? 'none' : '0 1px 2px rgba(15, 23, 42, 0.04)', gridColumn: 'span 8', minHeight: 192, height: '100%', display: 'flex', flexDirection: 'column', gap: 14 }}>
-              <Text variant="eyebrow">Filtro</Text>
-              <Text as="h2" variant="section-title-sm">Seletores</Text>
+              <p data-ui="eyebrow">Filtro</p>
+              <h2 data-ui="section-title-sm">Seletores</h2>
               <div style={{ boxSizing: 'border-box', minWidth: 0, display: 'flex', flexDirection: 'column', gap: 10 }}>
                 <Filter
                   label="Status"

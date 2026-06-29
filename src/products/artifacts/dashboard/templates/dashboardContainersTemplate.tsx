@@ -18,15 +18,15 @@ function buildContainersDashboardSource(themeName: string) {
           <section style={{ boxSizing: 'border-box', minWidth: 0, display: 'flex', flexDirection: 'row', gap: 18 }}>
               <header style={{ width: '100%', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 24, padding: 24, borderRadius: 24, border: '1px solid ' + theme.surfaceBorder, borderTop: 'none', backgroundColor: theme.headerBg, color: theme.headerText }}>
                 <div style={{ boxSizing: 'border-box', minWidth: 0, display: 'flex', flexDirection: 'column', gap: 8, maxWidth: 720 }}>
-                  <Text variant="eyebrow">
+                  <p data-ui="eyebrow">
                     Layout semantico em containers
-                  </Text>
-                  <Text as="h1" variant="page-title-sm">
+                  </p>
+                  <h1 data-ui="page-title-sm">
                     Dashboard com containers HTML e CSS
-                  </Text>
-                  <Text variant="lead">
+                  </h1>
+                  <p data-ui="lead">
                     Exemplo de autoria com tags semanticas e CSS inline, mantendo KPI, Chart e filtros como componentes funcionais.
-                  </Text>
+                  </p>
                 </div>
 
                 <div style={{ width: 340 }}>
@@ -106,7 +106,7 @@ function buildContainersDashboardSource(themeName: string) {
 
             <section style={{ boxSizing: 'border-box', minWidth: 0, display: 'grid', gridTemplateColumns: 'repeat(12, minmax(0, 1fr))', gap: 18, alignItems: 'stretch' }}>
               <article id="chart-receita-canal" style={{ boxSizing: 'border-box', minWidth: 0, display: 'flex', flexDirection: 'column', padding: 18, border: '1px solid ' + theme.surfaceBorder, borderRadius: theme.cardFrame ? 0 : 16, backgroundColor: theme.surfaceBg, boxShadow: theme.cardFrame ? 'none' : '0 1px 2px rgba(15, 23, 42, 0.04)', gridColumn: 'span 8', minHeight: 420, height: '100%', display: 'flex', flexDirection: 'column', gap: 14 }}>
-                  <Text as="h2" variant="section-title-sm">Receita por canal</Text>
+                  <h2 data-ui="section-title-sm">Receita por canal</h2>
                   <Chart
                     type="bar"
                     height={320}
@@ -133,7 +133,7 @@ function buildContainersDashboardSource(themeName: string) {
               <article id="filters-side" style={{ boxSizing: 'border-box', minWidth: 0, display: 'flex', flexDirection: 'column', padding: 18, border: '1px solid ' + theme.surfaceBorder, borderRadius: theme.cardFrame ? 0 : 16, backgroundColor: theme.surfaceBg, boxShadow: theme.cardFrame ? 'none' : '0 1px 2px rgba(15, 23, 42, 0.04)', gridColumn: 'span 4', minHeight: 420 }}>
                 <div style={{ boxSizing: 'border-box', minWidth: 0, display: 'flex', flexDirection: 'column', gap: 18, height: '100%' }}>
                   <article style={{ boxSizing: 'border-box', minWidth: 0, display: 'flex', flexDirection: 'column', padding: 18, border: '1px solid ' + theme.surfaceBorder, borderRadius: theme.cardFrame ? 0 : 16, backgroundColor: theme.surfaceBg, boxShadow: theme.cardFrame ? 'none' : '0 1px 2px rgba(15, 23, 42, 0.04)', flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column', gap: 14 }}>
-                    <Text as="h2" variant="section-title-sm">Canal</Text>
+                    <h2 data-ui="section-title-sm">Canal</h2>
                     <Filter
                       label="Canal"
                       table="vendas"
@@ -155,10 +155,10 @@ function buildContainersDashboardSource(themeName: string) {
                   </article>
 
                   <article style={{ boxSizing: 'border-box', minWidth: 0, display: 'flex', flexDirection: 'column', padding: 18, border: '1px solid ' + theme.surfaceBorder, borderRadius: theme.cardFrame ? 0 : 16, backgroundColor: theme.surfaceBg, boxShadow: theme.cardFrame ? 'none' : '0 1px 2px rgba(15, 23, 42, 0.04)', flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column', gap: 10 }}>
-                    <Text variant="eyebrow">Leitura esperada</Text>
-                    <Text variant="lead">
+                    <p data-ui="eyebrow">Leitura esperada</p>
+                    <p data-ui="lead">
                       Este exemplo usa containers HTML para organizar cabecalho, KPIs e linha analitica sem depender dos componentes de layout antigos.
-                    </Text>
+                    </p>
                   </article>
                 </div>
               </article>

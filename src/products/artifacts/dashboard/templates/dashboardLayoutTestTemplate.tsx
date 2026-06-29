@@ -17,15 +17,15 @@ function buildLayoutTestDashboardSource(themeName: string) {
   <div style={{ boxSizing: 'border-box', minWidth: 0, display: 'flex', flexDirection: 'column', gap: 24, width: '100%', minHeight: '100%', backgroundColor: theme.pageBg, padding: 24 }}>
     <section style={{ boxSizing: 'border-box', minWidth: 0, display: 'flex', flexDirection: 'row', gap: 18 }}>
         <header style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: 8, padding: 24, borderRadius: 24, border: '1px solid ' + theme.surfaceBorder, backgroundColor: theme.headerBg }}>
-          <Text variant="eyebrow">
+          <p data-ui="eyebrow">
             Teste puro de layout
-          </Text>
-          <Text as="h1" variant="page-title-sm">
+          </p>
+          <h1 data-ui="page-title-sm">
             Resize horizontal e vertical
-          </Text>
-          <Text variant="lead">
+          </h1>
+          <p data-ui="lead">
             Exemplo minimo com KPI e Chart, sem Query, para provar o comportamento do grid.
-          </Text>
+          </p>
         </header>
     </section>
 
@@ -62,30 +62,30 @@ function buildLayoutTestDashboardSource(themeName: string) {
 
       <section style={{ boxSizing: 'border-box', minWidth: 0, display: 'grid', gridTemplateColumns: 'repeat(12, minmax(0, 1fr))', gap: 16, alignItems: 'stretch' }}>
         <article id="test-a" style={{ boxSizing: 'border-box', minWidth: 0, display: 'flex', flexDirection: 'column', padding: 18, border: '1px solid ' + theme.surfaceBorder, borderRadius: theme.cardFrame ? 0 : 16, backgroundColor: theme.surfaceBg, boxShadow: theme.cardFrame ? 'none' : '0 1px 2px rgba(15, 23, 42, 0.04)', gridColumn: 'span 4', minHeight: 128, height: '100%', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
-            <Text variant="eyebrow">Bloco A</Text>
-            <Text as="h2" variant="section-title-strong">span 4 / rows 8</Text>
-            <Text variant="body-sm">Use este bloco para testar largura e altura.</Text>
+            <p data-ui="eyebrow">Bloco A</p>
+            <h2 data-ui="section-title-strong">span 4 / rows 8</h2>
+            <p data-ui="body-sm">Use este bloco para testar largura e altura.</p>
           </article>
 
         <article id="test-b" style={{ boxSizing: 'border-box', minWidth: 0, display: 'flex', flexDirection: 'column', padding: 18, border: '1px solid ' + theme.surfaceBorder, borderRadius: theme.cardFrame ? 0 : 16, backgroundColor: theme.surfaceBg, boxShadow: theme.cardFrame ? 'none' : '0 1px 2px rgba(15, 23, 42, 0.04)', gridColumn: 'span 4', minHeight: 256, height: '100%', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
-            <Text variant="eyebrow">Bloco B</Text>
-            <Text as="h2" variant="section-title-strong">span 4 / rows 16</Text>
-            <Text variant="body-sm">A altura aqui precisa crescer claramente.</Text>
+            <p data-ui="eyebrow">Bloco B</p>
+            <h2 data-ui="section-title-strong">span 4 / rows 16</h2>
+            <p data-ui="body-sm">A altura aqui precisa crescer claramente.</p>
           </article>
 
         <article id="test-c" style={{ boxSizing: 'border-box', minWidth: 0, display: 'flex', flexDirection: 'column', padding: 18, border: '1px solid ' + theme.surfaceBorder, borderRadius: theme.cardFrame ? 0 : 16, backgroundColor: theme.surfaceBg, boxShadow: theme.cardFrame ? 'none' : '0 1px 2px rgba(15, 23, 42, 0.04)', gridColumn: 'span 4', minHeight: 384, height: '100%', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
-            <Text variant="eyebrow">Bloco C</Text>
-            <Text as="h2" variant="section-title-strong">span 4 / rows 24</Text>
-            <Text variant="body-sm">Este bloco deixa o resize vertical bem evidente.</Text>
+            <p data-ui="eyebrow">Bloco C</p>
+            <h2 data-ui="section-title-strong">span 4 / rows 24</h2>
+            <p data-ui="body-sm">Este bloco deixa o resize vertical bem evidente.</p>
           </article>
       </section>
 
       <section style={{ boxSizing: 'border-box', minWidth: 0, display: 'grid', gridTemplateColumns: 'repeat(12, minmax(0, 1fr))', gap: 16, alignItems: 'stretch' }}>
         <article id="test-d" style={{ boxSizing: 'border-box', minWidth: 0, display: 'flex', flexDirection: 'column', padding: 18, border: '1px solid ' + theme.surfaceBorder, borderRadius: theme.cardFrame ? 0 : 16, backgroundColor: theme.surfaceBg, boxShadow: theme.cardFrame ? 'none' : '0 1px 2px rgba(15, 23, 42, 0.04)', gridColumn: 'span 7', minHeight: 192, height: '100%', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-              <Text variant="eyebrow">Bloco D</Text>
-              <Text as="h2" variant="section-title-strong">Chart responsivo</Text>
-              <Text variant="body-sm">Este bloco usa um chart simples para validar resize vertical dentro de um container HTML.</Text>
+              <p data-ui="eyebrow">Bloco D</p>
+              <h2 data-ui="section-title-strong">Chart responsivo</h2>
+              <p data-ui="body-sm">Este bloco usa um chart simples para validar resize vertical dentro de um container HTML.</p>
             </div>
             <div style={{ flex: 1, minHeight: 0 }}>
               <Chart
@@ -114,9 +114,9 @@ function buildLayoutTestDashboardSource(themeName: string) {
           </article>
 
         <article id="test-e" style={{ boxSizing: 'border-box', minWidth: 0, display: 'flex', flexDirection: 'column', padding: 18, border: '1px solid ' + theme.surfaceBorder, borderRadius: theme.cardFrame ? 0 : 16, backgroundColor: theme.surfaceBg, boxShadow: theme.cardFrame ? 'none' : '0 1px 2px rgba(15, 23, 42, 0.04)', gridColumn: 'span 5', minHeight: 96, height: '100%', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
-            <Text variant="eyebrow">Bloco E</Text>
-            <Text as="h2" variant="section-title-strong">span 5 / rows 6</Text>
-            <Text variant="body-sm">Sem conteúdo complexo para mascarar o comportamento do grid.</Text>
+            <p data-ui="eyebrow">Bloco E</p>
+            <h2 data-ui="section-title-strong">span 5 / rows 6</h2>
+            <p data-ui="body-sm">Sem conteúdo complexo para mascarar o comportamento do grid.</p>
           </article>
       </section>
     </div>

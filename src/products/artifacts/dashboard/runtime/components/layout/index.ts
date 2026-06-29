@@ -1,5 +1,2 @@
-export { default as DashboardCardSurface } from '@/products/artifacts/dashboard/runtime/components/layout/DashboardCardSurface'
-export * from '@/products/artifacts/dashboard/runtime/components/layout/DashboardLayout'
-export * from '@/products/artifacts/dashboard/runtime/components/layout/DashboardLayoutContext'
+export { DashboardHorizontal } from '@/products/artifacts/dashboard/runtime/components/layout/DashboardLayout'
 export * from '@/products/artifacts/dashboard/runtime/components/layout/dashboardLayoutAdapter'
-export * from '@/products/artifacts/dashboard/runtime/components/layout/dashboardLayoutTree'

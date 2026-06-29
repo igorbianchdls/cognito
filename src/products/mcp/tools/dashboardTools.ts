@@ -34,8 +34,6 @@ const DASHBOARD_INTERNAL_COMPONENTS = new Set([
   'Gauge',
   'Select',
   'OptionList',
-  'TextNode',
-  'Br',
 ])
 
 const DASHBOARD_AUTHORING_COMPONENTS = DASHBOARD_SUPPORTED_COMPONENTS.filter(
@@ -57,22 +55,6 @@ const DASHBOARD_COMPONENT_PROPS = {
       borderPreset: 'string opcional',
     },
   },
-  Grid: {
-    required: [],
-    props: {
-      columns: 'number, normalmente 12',
-      gap: 'number em px',
-      children: 'Panel/Card/layout/html',
-    },
-  },
-  Vertical: {
-    required: [],
-    props: {
-      gap: 'number em px',
-      align: 'start | center | end | stretch',
-      children: 'componentes de layout ou dados',
-    },
-  },
   Horizontal: {
     required: [],
     props: {
@@ -80,23 +62,6 @@ const DASHBOARD_COMPONENT_PROPS = {
       align: 'start | center | end | stretch',
       wrap: 'boolean opcional',
       children: 'componentes de layout ou dados',
-    },
-  },
-  Panel: {
-    required: ['id'],
-    props: {
-      id: 'string estavel, sem espacos',
-      title: 'string opcional',
-      span: 'number de 1 a 12 quando estiver dentro de Grid',
-      children: 'KPI/Chart/Table/Filter/layout/html',
-    },
-  },
-  Card: {
-    required: [],
-    props: {
-      title: 'string opcional',
-      span: 'number opcional quando estiver dentro de Grid',
-      children: 'conteudo visual ou componentes de dados',
     },
   },
   KPI: {
@@ -211,19 +176,6 @@ const DASHBOARD_COMPONENT_PROPS = {
       dataQuery: 'objeto opcional com query SQL',
     },
   },
-  Text: {
-    required: [],
-    props: {
-      as: 'p | span | h1 | h2 | h3 | strong',
-      children: 'texto curto',
-    },
-  },
-  Icon: {
-    required: ['name'],
-    props: {
-      name: 'string do icone suportado pelo runtime',
-    },
-  },
 } as const
 
 const DASHBOARD_DATA_QUERY_CONTRACT = {
@@ -253,8 +205,9 @@ const DASHBOARD_VALID_EXAMPLE = `<Dashboard
   theme="light"
   chartPalette="teal"
 >
-  <Grid columns={12} gap={16}>
-    <Panel id="panel-receita" title="Receita" span={4}>
+  <Horizontal gap={16} wrap>
+    <section data-ui="card" style={{ flex: '1 1 280px' }}>
+      <h2 data-ui="section-title-sm">Receita</h2>
       <KPI
         id="kpi-receita-total"
         label="Receita"
@@ -267,9 +220,10 @@ const DASHBOARD_VALID_EXAMPLE = `<Dashboard
           limit: 1,
         }}
       />
-    </Panel>
+    </section>
 
-    <Panel id="panel-vendas-mes" title="Vendas por mes" span={8}>
+    <section data-ui="card" style={{ flex: '2 1 560px' }}>
+      <h2 data-ui="section-title-sm">Vendas por mes</h2>
       <Chart
         id="chart-vendas-mes"
         type="bar"
@@ -289,8 +243,8 @@ const DASHBOARD_VALID_EXAMPLE = `<Dashboard
         xAxis={{ dataKey: 'label' }}
         series={[{ dataKey: 'value', label: 'Receita' }]}
       />
-    </Panel>
-  </Grid>
+    </section>
+  </Horizontal>
 </Dashboard>`
 
 export type McpDashboardToolContext = {

@@ -20,10 +20,10 @@ function buildMetaAdsDashboardSource(themeName: string) {
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 12, maxWidth: '64%' }}>
                   <span style={{ display: 'inline-flex', width: 'fit-content', alignItems: 'center', borderRadius: 999, border: '1px solid ' + theme.accentBorder, backgroundColor: theme.accentSurface, padding: '6px 12px', fontSize: 12, fontWeight: 600, color: theme.accentText }}>Paid Social</span>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-                    <Text variant="eyebrow">Meta Ads performance por conta, campanha e criativo</Text>
-                    <Text as="h1" variant="page-title-sm">Dashboard Meta Ads</Text>
+                    <p data-ui="eyebrow">Meta Ads performance por conta, campanha e criativo</p>
+                    <h1 data-ui="page-title-sm">Dashboard Meta Ads</h1>
                   </div>
-                  <Text variant="lead">Adaptacao do template legado de apps para JSX com tags, queries SQL explicitas e leitura de paid social no runtime novo do workspace.</Text>
+                  <p data-ui="lead">Adaptacao do template legado de apps para JSX com tags, queries SQL explicitas e leitura de paid social no runtime novo do workspace.</p>
                 </div>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 14, width: '34%', minWidth: 320 }}>
                   <DatePicker
@@ -45,8 +45,8 @@ function buildMetaAdsDashboardSource(themeName: string) {
           <section style={{ boxSizing: 'border-box', minWidth: 0, display: 'grid', gridTemplateColumns: 'repeat(12, minmax(0, 1fr))', gap: 18, alignItems: 'stretch' }}>
             <article id="metaads-filters" style={{ boxSizing: 'border-box', minWidth: 0, display: 'flex', flexDirection: 'column', padding: 18, border: '1px solid ' + theme.surfaceBorder, borderRadius: theme.cardFrame ? 0 : 16, backgroundColor: theme.surfaceBg, boxShadow: theme.cardFrame ? 'none' : '0 1px 2px rgba(15, 23, 42, 0.04)', gridColumn: 'span 8', minHeight: 108, height: '100%', display: 'flex', flexDirection: 'column', gap: 14 }}>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-                  <Text variant="eyebrow">Filters</Text>
-                  <Text as="h2" variant="section-title">Conta e campanha</Text>
+                  <p data-ui="eyebrow">Filters</p>
+                  <h2 data-ui="section-title">Conta e campanha</h2>
                 </div>
                 <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'flex-end', gap: 14 }}>
                   <Filter label="Conta" table="trafegopago.desempenho_diario" field="conta_id" mode="multiple" search clearable width={220} query={\`
@@ -76,8 +76,8 @@ function buildMetaAdsDashboardSource(themeName: string) {
                 </div>
               </article>
             <article id="metaads-reading" style={{ boxSizing: 'border-box', minWidth: 0, display: 'flex', flexDirection: 'column', padding: 18, border: '1px solid ' + theme.surfaceBorder, borderRadius: theme.cardFrame ? 0 : 16, backgroundColor: theme.surfaceBg, boxShadow: theme.cardFrame ? 'none' : '0 1px 2px rgba(15, 23, 42, 0.04)', gridColumn: 'span 4', minHeight: 108, height: '100%', display: 'flex', flexDirection: 'column', gap: 14 }}>
-                <Text variant="eyebrow">Leitura esperada</Text>
-                <Text variant="body-muted">Primeiro veja o pacing de gasto e retorno, depois abra concentracao por campanha e finalmente desca para o detalhe de anuncios e grupos quando houver desbalanceamento.</Text>
+                <p data-ui="eyebrow">Leitura esperada</p>
+                <p data-ui="body-muted">Primeiro veja o pacing de gasto e retorno, depois abra concentracao por campanha e finalmente desca para o detalhe de anuncios e grupos quando houver desbalanceamento.</p>
               </article>
           </section>
 
@@ -105,10 +105,10 @@ function buildMetaAdsDashboardSource(themeName: string) {
                   <section style={{ boxSizing: 'border-box', minWidth: 0, display: 'grid', gridTemplateColumns: 'repeat(12, minmax(0, 1fr))', gap: 18, alignItems: 'stretch' }}>
                     <article id="metaads-performance-gasto" style={{ boxSizing: 'border-box', minWidth: 0, display: 'flex', flexDirection: 'column', padding: 18, border: '1px solid ' + theme.surfaceBorder, borderRadius: theme.cardFrame ? 0 : 16, backgroundColor: theme.surfaceBg, boxShadow: theme.cardFrame ? 'none' : '0 1px 2px rgba(15, 23, 42, 0.04)', gridColumn: 'span 7', minHeight: 216, height: '100%', display: 'flex', flexDirection: 'column', gap: 14 }}>
                         <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-                          <Text variant="eyebrow">Budget concentration</Text>
-                          <Text as="h2" variant="section-title">Gasto por campanha</Text>
+                          <p data-ui="eyebrow">Budget concentration</p>
+                          <h2 data-ui="section-title">Gasto por campanha</h2>
                         </div>
-                        <Text variant="body-muted">Identifica quais campanhas carregam a maior parte do investimento e merecem inspeccao imediata de criativo e audiencia.</Text>
+                        <p data-ui="body-muted">Identifica quais campanhas carregam a maior parte do investimento e merecem inspeccao imediata de criativo e audiencia.</p>
                         <Chart type="bar" height={320} format="currency" dataQuery={{ query: \`
                           SELECT
                             COALESCE(src.campanha_id::text, 'sem_campanha') AS key,
@@ -125,10 +125,10 @@ function buildMetaAdsDashboardSource(themeName: string) {
 
                     <article id="metaads-performance-share" style={{ boxSizing: 'border-box', minWidth: 0, display: 'flex', flexDirection: 'column', padding: 18, border: '1px solid ' + theme.surfaceBorder, borderRadius: theme.cardFrame ? 0 : 16, backgroundColor: theme.surfaceBg, boxShadow: theme.cardFrame ? 'none' : '0 1px 2px rgba(15, 23, 42, 0.04)', gridColumn: 'span 5', minHeight: 216, height: '100%', display: 'flex', flexDirection: 'column', gap: 14 }}>
                         <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-                          <Text variant="eyebrow">Share</Text>
-                          <Text as="h2" variant="section-title">Participacao por conta</Text>
+                          <p data-ui="eyebrow">Share</p>
+                          <h2 data-ui="section-title">Participacao por conta</h2>
                         </div>
-                        <Text variant="body-muted">Mostra concentracao de budget entre contas, o que ajuda a separar escala sustentavel de dependencia excessiva de um unico portfolio.</Text>
+                        <p data-ui="body-muted">Mostra concentracao de budget entre contas, o que ajuda a separar escala sustentavel de dependencia excessiva de um unico portfolio.</p>
                         <Chart type="pie" height={320} format="currency" dataQuery={{ query: \`
                           SELECT
                             COALESCE(src.conta_id::text, 'sem_conta') AS key,
@@ -151,10 +151,10 @@ function buildMetaAdsDashboardSource(themeName: string) {
                   <section style={{ boxSizing: 'border-box', minWidth: 0, display: 'grid', gridTemplateColumns: 'repeat(12, minmax(0, 1fr))', gap: 18, alignItems: 'stretch' }}>
                     <article id="metaads-efficiency-roas" style={{ boxSizing: 'border-box', minWidth: 0, display: 'flex', flexDirection: 'column', padding: 18, border: '1px solid ' + theme.surfaceBorder, borderRadius: theme.cardFrame ? 0 : 16, backgroundColor: theme.surfaceBg, boxShadow: theme.cardFrame ? 'none' : '0 1px 2px rgba(15, 23, 42, 0.04)', gridColumn: 'span 7', minHeight: 216, height: '100%', display: 'flex', flexDirection: 'column', gap: 14 }}>
                         <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-                          <Text variant="eyebrow">Trend</Text>
-                          <Text as="h2" variant="section-title">ROAS por dia</Text>
+                          <p data-ui="eyebrow">Trend</p>
+                          <h2 data-ui="section-title">ROAS por dia</h2>
                         </div>
-                        <Text variant="body-muted">Serie curta para acompanhar deterioracao ou recuperacao de eficiencia sem sair do dashboard principal.</Text>
+                        <p data-ui="body-muted">Serie curta para acompanhar deterioracao ou recuperacao de eficiencia sem sair do dashboard principal.</p>
                         <Chart type="line" height={320} format="number" dataQuery={{ query: \`
                           SELECT
                             TO_CHAR(src.data_ref::date, 'YYYY-MM-DD') AS key,
@@ -173,8 +173,8 @@ function buildMetaAdsDashboardSource(themeName: string) {
                       <div style={{ boxSizing: 'border-box', minWidth: 0, display: 'flex', flexDirection: 'column', gap: 18, height: '100%' }}>
                         <article id="metaads-efficiency-funnel" style={{ boxSizing: 'border-box', minWidth: 0, display: 'flex', flexDirection: 'column', padding: 18, border: '1px solid ' + theme.surfaceBorder, borderRadius: theme.cardFrame ? 0 : 16, backgroundColor: theme.surfaceBg, boxShadow: theme.cardFrame ? 'none' : '0 1px 2px rgba(15, 23, 42, 0.04)', flex: 1, height: '100%', display: 'flex', flexDirection: 'column', gap: 14 }}>
                             <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-                              <Text variant="eyebrow">Funnel</Text>
-                              <Text as="h2" variant="section-title">Leads por campanha</Text>
+                              <p data-ui="eyebrow">Funnel</p>
+                              <h2 data-ui="section-title">Leads por campanha</h2>
                             </div>
                             <Chart type="bar" height={220} format="number" dataQuery={{ query: \`
                               SELECT
@@ -191,8 +191,8 @@ function buildMetaAdsDashboardSource(themeName: string) {
                           </article>
                         <article id="metaads-efficiency-insights" style={{ boxSizing: 'border-box', minWidth: 0, display: 'flex', flexDirection: 'column', padding: 18, border: '1px solid ' + theme.surfaceBorder, borderRadius: theme.cardFrame ? 0 : 16, backgroundColor: theme.surfaceBg, boxShadow: theme.cardFrame ? 'none' : '0 1px 2px rgba(15, 23, 42, 0.04)', flex: 1, height: '100%', display: 'flex', flexDirection: 'column', gap: 14 }}>
                             <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-                              <Text as="h2" variant="section-title-sm">Leituras operacionais</Text>
-                              <Text variant="small-muted">Hipoteses para revisar campanhas, criativos e distribuicao de budget.</Text>
+                              <h2 data-ui="section-title-sm">Leituras operacionais</h2>
+                              <p data-ui="small-muted">Hipoteses para revisar campanhas, criativos e distribuicao de budget.</p>
                             </div>
                             <Insights textStyle={{ ...{ margin: 0, fontSize: 14, lineHeight: 1.75, color: theme.textSecondary }, fontSize: 13, lineHeight: 1.65 }} iconStyle={{ color: '#1877F2' }} items={[
                               { text: 'ROAS caindo com gasto crescente costuma sinalizar saturacao de audiencia ou criativo perdendo tracao.' },
@@ -211,8 +211,8 @@ function buildMetaAdsDashboardSource(themeName: string) {
                   <section style={{ boxSizing: 'border-box', minWidth: 0, display: 'grid', gridTemplateColumns: 'repeat(12, minmax(0, 1fr))', gap: 18, alignItems: 'stretch' }}>
                     <article id="metaads-details-table" style={{ boxSizing: 'border-box', minWidth: 0, display: 'flex', flexDirection: 'column', padding: 18, border: '1px solid ' + theme.surfaceBorder, borderRadius: theme.cardFrame ? 0 : 16, backgroundColor: theme.surfaceBg, boxShadow: theme.cardFrame ? 'none' : '0 1px 2px rgba(15, 23, 42, 0.04)', gridColumn: 'span 8', minHeight: 288, height: '100%', display: 'flex', flexDirection: 'column', gap: 14 }}>
                         <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-                          <Text variant="eyebrow">Table</Text>
-                          <Text as="h2" variant="section-title">Campanhas no detalhe</Text>
+                          <p data-ui="eyebrow">Table</p>
+                          <h2 data-ui="section-title">Campanhas no detalhe</h2>
                         </div>
                         <Table bordered rounded stickyHeader borderColor={'#d7dbe3'} rowHoverColor={'#f8fafc'} headerStyle={{ backgroundColor: '#f8fafc', color: '#334155', fontSize: 14, fontWeight: 600, padding: '12px 14px' }} rowStyle={{ backgroundColor: '#ffffff' }} cellStyle={{ color: '#475569', fontSize: 14, fontWeight: 400, padding: '12px 14px' }} footerStyle={{ backgroundColor: '#f8fafc', color: '#0f172a', fontSize: 14, fontWeight: 600, padding: '12px 14px' }} enableExportCsv dataQuery={{ query: \`
                           SELECT
@@ -239,8 +239,8 @@ function buildMetaAdsDashboardSource(themeName: string) {
                       </article>
                     <article id="metaads-details-pivot" style={{ boxSizing: 'border-box', minWidth: 0, display: 'flex', flexDirection: 'column', padding: 18, border: '1px solid ' + theme.surfaceBorder, borderRadius: theme.cardFrame ? 0 : 16, backgroundColor: theme.surfaceBg, boxShadow: theme.cardFrame ? 'none' : '0 1px 2px rgba(15, 23, 42, 0.04)', gridColumn: 'span 4', minHeight: 288, height: '100%', display: 'flex', flexDirection: 'column', gap: 14 }}>
                         <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-                          <Text variant="eyebrow">Pivot</Text>
-                          <Text as="h2" variant="section-title">Conta por campanha</Text>
+                          <p data-ui="eyebrow">Pivot</p>
+                          <h2 data-ui="section-title">Conta por campanha</h2>
                         </div>
                         <PivotTable bordered rounded stickyHeader borderColor={'#d7dbe3'} containerStyle={{ backgroundColor: '#ffffff' }} headerStyle={{ backgroundColor: '#f8fafc', color: '#334155', fontSize: 14, fontWeight: 600, padding: '9px 10px' }} headerTotalStyle={{ backgroundColor: '#f1f5f9', color: '#1e293b', fontSize: 14, fontWeight: 600, padding: '9px 10px' }} rowLabelStyle={{ backgroundColor: '#ffffff', color: '#1e293b', fontSize: 14, padding: '9px 10px' }} cellStyle={{ backgroundColor: '#ffffff', color: '#475569', fontSize: 14, padding: '9px 10px' }} rowTotalStyle={{ backgroundColor: '#f8fafc', color: '#1e293b', fontSize: 14, fontWeight: 500, padding: '9px 10px' }} footerStyle={{ backgroundColor: '#f1f5f9', color: '#0f172a', fontSize: 14, fontWeight: 600, padding: '9px 10px' }} emptyStateStyle={{ color: '#64748b', fontSize: 14, padding: '18px 12px' }} expandButtonStyle={{ backgroundColor: '#ffffff', borderColor: '#e5e7eb', color: '#475569', hoverBackgroundColor: '#f8fafc' }} enableExportCsv defaultExpandedLevels={1} dataQuery={{ query: \`
                           SELECT
@@ -262,8 +262,8 @@ function buildMetaAdsDashboardSource(themeName: string) {
           <section style={{ boxSizing: 'border-box', minWidth: 0, display: 'grid', gridTemplateColumns: 'repeat(12, minmax(0, 1fr))', gap: 18, alignItems: 'stretch' }}>
             <article id="metaads-footer" style={{ boxSizing: 'border-box', minWidth: 0, display: 'flex', flexDirection: 'column', padding: 18, border: '1px solid ' + theme.surfaceBorder, borderRadius: theme.cardFrame ? 0 : 16, backgroundColor: theme.surfaceBg, boxShadow: theme.cardFrame ? 'none' : '0 1px 2px rgba(15, 23, 42, 0.04)', gridColumn: 'span 12', minHeight: 54 }}>
               <footer style={{ height: '100%', display: 'flex', justifyContent: 'space-between', gap: 18, padding: '18px 22px', borderRadius: 22, backgroundColor: theme.surfaceBg, border: '1px solid ' + theme.surfaceBorder }}>
-                <Text variant="small-muted">Template JSX para Meta Ads com filtros de paid social, KPIs comparativos e widgets de analise no formato novo do dashboard.</Text>
-                <Text variant="small-muted">Theme ativo: ${resolvedThemeName}</Text>
+                <p data-ui="small-muted">Template JSX para Meta Ads com filtros de paid social, KPIs comparativos e widgets de analise no formato novo do dashboard.</p>
+                <p data-ui="small-muted">Theme ativo: ${resolvedThemeName}</p>
               </footer>
             </article>
           </section>

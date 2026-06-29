@@ -20,10 +20,10 @@ function buildFinanceiroDashboardSource(themeName: string) {
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 12, maxWidth: '58%' }}>
                   <span style={{ display: 'inline-flex', width: 'fit-content', alignItems: 'center', borderRadius: 999, border: '1px solid ' + theme.accentBorder, backgroundColor: theme.accentSurface, padding: '6px 12px', fontSize: 12, fontWeight: 600, color: theme.accentText }}>Cash Control</span>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-                    <Text variant="eyebrow">AP, AR e pressao de caixa no periodo</Text>
-                    <Text as="h1" variant="page-title-sm">Dashboard Financeiro</Text>
+                    <p data-ui="eyebrow">AP, AR e pressao de caixa no periodo</p>
+                    <h1 data-ui="page-title-sm">Dashboard Financeiro</h1>
                   </div>
-                  <Text variant="lead">Leitura em pagina unica com liquidez, recebimentos, passivo, detalhamento operacional e filtros dedicados no topo.</Text>
+                  <p data-ui="lead">Leitura em pagina unica com liquidez, recebimentos, passivo, detalhamento operacional e filtros dedicados no topo.</p>
                 </div>
 
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 14, width: '34%', minWidth: 320 }}>
@@ -45,8 +45,8 @@ function buildFinanceiroDashboardSource(themeName: string) {
 
           <section style={{ boxSizing: 'border-box', minWidth: 0, display: 'grid', gridTemplateColumns: 'repeat(12, minmax(0, 1fr))', gap: 16, alignItems: 'stretch' }}>
             <article id="financeiro-filter-status" style={{ boxSizing: 'border-box', minWidth: 0, display: 'flex', flexDirection: 'column', padding: 18, border: '1px solid ' + theme.surfaceBorder, borderRadius: theme.cardFrame ? 0 : 16, backgroundColor: theme.surfaceBg, boxShadow: theme.cardFrame ? 'none' : '0 1px 2px rgba(15, 23, 42, 0.04)', gridColumn: 'span 4', minHeight: 108, height: '100%', display: 'flex', flexDirection: 'column', gap: 14 }}>
-                <Text variant="eyebrow">Filtro</Text>
-                <Text as="h2" variant="section-title-sm">Status</Text>
+                <p data-ui="eyebrow">Filtro</p>
+                <h2 data-ui="section-title-sm">Status</h2>
                 <Filter
                   label="Status"
                   table="financeiro.contas_pagar"
@@ -69,8 +69,8 @@ function buildFinanceiroDashboardSource(themeName: string) {
               </article>
 
             <article id="financeiro-filter-categoria" style={{ boxSizing: 'border-box', minWidth: 0, display: 'flex', flexDirection: 'column', padding: 18, border: '1px solid ' + theme.surfaceBorder, borderRadius: theme.cardFrame ? 0 : 16, backgroundColor: theme.surfaceBg, boxShadow: theme.cardFrame ? 'none' : '0 1px 2px rgba(15, 23, 42, 0.04)', gridColumn: 'span 4', minHeight: 108, height: '100%', display: 'flex', flexDirection: 'column', gap: 14 }}>
-                <Text variant="eyebrow">Filtro</Text>
-                <Text as="h2" variant="section-title-sm">Categoria despesa</Text>
+                <p data-ui="eyebrow">Filtro</p>
+                <h2 data-ui="section-title-sm">Categoria despesa</h2>
                 <Filter
                   label="Categoria despesa"
                   table="financeiro.contas_pagar"
@@ -94,8 +94,8 @@ function buildFinanceiroDashboardSource(themeName: string) {
               </article>
 
             <article id="financeiro-filter-fornecedor" style={{ boxSizing: 'border-box', minWidth: 0, display: 'flex', flexDirection: 'column', padding: 18, border: '1px solid ' + theme.surfaceBorder, borderRadius: theme.cardFrame ? 0 : 16, backgroundColor: theme.surfaceBg, boxShadow: theme.cardFrame ? 'none' : '0 1px 2px rgba(15, 23, 42, 0.04)', gridColumn: 'span 4', minHeight: 108, height: '100%', display: 'flex', flexDirection: 'column', gap: 14 }}>
-                <Text variant="eyebrow">Filtro</Text>
-                <Text as="h2" variant="section-title-sm">Fornecedor</Text>
+                <p data-ui="eyebrow">Filtro</p>
+                <h2 data-ui="section-title-sm">Fornecedor</h2>
                 <Filter
                   label="Fornecedor"
                   table="financeiro.contas_pagar"
@@ -173,10 +173,10 @@ function buildFinanceiroDashboardSource(themeName: string) {
           <section style={{ boxSizing: 'border-box', minWidth: 0, display: 'grid', gridTemplateColumns: 'repeat(12, minmax(0, 1fr))', gap: 18, alignItems: 'stretch' }}>
             <article id="financeiro-chart-ap" style={{ boxSizing: 'border-box', minWidth: 0, display: 'flex', flexDirection: 'column', padding: 18, border: '1px solid ' + theme.surfaceBorder, borderRadius: theme.cardFrame ? 0 : 16, backgroundColor: theme.surfaceBg, boxShadow: theme.cardFrame ? 'none' : '0 1px 2px rgba(15, 23, 42, 0.04)', gridColumn: 'span 7', minHeight: 216, height: '100%', display: 'flex', flexDirection: 'column', gap: 14 }}>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-                  <Text variant="eyebrow">AP exposure</Text>
-                  <Text as="h2" variant="section-title">Contas a pagar por fornecedor</Text>
+                  <p data-ui="eyebrow">AP exposure</p>
+                  <h2 data-ui="section-title">Contas a pagar por fornecedor</h2>
                 </div>
-                <Text variant="body-muted">Mostra onde o passivo esta concentrado para orientar negociacao, escalonamento e risco de vencimento.</Text>
+                <p data-ui="body-muted">Mostra onde o passivo esta concentrado para orientar negociacao, escalonamento e risco de vencimento.</p>
                 <Chart
                   type="bar"
                   height={320}
@@ -206,8 +206,8 @@ function buildFinanceiroDashboardSource(themeName: string) {
 
             <article id="financeiro-chart-status" style={{ boxSizing: 'border-box', minWidth: 0, display: 'flex', flexDirection: 'column', padding: 18, border: '1px solid ' + theme.surfaceBorder, borderRadius: theme.cardFrame ? 0 : 16, backgroundColor: theme.surfaceBg, boxShadow: theme.cardFrame ? 'none' : '0 1px 2px rgba(15, 23, 42, 0.04)', gridColumn: 'span 5', minHeight: 216, height: '100%', display: 'flex', flexDirection: 'column', gap: 14 }}>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-                  <Text variant="eyebrow">Status mix</Text>
-                  <Text as="h2" variant="section-title">Titulos por status</Text>
+                  <p data-ui="eyebrow">Status mix</p>
+                  <h2 data-ui="section-title">Titulos por status</h2>
                 </div>
                 <Chart
                   type="pie"
@@ -240,10 +240,10 @@ function buildFinanceiroDashboardSource(themeName: string) {
           <section style={{ boxSizing: 'border-box', minWidth: 0, display: 'grid', gridTemplateColumns: 'repeat(12, minmax(0, 1fr))', gap: 18, alignItems: 'stretch' }}>
             <article id="financeiro-chart-ar" style={{ boxSizing: 'border-box', minWidth: 0, display: 'flex', flexDirection: 'column', padding: 18, border: '1px solid ' + theme.surfaceBorder, borderRadius: theme.cardFrame ? 0 : 16, backgroundColor: theme.surfaceBg, boxShadow: theme.cardFrame ? 'none' : '0 1px 2px rgba(15, 23, 42, 0.04)', gridColumn: 'span 7', minHeight: 216, height: '100%', display: 'flex', flexDirection: 'column', gap: 14 }}>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-                  <Text variant="eyebrow">AR trend</Text>
-                  <Text as="h2" variant="section-title">Recebimentos por mes</Text>
+                  <p data-ui="eyebrow">AR trend</p>
+                  <h2 data-ui="section-title">Recebimentos por mes</h2>
                 </div>
-                <Text variant="body-muted">Serie mensal de contas a receber para confrontar o fluxo futuro com a pressao de pagamentos do mesmo periodo.</Text>
+                <p data-ui="body-muted">Serie mensal de contas a receber para confrontar o fluxo futuro com a pressao de pagamentos do mesmo periodo.</p>
                 <Chart
                   type="line"
                   height={320}
@@ -273,8 +273,8 @@ function buildFinanceiroDashboardSource(themeName: string) {
 
             <article id="financeiro-chart-clientes" style={{ boxSizing: 'border-box', minWidth: 0, display: 'flex', flexDirection: 'column', padding: 18, border: '1px solid ' + theme.surfaceBorder, borderRadius: theme.cardFrame ? 0 : 16, backgroundColor: theme.surfaceBg, boxShadow: theme.cardFrame ? 'none' : '0 1px 2px rgba(15, 23, 42, 0.04)', gridColumn: 'span 5', minHeight: 216, height: '100%', display: 'flex', flexDirection: 'column', gap: 14 }}>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-                  <Text variant="eyebrow">AR coverage</Text>
-                  <Text as="h2" variant="section-title">Recebimentos por cliente</Text>
+                  <p data-ui="eyebrow">AR coverage</p>
+                  <h2 data-ui="section-title">Recebimentos por cliente</h2>
                 </div>
                 <Chart
                   type="bar"
@@ -307,8 +307,8 @@ function buildFinanceiroDashboardSource(themeName: string) {
           <section style={{ boxSizing: 'border-box', minWidth: 0, display: 'grid', gridTemplateColumns: 'repeat(12, minmax(0, 1fr))', gap: 18, alignItems: 'stretch' }}>
             <article id="financeiro-table-ap" style={{ boxSizing: 'border-box', minWidth: 0, display: 'flex', flexDirection: 'column', padding: 18, border: '1px solid ' + theme.surfaceBorder, borderRadius: theme.cardFrame ? 0 : 16, backgroundColor: theme.surfaceBg, boxShadow: theme.cardFrame ? 'none' : '0 1px 2px rgba(15, 23, 42, 0.04)', gridColumn: 'span 8', minHeight: 288, height: '100%', display: 'flex', flexDirection: 'column', gap: 14 }}>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-                  <Text variant="eyebrow">Table</Text>
-                  <Text as="h2" variant="section-title">Titulos de contas a pagar</Text>
+                  <p data-ui="eyebrow">Table</p>
+                  <h2 data-ui="section-title">Titulos de contas a pagar</h2>
                 </div>
                 <Table
                   bordered
@@ -352,8 +352,8 @@ function buildFinanceiroDashboardSource(themeName: string) {
 
             <article id="financeiro-pivot-status" style={{ boxSizing: 'border-box', minWidth: 0, display: 'flex', flexDirection: 'column', padding: 18, border: '1px solid ' + theme.surfaceBorder, borderRadius: theme.cardFrame ? 0 : 16, backgroundColor: theme.surfaceBg, boxShadow: theme.cardFrame ? 'none' : '0 1px 2px rgba(15, 23, 42, 0.04)', gridColumn: 'span 4', minHeight: 288, height: '100%', display: 'flex', flexDirection: 'column', gap: 14 }}>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-                  <Text variant="eyebrow">Pivot</Text>
-                  <Text as="h2" variant="section-title">Fornecedor por status</Text>
+                  <p data-ui="eyebrow">Pivot</p>
+                  <h2 data-ui="section-title">Fornecedor por status</h2>
                 </div>
                 <PivotTable
                   bordered
@@ -394,7 +394,7 @@ function buildFinanceiroDashboardSource(themeName: string) {
           <section style={{ boxSizing: 'border-box', minWidth: 0, display: 'grid', gridTemplateColumns: 'repeat(12, minmax(0, 1fr))', gap: 18, alignItems: 'stretch' }}>
             <article id="financeiro-insight-liquidez" style={{ boxSizing: 'border-box', minWidth: 0, display: 'flex', flexDirection: 'column', padding: 18, border: '1px solid ' + theme.surfaceBorder, borderRadius: theme.cardFrame ? 0 : 16, backgroundColor: theme.surfaceBg, boxShadow: theme.cardFrame ? 'none' : '0 1px 2px rgba(15, 23, 42, 0.04)', gridColumn: 'span 4', minHeight: 126, height: '100%', display: 'flex', flexDirection: 'column', gap: 14 }}>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-                  <Text as="h2" variant="section-title-sm">Liquidez</Text>
+                  <h2 data-ui="section-title-sm">Liquidez</h2>
                 </div>
                 <Insights
                   textStyle={{ ...{ margin: 0, fontSize: 14, lineHeight: 1.75, color: theme.textSecondary }, fontSize: 13, lineHeight: 1.65 }}
@@ -407,7 +407,7 @@ function buildFinanceiroDashboardSource(themeName: string) {
 
             <article id="financeiro-insight-concentracao" style={{ boxSizing: 'border-box', minWidth: 0, display: 'flex', flexDirection: 'column', padding: 18, border: '1px solid ' + theme.surfaceBorder, borderRadius: theme.cardFrame ? 0 : 16, backgroundColor: theme.surfaceBg, boxShadow: theme.cardFrame ? 'none' : '0 1px 2px rgba(15, 23, 42, 0.04)', gridColumn: 'span 4', minHeight: 126, height: '100%', display: 'flex', flexDirection: 'column', gap: 14 }}>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-                  <Text as="h2" variant="section-title-sm">Concentracao</Text>
+                  <h2 data-ui="section-title-sm">Concentracao</h2>
                 </div>
                 <Insights
                   textStyle={{ ...{ margin: 0, fontSize: 14, lineHeight: 1.75, color: theme.textSecondary }, fontSize: 13, lineHeight: 1.65 }}
@@ -420,7 +420,7 @@ function buildFinanceiroDashboardSource(themeName: string) {
 
             <article id="financeiro-insight-status" style={{ boxSizing: 'border-box', minWidth: 0, display: 'flex', flexDirection: 'column', padding: 18, border: '1px solid ' + theme.surfaceBorder, borderRadius: theme.cardFrame ? 0 : 16, backgroundColor: theme.surfaceBg, boxShadow: theme.cardFrame ? 'none' : '0 1px 2px rgba(15, 23, 42, 0.04)', gridColumn: 'span 4', minHeight: 126, height: '100%', display: 'flex', flexDirection: 'column', gap: 14 }}>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-                  <Text as="h2" variant="section-title-sm">Status operacional</Text>
+                  <h2 data-ui="section-title-sm">Status operacional</h2>
                 </div>
                 <Insights
                   textStyle={{ ...{ margin: 0, fontSize: 14, lineHeight: 1.75, color: theme.textSecondary }, fontSize: 13, lineHeight: 1.65 }}
@@ -435,8 +435,8 @@ function buildFinanceiroDashboardSource(themeName: string) {
           <section style={{ boxSizing: 'border-box', minWidth: 0, display: 'grid', gridTemplateColumns: 'repeat(12, minmax(0, 1fr))', gap: 18, alignItems: 'stretch' }}>
             <article id="financeiro-footer" style={{ boxSizing: 'border-box', minWidth: 0, display: 'flex', flexDirection: 'column', padding: 18, border: '1px solid ' + theme.surfaceBorder, borderRadius: theme.cardFrame ? 0 : 16, backgroundColor: theme.surfaceBg, boxShadow: theme.cardFrame ? 'none' : '0 1px 2px rgba(15, 23, 42, 0.04)', gridColumn: 'span 12', minHeight: 54 }}>
               <footer style={{ height: '100%', display: 'flex', justifyContent: 'space-between', gap: 18, padding: '18px 22px', borderRadius: 22, backgroundColor: theme.surfaceBg, border: '1px solid ' + theme.surfaceBorder }}>
-                <Text variant="small-muted">Template JSX financeiro com AP, AR e geracao de caixa em uma unica pagina, com filtros dedicados e blocos operacionais sequenciais.</Text>
-                <Text variant="small-muted">Theme ativo: ${resolvedThemeName}</Text>
+                <p data-ui="small-muted">Template JSX financeiro com AP, AR e geracao de caixa em uma unica pagina, com filtros dedicados e blocos operacionais sequenciais.</p>
+                <p data-ui="small-muted">Theme ativo: ${resolvedThemeName}</p>
               </footer>
             </article>
           </section>

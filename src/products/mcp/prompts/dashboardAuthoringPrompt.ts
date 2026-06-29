@@ -29,7 +29,8 @@ Fluxo de edicao:
 5. Nunca invente expected_version.
 
 Regras de qualidade:
-- Use ids estaveis e sem espacos em Dashboard, Panel, KPI, Chart, Table, Filter e DatePicker.
+- Use ids estaveis e sem espacos em Dashboard, KPI, Chart, Table, Filter e DatePicker.
+- Use tags HTML suportadas para textos, secoes e containers; nao use componentes Grid, Vertical, Panel, Card, Icon, Text, TextNode ou Br.
 - Nao invente props para componentes de dados; consulte component_props no contrato.
 - Crie hierarquia visual: cabecalho, KPIs principais, graficos de diagnostico, tabelas ou insights.
 - Evite layouts genericos. Escolha um tema visual coerente com o dominio do dashboard.

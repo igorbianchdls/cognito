@@ -6,12 +6,7 @@ export const DASHBOARD_SUPPORTED_COMPONENTS = [
   'DashboardTemplate',
   'Theme',
   'Dashboard',
-  'Grid',
-  'Vertical',
   'Horizontal',
-  'Panel',
-  'Card',
-  'Icon',
   'Tabs',
   'Tab',
   'TabPanel',
@@ -37,9 +32,6 @@ export const DASHBOARD_SUPPORTED_COMPONENTS = [
   'OptionList',
   'DatePicker',
   'Insights',
-  'Text',
-  'TextNode',
-  'Br',
 ] as const
 
 export const DASHBOARD_SUPPORTED_COMPONENT_SET = new Set<string>(DASHBOARD_SUPPORTED_COMPONENTS)
@@ -48,17 +40,12 @@ export const DASHBOARD_CONTAINER_COMPONENTS = [
   'DashboardTemplate',
   'Theme',
   'Dashboard',
-  'Grid',
-  'Vertical',
   'Horizontal',
-  'Panel',
-  'Card',
   'Tabs',
   'Tab',
   'TabPanel',
   'Query',
   'Filter',
-  'Text',
 ] as const
 
 export const DASHBOARD_LEAF_COMPONENTS = DASHBOARD_SUPPORTED_COMPONENTS.filter(

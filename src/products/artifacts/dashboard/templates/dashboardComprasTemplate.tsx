@@ -21,9 +21,9 @@ function buildComprasDashboardSource(themeName: string) {
                 <article style={{ boxSizing: 'border-box', minWidth: 0, display: 'flex', flexDirection: 'column', padding: 18, border: '1px solid ' + theme.surfaceBorder, borderRadius: theme.cardFrame ? 0 : 16, backgroundColor: theme.surfaceBg, boxShadow: theme.cardFrame ? 'none' : '0 1px 2px rgba(15, 23, 42, 0.04)', display: 'flex', flexDirection: 'column', gap: 18 }}>
                   <div style={{ boxSizing: 'border-box', minWidth: 0, display: 'flex', flexDirection: 'column', gap: 10 }}>
                     <span style={{ display: 'inline-flex', width: 'fit-content', alignItems: 'center', borderRadius: 999, border: '1px solid ' + theme.accentBorder, backgroundColor: theme.accentSurface, padding: '6px 12px', fontSize: 12, fontWeight: 600, color: theme.accentText }}>Procurement Review</span>
-                    <Text variant="eyebrow">Compras, fornecedores e alocacao de gasto</Text>
-                    <Text as="h1" variant="page-title-sm">Dashboard de Compras</Text>
-                    <Text variant="body-muted">Navegue pelas visoes do dashboard e ajuste os filtros sem depender do header antigo.</Text>
+                    <p data-ui="eyebrow">Compras, fornecedores e alocacao de gasto</p>
+                    <h1 data-ui="page-title-sm">Dashboard de Compras</h1>
+                    <p data-ui="body-muted">Navegue pelas visoes do dashboard e ajuste os filtros sem depender do header antigo.</p>
                   </div>
 
                   <DatePicker
@@ -39,7 +39,7 @@ function buildComprasDashboardSource(themeName: string) {
                   />
 
                   <div style={{ boxSizing: 'border-box', minWidth: 0, display: 'flex', flexDirection: 'column', gap: 10 }}>
-                    <Text variant="eyebrow">Tabs</Text>
+                    <p data-ui="eyebrow">Tabs</p>
                     <div style={{ boxSizing: 'border-box', minWidth: 0, display: 'flex', flexDirection: 'column', gap: 8 }}>
                       <Tab value="overview" style={{ width: '100%', justifyContent: 'flex-start', textAlign: 'left' }}>Visao geral</Tab>
                       <Tab value="details" style={{ width: '100%', justifyContent: 'flex-start', textAlign: 'left' }}>Detalhamento</Tab>
@@ -49,8 +49,8 @@ function buildComprasDashboardSource(themeName: string) {
                 </article>
 
                 <article style={{ boxSizing: 'border-box', minWidth: 0, display: 'flex', flexDirection: 'column', padding: 18, border: '1px solid ' + theme.surfaceBorder, borderRadius: theme.cardFrame ? 0 : 16, backgroundColor: theme.surfaceBg, boxShadow: theme.cardFrame ? 'none' : '0 1px 2px rgba(15, 23, 42, 0.04)', display: 'flex', flexDirection: 'column', gap: 14 }}>
-                  <Text variant="eyebrow">Filtro</Text>
-                  <Text as="h2" variant="section-title-sm">Fornecedor</Text>
+                  <p data-ui="eyebrow">Filtro</p>
+                  <h2 data-ui="section-title-sm">Fornecedor</h2>
                   <Filter
                     label="Fornecedor"
                     table="compras.compras"
@@ -74,8 +74,8 @@ function buildComprasDashboardSource(themeName: string) {
                 </article>
 
                 <article style={{ boxSizing: 'border-box', minWidth: 0, display: 'flex', flexDirection: 'column', padding: 18, border: '1px solid ' + theme.surfaceBorder, borderRadius: theme.cardFrame ? 0 : 16, backgroundColor: theme.surfaceBg, boxShadow: theme.cardFrame ? 'none' : '0 1px 2px rgba(15, 23, 42, 0.04)', display: 'flex', flexDirection: 'column', gap: 14 }}>
-                  <Text variant="eyebrow">Filtro</Text>
-                  <Text as="h2" variant="section-title-sm">Centro de custo</Text>
+                  <p data-ui="eyebrow">Filtro</p>
+                  <h2 data-ui="section-title-sm">Centro de custo</h2>
                   <Filter
                     label="Centro de custo"
                     table="compras.compras"
@@ -99,8 +99,8 @@ function buildComprasDashboardSource(themeName: string) {
                 </article>
 
                 <article style={{ boxSizing: 'border-box', minWidth: 0, display: 'flex', flexDirection: 'column', padding: 18, border: '1px solid ' + theme.surfaceBorder, borderRadius: theme.cardFrame ? 0 : 16, backgroundColor: theme.surfaceBg, boxShadow: theme.cardFrame ? 'none' : '0 1px 2px rgba(15, 23, 42, 0.04)', display: 'flex', flexDirection: 'column', gap: 14 }}>
-                  <Text variant="eyebrow">Filtro</Text>
-                  <Text as="h2" variant="section-title-sm">Status</Text>
+                  <p data-ui="eyebrow">Filtro</p>
+                  <h2 data-ui="section-title-sm">Status</h2>
                   <Filter
                     label="Status"
                     table="compras.compras"
@@ -174,10 +174,10 @@ function buildComprasDashboardSource(themeName: string) {
                     <section style={{ boxSizing: 'border-box', minWidth: 0, display: 'grid', gridTemplateColumns: 'repeat(12, minmax(0, 1fr))', gap: 18, alignItems: 'stretch' }}>
                       <article id="compras-chart-fornecedor" style={{ boxSizing: 'border-box', minWidth: 0, display: 'flex', flexDirection: 'column', padding: 18, border: '1px solid ' + theme.surfaceBorder, borderRadius: theme.cardFrame ? 0 : 16, backgroundColor: theme.surfaceBg, boxShadow: theme.cardFrame ? 'none' : '0 1px 2px rgba(15, 23, 42, 0.04)', gridColumn: 'span 7', minHeight: 288, height: '100%', display: 'flex', flexDirection: 'column', gap: 14 }}>
                         <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-                          <Text variant="eyebrow">Top spend</Text>
-                          <Text as="h2" variant="section-title">Gasto por fornecedor</Text>
+                          <p data-ui="eyebrow">Top spend</p>
+                          <h2 data-ui="section-title">Gasto por fornecedor</h2>
                         </div>
-                        <Text variant="body-muted">Corte principal para identificar concentracao de compras e dependencia de poucos parceiros no periodo filtrado.</Text>
+                        <p data-ui="body-muted">Corte principal para identificar concentracao de compras e dependencia de poucos parceiros no periodo filtrado.</p>
                         <div style={{ flex: 1, minHeight: 0 }}>
                           <Chart
                             type="bar"
@@ -209,10 +209,10 @@ function buildComprasDashboardSource(themeName: string) {
 
                       <article id="compras-chart-categoria" style={{ boxSizing: 'border-box', minWidth: 0, display: 'flex', flexDirection: 'column', padding: 18, border: '1px solid ' + theme.surfaceBorder, borderRadius: theme.cardFrame ? 0 : 16, backgroundColor: theme.surfaceBg, boxShadow: theme.cardFrame ? 'none' : '0 1px 2px rgba(15, 23, 42, 0.04)', gridColumn: 'span 5', minHeight: 288, height: '100%', display: 'flex', flexDirection: 'column', gap: 14 }}>
                         <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-                          <Text variant="eyebrow">Allocation</Text>
-                          <Text as="h2" variant="section-title">Gasto por categoria</Text>
+                          <p data-ui="eyebrow">Allocation</p>
+                          <h2 data-ui="section-title">Gasto por categoria</h2>
                         </div>
-                        <Text variant="body-muted">Mostra em qual categoria de despesa o volume de compras esta se acumulando no periodo.</Text>
+                        <p data-ui="body-muted">Mostra em qual categoria de despesa o volume de compras esta se acumulando no periodo.</p>
                         <div style={{ flex: 1, minHeight: 0 }}>
                           <Chart
                             type="pie"
@@ -247,10 +247,10 @@ function buildComprasDashboardSource(themeName: string) {
                     <section style={{ boxSizing: 'border-box', minWidth: 0, display: 'grid', gridTemplateColumns: 'repeat(12, minmax(0, 1fr))', gap: 18, alignItems: 'stretch' }}>
                       <article id="compras-chart-trend" style={{ boxSizing: 'border-box', minWidth: 0, display: 'flex', flexDirection: 'column', padding: 18, border: '1px solid ' + theme.surfaceBorder, borderRadius: theme.cardFrame ? 0 : 16, backgroundColor: theme.surfaceBg, boxShadow: theme.cardFrame ? 'none' : '0 1px 2px rgba(15, 23, 42, 0.04)', gridColumn: 'span 7', minHeight: 288, height: '100%', display: 'flex', flexDirection: 'column', gap: 14 }}>
                         <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-                          <Text variant="eyebrow">Trend</Text>
-                          <Text as="h2" variant="section-title">Gasto por mes</Text>
+                          <p data-ui="eyebrow">Trend</p>
+                          <h2 data-ui="section-title">Gasto por mes</h2>
                         </div>
-                        <Text variant="body-muted">Serie mensal para entender aceleracao ou desaceleracao de compras sem depender do motor DSL antigo.</Text>
+                        <p data-ui="body-muted">Serie mensal para entender aceleracao ou desaceleracao de compras sem depender do motor DSL antigo.</p>
                         <div style={{ flex: 1, minHeight: 0 }}>
                           <Chart
                             type="line"
@@ -282,8 +282,8 @@ function buildComprasDashboardSource(themeName: string) {
 
                       <article id="compras-chart-status" style={{ boxSizing: 'border-box', minWidth: 0, display: 'flex', flexDirection: 'column', padding: 18, border: '1px solid ' + theme.surfaceBorder, borderRadius: theme.cardFrame ? 0 : 16, backgroundColor: theme.surfaceBg, boxShadow: theme.cardFrame ? 'none' : '0 1px 2px rgba(15, 23, 42, 0.04)', gridColumn: 'span 5', minHeight: 288, height: '100%', display: 'flex', flexDirection: 'column', gap: 14 }}>
                         <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-                          <Text variant="eyebrow">Status mix</Text>
-                          <Text as="h2" variant="section-title">Pedidos por status</Text>
+                          <p data-ui="eyebrow">Status mix</p>
+                          <h2 data-ui="section-title">Pedidos por status</h2>
                         </div>
                         <div style={{ flex: 1, minHeight: 0 }}>
                           <Chart
@@ -320,8 +320,8 @@ function buildComprasDashboardSource(themeName: string) {
                     <section style={{ boxSizing: 'border-box', minWidth: 0, display: 'grid', gridTemplateColumns: 'repeat(12, minmax(0, 1fr))', gap: 18, alignItems: 'stretch' }}>
                       <article id="compras-table" style={{ boxSizing: 'border-box', minWidth: 0, display: 'flex', flexDirection: 'column', padding: 18, border: '1px solid ' + theme.surfaceBorder, borderRadius: theme.cardFrame ? 0 : 16, backgroundColor: theme.surfaceBg, boxShadow: theme.cardFrame ? 'none' : '0 1px 2px rgba(15, 23, 42, 0.04)', gridColumn: 'span 8', minHeight: 324, height: '100%', display: 'flex', flexDirection: 'column', gap: 14 }}>
                         <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-                          <Text variant="eyebrow">Table</Text>
-                          <Text as="h2" variant="section-title">Pedidos de compra no detalhe</Text>
+                          <p data-ui="eyebrow">Table</p>
+                          <h2 data-ui="section-title">Pedidos de compra no detalhe</h2>
                         </div>
                         <Table
                           bordered
@@ -366,8 +366,8 @@ function buildComprasDashboardSource(themeName: string) {
 
                       <article id="compras-pivot" style={{ boxSizing: 'border-box', minWidth: 0, display: 'flex', flexDirection: 'column', padding: 18, border: '1px solid ' + theme.surfaceBorder, borderRadius: theme.cardFrame ? 0 : 16, backgroundColor: theme.surfaceBg, boxShadow: theme.cardFrame ? 'none' : '0 1px 2px rgba(15, 23, 42, 0.04)', gridColumn: 'span 4', minHeight: 324, height: '100%', display: 'flex', flexDirection: 'column', gap: 14 }}>
                         <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-                          <Text variant="eyebrow">Pivot</Text>
-                          <Text as="h2" variant="section-title">Categoria por status</Text>
+                          <p data-ui="eyebrow">Pivot</p>
+                          <h2 data-ui="section-title">Categoria por status</h2>
                         </div>
                         <PivotTable
                           bordered
@@ -412,7 +412,7 @@ function buildComprasDashboardSource(themeName: string) {
                     <section style={{ boxSizing: 'border-box', minWidth: 0, display: 'grid', gridTemplateColumns: 'repeat(12, minmax(0, 1fr))', gap: 18, alignItems: 'stretch' }}>
                       <article id="compras-insight-concentracao" style={{ boxSizing: 'border-box', minWidth: 0, display: 'flex', flexDirection: 'column', padding: 18, border: '1px solid ' + theme.surfaceBorder, borderRadius: theme.cardFrame ? 0 : 16, backgroundColor: theme.surfaceBg, boxShadow: theme.cardFrame ? 'none' : '0 1px 2px rgba(15, 23, 42, 0.04)', gridColumn: 'span 4', minHeight: 108, display: 'flex', flexDirection: 'column', gap: 14 }}>
                         <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-                          <Text as="h2" variant="section-title-sm">Concentracao em fornecedores</Text>
+                          <h2 data-ui="section-title-sm">Concentracao em fornecedores</h2>
                         </div>
                         <Insights
                           textStyle={{ ...{ margin: 0, fontSize: 14, lineHeight: 1.75, color: theme.textSecondary }, fontSize: 13, lineHeight: 1.65 }}
@@ -425,7 +425,7 @@ function buildComprasDashboardSource(themeName: string) {
 
                       <article id="compras-insight-centro" style={{ boxSizing: 'border-box', minWidth: 0, display: 'flex', flexDirection: 'column', padding: 18, border: '1px solid ' + theme.surfaceBorder, borderRadius: theme.cardFrame ? 0 : 16, backgroundColor: theme.surfaceBg, boxShadow: theme.cardFrame ? 'none' : '0 1px 2px rgba(15, 23, 42, 0.04)', gridColumn: 'span 4', minHeight: 108, display: 'flex', flexDirection: 'column', gap: 14 }}>
                         <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-                          <Text as="h2" variant="section-title-sm">Pressao por centro de custo</Text>
+                          <h2 data-ui="section-title-sm">Pressao por centro de custo</h2>
                         </div>
                         <Insights
                           textStyle={{ ...{ margin: 0, fontSize: 14, lineHeight: 1.75, color: theme.textSecondary }, fontSize: 13, lineHeight: 1.65 }}
@@ -438,7 +438,7 @@ function buildComprasDashboardSource(themeName: string) {
 
                       <article id="compras-insight-risco" style={{ boxSizing: 'border-box', minWidth: 0, display: 'flex', flexDirection: 'column', padding: 18, border: '1px solid ' + theme.surfaceBorder, borderRadius: theme.cardFrame ? 0 : 16, backgroundColor: theme.surfaceBg, boxShadow: theme.cardFrame ? 'none' : '0 1px 2px rgba(15, 23, 42, 0.04)', gridColumn: 'span 4', minHeight: 108, display: 'flex', flexDirection: 'column', gap: 14 }}>
                         <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-                          <Text as="h2" variant="section-title-sm">Risco operacional</Text>
+                          <h2 data-ui="section-title-sm">Risco operacional</h2>
                         </div>
                         <Insights
                           textStyle={{ ...{ margin: 0, fontSize: 14, lineHeight: 1.75, color: theme.textSecondary }, fontSize: 13, lineHeight: 1.65 }}
@@ -455,8 +455,8 @@ function buildComprasDashboardSource(themeName: string) {
                 <section style={{ boxSizing: 'border-box', minWidth: 0, display: 'grid', gridTemplateColumns: 'repeat(12, minmax(0, 1fr))', gap: 18, alignItems: 'stretch' }}>
                   <article id="compras-footer" style={{ boxSizing: 'border-box', minWidth: 0, display: 'flex', flexDirection: 'column', padding: 18, border: '1px solid ' + theme.surfaceBorder, borderRadius: theme.cardFrame ? 0 : 16, backgroundColor: theme.surfaceBg, boxShadow: theme.cardFrame ? 'none' : '0 1px 2px rgba(15, 23, 42, 0.04)', gridColumn: 'span 12', minHeight: 54 }}>
                   <footer style={{ height: '100%', display: 'flex', justifyContent: 'space-between', gap: 18, padding: '18px 22px', borderRadius: 22, backgroundColor: theme.surfaceBg, border: '1px solid ' + theme.surfaceBorder }}>
-                    <Text variant="small-muted">Template JSX de compras com sidebar, tabs laterais e queries SQL explicitas.</Text>
-                    <Text variant="small-muted">Theme ativo: ${resolvedThemeName}</Text>
+                    <p data-ui="small-muted">Template JSX de compras com sidebar, tabs laterais e queries SQL explicitas.</p>
+                    <p data-ui="small-muted">Theme ativo: ${resolvedThemeName}</p>
                   </footer>
                   </article>
                 </section>
