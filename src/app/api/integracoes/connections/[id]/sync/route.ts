@@ -22,6 +22,10 @@ function asTrigger(value: unknown): IntegrationSyncTrigger {
   return 'manual'
 }
 
+function asSyncMode(value: unknown): 'resource_chunk' | undefined {
+  return value === 'resource_chunk' ? value : undefined
+}
+
 export async function POST(
   req: NextRequest,
   context: { params: Promise<{ id: string }> },
@@ -40,6 +44,7 @@ export async function POST(
       destinationId: typeof payload.destinationId === 'string' ? payload.destinationId : typeof payload.destination_id === 'string' ? payload.destination_id : undefined,
       trigger: asTrigger(payload.trigger),
       resources: asStringArray(payload.resources),
+      syncMode: asSyncMode(payload.syncMode || payload.sync_mode || payload.mode),
       requestedBy: payload.requestedBy == null && payload.requested_by == null
         ? userId || authMode
         : String(payload.requestedBy ?? payload.requested_by),

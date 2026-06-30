@@ -478,7 +478,7 @@ export default function ConnectionDetailDrawer({
 
               <section>
                 <div className="mb-3 text-[14px] font-semibold text-[#24304A]">Últimas sincronizações</div>
-                <SyncRunsTable runs={syncRuns} />
+                <SyncRunsTable runs={syncRuns} events={events} />
               </section>
 
               <section>

@@ -7,6 +7,8 @@ export type IntegrationEventType =
   | 'connection.reconnect_requested'
   | 'sync.requested'
   | 'sync.resource.started'
+  | 'sync.resource.chunk_started'
+  | 'sync.resource.chunk_completed'
   | 'sync.resource.completed'
   | 'sync.resource.failed'
   | 'sync.completed'

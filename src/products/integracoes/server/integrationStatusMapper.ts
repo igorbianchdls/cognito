@@ -77,6 +77,18 @@ export function mapIntegrationEventTypeToUi(eventType: IntegrationEventType): In
         tone: 'progress',
         description: 'A sincronização de um recurso começou.',
       }
+    case 'sync.resource.chunk_started':
+      return {
+        label: 'Etapa iniciada',
+        tone: 'progress',
+        description: 'Uma etapa da sincronização começou.',
+      }
+    case 'sync.resource.chunk_completed':
+      return {
+        label: 'Etapa concluída',
+        tone: 'success',
+        description: 'Uma etapa da sincronização terminou.',
+      }
     case 'sync.resource.completed':
       return {
         label: 'Recurso concluído',

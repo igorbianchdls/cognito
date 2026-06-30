@@ -1,6 +1,6 @@
 import type { Connector } from '@/products/integracoes/connectors/base/Connector'
 import type { ConnectorContext } from '@/products/integracoes/connectors/base/ConnectorContext'
-import type { ConnectorResult } from '@/products/integracoes/connectors/base/ConnectorResult'
+import type { ConnectorResult, ConnectorRow, ConnectorRowBatch } from '@/products/integracoes/connectors/base/ConnectorResult'
 import {
   createContaAzulClient,
   extractContaAzulItems,
@@ -65,7 +65,7 @@ async function syncDerivedResource(input: {
   const derived = input.targetConfig.derivedFrom
   if (!derived) return warningResult(input.targetConfig.resource, 'Recurso derivado Conta Azul sem configuracao.')
 
-  const batches = []
+  const batches: ConnectorRowBatch[] = []
   let recordsIn = 0
   let recordsFailed = 0
   let truncated = false
@@ -194,7 +194,7 @@ export const contaAzulConnector: Connector = {
       })
     }
 
-    const batches = []
+    const batches: ConnectorRowBatch[] = []
     let recordsIn = 0
     let truncated = false
     let totalPages: number | undefined
@@ -232,6 +232,118 @@ export const contaAzulConnector: Connector = {
         totalPages: totalPages ?? null,
         totalRecords: totalRecords ?? null,
         truncated,
+      },
+    }
+  },
+
+  async fetchChunk(context: ConnectorContext, resource: string, input): Promise<ConnectorResult & { done: boolean, nextCursor?: Record<string, unknown> }> {
+    const config = getContaAzulResourceConfig(resource)
+    if (!config) {
+      return {
+        ...warningResult(resource, `Recurso Conta Azul ainda nao mapeado para sincronizacao: ${resource}.`),
+        done: true,
+      }
+    }
+
+    const client = createContaAzulClient(context.credentials)
+    const pageSize = input.pageSize || config.defaultPageSize
+    const cursor = input.cursor || context.cursor
+
+    if (config.derivedFrom) {
+      const parentConfig = getContaAzulResourceConfig(config.derivedFrom.resource)
+      if (!parentConfig) {
+        return {
+          ...warningResult(resource, `Recurso pai Conta Azul nao configurado: ${config.derivedFrom.resource}.`),
+          done: true,
+        }
+      }
+      const parentPage = await client.fetchPage(parentConfig, {
+        cursor,
+        pageSize,
+      })
+      const derived = config.derivedFrom
+      const rows: ConnectorRow[] = []
+      let recordsFailed = 0
+      for (const parent of parentPage.items) {
+        const parentId = getFirstStringValue(parent, derived.idKeys)
+        if (!parentId) {
+          recordsFailed += 1
+          continue
+        }
+        const payload = await client.requestPath({
+          resource,
+          path: replacePathParams(derived.path, parentId),
+          query: derived.responseMode === 'single'
+            ? undefined
+            : {
+                pagina: 1,
+                tamanho_pagina: config.defaultPageSize,
+              },
+        })
+        const childItems = extractContaAzulItems(
+          payload,
+          derived.itemKeys || config.itemKeys,
+          derived.responseMode,
+        ).map((item) => ({
+          ...item,
+          parent_resource: derived.resource,
+          parent_id: parentId,
+        }))
+        rows.push(...mapContaAzulRows({
+          resource,
+          rows: childItems,
+          page: parentPage.page,
+        }))
+      }
+      const nextCursor = parentPage.hasMore ? { page: parentPage.page + 1 } : undefined
+      return {
+        status: recordsFailed ? 'warning' : 'success',
+        recordsIn: rows.length,
+        recordsUpdated: rows.length,
+        recordsFailed,
+        batches: [{ resource, rows }],
+        nextCursor,
+        done: !nextCursor,
+        errorMessage: recordsFailed ? `Alguns registros pai nao tinham ID para ${resource}.` : undefined,
+        metadata: {
+          mode: 'conta_azul_api_chunk',
+          resource,
+          derivedFrom: derived.resource,
+          page: parentPage.page,
+          pageSize,
+          hasMore: parentPage.hasMore,
+          totalPages: parentPage.totalPages ?? null,
+          totalRecords: parentPage.totalRecords ?? null,
+        },
+      }
+    }
+
+    const page = await client.fetchPage(config, {
+      cursor,
+      pageSize,
+    })
+    const rows = mapContaAzulRows({
+      resource,
+      rows: page.items,
+      page: page.page,
+    })
+    const nextCursor = page.hasMore ? { page: page.page + 1 } : undefined
+    return {
+      status: 'success',
+      recordsIn: rows.length,
+      recordsUpdated: rows.length,
+      recordsFailed: 0,
+      batches: [{ resource, rows }],
+      nextCursor,
+      done: !nextCursor,
+      metadata: {
+        mode: 'conta_azul_api_chunk',
+        resource,
+        page: page.page,
+        pageSize,
+        hasMore: page.hasMore,
+        totalPages: page.totalPages ?? null,
+        totalRecords: page.totalRecords ?? null,
       },
     }
   },

@@ -10,6 +10,10 @@ export type PublishSyncMessageInput = {
   runId?: string
   trigger: IntegrationSyncTrigger
   resources?: string[]
+  mode?: 'resource_chunk'
+  resource?: string
+  cursor?: Record<string, unknown>
+  pageSize?: number
   requestedBy?: string
 }
 
@@ -37,6 +41,10 @@ export async function publishSyncMessage(input: PublishSyncMessageInput): Promis
     runId: input.runId,
     trigger: input.trigger,
     resources: input.resources || [],
+    mode: input.mode,
+    resource: input.resource,
+    cursor: input.cursor,
+    pageSize: input.pageSize,
     requestedBy: input.requestedBy || 'control-api',
     requestedAt: new Date().toISOString(),
   })).toString('base64')
@@ -56,6 +64,8 @@ export async function publishSyncMessage(input: PublishSyncMessageInput): Promis
           ...(input.pipelineId ? { pipelineId: input.pipelineId } : {}),
           ...(input.destinationId ? { destinationId: input.destinationId } : {}),
           ...(input.runId ? { runId: input.runId } : {}),
+          ...(input.mode ? { mode: input.mode } : {}),
+          ...(input.resource ? { resource: input.resource } : {}),
           trigger: input.trigger,
         },
       }],

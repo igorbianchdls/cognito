@@ -1,11 +1,14 @@
 import { createServer, type IncomingMessage } from 'node:http'
 
 import { runSyncJob } from '@/products/integracoes/cloud/src/worker/jobs/runSyncJob'
+import { runSyncChunkJob } from '@/products/integracoes/cloud/src/worker/jobs/runSyncChunkJob'
 import type { IntegrationSyncTrigger } from '@/products/integracoes/shared/contracts/syncContracts'
+import type { SyncChunkMode, SyncCursor } from '@/products/integracoes/cloud/src/sync-engine/chunkTypes'
 
 const syncTriggers: IntegrationSyncTrigger[] = ['manual', 'scheduled', 'webhook', 'initial']
 
 type WorkerPayload = {
+  mode?: SyncChunkMode
   tenantId?: number
   connectionId?: string
   pipelineId?: string
@@ -13,6 +16,9 @@ type WorkerPayload = {
   runId?: string
   trigger?: IntegrationSyncTrigger
   resources?: string[]
+  resource?: string
+  cursor?: SyncCursor
+  pageSize?: number
   requestedBy?: string
 }
 
@@ -39,6 +45,7 @@ function normalizePayload(value: unknown): WorkerPayload {
 
   return {
     tenantId: typeof value.tenantId === 'number' ? value.tenantId : undefined,
+    mode: value.mode === 'resource_chunk' ? value.mode : undefined,
     connectionId: typeof value.connectionId === 'string' ? value.connectionId : undefined,
     pipelineId: typeof value.pipelineId === 'string' ? value.pipelineId : undefined,
     destinationId: typeof value.destinationId === 'string' ? value.destinationId : undefined,
@@ -49,6 +56,9 @@ function normalizePayload(value: unknown): WorkerPayload {
     resources: Array.isArray(value.resources)
       ? value.resources.filter((resource): resource is string => typeof resource === 'string')
       : undefined,
+    resource: typeof value.resource === 'string' ? value.resource : undefined,
+    cursor: isRecord(value.cursor) ? value.cursor : undefined,
+    pageSize: typeof value.pageSize === 'number' ? value.pageSize : undefined,
     requestedBy: typeof value.requestedBy === 'string' ? value.requestedBy : undefined,
   }
 }
@@ -109,15 +119,52 @@ function isNonRetryableWorkerError(error: unknown) {
 }
 
 async function executeWorker(payload: WorkerPayload) {
+  const tenantId = payload.tenantId || Number(process.env.SYNC_TENANT_ID || 1)
+  const connectionId = payload.connectionId || process.env.SYNC_CONNECTION_ID || 'stub'
+  const pipelineId = payload.pipelineId || process.env.SYNC_PIPELINE_ID
+  const destinationId = payload.destinationId || process.env.SYNC_DESTINATION_ID
+  const runId = payload.runId || process.env.SYNC_RUN_ID
+  const trigger = payload.trigger || parseTrigger(process.env.SYNC_TRIGGER)
+  const requestedBy = payload.requestedBy
+
+  if (payload.mode === 'resource_chunk') {
+    const resource = payload.resource || payload.resources?.[0]
+    if (!resource) {
+      throw new Error('Payload resource_chunk precisa informar resource.')
+    }
+
+    const result = await runSyncChunkJob({
+      mode: 'resource_chunk',
+      tenantId,
+      connectionId,
+      pipelineId,
+      destinationId,
+      runId,
+      trigger,
+      resource,
+      cursor: payload.cursor,
+      pageSize: payload.pageSize,
+      requestedBy,
+    })
+
+    console.log(JSON.stringify({
+      severity: 'INFO',
+      message: 'Integration worker chunk finished.',
+      result,
+    }))
+
+    return result
+  }
+
   const result = await runSyncJob({
-    tenantId: payload.tenantId || Number(process.env.SYNC_TENANT_ID || 1),
-    connectionId: payload.connectionId || process.env.SYNC_CONNECTION_ID || 'stub',
-    pipelineId: payload.pipelineId || process.env.SYNC_PIPELINE_ID,
-    destinationId: payload.destinationId || process.env.SYNC_DESTINATION_ID,
+    tenantId,
+    connectionId,
+    pipelineId,
+    destinationId,
     runId: payload.runId || process.env.SYNC_RUN_ID,
-    trigger: payload.trigger || parseTrigger(process.env.SYNC_TRIGGER),
+    trigger,
     resources: payload.resources,
-    requestedBy: payload.requestedBy,
+    requestedBy,
   })
 
   console.log(JSON.stringify({

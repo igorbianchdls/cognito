@@ -404,6 +404,8 @@ function normalizeEventType(eventType: unknown): IntegrationEventType {
     value === 'connection.reconnect_requested' ||
     value === 'sync.requested' ||
     value === 'sync.resource.started' ||
+    value === 'sync.resource.chunk_started' ||
+    value === 'sync.resource.chunk_completed' ||
     value === 'sync.resource.completed' ||
     value === 'sync.resource.failed' ||
     value === 'sync.completed' ||
@@ -1270,6 +1272,8 @@ export async function createIntegrationSyncRun(params: {
 
     const run = toSyncRun(row)
     if (status === 'queued') {
+      const resources = params.resources || connection.selectedResources
+      const syncMode = params.metadata?.syncMode === 'resource_chunk' ? 'resource_chunk' : undefined
       await client.query(
         `INSERT INTO integrations.sync_dispatch_outbox
           (tenant_id, connection_id, pipeline_id, destination_id, run_id, trigger, payload)
@@ -1290,7 +1294,9 @@ export async function createIntegrationSyncRun(params: {
             destinationId: params.destinationId || undefined,
             runId: run.id,
             trigger: params.trigger,
-            resources: params.resources || connection.selectedResources,
+            resources,
+            mode: syncMode,
+            resource: syncMode ? resources[0] : undefined,
             requestedBy: String(params.metadata?.requestedBy || 'api'),
           }),
         ],

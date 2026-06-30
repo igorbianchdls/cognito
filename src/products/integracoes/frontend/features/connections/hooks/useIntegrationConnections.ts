@@ -19,6 +19,14 @@ type SyncConnectionOptions = {
   resources?: string[]
 }
 
+const ACTIVE_SYNC_STATUSES = new Set(['queued', 'running'])
+const SYNC_POLL_INTERVAL_MS = 5000
+const SYNC_POLL_TIMEOUT_MS = 120000
+
+function sleep(ms: number) {
+  return new Promise((resolve) => setTimeout(resolve, ms))
+}
+
 function toolkitKeyFromConnection(connection: IntegrationConnectionWithUi): string {
   const metadata = connection.metadata || {}
   const toolkitSlug = metadata.toolkitSlug || metadata.toolkit_slug
@@ -126,7 +134,16 @@ export default function useIntegrationConnections(tenantId = 0) {
         requestedBy: 'integracoes-ui',
       })
       await refreshConnections()
-      await loadConnectionDetail(connectionId)
+      let detail = await loadConnectionDetail(connectionId)
+      const startedAt = Date.now()
+      while (
+        ACTIVE_SYNC_STATUSES.has(detail.syncRuns.find((run) => run.id === result.runId)?.status || result.status)
+        && Date.now() - startedAt < SYNC_POLL_TIMEOUT_MS
+      ) {
+        await sleep(SYNC_POLL_INTERVAL_MS)
+        detail = await loadConnectionDetail(connectionId)
+        await refreshConnections()
+      }
       return result
     } catch (nextError) {
       setError(nextError instanceof Error ? nextError.message : String(nextError))

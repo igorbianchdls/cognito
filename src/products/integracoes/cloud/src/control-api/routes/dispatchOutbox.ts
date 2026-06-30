@@ -30,6 +30,15 @@ function stringArray(value: unknown) {
     : undefined
 }
 
+function optionalRecord(value: unknown): Record<string, unknown> | undefined {
+  return isRecord(value) ? value : undefined
+}
+
+function optionalPageSize(value: unknown): number | undefined {
+  const parsed = typeof value === 'number' ? value : typeof value === 'string' ? Number(value) : NaN
+  return Number.isFinite(parsed) && parsed > 0 ? Math.floor(parsed) : undefined
+}
+
 function optionalRunId(value: unknown) {
   const runId = String(value || '').trim()
   return /^\d+$/.test(runId) ? runId : null
@@ -53,6 +62,14 @@ export async function handleDispatchOutbox(request: ControlApiRequest): Promise<
         const trigger = validTriggers.has(item.trigger)
           ? item.trigger as IntegrationSyncTrigger
           : 'manual'
+        const resources = stringArray(item.payload.resources)
+        const chunked = item.payload.mode === 'resource_chunk'
+        const resource = typeof item.payload.resource === 'string'
+          ? item.payload.resource
+          : resources?.[0]
+        if (chunked && !resource) {
+          throw new Error(`Outbox ${item.id} em modo resource_chunk sem resource.`)
+        }
         const publish = await publishSyncMessage({
           tenantId: item.tenantId,
           connectionId: item.connectionId,
@@ -60,7 +77,11 @@ export async function handleDispatchOutbox(request: ControlApiRequest): Promise<
           destinationId: item.destinationId || undefined,
           runId: item.runId,
           trigger,
-          resources: stringArray(item.payload.resources),
+          resources: chunked && resource ? [resource] : resources,
+          mode: chunked ? 'resource_chunk' : undefined,
+          resource: chunked ? resource : undefined,
+          cursor: chunked ? optionalRecord(item.payload.cursor) : undefined,
+          pageSize: chunked ? optionalPageSize(item.payload.pageSize) : undefined,
           requestedBy: typeof item.payload.requestedBy === 'string' ? item.payload.requestedBy : 'outbox-dispatcher',
         })
         await markSyncDispatchPublished({

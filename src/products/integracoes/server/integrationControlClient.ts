@@ -150,6 +150,7 @@ export async function requestLocalSync(params: {
   destinationId?: string
   trigger?: IntegrationSyncTrigger
   resources?: string[]
+  syncMode?: 'resource_chunk'
   requestedBy?: string
 }): Promise<IntegrationSyncResult | null> {
   const hasCloudControlApi = Boolean(getCloudControlApiUrl())
@@ -164,6 +165,10 @@ export async function requestLocalSync(params: {
     throw new Error('Sync real indisponivel sem INTEGRATIONS_CONTROL_API_URL. Para desenvolvimento local, defina INTEGRATIONS_ALLOW_LOCAL_SYNC_STUB=true.')
   }
 
+  if (params.syncMode === 'resource_chunk' && (params.resources?.length || 0) !== 1) {
+    throw new Error('syncMode resource_chunk exige exatamente um recurso por run.')
+  }
+
   const run = await createIntegrationSyncRun({
     tenantId: params.tenantId,
     connectionId: params.connectionId,
@@ -175,6 +180,7 @@ export async function requestLocalSync(params: {
     metadata: {
       requestedBy: params.requestedBy || 'api',
       setupMode: hasCloudControlApi ? 'cloud' : 'local_stub',
+      syncMode: params.syncMode,
     },
   })
 
@@ -189,6 +195,7 @@ export async function requestLocalSync(params: {
       runId: run.id,
       trigger: params.trigger || 'manual',
       resources: params.resources,
+      mode: params.syncMode,
       requestedBy: params.requestedBy || 'api',
     })
   }

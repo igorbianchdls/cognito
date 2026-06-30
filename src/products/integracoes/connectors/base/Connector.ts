@@ -17,5 +17,12 @@ export type Connector = {
   validateCredentials?: (credentials: unknown) => { ok: boolean; error?: string }
   testConnection: (context: ConnectorContext) => Promise<ConnectorResult>
   syncResource: (context: ConnectorContext, resource: string) => Promise<ConnectorResult>
+  fetchChunk?: (context: ConnectorContext, resource: string, input: {
+    cursor?: Record<string, unknown>
+    pageSize?: number
+  }) => Promise<ConnectorResult & {
+    done: boolean
+    nextCursor?: Record<string, unknown>
+  }>
   refreshToken?: (context: ConnectorContext) => Promise<ConnectorResult>
 }

@@ -204,6 +204,41 @@ export class ContaAzulClient {
     return response.payload
   }
 
+  async fetchPage(
+    config: ContaAzulResourceConfig,
+    input?: {
+      page?: number
+      cursor?: Record<string, unknown>
+      pageSize?: number
+    },
+  ): Promise<ContaAzulPageResult> {
+    const pageSize = input?.pageSize || Number(process.env.CONTA_AZUL_PAGE_SIZE || config.defaultPageSize)
+    const page = Math.max(Number(input?.page || input?.cursor?.page || 1), 1)
+    const payload = await this.request(config, {
+      page,
+      pageSize,
+      cursor: input?.cursor,
+    })
+    const items = extractContaAzulItems(payload, config.itemKeys, config.responseMode)
+    const totalPages = extractTotalPages(payload)
+    const totalRecords = extractTotalRecords(payload)
+    const hasMoreByTotal = totalPages ? page < totalPages : undefined
+    const hasMore = config.responseMode === 'single' || config.paginationMode === 'none'
+      ? false
+      : hasMoreByTotal ?? items.length >= pageSize
+
+    return {
+      page,
+      pageSize,
+      items,
+      payload,
+      totalPages,
+      totalRecords,
+      hasMore,
+      truncated: false,
+    }
+  }
+
   async *paginate(
     config: ContaAzulResourceConfig,
     input?: {
@@ -218,34 +253,20 @@ export class ContaAzulClient {
     let loadedPages = 0
 
     while (loadedPages < maxPages) {
-      const payload = await this.request(config, {
+      const pageResult = await this.fetchPage(config, {
         page,
         pageSize,
         cursor: input?.cursor,
       })
-      const items = extractContaAzulItems(payload, config.itemKeys, config.responseMode)
-      const totalPages = extractTotalPages(payload)
-      const totalRecords = extractTotalRecords(payload)
       loadedPages += 1
-
-      const hasMoreByTotal = totalPages ? page < totalPages : undefined
-      const hasMore = config.responseMode === 'single' || config.paginationMode === 'none'
-        ? false
-        : hasMoreByTotal ?? items.length >= pageSize
-      const truncated = hasMore && loadedPages >= maxPages
+      const truncated = pageResult.hasMore && loadedPages >= maxPages
 
       yield {
-        page,
-        pageSize,
-        items,
-        payload,
-        totalPages,
-        totalRecords,
-        hasMore,
+        ...pageResult,
         truncated,
       }
 
-      if (!hasMore || truncated) return
+      if (!pageResult.hasMore || truncated) return
       page += 1
     }
   }

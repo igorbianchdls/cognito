@@ -28,7 +28,10 @@ import {
   saveIntegrationConnectionConfiguration,
   type IntegrationConnectionConfiguration,
   type IntegrationConnectionWithUi,
+  type IntegrationEventWithUi,
+  type IntegrationSyncRunWithUi,
 } from '@/products/integracoes/frontend/services/integracoesApi'
+import { latestSyncProgress } from '@/products/integracoes/frontend/features/connections/lib/syncProgress'
 
 type DataWarehouseSettings = {
   enabled: boolean
@@ -48,6 +51,8 @@ type McpSettings = {
 
 type ConnectionConfigurationModalProps = {
   connection: IntegrationConnectionWithUi | null
+  events?: IntegrationEventWithUi[]
+  syncRuns?: IntegrationSyncRunWithUi[]
   open: boolean
   busy?: boolean
   onOpenChange: (open: boolean) => void
@@ -98,6 +103,8 @@ function buildState(configuration: IntegrationConnectionConfiguration): {
 
 export default function ConnectionConfigurationModal({
   connection,
+  events = [],
+  syncRuns = [],
   open,
   busy = false,
   onOpenChange,
@@ -131,6 +138,7 @@ export default function ConnectionConfigurationModal({
   const [error, setError] = useState<string | null>(null)
 
   const toolkitSlug = String(connection?.metadata?.toolkitSlug || connection?.provider || '').toUpperCase()
+  const syncProgress = useMemo(() => latestSyncProgress(syncRuns, events), [events, syncRuns])
   const resources = useMemo(() => {
     const providerResources = configuration?.provider.resources.map((resource) => resource.slug) || []
     const selectedResources = configuration?.connection.selectedResources || connection?.selectedResources || []
@@ -304,6 +312,7 @@ export default function ConnectionConfigurationModal({
                     syncing={syncing}
                     syncDisabledReason={syncDisabledReason}
                     syncFeedback={syncFeedback}
+                    syncProgress={syncProgress}
                     onSyncNow={syncNow}
                     onChange={setDataWarehouse}
                   />

@@ -9,6 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Switch } from '@/components/ui/switch'
 import { SYNC_FREQUENCY_OPTIONS, type SyncFrequencyOption } from '@/products/integracoes/frontend/features/configuration/lib/syncFrequencyOptions'
 import type { IntegrationConnectionWithUi } from '@/products/integracoes/frontend/services/integracoesApi'
+import type { SyncProgressSummary } from '@/products/integracoes/frontend/features/connections/lib/syncProgress'
 
 type DataWarehouseSettings = {
   enabled: boolean
@@ -33,6 +34,7 @@ type DataWarehouseSettingsPanelProps = {
     tone: 'success' | 'error' | 'info'
     message: string
   } | null
+  syncProgress?: SyncProgressSummary | null
   onSyncNow?: () => void | Promise<void>
   onChange: (value: DataWarehouseSettings) => void
 }
@@ -78,6 +80,7 @@ export default function DataWarehouseSettingsPanel({
   syncing = false,
   syncDisabledReason,
   syncFeedback,
+  syncProgress,
   onSyncNow,
   onChange,
 }: DataWarehouseSettingsPanelProps) {
@@ -88,6 +91,15 @@ export default function DataWarehouseSettingsPanel({
     : syncFeedback?.tone === 'success'
       ? 'border-emerald-200 bg-emerald-50 text-emerald-700'
       : 'border-[#DCE3F0] bg-[#F7F8FC] text-[#66748D]'
+  const syncProgressClassName = syncProgress?.tone === 'danger'
+    ? 'border-red-200 bg-red-50 text-red-700'
+    : syncProgress?.tone === 'warning'
+      ? 'border-amber-200 bg-amber-50 text-amber-700'
+      : syncProgress?.tone === 'success'
+        ? 'border-emerald-200 bg-emerald-50 text-emerald-700'
+        : syncProgress?.tone === 'progress'
+          ? 'border-blue-200 bg-blue-50 text-blue-700'
+          : 'border-[#DCE3F0] bg-[#F7F8FC] text-[#66748D]'
 
   return (
     <Card className="rounded-lg bg-white py-0 shadow-none">
@@ -112,18 +124,15 @@ export default function DataWarehouseSettingsPanel({
       </div>
 
       {datasets ? (
-        <div className="mt-4 grid gap-2 rounded-[12px] bg-[#F7F8FC] p-3 text-[12px] text-[#5F6D85] sm:grid-cols-3">
+        <div className="mt-4 grid gap-2 rounded-[12px] bg-[#F7F8FC] p-3 text-[12px] text-[#5F6D85] sm:grid-cols-2">
           <div className="min-w-0">
             <span className="font-semibold text-[#33405A]">Raw:</span> {datasets.rawDataset}
           </div>
           <div className="min-w-0">
             <span className="font-semibold text-[#33405A]">Normalized:</span> {datasets.normalizedDataset}
           </div>
-          <div className="min-w-0">
-            <span className="font-semibold text-[#33405A]">Analytics:</span> {datasets.analyticsDataset}
-          </div>
           {datasets.projectId ? (
-            <div className="min-w-0 sm:col-span-3">
+            <div className="min-w-0 sm:col-span-2">
               <span className="font-semibold text-[#33405A]">Projeto:</span> {datasets.projectId}
             </div>
           ) : null}
@@ -212,6 +221,16 @@ export default function DataWarehouseSettingsPanel({
             {syncing ? 'Sincronizando...' : 'Sincronizar agora'}
           </Button>
         </div>
+
+        {syncProgress ? (
+          <div className={`mt-3 rounded-[10px] border px-3 py-2 ${syncProgressClassName}`}>
+            <div className="text-[12px] font-semibold">{syncProgress.title}</div>
+            <div className="mt-1 text-[12px] leading-5">{syncProgress.detail}</div>
+            {syncProgress.warningLabel && syncProgress.tone !== 'success' ? (
+              <div className="mt-1 text-[11px] leading-4 opacity-80">{syncProgress.warningLabel}</div>
+            ) : null}
+          </div>
+        ) : null}
 
         {syncFeedback ? (
           <div className={`mt-3 rounded-[10px] border px-3 py-2 text-[12px] ${syncFeedbackClassName}`}>

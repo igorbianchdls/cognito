@@ -344,6 +344,8 @@ export default function IntegracoesPage() {
     error: integrationError,
     loading: integrationLoading,
     selectedConnection,
+    selectedEvents,
+    selectedSyncRuns,
     createConnection,
     loadConnectionDetail,
     reconnectConnection,
@@ -623,6 +625,8 @@ export default function IntegracoesPage() {
         />
         <ConnectionConfigurationModal
           connection={selectedConnection}
+          events={selectedEvents}
+          syncRuns={selectedSyncRuns}
           open={isConnectionConfigurationOpen}
           busy={Boolean(integrationBusyId)}
           onOpenChange={setIsConnectionConfigurationOpen}
