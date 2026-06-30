@@ -1,0 +1,7 @@
+interface:
+  display_name: "Integrações Data Platform"
+  short_description: "Sync, checkpoints e BigQuery."
+  default_prompt: "Use $integracoes-data-platform para diagnosticar ou evoluir uma integração com sync chunkado, checkpoints e BigQuery."
+
+policy:
+  allow_implicit_invocation: true
