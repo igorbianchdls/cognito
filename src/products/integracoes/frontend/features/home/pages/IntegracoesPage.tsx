@@ -469,8 +469,8 @@ export default function IntegracoesPage() {
                               value={tab.value}
                               variant="underline"
                               className="px-1.5 pb-3 pt-0 text-[14px] font-medium"
-                              activeColor="#94A3B8"
-                              inactiveColor="#CBD5E1"
+                              activeColor="#A7B3C3"
+                              inactiveColor="#D5DCE8"
                               activeBorderColor="#CBD5E1"
                             >
                               {tab.label}
