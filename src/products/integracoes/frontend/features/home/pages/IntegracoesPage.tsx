@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useMemo, useState } from 'react'
-import { ArrowRight, Database, LockKeyhole, MoreHorizontal, Search, ShieldCheck } from 'lucide-react'
+import { Database, LockKeyhole, MoreHorizontal, Search, ShieldCheck } from 'lucide-react'
 
 import PageContainer from '@/components/layout/PageContainer'
 import { SidebarShadcn } from '@/components/navigation/SidebarShadcn'
@@ -40,11 +40,8 @@ const CATEGORY_TABS: Array<{ value: CatalogCategory; label: string }> = [
   { value: 'banking', label: 'Bancos' },
   { value: 'analytics', label: 'Analytics' },
   { value: 'communication', label: 'Comunicação' },
-  { value: 'data', label: 'Dados & Relatórios' },
-  { value: 'productivity', label: 'Produtividade' },
   { value: 'marketing', label: 'Marketing' },
   { value: 'support', label: 'Suporte' },
-  { value: 'other', label: 'Outros' },
 ]
 
 const SORT_LABELS: Record<SortMode, string> = {
@@ -61,6 +58,9 @@ const CATALOG_PRIORITY_ORDER = [
 const COMMUNICATION_SLUGS = new Set([
   'GMAIL',
   'SLACK',
+  'WHATSAPP',
+  'INSTAGRAM_DM',
+  'FACEBOOK_MESSENGER',
   'TELEGRAM',
   'DISCORD',
   'OUTLOOK',
@@ -296,7 +296,12 @@ function CatalogCard({
             {renderIntegrationLogo(toolkit.slug, toolkit.name)}
           </div>
           <div className="flex items-center gap-2">
-            <Badge variant={statusVariant}>{statusLabel}</Badge>
+            <Badge
+              variant={statusVariant}
+              className={connected ? 'bg-[#166534] text-white hover:bg-[#14532D]' : undefined}
+            >
+              {statusLabel}
+            </Badge>
             <Button
               type="button"
               variant="outline"
@@ -464,9 +469,9 @@ export default function IntegracoesPage() {
                               value={tab.value}
                               variant="underline"
                               className="px-1.5 pb-3 pt-0 text-[14px] font-medium"
-                              activeColor="#5B49E6"
-                              inactiveColor="#647089"
-                              activeBorderColor="#5B49E6"
+                              activeColor="#94A3B8"
+                              inactiveColor="#CBD5E1"
+                              activeBorderColor="#CBD5E1"
                             >
                               {tab.label}
                             </TabsTrigger>
@@ -546,34 +551,7 @@ export default function IntegracoesPage() {
                       </Card>
                     )}
 
-                    <section className="grid gap-5 xl:grid-cols-[1.35fr_0.95fr]">
-                      <div className="rounded-[28px] bg-[#17203A] px-7 py-7 text-white shadow-[0_18px_45px_rgba(23,32,58,0.18)]">
-                        <div className="flex items-start justify-between gap-4">
-                          <div>
-                            <div className="text-[28px] font-semibold tracking-[-0.03em]">Não encontrou a integração que precisa?</div>
-                            <p className="mt-3 max-w-[36rem] text-[15px] leading-7 text-[#C7D1E5]">
-                              Podemos priorizar novos conectores conforme o seu stack. Envie a ferramenta, o caso de uso e o tipo de dado ou automação que você quer liberar.
-                            </p>
-                          </div>
-                          <div className="grid h-12 w-12 shrink-0 place-items-center rounded-[16px] bg-white/10 text-white ring-1 ring-white/15">
-                            <ArrowRight className="h-5 w-5" />
-                          </div>
-                        </div>
-
-                        <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:items-center">
-                          <Button
-                            type="button"
-                            variant="secondary"
-                            className="h-11 bg-white text-[#17203A] hover:bg-[#F3F5FA]"
-                          >
-                            Sugerir integração
-                          </Button>
-                          <div className="text-[13px] text-[#AEB9CF]">
-                            Resposta prioritária para integrações com impacto em operação, dados ou atendimento.
-                          </div>
-                        </div>
-                      </div>
-
+                    <section>
                       <div className="rounded-[28px] border border-[#E6EAF4] bg-white px-7 py-7 shadow-[0_14px_36px_rgba(23,32,58,0.06)]">
                         <div className="flex items-center gap-3">
                           <div className="grid h-11 w-11 place-items-center rounded-[14px] bg-[#ECF8F1] text-[#178654]">

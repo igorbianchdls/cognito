@@ -27,7 +27,7 @@ export default function ConnectionStatusPanel({ connections, loading = false }: 
       {items.map((item) => {
         const Icon = item.icon
         return (
-          <Card key={item.label} className="rounded-lg bg-white py-0 shadow-[0_10px_24px_rgba(23,32,58,0.05)]">
+          <Card key={item.label} className="rounded-lg bg-white py-0 shadow-[0_4px_14px_rgba(23,32,58,0.025)]">
             <CardContent className="px-5 py-4">
             <div className="flex items-center justify-between gap-3">
               <div>
