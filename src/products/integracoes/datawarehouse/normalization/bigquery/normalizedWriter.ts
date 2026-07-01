@@ -3,7 +3,6 @@ import { getIntegrationsCloudConfig } from '@/products/integracoes/datawarehouse
 import { getTenantBigQueryDatasets } from '@/products/integracoes/datawarehouse/tenantBigQueryDatasets'
 import type { NormalizedRow, NormalizedTableName } from '@/products/integracoes/datawarehouse/normalization/contracts'
 import { getNormalizedTableSchema } from '@/products/integracoes/datawarehouse/normalization/bigquery/normalizedTableSchemas'
-import { ensureTenantAnalyticsViews } from '@/products/integracoes/datawarehouse/analytics/semanticViews'
 
 type BigQueryInsertResponse = {
   insertErrors?: Array<{ index?: number; errors?: Array<{ message?: string }> }>
@@ -214,11 +213,6 @@ export async function writeNormalizedRowsToBigQuery(input: WriteNormalizedRowsIn
     insertedRows += tableInsertedRows
     tables.push({ table, insertedRows: tableInsertedRows })
   }
-
-  await ensureTenantAnalyticsViews({
-    tenantId: input.tenantId,
-    tables: Array.from(new Set([...ensureTables, ...grouped.keys()])),
-  })
 
   return {
     ok: true,
