@@ -334,7 +334,7 @@ Interpret failures by subsystem before asking the customer to reconnect:
 | `Permission 'secretmanager.versions.access' denied` | Service account cannot read Secret Manager credentials. | Fix GCP IAM for the service account used by this environment. |
 | `Could not load the default credentials` | BigQuery client has no usable service account/ADC. | Check `BIGQUERY_CREDENTIALS_JSON`, `GOOGLE_APPLICATION_CREDENTIALS_JSON`, `GOOGLE_APPLICATION_CREDENTIALS` or ADC. |
 | `Unable to detect a Project Id` | BigQuery project/env credentials incomplete. | Set `GOOGLE_PROJECT_ID`, `BIGQUERY_PROJECT_ID` or service account JSON with `project_id`. |
-| `MCP nao tem permissao de leitura para vendas` | Connection/plugin read permissions do not include the provider resource. | Update plugin permissions/configuration for that connection. |
+| `MCP nao esta habilitado para a conexao Conta Azul` | Plugin/IA access is disabled for the connection. | Enable connection-level plugin permissions; resource-level grants are no longer used. |
 | `fetch failed`, `EAI_AGAIN`, `ECONNRESET`, timeout | Network/DNS/provider runtime issue. | Retry, test host connectivity, inspect `cause.code`; do not assume OAuth. |
 | Conta Azul HTTP `401`/`403` after refresh | Provider authorization is invalid/refused. | Run OAuth diagnostic; reconnect only if provider auth is confirmed invalid. |
 

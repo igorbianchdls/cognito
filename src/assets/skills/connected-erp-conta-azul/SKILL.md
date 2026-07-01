@@ -82,7 +82,7 @@ The action adapter supports more resources, but verify with dry-run or read-only
 
 - `Permission 'secretmanager.versions.access' denied`: GCP IAM/Secret Manager permission problem for the service account. Do not ask the customer to reconnect Conta Azul.
 - `Could not load the default credentials` or `Unable to detect a Project Id`: local/edge BigQuery credentials are missing or empty. Check Vercel/env/ADC/service account config.
-- `MCP nao tem permissao de leitura para <resource>`: plugin permissions for the connection do not include that resource. Fix connection/plugin configuration.
+- `MCP nao esta habilitado para a conexao <name>`: plugin/IA access is disabled for the connection. Enable the connection-level permission; grants are no longer managed per resource.
 - `fetch failed`, `EAI_AGAIN`, `ECONNRESET` or timeout: provider/network/DNS/runtime connectivity problem. Retry and inspect the underlying cause before changing OAuth code.
 - HTTP 401/403 from Conta Azul after token refresh attempts: provider authorization problem; diagnose OAuth and request reconnection only if provider auth is actually invalid.
 

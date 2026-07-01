@@ -63,10 +63,6 @@ function normalizeResource(value: unknown): AnalyticsResource {
   })
 }
 
-function hasGrant(resources: string[], resource: string) {
-  return resources.includes('*') || resources.includes(resource)
-}
-
 function providerStatus(provider: string, connectionId: string, displayName: string, ok: boolean, error?: string): ConnectedDomainProviderStatus {
   return {
     provider,
@@ -140,13 +136,6 @@ export async function executeAnalyticsTool(
     }
 
     if (action === 'listar_live' || action === 'ler_live') {
-      if (!hasGrant(permissions.liveReadResources, resource)) {
-        const error = `MCP nao tem permissao de leitura live para ${resource} na conexao ${connection.displayName}.`
-        providers.push(providerStatus(connection.provider, connection.id, connection.displayName, false, error))
-        errors.push(error)
-        continue
-      }
-
       const apiAdapter = getAnalyticsApiAdapter(connection.provider)
       if (!apiAdapter) {
         const error = `Provider analytics sem adapter API live registrado: ${connection.provider}. Registrados: ${listAnalyticsApiAdapterProviders().join(', ') || 'nenhum'}.`

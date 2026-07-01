@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { AlertTriangle, Bot, CheckCircle2, Database, RefreshCw, RotateCcw } from 'lucide-react'
+import { AlertTriangle, Bot, Database, RefreshCw, RotateCcw } from 'lucide-react'
 
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -46,15 +46,6 @@ type ConnectionDetailDrawerProps = {
   onReconnect: (connection: IntegrationConnectionWithUi) => void
 }
 
-type ResourcePermissionKey = 'readResources' | 'liveReadResources' | 'writeResources' | 'destructiveResources'
-
-const RESOURCE_PERMISSION_SECTIONS: Array<[string, ResourcePermissionKey]> = [
-  ['Leitura sincronizada', 'readResources'],
-  ['Leitura live', 'liveReadResources'],
-  ['Escrita', 'writeResources'],
-  ['Ações sensíveis', 'destructiveResources'],
-]
-
 function formatDate(value?: string | null) {
   if (!value) return '-'
   const date = new Date(value)
@@ -66,12 +57,6 @@ function formatDate(value?: string | null) {
     hour: '2-digit',
     minute: '2-digit',
   }).format(date)
-}
-
-function toggleResource(resources: string[], resource: string) {
-  return resources.includes(resource)
-    ? resources.filter((item) => item !== resource)
-    : [...resources, resource]
 }
 
 function oauthErrorFromConnection(connection: IntegrationConnectionWithUi | null) {
@@ -173,10 +158,6 @@ export default function ConnectionDetailDrawer({
       const saved = await updateIntegrationPluginPermissions(connection.id, {
         tenantId: connection.tenantId,
         enabled: nextPermissions.enabled,
-        readResources: nextPermissions.readResources,
-        liveReadResources: nextPermissions.liveReadResources,
-        writeResources: nextPermissions.writeResources,
-        destructiveResources: nextPermissions.destructiveResources,
         requireConfirmation: nextPermissions.requireConfirmation,
       })
       setPermissions(saved)
@@ -400,7 +381,7 @@ export default function ConnectionDetailDrawer({
                           </Badge>
                         </div>
                         <div className="mt-1 text-[13px] leading-5 text-[#66748D]">
-                          Permita que a Otto consulte os dados desta conexão e respeite confirmações para ações sensíveis.
+                          Permita que a Otto consulte dados e execute ações nesta conexão. Alterações reais continuam exigindo confirmação quando configurado.
                         </div>
                       </div>
                     </div>
@@ -419,45 +400,6 @@ export default function ConnectionDetailDrawer({
                   </div>
                   {permissions ? (
                     <div className="space-y-4">
-                      <div className="flex items-center gap-2 rounded-[14px] bg-white px-3 py-2 text-[12px] font-medium text-[#66748D] ring-1 ring-[#E4E8F0]">
-                        <CheckCircle2 className="h-4 w-4 text-[#168256]" />
-                        Configuração avançada por tipo de permissão
-                      </div>
-                      {RESOURCE_PERMISSION_SECTIONS.map(([label, key]) => {
-                        const resources = permissions[key]
-                        return (
-                          <div key={key}>
-                            <div className="mb-2 text-[12px] font-semibold uppercase tracking-[0.08em] text-[#7B879B]">{label}</div>
-                            <div className="flex flex-wrap gap-2">
-                              {connection.selectedResources.length ? connection.selectedResources.map((resource) => (
-                                <label
-                                  key={`${key}-${resource}`}
-                                  className={[
-                                    'inline-flex items-center gap-2 rounded-full border px-3 py-1 text-[12px] font-medium',
-                                    resources.includes(resource)
-                                      ? 'border-[#9DB4FF] bg-[#F5F8FF] text-[#24417C]'
-                                      : 'border-[#E1E6F0] bg-white text-[#64748B]',
-                                  ].join(' ')}
-                                >
-                                  <Checkbox
-                                    checked={resources.includes(resource)}
-                                    disabled={permissionsBusy}
-                                    onCheckedChange={() => {
-                                      void savePermissions({
-                                        ...permissions,
-                                        [key]: toggleResource(resources, resource),
-                                      })
-                                    }}
-                                  />
-                                  {resource}
-                                </label>
-                              )) : (
-                                <span className="text-[12px] text-[#66748D]">Nenhum recurso selecionado.</span>
-                              )}
-                            </div>
-                          </div>
-                        )
-                      })}
                       <label className="inline-flex items-center gap-2 text-[12px] font-semibold text-[#475569]">
                         <Checkbox
                           checked={permissions.requireConfirmation}

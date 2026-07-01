@@ -815,10 +815,11 @@ export async function upsertIntegrationPluginPermissions(
   const tenantId = requireTenantId(input.tenantId)
   const current = await getIntegrationPluginPermissions(input.connectionId, tenantId)
   const enabled = input.enabled ?? current?.enabled ?? false
-  const readResources = input.readResources ?? current?.readResources ?? []
-  const liveReadResources = input.liveReadResources ?? current?.liveReadResources ?? []
-  const writeResources = input.writeResources ?? current?.writeResources ?? []
-  const destructiveResources = input.destructiveResources ?? current?.destructiveResources ?? []
+  const fullGrant = enabled ? ['*'] : []
+  const readResources = fullGrant
+  const liveReadResources = fullGrant
+  const writeResources = fullGrant
+  const destructiveResources = fullGrant
   const requireConfirmation = input.requireConfirmation ?? current?.requireConfirmation ?? true
 
   const result = await runQuery<DbPluginPermissionsRow>(
@@ -1022,20 +1023,22 @@ export async function createIntegrationConnection(
       `INSERT INTO integrations.plugin_permissions
         (tenant_id, connection_id, enabled, read_resources, live_read_resources, write_resources, destructive_resources, require_confirmation, metadata, updated_at)
        VALUES
-        ($1, $2, true, $3::jsonb, '[]'::jsonb, '[]'::jsonb, '[]'::jsonb, true, $4::jsonb, now())
+        ($1, $2, true, '["*"]'::jsonb, '["*"]'::jsonb, '["*"]'::jsonb, '["*"]'::jsonb, true, $3::jsonb, now())
        ON CONFLICT (tenant_id, connection_id)
        DO UPDATE SET
          enabled = EXCLUDED.enabled,
          read_resources = EXCLUDED.read_resources,
+         live_read_resources = EXCLUDED.live_read_resources,
+         write_resources = EXCLUDED.write_resources,
+         destructive_resources = EXCLUDED.destructive_resources,
          metadata = integrations.plugin_permissions.metadata || EXCLUDED.metadata,
          updated_at = now()`,
       [
         tenantId,
         connection.id,
-        JSON.stringify(selectedResources),
         JSON.stringify({
           createdBy: 'connection_create',
-          defaultReadGrant: true,
+          defaultFullGrant: true,
         }),
       ],
     )

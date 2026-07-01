@@ -152,11 +152,6 @@ function hasSelectedResource(selectedResources: string[], providerResource: stri
   return selectedResources.includes(providerResource)
 }
 
-function hasReadPermission(readResources: string[], resource: string, providerResource: string) {
-  if (!readResources.length) return false
-  return readResources.includes('*') || readResources.includes(resource) || readResources.includes(providerResource)
-}
-
 function getRawPayload(row: JsonRecord) {
   return asRecord(row.source_payload ?? row.raw_payload ?? row.rawPayload ?? row.payload)
 }
@@ -518,11 +513,11 @@ export async function readConnectedBigQueryResource<Resource extends string>(
     )
   }
   const permissions = await getIntegrationPluginPermissions(input.connection.id, input.tenantId)
-  if (!permissions?.enabled || !hasReadPermission(permissions.readResources, config.resource, config.providerResource)) {
+  if (!permissions?.enabled) {
     throw new DomainAdapterError(
-      `MCP nao tem permissao de leitura para ${config.providerResource} na conexao ${input.connection.displayName}.`,
+      `MCP nao esta habilitado para a conexao ${input.connection.displayName}.`,
       {
-        code: 'connected_bigquery_resource_not_permitted',
+        code: 'connected_bigquery_not_enabled',
         details: {
           provider: input.connection.provider,
           connectionId: input.connection.id,

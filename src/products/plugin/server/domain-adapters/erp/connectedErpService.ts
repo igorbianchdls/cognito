@@ -152,115 +152,6 @@ function connectionStatus(connection: IntegrationConnection, ok: boolean, error?
   }
 }
 
-const LIVE_PERMISSION_PROVIDER_ALIASES: Record<string, Partial<Record<ConnectedErpResource, string>>> = {
-  bling: {
-    'contas-a-receber': 'contas_receber',
-    'contas-a-pagar': 'contas_pagar',
-    'pedidos-venda': 'pedidos_venda',
-    'pedidos-compra': 'compras',
-    'notas-fiscais': 'notas_fiscais',
-    'notas-fiscais-servico': 'notas_servico',
-    'notas-consumidor': 'notas_consumidor',
-    'formas-pagamento': 'formas_pagamento',
-    'canais-venda': 'canais_venda',
-    servicos: 'servicos',
-    'estoque-atual': 'estoque',
-  },
-  conta_azul: {
-    'contas-a-receber': 'contas_receber',
-    'contas-a-pagar': 'contas_pagar',
-    'pedidos-venda': 'vendas',
-    'venda-detalhes': 'venda_detalhes',
-    'venda-proximo-numero': 'venda_proximo_numero',
-    'itens-venda': 'itens_venda',
-    'notas-fiscais': 'notas_fiscais',
-    'notas-fiscais-servico': 'notas_fiscais_servico',
-    'centros-custo': 'centros_custo',
-    'contas-financeiras': 'contas_financeiras',
-    'saldos-contas-financeiras': 'saldos_contas_financeiras',
-    'eventos-financeiros-alteracoes': 'eventos_financeiros_alteracoes',
-    'saldos-iniciais': 'saldos_iniciais',
-    'categorias-dre': 'categorias_dre',
-    'contrato-proximo-numero': 'contrato_proximo_numero',
-    'produto-categorias': 'produto_categorias',
-    'produto-cest': 'produto_cest',
-    'produto-ecommerce-marcas': 'produto_ecommerce_marcas',
-    'produto-ncm': 'produto_ncm',
-    'produto-unidades-medida': 'produto_unidades_medida',
-    'empresa-conectada': 'empresa_conectada',
-  },
-  omie: {
-    'contas-a-receber': 'contas_receber',
-    'contas-a-pagar': 'contas_pagar',
-    'pedidos-venda': 'pedidos_venda',
-    'pedidos-compra': 'pedidos_compra',
-    'notas-fiscais': 'notas_fiscais',
-    'notas-fiscais-servico': 'notas_servico',
-    'centros-custo': 'departamentos',
-    servicos: 'servicos',
-    contratos: 'contratos',
-    'estoque-atual': 'estoque_saldos',
-    'movimentacoes-estoque': 'estoque_movimentacoes',
-    'lancamentos-financeiros': 'lancamentos_financeiros',
-    'contas-correntes': 'contas_correntes',
-  },
-  olist_erp: {
-    'contas-a-receber': 'contas_receber',
-    'contas-a-pagar': 'contas_pagar',
-    'pedidos-venda': 'pedidos_venda',
-    'pedidos-compra': 'compras',
-    'itens-venda': 'itens_venda',
-    'parcelas-venda': 'parcelas_venda',
-    'notas-fiscais': 'notas_fiscais',
-    'notas-consumidor': 'notas_consumidor',
-    'estoque-atual': 'estoque',
-    'movimentacoes-estoque': 'estoque_movimentacoes',
-    'listas-preco': 'listas_preco',
-    'formas-envio': 'formas_envio',
-    'formas-pagamento': 'formas_pagamento',
-    'empresa-conectada': 'empresa_conectada',
-    'uso-api': 'uso_api',
-  },
-  tiny: {
-    'contas-a-receber': 'contas_receber',
-    'contas-a-pagar': 'contas_pagar',
-    'pedidos-venda': 'pedidos_venda',
-    'pedidos-compra': 'compras',
-    'itens-venda': 'itens_venda',
-    'parcelas-venda': 'parcelas_venda',
-    'notas-fiscais': 'notas_fiscais',
-    'notas-consumidor': 'notas_consumidor',
-    'estoque-atual': 'estoque',
-    'movimentacoes-estoque': 'estoque_movimentacoes',
-    'listas-preco': 'listas_preco',
-    'formas-envio': 'formas_envio',
-    'formas-pagamento': 'formas_pagamento',
-    'empresa-conectada': 'empresa_conectada',
-    'uso-api': 'uso_api',
-  },
-}
-
-function normalizeResourceAlias(resource: string) {
-  return resource.replace(/_/g, '-')
-}
-
-function getPermissionAliases(provider: string, resource: ConnectedErpResource) {
-  const providerResource = LIVE_PERMISSION_PROVIDER_ALIASES[provider]?.[resource]
-  const aliases = new Set<string>([
-    resource,
-    normalizeResourceAlias(resource),
-  ])
-  if (providerResource) {
-    aliases.add(providerResource)
-    aliases.add(normalizeResourceAlias(providerResource))
-  }
-  return [...aliases].filter(Boolean)
-}
-
-function hasResourceGrant(resources: string[], aliases: string[]) {
-  return resources.includes('*') || aliases.some((alias) => resources.includes(alias))
-}
-
 async function listActiveConnections(tenantId: number, provider: string | null) {
   const connections = await listIntegrationConnections({
     tenantId,
@@ -309,9 +200,8 @@ export async function executeConnectedErpTool(
   for (const connection of connections) {
     if (action === 'listar_live' || action === 'ler_live') {
       const permissions = await getIntegrationPluginPermissions(connection.id, tenantId)
-      const permissionAliases = getPermissionAliases(connection.provider, resource)
-      if (!permissions?.enabled || !hasResourceGrant(permissions.liveReadResources, permissionAliases)) {
-        const error = `MCP nao tem permissao de leitura live para ${resource} na conexao ${connection.displayName}.`
+      if (!permissions?.enabled) {
+        const error = `MCP nao esta habilitado para a conexao ${connection.displayName}.`
         providers.push(connectionStatus(connection, false, error))
         errors.push(error)
         continue

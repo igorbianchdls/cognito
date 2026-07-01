@@ -25,17 +25,19 @@ import { renderIntegrationLogo, toolkitHasIcon } from '@/products/integracoes/sh
 import {
   DATA_CONNECTOR_TOP_PRIORITY_ORDER,
 } from '@/products/integracoes/shared/catalogPresentation'
+import { BANK_TOOLKITS, BANK_TOOLKIT_SLUGS, isBankToolkit } from '@/products/integracoes/shared/bankToolkits'
 import { getIntegrationProvider, INTEGRATION_PROVIDER_TOOLKITS } from '@/products/integracoes/shared/providers/providerCatalog'
 import type { IntegrationProvider } from '@/products/integracoes/shared/providers/providerTypes'
 import type { ToolkitDefinition, ToolkitStatusMap } from '@/products/integracoes/shared/types'
 
-type CatalogCategory = 'all' | 'erp' | 'crm' | 'analytics' | 'communication' | 'data' | 'productivity' | 'marketing' | 'support' | 'other'
+type CatalogCategory = 'all' | 'erp' | 'crm' | 'banking' | 'analytics' | 'communication' | 'data' | 'productivity' | 'marketing' | 'support' | 'other'
 type SortMode = 'popular' | 'name' | 'connected'
 
 const CATEGORY_TABS: Array<{ value: CatalogCategory; label: string }> = [
   { value: 'all', label: 'Todas' },
   { value: 'erp', label: 'ERP' },
   { value: 'crm', label: 'CRM' },
+  { value: 'banking', label: 'Bancos' },
   { value: 'analytics', label: 'Analytics' },
   { value: 'communication', label: 'Comunicação' },
   { value: 'data', label: 'Dados & Relatórios' },
@@ -50,6 +52,11 @@ const SORT_LABELS: Record<SortMode, string> = {
   name: 'Nome (A-Z)',
   connected: 'Conectadas primeiro',
 }
+
+const CATALOG_PRIORITY_ORDER = [
+  ...DATA_CONNECTOR_TOP_PRIORITY_ORDER,
+  ...BANK_TOOLKIT_SLUGS,
+] as const
 
 const COMMUNICATION_SLUGS = new Set([
   'GMAIL',
@@ -159,6 +166,7 @@ const SUPPORT_SLUGS = new Set([
 
 function categorizeToolkit(slug: string): CatalogCategory {
   const key = String(slug).toUpperCase()
+  if (isBankToolkit(key)) return 'banking'
   const provider = getIntegrationProvider(key)
   if (provider?.domain === 'erp') return 'erp'
   if (provider?.domain === 'crm') return 'crm'
@@ -252,12 +260,15 @@ function CatalogCard({
   onAction: (toolkit: ToolkitDefinition) => void
 }) {
   const hasDataConnection = Boolean(dataConnection)
+  const isBankCatalogOnly = isBankToolkit(toolkit.slug) && !provider
   const dataConnectionActive = isDataConnectionActive(dataConnection)
   const needsReconnect = connectionNeedsReconnect(dataConnection)
   const oauthInConfiguration = !hasDataConnection && isOAuthInConfiguration(provider, readinessLoaded)
   const connected = dataConnectionActive && !needsReconnect
   const category = CATEGORY_TABS.find((tab) => tab.value === categorizeToolkit(toolkit.slug))?.label ?? 'Outros'
-  const statusLabel = oauthInConfiguration
+  const statusLabel = isBankCatalogOnly
+    ? 'Via Pluggy'
+    : oauthInConfiguration
     ? 'Em configuração'
     : needsReconnect
       ? 'Reautenticar'
@@ -270,10 +281,12 @@ function CatalogCard({
       ? dataConnection?.uiStatus?.description || 'Conexão pronta. Configure data warehouse, Otto IA e sincronização quando quiser.'
       : oauthInConfiguration
         ? provider?.oauthReadiness?.message || 'OAuth em configuração. Este conector ficará disponível em breve.'
-        : 'Conecte sua conta para trazer os dados principais automaticamente.'
+        : isBankCatalogOnly
+          ? 'Conector bancário previsto para Pluggy. A conexão real será ativada na próxima etapa.'
+          : 'Conecte sua conta para trazer os dados principais automaticamente.'
   const isBusy = busySlug === toolkit.slug || busySlug === dataConnection?.id
-  const buttonLabel = oauthInConfiguration ? 'Em configuração' : isBusy ? 'Abrindo...' : hasDataConnection ? 'Configurar' : 'Conectar'
-  const statusVariant = connected ? 'default' : hasDataConnection || oauthInConfiguration ? 'secondary' : 'outline'
+  const buttonLabel = isBankCatalogOnly ? 'Em breve' : oauthInConfiguration ? 'Em configuração' : isBusy ? 'Abrindo...' : hasDataConnection ? 'Configurar' : 'Conectar'
+  const statusVariant = connected ? 'default' : hasDataConnection || oauthInConfiguration || isBankCatalogOnly ? 'secondary' : 'outline'
 
   return (
     <Card className="h-full min-h-[252px] gap-0 rounded-xl py-0 shadow-[0_12px_30px_rgba(23,32,58,0.06)]">
@@ -314,8 +327,8 @@ function CatalogCard({
           <Button
             type="button"
             onClick={() => onAction(toolkit)}
-            disabled={isBusy || oauthInConfiguration}
-            variant={connected || oauthInConfiguration ? 'outline' : 'default'}
+            disabled={isBusy || oauthInConfiguration || isBankCatalogOnly}
+            variant={connected || oauthInConfiguration || isBankCatalogOnly ? 'outline' : 'default'}
             className="h-10 shrink-0"
           >
             {buttonLabel}
@@ -359,7 +372,7 @@ export default function IntegracoesPage() {
   )
   const dataConnectorSamples = useMemo(() => {
     const map = new Map<string, ToolkitDefinition>()
-    for (const tk of INTEGRATION_PROVIDER_TOOLKITS) {
+    for (const tk of [...INTEGRATION_PROVIDER_TOOLKITS, ...BANK_TOOLKITS]) {
       map.set(String(tk.slug).toUpperCase(), tk)
     }
     return Array.from(map.values())
@@ -391,7 +404,7 @@ export default function IntegracoesPage() {
 
   const catalogToolkits = useMemo(() => {
     const source = dataConnectorSamples
-    const priority = DATA_CONNECTOR_TOP_PRIORITY_ORDER
+    const priority = CATALOG_PRIORITY_ORDER
     const statusMap = connectionStatusMap
     const query = search.trim().toLowerCase()
 

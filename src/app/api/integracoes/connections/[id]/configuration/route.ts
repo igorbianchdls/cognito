@@ -86,14 +86,14 @@ function normalizeMcpPreset(value: unknown): McpPreset {
   return 'blocked'
 }
 
-function applyMcpPreset(preset: McpPreset, resources: string[]) {
+function applyMcpPreset(preset: McpPreset) {
   if (preset === 'read_only') {
     return {
       enabled: true,
-      readResources: resources,
-      liveReadResources: [],
-      writeResources: [],
-      destructiveResources: [],
+      readResources: ['*'],
+      liveReadResources: ['*'],
+      writeResources: ['*'],
+      destructiveResources: ['*'],
       requireConfirmation: true,
     }
   }
@@ -101,10 +101,10 @@ function applyMcpPreset(preset: McpPreset, resources: string[]) {
   if (preset === 'actions_with_confirmation') {
     return {
       enabled: true,
-      readResources: resources,
+      readResources: ['*'],
       liveReadResources: ['*'],
       writeResources: ['*'],
-      destructiveResources: [],
+      destructiveResources: ['*'],
       requireConfirmation: true,
     }
   }
@@ -117,22 +117,6 @@ function applyMcpPreset(preset: McpPreset, resources: string[]) {
     destructiveResources: [],
     requireConfirmation: true,
   }
-}
-
-function providerResourceSlugs(provider: ReturnType<typeof requireIntegrationProvider>) {
-  return provider.resources.map((resource) => resource.slug)
-}
-
-function normalizePermissionResources(
-  provider: ReturnType<typeof requireIntegrationProvider>,
-  value: unknown,
-  fallback: string[],
-  wildcardResources = providerResourceSlugs(provider),
-) {
-  const requested = asStringArray(value)
-  const source = requested === undefined ? fallback : requested
-  if (source.includes('*')) return normalizeRequestedResources(provider, wildcardResources)
-  return normalizeRequestedResources(provider, source)
 }
 
 function nextSyncAtFor(frequency: string) {
@@ -367,32 +351,12 @@ export async function PATCH(
     if (Object.keys(mcp).length > 0) {
       const currentPermissions = parts.permissions
       const preset = normalizeMcpPreset(mcp.preset ?? currentPermissions.metadata?.mcpPreset)
-      const baseResources = parts.pipeline?.selectedResources?.length
-        ? parts.pipeline.selectedResources
-        : connection.selectedResources
-      const presetPermissions = applyMcpPreset(preset, baseResources)
+      const presetPermissions = applyMcpPreset(preset)
 
       parts.permissions = await upsertIntegrationPluginPermissions({
         tenantId,
         connectionId: connection.id,
         enabled: mcp.enabled == null ? presetPermissions.enabled : Boolean(mcp.enabled),
-        readResources: normalizePermissionResources(
-          provider,
-          mcp.readResources ?? mcp.read_resources,
-          presetPermissions.readResources,
-          baseResources,
-        ),
-        liveReadResources: normalizePermissionResources(
-          provider,
-          mcp.liveReadResources ?? mcp.live_read_resources,
-          presetPermissions.liveReadResources,
-        ),
-        writeResources: normalizePermissionResources(provider, mcp.writeResources ?? mcp.write_resources, presetPermissions.writeResources),
-        destructiveResources: normalizePermissionResources(
-          provider,
-          mcp.destructiveResources ?? mcp.destructive_resources,
-          presetPermissions.destructiveResources,
-        ),
         requireConfirmation: mcp.requireConfirmation == null && mcp.require_confirmation == null
           ? presetPermissions.requireConfirmation
           : Boolean(mcp.requireConfirmation ?? mcp.require_confirmation),

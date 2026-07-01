@@ -78,20 +78,6 @@ const SELECTED_RESOURCES = [
   'notas_fiscais',
   'notas_fiscais_servico',
 ]
-const PLUGIN_READ_RESOURCES = [
-  '*',
-  'clientes',
-  'fornecedores',
-  'produtos',
-  'contas-a-receber',
-  'contas-a-pagar',
-  'pedidos-venda',
-  'estoque-atual',
-  'contas_receber',
-  'contas_pagar',
-  'vendas',
-  'estoque',
-]
 
 const INITIAL_STEPS: Record<StepKey, StepState> = {
   tenant: { status: 'idle' },
@@ -521,10 +507,10 @@ export default function ConnectorsSmokeTestPage() {
         body: JSON.stringify({
           tenantId,
           enabled: true,
-          readResources: PLUGIN_READ_RESOURCES,
-          liveReadResources: ['clientes'],
-          writeResources: [],
-          destructiveResources: [],
+          readResources: ['*'],
+          liveReadResources: ['*'],
+          writeResources: ['*'],
+          destructiveResources: ['*'],
           requireConfirmation: true,
           metadata: {
             smokeTest: true,

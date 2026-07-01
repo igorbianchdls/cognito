@@ -104,10 +104,6 @@ function connectionStatus(connection: IntegrationConnection, ok: boolean, error?
   }
 }
 
-function hasResourceGrant(resources: string[], resource: string) {
-  return resources.includes('*') || resources.includes(resource)
-}
-
 async function listActiveConnections(tenantId: number, provider: string | null) {
   const connections = await listIntegrationConnections({
     tenantId,
@@ -155,8 +151,8 @@ export async function executeConnectedCrmTool(
   for (const connection of connections) {
     if (action === 'listar_live' || action === 'ler_live') {
       const permissions = await getIntegrationPluginPermissions(connection.id, tenantId)
-      if (!permissions?.enabled || !hasResourceGrant(permissions.liveReadResources, resource)) {
-        const error = `MCP nao tem permissao de leitura live para ${resource} na conexao ${connection.displayName}.`
+      if (!permissions?.enabled) {
+        const error = `MCP nao esta habilitado para a conexao ${connection.displayName}.`
         providers.push(connectionStatus(connection, false, error))
         errors.push(error)
         continue
