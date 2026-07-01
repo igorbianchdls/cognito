@@ -27,7 +27,7 @@ function buildShopifyDashboardSource(themeName: string) {
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 14, width: '34%', minWidth: 320 }}>
               <DatePicker
-                table="ecommerce.pedidos"
+                table="ecommerce_orders"
                 field="data_pedido"
                 presets={['7d', '30d', '90d', 'month']}
                 labelStyle={{ margin: 0, fontSize: 11, color: theme.headerDatePickerLabel, textTransform: 'uppercase', letterSpacing: '0.06em' }}
@@ -50,19 +50,19 @@ function buildShopifyDashboardSource(themeName: string) {
               <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'flex-end', gap: 14 }}>
                 <Filter
                   label="Loja"
-                  table="ecommerce.pedidos"
-                  field="loja_id"
+                  table="ecommerce_orders"
+                  field="cliente_id"
                   mode="multiple"
                   search
                   clearable
                   width={220}
                   query={\`
                     SELECT DISTINCT
-                      src.loja_id::text AS value,
-                      COALESCE(src.loja_id::text, 'Sem loja') AS label
-                    FROM ecommerce.pedidos src
-                    WHERE src.plataforma = 'shopify'
-                      AND src.loja_id IS NOT NULL
+                      CAST(src.cliente_id AS STRING) AS value,
+                      COALESCE(CAST(src.cliente_id AS STRING), 'Sem loja') AS label
+                    FROM ecommerce_orders src
+                    WHERE 1=1
+                      AND src.cliente_id IS NOT NULL
                     ORDER BY 2 ASC
                   \`}
                 >
@@ -70,7 +70,7 @@ function buildShopifyDashboardSource(themeName: string) {
                 </Filter>
                 <Filter
                   label="Pagamento"
-                  table="ecommerce.pedidos"
+                  table="ecommerce_orders"
                   field="status_pagamento"
                   mode="multiple"
                   search
@@ -78,10 +78,10 @@ function buildShopifyDashboardSource(themeName: string) {
                   width={220}
                   query={\`
                     SELECT DISTINCT
-                      src.status_pagamento::text AS value,
+                      CAST(src.status_pagamento AS STRING) AS value,
                       COALESCE(src.status_pagamento, 'Sem status') AS label
-                    FROM ecommerce.pedidos src
-                    WHERE src.plataforma = 'shopify'
+                    FROM ecommerce_orders src
+                    WHERE 1=1
                       AND COALESCE(src.status_pagamento, '') <> ''
                     ORDER BY 2 ASC
                   \`}
@@ -98,10 +98,10 @@ function buildShopifyDashboardSource(themeName: string) {
           </section>
 
           <section style={{ boxSizing: 'border-box', minWidth: 0, display: 'grid', gridTemplateColumns: 'repeat(12, minmax(0, 1fr))', gap: 16, alignItems: 'stretch' }}>
-            <article id="shopify-kpi-gmv" style={{ boxSizing: 'border-box', minWidth: 0, display: 'flex', flexDirection: 'column', padding: 18, border: '1px solid ' + theme.surfaceBorder, borderRadius: theme.cardFrame ? 0 : 16, backgroundColor: theme.surfaceBg, boxShadow: theme.cardFrame ? 'none' : '0 1px 2px rgba(15, 23, 42, 0.04)', gridColumn: 'span 3', minHeight: 72, height: '100%' }}><KPI title="GMV" dataQuery={{ query: \`SELECT COALESCE(SUM(src.valor_total), 0)::float AS value FROM ecommerce.pedidos src WHERE src.plataforma = 'shopify' {{filters}}\`, limit: 1 }} format="currency" comparisonMode="previous_period"><KPICompare /></KPI></article>
-            <article id="shopify-kpi-pedidos" style={{ boxSizing: 'border-box', minWidth: 0, display: 'flex', flexDirection: 'column', padding: 18, border: '1px solid ' + theme.surfaceBorder, borderRadius: theme.cardFrame ? 0 : 16, backgroundColor: theme.surfaceBg, boxShadow: theme.cardFrame ? 'none' : '0 1px 2px rgba(15, 23, 42, 0.04)', gridColumn: 'span 3', minHeight: 72, height: '100%' }}><KPI title="Pedidos" dataQuery={{ query: \`SELECT COUNT(*)::float AS value FROM ecommerce.pedidos src WHERE src.plataforma = 'shopify' {{filters}}\`, limit: 1 }} format="number" comparisonMode="previous_period"><KPICompare /></KPI></article>
-            <article id="shopify-kpi-ticket" style={{ boxSizing: 'border-box', minWidth: 0, display: 'flex', flexDirection: 'column', padding: 18, border: '1px solid ' + theme.surfaceBorder, borderRadius: theme.cardFrame ? 0 : 16, backgroundColor: theme.surfaceBg, boxShadow: theme.cardFrame ? 'none' : '0 1px 2px rgba(15, 23, 42, 0.04)', gridColumn: 'span 3', minHeight: 72, height: '100%' }}><KPI title="Ticket medio" dataQuery={{ query: \`SELECT COALESCE(AVG(src.valor_total), 0)::float AS value FROM ecommerce.pedidos src WHERE src.plataforma = 'shopify' {{filters}}\`, limit: 1 }} format="currency" comparisonMode="previous_period"><KPICompare /></KPI></article>
-            <article id="shopify-kpi-reembolsos" style={{ boxSizing: 'border-box', minWidth: 0, display: 'flex', flexDirection: 'column', padding: 18, border: '1px solid ' + theme.surfaceBorder, borderRadius: theme.cardFrame ? 0 : 16, backgroundColor: theme.surfaceBg, boxShadow: theme.cardFrame ? 'none' : '0 1px 2px rgba(15, 23, 42, 0.04)', gridColumn: 'span 3', minHeight: 72, height: '100%' }}><KPI title="Reembolsos" dataQuery={{ query: \`SELECT COALESCE(SUM(src.valor_reembolsado), 0)::float AS value FROM ecommerce.pedidos src WHERE src.plataforma = 'shopify' {{filters}}\`, limit: 1 }} format="currency" comparisonMode="previous_period"><KPICompare /></KPI></article>
+            <article id="shopify-kpi-gmv" style={{ boxSizing: 'border-box', minWidth: 0, display: 'flex', flexDirection: 'column', padding: 18, border: '1px solid ' + theme.surfaceBorder, borderRadius: theme.cardFrame ? 0 : 16, backgroundColor: theme.surfaceBg, boxShadow: theme.cardFrame ? 'none' : '0 1px 2px rgba(15, 23, 42, 0.04)', gridColumn: 'span 3', minHeight: 72, height: '100%' }}><KPI title="GMV" dataQuery={{ query: \`SELECT COALESCE(SUM(src.valor_total), 0) AS value FROM ecommerce_orders src WHERE 1=1 {{filters}}\`, limit: 1 }} format="currency" comparisonMode="previous_period"><KPICompare /></KPI></article>
+            <article id="shopify-kpi-pedidos" style={{ boxSizing: 'border-box', minWidth: 0, display: 'flex', flexDirection: 'column', padding: 18, border: '1px solid ' + theme.surfaceBorder, borderRadius: theme.cardFrame ? 0 : 16, backgroundColor: theme.surfaceBg, boxShadow: theme.cardFrame ? 'none' : '0 1px 2px rgba(15, 23, 42, 0.04)', gridColumn: 'span 3', minHeight: 72, height: '100%' }}><KPI title="Pedidos" dataQuery={{ query: \`SELECT COUNT(*) AS value FROM ecommerce_orders src WHERE 1=1 {{filters}}\`, limit: 1 }} format="number" comparisonMode="previous_period"><KPICompare /></KPI></article>
+            <article id="shopify-kpi-ticket" style={{ boxSizing: 'border-box', minWidth: 0, display: 'flex', flexDirection: 'column', padding: 18, border: '1px solid ' + theme.surfaceBorder, borderRadius: theme.cardFrame ? 0 : 16, backgroundColor: theme.surfaceBg, boxShadow: theme.cardFrame ? 'none' : '0 1px 2px rgba(15, 23, 42, 0.04)', gridColumn: 'span 3', minHeight: 72, height: '100%' }}><KPI title="Ticket medio" dataQuery={{ query: \`SELECT COALESCE(AVG(src.valor_total), 0) AS value FROM ecommerce_orders src WHERE 1=1 {{filters}}\`, limit: 1 }} format="currency" comparisonMode="previous_period"><KPICompare /></KPI></article>
+            <article id="shopify-kpi-reembolsos" style={{ boxSizing: 'border-box', minWidth: 0, display: 'flex', flexDirection: 'column', padding: 18, border: '1px solid ' + theme.surfaceBorder, borderRadius: theme.cardFrame ? 0 : 16, backgroundColor: theme.surfaceBg, boxShadow: theme.cardFrame ? 'none' : '0 1px 2px rgba(15, 23, 42, 0.04)', gridColumn: 'span 3', minHeight: 72, height: '100%' }}><KPI title="Reembolsos" dataQuery={{ query: \`SELECT COALESCE(SUM(CASE WHEN LOWER(COALESCE(src.status_pagamento, '')) LIKE '%reembols%' THEN src.valor_total ELSE 0 END), 0) AS value FROM ecommerce_orders src WHERE 1=1 {{filters}}\`, limit: 1 }} format="currency" comparisonMode="previous_period"><KPICompare /></KPI></article>
           </section>
 
           <Tabs defaultValue="sales">
@@ -132,11 +132,11 @@ function buildShopifyDashboardSource(themeName: string) {
                     dataQuery={{
                       query: \`
                         SELECT
-                          COALESCE(src.loja_id::text, 'sem_loja') AS key,
-                          COALESCE(src.loja_id::text, 'Sem loja') AS label,
-                          COALESCE(SUM(src.valor_total), 0)::float AS value
-                        FROM ecommerce.pedidos src
-                        WHERE src.plataforma = 'shopify'
+                          COALESCE(CAST(src.cliente_id AS STRING), 'sem_loja') AS key,
+                          COALESCE(CAST(src.cliente_id AS STRING), 'Sem loja') AS label,
+                          COALESCE(SUM(src.valor_total), 0) AS value
+                        FROM ecommerce_orders src
+                        WHERE 1=1
                           {{filters}}
                         GROUP BY 1, 2
                         ORDER BY 3 DESC
@@ -166,9 +166,9 @@ function buildShopifyDashboardSource(themeName: string) {
                         SELECT
                           COALESCE(src.status_pagamento, 'sem_status') AS key,
                           COALESCE(src.status_pagamento, 'Sem status') AS label,
-                          COUNT(*)::float AS value
-                        FROM ecommerce.pedidos src
-                        WHERE src.plataforma = 'shopify'
+                          COUNT(*) AS value
+                        FROM ecommerce_orders src
+                        WHERE 1=1
                           {{filters}}
                         GROUP BY 1, 2
                         ORDER BY 3 DESC
@@ -203,11 +203,11 @@ function buildShopifyDashboardSource(themeName: string) {
                     dataQuery={{
                       query: \`
                         SELECT
-                          TO_CHAR(DATE_TRUNC('month', src.data_pedido), 'YYYY-MM') AS key,
-                          TO_CHAR(DATE_TRUNC('month', src.data_pedido), 'MM/YYYY') AS label,
-                          COALESCE(SUM(src.valor_total), 0)::float AS value
-                        FROM ecommerce.pedidos src
-                        WHERE src.plataforma = 'shopify'
+                          FORMAT_DATE('%Y-%m', DATE_TRUNC(DATE(src.data_pedido), MONTH)) AS key,
+                          FORMAT_DATE('%m/%Y', DATE_TRUNC(DATE(src.data_pedido), MONTH)) AS label,
+                          COALESCE(SUM(src.valor_total), 0) AS value
+                        FROM ecommerce_orders src
+                        WHERE 1=1
                           {{filters}}
                         GROUP BY 1, 2
                         ORDER BY 1 ASC
@@ -239,9 +239,9 @@ function buildShopifyDashboardSource(themeName: string) {
                           SELECT
                             COALESCE(src.status_fulfillment, 'sem_status') AS key,
                             COALESCE(src.status_fulfillment, 'Sem status') AS label,
-                            COUNT(*)::float AS value
-                          FROM ecommerce.pedidos src
-                          WHERE src.plataforma = 'shopify'
+                            COUNT(*) AS value
+                          FROM ecommerce_orders src
+                          WHERE 1=1
                             {{filters}}
                           GROUP BY 1, 2
                           ORDER BY 3 DESC
@@ -293,16 +293,16 @@ function buildShopifyDashboardSource(themeName: string) {
                     dataQuery={{
                       query: \`
                         SELECT
-                          CONCAT('#', src.id::text) AS pedido,
-                          TO_CHAR(src.data_pedido::date, 'DD/MM/YYYY') AS data_pedido,
-                          COALESCE(src.loja_id::text, 'Sem loja') AS loja,
+                          CONCAT('#', CAST(src.pedido_id AS STRING)) AS pedido,
+                          FORMAT_DATE('%d/%m/%Y', DATE(src.data_pedido)) AS data_pedido,
+                          COALESCE(CAST(src.cliente_id AS STRING), 'Sem loja') AS loja,
                           COALESCE(src.status_pagamento, 'Sem status') AS status_pagamento,
                           COALESCE(src.status_fulfillment, 'Sem status') AS status_fulfillment,
-                          COALESCE(src.valor_total, 0)::float AS valor_total
-                        FROM ecommerce.pedidos src
-                        WHERE src.plataforma = 'shopify'
+                          COALESCE(src.valor_total, 0) AS valor_total
+                        FROM ecommerce_orders src
+                        WHERE 1=1
                           {{filters}}
-                        ORDER BY src.data_pedido DESC NULLS LAST, src.id DESC
+                        ORDER BY src.data_pedido DESC NULLS LAST, src.pedido_id DESC
                       \`,
                       limit: 12,
                     }}
@@ -341,11 +341,11 @@ function buildShopifyDashboardSource(themeName: string) {
                     dataQuery={{
                       query: \`
                         SELECT
-                          COALESCE(src.loja_id::text, 'Sem loja') AS loja,
+                          COALESCE(CAST(src.cliente_id AS STRING), 'Sem loja') AS loja,
                           COALESCE(src.status_pagamento, 'Sem status') AS status_pagamento,
-                          COALESCE(src.valor_total, 0)::float AS valor_total
-                        FROM ecommerce.pedidos src
-                        WHERE src.plataforma = 'shopify'
+                          COALESCE(src.valor_total, 0) AS valor_total
+                        FROM ecommerce_orders src
+                        WHERE 1=1
                           {{filters}}
                       \`,
                       limit: 400,

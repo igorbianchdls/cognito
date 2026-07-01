@@ -28,7 +28,7 @@ function buildGoogleAdsDashboardSource(themeName: string) {
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 14, width: '34%', minWidth: 320 }}>
                   <DatePicker
                     label="Periodo de performance"
-                    table="trafegopago.desempenho_diario"
+                    table="paid_media_insights_daily"
                     field="data_ref"
                     presets={['7d', '14d', '30d', '90d']}
                     labelStyle={{ margin: 0, fontSize: 11, color: theme.headerDatePickerLabel, textTransform: 'uppercase', letterSpacing: '0.06em' }}
@@ -51,20 +51,19 @@ function buildGoogleAdsDashboardSource(themeName: string) {
                 <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'flex-end', gap: 14 }}>
                   <Filter
                     label="Conta"
-                    table="trafegopago.desempenho_diario"
-                    field="conta_id"
+                    table="paid_media_insights_daily"
+                    field="account_id"
                     mode="multiple"
                     search
                     clearable
                     width={220}
                     query={\`
                       SELECT DISTINCT
-                        src.conta_id::text AS value,
-                        COALESCE(src.conta_id::text, 'Sem conta') AS label
-                      FROM trafegopago.desempenho_diario src
-                      WHERE src.plataforma = 'google_ads'
-                        AND src.nivel = 'campaign'
-                        AND src.conta_id IS NOT NULL
+                        CAST(src.account_id AS STRING) AS value,
+                        COALESCE(CAST(src.account_id AS STRING), 'Sem conta') AS label
+                      FROM paid_media_insights_daily src
+                      WHERE src.nivel = 'campaign'
+                        AND src.account_id IS NOT NULL
                       ORDER BY 2 ASC
                     \`}
                   >
@@ -72,20 +71,19 @@ function buildGoogleAdsDashboardSource(themeName: string) {
                   </Filter>
                   <Filter
                     label="Grupo"
-                    table="trafegopago.desempenho_diario"
-                    field="grupo_id"
+                    table="paid_media_insights_daily"
+                    field="ad_group_id"
                     mode="multiple"
                     search
                     clearable
                     width={220}
                     query={\`
                       SELECT DISTINCT
-                        src.grupo_id::text AS value,
-                        COALESCE(src.grupo_id::text, 'Sem grupo') AS label
-                      FROM trafegopago.desempenho_diario src
-                      WHERE src.plataforma = 'google_ads'
-                        AND src.nivel = 'campaign'
-                        AND src.grupo_id IS NOT NULL
+                        CAST(src.ad_group_id AS STRING) AS value,
+                        COALESCE(CAST(src.ad_group_id AS STRING), 'Sem grupo') AS label
+                      FROM paid_media_insights_daily src
+                      WHERE src.nivel = 'campaign'
+                        AND src.ad_group_id IS NOT NULL
                       ORDER BY 2 ASC
                     \`}
                   >
@@ -106,10 +104,9 @@ function buildGoogleAdsDashboardSource(themeName: string) {
                   title="Gasto"
                   dataQuery={{
                     query: \`
-                      SELECT COALESCE(SUM(src.gasto), 0)::float AS value
-                      FROM trafegopago.desempenho_diario src
-                      WHERE src.plataforma = 'google_ads'
-                        AND src.nivel = 'campaign'
+                      SELECT COALESCE(SUM(src.spend), 0) AS value
+                      FROM paid_media_insights_daily src
+                      WHERE src.nivel = 'campaign'
                         {{filters}}
                     \`,
                     limit: 1,
@@ -125,10 +122,9 @@ function buildGoogleAdsDashboardSource(themeName: string) {
                   title="Receita atribuida"
                   dataQuery={{
                     query: \`
-                      SELECT COALESCE(SUM(src.receita_atribuida), 0)::float AS value
-                      FROM trafegopago.desempenho_diario src
-                      WHERE src.plataforma = 'google_ads'
-                        AND src.nivel = 'campaign'
+                      SELECT COALESCE(SUM(src.conversion_value), 0) AS value
+                      FROM paid_media_insights_daily src
+                      WHERE src.nivel = 'campaign'
                         {{filters}}
                     \`,
                     limit: 1,
@@ -145,10 +141,9 @@ function buildGoogleAdsDashboardSource(themeName: string) {
                   dataQuery={{
                     query: \`
                       SELECT
-                        CASE WHEN COALESCE(SUM(src.gasto), 0) = 0 THEN 0 ELSE (SUM(src.receita_atribuida) / SUM(src.gasto))::float END AS value
-                      FROM trafegopago.desempenho_diario src
-                      WHERE src.plataforma = 'google_ads'
-                        AND src.nivel = 'campaign'
+                        CASE WHEN COALESCE(SUM(src.spend), 0) = 0 THEN 0 ELSE (SUM(src.conversion_value) / SUM(src.spend)) END AS value
+                      FROM paid_media_insights_daily src
+                      WHERE src.nivel = 'campaign'
                         {{filters}}
                     \`,
                     limit: 1,
@@ -165,10 +160,9 @@ function buildGoogleAdsDashboardSource(themeName: string) {
                   dataQuery={{
                     query: \`
                       SELECT
-                        CASE WHEN COALESCE(SUM(src.conversoes), 0) = 0 THEN 0 ELSE (SUM(src.gasto) / SUM(src.conversoes))::float END AS value
-                      FROM trafegopago.desempenho_diario src
-                      WHERE src.plataforma = 'google_ads'
-                        AND src.nivel = 'campaign'
+                        CASE WHEN COALESCE(SUM(src.conversions), 0) = 0 THEN 0 ELSE (SUM(src.spend) / SUM(src.conversions)) END AS value
+                      FROM paid_media_insights_daily src
+                      WHERE src.nivel = 'campaign'
                         {{filters}}
                     \`,
                     limit: 1,
@@ -209,12 +203,11 @@ function buildGoogleAdsDashboardSource(themeName: string) {
                           dataQuery={{
                             query: \`
                               SELECT
-                                COALESCE(src.campanha_id::text, 'sem_campanha') AS key,
-                                COALESCE(src.campanha_id::text, 'Sem campanha') AS label,
-                                COALESCE(SUM(src.gasto), 0)::float AS value
-                              FROM trafegopago.desempenho_diario src
-                              WHERE src.plataforma = 'google_ads'
-                                AND src.nivel = 'campaign'
+                                COALESCE(CAST(src.campaign_id AS STRING), 'sem_campanha') AS key,
+                                COALESCE(CAST(src.campaign_id AS STRING), 'Sem campanha') AS label,
+                                COALESCE(SUM(src.spend), 0) AS value
+                              FROM paid_media_insights_daily src
+                              WHERE src.nivel = 'campaign'
                                 {{filters}}
                               GROUP BY 1, 2
                               ORDER BY 3 DESC
@@ -242,12 +235,11 @@ function buildGoogleAdsDashboardSource(themeName: string) {
                           dataQuery={{
                             query: \`
                               SELECT
-                                COALESCE(src.conta_id::text, 'sem_conta') AS key,
-                                COALESCE(src.conta_id::text, 'Sem conta') AS label,
-                                CASE WHEN COALESCE(SUM(src.impressoes), 0) = 0 THEN 0 ELSE (SUM(src.cliques) / SUM(src.impressoes))::float END AS value
-                              FROM trafegopago.desempenho_diario src
-                              WHERE src.plataforma = 'google_ads'
-                                AND src.nivel = 'campaign'
+                                COALESCE(CAST(src.account_id AS STRING), 'sem_conta') AS key,
+                                COALESCE(CAST(src.account_id AS STRING), 'Sem conta') AS label,
+                                CASE WHEN COALESCE(SUM(src.impressions), 0) = 0 THEN 0 ELSE (SUM(src.clicks) / SUM(src.impressions)) END AS value
+                              FROM paid_media_insights_daily src
+                              WHERE src.nivel = 'campaign'
                                 {{filters}}
                               GROUP BY 1, 2
                               ORDER BY 3 DESC
@@ -281,12 +273,11 @@ function buildGoogleAdsDashboardSource(themeName: string) {
                           dataQuery={{
                             query: \`
                               SELECT
-                                TO_CHAR(DATE_TRUNC('month', src.data_ref), 'YYYY-MM') AS key,
-                                TO_CHAR(DATE_TRUNC('month', src.data_ref), 'MM/YYYY') AS label,
-                                COALESCE(SUM(src.gasto), 0)::float AS value
-                              FROM trafegopago.desempenho_diario src
-                              WHERE src.plataforma = 'google_ads'
-                                AND src.nivel = 'campaign'
+                                FORMAT_DATE('%Y-%m', DATE_TRUNC(DATE(src.data_ref), MONTH)) AS key,
+                                FORMAT_DATE('%m/%Y', DATE_TRUNC(DATE(src.data_ref), MONTH)) AS label,
+                                COALESCE(SUM(src.spend), 0) AS value
+                              FROM paid_media_insights_daily src
+                              WHERE src.nivel = 'campaign'
                                 {{filters}}
                               GROUP BY 1, 2
                               ORDER BY 1 ASC
@@ -316,12 +307,11 @@ function buildGoogleAdsDashboardSource(themeName: string) {
                               dataQuery={{
                                 query: \`
                                   SELECT
-                                    TO_CHAR(DATE_TRUNC('month', src.data_ref), 'YYYY-MM') AS key,
-                                    TO_CHAR(DATE_TRUNC('month', src.data_ref), 'MM/YYYY') AS label,
-                                    CASE WHEN COALESCE(SUM(src.cliques), 0) = 0 THEN 0 ELSE (SUM(src.conversoes) / SUM(src.cliques))::float END AS value
-                                  FROM trafegopago.desempenho_diario src
-                                  WHERE src.plataforma = 'google_ads'
-                                    AND src.nivel = 'campaign'
+                                    FORMAT_DATE('%Y-%m', DATE_TRUNC(DATE(src.data_ref), MONTH)) AS key,
+                                    FORMAT_DATE('%m/%Y', DATE_TRUNC(DATE(src.data_ref), MONTH)) AS label,
+                                    CASE WHEN COALESCE(SUM(src.clicks), 0) = 0 THEN 0 ELSE (SUM(src.conversions) / SUM(src.clicks)) END AS value
+                                  FROM paid_media_insights_daily src
+                                  WHERE src.nivel = 'campaign'
                                     {{filters}}
                                   GROUP BY 1, 2
                                   ORDER BY 1 ASC
@@ -374,15 +364,14 @@ function buildGoogleAdsDashboardSource(themeName: string) {
                           dataQuery={{
                             query: \`
                               SELECT
-                                COALESCE(src.conta_id::text, 'Sem conta') AS conta,
-                                COALESCE(src.campanha_id::text, 'Sem campanha') AS campanha,
-                                COALESCE(SUM(src.cliques), 0)::float AS cliques,
-                                COALESCE(SUM(src.conversoes), 0)::float AS conversoes,
-                                CASE WHEN COALESCE(SUM(src.conversoes), 0) = 0 THEN 0 ELSE (SUM(src.gasto) / SUM(src.conversoes))::float END AS cpa,
-                                CASE WHEN COALESCE(SUM(src.gasto), 0) = 0 THEN 0 ELSE (SUM(src.receita_atribuida) / SUM(src.gasto))::float END AS roas
-                              FROM trafegopago.desempenho_diario src
-                              WHERE src.plataforma = 'google_ads'
-                                AND src.nivel = 'campaign'
+                                COALESCE(CAST(src.account_id AS STRING), 'Sem conta') AS conta,
+                                COALESCE(CAST(src.campaign_id AS STRING), 'Sem campanha') AS campanha,
+                                COALESCE(SUM(src.clicks), 0) AS cliques,
+                                COALESCE(SUM(src.conversions), 0) AS conversoes,
+                                CASE WHEN COALESCE(SUM(src.conversions), 0) = 0 THEN 0 ELSE (SUM(src.spend) / SUM(src.conversions)) END AS cpa,
+                                CASE WHEN COALESCE(SUM(src.spend), 0) = 0 THEN 0 ELSE (SUM(src.conversion_value) / SUM(src.spend)) END AS roas
+                              FROM paid_media_insights_daily src
+                              WHERE src.nivel = 'campaign'
                                 {{filters}}
                               GROUP BY 1, 2
                               ORDER BY cliques DESC, campanha ASC
@@ -424,12 +413,11 @@ function buildGoogleAdsDashboardSource(themeName: string) {
                           dataQuery={{
                             query: \`
                               SELECT
-                                COALESCE(src.conta_id::text, 'Sem conta') AS conta,
-                                COALESCE(src.campanha_id::text, 'Sem campanha') AS campanha,
-                                COALESCE(src.gasto, 0)::float AS gasto
-                              FROM trafegopago.desempenho_diario src
-                              WHERE src.plataforma = 'google_ads'
-                                AND src.nivel = 'campaign'
+                                COALESCE(CAST(src.account_id AS STRING), 'Sem conta') AS conta,
+                                COALESCE(CAST(src.campaign_id AS STRING), 'Sem campanha') AS campanha,
+                                COALESCE(src.spend, 0) AS gasto
+                              FROM paid_media_insights_daily src
+                              WHERE src.nivel = 'campaign'
                                 {{filters}}
                             \`,
                             limit: 300,

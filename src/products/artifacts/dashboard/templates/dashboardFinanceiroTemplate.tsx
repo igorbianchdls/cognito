@@ -29,7 +29,7 @@ function buildFinanceiroDashboardSource(themeName: string) {
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 14, width: '34%', minWidth: 320 }}>
                   <DatePicker
                     label="Periodo de vencimento"
-                    table="financeiro.contas_pagar"
+                    table="contas_pagar"
                     field="data_vencimento"
                     presets={['7d', '30d', '90d', 'month']}
                     labelStyle={{ margin: 0, fontSize: 11, color: theme.headerDatePickerLabel, textTransform: 'uppercase', letterSpacing: '0.06em' }}
@@ -49,7 +49,7 @@ function buildFinanceiroDashboardSource(themeName: string) {
                 <h2 data-ui="section-title-sm">Status</h2>
                 <Filter
                   label="Status"
-                  table="financeiro.contas_pagar"
+                  table="contas_pagar"
                   field="status"
                   mode="multiple"
                   search
@@ -57,9 +57,9 @@ function buildFinanceiroDashboardSource(themeName: string) {
                   width="100%"
                   query={\`
                     SELECT DISTINCT
-                      LOWER(src.status)::text AS value,
+                      CAST(LOWER(src.status) AS STRING) AS value,
                       COALESCE(src.status, 'Sem status') AS label
-                    FROM financeiro.contas_pagar src
+                    FROM contas_pagar src
                     WHERE COALESCE(src.status, '') <> ''
                     ORDER BY 2 ASC
                   \`}
@@ -73,19 +73,18 @@ function buildFinanceiroDashboardSource(themeName: string) {
                 <h2 data-ui="section-title-sm">Categoria despesa</h2>
                 <Filter
                   label="Categoria despesa"
-                  table="financeiro.contas_pagar"
-                  field="categoria_despesa_id"
+                  table="contas_pagar"
+                  field="categoria"
                   mode="multiple"
                   search
                   clearable
                   width="100%"
                   query={\`
                     SELECT DISTINCT
-                      cp.categoria_despesa_id::text AS value,
-                      COALESCE(cd.nome, 'Sem categoria') AS label
-                    FROM financeiro.contas_pagar cp
-                    LEFT JOIN financeiro.categorias_despesa cd ON cd.id = cp.categoria_despesa_id
-                    WHERE cp.categoria_despesa_id IS NOT NULL
+                      CAST(cp.categoria AS STRING) AS value,
+                      COALESCE(cp.categoria, 'Sem categoria') AS label
+                    FROM contas_pagar cp
+                    WHERE cp.categoria IS NOT NULL
                     ORDER BY 2 ASC
                   \`}
                 >
@@ -98,19 +97,18 @@ function buildFinanceiroDashboardSource(themeName: string) {
                 <h2 data-ui="section-title-sm">Fornecedor</h2>
                 <Filter
                   label="Fornecedor"
-                  table="financeiro.contas_pagar"
-                  field="fornecedor_id"
+                  table="contas_pagar"
+                  field="pessoa_id"
                   mode="multiple"
                   search
                   clearable
                   width="100%"
                   query={\`
                     SELECT DISTINCT
-                      cp.fornecedor_id::text AS value,
-                      COALESCE(f.nome_fantasia, 'Sem fornecedor') AS label
-                    FROM financeiro.contas_pagar cp
-                    LEFT JOIN entidades.fornecedores f ON f.id = cp.fornecedor_id
-                    WHERE cp.fornecedor_id IS NOT NULL
+                      CAST(cp.pessoa_id AS STRING) AS value,
+                      COALESCE(cp.pessoa_nome, 'Sem fornecedor') AS label
+                    FROM contas_pagar cp
+                    WHERE cp.pessoa_id IS NOT NULL
                     ORDER BY 2 ASC
                   \`}
                 >
@@ -123,7 +121,7 @@ function buildFinanceiroDashboardSource(themeName: string) {
             <article id="financeiro-kpi-ar" style={{ boxSizing: 'border-box', minWidth: 0, display: 'flex', flexDirection: 'column', padding: 18, border: '1px solid ' + theme.surfaceBorder, borderRadius: theme.cardFrame ? 0 : 16, backgroundColor: theme.surfaceBg, boxShadow: theme.cardFrame ? 'none' : '0 1px 2px rgba(15, 23, 42, 0.04)', gridColumn: 'span 3', minHeight: 72, height: '100%' }}>
                 <KPI
                   title="Contas a receber"
-                  dataQuery={{ query: \`SELECT COALESCE(SUM(cr.valor_liquido), 0)::float AS value FROM financeiro.contas_receber cr WHERE 1=1 {{filters}}\`, limit: 1 }}
+                  dataQuery={{ query: \`SELECT COALESCE(SUM(cr.valor), 0) AS value FROM contas_receber cr WHERE 1=1 {{filters}}\`, limit: 1 }}
                   format="currency"
                   comparisonMode="previous_period"
                 >
@@ -133,7 +131,7 @@ function buildFinanceiroDashboardSource(themeName: string) {
             <article id="financeiro-kpi-ap" style={{ boxSizing: 'border-box', minWidth: 0, display: 'flex', flexDirection: 'column', padding: 18, border: '1px solid ' + theme.surfaceBorder, borderRadius: theme.cardFrame ? 0 : 16, backgroundColor: theme.surfaceBg, boxShadow: theme.cardFrame ? 'none' : '0 1px 2px rgba(15, 23, 42, 0.04)', gridColumn: 'span 3', minHeight: 72, height: '100%' }}>
                 <KPI
                   title="Contas a pagar"
-                  dataQuery={{ query: \`SELECT COALESCE(SUM(cp.valor_liquido), 0)::float AS value FROM financeiro.contas_pagar cp WHERE 1=1 {{filters}}\`, limit: 1 }}
+                  dataQuery={{ query: \`SELECT COALESCE(SUM(cp.valor), 0) AS value FROM contas_pagar cp WHERE 1=1 {{filters}}\`, limit: 1 }}
                   format="currency"
                   comparisonMode="previous_period"
                 >
@@ -146,9 +144,9 @@ function buildFinanceiroDashboardSource(themeName: string) {
                   dataQuery={{
                     query: \`
                       SELECT (
-                        COALESCE((SELECT SUM(cr.valor_liquido) FROM financeiro.contas_receber cr WHERE 1=1 {{filters}}), 0)
-                        - COALESCE((SELECT SUM(cp.valor_liquido) FROM financeiro.contas_pagar cp WHERE 1=1 {{filters}}), 0)
-                      )::float AS value
+                        COALESCE((SELECT SUM(cr.valor) FROM contas_receber cr WHERE 1=1 {{filters}}), 0)
+                        - COALESCE((SELECT SUM(cp.valor) FROM contas_pagar cp WHERE 1=1 {{filters}}), 0)
+                      ) AS value
                     \`,
                     limit: 1,
                   }}
@@ -161,7 +159,7 @@ function buildFinanceiroDashboardSource(themeName: string) {
             <article id="financeiro-kpi-titulos" style={{ boxSizing: 'border-box', minWidth: 0, display: 'flex', flexDirection: 'column', padding: 18, border: '1px solid ' + theme.surfaceBorder, borderRadius: theme.cardFrame ? 0 : 16, backgroundColor: theme.surfaceBg, boxShadow: theme.cardFrame ? 'none' : '0 1px 2px rgba(15, 23, 42, 0.04)', gridColumn: 'span 3', minHeight: 72, height: '100%' }}>
                 <KPI
                   title="Titulos em AP"
-                  dataQuery={{ query: \`SELECT COUNT(*)::float AS value FROM financeiro.contas_pagar cp WHERE 1=1 {{filters}}\`, limit: 1 }}
+                  dataQuery={{ query: \`SELECT COUNT(*) AS value FROM contas_pagar cp WHERE 1=1 {{filters}}\`, limit: 1 }}
                   format="number"
                   comparisonMode="previous_period"
                 >
@@ -184,11 +182,10 @@ function buildFinanceiroDashboardSource(themeName: string) {
                   dataQuery={{
                     query: \`
                       SELECT
-                        COALESCE(cp.fornecedor_id::text, '0') AS key,
-                        COALESCE(f.nome_fantasia, 'Sem fornecedor') AS label,
-                        COALESCE(SUM(cp.valor_liquido), 0)::float AS value
-                      FROM financeiro.contas_pagar cp
-                      LEFT JOIN entidades.fornecedores f ON f.id = cp.fornecedor_id
+                        COALESCE(CAST(cp.pessoa_id AS STRING), '0') AS key,
+                        COALESCE(cp.pessoa_nome, 'Sem fornecedor') AS label,
+                        COALESCE(SUM(cp.valor), 0) AS value
+                      FROM contas_pagar cp
                       WHERE 1=1
                         {{filters}}
                       GROUP BY 1, 2
@@ -218,8 +215,8 @@ function buildFinanceiroDashboardSource(themeName: string) {
                       SELECT
                         COALESCE(cp.status, 'sem_status') AS key,
                         COALESCE(cp.status, 'Sem status') AS label,
-                        COUNT(*)::float AS value
-                      FROM financeiro.contas_pagar cp
+                        COUNT(*) AS value
+                      FROM contas_pagar cp
                       WHERE 1=1
                         {{filters}}
                       GROUP BY 1, 2
@@ -251,10 +248,10 @@ function buildFinanceiroDashboardSource(themeName: string) {
                   dataQuery={{
                     query: \`
                       SELECT
-                        TO_CHAR(DATE_TRUNC('month', cr.data_vencimento), 'YYYY-MM') AS key,
-                        TO_CHAR(DATE_TRUNC('month', cr.data_vencimento), 'MM/YYYY') AS label,
-                        COALESCE(SUM(cr.valor_liquido), 0)::float AS value
-                      FROM financeiro.contas_receber cr
+                        FORMAT_DATE('%Y-%m', DATE_TRUNC(DATE(cr.data_vencimento), MONTH)) AS key,
+                        FORMAT_DATE('%m/%Y', DATE_TRUNC(DATE(cr.data_vencimento), MONTH)) AS label,
+                        COALESCE(SUM(cr.valor), 0) AS value
+                      FROM contas_receber cr
                       WHERE 1=1
                         {{filters}}
                       GROUP BY 1, 2
@@ -283,11 +280,10 @@ function buildFinanceiroDashboardSource(themeName: string) {
                   dataQuery={{
                     query: \`
                       SELECT
-                        COALESCE(cr.cliente_id::text, '0') AS key,
-                        COALESCE(cli.nome_fantasia, 'Sem cliente') AS label,
-                        COALESCE(SUM(cr.valor_liquido), 0)::float AS value
-                      FROM financeiro.contas_receber cr
-                      LEFT JOIN entidades.clientes cli ON cli.id = cr.cliente_id
+                        COALESCE(CAST(cr.pessoa_id AS STRING), '0') AS key,
+                        COALESCE(cr.pessoa_nome, 'Sem cliente') AS label,
+                        COALESCE(SUM(cr.valor), 0) AS value
+                      FROM contas_receber cr
                       WHERE 1=1
                         {{filters}}
                       GROUP BY 1, 2
@@ -324,15 +320,13 @@ function buildFinanceiroDashboardSource(themeName: string) {
                   dataQuery={{
                     query: \`
                       SELECT
-                        COALESCE(NULLIF(TRIM(cp.numero_documento), ''), CONCAT('Conta #', cp.id::text)) AS titulo,
-                        TO_CHAR(cp.data_vencimento::date, 'DD/MM/YYYY') AS data_vencimento,
-                        COALESCE(f.nome_fantasia, 'Sem fornecedor') AS fornecedor,
-                        COALESCE(cd.nome, 'Sem categoria') AS categoria,
+                        COALESCE(NULLIF(TRIM(cp.documento), ''), CONCAT('Conta #', CAST(cp.id AS STRING))) AS titulo,
+                        FORMAT_DATE('%d/%m/%Y', DATE(cp.data_vencimento)) AS data_vencimento,
+                        COALESCE(cp.pessoa_nome, 'Sem fornecedor') AS fornecedor,
+                        COALESCE(cp.categoria, 'Sem categoria') AS categoria,
                         COALESCE(cp.status, 'Sem status') AS status,
-                        COALESCE(cp.valor_liquido, 0)::float AS valor_liquido
-                      FROM financeiro.contas_pagar cp
-                      LEFT JOIN entidades.fornecedores f ON f.id = cp.fornecedor_id
-                      LEFT JOIN financeiro.categorias_despesa cd ON cd.id = cp.categoria_despesa_id
+                        COALESCE(cp.valor, 0) AS valor
+                      FROM contas_pagar cp
                       WHERE 1=1
                         {{filters}}
                       ORDER BY cp.data_vencimento ASC NULLS LAST, cp.id DESC
@@ -345,7 +339,7 @@ function buildFinanceiroDashboardSource(themeName: string) {
                     { accessorKey: 'fornecedor', header: 'Fornecedor' },
                     { accessorKey: 'categoria', header: 'Categoria' },
                     { accessorKey: 'status', header: 'Status', cell: 'badge' },
-                    { accessorKey: 'valor_liquido', header: 'Valor', format: 'currency', align: 'right', headerAlign: 'right' },
+                    { accessorKey: 'valor', header: 'Valor', format: 'currency', align: 'right', headerAlign: 'right' },
                   ]}
                 />
               </article>
@@ -374,11 +368,10 @@ function buildFinanceiroDashboardSource(themeName: string) {
                   dataQuery={{
                     query: \`
                       SELECT
-                        COALESCE(f.nome_fantasia, 'Sem fornecedor') AS fornecedor,
+                        COALESCE(cp.pessoa_nome, 'Sem fornecedor') AS fornecedor,
                         COALESCE(cp.status, 'Sem status') AS status,
-                        COALESCE(cp.valor_liquido, 0)::float AS valor_liquido
-                      FROM financeiro.contas_pagar cp
-                      LEFT JOIN entidades.fornecedores f ON f.id = cp.fornecedor_id
+                        COALESCE(cp.valor, 0) AS valor
+                      FROM contas_pagar cp
                       WHERE 1=1
                         {{filters}}
                     \`,
@@ -386,7 +379,7 @@ function buildFinanceiroDashboardSource(themeName: string) {
                   }}
                   rows={[{ field: 'fornecedor', label: 'Fornecedor' }]}
                   columns={[{ field: 'status', label: 'Status' }]}
-                  values={[{ field: 'valor_liquido', label: 'Valor', aggregate: 'sum', format: 'currency' }]}
+                  values={[{ field: 'valor', label: 'Valor', aggregate: 'sum', format: 'currency' }]}
                 />
               </article>
           </section>

@@ -19,7 +19,6 @@ import type {
   DashboardFilterThemeConfigEntry,
   DashboardGaugeThemeConfigEntry,
   DashboardHeaderTheme,
-  DashboardInsightsThemeConfigEntry,
   DashboardKpiTheme,
   DashboardPageTheme,
   DashboardPivotTableThemeConfigEntry,
@@ -250,20 +249,6 @@ function buildDashboardTextThemeConfigEntry(tokens: DashboardTemplateThemeTokens
       lineHeight: 1.25,
       letterSpacing: '-0.01em',
     },
-    'insights-title': {
-      color: tokens.titleColor,
-      fontSize: 18,
-      fontWeight: 600,
-      lineHeight: 1.3,
-      letterSpacing: '-0.01em',
-    },
-    'insights-title-sm': {
-      color: tokens.titleColor,
-      fontSize: 16,
-      fontWeight: 600,
-      lineHeight: 1.35,
-      letterSpacing: '-0.01em',
-    },
     'kpi-title': {
       color: tokens.textSecondary,
       fontSize: 12,
@@ -351,30 +336,6 @@ function buildDashboardDatePickerThemeConfigEntry(tokens: DashboardTemplateTheme
       backgroundColor: fieldBackground,
       boxShadow: tokens.dark ? '0 12px 32px rgba(0, 0, 0, 0.35)' : '0 12px 32px rgba(15, 23, 42, 0.12)',
     },
-  }
-}
-
-function buildDashboardInsightsThemeConfigEntry(tokens: DashboardTemplateThemeTokens): DashboardInsightsThemeConfigEntry {
-  return {
-    containerStyle: {},
-    itemStyle: {},
-    titleStyle: {
-      color: tokens.titleColor,
-      fontSize: 13,
-      fontWeight: 600,
-      lineHeight: 1.6,
-    },
-    textStyle: {
-      color: tokens.textSecondary,
-      fontSize: 13,
-      fontWeight: 400,
-      lineHeight: 1.6,
-    },
-    iconStyle: {
-      backgroundColor: tokens.primary,
-      color: tokens.primary,
-    },
-    dividerColor: tokens.surfaceBorder,
   }
 }
 
@@ -657,9 +618,6 @@ export const DASHBOARD_TEXT_THEME_CONFIG: Record<string, DashboardTextThemeConfi
 export const DASHBOARD_DATE_PICKER_THEME_CONFIG: Record<string, DashboardDatePickerThemeConfigEntry> = Object.fromEntries(
   Object.entries(DASHBOARD_TEMPLATE_THEME_TOKENS).map(([name, tokens]) => [name, buildDashboardDatePickerThemeConfigEntry(tokens)]),
 )
-export const DASHBOARD_INSIGHTS_THEME_CONFIG: Record<string, DashboardInsightsThemeConfigEntry> = Object.fromEntries(
-  Object.entries(DASHBOARD_TEMPLATE_THEME_TOKENS).map(([name, tokens]) => [name, buildDashboardInsightsThemeConfigEntry(tokens)]),
-)
 export const DASHBOARD_FILTER_THEME_CONFIG: Record<string, DashboardFilterThemeConfigEntry> = Object.fromEntries(
   Object.entries(DASHBOARD_TEMPLATE_THEME_TOKENS).map(([name, tokens]) => [name, buildDashboardFilterThemeConfigEntry(tokens)]),
 )
@@ -705,8 +663,6 @@ export function resolveDashboardTextVariantKey(role?: string): DashboardTextVari
   if (key === 'table-title') return 'table-title'
   if (key === 'pivot-title') return 'pivot-title'
   if (key === 'filter-title') return 'filter-title'
-  if (key === 'insights-title') return 'insights-title'
-  if (key === 'insights-title-sm') return 'insights-title-sm'
   if (key === 'kpi-title') return 'kpi-title'
   if (key === 'kpi-value') return 'kpi-value'
   if (key === 'kpi-compare') return 'kpi-compare'
@@ -749,27 +705,6 @@ export function resolveDashboardDatePickerTheme(
   const key = resolveThemeKey(themeName)
   const tokens = DASHBOARD_TEMPLATE_THEME_TOKENS[key] || DASHBOARD_TEMPLATE_THEME_TOKENS.light
   return deepMergeOrClone(buildDashboardDatePickerThemeConfigEntry(tokens), appearanceOverrides?.header?.datePicker)
-}
-
-export function resolveDashboardInsightsTheme(
-  themeName?: string,
-  appearanceOverrides?: DashboardAppearanceOverrides,
-): DashboardInsightsThemeConfigEntry {
-  const key = resolveThemeKey(themeName)
-  const tokens = DASHBOARD_TEMPLATE_THEME_TOKENS[key] || DASHBOARD_TEMPLATE_THEME_TOKENS.light
-  const theme = buildDashboardInsightsThemeConfigEntry(tokens)
-  return {
-    ...theme,
-    containerStyle: deepMergeOrClone(theme.containerStyle, appearanceOverrides?.insights?.container),
-    itemStyle: deepMergeOrClone(theme.itemStyle, appearanceOverrides?.insights?.item),
-    titleStyle: deepMergeOrClone(theme.titleStyle, appearanceOverrides?.insights?.title),
-    textStyle: deepMergeOrClone(theme.textStyle, appearanceOverrides?.insights?.text),
-    iconStyle: deepMergeOrClone(theme.iconStyle, appearanceOverrides?.insights?.icon),
-    dividerColor:
-      typeof appearanceOverrides?.insights?.dividerColor === 'string' && appearanceOverrides.insights.dividerColor.trim()
-        ? appearanceOverrides.insights.dividerColor.trim()
-        : theme.dividerColor,
-  }
 }
 
 export function resolveDashboardFilterTheme(themeName?: string): DashboardFilterThemeConfigEntry {
@@ -846,8 +781,6 @@ const DASHBOARD_TEXT_ROLE_SET = new Set<string>([
   'table-title',
   'pivot-title',
   'filter-title',
-  'insights-title',
-  'insights-title-sm',
   'kpi-title',
   'kpi-value',
   'kpi-compare',
@@ -1070,9 +1003,6 @@ export function buildDashboardThemeConfigFileSource() {
   const datePickerEntries = Object.entries(DASHBOARD_DATE_PICKER_THEME_CONFIG)
     .map(([name, config]) => `  ${name}: ${JSON.stringify(config, null, 2).replace(/\n/g, '\n  ')},`)
     .join('\n')
-  const insightsEntries = Object.entries(DASHBOARD_INSIGHTS_THEME_CONFIG)
-    .map(([name, config]) => `  ${name}: ${JSON.stringify(config, null, 2).replace(/\n/g, '\n  ')},`)
-    .join('\n')
   const filterEntries = Object.entries(DASHBOARD_FILTER_THEME_CONFIG)
     .map(([name, config]) => `  ${name}: ${JSON.stringify(config, null, 2).replace(/\n/g, '\n  ')},`)
     .join('\n')
@@ -1107,10 +1037,6 @@ export const DASHBOARD_DATE_PICKER_THEME_CONFIG = {
 ${datePickerEntries}
 } as const
 
-export const DASHBOARD_INSIGHTS_THEME_CONFIG = {
-${insightsEntries}
-} as const
-
 export const DASHBOARD_FILTER_THEME_CONFIG = {
 ${filterEntries}
 } as const
@@ -1142,7 +1068,6 @@ ${kpiEntries}
 export type DashboardCardThemeConfig = typeof DASHBOARD_CARD_THEME_CONFIG
 export type DashboardTextThemeConfig = typeof DASHBOARD_TEXT_THEME_CONFIG
 export type DashboardDatePickerThemeConfig = typeof DASHBOARD_DATE_PICKER_THEME_CONFIG
-export type DashboardInsightsThemeConfig = typeof DASHBOARD_INSIGHTS_THEME_CONFIG
 export type DashboardFilterThemeConfig = typeof DASHBOARD_FILTER_THEME_CONFIG
 export type DashboardTabThemeConfig = typeof DASHBOARD_TAB_THEME_CONFIG
 export type DashboardChartThemeConfig = typeof DASHBOARD_CHART_THEME_CONFIG

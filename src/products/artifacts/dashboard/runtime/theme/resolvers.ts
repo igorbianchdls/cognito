@@ -8,7 +8,6 @@ export {
   resolveDashboardHeaderCardOverride,
   resolveDashboardHeaderTextOverride,
   resolveDashboardHeaderTheme,
-  resolveDashboardInsightsTheme,
   resolveDashboardKpiTheme,
   resolveDashboardNodeStyle,
   resolveDashboardPageTheme,

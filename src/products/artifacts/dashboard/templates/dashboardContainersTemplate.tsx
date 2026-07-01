@@ -105,8 +105,8 @@ function buildContainersDashboardSource(themeName: string) {
             </section>
 
             <section style={{ boxSizing: 'border-box', minWidth: 0, display: 'grid', gridTemplateColumns: 'repeat(12, minmax(0, 1fr))', gap: 18, alignItems: 'stretch' }}>
-              <article id="chart-receita-canal" style={{ boxSizing: 'border-box', minWidth: 0, display: 'flex', flexDirection: 'column', padding: 18, border: '1px solid ' + theme.surfaceBorder, borderRadius: theme.cardFrame ? 0 : 16, backgroundColor: theme.surfaceBg, boxShadow: theme.cardFrame ? 'none' : '0 1px 2px rgba(15, 23, 42, 0.04)', gridColumn: 'span 8', minHeight: 420, height: '100%', display: 'flex', flexDirection: 'column', gap: 14 }}>
-                  <h2 data-ui="section-title-sm">Receita por canal</h2>
+              <article id="chart-receita-status" style={{ boxSizing: 'border-box', minWidth: 0, display: 'flex', flexDirection: 'column', padding: 18, border: '1px solid ' + theme.surfaceBorder, borderRadius: theme.cardFrame ? 0 : 16, backgroundColor: theme.surfaceBg, boxShadow: theme.cardFrame ? 'none' : '0 1px 2px rgba(15, 23, 42, 0.04)', gridColumn: 'span 8', minHeight: 420, height: '100%', display: 'flex', flexDirection: 'column', gap: 14 }}>
+                  <h2 data-ui="section-title-sm">Receita por status</h2>
                   <Chart
                     type="bar"
                     height={320}
@@ -114,10 +114,9 @@ function buildContainersDashboardSource(themeName: string) {
                     dataQuery={{
                       query: \`
                         SELECT
-                          COALESCE(cv.nome, '-') AS canal,
+                          COALESCE(src.status, 'Sem status') AS status,
                           CAST(COALESCE(SUM(src.valor_total), 0) AS FLOAT64) AS valor
                         FROM vendas src
-                        LEFT JOIN canais_venda cv ON cv.id = src.canal_venda_id
                         WHERE 1=1
                           {{filters}}
                         GROUP BY 1
@@ -125,7 +124,7 @@ function buildContainersDashboardSource(themeName: string) {
                       \`,
                       limit: 8,
                     }}
-                    xAxis={{ dataKey: 'canal' }}
+                    xAxis={{ dataKey: 'status' }}
                     series={[{ dataKey: 'valor', label: 'Receita' }]}
                   />
                 </article>
@@ -133,20 +132,21 @@ function buildContainersDashboardSource(themeName: string) {
               <article id="filters-side" style={{ boxSizing: 'border-box', minWidth: 0, display: 'flex', flexDirection: 'column', padding: 18, border: '1px solid ' + theme.surfaceBorder, borderRadius: theme.cardFrame ? 0 : 16, backgroundColor: theme.surfaceBg, boxShadow: theme.cardFrame ? 'none' : '0 1px 2px rgba(15, 23, 42, 0.04)', gridColumn: 'span 4', minHeight: 420 }}>
                 <div style={{ boxSizing: 'border-box', minWidth: 0, display: 'flex', flexDirection: 'column', gap: 18, height: '100%' }}>
                   <article style={{ boxSizing: 'border-box', minWidth: 0, display: 'flex', flexDirection: 'column', padding: 18, border: '1px solid ' + theme.surfaceBorder, borderRadius: theme.cardFrame ? 0 : 16, backgroundColor: theme.surfaceBg, boxShadow: theme.cardFrame ? 'none' : '0 1px 2px rgba(15, 23, 42, 0.04)', flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column', gap: 14 }}>
-                    <h2 data-ui="section-title-sm">Canal</h2>
+                    <h2 data-ui="section-title-sm">Pedido</h2>
                     <Filter
-                      label="Canal"
+                      label="Pedido"
                       table="vendas"
-                      field="canal_venda_id"
+                      field="numero"
                       mode="multiple"
                       search
                       clearable
                       width="100%"
                       query={\`
                         SELECT
-                          CAST(cv.id AS STRING) AS value,
-                          COALESCE(cv.nome, '-') AS label
-                        FROM canais_venda cv
+                          CAST(v.numero AS STRING) AS value,
+                          COALESCE(v.numero, '-') AS label
+                        FROM vendas v
+                        WHERE v.numero IS NOT NULL
                         ORDER BY 2 ASC
                       \`}
                     >

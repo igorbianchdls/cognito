@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-import { readdir, readFile } from 'node:fs/promises'
+import { access, readdir, readFile } from 'node:fs/promises'
 import path from 'node:path'
 
 const root = process.cwd()
@@ -12,6 +12,15 @@ function assert(condition, message) {
 
 async function source(relativePath) {
   return readFile(path.join(root, relativePath), 'utf8')
+}
+
+async function pathExists(relativePath) {
+  try {
+    await access(path.join(root, relativePath))
+    return true
+  } catch {
+    return false
+  }
 }
 
 async function listFiles(dir, output = []) {
@@ -36,6 +45,22 @@ const dashboardManifest = await source('src/products/artifacts/dashboard/languag
 assert(!dashboardManifest.includes("'Theme'"), 'dashboard DSL must not expose Theme component')
 assert(!dashboardManifest.includes("'Horizontal'"), 'dashboard DSL must not expose Horizontal component')
 assert(!dashboardManifest.includes("'Insights'"), 'dashboard DSL must not expose Insights component')
+
+const removedDashboardComponentFiles = [
+  'src/products/artifacts/dashboard/runtime/components/insights/DashboardInsights.tsx',
+  'src/products/artifacts/dashboard/runtime/components/insights/InsightsEditorModal.tsx',
+  'src/products/artifacts/dashboard/runtime/components/layout/DashboardLayout.tsx',
+  'src/products/artifacts/dashboard/renderer/components/DashboardInsights.tsx',
+  'src/products/artifacts/dashboard/renderer/components/DashboardLayout.tsx',
+]
+for (const file of removedDashboardComponentFiles) {
+  assert(!(await pathExists(file)), `removed dashboard component file must not return: ${file}`)
+}
+
+const dashboardRegistry = await source('src/products/artifacts/dashboard/runtime/registry/dashboardRegistry.tsx')
+assert(!dashboardRegistry.includes('DashboardInsights'), 'dashboard registry must not import/register DashboardInsights')
+assert(!dashboardRegistry.includes('DashboardHorizontal'), 'dashboard registry must not import/register DashboardHorizontal')
+assert(!dashboardRegistry.includes('DashboardLayout'), 'dashboard registry must not import/register DashboardLayout')
 assert(queryService.includes('compileDashboardQuery'), 'dashboard query compiler missing')
 assert(queryService.includes('buildDashboardFilterSql'), 'dashboard filter SQL compiler missing')
 assert(queryService.includes('dashboard_query_placeholder_not_supported'), 'unknown placeholders must be rejected')

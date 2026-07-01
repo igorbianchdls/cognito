@@ -28,7 +28,7 @@ function buildMetaAdsDashboardSource(themeName: string) {
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 14, width: '34%', minWidth: 320 }}>
                   <DatePicker
                     label="Periodo de performance"
-                    table="trafegopago.desempenho_diario"
+                    table="paid_media_insights_daily"
                     field="data_ref"
                     presets={['7d', '14d', '30d', '90d']}
                     labelStyle={{ margin: 0, fontSize: 11, color: theme.headerDatePickerLabel, textTransform: 'uppercase', letterSpacing: '0.06em' }}
@@ -49,26 +49,24 @@ function buildMetaAdsDashboardSource(themeName: string) {
                   <h2 data-ui="section-title">Conta e campanha</h2>
                 </div>
                 <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'flex-end', gap: 14 }}>
-                  <Filter label="Conta" table="trafegopago.desempenho_diario" field="conta_id" mode="multiple" search clearable width={220} query={\`
+                  <Filter label="Conta" table="paid_media_insights_daily" field="account_id" mode="multiple" search clearable width={220} query={\`
                     SELECT DISTINCT
-                      src.conta_id::text AS value,
-                      COALESCE(src.conta_id::text, 'Sem conta') AS label
-                    FROM trafegopago.desempenho_diario src
-                    WHERE src.plataforma = 'meta_ads'
-                      AND src.nivel = 'campaign'
-                      AND src.conta_id IS NOT NULL
+                      CAST(src.account_id AS STRING) AS value,
+                      COALESCE(CAST(src.account_id AS STRING), 'Sem conta') AS label
+                    FROM paid_media_insights_daily src
+                    WHERE src.nivel = 'campaign'
+                      AND src.account_id IS NOT NULL
                     ORDER BY 2 ASC
                   \`}>
                     <Select />
                   </Filter>
-                  <Filter label="Campanha" table="trafegopago.desempenho_diario" field="campanha_id" mode="multiple" search clearable width={240} query={\`
+                  <Filter label="Campanha" table="paid_media_insights_daily" field="campaign_id" mode="multiple" search clearable width={240} query={\`
                     SELECT DISTINCT
-                      src.campanha_id::text AS value,
-                      COALESCE(src.campanha_id::text, 'Sem campanha') AS label
-                    FROM trafegopago.desempenho_diario src
-                    WHERE src.plataforma = 'meta_ads'
-                      AND src.nivel = 'campaign'
-                      AND src.campanha_id IS NOT NULL
+                      CAST(src.campaign_id AS STRING) AS value,
+                      COALESCE(CAST(src.campaign_id AS STRING), 'Sem campanha') AS label
+                    FROM paid_media_insights_daily src
+                    WHERE src.nivel = 'campaign'
+                      AND src.campaign_id IS NOT NULL
                     ORDER BY 2 ASC
                   \`}>
                     <Select />
@@ -82,10 +80,10 @@ function buildMetaAdsDashboardSource(themeName: string) {
           </section>
 
           <section style={{ boxSizing: 'border-box', minWidth: 0, display: 'grid', gridTemplateColumns: 'repeat(12, minmax(0, 1fr))', gap: 16, alignItems: 'stretch' }}>
-            <article id="metaads-kpi-gasto" style={{ boxSizing: 'border-box', minWidth: 0, display: 'flex', flexDirection: 'column', padding: 18, border: '1px solid ' + theme.surfaceBorder, borderRadius: theme.cardFrame ? 0 : 16, backgroundColor: theme.surfaceBg, boxShadow: theme.cardFrame ? 'none' : '0 1px 2px rgba(15, 23, 42, 0.04)', gridColumn: 'span 3', minHeight: 72, height: '100%' }}><KPI title="Gasto" dataQuery={{ query: \`SELECT COALESCE(SUM(src.gasto), 0)::float AS value FROM trafegopago.desempenho_diario src WHERE src.plataforma = 'meta_ads' AND src.nivel = 'campaign' {{filters}}\`, limit: 1 }} format="currency" comparisonMode="previous_period"><KPICompare /></KPI></article>
-            <article id="metaads-kpi-receita" style={{ boxSizing: 'border-box', minWidth: 0, display: 'flex', flexDirection: 'column', padding: 18, border: '1px solid ' + theme.surfaceBorder, borderRadius: theme.cardFrame ? 0 : 16, backgroundColor: theme.surfaceBg, boxShadow: theme.cardFrame ? 'none' : '0 1px 2px rgba(15, 23, 42, 0.04)', gridColumn: 'span 3', minHeight: 72, height: '100%' }}><KPI title="Receita atribuida" dataQuery={{ query: \`SELECT COALESCE(SUM(src.receita_atribuida), 0)::float AS value FROM trafegopago.desempenho_diario src WHERE src.plataforma = 'meta_ads' AND src.nivel = 'campaign' {{filters}}\`, limit: 1 }} format="currency" comparisonMode="previous_period"><KPICompare /></KPI></article>
-            <article id="metaads-kpi-roas" style={{ boxSizing: 'border-box', minWidth: 0, display: 'flex', flexDirection: 'column', padding: 18, border: '1px solid ' + theme.surfaceBorder, borderRadius: theme.cardFrame ? 0 : 16, backgroundColor: theme.surfaceBg, boxShadow: theme.cardFrame ? 'none' : '0 1px 2px rgba(15, 23, 42, 0.04)', gridColumn: 'span 3', minHeight: 72, height: '100%' }}><KPI title="ROAS" dataQuery={{ query: \`SELECT CASE WHEN COALESCE(SUM(src.gasto), 0) = 0 THEN 0 ELSE (SUM(src.receita_atribuida) / SUM(src.gasto))::float END AS value FROM trafegopago.desempenho_diario src WHERE src.plataforma = 'meta_ads' AND src.nivel = 'campaign' {{filters}}\`, limit: 1 }} format="number" comparisonMode="previous_period"><KPICompare /></KPI></article>
-            <article id="metaads-kpi-conversoes" style={{ boxSizing: 'border-box', minWidth: 0, display: 'flex', flexDirection: 'column', padding: 18, border: '1px solid ' + theme.surfaceBorder, borderRadius: theme.cardFrame ? 0 : 16, backgroundColor: theme.surfaceBg, boxShadow: theme.cardFrame ? 'none' : '0 1px 2px rgba(15, 23, 42, 0.04)', gridColumn: 'span 3', minHeight: 72, height: '100%' }}><KPI title="Conversoes" dataQuery={{ query: \`SELECT COALESCE(SUM(src.conversoes), 0)::float AS value FROM trafegopago.desempenho_diario src WHERE src.plataforma = 'meta_ads' AND src.nivel = 'campaign' {{filters}}\`, limit: 1 }} format="number" comparisonMode="previous_period"><KPICompare /></KPI></article>
+            <article id="metaads-kpi-gasto" style={{ boxSizing: 'border-box', minWidth: 0, display: 'flex', flexDirection: 'column', padding: 18, border: '1px solid ' + theme.surfaceBorder, borderRadius: theme.cardFrame ? 0 : 16, backgroundColor: theme.surfaceBg, boxShadow: theme.cardFrame ? 'none' : '0 1px 2px rgba(15, 23, 42, 0.04)', gridColumn: 'span 3', minHeight: 72, height: '100%' }}><KPI title="Gasto" dataQuery={{ query: \`SELECT COALESCE(SUM(src.spend), 0) AS value FROM paid_media_insights_daily src WHERE src.nivel = 'campaign' {{filters}}\`, limit: 1 }} format="currency" comparisonMode="previous_period"><KPICompare /></KPI></article>
+            <article id="metaads-kpi-receita" style={{ boxSizing: 'border-box', minWidth: 0, display: 'flex', flexDirection: 'column', padding: 18, border: '1px solid ' + theme.surfaceBorder, borderRadius: theme.cardFrame ? 0 : 16, backgroundColor: theme.surfaceBg, boxShadow: theme.cardFrame ? 'none' : '0 1px 2px rgba(15, 23, 42, 0.04)', gridColumn: 'span 3', minHeight: 72, height: '100%' }}><KPI title="Receita atribuida" dataQuery={{ query: \`SELECT COALESCE(SUM(src.conversion_value), 0) AS value FROM paid_media_insights_daily src WHERE src.nivel = 'campaign' {{filters}}\`, limit: 1 }} format="currency" comparisonMode="previous_period"><KPICompare /></KPI></article>
+            <article id="metaads-kpi-roas" style={{ boxSizing: 'border-box', minWidth: 0, display: 'flex', flexDirection: 'column', padding: 18, border: '1px solid ' + theme.surfaceBorder, borderRadius: theme.cardFrame ? 0 : 16, backgroundColor: theme.surfaceBg, boxShadow: theme.cardFrame ? 'none' : '0 1px 2px rgba(15, 23, 42, 0.04)', gridColumn: 'span 3', minHeight: 72, height: '100%' }}><KPI title="ROAS" dataQuery={{ query: \`SELECT CASE WHEN COALESCE(SUM(src.spend), 0) = 0 THEN 0 ELSE (SUM(src.conversion_value) / SUM(src.spend)) END AS value FROM paid_media_insights_daily src WHERE src.nivel = 'campaign' {{filters}}\`, limit: 1 }} format="number" comparisonMode="previous_period"><KPICompare /></KPI></article>
+            <article id="metaads-kpi-conversoes" style={{ boxSizing: 'border-box', minWidth: 0, display: 'flex', flexDirection: 'column', padding: 18, border: '1px solid ' + theme.surfaceBorder, borderRadius: theme.cardFrame ? 0 : 16, backgroundColor: theme.surfaceBg, boxShadow: theme.cardFrame ? 'none' : '0 1px 2px rgba(15, 23, 42, 0.04)', gridColumn: 'span 3', minHeight: 72, height: '100%' }}><KPI title="Conversoes" dataQuery={{ query: \`SELECT COALESCE(SUM(src.conversions), 0) AS value FROM paid_media_insights_daily src WHERE src.nivel = 'campaign' {{filters}}\`, limit: 1 }} format="number" comparisonMode="previous_period"><KPICompare /></KPI></article>
           </section>
 
           <Tabs defaultValue="performance">
@@ -111,12 +109,11 @@ function buildMetaAdsDashboardSource(themeName: string) {
                         <p data-ui="body-muted">Identifica quais campanhas carregam a maior parte do investimento e merecem inspeccao imediata de criativo e audiencia.</p>
                         <Chart type="bar" height={320} format="currency" dataQuery={{ query: \`
                           SELECT
-                            COALESCE(src.campanha_id::text, 'sem_campanha') AS key,
-                            COALESCE(src.campanha_id::text, 'Sem campanha') AS label,
-                            COALESCE(SUM(src.gasto), 0)::float AS value
-                          FROM trafegopago.desempenho_diario src
-                          WHERE src.plataforma = 'meta_ads'
-                            AND src.nivel = 'campaign'
+                            COALESCE(CAST(src.campaign_id AS STRING), 'sem_campanha') AS key,
+                            COALESCE(CAST(src.campaign_id AS STRING), 'Sem campanha') AS label,
+                            COALESCE(SUM(src.spend), 0) AS value
+                          FROM paid_media_insights_daily src
+                          WHERE src.nivel = 'campaign'
                             {{filters}}
                           GROUP BY 1, 2
                           ORDER BY 3 DESC
@@ -131,12 +128,11 @@ function buildMetaAdsDashboardSource(themeName: string) {
                         <p data-ui="body-muted">Mostra concentracao de budget entre contas, o que ajuda a separar escala sustentavel de dependencia excessiva de um unico portfolio.</p>
                         <Chart type="pie" height={320} format="currency" dataQuery={{ query: \`
                           SELECT
-                            COALESCE(src.conta_id::text, 'sem_conta') AS key,
-                            COALESCE(src.conta_id::text, 'Sem conta') AS label,
-                            COALESCE(SUM(src.gasto), 0)::float AS value
-                          FROM trafegopago.desempenho_diario src
-                          WHERE src.plataforma = 'meta_ads'
-                            AND src.nivel = 'campaign'
+                            COALESCE(CAST(src.account_id AS STRING), 'sem_conta') AS key,
+                            COALESCE(CAST(src.account_id AS STRING), 'Sem conta') AS label,
+                            COALESCE(SUM(src.spend), 0) AS value
+                          FROM paid_media_insights_daily src
+                          WHERE src.nivel = 'campaign'
                             {{filters}}
                           GROUP BY 1, 2
                           ORDER BY 3 DESC
@@ -157,12 +153,11 @@ function buildMetaAdsDashboardSource(themeName: string) {
                         <p data-ui="body-muted">Serie curta para acompanhar deterioracao ou recuperacao de eficiencia sem sair do dashboard principal.</p>
                         <Chart type="line" height={320} format="number" dataQuery={{ query: \`
                           SELECT
-                            TO_CHAR(src.data_ref::date, 'YYYY-MM-DD') AS key,
-                            TO_CHAR(src.data_ref::date, 'DD/MM') AS label,
-                            CASE WHEN COALESCE(SUM(src.gasto), 0) = 0 THEN 0 ELSE (SUM(src.receita_atribuida) / SUM(src.gasto))::float END AS value
-                          FROM trafegopago.desempenho_diario src
-                          WHERE src.plataforma = 'meta_ads'
-                            AND src.nivel = 'campaign'
+                            FORMAT_DATE('%Y-%m-%d', DATE(src.data_ref)) AS key,
+                            FORMAT_DATE('%d/%m', DATE(src.data_ref)) AS label,
+                            CASE WHEN COALESCE(SUM(src.spend), 0) = 0 THEN 0 ELSE (SUM(src.conversion_value) / SUM(src.spend)) END AS value
+                          FROM paid_media_insights_daily src
+                          WHERE src.nivel = 'campaign'
                             {{filters}}
                           GROUP BY 1, 2
                           ORDER BY 1 ASC
@@ -178,12 +173,11 @@ function buildMetaAdsDashboardSource(themeName: string) {
                             </div>
                             <Chart type="bar" height={220} format="number" dataQuery={{ query: \`
                               SELECT
-                                COALESCE(src.campanha_id::text, 'sem_campanha') AS key,
-                                COALESCE(src.campanha_id::text, 'Sem campanha') AS label,
-                                COALESCE(SUM(src.leads), 0)::float AS value
-                              FROM trafegopago.desempenho_diario src
-                              WHERE src.plataforma = 'meta_ads'
-                                AND src.nivel = 'campaign'
+                                COALESCE(CAST(src.campaign_id AS STRING), 'sem_campanha') AS key,
+                                COALESCE(CAST(src.campaign_id AS STRING), 'Sem campanha') AS label,
+                                COALESCE(SUM(src.conversions), 0) AS value
+                              FROM paid_media_insights_daily src
+                              WHERE src.nivel = 'campaign'
                                 {{filters}}
                               GROUP BY 1, 2
                               ORDER BY 3 DESC
@@ -216,15 +210,14 @@ function buildMetaAdsDashboardSource(themeName: string) {
                         </div>
                         <Table bordered rounded stickyHeader borderColor={'#d7dbe3'} rowHoverColor={'#f8fafc'} headerStyle={{ backgroundColor: '#f8fafc', color: '#334155', fontSize: 14, fontWeight: 600, padding: '12px 14px' }} rowStyle={{ backgroundColor: '#ffffff' }} cellStyle={{ color: '#475569', fontSize: 14, fontWeight: 400, padding: '12px 14px' }} footerStyle={{ backgroundColor: '#f8fafc', color: '#0f172a', fontSize: 14, fontWeight: 600, padding: '12px 14px' }} enableExportCsv dataQuery={{ query: \`
                           SELECT
-                            COALESCE(src.conta_id::text, 'Sem conta') AS conta,
-                            COALESCE(src.campanha_id::text, 'Sem campanha') AS campanha,
-                            COALESCE(SUM(src.gasto), 0)::float AS gasto,
-                            COALESCE(SUM(src.receita_atribuida), 0)::float AS receita,
-                            CASE WHEN COALESCE(SUM(src.gasto), 0) = 0 THEN 0 ELSE (SUM(src.receita_atribuida) / SUM(src.gasto))::float END AS roas,
-                            COALESCE(SUM(src.conversoes), 0)::float AS conversoes
-                          FROM trafegopago.desempenho_diario src
-                          WHERE src.plataforma = 'meta_ads'
-                            AND src.nivel = 'campaign'
+                            COALESCE(CAST(src.account_id AS STRING), 'Sem conta') AS conta,
+                            COALESCE(CAST(src.campaign_id AS STRING), 'Sem campanha') AS campanha,
+                            COALESCE(SUM(src.spend), 0) AS gasto,
+                            COALESCE(SUM(src.conversion_value), 0) AS receita,
+                            CASE WHEN COALESCE(SUM(src.spend), 0) = 0 THEN 0 ELSE (SUM(src.conversion_value) / SUM(src.spend)) END AS roas,
+                            COALESCE(SUM(src.conversions), 0) AS conversoes
+                          FROM paid_media_insights_daily src
+                          WHERE src.nivel = 'campaign'
                             {{filters}}
                           GROUP BY 1, 2
                           ORDER BY gasto DESC, campanha ASC
@@ -244,12 +237,11 @@ function buildMetaAdsDashboardSource(themeName: string) {
                         </div>
                         <PivotTable bordered rounded stickyHeader borderColor={'#d7dbe3'} containerStyle={{ backgroundColor: '#ffffff' }} headerStyle={{ backgroundColor: '#f8fafc', color: '#334155', fontSize: 14, fontWeight: 600, padding: '9px 10px' }} headerTotalStyle={{ backgroundColor: '#f1f5f9', color: '#1e293b', fontSize: 14, fontWeight: 600, padding: '9px 10px' }} rowLabelStyle={{ backgroundColor: '#ffffff', color: '#1e293b', fontSize: 14, padding: '9px 10px' }} cellStyle={{ backgroundColor: '#ffffff', color: '#475569', fontSize: 14, padding: '9px 10px' }} rowTotalStyle={{ backgroundColor: '#f8fafc', color: '#1e293b', fontSize: 14, fontWeight: 500, padding: '9px 10px' }} footerStyle={{ backgroundColor: '#f1f5f9', color: '#0f172a', fontSize: 14, fontWeight: 600, padding: '9px 10px' }} emptyStateStyle={{ color: '#64748b', fontSize: 14, padding: '18px 12px' }} expandButtonStyle={{ backgroundColor: '#ffffff', borderColor: '#e5e7eb', color: '#475569', hoverBackgroundColor: '#f8fafc' }} enableExportCsv defaultExpandedLevels={1} dataQuery={{ query: \`
                           SELECT
-                            COALESCE(src.conta_id::text, 'Sem conta') AS conta,
-                            COALESCE(src.campanha_id::text, 'Sem campanha') AS campanha,
-                            COALESCE(src.gasto, 0)::float AS gasto
-                          FROM trafegopago.desempenho_diario src
-                          WHERE src.plataforma = 'meta_ads'
-                            AND src.nivel = 'campaign'
+                            COALESCE(CAST(src.account_id AS STRING), 'Sem conta') AS conta,
+                            COALESCE(CAST(src.campaign_id AS STRING), 'Sem campanha') AS campanha,
+                            COALESCE(src.spend, 0) AS gasto
+                          FROM paid_media_insights_daily src
+                          WHERE src.nivel = 'campaign'
                             {{filters}}
                         \`, limit: 300 }} rows={[{ field: 'conta', label: 'Conta' }]} columns={[{ field: 'campanha', label: 'Campanha' }]} values={[{ field: 'gasto', label: 'Gasto', aggregate: 'sum', format: 'currency' }]} />
                       </article>

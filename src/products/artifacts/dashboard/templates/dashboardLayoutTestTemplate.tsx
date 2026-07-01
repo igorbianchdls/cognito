@@ -36,7 +36,7 @@ function buildLayoutTestDashboardSource(themeName: string) {
               title="KPI Teste A"
               dataQuery={{
                 query: \`
-                  SELECT 128::float AS value
+                  SELECT 128 AS value
                 \`,
                 limit: 1,
               }}
@@ -50,7 +50,7 @@ function buildLayoutTestDashboardSource(themeName: string) {
               title="KPI Teste B"
               dataQuery={{
                 query: \`
-                  SELECT 8420::float AS value
+                  SELECT 8420 AS value
                 \`,
                 limit: 1,
               }}
@@ -98,11 +98,11 @@ function buildLayoutTestDashboardSource(themeName: string) {
                     SELECT *
                     FROM (
                       VALUES
-                        ('Seg', 12::float),
-                        ('Ter', 18::float),
-                        ('Qua', 9::float),
-                        ('Qui', 22::float),
-                        ('Sex', 16::float)
+                        ('Seg', 12),
+                        ('Ter', 18),
+                        ('Qua', 9),
+                        ('Qui', 22),
+                        ('Sex', 16)
                     ) AS sample(label, value)
                   \`,
                   limit: 5,

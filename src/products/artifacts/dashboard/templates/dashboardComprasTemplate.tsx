@@ -27,8 +27,8 @@ function buildComprasDashboardSource(themeName: string) {
                   </div>
 
                   <DatePicker
-                    table="compras.compras"
-                    field="data_pedido"
+                    table="compras"
+                    field="data_compra"
                     presets={['7d', '30d', '90d', 'month']}
                     labelStyle={{ margin: 0, fontSize: 11, color: theme.headerDatePickerLabel, textTransform: 'uppercase', letterSpacing: '0.06em' }}
                     fieldStyle={{ minHeight: 38, padding: '0 10px', border: '1px solid ' + theme.headerDatePickerBorder, borderRadius: 10, backgroundColor: theme.headerDatePickerBg, color: theme.headerDatePickerColor, fontSize: 14, fontWeight: 500 }}
@@ -53,7 +53,7 @@ function buildComprasDashboardSource(themeName: string) {
                   <h2 data-ui="section-title-sm">Fornecedor</h2>
                   <Filter
                     label="Fornecedor"
-                    table="compras.compras"
+                    table="compras"
                     field="fornecedor_id"
                     mode="multiple"
                     search
@@ -61,10 +61,9 @@ function buildComprasDashboardSource(themeName: string) {
                     width="100%"
                     query={\`
                       SELECT DISTINCT
-                        src.fornecedor_id::text AS value,
-                        COALESCE(f.nome_fantasia, 'Sem fornecedor') AS label
-                      FROM compras.compras src
-                      LEFT JOIN entidades.fornecedores f ON f.id = src.fornecedor_id
+                        CAST(src.fornecedor_id AS STRING) AS value,
+                        COALESCE(c.fornecedor_nome, 'Sem fornecedor') AS label
+                      FROM compras src
                       WHERE src.fornecedor_id IS NOT NULL
                       ORDER BY 2 ASC
                     \`}
@@ -75,22 +74,21 @@ function buildComprasDashboardSource(themeName: string) {
 
                 <article style={{ boxSizing: 'border-box', minWidth: 0, display: 'flex', flexDirection: 'column', padding: 18, border: '1px solid ' + theme.surfaceBorder, borderRadius: theme.cardFrame ? 0 : 16, backgroundColor: theme.surfaceBg, boxShadow: theme.cardFrame ? 'none' : '0 1px 2px rgba(15, 23, 42, 0.04)', display: 'flex', flexDirection: 'column', gap: 14 }}>
                   <p data-ui="eyebrow">Filtro</p>
-                  <h2 data-ui="section-title-sm">Centro de custo</h2>
+                  <h2 data-ui="section-title-sm">Documento</h2>
                   <Filter
-                    label="Centro de custo"
-                    table="compras.compras"
-                    field="centro_custo_id"
+                    label="Documento"
+                    table="compras"
+                    field="numero"
                     mode="multiple"
                     search
                     clearable
                     width="100%"
                     query={\`
                       SELECT DISTINCT
-                        src.centro_custo_id::text AS value,
-                        COALESCE(cc.nome, 'Sem centro de custo') AS label
-                      FROM compras.compras src
-                      LEFT JOIN empresa.centros_custo cc ON cc.id = src.centro_custo_id
-                      WHERE src.centro_custo_id IS NOT NULL
+                        CAST(c.numero AS STRING) AS value,
+                        COALESCE(c.numero, 'Sem documento') AS label
+                      FROM compras src
+                      WHERE c.numero IS NOT NULL
                       ORDER BY 2 ASC
                     \`}
                   >
@@ -103,7 +101,7 @@ function buildComprasDashboardSource(themeName: string) {
                   <h2 data-ui="section-title-sm">Status</h2>
                   <Filter
                     label="Status"
-                    table="compras.compras"
+                    table="compras"
                     field="status"
                     mode="multiple"
                     search
@@ -111,9 +109,9 @@ function buildComprasDashboardSource(themeName: string) {
                     width="100%"
                     query={\`
                       SELECT DISTINCT
-                        src.status::text AS value,
+                        CAST(src.status AS STRING) AS value,
                         COALESCE(src.status, 'Sem status') AS label
-                      FROM compras.compras src
+                      FROM compras src
                       WHERE COALESCE(src.status, '') <> ''
                       ORDER BY 2 ASC
                     \`}
@@ -132,7 +130,7 @@ function buildComprasDashboardSource(themeName: string) {
                       <article id="compras-kpi-valor" style={{ boxSizing: 'border-box', minWidth: 0, display: 'flex', flexDirection: 'column', padding: 18, border: '1px solid ' + theme.surfaceBorder, borderRadius: theme.cardFrame ? 0 : 16, backgroundColor: theme.surfaceBg, boxShadow: theme.cardFrame ? 'none' : '0 1px 2px rgba(15, 23, 42, 0.04)', gridColumn: 'span 3', minHeight: 72, height: '100%' }}>
                           <KPI
                             title="Valor comprado"
-                            dataQuery={{ query: \`SELECT COALESCE(SUM(c.valor_total), 0)::float AS value FROM compras.compras c WHERE 1=1 {{filters}}\`, limit: 1 }}
+                            dataQuery={{ query: \`SELECT COALESCE(SUM(c.valor_total), 0) AS value FROM compras c WHERE 1=1 {{filters}}\`, limit: 1 }}
                             format="currency"
                             comparisonMode="previous_period"
                           >
@@ -142,7 +140,7 @@ function buildComprasDashboardSource(themeName: string) {
                       <article id="compras-kpi-fornecedores" style={{ boxSizing: 'border-box', minWidth: 0, display: 'flex', flexDirection: 'column', padding: 18, border: '1px solid ' + theme.surfaceBorder, borderRadius: theme.cardFrame ? 0 : 16, backgroundColor: theme.surfaceBg, boxShadow: theme.cardFrame ? 'none' : '0 1px 2px rgba(15, 23, 42, 0.04)', gridColumn: 'span 3', minHeight: 72, height: '100%' }}>
                           <KPI
                             title="Fornecedores"
-                            dataQuery={{ query: \`SELECT COUNT(DISTINCT c.fornecedor_id)::float AS value FROM compras.compras c WHERE 1=1 {{filters}}\`, limit: 1 }}
+                            dataQuery={{ query: \`SELECT COUNT(DISTINCT c.fornecedor_id) AS value FROM compras c WHERE 1=1 {{filters}}\`, limit: 1 }}
                             format="number"
                             comparisonMode="previous_period"
                           >
@@ -152,7 +150,7 @@ function buildComprasDashboardSource(themeName: string) {
                       <article id="compras-kpi-pedidos" style={{ boxSizing: 'border-box', minWidth: 0, display: 'flex', flexDirection: 'column', padding: 18, border: '1px solid ' + theme.surfaceBorder, borderRadius: theme.cardFrame ? 0 : 16, backgroundColor: theme.surfaceBg, boxShadow: theme.cardFrame ? 'none' : '0 1px 2px rgba(15, 23, 42, 0.04)', gridColumn: 'span 3', minHeight: 72, height: '100%' }}>
                           <KPI
                             title="Pedidos"
-                            dataQuery={{ query: \`SELECT COUNT(DISTINCT c.id)::float AS value FROM compras.compras c WHERE 1=1 {{filters}}\`, limit: 1 }}
+                            dataQuery={{ query: \`SELECT COUNT(DISTINCT c.id) AS value FROM compras c WHERE 1=1 {{filters}}\`, limit: 1 }}
                             format="number"
                             comparisonMode="previous_period"
                           >
@@ -162,7 +160,7 @@ function buildComprasDashboardSource(themeName: string) {
                       <article id="compras-kpi-ticket" style={{ boxSizing: 'border-box', minWidth: 0, display: 'flex', flexDirection: 'column', padding: 18, border: '1px solid ' + theme.surfaceBorder, borderRadius: theme.cardFrame ? 0 : 16, backgroundColor: theme.surfaceBg, boxShadow: theme.cardFrame ? 'none' : '0 1px 2px rgba(15, 23, 42, 0.04)', gridColumn: 'span 3', minHeight: 72, height: '100%' }}>
                           <KPI
                             title="Ticket medio"
-                            dataQuery={{ query: \`SELECT COALESCE(AVG(c.valor_total), 0)::float AS value FROM compras.compras c WHERE 1=1 {{filters}}\`, limit: 1 }}
+                            dataQuery={{ query: \`SELECT COALESCE(AVG(c.valor_total), 0) AS value FROM compras c WHERE 1=1 {{filters}}\`, limit: 1 }}
                             format="currency"
                             comparisonMode="previous_period"
                           >
@@ -186,11 +184,10 @@ function buildComprasDashboardSource(themeName: string) {
                             dataQuery={{
                               query: \`
                                 SELECT
-                                  COALESCE(src.fornecedor_id::text, '0') AS key,
-                                  COALESCE(f.nome_fantasia, 'Sem fornecedor') AS label,
-                                  COALESCE(SUM(src.valor_total), 0)::float AS value
-                                FROM compras.compras src
-                                LEFT JOIN entidades.fornecedores f ON f.id = src.fornecedor_id
+                                  COALESCE(CAST(src.fornecedor_id AS STRING), '0') AS key,
+                                  COALESCE(c.fornecedor_nome, 'Sem fornecedor') AS label,
+                                  COALESCE(SUM(src.valor_total), 0) AS value
+                                FROM compras src
                                 WHERE 1=1
                                   {{filters}}
                                 GROUP BY 1, 2
@@ -207,12 +204,12 @@ function buildComprasDashboardSource(themeName: string) {
                         </div>
                       </article>
 
-                      <article id="compras-chart-categoria" style={{ boxSizing: 'border-box', minWidth: 0, display: 'flex', flexDirection: 'column', padding: 18, border: '1px solid ' + theme.surfaceBorder, borderRadius: theme.cardFrame ? 0 : 16, backgroundColor: theme.surfaceBg, boxShadow: theme.cardFrame ? 'none' : '0 1px 2px rgba(15, 23, 42, 0.04)', gridColumn: 'span 5', minHeight: 288, height: '100%', display: 'flex', flexDirection: 'column', gap: 14 }}>
+                      <article id="compras-chart-status" style={{ boxSizing: 'border-box', minWidth: 0, display: 'flex', flexDirection: 'column', padding: 18, border: '1px solid ' + theme.surfaceBorder, borderRadius: theme.cardFrame ? 0 : 16, backgroundColor: theme.surfaceBg, boxShadow: theme.cardFrame ? 'none' : '0 1px 2px rgba(15, 23, 42, 0.04)', gridColumn: 'span 5', minHeight: 288, height: '100%', display: 'flex', flexDirection: 'column', gap: 14 }}>
                         <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                           <p data-ui="eyebrow">Allocation</p>
-                          <h2 data-ui="section-title">Gasto por categoria</h2>
+                          <h2 data-ui="section-title">Gasto por status</h2>
                         </div>
-                        <p data-ui="body-muted">Mostra em qual categoria de despesa o volume de compras esta se acumulando no periodo.</p>
+                        <p data-ui="body-muted">Mostra em qual status de despesa o volume de compras esta se acumulando no periodo.</p>
                         <div style={{ flex: 1, minHeight: 0 }}>
                           <Chart
                             type="pie"
@@ -221,11 +218,10 @@ function buildComprasDashboardSource(themeName: string) {
                             dataQuery={{
                               query: \`
                                 SELECT
-                                  COALESCE(src.categoria_despesa_id::text, '0') AS key,
-                                  COALESCE(cd.nome, 'Sem categoria') AS label,
-                                  COALESCE(SUM(src.valor_total), 0)::float AS value
-                                FROM compras.compras src
-                                LEFT JOIN financeiro.categorias_despesa cd ON cd.id = src.categoria_despesa_id
+                                  COALESCE(CAST(src.status AS STRING), '0') AS key,
+                                  COALESCE(src.status, 'Sem status') AS label,
+                                  COALESCE(SUM(src.valor_total), 0) AS value
+                                FROM compras src
                                 WHERE 1=1
                                   {{filters}}
                                 GROUP BY 1, 2
@@ -259,10 +255,10 @@ function buildComprasDashboardSource(themeName: string) {
                             dataQuery={{
                               query: \`
                                 SELECT
-                                  TO_CHAR(DATE_TRUNC('month', src.data_pedido), 'YYYY-MM') AS key,
-                                  TO_CHAR(DATE_TRUNC('month', src.data_pedido), 'MM/YYYY') AS label,
-                                  COALESCE(SUM(src.valor_total), 0)::float AS value
-                                FROM compras.compras src
+                                  FORMAT_DATE('%Y-%m', DATE_TRUNC(DATE(src.data_compra), MONTH)) AS key,
+                                  FORMAT_DATE('%m/%Y', DATE_TRUNC(DATE(src.data_compra), MONTH)) AS label,
+                                  COALESCE(SUM(src.valor_total), 0) AS value
+                                FROM compras src
                                 WHERE 1=1
                                   {{filters}}
                                 GROUP BY 1, 2
@@ -295,8 +291,8 @@ function buildComprasDashboardSource(themeName: string) {
                                 SELECT
                                   COALESCE(src.status, 'sem_status') AS key,
                                   COALESCE(src.status, 'Sem status') AS label,
-                                  COUNT(*)::float AS value
-                                FROM compras.compras src
+                                  COUNT(*) AS value
+                                FROM compras src
                                 WHERE 1=1
                                   {{filters}}
                                 GROUP BY 1, 2
@@ -337,27 +333,25 @@ function buildComprasDashboardSource(themeName: string) {
                           dataQuery={{
                             query: \`
                               SELECT
-                                c.id::text AS compra_id,
-                                COALESCE(c.numero_oc, CONCAT('OC-', c.id::text)) AS numero_oc,
-                                TO_CHAR(c.data_pedido::date, 'DD/MM/YYYY') AS data_pedido,
-                                COALESCE(f.nome_fantasia, 'Sem fornecedor') AS fornecedor,
-                                COALESCE(cc.nome, 'Sem centro de custo') AS centro_custo,
+                                CAST(c.id AS STRING) AS compra_id,
+                                COALESCE(c.numero, CONCAT('OC-', CAST(c.id AS STRING))) AS numero,
+                                FORMAT_DATE('%d/%m/%Y', DATE(c.data_compra)) AS data_compra,
+                                COALESCE(c.fornecedor_nome, 'Sem fornecedor') AS fornecedor,
+                                COALESCE(c.numero, 'Sem documento') AS documento,
                                 COALESCE(c.status, 'Sem status') AS status,
-                                COALESCE(c.valor_total, 0)::float AS valor_total
-                              FROM compras.compras c
-                              LEFT JOIN entidades.fornecedores f ON f.id = c.fornecedor_id
-                              LEFT JOIN empresa.centros_custo cc ON cc.id = c.centro_custo_id
+                                COALESCE(c.valor_total, 0) AS valor_total
+                              FROM compras c
                               WHERE 1=1
                                 {{filters}}
-                              ORDER BY c.data_pedido DESC NULLS LAST, c.id DESC
+                              ORDER BY c.data_compra DESC NULLS LAST, c.id DESC
                             \`,
                             limit: 12,
                           }}
                           columns={[
-                            { accessorKey: 'numero_oc', header: 'OC' },
-                            { accessorKey: 'data_pedido', header: 'Data' },
+                            { accessorKey: 'numero', header: 'OC' },
+                            { accessorKey: 'data_compra', header: 'Data' },
                             { accessorKey: 'fornecedor', header: 'Fornecedor' },
-                            { accessorKey: 'centro_custo', header: 'Centro custo' },
+                            { accessorKey: 'documento', header: 'Documento' },
                             { accessorKey: 'status', header: 'Status', cell: 'badge' },
                             { accessorKey: 'valor_total', header: 'Valor', format: 'currency', align: 'right', headerAlign: 'right' },
                           ]}
@@ -367,7 +361,7 @@ function buildComprasDashboardSource(themeName: string) {
                       <article id="compras-pivot" style={{ boxSizing: 'border-box', minWidth: 0, display: 'flex', flexDirection: 'column', padding: 18, border: '1px solid ' + theme.surfaceBorder, borderRadius: theme.cardFrame ? 0 : 16, backgroundColor: theme.surfaceBg, boxShadow: theme.cardFrame ? 'none' : '0 1px 2px rgba(15, 23, 42, 0.04)', gridColumn: 'span 4', minHeight: 324, height: '100%', display: 'flex', flexDirection: 'column', gap: 14 }}>
                         <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                           <p data-ui="eyebrow">Pivot</p>
-                          <h2 data-ui="section-title">Categoria por status</h2>
+                          <h2 data-ui="section-title">Fornecedor por status</h2>
                         </div>
                         <PivotTable
                           bordered
@@ -388,17 +382,16 @@ function buildComprasDashboardSource(themeName: string) {
                           dataQuery={{
                             query: \`
                               SELECT
-                                COALESCE(cd.nome, 'Sem categoria') AS categoria,
+                                COALESCE(c.fornecedor_nome, 'Sem fornecedor') AS fornecedor,
                                 COALESCE(c.status, 'Sem status') AS status,
-                                COALESCE(c.valor_total, 0)::float AS valor_total
-                              FROM compras.compras c
-                              LEFT JOIN financeiro.categorias_despesa cd ON cd.id = c.categoria_despesa_id
+                                COALESCE(c.valor_total, 0) AS valor_total
+                              FROM compras c
                               WHERE 1=1
                                 {{filters}}
                             \`,
                             limit: 400,
                           }}
-                          rows={[{ field: 'categoria', label: 'Categoria' }]}
+                          rows={[{ field: 'fornecedor', label: 'Fornecedor' }]}
                           columns={[{ field: 'status', label: 'Status' }]}
                           values={[{ field: 'valor_total', label: 'Valor', aggregate: 'sum', format: 'currency' }]}
                         />
@@ -424,7 +417,7 @@ function buildComprasDashboardSource(themeName: string) {
                           <h2 data-ui="section-title-sm">Pressao por centro de custo</h2>
                         </div>
                         <ul style={{ margin: 0, paddingLeft: 18, fontSize: 13, lineHeight: 1.65, color: theme.textSecondary }}>
-                          <li>Centro de custo acima da media precisa ser lido junto com categoria para separar compra pontual de uma tendencia estrutural de gasto.</li>
+                          <li>Documento acima da media precisa ser lido junto com status para separar compra pontual de uma tendencia estrutural de gasto.</li>
                         </ul>
                       </article>
 

@@ -47,8 +47,6 @@ export type DashboardTextVariantKey =
   | 'table-title'
   | 'pivot-title'
   | 'filter-title'
-  | 'insights-title'
-  | 'insights-title-sm'
   | 'kpi-title'
   | 'kpi-value'
   | 'kpi-compare'
@@ -65,14 +63,6 @@ export type DashboardDatePickerThemeConfigEntry = {
   activePresetButtonStyle: React.CSSProperties
   separatorStyle: React.CSSProperties
   popoverStyle: React.CSSProperties
-}
-export type DashboardInsightsThemeConfigEntry = {
-  containerStyle: React.CSSProperties
-  itemStyle: React.CSSProperties
-  titleStyle: React.CSSProperties
-  textStyle: React.CSSProperties
-  iconStyle: React.CSSProperties
-  dividerColor: string
 }
 export type DashboardFilterThemeConfigEntry = {
   labelStyle: React.CSSProperties
@@ -142,19 +132,10 @@ export type DashboardHeaderAppearanceOverrides = {
   subtitle?: React.CSSProperties
   title?: React.CSSProperties
 }
-export type DashboardInsightsAppearanceOverrides = {
-  container?: React.CSSProperties
-  dividerColor?: string
-  icon?: React.CSSProperties
-  item?: React.CSSProperties
-  text?: React.CSSProperties
-  title?: React.CSSProperties
-}
 export type DashboardThemeAppearanceOverrides = { fontFamily?: string }
 export type DashboardAppearanceOverrides = {
   chart?: DashboardChartAppearanceOverrides
   header?: DashboardHeaderAppearanceOverrides
-  insights?: DashboardInsightsAppearanceOverrides
   kpi?: DashboardKpiAppearanceOverrides
   theme?: DashboardThemeAppearanceOverrides
 }

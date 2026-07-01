@@ -459,7 +459,7 @@ function buildClassicDashboardTemplateMarkup(title: string, themeName: string) {
 
             <div style={{ boxSizing: 'border-box', minWidth: 0, display: 'flex', flexDirection: 'column', gap: 10, alignItems: 'flex-end', minWidth: 240 }}>
               <DatePicker
-                table="vendas.pedidos"
+                table="vendas"
                 field="data_pedido"
                 presets={['7d', '30d', 'month', 'quarter']}
               />
@@ -487,8 +487,8 @@ function buildClassicDashboardTemplateMarkup(title: string, themeName: string) {
                 <KPI
                   dataQuery={{
                     query: \`
-                      SELECT COALESCE(SUM(p.valor_total), 0)::float AS value
-                      FROM vendas.pedidos p
+                      SELECT COALESCE(SUM(p.valor_total), 0) AS value
+                      FROM vendas p
                       WHERE 1=1
                         {{filters}}
                     \`,
@@ -510,8 +510,8 @@ function buildClassicDashboardTemplateMarkup(title: string, themeName: string) {
                 <KPI
                   dataQuery={{
                     query: \`
-                      SELECT COUNT(*)::float AS value
-                      FROM vendas.pedidos p
+                      SELECT COUNT(*) AS value
+                      FROM vendas p
                       WHERE 1=1
                         {{filters}}
                     \`,
@@ -533,8 +533,8 @@ function buildClassicDashboardTemplateMarkup(title: string, themeName: string) {
                 <KPI
                   dataQuery={{
                     query: \`
-                      SELECT COALESCE(AVG(p.valor_total), 0)::float AS value
-                      FROM vendas.pedidos p
+                      SELECT COALESCE(AVG(p.valor_total), 0) AS value
+                      FROM vendas p
                       WHERE 1=1
                         {{filters}}
                     \`,
@@ -551,13 +551,13 @@ function buildClassicDashboardTemplateMarkup(title: string, themeName: string) {
           <article id="classic-kpi-canais" style={{ boxSizing: 'border-box', minWidth: 0, display: 'flex', flexDirection: 'column', padding: 18, border: '1px solid ' + theme.surfaceBorder, borderRadius: theme.cardFrame ? 0 : 16, backgroundColor: theme.surfaceBg, boxShadow: theme.cardFrame ? 'none' : '0 1px 2px rgba(15, 23, 42, 0.04)', gridColumn: 'span 5', minHeight: 80, height: 'auto', display: 'flex', flexDirection: 'column', gap: 14 }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
                   <span data-ui="icon-placeholder" />
-                  <p data-ui="eyebrow">Canais ativos</p>
+                  <p data-ui="eyebrow">Status ativos</p>
                 </div>
                 <KPI
                   dataQuery={{
                     query: \`
-                      SELECT COUNT(DISTINCT p.canal_venda_id)::float AS value
-                      FROM vendas.pedidos p
+                      SELECT COUNT(DISTINCT p.status) AS value
+                      FROM vendas p
                       WHERE 1=1
                         {{filters}}
                     \`,
@@ -579,8 +579,8 @@ function buildClassicDashboardTemplateMarkup(title: string, themeName: string) {
                 <KPI
                   dataQuery={{
                     query: \`
-                      SELECT COALESCE(AVG(CASE WHEN COALESCE(p.status, '') = 'aprovado' THEN 1 ELSE 0 END), 0)::float AS value
-                      FROM vendas.pedidos p
+                      SELECT COALESCE(AVG(CASE WHEN COALESCE(p.status, '') = 'aprovado' THEN 1 ELSE 0 END), 0) AS value
+                      FROM vendas p
                       WHERE 1=1
                         {{filters}}
                     \`,
@@ -596,7 +596,7 @@ function buildClassicDashboardTemplateMarkup(title: string, themeName: string) {
 
           <article id="classic-chart-mix" style={{ boxSizing: 'border-box', minWidth: 0, display: 'flex', flexDirection: 'column', padding: 18, border: '1px solid ' + theme.surfaceBorder, borderRadius: theme.cardFrame ? 0 : 16, backgroundColor: theme.surfaceBg, boxShadow: theme.cardFrame ? 'none' : '0 1px 2px rgba(15, 23, 42, 0.04)', gridColumn: 'span 12', minHeight: 192, height: '100%', display: 'flex', flexDirection: 'column', gap: 14 }}>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-                <p data-ui="eyebrow">Receita por canal</p>
+                <p data-ui="eyebrow">Receita por status</p>
                 <h2 data-ui="section-title-md">Mix comercial</h2>
               </div>
               <Chart
@@ -607,12 +607,11 @@ function buildClassicDashboardTemplateMarkup(title: string, themeName: string) {
                 dataQuery={{
                   query: \`
                     SELECT
-                      COALESCE(cv.id::text, COALESCE(cv.nome, '-')) AS key,
-                      COALESCE(cv.nome, '-') AS label,
-                      COALESCE(SUM(pi.subtotal), 0)::float AS value
-                    FROM vendas.pedidos p
-                    JOIN vendas.pedidos_itens pi ON pi.pedido_id = p.id
-                    LEFT JOIN vendas.canais_venda cv ON cv.id = p.canal_venda_id
+                      COALESCE(p.status, 'sem_status') AS key,
+                      COALESCE(p.status, 'Sem status') AS label,
+                      COALESCE(SUM(pi.valor_total), 0) AS value
+                    FROM vendas p
+                    JOIN itens_venda pi ON pi.venda_id = p.id
                     WHERE 1=1
                       {{filters}}
                     GROUP BY 1, 2
@@ -620,7 +619,7 @@ function buildClassicDashboardTemplateMarkup(title: string, themeName: string) {
                   \`,
                   limit: 6,
                 }}
-                interaction={{ table: 'vendas.pedidos', field: 'canal_venda_id', clearOnSecondClick: true }}
+                interaction={{ table: 'vendas', field: 'status', clearOnSecondClick: true }}
                 xAxis={{ dataKey: 'label', labelMode: 'first-word' }}
                 series={[
                   { dataKey: 'value', label: 'Receita' },
@@ -632,7 +631,7 @@ function buildClassicDashboardTemplateMarkup(title: string, themeName: string) {
           <article id="classic-chart-share" style={{ boxSizing: 'border-box', minWidth: 0, display: 'flex', flexDirection: 'column', padding: 18, border: '1px solid ' + theme.surfaceBorder, borderRadius: theme.cardFrame ? 0 : 16, backgroundColor: theme.surfaceBg, boxShadow: theme.cardFrame ? 'none' : '0 1px 2px rgba(15, 23, 42, 0.04)', gridColumn: 'span 12', minHeight: 192, height: '100%', display: 'flex', flexDirection: 'column', gap: 14 }}>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
                 <p data-ui="eyebrow">Participacao</p>
-                <h2 data-ui="section-title-md">Share por canal</h2>
+                <h2 data-ui="section-title-md">Share por status</h2>
               </div>
               <Chart
                 type="pie"
@@ -642,12 +641,11 @@ function buildClassicDashboardTemplateMarkup(title: string, themeName: string) {
                 dataQuery={{
                   query: \`
                     SELECT
-                      COALESCE(cv.id::text, COALESCE(cv.nome, '-')) AS key,
-                      COALESCE(cv.nome, '-') AS label,
-                      COALESCE(SUM(pi.subtotal), 0)::float AS value
-                    FROM vendas.pedidos p
-                    JOIN vendas.pedidos_itens pi ON pi.pedido_id = p.id
-                    LEFT JOIN vendas.canais_venda cv ON cv.id = p.canal_venda_id
+                      COALESCE(p.status, 'sem_status') AS key,
+                      COALESCE(p.status, 'Sem status') AS label,
+                      COALESCE(SUM(pi.valor_total), 0) AS value
+                    FROM vendas p
+                    JOIN itens_venda pi ON pi.venda_id = p.id
                     WHERE 1=1
                       {{filters}}
                     GROUP BY 1, 2
@@ -655,7 +653,7 @@ function buildClassicDashboardTemplateMarkup(title: string, themeName: string) {
                   \`,
                   limit: 6,
                 }}
-                interaction={{ table: 'vendas.pedidos', field: 'canal_venda_id', clearOnSecondClick: true }}
+                interaction={{ table: 'vendas', field: 'status', clearOnSecondClick: true }}
                 categoryKey="label"
                 legend={{ enabled: true, position: 'right' }}
                 series={[
@@ -685,10 +683,10 @@ function buildClassicDashboardTemplateMarkup(title: string, themeName: string) {
                 dataQuery={{
                   query: \`
                     SELECT
-                      TO_CHAR(p.data_pedido::date, 'YYYY-MM-DD') AS key,
-                      TO_CHAR(p.data_pedido::date, 'DD/MM') AS label,
-                      COALESCE(SUM(p.valor_total), 0)::float AS value
-                    FROM vendas.pedidos p
+                      FORMAT_DATE('%Y-%m-%d', DATE(p.data_pedido)) AS key,
+                      FORMAT_DATE('%d/%m', DATE(p.data_pedido)) AS label,
+                      COALESCE(SUM(p.valor_total), 0) AS value
+                    FROM vendas p
                     WHERE 1=1
                       {{filters}}
                     GROUP BY 1, 2
@@ -725,13 +723,12 @@ function buildClassicDashboardTemplateMarkup(title: string, themeName: string) {
                 dataQuery={{
                   query: \`
                     SELECT
-                      p.id::text AS pedido_id,
-                      TO_CHAR(p.data_pedido::date, 'DD/MM/YYYY') AS data_pedido,
-                      COALESCE(cv.nome, '-') AS canal,
+                      CAST(p.id AS STRING) AS pedido_id,
+                      FORMAT_DATE('%d/%m/%Y', DATE(p.data_pedido)) AS data_pedido,
+                      COALESCE(p.cliente_nome, '-') AS cliente,
                       COALESCE(p.status, 'Sem status') AS status,
-                      COALESCE(p.valor_total, 0)::float AS valor_total
-                    FROM vendas.pedidos p
-                    LEFT JOIN vendas.canais_venda cv ON cv.id = p.canal_venda_id
+                      COALESCE(p.valor_total, 0) AS valor_total
+                    FROM vendas p
                     WHERE 1=1
                       {{filters}}
                     ORDER BY p.data_pedido DESC NULLS LAST, p.id DESC
@@ -741,7 +738,7 @@ function buildClassicDashboardTemplateMarkup(title: string, themeName: string) {
                 columns={[
                   { accessorKey: 'pedido_id', header: 'Pedido' },
                   { accessorKey: 'data_pedido', header: 'Data' },
-                  { accessorKey: 'canal', header: 'Canal' },
+                  { accessorKey: 'cliente', header: 'Cliente' },
                   { accessorKey: 'status', header: 'Status', cell: 'badge', meta: { variantMap: { aprovado: 'success', pendente: 'warning', cancelado: 'danger' } } },
                   { accessorKey: 'valor_total', header: 'Receita', format: 'currency', align: 'right', headerAlign: 'right' },
                 ]}
@@ -763,8 +760,8 @@ function buildClassicDashboardTemplateMarkup(title: string, themeName: string) {
                   query: \`
                     SELECT
                       COALESCE(p.status, 'Sem status') AS label,
-                      COUNT(*)::float AS value
-                    FROM vendas.pedidos p
+                      COUNT(*) AS value
+                    FROM vendas p
                     WHERE 1=1
                       {{filters}}
                     GROUP BY 1
@@ -782,7 +779,7 @@ function buildClassicDashboardTemplateMarkup(title: string, themeName: string) {
           <article id="classic-pivot-canal-status" style={{ boxSizing: 'border-box', minWidth: 0, display: 'flex', flexDirection: 'column', padding: 18, border: '1px solid ' + theme.surfaceBorder, borderRadius: theme.cardFrame ? 0 : 16, backgroundColor: theme.surfaceBg, boxShadow: theme.cardFrame ? 'none' : '0 1px 2px rgba(15, 23, 42, 0.04)', gridColumn: 'span 12', minHeight: 192, height: '100%', display: 'flex', flexDirection: 'column', gap: 14 }}>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
                 <p data-ui="eyebrow">Cruzamento</p>
-                <h2 data-ui="section-title-md">Receita por canal e status</h2>
+                <h2 data-ui="section-title-md">Receita por cliente e status</h2>
               </div>
               <PivotTable
                 bordered
@@ -803,17 +800,16 @@ function buildClassicDashboardTemplateMarkup(title: string, themeName: string) {
                 dataQuery={{
                   query: \`
                     SELECT
-                      COALESCE(cv.nome, '-') AS canal,
+                      COALESCE(p.cliente_nome, 'Sem cliente') AS cliente,
                       COALESCE(p.status, 'Sem status') AS status,
-                      COALESCE(p.valor_total, 0)::float AS valor_total
-                    FROM vendas.pedidos p
-                    LEFT JOIN vendas.canais_venda cv ON cv.id = p.canal_venda_id
+                      COALESCE(p.valor_total, 0) AS valor_total
+                    FROM vendas p
                     WHERE 1=1
                       {{filters}}
                   \`,
                   limit: 400,
                 }}
-                rows={[{ field: 'canal', label: 'Canal' }]}
+                rows={[{ field: 'cliente', label: 'Cliente' }]}
                 columns={[{ field: 'status', label: 'Status' }]}
                 values={[{ field: 'valor_total', label: 'Receita', aggregate: 'sum', format: 'currency' }]}
               />
@@ -821,11 +817,11 @@ function buildClassicDashboardTemplateMarkup(title: string, themeName: string) {
 
           <article id="classic-filter-canal" style={{ boxSizing: 'border-box', minWidth: 0, display: 'flex', flexDirection: 'column', padding: 18, border: '1px solid ' + theme.surfaceBorder, borderRadius: theme.cardFrame ? 0 : 16, backgroundColor: theme.surfaceBg, boxShadow: theme.cardFrame ? 'none' : '0 1px 2px rgba(15, 23, 42, 0.04)', gridColumn: 'span 8', minHeight: 192, height: '100%', display: 'flex', flexDirection: 'column', gap: 14 }}>
               <p data-ui="eyebrow">Filtro</p>
-              <h2 data-ui="section-title-sm">Canal</h2>
+              <h2 data-ui="section-title-sm">Pedido</h2>
               <Filter
-                label="Canal"
-                table="vendas.pedidos"
-                field="canal_venda_id"
+                label="Pedido"
+                table="vendas"
+                field="numero"
                 variant="verticallist"
                 mode="multiple"
                 search
@@ -834,9 +830,10 @@ function buildClassicDashboardTemplateMarkup(title: string, themeName: string) {
                 width="100%"
                 query={\`
                   SELECT
-                    cv.id::text AS value,
-                    COALESCE(cv.nome, '-') AS label
-                  FROM vendas.canais_venda cv
+                    CAST(v.numero AS STRING) AS value,
+                    COALESCE(v.numero, '-') AS label
+                  FROM vendas v
+                  WHERE v.numero IS NOT NULL
                   ORDER BY 2 ASC
                 \`}
               />
@@ -847,7 +844,7 @@ function buildClassicDashboardTemplateMarkup(title: string, themeName: string) {
               <h2 data-ui="section-title-sm">Cliente</h2>
               <Filter
                 label="Cliente"
-                table="vendas.pedidos"
+                table="vendas"
                 field="cliente_id"
                 variant="verticallist"
                 mode="multiple"
@@ -857,9 +854,10 @@ function buildClassicDashboardTemplateMarkup(title: string, themeName: string) {
                 width="100%"
                 query={\`
                   SELECT
-                    c.id::text AS value,
-                    COALESCE(c.nome_fantasia, '-') AS label
-                  FROM entidades.clientes c
+                    CAST(v.cliente_id AS STRING) AS value,
+                    COALESCE(v.cliente_nome, '-') AS label
+                  FROM vendas v
+                  WHERE v.cliente_id IS NOT NULL
                   ORDER BY 2 ASC
                 \`}
               />
@@ -871,7 +869,7 @@ function buildClassicDashboardTemplateMarkup(title: string, themeName: string) {
               <div style={{ boxSizing: 'border-box', minWidth: 0, display: 'flex', flexDirection: 'column', gap: 10 }}>
                 <Filter
                   label="Status"
-                  table="vendas.pedidos"
+                  table="vendas"
                   field="status"
                   variant="dropdown"
                   mode="multiple"
@@ -879,42 +877,44 @@ function buildClassicDashboardTemplateMarkup(title: string, themeName: string) {
                   width="100%"
                   query={\`
                     SELECT DISTINCT
-                      LOWER(src.status)::text AS value,
+                      CAST(LOWER(src.status) AS STRING) AS value,
                       COALESCE(src.status, 'Sem status') AS label
-                    FROM vendas.pedidos src
+                    FROM vendas src
                     WHERE COALESCE(src.status, '') <> ''
                     ORDER BY 2 ASC
                   \`}
                 />
                 <Filter
-                  label="Regiao"
-                  table="entidades.clientes"
-                  field="regiao"
+                  label="Pedido"
+                  table="vendas"
+                  field="numero"
                   variant="dropdown"
                   mode="multiple"
                   clearable
                   width="100%"
                   query={\`
                     SELECT DISTINCT
-                      LOWER(COALESCE(c.regiao, 'sem regiao'))::text AS value,
-                      COALESCE(c.regiao, 'Sem regiao') AS label
-                    FROM entidades.clientes c
+                      CAST(v.numero AS STRING) AS value,
+                      COALESCE(v.numero, 'Sem pedido') AS label
+                    FROM vendas v
+                    WHERE v.numero IS NOT NULL
                     ORDER BY 2 ASC
                   \`}
                 />
                 <Filter
-                  label="UF"
-                  table="entidades.clientes"
-                  field="uf"
+                  label="Cliente"
+                  table="vendas"
+                  field="cliente_id"
                   variant="dropdown"
                   mode="multiple"
                   clearable
                   width="100%"
                   query={\`
                     SELECT DISTINCT
-                      LOWER(COALESCE(c.estado, 'sem uf'))::text AS value,
-                      COALESCE(c.estado, 'Sem UF') AS label
-                    FROM entidades.clientes c
+                      CAST(v.cliente_id AS STRING) AS value,
+                      COALESCE(v.cliente_nome, 'Sem cliente') AS label
+                    FROM vendas v
+                    WHERE v.cliente_id IS NOT NULL
                     ORDER BY 2 ASC
                   \`}
                 />
