@@ -545,10 +545,14 @@ export function ArtifactListPage({
       return haystack.includes(normalizedQuery)
     })
   }, [items, query])
+  const useIntegracoesLayout = config.artifactType === 'dashboard'
 
   return (
-    <main className="min-h-screen bg-background px-5 py-6 text-foreground md:px-8">
-      <div className="mx-auto max-w-[1280px]">
+    <main className={useIntegracoesLayout
+      ? 'min-h-screen bg-white px-8 py-8 text-foreground lg:px-12'
+      : 'min-h-screen bg-background px-5 py-6 text-foreground md:px-8'}
+    >
+      <div className={useIntegracoesLayout ? 'w-full' : 'mx-auto max-w-[1280px]'}>
         <header className="mb-6">
           <div className="flex flex-col gap-4 xl:flex-row xl:items-end xl:justify-between">
             <div className="min-w-0">
