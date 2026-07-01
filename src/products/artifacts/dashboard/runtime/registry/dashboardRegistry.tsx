@@ -17,10 +17,8 @@ import {
 import DashboardChart from '@/products/artifacts/dashboard/runtime/components/chart/DashboardChart'
 import DashboardDatePicker from '@/products/artifacts/dashboard/runtime/components/filters/DashboardDatePicker'
 import DashboardFilter from '@/products/artifacts/dashboard/runtime/components/filters/DashboardFilter'
-import DashboardInsights from '@/products/artifacts/dashboard/runtime/components/insights/DashboardInsights'
 import DashboardKpi from '@/products/artifacts/dashboard/runtime/components/kpi/DashboardKpi'
 import { DashboardKpiCompare } from '@/products/artifacts/dashboard/runtime/components/kpi/DashboardKpiCompare'
-import { DashboardHorizontal } from '@/products/artifacts/dashboard/runtime/components/layout/DashboardLayout'
 import DashboardPivotTable from '@/products/artifacts/dashboard/runtime/components/table/DashboardPivotTable'
 import DashboardQuery, {
   getDashboardQueryDeltaColor,
@@ -108,19 +106,6 @@ function renderDashboardThemeLayer({
       </div>
     </DashboardThemeSelectionProvider>
   )
-}
-
-function DashboardTheme({ element, children }: { element: any; children?: React.ReactNode }) {
-  const props = (element?.props || {}) as AnyRecord
-  const { appearanceOverrides } = useDashboardThemeSelection()
-  return renderDashboardThemeLayer({
-    appearanceOverrides,
-    themeName: typeof props.name === 'string' ? props.name : undefined,
-    borderPreset: typeof props.borderPreset === 'string' ? props.borderPreset : undefined,
-    headerTheme: typeof props.headerTheme === 'string' ? props.headerTheme : undefined,
-    managers: (props.managers || {}) as AnyRecord,
-    children,
-  })
 }
 
 function DashboardSurface({ element, children }: { element: any; children?: React.ReactNode }) {
@@ -323,12 +308,10 @@ function DashboardTabPanel({
 
 export const dashboardShellRegistry: Record<string, DashboardRenderComponent> = {
   DashboardTemplate: ({ children }) => <DashboardRoot>{children}</DashboardRoot>,
-  Theme: ({ element, children }) => <DashboardTheme element={element}>{children}</DashboardTheme>,
   Dashboard: ({ element, children }) => <DashboardSurface element={element}>{children}</DashboardSurface>,
 }
 
 export const dashboardLayoutRegistry: Record<string, DashboardRenderComponent> = {
-  Horizontal: ({ element, children }) => <DashboardHorizontal element={element}>{children}</DashboardHorizontal>,
   Tabs: ({ element, children }) => <DashboardTabs element={element}>{children}</DashboardTabs>,
   Tab: ({ element, children }) => <DashboardTab element={element}>{children}</DashboardTab>,
   TabPanel: ({ element, children }) => <DashboardTabPanel element={element}>{children}</DashboardTabPanel>,
@@ -359,7 +342,6 @@ export const dashboardDataRegistry: Record<string, DashboardRenderComponent> = {
   Select: () => null,
   OptionList: () => null,
   DatePicker: ({ element, onAction }) => <DashboardDatePicker element={element} onAction={onAction} />,
-  Insights: ({ element }) => <DashboardInsights element={element} />,
 }
 
 export const dashboardContentRegistry: Record<string, DashboardRenderComponent> = {

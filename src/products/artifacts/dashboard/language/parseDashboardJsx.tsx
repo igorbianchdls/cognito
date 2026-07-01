@@ -38,9 +38,6 @@ export function getDashboardThemeNameFromSource(source: string, fallback = 'ligh
   const dashboardThemeMatch = String(source || '').match(/<Dashboard\b[^>]*\btheme="([^"]+)"/)
   if (dashboardThemeMatch?.[1]?.trim()) return dashboardThemeMatch[1].trim()
 
-  const themeMatch = String(source || '').match(/<Theme\b[^>]*\bname="([^"]+)"/)
-  if (themeMatch?.[1]?.trim()) return themeMatch[1].trim()
-
   const themeTokenMatch = String(source || '').match(/resolveDashboardThemeTokens\((['"])([^'"]+)\1\)/)
   if (themeTokenMatch?.[2]?.trim()) return themeTokenMatch[2].trim()
 
@@ -76,11 +73,6 @@ export function replaceDashboardThemeNameInSource(source: string, nextThemeName:
       /<Dashboard\b/,
       `<Dashboard theme="${normalizedThemeName}"`,
     )
-  } else if (/<Theme\b[^>]*\bname=/.test(nextSource)) {
-    nextSource = nextSource.replace(
-      /<Theme\b([^>]*)\bname=(?:"[^"]*"|\{'[^']*'\}|\{"[^"]*"\})/,
-      `<Theme$1name="${normalizedThemeName}"`,
-    )
   }
 
   nextSource = nextSource.replace(
@@ -92,8 +84,8 @@ export function replaceDashboardThemeNameInSource(source: string, nextThemeName:
     `const key = '${normalizedThemeName}'.toLowerCase()`,
   )
   nextSource = nextSource.replace(
-    /Theme ativo:\s*[^<{]+/g,
-    `Theme ativo: ${normalizedThemeName}`,
+    /Tema ativo:\s*[^<{]+/g,
+    `Tema ativo: ${normalizedThemeName}`,
   )
 
   if (/const\s+THEME_NAME\s*=/.test(cleanSource)) {

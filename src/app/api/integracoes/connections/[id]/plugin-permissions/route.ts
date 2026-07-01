@@ -13,6 +13,7 @@ import {
   integrationAuthErrorResponse,
   resolveIntegrationTenant,
 } from '@/products/integracoes/server/integrationTenantAuth'
+import { normalizeRequestedResources, requireIntegrationProvider } from '@/products/integracoes/server/integrationProviderRegistry'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -27,6 +28,16 @@ function asMcpCapability(value: unknown): string[] | undefined {
   const resources = asStringArray(value)
   if (resources === undefined) return undefined
   return resources.length ? ['*'] : []
+}
+
+function normalizeReadResources(connection: Awaited<ReturnType<typeof getIntegrationConnection>>, value: unknown) {
+  if (!connection) return asMcpCapability(value)
+  const resources = asStringArray(value)
+  if (resources === undefined) return undefined
+  if (!resources.length) return []
+  const provider = requireIntegrationProvider(connection.provider)
+  if (resources.includes('*')) return normalizeRequestedResources(provider, connection.selectedResources)
+  return normalizeRequestedResources(provider, resources)
 }
 
 function asRecord(value: unknown): Record<string, unknown> {
@@ -98,7 +109,7 @@ export async function PATCH(
       tenantId,
       connectionId: id,
       enabled: payload.enabled == null ? undefined : Boolean(payload.enabled),
-      readResources: asMcpCapability(payload.readResources ?? payload.read_resources),
+      readResources: normalizeReadResources(connection, payload.readResources ?? payload.read_resources),
       liveReadResources: asMcpCapability(payload.liveReadResources ?? payload.live_read_resources),
       writeResources: asMcpCapability(payload.writeResources ?? payload.write_resources),
       destructiveResources: asMcpCapability(payload.destructiveResources ?? payload.destructive_resources),

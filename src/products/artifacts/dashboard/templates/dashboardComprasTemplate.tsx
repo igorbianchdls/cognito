@@ -414,39 +414,27 @@ function buildComprasDashboardSource(themeName: string) {
                         <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
                           <h2 data-ui="section-title-sm">Concentracao em fornecedores</h2>
                         </div>
-                        <Insights
-                          textStyle={{ ...{ margin: 0, fontSize: 14, lineHeight: 1.75, color: theme.textSecondary }, fontSize: 13, lineHeight: 1.65 }}
-                          iconStyle={{ color: '#2563EB' }}
-                          items={[
-                            { text: 'Se poucos fornecedores concentram a maior parte do gasto, a negociacao fica mais sensivel a prazo, ruptura e dependencia comercial.' },
-                          ]}
-                        />
+                        <ul style={{ margin: 0, paddingLeft: 18, fontSize: 13, lineHeight: 1.65, color: theme.textSecondary }}>
+                          <li>Se poucos fornecedores concentram a maior parte do gasto, a negociacao fica mais sensivel a prazo, ruptura e dependencia comercial.</li>
+                        </ul>
                       </article>
 
                       <article id="compras-insight-centro" style={{ boxSizing: 'border-box', minWidth: 0, display: 'flex', flexDirection: 'column', padding: 18, border: '1px solid ' + theme.surfaceBorder, borderRadius: theme.cardFrame ? 0 : 16, backgroundColor: theme.surfaceBg, boxShadow: theme.cardFrame ? 'none' : '0 1px 2px rgba(15, 23, 42, 0.04)', gridColumn: 'span 4', minHeight: 108, display: 'flex', flexDirection: 'column', gap: 14 }}>
                         <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
                           <h2 data-ui="section-title-sm">Pressao por centro de custo</h2>
                         </div>
-                        <Insights
-                          textStyle={{ ...{ margin: 0, fontSize: 14, lineHeight: 1.75, color: theme.textSecondary }, fontSize: 13, lineHeight: 1.65 }}
-                          iconStyle={{ color: '#0F766E' }}
-                          items={[
-                            { text: 'Centro de custo acima da media precisa ser lido junto com categoria para separar compra pontual de uma tendencia estrutural de gasto.' },
-                          ]}
-                        />
+                        <ul style={{ margin: 0, paddingLeft: 18, fontSize: 13, lineHeight: 1.65, color: theme.textSecondary }}>
+                          <li>Centro de custo acima da media precisa ser lido junto com categoria para separar compra pontual de uma tendencia estrutural de gasto.</li>
+                        </ul>
                       </article>
 
                       <article id="compras-insight-risco" style={{ boxSizing: 'border-box', minWidth: 0, display: 'flex', flexDirection: 'column', padding: 18, border: '1px solid ' + theme.surfaceBorder, borderRadius: theme.cardFrame ? 0 : 16, backgroundColor: theme.surfaceBg, boxShadow: theme.cardFrame ? 'none' : '0 1px 2px rgba(15, 23, 42, 0.04)', gridColumn: 'span 4', minHeight: 108, display: 'flex', flexDirection: 'column', gap: 14 }}>
                         <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
                           <h2 data-ui="section-title-sm">Risco operacional</h2>
                         </div>
-                        <Insights
-                          textStyle={{ ...{ margin: 0, fontSize: 14, lineHeight: 1.75, color: theme.textSecondary }, fontSize: 13, lineHeight: 1.65 }}
-                          iconStyle={{ color: '#EA580C' }}
-                          items={[
-                            { text: 'Status com muito volume em analise ou parcial costuma indicar gargalo entre pedido, recebimento e pagamento.' },
-                          ]}
-                        />
+                        <ul style={{ margin: 0, paddingLeft: 18, fontSize: 13, lineHeight: 1.65, color: theme.textSecondary }}>
+                          <li>Status com muito volume em analise ou parcial costuma indicar gargalo entre pedido, recebimento e pagamento.</li>
+                        </ul>
                       </article>
                     </section>
                   </div>
@@ -456,7 +444,7 @@ function buildComprasDashboardSource(themeName: string) {
                   <article id="compras-footer" style={{ boxSizing: 'border-box', minWidth: 0, display: 'flex', flexDirection: 'column', padding: 18, border: '1px solid ' + theme.surfaceBorder, borderRadius: theme.cardFrame ? 0 : 16, backgroundColor: theme.surfaceBg, boxShadow: theme.cardFrame ? 'none' : '0 1px 2px rgba(15, 23, 42, 0.04)', gridColumn: 'span 12', minHeight: 54 }}>
                   <footer style={{ height: '100%', display: 'flex', justifyContent: 'space-between', gap: 18, padding: '18px 22px', borderRadius: 22, backgroundColor: theme.surfaceBg, border: '1px solid ' + theme.surfaceBorder }}>
                     <p data-ui="small-muted">Template JSX de compras com sidebar, tabs laterais e queries SQL explicitas.</p>
-                    <p data-ui="small-muted">Theme ativo: ${resolvedThemeName}</p>
+                    <p data-ui="small-muted">Tema ativo: ${resolvedThemeName}</p>
                   </footer>
                   </article>
                 </section>

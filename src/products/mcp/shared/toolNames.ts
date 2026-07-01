@@ -5,6 +5,7 @@ export const MCP_DASHBOARD_TOOL_NAMES = {
   dashboardPatch: 'dashboard_patch',
   dashboardUpdateFull: 'dashboard_update_full',
   dashboardGetContract: 'dashboard_get_contract',
+  dashboardQueryPreview: 'dashboard_query_preview',
 } as const
 
 export const MCP_ARTIFACT_TOOL_NAMES = {

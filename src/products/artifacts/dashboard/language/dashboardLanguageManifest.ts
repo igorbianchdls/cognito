@@ -4,9 +4,7 @@ export const DASHBOARD_DSL_VERSION = 'dashboard.v1'
 
 export const DASHBOARD_SUPPORTED_COMPONENTS = [
   'DashboardTemplate',
-  'Theme',
   'Dashboard',
-  'Horizontal',
   'Tabs',
   'Tab',
   'TabPanel',
@@ -31,16 +29,13 @@ export const DASHBOARD_SUPPORTED_COMPONENTS = [
   'Select',
   'OptionList',
   'DatePicker',
-  'Insights',
 ] as const
 
 export const DASHBOARD_SUPPORTED_COMPONENT_SET = new Set<string>(DASHBOARD_SUPPORTED_COMPONENTS)
 
 export const DASHBOARD_CONTAINER_COMPONENTS = [
   'DashboardTemplate',
-  'Theme',
   'Dashboard',
-  'Horizontal',
   'Tabs',
   'Tab',
   'TabPanel',

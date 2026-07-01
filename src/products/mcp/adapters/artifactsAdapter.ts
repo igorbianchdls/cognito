@@ -13,6 +13,11 @@ import {
   type ArtifactSourceKind,
   type DashboardListItem,
 } from '@/products/artifacts/dashboard/persistence/dashboardArtifactsService'
+import { preflightDashboardQueries } from '@/products/artifacts/dashboard/query/dashboardQueryPreflight'
+import {
+  normalizeDashboardQueryPreviewError,
+  previewDashboardQuery,
+} from '@/products/artifacts/dashboard/query/dashboardQueryPreview'
 
 export type McpJsonMap = Record<string, unknown>
 export type McpArtifactKind = ArtifactKind
@@ -86,6 +91,15 @@ export type McpDashboardPatchInput = {
 export type McpDashboardDeleteInput = {
   tenantId: number
   artifactId: string
+}
+
+export type McpDashboardQueryPreviewInput = {
+  tenantId: number
+  artifactId: string
+  componentId: string
+  sampleLimit?: number | null
+  includeProfile?: boolean
+  actorId?: string | null
 }
 
 export type McpArtifactReadInput = {
@@ -163,6 +177,24 @@ function withDashboardUrl<T extends { artifact_id: string }>(artifact: T) {
   }
 }
 
+async function withDashboardQueryPreflight<T extends { artifact_id: string }>(artifact: T, input: {
+  tenantId: number
+  source: string
+  actorId?: string | null
+}) {
+  const actorId = input.actorId == null || input.actorId === '' ? null : Number(input.actorId)
+  const queryPreflight = await preflightDashboardQueries({
+    artifactId: artifact.artifact_id,
+    tenantId: input.tenantId,
+    source: input.source,
+    actorId: Number.isFinite(actorId) ? actorId : null,
+  })
+  return {
+    ...withDashboardUrl(artifact),
+    query_preflight: queryPreflight,
+  }
+}
+
 function withListDashboardUrl(dashboard: DashboardListItem) {
   const { thumbnail_data_url: thumbnailDataUrl, ...dashboardWithoutThumbnail } = dashboard
   return {
@@ -221,6 +253,25 @@ export async function readMcpDashboard(input: McpDashboardReadInput) {
   return withDashboardUrl(artifact)
 }
 
+export async function previewMcpDashboardQuery(input: McpDashboardQueryPreviewInput) {
+  const actorId = input.actorId == null || input.actorId === '' ? null : Number(input.actorId)
+  try {
+    return await previewDashboardQuery({
+      artifactId: input.artifactId,
+      tenantId: input.tenantId,
+      componentId: input.componentId,
+      sampleLimit: input.sampleLimit,
+      includeProfile: input.includeProfile,
+      actorId: Number.isFinite(actorId) ? actorId : null,
+    })
+  } catch (error) {
+    return normalizeDashboardQueryPreviewError({
+      componentId: input.componentId,
+      error,
+    })
+  }
+}
+
 function withArtifactUrl<T extends { artifact_id: string; artifact_type?: string }>(artifact: T) {
   const artifactType =
     artifact.artifact_type === 'report' || artifact.artifact_type === 'slide' || artifact.artifact_type === 'dashboard'
@@ -257,10 +308,14 @@ export async function createMcpDashboard(input: McpDashboardCreateInput) {
     actorId: input.actorId,
   })
 
-  return withDashboardUrl(artifact)
+  return withDashboardQueryPreflight(artifact, input)
 }
 
 export async function createMcpArtifact(input: McpArtifactCreateInput) {
+  if (input.artifactType === 'dashboard') {
+    return createMcpDashboard(input)
+  }
+
   const artifact = await writeArtifact({
     artifactType: input.artifactType,
     tenantId: input.tenantId,
@@ -290,10 +345,14 @@ export async function updateMcpDashboardFull(input: McpDashboardUpdateFullInput)
     actorId: input.actorId,
   })
 
-  return withDashboardUrl(artifact)
+  return withDashboardQueryPreflight(artifact, input)
 }
 
 export async function updateMcpArtifactFull(input: McpArtifactUpdateFullInput) {
+  if (input.artifactType === 'dashboard') {
+    return updateMcpDashboardFull(input)
+  }
+
   const artifact = await writeArtifact({
     artifactType: input.artifactType,
     artifactId: input.artifactId,

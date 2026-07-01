@@ -27,24 +27,14 @@ function wrapDashboardSource(source: string) {
   const cleanSource = sanitizeArtifactSource(source)
   if (getArtifactRootTagName(cleanSource) !== 'Dashboard') return cleanSource
 
-  const themeTagMatch = cleanSource.match(/<Theme\b[^>]*\/>/)
-  const themeTagSource = themeTagMatch?.[0] || ''
   const dashboardThemeMatch = cleanSource.match(/<Dashboard\b[^>]*\btheme="([^"]+)"/)
-  const dashboardPaletteMatch = cleanSource.match(/<Dashboard\b[^>]*\bchartPalette="([^"]+)"/)
   const dashboardBorderPresetMatch = cleanSource.match(/<Dashboard\b[^>]*\bborderPreset="([^"]+)"/)
-  const themeNameMatch = themeTagSource.match(/\bname="([^"]+)"/)
-  const themePaletteMatch = themeTagSource.match(/\bchartPalette="([^"]+)"/)
-  const resolvedThemeName = dashboardThemeMatch?.[1]?.trim() || themeNameMatch?.[1]?.trim() || 'light'
+  const resolvedThemeName = dashboardThemeMatch?.[1]?.trim() || 'light'
   const resolvedBorderPreset = dashboardBorderPresetMatch?.[1]?.trim() || 'theme_default'
-  let dashboardSource = themeTagMatch ? cleanSource.replace(themeTagSource, '').trim() : cleanSource
+  let dashboardSource = cleanSource
 
   if (!dashboardThemeMatch?.[1]?.trim()) {
     dashboardSource = dashboardSource.replace(/<Dashboard\b/, `<Dashboard theme="${resolvedThemeName}"`)
-  }
-
-  const resolvedChartPalette = dashboardPaletteMatch?.[1]?.trim() || themePaletteMatch?.[1]?.trim()
-  if (resolvedChartPalette && !dashboardPaletteMatch?.[1]?.trim()) {
-    dashboardSource = dashboardSource.replace(/<Dashboard\b/, `<Dashboard chartPalette="${resolvedChartPalette}"`)
   }
 
   return `export default function __ArtifactEntry() {

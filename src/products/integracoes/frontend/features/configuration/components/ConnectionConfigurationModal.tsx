@@ -318,6 +318,7 @@ export default function ConnectionConfigurationModal({
                   />
                   <McpPermissionsSettingsPanel
                     value={mcp}
+                    resources={dataWarehouse.selectedResources.length ? dataWarehouse.selectedResources : resources}
                     onChange={setMcp}
                   />
                 </>

@@ -2,6 +2,7 @@ import {
   createMcpDashboard,
   listMcpDashboards,
   patchMcpDashboard,
+  previewMcpDashboardQuery,
   readMcpDashboard,
   updateMcpDashboardFull,
   type McpJsonMap,
@@ -20,7 +21,6 @@ type JsonRecord = Record<string, unknown>
 
 const DASHBOARD_INTERNAL_COMPONENTS = new Set([
   'DashboardTemplate',
-  'Theme',
   'BarChart',
   'LineChart',
   'PieChart',
@@ -53,15 +53,6 @@ const DASHBOARD_COMPONENT_PROPS = {
       theme: 'string opcional, normalmente light',
       chartPalette: DASHBOARD_SUPPORTED_CHART_PALETTES,
       borderPreset: 'string opcional',
-    },
-  },
-  Horizontal: {
-    required: [],
-    props: {
-      gap: 'number em px',
-      align: 'start | center | end | stretch',
-      wrap: 'boolean opcional',
-      children: 'componentes de layout ou dados',
     },
   },
   KPI: {
@@ -169,18 +160,11 @@ const DASHBOARD_COMPONENT_PROPS = {
       children: 'conteudo da aba',
     },
   },
-  Insights: {
-    required: [],
-    props: {
-      items: 'array opcional de textos ou objetos de insight',
-      dataQuery: 'objeto opcional com query SQL',
-    },
-  },
 } as const
 
 const DASHBOARD_DATA_QUERY_CONTRACT = {
   shape: {
-    query: 'SQL BigQuery SELECT/CTE usando nomes logicos do dataset analytics do tenant.',
+    query: 'SQL BigQuery SELECT/CTE usando nomes logicos do dataset normalized do tenant.',
     limit: 'number opcional',
   },
   placeholders: ['@de', '@ate', 'parametros nomeados de filtros definidos no dashboard'],
@@ -205,7 +189,7 @@ const DASHBOARD_VALID_EXAMPLE = `<Dashboard
   theme="light"
   chartPalette="teal"
 >
-  <Horizontal gap={16} wrap>
+  <section style={{ display: 'flex', gap: 16, flexWrap: 'wrap' }}>
     <section data-ui="card" style={{ flex: '1 1 280px' }}>
       <h2 data-ui="section-title-sm">Receita</h2>
       <KPI
@@ -244,7 +228,7 @@ const DASHBOARD_VALID_EXAMPLE = `<Dashboard
         series={[{ dataKey: 'value', label: 'Receita' }]}
       />
     </section>
-  </Horizontal>
+  </section>
 </Dashboard>`
 
 export type McpDashboardToolContext = {
@@ -341,6 +325,23 @@ export function getDashboardContract(includeExample: boolean) {
     supported_formats: [...DASHBOARD_FORMATS],
     component_props: DASHBOARD_COMPONENT_PROPS,
     data_query_contract: DASHBOARD_DATA_QUERY_CONTRACT,
+    query_preview_contract: {
+      tool: 'artifact_authoring',
+      action: 'query_preview',
+      purpose: 'Ler amostra limitada e perfil agregado de um componente dataQuery para debug/agente.',
+      input: {
+        kind: 'dashboard',
+        id: 'artifact_id do dashboard',
+        component_id: 'id do KPI, Chart, Query, Table ou PivotTable',
+        sample_limit: 'default 5; maximo 20',
+        include_profile: 'default true',
+      },
+      rules: [
+        'Nunca use query_preview como exportacao de dados.',
+        'Use query_preflight do create/update_full para saude das queries sem dados.',
+        'Use query_preview apenas quando precisar entender exemplos de valores retornados por um componente.',
+      ],
+    },
     rules: [
       'Gere source TSX completo, autocontido e declarativo para um dashboard.',
       'O root Dashboard deve ter id e title nao vazios.',
@@ -358,13 +359,17 @@ export function getDashboardContract(includeExample: boolean) {
       'Chame artifact_authoring com kind=dashboard e action=get_contract se precisar relembrar o formato.',
       'Gere source TSX.',
       'Chame artifact_authoring com kind=dashboard, action=create, title e source.',
-      'Retorne artifact_id, version e url ao usuario.',
+      'Confira query_preflight no retorno: cada dataQuery recebe ok, status, code, rowCount, columns e metadata quando executada.',
+      'Retorne artifact_id, version, url e qualquer falha de query_preflight ao usuario.',
+      'Se precisar entender valores reais de um componente, chame artifact_authoring com action=query_preview, id e component_id.',
     ],
     edit_flow: [
       'Chame artifact_authoring com kind=dashboard e action=patch ou update_full.',
       'Se expected_version for omitida, a tool usa a versao draft atual automaticamente.',
       'Use replace_text para edicoes pontuais e update_full para reescrita completa.',
-      'Retorne a nova versao e URL.',
+      'Em update_full, confira query_preflight antes de considerar o dashboard pronto.',
+      'Retorne a nova versao, URL e qualquer falha de query_preflight.',
+      'Use action=query_preview apenas para debug ou explicacao de dados de um componente especifico.',
     ],
     example_source: includeExample ? DASHBOARD_VALID_EXAMPLE : null,
   }
@@ -449,6 +454,19 @@ export async function executeMcpDashboardTool(
         ok: true,
         tool: MCP_DASHBOARD_TOOL_NAMES.dashboardGetContract,
         result: getDashboardContract(Boolean(args.include_example)),
+      }
+
+    case MCP_DASHBOARD_TOOL_NAMES.dashboardQueryPreview:
+      return {
+        ok: true,
+        tool: MCP_DASHBOARD_TOOL_NAMES.dashboardQueryPreview,
+        result: await previewMcpDashboardQuery({
+          artifactId: requiredText(args, 'artifact_id'),
+          tenantId,
+          componentId: requiredText(args, 'component_id'),
+          sampleLimit: optionalPositiveInt(args.sample_limit),
+          includeProfile: args.include_profile !== false,
+        }),
       }
 
     default:

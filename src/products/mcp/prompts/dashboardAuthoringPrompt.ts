@@ -28,9 +28,15 @@ Fluxo de edicao:
 4. Para reescrita grande, use action=update_full.
 5. Nunca invente expected_version.
 
+Leitura de dados:
+- Para saber se as queries funcionam, use o query_preflight retornado em create/update_full.
+- Para entender exemplos de valores de um componente especifico, use artifact_authoring com kind=dashboard, action=query_preview, id e component_id.
+- query_preview retorna somente sampleRows limitadas e profile; nao use como exportacao de dados.
+
 Regras de qualidade:
 - Use ids estaveis e sem espacos em Dashboard, KPI, Chart, Table, Filter e DatePicker.
 - Use tags HTML suportadas para textos, secoes e containers; nao use componentes Grid, Vertical, Panel, Card, Icon, Text, TextNode ou Br.
+- Nao use Theme, Horizontal ou Insights; configure tema no Dashboard e escreva insights com HTML simples.
 - Nao invente props para componentes de dados; consulte component_props no contrato.
 - Crie hierarquia visual: cabecalho, KPIs principais, graficos de diagnostico, tabelas ou insights.
 - Evite layouts genericos. Escolha um tema visual coerente com o dominio do dashboard.

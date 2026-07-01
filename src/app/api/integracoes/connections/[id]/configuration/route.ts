@@ -86,11 +86,11 @@ function normalizeMcpPreset(value: unknown): McpPreset {
   return 'blocked'
 }
 
-function applyMcpPreset(preset: McpPreset, _resources: string[]) {
+function applyMcpPreset(preset: McpPreset, resources: string[]) {
   if (preset === 'read_only') {
     return {
       enabled: true,
-      readResources: ['*'],
+      readResources: resources,
       liveReadResources: [],
       writeResources: [],
       destructiveResources: [],
@@ -101,7 +101,7 @@ function applyMcpPreset(preset: McpPreset, _resources: string[]) {
   if (preset === 'actions_with_confirmation') {
     return {
       enabled: true,
-      readResources: ['*'],
+      readResources: resources,
       liveReadResources: ['*'],
       writeResources: ['*'],
       destructiveResources: [],
@@ -119,10 +119,19 @@ function applyMcpPreset(preset: McpPreset, _resources: string[]) {
   }
 }
 
-function normalizePermissionResources(provider: ReturnType<typeof requireIntegrationProvider>, value: unknown, fallback: string[]) {
+function providerResourceSlugs(provider: ReturnType<typeof requireIntegrationProvider>) {
+  return provider.resources.map((resource) => resource.slug)
+}
+
+function normalizePermissionResources(
+  provider: ReturnType<typeof requireIntegrationProvider>,
+  value: unknown,
+  fallback: string[],
+  wildcardResources = providerResourceSlugs(provider),
+) {
   const requested = asStringArray(value)
   const source = requested === undefined ? fallback : requested
-  if (source.includes('*')) return provider.resources.map((resource) => resource.slug)
+  if (source.includes('*')) return normalizeRequestedResources(provider, wildcardResources)
   return normalizeRequestedResources(provider, source)
 }
 
@@ -367,7 +376,12 @@ export async function PATCH(
         tenantId,
         connectionId: connection.id,
         enabled: mcp.enabled == null ? presetPermissions.enabled : Boolean(mcp.enabled),
-        readResources: normalizePermissionResources(provider, mcp.readResources ?? mcp.read_resources, presetPermissions.readResources),
+        readResources: normalizePermissionResources(
+          provider,
+          mcp.readResources ?? mcp.read_resources,
+          presetPermissions.readResources,
+          baseResources,
+        ),
         liveReadResources: normalizePermissionResources(
           provider,
           mcp.liveReadResources ?? mcp.live_read_resources,

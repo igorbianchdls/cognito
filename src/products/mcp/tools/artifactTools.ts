@@ -1,6 +1,7 @@
 import {
   createMcpArtifact,
   patchMcpArtifact,
+  previewMcpDashboardQuery,
   readMcpArtifact,
   updateMcpArtifactFull,
   type McpArtifactKind,
@@ -16,7 +17,7 @@ import {
 } from '@/products/artifacts/document/language/documentLanguageManifest'
 
 type JsonRecord = Record<string, unknown>
-type ArtifactAction = 'get_contract' | 'create' | 'patch' | 'update_full'
+type ArtifactAction = 'get_contract' | 'create' | 'patch' | 'update_full' | 'query_preview'
 
 export type McpArtifactToolContext = {
   tenantId?: number
@@ -64,10 +65,16 @@ function normalizeArtifactKind(value: unknown): McpArtifactKind {
 
 function normalizeAction(value: unknown): ArtifactAction {
   const action = String(value || '').trim()
-  if (action === 'get_contract' || action === 'create' || action === 'patch' || action === 'update_full') {
+  if (
+    action === 'get_contract'
+    || action === 'create'
+    || action === 'patch'
+    || action === 'update_full'
+    || action === 'query_preview'
+  ) {
     return action
   }
-  throw new McpDashboardToolInputError('action invalida. Use get_contract, create, patch ou update_full.', {
+  throw new McpDashboardToolInputError('action invalida. Use get_contract, create, patch, update_full ou query_preview.', {
     field: 'action',
   })
 }
@@ -228,6 +235,30 @@ export async function executeMcpArtifactTool(
 
   if (!context.tenantId) {
     throw new McpDashboardToolInputError('tenant autenticado e obrigatorio para operar artifacts')
+  }
+
+  if (action === 'query_preview') {
+    if (kind !== 'dashboard') {
+      throw new McpDashboardToolInputError('query_preview esta disponivel apenas para kind=dashboard', {
+        kind,
+        action,
+      })
+    }
+    const artifactId = optionalText(args.id || args.artifact_id)
+    if (!artifactId) throw new McpDashboardToolInputError('id e obrigatorio para query_preview', { field: 'id' })
+    const componentId = requiredText(args, 'component_id')
+    const preview = await previewMcpDashboardQuery({
+      tenantId: context.tenantId,
+      artifactId,
+      componentId,
+      sampleLimit: optionalPositiveInt(args.sample_limit),
+      includeProfile: args.include_profile !== false,
+    })
+    return {
+      ok: true,
+      tool: MCP_ARTIFACT_TOOL_NAMES.artifactAuthoring,
+      result: { ok: true, tool: MCP_ARTIFACT_TOOL_NAMES.artifactAuthoring, kind, action, preview },
+    }
   }
 
   if (action === 'create') {

@@ -11,7 +11,7 @@ export const ARTIFACT_AUTHORING_SCHEMA = {
     },
     action: {
       type: 'string',
-      enum: ['get_contract', 'create', 'patch', 'update_full'],
+      enum: ['get_contract', 'create', 'patch', 'update_full', 'query_preview'],
       description: 'Acao de autoria.',
     },
     id: {
@@ -52,6 +52,18 @@ export const ARTIFACT_AUTHORING_SCHEMA = {
       type: 'boolean',
       description: 'Quando action=get_contract, inclui exemplo de source TSX.',
     },
+    component_id: {
+      type: 'string',
+      description: 'Quando action=query_preview, ID do componente do dashboard que possui dataQuery.query.',
+    },
+    sample_limit: {
+      type: 'integer',
+      description: 'Quando action=query_preview, quantidade maxima de linhas de amostra. Default: 5. Maximo: 20.',
+    },
+    include_profile: {
+      type: 'boolean',
+      description: 'Quando action=query_preview, retorna perfil agregado das colunas. Default: true.',
+    },
   },
   required: ['kind', 'action'],
   additionalProperties: true,
@@ -72,6 +84,10 @@ export const ARTIFACT_AUTHORING_OUTPUT_SCHEMA = {
       type: 'object',
       additionalProperties: true,
     },
+    preview: {
+      type: 'object',
+      additionalProperties: true,
+    },
   },
   required: ['ok', 'tool', 'kind', 'action'],
   additionalProperties: true,
@@ -81,7 +97,7 @@ export const ARTIFACT_MCP_TOOL_DEFINITIONS = [
   {
     name: MCP_ARTIFACT_TOOL_NAMES.artifactAuthoring,
     description:
-      'Cria e edita artifacts Cognito usando TSX declarativo versionado. Use kind=dashboard, report ou slide; action=get_contract, create, patch ou update_full.',
+      'Cria, edita e inspeciona artifacts Cognito usando TSX declarativo versionado. Use kind=dashboard, report ou slide; action=get_contract, create, patch, update_full ou query_preview.',
     inputSchema: ARTIFACT_AUTHORING_SCHEMA,
   },
 ] as const satisfies readonly McpToolDefinition[]

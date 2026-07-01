@@ -39,6 +39,18 @@ export type ConnectedDomainAdapterResult = {
   columns: string[]
   count: number
   warnings?: string[]
+  freshness?: ConnectedDomainFreshness[]
+}
+
+export type ConnectedDomainFreshness = {
+  provider: string
+  resource: string
+  dataset: string
+  table: string
+  last_synced_at?: string | null
+  last_normalized_at?: string | null
+  source_run_id?: string | null
+  source_run_ids?: string[]
 }
 
 export type ConnectedDomainToolResult = {
@@ -53,4 +65,5 @@ export type ConnectedDomainToolResult = {
   providers: ConnectedDomainProviderStatus[]
   errors?: string[]
   warnings?: string[]
+  freshness?: ConnectedDomainFreshness[]
 }

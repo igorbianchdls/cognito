@@ -167,6 +167,27 @@ export const DASHBOARD_GET_CONTRACT_SCHEMA = {
   additionalProperties: true,
 } as const satisfies McpToolInputSchema
 
+export const DASHBOARD_QUERY_PREVIEW_SCHEMA = {
+  type: 'object',
+  properties: {
+    artifact_id: artifactIdProperty,
+    component_id: {
+      type: 'string',
+      description: 'ID do componente do dashboard que possui dataQuery.query.',
+    },
+    sample_limit: {
+      type: 'integer',
+      description: 'Quantidade maxima de linhas de amostra. Default: 5. Maximo: 20.',
+    },
+    include_profile: {
+      type: 'boolean',
+      description: 'Se true, retorna perfil agregado das colunas. Default: true.',
+    },
+  },
+  required: ['artifact_id', 'component_id'],
+  additionalProperties: true,
+} as const satisfies McpToolInputSchema
+
 export const DASHBOARD_MCP_TOOL_DEFINITIONS = [
   {
     name: MCP_DASHBOARD_TOOL_NAMES.dashboardList,
@@ -197,5 +218,10 @@ export const DASHBOARD_MCP_TOOL_DEFINITIONS = [
     name: MCP_DASHBOARD_TOOL_NAMES.dashboardGetContract,
     description: 'Retorna o contrato de autoria para criar dashboards TSX compativeis com o renderer do Cognito.',
     inputSchema: DASHBOARD_GET_CONTRACT_SCHEMA,
+  },
+  {
+    name: MCP_DASHBOARD_TOOL_NAMES.dashboardQueryPreview,
+    description: 'Le uma amostra limitada e perfil agregado de um componente dataQuery do dashboard para debug/agente.',
+    inputSchema: DASHBOARD_QUERY_PREVIEW_SCHEMA,
   },
 ] as const satisfies readonly McpToolDefinition[]

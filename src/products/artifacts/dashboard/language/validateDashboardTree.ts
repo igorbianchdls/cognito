@@ -123,17 +123,6 @@ function validateFilterNode(node: DashboardTreeNode, path: number[]) {
   ensureStringProp(node, 'table', path)
 }
 
-function validateThemeNode(node: DashboardTreeNode, path: number[]) {
-  if (node.type !== 'Theme') return
-  ensureStringProp(node, 'name', path)
-  const chartPalette = node.props?.chartPalette
-  if (chartPalette == null) return
-  const normalizedChartPalette = String(chartPalette || '').trim().toLowerCase()
-  if (!normalizedChartPalette || !DASHBOARD_SUPPORTED_CHART_PALETTE_SET.has(normalizedChartPalette)) {
-    throw new Error(`Theme.chartPalette="${String(chartPalette)}" nao suportado em ${formatNodePath(path)}`)
-  }
-}
-
 function validateDashboardNode(node: DashboardTreeNode, path: number[]) {
   if (node.type !== 'DashboardTemplate' && node.type !== 'Dashboard') return
   ensureStringProp(node, 'title', path)
@@ -206,7 +195,6 @@ function validateNode(node: DashboardTreeNode, path: number[]) {
     throw new Error(`Componente nao suportado: ${type || 'Unknown'} em ${formatNodePath(path)}`)
   }
 
-  validateThemeNode(node, path)
   validateDashboardNode(node, path)
   validateFilterNode(node, path)
   validateKpiNode(node, path)

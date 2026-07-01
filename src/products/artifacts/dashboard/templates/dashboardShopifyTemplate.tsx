@@ -259,15 +259,11 @@ function buildShopifyDashboardSource(themeName: string) {
                       <h2 data-ui="section-title-sm">Leituras operacionais</h2>
                       <p data-ui="small-muted">Perguntas para o time alinhar comercial, pagamento e fulfillment.</p>
                     </div>
-                    <Insights
-                      textStyle={{ ...{ margin: 0, fontSize: 14, lineHeight: 1.75, color: theme.textSecondary }, fontSize: 13, lineHeight: 1.65 }}
-                      iconStyle={{ color: '#008060' }}
-                      items={[
-                        { text: 'GMV crescendo com status de pagamento pendente alto pode mascarar receita ainda nao capturada.' },
-                        { text: 'Fulfillment atrasado ou parcial costuma antecipar cancelamento, suporte e reembolso no ciclo seguinte.' },
-                        { text: 'Lojas com ticket maior e reembolso alto pedem leitura de sortimento, frete, promessa comercial e operacao de entrega.' },
-                      ]}
-                    />
+                    <ul style={{ margin: 0, paddingLeft: 18, fontSize: 13, lineHeight: 1.65, color: theme.textSecondary }}>
+                      <li>GMV crescendo com status de pagamento pendente alto pode mascarar receita ainda nao capturada.</li>
+                      <li>Fulfillment atrasado ou parcial costuma antecipar cancelamento, suporte e reembolso no ciclo seguinte.</li>
+                      <li>Lojas com ticket maior e reembolso alto pedem leitura de sortimento, frete, promessa comercial e operacao de entrega.</li>
+                    </ul>
                   </article>
                 </div>
                 </article>
@@ -369,7 +365,7 @@ function buildShopifyDashboardSource(themeName: string) {
             <article id="shopify-footer" style={{ boxSizing: 'border-box', minWidth: 0, display: 'flex', flexDirection: 'column', padding: 18, border: '1px solid ' + theme.surfaceBorder, borderRadius: theme.cardFrame ? 0 : 16, backgroundColor: theme.surfaceBg, boxShadow: theme.cardFrame ? 'none' : '0 1px 2px rgba(15, 23, 42, 0.04)', gridColumn: 'span 12', minHeight: 54 }}>
           <footer style={{ height: '100%', display: 'flex', justifyContent: 'space-between', gap: 18, padding: '18px 22px', borderRadius: 22, backgroundColor: theme.surfaceBg, border: '1px solid ' + theme.surfaceBorder }}>
             <p data-ui="small-muted">Template JSX para Shopify com leitura comercial e operacional, adaptado do app legado para o formato novo do dashboard.</p>
-            <p data-ui="small-muted">Theme ativo: ${resolvedThemeName}</p>
+            <p data-ui="small-muted">Tema ativo: ${resolvedThemeName}</p>
           </footer>
             </article>
           </section>

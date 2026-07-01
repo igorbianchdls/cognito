@@ -194,11 +194,11 @@ function buildMetaAdsDashboardSource(themeName: string) {
                               <h2 data-ui="section-title-sm">Leituras operacionais</h2>
                               <p data-ui="small-muted">Hipoteses para revisar campanhas, criativos e distribuicao de budget.</p>
                             </div>
-                            <Insights textStyle={{ ...{ margin: 0, fontSize: 14, lineHeight: 1.75, color: theme.textSecondary }, fontSize: 13, lineHeight: 1.65 }} iconStyle={{ color: '#1877F2' }} items={[
-                              { text: 'ROAS caindo com gasto crescente costuma sinalizar saturacao de audiencia ou criativo perdendo tracao.' },
-                              { text: 'Conta muito concentrada em poucas campanhas aumenta volatilidade do retorno e risco de escala artificial.' },
-                              { text: 'Conversao ou lead estavel com gasto acelerando pede leitura conjunta de frequencia, criativo e pagina de destino.' },
-                            ]} />
+                            <ul style={{ margin: 0, paddingLeft: 18, fontSize: 13, lineHeight: 1.65, color: theme.textSecondary }}>
+                              <li>ROAS caindo com gasto crescente costuma sinalizar saturacao de audiencia ou criativo perdendo tracao.</li>
+                              <li>Conta muito concentrada em poucas campanhas aumenta volatilidade do retorno e risco de escala artificial.</li>
+                              <li>Conversao ou lead estavel com gasto acelerando pede leitura conjunta de frequencia, criativo e pagina de destino.</li>
+                            </ul>
                           </article>
                       </div>
                     </article>
@@ -263,7 +263,7 @@ function buildMetaAdsDashboardSource(themeName: string) {
             <article id="metaads-footer" style={{ boxSizing: 'border-box', minWidth: 0, display: 'flex', flexDirection: 'column', padding: 18, border: '1px solid ' + theme.surfaceBorder, borderRadius: theme.cardFrame ? 0 : 16, backgroundColor: theme.surfaceBg, boxShadow: theme.cardFrame ? 'none' : '0 1px 2px rgba(15, 23, 42, 0.04)', gridColumn: 'span 12', minHeight: 54 }}>
               <footer style={{ height: '100%', display: 'flex', justifyContent: 'space-between', gap: 18, padding: '18px 22px', borderRadius: 22, backgroundColor: theme.surfaceBg, border: '1px solid ' + theme.surfaceBorder }}>
                 <p data-ui="small-muted">Template JSX para Meta Ads com filtros de paid social, KPIs comparativos e widgets de analise no formato novo do dashboard.</p>
-                <p data-ui="small-muted">Theme ativo: ${resolvedThemeName}</p>
+                <p data-ui="small-muted">Tema ativo: ${resolvedThemeName}</p>
               </footer>
             </article>
           </section>

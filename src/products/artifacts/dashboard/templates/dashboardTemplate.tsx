@@ -468,21 +468,15 @@ function buildClassicDashboardTemplateMarkup(title: string, themeName: string) {
           <section style={{ boxSizing: 'border-box', minWidth: 0, display: 'grid', gridTemplateColumns: 'repeat(24, minmax(0, 1fr))', gap: 18, padding: 28, width: '100%' }}>
 
           <article id="classic-insights-v1" style={{ boxSizing: 'border-box', minWidth: 0, display: 'flex', flexDirection: 'column', padding: 18, border: '1px solid ' + theme.surfaceBorder, borderRadius: theme.cardFrame ? 0 : 16, backgroundColor: theme.surfaceBg, boxShadow: theme.cardFrame ? 'none' : '0 1px 2px rgba(15, 23, 42, 0.04)', gridColumn: 'span 24', minHeight: 112 }}>
-            <Insights
-              variant="v1"
-              title="Insights principais"
-              description="Resumo inteligente do que mais importa no seu negocio."
-              headerActionLabel="Ver todos os insights"
-            />
+            <h2 data-ui="section-title-sm">Insights principais</h2>
+            <p data-ui="small-muted">Resumo inteligente do que mais importa no seu negocio.</p>
+            <p data-ui="small-muted">Ver todos os insights</p>
           </article>
 
           <article id="classic-insights-v5" style={{ boxSizing: 'border-box', minWidth: 0, display: 'flex', flexDirection: 'column', padding: 18, border: '1px solid ' + theme.surfaceBorder, borderRadius: theme.cardFrame ? 0 : 16, backgroundColor: theme.surfaceBg, boxShadow: theme.cardFrame ? 'none' : '0 1px 2px rgba(15, 23, 42, 0.04)', gridColumn: 'span 24', minHeight: 112 }}>
-            <Insights
-              variant="v5"
-              title="Alfred encontrou alguns insights importantes"
-              description="Analise automatica dos seus dados mais recentes."
-              headerActionLabel="Perguntar a IA"
-            />
+            <h2 data-ui="section-title-sm">Alfred encontrou alguns insights importantes</h2>
+            <p data-ui="small-muted">Analise automatica dos seus dados mais recentes.</p>
+            <p data-ui="small-muted">Perguntar a IA</p>
           </article>
 
           <article id="classic-kpi-receita" style={{ boxSizing: 'border-box', minWidth: 0, display: 'flex', flexDirection: 'column', padding: 18, border: '1px solid ' + theme.surfaceBorder, borderRadius: theme.cardFrame ? 0 : 16, backgroundColor: theme.surfaceBg, boxShadow: theme.cardFrame ? 'none' : '0 1px 2px rgba(15, 23, 42, 0.04)', gridColumn: 'span 5', minHeight: 80, height: 'auto', display: 'flex', flexDirection: 'column', gap: 14 }}>

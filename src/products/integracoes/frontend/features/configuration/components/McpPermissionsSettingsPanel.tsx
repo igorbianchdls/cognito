@@ -21,6 +21,7 @@ type PermissionKey = 'readResources' | 'liveReadResources' | 'writeResources' | 
 
 type McpPermissionsSettingsPanelProps = {
   value: McpPermissionsSettings
+  resources: string[]
   onChange: (value: McpPermissionsSettings) => void
 }
 
@@ -53,12 +54,13 @@ function wildcard(enabled: boolean) {
 
 export default function McpPermissionsSettingsPanel({
   value,
+  resources,
   onChange,
 }: McpPermissionsSettingsPanelProps) {
   function applyPreset(preset: McpPermissionPreset) {
     onChange({
       preset,
-      ...applyMcpPermissionPreset(preset, ['*']),
+      ...applyMcpPermissionPreset(preset, resources),
     })
   }
 
@@ -129,7 +131,7 @@ export default function McpPermissionsSettingsPanel({
               </div>
             </div>
             <Switch
-              checked={value[section.key].includes('*')}
+              checked={value[section.key].length > 0}
               disabled={!value.enabled}
               onCheckedChange={(checked) => togglePermission(section.key, checked)}
               aria-label={section.label}

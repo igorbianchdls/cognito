@@ -14,6 +14,7 @@ import type {
   ConnectedDomainAdapterInput,
   ConnectedDomainAdapterReadInput,
   ConnectedDomainAdapterResult,
+  ConnectedDomainFreshness,
   ConnectedDomainRecord,
 } from '@/products/plugin/server/domain-adapters/shared/adapterTypes'
 import { DomainAdapterError } from '@/products/plugin/server/domain-adapters/shared/adapterErrors'
@@ -364,6 +365,85 @@ function bigQueryFieldError(error: unknown, dataset: string, table: string) {
   )
 }
 
+function freshnessWarning(freshness: ConnectedDomainFreshness | null) {
+  if (!freshness) return ''
+  const timestamp = freshness.last_normalized_at || freshness.last_synced_at
+  if (!timestamp) return `Freshness: ${freshness.dataset}.${freshness.table} ainda nao possui registros para este tenant/conexao.`
+  const runIds = freshness.source_run_id ? ` source_run_id=${freshness.source_run_id}.` : ''
+  return `Freshness: ${freshness.dataset}.${freshness.table} atualizado ate ${timestamp}.${runIds}`
+}
+
+async function getFreshness(input: {
+  provider: string
+  resource: string
+  dataset: string
+  table: string
+  fullTable: string
+  params: JsonRecord
+  config: ConnectedBigQueryResourceConfig<string>
+}): Promise<ConnectedDomainFreshness | null> {
+  const normalizedAtSelectExpression = input.config.datasetKind === 'normalized'
+    ? 'SAFE_CAST(normalized_at AS TIMESTAMP)'
+    : 'CAST(NULL AS TIMESTAMP)'
+  const runIdField = input.config.datasetKind === 'normalized' ? 'source_run_id' : 'run_id'
+
+  try {
+    const [rows] = await getBigQueryClient().query({
+      query: `
+WITH base AS (
+  SELECT
+    SAFE_CAST(synced_at AS TIMESTAMP) AS synced_at,
+    ${normalizedAtSelectExpression} AS normalized_at,
+    CAST(${runIdField} AS STRING) AS source_run_id
+  FROM ${input.fullTable}
+  WHERE tenant_id = @tenantId
+    AND connection_id = @connectionId
+    AND provider = @provider
+    AND resource = @resource
+),
+run_ids AS (
+  SELECT
+    source_run_id,
+    MAX(COALESCE(normalized_at, synced_at)) AS last_seen_at
+  FROM base
+  WHERE source_run_id IS NOT NULL
+  GROUP BY source_run_id
+)
+SELECT
+  FORMAT_TIMESTAMP('%Y-%m-%dT%H:%M:%E3SZ', (SELECT MAX(synced_at) FROM base)) AS last_synced_at,
+  FORMAT_TIMESTAMP('%Y-%m-%dT%H:%M:%E3SZ', (SELECT MAX(normalized_at) FROM base)) AS last_normalized_at,
+  (SELECT source_run_id FROM run_ids ORDER BY last_seen_at DESC LIMIT 1) AS source_run_id,
+  (SELECT ARRAY_AGG(source_run_id ORDER BY last_seen_at DESC LIMIT 5) FROM run_ids) AS source_run_ids
+      `.trim(),
+      params: {
+        tenantId: input.params.tenantId,
+        connectionId: input.params.connectionId,
+        provider: input.params.provider,
+        resource: input.params.resource,
+      },
+    })
+    const row = asRecord((rows as unknown[])[0])
+    return {
+      provider: input.provider,
+      resource: input.resource,
+      dataset: input.dataset,
+      table: input.table,
+      last_synced_at: toText(row.last_synced_at) || null,
+      last_normalized_at: toText(row.last_normalized_at) || null,
+      source_run_id: toText(row.source_run_id) || null,
+      source_run_ids: Array.isArray(row.source_run_ids)
+        ? row.source_run_ids.map(toText).filter(Boolean)
+        : [],
+    }
+  } catch (error) {
+    const errorRecord = asRecord(error)
+    const message = toText(errorRecord.message)
+    const code = toText(errorRecord.code)
+    if (code === '404' || /not found/i.test(message)) return null
+    return null
+  }
+}
+
 function getRunId(row: JsonRecord) {
   return row.run_id == null && row.source_run_id == null ? null : String(row.run_id ?? row.source_run_id)
 }
@@ -572,6 +652,16 @@ export async function readConnectedBigQueryResource<Resource extends string>(
   const partitionId = getPartitionId(config)
   const orderBy = buildRequestedOrderBy(config, input.filters)
   const aggregate = isAggregateRequest(input.filters)
+  const freshness = await getFreshness({
+    provider: input.connection.provider,
+    resource: config.resource,
+    dataset,
+    table,
+    fullTable,
+    params,
+    config,
+  })
+  const currentFreshnessWarning = freshnessWarning(freshness)
 
   if (aggregate) {
     if (action === 'ler') {
@@ -624,7 +714,11 @@ LIMIT @limit
           rows: [],
           columns: [],
           count: 0,
-          warnings: [`Tabela BigQuery sem dados sincronizados: ${dataset}.${table}.`],
+          warnings: [
+            `Tabela BigQuery sem dados sincronizados: ${dataset}.${table}.`,
+            ...(currentFreshnessWarning ? [currentFreshnessWarning] : []),
+          ],
+          ...(freshness ? { freshness: [freshness] } : {}),
         }
       }
       const fieldError = bigQueryFieldError(error, dataset, table)
@@ -642,7 +736,9 @@ LIMIT @limit
       count: aggregateRows.length,
       warnings: [
         `Consulta agregada em ${dataset}.${table}. Dados dependem da ultima sincronizacao do pipeline.`,
+        ...(currentFreshnessWarning ? [currentFreshnessWarning] : []),
       ],
+      ...(freshness ? { freshness: [freshness] } : {}),
     }
   }
 
@@ -670,7 +766,11 @@ LIMIT @limit
         rows: [],
         columns: [],
         count: 0,
-        warnings: [`Tabela BigQuery sem dados sincronizados: ${dataset}.${table}.`],
+        warnings: [
+          `Tabela BigQuery sem dados sincronizados: ${dataset}.${table}.`,
+          ...(currentFreshnessWarning ? [currentFreshnessWarning] : []),
+        ],
+        ...(freshness ? { freshness: [freshness] } : {}),
       }
     }
     const fieldError = bigQueryFieldError(error, dataset, table)
@@ -686,5 +786,7 @@ LIMIT @limit
     rows: canonicalRows,
     columns: canonicalRows.length ? Object.keys(canonicalRows[0]) : [],
     count: canonicalRows.length,
+    warnings: currentFreshnessWarning ? [currentFreshnessWarning] : undefined,
+    ...(freshness ? { freshness: [freshness] } : {}),
   }
 }

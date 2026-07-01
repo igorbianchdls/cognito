@@ -36,11 +36,26 @@ function normalizeQuery(sql: string) {
   )
   for (const match of cleaned.matchAll(/\b(?:from|join)\s+([a-z_][a-z0-9_.-]*)/gi)) {
     const table = match[1].toLowerCase()
+    if (table === 'unnest') continue
     if (table.includes('.') || (!TABLE_SET.has(table) && !ctes.has(table))) {
       throw new ArtifactToolError(400, 'dashboard_query_table_not_allowed', `Tabela não permitida: ${table}`)
     }
   }
   return cleaned
+}
+
+function rewriteHistoryTableAliases(sql: string) {
+  const ctes = new Set(
+    [...sql.matchAll(/(?:with|,)\s*([a-z_][a-z0-9_]*)\s+as\s*\(/gi)]
+      .map((match) => match[1].toLowerCase()),
+  )
+  return sql.replace(/\b(from|join)\s+([a-z_][a-z0-9_]*_history)\b/gi, (match, keyword: string, table: string) => {
+    const normalizedTable = table.toLowerCase()
+    if (ctes.has(normalizedTable)) return match
+    const baseTable = normalizedTable.replace(/_history$/, '')
+    if (!(NORMALIZED_TABLE_NAMES as readonly string[]).includes(baseTable)) return match
+    return `${keyword} ${baseTable}`
+  })
 }
 
 function queryHash(query: string) {
@@ -156,14 +171,13 @@ async function reserveQueryBudget(input: {
 function validateReferencedTables(input: {
   referencedTables: Array<{ projectId?: string; datasetId?: string; tableId?: string }>
   projectId: string
-  analyticsDataset: string
   normalizedDataset: string
 }) {
   for (const table of input.referencedTables) {
     const projectId = String(table.projectId || '')
     const datasetId = String(table.datasetId || '')
     const tableId = String(table.tableId || '').replace(/\$.+$/, '')
-    const allowedDataset = datasetId === input.analyticsDataset || datasetId === input.normalizedDataset
+    const allowedDataset = datasetId === input.normalizedDataset
     const allowedTable = TABLE_SET.has(tableId) || (NORMALIZED_TABLE_NAMES as readonly string[]).includes(tableId)
     if (
       projectId !== input.projectId
@@ -289,13 +303,13 @@ function normalizeParams(filters: JsonRecord | undefined) {
   return params
 }
 
-function normalizeJsonValue(value: unknown): unknown {
+function normalizeJsonValue(value: unknown, unwrapValueObject = true): unknown {
   if (value instanceof Date) return value.toISOString()
   if (typeof value === 'bigint') return value.toString()
-  if (Array.isArray(value)) return value.map(normalizeJsonValue)
+  if (Array.isArray(value)) return value.map((item) => normalizeJsonValue(item))
   if (value && typeof value === 'object') {
     const record = value as JsonRecord
-    if (Object.keys(record).length === 1 && 'value' in record) {
+    if (unwrapValueObject && Object.keys(record).length === 1 && 'value' in record) {
       return normalizeJsonValue(record.value)
     }
     return Object.fromEntries(
@@ -306,7 +320,14 @@ function normalizeJsonValue(value: unknown): unknown {
 }
 
 function normalizeRows(rows: unknown[]) {
-  return rows.map(normalizeJsonValue)
+  return rows.map((row) => {
+    if (row && typeof row === 'object' && !Array.isArray(row) && !(row instanceof Date)) {
+      return Object.fromEntries(
+        Object.entries(row as JsonRecord).map(([key, value]) => [key, normalizeJsonValue(value)]),
+      )
+    }
+    return normalizeJsonValue(row, false)
+  })
 }
 
 export async function executeDashboardQuery(input: {
@@ -334,7 +355,7 @@ export async function executeDashboardQuery(input: {
   let params: JsonRecord
   try {
     const compiled = compileDashboardQuery(input.query, input.filters)
-    safeQuery = normalizeQuery(compiled.query)
+    safeQuery = rewriteHistoryTableAliases(normalizeQuery(compiled.query))
     params = compiled.params
   } catch (error) {
     const artifactError = error instanceof ArtifactToolError ? error : null
@@ -352,7 +373,7 @@ export async function executeDashboardQuery(input: {
   const limit = Math.min(Math.max(Number(input.limit || 1000), 1), 5000)
   const projectId = getBigQueryProjectId('creatto-463117') || 'creatto-463117'
   const datasets = getTenantBigQueryDatasets(input.tenantId)
-  const datasetId = datasets.analyticsDataset
+  const datasetId = datasets.normalizedDataset
   const client = createBigQueryClient({ projectId })
   const maximumBytesBilled = String(process.env.DASHBOARD_QUERY_MAX_BYTES || 100_000_000)
   const jobTimeoutMs = Number(process.env.DASHBOARD_QUERY_TIMEOUT_MS || 30_000)
@@ -380,7 +401,6 @@ export async function executeDashboardQuery(input: {
   validateReferencedTables({
     referencedTables: dryMetadata.statistics?.query?.referencedTables || [],
     projectId,
-    analyticsDataset: datasets.analyticsDataset,
     normalizedDataset: datasets.normalizedDataset,
   })
   if (bytesProcessed > Number(maximumBytesBilled)) {

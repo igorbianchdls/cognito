@@ -19,6 +19,7 @@ import {
 } from '@/products/plugin/server/domain-adapters/erp/erpTypes'
 import { DomainAdapterError } from '@/products/plugin/server/domain-adapters/shared/adapterErrors'
 import type {
+  ConnectedDomainFreshness,
   ConnectedDomainProviderStatus,
   ConnectedDomainRecord,
   ConnectedDomainToolResult,
@@ -302,6 +303,7 @@ export async function executeConnectedErpTool(
   const providers: ConnectedDomainProviderStatus[] = []
   const rows: ConnectedDomainRecord[] = []
   const warnings: string[] = []
+  const freshness: ConnectedDomainFreshness[] = []
   const errors: string[] = []
 
   for (const connection of connections) {
@@ -335,6 +337,7 @@ export async function executeConnectedErpTool(
           : await apiAdapter.readLive({ tenantId, connection, resource, filters, limit, includeProviderFields, id })
         rows.push(...result.rows)
         warnings.push(...(result.warnings || []))
+        freshness.push(...(result.freshness || []))
         providers.push(connectionStatus(connection, true))
       } catch (error) {
         const message = error instanceof Error ? error.message : 'Erro desconhecido no adapter API connected_erp.'
@@ -365,6 +368,7 @@ export async function executeConnectedErpTool(
         : await adapter.read({ tenantId, connection, resource, filters, limit, includeProviderFields, id })
       rows.push(...result.rows)
       warnings.push(...(result.warnings || []))
+      freshness.push(...(result.freshness || []))
       providers.push(connectionStatus(connection, true))
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Erro desconhecido no adapter connected_erp.'
@@ -385,5 +389,6 @@ export async function executeConnectedErpTool(
     providers,
     ...(errors.length ? { errors } : {}),
     ...(warnings.length ? { warnings } : {}),
+    ...(freshness.length ? { freshness } : {}),
   }
 }
