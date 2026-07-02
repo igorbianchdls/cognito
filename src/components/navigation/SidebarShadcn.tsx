@@ -12,14 +12,6 @@ import {
   IconPlugConnected,
 } from "@tabler/icons-react"
 
-import MetaIcon from "@/components/icons/MetaIcon"
-import GoogleAdsIcon from "@/components/icons/GoogleAdsIcon"
-import GoogleAnalyticsIcon from "@/components/icons/GoogleAnalyticsIcon"
-import ShopifyIcon from "@/components/icons/ShopifyIcon"
-import AmazonIcon from "@/components/icons/AmazonIcon"
-import ShopeeIcon from "@/components/icons/ShopeeIcon"
-import ContaAzulIcon from "@/components/icons/ContaAzulIcon"
-
 import { NavMainSimple } from "@/components/navigation/nav-main-simple"
 import { NavUser } from "@/components/nav-user"
 import {
@@ -27,11 +19,6 @@ import {
   SidebarContent,
   SidebarFooter,
   SidebarHeader,
-  SidebarGroup,
-  SidebarGroupLabel,
-  SidebarMenu,
-  SidebarMenuItem,
-  SidebarMenuButton,
 } from "@/components/ui/sidebar"
 
 const BrandIcon = (props: { className?: string; style?: React.CSSProperties }) => <IconGridDots stroke={1.75} {...props} />
@@ -78,11 +65,6 @@ const DEFAULT_ITEM_TEXT_STYLE: React.CSSProperties = {
   textTransform: 'none',
 }
 
-const VERTICAL_SIDEBAR_ITEM_CLASS_NAME =
-  "mx-auto h-14 w-auto min-w-9 flex-col items-center justify-center gap-1 px-0.5 py-2 text-center group-data-[collapsible=icon]:h-8 group-data-[collapsible=icon]:w-8 group-data-[collapsible=icon]:p-2"
-const VERTICAL_SIDEBAR_TITLE_CLASS_NAME =
-  "max-w-full truncate text-center leading-tight group-data-[collapsible=icon]:hidden"
-
 // Navigation data adapted to shadcn format
 const navigationData = {
   user: {
@@ -125,36 +107,6 @@ const navigationData = {
       title: "Reports",
       url: "/artifacts/reports",
       icon: ReportsIcon,
-    },
-  ],
-  integrations: [
-    {
-      title: "Meta Ads",
-      icon: MetaIcon,
-    },
-    {
-      title: "Google Ads", 
-      icon: GoogleAdsIcon,
-    },
-    {
-      title: "Google Analytics",
-      icon: GoogleAnalyticsIcon,
-    },
-    {
-      title: "Shopify",
-      icon: ShopifyIcon,
-    },
-    {
-      title: "Amazon Ads",
-      icon: AmazonIcon,
-    },
-    {
-      title: "Shopee",
-      icon: ShopeeIcon,
-    },
-    {
-      title: "ContaAzul",
-      icon: ContaAzulIcon,
     },
   ],
 }
@@ -213,22 +165,6 @@ export function SidebarShadcn({ bgColor, textColor, itemTextColor, itemTextStyle
       </SidebarHeader>
       <SidebarContent className="ui-text">
         <NavMainSimple items={dataWithActiveState.navMain} groupLabelStyle={finalSectionTitleStyle} itemTextStyle={finalItemTextStyle} iconSizePx={finalIconSizePx} />
-
-        <SidebarGroup className="px-1 py-2">
-          <SidebarGroupLabel style={finalSectionTitleStyle}>Integrações</SidebarGroupLabel>
-          <SidebarMenu>
-            {navigationData.integrations.map((integration) => (
-              <SidebarMenuItem key={integration.title}>
-                <SidebarMenuButton tooltip={integration.title} className={VERTICAL_SIDEBAR_ITEM_CLASS_NAME}>
-                  <span data-sidebar-icon style={{ width: finalIconSizePx, height: finalIconSizePx }} className="inline-flex items-center justify-center">
-                    <integration.icon className="w-full h-full" backgroundColor="transparent" />
-                  </span>
-                  <span className={VERTICAL_SIDEBAR_TITLE_CLASS_NAME} style={finalItemTextStyle}>{integration.title}</span>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-            ))}
-          </SidebarMenu>
-        </SidebarGroup>
       </SidebarContent>
       <SidebarFooter>
         <NavUser user={dataWithActiveState.user} />
