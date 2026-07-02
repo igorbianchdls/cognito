@@ -40,9 +40,10 @@ type VariantCopy = {
 const cardIcons = [PlugZap, Bot, Workflow]
 
 const whiteTitleStyle = { color: '#ffffff', letterSpacing: '-0.02em' }
-const heroTitleStyle = { ...whiteTitleStyle, fontSize: '60px', lineHeight: 0.95 }
-const sectionTitleStyle = { ...whiteTitleStyle, fontSize: '60px', lineHeight: 0.95 }
+const heroTitleStyle = { ...whiteTitleStyle, fontSize: 'var(--otto-title-size)', lineHeight: 0.95 }
+const sectionTitleStyle = { ...whiteTitleStyle, fontSize: 'var(--otto-title-size)', lineHeight: 0.95 }
 const cardTitleStyle = { ...whiteTitleStyle, fontSize: '18px', lineHeight: 1.25 }
+const responsiveTitleClassName = '[--otto-title-size:40px] md:[--otto-title-size:50px]'
 const mobileCarouselTrackClassName =
   'flex gap-3 overflow-x-auto scroll-smooth pb-2 scrollbar-hide [-webkit-overflow-scrolling:touch] [scroll-snap-type:x_mandatory] lg:grid lg:overflow-visible lg:pb-0 lg:[scroll-snap-type:none]'
 const mobileCarouselCardClassName = 'min-w-[78vw] snap-start lg:min-w-0'
@@ -192,7 +193,7 @@ function OttoLandingExperimentPage({ copy }: { copy: VariantCopy }) {
             <p className={`mb-4 text-sm font-semibold uppercase ${theme.accent}`}>
               {copy.eyebrow}
             </p>
-            <p className="max-w-[620px] font-semibold text-white" style={heroTitleStyle}>
+            <p className={`max-w-[620px] font-semibold text-white ${responsiveTitleClassName}`} style={heroTitleStyle}>
               {copy.headline}
             </p>
             <p className="mt-6 max-w-[560px] text-lg leading-7 text-white/68">
@@ -222,7 +223,7 @@ function OttoLandingExperimentPage({ copy }: { copy: VariantCopy }) {
         <div className="mx-auto grid max-w-[1180px] gap-10 lg:grid-cols-[0.95fr_1.05fr]">
           <div>
             <p className={`text-sm font-semibold uppercase ${theme.accent}`}>{copy.productEyebrow}</p>
-            <p className="mt-4 max-w-[560px] font-semibold text-white" style={sectionTitleStyle}>
+            <p className={`mt-4 max-w-[560px] font-semibold text-white ${responsiveTitleClassName}`} style={sectionTitleStyle}>
               {copy.productTitle}
             </p>
           </div>
@@ -261,7 +262,7 @@ function OttoLandingExperimentPage({ copy }: { copy: VariantCopy }) {
           </div>
           <div className="flex flex-col justify-center">
             <p className={`text-sm font-semibold uppercase ${theme.accent}`}>{copy.workflowEyebrow}</p>
-            <p className="mt-4 font-semibold text-white" style={sectionTitleStyle}>
+            <p className={`mt-4 font-semibold text-white ${responsiveTitleClassName}`} style={sectionTitleStyle}>
               {copy.workflowHeading}
             </p>
             <p className="mt-5 text-base leading-7 text-white/60">
@@ -277,7 +278,7 @@ function OttoLandingExperimentPage({ copy }: { copy: VariantCopy }) {
             <div className={`mb-5 grid size-12 place-items-center rounded-3xl border ${theme.result}`}>
               <ShieldCheck size={20} strokeWidth={1.5} />
             </div>
-            <p className="font-semibold text-white" style={sectionTitleStyle}>
+            <p className={`font-semibold text-white ${responsiveTitleClassName}`} style={sectionTitleStyle}>
               {copy.securityHeading}
             </p>
             <p className="mt-5 text-base leading-7 text-white/60">
