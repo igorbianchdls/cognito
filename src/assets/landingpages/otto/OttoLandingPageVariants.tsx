@@ -9,7 +9,6 @@ import {
   FileText,
   PlugZap,
   ShieldCheck,
-  Sparkles,
   Workflow,
 } from 'lucide-react'
 
@@ -25,13 +24,6 @@ type VariantCopy = {
   subtitle: string
   primaryCta: string
   secondaryCta: string
-  heroPrompt: string
-  heroReply: string
-  workerName: string
-  workerStatus: string
-  stats: [string, string][]
-  sourceTitle: string
-  sources: string[]
   productEyebrow: string
   productTitle: string
   cards: CardCopy[]
@@ -42,14 +34,14 @@ type VariantCopy = {
   workflowDescription: string
   securityHeading: string
   securityDescription: string
-  proofPoints: string[]
+  proofPoints: CardCopy[]
 }
 
 const cardIcons = [PlugZap, Bot, Workflow]
 
 const whiteTitleStyle = { color: '#ffffff', letterSpacing: '-0.02em' }
-const heroTitleStyle = { ...whiteTitleStyle, fontSize: '120px', lineHeight: 0.95 }
-const sectionTitleStyle = { ...whiteTitleStyle, fontSize: '120px', lineHeight: 0.95 }
+const heroTitleStyle = { ...whiteTitleStyle, fontSize: '60px', lineHeight: 0.95 }
+const sectionTitleStyle = { ...whiteTitleStyle, fontSize: '60px', lineHeight: 0.95 }
 const cardTitleStyle = { ...whiteTitleStyle, fontSize: '18px', lineHeight: 1.25 }
 const mobileCarouselTrackClassName =
   'flex gap-3 overflow-x-auto scroll-smooth pb-2 scrollbar-hide [-webkit-overflow-scrolling:touch] [scroll-snap-type:x_mandatory] lg:grid lg:overflow-visible lg:pb-0 lg:[scroll-snap-type:none]'
@@ -62,17 +54,6 @@ const variantA: VariantCopy = {
   subtitle: 'Otto conecta sistemas, bancos, documentos e planilhas para criar funcionarios de IA que acompanham rotinas, respondem perguntas, geram relatorios e executam tarefas.',
   primaryCta: 'Criar meu primeiro funcionario',
   secondaryCta: 'Ver integracoes',
-  heroPrompt: 'Prepare o fechamento da semana e avise o que precisa de acao.',
-  heroReply: 'Vou revisar financeiro, vendas, marketing e documentos pendentes.',
-  workerName: 'Gerente financeiro IA',
-  workerStatus: 'fechamento preparado',
-  stats: [
-    ['Rotinas', '31'],
-    ['Relatorios', '12'],
-    ['Pendencias', '5'],
-  ],
-  sourceTitle: 'Fontes do trabalho',
-  sources: ['ERP e CRM', 'Bancos', 'Planilhas'],
   productEyebrow: 'Equipe de IA',
   productTitle: 'Cada funcionario de IA trabalha com o contexto real do negocio.',
   cards: [
@@ -97,10 +78,22 @@ const variantA: VariantCopy = {
   securityHeading: 'Cada funcionario de IA tem limites claros.',
   securityDescription: 'Controle quais fontes ele pode ler, quais acoes pode executar e quando precisa pedir aprovacao antes de seguir.',
   proofPoints: [
-    'Permissoes por funcao',
-    'Aprovacao para acoes sensiveis',
-    'Historico de tarefas executadas',
-    'Relatorios auditaveis',
+    {
+      title: 'Permissoes por funcao',
+      description: 'Cada funcionario de IA recebe acesso apenas ao que precisa para executar sua rotina.',
+    },
+    {
+      title: 'Aprovacao para acoes sensiveis',
+      description: 'Defina quando uma tarefa precisa de validacao humana antes de seguir.',
+    },
+    {
+      title: 'Historico de tarefas executadas',
+      description: 'Veja o que foi feito, quando aconteceu e qual funcionario de IA executou.',
+    },
+    {
+      title: 'Relatorios auditaveis',
+      description: 'Mantenha entregas e analises registradas com contexto para revisao posterior.',
+    },
   ],
 }
 
@@ -111,17 +104,6 @@ const variantB: VariantCopy = {
   subtitle: 'Otto junta dados de sistemas, documentos, bancos e planilhas para responder perguntas, encontrar gargalos, criar relatorios e automatizar decisoes do dia a dia.',
   primaryCta: 'Centralizar meus dados',
   secondaryCta: 'Criar conta',
-  heroPrompt: 'O que mudou na operacao esta semana?',
-  heroReply: 'Vou comparar vendas, caixa, campanhas, documentos e atividades do time.',
-  workerName: 'Central de inteligencia',
-  workerStatus: 'resumo executivo pronto',
-  stats: [
-    ['Fontes', '16'],
-    ['Insights', '24'],
-    ['Acoes', '9'],
-  ],
-  sourceTitle: 'Base operacional',
-  sources: ['Sistemas', 'Documentos', 'Bancos'],
   productEyebrow: 'Inteligencia conectada',
   productTitle: 'A resposta que voce procura quase sempre esta espalhada em varios lugares.',
   cards: [
@@ -146,67 +128,23 @@ const variantB: VariantCopy = {
   securityHeading: 'Inteligencia com governanca para negocios reais.',
   securityDescription: 'Defina quem pode acessar cada fonte, quais analises podem ser feitas e quais acoes exigem aprovacao.',
   proofPoints: [
-    'Acesso por fonte de dados',
-    'Indicadores rastreaveis',
-    'Relatorios por area',
-    'Acoes com controle',
+    {
+      title: 'Acesso por fonte de dados',
+      description: 'Controle quem pode consultar sistemas, documentos, bancos e planilhas conectadas.',
+    },
+    {
+      title: 'Indicadores rastreaveis',
+      description: 'Entenda a origem de cada metrica usada em respostas, paineis e decisoes.',
+    },
+    {
+      title: 'Relatorios por area',
+      description: 'Organize entregas por financeiro, vendas, marketing, atendimento e gestao.',
+    },
+    {
+      title: 'Acoes com controle',
+      description: 'Acompanhe automacoes e defina limites antes de qualquer execucao sensivel.',
+    },
   ],
-}
-
-function ProductScene({ copy }: { copy: VariantCopy }) {
-  const theme = getTheme(copy)
-
-  return (
-    <div className="pointer-events-none absolute inset-0 overflow-hidden bg-[#040404]" aria-hidden="true">
-      <div className="absolute inset-0 opacity-[0.14] [background-image:linear-gradient(#ffffff_1px,transparent_1px),linear-gradient(90deg,#ffffff_1px,transparent_1px)] [background-size:72px_72px]" />
-      <div className="absolute right-[-72px] top-[96px] hidden w-[660px] rounded-[36px] border border-white/10 bg-[#0d0d0f] p-5 shadow-[0_24px_100px_rgba(0,0,0,0.72)] lg:block">
-        <div className="flex items-center justify-between border-b border-white/10 pb-4">
-          <div>
-            <p className="text-sm font-semibold text-white">Otto</p>
-            <p className="mt-1 text-xs text-white/45">{copy.workflowTitle}</p>
-          </div>
-          <span className={`rounded-full border px-3 py-1 text-xs font-medium ${theme.badge}`}>
-            em execucao
-          </span>
-        </div>
-
-        <div className="grid gap-3 pt-5">
-          <div className="rounded-[28px] border border-white/10 bg-white/[0.04] p-5">
-            <p className="text-sm text-white/48">Pedido</p>
-            <p className="mt-2 max-w-[460px] text-xl font-semibold leading-tight text-white">
-              {copy.heroPrompt}
-            </p>
-          </div>
-
-          <div className="rounded-[28px] border border-white/10 bg-[#141416] p-5">
-            <p className="text-sm text-white/48">Resposta</p>
-            <p className="mt-2 max-w-[500px] text-base leading-6 text-white/78">
-              {copy.heroReply}
-            </p>
-          </div>
-
-          <div className="grid grid-cols-3 gap-3">
-            {copy.sources.map((source) => (
-              <div key={source} className="rounded-[24px] border border-white/10 bg-white/[0.04] p-4">
-                <Check size={16} strokeWidth={1.5} className={theme.icon} />
-                <p className="mt-4 text-sm font-semibold text-white">{source}</p>
-              </div>
-            ))}
-          </div>
-
-          <div className={`flex items-center gap-3 rounded-[28px] border p-4 ${theme.result}`}>
-            <div className={`grid size-10 place-items-center rounded-2xl ${theme.iconBox}`}>
-              <Sparkles size={18} strokeWidth={1.5} />
-            </div>
-            <div>
-              <p className="text-base font-semibold text-white">{copy.workerName}</p>
-              <p className="text-sm text-white/60">{copy.workerStatus}</p>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  )
 }
 
 function getTheme(copy: VariantCopy) {
@@ -235,7 +173,6 @@ function OttoLandingExperimentPage({ copy }: { copy: VariantCopy }) {
   return (
     <main className={`${sfPro.variable} min-h-screen bg-[#040404] text-white`} style={sfProLandingStyle}>
       <section className="relative isolate min-h-[88svh] overflow-hidden border-b border-white/10">
-        <ProductScene copy={copy} />
         <div className="relative z-10 flex min-h-[88svh] max-w-[1180px] flex-col justify-between px-6 py-6 sm:px-8 lg:mx-auto">
           <header className="flex items-center justify-between">
             <Link href={copy.route} className="flex items-center gap-3">
@@ -349,9 +286,10 @@ function OttoLandingExperimentPage({ copy }: { copy: VariantCopy }) {
           </div>
           <div className={`${mobileCarouselTrackClassName} lg:grid-cols-2`} aria-label="Governanca e controle">
             {copy.proofPoints.map((point) => (
-              <div key={point} className={`${mobileCarouselCardClassName} flex items-center gap-3 rounded-[24px] border border-white/10 bg-white/[0.04] p-4`}>
+              <div key={point.title} className={`${mobileCarouselCardClassName} rounded-[24px] border border-white/10 bg-white/[0.04] p-5`}>
                 <Brain size={18} strokeWidth={1.5} className={`shrink-0 ${theme.icon}`} />
-                <span className="text-sm font-medium text-white">{point}</span>
+                <p className="mt-4 font-semibold text-white" style={cardTitleStyle}>{point.title}</p>
+                <p className="mt-2 text-sm leading-6 text-white/58">{point.description}</p>
               </div>
             ))}
           </div>

@@ -9,7 +9,6 @@ import {
   MessageSquare,
   PlugZap,
   ShieldCheck,
-  Workflow,
 } from 'lucide-react'
 
 const workflowSteps = [
@@ -31,73 +30,36 @@ const workflowSteps = [
 ]
 
 const proofPoints = [
-  'Permissoes por funcionario de IA',
-  'Fontes conectadas com rastreabilidade',
-  'Relatorios e analises auditaveis',
-  'Automacao com aprovacao quando necessario',
+  {
+    title: 'Permissoes por funcionario de IA',
+    description: 'Defina quais dados cada agente pode consultar e quais areas ficam fora do escopo.',
+  },
+  {
+    title: 'Fontes conectadas com rastreabilidade',
+    description: 'Acompanhe de onde veio cada informacao usada em analises, respostas e relatorios.',
+  },
+  {
+    title: 'Relatorios e analises auditaveis',
+    description: 'Mantenha historico do que foi gerado, quando foi gerado e qual contexto foi usado.',
+  },
+  {
+    title: 'Automacao com aprovacao quando necessario',
+    description: 'Exija confirmacao humana antes de executar acoes sensiveis no negocio.',
+  },
 ]
 
 const whiteTitleStyle = { color: '#ffffff', letterSpacing: '-0.02em' }
-const heroTitleStyle = { ...whiteTitleStyle, fontSize: '120px', lineHeight: 0.95 }
-const sectionTitleStyle = { ...whiteTitleStyle, fontSize: '120px', lineHeight: 0.95 }
+const heroTitleStyle = { ...whiteTitleStyle, fontSize: '60px', lineHeight: 0.95 }
+const sectionTitleStyle = { ...whiteTitleStyle, fontSize: '60px', lineHeight: 0.95 }
 const cardTitleStyle = { ...whiteTitleStyle, fontSize: '18px', lineHeight: 1.25 }
 const mobileCarouselTrackClassName =
   'flex gap-3 overflow-x-auto scroll-smooth pb-2 scrollbar-hide [-webkit-overflow-scrolling:touch] [scroll-snap-type:x_mandatory] lg:grid lg:overflow-visible lg:pb-0 lg:[scroll-snap-type:none]'
 const mobileCarouselCardClassName = 'min-w-[78vw] snap-start lg:min-w-0'
 
-function ProductScene() {
-  return (
-    <div className="pointer-events-none absolute inset-0 overflow-hidden bg-[#050505]" aria-hidden="true">
-      <div className="absolute inset-0 opacity-[0.16] [background-image:linear-gradient(#ffffff_1px,transparent_1px),linear-gradient(90deg,#ffffff_1px,transparent_1px)] [background-size:64px_64px]" />
-      <div className="absolute right-[-80px] top-[92px] hidden w-[680px] rounded-[36px] border border-white/10 bg-[#0d0d0d] p-5 shadow-[0_24px_100px_rgba(0,0,0,0.7)] lg:block">
-        <div className="flex items-center justify-between border-b border-white/10 pb-4">
-          <div>
-            <p className="text-sm font-semibold text-white">Otto</p>
-            <p className="mt-1 text-xs text-white/45">empresa conectada</p>
-          </div>
-          <span className="rounded-full border border-emerald-400/20 bg-emerald-400/10 px-3 py-1 text-xs font-medium text-emerald-200">
-            IA ativa
-          </span>
-        </div>
-
-        <div className="grid gap-3 pt-5">
-          <div className="rounded-[28px] border border-white/10 bg-white/[0.04] p-5">
-            <p className="text-sm text-white/48">Pedido</p>
-            <p className="mt-2 max-w-[430px] text-xl font-semibold leading-tight text-white">
-              Analise a semana e me diga o que precisa de acao.
-            </p>
-          </div>
-
-          <div className="grid grid-cols-3 gap-3">
-            {['Financeiro', 'Vendas', 'Marketing'].map((area) => (
-              <div key={area} className="rounded-[24px] border border-white/10 bg-[#141414] p-4">
-                <Check size={16} strokeWidth={1.5} className="text-emerald-300" />
-                <p className="mt-4 text-sm font-semibold text-white">{area}</p>
-                <p className="mt-1 text-xs text-white/45">fonte conectada</p>
-              </div>
-            ))}
-          </div>
-
-          <div className="flex items-center gap-3 rounded-[28px] border border-emerald-400/20 bg-emerald-400/10 p-4">
-            <div className="grid size-10 place-items-center rounded-2xl bg-emerald-300 text-[#06130d]">
-              <Workflow size={18} strokeWidth={1.5} />
-            </div>
-            <div>
-              <p className="text-base font-semibold text-white">Analista financeiro</p>
-              <p className="text-sm text-emerald-100/70">relatorio e proximas acoes prontos</p>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  )
-}
-
 export function OttoLandingPage() {
   return (
     <main className={`${sfPro.variable} min-h-screen bg-[#050505] text-white`} style={sfProLandingStyle}>
       <section className="relative isolate min-h-[88svh] overflow-hidden border-b border-white/10">
-        <ProductScene />
         <div className="relative z-10 flex min-h-[88svh] max-w-[1180px] flex-col justify-between px-6 py-6 sm:px-8 lg:mx-auto">
           <header className="flex items-center justify-between">
             <Link href="/lp" className="flex items-center gap-3">
@@ -208,9 +170,10 @@ export function OttoLandingPage() {
           </div>
           <div className={`${mobileCarouselTrackClassName} lg:grid-cols-2`} aria-label="Controles e seguranca">
             {proofPoints.map((point) => (
-              <div key={point} className={`${mobileCarouselCardClassName} flex items-center gap-3 rounded-[24px] border border-white/10 bg-white/[0.04] p-4`}>
+              <div key={point.title} className={`${mobileCarouselCardClassName} rounded-[24px] border border-white/10 bg-white/[0.04] p-5`}>
                 <Brain size={18} strokeWidth={1.5} className="shrink-0 text-emerald-200" />
-                <span className="text-sm font-medium text-white">{point}</span>
+                <p className="mt-4 font-semibold text-white" style={cardTitleStyle}>{point.title}</p>
+                <p className="mt-2 text-sm leading-6 text-white/58">{point.description}</p>
               </div>
             ))}
           </div>
