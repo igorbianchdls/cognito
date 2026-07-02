@@ -187,7 +187,7 @@ async function main() {
   assert(artifactToolsSource.includes('assertSourceMatchesKind'), 'artifact source kind guard missing')
   const artifactSchemasSource = await readFile(path.join(root, 'src/products/mcp/tools/artifactSchemas.ts'), 'utf8')
   assert(artifactSchemasSource.includes("enum: ['dashboard', 'report', 'slide']"), 'artifact authoring kind enum should include reports and slides')
-  assert(artifactSchemasSource.includes("enum: ['get_contract', 'create', 'patch', 'update_full']"), 'artifact authoring action enum missing')
+  assert(artifactSchemasSource.includes("enum: ['get_contract', 'create', 'patch', 'update_full', 'query_preview']"), 'artifact authoring action enum missing')
   console.log('artifact authoring contract ok')
 
   const appSource = await readFile(path.join(root, 'src/products/plugin/web/src/App.tsx'), 'utf8')

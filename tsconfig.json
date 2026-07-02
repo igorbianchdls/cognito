@@ -22,7 +22,13 @@
         "name": "next"
       }
     ],
+    "typeRoots": [
+      "./node_modules/@types"
+    ],
     "paths": {
+      "buffer": [
+        "./node_modules/@types/node/buffer.d.ts"
+      ],
       "@/*": [
         "./src/*"
       ]
