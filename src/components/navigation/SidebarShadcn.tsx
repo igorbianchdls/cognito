@@ -145,7 +145,7 @@ export function SidebarShadcn({ bgColor, textColor, itemTextColor, itemTextStyle
   const inlineStyle = inlineStyleBase as React.CSSProperties & Record<string, string | number>
   // Defaults requested: compact sidebar typography/colors
   inlineStyle['--sidebar'] = finalBgColor
-  inlineStyle['--sidebar-width'] = 'fit-content'
+  inlineStyle['--sidebar-width'] = '72px'
   inlineStyle['--sidebar-accent-foreground'] = finalItemTextColor
   inlineStyle['--ui-font-size'] = '14px'
   inlineStyle['--ui-tracking-pct'] = '-2'
