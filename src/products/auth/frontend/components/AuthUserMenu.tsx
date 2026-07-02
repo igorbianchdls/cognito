@@ -82,9 +82,9 @@ export function AuthUserMenu() {
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <SidebarMenuButton
-                  className="mx-auto h-10 w-10 justify-center p-1"
+                  className="mx-auto h-14 w-14 justify-center p-1"
                 >
-                  <Avatar className="size-8 rounded-md">
+                  <Avatar className="size-12 rounded-md">
                     <AvatarImage alt={displayName} src={avatarUrl} />
                     <AvatarFallback className="rounded-md bg-sidebar-accent text-xs font-semibold text-sidebar-accent-foreground">
                       {initials}
