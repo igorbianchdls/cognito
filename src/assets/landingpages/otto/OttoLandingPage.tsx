@@ -37,6 +37,8 @@ const proofPoints = [
   'Automacao com aprovacao quando necessario',
 ]
 
+const whiteTitleStyle = { color: '#ffffff', letterSpacing: '-0.02em' }
+
 function ProductScene() {
   return (
     <div className="pointer-events-none absolute inset-0 overflow-hidden bg-[#050505]" aria-hidden="true">
@@ -55,7 +57,7 @@ function ProductScene() {
         <div className="grid gap-3 pt-5">
           <div className="rounded-[28px] border border-white/10 bg-white/[0.04] p-5">
             <p className="text-sm text-white/48">Pedido</p>
-            <p className="mt-2 max-w-[430px] text-xl font-semibold leading-tight tracking-[-0.03em] text-white">
+            <p className="mt-2 max-w-[430px] text-xl font-semibold leading-tight text-white">
               Analise a semana e me diga o que precisa de acao.
             </p>
           </div>
@@ -96,7 +98,7 @@ export function OttoLandingPage() {
               <span className="grid size-9 place-items-center rounded-2xl bg-white text-sm font-semibold text-[#050505]">
                 O
               </span>
-              <span className="text-lg font-semibold tracking-[-0.03em] text-white">Otto</span>
+              <span className="text-lg font-semibold text-white">Otto</span>
             </Link>
             <nav className="hidden items-center gap-6 text-sm font-medium text-white/55 md:flex">
               <a href="#produto">Produto</a>
@@ -106,13 +108,13 @@ export function OttoLandingPage() {
           </header>
 
           <div className="max-w-[560px] pb-16 pt-28 sm:pt-36">
-            <p className="mb-4 text-sm font-semibold uppercase tracking-[0.08em] text-emerald-200">
+            <p className="mb-4 text-sm font-semibold uppercase text-emerald-200">
               Camada de inteligencia para PMEs
             </p>
-            <h1 className="max-w-[520px] text-5xl font-semibold leading-[0.95] tracking-[-0.03em] text-white sm:text-7xl">
+            <p className="max-w-[520px] text-5xl font-semibold leading-[0.95] text-white sm:text-7xl" style={whiteTitleStyle}>
               Otto
-            </h1>
-            <p className="mt-6 max-w-[520px] text-lg leading-7 tracking-[-0.02em] text-white/68">
+            </p>
+            <p className="mt-6 max-w-[520px] text-lg leading-7 text-white/68">
               Conecte sistemas, documentos, bancos e planilhas. Crie funcionarios de IA que entendem sua operacao, automatizam tarefas, analisam dados e geram relatorios para sua empresa.
             </p>
             <div className="mt-8 flex flex-wrap gap-3">
@@ -138,16 +140,16 @@ export function OttoLandingPage() {
       <section id="produto" className="border-b border-white/10 bg-[#050505] px-6 py-16 sm:px-8">
         <div className="mx-auto grid max-w-[1180px] gap-10 lg:grid-cols-[0.95fr_1.05fr]">
           <div>
-            <p className="text-sm font-semibold uppercase tracking-[0.08em] text-emerald-200">Produto</p>
-            <h2 className="mt-4 max-w-[520px] text-3xl font-semibold leading-tight tracking-[-0.03em] text-white sm:text-5xl">
+            <p className="text-sm font-semibold uppercase text-emerald-200">Produto</p>
+            <p className="mt-4 max-w-[520px] text-3xl font-semibold leading-tight text-white sm:text-5xl" style={whiteTitleStyle}>
               Tudo que sua empresa sabe, em um lugar onde a IA consegue trabalhar.
-            </h2>
+            </p>
           </div>
           <div className="grid gap-3 sm:grid-cols-2">
             {workflowSteps.map((step) => (
               <article key={step.title} className="rounded-[28px] border border-white/10 bg-white/[0.04] p-5">
                 <step.icon size={18} strokeWidth={1.5} className="text-emerald-200" />
-                <h3 className="mt-5 text-lg font-semibold tracking-[-0.03em] text-white">{step.title}</h3>
+                <p className="mt-5 text-lg font-semibold text-white" style={whiteTitleStyle}>{step.title}</p>
                 <p className="mt-2 text-sm leading-6 text-white/58">{step.description}</p>
               </article>
             ))}
@@ -174,10 +176,10 @@ export function OttoLandingPage() {
             </div>
           </div>
           <div className="flex flex-col justify-center">
-            <p className="text-sm font-semibold uppercase tracking-[0.08em] text-emerald-200">Workflow</p>
-            <h2 className="mt-4 text-3xl font-semibold leading-tight tracking-[-0.03em] text-white sm:text-5xl">
+            <p className="text-sm font-semibold uppercase text-emerald-200">Workflow</p>
+            <p className="mt-4 text-3xl font-semibold leading-tight text-white sm:text-5xl" style={whiteTitleStyle}>
               Funcionarios de IA que trabalham com os dados reais da empresa.
-            </h2>
+            </p>
             <p className="mt-5 text-base leading-7 text-white/60">
               Otto organiza o conhecimento operacional do negocio e entrega contexto para cada funcionario de IA executar tarefas com seguranca.
             </p>
@@ -191,9 +193,9 @@ export function OttoLandingPage() {
             <div className="mb-5 grid size-12 place-items-center rounded-3xl border border-white/10 bg-white/[0.04] text-emerald-200">
               <ShieldCheck size={20} strokeWidth={1.5} />
             </div>
-            <h2 className="text-3xl font-semibold leading-tight tracking-[-0.03em] text-white sm:text-5xl">
+            <p className="text-3xl font-semibold leading-tight text-white sm:text-5xl" style={whiteTitleStyle}>
               Controle o que cada funcionario de IA pode ler, analisar e executar.
-            </h2>
+            </p>
             <p className="mt-5 text-base leading-7 text-white/60">
               Defina permissoes por funcao, fonte de dados e tipo de acao antes de liberar automacoes no negocio.
             </p>

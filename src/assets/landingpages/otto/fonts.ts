@@ -34,4 +34,5 @@ export const sfPro = localFont({
 
 export const sfProLandingStyle: CSSProperties & Record<'--ui-font-family', string> = {
   '--ui-font-family': 'var(--font-sf-pro), -apple-system, BlinkMacSystemFont, system-ui, sans-serif',
+  letterSpacing: '-0.02em',
 }

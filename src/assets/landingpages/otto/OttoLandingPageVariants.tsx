@@ -47,6 +47,8 @@ type VariantCopy = {
 
 const cardIcons = [PlugZap, Bot, Workflow]
 
+const whiteTitleStyle = { color: '#ffffff', letterSpacing: '-0.02em' }
+
 const variantA: VariantCopy = {
   route: '/lp-a',
   eyebrow: 'Funcionarios de IA para PMEs',
@@ -165,7 +167,7 @@ function ProductScene({ copy }: { copy: VariantCopy }) {
         <div className="grid gap-3 pt-5">
           <div className="rounded-[28px] border border-white/10 bg-white/[0.04] p-5">
             <p className="text-sm text-white/48">Pedido</p>
-            <p className="mt-2 max-w-[460px] text-xl font-semibold leading-tight tracking-[-0.03em] text-white">
+            <p className="mt-2 max-w-[460px] text-xl font-semibold leading-tight text-white">
               {copy.heroPrompt}
             </p>
           </div>
@@ -234,7 +236,7 @@ function OttoLandingExperimentPage({ copy }: { copy: VariantCopy }) {
               <span className="grid size-9 place-items-center rounded-2xl bg-white text-sm font-semibold text-[#040404]">
                 O
               </span>
-              <span className="text-lg font-semibold tracking-[-0.03em] text-white">Otto</span>
+              <span className="text-lg font-semibold text-white">Otto</span>
             </Link>
             <nav className="hidden items-center gap-6 text-sm font-medium text-white/55 md:flex">
               <a href="#produto">Produto</a>
@@ -244,13 +246,13 @@ function OttoLandingExperimentPage({ copy }: { copy: VariantCopy }) {
           </header>
 
           <div className="max-w-[600px] pb-16 pt-28 sm:pt-36">
-            <p className={`mb-4 text-sm font-semibold uppercase tracking-[0.08em] ${theme.accent}`}>
+            <p className={`mb-4 text-sm font-semibold uppercase ${theme.accent}`}>
               {copy.eyebrow}
             </p>
-            <h1 className="max-w-[620px] text-5xl font-semibold leading-[0.95] tracking-[-0.03em] text-white sm:text-7xl">
+            <p className="max-w-[620px] text-5xl font-semibold leading-[0.95] text-white sm:text-7xl" style={whiteTitleStyle}>
               {copy.headline}
-            </h1>
-            <p className="mt-6 max-w-[560px] text-lg leading-7 tracking-[-0.02em] text-white/68">
+            </p>
+            <p className="mt-6 max-w-[560px] text-lg leading-7 text-white/68">
               {copy.subtitle}
             </p>
             <div className="mt-8 flex flex-wrap gap-3">
@@ -276,10 +278,10 @@ function OttoLandingExperimentPage({ copy }: { copy: VariantCopy }) {
       <section id="produto" className="border-b border-white/10 bg-[#040404] px-6 py-16 sm:px-8">
         <div className="mx-auto grid max-w-[1180px] gap-10 lg:grid-cols-[0.95fr_1.05fr]">
           <div>
-            <p className={`text-sm font-semibold uppercase tracking-[0.08em] ${theme.accent}`}>{copy.productEyebrow}</p>
-            <h2 className="mt-4 max-w-[560px] text-3xl font-semibold leading-tight tracking-[-0.03em] text-white sm:text-5xl">
+            <p className={`text-sm font-semibold uppercase ${theme.accent}`}>{copy.productEyebrow}</p>
+            <p className="mt-4 max-w-[560px] text-3xl font-semibold leading-tight text-white sm:text-5xl" style={whiteTitleStyle}>
               {copy.productTitle}
-            </h2>
+            </p>
           </div>
           <div className="grid gap-3 sm:grid-cols-2">
             {copy.cards.map((card, index) => {
@@ -287,7 +289,7 @@ function OttoLandingExperimentPage({ copy }: { copy: VariantCopy }) {
               return (
                 <article key={card.title} className="rounded-[28px] border border-white/10 bg-white/[0.04] p-5">
                   <Icon size={18} strokeWidth={1.5} className={theme.icon} />
-                  <h3 className="mt-5 text-lg font-semibold tracking-[-0.03em] text-white">{card.title}</h3>
+                  <p className="mt-5 text-lg font-semibold text-white" style={whiteTitleStyle}>{card.title}</p>
                   <p className="mt-2 text-sm leading-6 text-white/58">{card.description}</p>
                 </article>
               )
@@ -315,10 +317,10 @@ function OttoLandingExperimentPage({ copy }: { copy: VariantCopy }) {
             </div>
           </div>
           <div className="flex flex-col justify-center">
-            <p className={`text-sm font-semibold uppercase tracking-[0.08em] ${theme.accent}`}>{copy.workflowEyebrow}</p>
-            <h2 className="mt-4 text-3xl font-semibold leading-tight tracking-[-0.03em] text-white sm:text-5xl">
+            <p className={`text-sm font-semibold uppercase ${theme.accent}`}>{copy.workflowEyebrow}</p>
+            <p className="mt-4 text-3xl font-semibold leading-tight text-white sm:text-5xl" style={whiteTitleStyle}>
               {copy.workflowHeading}
-            </h2>
+            </p>
             <p className="mt-5 text-base leading-7 text-white/60">
               {copy.workflowDescription}
             </p>
@@ -332,9 +334,9 @@ function OttoLandingExperimentPage({ copy }: { copy: VariantCopy }) {
             <div className={`mb-5 grid size-12 place-items-center rounded-3xl border ${theme.result}`}>
               <ShieldCheck size={20} strokeWidth={1.5} />
             </div>
-            <h2 className="text-3xl font-semibold leading-tight tracking-[-0.03em] text-white sm:text-5xl">
+            <p className="text-3xl font-semibold leading-tight text-white sm:text-5xl" style={whiteTitleStyle}>
               {copy.securityHeading}
-            </h2>
+            </p>
             <p className="mt-5 text-base leading-7 text-white/60">
               {copy.securityDescription}
             </p>
