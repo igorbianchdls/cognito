@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { Show, SignInButton, SignUpButton, useClerk, useUser } from '@clerk/nextjs'
-import { ChevronsUpDown, Loader2, LogIn, LogOut, Plug, Settings, UserPlus } from 'lucide-react'
+import { Loader2, LogIn, LogOut, Plug, Settings, UserPlus } from 'lucide-react'
 
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import {
@@ -82,7 +82,7 @@ export function AuthUserMenu() {
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <SidebarMenuButton
-                  className="min-h-12 gap-2 px-2 py-1.5 group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:px-0"
+                  className="mx-auto h-10 w-10 justify-center p-1"
                 >
                   <Avatar className="size-8 rounded-md">
                     <AvatarImage alt={displayName} src={avatarUrl} />
@@ -90,11 +90,6 @@ export function AuthUserMenu() {
                       {initials}
                     </AvatarFallback>
                   </Avatar>
-                  <div className="grid min-w-0 flex-1 text-left leading-tight group-data-[collapsible=icon]:hidden">
-                    <span className="truncate font-medium">{displayName}</span>
-                    {email ? <span className="truncate text-xs text-sidebar-foreground/70">{email}</span> : null}
-                  </div>
-                  <ChevronsUpDown className="ml-auto size-4 text-sidebar-foreground/60 group-data-[collapsible=icon]:hidden" />
                 </SidebarMenuButton>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-64" side="right" sideOffset={8}>
