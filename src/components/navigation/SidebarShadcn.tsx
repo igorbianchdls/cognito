@@ -193,7 +193,7 @@ export function SidebarShadcn({ bgColor, textColor, itemTextColor, itemTextStyle
   const inlineStyle = inlineStyleBase as React.CSSProperties & Record<string, string | number>
   // Defaults requested: compact sidebar typography/colors
   inlineStyle['--sidebar'] = finalBgColor
-  inlineStyle['--sidebar-width'] = '80px'
+  inlineStyle['--sidebar-width'] = 'fit-content'
   inlineStyle['--sidebar-accent-foreground'] = finalItemTextColor
   inlineStyle['--ui-font-size'] = '14px'
   inlineStyle['--ui-tracking-pct'] = '-2'
@@ -214,7 +214,7 @@ export function SidebarShadcn({ bgColor, textColor, itemTextColor, itemTextStyle
       <SidebarContent className="ui-text">
         <NavMainSimple items={dataWithActiveState.navMain} groupLabelStyle={finalSectionTitleStyle} itemTextStyle={finalItemTextStyle} iconSizePx={finalIconSizePx} />
 
-        <SidebarGroup>
+        <SidebarGroup className="px-1 py-2">
           <SidebarGroupLabel style={finalSectionTitleStyle}>Integrações</SidebarGroupLabel>
           <SidebarMenu>
             {navigationData.integrations.map((integration) => (

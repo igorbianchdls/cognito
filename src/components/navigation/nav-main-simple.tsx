@@ -46,7 +46,7 @@ export function NavMainSimple({
   }
 
   return (
-    <SidebarGroup>
+    <SidebarGroup className="px-1 py-2">
       <SidebarGroupLabel style={groupLabelStyle}>{groupLabel}</SidebarGroupLabel>
       <SidebarMenu className="gap-0.5">
         {items.map((item) => (
