@@ -78,6 +78,11 @@ const DEFAULT_ITEM_TEXT_STYLE: React.CSSProperties = {
   textTransform: 'none',
 }
 
+const VERTICAL_SIDEBAR_ITEM_CLASS_NAME =
+  "h-14 flex-col items-center justify-center gap-1 px-1 py-2 text-center group-data-[collapsible=icon]:h-8 group-data-[collapsible=icon]:w-8 group-data-[collapsible=icon]:p-2"
+const VERTICAL_SIDEBAR_TITLE_CLASS_NAME =
+  "max-w-full truncate text-center leading-tight group-data-[collapsible=icon]:hidden"
+
 // Navigation data adapted to shadcn format
 const navigationData = {
   user: {
@@ -213,11 +218,11 @@ export function SidebarShadcn({ bgColor, textColor, itemTextColor, itemTextStyle
           <SidebarMenu>
             {navigationData.integrations.map((integration) => (
               <SidebarMenuItem key={integration.title}>
-                <SidebarMenuButton tooltip={integration.title}>
+                <SidebarMenuButton tooltip={integration.title} className={VERTICAL_SIDEBAR_ITEM_CLASS_NAME}>
                   <span data-sidebar-icon style={{ width: finalIconSizePx, height: finalIconSizePx }} className="inline-flex items-center justify-center">
                     <integration.icon className="w-full h-full" backgroundColor="transparent" />
                   </span>
-                  <span className="group-data-[collapsible=icon]:hidden" style={finalItemTextStyle}>{integration.title}</span>
+                  <span className={VERTICAL_SIDEBAR_TITLE_CLASS_NAME} style={finalItemTextStyle}>{integration.title}</span>
                 </SidebarMenuButton>
               </SidebarMenuItem>
             ))}
