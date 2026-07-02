@@ -57,7 +57,7 @@ export function NavMainSimple({
               isActive={item.isActive}
               className={verticalSidebarItemClassName}
             >
-              {item.icon && <item.icon className="shrink-0 text-[#6A6A6A]" style={{ width: iconSizePx, height: iconSizePx }} />}
+              {item.icon && <item.icon className="shrink-0 text-[#808080]" style={{ width: iconSizePx, height: iconSizePx }} />}
               <span className={verticalSidebarTitleClassName} style={itemTextStyle}>{item.title}</span>
             </SidebarMenuButton>
           </SidebarMenuItem>
