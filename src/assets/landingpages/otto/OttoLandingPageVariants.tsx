@@ -175,7 +175,7 @@ function OttoLandingExperimentPage({ copy }: { copy: VariantCopy }) {
   return (
     <main className={`${sfPro.variable} min-h-screen bg-[#040404] text-white`} style={sfProLandingStyle}>
       <section className="relative isolate min-h-[88svh] overflow-hidden border-b border-white/10">
-        <div className="relative z-10 flex min-h-[88svh] max-w-[1180px] flex-col justify-between px-6 py-6 sm:px-8 lg:mx-auto">
+        <div className="relative z-10 flex min-h-[88svh] max-w-[1180px] flex-col px-6 py-6 sm:px-8 lg:mx-auto">
           <header className="flex items-center justify-between">
             <Link href={copy.route} className="flex items-center gap-3">
               <span className="grid size-9 place-items-center rounded-2xl bg-white text-sm font-semibold text-[#040404]">
@@ -190,7 +190,7 @@ function OttoLandingExperimentPage({ copy }: { copy: VariantCopy }) {
             </nav>
           </header>
 
-          <div className="max-w-[600px] pb-16 pt-28 sm:pt-36">
+          <div className="max-w-[600px] pb-16 pt-10 sm:pt-12 lg:pt-14">
             <p className={`mb-4 text-sm font-semibold uppercase ${theme.accent}`}>
               {copy.eyebrow}
             </p>
