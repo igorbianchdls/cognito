@@ -16,7 +16,7 @@ type SidebarIconComponent = React.ComponentType<{
 }>
 
 const verticalSidebarItemClassName =
-  "h-14 flex-col items-center justify-center gap-1 px-1 py-2 text-center group-data-[collapsible=icon]:h-8 group-data-[collapsible=icon]:w-8 group-data-[collapsible=icon]:p-2"
+  "mx-auto h-14 w-auto min-w-9 flex-col items-center justify-center gap-1 px-0.5 py-2 text-center group-data-[collapsible=icon]:h-8 group-data-[collapsible=icon]:w-8 group-data-[collapsible=icon]:p-2"
 const verticalSidebarTitleClassName =
   "max-w-full truncate text-center leading-tight group-data-[collapsible=icon]:hidden"
 

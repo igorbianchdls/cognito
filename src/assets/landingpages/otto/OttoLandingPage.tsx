@@ -52,7 +52,8 @@ const whiteTitleStyle = { color: '#ffffff', letterSpacing: '-0.02em' }
 const heroTitleStyle = { ...whiteTitleStyle, fontSize: 'var(--otto-title-size)', lineHeight: 0.95 }
 const sectionTitleStyle = { ...whiteTitleStyle, fontSize: 'var(--otto-title-size)', lineHeight: 0.95 }
 const cardTitleStyle = { ...whiteTitleStyle, fontSize: '18px', lineHeight: 1.25 }
-const responsiveTitleClassName = '[--otto-title-size:40px] md:[--otto-title-size:50px]'
+const responsiveHeroTitleClassName = '[--otto-title-size:40px] md:[--otto-title-size:50px]'
+const responsiveSectionTitleClassName = '[--otto-title-size:30px] md:[--otto-title-size:50px]'
 const mobileCarouselTrackClassName =
   'flex gap-3 overflow-x-auto scroll-smooth pb-2 scrollbar-hide [-webkit-overflow-scrolling:touch] [scroll-snap-type:x_mandatory] lg:grid lg:overflow-visible lg:pb-0 lg:[scroll-snap-type:none]'
 const mobileCarouselCardClassName = 'min-w-[78vw] snap-start lg:min-w-0'
@@ -80,7 +81,7 @@ export function OttoLandingPage() {
             <p className="mb-4 text-sm font-semibold uppercase text-emerald-200">
               Camada de inteligencia para PMEs
             </p>
-            <p className={`max-w-[520px] font-semibold text-white ${responsiveTitleClassName}`} style={heroTitleStyle}>
+            <p className={`max-w-[520px] font-semibold text-white ${responsiveHeroTitleClassName}`} style={heroTitleStyle}>
               Otto
             </p>
             <p className="mt-6 max-w-[520px] text-lg leading-7 text-white/68">
@@ -110,7 +111,7 @@ export function OttoLandingPage() {
         <div className="mx-auto grid max-w-[1180px] gap-10 lg:grid-cols-[0.95fr_1.05fr]">
           <div>
             <p className="text-sm font-semibold uppercase text-emerald-200">Produto</p>
-            <p className={`mt-4 max-w-[520px] font-semibold text-white ${responsiveTitleClassName}`} style={sectionTitleStyle}>
+            <p className={`mt-4 max-w-[520px] font-semibold text-white ${responsiveSectionTitleClassName}`} style={sectionTitleStyle}>
               Tudo que sua empresa sabe, em um lugar onde a IA consegue trabalhar.
             </p>
           </div>
@@ -146,7 +147,7 @@ export function OttoLandingPage() {
           </div>
           <div className="flex flex-col justify-center">
             <p className="text-sm font-semibold uppercase text-emerald-200">Workflow</p>
-            <p className={`mt-4 font-semibold text-white ${responsiveTitleClassName}`} style={sectionTitleStyle}>
+            <p className={`mt-4 font-semibold text-white ${responsiveSectionTitleClassName}`} style={sectionTitleStyle}>
               Funcionarios de IA que trabalham com os dados reais da empresa.
             </p>
             <p className="mt-5 text-base leading-7 text-white/60">
@@ -162,7 +163,7 @@ export function OttoLandingPage() {
             <div className="mb-5 grid size-12 place-items-center rounded-3xl border border-white/10 bg-white/[0.04] text-emerald-200">
               <ShieldCheck size={20} strokeWidth={1.5} />
             </div>
-            <p className={`font-semibold text-white ${responsiveTitleClassName}`} style={sectionTitleStyle}>
+            <p className={`font-semibold text-white ${responsiveSectionTitleClassName}`} style={sectionTitleStyle}>
               Controle o que cada funcionario de IA pode ler, analisar e executar.
             </p>
             <p className="mt-5 text-base leading-7 text-white/60">
