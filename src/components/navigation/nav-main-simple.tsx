@@ -4,7 +4,6 @@ import { useRouter } from "next/navigation"
 
 import {
   SidebarGroup,
-  SidebarGroupLabel,
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
@@ -22,8 +21,6 @@ const verticalSidebarTitleClassName =
 
 export function NavMainSimple({
   items,
-  groupLabel = "Navigation",
-  groupLabelStyle,
   itemTextStyle,
   iconSizePx = 12,
 }: {
@@ -33,8 +30,6 @@ export function NavMainSimple({
     icon?: SidebarIconComponent
     isActive?: boolean
   }[]
-  groupLabel?: string
-  groupLabelStyle?: React.CSSProperties
   itemTextStyle?: React.CSSProperties
   iconSizePx?: number
 }) {
@@ -47,7 +42,6 @@ export function NavMainSimple({
 
   return (
     <SidebarGroup className="px-1 py-2">
-      <SidebarGroupLabel style={groupLabelStyle}>{groupLabel}</SidebarGroupLabel>
       <SidebarMenu className="gap-0.5">
         {items.map((item) => (
           <SidebarMenuItem key={item.title}>

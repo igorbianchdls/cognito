@@ -45,17 +45,6 @@ function fontVar(name?: string) {
   return name
 }
 
-// Default styles now bound to UI tokens
-const DEFAULT_SECTION_TITLE_STYLE: React.CSSProperties = {
-  // Use the previous dedicated font for section titles (not the general UI font)
-  fontFamily: fontVar('Space Mono'),
-  fontWeight: 500,
-  fontSize: '12px',
-  color: '#808080',
-  letterSpacing: '0em',
-  textTransform: 'uppercase',
-}
-
 const DEFAULT_ITEM_TEXT_STYLE: React.CSSProperties = {
   fontFamily: fontVar('Geist'),
   fontWeight: 400,
@@ -113,7 +102,7 @@ const navigationData = {
 
 import { cn } from "@/lib/utils"
 
-export function SidebarShadcn({ bgColor, textColor, itemTextColor, itemTextStyle, sectionTitleStyle, style, borderless, headerBorderless, className, headerVariant: _headerVariant = 'compact', showHeaderTrigger: _showHeaderTrigger = true, iconSizePx = 24, ...props }: React.ComponentProps<typeof Sidebar> & { bgColor?: string; textColor?: string; itemTextColor?: string; itemTextStyle?: React.CSSProperties; sectionTitleStyle?: React.CSSProperties; borderless?: boolean; headerBorderless?: boolean; className?: string; headerVariant?: 'default' | 'compact'; showHeaderTrigger?: boolean; iconSizePx?: number }) {
+export function SidebarShadcn({ bgColor, textColor, itemTextColor, itemTextStyle, style, borderless, headerBorderless, className, headerVariant: _headerVariant = 'compact', showHeaderTrigger: _showHeaderTrigger = true, iconSizePx = 24, ...props }: React.ComponentProps<typeof Sidebar> & { bgColor?: string; textColor?: string; itemTextColor?: string; itemTextStyle?: React.CSSProperties; borderless?: boolean; headerBorderless?: boolean; className?: string; headerVariant?: 'default' | 'compact'; showHeaderTrigger?: boolean; iconSizePx?: number }) {
   const pathname = usePathname()
   void _headerVariant
   void _showHeaderTrigger
@@ -135,7 +124,6 @@ export function SidebarShadcn({ bgColor, textColor, itemTextColor, itemTextStyle
   const finalBgColor = bgColor ?? '#FAFAFA'
   const finalTextColor = textColor ?? '#4D4D4D'
   const finalItemTextColor = itemTextColor ?? '#4D4D4D'
-  const finalSectionTitleStyle = sectionTitleStyle ?? DEFAULT_SECTION_TITLE_STYLE
   const finalItemTextStyle = itemTextStyle ?? DEFAULT_ITEM_TEXT_STYLE
   const finalIconSizePx = iconSizePx ?? 12
 
@@ -164,7 +152,7 @@ export function SidebarShadcn({ bgColor, textColor, itemTextColor, itemTextStyle
         </div>
       </SidebarHeader>
       <SidebarContent className="ui-text">
-        <NavMainSimple items={dataWithActiveState.navMain} groupLabelStyle={finalSectionTitleStyle} itemTextStyle={finalItemTextStyle} iconSizePx={finalIconSizePx} />
+        <NavMainSimple items={dataWithActiveState.navMain} itemTextStyle={finalItemTextStyle} iconSizePx={finalIconSizePx} />
       </SidebarContent>
       <SidebarFooter>
         <NavUser user={dataWithActiveState.user} />
