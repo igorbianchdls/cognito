@@ -49,8 +49,8 @@ const cardIcons = [PlugZap, Bot, Workflow]
 
 const whiteTitleStyle = { color: '#ffffff', letterSpacing: '-0.02em' }
 const mobileCarouselTrackClassName =
-  'flex gap-3 overflow-x-auto scroll-smooth pb-2 scrollbar-hide [-webkit-overflow-scrolling:touch] [scroll-snap-type:x_mandatory] sm:grid sm:overflow-visible sm:pb-0 sm:[scroll-snap-type:none]'
-const mobileCarouselCardClassName = 'min-w-[78vw] snap-start sm:min-w-0'
+  'flex gap-3 overflow-x-auto scroll-smooth pb-2 scrollbar-hide [-webkit-overflow-scrolling:touch] [scroll-snap-type:x_mandatory] lg:grid lg:overflow-visible lg:pb-0 lg:[scroll-snap-type:none]'
+const mobileCarouselCardClassName = 'min-w-[78vw] snap-start lg:min-w-0'
 
 const variantA: VariantCopy = {
   route: '/lp-a',
@@ -286,7 +286,7 @@ function OttoLandingExperimentPage({ copy }: { copy: VariantCopy }) {
               {copy.productTitle}
             </p>
           </div>
-          <div className={`${mobileCarouselTrackClassName} sm:grid-cols-2`} aria-label="Recursos do produto">
+          <div className={`${mobileCarouselTrackClassName} lg:grid-cols-2`} aria-label="Recursos do produto">
             {copy.cards.map((card, index) => {
               const Icon = cardIcons[index] || FileText
               return (
@@ -344,7 +344,7 @@ function OttoLandingExperimentPage({ copy }: { copy: VariantCopy }) {
               {copy.securityDescription}
             </p>
           </div>
-          <div className={`${mobileCarouselTrackClassName} sm:grid-cols-2`} aria-label="Governanca e controle">
+          <div className={`${mobileCarouselTrackClassName} lg:grid-cols-2`} aria-label="Governanca e controle">
             {copy.proofPoints.map((point) => (
               <div key={point} className={`${mobileCarouselCardClassName} flex items-center gap-3 rounded-[24px] border border-white/10 bg-white/[0.04] p-4`}>
                 <Brain size={18} strokeWidth={1.5} className={`shrink-0 ${theme.icon}`} />

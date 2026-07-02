@@ -39,8 +39,8 @@ const proofPoints = [
 
 const whiteTitleStyle = { color: '#ffffff', letterSpacing: '-0.02em' }
 const mobileCarouselTrackClassName =
-  'flex gap-3 overflow-x-auto scroll-smooth pb-2 scrollbar-hide [-webkit-overflow-scrolling:touch] [scroll-snap-type:x_mandatory] sm:grid sm:overflow-visible sm:pb-0 sm:[scroll-snap-type:none]'
-const mobileCarouselCardClassName = 'min-w-[78vw] snap-start sm:min-w-0'
+  'flex gap-3 overflow-x-auto scroll-smooth pb-2 scrollbar-hide [-webkit-overflow-scrolling:touch] [scroll-snap-type:x_mandatory] lg:grid lg:overflow-visible lg:pb-0 lg:[scroll-snap-type:none]'
+const mobileCarouselCardClassName = 'min-w-[78vw] snap-start lg:min-w-0'
 
 function ProductScene() {
   return (
@@ -148,7 +148,7 @@ export function OttoLandingPage() {
               Tudo que sua empresa sabe, em um lugar onde a IA consegue trabalhar.
             </p>
           </div>
-          <div className={`${mobileCarouselTrackClassName} sm:grid-cols-2`} aria-label="Recursos do produto">
+          <div className={`${mobileCarouselTrackClassName} lg:grid-cols-2`} aria-label="Recursos do produto">
             {workflowSteps.map((step) => (
               <article key={step.title} className={`${mobileCarouselCardClassName} rounded-[28px] border border-white/10 bg-white/[0.04] p-5`}>
                 <step.icon size={18} strokeWidth={1.5} className="text-emerald-200" />
@@ -203,7 +203,7 @@ export function OttoLandingPage() {
               Defina permissoes por funcao, fonte de dados e tipo de acao antes de liberar automacoes no negocio.
             </p>
           </div>
-          <div className={`${mobileCarouselTrackClassName} sm:grid-cols-2`} aria-label="Controles e seguranca">
+          <div className={`${mobileCarouselTrackClassName} lg:grid-cols-2`} aria-label="Controles e seguranca">
             {proofPoints.map((point) => (
               <div key={point} className={`${mobileCarouselCardClassName} flex items-center gap-3 rounded-[24px] border border-white/10 bg-white/[0.04] p-4`}>
                 <Brain size={18} strokeWidth={1.5} className="shrink-0 text-emerald-200" />
