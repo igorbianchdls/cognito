@@ -38,6 +38,9 @@ const proofPoints = [
 ]
 
 const whiteTitleStyle = { color: '#ffffff', letterSpacing: '-0.02em' }
+const mobileCarouselTrackClassName =
+  'flex gap-3 overflow-x-auto scroll-smooth pb-2 scrollbar-hide [-webkit-overflow-scrolling:touch] [scroll-snap-type:x_mandatory] sm:grid sm:overflow-visible sm:pb-0 sm:[scroll-snap-type:none]'
+const mobileCarouselCardClassName = 'min-w-[78vw] snap-start sm:min-w-0'
 
 function ProductScene() {
   return (
@@ -141,13 +144,13 @@ export function OttoLandingPage() {
         <div className="mx-auto grid max-w-[1180px] gap-10 lg:grid-cols-[0.95fr_1.05fr]">
           <div>
             <p className="text-sm font-semibold uppercase text-emerald-200">Produto</p>
-            <p className="mt-4 max-w-[520px] text-3xl font-semibold leading-tight text-white sm:text-5xl" style={whiteTitleStyle}>
+            <p className="mt-4 max-w-[520px] text-6xl font-semibold leading-tight text-white sm:text-8xl" style={whiteTitleStyle}>
               Tudo que sua empresa sabe, em um lugar onde a IA consegue trabalhar.
             </p>
           </div>
-          <div className="grid gap-3 sm:grid-cols-2">
+          <div className={`${mobileCarouselTrackClassName} sm:grid-cols-2`} aria-label="Recursos do produto">
             {workflowSteps.map((step) => (
-              <article key={step.title} className="rounded-[28px] border border-white/10 bg-white/[0.04] p-5">
+              <article key={step.title} className={`${mobileCarouselCardClassName} rounded-[28px] border border-white/10 bg-white/[0.04] p-5`}>
                 <step.icon size={18} strokeWidth={1.5} className="text-emerald-200" />
                 <p className="mt-5 text-lg font-semibold text-white" style={whiteTitleStyle}>{step.title}</p>
                 <p className="mt-2 text-sm leading-6 text-white/58">{step.description}</p>
@@ -177,7 +180,7 @@ export function OttoLandingPage() {
           </div>
           <div className="flex flex-col justify-center">
             <p className="text-sm font-semibold uppercase text-emerald-200">Workflow</p>
-            <p className="mt-4 text-3xl font-semibold leading-tight text-white sm:text-5xl" style={whiteTitleStyle}>
+            <p className="mt-4 text-6xl font-semibold leading-tight text-white sm:text-8xl" style={whiteTitleStyle}>
               Funcionarios de IA que trabalham com os dados reais da empresa.
             </p>
             <p className="mt-5 text-base leading-7 text-white/60">
@@ -193,16 +196,16 @@ export function OttoLandingPage() {
             <div className="mb-5 grid size-12 place-items-center rounded-3xl border border-white/10 bg-white/[0.04] text-emerald-200">
               <ShieldCheck size={20} strokeWidth={1.5} />
             </div>
-            <p className="text-3xl font-semibold leading-tight text-white sm:text-5xl" style={whiteTitleStyle}>
+            <p className="text-6xl font-semibold leading-tight text-white sm:text-8xl" style={whiteTitleStyle}>
               Controle o que cada funcionario de IA pode ler, analisar e executar.
             </p>
             <p className="mt-5 text-base leading-7 text-white/60">
               Defina permissoes por funcao, fonte de dados e tipo de acao antes de liberar automacoes no negocio.
             </p>
           </div>
-          <div className="grid gap-3 sm:grid-cols-2">
+          <div className={`${mobileCarouselTrackClassName} sm:grid-cols-2`} aria-label="Controles e seguranca">
             {proofPoints.map((point) => (
-              <div key={point} className="flex items-center gap-3 rounded-[24px] border border-white/10 bg-white/[0.04] p-4">
+              <div key={point} className={`${mobileCarouselCardClassName} flex items-center gap-3 rounded-[24px] border border-white/10 bg-white/[0.04] p-4`}>
                 <Brain size={18} strokeWidth={1.5} className="shrink-0 text-emerald-200" />
                 <span className="text-sm font-medium text-white">{point}</span>
               </div>

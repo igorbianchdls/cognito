@@ -48,6 +48,9 @@ type VariantCopy = {
 const cardIcons = [PlugZap, Bot, Workflow]
 
 const whiteTitleStyle = { color: '#ffffff', letterSpacing: '-0.02em' }
+const mobileCarouselTrackClassName =
+  'flex gap-3 overflow-x-auto scroll-smooth pb-2 scrollbar-hide [-webkit-overflow-scrolling:touch] [scroll-snap-type:x_mandatory] sm:grid sm:overflow-visible sm:pb-0 sm:[scroll-snap-type:none]'
+const mobileCarouselCardClassName = 'min-w-[78vw] snap-start sm:min-w-0'
 
 const variantA: VariantCopy = {
   route: '/lp-a',
@@ -279,15 +282,15 @@ function OttoLandingExperimentPage({ copy }: { copy: VariantCopy }) {
         <div className="mx-auto grid max-w-[1180px] gap-10 lg:grid-cols-[0.95fr_1.05fr]">
           <div>
             <p className={`text-sm font-semibold uppercase ${theme.accent}`}>{copy.productEyebrow}</p>
-            <p className="mt-4 max-w-[560px] text-3xl font-semibold leading-tight text-white sm:text-5xl" style={whiteTitleStyle}>
+            <p className="mt-4 max-w-[560px] text-6xl font-semibold leading-tight text-white sm:text-8xl" style={whiteTitleStyle}>
               {copy.productTitle}
             </p>
           </div>
-          <div className="grid gap-3 sm:grid-cols-2">
+          <div className={`${mobileCarouselTrackClassName} sm:grid-cols-2`} aria-label="Recursos do produto">
             {copy.cards.map((card, index) => {
               const Icon = cardIcons[index] || FileText
               return (
-                <article key={card.title} className="rounded-[28px] border border-white/10 bg-white/[0.04] p-5">
+                <article key={card.title} className={`${mobileCarouselCardClassName} rounded-[28px] border border-white/10 bg-white/[0.04] p-5`}>
                   <Icon size={18} strokeWidth={1.5} className={theme.icon} />
                   <p className="mt-5 text-lg font-semibold text-white" style={whiteTitleStyle}>{card.title}</p>
                   <p className="mt-2 text-sm leading-6 text-white/58">{card.description}</p>
@@ -318,7 +321,7 @@ function OttoLandingExperimentPage({ copy }: { copy: VariantCopy }) {
           </div>
           <div className="flex flex-col justify-center">
             <p className={`text-sm font-semibold uppercase ${theme.accent}`}>{copy.workflowEyebrow}</p>
-            <p className="mt-4 text-3xl font-semibold leading-tight text-white sm:text-5xl" style={whiteTitleStyle}>
+            <p className="mt-4 text-6xl font-semibold leading-tight text-white sm:text-8xl" style={whiteTitleStyle}>
               {copy.workflowHeading}
             </p>
             <p className="mt-5 text-base leading-7 text-white/60">
@@ -334,16 +337,16 @@ function OttoLandingExperimentPage({ copy }: { copy: VariantCopy }) {
             <div className={`mb-5 grid size-12 place-items-center rounded-3xl border ${theme.result}`}>
               <ShieldCheck size={20} strokeWidth={1.5} />
             </div>
-            <p className="text-3xl font-semibold leading-tight text-white sm:text-5xl" style={whiteTitleStyle}>
+            <p className="text-6xl font-semibold leading-tight text-white sm:text-8xl" style={whiteTitleStyle}>
               {copy.securityHeading}
             </p>
             <p className="mt-5 text-base leading-7 text-white/60">
               {copy.securityDescription}
             </p>
           </div>
-          <div className="grid gap-3 sm:grid-cols-2">
+          <div className={`${mobileCarouselTrackClassName} sm:grid-cols-2`} aria-label="Governanca e controle">
             {copy.proofPoints.map((point) => (
-              <div key={point} className="flex items-center gap-3 rounded-[24px] border border-white/10 bg-white/[0.04] p-4">
+              <div key={point} className={`${mobileCarouselCardClassName} flex items-center gap-3 rounded-[24px] border border-white/10 bg-white/[0.04] p-4`}>
                 <Brain size={18} strokeWidth={1.5} className={`shrink-0 ${theme.icon}`} />
                 <span className="text-sm font-medium text-white">{point}</span>
               </div>
