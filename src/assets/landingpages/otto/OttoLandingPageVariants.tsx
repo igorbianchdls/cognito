@@ -1,4 +1,5 @@
 import type { ComponentType } from 'react'
+import type { LucideIcon } from 'lucide-react'
 import Link from 'next/link'
 import { sfPro, sfProLandingStyle } from '@/assets/landingpages/otto/fonts'
 import BlingIcon from '@/components/icons/BlingIcon'
@@ -16,10 +17,15 @@ import {
   BarChart3,
   Bot,
   Brain,
+  Calculator,
   Check,
   FileText,
+  Landmark,
+  LayoutDashboard,
+  LineChart,
   PlugZap,
   ShieldCheck,
+  Tags,
   Workflow,
 } from 'lucide-react'
 
@@ -31,6 +37,11 @@ type CardCopy = {
 type IntegrationLogoCopy = {
   name: string
   Icon: ComponentType<{ className?: string }>
+}
+
+type CapabilityCardCopy = CardCopy & {
+  Icon: LucideIcon
+  metric: string
 }
 
 type VariantCopy = {
@@ -93,6 +104,39 @@ const howItWorksSteps: CardCopy[] = [
   {
     title: 'Voce aprova o que importa',
     description: 'Relatorios, alertas e acoes sensiveis chegam com contexto para revisao.',
+  },
+]
+
+const capabilityCards: CapabilityCardCopy[] = [
+  {
+    title: 'Realiza lancamentos',
+    description: 'Cria lancamentos no ERP a partir de notas, extratos, documentos e pedidos aprovados.',
+    Icon: Calculator,
+    metric: 'ERP atualizado',
+  },
+  {
+    title: 'Classifica despesas',
+    description: 'Identifica categorias, centros de custo e fornecedores para reduzir trabalho manual no financeiro.',
+    Icon: Tags,
+    metric: 'Regras aplicadas',
+  },
+  {
+    title: 'Conciliacao bancaria',
+    description: 'Compara extrato, contas a pagar, contas a receber e lancamentos para encontrar divergencias.',
+    Icon: Landmark,
+    metric: 'Movimentos conciliados',
+  },
+  {
+    title: 'Analise de Dados',
+    description: 'Cruza dados financeiros e operacionais para explicar variacoes, riscos e oportunidades.',
+    Icon: LineChart,
+    metric: 'Insights com contexto',
+  },
+  {
+    title: 'Criacao de Dashboards',
+    description: 'Monta visoes de caixa, inadimplencia, despesas, vendas e operacao para acompanhar a empresa.',
+    Icon: LayoutDashboard,
+    metric: 'Indicadores prontos',
   },
 ]
 
@@ -322,6 +366,70 @@ function LandingHowItWorksSection() {
   )
 }
 
+function CapabilityImage({ card, index }: { card: CapabilityCardCopy; index: number }) {
+  const Icon = card.Icon
+
+  return (
+    <figure className="relative min-h-[190px] overflow-hidden rounded-[24px] border border-white/10 bg-[#101014] p-5" role="img" aria-label={`Imagem de ${card.title}`}>
+      <div className="absolute inset-x-0 top-0 h-24 bg-[radial-gradient(circle_at_30%_20%,rgba(196,181,253,0.28),transparent_58%)]" />
+      <div className="relative flex items-center justify-between">
+        <div className="grid size-12 place-items-center rounded-2xl bg-violet-300 text-[#16091f]">
+          <Icon size={22} strokeWidth={1.6} />
+        </div>
+        <span className="rounded-full border border-white/10 bg-white/[0.05] px-3 py-1 text-[11px] font-semibold uppercase text-white/55">
+          {String(index + 1).padStart(2, '0')}
+        </span>
+      </div>
+
+      <div className="relative mt-8 rounded-[18px] border border-white/10 bg-white/[0.05] p-4">
+        <div className="flex items-center justify-between gap-4">
+          <span className="text-xs font-semibold uppercase text-white/45">{card.metric}</span>
+          <span className="h-2 w-2 rounded-full bg-violet-300" />
+        </div>
+        <div className="mt-4 grid gap-2">
+          {[0, 1, 2].map((row) => (
+            <span
+              key={row}
+              className="block h-2 rounded-full bg-white/15"
+              style={{ width: `${92 - row * 18}%` }}
+            />
+          ))}
+        </div>
+      </div>
+    </figure>
+  )
+}
+
+function LandingCapabilitiesSection() {
+  return (
+    <section id="o-que-faz" className="border-b border-white/10 bg-[#080808] px-6 py-16 sm:px-8">
+      <div className="mx-auto max-w-[1180px]">
+        <div className="mb-10 max-w-[680px]">
+          <p className="text-sm font-semibold uppercase text-violet-200">O que faz</p>
+          <p className={`mt-4 font-semibold text-white ${responsiveSectionTitleClassName}`} style={sectionTitleStyle}>
+            Funcionarios de IA para tirar rotinas financeiras do manual.
+          </p>
+          <p className="mt-5 text-base leading-7 text-white/60">
+            Cada rotina combina dados conectados, regras do negocio e aprovacao humana quando a acao pede controle.
+          </p>
+        </div>
+
+        <div className={`${mobileCarouselTrackClassName} lg:grid-cols-5`} aria-label="O que os funcionarios de IA fazem">
+          {capabilityCards.map((card, index) => (
+            <article key={card.title} className={`${mobileCarouselCardClassName} rounded-[28px] border border-white/10 bg-white/[0.04] p-3`}>
+              <CapabilityImage card={card} index={index} />
+              <div className="p-2 pt-5">
+                <p className="font-semibold text-white" style={cardTitleStyle}>{card.title}</p>
+                <p className="mt-2 text-sm leading-6 text-white/58">{card.description}</p>
+              </div>
+            </article>
+          ))}
+        </div>
+      </div>
+    </section>
+  )
+}
+
 function OttoLandingExperimentPage({ copy }: { copy: VariantCopy }) {
   const theme = getTheme(copy)
 
@@ -339,6 +447,7 @@ function OttoLandingExperimentPage({ copy }: { copy: VariantCopy }) {
             <nav className="hidden items-center gap-6 text-sm font-medium text-white/55 md:flex">
               <a href="#integracoes">Integracoes</a>
               <a href="#como-funciona">Como funciona</a>
+              <a href="#o-que-faz">O que faz</a>
               <a href="#produto">Produto</a>
               <a href="#areas">Areas</a>
               <a href="#seguranca">Seguranca</a>
@@ -374,6 +483,7 @@ function OttoLandingExperimentPage({ copy }: { copy: VariantCopy }) {
 
       <LandingIntegrationsMarqueeSection />
       <LandingHowItWorksSection />
+      <LandingCapabilitiesSection />
 
       <section id="produto" className="border-b border-white/10 bg-[#040404] px-6 py-16 sm:px-8">
         <div className="mx-auto grid max-w-[1180px] gap-10 lg:grid-cols-[0.95fr_1.05fr]">
