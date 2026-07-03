@@ -430,6 +430,81 @@ function LandingCapabilitiesSection() {
   )
 }
 
+function LandingPricingSection() {
+  const pricingItems = [
+    'Funcionario de IA para rotinas financeiras',
+    'Conexao com sistemas, documentos e planilhas',
+    'Relatorios, alertas e tarefas automatizadas',
+    'Aprovacao humana para acoes sensiveis',
+  ]
+
+  return (
+    <section id="preco" className="border-b border-white/10 bg-[#040404] px-6 py-16 sm:px-8">
+      <div className="mx-auto grid max-w-[1180px] gap-10 lg:grid-cols-[0.9fr_1.1fr] lg:items-center">
+        <div>
+          <p className="text-sm font-semibold uppercase text-violet-200">Preco</p>
+          <p className={`mt-4 max-w-[620px] font-semibold text-white ${responsiveSectionTitleClassName}`} style={sectionTitleStyle}>
+            Comece automatizando o financeiro sem contratar mais sistemas.
+          </p>
+          <p className="mt-5 max-w-[560px] text-base leading-7 text-white/60">
+            Um plano direto para colocar Otto trabalhando em cima dos seus dados, reduzindo tarefas manuais e dando mais clareza para a operacao.
+          </p>
+        </div>
+
+        <div className="rounded-[32px] border border-violet-300/25 bg-white/[0.06] p-6 shadow-[0_30px_90px_rgba(0,0,0,0.28)]">
+          <div className="flex flex-wrap items-center justify-between gap-3 border-b border-white/10 pb-5">
+            <div>
+              <p className="text-sm font-semibold uppercase text-violet-200">Plano inicial</p>
+              <p className="mt-1 text-sm text-white/55">Para PMEs que querem automatizar financeiro e operacao.</p>
+            </div>
+            <span className="rounded-full border border-violet-300/25 bg-violet-300/10 px-4 py-2 text-sm font-semibold text-violet-100">
+              Acesso anual
+            </span>
+          </div>
+
+          <div className="py-7">
+            <div className="flex items-end gap-3">
+              <span className="text-[18px] font-semibold text-white/55">12x de</span>
+              <span className="text-[54px] font-semibold leading-none text-white">R$ 29,90</span>
+            </div>
+            <p className="mt-3 text-sm leading-6 text-white/55">
+              Comece com as rotinas essenciais e evolua conforme novos funcionarios de IA entrarem na operacao.
+            </p>
+          </div>
+
+          <div className="grid gap-3 border-t border-white/10 pt-5">
+            {pricingItems.map((item) => (
+              <div key={item} className="flex items-center gap-3 text-sm font-medium text-white/72">
+                <span className="grid size-6 shrink-0 place-items-center rounded-full bg-violet-300 text-[#16091f]">
+                  <Check size={14} strokeWidth={1.6} />
+                </span>
+                <span>{item}</span>
+              </div>
+            ))}
+          </div>
+
+          <div className="mt-7 flex flex-wrap gap-3">
+            <Link
+              href="/sign-up"
+              className="inline-flex min-h-11 items-center gap-2 rounded-full bg-white px-5 py-3 text-sm font-semibold text-[#040404]"
+            >
+              Comecar agora
+              <ArrowRight size={18} strokeWidth={1.5} />
+            </Link>
+            <Link
+              href="/integracoes"
+              className="inline-flex min-h-11 items-center gap-2 rounded-full border border-white/15 bg-white/5 px-5 py-3 text-sm font-semibold text-white"
+            >
+              Ver integracoes
+              <ArrowRight size={18} strokeWidth={1.5} />
+            </Link>
+          </div>
+        </div>
+      </div>
+    </section>
+  )
+}
+
 function OttoLandingExperimentPage({ copy }: { copy: VariantCopy }) {
   const theme = getTheme(copy)
 
@@ -450,6 +525,7 @@ function OttoLandingExperimentPage({ copy }: { copy: VariantCopy }) {
               <a href="#o-que-faz">O que faz</a>
               <a href="#produto">Produto</a>
               <a href="#areas">Areas</a>
+              <a href="#preco">Preco</a>
               <a href="#seguranca">Seguranca</a>
             </nav>
           </header>
@@ -582,6 +658,8 @@ function OttoLandingExperimentPage({ copy }: { copy: VariantCopy }) {
           </div>
         </div>
       </section>
+
+      <LandingPricingSection />
 
       <section id="seguranca" className="border-b border-white/10 bg-[#080808] px-6 py-16 sm:px-8">
         <div className="mx-auto grid max-w-[1180px] gap-10 lg:grid-cols-[0.8fr_1.2fr]">
