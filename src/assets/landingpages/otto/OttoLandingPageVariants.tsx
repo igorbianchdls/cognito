@@ -1,5 +1,16 @@
+import type { ComponentType } from 'react'
 import Link from 'next/link'
 import { sfPro, sfProLandingStyle } from '@/assets/landingpages/otto/fonts'
+import BlingIcon from '@/components/icons/BlingIcon'
+import ContaAzulIcon from '@/components/icons/ContaAzulIcon'
+import GoogleAdsIcon from '@/components/icons/GoogleAdsIcon'
+import MetaIcon from '@/components/icons/MetaIcon'
+import NuvemshopIcon from '@/components/icons/NuvemshopIcon'
+import OmieIcon from '@/components/icons/OmieIcon'
+import PipedriveIcon from '@/components/icons/PipedriveIcon'
+import RdStationIcon from '@/components/icons/RdStationIcon'
+import TinyIcon from '@/components/icons/TinyIcon'
+import TotvsIcon from '@/components/icons/TotvsIcon'
 import {
   ArrowRight,
   BarChart3,
@@ -15,6 +26,11 @@ import {
 type CardCopy = {
   title: string
   description: string
+}
+
+type IntegrationLogoCopy = {
+  name: string
+  Icon: ComponentType<{ className?: string }>
 }
 
 type VariantCopy = {
@@ -48,13 +64,45 @@ const mobileCarouselTrackClassName =
   'flex gap-3 overflow-x-auto scroll-smooth pb-2 scrollbar-hide [-webkit-overflow-scrolling:touch] [scroll-snap-type:x_mandatory] lg:grid lg:overflow-visible lg:pb-0 lg:[scroll-snap-type:none]'
 const mobileCarouselCardClassName = 'min-w-[78vw] snap-start lg:min-w-0'
 
+const landingIntegrationRows: IntegrationLogoCopy[][] = [
+  [
+    { name: 'Conta Azul', Icon: ContaAzulIcon },
+    { name: 'Omie', Icon: OmieIcon },
+    { name: 'Bling', Icon: BlingIcon },
+    { name: 'Tiny', Icon: TinyIcon },
+    { name: 'TOTVS', Icon: TotvsIcon },
+  ],
+  [
+    { name: 'RD Station', Icon: RdStationIcon },
+    { name: 'Pipedrive', Icon: PipedriveIcon },
+    { name: 'Nuvemshop', Icon: NuvemshopIcon },
+    { name: 'Meta Ads', Icon: MetaIcon },
+    { name: 'Google Ads', Icon: GoogleAdsIcon },
+  ],
+]
+
+const howItWorksSteps: CardCopy[] = [
+  {
+    title: 'Conecte as fontes',
+    description: 'ERP, banco, planilhas, documentos e plataformas entram como base de trabalho.',
+  },
+  {
+    title: 'O funcionario de IA executa',
+    description: 'Ele consulta dados, cruza informacoes, encontra pendencias e prepara a acao.',
+  },
+  {
+    title: 'Voce aprova o que importa',
+    description: 'Relatorios, alertas e acoes sensiveis chegam com contexto para revisao.',
+  },
+]
+
 const variantA: VariantCopy = {
   route: '/lp-a',
   headline: 'Automatize o financeiro do seu negocio com funcionarios de IA.',
   subtitle: 'Otto conecta seus sistemas, documentos, plataformas e planilhas para criar funcionarios de IA que acompanham o financeiro, organizam a operacao, geram relatorios e automatizam tarefas do dia a dia.',
   primaryCta: 'Criar meu primeiro funcionario de IA',
   secondaryCta: 'Ver integracoes',
-  productEyebrow: 'Como funciona',
+  productEyebrow: 'Produto',
   productTitle: 'Cada funcionario de IA recebe uma funcao, acessa as fontes certas e trabalha com os dados reais da empresa.',
   cards: [
     {
@@ -162,6 +210,118 @@ function getTheme(copy: VariantCopy) {
   }
 }
 
+function LandingIntegrationsMarqueeSection() {
+  return (
+    <section id="integracoes" className="border-b border-white/10 bg-[#080808] px-6 py-16 sm:px-8">
+      <div className="mx-auto max-w-[1180px]">
+        <div className="mb-10 max-w-[680px]">
+          <p className="text-sm font-semibold uppercase text-violet-200">Integracoes</p>
+          <p className={`mt-4 font-semibold text-white ${responsiveSectionTitleClassName}`} style={sectionTitleStyle}>
+            Conecte os sistemas que guardam o financeiro e a operacao da empresa.
+          </p>
+          <p className="mt-5 text-base leading-7 text-white/60">
+            Otto usa essas fontes para dar contexto aos funcionarios de IA: ERPs, CRMs, ecommerce, anuncios, documentos e planilhas.
+          </p>
+        </div>
+
+        <div className="space-y-4" aria-label="Integracoes disponiveis em movimento">
+          {landingIntegrationRows.map((row, rowIndex) => (
+            <div key={rowIndex} className="integracoes-logo-marquee">
+              <div
+                className={`integracoes-logo-marquee__track ${
+                  rowIndex === 0
+                    ? 'integracoes-logo-marquee__track--left'
+                    : 'integracoes-logo-marquee__track--right'
+                }`}
+              >
+                {[...row, ...row].map(({ Icon, name }, index) => (
+                  <div key={`${name}-${index}`} className="integracoes-logo-marquee__item">
+                    <Icon className="h-8 w-8 rounded-md" />
+                    <span>{name}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+  )
+}
+
+function LandingHowItWorksSection() {
+  return (
+    <section id="como-funciona" className="border-b border-white/10 bg-[#040404] px-6 py-16 sm:px-8">
+      <div className="mx-auto grid max-w-[1180px] gap-10 lg:grid-cols-[0.9fr_1.1fr] lg:items-center">
+        <div>
+          <p className="text-sm font-semibold uppercase text-violet-200">Como funciona</p>
+          <p className={`mt-4 font-semibold text-white ${responsiveSectionTitleClassName}`} style={sectionTitleStyle}>
+            O usuario pede uma rotina. Otto usa as integracoes e entrega o trabalho pronto para revisar.
+          </p>
+          <p className="mt-5 text-base leading-7 text-white/60">
+            A experiencia parece um chat, mas por tras cada funcionario de IA busca dados, cruza informacoes e executa etapas com limites claros.
+          </p>
+
+          <div className="mt-7 grid gap-3">
+            {howItWorksSteps.map((step, index) => (
+              <div key={step.title} className="flex items-start gap-3 rounded-[22px] border border-white/10 bg-white/[0.04] p-4">
+                <div className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-violet-300 text-[13px] font-semibold text-[#16091f]">
+                  {index + 1}
+                </div>
+                <div>
+                  <p className="font-semibold text-white" style={cardTitleStyle}>{step.title}</p>
+                  <p className="mt-1 text-sm leading-6 text-white/58">{step.description}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <div className="integracoes-chat-demo" aria-label="Animacao mostrando Otto usando integracoes">
+          <div className="integracoes-chat-demo__phone">
+            <div className="integracoes-chat-demo__status">
+              <span>18:07</span>
+              <span>Otto</span>
+              <span>...</span>
+            </div>
+
+            <div className="integracoes-chat-demo__conversation">
+              <div className="integracoes-chat-demo__bubble integracoes-chat-demo__bubble--user integracoes-chat-demo__step integracoes-chat-demo__step--1">
+                Concilie o banco com o ERP e me mostre pendencias da semana.
+              </div>
+
+              <div className="integracoes-chat-demo__assistant integracoes-chat-demo__step integracoes-chat-demo__step--2">
+                <div className="integracoes-chat-demo__assistant-header">Otto</div>
+                Vou buscar extrato, lancamentos do ERP e planilhas financeiras conectadas.
+              </div>
+
+              <div className="integracoes-chat-demo__tool integracoes-chat-demo__step integracoes-chat-demo__step--3">
+                <span>consultar_conta_azul</span>
+                <strong>124 lancamentos encontrados</strong>
+              </div>
+
+              <div className="integracoes-chat-demo__tool integracoes-chat-demo__step integracoes-chat-demo__step--4">
+                <span>conciliar_extrato</span>
+                <strong>14 movimentos conciliados</strong>
+              </div>
+
+              <div className="integracoes-chat-demo__assistant integracoes-chat-demo__step integracoes-chat-demo__step--5">
+                <div className="integracoes-chat-demo__assistant-header">Otto</div>
+                Feito. Separei 3 divergencias, 2 contas vencendo hoje e um resumo para aprovacao.
+              </div>
+            </div>
+
+            <div className="integracoes-chat-demo__input">
+              <span>Pedir uma rotina financeira</span>
+              <i />
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  )
+}
+
 function OttoLandingExperimentPage({ copy }: { copy: VariantCopy }) {
   const theme = getTheme(copy)
 
@@ -177,10 +337,10 @@ function OttoLandingExperimentPage({ copy }: { copy: VariantCopy }) {
               <span className="text-lg font-semibold text-white">Otto</span>
             </Link>
             <nav className="hidden items-center gap-6 text-sm font-medium text-white/55 md:flex">
+              <a href="#integracoes">Integracoes</a>
+              <a href="#como-funciona">Como funciona</a>
               <a href="#produto">Produto</a>
               <a href="#areas">Areas</a>
-              <a href="#workflow">Workflow</a>
-              <a href="#implantacao">Implantacao</a>
               <a href="#seguranca">Seguranca</a>
             </nav>
           </header>
@@ -211,6 +371,9 @@ function OttoLandingExperimentPage({ copy }: { copy: VariantCopy }) {
           </div>
         </div>
       </section>
+
+      <LandingIntegrationsMarqueeSection />
+      <LandingHowItWorksSection />
 
       <section id="produto" className="border-b border-white/10 bg-[#040404] px-6 py-16 sm:px-8">
         <div className="mx-auto grid max-w-[1180px] gap-10 lg:grid-cols-[0.95fr_1.05fr]">
