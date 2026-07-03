@@ -55,6 +55,23 @@ const CATALOG_PRIORITY_ORDER = [
   ...BANK_TOOLKIT_SLUGS,
 ] as const
 
+const INTEGRATION_MARQUEE_ROWS: Array<Array<{ slug: string; name: string }>> = [
+  [
+    { slug: 'CONTA_AZUL', name: 'Conta Azul' },
+    { slug: 'OMIE', name: 'Omie' },
+    { slug: 'BLING', name: 'Bling' },
+    { slug: 'TINY', name: 'Tiny' },
+    { slug: 'GOOGLESHEETS', name: 'Google Sheets' },
+  ],
+  [
+    { slug: 'GOOGLEDRIVE', name: 'Google Drive' },
+    { slug: 'NOTION', name: 'Notion' },
+    { slug: 'HUBSPOT', name: 'HubSpot' },
+    { slug: 'SHOPIFY', name: 'Shopify' },
+    { slug: 'META_ADS', name: 'Meta Ads' },
+  ],
+]
+
 const COMMUNICATION_SLUGS = new Set([
   'GMAIL',
   'SLACK',
@@ -242,6 +259,125 @@ function sortByPriority(
 
     return a.name.localeCompare(b.name)
   })
+}
+
+function IntegrationLogoMarqueeSection() {
+  return (
+    <section className="mb-8 overflow-hidden rounded-[28px] border border-[#E6EAF4] bg-[#F8FAFD] px-6 py-7 shadow-[0_14px_36px_rgba(23,32,58,0.05)]">
+      <div className="mb-6 max-w-[620px]">
+        <div className="text-[20px] font-semibold text-[#1B2440]">Integre as fontes que movem sua operação</div>
+        <p className="mt-2 text-[14px] leading-6 text-[#66748D]">
+          Sistemas financeiros, documentos, planilhas e plataformas conectados para os funcionários de IA trabalharem com contexto.
+        </p>
+      </div>
+
+      <div className="space-y-4" aria-label="Integrações disponíveis em movimento">
+        {INTEGRATION_MARQUEE_ROWS.map((row, rowIndex) => (
+          <div key={rowIndex} className="integracoes-logo-marquee">
+            <div
+              className={`integracoes-logo-marquee__track ${
+                rowIndex === 0
+                  ? 'integracoes-logo-marquee__track--left'
+                  : 'integracoes-logo-marquee__track--right'
+              }`}
+            >
+              {[...row, ...row].map((item, index) => (
+                <div key={`${item.slug}-${index}`} className="integracoes-logo-marquee__item">
+                  {renderIntegrationLogo(item.slug, item.name)}
+                  <span>{item.name}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        ))}
+      </div>
+    </section>
+  )
+}
+
+function HowItWorksChatSection() {
+  const steps = [
+    {
+      title: 'Conecte as fontes',
+      description: 'ERP, banco, planilhas e documentos entram como fontes de trabalho para Otto.',
+    },
+    {
+      title: 'O funcionario de IA executa',
+      description: 'Ele consulta dados, cruza informacoes, encontra pendencias e prepara a acao.',
+    },
+    {
+      title: 'Voce aprova o que importa',
+      description: 'Relatorios, alertas e acoes sensiveis chegam com contexto para revisao.',
+    },
+  ]
+
+  return (
+    <section className="mb-8 overflow-hidden rounded-[28px] border border-[#E6EAF4] bg-white px-6 py-7 shadow-[0_14px_36px_rgba(23,32,58,0.06)]">
+      <div className="grid gap-8 lg:grid-cols-[0.86fr_1.14fr] lg:items-center">
+        <div>
+          <div className="text-[24px] font-semibold text-[#1B2440]">Como funciona</div>
+          <p className="mt-3 max-w-[560px] text-[15px] leading-7 text-[#66748D]">
+            O usuario pede uma rotina em linguagem natural. Otto usa as integracoes conectadas, executa as etapas necessarias e devolve o resultado pronto para revisar ou aprovar.
+          </p>
+
+          <div className="mt-7 grid gap-3">
+            {steps.map((step, index) => (
+              <div key={step.title} className="flex items-start gap-3 rounded-[18px] border border-[#E6EAF4] bg-[#F8FAFD] p-4">
+                <div className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-[#1B2440] text-[13px] font-semibold text-white">
+                  {index + 1}
+                </div>
+                <div>
+                  <div className="text-[15px] font-semibold text-[#202A3D]">{step.title}</div>
+                  <div className="mt-1 text-[14px] leading-6 text-[#66748D]">{step.description}</div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <div className="integracoes-chat-demo" aria-label="Demonstração animada de como Otto usa integrações">
+          <div className="integracoes-chat-demo__phone">
+            <div className="integracoes-chat-demo__status">
+              <span>18:07</span>
+              <span>Otto</span>
+              <span>●●●</span>
+            </div>
+
+            <div className="integracoes-chat-demo__conversation">
+              <div className="integracoes-chat-demo__bubble integracoes-chat-demo__bubble--user integracoes-chat-demo__step integracoes-chat-demo__step--1">
+                Concilie o banco com o ERP e me mostre pendencias da semana.
+              </div>
+
+              <div className="integracoes-chat-demo__assistant integracoes-chat-demo__step integracoes-chat-demo__step--2">
+                <div className="integracoes-chat-demo__assistant-header">Otto</div>
+                Vou buscar extrato, lançamentos do ERP e planilhas financeiras conectadas.
+              </div>
+
+              <div className="integracoes-chat-demo__tool integracoes-chat-demo__step integracoes-chat-demo__step--3">
+                <span>consultar_conta_azul</span>
+                <strong>124 lançamentos encontrados</strong>
+              </div>
+
+              <div className="integracoes-chat-demo__tool integracoes-chat-demo__step integracoes-chat-demo__step--4">
+                <span>conciliar_extrato</span>
+                <strong>14 movimentos conciliados</strong>
+              </div>
+
+              <div className="integracoes-chat-demo__assistant integracoes-chat-demo__step integracoes-chat-demo__step--5">
+                <div className="integracoes-chat-demo__assistant-header">Otto</div>
+                Feito. Separei 3 divergencias, 2 contas vencendo hoje e um resumo para aprovacao.
+              </div>
+            </div>
+
+            <div className="integracoes-chat-demo__input">
+              <span>Pedir uma rotina financeira</span>
+              <i />
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  )
 }
 
 function CatalogCard({
@@ -459,6 +595,9 @@ export default function IntegracoesPage() {
                     {integrationError && <div className="text-sm text-red-600 mb-3">{integrationError}</div>}
 
                     <ConnectionStatusPanel connections={connections} loading={integrationLoading} />
+
+                    <IntegrationLogoMarqueeSection />
+                    <HowItWorksChatSection />
 
                     <div className="mb-5 flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
                       <Tabs value={activeCategory} onValueChange={(value) => setActiveCategory(value as CatalogCategory)} className="min-w-0">

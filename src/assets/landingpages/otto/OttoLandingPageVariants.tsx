@@ -19,7 +19,6 @@ type CardCopy = {
 
 type VariantCopy = {
   route: string
-  eyebrow: string
   headline: string
   subtitle: string
   primaryCta: string
@@ -51,8 +50,7 @@ const mobileCarouselCardClassName = 'min-w-[78vw] snap-start lg:min-w-0'
 
 const variantA: VariantCopy = {
   route: '/lp-a',
-  eyebrow: 'Funcionarios de IA para financeiro e operacao',
-  headline: 'Contrate funcionarios de IA para cuidar das rotinas do seu negocio.',
+  headline: 'Automatize o financeiro do seu negocio com funcionarios de IA.',
   subtitle: 'Otto conecta seus sistemas, documentos, plataformas e planilhas para criar funcionarios de IA que acompanham o financeiro, organizam a operacao, geram relatorios e automatizam tarefas do dia a dia.',
   primaryCta: 'Criar meu primeiro funcionario de IA',
   secondaryCta: 'Ver integracoes',
@@ -188,9 +186,6 @@ function OttoLandingExperimentPage({ copy }: { copy: VariantCopy }) {
           </header>
 
           <div className="max-w-[600px] pb-16 pt-10 sm:pt-12 lg:pt-14">
-            <p className={`mb-4 text-sm font-semibold uppercase ${theme.accent}`}>
-              {copy.eyebrow}
-            </p>
             <p className={`max-w-[620px] font-semibold text-white ${responsiveHeroTitleClassName}`} style={heroTitleStyle}>
               {copy.headline}
             </p>
