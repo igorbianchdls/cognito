@@ -1,11 +1,11 @@
 import type { Metadata } from 'next'
-import { OttoLandingPage } from '@/assets/landingpages/otto/OttoLandingPage'
+import { OttoLandingPageVariantA } from '@/assets/landingpages/otto/OttoLandingPageVariants'
 
 export const metadata: Metadata = {
-  title: 'Otto | Camada de inteligencia para PMEs',
-  description: 'Conecte sistemas, documentos, bancos e planilhas para criar funcionarios de IA que automatizam tarefas, analisam dados e geram relatorios.',
+  title: 'Otto | Funcionarios de IA para financeiro e operacao',
+  description: 'Contrate funcionarios de IA que conectam sistemas, documentos, plataformas e planilhas para cuidar do financeiro e da operacao.',
 }
 
 export default function LandingPage() {
-  return <OttoLandingPage />
+  return <OttoLandingPageVariantA />
 }

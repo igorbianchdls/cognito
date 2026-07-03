@@ -51,45 +51,45 @@ const mobileCarouselCardClassName = 'min-w-[78vw] snap-start lg:min-w-0'
 
 const variantA: VariantCopy = {
   route: '/lp-a',
-  eyebrow: 'Funcionarios de IA para PMEs',
-  headline: 'Contrate uma equipe de IA para operar sua empresa.',
-  subtitle: 'Otto conecta sistemas, bancos, documentos e planilhas para criar funcionarios de IA que acompanham rotinas, respondem perguntas, geram relatorios e executam tarefas.',
-  primaryCta: 'Criar meu primeiro funcionario',
+  eyebrow: 'Funcionarios de IA para financeiro e operacao',
+  headline: 'Contrate funcionarios de IA para cuidar das rotinas do seu negocio.',
+  subtitle: 'Otto conecta seus sistemas, documentos, plataformas e planilhas para criar funcionarios de IA que acompanham o financeiro, organizam a operacao, geram relatorios e automatizam tarefas do dia a dia.',
+  primaryCta: 'Criar meu primeiro funcionario de IA',
   secondaryCta: 'Ver integracoes',
-  productEyebrow: 'Equipe de IA',
-  productTitle: 'Cada funcionario de IA trabalha com o contexto real do negocio.',
+  productEyebrow: 'Como funciona',
+  productTitle: 'Cada funcionario de IA recebe uma funcao, acessa as fontes certas e trabalha com os dados reais da empresa.',
   cards: [
     {
       title: 'Defina a funcao',
-      description: 'Crie analistas, assistentes financeiros, operadores de vendas ou agentes de atendimento.',
+      description: 'Crie funcionarios para financeiro, operacao, compras, cobranca, documentos ou relatorios.',
     },
     {
-      title: 'Conecte o conhecimento',
-      description: 'Entregue acesso a sistemas, documentos, bancos e planilhas que esse funcionario precisa usar.',
+      title: 'Conecte as fontes',
+      description: 'Integre sistemas, bancos, plataformas, planilhas e arquivos usados pela sua empresa.',
     },
     {
-      title: 'Acompanhe o trabalho',
-      description: 'Receba relatorios, alertas, tarefas concluidas e pedidos de aprovacao quando necessario.',
+      title: 'Automatize a rotina',
+      description: 'Receba analises, alertas, tarefas concluidas e pedidos de aprovacao quando necessario.',
     },
   ],
   workflowTitle: 'Funcionario de IA',
-  workflowItems: ['Funcao definida', 'Fontes liberadas', 'Rotina criada', 'Primeiro relatorio entregue'],
+  workflowItems: ['Funcao definida', 'Fontes conectadas', 'Rotina automatizada', 'Relatorio entregue'],
   workflowEyebrow: 'Rotina operacional',
-  workflowHeading: 'A empresa ganha gente trabalhando em cima dos dados, sem contratar mais sistemas.',
-  workflowDescription: 'Otto transforma dados espalhados em funcionarios de IA com responsabilidades claras: analisar, resumir, cobrar, reportar e acionar o time certo.',
-  securityHeading: 'Cada funcionario de IA tem limites claros.',
-  securityDescription: 'Controle quais fontes ele pode ler, quais acoes pode executar e quando precisa pedir aprovacao antes de seguir.',
+  workflowHeading: 'A empresa ganha gente trabalhando em cima dos dados, sem aumentar a equipe.',
+  workflowDescription: 'Otto transforma dados espalhados em funcionarios de IA com responsabilidades claras: analisar, conferir, cobrar, resumir, reportar e acionar o time certo.',
+  securityHeading: 'Cada funcionario de IA trabalha com limites claros.',
+  securityDescription: 'Controle quais fontes ele pode acessar, quais acoes pode executar e quando precisa pedir aprovacao humana.',
   proofPoints: [
     {
       title: 'Permissoes por funcao',
-      description: 'Cada funcionario de IA recebe acesso apenas ao que precisa para executar sua rotina.',
+      description: 'Cada funcionario acessa apenas os dados necessarios para sua rotina.',
     },
     {
       title: 'Aprovacao para acoes sensiveis',
-      description: 'Defina quando uma tarefa precisa de validacao humana antes de seguir.',
+      description: 'Pagamentos, cobrancas, mensagens e alteracoes criticas podem exigir validacao.',
     },
     {
-      title: 'Historico de tarefas executadas',
+      title: 'Historico de execucao',
       description: 'Veja o que foi feito, quando aconteceu e qual funcionario de IA executou.',
     },
     {
@@ -99,73 +99,68 @@ const variantA: VariantCopy = {
   ],
 }
 
-const variantB: VariantCopy = {
-  route: '/lp-b',
-  eyebrow: 'Central de inteligencia operacional',
-  headline: 'Uma central de inteligencia para decidir e agir mais rapido.',
-  subtitle: 'Otto junta dados de sistemas, documentos, bancos e planilhas para responder perguntas, encontrar gargalos, criar relatorios e automatizar decisoes do dia a dia.',
-  primaryCta: 'Centralizar meus dados',
-  secondaryCta: 'Criar conta',
-  productEyebrow: 'Inteligencia conectada',
-  productTitle: 'A resposta que voce procura quase sempre esta espalhada em varios lugares.',
-  cards: [
-    {
-      title: 'Unifique a operacao',
-      description: 'Conecte vendas, financeiro, marketing, documentos, bancos e planilhas em uma camada inteligente.',
-    },
-    {
-      title: 'Pergunte ao negocio',
-      description: 'Receba respostas com contexto real, comparacoes, tabelas, alertas e explicacoes acionaveis.',
-    },
-    {
-      title: 'Transforme insight em acao',
-      description: 'Crie relatorios, acompanhe indicadores e dispare tarefas para o time ou para funcionarios de IA.',
-    },
-  ],
-  workflowTitle: 'Central Otto',
-  workflowItems: ['Fontes conectadas', 'Dados comparados', 'Gargalos encontrados', 'Relatorio executivo gerado'],
-  workflowEyebrow: 'Decisao com contexto',
-  workflowHeading: 'Menos procura manual, mais decisao com base no que aconteceu de verdade.',
-  workflowDescription: 'Otto conecta os pontos entre areas e mostra o que mudou, onde esta o risco e qual acao deve vir depois.',
-  securityHeading: 'Inteligencia com governanca para negocios reais.',
-  securityDescription: 'Defina quem pode acessar cada fonte, quais analises podem ser feitas e quais acoes exigem aprovacao.',
-  proofPoints: [
-    {
-      title: 'Acesso por fonte de dados',
-      description: 'Controle quem pode consultar sistemas, documentos, bancos e planilhas conectadas.',
-    },
-    {
-      title: 'Indicadores rastreaveis',
-      description: 'Entenda a origem de cada metrica usada em respostas, paineis e decisoes.',
-    },
-    {
-      title: 'Relatorios por area',
-      description: 'Organize entregas por financeiro, vendas, marketing, atendimento e gestao.',
-    },
-    {
-      title: 'Acoes com controle',
-      description: 'Acompanhe automacoes e defina limites antes de qualquer execucao sensivel.',
-    },
-  ],
-}
+const departmentCards: CardCopy[] = [
+  {
+    title: 'Financeiro',
+    description: 'Fluxo de caixa, contas a pagar, contas a receber, cobrancas, conciliacao e fechamento.',
+  },
+  {
+    title: 'Operacao',
+    description: 'Acompanhamento de processos, pendencias, aprovacoes, documentos e rotinas entre areas.',
+  },
+  {
+    title: 'Compras e fornecedores',
+    description: 'Pedidos, notas, contratos, vencimentos e alertas de divergencia.',
+  },
+  {
+    title: 'Relatorios de gestao',
+    description: 'Resumo executivo, indicadores, variacoes e explicacoes com contexto do negocio.',
+  },
+]
+
+const rolloutSteps: CardCopy[] = [
+  {
+    title: 'Escolha a rotina',
+    description: 'Defina uma tarefa recorrente do financeiro ou da operacao que hoje depende de trabalho manual.',
+  },
+  {
+    title: 'Conecte os dados',
+    description: 'Libere os sistemas, planilhas, documentos e plataformas necessarios para executar a rotina.',
+  },
+  {
+    title: 'Valide as primeiras entregas',
+    description: 'Revise relatorios, alertas e acoes antes de deixar o fluxo rodar com mais autonomia.',
+  },
+  {
+    title: 'Expanda por area',
+    description: 'Depois de validar o primeiro caso, crie novos funcionarios de IA para outras rotinas.',
+  },
+]
+
+const resultCards: CardCopy[] = [
+  {
+    title: 'Financeiro mais acompanhado',
+    description: 'Caixa, contas e cobrancas deixam de depender so de checagens manuais.',
+  },
+  {
+    title: 'Operacao mais organizada',
+    description: 'Pendencias, documentos e aprovacoes ficam visiveis e acionaveis.',
+  },
+  {
+    title: 'Gestao com contexto',
+    description: 'O dono recebe relatorios e explicacoes baseados nos dados reais da empresa.',
+  },
+]
 
 function getTheme(copy: VariantCopy) {
-  if (copy.route === '/lp-a') {
-    return {
-      accent: 'text-violet-200',
-      badge: 'border-violet-400/20 bg-violet-400/10 text-violet-200',
-      icon: 'text-violet-200',
-      iconBox: 'bg-violet-300 text-[#16091f]',
-      result: 'border-violet-400/20 bg-violet-400/10',
-    }
-  }
+  void copy
 
   return {
-    accent: 'text-cyan-200',
-    badge: 'border-cyan-400/20 bg-cyan-400/10 text-cyan-200',
-    icon: 'text-cyan-200',
-    iconBox: 'bg-cyan-300 text-[#061218]',
-    result: 'border-cyan-400/20 bg-cyan-400/10',
+    accent: 'text-violet-200',
+    badge: 'border-violet-400/20 bg-violet-400/10 text-violet-200',
+    icon: 'text-violet-200',
+    iconBox: 'bg-violet-300 text-[#16091f]',
+    result: 'border-violet-400/20 bg-violet-400/10',
   }
 }
 
@@ -185,7 +180,9 @@ function OttoLandingExperimentPage({ copy }: { copy: VariantCopy }) {
             </Link>
             <nav className="hidden items-center gap-6 text-sm font-medium text-white/55 md:flex">
               <a href="#produto">Produto</a>
+              <a href="#areas">Areas</a>
               <a href="#workflow">Workflow</a>
+              <a href="#implantacao">Implantacao</a>
               <a href="#seguranca">Seguranca</a>
             </nav>
           </header>
@@ -243,6 +240,29 @@ function OttoLandingExperimentPage({ copy }: { copy: VariantCopy }) {
         </div>
       </section>
 
+      <section id="areas" className="border-b border-white/10 bg-[#080808] px-6 py-16 sm:px-8">
+        <div className="mx-auto grid max-w-[1180px] gap-10 lg:grid-cols-[0.85fr_1.15fr]">
+          <div>
+            <p className={`text-sm font-semibold uppercase ${theme.accent}`}>Areas da empresa</p>
+            <p className={`mt-4 max-w-[520px] font-semibold text-white ${responsiveSectionTitleClassName}`} style={sectionTitleStyle}>
+              Comece pelo financeiro ou pela operacao e expanda conforme a empresa ganha ritmo.
+            </p>
+            <p className="mt-5 text-base leading-7 text-white/60">
+              Otto foi desenhado para PMEs que precisam tirar trabalho manual da equipe sem contratar mais sistemas.
+            </p>
+          </div>
+          <div className={`${mobileCarouselTrackClassName} lg:grid-cols-2`} aria-label="Areas atendidas">
+            {departmentCards.map((card) => (
+              <article key={card.title} className={`${mobileCarouselCardClassName} rounded-[28px] border border-white/10 bg-white/[0.04] p-5`}>
+                <Brain size={18} strokeWidth={1.5} className={theme.icon} />
+                <p className="mt-5 font-semibold text-white" style={cardTitleStyle}>{card.title}</p>
+                <p className="mt-2 text-sm leading-6 text-white/58">{card.description}</p>
+              </article>
+            ))}
+          </div>
+        </div>
+      </section>
+
       <section id="workflow" className="border-b border-white/10 bg-[#0a0a0b] px-6 py-16 sm:px-8">
         <div className="mx-auto grid max-w-[1180px] gap-8 lg:grid-cols-[1.05fr_0.95fr]">
           <div className="rounded-[32px] border border-white/10 bg-[#111114] p-5">
@@ -273,7 +293,29 @@ function OttoLandingExperimentPage({ copy }: { copy: VariantCopy }) {
         </div>
       </section>
 
-      <section id="seguranca" className="bg-[#040404] px-6 py-16 sm:px-8">
+      <section id="implantacao" className="border-b border-white/10 bg-[#040404] px-6 py-16 sm:px-8">
+        <div className="mx-auto grid max-w-[1180px] gap-10 lg:grid-cols-[0.9fr_1.1fr]">
+          <div>
+            <p className={`text-sm font-semibold uppercase ${theme.accent}`}>Implantacao</p>
+            <p className={`mt-4 max-w-[540px] font-semibold text-white ${responsiveSectionTitleClassName}`} style={sectionTitleStyle}>
+              Coloque o primeiro funcionario de IA para trabalhar em uma rotina especifica.
+            </p>
+          </div>
+          <div className={`${mobileCarouselTrackClassName} lg:grid-cols-2`} aria-label="Etapas de implantacao">
+            {rolloutSteps.map((step, index) => (
+              <article key={step.title} className={`${mobileCarouselCardClassName} rounded-[28px] border border-white/10 bg-white/[0.04] p-5`}>
+                <span className={`grid size-8 place-items-center rounded-full text-sm font-semibold ${theme.iconBox}`}>
+                  {index + 1}
+                </span>
+                <p className="mt-5 font-semibold text-white" style={cardTitleStyle}>{step.title}</p>
+                <p className="mt-2 text-sm leading-6 text-white/58">{step.description}</p>
+              </article>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <section id="seguranca" className="border-b border-white/10 bg-[#080808] px-6 py-16 sm:px-8">
         <div className="mx-auto grid max-w-[1180px] gap-10 lg:grid-cols-[0.8fr_1.2fr]">
           <div>
             <div className={`mb-5 grid size-12 place-items-center rounded-3xl border ${theme.result}`}>
@@ -297,14 +339,46 @@ function OttoLandingExperimentPage({ copy }: { copy: VariantCopy }) {
           </div>
         </div>
       </section>
+
+      <section id="resultados" className="bg-[#040404] px-6 py-16 sm:px-8">
+        <div className="mx-auto grid max-w-[1180px] gap-10 lg:grid-cols-[0.95fr_1.05fr]">
+          <div>
+            <p className={`text-sm font-semibold uppercase ${theme.accent}`}>Resultados</p>
+            <p className={`mt-4 max-w-[540px] font-semibold text-white ${responsiveSectionTitleClassName}`} style={sectionTitleStyle}>
+              Menos operacao manual. Mais clareza sobre o que esta acontecendo no negocio.
+            </p>
+            <div className="mt-8 flex flex-wrap gap-3">
+              <Link
+                href="/integracoes"
+                className="inline-flex min-h-11 items-center gap-2 rounded-full bg-white px-5 py-3 text-sm font-semibold text-[#040404]"
+              >
+                Conectar minha empresa
+                <ArrowRight size={18} strokeWidth={1.5} />
+              </Link>
+              <Link
+                href="/sign-up"
+                className="inline-flex min-h-11 items-center gap-2 rounded-full border border-white/15 bg-white/5 px-5 py-3 text-sm font-semibold text-white"
+              >
+                Criar conta
+                <ArrowRight size={18} strokeWidth={1.5} />
+              </Link>
+            </div>
+          </div>
+          <div className={`${mobileCarouselTrackClassName} lg:grid-cols-3`} aria-label="Resultados esperados">
+            {resultCards.map((card) => (
+              <article key={card.title} className={`${mobileCarouselCardClassName} rounded-[28px] border border-white/10 bg-white/[0.04] p-5`}>
+                <Check size={18} strokeWidth={1.5} className={theme.icon} />
+                <p className="mt-5 font-semibold text-white" style={cardTitleStyle}>{card.title}</p>
+                <p className="mt-2 text-sm leading-6 text-white/58">{card.description}</p>
+              </article>
+            ))}
+          </div>
+        </div>
+      </section>
     </main>
   )
 }
 
 export function OttoLandingPageVariantA() {
   return <OttoLandingExperimentPage copy={variantA} />
-}
-
-export function OttoLandingPageVariantB() {
-  return <OttoLandingExperimentPage copy={variantB} />
 }
