@@ -318,6 +318,7 @@ function IPhoneMockupCompactDemo() {
   const screenHeight = iphoneMockupHeight - iphoneFramePadding * 2
   const chatGptScale = screenWidth / 1080
   const chatGptHeight = 1920 * chatGptScale
+  const chatGptTop = 18
 
   return (
     <div
@@ -351,7 +352,7 @@ function IPhoneMockupCompactDemo() {
                 height: chatGptHeight,
                 left: '50%',
                 position: 'absolute',
-                top: (screenHeight - chatGptHeight) / 2,
+                top: chatGptTop,
                 transform: 'translateX(-50%)',
                 width: screenWidth,
               }}
