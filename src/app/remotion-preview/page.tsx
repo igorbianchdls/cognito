@@ -245,10 +245,12 @@ function DeviceFramesDemo() {
 }
 
 function IPhoneMockupOnlyDemo() {
-  const chatGptScale = 0.47
-  const screenWidth = 430 - Math.max(10, Math.round(430 * 0.032)) * 2
-  const screenHeight = 932 - Math.max(10, Math.round(430 * 0.032)) * 2
-  const chatGptScaleX = screenWidth / (1080 * chatGptScale)
+  const iphoneMockupWidth = 540
+  const iphoneMockupHeight = 932
+  const iphoneFramePadding = Math.max(10, Math.round(iphoneMockupWidth * 0.032))
+  const screenWidth = iphoneMockupWidth - iphoneFramePadding * 2
+  const screenHeight = iphoneMockupHeight - iphoneFramePadding * 2
+  const chatGptScale = Math.min(screenWidth / 1080, screenHeight / 1920)
 
   return (
     <div
@@ -267,7 +269,7 @@ function IPhoneMockupOnlyDemo() {
     >
       <div style={{ background: `radial-gradient(circle at 50% 45%, ${theme.accent}28, rgba(255,255,255,0) 56%)`, inset: -120, position: 'absolute' }} />
       <div style={{ position: 'relative' }}>
-        <IPhoneMockupFrame scale={1.68} screenStyle={{ background: '#ffffff' }}>
+        <IPhoneMockupFrame height={iphoneMockupHeight} scale={1.68} screenStyle={{ background: '#ffffff' }} width={iphoneMockupWidth}>
           <div
             style={{
               background: '#ffffff',
@@ -293,7 +295,7 @@ function IPhoneMockupOnlyDemo() {
                   left: 0,
                   position: 'absolute',
                   top: 0,
-                  transform: `scale(${chatGptScale}) scaleX(${chatGptScaleX})`,
+                  transform: `scale(${chatGptScale})`,
                   transformOrigin: 'top left',
                   width: 1080,
                 }}
@@ -1874,9 +1876,9 @@ const catalog: CatalogItem[] = [
     value: 'device-frames',
   },
   {
-    code: '<IPhoneMockupFrame scale={1.68}><ChatGptMobileAnimation /></IPhoneMockupFrame>',
+    code: '<IPhoneMockupFrame width={540} height={932} scale={1.68}><ChatGptMobileAnimation /></IPhoneMockupFrame>',
     component: IPhoneMockupOnlyDemo,
-    description: 'Composição vertical com a animação mobile do ChatGPT dentro do iPhone.',
+    description: 'Composição vertical com a animação mobile do ChatGPT em um iPhone ajustado para viewport 9:16.',
     duration: MCP_SINGLE_ANIMATION_DURATION,
     height: 1920,
     kind: 'Componentes',
