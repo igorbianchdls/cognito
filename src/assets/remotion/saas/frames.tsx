@@ -112,6 +112,176 @@ export function TabletFrame({ children, style, theme }: { children: ReactNode; s
   )
 }
 
+export type IPhoneMockupFrameProps = {
+  children: ReactNode
+  height?: number
+  scale?: number
+  screenStyle?: CSSProperties
+  showHomeIndicator?: boolean
+  showIsland?: boolean
+  style?: CSSProperties
+  width?: number
+}
+
+export function IPhoneMockupFrame({
+  children,
+  height = 932,
+  scale = 1,
+  screenStyle,
+  showHomeIndicator = true,
+  showIsland = true,
+  style,
+  width = 430,
+}: IPhoneMockupFrameProps) {
+  const framePadding = Math.max(10, Math.round(width * 0.032))
+  const bodyRadius = Math.round(width * 0.15)
+  const screenRadius = Math.max(32, bodyRadius - framePadding)
+  const islandWidth = Math.round(width * 0.31)
+  const islandHeight = Math.max(28, Math.round(width * 0.08))
+  const homeIndicatorWidth = Math.round(width * 0.34)
+
+  return (
+    <div
+      style={{
+        height: height * scale,
+        position: 'relative',
+        width: width * scale,
+        ...style,
+      }}
+    >
+      <div
+        style={{
+          height,
+          left: 0,
+          position: 'absolute',
+          top: 0,
+          transform: `scale(${scale})`,
+          transformOrigin: 'top left',
+          width,
+        }}
+      >
+        <span
+          style={{
+            background: '#1b1f24',
+            borderRadius: 999,
+            boxShadow: 'inset 1px 0 1px rgba(255,255,255,0.18)',
+            height: Math.round(height * 0.09),
+            left: -5,
+            position: 'absolute',
+            top: Math.round(height * 0.17),
+            width: 6,
+            zIndex: 1,
+          }}
+        />
+        <span
+          style={{
+            background: '#1b1f24',
+            borderRadius: 999,
+            boxShadow: 'inset 1px 0 1px rgba(255,255,255,0.18)',
+            height: Math.round(height * 0.06),
+            left: -5,
+            position: 'absolute',
+            top: Math.round(height * 0.29),
+            width: 6,
+            zIndex: 1,
+          }}
+        />
+        <span
+          style={{
+            background: '#1b1f24',
+            borderRadius: 999,
+            boxShadow: 'inset -1px 0 1px rgba(255,255,255,0.16)',
+            height: Math.round(height * 0.12),
+            position: 'absolute',
+            right: -5,
+            top: Math.round(height * 0.23),
+            width: 6,
+            zIndex: 1,
+          }}
+        />
+
+        <div
+          style={{
+            background: 'linear-gradient(145deg, #343a42 0%, #11161c 34%, #05070a 68%, #222831 100%)',
+            border: '1px solid rgba(255,255,255,0.18)',
+            borderRadius: bodyRadius,
+            boxShadow: '0 42px 110px rgba(10, 14, 20, 0.34), inset 0 0 0 2px rgba(255,255,255,0.08), inset 0 0 18px rgba(255,255,255,0.10)',
+            boxSizing: 'border-box',
+            height: '100%',
+            overflow: 'hidden',
+            padding: framePadding,
+            position: 'relative',
+            width: '100%',
+            zIndex: 2,
+          }}
+        >
+          <div
+            style={{
+              background: '#ffffff',
+              borderRadius: screenRadius,
+              boxShadow: 'inset 0 0 0 1px rgba(255,255,255,0.10)',
+              height: '100%',
+              overflow: 'hidden',
+              position: 'relative',
+              width: '100%',
+              ...screenStyle,
+            }}
+          >
+            {children}
+          </div>
+
+          {showIsland ? (
+            <div
+              style={{
+                background: '#050505',
+                borderRadius: 999,
+                boxShadow: '0 2px 5px rgba(255,255,255,0.12), inset 0 0 0 1px rgba(255,255,255,0.06)',
+                height: islandHeight,
+                left: '50%',
+                position: 'absolute',
+                top: framePadding + Math.max(10, Math.round(width * 0.026)),
+                transform: 'translateX(-50%)',
+                width: islandWidth,
+                zIndex: 4,
+              }}
+            />
+          ) : null}
+
+          {showHomeIndicator ? (
+            <div
+              style={{
+                background: 'rgba(5, 5, 5, 0.86)',
+                borderRadius: 999,
+                bottom: framePadding + Math.max(8, Math.round(width * 0.024)),
+                height: Math.max(5, Math.round(width * 0.012)),
+                left: '50%',
+                position: 'absolute',
+                transform: 'translateX(-50%)',
+                width: homeIndicatorWidth,
+                zIndex: 4,
+              }}
+            />
+          ) : null}
+
+          <div
+            style={{
+              border: '1px solid rgba(255,255,255,0.18)',
+              borderRadius: bodyRadius - 1,
+              bottom: 1,
+              left: 1,
+              pointerEvents: 'none',
+              position: 'absolute',
+              right: 1,
+              top: 1,
+              zIndex: 5,
+            }}
+          />
+        </div>
+      </div>
+    </div>
+  )
+}
+
 export function FloatingScreenshot({
   children,
   active = false,

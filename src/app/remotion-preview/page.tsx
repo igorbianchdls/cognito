@@ -125,6 +125,7 @@ import {
   InboxTriageMock,
   IntegrationHubMock,
   InstagramPostMock,
+  IPhoneMockupFrame,
   KanbanMock,
   ledgerAIIntroConfig,
   LoadingToSuccess,
@@ -133,7 +134,6 @@ import {
   MetricCard,
   MouseClick,
   NumberTicker,
-  PhoneFrame,
   PromptInputHeroMock,
   ProgressBar,
   ProgressRing,
@@ -236,9 +236,9 @@ function DeviceFramesDemo() {
         <TabletFrame style={{ height: 430, width: 650 }} theme={theme}>
           <DashboardMock metrics={metrics} screen={productScreens[1]} theme={theme} />
         </TabletFrame>
-        <PhoneFrame style={{ height: 500, width: 250 }} theme={theme}>
+        <IPhoneMockupFrame scale={0.58} screenStyle={{ background: theme.panel }}>
           <InboxTriageMock theme={theme} />
-        </PhoneFrame>
+        </IPhoneMockupFrame>
       </div>
     </DemoStage>
   )
@@ -1801,12 +1801,12 @@ const catalog: CatalogItem[] = [
     value: 'browser-frame',
   },
   {
-    code: '<PhoneFrame theme={theme}>...</PhoneFrame>\n<TabletFrame theme={theme}>...</TabletFrame>',
+    code: '<IPhoneMockupFrame scale={0.58}>...</IPhoneMockupFrame>\n<TabletFrame theme={theme}>...</TabletFrame>',
     component: DeviceFramesDemo,
-    description: 'Frames de phone/tablet para demos responsivas.',
+    description: 'Frames de tablet e iPhone para demos responsivas.',
     kind: 'Componentes',
     label: 'Device Frames',
-    tags: ['Device', 'Mobile', 'Responsive'],
+    tags: ['Device', 'iPhone', 'Responsive'],
     value: 'device-frames',
   },
   {
