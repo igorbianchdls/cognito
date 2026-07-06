@@ -245,6 +245,8 @@ function DeviceFramesDemo() {
 }
 
 function IPhoneMockupOnlyDemo() {
+  const chatGptScale = 0.47
+
   return (
     <div
       style={{
@@ -262,19 +264,40 @@ function IPhoneMockupOnlyDemo() {
     >
       <div style={{ background: `radial-gradient(circle at 50% 45%, ${theme.accent}28, rgba(255,255,255,0) 56%)`, inset: -120, position: 'absolute' }} />
       <div style={{ position: 'relative' }}>
-        <IPhoneMockupFrame scale={1.68} screenStyle={{ background: '#F7FAF8' }}>
+        <IPhoneMockupFrame scale={1.68} screenStyle={{ background: '#ffffff' }}>
           <div
             style={{
-              alignContent: 'center',
-              background: '#F7FAF8',
-              boxSizing: 'border-box',
-              display: 'grid',
+              background: '#ffffff',
               height: '100%',
-              padding: '96px 34px 70px',
+              overflow: 'hidden',
+              position: 'relative',
               width: '100%',
             }}
           >
-            <InboxTriageMock theme={theme} />
+            <div
+              style={{
+                height: 1920 * chatGptScale,
+                left: '50%',
+                position: 'absolute',
+                top: '50%',
+                transform: 'translate(-50%, -50%)',
+                width: 1080 * chatGptScale,
+              }}
+            >
+              <div
+                style={{
+                  height: 1920,
+                  left: 0,
+                  position: 'absolute',
+                  top: 0,
+                  transform: `scale(${chatGptScale})`,
+                  transformOrigin: 'top left',
+                  width: 1080,
+                }}
+              >
+                <ChatGptMobileAnimation />
+              </div>
+            </div>
           </div>
         </IPhoneMockupFrame>
       </div>
@@ -1848,13 +1871,14 @@ const catalog: CatalogItem[] = [
     value: 'device-frames',
   },
   {
-    code: '<IPhoneMockupFrame scale={1.68}>...</IPhoneMockupFrame>',
+    code: '<IPhoneMockupFrame scale={1.68}><ChatGptMobileAnimation /></IPhoneMockupFrame>',
     component: IPhoneMockupOnlyDemo,
-    description: 'Composição vertical com apenas o mockup de iPhone.',
+    description: 'Composição vertical com a animação mobile do ChatGPT dentro do iPhone.',
+    duration: MCP_SINGLE_ANIMATION_DURATION,
     height: 1920,
     kind: 'Componentes',
     label: 'iPhone Mockup',
-    tags: ['Device', 'iPhone', 'Vertical'],
+    tags: ['Device', 'iPhone', 'ChatGPT', 'Vertical'],
     value: 'iphone-mockup',
     width: 1080,
   },
