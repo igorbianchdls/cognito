@@ -2,7 +2,7 @@
 
 import { Player } from '@remotion/player'
 import { interpolate, useCurrentFrame } from 'remotion'
-import type { ComponentType, ReactNode } from 'react'
+import type { ComponentType, CSSProperties, ReactNode } from 'react'
 import { useMemo, useState } from 'react'
 
 import {
@@ -304,6 +304,164 @@ function IPhoneMockupOnlyDemo() {
               </div>
             </div>
           </div>
+        </IPhoneMockupFrame>
+      </div>
+    </div>
+  )
+}
+
+function compactChatProgress(frame: number, start: number, end: number) {
+  return interpolate(frame, [start, end], [0, 1], {
+    extrapolateLeft: 'clamp',
+    extrapolateRight: 'clamp',
+  })
+}
+
+function compactChatSequenceStyle(frame: number, start: number, fromY = 10) {
+  const opacity = compactChatProgress(frame, start, start + 18)
+  const y = interpolate(frame, [start, start + 22], [fromY, 0], {
+    extrapolateLeft: 'clamp',
+    extrapolateRight: 'clamp',
+  })
+
+  return {
+    opacity,
+    transform: `translateY(${y}px)`,
+  }
+}
+
+function CompactChatActionRow({ style }: { style?: CSSProperties }) {
+  return (
+    <div style={{ ...style, alignItems: 'center', color: '#6b6b6b', display: 'flex', fontSize: 18, gap: 18, paddingLeft: 16 }}>
+      {['copy', 'sound', 'up', 'down', 'share', 'more'].map((label) => (
+        <span key={label} style={{ background: '#ededed', borderRadius: 999, display: 'block', height: 7, width: label === 'more' ? 22 : 18 }} />
+      ))}
+    </div>
+  )
+}
+
+function CompactChatUserBubble({ children, style }: { children: ReactNode; style: CSSProperties }) {
+  return (
+    <div style={{ ...style, display: 'flex', justifyContent: 'flex-end', paddingRight: 16 }}>
+      <div
+        style={{
+          background: '#f1f1f1',
+          borderRadius: 28,
+          color: '#111111',
+          fontSize: 17,
+          fontWeight: 430,
+          lineHeight: 1.2,
+          maxWidth: 276,
+          padding: '13px 17px',
+        }}
+      >
+        {children}
+      </div>
+    </div>
+  )
+}
+
+function CompactChatAssistantText({ children, showHeader = true, style }: { children: ReactNode; showHeader?: boolean; style: CSSProperties }) {
+  return (
+    <div
+      style={{
+        ...style,
+        color: '#111111',
+        fontSize: 17,
+        fontWeight: 430,
+        lineHeight: 1.34,
+        padding: '0 18px',
+      }}
+    >
+      {showHeader ? (
+        <div style={{ alignItems: 'center', color: '#8a8a8a', display: 'flex', fontSize: 13, fontWeight: 680, gap: 7, marginBottom: 8 }}>
+          <span style={{ display: 'grid', gap: 2, gridTemplateColumns: 'repeat(2, 5px)' }}>
+            {[0, 1, 2, 3].map((dot) => (
+              <span key={dot} style={{ background: dot === 1 ? '#8aa895' : '#225f42', borderRadius: 1.5, display: 'block', height: 5, width: 5 }} />
+            ))}
+          </span>
+          Otto
+        </div>
+      ) : null}
+      {children}
+    </div>
+  )
+}
+
+function ChatGptMobileCompactAnimation() {
+  const frame = useCurrentFrame()
+  const conversationY = interpolate(frame, [0, 210, 330, 470], [0, 0, -68, -132], {
+    extrapolateLeft: 'clamp',
+    extrapolateRight: 'clamp',
+  })
+
+  return (
+    <div style={{ background: '#ffffff', color: '#111111', fontFamily: 'Inter, Arial, sans-serif', height: '100%', overflow: 'hidden', position: 'relative', width: '100%' }}>
+      <div style={{ color: '#050505', fontSize: 15, fontWeight: 760, left: 28, letterSpacing: 0, lineHeight: 1, position: 'absolute', top: 16 }}>18:07</div>
+      <div style={{ alignItems: 'center', display: 'flex', gap: 5, position: 'absolute', right: 28, top: 15 }}>
+        <span style={{ background: '#050505', borderRadius: 2, display: 'block', height: 9, width: 18 }} />
+        <span style={{ border: '1.5px solid #050505', borderRadius: 3, display: 'block', height: 10, width: 20 }} />
+      </div>
+
+      <div style={{ borderBottom: '1px solid #eeeeee', height: 126, left: 0, position: 'absolute', right: 0, top: 0 }} />
+      <div style={{ color: '#555555', fontSize: 27, fontWeight: 520, left: 24, lineHeight: 1, position: 'absolute', top: 75 }}>☰</div>
+      <div style={{ color: '#111111', fontSize: 24, fontWeight: 700, left: 88, lineHeight: 1, position: 'absolute', top: 77 }}>ChatGPT</div>
+      <div style={{ color: '#555555', fontSize: 26, fontWeight: 520, position: 'absolute', right: 72, top: 73 }}>□</div>
+      <div style={{ color: '#555555', fontSize: 28, fontWeight: 700, position: 'absolute', right: 25, top: 70 }}>…</div>
+
+      <div style={{ bottom: 132, left: 0, overflow: 'hidden', position: 'absolute', right: 0, top: 126 }}>
+        <div style={{ display: 'grid', gap: 20, padding: '18px 0 420px', transform: `translateY(${conversationY}px)` }}>
+          <CompactChatUserBubble style={compactChatSequenceStyle(frame, 12, 10)}>
+            Crie uma legenda para o lancamento
+          </CompactChatUserBubble>
+          <CompactChatAssistantText style={compactChatSequenceStyle(frame, 54, 10)}>
+            Claro. Vou deixar o texto curto, direto e pronto para postar.
+          </CompactChatAssistantText>
+          <CompactChatAssistantText style={compactChatSequenceStyle(frame, 112, 10)}>
+            Novo recurso no ar: conecte seus dados, acompanhe indicadores e transforme analises em acoes sem sair do chat.
+          </CompactChatAssistantText>
+          <CompactChatUserBubble style={compactChatSequenceStyle(frame, 210, 10)}>
+            Faca uma versao mais executiva
+          </CompactChatUserBubble>
+          <CompactChatAssistantText style={compactChatSequenceStyle(frame, 252, 10)}>
+            Seus dados operacionais agora viram decisoes em minutos. Financeiro, vendas e marketing no mesmo fluxo de trabalho.
+          </CompactChatAssistantText>
+          <CompactChatActionRow style={compactChatSequenceStyle(frame, 340, 8)} />
+        </div>
+      </div>
+
+      <div style={{ background: '#ffffff', bottom: 0, height: 132, left: 0, position: 'absolute', right: 0 }}>
+        <div style={{ alignItems: 'center', background: '#f1f1f1', borderRadius: 999, display: 'flex', height: 54, left: 24, position: 'absolute', right: 24, top: 9 }}>
+          <span style={{ color: '#333333', fontSize: 28, left: 18, lineHeight: 1, position: 'absolute', top: 12 }}>+</span>
+          <span style={{ color: '#8a8a8a', fontSize: 17, fontWeight: 430, left: 52, lineHeight: 1, position: 'absolute', top: 18 }}>Pergunte ao ChatGPT</span>
+          <span style={{ color: '#333333', fontSize: 22, position: 'absolute', right: 50, top: 16 }}>⌕</span>
+          <span style={{ background: '#007aff', borderRadius: 999, height: 38, position: 'absolute', right: 8, top: 8, width: 38 }} />
+        </div>
+      </div>
+    </div>
+  )
+}
+
+function IPhoneMockupCompactDemo() {
+  return (
+    <div
+      style={{
+        alignItems: 'center',
+        background: theme.background,
+        color: theme.text,
+        display: 'flex',
+        fontFamily: theme.fontFamily,
+        height: '100%',
+        justifyContent: 'center',
+        overflow: 'hidden',
+        position: 'relative',
+        width: '100%',
+      }}
+    >
+      <div style={{ background: `radial-gradient(circle at 50% 45%, ${theme.accent}28, rgba(255,255,255,0) 56%)`, inset: -120, position: 'absolute' }} />
+      <div style={{ position: 'relative' }}>
+        <IPhoneMockupFrame height={932} scale={1.68} screenStyle={{ background: '#ffffff' }} width={430}>
+          <ChatGptMobileCompactAnimation />
         </IPhoneMockupFrame>
       </div>
     </div>
@@ -1885,6 +2043,18 @@ const catalog: CatalogItem[] = [
     label: 'iPhone Mockup',
     tags: ['Device', 'iPhone', 'ChatGPT', 'Vertical'],
     value: 'iphone-mockup',
+    width: 1080,
+  },
+  {
+    code: '<IPhoneMockupFrame width={430} height={932} scale={1.68}><ChatGptMobileCompactAnimation /></IPhoneMockupFrame>',
+    component: IPhoneMockupCompactDemo,
+    description: 'Composição vertical com o mockup antigo de iPhone e ChatGPT redesenhado para tela estreita.',
+    duration: MCP_SINGLE_ANIMATION_DURATION,
+    height: 1920,
+    kind: 'Componentes',
+    label: 'iPhone Mockup Compact',
+    tags: ['Device', 'iPhone', 'ChatGPT', 'Compact'],
+    value: 'iphone-mockup-compact',
     width: 1080,
   },
   {
