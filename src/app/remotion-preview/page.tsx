@@ -246,6 +246,9 @@ function DeviceFramesDemo() {
 
 function IPhoneMockupOnlyDemo() {
   const chatGptScale = 0.47
+  const screenWidth = 430 - Math.max(10, Math.round(430 * 0.032)) * 2
+  const screenHeight = 932 - Math.max(10, Math.round(430 * 0.032)) * 2
+  const chatGptScaleX = screenWidth / (1080 * chatGptScale)
 
   return (
     <div
@@ -276,12 +279,12 @@ function IPhoneMockupOnlyDemo() {
           >
             <div
               style={{
-                height: 1920 * chatGptScale,
+                height: screenHeight,
                 left: '50%',
                 position: 'absolute',
                 top: '50%',
                 transform: 'translate(-50%, -50%)',
-                width: 1080 * chatGptScale,
+                width: screenWidth,
               }}
             >
               <div
@@ -290,7 +293,7 @@ function IPhoneMockupOnlyDemo() {
                   left: 0,
                   position: 'absolute',
                   top: 0,
-                  transform: `scale(${chatGptScale})`,
+                  transform: `scale(${chatGptScale}) scaleX(${chatGptScaleX})`,
                   transformOrigin: 'top left',
                   width: 1080,
                 }}
