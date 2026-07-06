@@ -244,6 +244,44 @@ function DeviceFramesDemo() {
   )
 }
 
+function IPhoneMockupOnlyDemo() {
+  return (
+    <div
+      style={{
+        alignItems: 'center',
+        background: theme.background,
+        color: theme.text,
+        display: 'flex',
+        fontFamily: theme.fontFamily,
+        height: '100%',
+        justifyContent: 'center',
+        overflow: 'hidden',
+        position: 'relative',
+        width: '100%',
+      }}
+    >
+      <div style={{ background: `radial-gradient(circle at 50% 45%, ${theme.accent}28, rgba(255,255,255,0) 56%)`, inset: -120, position: 'absolute' }} />
+      <div style={{ position: 'relative' }}>
+        <IPhoneMockupFrame scale={1.68} screenStyle={{ background: '#F7FAF8' }}>
+          <div
+            style={{
+              alignContent: 'center',
+              background: '#F7FAF8',
+              boxSizing: 'border-box',
+              display: 'grid',
+              height: '100%',
+              padding: '96px 34px 70px',
+              width: '100%',
+            }}
+          >
+            <InboxTriageMock theme={theme} />
+          </div>
+        </IPhoneMockupFrame>
+      </div>
+    </div>
+  )
+}
+
 function FloatingScreenshotDemo() {
   return (
     <DemoStage>
@@ -1808,6 +1846,17 @@ const catalog: CatalogItem[] = [
     label: 'Device Frames',
     tags: ['Device', 'iPhone', 'Responsive'],
     value: 'device-frames',
+  },
+  {
+    code: '<IPhoneMockupFrame scale={1.68}>...</IPhoneMockupFrame>',
+    component: IPhoneMockupOnlyDemo,
+    description: 'Composição vertical com apenas o mockup de iPhone.',
+    height: 1920,
+    kind: 'Componentes',
+    label: 'iPhone Mockup',
+    tags: ['Device', 'iPhone', 'Vertical'],
+    value: 'iphone-mockup',
+    width: 1080,
   },
   {
     code: '<FloatingScreenshot active label="Revenue" metric="+24%" theme={theme} />',
