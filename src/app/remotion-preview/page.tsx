@@ -104,6 +104,7 @@ import {
   OttoAssistantModelSwitcherCompatibility,
   OttoAssistantSplitScreenCompatibility,
 } from '@/assets/remotion/compositions/OttoAssistantCompatibility'
+import { OTTO_INTEGRATION_ACCESS_MAP_DURATION, OttoIntegrationAccessMap } from '@/assets/remotion/compositions/OttoIntegrationAccessMap'
 import { OTTO_LOGO_REVEAL_HORIZONTAL_DURATION, OttoLogoRevealHorizontal } from '@/assets/remotion/compositions/OttoLogoRevealHorizontal'
 import { TaskLauncherAnimation } from '@/assets/remotion/compositions/TaskLauncherAnimation'
 import {
@@ -2132,6 +2133,18 @@ const catalog: CatalogItem[] = [
     tags: ['Integrations', 'Stack', 'Sync'],
     value: 'marketing-integration-sync-stack',
     width: 1080,
+  },
+  {
+    code: '<OttoIntegrationAccessMap />',
+    component: OttoIntegrationAccessMap,
+    description: 'Mapa horizontal de integrações com acesso concedido e permissões bloqueadas pelo Otto.',
+    duration: OTTO_INTEGRATION_ACCESS_MAP_DURATION,
+    height: 720,
+    kind: 'Actions',
+    label: 'Otto Integration Access Map',
+    tags: ['Integrations', 'Permissions', 'Access', 'Otto'],
+    value: 'actions-otto-integration-access-map',
+    width: 1280,
   },
   {
     code: '<AuditLogMock events={events} theme={theme} />',
