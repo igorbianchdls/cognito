@@ -104,6 +104,7 @@ import {
   OttoAssistantModelSwitcherCompatibility,
   OttoAssistantSplitScreenCompatibility,
 } from '@/assets/remotion/compositions/OttoAssistantCompatibility'
+import { OTTO_ASSISTANT_CONNECTIONS_DURATION, OttoAssistantConnections } from '@/assets/remotion/compositions/OttoAssistantConnections'
 import { OTTO_AGENT_SCAN_DURATION, OttoAgentScan } from '@/assets/remotion/compositions/OttoAgentScan'
 import { OTTO_INTEGRATION_ACCESS_MAP_DURATION, OttoIntegrationAccessMap } from '@/assets/remotion/compositions/OttoIntegrationAccessMap'
 import { OTTO_LOGO_REVEAL_HORIZONTAL_DURATION, OttoLogoRevealHorizontal } from '@/assets/remotion/compositions/OttoLogoRevealHorizontal'
@@ -2139,13 +2140,25 @@ const catalog: CatalogItem[] = [
   {
     code: '<OttoIntegrationAccessMap />',
     component: OttoIntegrationAccessMap,
-    description: 'Simulacao da tela de integracoes do Otto com usuario conectado e permissoes da IA.',
+    description: 'Simulacao da tela de integracoes do Otto conectando Conta Azul, Bling e Meta Ads com modal e drawer.',
     duration: OTTO_INTEGRATION_ACCESS_MAP_DURATION,
     height: 720,
     kind: 'Actions',
     label: 'Otto Integration Access Map',
     tags: ['Integrations', 'Permissions', 'Access', 'Otto'],
     value: 'actions-otto-integration-access-map',
+    width: 1280,
+  },
+  {
+    code: '<OttoAssistantConnections />',
+    component: OttoAssistantConnections,
+    description: 'Fluxo de conexao do Otto com Claude, ChatGPT e Cursor usando cards, modal e drawer final.',
+    duration: OTTO_ASSISTANT_CONNECTIONS_DURATION,
+    height: 720,
+    kind: 'Actions',
+    label: 'Otto Assistant Connections',
+    tags: ['Assistants', 'Claude', 'ChatGPT', 'Cursor', 'Otto'],
+    value: 'actions-otto-assistant-connections',
     width: 1280,
   },
   {
