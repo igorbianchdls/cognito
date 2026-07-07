@@ -50,6 +50,15 @@ function OttoGlyph({ color = '#4D4D4D', size = 22 }: { color?: string; size?: nu
   )
 }
 
+function OttoIcon({ color = '#4D4D4D', size = 22 }: { color?: string; size?: number }) {
+  return (
+    <Img
+      src={staticFile('logoOttoIcon.svg')}
+      style={{ display: 'block', filter: color === '#ffffff' ? 'brightness(0) invert(1)' : undefined, height: size, objectFit: 'contain', width: size }}
+    />
+  )
+}
+
 function LineIcon({ name, size = 20 }: { name: string; size?: number }) {
   const common = { fill: 'none', stroke: 'currentColor', strokeLinecap: 'round' as const, strokeLinejoin: 'round' as const, strokeWidth: 1.9 }
   const paths: Record<string, ReactElement> = {
@@ -91,7 +100,7 @@ function Sidebar() {
   return (
     <aside style={{ background: '#FAFAFA', borderRight: `1px solid ${LINE}`, bottom: 0, left: 0, position: 'absolute', top: 0, width: 88 }}>
       <div style={{ alignItems: 'center', display: 'flex', height: 52, justifyContent: 'center' }}>
-        <OttoGlyph />
+        <OttoIcon />
       </div>
       <div style={{ display: 'grid', gap: 10, justifyItems: 'center', paddingTop: 18 }}>
         {navItems.map((item, index) => (
