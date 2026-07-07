@@ -1,5 +1,5 @@
 import type { ReactElement } from 'react'
-import { SiShopify } from '@icons-pack/react-simple-icons'
+import { SiGoogledrive, SiHubspot, SiNotion, SiSalesforce, SiShopify, SiSlack, SiWhatsapp } from '@icons-pack/react-simple-icons'
 import { AbsoluteFill, Easing, Img, interpolate, staticFile, useCurrentFrame } from 'remotion'
 import BlingIcon from '@/components/icons/BlingIcon'
 import ContaAzulIcon from '@/components/icons/ContaAzulIcon'
@@ -7,7 +7,7 @@ import GoogleAdsIcon from '@/components/icons/GoogleAdsIcon'
 import MetaIcon from '@/components/icons/MetaIcon'
 import OmieIcon from '@/components/icons/OmieIcon'
 
-export const OTTO_INTEGRATION_ACCESS_MAP_DURATION = 360
+export const OTTO_INTEGRATION_ACCESS_MAP_DURATION = 470
 
 const INK = '#17203A'
 const MUTED = '#647089'
@@ -31,27 +31,41 @@ const integrations = [
   { category: 'Ads', description: 'Campanhas, criativos, conjuntos de anuncios e resultados.', label: 'Meta Ads', logo: 'meta_ads', slug: 'meta_ads', tone: '#0866FF' },
   { category: 'Ads', description: 'Midia paga, conversoes, campanhas e palavras-chave.', label: 'Google Ads', logo: 'google_ads', slug: 'google_ads', tone: '#F59E0B' },
   { category: 'Ecommerce', description: 'Pedidos, catalogo, clientes e performance da loja.', label: 'Shopify', logo: 'shopify', slug: 'shopify', tone: '#95BF47' },
+  { category: 'Arquivos', description: 'Documentos, planilhas, PDFs e pastas compartilhadas.', label: 'Google Drive', logo: 'google_drive', slug: 'google_drive', tone: '#1A73E8' },
+  { category: 'Comunicacao', description: 'Canais, mensagens, arquivos e contexto das conversas.', label: 'Slack', logo: 'slack', slug: 'slack', tone: '#4A154B' },
+  { category: 'CRM', description: 'Empresas, contatos, deals e historico comercial.', label: 'HubSpot', logo: 'hubspot', slug: 'hubspot', tone: '#FF7A59' },
+  { category: 'CRM', description: 'Leads, oportunidades, contas e pipeline de vendas.', label: 'Salesforce', logo: 'salesforce', slug: 'salesforce', tone: '#00A1E0' },
+  { category: 'Workspace', description: 'Paginas, bancos de dados, tarefas e documentos internos.', label: 'Notion', logo: 'notion', slug: 'notion', tone: '#111111' },
+  { category: 'Comunicacao', description: 'Conversas, contatos e historico de atendimento.', label: 'WhatsApp', logo: 'whatsapp', slug: 'whatsapp', tone: '#25D366' },
 ] as const
 
 const sequence = [
-  { click: 32, confirm: 60, end: 76, index: 0, modalIn: 38, start: 24 },
-  { click: 80, confirm: 108, end: 124, index: 1, modalIn: 86, start: 72 },
-  { click: 128, confirm: 156, end: 172, index: 2, modalIn: 134, start: 120 },
-  { click: 176, confirm: 204, end: 220, index: 3, modalIn: 182, start: 168 },
-  { click: 224, confirm: 252, end: 268, index: 4, modalIn: 230, start: 216 },
-  { click: 272, confirm: 300, end: 316, index: 5, modalIn: 278, start: 264 },
+  { click: 132, confirm: 160, end: 176, index: 0, modalIn: 138, start: 124 },
+  { click: 180, confirm: 208, end: 224, index: 1, modalIn: 186, start: 172 },
+  { click: 228, confirm: 256, end: 272, index: 2, modalIn: 234, start: 220 },
+  { click: 276, confirm: 304, end: 320, index: 3, modalIn: 282, start: 268 },
+  { click: 324, confirm: 352, end: 368, index: 4, modalIn: 330, start: 316 },
+  { click: 372, confirm: 400, end: 416, index: 5, modalIn: 378, start: 364 },
 ]
 
 const buttonTargets = [
-  { x: 418, y: 408 },
-  { x: 764, y: 408 },
-  { x: 1108, y: 408 },
-  { x: 418, y: 642 },
-  { x: 764, y: 642 },
-  { x: 1108, y: 642 },
+  { x: 423, y: 428 },
+  { x: 769, y: 428 },
+  { x: 1113, y: 428 },
+  { x: 423, y: 664 },
+  { x: 769, y: 664 },
+  { x: 1113, y: 664 },
 ]
 
 const modalConfirmTarget = { x: 762, y: 452 }
+
+function listScrollOffset(frame: number) {
+  return interpolate(frame, [18, 56, 78, 108], [0, -470, -470, 0], {
+    easing: Easing.bezier(0.22, 1, 0.36, 1),
+    extrapolateLeft: 'clamp',
+    extrapolateRight: 'clamp',
+  })
+}
 
 function progress(frame: number, start: number, end: number) {
   return interpolate(frame, [start, end], [0, 1], {
@@ -167,7 +181,13 @@ function ProviderMark({ integration, size = 56 }: { integration: typeof integrat
     if (integration.logo === 'omie') return <OmieIcon className={commonClass} />
     if (integration.logo === 'meta_ads') return <MetaIcon className={commonClass} />
     if (integration.logo === 'google_ads') return <GoogleAdsIcon className={commonClass} />
-    return <SiShopify size={size >= 56 ? 34 : 30} color="default" title="Shopify logo" />
+    if (integration.logo === 'shopify') return <SiShopify size={size >= 56 ? 34 : 30} color="default" title="Shopify logo" />
+    if (integration.logo === 'google_drive') return <SiGoogledrive size={size >= 56 ? 34 : 30} color="default" title="Google Drive logo" />
+    if (integration.logo === 'slack') return <SiSlack size={size >= 56 ? 34 : 30} color="default" title="Slack logo" />
+    if (integration.logo === 'hubspot') return <SiHubspot size={size >= 56 ? 34 : 30} color="default" title="HubSpot logo" />
+    if (integration.logo === 'salesforce') return <SiSalesforce size={size >= 56 ? 34 : 30} color="default" title="Salesforce logo" />
+    if (integration.logo === 'notion') return <SiNotion size={size >= 56 ? 34 : 30} color="default" title="Notion logo" />
+    return <SiWhatsapp size={size >= 56 ? 34 : 30} color="default" title="WhatsApp logo" />
   })()
 
   return (
@@ -196,8 +216,8 @@ function StatPanel() {
   const connected = connectedCount(frame)
   const values = [
     { label: 'Conectadas', value: connected, color: GREEN },
-    { label: 'Disponiveis', value: 6, color: '#2563EB' },
-    { label: 'Pendentes', value: Math.max(0, 6 - connected), color: '#A16207' },
+    { label: 'Disponiveis', value: integrations.length, color: '#2563EB' },
+    { label: 'Pendentes', value: Math.max(0, integrations.length - connected), color: '#A16207' },
   ]
 
   return (
@@ -328,8 +348,8 @@ function modalStep(frame: number) {
 function Cursor() {
   const frame = useCurrentFrame()
   const points = [
-    { frame: 0, x: 640, y: 610 },
-    { frame: 18, x: buttonTargets[0].x, y: buttonTargets[0].y },
+    { frame: 108, x: 640, y: 610 },
+    { frame: 120, x: buttonTargets[0].x, y: buttonTargets[0].y },
     ...sequence.flatMap((step, index) => {
       const card = buttonTargets[step.index]
       const next = sequence[index + 1] ? buttonTargets[sequence[index + 1].index] : { x: 1050, y: 604 }
@@ -351,7 +371,7 @@ function Cursor() {
   const click = Math.max(cardClick, confirmClick)
 
   return (
-    <div style={{ filter: 'drop-shadow(0 10px 12px rgba(0,0,0,0.22))', left: x, opacity: progress(frame, 16, 28) * (1 - progress(frame, 320, 336)), position: 'absolute', top: y, transform: `scale(${1 - click * 0.1})` }}>
+    <div style={{ filter: 'drop-shadow(0 10px 12px rgba(0,0,0,0.22))', left: x, opacity: progress(frame, 110, 122) * (1 - progress(frame, 420, 438)), position: 'absolute', top: y, transform: `scale(${1 - click * 0.1})` }}>
       <svg height="50" viewBox="0 0 84 84" width="50">
         <path d="M16 9 L73 33 L48 42 L37 70 Z" fill="#1F2937" stroke="#ffffff" strokeLinejoin="round" strokeWidth="4" />
       </svg>
@@ -434,8 +454,8 @@ function InfoBox({ label, value }: { label: string; value: string }) {
 function ConnectionDrawer() {
   const frame = useCurrentFrame()
   const integration = integrations[5]
-  const enter = progress(frame, 322, 342)
-  const pulse = Math.max(0, Math.sin(frame / 5)) * progress(frame, 334, 356)
+  const enter = progress(frame, 424, 444)
+  const pulse = Math.max(0, Math.sin(frame / 5)) * progress(frame, 436, 466)
 
   return (
     <div
@@ -483,17 +503,17 @@ function ConnectionDrawer() {
                 Otto pode consultar pedidos, clientes e catalogo desta conexao.
               </div>
             </div>
-            <Toggle delay={334} />
+            <Toggle delay={436} />
           </div>
           <div style={{ alignItems: 'center', borderTop: `1px solid ${LINE}`, display: 'flex', justifyContent: 'space-between', marginTop: 17, paddingTop: 15 }}>
             <span style={{ color: '#475569', fontSize: 12.5, fontWeight: 700 }}>Exigir confirmacao</span>
-            <Toggle delay={340} />
+            <Toggle delay={442} />
           </div>
         </section>
         <section style={{ background: '#FAFBFD', border: `1px solid ${LINE}`, borderRadius: 16, padding: 18 }}>
           <div style={{ color: INK, fontSize: 14, fontWeight: 760, marginBottom: 12 }}>Dados sincronizados</div>
           {['Pedidos', 'Clientes', 'Produtos', 'Performance da loja'].map((item, index) => (
-            <div key={item} style={{ alignItems: 'center', color: '#475569', display: 'flex', fontSize: 12.5, fontWeight: 650, gap: 9, marginTop: index ? 10 : 0, opacity: progress(frame, 334 + index * 4, 348 + index * 4) }}>
+            <div key={item} style={{ alignItems: 'center', color: '#475569', display: 'flex', fontSize: 12.5, fontWeight: 650, gap: 9, marginTop: index ? 10 : 0, opacity: progress(frame, 436 + index * 4, 450 + index * 4) }}>
               <span style={{ alignItems: 'center', background: '#DCFCE7', borderRadius: 999, color: GREEN, display: 'flex', height: 18, justifyContent: 'center', width: 18 }}>
                 <LineIcon name="check" size={12} />
               </span>
@@ -509,7 +529,9 @@ function ConnectionDrawer() {
 export function OttoIntegrationAccessMap() {
   const frame = useCurrentFrame()
   const appEnter = progress(frame, 0, 18)
-  const drawerShift = progress(frame, 322, 342)
+  const drawerShift = progress(frame, 424, 444)
+  const scrollOffset = listScrollOffset(frame)
+  const scrollAmount = Math.abs(scrollOffset) / 470
 
   return (
     <AbsoluteFill style={{ background: '#F4F6FA', color: INK, fontFamily: 'Inter, Arial, Helvetica, sans-serif', overflow: 'hidden' }}>
@@ -543,11 +565,18 @@ export function OttoIntegrationAccessMap() {
               Buscar integracao
             </div>
           </div>
-          <StatPanel />
-          <div style={{ display: 'grid', gap: 16, gridTemplateColumns: 'repeat(3, 1fr)' }}>
-            {integrations.map((integration, index) => (
-              <IntegrationCard index={index} integration={integration} key={integration.label} />
-            ))}
+          <div style={{ bottom: 0, left: 34, overflow: 'hidden', position: 'absolute', right: 34, top: 126 }}>
+            <div style={{ transform: `translateY(${scrollOffset}px)` }}>
+              <StatPanel />
+              <div style={{ display: 'grid', gap: 16, gridTemplateColumns: 'repeat(3, 1fr)' }}>
+                {integrations.map((integration, index) => (
+                  <IntegrationCard index={index} integration={integration} key={integration.label} />
+                ))}
+              </div>
+            </div>
+            <div style={{ background: '#EEF2F7', borderRadius: 999, bottom: 12, opacity: progress(frame, 18, 30) * (1 - progress(frame, 108, 120)), position: 'absolute', right: 3, top: 0, width: 5 }}>
+              <div style={{ background: '#CBD5E1', borderRadius: 999, height: 112, transform: `translateY(${scrollAmount * 308}px)`, width: 5 }} />
+            </div>
           </div>
         </main>
         <ConnectionModal />
