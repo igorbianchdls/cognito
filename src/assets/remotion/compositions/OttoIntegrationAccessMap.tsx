@@ -1,4 +1,5 @@
 import { Icon } from '@iconify/react'
+import type { ReactElement } from 'react'
 import { AbsoluteFill, Easing, interpolate, useCurrentFrame } from 'remotion'
 
 export const OTTO_INTEGRATION_ACCESS_MAP_DURATION = 95
@@ -55,7 +56,7 @@ function CheckIcon({ size = 13 }: { size?: number }) {
 
 function LineIcon({ name, size = 20 }: { name: string; size?: number }) {
   const common = { fill: 'none', stroke: 'currentColor', strokeLinecap: 'round' as const, strokeLinejoin: 'round' as const, strokeWidth: 1.9 }
-  const paths: Record<string, JSX.Element> = {
+  const paths: Record<string, ReactElement> = {
     alert: <path d="M10 3 L18 17 H2 Z M10 8 V11 M10 14 H10.01" {...common} />,
     chart: <path d="M4 16 V10 M10 16 V5 M16 16 V8 M3 17 H17" {...common} />,
     chat: <path d="M4 5 H16 V13 H8 L4 16 Z" {...common} />,
