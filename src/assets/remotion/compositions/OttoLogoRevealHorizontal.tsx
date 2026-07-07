@@ -3,7 +3,6 @@ import { AbsoluteFill, Easing, Img, interpolate, staticFile, useCurrentFrame } f
 export const OTTO_LOGO_REVEAL_HORIZONTAL_DURATION = 51
 
 const INK = '#242424'
-const MUTED = '#696969'
 
 function progress(frame: number, start: number, end: number) {
   return interpolate(frame, [start, end], [0, 1], {
@@ -16,7 +15,6 @@ function progress(frame: number, start: number, end: number) {
 export function OttoLogoRevealHorizontal() {
   const frame = useCurrentFrame()
   const logo = progress(frame, 0, 36)
-  const pill = progress(frame, 0, 12)
   const clip = interpolate(logo, [0, 1], [100, 0])
   const logoX = interpolate(logo, [0, 1], [-36, 0])
   const lockupScale = interpolate(frame, [0, OTTO_LOGO_REVEAL_HORIZONTAL_DURATION], [1.04, 0.98], {
@@ -51,27 +49,6 @@ export function OttoLogoRevealHorizontal() {
         />
       </div>
 
-      <div
-        style={{
-          background: MUTED,
-          borderRadius: 7,
-          bottom: 39,
-          boxShadow: '0 7px 18px rgba(0,0,0,0.13)',
-          color: '#ffffff',
-          fontSize: 28,
-          fontWeight: 750,
-          left: '50%',
-          letterSpacing: 0,
-          lineHeight: 1,
-          opacity: pill,
-          padding: '12px 18px 13px',
-          position: 'absolute',
-          transform: 'translateX(-50%)',
-          whiteSpace: 'nowrap',
-        }}
-      >
-        Introducing Otto
-      </div>
     </AbsoluteFill>
   )
 }

@@ -26,10 +26,18 @@ const assistants = [
 ]
 
 const sequence = [
-  { confirm: 66, end: 82, index: 0, modalIn: 42, start: 34 },
-  { confirm: 112, end: 128, index: 1, modalIn: 88, start: 80 },
-  { confirm: 158, end: 174, index: 2, modalIn: 134, start: 126 },
+  { click: 42, confirm: 70, end: 86, index: 0, modalIn: 48, start: 34 },
+  { click: 88, confirm: 116, end: 132, index: 1, modalIn: 94, start: 80 },
+  { click: 134, confirm: 162, end: 178, index: 2, modalIn: 140, start: 126 },
 ]
+
+const buttonTargets = [
+  { x: 431, y: 472 },
+  { x: 776, y: 472 },
+  { x: 1121, y: 472 },
+]
+
+const modalConfirmTarget = { x: 762, y: 452 }
 
 function progress(frame: number, start: number, end: number) {
   return interpolate(frame, [start, end], [0, 1], {
@@ -298,13 +306,29 @@ function ConnectionModal() {
 
 function Cursor() {
   const frame = useCurrentFrame()
-  const firstClick = progress(frame, 34, 44)
-  const secondClick = progress(frame, 80, 90)
-  const thirdClick = progress(frame, 126, 136)
-  const confirmClick = Math.max(progress(frame, 66, 76), progress(frame, 112, 122), progress(frame, 158, 168))
-  const x = interpolate(frame, [0, 30, 38, 58, 70, 82, 86, 104, 116, 128, 132, 150, 162, 180], [640, 260, 260, 620, 700, 532, 532, 620, 700, 806, 806, 620, 700, 1012], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' })
-  const y = interpolate(frame, [0, 30, 38, 58, 70, 82, 86, 104, 116, 128, 132, 150, 162, 180], [610, 520, 520, 456, 494, 520, 520, 456, 494, 520, 520, 456, 494, 506], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' })
-  const click = Math.max(firstClick * (1 - progress(frame, 44, 50)), secondClick * (1 - progress(frame, 90, 96)), thirdClick * (1 - progress(frame, 136, 142)), confirmClick * (1 - progress(frame, 168, 174)))
+  const points = [
+    { frame: 24, x: 640, y: 610 },
+    ...sequence.flatMap((step, index) => {
+      const card = buttonTargets[step.index]
+      const next = sequence[index + 1] ? buttonTargets[sequence[index + 1].index] : { x: 1012, y: 506 }
+      return [
+        { frame: step.start, x: card.x, y: card.y },
+        { frame: step.click, x: card.x, y: card.y },
+        { frame: step.modalIn + 8, x: modalConfirmTarget.x, y: modalConfirmTarget.y },
+        { frame: step.confirm, x: modalConfirmTarget.x, y: modalConfirmTarget.y },
+        { frame: step.end + 8, x: next.x, y: next.y },
+      ]
+    }),
+  ]
+  const sortedPoints = points
+    .sort((first, second) => first.frame - second.frame)
+    .filter((point, index, list) => index === 0 || point.frame !== list[index - 1].frame)
+  const input = sortedPoints.map((point) => point.frame)
+  const x = interpolate(frame, input, sortedPoints.map((point) => point.x), { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' })
+  const y = interpolate(frame, input, sortedPoints.map((point) => point.y), { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' })
+  const cardClick = sequence.reduce((amount, step) => Math.max(amount, progress(frame, step.click - 3, step.click + 3) * (1 - progress(frame, step.click + 3, step.click + 8))), 0)
+  const confirmClick = sequence.reduce((amount, step) => Math.max(amount, progress(frame, step.confirm - 3, step.confirm + 3) * (1 - progress(frame, step.confirm + 3, step.confirm + 8))), 0)
+  const click = Math.max(cardClick, confirmClick)
 
   return (
     <div style={{ filter: 'drop-shadow(0 10px 12px rgba(0,0,0,0.22))', left: x, opacity: progress(frame, 24, 36) * (1 - progress(frame, 184, 190)), position: 'absolute', top: y, transform: `scale(${1 - click * 0.1})` }}>
