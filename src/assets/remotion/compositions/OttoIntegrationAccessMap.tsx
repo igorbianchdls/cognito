@@ -1,7 +1,13 @@
 import type { ReactElement } from 'react'
+import { SiShopify } from '@icons-pack/react-simple-icons'
 import { AbsoluteFill, Easing, Img, interpolate, staticFile, useCurrentFrame } from 'remotion'
+import BlingIcon from '@/components/icons/BlingIcon'
+import ContaAzulIcon from '@/components/icons/ContaAzulIcon'
+import GoogleAdsIcon from '@/components/icons/GoogleAdsIcon'
+import MetaIcon from '@/components/icons/MetaIcon'
+import OmieIcon from '@/components/icons/OmieIcon'
 
-export const OTTO_INTEGRATION_ACCESS_MAP_DURATION = 210
+export const OTTO_INTEGRATION_ACCESS_MAP_DURATION = 330
 
 const INK = '#17203A'
 const MUTED = '#647089'
@@ -19,18 +25,21 @@ const navItems = [
 ]
 
 const integrations = [
-  { category: 'ERP', description: 'ERP financeiro para vendas, clientes, contas e fluxo de caixa.', initials: 'CA', label: 'Conta Azul', tone: '#2563EB' },
-  { category: 'ERP', description: 'Gestao comercial e fiscal para pedidos, notas e estoque.', initials: 'BL', label: 'Bling', tone: '#16A34A' },
-  { category: 'ERP', description: 'Operacao empresarial com financeiro, CRM e servicos.', initials: 'OM', label: 'Omie', tone: '#0891B2' },
-  { category: 'Ads', description: 'Campanhas, criativos, conjuntos de anuncios e resultados.', initials: 'M', label: 'Meta Ads', tone: '#0866FF' },
-  { category: 'Ads', description: 'Midia paga, conversoes, campanhas e palavras-chave.', initials: 'G', label: 'Google Ads', tone: '#F59E0B' },
-  { category: 'Ecommerce', description: 'Pedidos, catalogo, clientes e performance da loja.', initials: 'S', label: 'Shopify', tone: '#95BF47' },
-]
+  { category: 'ERP', description: 'ERP financeiro para vendas, clientes, contas e fluxo de caixa.', label: 'Conta Azul', logo: 'conta_azul', slug: 'conta_azul', tone: '#2563EB' },
+  { category: 'ERP', description: 'Gestao comercial e fiscal para pedidos, notas e estoque.', label: 'Bling', logo: 'bling', slug: 'bling', tone: '#16A34A' },
+  { category: 'ERP', description: 'Operacao empresarial com financeiro, CRM e servicos.', label: 'Omie', logo: 'omie', slug: 'omie', tone: '#0891B2' },
+  { category: 'Ads', description: 'Campanhas, criativos, conjuntos de anuncios e resultados.', label: 'Meta Ads', logo: 'meta_ads', slug: 'meta_ads', tone: '#0866FF' },
+  { category: 'Ads', description: 'Midia paga, conversoes, campanhas e palavras-chave.', label: 'Google Ads', logo: 'google_ads', slug: 'google_ads', tone: '#F59E0B' },
+  { category: 'Ecommerce', description: 'Pedidos, catalogo, clientes e performance da loja.', label: 'Shopify', logo: 'shopify', slug: 'shopify', tone: '#95BF47' },
+] as const
 
 const sequence = [
-  { confirm: 74, end: 90, index: 0, modalIn: 48, name: 'Conta Azul', start: 40 },
-  { confirm: 120, end: 136, index: 1, modalIn: 94, name: 'Bling', start: 86 },
-  { confirm: 166, end: 182, index: 3, modalIn: 140, name: 'Meta Ads', start: 132 },
+  { confirm: 54, end: 70, index: 0, modalIn: 28, start: 20 },
+  { confirm: 98, end: 114, index: 1, modalIn: 72, start: 64 },
+  { confirm: 142, end: 158, index: 2, modalIn: 116, start: 108 },
+  { confirm: 186, end: 202, index: 3, modalIn: 160, start: 152 },
+  { confirm: 230, end: 246, index: 4, modalIn: 204, start: 196 },
+  { confirm: 274, end: 290, index: 5, modalIn: 248, start: 240 },
 ]
 
 function progress(frame: number, start: number, end: number) {
@@ -99,10 +108,11 @@ function Sidebar() {
 
   return (
     <aside style={{ background: '#FAFAFA', borderRight: `1px solid ${LINE}`, bottom: 0, left: 0, position: 'absolute', top: 0, width: 88 }}>
-      <div style={{ alignItems: 'center', display: 'flex', height: 52, justifyContent: 'center' }}>
+      <div style={{ alignItems: 'center', display: 'flex', flexDirection: 'column', gap: 5, height: 66, justifyContent: 'center' }}>
         <OttoIcon />
+        <span style={{ color: '#181818', fontSize: 12, fontWeight: 650, lineHeight: 1 }}>Otto</span>
       </div>
-      <div style={{ display: 'grid', gap: 10, justifyItems: 'center', paddingTop: 18 }}>
+      <div style={{ display: 'grid', gap: 10, justifyItems: 'center', paddingTop: 4 }}>
         {navItems.map((item, index) => (
           <div
             key={item.label}
@@ -137,10 +147,35 @@ function Sidebar() {
   )
 }
 
-function ProviderMark({ initials, tone }: { initials: string; tone: string }) {
+function ProviderMark({ integration, size = 56 }: { integration: typeof integrations[number]; size?: number }) {
+  const iconSize = size >= 56 ? 'h-9 w-9' : 'h-8 w-8'
+  const commonClass = `${iconSize} rounded-md`
+  const logo = (() => {
+    if (integration.logo === 'conta_azul') return <ContaAzulIcon className={commonClass} />
+    if (integration.logo === 'bling') return <BlingIcon className={commonClass} />
+    if (integration.logo === 'omie') return <OmieIcon className={commonClass} />
+    if (integration.logo === 'meta_ads') return <MetaIcon className={commonClass} />
+    if (integration.logo === 'google_ads') return <GoogleAdsIcon className={commonClass} />
+    return <SiShopify size={size >= 56 ? 34 : 30} color="default" title="Shopify logo" />
+  })()
+
   return (
-    <div style={{ alignItems: 'center', background: tone, borderRadius: 14, color: '#FFFFFF', display: 'flex', fontSize: 16, fontWeight: 840, height: 56, justifyContent: 'center', letterSpacing: 0, width: 56 }}>
-      {initials}
+    <div
+      style={{
+        alignItems: 'center',
+        background: '#FFFFFF',
+        border: `1px solid ${LINE}`,
+        borderRadius: 14,
+        boxShadow: '0 10px 24px rgba(23,32,58,0.08)',
+        color: integration.tone,
+        display: 'flex',
+        height: size,
+        justifyContent: 'center',
+        overflow: 'hidden',
+        width: size,
+      }}
+    >
+      {logo}
     </div>
   )
 }
@@ -151,11 +186,11 @@ function StatPanel() {
   const values = [
     { label: 'Conectadas', value: connected, color: GREEN },
     { label: 'Disponiveis', value: 6, color: '#2563EB' },
-    { label: 'Pendentes', value: 3 - connected, color: '#A16207' },
+    { label: 'Pendentes', value: Math.max(0, 6 - connected), color: '#A16207' },
   ]
 
   return (
-    <div style={{ display: 'grid', gap: 14, gridTemplateColumns: 'repeat(3, 1fr)', marginBottom: 20 }}>
+    <div style={{ display: 'grid', gap: 14, gridTemplateColumns: 'repeat(3, 1fr)', marginBottom: 16 }}>
       {values.map((item, index) => {
         const enter = progress(frame, 8 + index * 5, 26 + index * 5)
         return (
@@ -169,7 +204,7 @@ function StatPanel() {
               boxShadow: '0 12px 30px rgba(23,32,58,0.05)',
               display: 'flex',
               gap: 14,
-              height: 74,
+              height: 68,
               opacity: enter,
               padding: '0 18px',
               transform: `translateY(${(1 - enter) * 12}px)`,
@@ -224,14 +259,14 @@ function IntegrationCard({ index, integration }: { index: number; integration: t
         boxShadow: active || connected ? `0 18px 38px ${connected ? 'rgba(22,101,52,0.15)' : 'rgba(23,32,58,0.12)'}` : '0 12px 30px rgba(23,32,58,0.06)',
         display: 'flex',
         flexDirection: 'column',
-        minHeight: 252,
+        minHeight: 220,
         opacity: enter,
-        padding: 20,
+        padding: 18,
         transform: `translateY(${(1 - enter) * 18}px) scale(${pulse})`,
       }}
     >
       <div style={{ alignItems: 'flex-start', display: 'flex', gap: 12, justifyContent: 'space-between' }}>
-        <ProviderMark initials={integration.initials} tone={integration.tone} />
+        <ProviderMark integration={integration} />
         <div style={{ alignItems: 'center', display: 'flex', gap: 8 }}>
           <StatusBadge connected={connected} />
           <div style={{ alignItems: 'center', background: '#FFFFFF', border: `1px solid ${LINE}`, borderRadius: 9, color: MUTED, display: 'flex', height: 34, justifyContent: 'center', width: 34 }}>
@@ -239,10 +274,10 @@ function IntegrationCard({ index, integration }: { index: number; integration: t
           </div>
         </div>
       </div>
-      <div style={{ flex: 1, minHeight: 104, paddingTop: 18 }}>
+      <div style={{ flex: 1, minHeight: 88, paddingTop: 14 }}>
         <div style={{ color: INK, fontSize: 19, fontWeight: 760, letterSpacing: 0 }}>{integration.label}</div>
         <div style={{ color: MUTED, fontSize: 13.5, lineHeight: 1.45, marginTop: 8 }}>{integration.description}</div>
-        <span style={{ background: '#F1F5F9', borderRadius: 999, color: '#475569', display: 'inline-flex', fontSize: 12, fontWeight: 700, marginTop: 14, padding: '6px 10px' }}>
+        <span style={{ background: '#F1F5F9', borderRadius: 999, color: '#475569', display: 'inline-flex', fontSize: 12, fontWeight: 700, marginTop: 10, padding: '6px 10px' }}>
           {integration.category}
         </span>
       </div>
@@ -281,16 +316,31 @@ function modalStep(frame: number) {
 
 function Cursor() {
   const frame = useCurrentFrame()
-  const firstClick = progress(frame, 40, 50)
-  const secondClick = progress(frame, 86, 96)
-  const thirdClick = progress(frame, 132, 142)
-  const confirmClick = Math.max(progress(frame, 74, 84), progress(frame, 120, 130), progress(frame, 166, 176))
-  const x = interpolate(frame, [0, 36, 44, 64, 78, 88, 94, 110, 124, 134, 140, 156, 170, 188], [640, 512, 374, 620, 700, 620, 704, 620, 700, 512, 374, 620, 700, 1012], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' })
-  const y = interpolate(frame, [0, 36, 44, 64, 78, 88, 94, 110, 124, 134, 140, 156, 170, 188], [610, 503, 520, 456, 494, 503, 520, 456, 494, 503, 520, 456, 494, 506], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' })
-  const click = Math.max(firstClick * (1 - progress(frame, 50, 54)), secondClick * (1 - progress(frame, 96, 100)), thirdClick * (1 - progress(frame, 142, 146)), confirmClick * (1 - progress(frame, 176, 182)))
+  const cardClick = Math.max(
+    progress(frame, 20, 30) * (1 - progress(frame, 30, 34)),
+    progress(frame, 64, 74) * (1 - progress(frame, 74, 78)),
+    progress(frame, 108, 118) * (1 - progress(frame, 118, 122)),
+    progress(frame, 152, 162) * (1 - progress(frame, 162, 166)),
+    progress(frame, 196, 206) * (1 - progress(frame, 206, 210)),
+    progress(frame, 240, 250) * (1 - progress(frame, 250, 254)),
+  )
+  const confirmClick = sequence.reduce((amount, step) => Math.max(amount, progress(frame, step.confirm, step.confirm + 10) * (1 - progress(frame, step.confirm + 10, step.confirm + 14))), 0)
+  const x = interpolate(
+    frame,
+    [0, 18, 24, 44, 58, 66, 72, 88, 102, 110, 116, 132, 146, 154, 160, 176, 190, 198, 204, 220, 234, 242, 248, 264, 278, 294],
+    [640, 508, 374, 620, 700, 704, 704, 620, 700, 1034, 1034, 620, 700, 374, 374, 620, 700, 704, 704, 620, 700, 1034, 1034, 620, 700, 1050],
+    { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' },
+  )
+  const y = interpolate(
+    frame,
+    [0, 18, 24, 44, 58, 66, 72, 88, 102, 110, 116, 132, 146, 154, 160, 176, 190, 198, 204, 220, 234, 242, 248, 264, 278, 294],
+    [610, 496, 515, 456, 494, 496, 515, 456, 494, 496, 515, 456, 494, 625, 640, 456, 494, 625, 640, 456, 494, 625, 640, 456, 494, 604],
+    { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' },
+  )
+  const click = Math.max(cardClick, confirmClick)
 
   return (
-    <div style={{ filter: 'drop-shadow(0 10px 12px rgba(0,0,0,0.22))', left: x, opacity: progress(frame, 26, 38) * (1 - progress(frame, 192, 206)), position: 'absolute', top: y, transform: `scale(${1 - click * 0.1})` }}>
+    <div style={{ filter: 'drop-shadow(0 10px 12px rgba(0,0,0,0.22))', left: x, opacity: progress(frame, 16, 28) * (1 - progress(frame, 294, 308)), position: 'absolute', top: y, transform: `scale(${1 - click * 0.1})` }}>
       <svg height="50" viewBox="0 0 84 84" width="50">
         <path d="M16 9 L73 33 L48 42 L37 70 Z" fill="#1F2937" stroke="#ffffff" strokeLinejoin="round" strokeWidth="4" />
       </svg>
@@ -324,7 +374,7 @@ function ConnectionModal() {
         }}
       >
         <div style={{ alignItems: 'center', display: 'flex', gap: 15 }}>
-          <ProviderMark initials={integration.initials} tone={integration.tone} />
+          <ProviderMark integration={integration} />
           <div>
             <div style={{ color: INK, fontSize: 25, fontWeight: 760 }}>Conectar {integration.label}</div>
             <div style={{ color: MUTED, fontSize: 13, fontWeight: 650, marginTop: 6 }}>{integration.category} - OAuth seguro</div>
@@ -372,8 +422,9 @@ function InfoBox({ label, value }: { label: string; value: string }) {
 
 function ConnectionDrawer() {
   const frame = useCurrentFrame()
-  const enter = progress(frame, 184, 202)
-  const pulse = Math.max(0, Math.sin(frame / 5)) * progress(frame, 194, 210)
+  const integration = integrations[5]
+  const enter = progress(frame, 292, 312)
+  const pulse = Math.max(0, Math.sin(frame / 5)) * progress(frame, 304, 326)
 
   return (
     <div
@@ -392,10 +443,10 @@ function ConnectionDrawer() {
     >
       <div style={{ borderBottom: `1px solid ${LINE}`, padding: '28px 26px 24px' }}>
         <div style={{ alignItems: 'center', display: 'flex', gap: 15 }}>
-          <ProviderMark initials="M" tone="#0866FF" />
+          <ProviderMark integration={integration} />
           <div>
-            <div style={{ color: INK, fontSize: 25, fontWeight: 760 }}>Meta Ads</div>
-            <div style={{ color: MUTED, fontSize: 13, fontWeight: 650, marginTop: 6 }}>Ads - meta_ads</div>
+            <div style={{ color: INK, fontSize: 25, fontWeight: 760 }}>{integration.label}</div>
+            <div style={{ color: MUTED, fontSize: 13, fontWeight: 650, marginTop: 6 }}>{integration.category} - {integration.slug}</div>
           </div>
         </div>
       </div>
@@ -418,20 +469,20 @@ function ConnectionDrawer() {
                 <span style={{ background: GREEN, borderRadius: 999, color: '#FFFFFF', fontSize: 11, fontWeight: 760, padding: '5px 8px' }}>Permitido</span>
               </div>
               <div style={{ color: MUTED, fontSize: 12.5, lineHeight: 1.45, marginTop: 7 }}>
-                Otto pode consultar campanhas, criativos e metricas desta conexao.
+                Otto pode consultar pedidos, clientes e catalogo desta conexao.
               </div>
             </div>
-            <Toggle delay={194} />
+            <Toggle delay={304} />
           </div>
           <div style={{ alignItems: 'center', borderTop: `1px solid ${LINE}`, display: 'flex', justifyContent: 'space-between', marginTop: 17, paddingTop: 15 }}>
             <span style={{ color: '#475569', fontSize: 12.5, fontWeight: 700 }}>Exigir confirmacao</span>
-            <Toggle delay={200} />
+            <Toggle delay={310} />
           </div>
         </section>
         <section style={{ background: '#FAFBFD', border: `1px solid ${LINE}`, borderRadius: 16, padding: 18 }}>
           <div style={{ color: INK, fontSize: 14, fontWeight: 760, marginBottom: 12 }}>Dados sincronizados</div>
-          {['Campanhas', 'Conjuntos de anuncios', 'Criativos', 'Resultados diarios'].map((item, index) => (
-            <div key={item} style={{ alignItems: 'center', color: '#475569', display: 'flex', fontSize: 12.5, fontWeight: 650, gap: 9, marginTop: index ? 10 : 0, opacity: progress(frame, 194 + index * 4, 208 + index * 4) }}>
+          {['Pedidos', 'Clientes', 'Produtos', 'Performance da loja'].map((item, index) => (
+            <div key={item} style={{ alignItems: 'center', color: '#475569', display: 'flex', fontSize: 12.5, fontWeight: 650, gap: 9, marginTop: index ? 10 : 0, opacity: progress(frame, 304 + index * 4, 318 + index * 4) }}>
               <span style={{ alignItems: 'center', background: '#DCFCE7', borderRadius: 999, color: GREEN, display: 'flex', height: 18, justifyContent: 'center', width: 18 }}>
                 <LineIcon name="check" size={12} />
               </span>
@@ -444,43 +495,10 @@ function ConnectionDrawer() {
   )
 }
 
-function Caption() {
-  const frame = useCurrentFrame()
-  const text = frame < 48
-    ? 'Usuario conecta Conta Azul'
-    : frame < 92
-      ? 'confirma o acesso no modal'
-      : frame < 138
-        ? 'depois conecta Bling'
-        : frame < 184
-          ? 'depois conecta Meta Ads'
-          : 'drawer lateral mostra a configuracao'
-
-  return (
-    <div
-      style={{
-        background: 'rgba(32,32,32,0.86)',
-        borderRadius: 8,
-        bottom: 30,
-        color: '#FFFFFF',
-        fontSize: 23,
-        fontWeight: 720,
-        left: '50%',
-        padding: '12px 18px 13px',
-        position: 'absolute',
-        transform: 'translateX(-50%)',
-        whiteSpace: 'nowrap',
-      }}
-    >
-      {text}
-    </div>
-  )
-}
-
 export function OttoIntegrationAccessMap() {
   const frame = useCurrentFrame()
   const appEnter = progress(frame, 0, 18)
-  const drawerShift = progress(frame, 184, 202)
+  const drawerShift = progress(frame, 292, 312)
 
   return (
     <AbsoluteFill style={{ background: '#F4F6FA', color: INK, fontFamily: 'Inter, Arial, Helvetica, sans-serif', overflow: 'hidden' }}>
@@ -501,8 +519,8 @@ export function OttoIntegrationAccessMap() {
         }}
       >
         <Sidebar />
-        <main style={{ bottom: 0, left: 88, overflow: 'hidden', padding: '30px 34px', position: 'absolute', right: drawerShift * 390, top: 0 }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 20 }}>
+        <main style={{ bottom: 0, left: 88, overflow: 'hidden', padding: '26px 34px', position: 'absolute', right: drawerShift * 390, top: 0 }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 16 }}>
             <div>
               <h1 style={{ color: INK, fontSize: 30, fontWeight: 760, letterSpacing: 0, margin: 0 }}>Conexoes</h1>
               <p style={{ color: MUTED, fontSize: 17, lineHeight: 1.45, margin: '8px 0 0' }}>
@@ -525,7 +543,6 @@ export function OttoIntegrationAccessMap() {
         <ConnectionDrawer />
       </div>
       <Cursor />
-      <Caption />
     </AbsoluteFill>
   )
 }

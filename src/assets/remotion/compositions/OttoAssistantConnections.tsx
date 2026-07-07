@@ -98,10 +98,11 @@ function Sidebar() {
 
   return (
     <aside style={{ background: '#FAFAFA', borderRight: `1px solid ${LINE}`, bottom: 0, left: 0, position: 'absolute', top: 0, width: 88 }}>
-      <div style={{ alignItems: 'center', display: 'flex', height: 52, justifyContent: 'center' }}>
+      <div style={{ alignItems: 'center', display: 'flex', flexDirection: 'column', gap: 5, height: 66, justifyContent: 'center' }}>
         <OttoIcon />
+        <span style={{ color: '#181818', fontSize: 12, fontWeight: 650, lineHeight: 1 }}>Otto</span>
       </div>
-      <div style={{ display: 'grid', gap: 10, justifyItems: 'center', paddingTop: 18 }}>
+      <div style={{ display: 'grid', gap: 10, justifyItems: 'center', paddingTop: 4 }}>
         {navItems.map((item, index) => (
           <div
             key={item.label}

@@ -146,8 +146,9 @@ export function SidebarShadcn({ bgColor, textColor, itemTextColor, itemTextStyle
       {...props}
     >
       <SidebarHeader className={cn("gap-0 p-0")} style={{ backgroundColor: 'var(--sidebar)' }}>
-        <div className="flex h-[43px] w-full items-center justify-center px-0">
+        <div className="flex h-[58px] w-full flex-col items-center justify-center gap-1 px-0">
           <img src="/logoOttoIcon.svg" alt="Otto" className="h-5 w-5 shrink-0 object-contain" />
+          <span className="text-[12px] font-semibold leading-none tracking-normal text-[#181818]" style={{ fontFamily: fontVar('Geist') }}>Otto</span>
         </div>
       </SidebarHeader>
       <SidebarContent className="ui-text">

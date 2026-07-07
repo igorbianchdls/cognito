@@ -2136,7 +2136,7 @@ const catalog: CatalogItem[] = [
   {
     code: '<OttoIntegrationAccessMap />',
     component: OttoIntegrationAccessMap,
-    description: 'Simulacao da tela de integracoes do Otto conectando Conta Azul, Bling e Meta Ads com modal e drawer.',
+    description: 'Simulacao da tela de integracoes do Otto conectando Conta Azul, Bling, Omie, Meta Ads, Google Ads e Shopify com modal e drawer.',
     duration: OTTO_INTEGRATION_ACCESS_MAP_DURATION,
     height: 720,
     kind: 'Actions',
