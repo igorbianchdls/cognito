@@ -96,6 +96,7 @@ import {
   ExpenseClassificationMatchingAction,
   ExpenseClassificationTableAction,
 } from '@/assets/remotion/compositions/ExpenseClassificationActions'
+import { OTTO_ASSISTANT_COMPATIBILITY_DURATION, OttoAssistantCompatibility } from '@/assets/remotion/compositions/OttoAssistantCompatibility'
 import { OTTO_LOGO_REVEAL_HORIZONTAL_DURATION, OttoLogoRevealHorizontal } from '@/assets/remotion/compositions/OttoLogoRevealHorizontal'
 import { TaskLauncherAnimation } from '@/assets/remotion/compositions/TaskLauncherAnimation'
 import {
@@ -3038,6 +3039,18 @@ const catalog: CatalogItem[] = [
     label: 'ChatGPT Tool Call',
     tags: ['ChatGPT', 'Mobile', 'Tool', 'Assistant'],
     value: 'marketing-chatgpt-tool-call',
+    width: 1080,
+  },
+  {
+    code: '<OttoAssistantCompatibility />',
+    component: OttoAssistantCompatibility,
+    description: 'Compatibilidade do Otto com Claude e ChatGPT em formato Reels.',
+    duration: OTTO_ASSISTANT_COMPATIBILITY_DURATION,
+    height: 1920,
+    kind: 'Marketing',
+    label: 'Claude + ChatGPT Compatibility',
+    tags: ['Claude', 'ChatGPT', 'Otto', 'Compatibility'],
+    value: 'marketing-claude-chatgpt-compatibility',
     width: 1080,
   },
   {
