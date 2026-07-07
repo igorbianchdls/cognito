@@ -104,8 +104,10 @@ import {
   OttoAssistantModelSwitcherCompatibility,
   OttoAssistantSplitScreenCompatibility,
 } from '@/assets/remotion/compositions/OttoAssistantCompatibility'
+import { OTTO_AGENT_SCAN_DURATION, OttoAgentScan } from '@/assets/remotion/compositions/OttoAgentScan'
 import { OTTO_INTEGRATION_ACCESS_MAP_DURATION, OttoIntegrationAccessMap } from '@/assets/remotion/compositions/OttoIntegrationAccessMap'
 import { OTTO_LOGO_REVEAL_HORIZONTAL_DURATION, OttoLogoRevealHorizontal } from '@/assets/remotion/compositions/OttoLogoRevealHorizontal'
+import { OTTO_WEBSITE_INTEGRATION_DURATION, OttoWebsiteIntegration } from '@/assets/remotion/compositions/OttoWebsiteIntegration'
 import { TaskLauncherAnimation } from '@/assets/remotion/compositions/TaskLauncherAnimation'
 import {
   AIChatWorkspaceMock,
@@ -2144,6 +2146,30 @@ const catalog: CatalogItem[] = [
     label: 'Otto Integration Access Map',
     tags: ['Integrations', 'Permissions', 'Access', 'Otto'],
     value: 'actions-otto-integration-access-map',
+    width: 1280,
+  },
+  {
+    code: '<OttoAgentScan />',
+    component: OttoAgentScan,
+    description: 'Agente Otto escaneando Drive, slides e CRM para destacar dados sensiveis.',
+    duration: OTTO_AGENT_SCAN_DURATION,
+    height: 720,
+    kind: 'Actions',
+    label: 'Otto Agent Scan',
+    tags: ['Agent', 'Scan', 'Sensitive Data', 'Otto'],
+    value: 'actions-otto-agent-scan',
+    width: 1280,
+  },
+  {
+    code: '<OttoWebsiteIntegration />',
+    component: OttoWebsiteIntegration,
+    description: 'Otto configurando credenciais e permissoes granulares em uma interface web de integracoes.',
+    duration: OTTO_WEBSITE_INTEGRATION_DURATION,
+    height: 720,
+    kind: 'Actions',
+    label: 'Otto Website Integration',
+    tags: ['Integrations', 'Credentials', 'Permissions', 'Otto'],
+    value: 'actions-otto-website-integration',
     width: 1280,
   },
   {
