@@ -7,7 +7,7 @@ import GoogleAdsIcon from '@/components/icons/GoogleAdsIcon'
 import MetaIcon from '@/components/icons/MetaIcon'
 import OmieIcon from '@/components/icons/OmieIcon'
 
-export const OTTO_INTEGRATION_ACCESS_MAP_DURATION = 330
+export const OTTO_INTEGRATION_ACCESS_MAP_DURATION = 360
 
 const INK = '#17203A'
 const MUTED = '#647089'
@@ -34,13 +34,24 @@ const integrations = [
 ] as const
 
 const sequence = [
-  { confirm: 54, end: 70, index: 0, modalIn: 28, start: 20 },
-  { confirm: 98, end: 114, index: 1, modalIn: 72, start: 64 },
-  { confirm: 142, end: 158, index: 2, modalIn: 116, start: 108 },
-  { confirm: 186, end: 202, index: 3, modalIn: 160, start: 152 },
-  { confirm: 230, end: 246, index: 4, modalIn: 204, start: 196 },
-  { confirm: 274, end: 290, index: 5, modalIn: 248, start: 240 },
+  { click: 32, confirm: 60, end: 76, index: 0, modalIn: 38, start: 24 },
+  { click: 80, confirm: 108, end: 124, index: 1, modalIn: 86, start: 72 },
+  { click: 128, confirm: 156, end: 172, index: 2, modalIn: 134, start: 120 },
+  { click: 176, confirm: 204, end: 220, index: 3, modalIn: 182, start: 168 },
+  { click: 224, confirm: 252, end: 268, index: 4, modalIn: 230, start: 216 },
+  { click: 272, confirm: 300, end: 316, index: 5, modalIn: 278, start: 264 },
 ]
+
+const buttonTargets = [
+  { x: 418, y: 408 },
+  { x: 764, y: 408 },
+  { x: 1108, y: 408 },
+  { x: 418, y: 642 },
+  { x: 764, y: 642 },
+  { x: 1108, y: 642 },
+]
+
+const modalConfirmTarget = { x: 762, y: 452 }
 
 function progress(frame: number, start: number, end: number) {
   return interpolate(frame, [start, end], [0, 1], {
@@ -316,31 +327,31 @@ function modalStep(frame: number) {
 
 function Cursor() {
   const frame = useCurrentFrame()
-  const cardClick = Math.max(
-    progress(frame, 20, 30) * (1 - progress(frame, 30, 34)),
-    progress(frame, 64, 74) * (1 - progress(frame, 74, 78)),
-    progress(frame, 108, 118) * (1 - progress(frame, 118, 122)),
-    progress(frame, 152, 162) * (1 - progress(frame, 162, 166)),
-    progress(frame, 196, 206) * (1 - progress(frame, 206, 210)),
-    progress(frame, 240, 250) * (1 - progress(frame, 250, 254)),
-  )
-  const confirmClick = sequence.reduce((amount, step) => Math.max(amount, progress(frame, step.confirm, step.confirm + 10) * (1 - progress(frame, step.confirm + 10, step.confirm + 14))), 0)
-  const x = interpolate(
-    frame,
-    [0, 18, 24, 44, 58, 66, 72, 88, 102, 110, 116, 132, 146, 154, 160, 176, 190, 198, 204, 220, 234, 242, 248, 264, 278, 294],
-    [640, 508, 374, 620, 700, 704, 704, 620, 700, 1034, 1034, 620, 700, 374, 374, 620, 700, 704, 704, 620, 700, 1034, 1034, 620, 700, 1050],
-    { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' },
-  )
-  const y = interpolate(
-    frame,
-    [0, 18, 24, 44, 58, 66, 72, 88, 102, 110, 116, 132, 146, 154, 160, 176, 190, 198, 204, 220, 234, 242, 248, 264, 278, 294],
-    [610, 496, 515, 456, 494, 496, 515, 456, 494, 496, 515, 456, 494, 625, 640, 456, 494, 625, 640, 456, 494, 625, 640, 456, 494, 604],
-    { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' },
-  )
+  const points = [
+    { frame: 0, x: 640, y: 610 },
+    { frame: 18, x: buttonTargets[0].x, y: buttonTargets[0].y },
+    ...sequence.flatMap((step, index) => {
+      const card = buttonTargets[step.index]
+      const next = sequence[index + 1] ? buttonTargets[sequence[index + 1].index] : { x: 1050, y: 604 }
+      return [
+        { frame: step.start, x: card.x, y: card.y },
+        { frame: step.click, x: card.x, y: card.y },
+        { frame: step.modalIn + 8, x: modalConfirmTarget.x, y: modalConfirmTarget.y },
+        { frame: step.confirm, x: modalConfirmTarget.x, y: modalConfirmTarget.y },
+        { frame: step.end + 8, x: next.x, y: next.y },
+      ]
+    }),
+  ]
+  const sortedPoints = points.sort((first, second) => first.frame - second.frame)
+  const input = sortedPoints.map((point) => point.frame)
+  const x = interpolate(frame, input, sortedPoints.map((point) => point.x), { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' })
+  const y = interpolate(frame, input, sortedPoints.map((point) => point.y), { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' })
+  const cardClick = sequence.reduce((amount, step) => Math.max(amount, progress(frame, step.click - 3, step.click + 3) * (1 - progress(frame, step.click + 3, step.click + 8))), 0)
+  const confirmClick = sequence.reduce((amount, step) => Math.max(amount, progress(frame, step.confirm - 3, step.confirm + 3) * (1 - progress(frame, step.confirm + 3, step.confirm + 8))), 0)
   const click = Math.max(cardClick, confirmClick)
 
   return (
-    <div style={{ filter: 'drop-shadow(0 10px 12px rgba(0,0,0,0.22))', left: x, opacity: progress(frame, 16, 28) * (1 - progress(frame, 294, 308)), position: 'absolute', top: y, transform: `scale(${1 - click * 0.1})` }}>
+    <div style={{ filter: 'drop-shadow(0 10px 12px rgba(0,0,0,0.22))', left: x, opacity: progress(frame, 16, 28) * (1 - progress(frame, 320, 336)), position: 'absolute', top: y, transform: `scale(${1 - click * 0.1})` }}>
       <svg height="50" viewBox="0 0 84 84" width="50">
         <path d="M16 9 L73 33 L48 42 L37 70 Z" fill="#1F2937" stroke="#ffffff" strokeLinejoin="round" strokeWidth="4" />
       </svg>
@@ -423,8 +434,8 @@ function InfoBox({ label, value }: { label: string; value: string }) {
 function ConnectionDrawer() {
   const frame = useCurrentFrame()
   const integration = integrations[5]
-  const enter = progress(frame, 292, 312)
-  const pulse = Math.max(0, Math.sin(frame / 5)) * progress(frame, 304, 326)
+  const enter = progress(frame, 322, 342)
+  const pulse = Math.max(0, Math.sin(frame / 5)) * progress(frame, 334, 356)
 
   return (
     <div
@@ -472,17 +483,17 @@ function ConnectionDrawer() {
                 Otto pode consultar pedidos, clientes e catalogo desta conexao.
               </div>
             </div>
-            <Toggle delay={304} />
+            <Toggle delay={334} />
           </div>
           <div style={{ alignItems: 'center', borderTop: `1px solid ${LINE}`, display: 'flex', justifyContent: 'space-between', marginTop: 17, paddingTop: 15 }}>
             <span style={{ color: '#475569', fontSize: 12.5, fontWeight: 700 }}>Exigir confirmacao</span>
-            <Toggle delay={310} />
+            <Toggle delay={340} />
           </div>
         </section>
         <section style={{ background: '#FAFBFD', border: `1px solid ${LINE}`, borderRadius: 16, padding: 18 }}>
           <div style={{ color: INK, fontSize: 14, fontWeight: 760, marginBottom: 12 }}>Dados sincronizados</div>
           {['Pedidos', 'Clientes', 'Produtos', 'Performance da loja'].map((item, index) => (
-            <div key={item} style={{ alignItems: 'center', color: '#475569', display: 'flex', fontSize: 12.5, fontWeight: 650, gap: 9, marginTop: index ? 10 : 0, opacity: progress(frame, 304 + index * 4, 318 + index * 4) }}>
+            <div key={item} style={{ alignItems: 'center', color: '#475569', display: 'flex', fontSize: 12.5, fontWeight: 650, gap: 9, marginTop: index ? 10 : 0, opacity: progress(frame, 334 + index * 4, 348 + index * 4) }}>
               <span style={{ alignItems: 'center', background: '#DCFCE7', borderRadius: 999, color: GREEN, display: 'flex', height: 18, justifyContent: 'center', width: 18 }}>
                 <LineIcon name="check" size={12} />
               </span>
@@ -498,7 +509,7 @@ function ConnectionDrawer() {
 export function OttoIntegrationAccessMap() {
   const frame = useCurrentFrame()
   const appEnter = progress(frame, 0, 18)
-  const drawerShift = progress(frame, 292, 312)
+  const drawerShift = progress(frame, 322, 342)
 
   return (
     <AbsoluteFill style={{ background: '#F4F6FA', color: INK, fontFamily: 'Inter, Arial, Helvetica, sans-serif', overflow: 'hidden' }}>
