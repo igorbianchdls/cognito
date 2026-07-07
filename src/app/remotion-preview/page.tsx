@@ -2139,7 +2139,7 @@ const catalog: CatalogItem[] = [
   {
     code: '<OttoIntegrationAccessMap />',
     component: OttoIntegrationAccessMap,
-    description: 'Mapa horizontal de integrações com acesso concedido e permissões bloqueadas pelo Otto.',
+    description: 'Simulacao da tela de integracoes do Otto com usuario conectado e permissoes da IA.',
     duration: OTTO_INTEGRATION_ACCESS_MAP_DURATION,
     height: 720,
     kind: 'Actions',
