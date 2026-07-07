@@ -27,22 +27,22 @@ function MergeMark({ value }: { value: number }) {
       width="116"
     >
       <path
-        d="M23 12 C41 34 64 44 94 43"
+        d="M23 13 C39 33 61 43 92 44"
         fill="none"
         stroke={INK}
         strokeDasharray="120"
         strokeDashoffset={interpolate(value, [0, 1], [120, 0])}
-        strokeLinecap="butt"
-        strokeWidth="22"
+        strokeLinecap="square"
+        strokeWidth="20"
       />
       <path
-        d="M21 89 C39 62 63 50 98 51"
+        d="M23 91 C39 71 61 61 92 60"
         fill="none"
         stroke={INK}
         strokeDasharray="126"
         strokeDashoffset={interpolate(value, [0, 1], [126, 0])}
-        strokeLinecap="butt"
-        strokeWidth="22"
+        strokeLinecap="square"
+        strokeWidth="20"
       />
     </svg>
   )
@@ -86,7 +86,7 @@ export function MergeLogoReveal() {
       >
         <MergeMark value={mark} />
         <div style={{ display: 'grid', gap: 8, justifyItems: 'start', minWidth: 372 }}>
-          <div style={{ alignItems: 'center', display: 'flex', gap: 12, height: 74, overflow: 'hidden' }}>
+          <div style={{ alignItems: 'center', display: 'flex', fontSize: 68, fontWeight: 900, gap: 12, height: 74, letterSpacing: 7, lineHeight: 1, overflow: 'hidden' }}>
             {'MERGE'.split('').map((letter, index) => (
               <Letter key={letter + index} index={index} wordProgress={word}>
                 {letter}
