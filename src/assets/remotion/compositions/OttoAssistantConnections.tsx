@@ -32,9 +32,9 @@ const sequence = [
 ]
 
 const buttonTargets = [
-  { x: 431, y: 472 },
-  { x: 776, y: 472 },
-  { x: 1121, y: 472 },
+  { x: 431, y: 523 },
+  { x: 776, y: 523 },
+  { x: 1121, y: 523 },
 ]
 
 const modalConfirmTarget = { x: 762, y: 452 }
@@ -419,23 +419,6 @@ function ConnectionDrawer() {
   )
 }
 
-function Caption() {
-  const frame = useCurrentFrame()
-  const text = frame < 78
-    ? 'Usuario conecta Claude'
-    : frame < 124
-      ? 'depois conecta ChatGPT'
-      : frame < 170
-        ? 'depois conecta Cursor'
-        : 'drawer lateral mostra a configuracao'
-
-  return (
-    <div style={{ background: 'rgba(32,32,32,0.86)', borderRadius: 8, bottom: 30, color: '#FFFFFF', fontSize: 23, fontWeight: 720, left: '50%', padding: '12px 18px 13px', position: 'absolute', transform: 'translateX(-50%)', whiteSpace: 'nowrap' }}>
-      {text}
-    </div>
-  )
-}
-
 export function OttoAssistantConnections() {
   const frame = useCurrentFrame()
   const appEnter = progress(frame, 0, 18)
@@ -469,7 +452,6 @@ export function OttoAssistantConnections() {
         <ConnectionDrawer />
       </div>
       <Cursor />
-      <Caption />
     </AbsoluteFill>
   )
 }
