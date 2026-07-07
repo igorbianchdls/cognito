@@ -107,6 +107,7 @@ import {
 import { OTTO_ASSISTANT_CONNECTIONS_DURATION, OttoAssistantConnections } from '@/assets/remotion/compositions/OttoAssistantConnections'
 import { OTTO_AGENT_SCAN_DURATION, OttoAgentScan } from '@/assets/remotion/compositions/OttoAgentScan'
 import { OTTO_INTEGRATION_ACCESS_MAP_DURATION, OttoIntegrationAccessMap } from '@/assets/remotion/compositions/OttoIntegrationAccessMap'
+import { OTTO_INTEGRATION_SIGNAL_MAP_DURATION, OttoIntegrationSignalMap } from '@/assets/remotion/compositions/OttoIntegrationSignalMap'
 import { OTTO_LOGO_REVEAL_HORIZONTAL_DURATION, OttoLogoRevealHorizontal } from '@/assets/remotion/compositions/OttoLogoRevealHorizontal'
 import { OTTO_WEBSITE_INTEGRATION_DURATION, OttoWebsiteIntegration } from '@/assets/remotion/compositions/OttoWebsiteIntegration'
 import { TaskLauncherAnimation } from '@/assets/remotion/compositions/TaskLauncherAnimation'
@@ -1567,7 +1568,7 @@ const catalog: CatalogItem[] = [
   {
     code: '<OttoLogoRevealHorizontal />',
     component: OttoLogoRevealHorizontal,
-    description: 'Reveal horizontal do logo Otto com subtitulo Agent Handler.',
+    description: 'Reveal horizontal do logo Otto usando o SVG oficial.',
     duration: OTTO_LOGO_REVEAL_HORIZONTAL_DURATION,
     height: 720,
     kind: 'Logo',
@@ -2147,6 +2148,18 @@ const catalog: CatalogItem[] = [
     label: 'Otto Integration Access Map',
     tags: ['Integrations', 'Permissions', 'Access', 'Otto'],
     value: 'actions-otto-integration-access-map',
+    width: 1280,
+  },
+  {
+    code: '<OttoIntegrationSignalMap />',
+    component: OttoIntegrationSignalMap,
+    description: 'Mapa visual inspirado no Integration2 com apps, sinais de acesso e permissoes bloqueadas.',
+    duration: OTTO_INTEGRATION_SIGNAL_MAP_DURATION,
+    height: 720,
+    kind: 'Actions',
+    label: 'Otto Integration Signal Map',
+    tags: ['Integrations', 'Access', 'Permissions', 'Otto'],
+    value: 'actions-otto-integration-signal-map',
     width: 1280,
   },
   {

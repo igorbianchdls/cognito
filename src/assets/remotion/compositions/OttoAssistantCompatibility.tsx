@@ -1,5 +1,5 @@
 import { Icon } from '@iconify/react'
-import { AbsoluteFill, Easing, interpolate, useCurrentFrame } from 'remotion'
+import { AbsoluteFill, Easing, Img, interpolate, staticFile, useCurrentFrame } from 'remotion'
 
 export const OTTO_ASSISTANT_COMPATIBILITY_DURATION = 150
 export const OTTO_ASSISTANT_SPLIT_SCREEN_DURATION = 150
@@ -23,13 +23,7 @@ function OttoMark({ frame }: { frame: number }) {
   const pulse = interpolate(Math.sin(frame / 13), [-1, 1], [0.98, 1.04])
 
   return (
-    <div style={{ alignItems: 'center', display: 'flex', gap: 19, transform: `scale(${pulse})` }}>
-      <svg aria-hidden="true" height="78" viewBox="0 0 116 104" width="87">
-        <path d="M23 13 C39 33 61 43 92 44" fill="none" stroke={GREEN} strokeLinecap="square" strokeWidth="20" />
-        <path d="M23 91 C39 71 61 61 92 60" fill="none" stroke={GREEN} strokeLinecap="square" strokeWidth="20" />
-      </svg>
-      <strong style={{ color: INK, fontSize: 62, fontWeight: 790, letterSpacing: 2, lineHeight: 1 }}>OTTO</strong>
-    </div>
+    <Img src={staticFile('logoOtto.svg')} style={{ display: 'block', height: 92, objectFit: 'contain', transform: `scale(${pulse})`, width: 214 }} />
   )
 }
 

@@ -1,6 +1,6 @@
 import { Icon } from '@iconify/react'
 import type { CSSProperties } from 'react'
-import { AbsoluteFill, Easing, interpolate, useCurrentFrame } from 'remotion'
+import { AbsoluteFill, Easing, Img, interpolate, staticFile, useCurrentFrame } from 'remotion'
 
 export const OTTO_AGENT_SCAN_DURATION = 333
 
@@ -52,10 +52,10 @@ function Caption({ children }: { children: string }) {
 
 function OttoGlyph({ color = '#ffffff', size = 32 }: { color?: string; size?: number }) {
   return (
-    <svg aria-hidden="true" height={size} viewBox="0 0 116 104" width={size * 1.12}>
-      <path d="M23 13 C39 33 61 43 92 44" fill="none" stroke={color} strokeLinecap="square" strokeWidth="20" />
-      <path d="M23 91 C39 71 61 61 92 60" fill="none" stroke={color} strokeLinecap="square" strokeWidth="20" />
-    </svg>
+    <Img
+      src={staticFile('logoOtto.svg')}
+      style={{ display: 'block', filter: color === '#ffffff' ? 'brightness(0) invert(1)' : undefined, height: size, objectFit: 'contain', width: size * 2.33 }}
+    />
   )
 }
 
@@ -218,7 +218,7 @@ function RoadmapScene({ frame }: { frame: number }) {
   const enter = fade(frame, 150, 226)
   const scan = progress(frame, 164, 206)
   const quarters = [
-    ['Q1 FY26', 'Agent Handler GA', 210],
+    ['Q1 FY26', 'Otto GA', 210],
     ['Q2 FY26', 'Gateway public beta', 500],
     ['Q3 FY26', 'Acquisition close', 790],
     ['Q4 FY26', 'EU expansion', 1080],

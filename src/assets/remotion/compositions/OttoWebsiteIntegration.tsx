@@ -1,6 +1,6 @@
 import { Icon } from '@iconify/react'
 import type { CSSProperties, ReactNode } from 'react'
-import { AbsoluteFill, Easing, interpolate, useCurrentFrame } from 'remotion'
+import { AbsoluteFill, Easing, Img, interpolate, staticFile, useCurrentFrame } from 'remotion'
 
 export const OTTO_WEBSITE_INTEGRATION_DURATION = 340
 
@@ -65,10 +65,10 @@ function frameBetween(frame: number, start: number, end: number) {
 
 function OttoGlyph({ color = '#ffffff', size = 34 }: { color?: string; size?: number }) {
   return (
-    <svg aria-hidden="true" height={size} viewBox="0 0 116 104" width={size * 1.12}>
-      <path d="M23 13 C39 33 61 43 92 44" fill="none" stroke={color} strokeLinecap="square" strokeWidth="20" />
-      <path d="M23 91 C39 71 61 61 92 60" fill="none" stroke={color} strokeLinecap="square" strokeWidth="20" />
-    </svg>
+    <Img
+      src={staticFile('logoOtto.svg')}
+      style={{ display: 'block', filter: color === '#ffffff' ? 'brightness(0) invert(1)' : undefined, height: size, objectFit: 'contain', width: size * 2.33 }}
+    />
   )
 }
 
@@ -109,7 +109,6 @@ function OttoBadge({ style }: { style?: CSSProperties }) {
       }}
     >
       <OttoGlyph size={34} />
-      <span style={{ fontSize: 31, fontWeight: 720, letterSpacing: 4 }}>OTTO</span>
     </div>
   )
 }
@@ -383,7 +382,7 @@ function MainScene() {
   const cursorX = badgeX + 180 + interpolate(frame, [250, 330], [0, 40], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' })
   const cursorY = badgeY - 28 - finalZoom * 24
   const caption = frameBetween(frame, 0, 50)
-    ? 'with Otto Agent Handler'
+    ? 'with Otto'
     : frameBetween(frame, 50, 106)
       ? 'Otto automatically sets'
       : frameBetween(frame, 106, 164)

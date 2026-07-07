@@ -1,6 +1,6 @@
 import { Icon } from '@iconify/react'
 import type { ReactElement } from 'react'
-import { AbsoluteFill, Easing, interpolate, useCurrentFrame } from 'remotion'
+import { AbsoluteFill, Easing, Img, interpolate, staticFile, useCurrentFrame } from 'remotion'
 
 export const OTTO_ASSISTANT_CONNECTIONS_DURATION = 190
 
@@ -41,10 +41,10 @@ function progress(frame: number, start: number, end: number) {
 
 function OttoGlyph({ color = '#4D4D4D', size = 22 }: { color?: string; size?: number }) {
   return (
-    <svg aria-hidden="true" height={size} viewBox="0 0 116 104" width={size * 1.12}>
-      <path d="M23 13 C39 33 61 43 92 44" fill="none" stroke={color} strokeLinecap="square" strokeWidth="20" />
-      <path d="M23 91 C39 71 61 61 92 60" fill="none" stroke={color} strokeLinecap="square" strokeWidth="20" />
-    </svg>
+    <Img
+      src={staticFile('logoOtto.svg')}
+      style={{ display: 'block', filter: color === '#ffffff' ? 'brightness(0) invert(1)' : undefined, height: size, objectFit: 'contain', width: size * 2.33 }}
+    />
   )
 }
 
