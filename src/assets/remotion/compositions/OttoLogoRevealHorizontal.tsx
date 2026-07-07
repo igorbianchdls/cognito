@@ -1,6 +1,6 @@
 import { AbsoluteFill, Easing, interpolate, useCurrentFrame } from 'remotion'
 
-export const MERGE_LOGO_REVEAL_DURATION = 51
+export const OTTO_LOGO_REVEAL_HORIZONTAL_DURATION = 51
 
 const INK = '#242424'
 const MUTED = '#696969'
@@ -13,7 +13,7 @@ function progress(frame: number, start: number, end: number) {
   })
 }
 
-function MergeMark({ value }: { value: number }) {
+function OttoMark({ value }: { value: number }) {
   const x = interpolate(value, [0, 1], [-34, 0])
   const opacity = interpolate(value, [0, 0.45, 1], [0, 0.48, 1])
   const scale = interpolate(value, [0, 1], [0.92, 1])
@@ -49,24 +49,27 @@ function MergeMark({ value }: { value: number }) {
 }
 
 function Letter({ children, index, wordProgress }: { children: string; index: number; wordProgress: number }) {
-  const item = progress(wordProgress * 48, index * 4, index * 4 + 16)
-  const x = interpolate(item, [0, 1], [-22, 0])
-  const opacity = interpolate(item, [0, 1], [0, 1])
+  const item = progress(wordProgress * 52, index * 5, index * 5 + 17)
+  const x = interpolate(item, [0, 1], [-18, 0])
+  const clip = interpolate(item, [0, 1], [100, 0])
+  const opacity = interpolate(item, [0, 0.35, 1], [0, 1, 1])
 
   return (
-    <span style={{ display: 'inline-block', opacity, transform: `translateX(${x}px)` }}>
-      {children}
+    <span style={{ display: 'inline-block', overflow: 'hidden', verticalAlign: 'top' }}>
+      <span style={{ clipPath: `inset(0 ${clip}% 0 0)`, display: 'inline-block', opacity, transform: `translateX(${x}px)` }}>
+        {children}
+      </span>
     </span>
   )
 }
 
-export function MergeLogoReveal() {
+export function OttoLogoRevealHorizontal() {
   const frame = useCurrentFrame()
   const mark = progress(frame, 0, 20)
   const word = progress(frame, 11, 35)
   const subtitle = progress(frame, 27, 43)
   const pill = progress(frame, 0, 12)
-  const lockupScale = interpolate(frame, [0, MERGE_LOGO_REVEAL_DURATION], [1.04, 0.98], {
+  const lockupScale = interpolate(frame, [0, OTTO_LOGO_REVEAL_HORIZONTAL_DURATION], [1.04, 0.98], {
     extrapolateLeft: 'clamp',
     extrapolateRight: 'clamp',
   })
@@ -84,10 +87,10 @@ export function MergeLogoReveal() {
           transform: `translate(-50%, -50%) scale(${lockupScale})`,
         }}
       >
-        <MergeMark value={mark} />
+        <OttoMark value={mark} />
         <div style={{ display: 'grid', gap: 8, justifyItems: 'start', minWidth: 372 }}>
-          <div style={{ alignItems: 'center', display: 'flex', fontSize: 68, fontWeight: 900, gap: 12, height: 74, letterSpacing: 7, lineHeight: 1, overflow: 'hidden' }}>
-            {'MERGE'.split('').map((letter, index) => (
+          <div style={{ alignItems: 'center', display: 'flex', fontSize: 68, fontWeight: 780, gap: 9, height: 74, letterSpacing: 4, lineHeight: 1, overflow: 'hidden' }}>
+            {'OTTO'.split('').map((letter, index) => (
               <Letter key={letter + index} index={index} wordProgress={word}>
                 {letter}
               </Letter>

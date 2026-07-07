@@ -96,7 +96,7 @@ import {
   ExpenseClassificationMatchingAction,
   ExpenseClassificationTableAction,
 } from '@/assets/remotion/compositions/ExpenseClassificationActions'
-import { MERGE_LOGO_REVEAL_DURATION, MergeLogoReveal } from '@/assets/remotion/compositions/MergeLogoReveal'
+import { OTTO_LOGO_REVEAL_HORIZONTAL_DURATION, OttoLogoRevealHorizontal } from '@/assets/remotion/compositions/OttoLogoRevealHorizontal'
 import { TaskLauncherAnimation } from '@/assets/remotion/compositions/TaskLauncherAnimation'
 import {
   AIChatWorkspaceMock,
@@ -1553,15 +1553,15 @@ function OttoLogoSpotlightDemo() {
 
 const catalog: CatalogItem[] = [
   {
-    code: '<MergeLogoReveal />',
-    component: MergeLogoReveal,
-    description: 'Reveal horizontal do logo MERGE com subtitulo Agent Handler.',
-    duration: MERGE_LOGO_REVEAL_DURATION,
+    code: '<OttoLogoRevealHorizontal />',
+    component: OttoLogoRevealHorizontal,
+    description: 'Reveal horizontal do logo Otto com subtitulo Agent Handler.',
+    duration: OTTO_LOGO_REVEAL_HORIZONTAL_DURATION,
     height: 720,
     kind: 'Logo',
-    label: 'Merge Logo Reveal',
-    tags: ['Logo', 'Merge', 'Reveal'],
-    value: 'merge-logo-reveal',
+    label: 'Otto Logo Reveal Horizontal',
+    tags: ['Logo', 'Otto', 'Reveal'],
+    value: 'otto-logo-reveal-horizontal',
     width: 1280,
   },
   {
