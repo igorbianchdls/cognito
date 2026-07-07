@@ -349,7 +349,6 @@ function Cursor() {
   const frame = useCurrentFrame()
   const points = [
     { frame: 166, x: 640, y: 610 },
-    { frame: 174, x: buttonTargets[0].x, y: buttonTargets[0].y },
     ...sequence.flatMap((step, index) => {
       const card = buttonTargets[step.index]
       const next = sequence[index + 1] ? buttonTargets[sequence[index + 1].index] : { x: 1050, y: 604 }
@@ -362,7 +361,9 @@ function Cursor() {
       ]
     }),
   ]
-  const sortedPoints = points.sort((first, second) => first.frame - second.frame)
+  const sortedPoints = points
+    .sort((first, second) => first.frame - second.frame)
+    .filter((point, index, list) => index === 0 || point.frame !== list[index - 1].frame)
   const input = sortedPoints.map((point) => point.frame)
   const x = interpolate(frame, input, sortedPoints.map((point) => point.x), { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' })
   const y = interpolate(frame, input, sortedPoints.map((point) => point.y), { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' })
