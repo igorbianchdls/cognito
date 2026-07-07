@@ -96,6 +96,7 @@ import {
   ExpenseClassificationMatchingAction,
   ExpenseClassificationTableAction,
 } from '@/assets/remotion/compositions/ExpenseClassificationActions'
+import { MERGE_LOGO_REVEAL_DURATION, MergeLogoReveal } from '@/assets/remotion/compositions/MergeLogoReveal'
 import { TaskLauncherAnimation } from '@/assets/remotion/compositions/TaskLauncherAnimation'
 import {
   AIChatWorkspaceMock,
@@ -256,7 +257,7 @@ function IPhoneMockupOnlyDemo() {
     <div
       style={{
         alignItems: 'center',
-        background: theme.background,
+        background: '#ffffff',
         color: theme.text,
         display: 'flex',
         fontFamily: theme.fontFamily,
@@ -267,9 +268,8 @@ function IPhoneMockupOnlyDemo() {
         width: '100%',
       }}
     >
-      <div style={{ background: `radial-gradient(circle at 50% 45%, ${theme.accent}28, rgba(255,255,255,0) 56%)`, inset: -120, position: 'absolute' }} />
       <div style={{ position: 'relative' }}>
-        <IPhoneMockupFrame height={iphoneMockupHeight} scale={1.68} screenStyle={{ background: '#ffffff' }} width={iphoneMockupWidth}>
+        <IPhoneMockupFrame height={iphoneMockupHeight} scale={1.68} screenStyle={{ background: '#ffffff' }} showHomeIndicator={false} showShadow={false} width={iphoneMockupWidth}>
           <div
             style={{
               background: '#ffffff',
@@ -324,7 +324,7 @@ function IPhoneMockupCompactDemo() {
     <div
       style={{
         alignItems: 'center',
-        background: theme.background,
+        background: '#ffffff',
         color: theme.text,
         display: 'flex',
         fontFamily: theme.fontFamily,
@@ -335,9 +335,8 @@ function IPhoneMockupCompactDemo() {
         width: '100%',
       }}
     >
-      <div style={{ background: `radial-gradient(circle at 50% 45%, ${theme.accent}28, rgba(255,255,255,0) 56%)`, inset: -120, position: 'absolute' }} />
       <div style={{ position: 'relative' }}>
-        <IPhoneMockupFrame height={iphoneMockupHeight} scale={1.68} screenStyle={{ background: '#ffffff' }} width={iphoneMockupWidth}>
+        <IPhoneMockupFrame height={iphoneMockupHeight} scale={1.68} screenStyle={{ background: '#ffffff' }} showHomeIndicator={false} showShadow={false} width={iphoneMockupWidth}>
           <div
             style={{
               background: '#ffffff',
@@ -1553,6 +1552,18 @@ function OttoLogoSpotlightDemo() {
 }
 
 const catalog: CatalogItem[] = [
+  {
+    code: '<MergeLogoReveal />',
+    component: MergeLogoReveal,
+    description: 'Reveal horizontal do logo MERGE com subtitulo Agent Handler.',
+    duration: MERGE_LOGO_REVEAL_DURATION,
+    height: 720,
+    kind: 'Logo',
+    label: 'Merge Logo Reveal',
+    tags: ['Logo', 'Merge', 'Reveal'],
+    value: 'merge-logo-reveal',
+    width: 1280,
+  },
   {
     code: '<OttoLogoPulse />',
     component: OttoLogoPulseDemo,

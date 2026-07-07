@@ -119,6 +119,7 @@ export type IPhoneMockupFrameProps = {
   screenStyle?: CSSProperties
   showHomeIndicator?: boolean
   showIsland?: boolean
+  showShadow?: boolean
   style?: CSSProperties
   width?: number
 }
@@ -130,6 +131,7 @@ export function IPhoneMockupFrame({
   screenStyle,
   showHomeIndicator = true,
   showIsland = true,
+  showShadow = true,
   style,
   width = 430,
 }: IPhoneMockupFrameProps) {
@@ -205,7 +207,7 @@ export function IPhoneMockupFrame({
             background: 'linear-gradient(145deg, #343a42 0%, #11161c 34%, #05070a 68%, #222831 100%)',
             border: '1px solid rgba(255,255,255,0.18)',
             borderRadius: bodyRadius,
-            boxShadow: '0 42px 110px rgba(10, 14, 20, 0.34), inset 0 0 0 2px rgba(255,255,255,0.08), inset 0 0 18px rgba(255,255,255,0.10)',
+            boxShadow: showShadow ? '0 42px 110px rgba(10, 14, 20, 0.34), inset 0 0 0 2px rgba(255,255,255,0.08), inset 0 0 18px rgba(255,255,255,0.10)' : 'inset 0 0 0 2px rgba(255,255,255,0.08), inset 0 0 18px rgba(255,255,255,0.10)',
             boxSizing: 'border-box',
             height: '100%',
             overflow: 'hidden',
