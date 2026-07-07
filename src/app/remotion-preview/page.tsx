@@ -96,7 +96,14 @@ import {
   ExpenseClassificationMatchingAction,
   ExpenseClassificationTableAction,
 } from '@/assets/remotion/compositions/ExpenseClassificationActions'
-import { OTTO_ASSISTANT_COMPATIBILITY_DURATION, OttoAssistantCompatibility } from '@/assets/remotion/compositions/OttoAssistantCompatibility'
+import {
+  OTTO_ASSISTANT_COMPATIBILITY_DURATION,
+  OTTO_ASSISTANT_MODEL_SWITCHER_DURATION,
+  OTTO_ASSISTANT_SPLIT_SCREEN_DURATION,
+  OttoAssistantCompatibility,
+  OttoAssistantModelSwitcherCompatibility,
+  OttoAssistantSplitScreenCompatibility,
+} from '@/assets/remotion/compositions/OttoAssistantCompatibility'
 import { OTTO_LOGO_REVEAL_HORIZONTAL_DURATION, OttoLogoRevealHorizontal } from '@/assets/remotion/compositions/OttoLogoRevealHorizontal'
 import { TaskLauncherAnimation } from '@/assets/remotion/compositions/TaskLauncherAnimation'
 import {
@@ -3051,6 +3058,30 @@ const catalog: CatalogItem[] = [
     label: 'Claude + ChatGPT Compatibility',
     tags: ['Claude', 'ChatGPT', 'Otto', 'Compatibility'],
     value: 'marketing-claude-chatgpt-compatibility',
+    width: 1080,
+  },
+  {
+    code: '<OttoAssistantSplitScreenCompatibility />',
+    component: OttoAssistantSplitScreenCompatibility,
+    description: 'ChatGPT e Claude lado a lado executando o mesmo fluxo com Otto.',
+    duration: OTTO_ASSISTANT_SPLIT_SCREEN_DURATION,
+    height: 1920,
+    kind: 'Marketing',
+    label: 'Claude + ChatGPT Split Screen',
+    tags: ['Claude', 'ChatGPT', 'Otto', 'Apps'],
+    value: 'marketing-claude-chatgpt-split-screen',
+    width: 1080,
+  },
+  {
+    code: '<OttoAssistantModelSwitcherCompatibility />',
+    component: OttoAssistantModelSwitcherCompatibility,
+    description: 'Seletor de assistente mostrando Otto funcionando com Claude ou ChatGPT.',
+    duration: OTTO_ASSISTANT_MODEL_SWITCHER_DURATION,
+    height: 1920,
+    kind: 'Marketing',
+    label: 'Claude + ChatGPT Model Switcher',
+    tags: ['Claude', 'ChatGPT', 'Otto', 'Switcher'],
+    value: 'marketing-claude-chatgpt-model-switcher',
     width: 1080,
   },
   {
