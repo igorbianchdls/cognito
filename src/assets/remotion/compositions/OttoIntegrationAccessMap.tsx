@@ -7,7 +7,7 @@ import GoogleAdsIcon from '@/components/icons/GoogleAdsIcon'
 import MetaIcon from '@/components/icons/MetaIcon'
 import OmieIcon from '@/components/icons/OmieIcon'
 
-export const OTTO_INTEGRATION_ACCESS_MAP_DURATION = 470
+export const OTTO_INTEGRATION_ACCESS_MAP_DURATION = 520
 
 const INK = '#17203A'
 const MUTED = '#647089'
@@ -40,12 +40,12 @@ const integrations = [
 ] as const
 
 const sequence = [
-  { click: 132, confirm: 160, end: 176, index: 0, modalIn: 138, start: 124 },
-  { click: 180, confirm: 208, end: 224, index: 1, modalIn: 186, start: 172 },
-  { click: 228, confirm: 256, end: 272, index: 2, modalIn: 234, start: 220 },
-  { click: 276, confirm: 304, end: 320, index: 3, modalIn: 282, start: 268 },
-  { click: 324, confirm: 352, end: 368, index: 4, modalIn: 330, start: 316 },
-  { click: 372, confirm: 400, end: 416, index: 5, modalIn: 378, start: 364 },
+  { click: 182, confirm: 210, end: 226, index: 0, modalIn: 188, start: 174 },
+  { click: 230, confirm: 258, end: 274, index: 1, modalIn: 236, start: 222 },
+  { click: 278, confirm: 306, end: 322, index: 2, modalIn: 284, start: 270 },
+  { click: 326, confirm: 354, end: 370, index: 3, modalIn: 332, start: 318 },
+  { click: 374, confirm: 402, end: 418, index: 4, modalIn: 380, start: 366 },
+  { click: 422, confirm: 450, end: 466, index: 5, modalIn: 428, start: 414 },
 ]
 
 const buttonTargets = [
@@ -60,7 +60,7 @@ const buttonTargets = [
 const modalConfirmTarget = { x: 762, y: 452 }
 
 function listScrollOffset(frame: number) {
-  return interpolate(frame, [18, 56, 78, 108], [0, -470, -470, 0], {
+  return interpolate(frame, [46, 96, 126, 166], [0, -470, -470, 0], {
     easing: Easing.bezier(0.22, 1, 0.36, 1),
     extrapolateLeft: 'clamp',
     extrapolateRight: 'clamp',
@@ -348,8 +348,8 @@ function modalStep(frame: number) {
 function Cursor() {
   const frame = useCurrentFrame()
   const points = [
-    { frame: 108, x: 640, y: 610 },
-    { frame: 120, x: buttonTargets[0].x, y: buttonTargets[0].y },
+    { frame: 166, x: 640, y: 610 },
+    { frame: 174, x: buttonTargets[0].x, y: buttonTargets[0].y },
     ...sequence.flatMap((step, index) => {
       const card = buttonTargets[step.index]
       const next = sequence[index + 1] ? buttonTargets[sequence[index + 1].index] : { x: 1050, y: 604 }
@@ -371,7 +371,7 @@ function Cursor() {
   const click = Math.max(cardClick, confirmClick)
 
   return (
-    <div style={{ filter: 'drop-shadow(0 10px 12px rgba(0,0,0,0.22))', left: x, opacity: progress(frame, 110, 122) * (1 - progress(frame, 420, 438)), position: 'absolute', top: y, transform: `scale(${1 - click * 0.1})` }}>
+    <div style={{ filter: 'drop-shadow(0 10px 12px rgba(0,0,0,0.22))', left: x, opacity: progress(frame, 168, 180) * (1 - progress(frame, 470, 488)), position: 'absolute', top: y, transform: `scale(${1 - click * 0.1})` }}>
       <svg height="50" viewBox="0 0 84 84" width="50">
         <path d="M16 9 L73 33 L48 42 L37 70 Z" fill="#1F2937" stroke="#ffffff" strokeLinejoin="round" strokeWidth="4" />
       </svg>
@@ -454,8 +454,8 @@ function InfoBox({ label, value }: { label: string; value: string }) {
 function ConnectionDrawer() {
   const frame = useCurrentFrame()
   const integration = integrations[5]
-  const enter = progress(frame, 424, 444)
-  const pulse = Math.max(0, Math.sin(frame / 5)) * progress(frame, 436, 466)
+  const enter = progress(frame, 474, 494)
+  const pulse = Math.max(0, Math.sin(frame / 5)) * progress(frame, 486, 516)
 
   return (
     <div
@@ -503,17 +503,17 @@ function ConnectionDrawer() {
                 Otto pode consultar pedidos, clientes e catalogo desta conexao.
               </div>
             </div>
-            <Toggle delay={436} />
+            <Toggle delay={486} />
           </div>
           <div style={{ alignItems: 'center', borderTop: `1px solid ${LINE}`, display: 'flex', justifyContent: 'space-between', marginTop: 17, paddingTop: 15 }}>
             <span style={{ color: '#475569', fontSize: 12.5, fontWeight: 700 }}>Exigir confirmacao</span>
-            <Toggle delay={442} />
+            <Toggle delay={492} />
           </div>
         </section>
         <section style={{ background: '#FAFBFD', border: `1px solid ${LINE}`, borderRadius: 16, padding: 18 }}>
           <div style={{ color: INK, fontSize: 14, fontWeight: 760, marginBottom: 12 }}>Dados sincronizados</div>
           {['Pedidos', 'Clientes', 'Produtos', 'Performance da loja'].map((item, index) => (
-            <div key={item} style={{ alignItems: 'center', color: '#475569', display: 'flex', fontSize: 12.5, fontWeight: 650, gap: 9, marginTop: index ? 10 : 0, opacity: progress(frame, 436 + index * 4, 450 + index * 4) }}>
+            <div key={item} style={{ alignItems: 'center', color: '#475569', display: 'flex', fontSize: 12.5, fontWeight: 650, gap: 9, marginTop: index ? 10 : 0, opacity: progress(frame, 486 + index * 4, 500 + index * 4) }}>
               <span style={{ alignItems: 'center', background: '#DCFCE7', borderRadius: 999, color: GREEN, display: 'flex', height: 18, justifyContent: 'center', width: 18 }}>
                 <LineIcon name="check" size={12} />
               </span>
@@ -529,7 +529,7 @@ function ConnectionDrawer() {
 export function OttoIntegrationAccessMap() {
   const frame = useCurrentFrame()
   const appEnter = progress(frame, 0, 18)
-  const drawerShift = progress(frame, 424, 444)
+  const drawerShift = progress(frame, 474, 494)
   const scrollOffset = listScrollOffset(frame)
   const scrollAmount = Math.abs(scrollOffset) / 470
 
@@ -574,7 +574,7 @@ export function OttoIntegrationAccessMap() {
                 ))}
               </div>
             </div>
-            <div style={{ background: '#EEF2F7', borderRadius: 999, bottom: 12, opacity: progress(frame, 18, 30) * (1 - progress(frame, 108, 120)), position: 'absolute', right: 3, top: 0, width: 5 }}>
+            <div style={{ background: '#EEF2F7', borderRadius: 999, bottom: 12, opacity: progress(frame, 46, 58) * (1 - progress(frame, 166, 178)), position: 'absolute', right: 3, top: 0, width: 5 }}>
               <div style={{ background: '#CBD5E1', borderRadius: 999, height: 112, transform: `translateY(${scrollAmount * 308}px)`, width: 5 }} />
             </div>
           </div>
