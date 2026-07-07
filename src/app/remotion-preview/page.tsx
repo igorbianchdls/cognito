@@ -2152,7 +2152,7 @@ const catalog: CatalogItem[] = [
   {
     code: '<OttoAssistantConnections />',
     component: OttoAssistantConnections,
-    description: 'Fluxo de conexao do Otto com Claude, ChatGPT e Cursor usando cards, modal e drawer final.',
+    description: 'Tela de conexoes do Otto conectando Claude, ChatGPT e Cursor com sidebar, modal e drawer.',
     duration: OTTO_ASSISTANT_CONNECTIONS_DURATION,
     height: 720,
     kind: 'Actions',
