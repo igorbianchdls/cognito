@@ -1,14 +1,12 @@
-import { Icon } from '@iconify/react'
 import type { ReactElement } from 'react'
 import { AbsoluteFill, Easing, interpolate, useCurrentFrame } from 'remotion'
 
-export const OTTO_INTEGRATION_ACCESS_MAP_DURATION = 95
+export const OTTO_INTEGRATION_ACCESS_MAP_DURATION = 110
 
 const INK = '#17203A'
 const MUTED = '#647089'
 const LINE = '#E8ECF4'
 const GREEN = '#166534'
-const BLUE = '#2563EB'
 const VIOLET = '#6A50F0'
 
 const navItems = [
@@ -21,12 +19,12 @@ const navItems = [
 ]
 
 const integrations = [
-  { category: 'Arquivos', icon: 'simple-icons:googledrive', label: 'Google Drive', status: 'Conectado', tone: GREEN },
-  { category: 'Comunicacao', icon: 'simple-icons:slack', label: 'Slack', status: 'Conectado', tone: GREEN },
-  { category: 'CRM', icon: 'simple-icons:hubspot', label: 'HubSpot', status: 'Pendente', tone: '#A16207' },
-  { category: 'Ecommerce', icon: 'simple-icons:shopify', label: 'Shopify', status: 'Nao conectado', tone: MUTED },
-  { category: 'CRM', icon: 'simple-icons:salesforce', label: 'Salesforce', status: 'Conectado', tone: GREEN },
-  { category: 'Workspace', icon: 'simple-icons:notion', label: 'Notion', status: 'Nao conectado', tone: MUTED },
+  { category: 'ERP', initials: 'CA', label: 'Conta Azul', tone: '#2563EB' },
+  { category: 'ERP', initials: 'BL', label: 'Bling', tone: '#16A34A' },
+  { category: 'ERP', initials: 'OM', label: 'Omie', tone: '#0891B2' },
+  { category: 'Ads', initials: 'M', label: 'Meta Ads', tone: '#0866FF' },
+  { category: 'Ads', initials: 'G', label: 'Google Ads', tone: '#F59E0B' },
+  { category: 'Ecommerce', initials: 'S', label: 'Shopify', tone: '#95BF47' },
 ]
 
 function progress(frame: number, start: number, end: number) {
@@ -46,29 +44,18 @@ function OttoGlyph({ color = '#4D4D4D', size = 22 }: { color?: string; size?: nu
   )
 }
 
-function CheckIcon({ size = 13 }: { size?: number }) {
-  return (
-    <svg height={size} viewBox="0 0 20 20" width={size}>
-      <path d="M4 10.5 L8.1 14.5 L16 5.5" fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.4" />
-    </svg>
-  )
-}
-
 function LineIcon({ name, size = 20 }: { name: string; size?: number }) {
   const common = { fill: 'none', stroke: 'currentColor', strokeLinecap: 'round' as const, strokeLinejoin: 'round' as const, strokeWidth: 1.9 }
   const paths: Record<string, ReactElement> = {
-    alert: <path d="M10 3 L18 17 H2 Z M10 8 V11 M10 14 H10.01" {...common} />,
     chart: <path d="M4 16 V10 M10 16 V5 M16 16 V8 M3 17 H17" {...common} />,
     chat: <path d="M4 5 H16 V13 H8 L4 16 Z" {...common} />,
     check: <path d="M4 10 L8 14 L16 6" {...common} />,
-    clock: <path d="M10 3 A7 7 0 1 1 10 17 A7 7 0 1 1 10 3 M10 7 V10 L13 12" {...common} />,
     file: <path d="M6 3 H12 L16 7 V17 H6 Z M12 3 V7 H16 M8 11 H14 M8 14 H13" {...common} />,
     history: <path d="M5 7 H2 V4 M3 7 A7 7 0 1 1 5 15 M10 6 V10 L13 12" {...common} />,
     plug: <path d="M7 3 V8 M13 3 V8 M5 8 H15 V11 A5 5 0 0 1 10 16 A5 5 0 0 1 5 11 Z M10 16 V18" {...common} />,
-    robot: <path d="M5 8 H15 A2 2 0 0 1 17 10 V15 H3 V10 A2 2 0 0 1 5 8 M10 8 V5 M7 12 H7.01 M13 12 H13.01 M7 15 V17 H13 V15" {...common} />,
     search: <path d="M9 4 A5 5 0 1 1 9 14 A5 5 0 1 1 9 4 M13 13 L17 17" {...common} />,
-    settings: <path d="M10 7 A3 3 0 1 1 10 13 A3 3 0 1 1 10 7 M10 2 V4 M10 16 V18 M4.3 4.3 L5.7 5.7 M14.3 14.3 L15.7 15.7 M2 10 H4 M16 10 H18 M4.3 15.7 L5.7 14.3 M14.3 5.7 L15.7 4.3" {...common} />,
     slides: <path d="M3 4 H17 V14 H3 Z M8 17 H12 M10 14 V17" {...common} />,
+    sync: <path d="M15 7 A5 5 0 0 0 6.3 4.2 L5 5.5 M5 3 V5.5 H7.5 M5 13 A5 5 0 0 0 13.7 15.8 L15 14.5 M15 17 V14.5 H12.5" {...common} />,
   }
 
   return (
@@ -102,7 +89,7 @@ function Sidebar() {
               gap: 5,
               height: 58,
               justifyContent: 'center',
-              opacity: progress(frame, 0 + index * 3, 18 + index * 3),
+              opacity: progress(frame, index * 3, 18 + index * 3),
               width: 72,
             }}
           >
@@ -121,12 +108,21 @@ function Sidebar() {
   )
 }
 
+function ProviderMark({ initials, tone }: { initials: string; tone: string }) {
+  return (
+    <div style={{ alignItems: 'center', background: tone, borderRadius: 14, color: '#FFFFFF', display: 'flex', fontSize: 16, fontWeight: 840, height: 48, justifyContent: 'center', letterSpacing: 0, width: 48 }}>
+      {initials}
+    </div>
+  )
+}
+
 function StatPanel() {
   const frame = useCurrentFrame()
+  const connected = frame > 84 ? 1 : 0
   const values = [
-    { icon: 'check', label: 'Conectadas', value: 3, color: GREEN },
-    { icon: 'clock', label: 'Pendentes', value: 1, color: '#A16207' },
-    { icon: 'alert', label: 'Atencao', value: 0, color: BLUE },
+    { label: 'Conectadas', value: connected, color: GREEN },
+    { label: 'Disponiveis', value: 6, color: '#2563EB' },
+    { label: 'Pendentes', value: frame > 84 ? 0 : 1, color: '#A16207' },
   ]
 
   return (
@@ -151,7 +147,7 @@ function StatPanel() {
             }}
           >
             <div style={{ alignItems: 'center', background: '#F7F8FC', borderRadius: 14, color: item.color, display: 'flex', height: 42, justifyContent: 'center', width: 42 }}>
-              <LineIcon name={item.icon} size={22} />
+              <LineIcon name={index === 0 ? 'check' : index === 1 ? 'plug' : 'sync'} size={22} />
             </div>
             <div>
               <div style={{ color: item.color, fontSize: 25, fontWeight: 780, lineHeight: 1 }}>{item.value}</div>
@@ -164,22 +160,21 @@ function StatPanel() {
   )
 }
 
-function StatusBadge({ status, tone }: { status: string; tone: string }) {
-  const connected = status === 'Conectado'
+function StatusBadge({ connected }: { connected: boolean }) {
   return (
     <span
       style={{
-        background: connected ? tone : status === 'Pendente' ? '#FEF3C7' : '#FFFFFF',
-        border: connected ? 'none' : `1px solid ${status === 'Pendente' ? '#FDE68A' : LINE}`,
+        background: connected ? GREEN : '#FFFFFF',
+        border: connected ? 'none' : `1px solid ${LINE}`,
         borderRadius: 999,
-        color: connected ? '#FFFFFF' : status === 'Pendente' ? '#92400E' : MUTED,
+        color: connected ? '#FFFFFF' : MUTED,
         fontSize: 12,
         fontWeight: 760,
         padding: '7px 10px',
         whiteSpace: 'nowrap',
       }}
     >
-      {status}
+      {connected ? 'Conectado' : 'Nao conectado'}
     </span>
   )
 }
@@ -187,16 +182,18 @@ function StatusBadge({ status, tone }: { status: string; tone: string }) {
 function IntegrationCard({ index, integration }: { index: number; integration: typeof integrations[number] }) {
   const frame = useCurrentFrame()
   const enter = progress(frame, 16 + index * 5, 34 + index * 5)
-  const selected = integration.label === 'Slack' && frame > 48
-  const pulse = selected ? 1 + Math.sin(frame / 4) * 0.01 : 1
+  const selected = integration.label === 'Conta Azul'
+  const connected = selected && frame > 84
+  const highlight = selected && frame > 38
+  const pulse = connected ? 1 + Math.sin(frame / 4) * 0.008 : 1
 
   return (
     <div
       style={{
         background: '#FFFFFF',
-        border: selected ? `2px solid ${VIOLET}` : `1px solid ${LINE}`,
+        border: highlight ? `2px solid ${connected ? GREEN : INK}` : `1px solid ${LINE}`,
         borderRadius: 16,
-        boxShadow: selected ? '0 18px 38px rgba(106,80,240,0.16)' : '0 12px 30px rgba(23,32,58,0.06)',
+        boxShadow: highlight ? `0 18px 38px ${connected ? 'rgba(22,101,52,0.16)' : 'rgba(23,32,58,0.13)'}` : '0 12px 30px rgba(23,32,58,0.06)',
         display: 'flex',
         flexDirection: 'column',
         height: 184,
@@ -206,16 +203,26 @@ function IntegrationCard({ index, integration }: { index: number; integration: t
       }}
     >
       <div style={{ alignItems: 'flex-start', display: 'flex', justifyContent: 'space-between' }}>
-        <div style={{ alignItems: 'center', background: '#F7F8FC', border: `1px solid ${LINE}`, borderRadius: 14, display: 'flex', height: 48, justifyContent: 'center', width: 48 }}>
-          <Icon height={24} icon={integration.icon} width={24} />
-        </div>
-        <StatusBadge status={integration.status} tone={integration.tone} />
+        <ProviderMark initials={integration.initials} tone={integration.tone} />
+        <StatusBadge connected={connected} />
       </div>
       <div style={{ color: INK, fontSize: 20, fontWeight: 760, marginTop: 20 }}>{integration.label}</div>
       <div style={{ color: MUTED, fontSize: 13, lineHeight: 1.35, marginTop: 7 }}>{integration.category}</div>
-      <div style={{ alignItems: 'center', borderTop: `1px solid ${LINE}`, color: MUTED, display: 'flex', fontSize: 12, fontWeight: 650, gap: 8, marginTop: 'auto', paddingTop: 14 }}>
-        <LineIcon name="settings" size={15} />
-        {integration.status === 'Conectado' ? 'Configurar' : 'Conectar'}
+      <div
+        style={{
+          alignItems: 'center',
+          background: connected ? '#DCFCE7' : INK,
+          borderRadius: 10,
+          color: connected ? GREEN : '#FFFFFF',
+          display: 'flex',
+          fontSize: 13,
+          fontWeight: 760,
+          height: 36,
+          justifyContent: 'center',
+          marginTop: 'auto',
+        }}
+      >
+        {connected ? 'Conectado' : 'Conectar'}
       </div>
     </div>
   )
@@ -223,12 +230,14 @@ function IntegrationCard({ index, integration }: { index: number; integration: t
 
 function Cursor() {
   const frame = useCurrentFrame()
-  const click = progress(frame, 42, 56)
-  const x = interpolate(frame, [0, 36, 48, 64], [620, 630, 425, 858], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' })
-  const y = interpolate(frame, [0, 36, 48, 64], [610, 488, 408, 176], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' })
+  const firstClick = progress(frame, 39, 49)
+  const secondClick = progress(frame, 73, 83)
+  const x = interpolate(frame, [0, 34, 44, 58, 76, 92], [632, 512, 374, 622, 700, 700], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' })
+  const y = interpolate(frame, [0, 34, 44, 58, 76, 92], [610, 503, 512, 456, 494, 494], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' })
+  const click = Math.max(firstClick * (1 - progress(frame, 49, 54)), secondClick * (1 - progress(frame, 83, 88)))
 
   return (
-    <div style={{ filter: 'drop-shadow(0 10px 12px rgba(0,0,0,0.22))', left: x, opacity: progress(frame, 22, 36), position: 'absolute', top: y, transform: `scale(${1 - click * 0.08})` }}>
+    <div style={{ filter: 'drop-shadow(0 10px 12px rgba(0,0,0,0.22))', left: x, opacity: progress(frame, 26, 38) * (1 - progress(frame, 92, 106)), position: 'absolute', top: y, transform: `scale(${1 - click * 0.1})` }}>
       <svg height="50" viewBox="0 0 84 84" width="50">
         <path d="M16 9 L73 33 L48 42 L37 70 Z" fill="#1F2937" stroke="#ffffff" strokeLinejoin="round" strokeWidth="4" />
       </svg>
@@ -236,113 +245,64 @@ function Cursor() {
   )
 }
 
-function Toggle({ checked, delay = 0 }: { checked: boolean; delay?: number }) {
+function ConnectionModal() {
   const frame = useCurrentFrame()
-  const on = checked ? progress(frame, delay, delay + 14) : 0
-  return (
-    <span style={{ background: checked ? VIOLET : '#CBD5E1', borderRadius: 999, display: 'inline-flex', height: 24, padding: 3, position: 'relative', width: 43 }}>
-      <span style={{ background: '#FFFFFF', borderRadius: 999, boxShadow: '0 2px 5px rgba(0,0,0,0.18)', height: 18, transform: `translateX(${on * 19}px)`, width: 18 }} />
-    </span>
-  )
-}
-
-function Drawer() {
-  const frame = useCurrentFrame()
-  const enter = progress(frame, 54, 72)
-  const otto = progress(frame, 68, 84)
-  const pulse = Math.max(0, Math.sin(frame / 5)) * progress(frame, 70, 90)
+  const enter = progress(frame, 48, 62)
+  const exit = progress(frame, 84, 96)
+  const visible = enter * (1 - exit)
+  const confirmed = frame > 78
 
   return (
-    <div
-      style={{
-        background: '#FFFFFF',
-        borderLeft: `1px solid ${LINE}`,
-        bottom: 0,
-        boxShadow: '-24px 0 54px rgba(23,32,58,0.12)',
-        opacity: enter,
-        position: 'absolute',
-        right: 0,
-        top: 0,
-        transform: `translateX(${(1 - enter) * 360}px)`,
-        width: 390,
-      }}
-    >
-      <div style={{ borderBottom: `1px solid ${LINE}`, padding: '28px 26px 24px' }}>
+    <div style={{ alignItems: 'center', background: `rgba(15,23,42,${0.18 * visible})`, display: 'flex', inset: 0, justifyContent: 'center', opacity: visible, position: 'absolute' }}>
+      <div
+        style={{
+          background: '#FFFFFF',
+          border: `1px solid ${LINE}`,
+          borderRadius: 18,
+          boxShadow: '0 34px 90px rgba(15,23,42,0.22)',
+          height: 348,
+          padding: 28,
+          transform: `translateY(${(1 - enter) * 18}px) scale(${0.96 + enter * 0.04})`,
+          width: 486,
+        }}
+      >
         <div style={{ alignItems: 'center', display: 'flex', gap: 15 }}>
-          <div style={{ alignItems: 'center', background: '#F7F8FC', border: `1px solid ${LINE}`, borderRadius: 16, display: 'flex', height: 50, justifyContent: 'center', width: 50 }}>
-            <Icon height={25} icon="simple-icons:slack" width={25} />
-          </div>
+          <ProviderMark initials="CA" tone="#2563EB" />
           <div>
-            <div style={{ color: INK, fontSize: 25, fontWeight: 760, letterSpacing: 0 }}>Slack</div>
-            <div style={{ color: MUTED, fontSize: 13, fontWeight: 650, marginTop: 6 }}>COMUNICACAO · slack</div>
+            <div style={{ color: INK, fontSize: 25, fontWeight: 760 }}>Conectar Conta Azul</div>
+            <div style={{ color: MUTED, fontSize: 13, fontWeight: 650, marginTop: 6 }}>ERP · OAuth seguro</div>
           </div>
         </div>
-      </div>
-      <div style={{ display: 'grid', gap: 16, padding: 26 }}>
-        <div style={{ display: 'grid', gap: 12, gridTemplateColumns: '1fr 1fr' }}>
-          <InfoBox label="Status" value="Conectado" />
-          <InfoBox label="Ultimo sync" value="Hoje" />
-        </div>
-        <section style={{ background: '#FAFBFD', border: `1px solid ${LINE}`, borderRadius: 16, padding: 18 }}>
-          <div style={{ alignItems: 'flex-start', display: 'flex', gap: 13 }}>
-            <div style={{ alignItems: 'center', background: '#FFFFFF', borderRadius: 14, color: VIOLET, display: 'flex', height: 40, justifyContent: 'center', position: 'relative', width: 40 }}>
-              <span style={{ background: `rgba(106,80,240,${0.16 + pulse * 0.18})`, borderRadius: 999, inset: -5 - pulse * 8, position: 'absolute' }} />
-              <span style={{ position: 'relative' }}>
-                <LineIcon name="robot" size={22} />
-              </span>
-            </div>
-            <div style={{ flex: 1, minWidth: 0 }}>
-              <div style={{ alignItems: 'center', display: 'flex', gap: 8 }}>
-                <div style={{ color: INK, fontSize: 15, fontWeight: 760 }}>Acesso da IA</div>
-                <span style={{ background: otto ? GREEN : '#FFFFFF', border: otto ? 'none' : `1px solid ${LINE}`, borderRadius: 999, color: otto ? '#FFFFFF' : MUTED, fontSize: 11, fontWeight: 760, padding: '5px 8px' }}>
-                  {otto ? 'Permitido' : 'Bloqueado'}
-                </span>
-              </div>
-              <div style={{ color: MUTED, fontSize: 12.5, lineHeight: 1.45, marginTop: 7 }}>
-                Otto pode consultar dados desta conexao e executar acoes seguras.
-              </div>
-            </div>
-            <Toggle checked={frame > 68} delay={68} />
-          </div>
-          <div style={{ alignItems: 'center', borderTop: `1px solid ${LINE}`, display: 'flex', justifyContent: 'space-between', marginTop: 17, paddingTop: 15 }}>
-            <span style={{ color: '#475569', fontSize: 12.5, fontWeight: 700 }}>Exigir confirmacao</span>
-            <Toggle checked={frame > 76} delay={76} />
-          </div>
-        </section>
-        <section style={{ background: '#FAFBFD', border: `1px solid ${LINE}`, borderRadius: 16, padding: 18 }}>
-          <div style={{ color: INK, fontSize: 14, fontWeight: 760, marginBottom: 12 }}>Permissoes ativas</div>
-          {['Ler canais', 'Ler mensagens', 'Criar resumo', 'Enviar mensagem com confirmacao'].map((item, index) => (
-            <div key={item} style={{ alignItems: 'center', color: '#475569', display: 'flex', fontSize: 12.5, fontWeight: 650, gap: 9, marginTop: index ? 10 : 0, opacity: progress(frame, 72 + index * 4, 86 + index * 4) }}>
-              <span style={{ alignItems: 'center', background: '#DCFCE7', borderRadius: 999, color: GREEN, display: 'flex', height: 18, justifyContent: 'center', width: 18 }}>
-                <CheckIcon size={12} />
+        <div style={{ background: '#F8FAFC', border: `1px solid ${LINE}`, borderRadius: 14, display: 'grid', gap: 12, marginTop: 24, padding: 18 }}>
+          {['Autorizar leitura de clientes, vendas e financeiro', 'Sincronizar dados automaticamente', 'Permitir consulta pela Otto IA com confirmacao'].map((item, index) => (
+            <div key={item} style={{ alignItems: 'center', color: '#475569', display: 'flex', fontSize: 14, fontWeight: 650, gap: 10, opacity: progress(frame, 58 + index * 5, 70 + index * 5) }}>
+              <span style={{ alignItems: 'center', background: '#DCFCE7', borderRadius: 999, color: GREEN, display: 'flex', height: 21, justifyContent: 'center', width: 21 }}>
+                <LineIcon name="check" size={14} />
               </span>
               {item}
             </div>
           ))}
-        </section>
+        </div>
+        <div style={{ display: 'flex', gap: 12, justifyContent: 'flex-end', marginTop: 24 }}>
+          <div style={{ alignItems: 'center', background: '#FFFFFF', border: `1px solid ${LINE}`, borderRadius: 10, color: MUTED, display: 'flex', fontSize: 13, fontWeight: 760, height: 40, justifyContent: 'center', width: 92 }}>Cancelar</div>
+          <div style={{ alignItems: 'center', background: confirmed ? GREEN : INK, borderRadius: 10, color: '#FFFFFF', display: 'flex', fontSize: 13, fontWeight: 780, height: 40, justifyContent: 'center', width: 154 }}>
+            {confirmed ? 'Conectado' : 'Confirmar'}
+          </div>
+        </div>
       </div>
-    </div>
-  )
-}
-
-function InfoBox({ label, value }: { label: string; value: string }) {
-  return (
-    <div style={{ background: '#FAFBFD', border: `1px solid ${LINE}`, borderRadius: 14, padding: 15 }}>
-      <div style={{ color: '#98A4BA', fontSize: 11, fontWeight: 760, textTransform: 'uppercase' }}>{label}</div>
-      <div style={{ color: INK, fontSize: 16, fontWeight: 760, marginTop: 7 }}>{value}</div>
     </div>
   )
 }
 
 function Caption() {
   const frame = useCurrentFrame()
-  const text = frame < 34
-    ? 'Usuario abre Integracoes no Otto'
-    : frame < 58
-      ? 'conecta os apps principais'
-      : frame < 78
-        ? 'configura o acesso da Otto'
-        : 'com permissao e confirmacao controladas'
+  const text = frame < 38
+    ? 'Usuario escolhe uma integracao'
+    : frame < 54
+      ? 'clica em Conectar'
+      : frame < 84
+        ? 'confirma no modal'
+        : 'Conta Azul fica conectada'
 
   return (
     <div
@@ -368,10 +328,6 @@ function Caption() {
 export function OttoIntegrationAccessMap() {
   const frame = useCurrentFrame()
   const appEnter = progress(frame, 0, 18)
-  const contentWidth = interpolate(frame, [54, 72], [1112, 802], {
-    extrapolateLeft: 'clamp',
-    extrapolateRight: 'clamp',
-  })
 
   return (
     <AbsoluteFill style={{ background: '#F4F6FA', color: INK, fontFamily: 'Inter, Arial, Helvetica, sans-serif', overflow: 'hidden' }}>
@@ -392,7 +348,7 @@ export function OttoIntegrationAccessMap() {
         }}
       >
         <Sidebar />
-        <main style={{ bottom: 0, left: 88, overflow: 'hidden', padding: '38px 34px', position: 'absolute', top: 0, width: contentWidth }}>
+        <main style={{ bottom: 0, left: 88, overflow: 'hidden', padding: '38px 34px', position: 'absolute', right: 0, top: 0 }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 24 }}>
             <div>
               <h1 style={{ color: INK, fontSize: 30, fontWeight: 760, letterSpacing: 0, margin: 0 }}>Conexoes</h1>
@@ -412,7 +368,7 @@ export function OttoIntegrationAccessMap() {
             ))}
           </div>
         </main>
-        <Drawer />
+        <ConnectionModal />
       </div>
       <Cursor />
       <Caption />
