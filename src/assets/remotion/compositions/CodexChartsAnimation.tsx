@@ -17,7 +17,7 @@ function typeText(text: string, progress: number) {
   return text.slice(0, Math.ceil(text.length * progress))
 }
 
-function PromptBar({ prompt, start, width = 420 }: { prompt: string; start: number; width?: number }) {
+function PromptBar({ prompt, start, width = 560 }: { prompt: string; start: number; width?: number }) {
   const frame = useCurrentFrame()
   const enter = clamp(frame, [start, start + 22], [0, 1])
   const typed = clamp(frame, [start + 10, start + 72], [0, 1])
@@ -32,19 +32,19 @@ function PromptBar({ prompt, start, width = 420 }: { prompt: string; start: numb
         boxShadow: '0 10px 28px rgba(15,23,42,0.06)',
         display: 'grid',
         gridTemplateColumns: '24px 1fr auto auto',
-        height: 42,
+        height: 48,
         opacity: enter,
         padding: '0 9px 0 15px',
         transform: `translateY(${(1 - enter) * 10}px)`,
         width,
       }}
     >
-      <span style={{ alignItems: 'center', color: '#7b7f86', display: 'flex', fontSize: 18, fontWeight: 420, justifyContent: 'center' }}>+</span>
-      <span style={{ color: '#1f2937', fontSize: 13, fontWeight: 520, letterSpacing: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+      <span style={{ alignItems: 'center', color: '#7b7f86', display: 'flex', fontSize: 19, fontWeight: 420, justifyContent: 'center' }}>+</span>
+      <span style={{ color: '#1f2937', fontSize: 14, fontWeight: 520, letterSpacing: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
         {typeText(prompt, typed)}
       </span>
       <span style={{ color: '#a1a8b3', fontSize: 10, fontWeight: 720, marginLeft: 12 }}>Instant</span>
-      <span style={{ alignItems: 'center', background: '#111111', borderRadius: 999, color: '#ffffff', display: 'flex', fontSize: 12, fontWeight: 780, height: 22, justifyContent: 'center', marginLeft: 8, width: 22 }}>↑</span>
+      <span style={{ alignItems: 'center', background: '#111111', borderRadius: 999, color: '#ffffff', display: 'flex', fontSize: 12, fontWeight: 780, height: 24, justifyContent: 'center', marginLeft: 8, width: 24 }}>↑</span>
     </div>
   )
 }
@@ -55,8 +55,8 @@ function ChartCaption({ start, subtitle, title }: { start: number; subtitle: str
 
   return (
     <div style={{ opacity, transform: `translateY(${(1 - opacity) * 8}px)` }}>
-      <div style={{ color: '#111827', fontSize: 13, fontWeight: 750, letterSpacing: 0, lineHeight: 1.22, maxWidth: 420 }}>{title}</div>
-      <div style={{ color: '#7b8491', fontSize: 9, fontWeight: 560, lineHeight: 1.25, marginTop: 4, maxWidth: 390 }}>{subtitle}</div>
+      <div style={{ color: '#111827', fontSize: 18, fontWeight: 750, letterSpacing: 0, lineHeight: 1.24, maxWidth: 760 }}>{title}</div>
+      <div style={{ color: '#7b8491', fontSize: 13, fontWeight: 560, lineHeight: 1.25, marginTop: 6, maxWidth: 680 }}>{subtitle}</div>
     </div>
   )
 }
@@ -227,43 +227,75 @@ function OpenAiMark({ start }: { start: number }) {
   )
 }
 
+function StageItem({ children, end, start }: { children: React.ReactNode; end: number; start: number }) {
+  const frame = useCurrentFrame()
+  const enter = clamp(frame, [start, start + 24], [0, 1])
+  const exit = clamp(frame, [end - 24, end], [1, 0])
+  const opacity = Math.min(enter, exit)
+  const y = (1 - enter) * 18 + (1 - exit) * -18
+
+  return (
+    <div
+      style={{
+        alignItems: 'center',
+        display: 'flex',
+        justifyContent: 'center',
+        left: 0,
+        opacity,
+        pointerEvents: 'none',
+        position: 'absolute',
+        right: 0,
+        top: '50%',
+        transform: `translateY(calc(-50% + ${y}px))`,
+      }}
+    >
+      {children}
+    </div>
+  )
+}
+
 export function CodexChartsAnimation() {
   const frame = useCurrentFrame()
-  const titleOut = clamp(frame, [76, 112], [1, 0])
-  const promptOneOut = clamp(frame, [164, 194], [1, 0])
-  const barOut = clamp(frame, [232, 260], [1, 0])
-  const promptTwoOut = clamp(frame, [334, 364], [1, 0])
-  const lineOut = clamp(frame, [430, 462], [1, 0])
-  const promptThreeOut = clamp(frame, [500, 528], [1, 0])
+  const titleIn = clamp(frame, [0, 28], [0, 1])
+  const titleOut = clamp(frame, [74, 104], [1, 0])
 
   return (
     <AbsoluteFill style={{ background: '#ffffff', color: '#111827', fontFamily: FONT, overflow: 'hidden' }}>
-      <div style={{ left: 92, opacity: titleOut, position: 'absolute', textAlign: 'center', top: 78, transform: `translateY(${(1 - titleOut) * -12}px)`, width: 292 }}>
-        <h1 style={{ color: '#050505', fontSize: 37, fontWeight: 780, letterSpacing: 0, lineHeight: 1.08, margin: 0 }}>Interactive charts in ChatGPT</h1>
+      <div style={{ left: 0, opacity: titleIn * titleOut, position: 'absolute', right: 0, textAlign: 'center', top: 78, transform: `translateY(${(1 - titleIn) * 14 + (1 - titleOut) * -16}px)` }}>
+        <h1 style={{ color: '#050505', fontSize: 40, fontWeight: 780, letterSpacing: 0, lineHeight: 1.08, margin: 0 }}>Interactive charts in ChatGPT</h1>
       </div>
 
-      <div style={{ left: 648, opacity: promptOneOut, position: 'absolute', top: 86 }}>
-        <PromptBar prompt="What are the top 10 countries by GDP?" start={42} />
-      </div>
-      <div style={{ left: 724, opacity: barOut, position: 'absolute', top: 40 }}>
-        <BarChart start={110} />
-      </div>
+      <StageItem end={186} start={104}>
+        <PromptBar prompt="What are the top 10 countries by GDP?" start={104} width={560} />
+      </StageItem>
 
-      <div style={{ left: 48, opacity: promptTwoOut, position: 'absolute', top: 286 }}>
-        <PromptBar prompt="Show a line chart of the growth over the last 10 years per country" start={214} width={430} />
-      </div>
-      <div style={{ left: 724, opacity: lineOut, position: 'absolute', top: 216 }}>
-        <LineChart start={282} />
-      </div>
+      <StageItem end={294} start={190}>
+        <div style={{ transform: 'scale(1.42)', transformOrigin: 'center center' }}>
+          <BarChart start={190} />
+        </div>
+      </StageItem>
 
-      <div style={{ left: 48, opacity: promptThreeOut, position: 'absolute', top: 468 }}>
-        <PromptBar prompt="Give me a pie chart showing the energy sources used" start={402} width={430} />
-      </div>
-      <div style={{ left: 724, position: 'absolute', top: 430 }}>
-        <PieChart start={476} />
-      </div>
+      <StageItem end={380} start={300}>
+        <PromptBar prompt="Show a line chart of the growth over the last 10 years per country" start={300} width={620} />
+      </StageItem>
 
-      <div style={{ bottom: 98, opacity: clamp(frame, [548, 580], [0, 1]), position: 'absolute', right: 168 }}>
+      <StageItem end={492} start={386}>
+        <div style={{ transform: 'scale(1.34)', transformOrigin: 'center center' }}>
+          <LineChart start={386} />
+        </div>
+      </StageItem>
+
+      <StageItem end={566} start={498}>
+        <PromptBar prompt="Give me a pie chart showing the energy sources used" start={498} width={620} />
+      </StageItem>
+
+      <StageItem end={620} start={568}>
+        <div style={{ transform: 'scale(1.42)', transformOrigin: 'center center' }}>
+          <PieChart start={568} />
+        </div>
+      </StageItem>
+
+      <div style={{ bottom: 58, left: 0, opacity: clamp(frame, [590, 612], [0, 1]), position: 'absolute', right: 0 }}>
         <OpenAiMark start={548} />
       </div>
     </AbsoluteFill>
