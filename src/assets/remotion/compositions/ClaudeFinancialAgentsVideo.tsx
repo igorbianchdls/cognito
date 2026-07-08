@@ -16,7 +16,7 @@ import {
 } from '@/assets/remotion/compositions/ChatGptMobileMarketing'
 
 export const CLAUDE_FINANCIAL_AGENTS_VIDEO_DURATION = CHATGPT_FINANCIAL_AGENTS_VIDEO_DURATION
-const CLAUDE_RESPONSE_SERIF = '"Times New Roman", Georgia, serif'
+const CLAUDE_RESPONSE_SERIF = 'Georgia, "Times New Roman", serif'
 
 function ClaudeFinancialAssistantText({ children, style }: { children: ReactNode; style: CSSProperties }) {
   return (
@@ -28,7 +28,7 @@ function ClaudeFinancialAssistantText({ children, style }: { children: ReactNode
         fontFamily: CLAUDE_RESPONSE_SERIF,
         fontSize: 43,
         fontWeight: 400,
-        letterSpacing: 0,
+        letterSpacing: '-0.01em',
         lineHeight: 1.26,
         padding: '0 42px',
       }}
@@ -103,7 +103,8 @@ export function ClaudeFinancialAgentsVideo() {
           .claude-financial-response,
           .claude-financial-response-copy,
           .claude-financial-response-copy span {
-            font-family: "Times New Roman", Georgia, serif !important;
+            font-family: Georgia, "Times New Roman", serif !important;
+            letter-spacing: -0.01em !important;
           }
         `}
       </style>
