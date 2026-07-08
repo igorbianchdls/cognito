@@ -46,43 +46,43 @@ type FinancialAgentStep = {
 
 export const financialAgentSteps: FinancialAgentStep[] = [
   {
-    insight: 'Organizei despesas por categoria e destaquei lancamentos fora do padrao.',
+    insight: 'Resumo: marketing e software concentram 64% das despesas. O frete ficou como ponto de revisao.',
     result: 'expenses',
     text: 'Primeiro vou acionar o agente de despesas para classificar gastos e excecoes.',
     toolName: 'classificar_despesas',
   },
   {
-    insight: 'Conciliei bancos, cartoes e movimentacoes. Separei 3 itens para revisao.',
+    insight: 'Encontrei 2 matches seguros e 1 tarifa sem lancamento no ERP. Esse item precisa virar regra.',
     result: 'reconcile',
     text: 'Agora vou acionar o agente de conciliacao para cruzar banco, cartoes e ERP.',
     toolName: 'conciliar_bancos_cartoes',
   },
   {
-    insight: 'Montei uma visao de caixa com saldo, vencimentos e tendencia dos proximos dias.',
+    insight: 'O caixa segue positivo. O menor saldo projetado e R$ 346k, com recuperacao ate R$ 465k em 30 dias.',
     result: 'cash',
     text: 'Vou transformar os dados em dashboard, relatorios e analise do caixa.',
     toolName: 'gerar_dashboard_caixa',
   },
   {
-    insight: 'Identifiquei pagamentos concentrados e recebiveis que merecem acompanhamento.',
+    insight: 'O ponto de atencao esta nos proximos 7 dias: saem R$ 42k antes da maior entrada prevista.',
     result: 'timeline',
     text: 'Tambem vou monitorar contas a pagar, contas a receber e fluxo de caixa.',
     toolName: 'monitorar_fluxo_caixa',
   },
   {
-    insight: 'Organizei notas, documentos e obrigacoes financeiras por prioridade.',
+    insight: 'Dois documentos ja podem ser arquivados. O boleto pendente precisa de revisao antes do fechamento.',
     result: 'docs',
     text: 'Agora vou revisar documentos, notas fiscais e obrigacoes financeiras.',
     toolName: 'organizar_documentos_fiscais',
   },
   {
-    insight: 'Priorizei clientes em atraso e preparei sugestoes de cobranca.',
+    insight: 'A cobranca mais urgente e Cliente Norte: R$ 42k em aberto ha 18 dias, com prioridade alta.',
     result: 'collections',
     text: 'Vou acompanhar clientes em atraso e sugerir as cobrancas mais importantes.',
     toolName: 'priorizar_cobrancas',
   },
   {
-    insight: 'Encontrei onde sua empresa pode economizar, reduzir perdas e aumentar margem.',
+    insight: 'Maior ganho rapido: cortar campanha com baixo retorno. Potencial total estimado de R$ 31k.',
     result: 'margin',
     text: 'Por fim, vou procurar perdas, economias e decisoes que aumentam margem.',
     toolName: 'identificar_oportunidades_margem',
