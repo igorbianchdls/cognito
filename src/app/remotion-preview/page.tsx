@@ -89,6 +89,7 @@ import {
 import { CHATGPT_FINANCIAL_AGENTS_VIDEO_DURATION, ChatGptFinancialAgentsVideo, ChatGptMobileAnimation, ChatGptToolCallDemoAnimation } from '@/assets/remotion/compositions/ChatGptMobileMarketing'
 import { ChatGptOperationalFlowsVideo } from '@/assets/remotion/compositions/ChatGptOperationalFlowsVideo'
 import { ChatGptTaskLauncherAnimation } from '@/assets/remotion/compositions/ChatGptTaskLauncherAnimation'
+import { CODEX_CHARTS_DURATION, CodexChartsAnimation } from '@/assets/remotion/compositions/CodexChartsAnimation'
 import { CLAUDE_FINANCIAL_AGENTS_VIDEO_DURATION, ClaudeFinancialAgentsVideo } from '@/assets/remotion/compositions/ClaudeFinancialAgentsVideo'
 import { ClaudeMobileAnimation } from '@/assets/remotion/compositions/ClaudeMobileMarketing'
 import { ClaudeOperationalFlowsVideo } from '@/assets/remotion/compositions/ClaudeOperationalFlowsVideo'
@@ -3180,6 +3181,18 @@ const catalog: CatalogItem[] = [
     tags: ['Claude', 'Financeiro', 'Agentes', 'Otto', 'Video'],
     value: 'video-claude-financial-agents',
     width: 1080,
+  },
+  {
+    code: '<CodexChartsAnimation />',
+    component: CodexChartsAnimation,
+    description: 'Animacao horizontal inspirada no video CodexCharts, com prompts do ChatGPT gerando graficos interativos.',
+    duration: CODEX_CHARTS_DURATION,
+    height: 720,
+    kind: 'Vídeos criados',
+    label: 'Codex Charts',
+    tags: ['ChatGPT', 'Charts', 'Interactive', 'Video'],
+    value: 'video-codex-charts',
+    width: 1280,
   },
   {
     code: '<ClaudeOperationalFlowsVideo />',
