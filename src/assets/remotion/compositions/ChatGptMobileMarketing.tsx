@@ -35,7 +35,7 @@ const orbitIntegrations: OrbitIntegration[] = [
   { accent: '#16a34a', icon: BlingIcon, label: 'Bling' },
 ]
 
-export const CHATGPT_FINANCIAL_AGENTS_VIDEO_DURATION = 1580
+export const CHATGPT_FINANCIAL_AGENTS_VIDEO_DURATION = 1820
 
 type FinancialAgentStep = {
   insight: string
@@ -326,37 +326,73 @@ export function ImprovedFinancialResultCard({ kind, startFrame }: { kind: Financ
   }
 
   if (kind === 'cash') {
-    const values = [62, 82, 70, 104, 92, 128]
+    const chartProgress = grow(18)
+    const points = [
+      { label: 'Hoje', value: 418, x: 26, y: 66 },
+      { label: '7d', value: 346, x: 126, y: 102 },
+      { label: '12d', value: 387, x: 226, y: 82 },
+      { label: '20d', value: 432, x: 326, y: 58 },
+      { label: '30d', value: 465, x: 426, y: 42 },
+    ]
+    const visiblePoints = points.map((point, index) => {
+      if (chartProgress >= 1) return point
+      const previous = points[Math.max(0, index - 1)]
+      const segment = Math.max(0, Math.min(1, chartProgress * (points.length - 1) - index + 1))
+      return {
+        ...point,
+        x: previous.x + (point.x - previous.x) * segment,
+        y: previous.y + (point.y - previous.y) * segment,
+      }
+    })
+    const linePath = visiblePoints.map((point, index) => `${index === 0 ? 'M' : 'L'} ${point.x} ${point.y}`).join(' ')
+    const areaPath = `${linePath} L ${visiblePoints[visiblePoints.length - 1].x} 128 L ${visiblePoints[0].x} 128 Z`
+
     return (
       <div style={{ padding: 14 }}>
-        <ResultShell title="Dashboard de caixa">
-          <KpiStrip
-            grow={grow}
-            items={[
-              { label: 'Saldo atual', tone: 'green', value: 'R$ 418k' },
-              { label: 'Receber 12d', value: 'R$ 96k' },
-              { label: 'Pagar 12d', tone: 'orange', value: 'R$ 72k' },
-            ]}
-          />
-          <div style={{ display: 'grid', gap: 9, padding: '11px 14px 14px' }}>
-            <div style={{ display: 'grid', gap: 2 }}>
-              <strong style={{ color: '#111827', fontSize: 18, fontWeight: 880, letterSpacing: 0 }}>Tendencia de caixa</strong>
-              <span style={{ color: '#94a3b8', fontSize: 14, fontWeight: 680 }}>Saldo projetado nos proximos 30 dias</span>
-            </div>
-            <div style={{ background: '#ffffff', border: '1px solid #e8edf3', borderRadius: 14, height: 132, overflow: 'hidden', padding: '14px 14px 10px', position: 'relative' }}>
-              {[0, 1, 2].map((line) => (
-                <span key={line} style={{ background: '#f1f5f9', height: 1, left: 14, position: 'absolute', right: 14, top: 22 + line * 34 }} />
+        <ResultShell title="Projecao de caixa">
+          <div style={{ display: 'grid', gap: 12, padding: 14 }}>
+            <div style={{ display: 'grid', gap: 9, gridTemplateColumns: '1fr 1fr 1fr' }}>
+              {[
+                { label: 'Saldo atual', tone: 'green', value: 'R$ 418k' },
+                { label: 'Saldo 30d', tone: 'green', value: 'R$ 465k' },
+                { label: 'Menor saldo', tone: 'orange', value: 'R$ 346k' },
+              ].map((item, index) => (
+                <div key={item.label} style={{ background: item.tone === 'green' ? '#ecfdf3' : '#fff7ed', border: `1px solid ${item.tone === 'green' ? '#bbf7d0' : '#fed7aa'}`, borderRadius: 12, opacity: grow(index * 5), padding: '11px 12px' }}>
+                  <div style={{ color: '#64748b', fontSize: 12, fontWeight: 760, marginBottom: 4 }}>{item.label}</div>
+                  <div style={{ color: item.tone === 'green' ? '#166534' : '#c2410c', fontSize: 18, fontWeight: 900, letterSpacing: 0 }}>{item.value}</div>
+                </div>
               ))}
-              <div style={{ alignItems: 'end', bottom: 10, display: 'flex', gap: 10, left: 14, position: 'absolute', right: 14, top: 14 }}>
-                {values.map((height, index) => (
-                  <div key={height} style={{ alignItems: 'end', display: 'flex', flex: 1, height: '100%', position: 'relative' }}>
-                    <span style={{ background: index > 3 ? 'linear-gradient(180deg, #2f7d56, #225f42)' : 'linear-gradient(180deg, #dbe5ee, #cbd5e1)', border: `1px solid ${index > 3 ? '#1f5a3e' : '#cbd5e1'}`, borderRadius: '8px 8px 4px 4px', boxShadow: index > 3 ? '0 8px 18px rgba(34, 95, 66, 0.18)' : 'none', height: height * 0.58 * grow(12 + index * 4), width: '100%' }} />
-                  </div>
-                ))}
-              </div>
             </div>
-            <div style={{ color: '#64748b', display: 'grid', fontSize: 13, fontWeight: 760, gridTemplateColumns: 'repeat(6, 1fr)', textAlign: 'center' }}>
-              {['Hoje', '3d', '7d', '12d', '20d', '30d'].map((label) => <span key={label}>{label}</span>)}
+
+            <div style={{ display: 'grid', gap: 3 }}>
+              <strong style={{ color: '#111827', fontSize: 19, fontWeight: 880, letterSpacing: 0 }}>Saldo projetado</strong>
+              <span style={{ color: '#94a3b8', fontSize: 14, fontWeight: 680 }}>Entradas e saidas previstas para os proximos 30 dias</span>
+            </div>
+
+            <div style={{ background: '#ffffff', border: '1px solid #e8edf3', borderRadius: 14, height: 172, overflow: 'hidden', position: 'relative' }}>
+              <svg height="172" style={{ display: 'block', opacity: grow(10) }} viewBox="0 0 452 172" width="100%">
+                <defs>
+                  <linearGradient id="cashAreaGradient" x1="0" x2="0" y1="0" y2="1">
+                    <stop offset="0%" stopColor="#225f42" stopOpacity="0.18" />
+                    <stop offset="100%" stopColor="#225f42" stopOpacity="0.02" />
+                  </linearGradient>
+                </defs>
+                {[34, 66, 98, 130].map((y) => <line key={y} stroke="#eef2f6" strokeWidth="1" x1="18" x2="434" y1={y} y2={y} />)}
+                <line stroke="#f59e0b" strokeDasharray="8 8" strokeWidth="2" x1="18" x2="434" y1="102" y2="102" />
+                <path d={areaPath} fill="url(#cashAreaGradient)" />
+                <path d={linePath} fill="none" stroke="#225f42" strokeLinecap="round" strokeLinejoin="round" strokeWidth="5" />
+                {points.map((point, index) => (
+                  <g key={point.label} opacity={grow(22 + index * 4)}>
+                    <circle cx={point.x} cy={point.y} fill="#ffffff" r="8" stroke={index === 1 ? '#f59e0b' : '#225f42'} strokeWidth="4" />
+                    <text fill="#64748b" fontSize="13" fontWeight="760" textAnchor="middle" x={point.x} y="156">{point.label}</text>
+                  </g>
+                ))}
+              </svg>
+            </div>
+
+            <div style={{ alignItems: 'center', background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: 12, color: '#475569', display: 'flex', fontSize: 15, fontWeight: 760, justifyContent: 'space-between', opacity: grow(38), padding: '10px 12px' }}>
+              <span>Risco baixo: caixa nao fica negativo</span>
+              <strong style={{ color: '#225f42', fontSize: 16, fontWeight: 900 }}>+R$ 47k em 30d</strong>
             </div>
           </div>
         </ResultShell>
@@ -365,27 +401,51 @@ export function ImprovedFinancialResultCard({ kind, startFrame }: { kind: Financ
   }
 
   if (kind === 'timeline') {
+    const timelineRows = [
+      { day: 'Hoje', entrada: 'R$ 18k', saida: 'R$ 31k', saldo: 'R$ 405k', tone: 'green' as const, width: 74 },
+      { day: '7 dias', entrada: 'R$ 24k', saida: 'R$ 42k', saldo: 'R$ 387k', tone: 'orange' as const, width: 52 },
+      { day: '12 dias', entrada: 'R$ 96k', saida: 'R$ 18k', saldo: 'R$ 465k', tone: 'green' as const, width: 92 },
+    ]
+
     return (
       <div style={{ padding: 14 }}>
         <ResultShell title="Fluxo de caixa projetado">
-          <KpiStrip
-            grow={grow}
-            items={[
-              { label: 'Saldo hoje', tone: 'green', value: 'R$ 418k' },
-              { label: 'Menor saldo', value: 'R$ 346k' },
-              { label: 'Janela critica', tone: 'orange', value: '7 dias' },
-            ]}
-          />
-          <ResultTable
-            columns={['Quando', 'Entrada', 'Saida', 'Saldo proj.', 'Prioridade']}
-            grow={(delay) => grow(14 + delay)}
-            rows={[
-              ['Hoje', 'R$ 18k', 'R$ 31k', 'R$ 405k', <ResultBadge tone="green">OK</ResultBadge>],
-              ['7 dias', 'R$ 24k', 'R$ 42k', 'R$ 387k', <ResultBadge tone="orange">Atencao</ResultBadge>],
-              ['12 dias', 'R$ 96k', 'R$ 18k', 'R$ 465k', <ResultBadge tone="green">Folga</ResultBadge>],
-            ]}
-            template="0.7fr 0.82fr 0.75fr 0.9fr 0.82fr"
-          />
+          <div style={{ display: 'grid', gap: 12, padding: 14 }}>
+            <div style={{ display: 'grid', gap: 9, gridTemplateColumns: '1fr 1fr 1fr' }}>
+              {[
+                { label: 'Saldo hoje', tone: 'green', value: 'R$ 418k' },
+                { label: 'Menor saldo', tone: 'orange', value: 'R$ 346k' },
+                { label: 'Janela critica', tone: 'orange', value: '7 dias' },
+              ].map((item, index) => (
+                <div key={item.label} style={{ background: item.tone === 'green' ? '#ecfdf3' : '#fff7ed', border: `1px solid ${item.tone === 'green' ? '#bbf7d0' : '#fed7aa'}`, borderRadius: 12, opacity: grow(index * 5), padding: '10px 12px' }}>
+                  <div style={{ color: '#64748b', fontSize: 12, fontWeight: 760, marginBottom: 4 }}>{item.label}</div>
+                  <div style={{ color: item.tone === 'green' ? '#166534' : '#c2410c', fontSize: 18, fontWeight: 900, letterSpacing: 0 }}>{item.value}</div>
+                </div>
+              ))}
+            </div>
+
+            <div style={{ background: '#ffffff', border: '1px solid #e8edf3', borderRadius: 14, display: 'grid', gap: 10, padding: 12 }}>
+              {timelineRows.map((row, index) => (
+                <div key={row.day} style={{ alignItems: 'center', display: 'grid', gap: 11, gridTemplateColumns: '58px 1fr 76px', opacity: grow(12 + index * 7) }}>
+                  <strong style={{ color: '#111827', fontSize: 15, fontWeight: 860, letterSpacing: 0 }}>{row.day}</strong>
+                  <div style={{ display: 'grid', gap: 5 }}>
+                    <div style={{ alignItems: 'center', display: 'grid', gap: 8, gridTemplateColumns: '1fr auto' }}>
+                      <span style={{ background: '#f1f5f9', borderRadius: 999, height: 11, overflow: 'hidden' }}>
+                        <span style={{ background: row.tone === 'green' ? '#225f42' : '#f59e0b', borderRadius: 999, display: 'block', height: '100%', width: `${row.width * grow(16 + index * 6)}%` }} />
+                      </span>
+                      <span style={{ color: row.tone === 'green' ? '#166534' : '#c2410c', fontSize: 13, fontWeight: 860 }}>{row.saldo}</span>
+                    </div>
+                    <span style={{ color: '#64748b', fontSize: 12, fontWeight: 720 }}>Entrada {row.entrada} · Saida {row.saida}</span>
+                  </div>
+                  <ResultBadge tone={row.tone}>{index === 1 ? 'Atencao' : 'OK'}</ResultBadge>
+                </div>
+              ))}
+            </div>
+
+            <div style={{ background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: 12, color: '#475569', fontSize: 15, fontWeight: 760, opacity: grow(38), padding: '10px 12px' }}>
+              Maior pressao em 7 dias: segurar pagamentos nao urgentes.
+            </div>
+          </div>
         </ResultShell>
       </div>
     )
@@ -429,26 +489,50 @@ export function ImprovedFinancialResultCard({ kind, startFrame }: { kind: Financ
     )
   }
 
+  const marginRows = [
+    { action: 'Cortar campanha', area: 'Midia paga', impact: 'R$ 18.4k', tone: '#225f42', width: 100 },
+    { action: 'Renegociar SLA', area: 'Frete', impact: 'R$ 8.2k', tone: '#2f7d56', width: 58 },
+    { action: 'Revisar plano', area: 'Software', impact: 'R$ 4.7k', tone: '#94a3b8', width: 34 },
+  ]
+
   return (
     <div style={{ padding: 14 }}>
       <ResultShell title="Oportunidades de margem">
-        <KpiStrip
-          grow={grow}
-          items={[
-            { label: 'Economia potencial', tone: 'green', value: 'R$ 31k' },
-            { label: 'Margem estimada', tone: 'green', value: '+4.2 p.p.' },
-          ]}
-        />
-        <ResultTable
-          columns={['Area', 'Impacto', 'Acao']}
-          grow={(delay) => grow(12 + delay)}
-          rows={[
-            ['Midia paga', 'R$ 18.4k', 'Cortar campanha'],
-            ['Frete', 'R$ 8.2k', 'Renegociar SLA'],
-            ['Software', 'R$ 4.7k', 'Revisar plano'],
-          ]}
-          template="0.9fr 0.78fr 1.05fr"
-        />
+        <div style={{ display: 'grid', gap: 12, padding: 14 }}>
+          <div style={{ display: 'grid', gap: 9, gridTemplateColumns: '1fr 1fr' }}>
+            {[
+              { label: 'Economia potencial', value: 'R$ 31k' },
+              { label: 'Margem estimada', value: '+4.2 p.p.' },
+            ].map((item, index) => (
+              <div key={item.label} style={{ background: '#ecfdf3', border: '1px solid #bbf7d0', borderRadius: 12, opacity: grow(index * 6), padding: '11px 12px' }}>
+                <div style={{ color: '#64748b', fontSize: 12, fontWeight: 760, marginBottom: 4 }}>{item.label}</div>
+                <div style={{ color: '#166534', fontSize: 20, fontWeight: 900, letterSpacing: 0 }}>{item.value}</div>
+              </div>
+            ))}
+          </div>
+
+          <div style={{ background: '#ffffff', border: '1px solid #e8edf3', borderRadius: 14, display: 'grid', gap: 11, padding: 12 }}>
+            {marginRows.map((row, index) => (
+              <div key={row.area} style={{ display: 'grid', gap: 6, opacity: grow(12 + index * 8) }}>
+                <div style={{ alignItems: 'center', display: 'flex', justifyContent: 'space-between' }}>
+                  <div style={{ display: 'grid', gap: 2 }}>
+                    <strong style={{ color: '#111827', fontSize: 16, fontWeight: 860, letterSpacing: 0 }}>{row.area}</strong>
+                    <span style={{ color: '#64748b', fontSize: 12, fontWeight: 720 }}>{row.action}</span>
+                  </div>
+                  <strong style={{ color: row.tone, fontSize: 17, fontWeight: 900, letterSpacing: 0 }}>{row.impact}</strong>
+                </div>
+                <span style={{ background: '#f1f5f9', borderRadius: 999, height: 11, overflow: 'hidden' }}>
+                  <span style={{ background: row.tone, borderRadius: 999, display: 'block', height: '100%', width: `${row.width * grow(18 + index * 6)}%` }} />
+                </span>
+              </div>
+            ))}
+          </div>
+
+          <div style={{ alignItems: 'center', background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: 12, color: '#475569', display: 'flex', fontSize: 15, fontWeight: 760, justifyContent: 'space-between', opacity: grow(38), padding: '10px 12px' }}>
+            <span>Prioridade: revisar midia paga primeiro</span>
+            <ResultBadge tone="green">Alto impacto</ResultBadge>
+          </div>
+        </div>
       </ResultShell>
     </div>
   )
@@ -704,7 +788,7 @@ export function ChatGptFinancialAgentsVideo() {
   const frame = useCurrentFrame()
   const conversationY = interpolate(
     frame,
-    [0, 210, 380, 550, 720, 890, 1060, 1230, 1400],
+    [0, 240, 460, 680, 900, 1120, 1340, 1560, 1740],
     [0, 0, -330, -710, -1090, -1470, -1850, -2230, -2610],
     {
       extrapolateLeft: 'clamp',
@@ -723,7 +807,7 @@ export function ChatGptFinancialAgentsVideo() {
       </ChatGptFinancialAssistantText>
 
       {financialAgentSteps.map((step, index) => {
-        const start = 150 + index * 170
+        const start = 150 + index * 210
         return (
           <div key={step.toolName} style={{ display: 'contents' }}>
             <ChatGptFinancialAssistantText showHeader={false} style={chatGptSequenceStyle(frame, start, 22)}>
@@ -743,7 +827,7 @@ export function ChatGptFinancialAgentsVideo() {
         )
       })}
 
-      <ChatGptToolResultCard style={chatGptSequenceStyle(frame, 1450, 18)}>
+      <ChatGptToolResultCard style={chatGptSequenceStyle(frame, 1660, 18)}>
         <div style={{ display: 'grid', gap: 16, padding: 20 }}>
           <div style={{ color: '#111111', fontSize: 30, fontWeight: 840, letterSpacing: 0 }}>7 agentes financeiros ativos</div>
           <div style={{ display: 'grid', gap: 10, gridTemplateColumns: '1fr 1fr' }}>
@@ -756,7 +840,7 @@ export function ChatGptFinancialAgentsVideo() {
         </div>
       </ChatGptToolResultCard>
 
-      <ChatGptFinancialAssistantText showHeader={false} style={chatGptSequenceStyle(frame, 1520, 18)}>
+      <ChatGptFinancialAssistantText showHeader={false} style={chatGptSequenceStyle(frame, 1740, 18)}>
         Seu financeiro operando direto pelo ChatGPT ou Claude.
       </ChatGptFinancialAssistantText>
     </ChatGptMobileShell>

@@ -88,7 +88,7 @@ export function ClaudeFinancialAgentsVideo() {
   const frame = useCurrentFrame()
   const conversationY = interpolate(
     frame,
-    [0, 210, 380, 550, 720, 890, 1060, 1230, 1400],
+    [0, 240, 460, 680, 900, 1120, 1340, 1560, 1740],
     [0, 0, -330, -710, -1090, -1470, -1850, -2230, -2610],
     {
       extrapolateLeft: 'clamp',
@@ -118,7 +118,7 @@ export function ClaudeFinancialAgentsVideo() {
       </ClaudeFinancialAssistantText>
 
       {financialAgentSteps.map((step, index) => {
-        const start = 150 + index * 170
+        const start = 150 + index * 210
         return (
           <div key={step.toolName} style={{ display: 'contents' }}>
             <ClaudeFinancialAssistantText style={claudeSequenceStyle(frame, start, 22)}>
@@ -135,7 +135,7 @@ export function ClaudeFinancialAgentsVideo() {
         )
       })}
 
-      <ClaudeToolResultCard style={claudeSequenceStyle(frame, 1450, 18)}>
+      <ClaudeToolResultCard style={claudeSequenceStyle(frame, 1660, 18)}>
         <div style={{ background: '#fffaf3', display: 'grid', gap: 16, padding: 22 }}>
           <div style={{ color: '#171714', fontSize: 30, fontWeight: 780, letterSpacing: 0 }}>7 agentes financeiros ativos</div>
           <div style={{ display: 'grid', gap: 10, gridTemplateColumns: '1fr 1fr' }}>
@@ -148,7 +148,7 @@ export function ClaudeFinancialAgentsVideo() {
         </div>
       </ClaudeToolResultCard>
 
-      <ClaudeFinancialAssistantText style={claudeSequenceStyle(frame, 1520, 18)}>
+      <ClaudeFinancialAssistantText style={claudeSequenceStyle(frame, 1740, 18)}>
         Seu financeiro operando direto pelo Claude com Otto.
       </ClaudeFinancialAssistantText>
       </ClaudeMobileShell>
