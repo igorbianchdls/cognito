@@ -1,12 +1,13 @@
+import type { CSSProperties, ReactNode } from 'react'
 import { interpolate, useCurrentFrame } from 'remotion'
 
 import {
-  ClaudeFlowAssistantText,
   ClaudeFlowUserBubble,
   ClaudeMobileShell,
   ClaudeToolResultCard,
   claudeSequenceStyle,
 } from '@/assets/remotion/compositions/ClaudeMobileBase'
+import { OttoAssistantHeader, fastCharacterTyping } from '@/assets/remotion/compositions/ChatGptMobileBase'
 import {
   CHATGPT_FINANCIAL_AGENTS_VIDEO_DURATION,
   ImprovedFinancialResultCard,
@@ -14,6 +15,29 @@ import {
 } from '@/assets/remotion/compositions/ChatGptMobileMarketing'
 
 export const CLAUDE_FINANCIAL_AGENTS_VIDEO_DURATION = CHATGPT_FINANCIAL_AGENTS_VIDEO_DURATION
+const CLAUDE_RESPONSE_SERIF = 'Georgia, "Times New Roman", Times, serif'
+
+function ClaudeFinancialAssistantText({ children, style }: { children: ReactNode; style: CSSProperties }) {
+  return (
+    <div
+      style={{
+        ...style,
+        color: '#111111',
+        fontFamily: CLAUDE_RESPONSE_SERIF,
+        fontSize: 43,
+        fontWeight: 500,
+        letterSpacing: 0,
+        lineHeight: 1.26,
+        padding: '0 42px',
+      }}
+    >
+      <OttoAssistantHeader muted="#8b857c" />
+      <span style={{ fontFamily: CLAUDE_RESPONSE_SERIF }}>
+        {fastCharacterTyping(children, style)}
+      </span>
+    </div>
+  )
+}
 
 function ClaudeToolUseCard({ startFrame, toolName }: { startFrame: number; toolName: string }) {
   const frame = useCurrentFrame()
@@ -58,24 +82,24 @@ export function ClaudeFinancialAgentsVideo() {
         Otto, revise o financeiro da empresa e priorize o que eu preciso resolver hoje.
       </ClaudeFlowUserBubble>
 
-      <ClaudeFlowAssistantText style={claudeSequenceStyle(frame, 74, 22)}>
+      <ClaudeFinancialAssistantText style={claudeSequenceStyle(frame, 74, 22)}>
         Claro. Vou acionar seus agentes financeiros e organizar prioridades, riscos e oportunidades.
-      </ClaudeFlowAssistantText>
+      </ClaudeFinancialAssistantText>
 
       {financialAgentSteps.map((step, index) => {
         const start = 150 + index * 170
         return (
           <div key={step.toolName} style={{ display: 'contents' }}>
-            <ClaudeFlowAssistantText style={claudeSequenceStyle(frame, start, 22)}>
+            <ClaudeFinancialAssistantText style={claudeSequenceStyle(frame, start, 22)}>
               {step.text}
-            </ClaudeFlowAssistantText>
+            </ClaudeFinancialAssistantText>
             <ClaudeToolUseCard startFrame={start + 52} toolName={step.toolName} />
             <ClaudeToolResultCard style={claudeSequenceStyle(frame, start + 100, 18)}>
               <ImprovedFinancialResultCard kind={step.result} startFrame={start + 100} />
             </ClaudeToolResultCard>
-            <ClaudeFlowAssistantText style={claudeSequenceStyle(frame, start + 174, 22)}>
+            <ClaudeFinancialAssistantText style={claudeSequenceStyle(frame, start + 174, 22)}>
               {step.insight}
-            </ClaudeFlowAssistantText>
+            </ClaudeFinancialAssistantText>
           </div>
         )
       })}
@@ -93,9 +117,9 @@ export function ClaudeFinancialAgentsVideo() {
         </div>
       </ClaudeToolResultCard>
 
-      <ClaudeFlowAssistantText style={claudeSequenceStyle(frame, 1520, 18)}>
+      <ClaudeFinancialAssistantText style={claudeSequenceStyle(frame, 1520, 18)}>
         Seu financeiro operando direto pelo Claude com Otto.
-      </ClaudeFlowAssistantText>
+      </ClaudeFinancialAssistantText>
     </ClaudeMobileShell>
   )
 }
