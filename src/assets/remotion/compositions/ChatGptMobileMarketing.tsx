@@ -1,4 +1,4 @@
-import type { ComponentType } from 'react'
+import type { ComponentType, ReactNode } from 'react'
 import { AbsoluteFill, interpolate, useCurrentFrame } from 'remotion'
 
 import {
@@ -189,6 +189,244 @@ function FinancialResultCard({ kind, startFrame }: { kind: FinancialAgentStep['r
           {item}
         </div>
       ))}
+    </div>
+  )
+}
+
+function ResultBadge({ children, tone = 'neutral' }: { children: string; tone?: 'blue' | 'green' | 'neutral' | 'orange' | 'red' }) {
+  const styles = {
+    blue: { background: '#eff6ff', border: '#bfdbfe', color: '#1d4ed8' },
+    green: { background: '#ecfdf3', border: '#bbf7d0', color: '#166534' },
+    neutral: { background: '#f8fafc', border: '#e2e8f0', color: '#475569' },
+    orange: { background: '#fff7ed', border: '#fed7aa', color: '#c2410c' },
+    red: { background: '#fef2f2', border: '#fecaca', color: '#b91c1c' },
+  }[tone]
+
+  return (
+    <span style={{ background: styles.background, border: `1px solid ${styles.border}`, borderRadius: 999, color: styles.color, display: 'inline-flex', fontSize: 14, fontWeight: 820, justifyContent: 'center', lineHeight: 1, padding: '7px 9px', whiteSpace: 'nowrap' }}>
+      {children}
+    </span>
+  )
+}
+
+function ResultShell({ children, title }: { children: ReactNode; title: string }) {
+  return (
+    <div style={{ background: '#ffffff', border: '1px solid #e5e7eb', borderRadius: 16, boxShadow: '0 12px 34px rgba(15, 23, 42, 0.06)', overflow: 'hidden' }}>
+      <div style={{ alignItems: 'center', background: '#fbfcfd', borderBottom: '1px solid #eef2f6', display: 'flex', justifyContent: 'space-between', padding: '12px 14px' }}>
+        <strong style={{ color: '#111827', fontSize: 19, fontWeight: 850, letterSpacing: 0 }}>{title}</strong>
+        <ResultBadge tone="green">Atualizado</ResultBadge>
+      </div>
+      {children}
+    </div>
+  )
+}
+
+function ResultTable({
+  columns,
+  grow,
+  rows,
+  template,
+}: {
+  columns: string[]
+  grow: (delay: number) => number
+  rows: Array<Array<ReactNode>>
+  template: string
+}) {
+  return (
+    <div style={{ display: 'grid' }}>
+      <div style={{ background: '#f8fafc', borderBottom: '1px solid #edf2f7', color: '#64748b', display: 'grid', fontSize: 13, fontWeight: 820, gap: 10, gridTemplateColumns: template, letterSpacing: 0, padding: '9px 14px', textTransform: 'uppercase' }}>
+        {columns.map((column) => <span key={column}>{column}</span>)}
+      </div>
+      {rows.map((row, index) => (
+        <div key={index} style={{ alignItems: 'center', borderBottom: index === rows.length - 1 ? 'none' : '1px solid #f1f5f9', color: '#111827', display: 'grid', fontSize: 17, fontWeight: 720, gap: 10, gridTemplateColumns: template, opacity: grow(index * 7), padding: '11px 14px' }}>
+          {row.map((cell, cellIndex) => <span key={cellIndex} style={{ minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{cell}</span>)}
+        </div>
+      ))}
+    </div>
+  )
+}
+
+function KpiStrip({ grow, items }: { grow: (delay: number) => number; items: Array<{ label: string; value: string; tone?: 'green' | 'neutral' | 'orange' }> }) {
+  return (
+    <div style={{ display: 'grid', gap: 8, gridTemplateColumns: `repeat(${items.length}, 1fr)`, padding: '12px 14px 4px' }}>
+      {items.map((item, index) => (
+        <div key={item.label} style={{ background: item.tone === 'green' ? '#ecfdf3' : item.tone === 'orange' ? '#fff7ed' : '#f8fafc', border: `1px solid ${item.tone === 'green' ? '#bbf7d0' : item.tone === 'orange' ? '#fed7aa' : '#e2e8f0'}`, borderRadius: 12, opacity: grow(index * 5), padding: '9px 10px' }}>
+          <div style={{ color: '#64748b', fontSize: 12, fontWeight: 760, marginBottom: 3 }}>{item.label}</div>
+          <div style={{ color: item.tone === 'green' ? '#166534' : item.tone === 'orange' ? '#c2410c' : '#111827', fontSize: 16, fontWeight: 880, letterSpacing: 0 }}>{item.value}</div>
+        </div>
+      ))}
+    </div>
+  )
+}
+
+function ImprovedFinancialResultCard({ kind, startFrame }: { kind: FinancialAgentStep['result']; startFrame: number }) {
+  const frame = useCurrentFrame()
+  const local = Math.max(0, frame - startFrame)
+  const grow = (delay: number) => interpolate(local, [delay, delay + 24], [0, 1], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' })
+
+  if (kind === 'expenses') {
+    return (
+      <div style={{ padding: 14 }}>
+        <ResultShell title="Despesas classificadas">
+          <ResultTable
+            columns={['Fornecedor', 'Categoria', 'Valor', 'Status']}
+            grow={grow}
+            rows={[
+              ['Google Ads', <ResultBadge tone="blue">Marketing</ResultBadge>, 'R$ 18.400', <ResultBadge tone="green">Classificado</ResultBadge>],
+              ['AWS Brasil', <ResultBadge>Software</ResultBadge>, 'R$ 12.790', <ResultBadge tone="green">Classificado</ResultBadge>],
+              ['Frete Sul', <ResultBadge tone="orange">Logistica</ResultBadge>, 'R$ 8.420', <ResultBadge tone="orange">Revisar</ResultBadge>],
+            ]}
+            template="1.25fr 0.92fr 0.78fr 0.95fr"
+          />
+        </ResultShell>
+      </div>
+    )
+  }
+
+  if (kind === 'reconcile') {
+    return (
+      <div style={{ padding: 14 }}>
+        <ResultShell title="Conciliação banco x ERP">
+          <ResultTable
+            columns={['Banco', 'ERP', 'Valor', 'Match']}
+            grow={grow}
+            rows={[
+              ['PIX Cliente Norte', 'NF-9031', 'R$ 42.100', <ResultBadge tone="green">OK</ResultBadge>],
+              ['Cartao Stone', 'Lote-552', 'R$ 68.900', <ResultBadge tone="green">OK</ResultBadge>],
+              ['Tarifa bancaria', 'Sem lancamento', 'R$ 189', <ResultBadge tone="orange">Revisar</ResultBadge>],
+            ]}
+            template="1.25fr 1fr 0.78fr 0.78fr"
+          />
+        </ResultShell>
+      </div>
+    )
+  }
+
+  if (kind === 'cash') {
+    const values = [62, 82, 70, 104, 92, 128]
+    return (
+      <div style={{ padding: 14 }}>
+        <ResultShell title="Dashboard de caixa">
+          <KpiStrip
+            grow={grow}
+            items={[
+              { label: 'Saldo atual', tone: 'green', value: 'R$ 418k' },
+              { label: 'Receber 12d', value: 'R$ 96k' },
+              { label: 'Pagar 12d', tone: 'orange', value: 'R$ 72k' },
+            ]}
+          />
+          <div style={{ display: 'grid', gap: 9, padding: '11px 14px 14px' }}>
+            <div style={{ display: 'grid', gap: 2 }}>
+              <strong style={{ color: '#111827', fontSize: 18, fontWeight: 880, letterSpacing: 0 }}>Tendencia de caixa</strong>
+              <span style={{ color: '#94a3b8', fontSize: 14, fontWeight: 680 }}>Saldo projetado nos proximos 30 dias</span>
+            </div>
+            <div style={{ background: '#ffffff', border: '1px solid #e8edf3', borderRadius: 14, height: 132, overflow: 'hidden', padding: '14px 14px 10px', position: 'relative' }}>
+              {[0, 1, 2].map((line) => (
+                <span key={line} style={{ background: '#f1f5f9', height: 1, left: 14, position: 'absolute', right: 14, top: 22 + line * 34 }} />
+              ))}
+              <div style={{ alignItems: 'end', bottom: 10, display: 'flex', gap: 10, left: 14, position: 'absolute', right: 14, top: 14 }}>
+                {values.map((height, index) => (
+                  <div key={height} style={{ alignItems: 'end', display: 'flex', flex: 1, height: '100%', position: 'relative' }}>
+                    <span style={{ background: index > 3 ? 'linear-gradient(180deg, #2f7d56, #225f42)' : 'linear-gradient(180deg, #dbe5ee, #cbd5e1)', border: `1px solid ${index > 3 ? '#1f5a3e' : '#cbd5e1'}`, borderRadius: '8px 8px 4px 4px', boxShadow: index > 3 ? '0 8px 18px rgba(34, 95, 66, 0.18)' : 'none', height: height * 0.58 * grow(12 + index * 4), width: '100%' }} />
+                  </div>
+                ))}
+              </div>
+            </div>
+            <div style={{ color: '#64748b', display: 'grid', fontSize: 13, fontWeight: 760, gridTemplateColumns: 'repeat(6, 1fr)', textAlign: 'center' }}>
+              {['Hoje', '3d', '7d', '12d', '20d', '30d'].map((label) => <span key={label}>{label}</span>)}
+            </div>
+          </div>
+        </ResultShell>
+      </div>
+    )
+  }
+
+  if (kind === 'timeline') {
+    return (
+      <div style={{ padding: 14 }}>
+        <ResultShell title="Fluxo de caixa projetado">
+          <KpiStrip
+            grow={grow}
+            items={[
+              { label: 'Saldo hoje', tone: 'green', value: 'R$ 418k' },
+              { label: 'Menor saldo', value: 'R$ 346k' },
+              { label: 'Janela critica', tone: 'orange', value: '7 dias' },
+            ]}
+          />
+          <ResultTable
+            columns={['Quando', 'Entrada', 'Saida', 'Saldo proj.', 'Prioridade']}
+            grow={(delay) => grow(14 + delay)}
+            rows={[
+              ['Hoje', 'R$ 18k', 'R$ 31k', 'R$ 405k', <ResultBadge tone="green">OK</ResultBadge>],
+              ['7 dias', 'R$ 24k', 'R$ 42k', 'R$ 387k', <ResultBadge tone="orange">Atencao</ResultBadge>],
+              ['12 dias', 'R$ 96k', 'R$ 18k', 'R$ 465k', <ResultBadge tone="green">Folga</ResultBadge>],
+            ]}
+            template="0.7fr 0.82fr 0.75fr 0.9fr 0.82fr"
+          />
+        </ResultShell>
+      </div>
+    )
+  }
+
+  if (kind === 'docs') {
+    return (
+      <div style={{ padding: 14 }}>
+        <ResultShell title="Documentos financeiros">
+          <ResultTable
+            columns={['Documento', 'Tipo', 'Status', 'Acao']}
+            grow={grow}
+            rows={[
+              ['NF 4821.pdf', 'Nota fiscal', <ResultBadge tone="green">Validado</ResultBadge>, 'Arquivar'],
+              ['boleto_fornecedor.xml', 'Boleto', <ResultBadge tone="orange">Pendente</ResultBadge>, 'Revisar'],
+              ['contrato_frete.pdf', 'Contrato', <ResultBadge tone="green">Validado</ResultBadge>, 'Arquivar'],
+            ]}
+            template="1.35fr 0.88fr 0.78fr 0.7fr"
+          />
+        </ResultShell>
+      </div>
+    )
+  }
+
+  if (kind === 'collections') {
+    return (
+      <div style={{ padding: 14 }}>
+        <ResultShell title="Cobranças priorizadas">
+          <ResultTable
+            columns={['Cliente', 'Atraso', 'Valor', 'Proxima acao']}
+            grow={grow}
+            rows={[
+              ['Cliente Norte', '18 dias', 'R$ 42k', <ResultBadge tone="red">Alta</ResultBadge>],
+              ['Rede Alpha', '9 dias', 'R$ 18k', <ResultBadge tone="orange">Media</ResultBadge>],
+              ['Loja Prime', '6 dias', 'R$ 11k', <ResultBadge tone="green">Baixa</ResultBadge>],
+            ]}
+            template="1.15fr 0.75fr 0.75fr 0.95fr"
+          />
+        </ResultShell>
+      </div>
+    )
+  }
+
+  return (
+    <div style={{ padding: 14 }}>
+      <ResultShell title="Oportunidades de margem">
+        <KpiStrip
+          grow={grow}
+          items={[
+            { label: 'Economia potencial', tone: 'green', value: 'R$ 31k' },
+            { label: 'Margem estimada', tone: 'green', value: '+4.2 p.p.' },
+          ]}
+        />
+        <ResultTable
+          columns={['Area', 'Impacto', 'Acao']}
+          grow={(delay) => grow(12 + delay)}
+          rows={[
+            ['Midia paga', 'R$ 18.4k', 'Cortar campanha'],
+            ['Frete', 'R$ 8.2k', 'Renegociar SLA'],
+            ['Software', 'R$ 4.7k', 'Revisar plano'],
+          ]}
+          template="0.9fr 0.78fr 1.05fr"
+        />
+      </ResultShell>
     </div>
   )
 }
@@ -473,7 +711,7 @@ export function ChatGptFinancialAgentsVideo() {
               toolName={step.toolName}
             />
             <ChatGptToolResultCard style={chatGptSequenceStyle(frame, start + 100, 18)}>
-              <FinancialResultCard kind={step.result} startFrame={start + 100} />
+              <ImprovedFinancialResultCard kind={step.result} startFrame={start + 100} />
             </ChatGptToolResultCard>
             <ChatGptFlowAssistantText showHeader={false} style={chatGptSequenceStyle(frame, start + 174, 22)}>
               {step.insight}
