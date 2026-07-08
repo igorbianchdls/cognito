@@ -1,5 +1,6 @@
 import type { CSSProperties, ReactNode } from 'react'
 import { interpolate, useCurrentFrame } from 'remotion'
+import { Wrench } from 'lucide-react'
 
 import {
   ClaudeFlowUserBubble,
@@ -15,24 +16,25 @@ import {
 } from '@/assets/remotion/compositions/ChatGptMobileMarketing'
 
 export const CLAUDE_FINANCIAL_AGENTS_VIDEO_DURATION = CHATGPT_FINANCIAL_AGENTS_VIDEO_DURATION
-const CLAUDE_RESPONSE_SERIF = 'Georgia, "Times New Roman", Times, serif'
+const CLAUDE_RESPONSE_SERIF = '"Times New Roman", Georgia, serif'
 
 function ClaudeFinancialAssistantText({ children, style }: { children: ReactNode; style: CSSProperties }) {
   return (
     <div
+      className="claude-financial-response"
       style={{
         ...style,
         color: '#111111',
         fontFamily: CLAUDE_RESPONSE_SERIF,
         fontSize: 43,
-        fontWeight: 500,
+        fontWeight: 400,
         letterSpacing: 0,
         lineHeight: 1.26,
         padding: '0 42px',
       }}
     >
       <OttoAssistantHeader muted="#8b857c" />
-      <span style={{ fontFamily: CLAUDE_RESPONSE_SERIF }}>
+      <span className="claude-financial-response-copy" style={{ fontFamily: CLAUDE_RESPONSE_SERIF }}>
         {fastCharacterTyping(children, style)}
       </span>
     </div>
@@ -41,26 +43,44 @@ function ClaudeFinancialAssistantText({ children, style }: { children: ReactNode
 
 function ClaudeToolUseCard({ startFrame, toolName }: { startFrame: number; toolName: string }) {
   const frame = useCurrentFrame()
-  const local = Math.max(0, frame - startFrame)
-  const progress = interpolate(local, [0, 18], [0, 1], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' })
-  const scan = interpolate(local % 46, [0, 46], [-190, 190])
 
   return (
-    <ClaudeToolResultCard style={claudeSequenceStyle(frame, startFrame, 16)}>
-      <div style={{ background: '#fffaf3', display: 'grid', gap: 14, padding: 20 }}>
-        <div style={{ alignItems: 'center', display: 'flex', gap: 13 }}>
-          <span style={{ alignItems: 'center', background: '#d86f4a', borderRadius: 13, color: '#ffffff', display: 'flex', fontSize: 22, fontWeight: 850, height: 42, justifyContent: 'center', lineHeight: 1, width: 42 }}>*</span>
-          <div style={{ display: 'grid', gap: 3 }}>
-            <strong style={{ color: '#171714', fontSize: 24, fontWeight: 780, letterSpacing: 0 }}>Usando ferramenta</strong>
-            <span style={{ color: '#8b857c', fontSize: 18, fontWeight: 620 }}>{toolName}</span>
-          </div>
-        </div>
-        <div style={{ background: '#efe7dc', borderRadius: 999, height: 8, overflow: 'hidden', position: 'relative' }}>
-          <span style={{ background: '#d86f4a', borderRadius: 999, display: 'block', height: '100%', transform: `scaleX(${progress})`, transformOrigin: 'left center', width: '100%' }} />
-          <span style={{ background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.9), transparent)', height: '100%', left: scan, position: 'absolute', top: 0, width: 120 }} />
-        </div>
+    <div
+      style={{
+        ...claudeSequenceStyle(frame, startFrame, 16),
+        alignItems: 'center',
+        background: 'transparent',
+        border: '1px solid #dfddd8',
+        borderRadius: 12,
+        boxSizing: 'border-box',
+        color: '#171714',
+        display: 'flex',
+        fontFamily: 'Arial, sans-serif',
+        gap: 16,
+        margin: '0 42px',
+        minHeight: 84,
+        padding: '20px 22px',
+      }}
+    >
+      <div
+        style={{
+          alignItems: 'center',
+          border: '1px solid #d5d0c7',
+          borderRadius: 12,
+          display: 'flex',
+          height: 42,
+          justifyContent: 'center',
+          width: 42,
+        }}
+      >
+        <Wrench color="#77746f" size={22} strokeWidth={2.2} />
       </div>
-    </ClaudeToolResultCard>
+      <div style={{ alignItems: 'center', display: 'flex', gap: 12, minWidth: 0 }}>
+        <span style={{ color: '#171714', fontSize: 32, fontWeight: 600, letterSpacing: 0, lineHeight: 1.05 }}>
+          {toolName}
+        </span>
+      </div>
+    </div>
   )
 }
 
@@ -77,7 +97,17 @@ export function ClaudeFinancialAgentsVideo() {
   )
 
   return (
-    <ClaudeMobileShell conversationY={conversationY}>
+    <>
+      <style>
+        {`
+          .claude-financial-response,
+          .claude-financial-response-copy,
+          .claude-financial-response-copy span {
+            font-family: "Times New Roman", Georgia, serif !important;
+          }
+        `}
+      </style>
+      <ClaudeMobileShell conversationY={conversationY}>
       <ClaudeFlowUserBubble style={claudeSequenceStyle(frame, 12, 18)}>
         Otto, revise o financeiro da empresa e priorize o que eu preciso resolver hoje.
       </ClaudeFlowUserBubble>
@@ -120,6 +150,7 @@ export function ClaudeFinancialAgentsVideo() {
       <ClaudeFinancialAssistantText style={claudeSequenceStyle(frame, 1520, 18)}>
         Seu financeiro operando direto pelo Claude com Otto.
       </ClaudeFinancialAssistantText>
-    </ClaudeMobileShell>
+      </ClaudeMobileShell>
+    </>
   )
 }
