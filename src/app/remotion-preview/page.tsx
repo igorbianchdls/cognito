@@ -89,6 +89,7 @@ import {
 import { CHATGPT_FINANCIAL_AGENTS_VIDEO_DURATION, ChatGptFinancialAgentsVideo, ChatGptMobileAnimation, ChatGptToolCallDemoAnimation } from '@/assets/remotion/compositions/ChatGptMobileMarketing'
 import { ChatGptOperationalFlowsVideo } from '@/assets/remotion/compositions/ChatGptOperationalFlowsVideo'
 import { ChatGptTaskLauncherAnimation } from '@/assets/remotion/compositions/ChatGptTaskLauncherAnimation'
+import { CLAUDE_FINANCIAL_AGENTS_VIDEO_DURATION, ClaudeFinancialAgentsVideo } from '@/assets/remotion/compositions/ClaudeFinancialAgentsVideo'
 import { ClaudeMobileAnimation } from '@/assets/remotion/compositions/ClaudeMobileMarketing'
 import { ClaudeOperationalFlowsVideo } from '@/assets/remotion/compositions/ClaudeOperationalFlowsVideo'
 import {
@@ -3166,6 +3167,18 @@ const catalog: CatalogItem[] = [
     label: 'ChatGPT Financial Agents',
     tags: ['ChatGPT', 'Financeiro', 'Agentes', 'Otto', 'Video'],
     value: 'video-chatgpt-financial-agents',
+    width: 1080,
+  },
+  {
+    code: '<ClaudeFinancialAgentsVideo />',
+    component: ClaudeFinancialAgentsVideo,
+    description: 'Video mobile do Claude mostrando Otto acionando 7 agentes financeiros com tool use, tabelas, dashboard e insights.',
+    duration: CLAUDE_FINANCIAL_AGENTS_VIDEO_DURATION,
+    height: 1920,
+    kind: 'Vídeos criados',
+    label: 'Claude Financial Agents',
+    tags: ['Claude', 'Financeiro', 'Agentes', 'Otto', 'Video'],
+    value: 'video-claude-financial-agents',
     width: 1080,
   },
   {

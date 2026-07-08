@@ -41,7 +41,7 @@ type FinancialAgentStep = {
   toolName: string
 }
 
-const financialAgentSteps: FinancialAgentStep[] = [
+export const financialAgentSteps: FinancialAgentStep[] = [
   {
     insight: 'Organizei despesas por categoria e destaquei lancamentos fora do padrao.',
     result: 'expenses',
@@ -259,7 +259,7 @@ function KpiStrip({ grow, items }: { grow: (delay: number) => number; items: Arr
   )
 }
 
-function ImprovedFinancialResultCard({ kind, startFrame }: { kind: FinancialAgentStep['result']; startFrame: number }) {
+export function ImprovedFinancialResultCard({ kind, startFrame }: { kind: FinancialAgentStep['result']; startFrame: number }) {
   const frame = useCurrentFrame()
   const local = Math.max(0, frame - startFrame)
   const grow = (delay: number) => interpolate(local, [delay, delay + 24], [0, 1], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' })
