@@ -32,7 +32,7 @@ const orbitIntegrations: OrbitIntegration[] = [
   { accent: '#16a34a', icon: BlingIcon, label: 'Bling' },
 ]
 
-export const CHATGPT_FINANCIAL_AGENTS_VIDEO_DURATION = 1230
+export const CHATGPT_FINANCIAL_AGENTS_VIDEO_DURATION = 1580
 
 type FinancialAgentStep = {
   insight: string
@@ -681,8 +681,8 @@ export function ChatGptFinancialAgentsVideo() {
   const frame = useCurrentFrame()
   const conversationY = interpolate(
     frame,
-    [0, 210, 360, 510, 660, 810, 960, 1110],
-    [0, 0, -360, -740, -1120, -1500, -1880, -2260],
+    [0, 210, 380, 550, 720, 890, 1060, 1230, 1400],
+    [0, 0, -330, -710, -1090, -1470, -1850, -2230, -2610],
     {
       extrapolateLeft: 'clamp',
       extrapolateRight: 'clamp',
@@ -700,7 +700,7 @@ export function ChatGptFinancialAgentsVideo() {
       </ChatGptFlowAssistantText>
 
       {financialAgentSteps.map((step, index) => {
-        const start = 150 + index * 140
+        const start = 150 + index * 170
         return (
           <div key={step.toolName} style={{ display: 'contents' }}>
             <ChatGptFlowAssistantText showHeader={false} style={chatGptSequenceStyle(frame, start, 22)}>
@@ -720,7 +720,7 @@ export function ChatGptFinancialAgentsVideo() {
         )
       })}
 
-      <ChatGptToolResultCard style={chatGptSequenceStyle(frame, 1148, 18)}>
+      <ChatGptToolResultCard style={chatGptSequenceStyle(frame, 1450, 18)}>
         <div style={{ display: 'grid', gap: 16, padding: 20 }}>
           <div style={{ color: '#111111', fontSize: 30, fontWeight: 840, letterSpacing: 0 }}>7 agentes financeiros ativos</div>
           <div style={{ display: 'grid', gap: 10, gridTemplateColumns: '1fr 1fr' }}>
@@ -733,7 +733,7 @@ export function ChatGptFinancialAgentsVideo() {
         </div>
       </ChatGptToolResultCard>
 
-      <ChatGptFlowAssistantText showHeader={false} style={chatGptSequenceStyle(frame, 1200, 18)}>
+      <ChatGptFlowAssistantText showHeader={false} style={chatGptSequenceStyle(frame, 1520, 18)}>
         Seu financeiro operando direto pelo ChatGPT ou Claude.
       </ChatGptFlowAssistantText>
     </ChatGptMobileShell>
