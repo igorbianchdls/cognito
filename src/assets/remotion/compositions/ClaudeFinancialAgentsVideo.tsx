@@ -26,7 +26,7 @@ function ClaudeFinancialAssistantText({ children, style }: { children: ReactNode
         ...style,
         color: '#111111',
         fontFamily: CLAUDE_RESPONSE_SERIF,
-        fontSize: 43,
+        fontSize: 38,
         fontWeight: 400,
         letterSpacing: '-0.01em',
         lineHeight: 1.26,

@@ -1,4 +1,4 @@
-import type { ComponentType, ReactNode } from 'react'
+import type { ComponentType, CSSProperties, ReactNode } from 'react'
 import { AbsoluteFill, interpolate, useCurrentFrame } from 'remotion'
 
 import {
@@ -8,7 +8,10 @@ import {
   ChatGptMobileShell,
   ChatGptToolCallCard,
   ChatGptToolResultCard,
+  CHATGPT_MOBILE_FONT_STACK,
+  OttoAssistantHeader,
   chatGptSequenceStyle,
+  fastCharacterTyping,
 } from '@/assets/remotion/compositions/ChatGptMobileBase'
 import BlingIcon from '@/components/icons/BlingIcon'
 import ContaAzulIcon from '@/components/icons/ContaAzulIcon'
@@ -85,6 +88,26 @@ export const financialAgentSteps: FinancialAgentStep[] = [
     toolName: 'identificar_oportunidades_margem',
   },
 ]
+
+function ChatGptFinancialAssistantText({ children, showHeader = true, style }: { children: ReactNode; showHeader?: boolean; style: CSSProperties }) {
+  return (
+    <div
+      style={{
+        ...style,
+        color: '#111111',
+        fontFamily: CHATGPT_MOBILE_FONT_STACK,
+        fontSize: 38,
+        fontWeight: 400,
+        letterSpacing: 0,
+        lineHeight: 1.34,
+        padding: '0 36px',
+      }}
+    >
+      {showHeader ? <OttoAssistantHeader /> : null}
+      {fastCharacterTyping(children, style)}
+    </div>
+  )
+}
 
 function FinancialResultCard({ kind, startFrame }: { kind: FinancialAgentStep['result']; startFrame: number }) {
   const frame = useCurrentFrame()
@@ -695,17 +718,17 @@ export function ChatGptFinancialAgentsVideo() {
         Otto, me ajuda a revisar o financeiro da empresa e priorizar o que eu preciso resolver hoje?
       </ChatGptFlowUserBubble>
 
-      <ChatGptFlowAssistantText style={chatGptSequenceStyle(frame, 74, 22)}>
+      <ChatGptFinancialAssistantText style={chatGptSequenceStyle(frame, 74, 22)}>
         Claro. Vou acionar seus agentes financeiros e trazer prioridades, riscos e oportunidades.
-      </ChatGptFlowAssistantText>
+      </ChatGptFinancialAssistantText>
 
       {financialAgentSteps.map((step, index) => {
         const start = 150 + index * 170
         return (
           <div key={step.toolName} style={{ display: 'contents' }}>
-            <ChatGptFlowAssistantText showHeader={false} style={chatGptSequenceStyle(frame, start, 22)}>
+            <ChatGptFinancialAssistantText showHeader={false} style={chatGptSequenceStyle(frame, start, 22)}>
               {step.text}
-            </ChatGptFlowAssistantText>
+            </ChatGptFinancialAssistantText>
             <ChatGptToolCallCard
               style={chatGptSequenceStyle(frame, start + 52, 16)}
               toolName={step.toolName}
@@ -713,9 +736,9 @@ export function ChatGptFinancialAgentsVideo() {
             <ChatGptToolResultCard style={chatGptSequenceStyle(frame, start + 100, 18)}>
               <ImprovedFinancialResultCard kind={step.result} startFrame={start + 100} />
             </ChatGptToolResultCard>
-            <ChatGptFlowAssistantText showHeader={false} style={chatGptSequenceStyle(frame, start + 174, 22)}>
+            <ChatGptFinancialAssistantText showHeader={false} style={chatGptSequenceStyle(frame, start + 174, 22)}>
               {step.insight}
-            </ChatGptFlowAssistantText>
+            </ChatGptFinancialAssistantText>
           </div>
         )
       })}
@@ -733,9 +756,9 @@ export function ChatGptFinancialAgentsVideo() {
         </div>
       </ChatGptToolResultCard>
 
-      <ChatGptFlowAssistantText showHeader={false} style={chatGptSequenceStyle(frame, 1520, 18)}>
+      <ChatGptFinancialAssistantText showHeader={false} style={chatGptSequenceStyle(frame, 1520, 18)}>
         Seu financeiro operando direto pelo ChatGPT ou Claude.
-      </ChatGptFlowAssistantText>
+      </ChatGptFinancialAssistantText>
     </ChatGptMobileShell>
   )
 }
