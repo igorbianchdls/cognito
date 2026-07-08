@@ -261,8 +261,8 @@ function ResultTable({
         {columns.map((column) => <span key={column}>{column}</span>)}
       </div>
       {rows.map((row, index) => (
-        <div key={index} style={{ alignItems: 'center', borderBottom: index === rows.length - 1 ? 'none' : '1px solid #f1f5f9', color: '#111827', display: 'grid', fontSize: 17, fontWeight: 720, gap: 10, gridTemplateColumns: template, opacity: grow(index * 7), padding: '11px 14px' }}>
-          {row.map((cell, cellIndex) => <span key={cellIndex} style={{ minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{cell}</span>)}
+        <div key={index} style={{ alignItems: 'center', borderBottom: index === rows.length - 1 ? 'none' : '1px solid #f1f5f9', color: '#111827', display: 'grid', fontSize: 17, gap: 10, gridTemplateColumns: template, opacity: grow(index * 7), padding: '11px 14px' }}>
+          {row.map((cell, cellIndex) => <span key={cellIndex} style={{ fontWeight: cellIndex === 0 ? 760 : 520, minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{cell}</span>)}
         </div>
       ))}
     </div>
