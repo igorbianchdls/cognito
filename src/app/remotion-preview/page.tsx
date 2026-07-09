@@ -3237,7 +3237,7 @@ const catalog: CatalogItem[] = [
     description: 'ChatGPT mobile mostrando o outline de uma apresentacao PPTX e abrindo no PowerPoint desktop/web.',
     duration: CHATGPT_POWERPOINT_OUTLINE_MOBILE_DURATION,
     height: 1920,
-    kind: 'VÃ­deos criados',
+    kind: 'Vídeos criados',
     label: 'ChatGPT to PowerPoint Outline',
     tags: ['ChatGPT', 'PowerPoint', 'PPT', 'Presentation', 'Outline'],
     value: 'video-chatgpt-to-powerpoint-outline',
