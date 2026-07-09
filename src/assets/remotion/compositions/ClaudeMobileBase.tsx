@@ -12,10 +12,10 @@ export const claudeSequenceStyle = chatGptSequenceStyle
 
 function ClaudeMenuGlyph({ color = '#333330' }: { color?: string }) {
   return (
-    <div style={{ display: 'grid', gap: 13, height: 48, width: 64 }}>
-      <span style={{ background: color, borderRadius: 999, display: 'block', height: 7, width: 64 }} />
-      <span style={{ background: color, borderRadius: 999, display: 'block', height: 7, width: 64 }} />
-      <span style={{ background: color, borderRadius: 999, display: 'block', height: 7, width: 64 }} />
+    <div style={{ display: 'grid', gap: 11, height: 41, width: 54 }}>
+      <span style={{ background: color, borderRadius: 999, display: 'block', height: 6, width: 54 }} />
+      <span style={{ background: color, borderRadius: 999, display: 'block', height: 6, width: 54 }} />
+      <span style={{ background: color, borderRadius: 999, display: 'block', height: 6, width: 54 }} />
     </div>
   )
 }
@@ -31,18 +31,18 @@ function ClaudePlusGlyph({ color = '#111111', size = 58, thickness = 7 }: { colo
 
 function ClaudeMoreGlyph({ color = '#333330' }: { color?: string }) {
   return (
-    <div style={{ alignItems: 'center', display: 'flex', gap: 10, height: 48, justifyContent: 'center', width: 74 }}>
-      {[0, 1, 2].map((item) => <span key={item} style={{ background: color, borderRadius: 999, display: 'block', height: 10, width: 10 }} />)}
+    <div style={{ alignItems: 'center', display: 'flex', gap: 9, height: 44, justifyContent: 'center', width: 64 }}>
+      {[0, 1, 2].map((item) => <span key={item} style={{ background: color, borderRadius: 999, display: 'block', height: 8, width: 8 }} />)}
     </div>
   )
 }
 
 function ClaudeMicGlyph({ color = '#333330' }: { color?: string }) {
   return (
-    <svg fill="none" height="62" style={{ display: 'block' }} viewBox="0 0 62 62" width="62" xmlns="http://www.w3.org/2000/svg">
-      <rect height="32" rx="14" stroke={color} strokeWidth="6.5" width="24" x="19" y="7" />
-      <path d="M12 29v5c0 10.5 8.2 19 19 19s19-8.5 19-19v-5" stroke={color} strokeLinecap="round" strokeWidth="6.5" />
-      <path d="M31 53v6" stroke={color} strokeLinecap="round" strokeWidth="6.5" />
+    <svg fill="none" height="54" style={{ display: 'block' }} viewBox="0 0 62 62" width="54" xmlns="http://www.w3.org/2000/svg">
+      <rect height="32" rx="14" stroke={color} strokeWidth="5.8" width="24" x="19" y="7" />
+      <path d="M12 29v5c0 10.5 8.2 19 19 19s19-8.5 19-19v-5" stroke={color} strokeLinecap="round" strokeWidth="5.8" />
+      <path d="M31 53v6" stroke={color} strokeLinecap="round" strokeWidth="5.8" />
     </svg>
   )
 }
@@ -192,13 +192,13 @@ export function ClaudeMobileShell({ children, conversationY = 0 }: { children: R
       </style>
       <ClaudeStatusBar />
 
-      <div style={{ alignItems: 'center', display: 'flex', height: 86, justifyContent: 'center', left: 37, position: 'absolute', top: 136, width: 86 }}>
+      <div style={{ alignItems: 'center', display: 'flex', height: 74, justifyContent: 'center', left: 43, position: 'absolute', top: 143, width: 74 }}>
         <ClaudeMenuGlyph />
       </div>
-      <div style={{ alignItems: 'center', background: '#333330', borderRadius: 999, display: 'flex', height: 88, justifyContent: 'center', left: 816, position: 'absolute', top: 134, width: 88 }}>
-        <ClaudePlusGlyph color="#ffffff" size={56} thickness={7} />
+      <div style={{ alignItems: 'center', background: '#333330', borderRadius: 999, display: 'flex', height: 76, justifyContent: 'center', left: 822, position: 'absolute', top: 140, width: 76 }}>
+        <ClaudePlusGlyph color="#ffffff" size={48} thickness={6} />
       </div>
-      <div style={{ alignItems: 'center', display: 'flex', height: 86, justifyContent: 'center', left: 947, position: 'absolute', top: 136, width: 96 }}>
+      <div style={{ alignItems: 'center', display: 'flex', height: 74, justifyContent: 'center', left: 953, position: 'absolute', top: 143, width: 84 }}>
         <ClaudeMoreGlyph />
       </div>
 
@@ -213,7 +213,7 @@ export function ClaudeMobileShell({ children, conversationY = 0 }: { children: R
           <div style={{ color: '#77746f', fontSize: 42, fontWeight: 450, left: 36, letterSpacing: 0, lineHeight: 1, position: 'absolute', top: 53 }}>Responder a Claude</div>
           <div style={{ alignItems: 'center', display: 'flex', gap: 19, left: 22, position: 'absolute', right: 24, top: 145 }}>
             <div style={{ alignItems: 'center', background: '#efeeeb', borderRadius: 999, display: 'flex', height: 90, justifyContent: 'center', width: 90 }}>
-              <ClaudePlusGlyph color="#111111" size={52} thickness={6} />
+              <ClaudePlusGlyph color="#111111" size={46} thickness={5.5} />
             </div>
             <div style={{ alignItems: 'center', background: '#efeeeb', borderRadius: 999, color: '#111111', display: 'flex', fontSize: 35, fontWeight: 520, height: 78, justifyContent: 'center', letterSpacing: 0, padding: '0 42px', whiteSpace: 'nowrap' }}>Sonnet 4.6</div>
             <div style={{ flex: 1 }} />
