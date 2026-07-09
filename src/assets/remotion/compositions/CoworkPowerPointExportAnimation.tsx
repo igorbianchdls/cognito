@@ -8,7 +8,7 @@ loadSfProFonts()
 
 export const COWORK_POWERPOINT_EXPORT_DURATION = 225
 export const COWORK_POWERPOINT_EXPORT_MOBILE_DURATION = 650
-export const CHATBOT_DASHBOARD_MOBILE_DURATION = 520
+export const CHATBOT_DASHBOARD_MOBILE_DURATION = 470
 export const CLAUDE_POWERPOINT_OUTLINE_MOBILE_DURATION = 285
 export const CHATGPT_POWERPOINT_OUTLINE_MOBILE_DURATION = 285
 
@@ -724,20 +724,48 @@ function MobileDashboardChatScene() {
   )
 }
 
-function MobileDashboardScene() {
+function DashboardSlideshowScene() {
   const frame = useCurrentFrame()
   const sceneIn = p(frame, 234, 264)
-  const sceneOut = p(frame, 318, 344, [1, 0])
   const scale = p(frame, 234, 264, [0.92, 1])
+  const dashboards = ['dash1.png', 'dash2.png', 'dash04.png', 'dash04.png']
 
   return (
-    <div style={{ background: '#111827', bottom: 0, left: 0, opacity: sceneIn * sceneOut, position: 'absolute', right: 0, top: 0 }}>
+    <div style={{ background: '#f4f7fb', bottom: 0, left: 0, opacity: sceneIn, position: 'absolute', right: 0, top: 0 }}>
       <MobileStatusBar />
-      <div style={{ color: '#d6d7e3', fontSize: 22, fontWeight: 700, left: 66, letterSpacing: 0, position: 'absolute', top: 150 }}>
-        CRM Dashboard
+      <div style={{ color: '#1f2937', fontSize: 22, fontWeight: 750, left: 66, letterSpacing: 0, position: 'absolute', top: 150 }}>
+        Dashboards
       </div>
-      <div style={{ borderRadius: 28, boxShadow: '0 34px 92px rgba(0,0,0,0.34)', left: 44, overflow: 'hidden', position: 'absolute', right: 44, top: 548, transform: `scale(${scale})`, transformOrigin: 'center center' }}>
-        <Img src={staticFile('dashboard.jpeg')} style={{ display: 'block', width: '100%' }} />
+      <div style={{ background: '#ffffff', border: '1px solid rgba(15,23,42,0.08)', borderRadius: 30, boxShadow: '0 34px 92px rgba(15,23,42,0.16)', height: 780, left: 38, overflow: 'hidden', position: 'absolute', right: 38, top: 558, transform: `scale(${scale})`, transformOrigin: 'center center' }}>
+        {dashboards.map((file, index) => {
+          const start = 246 + index * 48
+          const enter = p(frame, start, start + 18)
+          const exit = p(frame, start + 40, start + 52, [1, 0])
+          const active = enter * (index === dashboards.length - 1 ? 1 : exit)
+          return (
+            <Img
+              key={`${file}-${index}`}
+              src={staticFile(file)}
+              style={{
+                display: 'block',
+                height: '100%',
+                left: 0,
+                objectFit: 'cover',
+                opacity: active,
+                position: 'absolute',
+                top: 0,
+                transform: `translateX(${(1 - enter) * 42}px) scale(${0.985 + enter * 0.015})`,
+                width: '100%',
+              }}
+            />
+          )
+        })}
+      </div>
+      <div style={{ alignItems: 'center', display: 'flex', gap: 10, justifyContent: 'center', left: 0, position: 'absolute', right: 0, top: 1372 }}>
+        {dashboards.map((_, index) => {
+          const active = frame >= 246 + index * 48 && (index === dashboards.length - 1 || frame < 246 + (index + 1) * 48)
+          return <span key={index} style={{ background: active ? '#111827' : '#cbd5e1', borderRadius: 999, display: 'block', height: 8, width: active ? 28 : 8 }} />
+        })}
       </div>
       <div style={{ background: '#050505', borderRadius: 999, bottom: 18, height: 12, left: '50%', position: 'absolute', transform: 'translateX(-50%)', width: 380 }} />
     </div>
@@ -894,8 +922,7 @@ export function ChatbotToDashboardMobileAnimation() {
   return (
     <AbsoluteFill style={{ background: '#fbfaf7', color: INK, fontFamily: FONT, overflow: 'hidden' }}>
       <MobileDashboardChatScene />
-      <MobileDashboardScene />
-      <NativeDashboardScene />
+      <DashboardSlideshowScene />
     </AbsoluteFill>
   )
 }
