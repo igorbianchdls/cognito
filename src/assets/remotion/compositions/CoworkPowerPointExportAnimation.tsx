@@ -80,7 +80,7 @@ function ChatScene() {
                 boxShadow: '0 16px 42px rgba(50, 45, 35, 0.08)',
                 display: 'grid',
                 gap: 18,
-                gridTemplateColumns: '92px 1fr 54px auto',
+                gridTemplateColumns: '92px 1fr 50px auto',
                 height: 96,
                 marginTop: 10,
                 opacity: cardIn,
@@ -108,21 +108,22 @@ function ChatScene() {
                   background: click > 0.45 ? '#d9d4cd' : '#e8e4de',
                   border: '1px solid #d5cec4',
                   borderRadius: 10,
-                  color: '#24211d',
+                  color: '#111111',
                   display: 'flex',
-                  fontSize: 18,
-                  fontWeight: 560,
-                  gap: 10,
+                  fontSize: 16,
+                  fontWeight: 500,
+                  gap: 7,
                   height: 52,
                   justifyContent: 'center',
                   letterSpacing: 0,
-                  padding: '0 18px',
+                  padding: '0 13px',
                   transform: `scale(${1 - Math.sin(click * Math.PI) * 0.025})`,
-                  width: 304,
+                  whiteSpace: 'nowrap',
+                  width: 292,
                 }}
                 type="button"
               >
-                <span style={{ alignItems: 'center', background: '#c24f41', borderRadius: 6, color: '#ffffff', display: 'flex', fontSize: 12, fontWeight: 800, height: 24, justifyContent: 'center', width: 24 }}>P</span>
+                <span style={{ alignItems: 'center', background: '#c24f41', borderRadius: 6, color: '#ffffff', display: 'flex', flex: '0 0 auto', fontSize: 12, fontWeight: 800, height: 24, justifyContent: 'center', width: 24 }}>P</span>
                 Open in Microsoft PowerPoint
               </button>
             </div>
