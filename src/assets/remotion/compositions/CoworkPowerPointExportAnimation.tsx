@@ -6,6 +6,7 @@ import { IOS_REMOTION_FONT_STACK, loadSfProFonts } from '@/assets/remotion/fonts
 loadSfProFonts()
 
 export const COWORK_POWERPOINT_EXPORT_DURATION = 225
+export const COWORK_POWERPOINT_EXPORT_MOBILE_DURATION = 225
 
 const FONT = IOS_REMOTION_FONT_STACK
 const BLUE = '#27316b'
@@ -302,6 +303,182 @@ export function CoworkPowerPointExportAnimation() {
         <FileText size={13} strokeWidth={2} />
         PPTX generated from chat
       </div>
+    </AbsoluteFill>
+  )
+}
+
+function MobileStatusBar() {
+  return (
+    <>
+      <div style={{ color: '#111111', fontSize: 38, fontWeight: 760, left: 74, letterSpacing: 0, lineHeight: 1, position: 'absolute', top: 42 }}>19:04</div>
+      <div style={{ alignItems: 'flex-end', display: 'flex', gap: 5, height: 30, position: 'absolute', right: 120, top: 54, width: 42 }}>
+        {[12, 18, 25, 31].map((height, index) => <span key={height} style={{ background: index > 1 ? '#c8c8c8' : '#050505', borderRadius: 3, display: 'block', height, width: 7 }} />)}
+      </div>
+      <div style={{ border: '2px solid #bcbcbc', borderRadius: 10, height: 35, position: 'absolute', right: 44, top: 45, width: 67 }}>
+        <div style={{ background: '#e8c348', borderRadius: 7, bottom: 2, left: 2, position: 'absolute', top: 2, width: 45 }} />
+        <div style={{ color: '#050505', fontSize: 24, fontWeight: 760, left: 25, lineHeight: '31px', position: 'absolute', textAlign: 'center', top: 0, width: 30 }}>5</div>
+      </div>
+    </>
+  )
+}
+
+function MobilePptCard({ click, progress }: { click: number; progress: number }) {
+  return (
+    <div
+      style={{
+        background: '#fffefb',
+        border: '1px solid #d8d0c4',
+        borderRadius: 24,
+        boxShadow: '0 22px 58px rgba(50, 45, 35, 0.10)',
+        display: 'grid',
+        gap: 22,
+        opacity: progress,
+        padding: 24,
+        transform: `translateY(${(1 - progress) * 22}px)`,
+        width: 914,
+      }}
+    >
+      <div style={{ alignItems: 'center', display: 'grid', gap: 20, gridTemplateColumns: '88px 1fr' }}>
+        <div style={{ alignItems: 'center', background: '#fbfaf7', border: '1px solid #d9d1c6', borderRadius: 18, display: 'flex', height: 88, justifyContent: 'center', transform: 'rotate(-3deg)', width: 88 }}>
+          <Presentation color="#6b665f" size={42} strokeWidth={1.8} />
+        </div>
+        <div style={{ display: 'grid', gap: 8 }}>
+          <strong style={{ color: '#1f1f1f', fontSize: 31, fontWeight: 610, letterSpacing: 0, lineHeight: 1.1 }}>Lost deal analysis q4 q1</strong>
+          <span style={{ color: '#7b766f', fontSize: 23, fontWeight: 510, letterSpacing: 0 }}>Presentation · PPTX</span>
+        </div>
+      </div>
+      <div style={{ alignItems: 'center', display: 'grid', gap: 14, gridTemplateColumns: '72px 1fr' }}>
+        <button style={{ alignItems: 'center', background: '#fffefb', border: '1px solid #d8d0c4', borderRadius: 16, display: 'flex', height: 66, justifyContent: 'center', width: 72 }} type="button">
+          <Folder color="#6f6a63" size={31} strokeWidth={1.7} />
+        </button>
+        <button
+          style={{
+            alignItems: 'center',
+            background: click > 0.45 ? '#d9d4cd' : '#e8e4de',
+            border: '1px solid #d5cec4',
+            borderRadius: 16,
+            color: '#111111',
+            display: 'flex',
+            fontSize: 28,
+            fontWeight: 500,
+            gap: 10,
+            height: 66,
+            justifyContent: 'center',
+            letterSpacing: 0,
+            transform: `scale(${1 - Math.sin(click * Math.PI) * 0.025})`,
+            whiteSpace: 'nowrap',
+            width: '100%',
+          }}
+          type="button"
+        >
+          <span style={{ alignItems: 'center', background: '#c24f41', borderRadius: 8, color: '#ffffff', display: 'flex', flex: '0 0 auto', fontSize: 18, fontWeight: 800, height: 36, justifyContent: 'center', width: 36 }}>P</span>
+          Open in Microsoft PowerPoint
+        </button>
+      </div>
+    </div>
+  )
+}
+
+function MobileChatScene() {
+  const frame = useCurrentFrame()
+  const answerText = 'Preparei um deck executivo com os principais motivos de perda, contas em risco, impacto financeiro e proximos passos.'
+  const answerProgress = p(frame, 28, 86)
+  const cardIn = p(frame, 78, 104)
+  const cursorIn = p(frame, 108, 126)
+  const click = p(frame, 128, 138, [0, 1])
+  const sceneOut = p(frame, 145, 168, [1, 0])
+  const cursorX = interpolate(frame, [108, 132], [780, 704], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' })
+  const cursorY = interpolate(frame, [108, 132], [1010, 977], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' })
+
+  return (
+    <div style={{ bottom: 0, left: 0, opacity: sceneOut, position: 'absolute', right: 0, top: 0 }}>
+      <div style={{ background: '#fbfaf7', bottom: 0, left: 0, position: 'absolute', right: 0, top: 0 }} />
+      <MobileStatusBar />
+      <div style={{ alignItems: 'center', borderBottom: '1px solid #eee9df', display: 'flex', height: 118, justifyContent: 'space-between', left: 48, position: 'absolute', right: 48, top: 106 }}>
+        <strong style={{ color: '#111111', fontSize: 32, fontWeight: 720, letterSpacing: 0 }}>Otto</strong>
+        <span style={{ alignItems: 'center', background: '#ffffff', border: '1px solid #e8e1d7', borderRadius: 999, color: '#777064', display: 'flex', fontSize: 21, fontWeight: 670, gap: 10, padding: '13px 18px' }}>
+          <Search size={22} strokeWidth={2.2} />
+          Presentation
+        </span>
+      </div>
+
+      <div style={{ display: 'grid', gap: 38, left: 56, position: 'absolute', right: 56, top: 292 }}>
+        <div style={{ alignItems: 'start', display: 'grid', gridTemplateColumns: '1fr auto' }}>
+          <div />
+          <div style={{ background: '#f0eeea', border: '1px solid #e0dcd4', borderRadius: 34, color: '#161616', fontSize: 30, fontWeight: 500, letterSpacing: 0, lineHeight: 1.24, maxWidth: 735, padding: '28px 34px' }}>
+            Crie uma apresentação executiva sobre perdas de deals no Q4.
+          </div>
+        </div>
+
+        <div style={{ display: 'grid', gap: 18 }}>
+          <div style={{ alignItems: 'center', display: 'flex', gap: 12 }}>
+            <OttoMark />
+            <span style={{ color: '#7a756d', fontSize: 22, fontWeight: 760 }}>Otto</span>
+          </div>
+          <div style={{ color: INK, fontSize: 39, fontWeight: 420, letterSpacing: 0, lineHeight: 1.28 }}>
+            {typed(answerText, answerProgress)}
+          </div>
+          <MobilePptCard click={click} progress={cardIn} />
+        </div>
+      </div>
+
+      <div style={{ left: cursorX, opacity: cursorIn, position: 'absolute', top: cursorY, transform: `scale(${1.75 - Math.sin(click * Math.PI) * 0.16})`, zIndex: 20 }}>
+        <MousePointer2 color="#111111" fill="#111111" size={28} strokeWidth={2} />
+      </div>
+    </div>
+  )
+}
+
+function MobilePowerPointScene() {
+  const frame = useCurrentFrame()
+  const sceneIn = p(frame, 154, 184)
+  const active = frame < 196 ? 0 : frame < 212 ? 1 : 2
+  const slideScale = p(frame, 154, 184, [0.94, 1])
+
+  return (
+    <div style={{ background: '#e6dccd', bottom: 0, left: 0, opacity: sceneIn, position: 'absolute', right: 0, top: 0 }}>
+      <MobileStatusBar />
+      <div style={{ background: '#ffffff', border: '1px solid rgba(0,0,0,0.12)', borderRadius: 28, boxShadow: '0 34px 92px rgba(58, 48, 32, 0.24)', height: 1548, left: 44, overflow: 'hidden', position: 'absolute', right: 44, top: 176, transform: `scale(${slideScale})`, transformOrigin: 'center center' }}>
+        <div style={{ background: '#f7f7f7', borderBottom: '1px solid #dddddd', height: 128, padding: '0 24px' }}>
+          <div style={{ alignItems: 'center', display: 'flex', gap: 14, height: 62 }}>
+            <span style={{ alignItems: 'center', background: '#c24f41', borderRadius: 10, color: '#ffffff', display: 'flex', fontSize: 23, fontWeight: 850, height: 40, justifyContent: 'center', width: 40 }}>P</span>
+            <strong style={{ color: '#333333', fontSize: 25, fontWeight: 680, letterSpacing: 0 }}>Lost deal analysis q4 q1</strong>
+          </div>
+          <div style={{ alignItems: 'center', display: 'flex', gap: 22, height: 58 }}>
+            {['Home', 'Insert', 'Design', 'Share'].map((item, index) => (
+              <span key={item} style={{ color: index === 0 ? '#c24f41' : '#555555', fontSize: 21, fontWeight: 650 }}>{item}</span>
+            ))}
+          </div>
+        </div>
+        <div style={{ background: '#f0f0f0', bottom: 0, left: 0, position: 'absolute', right: 0, top: 128 }}>
+          <div style={{ display: 'flex', gap: 18, height: 146, left: 18, overflow: 'hidden', position: 'absolute', right: 18, top: 20 }}>
+            <SlideThumb active={active === 0} index={1} variant="cover" />
+            <SlideThumb active={active === 1} index={2} variant="snapshot" />
+            <SlideThumb active={active === 2} index={3} variant="chart" />
+          </div>
+          <div style={{ alignItems: 'center', bottom: 40, display: 'flex', justifyContent: 'center', left: 0, overflow: 'hidden', position: 'absolute', right: 0, top: 188 }}>
+            <div style={{ opacity: active === 0 ? 1 : 0, position: 'absolute', transform: 'scale(1.06)' }}>
+              <CoverSlide />
+            </div>
+            <div style={{ opacity: active === 1 ? 1 : 0, position: 'absolute', transform: 'scale(1.06)' }}>
+              <SnapshotSlide />
+            </div>
+            <div style={{ opacity: active === 2 ? 1 : 0, position: 'absolute', transform: 'scale(1.06)' }}>
+              <ChartSlide />
+            </div>
+          </div>
+        </div>
+      </div>
+      <div style={{ background: '#050505', borderRadius: 999, bottom: 18, height: 12, left: '50%', position: 'absolute', transform: 'translateX(-50%)', width: 380 }} />
+    </div>
+  )
+}
+
+export function CoworkPowerPointExportMobileAnimation() {
+  return (
+    <AbsoluteFill style={{ background: '#fbfaf7', color: INK, fontFamily: FONT, overflow: 'hidden' }}>
+      <MobileChatScene />
+      <MobilePowerPointScene />
     </AbsoluteFill>
   )
 }
