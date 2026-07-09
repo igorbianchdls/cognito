@@ -11,6 +11,7 @@ export const CLAUDE_POWERPOINT_OUTLINE_MOBILE_DURATION = 285
 export const CHATGPT_POWERPOINT_OUTLINE_MOBILE_DURATION = 285
 
 const FONT = IOS_REMOTION_FONT_STACK
+const CLAUDE_RESPONSE_SERIF = 'Georgia, "Times New Roman", serif'
 const BLUE = '#27316b'
 const RED = '#ef4e5f'
 const INK = '#151515'
@@ -475,7 +476,7 @@ function ClaudeComposer() {
   return (
     <div style={{ background: '#fbfaf8', bottom: 0, height: 340, left: 0, position: 'absolute', right: 0 }}>
       <div style={{ background: '#fbfaf8', border: '1.5px solid #bebcb7', borderRadius: 68, boxShadow: '0 20px 48px rgba(20,24,22,0.16)', height: 254, left: 42, position: 'absolute', right: 42, top: 0 }}>
-        <div style={{ color: '#77746f', fontSize: 42, fontWeight: 450, left: 36, letterSpacing: 0, lineHeight: 1, position: 'absolute', top: 53 }}>Responder a Claude</div>
+        <div style={{ color: '#77746f', fontSize: 42, fontWeight: 450, left: 36, letterSpacing: 0, lineHeight: 1, position: 'absolute', top: 53 }}>Chat with Claude</div>
         <div style={{ alignItems: 'center', display: 'flex', gap: 19, left: 22, position: 'absolute', right: 24, top: 145 }}>
           <div style={{ alignItems: 'center', background: '#efeeeb', borderRadius: 999, display: 'flex', height: 78, justifyContent: 'center', width: 78 }}>+</div>
           <div style={{ alignItems: 'center', background: '#efeeeb', borderRadius: 999, color: '#111111', display: 'flex', fontSize: 35, fontWeight: 520, height: 78, justifyContent: 'center', letterSpacing: 0, padding: '0 42px', whiteSpace: 'nowrap' }}>Sonnet 4.6</div>
@@ -512,8 +513,8 @@ function ClaudePowerPointOutlineChatScene() {
       <MobileStatusBar />
 
       <div style={{ background: '#fbfaf8', border: '1.5px solid #bebcb7', borderRadius: 58, boxShadow: '0 24px 68px rgba(20,24,22,0.14)', display: 'grid', gap: 22, left: 42, minHeight: 258, opacity: introOut, padding: '34px 36px 28px', position: 'absolute', right: 42, top: 725, transform: `translateY(${(1 - introOut) * -34}px) scale(${0.96 + p(frame, 0, 22) * 0.04})` }}>
-        <div style={{ color: '#77746f', fontSize: 38, fontWeight: 450, letterSpacing: 0 }}>Responder a Claude</div>
-        <div style={{ color: '#111111', fontFamily: 'Georgia, "Times New Roman", serif', fontSize: 34, fontWeight: 400, letterSpacing: '-0.01em', lineHeight: 1.15, minHeight: 78, overflow: 'hidden' }}>
+        <div style={{ color: '#77746f', fontSize: 38, fontWeight: 450, letterSpacing: 0, opacity: promptProgress > 0.02 ? 0 : 1 }}>Chat with Claude</div>
+        <div style={{ color: '#111111', fontFamily: FONT, fontSize: 34, fontWeight: 400, letterSpacing: 0, lineHeight: 1.15, minHeight: 78, overflow: 'hidden', transform: `translateY(${promptProgress > 0.02 ? -60 : 0}px)` }}>
           {typed(promptText, promptProgress)}
           <span style={{ background: '#111111', display: frame % 18 < 9 ? 'inline-block' : 'none', height: 35, marginLeft: 4, transform: 'translateY(5px)', width: 3 }} />
         </div>
@@ -546,7 +547,7 @@ function ClaudePowerPointOutlineChatScene() {
               <OttoMark />
               <span style={{ color: '#8b857c', fontSize: 22, fontWeight: 760 }}>Otto</span>
             </div>
-            <div style={{ color: '#111111', fontFamily: 'Georgia, "Times New Roman", serif', fontSize: 38, fontWeight: 400, letterSpacing: '-0.01em', lineHeight: 1.26 }}>
+            <div style={{ color: '#111111', fontFamily: CLAUDE_RESPONSE_SERIF, fontSize: 38, fontWeight: 400, letterSpacing: '-0.01em', lineHeight: 1.26 }}>
               {typed(answerText, answerProgress)}
             </div>
             <MobilePptCard click={click} progress={cardIn} />
