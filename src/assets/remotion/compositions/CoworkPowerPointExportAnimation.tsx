@@ -2,6 +2,7 @@ import { AbsoluteFill, interpolate, useCurrentFrame } from 'remotion'
 import { ChevronDown, FileText, Folder, MousePointer2, Presentation, Search, Share, Square } from 'lucide-react'
 
 import { IOS_REMOTION_FONT_STACK, loadSfProFonts } from '@/assets/remotion/fonts/sfPro'
+import { OttoAssistantHeader } from '@/assets/remotion/compositions/ChatGptMobileBase'
 
 loadSfProFonts()
 
@@ -542,15 +543,16 @@ function ClaudePowerPointOutlineChatScene() {
             </div>
           </div>
 
-          <div style={{ display: 'grid', gap: 18 }}>
-            <div style={{ alignItems: 'center', display: 'flex', gap: 12 }}>
-              <OttoMark />
-              <span style={{ color: '#8b857c', fontSize: 22, fontWeight: 760 }}>Otto</span>
+          <div className="claude-powerpoint-response" style={{ color: '#111111', display: 'grid', fontFamily: CLAUDE_RESPONSE_SERIF, fontSize: 38, fontWeight: 400, gap: 18, letterSpacing: '-0.01em', lineHeight: 1.26, padding: '0 42px' }}>
+            <OttoAssistantHeader muted="#8b857c" />
+            <div style={{ fontFamily: CLAUDE_RESPONSE_SERIF }}>
+              <span style={{ fontFamily: CLAUDE_RESPONSE_SERIF }}>
+                {typed(answerText, answerProgress)}
+              </span>
             </div>
-            <div style={{ color: '#111111', fontFamily: CLAUDE_RESPONSE_SERIF, fontSize: 38, fontWeight: 400, letterSpacing: '-0.01em', lineHeight: 1.26 }}>
-              {typed(answerText, answerProgress)}
+            <div style={{ marginLeft: -42, marginRight: -42 }}>
+              <MobilePptCard click={click} progress={cardIn} />
             </div>
-            <MobilePptCard click={click} progress={cardIn} />
           </div>
         </div>
       </div>

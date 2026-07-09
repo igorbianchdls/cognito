@@ -155,11 +155,11 @@ export function ClaudeMobileShell({ children, conversationY = 0 }: { children: R
       </style>
       <ClaudeStatusBar />
 
-      <Menu color="#333330" size={47} strokeWidth={2.4} style={{ left: 61, position: 'absolute', top: 161 }} />
-      <div style={{ alignItems: 'center', background: '#333330', borderRadius: 999, display: 'flex', height: 54, justifyContent: 'center', left: 837, position: 'absolute', top: 151, width: 54 }}>
-        <Plus color="#ffffff" size={42} strokeWidth={3.2} />
+      <Menu color="#333330" size={56} strokeWidth={2.7} style={{ left: 56, position: 'absolute', top: 156 }} />
+      <div style={{ alignItems: 'center', background: '#333330', borderRadius: 999, display: 'flex', height: 64, justifyContent: 'center', left: 832, position: 'absolute', top: 146, width: 64 }}>
+        <Plus color="#ffffff" size={48} strokeWidth={3.4} />
       </div>
-      <MoreHorizontal color="#333330" size={50} strokeWidth={3.2} style={{ left: 969, position: 'absolute', top: 158 }} />
+      <MoreHorizontal color="#333330" size={58} strokeWidth={3.4} style={{ left: 965, position: 'absolute', top: 154 }} />
 
       <div style={{ bottom: 340, left: 0, overflow: 'hidden', position: 'absolute', right: 0, top: 226 }}>
         <div style={{ display: 'grid', gap: 34, padding: '20px 0 820px', transform: `translateY(${conversationY}px)` }}>
