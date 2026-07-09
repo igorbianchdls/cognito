@@ -543,7 +543,7 @@ function ClaudePowerPointOutlineChatScene() {
             </div>
           </div>
 
-          <div className="claude-powerpoint-response" style={{ color: '#111111', display: 'grid', fontFamily: CLAUDE_RESPONSE_SERIF, fontSize: 38, fontWeight: 400, gap: 18, letterSpacing: '-0.01em', lineHeight: 1.26, padding: '0 42px' }}>
+          <div className="claude-powerpoint-response" style={{ color: '#111111', display: 'grid', fontFamily: CLAUDE_RESPONSE_SERIF, fontSize: 38, fontWeight: 400, gap: 18, letterSpacing: '-0.02em', lineHeight: 1.26, padding: '0 42px' }}>
             <OttoAssistantHeader muted="#8b857c" />
             <div style={{ fontFamily: CLAUDE_RESPONSE_SERIF }}>
               <span style={{ fontFamily: CLAUDE_RESPONSE_SERIF }}>

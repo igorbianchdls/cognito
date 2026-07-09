@@ -28,7 +28,7 @@ function ClaudeFinancialAssistantText({ children, style }: { children: ReactNode
         fontFamily: CLAUDE_RESPONSE_SERIF,
         fontSize: 38,
         fontWeight: 400,
-        letterSpacing: '-0.01em',
+        letterSpacing: '-0.02em',
         lineHeight: 1.26,
         padding: '0 42px',
       }}
@@ -104,7 +104,7 @@ export function ClaudeFinancialAgentsVideo() {
           .claude-financial-response-copy,
           .claude-financial-response-copy span {
             font-family: "Libre Baskerville", Baskerville, Georgia, "Times New Roman", serif !important;
-            letter-spacing: -0.01em !important;
+            letter-spacing: -0.02em !important;
           }
         `}
       </style>
