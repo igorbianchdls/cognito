@@ -1,6 +1,6 @@
 import type { CSSProperties, ReactNode } from 'react'
 import { AbsoluteFill } from 'remotion'
-import { Copy, Menu, Mic, MoreHorizontal, Play, Plus, RotateCcw, ThumbsDown, ThumbsUp, Upload } from 'lucide-react'
+import { Copy, Play, RotateCcw, ThumbsDown, ThumbsUp, Upload } from 'lucide-react'
 
 import { OttoAssistantHeader, chatGptSequenceStyle, fastCharacterTyping } from '@/assets/remotion/compositions/ChatGptMobileBase'
 import { IOS_REMOTION_FONT_STACK, loadSfProFonts } from '@/assets/remotion/fonts/sfPro'
@@ -9,6 +9,43 @@ loadSfProFonts()
 
 export const CLAUDE_MOBILE_FONT_STACK = IOS_REMOTION_FONT_STACK
 export const claudeSequenceStyle = chatGptSequenceStyle
+
+function ClaudeMenuGlyph({ color = '#333330' }: { color?: string }) {
+  return (
+    <div style={{ display: 'grid', gap: 13, height: 48, width: 64 }}>
+      <span style={{ background: color, borderRadius: 999, display: 'block', height: 7, width: 64 }} />
+      <span style={{ background: color, borderRadius: 999, display: 'block', height: 7, width: 64 }} />
+      <span style={{ background: color, borderRadius: 999, display: 'block', height: 7, width: 64 }} />
+    </div>
+  )
+}
+
+function ClaudePlusGlyph({ color = '#111111', size = 58, thickness = 7 }: { color?: string; size?: number; thickness?: number }) {
+  return (
+    <div style={{ height: size, position: 'relative', width: size }}>
+      <span style={{ background: color, borderRadius: 999, height: thickness, left: 0, position: 'absolute', top: (size - thickness) / 2, width: size }} />
+      <span style={{ background: color, borderRadius: 999, height: size, left: (size - thickness) / 2, position: 'absolute', top: 0, width: thickness }} />
+    </div>
+  )
+}
+
+function ClaudeMoreGlyph({ color = '#333330' }: { color?: string }) {
+  return (
+    <div style={{ alignItems: 'center', display: 'flex', gap: 10, height: 48, justifyContent: 'center', width: 74 }}>
+      {[0, 1, 2].map((item) => <span key={item} style={{ background: color, borderRadius: 999, display: 'block', height: 10, width: 10 }} />)}
+    </div>
+  )
+}
+
+function ClaudeMicGlyph({ color = '#333330' }: { color?: string }) {
+  return (
+    <svg fill="none" height="62" style={{ display: 'block' }} viewBox="0 0 62 62" width="62" xmlns="http://www.w3.org/2000/svg">
+      <rect height="32" rx="14" stroke={color} strokeWidth="6.5" width="24" x="19" y="7" />
+      <path d="M12 29v5c0 10.5 8.2 19 19 19s19-8.5 19-19v-5" stroke={color} strokeLinecap="round" strokeWidth="6.5" />
+      <path d="M31 53v6" stroke={color} strokeLinecap="round" strokeWidth="6.5" />
+    </svg>
+  )
+}
 
 export function ClaudeStatusBar() {
   return (
@@ -155,11 +192,15 @@ export function ClaudeMobileShell({ children, conversationY = 0 }: { children: R
       </style>
       <ClaudeStatusBar />
 
-      <Menu color="#333330" size={70} strokeWidth={3.2} style={{ left: 48, position: 'absolute', top: 149 }} />
-      <div style={{ alignItems: 'center', background: '#333330', borderRadius: 999, display: 'flex', height: 82, justifyContent: 'center', left: 820, position: 'absolute', top: 137, width: 82 }}>
-        <Plus color="#ffffff" size={64} strokeWidth={3.8} />
+      <div style={{ alignItems: 'center', display: 'flex', height: 86, justifyContent: 'center', left: 37, position: 'absolute', top: 136, width: 86 }}>
+        <ClaudeMenuGlyph />
       </div>
-      <MoreHorizontal color="#333330" size={70} strokeWidth={3.8} style={{ left: 958, position: 'absolute', top: 148 }} />
+      <div style={{ alignItems: 'center', background: '#333330', borderRadius: 999, display: 'flex', height: 88, justifyContent: 'center', left: 816, position: 'absolute', top: 134, width: 88 }}>
+        <ClaudePlusGlyph color="#ffffff" size={56} thickness={7} />
+      </div>
+      <div style={{ alignItems: 'center', display: 'flex', height: 86, justifyContent: 'center', left: 947, position: 'absolute', top: 136, width: 96 }}>
+        <ClaudeMoreGlyph />
+      </div>
 
       <div style={{ bottom: 340, left: 0, overflow: 'hidden', position: 'absolute', right: 0, top: 226 }}>
         <div style={{ display: 'grid', gap: 34, padding: '20px 0 820px', transform: `translateY(${conversationY}px)` }}>
@@ -172,12 +213,12 @@ export function ClaudeMobileShell({ children, conversationY = 0 }: { children: R
           <div style={{ color: '#77746f', fontSize: 42, fontWeight: 450, left: 36, letterSpacing: 0, lineHeight: 1, position: 'absolute', top: 53 }}>Responder a Claude</div>
           <div style={{ alignItems: 'center', display: 'flex', gap: 19, left: 22, position: 'absolute', right: 24, top: 145 }}>
             <div style={{ alignItems: 'center', background: '#efeeeb', borderRadius: 999, display: 'flex', height: 90, justifyContent: 'center', width: 90 }}>
-              <Plus color="#111111" size={58} strokeWidth={3.1} />
+              <ClaudePlusGlyph color="#111111" size={52} thickness={6} />
             </div>
             <div style={{ alignItems: 'center', background: '#efeeeb', borderRadius: 999, color: '#111111', display: 'flex', fontSize: 35, fontWeight: 520, height: 78, justifyContent: 'center', letterSpacing: 0, padding: '0 42px', whiteSpace: 'nowrap' }}>Sonnet 4.6</div>
             <div style={{ flex: 1 }} />
             <div style={{ alignItems: 'center', background: '#efeeeb', borderRadius: 999, display: 'flex', height: 90, justifyContent: 'center', width: 90 }}>
-              <Mic color="#333330" size={58} strokeWidth={3.1} />
+              <ClaudeMicGlyph />
             </div>
             <ClaudeVoiceButton />
           </div>
