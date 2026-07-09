@@ -7,6 +7,7 @@ loadSfProFonts()
 
 export const COWORK_POWERPOINT_EXPORT_DURATION = 225
 export const COWORK_POWERPOINT_EXPORT_MOBILE_DURATION = 225
+export const CLAUDE_POWERPOINT_OUTLINE_MOBILE_DURATION = 225
 
 const FONT = IOS_REMOTION_FONT_STACK
 const BLUE = '#27316b'
@@ -450,6 +451,85 @@ export function CoworkPowerPointExportMobileAnimation() {
   return (
     <AbsoluteFill style={{ background: '#fbfaf7', color: INK, fontFamily: FONT, overflow: 'hidden' }}>
       <MobileChatScene />
+      <MobilePowerPointScene />
+    </AbsoluteFill>
+  )
+}
+
+function ClaudeComposer() {
+  return (
+    <div style={{ background: '#fbfaf8', bottom: 0, height: 340, left: 0, position: 'absolute', right: 0 }}>
+      <div style={{ background: '#fbfaf8', border: '1.5px solid #bebcb7', borderRadius: 68, boxShadow: '0 20px 48px rgba(20,24,22,0.16)', height: 254, left: 42, position: 'absolute', right: 42, top: 0 }}>
+        <div style={{ color: '#77746f', fontSize: 42, fontWeight: 450, left: 36, letterSpacing: 0, lineHeight: 1, position: 'absolute', top: 53 }}>Responder a Claude</div>
+        <div style={{ alignItems: 'center', display: 'flex', gap: 19, left: 22, position: 'absolute', right: 24, top: 145 }}>
+          <div style={{ alignItems: 'center', background: '#efeeeb', borderRadius: 999, display: 'flex', height: 78, justifyContent: 'center', width: 78 }}>+</div>
+          <div style={{ alignItems: 'center', background: '#efeeeb', borderRadius: 999, color: '#111111', display: 'flex', fontSize: 35, fontWeight: 520, height: 78, justifyContent: 'center', letterSpacing: 0, padding: '0 42px', whiteSpace: 'nowrap' }}>Sonnet 4.6</div>
+          <div style={{ flex: 1 }} />
+          <div style={{ alignItems: 'center', background: '#050505', borderRadius: 999, display: 'flex', gap: 5, height: 78, justifyContent: 'center', width: 78 }}>
+            {[18, 28, 38, 28, 18].map((height, index) => <span key={`${height}-${index}`} style={{ background: '#ffffff', borderRadius: 999, height, width: 5 }} />)}
+          </div>
+        </div>
+      </div>
+      <div style={{ background: '#050505', borderRadius: 999, bottom: 14, height: 12, left: '50%', position: 'absolute', transform: 'translateX(-50%)', width: 380 }} />
+    </div>
+  )
+}
+
+function ClaudePowerPointOutlineChatScene() {
+  const frame = useCurrentFrame()
+  const answerText = 'Montei o outline, organizei a narrativa executiva e gerei uma apresentacao pronta para abrir no PowerPoint.'
+  const answerProgress = p(frame, 28, 86)
+  const cardIn = p(frame, 78, 104)
+  const cursorIn = p(frame, 108, 126)
+  const click = p(frame, 128, 138, [0, 1])
+  const sceneOut = p(frame, 145, 168, [1, 0])
+  const cursorX = interpolate(frame, [108, 132], [790, 190], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' })
+  const cursorY = interpolate(frame, [108, 132], [1010, 955], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' })
+
+  return (
+    <div style={{ bottom: 0, left: 0, opacity: sceneOut, position: 'absolute', right: 0, top: 0 }}>
+      <div style={{ background: '#fbfaf8', bottom: 0, left: 0, position: 'absolute', right: 0, top: 0 }} />
+      <MobileStatusBar />
+      <div style={{ alignItems: 'center', display: 'flex', height: 118, justifyContent: 'space-between', left: 48, position: 'absolute', right: 48, top: 106 }}>
+        <strong style={{ color: '#333330', fontSize: 32, fontWeight: 620, letterSpacing: 0 }}>Claude</strong>
+        <span style={{ color: '#333330', fontSize: 34, fontWeight: 500, letterSpacing: 0 }}>...</span>
+      </div>
+
+      <div style={{ bottom: 368, left: 0, overflow: 'hidden', position: 'absolute', right: 0, top: 232 }}>
+        <div style={{ display: 'grid', gap: 38, padding: '34px 56px 180px' }}>
+          <div style={{ alignItems: 'start', display: 'grid', gridTemplateColumns: '1fr auto' }}>
+            <div />
+            <div style={{ background: '#f1f0ee', border: '1px solid #dfddd8', borderRadius: 38, color: '#111111', fontSize: 31, fontWeight: 400, letterSpacing: 0, lineHeight: 1.18, maxWidth: 760, padding: '28px 34px' }}>
+              Crie uma apresentacao executiva sobre perdas de deals no Q4.
+            </div>
+          </div>
+
+          <div style={{ display: 'grid', gap: 18 }}>
+            <div style={{ alignItems: 'center', display: 'flex', gap: 12 }}>
+              <OttoMark />
+              <span style={{ color: '#8b857c', fontSize: 22, fontWeight: 760 }}>Otto</span>
+            </div>
+            <div style={{ color: '#111111', fontFamily: 'Georgia, "Times New Roman", serif', fontSize: 38, fontWeight: 400, letterSpacing: '-0.01em', lineHeight: 1.26 }}>
+              {typed(answerText, answerProgress)}
+            </div>
+            <MobilePptCard click={click} progress={cardIn} />
+          </div>
+        </div>
+      </div>
+
+      <ClaudeComposer />
+
+      <div style={{ left: cursorX, opacity: cursorIn, position: 'absolute', top: cursorY, transform: `scale(${1.75 - Math.sin(click * Math.PI) * 0.16})`, zIndex: 20 }}>
+        <MousePointer2 color="#111111" fill="#111111" size={28} strokeWidth={2} />
+      </div>
+    </div>
+  )
+}
+
+export function ClaudePowerPointOutlineMobileAnimation() {
+  return (
+    <AbsoluteFill style={{ background: '#fbfaf8', color: INK, fontFamily: FONT, overflow: 'hidden' }}>
+      <ClaudePowerPointOutlineChatScene />
       <MobilePowerPointScene />
     </AbsoluteFill>
   )
