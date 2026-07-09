@@ -1,4 +1,4 @@
-import { AbsoluteFill, interpolate, useCurrentFrame } from 'remotion'
+import { AbsoluteFill, Img, interpolate, staticFile, useCurrentFrame } from 'remotion'
 import { ChevronDown, FileText, Folder, MousePointer2, Presentation, Search, Share, Square } from 'lucide-react'
 
 import { IOS_REMOTION_FONT_STACK, loadSfProFonts } from '@/assets/remotion/fonts/sfPro'
@@ -8,6 +8,7 @@ loadSfProFonts()
 
 export const COWORK_POWERPOINT_EXPORT_DURATION = 225
 export const COWORK_POWERPOINT_EXPORT_MOBILE_DURATION = 650
+export const CHATBOT_DASHBOARD_MOBILE_DURATION = 285
 export const CLAUDE_POWERPOINT_OUTLINE_MOBILE_DURATION = 285
 export const CHATGPT_POWERPOINT_OUTLINE_MOBILE_DURATION = 285
 
@@ -620,6 +621,130 @@ function MobileExcelScene({ start }: { start: number }) {
       </div>
       <div style={{ background: '#050505', borderRadius: 999, bottom: 18, height: 12, left: '50%', position: 'absolute', transform: 'translateX(-50%)', width: 380 }} />
     </div>
+  )
+}
+
+function MobileDashboardCard({ click, progress }: { click: number; progress: number }) {
+  return (
+    <div
+      style={{
+        alignItems: 'center',
+        background: click > 0.45 ? '#f7f7f7' : '#ffffff',
+        border: '1.5px solid #d6cec3',
+        borderRadius: 28,
+        boxShadow: '0 18px 42px rgba(50, 45, 35, 0.10)',
+        display: 'grid',
+        gridTemplateColumns: '174px 1fr',
+        height: 142,
+        opacity: progress,
+        overflow: 'hidden',
+        padding: '0 34px',
+        transform: `translateY(${(1 - progress) * 22}px) scale(${1 - Math.sin(click * Math.PI) * 0.018})`,
+        width: '100%',
+      }}
+    >
+      <div style={{ alignItems: 'center', alignSelf: 'stretch', display: 'flex', justifyContent: 'flex-start', overflow: 'hidden', position: 'relative' }}>
+        <div style={{ background: '#171a2f', border: '1.5px solid #d8d0c4', borderRadius: 18, height: 126, overflow: 'hidden', transform: 'rotate(-5deg)', width: 126 }}>
+          <Img src={staticFile('dashboard.jpeg')} style={{ height: '100%', objectFit: 'cover', width: '100%' }} />
+        </div>
+      </div>
+      <div style={{ display: 'grid', gap: 10, minWidth: 0 }}>
+        <strong style={{ color: '#242424', fontSize: 34, fontWeight: 520, letterSpacing: 0, lineHeight: 1.08, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>crm_dashboard</strong>
+        <span style={{ color: '#77736d', fontSize: 27, fontWeight: 440, letterSpacing: 0 }}>Dashboard · Live</span>
+      </div>
+    </div>
+  )
+}
+
+function MobileDashboardChatScene() {
+  const frame = useCurrentFrame()
+  const promptText = 'Crie um dashboard executivo com tickets, mensagens e tempo de resposta.'
+  const answerText = 'Montei um dashboard visual com volume de tickets, mensagens, tempo medio de resposta e distribuicao por canal.'
+  const promptProgress = p(frame, 12, 72)
+  const introOut = p(frame, 78, 98, [1, 0])
+  const chatIn = p(frame, 88, 110)
+  const userBubbleIn = p(frame, 96, 116)
+  const answerProgress = p(frame, 118, 172)
+  const cardIn = p(frame, 164, 194)
+  const cursorIn = p(frame, 198, 216)
+  const click = p(frame, 218, 228, [0, 1])
+  const sceneOut = p(frame, 226, 250, [1, 0])
+  const cursorX = interpolate(frame, [198, 222], [790, 190], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' })
+  const cursorY = interpolate(frame, [198, 222], [1010, 955], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' })
+
+  return (
+    <div style={{ bottom: 0, left: 0, opacity: sceneOut, position: 'absolute', right: 0, top: 0 }}>
+      <div style={{ background: '#fbfaf7', bottom: 0, left: 0, position: 'absolute', right: 0, top: 0 }} />
+      <MobileStatusBar />
+
+      <div style={{ alignItems: 'center', border: '1.5px solid #e1dbd2', borderRadius: 48, boxShadow: '0 28px 82px rgba(58,48,32,0.12)', display: 'grid', gridTemplateColumns: '1fr 72px', left: 64, minHeight: 168, opacity: introOut, padding: '24px 26px 24px 38px', position: 'absolute', right: 64, top: 790, transform: `translateY(${(1 - introOut) * -34}px) scale(${0.96 + p(frame, 0, 22) * 0.04})` }}>
+        <div style={{ color: '#171717', fontSize: 30, fontWeight: 440, letterSpacing: 0, lineHeight: 1.16, minWidth: 0, overflow: 'hidden', wordBreak: 'normal' }}>
+          {typed(promptText, promptProgress)}
+          <span style={{ background: '#171717', display: frame % 18 < 9 ? 'inline-block' : 'none', height: 35, marginLeft: 4, transform: 'translateY(5px)', width: 3 }} />
+        </div>
+        <div style={{ alignItems: 'center', background: '#111111', borderRadius: 999, color: '#ffffff', display: 'flex', fontSize: 26, fontWeight: 620, height: 64, justifyContent: 'center', justifySelf: 'end', width: 64 }}>Go</div>
+      </div>
+
+      <div style={{ alignItems: 'center', borderBottom: '1px solid #eee9df', display: 'flex', height: 118, justifyContent: 'space-between', left: 48, opacity: chatIn, position: 'absolute', right: 48, top: 106, transform: `translateY(${(1 - chatIn) * 24}px)` }}>
+        <strong style={{ color: '#111111', fontSize: 32, fontWeight: 720, letterSpacing: 0 }}>Otto</strong>
+        <span style={{ alignItems: 'center', background: '#ffffff', border: '1px solid #e8e1d7', borderRadius: 999, color: '#777064', display: 'flex', fontSize: 21, fontWeight: 670, gap: 10, padding: '13px 18px' }}>
+          <Search size={22} strokeWidth={2.2} />
+          Dashboard
+        </span>
+      </div>
+
+      <div style={{ display: 'grid', gap: 38, left: 56, opacity: chatIn, position: 'absolute', right: 56, top: 292, transform: `translateY(${(1 - chatIn) * 34}px)` }}>
+        <div style={{ alignItems: 'start', display: 'grid', gridTemplateColumns: '1fr auto' }}>
+          <div />
+          <div style={{ background: '#f0eeea', border: '1px solid #e0dcd4', borderRadius: 34, color: '#161616', fontSize: 30, fontWeight: 500, letterSpacing: 0, lineHeight: 1.24, maxWidth: 760, opacity: userBubbleIn, padding: '28px 34px', transform: `translateY(${(1 - userBubbleIn) * 18}px)` }}>
+            Crie um dashboard executivo com tickets, mensagens e tempo de resposta.
+          </div>
+        </div>
+
+        <div style={{ display: 'grid', gap: 18 }}>
+          <div style={{ alignItems: 'center', display: 'flex', gap: 12 }}>
+            <OttoMark />
+            <span style={{ color: '#7a756d', fontSize: 22, fontWeight: 760 }}>Otto</span>
+          </div>
+          <div style={{ color: INK, fontSize: 39, fontWeight: 420, letterSpacing: 0, lineHeight: 1.28 }}>
+            {typed(answerText, answerProgress)}
+          </div>
+          <MobileDashboardCard click={click} progress={cardIn} />
+        </div>
+      </div>
+
+      <div style={{ left: cursorX, opacity: cursorIn, position: 'absolute', top: cursorY, transform: `scale(${1.75 - Math.sin(click * Math.PI) * 0.16})`, zIndex: 20 }}>
+        <MousePointer2 color="#111111" fill="#111111" size={28} strokeWidth={2} />
+      </div>
+    </div>
+  )
+}
+
+function MobileDashboardScene() {
+  const frame = useCurrentFrame()
+  const sceneIn = p(frame, 234, 264)
+  const scale = p(frame, 234, 264, [0.92, 1])
+
+  return (
+    <div style={{ background: '#111827', bottom: 0, left: 0, opacity: sceneIn, position: 'absolute', right: 0, top: 0 }}>
+      <MobileStatusBar />
+      <div style={{ color: '#d6d7e3', fontSize: 22, fontWeight: 700, left: 66, letterSpacing: 0, position: 'absolute', top: 150 }}>
+        CRM Dashboard
+      </div>
+      <div style={{ borderRadius: 28, boxShadow: '0 34px 92px rgba(0,0,0,0.34)', left: 44, overflow: 'hidden', position: 'absolute', right: 44, top: 548, transform: `scale(${scale})`, transformOrigin: 'center center' }}>
+        <Img src={staticFile('dashboard.jpeg')} style={{ display: 'block', width: '100%' }} />
+      </div>
+      <div style={{ background: '#050505', borderRadius: 999, bottom: 18, height: 12, left: '50%', position: 'absolute', transform: 'translateX(-50%)', width: 380 }} />
+    </div>
+  )
+}
+
+export function ChatbotToDashboardMobileAnimation() {
+  return (
+    <AbsoluteFill style={{ background: '#fbfaf7', color: INK, fontFamily: FONT, overflow: 'hidden' }}>
+      <MobileDashboardChatScene />
+      <MobileDashboardScene />
+    </AbsoluteFill>
   )
 }
 

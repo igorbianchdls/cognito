@@ -90,7 +90,7 @@ import { CHATGPT_FINANCIAL_AGENTS_VIDEO_DURATION, ChatGptFinancialAgentsVideo, C
 import { ChatGptOperationalFlowsVideo } from '@/assets/remotion/compositions/ChatGptOperationalFlowsVideo'
 import { ChatGptTaskLauncherAnimation } from '@/assets/remotion/compositions/ChatGptTaskLauncherAnimation'
 import { CODEX_CHARTS_DURATION, CodexChartsAnimation } from '@/assets/remotion/compositions/CodexChartsAnimation'
-import { CHATGPT_POWERPOINT_OUTLINE_MOBILE_DURATION, CLAUDE_POWERPOINT_OUTLINE_MOBILE_DURATION, COWORK_POWERPOINT_EXPORT_DURATION, COWORK_POWERPOINT_EXPORT_MOBILE_DURATION, ChatGptPowerPointOutlineMobileAnimation, ClaudePowerPointOutlineMobileAnimation, CoworkPowerPointExportAnimation, CoworkPowerPointExportMobileAnimation } from '@/assets/remotion/compositions/CoworkPowerPointExportAnimation'
+import { CHATBOT_DASHBOARD_MOBILE_DURATION, CHATGPT_POWERPOINT_OUTLINE_MOBILE_DURATION, CLAUDE_POWERPOINT_OUTLINE_MOBILE_DURATION, COWORK_POWERPOINT_EXPORT_DURATION, COWORK_POWERPOINT_EXPORT_MOBILE_DURATION, ChatGptPowerPointOutlineMobileAnimation, ChatbotToDashboardMobileAnimation, ClaudePowerPointOutlineMobileAnimation, CoworkPowerPointExportAnimation, CoworkPowerPointExportMobileAnimation } from '@/assets/remotion/compositions/CoworkPowerPointExportAnimation'
 import { CLAUDE_FINANCIAL_AGENTS_VIDEO_DURATION, ClaudeFinancialAgentsVideo } from '@/assets/remotion/compositions/ClaudeFinancialAgentsVideo'
 import { ClaudeMobileAnimation } from '@/assets/remotion/compositions/ClaudeMobileMarketing'
 import { ClaudeOperationalFlowsVideo } from '@/assets/remotion/compositions/ClaudeOperationalFlowsVideo'
@@ -3255,6 +3255,18 @@ const catalog: CatalogItem[] = [
     label: 'Chatbot to PowerPoint Mobile',
     tags: ['Chatbot', 'PowerPoint', 'PPT', 'Presentation', 'Mobile', 'Otto'],
     value: 'video-chatbot-to-powerpoint-mobile',
+    width: 1080,
+  },
+  {
+    code: '<ChatbotToDashboardMobileAnimation />',
+    component: ChatbotToDashboardMobileAnimation,
+    description: 'Versao mobile do chatbot gerando um dashboard e abrindo a visualizacao final.',
+    duration: CHATBOT_DASHBOARD_MOBILE_DURATION,
+    height: 1920,
+    kind: 'Vídeos criados',
+    label: 'Chatbot to Dashboard Mobile',
+    tags: ['Chatbot', 'Dashboard', 'CRM', 'Analytics', 'Mobile'],
+    value: 'video-chatbot-to-dashboard-mobile',
     width: 1080,
   },
   {
