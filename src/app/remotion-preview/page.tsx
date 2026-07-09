@@ -90,7 +90,7 @@ import { CHATGPT_FINANCIAL_AGENTS_VIDEO_DURATION, ChatGptFinancialAgentsVideo, C
 import { ChatGptOperationalFlowsVideo } from '@/assets/remotion/compositions/ChatGptOperationalFlowsVideo'
 import { ChatGptTaskLauncherAnimation } from '@/assets/remotion/compositions/ChatGptTaskLauncherAnimation'
 import { CODEX_CHARTS_DURATION, CodexChartsAnimation } from '@/assets/remotion/compositions/CodexChartsAnimation'
-import { CLAUDE_POWERPOINT_OUTLINE_MOBILE_DURATION, COWORK_POWERPOINT_EXPORT_DURATION, COWORK_POWERPOINT_EXPORT_MOBILE_DURATION, ClaudePowerPointOutlineMobileAnimation, CoworkPowerPointExportAnimation, CoworkPowerPointExportMobileAnimation } from '@/assets/remotion/compositions/CoworkPowerPointExportAnimation'
+import { CHATGPT_POWERPOINT_OUTLINE_MOBILE_DURATION, CLAUDE_POWERPOINT_OUTLINE_MOBILE_DURATION, COWORK_POWERPOINT_EXPORT_DURATION, COWORK_POWERPOINT_EXPORT_MOBILE_DURATION, ChatGptPowerPointOutlineMobileAnimation, ClaudePowerPointOutlineMobileAnimation, CoworkPowerPointExportAnimation, CoworkPowerPointExportMobileAnimation } from '@/assets/remotion/compositions/CoworkPowerPointExportAnimation'
 import { CLAUDE_FINANCIAL_AGENTS_VIDEO_DURATION, ClaudeFinancialAgentsVideo } from '@/assets/remotion/compositions/ClaudeFinancialAgentsVideo'
 import { ClaudeMobileAnimation } from '@/assets/remotion/compositions/ClaudeMobileMarketing'
 import { ClaudeOperationalFlowsVideo } from '@/assets/remotion/compositions/ClaudeOperationalFlowsVideo'
@@ -3229,6 +3229,18 @@ const catalog: CatalogItem[] = [
     label: 'Claude to PowerPoint Outline',
     tags: ['Claude', 'PowerPoint', 'PPT', 'Presentation', 'Outline'],
     value: 'video-claude-to-powerpoint-outline',
+    width: 1080,
+  },
+  {
+    code: '<ChatGptPowerPointOutlineMobileAnimation />',
+    component: ChatGptPowerPointOutlineMobileAnimation,
+    description: 'ChatGPT mobile mostrando o outline de uma apresentacao PPTX e abrindo no PowerPoint desktop/web.',
+    duration: CHATGPT_POWERPOINT_OUTLINE_MOBILE_DURATION,
+    height: 1920,
+    kind: 'VÃ­deos criados',
+    label: 'ChatGPT to PowerPoint Outline',
+    tags: ['ChatGPT', 'PowerPoint', 'PPT', 'Presentation', 'Outline'],
+    value: 'video-chatgpt-to-powerpoint-outline',
     width: 1080,
   },
   {

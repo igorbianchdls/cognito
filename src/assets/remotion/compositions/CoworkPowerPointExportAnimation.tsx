@@ -8,6 +8,7 @@ loadSfProFonts()
 export const COWORK_POWERPOINT_EXPORT_DURATION = 225
 export const COWORK_POWERPOINT_EXPORT_MOBILE_DURATION = 225
 export const CLAUDE_POWERPOINT_OUTLINE_MOBILE_DURATION = 225
+export const CHATGPT_POWERPOINT_OUTLINE_MOBILE_DURATION = 225
 
 const FONT = IOS_REMOTION_FONT_STACK
 const BLUE = '#27316b'
@@ -530,6 +531,94 @@ export function ClaudePowerPointOutlineMobileAnimation() {
   return (
     <AbsoluteFill style={{ background: '#fbfaf8', color: INK, fontFamily: FONT, overflow: 'hidden' }}>
       <ClaudePowerPointOutlineChatScene />
+      <MobilePowerPointScene />
+    </AbsoluteFill>
+  )
+}
+
+function ChatGptComposer() {
+  return (
+    <div style={{ background: '#ffffff', bottom: 0, height: 284, left: 0, position: 'absolute', right: 0 }}>
+      <div style={{ alignItems: 'center', background: '#f4f4f4', border: '1px solid #e4e4e4', borderRadius: 999, display: 'grid', gridTemplateColumns: '72px 1fr 72px 72px', height: 104, left: 44, padding: '0 18px', position: 'absolute', right: 44, top: 20 }}>
+        <div style={{ alignItems: 'center', background: '#ffffff', border: '1px solid #dddddd', borderRadius: 999, color: '#2d2d2d', display: 'flex', fontSize: 38, fontWeight: 300, height: 58, justifyContent: 'center', width: 58 }}>+</div>
+        <div style={{ color: '#777777', fontSize: 36, fontWeight: 430, letterSpacing: 0 }}>Pergunte ao ChatGPT</div>
+        <div style={{ alignItems: 'center', display: 'flex', gap: 4, justifyContent: 'center' }}>
+          {[28, 42, 30].map((height, index) => <span key={`${height}-${index}`} style={{ background: '#202020', borderRadius: 999, display: 'block', height, width: 5 }} />)}
+        </div>
+        <div style={{ alignItems: 'center', background: '#111111', borderRadius: 999, display: 'flex', gap: 4, height: 58, justifyContent: 'center', width: 58 }}>
+          {[18, 30, 42, 30, 18].map((height, index) => <span key={`${height}-${index}`} style={{ background: '#ffffff', borderRadius: 999, display: 'block', height, width: 4 }} />)}
+        </div>
+      </div>
+      <div style={{ background: '#050505', borderRadius: 999, bottom: 14, height: 12, left: '50%', position: 'absolute', transform: 'translateX(-50%)', width: 380 }} />
+    </div>
+  )
+}
+
+function ChatGptPowerPointOutlineChatScene() {
+  const frame = useCurrentFrame()
+  const answerText = 'Pronto. Montei o outline, gerei a apresentacao executiva e deixei o arquivo PPTX pronto para abrir no PowerPoint.'
+  const answerProgress = p(frame, 28, 86)
+  const cardIn = p(frame, 78, 104)
+  const cursorIn = p(frame, 108, 126)
+  const click = p(frame, 128, 138, [0, 1])
+  const sceneOut = p(frame, 145, 168, [1, 0])
+  const cursorX = interpolate(frame, [108, 132], [790, 190], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' })
+  const cursorY = interpolate(frame, [108, 132], [1010, 955], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' })
+
+  return (
+    <div style={{ bottom: 0, left: 0, opacity: sceneOut, position: 'absolute', right: 0, top: 0 }}>
+      <div style={{ background: '#ffffff', bottom: 0, left: 0, position: 'absolute', right: 0, top: 0 }} />
+      <MobileStatusBar />
+
+      <div style={{ alignItems: 'center', display: 'grid', gridTemplateColumns: '82px 1fr 82px 82px', height: 118, left: 36, position: 'absolute', right: 36, top: 106 }}>
+        <div style={{ display: 'grid', gap: 8, justifyItems: 'center' }}>
+          {[0, 1, 2].map((item) => <span key={item} style={{ background: '#111111', borderRadius: 999, display: 'block', height: 3, width: 30 }} />)}
+        </div>
+        <div style={{ alignItems: 'center', display: 'flex', gap: 12, justifyContent: 'center' }}>
+          <strong style={{ color: '#171717', fontSize: 33, fontWeight: 680, letterSpacing: 0 }}>ChatGPT</strong>
+          <ChevronDown color="#6b6b6b" size={28} strokeWidth={2.2} />
+        </div>
+        <div style={{ alignItems: 'center', border: '2px solid #111111', borderRadius: 9, display: 'flex', height: 33, justifyContent: 'center', justifySelf: 'center', width: 33 }}>
+          <span style={{ background: '#111111', borderRadius: 999, display: 'block', height: 3, transform: 'rotate(-38deg)', width: 20 }} />
+        </div>
+        <div style={{ color: '#111111', fontSize: 38, fontWeight: 560, justifySelf: 'center', letterSpacing: 0, lineHeight: 1 }}>...</div>
+      </div>
+
+      <div style={{ bottom: 294, left: 0, overflow: 'hidden', position: 'absolute', right: 0, top: 232 }}>
+        <div style={{ display: 'grid', gap: 38, padding: '42px 56px 180px' }}>
+          <div style={{ alignItems: 'start', display: 'grid', gridTemplateColumns: '1fr auto' }}>
+            <div />
+            <div style={{ background: '#f4f4f4', borderRadius: 38, color: '#171717', fontSize: 31, fontWeight: 430, letterSpacing: 0, lineHeight: 1.2, maxWidth: 760, padding: '28px 34px' }}>
+              Crie uma apresentacao executiva sobre perdas de deals no Q4.
+            </div>
+          </div>
+
+          <div style={{ display: 'grid', gap: 20 }}>
+            <div style={{ alignItems: 'center', display: 'flex', gap: 13 }}>
+              <div style={{ alignItems: 'center', background: '#111111', borderRadius: 999, color: '#ffffff', display: 'flex', fontSize: 20, fontWeight: 760, height: 34, justifyContent: 'center', width: 34 }}>O</div>
+              <span style={{ color: '#2b2b2b', fontSize: 23, fontWeight: 700 }}>Otto</span>
+            </div>
+            <div style={{ color: '#111111', fontSize: 38, fontWeight: 420, letterSpacing: 0, lineHeight: 1.28 }}>
+              {typed(answerText, answerProgress)}
+            </div>
+            <MobilePptCard click={click} progress={cardIn} />
+          </div>
+        </div>
+      </div>
+
+      <ChatGptComposer />
+
+      <div style={{ left: cursorX, opacity: cursorIn, position: 'absolute', top: cursorY, transform: `scale(${1.75 - Math.sin(click * Math.PI) * 0.16})`, zIndex: 20 }}>
+        <MousePointer2 color="#111111" fill="#111111" size={28} strokeWidth={2} />
+      </div>
+    </div>
+  )
+}
+
+export function ChatGptPowerPointOutlineMobileAnimation() {
+  return (
+    <AbsoluteFill style={{ background: '#ffffff', color: INK, fontFamily: FONT, overflow: 'hidden' }}>
+      <ChatGptPowerPointOutlineChatScene />
       <MobilePowerPointScene />
     </AbsoluteFill>
   )
