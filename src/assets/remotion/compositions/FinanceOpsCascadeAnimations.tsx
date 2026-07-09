@@ -4,8 +4,8 @@ import { IOS_REMOTION_FONT_STACK, loadSfProFonts } from '@/assets/remotion/fonts
 
 loadSfProFonts()
 
-export const EXPENSE_CLASSIFICATION_CASCADE_DURATION = 112
-export const BANK_RECONCILIATION_CASCADE_DURATION = 112
+export const EXPENSE_CLASSIFICATION_CASCADE_DURATION = 142
+export const BANK_RECONCILIATION_CASCADE_DURATION = 142
 
 const FONT = IOS_REMOTION_FONT_STACK
 
@@ -75,11 +75,11 @@ function Shell({ children, height, progress }: { children: React.ReactNode; heig
 }
 
 const expenses = [
-  { amount: 'R$ 1.280', category: 'Software', completeAt: 66, name: 'OpenAI API', tone: '#eef6ff' },
-  { amount: 'R$ 420', category: 'Marketing', completeAt: 74, name: 'Meta Ads', tone: '#f0f7ff' },
-  { amount: 'R$ 189', category: 'Tarifa bancaria', completeAt: 82, name: 'Banco Inter', tone: '#fff7ed' },
-  { amount: 'R$ 2.450', category: 'Logistica', completeAt: 90, name: 'Correios', tone: '#f4f9f2' },
-  { amount: 'R$ 890', category: 'Assinatura', completeAt: 98, name: 'Notion', tone: '#f7f7f7' },
+  { amount: 'R$ 1.280', category: 'Software', completeAt: 84, name: 'OpenAI API', tone: '#eef6ff' },
+  { amount: 'R$ 420', category: 'Marketing', completeAt: 94, name: 'Meta Ads', tone: '#f0f7ff' },
+  { amount: 'R$ 189', category: 'Tarifa bancaria', completeAt: 104, name: 'Banco Inter', tone: '#fff7ed' },
+  { amount: 'R$ 2.450', category: 'Logistica', completeAt: 114, name: 'Correios', tone: '#f4f9f2' },
+  { amount: 'R$ 890', category: 'Assinatura', completeAt: 124, name: 'Notion', tone: '#f7f7f7' },
 ]
 
 function ExpenseIcon({ tone }: { tone: string }) {
@@ -94,7 +94,7 @@ function ExpenseIcon({ tone }: { tone: string }) {
 function ExpenseRow({ index }: { index: number }) {
   const frame = useCurrentFrame()
   const item = expenses[index]
-  const rowIn = p(frame, 24 + index * 7, 38 + index * 7)
+  const rowIn = p(frame, 30 + index * 9, 48 + index * 9)
   const complete = frame >= item.completeAt
 
   return (
@@ -113,19 +113,18 @@ function ExpenseRow({ index }: { index: number }) {
 export function ExpenseClassificationCascadeAnimation() {
   const frame = useCurrentFrame()
   const titleIn = p(frame, 0, 10)
-  const titleOut = p(frame, 16, 30, [1, 0])
-  const headerIn = p(frame, 24, 40)
-  const cardIn = p(frame, 30, 46)
-  const expand = p(frame, 52, 70)
+  const titleOut = p(frame, 22, 42, [1, 0])
+  const headerIn = p(frame, 38, 60)
+  const cardIn = p(frame, 48, 70)
+  const expand = p(frame, 74, 100)
   const cardHeight = interpolate(expand, [0, 1], [78, 282], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' })
 
   return (
-    <AbsoluteFill style={{ background: '#eef4f8', color: '#111111', fontFamily: FONT, overflow: 'hidden' }}>
-      <div style={{ background: '#ffffff', height: 360, left: 0, position: 'absolute', right: 0, top: 180 }} />
-      <h1 style={{ color: '#050505', fontSize: 46, fontWeight: 760, left: 0, letterSpacing: -0.2, lineHeight: 1, margin: 0, opacity: titleIn * titleOut, position: 'absolute', right: 0, textAlign: 'center', top: 316, transform: `translateY(${(1 - titleIn) * 16 - (1 - titleOut) * 18}px)` }}>
+    <AbsoluteFill style={{ background: '#ffffff', color: '#111111', fontFamily: FONT, overflow: 'hidden' }}>
+      <h1 style={{ color: '#050505', fontSize: 58, fontWeight: 760, left: 70, letterSpacing: -0.2, lineHeight: 1.05, margin: 0, opacity: titleIn * titleOut, position: 'absolute', right: 70, textAlign: 'center', top: 812, transform: `translateY(${(1 - titleIn) * 16 - (1 - titleOut) * 18}px)` }}>
         Classify expenses automatically
       </h1>
-      <div style={{ left: '50%', position: 'absolute', top: 282, transform: 'translateX(-50%)', width: 500 }}>
+      <div style={{ left: '50%', position: 'absolute', top: 760, transform: 'translateX(-50%)', width: 600 }}>
         <StageHeader label="Classifying uncategorized expenses" progress={headerIn} />
         <Shell height={cardHeight} progress={cardIn}>
           {expenses.map((_, index) => <ExpenseRow key={index} index={index} />)}
@@ -136,17 +135,17 @@ export function ExpenseClassificationCascadeAnimation() {
 }
 
 const reconciliations = [
-  { bank: 'PIX Cliente Norte', completeAt: 66, erp: 'NF-9031', status: 'Matched', value: 'R$ 42.100' },
-  { bank: 'Cartao Stone', completeAt: 74, erp: 'Lote-552', status: 'Matched', value: 'R$ 68.900' },
-  { bank: 'Tarifa bancaria', completeAt: 82, erp: 'Sem lancamento', status: 'Review', value: 'R$ 189' },
-  { bank: 'Boleto Fornecedor', completeAt: 90, erp: 'CP-1182', status: 'Matched', value: 'R$ 12.430' },
-  { bank: 'TED Parceiro', completeAt: 98, erp: 'CR-4401', status: 'Matched', value: 'R$ 9.870' },
+  { bank: 'PIX Cliente Norte', completeAt: 84, erp: 'NF-9031', status: 'Matched', value: 'R$ 42.100' },
+  { bank: 'Cartao Stone', completeAt: 94, erp: 'Lote-552', status: 'Matched', value: 'R$ 68.900' },
+  { bank: 'Tarifa bancaria', completeAt: 104, erp: 'Sem lancamento', status: 'Review', value: 'R$ 189' },
+  { bank: 'Boleto Fornecedor', completeAt: 114, erp: 'CP-1182', status: 'Matched', value: 'R$ 12.430' },
+  { bank: 'TED Parceiro', completeAt: 124, erp: 'CR-4401', status: 'Matched', value: 'R$ 9.870' },
 ]
 
 function ReconciliationRow({ index }: { index: number }) {
   const frame = useCurrentFrame()
   const item = reconciliations[index]
-  const rowIn = p(frame, 24 + index * 7, 38 + index * 7)
+  const rowIn = p(frame, 30 + index * 9, 48 + index * 9)
   const complete = frame >= item.completeAt
   const review = complete && item.status === 'Review'
 
@@ -167,19 +166,18 @@ function ReconciliationRow({ index }: { index: number }) {
 export function BankReconciliationCascadeAnimation() {
   const frame = useCurrentFrame()
   const titleIn = p(frame, 0, 10)
-  const titleOut = p(frame, 16, 30, [1, 0])
-  const headerIn = p(frame, 24, 40)
-  const cardIn = p(frame, 30, 46)
-  const expand = p(frame, 52, 70)
+  const titleOut = p(frame, 22, 42, [1, 0])
+  const headerIn = p(frame, 38, 60)
+  const cardIn = p(frame, 48, 70)
+  const expand = p(frame, 74, 100)
   const cardHeight = interpolate(expand, [0, 1], [78, 282], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' })
 
   return (
-    <AbsoluteFill style={{ background: '#eef4f8', color: '#111111', fontFamily: FONT, overflow: 'hidden' }}>
-      <div style={{ background: '#ffffff', height: 360, left: 0, position: 'absolute', right: 0, top: 180 }} />
-      <h1 style={{ color: '#050505', fontSize: 46, fontWeight: 760, left: 0, letterSpacing: -0.2, lineHeight: 1, margin: 0, opacity: titleIn * titleOut, position: 'absolute', right: 0, textAlign: 'center', top: 316, transform: `translateY(${(1 - titleIn) * 16 - (1 - titleOut) * 18}px)` }}>
+    <AbsoluteFill style={{ background: '#ffffff', color: '#111111', fontFamily: FONT, overflow: 'hidden' }}>
+      <h1 style={{ color: '#050505', fontSize: 58, fontWeight: 760, left: 70, letterSpacing: -0.2, lineHeight: 1.05, margin: 0, opacity: titleIn * titleOut, position: 'absolute', right: 70, textAlign: 'center', top: 812, transform: `translateY(${(1 - titleIn) * 16 - (1 - titleOut) * 18}px)` }}>
         Reconcile bank transactions
       </h1>
-      <div style={{ left: '50%', position: 'absolute', top: 282, transform: 'translateX(-50%)', width: 610 }}>
+      <div style={{ left: '50%', position: 'absolute', top: 760, transform: 'translateX(-50%)', width: 720 }}>
         <StageHeader label="Matching bank movements with ERP records" progress={headerIn} />
         <Shell height={cardHeight} progress={cardIn}>
           {reconciliations.map((_, index) => <ReconciliationRow key={index} index={index} />)}

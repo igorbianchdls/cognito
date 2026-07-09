@@ -4,7 +4,7 @@ import { IOS_REMOTION_FONT_STACK, loadSfProFonts } from '@/assets/remotion/fonts
 
 loadSfProFonts()
 
-export const SYNC_ACCOUNTS_ANIMATION_DURATION = 102
+export const SYNC_ACCOUNTS_ANIMATION_DURATION = 132
 
 const FONT = IOS_REMOTION_FONT_STACK
 
@@ -13,12 +13,12 @@ function p(frame: number, from: number, to: number, out: [number, number] = [0, 
 }
 
 const institutions = [
-  { accounts: '1 account', color: '#1174c8', initials: 'AE', name: 'American Express', syncedAt: 60 },
-  { accounts: '2 accounts', color: '#ffffff', accent: '#d51f2a', initials: 'BO', name: 'Bank of America', syncedAt: 68 },
-  { accounts: '1 account', color: '#2bb6d7', initials: 'CS', name: 'Charles Schwab', syncedAt: 74 },
-  { accounts: '1 account', color: '#ecf6ff', accent: '#6c40c8', initials: 'ET', name: 'Etrade', syncedAt: 80 },
-  { accounts: '1 account', color: '#111111', initials: 'FI', name: 'Fidelity', syncedAt: 86 },
-  { accounts: '1 account', color: '#c9ff1a', initials: 'RH', name: 'Robinhood', syncedAt: 92 },
+  { accounts: '1 account', color: '#1174c8', initials: 'AE', name: 'American Express', syncedAt: 78 },
+  { accounts: '2 accounts', color: '#ffffff', accent: '#d51f2a', initials: 'BO', name: 'Bank of America', syncedAt: 88 },
+  { accounts: '1 account', color: '#2bb6d7', initials: 'CS', name: 'Charles Schwab', syncedAt: 96 },
+  { accounts: '1 account', color: '#ecf6ff', accent: '#6c40c8', initials: 'ET', name: 'Etrade', syncedAt: 104 },
+  { accounts: '1 account', color: '#111111', initials: 'FI', name: 'Fidelity', syncedAt: 112 },
+  { accounts: '1 account', color: '#c9ff1a', initials: 'RH', name: 'Robinhood', syncedAt: 120 },
 ]
 
 function PlaidMark() {
@@ -86,7 +86,7 @@ function InstitutionLogo({ accent, color, initials, index }: { accent?: string; 
 function SyncRow({ index }: { index: number }) {
   const frame = useCurrentFrame()
   const item = institutions[index]
-  const rowIn = p(frame, 22 + index * 6, 34 + index * 6)
+  const rowIn = p(frame, 28 + index * 8, 44 + index * 8)
   const synced = frame >= item.syncedAt
 
   return (
@@ -116,20 +116,19 @@ function SyncRow({ index }: { index: number }) {
 export function SyncAccountsAnimation() {
   const frame = useCurrentFrame()
   const titleIn = p(frame, 0, 10)
-  const titleOut = p(frame, 14, 26, [1, 0])
-  const headerIn = p(frame, 22, 36)
-  const cardIn = p(frame, 28, 42)
-  const fullList = p(frame, 46, 64)
+  const titleOut = p(frame, 20, 38, [1, 0])
+  const headerIn = p(frame, 34, 54)
+  const cardIn = p(frame, 42, 62)
+  const fullList = p(frame, 64, 88)
   const cardHeight = interpolate(fullList, [0, 1], [70, 304], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' })
 
   return (
-    <AbsoluteFill style={{ background: '#eef4f8', color: '#111111', fontFamily: FONT, overflow: 'hidden' }}>
-      <div style={{ background: '#ffffff', height: 360, left: 0, position: 'absolute', right: 0, top: 180 }} />
+    <AbsoluteFill style={{ background: '#ffffff', color: '#111111', fontFamily: FONT, overflow: 'hidden' }}>
 
       <h1
         style={{
           color: '#050505',
-          fontSize: 46,
+          fontSize: 58,
           fontWeight: 760,
           left: 0,
           letterSpacing: -0.2,
@@ -139,14 +138,14 @@ export function SyncAccountsAnimation() {
           position: 'absolute',
           right: 0,
           textAlign: 'center',
-          top: 316,
+          top: 824,
           transform: `translateY(${(1 - titleIn) * 16 - (1 - titleOut) * 18}px)`,
         }}
       >
         Securely connect your accounts
       </h1>
 
-      <div style={{ left: '50%', opacity: headerIn, position: 'absolute', top: 290, transform: `translateX(-50%) translateY(${(1 - headerIn) * 14}px)`, width: 460 }}>
+      <div style={{ left: '50%', opacity: headerIn, position: 'absolute', top: 760, transform: `translateX(-50%) translateY(${(1 - headerIn) * 14}px)`, width: 520 }}>
         <div style={{ alignItems: 'center', display: 'flex', gap: 9, marginBottom: 13, paddingLeft: 30 }}>
           <PlaidMark />
           <span style={{ color: '#8a8a8a', fontSize: 15, fontWeight: 430, letterSpacing: 0 }}>Connecting with Plaid</span>
