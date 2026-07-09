@@ -90,6 +90,7 @@ import { CHATGPT_FINANCIAL_AGENTS_VIDEO_DURATION, ChatGptFinancialAgentsVideo, C
 import { ChatGptOperationalFlowsVideo } from '@/assets/remotion/compositions/ChatGptOperationalFlowsVideo'
 import { ChatGptTaskLauncherAnimation } from '@/assets/remotion/compositions/ChatGptTaskLauncherAnimation'
 import { CODEX_CHARTS_DURATION, CodexChartsAnimation } from '@/assets/remotion/compositions/CodexChartsAnimation'
+import { COWORK_POWERPOINT_EXPORT_DURATION, CoworkPowerPointExportAnimation } from '@/assets/remotion/compositions/CoworkPowerPointExportAnimation'
 import { CLAUDE_FINANCIAL_AGENTS_VIDEO_DURATION, ClaudeFinancialAgentsVideo } from '@/assets/remotion/compositions/ClaudeFinancialAgentsVideo'
 import { ClaudeMobileAnimation } from '@/assets/remotion/compositions/ClaudeMobileMarketing'
 import { ClaudeOperationalFlowsVideo } from '@/assets/remotion/compositions/ClaudeOperationalFlowsVideo'
@@ -3192,6 +3193,18 @@ const catalog: CatalogItem[] = [
     label: 'Codex Charts',
     tags: ['ChatGPT', 'Charts', 'Interactive', 'Video'],
     value: 'video-codex-charts',
+    width: 1280,
+  },
+  {
+    code: '<CoworkPowerPointExportAnimation />',
+    component: CoworkPowerPointExportAnimation,
+    description: 'Chatbot gerando um arquivo PPTX e abrindo a apresentacao no Microsoft PowerPoint.',
+    duration: COWORK_POWERPOINT_EXPORT_DURATION,
+    height: 720,
+    kind: 'Vídeos criados',
+    label: 'Chatbot to PowerPoint',
+    tags: ['Chatbot', 'PowerPoint', 'PPT', 'Presentation', 'Otto'],
+    value: 'video-chatbot-to-powerpoint',
     width: 1280,
   },
   {

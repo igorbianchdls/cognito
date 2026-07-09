@@ -1,0 +1,306 @@
+import { AbsoluteFill, interpolate, useCurrentFrame } from 'remotion'
+import { ChevronDown, FileText, Folder, MousePointer2, Presentation, Search, Share, Square } from 'lucide-react'
+
+import { IOS_REMOTION_FONT_STACK, loadSfProFonts } from '@/assets/remotion/fonts/sfPro'
+
+loadSfProFonts()
+
+export const COWORK_POWERPOINT_EXPORT_DURATION = 225
+
+const FONT = IOS_REMOTION_FONT_STACK
+const BLUE = '#27316b'
+const RED = '#ef4e5f'
+const INK = '#151515'
+
+function p(frame: number, from: number, to: number, out: [number, number] = [0, 1]) {
+  return interpolate(frame, [from, to], out, { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' })
+}
+
+function typed(text: string, amount: number) {
+  return text.slice(0, Math.ceil(text.length * amount))
+}
+
+function OttoMark() {
+  return (
+    <span style={{ display: 'grid', gap: 3, gridTemplateColumns: 'repeat(2, 7px)' }}>
+      <span style={{ background: '#225f42', borderRadius: 2, display: 'block', height: 7, width: 7 }} />
+      <span style={{ background: '#8aa895', borderRadius: 2, display: 'block', height: 7, width: 7 }} />
+      <span style={{ background: '#c9d8ce', borderRadius: 2, display: 'block', height: 7, width: 7 }} />
+      <span style={{ background: '#225f42', borderRadius: 2, display: 'block', height: 7, width: 7 }} />
+    </span>
+  )
+}
+
+function ChatScene() {
+  const frame = useCurrentFrame()
+  const answerText = 'Preparei um deck executivo com os principais motivos de perda, contas em risco, impacto financeiro e proximos passos para o time comercial.'
+  const answerProgress = p(frame, 28, 86)
+  const cardIn = p(frame, 78, 102)
+  const cursorIn = p(frame, 108, 126)
+  const click = p(frame, 128, 138, [0, 1])
+  const sceneOut = p(frame, 145, 168, [1, 0])
+  const cursorX = interpolate(frame, [108, 132], [900, 1002], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' })
+  const cursorY = interpolate(frame, [108, 132], [482, 454], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' })
+
+  return (
+    <div style={{ bottom: 0, left: 0, opacity: sceneOut, position: 'absolute', right: 0, top: 0 }}>
+      <div style={{ background: '#fbfaf7', bottom: 0, left: 0, position: 'absolute', right: 0, top: 0 }} />
+      <div style={{ left: 176, position: 'absolute', right: 176, top: 54 }}>
+        <div style={{ alignItems: 'center', borderBottom: '1px solid #eee9df', display: 'flex', height: 48, justifyContent: 'space-between' }}>
+          <strong style={{ color: '#111111', fontSize: 15, fontWeight: 700, letterSpacing: 0 }}>Otto</strong>
+          <span style={{ alignItems: 'center', background: '#ffffff', border: '1px solid #e8e1d7', borderRadius: 999, color: '#777064', display: 'flex', fontSize: 12, fontWeight: 680, gap: 7, padding: '8px 12px' }}>
+            <Search size={13} strokeWidth={2.2} />
+            Presentation workspace
+          </span>
+        </div>
+
+        <div style={{ display: 'grid', gap: 22, paddingTop: 54 }}>
+          <div style={{ alignItems: 'start', display: 'grid', gridTemplateColumns: '1fr auto' }}>
+            <div />
+            <div style={{ background: '#f0eeea', border: '1px solid #e0dcd4', borderRadius: 22, color: '#161616', fontSize: 17, fontWeight: 500, letterSpacing: 0, lineHeight: 1.34, maxWidth: 520, padding: '18px 22px' }}>
+              Crie uma apresentação executiva sobre perdas de deals no Q4.
+            </div>
+          </div>
+
+          <div style={{ display: 'grid', gap: 12, maxWidth: 860 }}>
+            <div style={{ alignItems: 'center', display: 'flex', gap: 9 }}>
+              <OttoMark />
+              <span style={{ color: '#7a756d', fontSize: 13, fontWeight: 760 }}>Otto</span>
+            </div>
+            <div style={{ color: INK, fontSize: 25, fontWeight: 420, letterSpacing: 0, lineHeight: 1.42, maxWidth: 820 }}>
+              {typed(answerText, answerProgress)}
+            </div>
+
+            <div
+              style={{
+                alignItems: 'center',
+                background: '#fffefb',
+                border: '1px solid #d8d0c4',
+                borderRadius: 12,
+                boxShadow: '0 16px 42px rgba(50, 45, 35, 0.08)',
+                display: 'grid',
+                gap: 18,
+                gridTemplateColumns: '92px 1fr 54px auto',
+                height: 96,
+                marginTop: 10,
+                opacity: cardIn,
+                overflow: 'hidden',
+                padding: '0 18px 0 24px',
+                transform: `translateY(${(1 - cardIn) * 14}px)`,
+                width: 980,
+              }}
+            >
+              <div style={{ alignItems: 'center', alignSelf: 'stretch', borderRight: '1px solid #eee7dc', display: 'flex', justifyContent: 'center' }}>
+                <div style={{ alignItems: 'center', background: '#fbfaf7', border: '1px solid #d9d1c6', borderRadius: 10, display: 'flex', height: 64, justifyContent: 'center', transform: 'rotate(-3deg)', width: 64 }}>
+                  <Presentation color="#6b665f" size={30} strokeWidth={1.8} />
+                </div>
+              </div>
+              <div style={{ display: 'grid', gap: 5 }}>
+                <strong style={{ color: '#1f1f1f', fontSize: 20, fontWeight: 620, letterSpacing: 0 }}>Lost deal analysis q4 q1</strong>
+                <span style={{ color: '#7b766f', fontSize: 15, fontWeight: 520, letterSpacing: 0 }}>Presentation · PPTX</span>
+              </div>
+              <button style={{ alignItems: 'center', background: '#fffefb', border: '1px solid #d8d0c4', borderRadius: 10, display: 'flex', height: 42, justifyContent: 'center', width: 48 }} type="button">
+                <Folder color="#6f6a63" size={22} strokeWidth={1.7} />
+              </button>
+              <button
+                style={{
+                  alignItems: 'center',
+                  background: click > 0.45 ? '#d9d4cd' : '#e8e4de',
+                  border: '1px solid #d5cec4',
+                  borderRadius: 10,
+                  color: '#24211d',
+                  display: 'flex',
+                  fontSize: 18,
+                  fontWeight: 560,
+                  gap: 10,
+                  height: 52,
+                  justifyContent: 'center',
+                  letterSpacing: 0,
+                  padding: '0 18px',
+                  transform: `scale(${1 - Math.sin(click * Math.PI) * 0.025})`,
+                  width: 304,
+                }}
+                type="button"
+              >
+                <span style={{ alignItems: 'center', background: '#c24f41', borderRadius: 6, color: '#ffffff', display: 'flex', fontSize: 12, fontWeight: 800, height: 24, justifyContent: 'center', width: 24 }}>P</span>
+                Open in Microsoft PowerPoint
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div style={{ left: cursorX, opacity: cursorIn, position: 'absolute', top: cursorY, transform: `scale(${1 - Math.sin(click * Math.PI) * 0.12})`, zIndex: 20 }}>
+        <MousePointer2 color="#111111" fill="#111111" size={28} strokeWidth={2} />
+      </div>
+    </div>
+  )
+}
+
+function PptToolbar() {
+  return (
+    <div style={{ background: '#f7f7f7', borderBottom: '1px solid #dddddd', height: 84 }}>
+      <div style={{ alignItems: 'center', display: 'flex', gap: 8, height: 34, paddingLeft: 16 }}>
+        <span style={{ background: '#ff5f57', borderRadius: 999, height: 10, width: 10 }} />
+        <span style={{ background: '#ffbd2e', borderRadius: 999, height: 10, width: 10 }} />
+        <span style={{ background: '#28c840', borderRadius: 999, height: 10, width: 10 }} />
+        <span style={{ color: '#444444', fontSize: 13, fontWeight: 650, marginLeft: 18 }}>Lost deal analysis q4 q1</span>
+        <ChevronDown color="#767676" size={14} strokeWidth={2.2} />
+      </div>
+      <div style={{ alignItems: 'center', display: 'flex', gap: 14, height: 50, padding: '0 16px' }}>
+        {['Home', 'Insert', 'Design', 'Transitions', 'Animations', 'Slide Show', 'Review', 'View'].map((item, index) => (
+          <span key={item} style={{ color: index === 0 ? '#c24f41' : '#555555', fontSize: 12, fontWeight: 650 }}>{item}</span>
+        ))}
+        <div style={{ flex: 1 }} />
+        <Share color="#666666" size={18} strokeWidth={2} />
+      </div>
+    </div>
+  )
+}
+
+function SlideThumb({ active, index, variant }: { active?: boolean; index: number; variant: 'cover' | 'snapshot' | 'chart' }) {
+  return (
+    <div style={{ background: '#ffffff', border: active ? '2px solid #ef4e5f' : '1px solid #d6d6d6', borderRadius: 3, height: 72, padding: 5, width: 104 }}>
+      {variant === 'cover' ? (
+        <div style={{ background: BLUE, height: '100%', position: 'relative' }}>
+          <span style={{ background: RED, bottom: 0, position: 'absolute', right: 0, top: 0, width: 30 }} />
+        </div>
+      ) : variant === 'snapshot' ? (
+        <div style={{ display: 'grid', gap: 5 }}>
+          <span style={{ background: '#e8edf4', display: 'block', height: 12 }} />
+          {[42, 62, 34].map((width) => <span key={width} style={{ background: RED, display: 'block', height: 6, width }} />)}
+        </div>
+      ) : (
+        <div style={{ alignItems: 'end', display: 'flex', gap: 5, height: '100%', padding: 8 }}>
+          {[45, 32, 25, 16].map((height) => <span key={height} style={{ background: RED, display: 'block', flex: 1, height }} />)}
+        </div>
+      )}
+      <span style={{ color: '#777777', fontSize: 8, fontWeight: 700 }}>{index}</span>
+    </div>
+  )
+}
+
+function CoverSlide() {
+  return (
+    <div style={{ background: BLUE, boxShadow: '0 16px 38px rgba(20, 25, 54, 0.18)', height: 468, overflow: 'hidden', position: 'relative', width: 832 }}>
+      <div style={{ color: '#ffffff', fontFamily: 'Georgia, "Times New Roman", serif', fontSize: 43, fontWeight: 800, left: 58, letterSpacing: 0, lineHeight: 1.06, position: 'absolute', top: 122, width: 430 }}>
+        DEAL LOSS &<br />ACCOUNT RISK<br />REVIEW
+      </div>
+      <div style={{ color: 'rgba(255,255,255,0.78)', fontSize: 12, fontWeight: 520, left: 58, position: 'absolute', top: 300 }}>
+        Account-Level Breakdown for the Account Team
+      </div>
+      <div style={{ color: 'rgba(255,255,255,0.72)', fontSize: 10, fontWeight: 520, left: 58, position: 'absolute', top: 388 }}>
+        February 2026&nbsp;&nbsp;|&nbsp;&nbsp;Siren Capital
+      </div>
+      <div style={{ background: RED, bottom: 0, position: 'absolute', right: 44, top: 0, width: 170 }}>
+        <div style={{ color: '#ffffff', fontSize: 56, fontWeight: 780, left: 0, letterSpacing: 0, position: 'absolute', textAlign: 'center', top: 104, width: '100%' }}>40</div>
+        <div style={{ color: 'rgba(255,255,255,0.9)', fontSize: 10, fontWeight: 800, left: 0, letterSpacing: 1.8, position: 'absolute', textAlign: 'center', textTransform: 'uppercase', top: 178, width: '100%' }}>deals lost</div>
+        <div style={{ color: '#ffffff', fontSize: 27, fontWeight: 780, left: 0, letterSpacing: 0, position: 'absolute', textAlign: 'center', top: 286, width: '100%' }}>$20.4M</div>
+        <div style={{ color: 'rgba(255,255,255,0.88)', fontSize: 10, fontWeight: 800, left: 0, letterSpacing: 1.8, position: 'absolute', textAlign: 'center', textTransform: 'uppercase', top: 330, width: '100%' }}>total value</div>
+      </div>
+    </div>
+  )
+}
+
+function SnapshotSlide() {
+  return (
+    <div style={{ background: '#ffffff', height: 468, padding: 48, width: 832 }}>
+      <h2 style={{ color: BLUE, fontFamily: 'Georgia, "Times New Roman", serif', fontSize: 28, letterSpacing: 0, margin: 0 }}>EXECUTIVE SNAPSHOT</h2>
+      <div style={{ display: 'grid', gap: 16, gridTemplateColumns: 'repeat(4, 1fr)', marginTop: 24 }}>
+        {['+6.5%', '40', '$20.4M', '$423.3M'].map((metric, index) => (
+          <div key={metric} style={{ background: '#f6f7fa', borderTop: `4px solid ${index === 0 ? '#48a868' : RED}`, padding: 13 }}>
+            <strong style={{ color: index === 0 ? '#2d8f50' : RED, fontSize: 19, letterSpacing: 0 }}>{metric}</strong>
+            <div style={{ color: '#6b7280', fontSize: 9, fontWeight: 700, marginTop: 5 }}>Q4 indicator</div>
+          </div>
+        ))}
+      </div>
+      <div style={{ display: 'grid', gap: 11, marginTop: 32, width: 530 }}>
+        {[
+          ['Deal stage mismatch', 86],
+          ['Price objection', 68],
+          ['Competitor displacement', 58],
+          ['Procurement delay', 36],
+          ['Product gap', 24],
+        ].map(([label, width]) => (
+          <div key={label} style={{ alignItems: 'center', display: 'grid', gap: 16, gridTemplateColumns: '170px 1fr auto' }}>
+            <span style={{ color: '#344054', fontSize: 12, fontWeight: 650 }}>{label}</span>
+            <span style={{ background: '#edf0f5', height: 10 }}>
+              <span style={{ background: RED, display: 'block', height: '100%', width: `${width}%` }} />
+            </span>
+            <span style={{ color: '#667085', fontSize: 10, fontWeight: 700 }}>{width}%</span>
+          </div>
+        ))}
+      </div>
+    </div>
+  )
+}
+
+function ChartSlide() {
+  return (
+    <div style={{ background: '#ffffff', height: 468, padding: 48, width: 832 }}>
+      <h2 style={{ color: BLUE, fontFamily: 'Georgia, "Times New Roman", serif', fontSize: 26, letterSpacing: 0, margin: 0 }}>LOSSES BY PRODUCT TYPE</h2>
+      <div style={{ alignItems: 'end', display: 'flex', gap: 28, height: 270, marginTop: 34, paddingLeft: 34, width: 450 }}>
+        {[210, 145, 104, 74, 34].map((height, index) => (
+          <div key={height} style={{ alignItems: 'center', display: 'grid', gap: 8, justifyItems: 'center' }}>
+            <span style={{ background: RED, display: 'block', height, width: 42 }} />
+            <span style={{ color: '#667085', fontSize: 9, fontWeight: 700 }}>P{index + 1}</span>
+          </div>
+        ))}
+      </div>
+      <div style={{ display: 'grid', gap: 12, position: 'absolute', right: 84, top: 128, width: 220 }}>
+        {['Pipeline hygiene', 'Expansion blockers', 'Analytics'].map((item, index) => (
+          <div key={item} style={{ background: '#f7f8fb', borderLeft: `4px solid ${index === 0 ? RED : BLUE}`, padding: 13 }}>
+            <strong style={{ color: '#202939', fontSize: 13, letterSpacing: 0 }}>{item}</strong>
+            <div style={{ color: '#667085', fontSize: 10, fontWeight: 620, marginTop: 5 }}>Recommended action</div>
+          </div>
+        ))}
+      </div>
+    </div>
+  )
+}
+
+function PowerPointScene() {
+  const frame = useCurrentFrame()
+  const sceneIn = p(frame, 154, 184)
+  const active = frame < 196 ? 0 : frame < 212 ? 1 : 2
+  const slideScale = p(frame, 154, 184, [0.94, 1])
+
+  return (
+    <div style={{ background: '#e6dccd', bottom: 0, left: 0, opacity: sceneIn, position: 'absolute', right: 0, top: 0 }}>
+      <div style={{ background: '#ffffff', border: '1px solid rgba(0,0,0,0.12)', borderRadius: 8, boxShadow: '0 28px 80px rgba(58, 48, 32, 0.24)', height: 610, left: 48, overflow: 'hidden', position: 'absolute', right: 48, top: 54, transform: `scale(${slideScale})`, transformOrigin: 'center center' }}>
+        <PptToolbar />
+        <div style={{ background: '#f0f0f0', bottom: 0, display: 'grid', gridTemplateColumns: '132px 1fr', left: 0, position: 'absolute', right: 0, top: 84 }}>
+          <div style={{ background: '#f7f7f7', borderRight: '1px solid #d8d8d8', display: 'grid', gap: 12, justifyItems: 'center', paddingTop: 16 }}>
+            <SlideThumb active={active === 0} index={1} variant="cover" />
+            <SlideThumb active={active === 1} index={2} variant="snapshot" />
+            <SlideThumb active={active === 2} index={3} variant="chart" />
+          </div>
+          <div style={{ alignItems: 'center', display: 'flex', justifyContent: 'center', overflow: 'hidden', position: 'relative' }}>
+            <div style={{ opacity: active === 0 ? 1 : 0, position: 'absolute', transform: `translateX(${active === 0 ? 0 : -28}px)`, transition: 'none' }}>
+              <CoverSlide />
+            </div>
+            <div style={{ opacity: active === 1 ? 1 : 0, position: 'absolute', transform: `translateX(${active === 1 ? 0 : 28}px)`, transition: 'none' }}>
+              <SnapshotSlide />
+            </div>
+            <div style={{ opacity: active === 2 ? 1 : 0, position: 'absolute', transform: `translateX(${active === 2 ? 0 : 28}px)`, transition: 'none' }}>
+              <ChartSlide />
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+export function CoworkPowerPointExportAnimation() {
+  return (
+    <AbsoluteFill style={{ background: '#fbfaf7', color: INK, fontFamily: FONT, overflow: 'hidden' }}>
+      <ChatScene />
+      <PowerPointScene />
+      <div style={{ alignItems: 'center', background: 'rgba(255,255,255,0.72)', border: '1px solid rgba(216,208,196,0.85)', borderRadius: 999, bottom: 18, color: '#766f65', display: 'flex', fontSize: 11, fontWeight: 700, gap: 7, left: 24, padding: '8px 12px', position: 'absolute' }}>
+        <FileText size={13} strokeWidth={2} />
+        PPTX generated from chat
+      </div>
+    </AbsoluteFill>
+  )
+}
