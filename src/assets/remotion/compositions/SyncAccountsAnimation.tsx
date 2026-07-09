@@ -4,7 +4,7 @@ import { IOS_REMOTION_FONT_STACK, loadSfProFonts } from '@/assets/remotion/fonts
 
 loadSfProFonts()
 
-export const SYNC_ACCOUNTS_ANIMATION_DURATION = 72
+export const SYNC_ACCOUNTS_ANIMATION_DURATION = 102
 
 const FONT = IOS_REMOTION_FONT_STACK
 
@@ -13,12 +13,12 @@ function p(frame: number, from: number, to: number, out: [number, number] = [0, 
 }
 
 const institutions = [
-  { accounts: '1 account', color: '#1174c8', initials: 'AE', name: 'American Express', syncedAt: 45 },
-  { accounts: '2 accounts', color: '#ffffff', accent: '#d51f2a', initials: 'BO', name: 'Bank of America', syncedAt: 50 },
-  { accounts: '1 account', color: '#2bb6d7', initials: 'CS', name: 'Charles Schwab', syncedAt: 54 },
-  { accounts: '1 account', color: '#ecf6ff', accent: '#6c40c8', initials: 'ET', name: 'Etrade', syncedAt: 58 },
-  { accounts: '1 account', color: '#111111', initials: 'FI', name: 'Fidelity', syncedAt: 62 },
-  { accounts: '1 account', color: '#c9ff1a', initials: 'RH', name: 'Robinhood', syncedAt: 66 },
+  { accounts: '1 account', color: '#1174c8', initials: 'AE', name: 'American Express', syncedAt: 60 },
+  { accounts: '2 accounts', color: '#ffffff', accent: '#d51f2a', initials: 'BO', name: 'Bank of America', syncedAt: 68 },
+  { accounts: '1 account', color: '#2bb6d7', initials: 'CS', name: 'Charles Schwab', syncedAt: 74 },
+  { accounts: '1 account', color: '#ecf6ff', accent: '#6c40c8', initials: 'ET', name: 'Etrade', syncedAt: 80 },
+  { accounts: '1 account', color: '#111111', initials: 'FI', name: 'Fidelity', syncedAt: 86 },
+  { accounts: '1 account', color: '#c9ff1a', initials: 'RH', name: 'Robinhood', syncedAt: 92 },
 ]
 
 function PlaidMark() {
@@ -86,7 +86,7 @@ function InstitutionLogo({ accent, color, initials, index }: { accent?: string; 
 function SyncRow({ index }: { index: number }) {
   const frame = useCurrentFrame()
   const item = institutions[index]
-  const rowIn = p(frame, 18 + index * 4, 25 + index * 4)
+  const rowIn = p(frame, 22 + index * 6, 34 + index * 6)
   const synced = frame >= item.syncedAt
 
   return (
@@ -116,10 +116,10 @@ function SyncRow({ index }: { index: number }) {
 export function SyncAccountsAnimation() {
   const frame = useCurrentFrame()
   const titleIn = p(frame, 0, 10)
-  const titleOut = p(frame, 10, 18, [1, 0])
-  const headerIn = p(frame, 14, 24)
-  const cardIn = p(frame, 18, 28)
-  const fullList = p(frame, 32, 42)
+  const titleOut = p(frame, 14, 26, [1, 0])
+  const headerIn = p(frame, 22, 36)
+  const cardIn = p(frame, 28, 42)
+  const fullList = p(frame, 46, 64)
   const cardHeight = interpolate(fullList, [0, 1], [70, 304], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' })
 
   return (

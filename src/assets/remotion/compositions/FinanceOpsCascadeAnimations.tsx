@@ -4,8 +4,8 @@ import { IOS_REMOTION_FONT_STACK, loadSfProFonts } from '@/assets/remotion/fonts
 
 loadSfProFonts()
 
-export const EXPENSE_CLASSIFICATION_CASCADE_DURATION = 84
-export const BANK_RECONCILIATION_CASCADE_DURATION = 84
+export const EXPENSE_CLASSIFICATION_CASCADE_DURATION = 112
+export const BANK_RECONCILIATION_CASCADE_DURATION = 112
 
 const FONT = IOS_REMOTION_FONT_STACK
 
@@ -75,11 +75,11 @@ function Shell({ children, height, progress }: { children: React.ReactNode; heig
 }
 
 const expenses = [
-  { amount: 'R$ 1.280', category: 'Software', completeAt: 52, name: 'OpenAI API', tone: '#eef6ff' },
-  { amount: 'R$ 420', category: 'Marketing', completeAt: 56, name: 'Meta Ads', tone: '#f0f7ff' },
-  { amount: 'R$ 189', category: 'Tarifa bancaria', completeAt: 60, name: 'Banco Inter', tone: '#fff7ed' },
-  { amount: 'R$ 2.450', category: 'Logistica', completeAt: 64, name: 'Correios', tone: '#f4f9f2' },
-  { amount: 'R$ 890', category: 'Assinatura', completeAt: 68, name: 'Notion', tone: '#f7f7f7' },
+  { amount: 'R$ 1.280', category: 'Software', completeAt: 66, name: 'OpenAI API', tone: '#eef6ff' },
+  { amount: 'R$ 420', category: 'Marketing', completeAt: 74, name: 'Meta Ads', tone: '#f0f7ff' },
+  { amount: 'R$ 189', category: 'Tarifa bancaria', completeAt: 82, name: 'Banco Inter', tone: '#fff7ed' },
+  { amount: 'R$ 2.450', category: 'Logistica', completeAt: 90, name: 'Correios', tone: '#f4f9f2' },
+  { amount: 'R$ 890', category: 'Assinatura', completeAt: 98, name: 'Notion', tone: '#f7f7f7' },
 ]
 
 function ExpenseIcon({ tone }: { tone: string }) {
@@ -94,7 +94,7 @@ function ExpenseIcon({ tone }: { tone: string }) {
 function ExpenseRow({ index }: { index: number }) {
   const frame = useCurrentFrame()
   const item = expenses[index]
-  const rowIn = p(frame, 20 + index * 5, 28 + index * 5)
+  const rowIn = p(frame, 24 + index * 7, 38 + index * 7)
   const complete = frame >= item.completeAt
 
   return (
@@ -113,10 +113,10 @@ function ExpenseRow({ index }: { index: number }) {
 export function ExpenseClassificationCascadeAnimation() {
   const frame = useCurrentFrame()
   const titleIn = p(frame, 0, 10)
-  const titleOut = p(frame, 12, 22, [1, 0])
-  const headerIn = p(frame, 16, 26)
-  const cardIn = p(frame, 20, 30)
-  const expand = p(frame, 34, 46)
+  const titleOut = p(frame, 16, 30, [1, 0])
+  const headerIn = p(frame, 24, 40)
+  const cardIn = p(frame, 30, 46)
+  const expand = p(frame, 52, 70)
   const cardHeight = interpolate(expand, [0, 1], [78, 282], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' })
 
   return (
@@ -136,17 +136,17 @@ export function ExpenseClassificationCascadeAnimation() {
 }
 
 const reconciliations = [
-  { bank: 'PIX Cliente Norte', completeAt: 52, erp: 'NF-9031', status: 'Matched', value: 'R$ 42.100' },
-  { bank: 'Cartao Stone', completeAt: 56, erp: 'Lote-552', status: 'Matched', value: 'R$ 68.900' },
-  { bank: 'Tarifa bancaria', completeAt: 60, erp: 'Sem lancamento', status: 'Review', value: 'R$ 189' },
-  { bank: 'Boleto Fornecedor', completeAt: 64, erp: 'CP-1182', status: 'Matched', value: 'R$ 12.430' },
-  { bank: 'TED Parceiro', completeAt: 68, erp: 'CR-4401', status: 'Matched', value: 'R$ 9.870' },
+  { bank: 'PIX Cliente Norte', completeAt: 66, erp: 'NF-9031', status: 'Matched', value: 'R$ 42.100' },
+  { bank: 'Cartao Stone', completeAt: 74, erp: 'Lote-552', status: 'Matched', value: 'R$ 68.900' },
+  { bank: 'Tarifa bancaria', completeAt: 82, erp: 'Sem lancamento', status: 'Review', value: 'R$ 189' },
+  { bank: 'Boleto Fornecedor', completeAt: 90, erp: 'CP-1182', status: 'Matched', value: 'R$ 12.430' },
+  { bank: 'TED Parceiro', completeAt: 98, erp: 'CR-4401', status: 'Matched', value: 'R$ 9.870' },
 ]
 
 function ReconciliationRow({ index }: { index: number }) {
   const frame = useCurrentFrame()
   const item = reconciliations[index]
-  const rowIn = p(frame, 20 + index * 5, 28 + index * 5)
+  const rowIn = p(frame, 24 + index * 7, 38 + index * 7)
   const complete = frame >= item.completeAt
   const review = complete && item.status === 'Review'
 
@@ -167,10 +167,10 @@ function ReconciliationRow({ index }: { index: number }) {
 export function BankReconciliationCascadeAnimation() {
   const frame = useCurrentFrame()
   const titleIn = p(frame, 0, 10)
-  const titleOut = p(frame, 12, 22, [1, 0])
-  const headerIn = p(frame, 16, 26)
-  const cardIn = p(frame, 20, 30)
-  const expand = p(frame, 34, 46)
+  const titleOut = p(frame, 16, 30, [1, 0])
+  const headerIn = p(frame, 24, 40)
+  const cardIn = p(frame, 30, 46)
+  const expand = p(frame, 52, 70)
   const cardHeight = interpolate(expand, [0, 1], [78, 282], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' })
 
   return (
