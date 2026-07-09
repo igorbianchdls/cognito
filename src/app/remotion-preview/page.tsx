@@ -3210,7 +3210,7 @@ const catalog: CatalogItem[] = [
   {
     code: '<CoworkPowerPointExportMobileAnimation />',
     component: CoworkPowerPointExportMobileAnimation,
-    description: 'Versao mobile do chatbot gerando um PPTX e abrindo a apresentacao no Microsoft PowerPoint.',
+    description: 'Versao mobile do chatbot gerando um PPTX, abrindo no PowerPoint e depois criando uma planilha Excel.',
     duration: COWORK_POWERPOINT_EXPORT_MOBILE_DURATION,
     height: 1920,
     kind: 'Vídeos criados',

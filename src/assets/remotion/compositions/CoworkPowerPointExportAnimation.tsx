@@ -7,7 +7,7 @@ import { OttoAssistantHeader } from '@/assets/remotion/compositions/ChatGptMobil
 loadSfProFonts()
 
 export const COWORK_POWERPOINT_EXPORT_DURATION = 225
-export const COWORK_POWERPOINT_EXPORT_MOBILE_DURATION = 285
+export const COWORK_POWERPOINT_EXPORT_MOBILE_DURATION = 650
 export const CLAUDE_POWERPOINT_OUTLINE_MOBILE_DURATION = 285
 export const CHATGPT_POWERPOINT_OUTLINE_MOBILE_DURATION = 285
 
@@ -426,14 +426,15 @@ function MobileChatScene() {
   )
 }
 
-function MobilePowerPointScene({ start = 154 }: { start?: number }) {
+function MobilePowerPointScene({ end, start = 154 }: { end?: number; start?: number }) {
   const frame = useCurrentFrame()
   const sceneIn = p(frame, start, start + 30)
+  const sceneOut = end === undefined ? 1 : p(frame, end, end + 20, [1, 0])
   const active = frame < start + 42 ? 0 : frame < start + 58 ? 1 : 2
   const slideScale = p(frame, start, start + 30, [0.94, 1])
 
   return (
-    <div style={{ background: '#e6dccd', bottom: 0, left: 0, opacity: sceneIn, position: 'absolute', right: 0, top: 0 }}>
+    <div style={{ background: '#e6dccd', bottom: 0, left: 0, opacity: sceneIn * sceneOut, position: 'absolute', right: 0, top: 0 }}>
       <MobileStatusBar />
       <div style={{ color: '#6f665b', fontSize: 22, fontWeight: 700, left: 66, letterSpacing: 0, position: 'absolute', top: 150 }}>
         Microsoft PowerPoint
@@ -464,11 +465,171 @@ function MobilePowerPointScene({ start = 154 }: { start?: number }) {
   )
 }
 
+function MobileExcelCard({ click, progress }: { click: number; progress: number }) {
+  return (
+    <div
+      style={{
+        alignItems: 'center',
+        background: click > 0.45 ? '#f7f7f7' : '#ffffff',
+        border: '1.5px solid #d6cec3',
+        borderRadius: 28,
+        boxShadow: '0 18px 42px rgba(50, 45, 35, 0.10)',
+        display: 'grid',
+        gridTemplateColumns: '174px 1fr',
+        height: 142,
+        opacity: progress,
+        overflow: 'hidden',
+        padding: '0 34px',
+        transform: `translateY(${(1 - progress) * 22}px) scale(${1 - Math.sin(click * Math.PI) * 0.018})`,
+        width: '100%',
+      }}
+    >
+      <div style={{ alignItems: 'center', alignSelf: 'stretch', display: 'flex', justifyContent: 'flex-start', overflow: 'hidden', position: 'relative' }}>
+        <div style={{ alignItems: 'center', background: '#f6fbf7', border: '1.5px solid #cfded2', borderRadius: 18, display: 'flex', height: 126, justifyContent: 'center', transform: 'rotate(-5deg)', width: 126 }}>
+          <div style={{ border: '3px solid #1f7a45', borderRadius: 7, display: 'grid', gap: 3, gridTemplateColumns: 'repeat(3, 16px)', padding: 7 }}>
+            {Array.from({ length: 9 }).map((_, index) => <span key={index} style={{ background: index === 0 || index === 3 ? '#1f7a45' : '#d8efe0', borderRadius: 2, height: 12, width: 16 }} />)}
+          </div>
+        </div>
+      </div>
+      <div style={{ display: 'grid', gap: 10, minWidth: 0 }}>
+        <strong style={{ color: '#242424', fontSize: 34, fontWeight: 520, letterSpacing: 0, lineHeight: 1.08, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>lost_deals_analysis</strong>
+        <span style={{ color: '#77736d', fontSize: 27, fontWeight: 440, letterSpacing: 0 }}>Spreadsheet · XLSX</span>
+      </div>
+    </div>
+  )
+}
+
+function MobileExcelChatScene({ start }: { start: number }) {
+  const frame = useCurrentFrame()
+  const local = frame - start
+  const promptText = 'Agora transforme isso em uma planilha Excel com deals perdidos, valor, motivo e prioridade.'
+  const answerText = 'Organizei os deals em uma planilha com valor, motivo da perda, risco da conta e prioridade de acao para o time comercial.'
+  const promptProgress = p(local, 12, 82)
+  const introIn = p(local, 0, 18)
+  const introOut = p(local, 92, 112, [1, 0])
+  const chatIn = p(local, 102, 124)
+  const userBubbleIn = p(local, 110, 130)
+  const answerProgress = p(local, 132, 186)
+  const cardIn = p(local, 178, 208)
+  const cursorIn = p(local, 212, 230)
+  const click = p(local, 232, 242, [0, 1])
+  const sceneOut = p(local, 240, 264, [1, 0])
+  const cursorX = interpolate(local, [212, 236], [790, 190], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' })
+  const cursorY = interpolate(local, [212, 236], [1010, 955], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' })
+
+  return (
+    <div style={{ bottom: 0, left: 0, opacity: introIn * sceneOut, position: 'absolute', right: 0, top: 0 }}>
+      <div style={{ background: '#fbfaf7', bottom: 0, left: 0, position: 'absolute', right: 0, top: 0 }} />
+      <MobileStatusBar />
+
+      <div style={{ alignItems: 'center', border: '1.5px solid #d8ded6', borderRadius: 48, boxShadow: '0 28px 82px rgba(35,58,42,0.12)', display: 'grid', gridTemplateColumns: '1fr 72px', left: 64, minHeight: 188, opacity: introOut, padding: '24px 26px 24px 38px', position: 'absolute', right: 64, top: 780, transform: `translateY(${(1 - introOut) * -34}px) scale(${0.96 + p(local, 0, 22) * 0.04})` }}>
+        <div style={{ color: '#171717', fontSize: 29, fontWeight: 440, letterSpacing: 0, lineHeight: 1.16, minWidth: 0, overflow: 'hidden', wordBreak: 'normal' }}>
+          {typed(promptText, promptProgress)}
+          <span style={{ background: '#171717', display: local % 18 < 9 ? 'inline-block' : 'none', height: 34, marginLeft: 4, transform: 'translateY(5px)', width: 3 }} />
+        </div>
+        <div style={{ alignItems: 'center', background: '#111111', borderRadius: 999, color: '#ffffff', display: 'flex', fontSize: 26, fontWeight: 620, height: 64, justifyContent: 'center', justifySelf: 'end', width: 64 }}>Go</div>
+      </div>
+
+      <div style={{ alignItems: 'center', borderBottom: '1px solid #e8eee8', display: 'flex', height: 118, justifyContent: 'space-between', left: 48, opacity: chatIn, position: 'absolute', right: 48, top: 106, transform: `translateY(${(1 - chatIn) * 24}px)` }}>
+        <strong style={{ color: '#111111', fontSize: 32, fontWeight: 720, letterSpacing: 0 }}>Otto</strong>
+        <span style={{ alignItems: 'center', background: '#ffffff', border: '1px solid #dfe8df', borderRadius: 999, color: '#617062', display: 'flex', fontSize: 21, fontWeight: 670, gap: 10, padding: '13px 18px' }}>
+          <Search size={22} strokeWidth={2.2} />
+          Spreadsheet
+        </span>
+      </div>
+
+      <div style={{ display: 'grid', gap: 38, left: 56, opacity: chatIn, position: 'absolute', right: 56, top: 292, transform: `translateY(${(1 - chatIn) * 34}px)` }}>
+        <div style={{ alignItems: 'start', display: 'grid', gridTemplateColumns: '1fr auto' }}>
+          <div />
+          <div style={{ background: '#eef3ee', border: '1px solid #d8e1d8', borderRadius: 34, color: '#161616', fontSize: 29, fontWeight: 500, letterSpacing: 0, lineHeight: 1.18, maxWidth: 760, opacity: userBubbleIn, padding: '28px 34px', transform: `translateY(${(1 - userBubbleIn) * 18}px)` }}>
+            Agora transforme isso em uma planilha Excel com deals perdidos, valor, motivo e prioridade.
+          </div>
+        </div>
+
+        <div style={{ display: 'grid', gap: 18 }}>
+          <div style={{ alignItems: 'center', display: 'flex', gap: 12 }}>
+            <OttoMark />
+            <span style={{ color: '#7a756d', fontSize: 22, fontWeight: 760 }}>Otto</span>
+          </div>
+          <div style={{ color: INK, fontSize: 38, fontWeight: 420, letterSpacing: 0, lineHeight: 1.28 }}>
+            {typed(answerText, answerProgress)}
+          </div>
+          <MobileExcelCard click={click} progress={cardIn} />
+        </div>
+      </div>
+
+      <div style={{ left: cursorX, opacity: cursorIn, position: 'absolute', top: cursorY, transform: `scale(${1.75 - Math.sin(click * Math.PI) * 0.16})`, zIndex: 20 }}>
+        <MousePointer2 color="#111111" fill="#111111" size={28} strokeWidth={2} />
+      </div>
+    </div>
+  )
+}
+
+function MobileExcelScene({ start }: { start: number }) {
+  const frame = useCurrentFrame()
+  const sceneIn = p(frame, start, start + 30)
+  const sheetScale = p(frame, start, start + 30, [0.94, 1])
+  const rows = [
+    ['Northwind', 'R$ 420k', 'Preco', 'Alta'],
+    ['Atlas Corp', 'R$ 310k', 'Concorrente', 'Alta'],
+    ['Prime Retail', 'R$ 190k', 'Timing', 'Media'],
+    ['Blue Ocean', 'R$ 155k', 'Produto', 'Media'],
+    ['Solaris', 'R$ 92k', 'Budget', 'Baixa'],
+  ]
+
+  return (
+    <div style={{ background: '#e4ede5', bottom: 0, left: 0, opacity: sceneIn, position: 'absolute', right: 0, top: 0 }}>
+      <MobileStatusBar />
+      <div style={{ color: '#45604c', fontSize: 22, fontWeight: 700, left: 66, letterSpacing: 0, position: 'absolute', top: 150 }}>
+        Microsoft Excel
+      </div>
+      <div style={{ background: '#ffffff', border: '1px solid rgba(0,0,0,0.12)', borderRadius: 18, boxShadow: '0 34px 92px rgba(34, 73, 48, 0.22)', height: 790, left: 40, overflow: 'hidden', position: 'absolute', right: 40, top: 510, transform: `scale(${sheetScale})`, transformOrigin: 'center center' }}>
+        <div style={{ background: '#0f6b3d', color: '#ffffff', display: 'flex', flexDirection: 'column', height: 94 }}>
+          <div style={{ alignItems: 'center', display: 'flex', gap: 8, height: 38, paddingLeft: 16 }}>
+            <span style={{ background: '#ff5f57', borderRadius: 999, height: 10, width: 10 }} />
+            <span style={{ background: '#ffbd2e', borderRadius: 999, height: 10, width: 10 }} />
+            <span style={{ background: '#28c840', borderRadius: 999, height: 10, width: 10 }} />
+            <span style={{ fontSize: 13, fontWeight: 650, marginLeft: 18 }}>lost_deals_analysis.xlsx</span>
+          </div>
+          <div style={{ alignItems: 'center', display: 'flex', gap: 18, height: 56, padding: '0 18px' }}>
+            {['Home', 'Insert', 'Data', 'Formulas', 'Review', 'View'].map((item, index) => (
+              <span key={item} style={{ color: index === 0 ? '#ffffff' : 'rgba(255,255,255,0.72)', fontSize: 13, fontWeight: 700 }}>{item}</span>
+            ))}
+          </div>
+        </div>
+        <div style={{ background: '#f8faf8', bottom: 0, display: 'grid', gridTemplateRows: '92px 1fr 170px', left: 0, padding: 22, position: 'absolute', right: 0, top: 94 }}>
+          <div style={{ display: 'grid', gap: 12, gridTemplateColumns: 'repeat(3, 1fr)' }}>
+            {['R$ 1.16M perdido', '5 contas criticas', '3 acoes prioritarias'].map((item, index) => (
+              <div key={item} style={{ background: '#ffffff', border: '1px solid #dfe9e1', borderRadius: 12, color: index === 0 ? '#b42318' : '#14532d', display: 'grid', fontSize: 17, fontWeight: 800, placeItems: 'center' }}>{item}</div>
+            ))}
+          </div>
+          <div style={{ background: '#ffffff', border: '1px solid #dfe9e1', borderRadius: 12, overflow: 'hidden' }}>
+            <div style={{ background: '#eef7f0', color: '#24503a', display: 'grid', fontSize: 13, fontWeight: 900, gridTemplateColumns: '1.2fr 0.8fr 1fr 0.8fr', padding: '12px 14px', textTransform: 'uppercase' }}>
+              {['Conta', 'Valor', 'Motivo', 'Prioridade'].map((item) => <span key={item}>{item}</span>)}
+            </div>
+            {rows.map((row, index) => (
+              <div key={row[0]} style={{ borderTop: '1px solid #eef2ef', color: '#142018', display: 'grid', fontSize: 18, fontWeight: 520, gridTemplateColumns: '1.2fr 0.8fr 1fr 0.8fr', padding: '14px' }}>
+                {row.map((cell, cellIndex) => <span key={cell} style={{ fontWeight: cellIndex === 0 ? 780 : 520, color: cellIndex === 3 && index < 2 ? '#b42318' : '#142018' }}>{cell}</span>)}
+              </div>
+            ))}
+          </div>
+          <div style={{ alignItems: 'end', background: '#ffffff', border: '1px solid #dfe9e1', borderRadius: 12, display: 'flex', gap: 16, marginTop: 18, padding: '22px 26px' }}>
+            {[98, 72, 54, 42, 28].map((height, index) => <span key={height} style={{ background: index < 2 ? '#0f6b3d' : '#bdd9c5', borderRadius: 8, flex: 1, height }} />)}
+          </div>
+        </div>
+      </div>
+      <div style={{ background: '#050505', borderRadius: 999, bottom: 18, height: 12, left: '50%', position: 'absolute', transform: 'translateX(-50%)', width: 380 }} />
+    </div>
+  )
+}
+
 export function CoworkPowerPointExportMobileAnimation() {
   return (
     <AbsoluteFill style={{ background: '#fbfaf7', color: INK, fontFamily: FONT, overflow: 'hidden' }}>
       <MobileChatScene />
-      <MobilePowerPointScene start={234} />
+      <MobilePowerPointScene end={330} start={234} />
+      <MobileExcelChatScene start={350} />
+      <MobileExcelScene start={584} />
     </AbsoluteFill>
   )
 }
