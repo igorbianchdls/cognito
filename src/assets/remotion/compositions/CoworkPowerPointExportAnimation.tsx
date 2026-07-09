@@ -347,33 +347,14 @@ function MobilePptCard({ click, progress }: { click: number; progress: number })
           <span style={{ color: '#7b766f', fontSize: 23, fontWeight: 510, letterSpacing: 0 }}>Presentation · PPTX</span>
         </div>
       </div>
-      <div style={{ alignItems: 'center', display: 'grid', gap: 14, gridTemplateColumns: '72px 1fr' }}>
-        <button style={{ alignItems: 'center', background: '#fffefb', border: '1px solid #d8d0c4', borderRadius: 16, display: 'flex', height: 66, justifyContent: 'center', width: 72 }} type="button">
+      <div style={{ alignItems: 'center', display: 'flex', justifyContent: 'space-between' }}>
+        <button style={{ alignItems: 'center', background: click > 0.45 ? '#f0ebe4' : '#fffefb', border: '1px solid #d8d0c4', borderRadius: 16, display: 'flex', height: 66, justifyContent: 'center', transform: `scale(${1 - Math.sin(click * Math.PI) * 0.025})`, width: 72 }} type="button">
           <Folder color="#6f6a63" size={31} strokeWidth={1.7} />
         </button>
-        <button
-          style={{
-            alignItems: 'center',
-            background: click > 0.45 ? '#d9d4cd' : '#e8e4de',
-            border: '1px solid #d5cec4',
-            borderRadius: 16,
-            color: '#111111',
-            display: 'flex',
-            fontSize: 28,
-            fontWeight: 500,
-            gap: 10,
-            height: 66,
-            justifyContent: 'center',
-            letterSpacing: 0,
-            transform: `scale(${1 - Math.sin(click * Math.PI) * 0.025})`,
-            whiteSpace: 'nowrap',
-            width: '100%',
-          }}
-          type="button"
-        >
-          <span style={{ alignItems: 'center', background: '#c24f41', borderRadius: 8, color: '#ffffff', display: 'flex', flex: '0 0 auto', fontSize: 18, fontWeight: 800, height: 36, justifyContent: 'center', width: 36 }}>P</span>
-          Open in Microsoft PowerPoint
-        </button>
+        <span style={{ alignItems: 'center', color: '#6f6a63', display: 'flex', fontSize: 22, fontWeight: 560, gap: 10 }}>
+          <span style={{ alignItems: 'center', background: '#c24f41', borderRadius: 8, color: '#ffffff', display: 'flex', fontSize: 18, fontWeight: 800, height: 36, justifyContent: 'center', width: 36 }}>P</span>
+          Microsoft PowerPoint
+        </span>
       </div>
     </div>
   )
@@ -387,8 +368,8 @@ function MobileChatScene() {
   const cursorIn = p(frame, 108, 126)
   const click = p(frame, 128, 138, [0, 1])
   const sceneOut = p(frame, 145, 168, [1, 0])
-  const cursorX = interpolate(frame, [108, 132], [780, 704], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' })
-  const cursorY = interpolate(frame, [108, 132], [1010, 977], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' })
+  const cursorX = interpolate(frame, [108, 132], [790, 190], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' })
+  const cursorY = interpolate(frame, [108, 132], [1010, 955], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' })
 
   return (
     <div style={{ bottom: 0, left: 0, opacity: sceneOut, position: 'absolute', right: 0, top: 0 }}>
@@ -438,32 +419,25 @@ function MobilePowerPointScene() {
   return (
     <div style={{ background: '#e6dccd', bottom: 0, left: 0, opacity: sceneIn, position: 'absolute', right: 0, top: 0 }}>
       <MobileStatusBar />
-      <div style={{ background: '#ffffff', border: '1px solid rgba(0,0,0,0.12)', borderRadius: 28, boxShadow: '0 34px 92px rgba(58, 48, 32, 0.24)', height: 1548, left: 44, overflow: 'hidden', position: 'absolute', right: 44, top: 176, transform: `scale(${slideScale})`, transformOrigin: 'center center' }}>
-        <div style={{ background: '#f7f7f7', borderBottom: '1px solid #dddddd', height: 128, padding: '0 24px' }}>
-          <div style={{ alignItems: 'center', display: 'flex', gap: 14, height: 62 }}>
-            <span style={{ alignItems: 'center', background: '#c24f41', borderRadius: 10, color: '#ffffff', display: 'flex', fontSize: 23, fontWeight: 850, height: 40, justifyContent: 'center', width: 40 }}>P</span>
-            <strong style={{ color: '#333333', fontSize: 25, fontWeight: 680, letterSpacing: 0 }}>Lost deal analysis q4 q1</strong>
-          </div>
-          <div style={{ alignItems: 'center', display: 'flex', gap: 22, height: 58 }}>
-            {['Home', 'Insert', 'Design', 'Share'].map((item, index) => (
-              <span key={item} style={{ color: index === 0 ? '#c24f41' : '#555555', fontSize: 21, fontWeight: 650 }}>{item}</span>
-            ))}
-          </div>
-        </div>
-        <div style={{ background: '#f0f0f0', bottom: 0, left: 0, position: 'absolute', right: 0, top: 128 }}>
-          <div style={{ display: 'flex', gap: 18, height: 146, left: 18, overflow: 'hidden', position: 'absolute', right: 18, top: 20 }}>
+      <div style={{ color: '#6f665b', fontSize: 22, fontWeight: 700, left: 66, letterSpacing: 0, position: 'absolute', top: 150 }}>
+        Microsoft PowerPoint
+      </div>
+      <div style={{ background: '#ffffff', border: '1px solid rgba(0,0,0,0.12)', borderRadius: 18, boxShadow: '0 34px 92px rgba(58, 48, 32, 0.24)', height: 760, left: 40, overflow: 'hidden', position: 'absolute', right: 40, top: 530, transform: `scale(${slideScale})`, transformOrigin: 'center center' }}>
+        <PptToolbar />
+        <div style={{ background: '#f0f0f0', bottom: 0, display: 'grid', gridTemplateColumns: '132px 1fr', left: 0, position: 'absolute', right: 0, top: 84 }}>
+          <div style={{ background: '#f7f7f7', borderRight: '1px solid #d8d8d8', display: 'grid', gap: 12, justifyItems: 'center', paddingTop: 16 }}>
             <SlideThumb active={active === 0} index={1} variant="cover" />
             <SlideThumb active={active === 1} index={2} variant="snapshot" />
             <SlideThumb active={active === 2} index={3} variant="chart" />
           </div>
-          <div style={{ alignItems: 'center', bottom: 40, display: 'flex', justifyContent: 'center', left: 0, overflow: 'hidden', position: 'absolute', right: 0, top: 188 }}>
-            <div style={{ opacity: active === 0 ? 1 : 0, position: 'absolute', transform: 'scale(1.06)' }}>
+          <div style={{ alignItems: 'center', display: 'flex', justifyContent: 'center', overflow: 'hidden', position: 'relative' }}>
+            <div style={{ opacity: active === 0 ? 1 : 0, position: 'absolute', transform: 'scale(0.92)' }}>
               <CoverSlide />
             </div>
-            <div style={{ opacity: active === 1 ? 1 : 0, position: 'absolute', transform: 'scale(1.06)' }}>
+            <div style={{ opacity: active === 1 ? 1 : 0, position: 'absolute', transform: 'scale(0.92)' }}>
               <SnapshotSlide />
             </div>
-            <div style={{ opacity: active === 2 ? 1 : 0, position: 'absolute', transform: 'scale(1.06)' }}>
+            <div style={{ opacity: active === 2 ? 1 : 0, position: 'absolute', transform: 'scale(0.92)' }}>
               <ChartSlide />
             </div>
           </div>
