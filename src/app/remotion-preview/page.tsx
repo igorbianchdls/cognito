@@ -94,6 +94,7 @@ import { CHATGPT_POWERPOINT_OUTLINE_MOBILE_DURATION, CLAUDE_POWERPOINT_OUTLINE_M
 import { CLAUDE_FINANCIAL_AGENTS_VIDEO_DURATION, ClaudeFinancialAgentsVideo } from '@/assets/remotion/compositions/ClaudeFinancialAgentsVideo'
 import { ClaudeMobileAnimation } from '@/assets/remotion/compositions/ClaudeMobileMarketing'
 import { ClaudeOperationalFlowsVideo } from '@/assets/remotion/compositions/ClaudeOperationalFlowsVideo'
+import { SYNC_ACCOUNTS_ANIMATION_DURATION, SyncAccountsAnimation } from '@/assets/remotion/compositions/SyncAccountsAnimation'
 import {
   ExpenseClassificationFoldersAction,
   ExpenseClassificationMatchingAction,
@@ -3193,6 +3194,18 @@ const catalog: CatalogItem[] = [
     label: 'Codex Charts',
     tags: ['ChatGPT', 'Charts', 'Interactive', 'Video'],
     value: 'video-codex-charts',
+    width: 1280,
+  },
+  {
+    code: '<SyncAccountsAnimation />',
+    component: SyncAccountsAnimation,
+    description: 'Animacao horizontal minimalista de conexao segura e sincronizacao em cascata de contas financeiras.',
+    duration: SYNC_ACCOUNTS_ANIMATION_DURATION,
+    height: 720,
+    kind: 'Vídeos criados',
+    label: 'Account Sync Cascade',
+    tags: ['Sync', 'Accounts', 'Plaid', 'Finance', 'Integration'],
+    value: 'video-account-sync-cascade',
     width: 1280,
   },
   {
