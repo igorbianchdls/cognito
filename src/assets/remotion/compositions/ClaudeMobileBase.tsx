@@ -116,9 +116,9 @@ export function ClaudeToolResultCard({ children, style }: { children: ReactNode;
 
 export function ClaudeVoiceButton() {
   return (
-    <div style={{ alignItems: 'center', background: '#050505', borderRadius: 999, display: 'flex', gap: 6, height: 78, justifyContent: 'center', width: 78 }}>
-      {[19, 29, 39, 29, 19].map((height, index) => (
-        <span key={`${height}-${index}`} style={{ background: '#ffffff', borderRadius: 999, height, width: 5 }} />
+    <div style={{ alignItems: 'center', background: '#050505', borderRadius: 999, display: 'flex', gap: 7, height: 90, justifyContent: 'center', width: 90 }}>
+      {[23, 36, 50, 36, 23].map((height, index) => (
+        <span key={`${height}-${index}`} style={{ background: '#ffffff', borderRadius: 999, height, width: 6 }} />
       ))}
     </div>
   )
@@ -155,11 +155,11 @@ export function ClaudeMobileShell({ children, conversationY = 0 }: { children: R
       </style>
       <ClaudeStatusBar />
 
-      <Menu color="#333330" size={56} strokeWidth={2.7} style={{ left: 56, position: 'absolute', top: 156 }} />
-      <div style={{ alignItems: 'center', background: '#333330', borderRadius: 999, display: 'flex', height: 64, justifyContent: 'center', left: 832, position: 'absolute', top: 146, width: 64 }}>
-        <Plus color="#ffffff" size={48} strokeWidth={3.4} />
+      <Menu color="#333330" size={70} strokeWidth={3.2} style={{ left: 48, position: 'absolute', top: 149 }} />
+      <div style={{ alignItems: 'center', background: '#333330', borderRadius: 999, display: 'flex', height: 82, justifyContent: 'center', left: 820, position: 'absolute', top: 137, width: 82 }}>
+        <Plus color="#ffffff" size={64} strokeWidth={3.8} />
       </div>
-      <MoreHorizontal color="#333330" size={58} strokeWidth={3.4} style={{ left: 965, position: 'absolute', top: 154 }} />
+      <MoreHorizontal color="#333330" size={70} strokeWidth={3.8} style={{ left: 958, position: 'absolute', top: 148 }} />
 
       <div style={{ bottom: 340, left: 0, overflow: 'hidden', position: 'absolute', right: 0, top: 226 }}>
         <div style={{ display: 'grid', gap: 34, padding: '20px 0 820px', transform: `translateY(${conversationY}px)` }}>
@@ -171,13 +171,13 @@ export function ClaudeMobileShell({ children, conversationY = 0 }: { children: R
         <div style={{ background: '#fbfaf8', border: '1.5px solid #bebcb7', borderRadius: 68, boxShadow: '0 20px 48px rgba(20,24,22,0.16)', height: 254, left: 42, position: 'absolute', right: 42, top: 0 }}>
           <div style={{ color: '#77746f', fontSize: 42, fontWeight: 450, left: 36, letterSpacing: 0, lineHeight: 1, position: 'absolute', top: 53 }}>Responder a Claude</div>
           <div style={{ alignItems: 'center', display: 'flex', gap: 19, left: 22, position: 'absolute', right: 24, top: 145 }}>
-            <div style={{ alignItems: 'center', background: '#efeeeb', borderRadius: 999, display: 'flex', height: 78, justifyContent: 'center', width: 78 }}>
-              <Plus color="#111111" size={43} strokeWidth={2.6} />
+            <div style={{ alignItems: 'center', background: '#efeeeb', borderRadius: 999, display: 'flex', height: 90, justifyContent: 'center', width: 90 }}>
+              <Plus color="#111111" size={58} strokeWidth={3.1} />
             </div>
             <div style={{ alignItems: 'center', background: '#efeeeb', borderRadius: 999, color: '#111111', display: 'flex', fontSize: 35, fontWeight: 520, height: 78, justifyContent: 'center', letterSpacing: 0, padding: '0 42px', whiteSpace: 'nowrap' }}>Sonnet 4.6</div>
             <div style={{ flex: 1 }} />
-            <div style={{ alignItems: 'center', background: '#efeeeb', borderRadius: 999, display: 'flex', height: 78, justifyContent: 'center', width: 78 }}>
-              <Mic color="#333330" size={45} strokeWidth={2.8} />
+            <div style={{ alignItems: 'center', background: '#efeeeb', borderRadius: 999, display: 'flex', height: 90, justifyContent: 'center', width: 90 }}>
+              <Mic color="#333330" size={58} strokeWidth={3.1} />
             </div>
             <ClaudeVoiceButton />
           </div>
