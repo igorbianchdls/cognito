@@ -326,35 +326,29 @@ function MobilePptCard({ click, progress }: { click: number; progress: number })
   return (
     <div
       style={{
-        background: '#fffefb',
-        border: '1px solid #d8d0c4',
-        borderRadius: 24,
-        boxShadow: '0 22px 58px rgba(50, 45, 35, 0.10)',
+        alignItems: 'center',
+        background: click > 0.45 ? '#f4f1ec' : '#fffefb',
+        border: '1.5px solid #d6cec3',
+        borderRadius: 28,
+        boxShadow: '0 18px 42px rgba(50, 45, 35, 0.10)',
         display: 'grid',
-        gap: 22,
+        gridTemplateColumns: '150px 1fr',
+        height: 142,
         opacity: progress,
-        padding: 24,
-        transform: `translateY(${(1 - progress) * 22}px)`,
+        overflow: 'hidden',
+        padding: '0 34px 0 0',
+        transform: `translateY(${(1 - progress) * 22}px) scale(${1 - Math.sin(click * Math.PI) * 0.018})`,
         width: 914,
       }}
     >
-      <div style={{ alignItems: 'center', display: 'grid', gap: 20, gridTemplateColumns: '88px 1fr' }}>
-        <div style={{ alignItems: 'center', background: '#fbfaf7', border: '1px solid #d9d1c6', borderRadius: 18, display: 'flex', height: 88, justifyContent: 'center', transform: 'rotate(-3deg)', width: 88 }}>
-          <Presentation color="#6b665f" size={42} strokeWidth={1.8} />
-        </div>
-        <div style={{ display: 'grid', gap: 8 }}>
-          <strong style={{ color: '#1f1f1f', fontSize: 31, fontWeight: 610, letterSpacing: 0, lineHeight: 1.1 }}>Lost deal analysis q4 q1</strong>
-          <span style={{ color: '#7b766f', fontSize: 23, fontWeight: 510, letterSpacing: 0 }}>Presentation · PPTX</span>
+      <div style={{ alignItems: 'center', alignSelf: 'stretch', display: 'flex', justifyContent: 'center', overflow: 'hidden', position: 'relative' }}>
+        <div style={{ alignItems: 'center', background: '#fbfaf7', border: '1.5px solid #d8d0c4', borderRadius: 18, display: 'flex', height: 126, justifyContent: 'center', left: 34, position: 'absolute', top: 18, transform: 'rotate(-6deg)', width: 126 }}>
+          <Presentation color="#252525" size={46} strokeWidth={1.9} />
         </div>
       </div>
-      <div style={{ alignItems: 'center', display: 'flex', justifyContent: 'space-between' }}>
-        <button style={{ alignItems: 'center', background: click > 0.45 ? '#f0ebe4' : '#fffefb', border: '1px solid #d8d0c4', borderRadius: 16, display: 'flex', height: 66, justifyContent: 'center', transform: `scale(${1 - Math.sin(click * Math.PI) * 0.025})`, width: 72 }} type="button">
-          <Folder color="#6f6a63" size={31} strokeWidth={1.7} />
-        </button>
-        <span style={{ alignItems: 'center', color: '#6f6a63', display: 'flex', fontSize: 22, fontWeight: 560, gap: 10 }}>
-          <span style={{ alignItems: 'center', background: '#c24f41', borderRadius: 8, color: '#ffffff', display: 'flex', fontSize: 18, fontWeight: 800, height: 36, justifyContent: 'center', width: 36 }}>P</span>
-          Microsoft PowerPoint
-        </span>
+      <div style={{ display: 'grid', gap: 10, minWidth: 0 }}>
+        <strong style={{ color: '#242424', fontSize: 34, fontWeight: 520, letterSpacing: 0, lineHeight: 1.08, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>Lost deal analysis q4 q1</strong>
+        <span style={{ color: '#77736d', fontSize: 27, fontWeight: 440, letterSpacing: 0 }}>Presentation · PPTX</span>
       </div>
     </div>
   )
