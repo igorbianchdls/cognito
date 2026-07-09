@@ -8,7 +8,7 @@ loadSfProFonts()
 
 export const COWORK_POWERPOINT_EXPORT_DURATION = 225
 export const COWORK_POWERPOINT_EXPORT_MOBILE_DURATION = 650
-export const CHATBOT_DASHBOARD_MOBILE_DURATION = 285
+export const CHATBOT_DASHBOARD_MOBILE_DURATION = 430
 export const CLAUDE_POWERPOINT_OUTLINE_MOBILE_DURATION = 285
 export const CHATGPT_POWERPOINT_OUTLINE_MOBILE_DURATION = 285
 
@@ -644,8 +644,12 @@ function MobileDashboardCard({ click, progress }: { click: number; progress: num
       }}
     >
       <div style={{ alignItems: 'center', alignSelf: 'stretch', display: 'flex', justifyContent: 'flex-start', overflow: 'hidden', position: 'relative' }}>
-        <div style={{ background: '#171a2f', border: '1.5px solid #d8d0c4', borderRadius: 18, height: 126, overflow: 'hidden', transform: 'rotate(-5deg)', width: 126 }}>
-          <Img src={staticFile('dashboard.jpeg')} style={{ height: '100%', objectFit: 'cover', width: '100%' }} />
+        <div style={{ alignItems: 'center', background: '#fbfaf7', border: '1.5px solid #d8d0c4', borderRadius: 18, display: 'flex', height: 126, justifyContent: 'center', transform: 'rotate(-6deg)', width: 126 }}>
+          <div style={{ border: '3px solid #252525', borderRadius: 7, display: 'grid', gap: 5, gridTemplateColumns: 'repeat(3, 10px)', padding: 8 }}>
+            {[16, 25, 12, 20, 14, 28].map((height, index) => (
+              <span key={`${height}-${index}`} style={{ alignSelf: 'end', background: index % 2 === 0 ? '#252525' : '#7b7b7b', borderRadius: 2, display: 'block', height, width: 10 }} />
+            ))}
+          </div>
         </div>
       </div>
       <div style={{ display: 'grid', gap: 10, minWidth: 0 }}>
@@ -723,10 +727,11 @@ function MobileDashboardChatScene() {
 function MobileDashboardScene() {
   const frame = useCurrentFrame()
   const sceneIn = p(frame, 234, 264)
+  const sceneOut = p(frame, 318, 344, [1, 0])
   const scale = p(frame, 234, 264, [0.92, 1])
 
   return (
-    <div style={{ background: '#111827', bottom: 0, left: 0, opacity: sceneIn, position: 'absolute', right: 0, top: 0 }}>
+    <div style={{ background: '#111827', bottom: 0, left: 0, opacity: sceneIn * sceneOut, position: 'absolute', right: 0, top: 0 }}>
       <MobileStatusBar />
       <div style={{ color: '#d6d7e3', fontSize: 22, fontWeight: 700, left: 66, letterSpacing: 0, position: 'absolute', top: 150 }}>
         CRM Dashboard
@@ -739,11 +744,82 @@ function MobileDashboardScene() {
   )
 }
 
+function KpiTile({ accent, delay, label, value }: { accent: string; delay: number; label: string; value: string }) {
+  const frame = useCurrentFrame()
+  const progress = p(frame, 330 + delay, 348 + delay)
+
+  return (
+    <div style={{ background: `linear-gradient(135deg, ${accent}, rgba(255,255,255,0.08))`, border: '1px solid rgba(255,255,255,0.08)', borderRadius: 20, boxShadow: '0 16px 44px rgba(0,0,0,0.22)', minHeight: 120, opacity: progress, padding: 22, transform: `translateY(${(1 - progress) * 20}px) scale(${0.96 + progress * 0.04})` }}>
+      <div style={{ color: 'rgba(255,255,255,0.72)', fontSize: 18, fontWeight: 650, letterSpacing: 0 }}>{label}</div>
+      <div style={{ color: '#ffffff', fontSize: 44, fontWeight: 780, letterSpacing: -0.4, marginTop: 12 }}>{value}</div>
+    </div>
+  )
+}
+
+function NativeDashboardScene() {
+  const frame = useCurrentFrame()
+  const sceneIn = p(frame, 330, 360)
+  const panelIn = p(frame, 342, 370)
+  const lineProgress = p(frame, 360, 404)
+  const bars = [120, 48, 162, 78, 210, 130]
+
+  return (
+    <div style={{ background: '#171a2f', bottom: 0, left: 0, opacity: sceneIn, position: 'absolute', right: 0, top: 0 }}>
+      <MobileStatusBar />
+      <div style={{ color: '#d6d7e3', fontSize: 22, fontWeight: 700, left: 66, letterSpacing: 0, position: 'absolute', top: 150 }}>
+        CRM Dashboard
+      </div>
+      <div style={{ background: '#111426', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 32, boxShadow: '0 34px 92px rgba(0,0,0,0.34)', left: 42, minHeight: 930, opacity: panelIn, overflow: 'hidden', padding: 28, position: 'absolute', right: 42, top: 450, transform: `translateY(${(1 - panelIn) * 34}px) scale(${0.96 + panelIn * 0.04})` }}>
+        <div style={{ alignItems: 'center', display: 'flex', justifyContent: 'space-between', marginBottom: 24 }}>
+          <div>
+            <div style={{ color: '#ffffff', fontSize: 26, fontWeight: 800, letterSpacing: 0 }}>CRM Dashboard</div>
+            <div style={{ color: 'rgba(255,255,255,0.52)', fontSize: 16, fontWeight: 520, marginTop: 6 }}>Live support performance</div>
+          </div>
+          <span style={{ background: 'rgba(39, 245, 255, 0.14)', border: '1px solid rgba(39,245,255,0.28)', borderRadius: 999, color: '#28f0ff', fontSize: 15, fontWeight: 760, padding: '9px 13px' }}>Live</span>
+        </div>
+
+        <div style={{ display: 'grid', gap: 18, gridTemplateColumns: '1fr 1fr' }}>
+          <KpiTile accent="#bf5cff" delay={0} label="Avg first reply time" value="30m 15s" />
+          <KpiTile accent="#13cfe8" delay={8} label="Avg full resolve time" value="22h 40m" />
+        </div>
+
+        <div style={{ background: '#171b34', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 22, marginTop: 18, padding: 22 }}>
+          <div style={{ color: '#ffffff', fontSize: 19, fontWeight: 760, marginBottom: 20 }}>Tickets created vs solved</div>
+          <svg height="230" viewBox="0 0 850 230" width="100%">
+            {[0, 1, 2, 3, 4].map((line) => <line key={line} stroke="rgba(255,255,255,0.07)" strokeWidth="1" x1="0" x2="850" y1={line * 48 + 18} y2={line * 48 + 18} />)}
+            <path d="M0 176 C70 124 96 126 140 148 C198 176 242 82 292 110 C360 148 390 162 450 98 C526 18 560 90 620 104 C696 122 748 82 850 70" fill="none" pathLength="1" stroke="#22d3ee" strokeDasharray="1" strokeDashoffset={1 - lineProgress} strokeLinecap="round" strokeWidth="5" />
+            <path d="M0 188 C70 150 108 132 154 158 C214 190 250 106 304 122 C370 140 410 180 470 118 C535 52 585 114 640 128 C720 150 760 104 850 96" fill="none" pathLength="1" stroke="#d946ef" strokeDasharray="1" strokeDashoffset={1 - lineProgress} strokeLinecap="round" strokeWidth="5" />
+          </svg>
+        </div>
+
+        <div style={{ display: 'grid', gap: 18, gridTemplateColumns: '1fr 1fr', marginTop: 18 }}>
+          <div style={{ background: '#171b34', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 22, minHeight: 230, padding: 20 }}>
+            <div style={{ color: '#ffffff', fontSize: 18, fontWeight: 760, marginBottom: 16 }}>Tickets by type</div>
+            <div style={{ alignItems: 'center', display: 'grid', height: 154, justifyItems: 'center' }}>
+              <div style={{ background: `conic-gradient(#18d7ff 0 ${lineProgress * 42}%, #2266ff ${lineProgress * 42}% ${lineProgress * 72}%, #d946ef ${lineProgress * 72}% ${lineProgress * 100}%, rgba(255,255,255,0.08) 0)`, borderRadius: 999, height: 142, position: 'relative', width: 142 }}>
+                <span style={{ background: '#171b34', borderRadius: 999, inset: 34, position: 'absolute' }} />
+              </div>
+            </div>
+          </div>
+          <div style={{ background: '#171b34', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 22, minHeight: 230, padding: 20 }}>
+            <div style={{ color: '#ffffff', fontSize: 18, fontWeight: 760, marginBottom: 16 }}>Tickets / week day</div>
+            <div style={{ alignItems: 'end', display: 'flex', gap: 14, height: 160, padding: '8px 6px 0' }}>
+              {bars.map((height, index) => <span key={height} style={{ background: index === 4 ? '#14f1ff' : '#2b68ff', borderRadius: 8, flex: 1, height: height * p(frame, 372 + index * 4, 392 + index * 4) }} />)}
+            </div>
+          </div>
+        </div>
+      </div>
+      <div style={{ background: '#050505', borderRadius: 999, bottom: 18, height: 12, left: '50%', position: 'absolute', transform: 'translateX(-50%)', width: 380 }} />
+    </div>
+  )
+}
+
 export function ChatbotToDashboardMobileAnimation() {
   return (
     <AbsoluteFill style={{ background: '#fbfaf7', color: INK, fontFamily: FONT, overflow: 'hidden' }}>
       <MobileDashboardChatScene />
       <MobileDashboardScene />
+      <NativeDashboardScene />
     </AbsoluteFill>
   )
 }
