@@ -327,23 +327,27 @@ function MobilePptCard({ click, progress }: { click: number; progress: number })
     <div
       style={{
         alignItems: 'center',
-        background: click > 0.45 ? '#f4f1ec' : '#fffefb',
+        background: click > 0.45 ? '#f7f7f7' : '#ffffff',
         border: '1.5px solid #d6cec3',
         borderRadius: 28,
         boxShadow: '0 18px 42px rgba(50, 45, 35, 0.10)',
         display: 'grid',
-        gridTemplateColumns: '150px 1fr',
+        gridTemplateColumns: '174px 1fr',
         height: 142,
         opacity: progress,
         overflow: 'hidden',
-        padding: '0 34px 0 0',
+        padding: '0 34px',
         transform: `translateY(${(1 - progress) * 22}px) scale(${1 - Math.sin(click * Math.PI) * 0.018})`,
-        width: 914,
+        width: '100%',
       }}
     >
-      <div style={{ alignItems: 'center', alignSelf: 'stretch', display: 'flex', justifyContent: 'center', overflow: 'hidden', position: 'relative' }}>
-        <div style={{ alignItems: 'center', background: '#fbfaf7', border: '1.5px solid #d8d0c4', borderRadius: 18, display: 'flex', height: 126, justifyContent: 'center', left: 34, position: 'absolute', top: 18, transform: 'rotate(-6deg)', width: 126 }}>
-          <Presentation color="#252525" size={46} strokeWidth={1.9} />
+      <div style={{ alignItems: 'center', alignSelf: 'stretch', display: 'flex', justifyContent: 'flex-start', overflow: 'hidden', position: 'relative' }}>
+        <div style={{ alignItems: 'center', background: '#fbfaf7', border: '1.5px solid #d8d0c4', borderRadius: 18, display: 'flex', height: 126, justifyContent: 'center', transform: 'rotate(-6deg)', width: 126 }}>
+          <div style={{ alignItems: 'center', border: '3px solid #252525', borderRadius: 5, display: 'flex', height: 42, justifyContent: 'center', position: 'relative', width: 34 }}>
+            <span style={{ borderBottom: '10px solid transparent', borderLeft: '10px solid #252525', height: 0, position: 'absolute', right: -3, top: -3, width: 0 }} />
+            <span style={{ background: '#252525', borderRadius: 999, height: 4, position: 'absolute', top: 14, width: 16 }} />
+            <span style={{ background: '#252525', borderRadius: 999, height: 4, position: 'absolute', top: 23, width: 16 }} />
+          </div>
         </div>
       </div>
       <div style={{ display: 'grid', gap: 10, minWidth: 0 }}>
