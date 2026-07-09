@@ -8,7 +8,7 @@ loadSfProFonts()
 
 export const COWORK_POWERPOINT_EXPORT_DURATION = 225
 export const COWORK_POWERPOINT_EXPORT_MOBILE_DURATION = 650
-export const CHATBOT_DASHBOARD_MOBILE_DURATION = 430
+export const CHATBOT_DASHBOARD_MOBILE_DURATION = 520
 export const CLAUDE_POWERPOINT_OUTLINE_MOBILE_DURATION = 285
 export const CHATGPT_POWERPOINT_OUTLINE_MOBILE_DURATION = 285
 
@@ -744,14 +744,15 @@ function MobileDashboardScene() {
   )
 }
 
-function KpiTile({ accent, delay, label, value }: { accent: string; delay: number; label: string; value: string }) {
+function KpiTile({ accent, delay, label, sublabel, value }: { accent: string; delay: number; label: string; sublabel: string; value: string }) {
   const frame = useCurrentFrame()
   const progress = p(frame, 330 + delay, 348 + delay)
 
   return (
-    <div style={{ background: `linear-gradient(135deg, ${accent}, rgba(255,255,255,0.08))`, border: '1px solid rgba(255,255,255,0.08)', borderRadius: 20, boxShadow: '0 16px 44px rgba(0,0,0,0.22)', minHeight: 120, opacity: progress, padding: 22, transform: `translateY(${(1 - progress) * 20}px) scale(${0.96 + progress * 0.04})` }}>
-      <div style={{ color: 'rgba(255,255,255,0.72)', fontSize: 18, fontWeight: 650, letterSpacing: 0 }}>{label}</div>
-      <div style={{ color: '#ffffff', fontSize: 44, fontWeight: 780, letterSpacing: -0.4, marginTop: 12 }}>{value}</div>
+    <div style={{ background: `linear-gradient(135deg, ${accent}, rgba(255,255,255,0.08))`, border: '1px solid rgba(255,255,255,0.08)', borderRadius: 18, boxShadow: '0 16px 44px rgba(0,0,0,0.18)', minHeight: 112, opacity: progress, padding: 18, transform: `translateY(${(1 - progress) * 20}px) scale(${0.96 + progress * 0.04})` }}>
+      <div style={{ color: 'rgba(255,255,255,0.68)', fontSize: 14, fontWeight: 700, letterSpacing: 0 }}>{label}</div>
+      <div style={{ color: '#ffffff', fontSize: 32, fontWeight: 820, letterSpacing: -0.2, marginTop: 9 }}>{value}</div>
+      <div style={{ color: 'rgba(255,255,255,0.56)', fontSize: 12, fontWeight: 650, marginTop: 7 }}>{sublabel}</div>
     </div>
   )
 }
@@ -760,51 +761,126 @@ function NativeDashboardScene() {
   const frame = useCurrentFrame()
   const sceneIn = p(frame, 330, 360)
   const panelIn = p(frame, 342, 370)
-  const lineProgress = p(frame, 360, 404)
-  const bars = [120, 48, 162, 78, 210, 130]
+  const lineProgress = p(frame, 372, 430)
+  const bars = [116, 48, 152, 82, 206, 132, 168]
+  const channels = [
+    ['Email', '4.8k', 84, '#22d3ee'],
+    ['Chat', '3.6k', 68, '#d946ef'],
+    ['WhatsApp', '2.9k', 54, '#8b5cf6'],
+    ['Phone', '1.1k', 28, '#38bdf8'],
+  ]
+  const queue = [
+    ['Enterprise', '18 open', '#f97316'],
+    ['Billing', '12 open', '#22d3ee'],
+    ['Onboarding', '9 open', '#d946ef'],
+  ]
 
   return (
-    <div style={{ background: '#171a2f', bottom: 0, left: 0, opacity: sceneIn, position: 'absolute', right: 0, top: 0 }}>
+    <div style={{ background: '#15182a', bottom: 0, left: 0, opacity: sceneIn, position: 'absolute', right: 0, top: 0 }}>
       <MobileStatusBar />
       <div style={{ color: '#d6d7e3', fontSize: 22, fontWeight: 700, left: 66, letterSpacing: 0, position: 'absolute', top: 150 }}>
         CRM Dashboard
       </div>
-      <div style={{ background: '#111426', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 32, boxShadow: '0 34px 92px rgba(0,0,0,0.34)', left: 42, minHeight: 930, opacity: panelIn, overflow: 'hidden', padding: 28, position: 'absolute', right: 42, top: 450, transform: `translateY(${(1 - panelIn) * 34}px) scale(${0.96 + panelIn * 0.04})` }}>
+      <div style={{ background: '#101426', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 34, boxShadow: '0 34px 92px rgba(0,0,0,0.36)', left: 38, minHeight: 1240, opacity: panelIn, overflow: 'hidden', padding: 26, position: 'absolute', right: 38, top: 336, transform: `translateY(${(1 - panelIn) * 34}px) scale(${0.96 + panelIn * 0.04})` }}>
         <div style={{ alignItems: 'center', display: 'flex', justifyContent: 'space-between', marginBottom: 24 }}>
           <div>
-            <div style={{ color: '#ffffff', fontSize: 26, fontWeight: 800, letterSpacing: 0 }}>CRM Dashboard</div>
-            <div style={{ color: 'rgba(255,255,255,0.52)', fontSize: 16, fontWeight: 520, marginTop: 6 }}>Live support performance</div>
+            <div style={{ color: '#ffffff', fontSize: 28, fontWeight: 850, letterSpacing: 0 }}>CRM Command Center</div>
+            <div style={{ color: 'rgba(255,255,255,0.52)', fontSize: 16, fontWeight: 520, marginTop: 6 }}>Tickets, response time, channels and SLA health</div>
           </div>
           <span style={{ background: 'rgba(39, 245, 255, 0.14)', border: '1px solid rgba(39,245,255,0.28)', borderRadius: 999, color: '#28f0ff', fontSize: 15, fontWeight: 760, padding: '9px 13px' }}>Live</span>
         </div>
 
-        <div style={{ display: 'grid', gap: 18, gridTemplateColumns: '1fr 1fr' }}>
-          <KpiTile accent="#bf5cff" delay={0} label="Avg first reply time" value="30m 15s" />
-          <KpiTile accent="#13cfe8" delay={8} label="Avg full resolve time" value="22h 40m" />
+        <div style={{ display: 'grid', gap: 14, gridTemplateColumns: 'repeat(3, 1fr)' }}>
+          <KpiTile accent="#9b5cff" delay={0} label="First reply" sublabel="-18% vs last week" value="30m" />
+          <KpiTile accent="#0fbfd7" delay={5} label="Resolution" sublabel="SLA target met" value="22h" />
+          <KpiTile accent="#3157ff" delay={10} label="Tickets" sublabel="+12% volume" value="12.4k" />
+          <KpiTile accent="#d946ef" delay={15} label="CSAT" sublabel="+4.2 points" value="94%" />
+          <KpiTile accent="#14b8a6" delay={20} label="Backlog" sublabel="312 urgent" value="1.2k" />
+          <KpiTile accent="#f97316" delay={25} label="Escalations" sublabel="48 high risk" value="7.8%" />
         </div>
 
-        <div style={{ background: '#171b34', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 22, marginTop: 18, padding: 22 }}>
-          <div style={{ color: '#ffffff', fontSize: 19, fontWeight: 760, marginBottom: 20 }}>Tickets created vs solved</div>
-          <svg height="230" viewBox="0 0 850 230" width="100%">
-            {[0, 1, 2, 3, 4].map((line) => <line key={line} stroke="rgba(255,255,255,0.07)" strokeWidth="1" x1="0" x2="850" y1={line * 48 + 18} y2={line * 48 + 18} />)}
-            <path d="M0 176 C70 124 96 126 140 148 C198 176 242 82 292 110 C360 148 390 162 450 98 C526 18 560 90 620 104 C696 122 748 82 850 70" fill="none" pathLength="1" stroke="#22d3ee" strokeDasharray="1" strokeDashoffset={1 - lineProgress} strokeLinecap="round" strokeWidth="5" />
-            <path d="M0 188 C70 150 108 132 154 158 C214 190 250 106 304 122 C370 140 410 180 470 118 C535 52 585 114 640 128 C720 150 760 104 850 96" fill="none" pathLength="1" stroke="#d946ef" strokeDasharray="1" strokeDashoffset={1 - lineProgress} strokeLinecap="round" strokeWidth="5" />
+        <div style={{ background: '#171b34', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 24, marginTop: 16, padding: 22 }}>
+          <div style={{ alignItems: 'center', display: 'flex', justifyContent: 'space-between', marginBottom: 16 }}>
+            <div>
+              <div style={{ color: '#ffffff', fontSize: 20, fontWeight: 790 }}>Tickets created vs solved</div>
+              <div style={{ color: 'rgba(255,255,255,0.48)', fontSize: 13, fontWeight: 560, marginTop: 4 }}>Daily trend across all channels</div>
+            </div>
+            <div style={{ alignItems: 'center', color: 'rgba(255,255,255,0.62)', display: 'flex', fontSize: 12, fontWeight: 700, gap: 14 }}>
+              <span><i style={{ background: '#22d3ee', borderRadius: 999, display: 'inline-block', height: 8, marginRight: 6, width: 8 }} />Created</span>
+              <span><i style={{ background: '#d946ef', borderRadius: 999, display: 'inline-block', height: 8, marginRight: 6, width: 8 }} />Solved</span>
+            </div>
+          </div>
+          <svg height="250" viewBox="0 0 850 250" width="100%">
+            {[0, 1, 2, 3, 4].map((line) => <line key={line} stroke="rgba(255,255,255,0.07)" strokeWidth="1" x1="0" x2="850" y1={line * 52 + 18} y2={line * 52 + 18} />)}
+            <path d="M0 194 C58 138 98 142 146 158 C202 176 230 86 292 104 C360 128 388 164 456 96 C520 30 574 74 620 92 C700 122 746 70 850 62" fill="none" pathLength="1" stroke="#22d3ee" strokeDasharray="1" strokeDashoffset={1 - lineProgress} strokeLinecap="round" strokeWidth="5" />
+            <path d="M0 210 C62 164 112 142 160 174 C216 206 252 118 308 130 C372 144 410 190 474 124 C542 62 594 122 650 136 C722 154 764 112 850 104" fill="none" pathLength="1" stroke="#d946ef" strokeDasharray="1" strokeDashoffset={1 - lineProgress} strokeLinecap="round" strokeWidth="5" />
+            <circle cx="620" cy="92" fill="#22d3ee" opacity={lineProgress} r="8" />
+            <circle cx="650" cy="136" fill="#d946ef" opacity={lineProgress} r="8" />
           </svg>
         </div>
 
-        <div style={{ display: 'grid', gap: 18, gridTemplateColumns: '1fr 1fr', marginTop: 18 }}>
-          <div style={{ background: '#171b34', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 22, minHeight: 230, padding: 20 }}>
-            <div style={{ color: '#ffffff', fontSize: 18, fontWeight: 760, marginBottom: 16 }}>Tickets by type</div>
-            <div style={{ alignItems: 'center', display: 'grid', height: 154, justifyItems: 'center' }}>
-              <div style={{ background: `conic-gradient(#18d7ff 0 ${lineProgress * 42}%, #2266ff ${lineProgress * 42}% ${lineProgress * 72}%, #d946ef ${lineProgress * 72}% ${lineProgress * 100}%, rgba(255,255,255,0.08) 0)`, borderRadius: 999, height: 142, position: 'relative', width: 142 }}>
-                <span style={{ background: '#171b34', borderRadius: 999, inset: 34, position: 'absolute' }} />
+        <div style={{ display: 'grid', gap: 16, gridTemplateColumns: '1.05fr 0.95fr', marginTop: 16 }}>
+          <div style={{ background: '#171b34', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 24, minHeight: 292, padding: 20 }}>
+            <div style={{ color: '#ffffff', fontSize: 18, fontWeight: 790, marginBottom: 14 }}>Channel mix</div>
+            <div style={{ display: 'grid', gap: 14, gridTemplateColumns: '180px 1fr' }}>
+              <div style={{ alignItems: 'center', display: 'grid', height: 190, justifyItems: 'center' }}>
+                <div style={{ background: `conic-gradient(#18d7ff 0 ${lineProgress * 34}%, #2266ff ${lineProgress * 34}% ${lineProgress * 58}%, #d946ef ${lineProgress * 58}% ${lineProgress * 82}%, #8b5cf6 ${lineProgress * 82}% ${lineProgress * 100}%, rgba(255,255,255,0.08) 0)`, borderRadius: 999, height: 172, position: 'relative', width: 172 }}>
+                  <span style={{ background: '#171b34', borderRadius: 999, inset: 42, position: 'absolute' }} />
+                  <span style={{ color: '#ffffff', fontSize: 24, fontWeight: 850, left: 0, lineHeight: '172px', position: 'absolute', textAlign: 'center', top: 0, width: 172 }}>12.4k</span>
+                </div>
+              </div>
+              <div style={{ display: 'grid', gap: 12, paddingTop: 6 }}>
+                {channels.map(([name, value, width, color], index) => (
+                  <div key={name} style={{ display: 'grid', gap: 6 }}>
+                    <div style={{ alignItems: 'center', color: '#ffffff', display: 'flex', fontSize: 13, fontWeight: 720, justifyContent: 'space-between' }}>
+                      <span>{name}</span>
+                      <span style={{ color: 'rgba(255,255,255,0.58)' }}>{value}</span>
+                    </div>
+                    <div style={{ background: 'rgba(255,255,255,0.08)', borderRadius: 999, height: 8, overflow: 'hidden' }}>
+                      <span style={{ background: color, borderRadius: 999, display: 'block', height: 8, width: `${Number(width) * p(frame, 378 + index * 4, 404 + index * 4)}%` }} />
+                    </div>
+                  </div>
+                ))}
               </div>
             </div>
           </div>
-          <div style={{ background: '#171b34', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 22, minHeight: 230, padding: 20 }}>
-            <div style={{ color: '#ffffff', fontSize: 18, fontWeight: 760, marginBottom: 16 }}>Tickets / week day</div>
-            <div style={{ alignItems: 'end', display: 'flex', gap: 14, height: 160, padding: '8px 6px 0' }}>
-              {bars.map((height, index) => <span key={height} style={{ background: index === 4 ? '#14f1ff' : '#2b68ff', borderRadius: 8, flex: 1, height: height * p(frame, 372 + index * 4, 392 + index * 4) }} />)}
+          <div style={{ background: '#171b34', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 24, minHeight: 292, padding: 20 }}>
+            <div style={{ color: '#ffffff', fontSize: 18, fontWeight: 790, marginBottom: 14 }}>Tickets / weekday</div>
+            <div style={{ alignItems: 'end', borderBottom: '1px solid rgba(255,255,255,0.08)', display: 'flex', gap: 12, height: 196, padding: '8px 6px 0' }}>
+              {bars.map((height, index) => <span key={height} style={{ background: index === 4 ? '#14f1ff' : '#2b68ff', borderRadius: 8, flex: 1, height: height * p(frame, 382 + index * 4, 410 + index * 4) }} />)}
+            </div>
+            <div style={{ color: 'rgba(255,255,255,0.46)', display: 'grid', fontSize: 10, fontWeight: 760, gridTemplateColumns: 'repeat(7, 1fr)', marginTop: 10, textAlign: 'center' }}>
+              {['M', 'T', 'W', 'T', 'F', 'S', 'S'].map((day, index) => <span key={`${day}-${index}`}>{day}</span>)}
+            </div>
+          </div>
+        </div>
+
+        <div style={{ display: 'grid', gap: 16, gridTemplateColumns: '1fr 1fr', marginTop: 16 }}>
+          <div style={{ background: '#171b34', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 24, minHeight: 190, padding: 20 }}>
+            <div style={{ color: '#ffffff', fontSize: 18, fontWeight: 790, marginBottom: 16 }}>Queue health</div>
+            <div style={{ display: 'grid', gap: 10 }}>
+              {queue.map(([name, value, color], index) => {
+                const rowIn = p(frame, 392 + index * 8, 412 + index * 8)
+                return (
+                  <div key={name} style={{ alignItems: 'center', background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: 14, display: 'grid', gridTemplateColumns: '14px 1fr auto', opacity: rowIn, padding: '12px 14px', transform: `translateY(${(1 - rowIn) * 12}px)` }}>
+                    <span style={{ background: color, borderRadius: 999, height: 10, width: 10 }} />
+                    <span style={{ color: '#ffffff', fontSize: 14, fontWeight: 720 }}>{name}</span>
+                    <span style={{ color: 'rgba(255,255,255,0.58)', fontSize: 13, fontWeight: 700 }}>{value}</span>
+                  </div>
+                )
+              })}
+            </div>
+          </div>
+          <div style={{ background: '#171b34', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 24, minHeight: 190, padding: 20 }}>
+            <div style={{ color: '#ffffff', fontSize: 18, fontWeight: 790, marginBottom: 18 }}>SLA coverage</div>
+            <div style={{ alignItems: 'center', display: 'grid', gap: 18, gridTemplateColumns: '138px 1fr' }}>
+              <div style={{ background: `conic-gradient(#12b76a 0 ${lineProgress * 86}%, rgba(255,255,255,0.08) 0)`, borderRadius: 999, height: 132, position: 'relative', width: 132 }}>
+                <span style={{ background: '#171b34', borderRadius: 999, inset: 28, position: 'absolute' }} />
+                <span style={{ color: '#ffffff', fontSize: 28, fontWeight: 850, left: 0, lineHeight: '132px', position: 'absolute', textAlign: 'center', top: 0, width: 132 }}>86%</span>
+              </div>
+              <div style={{ color: 'rgba(255,255,255,0.64)', fontSize: 14, fontWeight: 620, lineHeight: 1.45 }}>
+                Resolution on track across priority queues. Enterprise escalations need attention before end of day.
+              </div>
             </div>
           </div>
         </div>
