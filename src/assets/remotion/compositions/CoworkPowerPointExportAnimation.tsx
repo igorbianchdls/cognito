@@ -472,9 +472,9 @@ export function CoworkPowerPointExportMobileAnimation() {
   )
 }
 
-function ClaudeComposer() {
+function ClaudeComposer({ opacity = 1 }: { opacity?: number }) {
   return (
-    <div style={{ background: '#fbfaf8', bottom: 0, height: 340, left: 0, position: 'absolute', right: 0 }}>
+    <div style={{ background: '#fbfaf8', bottom: 0, height: 340, left: 0, opacity, position: 'absolute', right: 0 }}>
       <div style={{ background: '#fbfaf8', border: '1.5px solid #bebcb7', borderRadius: 68, boxShadow: '0 20px 48px rgba(20,24,22,0.16)', height: 254, left: 42, position: 'absolute', right: 42, top: 0 }}>
         <div style={{ color: '#77746f', fontSize: 42, fontWeight: 450, left: 36, letterSpacing: 0, lineHeight: 1, position: 'absolute', top: 53 }}>Chat with Claude</div>
         <div style={{ alignItems: 'center', display: 'flex', gap: 19, left: 22, position: 'absolute', right: 24, top: 145 }}>
@@ -555,7 +555,7 @@ function ClaudePowerPointOutlineChatScene() {
         </div>
       </div>
 
-      <ClaudeComposer />
+      <ClaudeComposer opacity={chatIn} />
 
       <div style={{ left: cursorX, opacity: cursorIn, position: 'absolute', top: cursorY, transform: `scale(${1.75 - Math.sin(click * Math.PI) * 0.16})`, zIndex: 20 }}>
         <MousePointer2 color="#111111" fill="#111111" size={28} strokeWidth={2} />
@@ -573,9 +573,9 @@ export function ClaudePowerPointOutlineMobileAnimation() {
   )
 }
 
-function ChatGptComposer() {
+function ChatGptComposer({ opacity = 1 }: { opacity?: number }) {
   return (
-    <div style={{ background: '#ffffff', bottom: 0, height: 284, left: 0, position: 'absolute', right: 0 }}>
+    <div style={{ background: '#ffffff', bottom: 0, height: 284, left: 0, opacity, position: 'absolute', right: 0 }}>
       <div style={{ alignItems: 'center', background: '#f4f4f4', border: '1px solid #e4e4e4', borderRadius: 999, display: 'grid', gridTemplateColumns: '72px 1fr 72px 72px', height: 104, left: 44, padding: '0 18px', position: 'absolute', right: 44, top: 20 }}>
         <div style={{ alignItems: 'center', background: '#ffffff', border: '1px solid #dddddd', borderRadius: 999, color: '#2d2d2d', display: 'flex', fontSize: 38, fontWeight: 300, height: 58, justifyContent: 'center', width: 58 }}>+</div>
         <div style={{ color: '#777777', fontSize: 36, fontWeight: 430, letterSpacing: 0 }}>Pergunte ao ChatGPT</div>
@@ -660,7 +660,7 @@ function ChatGptPowerPointOutlineChatScene() {
         </div>
       </div>
 
-      <ChatGptComposer />
+      <ChatGptComposer opacity={chatIn} />
 
       <div style={{ left: cursorX, opacity: cursorIn, position: 'absolute', top: cursorY, transform: `scale(${1.75 - Math.sin(click * Math.PI) * 0.16})`, zIndex: 20 }}>
         <MousePointer2 color="#111111" fill="#111111" size={28} strokeWidth={2} />
