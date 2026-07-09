@@ -118,7 +118,7 @@ export function ClaudeFlowAssistantText({ children, style }: { children: ReactNo
       style={{
         ...style,
         color: '#111111',
-        fontFamily: 'Georgia, "Times New Roman", serif',
+        fontFamily: '"Libre Baskerville", Baskerville, Georgia, "Times New Roman", serif',
         fontSize: 43,
         fontWeight: 500,
         letterSpacing: '-0.55px',

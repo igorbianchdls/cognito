@@ -12,7 +12,7 @@ export const CLAUDE_POWERPOINT_OUTLINE_MOBILE_DURATION = 285
 export const CHATGPT_POWERPOINT_OUTLINE_MOBILE_DURATION = 285
 
 const FONT = IOS_REMOTION_FONT_STACK
-const CLAUDE_RESPONSE_SERIF = 'Georgia, "Times New Roman", serif'
+const CLAUDE_RESPONSE_SERIF = '"Libre Baskerville", Baskerville, Georgia, "Times New Roman", serif'
 const BLUE = '#27316b'
 const RED = '#ef4e5f'
 const INK = '#151515'
