@@ -94,6 +94,7 @@ import { CHATGPT_POWERPOINT_OUTLINE_MOBILE_DURATION, CLAUDE_POWERPOINT_OUTLINE_M
 import { CLAUDE_FINANCIAL_AGENTS_VIDEO_DURATION, ClaudeFinancialAgentsVideo } from '@/assets/remotion/compositions/ClaudeFinancialAgentsVideo'
 import { ClaudeMobileAnimation } from '@/assets/remotion/compositions/ClaudeMobileMarketing'
 import { ClaudeOperationalFlowsVideo } from '@/assets/remotion/compositions/ClaudeOperationalFlowsVideo'
+import { BANK_RECONCILIATION_CASCADE_DURATION, BankReconciliationCascadeAnimation, EXPENSE_CLASSIFICATION_CASCADE_DURATION, ExpenseClassificationCascadeAnimation } from '@/assets/remotion/compositions/FinanceOpsCascadeAnimations'
 import { SYNC_ACCOUNTS_ANIMATION_DURATION, SyncAccountsAnimation } from '@/assets/remotion/compositions/SyncAccountsAnimation'
 import {
   ExpenseClassificationFoldersAction,
@@ -3206,6 +3207,30 @@ const catalog: CatalogItem[] = [
     label: 'Account Sync Cascade',
     tags: ['Sync', 'Accounts', 'Plaid', 'Finance', 'Integration'],
     value: 'video-account-sync-cascade',
+    width: 1280,
+  },
+  {
+    code: '<ExpenseClassificationCascadeAnimation />',
+    component: ExpenseClassificationCascadeAnimation,
+    description: 'Animacao horizontal minimalista de classificacao automatica de despesas em cascata.',
+    duration: EXPENSE_CLASSIFICATION_CASCADE_DURATION,
+    height: 720,
+    kind: 'Vídeos criados',
+    label: 'Expense Classification Cascade',
+    tags: ['Financeiro', 'Despesas', 'Classificacao', 'Automation', 'Otto'],
+    value: 'video-expense-classification-cascade',
+    width: 1280,
+  },
+  {
+    code: '<BankReconciliationCascadeAnimation />',
+    component: BankReconciliationCascadeAnimation,
+    description: 'Animacao horizontal minimalista de conciliacao bancaria com matching em cascata.',
+    duration: BANK_RECONCILIATION_CASCADE_DURATION,
+    height: 720,
+    kind: 'Vídeos criados',
+    label: 'Bank Reconciliation Cascade',
+    tags: ['Financeiro', 'Conciliacao', 'Bancos', 'Automation', 'Otto'],
+    value: 'video-bank-reconciliation-cascade',
     width: 1280,
   },
   {
