@@ -1,6 +1,8 @@
-import type { ReactNode } from 'react'
+import type { ComponentType, ReactNode } from 'react'
 import { AbsoluteFill, interpolate, useCurrentFrame } from 'remotion'
 
+import GoogleAdsIcon from '@/components/icons/GoogleAdsIcon'
+import ShopifyIcon from '@/components/icons/ShopifyIcon'
 import {
   CHATGPT_MOBILE_FONT_STACK,
   ChatGptFlowAssistantText,
@@ -14,7 +16,7 @@ import { IOS_REMOTION_FONT_STACK, loadSfProFonts } from '@/assets/remotion/fonts
 
 loadSfProFonts()
 
-export const CHATGPT_FINANCIAL_TWO_AGENTS_DURATION = 2920
+export const CHATGPT_FINANCIAL_TWO_AGENTS_DURATION = 3080
 
 const FONT = IOS_REMOTION_FONT_STACK
 
@@ -185,7 +187,7 @@ function CascadeCard({ children, label, localFrame, progressStart, subtitle, tit
 function AgentOneChat({ start }: { start: number }) {
   const frame = useCurrentFrame()
   const local = Math.max(0, frame - start)
-  const opacity = p(frame, start - 12, start + 12) * p(frame, start + 662, start + 690, [1, 0])
+  const opacity = p(frame, start - 12, start + 12) * p(frame, start + 748, start + 790, [1, 0])
   const prompt = 'Classifique as ultimas despesas e concilie bancos, cartoes e movimentacoes.'
   const conversationY = stagedScroll(local, [0, 292, 438, 588], [0, 0, -470, -980])
 
@@ -237,19 +239,40 @@ function FinancialReportCard({ progress }: { progress: number }) {
   )
 }
 
-const payableRows = [
-  { date: 'Hoje', name: 'Fornecedor Cloud', status: 'Prioridade', value: 'R$ 18.400' },
-  { date: '2 dias', name: 'Folha operacional', status: 'Programado', value: 'R$ 64.900' },
-  { date: '5 dias', name: 'Aluguel matriz', status: 'OK', value: 'R$ 12.800' },
-  { date: '7 dias', name: 'Impostos federais', status: 'Revisar', value: 'R$ 31.200' },
+type CashFlowRow = {
+  color: string
+  date: string
+  description: string
+  icon?: ComponentType<{ className?: string }>
+  initials: string
+  name: string
+  status: string
+  value: string
+}
+
+const payableRows: CashFlowRow[] = [
+  { color: '#4285f4', date: 'Hoje', description: 'Midia paga e campanhas', icon: GoogleAdsIcon, initials: 'G', name: 'Google Ads', status: 'Prioridade', value: 'R$ 18.400' },
+  { color: '#111827', date: '2 dias', description: 'Folha e beneficios', initials: 'FO', name: 'Folha operacional', status: 'Programado', value: 'R$ 64.900' },
+  { color: '#95bf47', date: '5 dias', description: 'Plano ecommerce mensal', icon: ShopifyIcon, initials: 'S', name: 'Shopify', status: 'OK', value: 'R$ 12.800' },
+  { color: '#f97316', date: '7 dias', description: 'DAS e retencoes federais', initials: 'IR', name: 'Impostos federais', status: 'Revisar', value: 'R$ 31.200' },
 ]
 
-const receivableRows = [
-  { date: 'Hoje', name: 'Cliente Norte', status: 'Confirmado', value: 'R$ 42.100' },
-  { date: '3 dias', name: 'Grupo Delta', status: 'A vencer', value: 'R$ 76.500' },
-  { date: '8 dias', name: 'Mercado Sul', status: 'Atraso leve', value: 'R$ 28.900' },
-  { date: '12 dias', name: 'Canal B2B', status: 'Confirmado', value: 'R$ 54.700' },
+const receivableRows: CashFlowRow[] = [
+  { color: '#0ea5e9', date: 'Hoje', description: 'NF-9031 · servicos recorrentes', initials: 'CN', name: 'Cliente Norte', status: 'Confirmado', value: 'R$ 42.100' },
+  { color: '#7c3aed', date: '3 dias', description: 'Contrato enterprise anual', initials: 'GD', name: 'Grupo Delta', status: 'A vencer', value: 'R$ 76.500' },
+  { color: '#95bf47', date: '8 dias', description: 'Pedidos integrados Shopify', icon: ShopifyIcon, initials: 'S', name: 'Mercado Sul', status: 'Atraso leve', value: 'R$ 28.900' },
+  { color: '#4285f4', date: '12 dias', description: 'Receita de campanhas Google', icon: GoogleAdsIcon, initials: 'G', name: 'Canal B2B', status: 'Confirmado', value: 'R$ 54.700' },
 ]
+
+function CashFlowSourceIcon({ row }: { row: CashFlowRow }) {
+  const Icon = row.icon
+
+  return (
+    <div style={{ alignItems: 'center', background: '#ffffff', border: '1px solid #e7edf0', borderRadius: 13, boxShadow: '0 8px 18px rgba(15, 23, 42, 0.06)', color: row.color, display: 'flex', height: 46, justifyContent: 'center', overflow: 'hidden', width: 46 }}>
+      {Icon ? <Icon className="h-8 w-8" /> : <span style={{ alignItems: 'center', background: row.color, borderRadius: 10, color: '#ffffff', display: 'flex', fontSize: 15, fontWeight: 780, height: 34, justifyContent: 'center', letterSpacing: -0.2, width: 34 }}>{row.initials}</span>}
+    </div>
+  )
+}
 
 function CashFlowTableCard({
   localFrame,
@@ -258,7 +281,7 @@ function CashFlowTableCard({
   tone,
 }: {
   localFrame: number
-  rows: Array<{ date: string; name: string; status: string; value: string }>
+  rows: CashFlowRow[]
   title: string
   tone: 'green' | 'red'
 }) {
@@ -275,8 +298,8 @@ function CashFlowTableCard({
         </div>
         <span style={{ background: soft, borderRadius: 999, color: accent, fontSize: 17, fontWeight: 700, padding: '9px 13px' }}>Atualizado</span>
       </div>
-      <div style={{ display: 'grid', gridTemplateColumns: '1.35fr 0.72fr 0.82fr', padding: '12px 24px 0' }}>
-        {['Nome', 'Valor', 'Status'].map((item) => (
+      <div style={{ display: 'grid', gridTemplateColumns: '1.58fr 0.62fr 0.8fr', padding: '12px 24px 0' }}>
+        {['Conta', 'Valor', 'Status'].map((item) => (
           <span key={item} style={{ color: '#8a8a8a', fontSize: 15, fontWeight: 700, textTransform: 'uppercase' }}>{item}</span>
         ))}
       </div>
@@ -284,10 +307,13 @@ function CashFlowTableCard({
         const rowIn = p(localFrame, 20 + index * 10, 36 + index * 10)
         const isAlert = row.status === 'Prioridade' || row.status === 'Revisar' || row.status === 'Atraso leve'
         return (
-          <div key={row.name} style={{ alignItems: 'center', borderTop: index === 0 ? '0 solid transparent' : '1px solid #f1f3f5', display: 'grid', gridTemplateColumns: '1.35fr 0.72fr 0.82fr', margin: '0 24px', minHeight: 68, opacity: rowIn, transform: `translateY(${(1 - rowIn) * 10}px)` }}>
-            <div style={{ display: 'grid', gap: 5, minWidth: 0 }}>
-              <strong style={{ color: '#111111', fontSize: 20, fontWeight: 650, letterSpacing: -0.1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{row.name}</strong>
-              <span style={{ color: '#8a8a8a', fontSize: 16, fontWeight: 430 }}>{row.date}</span>
+          <div key={row.name} style={{ alignItems: 'center', borderTop: index === 0 ? '0 solid transparent' : '1px solid #f1f3f5', display: 'grid', gridTemplateColumns: '1.58fr 0.62fr 0.8fr', margin: '0 24px', minHeight: 78, opacity: rowIn, transform: `translateY(${(1 - rowIn) * 10}px)` }}>
+            <div style={{ alignItems: 'center', display: 'grid', gap: 13, gridTemplateColumns: '46px 1fr', minWidth: 0 }}>
+              <CashFlowSourceIcon row={row} />
+              <div style={{ display: 'grid', gap: 5, minWidth: 0 }}>
+                <strong style={{ color: '#111111', fontSize: 20, fontWeight: 650, letterSpacing: -0.1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{row.name}</strong>
+                <span style={{ color: '#8a8a8a', fontSize: 15, fontWeight: 430, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{row.description} · {row.date}</span>
+              </div>
             </div>
             <span style={{ color: '#111111', fontSize: 20, fontWeight: 520 }}>{row.value}</span>
             <span style={{ background: isAlert ? '#fff7ed' : soft, borderRadius: 999, color: isAlert ? '#c2410c' : accent, fontSize: 16, fontWeight: 700, justifySelf: 'start', padding: '8px 11px' }}>{row.status}</span>
@@ -624,13 +650,13 @@ export function ChatGptFinancialTwoAgentsVideo() {
     <AbsoluteFill style={{ background: '#ffffff', color: '#111111', fontFamily: FONT, overflow: 'hidden' }}>
       <AgentOneChat start={108} />
       <PromptInputScene frame={frame} prompt="Classifique as ultimas despesas e concilie bancos, cartoes e movimentacoes." start={0} />
-      <AgentTwoChat start={828} />
-      <PromptInputScene frame={frame} prompt="Veja as ultimas contas a pagar e a receber e crie um relatorio com dashboard de fluxo de caixa." start={720} />
-      <ReportSlideScene start={1660} />
-      <DashboardScene end={1960} start={1802} />
-      <AgentThreeChat start={2110} />
-      <PromptInputScene frame={frame} prompt="Organize documentos, notas fiscais e impostos pendentes, e emita a nota fiscal do ultimo servico aprovado." start={2002} />
-      <InvoiceIssuedScene start={2720} />
+      <AgentTwoChat start={988} />
+      <PromptInputScene frame={frame} prompt="Veja as ultimas contas a pagar e a receber e crie um relatorio com dashboard de fluxo de caixa." start={880} />
+      <ReportSlideScene start={1820} />
+      <DashboardScene end={2120} start={1962} />
+      <AgentThreeChat start={2270} />
+      <PromptInputScene frame={frame} prompt="Organize documentos, notas fiscais e impostos pendentes, e emita a nota fiscal do ultimo servico aprovado." start={2162} />
+      <InvoiceIssuedScene start={2880} />
     </AbsoluteFill>
   )
 }
