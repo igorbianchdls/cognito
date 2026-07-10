@@ -115,6 +115,7 @@ function ChatGptFinancialPromptScene({ frame, prompt }: { frame: number; prompt:
   const sceneIn = interpolate(frame, [0, 18], [0, 1], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' })
   const sceneOut = interpolate(frame, [78, 106], [1, 0], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' })
   const promptProgress = interpolate(frame, [12, 76], [0, 1], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' })
+  const inputHeight = interpolate(promptProgress, [0, 0.48, 1], [104, 104, 176], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' })
   const text = prompt.slice(0, Math.ceil(prompt.length * promptProgress))
 
   return (
@@ -133,15 +134,16 @@ function ChatGptFinancialPromptScene({ frame, prompt }: { frame: number; prompt:
           style={{
             alignItems: 'center',
             background: '#f1f1f1',
-            borderRadius: 999,
+            borderRadius: inputHeight > 124 ? 48 : 999,
             display: 'flex',
-            height: 104,
-            padding: '0 13px 0 33px',
+            height: inputHeight,
+            minHeight: 104,
+            padding: inputHeight > 124 ? '28px 13px 26px 33px' : '0 13px 0 33px',
             width: 944,
           }}
         >
           <span style={{ color: '#333333', fontSize: 54, fontWeight: 300, lineHeight: 1, marginRight: 34 }}>+</span>
-          <span style={{ color: '#111111', flex: 1, fontSize: 34, fontWeight: 400, letterSpacing: 0, lineHeight: 1.16, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+          <span style={{ color: '#111111', flex: 1, fontSize: 34, fontWeight: 400, letterSpacing: 0, lineHeight: 1.18, maxHeight: 96, overflow: 'hidden', whiteSpace: 'normal', wordBreak: 'normal' }}>
             {text}
             {promptProgress > 0 && promptProgress < 1 ? <span style={{ background: '#111111', display: frame % 18 < 9 ? 'inline-block' : 'none', height: 36, marginLeft: 4, transform: 'translateY(6px)', width: 3 }} /> : null}
           </span>
