@@ -2,6 +2,7 @@ import type { ComponentType, ReactNode } from 'react'
 import { AbsoluteFill, interpolate, useCurrentFrame } from 'remotion'
 
 import GoogleAdsIcon from '@/components/icons/GoogleAdsIcon'
+import MetaIcon from '@/components/icons/MetaIcon'
 import ShopifyIcon from '@/components/icons/ShopifyIcon'
 import {
   CHATGPT_MOBILE_FONT_STACK,
@@ -44,22 +45,22 @@ function PromptInputScene({ frame, prompt, start }: { frame: number; prompt: str
   const sceneIn = p(local, 0, 18)
   const sceneOut = p(local, 78, 106, [1, 0])
   const promptProgress = p(local, 12, 76)
-  const inputHeight = interpolate(promptProgress, [0, 0.48, 1], [104, 104, 176], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' })
+  const inputHeight = interpolate(promptProgress, [0, 0.48, 1], [104, 104, 216], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' })
   const text = typed(prompt, promptProgress)
 
   return (
     <AbsoluteFill style={{ background: '#ffffff', color: '#111111', fontFamily: CHATGPT_MOBILE_FONT_STACK, opacity: sceneIn * sceneOut, overflow: 'hidden', transform: `translateY(${(1 - sceneIn) * 20 - (1 - sceneOut) * 18}px)` }}>
       <div style={{ alignItems: 'center', display: 'flex', inset: 0, justifyContent: 'center', position: 'absolute' }}>
-        <div style={{ alignItems: 'center', background: '#f1f1f1', borderRadius: inputHeight > 124 ? 48 : 999, display: 'flex', height: inputHeight, minHeight: 104, padding: inputHeight > 124 ? '28px 13px 26px 33px' : '0 13px 0 33px', width: 944 }}>
+        <div style={{ alignItems: inputHeight > 124 ? 'flex-start' : 'center', background: '#f1f1f1', borderRadius: inputHeight > 124 ? 48 : 999, display: 'flex', height: inputHeight, minHeight: 104, padding: inputHeight > 124 ? '30px 13px 30px 33px' : '0 13px 0 33px', width: 944 }}>
           <span style={{ color: '#333333', fontSize: 54, fontWeight: 300, lineHeight: 1, marginRight: 34 }}>+</span>
-          <span style={{ color: '#111111', flex: 1, fontSize: 34, fontWeight: 400, letterSpacing: 0, lineHeight: 1.18, maxHeight: 96, overflow: 'hidden', whiteSpace: 'normal', wordBreak: 'normal' }}>
+          <span style={{ color: '#111111', flex: 1, fontSize: 34, fontWeight: 400, letterSpacing: 0, lineHeight: 1.2, maxHeight: 132, overflow: 'hidden', whiteSpace: 'normal', wordBreak: 'normal' }}>
             {text}
             {promptProgress > 0 && promptProgress < 1 ? <span style={{ background: '#111111', display: local % 18 < 9 ? 'inline-block' : 'none', height: 36, marginLeft: 4, transform: 'translateY(6px)', width: 3 }} /> : null}
           </span>
-          <div style={{ alignItems: 'center', display: 'flex', gap: 6, height: 62, justifyContent: 'center', marginLeft: 20, width: 62 }}>
+          <div style={{ alignItems: 'center', display: 'flex', gap: 6, height: 62, justifyContent: 'center', marginLeft: 20, marginTop: inputHeight > 124 ? 4 : 0, width: 62 }}>
             {[21, 34, 45, 34, 21].map((height, index) => <span key={`${height}-${index}`} style={{ background: '#333333', borderRadius: 999, display: 'block', height, width: 5 }} />)}
           </div>
-          <div style={{ alignItems: 'center', background: '#007aff', borderRadius: 999, display: 'flex', gap: 5, height: 78, justifyContent: 'center', marginLeft: 10, width: 78 }}>
+          <div style={{ alignItems: 'center', background: '#007aff', borderRadius: 999, display: 'flex', gap: 5, height: 78, justifyContent: 'center', marginLeft: 10, marginTop: inputHeight > 124 ? -4 : 0, width: 78 }}>
             {[20, 35, 48, 35, 20].map((height, index) => <span key={`${height}-${index}`} style={{ background: '#ffffff', borderRadius: 999, height, width: 6 }} />)}
           </div>
         </div>
@@ -89,18 +90,26 @@ function Spinner({ active }: { active: boolean }) {
   )
 }
 
+type IconRow = {
+  color: string
+  description: string
+  icon?: ComponentType<{ className?: string }>
+  initials: string
+  name: string
+}
+
 const expenses = [
-  { amount: 'R$ 1.280', category: 'Software', completeAt: 68, name: 'OpenAI API', tone: '#eef6ff' },
-  { amount: 'R$ 420', category: 'Marketing', completeAt: 80, name: 'Meta Ads', tone: '#f0f7ff' },
-  { amount: 'R$ 189', category: 'Tarifa bancaria', completeAt: 92, name: 'Banco Inter', tone: '#fff7ed' },
-  { amount: 'R$ 2.450', category: 'Logistica', completeAt: 104, name: 'Correios', tone: '#f4f9f2' },
+  { amount: 'R$ 1.280', category: 'Software', color: '#111827', completeAt: 68, description: 'Uso de API e automacao', initials: 'AI', name: 'OpenAI API', tone: '#eef6ff' },
+  { amount: 'R$ 420', category: 'Marketing', color: '#1877f2', completeAt: 80, description: 'Campanhas de aquisicao', icon: MetaIcon, initials: 'M', name: 'Meta Ads', tone: '#f0f7ff' },
+  { amount: 'R$ 189', category: 'Tarifa bancaria', color: '#f97316', completeAt: 92, description: 'Pacote e TED bancaria', initials: 'BI', name: 'Banco Inter', tone: '#fff7ed' },
+  { amount: 'R$ 2.450', category: 'Logistica', color: '#facc15', completeAt: 104, description: 'Envios e fretes nacionais', initials: 'CO', name: 'Correios', tone: '#f4f9f2' },
 ]
 
 const reconciliations = [
-  { bank: 'PIX Cliente Norte', completeAt: 76, erp: 'NF-9031', status: 'Conciliado', value: 'R$ 42.100' },
-  { bank: 'Cartao Stone', completeAt: 88, erp: 'Lote-552', status: 'Conciliado', value: 'R$ 68.900' },
-  { bank: 'Tarifa bancaria', completeAt: 100, erp: 'Sem lancamento', status: 'Revisar', value: 'R$ 189' },
-  { bank: 'Boleto Fornecedor', completeAt: 112, erp: 'CP-1182', status: 'Conciliado', value: 'R$ 12.430' },
+  { bank: 'PIX Cliente Norte', color: '#0ea5e9', completeAt: 76, description: 'Conta azul · recebimento', erp: 'NF-9031', initials: 'CN', status: 'Conciliado', value: 'R$ 42.100' },
+  { bank: 'Cartao Stone', color: '#111827', completeAt: 88, description: 'Adquirente · lote diario', erp: 'Lote-552', initials: 'ST', status: 'Conciliado', value: 'R$ 68.900' },
+  { bank: 'Tarifa bancaria', color: '#f97316', completeAt: 100, description: 'Banco Inter · taxa avulsa', erp: 'Sem lancamento', initials: 'BI', status: 'Revisar', value: 'R$ 189' },
+  { bank: 'Boleto Fornecedor', color: '#95bf47', completeAt: 112, description: 'Shopify · assinatura loja', icon: ShopifyIcon, erp: 'CP-1182', initials: 'S', status: 'Conciliado', value: 'R$ 12.430' },
 ]
 
 function MiniMark({ color = '#111111' }: { color?: string }) {
@@ -111,11 +120,12 @@ function MiniMark({ color = '#111111' }: { color?: string }) {
   )
 }
 
-function ExpenseIcon({ tone }: { tone: string }) {
+function BrandIconBox({ row }: { row: IconRow }) {
+  const Icon = row.icon
+
   return (
-    <div style={{ alignItems: 'center', background: tone, border: '1px solid #e7edf0', borderRadius: 10, display: 'grid', height: 38, justifyItems: 'center', width: 38 }}>
-      <span style={{ background: '#111111', borderRadius: 3, height: 5, width: 20 }} />
-      <span style={{ background: '#111111', borderRadius: 999, height: 7, width: 7 }} />
+    <div style={{ alignItems: 'center', background: '#ffffff', border: '1px solid #e7edf0', borderRadius: 12, boxShadow: '0 8px 18px rgba(15, 23, 42, 0.06)', color: row.color, display: 'flex', height: 42, justifyContent: 'center', overflow: 'hidden', width: 42 }}>
+      {Icon ? <Icon className="h-7 w-7" /> : <span style={{ alignItems: 'center', background: row.color, borderRadius: 9, color: '#ffffff', display: 'flex', fontSize: 14, fontWeight: 780, height: 31, justifyContent: 'center', letterSpacing: -0.2, width: 31 }}>{row.initials}</span>}
     </div>
   )
 }
@@ -126,11 +136,11 @@ function ExpenseRow({ index, localFrame }: { index: number; localFrame: number }
   const complete = localFrame >= item.completeAt
 
   return (
-    <div style={{ alignItems: 'center', display: 'grid', gap: 18, gridTemplateColumns: '48px 1fr auto 28px', height: 72, opacity: rowIn, padding: '0 28px', transform: `translateY(${(1 - rowIn) * 18}px)` }}>
-      <ExpenseIcon tone={item.tone} />
+    <div style={{ alignItems: 'center', display: 'grid', gap: 15, gridTemplateColumns: '42px 1fr auto 28px', height: 72, opacity: rowIn, padding: '0 28px', transform: `translateY(${(1 - rowIn) * 18}px)` }}>
+      <BrandIconBox row={item} />
       <div style={{ display: 'grid', gap: 5, minWidth: 0 }}>
-        <strong style={{ color: '#111111', fontSize: 23, fontWeight: 560, letterSpacing: -0.1, lineHeight: 1 }}>{item.name}</strong>
-        <span style={{ color: '#8a8a8a', fontSize: 17, fontWeight: 420, lineHeight: 1 }}>{item.amount}</span>
+        <strong style={{ color: '#111111', fontSize: 22, fontWeight: 560, letterSpacing: -0.1, lineHeight: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{item.name}</strong>
+        <span style={{ color: '#8a8a8a', fontSize: 16, fontWeight: 420, lineHeight: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{item.description} · {item.amount}</span>
       </div>
       <span style={{ color: complete ? '#166534' : '#111111', fontSize: 21, fontWeight: 500, letterSpacing: -0.1, lineHeight: 1 }}>{complete ? item.category : 'Classificando'}</span>
       <Spinner active={!complete} />
@@ -145,10 +155,11 @@ function ReconciliationRow({ index, localFrame }: { index: number; localFrame: n
   const review = complete && item.status === 'Revisar'
 
   return (
-    <div style={{ alignItems: 'center', display: 'grid', gap: 14, gridTemplateColumns: '1fr 44px 1fr auto 28px', height: 72, opacity: rowIn, padding: '0 24px', transform: `translateY(${(1 - rowIn) * 18}px)` }}>
+    <div style={{ alignItems: 'center', display: 'grid', gap: 12, gridTemplateColumns: '42px 1fr 38px 0.78fr auto 28px', height: 72, opacity: rowIn, padding: '0 22px', transform: `translateY(${(1 - rowIn) * 18}px)` }}>
+      <BrandIconBox row={item} />
       <div style={{ display: 'grid', gap: 5, minWidth: 0 }}>
         <strong style={{ color: '#111111', fontSize: 20, fontWeight: 610, letterSpacing: -0.1, lineHeight: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{item.bank}</strong>
-        <span style={{ color: '#8a8a8a', fontSize: 16, fontWeight: 420, lineHeight: 1 }}>{item.value}</span>
+        <span style={{ color: '#8a8a8a', fontSize: 15, fontWeight: 420, lineHeight: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{item.description} · {item.value}</span>
       </div>
       <span style={{ alignItems: 'center', background: complete ? (review ? '#fff7ed' : '#ecfdf3') : '#f2f4f7', borderRadius: 999, color: complete ? (review ? '#c2410c' : '#166534') : '#667085', display: 'flex', fontSize: 20, fontWeight: 850, height: 38, justifyContent: 'center', width: 38 }}>{complete ? (review ? '!' : '✓') : '·'}</span>
       <div style={{ color: '#111111', fontSize: 20, fontWeight: 520, letterSpacing: -0.1, minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{item.erp}</div>
@@ -158,7 +169,7 @@ function ReconciliationRow({ index, localFrame }: { index: number; localFrame: n
   )
 }
 
-function CascadeCard({ children, label, localFrame, progressStart, subtitle, title }: { children: ReactNode; label: string; localFrame: number; progressStart: number; subtitle: string; title: string }) {
+function CascadeCard({ children, localFrame, progressStart, subtitle, title }: { children: ReactNode; localFrame: number; progressStart: number; subtitle: string; title: string }) {
   const show = p(localFrame, 0, 18)
   const list = p(localFrame, 34, 62)
   const cardHeight = interpolate(list, [0, 1], [112, 420], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' })
@@ -166,10 +177,6 @@ function CascadeCard({ children, label, localFrame, progressStart, subtitle, tit
 
   return (
     <div style={{ opacity: show, transform: `translateY(${(1 - show) * 18}px) scale(${0.985 + show * 0.015})` }}>
-      <div style={{ alignItems: 'center', display: 'flex', gap: 12, marginBottom: 14, paddingLeft: 10 }}>
-        <MiniMark />
-        <span style={{ color: '#777777', fontSize: 20, fontWeight: 430, letterSpacing: 0 }}>{label}</span>
-      </div>
       <div style={{ background: '#ffffff', border: '1px solid #e5e7eb', borderRadius: 30, boxShadow: '0 18px 46px rgba(15, 23, 42, 0.08)', height: cardHeight, overflow: 'hidden', padding: '16px 0' }}>
         <div style={{ alignItems: 'center', display: 'flex', justifyContent: 'space-between', padding: '0 28px 12px' }}>
           <div style={{ display: 'grid', gap: 5 }}>
@@ -200,7 +207,7 @@ function AgentOneChat({ start }: { start: number }) {
         </ChatGptFlowAssistantText>
         <ChatGptToolCallCard style={chatGptSequenceStyle(local, 150, 16)} toolName="classificar_despesas" />
         <ChatGptToolResultCard style={chatGptSequenceStyle(local, 205, 18)}>
-          <CascadeCard label="Classificando despesas sem categoria" localFrame={local - 205} progressStart={12} subtitle="Fornecedor, valor e categoria sugerida" title="Classificacao automatica">
+          <CascadeCard localFrame={local - 205} progressStart={12} subtitle="Fornecedor, valor e categoria sugerida" title="Classificacao automatica">
             {expenses.map((_, index) => <ExpenseRow key={index} index={index} localFrame={local - 205} />)}
           </CascadeCard>
         </ChatGptToolResultCard>
@@ -209,7 +216,7 @@ function AgentOneChat({ start }: { start: number }) {
         </ChatGptFlowAssistantText>
         <ChatGptToolCallCard style={chatGptSequenceStyle(local, 455, 16)} toolName="conciliar_bancos_cartoes" />
         <ChatGptToolResultCard style={chatGptSequenceStyle(local, 510, 18)}>
-          <CascadeCard label="Conciliando banco com ERP" localFrame={local - 510} progressStart={18} subtitle="Movimento bancario x registro no ERP" title="Matching de lancamentos">
+          <CascadeCard localFrame={local - 510} progressStart={18} subtitle="Movimento bancario x registro no ERP" title="Matching de lancamentos">
             {reconciliations.map((_, index) => <ReconciliationRow key={index} index={index} localFrame={local - 510} />)}
           </CascadeCard>
         </ChatGptToolResultCard>
@@ -555,13 +562,13 @@ function AgentThreeChat({ start }: { start: number }) {
         </ChatGptFlowAssistantText>
         <ChatGptToolCallCard style={chatGptSequenceStyle(local, 132, 16)} toolName="organizar_documentos_fiscais" />
         <ChatGptToolResultCard style={chatGptSequenceStyle(local, 174, 18)}>
-          <CascadeCard label="Validando documentos fiscais" localFrame={local - 174} progressStart={12} subtitle="Documentos, XML e dados do tomador" title="Documentos conferidos">
+          <CascadeCard localFrame={local - 174} progressStart={12} subtitle="Documentos, XML e dados do tomador" title="Documentos conferidos">
             {fiscalDocuments.map((_, index) => <FiscalDocumentRow key={index} index={index} localFrame={local - 174} />)}
           </CascadeCard>
         </ChatGptToolResultCard>
         <ChatGptToolCallCard style={chatGptSequenceStyle(local, 310, 16)} toolName="verificar_obrigacoes_fiscais" />
         <ChatGptToolResultCard style={chatGptSequenceStyle(local, 350, 18)}>
-          <CascadeCard label="Checando impostos e obrigacoes" localFrame={local - 350} progressStart={10} subtitle="Vencimentos, retencoes e registros fiscais" title="Obrigacoes fiscais">
+          <CascadeCard localFrame={local - 350} progressStart={10} subtitle="Vencimentos, retencoes e registros fiscais" title="Obrigacoes fiscais">
             {taxObligations.map((_, index) => <TaxObligationRow key={index} index={index} localFrame={local - 350} />)}
           </CascadeCard>
         </ChatGptToolResultCard>
