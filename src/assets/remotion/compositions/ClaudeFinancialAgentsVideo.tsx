@@ -10,12 +10,11 @@ import {
 } from '@/assets/remotion/compositions/ClaudeMobileBase'
 import { OttoAssistantHeader, fastCharacterTyping } from '@/assets/remotion/compositions/ChatGptMobileBase'
 import {
-  CHATGPT_FINANCIAL_AGENTS_VIDEO_DURATION,
   ImprovedFinancialResultCard,
   financialAgentSteps,
 } from '@/assets/remotion/compositions/ChatGptMobileMarketing'
 
-export const CLAUDE_FINANCIAL_AGENTS_VIDEO_DURATION = CHATGPT_FINANCIAL_AGENTS_VIDEO_DURATION
+export const CLAUDE_FINANCIAL_AGENTS_VIDEO_DURATION = 1820
 const CLAUDE_RESPONSE_SERIF = '"Libre Baskerville", Baskerville, Georgia, "Times New Roman", serif'
 
 function ClaudeFinancialAssistantText({ children, style }: { children: ReactNode; style: CSSProperties }) {

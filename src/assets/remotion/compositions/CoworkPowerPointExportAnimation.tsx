@@ -1,8 +1,10 @@
+import type { CSSProperties, ReactNode } from 'react'
 import { AbsoluteFill, Img, interpolate, staticFile, useCurrentFrame } from 'remotion'
 import { ChevronDown, FileText, Folder, MousePointer2, Presentation, Search, Share, Square } from 'lucide-react'
 
 import { IOS_REMOTION_FONT_STACK, loadSfProFonts } from '@/assets/remotion/fonts/sfPro'
-import { OttoAssistantHeader } from '@/assets/remotion/compositions/ChatGptMobileBase'
+import { ChatGptFlowAssistantText, ChatGptFlowUserBubble, ChatGptMobileShell, OttoAssistantHeader, chatGptSequenceStyle, fastCharacterTyping } from '@/assets/remotion/compositions/ChatGptMobileBase'
+import { ClaudeFlowUserBubble, ClaudeMobileShell, claudeSequenceStyle } from '@/assets/remotion/compositions/ClaudeMobileBase'
 
 loadSfProFonts()
 
@@ -931,72 +933,55 @@ function ClaudeComposer({ opacity = 1 }: { opacity?: number }) {
   )
 }
 
+function ClaudeOutlineAssistantText({ children, style }: { children: ReactNode; style: CSSProperties }) {
+  return (
+    <div
+      className="claude-powerpoint-response"
+      style={{
+        ...style,
+        color: '#111111',
+        fontFamily: CLAUDE_RESPONSE_SERIF,
+        fontSize: 38,
+        fontWeight: 400,
+        letterSpacing: '-0.02em',
+        lineHeight: 1.26,
+        padding: '0 42px',
+      }}
+    >
+      <OttoAssistantHeader muted="#8b857c" />
+      <span className="claude-powerpoint-response-copy" style={{ fontFamily: CLAUDE_RESPONSE_SERIF }}>
+        {fastCharacterTyping(children, style)}
+      </span>
+    </div>
+  )
+}
+
 function ClaudePowerPointOutlineChatScene() {
   const frame = useCurrentFrame()
   const promptText = 'Crie uma apresentacao executiva sobre perdas de deals no Q4.'
   const answerText = 'Montei o outline, organizei a narrativa executiva e gerei uma apresentacao pronta para abrir no PowerPoint.'
-  const promptProgress = p(frame, 12, 72)
-  const introOut = p(frame, 78, 98, [1, 0])
-  const chatIn = p(frame, 88, 110)
-  const userBubbleIn = p(frame, 96, 116)
-  const answerProgress = p(frame, 118, 172)
   const cardIn = p(frame, 164, 194)
   const cursorIn = p(frame, 198, 216)
   const click = p(frame, 218, 228, [0, 1])
   const sceneOut = p(frame, 226, 250, [1, 0])
   const cursorX = interpolate(frame, [198, 222], [790, 190], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' })
-  const cursorY = interpolate(frame, [198, 222], [1010, 955], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' })
+  const cursorY = interpolate(frame, [198, 222], [850, 610], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' })
 
   return (
     <div style={{ bottom: 0, left: 0, opacity: sceneOut, position: 'absolute', right: 0, top: 0 }}>
-      <div style={{ background: '#fbfaf8', bottom: 0, left: 0, position: 'absolute', right: 0, top: 0 }} />
-      <MobileStatusBar />
+      <ClaudeMobileShell>
+        <ClaudeFlowUserBubble style={claudeSequenceStyle(frame, 12, 18)}>
+          {promptText}
+        </ClaudeFlowUserBubble>
 
-      <div style={{ background: '#fbfaf8', border: '1.5px solid #bebcb7', borderRadius: 58, boxShadow: '0 24px 68px rgba(20,24,22,0.14)', display: 'grid', gap: 22, left: 42, minHeight: 258, opacity: introOut, padding: '34px 36px 28px', position: 'absolute', right: 42, top: 725, transform: `translateY(${(1 - introOut) * -34}px) scale(${0.96 + p(frame, 0, 22) * 0.04})` }}>
-        <div style={{ color: '#77746f', fontSize: 38, fontWeight: 450, letterSpacing: 0, opacity: promptProgress > 0.02 ? 0 : 1 }}>Chat with Claude</div>
-        <div style={{ color: '#111111', fontFamily: FONT, fontSize: 34, fontWeight: 400, letterSpacing: 0, lineHeight: 1.15, minHeight: 78, overflow: 'hidden', transform: `translateY(${promptProgress > 0.02 ? -60 : 0}px)` }}>
-          {typed(promptText, promptProgress)}
-          <span style={{ background: '#111111', display: frame % 18 < 9 ? 'inline-block' : 'none', height: 35, marginLeft: 4, transform: 'translateY(5px)', width: 3 }} />
+        <ClaudeOutlineAssistantText style={claudeSequenceStyle(frame, 74, 22)}>
+          {answerText}
+        </ClaudeOutlineAssistantText>
+
+        <div style={{ ...claudeSequenceStyle(frame, 164, 24), margin: '0 42px' }}>
+          <MobilePptCard click={click} progress={cardIn} />
         </div>
-        <div style={{ alignItems: 'center', display: 'flex', gap: 18 }}>
-          <div style={{ alignItems: 'center', background: '#efeeeb', borderRadius: 999, display: 'flex', fontSize: 28, height: 66, justifyContent: 'center', width: 66 }}>+</div>
-          <div style={{ alignItems: 'center', background: '#efeeeb', borderRadius: 999, color: '#111111', display: 'flex', fontSize: 29, fontWeight: 520, height: 66, justifyContent: 'center', padding: '0 34px', whiteSpace: 'nowrap' }}>Sonnet 4.6</div>
-          <div style={{ flex: 1 }} />
-          <div style={{ alignItems: 'center', background: '#050505', borderRadius: 999, display: 'flex', gap: 4, height: 66, justifyContent: 'center', width: 66 }}>
-            {[16, 26, 36, 26, 16].map((height, index) => <span key={`${height}-${index}`} style={{ background: '#ffffff', borderRadius: 999, height, width: 4 }} />)}
-          </div>
-        </div>
-      </div>
-
-      <div style={{ alignItems: 'center', display: 'flex', height: 118, justifyContent: 'space-between', left: 48, opacity: chatIn, position: 'absolute', right: 48, top: 106, transform: `translateY(${(1 - chatIn) * 24}px)` }}>
-        <strong style={{ color: '#333330', fontSize: 32, fontWeight: 620, letterSpacing: 0 }}>Claude</strong>
-        <span style={{ color: '#333330', fontSize: 34, fontWeight: 500, letterSpacing: 0 }}>...</span>
-      </div>
-
-      <div style={{ bottom: 368, left: 0, opacity: chatIn, overflow: 'hidden', position: 'absolute', right: 0, top: 232, transform: `translateY(${(1 - chatIn) * 34}px)` }}>
-        <div style={{ display: 'grid', gap: 38, padding: '34px 56px 180px' }}>
-          <div style={{ alignItems: 'start', display: 'grid', gridTemplateColumns: '1fr auto' }}>
-            <div />
-            <div style={{ background: '#f1f0ee', border: '1px solid #dfddd8', borderRadius: 38, color: '#111111', fontSize: 31, fontWeight: 400, letterSpacing: 0, lineHeight: 1.18, maxWidth: 760, opacity: userBubbleIn, padding: '28px 34px', transform: `translateY(${(1 - userBubbleIn) * 18}px)` }}>
-              Crie uma apresentacao executiva sobre perdas de deals no Q4.
-            </div>
-          </div>
-
-          <div className="claude-powerpoint-response" style={{ color: '#111111', display: 'grid', fontFamily: CLAUDE_RESPONSE_SERIF, fontSize: 38, fontWeight: 400, gap: 18, letterSpacing: '-0.02em', lineHeight: 1.26, padding: '0 42px' }}>
-            <OttoAssistantHeader muted="#8b857c" />
-            <div style={{ fontFamily: CLAUDE_RESPONSE_SERIF }}>
-              <span style={{ fontFamily: CLAUDE_RESPONSE_SERIF }}>
-                {typed(answerText, answerProgress)}
-              </span>
-            </div>
-            <div style={{ marginLeft: -42, marginRight: -42 }}>
-              <MobilePptCard click={click} progress={cardIn} />
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <ClaudeComposer opacity={chatIn} />
+      </ClaudeMobileShell>
 
       <div style={{ left: cursorX, opacity: cursorIn, position: 'absolute', top: cursorY, transform: `scale(${1.75 - Math.sin(click * Math.PI) * 0.16})`, zIndex: 20 }}>
         <MousePointer2 color="#111111" fill="#111111" size={28} strokeWidth={2} />
@@ -1036,72 +1021,28 @@ function ChatGptPowerPointOutlineChatScene() {
   const frame = useCurrentFrame()
   const promptText = 'Crie uma apresentacao executiva sobre perdas de deals no Q4.'
   const answerText = 'Pronto. Montei o outline, gerei a apresentacao executiva e deixei o arquivo PPTX pronto para abrir no PowerPoint.'
-  const promptProgress = p(frame, 12, 72)
-  const introOut = p(frame, 78, 98, [1, 0])
-  const chatIn = p(frame, 88, 110)
-  const userBubbleIn = p(frame, 96, 116)
-  const answerProgress = p(frame, 118, 172)
   const cardIn = p(frame, 164, 194)
   const cursorIn = p(frame, 198, 216)
   const click = p(frame, 218, 228, [0, 1])
   const sceneOut = p(frame, 226, 250, [1, 0])
   const cursorX = interpolate(frame, [198, 222], [790, 190], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' })
-  const cursorY = interpolate(frame, [198, 222], [1010, 955], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' })
+  const cursorY = interpolate(frame, [198, 222], [850, 610], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' })
 
   return (
     <div style={{ bottom: 0, left: 0, opacity: sceneOut, position: 'absolute', right: 0, top: 0 }}>
-      <div style={{ background: '#ffffff', bottom: 0, left: 0, position: 'absolute', right: 0, top: 0 }} />
-      <MobileStatusBar />
+      <ChatGptMobileShell promptInputBottom={36}>
+        <ChatGptFlowUserBubble style={chatGptSequenceStyle(frame, 12, 18)}>
+          {promptText}
+        </ChatGptFlowUserBubble>
 
-      <div style={{ background: '#f4f4f4', border: '1px solid #e4e4e4', borderRadius: 54, boxShadow: '0 24px 68px rgba(20,24,22,0.12)', display: 'grid', gap: 22, gridTemplateColumns: '72px 1fr 72px 72px', left: 44, minHeight: 180, opacity: introOut, padding: '26px 18px', position: 'absolute', right: 44, top: 780, transform: `translateY(${(1 - introOut) * -34}px) scale(${0.96 + p(frame, 0, 22) * 0.04})` }}>
-        <div style={{ alignItems: 'center', alignSelf: 'end', background: '#ffffff', border: '1px solid #dddddd', borderRadius: 999, color: '#2d2d2d', display: 'flex', fontSize: 38, fontWeight: 300, height: 58, justifyContent: 'center', width: 58 }}>+</div>
-        <div style={{ alignSelf: 'center', color: '#171717', fontSize: 30, fontWeight: 430, letterSpacing: 0, lineHeight: 1.16, minWidth: 0, overflow: 'hidden' }}>
-          {typed(promptText, promptProgress)}
-          <span style={{ background: '#171717', display: frame % 18 < 9 ? 'inline-block' : 'none', height: 35, marginLeft: 4, transform: 'translateY(5px)', width: 3 }} />
-        </div>
-        <div style={{ alignItems: 'center', alignSelf: 'end', display: 'flex', gap: 4, justifyContent: 'center' }}>
-          {[28, 42, 30].map((height, index) => <span key={`${height}-${index}`} style={{ background: '#202020', borderRadius: 999, display: 'block', height, width: 5 }} />)}
-        </div>
-        <div style={{ alignItems: 'center', alignSelf: 'end', background: '#111111', borderRadius: 999, color: '#ffffff', display: 'flex', fontSize: 26, fontWeight: 620, height: 58, justifyContent: 'center', width: 58 }}>Go</div>
-      </div>
+        <ChatGptFlowAssistantText style={chatGptSequenceStyle(frame, 74, 22)}>
+          {answerText}
+        </ChatGptFlowAssistantText>
 
-      <div style={{ alignItems: 'center', display: 'grid', gridTemplateColumns: '82px 1fr 82px 82px', height: 118, left: 36, opacity: chatIn, position: 'absolute', right: 36, top: 106, transform: `translateY(${(1 - chatIn) * 24}px)` }}>
-        <div style={{ display: 'grid', gap: 8, justifyItems: 'center' }}>
-          {[0, 1, 2].map((item) => <span key={item} style={{ background: '#111111', borderRadius: 999, display: 'block', height: 3, width: 30 }} />)}
+        <div style={{ ...chatGptSequenceStyle(frame, 164, 24), margin: '0 36px' }}>
+          <MobilePptCard click={click} progress={cardIn} />
         </div>
-        <div style={{ alignItems: 'center', display: 'flex', gap: 12, justifyContent: 'center' }}>
-          <strong style={{ color: '#171717', fontSize: 33, fontWeight: 680, letterSpacing: 0 }}>ChatGPT</strong>
-          <ChevronDown color="#6b6b6b" size={28} strokeWidth={2.2} />
-        </div>
-        <div style={{ alignItems: 'center', border: '2px solid #111111', borderRadius: 9, display: 'flex', height: 33, justifyContent: 'center', justifySelf: 'center', width: 33 }}>
-          <span style={{ background: '#111111', borderRadius: 999, display: 'block', height: 3, transform: 'rotate(-38deg)', width: 20 }} />
-        </div>
-        <div style={{ color: '#111111', fontSize: 38, fontWeight: 560, justifySelf: 'center', letterSpacing: 0, lineHeight: 1 }}>...</div>
-      </div>
-
-      <div style={{ bottom: 294, left: 0, opacity: chatIn, overflow: 'hidden', position: 'absolute', right: 0, top: 232, transform: `translateY(${(1 - chatIn) * 34}px)` }}>
-        <div style={{ display: 'grid', gap: 38, padding: '42px 56px 180px' }}>
-          <div style={{ alignItems: 'start', display: 'grid', gridTemplateColumns: '1fr auto' }}>
-            <div />
-            <div style={{ background: '#f4f4f4', borderRadius: 38, color: '#171717', fontSize: 31, fontWeight: 430, letterSpacing: 0, lineHeight: 1.2, maxWidth: 760, opacity: userBubbleIn, padding: '28px 34px', transform: `translateY(${(1 - userBubbleIn) * 18}px)` }}>
-              Crie uma apresentacao executiva sobre perdas de deals no Q4.
-            </div>
-          </div>
-
-          <div style={{ display: 'grid', gap: 20 }}>
-            <div style={{ alignItems: 'center', display: 'flex', gap: 13 }}>
-              <div style={{ alignItems: 'center', background: '#111111', borderRadius: 999, color: '#ffffff', display: 'flex', fontSize: 20, fontWeight: 760, height: 34, justifyContent: 'center', width: 34 }}>O</div>
-              <span style={{ color: '#2b2b2b', fontSize: 23, fontWeight: 700 }}>Otto</span>
-            </div>
-            <div style={{ color: '#111111', fontSize: 38, fontWeight: 420, letterSpacing: 0, lineHeight: 1.28 }}>
-              {typed(answerText, answerProgress)}
-            </div>
-            <MobilePptCard click={click} progress={cardIn} />
-          </div>
-        </div>
-      </div>
-
-      <ChatGptComposer opacity={chatIn} />
+      </ChatGptMobileShell>
 
       <div style={{ left: cursorX, opacity: cursorIn, position: 'absolute', top: cursorY, transform: `scale(${1.75 - Math.sin(click * Math.PI) * 0.16})`, zIndex: 20 }}>
         <MousePointer2 color="#111111" fill="#111111" size={28} strokeWidth={2} />

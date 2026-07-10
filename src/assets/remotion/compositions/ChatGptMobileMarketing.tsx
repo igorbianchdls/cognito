@@ -35,7 +35,9 @@ const orbitIntegrations: OrbitIntegration[] = [
   { accent: '#16a34a', icon: BlingIcon, label: 'Bling' },
 ]
 
-export const CHATGPT_FINANCIAL_AGENTS_VIDEO_DURATION = 1820
+const CHATGPT_FINANCIAL_PROMPT_OFFSET = 108
+
+export const CHATGPT_FINANCIAL_AGENTS_VIDEO_DURATION = 1928
 
 type FinancialAgentStep = {
   insight: string
@@ -106,6 +108,56 @@ function ChatGptFinancialAssistantText({ children, showHeader = true, style }: {
       {showHeader ? <OttoAssistantHeader /> : null}
       {fastCharacterTyping(children, style)}
     </div>
+  )
+}
+
+function ChatGptFinancialPromptScene({ frame, prompt }: { frame: number; prompt: string }) {
+  const sceneIn = interpolate(frame, [0, 18], [0, 1], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' })
+  const sceneOut = interpolate(frame, [78, 106], [1, 0], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' })
+  const promptProgress = interpolate(frame, [12, 76], [0, 1], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' })
+  const text = prompt.slice(0, Math.ceil(prompt.length * promptProgress))
+
+  return (
+    <AbsoluteFill
+      style={{
+        background: '#ffffff',
+        color: '#111111',
+        fontFamily: CHATGPT_MOBILE_FONT_STACK,
+        opacity: sceneIn * sceneOut,
+        overflow: 'hidden',
+        transform: `translateY(${(1 - sceneIn) * 20 - (1 - sceneOut) * 18}px)`,
+      }}
+    >
+      <div style={{ alignItems: 'center', display: 'flex', inset: 0, justifyContent: 'center', position: 'absolute' }}>
+        <div
+          style={{
+            alignItems: 'center',
+            background: '#f1f1f1',
+            borderRadius: 999,
+            display: 'flex',
+            height: 104,
+            padding: '0 13px 0 33px',
+            width: 944,
+          }}
+        >
+          <span style={{ color: '#333333', fontSize: 54, fontWeight: 300, lineHeight: 1, marginRight: 34 }}>+</span>
+          <span style={{ color: '#111111', flex: 1, fontSize: 34, fontWeight: 400, letterSpacing: 0, lineHeight: 1.16, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+            {text}
+            {promptProgress > 0 && promptProgress < 1 ? <span style={{ background: '#111111', display: frame % 18 < 9 ? 'inline-block' : 'none', height: 36, marginLeft: 4, transform: 'translateY(6px)', width: 3 }} /> : null}
+          </span>
+          <div style={{ alignItems: 'center', display: 'flex', gap: 6, height: 62, justifyContent: 'center', marginLeft: 20, width: 62 }}>
+            {[21, 34, 45, 34, 21].map((height, index) => (
+              <span key={`${height}-${index}`} style={{ background: '#333333', borderRadius: 999, display: 'block', height, width: 5 }} />
+            ))}
+          </div>
+          <div style={{ alignItems: 'center', background: '#007aff', borderRadius: 999, display: 'flex', gap: 5, height: 78, justifyContent: 'center', marginLeft: 10, width: 78 }}>
+            {[20, 35, 48, 35, 20].map((height, index) => (
+              <span key={`${height}-${index}`} style={{ background: '#ffffff', borderRadius: 999, height, width: 6 }} />
+            ))}
+          </div>
+        </div>
+      </div>
+    </AbsoluteFill>
   )
 }
 
@@ -786,8 +838,14 @@ export function ChatGptAccountingToolActionsAnimation() {
 
 export function ChatGptFinancialAgentsVideo() {
   const frame = useCurrentFrame()
+  const chatFrame = Math.max(0, frame - CHATGPT_FINANCIAL_PROMPT_OFFSET)
+  const prompt = 'Otto, me ajuda a revisar o financeiro da empresa e priorizar o que eu preciso resolver hoje?'
+  const chatIn = interpolate(frame, [96, 118], [0, 1], {
+    extrapolateLeft: 'clamp',
+    extrapolateRight: 'clamp',
+  })
   const conversationY = interpolate(
-    frame,
+    chatFrame,
     [0, 240, 460, 680, 900, 1120, 1340, 1560, 1740],
     [0, 0, -330, -710, -1090, -1470, -1850, -2230, -2610],
     {
@@ -797,53 +855,59 @@ export function ChatGptFinancialAgentsVideo() {
   )
 
   return (
-    <ChatGptMobileShell conversationY={conversationY} promptInputBottom={36}>
-      <ChatGptFlowUserBubble style={chatGptSequenceStyle(frame, 12, 18)}>
-        Otto, me ajuda a revisar o financeiro da empresa e priorizar o que eu preciso resolver hoje?
-      </ChatGptFlowUserBubble>
+    <>
+      <div style={{ inset: 0, opacity: chatIn, position: 'absolute', transform: `translateY(${(1 - chatIn) * 18}px)` }}>
+        <ChatGptMobileShell conversationY={conversationY} promptInputBottom={36}>
+          <ChatGptFlowUserBubble style={chatGptSequenceStyle(chatFrame, 12, 18)}>
+            {prompt}
+          </ChatGptFlowUserBubble>
 
-      <ChatGptFinancialAssistantText style={chatGptSequenceStyle(frame, 74, 22)}>
-        Claro. Vou acionar seus agentes financeiros e trazer prioridades, riscos e oportunidades.
-      </ChatGptFinancialAssistantText>
+          <ChatGptFinancialAssistantText style={chatGptSequenceStyle(chatFrame, 74, 22)}>
+            Claro. Vou acionar seus agentes financeiros e trazer prioridades, riscos e oportunidades.
+          </ChatGptFinancialAssistantText>
 
-      {financialAgentSteps.map((step, index) => {
-        const start = 150 + index * 210
-        return (
-          <div key={step.toolName} style={{ display: 'contents' }}>
-            <ChatGptFinancialAssistantText showHeader={false} style={chatGptSequenceStyle(frame, start, 22)}>
-              {step.text}
-            </ChatGptFinancialAssistantText>
-            <ChatGptToolCallCard
-              style={chatGptSequenceStyle(frame, start + 52, 16)}
-              toolName={step.toolName}
-            />
-            <ChatGptToolResultCard style={chatGptSequenceStyle(frame, start + 100, 18)}>
-              <ImprovedFinancialResultCard kind={step.result} startFrame={start + 100} />
-            </ChatGptToolResultCard>
-            <ChatGptFinancialAssistantText showHeader={false} style={chatGptSequenceStyle(frame, start + 174, 22)}>
-              {step.insight}
-            </ChatGptFinancialAssistantText>
-          </div>
-        )
-      })}
-
-      <ChatGptToolResultCard style={chatGptSequenceStyle(frame, 1660, 18)}>
-        <div style={{ display: 'grid', gap: 16, padding: 20 }}>
-          <div style={{ color: '#111111', fontSize: 30, fontWeight: 840, letterSpacing: 0 }}>7 agentes financeiros ativos</div>
-          <div style={{ display: 'grid', gap: 10, gridTemplateColumns: '1fr 1fr' }}>
-            {['Despesas organizadas', 'Bancos conciliados', 'Caixa monitorado', 'Documentos em ordem', 'Cobrancas priorizadas', 'Margem analisada'].map((item) => (
-              <div key={item} style={{ background: '#ecfdf3', border: '1px solid #bbf7d0', borderRadius: 13, color: '#166534', fontSize: 17, fontWeight: 820, padding: 12 }}>
-                {item}
+          {financialAgentSteps.map((step, index) => {
+            const start = 150 + index * 210
+            const absoluteStart = CHATGPT_FINANCIAL_PROMPT_OFFSET + start
+            return (
+              <div key={step.toolName} style={{ display: 'contents' }}>
+                <ChatGptFinancialAssistantText showHeader={false} style={chatGptSequenceStyle(chatFrame, start, 22)}>
+                  {step.text}
+                </ChatGptFinancialAssistantText>
+                <ChatGptToolCallCard
+                  style={chatGptSequenceStyle(chatFrame, start + 52, 16)}
+                  toolName={step.toolName}
+                />
+                <ChatGptToolResultCard style={chatGptSequenceStyle(chatFrame, start + 100, 18)}>
+                  <ImprovedFinancialResultCard kind={step.result} startFrame={absoluteStart + 100} />
+                </ChatGptToolResultCard>
+                <ChatGptFinancialAssistantText showHeader={false} style={chatGptSequenceStyle(chatFrame, start + 174, 22)}>
+                  {step.insight}
+                </ChatGptFinancialAssistantText>
               </div>
-            ))}
-          </div>
-        </div>
-      </ChatGptToolResultCard>
+            )
+          })}
 
-      <ChatGptFinancialAssistantText showHeader={false} style={chatGptSequenceStyle(frame, 1740, 18)}>
-        Seu financeiro operando direto pelo ChatGPT ou Claude.
-      </ChatGptFinancialAssistantText>
-    </ChatGptMobileShell>
+          <ChatGptToolResultCard style={chatGptSequenceStyle(chatFrame, 1660, 18)}>
+            <div style={{ display: 'grid', gap: 16, padding: 20 }}>
+              <div style={{ color: '#111111', fontSize: 30, fontWeight: 840, letterSpacing: 0 }}>7 agentes financeiros ativos</div>
+              <div style={{ display: 'grid', gap: 10, gridTemplateColumns: '1fr 1fr' }}>
+                {['Despesas organizadas', 'Bancos conciliados', 'Caixa monitorado', 'Documentos em ordem', 'Cobrancas priorizadas', 'Margem analisada'].map((item) => (
+                  <div key={item} style={{ background: '#ecfdf3', border: '1px solid #bbf7d0', borderRadius: 13, color: '#166534', fontSize: 17, fontWeight: 820, padding: 12 }}>
+                    {item}
+                  </div>
+                ))}
+              </div>
+            </div>
+          </ChatGptToolResultCard>
+
+          <ChatGptFinancialAssistantText showHeader={false} style={chatGptSequenceStyle(chatFrame, 1740, 18)}>
+            Seu financeiro operando direto pelo ChatGPT ou Claude.
+          </ChatGptFinancialAssistantText>
+        </ChatGptMobileShell>
+      </div>
+      <ChatGptFinancialPromptScene frame={frame} prompt={prompt} />
+    </>
   )
 }
 
