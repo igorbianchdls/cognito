@@ -7,7 +7,7 @@ loadSfProFonts()
 export const CHATBOT_SYNC_TOOL_DURATION = 636
 
 const FONT = IOS_REMOTION_FONT_STACK
-const APP_BACKGROUND = '#fbfbfa'
+const APP_BACKGROUND = '#fdfdfc'
 
 function p(frame: number, from: number, to: number, out: [number, number] = [0, 1]) {
   return interpolate(frame, [from, to], out, { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' })
