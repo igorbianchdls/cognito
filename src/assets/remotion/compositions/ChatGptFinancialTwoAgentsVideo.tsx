@@ -103,6 +103,8 @@ const expenses = [
   { amount: 'R$ 420', category: 'Marketing', color: '#1877f2', completeAt: 80, description: 'Campanhas de aquisicao', icon: MetaIcon, initials: 'M', name: 'Meta Ads', tone: '#f0f7ff' },
   { amount: 'R$ 189', category: 'Tarifa bancaria', color: '#f97316', completeAt: 92, description: 'Pacote e TED bancaria', initials: 'BI', name: 'Banco Inter', tone: '#fff7ed' },
   { amount: 'R$ 2.450', category: 'Logistica', color: '#facc15', completeAt: 104, description: 'Envios e fretes nacionais', initials: 'CO', name: 'Correios', tone: '#f4f9f2' },
+  { amount: 'R$ 980', category: 'Ecommerce', color: '#95bf47', completeAt: 116, description: 'Apps e checkout da loja', icon: ShopifyIcon, initials: 'S', name: 'Shopify Apps', tone: '#f4f9f2' },
+  { amount: 'R$ 740', category: 'Vendas', color: '#4285f4', completeAt: 128, description: 'Leads e conversoes', icon: GoogleAdsIcon, initials: 'G', name: 'Google Ads', tone: '#eef6ff' },
 ]
 
 const reconciliations = [
@@ -110,6 +112,8 @@ const reconciliations = [
   { bank: 'Cartao Stone', color: '#111827', completeAt: 88, description: 'Adquirente · lote diario', erp: 'Lote-552', initials: 'ST', status: 'Conciliado', value: 'R$ 68.900' },
   { bank: 'Tarifa bancaria', color: '#f97316', completeAt: 100, description: 'Banco Inter · taxa avulsa', erp: 'Sem lancamento', initials: 'BI', status: 'Revisar', value: 'R$ 189' },
   { bank: 'Boleto Fornecedor', color: '#95bf47', completeAt: 112, description: 'Shopify · assinatura loja', icon: ShopifyIcon, erp: 'CP-1182', initials: 'S', status: 'Conciliado', value: 'R$ 12.430' },
+  { bank: 'Google Ads BR', color: '#4285f4', completeAt: 124, description: 'Cartao corporativo · marketing', icon: GoogleAdsIcon, erp: 'MKT-884', initials: 'G', status: 'Conciliado', value: 'R$ 8.760' },
+  { bank: 'Meta Ads', color: '#1877f2', completeAt: 136, description: 'Cartao corporativo · campanhas', icon: MetaIcon, erp: 'MKT-921', initials: 'M', status: 'Conciliado', value: 'R$ 6.420' },
 ]
 
 function MiniMark({ color = '#111111' }: { color?: string }) {
@@ -172,7 +176,7 @@ function ReconciliationRow({ index, localFrame }: { index: number; localFrame: n
 function CascadeCard({ children, localFrame, progressStart, subtitle, title }: { children: ReactNode; localFrame: number; progressStart: number; subtitle: string; title: string }) {
   const show = p(localFrame, 0, 18)
   const list = p(localFrame, 34, 62)
-  const cardHeight = interpolate(list, [0, 1], [112, 420], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' })
+  const cardHeight = interpolate(list, [0, 1], [112, 560], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' })
   const progress = Math.round(interpolate(p(localFrame, progressStart, 124), [0, 1], [18, 100], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' }))
 
   return (
@@ -196,7 +200,7 @@ function AgentOneChat({ start }: { start: number }) {
   const local = Math.max(0, frame - start)
   const opacity = p(frame, start - 12, start + 12) * p(frame, start + 748, start + 790, [1, 0])
   const prompt = 'Classifique as ultimas despesas e concilie bancos, cartoes e movimentacoes.'
-  const conversationY = stagedScroll(local, [0, 292, 438, 588], [0, 0, -470, -980])
+  const conversationY = stagedScroll(local, [0, 292, 438, 588], [0, 0, -610, -1260])
 
   return (
     <div style={{ inset: 0, opacity, position: 'absolute' }}>
@@ -262,6 +266,8 @@ const payableRows: CashFlowRow[] = [
   { color: '#111827', date: '2 dias', description: 'Folha e beneficios', initials: 'FO', name: 'Folha operacional', status: 'Programado', value: 'R$ 64.900' },
   { color: '#95bf47', date: '5 dias', description: 'Plano ecommerce mensal', icon: ShopifyIcon, initials: 'S', name: 'Shopify', status: 'OK', value: 'R$ 12.800' },
   { color: '#f97316', date: '7 dias', description: 'DAS e retencoes federais', initials: 'IR', name: 'Impostos federais', status: 'Revisar', value: 'R$ 31.200' },
+  { color: '#1877f2', date: '9 dias', description: 'Campanhas de remarketing', icon: MetaIcon, initials: 'M', name: 'Meta Ads', status: 'OK', value: 'R$ 9.600' },
+  { color: '#0ea5e9', date: '12 dias', description: 'Hospedagem e infraestrutura', initials: 'AW', name: 'AWS Brasil', status: 'Programado', value: 'R$ 14.750' },
 ]
 
 const receivableRows: CashFlowRow[] = [
@@ -269,6 +275,8 @@ const receivableRows: CashFlowRow[] = [
   { color: '#7c3aed', date: '3 dias', description: 'Contrato enterprise anual', initials: 'GD', name: 'Grupo Delta', status: 'A vencer', value: 'R$ 76.500' },
   { color: '#95bf47', date: '8 dias', description: 'Pedidos integrados Shopify', icon: ShopifyIcon, initials: 'S', name: 'Mercado Sul', status: 'Atraso leve', value: 'R$ 28.900' },
   { color: '#4285f4', date: '12 dias', description: 'Receita de campanhas Google', icon: GoogleAdsIcon, initials: 'G', name: 'Canal B2B', status: 'Confirmado', value: 'R$ 54.700' },
+  { color: '#1877f2', date: '14 dias', description: 'Retainer de performance', icon: MetaIcon, initials: 'M', name: 'Rede Alpha', status: 'A vencer', value: 'R$ 18.600' },
+  { color: '#f97316', date: '15 dias', description: 'Projeto de automacao fiscal', initials: 'NF', name: 'Norte Foods', status: 'Confirmado', value: 'R$ 31.400' },
 ]
 
 function CashFlowSourceIcon({ row }: { row: CashFlowRow }) {
@@ -336,7 +344,7 @@ function AgentTwoChat({ start }: { start: number }) {
   const local = Math.max(0, frame - start)
   const opacity = p(frame, start - 12, start + 14) * p(frame, start + 785, start + 815, [1, 0])
   const prompt = 'Veja as ultimas contas a pagar e a receber e crie um relatorio com dashboard de fluxo de caixa.'
-  const conversationY = stagedScroll(local, [0, 322, 548, 710], [0, 0, -560, -1060])
+  const conversationY = stagedScroll(local, [0, 322, 548, 710], [0, 0, -700, -1320])
   const cardIn = p(local, 642, 672)
 
   return (
@@ -525,6 +533,8 @@ const fiscalDocuments = [
   { detail: 'Servico aprovado', name: 'OS-2048', status: 'Conferido', tone: '#f0f7ff' },
   { detail: 'Cadastro municipal', name: 'Tomador', status: 'OK', tone: '#f4f9f2' },
   { detail: 'Retencoes calculadas', name: 'Impostos', status: 'OK', tone: '#fff7ed' },
+  { detail: 'Dados bancarios', name: 'Pagamento', status: 'OK', tone: '#eef6ff' },
+  { detail: 'Codigo municipal', name: 'Servico', status: 'Validado', tone: '#f4f9f2' },
 ]
 
 const taxObligations = [
@@ -532,6 +542,8 @@ const taxObligations = [
   { due: '7 dias', name: 'DAS', status: 'Programado', value: 'R$ 1.184,00' },
   { due: '15 dias', name: 'SPED fiscal', status: 'Em dia', value: 'OK' },
   { due: 'Mensal', name: 'Livro fiscal', status: 'Atualizado', value: 'OK' },
+  { due: 'Mensal', name: 'DCTFWeb', status: 'Em dia', value: 'OK' },
+  { due: '30 dias', name: 'Certidoes', status: 'Monitorado', value: 'OK' },
 ]
 
 function FiscalDocumentRow({ index, localFrame }: { index: number; localFrame: number }) {
@@ -601,7 +613,7 @@ function AgentThreeChat({ start }: { start: number }) {
   const local = Math.max(0, frame - start)
   const opacity = p(frame, start - 12, start + 14) * p(frame, start + 625, start + 655, [1, 0])
   const prompt = 'Organize documentos, notas fiscais e impostos pendentes, e emita a nota fiscal do ultimo servico aprovado.'
-  const conversationY = stagedScroll(local, [0, 236, 386, 548], [0, 0, -410, -870])
+  const conversationY = stagedScroll(local, [0, 236, 386, 548], [0, 0, -560, -1120])
   const click = p(local, 586, 596)
   const cardIn = p(local, 548, 578)
 
@@ -707,6 +719,8 @@ const overdueCustomers = [
   { color: '#7c3aed', completeAt: 84, description: 'Boleto vencido ha 9 dias', initials: 'RA', name: 'Rede Alpha', priority: 'Media', value: 'R$ 18.600' },
   { color: '#95bf47', completeAt: 96, description: 'Mensalidade vencida ha 6 dias', initials: 'LP', name: 'Loja Prime', priority: 'Baixa', value: 'R$ 11.400' },
   { color: '#f97316', completeAt: 108, description: 'Parcela em aberto ha 14 dias', initials: 'MS', name: 'Mercado Sul', priority: 'Alta', value: 'R$ 28.900' },
+  { color: '#1877f2', completeAt: 120, description: 'Contrato vencido ha 11 dias', initials: 'AF', name: 'Alpha Foods', priority: 'Media', value: 'R$ 16.800' },
+  { color: '#111827', completeAt: 132, description: 'Fatura vencida ha 5 dias', initials: 'CB', name: 'Canal B2B', priority: 'Baixa', value: 'R$ 9.700' },
 ]
 
 const collectionSteps = [
@@ -714,6 +728,8 @@ const collectionSteps = [
   { color: '#0ea5e9', completeAt: 78, description: 'Link de pagamento e codigo PIX', initials: 'PX', name: 'PIX + boleto', status: 'Gerado' },
   { color: '#7c3aed', completeAt: 90, description: 'Follow-up em D+2 se nao houver resposta', initials: 'F2', name: 'Proximo contato', status: 'Agendado' },
   { color: '#111827', completeAt: 102, description: 'Historico salvo no contas a receber', initials: 'AR', name: 'Registro financeiro', status: 'Salvo' },
+  { color: '#f97316', completeAt: 114, description: 'Tom ajustado por tempo de atraso', initials: 'TA', name: 'Tom de cobranca', status: 'Pronto' },
+  { color: '#16a34a', completeAt: 126, description: 'Baixa automatica quando houver pagamento', initials: 'BX', name: 'Monitoramento', status: 'Ativo' },
 ]
 
 function CollectionCustomerRow({ index, localFrame }: { index: number; localFrame: number }) {
@@ -775,7 +791,7 @@ function AgentFourChat({ start }: { start: number }) {
   const local = Math.max(0, frame - start)
   const opacity = p(frame, start - 12, start + 14) * p(frame, start + 790, start + 826, [1, 0])
   const prompt = 'Cobre os clientes inadimplentes e me mostre as mensagens enviadas.'
-  const conversationY = stagedScroll(local, [0, 302, 548, 720], [0, 0, -560, -1060])
+  const conversationY = stagedScroll(local, [0, 302, 548, 720], [0, 0, -700, -1340])
   const click = p(local, 762, 772)
   const cardIn = p(local, 708, 738)
 
