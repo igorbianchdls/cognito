@@ -1,4 +1,4 @@
-import type { ComponentType, ReactNode } from 'react'
+import type { ComponentType, CSSProperties, ReactNode } from 'react'
 import { AbsoluteFill, interpolate, useCurrentFrame } from 'remotion'
 
 import GoogleAdsIcon from '@/components/icons/GoogleAdsIcon'
@@ -11,15 +11,27 @@ import {
   ChatGptMobileShell,
   ChatGptToolCallCard,
   ChatGptToolResultCard,
+  OttoAssistantHeader,
   chatGptSequenceStyle,
+  fastCharacterTyping,
 } from '@/assets/remotion/compositions/ChatGptMobileBase'
+import {
+  CLAUDE_MOBILE_FONT_STACK,
+  ClaudeFlowUserBubble,
+  ClaudeMobileShell,
+  ClaudeToolResultCard,
+  claudeSequenceStyle,
+} from '@/assets/remotion/compositions/ClaudeMobileBase'
 import { IOS_REMOTION_FONT_STACK, loadSfProFonts } from '@/assets/remotion/fonts/sfPro'
 
 loadSfProFonts()
 
 export const CHATGPT_FINANCIAL_TWO_AGENTS_DURATION = 7220
+export const CLAUDE_FINANCIAL_TWO_AGENTS_DURATION = CHATGPT_FINANCIAL_TWO_AGENTS_DURATION
 
 const FONT = IOS_REMOTION_FONT_STACK
+const CLAUDE_RESPONSE_SERIF = '"Libre Baskerville", Baskerville, Georgia, "Times New Roman", serif'
+type MobileVariant = 'chatgpt' | 'claude'
 
 function p(frame: number, from: number, to: number, out: [number, number] = [0, 1]) {
   return interpolate(frame, [from, to], out, { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' })
@@ -40,13 +52,34 @@ function stagedScroll(frame: number, points: [number, number, number, number], v
   return interpolate(frame, points, values, { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' })
 }
 
-function PromptInputScene({ frame, prompt, start }: { frame: number; prompt: string; start: number }) {
+function PromptInputScene({ frame, prompt, start, variant = 'chatgpt' }: { frame: number; prompt: string; start: number; variant?: MobileVariant }) {
   const local = frame - start
   const sceneIn = p(local, 0, 18)
   const sceneOut = p(local, 78, 106, [1, 0])
   const promptProgress = p(local, 12, 76)
   const inputHeight = interpolate(promptProgress, [0, 0.48, 1], [104, 104, 216], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' })
   const text = typed(prompt, promptProgress)
+
+  if (variant === 'claude') {
+    return (
+      <AbsoluteFill style={{ background: '#fbfaf8', color: '#111111', fontFamily: CLAUDE_MOBILE_FONT_STACK, opacity: sceneIn * sceneOut, overflow: 'hidden', transform: `translateY(${(1 - sceneIn) * 20 - (1 - sceneOut) * 18}px)` }}>
+        <div style={{ alignItems: 'center', display: 'flex', inset: 0, justifyContent: 'center', position: 'absolute' }}>
+          <div style={{ background: '#fbfaf8', border: '1.5px solid #bebcb7', borderRadius: inputHeight > 124 ? 52 : 999, boxShadow: '0 22px 54px rgba(20,24,22,0.14)', display: 'grid', gap: 22, gridTemplateColumns: '1fr auto', minHeight: inputHeight, padding: inputHeight > 124 ? '30px 30px 24px 36px' : '0 30px 0 36px', width: 944 }}>
+            <span style={{ alignSelf: inputHeight > 124 ? 'start' : 'center', color: text ? '#171714' : '#77746f', fontSize: text ? 34 : 42, fontWeight: 430, letterSpacing: 0, lineHeight: 1.2, maxHeight: 132, overflow: 'hidden', paddingTop: inputHeight > 124 ? 4 : 0, whiteSpace: 'normal' }}>
+              {text || 'Chat with Claude'}
+              {promptProgress > 0 && promptProgress < 1 ? <span style={{ background: '#171714', display: local % 18 < 9 ? 'inline-block' : 'none', height: 35, marginLeft: 4, transform: 'translateY(6px)', width: 3 }} /> : null}
+            </span>
+            <div style={{ alignItems: 'center', alignSelf: inputHeight > 124 ? 'end' : 'center', display: 'flex', gap: 16 }}>
+              <span style={{ alignItems: 'center', background: '#efeeeb', borderRadius: 999, color: '#111111', display: 'flex', fontSize: 31, fontWeight: 520, height: 62, justifyContent: 'center', padding: '0 28px', whiteSpace: 'nowrap' }}>Sonnet 4.6</span>
+              <span style={{ alignItems: 'center', background: '#050505', borderRadius: 999, display: 'flex', gap: 5, height: 70, justifyContent: 'center', width: 70 }}>
+                {[18, 30, 42, 30, 18].map((height, index) => <span key={`${height}-${index}`} style={{ background: '#ffffff', borderRadius: 999, height, width: 5 }} />)}
+              </span>
+            </div>
+          </div>
+        </div>
+      </AbsoluteFill>
+    )
+  }
 
   return (
     <AbsoluteFill style={{ background: '#ffffff', color: '#111111', fontFamily: CHATGPT_MOBILE_FONT_STACK, opacity: sceneIn * sceneOut, overflow: 'hidden', transform: `translateY(${(1 - sceneIn) * 20 - (1 - sceneOut) * 18}px)` }}>
@@ -67,6 +100,102 @@ function PromptInputScene({ frame, prompt, start }: { frame: number; prompt: str
       </div>
     </AbsoluteFill>
   )
+}
+
+function VariantShell({ children, conversationY, variant }: { children: ReactNode; conversationY: number; variant: MobileVariant }) {
+  if (variant === 'claude') {
+    return <ClaudeMobileShell conversationY={conversationY}>{children}</ClaudeMobileShell>
+  }
+
+  return <ChatGptMobileShell conversationY={conversationY} promptInputBottom={36}>{children}</ChatGptMobileShell>
+}
+
+function VariantUserBubble({ children, style, variant }: { children: ReactNode; style: CSSProperties; variant: MobileVariant }) {
+  if (variant === 'claude') {
+    return <ClaudeFlowUserBubble style={style}>{children}</ClaudeFlowUserBubble>
+  }
+
+  return <ChatGptFlowUserBubble style={style}>{children}</ChatGptFlowUserBubble>
+}
+
+function ClaudeAssistantText({ children, showHeader = true, style }: { children: ReactNode; showHeader?: boolean; style: CSSProperties }) {
+  return (
+    <div
+      className="claude-financial-response"
+      style={{
+        ...style,
+        color: '#111111',
+        fontFamily: CLAUDE_RESPONSE_SERIF,
+        fontSize: 38,
+        fontWeight: 400,
+        letterSpacing: '-0.02em',
+        lineHeight: 1.26,
+        padding: '0 42px',
+      }}
+    >
+      {showHeader ? <OttoAssistantHeader muted="#8b857c" /> : null}
+      <span className="claude-financial-response-copy" style={{ fontFamily: CLAUDE_RESPONSE_SERIF }}>
+        {fastCharacterTyping(children, style)}
+      </span>
+    </div>
+  )
+}
+
+function VariantAssistantText({ children, showHeader = true, style, variant }: { children: ReactNode; showHeader?: boolean; style: CSSProperties; variant: MobileVariant }) {
+  if (variant === 'claude') {
+    return <ClaudeAssistantText showHeader={showHeader} style={style}>{children}</ClaudeAssistantText>
+  }
+
+  return <ChatGptFlowAssistantText showHeader={showHeader} style={style}>{children}</ChatGptFlowAssistantText>
+}
+
+function ClaudeToolUseCard({ style, toolName }: { style: CSSProperties; toolName: string }) {
+  return (
+    <div
+      style={{
+        ...style,
+        alignItems: 'center',
+        background: 'transparent',
+        border: '1px solid #dfddd8',
+        borderRadius: 12,
+        boxSizing: 'border-box',
+        color: '#171714',
+        display: 'flex',
+        fontFamily: CLAUDE_MOBILE_FONT_STACK,
+        gap: 16,
+        margin: '0 42px',
+        minHeight: 84,
+        padding: '20px 22px',
+      }}
+    >
+      <div style={{ alignItems: 'center', border: '1px solid #d5d0c7', borderRadius: 12, display: 'flex', height: 42, justifyContent: 'center', width: 42 }}>
+        <svg fill="none" height="22" viewBox="0 0 24 24" width="22">
+          <path d="M14.7 6.3l3-3a4.1 4.1 0 0 1-5.4 5.4l-6.6 6.6a2.2 2.2 0 1 0 3.1 3.1l6.6-6.6a4.1 4.1 0 0 1 5.4 5.4l-3 3" stroke="#77746f" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.2" />
+        </svg>
+      </div>
+      <span style={{ color: '#171714', fontSize: 32, fontWeight: 600, letterSpacing: 0, lineHeight: 1.05 }}>{toolName}</span>
+    </div>
+  )
+}
+
+function VariantToolCall({ style, toolName, variant }: { style: CSSProperties; toolName: string; variant: MobileVariant }) {
+  if (variant === 'claude') {
+    return <ClaudeToolUseCard style={style} toolName={toolName} />
+  }
+
+  return <ChatGptToolCallCard style={style} toolName={toolName} />
+}
+
+function VariantToolResult({ children, style, variant }: { children: ReactNode; style: CSSProperties; variant: MobileVariant }) {
+  if (variant === 'claude') {
+    return <ClaudeToolResultCard style={style}>{children}</ClaudeToolResultCard>
+  }
+
+  return <ChatGptToolResultCard style={style}>{children}</ChatGptToolResultCard>
+}
+
+function sequence(variant: MobileVariant, frame: number, start: number, duration: number) {
+  return variant === 'claude' ? claudeSequenceStyle(frame, start, duration) : chatGptSequenceStyle(frame, start, duration)
 }
 
 function Spinner({ active }: { active: boolean }) {
@@ -270,7 +399,7 @@ function ChecklistProgress({ items, localFrame }: { items: string[]; localFrame:
   )
 }
 
-function AgentOneChat({ start }: { start: number }) {
+function AgentOneChat({ start, variant = 'chatgpt' }: { start: number; variant?: MobileVariant }) {
   const frame = useCurrentFrame()
   const local = Math.max(0, frame - start)
   const opacity = p(frame, start - 12, start + 12) * p(frame, start + 748, start + 790, [1, 0])
@@ -279,30 +408,30 @@ function AgentOneChat({ start }: { start: number }) {
 
   return (
     <div style={{ inset: 0, opacity, position: 'absolute' }}>
-      <ChatGptMobileShell conversationY={conversationY} promptInputBottom={36}>
-        <ChatGptFlowUserBubble style={fadeOnlyStyle(local, 12)}>{prompt}</ChatGptFlowUserBubble>
-        <ChatGptFlowAssistantText style={chatGptSequenceStyle(local, 74, 22)}>
+      <VariantShell conversationY={conversationY} variant={variant}>
+        <VariantUserBubble style={fadeOnlyStyle(local, 12)} variant={variant}>{prompt}</VariantUserBubble>
+        <VariantAssistantText style={sequence(variant, local, 74, 22)} variant={variant}>
           Vou organizar as despesas recentes, classificar cada gasto e depois cruzar bancos, cartoes e ERP.
-        </ChatGptFlowAssistantText>
-        <ChatGptToolCallCard style={chatGptSequenceStyle(local, 150, 16)} toolName="classificar_despesas" />
-        <ChatGptToolResultCard style={chatGptSequenceStyle(local, 205, 18)}>
+        </VariantAssistantText>
+        <VariantToolCall style={sequence(variant, local, 150, 16)} toolName="classificar_despesas" variant={variant} />
+        <VariantToolResult style={sequence(variant, local, 205, 18)} variant={variant}>
           <CascadeCard localFrame={local - 205} progressStart={12} subtitle="Fornecedor, valor e categoria sugerida" title="Classificacao automatica">
             {expenses.map((_, index) => <ExpenseRow key={index} index={index} localFrame={local - 205} />)}
           </CascadeCard>
-        </ChatGptToolResultCard>
-        <ChatGptFlowAssistantText showHeader={false} style={chatGptSequenceStyle(local, 365, 22)}>
+        </VariantToolResult>
+        <VariantAssistantText showHeader={false} style={sequence(variant, local, 365, 22)} variant={variant}>
           Classifiquei as despesas principais e deixei uma tarifa bancaria como regra recorrente para revisar.
-        </ChatGptFlowAssistantText>
-        <ChatGptToolCallCard style={chatGptSequenceStyle(local, 455, 16)} toolName="conciliar_bancos_cartoes" />
-        <ChatGptToolResultCard style={chatGptSequenceStyle(local, 510, 18)}>
+        </VariantAssistantText>
+        <VariantToolCall style={sequence(variant, local, 455, 16)} toolName="conciliar_bancos_cartoes" variant={variant} />
+        <VariantToolResult style={sequence(variant, local, 510, 18)} variant={variant}>
           <CascadeCard localFrame={local - 510} progressStart={18} subtitle="Movimento bancario x registro no ERP" title="Matching de lancamentos">
             {reconciliations.map((_, index) => <ReconciliationRow key={index} index={index} localFrame={local - 510} />)}
           </CascadeCard>
-        </ChatGptToolResultCard>
-        <ChatGptFlowAssistantText showHeader={false} style={chatGptSequenceStyle(local, 665, 22)}>
+        </VariantToolResult>
+        <VariantAssistantText showHeader={false} style={sequence(variant, local, 665, 22)} variant={variant}>
           Conciliacao concluida: encontrei 3 matches seguros e 1 movimento para revisao.
-        </ChatGptFlowAssistantText>
-      </ChatGptMobileShell>
+        </VariantAssistantText>
+      </VariantShell>
     </div>
   )
 }
@@ -400,7 +529,7 @@ function CashFlowTableCard({
   )
 }
 
-function AgentTwoChat({ start }: { start: number }) {
+function AgentTwoChat({ start, variant = 'chatgpt' }: { start: number; variant?: MobileVariant }) {
   const frame = useCurrentFrame()
   const local = Math.max(0, frame - start)
   const opacity = p(frame, start - 12, start + 14) * p(frame, start + 785, start + 815, [1, 0])
@@ -410,30 +539,30 @@ function AgentTwoChat({ start }: { start: number }) {
 
   return (
     <div style={{ inset: 0, opacity, position: 'absolute' }}>
-      <ChatGptMobileShell conversationY={conversationY} promptInputBottom={36}>
-        <ChatGptFlowUserBubble style={fadeOnlyStyle(local, 12)}>{prompt}</ChatGptFlowUserBubble>
-        <ChatGptFlowAssistantText style={chatGptSequenceStyle(local, 74, 22)}>
+      <VariantShell conversationY={conversationY} variant={variant}>
+        <VariantUserBubble style={fadeOnlyStyle(local, 12)} variant={variant}>{prompt}</VariantUserBubble>
+        <VariantAssistantText style={sequence(variant, local, 74, 22)} variant={variant}>
           Vou primeiro levantar contas a pagar, depois contas a receber, cruzar os vencimentos e so no final montar o relatorio executivo.
-        </ChatGptFlowAssistantText>
-        <ChatGptToolCallCard style={chatGptSequenceStyle(local, 156, 16)} toolName="buscar_contas_a_pagar" />
-        <ChatGptToolResultCard style={chatGptSequenceStyle(local, 210, 18)}>
+        </VariantAssistantText>
+        <VariantToolCall style={sequence(variant, local, 156, 16)} toolName="buscar_contas_a_pagar" variant={variant} />
+        <VariantToolResult style={sequence(variant, local, 210, 18)} variant={variant}>
           <CashFlowTableCard localFrame={local - 210} rows={payableRows} title="Contas a pagar" tone="red" />
-        </ChatGptToolResultCard>
-        <ChatGptFlowAssistantText showHeader={false} style={chatGptSequenceStyle(local, 372, 22)}>
+        </VariantToolResult>
+        <VariantAssistantText showHeader={false} style={sequence(variant, local, 372, 22)} variant={variant}>
           Encontrei R$ 127.300 em compromissos proximos, com impostos e fornecedor cloud exigindo prioridade.
-        </ChatGptFlowAssistantText>
-        <ChatGptToolCallCard style={chatGptSequenceStyle(local, 456, 16)} toolName="buscar_contas_a_receber" />
-        <ChatGptToolResultCard style={chatGptSequenceStyle(local, 508, 18)}>
+        </VariantAssistantText>
+        <VariantToolCall style={sequence(variant, local, 456, 16)} toolName="buscar_contas_a_receber" variant={variant} />
+        <VariantToolResult style={sequence(variant, local, 508, 18)} variant={variant}>
           <CashFlowTableCard localFrame={local - 508} rows={receivableRows} title="Contas a receber" tone="green" />
-        </ChatGptToolResultCard>
-        <ChatGptFlowAssistantText showHeader={false} style={chatGptSequenceStyle(local, 650, 22)}>
+        </VariantToolResult>
+        <VariantAssistantText showHeader={false} style={sequence(variant, local, 650, 22)} variant={variant}>
           A entrada prevista cobre os vencimentos, mas recomendo acompanhar Cliente Norte e Mercado Sul para proteger o caixa.
-        </ChatGptFlowAssistantText>
-        <ChatGptToolCallCard style={chatGptSequenceStyle(local, 704, 16)} toolName="gerar_relatorio_financeiro" />
-        <div style={{ ...chatGptSequenceStyle(local, 748, 18), margin: '0 36px' }}>
+        </VariantAssistantText>
+        <VariantToolCall style={sequence(variant, local, 704, 16)} toolName="gerar_relatorio_financeiro" variant={variant} />
+        <div style={{ ...sequence(variant, local, 748, 18), margin: '0 36px' }}>
           <FinancialReportCard progress={cardIn} />
         </div>
-      </ChatGptMobileShell>
+      </VariantShell>
     </div>
   )
 }
@@ -653,7 +782,7 @@ function InvoiceFileCard({ click, progress }: { click: number; progress: number 
   return <ClickableResultCard click={click} kind="invoice" progress={progress} subtitle="Nota fiscal · NFS-e" title="nota_fiscal_servico_2048" />
 }
 
-function AgentThreeChat({ start }: { start: number }) {
+function AgentThreeChat({ start, variant = 'chatgpt' }: { start: number; variant?: MobileVariant }) {
   const frame = useCurrentFrame()
   const local = Math.max(0, frame - start)
   const opacity = p(frame, start - 12, start + 14) * p(frame, start + 625, start + 655, [1, 0])
@@ -664,31 +793,31 @@ function AgentThreeChat({ start }: { start: number }) {
 
   return (
     <div style={{ inset: 0, opacity, position: 'absolute' }}>
-      <ChatGptMobileShell conversationY={conversationY} promptInputBottom={36}>
-        <ChatGptFlowUserBubble style={fadeOnlyStyle(local, 12)}>{prompt}</ChatGptFlowUserBubble>
-        <ChatGptFlowAssistantText style={chatGptSequenceStyle(local, 74, 22)}>
+      <VariantShell conversationY={conversationY} variant={variant}>
+        <VariantUserBubble style={fadeOnlyStyle(local, 12)} variant={variant}>{prompt}</VariantUserBubble>
+        <VariantAssistantText style={sequence(variant, local, 74, 22)} variant={variant}>
           Vou revisar documentos, informacoes contabeis, impostos e emitir a NFS-e do servico aprovado.
-        </ChatGptFlowAssistantText>
-        <ChatGptToolCallCard style={chatGptSequenceStyle(local, 132, 16)} toolName="organizar_documentos_fiscais" />
-        <ChatGptToolResultCard style={chatGptSequenceStyle(local, 174, 18)}>
+        </VariantAssistantText>
+        <VariantToolCall style={sequence(variant, local, 132, 16)} toolName="organizar_documentos_fiscais" variant={variant} />
+        <VariantToolResult style={sequence(variant, local, 174, 18)} variant={variant}>
           <CascadeCard localFrame={local - 174} progressStart={12} subtitle="Documentos, XML e dados do tomador" title="Documentos conferidos">
             {fiscalDocuments.map((_, index) => <FiscalDocumentRow key={index} index={index} localFrame={local - 174} />)}
           </CascadeCard>
-        </ChatGptToolResultCard>
-        <ChatGptToolCallCard style={chatGptSequenceStyle(local, 310, 16)} toolName="verificar_obrigacoes_fiscais" />
-        <ChatGptToolResultCard style={chatGptSequenceStyle(local, 350, 18)}>
+        </VariantToolResult>
+        <VariantToolCall style={sequence(variant, local, 310, 16)} toolName="verificar_obrigacoes_fiscais" variant={variant} />
+        <VariantToolResult style={sequence(variant, local, 350, 18)} variant={variant}>
           <CascadeCard localFrame={local - 350} progressStart={10} subtitle="Vencimentos, retencoes e registros fiscais" title="Obrigacoes fiscais">
             {taxObligations.map((_, index) => <TaxObligationRow key={index} index={index} localFrame={local - 350} />)}
           </CascadeCard>
-        </ChatGptToolResultCard>
-        <ChatGptFlowAssistantText showHeader={false} style={chatGptSequenceStyle(local, 486, 22)}>
+        </VariantToolResult>
+        <VariantAssistantText showHeader={false} style={sequence(variant, local, 486, 22)} variant={variant}>
           Tudo conferido. Vou emitir a nota fiscal do ultimo servico aprovado e gerar PDF/XML.
-        </ChatGptFlowAssistantText>
-        <ChatGptToolCallCard style={chatGptSequenceStyle(local, 528, 16)} toolName="emitir_nota_fiscal" />
-        <div style={{ ...chatGptSequenceStyle(local, 548, 18), margin: '0 36px' }}>
+        </VariantAssistantText>
+        <VariantToolCall style={sequence(variant, local, 528, 16)} toolName="emitir_nota_fiscal" variant={variant} />
+        <div style={{ ...sequence(variant, local, 548, 18), margin: '0 36px' }}>
           <InvoiceFileCard click={click} progress={cardIn} />
         </div>
-      </ChatGptMobileShell>
+      </VariantShell>
       <div style={{ left: 188, opacity: p(local, 562, 582), position: 'absolute', top: 932, transform: `scale(${1.75 - Math.sin(click * Math.PI) * 0.16})`, zIndex: 20 }}>
         <svg fill="none" height="50" viewBox="0 0 84 84" width="50">
           <path d="M18 10L62 48L44 52L35 72L18 10Z" fill="#111111" stroke="#ffffff" strokeLinejoin="round" strokeWidth="4" />
@@ -819,7 +948,7 @@ function WhatsAppOutlineCard({ click, progress }: { click: number; progress: num
   return <ClickableResultCard click={click} kind="whatsapp" progress={progress} subtitle="WhatsApp · Mensagens" title="cobrancas_whatsapp_enviadas" />
 }
 
-function AgentFourChat({ start }: { start: number }) {
+function AgentFourChat({ start, variant = 'chatgpt' }: { start: number; variant?: MobileVariant }) {
   const frame = useCurrentFrame()
   const local = Math.max(0, frame - start)
   const opacity = p(frame, start - 12, start + 14) * p(frame, start + 790, start + 826, [1, 0])
@@ -830,34 +959,34 @@ function AgentFourChat({ start }: { start: number }) {
 
   return (
     <div style={{ inset: 0, opacity, position: 'absolute' }}>
-      <ChatGptMobileShell conversationY={conversationY} promptInputBottom={36}>
-        <ChatGptFlowUserBubble style={fadeOnlyStyle(local, 12)}>{prompt}</ChatGptFlowUserBubble>
-        <ChatGptFlowAssistantText style={chatGptSequenceStyle(local, 74, 22)}>
+      <VariantShell conversationY={conversationY} variant={variant}>
+        <VariantUserBubble style={fadeOnlyStyle(local, 12)} variant={variant}>{prompt}</VariantUserBubble>
+        <VariantAssistantText style={sequence(variant, local, 74, 22)} variant={variant}>
           Vou localizar clientes em atraso, priorizar por valor e dias vencidos, preparar a abordagem e enviar as mensagens pelo WhatsApp.
-        </ChatGptFlowAssistantText>
-        <ChatGptToolCallCard style={chatGptSequenceStyle(local, 146, 16)} toolName="buscar_inadimplentes" />
-        <ChatGptToolResultCard style={chatGptSequenceStyle(local, 198, 18)}>
+        </VariantAssistantText>
+        <VariantToolCall style={sequence(variant, local, 146, 16)} toolName="buscar_inadimplentes" variant={variant} />
+        <VariantToolResult style={sequence(variant, local, 198, 18)} variant={variant}>
           <CascadeCard localFrame={local - 198} progressStart={12} subtitle="Clientes, valores em aberto e prioridade" title="Inadimplentes encontrados">
             {overdueCustomers.map((_, index) => <CollectionCustomerRow key={index} index={index} localFrame={local - 198} />)}
           </CascadeCard>
-        </ChatGptToolResultCard>
-        <ChatGptFlowAssistantText showHeader={false} style={chatGptSequenceStyle(local, 354, 22)}>
+        </VariantToolResult>
+        <VariantAssistantText showHeader={false} style={sequence(variant, local, 354, 22)} variant={variant}>
           Prioridade alta: Cliente Norte e Mercado Sul somam R$ 71.000 em atraso. Vou usar um tom amigavel, com PIX e boleto.
-        </ChatGptFlowAssistantText>
-        <ChatGptToolCallCard style={chatGptSequenceStyle(local, 430, 16)} toolName="preparar_cobrancas" />
-        <ChatGptToolResultCard style={chatGptSequenceStyle(local, 478, 18)}>
+        </VariantAssistantText>
+        <VariantToolCall style={sequence(variant, local, 430, 16)} toolName="preparar_cobrancas" variant={variant} />
+        <VariantToolResult style={sequence(variant, local, 478, 18)} variant={variant}>
           <CascadeCard localFrame={local - 478} progressStart={10} subtitle="Canal, pagamento, follow-up e registro" title="Contexto de cobranca">
             {collectionSteps.map((_, index) => <CollectionStepRow key={index} index={index} localFrame={local - 478} />)}
           </CascadeCard>
-        </ChatGptToolResultCard>
-        <ChatGptFlowAssistantText showHeader={false} style={chatGptSequenceStyle(local, 620, 22)}>
+        </VariantToolResult>
+        <VariantAssistantText showHeader={false} style={sequence(variant, local, 620, 22)} variant={variant}>
           Cobranças prontas. Vou enviar as mensagens e salvar o historico no contas a receber.
-        </ChatGptFlowAssistantText>
-        <ChatGptToolCallCard style={chatGptSequenceStyle(local, 664, 16)} toolName="enviar_mensagens_whatsapp" />
-        <div style={{ ...chatGptSequenceStyle(local, 708, 18), margin: '0 36px' }}>
+        </VariantAssistantText>
+        <VariantToolCall style={sequence(variant, local, 664, 16)} toolName="enviar_mensagens_whatsapp" variant={variant} />
+        <div style={{ ...sequence(variant, local, 708, 18), margin: '0 36px' }}>
           <WhatsAppOutlineCard click={click} progress={cardIn} />
         </div>
-      </ChatGptMobileShell>
+      </VariantShell>
       <div style={{ left: 188, opacity: p(local, 736, 756), position: 'absolute', top: 932, transform: `scale(${1.75 - Math.sin(click * Math.PI) * 0.16})`, zIndex: 20 }}>
         <svg fill="none" height="50" viewBox="0 0 84 84" width="50">
           <path d="M18 10L62 48L44 52L35 72L18 10Z" fill="#111111" stroke="#ffffff" strokeLinejoin="round" strokeWidth="4" />
@@ -995,7 +1124,7 @@ function ApprovalCard({ click, localFrame }: { click: number; localFrame: number
   )
 }
 
-function AgentFiveChat({ start }: { start: number }) {
+function AgentFiveChat({ start, variant = 'chatgpt' }: { start: number; variant?: MobileVariant }) {
   const frame = useCurrentFrame()
   const local = Math.max(0, frame - start)
   const opacity = p(frame, start - 12, start + 14)
@@ -1005,33 +1134,33 @@ function AgentFiveChat({ start }: { start: number }) {
 
   return (
     <div style={{ inset: 0, opacity, position: 'absolute' }}>
-      <ChatGptMobileShell conversationY={conversationY} promptInputBottom={36}>
-        <ChatGptFlowUserBubble style={fadeOnlyStyle(local, 12)}>{prompt}</ChatGptFlowUserBubble>
-        <ChatGptFlowAssistantText style={chatGptSequenceStyle(local, 74, 22)}>
+      <VariantShell conversationY={conversationY} variant={variant}>
+        <VariantUserBubble style={fadeOnlyStyle(local, 12)} variant={variant}>{prompt}</VariantUserBubble>
+        <VariantAssistantText style={sequence(variant, local, 74, 22)} variant={variant}>
           Vou buscar pagamentos pendentes acima de R$ 1.000, avaliar regras, separar riscos e pedir confirmacao antes de executar.
-        </ChatGptFlowAssistantText>
-        <ChatGptToolCallCard style={chatGptSequenceStyle(local, 148, 16)} toolName="buscar_pagamentos_para_aprovacao" />
-        <ChatGptToolResultCard style={chatGptSequenceStyle(local, 202, 18)}>
+        </VariantAssistantText>
+        <VariantToolCall style={sequence(variant, local, 148, 16)} toolName="buscar_pagamentos_para_aprovacao" variant={variant} />
+        <VariantToolResult style={sequence(variant, local, 202, 18)} variant={variant}>
           <CascadeCard localFrame={local - 202} progressStart={12} subtitle="Fornecedor, valor e risco operacional" title="Pagamentos para aprovacao">
             {approvalPayments.map((_, index) => <ApprovalPaymentRow key={index} index={index} localFrame={local - 202} />)}
           </CascadeCard>
-        </ChatGptToolResultCard>
-        <div style={{ ...chatGptSequenceStyle(local, 372, 22), margin: '0 36px' }}>
+        </VariantToolResult>
+        <div style={{ ...sequence(variant, local, 372, 22), margin: '0 36px' }}>
           <InsightCard caption="3 seguros para aprovar, 2 para agendar e 1 retido para revisao." localFrame={local - 372} tone="#111827" value="6 pagamentos acima de R$ 1.000" />
         </div>
-        <div style={{ ...chatGptSequenceStyle(local, 464, 18), margin: '0 36px' }}>
+        <div style={{ ...sequence(variant, local, 464, 18), margin: '0 36px' }}>
           <ApprovalCard click={approveClick} localFrame={local - 464} />
         </div>
-        <ChatGptToolCallCard style={chatGptSequenceStyle(local, 672, 16)} toolName="aprovar_pagamentos" />
-        <ChatGptToolResultCard style={chatGptSequenceStyle(local, 724, 18)}>
+        <VariantToolCall style={sequence(variant, local, 672, 16)} toolName="aprovar_pagamentos" variant={variant} />
+        <VariantToolResult style={sequence(variant, local, 724, 18)} variant={variant}>
           <CascadeCard localFrame={local - 724} progressStart={10} subtitle="3 aprovados, 2 agendados, 1 retido" title="Resultado da aprovacao">
             {approvalPayments.map((_, index) => <ApprovalResultRow key={index} index={index} localFrame={local - 724} />)}
           </CascadeCard>
-        </ChatGptToolResultCard>
-        <ChatGptFlowAssistantText showHeader={false} style={chatGptSequenceStyle(local, 890, 22)}>
+        </VariantToolResult>
+        <VariantAssistantText showHeader={false} style={sequence(variant, local, 890, 22)} variant={variant}>
           Pagamentos aprovados e agendados com seguranca. Frete Sul ficou retido porque saiu do padrao mensal.
-        </ChatGptFlowAssistantText>
-      </ChatGptMobileShell>
+        </VariantAssistantText>
+      </VariantShell>
       <div style={{ left: 520, opacity: p(local, 594, 614) * p(local, 648, 674, [1, 0]), position: 'absolute', top: 1108, transform: `scale(${1.7 - Math.sin(approveClick * Math.PI) * 0.16})`, zIndex: 20 }}>
         <svg fill="none" height="50" viewBox="0 0 84 84" width="50">
           <path d="M18 10L62 48L44 52L35 72L18 10Z" fill="#111111" stroke="#ffffff" strokeLinejoin="round" strokeWidth="4" />
@@ -1096,7 +1225,7 @@ function StatusSyncRow({ index, localFrame, rows }: { index: number; localFrame:
   )
 }
 
-function AgentSixChat({ start }: { start: number }) {
+function AgentSixChat({ start, variant = 'chatgpt' }: { start: number; variant?: MobileVariant }) {
   const frame = useCurrentFrame()
   const local = Math.max(0, frame - start)
   const opacity = p(frame, start - 12, start + 14) * p(frame, start + 880, start + 918, [1, 0])
@@ -1105,30 +1234,30 @@ function AgentSixChat({ start }: { start: number }) {
 
   return (
     <div style={{ inset: 0, opacity, position: 'absolute' }}>
-      <ChatGptMobileShell conversationY={conversationY} promptInputBottom={36}>
-        <ChatGptFlowUserBubble style={fadeOnlyStyle(local, 12)}>{prompt}</ChatGptFlowUserBubble>
-        <ChatGptFlowAssistantText style={chatGptSequenceStyle(local, 74, 22)}>
+      <VariantShell conversationY={conversationY} variant={variant}>
+        <VariantUserBubble style={fadeOnlyStyle(local, 12)} variant={variant}>{prompt}</VariantUserBubble>
+        <VariantAssistantText style={sequence(variant, local, 74, 22)} variant={variant}>
           Vou fechar o mes cruzando extratos, despesas, receitas, notas, impostos e pendencias contabeis antes de gerar o pacote final.
-        </ChatGptFlowAssistantText>
-        <ChatGptToolCallCard style={chatGptSequenceStyle(local, 148, 16)} toolName="verificar_fechamento_mensal" />
-        <ChatGptToolResultCard style={chatGptSequenceStyle(local, 202, 18)}>
+        </VariantAssistantText>
+        <VariantToolCall style={sequence(variant, local, 148, 16)} toolName="verificar_fechamento_mensal" variant={variant} />
+        <VariantToolResult style={sequence(variant, local, 202, 18)} variant={variant}>
           <CascadeCard localFrame={local - 202} progressStart={12} subtitle="Checklist financeiro, fiscal e contabil" title="Fechamento mensal">
             {closingChecks.map((_, index) => <StatusSyncRow key={index} index={index} localFrame={local - 202} rows={closingChecks} />)}
           </CascadeCard>
-        </ChatGptToolResultCard>
-        <ChatGptFlowAssistantText showHeader={false} style={chatGptSequenceStyle(local, 372, 22)}>
+        </VariantToolResult>
+        <VariantAssistantText showHeader={false} style={sequence(variant, local, 372, 22)} variant={variant}>
           O mes esta praticamente fechado: duas pendencias contabeis foram separadas, e o restante esta pronto para pacote executivo.
-        </ChatGptFlowAssistantText>
-        <ChatGptToolCallCard style={chatGptSequenceStyle(local, 456, 16)} toolName="gerar_pacote_fechamento" />
-        <ChatGptToolResultCard style={chatGptSequenceStyle(local, 510, 18)}>
+        </VariantAssistantText>
+        <VariantToolCall style={sequence(variant, local, 456, 16)} toolName="gerar_pacote_fechamento" variant={variant} />
+        <VariantToolResult style={sequence(variant, local, 510, 18)} variant={variant}>
           <CascadeCard localFrame={local - 510} progressStart={10} subtitle="DRE, caixa, fiscal, contabilidade e insights" title="Pacote de fechamento">
             {closingPackage.map((_, index) => <StatusSyncRow key={index} index={index} localFrame={local - 510} rows={closingPackage} />)}
           </CascadeCard>
-        </ChatGptToolResultCard>
-        <ChatGptFlowAssistantText showHeader={false} style={chatGptSequenceStyle(local, 690, 22)}>
+        </VariantToolResult>
+        <VariantAssistantText showHeader={false} style={sequence(variant, local, 690, 22)} variant={variant}>
           Fechamento gerado com DRE, fluxo de caixa, pacote contabil e agenda fiscal do proximo mes.
-        </ChatGptFlowAssistantText>
-      </ChatGptMobileShell>
+        </VariantAssistantText>
+      </VariantShell>
     </div>
   )
 }
@@ -1171,7 +1300,7 @@ function AdminDocsScene({ start }: { start: number }) {
   )
 }
 
-function AgentSevenChat({ start }: { start: number }) {
+function AgentSevenChat({ start, variant = 'chatgpt' }: { start: number; variant?: MobileVariant }) {
   const frame = useCurrentFrame()
   const local = Math.max(0, frame - start)
   const opacity = p(frame, start - 12, start + 14) * p(frame, start + 760, start + 796, [1, 0])
@@ -1180,30 +1309,30 @@ function AgentSevenChat({ start }: { start: number }) {
 
   return (
     <div style={{ inset: 0, opacity, position: 'absolute' }}>
-      <ChatGptMobileShell conversationY={conversationY} promptInputBottom={36}>
-        <ChatGptFlowUserBubble style={fadeOnlyStyle(local, 12)}>{prompt}</ChatGptFlowUserBubble>
-        <ChatGptFlowAssistantText style={chatGptSequenceStyle(local, 74, 22)}>
+      <VariantShell conversationY={conversationY} variant={variant}>
+        <VariantUserBubble style={fadeOnlyStyle(local, 12)} variant={variant}>{prompt}</VariantUserBubble>
+        <VariantAssistantText style={sequence(variant, local, 74, 22)} variant={variant}>
           Vou localizar documentos administrativos, classificar por tipo, separar pendencias e montar uma pasta pronta para revisao.
-        </ChatGptFlowAssistantText>
-        <ChatGptToolCallCard style={chatGptSequenceStyle(local, 148, 16)} toolName="buscar_documentos_administrativos" />
-        <ChatGptToolResultCard style={chatGptSequenceStyle(local, 202, 18)}>
+        </VariantAssistantText>
+        <VariantToolCall style={sequence(variant, local, 148, 16)} toolName="buscar_documentos_administrativos" variant={variant} />
+        <VariantToolResult style={sequence(variant, local, 202, 18)} variant={variant}>
           <CascadeCard localFrame={local - 202} progressStart={12} subtitle="Contratos, boletos, notas e comprovantes" title="Documentos encontrados">
             {adminDocuments.map((_, index) => <StatusSyncRow key={index} index={index} localFrame={local - 202} rows={adminDocuments} />)}
           </CascadeCard>
-        </ChatGptToolResultCard>
-        <ChatGptFlowAssistantText showHeader={false} style={chatGptSequenceStyle(local, 372, 22)}>
+        </VariantToolResult>
+        <VariantAssistantText showHeader={false} style={sequence(variant, local, 372, 22)} variant={variant}>
           Encontrei 6 grupos de documentos. Um contrato ainda precisa assinatura e duas pendencias foram separadas.
-        </ChatGptFlowAssistantText>
-        <ChatGptToolCallCard style={chatGptSequenceStyle(local, 456, 16)} toolName="organizar_pastas_documentos" />
-        <ChatGptToolResultCard style={chatGptSequenceStyle(local, 510, 18)}>
+        </VariantAssistantText>
+        <VariantToolCall style={sequence(variant, local, 456, 16)} toolName="organizar_pastas_documentos" variant={variant} />
+        <VariantToolResult style={sequence(variant, local, 510, 18)} variant={variant}>
           <CascadeCard localFrame={local - 510} progressStart={10} subtitle="Pastas, arquivos e pendencias administrativas" title="Pasta administrativa">
             {documentFolders.map((_, index) => <StatusSyncRow key={index} index={index} localFrame={local - 510} rows={documentFolders} />)}
           </CascadeCard>
-        </ChatGptToolResultCard>
-        <ChatGptFlowAssistantText showHeader={false} style={chatGptSequenceStyle(local, 690, 22)}>
+        </VariantToolResult>
+        <VariantAssistantText showHeader={false} style={sequence(variant, local, 690, 22)} variant={variant}>
           Organizei o pacote administrativo da semana e deixei pendencias prontas para acompanhamento.
-        </ChatGptFlowAssistantText>
-      </ChatGptMobileShell>
+        </VariantAssistantText>
+      </VariantShell>
     </div>
   )
 }
@@ -1231,6 +1360,44 @@ export function ChatGptFinancialTwoAgentsVideo() {
       <PromptInputScene frame={frame} prompt="Faca o fechamento financeiro e contabil do mes." start={5220} />
       <AgentSevenChat start={6268} />
       <PromptInputScene frame={frame} prompt="Organize contratos, boletos e documentos administrativos da semana." start={6160} />
+      <AdminDocsScene start={7008} />
+    </AbsoluteFill>
+  )
+}
+
+export function ClaudeFinancialTwoAgentsVideo() {
+  const frame = useCurrentFrame()
+
+  return (
+    <AbsoluteFill style={{ background: '#fbfaf8', color: '#111111', fontFamily: CLAUDE_MOBILE_FONT_STACK, overflow: 'hidden' }}>
+      <style>
+        {`
+          .claude-financial-response,
+          .claude-financial-response-copy,
+          .claude-financial-response-copy span {
+            font-family: "Libre Baskerville", Baskerville, Georgia, "Times New Roman", serif !important;
+            letter-spacing: -0.02em !important;
+          }
+        `}
+      </style>
+      <AgentOneChat start={108} variant="claude" />
+      <PromptInputScene frame={frame} prompt="Classifique as ultimas despesas e concilie bancos, cartoes e movimentacoes." start={0} variant="claude" />
+      <AgentTwoChat start={988} variant="claude" />
+      <PromptInputScene frame={frame} prompt="Veja as ultimas contas a pagar e a receber e crie um relatorio com dashboard de fluxo de caixa." start={880} variant="claude" />
+      <ReportSlideScene start={1820} />
+      <DashboardScene end={2120} start={1962} />
+      <AgentThreeChat start={2270} variant="claude" />
+      <PromptInputScene frame={frame} prompt="Organize documentos, notas fiscais e impostos pendentes, e emita a nota fiscal do ultimo servico aprovado." start={2162} variant="claude" />
+      <InvoiceIssuedScene start={2880} />
+      <AgentFourChat start={3198} variant="claude" />
+      <PromptInputScene frame={frame} prompt="Cobre os clientes inadimplentes e me mostre as mensagens enviadas." start={3090} variant="claude" />
+      <WhatsAppMessagesScene start={3998} />
+      <AgentFiveChat start={4358} variant="claude" />
+      <PromptInputScene frame={frame} prompt="Revise pagamentos acima de R$ 1.000 e me peca aprovacao antes de executar." start={4250} variant="claude" />
+      <AgentSixChat start={5328} variant="claude" />
+      <PromptInputScene frame={frame} prompt="Faca o fechamento financeiro e contabil do mes." start={5220} variant="claude" />
+      <AgentSevenChat start={6268} variant="claude" />
+      <PromptInputScene frame={frame} prompt="Organize contratos, boletos e documentos administrativos da semana." start={6160} variant="claude" />
       <AdminDocsScene start={7008} />
     </AbsoluteFill>
   )

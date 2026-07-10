@@ -87,7 +87,7 @@ import {
   TweetAnimation,
 } from '@/assets/remotion/compositions/McpOperationsDemo'
 import { CHATGPT_FINANCIAL_AGENTS_VIDEO_DURATION, ChatGptFinancialAgentsVideo, ChatGptMobileAnimation, ChatGptToolCallDemoAnimation } from '@/assets/remotion/compositions/ChatGptMobileMarketing'
-import { CHATGPT_FINANCIAL_TWO_AGENTS_DURATION, ChatGptFinancialTwoAgentsVideo } from '@/assets/remotion/compositions/ChatGptFinancialTwoAgentsVideo'
+import { CHATGPT_FINANCIAL_TWO_AGENTS_DURATION, CLAUDE_FINANCIAL_TWO_AGENTS_DURATION, ChatGptFinancialTwoAgentsVideo, ClaudeFinancialTwoAgentsVideo } from '@/assets/remotion/compositions/ChatGptFinancialTwoAgentsVideo'
 import { ChatGptOperationalFlowsVideo } from '@/assets/remotion/compositions/ChatGptOperationalFlowsVideo'
 import { ChatGptTaskLauncherAnimation } from '@/assets/remotion/compositions/ChatGptTaskLauncherAnimation'
 import { CODEX_CHARTS_DURATION, CodexChartsAnimation } from '@/assets/remotion/compositions/CodexChartsAnimation'
@@ -3185,6 +3185,18 @@ const catalog: CatalogItem[] = [
     label: 'ChatGPT Financial Two Agents',
     tags: ['ChatGPT', 'Financeiro', 'Agentes', 'Dashboard', 'Fiscal', 'Otto'],
     value: 'video-chatgpt-financial-two-agents',
+    width: 1080,
+  },
+  {
+    code: '<ClaudeFinancialTwoAgentsVideo />',
+    component: ClaudeFinancialTwoAgentsVideo,
+    description: 'Video mobile do Claude com Otto operando financeiro, contabilidade, cobranca, aprovacao, fechamento e documentos administrativos.',
+    duration: CLAUDE_FINANCIAL_TWO_AGENTS_DURATION,
+    height: 1920,
+    kind: 'Vídeos criados',
+    label: 'Claude Financial Two Agents',
+    tags: ['Claude', 'Financeiro', 'Agentes', 'Dashboard', 'Fiscal', 'Otto'],
+    value: 'video-claude-financial-two-agents',
     width: 1080,
   },
   {
