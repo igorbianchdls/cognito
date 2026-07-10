@@ -17,7 +17,7 @@ import { IOS_REMOTION_FONT_STACK, loadSfProFonts } from '@/assets/remotion/fonts
 
 loadSfProFonts()
 
-export const CHATGPT_FINANCIAL_TWO_AGENTS_DURATION = 3080
+export const CHATGPT_FINANCIAL_TWO_AGENTS_DURATION = 4320
 
 const FONT = IOS_REMOTION_FONT_STACK
 
@@ -702,6 +702,182 @@ function InvoiceIssuedScene({ start }: { start: number }) {
   )
 }
 
+const overdueCustomers = [
+  { color: '#0ea5e9', completeAt: 72, description: 'NF-2041 vencida ha 18 dias', initials: 'CN', name: 'Cliente Norte', priority: 'Alta', value: 'R$ 42.100' },
+  { color: '#7c3aed', completeAt: 84, description: 'Boleto vencido ha 9 dias', initials: 'RA', name: 'Rede Alpha', priority: 'Media', value: 'R$ 18.600' },
+  { color: '#95bf47', completeAt: 96, description: 'Mensalidade vencida ha 6 dias', initials: 'LP', name: 'Loja Prime', priority: 'Baixa', value: 'R$ 11.400' },
+  { color: '#f97316', completeAt: 108, description: 'Parcela em aberto ha 14 dias', initials: 'MS', name: 'Mercado Sul', priority: 'Alta', value: 'R$ 28.900' },
+]
+
+const collectionSteps = [
+  { color: '#25d366', completeAt: 66, description: 'Mensagem amigavel com contexto financeiro', initials: 'WA', name: 'WhatsApp', status: 'Pronto' },
+  { color: '#0ea5e9', completeAt: 78, description: 'Link de pagamento e codigo PIX', initials: 'PX', name: 'PIX + boleto', status: 'Gerado' },
+  { color: '#7c3aed', completeAt: 90, description: 'Follow-up em D+2 se nao houver resposta', initials: 'F2', name: 'Proximo contato', status: 'Agendado' },
+  { color: '#111827', completeAt: 102, description: 'Historico salvo no contas a receber', initials: 'AR', name: 'Registro financeiro', status: 'Salvo' },
+]
+
+function CollectionCustomerRow({ index, localFrame }: { index: number; localFrame: number }) {
+  const item = overdueCustomers[index]
+  const rowIn = p(localFrame, 8 + index * 10, 22 + index * 10)
+  const complete = localFrame >= item.completeAt
+  const high = item.priority === 'Alta'
+
+  return (
+    <div style={{ alignItems: 'center', display: 'grid', gap: 14, gridTemplateColumns: '42px 1fr auto auto 28px', height: 72, opacity: rowIn, padding: '0 22px', transform: `translateY(${(1 - rowIn) * 18}px)` }}>
+      <BrandIconBox row={item} />
+      <div style={{ display: 'grid', gap: 5, minWidth: 0 }}>
+        <strong style={{ color: '#111111', fontSize: 21, fontWeight: 610, letterSpacing: -0.1, lineHeight: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{item.name}</strong>
+        <span style={{ color: '#8a8a8a', fontSize: 15, fontWeight: 420, lineHeight: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{item.description} · {item.value}</span>
+      </div>
+      <span style={{ background: high ? '#fff1f2' : '#fff7ed', borderRadius: 999, color: high ? '#be123c' : '#c2410c', fontSize: 16, fontWeight: 760, padding: '8px 11px' }}>{item.priority}</span>
+      <span style={{ color: complete ? '#166534' : '#111111', fontSize: 18, fontWeight: 540 }}>{complete ? 'Mapeado' : 'Verificando'}</span>
+      <Spinner active={!complete} />
+    </div>
+  )
+}
+
+function CollectionStepRow({ index, localFrame }: { index: number; localFrame: number }) {
+  const item = collectionSteps[index]
+  const rowIn = p(localFrame, 8 + index * 10, 22 + index * 10)
+  const complete = localFrame >= item.completeAt
+
+  return (
+    <div style={{ alignItems: 'center', display: 'grid', gap: 14, gridTemplateColumns: '42px 1fr auto 28px', height: 72, opacity: rowIn, padding: '0 22px', transform: `translateY(${(1 - rowIn) * 18}px)` }}>
+      <BrandIconBox row={item} />
+      <div style={{ display: 'grid', gap: 5, minWidth: 0 }}>
+        <strong style={{ color: '#111111', fontSize: 21, fontWeight: 610, letterSpacing: -0.1, lineHeight: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{item.name}</strong>
+        <span style={{ color: '#8a8a8a', fontSize: 15, fontWeight: 420, lineHeight: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{item.description}</span>
+      </div>
+      <span style={{ color: complete ? '#166534' : '#111111', fontSize: 18, fontWeight: 540 }}>{complete ? item.status : 'Preparando'}</span>
+      <Spinner active={!complete} />
+    </div>
+  )
+}
+
+function WhatsAppOutlineCard({ click, progress }: { click: number; progress: number }) {
+  return (
+    <div style={{ alignItems: 'center', background: click > 0.45 ? '#f7f7f7' : '#ffffff', border: '1.5px solid #d6cec3', borderRadius: 28, boxShadow: '0 18px 42px rgba(50,45,35,0.10)', display: 'grid', gridTemplateColumns: '174px 1fr', height: 142, opacity: progress, overflow: 'hidden', padding: '0 34px', transform: `translateY(${(1 - progress) * 22}px) scale(${1 - Math.sin(click * Math.PI) * 0.018})`, width: '100%' }}>
+      <div style={{ alignItems: 'center', alignSelf: 'stretch', display: 'flex', justifyContent: 'flex-start', overflow: 'hidden', position: 'relative' }}>
+        <div style={{ alignItems: 'center', background: '#ecfdf3', border: '1.5px solid #bbf7d0', borderRadius: 18, color: '#16a34a', display: 'flex', height: 126, justifyContent: 'center', transform: 'rotate(-6deg)', width: 126 }}>
+          <span style={{ alignItems: 'center', background: '#25d366', borderRadius: 999, color: '#ffffff', display: 'flex', fontSize: 34, fontWeight: 820, height: 70, justifyContent: 'center', width: 70 }}>W</span>
+        </div>
+      </div>
+      <div style={{ display: 'grid', gap: 10, minWidth: 0 }}>
+        <strong style={{ color: '#242424', fontSize: 34, fontWeight: 520, letterSpacing: 0, lineHeight: 1.08, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>cobrancas_whatsapp_enviadas</strong>
+        <span style={{ color: '#77736d', fontSize: 27, fontWeight: 440, letterSpacing: 0 }}>WhatsApp · Mensagens</span>
+      </div>
+    </div>
+  )
+}
+
+function AgentFourChat({ start }: { start: number }) {
+  const frame = useCurrentFrame()
+  const local = Math.max(0, frame - start)
+  const opacity = p(frame, start - 12, start + 14) * p(frame, start + 790, start + 826, [1, 0])
+  const prompt = 'Cobre os clientes inadimplentes e me mostre as mensagens enviadas.'
+  const conversationY = stagedScroll(local, [0, 302, 548, 720], [0, 0, -560, -1060])
+  const click = p(local, 762, 772)
+  const cardIn = p(local, 708, 738)
+
+  return (
+    <div style={{ inset: 0, opacity, position: 'absolute' }}>
+      <ChatGptMobileShell conversationY={conversationY} promptInputBottom={36}>
+        <ChatGptFlowUserBubble style={fadeOnlyStyle(local, 12)}>{prompt}</ChatGptFlowUserBubble>
+        <ChatGptFlowAssistantText style={chatGptSequenceStyle(local, 74, 22)}>
+          Vou localizar clientes em atraso, priorizar por valor e dias vencidos, preparar a abordagem e enviar as mensagens pelo WhatsApp.
+        </ChatGptFlowAssistantText>
+        <ChatGptToolCallCard style={chatGptSequenceStyle(local, 146, 16)} toolName="buscar_inadimplentes" />
+        <ChatGptToolResultCard style={chatGptSequenceStyle(local, 198, 18)}>
+          <CascadeCard localFrame={local - 198} progressStart={12} subtitle="Clientes, valores em aberto e prioridade" title="Inadimplentes encontrados">
+            {overdueCustomers.map((_, index) => <CollectionCustomerRow key={index} index={index} localFrame={local - 198} />)}
+          </CascadeCard>
+        </ChatGptToolResultCard>
+        <ChatGptFlowAssistantText showHeader={false} style={chatGptSequenceStyle(local, 354, 22)}>
+          Prioridade alta: Cliente Norte e Mercado Sul somam R$ 71.000 em atraso. Vou usar um tom amigavel, com PIX e boleto.
+        </ChatGptFlowAssistantText>
+        <ChatGptToolCallCard style={chatGptSequenceStyle(local, 430, 16)} toolName="preparar_cobrancas" />
+        <ChatGptToolResultCard style={chatGptSequenceStyle(local, 478, 18)}>
+          <CascadeCard localFrame={local - 478} progressStart={10} subtitle="Canal, pagamento, follow-up e registro" title="Contexto de cobranca">
+            {collectionSteps.map((_, index) => <CollectionStepRow key={index} index={index} localFrame={local - 478} />)}
+          </CascadeCard>
+        </ChatGptToolResultCard>
+        <ChatGptFlowAssistantText showHeader={false} style={chatGptSequenceStyle(local, 620, 22)}>
+          Cobranças prontas. Vou enviar as mensagens e salvar o historico no contas a receber.
+        </ChatGptFlowAssistantText>
+        <ChatGptToolCallCard style={chatGptSequenceStyle(local, 664, 16)} toolName="enviar_mensagens_whatsapp" />
+        <div style={{ ...chatGptSequenceStyle(local, 708, 18), margin: '0 36px' }}>
+          <WhatsAppOutlineCard click={click} progress={cardIn} />
+        </div>
+      </ChatGptMobileShell>
+      <div style={{ left: 188, opacity: p(local, 736, 756), position: 'absolute', top: 932, transform: `scale(${1.75 - Math.sin(click * Math.PI) * 0.16})`, zIndex: 20 }}>
+        <svg fill="none" height="50" viewBox="0 0 84 84" width="50">
+          <path d="M18 10L62 48L44 52L35 72L18 10Z" fill="#111111" stroke="#ffffff" strokeLinejoin="round" strokeWidth="4" />
+        </svg>
+      </div>
+    </div>
+  )
+}
+
+function WhatsAppMessagesScene({ start }: { start: number }) {
+  const frame = useCurrentFrame()
+  const local = frame - start
+  const sceneIn = p(local, 0, 28)
+  const phoneIn = p(local, 10, 42)
+  const message1 = p(local, 54, 80)
+  const message2 = p(local, 90, 116)
+  const message3 = p(local, 126, 152)
+
+  return (
+    <div style={{ background: '#e8f5ee', inset: 0, opacity: sceneIn, position: 'absolute' }}>
+      <div style={{ color: '#1f6f4a', fontSize: 26, fontWeight: 820, left: 66, position: 'absolute', top: 152 }}>WhatsApp</div>
+      <div style={{ background: '#ffffff', border: '1px solid #cfe7da', borderRadius: 34, boxShadow: '0 36px 96px rgba(16, 94, 61, 0.22)', display: 'grid', gridTemplateRows: '98px 1fr', left: 38, overflow: 'hidden', position: 'absolute', right: 38, top: 300, transform: `translateY(${(1 - phoneIn) * 30}px) scale(${0.96 + phoneIn * 0.04})` }}>
+        <header style={{ alignItems: 'center', background: '#075e54', color: '#ffffff', display: 'flex', gap: 18, padding: '0 28px' }}>
+          <span style={{ alignItems: 'center', background: '#d9fdd3', borderRadius: 999, color: '#075e54', display: 'flex', fontSize: 22, fontWeight: 820, height: 54, justifyContent: 'center', width: 54 }}>CN</span>
+          <div style={{ minWidth: 0 }}>
+            <div style={{ fontSize: 25, fontWeight: 820, lineHeight: 1 }}>Cliente Norte</div>
+            <div style={{ color: 'rgba(255,255,255,0.76)', fontSize: 16, fontWeight: 520, marginTop: 4 }}>online agora · cobranca enviada</div>
+          </div>
+          <span style={{ background: 'rgba(255,255,255,0.14)', borderRadius: 999, fontSize: 15, fontWeight: 760, marginLeft: 'auto', padding: '9px 13px' }}>3 mensagens</span>
+        </header>
+        <div style={{ background: '#efe7dd', display: 'grid', gridTemplateColumns: '280px 1fr', minHeight: 1160 }}>
+          <aside style={{ background: '#f7faf8', borderRight: '1px solid #dbe8df', padding: 18 }}>
+            {[
+              ['CN', 'Cliente Norte', 'PIX e boleto enviados', '#0ea5e9'],
+              ['RA', 'Rede Alpha', 'Mensagem enviada', '#7c3aed'],
+              ['LP', 'Loja Prime', 'Follow-up agendado', '#95bf47'],
+            ].map(([initials, name, detail, color], index) => (
+              <div key={name} style={{ alignItems: 'center', background: index === 0 ? '#e7f7ef' : '#ffffff', border: '1px solid #dce9e2', borderRadius: 18, display: 'grid', gap: 12, gridTemplateColumns: '48px 1fr', marginBottom: 12, padding: 12 }}>
+                <span style={{ alignItems: 'center', background: color, borderRadius: 999, color: '#ffffff', display: 'flex', fontSize: 16, fontWeight: 820, height: 48, justifyContent: 'center', width: 48 }}>{initials}</span>
+                <div style={{ minWidth: 0 }}>
+                  <div style={{ color: '#111827', fontSize: 18, fontWeight: 780, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{name}</div>
+                  <div style={{ color: '#667085', fontSize: 14, fontWeight: 520, marginTop: 4, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{detail}</div>
+                </div>
+              </div>
+            ))}
+          </aside>
+          <main style={{ padding: '34px 30px', position: 'relative' }}>
+            <div style={{ background: '#ffffff', borderRadius: 18, color: '#111827', fontSize: 19, fontWeight: 520, lineHeight: 1.35, marginBottom: 18, marginLeft: 'auto', maxWidth: 610, opacity: message1, padding: '18px 20px', transform: `translateY(${(1 - message1) * 16}px)` }}>
+              Oi, pessoal do Cliente Norte. Tudo bem? Identifiquei a NF-2041 em aberto, no valor de R$ 42.100, vencida ha 18 dias.
+              <div style={{ color: '#667085', fontSize: 13, fontWeight: 700, marginTop: 8, textAlign: 'right' }}>09:42 ✓✓</div>
+            </div>
+            <div style={{ background: '#d9fdd3', borderRadius: 18, color: '#111827', fontSize: 19, fontWeight: 520, lineHeight: 1.35, marginBottom: 18, marginLeft: 'auto', maxWidth: 610, opacity: message2, padding: '18px 20px', transform: `translateY(${(1 - message2) * 16}px)` }}>
+              Para facilitar, envio aqui o PIX copia e cola e o boleto atualizado. Se ja tiverem pago, podem desconsiderar e me mandar o comprovante por aqui.
+              <div style={{ background: '#ffffff', border: '1px solid #bfe9cb', borderRadius: 14, color: '#166534', fontSize: 17, fontWeight: 780, marginTop: 14, padding: 14 }}>PIX · Boleto atualizado · R$ 42.100</div>
+              <div style={{ color: '#667085', fontSize: 13, fontWeight: 700, marginTop: 8, textAlign: 'right' }}>09:42 ✓✓</div>
+            </div>
+            <div style={{ background: '#d9fdd3', borderRadius: 18, color: '#111827', fontSize: 19, fontWeight: 520, lineHeight: 1.35, marginLeft: 'auto', maxWidth: 610, opacity: message3, padding: '18px 20px', transform: `translateY(${(1 - message3) * 16}px)` }}>
+              Tambem deixei um lembrete automatico para daqui a 2 dias, caso ainda nao conste baixa no financeiro.
+              <div style={{ color: '#667085', fontSize: 13, fontWeight: 700, marginTop: 8, textAlign: 'right' }}>09:43 ✓✓</div>
+            </div>
+            <div style={{ background: '#ffffff', border: '1px solid #d8e2dc', borderRadius: 999, bottom: 22, color: '#8a8a8a', fontSize: 18, fontWeight: 520, left: 30, padding: '18px 24px', position: 'absolute', right: 30 }}>Mensagem enviada pelo Otto</div>
+          </main>
+        </div>
+      </div>
+      <div style={{ background: '#050505', borderRadius: 999, bottom: 18, height: 12, left: '50%', position: 'absolute', transform: 'translateX(-50%)', width: 380 }} />
+    </div>
+  )
+}
+
 export function ChatGptFinancialTwoAgentsVideo() {
   const frame = useCurrentFrame()
 
@@ -716,6 +892,9 @@ export function ChatGptFinancialTwoAgentsVideo() {
       <AgentThreeChat start={2270} />
       <PromptInputScene frame={frame} prompt="Organize documentos, notas fiscais e impostos pendentes, e emita a nota fiscal do ultimo servico aprovado." start={2162} />
       <InvoiceIssuedScene start={2880} />
+      <AgentFourChat start={3198} />
+      <PromptInputScene frame={frame} prompt="Cobre os clientes inadimplentes e me mostre as mensagens enviadas." start={3090} />
+      <WhatsAppMessagesScene start={3998} />
     </AbsoluteFill>
   )
 }
