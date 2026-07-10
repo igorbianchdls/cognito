@@ -94,6 +94,7 @@ import { CHATBOT_DASHBOARD_MOBILE_DURATION, CHATGPT_POWERPOINT_OUTLINE_MOBILE_DU
 import { CLAUDE_FINANCIAL_AGENTS_VIDEO_DURATION, ClaudeFinancialAgentsVideo } from '@/assets/remotion/compositions/ClaudeFinancialAgentsVideo'
 import { ClaudeMobileAnimation } from '@/assets/remotion/compositions/ClaudeMobileMarketing'
 import { ClaudeOperationalFlowsVideo } from '@/assets/remotion/compositions/ClaudeOperationalFlowsVideo'
+import { CHATBOT_SYNC_TOOL_DURATION, ChatbotSyncToolAnimation } from '@/assets/remotion/compositions/ChatbotSyncToolAnimation'
 import { BANK_RECONCILIATION_CASCADE_DURATION, BankReconciliationCascadeAnimation, EXPENSE_CLASSIFICATION_CASCADE_DURATION, ExpenseClassificationCascadeAnimation } from '@/assets/remotion/compositions/FinanceOpsCascadeAnimations'
 import { SYNC_ACCOUNTS_ANIMATION_DURATION, SyncAccountsAnimation } from '@/assets/remotion/compositions/SyncAccountsAnimation'
 import {
@@ -3207,6 +3208,18 @@ const catalog: CatalogItem[] = [
     label: 'Account Sync Cascade',
     tags: ['Sync', 'Accounts', 'Plaid', 'Finance', 'Integration'],
     value: 'video-account-sync-cascade',
+    width: 1080,
+  },
+  {
+    code: '<ChatbotSyncToolAnimation />',
+    component: ChatbotSyncToolAnimation,
+    description: 'Conversa mobile em que Otto recebe um pedido de conciliacao, chama uma ferramenta e exibe a sincronizacao de contas dentro do chat.',
+    duration: CHATBOT_SYNC_TOOL_DURATION,
+    height: 1920,
+    kind: 'Vídeos criados',
+    label: 'Chatbot Sync Tool',
+    tags: ['Chatbot', 'Sync', 'Tool Call', 'Financeiro', 'Otto'],
+    value: 'video-chatbot-sync-tool',
     width: 1080,
   },
   {
