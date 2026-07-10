@@ -14,7 +14,7 @@ import { IOS_REMOTION_FONT_STACK, loadSfProFonts } from '@/assets/remotion/fonts
 
 loadSfProFonts()
 
-export const CHATGPT_FINANCIAL_TWO_AGENTS_DURATION = 2360
+export const CHATGPT_FINANCIAL_TWO_AGENTS_DURATION = 2920
 
 const FONT = IOS_REMOTION_FONT_STACK
 
@@ -31,6 +31,10 @@ function fadeOnlyStyle(frame: number, start: number) {
     opacity: p(frame, start, start + 18),
     transform: 'translateY(0px)',
   }
+}
+
+function stagedScroll(frame: number, points: [number, number, number, number], values: [number, number, number, number]) {
+  return interpolate(frame, points, values, { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' })
 }
 
 function PromptInputScene({ frame, prompt, start }: { frame: number; prompt: string; start: number }) {
@@ -183,7 +187,7 @@ function AgentOneChat({ start }: { start: number }) {
   const local = Math.max(0, frame - start)
   const opacity = p(frame, start - 12, start + 12) * p(frame, start + 662, start + 690, [1, 0])
   const prompt = 'Classifique as ultimas despesas e concilie bancos, cartoes e movimentacoes.'
-  const conversationY = interpolate(local, [0, 330, 520], [0, -520, -1080], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' })
+  const conversationY = stagedScroll(local, [0, 292, 438, 588], [0, 0, -470, -980])
 
   return (
     <div style={{ inset: 0, opacity, position: 'absolute' }}>
@@ -233,23 +237,98 @@ function FinancialReportCard({ progress }: { progress: number }) {
   )
 }
 
+const payableRows = [
+  { date: 'Hoje', name: 'Fornecedor Cloud', status: 'Prioridade', value: 'R$ 18.400' },
+  { date: '2 dias', name: 'Folha operacional', status: 'Programado', value: 'R$ 64.900' },
+  { date: '5 dias', name: 'Aluguel matriz', status: 'OK', value: 'R$ 12.800' },
+  { date: '7 dias', name: 'Impostos federais', status: 'Revisar', value: 'R$ 31.200' },
+]
+
+const receivableRows = [
+  { date: 'Hoje', name: 'Cliente Norte', status: 'Confirmado', value: 'R$ 42.100' },
+  { date: '3 dias', name: 'Grupo Delta', status: 'A vencer', value: 'R$ 76.500' },
+  { date: '8 dias', name: 'Mercado Sul', status: 'Atraso leve', value: 'R$ 28.900' },
+  { date: '12 dias', name: 'Canal B2B', status: 'Confirmado', value: 'R$ 54.700' },
+]
+
+function CashFlowTableCard({
+  localFrame,
+  rows,
+  title,
+  tone,
+}: {
+  localFrame: number
+  rows: Array<{ date: string; name: string; status: string; value: string }>
+  title: string
+  tone: 'green' | 'red'
+}) {
+  const tableIn = p(localFrame, 0, 18)
+  const accent = tone === 'green' ? '#16a34a' : '#dc2626'
+  const soft = tone === 'green' ? '#ecfdf3' : '#fff1f2'
+
+  return (
+    <div style={{ background: '#ffffff', border: '1px solid #e5e7eb', borderRadius: 24, boxShadow: '0 16px 42px rgba(15, 23, 42, 0.08)', opacity: tableIn, overflow: 'hidden', transform: `translateY(${(1 - tableIn) * 18}px)` }}>
+      <div style={{ alignItems: 'center', borderBottom: '1px solid #eef0f2', display: 'flex', justifyContent: 'space-between', padding: '22px 24px' }}>
+        <div>
+          <div style={{ color: '#111111', fontSize: 24, fontWeight: 720, letterSpacing: -0.1 }}>{title}</div>
+          <div style={{ color: '#7a7a7a', fontSize: 17, fontWeight: 430, marginTop: 5 }}>Vencimentos dos proximos 15 dias</div>
+        </div>
+        <span style={{ background: soft, borderRadius: 999, color: accent, fontSize: 17, fontWeight: 700, padding: '9px 13px' }}>Atualizado</span>
+      </div>
+      <div style={{ display: 'grid', gridTemplateColumns: '1.35fr 0.72fr 0.82fr', padding: '12px 24px 0' }}>
+        {['Nome', 'Valor', 'Status'].map((item) => (
+          <span key={item} style={{ color: '#8a8a8a', fontSize: 15, fontWeight: 700, textTransform: 'uppercase' }}>{item}</span>
+        ))}
+      </div>
+      {rows.map((row, index) => {
+        const rowIn = p(localFrame, 20 + index * 10, 36 + index * 10)
+        const isAlert = row.status === 'Prioridade' || row.status === 'Revisar' || row.status === 'Atraso leve'
+        return (
+          <div key={row.name} style={{ alignItems: 'center', borderTop: index === 0 ? '0 solid transparent' : '1px solid #f1f3f5', display: 'grid', gridTemplateColumns: '1.35fr 0.72fr 0.82fr', margin: '0 24px', minHeight: 68, opacity: rowIn, transform: `translateY(${(1 - rowIn) * 10}px)` }}>
+            <div style={{ display: 'grid', gap: 5, minWidth: 0 }}>
+              <strong style={{ color: '#111111', fontSize: 20, fontWeight: 650, letterSpacing: -0.1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{row.name}</strong>
+              <span style={{ color: '#8a8a8a', fontSize: 16, fontWeight: 430 }}>{row.date}</span>
+            </div>
+            <span style={{ color: '#111111', fontSize: 20, fontWeight: 520 }}>{row.value}</span>
+            <span style={{ background: isAlert ? '#fff7ed' : soft, borderRadius: 999, color: isAlert ? '#c2410c' : accent, fontSize: 16, fontWeight: 700, justifySelf: 'start', padding: '8px 11px' }}>{row.status}</span>
+          </div>
+        )
+      })}
+    </div>
+  )
+}
+
 function AgentTwoChat({ start }: { start: number }) {
   const frame = useCurrentFrame()
   const local = Math.max(0, frame - start)
-  const opacity = p(frame, start - 12, start + 14) * p(frame, start + 345, start + 375, [1, 0])
+  const opacity = p(frame, start - 12, start + 14) * p(frame, start + 785, start + 815, [1, 0])
   const prompt = 'Veja as ultimas contas a pagar e a receber e crie um relatorio com dashboard de fluxo de caixa.'
-  const cardIn = p(local, 178, 208)
+  const conversationY = stagedScroll(local, [0, 322, 548, 710], [0, 0, -560, -1060])
+  const cardIn = p(local, 642, 672)
 
   return (
     <div style={{ inset: 0, opacity, position: 'absolute' }}>
-      <ChatGptMobileShell promptInputBottom={36}>
+      <ChatGptMobileShell conversationY={conversationY} promptInputBottom={36}>
         <ChatGptFlowUserBubble style={fadeOnlyStyle(local, 12)}>{prompt}</ChatGptFlowUserBubble>
         <ChatGptFlowAssistantText style={chatGptSequenceStyle(local, 74, 22)}>
-          Vou analisar vencimentos, contas a receber e projecao de caixa, depois gerar um relatorio executivo com dashboard.
+          Vou primeiro levantar contas a pagar, depois contas a receber, cruzar os vencimentos e so no final montar o relatorio executivo.
         </ChatGptFlowAssistantText>
-        <ChatGptToolCallCard style={chatGptSequenceStyle(local, 148, 16)} toolName="monitorar_fluxo_caixa" />
-        <ChatGptToolCallCard style={chatGptSequenceStyle(local, 204, 16)} toolName="gerar_relatorio_financeiro" />
-        <div style={{ ...chatGptSequenceStyle(local, 250, 18), margin: '0 36px' }}>
+        <ChatGptToolCallCard style={chatGptSequenceStyle(local, 156, 16)} toolName="buscar_contas_a_pagar" />
+        <ChatGptToolResultCard style={chatGptSequenceStyle(local, 210, 18)}>
+          <CashFlowTableCard localFrame={local - 210} rows={payableRows} title="Contas a pagar" tone="red" />
+        </ChatGptToolResultCard>
+        <ChatGptFlowAssistantText showHeader={false} style={chatGptSequenceStyle(local, 372, 22)}>
+          Encontrei R$ 127.300 em compromissos proximos, com impostos e fornecedor cloud exigindo prioridade.
+        </ChatGptFlowAssistantText>
+        <ChatGptToolCallCard style={chatGptSequenceStyle(local, 456, 16)} toolName="buscar_contas_a_receber" />
+        <ChatGptToolResultCard style={chatGptSequenceStyle(local, 508, 18)}>
+          <CashFlowTableCard localFrame={local - 508} rows={receivableRows} title="Contas a receber" tone="green" />
+        </ChatGptToolResultCard>
+        <ChatGptFlowAssistantText showHeader={false} style={chatGptSequenceStyle(local, 650, 22)}>
+          A entrada prevista cobre os vencimentos, mas recomendo acompanhar Cliente Norte e Mercado Sul para proteger o caixa.
+        </ChatGptFlowAssistantText>
+        <ChatGptToolCallCard style={chatGptSequenceStyle(local, 704, 16)} toolName="gerar_relatorio_financeiro" />
+        <div style={{ ...chatGptSequenceStyle(local, 748, 18), margin: '0 36px' }}>
           <FinancialReportCard progress={cardIn} />
         </div>
       </ChatGptMobileShell>
@@ -437,7 +516,7 @@ function AgentThreeChat({ start }: { start: number }) {
   const local = Math.max(0, frame - start)
   const opacity = p(frame, start - 12, start + 14) * p(frame, start + 625, start + 655, [1, 0])
   const prompt = 'Organize documentos, notas fiscais e impostos pendentes, e emita a nota fiscal do ultimo servico aprovado.'
-  const conversationY = interpolate(local, [0, 280, 450], [0, -440, -920], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' })
+  const conversationY = stagedScroll(local, [0, 236, 386, 548], [0, 0, -410, -870])
   const click = p(local, 586, 596)
   const cardIn = p(local, 548, 578)
 
@@ -547,11 +626,11 @@ export function ChatGptFinancialTwoAgentsVideo() {
       <PromptInputScene frame={frame} prompt="Classifique as ultimas despesas e concilie bancos, cartoes e movimentacoes." start={0} />
       <AgentTwoChat start={828} />
       <PromptInputScene frame={frame} prompt="Veja as ultimas contas a pagar e a receber e crie um relatorio com dashboard de fluxo de caixa." start={720} />
-      <ReportSlideScene start={1168} />
-      <DashboardScene end={1468} start={1310} />
-      <AgentThreeChat start={1618} />
-      <PromptInputScene frame={frame} prompt="Organize documentos, notas fiscais e impostos pendentes, e emita a nota fiscal do ultimo servico aprovado." start={1510} />
-      <InvoiceIssuedScene start={2228} />
+      <ReportSlideScene start={1660} />
+      <DashboardScene end={1960} start={1802} />
+      <AgentThreeChat start={2110} />
+      <PromptInputScene frame={frame} prompt="Organize documentos, notas fiscais e impostos pendentes, e emita a nota fiscal do ultimo servico aprovado." start={2002} />
+      <InvoiceIssuedScene start={2720} />
     </AbsoluteFill>
   )
 }
