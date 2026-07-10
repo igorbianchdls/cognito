@@ -195,6 +195,81 @@ function CascadeCard({ children, localFrame, progressStart, subtitle, title }: {
   )
 }
 
+function ClickableResultCard({
+  click = 0,
+  kind,
+  progress,
+  subtitle,
+  title,
+}: {
+  click?: number
+  kind: 'dashboard' | 'invoice' | 'whatsapp'
+  progress: number
+  subtitle: string
+  title: string
+}) {
+  const icon = kind === 'dashboard'
+    ? (
+      <div style={{ border: '3px solid #252525', borderRadius: 7, display: 'grid', gap: 5, gridTemplateColumns: 'repeat(3, 10px)', padding: 8 }}>
+        {[16, 25, 12, 20, 14, 28].map((height, index) => <span key={`${height}-${index}`} style={{ alignSelf: 'end', background: index % 2 === 0 ? '#252525' : '#7b7b7b', borderRadius: 2, display: 'block', height, width: 10 }} />)}
+      </div>
+    )
+    : kind === 'invoice'
+      ? (
+        <div style={{ border: '3px solid #252525', borderRadius: 6, height: 52, position: 'relative', width: 40 }}>
+          <span style={{ background: '#252525', borderRadius: 999, height: 4, left: 8, position: 'absolute', top: 13, width: 24 }} />
+          <span style={{ background: '#252525', borderRadius: 999, height: 4, left: 8, position: 'absolute', top: 24, width: 18 }} />
+          <span style={{ background: '#12b76a', borderRadius: 999, bottom: -10, height: 20, position: 'absolute', right: -10, width: 20 }} />
+        </div>
+      )
+      : <span style={{ alignItems: 'center', background: '#25d366', borderRadius: 999, color: '#ffffff', display: 'flex', fontSize: 34, fontWeight: 820, height: 70, justifyContent: 'center', width: 70 }}>W</span>
+  const thumbBg = kind === 'whatsapp' ? '#ecfdf3' : kind === 'invoice' ? '#fffaf3' : '#fbfaf7'
+  const thumbBorder = kind === 'whatsapp' ? '#bbf7d0' : '#d8d0c4'
+
+  return (
+    <div style={{ alignItems: 'center', background: click > 0.45 ? '#f7f7f7' : '#ffffff', border: '1.5px solid #d6cec3', borderRadius: 28, boxShadow: '0 18px 42px rgba(50,45,35,0.10)', display: 'grid', gridTemplateColumns: '174px 1fr', height: 142, opacity: progress, overflow: 'hidden', padding: '0 34px', transform: `translateY(${(1 - progress) * 22}px) scale(${1 - Math.sin(click * Math.PI) * 0.018})`, width: '100%' }}>
+      <div style={{ alignItems: 'center', alignSelf: 'stretch', display: 'flex', justifyContent: 'flex-start', overflow: 'hidden', position: 'relative' }}>
+        <div style={{ alignItems: 'center', background: thumbBg, border: `1.5px solid ${thumbBorder}`, borderRadius: 18, color: '#16a34a', display: 'flex', height: 126, justifyContent: 'center', transform: 'rotate(-6deg)', width: 126 }}>
+          {icon}
+        </div>
+      </div>
+      <div style={{ display: 'grid', gap: 10, minWidth: 0 }}>
+        <strong style={{ color: '#242424', fontSize: 34, fontWeight: 520, letterSpacing: 0, lineHeight: 1.08, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{title}</strong>
+        <span style={{ color: '#77736d', fontSize: 27, fontWeight: 440, letterSpacing: 0 }}>{subtitle}</span>
+      </div>
+    </div>
+  )
+}
+
+function InsightCard({ caption, localFrame, tone = '#111827', value }: { caption: string; localFrame: number; tone?: string; value: string }) {
+  const cardIn = p(localFrame, 0, 18)
+
+  return (
+    <div style={{ background: '#ffffff', border: '1px solid #e5e7eb', borderRadius: 26, boxShadow: '0 16px 42px rgba(15, 23, 42, 0.08)', opacity: cardIn, padding: 24, transform: `translateY(${(1 - cardIn) * 18}px)` }}>
+      <div style={{ color: tone, fontSize: 38, fontWeight: 860, letterSpacing: -0.2, lineHeight: 1 }}>{value}</div>
+      <div style={{ color: '#667085', fontSize: 19, fontWeight: 520, lineHeight: 1.3, marginTop: 10 }}>{caption}</div>
+    </div>
+  )
+}
+
+function ChecklistProgress({ items, localFrame }: { items: string[]; localFrame: number }) {
+  return (
+    <div style={{ display: 'grid', gap: 10 }}>
+      {items.map((item, index) => {
+        const itemIn = p(localFrame, 8 + index * 8, 24 + index * 8)
+        const done = localFrame >= 52 + index * 8
+        return (
+          <div key={item} style={{ alignItems: 'center', background: '#f8fafc', border: '1px solid #edf1f5', borderRadius: 16, display: 'grid', gap: 12, gridTemplateColumns: '30px 1fr auto', opacity: itemIn, padding: '12px 14px', transform: `translateY(${(1 - itemIn) * 10}px)` }}>
+            <span style={{ alignItems: 'center', background: done ? '#16a34a' : '#e5e7eb', borderRadius: 999, color: '#ffffff', display: 'flex', fontSize: 16, fontWeight: 820, height: 30, justifyContent: 'center', width: 30 }}>{done ? '✓' : '·'}</span>
+            <span style={{ color: '#111111', fontSize: 18, fontWeight: 620, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{item}</span>
+            <span style={{ color: done ? '#166534' : '#667085', fontSize: 15, fontWeight: 720 }}>{done ? 'OK' : '...'}</span>
+          </div>
+        )
+      })}
+    </div>
+  )
+}
+
 function AgentOneChat({ start }: { start: number }) {
   const frame = useCurrentFrame()
   const local = Math.max(0, frame - start)
@@ -233,21 +308,7 @@ function AgentOneChat({ start }: { start: number }) {
 }
 
 function FinancialReportCard({ progress }: { progress: number }) {
-  return (
-    <div style={{ alignItems: 'center', background: '#ffffff', border: '1.5px solid #d6cec3', borderRadius: 28, boxShadow: '0 18px 42px rgba(50,45,35,0.10)', display: 'grid', gridTemplateColumns: '174px 1fr', height: 142, opacity: progress, overflow: 'hidden', padding: '0 34px', transform: `translateY(${(1 - progress) * 22}px)`, width: '100%' }}>
-      <div style={{ alignItems: 'center', alignSelf: 'stretch', display: 'flex', justifyContent: 'flex-start', overflow: 'hidden', position: 'relative' }}>
-        <div style={{ alignItems: 'center', background: '#fbfaf7', border: '1.5px solid #d8d0c4', borderRadius: 18, display: 'flex', height: 126, justifyContent: 'center', transform: 'rotate(-6deg)', width: 126 }}>
-          <div style={{ border: '3px solid #252525', borderRadius: 7, display: 'grid', gap: 5, gridTemplateColumns: 'repeat(3, 10px)', padding: 8 }}>
-            {[16, 25, 12, 20, 14, 28].map((height, index) => <span key={`${height}-${index}`} style={{ alignSelf: 'end', background: index % 2 === 0 ? '#252525' : '#7b7b7b', borderRadius: 2, display: 'block', height, width: 10 }} />)}
-          </div>
-        </div>
-      </div>
-      <div style={{ display: 'grid', gap: 10, minWidth: 0 }}>
-        <strong style={{ color: '#242424', fontSize: 34, fontWeight: 520, letterSpacing: 0, lineHeight: 1.08, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>relatorio_fluxo_caixa</strong>
-        <span style={{ color: '#77736d', fontSize: 27, fontWeight: 440, letterSpacing: 0 }}>Presentation · Dashboard</span>
-      </div>
-    </div>
-  )
+  return <ClickableResultCard kind="dashboard" progress={progress} subtitle="Presentation · Dashboard" title="relatorio_fluxo_caixa" />
 }
 
 type CashFlowRow = {
@@ -589,23 +650,7 @@ function TaxObligationRow({ index, localFrame }: { index: number; localFrame: nu
 }
 
 function InvoiceFileCard({ click, progress }: { click: number; progress: number }) {
-  return (
-    <div style={{ alignItems: 'center', background: click > 0.45 ? '#f7f7f7' : '#ffffff', border: '1.5px solid #d6cec3', borderRadius: 28, boxShadow: '0 18px 42px rgba(50,45,35,0.10)', display: 'grid', gridTemplateColumns: '174px 1fr', height: 142, opacity: progress, overflow: 'hidden', padding: '0 34px', transform: `translateY(${(1 - progress) * 22}px) scale(${1 - Math.sin(click * Math.PI) * 0.018})`, width: '100%' }}>
-      <div style={{ alignItems: 'center', alignSelf: 'stretch', display: 'flex', justifyContent: 'flex-start', overflow: 'hidden', position: 'relative' }}>
-        <div style={{ alignItems: 'center', background: '#fffaf3', border: '1.5px solid #d8d0c4', borderRadius: 18, display: 'flex', height: 126, justifyContent: 'center', transform: 'rotate(-6deg)', width: 126 }}>
-          <div style={{ border: '3px solid #252525', borderRadius: 6, height: 52, position: 'relative', width: 40 }}>
-            <span style={{ background: '#252525', borderRadius: 999, height: 4, left: 8, position: 'absolute', top: 13, width: 24 }} />
-            <span style={{ background: '#252525', borderRadius: 999, height: 4, left: 8, position: 'absolute', top: 24, width: 18 }} />
-            <span style={{ background: '#12b76a', borderRadius: 999, bottom: -10, height: 20, position: 'absolute', right: -10, width: 20 }} />
-          </div>
-        </div>
-      </div>
-      <div style={{ display: 'grid', gap: 10, minWidth: 0 }}>
-        <strong style={{ color: '#242424', fontSize: 34, fontWeight: 520, letterSpacing: 0, lineHeight: 1.08, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>nota_fiscal_servico_2048</strong>
-        <span style={{ color: '#77736d', fontSize: 27, fontWeight: 440, letterSpacing: 0 }}>Nota fiscal · NFS-e</span>
-      </div>
-    </div>
-  )
+  return <ClickableResultCard click={click} kind="invoice" progress={progress} subtitle="Nota fiscal · NFS-e" title="nota_fiscal_servico_2048" />
 }
 
 function AgentThreeChat({ start }: { start: number }) {
@@ -771,19 +816,7 @@ function CollectionStepRow({ index, localFrame }: { index: number; localFrame: n
 }
 
 function WhatsAppOutlineCard({ click, progress }: { click: number; progress: number }) {
-  return (
-    <div style={{ alignItems: 'center', background: click > 0.45 ? '#f7f7f7' : '#ffffff', border: '1.5px solid #d6cec3', borderRadius: 28, boxShadow: '0 18px 42px rgba(50,45,35,0.10)', display: 'grid', gridTemplateColumns: '174px 1fr', height: 142, opacity: progress, overflow: 'hidden', padding: '0 34px', transform: `translateY(${(1 - progress) * 22}px) scale(${1 - Math.sin(click * Math.PI) * 0.018})`, width: '100%' }}>
-      <div style={{ alignItems: 'center', alignSelf: 'stretch', display: 'flex', justifyContent: 'flex-start', overflow: 'hidden', position: 'relative' }}>
-        <div style={{ alignItems: 'center', background: '#ecfdf3', border: '1.5px solid #bbf7d0', borderRadius: 18, color: '#16a34a', display: 'flex', height: 126, justifyContent: 'center', transform: 'rotate(-6deg)', width: 126 }}>
-          <span style={{ alignItems: 'center', background: '#25d366', borderRadius: 999, color: '#ffffff', display: 'flex', fontSize: 34, fontWeight: 820, height: 70, justifyContent: 'center', width: 70 }}>W</span>
-        </div>
-      </div>
-      <div style={{ display: 'grid', gap: 10, minWidth: 0 }}>
-        <strong style={{ color: '#242424', fontSize: 34, fontWeight: 520, letterSpacing: 0, lineHeight: 1.08, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>cobrancas_whatsapp_enviadas</strong>
-        <span style={{ color: '#77736d', fontSize: 27, fontWeight: 440, letterSpacing: 0 }}>WhatsApp · Mensagens</span>
-      </div>
-    </div>
-  )
+  return <ClickableResultCard click={click} kind="whatsapp" progress={progress} subtitle="WhatsApp · Mensagens" title="cobrancas_whatsapp_enviadas" />
 }
 
 function AgentFourChat({ start }: { start: number }) {
@@ -942,7 +975,7 @@ function ApprovalResultRow({ index, localFrame }: { index: number; localFrame: n
   )
 }
 
-function ApprovalActionCard({ click, localFrame }: { click: number; localFrame: number }) {
+function ApprovalCard({ click, localFrame }: { click: number; localFrame: number }) {
   const cardIn = p(localFrame, 0, 22)
 
   return (
@@ -954,20 +987,8 @@ function ApprovalActionCard({ click, localFrame }: { click: number; localFrame: 
         </div>
         <span style={{ alignSelf: 'start', background: '#fff7ed', borderRadius: 999, color: '#c2410c', fontSize: 16, fontWeight: 760, padding: '9px 12px' }}>Acima de R$ 1.000</span>
       </div>
-      <div style={{ display: 'grid', gap: 12, marginTop: 22 }}>
-        {approvalPayments.slice(0, 3).map((item, index) => {
-          const rowIn = p(localFrame, 18 + index * 8, 34 + index * 8)
-          return (
-            <div key={item.name} style={{ alignItems: 'center', background: '#f8fafc', border: '1px solid #edf1f5', borderRadius: 18, display: 'grid', gap: 13, gridTemplateColumns: '34px 1fr auto', opacity: rowIn, padding: 14, transform: `translateY(${(1 - rowIn) * 10}px)` }}>
-              <span style={{ alignItems: 'center', background: '#111111', borderRadius: 999, color: '#ffffff', display: 'flex', fontSize: 18, fontWeight: 820, height: 34, justifyContent: 'center', width: 34 }}>✓</span>
-              <div style={{ minWidth: 0 }}>
-                <div style={{ color: '#111111', fontSize: 19, fontWeight: 650, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{item.name}</div>
-                <div style={{ color: '#8a8a8a', fontSize: 15, fontWeight: 430, marginTop: 4 }}>{item.description}</div>
-              </div>
-              <strong style={{ color: '#111111', fontSize: 19, fontWeight: 680 }}>{item.value}</strong>
-            </div>
-          )
-        })}
+      <div style={{ marginTop: 22 }}>
+        <ChecklistProgress items={approvalPayments.slice(0, 3).map((item) => `${item.name} · ${item.value}`)} localFrame={localFrame - 12} />
       </div>
       <button style={{ background: '#111111', border: '0 none', borderRadius: 999, color: '#ffffff', fontFamily: FONT, fontSize: 21, fontWeight: 760, height: 62, marginTop: 22, transform: `scale(${1 - Math.sin(click * Math.PI) * 0.025})`, width: '100%' }}>Aprovar selecionados</button>
     </div>
@@ -995,11 +1016,11 @@ function AgentFiveChat({ start }: { start: number }) {
             {approvalPayments.map((_, index) => <ApprovalPaymentRow key={index} index={index} localFrame={local - 202} />)}
           </CascadeCard>
         </ChatGptToolResultCard>
-        <ChatGptFlowAssistantText showHeader={false} style={chatGptSequenceStyle(local, 372, 22)}>
-          Encontrei 6 pagamentos acima de R$ 1.000: 3 seguros para aprovar, 2 para agendar e 1 retido para revisao.
-        </ChatGptFlowAssistantText>
+        <div style={{ ...chatGptSequenceStyle(local, 372, 22), margin: '0 36px' }}>
+          <InsightCard caption="3 seguros para aprovar, 2 para agendar e 1 retido para revisao." localFrame={local - 372} tone="#111827" value="6 pagamentos acima de R$ 1.000" />
+        </div>
         <div style={{ ...chatGptSequenceStyle(local, 464, 18), margin: '0 36px' }}>
-          <ApprovalActionCard click={approveClick} localFrame={local - 464} />
+          <ApprovalCard click={approveClick} localFrame={local - 464} />
         </div>
         <ChatGptToolCallCard style={chatGptSequenceStyle(local, 672, 16)} toolName="aprovar_pagamentos" />
         <ChatGptToolResultCard style={chatGptSequenceStyle(local, 724, 18)}>
