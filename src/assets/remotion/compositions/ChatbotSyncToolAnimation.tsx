@@ -4,7 +4,7 @@ import { IOS_REMOTION_FONT_STACK, loadSfProFonts } from '@/assets/remotion/fonts
 
 loadSfProFonts()
 
-export const CHATBOT_SYNC_TOOL_DURATION = 390
+export const CHATBOT_SYNC_TOOL_DURATION = 540
 
 const FONT = IOS_REMOTION_FONT_STACK
 
@@ -168,8 +168,8 @@ function SyncToolResult({ frame }: { frame: number }) {
 }
 
 function ExpenseToolResult({ frame }: { frame: number }) {
-  const localFrame = frame - 306
-  const show = p(frame, 306, 326)
+  const localFrame = frame - 376
+  const show = p(frame, 376, 396)
   const list = p(localFrame, 34, 62)
   const cardHeight = interpolate(list, [0, 1], [112, 492], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' })
   const progress = Math.round(interpolate(p(localFrame, 12, 122), [0, 1], [18, 100], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' }))
@@ -241,10 +241,10 @@ export function ChatbotSyncToolAnimation() {
   const userText = typed('Concilie minhas contas de hoje e classifique as despesas pendentes.', p(frame, 8, 54))
   const userBubble = p(frame, 0, 12)
   const assistantIntro = p(frame, 54, 86)
-  const syncSummary = p(frame, 188, 222)
-  const expenseIntro = p(frame, 246, 276)
-  const expenseSummary = p(frame, 352, 384)
-  const contentShift = interpolate(p(frame, 218, 266), [0, 1], [0, -740], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' })
+  const syncSummary = p(frame, 260, 292)
+  const expenseIntro = p(frame, 312, 342)
+  const expenseSummary = p(frame, 502, 532)
+  const contentShift = interpolate(p(frame, 292, 336), [0, 1], [0, -740], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' })
 
   return (
     <AbsoluteFill style={{ background: '#ffffff', color: '#111111', fontFamily: FONT, overflow: 'hidden' }}>
@@ -273,7 +273,7 @@ export function ChatbotSyncToolAnimation() {
           <div style={{ marginTop: 42, opacity: expenseIntro, transform: `translateY(${(1 - expenseIntro) * 18}px)` }}>
             <AssistantLabel />
             <AssistantText>Agora vou classificar as despesas que ficaram sem categoria, usando fornecedor, historico e recorrencia.</AssistantText>
-            <ToolCallCard frame={frame} icon="$" name="classificar_despesas" runningUntil={316} showFrom={278} showTo={294} statusDone="Despesas classificadas" statusRunning="Analisando despesas sem categoria..." />
+            <ToolCallCard frame={frame} icon="$" name="classificar_despesas" runningUntil={500} showFrom={344} showTo={360} statusDone="Despesas classificadas" statusRunning="Analisando despesas sem categoria..." />
             <ExpenseToolResult frame={frame} />
           </div>
 
