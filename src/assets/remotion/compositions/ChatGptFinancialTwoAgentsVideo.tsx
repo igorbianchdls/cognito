@@ -14,7 +14,7 @@ import { IOS_REMOTION_FONT_STACK, loadSfProFonts } from '@/assets/remotion/fonts
 
 loadSfProFonts()
 
-export const CHATGPT_FINANCIAL_TWO_AGENTS_DURATION = 2120
+export const CHATGPT_FINANCIAL_TWO_AGENTS_DURATION = 2360
 
 const FONT = IOS_REMOTION_FONT_STACK
 
@@ -24,6 +24,13 @@ function p(frame: number, from: number, to: number, out: [number, number] = [0, 
 
 function typed(text: string, amount: number) {
   return text.slice(0, Math.ceil(text.length * amount))
+}
+
+function fadeOnlyStyle(frame: number, start: number) {
+  return {
+    opacity: p(frame, start, start + 18),
+    transform: 'translateY(0px)',
+  }
 }
 
 function PromptInputScene({ frame, prompt, start }: { frame: number; prompt: string; start: number }) {
@@ -179,9 +186,9 @@ function AgentOneChat({ start }: { start: number }) {
   const conversationY = interpolate(local, [0, 330, 520], [0, -520, -1080], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' })
 
   return (
-    <div style={{ inset: 0, opacity, position: 'absolute', transform: `translateY(${(1 - p(frame, start - 12, start + 12)) * 18}px)` }}>
+    <div style={{ inset: 0, opacity, position: 'absolute' }}>
       <ChatGptMobileShell conversationY={conversationY} promptInputBottom={36}>
-        <ChatGptFlowUserBubble style={chatGptSequenceStyle(local, 12, 18)}>{prompt}</ChatGptFlowUserBubble>
+        <ChatGptFlowUserBubble style={fadeOnlyStyle(local, 12)}>{prompt}</ChatGptFlowUserBubble>
         <ChatGptFlowAssistantText style={chatGptSequenceStyle(local, 74, 22)}>
           Vou organizar as despesas recentes, classificar cada gasto e depois cruzar bancos, cartoes e ERP.
         </ChatGptFlowAssistantText>
@@ -229,14 +236,14 @@ function FinancialReportCard({ progress }: { progress: number }) {
 function AgentTwoChat({ start }: { start: number }) {
   const frame = useCurrentFrame()
   const local = Math.max(0, frame - start)
-  const opacity = p(frame, start - 12, start + 14) * p(frame, start + 250, start + 280, [1, 0])
+  const opacity = p(frame, start - 12, start + 14) * p(frame, start + 345, start + 375, [1, 0])
   const prompt = 'Veja as ultimas contas a pagar e a receber e crie um relatorio com dashboard de fluxo de caixa.'
   const cardIn = p(local, 178, 208)
 
   return (
-    <div style={{ inset: 0, opacity, position: 'absolute', transform: `translateY(${(1 - p(frame, start - 12, start + 14)) * 18}px)` }}>
+    <div style={{ inset: 0, opacity, position: 'absolute' }}>
       <ChatGptMobileShell promptInputBottom={36}>
-        <ChatGptFlowUserBubble style={chatGptSequenceStyle(local, 12, 18)}>{prompt}</ChatGptFlowUserBubble>
+        <ChatGptFlowUserBubble style={fadeOnlyStyle(local, 12)}>{prompt}</ChatGptFlowUserBubble>
         <ChatGptFlowAssistantText style={chatGptSequenceStyle(local, 74, 22)}>
           Vou analisar vencimentos, contas a receber e projecao de caixa, depois gerar um relatorio executivo com dashboard.
         </ChatGptFlowAssistantText>
@@ -293,15 +300,16 @@ function ReportSlideScene({ start }: { start: number }) {
   )
 }
 
-function DashboardScene({ start }: { start: number }) {
+function DashboardScene({ end, start }: { end?: number; start: number }) {
   const frame = useCurrentFrame()
   const local = frame - start
   const sceneIn = p(local, 0, 30)
+  const sceneOut = end === undefined ? 1 : p(frame, end, end + 24, [1, 0])
   const lineProgress = p(local, 56, 120)
   const bars = [78, 132, 98, 162, 118, 188]
 
   return (
-    <div style={{ background: '#06111f', inset: 0, opacity: sceneIn, position: 'absolute' }}>
+    <div style={{ background: '#06111f', inset: 0, opacity: sceneIn * sceneOut, position: 'absolute' }}>
       <div style={{ color: '#dbeafe', fontSize: 26, fontWeight: 800, left: 66, position: 'absolute', top: 152 }}>Dashboard de caixa</div>
       <div style={{ background: '#0b1b2d', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 36, boxShadow: '0 34px 92px rgba(0,0,0,0.36)', left: 38, minHeight: 1240, overflow: 'hidden', padding: 30, position: 'absolute', right: 38, top: 330, transform: `translateY(${(1 - p(local, 8, 34)) * 28}px) scale(${0.96 + p(local, 8, 34) * 0.04})` }}>
         <div style={{ alignItems: 'center', display: 'flex', justifyContent: 'space-between', marginBottom: 24 }}>
@@ -434,9 +442,9 @@ function AgentThreeChat({ start }: { start: number }) {
   const cardIn = p(local, 548, 578)
 
   return (
-    <div style={{ inset: 0, opacity, position: 'absolute', transform: `translateY(${(1 - p(frame, start - 12, start + 14)) * 18}px)` }}>
+    <div style={{ inset: 0, opacity, position: 'absolute' }}>
       <ChatGptMobileShell conversationY={conversationY} promptInputBottom={36}>
-        <ChatGptFlowUserBubble style={chatGptSequenceStyle(local, 12, 18)}>{prompt}</ChatGptFlowUserBubble>
+        <ChatGptFlowUserBubble style={fadeOnlyStyle(local, 12)}>{prompt}</ChatGptFlowUserBubble>
         <ChatGptFlowAssistantText style={chatGptSequenceStyle(local, 74, 22)}>
           Vou revisar documentos, informacoes contabeis, impostos e emitir a NFS-e do servico aprovado.
         </ChatGptFlowAssistantText>
@@ -539,11 +547,11 @@ export function ChatGptFinancialTwoAgentsVideo() {
       <PromptInputScene frame={frame} prompt="Classifique as ultimas despesas e concilie bancos, cartoes e movimentacoes." start={0} />
       <AgentTwoChat start={828} />
       <PromptInputScene frame={frame} prompt="Veja as ultimas contas a pagar e a receber e crie um relatorio com dashboard de fluxo de caixa." start={720} />
-      <ReportSlideScene start={1080} />
-      <DashboardScene start={1198} />
-      <AgentThreeChat start={1388} />
-      <PromptInputScene frame={frame} prompt="Organize documentos, notas fiscais e impostos pendentes, e emita a nota fiscal do ultimo servico aprovado." start={1280} />
-      <InvoiceIssuedScene start={1990} />
+      <ReportSlideScene start={1168} />
+      <DashboardScene end={1468} start={1310} />
+      <AgentThreeChat start={1618} />
+      <PromptInputScene frame={frame} prompt="Organize documentos, notas fiscais e impostos pendentes, e emita a nota fiscal do ultimo servico aprovado." start={1510} />
+      <InvoiceIssuedScene start={2228} />
     </AbsoluteFill>
   )
 }
