@@ -374,37 +374,89 @@ function ReportSlideScene({ start }: { start: number }) {
   const local = frame - start
   const sceneIn = p(local, 0, 26)
   const sceneOut = p(local, 170, 198, [1, 0])
-  const bars = [86, 122, 74, 154, 112, 138]
+  const activeSlide = local < 54 ? 0 : local < 84 ? 1 : local < 114 ? 2 : local < 144 ? 3 : 4
+  const click = Math.max(p(local, 48, 54, [0, 1]) * p(local, 58, 64, [1, 0]), p(local, 78, 84, [0, 1]) * p(local, 88, 94, [1, 0]), p(local, 108, 114, [0, 1]) * p(local, 118, 124, [1, 0]), p(local, 138, 144, [0, 1]) * p(local, 148, 154, [1, 0]))
+  const cursorY = interpolate(local, [38, 54, 84, 114, 144], [612, 720, 828, 936, 1044], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' })
+  const slideFade = p(local % 30, 0, 10)
+  const slides = [
+    { accent: '#2563eb', subtitle: 'Visao executiva dos proximos 30 dias', title: 'Fluxo de caixa e compromissos' },
+    { accent: '#dc2626', subtitle: 'R$ 127.300 em vencimentos priorizados', title: 'Contas a pagar' },
+    { accent: '#16a34a', subtitle: 'R$ 202.200 previstos em entradas', title: 'Contas a receber' },
+    { accent: '#7c3aed', subtitle: 'Saldo projetado, folga e riscos de atraso', title: 'Projecao de caixa' },
+    { accent: '#0f172a', subtitle: 'Acoes recomendadas para proteger margem', title: 'Plano de acompanhamento' },
+  ]
+  const current = slides[activeSlide]
+  const bars = activeSlide === 1 ? [154, 108, 82, 132, 76] : activeSlide === 2 ? [92, 168, 118, 148, 126] : activeSlide === 3 ? [74, 98, 142, 160, 184] : [86, 122, 74, 154, 112]
 
   return (
     <div style={{ background: '#e8edf4', inset: 0, opacity: sceneIn * sceneOut, position: 'absolute' }}>
       <div style={{ color: '#475467', fontSize: 24, fontWeight: 750, left: 66, position: 'absolute', top: 154 }}>Financial report</div>
-      <div style={{ background: '#ffffff', border: '1px solid rgba(15,23,42,0.12)', borderRadius: 22, boxShadow: '0 34px 92px rgba(15,23,42,0.18)', height: 790, left: 42, overflow: 'hidden', position: 'absolute', right: 42, top: 500, transform: `scale(${p(local, 0, 26, [0.94, 1])})` }}>
-        <div style={{ background: '#f7f7f7', borderBottom: '1px solid #dddddd', height: 86, padding: '22px 28px' }}>
-          <span style={{ color: '#344054', fontSize: 22, fontWeight: 780 }}>relatorio_fluxo_caixa.pptx</span>
+      <div style={{ background: '#ffffff', border: '1px solid rgba(15,23,42,0.12)', borderRadius: 22, boxShadow: '0 34px 92px rgba(15,23,42,0.18)', height: 850, left: 36, overflow: 'hidden', position: 'absolute', right: 36, top: 450, transform: `scale(${p(local, 0, 26, [0.94, 1])})` }}>
+        <div style={{ alignItems: 'center', background: '#f7f7f7', borderBottom: '1px solid #dddddd', display: 'flex', gap: 18, height: 82, padding: '0 24px' }}>
+          <span style={{ color: '#b7472a', fontSize: 23, fontWeight: 860 }}>PowerPoint</span>
+          <span style={{ color: '#344054', fontSize: 20, fontWeight: 760 }}>relatorio_fluxo_caixa.pptx</span>
+          <div style={{ display: 'flex', gap: 10, marginLeft: 'auto' }}>
+            {['Home', 'Insert', 'Design'].map((item) => <span key={item} style={{ background: '#ffffff', border: '1px solid #e5e7eb', borderRadius: 999, color: '#667085', fontSize: 14, fontWeight: 700, padding: '7px 11px' }}>{item}</span>)}
+          </div>
         </div>
-        <div style={{ display: 'grid', gap: 22, padding: 34 }}>
-          <div>
-            <h1 style={{ color: '#111827', fontFamily: 'Georgia, "Times New Roman", serif', fontSize: 42, letterSpacing: 0, lineHeight: 1.05, margin: 0 }}>Fluxo de caixa e compromissos</h1>
-            <p style={{ color: '#667085', fontSize: 20, fontWeight: 520, lineHeight: 1.35, margin: '12px 0 0' }}>Resumo de contas a pagar, contas a receber e caixa projetado para os proximos 30 dias.</p>
-          </div>
-          <div style={{ display: 'grid', gap: 14, gridTemplateColumns: 'repeat(3, 1fr)' }}>
-            {[
-              ['A receber', 'R$ 312k', '#0f8f51'],
-              ['A pagar', 'R$ 184k', '#c2410c'],
-              ['Caixa proj.', 'R$ 465k', '#2563eb'],
-            ].map(([label, value, color]) => (
-              <div key={label} style={{ background: '#f9fafb', border: '1px solid #eaecf0', borderRadius: 18, padding: 18 }}>
-                <div style={{ color: '#667085', fontSize: 16, fontWeight: 700 }}>{label}</div>
-                <div style={{ color, fontSize: 32, fontWeight: 850, marginTop: 8 }}>{value}</div>
+        <div style={{ bottom: 0, display: 'grid', gridTemplateColumns: '160px 1fr', left: 0, position: 'absolute', right: 0, top: 82 }}>
+          <aside style={{ background: '#fbfbfb', borderRight: '1px solid #e5e7eb', padding: '18px 14px' }}>
+            {slides.map((slide, index) => {
+              const selected = activeSlide === index
+              return (
+                <div key={slide.title} style={{ alignItems: 'center', display: 'grid', gap: 8, gridTemplateColumns: '22px 1fr', marginBottom: 12 }}>
+                  <span style={{ color: '#667085', fontSize: 13, fontWeight: 760 }}>{index + 1}</span>
+                  <div style={{ background: '#ffffff', border: selected ? `3px solid ${slide.accent}` : '1px solid #d9dee7', borderRadius: 8, height: 88, overflow: 'hidden', padding: 9 }}>
+                    <div style={{ background: slide.accent, borderRadius: 5, height: 7, marginBottom: 10, width: 54 }} />
+                    <div style={{ background: '#111827', borderRadius: 3, height: 8, marginBottom: 6, opacity: 0.82, width: 86 }} />
+                    <div style={{ display: 'flex', gap: 5, marginTop: 12 }}>
+                      {[26, 42, 31].map((height) => <span key={height} style={{ background: slide.accent, borderRadius: 3, display: 'block', height, opacity: 0.72, width: 14 }} />)}
+                    </div>
+                  </div>
+                </div>
+              )
+            })}
+          </aside>
+          <main style={{ background: '#edf1f6', padding: 28 }}>
+            <div style={{ background: '#ffffff', border: '1px solid #dce2ea', boxShadow: '0 18px 44px rgba(15,23,42,0.12)', height: '100%', opacity: slideFade, padding: 38, transform: `translateY(${(1 - slideFade) * 10}px)` }}>
+              <div style={{ alignItems: 'start', display: 'flex', justifyContent: 'space-between' }}>
+                <div>
+                  <h1 style={{ color: '#111827', fontFamily: 'Georgia, "Times New Roman", serif', fontSize: 34, letterSpacing: 0, lineHeight: 1.05, margin: 0, maxWidth: 580 }}>{current.title}</h1>
+                  <p style={{ color: '#667085', fontSize: 18, fontWeight: 520, lineHeight: 1.35, margin: '10px 0 0' }}>{current.subtitle}</p>
+                </div>
+                <span style={{ background: current.accent, borderRadius: 999, color: '#ffffff', fontSize: 15, fontWeight: 800, padding: '10px 14px' }}>Slide {activeSlide + 1}/5</span>
               </div>
-            ))}
-          </div>
-          <div style={{ background: '#f9fafb', border: '1px solid #eaecf0', borderRadius: 20, padding: 22 }}>
-            <div style={{ color: '#111827', fontSize: 22, fontWeight: 820, marginBottom: 18 }}>Projecao por semana</div>
-            <div style={{ alignItems: 'end', display: 'flex', gap: 18, height: 220 }}>
-              {bars.map((height, index) => <span key={height} style={{ background: index < 2 ? '#94a3b8' : '#2563eb', borderRadius: 9, flex: 1, height: height * p(local, 48 + index * 5, 84 + index * 5) }} />)}
+              <div style={{ display: 'grid', gap: 12, gridTemplateColumns: 'repeat(3, 1fr)', marginTop: 28 }}>
+                {[
+                  ['A receber', activeSlide === 2 ? 'R$ 202k' : 'R$ 312k', '#16a34a'],
+                  ['A pagar', activeSlide === 1 ? 'R$ 127k' : 'R$ 184k', '#dc2626'],
+                  ['Caixa proj.', activeSlide === 3 ? 'R$ 511k' : 'R$ 465k', '#2563eb'],
+                ].map(([label, value, color]) => (
+                  <div key={label} style={{ background: '#f9fafb', border: '1px solid #eaecf0', borderRadius: 16, padding: 16 }}>
+                    <div style={{ color: '#667085', fontSize: 14, fontWeight: 700 }}>{label}</div>
+                    <div style={{ color, fontSize: 27, fontWeight: 850, marginTop: 7 }}>{value}</div>
+                  </div>
+                ))}
+              </div>
+              <div style={{ background: '#f9fafb', border: '1px solid #eaecf0', borderRadius: 18, marginTop: 24, padding: 20 }}>
+                <div style={{ color: '#111827', fontSize: 19, fontWeight: 820, marginBottom: 16 }}>{activeSlide === 4 ? 'Acoes recomendadas' : 'Evolucao por semana'}</div>
+                <div style={{ alignItems: 'end', display: 'flex', gap: 14, height: 178 }}>
+                  {bars.map((height, index) => <span key={`${height}-${index}`} style={{ background: index % 2 === 0 ? current.accent : '#94a3b8', borderRadius: 8, flex: 1, height: height * p(local, 18 + index * 5, 52 + index * 5) }} />)}
+                </div>
+              </div>
+              <div style={{ display: 'grid', gap: 10, marginTop: 22 }}>
+                {[
+                  activeSlide === 1 ? 'Priorizar fornecedor cloud e impostos federais nos proximos 7 dias.' : 'Entradas previstas cobrem os compromissos do periodo.',
+                  activeSlide === 2 ? 'Mercado Sul exige acompanhamento para reduzir atraso leve.' : 'Manter acompanhamento diario de saldo, vencimentos e recebiveis.',
+                  activeSlide === 4 ? 'Criar alerta automatico quando folga de caixa cair abaixo de 30 dias.' : 'Gerar dashboard para monitorar indicadores em tempo real.',
+                ].map((item) => <div key={item} style={{ alignItems: 'center', color: '#344054', display: 'flex', fontSize: 17, fontWeight: 560, gap: 10 }}><span style={{ background: current.accent, borderRadius: 999, height: 9, width: 9 }} />{item}</div>)}
+              </div>
             </div>
+          </main>
+          <div style={{ left: 92, opacity: p(local, 34, 44) * p(local, 154, 170, [1, 0]), position: 'absolute', top: cursorY, transform: `scale(${1.15 - Math.sin(click * Math.PI) * 0.08})`, zIndex: 20 }}>
+            <svg fill="none" height="42" viewBox="0 0 84 84" width="42">
+              <path d="M18 10L62 48L44 52L35 72L18 10Z" fill="#111111" stroke="#ffffff" strokeLinejoin="round" strokeWidth="4" />
+            </svg>
           </div>
         </div>
       </div>
