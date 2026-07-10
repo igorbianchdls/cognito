@@ -17,7 +17,7 @@ import { IOS_REMOTION_FONT_STACK, loadSfProFonts } from '@/assets/remotion/fonts
 
 loadSfProFonts()
 
-export const CHATGPT_FINANCIAL_TWO_AGENTS_DURATION = 4320
+export const CHATGPT_FINANCIAL_TWO_AGENTS_DURATION = 7220
 
 const FONT = IOS_REMOTION_FONT_STACK
 
@@ -894,6 +894,299 @@ function WhatsAppMessagesScene({ start }: { start: number }) {
   )
 }
 
+const approvalPayments = [
+  { color: '#4285f4', description: 'Midia paga · risco baixo', icon: GoogleAdsIcon, initials: 'G', name: 'Google Ads', risk: 'Baixo', status: 'Aprovado', value: 'R$ 1.840' },
+  { color: '#0ea5e9', description: 'Infraestrutura recorrente', initials: 'AW', name: 'AWS Brasil', risk: 'Recorrente', status: 'Agendado', value: 'R$ 12.790' },
+  { color: '#1877f2', description: 'Campanhas dentro da regra', icon: MetaIcon, initials: 'M', name: 'Meta Ads', risk: 'Baixo', status: 'Aprovado', value: 'R$ 3.460' },
+  { color: '#111827', description: 'Fornecedor acima da media', initials: 'FC', name: 'Fornecedor Cloud', risk: 'Confirmar', status: 'Agendado', value: 'R$ 18.400' },
+  { color: '#f97316', description: 'Obrigacao fiscal prioritaria', initials: 'IR', name: 'Impostos federais', risk: 'Prioridade', status: 'Aprovado', value: 'R$ 31.200' },
+  { color: '#facc15', description: 'Valor fora do padrao mensal', initials: 'FS', name: 'Frete Sul', risk: 'Revisar', status: 'Retido', value: 'R$ 8.420' },
+]
+
+function ApprovalPaymentRow({ index, localFrame }: { index: number; localFrame: number }) {
+  const item = approvalPayments[index]
+  const rowIn = p(localFrame, 8 + index * 10, 22 + index * 10)
+  const complete = localFrame >= 68 + index * 10
+  const alert = item.risk === 'Confirmar' || item.risk === 'Revisar'
+
+  return (
+    <div style={{ alignItems: 'center', display: 'grid', gap: 13, gridTemplateColumns: '42px 1fr auto auto 28px', height: 72, opacity: rowIn, padding: '0 22px', transform: `translateY(${(1 - rowIn) * 18}px)` }}>
+      <BrandIconBox row={item} />
+      <div style={{ display: 'grid', gap: 5, minWidth: 0 }}>
+        <strong style={{ color: '#111111', fontSize: 21, fontWeight: 610, letterSpacing: -0.1, lineHeight: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{item.name}</strong>
+        <span style={{ color: '#8a8a8a', fontSize: 15, fontWeight: 420, lineHeight: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{item.description} · {item.value}</span>
+      </div>
+      <span style={{ background: alert ? '#fff7ed' : '#ecfdf3', borderRadius: 999, color: alert ? '#c2410c' : '#166534', fontSize: 16, fontWeight: 760, padding: '8px 11px' }}>{item.risk}</span>
+      <span style={{ color: complete ? '#166534' : '#111111', fontSize: 18, fontWeight: 540 }}>{complete ? 'Analisado' : 'Checando'}</span>
+      <Spinner active={!complete} />
+    </div>
+  )
+}
+
+function ApprovalResultRow({ index, localFrame }: { index: number; localFrame: number }) {
+  const item = approvalPayments[index]
+  const rowIn = p(localFrame, 8 + index * 10, 22 + index * 10)
+  const complete = localFrame >= 58 + index * 8
+  const retained = item.status === 'Retido'
+
+  return (
+    <div style={{ alignItems: 'center', display: 'grid', gap: 13, gridTemplateColumns: '42px 1fr auto 28px', height: 72, opacity: rowIn, padding: '0 22px', transform: `translateY(${(1 - rowIn) * 18}px)` }}>
+      <BrandIconBox row={item} />
+      <div style={{ display: 'grid', gap: 5, minWidth: 0 }}>
+        <strong style={{ color: '#111111', fontSize: 21, fontWeight: 610, letterSpacing: -0.1, lineHeight: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{item.name}</strong>
+        <span style={{ color: '#8a8a8a', fontSize: 15, fontWeight: 420, lineHeight: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{item.value} · {item.description}</span>
+      </div>
+      <span style={{ background: retained ? '#fff7ed' : '#ecfdf3', borderRadius: 999, color: retained ? '#c2410c' : '#166534', fontSize: 17, fontWeight: 760, padding: '8px 12px' }}>{complete ? item.status : 'Executando'}</span>
+      <Spinner active={!complete} />
+    </div>
+  )
+}
+
+function ApprovalActionCard({ click, localFrame }: { click: number; localFrame: number }) {
+  const cardIn = p(localFrame, 0, 22)
+
+  return (
+    <div style={{ background: '#ffffff', border: '1px solid #e5e7eb', borderRadius: 30, boxShadow: '0 18px 46px rgba(15, 23, 42, 0.08)', opacity: cardIn, overflow: 'hidden', padding: 26, transform: `translateY(${(1 - cardIn) * 18}px)` }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', gap: 18 }}>
+        <div>
+          <div style={{ color: '#111111', fontSize: 24, fontWeight: 720, letterSpacing: -0.1 }}>Aprovar pagamentos?</div>
+          <div style={{ color: '#8a8a8a', fontSize: 17, fontWeight: 430, marginTop: 6 }}>3 pagamentos selecionados exigem confirmacao humana</div>
+        </div>
+        <span style={{ alignSelf: 'start', background: '#fff7ed', borderRadius: 999, color: '#c2410c', fontSize: 16, fontWeight: 760, padding: '9px 12px' }}>Acima de R$ 1.000</span>
+      </div>
+      <div style={{ display: 'grid', gap: 12, marginTop: 22 }}>
+        {approvalPayments.slice(0, 3).map((item, index) => {
+          const rowIn = p(localFrame, 18 + index * 8, 34 + index * 8)
+          return (
+            <div key={item.name} style={{ alignItems: 'center', background: '#f8fafc', border: '1px solid #edf1f5', borderRadius: 18, display: 'grid', gap: 13, gridTemplateColumns: '34px 1fr auto', opacity: rowIn, padding: 14, transform: `translateY(${(1 - rowIn) * 10}px)` }}>
+              <span style={{ alignItems: 'center', background: '#111111', borderRadius: 999, color: '#ffffff', display: 'flex', fontSize: 18, fontWeight: 820, height: 34, justifyContent: 'center', width: 34 }}>✓</span>
+              <div style={{ minWidth: 0 }}>
+                <div style={{ color: '#111111', fontSize: 19, fontWeight: 650, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{item.name}</div>
+                <div style={{ color: '#8a8a8a', fontSize: 15, fontWeight: 430, marginTop: 4 }}>{item.description}</div>
+              </div>
+              <strong style={{ color: '#111111', fontSize: 19, fontWeight: 680 }}>{item.value}</strong>
+            </div>
+          )
+        })}
+      </div>
+      <button style={{ background: '#111111', border: '0 none', borderRadius: 999, color: '#ffffff', fontFamily: FONT, fontSize: 21, fontWeight: 760, height: 62, marginTop: 22, transform: `scale(${1 - Math.sin(click * Math.PI) * 0.025})`, width: '100%' }}>Aprovar selecionados</button>
+    </div>
+  )
+}
+
+function AgentFiveChat({ start }: { start: number }) {
+  const frame = useCurrentFrame()
+  const local = Math.max(0, frame - start)
+  const opacity = p(frame, start - 12, start + 14)
+  const prompt = 'Revise pagamentos acima de R$ 1.000 e me peca aprovacao antes de executar.'
+  const conversationY = stagedScroll(local, [0, 300, 540, 760], [0, 0, -690, -1360])
+  const approveClick = p(local, 628, 638)
+
+  return (
+    <div style={{ inset: 0, opacity, position: 'absolute' }}>
+      <ChatGptMobileShell conversationY={conversationY} promptInputBottom={36}>
+        <ChatGptFlowUserBubble style={fadeOnlyStyle(local, 12)}>{prompt}</ChatGptFlowUserBubble>
+        <ChatGptFlowAssistantText style={chatGptSequenceStyle(local, 74, 22)}>
+          Vou buscar pagamentos pendentes acima de R$ 1.000, avaliar regras, separar riscos e pedir confirmacao antes de executar.
+        </ChatGptFlowAssistantText>
+        <ChatGptToolCallCard style={chatGptSequenceStyle(local, 148, 16)} toolName="buscar_pagamentos_para_aprovacao" />
+        <ChatGptToolResultCard style={chatGptSequenceStyle(local, 202, 18)}>
+          <CascadeCard localFrame={local - 202} progressStart={12} subtitle="Fornecedor, valor e risco operacional" title="Pagamentos para aprovacao">
+            {approvalPayments.map((_, index) => <ApprovalPaymentRow key={index} index={index} localFrame={local - 202} />)}
+          </CascadeCard>
+        </ChatGptToolResultCard>
+        <ChatGptFlowAssistantText showHeader={false} style={chatGptSequenceStyle(local, 372, 22)}>
+          Encontrei 6 pagamentos acima de R$ 1.000: 3 seguros para aprovar, 2 para agendar e 1 retido para revisao.
+        </ChatGptFlowAssistantText>
+        <div style={{ ...chatGptSequenceStyle(local, 464, 18), margin: '0 36px' }}>
+          <ApprovalActionCard click={approveClick} localFrame={local - 464} />
+        </div>
+        <ChatGptToolCallCard style={chatGptSequenceStyle(local, 672, 16)} toolName="aprovar_pagamentos" />
+        <ChatGptToolResultCard style={chatGptSequenceStyle(local, 724, 18)}>
+          <CascadeCard localFrame={local - 724} progressStart={10} subtitle="3 aprovados, 2 agendados, 1 retido" title="Resultado da aprovacao">
+            {approvalPayments.map((_, index) => <ApprovalResultRow key={index} index={index} localFrame={local - 724} />)}
+          </CascadeCard>
+        </ChatGptToolResultCard>
+        <ChatGptFlowAssistantText showHeader={false} style={chatGptSequenceStyle(local, 890, 22)}>
+          Pagamentos aprovados e agendados com seguranca. Frete Sul ficou retido porque saiu do padrao mensal.
+        </ChatGptFlowAssistantText>
+      </ChatGptMobileShell>
+      <div style={{ left: 520, opacity: p(local, 594, 614) * p(local, 648, 674, [1, 0]), position: 'absolute', top: 1108, transform: `scale(${1.7 - Math.sin(approveClick * Math.PI) * 0.16})`, zIndex: 20 }}>
+        <svg fill="none" height="50" viewBox="0 0 84 84" width="50">
+          <path d="M18 10L62 48L44 52L35 72L18 10Z" fill="#111111" stroke="#ffffff" strokeLinejoin="round" strokeWidth="4" />
+        </svg>
+      </div>
+    </div>
+  )
+}
+
+const closingChecks = [
+  { color: '#0ea5e9', description: 'Extratos de bancos e cartoes', initials: 'EX', name: 'Extratos conciliados', status: 'OK' },
+  { color: '#1877f2', description: 'Despesas classificadas por centro de custo', icon: MetaIcon, initials: 'CC', name: 'Centros de custo', status: 'OK' },
+  { color: '#16a34a', description: 'Receitas reconhecidas e baixadas', initials: 'RR', name: 'Receitas do mes', status: 'OK' },
+  { color: '#f97316', description: 'Notas, XML e retencoes validados', initials: 'NF', name: 'Notas fiscais', status: 'OK' },
+  { color: '#7c3aed', description: 'Impostos e obrigacoes conferidos', initials: 'TX', name: 'Tributos', status: 'OK' },
+  { color: '#111827', description: 'Pendencias contabeis separadas', initials: 'PC', name: 'Pendencias', status: '2 itens' },
+]
+
+const closingPackage = [
+  { color: '#0f172a', description: 'Resultado gerencial do periodo', initials: 'DR', name: 'DRE mensal', status: 'Gerado' },
+  { color: '#2563eb', description: 'Saldo inicial, entradas e saidas', initials: 'FC', name: 'Fluxo de caixa', status: 'Gerado' },
+  { color: '#16a34a', description: 'Arquivos para contabilidade', initials: 'CT', name: 'Pacote contabil', status: 'Pronto' },
+  { color: '#f97316', description: 'Impostos e vencimentos do proximo mes', initials: 'TX', name: 'Agenda fiscal', status: 'Pronto' },
+  { color: '#7c3aed', description: 'Alertas de margem e despesas fora do padrao', initials: 'IN', name: 'Insights', status: 'Pronto' },
+  { color: '#111827', description: 'Resumo executivo para diretoria', initials: 'RE', name: 'Relatorio final', status: 'Pronto' },
+]
+
+const adminDocuments = [
+  { color: '#0ea5e9', description: 'Contrato assinado e anexos', initials: 'CN', name: 'Contrato Cliente Norte', status: 'Organizado' },
+  { color: '#f97316', description: 'Boleto e comprovante', initials: 'FB', name: 'Fornecedor Beta', status: 'Organizado' },
+  { color: '#95bf47', description: 'Pedido e nota de ecommerce', icon: ShopifyIcon, initials: 'S', name: 'Shopify pedidos', status: 'Organizado' },
+  { color: '#4285f4', description: 'Fatura de campanha e recibo', icon: GoogleAdsIcon, initials: 'G', name: 'Google Ads', status: 'Organizado' },
+  { color: '#7c3aed', description: 'Documento aguardando assinatura', initials: 'JD', name: 'Juridico Delta', status: 'Pendente' },
+  { color: '#111827', description: 'Comprovante e registro interno', initials: 'RH', name: 'Folha e RH', status: 'Organizado' },
+]
+
+const documentFolders = [
+  { color: '#2563eb', description: 'Contratos e anexos assinados', initials: 'CT', name: 'Contratos', status: '6 docs' },
+  { color: '#16a34a', description: 'Boletos pagos e pendentes', initials: 'BL', name: 'Boletos', status: '8 docs' },
+  { color: '#f97316', description: 'Notas, XML e recibos', initials: 'NF', name: 'Notas fiscais', status: '12 docs' },
+  { color: '#7c3aed', description: 'Comprovantes por competencia', initials: 'CP', name: 'Comprovantes', status: '9 docs' },
+  { color: '#0ea5e9', description: 'Documentos para contador', initials: 'CB', name: 'Contabilidade', status: 'Pronto' },
+  { color: '#111827', description: 'Pendencias administrativas', initials: 'PD', name: 'Pendencias', status: '2 itens' },
+]
+
+function StatusSyncRow({ index, localFrame, rows }: { index: number; localFrame: number; rows: Array<{ color: string; description: string; icon?: ComponentType<{ className?: string }>; initials: string; name: string; status: string }> }) {
+  const item = rows[index]
+  const rowIn = p(localFrame, 8 + index * 10, 22 + index * 10)
+  const complete = localFrame >= 62 + index * 10
+  const pending = item.status.includes('Pendente') || item.status.includes('itens')
+
+  return (
+    <div style={{ alignItems: 'center', display: 'grid', gap: 14, gridTemplateColumns: '42px 1fr auto 28px', height: 72, opacity: rowIn, padding: '0 22px', transform: `translateY(${(1 - rowIn) * 18}px)` }}>
+      <BrandIconBox row={item} />
+      <div style={{ display: 'grid', gap: 5, minWidth: 0 }}>
+        <strong style={{ color: '#111111', fontSize: 21, fontWeight: 610, letterSpacing: -0.1, lineHeight: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{item.name}</strong>
+        <span style={{ color: '#8a8a8a', fontSize: 15, fontWeight: 420, lineHeight: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{item.description}</span>
+      </div>
+      <span style={{ background: pending ? '#fff7ed' : '#ecfdf3', borderRadius: 999, color: pending ? '#c2410c' : '#166534', fontSize: 17, fontWeight: 760, padding: '8px 12px' }}>{complete ? item.status : 'Sincronizando'}</span>
+      <Spinner active={!complete} />
+    </div>
+  )
+}
+
+function AgentSixChat({ start }: { start: number }) {
+  const frame = useCurrentFrame()
+  const local = Math.max(0, frame - start)
+  const opacity = p(frame, start - 12, start + 14) * p(frame, start + 880, start + 918, [1, 0])
+  const prompt = 'Faca o fechamento financeiro e contabil do mes.'
+  const conversationY = stagedScroll(local, [0, 300, 540, 760], [0, 0, -700, -1360])
+
+  return (
+    <div style={{ inset: 0, opacity, position: 'absolute' }}>
+      <ChatGptMobileShell conversationY={conversationY} promptInputBottom={36}>
+        <ChatGptFlowUserBubble style={fadeOnlyStyle(local, 12)}>{prompt}</ChatGptFlowUserBubble>
+        <ChatGptFlowAssistantText style={chatGptSequenceStyle(local, 74, 22)}>
+          Vou fechar o mes cruzando extratos, despesas, receitas, notas, impostos e pendencias contabeis antes de gerar o pacote final.
+        </ChatGptFlowAssistantText>
+        <ChatGptToolCallCard style={chatGptSequenceStyle(local, 148, 16)} toolName="verificar_fechamento_mensal" />
+        <ChatGptToolResultCard style={chatGptSequenceStyle(local, 202, 18)}>
+          <CascadeCard localFrame={local - 202} progressStart={12} subtitle="Checklist financeiro, fiscal e contabil" title="Fechamento mensal">
+            {closingChecks.map((_, index) => <StatusSyncRow key={index} index={index} localFrame={local - 202} rows={closingChecks} />)}
+          </CascadeCard>
+        </ChatGptToolResultCard>
+        <ChatGptFlowAssistantText showHeader={false} style={chatGptSequenceStyle(local, 372, 22)}>
+          O mes esta praticamente fechado: duas pendencias contabeis foram separadas, e o restante esta pronto para pacote executivo.
+        </ChatGptFlowAssistantText>
+        <ChatGptToolCallCard style={chatGptSequenceStyle(local, 456, 16)} toolName="gerar_pacote_fechamento" />
+        <ChatGptToolResultCard style={chatGptSequenceStyle(local, 510, 18)}>
+          <CascadeCard localFrame={local - 510} progressStart={10} subtitle="DRE, caixa, fiscal, contabilidade e insights" title="Pacote de fechamento">
+            {closingPackage.map((_, index) => <StatusSyncRow key={index} index={index} localFrame={local - 510} rows={closingPackage} />)}
+          </CascadeCard>
+        </ChatGptToolResultCard>
+        <ChatGptFlowAssistantText showHeader={false} style={chatGptSequenceStyle(local, 690, 22)}>
+          Fechamento gerado com DRE, fluxo de caixa, pacote contabil e agenda fiscal do proximo mes.
+        </ChatGptFlowAssistantText>
+      </ChatGptMobileShell>
+    </div>
+  )
+}
+
+function AdminDocsScene({ start }: { start: number }) {
+  const frame = useCurrentFrame()
+  const local = frame - start
+  const sceneIn = p(local, 0, 28)
+  const panelIn = p(local, 10, 42)
+
+  return (
+    <div style={{ background: '#f3f6fb', inset: 0, opacity: sceneIn, position: 'absolute' }}>
+      <div style={{ color: '#344054', fontSize: 26, fontWeight: 820, left: 66, position: 'absolute', top: 152 }}>Arquivos administrativos</div>
+      <div style={{ background: '#ffffff', border: '1px solid #dce3ee', borderRadius: 34, boxShadow: '0 36px 96px rgba(15, 23, 42, 0.16)', left: 38, overflow: 'hidden', position: 'absolute', right: 38, top: 300, transform: `translateY(${(1 - panelIn) * 30}px) scale(${0.96 + panelIn * 0.04})` }}>
+        <header style={{ alignItems: 'center', borderBottom: '1px solid #e5e7eb', display: 'flex', justifyContent: 'space-between', padding: '30px 34px' }}>
+          <div>
+            <div style={{ color: '#111827', fontSize: 31, fontWeight: 860 }}>Pacote administrativo da semana</div>
+            <div style={{ color: '#667085', fontSize: 18, fontWeight: 520, marginTop: 7 }}>Contratos, boletos, notas, comprovantes e pendencias</div>
+          </div>
+          <span style={{ background: '#ecfdf3', borderRadius: 999, color: '#166534', fontSize: 17, fontWeight: 780, padding: '11px 15px' }}>Organizado</span>
+        </header>
+        <div style={{ display: 'grid', gap: 16, gridTemplateColumns: 'repeat(2, 1fr)', padding: 30 }}>
+          {documentFolders.map((item, index) => {
+            const itemIn = p(local, 46 + index * 6, 70 + index * 6)
+            return (
+              <div key={item.name} style={{ alignItems: 'center', background: '#f8fafc', border: '1px solid #e5e7eb', borderRadius: 22, display: 'grid', gap: 15, gridTemplateColumns: '52px 1fr auto', opacity: itemIn, padding: 20, transform: `translateY(${(1 - itemIn) * 14}px)` }}>
+                <BrandIconBox row={item} />
+                <div style={{ minWidth: 0 }}>
+                  <div style={{ color: '#111827', fontSize: 22, fontWeight: 760, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{item.name}</div>
+                  <div style={{ color: '#667085', fontSize: 16, fontWeight: 520, marginTop: 5, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{item.description}</div>
+                </div>
+                <span style={{ background: item.status.includes('itens') ? '#fff7ed' : '#ecfdf3', borderRadius: 999, color: item.status.includes('itens') ? '#c2410c' : '#166534', fontSize: 16, fontWeight: 780, padding: '9px 12px' }}>{item.status}</span>
+              </div>
+            )
+          })}
+        </div>
+      </div>
+      <div style={{ background: '#050505', borderRadius: 999, bottom: 18, height: 12, left: '50%', position: 'absolute', transform: 'translateX(-50%)', width: 380 }} />
+    </div>
+  )
+}
+
+function AgentSevenChat({ start }: { start: number }) {
+  const frame = useCurrentFrame()
+  const local = Math.max(0, frame - start)
+  const opacity = p(frame, start - 12, start + 14) * p(frame, start + 760, start + 796, [1, 0])
+  const prompt = 'Organize contratos, boletos e documentos administrativos da semana.'
+  const conversationY = stagedScroll(local, [0, 300, 540, 700], [0, 0, -700, -1280])
+
+  return (
+    <div style={{ inset: 0, opacity, position: 'absolute' }}>
+      <ChatGptMobileShell conversationY={conversationY} promptInputBottom={36}>
+        <ChatGptFlowUserBubble style={fadeOnlyStyle(local, 12)}>{prompt}</ChatGptFlowUserBubble>
+        <ChatGptFlowAssistantText style={chatGptSequenceStyle(local, 74, 22)}>
+          Vou localizar documentos administrativos, classificar por tipo, separar pendencias e montar uma pasta pronta para revisao.
+        </ChatGptFlowAssistantText>
+        <ChatGptToolCallCard style={chatGptSequenceStyle(local, 148, 16)} toolName="buscar_documentos_administrativos" />
+        <ChatGptToolResultCard style={chatGptSequenceStyle(local, 202, 18)}>
+          <CascadeCard localFrame={local - 202} progressStart={12} subtitle="Contratos, boletos, notas e comprovantes" title="Documentos encontrados">
+            {adminDocuments.map((_, index) => <StatusSyncRow key={index} index={index} localFrame={local - 202} rows={adminDocuments} />)}
+          </CascadeCard>
+        </ChatGptToolResultCard>
+        <ChatGptFlowAssistantText showHeader={false} style={chatGptSequenceStyle(local, 372, 22)}>
+          Encontrei 6 grupos de documentos. Um contrato ainda precisa assinatura e duas pendencias foram separadas.
+        </ChatGptFlowAssistantText>
+        <ChatGptToolCallCard style={chatGptSequenceStyle(local, 456, 16)} toolName="organizar_pastas_documentos" />
+        <ChatGptToolResultCard style={chatGptSequenceStyle(local, 510, 18)}>
+          <CascadeCard localFrame={local - 510} progressStart={10} subtitle="Pastas, arquivos e pendencias administrativas" title="Pasta administrativa">
+            {documentFolders.map((_, index) => <StatusSyncRow key={index} index={index} localFrame={local - 510} rows={documentFolders} />)}
+          </CascadeCard>
+        </ChatGptToolResultCard>
+        <ChatGptFlowAssistantText showHeader={false} style={chatGptSequenceStyle(local, 690, 22)}>
+          Organizei o pacote administrativo da semana e deixei pendencias prontas para acompanhamento.
+        </ChatGptFlowAssistantText>
+      </ChatGptMobileShell>
+    </div>
+  )
+}
+
 export function ChatGptFinancialTwoAgentsVideo() {
   const frame = useCurrentFrame()
 
@@ -911,6 +1204,13 @@ export function ChatGptFinancialTwoAgentsVideo() {
       <AgentFourChat start={3198} />
       <PromptInputScene frame={frame} prompt="Cobre os clientes inadimplentes e me mostre as mensagens enviadas." start={3090} />
       <WhatsAppMessagesScene start={3998} />
+      <AgentFiveChat start={4358} />
+      <PromptInputScene frame={frame} prompt="Revise pagamentos acima de R$ 1.000 e me peca aprovacao antes de executar." start={4250} />
+      <AgentSixChat start={5328} />
+      <PromptInputScene frame={frame} prompt="Faca o fechamento financeiro e contabil do mes." start={5220} />
+      <AgentSevenChat start={6268} />
+      <PromptInputScene frame={frame} prompt="Organize contratos, boletos e documentos administrativos da semana." start={6160} />
+      <AdminDocsScene start={7008} />
     </AbsoluteFill>
   )
 }
