@@ -7,6 +7,7 @@ loadSfProFonts()
 export const CHATBOT_SYNC_TOOL_DURATION = 636
 
 const FONT = IOS_REMOTION_FONT_STACK
+const APP_BACKGROUND = '#fbfbfa'
 
 function p(frame: number, from: number, to: number, out: [number, number] = [0, 1]) {
   return interpolate(frame, [from, to], out, { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' })
@@ -246,7 +247,7 @@ function PromptInputScene({ frame, prompt }: { frame: number; prompt: string }) 
     <div
       style={{
         alignItems: 'center',
-        background: '#f7f7f5',
+        background: APP_BACKGROUND,
         display: 'flex',
         inset: 0,
         justifyContent: 'center',
@@ -281,7 +282,7 @@ export function ChatbotSyncToolAnimation() {
   const contentShift = interpolate(p(chatFrame, 292, 336), [0, 1], [0, -740], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' })
 
   return (
-    <AbsoluteFill style={{ background: '#ffffff', color: '#111111', fontFamily: FONT, overflow: 'hidden' }}>
+    <AbsoluteFill style={{ background: APP_BACKGROUND, color: '#111111', fontFamily: FONT, overflow: 'hidden' }}>
       <PromptInputScene frame={frame} prompt={prompt} />
 
       <div style={{ inset: 0, opacity: chatIn, position: 'absolute', transform: `translateY(${(1 - chatIn) * 18}px)` }}>
@@ -321,7 +322,7 @@ export function ChatbotSyncToolAnimation() {
         </div>
       </div>
 
-      <div style={{ background: 'linear-gradient(180deg, rgba(255,255,255,0), #ffffff 22%)', bottom: 0, height: 260, left: 0, padding: '74px 50px 38px', position: 'absolute', right: 0 }}>
+      <div style={{ background: `linear-gradient(180deg, rgba(251,251,250,0), ${APP_BACKGROUND} 22%)`, bottom: 0, height: 260, left: 0, padding: '74px 50px 38px', position: 'absolute', right: 0 }}>
         <div style={{ alignItems: 'center', background: '#ffffff', border: '1px solid #dedede', borderRadius: 52, boxShadow: '0 14px 38px rgba(15,23,42,0.08)', color: '#8a8a8a', display: 'flex', fontSize: 29, fontWeight: 430, height: 96, justifyContent: 'space-between', padding: '0 28px 0 34px' }}>
           <span>Pergunte ao Otto</span>
           <span style={{ alignItems: 'center', background: '#111111', borderRadius: 999, color: '#ffffff', display: 'flex', fontSize: 28, height: 58, justifyContent: 'center', width: 58 }}>↑</span>
