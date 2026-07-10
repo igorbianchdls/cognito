@@ -736,7 +736,7 @@ function DashboardSlideshowScene() {
       <div style={{ color: '#1f2937', fontSize: 22, fontWeight: 750, left: 66, letterSpacing: 0, position: 'absolute', top: 150 }}>
         Dashboards
       </div>
-      <div style={{ background: '#ffffff', border: '1px solid rgba(15,23,42,0.08)', borderRadius: 30, boxShadow: '0 34px 92px rgba(15,23,42,0.16)', height: 780, left: 38, overflow: 'hidden', position: 'absolute', right: 38, top: 558, transform: `scale(${scale})`, transformOrigin: 'center center' }}>
+      <div style={{ background: '#ffffff', border: '1px solid rgba(15,23,42,0.08)', borderRadius: 30, boxShadow: '0 34px 92px rgba(15,23,42,0.16)', height: 680, left: 18, overflow: 'hidden', position: 'absolute', right: 18, top: 610, transform: `scale(${scale})`, transformOrigin: 'center center' }}>
         {dashboards.map((file, index) => {
           const start = 246 + index * 48
           const enter = p(frame, start, start + 18)
@@ -750,7 +750,7 @@ function DashboardSlideshowScene() {
                 display: 'block',
                 height: '100%',
                 left: 0,
-                objectFit: 'cover',
+                objectFit: 'contain',
                 opacity: active,
                 position: 'absolute',
                 top: 0,
@@ -761,7 +761,7 @@ function DashboardSlideshowScene() {
           )
         })}
       </div>
-      <div style={{ alignItems: 'center', display: 'flex', gap: 10, justifyContent: 'center', left: 0, position: 'absolute', right: 0, top: 1372 }}>
+      <div style={{ alignItems: 'center', display: 'flex', gap: 10, justifyContent: 'center', left: 0, position: 'absolute', right: 0, top: 1326 }}>
         {dashboards.map((_, index) => {
           const active = frame >= 246 + index * 48 && (index === dashboards.length - 1 || frame < 246 + (index + 1) * 48)
           return <span key={index} style={{ background: active ? '#111827' : '#cbd5e1', borderRadius: 999, display: 'block', height: 8, width: active ? 28 : 8 }} />
