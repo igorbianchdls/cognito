@@ -4,7 +4,7 @@ import { IOS_REMOTION_FONT_STACK, loadSfProFonts } from '@/assets/remotion/fonts
 
 loadSfProFonts()
 
-export const CHATBOT_SYNC_TOOL_DURATION = 540
+export const CHATBOT_SYNC_TOOL_DURATION = 636
 
 const FONT = IOS_REMOTION_FONT_STACK
 
@@ -236,33 +236,70 @@ function AssistantText({ children }: { children: React.ReactNode }) {
   )
 }
 
+function PromptInputScene({ frame, prompt }: { frame: number; prompt: string }) {
+  const inputIn = p(frame, 0, 18)
+  const inputOut = p(frame, 78, 104, [1, 0])
+  const typedText = typed(prompt, p(frame, 12, 74))
+  const sendReady = p(frame, 58, 74)
+
+  return (
+    <div
+      style={{
+        alignItems: 'center',
+        background: '#f7f7f5',
+        display: 'flex',
+        inset: 0,
+        justifyContent: 'center',
+        opacity: inputIn * inputOut,
+        position: 'absolute',
+        transform: `translateY(${(1 - inputIn) * 20 - (1 - inputOut) * 18}px)`,
+        zIndex: 4,
+      }}
+    >
+      <div style={{ display: 'grid', gap: 22, justifyItems: 'center', width: 900 }}>
+        <div style={{ alignItems: 'center', background: '#ffffff', border: '1px solid #e4e4e2', borderRadius: 54, boxShadow: '0 18px 58px rgba(15,23,42,0.08)', color: typedText ? '#111111' : '#8a8a8a', display: 'flex', fontSize: 34, fontWeight: 430, minHeight: 108, padding: '0 30px 0 40px', width: '100%' }}>
+          <span style={{ flex: 1, lineHeight: 1.18, maxWidth: 740, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+            {typedText || 'Pergunte ao Otto'}
+          </span>
+          <span style={{ alignItems: 'center', background: sendReady ? '#111111' : '#f1f1f1', borderRadius: 999, color: sendReady ? '#ffffff' : '#9a9a9a', display: 'flex', fontSize: 30, height: 62, justifyContent: 'center', marginLeft: 24, width: 62 }}>↑</span>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 export function ChatbotSyncToolAnimation() {
   const frame = useCurrentFrame()
-  const userText = typed('Concilie minhas contas de hoje e classifique as despesas pendentes.', p(frame, 8, 54))
-  const userBubble = p(frame, 0, 12)
-  const assistantIntro = p(frame, 54, 86)
-  const syncSummary = p(frame, 260, 292)
-  const expenseIntro = p(frame, 312, 342)
-  const expenseSummary = p(frame, 502, 532)
-  const contentShift = interpolate(p(frame, 292, 336), [0, 1], [0, -740], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' })
+  const prompt = 'Classifique as despesas e concilie minhas contas.'
+  const chatFrame = Math.max(0, frame - 96)
+  const chatIn = p(frame, 90, 112)
+  const userBubble = p(chatFrame, 0, 12)
+  const assistantIntro = p(chatFrame, 54, 86)
+  const syncSummary = p(chatFrame, 260, 292)
+  const expenseIntro = p(chatFrame, 312, 342)
+  const expenseSummary = p(chatFrame, 502, 532)
+  const contentShift = interpolate(p(chatFrame, 292, 336), [0, 1], [0, -740], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' })
 
   return (
     <AbsoluteFill style={{ background: '#ffffff', color: '#111111', fontFamily: FONT, overflow: 'hidden' }}>
+      <PromptInputScene frame={frame} prompt={prompt} />
+
+      <div style={{ inset: 0, opacity: chatIn, position: 'absolute', transform: `translateY(${(1 - chatIn) * 18}px)` }}>
       <MobileChrome />
 
       <div style={{ bottom: 238, left: 56, overflow: 'hidden', position: 'absolute', right: 56, top: 260 }}>
         <div style={{ transform: `translateY(${contentShift}px)` }}>
           <div style={{ alignItems: 'start', display: 'grid', justifyItems: 'end', opacity: userBubble, transform: `translateY(${(1 - userBubble) * 18}px)` }}>
             <div style={{ background: '#f0eeea', border: '1px solid #e2ded8', borderRadius: 34, color: '#171717', fontSize: 30, fontWeight: 440, letterSpacing: -0.2, lineHeight: 1.25, maxWidth: 760, minHeight: 92, padding: '28px 34px' }}>
-              {userText}
+              {prompt}
             </div>
           </div>
 
           <div style={{ marginTop: 42, opacity: assistantIntro, transform: `translateY(${(1 - assistantIntro) * 20}px)` }}>
             <AssistantLabel />
             <AssistantText>Vou sincronizar bancos, cartoes e ERP, comparar com os lancamentos e separar divergencias para revisao.</AssistantText>
-            <ToolCallCard frame={frame} icon=">" name="conciliar_movimentacoes" runningUntil={132} showFrom={94} showTo={110} statusDone="Dados sincronizados" statusRunning="Conectando bancos e ERP..." />
-            <SyncToolResult frame={frame} />
+            <ToolCallCard frame={chatFrame} icon=">" name="conciliar_movimentacoes" runningUntil={132} showFrom={94} showTo={110} statusDone="Dados conciliados" statusRunning="Comparando banco e ERP..." />
+            <SyncToolResult frame={chatFrame} />
           </div>
 
           <div style={{ marginTop: 28, opacity: syncSummary, transform: `translateY(${(1 - syncSummary) * 14}px)` }}>
@@ -273,8 +310,8 @@ export function ChatbotSyncToolAnimation() {
           <div style={{ marginTop: 42, opacity: expenseIntro, transform: `translateY(${(1 - expenseIntro) * 18}px)` }}>
             <AssistantLabel />
             <AssistantText>Agora vou classificar as despesas que ficaram sem categoria, usando fornecedor, historico e recorrencia.</AssistantText>
-            <ToolCallCard frame={frame} icon="$" name="classificar_despesas" runningUntil={500} showFrom={344} showTo={360} statusDone="Despesas classificadas" statusRunning="Analisando despesas sem categoria..." />
-            <ExpenseToolResult frame={frame} />
+            <ToolCallCard frame={chatFrame} icon="$" name="classificar_despesas" runningUntil={500} showFrom={344} showTo={360} statusDone="Despesas classificadas" statusRunning="Analisando despesas sem categoria..." />
+            <ExpenseToolResult frame={chatFrame} />
           </div>
 
           <div style={{ marginTop: 28, opacity: expenseSummary, transform: `translateY(${(1 - expenseSummary) * 14}px)` }}>
@@ -289,6 +326,7 @@ export function ChatbotSyncToolAnimation() {
           <span>Pergunte ao Otto</span>
           <span style={{ alignItems: 'center', background: '#111111', borderRadius: 999, color: '#ffffff', display: 'flex', fontSize: 28, height: 58, justifyContent: 'center', width: 58 }}>↑</span>
         </div>
+      </div>
       </div>
     </AbsoluteFill>
   )
