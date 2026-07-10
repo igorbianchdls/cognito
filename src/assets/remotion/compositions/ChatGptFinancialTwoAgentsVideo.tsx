@@ -14,7 +14,7 @@ import { IOS_REMOTION_FONT_STACK, loadSfProFonts } from '@/assets/remotion/fonts
 
 loadSfProFonts()
 
-export const CHATGPT_FINANCIAL_TWO_AGENTS_DURATION = 1300
+export const CHATGPT_FINANCIAL_TWO_AGENTS_DURATION = 2120
 
 const FONT = IOS_REMOTION_FONT_STACK
 
@@ -348,6 +348,188 @@ function DashboardScene({ start }: { start: number }) {
   )
 }
 
+const fiscalDocuments = [
+  { detail: 'PDF + XML', name: 'Contrato Cliente Norte', status: 'Validado', tone: '#eef6ff' },
+  { detail: 'Servico aprovado', name: 'OS-2048', status: 'Conferido', tone: '#f0f7ff' },
+  { detail: 'Cadastro municipal', name: 'Tomador', status: 'OK', tone: '#f4f9f2' },
+  { detail: 'Retencoes calculadas', name: 'Impostos', status: 'OK', tone: '#fff7ed' },
+]
+
+const taxObligations = [
+  { due: 'Hoje', name: 'ISS retido', status: 'Calculado', value: 'R$ 248,00' },
+  { due: '7 dias', name: 'DAS', status: 'Programado', value: 'R$ 1.184,00' },
+  { due: '15 dias', name: 'SPED fiscal', status: 'Em dia', value: 'OK' },
+  { due: 'Mensal', name: 'Livro fiscal', status: 'Atualizado', value: 'OK' },
+]
+
+function FiscalDocumentRow({ index, localFrame }: { index: number; localFrame: number }) {
+  const item = fiscalDocuments[index]
+  const rowIn = p(localFrame, 8 + index * 10, 22 + index * 10)
+  const complete = localFrame >= 64 + index * 12
+
+  return (
+    <div style={{ alignItems: 'center', display: 'grid', gap: 18, gridTemplateColumns: '48px 1fr auto 28px', height: 72, opacity: rowIn, padding: '0 28px', transform: `translateY(${(1 - rowIn) * 18}px)` }}>
+      <div style={{ alignItems: 'center', background: item.tone, border: '1px solid #e7edf0', borderRadius: 10, display: 'grid', height: 38, justifyItems: 'center', width: 38 }}>
+        <span style={{ border: '2px solid #111111', borderRadius: 4, display: 'block', height: 24, position: 'relative', width: 20 }}>
+          <span style={{ background: '#111111', borderRadius: 999, height: 2, left: 4, position: 'absolute', top: 7, width: 11 }} />
+          <span style={{ background: '#111111', borderRadius: 999, height: 2, left: 4, position: 'absolute', top: 13, width: 8 }} />
+        </span>
+      </div>
+      <div style={{ display: 'grid', gap: 5, minWidth: 0 }}>
+        <strong style={{ color: '#111111', fontSize: 23, fontWeight: 560, letterSpacing: -0.1, lineHeight: 1 }}>{item.name}</strong>
+        <span style={{ color: '#8a8a8a', fontSize: 17, fontWeight: 420, lineHeight: 1 }}>{item.detail}</span>
+      </div>
+      <span style={{ color: complete ? '#166534' : '#111111', fontSize: 21, fontWeight: 500, letterSpacing: -0.1, lineHeight: 1 }}>{complete ? item.status : 'Verificando'}</span>
+      <Spinner active={!complete} />
+    </div>
+  )
+}
+
+function TaxObligationRow({ index, localFrame }: { index: number; localFrame: number }) {
+  const item = taxObligations[index]
+  const rowIn = p(localFrame, 8 + index * 10, 22 + index * 10)
+  const complete = localFrame >= 62 + index * 12
+  const alert = item.due === 'Hoje' || item.due === '7 dias'
+
+  return (
+    <div style={{ alignItems: 'center', display: 'grid', gap: 14, gridTemplateColumns: '1fr auto auto 28px', height: 72, opacity: rowIn, padding: '0 24px', transform: `translateY(${(1 - rowIn) * 18}px)` }}>
+      <div style={{ display: 'grid', gap: 5, minWidth: 0 }}>
+        <strong style={{ color: '#111111', fontSize: 21, fontWeight: 610, letterSpacing: -0.1, lineHeight: 1 }}>{item.name}</strong>
+        <span style={{ color: '#8a8a8a', fontSize: 16, fontWeight: 420, lineHeight: 1 }}>{item.value}</span>
+      </div>
+      <span style={{ background: alert ? '#fff7ed' : '#ecfdf3', borderRadius: 999, color: alert ? '#c2410c' : '#166534', fontSize: 17, fontWeight: 760, padding: '8px 12px' }}>{item.due}</span>
+      <span style={{ color: complete ? '#166534' : '#111111', fontSize: 19, fontWeight: 540, letterSpacing: -0.1, lineHeight: 1 }}>{complete ? item.status : 'Checando'}</span>
+      <Spinner active={!complete} />
+    </div>
+  )
+}
+
+function InvoiceFileCard({ click, progress }: { click: number; progress: number }) {
+  return (
+    <div style={{ alignItems: 'center', background: click > 0.45 ? '#f7f7f7' : '#ffffff', border: '1.5px solid #d6cec3', borderRadius: 28, boxShadow: '0 18px 42px rgba(50,45,35,0.10)', display: 'grid', gridTemplateColumns: '174px 1fr', height: 142, opacity: progress, overflow: 'hidden', padding: '0 34px', transform: `translateY(${(1 - progress) * 22}px) scale(${1 - Math.sin(click * Math.PI) * 0.018})`, width: '100%' }}>
+      <div style={{ alignItems: 'center', alignSelf: 'stretch', display: 'flex', justifyContent: 'flex-start', overflow: 'hidden', position: 'relative' }}>
+        <div style={{ alignItems: 'center', background: '#fffaf3', border: '1.5px solid #d8d0c4', borderRadius: 18, display: 'flex', height: 126, justifyContent: 'center', transform: 'rotate(-6deg)', width: 126 }}>
+          <div style={{ border: '3px solid #252525', borderRadius: 6, height: 52, position: 'relative', width: 40 }}>
+            <span style={{ background: '#252525', borderRadius: 999, height: 4, left: 8, position: 'absolute', top: 13, width: 24 }} />
+            <span style={{ background: '#252525', borderRadius: 999, height: 4, left: 8, position: 'absolute', top: 24, width: 18 }} />
+            <span style={{ background: '#12b76a', borderRadius: 999, bottom: -10, height: 20, position: 'absolute', right: -10, width: 20 }} />
+          </div>
+        </div>
+      </div>
+      <div style={{ display: 'grid', gap: 10, minWidth: 0 }}>
+        <strong style={{ color: '#242424', fontSize: 34, fontWeight: 520, letterSpacing: 0, lineHeight: 1.08, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>nota_fiscal_servico_2048</strong>
+        <span style={{ color: '#77736d', fontSize: 27, fontWeight: 440, letterSpacing: 0 }}>Nota fiscal · NFS-e</span>
+      </div>
+    </div>
+  )
+}
+
+function AgentThreeChat({ start }: { start: number }) {
+  const frame = useCurrentFrame()
+  const local = Math.max(0, frame - start)
+  const opacity = p(frame, start - 12, start + 14) * p(frame, start + 625, start + 655, [1, 0])
+  const prompt = 'Organize documentos, notas fiscais e impostos pendentes, e emita a nota fiscal do ultimo servico aprovado.'
+  const conversationY = interpolate(local, [0, 280, 450], [0, -440, -920], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' })
+  const click = p(local, 586, 596)
+  const cardIn = p(local, 548, 578)
+
+  return (
+    <div style={{ inset: 0, opacity, position: 'absolute', transform: `translateY(${(1 - p(frame, start - 12, start + 14)) * 18}px)` }}>
+      <ChatGptMobileShell conversationY={conversationY} promptInputBottom={36}>
+        <ChatGptFlowUserBubble style={chatGptSequenceStyle(local, 12, 18)}>{prompt}</ChatGptFlowUserBubble>
+        <ChatGptFlowAssistantText style={chatGptSequenceStyle(local, 74, 22)}>
+          Vou revisar documentos, informacoes contabeis, impostos e emitir a NFS-e do servico aprovado.
+        </ChatGptFlowAssistantText>
+        <ChatGptToolCallCard style={chatGptSequenceStyle(local, 132, 16)} toolName="organizar_documentos_fiscais" />
+        <ChatGptToolResultCard style={chatGptSequenceStyle(local, 174, 18)}>
+          <CascadeCard label="Validando documentos fiscais" localFrame={local - 174} progressStart={12} subtitle="Documentos, XML e dados do tomador" title="Documentos conferidos">
+            {fiscalDocuments.map((_, index) => <FiscalDocumentRow key={index} index={index} localFrame={local - 174} />)}
+          </CascadeCard>
+        </ChatGptToolResultCard>
+        <ChatGptToolCallCard style={chatGptSequenceStyle(local, 310, 16)} toolName="verificar_obrigacoes_fiscais" />
+        <ChatGptToolResultCard style={chatGptSequenceStyle(local, 350, 18)}>
+          <CascadeCard label="Checando impostos e obrigacoes" localFrame={local - 350} progressStart={10} subtitle="Vencimentos, retencoes e registros fiscais" title="Obrigacoes fiscais">
+            {taxObligations.map((_, index) => <TaxObligationRow key={index} index={index} localFrame={local - 350} />)}
+          </CascadeCard>
+        </ChatGptToolResultCard>
+        <ChatGptFlowAssistantText showHeader={false} style={chatGptSequenceStyle(local, 486, 22)}>
+          Tudo conferido. Vou emitir a nota fiscal do ultimo servico aprovado e gerar PDF/XML.
+        </ChatGptFlowAssistantText>
+        <ChatGptToolCallCard style={chatGptSequenceStyle(local, 528, 16)} toolName="emitir_nota_fiscal" />
+        <div style={{ ...chatGptSequenceStyle(local, 548, 18), margin: '0 36px' }}>
+          <InvoiceFileCard click={click} progress={cardIn} />
+        </div>
+      </ChatGptMobileShell>
+      <div style={{ left: 188, opacity: p(local, 562, 582), position: 'absolute', top: 932, transform: `scale(${1.75 - Math.sin(click * Math.PI) * 0.16})`, zIndex: 20 }}>
+        <svg fill="none" height="50" viewBox="0 0 84 84" width="50">
+          <path d="M18 10L62 48L44 52L35 72L18 10Z" fill="#111111" stroke="#ffffff" strokeLinejoin="round" strokeWidth="4" />
+        </svg>
+      </div>
+    </div>
+  )
+}
+
+function InvoiceIssuedScene({ start }: { start: number }) {
+  const frame = useCurrentFrame()
+  const local = frame - start
+  const sceneIn = p(local, 0, 30)
+  const panelIn = p(local, 12, 42)
+
+  return (
+    <div style={{ background: '#f3f7f5', inset: 0, opacity: sceneIn, position: 'absolute' }}>
+      <div style={{ color: '#315246', fontSize: 26, fontWeight: 800, left: 66, position: 'absolute', top: 152 }}>Sistema fiscal</div>
+      <div style={{ background: '#ffffff', border: '1px solid #d9e5df', borderRadius: 32, boxShadow: '0 34px 92px rgba(21,72,52,0.16)', left: 40, overflow: 'hidden', position: 'absolute', right: 40, top: 330, transform: `translateY(${(1 - panelIn) * 32}px) scale(${0.96 + panelIn * 0.04})` }}>
+        <div style={{ alignItems: 'center', background: '#0f5132', color: '#ffffff', display: 'flex', justifyContent: 'space-between', padding: '32px 36px' }}>
+          <div>
+            <div style={{ fontSize: 31, fontWeight: 860 }}>Nota Fiscal de Servico Eletronica</div>
+            <div style={{ color: 'rgba(255,255,255,0.72)', fontSize: 18, fontWeight: 520, marginTop: 6 }}>Prefeitura Municipal · NFS-e</div>
+          </div>
+          <span style={{ background: '#dcfce7', borderRadius: 999, color: '#166534', fontSize: 18, fontWeight: 820, padding: '11px 16px' }}>Emitida</span>
+        </div>
+        <div style={{ display: 'grid', gap: 22, padding: 34 }}>
+          <div style={{ background: '#f8fafc', border: '1px solid #e5e7eb', borderRadius: 22, display: 'grid', gap: 14, padding: 24 }}>
+            <div style={{ alignItems: 'center', display: 'flex', justifyContent: 'space-between' }}>
+              <strong style={{ color: '#111827', fontSize: 34, fontWeight: 860 }}>NFS-e 2048</strong>
+              <span style={{ color: '#64748b', fontSize: 18, fontWeight: 700 }}>Emitida agora</span>
+            </div>
+            <div style={{ display: 'grid', gap: 14, gridTemplateColumns: '1fr 1fr' }}>
+              {[
+                ['Tomador', 'Cliente Norte Ltda'],
+                ['Servico', 'Consultoria operacional e automacao financeira'],
+                ['Valor', 'R$ 12.400,00'],
+                ['ISS', 'R$ 248,00'],
+              ].map(([label, value]) => (
+                <div key={label} style={{ background: '#ffffff', border: '1px solid #e5e7eb', borderRadius: 18, padding: 18 }}>
+                  <div style={{ color: '#64748b', fontSize: 15, fontWeight: 760, textTransform: 'uppercase' }}>{label}</div>
+                  <div style={{ color: '#111827', fontSize: label === 'Servico' ? 18 : 23, fontWeight: 760, lineHeight: 1.2, marginTop: 8 }}>{value}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+          <div style={{ display: 'grid', gap: 14, gridTemplateColumns: '1fr 1fr' }}>
+            {['XML gerado', 'PDF gerado', 'Tomador validado', 'Impostos calculados'].map((item, index) => {
+              const itemIn = p(local, 50 + index * 6, 72 + index * 6)
+              return (
+                <div key={item} style={{ alignItems: 'center', background: '#ecfdf3', border: '1px solid #bbf7d0', borderRadius: 18, color: '#166534', display: 'flex', fontSize: 20, fontWeight: 820, gap: 12, opacity: itemIn, padding: 18, transform: `translateY(${(1 - itemIn) * 12}px)` }}>
+                  <span style={{ background: '#16a34a', borderRadius: 999, display: 'block', height: 12, width: 12 }} />
+                  {item}
+                </div>
+              )
+            })}
+          </div>
+          <div style={{ background: '#f8fafc', border: '1px solid #e5e7eb', borderRadius: 22, padding: 24 }}>
+            <div style={{ color: '#111827', fontSize: 24, fontWeight: 840 }}>Resumo fiscal</div>
+            <div style={{ color: '#475569', fontSize: 20, fontWeight: 520, lineHeight: 1.38, marginTop: 12 }}>
+              Nota emitida com retencoes calculadas, arquivos fiscais gerados e registro pronto para contabilidade.
+            </div>
+          </div>
+        </div>
+      </div>
+      <div style={{ background: '#050505', borderRadius: 999, bottom: 18, height: 12, left: '50%', position: 'absolute', transform: 'translateX(-50%)', width: 380 }} />
+    </div>
+  )
+}
+
 export function ChatGptFinancialTwoAgentsVideo() {
   const frame = useCurrentFrame()
 
@@ -359,6 +541,9 @@ export function ChatGptFinancialTwoAgentsVideo() {
       <PromptInputScene frame={frame} prompt="Veja as ultimas contas a pagar e a receber e crie um relatorio com dashboard de fluxo de caixa." start={720} />
       <ReportSlideScene start={1080} />
       <DashboardScene start={1198} />
+      <AgentThreeChat start={1388} />
+      <PromptInputScene frame={frame} prompt="Organize documentos, notas fiscais e impostos pendentes, e emita a nota fiscal do ultimo servico aprovado." start={1280} />
+      <InvoiceIssuedScene start={1990} />
     </AbsoluteFill>
   )
 }
