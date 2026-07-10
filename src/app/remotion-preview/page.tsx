@@ -87,6 +87,7 @@ import {
   TweetAnimation,
 } from '@/assets/remotion/compositions/McpOperationsDemo'
 import { CHATGPT_FINANCIAL_AGENTS_VIDEO_DURATION, ChatGptFinancialAgentsVideo, ChatGptMobileAnimation, ChatGptToolCallDemoAnimation } from '@/assets/remotion/compositions/ChatGptMobileMarketing'
+import { CHATGPT_FINANCIAL_TWO_AGENTS_DURATION, ChatGptFinancialTwoAgentsVideo } from '@/assets/remotion/compositions/ChatGptFinancialTwoAgentsVideo'
 import { ChatGptOperationalFlowsVideo } from '@/assets/remotion/compositions/ChatGptOperationalFlowsVideo'
 import { ChatGptTaskLauncherAnimation } from '@/assets/remotion/compositions/ChatGptTaskLauncherAnimation'
 import { CODEX_CHARTS_DURATION, CodexChartsAnimation } from '@/assets/remotion/compositions/CodexChartsAnimation'
@@ -3172,6 +3173,18 @@ const catalog: CatalogItem[] = [
     label: 'ChatGPT Financial Agents',
     tags: ['ChatGPT', 'Financeiro', 'Agentes', 'Otto', 'Video'],
     value: 'video-chatgpt-financial-agents',
+    width: 1080,
+  },
+  {
+    code: '<ChatGptFinancialTwoAgentsVideo />',
+    component: ChatGptFinancialTwoAgentsVideo,
+    description: 'Video mobile do ChatGPT com dois agentes financeiros: classificacao/conciliacao em cascata e relatorio com dashboard de fluxo de caixa.',
+    duration: CHATGPT_FINANCIAL_TWO_AGENTS_DURATION,
+    height: 1920,
+    kind: 'Vídeos criados',
+    label: 'ChatGPT Financial Two Agents',
+    tags: ['ChatGPT', 'Financeiro', 'Agentes', 'Dashboard', 'Otto'],
+    value: 'video-chatgpt-financial-two-agents',
     width: 1080,
   },
   {
