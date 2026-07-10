@@ -120,7 +120,7 @@ function MiniMark({ color = '#111111' }: { color?: string }) {
   )
 }
 
-function BrandIconBox({ row }: { row: IconRow }) {
+function BrandIconBox({ row }: { row: Pick<IconRow, 'color' | 'icon' | 'initials'> }) {
   const Icon = row.icon
 
   return (
