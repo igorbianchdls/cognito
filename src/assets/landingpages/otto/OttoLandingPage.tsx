@@ -717,7 +717,7 @@ export function OttoLandingPage() {
             0% { opacity: 0; transform: translateY(14px); }
             12% { opacity: 1; transform: translateY(0); }
             82% { opacity: 1; transform: translateY(0); }
-            100% { opacity: 0; transform: translateY(-8px); }
+            100% { opacity: 1; transform: translateY(0); }
           }
 
           @keyframes landing-status-swap {
@@ -729,7 +729,7 @@ export function OttoLandingPage() {
           @keyframes landing-status-done {
             0%, 15% { opacity: 0; transform: translateY(4px); }
             19%, 78% { opacity: 1; transform: translateY(0); }
-            92%, 100% { opacity: 0; transform: translateY(-4px); }
+            92%, 100% { opacity: 1; transform: translateY(0); }
           }
 
           @keyframes landing-spinner {
@@ -759,25 +759,25 @@ export function OttoLandingPage() {
           @keyframes landing-question-cycle {
             0%, 26% { opacity: 0; transform: translateY(16px); }
             30%, 88% { opacity: 1; transform: translateY(0); }
-            100% { opacity: 0; transform: translateY(-8px); }
+            100% { opacity: 1; transform: translateY(0); }
           }
 
           @keyframes landing-chat-cycle {
             0%, 34% { opacity: 0; transform: translateY(16px); }
             40%, 88% { opacity: 1; transform: translateY(0); }
-            100% { opacity: 0; transform: translateY(-8px); }
+            100% { opacity: 1; transform: translateY(0); }
           }
 
           @keyframes landing-tool-cycle {
             0%, 46% { opacity: 0; transform: translateY(16px); }
             52%, 88% { opacity: 1; transform: translateY(0); }
-            100% { opacity: 0; transform: translateY(-8px); }
+            100% { opacity: 1; transform: translateY(0); }
           }
 
           @keyframes landing-final-cycle {
             0%, 72% { opacity: 0; transform: translateY(16px); }
             78%, 88% { opacity: 1; transform: translateY(0); }
-            100% { opacity: 0; transform: translateY(-8px); }
+            100% { opacity: 1; transform: translateY(0); }
           }
 
           @keyframes landing-chat-scroll-cycle {
@@ -793,14 +793,14 @@ export function OttoLandingPage() {
             0% { opacity: 0; transform: translateY(14px); }
             4% { opacity: 1; transform: translateY(0); }
             72% { opacity: 1; transform: translateY(0); }
-            100% { opacity: 0; transform: translateY(-8px); }
+            100% { opacity: 1; transform: translateY(0); }
           }
 
           @keyframes landing-table-row-cycle {
             0% { opacity: 0; transform: translateY(18px); }
             4% { opacity: 1; transform: translateY(0); }
             78% { opacity: 1; transform: translateY(0); }
-            100% { opacity: 0; transform: translateY(-8px); }
+            100% { opacity: 1; transform: translateY(0); }
           }
 
           @keyframes landing-table-pending-cycle {
@@ -811,7 +811,7 @@ export function OttoLandingPage() {
           @keyframes landing-table-done-cycle {
             0%, 36% { opacity: 0; transform: translateY(4px); }
             44%, 78% { opacity: 1; transform: translateY(0); }
-            100% { opacity: 0; transform: translateY(-4px); }
+            100% { opacity: 1; transform: translateY(0); }
           }
 
           @keyframes landing-table-spinner-cycle {
@@ -822,12 +822,12 @@ export function OttoLandingPage() {
           @keyframes landing-table-check-cycle {
             0%, 36% { opacity: 0; transform: scale(0.78); }
             44%, 78% { opacity: 1; transform: scale(1); }
-            100% { opacity: 0; transform: scale(0.92); }
+            100% { opacity: 1; transform: scale(1); }
           }
 
           .landing-sync-row,
           .landing-hero-row {
-            animation: landing-row-loop 5.8s ease infinite both;
+            animation: landing-row-loop 5.8s ease both;
           }
 
           .landing-sync-row {
@@ -835,15 +835,15 @@ export function OttoLandingPage() {
           }
 
           .landing-sync-loading {
-            animation: landing-status-swap 7.2s ease infinite both;
+            animation: landing-status-swap 7.2s ease both;
           }
 
           .landing-sync-loading span {
-            animation: landing-spinner 900ms linear infinite;
+            animation: landing-spinner 900ms linear 8 both;
           }
 
           .landing-sync-done {
-            animation: landing-status-done 7.2s ease infinite both;
+            animation: landing-status-done 7.2s ease both;
             display: inline-flex;
             position: absolute;
           }
@@ -858,7 +858,7 @@ export function OttoLandingPage() {
           }
 
           .landing-prompt-input {
-            animation: landing-prompt-cycle 20s ease infinite both;
+            animation: landing-prompt-cycle 20s ease both;
           }
 
           .landing-typed-prompt {
@@ -866,7 +866,7 @@ export function OttoLandingPage() {
             max-width: 0;
             overflow: hidden;
             white-space: nowrap;
-            animation: landing-typing-mask 20s steps(54, end) infinite both;
+            animation: landing-typing-mask 20s steps(54, end) both;
           }
 
           @media (max-width: 640px) {
@@ -886,11 +886,11 @@ export function OttoLandingPage() {
           }
 
           .landing-caret {
-            animation: landing-caret-cycle 20s ease infinite both;
+            animation: landing-caret-cycle 20s ease both;
           }
 
           .landing-input-placeholder {
-            animation: landing-placeholder-cycle 20s ease infinite both;
+            animation: landing-placeholder-cycle 20s ease both;
           }
 
           .landing-chat-scroll {
@@ -934,26 +934,26 @@ export function OttoLandingPage() {
           }
 
           .landing-chat-scroll-content {
-            animation: landing-chat-scroll-cycle 20s ease infinite both;
+            animation: landing-chat-scroll-cycle 20s ease both;
             will-change: transform;
           }
 
           .landing-user-question {
-            animation: landing-question-cycle 20s ease infinite both;
+            animation: landing-question-cycle 20s ease both;
           }
 
           .landing-assistant-intro {
-            animation: landing-chat-cycle 20s ease infinite both;
+            animation: landing-chat-cycle 20s ease both;
           }
 
           .landing-sequence-item {
             opacity: 0;
-            animation: landing-sequence-cycle 20s ease infinite both;
+            animation: landing-sequence-cycle 20s ease both;
           }
 
           .landing-table-row {
             opacity: 0;
-            animation: landing-table-row-cycle 20s ease infinite both;
+            animation: landing-table-row-cycle 20s ease both;
           }
 
           .landing-table-pending,
@@ -962,7 +962,7 @@ export function OttoLandingPage() {
           .landing-table-check {
             animation-duration: 20s;
             animation-fill-mode: both;
-            animation-iteration-count: infinite;
+            animation-iteration-count: 1;
             animation-timing-function: ease;
             animation-delay: inherit;
           }
