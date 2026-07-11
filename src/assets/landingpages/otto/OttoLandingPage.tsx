@@ -186,68 +186,89 @@ function DataConnectionSync() {
 }
 
 function ChatAutomationPanel({ dark = false, steps, title }: { dark?: boolean; steps: ChatStep[]; title: string }) {
-  const surface = dark ? 'border-white/10 bg-white/[0.06]' : 'border-black/10 bg-white'
-  const inner = dark ? 'border-white/10 bg-[#111111]' : 'border-black/10 bg-[#f8fafc]'
-  const titleColor = dark ? 'text-white' : 'text-[#111827]'
-  const muted = dark ? 'text-white/55' : 'text-[#667085]'
-
   return (
-    <div className={`rounded-[30px] border ${surface} p-4 shadow-[0_28px_80px_rgba(15,23,42,0.12)] md:p-6`}>
-      <div className={`overflow-hidden rounded-[24px] border ${inner}`}>
-        <div className="flex items-center justify-between border-b border-current/10 pb-4">
-          <div className="flex items-center gap-3 px-4 pt-4">
-            <span className="grid size-10 place-items-center rounded-2xl bg-emerald-300 text-sm font-bold text-[#06130d]">O</span>
-            <div>
-              <p className={`text-lg font-semibold ${titleColor}`}>Otto</p>
-              <p className={`mt-1 text-sm font-medium ${muted}`}>Agente operando no chat</p>
-            </div>
+    <div className={`rounded-[30px] border p-3 shadow-[0_28px_80px_rgba(15,23,42,0.14)] md:p-4 ${dark ? 'border-white/10 bg-white/[0.08]' : 'border-black/10 bg-white'}`}>
+      <div className="overflow-hidden rounded-[26px] border border-black/10 bg-white text-[#111827]">
+        <div className="flex h-14 items-center justify-between border-b border-black/10 px-5">
+          <div className="flex items-center gap-3">
+            <span className="grid size-8 place-items-center rounded-full bg-[#111827] text-xs font-bold text-white">O</span>
+            <span className="text-[15px] font-semibold">ChatGPT</span>
           </div>
-          <span className="mr-4 mt-4 grid size-10 place-items-center rounded-full bg-emerald-300 text-[#06130d]">
-            <Sparkles size={18} strokeWidth={1.8} />
-          </span>
+          <span className="rounded-full bg-[#f4f4f5] px-3 py-1.5 text-xs font-semibold text-[#71717a]">Otto ativo</span>
         </div>
-        <div className="grid gap-4 p-4">
-          <div className="landing-chat-message ml-auto max-w-[82%] rounded-[24px] bg-white px-5 py-4 text-[#111827] shadow-[0_12px_34px_rgba(15,23,42,0.08)]">
+        <div className="grid gap-5 bg-white p-5">
+          <div className="landing-chat-message ml-auto max-w-[82%] rounded-[22px] bg-[#f4f4f5] px-5 py-4 text-[#111827]">
             <p className="text-[17px] font-medium leading-6">{title}</p>
           </div>
           <div className="landing-chat-message flex items-start gap-3" style={{ animationDelay: '0.18s' }}>
-            <span className="mt-1 grid size-8 shrink-0 place-items-center rounded-xl bg-emerald-300 text-xs font-bold text-[#06130d]">O</span>
-            <div className="max-w-[88%] rounded-[24px] border border-black/[0.06] bg-white px-5 py-4 text-[#111827] shadow-[0_12px_34px_rgba(15,23,42,0.06)]">
-              <p className="text-[16px] font-medium leading-6 text-[#334155]">
-                Vou consultar suas fontes conectadas, executar as ferramentas certas e trazer o resultado com pontos de revisao.
+            <AssistantAvatar />
+            <div className="max-w-[88%]">
+              <p className="text-[17px] font-normal leading-7 text-[#111827]">
+                Claro. Vou consultar as fontes conectadas, executar as ferramentas certas e retornar os resultados com pontos de revisao.
               </p>
             </div>
           </div>
           <div className="landing-chat-message flex items-start gap-3" style={{ animationDelay: '0.34s' }}>
-            <span className="mt-1 grid size-8 shrink-0 place-items-center rounded-xl bg-emerald-300 text-xs font-bold text-[#06130d]">O</span>
-            <div className="grid w-full gap-3 rounded-[24px] border border-black/[0.06] bg-white p-4 shadow-[0_12px_34px_rgba(15,23,42,0.06)]">
+            <AssistantAvatar />
+            <div className="grid w-full gap-3">
               {steps.map((step, index) => (
-                <div key={step.name} className="grid gap-2">
-                  <div className="landing-tool-call inline-flex w-max items-center gap-2 rounded-xl border border-black/[0.08] bg-[#f8fafc] px-3 py-2 text-sm font-semibold text-[#475467]" style={{ animationDelay: `${0.42 + index * 0.16}s` }}>
-                    <Sparkles size={14} strokeWidth={1.8} />
-                    {step.name.toLowerCase().replaceAll(' ', '_')}
-                  </div>
+                <div key={step.name} className="grid gap-2 rounded-[18px] border border-black/10 bg-white p-3 shadow-[0_10px_28px_rgba(15,23,42,0.06)]">
+                  <ToolCallCard index={index} name={step.name.toLowerCase().replaceAll(' ', '_')} />
                   <ToolResultRow index={index} step={step} />
                 </div>
               ))}
+              <OutlineArtifact steps={steps} />
             </div>
           </div>
           <div className="landing-chat-message flex items-start gap-3" style={{ animationDelay: '0.72s' }}>
-            <span className="mt-1 grid size-8 shrink-0 place-items-center rounded-xl bg-emerald-300 text-xs font-bold text-[#06130d]">O</span>
-            <div className="max-w-[88%] rounded-[24px] border border-black/[0.06] bg-white px-5 py-4 text-[#111827] shadow-[0_12px_34px_rgba(15,23,42,0.06)]">
-              <p className="text-[16px] font-medium leading-6 text-[#334155]">
-                Pronto. A rotina foi executada e deixei os itens sensiveis separados para acompanhamento.
+            <AssistantAvatar />
+            <div className="max-w-[88%]">
+              <p className="text-[17px] font-normal leading-7 text-[#111827]">
+                Pronto. Executei a rotina, gerei o artefato de acompanhamento e separei os itens sensiveis para revisao.
               </p>
             </div>
           </div>
-          <div className={`mt-1 flex items-center gap-3 rounded-full border px-4 py-3 ${dark ? 'border-white/10 bg-white/[0.04]' : 'border-black/10 bg-white'}`}>
-            <span className={`text-sm font-medium ${muted}`}>Pergunte ao Otto...</span>
+          <div className="mt-1 flex items-center gap-3 rounded-[24px] border border-black/10 bg-[#f4f4f5] px-4 py-3">
+            <span className="text-sm font-medium text-[#71717a]">Mensagem para Otto</span>
             <span className="ml-auto grid size-8 place-items-center rounded-full bg-[#111827] text-white">
               <ArrowRight size={15} strokeWidth={1.8} />
             </span>
           </div>
         </div>
       </div>
+    </div>
+  )
+}
+
+function AssistantAvatar() {
+  return <span className="mt-1 grid size-8 shrink-0 place-items-center rounded-full bg-[#111827] text-xs font-bold text-white">O</span>
+}
+
+function ToolCallCard({ index, name }: { index: number; name: string }) {
+  return (
+    <div className="landing-tool-call flex items-center gap-3 rounded-[14px] border border-black/10 bg-[#f8fafc] px-3 py-2.5 text-sm font-semibold text-[#3f3f46]" style={{ animationDelay: `${0.42 + index * 0.16}s` }}>
+      <span className="grid size-7 place-items-center rounded-lg border border-black/10 bg-white text-[#71717a]">
+        <Sparkles size={14} strokeWidth={1.8} />
+      </span>
+      <span>{name}</span>
+    </div>
+  )
+}
+
+function OutlineArtifact({ steps }: { steps: ChatStep[] }) {
+  const label = steps.some((step) => step.name.includes('NFS')) ? 'nota_fiscal_emitida' : steps.some((step) => step.name.includes('WhatsApp')) ? 'mensagens_enviadas' : steps.some((step) => step.name.includes('Fluxo')) ? 'dashboard_fluxo_caixa' : 'resumo_operacional'
+  const type = steps.some((step) => step.name.includes('NFS')) ? 'Nota fiscal' : steps.some((step) => step.name.includes('WhatsApp')) ? 'WhatsApp' : steps.some((step) => step.name.includes('Fluxo')) ? 'Dashboard' : 'Relatorio'
+
+  return (
+    <div className="landing-tool-row grid grid-cols-[54px_1fr_auto] items-center gap-4 rounded-[18px] border border-black/10 bg-white p-3 shadow-[0_10px_28px_rgba(15,23,42,0.06)]" style={{ animationDelay: '0.78s' }}>
+      <span className="grid size-[54px] place-items-center rounded-2xl border border-black/10 bg-[#fafafa]">
+        <FileText size={23} strokeWidth={1.8} />
+      </span>
+      <div className="min-w-0">
+        <p className="truncate text-[16px] font-semibold text-[#111827]">{label}</p>
+        <p className="mt-1 truncate text-sm font-medium text-[#71717a]">{type} · Gerado pelo Otto</p>
+      </div>
+      <span className="rounded-full bg-[#f4f4f5] px-3 py-2 text-sm font-semibold text-[#52525b]">Abrir</span>
     </div>
   )
 }
@@ -264,13 +285,13 @@ function toneClasses(tone: ChatStep['tone']) {
 
 function ToolResultRow({ index, step }: { index: number; step: ChatStep }) {
   return (
-    <div className="landing-tool-row grid min-h-[72px] grid-cols-[44px_1fr_auto] items-center gap-4 rounded-[20px] border border-black/[0.06] bg-white p-3 shadow-[0_10px_28px_rgba(15,23,42,0.05)]" style={{ animationDelay: `${0.12 + index * 0.12}s` }}>
-      <span className={`grid size-11 place-items-center rounded-2xl ${toneClasses(step.tone)}`}>{step.icon}</span>
+    <div className="landing-tool-row grid min-h-[68px] grid-cols-[40px_1fr_auto] items-center gap-3 rounded-[14px] border border-black/[0.06] bg-white p-2.5" style={{ animationDelay: `${0.5 + index * 0.16}s` }}>
+      <span className={`grid size-10 place-items-center rounded-xl ${toneClasses(step.tone)}`}>{step.icon}</span>
       <div className="min-w-0">
-        <p className="truncate text-[16px] font-semibold text-[#111827]">{step.name}</p>
+        <p className="truncate text-[15px] font-semibold text-[#111827]">{step.name}</p>
         <p className="mt-1 truncate text-sm font-medium text-[#7a8290]">{step.description}</p>
       </div>
-      <span className={`rounded-full px-3 py-2 text-sm font-semibold ${toneClasses(step.tone)}`}>{step.status}</span>
+      <span className={`rounded-full px-2.5 py-1.5 text-xs font-semibold ${toneClasses(step.tone)}`}>{step.status}</span>
     </div>
   )
 }
