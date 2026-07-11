@@ -11,6 +11,8 @@ import {
   Landmark,
   LockKeyhole,
   MessageCircle,
+  Mic,
+  Plus,
   ReceiptText,
   ShieldCheck,
   Sparkles,
@@ -188,29 +190,32 @@ function DataConnectionSync() {
 function ChatAutomationPanel({ dark = false, steps, title }: { dark?: boolean; steps: ChatStep[]; title: string }) {
   return (
     <div className={`rounded-[30px] border p-3 shadow-[0_28px_80px_rgba(15,23,42,0.14)] md:p-4 ${dark ? 'border-white/10 bg-white/[0.08]' : 'border-black/10 bg-white'}`}>
-      <div className="overflow-hidden rounded-[26px] border border-black/10 bg-white text-[#111827]">
-        <div className="flex h-14 items-center justify-between border-b border-black/10 px-5">
+      <div className="overflow-hidden rounded-[26px] border border-black/10 bg-white text-[#111111]">
+        <div className="flex h-14 items-center justify-between bg-white px-5">
           <div className="flex items-center gap-3">
-            <span className="grid size-8 place-items-center rounded-full bg-[#111827] text-xs font-bold text-white">O</span>
-            <span className="text-[15px] font-semibold">ChatGPT</span>
+            <span className="grid size-8 place-items-center rounded-full bg-[#111111] text-xs font-bold text-white">O</span>
+            <span className="text-[15px] font-semibold text-[#111111]">ChatGPT</span>
           </div>
-          <span className="rounded-full bg-[#f4f4f5] px-3 py-1.5 text-xs font-semibold text-[#71717a]">Otto ativo</span>
+          <span className="rounded-full bg-[#f7f7f7] px-3 py-1.5 text-xs font-medium text-[#6b6b6b]">Otto ativo</span>
         </div>
         <div className="relative min-h-[560px] bg-white p-5">
-          <div className="landing-prompt-input absolute bottom-5 left-5 right-5 flex items-center gap-3 rounded-[24px] border border-black/10 bg-[#f4f4f5] px-4 py-3">
-            <span className="landing-typed-prompt text-sm font-medium text-[#111827]">{title}</span>
+          <div className="landing-prompt-input absolute bottom-5 left-5 right-5 flex min-h-[58px] items-center gap-3 rounded-full bg-[#f1f1f1] px-4 py-2">
+            <span className="grid size-9 shrink-0 place-items-center rounded-full text-[#333333]">
+              <Plus size={22} strokeWidth={1.8} />
+            </span>
+            <span className="landing-typed-prompt text-[15px] font-normal leading-5 text-[#111111]">{title}</span>
             <span className="landing-caret h-5 w-[2px] bg-[#111827]" />
-            <span className="ml-auto grid size-8 place-items-center rounded-full bg-[#111827] text-white">
-              <ArrowRight size={15} strokeWidth={1.8} />
+            <span className="ml-auto grid size-9 shrink-0 place-items-center rounded-full bg-[#111111] text-white">
+              <Mic size={17} strokeWidth={2} />
             </span>
           </div>
-          <div className="landing-user-question ml-auto max-w-[82%] rounded-[22px] bg-[#f4f4f5] px-5 py-4 text-[#111827]">
-            <p className="text-[17px] font-medium leading-6">{title}</p>
+          <div className="landing-user-question ml-auto max-w-[82%] rounded-[28px] bg-[#f1f1f1] px-5 py-4 text-[#111111]">
+            <p className="text-[16px] font-normal leading-6">{title}</p>
           </div>
           <div className="landing-assistant-intro mt-5 flex items-start gap-3">
             <AssistantAvatar />
             <div className="max-w-[88%]">
-              <p className="text-[17px] font-normal leading-7 text-[#111827]">
+              <p className="text-[16px] font-normal leading-7 text-[#111111]">
                 Claro. Vou consultar as fontes conectadas, executar as ferramentas certas e retornar os resultados com pontos de revisao.
               </p>
             </div>
@@ -219,7 +224,7 @@ function ChatAutomationPanel({ dark = false, steps, title }: { dark?: boolean; s
             <AssistantAvatar />
             <div className="grid w-full gap-3">
               {steps.map((step, index) => (
-                <div key={step.name} className="grid gap-2 rounded-[18px] border border-black/10 bg-white p-3 shadow-[0_10px_28px_rgba(15,23,42,0.06)]">
+                <div key={step.name} className="grid gap-2">
                   <ToolCallCard index={index} name={step.name.toLowerCase().replaceAll(' ', '_')} />
                   <ToolResultRow index={index} step={step} />
                 </div>
@@ -230,15 +235,18 @@ function ChatAutomationPanel({ dark = false, steps, title }: { dark?: boolean; s
           <div className="landing-assistant-final mt-5 flex items-start gap-3">
             <AssistantAvatar />
             <div className="max-w-[88%]">
-              <p className="text-[17px] font-normal leading-7 text-[#111827]">
+              <p className="text-[16px] font-normal leading-7 text-[#111111]">
                 Pronto. Executei a rotina, gerei o artefato de acompanhamento e separei os itens sensiveis para revisao.
               </p>
             </div>
           </div>
-          <div className="landing-chat-composer absolute bottom-5 left-5 right-5 flex items-center gap-3 rounded-[24px] border border-black/10 bg-[#f4f4f5] px-4 py-3">
-            <span className="text-sm font-medium text-[#71717a]">Mensagem para Otto</span>
-            <span className="ml-auto grid size-8 place-items-center rounded-full bg-[#111827] text-white">
-              <ArrowRight size={15} strokeWidth={1.8} />
+          <div className="landing-chat-composer absolute bottom-5 left-5 right-5 flex min-h-[58px] items-center gap-3 rounded-full bg-[#f1f1f1] px-4 py-2">
+            <span className="grid size-9 shrink-0 place-items-center rounded-full text-[#333333]">
+              <Plus size={22} strokeWidth={1.8} />
+            </span>
+            <span className="text-[15px] font-normal text-[#777777]">Mensagem para Otto</span>
+            <span className="ml-auto grid size-9 place-items-center rounded-full bg-[#111111] text-white">
+              <Mic size={17} strokeWidth={2} />
             </span>
           </div>
         </div>
@@ -248,13 +256,13 @@ function ChatAutomationPanel({ dark = false, steps, title }: { dark?: boolean; s
 }
 
 function AssistantAvatar() {
-  return <span className="mt-1 grid size-8 shrink-0 place-items-center rounded-full bg-[#111827] text-xs font-bold text-white">O</span>
+  return <span className="mt-1 grid size-7 shrink-0 place-items-center rounded-full bg-[#111111] text-[10px] font-bold text-white">O</span>
 }
 
 function ToolCallCard({ index, name }: { index: number; name: string }) {
   return (
-    <div className="landing-tool-call flex items-center gap-3 rounded-[14px] border border-black/10 bg-[#f8fafc] px-3 py-2.5 text-sm font-semibold text-[#3f3f46]" style={{ animationDelay: `${0.1 + index * 0.16}s` }}>
-      <span className="grid size-7 place-items-center rounded-lg border border-black/10 bg-white text-[#71717a]">
+    <div className="landing-tool-call flex min-h-[48px] items-center gap-3 rounded-xl border border-[#e4e4e7] bg-white px-3 py-2.5 text-[15px] font-medium text-[#111111] shadow-[0_1px_2px_rgba(0,0,0,0.04)]" style={{ animationDelay: `${0.1 + index * 0.16}s` }}>
+      <span className="grid size-7 place-items-center rounded-lg border border-[#e4e4e7] bg-[#fafafa] text-[#71717a]">
         <Sparkles size={14} strokeWidth={1.8} />
       </span>
       <span>{name}</span>
@@ -267,15 +275,15 @@ function OutlineArtifact({ steps }: { steps: ChatStep[] }) {
   const type = steps.some((step) => step.name.includes('NFS')) ? 'Nota fiscal' : steps.some((step) => step.name.includes('WhatsApp')) ? 'WhatsApp' : steps.some((step) => step.name.includes('Fluxo')) ? 'Dashboard' : 'Relatorio'
 
   return (
-    <div className="landing-tool-row grid grid-cols-[54px_1fr_auto] items-center gap-4 rounded-[18px] border border-black/10 bg-white p-3 shadow-[0_10px_28px_rgba(15,23,42,0.06)]" style={{ animationDelay: '0.58s' }}>
-      <span className="grid size-[54px] place-items-center rounded-2xl border border-black/10 bg-[#fafafa]">
+    <div className="landing-tool-row grid grid-cols-[54px_1fr_auto] items-center gap-4 rounded-[18px] border border-[#e4e4e7] bg-white p-3 shadow-[0_1px_2px_rgba(0,0,0,0.04)]" style={{ animationDelay: '0.58s' }}>
+      <span className="grid size-[54px] place-items-center rounded-2xl border border-[#e4e4e7] bg-[#fafafa]">
         <FileText size={23} strokeWidth={1.8} />
       </span>
       <div className="min-w-0">
         <p className="truncate text-[16px] font-semibold text-[#111827]">{label}</p>
         <p className="mt-1 truncate text-sm font-medium text-[#71717a]">{type} · Gerado pelo Otto</p>
       </div>
-      <span className="rounded-full bg-[#f4f4f5] px-3 py-2 text-sm font-semibold text-[#52525b]">Abrir</span>
+      <span className="rounded-full bg-[#f1f1f1] px-3 py-2 text-sm font-medium text-[#52525b]">Abrir</span>
     </div>
   )
 }
@@ -292,11 +300,11 @@ function toneClasses(tone: ChatStep['tone']) {
 
 function ToolResultRow({ index, step }: { index: number; step: ChatStep }) {
   return (
-    <div className="landing-tool-row grid min-h-[68px] grid-cols-[40px_1fr_auto] items-center gap-3 rounded-[14px] border border-black/[0.06] bg-white p-2.5" style={{ animationDelay: `${0.18 + index * 0.16}s` }}>
+    <div className="landing-tool-row grid min-h-[68px] grid-cols-[40px_1fr_auto] items-center gap-3 rounded-[14px] border border-[#eeeeee] bg-white p-2.5" style={{ animationDelay: `${0.18 + index * 0.16}s` }}>
       <span className={`grid size-10 place-items-center rounded-xl ${toneClasses(step.tone)}`}>{step.icon}</span>
       <div className="min-w-0">
-        <p className="truncate text-[15px] font-semibold text-[#111827]">{step.name}</p>
-        <p className="mt-1 truncate text-sm font-medium text-[#7a8290]">{step.description}</p>
+        <p className="truncate text-[15px] font-medium text-[#111111]">{step.name}</p>
+        <p className="mt-1 truncate text-sm font-normal text-[#777777]">{step.description}</p>
       </div>
       <span className={`rounded-full px-2.5 py-1.5 text-xs font-semibold ${toneClasses(step.tone)}`}>{step.status}</span>
     </div>
