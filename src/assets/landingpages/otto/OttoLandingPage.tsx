@@ -45,12 +45,27 @@ type ChatStep = {
 }
 
 type ResultRow = {
+  amount?: string
+  color?: string
   description: string
+  erp?: string
   icon?: IconComponent
   initials: string
   name: string
   result: string
   tone: ChatStep['tone']
+  value?: string
+}
+
+type ExpenseResult = ResultRow & {
+  amount: string
+  color: string
+}
+
+type ReconciliationResult = ResultRow & {
+  color: string
+  erp: string
+  value: string
 }
 
 const integrationRows: SyncRow[] = [
@@ -197,7 +212,8 @@ function DataConnectionSync() {
 }
 
 function ChatAutomationPanel({ dark = false, steps, title }: { dark?: boolean; steps: ChatStep[]; title: string }) {
-  const finalDelay = 4.9 + steps.length * 1.75
+  const stepGap = 2.75
+  const finalDelay = 4.9 + steps.length * stepGap
 
   return (
     <div className={`rounded-[30px] border p-3 shadow-[0_28px_80px_rgba(15,23,42,0.14)] md:p-4 ${dark ? 'border-white/10 bg-white/[0.08]' : 'border-black/10 bg-white'}`}>
@@ -220,45 +236,49 @@ function ChatAutomationPanel({ dark = false, steps, title }: { dark?: boolean; s
               <Mic size={17} strokeWidth={2} />
             </span>
           </div>
-          <div className="landing-user-question ml-auto max-w-[82%] rounded-[28px] bg-[#f1f1f1] px-5 py-4 text-[#111111]">
-            <p className="text-[16px] font-normal leading-6">{title}</p>
-          </div>
-          <div className="landing-sequence-item mt-5 flex items-start gap-3" style={{ animationDelay: '2.95s' }}>
-            <AssistantAvatar />
-            <div className="max-w-[88%]">
-              <p className="text-[16px] font-normal leading-7 text-[#111111]">
-                Claro. Vou consultar as fontes conectadas, executar as ferramentas certas e retornar os resultados com pontos de revisao.
-              </p>
-            </div>
-          </div>
-          {steps.map((step, index) => {
-            const baseDelay = 4 + index * 1.75
-            return (
-              <div key={step.name} className="grid gap-3">
-                <AssistantText delay={baseDelay} text={`Vou chamar ${step.name.toLowerCase()} para cruzar os dados e montar o resultado.`} />
-                <div className="landing-sequence-item flex items-start gap-3" style={{ animationDelay: `${baseDelay + 0.48}s` }}>
-                  <AssistantAvatar />
-                  <div className="grid w-full gap-2">
-                    <ToolCallCard name={step.name.toLowerCase().replaceAll(' ', '_')} />
-                    <ToolResultTable step={step} />
-                  </div>
-                </div>
-                <AssistantText delay={baseDelay + 1.04} text={`${step.name} concluido: ${step.status}. ${step.description}.`} />
+          <div className="landing-chat-scroll absolute bottom-[92px] left-5 right-5 top-5 overflow-hidden">
+            <div className="landing-chat-scroll-content pb-4" style={{ ['--landing-scroll-y' as string]: `${Math.max(140, steps.length * 124)}px` }}>
+              <div className="landing-user-question ml-auto max-w-[82%] rounded-[28px] bg-[#f1f1f1] px-5 py-4 text-[#111111]">
+                <p className="text-[16px] font-normal leading-6">{title}</p>
               </div>
-            )
-          })}
-          <div className="landing-sequence-item mt-5 flex items-start gap-3" style={{ animationDelay: `${finalDelay}s` }}>
-            <AssistantAvatar />
-            <div className="grid w-full gap-3">
-              <OutlineArtifact steps={steps} />
-            </div>
-          </div>
-          <div className="landing-sequence-item mt-5 flex items-start gap-3" style={{ animationDelay: `${finalDelay + 0.82}s` }}>
-            <AssistantAvatar />
-            <div className="max-w-[88%]">
-              <p className="text-[16px] font-normal leading-7 text-[#111111]">
-                Pronto. Executei a rotina, gerei o artefato de acompanhamento e separei os itens sensiveis para revisao.
-              </p>
+              <div className="landing-sequence-item mt-5 flex items-start gap-3" style={{ animationDelay: '2.95s' }}>
+                <AssistantAvatar />
+                <div className="max-w-[88%]">
+                  <p className="text-[16px] font-normal leading-7 text-[#111111]">
+                    Claro. Vou consultar as fontes conectadas, executar as ferramentas certas e retornar os resultados com pontos de revisao.
+                  </p>
+                </div>
+              </div>
+              {steps.map((step, index) => {
+                const baseDelay = 4 + index * stepGap
+                return (
+                  <div key={step.name} className="grid gap-3">
+                    <AssistantText delay={baseDelay} text={`Vou chamar ${step.name.toLowerCase()} para cruzar os dados e montar o resultado.`} />
+                    <div className="landing-sequence-item flex items-start gap-3" style={{ animationDelay: `${baseDelay + 0.48}s` }}>
+                      <AssistantAvatar />
+                      <div className="grid w-full gap-2">
+                        <ToolCallCard name={step.name.toLowerCase().replaceAll(' ', '_')} />
+                        <ToolResultTable delay={baseDelay + 0.68} step={step} />
+                      </div>
+                    </div>
+                    <AssistantText delay={baseDelay + 2.18} text={`${step.name} concluido: ${step.status}. ${step.description}.`} />
+                  </div>
+                )
+              })}
+              <div className="landing-sequence-item mt-5 flex items-start gap-3" style={{ animationDelay: `${finalDelay}s` }}>
+                <AssistantAvatar />
+                <div className="grid w-full gap-3">
+                  <OutlineArtifact steps={steps} />
+                </div>
+              </div>
+              <div className="landing-sequence-item mt-5 flex items-start gap-3" style={{ animationDelay: `${finalDelay + 0.82}s` }}>
+                <AssistantAvatar />
+                <div className="max-w-[88%]">
+                  <p className="text-[16px] font-normal leading-7 text-[#111111]">
+                    Pronto. Executei a rotina, gerei o artefato de acompanhamento e separei os itens sensiveis para revisao.
+                  </p>
+                </div>
+              </div>
             </div>
           </div>
           <div className="landing-chat-composer absolute bottom-5 left-5 right-5 flex min-h-[58px] items-center gap-3 rounded-full bg-[#f1f1f1] px-4 py-2">
@@ -333,17 +353,23 @@ function toneClasses(tone: ChatStep['tone']) {
 function resultRowsForStep(step: ChatStep): ResultRow[] {
   if (step.name === 'Classificar despesas') {
     return [
-      { description: 'Uso de API e automacao', initials: 'AI', name: 'OpenAI API', result: 'Software', tone: 'green' },
-      { description: 'Campanhas de aquisicao', icon: MetaIcon, initials: 'M', name: 'Meta Ads', result: 'Marketing', tone: 'green' },
-      { description: 'Apps e checkout da loja', icon: ShopifyIcon, initials: 'S', name: 'Shopify Apps', result: 'Ecommerce', tone: 'blue' },
+      { amount: 'R$ 1.280', color: '#111827', description: 'Uso de API e automacao', initials: 'AI', name: 'OpenAI API', result: 'Software', tone: 'green' },
+      { amount: 'R$ 420', color: '#1877f2', description: 'Campanhas de aquisicao', icon: MetaIcon, initials: 'M', name: 'Meta Ads', result: 'Marketing', tone: 'green' },
+      { amount: 'R$ 189', color: '#f97316', description: 'Pacote e TED bancaria', initials: 'BI', name: 'Banco Inter', result: 'Tarifa bancaria', tone: 'amber' },
+      { amount: 'R$ 2.450', color: '#facc15', description: 'Envios e fretes nacionais', initials: 'CO', name: 'Correios', result: 'Logistica', tone: 'green' },
+      { amount: 'R$ 980', color: '#95bf47', description: 'Apps e checkout da loja', icon: ShopifyIcon, initials: 'S', name: 'Shopify Apps', result: 'Ecommerce', tone: 'blue' },
+      { amount: 'R$ 740', color: '#4285f4', description: 'Leads e conversoes', icon: GoogleAdsIcon, initials: 'G', name: 'Google Ads', result: 'Vendas', tone: 'blue' },
     ]
   }
 
   if (step.name === 'Conciliar bancos') {
     return [
-      { description: 'Conta Azul - NF-9031', initials: 'CN', name: 'PIX Cliente Norte', result: 'Conciliado', tone: 'green' },
-      { description: 'Adquirente - lote diario', initials: 'ST', name: 'Cartao Stone', result: 'Conciliado', tone: 'green' },
-      { description: 'Sem lancamento no ERP', initials: 'BI', name: 'Tarifa bancaria', result: 'Revisar', tone: 'amber' },
+      { color: '#0ea5e9', description: 'Conta azul - recebimento', erp: 'NF-9031', initials: 'CN', name: 'PIX Cliente Norte', result: 'Conciliado', tone: 'green', value: 'R$ 42.100' },
+      { color: '#111827', description: 'Adquirente - lote diario', erp: 'Lote-552', initials: 'ST', name: 'Cartao Stone', result: 'Conciliado', tone: 'green', value: 'R$ 68.900' },
+      { color: '#f97316', description: 'Banco Inter - taxa avulsa', erp: 'Sem lancamento', initials: 'BI', name: 'Tarifa bancaria', result: 'Revisar', tone: 'amber', value: 'R$ 189' },
+      { color: '#95bf47', description: 'Shopify - assinatura loja', erp: 'CP-1182', icon: ShopifyIcon, initials: 'S', name: 'Boleto Fornecedor', result: 'Conciliado', tone: 'green', value: 'R$ 12.430' },
+      { color: '#4285f4', description: 'Cartao corporativo - marketing', erp: 'MKT-884', icon: GoogleAdsIcon, initials: 'G', name: 'Google Ads BR', result: 'Conciliado', tone: 'green', value: 'R$ 8.760' },
+      { color: '#1877f2', description: 'Cartao corporativo - campanhas', erp: 'MKT-921', icon: MetaIcon, initials: 'M', name: 'Meta Ads', result: 'Conciliado', tone: 'green', value: 'R$ 6.420' },
     ]
   }
 
@@ -486,37 +512,103 @@ function ResultIcon({ row }: { row: ResultRow }) {
   const Icon = row.icon
 
   return (
-    <span className="grid size-10 shrink-0 place-items-center rounded-xl border border-[#eeeeee] bg-white text-[#111111]">
-      {Icon ? <Icon className="h-7 w-7" /> : <span className={`grid size-8 place-items-center rounded-lg text-[11px] font-bold ${toneClasses(row.tone)}`}>{row.initials}</span>}
+    <span className="grid size-[42px] shrink-0 place-items-center rounded-xl border border-[#e7edf0] bg-white text-[#111111] shadow-[0_8px_18px_rgba(15,23,42,0.06)]" style={{ color: row.color ?? '#111111' }}>
+      {Icon ? <Icon className="h-7 w-7" /> : <span className="grid size-[31px] place-items-center rounded-[9px] text-[14px] font-bold text-white" style={{ background: row.color ?? '#111827' }}>{row.initials}</span>}
     </span>
   )
 }
 
-function ToolResultTable({ step }: { step: ChatStep }) {
+function ToolResultTable({ delay = 0, step }: { delay?: number; step: ChatStep }) {
   const rows = resultRowsForStep(step)
+  const isExpense = step.name === 'Classificar despesas'
+  const isReconciliation = step.name === 'Conciliar bancos'
+  const title = isExpense ? 'Classificacao automatica' : isReconciliation ? 'Matching de lancamentos' : step.name
+  const subtitle = isExpense ? 'Fornecedor, valor e categoria sugerida' : isReconciliation ? 'Movimento bancario x registro no ERP' : step.description
 
   return (
-    <div className="overflow-hidden rounded-[18px] border border-[#e8e8e8] bg-white shadow-[0_1px_2px_rgba(0,0,0,0.04)]">
-      <div className="flex items-start justify-between gap-4 border-b border-[#eeeeee] px-4 py-3">
+    <div className="overflow-hidden rounded-[24px] border border-[#e5e7eb] bg-white py-3 shadow-[0_18px_46px_rgba(15,23,42,0.08)]">
+      <div className="flex items-start justify-between gap-4 px-5 pb-3">
         <div className="min-w-0">
-          <p className="truncate text-[15px] font-semibold text-[#111111]">{step.name}</p>
-          <p className="mt-1 truncate text-sm font-normal text-[#777777]">{step.description}</p>
+          <p className="truncate text-[17px] font-semibold tracking-[-0.01em] text-[#111111]">{title}</p>
+          <p className="mt-1 truncate text-sm font-normal text-[#8b8b8b]">{subtitle}</p>
         </div>
-        <span className={`shrink-0 rounded-full px-2.5 py-1.5 text-xs font-semibold ${toneClasses(step.tone)}`}>{step.status}</span>
+        <span className="shrink-0 rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1.5 text-sm font-semibold text-emerald-700">100%</span>
       </div>
       <div>
-        {rows.map((row) => (
-          <div key={`${step.name}-${row.name}`} className="grid min-h-[66px] grid-cols-[40px_1fr_auto] items-center gap-3 border-b border-[#f1f1f1] px-4 py-2.5 last:border-b-0">
-            <ResultIcon row={row} />
-            <div className="min-w-0">
-              <p className="truncate text-[15px] font-medium text-[#111111]">{row.name}</p>
-              <p className="mt-1 truncate text-sm font-normal text-[#777777]">{row.description}</p>
+        {rows.map((row, index) => {
+          if (isReconciliation) {
+            return <ReconciliationResultRow key={`${step.name}-${row.name}`} delay={delay + index * 0.18} row={row as ReconciliationResult} />
+          }
+
+          if (isExpense) {
+            return <ExpenseResultRow key={`${step.name}-${row.name}`} delay={delay + index * 0.18} row={row as ExpenseResult} />
+          }
+
+          return (
+            <div key={`${step.name}-${row.name}`} className="landing-table-row grid min-h-[66px] grid-cols-[42px_1fr_auto] items-center gap-3 border-b border-[#f1f1f1] px-5 py-2.5 last:border-b-0" style={{ animationDelay: `${delay + index * 0.14}s` }}>
+              <ResultIcon row={row} />
+              <div className="min-w-0">
+                <p className="truncate text-[15px] font-medium text-[#111111]">{row.name}</p>
+                <p className="mt-1 truncate text-sm font-normal text-[#777777]">{row.description}</p>
+              </div>
+              <span className={`rounded-full px-2.5 py-1.5 text-xs font-semibold ${toneClasses(row.tone)}`}>{row.result}</span>
             </div>
-            <span className={`rounded-full px-2.5 py-1.5 text-xs font-semibold ${toneClasses(row.tone)}`}>{row.result}</span>
-          </div>
-        ))}
+          )
+        })}
       </div>
     </div>
+  )
+}
+
+function ExpenseResultRow({ delay, row }: { delay: number; row: ExpenseResult }) {
+  return (
+    <div className="landing-table-row grid h-[72px] grid-cols-[42px_1fr_auto_28px] items-center gap-[15px] px-5" style={{ animationDelay: `${delay}s` }}>
+      <ResultIcon row={row} />
+      <div className="min-w-0">
+        <strong className="block truncate text-[18px] font-medium leading-none tracking-[-0.01em] text-[#111111]">{row.name}</strong>
+        <span className="mt-1.5 block truncate text-[14px] font-normal leading-none text-[#8a8a8a]">{row.description} · {row.amount}</span>
+      </div>
+      <span className="landing-table-status relative min-w-[116px] text-right text-[16px] font-medium leading-none tracking-[-0.01em]">
+        <span className="landing-table-pending text-[#111111]">Classificando</span>
+        <span className="landing-table-done absolute inset-0 text-emerald-700">{row.result}</span>
+      </span>
+      <TableSpinner />
+    </div>
+  )
+}
+
+function ReconciliationResultRow({ delay, row }: { delay: number; row: ReconciliationResult }) {
+  const review = row.result === 'Revisar'
+
+  return (
+    <div className="landing-table-row grid h-[72px] grid-cols-[42px_1fr_34px_0.78fr_auto_28px] items-center gap-3 px-5" style={{ animationDelay: `${delay}s` }}>
+      <ResultIcon row={row} />
+      <div className="min-w-0">
+        <strong className="block truncate text-[17px] font-semibold leading-none tracking-[-0.01em] text-[#111111]">{row.name}</strong>
+        <span className="mt-1.5 block truncate text-[13px] font-normal leading-none text-[#8a8a8a]">{row.description} · {row.value}</span>
+      </div>
+      <span className="landing-review-icon relative grid size-[34px] place-items-center rounded-full text-[18px] font-black">
+        <span className="landing-table-pending absolute grid size-[34px] place-items-center rounded-full bg-[#f2f4f7] text-[#667085]">·</span>
+        <span className={`landing-table-done absolute grid size-[34px] place-items-center rounded-full ${review ? 'bg-orange-50 text-orange-700' : 'bg-emerald-50 text-emerald-700'}`}>{review ? '!' : '✓'}</span>
+      </span>
+      <div className="min-w-0 truncate text-[15px] font-medium tracking-[-0.01em] text-[#111111]">{row.erp}</div>
+      <span className="landing-table-status relative min-w-[86px] text-right text-[15px] font-medium leading-none tracking-[-0.01em]">
+        <span className="landing-table-pending text-[#111111]">Verificando</span>
+        <span className={`landing-table-done absolute inset-0 ${review ? 'text-orange-700' : 'text-emerald-700'}`}>{row.result}</span>
+      </span>
+      <TableSpinner />
+    </div>
+  )
+}
+
+function TableSpinner() {
+  return (
+    <span className="relative grid size-7 place-items-center">
+      <span className="landing-table-spinner size-[18px] rounded-full border-2 border-[#d0d5dd] border-r-[#111827]" />
+      <span className="landing-table-check absolute grid size-7 place-items-center rounded-full bg-emerald-50 text-emerald-700">
+        <Check size={15} strokeWidth={2.4} />
+      </span>
+    </span>
   )
 }
 
@@ -625,11 +717,48 @@ export function OttoLandingPage() {
             100% { opacity: 0; transform: translateY(-8px); }
           }
 
+          @keyframes landing-chat-scroll-cycle {
+            0%, 42% { transform: translateY(0); }
+            58% { transform: translateY(calc(var(--landing-scroll-y) * -0.34)); }
+            74% { transform: translateY(calc(var(--landing-scroll-y) * -0.68)); }
+            88% { transform: translateY(calc(var(--landing-scroll-y) * -1)); }
+            100% { transform: translateY(calc(var(--landing-scroll-y) * -1)); }
+          }
+
           @keyframes landing-sequence-cycle {
             0% { opacity: 0; transform: translateY(14px); }
             4% { opacity: 1; transform: translateY(0); }
             72% { opacity: 1; transform: translateY(0); }
             100% { opacity: 0; transform: translateY(-8px); }
+          }
+
+          @keyframes landing-table-row-cycle {
+            0% { opacity: 0; transform: translateY(18px); }
+            4% { opacity: 1; transform: translateY(0); }
+            78% { opacity: 1; transform: translateY(0); }
+            100% { opacity: 0; transform: translateY(-8px); }
+          }
+
+          @keyframes landing-table-pending-cycle {
+            0%, 34% { opacity: 1; transform: translateY(0); }
+            42%, 100% { opacity: 0; transform: translateY(-4px); }
+          }
+
+          @keyframes landing-table-done-cycle {
+            0%, 36% { opacity: 0; transform: translateY(4px); }
+            44%, 78% { opacity: 1; transform: translateY(0); }
+            100% { opacity: 0; transform: translateY(-4px); }
+          }
+
+          @keyframes landing-table-spinner-cycle {
+            0%, 34% { opacity: 1; transform: rotate(0deg); }
+            42%, 100% { opacity: 0; transform: rotate(270deg); }
+          }
+
+          @keyframes landing-table-check-cycle {
+            0%, 36% { opacity: 0; transform: scale(0.78); }
+            44%, 78% { opacity: 1; transform: scale(1); }
+            100% { opacity: 0; transform: scale(0.92); }
           }
 
           .landing-sync-row,
@@ -665,7 +794,7 @@ export function OttoLandingPage() {
           }
 
           .landing-prompt-input {
-            animation: landing-prompt-cycle 14s ease infinite both;
+            animation: landing-prompt-cycle 20s ease infinite both;
           }
 
           .landing-typed-prompt {
@@ -673,28 +802,93 @@ export function OttoLandingPage() {
             max-width: 0;
             overflow: hidden;
             white-space: nowrap;
-            animation: landing-typing-mask 14s steps(54, end) infinite both;
+            animation: landing-typing-mask 20s steps(54, end) infinite both;
           }
 
           .landing-caret {
             animation: landing-status-swap 1s steps(1, end) infinite;
           }
 
+          .landing-chat-scroll {
+            scrollbar-width: thin;
+          }
+
+          .landing-chat-scroll::before,
+          .landing-chat-scroll::after {
+            content: '';
+            left: 0;
+            pointer-events: none;
+            position: absolute;
+            right: 0;
+            z-index: 5;
+          }
+
+          .landing-chat-scroll::before {
+            background: linear-gradient(#ffffff, rgba(255,255,255,0));
+            height: 22px;
+            top: 0;
+          }
+
+          .landing-chat-scroll::after {
+            background: linear-gradient(rgba(255,255,255,0), #ffffff);
+            bottom: 0;
+            height: 34px;
+          }
+
+          .landing-chat-scroll-content {
+            animation: landing-chat-scroll-cycle 20s ease infinite both;
+            will-change: transform;
+          }
+
           .landing-user-question {
-            animation: landing-question-cycle 14s ease infinite both;
+            animation: landing-question-cycle 20s ease infinite both;
           }
 
           .landing-assistant-intro {
-            animation: landing-chat-cycle 14s ease infinite both;
+            animation: landing-chat-cycle 20s ease infinite both;
           }
 
           .landing-chat-composer {
-            animation: landing-final-cycle 14s ease infinite both;
+            animation: landing-final-cycle 20s ease infinite both;
           }
 
           .landing-sequence-item {
             opacity: 0;
-            animation: landing-sequence-cycle 14s ease infinite both;
+            animation: landing-sequence-cycle 20s ease infinite both;
+          }
+
+          .landing-table-row {
+            opacity: 0;
+            animation: landing-table-row-cycle 20s ease infinite both;
+          }
+
+          .landing-table-pending,
+          .landing-table-done,
+          .landing-table-spinner,
+          .landing-table-check {
+            animation-duration: 20s;
+            animation-fill-mode: both;
+            animation-iteration-count: infinite;
+            animation-timing-function: ease;
+            animation-delay: inherit;
+          }
+
+          .landing-table-pending {
+            animation-name: landing-table-pending-cycle;
+          }
+
+          .landing-table-done {
+            opacity: 0;
+            animation-name: landing-table-done-cycle;
+          }
+
+          .landing-table-spinner {
+            animation-name: landing-table-spinner-cycle;
+          }
+
+          .landing-table-check {
+            opacity: 0;
+            animation-name: landing-table-check-cycle;
           }
         `}
       </style>
