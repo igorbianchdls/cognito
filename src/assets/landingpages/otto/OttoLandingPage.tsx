@@ -217,8 +217,7 @@ function ChatAutomationPanel({ dark = false, steps, title }: { dark?: boolean; s
   const scrollDistance = 260 + steps.reduce((total, step) => total + (step.name === 'Classificar despesas' || step.name === 'Conciliar bancos' ? 430 : 320), 0)
 
   return (
-    <div className={`rounded-[30px] border p-3 shadow-[0_28px_80px_rgba(15,23,42,0.14)] md:p-4 ${dark ? 'border-white/10 bg-white/[0.08]' : 'border-black/10 bg-white'}`}>
-      <div className="overflow-hidden rounded-[26px] border border-black/10 bg-white text-[#111111]">
+    <div className={`overflow-hidden rounded-[26px] border bg-white text-[#111111] shadow-[0_28px_80px_rgba(15,23,42,0.14)] ${dark ? 'border-white/10' : 'border-black/10'}`}>
         <div className="flex h-14 items-center justify-between bg-white px-5">
           <div className="flex items-center gap-3">
             <span className="grid size-8 place-items-center rounded-full bg-[#111111] text-xs font-bold text-white">O</span>
@@ -231,8 +230,11 @@ function ChatAutomationPanel({ dark = false, steps, title }: { dark?: boolean; s
             <span className="grid size-9 shrink-0 place-items-center rounded-full text-[#333333]">
               <Plus size={22} strokeWidth={1.8} />
             </span>
-            <span className="landing-typed-prompt text-[15px] font-normal leading-5 text-[#111111]">{title}</span>
-            <span className="landing-caret h-5 w-[2px] bg-[#111827]" />
+            <span className="relative min-w-0 flex-1">
+              <span className="landing-typed-prompt text-[15px] font-normal leading-5 text-[#111111]">{title}</span>
+              <span className="landing-caret ml-0.5 inline-block h-5 w-[2px] translate-y-1 bg-[#111827]" />
+              <span className="landing-input-placeholder absolute left-0 top-1/2 -translate-y-1/2 text-[15px] font-normal text-[#777777]">Mensagem para Otto</span>
+            </span>
             <span className="ml-auto grid size-9 shrink-0 place-items-center rounded-full bg-[#111111] text-white">
               <Mic size={17} strokeWidth={2} />
             </span>
@@ -242,9 +244,8 @@ function ChatAutomationPanel({ dark = false, steps, title }: { dark?: boolean; s
               <div className="landing-user-question ml-auto max-w-[82%] rounded-[28px] bg-[#f1f1f1] px-5 py-4 text-[#111111]">
                 <p className="text-[16px] font-normal leading-6">{title}</p>
               </div>
-              <div className="landing-sequence-item mt-5 flex items-start gap-3" style={{ animationDelay: '2.95s' }}>
-                <AssistantAvatar />
-                <div className="max-w-[88%]">
+              <div className="landing-sequence-item mt-5" style={{ animationDelay: '2.95s' }}>
+                <div className="max-w-[92%]">
                   <p className="text-[16px] font-normal leading-7 text-[#111111]">
                     Claro. Vou consultar as fontes conectadas, executar as ferramentas certas e retornar os resultados com pontos de revisao.
                   </p>
@@ -255,26 +256,19 @@ function ChatAutomationPanel({ dark = false, steps, title }: { dark?: boolean; s
                 return (
                   <div key={step.name} className="grid gap-3">
                     <AssistantText delay={baseDelay} text={`Vou chamar ${step.name.toLowerCase()} para cruzar os dados e montar o resultado.`} />
-                    <div className="landing-sequence-item flex items-start gap-3" style={{ animationDelay: `${baseDelay + 0.48}s` }}>
-                      <AssistantAvatar />
-                      <div className="grid w-full gap-2">
-                        <ToolCallCard name={step.name.toLowerCase().replaceAll(' ', '_')} />
-                        <ToolResultTable delay={baseDelay + 0.68} step={step} />
-                      </div>
+                    <div className="landing-sequence-item grid w-full gap-2" style={{ animationDelay: `${baseDelay + 0.48}s` }}>
+                      <ToolCallCard name={step.name.toLowerCase().replaceAll(' ', '_')} />
+                      <ToolResultTable delay={baseDelay + 0.68} step={step} />
                     </div>
                     <AssistantText delay={baseDelay + 2.18} text={`${step.name} concluido: ${step.status}. ${step.description}.`} />
                   </div>
                 )
               })}
-              <div className="landing-sequence-item mt-5 flex items-start gap-3" style={{ animationDelay: `${finalDelay}s` }}>
-                <AssistantAvatar />
-                <div className="grid w-full gap-3">
-                  <OutlineArtifact steps={steps} />
-                </div>
+              <div className="landing-sequence-item mt-5 grid w-full gap-3" style={{ animationDelay: `${finalDelay}s` }}>
+                <OutlineArtifact steps={steps} />
               </div>
-              <div className="landing-sequence-item mt-5 flex items-start gap-3" style={{ animationDelay: `${finalDelay + 0.82}s` }}>
-                <AssistantAvatar />
-                <div className="max-w-[88%]">
+              <div className="landing-sequence-item mt-5" style={{ animationDelay: `${finalDelay + 0.82}s` }}>
+                <div className="max-w-[92%]">
                   <p className="text-[16px] font-normal leading-7 text-[#111111]">
                     Pronto. Executei a rotina, gerei o artefato de acompanhamento e separei os itens sensiveis para revisao.
                   </p>
@@ -282,30 +276,15 @@ function ChatAutomationPanel({ dark = false, steps, title }: { dark?: boolean; s
               </div>
             </div>
           </div>
-          <div className="landing-chat-composer absolute bottom-5 left-5 right-5 flex min-h-[58px] items-center gap-3 rounded-full bg-[#f1f1f1] px-4 py-2">
-            <span className="grid size-9 shrink-0 place-items-center rounded-full text-[#333333]">
-              <Plus size={22} strokeWidth={1.8} />
-            </span>
-            <span className="text-[15px] font-normal text-[#777777]">Mensagem para Otto</span>
-            <span className="ml-auto grid size-9 place-items-center rounded-full bg-[#111111] text-white">
-              <Mic size={17} strokeWidth={2} />
-            </span>
-          </div>
         </div>
-      </div>
     </div>
   )
 }
 
-function AssistantAvatar() {
-  return <span className="mt-1 grid size-7 shrink-0 place-items-center rounded-full bg-[#111111] text-[10px] font-bold text-white">O</span>
-}
-
 function AssistantText({ delay, text }: { delay: number; text: string }) {
   return (
-    <div className="landing-sequence-item flex items-start gap-3" style={{ animationDelay: `${delay}s` }}>
-      <AssistantAvatar />
-      <div className="max-w-[88%]">
+    <div className="landing-sequence-item" style={{ animationDelay: `${delay}s` }}>
+      <div className="max-w-[92%]">
         <p className="text-[16px] font-normal leading-7 text-[#111111]">{text}</p>
       </div>
     </div>
@@ -684,14 +663,23 @@ export function OttoLandingPage() {
           }
 
           @keyframes landing-prompt-cycle {
-            0%, 5% { opacity: 0; transform: translateY(12px); }
-            8%, 24% { opacity: 1; transform: translateY(0); }
-            28%, 100% { opacity: 0; transform: translateY(-8px); }
+            0%, 100% { opacity: 1; transform: translateY(0); }
           }
 
           @keyframes landing-typing-mask {
-            0%, 8% { max-width: 0; }
-            22%, 100% { max-width: 520px; }
+            0%, 8% { max-width: 0; opacity: 1; }
+            22%, 28% { max-width: 520px; opacity: 1; }
+            34%, 100% { max-width: 0; opacity: 0; }
+          }
+
+          @keyframes landing-caret-cycle {
+            0%, 28% { opacity: 1; }
+            31%, 100% { opacity: 0; }
+          }
+
+          @keyframes landing-placeholder-cycle {
+            0%, 30% { opacity: 0; }
+            36%, 100% { opacity: 1; }
           }
 
           @keyframes landing-question-cycle {
@@ -808,7 +796,11 @@ export function OttoLandingPage() {
           }
 
           .landing-caret {
-            animation: landing-status-swap 1s steps(1, end) infinite;
+            animation: landing-caret-cycle 20s ease infinite both;
+          }
+
+          .landing-input-placeholder {
+            animation: landing-placeholder-cycle 20s ease infinite both;
           }
 
           .landing-chat-scroll {
@@ -862,10 +854,6 @@ export function OttoLandingPage() {
 
           .landing-assistant-intro {
             animation: landing-chat-cycle 20s ease infinite both;
-          }
-
-          .landing-chat-composer {
-            animation: landing-final-cycle 20s ease infinite both;
           }
 
           .landing-sequence-item {
