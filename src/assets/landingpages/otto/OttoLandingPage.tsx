@@ -44,6 +44,15 @@ type ChatStep = {
   tone: 'green' | 'blue' | 'amber' | 'red' | 'slate'
 }
 
+type ResultRow = {
+  description: string
+  icon?: IconComponent
+  initials: string
+  name: string
+  result: string
+  tone: ChatStep['tone']
+}
+
 const integrationRows: SyncRow[] = [
   { description: 'ERP financeiro - notas, clientes e contas', icon: ContaAzulIcon, name: 'Conta Azul', tone: '#1d7cff' },
   { description: 'ERP e gestao - financeiro e fiscal', icon: OmieIcon, name: 'Omie', tone: '#0f9f70' },
@@ -188,6 +197,8 @@ function DataConnectionSync() {
 }
 
 function ChatAutomationPanel({ dark = false, steps, title }: { dark?: boolean; steps: ChatStep[]; title: string }) {
+  const finalDelay = 4.9 + steps.length * 1.75
+
   return (
     <div className={`rounded-[30px] border p-3 shadow-[0_28px_80px_rgba(15,23,42,0.14)] md:p-4 ${dark ? 'border-white/10 bg-white/[0.08]' : 'border-black/10 bg-white'}`}>
       <div className="overflow-hidden rounded-[26px] border border-black/10 bg-white text-[#111111]">
@@ -212,7 +223,7 @@ function ChatAutomationPanel({ dark = false, steps, title }: { dark?: boolean; s
           <div className="landing-user-question ml-auto max-w-[82%] rounded-[28px] bg-[#f1f1f1] px-5 py-4 text-[#111111]">
             <p className="text-[16px] font-normal leading-6">{title}</p>
           </div>
-          <div className="landing-assistant-intro mt-5 flex items-start gap-3">
+          <div className="landing-sequence-item mt-5 flex items-start gap-3" style={{ animationDelay: '2.95s' }}>
             <AssistantAvatar />
             <div className="max-w-[88%]">
               <p className="text-[16px] font-normal leading-7 text-[#111111]">
@@ -220,19 +231,29 @@ function ChatAutomationPanel({ dark = false, steps, title }: { dark?: boolean; s
               </p>
             </div>
           </div>
-          <div className="landing-tool-block mt-5 flex items-start gap-3">
+          {steps.map((step, index) => {
+            const baseDelay = 4 + index * 1.75
+            return (
+              <div key={step.name} className="grid gap-3">
+                <AssistantText delay={baseDelay} text={`Vou chamar ${step.name.toLowerCase()} para cruzar os dados e montar o resultado.`} />
+                <div className="landing-sequence-item flex items-start gap-3" style={{ animationDelay: `${baseDelay + 0.48}s` }}>
+                  <AssistantAvatar />
+                  <div className="grid w-full gap-2">
+                    <ToolCallCard name={step.name.toLowerCase().replaceAll(' ', '_')} />
+                    <ToolResultTable step={step} />
+                  </div>
+                </div>
+                <AssistantText delay={baseDelay + 1.04} text={`${step.name} concluido: ${step.status}. ${step.description}.`} />
+              </div>
+            )
+          })}
+          <div className="landing-sequence-item mt-5 flex items-start gap-3" style={{ animationDelay: `${finalDelay}s` }}>
             <AssistantAvatar />
             <div className="grid w-full gap-3">
-              {steps.map((step, index) => (
-                <div key={step.name} className="grid gap-2">
-                  <ToolCallCard index={index} name={step.name.toLowerCase().replaceAll(' ', '_')} />
-                  <ToolResultRow index={index} step={step} />
-                </div>
-              ))}
               <OutlineArtifact steps={steps} />
             </div>
           </div>
-          <div className="landing-assistant-final mt-5 flex items-start gap-3">
+          <div className="landing-sequence-item mt-5 flex items-start gap-3" style={{ animationDelay: `${finalDelay + 0.82}s` }}>
             <AssistantAvatar />
             <div className="max-w-[88%]">
               <p className="text-[16px] font-normal leading-7 text-[#111111]">
@@ -259,9 +280,20 @@ function AssistantAvatar() {
   return <span className="mt-1 grid size-7 shrink-0 place-items-center rounded-full bg-[#111111] text-[10px] font-bold text-white">O</span>
 }
 
-function ToolCallCard({ index, name }: { index: number; name: string }) {
+function AssistantText({ delay, text }: { delay: number; text: string }) {
   return (
-    <div className="landing-tool-call flex min-h-[48px] items-center gap-3 rounded-xl border border-[#e4e4e7] bg-white px-3 py-2.5 text-[15px] font-medium text-[#111111] shadow-[0_1px_2px_rgba(0,0,0,0.04)]" style={{ animationDelay: `${0.1 + index * 0.16}s` }}>
+    <div className="landing-sequence-item flex items-start gap-3" style={{ animationDelay: `${delay}s` }}>
+      <AssistantAvatar />
+      <div className="max-w-[88%]">
+        <p className="text-[16px] font-normal leading-7 text-[#111111]">{text}</p>
+      </div>
+    </div>
+  )
+}
+
+function ToolCallCard({ name }: { name: string }) {
+  return (
+    <div className="flex min-h-[48px] items-center gap-3 rounded-xl border border-[#e4e4e7] bg-white px-3 py-2.5 text-[15px] font-medium text-[#111111] shadow-[0_1px_2px_rgba(0,0,0,0.04)]">
       <span className="grid size-7 place-items-center rounded-lg border border-[#e4e4e7] bg-[#fafafa] text-[#71717a]">
         <Sparkles size={14} strokeWidth={1.8} />
       </span>
@@ -298,15 +330,192 @@ function toneClasses(tone: ChatStep['tone']) {
   }[tone]
 }
 
-function ToolResultRow({ index, step }: { index: number; step: ChatStep }) {
+function resultRowsForStep(step: ChatStep): ResultRow[] {
+  if (step.name === 'Classificar despesas') {
+    return [
+      { description: 'Uso de API e automacao', initials: 'AI', name: 'OpenAI API', result: 'Software', tone: 'green' },
+      { description: 'Campanhas de aquisicao', icon: MetaIcon, initials: 'M', name: 'Meta Ads', result: 'Marketing', tone: 'green' },
+      { description: 'Apps e checkout da loja', icon: ShopifyIcon, initials: 'S', name: 'Shopify Apps', result: 'Ecommerce', tone: 'blue' },
+    ]
+  }
+
+  if (step.name === 'Conciliar bancos') {
+    return [
+      { description: 'Conta Azul - NF-9031', initials: 'CN', name: 'PIX Cliente Norte', result: 'Conciliado', tone: 'green' },
+      { description: 'Adquirente - lote diario', initials: 'ST', name: 'Cartao Stone', result: 'Conciliado', tone: 'green' },
+      { description: 'Sem lancamento no ERP', initials: 'BI', name: 'Tarifa bancaria', result: 'Revisar', tone: 'amber' },
+    ]
+  }
+
+  if (step.name === 'Separar revisoes') {
+    return [
+      { description: 'Taxa avulsa sem regra recorrente', initials: 'BI', name: 'Banco Inter', result: 'Revisar', tone: 'amber' },
+      { description: 'Fornecedor fora do padrao mensal', initials: 'FS', name: 'Frete Sul', result: 'Reter', tone: 'red' },
+      { description: 'Conta duplicada no periodo', icon: MetaIcon, initials: 'M', name: 'Meta Ads', result: 'Checar', tone: 'blue' },
+    ]
+  }
+
+  if (step.name === 'Contas a pagar') {
+    return [
+      { description: 'Midia paga e campanhas', icon: GoogleAdsIcon, initials: 'G', name: 'Google Ads', result: 'R$ 18.400', tone: 'red' },
+      { description: 'DAS e retencoes federais', initials: 'IR', name: 'Impostos federais', result: 'R$ 31.200', tone: 'amber' },
+      { description: 'Hospedagem e infraestrutura', initials: 'AW', name: 'AWS Brasil', result: 'R$ 14.750', tone: 'blue' },
+    ]
+  }
+
+  if (step.name === 'Contas a receber') {
+    return [
+      { description: 'NF-9031 - servicos recorrentes', initials: 'CN', name: 'Cliente Norte', result: 'R$ 42.100', tone: 'green' },
+      { description: 'Contrato enterprise anual', initials: 'GD', name: 'Grupo Delta', result: 'R$ 76.500', tone: 'green' },
+      { description: 'Pedidos integrados Shopify', icon: ShopifyIcon, initials: 'S', name: 'Mercado Sul', result: 'Atraso leve', tone: 'amber' },
+    ]
+  }
+
+  if (step.name === 'Fluxo de caixa') {
+    return [
+      { description: 'Saldo projetado em 30 dias', initials: 'CX', name: 'Caixa projetado', result: 'R$ 465k', tone: 'green' },
+      { description: 'Pior semana do periodo', initials: 'RW', name: 'Risco semanal', result: 'Semana 3', tone: 'amber' },
+      { description: 'Relatorio executivo criado', initials: 'PPT', name: 'Dashboard financeiro', result: 'Pronto', tone: 'blue' },
+    ]
+  }
+
+  if (step.name === 'Insights de margem') {
+    return [
+      { description: 'Aumento no custo logistico', initials: 'FR', name: 'Frete', result: '+18%', tone: 'red' },
+      { description: 'CPL subiu em 3 campanhas', icon: GoogleAdsIcon, initials: 'G', name: 'Google Ads', result: '+9%', tone: 'amber' },
+      { description: 'Recebimento em atraso', initials: 'CN', name: 'Cliente Norte', result: 'R$ 42.100', tone: 'red' },
+    ]
+  }
+
+  if (step.name === 'Pagamentos acima de R$ 1.000') {
+    return [
+      { description: 'Campanhas dentro da regra', icon: GoogleAdsIcon, initials: 'G', name: 'Google Ads', result: 'Baixo risco', tone: 'green' },
+      { description: 'Recorrente, acima da media', initials: 'AW', name: 'AWS Brasil', result: 'Confirmar', tone: 'amber' },
+      { description: 'Prioridade fiscal', initials: 'IR', name: 'Impostos federais', result: 'Prioridade', tone: 'blue' },
+    ]
+  }
+
+  if (step.name === 'Aprovacao humana') {
+    return [
+      { description: 'Google Ads e Meta Ads', icon: GoogleAdsIcon, initials: 'G', name: 'Midia paga', result: 'Aprovado', tone: 'green' },
+      { description: 'AWS Brasil e impostos', initials: 'AG', name: 'Agendamentos', result: 'Agendado', tone: 'blue' },
+      { description: 'Saiu do padrao mensal', initials: 'FS', name: 'Frete Sul', result: 'Retido', tone: 'amber' },
+    ]
+  }
+
+  if (step.name === 'Trilha de auditoria') {
+    return [
+      { description: 'Prompt recebido no ChatGPT', initials: 'AN', name: 'Ana', result: '09:12', tone: 'blue' },
+      { description: 'Regra de aprovacao aplicada', initials: 'O', name: 'Otto', result: '09:14', tone: 'green' },
+      { description: 'Pagamentos autorizados', initials: 'AN', name: 'Aprovacao', result: '09:15', tone: 'green' },
+    ]
+  }
+
+  if (step.name === 'Documentos fiscais') {
+    return [
+      { description: 'PDF + XML conferidos', initials: 'CN', name: 'Contrato Cliente Norte', result: 'Validado', tone: 'green' },
+      { description: 'Servico aprovado', initials: 'OS', name: 'OS-2048', result: 'Conferido', tone: 'green' },
+      { description: 'Cadastro municipal', initials: 'TM', name: 'Tomador', result: 'OK', tone: 'blue' },
+    ]
+  }
+
+  if (step.name === 'Obrigacoes fiscais') {
+    return [
+      { description: 'Retencao do servico', initials: 'ISS', name: 'ISS retido', result: 'Calculado', tone: 'green' },
+      { description: 'Vencimento em 7 dias', initials: 'DAS', name: 'DAS', result: 'Programado', tone: 'blue' },
+      { description: 'Obrigacao mensal', initials: 'DCT', name: 'DCTFWeb', result: 'Em dia', tone: 'green' },
+    ]
+  }
+
+  if (step.name === 'Emitir NFS-e') {
+    return [
+      { description: 'Consultoria operacional', initials: 'NF', name: 'NFS-e 2048', result: 'Emitida', tone: 'green' },
+      { description: 'Arquivo fiscal gerado', initials: 'XML', name: 'XML', result: 'Gerado', tone: 'green' },
+      { description: 'Documento para cliente', initials: 'PDF', name: 'PDF', result: 'Gerado', tone: 'blue' },
+    ]
+  }
+
+  if (step.name === 'Contratos') {
+    return [
+      { description: 'Contrato assinado e anexos', initials: 'CN', name: 'Cliente Norte', result: 'Organizado', tone: 'green' },
+      { description: 'Aguardando assinatura', initials: 'JD', name: 'Juridico Delta', result: 'Pendente', tone: 'amber' },
+      { description: 'Renovacao anual', initials: 'RA', name: 'Rede Alpha', result: 'Arquivo', tone: 'blue' },
+    ]
+  }
+
+  if (step.name === 'Administrativo') {
+    return [
+      { description: 'Boleto e comprovante', initials: 'FB', name: 'Fornecedor Beta', result: 'Organizado', tone: 'green' },
+      { description: 'Pedido e nota ecommerce', icon: ShopifyIcon, initials: 'S', name: 'Shopify pedidos', result: 'Organizado', tone: 'green' },
+      { description: 'Fatura de campanha', icon: GoogleAdsIcon, initials: 'G', name: 'Google Ads', result: 'Arquivo', tone: 'blue' },
+    ]
+  }
+
+  if (step.name === 'Pendencias') {
+    return [
+      { description: 'Documento sem assinatura', initials: 'JD', name: 'Juridico Delta', result: 'Pendente', tone: 'amber' },
+      { description: 'Comprovante incompleto', initials: 'RH', name: 'Folha e RH', result: 'Revisar', tone: 'amber' },
+      { description: 'Contrato fora da pasta', initials: 'CT', name: 'Contratos', result: 'Movido', tone: 'green' },
+    ]
+  }
+
+  if (step.name === 'Inadimplentes') {
+    return [
+      { description: 'NF-2041 vencida ha 18 dias', initials: 'CN', name: 'Cliente Norte', result: 'Alta', tone: 'red' },
+      { description: 'Boleto vencido ha 9 dias', initials: 'RA', name: 'Rede Alpha', result: 'Media', tone: 'amber' },
+      { description: 'Parcela em aberto ha 14 dias', initials: 'MS', name: 'Mercado Sul', result: 'Alta', tone: 'red' },
+    ]
+  }
+
+  if (step.name === 'Preparar cobrancas') {
+    return [
+      { description: 'Mensagem amigavel com contexto', initials: 'WA', name: 'WhatsApp', result: 'Pronto', tone: 'green' },
+      { description: 'Link de pagamento e codigo PIX', initials: 'PX', name: 'PIX + boleto', result: 'Gerado', tone: 'blue' },
+      { description: 'Follow-up em D+2', initials: 'F2', name: 'Proximo contato', result: 'Agendado', tone: 'blue' },
+    ]
+  }
+
+  return [
+    { description: 'Mensagem enviada ao cliente', initials: 'CN', name: 'Cliente Norte', result: 'Enviado', tone: 'green' },
+    { description: 'Mensagem enviada ao financeiro', initials: 'RA', name: 'Rede Alpha', result: 'Enviado', tone: 'green' },
+    { description: 'Historico salvo no contas a receber', initials: 'AR', name: 'Registro financeiro', result: 'Salvo', tone: 'blue' },
+  ]
+}
+
+function ResultIcon({ row }: { row: ResultRow }) {
+  const Icon = row.icon
+
   return (
-    <div className="landing-tool-row grid min-h-[68px] grid-cols-[40px_1fr_auto] items-center gap-3 rounded-[14px] border border-[#eeeeee] bg-white p-2.5" style={{ animationDelay: `${0.18 + index * 0.16}s` }}>
-      <span className={`grid size-10 place-items-center rounded-xl ${toneClasses(step.tone)}`}>{step.icon}</span>
-      <div className="min-w-0">
-        <p className="truncate text-[15px] font-medium text-[#111111]">{step.name}</p>
-        <p className="mt-1 truncate text-sm font-normal text-[#777777]">{step.description}</p>
+    <span className="grid size-10 shrink-0 place-items-center rounded-xl border border-[#eeeeee] bg-white text-[#111111]">
+      {Icon ? <Icon className="h-7 w-7" /> : <span className={`grid size-8 place-items-center rounded-lg text-[11px] font-bold ${toneClasses(row.tone)}`}>{row.initials}</span>}
+    </span>
+  )
+}
+
+function ToolResultTable({ step }: { step: ChatStep }) {
+  const rows = resultRowsForStep(step)
+
+  return (
+    <div className="overflow-hidden rounded-[18px] border border-[#e8e8e8] bg-white shadow-[0_1px_2px_rgba(0,0,0,0.04)]">
+      <div className="flex items-start justify-between gap-4 border-b border-[#eeeeee] px-4 py-3">
+        <div className="min-w-0">
+          <p className="truncate text-[15px] font-semibold text-[#111111]">{step.name}</p>
+          <p className="mt-1 truncate text-sm font-normal text-[#777777]">{step.description}</p>
+        </div>
+        <span className={`shrink-0 rounded-full px-2.5 py-1.5 text-xs font-semibold ${toneClasses(step.tone)}`}>{step.status}</span>
       </div>
-      <span className={`rounded-full px-2.5 py-1.5 text-xs font-semibold ${toneClasses(step.tone)}`}>{step.status}</span>
+      <div>
+        {rows.map((row) => (
+          <div key={`${step.name}-${row.name}`} className="grid min-h-[66px] grid-cols-[40px_1fr_auto] items-center gap-3 border-b border-[#f1f1f1] px-4 py-2.5 last:border-b-0">
+            <ResultIcon row={row} />
+            <div className="min-w-0">
+              <p className="truncate text-[15px] font-medium text-[#111111]">{row.name}</p>
+              <p className="mt-1 truncate text-sm font-normal text-[#777777]">{row.description}</p>
+            </div>
+            <span className={`rounded-full px-2.5 py-1.5 text-xs font-semibold ${toneClasses(row.tone)}`}>{row.result}</span>
+          </div>
+        ))}
+      </div>
     </div>
   )
 }
@@ -416,8 +625,14 @@ export function OttoLandingPage() {
             100% { opacity: 0; transform: translateY(-8px); }
           }
 
+          @keyframes landing-sequence-cycle {
+            0% { opacity: 0; transform: translateY(14px); }
+            4% { opacity: 1; transform: translateY(0); }
+            72% { opacity: 1; transform: translateY(0); }
+            100% { opacity: 0; transform: translateY(-8px); }
+          }
+
           .landing-sync-row,
-          .landing-tool-row,
           .landing-hero-row {
             animation: landing-row-loop 5.8s ease infinite both;
           }
@@ -450,7 +665,7 @@ export function OttoLandingPage() {
           }
 
           .landing-prompt-input {
-            animation: landing-prompt-cycle 8.2s ease infinite both;
+            animation: landing-prompt-cycle 14s ease infinite both;
           }
 
           .landing-typed-prompt {
@@ -458,7 +673,7 @@ export function OttoLandingPage() {
             max-width: 0;
             overflow: hidden;
             white-space: nowrap;
-            animation: landing-typing-mask 8.2s steps(54, end) infinite both;
+            animation: landing-typing-mask 14s steps(54, end) infinite both;
           }
 
           .landing-caret {
@@ -466,23 +681,20 @@ export function OttoLandingPage() {
           }
 
           .landing-user-question {
-            animation: landing-question-cycle 8.2s ease infinite both;
+            animation: landing-question-cycle 14s ease infinite both;
           }
 
           .landing-assistant-intro {
-            animation: landing-chat-cycle 8.2s ease infinite both;
-          }
-
-          .landing-tool-block {
-            animation: landing-tool-cycle 8.2s ease infinite both;
-          }
-
-          .landing-assistant-final {
-            animation: landing-final-cycle 8.2s ease infinite both;
+            animation: landing-chat-cycle 14s ease infinite both;
           }
 
           .landing-chat-composer {
-            animation: landing-final-cycle 8.2s ease infinite both;
+            animation: landing-final-cycle 14s ease infinite both;
+          }
+
+          .landing-sequence-item {
+            opacity: 0;
+            animation: landing-sequence-cycle 14s ease infinite both;
           }
         `}
       </style>
