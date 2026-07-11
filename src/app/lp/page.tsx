@@ -1,5 +1,5 @@
 import type { Metadata } from 'next'
-import { OttoLandingPageVariantA } from '@/assets/landingpages/otto/OttoLandingPageVariants'
+import { OttoLandingPage } from '@/assets/landingpages/otto/OttoLandingPage'
 
 export const metadata: Metadata = {
   title: 'Otto | Funcionarios de IA para financeiro e operacao',
@@ -7,5 +7,5 @@ export const metadata: Metadata = {
 }
 
 export default function LandingPage() {
-  return <OttoLandingPageVariantA />
+  return <OttoLandingPage />
 }
