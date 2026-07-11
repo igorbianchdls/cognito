@@ -287,8 +287,8 @@ function DesktopChatAutomationPanel({ steps, title }: { steps: ChatStep[]; title
   const scrollDistance = 180 + steps.reduce((total, step) => total + (step.name === 'Classificar despesas' || step.name === 'Conciliar bancos' ? 360 : 260), 0)
 
   return (
-    <div className="overflow-hidden rounded-[26px] border border-black/10 bg-white text-[#111111] shadow-[0_28px_80px_rgba(15,23,42,0.14)]">
-      <div className="grid min-h-[560px] grid-cols-[190px_1fr] bg-white">
+    <div className="overflow-hidden rounded-[22px] border border-black/10 bg-white text-[#111111] shadow-[0_28px_80px_rgba(15,23,42,0.14)] sm:rounded-[26px]">
+      <div className="grid min-h-[560px] grid-cols-1 bg-white md:grid-cols-[190px_1fr]">
         <aside className="hidden border-r border-[#eeeeee] bg-[#f7f7f8] p-3 md:block">
           <div className="flex h-11 items-center gap-2 rounded-xl px-2 text-sm font-semibold text-[#111111]">
             <span className="grid size-7 place-items-center rounded-full bg-[#111111] text-[10px] font-bold text-white">O</span>
@@ -301,22 +301,22 @@ function DesktopChatAutomationPanel({ steps, title }: { steps: ChatStep[]; title
           </div>
         </aside>
 
-        <div className="relative min-h-[560px] bg-white p-3 sm:p-5">
+        <div className="relative min-h-[560px] min-w-0 bg-white p-3 sm:p-5">
           <div className="flex h-11 items-center justify-between border-b border-[#f0f0f0] pb-3">
             <div>
               <p className="text-[15px] font-semibold text-[#111111]">ChatGPT</p>
-              <p className="text-xs font-medium text-[#777777]">Otto conectado aos dados financeiros</p>
+              <p className="truncate text-xs font-medium text-[#777777]">Otto conectado aos dados financeiros</p>
             </div>
-            <span className="rounded-full bg-emerald-50 px-3 py-1.5 text-xs font-semibold text-emerald-700">Tools ativas</span>
+            <span className="shrink-0 rounded-full bg-emerald-50 px-2.5 py-1.5 text-[11px] font-semibold text-emerald-700 sm:px-3 sm:text-xs">Tools ativas</span>
           </div>
 
           <div className="landing-chat-scroll absolute bottom-[92px] left-3 right-3 top-[76px] overflow-x-hidden overflow-y-auto sm:left-5 sm:right-5">
             <div className="landing-chat-scroll-content pb-4" style={{ ['--landing-scroll-y' as string]: `${scrollDistance}px` }}>
-              <div className="landing-user-question ml-auto max-w-[76%] rounded-[24px] bg-[#f1f1f1] px-5 py-4 text-[#111111]">
-                <p className="break-words text-[16px] font-normal leading-6">{title}</p>
+              <div className="landing-user-question ml-auto max-w-[88%] rounded-[22px] bg-[#f1f1f1] px-4 py-3 text-[#111111] sm:max-w-[76%] sm:rounded-[24px] sm:px-5 sm:py-4">
+                <p className="break-words text-[14px] font-normal leading-5 sm:text-[16px] sm:leading-6">{title}</p>
               </div>
-              <div className="landing-sequence-item mt-6 max-w-[84%]" style={{ animationDelay: '2.8s' }}>
-                <p className="text-[16px] font-normal leading-7 text-[#111111]">
+              <div className="landing-sequence-item mt-5 max-w-[94%] sm:mt-6 sm:max-w-[84%]" style={{ animationDelay: '2.8s' }}>
+                <p className="text-[14px] font-normal leading-6 text-[#111111] sm:text-[16px] sm:leading-7">
                   Vou analisar os lancamentos, cruzar banco e ERP, classificar despesas e separar o que precisa de revisao.
                 </p>
               </div>
@@ -333,18 +333,20 @@ function DesktopChatAutomationPanel({ steps, title }: { steps: ChatStep[]; title
                   </div>
                 )
               })}
-              <div className="landing-sequence-item mt-5 max-w-[86%]" style={{ animationDelay: `${finalDelay}s` }}>
-                <p className="text-[16px] font-normal leading-7 text-[#111111]">
+              <div className="landing-sequence-item mt-5 max-w-[94%] sm:max-w-[86%]" style={{ animationDelay: `${finalDelay}s` }}>
+                <p className="text-[14px] font-normal leading-6 text-[#111111] sm:text-[16px] sm:leading-7">
                   Resumo: as despesas recorrentes foram classificadas, os principais recebimentos conciliados e uma divergencia ficou marcada para revisao.
                 </p>
               </div>
             </div>
           </div>
 
-          <div className="absolute bottom-5 left-3 right-3 flex min-h-[58px] items-center gap-3 rounded-[18px] border border-[#e5e5e5] bg-white px-4 py-2 shadow-[0_12px_34px_rgba(15,23,42,0.08)] sm:left-5 sm:right-5">
-            <Plus size={20} strokeWidth={1.8} />
-            <span className="landing-typed-prompt min-w-0 flex-1 text-[15px] font-normal leading-5 text-[#111111]">{title}</span>
-            <span className="landing-input-placeholder absolute left-[52px] top-1/2 -translate-y-1/2 text-[15px] font-normal text-[#777777]">Mensagem para Otto</span>
+          <div className="absolute bottom-5 left-3 right-3 flex min-h-[58px] items-start gap-2 rounded-[18px] border border-[#e5e5e5] bg-white px-3 py-3 shadow-[0_12px_34px_rgba(15,23,42,0.08)] sm:left-5 sm:right-5 sm:items-center sm:gap-3 sm:px-4 sm:py-2">
+            <Plus className="shrink-0" size={20} strokeWidth={1.8} />
+            <span className="relative min-w-0 flex-1">
+              <span className="landing-typed-prompt text-[14px] font-normal leading-5 text-[#111111] sm:text-[15px]">{title}</span>
+              <span className="landing-input-placeholder absolute left-0 top-1/2 -translate-y-1/2 text-[14px] font-normal text-[#777777] sm:text-[15px]">Mensagem para Otto</span>
+            </span>
             <Mic className="ml-auto shrink-0" size={17} strokeWidth={2} />
           </div>
         </div>
@@ -356,8 +358,8 @@ function DesktopChatAutomationPanel({ steps, title }: { steps: ChatStep[]; title
 function AssistantText({ delay, text }: { delay: number; text: string }) {
   return (
     <div className="landing-sequence-item" style={{ animationDelay: `${delay}s` }}>
-      <div className="max-w-[92%]">
-        <p className="text-[16px] font-normal leading-7 text-[#111111]">{text}</p>
+      <div className="max-w-[94%] sm:max-w-[92%]">
+        <p className="text-[14px] font-normal leading-6 text-[#111111] sm:text-[16px] sm:leading-7">{text}</p>
       </div>
     </div>
   )
