@@ -196,11 +196,18 @@ function ChatAutomationPanel({ dark = false, steps, title }: { dark?: boolean; s
           </div>
           <span className="rounded-full bg-[#f4f4f5] px-3 py-1.5 text-xs font-semibold text-[#71717a]">Otto ativo</span>
         </div>
-        <div className="grid gap-5 bg-white p-5">
-          <div className="landing-chat-message ml-auto max-w-[82%] rounded-[22px] bg-[#f4f4f5] px-5 py-4 text-[#111827]">
+        <div className="relative min-h-[560px] bg-white p-5">
+          <div className="landing-prompt-input absolute bottom-5 left-5 right-5 flex items-center gap-3 rounded-[24px] border border-black/10 bg-[#f4f4f5] px-4 py-3">
+            <span className="landing-typed-prompt text-sm font-medium text-[#111827]">{title}</span>
+            <span className="landing-caret h-5 w-[2px] bg-[#111827]" />
+            <span className="ml-auto grid size-8 place-items-center rounded-full bg-[#111827] text-white">
+              <ArrowRight size={15} strokeWidth={1.8} />
+            </span>
+          </div>
+          <div className="landing-user-question ml-auto max-w-[82%] rounded-[22px] bg-[#f4f4f5] px-5 py-4 text-[#111827]">
             <p className="text-[17px] font-medium leading-6">{title}</p>
           </div>
-          <div className="landing-chat-message flex items-start gap-3" style={{ animationDelay: '0.18s' }}>
+          <div className="landing-assistant-intro mt-5 flex items-start gap-3">
             <AssistantAvatar />
             <div className="max-w-[88%]">
               <p className="text-[17px] font-normal leading-7 text-[#111827]">
@@ -208,7 +215,7 @@ function ChatAutomationPanel({ dark = false, steps, title }: { dark?: boolean; s
               </p>
             </div>
           </div>
-          <div className="landing-chat-message flex items-start gap-3" style={{ animationDelay: '0.34s' }}>
+          <div className="landing-tool-block mt-5 flex items-start gap-3">
             <AssistantAvatar />
             <div className="grid w-full gap-3">
               {steps.map((step, index) => (
@@ -220,7 +227,7 @@ function ChatAutomationPanel({ dark = false, steps, title }: { dark?: boolean; s
               <OutlineArtifact steps={steps} />
             </div>
           </div>
-          <div className="landing-chat-message flex items-start gap-3" style={{ animationDelay: '0.72s' }}>
+          <div className="landing-assistant-final mt-5 flex items-start gap-3">
             <AssistantAvatar />
             <div className="max-w-[88%]">
               <p className="text-[17px] font-normal leading-7 text-[#111827]">
@@ -228,7 +235,7 @@ function ChatAutomationPanel({ dark = false, steps, title }: { dark?: boolean; s
               </p>
             </div>
           </div>
-          <div className="mt-1 flex items-center gap-3 rounded-[24px] border border-black/10 bg-[#f4f4f5] px-4 py-3">
+          <div className="landing-chat-composer absolute bottom-5 left-5 right-5 flex items-center gap-3 rounded-[24px] border border-black/10 bg-[#f4f4f5] px-4 py-3">
             <span className="text-sm font-medium text-[#71717a]">Mensagem para Otto</span>
             <span className="ml-auto grid size-8 place-items-center rounded-full bg-[#111827] text-white">
               <ArrowRight size={15} strokeWidth={1.8} />
@@ -246,7 +253,7 @@ function AssistantAvatar() {
 
 function ToolCallCard({ index, name }: { index: number; name: string }) {
   return (
-    <div className="landing-tool-call flex items-center gap-3 rounded-[14px] border border-black/10 bg-[#f8fafc] px-3 py-2.5 text-sm font-semibold text-[#3f3f46]" style={{ animationDelay: `${0.42 + index * 0.16}s` }}>
+    <div className="landing-tool-call flex items-center gap-3 rounded-[14px] border border-black/10 bg-[#f8fafc] px-3 py-2.5 text-sm font-semibold text-[#3f3f46]" style={{ animationDelay: `${0.1 + index * 0.16}s` }}>
       <span className="grid size-7 place-items-center rounded-lg border border-black/10 bg-white text-[#71717a]">
         <Sparkles size={14} strokeWidth={1.8} />
       </span>
@@ -260,7 +267,7 @@ function OutlineArtifact({ steps }: { steps: ChatStep[] }) {
   const type = steps.some((step) => step.name.includes('NFS')) ? 'Nota fiscal' : steps.some((step) => step.name.includes('WhatsApp')) ? 'WhatsApp' : steps.some((step) => step.name.includes('Fluxo')) ? 'Dashboard' : 'Relatorio'
 
   return (
-    <div className="landing-tool-row grid grid-cols-[54px_1fr_auto] items-center gap-4 rounded-[18px] border border-black/10 bg-white p-3 shadow-[0_10px_28px_rgba(15,23,42,0.06)]" style={{ animationDelay: '0.78s' }}>
+    <div className="landing-tool-row grid grid-cols-[54px_1fr_auto] items-center gap-4 rounded-[18px] border border-black/10 bg-white p-3 shadow-[0_10px_28px_rgba(15,23,42,0.06)]" style={{ animationDelay: '0.58s' }}>
       <span className="grid size-[54px] place-items-center rounded-2xl border border-black/10 bg-[#fafafa]">
         <FileText size={23} strokeWidth={1.8} />
       </span>
@@ -285,7 +292,7 @@ function toneClasses(tone: ChatStep['tone']) {
 
 function ToolResultRow({ index, step }: { index: number; step: ChatStep }) {
   return (
-    <div className="landing-tool-row grid min-h-[68px] grid-cols-[40px_1fr_auto] items-center gap-3 rounded-[14px] border border-black/[0.06] bg-white p-2.5" style={{ animationDelay: `${0.5 + index * 0.16}s` }}>
+    <div className="landing-tool-row grid min-h-[68px] grid-cols-[40px_1fr_auto] items-center gap-3 rounded-[14px] border border-black/[0.06] bg-white p-2.5" style={{ animationDelay: `${0.18 + index * 0.16}s` }}>
       <span className={`grid size-10 place-items-center rounded-xl ${toneClasses(step.tone)}`}>{step.icon}</span>
       <div className="min-w-0">
         <p className="truncate text-[15px] font-semibold text-[#111827]">{step.name}</p>
@@ -366,21 +373,49 @@ export function OttoLandingPage() {
             to { transform: rotate(360deg); }
           }
 
+          @keyframes landing-prompt-cycle {
+            0%, 5% { opacity: 0; transform: translateY(12px); }
+            8%, 24% { opacity: 1; transform: translateY(0); }
+            28%, 100% { opacity: 0; transform: translateY(-8px); }
+          }
+
+          @keyframes landing-typing-mask {
+            0%, 8% { max-width: 0; }
+            22%, 100% { max-width: 520px; }
+          }
+
+          @keyframes landing-question-cycle {
+            0%, 26% { opacity: 0; transform: translateY(16px); }
+            30%, 88% { opacity: 1; transform: translateY(0); }
+            100% { opacity: 0; transform: translateY(-8px); }
+          }
+
+          @keyframes landing-chat-cycle {
+            0%, 34% { opacity: 0; transform: translateY(16px); }
+            40%, 88% { opacity: 1; transform: translateY(0); }
+            100% { opacity: 0; transform: translateY(-8px); }
+          }
+
+          @keyframes landing-tool-cycle {
+            0%, 46% { opacity: 0; transform: translateY(16px); }
+            52%, 88% { opacity: 1; transform: translateY(0); }
+            100% { opacity: 0; transform: translateY(-8px); }
+          }
+
+          @keyframes landing-final-cycle {
+            0%, 72% { opacity: 0; transform: translateY(16px); }
+            78%, 88% { opacity: 1; transform: translateY(0); }
+            100% { opacity: 0; transform: translateY(-8px); }
+          }
+
           .landing-sync-row,
           .landing-tool-row,
-          .landing-hero-row,
-          .landing-chat-message,
-          .landing-tool-call {
+          .landing-hero-row {
             animation: landing-row-loop 5.8s ease infinite both;
           }
 
           .landing-sync-row {
             animation-duration: 7.2s;
-          }
-
-          .landing-chat-message,
-          .landing-tool-call {
-            animation-duration: 6.4s;
           }
 
           .landing-sync-loading {
@@ -404,6 +439,42 @@ export function OttoLandingPage() {
           .landing-sync-status .landing-sync-loading,
           .landing-sync-status .landing-sync-done {
             animation-delay: inherit;
+          }
+
+          .landing-prompt-input {
+            animation: landing-prompt-cycle 8.2s ease infinite both;
+          }
+
+          .landing-typed-prompt {
+            display: inline-block;
+            max-width: 0;
+            overflow: hidden;
+            white-space: nowrap;
+            animation: landing-typing-mask 8.2s steps(54, end) infinite both;
+          }
+
+          .landing-caret {
+            animation: landing-status-swap 1s steps(1, end) infinite;
+          }
+
+          .landing-user-question {
+            animation: landing-question-cycle 8.2s ease infinite both;
+          }
+
+          .landing-assistant-intro {
+            animation: landing-chat-cycle 8.2s ease infinite both;
+          }
+
+          .landing-tool-block {
+            animation: landing-tool-cycle 8.2s ease infinite both;
+          }
+
+          .landing-assistant-final {
+            animation: landing-final-cycle 8.2s ease infinite both;
+          }
+
+          .landing-chat-composer {
+            animation: landing-final-cycle 8.2s ease infinite both;
           }
         `}
       </style>
