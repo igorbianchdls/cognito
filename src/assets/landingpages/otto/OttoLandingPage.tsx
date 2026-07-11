@@ -214,6 +214,7 @@ function DataConnectionSync() {
 function ChatAutomationPanel({ dark = false, steps, title }: { dark?: boolean; steps: ChatStep[]; title: string }) {
   const stepGap = 2.75
   const finalDelay = 4.9 + steps.length * stepGap
+  const scrollDistance = 260 + steps.reduce((total, step) => total + (step.name === 'Classificar despesas' || step.name === 'Conciliar bancos' ? 430 : 320), 0)
 
   return (
     <div className={`rounded-[30px] border p-3 shadow-[0_28px_80px_rgba(15,23,42,0.14)] md:p-4 ${dark ? 'border-white/10 bg-white/[0.08]' : 'border-black/10 bg-white'}`}>
@@ -236,8 +237,8 @@ function ChatAutomationPanel({ dark = false, steps, title }: { dark?: boolean; s
               <Mic size={17} strokeWidth={2} />
             </span>
           </div>
-          <div className="landing-chat-scroll absolute bottom-[92px] left-5 right-5 top-5 overflow-hidden">
-            <div className="landing-chat-scroll-content pb-4" style={{ ['--landing-scroll-y' as string]: `${Math.max(140, steps.length * 124)}px` }}>
+          <div className="landing-chat-scroll absolute bottom-[92px] left-5 right-5 top-5 overflow-x-hidden overflow-y-auto">
+            <div className="landing-chat-scroll-content pb-4" style={{ ['--landing-scroll-y' as string]: `${scrollDistance}px` }}>
               <div className="landing-user-question ml-auto max-w-[82%] rounded-[28px] bg-[#f1f1f1] px-5 py-4 text-[#111111]">
                 <p className="text-[16px] font-normal leading-6">{title}</p>
               </div>
@@ -718,9 +719,10 @@ export function OttoLandingPage() {
           }
 
           @keyframes landing-chat-scroll-cycle {
-            0%, 42% { transform: translateY(0); }
-            58% { transform: translateY(calc(var(--landing-scroll-y) * -0.34)); }
-            74% { transform: translateY(calc(var(--landing-scroll-y) * -0.68)); }
+            0%, 30% { transform: translateY(0); }
+            44% { transform: translateY(calc(var(--landing-scroll-y) * -0.24)); }
+            58% { transform: translateY(calc(var(--landing-scroll-y) * -0.52)); }
+            74% { transform: translateY(calc(var(--landing-scroll-y) * -0.78)); }
             88% { transform: translateY(calc(var(--landing-scroll-y) * -1)); }
             100% { transform: translateY(calc(var(--landing-scroll-y) * -1)); }
           }
@@ -811,6 +813,20 @@ export function OttoLandingPage() {
 
           .landing-chat-scroll {
             scrollbar-width: thin;
+            scrollbar-color: #d7d7d7 transparent;
+          }
+
+          .landing-chat-scroll::-webkit-scrollbar {
+            width: 6px;
+          }
+
+          .landing-chat-scroll::-webkit-scrollbar-track {
+            background: transparent;
+          }
+
+          .landing-chat-scroll::-webkit-scrollbar-thumb {
+            background: #d7d7d7;
+            border-radius: 999px;
           }
 
           .landing-chat-scroll::before,
