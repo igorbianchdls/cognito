@@ -285,19 +285,23 @@ export function OttoLandingPage() {
     <main className={`${sfPro.variable} min-h-screen bg-[#050505] text-white`} style={sfProLandingStyle}>
       <style>
         {`
-          @keyframes landing-row-in {
-            from { opacity: 0; transform: translateY(14px); }
-            to { opacity: 1; transform: translateY(0); }
+          @keyframes landing-row-loop {
+            0% { opacity: 0; transform: translateY(14px); }
+            12% { opacity: 1; transform: translateY(0); }
+            82% { opacity: 1; transform: translateY(0); }
+            100% { opacity: 0; transform: translateY(-8px); }
           }
 
           @keyframes landing-status-swap {
-            0%, 56% { opacity: 1; }
-            57%, 100% { opacity: 0; }
+            0%, 48% { opacity: 1; }
+            54%, 88% { opacity: 0; }
+            100% { opacity: 1; }
           }
 
           @keyframes landing-status-done {
-            0%, 56% { opacity: 0; transform: translateY(4px); }
-            57%, 100% { opacity: 1; transform: translateY(0); }
+            0%, 48% { opacity: 0; transform: translateY(4px); }
+            54%, 88% { opacity: 1; transform: translateY(0); }
+            100% { opacity: 0; transform: translateY(-4px); }
           }
 
           @keyframes landing-spinner {
@@ -307,11 +311,11 @@ export function OttoLandingPage() {
           .landing-sync-row,
           .landing-tool-row,
           .landing-hero-row {
-            animation: landing-row-in 520ms ease both;
+            animation: landing-row-loop 5.8s ease infinite both;
           }
 
           .landing-sync-loading {
-            animation: landing-status-swap 2.2s ease both;
+            animation: landing-status-swap 5.8s ease infinite both;
           }
 
           .landing-sync-loading span {
@@ -319,7 +323,7 @@ export function OttoLandingPage() {
           }
 
           .landing-sync-done {
-            animation: landing-status-done 2.2s ease both;
+            animation: landing-status-done 5.8s ease infinite both;
             display: inline-flex;
             position: absolute;
           }
