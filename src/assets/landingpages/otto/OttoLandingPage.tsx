@@ -139,8 +139,10 @@ function IntegrationIcon({ row }: { row: SyncRow }) {
 }
 
 function SyncStatus({ index }: { index: number }) {
+  const delay = `${0.42 + index * 0.62}s`
+
   return (
-    <div className="landing-sync-status flex min-w-[132px] justify-end" style={{ animationDelay: `${0.75 + index * 0.22}s` }}>
+    <div className="landing-sync-status flex min-w-[132px] justify-end" style={{ animationDelay: delay }}>
       <span className="landing-sync-loading inline-flex items-center gap-2 rounded-full bg-[#f1f5f9] px-3 py-2 text-sm font-semibold text-[#475569]">
         <span className="size-3 rounded-full border-2 border-[#94a3b8] border-r-[#111827]" />
         Sincronizando
@@ -168,7 +170,7 @@ function DataConnectionSync() {
           <div
             key={row.name}
             className="landing-sync-row grid min-h-[76px] grid-cols-[48px_1fr_auto] items-center gap-4 border-b border-black/[0.06] py-3 last:border-b-0"
-            style={{ animationDelay: `${index * 0.08}s` }}
+            style={{ animationDelay: `${index * 0.62}s` }}
           >
             <IntegrationIcon row={row} />
             <div className="min-w-0">
@@ -191,24 +193,59 @@ function ChatAutomationPanel({ dark = false, steps, title }: { dark?: boolean; s
 
   return (
     <div className={`rounded-[30px] border ${surface} p-4 shadow-[0_28px_80px_rgba(15,23,42,0.12)] md:p-6`}>
-      <div className={`rounded-[24px] border ${inner} p-4`}>
+      <div className={`overflow-hidden rounded-[24px] border ${inner}`}>
         <div className="flex items-center justify-between border-b border-current/10 pb-4">
-          <div>
-            <p className={`text-lg font-semibold ${titleColor}`}>{title}</p>
-            <p className={`mt-1 text-sm font-medium ${muted}`}>Otto executando no chat com ferramentas conectadas</p>
+          <div className="flex items-center gap-3 px-4 pt-4">
+            <span className="grid size-10 place-items-center rounded-2xl bg-emerald-300 text-sm font-bold text-[#06130d]">O</span>
+            <div>
+              <p className={`text-lg font-semibold ${titleColor}`}>Otto</p>
+              <p className={`mt-1 text-sm font-medium ${muted}`}>Agente operando no chat</p>
+            </div>
           </div>
-          <span className="grid size-10 place-items-center rounded-full bg-emerald-300 text-[#06130d]">
+          <span className="mr-4 mt-4 grid size-10 place-items-center rounded-full bg-emerald-300 text-[#06130d]">
             <Sparkles size={18} strokeWidth={1.8} />
           </span>
         </div>
-        <div className="mt-5 rounded-[22px] bg-white p-4 text-[#111827] shadow-[0_12px_34px_rgba(15,23,42,0.08)]">
-          <p className="text-sm font-semibold text-[#667085]">Usuario</p>
-          <p className="mt-2 text-[17px] font-medium leading-6">{title}</p>
-        </div>
-        <div className="mt-4 grid gap-3">
-          {steps.map((step, index) => (
-            <ToolResultRow key={step.name} index={index} step={step} />
-          ))}
+        <div className="grid gap-4 p-4">
+          <div className="landing-chat-message ml-auto max-w-[82%] rounded-[24px] bg-white px-5 py-4 text-[#111827] shadow-[0_12px_34px_rgba(15,23,42,0.08)]">
+            <p className="text-[17px] font-medium leading-6">{title}</p>
+          </div>
+          <div className="landing-chat-message flex items-start gap-3" style={{ animationDelay: '0.18s' }}>
+            <span className="mt-1 grid size-8 shrink-0 place-items-center rounded-xl bg-emerald-300 text-xs font-bold text-[#06130d]">O</span>
+            <div className="max-w-[88%] rounded-[24px] border border-black/[0.06] bg-white px-5 py-4 text-[#111827] shadow-[0_12px_34px_rgba(15,23,42,0.06)]">
+              <p className="text-[16px] font-medium leading-6 text-[#334155]">
+                Vou consultar suas fontes conectadas, executar as ferramentas certas e trazer o resultado com pontos de revisao.
+              </p>
+            </div>
+          </div>
+          <div className="landing-chat-message flex items-start gap-3" style={{ animationDelay: '0.34s' }}>
+            <span className="mt-1 grid size-8 shrink-0 place-items-center rounded-xl bg-emerald-300 text-xs font-bold text-[#06130d]">O</span>
+            <div className="grid w-full gap-3 rounded-[24px] border border-black/[0.06] bg-white p-4 shadow-[0_12px_34px_rgba(15,23,42,0.06)]">
+              {steps.map((step, index) => (
+                <div key={step.name} className="grid gap-2">
+                  <div className="landing-tool-call inline-flex w-max items-center gap-2 rounded-xl border border-black/[0.08] bg-[#f8fafc] px-3 py-2 text-sm font-semibold text-[#475467]" style={{ animationDelay: `${0.42 + index * 0.16}s` }}>
+                    <Sparkles size={14} strokeWidth={1.8} />
+                    {step.name.toLowerCase().replaceAll(' ', '_')}
+                  </div>
+                  <ToolResultRow index={index} step={step} />
+                </div>
+              ))}
+            </div>
+          </div>
+          <div className="landing-chat-message flex items-start gap-3" style={{ animationDelay: '0.72s' }}>
+            <span className="mt-1 grid size-8 shrink-0 place-items-center rounded-xl bg-emerald-300 text-xs font-bold text-[#06130d]">O</span>
+            <div className="max-w-[88%] rounded-[24px] border border-black/[0.06] bg-white px-5 py-4 text-[#111827] shadow-[0_12px_34px_rgba(15,23,42,0.06)]">
+              <p className="text-[16px] font-medium leading-6 text-[#334155]">
+                Pronto. A rotina foi executada e deixei os itens sensiveis separados para acompanhamento.
+              </p>
+            </div>
+          </div>
+          <div className={`mt-1 flex items-center gap-3 rounded-full border px-4 py-3 ${dark ? 'border-white/10 bg-white/[0.04]' : 'border-black/10 bg-white'}`}>
+            <span className={`text-sm font-medium ${muted}`}>Pergunte ao Otto...</span>
+            <span className="ml-auto grid size-8 place-items-center rounded-full bg-[#111827] text-white">
+              <ArrowRight size={15} strokeWidth={1.8} />
+            </span>
+          </div>
         </div>
       </div>
     </div>
@@ -293,15 +330,15 @@ export function OttoLandingPage() {
           }
 
           @keyframes landing-status-swap {
-            0%, 48% { opacity: 1; }
-            54%, 88% { opacity: 0; }
-            100% { opacity: 1; }
+            0%, 3% { opacity: 0; transform: translateY(4px); }
+            6%, 14% { opacity: 1; transform: translateY(0); }
+            18%, 100% { opacity: 0; transform: translateY(-4px); }
           }
 
           @keyframes landing-status-done {
-            0%, 48% { opacity: 0; transform: translateY(4px); }
-            54%, 88% { opacity: 1; transform: translateY(0); }
-            100% { opacity: 0; transform: translateY(-4px); }
+            0%, 15% { opacity: 0; transform: translateY(4px); }
+            19%, 78% { opacity: 1; transform: translateY(0); }
+            92%, 100% { opacity: 0; transform: translateY(-4px); }
           }
 
           @keyframes landing-spinner {
@@ -310,12 +347,23 @@ export function OttoLandingPage() {
 
           .landing-sync-row,
           .landing-tool-row,
-          .landing-hero-row {
+          .landing-hero-row,
+          .landing-chat-message,
+          .landing-tool-call {
             animation: landing-row-loop 5.8s ease infinite both;
           }
 
+          .landing-sync-row {
+            animation-duration: 7.2s;
+          }
+
+          .landing-chat-message,
+          .landing-tool-call {
+            animation-duration: 6.4s;
+          }
+
           .landing-sync-loading {
-            animation: landing-status-swap 5.8s ease infinite both;
+            animation: landing-status-swap 7.2s ease infinite both;
           }
 
           .landing-sync-loading span {
@@ -323,13 +371,18 @@ export function OttoLandingPage() {
           }
 
           .landing-sync-done {
-            animation: landing-status-done 5.8s ease infinite both;
+            animation: landing-status-done 7.2s ease infinite both;
             display: inline-flex;
             position: absolute;
           }
 
           .landing-sync-status {
             position: relative;
+          }
+
+          .landing-sync-status .landing-sync-loading,
+          .landing-sync-status .landing-sync-done {
+            animation-delay: inherit;
           }
         `}
       </style>
