@@ -225,13 +225,13 @@ function ChatAutomationPanel({ dark = false, steps, title }: { dark?: boolean; s
           </div>
           <span className="rounded-full bg-[#f7f7f7] px-3 py-1.5 text-xs font-medium text-[#6b6b6b]">Otto ativo</span>
         </div>
-        <div className="relative min-h-[560px] bg-white p-5">
-          <div className="landing-prompt-input absolute bottom-5 left-5 right-5 flex min-h-[58px] items-center gap-3 rounded-full bg-[#f1f1f1] px-4 py-2">
+        <div className="relative min-h-[560px] bg-white p-3 sm:p-5">
+          <div className="landing-prompt-input absolute bottom-3 left-3 right-3 flex min-h-[58px] items-start gap-2 rounded-[28px] bg-[#f1f1f1] px-3 py-3 sm:bottom-5 sm:left-5 sm:right-5 sm:items-center sm:gap-3 sm:rounded-full sm:px-4 sm:py-2">
             <span className="grid size-9 shrink-0 place-items-center rounded-full text-[#333333]">
               <Plus size={22} strokeWidth={1.8} />
             </span>
             <span className="relative min-w-0 flex-1">
-              <span className="landing-typed-prompt text-[15px] font-normal leading-5 text-[#111111]">{title}</span>
+              <span className="landing-typed-prompt text-[14px] font-normal leading-5 text-[#111111] sm:text-[15px]">{title}</span>
               <span className="landing-caret ml-0.5 inline-block h-5 w-[2px] translate-y-1 bg-[#111827]" />
               <span className="landing-input-placeholder absolute left-0 top-1/2 -translate-y-1/2 text-[15px] font-normal text-[#777777]">Mensagem para Otto</span>
             </span>
@@ -239,10 +239,10 @@ function ChatAutomationPanel({ dark = false, steps, title }: { dark?: boolean; s
               <Mic size={17} strokeWidth={2} />
             </span>
           </div>
-          <div className="landing-chat-scroll absolute bottom-[92px] left-5 right-5 top-5 overflow-x-hidden overflow-y-auto">
+          <div className="landing-chat-scroll absolute bottom-[112px] left-3 right-3 top-3 overflow-x-hidden overflow-y-auto sm:bottom-[92px] sm:left-5 sm:right-5 sm:top-5">
             <div className="landing-chat-scroll-content pb-4" style={{ ['--landing-scroll-y' as string]: `${scrollDistance}px` }}>
-              <div className="landing-user-question ml-auto max-w-[82%] rounded-[28px] bg-[#f1f1f1] px-5 py-4 text-[#111111]">
-                <p className="text-[16px] font-normal leading-6">{title}</p>
+              <div className="landing-user-question ml-auto max-w-[88%] rounded-[24px] bg-[#f1f1f1] px-4 py-3 text-[#111111] sm:max-w-[82%] sm:rounded-[28px] sm:px-5 sm:py-4">
+                <p className="break-words text-[15px] font-normal leading-6 sm:text-[16px]">{title}</p>
               </div>
               <div className="landing-sequence-item mt-5" style={{ animationDelay: '2.95s' }}>
                 <div className="max-w-[92%]">
@@ -277,6 +277,78 @@ function ChatAutomationPanel({ dark = false, steps, title }: { dark?: boolean; s
             </div>
           </div>
         </div>
+    </div>
+  )
+}
+
+function DesktopChatAutomationPanel({ steps, title }: { steps: ChatStep[]; title: string }) {
+  const stepGap = 2.65
+  const finalDelay = 4.7 + steps.length * stepGap
+  const scrollDistance = 180 + steps.reduce((total, step) => total + (step.name === 'Classificar despesas' || step.name === 'Conciliar bancos' ? 360 : 260), 0)
+
+  return (
+    <div className="overflow-hidden rounded-[26px] border border-black/10 bg-white text-[#111111] shadow-[0_28px_80px_rgba(15,23,42,0.14)]">
+      <div className="grid min-h-[560px] grid-cols-[190px_1fr] bg-white">
+        <aside className="hidden border-r border-[#eeeeee] bg-[#f7f7f8] p-3 md:block">
+          <div className="flex h-11 items-center gap-2 rounded-xl px-2 text-sm font-semibold text-[#111111]">
+            <span className="grid size-7 place-items-center rounded-full bg-[#111111] text-[10px] font-bold text-white">O</span>
+            Otto no ChatGPT
+          </div>
+          <div className="mt-4 grid gap-1 text-sm font-medium text-[#555555]">
+            {['Financeiro', 'Conciliação', 'Relatórios', 'Aprovações'].map((item, index) => (
+              <span key={item} className={`rounded-xl px-3 py-2 ${index === 0 ? 'bg-white text-[#111111] shadow-[0_1px_2px_rgba(0,0,0,0.05)]' : ''}`}>{item}</span>
+            ))}
+          </div>
+        </aside>
+
+        <div className="relative min-h-[560px] bg-white p-3 sm:p-5">
+          <div className="flex h-11 items-center justify-between border-b border-[#f0f0f0] pb-3">
+            <div>
+              <p className="text-[15px] font-semibold text-[#111111]">ChatGPT</p>
+              <p className="text-xs font-medium text-[#777777]">Otto conectado aos dados financeiros</p>
+            </div>
+            <span className="rounded-full bg-emerald-50 px-3 py-1.5 text-xs font-semibold text-emerald-700">Tools ativas</span>
+          </div>
+
+          <div className="landing-chat-scroll absolute bottom-[92px] left-3 right-3 top-[76px] overflow-x-hidden overflow-y-auto sm:left-5 sm:right-5">
+            <div className="landing-chat-scroll-content pb-4" style={{ ['--landing-scroll-y' as string]: `${scrollDistance}px` }}>
+              <div className="landing-user-question ml-auto max-w-[76%] rounded-[24px] bg-[#f1f1f1] px-5 py-4 text-[#111111]">
+                <p className="break-words text-[16px] font-normal leading-6">{title}</p>
+              </div>
+              <div className="landing-sequence-item mt-6 max-w-[84%]" style={{ animationDelay: '2.8s' }}>
+                <p className="text-[16px] font-normal leading-7 text-[#111111]">
+                  Vou analisar os lancamentos, cruzar banco e ERP, classificar despesas e separar o que precisa de revisao.
+                </p>
+              </div>
+              {steps.map((step, index) => {
+                const baseDelay = 3.85 + index * stepGap
+                return (
+                  <div key={`desktop-${step.name}`} className="grid gap-3">
+                    <AssistantText delay={baseDelay} text={`Agora vou executar ${step.name.toLowerCase()} com os dados sincronizados.`} />
+                    <div className="landing-sequence-item grid w-full gap-2" style={{ animationDelay: `${baseDelay + 0.48}s` }}>
+                      <ToolCallCard name={step.name.toLowerCase().replaceAll(' ', '_')} />
+                      <ToolResultTable delay={baseDelay + 0.68} step={step} />
+                    </div>
+                    <AssistantText delay={baseDelay + 2.12} text={`${step.name} finalizado: ${step.status}. ${step.description}.`} />
+                  </div>
+                )
+              })}
+              <div className="landing-sequence-item mt-5 max-w-[86%]" style={{ animationDelay: `${finalDelay}s` }}>
+                <p className="text-[16px] font-normal leading-7 text-[#111111]">
+                  Resumo: as despesas recorrentes foram classificadas, os principais recebimentos conciliados e uma divergencia ficou marcada para revisao.
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <div className="absolute bottom-5 left-3 right-3 flex min-h-[58px] items-center gap-3 rounded-[18px] border border-[#e5e5e5] bg-white px-4 py-2 shadow-[0_12px_34px_rgba(15,23,42,0.08)] sm:left-5 sm:right-5">
+            <Plus size={20} strokeWidth={1.8} />
+            <span className="landing-typed-prompt min-w-0 flex-1 text-[15px] font-normal leading-5 text-[#111111]">{title}</span>
+            <span className="landing-input-placeholder absolute left-[52px] top-1/2 -translate-y-1/2 text-[15px] font-normal text-[#777777]">Mensagem para Otto</span>
+            <Mic className="ml-auto shrink-0" size={17} strokeWidth={2} />
+          </div>
+        </div>
+      </div>
     </div>
   )
 }
@@ -795,6 +867,14 @@ export function OttoLandingPage() {
             animation: landing-typing-mask 20s steps(54, end) infinite both;
           }
 
+          @media (max-width: 640px) {
+            .landing-typed-prompt {
+              display: block;
+              overflow-wrap: anywhere;
+              white-space: normal;
+            }
+          }
+
           .landing-caret {
             animation: landing-caret-cycle 20s ease infinite both;
           }
@@ -954,6 +1034,15 @@ export function OttoLandingPage() {
         title="O financeiro deixa de depender de conferencia manual."
       >
         <ChatAutomationPanel dark steps={financeSteps} title="Classifique despesas e concilie os ultimos lancamentos." />
+      </Section>
+
+      <Section
+        eyebrow="Financeiro no desktop"
+        id="financeiro-desktop"
+        subtitle="Para quem trabalha no computador, Otto tambem roda dentro do ChatGPT em uma conversa ampla, com tool calls, tabelas animadas e resumo executivo."
+        title="A rotina financeira acontecendo no ChatGPT desktop."
+      >
+        <DesktopChatAutomationPanel steps={financeSteps} title="Analise o financeiro do mes, classifique despesas e concilie banco com ERP." />
       </Section>
 
       <Section
