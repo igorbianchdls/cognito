@@ -564,8 +564,8 @@ function ResultIcon({ row }: { row: ResultRow }) {
   const Icon = row.icon
 
   return (
-    <span className="grid size-[42px] shrink-0 place-items-center rounded-xl border border-[#e7edf0] bg-white text-[#111111] shadow-[0_8px_18px_rgba(15,23,42,0.06)]" style={{ color: row.color ?? '#111111' }}>
-      {Icon ? <Icon className="h-7 w-7" /> : <span className="grid size-[31px] place-items-center rounded-[9px] text-[14px] font-bold text-white" style={{ background: row.color ?? '#111827' }}>{row.initials}</span>}
+    <span className="grid size-9 shrink-0 place-items-center rounded-xl border border-[#e7edf0] bg-white text-[#111111] shadow-[0_8px_18px_rgba(15,23,42,0.06)] sm:size-[42px]" style={{ color: row.color ?? '#111111' }}>
+      {Icon ? <Icon className="h-6 w-6 sm:h-7 sm:w-7" /> : <span className="grid size-7 place-items-center rounded-[9px] text-[12px] font-bold text-white sm:size-[31px] sm:text-[14px]" style={{ background: row.color ?? '#111827' }}>{row.initials}</span>}
     </span>
   )
 }
@@ -578,13 +578,13 @@ function ToolResultTable({ delay = 0, step }: { delay?: number; step: ChatStep }
   const subtitle = isExpense ? 'Fornecedor, valor e categoria sugerida' : isReconciliation ? 'Movimento bancario x registro no ERP' : step.description
 
   return (
-    <div className="overflow-hidden rounded-[24px] border border-[#e5e7eb] bg-white py-3 shadow-[0_18px_46px_rgba(15,23,42,0.08)]">
-      <div className="flex items-start justify-between gap-4 px-5 pb-3">
+    <div className="overflow-hidden rounded-[20px] border border-[#e5e7eb] bg-white py-2 shadow-[0_18px_46px_rgba(15,23,42,0.08)] sm:rounded-[24px] sm:py-3">
+      <div className="flex items-start justify-between gap-3 px-3 pb-2 sm:gap-4 sm:px-5 sm:pb-3">
         <div className="min-w-0">
-          <p className="truncate text-[17px] font-semibold tracking-[-0.01em] text-[#111111]">{title}</p>
-          <p className="mt-1 truncate text-sm font-normal text-[#8b8b8b]">{subtitle}</p>
+          <p className="truncate text-[14px] font-semibold tracking-[-0.01em] text-[#111111] sm:text-[17px]">{title}</p>
+          <p className="mt-1 truncate text-[12px] font-normal text-[#8b8b8b] sm:text-sm">{subtitle}</p>
         </div>
-        <span className="shrink-0 rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1.5 text-sm font-semibold text-emerald-700">100%</span>
+        <span className="shrink-0 rounded-full border border-emerald-200 bg-emerald-50 px-2 py-1 text-[11px] font-semibold text-emerald-700 sm:px-3 sm:py-1.5 sm:text-sm">100%</span>
       </div>
       <div>
         {rows.map((row, index) => {
@@ -597,13 +597,13 @@ function ToolResultTable({ delay = 0, step }: { delay?: number; step: ChatStep }
           }
 
           return (
-            <div key={`${step.name}-${row.name}`} className="landing-table-row grid min-h-[66px] grid-cols-[42px_1fr_auto] items-center gap-3 border-b border-[#f1f1f1] px-5 py-2.5 last:border-b-0" style={{ animationDelay: `${delay + index * 0.14}s` }}>
+            <div key={`${step.name}-${row.name}`} className="landing-table-row grid min-h-[58px] grid-cols-[36px_1fr_auto] items-center gap-2 border-b border-[#f1f1f1] px-3 py-2 last:border-b-0 sm:min-h-[66px] sm:grid-cols-[42px_1fr_auto] sm:gap-3 sm:px-5 sm:py-2.5" style={{ animationDelay: `${delay + index * 0.14}s` }}>
               <ResultIcon row={row} />
               <div className="min-w-0">
-                <p className="truncate text-[15px] font-medium text-[#111111]">{row.name}</p>
-                <p className="mt-1 truncate text-sm font-normal text-[#777777]">{row.description}</p>
+                <p className="truncate text-[13px] font-medium text-[#111111] sm:text-[15px]">{row.name}</p>
+                <p className="mt-1 truncate text-[11px] font-normal text-[#777777] sm:text-sm">{row.description}</p>
               </div>
-              <span className={`rounded-full px-2.5 py-1.5 text-xs font-semibold ${toneClasses(row.tone)}`}>{row.result}</span>
+              <span className={`rounded-full px-2 py-1 text-[10px] font-semibold sm:px-2.5 sm:py-1.5 sm:text-xs ${toneClasses(row.tone)}`}>{row.result}</span>
             </div>
           )
         })}
@@ -614,17 +614,17 @@ function ToolResultTable({ delay = 0, step }: { delay?: number; step: ChatStep }
 
 function ExpenseResultRow({ delay, row }: { delay: number; row: ExpenseResult }) {
   return (
-    <div className="landing-table-row grid h-[72px] grid-cols-[42px_1fr_auto_28px] items-center gap-[15px] px-5" style={{ animationDelay: `${delay}s` }}>
+    <div className="landing-table-row grid h-[60px] grid-cols-[36px_minmax(0,1fr)_auto] items-center gap-2 px-3 sm:h-[72px] sm:grid-cols-[42px_1fr_auto_28px] sm:gap-[15px] sm:px-5" style={{ animationDelay: `${delay}s` }}>
       <ResultIcon row={row} />
       <div className="min-w-0">
-        <strong className="block truncate text-[18px] font-medium leading-none tracking-[-0.01em] text-[#111111]">{row.name}</strong>
+        <strong className="block truncate text-[13px] font-medium leading-none tracking-[-0.01em] text-[#111111] sm:text-[18px]">{row.name}</strong>
         <span className="mt-1.5 block truncate text-[14px] font-normal leading-none text-[#8a8a8a]">{row.description} · {row.amount}</span>
       </div>
-      <span className="landing-table-status relative min-w-[116px] text-right text-[16px] font-medium leading-none tracking-[-0.01em]">
+      <span className="landing-table-status relative min-w-[72px] text-right text-[12px] font-medium leading-none tracking-[-0.01em] sm:min-w-[116px] sm:text-[16px]">
         <span className="landing-table-pending text-[#111111]">Classificando</span>
         <span className="landing-table-done absolute inset-0 text-emerald-700">{row.result}</span>
       </span>
-      <TableSpinner />
+      <TableSpinner className="hidden sm:grid" />
     </div>
   )
 }
@@ -633,29 +633,29 @@ function ReconciliationResultRow({ delay, row }: { delay: number; row: Reconcili
   const review = row.result === 'Revisar'
 
   return (
-    <div className="landing-table-row grid h-[72px] grid-cols-[42px_1fr_34px_0.78fr_auto_28px] items-center gap-3 px-5" style={{ animationDelay: `${delay}s` }}>
+    <div className="landing-table-row grid h-[60px] grid-cols-[36px_minmax(0,1fr)_auto] items-center gap-2 px-3 sm:h-[72px] sm:grid-cols-[42px_1fr_34px_0.78fr_auto_28px] sm:gap-3 sm:px-5" style={{ animationDelay: `${delay}s` }}>
       <ResultIcon row={row} />
       <div className="min-w-0">
-        <strong className="block truncate text-[17px] font-semibold leading-none tracking-[-0.01em] text-[#111111]">{row.name}</strong>
+        <strong className="block truncate text-[13px] font-semibold leading-none tracking-[-0.01em] text-[#111111] sm:text-[17px]">{row.name}</strong>
         <span className="mt-1.5 block truncate text-[13px] font-normal leading-none text-[#8a8a8a]">{row.description} · {row.value}</span>
       </div>
-      <span className="landing-review-icon relative grid size-[34px] place-items-center rounded-full text-[18px] font-black">
+      <span className="landing-review-icon relative hidden size-[34px] place-items-center rounded-full text-[18px] font-black sm:grid">
         <span className="landing-table-pending absolute grid size-[34px] place-items-center rounded-full bg-[#f2f4f7] text-[#667085]">·</span>
         <span className={`landing-table-done absolute grid size-[34px] place-items-center rounded-full ${review ? 'bg-orange-50 text-orange-700' : 'bg-emerald-50 text-emerald-700'}`}>{review ? '!' : '✓'}</span>
       </span>
-      <div className="min-w-0 truncate text-[15px] font-medium tracking-[-0.01em] text-[#111111]">{row.erp}</div>
-      <span className="landing-table-status relative min-w-[86px] text-right text-[15px] font-medium leading-none tracking-[-0.01em]">
+      <div className="hidden min-w-0 truncate text-[15px] font-medium tracking-[-0.01em] text-[#111111] sm:block">{row.erp}</div>
+      <span className="landing-table-status relative min-w-[68px] text-right text-[12px] font-medium leading-none tracking-[-0.01em] sm:min-w-[86px] sm:text-[15px]">
         <span className="landing-table-pending text-[#111111]">Verificando</span>
         <span className={`landing-table-done absolute inset-0 ${review ? 'text-orange-700' : 'text-emerald-700'}`}>{row.result}</span>
       </span>
-      <TableSpinner />
+      <TableSpinner className="hidden sm:grid" />
     </div>
   )
 }
 
-function TableSpinner() {
+function TableSpinner({ className = 'grid' }: { className?: string }) {
   return (
-    <span className="relative grid size-7 place-items-center">
+    <span className={`relative size-7 place-items-center ${className}`}>
       <span className="landing-table-spinner size-[18px] rounded-full border-2 border-[#d0d5dd] border-r-[#111827]" />
       <span className="landing-table-check absolute grid size-7 place-items-center rounded-full bg-emerald-50 text-emerald-700">
         <Check size={15} strokeWidth={2.4} />
@@ -872,6 +872,14 @@ export function OttoLandingPage() {
               display: block;
               overflow-wrap: anywhere;
               white-space: normal;
+            }
+
+            .landing-table-row span {
+              font-size: 11px;
+            }
+
+            .landing-table-row .landing-table-status span {
+              font-size: 12px;
             }
           }
 
