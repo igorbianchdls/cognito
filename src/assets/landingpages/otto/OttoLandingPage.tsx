@@ -1100,7 +1100,7 @@ export function OttoLandingPage() {
         `}
       </style>
 
-      <section className="relative isolate overflow-hidden border-b border-white/10 bg-[#050505] px-1 py-6 sm:px-8">
+      <section className="relative isolate overflow-hidden border-b border-white/10 bg-[#050505] pl-0.5 pr-1 py-3 sm:px-8 sm:py-5">
         <div className="mx-auto flex max-w-[1180px] items-center justify-between">
           <Link href="/lp" className="flex items-center">
             <img src="/logoOtto.svg" alt="Otto" className="h-[72px] w-auto brightness-0 invert md:h-12" />
