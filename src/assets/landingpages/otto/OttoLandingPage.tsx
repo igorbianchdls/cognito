@@ -121,7 +121,6 @@ const collectionSteps: ChatStep[] = [
 
 function Section({
   children,
-  eyebrow,
   id,
   subtitle,
   theme = 'light',
@@ -139,9 +138,8 @@ function Section({
   const isDark = theme === 'dark' || theme === 'green'
   const background = theme === 'dark' ? 'bg-[#050505]' : theme === 'green' ? 'bg-[#06130d]' : theme === 'warm' ? 'bg-[#f5f1eb]' : 'bg-[#f7f8fa]'
   const border = isDark ? 'border-white/10' : 'border-black/10'
-  const text = isDark ? 'text-white' : 'text-[#111827]'
-  const muted = isDark ? 'text-white/62' : 'text-[#667085]'
-  const eyebrowColor = theme === 'green' ? 'text-emerald-200' : isDark ? 'text-emerald-200' : 'text-emerald-700'
+  const text = isDark ? 'text-[#f8fafc]' : 'text-[#111827]'
+  const muted = isDark ? 'text-white/70' : 'text-[#667085]'
 
   useEffect(() => {
     const element = sectionRef.current
@@ -168,8 +166,7 @@ function Section({
     <section ref={sectionRef} id={id} className={`landing-animate-scope border-b ${border} ${background} px-6 py-20 sm:px-8 ${hasEntered ? 'landing-in-view' : ''}`}>
       <div className="mx-auto grid max-w-[1180px] gap-10 lg:grid-cols-[0.9fr_1.1fr] lg:items-center">
         <div>
-          <p className={`text-sm font-semibold uppercase tracking-[0.08em] ${eyebrowColor}`}>{eyebrow}</p>
-          <h2 className={`mt-4 max-w-[560px] text-[34px] font-semibold leading-[0.98] tracking-[-0.03em] md:text-[52px] ${text}`}>
+          <h2 className={`max-w-[560px] text-[34px] font-semibold leading-[0.98] tracking-[-0.03em] md:text-[52px] ${text}`}>
             {title}
           </h2>
           <p className={`mt-5 max-w-[520px] text-base leading-7 md:text-lg ${muted}`}>{subtitle}</p>
