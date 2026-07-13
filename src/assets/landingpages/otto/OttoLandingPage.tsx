@@ -166,7 +166,7 @@ function Section({
     <section ref={sectionRef} id={id} className={`landing-animate-scope border-b ${border} ${background} px-0 py-20 sm:px-8 ${hasEntered ? 'landing-in-view' : ''}`}>
       <div className="mx-auto grid max-w-[1180px] gap-10 lg:grid-cols-[0.9fr_1.1fr] lg:items-center">
         <div className="px-6 sm:px-0">
-          <h2 className={`max-w-[620px] !text-[38px] font-semibold leading-[0.96] tracking-[-0.035em] md:!text-[45px] ${text}`} style={{ color: isDark ? '#ffffff' : undefined, fontFamily: '"Day Roman", "Times New Roman", serif' }}>
+          <h2 className={`landing-title-font max-w-[620px] !text-[38px] font-semibold leading-[0.96] tracking-[-0.035em] md:!text-[45px] ${text}`} style={isDark ? { color: '#ffffff' } : undefined}>
             {title}
           </h2>
           <p className={`mt-5 max-w-[520px] text-base leading-7 md:text-lg ${muted}`}>{subtitle}</p>
@@ -710,6 +710,10 @@ export function OttoLandingPage() {
     <main className={`${sfPro.variable} min-h-screen bg-[#050505] text-white`} style={sfProLandingStyle}>
       <style>
         {`
+          .landing-title-font {
+            font-family: "Day Roman", "Times New Roman", Times, serif !important;
+          }
+
           @keyframes landing-row-loop {
             0% { opacity: 0; transform: translateY(14px); }
             12% { opacity: 1; transform: translateY(0); }
@@ -1025,7 +1029,7 @@ export function OttoLandingPage() {
       <section className="relative overflow-hidden bg-[#050505] px-6 py-20 sm:px-8">
         <div className="mx-auto max-w-[1180px]">
           <div>
-            <h1 className="max-w-[760px] !text-[46px] font-semibold leading-[0.95] tracking-[-0.04em] md:!text-[60px]" style={{ color: '#ffffff', fontFamily: '"Day Roman", "Times New Roman", serif' }}>
+            <h1 className="landing-title-font max-w-[760px] !text-[46px] font-semibold leading-[0.95] tracking-[-0.04em] md:!text-[60px]" style={{ color: '#ffffff' }}>
               Automatize financeiro, fiscal e administrativo.
             </h1>
             <p className="mt-6 max-w-[580px] text-lg leading-8" style={{ color: 'rgba(255,255,255,0.78)' }}>
