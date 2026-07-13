@@ -119,6 +119,18 @@ const collectionSteps: ChatStep[] = [
   { description: 'Mensagens enviadas e historico salvo', icon: <MessageCircle size={18} />, name: 'WhatsApp', status: 'Enviado', tone: 'green' },
 ]
 
+const darkHighlightPattern = /(contas a pagar|contas a receber|fluxo de caixa|notas fiscais|financeiro|fiscal|administrativo|controle|pagamentos|cobranca|cobrança|dados|bancos|cartoes|cartões|documentos|relatorios|relatórios|dashboards|dashboard|margem|impostos|IA|ERP)/gi
+
+function renderDarkHighlightedText(text: string) {
+  return text.split(darkHighlightPattern).map((part, index) => {
+    if (part.match(darkHighlightPattern)) {
+      return <span key={`${part}-${index}`} style={{ color: '#52D273' }}>{part}</span>
+    }
+
+    return part
+  })
+}
+
 function Section({
   children,
   id,
@@ -140,6 +152,8 @@ function Section({
   const border = isDark ? 'border-white/10' : 'border-black/10'
   const text = isDark ? 'text-[#f8fafc]' : 'text-[#111827]'
   const muted = isDark ? 'text-white/70' : 'text-[#667085]'
+  const sectionPadding = isDark ? 'py-28 md:py-32' : 'py-20'
+  const sectionGap = isDark ? 'gap-14 lg:gap-16' : 'gap-10'
 
   useEffect(() => {
     const element = sectionRef.current
@@ -163,13 +177,21 @@ function Section({
   }, [hasEntered])
 
   return (
-    <section ref={sectionRef} id={id} className={`landing-animate-scope border-b ${border} ${background} px-0 py-20 sm:px-8 ${hasEntered ? 'landing-in-view' : ''}`}>
-      <div className="mx-auto grid max-w-[1180px] gap-10 lg:grid-cols-[0.9fr_1.1fr] lg:items-center">
+    <section ref={sectionRef} id={id} className={`landing-animate-scope border-b ${border} ${background} px-0 ${sectionPadding} sm:px-8 ${hasEntered ? 'landing-in-view' : ''}`}>
+      <div className={`mx-auto grid max-w-[1180px] ${sectionGap} lg:grid-cols-[0.9fr_1.1fr] lg:items-center`}>
         <div className="px-6 sm:px-0">
-          <h2 className={`landing-title-font max-w-[620px] !text-[30px] font-semibold leading-[0.96] tracking-[-0.035em] md:!text-[45px] ${text}`} style={isDark ? { color: '#ffffff' } : undefined}>
-            {title}
+          <h2
+            className={`${isDark ? '' : 'landing-title-font'} max-w-[620px] !text-[30px] md:!text-[45px] ${text}`}
+            style={isDark ? { color: '#f8f8f8', fontFamily: 'Inter, var(--font-sf-pro), -apple-system, BlinkMacSystemFont, system-ui, sans-serif', fontWeight: 800, letterSpacing: '-0.06em', lineHeight: 0.92 } : undefined}
+          >
+            {isDark ? renderDarkHighlightedText(title) : title}
           </h2>
-          <p className={`mt-5 max-w-[520px] text-[22px] leading-8 md:text-lg ${muted}`}>{subtitle}</p>
+          <p
+            className={`mt-7 max-w-[560px] text-[22px] md:text-lg ${muted}`}
+            style={isDark ? { color: '#f8f8f8', fontFamily: 'Inter, var(--font-sf-pro), -apple-system, BlinkMacSystemFont, system-ui, sans-serif', fontWeight: 400, letterSpacing: '-0.01em', lineHeight: 1.6 } : undefined}
+          >
+            {isDark ? renderDarkHighlightedText(subtitle) : subtitle}
+          </p>
         </div>
         <div className="px-1 sm:px-0">{children}</div>
       </div>
