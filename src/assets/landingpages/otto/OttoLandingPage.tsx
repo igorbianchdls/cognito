@@ -711,7 +711,7 @@ export function OttoLandingPage() {
       <style>
         {`
           .landing-title-font {
-            font-family: "Day Roman", "Times New Roman", Times, serif !important;
+            font-family: Georgia, "Times New Roman", Times, serif !important;
           }
 
           @keyframes landing-row-loop {
