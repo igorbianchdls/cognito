@@ -166,7 +166,7 @@ function Section({
     <section ref={sectionRef} id={id} className={`landing-animate-scope border-b ${border} ${background} px-6 py-20 sm:px-8 ${hasEntered ? 'landing-in-view' : ''}`}>
       <div className="mx-auto grid max-w-[1180px] gap-10 lg:grid-cols-[0.9fr_1.1fr] lg:items-center">
         <div>
-          <h2 className={`max-w-[620px] text-[40px] font-semibold leading-[0.96] tracking-[-0.035em] md:text-[64px] ${text}`} style={isDark ? { color: '#ffffff' } : undefined}>
+          <h2 className={`max-w-[960px] !text-[54px] font-semibold leading-[0.9] tracking-[-0.045em] md:!text-[120px] ${text}`} style={isDark ? { color: '#ffffff' } : undefined}>
             {title}
           </h2>
           <p className={`mt-5 max-w-[520px] text-base leading-7 md:text-lg ${muted}`}>{subtitle}</p>
@@ -1051,7 +1051,7 @@ export function OttoLandingPage() {
       <section className="relative overflow-hidden bg-[#050505] px-6 py-20 sm:px-8">
         <div className="mx-auto grid max-w-[1180px] gap-12 lg:grid-cols-[0.95fr_1.05fr] lg:items-center">
           <div>
-            <h1 className="max-w-[900px] text-[54px] font-semibold leading-[0.9] tracking-[-0.045em] md:text-[120px]" style={{ color: '#ffffff' }}>
+            <h1 className="max-w-[900px] !text-[54px] font-semibold leading-[0.9] tracking-[-0.045em] md:!text-[120px]" style={{ color: '#ffffff' }}>
               Automatize financeiro, fiscal e administrativo.
             </h1>
             <p className="mt-6 max-w-[580px] text-lg leading-8" style={{ color: 'rgba(255,255,255,0.78)' }}>
