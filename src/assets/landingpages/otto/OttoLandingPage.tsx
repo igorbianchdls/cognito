@@ -1051,7 +1051,7 @@ export function OttoLandingPage() {
       <section className="relative overflow-hidden bg-[#050505] px-6 py-20 sm:px-8">
         <div className="mx-auto grid max-w-[1180px] gap-12 lg:grid-cols-[0.95fr_1.05fr] lg:items-center">
           <div>
-            <h1 className="max-w-[760px] text-[54px] font-semibold leading-[0.92] tracking-[-0.045em] md:text-[88px]" style={{ color: '#ffffff' }}>
+            <h1 className="max-w-[900px] text-[54px] font-semibold leading-[0.9] tracking-[-0.045em] md:text-[120px]" style={{ color: '#ffffff' }}>
               Automatize financeiro, fiscal e administrativo.
             </h1>
             <p className="mt-6 max-w-[580px] text-lg leading-8" style={{ color: 'rgba(255,255,255,0.78)' }}>
