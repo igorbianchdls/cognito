@@ -1,3 +1,6 @@
+'use client'
+
+import { useEffect, useRef, useState } from 'react'
 import type { ComponentType, ReactNode } from 'react'
 import Link from 'next/link'
 import {
@@ -131,6 +134,8 @@ function Section({
   theme?: 'light' | 'dark' | 'warm' | 'green'
   title: string
 }) {
+  const sectionRef = useRef<HTMLElement | null>(null)
+  const [hasEntered, setHasEntered] = useState(false)
   const isDark = theme === 'dark' || theme === 'green'
   const background = theme === 'dark' ? 'bg-[#050505]' : theme === 'green' ? 'bg-[#06130d]' : theme === 'warm' ? 'bg-[#f5f1eb]' : 'bg-[#f7f8fa]'
   const border = isDark ? 'border-white/10' : 'border-black/10'
@@ -138,8 +143,29 @@ function Section({
   const muted = isDark ? 'text-white/62' : 'text-[#667085]'
   const eyebrowColor = theme === 'green' ? 'text-emerald-200' : isDark ? 'text-emerald-200' : 'text-emerald-700'
 
+  useEffect(() => {
+    const element = sectionRef.current
+    if (!element || hasEntered) {
+      return
+    }
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry?.isIntersecting) {
+          setHasEntered(true)
+          observer.disconnect()
+        }
+      },
+      { rootMargin: '0px 0px -18% 0px', threshold: 0.22 },
+    )
+
+    observer.observe(element)
+
+    return () => observer.disconnect()
+  }, [hasEntered])
+
   return (
-    <section id={id} className={`border-b ${border} ${background} px-6 py-20 sm:px-8`}>
+    <section ref={sectionRef} id={id} className={`landing-animate-scope border-b ${border} ${background} px-6 py-20 sm:px-8 ${hasEntered ? 'landing-in-view' : ''}`}>
       <div className="mx-auto grid max-w-[1180px] gap-10 lg:grid-cols-[0.9fr_1.1fr] lg:items-center">
         <div>
           <p className={`text-sm font-semibold uppercase tracking-[0.08em] ${eyebrowColor}`}>{eyebrow}</p>
@@ -226,7 +252,7 @@ function ChatAutomationPanel({ dark = false, steps, title }: { dark?: boolean; s
           <span className="rounded-full bg-[#f7f7f7] px-3 py-1.5 text-xs font-medium text-[#6b6b6b]">Otto ativo</span>
         </div>
         <div className="relative min-h-[560px] bg-white p-3 sm:p-5">
-          <div className="landing-prompt-input absolute bottom-3 left-3 right-3 z-20 flex min-h-[58px] items-start gap-2 rounded-[28px] bg-[#f1f1f1] px-3 py-3 sm:bottom-5 sm:left-5 sm:right-5 sm:items-center sm:gap-3 sm:rounded-full sm:px-4 sm:py-2">
+          <div className="landing-prompt-input absolute bottom-3 left-3 right-3 z-20 flex h-[58px] items-center gap-2 overflow-hidden rounded-[28px] bg-[#f1f1f1] px-3 py-2 sm:bottom-5 sm:left-5 sm:right-5 sm:gap-3 sm:rounded-full sm:px-4">
             <span className="grid size-9 shrink-0 place-items-center rounded-full text-[#333333]">
               <Plus size={22} strokeWidth={1.8} />
             </span>
@@ -341,7 +367,7 @@ function DesktopChatAutomationPanel({ steps, title }: { steps: ChatStep[]; title
             </div>
           </div>
 
-          <div className="absolute bottom-5 left-3 right-3 z-20 flex min-h-[58px] items-start gap-2 rounded-[18px] border border-[#e5e5e5] bg-white px-3 py-3 sm:left-5 sm:right-5 sm:items-center sm:gap-3 sm:px-4 sm:py-2">
+          <div className="absolute bottom-5 left-3 right-3 z-20 flex h-[58px] items-center gap-2 overflow-hidden rounded-[18px] border border-[#e5e5e5] bg-white px-3 py-2 sm:left-5 sm:right-5 sm:gap-3 sm:px-4">
             <Plus className="shrink-0" size={20} strokeWidth={1.8} />
             <span className="relative min-w-0 flex-1">
               <span className="landing-typed-prompt text-[14px] font-normal leading-5 text-[#111111] sm:text-[15px]">{title}</span>
@@ -873,9 +899,11 @@ export function OttoLandingPage() {
 
           @media (max-width: 640px) {
             .landing-typed-prompt {
-              display: block;
-              overflow-wrap: anywhere;
-              white-space: normal;
+              display: inline-block;
+              max-width: 100%;
+              overflow: hidden;
+              text-overflow: ellipsis;
+              white-space: nowrap;
             }
 
             .landing-table-row span {
@@ -985,6 +1013,25 @@ export function OttoLandingPage() {
           .landing-table-check {
             opacity: 0;
             animation-name: landing-table-check-cycle;
+          }
+
+          .landing-animate-scope:not(.landing-in-view) .landing-sync-row,
+          .landing-animate-scope:not(.landing-in-view) .landing-sync-loading,
+          .landing-animate-scope:not(.landing-in-view) .landing-sync-done,
+          .landing-animate-scope:not(.landing-in-view) .landing-typed-prompt,
+          .landing-animate-scope:not(.landing-in-view) .landing-caret,
+          .landing-animate-scope:not(.landing-in-view) .landing-input-placeholder,
+          .landing-animate-scope:not(.landing-in-view) .landing-chat-scroll-content,
+          .landing-animate-scope:not(.landing-in-view) .landing-user-question,
+          .landing-animate-scope:not(.landing-in-view) .landing-assistant-intro,
+          .landing-animate-scope:not(.landing-in-view) .landing-sequence-item,
+          .landing-animate-scope:not(.landing-in-view) .landing-table-row,
+          .landing-animate-scope:not(.landing-in-view) .landing-table-pending,
+          .landing-animate-scope:not(.landing-in-view) .landing-table-done,
+          .landing-animate-scope:not(.landing-in-view) .landing-table-spinner,
+          .landing-animate-scope:not(.landing-in-view) .landing-table-check,
+          .landing-animate-scope:not(.landing-in-view) .landing-tool-row {
+            animation-play-state: paused;
           }
         `}
       </style>
