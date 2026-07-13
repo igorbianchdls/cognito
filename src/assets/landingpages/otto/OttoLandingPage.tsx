@@ -690,6 +690,13 @@ function TableSpinner({ className = 'grid' }: { className?: string }) {
 }
 
 function PricingCard() {
+  const plans = [
+    { badge: '', cadence: 'Mensal', description: 'Flexivel para comecar sem compromisso longo.', price: 'R$ 997' },
+    { badge: 'Mais escolhido', cadence: 'Trimestral', description: 'Melhor para implantar, ajustar e medir os primeiros ganhos.', price: 'R$ 897' },
+    { badge: 'Melhor valor', cadence: 'Anual', description: 'Para transformar o financeiro em uma operacao continua com IA.', price: 'R$ 797' },
+  ]
+  const [selectedCadence, setSelectedCadence] = useState('Trimestral')
+  const selectedPlan = plans.find((plan) => plan.cadence === selectedCadence) ?? plans[1]
   const features = [
     'Agentes para financeiro, fiscal e administrativo',
     'Conexoes com ERP, bancos, anuncios e documentos',
@@ -709,22 +716,32 @@ function PricingCard() {
       </div>
 
       <div className="mx-auto mt-7 grid max-w-[430px] grid-cols-3 rounded-full border border-black/10 bg-[#f8fafc] p-1 text-sm font-semibold text-[#64748b]">
-        <button className="rounded-full px-3 py-2" type="button">Mensal</button>
-        <button className="rounded-full bg-[#111827] px-3 py-2 text-white" type="button">Trimestral</button>
-        <button className="rounded-full px-3 py-2" type="button">Anual</button>
+        {plans.map((plan) => {
+          const active = plan.cadence === selectedPlan.cadence
+          return (
+            <button
+              key={plan.cadence}
+              className={`rounded-full px-3 py-2 transition-colors ${active ? 'bg-[#111827] text-white' : 'text-[#64748b]'}`}
+              onClick={() => setSelectedCadence(plan.cadence)}
+              type="button"
+            >
+              {plan.cadence}
+            </button>
+          )
+        })}
       </div>
 
       <div className="mx-auto mt-5 max-w-[520px] rounded-[26px] border border-[#111827] bg-[#111827] p-6 text-white">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
-            <p className="text-lg font-semibold">Trimestral</p>
-            <p className="mt-1 text-sm font-medium text-white/58">Melhor para implantar, ajustar e medir os primeiros ganhos.</p>
+            <p className="text-lg font-semibold">{selectedPlan.cadence}</p>
+            <p className="mt-1 text-sm font-medium text-white/58">{selectedPlan.description}</p>
           </div>
-          <span className="rounded-full bg-white px-3 py-1.5 text-xs font-semibold text-[#111827]">Mais escolhido</span>
+          {selectedPlan.badge ? <span className="rounded-full bg-white px-3 py-1.5 text-xs font-semibold text-[#111827]">{selectedPlan.badge}</span> : null}
         </div>
 
         <div className="mt-7 flex items-end gap-2">
-          <span className="text-[52px] font-semibold leading-none tracking-[-0.045em]">R$ 897</span>
+          <span className="text-[52px] font-semibold leading-none tracking-[-0.045em]">{selectedPlan.price}</span>
           <span className="pb-2 text-base font-medium text-white/62">/mes</span>
         </div>
 
@@ -1060,7 +1077,7 @@ export function OttoLandingPage() {
         `}
       </style>
 
-      <section className="relative isolate overflow-hidden border-b border-white/10 bg-[#050505] px-6 py-6 sm:px-8">
+      <section className="relative isolate overflow-hidden border-b border-white/10 bg-[#050505] px-1 py-6 sm:px-8">
         <div className="mx-auto flex max-w-[1180px] items-center justify-between">
           <Link href="/lp" className="flex items-center">
             <img src="/logoOtto.svg" alt="Otto" className="h-[72px] w-auto brightness-0 invert md:h-12" />
