@@ -1117,10 +1117,16 @@ export function OttoLandingPage() {
       <section className="relative overflow-hidden bg-[#050505] px-6 py-20 sm:px-8">
         <div className="mx-auto max-w-[1180px]">
           <div>
-            <h1 className="landing-title-font max-w-[760px] !text-[46px] font-semibold leading-[0.95] tracking-[-0.04em] md:!text-[60px]" style={{ color: '#ffffff' }}>
-              Automatize financeiro, fiscal e administrativo.
+            <h1
+              className="max-w-[760px] !text-[46px] md:!text-[60px]"
+              style={{ color: '#f8f8f8', fontFamily: 'Inter, var(--font-sf-pro), -apple-system, BlinkMacSystemFont, system-ui, sans-serif', fontWeight: 800, letterSpacing: '-0.03em', lineHeight: 0.92 }}
+            >
+              {renderHighlightedText('Automatize financeiro, fiscal e administrativo.', '#52D273')}
             </h1>
-            <p className="mt-6 max-w-[580px] text-lg leading-8" style={{ color: 'rgba(255,255,255,0.78)' }}>
+            <p
+              className="mt-7 max-w-[580px] text-[22px] md:text-lg"
+              style={{ color: '#f8f8f8', fontFamily: 'Inter, var(--font-sf-pro), -apple-system, BlinkMacSystemFont, system-ui, sans-serif', fontWeight: 400, letterSpacing: '-0.01em', lineHeight: 1.6 }}
+            >
               Otto conecta seus sistemas, entende os dados da empresa e aciona agentes para executar rotinas com controle humano quando importa.
             </p>
             <div className="mt-8 flex flex-wrap gap-3">
