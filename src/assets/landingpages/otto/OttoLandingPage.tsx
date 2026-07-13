@@ -183,7 +183,7 @@ function Section({
         <div className="px-6 sm:px-0">
           <h2
             className={`max-w-[620px] !text-[30px] md:!text-[45px] ${text}`}
-            style={{ color: isDark ? '#f8f8f8' : '#111111', fontFamily: 'Inter, var(--font-sf-pro), -apple-system, BlinkMacSystemFont, system-ui, sans-serif', fontWeight: 800, letterSpacing: '-0.06em', lineHeight: 0.92 }}
+            style={{ color: isDark ? '#f8f8f8' : '#111111', fontFamily: 'Inter, var(--font-sf-pro), -apple-system, BlinkMacSystemFont, system-ui, sans-serif', fontWeight: 800, letterSpacing: '-0.03em', lineHeight: 0.92 }}
           >
             {renderHighlightedText(title, highlightColor)}
           </h2>
