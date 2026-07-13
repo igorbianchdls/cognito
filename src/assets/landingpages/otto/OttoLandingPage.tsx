@@ -689,18 +689,52 @@ function TableSpinner({ className = 'grid' }: { className?: string }) {
   )
 }
 
-function AgentHandoff() {
-  const agents = ['Financeiro', 'Fiscal', 'Documentos', 'Cobranca', 'Relatorios']
+function PricingCard() {
+  const features = [
+    'Agentes para financeiro, fiscal e administrativo',
+    'Conexoes com ERP, bancos, anuncios e documentos',
+    'Classificacao, conciliacao, cobranca e aprovacao humana',
+    'Relatorios, dashboards e trilha de auditoria',
+    'Onboarding assistido para conectar sua operacao',
+  ]
 
   return (
-    <div className="grid gap-3 rounded-[30px] border border-black/10 bg-white p-5 md:grid-cols-5">
-      {agents.map((agent, index) => (
-        <div key={agent} className="landing-tool-row rounded-[22px] border border-black/[0.08] bg-[#f8fafc] p-4" style={{ animationDelay: `${index * 0.1}s` }}>
-          <span className="grid size-10 place-items-center rounded-2xl bg-[#111827] text-sm font-bold text-white">{agent.slice(0, 2)}</span>
-          <p className="mt-4 text-[17px] font-semibold text-[#111827]">{agent}</p>
-          <p className="mt-2 text-sm font-medium leading-5 text-[#667085]">Contexto recebido e proxima acao preparada.</p>
+    <div className="rounded-[30px] border border-black/10 bg-white p-5 text-[#111827] md:p-7">
+      <div className="flex flex-wrap items-start justify-between gap-5 border-b border-black/10 pb-6">
+        <div>
+          <p className="text-sm font-semibold uppercase tracking-[0.08em] text-emerald-700">Plano Otto</p>
+          <h3 className="mt-3 text-[32px] font-semibold tracking-[-0.035em] text-[#111827] md:text-[42px]">Operacao IA</h3>
+          <p className="mt-3 max-w-[420px] text-base leading-7 text-[#667085]">Para empresas que querem automatizar rotinas financeiras com agentes trabalhando todos os dias.</p>
         </div>
-      ))}
+        <div className="rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-emerald-800">
+          <p className="text-xs font-semibold uppercase tracking-[0.08em]">Mais escolhido</p>
+          <p className="mt-1 text-sm font-semibold">Implementacao guiada</p>
+        </div>
+      </div>
+
+      <div className="py-7">
+        <div className="flex items-end gap-2">
+          <span className="text-[52px] font-semibold leading-none tracking-[-0.045em]">R$ 997</span>
+          <span className="pb-2 text-base font-medium text-[#667085]">/mes</span>
+        </div>
+        <p className="mt-3 text-sm leading-6 text-[#667085]">Comece com os principais agentes e evolua conforme novas rotinas entram na operacao.</p>
+      </div>
+
+      <Link href="/sign-up" className="inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-full bg-[#111827] px-5 py-3 text-sm font-semibold text-white">
+        Comecar agora
+        <ArrowRight size={18} strokeWidth={1.6} />
+      </Link>
+
+      <div className="mt-7 grid gap-3">
+        {features.map((feature) => (
+          <div key={feature} className="flex items-start gap-3">
+            <span className="mt-0.5 grid size-5 shrink-0 place-items-center rounded-full bg-emerald-50 text-emerald-700">
+              <Check size={14} strokeWidth={2.2} />
+            </span>
+            <span className="text-sm font-medium leading-6 text-[#334155]">{feature}</span>
+          </div>
+        ))}
+      </div>
     </div>
   )
 }
@@ -1013,9 +1047,8 @@ export function OttoLandingPage() {
 
       <section className="relative isolate overflow-hidden border-b border-white/10 bg-[#050505] px-6 py-6 sm:px-8">
         <div className="mx-auto flex max-w-[1180px] items-center justify-between">
-          <Link href="/lp" className="flex items-center gap-3">
-            <span className="grid size-9 place-items-center rounded-2xl bg-white text-sm font-semibold text-[#050505]">O</span>
-            <span className="text-lg font-semibold text-white">Otto</span>
+          <Link href="/lp" className="flex items-center">
+            <img src="/logoOtto.svg" alt="Otto" className="h-9 w-auto brightness-0 invert" />
           </Link>
           <nav className="hidden items-center gap-6 text-sm font-medium text-white/55 md:flex">
             <a href="#conecte">Conecte</a>
@@ -1126,12 +1159,12 @@ export function OttoLandingPage() {
       </Section>
 
       <Section
-        eyebrow="Time de agentes"
-        id="agentes"
-        subtitle="Cada agente trabalha em uma parte da operacao e passa contexto para o proximo, sem perder rastreabilidade."
-        title="Financeiro, fiscal, documentos, cobranca e relatorios trabalhando juntos."
+        eyebrow="Preco"
+        id="preco"
+        subtitle="Um plano direto para colocar agentes de IA operando no financeiro, fiscal e administrativo sem montar time interno."
+        title="Comece com uma operacao financeira automatizada."
       >
-        <AgentHandoff />
+        <PricingCard />
       </Section>
 
       <section className="bg-[#050505] px-6 py-20 sm:px-8">
