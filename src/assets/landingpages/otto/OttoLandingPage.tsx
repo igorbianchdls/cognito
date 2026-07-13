@@ -700,40 +700,55 @@ function PricingCard() {
 
   return (
     <div className="rounded-[30px] border border-black/10 bg-white p-5 text-[#111827] md:p-7">
-      <div className="flex flex-wrap items-start justify-between gap-5 border-b border-black/10 pb-6">
+      <div className="border-b border-black/10 pb-6">
         <div>
           <p className="text-sm font-semibold uppercase tracking-[0.08em] text-emerald-700">Plano Otto</p>
           <h3 className="mt-3 text-[32px] font-semibold tracking-[-0.035em] text-[#111827] md:text-[42px]">Operacao IA</h3>
           <p className="mt-3 max-w-[420px] text-base leading-7 text-[#667085]">Para empresas que querem automatizar rotinas financeiras com agentes trabalhando todos os dias.</p>
         </div>
-        <div className="rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-emerald-800">
-          <p className="text-xs font-semibold uppercase tracking-[0.08em]">Mais escolhido</p>
-          <p className="mt-1 text-sm font-semibold">Implementacao guiada</p>
-        </div>
       </div>
 
-      <div className="py-7">
-        <div className="flex items-end gap-2">
-          <span className="text-[52px] font-semibold leading-none tracking-[-0.045em]">R$ 997</span>
-          <span className="pb-2 text-base font-medium text-[#667085]">/mes</span>
-        </div>
-        <p className="mt-3 text-sm leading-6 text-[#667085]">Comece com os principais agentes e evolua conforme novas rotinas entram na operacao.</p>
+      <div className="mx-auto mt-7 grid max-w-[430px] grid-cols-3 rounded-full border border-black/10 bg-[#f8fafc] p-1 text-sm font-semibold text-[#64748b]">
+        <button className="rounded-full px-3 py-2" type="button">Mensal</button>
+        <button className="rounded-full bg-[#111827] px-3 py-2 text-white" type="button">Trimestral</button>
+        <button className="rounded-full px-3 py-2" type="button">Anual</button>
       </div>
 
-      <Link href="/sign-up" className="inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-full bg-[#111827] px-5 py-3 text-sm font-semibold text-white">
-        Comecar agora
-        <ArrowRight size={18} strokeWidth={1.6} />
-      </Link>
-
-      <div className="mt-7 grid gap-3">
-        {features.map((feature) => (
-          <div key={feature} className="flex items-start gap-3">
-            <span className="mt-0.5 grid size-5 shrink-0 place-items-center rounded-full bg-emerald-50 text-emerald-700">
-              <Check size={14} strokeWidth={2.2} />
-            </span>
-            <span className="text-sm font-medium leading-6 text-[#334155]">{feature}</span>
+      <div className="mx-auto mt-5 max-w-[520px] rounded-[26px] border border-[#111827] bg-[#111827] p-6 text-white">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div>
+            <p className="text-lg font-semibold">Trimestral</p>
+            <p className="mt-1 text-sm font-medium text-white/58">Melhor para implantar, ajustar e medir os primeiros ganhos.</p>
           </div>
-        ))}
+          <span className="rounded-full bg-white px-3 py-1.5 text-xs font-semibold text-[#111827]">Mais escolhido</span>
+        </div>
+
+        <div className="mt-7 flex items-end gap-2">
+          <span className="text-[52px] font-semibold leading-none tracking-[-0.045em]">R$ 897</span>
+          <span className="pb-2 text-base font-medium text-white/62">/mes</span>
+        </div>
+
+        <Link href="/sign-up" className="mt-7 inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-full bg-white px-5 py-3 text-sm font-semibold text-[#111827]">
+          Comecar agora
+          <ArrowRight size={18} strokeWidth={1.6} />
+        </Link>
+
+        <div className="mt-7 border-t border-white/12 pt-6">
+          <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+            <p className="text-sm font-semibold uppercase tracking-[0.08em] text-white/58">Incluso</p>
+            <span className="rounded-full bg-white/10 px-3 py-1.5 text-xs font-semibold text-white">Implementacao guiada</span>
+          </div>
+          <div className="grid gap-3">
+            {features.map((feature) => (
+              <div key={feature} className="flex items-start gap-3">
+                <span className="mt-0.5 grid size-5 shrink-0 place-items-center rounded-full bg-white/10 text-white">
+                  <Check size={14} strokeWidth={2.2} />
+                </span>
+                <span className="text-sm font-medium leading-6 text-white/76">{feature}</span>
+              </div>
+            ))}
+          </div>
+        </div>
       </div>
     </div>
   )
@@ -1048,7 +1063,7 @@ export function OttoLandingPage() {
       <section className="relative isolate overflow-hidden border-b border-white/10 bg-[#050505] px-6 py-6 sm:px-8">
         <div className="mx-auto flex max-w-[1180px] items-center justify-between">
           <Link href="/lp" className="flex items-center">
-            <img src="/logoOtto.svg" alt="Otto" className="h-9 w-auto brightness-0 invert" />
+            <img src="/logoOtto.svg" alt="Otto" className="h-9 w-auto brightness-0 invert md:h-12" />
           </Link>
           <nav className="hidden items-center gap-6 text-sm font-medium text-white/55 md:flex">
             <a href="#conecte">Conecte</a>
