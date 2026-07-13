@@ -182,16 +182,16 @@ function Section({
       <div className={`mx-auto grid max-w-[1180px] ${sectionGap} lg:grid-cols-[0.9fr_1.1fr] lg:items-center`}>
         <div className="px-6 sm:px-0">
           <h2
-            className={`${isDark ? '' : 'landing-title-font'} max-w-[620px] !text-[30px] md:!text-[45px] ${text}`}
-            style={isDark ? { color: '#f8f8f8', fontFamily: 'Inter, var(--font-sf-pro), -apple-system, BlinkMacSystemFont, system-ui, sans-serif', fontWeight: 800, letterSpacing: '-0.06em', lineHeight: 0.92 } : { color: '#111111' }}
+            className={`max-w-[620px] !text-[30px] md:!text-[45px] ${text}`}
+            style={{ color: isDark ? '#f8f8f8' : '#111111', fontFamily: 'Inter, var(--font-sf-pro), -apple-system, BlinkMacSystemFont, system-ui, sans-serif', fontWeight: 800, letterSpacing: '-0.06em', lineHeight: 0.92 }}
           >
             {renderHighlightedText(title, highlightColor)}
           </h2>
           <p
             className={`mt-7 max-w-[560px] text-[22px] md:text-lg ${muted}`}
-            style={isDark ? { color: '#f8f8f8', fontFamily: 'Inter, var(--font-sf-pro), -apple-system, BlinkMacSystemFont, system-ui, sans-serif', fontWeight: 400, letterSpacing: '-0.01em', lineHeight: 1.6 } : { color: '#111111' }}
+            style={{ color: isDark ? '#f8f8f8' : '#111111', fontFamily: 'Inter, var(--font-sf-pro), -apple-system, BlinkMacSystemFont, system-ui, sans-serif', fontWeight: 400, letterSpacing: '-0.01em', lineHeight: 1.6 }}
           >
-            {renderHighlightedText(subtitle, highlightColor)}
+            {subtitle}
           </p>
         </div>
         <div className="px-1 sm:px-0">{children}</div>
