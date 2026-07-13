@@ -163,15 +163,15 @@ function Section({
   }, [hasEntered])
 
   return (
-    <section ref={sectionRef} id={id} className={`landing-animate-scope border-b ${border} ${background} px-6 py-20 sm:px-8 ${hasEntered ? 'landing-in-view' : ''}`}>
+    <section ref={sectionRef} id={id} className={`landing-animate-scope border-b ${border} ${background} px-0 py-20 sm:px-8 ${hasEntered ? 'landing-in-view' : ''}`}>
       <div className="mx-auto grid max-w-[1180px] gap-10 lg:grid-cols-[0.9fr_1.1fr] lg:items-center">
-        <div>
+        <div className="px-6 sm:px-0">
           <h2 className={`max-w-[620px] !text-[38px] font-semibold leading-[0.96] tracking-[-0.035em] md:!text-[45px] ${text}`} style={isDark ? { color: '#ffffff' } : undefined}>
             {title}
           </h2>
           <p className={`mt-5 max-w-[520px] text-base leading-7 md:text-lg ${muted}`}>{subtitle}</p>
         </div>
-        {children}
+        <div className="px-1 sm:px-0">{children}</div>
       </div>
     </section>
   )
@@ -248,8 +248,8 @@ function ChatAutomationPanel({ dark = false, steps, title }: { dark?: boolean; s
           </div>
           <span className="rounded-full bg-[#f7f7f7] px-3 py-1.5 text-xs font-medium text-[#6b6b6b]">Otto ativo</span>
         </div>
-        <div className="relative min-h-[560px] bg-white px-1 py-3 sm:p-5">
-          <div className="landing-prompt-input absolute bottom-3 left-1 right-1 z-20 flex h-[58px] items-center gap-2 overflow-hidden rounded-[28px] bg-[#f1f1f1] px-3 py-2 sm:bottom-5 sm:left-5 sm:right-5 sm:gap-3 sm:rounded-full sm:px-4">
+        <div className="relative min-h-[560px] bg-white p-3 sm:p-5">
+          <div className="landing-prompt-input absolute bottom-3 left-3 right-3 z-20 flex h-[58px] items-center gap-2 overflow-hidden rounded-[28px] bg-[#f1f1f1] px-3 py-2 sm:bottom-5 sm:left-5 sm:right-5 sm:gap-3 sm:rounded-full sm:px-4">
             <span className="grid size-9 shrink-0 place-items-center rounded-full text-[#333333]">
               <Plus size={22} strokeWidth={1.8} />
             </span>
@@ -262,7 +262,7 @@ function ChatAutomationPanel({ dark = false, steps, title }: { dark?: boolean; s
               <Mic size={17} strokeWidth={2} />
             </span>
           </div>
-          <div className="landing-chat-scroll absolute bottom-[112px] left-1 right-1 top-3 overflow-x-hidden overflow-y-auto sm:bottom-[92px] sm:left-5 sm:right-5 sm:top-5">
+          <div className="landing-chat-scroll absolute bottom-[112px] left-3 right-3 top-3 overflow-x-hidden overflow-y-auto sm:bottom-[92px] sm:left-5 sm:right-5 sm:top-5">
             <div className="landing-chat-scroll-content pb-4" style={{ ['--landing-scroll-y' as string]: `${scrollDistance}px` }}>
               <div className="landing-user-question ml-auto max-w-[88%] rounded-[24px] bg-[#f1f1f1] px-4 py-3 text-[#111111] sm:max-w-[82%] sm:rounded-[28px] sm:px-5 sm:py-4">
                 <p className="break-words text-[15px] font-normal leading-6 sm:text-[16px]">{title}</p>
@@ -324,7 +324,7 @@ function DesktopChatAutomationPanel({ steps, title }: { steps: ChatStep[]; title
           </div>
         </aside>
 
-        <div className="relative min-h-[560px] min-w-0 bg-white px-1 py-3 sm:p-5">
+        <div className="relative min-h-[560px] min-w-0 bg-white p-3 sm:p-5">
           <div className="flex h-11 items-center justify-between border-b border-[#f0f0f0] pb-3">
             <div>
               <p className="text-[15px] font-semibold text-[#111111]">ChatGPT</p>
@@ -333,7 +333,7 @@ function DesktopChatAutomationPanel({ steps, title }: { steps: ChatStep[]; title
             <span className="shrink-0 rounded-full bg-emerald-50 px-2.5 py-1.5 text-[11px] font-semibold text-emerald-700 sm:px-3 sm:text-xs">Tools ativas</span>
           </div>
 
-          <div className="landing-chat-scroll absolute bottom-[92px] left-1 right-1 top-[76px] overflow-x-hidden overflow-y-auto sm:left-5 sm:right-5">
+          <div className="landing-chat-scroll absolute bottom-[92px] left-3 right-3 top-[76px] overflow-x-hidden overflow-y-auto sm:left-5 sm:right-5">
             <div className="landing-chat-scroll-content pb-4" style={{ ['--landing-scroll-y' as string]: `${scrollDistance}px` }}>
               <div className="landing-user-question ml-auto max-w-[88%] rounded-[22px] bg-[#f1f1f1] px-4 py-3 text-[#111111] sm:max-w-[76%] sm:rounded-[24px] sm:px-5 sm:py-4">
                 <p className="break-words text-[14px] font-normal leading-5 sm:text-[16px] sm:leading-6">{title}</p>
@@ -364,7 +364,7 @@ function DesktopChatAutomationPanel({ steps, title }: { steps: ChatStep[]; title
             </div>
           </div>
 
-          <div className="absolute bottom-5 left-1 right-1 z-20 flex h-[58px] items-center gap-2 overflow-hidden rounded-[18px] border border-[#e5e5e5] bg-white px-3 py-2 sm:left-5 sm:right-5 sm:gap-3 sm:px-4">
+          <div className="absolute bottom-5 left-3 right-3 z-20 flex h-[58px] items-center gap-2 overflow-hidden rounded-[18px] border border-[#e5e5e5] bg-white px-3 py-2 sm:left-5 sm:right-5 sm:gap-3 sm:px-4">
             <Plus className="shrink-0" size={20} strokeWidth={1.8} />
             <span className="relative min-w-0 flex-1">
               <span className="landing-typed-prompt text-[14px] font-normal leading-5 text-[#111111] sm:text-[15px]">{title}</span>
