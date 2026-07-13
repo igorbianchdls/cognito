@@ -1051,11 +1051,10 @@ export function OttoLandingPage() {
       <section className="relative overflow-hidden bg-[#050505] px-6 py-20 sm:px-8">
         <div className="mx-auto grid max-w-[1180px] gap-12 lg:grid-cols-[0.95fr_1.05fr] lg:items-center">
           <div>
-            <p className="text-sm font-semibold uppercase tracking-[0.08em] text-emerald-200">Agentes de IA para PMEs</p>
-            <h1 className="mt-5 max-w-[680px] text-[44px] font-semibold leading-[0.95] tracking-[-0.04em] text-white md:text-[72px]">
+            <h1 className="max-w-[680px] text-[44px] font-semibold leading-[0.95] tracking-[-0.04em] md:text-[72px]" style={{ color: '#ffffff' }}>
               Automatize financeiro, fiscal e administrativo.
             </h1>
-            <p className="mt-6 max-w-[580px] text-lg leading-8 text-white/64">
+            <p className="mt-6 max-w-[580px] text-lg leading-8" style={{ color: 'rgba(255,255,255,0.78)' }}>
               Otto conecta seus sistemas, entende os dados da empresa e aciona agentes para executar rotinas com controle humano quando importa.
             </p>
             <div className="mt-8 flex flex-wrap gap-3">
