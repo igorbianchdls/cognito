@@ -158,7 +158,7 @@ function IntegrationIcon({ row }: { row: SyncRow }) {
   const Icon = row.icon
 
   return (
-    <div className="grid size-12 shrink-0 place-items-center rounded-2xl border border-black/10 bg-white shadow-[0_10px_24px_rgba(15,23,42,0.08)]" style={{ color: row.tone }}>
+    <div className="grid size-12 shrink-0 place-items-center rounded-2xl border border-black/10 bg-white" style={{ color: row.tone }}>
       {Icon ? <Icon className="h-8 w-8" /> : <span className="grid size-8 place-items-center rounded-xl text-[13px] font-bold text-white" style={{ background: row.tone }}>{row.initials}</span>}
     </div>
   )
@@ -183,7 +183,7 @@ function SyncStatus({ index }: { index: number }) {
 
 function DataConnectionSync() {
   return (
-    <div className="rounded-[30px] border border-black/10 bg-white p-4 shadow-[0_28px_80px_rgba(15,23,42,0.10)] md:p-6">
+    <div className="rounded-[30px] border border-black/10 bg-white p-4 md:p-6">
       <div className="flex items-start justify-between gap-4 border-b border-black/10 pb-5">
         <div>
           <p className="text-[24px] font-semibold tracking-[-0.02em] text-[#111827]">Conectando fontes de dados</p>
@@ -217,7 +217,7 @@ function ChatAutomationPanel({ dark = false, steps, title }: { dark?: boolean; s
   const scrollDistance = 260 + steps.reduce((total, step) => total + (step.name === 'Classificar despesas' || step.name === 'Conciliar bancos' ? 430 : 320), 0)
 
   return (
-    <div className={`overflow-hidden rounded-[26px] border bg-white text-[#111111] shadow-[0_28px_80px_rgba(15,23,42,0.14)] ${dark ? 'border-white/10' : 'border-black/10'}`}>
+    <div className={`overflow-hidden rounded-[26px] border bg-white text-[#111111] ${dark ? 'border-white/10' : 'border-black/10'}`}>
         <div className="flex h-14 items-center justify-between bg-white px-5">
           <div className="flex items-center gap-3">
             <span className="grid size-8 place-items-center rounded-full bg-[#111111] text-xs font-bold text-white">O</span>
@@ -226,7 +226,7 @@ function ChatAutomationPanel({ dark = false, steps, title }: { dark?: boolean; s
           <span className="rounded-full bg-[#f7f7f7] px-3 py-1.5 text-xs font-medium text-[#6b6b6b]">Otto ativo</span>
         </div>
         <div className="relative min-h-[560px] bg-white p-3 sm:p-5">
-          <div className="landing-prompt-input absolute bottom-3 left-3 right-3 flex min-h-[58px] items-start gap-2 rounded-[28px] bg-[#f1f1f1] px-3 py-3 sm:bottom-5 sm:left-5 sm:right-5 sm:items-center sm:gap-3 sm:rounded-full sm:px-4 sm:py-2">
+          <div className="landing-prompt-input absolute bottom-3 left-3 right-3 z-20 flex min-h-[58px] items-start gap-2 rounded-[28px] bg-[#f1f1f1] px-3 py-3 sm:bottom-5 sm:left-5 sm:right-5 sm:items-center sm:gap-3 sm:rounded-full sm:px-4 sm:py-2">
             <span className="grid size-9 shrink-0 place-items-center rounded-full text-[#333333]">
               <Plus size={22} strokeWidth={1.8} />
             </span>
@@ -287,7 +287,7 @@ function DesktopChatAutomationPanel({ steps, title }: { steps: ChatStep[]; title
   const scrollDistance = 180 + steps.reduce((total, step) => total + (step.name === 'Classificar despesas' || step.name === 'Conciliar bancos' ? 360 : 260), 0)
 
   return (
-    <div className="overflow-hidden rounded-[22px] border border-black/10 bg-white text-[#111111] shadow-[0_28px_80px_rgba(15,23,42,0.14)] sm:rounded-[26px]">
+    <div className="overflow-hidden rounded-[22px] border border-black/10 bg-white text-[#111111] sm:rounded-[26px]">
       <div className="grid min-h-[560px] grid-cols-1 bg-white md:grid-cols-[190px_1fr]">
         <aside className="hidden border-r border-[#eeeeee] bg-[#f7f7f8] p-3 md:block">
           <div className="flex h-11 items-center gap-2 rounded-xl px-2 text-sm font-semibold text-[#111111]">
@@ -296,7 +296,7 @@ function DesktopChatAutomationPanel({ steps, title }: { steps: ChatStep[]; title
           </div>
           <div className="mt-4 grid gap-1 text-sm font-medium text-[#555555]">
             {['Financeiro', 'Conciliação', 'Relatórios', 'Aprovações'].map((item, index) => (
-              <span key={item} className={`rounded-xl px-3 py-2 ${index === 0 ? 'bg-white text-[#111111] shadow-[0_1px_2px_rgba(0,0,0,0.05)]' : ''}`}>{item}</span>
+              <span key={item} className={`rounded-xl px-3 py-2 ${index === 0 ? 'bg-white text-[#111111]' : ''}`}>{item}</span>
             ))}
           </div>
         </aside>
@@ -341,7 +341,7 @@ function DesktopChatAutomationPanel({ steps, title }: { steps: ChatStep[]; title
             </div>
           </div>
 
-          <div className="absolute bottom-5 left-3 right-3 flex min-h-[58px] items-start gap-2 rounded-[18px] border border-[#e5e5e5] bg-white px-3 py-3 shadow-[0_12px_34px_rgba(15,23,42,0.08)] sm:left-5 sm:right-5 sm:items-center sm:gap-3 sm:px-4 sm:py-2">
+          <div className="absolute bottom-5 left-3 right-3 z-20 flex min-h-[58px] items-start gap-2 rounded-[18px] border border-[#e5e5e5] bg-white px-3 py-3 sm:left-5 sm:right-5 sm:items-center sm:gap-3 sm:px-4 sm:py-2">
             <Plus className="shrink-0" size={20} strokeWidth={1.8} />
             <span className="relative min-w-0 flex-1">
               <span className="landing-typed-prompt text-[14px] font-normal leading-5 text-[#111111] sm:text-[15px]">{title}</span>
@@ -367,7 +367,7 @@ function AssistantText({ delay, text }: { delay: number; text: string }) {
 
 function ToolCallCard({ name }: { name: string }) {
   return (
-    <div className="flex min-h-[48px] items-center gap-3 rounded-xl border border-[#e4e4e7] bg-white px-3 py-2.5 text-[15px] font-medium text-[#111111] shadow-[0_1px_2px_rgba(0,0,0,0.04)]">
+    <div className="flex min-h-[48px] items-center gap-3 rounded-xl border border-[#e4e4e7] bg-white px-3 py-2.5 text-[15px] font-medium text-[#111111]">
       <span className="grid size-7 place-items-center rounded-lg border border-[#e4e4e7] bg-[#fafafa] text-[#71717a]">
         <Sparkles size={14} strokeWidth={1.8} />
       </span>
@@ -381,7 +381,7 @@ function OutlineArtifact({ steps }: { steps: ChatStep[] }) {
   const type = steps.some((step) => step.name.includes('NFS')) ? 'Nota fiscal' : steps.some((step) => step.name.includes('WhatsApp')) ? 'WhatsApp' : steps.some((step) => step.name.includes('Fluxo')) ? 'Dashboard' : 'Relatorio'
 
   return (
-    <div className="landing-tool-row grid grid-cols-[54px_1fr_auto] items-center gap-4 rounded-[18px] border border-[#e4e4e7] bg-white p-3 shadow-[0_1px_2px_rgba(0,0,0,0.04)]" style={{ animationDelay: '0.58s' }}>
+    <div className="landing-tool-row grid grid-cols-[54px_1fr_auto] items-center gap-4 rounded-[18px] border border-[#e4e4e7] bg-white p-3" style={{ animationDelay: '0.58s' }}>
       <span className="grid size-[54px] place-items-center rounded-2xl border border-[#e4e4e7] bg-[#fafafa]">
         <FileText size={23} strokeWidth={1.8} />
       </span>
@@ -566,7 +566,7 @@ function ResultIcon({ row }: { row: ResultRow }) {
   const Icon = row.icon
 
   return (
-    <span className="grid size-9 shrink-0 place-items-center rounded-xl border border-[#e7edf0] bg-white text-[#111111] shadow-[0_8px_18px_rgba(15,23,42,0.06)] sm:size-[42px]" style={{ color: row.color ?? '#111111' }}>
+    <span className="grid size-9 shrink-0 place-items-center rounded-xl border border-[#e7edf0] bg-white text-[#111111] sm:size-[42px]" style={{ color: row.color ?? '#111111' }}>
       {Icon ? <Icon className="h-6 w-6 sm:h-7 sm:w-7" /> : <span className="grid size-7 place-items-center rounded-[9px] text-[12px] font-bold text-white sm:size-[31px] sm:text-[14px]" style={{ background: row.color ?? '#111827' }}>{row.initials}</span>}
     </span>
   )
@@ -580,7 +580,7 @@ function ToolResultTable({ delay = 0, step }: { delay?: number; step: ChatStep }
   const subtitle = isExpense ? 'Fornecedor, valor e categoria sugerida' : isReconciliation ? 'Movimento bancario x registro no ERP' : step.description
 
   return (
-    <div className="overflow-hidden rounded-[20px] border border-[#e5e7eb] bg-white py-2 shadow-[0_18px_46px_rgba(15,23,42,0.08)] sm:rounded-[24px] sm:py-3">
+    <div className="overflow-hidden rounded-[20px] border border-[#e5e7eb] bg-white py-2 sm:rounded-[24px] sm:py-3">
       <div className="flex items-start justify-between gap-3 px-3 pb-2 sm:gap-4 sm:px-5 sm:pb-3">
         <div className="min-w-0">
           <p className="truncate text-[14px] font-semibold tracking-[-0.01em] text-[#111111] sm:text-[17px]">{title}</p>
@@ -696,7 +696,7 @@ function AgentHandoff() {
   const agents = ['Financeiro', 'Fiscal', 'Documentos', 'Cobranca', 'Relatorios']
 
   return (
-    <div className="grid gap-3 rounded-[30px] border border-black/10 bg-white p-5 shadow-[0_24px_70px_rgba(15,23,42,0.09)] md:grid-cols-5">
+    <div className="grid gap-3 rounded-[30px] border border-black/10 bg-white p-5 md:grid-cols-5">
       {agents.map((agent, index) => (
         <div key={agent} className="landing-tool-row rounded-[22px] border border-black/[0.08] bg-[#f8fafc] p-4" style={{ animationDelay: `${index * 0.1}s` }}>
           <span className="grid size-10 place-items-center rounded-2xl bg-[#111827] text-sm font-bold text-white">{agent.slice(0, 2)}</span>
@@ -786,7 +786,8 @@ export function OttoLandingPage() {
             58% { transform: translateY(calc(var(--landing-scroll-y) * -0.52)); }
             74% { transform: translateY(calc(var(--landing-scroll-y) * -0.78)); }
             88% { transform: translateY(calc(var(--landing-scroll-y) * -1)); }
-            100% { transform: translateY(calc(var(--landing-scroll-y) * -1)); }
+            96% { transform: translateY(calc(var(--landing-scroll-y) * -1)); }
+            100% { transform: translateY(0); }
           }
 
           @keyframes landing-sequence-cycle {
@@ -858,7 +859,8 @@ export function OttoLandingPage() {
           }
 
           .landing-prompt-input {
-            animation: landing-prompt-cycle 20s ease both;
+            opacity: 1;
+            transform: translateY(0);
           }
 
           .landing-typed-prompt {
