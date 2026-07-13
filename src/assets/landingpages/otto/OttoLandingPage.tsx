@@ -166,10 +166,10 @@ function Section({
     <section ref={sectionRef} id={id} className={`landing-animate-scope border-b ${border} ${background} px-0 py-20 sm:px-8 ${hasEntered ? 'landing-in-view' : ''}`}>
       <div className="mx-auto grid max-w-[1180px] gap-10 lg:grid-cols-[0.9fr_1.1fr] lg:items-center">
         <div className="px-6 sm:px-0">
-          <h2 className={`landing-title-font max-w-[620px] !text-[38px] font-semibold leading-[0.96] tracking-[-0.035em] md:!text-[45px] ${text}`} style={isDark ? { color: '#ffffff' } : undefined}>
+          <h2 className={`landing-title-font max-w-[620px] !text-[30px] font-semibold leading-[0.96] tracking-[-0.035em] md:!text-[45px] ${text}`} style={isDark ? { color: '#ffffff' } : undefined}>
             {title}
           </h2>
-          <p className={`mt-5 max-w-[520px] text-base leading-7 md:text-lg ${muted}`}>{subtitle}</p>
+          <p className={`mt-5 max-w-[520px] text-[22px] leading-8 md:text-lg ${muted}`}>{subtitle}</p>
         </div>
         <div className="px-1 sm:px-0">{children}</div>
       </div>
@@ -1063,7 +1063,7 @@ export function OttoLandingPage() {
       <section className="relative isolate overflow-hidden border-b border-white/10 bg-[#050505] px-6 py-6 sm:px-8">
         <div className="mx-auto flex max-w-[1180px] items-center justify-between">
           <Link href="/lp" className="flex items-center">
-            <img src="/logoOtto.svg" alt="Otto" className="h-9 w-auto brightness-0 invert md:h-12" />
+            <img src="/logoOtto.svg" alt="Otto" className="h-[72px] w-auto brightness-0 invert md:h-12" />
           </Link>
           <nav className="hidden items-center gap-6 text-sm font-medium text-white/55 md:flex">
             <a href="#conecte">Conecte</a>
