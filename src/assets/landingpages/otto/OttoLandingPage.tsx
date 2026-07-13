@@ -166,7 +166,7 @@ function Section({
     <section ref={sectionRef} id={id} className={`landing-animate-scope border-b ${border} ${background} px-6 py-20 sm:px-8 ${hasEntered ? 'landing-in-view' : ''}`}>
       <div className="mx-auto grid max-w-[1180px] gap-10 lg:grid-cols-[0.9fr_1.1fr] lg:items-center">
         <div>
-          <h2 className={`max-w-[760px] !text-[54px] font-semibold leading-[0.92] tracking-[-0.045em] md:!text-[80px] ${text}`} style={isDark ? { color: '#ffffff' } : undefined}>
+          <h2 className={`max-w-[620px] !text-[38px] font-semibold leading-[0.96] tracking-[-0.035em] md:!text-[45px] ${text}`} style={isDark ? { color: '#ffffff' } : undefined}>
             {title}
           </h2>
           <p className={`mt-5 max-w-[520px] text-base leading-7 md:text-lg ${muted}`}>{subtitle}</p>
@@ -689,32 +689,6 @@ function TableSpinner({ className = 'grid' }: { className?: string }) {
   )
 }
 
-function HeroVisual() {
-  return (
-    <div className="relative min-h-[420px] lg:min-h-0">
-      <div className="absolute inset-x-0 top-6 rounded-[34px] border border-white/10 bg-white/[0.06] p-5 shadow-[0_30px_90px_rgba(0,0,0,0.35)] backdrop-blur">
-        <div className="flex items-center gap-3 border-b border-white/10 pb-4">
-          <span className="grid size-11 place-items-center rounded-2xl bg-white text-sm font-bold text-[#050505]">O</span>
-          <div>
-            <p className="font-semibold text-white">Otto</p>
-            <p className="text-sm font-medium text-white/50">Agentes financeiros conectados</p>
-          </div>
-        </div>
-        <div className="mt-5 grid gap-3">
-          {['Conectando dados da empresa', 'Classificando despesas e conciliando bancos', 'Gerando dashboard, relatorio e insights de margem'].map((item, index) => (
-            <div key={item} className="landing-hero-row flex items-center gap-3 rounded-2xl border border-white/10 bg-black/20 px-4 py-3" style={{ animationDelay: `${index * 0.18}s` }}>
-              <span className="grid size-7 place-items-center rounded-full bg-emerald-300 text-[#06130d]">
-                <Check size={15} strokeWidth={2} />
-              </span>
-              <span className="text-sm font-semibold text-white">{item}</span>
-            </div>
-          ))}
-        </div>
-      </div>
-    </div>
-  )
-}
-
 function AgentHandoff() {
   const agents = ['Financeiro', 'Fiscal', 'Documentos', 'Cobranca', 'Relatorios']
 
@@ -1049,9 +1023,9 @@ export function OttoLandingPage() {
       </section>
 
       <section className="relative overflow-hidden bg-[#050505] px-6 py-20 sm:px-8">
-        <div className="mx-auto grid max-w-[1180px] gap-12 lg:grid-cols-[0.95fr_1.05fr] lg:items-center">
+        <div className="mx-auto max-w-[1180px]">
           <div>
-            <h1 className="max-w-[820px] !text-[54px] font-semibold leading-[0.92] tracking-[-0.045em] md:!text-[80px]" style={{ color: '#ffffff' }}>
+            <h1 className="max-w-[760px] !text-[46px] font-semibold leading-[0.95] tracking-[-0.04em] md:!text-[60px]" style={{ color: '#ffffff' }}>
               Automatize financeiro, fiscal e administrativo.
             </h1>
             <p className="mt-6 max-w-[580px] text-lg leading-8" style={{ color: 'rgba(255,255,255,0.78)' }}>
@@ -1068,7 +1042,6 @@ export function OttoLandingPage() {
               </Link>
             </div>
           </div>
-          <HeroVisual />
         </div>
       </section>
 
