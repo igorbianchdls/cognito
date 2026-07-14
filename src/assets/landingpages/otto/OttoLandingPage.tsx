@@ -10,7 +10,6 @@ import {
   CircleDollarSign,
   FileCheck2,
   FileText,
-  FolderKanban,
   Landmark,
   LockKeyhole,
   MessageCircle,
@@ -107,19 +106,13 @@ const fiscalSteps: ChatStep[] = [
   { description: 'Nota fiscal do ultimo servico aprovado', icon: <FileCheck2 size={18} />, name: 'Emitir NFS-e', status: 'Emitida', tone: 'green' },
 ]
 
-const documentSteps: ChatStep[] = [
-  { description: 'Contratos, anexos e assinaturas', icon: <FolderKanban size={18} />, name: 'Contratos', status: 'Organizado', tone: 'blue' },
-  { description: 'Boletos, comprovantes e pedidos', icon: <ReceiptText size={18} />, name: 'Administrativo', status: '8 docs', tone: 'green' },
-  { description: 'Pendencias juridicas e contabeis', icon: <FileText size={18} />, name: 'Pendencias', status: '2 itens', tone: 'amber' },
-]
-
 const collectionSteps: ChatStep[] = [
   { description: 'Cliente Norte, Rede Alpha e Mercado Sul', icon: <CircleDollarSign size={18} />, name: 'Inadimplentes', status: 'R$ 71.000', tone: 'red' },
   { description: 'Tom, PIX, boleto e follow-up', icon: <MessageCircle size={18} />, name: 'Preparar cobrancas', status: 'Pronto', tone: 'blue' },
   { description: 'Mensagens enviadas e historico salvo', icon: <MessageCircle size={18} />, name: 'WhatsApp', status: 'Enviado', tone: 'green' },
 ]
 
-const highlightPattern = /(contas a pagar|contas a receber|fluxo de caixa|notas fiscais|financeiro|fiscal|administrativo|controle|pagamentos|cobranca|cobrança|dados|bancos|cartoes|cartões|documentos|relatorios|relatórios|dashboards|dashboard|margem|impostos|IA|ERP)/gi
+const highlightPattern = /(contas a pagar|contas a receber|fluxo de caixa|notas fiscais|financeiro|fiscal|administrativo|controle|pagamentos|cobranca|cobrança|dados|bancos|cartoes|cartões|documentos|relatorios|relatórios|dashboards|dashboard|margem|impostos|IA|ERP|vendas|compras|estoque|operação|operacao|inteligente|trabalha)/gi
 
 function renderHighlightedText(text: string, color: string) {
   return text.split(highlightPattern).map((part, index) => {
@@ -721,20 +714,20 @@ function PricingCard() {
   const [selectedCadence, setSelectedCadence] = useState('Trimestral')
   const selectedPlan = plans.find((plan) => plan.cadence === selectedCadence) ?? plans[1]
   const features = [
-    'Agentes para financeiro, fiscal e administrativo',
-    'Conexoes com ERP, bancos, anuncios e documentos',
-    'Classificacao, conciliacao, cobranca e aprovacao humana',
-    'Relatorios, dashboards e trilha de auditoria',
-    'Onboarding assistido para conectar sua operacao',
+    'Módulos de financeiro, fiscal, vendas, compras e estoque',
+    'Conexões com bancos, anúncios, lojas, documentos e planilhas',
+    'Automação de classificação, conciliação, cobrança e aprovação',
+    'Relatórios, dashboards e trilha de auditoria em tempo real',
+    'Onboarding assistido para centralizar sua operação',
   ]
 
   return (
     <div className="rounded-[30px] border border-black/10 bg-white p-5 text-[#111827] md:p-7">
       <div className="border-b border-black/10 pb-6">
         <div>
-          <p className="text-sm font-semibold uppercase tracking-[0.08em] text-emerald-700">Plano Otto</p>
-          <h3 className="mt-3 text-[32px] font-semibold tracking-[-0.035em] text-[#111827] md:text-[42px]">Operacao IA</h3>
-          <p className="mt-3 max-w-[420px] text-base leading-7 text-[#667085]">Para empresas que querem automatizar rotinas financeiras com agentes trabalhando todos os dias.</p>
+          <p className="text-sm font-semibold uppercase tracking-[0.08em] text-emerald-700">ERP AI-powered</p>
+          <h3 className="mt-3 text-[32px] font-semibold tracking-[-0.035em] text-[#111827] md:text-[42px]">Operação ERP</h3>
+          <p className="mt-3 max-w-[420px] text-base leading-7 text-[#667085]">Para empresas que querem centralizar dados, automatizar rotinas e acompanhar a operação em um ERP AI-first.</p>
         </div>
       </div>
 
@@ -1106,10 +1099,10 @@ export function OttoLandingPage() {
             <img src="/logoOtto.svg" alt="Otto" className="h-[72px] w-auto brightness-0 invert md:h-12" />
           </Link>
           <nav className="hidden items-center gap-6 text-sm font-medium text-white/55 md:flex">
-            <a href="#conecte">Conecte</a>
+            <a href="#conecte">Dados</a>
             <a href="#financeiro">Financeiro</a>
-            <a href="#fiscal">Fiscal</a>
-            <a href="#documentos">Documentos</a>
+            <a href="#operacao">Operação</a>
+            <a href="#preco">Preço</a>
           </nav>
         </div>
       </section>
@@ -1121,17 +1114,17 @@ export function OttoLandingPage() {
               className="max-w-[760px] !text-[46px] md:!text-[60px]"
               style={{ color: '#f8f8f8', fontFamily: 'Inter, var(--font-sf-pro), -apple-system, BlinkMacSystemFont, system-ui, sans-serif', fontWeight: 800, letterSpacing: '-0.03em', lineHeight: 0.92 }}
             >
-              {renderHighlightedText('Automatize financeiro, fiscal e administrativo.', '#52D273')}
+              {renderHighlightedText('O ERP completo que trabalha pela sua empresa.', '#52D273')}
             </h1>
             <p
               className="mt-7 max-w-[580px] text-[22px] md:text-lg"
               style={{ color: '#f8f8f8', fontFamily: 'Inter, var(--font-sf-pro), -apple-system, BlinkMacSystemFont, system-ui, sans-serif', fontWeight: 400, letterSpacing: '-0.01em', lineHeight: 1.6 }}
             >
-              Otto conecta seus sistemas, entende os dados da empresa e aciona agentes para executar rotinas com controle humano quando importa.
+              Otto centraliza financeiro, fiscal, vendas, compras, estoque, documentos e relatórios em um ERP AI-first que entende seus dados e executa rotinas automaticamente.
             </p>
             <div className="mt-8 flex flex-wrap gap-3">
               <Link href="/integracoes" className="inline-flex min-h-11 items-center gap-2 rounded-full bg-white px-5 py-3 text-sm font-semibold text-[#050505]">
-                Conectar minha empresa
+                Conhecer o ERP
                 <ArrowRight size={18} strokeWidth={1.6} />
               </Link>
               <Link href="/sign-up" className="inline-flex min-h-11 items-center gap-2 rounded-full border border-white/15 bg-white/5 px-5 py-3 text-sm font-semibold text-white">
@@ -1146,8 +1139,8 @@ export function OttoLandingPage() {
       <Section
         eyebrow="Conecte os dados"
         id="conecte"
-        subtitle="ERPs, bancos, anuncios, e-commerce, documentos e canais de cobranca entram como contexto operacional para os agentes."
-        title="Todas as fontes sincronizadas antes da IA trabalhar."
+        subtitle="Conecte bancos, ERPs legados, lojas, anúncios, documentos e planilhas para criar uma base única de operação."
+        title="Traga seus dados para um ERP inteligente."
       >
         <DataConnectionSync />
       </Section>
@@ -1155,87 +1148,77 @@ export function OttoLandingPage() {
       <Section
         eyebrow="Financeiro"
         id="financeiro"
-        subtitle="Classifique despesas, concilie bancos, cartoes e movimentacoes, e deixe apenas divergencias reais para revisao."
+        subtitle="Otto classifica despesas, concilia bancos, acompanha contas a pagar e receber e mostra divergências antes que virem problema."
         theme="dark"
-        title="O financeiro deixa de depender de conferencia manual."
+        title="Um financeiro que fecha, concilia e alerta sozinho."
       >
-        <ChatAutomationPanel dark steps={financeSteps} title="Classifique despesas e concilie os ultimos lancamentos." />
+        <ChatAutomationPanel dark steps={financeSteps} title="Classifique despesas, concilie bancos e atualize o financeiro do ERP." />
       </Section>
 
       <Section
-        eyebrow="Financeiro no desktop"
-        id="financeiro-desktop"
-        subtitle="Para quem trabalha no computador, Otto tambem roda dentro do ChatGPT em uma conversa ampla, com tool calls, tabelas animadas e resumo executivo."
-        title="A rotina financeira acontecendo no ChatGPT desktop."
+        eyebrow="Operação"
+        id="operacao"
+        subtitle="Pedidos, fornecedores, estoque, campanhas e receita deixam de viver em sistemas separados e passam a alimentar o ERP em tempo real."
+        title="Vendas, compras e estoque conectados no mesmo fluxo."
       >
-        <DesktopChatAutomationPanel steps={financeSteps} title="Analise o financeiro do mes, classifique despesas e concilie banco com ERP." />
+        <DesktopChatAutomationPanel steps={financeSteps} title="Analise vendas, compras e estoque e mostre o que precisa de ação." />
       </Section>
 
       <Section
-        eyebrow="Caixa, relatorios e margem"
+        eyebrow="Relatórios e gestão"
         id="caixa"
-        subtitle="Otto acompanha contas a pagar, contas a receber, fluxo de caixa, relatorios e mostra onde sua margem esta vazando."
-        title="Da rotina de caixa ao insight que muda a decisao."
+        subtitle="Dashboards, fluxo de caixa, margem e indicadores operacionais são gerados com contexto, não apenas números soltos."
+        title="Relatórios que explicam o que está acontecendo."
       >
-        <ChatAutomationPanel steps={cashSteps} title="Mostre caixa, relatorio executivo e onde estamos perdendo margem." />
+        <ChatAutomationPanel steps={cashSteps} title="Gere um dashboard de gestão com caixa, margem e desempenho operacional." />
       </Section>
 
       <Section
-        eyebrow="Aprovacoes e controle"
+        eyebrow="Controle e aprovações"
         id="aprovacoes"
-        subtitle="Pagamentos sensiveis podem exigir aprovacao humana, com regra aplicada, historico salvo e acao rastreavel."
+        subtitle="Pagamentos, compras e ações sensíveis podem exigir aprovação antes de serem executadas pela IA."
         theme="dark"
-        title="Automatize sem abrir mao do controle."
+        title="Automação com controle humano quando importa."
       >
         <ChatAutomationPanel dark steps={approvalSteps} title="Revise pagamentos acima de R$ 1.000 antes de executar." />
       </Section>
 
       <Section
-        eyebrow="Fiscal"
+        eyebrow="Fiscal e documentos"
         id="fiscal"
-        subtitle="Notas fiscais, XMLs, impostos, obrigacoes fiscais e emissao de NFS-e ficam organizados em uma rotina acompanhavel."
-        title="Seu fiscal com documentos, impostos e notas em ordem."
+        subtitle="Notas fiscais, XMLs, contratos, comprovantes e obrigações ficam organizados, rastreáveis e prontos para execução."
+        title="Fiscal, notas e documentos no mesmo ERP."
       >
-        <ChatAutomationPanel steps={fiscalSteps} title="Organize notas fiscais, impostos pendentes e emita a NFS-e." />
-      </Section>
-
-      <Section
-        eyebrow="Documentos e contratos"
-        id="documentos"
-        subtitle="Contratos, boletos, comprovantes, anexos e documentos administrativos saem da bagunca para pastas prontas."
-        theme="warm"
-        title="O administrativo ganha uma caixa de entrada inteligente."
-      >
-        <ChatAutomationPanel steps={documentSteps} title="Organize contratos, boletos e documentos da semana." />
+        <ChatAutomationPanel steps={fiscalSteps} title="Organize notas, documentos fiscais e obrigações no ERP." />
       </Section>
 
       <Section
         eyebrow="Cobrancas"
         id="cobrancas"
-        subtitle="Otto encontra inadimplentes, prepara contexto de cobranca e envia mensagens com registro no financeiro."
+        subtitle="Otto encontra inadimplentes, prepara mensagens e registra cada cobrança dentro do histórico financeiro."
         theme="green"
-        title="Cobrar clientes vira um fluxo acompanhado, nao uma tarefa esquecida."
+        title="Cobrança integrada ao contas a receber."
       >
-        <ChatAutomationPanel dark steps={collectionSteps} title="Cobre os inadimplentes e mostre as mensagens enviadas." />
+        <ChatAutomationPanel dark steps={collectionSteps} title="Cobre clientes inadimplentes e registre as mensagens no contas a receber." />
       </Section>
 
       <Section
         eyebrow="Preco"
         id="preco"
-        subtitle="Um plano direto para colocar agentes de IA operando no financeiro, fiscal e administrativo sem montar time interno."
-        title="Comece com uma operacao financeira automatizada."
+        subtitle="Escolha o ciclo de pagamento e comece com os módulos essenciais para centralizar dados, automatizar rotinas e acompanhar a operação."
+        title="Um ERP AI-powered para operar sua empresa."
       >
         <PricingCard />
       </Section>
 
       <section className="bg-[#050505] px-6 py-20 sm:px-8">
         <div className="mx-auto max-w-[900px] text-center">
-          <p className="text-sm font-semibold uppercase tracking-[0.08em] text-emerald-200">Otto</p>
-          <h2 className="mt-5 text-[38px] font-semibold leading-[0.98] tracking-[-0.04em] text-white md:text-[64px]">
-            Coloque seus agentes para operar a empresa todos os dias.
+          <p className="text-sm font-semibold uppercase tracking-[0.08em] text-emerald-200">Otto ERP</p>
+          <h2 className="mt-5 text-[38px] font-extrabold leading-[0.92] tracking-[-0.03em] text-[#f8f8f8] md:text-[64px]">
+            Coloque seu ERP AI-first para operar todos os dias.
           </h2>
-          <p className="mx-auto mt-6 max-w-[620px] text-lg leading-8 text-white/62">
-            Conecte dados, automatize rotinas e mantenha aprovacao humana nas decisoes que importam.
+          <p className="mx-auto mt-6 max-w-[620px] text-lg font-normal leading-[1.6] tracking-[-0.01em] text-[#f8f8f8]/70">
+            Centralize dados, automatize processos e mantenha aprovacao humana nas decisoes que importam.
           </p>
           <div className="mt-8 flex justify-center">
             <Link href="/sign-up" className="inline-flex min-h-12 items-center gap-2 rounded-full bg-white px-6 py-3 text-sm font-semibold text-[#050505]">
