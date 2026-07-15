@@ -118,6 +118,12 @@ const financeBentos = [
   { alt: 'Visão de DRE do Otto', src: '/BentoDRE.webp', title: 'DRE' },
 ]
 
+const managementBentos = [
+  { alt: 'Visão de forecasting do Otto', src: '/BentoForcasting.webp', title: 'Forecasting' },
+  { alt: 'Visão de dashboard do Otto', src: '/BentoDashboard.webp', title: 'Dashboard' },
+  { alt: 'Visão de receita do Otto', src: '/BentoRevenue.webp', title: 'Receita' },
+]
+
 const highlightPattern = /(contas a pagar|contas a receber|fluxo de caixa|notas fiscais|financeiro|fiscal|administrativo|controle|pagamentos|cobranca|cobrança|dados|bancos|cartoes|cartões|documentos|relatorios|relatórios|dashboards|dashboard|margem|impostos|IA|ERP|vendas|compras|estoque|operação|operacao|inteligente|trabalha)/gi
 
 function renderHighlightedText(text: string, color: string) {
@@ -133,6 +139,7 @@ function renderHighlightedText(text: string, color: string) {
 function Section({
   children,
   id,
+  layout = 'split',
   subtitle,
   theme = 'light',
   title,
@@ -140,6 +147,7 @@ function Section({
   children: ReactNode
   eyebrow: string
   id: string
+  layout?: 'split' | 'stacked'
   subtitle: string
   theme?: 'light' | 'dark' | 'warm' | 'green'
   title: string
@@ -178,22 +186,22 @@ function Section({
 
   return (
     <section ref={sectionRef} id={id} className={`landing-animate-scope border-b ${border} ${background} px-0 ${sectionPadding} sm:px-8 ${hasEntered ? 'landing-in-view' : ''}`}>
-      <div className={`mx-auto grid max-w-[1180px] ${sectionGap} lg:grid-cols-[0.9fr_1.1fr] lg:items-center`}>
-        <div className="px-6 sm:px-0">
+      <div className={`mx-auto grid max-w-[1180px] ${sectionGap} ${layout === 'stacked' ? '' : 'lg:grid-cols-[0.9fr_1.1fr] lg:items-center'}`}>
+        <div className={`px-6 sm:px-0 ${layout === 'stacked' ? 'mx-auto max-w-[820px] text-center' : ''}`}>
           <h2
-            className={`max-w-[620px] !text-[30px] md:!text-[45px] ${text}`}
+            className={`${layout === 'stacked' ? 'mx-auto max-w-[900px]' : 'max-w-[620px]'} !text-[30px] md:!text-[45px] ${text}`}
             style={{ color: isDark ? '#f8f8f8' : '#111111', fontFamily: 'Inter, var(--font-sf-pro), -apple-system, BlinkMacSystemFont, system-ui, sans-serif', fontWeight: 800, letterSpacing: '-0.03em', lineHeight: 0.92 }}
           >
             {renderHighlightedText(title, highlightColor)}
           </h2>
           <p
-            className={`mt-7 max-w-[560px] text-[22px] md:text-lg ${muted}`}
+            className={`mt-7 ${layout === 'stacked' ? 'mx-auto max-w-[760px]' : 'max-w-[560px]'} text-[22px] md:text-lg ${muted}`}
             style={{ color: isDark ? '#f8f8f8' : '#111111', fontFamily: 'Inter, var(--font-sf-pro), -apple-system, BlinkMacSystemFont, system-ui, sans-serif', fontWeight: 400, letterSpacing: '-0.01em', lineHeight: 1.6 }}
           >
             {subtitle}
           </p>
         </div>
-        <div className="px-1 sm:px-0">{children}</div>
+        <div className={`px-1 sm:px-0 ${layout === 'stacked' ? 'min-w-0' : ''}`}>{children}</div>
       </div>
     </section>
   )
@@ -209,11 +217,11 @@ function IntegrationIcon({ row }: { row: SyncRow }) {
   )
 }
 
-function FinanceBentoGallery() {
+function BentoGallery({ items }: { items: Array<{ alt: string; src: string; title: string }> }) {
   return (
     <div className="-mx-1 overflow-x-auto px-1 pb-2 md:mx-0 md:overflow-visible md:px-0">
-      <div className="flex snap-x snap-mandatory gap-4 pr-10 md:grid md:grid-cols-3 md:gap-4 md:pr-0 lg:w-[760px] lg:-translate-x-8 xl:w-[820px]">
-        {financeBentos.map((item) => (
+      <div className="flex snap-x snap-mandatory gap-4 pr-10 md:grid md:grid-cols-3 md:gap-4 md:pr-0">
+        {items.map((item) => (
           <figure key={item.src} className="min-w-[84%] snap-start overflow-hidden rounded-[28px] border border-black/10 bg-white p-2 md:min-w-0">
             <img
               src={item.src}
@@ -1183,10 +1191,14 @@ export function OttoLandingPage() {
       <Section
         eyebrow="Contas a pagar"
         id="contas-a-pagar"
+        layout="stacked"
         subtitle="Acompanhe contas a pagar, contas a receber e DRE em uma visão clara para evitar atrasos, duplicidades e decisões sem contexto."
         title="Gestão financeira com contas e resultado no mesmo lugar."
       >
-        <FinanceBentoGallery />
+        <div className="grid gap-5 md:gap-6">
+          <BentoGallery items={financeBentos} />
+          <BentoGallery items={managementBentos} />
+        </div>
       </Section>
 
       <Section
