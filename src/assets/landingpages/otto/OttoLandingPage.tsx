@@ -142,13 +142,13 @@ function ClaudeWordmark() {
 
 function ChatGptWordmark() {
   return (
-    <img alt="ChatGPT" className="mx-1 inline-block h-[1.2em] w-auto translate-y-[0.12em]" src="/gptLogo.svg" />
+    <img alt="ChatGPT" className="mx-1 inline-block h-[1.08em] w-auto translate-y-[0.1em]" src="/gptLogo.svg" />
   )
 }
 
 function WordmarkPlus() {
   return (
-    <svg aria-hidden="true" className="mx-1 inline-block h-[0.56em] w-[0.56em] translate-y-[0.03em]" viewBox="0 0 24 24">
+    <svg aria-hidden="true" className="mx-1 inline-block h-[0.56em] w-[0.56em] translate-y-[0.1em]" viewBox="0 0 24 24">
       <path d="M12 5V19M5 12H19" fill="none" stroke="#f8f8f8" strokeLinecap="round" strokeWidth="1.8" />
     </svg>
   )
@@ -236,7 +236,7 @@ function IntegrationIcon({ row }: { row: SyncRow }) {
 function BentoGallery({ items }: { items: Array<{ alt: string; description: string; src: string; title: string }> }) {
   return (
     <div className="px-1 pb-2 md:px-0">
-      <div className="grid grid-cols-2 gap-4 md:grid-cols-3">
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
         {items.map((item) => (
           <figure key={item.src} className="overflow-hidden rounded-[28px] border border-black/10 bg-white p-2">
             <figcaption className="px-4 pb-4 pt-4">
@@ -1606,7 +1606,6 @@ export function OttoLandingPage() {
           </Link>
           <nav className="hidden items-center gap-6 text-sm font-medium text-white/55 md:flex">
             <a href="#conecte">Dados</a>
-            <a href="#financeiro">Financeiro</a>
             <a href="#fiscal">Fiscal</a>
             <a href="#preco">Preço</a>
           </nav>
@@ -1626,7 +1625,7 @@ export function OttoLandingPage() {
               className="mx-auto mt-7 max-w-[580px] text-[22px] md:text-lg"
               style={{ color: '#f8f8f8', fontFamily: 'Inter, var(--font-sf-pro), -apple-system, BlinkMacSystemFont, system-ui, sans-serif', fontWeight: 400, letterSpacing: '-0.01em', lineHeight: 1.6 }}
             >
-              Com Otto, você opera o financeiro da sua empresa pelo ChatGPT ou Claude: funcionários de IA classificam despesas, conciliam bancos, acompanham contas a pagar e receber, organizam documentos e geram relatórios para você decidir melhor.
+              Otto implementa funcionários de IA para operar o financeiro da sua empresa, direto pelo ChatGPT ou Claude.
             </p>
             <div className="mt-8 flex flex-wrap justify-center gap-3">
               <Link href="/sign-up" className="inline-flex min-h-11 items-center gap-2 rounded-full bg-[#52D273] px-6 py-3 text-sm font-semibold text-[#050505]">
@@ -1645,16 +1644,6 @@ export function OttoLandingPage() {
         title="Traga seus dados para um ERP inteligente."
       >
         <DataConnectionSync />
-      </Section>
-
-      <Section
-        eyebrow="Financeiro"
-        id="financeiro"
-        subtitle="Otto classifica despesas, concilia bancos, acompanha contas a pagar e receber e mostra divergências antes que virem problema."
-        theme="dark"
-        title="Um financeiro que fecha, concilia e alerta sozinho."
-      >
-        <ChatAutomationPanel dark steps={financeSteps} title="Classifique despesas, concilie bancos e atualize o financeiro do ERP." />
       </Section>
 
       <Section
