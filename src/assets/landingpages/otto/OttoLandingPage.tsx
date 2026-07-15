@@ -112,6 +112,12 @@ const collectionSteps: ChatStep[] = [
   { description: 'Mensagens enviadas e historico salvo', icon: <MessageCircle size={18} />, name: 'WhatsApp', status: 'Enviado', tone: 'green' },
 ]
 
+const financeBentos = [
+  { alt: 'Visão de contas a pagar do Otto', src: '/BentoContasAPagar.webp', title: 'Contas a pagar' },
+  { alt: 'Visão de contas a receber do Otto', src: '/BentoContasAReceber.webp', title: 'Contas a receber' },
+  { alt: 'Visão de DRE do Otto', src: '/BentoDRE.webp', title: 'DRE' },
+]
+
 const highlightPattern = /(contas a pagar|contas a receber|fluxo de caixa|notas fiscais|financeiro|fiscal|administrativo|controle|pagamentos|cobranca|cobrança|dados|bancos|cartoes|cartões|documentos|relatorios|relatórios|dashboards|dashboard|margem|impostos|IA|ERP|vendas|compras|estoque|operação|operacao|inteligente|trabalha)/gi
 
 function renderHighlightedText(text: string, color: string) {
@@ -199,6 +205,25 @@ function IntegrationIcon({ row }: { row: SyncRow }) {
   return (
     <div className="grid size-12 shrink-0 place-items-center rounded-2xl border border-black/10 bg-white" style={{ color: row.tone }}>
       {Icon ? <Icon className="h-8 w-8" /> : <span className="grid size-8 place-items-center rounded-xl text-[13px] font-bold text-white" style={{ background: row.tone }}>{row.initials}</span>}
+    </div>
+  )
+}
+
+function FinanceBentoGallery() {
+  return (
+    <div className="-mx-1 overflow-x-auto px-1 pb-2 md:mx-0 md:overflow-visible md:px-0">
+      <div className="flex snap-x snap-mandatory gap-4 pr-10 md:grid md:grid-cols-3 md:gap-4 md:pr-0 lg:w-[760px] lg:-translate-x-8 xl:w-[820px]">
+        {financeBentos.map((item) => (
+          <figure key={item.src} className="min-w-[84%] snap-start overflow-hidden rounded-[28px] border border-black/10 bg-white p-2 md:min-w-0">
+            <img
+              src={item.src}
+              alt={item.alt}
+              className="block h-auto w-full rounded-[22px]"
+            />
+            <figcaption className="px-3 pb-3 pt-4 text-sm font-semibold tracking-[-0.01em] text-[#111111]">{item.title}</figcaption>
+          </figure>
+        ))}
+      </div>
     </div>
   )
 }
@@ -1158,16 +1183,10 @@ export function OttoLandingPage() {
       <Section
         eyebrow="Contas a pagar"
         id="contas-a-pagar"
-        subtitle="Acompanhe fornecedores, vencimentos, valores e aprovações em uma visão clara para evitar atrasos, duplicidades e pagamentos fora da política."
-        title="Contas a pagar dentro do mesmo fluxo inteligente."
+        subtitle="Acompanhe contas a pagar, contas a receber e DRE em uma visão clara para evitar atrasos, duplicidades e decisões sem contexto."
+        title="Gestão financeira com contas e resultado no mesmo lugar."
       >
-        <div className="overflow-hidden rounded-[28px] border border-black/10 bg-white p-2">
-          <img
-            src="/BentoContasAPagar.webp"
-            alt="Visão de contas a pagar do Otto"
-            className="block h-auto w-full rounded-[22px]"
-          />
-        </div>
+        <FinanceBentoGallery />
       </Section>
 
       <Section
