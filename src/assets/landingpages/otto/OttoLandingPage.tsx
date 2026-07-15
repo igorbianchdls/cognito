@@ -219,10 +219,10 @@ function IntegrationIcon({ row }: { row: SyncRow }) {
 
 function BentoGallery({ items }: { items: Array<{ alt: string; description: string; src: string; title: string }> }) {
   return (
-    <div className="-mx-1 overflow-x-auto px-1 pb-2 md:mx-0 md:overflow-visible md:px-0">
-      <div className="flex snap-x snap-mandatory gap-4 pr-10 md:grid md:grid-cols-3 md:gap-4 md:pr-0">
+    <div className="px-1 pb-2 md:px-0">
+      <div className="grid gap-4 md:grid-cols-3">
         {items.map((item) => (
-          <figure key={item.src} className="min-w-[84%] snap-start overflow-hidden rounded-[28px] border border-black/10 bg-white p-2 md:min-w-0">
+          <figure key={item.src} className="overflow-hidden rounded-[28px] border border-black/10 bg-white p-2">
             <figcaption className="px-4 pb-4 pt-4">
               <h3 className="text-[17px] font-semibold leading-tight tracking-[-0.02em] text-[#111111]">{item.title}</h3>
               <p className="mt-2 text-sm font-normal leading-5 tracking-[-0.01em] text-[#9ca3af]">{item.description}</p>
