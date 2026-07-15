@@ -134,18 +134,6 @@ const CLAUDE_ICON_PATH = 'm4.714 15.956l4.718-2.648l.079-.23l-.08-.128h-.23l-.79
 
 const OPENAI_ICON_PATH = 'M22.282 9.821a6 6 0 0 0-.516-4.91a6.05 6.05 0 0 0-6.51-2.9A6.065 6.065 0 0 0 4.981 4.18a6 6 0 0 0-3.998 2.9a6.05 6.05 0 0 0 .743 7.097a5.98 5.98 0 0 0 .51 4.911a6.05 6.05 0 0 0 6.515 2.9A6 6 0 0 0 13.26 24a6.06 6.06 0 0 0 5.772-4.206a6 6 0 0 0 3.997-2.9a6.06 6.06 0 0 0-.747-7.073M13.26 22.43a4.48 4.48 0 0 1-2.876-1.04l.141-.081l4.779-2.758a.8.8 0 0 0 .392-.681v-6.737l2.02 1.168a.07.07 0 0 1 .038.052v5.583a4.504 4.504 0 0 1-4.494 4.494M3.6 18.304a4.47 4.47 0 0 1-.535-3.014l.142.085l4.783 2.759a.77.77 0 0 0 .78 0l5.843-3.369v2.332a.08.08 0 0 1-.033.062L9.74 19.95a4.5 4.5 0 0 1-6.14-1.646M2.34 7.896a4.5 4.5 0 0 1 2.366-1.973V11.6a.77.77 0 0 0 .388.677l5.815 3.354l-2.02 1.168a.08.08 0 0 1-.071 0l-4.83-2.786A4.504 4.504 0 0 1 2.34 7.872zm16.597 3.855l-5.833-3.387L15.119 7.2a.08.08 0 0 1 .071 0l4.83 2.791a4.494 4.494 0 0 1-.676 8.105v-5.678a.79.79 0 0 0-.407-.667m2.01-3.023l-.141-.085l-4.774-2.782a.78.78 0 0 0-.785 0L9.409 9.23V6.897a.07.07 0 0 1 .028-.061l4.83-2.787a4.5 4.5 0 0 1 6.68 4.66zm-12.64 4.135l-2.02-1.164a.08.08 0 0 1-.038-.057V6.075a4.5 4.5 0 0 1 7.375-3.453l-.142.08L8.704 5.46a.8.8 0 0 0-.393.681zm1.097-2.365l2.602-1.5l2.607 1.5v2.999l-2.597 1.5l-2.607-1.5Z'
 
-const highlightPattern = /(contas a pagar|contas a receber|fluxo de caixa|notas fiscais|financeiro|fiscal|administrativo|controle|pagamentos|cobranca|cobrança|dados|bancos|cartoes|cartões|documentos|relatorios|relatórios|dashboards|dashboard|margem|impostos|IA|ERP|vendas|compras|estoque|operação|operacao|inteligente|trabalha)/gi
-
-function renderHighlightedText(text: string, color: string) {
-  return text.split(highlightPattern).map((part, index) => {
-    if (part.match(highlightPattern)) {
-      return <span key={`${part}-${index}`} style={{ color }}>{part}</span>
-    }
-
-    return part
-  })
-}
-
 function ClaudeWordmark() {
   return (
     <img alt="Claude" className="mx-1 inline-block h-[0.82em] w-auto translate-y-[0.07em]" src="/claudeLogo.svg" />
@@ -155,6 +143,14 @@ function ClaudeWordmark() {
 function ChatGptWordmark() {
   return (
     <img alt="ChatGPT" className="mx-1 inline-block h-[1.2em] w-auto translate-y-[0.12em]" src="/gptLogo.svg" />
+  )
+}
+
+function WordmarkPlus() {
+  return (
+    <svg aria-hidden="true" className="mx-1 inline-block h-[0.44em] w-[0.44em] translate-y-[-0.05em]" viewBox="0 0 24 24">
+      <path d="M12 5V19M5 12H19" fill="none" stroke="#f8f8f8" strokeLinecap="round" strokeWidth="1.8" />
+    </svg>
   )
 }
 
@@ -183,8 +179,6 @@ function Section({
   const muted = isDark ? 'text-white/70' : 'text-[#111111]'
   const sectionPadding = isDark ? 'py-8 sm:py-28 md:py-32' : 'py-8 sm:py-20'
   const sectionGap = isDark ? 'gap-14 lg:gap-16' : 'gap-10'
-  const highlightColor = isDark ? '#52D273' : '#42D96B'
-
   useEffect(() => {
     const element = sectionRef.current
     if (!element || hasEntered) {
@@ -212,9 +206,9 @@ function Section({
         <div className={`px-6 text-center sm:px-0 ${layout === 'stacked' ? 'mx-auto max-w-[820px]' : ''}`}>
           <h2
             className="mx-auto max-w-[900px] !text-[30px] md:!text-[45px]"
-            style={{ color: isDark ? '#f8f8f8' : '#111111', fontFamily: 'Inter, var(--font-sf-pro), -apple-system, BlinkMacSystemFont, system-ui, sans-serif', fontWeight: 800, letterSpacing: '-0.03em', lineHeight: 0.92 }}
+            style={{ color: isDark ? '#f8f8f8' : '#111111', fontFamily: 'Inter, var(--font-sf-pro), -apple-system, BlinkMacSystemFont, system-ui, sans-serif', fontWeight: 800, letterSpacing: '-0.03em', lineHeight: 1.2 }}
           >
-            {renderHighlightedText(title, highlightColor)}
+            {title}
           </h2>
           <p
             className="mx-auto mt-7 max-w-[760px] text-[22px] md:text-lg"
@@ -1624,9 +1618,9 @@ export function OttoLandingPage() {
           <div className="text-center">
             <h1
               className="mx-auto max-w-[760px] !text-[36px] md:!text-[54px]"
-              style={{ color: '#f8f8f8', fontFamily: 'Inter, var(--font-sf-pro), -apple-system, BlinkMacSystemFont, system-ui, sans-serif', fontWeight: 800, letterSpacing: '-0.03em', lineHeight: 0.98 }}
+              style={{ color: '#f8f8f8', fontFamily: 'Inter, var(--font-sf-pro), -apple-system, BlinkMacSystemFont, system-ui, sans-serif', fontWeight: 800, letterSpacing: '-0.03em', lineHeight: 1.2 }}
             >
-              Sistema de Gestão integrado ao <span className="whitespace-nowrap"><ClaudeWordmark /> e <ChatGptWordmark /></span> que cuida do seu financeiro.
+              Sistema de Gestão integrado ao <span className="whitespace-nowrap"><ClaudeWordmark /><WordmarkPlus /><ChatGptWordmark /></span> que cuida do seu financeiro.
             </h1>
             <p
               className="mx-auto mt-7 max-w-[580px] text-[22px] md:text-lg"
