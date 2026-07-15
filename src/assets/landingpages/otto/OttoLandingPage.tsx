@@ -355,7 +355,7 @@ function CodexChartsFeatureCard({
       </div>
       <div
         className="landing-codex-chart overflow-hidden rounded-[24px] bg-[#f7f8fa]"
-        style={{ aspectRatio: '16 / 9', minHeight: 168 }}
+        style={{ aspectRatio: '1 / 1', minHeight: 260 }}
       >
         <div className="landing-codex-prompt">
           <span>+</span>
