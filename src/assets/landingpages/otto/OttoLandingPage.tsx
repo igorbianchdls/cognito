@@ -220,7 +220,7 @@ function IntegrationIcon({ row }: { row: SyncRow }) {
 function BentoGallery({ items }: { items: Array<{ alt: string; description: string; src: string; title: string }> }) {
   return (
     <div className="px-1 pb-2 md:px-0">
-      <div className="grid gap-4 md:grid-cols-3">
+      <div className="grid grid-cols-2 gap-4 md:grid-cols-3">
         {items.map((item) => (
           <figure key={item.src} className="overflow-hidden rounded-[28px] border border-black/10 bg-white p-2">
             <figcaption className="px-4 pb-4 pt-4">
