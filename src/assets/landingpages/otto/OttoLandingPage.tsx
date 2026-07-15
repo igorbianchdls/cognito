@@ -1163,7 +1163,7 @@ export function OttoLandingPage() {
       >
         <div className="overflow-hidden rounded-[28px] border border-black/10 bg-white p-2">
           <img
-            src="/BentoContasAPagar.avif"
+            src="/BentoContasAPagar.webp"
             alt="Visão de contas a pagar do Otto"
             className="block h-auto w-full rounded-[22px]"
           />
