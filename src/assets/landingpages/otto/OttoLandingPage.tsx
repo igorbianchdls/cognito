@@ -276,7 +276,10 @@ function CodexChartsFeatureCard({ description, title }: { description: string; t
       >
         <div className="landing-codex-prompt">
           <span>+</span>
-          <p>Analise margem por canal</p>
+          <p>
+            <span className="landing-codex-typed">Analise margem por canal</span>
+            <i />
+          </p>
           <strong>↑</strong>
         </div>
         <div className="landing-codex-card">
@@ -1025,23 +1028,44 @@ export function OttoLandingPage() {
 
           @keyframes landing-codex-prompt-cycle {
             0% { opacity: 0; transform: translate(-50%, 16px) scale(0.96); }
-            10%, 32% { opacity: 1; transform: translate(-50%, 0) scale(1); }
-            42%, 100% { opacity: 0; transform: translate(-50%, -18px) scale(0.98); }
+            10%, 44% { opacity: 1; transform: translate(-50%, 0) scale(1); }
+            54%, 100% { opacity: 0; transform: translate(-50%, -18px) scale(0.98); }
           }
 
           @keyframes landing-codex-card-cycle {
-            0%, 30% { opacity: 0; transform: translateY(18px) scale(0.97); }
-            42%, 100% { opacity: 1; transform: translateY(0) scale(1); }
+            0%, 44% { opacity: 0; transform: translateY(18px) scale(0.97); }
+            56%, 100% { opacity: 1; transform: translateY(0) scale(1); }
+          }
+
+          @keyframes landing-codex-type-cycle {
+            0%, 12% { max-width: 0; }
+            36%, 100% { max-width: 180px; }
+          }
+
+          @keyframes landing-codex-caret-cycle {
+            0%, 10% { opacity: 0; }
+            13%, 18% { opacity: 1; }
+            19%, 24% { opacity: 0; }
+            25%, 30% { opacity: 1; }
+            31%, 36% { opacity: 0; }
+            37%, 43% { opacity: 1; }
+            48%, 100% { opacity: 0; }
+          }
+
+          @keyframes landing-codex-send-cycle {
+            0%, 39% { background: #111111; transform: scale(1); }
+            43% { background: #52D273; color: #06130d; transform: scale(0.9); }
+            48%, 100% { background: #111111; color: #ffffff; transform: scale(1); }
           }
 
           @keyframes landing-codex-bar-cycle {
-            0%, 40% { transform: scaleY(0.12); }
-            58%, 100% { transform: scaleY(1); }
+            0%, 54% { transform: scaleY(0.12); }
+            72%, 100% { transform: scaleY(1); }
           }
 
           @keyframes landing-codex-insight-cycle {
-            0%, 58% { opacity: 0; transform: translateY(10px); }
-            72%, 100% { opacity: 1; transform: translateY(0); }
+            0%, 70% { opacity: 0; transform: translateY(10px); }
+            84%, 100% { opacity: 1; transform: translateY(0); }
           }
 
           .landing-sync-row,
@@ -1109,18 +1133,37 @@ export function OttoLandingPage() {
           }
 
           .landing-codex-prompt p {
+            align-items: center;
             color: #111827;
+            display: flex;
             font-size: 13px;
             font-weight: 560;
             line-height: 1.1;
             margin: 0;
             overflow: hidden;
-            text-overflow: ellipsis;
             white-space: nowrap;
+          }
+
+          .landing-codex-typed {
+            animation: landing-codex-type-cycle 5.8s steps(24, end) infinite;
+            display: inline-block;
+            max-width: 0;
+            overflow: hidden;
+            white-space: nowrap;
+          }
+
+          .landing-codex-prompt p i {
+            animation: landing-codex-caret-cycle 5.8s ease infinite;
+            background: #111827;
+            display: inline-block;
+            height: 15px;
+            margin-left: 2px;
+            width: 1px;
           }
 
           .landing-codex-prompt strong {
             align-items: center;
+            animation: landing-codex-send-cycle 5.8s ease-in-out infinite;
             background: #111111;
             border-radius: 999px;
             color: #ffffff;
