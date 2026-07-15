@@ -242,13 +242,13 @@ function Section({
   id: string
   layout?: 'split' | 'stacked'
   subtitle: string
-  theme?: 'light' | 'dark' | 'warm' | 'green'
+  theme?: 'light' | 'dark' | 'warm' | 'green' | 'white'
   title: string
 }) {
   const sectionRef = useRef<HTMLElement | null>(null)
   const [hasEntered, setHasEntered] = useState(false)
   const isDark = theme === 'dark' || theme === 'green'
-  const background = theme === 'dark' ? 'bg-[#050505]' : theme === 'green' ? 'bg-[#06130d]' : theme === 'warm' ? 'bg-[#f5f1eb]' : 'bg-[#f7f8fa]'
+  const background = theme === 'dark' ? 'bg-[#050505]' : theme === 'green' ? 'bg-[#06130d]' : theme === 'warm' ? 'bg-[#f5f1eb]' : theme === 'white' ? 'bg-white' : 'bg-[#f7f8fa]'
   const border = isDark ? 'border-white/10' : 'border-black/10'
   const text = isDark ? 'text-[#f8fafc]' : 'text-[#111111]'
   const muted = isDark ? 'text-white/70' : 'text-[#111111]'
@@ -1738,6 +1738,7 @@ export function OttoLandingPage() {
         id="analise-de-dados"
         layout="stacked"
         subtitle="Funcionários de IA analisam, organizam e executam rotinas financeiras dentro do fluxo da sua empresa."
+        theme="white"
         title="Recursos de IA para operar o financeiro."
       >
         <CodexChartsFeatureGallery />
