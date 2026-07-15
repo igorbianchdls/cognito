@@ -125,9 +125,9 @@ const managementBentos = [
 ]
 
 const aiFeatureItems = [
-  { description: 'Pergunte sobre caixa, margem e resultado e veja gráficos surgirem no fluxo.', title: 'Análise de dados' },
-  { description: 'Transforme dados financeiros em dashboards visuais para acompanhar a operação.', title: 'Criar dashboard' },
-  { description: 'Acione funcionários de IA para investigar, explicar e executar rotinas financeiras.', title: 'Agentes de IA' },
+  { description: 'Pergunte sobre caixa, margem e resultado e veja gráficos surgirem no fluxo.', kind: 'analysis', prompt: 'Analise margem por canal', title: 'Análise de dados' },
+  { description: 'Transforme dados financeiros em dashboards visuais para acompanhar a operação.', kind: 'dashboard', prompt: 'Crie um dashboard financeiro', title: 'Criar dashboard' },
+  { description: 'Acione funcionários de IA para investigar, explicar e executar rotinas financeiras.', kind: 'agents', prompt: 'Acione meus agentes de IA', title: 'Agentes de IA' },
 ]
 
 const CLAUDE_ICON_PATH = 'm4.714 15.956l4.718-2.648l.079-.23l-.08-.128h-.23l-.79-.048l-2.695-.073l-2.337-.097l-2.265-.122l-.57-.121l-.535-.704l.055-.353l.48-.321l.685.06l1.518.104l2.277.157l1.651.098l2.447.255h.389l.054-.158l-.133-.097l-.103-.098l-2.356-1.596l-2.55-1.688l-1.336-.972l-.722-.491L2 6.223l-.158-1.008l.656-.722l.88.06l.224.061l.893.686l1.906 1.476l2.49 1.833l.364.304l.146-.104l.018-.072l-.164-.274l-1.354-2.446l-1.445-2.49l-.644-1.032l-.17-.619a3 3 0 0 1-.103-.729L6.287.133L6.7 0l.995.134l.42.364l.619 1.415L9.735 4.14l1.555 3.03l.455.898l.243.832l.09.255h.159V9.01l.127-1.706l.237-2.095l.23-2.695l.08-.76l.376-.91l.747-.492l.583.28l.48.685l-.067.444l-.286 1.851l-.558 2.903l-.365 1.942h.213l.243-.242l.983-1.306l1.652-2.064l.728-.82l.85-.904l.547-.431h1.032l.759 1.129l-.34 1.166l-1.063 1.347l-.88 1.142l-1.263 1.7l-.79 1.36l.074.11l.188-.02l2.853-.606l1.542-.28l1.84-.315l.832.388l.09.395l-.327.807l-1.967.486l-2.307.462l-3.436.813l-.043.03l.049.061l1.548.146l.662.036h1.62l3.018.225l.79.522l.473.638l-.08.485l-1.213.62l-1.64-.389l-3.825-.91l-1.31-.329h-.183v.11l1.093 1.068l2.003 1.81l2.508 2.33l.127.578l-.321.455l-.34-.049l-2.204-1.657l-.85-.747l-1.925-1.62h-.127v.17l.443.649l2.343 3.521l.122 1.08l-.17.353l-.607.213l-.668-.122l-1.372-1.924l-1.415-2.168l-1.141-1.943l-.14.08l-.674 7.254l-.316.37l-.728.28l-.607-.461l-.322-.747l.322-1.476l.388-1.924l.316-1.53l.285-1.9l.17-.632l-.012-.042l-.14.018l-1.432 1.967l-2.18 2.945l-1.724 1.845l-.413.164l-.716-.37l.066-.662l.401-.589l2.386-3.036l1.439-1.882l.929-1.086l-.006-.158h-.055L4.138 18.56l-1.13.146l-.485-.456l.06-.746l.231-.243l1.907-1.312Z'
@@ -261,8 +261,20 @@ function BentoGallery({ items }: { items: Array<{ alt: string; description: stri
   )
 }
 
-function CodexChartsFeatureCard({ description, title }: { description: string; title: string }) {
+function CodexChartsFeatureCard({ description, kind, prompt, title }: { description: string; kind: string; prompt: string; title: string }) {
   const bars = [56, 76, 48, 88, 64, 96]
+  const dashboardCards = [
+    ['Caixa', 'R$ 418k', '+12%'],
+    ['Receber', 'R$ 202k', '8 dias'],
+    ['Pagar', 'R$ 127k', '15 dias'],
+    ['Margem', '31,2%', '+2,3 p.p.'],
+  ]
+  const agentRows = [
+    ['Classificador', 'Despesas organizadas', 'Feito'],
+    ['Conciliador', 'Bancos conferidos', 'Feito'],
+    ['Analista', 'Insights de margem', 'Ativo'],
+    ['Cobranca', 'Clientes priorizados', 'Pronto'],
+  ]
 
   return (
     <div className="overflow-hidden rounded-[30px] border border-black/10 bg-white p-2">
@@ -277,12 +289,12 @@ function CodexChartsFeatureCard({ description, title }: { description: string; t
         <div className="landing-codex-prompt">
           <span>+</span>
           <p>
-            <span className="landing-codex-typed">Analise margem por canal</span>
+            <span className="landing-codex-typed">{prompt}</span>
             <i />
           </p>
           <strong>↑</strong>
         </div>
-        <div className="landing-codex-card">
+        <div className={`landing-codex-card landing-codex-card-${kind}`}>
           <div className="landing-codex-card-header">
             <div>
               <strong>{title}</strong>
@@ -290,20 +302,51 @@ function CodexChartsFeatureCard({ description, title }: { description: string; t
             </div>
             <em>Otto</em>
           </div>
-          <div className="landing-codex-kpis">
-            <span>Margem <strong>31,2%</strong></span>
-            <span>Caixa <strong>R$ 418k</strong></span>
-            <span>Receita <strong>+18%</strong></span>
-          </div>
-          <div className="landing-codex-bars">
-            {bars.map((height, index) => (
-              <i key={`${height}-${index}`} style={{ '--bar-height': `${height}%`, animationDelay: `${index * 0.12 + 0.35}s` } as CSSProperties} />
-            ))}
-          </div>
-          <div className="landing-codex-insight">
-            <Sparkles size={13} />
-            <span>Insight: Google Ads cresce com margem acima do plano.</span>
-          </div>
+          {kind === 'dashboard' ? (
+            <>
+              <div className="landing-codex-dashboard-grid">
+                {dashboardCards.map(([label, value, meta], index) => (
+                  <span key={label} style={{ animationDelay: `${0.22 + index * 0.12}s` }}>
+                    <small>{label}</small>
+                    <strong>{value}</strong>
+                    <em>{meta}</em>
+                  </span>
+                ))}
+              </div>
+              <div className="landing-codex-dashboard-chart">
+                {bars.slice(0, 5).map((height, index) => (
+                  <i key={`${height}-${index}`} style={{ '--bar-height': `${height}%`, animationDelay: `${index * 0.12 + 0.35}s` } as CSSProperties} />
+                ))}
+              </div>
+            </>
+          ) : kind === 'agents' ? (
+            <div className="landing-codex-agents">
+              {agentRows.map(([name, task, status], index) => (
+                <div key={name} style={{ animationDelay: `${0.2 + index * 0.16}s` }}>
+                  <span><Sparkles size={12} /></span>
+                  <p><strong>{name}</strong><small>{task}</small></p>
+                  <em>{status}</em>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <>
+              <div className="landing-codex-kpis">
+                <span>Margem <strong>31,2%</strong></span>
+                <span>Caixa <strong>R$ 418k</strong></span>
+                <span>Receita <strong>+18%</strong></span>
+              </div>
+              <div className="landing-codex-bars">
+                {bars.map((height, index) => (
+                  <i key={`${height}-${index}`} style={{ '--bar-height': `${height}%`, animationDelay: `${index * 0.12 + 0.35}s` } as CSSProperties} />
+                ))}
+              </div>
+              <div className="landing-codex-insight">
+                <Sparkles size={13} />
+                <span>Insight: Google Ads cresce com margem acima do plano.</span>
+              </div>
+            </>
+          )}
         </div>
       </div>
     </div>
@@ -314,7 +357,7 @@ function CodexChartsFeatureGallery() {
   return (
     <div className="grid gap-4 md:grid-cols-3">
       {aiFeatureItems.map((item) => (
-        <CodexChartsFeatureCard key={item.title} description={item.description} title={item.title} />
+        <CodexChartsFeatureCard key={item.title} description={item.description} kind={item.kind} prompt={item.prompt} title={item.title} />
       ))}
     </div>
   )
@@ -1039,7 +1082,7 @@ export function OttoLandingPage() {
 
           @keyframes landing-codex-type-cycle {
             0%, 12% { max-width: 0; }
-            36%, 100% { max-width: 180px; }
+            36%, 100% { max-width: 230px; }
           }
 
           @keyframes landing-codex-caret-cycle {
@@ -1066,6 +1109,11 @@ export function OttoLandingPage() {
           @keyframes landing-codex-insight-cycle {
             0%, 70% { opacity: 0; transform: translateY(10px); }
             84%, 100% { opacity: 1; transform: translateY(0); }
+          }
+
+          @keyframes landing-codex-tile-cycle {
+            0%, 52% { opacity: 0; transform: translateY(10px) scale(0.96); }
+            68%, 100% { opacity: 1; transform: translateY(0) scale(1); }
           }
 
           .landing-sync-row,
@@ -1280,6 +1328,129 @@ export function OttoLandingPage() {
             font-size: 11px;
             font-weight: 650;
             line-height: 1.25;
+          }
+
+          .landing-codex-dashboard-grid {
+            display: grid;
+            gap: 8px;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+          }
+
+          .landing-codex-dashboard-grid span {
+            animation: landing-codex-tile-cycle 5.8s ease-in-out infinite both;
+            background: #f8fafc;
+            border: 1px solid #eef2f7;
+            border-radius: 13px;
+            display: grid;
+            gap: 3px;
+            padding: 9px;
+          }
+
+          .landing-codex-dashboard-grid small,
+          .landing-codex-dashboard-grid em {
+            color: #7b8491;
+            font-size: 10px;
+            font-style: normal;
+            font-weight: 620;
+            line-height: 1;
+          }
+
+          .landing-codex-dashboard-grid strong {
+            color: #111827;
+            font-size: 15px;
+            font-weight: 780;
+            letter-spacing: -0.02em;
+            line-height: 1.05;
+          }
+
+          .landing-codex-dashboard-grid em {
+            color: #16a34a;
+          }
+
+          .landing-codex-dashboard-chart {
+            align-items: end;
+            background: linear-gradient(to bottom, transparent 0 31%, #eef2f7 32% 33%, transparent 34% 64%, #eef2f7 65% 66%, transparent 67%);
+            display: grid;
+            flex: 1;
+            gap: 7px;
+            grid-template-columns: repeat(5, minmax(0, 1fr));
+            min-height: 48px;
+          }
+
+          .landing-codex-dashboard-chart i {
+            animation: landing-codex-bar-cycle 5.8s cubic-bezier(0.2, 0.8, 0.2, 1) infinite;
+            background: linear-gradient(180deg, #2563eb, #52D273);
+            border-radius: 999px 999px 4px 4px;
+            display: block;
+            height: var(--bar-height);
+            min-height: 12px;
+            transform-origin: bottom;
+          }
+
+          .landing-codex-agents {
+            display: grid;
+            gap: 8px;
+          }
+
+          .landing-codex-agents div {
+            align-items: center;
+            animation: landing-codex-tile-cycle 5.8s ease-in-out infinite both;
+            background: #f8fafc;
+            border: 1px solid #eef2f7;
+            border-radius: 14px;
+            display: grid;
+            gap: 9px;
+            grid-template-columns: 30px 1fr auto;
+            min-width: 0;
+            padding: 8px;
+          }
+
+          .landing-codex-agents div > span {
+            align-items: center;
+            background: #ecfdf3;
+            border-radius: 999px;
+            color: #168a4a;
+            display: flex;
+            height: 30px;
+            justify-content: center;
+            width: 30px;
+          }
+
+          .landing-codex-agents p {
+            display: grid;
+            gap: 2px;
+            margin: 0;
+            min-width: 0;
+          }
+
+          .landing-codex-agents p strong {
+            color: #111827;
+            font-size: 12px;
+            font-weight: 760;
+            line-height: 1;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+          }
+
+          .landing-codex-agents p small {
+            color: #7b8491;
+            font-size: 10px;
+            font-weight: 560;
+            line-height: 1.15;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+          }
+
+          .landing-codex-agents div > em {
+            background: #ecfdf3;
+            border-radius: 999px;
+            color: #168a4a;
+            font-size: 10px;
+            font-style: normal;
+            font-weight: 720;
+            padding: 5px 7px;
           }
 
           .landing-prompt-input {
