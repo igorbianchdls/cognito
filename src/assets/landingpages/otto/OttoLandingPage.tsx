@@ -148,7 +148,7 @@ function ClaudeWordmark() {
 
 function ChatGptWordmark() {
   return (
-    <img alt="ChatGPT" className="mx-1 inline-block h-[1em] w-auto translate-y-[0.08em]" src="/gptLogo.svg" />
+    <img alt="ChatGPT" className="mx-1 inline-block h-[1.2em] w-auto translate-y-[0.12em]" src="/gptLogo.svg" />
   )
 }
 
@@ -1164,9 +1164,9 @@ export function OttoLandingPage() {
           <div className="text-center">
             <h1
               className="mx-auto max-w-[760px] !text-[36px] md:!text-[54px]"
-              style={{ color: '#f8f8f8', fontFamily: 'Inter, var(--font-sf-pro), -apple-system, BlinkMacSystemFont, system-ui, sans-serif', fontWeight: 600, letterSpacing: '-0.03em', lineHeight: 0.98 }}
+              style={{ color: '#f8f8f8', fontFamily: 'Inter, var(--font-sf-pro), -apple-system, BlinkMacSystemFont, system-ui, sans-serif', fontWeight: 800, letterSpacing: '-0.03em', lineHeight: 0.98 }}
             >
-              Sistema de Gestão integrado ao <ClaudeWordmark /> e <ChatGptWordmark /> que cuida do seu financeiro.
+              Sistema de Gestão integrado ao <span className="whitespace-nowrap"><ClaudeWordmark /> e <ChatGptWordmark /></span> que cuida do seu financeiro.
             </h1>
             <p
               className="mx-auto mt-7 max-w-[580px] text-[22px] md:text-lg"
