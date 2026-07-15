@@ -148,7 +148,7 @@ function ChatGptWordmark() {
 
 function WordmarkPlus() {
   return (
-    <svg aria-hidden="true" className="mx-1 inline-block h-[0.44em] w-[0.44em] translate-y-[-0.05em]" viewBox="0 0 24 24">
+    <svg aria-hidden="true" className="mx-1 inline-block h-[0.56em] w-[0.56em] translate-y-[0.03em]" viewBox="0 0 24 24">
       <path d="M12 5V19M5 12H19" fill="none" stroke="#f8f8f8" strokeLinecap="round" strokeWidth="1.8" />
     </svg>
   )
