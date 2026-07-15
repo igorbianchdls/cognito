@@ -345,10 +345,33 @@ function CodexChartsFeatureCard({
   rows?: string[][]
   title: string
 }) {
+  const cardRef = useRef<HTMLDivElement | null>(null)
+  const [hasEntered, setHasEntered] = useState(false)
   const bars = [56, 76, 48, 88, 64, 96]
 
+  useEffect(() => {
+    const element = cardRef.current
+    if (!element || hasEntered) {
+      return
+    }
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry?.isIntersecting) {
+          setHasEntered(true)
+          observer.disconnect()
+        }
+      },
+      { rootMargin: '0px 0px -14% 0px', threshold: 0.32 },
+    )
+
+    observer.observe(element)
+
+    return () => observer.disconnect()
+  }, [hasEntered])
+
   return (
-    <div className="overflow-hidden rounded-[30px] border border-black/10 bg-white p-2">
+    <div ref={cardRef} className={`landing-codex-feature-card overflow-hidden rounded-[30px] border border-black/10 bg-white p-2 ${hasEntered ? 'landing-codex-card-in-view' : ''}`}>
       <div className="px-4 pb-4 pt-4">
         <h3 className="text-[17px] font-semibold leading-tight tracking-[-0.02em] text-[#111111]">{title}</h3>
         <p className="mt-2 text-sm font-normal leading-5 tracking-[-0.01em] text-[#9ca3af]">{description}</p>
@@ -1223,6 +1246,32 @@ export function OttoLandingPage() {
             color: #111827;
             padding: 16px;
             position: relative;
+          }
+
+          .landing-codex-feature-card .landing-codex-prompt,
+          .landing-codex-feature-card .landing-codex-typed,
+          .landing-codex-feature-card .landing-codex-prompt p i,
+          .landing-codex-feature-card .landing-codex-prompt strong,
+          .landing-codex-feature-card .landing-codex-card,
+          .landing-codex-feature-card .landing-codex-bars i,
+          .landing-codex-feature-card .landing-codex-insight,
+          .landing-codex-feature-card .landing-codex-dashboard-grid span,
+          .landing-codex-feature-card .landing-codex-dashboard-chart i,
+          .landing-codex-feature-card .landing-codex-agents div {
+            animation-play-state: paused;
+          }
+
+          .landing-codex-feature-card.landing-codex-card-in-view .landing-codex-prompt,
+          .landing-codex-feature-card.landing-codex-card-in-view .landing-codex-typed,
+          .landing-codex-feature-card.landing-codex-card-in-view .landing-codex-prompt p i,
+          .landing-codex-feature-card.landing-codex-card-in-view .landing-codex-prompt strong,
+          .landing-codex-feature-card.landing-codex-card-in-view .landing-codex-card,
+          .landing-codex-feature-card.landing-codex-card-in-view .landing-codex-bars i,
+          .landing-codex-feature-card.landing-codex-card-in-view .landing-codex-insight,
+          .landing-codex-feature-card.landing-codex-card-in-view .landing-codex-dashboard-grid span,
+          .landing-codex-feature-card.landing-codex-card-in-view .landing-codex-dashboard-chart i,
+          .landing-codex-feature-card.landing-codex-card-in-view .landing-codex-agents div {
+            animation-play-state: running;
           }
 
           .landing-codex-prompt {
