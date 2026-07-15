@@ -187,15 +187,15 @@ function Section({
   return (
     <section ref={sectionRef} id={id} className={`landing-animate-scope border-b ${border} ${background} px-0 ${sectionPadding} sm:px-8 ${hasEntered ? 'landing-in-view' : ''}`}>
       <div className={`mx-auto grid max-w-[1180px] ${sectionGap} ${layout === 'stacked' ? '' : 'lg:grid-cols-[0.9fr_1.1fr] lg:items-center'}`}>
-        <div className={`px-6 sm:px-0 ${layout === 'stacked' ? 'mx-auto max-w-[820px] text-center' : ''}`}>
+        <div className={`px-6 text-center sm:px-0 ${layout === 'stacked' ? 'mx-auto max-w-[820px]' : ''}`}>
           <h2
-            className={`${layout === 'stacked' ? 'mx-auto max-w-[900px]' : 'max-w-[620px]'} !text-[30px] md:!text-[45px] ${text}`}
+            className="mx-auto max-w-[900px] !text-[30px] md:!text-[45px]"
             style={{ color: isDark ? '#f8f8f8' : '#111111', fontFamily: 'Inter, var(--font-sf-pro), -apple-system, BlinkMacSystemFont, system-ui, sans-serif', fontWeight: 800, letterSpacing: '-0.03em', lineHeight: 0.92 }}
           >
             {renderHighlightedText(title, highlightColor)}
           </h2>
           <p
-            className={`mt-7 ${layout === 'stacked' ? 'mx-auto max-w-[760px]' : 'max-w-[560px]'} text-[22px] md:text-lg ${muted}`}
+            className="mx-auto mt-7 max-w-[760px] text-[22px] md:text-lg"
             style={{ color: isDark ? '#f8f8f8' : '#111111', fontFamily: 'Inter, var(--font-sf-pro), -apple-system, BlinkMacSystemFont, system-ui, sans-serif', fontWeight: 400, letterSpacing: '-0.01em', lineHeight: 1.6 }}
           >
             {subtitle}
@@ -1145,20 +1145,20 @@ export function OttoLandingPage() {
 
       <section className="relative overflow-hidden bg-[#050505] px-6 py-20 sm:px-8">
         <div className="mx-auto max-w-[1180px]">
-          <div>
+          <div className="text-center">
             <h1
-              className="max-w-[760px] !text-[46px] md:!text-[60px]"
+              className="mx-auto max-w-[760px] !text-[40px] md:!text-[54px]"
               style={{ color: '#f8f8f8', fontFamily: 'Inter, var(--font-sf-pro), -apple-system, BlinkMacSystemFont, system-ui, sans-serif', fontWeight: 800, letterSpacing: '-0.03em', lineHeight: 0.92 }}
             >
               {renderHighlightedText('O sistema de gestão para o seu negócio que cuida do seu financeiro com funcionários de IA.', '#52D273')}
             </h1>
             <p
-              className="mt-7 max-w-[580px] text-[22px] md:text-lg"
+              className="mx-auto mt-7 max-w-[580px] text-[22px] md:text-lg"
               style={{ color: '#f8f8f8', fontFamily: 'Inter, var(--font-sf-pro), -apple-system, BlinkMacSystemFont, system-ui, sans-serif', fontWeight: 400, letterSpacing: '-0.01em', lineHeight: 1.6 }}
             >
               Otto centraliza financeiro, fiscal, vendas, compras, estoque, documentos e relatórios em um ERP AI-first que entende seus dados e executa rotinas automaticamente.
             </p>
-            <div className="mt-8 flex flex-wrap gap-3">
+            <div className="mt-8 flex flex-wrap justify-center gap-3">
               <Link href="/integracoes" className="inline-flex min-h-11 items-center gap-2 rounded-full bg-white px-5 py-3 text-sm font-semibold text-[#050505]">
                 Conhecer o ERP
                 <ArrowRight size={18} strokeWidth={1.6} />
