@@ -1159,11 +1159,11 @@ export function OttoLandingPage() {
         </div>
       </section>
 
-      <section className="relative overflow-hidden bg-[#050505] px-6 py-20 sm:px-8">
+      <section className="relative overflow-hidden bg-[#050505] px-6 py-8 sm:px-8 sm:py-20">
         <div className="mx-auto max-w-[1180px]">
           <div className="text-center">
             <h1
-              className="mx-auto max-w-[760px] !text-[40px] md:!text-[54px]"
+              className="mx-auto max-w-[760px] !text-[36px] md:!text-[54px]"
               style={{ color: '#f8f8f8', fontFamily: 'Inter, var(--font-sf-pro), -apple-system, BlinkMacSystemFont, system-ui, sans-serif', fontWeight: 800, letterSpacing: '-0.03em', lineHeight: 0.92 }}
             >
               Sistema de Gestão integrado ao <ClaudeWordmark /> e <ChatGptWordmark /> que cuida do seu financeiro.
