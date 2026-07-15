@@ -148,7 +148,7 @@ function ClaudeWordmark() {
 
 function ChatGptWordmark() {
   return (
-    <img alt="ChatGPT" className="mx-1 inline-block h-[0.84em] w-auto translate-y-[0.05em]" src="/gptLogo.svg" />
+    <img alt="ChatGPT" className="mx-1 inline-block h-[1em] w-auto translate-y-[0.08em]" src="/gptLogo.svg" />
   )
 }
 
