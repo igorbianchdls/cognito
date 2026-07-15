@@ -113,15 +113,15 @@ const collectionSteps: ChatStep[] = [
 ]
 
 const financeBentos = [
-  { alt: 'Visão de contas a pagar do Otto', src: '/BentoContasAPagar.webp', title: 'Contas a pagar' },
-  { alt: 'Visão de contas a receber do Otto', src: '/BentoContasAReceber.webp', title: 'Contas a receber' },
-  { alt: 'Visão de DRE do Otto', src: '/BentoDRE.webp', title: 'DRE' },
+  { alt: 'Visão de contas a pagar do Otto', description: 'Fornecedores, vencimentos e aprovações em uma fila clara.', src: '/BentoContasAPagar.webp', title: 'Contas a pagar' },
+  { alt: 'Visão de contas a receber do Otto', description: 'Recebíveis, atrasos e cobranças conectados ao caixa.', src: '/BentoContasAReceber.webp', title: 'Contas a receber' },
+  { alt: 'Visão de DRE do Otto', description: 'Resultado, despesas e margem explicados com contexto.', src: '/BentoDRE.webp', title: 'DRE' },
 ]
 
 const managementBentos = [
-  { alt: 'Visão de forecasting do Otto', src: '/BentoForcasting.webp', title: 'Forecasting' },
-  { alt: 'Visão de dashboard do Otto', src: '/BentoDashboard.webp', title: 'Dashboard' },
-  { alt: 'Visão de receita do Otto', src: '/BentoRevenue.webp', title: 'Receita' },
+  { alt: 'Visão de forecasting do Otto', description: 'Projeções de receita e caixa para antecipar decisões.', src: '/BentoForcasting.webp', title: 'Forecasting' },
+  { alt: 'Visão de dashboard do Otto', description: 'Indicadores essenciais reunidos em uma visão executiva.', src: '/BentoDashboard.webp', title: 'Dashboard' },
+  { alt: 'Visão de receita do Otto', description: 'Receita por canal, cliente e período sem planilhas soltas.', src: '/BentoRevenue.webp', title: 'Receita' },
 ]
 
 const highlightPattern = /(contas a pagar|contas a receber|fluxo de caixa|notas fiscais|financeiro|fiscal|administrativo|controle|pagamentos|cobranca|cobrança|dados|bancos|cartoes|cartões|documentos|relatorios|relatórios|dashboards|dashboard|margem|impostos|IA|ERP|vendas|compras|estoque|operação|operacao|inteligente|trabalha)/gi
@@ -217,18 +217,21 @@ function IntegrationIcon({ row }: { row: SyncRow }) {
   )
 }
 
-function BentoGallery({ items }: { items: Array<{ alt: string; src: string; title: string }> }) {
+function BentoGallery({ items }: { items: Array<{ alt: string; description: string; src: string; title: string }> }) {
   return (
     <div className="-mx-1 overflow-x-auto px-1 pb-2 md:mx-0 md:overflow-visible md:px-0">
       <div className="flex snap-x snap-mandatory gap-4 pr-10 md:grid md:grid-cols-3 md:gap-4 md:pr-0">
         {items.map((item) => (
           <figure key={item.src} className="min-w-[84%] snap-start overflow-hidden rounded-[28px] border border-black/10 bg-white p-2 md:min-w-0">
+            <figcaption className="px-4 pb-4 pt-4">
+              <h3 className="text-[17px] font-semibold leading-tight tracking-[-0.02em] text-[#111111]">{item.title}</h3>
+              <p className="mt-2 text-sm font-normal leading-5 tracking-[-0.01em] text-[#9ca3af]">{item.description}</p>
+            </figcaption>
             <img
               src={item.src}
               alt={item.alt}
               className="block h-auto w-full rounded-[22px]"
             />
-            <figcaption className="px-3 pb-3 pt-4 text-sm font-semibold tracking-[-0.01em] text-[#111111]">{item.title}</figcaption>
           </figure>
         ))}
       </div>
@@ -1147,7 +1150,7 @@ export function OttoLandingPage() {
               className="max-w-[760px] !text-[46px] md:!text-[60px]"
               style={{ color: '#f8f8f8', fontFamily: 'Inter, var(--font-sf-pro), -apple-system, BlinkMacSystemFont, system-ui, sans-serif', fontWeight: 800, letterSpacing: '-0.03em', lineHeight: 0.92 }}
             >
-              {renderHighlightedText('O ERP completo que trabalha pela sua empresa.', '#52D273')}
+              {renderHighlightedText('O sistema de gestão para o seu negócio que cuida do seu financeiro com funcionários de IA.', '#52D273')}
             </h1>
             <p
               className="mt-7 max-w-[580px] text-[22px] md:text-lg"
