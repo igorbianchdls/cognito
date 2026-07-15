@@ -766,7 +766,7 @@ function PricingCard() {
   const [selectedCadence, setSelectedCadence] = useState('Trimestral')
   const selectedPlan = plans.find((plan) => plan.cadence === selectedCadence) ?? plans[1]
   const features = [
-    'Módulos de financeiro, fiscal, vendas, compras e estoque',
+    'Módulos de financeiro, fiscal, documentos e relatórios',
     'Conexões com bancos, anúncios, lojas, documentos e planilhas',
     'Automação de classificação, conciliação, cobrança e aprovação',
     'Relatórios, dashboards e trilha de auditoria em tempo real',
@@ -1153,7 +1153,7 @@ export function OttoLandingPage() {
           <nav className="hidden items-center gap-6 text-sm font-medium text-white/55 md:flex">
             <a href="#conecte">Dados</a>
             <a href="#financeiro">Financeiro</a>
-            <a href="#operacao">Operação</a>
+            <a href="#fiscal">Fiscal</a>
             <a href="#preco">Preço</a>
           </nav>
         </div>
@@ -1214,34 +1214,6 @@ export function OttoLandingPage() {
           <BentoGallery items={financeBentos} />
           <BentoGallery items={managementBentos} />
         </div>
-      </Section>
-
-      <Section
-        eyebrow="Operação"
-        id="operacao"
-        subtitle="Pedidos, fornecedores, estoque, campanhas e receita deixam de viver em sistemas separados e passam a alimentar o ERP em tempo real."
-        title="Vendas, compras e estoque conectados no mesmo fluxo."
-      >
-        <DesktopChatAutomationPanel steps={financeSteps} title="Analise vendas, compras e estoque e mostre o que precisa de ação." />
-      </Section>
-
-      <Section
-        eyebrow="Relatórios e gestão"
-        id="caixa"
-        subtitle="Dashboards, fluxo de caixa, margem e indicadores operacionais são gerados com contexto, não apenas números soltos."
-        title="Relatórios que explicam o que está acontecendo."
-      >
-        <ChatAutomationPanel steps={cashSteps} title="Gere um dashboard de gestão com caixa, margem e desempenho operacional." />
-      </Section>
-
-      <Section
-        eyebrow="Controle e aprovações"
-        id="aprovacoes"
-        subtitle="Pagamentos, compras e ações sensíveis podem exigir aprovação antes de serem executadas pela IA."
-        theme="dark"
-        title="Automação com controle humano quando importa."
-      >
-        <ChatAutomationPanel dark steps={approvalSteps} title="Revise pagamentos acima de R$ 1.000 antes de executar." />
       </Section>
 
       <Section
