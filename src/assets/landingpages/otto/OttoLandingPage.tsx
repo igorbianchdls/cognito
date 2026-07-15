@@ -279,7 +279,6 @@ function CodexChartsFeatureCard({ description, title }: { description: string; t
           durationInFrames={CODEX_CHARTS_DURATION}
           fps={30}
           loop
-          muted
           style={{ display: 'block', height: '100%', width: '100%' }}
         />
       </div>
