@@ -270,7 +270,7 @@ function CodexChartsFeatureCard({ description, title }: { description: string; t
         <h3 className="text-[17px] font-semibold leading-tight tracking-[-0.02em] text-[#111111]">{title}</h3>
         <p className="mt-2 text-sm font-normal leading-5 tracking-[-0.01em] text-[#9ca3af]">{description}</p>
       </div>
-      <div className="overflow-hidden rounded-[24px] bg-[#f7f8fa]">
+      <div className="aspect-video overflow-hidden rounded-[24px] bg-[#f7f8fa]">
         <Player
           autoPlay
           component={CodexChartsAnimation}
@@ -279,7 +279,8 @@ function CodexChartsFeatureCard({ description, title }: { description: string; t
           durationInFrames={CODEX_CHARTS_DURATION}
           fps={30}
           loop
-          style={{ aspectRatio: '16 / 9', display: 'block', width: '100%' }}
+          muted
+          style={{ display: 'block', height: '100%', width: '100%' }}
         />
       </div>
     </div>
