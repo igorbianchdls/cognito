@@ -142,19 +142,13 @@ function renderHighlightedText(text: string, color: string) {
 
 function ClaudeWordmark() {
   return (
-    <svg aria-label="Claude" className="mx-1 inline-block h-[0.86em] w-[3.35em] translate-y-[0.08em]" role="img" viewBox="0 0 176 42">
-      <path d={CLAUDE_ICON_PATH} fill="#D97757" transform="translate(2 8) scale(1.08)" />
-      <text fill="#f8f8f8" fontFamily="Georgia, 'Times New Roman', serif" fontSize="33" fontWeight="700" letterSpacing="-1.2" x="41" y="33">Claude</text>
-    </svg>
+    <img alt="Claude" className="mx-1 inline-block h-[0.82em] w-auto translate-y-[0.07em]" src="/claudeLogo.svg" />
   )
 }
 
 function ChatGptWordmark() {
   return (
-    <svg aria-label="ChatGPT" className="mx-1 inline-block h-[0.72em] w-[3.65em] translate-y-[0.02em]" role="img" viewBox="0 0 192 42">
-      <path d={OPENAI_ICON_PATH} fill="#f8f8f8" transform="translate(3 6) scale(1.25)" />
-      <text fill="#f8f8f8" fontFamily="Inter, -apple-system, BlinkMacSystemFont, system-ui, sans-serif" fontSize="27" fontWeight="760" letterSpacing="-0.7" x="44" y="31">ChatGPT</text>
-    </svg>
+    <img alt="ChatGPT" className="mx-1 inline-block h-[0.68em] w-auto translate-y-[0.02em]" src="/gptLogo.svg" />
   )
 }
 
