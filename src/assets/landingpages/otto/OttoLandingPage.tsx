@@ -1,8 +1,7 @@
 'use client'
 
-import { Player } from '@remotion/player'
 import { useEffect, useRef, useState } from 'react'
-import type { ComponentType, ReactNode } from 'react'
+import type { ComponentType, CSSProperties, ReactNode } from 'react'
 import Link from 'next/link'
 import {
   ArrowRight,
@@ -22,7 +21,6 @@ import {
 } from 'lucide-react'
 
 import { sfPro, sfProLandingStyle } from '@/assets/landingpages/otto/fonts'
-import { CODEX_CHARTS_DURATION, CodexChartsAnimation } from '@/assets/remotion/compositions/CodexChartsAnimation'
 import BlingIcon from '@/components/icons/BlingIcon'
 import ContaAzulIcon from '@/components/icons/ContaAzulIcon'
 import GoogleAdsIcon from '@/components/icons/GoogleAdsIcon'
@@ -264,6 +262,8 @@ function BentoGallery({ items }: { items: Array<{ alt: string; description: stri
 }
 
 function CodexChartsFeatureCard({ description, title }: { description: string; title: string }) {
+  const bars = [56, 76, 48, 88, 64, 96]
+
   return (
     <div className="overflow-hidden rounded-[30px] border border-black/10 bg-white p-2">
       <div className="px-4 pb-4 pt-4">
@@ -271,19 +271,37 @@ function CodexChartsFeatureCard({ description, title }: { description: string; t
         <p className="mt-2 text-sm font-normal leading-5 tracking-[-0.01em] text-[#9ca3af]">{description}</p>
       </div>
       <div
-        className="overflow-hidden rounded-[24px] bg-[#f7f8fa]"
-        style={{ aspectRatio: '16 / 9', minHeight: 168, position: 'relative' }}
+        className="landing-codex-chart overflow-hidden rounded-[24px] bg-[#f7f8fa]"
+        style={{ aspectRatio: '16 / 9', minHeight: 168 }}
       >
-        <Player
-          autoPlay
-          component={CodexChartsAnimation}
-          compositionHeight={720}
-          compositionWidth={1280}
-          durationInFrames={CODEX_CHARTS_DURATION}
-          fps={30}
-          loop
-          style={{ display: 'block', height: '100%', inset: 0, position: 'absolute', width: '100%' }}
-        />
+        <div className="landing-codex-prompt">
+          <span>+</span>
+          <p>Analise margem por canal</p>
+          <strong>↑</strong>
+        </div>
+        <div className="landing-codex-card">
+          <div className="landing-codex-card-header">
+            <div>
+              <strong>{title}</strong>
+              <span>Atualizado agora</span>
+            </div>
+            <em>Otto</em>
+          </div>
+          <div className="landing-codex-kpis">
+            <span>Margem <strong>31,2%</strong></span>
+            <span>Caixa <strong>R$ 418k</strong></span>
+            <span>Receita <strong>+18%</strong></span>
+          </div>
+          <div className="landing-codex-bars">
+            {bars.map((height, index) => (
+              <i key={`${height}-${index}`} style={{ '--bar-height': `${height}%`, animationDelay: `${index * 0.12 + 0.35}s` } as CSSProperties} />
+            ))}
+          </div>
+          <div className="landing-codex-insight">
+            <Sparkles size={13} />
+            <span>Insight: Google Ads cresce com margem acima do plano.</span>
+          </div>
+        </div>
       </div>
     </div>
   )
@@ -1005,6 +1023,27 @@ export function OttoLandingPage() {
             100% { opacity: 1; transform: scale(1); }
           }
 
+          @keyframes landing-codex-prompt-cycle {
+            0% { opacity: 0; transform: translate(-50%, 16px) scale(0.96); }
+            10%, 32% { opacity: 1; transform: translate(-50%, 0) scale(1); }
+            42%, 100% { opacity: 0; transform: translate(-50%, -18px) scale(0.98); }
+          }
+
+          @keyframes landing-codex-card-cycle {
+            0%, 30% { opacity: 0; transform: translateY(18px) scale(0.97); }
+            42%, 100% { opacity: 1; transform: translateY(0) scale(1); }
+          }
+
+          @keyframes landing-codex-bar-cycle {
+            0%, 40% { transform: scaleY(0.12); }
+            58%, 100% { transform: scaleY(1); }
+          }
+
+          @keyframes landing-codex-insight-cycle {
+            0%, 58% { opacity: 0; transform: translateY(10px); }
+            72%, 100% { opacity: 1; transform: translateY(0); }
+          }
+
           .landing-sync-row,
           .landing-hero-row {
             animation: landing-row-loop 5.8s ease both;
@@ -1035,6 +1074,169 @@ export function OttoLandingPage() {
           .landing-sync-status .landing-sync-loading,
           .landing-sync-status .landing-sync-done {
             animation-delay: inherit;
+          }
+
+          .landing-codex-chart {
+            color: #111827;
+            padding: 16px;
+            position: relative;
+          }
+
+          .landing-codex-prompt {
+            align-items: center;
+            animation: landing-codex-prompt-cycle 5.8s ease-in-out infinite;
+            background: #ffffff;
+            border: 1px solid #e5e7eb;
+            border-radius: 999px;
+            box-shadow: 0 14px 34px rgba(15, 23, 42, 0.08);
+            display: grid;
+            gap: 9px;
+            grid-template-columns: auto 1fr auto;
+            left: 50%;
+            max-width: calc(100% - 28px);
+            padding: 9px 10px 9px 14px;
+            position: absolute;
+            top: 50%;
+            transform: translate(-50%, 0);
+            width: 330px;
+            z-index: 2;
+          }
+
+          .landing-codex-prompt span {
+            color: #7b8491;
+            font-size: 18px;
+            line-height: 1;
+          }
+
+          .landing-codex-prompt p {
+            color: #111827;
+            font-size: 13px;
+            font-weight: 560;
+            line-height: 1.1;
+            margin: 0;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+          }
+
+          .landing-codex-prompt strong {
+            align-items: center;
+            background: #111111;
+            border-radius: 999px;
+            color: #ffffff;
+            display: flex;
+            font-size: 12px;
+            height: 24px;
+            justify-content: center;
+            line-height: 1;
+            width: 24px;
+          }
+
+          .landing-codex-card {
+            animation: landing-codex-card-cycle 5.8s ease-in-out infinite;
+            background: #ffffff;
+            border: 1px solid #e5e7eb;
+            border-radius: 18px;
+            box-shadow: 0 14px 36px rgba(15, 23, 42, 0.08);
+            display: grid;
+            gap: 12px;
+            height: 100%;
+            padding: 15px;
+          }
+
+          .landing-codex-card-header {
+            align-items: center;
+            display: flex;
+            justify-content: space-between;
+          }
+
+          .landing-codex-card-header strong {
+            color: #111827;
+            display: block;
+            font-size: 14px;
+            font-weight: 750;
+            letter-spacing: -0.02em;
+            line-height: 1.1;
+          }
+
+          .landing-codex-card-header span,
+          .landing-codex-card-header em {
+            color: #8b95a1;
+            display: block;
+            font-size: 11px;
+            font-style: normal;
+            font-weight: 560;
+            margin-top: 3px;
+          }
+
+          .landing-codex-card-header em {
+            background: #ecfdf3;
+            border-radius: 999px;
+            color: #168a4a;
+            margin-top: 0;
+            padding: 5px 8px;
+          }
+
+          .landing-codex-kpis {
+            display: grid;
+            gap: 7px;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+          }
+
+          .landing-codex-kpis span {
+            background: #f8fafc;
+            border: 1px solid #eef2f7;
+            border-radius: 12px;
+            color: #7b8491;
+            display: grid;
+            font-size: 10px;
+            font-weight: 560;
+            gap: 3px;
+            padding: 8px;
+          }
+
+          .landing-codex-kpis strong {
+            color: #111827;
+            font-size: 13px;
+            font-weight: 760;
+          }
+
+          .landing-codex-bars {
+            align-items: end;
+            background: linear-gradient(to bottom, transparent 0 31%, #eef2f7 32% 33%, transparent 34% 64%, #eef2f7 65% 66%, transparent 67%);
+            display: grid;
+            flex: 1;
+            gap: 8px;
+            grid-template-columns: repeat(6, minmax(0, 1fr));
+            min-height: 58px;
+          }
+
+          .landing-codex-bars i {
+            animation: landing-codex-bar-cycle 5.8s cubic-bezier(0.2, 0.8, 0.2, 1) infinite;
+            background: linear-gradient(180deg, #52D273, #0f9f70);
+            border-radius: 8px 8px 3px 3px;
+            display: block;
+            height: var(--bar-height);
+            min-height: 12px;
+            transform-origin: bottom;
+          }
+
+          .landing-codex-insight {
+            align-items: center;
+            animation: landing-codex-insight-cycle 5.8s ease-in-out infinite;
+            background: #f0fdf4;
+            border: 1px solid #bbf7d0;
+            border-radius: 12px;
+            color: #166534;
+            display: flex;
+            gap: 7px;
+            padding: 8px 10px;
+          }
+
+          .landing-codex-insight span {
+            font-size: 11px;
+            font-weight: 650;
+            line-height: 1.25;
           }
 
           .landing-prompt-input {
