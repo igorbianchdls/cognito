@@ -1156,6 +1156,21 @@ export function OttoLandingPage() {
       </Section>
 
       <Section
+        eyebrow="Contas a pagar"
+        id="contas-a-pagar"
+        subtitle="Acompanhe fornecedores, vencimentos, valores e aprovações em uma visão clara para evitar atrasos, duplicidades e pagamentos fora da política."
+        title="Contas a pagar dentro do mesmo fluxo inteligente."
+      >
+        <div className="overflow-hidden rounded-[28px] border border-black/10 bg-white p-2">
+          <img
+            src="/BentoContasAPagar.avif"
+            alt="Visão de contas a pagar do Otto"
+            className="block h-auto w-full rounded-[22px]"
+          />
+        </div>
+      </Section>
+
+      <Section
         eyebrow="Operação"
         id="operacao"
         subtitle="Pedidos, fornecedores, estoque, campanhas e receita deixam de viver em sistemas separados e passam a alimentar o ERP em tempo real."
