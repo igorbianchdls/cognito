@@ -148,7 +148,7 @@ function ClaudeWordmark() {
 
 function ChatGptWordmark() {
   return (
-    <img alt="ChatGPT" className="mx-1 inline-block h-[0.68em] w-auto translate-y-[0.02em]" src="/gptLogo.svg" />
+    <img alt="ChatGPT" className="mx-1 inline-block h-[0.78em] w-auto translate-y-[0.04em]" src="/gptLogo.svg" />
   )
 }
 
@@ -175,7 +175,7 @@ function Section({
   const border = isDark ? 'border-white/10' : 'border-black/10'
   const text = isDark ? 'text-[#f8fafc]' : 'text-[#111111]'
   const muted = isDark ? 'text-white/70' : 'text-[#111111]'
-  const sectionPadding = isDark ? 'py-28 md:py-32' : 'py-20'
+  const sectionPadding = isDark ? 'py-8 sm:py-28 md:py-32' : 'py-8 sm:py-20'
   const sectionGap = isDark ? 'gap-14 lg:gap-16' : 'gap-10'
   const highlightColor = isDark ? '#52D273' : '#42D96B'
 
@@ -1145,10 +1145,10 @@ export function OttoLandingPage() {
         `}
       </style>
 
-      <section className="relative isolate overflow-hidden border-b border-white/10 bg-[#050505] pl-0.5 pr-1 py-3 sm:px-8 sm:py-5">
+      <section className="relative isolate overflow-hidden border-b border-white/10 bg-[#050505] pl-0.5 pr-1 py-1 sm:px-8 sm:py-5">
         <div className="mx-auto flex max-w-[1180px] items-center justify-between">
           <Link href="/lp" className="flex items-center">
-            <img src="/logoOtto.svg" alt="Otto" className="h-[72px] w-auto brightness-0 invert md:h-12" />
+            <img src="/logoOtto.svg" alt="Otto" className="h-12 w-auto brightness-0 invert" />
           </Link>
           <nav className="hidden items-center gap-6 text-sm font-medium text-white/55 md:flex">
             <a href="#conecte">Dados</a>
@@ -1175,12 +1175,8 @@ export function OttoLandingPage() {
               Com Otto, você opera o financeiro da sua empresa pelo ChatGPT ou Claude: funcionários de IA classificam despesas, conciliam bancos, acompanham contas a pagar e receber, organizam documentos e geram relatórios para você decidir melhor.
             </p>
             <div className="mt-8 flex flex-wrap justify-center gap-3">
-              <Link href="/integracoes" className="inline-flex min-h-11 items-center gap-2 rounded-full bg-white px-5 py-3 text-sm font-semibold text-[#050505]">
-                Conhecer o ERP
-                <ArrowRight size={18} strokeWidth={1.6} />
-              </Link>
-              <Link href="/sign-up" className="inline-flex min-h-11 items-center gap-2 rounded-full border border-white/15 bg-white/5 px-5 py-3 text-sm font-semibold text-white">
-                Criar conta
+              <Link href="/sign-up" className="inline-flex min-h-11 items-center gap-2 rounded-full bg-[#52D273] px-6 py-3 text-sm font-semibold text-[#050505]">
+                Comprar
                 <ArrowRight size={18} strokeWidth={1.6} />
               </Link>
             </div>
