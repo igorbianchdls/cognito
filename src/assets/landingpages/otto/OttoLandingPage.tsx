@@ -1,5 +1,6 @@
 'use client'
 
+import { Player } from '@remotion/player'
 import { useEffect, useRef, useState } from 'react'
 import type { ComponentType, ReactNode } from 'react'
 import Link from 'next/link'
@@ -21,6 +22,7 @@ import {
 } from 'lucide-react'
 
 import { sfPro, sfProLandingStyle } from '@/assets/landingpages/otto/fonts'
+import { CODEX_CHARTS_DURATION, CodexChartsAnimation } from '@/assets/remotion/compositions/CodexChartsAnimation'
 import BlingIcon from '@/components/icons/BlingIcon'
 import ContaAzulIcon from '@/components/icons/ContaAzulIcon'
 import GoogleAdsIcon from '@/components/icons/GoogleAdsIcon'
@@ -250,6 +252,25 @@ function BentoGallery({ items }: { items: Array<{ alt: string; description: stri
             />
           </figure>
         ))}
+      </div>
+    </div>
+  )
+}
+
+function CodexChartsLandingPlayer() {
+  return (
+    <div className="overflow-hidden rounded-[30px] border border-black/10 bg-white p-2">
+      <div className="overflow-hidden rounded-[24px] bg-[#f7f8fa]">
+        <Player
+          autoPlay
+          component={CodexChartsAnimation}
+          compositionHeight={720}
+          compositionWidth={1280}
+          durationInFrames={CODEX_CHARTS_DURATION}
+          fps={30}
+          loop
+          style={{ aspectRatio: '16 / 9', display: 'block', width: '100%' }}
+        />
       </div>
     </div>
   )
@@ -1214,6 +1235,16 @@ export function OttoLandingPage() {
           <BentoGallery items={financeBentos} />
           <BentoGallery items={managementBentos} />
         </div>
+      </Section>
+
+      <Section
+        eyebrow="Análise de dados"
+        id="analise-de-dados"
+        layout="stacked"
+        subtitle="Faça perguntas sobre seus dados financeiros e veja gráficos, comparativos e respostas visuais serem gerados em tempo real."
+        title="Análise de dados"
+      >
+        <CodexChartsLandingPlayer />
       </Section>
 
       <Section
