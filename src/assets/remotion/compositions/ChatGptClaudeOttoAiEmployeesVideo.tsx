@@ -26,6 +26,7 @@ const FONT = IOS_REMOTION_FONT_STACK
 type ResultRow = {
   background?: string
   description: string
+  erp?: string
   icon?: ComponentType<{ className?: string }>
   initials: string
   name: string
@@ -36,7 +37,7 @@ type ResultRow = {
 
 type ActionStep = {
   result: {
-    kind?: 'list' | 'table' | 'dashboard' | 'insight' | 'employee'
+    kind?: 'list' | 'table' | 'dashboard' | 'insight' | 'employee' | 'reconciliation'
     rows?: ResultRow[]
     subtitle: string
     title: string
@@ -186,7 +187,7 @@ function CascadeResultCard({ localFrame, result }: { localFrame: number; result:
           </div>
           <span style={{ background: '#ecfdf3', border: '1px solid #bbf7d0', borderRadius: 999, color: '#0f8f51', fontSize: 18, fontWeight: 650, padding: '9px 14px' }}>{progress}%</span>
         </div>
-        {result.kind === 'dashboard' ? <DashboardResult localFrame={localFrame - 20} /> : result.kind === 'employee' ? <EmployeeResult localFrame={localFrame - 20} /> : rows.map((row, index) => <ResultRowItem key={`${row.name}-${index}`} index={index} localFrame={localFrame} row={row} />)}
+        {result.kind === 'dashboard' ? <DashboardResult localFrame={localFrame - 20} /> : result.kind === 'employee' ? <EmployeeResult localFrame={localFrame - 20} /> : result.kind === 'reconciliation' ? rows.map((row, index) => <ReconciliationResultRow key={`${row.name}-${index}`} index={index} localFrame={localFrame} row={row} />) : rows.map((row, index) => <ResultRowItem key={`${row.name}-${index}`} index={index} localFrame={localFrame} row={row} />)}
       </div>
     </div>
   )
@@ -218,6 +219,26 @@ function ResultRowItem({ index, localFrame, row }: { index: number; localFrame: 
       </div>
       <span style={{ color: '#111111', fontSize: 18, fontWeight: 540, whiteSpace: 'nowrap' }}>{row.value}</span>
       <span style={{ background: statusBackground, borderRadius: 999, color: statusColor, fontSize: 16, fontWeight: 760, padding: '8px 11px', whiteSpace: 'nowrap' }}>{complete ? row.status : 'Sincronizando'}</span>
+      <Spinner active={!complete} />
+    </div>
+  )
+}
+
+function ReconciliationResultRow({ index, localFrame, row }: { index: number; localFrame: number; row: ResultRow }) {
+  const rowIn = p(localFrame, 10 + index * 10, 24 + index * 10)
+  const complete = localFrame >= 76 + index * 10
+  const review = complete && (row.status === 'Revisar' || row.status === 'Divergencia')
+
+  return (
+    <div style={{ alignItems: 'center', display: 'grid', gap: 12, gridTemplateColumns: '42px 1fr 38px 0.78fr auto 28px', height: 72, opacity: rowIn, padding: '0 22px', transform: `translateY(${(1 - rowIn) * 18}px)` }}>
+      <BrandIconBox row={row} />
+      <div style={{ display: 'grid', gap: 5, minWidth: 0 }}>
+        <strong style={{ color: '#111111', fontSize: 20, fontWeight: 610, letterSpacing: -0.1, lineHeight: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{row.name}</strong>
+        <span style={{ color: '#8a8a8a', fontSize: 15, fontWeight: 420, lineHeight: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{row.description} · {row.value}</span>
+      </div>
+      <span style={{ alignItems: 'center', background: complete ? (review ? '#fff7ed' : '#ecfdf3') : '#f2f4f7', borderRadius: 999, color: complete ? (review ? '#c2410c' : '#166534') : '#667085', display: 'flex', fontSize: 20, fontWeight: 850, height: 38, justifyContent: 'center', width: 38 }}>{complete ? (review ? '!' : '✓') : '·'}</span>
+      <div style={{ color: '#111111', fontSize: 20, fontWeight: 520, letterSpacing: -0.1, minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{row.erp}</div>
+      <span style={{ color: review ? '#c2410c' : complete ? '#166534' : '#111111', fontSize: 19, fontWeight: 540, letterSpacing: -0.1, lineHeight: 1 }}>{complete ? row.status : 'Verificando'}</span>
       <Spinner active={!complete} />
     </div>
   )
@@ -353,15 +374,16 @@ const scenes: AgentScene[] = [
     actions: [
       {
         result: {
+          kind: 'reconciliation',
           rows: [
-            row('PIX Cliente Norte', 'NF-9031 encontrada no Otto', 'R$ 42.100', 'Conciliado', 'CN', '#0ea5e9', '#eff8ff'),
-            row('Cartao Stone', 'Lote-552 validado', 'R$ 68.900', 'Conciliado', 'ST', '#111827', '#f4f4f5'),
-            row('Boleto Rede Alpha', 'Recebimento do retainer', 'R$ 18.600', 'Conciliado', 'RA', '#1877f2', '#edf5ff'),
-            row('Shopify Payout', 'Repasse de ecommerce', 'R$ 12.780', 'Conciliado', 'SH', '#95bf47', '#f4faee', ShopifyIcon),
-            row('Tarifa bancaria', 'Sem lancamento no ERP', 'R$ 189', 'Revisar', 'BI', '#f97316', '#fff7ed'),
-            row('Boleto Mercado Sul', 'Recebimento parcial', 'R$ 8.400', 'Divergencia', 'MS', '#dc2626', '#fff1f2'),
-            row('Google Ads', 'Debito no cartao corporativo', 'R$ 4.720', 'Conciliado', 'G', '#4285f4', '#eef6ff', GoogleAdsIcon),
-            row('Fornecedor Cloud', 'Pagamento sem pedido vinculado', 'R$ 18.400', 'Revisar', 'FC', '#7c3aed', '#f5f3ff'),
+            row('PIX Cliente Norte', 'Conta Azul · recebimento', 'R$ 42.100', 'Conciliado', 'CN', '#0ea5e9', '#eff8ff', undefined, 'NF-9031'),
+            row('Cartao Stone', 'Adquirente · lote diario', 'R$ 68.900', 'Conciliado', 'ST', '#111827', '#f4f4f5', undefined, 'Lote-552'),
+            row('Boleto Rede Alpha', 'Recebimento · retainer', 'R$ 18.600', 'Conciliado', 'RA', '#1877f2', '#edf5ff', undefined, 'CR-7721'),
+            row('Shopify Payout', 'Shopify · repasse ecommerce', 'R$ 12.780', 'Conciliado', 'SH', '#95bf47', '#f4faee', ShopifyIcon, 'PV-1182'),
+            row('Tarifa bancaria', 'Banco Inter · taxa avulsa', 'R$ 189', 'Revisar', 'BI', '#f97316', '#fff7ed', undefined, 'Sem lancamento'),
+            row('Boleto Mercado Sul', 'Recebimento · parcial', 'R$ 8.400', 'Divergencia', 'MS', '#dc2626', '#fff1f2', undefined, 'CR-4419'),
+            row('Google Ads', 'Cartao corporativo · marketing', 'R$ 4.720', 'Conciliado', 'G', '#4285f4', '#eef6ff', GoogleAdsIcon, 'MKT-884'),
+            row('Fornecedor Cloud', 'Pagamento · pedido nao vinculado', 'R$ 18.400', 'Revisar', 'FC', '#7c3aed', '#f5f3ff', undefined, 'Sem pedido'),
           ],
           subtitle: 'Banco, cartao e lancamentos no Otto',
           title: 'Matching financeiro',
@@ -383,11 +405,13 @@ const scenes: AgentScene[] = [
             row('Google Ads', 'Midia paga recorrente', 'R$ 8.420', 'A vencer', 'G', '#4285f4', undefined, GoogleAdsIcon),
             row('Impostos federais', 'Vencimento do mes', 'R$ 31.200', 'Prioridade', 'TX', '#f97316'),
             row('Frete Sul', 'Despesa acima do padrao', 'R$ 6.830', 'Revisar', 'FS', '#dc2626'),
+            row('Meta Ads', 'Campanha de remarketing', 'R$ 3.460', 'A vencer', 'M', '#1877f2', undefined, MetaIcon),
+            row('Shopify', 'Plano ecommerce mensal', 'R$ 1.280', 'Agendado', 'SH', '#95bf47', undefined, ShopifyIcon),
           ],
           subtitle: 'Vencimentos, prioridades e risco',
           title: 'Contas a pagar',
         },
-        summary: 'Encontrei R$ 59.240 em vencimentos proximos. Impostos e AWS exigem prioridade.',
+        summary: 'Encontrei R$ 63.980 em vencimentos proximos. Impostos, AWS e frete exigem prioridade.',
         text: 'Vou levantar as contas a pagar primeiro.',
         tool: 'buscar_contas_a_pagar',
       },
@@ -399,6 +423,8 @@ const scenes: AgentScene[] = [
             row('Rede Alpha', 'Retainer de performance', 'R$ 18.600', 'A vencer', 'RA', '#1877f2'),
             row('Mercado Sul', 'Pagamento em atraso', 'R$ 28.900', 'Atraso', 'MS', '#dc2626'),
             row('Norte Foods', 'Projeto fiscal aprovado', 'R$ 31.400', 'Confirmado', 'NF', '#f97316'),
+            row('Canal B2B', 'Receita de campanha Google', 'R$ 54.700', 'Confirmado', 'G', '#4285f4', undefined, GoogleAdsIcon),
+            row('Loja Prime', 'Pedidos integrados Shopify', 'R$ 16.800', 'Previsto', 'SH', '#95bf47', undefined, ShopifyIcon),
           ],
           subtitle: 'Entradas previstas e atrasos',
           title: 'Contas a receber',
@@ -617,8 +643,8 @@ const scenes: AgentScene[] = [
   },
 ]
 
-function row(name: string, description: string, value: string, status: string, initials: string, tone: string, background?: string, icon?: ComponentType<{ className?: string }>): ResultRow {
-  return { background, description, icon, initials, name, status, tone, value }
+function row(name: string, description: string, value: string, status: string, initials: string, tone: string, background?: string, icon?: ComponentType<{ className?: string }>, erp?: string): ResultRow {
+  return { background, description, erp, icon, initials, name, status, tone, value }
 }
 
 export function ChatGptClaudeOttoAiEmployeesVideo() {
