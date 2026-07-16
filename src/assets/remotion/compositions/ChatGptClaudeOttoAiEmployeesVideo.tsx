@@ -188,13 +188,15 @@ function CascadeResultCard({ localFrame, result }: { localFrame: number; result:
 }
 
 function ResultRowItem({ index, localFrame, row }: { index: number; localFrame: number; row: ResultRow }) {
-  const compact = index >= 0 && localFrame >= -999 && Boolean(row.background)
+  const compact = Boolean(row.background)
   const rowIn = p(localFrame, 46 + index * 14, 68 + index * 14)
   const complete = localFrame >= 106 + index * 14
   const alert = row.status.includes('Revisar') || row.status.includes('Atraso') || row.status.includes('Risco') || row.status.includes('Pendente')
+  const statusBackground = row.background ?? (alert ? '#fff7ed' : '#ecfdf3')
+  const statusColor = row.background ? row.tone : alert ? '#c2410c' : '#166534'
 
   return (
-    <div style={{ alignItems: 'center', background: row.background ?? 'transparent', borderRadius: row.background ? 18 : 0, display: 'grid', gap: 14, gridTemplateColumns: '46px 1fr auto 28px', height: row.background ? 64 : 76, margin: row.background ? '0 16px 6px' : 0, opacity: rowIn, padding: row.background ? '0 12px' : '0 22px', transform: `translateY(${(1 - rowIn) * 18}px)` }}>
+    <div style={{ alignItems: 'center', display: 'grid', gap: 14, gridTemplateColumns: '46px 1fr auto 28px', height: compact ? 64 : 76, opacity: rowIn, padding: '0 22px', transform: `translateY(${(1 - rowIn) * 18}px)` }}>
       <div style={{ alignItems: 'center', background: row.tone, borderRadius: 16, color: '#ffffff', display: 'flex', fontSize: 16, fontWeight: 780, height: compact ? 42 : 46, justifyContent: 'center', width: compact ? 42 : 46 }}>{row.initials}</div>
       <div style={{ display: 'grid', gap: 5, minWidth: 0 }}>
         <strong style={{ color: '#111111', fontSize: compact ? 19 : 21, fontWeight: 630, letterSpacing: -0.1, lineHeight: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{row.name}</strong>
@@ -202,7 +204,7 @@ function ResultRowItem({ index, localFrame, row }: { index: number; localFrame: 
       </div>
       <div style={{ alignItems: 'end', display: 'grid', gap: 7, justifyItems: 'start' }}>
         <span style={{ color: '#111111', fontSize: compact ? 16 : 18, fontWeight: 560, whiteSpace: 'nowrap' }}>{row.value}</span>
-        <span style={{ background: alert ? '#fff7ed' : '#ecfdf3', borderRadius: 999, color: alert ? '#c2410c' : '#166534', fontSize: compact ? 13 : 15, fontWeight: 760, padding: compact ? '5px 8px' : '7px 10px', whiteSpace: 'nowrap' }}>{complete ? row.status : 'Sincronizando'}</span>
+        <span style={{ background: statusBackground, borderRadius: 999, color: statusColor, fontSize: compact ? 13 : 15, fontWeight: 760, padding: compact ? '5px 8px' : '7px 10px', whiteSpace: 'nowrap' }}>{complete ? row.status : 'Sincronizando'}</span>
       </div>
       <Spinner active={!complete} />
     </div>
