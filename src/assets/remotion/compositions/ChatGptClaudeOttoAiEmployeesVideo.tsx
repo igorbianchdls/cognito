@@ -19,7 +19,7 @@ import { IOS_REMOTION_FONT_STACK, loadSfProFonts } from '@/assets/remotion/fonts
 
 loadSfProFonts()
 
-export const OTTO_AI_EMPLOYEES_CHATGPT_CLAUDE_DURATION = 9500
+export const OTTO_AI_EMPLOYEES_CHATGPT_CLAUDE_DURATION = 10200
 
 const FONT = IOS_REMOTION_FONT_STACK
 
@@ -37,7 +37,7 @@ type ResultRow = {
 
 type ActionStep = {
   result: {
-    kind?: 'list' | 'table' | 'dashboard' | 'dashboardOutline' | 'insight' | 'employee' | 'reconciliation'
+    kind?: 'list' | 'table' | 'dashboard' | 'dashboardOutline' | 'employee' | 'invoiceOutline' | 'reconciliation'
     rows?: ResultRow[]
     subtitle: string
     title: string
@@ -191,7 +191,7 @@ function CascadeResultCard({ localFrame, result }: { localFrame: number; result:
           </div>
           <span style={{ background: '#ecfdf3', border: '1px solid #bbf7d0', borderRadius: 999, color: '#0f8f51', fontSize: 18, fontWeight: 650, padding: '9px 14px' }}>{progress}%</span>
         </div>
-        {result.kind === 'dashboard' ? <DashboardResult localFrame={localFrame - 20} /> : result.kind === 'dashboardOutline' ? <DashboardOutlineResult localFrame={localFrame - 20} /> : result.kind === 'employee' ? <EmployeeResult localFrame={localFrame - 20} /> : result.kind === 'reconciliation' ? rows.map((row, index) => <ReconciliationResultRow key={`${row.name}-${index}`} index={index} localFrame={localFrame} row={row} />) : rows.map((row, index) => <ResultRowItem key={`${row.name}-${index}`} index={index} localFrame={localFrame} row={row} />)}
+        {result.kind === 'dashboard' ? <DashboardResult localFrame={localFrame - 20} /> : result.kind === 'dashboardOutline' ? <DashboardOutlineResult localFrame={localFrame - 20} /> : result.kind === 'invoiceOutline' ? <InvoiceOutlineResult localFrame={localFrame - 20} /> : result.kind === 'employee' ? <EmployeeResult localFrame={localFrame - 20} /> : result.kind === 'reconciliation' ? rows.map((row, index) => <ReconciliationResultRow key={`${row.name}-${index}`} index={index} localFrame={localFrame} row={row} />) : rows.map((row, index) => <ResultRowItem key={`${row.name}-${index}`} index={index} localFrame={localFrame} row={row} />)}
       </div>
     </div>
   )
@@ -281,6 +281,87 @@ function DashboardOutlineResult({ localFrame }: { localFrame: number }) {
   )
 }
 
+function InvoiceOutlineResult({ localFrame }: { localFrame: number }) {
+  const outlineIn = p(localFrame, 6, 24)
+  const click = p(localFrame, 104, 122)
+  const invoiceIn = p(localFrame, 146, 176)
+  const cursorX = interpolate(p(localFrame, 74, 112), [0, 1], [350, 474], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' })
+  const cursorY = interpolate(p(localFrame, 74, 112), [0, 1], [96, 132], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' })
+
+  return (
+    <div style={{ height: 420, overflow: 'hidden', padding: '4px 22px 0', position: 'relative' }}>
+      <div style={{ opacity: outlineIn * p(localFrame, 128, 150, [1, 0]), transform: `translateY(${(1 - outlineIn) * 14}px)` }}>
+        <div style={{ alignItems: 'center', background: '#ffffff', border: '1px solid #e3e5e8', borderRadius: 20, boxShadow: '0 14px 30px rgba(15, 23, 42, 0.08)', display: 'grid', gap: 18, gridTemplateColumns: '74px 1fr', padding: 18 }}>
+          <div style={{ alignItems: 'center', background: '#f8fafc', border: '1px solid #e5e7eb', borderRadius: 18, display: 'flex', height: 74, justifyContent: 'center', transform: 'rotate(-4deg)', width: 74 }}>
+            <span style={{ color: '#111111', fontSize: 28, fontWeight: 760 }}>NF</span>
+          </div>
+          <div style={{ minWidth: 0 }}>
+            <div style={{ color: '#111111', fontSize: 22, fontWeight: 650, letterSpacing: -0.12, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>nota_fiscal_servico_2048</div>
+            <div style={{ color: '#737373', fontSize: 18, fontWeight: 430, marginTop: 6 }}>Nota fiscal · NFS-e</div>
+          </div>
+        </div>
+        <div style={{ filter: 'drop-shadow(0 8px 10px rgba(15, 23, 42, 0.2))', left: cursorX, position: 'absolute', top: cursorY, transform: `scale(${1 - click * 0.12})`, zIndex: 6 }}>
+          <svg height="42" viewBox="0 0 42 42" width="42">
+            <path d="M8 5L32 24L21 26L16 37L8 5Z" fill="#111111" />
+            <path d="M18 25L23 36" stroke="#ffffff" strokeLinecap="round" strokeWidth="3" />
+          </svg>
+        </div>
+      </div>
+      <div style={{ opacity: invoiceIn, position: 'absolute', transform: `translateY(${(1 - invoiceIn) * 18}px) scale(${0.985 + invoiceIn * 0.015})`, width: 'calc(100% - 44px)' }}>
+        <InvoiceIssuedPanel localFrame={localFrame - 156} />
+      </div>
+    </div>
+  )
+}
+
+function InvoiceIssuedPanel({ localFrame }: { localFrame: number }) {
+  const items = ['XML gerado', 'PDF gerado', 'Tomador validado', 'Impostos calculados']
+
+  return (
+    <div style={{ background: '#ffffff', border: '1px solid #e5e7eb', borderRadius: 24, boxShadow: '0 18px 42px rgba(15, 23, 42, 0.08)', overflow: 'hidden' }}>
+      <div style={{ alignItems: 'center', background: '#111827', color: '#ffffff', display: 'flex', justifyContent: 'space-between', padding: '18px 22px' }}>
+        <div>
+          <div style={{ fontSize: 22, fontWeight: 820 }}>Nota Fiscal de Serviço Eletrônica</div>
+          <div style={{ color: 'rgba(255,255,255,0.68)', fontSize: 14, fontWeight: 520, marginTop: 4 }}>Prefeitura Municipal · NFS-e</div>
+        </div>
+        <span style={{ background: '#dcfce7', borderRadius: 999, color: '#166534', fontSize: 15, fontWeight: 820, padding: '8px 12px' }}>Emitida</span>
+      </div>
+      <div style={{ display: 'grid', gap: 12, padding: 18 }}>
+        <div style={{ background: '#f8fafc', border: '1px solid #e5e7eb', borderRadius: 18, display: 'grid', gap: 11, padding: 18 }}>
+          <div style={{ alignItems: 'center', display: 'flex', justifyContent: 'space-between' }}>
+            <strong style={{ color: '#111827', fontSize: 28, fontWeight: 860 }}>NFS-e 2048</strong>
+            <span style={{ color: '#64748b', fontSize: 15, fontWeight: 700 }}>Emitida agora</span>
+          </div>
+          <div style={{ display: 'grid', gap: 10, gridTemplateColumns: '1fr 1fr' }}>
+            {[
+              ['Tomador', 'Cliente Norte Ltda'],
+              ['Serviço', 'Automação financeira'],
+              ['Valor', 'R$ 12.400,00'],
+              ['ISS', 'R$ 248,00'],
+            ].map(([label, value]) => (
+              <div key={label} style={{ background: '#ffffff', border: '1px solid #e5e7eb', borderRadius: 14, padding: 12 }}>
+                <div style={{ color: '#64748b', fontSize: 11, fontWeight: 760, textTransform: 'uppercase' }}>{label}</div>
+                <div style={{ color: '#111827', fontSize: label === 'Serviço' ? 15 : 18, fontWeight: 760, lineHeight: 1.15, marginTop: 6 }}>{value}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+        <div style={{ display: 'grid', gap: 8, gridTemplateColumns: '1fr 1fr' }}>
+          {items.map((item, index) => {
+            const itemIn = p(localFrame, 34 + index * 6, 52 + index * 6)
+            return (
+              <div key={item} style={{ alignItems: 'center', background: '#ecfdf3', border: '1px solid #bbf7d0', borderRadius: 14, color: '#166534', display: 'flex', fontSize: 15, fontWeight: 820, gap: 8, opacity: itemIn, padding: 12, transform: `translateY(${(1 - itemIn) * 10}px)` }}>
+                <span style={{ background: '#16a34a', borderRadius: 999, display: 'block', height: 9, width: 9 }} />
+                {item}
+              </div>
+            )
+          })}
+        </div>
+      </div>
+    </div>
+  )
+}
+
 function DashboardResult({ localFrame }: { localFrame: number }) {
   const kpis = [
     ['Caixa', 'R$ 418k', '#16a34a'],
@@ -347,7 +428,7 @@ function InsightBlock({ localFrame, text, value }: { localFrame: number; text: s
 function AgentChatScene({ scene, start }: { scene: AgentScene; start: number }) {
   const frame = useCurrentFrame()
   const local = Math.max(0, frame - start)
-  const duration = scene.actions.length === 1 ? 790 : scene.actions.length === 2 ? 930 : scene.actions.length === 3 ? 1120 : 2700
+  const duration = scene.actions.length === 1 ? 790 : scene.actions.length === 2 ? 930 : scene.actions.length === 3 ? 1550 : 2700
   const opacity = p(frame, start - 10, start + 14) * p(frame, start + duration - 28, start + duration, [1, 0])
   const conversationY = stagedScroll(local, scene.actions.length)
   let cursor = 150
@@ -360,7 +441,7 @@ function AgentChatScene({ scene, start }: { scene: AgentScene; start: number }) 
         {scene.actions.map((action, index) => {
           const toolStart = cursor
           const resultStart = toolStart + 58
-          const resultHold = action.result.kind === 'dashboardOutline' ? 330 : action.result.rows && action.result.rows.length >= 6 ? 210 : 166
+          const resultHold = action.result.kind === 'dashboardOutline' || action.result.kind === 'invoiceOutline' ? 330 : action.result.rows && action.result.rows.length >= 6 ? 210 : 166
           const summaryStart = resultStart + resultHold
           cursor = summaryStart + (action.summary ? 118 : 46)
           return (
@@ -525,35 +606,50 @@ const scenes: AgentScene[] = [
     actions: [
       {
         result: {
-          rows: [
-            row('Contratos', 'Anexos assinados e vencimentos', '6 docs', 'Organizado', 'CT', '#2563eb'),
-            row('Comprovantes', 'Pagamentos e recibos do mes', '9 docs', 'Organizado', 'CP', '#16a34a'),
-            row('Notas fiscais', 'PDF, XML e tomador', '12 docs', 'Organizado', 'NF', '#f97316'),
-            row('Juridico Delta', 'Contrato aguardando assinatura', '1 doc', 'Pendente', 'JD', '#7c3aed'),
-          ],
-          subtitle: 'Contratos, comprovantes, XMLs e notas',
-          title: 'Documentos encontrados',
+          kind: 'invoiceOutline',
+          subtitle: 'Nota fiscal · NFS-e',
+          title: 'nota_fiscal_servico_2048',
         },
-        summary: 'Documentos organizados por tipo. Um contrato ainda precisa assinatura.',
-        tool: 'buscar_documentos_comprovantes',
+        summary: 'Nota emitida com PDF, XML, tomador validado e impostos calculados. Agora vou acompanhar prazos e obrigacoes.',
+        tool: 'emitir_nota_fiscal',
       },
       {
         result: {
           rows: [
-            row('ISS', 'Vencimento acompanhado', '5 dias', 'Em dia', 'IS', '#16a34a'),
-            row('DAS', 'Guia mensal separada', 'R$ 8.200', 'Pronto', 'DA', '#f97316'),
+            row('ISS retido', 'Nota NFS-e 2048 vinculada', 'R$ 248', 'Calculado', 'IS', '#16a34a'),
+            row('DAS', 'Guia mensal separada', 'R$ 8.200', 'Programado', 'DA', '#f97316'),
             row('DCTFWeb', 'Declaracao a revisar', '1 item', 'Pendente', 'DF', '#dc2626'),
+            row('SPED fiscal', 'Competencia atual conferida', 'OK', 'Em dia', 'SP', '#2563eb'),
+            row('Certidoes', 'Validade monitorada', '30 dias', 'Monitorado', 'CE', '#7c3aed'),
+            row('Livro fiscal', 'Notas e XML atualizados', '12 docs', 'Atualizado', 'LF', '#111827'),
           ],
-          subtitle: 'Obrigacoes financeiras e fiscais',
-          title: 'Obrigacoes acompanhadas',
+          subtitle: 'Prazos, guias, declaracoes e registros',
+          title: 'Prazos e obrigacoes fiscais',
         },
-        summary: 'Obrigacoes foram acompanhadas. DCTFWeb ficou como pendencia para revisao.',
-        text: 'Vou verificar as obrigacoes financeiras e fiscais.',
-        tool: 'verificar_obrigacoes_fiscais',
+        summary: 'Obrigacoes acompanhadas. DCTFWeb ficou pendente para revisao antes do envio.',
+        text: 'Vou acompanhar prazos, guias e obrigacoes fiscais vinculadas a nota e ao mes atual.',
+        tool: 'acompanhar_obrigacoes_fiscais',
+      },
+      {
+        result: {
+          rows: [
+            row('ISS servicos', 'Aliquota aplicada acima da media', '+R$ 420', 'Revisar', 'IS', '#dc2626'),
+            row('Credito PIS/COFINS', 'Despesa elegivel nao aproveitada', '+R$ 1.180', 'Economia', 'PC', '#16a34a'),
+            row('Retencoes', 'Cliente Norte validado', 'OK', 'Correto', 'RT', '#2563eb'),
+            row('DAS projetado', 'Receita do mes recalculada', '-R$ 640', 'Economia', 'DA', '#f97316'),
+            row('Nota Mercado Sul', 'Dados fiscais incompletos', '1 item', 'Pendente', 'MS', '#7c3aed'),
+            row('Simples Nacional', 'Faixa efetiva monitorada', '11,8%', 'OK', 'SN', '#111827'),
+          ],
+          subtitle: 'Inconsistencias, pagamentos acima e economia',
+          title: 'Analise de impostos',
+        },
+        summary: 'Encontrei possivel economia de R$ 2.240 e um ponto de revisao no ISS antes do proximo fechamento fiscal.',
+        text: 'Agora vou analisar impostos para identificar inconsistencias, pagamentos acima do necessario e oportunidades de economia.',
+        tool: 'analisar_impostos_empresa',
       },
     ],
-    intro: 'Vou primeiro organizar documentos, comprovantes e notas; depois verifico obrigacoes.',
-    prompt: 'Organize documentos, comprovantes, notas fiscais e obrigacoes.',
+    intro: 'Vou emitir a nota fiscal do servico aprovado, depois acompanhar prazos, obrigacoes e analisar impostos em busca de inconsistencias e economia.',
+    prompt: 'Emita a nota fiscal do ultimo servico aprovado e revise impostos, prazos e obrigacoes fiscais.',
   },
   {
     actions: [
