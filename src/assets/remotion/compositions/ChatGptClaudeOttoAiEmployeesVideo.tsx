@@ -1,6 +1,10 @@
-import type { CSSProperties, ReactNode } from 'react'
+import type { ComponentType, CSSProperties, ReactNode } from 'react'
 import { AbsoluteFill, interpolate, useCurrentFrame } from 'remotion'
 
+import BlingIcon from '@/components/icons/BlingIcon'
+import GoogleAdsIcon from '@/components/icons/GoogleAdsIcon'
+import MetaIcon from '@/components/icons/MetaIcon'
+import ShopifyIcon from '@/components/icons/ShopifyIcon'
 import {
   CHATGPT_MOBILE_FONT_STACK,
   ChatGptFlowAssistantText,
@@ -22,6 +26,7 @@ const FONT = IOS_REMOTION_FONT_STACK
 type ResultRow = {
   background?: string
   description: string
+  icon?: ComponentType<{ className?: string }>
   initials: string
   name: string
   status: string
@@ -167,7 +172,7 @@ function BrandPill({ label, tone }: { label: string; tone: string }) {
 function CascadeResultCard({ localFrame, result }: { localFrame: number; result: ActionStep['result'] }) {
   const show = p(localFrame, 0, 18)
   const rows = result.rows ?? []
-  const rowHeight = rows.length > 6 ? 64 : 76
+  const rowHeight = 72
   const cardHeight = result.kind === 'dashboard' ? 552 : result.kind === 'employee' ? 500 : interpolate(p(localFrame, 34, 78), [0, 1], [116, 126 + rows.length * rowHeight], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' })
   const progress = Math.round(interpolate(p(localFrame, 18, 154), [0, 1], [18, 100], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' }))
 
@@ -187,25 +192,32 @@ function CascadeResultCard({ localFrame, result }: { localFrame: number; result:
   )
 }
 
+function BrandIconBox({ row }: { row: Pick<ResultRow, 'icon' | 'initials' | 'tone'> }) {
+  const Icon = row.icon
+
+  return (
+    <div style={{ alignItems: 'center', background: '#ffffff', border: '1px solid #e7edf0', borderRadius: 12, boxShadow: '0 8px 18px rgba(15, 23, 42, 0.06)', color: row.tone, display: 'flex', height: 42, justifyContent: 'center', overflow: 'hidden', width: 42 }}>
+      {Icon ? <Icon className="h-7 w-7" /> : <span style={{ alignItems: 'center', background: row.tone, borderRadius: 9, color: '#ffffff', display: 'flex', fontSize: 14, fontWeight: 780, height: 31, justifyContent: 'center', letterSpacing: -0.2, width: 31 }}>{row.initials}</span>}
+    </div>
+  )
+}
+
 function ResultRowItem({ index, localFrame, row }: { index: number; localFrame: number; row: ResultRow }) {
-  const compact = Boolean(row.background)
-  const rowIn = p(localFrame, 46 + index * 14, 68 + index * 14)
-  const complete = localFrame >= 106 + index * 14
-  const alert = row.status.includes('Revisar') || row.status.includes('Atraso') || row.status.includes('Risco') || row.status.includes('Pendente')
+  const rowIn = p(localFrame, 8 + index * 10, 22 + index * 10)
+  const complete = localFrame >= 62 + index * 10
+  const alert = row.status.includes('Revisar') || row.status.includes('Atraso') || row.status.includes('Risco') || row.status.includes('Pendente') || row.status.includes('Divergencia')
   const statusBackground = row.background ?? (alert ? '#fff7ed' : '#ecfdf3')
   const statusColor = row.background ? row.tone : alert ? '#c2410c' : '#166534'
 
   return (
-    <div style={{ alignItems: 'center', display: 'grid', gap: 14, gridTemplateColumns: '46px 1fr auto 28px', height: compact ? 64 : 76, opacity: rowIn, padding: '0 22px', transform: `translateY(${(1 - rowIn) * 18}px)` }}>
-      <div style={{ alignItems: 'center', background: row.tone, borderRadius: 16, color: '#ffffff', display: 'flex', fontSize: 16, fontWeight: 780, height: compact ? 42 : 46, justifyContent: 'center', width: compact ? 42 : 46 }}>{row.initials}</div>
+    <div style={{ alignItems: 'center', display: 'grid', gap: 13, gridTemplateColumns: '42px 1fr auto auto 28px', height: 72, opacity: rowIn, padding: '0 22px', transform: `translateY(${(1 - rowIn) * 18}px)` }}>
+      <BrandIconBox row={row} />
       <div style={{ display: 'grid', gap: 5, minWidth: 0 }}>
-        <strong style={{ color: '#111111', fontSize: compact ? 19 : 21, fontWeight: 630, letterSpacing: -0.1, lineHeight: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{row.name}</strong>
-        <span style={{ color: '#8a8a8a', fontSize: compact ? 14 : 15, fontWeight: 420, lineHeight: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{row.description}</span>
+        <strong style={{ color: '#111111', fontSize: 21, fontWeight: 610, letterSpacing: -0.1, lineHeight: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{row.name}</strong>
+        <span style={{ color: '#8a8a8a', fontSize: 15, fontWeight: 420, lineHeight: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{row.description}</span>
       </div>
-      <div style={{ alignItems: 'end', display: 'grid', gap: 7, justifyItems: 'start' }}>
-        <span style={{ color: '#111111', fontSize: compact ? 16 : 18, fontWeight: 560, whiteSpace: 'nowrap' }}>{row.value}</span>
-        <span style={{ background: statusBackground, borderRadius: 999, color: statusColor, fontSize: compact ? 13 : 15, fontWeight: 760, padding: compact ? '5px 8px' : '7px 10px', whiteSpace: 'nowrap' }}>{complete ? row.status : 'Sincronizando'}</span>
-      </div>
+      <span style={{ color: '#111111', fontSize: 18, fontWeight: 540, whiteSpace: 'nowrap' }}>{row.value}</span>
+      <span style={{ background: statusBackground, borderRadius: 999, color: statusColor, fontSize: 16, fontWeight: 760, padding: '8px 11px', whiteSpace: 'nowrap' }}>{complete ? row.status : 'Sincronizando'}</span>
       <Spinner active={!complete} />
     </div>
   )
@@ -318,10 +330,10 @@ const scenes: AgentScene[] = [
       {
         result: {
           rows: [
-            row('Receita Shopify', 'Pedido importado e reconhecido', 'R$ 18.400', 'Receita', 'SH', '#95bf47', '#f4faee'),
+            row('Receita Shopify', 'Pedido importado e reconhecido', 'R$ 18.400', 'Receita', 'SH', '#95bf47', '#f4faee', ShopifyIcon),
             row('Cliente Norte', 'Servico aprovado no mes', 'R$ 42.100', 'Receita', 'CN', '#0ea5e9', '#eff8ff'),
-            row('Google Ads', 'Campanha de aquisicao', 'R$ 4.720', 'Marketing', 'G', '#4285f4', '#eef6ff'),
-            row('Meta Ads', 'Midia paga para remarketing', 'R$ 3.460', 'Marketing', 'M', '#1877f2', '#edf5ff'),
+            row('Google Ads', 'Campanha de aquisicao', 'R$ 4.720', 'Marketing', 'G', '#4285f4', '#eef6ff', GoogleAdsIcon),
+            row('Meta Ads', 'Midia paga para remarketing', 'R$ 3.460', 'Marketing', 'M', '#1877f2', '#edf5ff', MetaIcon),
             row('AWS Brasil', 'Infraestrutura recorrente', 'R$ 3.980', 'Software', 'AW', '#111827', '#f4f4f5'),
             row('OpenAI API', 'Automacao e atendimento', 'R$ 1.280', 'Software', 'AI', '#10a37f', '#ecfdf3'),
             row('Impostos federais', 'Guia mensal vinculada', 'R$ 12.300', 'Impostos', 'TX', '#f97316', '#fff7ed'),
@@ -345,10 +357,10 @@ const scenes: AgentScene[] = [
             row('PIX Cliente Norte', 'NF-9031 encontrada no Otto', 'R$ 42.100', 'Conciliado', 'CN', '#0ea5e9', '#eff8ff'),
             row('Cartao Stone', 'Lote-552 validado', 'R$ 68.900', 'Conciliado', 'ST', '#111827', '#f4f4f5'),
             row('Boleto Rede Alpha', 'Recebimento do retainer', 'R$ 18.600', 'Conciliado', 'RA', '#1877f2', '#edf5ff'),
-            row('Shopify Payout', 'Repasse de ecommerce', 'R$ 12.780', 'Conciliado', 'SH', '#95bf47', '#f4faee'),
+            row('Shopify Payout', 'Repasse de ecommerce', 'R$ 12.780', 'Conciliado', 'SH', '#95bf47', '#f4faee', ShopifyIcon),
             row('Tarifa bancaria', 'Sem lancamento no ERP', 'R$ 189', 'Revisar', 'BI', '#f97316', '#fff7ed'),
             row('Boleto Mercado Sul', 'Recebimento parcial', 'R$ 8.400', 'Divergencia', 'MS', '#dc2626', '#fff1f2'),
-            row('Google Ads', 'Debito no cartao corporativo', 'R$ 4.720', 'Conciliado', 'G', '#4285f4', '#eef6ff'),
+            row('Google Ads', 'Debito no cartao corporativo', 'R$ 4.720', 'Conciliado', 'G', '#4285f4', '#eef6ff', GoogleAdsIcon),
             row('Fornecedor Cloud', 'Pagamento sem pedido vinculado', 'R$ 18.400', 'Revisar', 'FC', '#7c3aed', '#f5f3ff'),
           ],
           subtitle: 'Banco, cartao e lancamentos no Otto',
@@ -368,7 +380,7 @@ const scenes: AgentScene[] = [
           kind: 'table',
           rows: [
             row('AWS Brasil', 'Vence em 3 dias', 'R$ 12.790', 'Prioridade', 'AW', '#111827'),
-            row('Google Ads', 'Midia paga recorrente', 'R$ 8.420', 'A vencer', 'G', '#4285f4'),
+            row('Google Ads', 'Midia paga recorrente', 'R$ 8.420', 'A vencer', 'G', '#4285f4', undefined, GoogleAdsIcon),
             row('Impostos federais', 'Vencimento do mes', 'R$ 31.200', 'Prioridade', 'TX', '#f97316'),
             row('Frete Sul', 'Despesa acima do padrao', 'R$ 6.830', 'Revisar', 'FS', '#dc2626'),
           ],
@@ -399,7 +411,7 @@ const scenes: AgentScene[] = [
           rows: [
             row('Fluxo de caixa', 'Risco em 12 dias se atraso continuar', 'R$ 38k', 'Risco', 'CX', '#2563eb'),
             row('Frete Sul', 'Despesa 22% acima da media', 'R$ 6.8k', 'Economizar', 'FS', '#dc2626'),
-            row('Meta Ads', 'CAC subiu com margem menor', 'R$ 14k', 'Revisar', 'M', '#1877f2'),
+            row('Meta Ads', 'CAC subiu com margem menor', 'R$ 14k', 'Revisar', 'M', '#1877f2', undefined, MetaIcon),
           ],
           subtitle: 'Alertas de caixa e economia',
           title: 'Analise de risco',
@@ -419,7 +431,7 @@ const scenes: AgentScene[] = [
             row('Fornecedor Cloud', 'Pedido de renovacao anual', 'R$ 18.400', 'Aprovar', 'FC', '#111827'),
             row('Grafica Delta', 'Pedido de materiais', 'R$ 3.200', 'Pendente', 'GD', '#7c3aed'),
             row('Transportadora Sul', 'Frete de ecommerce', 'R$ 6.830', 'Revisar', 'TS', '#dc2626'),
-            row('Bling pedidos', 'Compras importadas', '12 pedidos', 'Sincronizado', 'BL', '#16a34a'),
+            row('Bling pedidos', 'Compras importadas', '12 pedidos', 'Sincronizado', 'BL', '#16a34a', undefined, BlingIcon),
           ],
           subtitle: 'Pedidos, fornecedores, valores e status',
           title: 'Compras e fornecedores',
@@ -605,8 +617,8 @@ const scenes: AgentScene[] = [
   },
 ]
 
-function row(name: string, description: string, value: string, status: string, initials: string, tone: string, background?: string): ResultRow {
-  return { background, description, initials, name, status, tone, value }
+function row(name: string, description: string, value: string, status: string, initials: string, tone: string, background?: string, icon?: ComponentType<{ className?: string }>): ResultRow {
+  return { background, description, icon, initials, name, status, tone, value }
 }
 
 export function ChatGptClaudeOttoAiEmployeesVideo() {
