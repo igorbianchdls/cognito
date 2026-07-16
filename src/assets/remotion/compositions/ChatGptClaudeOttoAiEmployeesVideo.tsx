@@ -509,29 +509,12 @@ const scenes: AgentScene[] = [
       },
       {
         result: {
-          rows: [
-            row('Fluxo de caixa', 'Risco em 12 dias se atraso continuar', 'R$ 38k', 'Risco', 'CX', '#2563eb'),
-            row('Frete Sul', 'Despesa 22% acima da media', 'R$ 6.8k', 'Economizar', 'FS', '#dc2626'),
-            row('Meta Ads', 'CAC subiu com margem menor', 'R$ 14k', 'Revisar', 'M', '#1877f2', undefined, MetaIcon),
-            row('Mercado Sul', 'Atraso pressiona recebimentos', 'R$ 28.9k', 'Cobrar', 'MS', '#dc2626'),
-            row('Fornecedor Cloud', 'Renovacao acima da media', 'R$ 18.4k', 'Negociar', 'FC', '#111827'),
-            row('Shopify', 'Receita cobre custo mensal', '+R$ 15.5k', 'OK', 'SH', '#95bf47', undefined, ShopifyIcon),
-          ],
-          subtitle: 'Alertas de caixa e economia',
-          title: 'Fluxo, alertas e economia',
-        },
-        summary: 'Recomendo cobrar Mercado Sul, renegociar frete e revisar campanhas de baixo retorno para proteger caixa.',
-        text: 'Vou cruzar tudo para encontrar atrasos, risco de caixa e oportunidades de economia.',
-        tool: 'analisar_fluxo_caixa_operacao',
-      },
-      {
-        result: {
           kind: 'dashboardOutline',
           subtitle: 'Dashboard · Tempo real',
           title: 'dashboard_operacao_financeira',
         },
-        summary: 'Dashboard criado com contas, vendas, compras, cobrancas, fluxo de caixa e alertas operacionais.',
-        text: 'Vou criar um dashboard para acompanhar essa operacao em tempo real.',
+        summary: 'Dashboard criado com contas, vendas, compras, cobrancas, fluxo de caixa, vencimentos, atrasos e pontos de economia.',
+        text: 'Com pagar, receber, vendas e compras revisados, vou criar um dashboard para acompanhar caixa, atrasos e gastos fora do padrao.',
         tool: 'criar_dashboard_operacao_financeira',
       },
     ],
