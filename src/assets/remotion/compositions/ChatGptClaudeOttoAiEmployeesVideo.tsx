@@ -15,7 +15,7 @@ import { IOS_REMOTION_FONT_STACK, loadSfProFonts } from '@/assets/remotion/fonts
 
 loadSfProFonts()
 
-export const OTTO_AI_EMPLOYEES_CHATGPT_CLAUDE_DURATION = 3380
+export const OTTO_AI_EMPLOYEES_CHATGPT_CLAUDE_DURATION = 10680
 
 const FONT = IOS_REMOTION_FONT_STACK
 
@@ -61,16 +61,41 @@ function fadeOnlyStyle(frame: number, start: number): CSSProperties {
   }
 }
 
-function stagedScroll(frame: number, duration: number) {
-  const first = duration * 0.26
-  const second = duration * 0.48
-  const third = duration * 0.68
-  const last = duration * 0.88
-  return interpolate(frame, [0, first, second, third, last], [0, 0, -410, -860, -1240], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' })
+function stagedScroll(frame: number, actionCount: number) {
+  if (actionCount <= 1) {
+    return interpolate(frame, [0, 330, 520, 700], [0, 0, -560, -1040], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' })
+  }
+
+  if (actionCount === 2) {
+    return interpolate(frame, [0, 340, 580, 820, 1040], [0, 0, -520, -1040, -1540], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' })
+  }
+
+  return interpolate(frame, [0, 340, 600, 860, 1120, 1320], [0, 0, -520, -1040, -1560, -2060], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' })
 }
 
 function sequence(frame: number, start: number, fromY = 20) {
   return chatGptSequenceStyle(frame, start, fromY)
+}
+
+function Spinner({ active }: { active: boolean }) {
+  const frame = useCurrentFrame()
+  if (!active) {
+    return <span style={{ background: '#12b76a', borderRadius: 999, display: 'block', height: 11, width: 11 }} />
+  }
+
+  return (
+    <span
+      style={{
+        border: '3px solid #d7d7d7',
+        borderRadius: 999,
+        borderRightColor: '#111111',
+        display: 'block',
+        height: 24,
+        transform: `rotate(${frame * 20}deg)`,
+        width: 24,
+      }}
+    />
+  )
 }
 
 function PromptInputScene({ frame, prompt, start }: { frame: number; prompt: string; start: number }) {
@@ -141,8 +166,8 @@ function BrandPill({ label, tone }: { label: string; tone: string }) {
 function CascadeResultCard({ localFrame, result }: { localFrame: number; result: ActionStep['result'] }) {
   const show = p(localFrame, 0, 18)
   const rows = result.rows ?? []
-  const cardHeight = result.kind === 'dashboard' ? 552 : result.kind === 'employee' ? 500 : interpolate(p(localFrame, 24, 54), [0, 1], [116, 126 + rows.length * 74], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' })
-  const progress = Math.round(interpolate(p(localFrame, 12, 104), [0, 1], [18, 100], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' }))
+  const cardHeight = result.kind === 'dashboard' ? 552 : result.kind === 'employee' ? 500 : interpolate(p(localFrame, 34, 78), [0, 1], [116, 126 + rows.length * 76], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' })
+  const progress = Math.round(interpolate(p(localFrame, 18, 154), [0, 1], [18, 100], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' }))
 
   return (
     <div style={{ opacity: show, transform: `translateY(${(1 - show) * 18}px) scale(${0.985 + show * 0.015})` }}>
@@ -161,19 +186,22 @@ function CascadeResultCard({ localFrame, result }: { localFrame: number; result:
 }
 
 function ResultRowItem({ index, localFrame, row }: { index: number; localFrame: number; row: ResultRow }) {
-  const rowIn = p(localFrame, 34 + index * 9, 50 + index * 9)
-  const complete = localFrame >= 78 + index * 10
+  const rowIn = p(localFrame, 46 + index * 14, 68 + index * 14)
+  const complete = localFrame >= 106 + index * 14
   const alert = row.status.includes('Revisar') || row.status.includes('Atraso') || row.status.includes('Risco') || row.status.includes('Pendente')
 
   return (
-    <div style={{ alignItems: 'center', display: 'grid', gap: 14, gridTemplateColumns: '46px 1fr auto 28px', height: 74, opacity: rowIn, padding: '0 22px', transform: `translateY(${(1 - rowIn) * 18}px)` }}>
+    <div style={{ alignItems: 'center', display: 'grid', gap: 14, gridTemplateColumns: '46px 1fr auto 28px', height: 76, opacity: rowIn, padding: '0 22px', transform: `translateY(${(1 - rowIn) * 18}px)` }}>
       <div style={{ alignItems: 'center', background: row.tone, borderRadius: 16, color: '#ffffff', display: 'flex', fontSize: 16, fontWeight: 780, height: 46, justifyContent: 'center', width: 46 }}>{row.initials}</div>
       <div style={{ display: 'grid', gap: 5, minWidth: 0 }}>
         <strong style={{ color: '#111111', fontSize: 21, fontWeight: 630, letterSpacing: -0.1, lineHeight: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{row.name}</strong>
         <span style={{ color: '#8a8a8a', fontSize: 15, fontWeight: 420, lineHeight: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{row.description}</span>
       </div>
-      <span style={{ color: '#111111', fontSize: 18, fontWeight: 560, whiteSpace: 'nowrap' }}>{row.value}</span>
-      <span style={{ background: alert ? '#fff7ed' : '#ecfdf3', borderRadius: 999, color: alert ? '#c2410c' : '#166534', fontSize: 15, fontWeight: 760, gridColumn: '3 / 5', justifySelf: 'start', marginTop: -1, padding: '7px 10px' }}>{complete ? row.status : 'Processando'}</span>
+      <div style={{ alignItems: 'end', display: 'grid', gap: 7, justifyItems: 'start' }}>
+        <span style={{ color: '#111111', fontSize: 18, fontWeight: 560, whiteSpace: 'nowrap' }}>{row.value}</span>
+        <span style={{ background: alert ? '#fff7ed' : '#ecfdf3', borderRadius: 999, color: alert ? '#c2410c' : '#166534', fontSize: 15, fontWeight: 760, padding: '7px 10px', whiteSpace: 'nowrap' }}>{complete ? row.status : 'Sincronizando'}</span>
+      </div>
+      <Spinner active={!complete} />
     </div>
   )
 }
@@ -244,10 +272,10 @@ function InsightBlock({ localFrame, text, value }: { localFrame: number; text: s
 function AgentChatScene({ scene, start }: { scene: AgentScene; start: number }) {
   const frame = useCurrentFrame()
   const local = Math.max(0, frame - start)
-  const duration = 320
+  const duration = scene.actions.length === 1 ? 790 : scene.actions.length === 2 ? 930 : 1120
   const opacity = p(frame, start - 10, start + 14) * p(frame, start + duration - 28, start + duration, [1, 0])
-  const conversationY = stagedScroll(local, duration)
-  let cursor = 122
+  const conversationY = stagedScroll(local, scene.actions.length)
+  let cursor = 150
 
   return (
     <div style={{ inset: 0, opacity, position: 'absolute' }}>
@@ -256,9 +284,9 @@ function AgentChatScene({ scene, start }: { scene: AgentScene; start: number }) 
         <ChatGptFlowAssistantText style={sequence(local, 62)}>{scene.intro}</ChatGptFlowAssistantText>
         {scene.actions.map((action, index) => {
           const toolStart = cursor
-          const resultStart = toolStart + 42
-          const summaryStart = resultStart + 126
-          cursor = summaryStart + (action.summary ? 58 : 26)
+          const resultStart = toolStart + 58
+          const summaryStart = resultStart + 166
+          cursor = summaryStart + (action.summary ? 118 : 46)
           return (
             <FragmentBlock key={`${action.tool}-${index}`}>
               {action.text ? <ChatGptFlowAssistantText showHeader={false} style={sequence(local, toolStart - 36)}>{action.text}</ChatGptFlowAssistantText> : null}
@@ -570,7 +598,7 @@ function row(name: string, description: string, value: string, status: string, i
 
 export function ChatGptClaudeOttoAiEmployeesVideo() {
   const frame = useCurrentFrame()
-  const starts = [300, 620, 940, 1260, 1580, 1900, 2220, 2540, 2860]
+  const starts = [300, 1120, 1940, 3100, 4400, 5700, 7000, 8200, 9400]
 
   return (
     <AbsoluteFill style={{ background: '#ffffff', color: '#111111', fontFamily: FONT, overflow: 'hidden' }}>
