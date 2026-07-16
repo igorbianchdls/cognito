@@ -19,7 +19,7 @@ import { IOS_REMOTION_FONT_STACK, loadSfProFonts } from '@/assets/remotion/fonts
 
 loadSfProFonts()
 
-export const OTTO_AI_EMPLOYEES_CHATGPT_CLAUDE_DURATION = 10680
+export const OTTO_AI_EMPLOYEES_CHATGPT_CLAUDE_DURATION = 9500
 
 const FONT = IOS_REMOTION_FONT_STACK
 
@@ -37,7 +37,7 @@ type ResultRow = {
 
 type ActionStep = {
   result: {
-    kind?: 'list' | 'table' | 'dashboard' | 'insight' | 'employee' | 'reconciliation'
+    kind?: 'list' | 'table' | 'dashboard' | 'dashboardOutline' | 'insight' | 'employee' | 'reconciliation'
     rows?: ResultRow[]
     subtitle: string
     title: string
@@ -77,7 +77,11 @@ function stagedScroll(frame: number, actionCount: number) {
     return interpolate(frame, [0, 340, 580, 820, 1040], [0, 0, -520, -1040, -1540], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' })
   }
 
-  return interpolate(frame, [0, 340, 600, 860, 1120, 1320], [0, 0, -520, -1040, -1560, -2060], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' })
+  if (actionCount <= 3) {
+    return interpolate(frame, [0, 340, 600, 860, 1120, 1320], [0, 0, -520, -1040, -1560, -2060], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' })
+  }
+
+  return interpolate(frame, [0, 360, 660, 960, 1260, 1560, 1860, 2160, 2460], [0, 0, -520, -1040, -1560, -2080, -2600, -3120, -3640], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' })
 }
 
 function sequence(frame: number, start: number, fromY = 20) {
@@ -174,7 +178,7 @@ function CascadeResultCard({ localFrame, result }: { localFrame: number; result:
   const show = p(localFrame, 0, 18)
   const rows = result.rows ?? []
   const rowHeight = 72
-  const cardHeight = result.kind === 'dashboard' ? 552 : result.kind === 'employee' ? 500 : interpolate(p(localFrame, 34, 78), [0, 1], [116, 126 + rows.length * rowHeight], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' })
+  const cardHeight = result.kind === 'dashboard' || result.kind === 'dashboardOutline' ? 552 : result.kind === 'employee' ? 500 : interpolate(p(localFrame, 34, 78), [0, 1], [116, 126 + rows.length * rowHeight], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' })
   const progress = Math.round(interpolate(p(localFrame, 18, 154), [0, 1], [18, 100], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' }))
 
   return (
@@ -187,7 +191,7 @@ function CascadeResultCard({ localFrame, result }: { localFrame: number; result:
           </div>
           <span style={{ background: '#ecfdf3', border: '1px solid #bbf7d0', borderRadius: 999, color: '#0f8f51', fontSize: 18, fontWeight: 650, padding: '9px 14px' }}>{progress}%</span>
         </div>
-        {result.kind === 'dashboard' ? <DashboardResult localFrame={localFrame - 20} /> : result.kind === 'employee' ? <EmployeeResult localFrame={localFrame - 20} /> : result.kind === 'reconciliation' ? rows.map((row, index) => <ReconciliationResultRow key={`${row.name}-${index}`} index={index} localFrame={localFrame} row={row} />) : rows.map((row, index) => <ResultRowItem key={`${row.name}-${index}`} index={index} localFrame={localFrame} row={row} />)}
+        {result.kind === 'dashboard' ? <DashboardResult localFrame={localFrame - 20} /> : result.kind === 'dashboardOutline' ? <DashboardOutlineResult localFrame={localFrame - 20} /> : result.kind === 'employee' ? <EmployeeResult localFrame={localFrame - 20} /> : result.kind === 'reconciliation' ? rows.map((row, index) => <ReconciliationResultRow key={`${row.name}-${index}`} index={index} localFrame={localFrame} row={row} />) : rows.map((row, index) => <ResultRowItem key={`${row.name}-${index}`} index={index} localFrame={localFrame} row={row} />)}
       </div>
     </div>
   )
@@ -240,6 +244,39 @@ function ReconciliationResultRow({ index, localFrame, row }: { index: number; lo
       <div style={{ color: '#111111', fontSize: 20, fontWeight: 520, letterSpacing: -0.1, minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{row.erp}</div>
       <span style={{ color: review ? '#c2410c' : complete ? '#166534' : '#111111', fontSize: 19, fontWeight: 540, letterSpacing: -0.1, lineHeight: 1 }}>{complete ? row.status : 'Verificando'}</span>
       <Spinner active={!complete} />
+    </div>
+  )
+}
+
+function DashboardOutlineResult({ localFrame }: { localFrame: number }) {
+  const outlineIn = p(localFrame, 6, 24)
+  const click = p(localFrame, 104, 122)
+  const dashboardIn = p(localFrame, 144, 174)
+  const cursorX = interpolate(p(localFrame, 74, 112), [0, 1], [360, 478], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' })
+  const cursorY = interpolate(p(localFrame, 74, 112), [0, 1], [98, 134], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' })
+
+  return (
+    <div style={{ height: 420, overflow: 'hidden', padding: '4px 22px 0', position: 'relative' }}>
+      <div style={{ opacity: outlineIn * p(localFrame, 126, 150, [1, 0]), transform: `translateY(${(1 - outlineIn) * 14}px)` }}>
+        <div style={{ alignItems: 'center', background: '#ffffff', border: '1px solid #e3e5e8', borderRadius: 20, boxShadow: '0 14px 30px rgba(15, 23, 42, 0.08)', display: 'grid', gap: 18, gridTemplateColumns: '74px 1fr', padding: 18 }}>
+          <div style={{ alignItems: 'center', background: '#f8fafc', border: '1px solid #e5e7eb', borderRadius: 18, display: 'flex', height: 74, justifyContent: 'center', transform: 'rotate(-4deg)', width: 74 }}>
+            <span style={{ color: '#111111', fontSize: 28, fontWeight: 760 }}>▦</span>
+          </div>
+          <div style={{ minWidth: 0 }}>
+            <div style={{ color: '#111111', fontSize: 22, fontWeight: 650, letterSpacing: -0.12, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>dashboard_operacao_financeira</div>
+            <div style={{ color: '#737373', fontSize: 18, fontWeight: 430, marginTop: 6 }}>Dashboard · Tempo real</div>
+          </div>
+        </div>
+        <div style={{ filter: 'drop-shadow(0 8px 10px rgba(15, 23, 42, 0.2))', left: cursorX, position: 'absolute', top: cursorY, transform: `scale(${1 - click * 0.12})`, zIndex: 6 }}>
+          <svg height="42" viewBox="0 0 42 42" width="42">
+            <path d="M8 5L32 24L21 26L16 37L8 5Z" fill="#111111" />
+            <path d="M18 25L23 36" stroke="#ffffff" strokeLinecap="round" strokeWidth="3" />
+          </svg>
+        </div>
+      </div>
+      <div style={{ opacity: dashboardIn, position: 'absolute', transform: `translateY(${(1 - dashboardIn) * 18}px) scale(${0.985 + dashboardIn * 0.015})`, width: 'calc(100% - 44px)' }}>
+        <DashboardResult localFrame={localFrame - 156} />
+      </div>
     </div>
   )
 }
@@ -310,7 +347,7 @@ function InsightBlock({ localFrame, text, value }: { localFrame: number; text: s
 function AgentChatScene({ scene, start }: { scene: AgentScene; start: number }) {
   const frame = useCurrentFrame()
   const local = Math.max(0, frame - start)
-  const duration = scene.actions.length === 1 ? 790 : scene.actions.length === 2 ? 930 : 1120
+  const duration = scene.actions.length === 1 ? 790 : scene.actions.length === 2 ? 930 : scene.actions.length === 3 ? 1120 : 2700
   const opacity = p(frame, start - 10, start + 14) * p(frame, start + duration - 28, start + duration, [1, 0])
   const conversationY = stagedScroll(local, scene.actions.length)
   let cursor = 150
@@ -323,7 +360,8 @@ function AgentChatScene({ scene, start }: { scene: AgentScene; start: number }) 
         {scene.actions.map((action, index) => {
           const toolStart = cursor
           const resultStart = toolStart + 58
-          const summaryStart = resultStart + 166
+          const resultHold = action.result.kind === 'dashboardOutline' ? 330 : action.result.rows && action.result.rows.length >= 6 ? 210 : 166
+          const summaryStart = resultStart + resultHold
           cursor = summaryStart + (action.summary ? 118 : 46)
           return (
             <FragmentBlock key={`${action.tool}-${index}`}>
@@ -430,7 +468,44 @@ const scenes: AgentScene[] = [
           title: 'Contas a receber',
         },
         summary: 'As entradas cobrem os vencimentos, mas Mercado Sul pressiona o caixa se atrasar mais 7 dias.',
+        text: 'Agora vou puxar recebimentos, vendas faturadas e atrasos no contas a receber.',
         tool: 'buscar_contas_a_receber',
+      },
+      {
+        result: {
+          kind: 'table',
+          rows: [
+            row('Proposta Cliente Norte', 'Servico aprovado', 'R$ 12.400', 'Registrada', 'CN', '#0ea5e9'),
+            row('Venda Mercado Sul', 'Pedido importado', 'R$ 28.900', 'Cobranca pendente', 'MS', '#dc2626'),
+            row('Rede Alpha', 'Retainer renovado', 'R$ 18.600', 'Registrada', 'RA', '#1877f2'),
+            row('Loja Prime', 'Pedido ecommerce Shopify', 'R$ 16.800', 'Faturada', 'SH', '#95bf47', undefined, ShopifyIcon),
+            row('Canal B2B', 'Contrato de performance', 'R$ 54.700', 'Faturada', 'G', '#4285f4', undefined, GoogleAdsIcon),
+            row('Norte Foods', 'Projeto fiscal aprovado', 'R$ 31.400', 'Registrada', 'NF', '#f97316'),
+          ],
+          subtitle: 'Propostas, vendas, clientes e cobrancas',
+          title: 'Vendas e propostas',
+        },
+        summary: 'Vendas e propostas foram registradas. Mercado Sul precisa cobranca e Loja Prime ja entrou no faturamento.',
+        text: 'Vou puxar propostas, vendas e cobrancas vinculadas aos clientes.',
+        tool: 'buscar_vendas_propostas',
+      },
+      {
+        result: {
+          kind: 'table',
+          rows: [
+            row('Fornecedor Cloud', 'Pedido de renovacao anual', 'R$ 18.400', 'Aprovar', 'FC', '#111827'),
+            row('Grafica Delta', 'Pedido de materiais', 'R$ 3.200', 'Pendente', 'GD', '#7c3aed'),
+            row('Transportadora Sul', 'Frete de ecommerce', 'R$ 6.830', 'Revisar', 'TS', '#dc2626'),
+            row('Bling pedidos', 'Compras importadas', '12 pedidos', 'Sincronizado', 'BL', '#16a34a', undefined, BlingIcon),
+            row('Shopify Apps', 'Apps e checkout da loja', 'R$ 1.280', 'Agendado', 'SH', '#95bf47', undefined, ShopifyIcon),
+            row('Impostos federais', 'Guia mensal vinculada', 'R$ 31.200', 'Prioridade', 'TX', '#f97316'),
+          ],
+          subtitle: 'Compras, fornecedores, pedidos e documentos',
+          title: 'Compras e fornecedores',
+        },
+        summary: 'Compras e fornecedores foram organizados. Frete Sul saiu do padrao e Fornecedor Cloud exige aprovacao.',
+        text: 'Agora vou revisar compras, fornecedores, pedidos e documentos relacionados.',
+        tool: 'buscar_compras_fornecedores',
       },
       {
         result: {
@@ -438,97 +513,30 @@ const scenes: AgentScene[] = [
             row('Fluxo de caixa', 'Risco em 12 dias se atraso continuar', 'R$ 38k', 'Risco', 'CX', '#2563eb'),
             row('Frete Sul', 'Despesa 22% acima da media', 'R$ 6.8k', 'Economizar', 'FS', '#dc2626'),
             row('Meta Ads', 'CAC subiu com margem menor', 'R$ 14k', 'Revisar', 'M', '#1877f2', undefined, MetaIcon),
+            row('Mercado Sul', 'Atraso pressiona recebimentos', 'R$ 28.9k', 'Cobrar', 'MS', '#dc2626'),
+            row('Fornecedor Cloud', 'Renovacao acima da media', 'R$ 18.4k', 'Negociar', 'FC', '#111827'),
+            row('Shopify', 'Receita cobre custo mensal', '+R$ 15.5k', 'OK', 'SH', '#95bf47', undefined, ShopifyIcon),
           ],
           subtitle: 'Alertas de caixa e economia',
-          title: 'Analise de risco',
+          title: 'Fluxo, alertas e economia',
         },
-        summary: 'Recomendo renegociar frete e pausar campanhas de baixo retorno para proteger caixa e margem.',
-        tool: 'analisar_fluxo_caixa',
+        summary: 'Recomendo cobrar Mercado Sul, renegociar frete e revisar campanhas de baixo retorno para proteger caixa.',
+        text: 'Vou cruzar tudo para encontrar atrasos, risco de caixa e oportunidades de economia.',
+        tool: 'analisar_fluxo_caixa_operacao',
+      },
+      {
+        result: {
+          kind: 'dashboardOutline',
+          subtitle: 'Dashboard · Tempo real',
+          title: 'dashboard_operacao_financeira',
+        },
+        summary: 'Dashboard criado com contas, vendas, compras, cobrancas, fluxo de caixa e alertas operacionais.',
+        text: 'Vou criar um dashboard para acompanhar essa operacao em tempo real.',
+        tool: 'criar_dashboard_operacao_financeira',
       },
     ],
-    intro: 'Vou seguir em etapas: contas a pagar, depois contas a receber, e por fim fluxo de caixa e economia.',
-    prompt: 'Acompanhe contas, fluxo de caixa e encontre gastos fora do padrao.',
-  },
-  {
-    actions: [
-      {
-        result: {
-          rows: [
-            row('Fornecedor Cloud', 'Pedido de renovacao anual', 'R$ 18.400', 'Aprovar', 'FC', '#111827'),
-            row('Grafica Delta', 'Pedido de materiais', 'R$ 3.200', 'Pendente', 'GD', '#7c3aed'),
-            row('Transportadora Sul', 'Frete de ecommerce', 'R$ 6.830', 'Revisar', 'TS', '#dc2626'),
-            row('Bling pedidos', 'Compras importadas', '12 pedidos', 'Sincronizado', 'BL', '#16a34a', undefined, BlingIcon),
-          ],
-          subtitle: 'Pedidos, fornecedores, valores e status',
-          title: 'Compras e fornecedores',
-        },
-        summary: 'Pedidos e fornecedores foram organizados. Separei o frete para revisao por sair do padrao.',
-        text: 'Vou buscar pedidos abertos e fornecedores vinculados.',
-        tool: 'buscar_compras_pedidos',
-      },
-      {
-        result: {
-          rows: [
-            row('NF Fornecedor Cloud', 'Nota e contrato vinculados', 'PDF/XML', 'Organizado', 'NF', '#f97316'),
-            row('Pedido Grafica Delta', 'Cotacao e aprovacao anexadas', '2 docs', 'Organizado', 'GD', '#7c3aed'),
-            row('Frete Sul', 'Comprovante sem centro de custo', '1 doc', 'Pendente', 'FS', '#dc2626'),
-          ],
-          subtitle: 'NF, pedido, contrato e comprovante',
-          title: 'Documentos de compras',
-        },
-        summary: 'Documentos de compras foram vinculados aos pedidos. Uma pendencia ficou aberta para aprovacao.',
-        tool: 'organizar_documentos_compras',
-      },
-    ],
-    intro: 'Vou organizar compras em duas etapas: primeiro pedidos e fornecedores, depois documentos e pendencias.',
-    prompt: 'Organize compras, fornecedores, pedidos e documentos relacionados.',
-  },
-  {
-    actions: [
-      {
-        result: {
-          rows: [
-            row('Proposta Cliente Norte', 'Servico aprovado', 'R$ 12.400', 'Registrada', 'CN', '#0ea5e9'),
-            row('Venda Mercado Sul', 'Pedido importado', 'R$ 28.900', 'Registrada', 'MS', '#dc2626'),
-            row('Rede Alpha', 'Retainer renovado', 'R$ 18.600', 'Registrada', 'RA', '#1877f2'),
-          ],
-          subtitle: 'Propostas, vendas e clientes',
-          title: 'Vendas registradas',
-        },
-        summary: 'Vendas e propostas foram registradas. Agora vou emitir as notas correspondentes.',
-        tool: 'registrar_propostas_vendas',
-      },
-      {
-        result: {
-          rows: [
-            row('NFS-e 2048', 'Cliente Norte Ltda', 'R$ 12.400', 'Emitida', 'NF', '#16a34a'),
-            row('NFS-e 2049', 'Rede Alpha', 'R$ 18.600', 'Emitida', 'NF', '#16a34a'),
-            row('Mercado Sul', 'Aguardando dados fiscais', 'R$ 28.900', 'Pendente', 'MS', '#dc2626'),
-          ],
-          subtitle: 'Notas fiscais correspondentes',
-          title: 'Notas emitidas',
-        },
-        summary: 'Duas notas foram emitidas. Mercado Sul ficou pendente por dados fiscais incompletos.',
-        text: 'Vou emitir as notas fiscais correspondentes.',
-        tool: 'emitir_notas_fiscais',
-      },
-      {
-        result: {
-          rows: [
-            row('Cliente Norte', 'Boleto e PIX enviados', 'R$ 12.400', 'Enviado', 'CN', '#0ea5e9'),
-            row('Rede Alpha', 'Cobranca recorrente enviada', 'R$ 18.600', 'Enviado', 'RA', '#1877f2'),
-            row('Mercado Sul', 'Aguardando nota fiscal', 'R$ 28.900', 'Pendente', 'MS', '#dc2626'),
-          ],
-          subtitle: 'Cobrancas para clientes',
-          title: 'Cobrancas enviadas',
-        },
-        summary: 'Cobrancas enviadas e registradas no historico financeiro dos clientes.',
-        text: 'Vou enviar as cobrancas aos clientes.',
-        tool: 'enviar_cobrancas_clientes',
-      },
-    ],
-    intro: 'Vou registrar propostas e vendas, emitir as notas e enviar as cobrancas na ordem correta.',
-    prompt: 'Registre propostas e vendas, emita notas e envie cobrancas.',
+    intro: 'Vou revisar a operacao financeira inteira: pagamentos, recebimentos, vendas, compras, cobrancas, caixa e economia.',
+    prompt: 'Acompanhe contas a pagar e receber, vendas, compras, cobrancas, pagamentos, recebimentos e gere um dashboard da operacao.',
   },
   {
     actions: [
@@ -649,7 +657,7 @@ function row(name: string, description: string, value: string, status: string, i
 
 export function ChatGptClaudeOttoAiEmployeesVideo() {
   const frame = useCurrentFrame()
-  const starts = [300, 1120, 1940, 3100, 4400, 5700, 7000, 8200, 9400]
+  const starts = [300, 1120, 1940, 4900, 6000, 7100, 8320]
 
   return (
     <AbsoluteFill style={{ background: '#ffffff', color: '#111111', fontFamily: FONT, overflow: 'hidden' }}>
