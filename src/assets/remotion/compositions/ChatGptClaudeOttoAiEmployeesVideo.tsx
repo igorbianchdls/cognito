@@ -20,6 +20,7 @@ export const OTTO_AI_EMPLOYEES_CHATGPT_CLAUDE_DURATION = 10680
 const FONT = IOS_REMOTION_FONT_STACK
 
 type ResultRow = {
+  background?: string
   description: string
   initials: string
   name: string
@@ -166,7 +167,8 @@ function BrandPill({ label, tone }: { label: string; tone: string }) {
 function CascadeResultCard({ localFrame, result }: { localFrame: number; result: ActionStep['result'] }) {
   const show = p(localFrame, 0, 18)
   const rows = result.rows ?? []
-  const cardHeight = result.kind === 'dashboard' ? 552 : result.kind === 'employee' ? 500 : interpolate(p(localFrame, 34, 78), [0, 1], [116, 126 + rows.length * 76], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' })
+  const rowHeight = rows.length > 6 ? 64 : 76
+  const cardHeight = result.kind === 'dashboard' ? 552 : result.kind === 'employee' ? 500 : interpolate(p(localFrame, 34, 78), [0, 1], [116, 126 + rows.length * rowHeight], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' })
   const progress = Math.round(interpolate(p(localFrame, 18, 154), [0, 1], [18, 100], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' }))
 
   return (
@@ -186,20 +188,21 @@ function CascadeResultCard({ localFrame, result }: { localFrame: number; result:
 }
 
 function ResultRowItem({ index, localFrame, row }: { index: number; localFrame: number; row: ResultRow }) {
+  const compact = index >= 0 && localFrame >= -999 && Boolean(row.background)
   const rowIn = p(localFrame, 46 + index * 14, 68 + index * 14)
   const complete = localFrame >= 106 + index * 14
   const alert = row.status.includes('Revisar') || row.status.includes('Atraso') || row.status.includes('Risco') || row.status.includes('Pendente')
 
   return (
-    <div style={{ alignItems: 'center', display: 'grid', gap: 14, gridTemplateColumns: '46px 1fr auto 28px', height: 76, opacity: rowIn, padding: '0 22px', transform: `translateY(${(1 - rowIn) * 18}px)` }}>
-      <div style={{ alignItems: 'center', background: row.tone, borderRadius: 16, color: '#ffffff', display: 'flex', fontSize: 16, fontWeight: 780, height: 46, justifyContent: 'center', width: 46 }}>{row.initials}</div>
+    <div style={{ alignItems: 'center', background: row.background ?? 'transparent', borderRadius: row.background ? 18 : 0, display: 'grid', gap: 14, gridTemplateColumns: '46px 1fr auto 28px', height: row.background ? 64 : 76, margin: row.background ? '0 16px 6px' : 0, opacity: rowIn, padding: row.background ? '0 12px' : '0 22px', transform: `translateY(${(1 - rowIn) * 18}px)` }}>
+      <div style={{ alignItems: 'center', background: row.tone, borderRadius: 16, color: '#ffffff', display: 'flex', fontSize: 16, fontWeight: 780, height: compact ? 42 : 46, justifyContent: 'center', width: compact ? 42 : 46 }}>{row.initials}</div>
       <div style={{ display: 'grid', gap: 5, minWidth: 0 }}>
-        <strong style={{ color: '#111111', fontSize: 21, fontWeight: 630, letterSpacing: -0.1, lineHeight: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{row.name}</strong>
-        <span style={{ color: '#8a8a8a', fontSize: 15, fontWeight: 420, lineHeight: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{row.description}</span>
+        <strong style={{ color: '#111111', fontSize: compact ? 19 : 21, fontWeight: 630, letterSpacing: -0.1, lineHeight: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{row.name}</strong>
+        <span style={{ color: '#8a8a8a', fontSize: compact ? 14 : 15, fontWeight: 420, lineHeight: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{row.description}</span>
       </div>
       <div style={{ alignItems: 'end', display: 'grid', gap: 7, justifyItems: 'start' }}>
-        <span style={{ color: '#111111', fontSize: 18, fontWeight: 560, whiteSpace: 'nowrap' }}>{row.value}</span>
-        <span style={{ background: alert ? '#fff7ed' : '#ecfdf3', borderRadius: 999, color: alert ? '#c2410c' : '#166534', fontSize: 15, fontWeight: 760, padding: '7px 10px', whiteSpace: 'nowrap' }}>{complete ? row.status : 'Sincronizando'}</span>
+        <span style={{ color: '#111111', fontSize: compact ? 16 : 18, fontWeight: 560, whiteSpace: 'nowrap' }}>{row.value}</span>
+        <span style={{ background: alert ? '#fff7ed' : '#ecfdf3', borderRadius: 999, color: alert ? '#c2410c' : '#166534', fontSize: compact ? 13 : 15, fontWeight: 760, padding: compact ? '5px 8px' : '7px 10px', whiteSpace: 'nowrap' }}>{complete ? row.status : 'Sincronizando'}</span>
       </div>
       <Spinner active={!complete} />
     </div>
@@ -313,15 +316,19 @@ const scenes: AgentScene[] = [
       {
         result: {
           rows: [
-            row('Receita Shopify', 'Pedido importado e reconhecido', 'R$ 18.400', 'Receita', 'SH', '#95bf47'),
-            row('Google Ads', 'Campanha de aquisicao', 'R$ 4.720', 'Marketing', 'G', '#4285f4'),
-            row('AWS Brasil', 'Infraestrutura recorrente', 'R$ 3.980', 'Software', 'AW', '#111827'),
-            row('Impostos federais', 'Guia mensal vinculada', 'R$ 12.300', 'Impostos', 'TX', '#f97316'),
+            row('Receita Shopify', 'Pedido importado e reconhecido', 'R$ 18.400', 'Receita', 'SH', '#95bf47', '#f4faee'),
+            row('Cliente Norte', 'Servico aprovado no mes', 'R$ 42.100', 'Receita', 'CN', '#0ea5e9', '#eff8ff'),
+            row('Google Ads', 'Campanha de aquisicao', 'R$ 4.720', 'Marketing', 'G', '#4285f4', '#eef6ff'),
+            row('Meta Ads', 'Midia paga para remarketing', 'R$ 3.460', 'Marketing', 'M', '#1877f2', '#edf5ff'),
+            row('AWS Brasil', 'Infraestrutura recorrente', 'R$ 3.980', 'Software', 'AW', '#111827', '#f4f4f5'),
+            row('OpenAI API', 'Automacao e atendimento', 'R$ 1.280', 'Software', 'AI', '#10a37f', '#ecfdf3'),
+            row('Impostos federais', 'Guia mensal vinculada', 'R$ 12.300', 'Impostos', 'TX', '#f97316', '#fff7ed'),
+            row('Frete Sul', 'Envios e operacao logistica', 'R$ 2.450', 'Logistica', 'FS', '#dc2626', '#fff1f2'),
           ],
           subtitle: 'Receitas, despesas, categorias e centros de custo',
           title: 'Classificacao automatica',
         },
-        summary: 'Receitas e despesas foram organizadas por categoria. Separei dois itens recorrentes para regra automatica.',
+        summary: 'Receitas e despesas foram organizadas por categoria, com itens recorrentes prontos para regra automatica.',
         tool: 'classificar_receitas_despesas',
       },
     ],
@@ -333,15 +340,19 @@ const scenes: AgentScene[] = [
       {
         result: {
           rows: [
-            row('PIX Cliente Norte', 'NF-9031 encontrada no Otto', 'R$ 42.100', 'Conciliado', 'CN', '#0ea5e9'),
-            row('Cartao Stone', 'Lote-552 validado', 'R$ 68.900', 'Conciliado', 'ST', '#111827'),
-            row('Tarifa bancaria', 'Sem lancamento no ERP', 'R$ 189', 'Revisar', 'BI', '#f97316'),
-            row('Boleto Mercado Sul', 'Recebimento parcial', 'R$ 8.400', 'Divergencia', 'MS', '#dc2626'),
+            row('PIX Cliente Norte', 'NF-9031 encontrada no Otto', 'R$ 42.100', 'Conciliado', 'CN', '#0ea5e9', '#eff8ff'),
+            row('Cartao Stone', 'Lote-552 validado', 'R$ 68.900', 'Conciliado', 'ST', '#111827', '#f4f4f5'),
+            row('Boleto Rede Alpha', 'Recebimento do retainer', 'R$ 18.600', 'Conciliado', 'RA', '#1877f2', '#edf5ff'),
+            row('Shopify Payout', 'Repasse de ecommerce', 'R$ 12.780', 'Conciliado', 'SH', '#95bf47', '#f4faee'),
+            row('Tarifa bancaria', 'Sem lancamento no ERP', 'R$ 189', 'Revisar', 'BI', '#f97316', '#fff7ed'),
+            row('Boleto Mercado Sul', 'Recebimento parcial', 'R$ 8.400', 'Divergencia', 'MS', '#dc2626', '#fff1f2'),
+            row('Google Ads', 'Debito no cartao corporativo', 'R$ 4.720', 'Conciliado', 'G', '#4285f4', '#eef6ff'),
+            row('Fornecedor Cloud', 'Pagamento sem pedido vinculado', 'R$ 18.400', 'Revisar', 'FC', '#7c3aed', '#f5f3ff'),
           ],
           subtitle: 'Banco, cartao e lancamentos no Otto',
           title: 'Matching financeiro',
         },
-        summary: 'Conciliacao concluida com dois matches seguros, uma divergencia e uma tarifa para revisar.',
+        summary: 'Conciliacao concluida com matches seguros, duas revisoes e uma divergencia para ajustar no Otto.',
         tool: 'conciliar_bancos_cartoes',
       },
     ],
@@ -592,8 +603,8 @@ const scenes: AgentScene[] = [
   },
 ]
 
-function row(name: string, description: string, value: string, status: string, initials: string, tone: string): ResultRow {
-  return { description, initials, name, status, tone, value }
+function row(name: string, description: string, value: string, status: string, initials: string, tone: string, background?: string): ResultRow {
+  return { background, description, initials, name, status, tone, value }
 }
 
 export function ChatGptClaudeOttoAiEmployeesVideo() {
