@@ -88,6 +88,7 @@ import {
 } from '@/assets/remotion/compositions/McpOperationsDemo'
 import { CHATGPT_FINANCIAL_AGENTS_VIDEO_DURATION, ChatGptFinancialAgentsVideo, ChatGptMobileAnimation, ChatGptToolCallDemoAnimation } from '@/assets/remotion/compositions/ChatGptMobileMarketing'
 import { CHATGPT_FINANCIAL_TWO_AGENTS_DURATION, CLAUDE_FINANCIAL_TWO_AGENTS_DURATION, ChatGptFinancialTwoAgentsVideo, ClaudeFinancialTwoAgentsVideo } from '@/assets/remotion/compositions/ChatGptFinancialTwoAgentsVideo'
+import { OTTO_AI_EMPLOYEES_CHATGPT_CLAUDE_DURATION, ChatGptClaudeOttoAiEmployeesVideo } from '@/assets/remotion/compositions/ChatGptClaudeOttoAiEmployeesVideo'
 import { ChatGptOperationalFlowsVideo } from '@/assets/remotion/compositions/ChatGptOperationalFlowsVideo'
 import { ChatGptTaskLauncherAnimation } from '@/assets/remotion/compositions/ChatGptTaskLauncherAnimation'
 import { CODEX_CHARTS_DURATION, CodexChartsAnimation } from '@/assets/remotion/compositions/CodexChartsAnimation'
@@ -3266,6 +3267,18 @@ const catalog: CatalogItem[] = [
     label: 'ChatGPT Financial Two Agents',
     tags: ['ChatGPT', 'Financeiro', 'Agentes', 'Dashboard', 'Fiscal', 'Otto'],
     value: 'video-chatgpt-financial-two-agents',
+    width: 1080,
+  },
+  {
+    code: '<ChatGptClaudeOttoAiEmployeesVideo />',
+    component: ChatGptClaudeOttoAiEmployeesVideo,
+    description: 'Video mobile do Otto operando pelo ChatGPT ou Claude com funcionarios de IA para financeiro, compras, vendas, fiscal, cobranca, dashboards e processos personalizados.',
+    duration: OTTO_AI_EMPLOYEES_CHATGPT_CLAUDE_DURATION,
+    height: 1920,
+    kind: 'Vídeos criados',
+    label: 'Otto AI Employees ChatGPT Claude',
+    tags: ['ChatGPT', 'Claude', 'Otto', 'Funcionarios de IA', 'ERP'],
+    value: 'video-otto-ai-employees-chatgpt-claude',
     width: 1080,
   },
   {
