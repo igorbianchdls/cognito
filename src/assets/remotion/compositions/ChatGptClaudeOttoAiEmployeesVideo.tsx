@@ -27,7 +27,7 @@ import { IOS_REMOTION_FONT_STACK, loadSfProFonts } from '@/assets/remotion/fonts
 
 loadSfProFonts()
 
-export const OTTO_AI_EMPLOYEES_CHATGPT_CLAUDE_DURATION = 11600
+export const OTTO_AI_EMPLOYEES_CHATGPT_CLAUDE_DURATION = 11300
 export const OTTO_AI_EMPLOYEES_CLAUDE_DURATION = OTTO_AI_EMPLOYEES_CHATGPT_CLAUDE_DURATION
 
 const FONT = IOS_REMOTION_FONT_STACK
@@ -149,11 +149,11 @@ function PromptInputScene({ frame, prompt, start }: { frame: number; prompt: str
       <ChatGptMobileShell conversationY={0} promptInputBottom={36}>
         <div />
       </ChatGptMobileShell>
-      <div style={{ color: '#111111', fontFamily: CHATGPT_MOBILE_FONT_STACK, fontSize: 46, fontWeight: 600, left: 0, letterSpacing: -0.6, lineHeight: 1, opacity: p(local, 8, 24), position: 'absolute', right: 0, textAlign: 'center', top: 684, transform: `translateY(${(1 - p(local, 8, 24)) * 12}px)` }}>
+      <div style={{ color: '#111111', fontFamily: CHATGPT_MOBILE_FONT_STACK, fontSize: 46, fontWeight: 450, left: 0, letterSpacing: -0.4, lineHeight: 1, opacity: p(local, 8, 24), position: 'absolute', right: 0, textAlign: 'center', top: 700, transform: `translateY(${(1 - p(local, 8, 24)) * 12}px)` }}>
         Tudo pronto para começar?
       </div>
-      <div style={{ background: '#ffffff', bottom: 0, height: 264, left: 0, position: 'absolute', right: 0 }}>
-        <div style={{ alignItems: inputHeight > 124 ? 'flex-start' : 'center', background: '#f1f1f1', borderRadius: inputHeight > 124 ? 48 : 999, display: 'flex', height: inputHeight, left: 68, minHeight: 104, padding: inputHeight > 124 ? '30px 13px 30px 33px' : '0 13px 0 33px', position: 'absolute', right: 68, top: 264 - 36 - inputHeight }}>
+      <div style={{ alignItems: 'center', display: 'flex', inset: 0, justifyContent: 'center', position: 'absolute', top: 96 }}>
+        <div style={{ alignItems: inputHeight > 124 ? 'flex-start' : 'center', background: '#f1f1f1', borderRadius: inputHeight > 124 ? 48 : 999, display: 'flex', height: inputHeight, minHeight: 104, padding: inputHeight > 124 ? '30px 13px 30px 33px' : '0 13px 0 33px', width: 944 }}>
           <span style={{ color: '#333333', fontSize: 54, fontWeight: 300, lineHeight: 1, marginRight: 34 }}>+</span>
           <span style={{ color: '#111111', flex: 1, fontSize: 34, fontWeight: 400, letterSpacing: 0, lineHeight: 1.2, maxHeight: 132, overflow: 'hidden', whiteSpace: 'normal', wordBreak: 'normal' }}>
             {text}
@@ -163,6 +163,8 @@ function PromptInputScene({ frame, prompt, start }: { frame: number; prompt: str
             <span style={{ color: '#ffffff', fontSize: 34, fontWeight: 760, transform: 'translateY(-2px)' }}>↑</span>
           </div>
         </div>
+      </div>
+      <div style={{ background: '#ffffff', bottom: 0, height: 264, left: 0, pointerEvents: 'none', position: 'absolute', right: 0 }}>
         <div style={{ background: '#050505', borderRadius: 999, bottom: 14, height: 12, left: '50%', position: 'absolute', transform: 'translateX(-50%)', width: 380 }} />
       </div>
     </div>
@@ -1269,11 +1271,10 @@ function row(name: string, description: string, value: string, status: string, i
 
 export function ChatGptClaudeOttoAiEmployeesVideo() {
   const frame = useCurrentFrame()
-  const starts = [300, 1120, 1940, 4900, 6700, 8400, 10400]
+  const starts = [0, 820, 1640, 4600, 6400, 8100, 10100]
 
   return (
     <AbsoluteFill style={{ background: '#ffffff', color: '#111111', fontFamily: FONT, overflow: 'hidden' }}>
-      <CompatibilityOpening start={0} />
       {scenes.map((scene, index) => {
         const start = starts[index] + 110
         return (
@@ -1289,11 +1290,10 @@ export function ChatGptClaudeOttoAiEmployeesVideo() {
 
 export function ClaudeOttoAiEmployeesVideo() {
   const frame = useCurrentFrame()
-  const starts = [300, 1120, 1940, 4900, 6700, 8400, 10400]
+  const starts = [0, 820, 1640, 4600, 6400, 8100, 10100]
 
   return (
     <AbsoluteFill style={{ background: '#fbfaf8', color: '#111111', fontFamily: CLAUDE_MOBILE_FONT_STACK, overflow: 'hidden' }}>
-      <CompatibilityOpening start={0} />
       {scenes.map((scene, index) => {
         const start = starts[index] + 110
         return (
