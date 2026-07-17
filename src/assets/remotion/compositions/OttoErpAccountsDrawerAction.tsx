@@ -243,7 +243,7 @@ function AccountDrawer() {
       <div style={{ background: '#ECFDF3', border: '1px solid #BBF7D0', borderRadius: 14, color: GREEN, fontSize: 13, fontWeight: 650, lineHeight: 1.35, marginTop: 18, opacity: ease(frame, 316, 334), padding: 13 }}>
         Otto vinculou este lancamento ao fornecedor e sugeriu recorrencia automatica.
       </div>
-      <button style={{ background: save > 0.5 ? GREEN : INK, border: 0, borderRadius: 13, bottom: 24, color: '#FFFFFF', fontSize: 14, fontWeight: 800, height: 46, left: 24, position: 'absolute', right: 24 }}>{save > 0.5 ? 'Lancamento registrado' : 'Registrar lancamento'}</button>
+      <button style={{ background: save > 0.5 ? GREEN : INK, border: 0, borderRadius: 13, bottom: 24, color: '#FFFFFF', fontSize: 14, fontWeight: 800, height: 46, left: 24, position: 'absolute', right: 24 }}>{save > 0.5 ? 'Conta a pagar registrada' : 'Registrar conta a pagar'}</button>
     </div>
   )
 }
