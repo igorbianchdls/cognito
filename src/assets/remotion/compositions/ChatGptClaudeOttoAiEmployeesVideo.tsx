@@ -151,7 +151,7 @@ function PromptInputScene({ frame, prompt, start }: { frame: number; prompt: str
       <ChatGptMobileShell conversationY={0} promptInputBottom={36}>
         <div />
       </ChatGptMobileShell>
-      <div style={{ color: '#111111', fontFamily: CHATGPT_MOBILE_FONT_STACK, fontSize: 46, fontWeight: 450, left: 0, letterSpacing: -0.4, lineHeight: 1, opacity: p(local, 8, 24), position: 'absolute', right: 0, textAlign: 'center', top: 790, transform: `translateY(${(1 - p(local, 8, 24)) * 12}px)` }}>
+      <div style={{ color: '#111111', fontFamily: CHATGPT_MOBILE_FONT_STACK, fontSize: 46, fontWeight: 450, left: 0, letterSpacing: -0.4, lineHeight: 1, opacity: p(local, 8, 24), position: 'absolute', right: 0, textAlign: 'center', top: 860, transform: `translateY(${(1 - p(local, 8, 24)) * 12}px)` }}>
         Tudo pronto para começar?
       </div>
       <div style={{ alignItems: 'center', display: 'flex', inset: 0, justifyContent: 'center', position: 'absolute', top: 96 }}>
@@ -911,11 +911,11 @@ function ClaudePromptInputScene({ frame, prompt, start }: { frame: number; promp
       <ClaudeMobileShell conversationY={0}>
         <div />
       </ClaudeMobileShell>
-      <div style={{ color: '#111111', fontFamily: CLAUDE_MOBILE_FONT_STACK, fontSize: 44, fontWeight: 430, left: 0, letterSpacing: '-0.01em', lineHeight: 1, opacity: p(local, 8, 24), position: 'absolute', right: 0, textAlign: 'center', top: 1504, transform: `translateY(${(1 - p(local, 8, 24)) * 12}px)` }}>
+      <div style={{ color: '#111111', fontFamily: CLAUDE_MOBILE_FONT_STACK, fontSize: 44, fontWeight: 430, left: 0, letterSpacing: '-0.01em', lineHeight: 1, opacity: p(local, 8, 24), position: 'absolute', right: 0, textAlign: 'center', top: 728, transform: `translateY(${(1 - p(local, 8, 24)) * 12}px)` }}>
         Tudo pronto para começar?
       </div>
-      <div style={{ background: '#fbfaf8', bottom: 0, height: 340, left: 0, position: 'absolute', right: 0 }}>
-        <div style={{ background: '#fbfaf8', border: '1.5px solid #bebcb7', borderRadius: 68, boxShadow: '0 20px 48px rgba(20,24,22,0.16)', height: 254, left: 42, position: 'absolute', right: 42, top: 0 }}>
+      <div style={{ height: 254, left: 42, position: 'absolute', right: 42, top: 802 }}>
+        <div style={{ background: '#fbfaf8', border: '1.5px solid #bebcb7', borderRadius: 68, boxShadow: '0 20px 48px rgba(20,24,22,0.16)', height: 254, left: 0, position: 'absolute', right: 0, top: 0 }}>
           <div style={{ color: text ? '#111111' : '#77746f', fontSize: 42, fontWeight: 450, left: 36, letterSpacing: '-0.01em', lineHeight: 1.18, maxHeight: 92, overflow: 'hidden', position: 'absolute', right: 36, top: 42, whiteSpace: 'pre-wrap' }}>
             {text || 'Chat with Claude'}
             {promptProgress > 0 && promptProgress < 1 ? <span style={{ background: '#111111', display: local % 18 < 9 ? 'inline-block' : 'none', height: 38, marginLeft: 4, transform: 'translateY(7px)', width: 3 }} /> : null}
@@ -936,7 +936,6 @@ function ClaudePromptInputScene({ frame, prompt, start }: { frame: number; promp
             </div>
           </div>
         </div>
-        <div style={{ background: '#050505', borderRadius: 999, bottom: 14, height: 12, left: '50%', position: 'absolute', transform: 'translateX(-50%)', width: 380 }} />
       </div>
     </div>
   )
