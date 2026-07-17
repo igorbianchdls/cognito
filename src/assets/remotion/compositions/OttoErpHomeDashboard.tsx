@@ -1,7 +1,7 @@
 import type { ReactElement } from 'react'
 import { AbsoluteFill, Easing, Img, interpolate, staticFile, useCurrentFrame } from 'remotion'
 
-export const OTTO_ERP_HOME_DASHBOARD_DURATION = 240
+export const OTTO_ERP_HOME_DASHBOARD_DURATION = 480
 
 const INK = '#111827'
 const MUTED = '#6B7280'
@@ -348,7 +348,7 @@ function CashTimeline() {
 
 function CashTabContent() {
   const frame = useCurrentFrame()
-  const panelIn = ease(frame, 142, 164)
+  const panelIn = ease(frame, 142, 164) * interpolate(frame, [246, 266], [1, 0], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' })
 
   return (
     <div style={{ opacity: panelIn, transform: `translateY(${(1 - panelIn) * 18}px)` }}>
@@ -384,11 +384,172 @@ function CashTabContent() {
   )
 }
 
+function FiscalMetric({ delay, label, tone, value }: { delay: number; label: string; tone: string; value: string }) {
+  const frame = useCurrentFrame()
+  const show = ease(frame, delay, delay + 22)
+  return (
+    <div style={{ background: '#FFFFFF', border: `1px solid ${LINE}`, borderRadius: 18, opacity: show, padding: 20, transform: `translateY(${(1 - show) * 16}px)` }}>
+      <span style={{ color: MUTED, fontSize: 13, fontWeight: 650 }}>{label}</span>
+      <div style={{ color: INK, fontSize: 31, fontWeight: 790, letterSpacing: -0.9, marginTop: 14 }}>{value}</div>
+      <span style={{ background: `${tone}12`, borderRadius: 999, color: tone, display: 'inline-block', fontSize: 12, fontWeight: 780, marginTop: 14, padding: '6px 9px' }}>Monitorado</span>
+    </div>
+  )
+}
+
+function FiscalQueue() {
+  const frame = useCurrentFrame()
+  const rows = [
+    ['NFS-e 2048', 'Cliente Norte Ltda', 'Emitida', GREEN],
+    ['NFS-e 2049', 'Rede Alpha', 'Pronta para emitir', BLUE],
+    ['DAS Simples', 'Vence em 4 dias', 'Prioridade', RED],
+    ['XMLs recebidos', '34 documentos validados', 'OK', TEAL],
+  ] as const
+
+  return (
+    <div style={{ background: '#FFFFFF', border: `1px solid ${LINE}`, borderRadius: 18, overflow: 'hidden' }}>
+      <div style={{ borderBottom: `1px solid ${LINE}`, padding: '17px 20px' }}>
+        <div style={{ color: INK, fontSize: 19, fontWeight: 800 }}>Fila fiscal</div>
+        <div style={{ color: MUTED, fontSize: 12, fontWeight: 500, marginTop: 4 }}>Notas, XMLs e obrigacoes</div>
+      </div>
+      {rows.map(([title, subtitle, status, color], index) => {
+        const show = ease(frame, 300 + index * 10, 322 + index * 10)
+        return (
+          <div key={title} style={{ alignItems: 'center', borderBottom: index === rows.length - 1 ? 'none' : `1px solid ${LINE}`, display: 'grid', gap: 14, gridTemplateColumns: '42px 1fr auto', opacity: show, padding: '15px 20px', transform: `translateX(${(1 - show) * 18}px)` }}>
+            <span style={{ alignItems: 'center', background: `${color}14`, borderRadius: 12, color, display: 'flex', fontSize: 13, fontWeight: 830, height: 42, justifyContent: 'center', width: 42 }}>{title.slice(0, 2)}</span>
+            <div>
+              <div style={{ color: INK, fontSize: 15, fontWeight: 730 }}>{title}</div>
+              <div style={{ color: MUTED, fontSize: 12, fontWeight: 500, marginTop: 4 }}>{subtitle}</div>
+            </div>
+            <span style={{ background: `${color}12`, borderRadius: 999, color, fontSize: 12, fontWeight: 780, padding: '7px 10px' }}>{status}</span>
+          </div>
+        )
+      })}
+    </div>
+  )
+}
+
+function TaxInsightPanel() {
+  const frame = useCurrentFrame()
+  const show = ease(frame, 306, 328)
+  return (
+    <div style={{ background: '#0B1220', borderRadius: 18, color: '#FFFFFF', opacity: show, padding: 22, transform: `translateY(${(1 - show) * 16}px)` }}>
+      <div style={{ color: '#86EFAC', fontSize: 12, fontWeight: 800, letterSpacing: 0.5, textTransform: 'uppercase' }}>Otto Fiscal</div>
+      <div style={{ fontSize: 26, fontWeight: 820, letterSpacing: -0.6, lineHeight: 1.12, marginTop: 10 }}>Possivel economia de R$ 7.840 em impostos.</div>
+      <div style={{ color: 'rgba(255,255,255,0.65)', fontSize: 14, fontWeight: 500, lineHeight: 1.45, marginTop: 12 }}>A aliquota de 2 notas parece acima do padrao para o codigo de servico usado.</div>
+      <div style={{ display: 'grid', gap: 9, marginTop: 20 }}>
+        {['Revisar codigo de servico', 'Conferir retencoes', 'Preparar guia do mes'].map((item, index) => {
+          const itemIn = ease(frame, 326 + index * 9, 344 + index * 9)
+          return (
+            <div key={item} style={{ alignItems: 'center', background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.09)', borderRadius: 13, display: 'grid', gap: 10, gridTemplateColumns: '24px 1fr', opacity: itemIn, padding: '11px 12px', transform: `translateY(${(1 - itemIn) * 10}px)` }}>
+              <span style={{ alignItems: 'center', background: '#22C55E', borderRadius: 999, display: 'flex', fontSize: 12, fontWeight: 900, height: 24, justifyContent: 'center', width: 24 }}>✓</span>
+              <span style={{ fontSize: 13, fontWeight: 650 }}>{item}</span>
+            </div>
+          )
+        })}
+      </div>
+    </div>
+  )
+}
+
+function FiscalTabContent() {
+  const frame = useCurrentFrame()
+  const panelIn = ease(frame, 266, 288) * interpolate(frame, [356, 376], [1, 0], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' })
+
+  return (
+    <div style={{ opacity: panelIn, transform: `translateY(${(1 - panelIn) * 18}px)` }}>
+      <div style={{ display: 'grid', gap: 16, gridTemplateColumns: 'repeat(4, 1fr)', marginTop: 24 }}>
+        <FiscalMetric delay={276} label="Notas emitidas" tone={GREEN} value="128" />
+        <FiscalMetric delay={282} label="XMLs validados" tone={BLUE} value="342" />
+        <FiscalMetric delay={288} label="Obrigacoes" tone={RED} value="3" />
+        <FiscalMetric delay={294} label="Economia estimada" tone={TEAL} value="R$ 7.840" />
+      </div>
+      <div style={{ display: 'grid', gap: 16, gridTemplateColumns: '1.05fr 0.95fr', marginTop: 16 }}>
+        <FiscalQueue />
+        <TaxInsightPanel />
+      </div>
+      <div style={{ display: 'grid', gap: 16, gridTemplateColumns: 'repeat(3, 1fr)', marginTop: 16 }}>
+        {['Notas fiscais', 'Comprovantes', 'Obrigacoes fiscais'].map((title, index) => {
+          const show = ease(frame, 330 + index * 8, 350 + index * 8)
+          return (
+            <div key={title} style={{ background: '#FFFFFF', border: `1px solid ${LINE}`, borderRadius: 18, opacity: show, padding: 18, transform: `translateY(${(1 - show) * 12}px)` }}>
+              <div style={{ color: INK, fontSize: 17, fontWeight: 780 }}>{title}</div>
+              <div style={{ color: MUTED, fontSize: 12, fontWeight: 500, lineHeight: 1.45, marginTop: 8 }}>Organizado, rastreavel e pronto para execucao.</div>
+            </div>
+          )
+        })}
+      </div>
+    </div>
+  )
+}
+
+function ReportsChartPreview() {
+  const frame = useCurrentFrame()
+  const draw = ease(frame, 414, 452)
+  return (
+    <div style={{ background: '#FFFFFF', border: `1px solid ${LINE}`, borderRadius: 18, padding: 22 }}>
+      <div style={{ alignItems: 'start', display: 'flex', justifyContent: 'space-between' }}>
+        <div>
+          <div style={{ color: INK, fontSize: 21, fontWeight: 820 }}>Dashboard executivo</div>
+          <div style={{ color: MUTED, fontSize: 13, fontWeight: 500, marginTop: 5 }}>Margem, caixa e desempenho operacional</div>
+        </div>
+        <span style={{ background: '#ECFDF3', borderRadius: 999, color: GREEN, fontSize: 12, fontWeight: 780, padding: '7px 10px' }}>Tempo real</span>
+      </div>
+      <svg height="230" style={{ marginTop: 22, overflow: 'visible' }} viewBox="0 0 590 230" width="100%">
+        {[0, 1, 2, 3].map((line) => <path key={line} d={`M0 ${40 + line * 44} H590`} stroke="#EEF1F5" strokeWidth="1" />)}
+        <path d="M10 174 C90 154 120 116 190 122 C260 128 282 68 352 78 C430 88 458 48 580 58" fill="none" stroke={GREEN} strokeLinecap="round" strokeWidth="4" style={{ strokeDasharray: 760, strokeDashoffset: 760 - 760 * draw }} />
+        <path d="M10 196 C100 184 150 160 220 166 C300 172 340 112 420 126 C486 138 520 92 580 102" fill="none" stroke={BLUE} strokeLinecap="round" strokeWidth="3" style={{ strokeDasharray: 760, strokeDashoffset: 760 - 760 * draw }} />
+      </svg>
+    </div>
+  )
+}
+
+function ReportsTabContent() {
+  const frame = useCurrentFrame()
+  const panelIn = ease(frame, 376, 398)
+  const cards = [
+    ['DRE automatizada', 'Receita, margem e lucro explicados pela IA', GREEN],
+    ['Apresentacao pronta', 'Slides executivos para reuniao mensal', BLUE],
+    ['Analise de margem', 'Onde economizar e onde aumentar preco', TEAL],
+    ['Alertas de gestao', 'Riscos de caixa, atrasos e gargalos', RED],
+  ] as const
+
+  return (
+    <div style={{ opacity: panelIn, transform: `translateY(${(1 - panelIn) * 18}px)` }}>
+      <div style={{ display: 'grid', gap: 16, gridTemplateColumns: 'repeat(4, 1fr)', marginTop: 24 }}>
+        {cards.map(([title, subtitle, color], index) => {
+          const show = ease(frame, 386 + index * 7, 406 + index * 7)
+          return (
+            <div key={title} style={{ background: '#FFFFFF', border: `1px solid ${LINE}`, borderRadius: 18, opacity: show, padding: 18, transform: `translateY(${(1 - show) * 14}px)` }}>
+              <span style={{ alignItems: 'center', background: `${color}14`, borderRadius: 12, color, display: 'flex', fontSize: 16, fontWeight: 850, height: 38, justifyContent: 'center', width: 38 }}>↗</span>
+              <div style={{ color: INK, fontSize: 17, fontWeight: 790, marginTop: 14 }}>{title}</div>
+              <div style={{ color: MUTED, fontSize: 12, fontWeight: 500, lineHeight: 1.38, marginTop: 7 }}>{subtitle}</div>
+            </div>
+          )
+        })}
+      </div>
+      <div style={{ display: 'grid', gap: 16, gridTemplateColumns: '1.35fr 0.85fr', marginTop: 16 }}>
+        <ReportsChartPreview />
+        <div style={{ background: '#0B1220', borderRadius: 18, color: '#FFFFFF', padding: 22 }}>
+          <div style={{ color: '#86EFAC', fontSize: 12, fontWeight: 800, letterSpacing: 0.5, textTransform: 'uppercase' }}>Insights</div>
+          <div style={{ fontSize: 25, fontWeight: 820, letterSpacing: -0.6, lineHeight: 1.12, marginTop: 10 }}>Margem pode subir 4,2 p.p. com 3 decisoes.</div>
+          <div style={{ color: 'rgba(255,255,255,0.65)', fontSize: 14, fontWeight: 500, lineHeight: 1.45, marginTop: 12 }}>Reduzir midia de baixa conversao, renegociar frete e priorizar clientes com maior recorrencia.</div>
+          <div style={{ display: 'grid', gap: 10, marginTop: 20 }}>
+            {['Economia prevista: R$ 24.600', 'Caixa protegido: 21 dias', 'Slides gerados: 8 paginas'].map((item, index) => {
+              const show = ease(frame, 430 + index * 9, 448 + index * 9)
+              return <div key={item} style={{ background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.09)', borderRadius: 13, fontSize: 13, fontWeight: 680, opacity: show, padding: '12px 13px', transform: `translateY(${(1 - show) * 10}px)` }}>{item}</div>
+            })}
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 export function OttoErpHomeDashboard() {
   const frame = useCurrentFrame()
   const titleIn = ease(frame, 10, 30)
   const cash = money(interpolate(ease(frame, 28, 78), [0, 1], [720000, 918400]))
-  const activeTab = frame >= 136 ? 'Caixa' : 'Resumo'
+  const activeTab = frame >= 376 ? 'Relatorios' : frame >= 266 ? 'Fiscal' : frame >= 136 ? 'Caixa' : 'Resumo'
   const summaryOut = interpolate(frame, [126, 146], [1, 0], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' })
 
   return (
@@ -408,26 +569,36 @@ export function OttoErpHomeDashboard() {
               ))}
             </div>
           </div>
-          <div style={{ opacity: summaryOut, pointerEvents: summaryOut > 0 ? 'auto' : 'none', position: summaryOut === 0 ? 'absolute' : 'relative', transform: `translateY(${(1 - summaryOut) * -18}px)` }}>
-            <div style={{ display: 'grid', gap: 16, gridTemplateColumns: 'repeat(4, 1fr)', marginTop: 24 }}>
-              <KpiCard color={GREEN} delay={34} label="Caixa atual" trend="+11,7%" value={cash} />
-              <KpiCard color={BLUE} delay={40} label="Receita prevista" trend="+14,2%" value="R$ 482.900" />
-              <KpiCard color={RED} delay={46} label="A pagar" trend="3 alertas" value="R$ 63.980" />
-              <KpiCard color={TEAL} delay={52} label="Margem" trend="+2,8 p.p." value="38,4%" />
+          <div style={{ height: 560, position: 'relative' }}>
+            <div style={{ inset: 0, opacity: summaryOut, pointerEvents: summaryOut > 0 ? 'auto' : 'none', position: 'absolute', transform: `translateY(${(1 - summaryOut) * -18}px)` }}>
+              <div style={{ display: 'grid', gap: 16, gridTemplateColumns: 'repeat(4, 1fr)', marginTop: 24 }}>
+                <KpiCard color={GREEN} delay={34} label="Caixa atual" trend="+11,7%" value={cash} />
+                <KpiCard color={BLUE} delay={40} label="Receita prevista" trend="+14,2%" value="R$ 482.900" />
+                <KpiCard color={RED} delay={46} label="A pagar" trend="3 alertas" value="R$ 63.980" />
+                <KpiCard color={TEAL} delay={52} label="Margem" trend="+2,8 p.p." value="38,4%" />
+              </div>
+              <div style={{ display: 'grid', gap: 16, gridTemplateColumns: '1.45fr 0.85fr', marginTop: 16 }}>
+                <CashChart />
+                <AssistantPanel />
+              </div>
+              <div style={{ display: 'grid', gap: 16, gridTemplateColumns: '0.8fr 1.2fr', marginTop: 16 }}>
+                <OperationList />
+                <FinancialTable />
+              </div>
+              <div style={{ marginTop: 16 }}>
+                <ReportStrip />
+              </div>
             </div>
-            <div style={{ display: 'grid', gap: 16, gridTemplateColumns: '1.45fr 0.85fr', marginTop: 16 }}>
-              <CashChart />
-              <AssistantPanel />
+            <div style={{ inset: 0, position: 'absolute' }}>
+              <CashTabContent />
             </div>
-            <div style={{ display: 'grid', gap: 16, gridTemplateColumns: '0.8fr 1.2fr', marginTop: 16 }}>
-              <OperationList />
-              <FinancialTable />
+            <div style={{ inset: 0, position: 'absolute' }}>
+              <FiscalTabContent />
             </div>
-            <div style={{ marginTop: 16 }}>
-              <ReportStrip />
+            <div style={{ inset: 0, position: 'absolute' }}>
+              <ReportsTabContent />
             </div>
           </div>
-          <CashTabContent />
         </div>
       </main>
     </AbsoluteFill>
