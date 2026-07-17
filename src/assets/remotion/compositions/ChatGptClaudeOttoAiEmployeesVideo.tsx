@@ -303,6 +303,38 @@ function ChatGptOutlineWithCursor({ localFrame, subtitle, title }: { localFrame:
   )
 }
 
+function InvoiceOutlineWithEmissionStatus({ localFrame, subtitle, title }: { localFrame: number; subtitle: string; title: string }) {
+  const steps = [
+    ['Validando tomador', 'CNPJ, inscricao municipal e endereco'],
+    ['Calculando impostos', 'ISS, retencoes e codigo de servico'],
+    ['Transmitindo NFS-e', 'Envio para a prefeitura municipal'],
+    ['Autorizando emissao', 'Numero, PDF e XML gerados'],
+  ]
+
+  return (
+    <div style={{ display: 'grid', gap: 14, width: '100%' }}>
+      <ChatGptOutlineWithCursor localFrame={localFrame} subtitle={subtitle} title={title} />
+      <div style={{ background: '#ffffff', border: '1px solid #eeeeee', borderRadius: 18, boxShadow: '0 10px 26px rgba(15, 23, 42, 0.045)', display: 'grid', gap: 2, opacity: p(localFrame, 28, 46), overflow: 'hidden', padding: '8px 0', transform: `translateY(${(1 - p(localFrame, 28, 46)) * 12}px)` }}>
+        {steps.map(([label, detail], index) => {
+          const itemIn = p(localFrame, 42 + index * 18, 58 + index * 18)
+          const complete = localFrame >= 74 + index * 18
+          const active = itemIn > 0 && !complete
+          return (
+            <div key={label} style={{ alignItems: 'center', display: 'grid', gap: 13, gridTemplateColumns: '34px 1fr auto', minHeight: 58, opacity: itemIn, padding: '0 16px', transform: `translateY(${(1 - itemIn) * 10}px)` }}>
+              <span style={{ alignItems: 'center', background: complete ? '#dcfce7' : active ? '#eef6ff' : '#f4f4f5', borderRadius: 999, color: complete ? '#166534' : active ? '#2563eb' : '#8a8a8a', display: 'flex', fontSize: 16, fontWeight: 780, height: 34, justifyContent: 'center', width: 34 }}>{complete ? '✓' : '·'}</span>
+              <div style={{ display: 'grid', gap: 4, minWidth: 0 }}>
+                <strong style={{ color: '#171717', fontSize: 17, fontWeight: 660, lineHeight: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{label}</strong>
+                <span style={{ color: '#8a8a8a', fontSize: 13, fontWeight: 430, lineHeight: 1.05, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{detail}</span>
+              </div>
+              <span style={{ color: complete ? '#166534' : active ? '#2563eb' : '#8a8a8a', fontSize: 13, fontWeight: 720 }}>{complete ? 'OK' : active ? 'Processando' : 'Aguardando'}</span>
+            </div>
+          )
+        })}
+      </div>
+    </div>
+  )
+}
+
 function DashboardOutlineResult({ localFrame, subtitle, title }: { localFrame: number; subtitle: string; title: string }) {
   const outlineIn = p(localFrame, 6, 24)
   const click = p(localFrame, 104, 122)
@@ -737,7 +769,7 @@ function AgentChatScene({ scene, start }: { scene: AgentScene; start: number }) 
   const scheduledActions = scene.actions.map((action, index) => {
     const toolStart = cursor
     const resultStart = toolStart + 58
-    const resultHold = action.result.kind === 'dashboardOutline' || action.result.kind === 'invoiceOutline' || action.result.kind === 'reportOutline' ? 330 : action.result.rows && action.result.rows.length >= 6 ? 210 : 166
+    const resultHold = action.result.kind === 'invoiceOutline' ? 390 : action.result.kind === 'dashboardOutline' || action.result.kind === 'reportOutline' ? 330 : action.result.rows && action.result.rows.length >= 6 ? 210 : 166
     const summaryStart = resultStart + resultHold
     cursor = summaryStart + (action.summary ? 118 : 46)
     return { action, index, resultStart, summaryStart, toolStart }
@@ -758,7 +790,11 @@ function AgentChatScene({ scene, start }: { scene: AgentScene; start: number }) 
               <ChatGptToolCallCard style={sequence(local, toolStart)} toolName={action.tool} />
               {isOutline ? (
                 <div style={{ ...sequence(local, resultStart), margin: '0 36px' }}>
-                  <ChatGptOutlineWithCursor localFrame={local - resultStart} subtitle={action.result.subtitle} title={action.result.title} />
+                  {action.result.kind === 'invoiceOutline' ? (
+                    <InvoiceOutlineWithEmissionStatus localFrame={local - resultStart} subtitle={action.result.subtitle} title={action.result.title} />
+                  ) : (
+                    <ChatGptOutlineWithCursor localFrame={local - resultStart} subtitle={action.result.subtitle} title={action.result.title} />
+                  )}
                 </div>
               ) : (
                 <ChatGptToolResultCard style={sequence(local, resultStart)}>
