@@ -1,5 +1,6 @@
 import type { ComponentType, CSSProperties, ReactNode } from 'react'
 import { AbsoluteFill, interpolate, useCurrentFrame } from 'remotion'
+import { Wrench } from 'lucide-react'
 
 import BlingIcon from '@/components/icons/BlingIcon'
 import GoogleAdsIcon from '@/components/icons/GoogleAdsIcon'
@@ -15,13 +16,22 @@ import {
   OttoAssistantHeader,
   chatGptSequenceStyle,
 } from '@/assets/remotion/compositions/ChatGptMobileBase'
+import {
+  ClaudeFlowUserBubble,
+  ClaudeMobileShell,
+  ClaudeToolResultCard,
+  CLAUDE_MOBILE_FONT_STACK,
+  claudeSequenceStyle,
+} from '@/assets/remotion/compositions/ClaudeMobileBase'
 import { IOS_REMOTION_FONT_STACK, loadSfProFonts } from '@/assets/remotion/fonts/sfPro'
 
 loadSfProFonts()
 
 export const OTTO_AI_EMPLOYEES_CHATGPT_CLAUDE_DURATION = 11600
+export const OTTO_AI_EMPLOYEES_CLAUDE_DURATION = OTTO_AI_EMPLOYEES_CHATGPT_CLAUDE_DURATION
 
 const FONT = IOS_REMOTION_FONT_STACK
+const CLAUDE_RESPONSE_SERIF = '"Libre Baskerville", Baskerville, Georgia, "Times New Roman", serif'
 
 type ResultRow = {
   background?: string
@@ -829,6 +839,128 @@ function AgentChatScene({ scene, start }: { scene: AgentScene; start: number }) 
   )
 }
 
+function ClaudeAssistantText({ children, style }: { children: ReactNode; style: CSSProperties }) {
+  return (
+    <div
+      style={{
+        ...style,
+        color: '#111111',
+        fontFamily: CLAUDE_RESPONSE_SERIF,
+        fontSize: 38,
+        fontWeight: 400,
+        letterSpacing: '-0.02em',
+        lineHeight: 1.26,
+        padding: '0 42px',
+      }}
+    >
+      <OttoAssistantHeader muted="#8b857c" />
+      <span style={{ fontFamily: CLAUDE_RESPONSE_SERIF }}>{typed(String(children), Math.max(0, Math.min(1, Number(style.opacity ?? 1))))}</span>
+    </div>
+  )
+}
+
+function ClaudeToolUseCard({ startFrame, toolName }: { startFrame: number; toolName: string }) {
+  const frame = useCurrentFrame()
+
+  return (
+    <div
+      style={{
+        ...claudeSequenceStyle(frame, startFrame, 16),
+        alignItems: 'center',
+        background: 'transparent',
+        border: '1px solid #dfddd8',
+        borderRadius: 12,
+        boxSizing: 'border-box',
+        color: '#171714',
+        display: 'flex',
+        fontFamily: CLAUDE_MOBILE_FONT_STACK,
+        gap: 16,
+        margin: '0 42px',
+        minHeight: 84,
+        padding: '20px 22px',
+      }}
+    >
+      <div style={{ alignItems: 'center', border: '1px solid #d5d0c7', borderRadius: 12, display: 'flex', height: 42, justifyContent: 'center', width: 42 }}>
+        <Wrench color="#77746f" size={22} strokeWidth={2.2} />
+      </div>
+      <span style={{ color: '#171714', fontSize: 32, fontWeight: 600, letterSpacing: 0, lineHeight: 1.05 }}>{toolName}</span>
+    </div>
+  )
+}
+
+function ClaudePromptInputScene({ frame, prompt, start }: { frame: number; prompt: string; start: number }) {
+  const local = frame - start
+  const sceneIn = p(local, 0, 16)
+  const sceneOut = p(local, 82, 108, [1, 0])
+  const promptProgress = p(local, 12, 76)
+  const inputHeight = interpolate(promptProgress, [0, 0.48, 1], [116, 116, 226], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' })
+  const text = typed(prompt, promptProgress)
+
+  return (
+    <AbsoluteFill style={{ background: '#fbfaf8', color: '#111111', fontFamily: CLAUDE_MOBILE_FONT_STACK, opacity: sceneIn * sceneOut, overflow: 'hidden', transform: `translateY(${(1 - sceneIn) * 20 - (1 - sceneOut) * 18}px)` }}>
+      <div style={{ alignItems: 'center', display: 'flex', inset: 0, justifyContent: 'center', position: 'absolute' }}>
+        <div style={{ alignItems: inputHeight > 136 ? 'flex-start' : 'center', background: '#f1f0ee', border: '1.5px solid #d8d4cc', borderRadius: inputHeight > 136 ? 46 : 999, display: 'flex', minHeight: 116, padding: inputHeight > 136 ? '30px 34px' : '0 34px', width: 914 }}>
+          <span style={{ color: text ? '#111111' : '#77746f', fontSize: 38, fontWeight: 400, letterSpacing: '-0.02em', lineHeight: 1.18, whiteSpace: 'pre-wrap' }}>{text || 'Chat with Claude'}</span>
+        </div>
+      </div>
+    </AbsoluteFill>
+  )
+}
+
+function ClaudeAgentChatScene({ scene, start }: { scene: AgentScene; start: number }) {
+  const frame = useCurrentFrame()
+  const local = Math.max(0, frame - start)
+  const longRows = scene.actions.some((action) => (action.result.rows?.length ?? 0) >= 8)
+  const duration = scene.actions.length === 1 ? 790 : scene.actions.length === 2 ? 930 : scene.actions.length === 3 ? (longRows ? 1850 : 1550) : 2700
+  const opacity = p(frame, start - 10, start + 14) * p(frame, start + duration - 28, start + duration, [1, 0])
+  let cursor = 150
+  const scheduledActions = scene.actions.map((action, index) => {
+    const toolStart = cursor
+    const resultStart = toolStart + 58
+    const resultHold = action.result.kind === 'invoiceOutline' ? 390 : action.result.kind === 'dashboardOutline' || action.result.kind === 'reportOutline' ? 330 : action.result.rows && action.result.rows.length >= 6 ? 210 : 166
+    const summaryStart = resultStart + resultHold
+    cursor = summaryStart + (action.summary ? 118 : 46)
+    return { action, index, resultStart, summaryStart, toolStart }
+  })
+  const conversationY = toolDrivenScroll(local, scheduledActions)
+  const dashboardAction = scheduledActions.find(({ action }) => action.result.kind === 'dashboardOutline')
+  const invoiceAction = scheduledActions.find(({ action }) => action.result.kind === 'invoiceOutline')
+
+  return (
+    <div style={{ inset: 0, opacity, position: 'absolute' }}>
+      <ClaudeMobileShell conversationY={conversationY}>
+        <ClaudeFlowUserBubble style={fadeOnlyStyle(local, 8)}>{scene.prompt}</ClaudeFlowUserBubble>
+        <ClaudeAssistantText style={claudeSequenceStyle(local, 62, 22)}>{scene.intro}</ClaudeAssistantText>
+        {scheduledActions.map(({ action, index, resultStart, summaryStart, toolStart }) => {
+          const isOutline = action.result.kind === 'dashboardOutline' || action.result.kind === 'invoiceOutline' || action.result.kind === 'reportOutline'
+          return (
+            <FragmentBlock key={`${action.tool}-${index}`}>
+              {action.text ? <ClaudeAssistantText style={claudeSequenceStyle(local, toolStart - 36, 22)}>{action.text}</ClaudeAssistantText> : null}
+              <ClaudeToolUseCard startFrame={toolStart} toolName={action.tool} />
+              {isOutline ? (
+                <div style={{ ...claudeSequenceStyle(local, resultStart, 18), margin: '0 42px' }}>
+                  {action.result.kind === 'invoiceOutline' ? (
+                    <InvoiceOutlineWithEmissionStatus localFrame={local - resultStart} subtitle={action.result.subtitle} title={action.result.title} />
+                  ) : (
+                    <ChatGptOutlineWithCursor localFrame={local - resultStart} subtitle={action.result.subtitle} title={action.result.title} />
+                  )}
+                </div>
+              ) : (
+                <ClaudeToolResultCard style={claudeSequenceStyle(local, resultStart, 18)}>
+                  <CascadeResultCard localFrame={local - resultStart} result={action.result} />
+                </ClaudeToolResultCard>
+              )}
+              {action.summary ? <ClaudeAssistantText style={claudeSequenceStyle(local, summaryStart, 22)}>{action.summary}</ClaudeAssistantText> : null}
+            </FragmentBlock>
+          )
+        })}
+      </ClaudeMobileShell>
+      {dashboardAction ? <FullscreenDashboardScene localFrame={local - (dashboardAction.resultStart + 170)} /> : null}
+      {invoiceAction ? <FullscreenInvoiceScene localFrame={local - (invoiceAction.resultStart + 170)} /> : null}
+    </div>
+  )
+}
+
 function FragmentBlock({ children }: { children: ReactNode }) {
   return <>{children}</>
 }
@@ -1141,6 +1273,26 @@ export function ChatGptClaudeOttoAiEmployeesVideo() {
           <FragmentBlock key={scene.prompt}>
             <AgentChatScene scene={scene} start={start} />
             <PromptInputScene frame={frame} prompt={scene.prompt} start={starts[index]} />
+          </FragmentBlock>
+        )
+      })}
+    </AbsoluteFill>
+  )
+}
+
+export function ClaudeOttoAiEmployeesVideo() {
+  const frame = useCurrentFrame()
+  const starts = [300, 1120, 1940, 4900, 6700, 8400, 10400]
+
+  return (
+    <AbsoluteFill style={{ background: '#fbfaf8', color: '#111111', fontFamily: CLAUDE_MOBILE_FONT_STACK, overflow: 'hidden' }}>
+      <CompatibilityOpening start={0} />
+      {scenes.map((scene, index) => {
+        const start = starts[index] + 110
+        return (
+          <FragmentBlock key={scene.prompt}>
+            <ClaudeAgentChatScene scene={scene} start={start} />
+            <ClaudePromptInputScene frame={frame} prompt={scene.prompt} start={starts[index]} />
           </FragmentBlock>
         )
       })}
