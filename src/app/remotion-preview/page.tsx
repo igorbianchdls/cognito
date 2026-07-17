@@ -114,6 +114,7 @@ import {
 } from '@/assets/remotion/compositions/OttoAssistantCompatibility'
 import { OTTO_ASSISTANT_CONNECTIONS_DURATION, OttoAssistantConnections } from '@/assets/remotion/compositions/OttoAssistantConnections'
 import { OTTO_AGENT_SCAN_DURATION, OttoAgentScan } from '@/assets/remotion/compositions/OttoAgentScan'
+import { OTTO_ERP_HOME_DASHBOARD_DURATION, OttoErpHomeDashboard } from '@/assets/remotion/compositions/OttoErpHomeDashboard'
 import { OTTO_INTEGRATION_ACCESS_MAP_DURATION, OttoIntegrationAccessMap } from '@/assets/remotion/compositions/OttoIntegrationAccessMap'
 import { OTTO_INTEGRATION_SIGNAL_MAP_DURATION, OttoIntegrationSignalMap } from '@/assets/remotion/compositions/OttoIntegrationSignalMap'
 import { OTTO_LOGO_REVEAL_HORIZONTAL_DURATION, OttoLogoRevealHorizontal } from '@/assets/remotion/compositions/OttoLogoRevealHorizontal'
@@ -2160,6 +2161,18 @@ const catalog: CatalogItem[] = [
     label: 'Otto Integration Access Map',
     tags: ['Integrations', 'Permissions', 'Access', 'Otto'],
     value: 'actions-otto-integration-access-map',
+    width: 1280,
+  },
+  {
+    code: '<OttoErpHomeDashboard />',
+    component: OttoErpHomeDashboard,
+    description: 'Simulacao da tela inicial do ERP Otto com sidebar, KPIs, fluxo de caixa, relatorios e resumo financeiro.',
+    duration: OTTO_ERP_HOME_DASHBOARD_DURATION,
+    height: 720,
+    kind: 'Actions',
+    label: 'Otto ERP Home Dashboard',
+    tags: ['ERP', 'Dashboard', 'Otto', 'Financeiro'],
+    value: 'actions-otto-erp-home-dashboard',
     width: 1280,
   },
   {
