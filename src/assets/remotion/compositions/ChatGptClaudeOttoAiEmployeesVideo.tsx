@@ -84,6 +84,23 @@ function stagedScroll(frame: number, actionCount: number) {
   return interpolate(frame, [0, 360, 660, 960, 1260, 1560, 1860, 2160, 2460], [0, 0, -520, -1040, -1560, -2080, -2600, -3120, -3640], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' })
 }
 
+function toolDrivenScroll(frame: number, scheduledActions: Array<{ resultStart: number; summaryStart: number }>) {
+  if (scheduledActions.length <= 3) {
+    return stagedScroll(frame, scheduledActions.length)
+  }
+
+  const inputRange = [0, Math.max(1, scheduledActions[0].resultStart + 20)]
+  const outputRange = [0, 0]
+
+  scheduledActions.forEach(({ resultStart, summaryStart }, index) => {
+    const resultPosition = -500 - index * 560
+    inputRange.push(resultStart + 78, summaryStart + 62)
+    outputRange.push(resultPosition, resultPosition - 220)
+  })
+
+  return interpolate(frame, inputRange, outputRange, { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' })
+}
+
 function sequence(frame: number, start: number, fromY = 20) {
   return chatGptSequenceStyle(frame, start, fromY)
 }
@@ -764,7 +781,6 @@ function AgentChatScene({ scene, start }: { scene: AgentScene; start: number }) 
   const longRows = scene.actions.some((action) => (action.result.rows?.length ?? 0) >= 8)
   const duration = scene.actions.length === 1 ? 790 : scene.actions.length === 2 ? 930 : scene.actions.length === 3 ? (longRows ? 1850 : 1550) : 2700
   const opacity = p(frame, start - 10, start + 14) * p(frame, start + duration - 28, start + duration, [1, 0])
-  const conversationY = stagedScroll(local, scene.actions.length)
   let cursor = 150
   const scheduledActions = scene.actions.map((action, index) => {
     const toolStart = cursor
@@ -774,6 +790,7 @@ function AgentChatScene({ scene, start }: { scene: AgentScene; start: number }) 
     cursor = summaryStart + (action.summary ? 118 : 46)
     return { action, index, resultStart, summaryStart, toolStart }
   })
+  const conversationY = toolDrivenScroll(local, scheduledActions)
   const dashboardAction = scheduledActions.find(({ action }) => action.result.kind === 'dashboardOutline')
   const invoiceAction = scheduledActions.find(({ action }) => action.result.kind === 'invoiceOutline')
 
