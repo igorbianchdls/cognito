@@ -1,7 +1,10 @@
-import type { ReactElement } from 'react'
+import type { ComponentType, ReactElement } from 'react'
 import { AbsoluteFill, Easing, Img, interpolate, staticFile, useCurrentFrame } from 'remotion'
+import AmazonIcon from '@/components/icons/AmazonIcon'
+import GoogleAdsIcon from '@/components/icons/GoogleAdsIcon'
+import ShopifyIcon from '@/components/icons/ShopifyIcon'
 
-export const OTTO_ERP_ACCOUNTS_DRAWER_ACTION_DURATION = 300
+export const OTTO_ERP_ACCOUNTS_DRAWER_ACTION_DURATION = 380
 
 const INK = '#111827'
 const MUTED = '#6B7280'
@@ -13,6 +16,18 @@ const BLUE = '#2563EB'
 const TEAL = '#0F766E'
 const AMBER = '#D97706'
 
+type AccountRow = {
+  color: string
+  description: string
+  due: string
+  icon?: ComponentType<{ className?: string }>
+  initials: string
+  name: string
+  status: string
+  type: 'Pagar' | 'Receber'
+  value: string
+}
+
 const navItems = [
   { icon: 'home', label: 'Inicio' },
   { icon: 'chat', label: 'Chat' },
@@ -22,14 +37,16 @@ const navItems = [
   { icon: 'plug', label: 'Integracoes' },
 ]
 
-const rows = [
-  ['AWS Brasil', 'Infraestrutura recorrente e cloud', 'Pagar', '25 Jun', 'R$ 12.790,00', 'Aprovar', RED, 'AW'],
-  ['Cliente Norte', 'NFS-e 2048 - consultoria operacional', 'Receber', '28 Jun', 'R$ 42.100,00', 'Previsto', GREEN, 'CN'],
-  ['Google Ads', 'Campanhas de aquisicao e remarketing', 'Pagar', '30 Jun', 'R$ 8.420,00', 'Agendado', BLUE, 'G'],
-  ['Mercado Sul', 'Pedido faturado com atraso', 'Receber', '02 Jul', 'R$ 28.900,00', 'Atrasado', RED, 'MS'],
-  ['Fornecedor Cloud', 'Renovacao anual de software', 'Pagar', '05 Jul', 'R$ 18.400,00', 'Rascunho', TEAL, 'FC'],
-  ['Loja Prime', 'Repasse ecommerce Shopify', 'Receber', '07 Jul', 'R$ 16.800,00', 'Confirmado', GREEN, 'LP'],
-] as const
+const rows: AccountRow[] = [
+  { color: '#FF9900', description: 'Infraestrutura recorrente e cloud', due: '25 Jun', icon: AmazonIcon, initials: 'AW', name: 'AWS Brasil', status: 'Aprovar', type: 'Pagar', value: 'R$ 12.790,00' },
+  { color: BLUE, description: 'Campanhas de aquisicao e remarketing', due: '30 Jun', icon: GoogleAdsIcon, initials: 'G', name: 'Google Ads', status: 'Agendado', type: 'Pagar', value: 'R$ 8.420,00' },
+  { color: TEAL, description: 'Renovacao anual de software', due: '05 Jul', initials: 'FC', name: 'Fornecedor Cloud', status: 'Rascunho', type: 'Pagar', value: 'R$ 18.400,00' },
+  { color: AMBER, description: 'Guia mensal e obrigacoes fiscais', due: '06 Jul', initials: 'TX', name: 'Impostos federais', status: 'Prioridade', type: 'Pagar', value: 'R$ 31.200,00' },
+  { color: GREEN, description: 'NFS-e 2048 - consultoria operacional', due: '28 Jun', initials: 'CN', name: 'Cliente Norte', status: 'Previsto', type: 'Receber', value: 'R$ 42.100,00' },
+  { color: RED, description: 'Pedido faturado com atraso', due: '02 Jul', initials: 'MS', name: 'Mercado Sul', status: 'Atrasado', type: 'Receber', value: 'R$ 28.900,00' },
+  { color: '#95BF47', description: 'Repasse ecommerce Shopify', due: '07 Jul', icon: ShopifyIcon, initials: 'LP', name: 'Loja Prime', status: 'Confirmado', type: 'Receber', value: 'R$ 16.800,00' },
+  { color: GREEN, description: 'Retainer mensal de performance', due: '09 Jul', initials: 'RA', name: 'Rede Alpha', status: 'Previsto', type: 'Receber', value: 'R$ 18.600,00' },
+]
 
 function ease(frame: number, start: number, end: number) {
   return interpolate(frame, [start, end], [0, 1], {
@@ -37,6 +54,12 @@ function ease(frame: number, start: number, end: number) {
     extrapolateLeft: 'clamp',
     extrapolateRight: 'clamp',
   })
+}
+
+function phase(frame: number): 'Pagar' | 'Receber' | 'Todos' {
+  if (frame < 112) return 'Pagar'
+  if (frame < 204) return 'Receber'
+  return 'Todos'
 }
 
 function LineIcon({ name, size = 20 }: { name: string; size?: number }) {
@@ -67,23 +90,7 @@ function Sidebar() {
       </div>
       <div style={{ display: 'grid', gap: 10, justifyItems: 'center', paddingTop: 6 }}>
         {navItems.map((item) => (
-          <div
-            key={item.label}
-            style={{
-              alignItems: 'center',
-              background: item.active ? '#ECFDF3' : 'transparent',
-              borderRadius: 14,
-              color: item.active ? GREEN : '#4D4D4D',
-              display: 'flex',
-              flexDirection: 'column',
-              fontSize: 10,
-              fontWeight: item.active ? 760 : 520,
-              gap: 5,
-              height: 58,
-              justifyContent: 'center',
-              width: 72,
-            }}
-          >
+          <div key={item.label} style={{ alignItems: 'center', background: item.active ? '#ECFDF3' : 'transparent', borderRadius: 14, color: item.active ? GREEN : '#4D4D4D', display: 'flex', flexDirection: 'column', fontSize: 10, fontWeight: item.active ? 760 : 520, gap: 5, height: 58, justifyContent: 'center', width: 72 }}>
             <LineIcon name={item.icon} size={19} />
             <span>{item.label}</span>
           </div>
@@ -102,7 +109,7 @@ function TopBar() {
       </div>
       <div style={{ alignItems: 'center', background: SOFT, border: `1px solid ${LINE}`, borderRadius: 10, color: '#9CA3AF', display: 'flex', gap: 9, height: 36, padding: '0 13px' }}>
         <LineIcon name="search" size={16} />
-        <span style={{ fontSize: 13, fontWeight: 500 }}>Buscar cliente, fornecedor ou lançamento...</span>
+        <span style={{ fontSize: 13, fontWeight: 500 }}>Buscar cliente, fornecedor ou lancamento...</span>
       </div>
       <div style={{ alignItems: 'center', display: 'flex', gap: 12, justifyContent: 'flex-end', paddingLeft: 18 }}>
         <span style={{ background: '#ECFDF3', border: '1px solid #BBF7D0', borderRadius: 999, color: GREEN, fontSize: 12, fontWeight: 760, padding: '7px 10px' }}>Otto IA ativo</span>
@@ -123,21 +130,36 @@ function MetricCard({ delay, label, tone, value }: { delay: number; label: strin
   )
 }
 
+function CompanyIcon({ row }: { row: AccountRow }) {
+  const Icon = row.icon
+  return (
+    <span style={{ alignItems: 'center', background: Icon ? '#FFFFFF' : `${row.color}14`, border: `1px solid ${Icon ? LINE : `${row.color}22`}`, borderRadius: 13, color: row.color, display: 'flex', fontSize: 13, fontWeight: 850, height: 42, justifyContent: 'center', overflow: 'hidden', width: 42 }}>
+      {Icon ? <Icon className="h-8 w-8" /> : row.initials}
+    </span>
+  )
+}
+
 function StatusPill({ color, label }: { color: string; label: string }) {
   return <span style={{ background: `${color}12`, borderRadius: 999, color, display: 'inline-block', fontSize: 12, fontWeight: 760, padding: '7px 9px', textAlign: 'center' }}>{label}</span>
 }
 
 function AccountsTable() {
   const frame = useCurrentFrame()
+  const currentPhase = phase(frame)
+  const shownRows = currentPhase === 'Todos' ? rows : rows.filter((row) => row.type === currentPhase)
+  const phaseStart = currentPhase === 'Pagar' ? 48 : currentPhase === 'Receber' ? 122 : 210
+  const title = currentPhase === 'Pagar' ? 'Contas a pagar' : currentPhase === 'Receber' ? 'Contas a receber' : 'Contas a pagar e receber'
+  const subtitle = currentPhase === 'Pagar' ? 'Fornecedores, impostos e despesas pendentes' : currentPhase === 'Receber' ? 'Clientes, notas emitidas e recebimentos previstos' : 'Visao consolidada antes de registrar um novo lancamento'
+  const buttonIn = ease(frame, 198, 218)
 
   return (
     <div style={{ background: '#FFFFFF', border: `1px solid ${LINE}`, borderRadius: 20, overflow: 'hidden' }}>
       <div style={{ alignItems: 'center', borderBottom: `1px solid ${LINE}`, display: 'grid', gridTemplateColumns: '1fr auto', padding: '19px 22px' }}>
         <div>
-          <div style={{ color: INK, fontSize: 20, fontWeight: 820, letterSpacing: -0.25 }}>Contas a pagar e receber</div>
-          <div style={{ color: MUTED, fontSize: 13, fontWeight: 500, marginTop: 5 }}>Visão operacional dos próximos vencimentos</div>
+          <div style={{ color: INK, fontSize: 20, fontWeight: 820, letterSpacing: -0.25 }}>{title}</div>
+          <div style={{ color: MUTED, fontSize: 13, fontWeight: 500, marginTop: 5 }}>{subtitle}</div>
         </div>
-        <button style={{ background: INK, border: 0, borderRadius: 12, color: '#FFFFFF', fontSize: 13, fontWeight: 760, height: 38, padding: '0 15px' }}>Novo lançamento</button>
+        <button style={{ background: INK, border: 0, borderRadius: 12, color: '#FFFFFF', fontSize: 13, fontWeight: 760, height: 38, opacity: buttonIn, padding: '0 15px', transform: `translateY(${(1 - buttonIn) * 8}px)` }}>Novo lancamento</button>
       </div>
       <div style={{ background: '#FBFCFD', borderBottom: `1px solid ${LINE}`, color: '#8A94A6', display: 'grid', fontSize: 11, fontWeight: 780, gridTemplateColumns: '1.35fr 110px 118px 132px 110px', padding: '10px 22px', textTransform: 'uppercase' }}>
         <span>Conta</span>
@@ -146,21 +168,22 @@ function AccountsTable() {
         <span>Valor</span>
         <span>Status</span>
       </div>
-      {rows.map(([name, description, type, due, value, status, color, initials], index) => {
-        const rowIn = ease(frame, 56 + index * 9, 78 + index * 9)
+      {shownRows.map((row, index) => {
+        const rowIn = ease(frame, phaseStart + index * 9, phaseStart + 22 + index * 9)
+        const statusColor = row.status === 'Atrasado' || row.status === 'Aprovar' || row.status === 'Prioridade' ? RED : row.status === 'Rascunho' ? AMBER : row.color
         return (
-          <div key={`${name}-${type}`} style={{ alignItems: 'center', borderBottom: index === rows.length - 1 ? 'none' : `1px solid ${LINE}`, display: 'grid', gridTemplateColumns: '1.35fr 110px 118px 132px 110px', minHeight: 72, opacity: rowIn, padding: '0 22px', transform: `translateX(${(1 - rowIn) * 18}px)` }}>
+          <div key={`${currentPhase}-${row.name}-${row.type}`} style={{ alignItems: 'center', borderBottom: index === shownRows.length - 1 ? 'none' : `1px solid ${LINE}`, display: 'grid', gridTemplateColumns: '1.35fr 110px 118px 132px 110px', minHeight: 72, opacity: rowIn, padding: '0 22px', transform: `translateX(${(1 - rowIn) * 18}px)` }}>
             <div style={{ alignItems: 'center', display: 'grid', gap: 13, gridTemplateColumns: '42px 1fr', minWidth: 0 }}>
-              <span style={{ alignItems: 'center', background: `${color}14`, border: `1px solid ${color}22`, borderRadius: 13, color, display: 'flex', fontSize: 13, fontWeight: 850, height: 42, justifyContent: 'center', width: 42 }}>{initials}</span>
+              <CompanyIcon row={row} />
               <div style={{ minWidth: 0 }}>
-                <div style={{ color: INK, fontSize: 14, fontWeight: 760, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{name}</div>
-                <div style={{ color: MUTED, fontSize: 12, fontWeight: 500, marginTop: 4, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{description}</div>
+                <div style={{ color: INK, fontSize: 14, fontWeight: 760, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{row.name}</div>
+                <div style={{ color: MUTED, fontSize: 12, fontWeight: 500, marginTop: 4, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{row.description}</div>
               </div>
             </div>
-            <span style={{ color: type === 'Receber' ? GREEN : RED, fontSize: 13, fontWeight: 740 }}>{type}</span>
-            <span style={{ color: INK, fontSize: 13, fontWeight: 650 }}>{due}</span>
-            <span style={{ color: INK, fontSize: 14, fontWeight: 780 }}>{value}</span>
-            <StatusPill color={status === 'Atrasado' || status === 'Aprovar' ? RED : status === 'Rascunho' ? AMBER : color} label={status} />
+            <span style={{ color: row.type === 'Receber' ? GREEN : RED, fontSize: 13, fontWeight: 740 }}>{row.type}</span>
+            <span style={{ color: INK, fontSize: 13, fontWeight: 650 }}>{row.due}</span>
+            <span style={{ color: INK, fontSize: 14, fontWeight: 780 }}>{row.value}</span>
+            <StatusPill color={statusColor} label={row.status} />
           </div>
         )
       })}
@@ -170,12 +193,12 @@ function AccountsTable() {
 
 function CursorPointer() {
   const frame = useCurrentFrame()
-  const click = ease(frame, 138, 152)
-  const x = interpolate(ease(frame, 112, 144), [0, 1], [820, 1042], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' })
-  const y = interpolate(ease(frame, 112, 144), [0, 1], [390, 192], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' })
+  const click = ease(frame, 228, 242)
+  const x = interpolate(ease(frame, 204, 234), [0, 1], [816, 1042], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' })
+  const y = interpolate(ease(frame, 204, 234), [0, 1], [392, 192], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' })
 
   return (
-    <div style={{ filter: 'drop-shadow(0 8px 10px rgba(15, 23, 42, 0.18))', left: x, opacity: ease(frame, 104, 122) * interpolate(frame, [164, 182], [1, 0], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' }), position: 'absolute', top: y, transform: `scale(${1 - click * 0.12})`, zIndex: 20 }}>
+    <div style={{ filter: 'drop-shadow(0 8px 10px rgba(15, 23, 42, 0.18))', left: x, opacity: ease(frame, 198, 216) * interpolate(frame, [254, 272], [1, 0], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' }), position: 'absolute', top: y, transform: `scale(${1 - click * 0.12})`, zIndex: 20 }}>
       <svg height="38" viewBox="0 0 42 42" width="38">
         <path d="M8 5L32 24L21 26L16 37L8 5Z" fill="#111111" />
         <path d="M18 25L23 36" stroke="#ffffff" strokeLinecap="round" strokeWidth="3" />
@@ -186,12 +209,12 @@ function CursorPointer() {
 
 function AccountDrawer() {
   const frame = useCurrentFrame()
-  const open = ease(frame, 150, 178)
-  const save = ease(frame, 246, 264)
+  const open = ease(frame, 240, 268)
+  const save = ease(frame, 330, 348)
   const fields = [
     ['Tipo', 'Conta a pagar'],
     ['Fornecedor', 'Fornecedor Cloud'],
-    ['Descrição', 'Renovação anual de software'],
+    ['Descricao', 'Renovacao anual de software'],
     ['Vencimento', '05 Jul 2026'],
     ['Valor', 'R$ 18.400,00'],
     ['Categoria', 'Software e infraestrutura'],
@@ -201,14 +224,14 @@ function AccountDrawer() {
     <div style={{ background: '#FFFFFF', borderLeft: `1px solid ${LINE}`, bottom: 0, boxShadow: '-24px 0 60px rgba(15, 23, 42, 0.10)', opacity: open, padding: 24, position: 'absolute', right: 0, top: 0, transform: `translateX(${(1 - open) * 390}px)`, width: 388, zIndex: 12 }}>
       <div style={{ alignItems: 'center', display: 'flex', justifyContent: 'space-between' }}>
         <div>
-          <div style={{ color: INK, fontSize: 22, fontWeight: 820, letterSpacing: -0.4 }}>Novo lançamento</div>
+          <div style={{ color: INK, fontSize: 22, fontWeight: 820, letterSpacing: -0.4 }}>Novo lancamento</div>
           <div style={{ color: MUTED, fontSize: 13, fontWeight: 500, marginTop: 5 }}>Registrar conta no ERP</div>
         </div>
-        <span style={{ alignItems: 'center', background: SOFT, borderRadius: 999, color: MUTED, display: 'flex', fontSize: 18, fontWeight: 500, height: 34, justifyContent: 'center', width: 34 }}>×</span>
+        <span style={{ alignItems: 'center', background: SOFT, borderRadius: 999, color: MUTED, display: 'flex', fontSize: 18, fontWeight: 500, height: 34, justifyContent: 'center', width: 34 }}>x</span>
       </div>
       <div style={{ display: 'grid', gap: 12, marginTop: 24 }}>
         {fields.map(([label, value], index) => {
-          const fieldIn = ease(frame, 174 + index * 8, 194 + index * 8)
+          const fieldIn = ease(frame, 264 + index * 8, 284 + index * 8)
           return (
             <div key={label} style={{ opacity: fieldIn, transform: `translateY(${(1 - fieldIn) * 10}px)` }}>
               <label style={{ color: MUTED, display: 'block', fontSize: 11, fontWeight: 780, marginBottom: 6, textTransform: 'uppercase' }}>{label}</label>
@@ -217,15 +240,18 @@ function AccountDrawer() {
           )
         })}
       </div>
-      <div style={{ background: '#ECFDF3', border: '1px solid #BBF7D0', borderRadius: 14, color: GREEN, fontSize: 13, fontWeight: 650, lineHeight: 1.35, marginTop: 18, opacity: ease(frame, 228, 246), padding: 13 }}>
-        Otto vinculou este lançamento ao fornecedor e sugeriu recorrência automática.
+      <div style={{ background: '#ECFDF3', border: '1px solid #BBF7D0', borderRadius: 14, color: GREEN, fontSize: 13, fontWeight: 650, lineHeight: 1.35, marginTop: 18, opacity: ease(frame, 316, 334), padding: 13 }}>
+        Otto vinculou este lancamento ao fornecedor e sugeriu recorrencia automatica.
       </div>
-      <button style={{ background: save > 0.5 ? GREEN : INK, border: 0, borderRadius: 13, bottom: 24, color: '#FFFFFF', fontSize: 14, fontWeight: 800, height: 46, left: 24, position: 'absolute', right: 24 }}>{save > 0.5 ? 'Lançamento registrado' : 'Registrar lançamento'}</button>
+      <button style={{ background: save > 0.5 ? GREEN : INK, border: 0, borderRadius: 13, bottom: 24, color: '#FFFFFF', fontSize: 14, fontWeight: 800, height: 46, left: 24, position: 'absolute', right: 24 }}>{save > 0.5 ? 'Lancamento registrado' : 'Registrar lancamento'}</button>
     </div>
   )
 }
 
 export function OttoErpAccountsDrawerAction() {
+  const frame = useCurrentFrame()
+  const currentPhase = phase(frame)
+
   return (
     <AbsoluteFill style={{ background: '#FFFFFF', color: INK, fontFamily: 'Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif' }}>
       <Sidebar />
@@ -235,17 +261,17 @@ export function OttoErpAccountsDrawerAction() {
           <div style={{ alignItems: 'end', display: 'flex', justifyContent: 'space-between' }}>
             <div>
               <h1 style={{ color: INK, fontSize: 42, fontWeight: 760, letterSpacing: -1.4, lineHeight: 1, margin: 0 }}>Contas a pagar e receber</h1>
-              <p style={{ color: MUTED, fontSize: 15, fontWeight: 500, margin: '10px 0 0' }}>Registre, acompanhe e automatize lançamentos financeiros.</p>
+              <p style={{ color: MUTED, fontSize: 15, fontWeight: 500, margin: '10px 0 0' }}>Registre, acompanhe e automatize lancamentos financeiros.</p>
             </div>
             <div style={{ alignItems: 'center', display: 'flex', gap: 9 }}>
-              {['Todos', 'A pagar', 'A receber', 'Atrasados'].map((tab, index) => (
-                <span key={tab} style={{ background: index === 0 ? INK : '#FFFFFF', border: `1px solid ${index === 0 ? INK : LINE}`, borderRadius: 999, color: index === 0 ? '#FFFFFF' : MUTED, fontSize: 12, fontWeight: 720, padding: '8px 12px' }}>{tab}</span>
+              {['A pagar', 'A receber', 'Todos'].map((tab) => (
+                <span key={tab} style={{ background: (currentPhase === 'Pagar' && tab === 'A pagar') || (currentPhase === 'Receber' && tab === 'A receber') || (currentPhase === 'Todos' && tab === 'Todos') ? INK : '#FFFFFF', border: `1px solid ${((currentPhase === 'Pagar' && tab === 'A pagar') || (currentPhase === 'Receber' && tab === 'A receber') || (currentPhase === 'Todos' && tab === 'Todos')) ? INK : LINE}`, borderRadius: 999, color: ((currentPhase === 'Pagar' && tab === 'A pagar') || (currentPhase === 'Receber' && tab === 'A receber') || (currentPhase === 'Todos' && tab === 'Todos')) ? '#FFFFFF' : MUTED, fontSize: 12, fontWeight: 720, padding: '8px 12px' }}>{tab}</span>
               ))}
             </div>
           </div>
           <div style={{ display: 'grid', gap: 16, gridTemplateColumns: 'repeat(4, 1fr)', marginTop: 24 }}>
-            <MetricCard delay={18} label="A pagar" tone={RED} value="R$ 63.980" />
-            <MetricCard delay={24} label="A receber" tone={GREEN} value="R$ 192.500" />
+            <MetricCard delay={18} label="A pagar" tone={RED} value="R$ 70.810" />
+            <MetricCard delay={24} label="A receber" tone={GREEN} value="R$ 106.400" />
             <MetricCard delay={30} label="Em atraso" tone={RED} value="R$ 28.900" />
             <MetricCard delay={36} label="Registradas hoje" tone={BLUE} value="12" />
           </div>
