@@ -248,6 +248,61 @@ function ReconciliationResultRow({ index, localFrame, row }: { index: number; lo
   )
 }
 
+function ChatGptOutlineCard({ click, progress, subtitle, title }: { click: number; progress: number; subtitle: string; title: string }) {
+  return (
+    <div
+      style={{
+        alignItems: 'center',
+        background: click > 0.45 ? '#f7f7f7' : '#ffffff',
+        border: '1.5px solid #d6cec3',
+        borderRadius: 28,
+        boxShadow: '0 18px 42px rgba(50, 45, 35, 0.10)',
+        display: 'grid',
+        gridTemplateColumns: '174px 1fr',
+        height: 142,
+        opacity: progress,
+        overflow: 'hidden',
+        padding: '0 34px',
+        transform: `translateY(${(1 - progress) * 22}px) scale(${1 - Math.sin(click * Math.PI) * 0.018})`,
+        width: '100%',
+      }}
+    >
+      <div style={{ alignItems: 'center', alignSelf: 'stretch', display: 'flex', justifyContent: 'flex-start', overflow: 'hidden', position: 'relative' }}>
+        <div style={{ alignItems: 'center', background: '#fbfaf7', border: '1.5px solid #d8d0c4', borderRadius: 18, display: 'flex', height: 126, justifyContent: 'center', transform: 'rotate(-6deg)', width: 126 }}>
+          <div style={{ alignItems: 'center', border: '3px solid #252525', borderRadius: 5, display: 'flex', height: 42, justifyContent: 'center', position: 'relative', width: 34 }}>
+            <span style={{ borderBottom: '10px solid transparent', borderLeft: '10px solid #252525', height: 0, position: 'absolute', right: -3, top: -3, width: 0 }} />
+            <span style={{ background: '#252525', borderRadius: 999, height: 4, position: 'absolute', top: 14, width: 16 }} />
+            <span style={{ background: '#252525', borderRadius: 999, height: 4, position: 'absolute', top: 23, width: 16 }} />
+          </div>
+        </div>
+      </div>
+      <div style={{ display: 'grid', gap: 10, minWidth: 0 }}>
+        <strong style={{ color: '#242424', fontSize: 34, fontWeight: 520, letterSpacing: 0, lineHeight: 1.08, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{title}</strong>
+        <span style={{ color: '#77736d', fontSize: 27, fontWeight: 440, letterSpacing: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{subtitle}</span>
+      </div>
+    </div>
+  )
+}
+
+function ChatGptOutlineWithCursor({ localFrame, subtitle, title }: { localFrame: number; subtitle: string; title: string }) {
+  const progress = p(localFrame, 6, 24)
+  const click = p(localFrame, 104, 122)
+  const cursorX = interpolate(p(localFrame, 74, 112), [0, 1], [520, 598], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' })
+  const cursorY = interpolate(p(localFrame, 74, 112), [0, 1], [72, 102], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' })
+
+  return (
+    <div style={{ height: 168, position: 'relative', width: '100%' }}>
+      <ChatGptOutlineCard click={click} progress={progress} subtitle={subtitle} title={title} />
+      <div style={{ filter: 'drop-shadow(0 8px 10px rgba(15, 23, 42, 0.2))', left: cursorX, opacity: progress, position: 'absolute', top: cursorY, transform: `scale(${1 - click * 0.12})`, zIndex: 6 }}>
+        <svg height="42" viewBox="0 0 42 42" width="42">
+          <path d="M8 5L32 24L21 26L16 37L8 5Z" fill="#111111" />
+          <path d="M18 25L23 36" stroke="#ffffff" strokeLinecap="round" strokeWidth="3" />
+        </svg>
+      </div>
+    </div>
+  )
+}
+
 function DashboardOutlineResult({ localFrame, subtitle, title }: { localFrame: number; subtitle: string; title: string }) {
   const outlineIn = p(localFrame, 6, 24)
   const click = p(localFrame, 104, 122)
@@ -696,20 +751,27 @@ function AgentChatScene({ scene, start }: { scene: AgentScene; start: number }) 
         <ChatGptFlowUserBubble style={fadeOnlyStyle(local, 8)}>{scene.prompt}</ChatGptFlowUserBubble>
         <ChatGptFlowAssistantText style={sequence(local, 62)}>{scene.intro}</ChatGptFlowAssistantText>
         {scheduledActions.map(({ action, index, resultStart, summaryStart, toolStart }) => {
+          const isOutline = action.result.kind === 'dashboardOutline' || action.result.kind === 'invoiceOutline' || action.result.kind === 'reportOutline'
           return (
             <FragmentBlock key={`${action.tool}-${index}`}>
               {action.text ? <ChatGptFlowAssistantText showHeader={false} style={sequence(local, toolStart - 36)}>{action.text}</ChatGptFlowAssistantText> : null}
               <ChatGptToolCallCard style={sequence(local, toolStart)} toolName={action.tool} />
-              <ChatGptToolResultCard style={sequence(local, resultStart)}>
-                <CascadeResultCard localFrame={local - resultStart} result={action.result} />
-              </ChatGptToolResultCard>
+              {isOutline ? (
+                <div style={{ ...sequence(local, resultStart), margin: '0 36px' }}>
+                  <ChatGptOutlineWithCursor localFrame={local - resultStart} subtitle={action.result.subtitle} title={action.result.title} />
+                </div>
+              ) : (
+                <ChatGptToolResultCard style={sequence(local, resultStart)}>
+                  <CascadeResultCard localFrame={local - resultStart} result={action.result} />
+                </ChatGptToolResultCard>
+              )}
               {action.summary ? <ChatGptFlowAssistantText showHeader={false} style={sequence(local, summaryStart)}>{action.summary}</ChatGptFlowAssistantText> : null}
             </FragmentBlock>
           )
         })}
       </ChatGptMobileShell>
       {dashboardAction ? <FullscreenDashboardScene localFrame={local - (dashboardAction.resultStart + 170)} /> : null}
-      {invoiceAction ? <FullscreenInvoiceScene localFrame={local - (invoiceAction.resultStart + 220)} /> : null}
+      {invoiceAction ? <FullscreenInvoiceScene localFrame={local - (invoiceAction.resultStart + 170)} /> : null}
     </div>
   )
 }
