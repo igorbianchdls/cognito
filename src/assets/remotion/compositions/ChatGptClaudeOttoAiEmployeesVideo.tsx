@@ -19,7 +19,7 @@ import { IOS_REMOTION_FONT_STACK, loadSfProFonts } from '@/assets/remotion/fonts
 
 loadSfProFonts()
 
-export const OTTO_AI_EMPLOYEES_CHATGPT_CLAUDE_DURATION = 10200
+export const OTTO_AI_EMPLOYEES_CHATGPT_CLAUDE_DURATION = 11600
 
 const FONT = IOS_REMOTION_FONT_STACK
 
@@ -37,7 +37,7 @@ type ResultRow = {
 
 type ActionStep = {
   result: {
-    kind?: 'list' | 'table' | 'dashboard' | 'dashboardOutline' | 'employee' | 'invoiceOutline' | 'reconciliation'
+    kind?: 'list' | 'table' | 'dashboard' | 'dashboardOutline' | 'employee' | 'invoiceOutline' | 'reconciliation' | 'reportOutline' | 'slides'
     rows?: ResultRow[]
     subtitle: string
     title: string
@@ -178,7 +178,7 @@ function CascadeResultCard({ localFrame, result }: { localFrame: number; result:
   const show = p(localFrame, 0, 18)
   const rows = result.rows ?? []
   const rowHeight = 72
-  const cardHeight = result.kind === 'dashboard' || result.kind === 'dashboardOutline' ? 552 : result.kind === 'employee' ? 500 : interpolate(p(localFrame, 34, 78), [0, 1], [116, 126 + rows.length * rowHeight], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' })
+  const cardHeight = result.kind === 'dashboard' || result.kind === 'dashboardOutline' || result.kind === 'reportOutline' || result.kind === 'slides' ? 552 : result.kind === 'employee' ? 500 : interpolate(p(localFrame, 34, 78), [0, 1], [116, 126 + rows.length * rowHeight], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' })
   const progress = Math.round(interpolate(p(localFrame, 18, 154), [0, 1], [18, 100], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' }))
 
   return (
@@ -191,7 +191,7 @@ function CascadeResultCard({ localFrame, result }: { localFrame: number; result:
           </div>
           <span style={{ background: '#ecfdf3', border: '1px solid #bbf7d0', borderRadius: 999, color: '#0f8f51', fontSize: 18, fontWeight: 650, padding: '9px 14px' }}>{progress}%</span>
         </div>
-        {result.kind === 'dashboard' ? <DashboardResult localFrame={localFrame - 20} /> : result.kind === 'dashboardOutline' ? <DashboardOutlineResult localFrame={localFrame - 20} /> : result.kind === 'invoiceOutline' ? <InvoiceOutlineResult localFrame={localFrame - 20} /> : result.kind === 'employee' ? <EmployeeResult localFrame={localFrame - 20} /> : result.kind === 'reconciliation' ? rows.map((row, index) => <ReconciliationResultRow key={`${row.name}-${index}`} index={index} localFrame={localFrame} row={row} />) : rows.map((row, index) => <ResultRowItem key={`${row.name}-${index}`} index={index} localFrame={localFrame} row={row} />)}
+        {result.kind === 'dashboard' ? <DashboardResult localFrame={localFrame - 20} /> : result.kind === 'dashboardOutline' ? <DashboardOutlineResult localFrame={localFrame - 20} subtitle={result.subtitle} title={result.title} /> : result.kind === 'reportOutline' ? <ReportOutlineResult localFrame={localFrame - 20} /> : result.kind === 'slides' ? <SlidesResult localFrame={localFrame - 20} /> : result.kind === 'invoiceOutline' ? <InvoiceOutlineResult localFrame={localFrame - 20} /> : result.kind === 'employee' ? <EmployeeResult localFrame={localFrame - 20} /> : result.kind === 'reconciliation' ? rows.map((row, index) => <ReconciliationResultRow key={`${row.name}-${index}`} index={index} localFrame={localFrame} row={row} />) : rows.map((row, index) => <ResultRowItem key={`${row.name}-${index}`} index={index} localFrame={localFrame} row={row} />)}
       </div>
     </div>
   )
@@ -248,23 +248,22 @@ function ReconciliationResultRow({ index, localFrame, row }: { index: number; lo
   )
 }
 
-function DashboardOutlineResult({ localFrame }: { localFrame: number }) {
+function DashboardOutlineResult({ localFrame, subtitle, title }: { localFrame: number; subtitle: string; title: string }) {
   const outlineIn = p(localFrame, 6, 24)
   const click = p(localFrame, 104, 122)
-  const dashboardIn = p(localFrame, 144, 174)
   const cursorX = interpolate(p(localFrame, 74, 112), [0, 1], [360, 478], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' })
   const cursorY = interpolate(p(localFrame, 74, 112), [0, 1], [98, 134], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' })
 
   return (
     <div style={{ height: 420, overflow: 'hidden', padding: '4px 22px 0', position: 'relative' }}>
-      <div style={{ opacity: outlineIn * p(localFrame, 126, 150, [1, 0]), transform: `translateY(${(1 - outlineIn) * 14}px)` }}>
+      <div style={{ opacity: outlineIn, transform: `translateY(${(1 - outlineIn) * 14}px)` }}>
         <div style={{ alignItems: 'center', background: '#ffffff', border: '1px solid #e3e5e8', borderRadius: 20, boxShadow: '0 14px 30px rgba(15, 23, 42, 0.08)', display: 'grid', gap: 18, gridTemplateColumns: '74px 1fr', padding: 18 }}>
           <div style={{ alignItems: 'center', background: '#f8fafc', border: '1px solid #e5e7eb', borderRadius: 18, display: 'flex', height: 74, justifyContent: 'center', transform: 'rotate(-4deg)', width: 74 }}>
             <span style={{ color: '#111111', fontSize: 28, fontWeight: 760 }}>▦</span>
           </div>
           <div style={{ minWidth: 0 }}>
-            <div style={{ color: '#111111', fontSize: 22, fontWeight: 650, letterSpacing: -0.12, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>dashboard_operacao_financeira</div>
-            <div style={{ color: '#737373', fontSize: 18, fontWeight: 430, marginTop: 6 }}>Dashboard · Tempo real</div>
+            <div style={{ color: '#111111', fontSize: 22, fontWeight: 650, letterSpacing: -0.12, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{title}</div>
+            <div style={{ color: '#737373', fontSize: 18, fontWeight: 430, marginTop: 6 }}>{subtitle}</div>
           </div>
         </div>
         <div style={{ filter: 'drop-shadow(0 8px 10px rgba(15, 23, 42, 0.2))', left: cursorX, position: 'absolute', top: cursorY, transform: `scale(${1 - click * 0.12})`, zIndex: 6 }}>
@@ -274,8 +273,57 @@ function DashboardOutlineResult({ localFrame }: { localFrame: number }) {
           </svg>
         </div>
       </div>
-      <div style={{ opacity: dashboardIn, position: 'absolute', transform: `translateY(${(1 - dashboardIn) * 18}px) scale(${0.985 + dashboardIn * 0.015})`, width: 'calc(100% - 44px)' }}>
-        <DashboardResult localFrame={localFrame - 156} />
+    </div>
+  )
+}
+
+function ReportOutlineResult({ localFrame }: { localFrame: number }) {
+  const outlineIn = p(localFrame, 6, 24)
+  const click = p(localFrame, 104, 122)
+  const reportIn = p(localFrame, 144, 174)
+  const cursorX = interpolate(p(localFrame, 74, 112), [0, 1], [350, 474], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' })
+  const cursorY = interpolate(p(localFrame, 74, 112), [0, 1], [96, 132], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' })
+
+  return (
+    <div style={{ height: 420, overflow: 'hidden', padding: '4px 22px 0', position: 'relative' }}>
+      <div style={{ opacity: outlineIn * p(localFrame, 126, 150, [1, 0]), transform: `translateY(${(1 - outlineIn) * 14}px)` }}>
+        <div style={{ alignItems: 'center', background: '#ffffff', border: '1px solid #e3e5e8', borderRadius: 20, boxShadow: '0 14px 30px rgba(15, 23, 42, 0.08)', display: 'grid', gap: 18, gridTemplateColumns: '74px 1fr', padding: 18 }}>
+          <div style={{ alignItems: 'center', background: '#f8fafc', border: '1px solid #e5e7eb', borderRadius: 18, display: 'flex', height: 74, justifyContent: 'center', transform: 'rotate(-4deg)', width: 74 }}>
+            <span style={{ color: '#111111', fontSize: 25, fontWeight: 760 }}>PDF</span>
+          </div>
+          <div style={{ minWidth: 0 }}>
+            <div style={{ color: '#111111', fontSize: 22, fontWeight: 650, letterSpacing: -0.12, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>relatorio_resultados_empresa</div>
+            <div style={{ color: '#737373', fontSize: 18, fontWeight: 430, marginTop: 6 }}>Relatório · PDF</div>
+          </div>
+        </div>
+        <div style={{ filter: 'drop-shadow(0 8px 10px rgba(15, 23, 42, 0.2))', left: cursorX, position: 'absolute', top: cursorY, transform: `scale(${1 - click * 0.12})`, zIndex: 6 }}>
+          <svg height="42" viewBox="0 0 42 42" width="42">
+            <path d="M8 5L32 24L21 26L16 37L8 5Z" fill="#111111" />
+            <path d="M18 25L23 36" stroke="#ffffff" strokeLinecap="round" strokeWidth="3" />
+          </svg>
+        </div>
+      </div>
+      <div style={{ opacity: reportIn, position: 'absolute', transform: `translateY(${(1 - reportIn) * 18}px) scale(${0.985 + reportIn * 0.015})`, width: 'calc(100% - 44px)' }}>
+        <div style={{ background: '#ffffff', border: '1px solid #e5e7eb', borderRadius: 24, boxShadow: '0 18px 42px rgba(15, 23, 42, 0.08)', padding: 22 }}>
+          <div style={{ color: '#111111', fontSize: 25, fontWeight: 820 }}>Relatório gerencial</div>
+          <div style={{ color: '#737373', fontSize: 16, fontWeight: 430, marginTop: 5 }}>Resultados, caixa, margem e riscos</div>
+          <div style={{ display: 'grid', gap: 10, marginTop: 18 }}>
+            {[
+              ['Resumo executivo', 'Caixa saudável com atenção em atrasos'],
+              ['Vencimentos', 'R$ 63.980 em pagamentos próximos'],
+              ['Recebimentos', 'R$ 192.500 previstos e R$ 28.900 em atraso'],
+              ['Economia', 'Frete e mídia com potencial de redução'],
+            ].map(([label, value], index) => {
+              const itemIn = p(localFrame, 172 + index * 8, 190 + index * 8)
+              return (
+                <div key={label} style={{ alignItems: 'center', background: '#f8fafc', border: '1px solid #eef2f7', borderRadius: 16, display: 'grid', gap: 12, gridTemplateColumns: '1fr auto', opacity: itemIn, padding: '13px 15px', transform: `translateY(${(1 - itemIn) * 10}px)` }}>
+                  <span style={{ color: '#111111', fontSize: 17, fontWeight: 700 }}>{label}</span>
+                  <span style={{ color: '#667085', fontSize: 15, fontWeight: 520 }}>{value}</span>
+                </div>
+              )
+            })}
+          </div>
+        </div>
       </div>
     </div>
   )
@@ -283,14 +331,19 @@ function DashboardOutlineResult({ localFrame }: { localFrame: number }) {
 
 function InvoiceOutlineResult({ localFrame }: { localFrame: number }) {
   const outlineIn = p(localFrame, 6, 24)
-  const click = p(localFrame, 104, 122)
-  const invoiceIn = p(localFrame, 146, 176)
-  const cursorX = interpolate(p(localFrame, 74, 112), [0, 1], [350, 474], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' })
-  const cursorY = interpolate(p(localFrame, 74, 112), [0, 1], [96, 132], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' })
+  const click = p(localFrame, 166, 184)
+  const cursorX = interpolate(p(localFrame, 136, 174), [0, 1], [350, 474], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' })
+  const cursorY = interpolate(p(localFrame, 136, 174), [0, 1], [96, 132], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' })
+  const steps = [
+    ['Validando tomador', 'CNPJ e inscrição municipal'],
+    ['Calculando ISS', 'Retenções e código de serviço'],
+    ['Transmitindo NFS-e', 'Prefeitura municipal'],
+    ['Autorizada', 'PDF e XML disponíveis'],
+  ]
 
   return (
     <div style={{ height: 420, overflow: 'hidden', padding: '4px 22px 0', position: 'relative' }}>
-      <div style={{ opacity: outlineIn * p(localFrame, 128, 150, [1, 0]), transform: `translateY(${(1 - outlineIn) * 14}px)` }}>
+      <div style={{ opacity: outlineIn, transform: `translateY(${(1 - outlineIn) * 14}px)` }}>
         <div style={{ alignItems: 'center', background: '#ffffff', border: '1px solid #e3e5e8', borderRadius: 20, boxShadow: '0 14px 30px rgba(15, 23, 42, 0.08)', display: 'grid', gap: 18, gridTemplateColumns: '74px 1fr', padding: 18 }}>
           <div style={{ alignItems: 'center', background: '#f8fafc', border: '1px solid #e5e7eb', borderRadius: 18, display: 'flex', height: 74, justifyContent: 'center', transform: 'rotate(-4deg)', width: 74 }}>
             <span style={{ color: '#111111', fontSize: 28, fontWeight: 760 }}>NF</span>
@@ -300,15 +353,29 @@ function InvoiceOutlineResult({ localFrame }: { localFrame: number }) {
             <div style={{ color: '#737373', fontSize: 18, fontWeight: 430, marginTop: 6 }}>Nota fiscal · NFS-e</div>
           </div>
         </div>
+        <div style={{ background: '#ffffff', border: '1px solid #e5e7eb', borderRadius: 18, boxShadow: '0 12px 28px rgba(15, 23, 42, 0.05)', display: 'grid', gap: 8, marginTop: 14, padding: 14 }}>
+          {steps.map(([label, detail], index) => {
+            const itemIn = p(localFrame, 34 + index * 24, 50 + index * 24)
+            const complete = localFrame >= 66 + index * 24
+            const active = itemIn > 0 && !complete
+            return (
+              <div key={label} style={{ alignItems: 'center', display: 'grid', gap: 11, gridTemplateColumns: '28px 1fr auto', opacity: itemIn, padding: '5px 2px', transform: `translateY(${(1 - itemIn) * 8}px)` }}>
+                <span style={{ alignItems: 'center', background: complete ? '#dcfce7' : active ? '#eef6ff' : '#f2f4f7', borderRadius: 999, color: complete ? '#166534' : '#2563eb', display: 'flex', fontSize: 14, fontWeight: 820, height: 28, justifyContent: 'center', width: 28 }}>{complete ? '✓' : '·'}</span>
+                <div style={{ minWidth: 0 }}>
+                  <div style={{ color: '#111111', fontSize: 16, fontWeight: 700, lineHeight: 1 }}>{label}</div>
+                  <div style={{ color: '#8a8a8a', fontSize: 13, fontWeight: 430, marginTop: 4, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{detail}</div>
+                </div>
+                <span style={{ color: complete ? '#166534' : '#667085', fontSize: 13, fontWeight: 720 }}>{complete ? 'OK' : active ? 'Processando' : 'Aguardando'}</span>
+              </div>
+            )
+          })}
+        </div>
         <div style={{ filter: 'drop-shadow(0 8px 10px rgba(15, 23, 42, 0.2))', left: cursorX, position: 'absolute', top: cursorY, transform: `scale(${1 - click * 0.12})`, zIndex: 6 }}>
           <svg height="42" viewBox="0 0 42 42" width="42">
             <path d="M8 5L32 24L21 26L16 37L8 5Z" fill="#111111" />
             <path d="M18 25L23 36" stroke="#ffffff" strokeLinecap="round" strokeWidth="3" />
           </svg>
         </div>
-      </div>
-      <div style={{ opacity: invoiceIn, position: 'absolute', transform: `translateY(${(1 - invoiceIn) * 18}px) scale(${0.985 + invoiceIn * 0.015})`, width: 'calc(100% - 44px)' }}>
-        <InvoiceIssuedPanel localFrame={localFrame - 156} />
       </div>
     </div>
   )
@@ -362,6 +429,120 @@ function InvoiceIssuedPanel({ localFrame }: { localFrame: number }) {
   )
 }
 
+function FullscreenInvoiceScene({ localFrame }: { localFrame: number }) {
+  const sceneIn = p(localFrame, 0, 28)
+  const sceneOut = p(localFrame, 360, 410, [1, 0])
+  const panelIn = p(localFrame, 12, 42)
+
+  if (localFrame < 0) {
+    return null
+  }
+
+  return (
+    <AbsoluteFill style={{ background: '#f6f8fb', color: '#111111', fontFamily: FONT, opacity: sceneIn * sceneOut, overflow: 'hidden', zIndex: 42 }}>
+      <div style={{ background: '#111827', color: '#ffffff', padding: '62px 54px 36px' }}>
+        <div style={{ alignItems: 'center', display: 'flex', justifyContent: 'space-between' }}>
+          <div>
+            <div style={{ color: 'rgba(255,255,255,0.72)', fontSize: 22, fontWeight: 650 }}>Prefeitura Municipal · NFS-e</div>
+            <div style={{ fontSize: 52, fontWeight: 860, letterSpacing: -0.6, lineHeight: 1.02, marginTop: 10 }}>Nota Fiscal de Serviço Eletrônica</div>
+          </div>
+          <span style={{ background: '#dcfce7', borderRadius: 999, color: '#166534', fontSize: 22, fontWeight: 820, padding: '13px 20px' }}>Emitida</span>
+        </div>
+      </div>
+      <div style={{ opacity: panelIn, padding: '38px 48px', transform: `translateY(${(1 - panelIn) * 22}px)` }}>
+        <div style={{ background: '#ffffff', border: '1px solid #e5e7eb', borderRadius: 34, boxShadow: '0 24px 64px rgba(15, 23, 42, 0.10)', overflow: 'hidden' }}>
+          <div style={{ display: 'grid', gap: 26, padding: 38 }}>
+            <div style={{ alignItems: 'center', display: 'flex', justifyContent: 'space-between' }}>
+              <div>
+                <strong style={{ color: '#111827', fontSize: 48, fontWeight: 860 }}>NFS-e 2048</strong>
+                <div style={{ color: '#64748b', fontSize: 22, fontWeight: 520, marginTop: 8 }}>Emitida agora · PDF e XML gerados</div>
+              </div>
+              <div style={{ background: '#f0fdf4', border: '1px solid #bbf7d0', borderRadius: 22, color: '#166534', fontSize: 24, fontWeight: 820, padding: '18px 22px' }}>R$ 12.400,00</div>
+            </div>
+            <div style={{ display: 'grid', gap: 18, gridTemplateColumns: '1fr 1fr' }}>
+              {[
+                ['Tomador', 'Cliente Norte Ltda'],
+                ['Serviço', 'Consultoria operacional e automação financeira'],
+                ['ISS calculado', 'R$ 248,00'],
+                ['Código municipal', '17.01'],
+              ].map(([label, value], index) => {
+                const itemIn = p(localFrame, 48 + index * 8, 70 + index * 8)
+                return (
+                  <div key={label} style={{ background: '#f8fafc', border: '1px solid #e5e7eb', borderRadius: 22, opacity: itemIn, padding: 24, transform: `translateY(${(1 - itemIn) * 14}px)` }}>
+                    <div style={{ color: '#64748b', fontSize: 16, fontWeight: 760, textTransform: 'uppercase' }}>{label}</div>
+                    <div style={{ color: '#111827', fontSize: label === 'Serviço' ? 23 : 29, fontWeight: 780, lineHeight: 1.16, marginTop: 9 }}>{value}</div>
+                  </div>
+                )
+              })}
+            </div>
+            <div style={{ display: 'grid', gap: 14, gridTemplateColumns: 'repeat(4, 1fr)' }}>
+              {['XML gerado', 'PDF gerado', 'Tomador validado', 'Impostos calculados'].map((item, index) => {
+                const itemIn = p(localFrame, 102 + index * 8, 124 + index * 8)
+                return (
+                  <div key={item} style={{ alignItems: 'center', background: '#ecfdf3', border: '1px solid #bbf7d0', borderRadius: 20, color: '#166534', display: 'flex', fontSize: 20, fontWeight: 820, gap: 10, opacity: itemIn, padding: 18, transform: `translateY(${(1 - itemIn) * 14}px)` }}>
+                    <span style={{ background: '#16a34a', borderRadius: 999, display: 'block', height: 11, width: 11 }} />
+                    {item}
+                  </div>
+                )
+              })}
+            </div>
+            <div style={{ background: '#f8fafc', border: '1px solid #e5e7eb', borderRadius: 24, padding: 26 }}>
+              <div style={{ color: '#111827', fontSize: 27, fontWeight: 840 }}>Resumo fiscal</div>
+              <div style={{ color: '#475569', fontSize: 22, fontWeight: 520, lineHeight: 1.36, marginTop: 12 }}>
+                Nota emitida com retenções calculadas, arquivos fiscais gerados e registro pronto para contabilidade.
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </AbsoluteFill>
+  )
+}
+
+function SlidesResult({ localFrame }: { localFrame: number }) {
+  const deckIn = p(localFrame, 8, 28)
+  const active = Math.min(2, Math.floor(Math.max(0, localFrame - 54) / 42))
+  const slideProgress = p(localFrame, 46, 150)
+
+  return (
+    <div style={{ display: 'grid', gap: 14, gridTemplateColumns: '92px 1fr', opacity: deckIn, padding: '4px 22px 0', transform: `translateY(${(1 - deckIn) * 16}px)` }}>
+      <div style={{ display: 'grid', gap: 10 }}>
+        {[0, 1, 2].map((item) => (
+          <div key={item} style={{ background: item === active ? '#eef6ff' : '#f8fafc', border: `1px solid ${item === active ? '#93c5fd' : '#e5e7eb'}`, borderRadius: 12, height: 80, padding: 8 }}>
+            <div style={{ background: item === active ? '#2563eb' : '#dbe5ee', borderRadius: 6, height: 10, width: '76%' }} />
+            <div style={{ background: '#ffffff', borderRadius: 5, height: 34, marginTop: 9 }} />
+          </div>
+        ))}
+      </div>
+      <div style={{ background: '#ffffff', border: '1px solid #e5e7eb', borderRadius: 22, boxShadow: '0 18px 42px rgba(15, 23, 42, 0.08)', minHeight: 400, overflow: 'hidden', padding: 24 }}>
+        <div style={{ color: '#667085', fontSize: 15, fontWeight: 760, textTransform: 'uppercase' }}>Apresentação executiva</div>
+        <div style={{ color: '#111827', fontSize: 31, fontWeight: 860, letterSpacing: -0.3, lineHeight: 1.05, marginTop: 10 }}>
+          {active === 0 ? 'Resultados financeiros do mês' : active === 1 ? 'Riscos, atrasos e economia' : 'Próximas decisões recomendadas'}
+        </div>
+        <div style={{ display: 'grid', gap: 12, gridTemplateColumns: '1fr 1fr', marginTop: 22 }}>
+          {[
+            ['Caixa', 'R$ 418k'],
+            ['Receber', 'R$ 192k'],
+            ['Atrasos', 'R$ 28.9k'],
+            ['Economia', '+R$ 38k'],
+          ].map(([label, value], index) => {
+            const itemIn = p(localFrame, 36 + index * 7, 54 + index * 7)
+            return (
+              <div key={label} style={{ background: '#f8fafc', border: '1px solid #eef2f7', borderRadius: 16, opacity: itemIn, padding: 15, transform: `translateY(${(1 - itemIn) * 10}px)` }}>
+                <div style={{ color: '#667085', fontSize: 13, fontWeight: 700 }}>{label}</div>
+                <div style={{ color: index === 2 ? '#dc2626' : '#16a34a', fontSize: 23, fontWeight: 840, marginTop: 6 }}>{value}</div>
+              </div>
+            )
+          })}
+        </div>
+        <div style={{ alignItems: 'end', background: '#f8fafc', border: '1px solid #eef2f7', borderRadius: 18, display: 'grid', gap: 8, gridTemplateColumns: 'repeat(6,1fr)', height: 110, marginTop: 18, padding: '18px 18px' }}>
+          {[46, 72, 58, 92, 78, 104].map((height, index) => <span key={height} style={{ background: index > 3 ? '#16a34a' : '#dbe5ee', borderRadius: '8px 8px 4px 4px', display: 'block', height: height * slideProgress, minHeight: 6 }} />)}
+        </div>
+      </div>
+    </div>
+  )
+}
+
 function DashboardResult({ localFrame }: { localFrame: number }) {
   const kpis = [
     ['Caixa', 'R$ 418k', '#16a34a'],
@@ -389,6 +570,71 @@ function DashboardResult({ localFrame }: { localFrame: number }) {
       </div>
       <InsightBlock localFrame={localFrame - 84} text="Decisao sugerida: reduzir CAC em Meta Ads e renegociar fornecedor Cloud para proteger margem e caixa." value="+R$ 38k impacto estimado" />
     </div>
+  )
+}
+
+function FullscreenDashboardScene({ localFrame }: { localFrame: number }) {
+  const sceneIn = p(localFrame, 0, 28)
+  const sceneOut = p(localFrame, 360, 410, [1, 0])
+  const kpis = [
+    ['Caixa atual', 'R$ 418k', '+12,4%', '#16a34a'],
+    ['A receber', 'R$ 192k', '6 clientes', '#2563eb'],
+    ['Em atraso', 'R$ 28.9k', 'prioridade', '#dc2626'],
+    ['Economia', '+R$ 38k', 'estimada', '#7c3aed'],
+  ]
+
+  if (localFrame < 0) {
+    return null
+  }
+
+  return (
+    <AbsoluteFill style={{ background: '#f6f8fb', color: '#111111', fontFamily: FONT, opacity: sceneIn * sceneOut, overflow: 'hidden', zIndex: 40 }}>
+      <div style={{ background: '#ffffff', borderBottom: '1px solid #e5e7eb', display: 'flex', justifyContent: 'space-between', padding: '58px 54px 28px' }}>
+        <div>
+          <div style={{ color: '#667085', fontSize: 22, fontWeight: 700 }}>Dashboard · Tempo real</div>
+          <div style={{ color: '#111827', fontSize: 52, fontWeight: 860, letterSpacing: -0.8, lineHeight: 1.02, marginTop: 10 }}>Resultados da empresa</div>
+        </div>
+        <div style={{ alignItems: 'center', background: '#ecfdf3', border: '1px solid #bbf7d0', borderRadius: 999, color: '#166534', display: 'flex', fontSize: 21, fontWeight: 780, height: 52, padding: '0 20px' }}>Atualizado agora</div>
+      </div>
+      <div style={{ display: 'grid', gap: 22, padding: '34px 42px' }}>
+        <div style={{ display: 'grid', gap: 16, gridTemplateColumns: 'repeat(2, 1fr)' }}>
+          {kpis.map(([label, value, delta, color], index) => {
+            const itemIn = p(localFrame, 24 + index * 8, 48 + index * 8)
+            return (
+              <div key={label} style={{ background: '#ffffff', border: '1px solid #e5e7eb', borderRadius: 28, boxShadow: '0 18px 44px rgba(15, 23, 42, 0.07)', opacity: itemIn, padding: 28, transform: `translateY(${(1 - itemIn) * 18}px)` }}>
+                <div style={{ color: '#667085', fontSize: 20, fontWeight: 650 }}>{label}</div>
+                <div style={{ color, fontSize: 45, fontWeight: 860, letterSpacing: -0.5, marginTop: 10 }}>{value}</div>
+                <div style={{ color: '#8a8a8a', fontSize: 18, fontWeight: 520, marginTop: 5 }}>{delta}</div>
+              </div>
+            )
+          })}
+        </div>
+        <div style={{ background: '#ffffff', border: '1px solid #e5e7eb', borderRadius: 32, boxShadow: '0 22px 54px rgba(15, 23, 42, 0.08)', padding: 30 }}>
+          <div style={{ color: '#111827', fontSize: 28, fontWeight: 800 }}>Fluxo de caixa e operação</div>
+          <div style={{ color: '#667085', fontSize: 18, fontWeight: 450, marginTop: 6 }}>Entradas, saídas, atrasos e projeção dos próximos dias</div>
+          <div style={{ alignItems: 'end', borderBottom: '1px solid #eef2f7', display: 'grid', gap: 14, gridTemplateColumns: 'repeat(9,1fr)', height: 250, marginTop: 28, paddingBottom: 18 }}>
+            {[86, 118, 102, 148, 130, 186, 154, 212, 198].map((height, index) => {
+              const bar = p(localFrame, 80 + index * 7, 102 + index * 7)
+              return <span key={height} style={{ background: index > 5 ? '#16a34a' : '#dbe5ee', borderRadius: '12px 12px 5px 5px', display: 'block', height: height * bar, minHeight: 10 }} />
+            })}
+          </div>
+        </div>
+        <div style={{ display: 'grid', gap: 16, gridTemplateColumns: '1fr 1fr' }}>
+          {[
+            ['Ação recomendada', 'Cobrar Mercado Sul hoje e renegociar Fornecedor Cloud.', '#fff7ed', '#c2410c'],
+            ['Oportunidade', 'Redução estimada de R$ 38k em frete e mídia paga.', '#f0fdf4', '#166534'],
+          ].map(([label, text, background, color], index) => {
+            const itemIn = p(localFrame, 150 + index * 12, 174 + index * 12)
+            return (
+              <div key={label} style={{ background, border: '1px solid #e5e7eb', borderRadius: 26, opacity: itemIn, padding: 24, transform: `translateY(${(1 - itemIn) * 16}px)` }}>
+                <div style={{ color, fontSize: 20, fontWeight: 820 }}>{label}</div>
+                <div style={{ color: '#111827', fontSize: 21, fontWeight: 560, lineHeight: 1.28, marginTop: 8 }}>{text}</div>
+              </div>
+            )
+          })}
+        </div>
+      </div>
+    </AbsoluteFill>
   )
 }
 
@@ -428,22 +674,28 @@ function InsightBlock({ localFrame, text, value }: { localFrame: number; text: s
 function AgentChatScene({ scene, start }: { scene: AgentScene; start: number }) {
   const frame = useCurrentFrame()
   const local = Math.max(0, frame - start)
-  const duration = scene.actions.length === 1 ? 790 : scene.actions.length === 2 ? 930 : scene.actions.length === 3 ? 1550 : 2700
+  const longRows = scene.actions.some((action) => (action.result.rows?.length ?? 0) >= 8)
+  const duration = scene.actions.length === 1 ? 790 : scene.actions.length === 2 ? 930 : scene.actions.length === 3 ? (longRows ? 1850 : 1550) : 2700
   const opacity = p(frame, start - 10, start + 14) * p(frame, start + duration - 28, start + duration, [1, 0])
   const conversationY = stagedScroll(local, scene.actions.length)
   let cursor = 150
+  const scheduledActions = scene.actions.map((action, index) => {
+    const toolStart = cursor
+    const resultStart = toolStart + 58
+    const resultHold = action.result.kind === 'dashboardOutline' || action.result.kind === 'invoiceOutline' || action.result.kind === 'reportOutline' ? 330 : action.result.rows && action.result.rows.length >= 6 ? 210 : 166
+    const summaryStart = resultStart + resultHold
+    cursor = summaryStart + (action.summary ? 118 : 46)
+    return { action, index, resultStart, summaryStart, toolStart }
+  })
+  const dashboardAction = scheduledActions.find(({ action }) => action.result.kind === 'dashboardOutline')
+  const invoiceAction = scheduledActions.find(({ action }) => action.result.kind === 'invoiceOutline')
 
   return (
     <div style={{ inset: 0, opacity, position: 'absolute' }}>
       <ChatGptMobileShell conversationY={conversationY} promptInputBottom={36}>
         <ChatGptFlowUserBubble style={fadeOnlyStyle(local, 8)}>{scene.prompt}</ChatGptFlowUserBubble>
         <ChatGptFlowAssistantText style={sequence(local, 62)}>{scene.intro}</ChatGptFlowAssistantText>
-        {scene.actions.map((action, index) => {
-          const toolStart = cursor
-          const resultStart = toolStart + 58
-          const resultHold = action.result.kind === 'dashboardOutline' || action.result.kind === 'invoiceOutline' ? 330 : action.result.rows && action.result.rows.length >= 6 ? 210 : 166
-          const summaryStart = resultStart + resultHold
-          cursor = summaryStart + (action.summary ? 118 : 46)
+        {scheduledActions.map(({ action, index, resultStart, summaryStart, toolStart }) => {
           return (
             <FragmentBlock key={`${action.tool}-${index}`}>
               {action.text ? <ChatGptFlowAssistantText showHeader={false} style={sequence(local, toolStart - 36)}>{action.text}</ChatGptFlowAssistantText> : null}
@@ -456,6 +708,8 @@ function AgentChatScene({ scene, start }: { scene: AgentScene; start: number }) 
           )
         })}
       </ChatGptMobileShell>
+      {dashboardAction ? <FullscreenDashboardScene localFrame={local - (dashboardAction.resultStart + 170)} /> : null}
+      {invoiceAction ? <FullscreenInvoiceScene localFrame={local - (invoiceAction.resultStart + 220)} /> : null}
     </div>
   )
 }
@@ -588,19 +842,44 @@ const scenes: AgentScene[] = [
         text: 'Agora vou revisar compras, fornecedores, pedidos e documentos relacionados.',
         tool: 'buscar_compras_fornecedores',
       },
+    ],
+    intro: 'Vou revisar a operacao financeira inteira: pagamentos, recebimentos, vendas, compras, cobrancas, caixa e economia.',
+    prompt: 'Acompanhe contas a pagar e receber, vendas, compras, cobrancas, pagamentos e recebimentos.',
+  },
+  {
+    actions: [
+      {
+        result: {
+          kind: 'reportOutline',
+          subtitle: 'Relatório · PDF',
+          title: 'relatorio_resultados_empresa',
+        },
+        summary: 'Relatorio criado com resumo executivo, vencimentos, recebimentos, riscos e oportunidades de economia.',
+        tool: 'gerar_relatorio_resultados',
+      },
       {
         result: {
           kind: 'dashboardOutline',
           subtitle: 'Dashboard · Tempo real',
-          title: 'dashboard_operacao_financeira',
+          title: 'dashboard_resultados_empresa',
         },
-        summary: 'Dashboard criado com contas, vendas, compras, cobrancas, fluxo de caixa, vencimentos, atrasos e pontos de economia.',
-        text: 'Com pagar, receber, vendas e compras revisados, vou criar um dashboard para acompanhar caixa, atrasos e gastos fora do padrao.',
-        tool: 'criar_dashboard_operacao_financeira',
+        summary: 'Dashboard gerado com caixa, margem, lucro, atrasos, vencimentos e performance operacional.',
+        text: 'Agora vou transformar os dados em um dashboard para acompanhar os resultados em tempo real.',
+        tool: 'gerar_dashboard_resultados',
+      },
+      {
+        result: {
+          kind: 'slides',
+          subtitle: 'Slides · PPTX',
+          title: 'Apresentacao executiva',
+        },
+        summary: 'Apresentacao criada com slides claros para explicar resultados, riscos e proximas decisoes.',
+        text: 'Por fim, vou montar uma apresentacao em slides para comunicar os resultados de forma clara.',
+        tool: 'gerar_apresentacao_slides',
       },
     ],
-    intro: 'Vou revisar a operacao financeira inteira: pagamentos, recebimentos, vendas, compras, cobrancas, caixa e economia.',
-    prompt: 'Acompanhe contas a pagar e receber, vendas, compras, cobrancas, pagamentos, recebimentos e gere um dashboard da operacao.',
+    intro: 'Com base nos dados financeiros e operacionais, vou criar relatorio, dashboard e slides para acompanhar e apresentar os resultados.',
+    prompt: 'Crie relatorios, dashboards e uma apresentacao em slides com os resultados da empresa.',
   },
   {
     actions: [
@@ -659,59 +938,59 @@ const scenes: AgentScene[] = [
             row('Mercado Sul', '28 dias em atraso', 'R$ 28.900', 'Prioridade', 'MS', '#dc2626'),
             row('Cliente Norte', '12 dias em atraso', 'R$ 42.100', 'Prioridade', 'CN', '#0ea5e9'),
             row('Loja Prime', 'Boleto venceu ontem', 'R$ 8.400', 'Acompanhar', 'LP', '#f97316'),
+            row('Rede Alpha', '18 dias em atraso', 'R$ 18.600', 'Prioridade', 'RA', '#1877f2'),
+            row('Norte Foods', 'NF vencida ha 7 dias', 'R$ 31.400', 'Acompanhar', 'NF', '#16a34a'),
+            row('Canal B2B', 'Parcela sem baixa', 'R$ 54.700', 'Revisar', 'G', '#4285f4', undefined, GoogleAdsIcon),
+            row('Grupo Delta', 'Contrato anual pendente', 'R$ 76.500', 'Prioridade', 'GD', '#7c3aed'),
+            row('Shopify Store', 'Repasse parcial recebido', 'R$ 12.780', 'Acompanhar', 'SH', '#95bf47', undefined, ShopifyIcon),
           ],
           subtitle: 'Clientes, valores e dias em atraso',
           title: 'Clientes em atraso',
         },
-        summary: 'Mercado Sul e Cliente Norte exigem prioridade. Vou acompanhar cada cobranca.',
+        summary: 'Identifiquei 8 clientes em atraso. Mercado Sul, Grupo Delta e Cliente Norte exigem prioridade.',
         tool: 'buscar_clientes_em_atraso',
       },
       {
         result: {
           rows: [
-            row('Mercado Sul', 'Follow-up agendado', 'Amanha', 'Aguardando', 'MS', '#dc2626'),
-            row('Cliente Norte', 'PIX recebido parcialmente', 'R$ 18.000', 'Recebido', 'CN', '#0ea5e9'),
-            row('Loja Prime', 'Mensagem reenviada', 'WhatsApp', 'Enviado', 'LP', '#25d366'),
+            row('Mercado Sul', 'WhatsApp com PIX e boleto', 'R$ 28.900', 'Enviado', 'MS', '#25d366'),
+            row('Cliente Norte', 'E-mail para financeiro', 'R$ 42.100', 'Enviado', 'CN', '#0ea5e9'),
+            row('Loja Prime', 'WhatsApp de lembrete', 'R$ 8.400', 'Entregue', 'LP', '#25d366'),
+            row('Rede Alpha', 'E-mail com segunda via', 'R$ 18.600', 'Enviado', 'RA', '#1877f2'),
+            row('Norte Foods', 'WhatsApp para aprovador', 'R$ 31.400', 'Entregue', 'NF', '#16a34a'),
+            row('Canal B2B', 'E-mail com comprovantes', 'R$ 54.700', 'Enviado', 'G', '#4285f4', undefined, GoogleAdsIcon),
+            row('Grupo Delta', 'WhatsApp + e-mail formal', 'R$ 76.500', 'Enviado', 'GD', '#7c3aed'),
+            row('Shopify Store', 'Lembrete sobre saldo restante', 'R$ 12.780', 'Entregue', 'SH', '#95bf47', undefined, ShopifyIcon),
           ],
-          subtitle: 'Follow-up, pagamento e proximo envio',
-          title: 'Acompanhamento de cobranca',
+          subtitle: 'E-mail, WhatsApp, segunda via e historico',
+          title: 'Cobrancas enviadas',
         },
-        summary: 'Cobrancas acompanhadas e historico atualizado no contas a receber.',
-        text: 'Vou acompanhar status das cobrancas.',
-        tool: 'acompanhar_cobrancas',
-      },
-    ],
-    intro: 'Vou buscar clientes em atraso e depois acompanhar o processo de cobranca.',
-    prompt: 'Monitore clientes em atraso e acompanhe as cobrancas.',
-  },
-  {
-    actions: [
-      {
-        result: {
-          kind: 'dashboard',
-          subtitle: 'KPIs, graficos e analise em tempo real',
-          title: 'Dashboard do negocio',
-        },
-        summary: 'Dashboard gerado com caixa, margem, lucro, inadimplencia e performance operacional.',
-        tool: 'gerar_dashboard_tempo_real',
+        summary: 'Cobrancas enviadas por e-mail e WhatsApp, com historico registrado no contas a receber.',
+        text: 'Vou enviar as cobrancas pelos canais corretos e registrar tudo no historico.',
+        tool: 'enviar_cobrancas_email_whatsapp',
       },
       {
         result: {
           rows: [
-            row('Margem', 'Renegociar fornecedor Cloud', '+R$ 18k', 'Decisao', 'MG', '#7c3aed'),
-            row('Caixa', 'Antecipar Cliente Norte', '+R$ 24k', 'Decisao', 'CX', '#2563eb'),
-            row('Lucro', 'Reduzir campanha de baixo ROI', '+R$ 14k', 'Decisao', 'LC', '#16a34a'),
+            row('Cliente Norte', 'PIX recebido parcialmente', 'R$ 18.000', 'Pago parcial', 'CN', '#0ea5e9'),
+            row('Loja Prime', 'Cliente respondeu no WhatsApp', 'Hoje', 'Respondido', 'LP', '#25d366'),
+            row('Mercado Sul', 'Follow-up agendado', 'Amanha', 'Aguardando', 'MS', '#dc2626'),
+            row('Rede Alpha', 'Boleto aberto pelo cliente', '2h atras', 'Visualizado', 'RA', '#1877f2'),
+            row('Norte Foods', 'Pagamento prometido', 'Sexta', 'Acompanhar', 'NF', '#16a34a'),
+            row('Canal B2B', 'Comprovante solicitado', 'Pendente', 'Revisar', 'G', '#4285f4', undefined, GoogleAdsIcon),
+            row('Grupo Delta', 'Sem resposta ainda', '24h', 'Escalar', 'GD', '#7c3aed'),
+            row('Shopify Store', 'Saldo liquidado', 'R$ 12.780', 'Recebido', 'SH', '#95bf47', undefined, ShopifyIcon),
           ],
-          subtitle: 'Impacto em margem, caixa e lucro',
-          title: 'Recomendacoes',
+          subtitle: 'Resposta, recebimento, follow-up e proximo passo',
+          title: 'Acompanhamento ate recebimento',
         },
-        summary: 'As decisoes priorizadas podem aumentar margem, caixa e lucro nos proximos 30 dias.',
-        text: 'Vou apontar decisoes para margem, caixa e lucro.',
-        tool: 'gerar_recomendacoes_negocio',
+        summary: 'Recebimentos acompanhados: um cliente liquidou, um pagou parcialmente e os casos criticos ficaram com proximo passo definido.',
+        text: 'Agora vou acompanhar respostas, recebimentos e proximos passos ate a baixa no contas a receber.',
+        tool: 'acompanhar_recebimentos_cobrancas',
       },
     ],
-    intro: 'Vou transformar tudo em dashboard e depois gerar recomendacoes praticas para o negocio.',
-    prompt: 'Transforme os dados em relatorios, dashboards e decisoes.',
+    intro: 'Vou localizar clientes em atraso, enviar cobrancas por e-mail ou WhatsApp e acompanhar cada caso ate o recebimento.',
+    prompt: 'Monitore clientes em atraso, envie cobrancas por e-mail ou WhatsApp e acompanhe ate o recebimento.',
   },
   {
     actions: [
@@ -736,7 +1015,7 @@ function row(name: string, description: string, value: string, status: string, i
 
 export function ChatGptClaudeOttoAiEmployeesVideo() {
   const frame = useCurrentFrame()
-  const starts = [300, 1120, 1940, 4900, 6000, 7100, 8320]
+  const starts = [300, 1120, 1940, 4900, 6700, 8400, 10400]
 
   return (
     <AbsoluteFill style={{ background: '#ffffff', color: '#111111', fontFamily: FONT, overflow: 'hidden' }}>
