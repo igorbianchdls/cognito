@@ -1,7 +1,7 @@
 import type { ReactElement } from 'react'
 import { AbsoluteFill, Easing, Img, interpolate, staticFile, useCurrentFrame } from 'remotion'
 
-export const OTTO_ERP_HOME_DASHBOARD_DURATION = 640
+export const OTTO_ERP_HOME_DASHBOARD_DURATION = 480
 
 const INK = '#111827'
 const MUTED = '#6B7280'
@@ -674,7 +674,7 @@ export function OttoErpHomeDashboard() {
   const frame = useCurrentFrame()
   const titleIn = ease(frame, 10, 30)
   const cash = money(interpolate(ease(frame, 28, 78), [0, 1], [720000, 918400]))
-  const activeTab = frame >= 486 ? 'Contas' : frame >= 376 ? 'Relatorios' : frame >= 266 ? 'Fiscal' : frame >= 136 ? 'Caixa' : 'Resumo'
+  const activeTab = frame >= 376 ? 'Relatorios' : frame >= 266 ? 'Fiscal' : frame >= 136 ? 'Caixa' : 'Resumo'
   const summaryOut = interpolate(frame, [126, 146], [1, 0], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' })
 
   return (
@@ -689,7 +689,7 @@ export function OttoErpHomeDashboard() {
               <p style={{ color: MUTED, fontSize: 15, fontWeight: 500, margin: '10px 0 0' }}>Aqui esta o resumo da sua operacao financeira hoje.</p>
             </div>
             <div style={{ alignItems: 'center', display: 'flex', gap: 9, opacity: ease(frame, 20, 38) }}>
-              {['Resumo', 'Caixa', 'Fiscal', 'Relatorios', 'Contas'].map((tab) => (
+              {['Resumo', 'Caixa', 'Fiscal', 'Relatorios'].map((tab) => (
                 <span key={tab} style={{ background: activeTab === tab ? INK : '#FFFFFF', border: `1px solid ${activeTab === tab ? INK : LINE}`, borderRadius: 999, color: activeTab === tab ? '#FFFFFF' : MUTED, fontSize: 12, fontWeight: 720, padding: '8px 12px', transition: 'none' }}>{tab}</span>
               ))}
             </div>
@@ -722,9 +722,6 @@ export function OttoErpHomeDashboard() {
             </div>
             <div style={{ inset: 0, position: 'absolute' }}>
               <ReportsTabContent />
-            </div>
-            <div style={{ inset: 0, position: 'absolute' }}>
-              <AccountsTabContent />
             </div>
           </div>
         </div>

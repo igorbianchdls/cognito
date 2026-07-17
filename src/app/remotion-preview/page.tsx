@@ -114,6 +114,7 @@ import {
 } from '@/assets/remotion/compositions/OttoAssistantCompatibility'
 import { OTTO_ASSISTANT_CONNECTIONS_DURATION, OttoAssistantConnections } from '@/assets/remotion/compositions/OttoAssistantConnections'
 import { OTTO_AGENT_SCAN_DURATION, OttoAgentScan } from '@/assets/remotion/compositions/OttoAgentScan'
+import { OTTO_ERP_ACCOUNTS_DRAWER_ACTION_DURATION, OttoErpAccountsDrawerAction } from '@/assets/remotion/compositions/OttoErpAccountsDrawerAction'
 import { OTTO_ERP_HOME_DASHBOARD_DURATION, OttoErpHomeDashboard } from '@/assets/remotion/compositions/OttoErpHomeDashboard'
 import { OTTO_INTEGRATION_ACCESS_MAP_DURATION, OttoIntegrationAccessMap } from '@/assets/remotion/compositions/OttoIntegrationAccessMap'
 import { OTTO_INTEGRATION_SIGNAL_MAP_DURATION, OttoIntegrationSignalMap } from '@/assets/remotion/compositions/OttoIntegrationSignalMap'
@@ -2173,6 +2174,18 @@ const catalog: CatalogItem[] = [
     label: 'Otto ERP Home Dashboard',
     tags: ['ERP', 'Dashboard', 'Otto', 'Financeiro'],
     value: 'actions-otto-erp-home-dashboard',
+    width: 1280,
+  },
+  {
+    code: '<OttoErpAccountsDrawerAction />',
+    component: OttoErpAccountsDrawerAction,
+    description: 'Tela de contas a pagar e receber do ERP Otto com tabela profissional e drawer de novo lancamento.',
+    duration: OTTO_ERP_ACCOUNTS_DRAWER_ACTION_DURATION,
+    height: 720,
+    kind: 'Actions',
+    label: 'Otto ERP Accounts Drawer',
+    tags: ['ERP', 'Accounts', 'Drawer', 'Financeiro', 'Otto'],
+    value: 'actions-otto-erp-accounts-drawer',
     width: 1280,
   },
   {
