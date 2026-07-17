@@ -1,7 +1,7 @@
 import type { ReactElement } from 'react'
 import { AbsoluteFill, Easing, Img, interpolate, staticFile, useCurrentFrame } from 'remotion'
 
-export const OTTO_ERP_HOME_DASHBOARD_DURATION = 480
+export const OTTO_ERP_HOME_DASHBOARD_DURATION = 640
 
 const INK = '#111827'
 const MUTED = '#6B7280'
@@ -505,7 +505,7 @@ function ReportsChartPreview() {
 
 function ReportsTabContent() {
   const frame = useCurrentFrame()
-  const panelIn = ease(frame, 376, 398)
+  const panelIn = ease(frame, 376, 398) * interpolate(frame, [486, 506], [1, 0], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' })
   const cards = [
     ['DRE automatizada', 'Receita, margem e lucro explicados pela IA', GREEN],
     ['Apresentacao pronta', 'Slides executivos para reuniao mensal', BLUE],
@@ -545,11 +545,136 @@ function ReportsTabContent() {
   )
 }
 
+function CursorPointer({ frame }: { frame: number }) {
+  const click = ease(frame, 536, 550)
+  const x = interpolate(ease(frame, 512, 542), [0, 1], [940, 1048], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' })
+  const y = interpolate(ease(frame, 512, 542), [0, 1], [126, 84], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' })
+
+  return (
+    <div style={{ filter: 'drop-shadow(0 8px 10px rgba(15, 23, 42, 0.18))', left: x, opacity: ease(frame, 506, 524) * interpolate(frame, [560, 576], [1, 0], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' }), position: 'absolute', top: y, transform: `scale(${1 - click * 0.12})`, zIndex: 20 }}>
+      <svg height="38" viewBox="0 0 42 42" width="38">
+        <path d="M8 5L32 24L21 26L16 37L8 5Z" fill="#111111" />
+        <path d="M18 25L23 36" stroke="#ffffff" strokeLinecap="round" strokeWidth="3" />
+      </svg>
+    </div>
+  )
+}
+
+function AccountsTable() {
+  const frame = useCurrentFrame()
+  const rows = [
+    ['Pagar', 'AWS Brasil', 'Infraestrutura recorrente', '25 Jun', 'R$ 12.790', RED],
+    ['Receber', 'Cliente Norte', 'NFS-e 2048 emitida', '28 Jun', 'R$ 42.100', GREEN],
+    ['Pagar', 'Google Ads', 'Campanhas de aquisicao', '30 Jun', 'R$ 8.420', BLUE],
+    ['Receber', 'Mercado Sul', 'Pedido faturado em atraso', '02 Jul', 'R$ 28.900', RED],
+    ['Pagar', 'Fornecedor Cloud', 'Renovacao anual', '05 Jul', 'R$ 18.400', TEAL],
+  ] as const
+
+  return (
+    <div style={{ background: '#FFFFFF', border: `1px solid ${LINE}`, borderRadius: 18, overflow: 'hidden' }}>
+      <div style={{ alignItems: 'center', borderBottom: `1px solid ${LINE}`, display: 'grid', gridTemplateColumns: '1fr auto', padding: '18px 20px' }}>
+        <div>
+          <div style={{ color: INK, fontSize: 20, fontWeight: 820 }}>Contas a pagar e receber</div>
+          <div style={{ color: MUTED, fontSize: 13, fontWeight: 500, marginTop: 5 }}>Lancamentos, vencimentos e status da operacao</div>
+        </div>
+        <button style={{ background: INK, border: 0, borderRadius: 12, color: '#FFFFFF', fontSize: 13, fontWeight: 760, height: 38, padding: '0 15px' }}>Novo lancamento</button>
+      </div>
+      <div style={{ background: SOFT, borderBottom: `1px solid ${LINE}`, color: MUTED, display: 'grid', fontSize: 11, fontWeight: 760, gridTemplateColumns: '90px 1fr 150px 140px 120px', padding: '10px 20px', textTransform: 'uppercase' }}>
+        <span>Tipo</span>
+        <span>Conta</span>
+        <span>Vencimento</span>
+        <span>Valor</span>
+        <span>Status</span>
+      </div>
+      {rows.map(([type, name, description, due, value, color], index) => {
+        const rowIn = ease(frame, 504 + index * 8, 526 + index * 8)
+        return (
+          <div key={`${type}-${name}`} style={{ alignItems: 'center', borderBottom: index === rows.length - 1 ? 'none' : `1px solid ${LINE}`, display: 'grid', gridTemplateColumns: '90px 1fr 150px 140px 120px', opacity: rowIn, padding: '14px 20px', transform: `translateX(${(1 - rowIn) * 16}px)` }}>
+            <span style={{ background: `${color}12`, borderRadius: 999, color, fontSize: 12, fontWeight: 780, padding: '7px 9px', textAlign: 'center', width: 68 }}>{type}</span>
+            <div style={{ alignItems: 'center', display: 'grid', gap: 12, gridTemplateColumns: '38px 1fr', minWidth: 0 }}>
+              <span style={{ alignItems: 'center', background: `${color}14`, borderRadius: 12, color, display: 'flex', fontSize: 13, fontWeight: 820, height: 38, justifyContent: 'center', width: 38 }}>{name.slice(0, 2)}</span>
+              <div style={{ minWidth: 0 }}>
+                <div style={{ color: INK, fontSize: 14, fontWeight: 740, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{name}</div>
+                <div style={{ color: MUTED, fontSize: 12, fontWeight: 500, marginTop: 3, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{description}</div>
+              </div>
+            </div>
+            <span style={{ color: INK, fontSize: 13, fontWeight: 650 }}>{due}</span>
+            <span style={{ color: INK, fontSize: 14, fontWeight: 780 }}>{value}</span>
+            <span style={{ color, fontSize: 12, fontWeight: 760 }}>{type === 'Receber' ? 'A receber' : 'A pagar'}</span>
+          </div>
+        )
+      })}
+    </div>
+  )
+}
+
+function AccountDrawer() {
+  const frame = useCurrentFrame()
+  const open = ease(frame, 548, 576)
+  const save = ease(frame, 606, 622)
+  const fields = [
+    ['Tipo', 'Conta a pagar'],
+    ['Fornecedor', 'Fornecedor Cloud'],
+    ['Descricao', 'Renovacao anual de software'],
+    ['Vencimento', '05 Jul 2026'],
+    ['Valor', 'R$ 18.400,00'],
+    ['Categoria', 'Software e infraestrutura'],
+  ]
+
+  return (
+    <div style={{ background: '#FFFFFF', borderLeft: `1px solid ${LINE}`, bottom: 0, boxShadow: '-24px 0 60px rgba(15, 23, 42, 0.10)', opacity: open, padding: 24, position: 'absolute', right: 0, top: 0, transform: `translateX(${(1 - open) * 390}px)`, width: 388, zIndex: 12 }}>
+      <div style={{ alignItems: 'center', display: 'flex', justifyContent: 'space-between' }}>
+        <div>
+          <div style={{ color: INK, fontSize: 22, fontWeight: 820, letterSpacing: -0.4 }}>Novo lancamento</div>
+          <div style={{ color: MUTED, fontSize: 13, fontWeight: 500, marginTop: 5 }}>Registrar conta no ERP</div>
+        </div>
+        <span style={{ alignItems: 'center', background: SOFT, borderRadius: 999, color: MUTED, display: 'flex', fontSize: 18, fontWeight: 500, height: 34, justifyContent: 'center', width: 34 }}>×</span>
+      </div>
+      <div style={{ display: 'grid', gap: 12, marginTop: 24 }}>
+        {fields.map(([label, value], index) => {
+          const fieldIn = ease(frame, 572 + index * 6, 590 + index * 6)
+          return (
+            <div key={label} style={{ opacity: fieldIn, transform: `translateY(${(1 - fieldIn) * 10}px)` }}>
+              <label style={{ color: MUTED, display: 'block', fontSize: 11, fontWeight: 780, marginBottom: 6, textTransform: 'uppercase' }}>{label}</label>
+              <div style={{ alignItems: 'center', background: SOFT, border: `1px solid ${LINE}`, borderRadius: 12, color: INK, display: 'flex', fontSize: 14, fontWeight: 680, height: 42, padding: '0 13px' }}>{value}</div>
+            </div>
+          )
+        })}
+      </div>
+      <div style={{ background: '#ECFDF3', border: '1px solid #BBF7D0', borderRadius: 14, color: GREEN, fontSize: 13, fontWeight: 650, lineHeight: 1.35, marginTop: 18, opacity: ease(frame, 608, 624), padding: 13 }}>
+        Otto vinculou este lancamento ao fornecedor e sugeriu regra recorrente para os proximos meses.
+      </div>
+      <button style={{ background: save > 0.5 ? GREEN : INK, border: 0, borderRadius: 13, bottom: 24, color: '#FFFFFF', fontSize: 14, fontWeight: 800, height: 46, left: 24, position: 'absolute', right: 24 }}>{save > 0.5 ? 'Lancamento registrado' : 'Registrar lancamento'}</button>
+    </div>
+  )
+}
+
+function AccountsTabContent() {
+  const frame = useCurrentFrame()
+  const panelIn = ease(frame, 486, 508)
+
+  return (
+    <div style={{ opacity: panelIn, transform: `translateY(${(1 - panelIn) * 18}px)` }}>
+      <div style={{ display: 'grid', gap: 16, gridTemplateColumns: 'repeat(4, 1fr)', marginTop: 24 }}>
+        <CashForecastCard delay={492} label="A pagar" tone={RED} value="R$ 63.980" />
+        <CashForecastCard delay={498} label="A receber" tone={GREEN} value="R$ 192.500" />
+        <CashForecastCard delay={504} label="Em atraso" tone={RED} value="R$ 28.900" />
+        <CashForecastCard delay={510} label="Registradas hoje" tone={BLUE} value="12" />
+      </div>
+      <div style={{ marginTop: 16 }}>
+        <AccountsTable />
+      </div>
+      <CursorPointer frame={frame} />
+      <AccountDrawer />
+    </div>
+  )
+}
+
 export function OttoErpHomeDashboard() {
   const frame = useCurrentFrame()
   const titleIn = ease(frame, 10, 30)
   const cash = money(interpolate(ease(frame, 28, 78), [0, 1], [720000, 918400]))
-  const activeTab = frame >= 376 ? 'Relatorios' : frame >= 266 ? 'Fiscal' : frame >= 136 ? 'Caixa' : 'Resumo'
+  const activeTab = frame >= 486 ? 'Contas' : frame >= 376 ? 'Relatorios' : frame >= 266 ? 'Fiscal' : frame >= 136 ? 'Caixa' : 'Resumo'
   const summaryOut = interpolate(frame, [126, 146], [1, 0], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' })
 
   return (
@@ -564,7 +689,7 @@ export function OttoErpHomeDashboard() {
               <p style={{ color: MUTED, fontSize: 15, fontWeight: 500, margin: '10px 0 0' }}>Aqui esta o resumo da sua operacao financeira hoje.</p>
             </div>
             <div style={{ alignItems: 'center', display: 'flex', gap: 9, opacity: ease(frame, 20, 38) }}>
-              {['Resumo', 'Caixa', 'Fiscal', 'Relatorios'].map((tab, index) => (
+              {['Resumo', 'Caixa', 'Fiscal', 'Relatorios', 'Contas'].map((tab) => (
                 <span key={tab} style={{ background: activeTab === tab ? INK : '#FFFFFF', border: `1px solid ${activeTab === tab ? INK : LINE}`, borderRadius: 999, color: activeTab === tab ? '#FFFFFF' : MUTED, fontSize: 12, fontWeight: 720, padding: '8px 12px', transition: 'none' }}>{tab}</span>
               ))}
             </div>
@@ -597,6 +722,9 @@ export function OttoErpHomeDashboard() {
             </div>
             <div style={{ inset: 0, position: 'absolute' }}>
               <ReportsTabContent />
+            </div>
+            <div style={{ inset: 0, position: 'absolute' }}>
+              <AccountsTabContent />
             </div>
           </div>
         </div>
