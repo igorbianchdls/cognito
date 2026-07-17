@@ -300,10 +300,96 @@ function ReportStrip() {
   )
 }
 
+function CashForecastCard({ delay, label, tone, value }: { delay: number; label: string; tone: string; value: string }) {
+  const frame = useCurrentFrame()
+  const show = ease(frame, delay, delay + 22)
+  return (
+    <div style={{ background: '#FFFFFF', border: `1px solid ${LINE}`, borderRadius: 18, opacity: show, padding: 20, transform: `translateY(${(1 - show) * 16}px)` }}>
+      <div style={{ alignItems: 'center', display: 'flex', justifyContent: 'space-between' }}>
+        <span style={{ color: MUTED, fontSize: 13, fontWeight: 650 }}>{label}</span>
+        <span style={{ background: `${tone}14`, borderRadius: 999, color: tone, fontSize: 12, fontWeight: 780, padding: '6px 9px' }}>Atual</span>
+      </div>
+      <div style={{ color: INK, fontSize: 34, fontWeight: 780, letterSpacing: -1, marginTop: 14 }}>{value}</div>
+      <div style={{ background: SOFT, borderRadius: 999, height: 8, marginTop: 18, overflow: 'hidden' }}>
+        <span style={{ background: tone, borderRadius: 999, display: 'block', height: 8, width: `${interpolate(show, [0, 1], [0, 74])}%` }} />
+      </div>
+    </div>
+  )
+}
+
+function CashTimeline() {
+  const frame = useCurrentFrame()
+  const items = [
+    ['Hoje', 'Saldo disponivel', 'R$ 918.400', GREEN],
+    ['3 dias', 'Fornecedores e impostos', '-R$ 63.980', RED],
+    ['7 dias', 'Recebimentos previstos', '+R$ 122.300', BLUE],
+    ['15 dias', 'Caixa projetado', 'R$ 976.720', TEAL],
+  ] as const
+
+  return (
+    <div style={{ background: '#FFFFFF', border: `1px solid ${LINE}`, borderRadius: 18, overflow: 'hidden' }}>
+      <div style={{ borderBottom: `1px solid ${LINE}`, padding: '17px 20px' }}>
+        <div style={{ color: INK, fontSize: 19, fontWeight: 800 }}>Linha do tempo do caixa</div>
+        <div style={{ color: MUTED, fontSize: 12, fontWeight: 500, marginTop: 4 }}>Projecao de entradas e saidas</div>
+      </div>
+      {items.map(([date, title, value, color], index) => {
+        const show = ease(frame, 166 + index * 10, 188 + index * 10)
+        return (
+          <div key={title} style={{ alignItems: 'center', borderBottom: index === items.length - 1 ? 'none' : `1px solid ${LINE}`, display: 'grid', gap: 16, gridTemplateColumns: '76px 1fr 150px', opacity: show, padding: '17px 20px', transform: `translateX(${(1 - show) * 18}px)` }}>
+            <span style={{ background: SOFT, borderRadius: 999, color: MUTED, fontSize: 12, fontWeight: 760, padding: '7px 10px', textAlign: 'center' }}>{date}</span>
+            <span style={{ color: INK, fontSize: 15, fontWeight: 690 }}>{title}</span>
+            <span style={{ color, fontSize: 15, fontWeight: 820, textAlign: 'right' }}>{value}</span>
+          </div>
+        )
+      })}
+    </div>
+  )
+}
+
+function CashTabContent() {
+  const frame = useCurrentFrame()
+  const panelIn = ease(frame, 142, 164)
+
+  return (
+    <div style={{ opacity: panelIn, transform: `translateY(${(1 - panelIn) * 18}px)` }}>
+      <div style={{ display: 'grid', gap: 16, gridTemplateColumns: 'repeat(4, 1fr)', marginTop: 24 }}>
+        <CashForecastCard delay={150} label="Caixa disponivel" tone={GREEN} value="R$ 918.400" />
+        <CashForecastCard delay={156} label="Runway" tone={BLUE} value="92 dias" />
+        <CashForecastCard delay={162} label="Saidas 7 dias" tone={RED} value="R$ 63.980" />
+        <CashForecastCard delay={168} label="Entradas 7 dias" tone={TEAL} value="R$ 122.300" />
+      </div>
+      <div style={{ display: 'grid', gap: 16, gridTemplateColumns: '1.35fr 0.95fr', marginTop: 16 }}>
+        <CashChart />
+        <div style={{ background: '#0B1220', borderRadius: 18, color: '#FFFFFF', padding: 22 }}>
+          <div style={{ color: '#86EFAC', fontSize: 12, fontWeight: 800, letterSpacing: 0.5, textTransform: 'uppercase' }}>Alerta do Otto</div>
+          <div style={{ fontSize: 25, fontWeight: 800, letterSpacing: -0.5, lineHeight: 1.12, marginTop: 10 }}>O caixa fica saudavel se Mercado Sul pagar ate sexta.</div>
+          <div style={{ color: 'rgba(255,255,255,0.64)', fontSize: 14, fontWeight: 500, lineHeight: 1.45, marginTop: 12 }}>Se atrasar mais 7 dias, recomendo segurar R$ 18.400 em compras recorrentes.</div>
+          <div style={{ display: 'grid', gap: 9, marginTop: 20 }}>
+            {['Cobrar Mercado Sul', 'Adiar compra Fornecedor Cloud', 'Aprovar impostos federais'].map((item, index) => {
+              const itemIn = ease(frame, 178 + index * 9, 196 + index * 9)
+              return (
+                <div key={item} style={{ alignItems: 'center', background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.09)', borderRadius: 13, display: 'grid', gap: 10, gridTemplateColumns: '24px 1fr', opacity: itemIn, padding: '11px 12px', transform: `translateY(${(1 - itemIn) * 10}px)` }}>
+                  <span style={{ alignItems: 'center', background: '#22C55E', borderRadius: 999, display: 'flex', fontSize: 12, fontWeight: 900, height: 24, justifyContent: 'center', width: 24 }}>✓</span>
+                  <span style={{ fontSize: 13, fontWeight: 650 }}>{item}</span>
+                </div>
+              )
+            })}
+          </div>
+        </div>
+      </div>
+      <div style={{ marginTop: 16 }}>
+        <CashTimeline />
+      </div>
+    </div>
+  )
+}
+
 export function OttoErpHomeDashboard() {
   const frame = useCurrentFrame()
   const titleIn = ease(frame, 10, 30)
   const cash = money(interpolate(ease(frame, 28, 78), [0, 1], [720000, 918400]))
+  const activeTab = frame >= 136 ? 'Caixa' : 'Resumo'
+  const summaryOut = interpolate(frame, [126, 146], [1, 0], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' })
 
   return (
     <AbsoluteFill style={{ background: '#FFFFFF', color: INK, fontFamily: 'Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif' }}>
@@ -313,32 +399,35 @@ export function OttoErpHomeDashboard() {
         <div style={{ padding: '28px 32px 0' }}>
           <div style={{ alignItems: 'end', display: 'flex', justifyContent: 'space-between' }}>
             <div style={{ opacity: titleIn, transform: `translateY(${(1 - titleIn) * 14}px)` }}>
-              <h1 style={{ color: INK, fontSize: 42, fontWeight: 760, letterSpacing: -1.4, lineHeight: 1, margin: 0 }}>Dashboard</h1>
-              <p style={{ color: MUTED, fontSize: 15, fontWeight: 500, margin: '10px 0 0' }}>Visao inicial do ERP financeiro, fiscal e operacional.</p>
+              <h1 style={{ color: INK, fontSize: 42, fontWeight: 760, letterSpacing: -1.4, lineHeight: 1, margin: 0 }}>Olá, Márcio</h1>
+              <p style={{ color: MUTED, fontSize: 15, fontWeight: 500, margin: '10px 0 0' }}>Aqui esta o resumo da sua operacao financeira hoje.</p>
             </div>
             <div style={{ alignItems: 'center', display: 'flex', gap: 9, opacity: ease(frame, 20, 38) }}>
               {['Resumo', 'Caixa', 'Fiscal', 'Relatorios'].map((tab, index) => (
-                <span key={tab} style={{ background: index === 0 ? INK : '#FFFFFF', border: `1px solid ${index === 0 ? INK : LINE}`, borderRadius: 999, color: index === 0 ? '#FFFFFF' : MUTED, fontSize: 12, fontWeight: 720, padding: '8px 12px' }}>{tab}</span>
+                <span key={tab} style={{ background: activeTab === tab ? INK : '#FFFFFF', border: `1px solid ${activeTab === tab ? INK : LINE}`, borderRadius: 999, color: activeTab === tab ? '#FFFFFF' : MUTED, fontSize: 12, fontWeight: 720, padding: '8px 12px', transition: 'none' }}>{tab}</span>
               ))}
             </div>
           </div>
-          <div style={{ display: 'grid', gap: 16, gridTemplateColumns: 'repeat(4, 1fr)', marginTop: 24 }}>
-            <KpiCard color={GREEN} delay={34} label="Caixa atual" trend="+11,7%" value={cash} />
-            <KpiCard color={BLUE} delay={40} label="Receita prevista" trend="+14,2%" value="R$ 482.900" />
-            <KpiCard color={RED} delay={46} label="A pagar" trend="3 alertas" value="R$ 63.980" />
-            <KpiCard color={TEAL} delay={52} label="Margem" trend="+2,8 p.p." value="38,4%" />
+          <div style={{ opacity: summaryOut, pointerEvents: summaryOut > 0 ? 'auto' : 'none', position: summaryOut === 0 ? 'absolute' : 'relative', transform: `translateY(${(1 - summaryOut) * -18}px)` }}>
+            <div style={{ display: 'grid', gap: 16, gridTemplateColumns: 'repeat(4, 1fr)', marginTop: 24 }}>
+              <KpiCard color={GREEN} delay={34} label="Caixa atual" trend="+11,7%" value={cash} />
+              <KpiCard color={BLUE} delay={40} label="Receita prevista" trend="+14,2%" value="R$ 482.900" />
+              <KpiCard color={RED} delay={46} label="A pagar" trend="3 alertas" value="R$ 63.980" />
+              <KpiCard color={TEAL} delay={52} label="Margem" trend="+2,8 p.p." value="38,4%" />
+            </div>
+            <div style={{ display: 'grid', gap: 16, gridTemplateColumns: '1.45fr 0.85fr', marginTop: 16 }}>
+              <CashChart />
+              <AssistantPanel />
+            </div>
+            <div style={{ display: 'grid', gap: 16, gridTemplateColumns: '0.8fr 1.2fr', marginTop: 16 }}>
+              <OperationList />
+              <FinancialTable />
+            </div>
+            <div style={{ marginTop: 16 }}>
+              <ReportStrip />
+            </div>
           </div>
-          <div style={{ display: 'grid', gap: 16, gridTemplateColumns: '1.45fr 0.85fr', marginTop: 16 }}>
-            <CashChart />
-            <AssistantPanel />
-          </div>
-          <div style={{ display: 'grid', gap: 16, gridTemplateColumns: '0.8fr 1.2fr', marginTop: 16 }}>
-            <OperationList />
-            <FinancialTable />
-          </div>
-          <div style={{ marginTop: 16 }}>
-            <ReportStrip />
-          </div>
+          <CashTabContent />
         </div>
       </main>
     </AbsoluteFill>
