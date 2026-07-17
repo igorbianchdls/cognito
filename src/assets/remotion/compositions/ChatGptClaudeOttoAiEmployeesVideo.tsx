@@ -149,7 +149,7 @@ function PromptInputScene({ frame, prompt, start }: { frame: number; prompt: str
       <ChatGptMobileShell conversationY={0} promptInputBottom={36}>
         <div />
       </ChatGptMobileShell>
-      <div style={{ color: '#111111', fontFamily: CHATGPT_MOBILE_FONT_STACK, fontSize: 46, fontWeight: 450, left: 0, letterSpacing: -0.4, lineHeight: 1, opacity: p(local, 8, 24), position: 'absolute', right: 0, textAlign: 'center', top: 700, transform: `translateY(${(1 - p(local, 8, 24)) * 12}px)` }}>
+      <div style={{ color: '#111111', fontFamily: CHATGPT_MOBILE_FONT_STACK, fontSize: 46, fontWeight: 450, left: 0, letterSpacing: -0.4, lineHeight: 1, opacity: p(local, 8, 24), position: 'absolute', right: 0, textAlign: 'center', top: 790, transform: `translateY(${(1 - p(local, 8, 24)) * 12}px)` }}>
         Tudo pronto para começar?
       </div>
       <div style={{ alignItems: 'center', display: 'flex', inset: 0, justifyContent: 'center', position: 'absolute', top: 96 }}>
