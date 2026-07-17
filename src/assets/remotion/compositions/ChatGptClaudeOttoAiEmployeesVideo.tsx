@@ -141,8 +141,10 @@ function PromptInputScene({ frame, prompt, start }: { frame: number; prompt: str
   const sceneIn = p(local, 0, 16)
   const sceneOut = p(local, 82, 108, [1, 0])
   const promptProgress = p(local, 12, 76)
-  const inputHeight = interpolate(promptProgress, [0, 0.48, 1], [104, 104, 216], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' })
   const text = typed(prompt, promptProgress)
+  const estimatedLineCount = Math.max(1, Math.ceil(text.length / 54))
+  const inputHeight = Math.min(216, 104 + (estimatedLineCount - 1) * 50)
+  const expanded = estimatedLineCount > 1
 
   return (
     <div style={{ inset: 0, opacity: sceneIn * sceneOut, position: 'absolute', transform: `translateY(${(1 - sceneIn) * 20 - (1 - sceneOut) * 18}px)` }}>
@@ -153,13 +155,13 @@ function PromptInputScene({ frame, prompt, start }: { frame: number; prompt: str
         Tudo pronto para começar?
       </div>
       <div style={{ alignItems: 'center', display: 'flex', inset: 0, justifyContent: 'center', position: 'absolute', top: 96 }}>
-        <div style={{ alignItems: inputHeight > 124 ? 'flex-start' : 'center', background: '#f1f1f1', borderRadius: inputHeight > 124 ? 48 : 999, display: 'flex', height: inputHeight, minHeight: 104, padding: inputHeight > 124 ? '30px 13px 30px 33px' : '0 13px 0 33px', width: 944 }}>
+        <div style={{ alignItems: expanded ? 'flex-start' : 'center', background: '#f1f1f1', borderRadius: expanded ? 48 : 999, display: 'flex', height: inputHeight, minHeight: 104, padding: expanded ? '30px 13px 30px 33px' : '0 13px 0 33px', width: 944 }}>
           <span style={{ color: '#333333', fontSize: 54, fontWeight: 300, lineHeight: 1, marginRight: 34 }}>+</span>
           <span style={{ color: '#111111', flex: 1, fontSize: 34, fontWeight: 400, letterSpacing: 0, lineHeight: 1.2, maxHeight: 132, overflow: 'hidden', whiteSpace: 'normal', wordBreak: 'normal' }}>
             {text}
             {promptProgress > 0 && promptProgress < 1 ? <span style={{ background: '#111111', display: local % 18 < 9 ? 'inline-block' : 'none', height: 36, marginLeft: 4, transform: 'translateY(6px)', width: 3 }} /> : null}
           </span>
-          <div style={{ alignItems: 'center', background: '#007aff', borderRadius: 999, display: 'flex', height: 78, justifyContent: 'center', marginLeft: 10, marginTop: inputHeight > 124 ? -4 : 0, width: 78 }}>
+          <div style={{ alignItems: 'center', background: '#007aff', borderRadius: 999, display: 'flex', height: 78, justifyContent: 'center', marginLeft: 10, marginTop: expanded ? -4 : 0, width: 78 }}>
             <span style={{ color: '#ffffff', fontSize: 34, fontWeight: 760, transform: 'translateY(-2px)' }}>↑</span>
           </div>
         </div>
@@ -902,17 +904,41 @@ function ClaudePromptInputScene({ frame, prompt, start }: { frame: number; promp
   const sceneIn = p(local, 0, 16)
   const sceneOut = p(local, 82, 108, [1, 0])
   const promptProgress = p(local, 12, 76)
-  const inputHeight = interpolate(promptProgress, [0, 0.48, 1], [116, 116, 226], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' })
   const text = typed(prompt, promptProgress)
 
   return (
-    <AbsoluteFill style={{ background: '#fbfaf8', color: '#111111', fontFamily: CLAUDE_MOBILE_FONT_STACK, opacity: sceneIn * sceneOut, overflow: 'hidden', transform: `translateY(${(1 - sceneIn) * 20 - (1 - sceneOut) * 18}px)` }}>
-      <div style={{ alignItems: 'center', display: 'flex', inset: 0, justifyContent: 'center', position: 'absolute' }}>
-        <div style={{ alignItems: inputHeight > 136 ? 'flex-start' : 'center', background: '#f1f0ee', border: '1.5px solid #d8d4cc', borderRadius: inputHeight > 136 ? 46 : 999, display: 'flex', minHeight: 116, padding: inputHeight > 136 ? '30px 34px' : '0 34px', width: 914 }}>
-          <span style={{ color: text ? '#111111' : '#77746f', fontSize: 38, fontWeight: 400, letterSpacing: '-0.02em', lineHeight: 1.18, whiteSpace: 'pre-wrap' }}>{text || 'Chat with Claude'}</span>
-        </div>
+    <div style={{ inset: 0, opacity: sceneIn * sceneOut, position: 'absolute', transform: `translateY(${(1 - sceneIn) * 20 - (1 - sceneOut) * 18}px)` }}>
+      <ClaudeMobileShell conversationY={0}>
+        <div />
+      </ClaudeMobileShell>
+      <div style={{ color: '#111111', fontFamily: CLAUDE_MOBILE_FONT_STACK, fontSize: 44, fontWeight: 430, left: 0, letterSpacing: '-0.01em', lineHeight: 1, opacity: p(local, 8, 24), position: 'absolute', right: 0, textAlign: 'center', top: 1504, transform: `translateY(${(1 - p(local, 8, 24)) * 12}px)` }}>
+        Tudo pronto para começar?
       </div>
-    </AbsoluteFill>
+      <div style={{ background: '#fbfaf8', bottom: 0, height: 340, left: 0, position: 'absolute', right: 0 }}>
+        <div style={{ background: '#fbfaf8', border: '1.5px solid #bebcb7', borderRadius: 68, boxShadow: '0 20px 48px rgba(20,24,22,0.16)', height: 254, left: 42, position: 'absolute', right: 42, top: 0 }}>
+          <div style={{ color: text ? '#111111' : '#77746f', fontSize: 42, fontWeight: 450, left: 36, letterSpacing: '-0.01em', lineHeight: 1.18, maxHeight: 92, overflow: 'hidden', position: 'absolute', right: 36, top: 42, whiteSpace: 'pre-wrap' }}>
+            {text || 'Chat with Claude'}
+            {promptProgress > 0 && promptProgress < 1 ? <span style={{ background: '#111111', display: local % 18 < 9 ? 'inline-block' : 'none', height: 38, marginLeft: 4, transform: 'translateY(7px)', width: 3 }} /> : null}
+          </div>
+          <div style={{ alignItems: 'center', display: 'flex', gap: 19, left: 22, position: 'absolute', right: 24, top: 145 }}>
+            <div style={{ alignItems: 'center', background: '#efeeeb', borderRadius: 999, color: '#111111', display: 'flex', fontSize: 42, fontWeight: 360, height: 90, justifyContent: 'center', width: 90 }}>+</div>
+            <div style={{ alignItems: 'center', background: '#efeeeb', borderRadius: 999, color: '#111111', display: 'flex', fontSize: 35, fontWeight: 520, height: 78, justifyContent: 'center', letterSpacing: 0, padding: '0 42px', whiteSpace: 'nowrap' }}>Sonnet 4.6</div>
+            <div style={{ flex: 1 }} />
+            <div style={{ alignItems: 'center', background: '#efeeeb', borderRadius: 999, display: 'flex', height: 90, justifyContent: 'center', width: 90 }}>
+              <svg fill="none" height="42" viewBox="0 0 62 62" width="42" xmlns="http://www.w3.org/2000/svg">
+                <rect height="32" rx="14" stroke="#333330" strokeWidth="5.8" width="24" x="19" y="7" />
+                <path d="M12 29v5c0 10.5 8.2 19 19 19s19-8.5 19-19v-5" stroke="#333330" strokeLinecap="round" strokeWidth="5.8" />
+                <path d="M31 53v6" stroke="#333330" strokeLinecap="round" strokeWidth="5.8" />
+              </svg>
+            </div>
+            <div style={{ alignItems: 'center', background: '#050505', borderRadius: 999, display: 'flex', gap: 7, height: 90, justifyContent: 'center', width: 90 }}>
+              {[23, 36, 50, 36, 23].map((height, index) => <span key={`${height}-${index}`} style={{ background: '#ffffff', borderRadius: 999, height, width: 6 }} />)}
+            </div>
+          </div>
+        </div>
+        <div style={{ background: '#050505', borderRadius: 999, bottom: 14, height: 12, left: '50%', position: 'absolute', transform: 'translateX(-50%)', width: 380 }} />
+      </div>
+    </div>
   )
 }
 
