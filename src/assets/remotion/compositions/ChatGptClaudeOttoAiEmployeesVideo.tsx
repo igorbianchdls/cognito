@@ -191,7 +191,7 @@ function CompatibilityOpening({ start }: { start: number }) {
             <div style={{ color: 'rgba(255,255,255,0.72)', fontSize: 23, fontWeight: 440, lineHeight: 1.34 }}>Funcionarios de IA executam rotinas financeiras, operacionais e fiscais dentro do Otto.</div>
           </div>
         </div>
-        <ChatGptFlowUserBubble style={fadeOnlyStyle(local, 74)}>{prompt}</ChatGptFlowUserBubble>
+        <StaticChatGptUserBubble style={fadeOnlyStyle(local, 74)}>{prompt}</StaticChatGptUserBubble>
         <ChatGptFlowAssistantText style={sequence(local, 134)}>
           Vou acionar os funcionarios de IA para organizar dados, executar rotinas e mostrar o que precisa de atencao.
         </ChatGptFlowAssistantText>
