@@ -2,7 +2,6 @@ import type { ComponentType, CSSProperties, ReactNode } from 'react'
 import { AbsoluteFill, interpolate, useCurrentFrame } from 'remotion'
 import { Wrench } from 'lucide-react'
 
-import BlingIcon from '@/components/icons/BlingIcon'
 import GoogleAdsIcon from '@/components/icons/GoogleAdsIcon'
 import MetaIcon from '@/components/icons/MetaIcon'
 import ShopifyIcon from '@/components/icons/ShopifyIcon'
@@ -1061,11 +1060,13 @@ const scenes: AgentScene[] = [
             row('Frete Sul', 'Despesa acima do padrao', 'R$ 6.830', 'Revisar', 'FS', '#dc2626'),
             row('Meta Ads', 'Campanha de remarketing', 'R$ 3.460', 'A vencer', 'M', '#1877f2', undefined, MetaIcon),
             row('Shopify', 'Plano ecommerce mensal', 'R$ 1.280', 'Agendado', 'SH', '#95bf47', undefined, ShopifyIcon),
+            row('Conta Azul', 'Assinatura ERP financeiro', 'R$ 2.190', 'A vencer', 'CA', '#2563eb'),
+            row('Banco Inter', 'Tarifas e servicos bancarios', 'R$ 840', 'Revisar', 'BI', '#f97316'),
           ],
           subtitle: 'Vencimentos, prioridades e risco',
           title: 'Contas a pagar',
         },
-        summary: 'Encontrei R$ 63.980 em vencimentos proximos. Impostos, AWS e frete exigem prioridade.',
+        summary: 'Encontrei 8 contas a pagar. Impostos, AWS e frete exigem prioridade nos proximos dias.',
         text: 'Vou levantar as contas a pagar primeiro.',
         tool: 'buscar_contas_a_pagar',
       },
@@ -1079,6 +1080,8 @@ const scenes: AgentScene[] = [
             row('Norte Foods', 'Projeto fiscal aprovado', 'R$ 31.400', 'Confirmado', 'NF', '#f97316'),
             row('Canal B2B', 'Receita de campanha Google', 'R$ 54.700', 'Confirmado', 'G', '#4285f4', undefined, GoogleAdsIcon),
             row('Loja Prime', 'Pedidos integrados Shopify', 'R$ 16.800', 'Previsto', 'SH', '#95bf47', undefined, ShopifyIcon),
+            row('Grupo Delta', 'Contrato mensal recorrente', 'R$ 76.500', 'Previsto', 'GD', '#7c3aed'),
+            row('Shopify Store', 'Repasse ecommerce pendente', 'R$ 12.780', 'A vencer', 'SH', '#95bf47', undefined, ShopifyIcon),
           ],
           subtitle: 'Entradas previstas e atrasos',
           title: 'Contas a receber',
@@ -1091,41 +1094,25 @@ const scenes: AgentScene[] = [
         result: {
           kind: 'table',
           rows: [
-            row('Proposta Cliente Norte', 'Servico aprovado', 'R$ 12.400', 'Registrada', 'CN', '#0ea5e9'),
-            row('Venda Mercado Sul', 'Pedido importado', 'R$ 28.900', 'Cobranca pendente', 'MS', '#dc2626'),
-            row('Rede Alpha', 'Retainer renovado', 'R$ 18.600', 'Registrada', 'RA', '#1877f2'),
-            row('Loja Prime', 'Pedido ecommerce Shopify', 'R$ 16.800', 'Faturada', 'SH', '#95bf47', undefined, ShopifyIcon),
-            row('Canal B2B', 'Contrato de performance', 'R$ 54.700', 'Faturada', 'G', '#4285f4', undefined, GoogleAdsIcon),
-            row('Norte Foods', 'Projeto fiscal aprovado', 'R$ 31.400', 'Registrada', 'NF', '#f97316'),
+            row('Cliente Norte', 'Venda de servico aprovada', 'R$ 12.400', 'Registrada', 'CN', '#0ea5e9'),
+            row('Mercado Sul', 'Pedido comercial importado', 'R$ 28.900', 'Faturar', 'MS', '#dc2626'),
+            row('Rede Alpha', 'Venda recorrente renovada', 'R$ 18.600', 'Registrada', 'RA', '#1877f2'),
+            row('Loja Prime', 'Venda ecommerce Shopify', 'R$ 16.800', 'Faturada', 'SH', '#95bf47', undefined, ShopifyIcon),
+            row('Canal B2B', 'Venda de performance', 'R$ 54.700', 'Faturada', 'G', '#4285f4', undefined, GoogleAdsIcon),
+            row('Norte Foods', 'Venda de projeto fiscal', 'R$ 31.400', 'Registrada', 'NF', '#f97316'),
+            row('Grupo Delta', 'Venda enterprise aprovada', 'R$ 76.500', 'Registrar', 'GD', '#7c3aed'),
+            row('Shopify Store', 'Venda integrada da loja', 'R$ 12.780', 'Faturada', 'SH', '#95bf47', undefined, ShopifyIcon),
           ],
-          subtitle: 'Propostas, vendas, clientes e cobrancas',
-          title: 'Vendas e propostas',
+          subtitle: 'Vendas, clientes, valores e faturamento',
+          title: 'Vendas',
         },
-        summary: 'Vendas e propostas foram registradas. Mercado Sul precisa cobranca e Loja Prime ja entrou no faturamento.',
-        text: 'Vou puxar propostas, vendas e cobrancas vinculadas aos clientes.',
-        tool: 'buscar_vendas_propostas',
-      },
-      {
-        result: {
-          kind: 'table',
-          rows: [
-            row('Fornecedor Cloud', 'Pedido de renovacao anual', 'R$ 18.400', 'Aprovar', 'FC', '#111827'),
-            row('Grafica Delta', 'Pedido de materiais', 'R$ 3.200', 'Pendente', 'GD', '#7c3aed'),
-            row('Transportadora Sul', 'Frete de ecommerce', 'R$ 6.830', 'Revisar', 'TS', '#dc2626'),
-            row('Bling pedidos', 'Compras importadas', '12 pedidos', 'Sincronizado', 'BL', '#16a34a', undefined, BlingIcon),
-            row('Shopify Apps', 'Apps e checkout da loja', 'R$ 1.280', 'Agendado', 'SH', '#95bf47', undefined, ShopifyIcon),
-            row('Impostos federais', 'Guia mensal vinculada', 'R$ 31.200', 'Prioridade', 'TX', '#f97316'),
-          ],
-          subtitle: 'Compras, fornecedores, pedidos e documentos',
-          title: 'Compras e fornecedores',
-        },
-        summary: 'Compras e fornecedores foram organizados. Frete Sul saiu do padrao e Fornecedor Cloud exige aprovacao.',
-        text: 'Agora vou revisar compras, fornecedores, pedidos e documentos relacionados.',
-        tool: 'buscar_compras_fornecedores',
+        summary: 'Oito vendas foram encontradas. Mercado Sul precisa faturamento e Grupo Delta deve ser registrado no ERP.',
+        text: 'Agora vou buscar apenas vendas e status de faturamento.',
+        tool: 'buscar_vendas',
       },
     ],
-    intro: 'Vou revisar a operacao financeira inteira: pagamentos, recebimentos, vendas, compras, cobrancas, caixa e economia.',
-    prompt: 'Acompanhe contas a pagar e receber, vendas, compras, cobrancas, pagamentos e recebimentos.',
+    intro: 'Vou revisar a operacao financeira: pagamentos, recebimentos, vendas, cobrancas, caixa e economia.',
+    prompt: 'Acompanhe contas a pagar e receber, vendas, cobrancas, pagamentos e recebimentos.',
   },
   {
     actions: [
