@@ -11,7 +11,6 @@ import {
   ChatGptMobileShell,
   ChatGptToolCallCard,
   ChatGptToolResultCard,
-  OttoAssistantHeader,
   chatGptSequenceStyle,
 } from '@/assets/remotion/compositions/ChatGptMobileBase'
 import {
@@ -192,7 +191,7 @@ function CompatibilityOpening({ start }: { start: number }) {
           </div>
         </div>
         <StaticChatGptUserBubble style={fadeOnlyStyle(local, 74)}>{prompt}</StaticChatGptUserBubble>
-        <ChatGptFlowAssistantText style={sequence(local, 134)}>
+        <ChatGptFlowAssistantText showHeader={false} style={sequence(local, 134)}>
           Vou acionar os funcionarios de IA para organizar dados, executar rotinas e mostrar o que precisa de atencao.
         </ChatGptFlowAssistantText>
       </ChatGptMobileShell>
@@ -852,6 +851,10 @@ function StaticClaudeUserBubble({ children, style }: { children: ReactNode; styl
   )
 }
 
+function ChatGptAssistantTextNoHeader({ children, style }: { children: ReactNode; style: CSSProperties }) {
+  return <ChatGptFlowAssistantText showHeader={false} style={style}>{children}</ChatGptFlowAssistantText>
+}
+
 function AgentChatScene({ scene, start }: { scene: AgentScene; start: number }) {
   const frame = useCurrentFrame()
   const local = Math.max(0, frame - start)
@@ -862,7 +865,8 @@ function AgentChatScene({ scene, start }: { scene: AgentScene; start: number }) 
   const scheduledActions = scene.actions.map((action, index) => {
     const toolStart = cursor
     const resultStart = toolStart + 58
-    const resultHold = action.result.kind === 'invoiceOutline' ? 390 : action.result.kind === 'dashboardOutline' || action.result.kind === 'reportOutline' ? 330 : action.result.rows && action.result.rows.length >= 6 ? 210 : 166
+    const rowCount = action.result.rows?.length ?? 0
+    const resultHold = action.result.kind === 'invoiceOutline' ? 390 : action.result.kind === 'dashboardOutline' || action.result.kind === 'reportOutline' ? 330 : rowCount >= 10 ? 270 : rowCount >= 6 ? 220 : 166
     const summaryStart = resultStart + resultHold
     cursor = summaryStart + (action.summary ? 118 : 46)
     return { action, index, resultStart, summaryStart, toolStart }
@@ -875,12 +879,12 @@ function AgentChatScene({ scene, start }: { scene: AgentScene; start: number }) 
     <div style={{ inset: 0, opacity, position: 'absolute' }}>
       <ChatGptMobileShell conversationY={conversationY} promptInputBottom={36}>
         <StaticChatGptUserBubble style={fadeOnlyStyle(local, 8)}>{scene.prompt}</StaticChatGptUserBubble>
-        <ChatGptFlowAssistantText style={sequence(local, 62)}>{scene.intro}</ChatGptFlowAssistantText>
+        <ChatGptAssistantTextNoHeader style={sequence(local, 62)}>{scene.intro}</ChatGptAssistantTextNoHeader>
         {scheduledActions.map(({ action, index, resultStart, summaryStart, toolStart }) => {
           const isOutline = action.result.kind === 'dashboardOutline' || action.result.kind === 'invoiceOutline' || action.result.kind === 'reportOutline'
           return (
             <FragmentBlock key={`${action.tool}-${index}`}>
-              {action.text ? <ChatGptFlowAssistantText showHeader={false} style={sequence(local, toolStart - 36)}>{action.text}</ChatGptFlowAssistantText> : null}
+              {action.text ? <ChatGptAssistantTextNoHeader style={sequence(local, toolStart - 36)}>{action.text}</ChatGptAssistantTextNoHeader> : null}
               <ChatGptToolCallCard style={sequence(local, toolStart)} toolName={action.tool} />
               {isOutline ? (
                 <div style={{ ...sequence(local, resultStart), margin: '0 36px' }}>
@@ -895,7 +899,7 @@ function AgentChatScene({ scene, start }: { scene: AgentScene; start: number }) 
                   <CascadeResultCard localFrame={local - resultStart} result={action.result} />
                 </ChatGptToolResultCard>
               )}
-              {action.summary ? <ChatGptFlowAssistantText showHeader={false} style={sequence(local, summaryStart)}>{action.summary}</ChatGptFlowAssistantText> : null}
+              {action.summary ? <ChatGptAssistantTextNoHeader style={sequence(local, summaryStart)}>{action.summary}</ChatGptAssistantTextNoHeader> : null}
             </FragmentBlock>
           )
         })}
@@ -920,7 +924,6 @@ function ClaudeAssistantText({ children, style }: { children: ReactNode; style: 
         padding: '0 42px',
       }}
     >
-      <OttoAssistantHeader muted="#8b857c" />
       <span style={{ fontFamily: CLAUDE_RESPONSE_SERIF }}>{typed(String(children), Math.max(0, Math.min(1, Number(style.opacity ?? 1))))}</span>
     </div>
   )
@@ -1007,7 +1010,8 @@ function ClaudeAgentChatScene({ scene, start }: { scene: AgentScene; start: numb
   const scheduledActions = scene.actions.map((action, index) => {
     const toolStart = cursor
     const resultStart = toolStart + 58
-    const resultHold = action.result.kind === 'invoiceOutline' ? 390 : action.result.kind === 'dashboardOutline' || action.result.kind === 'reportOutline' ? 330 : action.result.rows && action.result.rows.length >= 6 ? 210 : 166
+    const rowCount = action.result.rows?.length ?? 0
+    const resultHold = action.result.kind === 'invoiceOutline' ? 390 : action.result.kind === 'dashboardOutline' || action.result.kind === 'reportOutline' ? 330 : rowCount >= 10 ? 270 : rowCount >= 6 ? 220 : 166
     const summaryStart = resultStart + resultHold
     cursor = summaryStart + (action.summary ? 118 : 46)
     return { action, index, resultStart, summaryStart, toolStart }
@@ -1069,6 +1073,8 @@ const scenes: AgentScene[] = [
             row('OpenAI API', 'Automacao e atendimento', 'R$ 1.280', 'Software', 'AI', '#10a37f', '#ecfdf3'),
             row('Impostos federais', 'Guia mensal vinculada', 'R$ 12.300', 'Impostos', 'TX', '#f97316', '#fff7ed'),
             row('Frete Sul', 'Envios e operacao logistica', 'R$ 2.450', 'Logistica', 'FS', '#dc2626', '#fff1f2'),
+            row('HubSpot', 'CRM e pipeline comercial', 'R$ 1.940', 'Software', 'HS', '#ff7a59', '#fff7ed'),
+            row('Boleto Mercado Sul', 'Recebimento parcial identificado', 'R$ 8.400', 'Receita', 'MS', '#0ea5e9', '#eff8ff'),
           ],
           subtitle: 'Receitas, despesas, categorias e centros de custo',
           title: 'Classificacao automatica',
@@ -1094,6 +1100,8 @@ const scenes: AgentScene[] = [
             row('Boleto Mercado Sul', 'Recebimento · parcial', 'R$ 8.400', 'Divergencia', 'MS', '#dc2626', '#fff1f2', undefined, 'CR-4419'),
             row('Google Ads', 'Cartao corporativo · marketing', 'R$ 4.720', 'Conciliado', 'G', '#4285f4', '#eef6ff', GoogleAdsIcon, 'MKT-884'),
             row('Fornecedor Cloud', 'Pagamento · pedido nao vinculado', 'R$ 18.400', 'Revisar', 'FC', '#7c3aed', '#f5f3ff', undefined, 'Sem pedido'),
+            row('Meta Ads', 'Cartao corporativo · remarketing', 'R$ 3.460', 'Conciliado', 'M', '#1877f2', '#edf5ff', MetaIcon, 'MKT-921'),
+            row('OpenAI API', 'Assinatura internacional · software', 'R$ 1.280', 'Conciliado', 'AI', '#10a37f', '#ecfdf3', undefined, 'SFT-104'),
           ],
           subtitle: 'Banco, cartao e lancamentos no Otto',
           title: 'Matching financeiro',
