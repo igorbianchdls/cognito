@@ -137,6 +137,9 @@ function PromptInputScene({ frame, hold = 108, prompt, start }: { frame: number;
   const sceneIn = p(local, 0, 16)
   const sceneOut = p(local, hold - 26, hold, [1, 0])
   const promptProgress = p(local, 12, 76)
+  const sendPress = p(local, 78, 88)
+  const sentState = p(local, 88, 100)
+  const textAfterSend = p(local, 86, 98, [1, 0])
   const text = typed(prompt, promptProgress)
   const estimatedLineCount = Math.max(1, Math.ceil(text.length / 54))
   const inputHeight = Math.min(216, 104 + (estimatedLineCount - 1) * 50)
@@ -153,14 +156,14 @@ function PromptInputScene({ frame, hold = 108, prompt, start }: { frame: number;
         Tudo pronto para começar?
       </div>
       <div style={{ alignItems: 'center', display: 'flex', inset: 0, justifyContent: 'center', position: 'absolute', top: 96 }}>
-        <div style={{ alignItems: expanded ? 'flex-start' : 'center', background: '#f1f1f1', borderRadius: expanded ? 48 : 999, display: 'flex', height: inputHeight, minHeight: 104, padding: expanded ? '30px 13px 30px 33px' : '0 13px 0 33px', width: 944 }}>
+        <div style={{ alignItems: expanded ? 'flex-start' : 'center', background: '#f1f1f1', borderRadius: expanded ? 48 : 999, display: 'flex', height: inputHeight, minHeight: 104, padding: expanded ? '30px 13px 30px 33px' : '0 13px 0 33px', transform: `translateY(${-sentState * 10}px)`, width: 944 }}>
           <span style={{ color: '#333333', fontSize: 54, fontWeight: 300, lineHeight: 1, marginRight: 34 }}>+</span>
-          <span style={{ color: '#111111', flex: 1, fontSize: 34, fontWeight: 400, letterSpacing: 0, lineHeight: 1.2, maxHeight: 132, overflow: 'hidden', whiteSpace: 'normal', wordBreak: 'normal' }}>
+          <span style={{ color: '#111111', flex: 1, fontSize: 34, fontWeight: 400, letterSpacing: 0, lineHeight: 1.2, maxHeight: 132, opacity: textAfterSend, overflow: 'hidden', whiteSpace: 'normal', wordBreak: 'normal' }}>
             {text}
             {promptProgress > 0 && promptProgress < 1 ? <span style={{ background: '#111111', display: local % 18 < 9 ? 'inline-block' : 'none', height: 36, marginLeft: 4, transform: 'translateY(6px)', width: 3 }} /> : null}
           </span>
-          <div style={{ alignItems: 'center', background: '#007aff', borderRadius: 999, display: 'flex', height: 78, justifyContent: 'center', marginLeft: 10, marginTop: expanded ? -4 : 0, width: 78 }}>
-            <span style={{ color: '#ffffff', fontSize: 34, fontWeight: 760, transform: 'translateY(-2px)' }}>↑</span>
+          <div style={{ alignItems: 'center', background: sentState > 0 ? '#d7d7d7' : '#007aff', borderRadius: 999, display: 'flex', height: 78, justifyContent: 'center', marginLeft: 10, marginTop: expanded ? -4 : 0, transform: `scale(${1 - Math.sin(sendPress * Math.PI) * 0.1})`, width: 78 }}>
+            {sentState > 0 ? <span style={{ background: '#111111', borderRadius: 7, display: 'block', height: 28, width: 28 }} /> : <span style={{ color: '#ffffff', fontSize: 34, fontWeight: 760, transform: 'translateY(-2px)' }}>↑</span>}
           </div>
         </div>
       </div>
@@ -1028,6 +1031,9 @@ function ClaudePromptInputScene({ frame, hold = 108, prompt, start }: { frame: n
   const sceneIn = p(local, 0, 16)
   const sceneOut = p(local, hold - 26, hold, [1, 0])
   const promptProgress = p(local, 12, 76)
+  const sendPress = p(local, 78, 88)
+  const sentState = p(local, 88, 100)
+  const textAfterSend = p(local, 86, 98, [1, 0])
   const text = typed(prompt, promptProgress)
   const estimatedLineCount = Math.max(1, Math.ceil(text.length / 42))
   const inputHeight = Math.min(330, 254 + Math.max(0, estimatedLineCount - 2) * 44)
@@ -1043,8 +1049,8 @@ function ClaudePromptInputScene({ frame, hold = 108, prompt, start }: { frame: n
         Tudo pronto para começar?
       </div>
       <div style={{ height: inputHeight, left: 42, position: 'absolute', right: 42, top: inputTop }}>
-        <div style={{ background: '#fbfaf8', border: '1.5px solid #bebcb7', borderRadius: 68, boxShadow: '0 20px 48px rgba(20,24,22,0.16)', height: inputHeight, left: 0, position: 'absolute', right: 0, top: 0 }}>
-          <div style={{ color: text ? '#111111' : '#77746f', fontSize: 42, fontWeight: 450, left: 36, letterSpacing: '-0.01em', lineHeight: 1.18, maxHeight: inputHeight - 162, overflow: 'hidden', position: 'absolute', right: 36, top: 42, whiteSpace: 'pre-wrap' }}>
+        <div style={{ background: '#fbfaf8', border: '1.5px solid #bebcb7', borderRadius: 68, boxShadow: '0 20px 48px rgba(20,24,22,0.16)', height: inputHeight, left: 0, position: 'absolute', right: 0, top: 0, transform: `translateY(${-sentState * 10}px)` }}>
+          <div style={{ color: text ? '#111111' : '#77746f', fontSize: 42, fontWeight: 450, left: 36, letterSpacing: '-0.01em', lineHeight: 1.18, maxHeight: inputHeight - 162, opacity: textAfterSend, overflow: 'hidden', position: 'absolute', right: 36, top: 42, whiteSpace: 'pre-wrap' }}>
             {text || 'Chat with Claude'}
             {promptProgress > 0 && promptProgress < 1 ? <span style={{ background: '#111111', display: local % 18 < 9 ? 'inline-block' : 'none', height: 38, marginLeft: 4, transform: 'translateY(7px)', width: 3 }} /> : null}
           </div>
@@ -1059,8 +1065,8 @@ function ClaudePromptInputScene({ frame, hold = 108, prompt, start }: { frame: n
                 <path d="M31 53v6" stroke="#333330" strokeLinecap="round" strokeWidth="5.8" />
               </svg>
             </div>
-            <div style={{ alignItems: 'center', background: '#050505', borderRadius: 999, display: 'flex', gap: 7, height: 90, justifyContent: 'center', width: 90 }}>
-              {[23, 36, 50, 36, 23].map((height, index) => <span key={`${height}-${index}`} style={{ background: '#ffffff', borderRadius: 999, height, width: 6 }} />)}
+            <div style={{ alignItems: 'center', background: sentState > 0 ? '#d7d7d7' : '#050505', borderRadius: 999, display: 'flex', gap: 7, height: 90, justifyContent: 'center', transform: `scale(${1 - Math.sin(sendPress * Math.PI) * 0.1})`, width: 90 }}>
+              {sentState > 0 ? <span style={{ background: '#111111', borderRadius: 7, display: 'block', height: 30, width: 30 }} /> : [23, 36, 50, 36, 23].map((height, index) => <span key={`${height}-${index}`} style={{ background: '#ffffff', borderRadius: 999, height, width: 6 }} />)}
             </div>
           </div>
         </div>
