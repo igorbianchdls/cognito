@@ -132,10 +132,10 @@ function Spinner({ active }: { active: boolean }) {
   )
 }
 
-function PromptInputScene({ frame, prompt, start }: { frame: number; prompt: string; start: number }) {
+function PromptInputScene({ frame, hold = 108, prompt, start }: { frame: number; hold?: number; prompt: string; start: number }) {
   const local = frame - start
   const sceneIn = p(local, 0, 16)
-  const sceneOut = p(local, 82, 108, [1, 0])
+  const sceneOut = p(local, hold - 26, hold, [1, 0])
   const promptProgress = p(local, 12, 76)
   const text = typed(prompt, promptProgress)
   const estimatedLineCount = Math.max(1, Math.ceil(text.length / 54))
@@ -566,17 +566,17 @@ function FullscreenInvoiceImageScene({ localFrame }: { localFrame: number }) {
           background: '#ffffff',
           borderRadius: 18,
           boxShadow: '0 34px 90px rgba(15, 23, 42, 0.22)',
-          height: 1680,
+          height: 1210,
           opacity: documentIn,
           overflow: 'hidden',
-          transform: `translateY(${(1 - documentIn) * 28}px) scale(${0.985 + documentIn * 0.015})`,
-          width: 980,
+          transform: `translateY(${(1 - documentIn) * 28}px) scale(${0.98 + documentIn * 0.02})`,
+          width: 840,
         }}
       >
         <Img
           alt="Nota Fiscal Eletronica de Servicos"
           src={staticFile('nfse.jpg')}
-          style={{ display: 'block', height: '100%', objectFit: 'cover', objectPosition: 'top center', width: '100%' }}
+          style={{ display: 'block', height: '100%', objectFit: 'contain', objectPosition: 'top center', width: '100%' }}
         />
       </div>
     </AbsoluteFill>
@@ -920,8 +920,7 @@ function AgentChatScene({ scene, start }: { scene: AgentScene; start: number }) 
   const frame = useCurrentFrame()
   const local = Math.max(0, frame - start)
   const longRows = scene.actions.some((action) => (action.result.rows?.length ?? 0) >= 8)
-  const duration = scene.actions.length === 1 ? 790 : scene.actions.length === 2 ? 930 : scene.actions.length === 3 ? (longRows ? 1850 : 1550) : 2700
-  const opacity = p(frame, start - 10, start + 14) * p(frame, start + duration - 28, start + duration, [1, 0])
+  const baseDuration = scene.actions.length === 1 ? 790 : scene.actions.length === 2 ? 930 : scene.actions.length === 3 ? (longRows ? 1850 : 1550) : 2700
   let cursor = 150
   const scheduledActions = scene.actions.map((action, index) => {
     const toolStart = cursor
@@ -932,6 +931,9 @@ function AgentChatScene({ scene, start }: { scene: AgentScene; start: number }) 
     cursor = summaryStart + (action.summary ? 118 : 46)
     return { action, index, resultStart, summaryStart, toolStart }
   })
+  const hasFullscreenAction = scene.actions.some((action) => action.result.kind === 'dashboardOutline' || action.result.kind === 'invoiceOutline')
+  const duration = Math.max(baseDuration, cursor + (hasFullscreenAction ? 430 : 120))
+  const opacity = p(frame, start - 10, start + 14) * p(frame, start + duration - 28, start + duration, [1, 0])
   const conversationY = toolDrivenScroll(local, scheduledActions)
   const dashboardAction = scheduledActions.find(({ action }) => action.result.kind === 'dashboardOutline')
   const invoiceAction = scheduledActions.find(({ action }) => action.result.kind === 'invoiceOutline')
@@ -1019,10 +1021,10 @@ function ClaudeToolUseCard({ startFrame, toolName }: { startFrame: number; toolN
   )
 }
 
-function ClaudePromptInputScene({ frame, prompt, start }: { frame: number; prompt: string; start: number }) {
+function ClaudePromptInputScene({ frame, hold = 108, prompt, start }: { frame: number; hold?: number; prompt: string; start: number }) {
   const local = frame - start
   const sceneIn = p(local, 0, 16)
-  const sceneOut = p(local, 82, 108, [1, 0])
+  const sceneOut = p(local, hold - 26, hold, [1, 0])
   const promptProgress = p(local, 12, 76)
   const text = typed(prompt, promptProgress)
 
@@ -1065,8 +1067,7 @@ function ClaudeAgentChatScene({ scene, start }: { scene: AgentScene; start: numb
   const frame = useCurrentFrame()
   const local = Math.max(0, frame - start)
   const longRows = scene.actions.some((action) => (action.result.rows?.length ?? 0) >= 8)
-  const duration = scene.actions.length === 1 ? 790 : scene.actions.length === 2 ? 930 : scene.actions.length === 3 ? (longRows ? 1850 : 1550) : 2700
-  const opacity = p(frame, start - 10, start + 14) * p(frame, start + duration - 28, start + duration, [1, 0])
+  const baseDuration = scene.actions.length === 1 ? 790 : scene.actions.length === 2 ? 930 : scene.actions.length === 3 ? (longRows ? 1850 : 1550) : 2700
   let cursor = 150
   const scheduledActions = scene.actions.map((action, index) => {
     const toolStart = cursor
@@ -1077,6 +1078,9 @@ function ClaudeAgentChatScene({ scene, start }: { scene: AgentScene; start: numb
     cursor = summaryStart + (action.summary ? 118 : 46)
     return { action, index, resultStart, summaryStart, toolStart }
   })
+  const hasFullscreenAction = scene.actions.some((action) => action.result.kind === 'dashboardOutline' || action.result.kind === 'invoiceOutline')
+  const duration = Math.max(baseDuration, cursor + (hasFullscreenAction ? 430 : 120))
+  const opacity = p(frame, start - 10, start + 14) * p(frame, start + duration - 28, start + duration, [1, 0])
   const conversationY = toolDrivenScroll(local, scheduledActions)
   const dashboardAction = scheduledActions.find(({ action }) => action.result.kind === 'dashboardOutline')
   const invoiceAction = scheduledActions.find(({ action }) => action.result.kind === 'invoiceOutline')
@@ -1404,11 +1408,12 @@ export function ChatGptClaudeOttoAiEmployeesVideo() {
   return (
     <AbsoluteFill style={{ background: '#ffffff', color: '#111111', fontFamily: FONT, overflow: 'hidden' }}>
       {scenes.map((scene, index) => {
-        const start = starts[index] + 110
+        const promptHold = index === 3 ? 176 : 108
+        const start = starts[index] + (index === 3 ? 190 : 110)
         return (
           <FragmentBlock key={scene.prompt}>
             <AgentChatScene scene={scene} start={start} />
-            <PromptInputScene frame={frame} prompt={scene.prompt} start={starts[index]} />
+            <PromptInputScene frame={frame} hold={promptHold} prompt={scene.prompt} start={starts[index]} />
           </FragmentBlock>
         )
       })}
@@ -1423,11 +1428,12 @@ export function ClaudeOttoAiEmployeesVideo() {
   return (
     <AbsoluteFill style={{ background: '#fbfaf8', color: '#111111', fontFamily: CLAUDE_MOBILE_FONT_STACK, overflow: 'hidden' }}>
       {scenes.map((scene, index) => {
-        const start = starts[index] + 110
+        const promptHold = index === 3 ? 176 : 108
+        const start = starts[index] + (index === 3 ? 190 : 110)
         return (
           <FragmentBlock key={scene.prompt}>
             <ClaudeAgentChatScene scene={scene} start={start} />
-            <ClaudePromptInputScene frame={frame} prompt={scene.prompt} start={starts[index]} />
+            <ClaudePromptInputScene frame={frame} hold={promptHold} prompt={scene.prompt} start={starts[index]} />
           </FragmentBlock>
         )
       })}
