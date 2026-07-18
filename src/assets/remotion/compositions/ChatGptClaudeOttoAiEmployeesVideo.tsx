@@ -141,13 +141,15 @@ function PromptInputScene({ frame, hold = 108, prompt, start }: { frame: number;
   const estimatedLineCount = Math.max(1, Math.ceil(text.length / 54))
   const inputHeight = Math.min(216, 104 + (estimatedLineCount - 1) * 50)
   const expanded = estimatedLineCount > 1
+  const inputCenterY = 1008
+  const labelTop = inputCenterY - inputHeight / 2 - 80
 
   return (
     <div style={{ inset: 0, opacity: sceneIn * sceneOut, position: 'absolute', transform: `translateY(${(1 - sceneIn) * 20 - (1 - sceneOut) * 18}px)` }}>
       <ChatGptMobileShell conversationY={0} promptInputBottom={36}>
         <div />
       </ChatGptMobileShell>
-      <div style={{ color: '#111111', fontFamily: CHATGPT_MOBILE_FONT_STACK, fontSize: 46, fontWeight: 450, left: 0, letterSpacing: -0.4, lineHeight: 1, opacity: p(local, 8, 24), position: 'absolute', right: 0, textAlign: 'center', top: 860, transform: `translateY(${(1 - p(local, 8, 24)) * 12}px)` }}>
+      <div style={{ color: '#111111', fontFamily: CHATGPT_MOBILE_FONT_STACK, fontSize: 46, fontWeight: 450, left: 0, letterSpacing: -0.4, lineHeight: 1, opacity: p(local, 8, 24), position: 'absolute', right: 0, textAlign: 'center', top: labelTop, transform: `translateY(${(1 - p(local, 8, 24)) * 12}px)` }}>
         Tudo pronto para começar?
       </div>
       <div style={{ alignItems: 'center', display: 'flex', inset: 0, justifyContent: 'center', position: 'absolute', top: 96 }}>
@@ -1027,22 +1029,26 @@ function ClaudePromptInputScene({ frame, hold = 108, prompt, start }: { frame: n
   const sceneOut = p(local, hold - 26, hold, [1, 0])
   const promptProgress = p(local, 12, 76)
   const text = typed(prompt, promptProgress)
+  const estimatedLineCount = Math.max(1, Math.ceil(text.length / 42))
+  const inputHeight = Math.min(330, 254 + Math.max(0, estimatedLineCount - 2) * 44)
+  const inputTop = 929 - inputHeight / 2
+  const labelTop = inputTop - 74
 
   return (
     <div style={{ inset: 0, opacity: sceneIn * sceneOut, position: 'absolute', transform: `translateY(${(1 - sceneIn) * 20 - (1 - sceneOut) * 18}px)` }}>
       <ClaudeMobileShell conversationY={0}>
         <div />
       </ClaudeMobileShell>
-      <div style={{ color: '#111111', fontFamily: CLAUDE_MOBILE_FONT_STACK, fontSize: 44, fontWeight: 430, left: 0, letterSpacing: '-0.01em', lineHeight: 1, opacity: p(local, 8, 24), position: 'absolute', right: 0, textAlign: 'center', top: 728, transform: `translateY(${(1 - p(local, 8, 24)) * 12}px)` }}>
+      <div style={{ color: '#111111', fontFamily: CLAUDE_MOBILE_FONT_STACK, fontSize: 44, fontWeight: 430, left: 0, letterSpacing: '-0.01em', lineHeight: 1, opacity: p(local, 8, 24), position: 'absolute', right: 0, textAlign: 'center', top: labelTop, transform: `translateY(${(1 - p(local, 8, 24)) * 12}px)` }}>
         Tudo pronto para começar?
       </div>
-      <div style={{ height: 254, left: 42, position: 'absolute', right: 42, top: 802 }}>
-        <div style={{ background: '#fbfaf8', border: '1.5px solid #bebcb7', borderRadius: 68, boxShadow: '0 20px 48px rgba(20,24,22,0.16)', height: 254, left: 0, position: 'absolute', right: 0, top: 0 }}>
-          <div style={{ color: text ? '#111111' : '#77746f', fontSize: 42, fontWeight: 450, left: 36, letterSpacing: '-0.01em', lineHeight: 1.18, maxHeight: 92, overflow: 'hidden', position: 'absolute', right: 36, top: 42, whiteSpace: 'pre-wrap' }}>
+      <div style={{ height: inputHeight, left: 42, position: 'absolute', right: 42, top: inputTop }}>
+        <div style={{ background: '#fbfaf8', border: '1.5px solid #bebcb7', borderRadius: 68, boxShadow: '0 20px 48px rgba(20,24,22,0.16)', height: inputHeight, left: 0, position: 'absolute', right: 0, top: 0 }}>
+          <div style={{ color: text ? '#111111' : '#77746f', fontSize: 42, fontWeight: 450, left: 36, letterSpacing: '-0.01em', lineHeight: 1.18, maxHeight: inputHeight - 162, overflow: 'hidden', position: 'absolute', right: 36, top: 42, whiteSpace: 'pre-wrap' }}>
             {text || 'Chat with Claude'}
             {promptProgress > 0 && promptProgress < 1 ? <span style={{ background: '#111111', display: local % 18 < 9 ? 'inline-block' : 'none', height: 38, marginLeft: 4, transform: 'translateY(7px)', width: 3 }} /> : null}
           </div>
-          <div style={{ alignItems: 'center', display: 'flex', gap: 19, left: 22, position: 'absolute', right: 24, top: 145 }}>
+          <div style={{ alignItems: 'center', bottom: 19, display: 'flex', gap: 19, left: 22, position: 'absolute', right: 24 }}>
             <div style={{ alignItems: 'center', background: '#efeeeb', borderRadius: 999, color: '#111111', display: 'flex', fontSize: 42, fontWeight: 360, height: 90, justifyContent: 'center', width: 90 }}>+</div>
             <div style={{ alignItems: 'center', background: '#efeeeb', borderRadius: 999, color: '#111111', display: 'flex', fontSize: 35, fontWeight: 520, height: 78, justifyContent: 'center', letterSpacing: 0, padding: '0 42px', whiteSpace: 'nowrap' }}>Sonnet 4.6</div>
             <div style={{ flex: 1 }} />
@@ -1248,15 +1254,6 @@ const scenes: AgentScene[] = [
     actions: [
       {
         result: {
-          kind: 'reportOutline',
-          subtitle: 'Relatório · PDF',
-          title: 'relatorio_vendas_mes',
-        },
-        summary: 'Relatorio criado com resumo das vendas do mes, clientes, valores faturados e itens pendentes de cobranca.',
-        tool: 'gerar_relatorio_vendas_mes',
-      },
-      {
-        result: {
           kind: 'dashboardOutline',
           subtitle: 'Dashboard · Tempo real',
           title: 'dashboard_financeiro',
@@ -1264,6 +1261,16 @@ const scenes: AgentScene[] = [
         summary: 'Dashboard financeiro gerado para acompanhar caixa, contas a pagar, contas a receber, atrasos e margem.',
         text: 'Agora vou montar um dashboard financeiro para acompanhar caixa, vencimentos, recebimentos e atrasos.',
         tool: 'gerar_dashboard_financeiro',
+      },
+      {
+        result: {
+          kind: 'reportOutline',
+          subtitle: 'Relatório · PDF',
+          title: 'relatorio_vendas_mes',
+        },
+        summary: 'Relatorio criado com resumo das vendas do mes, clientes, valores faturados e itens pendentes de cobranca.',
+        text: 'Depois vou gerar um relatorio com o resumo das vendas deste mes.',
+        tool: 'gerar_relatorio_vendas_mes',
       },
     ],
     intro: 'Com base nesses dados, vou criar um dashboard financeiro e um relatorio de vendas do mes.',
@@ -1323,51 +1330,51 @@ const scenes: AgentScene[] = [
       {
         result: {
           rows: [
-            row('Mercado Sul', '28 dias em atraso', 'R$ 28.900', 'Prioridade', 'MS', '#dc2626'),
-            row('Cliente Norte', '12 dias em atraso', 'R$ 42.100', 'Prioridade', 'CN', '#0ea5e9'),
-            row('Loja Prime', 'Boleto venceu ontem', 'R$ 8.400', 'Acompanhar', 'LP', '#f97316'),
-            row('Rede Alpha', '18 dias em atraso', 'R$ 18.600', 'Prioridade', 'RA', '#1877f2'),
-            row('Norte Foods', 'NF vencida ha 7 dias', 'R$ 31.400', 'Acompanhar', 'NF', '#16a34a'),
-            row('Canal B2B', 'Parcela sem baixa', 'R$ 54.700', 'Revisar', 'G', '#4285f4', undefined, GoogleAdsIcon),
-            row('Grupo Delta', 'Contrato anual pendente', 'R$ 76.500', 'Prioridade', 'GD', '#7c3aed'),
-            row('Shopify Store', 'Repasse parcial recebido', 'R$ 12.780', 'Acompanhar', 'SH', '#95bf47', undefined, ShopifyIcon),
+            row('Mercado Sul', '28 dias em atraso', 'R$ 3.482,70', 'Prioridade', 'MS', '#dc2626'),
+            row('Cliente Norte', '12 dias em atraso', 'R$ 5.940,35', 'Prioridade', 'CN', '#0ea5e9'),
+            row('Loja Prime', 'Boleto venceu ontem', 'R$ 1.286,90', 'Acompanhar', 'LP', '#f97316'),
+            row('Rede Alpha', '18 dias em atraso', 'R$ 2.174,55', 'Prioridade', 'RA', '#1877f2'),
+            row('Norte Foods', 'NF vencida ha 7 dias', 'R$ 4.812,20', 'Acompanhar', 'NF', '#16a34a'),
+            row('Canal B2B', 'Parcela sem baixa', 'R$ 6.390,80', 'Revisar', 'G', '#4285f4', undefined, GoogleAdsIcon),
+            row('Grupo Delta', 'Contrato mensal pendente', 'R$ 7.158,45', 'Prioridade', 'GD', '#7c3aed'),
+            row('Shopify Store', 'Repasse parcial recebido', 'R$ 1.934,12', 'Acompanhar', 'SH', '#95bf47', undefined, ShopifyIcon),
           ],
           subtitle: 'Clientes, valores e dias em atraso',
           title: 'Clientes em atraso',
         },
-        summary: 'Identifiquei 8 clientes em atraso. Mercado Sul, Grupo Delta e Cliente Norte exigem prioridade.',
+        summary: 'Identifiquei 8 clientes em atraso, com R$ 33.180,07 em aberto. Mercado Sul, Grupo Delta e Cliente Norte exigem prioridade.',
         tool: 'buscar_clientes_em_atraso',
       },
       {
         result: {
           rows: [
-            row('Mercado Sul', 'WhatsApp com PIX e boleto', 'R$ 28.900', 'Enviado', 'MS', '#25d366'),
-            row('Cliente Norte', 'E-mail para financeiro', 'R$ 42.100', 'Enviado', 'CN', '#0ea5e9'),
-            row('Loja Prime', 'WhatsApp de lembrete', 'R$ 8.400', 'Entregue', 'LP', '#25d366'),
-            row('Rede Alpha', 'E-mail com segunda via', 'R$ 18.600', 'Enviado', 'RA', '#1877f2'),
-            row('Norte Foods', 'WhatsApp para aprovador', 'R$ 31.400', 'Entregue', 'NF', '#16a34a'),
-            row('Canal B2B', 'E-mail com comprovantes', 'R$ 54.700', 'Enviado', 'G', '#4285f4', undefined, GoogleAdsIcon),
-            row('Grupo Delta', 'WhatsApp + e-mail formal', 'R$ 76.500', 'Enviado', 'GD', '#7c3aed'),
-            row('Shopify Store', 'Lembrete sobre saldo restante', 'R$ 12.780', 'Entregue', 'SH', '#95bf47', undefined, ShopifyIcon),
+            row('Mercado Sul', 'financeiro@mercadosul.com.br', 'R$ 3.482,70', 'Enviado', 'MS', '#dc2626'),
+            row('Cliente Norte', 'contas@clientenorte.com.br', 'R$ 5.940,35', 'Enviado', 'CN', '#0ea5e9'),
+            row('Loja Prime', 'adm@lojaprime.com.br', 'R$ 1.286,90', 'Enviado', 'LP', '#f97316'),
+            row('Rede Alpha', 'financeiro@redealpha.com.br', 'R$ 2.174,55', 'Enviado', 'RA', '#1877f2'),
+            row('Norte Foods', 'pagamentos@nortefoods.com.br', 'R$ 4.812,20', 'Enviado', 'NF', '#16a34a'),
+            row('Canal B2B', 'cobranca@canalb2b.com.br', 'R$ 6.390,80', 'Enviado', 'G', '#4285f4', undefined, GoogleAdsIcon),
+            row('Grupo Delta', 'financeiro@grupodelta.com.br', 'R$ 7.158,45', 'Enviado', 'GD', '#7c3aed'),
+            row('Shopify Store', 'owner@shopifystore.com.br', 'R$ 1.934,12', 'Enviado', 'SH', '#95bf47', undefined, ShopifyIcon),
           ],
-          subtitle: 'E-mail, WhatsApp, segunda via e historico',
-          title: 'Cobrancas enviadas',
+          subtitle: 'E-mails enviados, segunda via e historico',
+          title: 'Cobrancas por e-mail',
         },
-        summary: 'Cobrancas enviadas por e-mail e WhatsApp, com historico registrado no contas a receber.',
-        text: 'Vou enviar as cobrancas pelos canais corretos e registrar tudo no historico.',
-        tool: 'enviar_cobrancas_email_whatsapp',
+        summary: 'E-mails de cobranca enviados com segunda via, valor em aberto e historico registrado no contas a receber.',
+        text: 'Vou enviar as cobrancas por e-mail com segunda via, valor atualizado e prazo para pagamento.',
+        tool: 'enviar_cobrancas_email',
       },
       {
         result: {
           rows: [
-            row('Cliente Norte', 'PIX recebido parcialmente', 'R$ 18.000', 'Pago parcial', 'CN', '#0ea5e9'),
-            row('Loja Prime', 'Cliente respondeu no WhatsApp', 'Hoje', 'Respondido', 'LP', '#25d366'),
+            row('Cliente Norte', 'PIX recebido parcialmente', 'R$ 2.400,00', 'Pago parcial', 'CN', '#0ea5e9'),
+            row('Loja Prime', 'Cliente respondeu ao e-mail', 'Hoje', 'Respondido', 'LP', '#f97316'),
             row('Mercado Sul', 'Follow-up agendado', 'Amanha', 'Aguardando', 'MS', '#dc2626'),
             row('Rede Alpha', 'Boleto aberto pelo cliente', '2h atras', 'Visualizado', 'RA', '#1877f2'),
             row('Norte Foods', 'Pagamento prometido', 'Sexta', 'Acompanhar', 'NF', '#16a34a'),
             row('Canal B2B', 'Comprovante solicitado', 'Pendente', 'Revisar', 'G', '#4285f4', undefined, GoogleAdsIcon),
             row('Grupo Delta', 'Sem resposta ainda', '24h', 'Escalar', 'GD', '#7c3aed'),
-            row('Shopify Store', 'Saldo liquidado', 'R$ 12.780', 'Recebido', 'SH', '#95bf47', undefined, ShopifyIcon),
+            row('Shopify Store', 'Saldo liquidado', 'R$ 1.934,12', 'Recebido', 'SH', '#95bf47', undefined, ShopifyIcon),
           ],
           subtitle: 'Resposta, recebimento, follow-up e proximo passo',
           title: 'Acompanhamento ate recebimento',
@@ -1377,8 +1384,8 @@ const scenes: AgentScene[] = [
         tool: 'acompanhar_recebimentos_cobrancas',
       },
     ],
-    intro: 'Vou localizar clientes em atraso, enviar cobrancas por e-mail ou WhatsApp e acompanhar cada caso ate o recebimento.',
-    prompt: 'Monitore clientes em atraso, envie cobrancas por e-mail ou WhatsApp e acompanhe ate o recebimento.',
+    intro: 'Vou localizar clientes em atraso, enviar cobrancas por e-mail e acompanhar cada caso ate o recebimento.',
+    prompt: 'Monitore clientes em atraso, envie cobrancas por e-mail e acompanhe ate o recebimento.',
   },
   {
     actions: [
