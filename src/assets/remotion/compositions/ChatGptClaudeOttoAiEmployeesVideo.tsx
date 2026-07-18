@@ -1367,8 +1367,27 @@ const scenes: AgentScene[] = [
       {
         result: {
           rows: [
+            row('Mercado Sul', '+55 11 94218-7704', 'R$ 3.482,70', 'Enviado', 'MS', '#25d366'),
+            row('Cliente Norte', '+55 85 99104-2281', 'R$ 5.940,35', 'Enviado', 'CN', '#0ea5e9'),
+            row('Loja Prime', '+55 11 97842-6630', 'R$ 1.286,90', 'Enviado', 'LP', '#f97316'),
+            row('Rede Alpha', '+55 21 98216-4409', 'R$ 2.174,55', 'Enviado', 'RA', '#1877f2'),
+            row('Norte Foods', '+55 81 99672-1180', 'R$ 4.812,20', 'Enviado', 'NF', '#16a34a'),
+            row('Canal B2B', '+55 31 97158-0294', 'R$ 6.390,80', 'Enviado', 'G', '#4285f4', undefined, GoogleAdsIcon),
+            row('Grupo Delta', '+55 41 98744-5520', 'R$ 7.158,45', 'Enviado', 'GD', '#7c3aed'),
+            row('Shopify Store', '+55 47 99288-6315', 'R$ 1.934,12', 'Enviado', 'SH', '#95bf47', undefined, ShopifyIcon),
+          ],
+          subtitle: 'Mensagens enviadas, link de pagamento e historico',
+          title: 'Cobrancas por WhatsApp',
+        },
+        summary: 'Mensagens de WhatsApp enviadas com link de pagamento e historico anexado aos clientes em atraso.',
+        text: 'Agora vou reforcar a cobranca pelo WhatsApp usando o telefone cadastrado de cada cliente.',
+        tool: 'enviar_cobrancas_whatsapp',
+      },
+      {
+        result: {
+          rows: [
             row('Cliente Norte', 'PIX recebido parcialmente', 'R$ 2.400,00', 'Pago parcial', 'CN', '#0ea5e9'),
-            row('Loja Prime', 'Cliente respondeu ao e-mail', 'Hoje', 'Respondido', 'LP', '#f97316'),
+            row('Loja Prime', 'Cliente respondeu no WhatsApp', 'Hoje', 'Respondido', 'LP', '#25d366'),
             row('Mercado Sul', 'Follow-up agendado', 'Amanha', 'Aguardando', 'MS', '#dc2626'),
             row('Rede Alpha', 'Boleto aberto pelo cliente', '2h atras', 'Visualizado', 'RA', '#1877f2'),
             row('Norte Foods', 'Pagamento prometido', 'Sexta', 'Acompanhar', 'NF', '#16a34a'),
@@ -1384,8 +1403,8 @@ const scenes: AgentScene[] = [
         tool: 'acompanhar_recebimentos_cobrancas',
       },
     ],
-    intro: 'Vou localizar clientes em atraso, enviar cobrancas por e-mail e acompanhar cada caso ate o recebimento.',
-    prompt: 'Monitore clientes em atraso, envie cobrancas por e-mail e acompanhe ate o recebimento.',
+    intro: 'Vou localizar clientes em atraso, enviar cobrancas por e-mail, reforcar no WhatsApp e acompanhar cada caso ate o recebimento.',
+    prompt: 'Monitore clientes em atraso, envie cobrancas por e-mail e WhatsApp e acompanhe ate o recebimento.',
   },
   {
     actions: [
