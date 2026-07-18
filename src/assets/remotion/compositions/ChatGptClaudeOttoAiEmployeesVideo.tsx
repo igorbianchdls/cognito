@@ -1120,34 +1120,24 @@ const scenes: AgentScene[] = [
         result: {
           kind: 'reportOutline',
           subtitle: 'Relatório · PDF',
-          title: 'relatorio_resultados_empresa',
+          title: 'relatorio_vendas_mes',
         },
-        summary: 'Relatorio criado com resumo executivo, vencimentos, recebimentos, riscos e oportunidades de economia.',
-        tool: 'gerar_relatorio_resultados',
+        summary: 'Relatorio criado com resumo das vendas do mes, clientes, valores faturados e itens pendentes de cobranca.',
+        tool: 'gerar_relatorio_vendas_mes',
       },
       {
         result: {
           kind: 'dashboardOutline',
           subtitle: 'Dashboard · Tempo real',
-          title: 'dashboard_resultados_empresa',
+          title: 'dashboard_financeiro',
         },
-        summary: 'Dashboard gerado com caixa, margem, lucro, atrasos, vencimentos e performance operacional.',
-        text: 'Agora vou transformar os dados em um dashboard para acompanhar os resultados em tempo real.',
-        tool: 'gerar_dashboard_resultados',
-      },
-      {
-        result: {
-          kind: 'slides',
-          subtitle: 'Slides · PPTX',
-          title: 'Apresentacao executiva',
-        },
-        summary: 'Apresentacao criada com slides claros para explicar resultados, riscos e proximas decisoes.',
-        text: 'Por fim, vou montar uma apresentacao em slides para comunicar os resultados de forma clara.',
-        tool: 'gerar_apresentacao_slides',
+        summary: 'Dashboard financeiro gerado para acompanhar caixa, contas a pagar, contas a receber, atrasos e margem.',
+        text: 'Agora vou montar um dashboard financeiro para acompanhar caixa, vencimentos, recebimentos e atrasos.',
+        tool: 'gerar_dashboard_financeiro',
       },
     ],
-    intro: 'Com base nos dados financeiros e operacionais, vou criar relatorio, dashboard e slides para acompanhar e apresentar os resultados.',
-    prompt: 'Crie relatorios, dashboards e uma apresentacao em slides com os resultados da empresa.',
+    intro: 'Com base nesses dados, vou criar um dashboard financeiro e um relatorio de vendas do mes.',
+    prompt: 'Agora crie um dashboard para acompanhar meu financeiro e um relatorio com o resumo das minhas vendas deste mes.',
   },
   {
     actions: [
