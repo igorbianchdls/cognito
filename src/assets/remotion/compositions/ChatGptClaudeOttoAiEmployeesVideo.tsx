@@ -1,5 +1,5 @@
 import type { ComponentType, CSSProperties, ReactNode } from 'react'
-import { AbsoluteFill, interpolate, useCurrentFrame } from 'remotion'
+import { AbsoluteFill, Img, interpolate, staticFile, useCurrentFrame } from 'remotion'
 import { Wrench } from 'lucide-react'
 
 import GoogleAdsIcon from '@/components/icons/GoogleAdsIcon'
@@ -550,6 +550,39 @@ function InvoiceIssuedPanel({ localFrame }: { localFrame: number }) {
   )
 }
 
+function FullscreenInvoiceImageScene({ localFrame }: { localFrame: number }) {
+  const sceneIn = p(localFrame, 0, 28)
+  const sceneOut = p(localFrame, 360, 410, [1, 0])
+  const documentIn = p(localFrame, 12, 44)
+
+  if (localFrame < 0) {
+    return null
+  }
+
+  return (
+    <AbsoluteFill style={{ alignItems: 'center', background: '#f4f5f7', display: 'flex', justifyContent: 'center', opacity: sceneIn * sceneOut, overflow: 'hidden', zIndex: 42 }}>
+      <div
+        style={{
+          background: '#ffffff',
+          borderRadius: 18,
+          boxShadow: '0 34px 90px rgba(15, 23, 42, 0.22)',
+          height: 1680,
+          opacity: documentIn,
+          overflow: 'hidden',
+          transform: `translateY(${(1 - documentIn) * 28}px) scale(${0.985 + documentIn * 0.015})`,
+          width: 980,
+        }}
+      >
+        <Img
+          alt="Nota Fiscal Eletronica de Servicos"
+          src={staticFile('nfse.jpg')}
+          style={{ display: 'block', height: '100%', objectFit: 'cover', objectPosition: 'top center', width: '100%' }}
+        />
+      </div>
+    </AbsoluteFill>
+  )
+}
+
 function FullscreenInvoiceScene({ localFrame }: { localFrame: number }) {
   const sceneIn = p(localFrame, 0, 28)
   const sceneOut = p(localFrame, 360, 410, [1, 0])
@@ -905,7 +938,7 @@ function AgentChatScene({ scene, start }: { scene: AgentScene; start: number }) 
         })}
       </ChatGptMobileShell>
       {dashboardAction ? <FullscreenDashboardScene localFrame={local - (dashboardAction.resultStart + 170)} /> : null}
-      {invoiceAction ? <FullscreenInvoiceScene localFrame={local - (invoiceAction.resultStart + 170)} /> : null}
+      {invoiceAction ? <FullscreenInvoiceImageScene localFrame={local - (invoiceAction.resultStart + 170)} /> : null}
     </div>
   )
 }
@@ -1050,7 +1083,7 @@ function ClaudeAgentChatScene({ scene, start }: { scene: AgentScene; start: numb
         })}
       </ClaudeMobileShell>
       {dashboardAction ? <FullscreenDashboardScene localFrame={local - (dashboardAction.resultStart + 170)} /> : null}
-      {invoiceAction ? <FullscreenInvoiceScene localFrame={local - (invoiceAction.resultStart + 170)} /> : null}
+      {invoiceAction ? <FullscreenInvoiceImageScene localFrame={local - (invoiceAction.resultStart + 170)} /> : null}
     </div>
   )
 }
