@@ -727,6 +727,34 @@ function DashboardResult({ localFrame }: { localFrame: number }) {
   )
 }
 
+function FullscreenDashboardImageScene({ localFrame }: { localFrame: number }) {
+  const sceneIn = p(localFrame, 0, 28)
+  const sceneOut = p(localFrame, 360, 410, [1, 0])
+  const imageIn = p(localFrame, 10, 36)
+
+  if (localFrame < 0) {
+    return null
+  }
+
+  return (
+    <AbsoluteFill style={{ alignItems: 'center', background: '#020817', display: 'flex', justifyContent: 'center', opacity: sceneIn * sceneOut, overflow: 'hidden', zIndex: 40 }}>
+      <Img
+        alt="Dashboard financeiro"
+        src={staticFile('mob1.png')}
+        style={{
+          display: 'block',
+          height: '100%',
+          objectFit: 'cover',
+          opacity: imageIn,
+          transform: `scale(${0.94 + imageIn * 0.06})`,
+          transformOrigin: 'center center',
+          width: '100%',
+        }}
+      />
+    </AbsoluteFill>
+  )
+}
+
 function FullscreenDashboardScene({ localFrame }: { localFrame: number }) {
   const sceneIn = p(localFrame, 0, 28)
   const sceneOut = p(localFrame, 360, 410, [1, 0])
@@ -937,7 +965,7 @@ function AgentChatScene({ scene, start }: { scene: AgentScene; start: number }) 
           )
         })}
       </ChatGptMobileShell>
-      {dashboardAction ? <FullscreenDashboardScene localFrame={local - (dashboardAction.resultStart + 170)} /> : null}
+      {dashboardAction ? <FullscreenDashboardImageScene localFrame={local - (dashboardAction.resultStart + 170)} /> : null}
       {invoiceAction ? <FullscreenInvoiceImageScene localFrame={local - (invoiceAction.resultStart + 170)} /> : null}
     </div>
   )
@@ -1082,7 +1110,7 @@ function ClaudeAgentChatScene({ scene, start }: { scene: AgentScene; start: numb
           )
         })}
       </ClaudeMobileShell>
-      {dashboardAction ? <FullscreenDashboardScene localFrame={local - (dashboardAction.resultStart + 170)} /> : null}
+      {dashboardAction ? <FullscreenDashboardImageScene localFrame={local - (dashboardAction.resultStart + 170)} /> : null}
       {invoiceAction ? <FullscreenInvoiceImageScene localFrame={local - (invoiceAction.resultStart + 170)} /> : null}
     </div>
   )
