@@ -348,14 +348,24 @@ export function ChatGptVoiceButton() {
   )
 }
 
+export function ChatGptWaitingButton() {
+  return (
+    <div style={{ alignItems: 'center', background: '#d7d7d7', borderRadius: 999, display: 'flex', height: 78, justifyContent: 'center', width: 78 }}>
+      <span style={{ background: '#111111', borderRadius: 7, display: 'block', height: 28, width: 28 }} />
+    </div>
+  )
+}
+
 export function ChatGptMobileShell({
   children,
   conversationY = 0,
   promptInputBottom,
+  responseInProgress = false,
 }: {
   children: ReactNode
   conversationY?: number
   promptInputBottom?: number
+  responseInProgress?: boolean
 }) {
   const conversationBottom = promptInputBottom === undefined ? 264 : promptInputBottom + 126
 
@@ -384,7 +394,7 @@ export function ChatGptMobileShell({
           <span style={{ color: '#8a8a8a', fontSize: 40, fontWeight: 400, left: 130, letterSpacing: 0, lineHeight: 1, position: 'absolute', top: 32 }}>Pergunte ao ChatGPT</span>
           <ChatGptMicIcon color="#333333" size={54} strokeWidth={2.05} style={{ position: 'absolute', right: 118, top: 25 }} />
           <div style={{ position: 'absolute', right: 13, top: 13 }}>
-            <ChatGptVoiceButton />
+            {responseInProgress ? <ChatGptWaitingButton /> : <ChatGptVoiceButton />}
           </div>
         </div>
         <div style={{ background: '#050505', borderRadius: 999, bottom: 14, height: 12, left: '50%', position: 'absolute', transform: 'translateX(-50%)', width: 380 }} />

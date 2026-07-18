@@ -945,7 +945,7 @@ function AgentChatScene({ scene, start }: { scene: AgentScene; start: number }) 
 
   return (
     <div style={{ inset: 0, opacity, position: 'absolute' }}>
-      <ChatGptMobileShell conversationY={conversationY} promptInputBottom={36}>
+      <ChatGptMobileShell conversationY={conversationY} promptInputBottom={36} responseInProgress>
         <StaticChatGptUserBubble style={fadeOnlyStyle(local, 8)}>{scene.prompt}</StaticChatGptUserBubble>
         <ChatGptAssistantTextNoHeader style={sequence(local, 62)}>{scene.intro}</ChatGptAssistantTextNoHeader>
         {scheduledActions.map(({ action, index, resultStart, summaryStart, toolStart }) => {
@@ -997,6 +997,31 @@ function ClaudeAssistantText({ children, style }: { children: ReactNode; style: 
   )
 }
 
+function ClaudeOrangeIcon({ size = 64 }: { size?: number }) {
+  const rays = Array.from({ length: 12 })
+
+  return (
+    <span style={{ display: 'block', height: size, position: 'relative', width: size }}>
+      {rays.map((_, index) => (
+        <span
+          key={index}
+          style={{
+            background: '#D97757',
+            borderRadius: 999,
+            height: size * 0.42,
+            left: '50%',
+            position: 'absolute',
+            top: '50%',
+            transform: `translate(-50%, -100%) rotate(${index * 30}deg)`,
+            transformOrigin: `50% ${size * 0.42}px`,
+            width: size * 0.105,
+          }}
+        />
+      ))}
+    </span>
+  )
+}
+
 function ClaudeToolUseCard({ startFrame, toolName }: { startFrame: number; toolName: string }) {
   const frame = useCurrentFrame()
 
@@ -1045,8 +1070,9 @@ function ClaudePromptInputScene({ frame, hold = 108, prompt, start }: { frame: n
       <ClaudeMobileShell conversationY={0}>
         <div />
       </ClaudeMobileShell>
-      <div style={{ color: '#111111', fontFamily: CLAUDE_MOBILE_FONT_STACK, fontSize: 44, fontWeight: 430, left: 0, letterSpacing: '-0.01em', lineHeight: 1, opacity: p(local, 8, 24), position: 'absolute', right: 0, textAlign: 'center', top: labelTop, transform: `translateY(${(1 - p(local, 8, 24)) * 12}px)` }}>
-        Tudo pronto para começar?
+      <div style={{ alignItems: 'center', color: '#111111', display: 'flex', fontFamily: CLAUDE_RESPONSE_SERIF, fontSize: 48, fontWeight: 400, gap: 18, justifyContent: 'center', left: 0, letterSpacing: '-0.02em', lineHeight: 1, opacity: p(local, 8, 24), position: 'absolute', right: 0, top: labelTop, transform: `translateY(${(1 - p(local, 8, 24)) * 12}px)` }}>
+        <ClaudeOrangeIcon size={64} />
+        <span>De volta à ação, Igor</span>
       </div>
       <div style={{ height: inputHeight, left: 42, position: 'absolute', right: 42, top: inputTop }}>
         <div style={{ background: '#fbfaf8', border: '1.5px solid #bebcb7', borderRadius: 68, boxShadow: '0 20px 48px rgba(20,24,22,0.16)', height: inputHeight, left: 0, position: 'absolute', right: 0, top: 0, transform: `translateY(${-sentState * 10}px)` }}>
@@ -1099,7 +1125,7 @@ function ClaudeAgentChatScene({ scene, start }: { scene: AgentScene; start: numb
 
   return (
     <div style={{ inset: 0, opacity, position: 'absolute' }}>
-      <ClaudeMobileShell conversationY={conversationY}>
+      <ClaudeMobileShell conversationY={conversationY} responseInProgress>
         <StaticClaudeUserBubble style={fadeOnlyStyle(local, 8)}>{scene.prompt}</StaticClaudeUserBubble>
         <ClaudeAssistantText style={claudeSequenceStyle(local, 62, 22)}>{scene.intro}</ClaudeAssistantText>
         {scheduledActions.map(({ action, index, resultStart, summaryStart, toolStart }) => {

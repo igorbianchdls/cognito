@@ -161,7 +161,15 @@ export function ClaudeVoiceButton() {
   )
 }
 
-export function ClaudeMobileShell({ children, conversationY = 0 }: { children: ReactNode; conversationY?: number }) {
+export function ClaudeWaitingButton() {
+  return (
+    <div style={{ alignItems: 'center', background: '#d7d7d7', borderRadius: 999, display: 'flex', height: 90, justifyContent: 'center', width: 90 }}>
+      <span style={{ background: '#111111', borderRadius: 7, display: 'block', height: 30, width: 30 }} />
+    </div>
+  )
+}
+
+export function ClaudeMobileShell({ children, conversationY = 0, responseInProgress = false }: { children: ReactNode; conversationY?: number; responseInProgress?: boolean }) {
   return (
     <AbsoluteFill style={{ background: '#fbfaf8', color: '#111111', fontFamily: CLAUDE_MOBILE_FONT_STACK, overflow: 'hidden' }}>
       <style>
@@ -220,7 +228,7 @@ export function ClaudeMobileShell({ children, conversationY = 0 }: { children: R
             <div style={{ alignItems: 'center', background: '#efeeeb', borderRadius: 999, display: 'flex', height: 90, justifyContent: 'center', width: 90 }}>
               <ClaudeMicGlyph />
             </div>
-            <ClaudeVoiceButton />
+            {responseInProgress ? <ClaudeWaitingButton /> : <ClaudeVoiceButton />}
           </div>
         </div>
         <div style={{ background: '#050505', borderRadius: 999, bottom: 14, height: 12, left: '50%', position: 'absolute', transform: 'translateX(-50%)', width: 380 }} />
