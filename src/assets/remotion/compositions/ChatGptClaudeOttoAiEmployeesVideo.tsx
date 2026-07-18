@@ -1071,9 +1071,9 @@ function ClaudePromptInputScene({ frame, hold = 108, prompt, start }: { frame: n
       <ClaudeMobileShell conversationY={0}>
         <div />
       </ClaudeMobileShell>
-      <div style={{ alignItems: 'center', color: '#111111', display: 'flex', fontFamily: CLAUDE_RESPONSE_SERIF, fontSize: 48, fontWeight: 400, gap: 18, justifyContent: 'center', left: 0, letterSpacing: '-0.02em', lineHeight: 1, opacity: p(local, 8, 24), position: 'absolute', right: 0, top: labelTop, transform: `translateY(${(1 - p(local, 8, 24)) * 12}px)` }}>
+      <div className="claude-ai-employees-prompt-title" style={{ alignItems: 'center', color: '#111111', display: 'flex', fontFamily: CLAUDE_RESPONSE_SERIF, fontSize: 48, fontWeight: 400, gap: 18, justifyContent: 'center', left: 0, letterSpacing: '-0.02em', lineHeight: 1, opacity: p(local, 8, 24), position: 'absolute', right: 0, top: labelTop, transform: `translateY(${(1 - p(local, 8, 24)) * 12}px)` }}>
         <ClaudeOrangeIcon size={64} />
-        <span>De volta à ação, Igor</span>
+        <span className="claude-ai-employees-prompt-title-copy" style={{ fontFamily: CLAUDE_RESPONSE_SERIF }}>De volta à ação, Igor</span>
       </div>
       <div style={{ height: inputHeight, left: 42, position: 'absolute', right: 42, top: inputTop }}>
         <div style={{ background: '#fbfaf8', border: '1.5px solid #bebcb7', borderRadius: 68, boxShadow: '0 20px 48px rgba(20,24,22,0.16)', height: inputHeight, left: 0, position: 'absolute', right: 0, top: 0, transform: `translateY(${-sentState * 10}px)` }}>
@@ -1490,7 +1490,9 @@ export function ClaudeOttoAiEmployeesVideo() {
         {`
           .claude-ai-employees-response,
           .claude-ai-employees-response-copy,
-          .claude-ai-employees-response-copy span {
+          .claude-ai-employees-response-copy span,
+          .claude-ai-employees-prompt-title,
+          .claude-ai-employees-prompt-title-copy {
             font-family: "Libre Baskerville", Baskerville, Georgia, "Times New Roman", serif !important;
             letter-spacing: -0.02em !important;
           }
