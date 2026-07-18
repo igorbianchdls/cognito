@@ -8,7 +8,6 @@ import ShopifyIcon from '@/components/icons/ShopifyIcon'
 import {
   CHATGPT_MOBILE_FONT_STACK,
   ChatGptFlowAssistantText,
-  ChatGptFlowUserBubble,
   ChatGptMobileShell,
   ChatGptToolCallCard,
   ChatGptToolResultCard,
@@ -16,7 +15,6 @@ import {
   chatGptSequenceStyle,
 } from '@/assets/remotion/compositions/ChatGptMobileBase'
 import {
-  ClaudeFlowUserBubble,
   ClaudeMobileShell,
   ClaudeToolResultCard,
   CLAUDE_MOBILE_FONT_STACK,
@@ -795,6 +793,65 @@ function InsightBlock({ localFrame, text, value }: { localFrame: number; text: s
   )
 }
 
+function StaticChatGptUserBubble({ children, style }: { children: ReactNode; style: CSSProperties }) {
+  return (
+    <div style={{ ...style, display: 'flex', justifyContent: 'flex-end', paddingRight: 36 }}>
+      <div
+        style={{
+          alignItems: 'center',
+          background: '#f1f1f1',
+          borderRadius: 60,
+          boxSizing: 'border-box',
+          color: '#111111',
+          display: 'flex',
+          fontFamily: CHATGPT_MOBILE_FONT_STACK,
+          fontSize: 42,
+          fontWeight: 400,
+          justifyContent: 'center',
+          letterSpacing: 0,
+          lineHeight: 1.18,
+          maxWidth: 760,
+          minHeight: 91,
+          padding: '24px 42px',
+          width: 'max-content',
+        }}
+      >
+        {children}
+      </div>
+    </div>
+  )
+}
+
+function StaticClaudeUserBubble({ children, style }: { children: ReactNode; style: CSSProperties }) {
+  return (
+    <div style={{ ...style, display: 'flex', justifyContent: 'flex-end', paddingRight: 42 }}>
+      <div
+        style={{
+          alignItems: 'center',
+          background: '#f1f0ee',
+          border: '1px solid #dfddd8',
+          borderRadius: 68,
+          boxSizing: 'border-box',
+          color: '#111111',
+          display: 'flex',
+          fontFamily: CLAUDE_MOBILE_FONT_STACK,
+          fontSize: 38,
+          fontWeight: 400,
+          justifyContent: 'center',
+          letterSpacing: '-0.76px',
+          lineHeight: 1.12,
+          maxWidth: 760,
+          minHeight: 96,
+          padding: '25px 40px',
+          width: 'max-content',
+        }}
+      >
+        {children}
+      </div>
+    </div>
+  )
+}
+
 function AgentChatScene({ scene, start }: { scene: AgentScene; start: number }) {
   const frame = useCurrentFrame()
   const local = Math.max(0, frame - start)
@@ -817,7 +874,7 @@ function AgentChatScene({ scene, start }: { scene: AgentScene; start: number }) 
   return (
     <div style={{ inset: 0, opacity, position: 'absolute' }}>
       <ChatGptMobileShell conversationY={conversationY} promptInputBottom={36}>
-        <ChatGptFlowUserBubble style={fadeOnlyStyle(local, 8)}>{scene.prompt}</ChatGptFlowUserBubble>
+        <StaticChatGptUserBubble style={fadeOnlyStyle(local, 8)}>{scene.prompt}</StaticChatGptUserBubble>
         <ChatGptFlowAssistantText style={sequence(local, 62)}>{scene.intro}</ChatGptFlowAssistantText>
         {scheduledActions.map(({ action, index, resultStart, summaryStart, toolStart }) => {
           const isOutline = action.result.kind === 'dashboardOutline' || action.result.kind === 'invoiceOutline' || action.result.kind === 'reportOutline'
@@ -962,7 +1019,7 @@ function ClaudeAgentChatScene({ scene, start }: { scene: AgentScene; start: numb
   return (
     <div style={{ inset: 0, opacity, position: 'absolute' }}>
       <ClaudeMobileShell conversationY={conversationY}>
-        <ClaudeFlowUserBubble style={fadeOnlyStyle(local, 8)}>{scene.prompt}</ClaudeFlowUserBubble>
+        <StaticClaudeUserBubble style={fadeOnlyStyle(local, 8)}>{scene.prompt}</StaticClaudeUserBubble>
         <ClaudeAssistantText style={claudeSequenceStyle(local, 62, 22)}>{scene.intro}</ClaudeAssistantText>
         {scheduledActions.map(({ action, index, resultStart, summaryStart, toolStart }) => {
           const isOutline = action.result.kind === 'dashboardOutline' || action.result.kind === 'invoiceOutline' || action.result.kind === 'reportOutline'
