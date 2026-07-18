@@ -3706,6 +3706,28 @@ export default function RemotionPreviewPage() {
   const height = selectedItem.height || 720
   const duration = selectedItem.duration || 180
   const aspectRatio = `${width} / ${height}`
+  const downloadFileName = `${selectedItem.value}.mp4`
+  const downloadUrl = `/remotion/exports/${downloadFileName}`
+
+  async function handleDownloadVideo() {
+    try {
+      const response = await fetch(downloadUrl, { method: 'HEAD' })
+
+      if (!response.ok) {
+        window.alert(`Arquivo ainda nao encontrado: public${downloadUrl}`)
+        return
+      }
+
+      const anchor = document.createElement('a')
+      anchor.href = downloadUrl
+      anchor.download = downloadFileName
+      document.body.appendChild(anchor)
+      anchor.click()
+      anchor.remove()
+    } catch {
+      window.alert(`Nao foi possivel baixar o arquivo: public${downloadUrl}`)
+    }
+  }
 
   return (
     <main style={{ background: '#F4F6F3', color: '#101828', display: 'grid', fontFamily: theme.fontFamily, gridTemplateColumns: '248px minmax(0, 1fr)', minHeight: '100vh' }}>
@@ -3826,6 +3848,27 @@ export default function RemotionPreviewPage() {
                 width: '100%',
               }}
             />
+            <button
+              onClick={handleDownloadVideo}
+              style={{
+                alignItems: 'center',
+                background: '#111827',
+                border: 0,
+                borderRadius: 12,
+                color: '#FFFFFF',
+                cursor: 'pointer',
+                display: 'flex',
+                fontSize: 14,
+                fontWeight: 850,
+                justifyContent: 'center',
+                marginTop: 12,
+                padding: '13px 16px',
+                width: '100%',
+              }}
+              type="button"
+            >
+              Baixar vídeo
+            </button>
           </div>
           <div style={{ background: '#FFFFFF', border: '1px solid #E3E8EF', borderRadius: 18, boxShadow: '0 18px 46px rgba(16,24,40,0.05)', display: 'grid', gap: 16, padding: 18 }}>
             <div style={{ alignItems: 'start', display: 'flex', gap: 12, justifyContent: 'space-between' }}>
