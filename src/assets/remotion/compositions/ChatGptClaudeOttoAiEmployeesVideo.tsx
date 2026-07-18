@@ -981,6 +981,7 @@ function AgentChatScene({ scene, start }: { scene: AgentScene; start: number }) 
 function ClaudeAssistantText({ children, style }: { children: ReactNode; style: CSSProperties }) {
   return (
     <div
+      className="claude-ai-employees-response"
       style={{
         ...style,
         color: '#111111',
@@ -992,7 +993,7 @@ function ClaudeAssistantText({ children, style }: { children: ReactNode; style: 
         padding: '0 42px',
       }}
     >
-      <span style={{ fontFamily: CLAUDE_RESPONSE_SERIF }}>{typed(String(children), Math.max(0, Math.min(1, Number(style.opacity ?? 1))))}</span>
+      <span className="claude-ai-employees-response-copy" style={{ fontFamily: CLAUDE_RESPONSE_SERIF }}>{typed(String(children), Math.max(0, Math.min(1, Number(style.opacity ?? 1))))}</span>
     </div>
   )
 }
@@ -1485,6 +1486,16 @@ export function ClaudeOttoAiEmployeesVideo() {
 
   return (
     <AbsoluteFill style={{ background: '#fbfaf8', color: '#111111', fontFamily: CLAUDE_MOBILE_FONT_STACK, overflow: 'hidden' }}>
+      <style>
+        {`
+          .claude-ai-employees-response,
+          .claude-ai-employees-response-copy,
+          .claude-ai-employees-response-copy span {
+            font-family: "Libre Baskerville", Baskerville, Georgia, "Times New Roman", serif !important;
+            letter-spacing: -0.02em !important;
+          }
+        `}
+      </style>
       {scenes.map((scene, index) => {
         const promptHold = index === 3 ? 176 : 108
         const start = starts[index] + (index === 3 ? 190 : 110)
