@@ -99,7 +99,7 @@ function toolDrivenScroll(frame: number, scheduledActions: Array<{ resultStart: 
   const outputRange = [0, 0]
 
   scheduledActions.forEach(({ resultStart, summaryStart }, index) => {
-    const resultPosition = -420 - index * 560
+    const resultPosition = -420 - index * 720
     inputRange.push(resultStart + 78, summaryStart + 62)
     outputRange.push(resultPosition, resultPosition - 220)
   })
@@ -997,7 +997,7 @@ function AgentChatScene({ scene, start }: { scene: AgentScene; start: number }) 
   const frame = useCurrentFrame()
   const local = Math.max(0, frame - start)
   const longRows = scene.actions.some((action) => (action.result.rows?.length ?? 0) >= 8)
-  const baseDuration = scene.actions.length === 1 ? 790 : scene.actions.length === 2 ? 930 : scene.actions.length === 3 ? (longRows ? 1850 : 1550) : 2700
+  const baseDuration = scene.actions.length === 1 ? 790 : scene.actions.length === 2 ? 930 : scene.actions.length === 3 ? (longRows ? 1850 : 1550) : scene.actions.length >= 6 ? 4300 : 2700
   let cursor = 150
   const scheduledActions = scene.actions.map((action, index) => {
     const toolStart = cursor
@@ -1178,7 +1178,7 @@ function ClaudeAgentChatScene({ scene, start }: { scene: AgentScene; start: numb
   const frame = useCurrentFrame()
   const local = Math.max(0, frame - start)
   const longRows = scene.actions.some((action) => (action.result.rows?.length ?? 0) >= 8)
-  const baseDuration = scene.actions.length === 1 ? 790 : scene.actions.length === 2 ? 930 : scene.actions.length === 3 ? (longRows ? 1850 : 1550) : 2700
+  const baseDuration = scene.actions.length === 1 ? 790 : scene.actions.length === 2 ? 930 : scene.actions.length === 3 ? (longRows ? 1850 : 1550) : scene.actions.length >= 6 ? 4300 : 2700
   let cursor = 150
   const scheduledActions = scene.actions.map((action, index) => {
     const toolStart = cursor
