@@ -23,7 +23,7 @@ import { IOS_REMOTION_FONT_STACK, loadSfProFonts } from '@/assets/remotion/fonts
 
 loadSfProFonts()
 
-export const OTTO_AI_EMPLOYEES_CHATGPT_CLAUDE_DURATION = 12100
+export const OTTO_AI_EMPLOYEES_CHATGPT_CLAUDE_DURATION = 12900
 export const OTTO_AI_EMPLOYEES_CLAUDE_DURATION = OTTO_AI_EMPLOYEES_CHATGPT_CLAUDE_DURATION
 
 const FONT = IOS_REMOTION_FONT_STACK
@@ -1003,7 +1003,7 @@ function AgentChatScene({ scene, start }: { scene: AgentScene; start: number }) 
     const toolStart = cursor
     const resultStart = toolStart + 58
     const rowCount = action.result.rows?.length ?? 0
-    const resultHold = action.result.kind === 'invoiceOutline' ? 390 : action.result.kind === 'dashboardOutline' || action.result.kind === 'reportOutline' ? 330 : action.result.kind === 'cashflow' || action.result.kind === 'insights' ? 320 : rowCount >= 8 ? 270 : rowCount >= 6 ? 220 : 166
+    const resultHold = action.result.kind === 'invoiceOutline' ? 390 : action.result.kind === 'dashboardOutline' || action.result.kind === 'reportOutline' ? 330 : action.result.kind === 'insights' ? 430 : action.result.kind === 'cashflow' ? 340 : rowCount >= 8 ? 270 : rowCount >= 6 ? 220 : 166
     const summaryStart = resultStart + resultHold
     cursor = summaryStart + (action.summary ? 118 : 46)
     return { action, index, resultStart, summaryStart, toolStart }
@@ -1184,7 +1184,7 @@ function ClaudeAgentChatScene({ scene, start }: { scene: AgentScene; start: numb
     const toolStart = cursor
     const resultStart = toolStart + 58
     const rowCount = action.result.rows?.length ?? 0
-    const resultHold = action.result.kind === 'invoiceOutline' ? 390 : action.result.kind === 'dashboardOutline' || action.result.kind === 'reportOutline' ? 330 : action.result.kind === 'cashflow' || action.result.kind === 'insights' ? 320 : rowCount >= 8 ? 270 : rowCount >= 6 ? 220 : 166
+    const resultHold = action.result.kind === 'invoiceOutline' ? 390 : action.result.kind === 'dashboardOutline' || action.result.kind === 'reportOutline' ? 330 : action.result.kind === 'insights' ? 430 : action.result.kind === 'cashflow' ? 340 : rowCount >= 8 ? 270 : rowCount >= 6 ? 220 : 166
     const summaryStart = resultStart + resultHold
     cursor = summaryStart + (action.summary ? 118 : 46)
     return { action, index, resultStart, summaryStart, toolStart }
@@ -1574,7 +1574,7 @@ function row(name: string, description: string, value: string, status: string, i
 
 export function ChatGptClaudeOttoAiEmployeesVideo() {
   const frame = useCurrentFrame()
-  const starts = [0, 820, 1640, 5200, 7000, 8700, 10700]
+  const starts = [0, 820, 1640, 6000, 7800, 9500, 11500]
 
   return (
     <AbsoluteFill style={{ background: '#ffffff', color: '#111111', fontFamily: FONT, overflow: 'hidden' }}>
@@ -1594,7 +1594,7 @@ export function ChatGptClaudeOttoAiEmployeesVideo() {
 
 export function ClaudeOttoAiEmployeesVideo() {
   const frame = useCurrentFrame()
-  const starts = [0, 820, 1640, 5200, 7000, 8700, 10700]
+  const starts = [0, 820, 1640, 6000, 7800, 9500, 11500]
 
   return (
     <AbsoluteFill style={{ background: '#fbfaf8', color: '#111111', fontFamily: CLAUDE_MOBILE_FONT_STACK, overflow: 'hidden' }}>
