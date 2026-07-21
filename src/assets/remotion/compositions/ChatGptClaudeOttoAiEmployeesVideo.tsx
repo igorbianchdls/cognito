@@ -25,6 +25,7 @@ loadSfProFonts()
 
 export const OTTO_AI_EMPLOYEES_CHATGPT_CLAUDE_DURATION = 12900
 export const OTTO_AI_EMPLOYEES_CLAUDE_DURATION = OTTO_AI_EMPLOYEES_CHATGPT_CLAUDE_DURATION
+export const OTTO_FINANCIAL_OPERATION_SCENE_DURATION = 4650
 
 const FONT = IOS_REMOTION_FONT_STACK
 const CLAUDE_RESPONSE_SERIF = '"Libre Baskerville", Baskerville, Georgia, "Times New Roman", serif'
@@ -1345,12 +1346,12 @@ const scenes: AgentScene[] = [
             row('Conta Azul', 'ERP legado em transicao', 'R$ 2.190', 'Avaliar', 'CA', '#2563eb'),
             row('Escritorio Fiscal', 'Honorarios mensais', 'R$ 4.800', 'Agendado', 'EF', '#f97316'),
           ],
-          subtitle: 'Compras, fornecedores, pedidos e documentos',
-          title: 'Compras e fornecedores',
+          subtitle: 'Compras, pedidos, valores e status',
+          title: 'Compras',
         },
-        summary: 'Compras e fornecedores foram cruzados com pagamentos. Frete Sul e Fornecedor Cloud merecem revisao antes de executar.',
-        text: 'Vou cruzar compras, fornecedores e pedidos vinculados aos pagamentos.',
-        tool: 'buscar_compras_fornecedores',
+        summary: 'Compras foram cruzadas com pagamentos. Frete Sul e Fornecedor Cloud merecem revisao antes de executar.',
+        text: 'Vou buscar compras e pedidos vinculados aos pagamentos.',
+        tool: 'buscar_compras',
       },
       {
         result: {
@@ -1365,12 +1366,12 @@ const scenes: AgentScene[] = [
             row('Grupo Delta', 'Venda enterprise aprovada', 'R$ 76.500', 'Registrar', 'GD', '#7c3aed'),
             row('Shopify Store', 'Venda integrada da loja', 'R$ 12.780', 'Faturada', 'SH', '#95bf47', undefined, ShopifyIcon),
           ],
-          subtitle: 'Propostas aprovadas, vendas e faturamento',
-          title: 'Propostas e vendas',
+          subtitle: 'Vendas, clientes, valores e faturamento',
+          title: 'Vendas',
         },
-        summary: 'Oito propostas e vendas foram encontradas. Mercado Sul precisa faturamento e Grupo Delta deve ser registrado no ERP.',
-        text: 'Agora vou buscar propostas aprovadas, vendas registradas e status de faturamento.',
-        tool: 'buscar_propostas_vendas',
+        summary: 'Oito vendas foram encontradas. Mercado Sul precisa faturamento e Grupo Delta deve ser registrado no ERP.',
+        text: 'Agora vou buscar vendas registradas e status de faturamento.',
+        tool: 'buscar_vendas',
       },
       {
         result: {
@@ -1393,8 +1394,8 @@ const scenes: AgentScene[] = [
         tool: 'identificar_gastos_e_economias',
       },
     ],
-    intro: 'Vou revisar a operacao financeira: pagamentos, recebimentos, compras, fornecedores, propostas, vendas, cobrancas, caixa e economia.',
-    prompt: 'Acompanhe contas a pagar e receber, compras, fornecedores, propostas, vendas, cobrancas, pagamentos e recebimentos.',
+    intro: 'Vou revisar a operacao financeira: pagamentos, recebimentos, compras, vendas, cobrancas, caixa e economia.',
+    prompt: 'Acompanhe contas a pagar e receber, compras, vendas, cobrancas, pagamentos e recebimentos.',
   },
   {
     actions: [
@@ -1589,6 +1590,18 @@ export function ChatGptClaudeOttoAiEmployeesVideo() {
           </FragmentBlock>
         )
       })}
+    </AbsoluteFill>
+  )
+}
+
+export function OttoFinancialOperationSceneVideo() {
+  const frame = useCurrentFrame()
+  const scene = scenes[2]
+
+  return (
+    <AbsoluteFill style={{ background: '#ffffff', color: '#111111', fontFamily: FONT, overflow: 'hidden' }}>
+      <AgentChatScene scene={scene} start={190} />
+      <PromptInputScene frame={frame} hold={176} prompt={scene.prompt} start={0} />
     </AbsoluteFill>
   )
 }

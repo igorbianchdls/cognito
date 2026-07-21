@@ -4,7 +4,9 @@ import {
   ChatGptClaudeOttoAiEmployeesVideo,
   OTTO_AI_EMPLOYEES_CHATGPT_CLAUDE_DURATION,
   OTTO_AI_EMPLOYEES_CLAUDE_DURATION,
+  OTTO_FINANCIAL_OPERATION_SCENE_DURATION,
   ClaudeOttoAiEmployeesVideo,
+  OttoFinancialOperationSceneVideo,
 } from './compositions/ChatGptClaudeOttoAiEmployeesVideo'
 import {
   OTTO_LOGO_REVEAL_HORIZONTAL_DURATION,
@@ -40,6 +42,14 @@ function RemotionDownloadRoot() {
         fps={30}
         height={1920}
         id="video-otto-ai-employees-claude"
+        width={1080}
+      />
+      <Composition
+        component={OttoFinancialOperationSceneVideo}
+        durationInFrames={OTTO_FINANCIAL_OPERATION_SCENE_DURATION}
+        fps={30}
+        height={1920}
+        id="video-otto-financial-operation-scene"
         width={1080}
       />
       <Composition
