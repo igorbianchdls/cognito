@@ -101,7 +101,8 @@ function toolDrivenScroll(frame: number, scheduledActions: Array<{ resultStart: 
   scheduledActions.forEach(({ resultStart, summaryStart }, index) => {
     const resultPosition = -420 - index * 900
     inputRange.push(resultStart + 78, summaryStart + 62)
-    outputRange.push(resultPosition, resultPosition - 220)
+    const finalOffset = index === scheduledActions.length - 1 ? 520 : 220
+    outputRange.push(resultPosition, resultPosition - finalOffset)
   })
 
   return interpolate(frame, inputRange, outputRange, { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' })
