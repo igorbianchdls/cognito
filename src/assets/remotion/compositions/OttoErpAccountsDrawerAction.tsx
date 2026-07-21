@@ -418,7 +418,7 @@ export function OttoErpAccountsDrawerAction() {
         <div style={{ padding: '28px 32px 0', position: 'relative' }}>
           <div style={{ alignItems: 'end', display: 'flex', justifyContent: 'space-between' }}>
             <div>
-              <h1 style={{ color: INK, fontSize: 63, fontWeight: 760, letterSpacing: -1.8, lineHeight: 0.96, margin: 0 }}>{page.title}</h1>
+              <h1 style={{ color: INK, fontSize: 76, fontWeight: 760, letterSpacing: 0, lineHeight: 0.96, margin: 0 }}>{page.title}</h1>
               <p style={{ color: MUTED, fontSize: 15, fontWeight: 500, margin: '10px 0 0' }}>Registre, acompanhe e automatize lancamentos financeiros.</p>
             </div>
           </div>
