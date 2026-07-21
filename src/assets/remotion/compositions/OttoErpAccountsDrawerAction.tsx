@@ -62,7 +62,7 @@ const pages: PageData[] = [
     ],
     subtitle: 'Fornecedores, impostos e despesas pendentes',
     tab: 'Contas a Pagar',
-    title: 'Conta a Pagar',
+    title: 'Contas a Pagar',
   },
   {
     key: 'receivable',
@@ -76,7 +76,7 @@ const pages: PageData[] = [
     ],
     subtitle: 'Clientes, notas emitidas e recebimentos previstos',
     tab: 'Contas a Receber',
-    title: 'Conta a Receber',
+    title: 'Contas a Receber',
   },
   {
     key: 'financialAccounts',

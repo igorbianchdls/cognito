@@ -1,6 +1,8 @@
 import { AbsoluteFill, Easing, Img, interpolate, staticFile, useCurrentFrame } from 'remotion'
 
-export const OTTO_LOGO_REVEAL_HORIZONTAL_DURATION = 51
+const OTTO_LOGO_REVEAL_HORIZONTAL_INTRO_DURATION = 51
+
+export const OTTO_LOGO_REVEAL_HORIZONTAL_DURATION = 141
 
 const INK = '#242424'
 
@@ -17,7 +19,7 @@ export function OttoLogoRevealHorizontal() {
   const logo = progress(frame, 0, 36)
   const clip = interpolate(logo, [0, 1], [100, 0])
   const logoX = interpolate(logo, [0, 1], [-36, 0])
-  const lockupScale = interpolate(frame, [0, OTTO_LOGO_REVEAL_HORIZONTAL_DURATION], [1.04, 0.98], {
+  const lockupScale = interpolate(frame, [0, OTTO_LOGO_REVEAL_HORIZONTAL_INTRO_DURATION], [1.04, 0.98], {
     extrapolateLeft: 'clamp',
     extrapolateRight: 'clamp',
   })
