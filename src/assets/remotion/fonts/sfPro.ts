@@ -1,4 +1,4 @@
-import { continueRender, delayRender, staticFile } from 'remotion'
+import { staticFile } from 'remotion'
 
 export const IOS_REMOTION_FONT_STACK = '"SF Pro Text", "SF Pro Display", -apple-system, BlinkMacSystemFont, system-ui, sans-serif'
 export const IOS_REMOTION_DISPLAY_FONT_STACK = '"SF Pro Display", "SF Pro Text", -apple-system, BlinkMacSystemFont, system-ui, sans-serif'
@@ -23,12 +23,19 @@ const SF_PRO_FONTS: FontDefinition[] = [
 
 let fontLoadPromise: Promise<void> | null = null
 
+function withFontTimeout(promise: Promise<unknown>, timeoutMs = 3500) {
+  return Promise.race([
+    promise,
+    new Promise<void>((resolve) => {
+      window.setTimeout(resolve, timeoutMs)
+    }),
+  ])
+}
+
 export function loadSfProFonts() {
   if (fontLoadPromise || typeof document === 'undefined' || typeof FontFace === 'undefined') {
     return fontLoadPromise
   }
-
-  const handle = delayRender('Loading SF Pro fonts')
 
   fontLoadPromise = Promise.all(
     SF_PRO_FONTS.map(async (definition) => {
@@ -41,11 +48,11 @@ export function loadSfProFonts() {
         },
       )
       document.fonts.add(font)
-      await font.load()
+      await withFontTimeout(font.load())
     }),
   )
     .then(() => undefined)
-    .finally(() => continueRender(handle))
+    .catch(() => undefined)
 
   return fontLoadPromise
 }

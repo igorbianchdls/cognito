@@ -43,7 +43,7 @@ type ResultRow = {
 
 type ActionStep = {
   result: {
-    kind?: 'list' | 'table' | 'dashboard' | 'dashboardOutline' | 'employee' | 'invoiceOutline' | 'reconciliation' | 'reportOutline' | 'slides'
+    kind?: 'cashflow' | 'insights' | 'list' | 'table' | 'dashboard' | 'dashboardOutline' | 'employee' | 'invoiceOutline' | 'reconciliation' | 'reportOutline' | 'slides'
     rows?: ResultRow[]
     subtitle: string
     title: string
@@ -217,7 +217,7 @@ function CascadeResultCard({ localFrame, result }: { localFrame: number; result:
   const show = p(localFrame, 0, 18)
   const rows = result.rows ?? []
   const rowHeight = 72
-  const cardHeight = result.kind === 'dashboard' || result.kind === 'dashboardOutline' || result.kind === 'reportOutline' || result.kind === 'slides' ? 552 : result.kind === 'employee' ? 500 : interpolate(p(localFrame, 34, 78), [0, 1], [116, 126 + rows.length * rowHeight], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' })
+  const cardHeight = result.kind === 'dashboard' || result.kind === 'dashboardOutline' || result.kind === 'reportOutline' || result.kind === 'slides' ? 552 : result.kind === 'employee' || result.kind === 'cashflow' || result.kind === 'insights' ? 500 : interpolate(p(localFrame, 34, 78), [0, 1], [116, 126 + rows.length * rowHeight], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' })
   const progress = Math.round(interpolate(p(localFrame, 18, 154), [0, 1], [18, 100], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' }))
 
   return (
@@ -230,7 +230,7 @@ function CascadeResultCard({ localFrame, result }: { localFrame: number; result:
           </div>
           <span style={{ background: '#ecfdf3', border: '1px solid #bbf7d0', borderRadius: 999, color: '#0f8f51', fontSize: 18, fontWeight: 650, padding: '9px 14px' }}>{progress}%</span>
         </div>
-        {result.kind === 'dashboard' ? <DashboardResult localFrame={localFrame - 20} /> : result.kind === 'dashboardOutline' ? <DashboardOutlineResult localFrame={localFrame - 20} subtitle={result.subtitle} title={result.title} /> : result.kind === 'reportOutline' ? <ReportOutlineResult localFrame={localFrame - 20} /> : result.kind === 'slides' ? <SlidesResult localFrame={localFrame - 20} /> : result.kind === 'invoiceOutline' ? <InvoiceOutlineResult localFrame={localFrame - 20} /> : result.kind === 'employee' ? <EmployeeResult localFrame={localFrame - 20} /> : result.kind === 'reconciliation' ? rows.map((row, index) => <ReconciliationResultRow key={`${row.name}-${index}`} index={index} localFrame={localFrame} row={row} />) : rows.map((row, index) => <ResultRowItem key={`${row.name}-${index}`} index={index} localFrame={localFrame} row={row} />)}
+        {result.kind === 'dashboard' ? <DashboardResult localFrame={localFrame - 20} /> : result.kind === 'dashboardOutline' ? <DashboardOutlineResult localFrame={localFrame - 20} subtitle={result.subtitle} title={result.title} /> : result.kind === 'reportOutline' ? <ReportOutlineResult localFrame={localFrame - 20} /> : result.kind === 'slides' ? <SlidesResult localFrame={localFrame - 20} /> : result.kind === 'invoiceOutline' ? <InvoiceOutlineResult localFrame={localFrame - 20} /> : result.kind === 'employee' ? <EmployeeResult localFrame={localFrame - 20} /> : result.kind === 'cashflow' ? <CashFlowAnalysisResult localFrame={localFrame - 20} /> : result.kind === 'insights' ? <SpendEconomyInsightResult localFrame={localFrame - 20} /> : result.kind === 'reconciliation' ? rows.map((row, index) => <ReconciliationResultRow key={`${row.name}-${index}`} index={index} localFrame={localFrame} row={row} />) : rows.map((row, index) => <ResultRowItem key={`${row.name}-${index}`} index={index} localFrame={localFrame} row={row} />)}
       </div>
     </div>
   )
@@ -732,6 +732,78 @@ function DashboardResult({ localFrame }: { localFrame: number }) {
   )
 }
 
+function CashFlowAnalysisResult({ localFrame }: { localFrame: number }) {
+  const kpis = [
+    ['Caixa projetado', 'R$ 418k', '+12 dias', '#16a34a'],
+    ['Saidas 7 dias', 'R$ 84k', '5 vencimentos', '#f97316'],
+    ['Entradas 7 dias', 'R$ 126k', '8 recebimentos', '#2563eb'],
+    ['Risco de atraso', 'R$ 14,8k', '2 clientes', '#dc2626'],
+  ]
+  const bars = [68, 92, 74, 116, 88, 138, 112, 156]
+
+  return (
+    <div style={{ display: 'grid', gap: 14, padding: '4px 22px 0' }}>
+      <div style={{ display: 'grid', gap: 10, gridTemplateColumns: 'repeat(2, 1fr)' }}>
+        {kpis.map(([label, value, note, color], index) => {
+          const itemIn = p(localFrame, index * 7, 18 + index * 7)
+          return (
+            <div key={label} style={{ background: '#f8fafc', border: '1px solid #eef2f7', borderRadius: 18, opacity: itemIn, padding: 16, transform: `translateY(${(1 - itemIn) * 12}px)` }}>
+              <div style={{ color: '#667085', fontSize: 14, fontWeight: 650 }}>{label}</div>
+              <div style={{ color, fontSize: 25, fontWeight: 840, letterSpacing: -0.2, marginTop: 6 }}>{value}</div>
+              <div style={{ color: '#8a8a8a', fontSize: 13, fontWeight: 520, marginTop: 3 }}>{note}</div>
+            </div>
+          )
+        })}
+      </div>
+      <div style={{ background: '#f8fafc', border: '1px solid #eef2f7', borderRadius: 22, padding: '18px 18px 14px' }}>
+        <div style={{ alignItems: 'end', borderBottom: '1px solid #e5e7eb', display: 'grid', gap: 9, gridTemplateColumns: 'repeat(8, 1fr)', height: 132, paddingBottom: 12 }}>
+          {bars.map((height, index) => {
+            const barIn = p(localFrame, 38 + index * 5, 58 + index * 5)
+            const negative = index === 1 || index === 4
+            return <span key={`${height}-${index}`} style={{ background: negative ? '#fecaca' : index > 4 ? '#16a34a' : '#bfdbfe', borderRadius: '8px 8px 4px 4px', display: 'block', height: height * barIn, minHeight: 6 }} />
+          })}
+        </div>
+        <div style={{ color: '#667085', display: 'flex', fontSize: 13, fontWeight: 650, justifyContent: 'space-between', padding: '9px 4px 0' }}>
+          <span>Hoje</span>
+          <span>7d</span>
+          <span>15d</span>
+          <span>30d</span>
+        </div>
+      </div>
+      <InsightBlock localFrame={localFrame - 96} text="Se Mercado Sul atrasar mais 7 dias, o saldo minimo cai para R$ 126k. Melhor antecipar cobranca hoje." value="Alerta de caixa" />
+    </div>
+  )
+}
+
+function SpendEconomyInsightResult({ localFrame }: { localFrame: number }) {
+  const insights = [
+    ['Gasto fora do padrao', 'Frete Sul subiu 18% contra media dos ultimos 3 meses.', 'Revisar contrato', '#fff7ed', '#c2410c'],
+    ['Economia estimada', 'Renegociar Cloud e frete libera R$ 38k no trimestre.', '+R$ 38k', '#f0fdf4', '#166534'],
+    ['Margem protegida', 'Reduzir midia com CPL alto melhora caixa sem cortar vendas.', '+4,2 p.p.', '#eff6ff', '#1d4ed8'],
+  ]
+
+  return (
+    <div style={{ display: 'grid', gap: 13, padding: '4px 22px 0' }}>
+      {insights.map(([label, text, value, background, color], index) => {
+        const itemIn = p(localFrame, 10 + index * 16, 34 + index * 16)
+        return (
+          <div key={label} style={{ alignItems: 'center', background, border: '1px solid #e5e7eb', borderRadius: 20, display: 'grid', gap: 16, gridTemplateColumns: '1fr auto', minHeight: 104, opacity: itemIn, padding: '18px 20px', transform: `translateY(${(1 - itemIn) * 16}px)` }}>
+            <div style={{ display: 'grid', gap: 7 }}>
+              <strong style={{ color, fontSize: 20, fontWeight: 820, letterSpacing: -0.1 }}>{label}</strong>
+              <span style={{ color: '#344054', fontSize: 16, fontWeight: 470, lineHeight: 1.25 }}>{text}</span>
+            </div>
+            <span style={{ background: '#ffffff', border: '1px solid rgba(15,23,42,0.08)', borderRadius: 999, color, fontSize: 18, fontWeight: 820, padding: '9px 12px', whiteSpace: 'nowrap' }}>{value}</span>
+          </div>
+        )
+      })}
+      <div style={{ background: '#111827', borderRadius: 22, color: '#ffffff', opacity: p(localFrame, 78, 104), padding: 22, transform: `translateY(${(1 - p(localFrame, 78, 104)) * 14}px)` }}>
+        <div style={{ color: '#52d273', fontSize: 18, fontWeight: 820 }}>Decisao recomendada</div>
+        <div style={{ color: '#ffffff', fontSize: 22, fontWeight: 620, lineHeight: 1.25, marginTop: 8 }}>Segurar Frete Sul, renegociar fornecedor Cloud e manter Google Ads nos grupos com ROAS positivo.</div>
+      </div>
+    </div>
+  )
+}
+
 function FullscreenDashboardImageScene({ localFrame }: { localFrame: number }) {
   const sceneIn = p(localFrame, 0, 28)
   const sceneOut = p(localFrame, 360, 410, [1, 0])
@@ -931,7 +1003,7 @@ function AgentChatScene({ scene, start }: { scene: AgentScene; start: number }) 
     const toolStart = cursor
     const resultStart = toolStart + 58
     const rowCount = action.result.rows?.length ?? 0
-    const resultHold = action.result.kind === 'invoiceOutline' ? 390 : action.result.kind === 'dashboardOutline' || action.result.kind === 'reportOutline' ? 330 : rowCount >= 10 ? 270 : rowCount >= 6 ? 220 : 166
+    const resultHold = action.result.kind === 'invoiceOutline' ? 390 : action.result.kind === 'dashboardOutline' || action.result.kind === 'reportOutline' ? 330 : action.result.kind === 'cashflow' || action.result.kind === 'insights' ? 250 : rowCount >= 10 ? 270 : rowCount >= 6 ? 220 : 166
     const summaryStart = resultStart + resultHold
     cursor = summaryStart + (action.summary ? 118 : 46)
     return { action, index, resultStart, summaryStart, toolStart }
@@ -1112,7 +1184,7 @@ function ClaudeAgentChatScene({ scene, start }: { scene: AgentScene; start: numb
     const toolStart = cursor
     const resultStart = toolStart + 58
     const rowCount = action.result.rows?.length ?? 0
-    const resultHold = action.result.kind === 'invoiceOutline' ? 390 : action.result.kind === 'dashboardOutline' || action.result.kind === 'reportOutline' ? 330 : rowCount >= 10 ? 270 : rowCount >= 6 ? 220 : 166
+    const resultHold = action.result.kind === 'invoiceOutline' ? 390 : action.result.kind === 'dashboardOutline' || action.result.kind === 'reportOutline' ? 330 : action.result.kind === 'cashflow' || action.result.kind === 'insights' ? 250 : rowCount >= 10 ? 270 : rowCount >= 6 ? 220 : 166
     const summaryStart = resultStart + resultHold
     cursor = summaryStart + (action.summary ? 118 : 46)
     return { action, index, resultStart, summaryStart, toolStart }
@@ -1263,6 +1335,26 @@ const scenes: AgentScene[] = [
         result: {
           kind: 'table',
           rows: [
+            row('Fornecedor Cloud', 'Pedido PO-442 aprovado', 'R$ 18.400', 'Revisar', 'FC', '#7c3aed'),
+            row('AWS Brasil', 'Infra recorrente vinculada ao contrato', 'R$ 12.790', 'Recorrente', 'AW', '#111827'),
+            row('Frete Sul', 'Contrato logistico com reajuste', 'R$ 6.830', 'Acima do padrao', 'FS', '#dc2626'),
+            row('Google Ads', 'Compra de midia programada', 'R$ 8.420', 'Aprovado', 'G', '#4285f4', undefined, GoogleAdsIcon),
+            row('Meta Ads', 'Campanha remarketing do mes', 'R$ 3.460', 'Aprovado', 'M', '#1877f2', undefined, MetaIcon),
+            row('Shopify', 'Plano e apps ecommerce', 'R$ 1.280', 'OK', 'SH', '#95bf47', undefined, ShopifyIcon),
+            row('Conta Azul', 'ERP legado em transicao', 'R$ 2.190', 'Avaliar', 'CA', '#2563eb'),
+            row('Escritorio Fiscal', 'Honorarios mensais', 'R$ 4.800', 'Agendado', 'EF', '#f97316'),
+          ],
+          subtitle: 'Compras, fornecedores, pedidos e documentos',
+          title: 'Compras e fornecedores',
+        },
+        summary: 'Compras e fornecedores foram cruzados com pagamentos. Frete Sul e Fornecedor Cloud merecem revisao antes de executar.',
+        text: 'Vou cruzar compras, fornecedores e pedidos vinculados aos pagamentos.',
+        tool: 'buscar_compras_fornecedores',
+      },
+      {
+        result: {
+          kind: 'table',
+          rows: [
             row('Cliente Norte', 'Venda de servico aprovada', 'R$ 12.400', 'Registrada', 'CN', '#0ea5e9'),
             row('Mercado Sul', 'Pedido comercial importado', 'R$ 28.900', 'Faturar', 'MS', '#dc2626'),
             row('Rede Alpha', 'Venda recorrente renovada', 'R$ 18.600', 'Registrada', 'RA', '#1877f2'),
@@ -1272,16 +1364,36 @@ const scenes: AgentScene[] = [
             row('Grupo Delta', 'Venda enterprise aprovada', 'R$ 76.500', 'Registrar', 'GD', '#7c3aed'),
             row('Shopify Store', 'Venda integrada da loja', 'R$ 12.780', 'Faturada', 'SH', '#95bf47', undefined, ShopifyIcon),
           ],
-          subtitle: 'Vendas, clientes, valores e faturamento',
-          title: 'Vendas',
+          subtitle: 'Propostas aprovadas, vendas e faturamento',
+          title: 'Propostas e vendas',
         },
-        summary: 'Oito vendas foram encontradas. Mercado Sul precisa faturamento e Grupo Delta deve ser registrado no ERP.',
-        text: 'Agora vou buscar apenas vendas e status de faturamento.',
-        tool: 'buscar_vendas',
+        summary: 'Oito propostas e vendas foram encontradas. Mercado Sul precisa faturamento e Grupo Delta deve ser registrado no ERP.',
+        text: 'Agora vou buscar propostas aprovadas, vendas registradas e status de faturamento.',
+        tool: 'buscar_propostas_vendas',
+      },
+      {
+        result: {
+          kind: 'cashflow',
+          subtitle: 'Entradas, saidas, vencimentos e atrasos',
+          title: 'Fluxo de caixa',
+        },
+        summary: 'O caixa segue positivo, mas dois atrasos podem reduzir a folga da proxima semana. Recomendo cobrar Mercado Sul hoje.',
+        text: 'Com pagar, receber, compras e vendas cruzados, vou analisar o fluxo de caixa da operacao.',
+        tool: 'analisar_fluxo_caixa',
+      },
+      {
+        result: {
+          kind: 'insights',
+          subtitle: 'Gastos fora do padrao, economia e margem',
+          title: 'Economia e margem',
+        },
+        summary: 'Identifiquei oportunidade de economia em frete, cloud e midia paga. O impacto estimado e de R$ 38 mil no trimestre.',
+        text: 'Agora vou identificar onde a empresa esta gastando demais, perdendo dinheiro ou pode economizar.',
+        tool: 'identificar_gastos_e_economias',
       },
     ],
-    intro: 'Vou revisar a operacao financeira: pagamentos, recebimentos, vendas, cobrancas, caixa e economia.',
-    prompt: 'Acompanhe contas a pagar e receber, vendas, cobrancas, pagamentos e recebimentos.',
+    intro: 'Vou revisar a operacao financeira: pagamentos, recebimentos, compras, fornecedores, propostas, vendas, cobrancas, caixa e economia.',
+    prompt: 'Acompanhe contas a pagar e receber, compras, fornecedores, propostas, vendas, cobrancas, pagamentos e recebimentos.',
   },
   {
     actions: [

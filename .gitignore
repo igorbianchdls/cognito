@@ -5,6 +5,7 @@
 /.node_modules*
 /.pnpm-store/
 /tmp/cognito-node-modules*/
+/_node_modules_partial_*/
 /.cache/
 /C:\\Users\\Administrador\\AppData\\Local\\pnpm\\store\\v3/
 /cognito@0.1.0
@@ -25,6 +26,7 @@ a
 # next.js
 /.next/
 /out/
+/public/remotion/exports/
 
 # production
 /build
