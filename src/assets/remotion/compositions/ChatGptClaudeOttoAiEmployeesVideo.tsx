@@ -99,7 +99,7 @@ function toolDrivenScroll(frame: number, scheduledActions: Array<{ resultStart: 
   const outputRange = [0, 0]
 
   scheduledActions.forEach(({ resultStart, summaryStart }, index) => {
-    const resultPosition = -420 - index * 720
+    const resultPosition = -420 - index * 900
     inputRange.push(resultStart + 78, summaryStart + 62)
     outputRange.push(resultPosition, resultPosition - 220)
   })
