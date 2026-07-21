@@ -42,9 +42,9 @@ export function OttoLogoRevealHorizontal() {
             clipPath: `inset(0 ${clip}% 0 0)`,
             display: 'block',
             filter: `blur(${interpolate(logo, [0, 1], [1.2, 0])}px)`,
-            height: 118,
+            height: 354,
             transform: `translateX(${logoX}px)`,
-            width: 274,
+            width: 822,
           }}
         />
       </div>

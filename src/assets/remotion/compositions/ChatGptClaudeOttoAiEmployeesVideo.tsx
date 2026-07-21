@@ -26,6 +26,7 @@ loadSfProFonts()
 export const OTTO_AI_EMPLOYEES_CHATGPT_CLAUDE_DURATION = 12900
 export const OTTO_AI_EMPLOYEES_CLAUDE_DURATION = OTTO_AI_EMPLOYEES_CHATGPT_CLAUDE_DURATION
 export const OTTO_FINANCIAL_OPERATION_SCENE_DURATION = 4650
+export const CLAUDE_FINANCIAL_OPERATION_SCENE_DURATION = OTTO_FINANCIAL_OPERATION_SCENE_DURATION
 
 const FONT = IOS_REMOTION_FONT_STACK
 const CLAUDE_RESPONSE_SERIF = '"Libre Baskerville", Baskerville, Georgia, "Times New Roman", serif'
@@ -1602,6 +1603,30 @@ export function OttoFinancialOperationSceneVideo() {
     <AbsoluteFill style={{ background: '#ffffff', color: '#111111', fontFamily: FONT, overflow: 'hidden' }}>
       <AgentChatScene scene={scene} start={190} />
       <PromptInputScene frame={frame} hold={176} prompt={scene.prompt} start={0} />
+    </AbsoluteFill>
+  )
+}
+
+export function ClaudeFinancialOperationSceneVideo() {
+  const frame = useCurrentFrame()
+  const scene = scenes[2]
+
+  return (
+    <AbsoluteFill style={{ background: '#fbfaf8', color: '#111111', fontFamily: CLAUDE_MOBILE_FONT_STACK, overflow: 'hidden' }}>
+      <style>
+        {`
+          .claude-ai-employees-response,
+          .claude-ai-employees-response-copy,
+          .claude-ai-employees-response-copy span,
+          .claude-ai-employees-prompt-title,
+          .claude-ai-employees-prompt-title-copy {
+            font-family: "Libre Baskerville", Baskerville, Georgia, "Times New Roman", serif !important;
+            letter-spacing: -0.02em !important;
+          }
+        `}
+      </style>
+      <ClaudeAgentChatScene scene={scene} start={190} />
+      <ClaudePromptInputScene frame={frame} hold={176} prompt={scene.prompt} start={0} />
     </AbsoluteFill>
   )
 }

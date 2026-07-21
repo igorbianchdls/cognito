@@ -88,7 +88,7 @@ import {
 } from '@/assets/remotion/compositions/McpOperationsDemo'
 import { CHATGPT_FINANCIAL_AGENTS_VIDEO_DURATION, ChatGptFinancialAgentsVideo, ChatGptMobileAnimation, ChatGptToolCallDemoAnimation } from '@/assets/remotion/compositions/ChatGptMobileMarketing'
 import { CHATGPT_FINANCIAL_TWO_AGENTS_DURATION, CLAUDE_FINANCIAL_TWO_AGENTS_DURATION, ChatGptFinancialTwoAgentsVideo, ClaudeFinancialTwoAgentsVideo } from '@/assets/remotion/compositions/ChatGptFinancialTwoAgentsVideo'
-import { OTTO_AI_EMPLOYEES_CHATGPT_CLAUDE_DURATION, OTTO_AI_EMPLOYEES_CLAUDE_DURATION, OTTO_FINANCIAL_OPERATION_SCENE_DURATION, ChatGptClaudeOttoAiEmployeesVideo, ClaudeOttoAiEmployeesVideo, OttoFinancialOperationSceneVideo } from '@/assets/remotion/compositions/ChatGptClaudeOttoAiEmployeesVideo'
+import { CLAUDE_FINANCIAL_OPERATION_SCENE_DURATION, OTTO_AI_EMPLOYEES_CHATGPT_CLAUDE_DURATION, OTTO_AI_EMPLOYEES_CLAUDE_DURATION, OTTO_FINANCIAL_OPERATION_SCENE_DURATION, ChatGptClaudeOttoAiEmployeesVideo, ClaudeFinancialOperationSceneVideo, ClaudeOttoAiEmployeesVideo, OttoFinancialOperationSceneVideo } from '@/assets/remotion/compositions/ChatGptClaudeOttoAiEmployeesVideo'
 import { ChatGptOperationalFlowsVideo } from '@/assets/remotion/compositions/ChatGptOperationalFlowsVideo'
 import { ChatGptTaskLauncherAnimation } from '@/assets/remotion/compositions/ChatGptTaskLauncherAnimation'
 import { CODEX_CHARTS_DURATION, CodexChartsAnimation } from '@/assets/remotion/compositions/CodexChartsAnimation'
@@ -3317,6 +3317,18 @@ const catalog: CatalogItem[] = [
     label: 'Otto Financial Operation Scene',
     tags: ['ChatGPT', 'Financeiro', 'Compras', 'Vendas', 'Caixa', 'Otto'],
     value: 'video-otto-financial-operation-scene',
+    width: 1080,
+  },
+  {
+    code: '<ClaudeFinancialOperationSceneVideo />',
+    component: ClaudeFinancialOperationSceneVideo,
+    description: 'Cena isolada do Claude operando contas a pagar, contas a receber, compras, vendas, fluxo de caixa e economia no Otto.',
+    duration: CLAUDE_FINANCIAL_OPERATION_SCENE_DURATION,
+    height: 1920,
+    kind: 'Vídeos criados',
+    label: 'Claude Financial Operation Scene',
+    tags: ['Claude', 'Financeiro', 'Compras', 'Vendas', 'Caixa', 'Otto'],
+    value: 'video-claude-financial-operation-scene',
     width: 1080,
   },
   {

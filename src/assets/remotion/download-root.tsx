@@ -2,9 +2,11 @@ import { Composition, registerRoot } from 'remotion'
 
 import {
   ChatGptClaudeOttoAiEmployeesVideo,
+  CLAUDE_FINANCIAL_OPERATION_SCENE_DURATION,
   OTTO_AI_EMPLOYEES_CHATGPT_CLAUDE_DURATION,
   OTTO_AI_EMPLOYEES_CLAUDE_DURATION,
   OTTO_FINANCIAL_OPERATION_SCENE_DURATION,
+  ClaudeFinancialOperationSceneVideo,
   ClaudeOttoAiEmployeesVideo,
   OttoFinancialOperationSceneVideo,
 } from './compositions/ChatGptClaudeOttoAiEmployeesVideo'
@@ -50,6 +52,14 @@ function RemotionDownloadRoot() {
         fps={30}
         height={1920}
         id="video-otto-financial-operation-scene"
+        width={1080}
+      />
+      <Composition
+        component={ClaudeFinancialOperationSceneVideo}
+        durationInFrames={CLAUDE_FINANCIAL_OPERATION_SCENE_DURATION}
+        fps={30}
+        height={1920}
+        id="video-claude-financial-operation-scene"
         width={1080}
       />
       <Composition
