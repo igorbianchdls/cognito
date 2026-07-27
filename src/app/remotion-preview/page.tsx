@@ -3338,7 +3338,7 @@ const catalog: CatalogItem[] = [
     description: 'Cena isolada com prompt e apenas o retangulo de sync financeiro.',
     duration: OTTO_SYNC_ONLY_SCENE_DURATION,
     height: 1920,
-    kind: 'VÃ­deos criados',
+    kind: 'Vídeos criados',
     label: 'Otto Sync Only Scene',
     tags: ['Otto', 'Sync', 'Financeiro', 'Prompt'],
     value: 'video-otto-sync-only-scene',
