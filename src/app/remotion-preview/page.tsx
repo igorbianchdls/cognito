@@ -118,7 +118,7 @@ import { OTTO_ERP_ACCOUNTS_DRAWER_ACTION_DURATION, OttoErpAccountsDrawerAction }
 import { OTTO_ERP_HOME_DASHBOARD_DURATION, OttoErpHomeDashboard } from '@/assets/remotion/compositions/OttoErpHomeDashboard'
 import { OTTO_INTEGRATION_ACCESS_MAP_DURATION, OttoIntegrationAccessMap } from '@/assets/remotion/compositions/OttoIntegrationAccessMap'
 import { OTTO_INTEGRATION_SIGNAL_MAP_DURATION, OttoIntegrationSignalMap } from '@/assets/remotion/compositions/OttoIntegrationSignalMap'
-import { OTTO_LOGO_REVEAL_HORIZONTAL_DURATION, OttoLogoRevealHorizontal } from '@/assets/remotion/compositions/OttoLogoRevealHorizontal'
+import { OTTO_LOGO_REVEAL_HORIZONTAL_DURATION, OTTO_LOGO_REVEAL_REELS_DURATION, OttoLogoRevealHorizontal, OttoLogoRevealReels } from '@/assets/remotion/compositions/OttoLogoRevealHorizontal'
 import {
   OTTO_FINANCIAL_SCENE_COMPONENT_DURATION,
   OttoAdminInboxZeroScene,
@@ -1602,6 +1602,18 @@ const catalog: CatalogItem[] = [
     tags: ['Logo', 'Otto', 'Reveal'],
     value: 'otto-logo-reveal-horizontal',
     width: 1280,
+  },
+  {
+    code: '<OttoLogoRevealReels />',
+    component: OttoLogoRevealReels,
+    description: 'Reveal vertical para reels usando o icone oficial Otto.',
+    duration: OTTO_LOGO_REVEAL_REELS_DURATION,
+    height: 1920,
+    kind: 'Logo',
+    label: 'Otto Logo Reveal Reels',
+    tags: ['Logo', 'Otto', 'Reveal', 'Reels'],
+    value: 'otto-logo-reveal-reels',
+    width: 1080,
   },
   {
     code: '<OttoLogoSoftPulse />',

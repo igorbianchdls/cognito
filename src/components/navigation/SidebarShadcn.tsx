@@ -3,6 +3,7 @@
 import * as React from "react"
 import { usePathname } from "next/navigation"
 import {
+  IconBuildingStore,
   IconChartBar,
   IconFileText,
   IconGridDots,
@@ -23,6 +24,7 @@ import {
 
 const BrandIcon = (props: { className?: string; style?: React.CSSProperties }) => <IconGridDots stroke={1.75} {...props} />
 const IntegrationsIcon = (props: { className?: string; style?: React.CSSProperties }) => <IconPlugConnected stroke={1.75} {...props} />
+const ErpIcon = (props: { className?: string; style?: React.CSSProperties }) => <IconBuildingStore stroke={1.75} {...props} />
 const DashboardsIcon = (props: { className?: string; style?: React.CSSProperties }) => <IconChartBar stroke={1.75} {...props} />
 const SlidesIcon = (props: { className?: string; style?: React.CSSProperties }) => <IconPresentation stroke={1.75} {...props} />
 const ReportsIcon = (props: { className?: string; style?: React.CSSProperties }) => <IconFileText stroke={1.75} {...props} />
@@ -83,6 +85,11 @@ const navigationData = {
       icon: IntegrationsIcon,
     },
     {
+      title: "ERP",
+      url: "/erp",
+      icon: ErpIcon,
+    },
+    {
       title: "Dashboards",
       url: "/artifacts/dashboards",
       icon: DashboardsIcon,
@@ -112,7 +119,7 @@ export function SidebarShadcn({ bgColor, textColor, itemTextColor, itemTextStyle
   // Update active state based on current path
   const navMainWithActiveState = navigationData.navMain.map(item => ({
     ...item,
-    isActive: pathname === item.url
+    isActive: item.url ? pathname === item.url || pathname.startsWith(`${item.url}/`) : false
   }))
 
   const dataWithActiveState = {

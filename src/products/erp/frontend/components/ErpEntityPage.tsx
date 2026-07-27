@@ -1,0 +1,70 @@
+'use client'
+
+import { useEffect, useMemo, useState } from 'react'
+
+import { ErpActionBar } from '@/products/erp/frontend/components/ErpActionBar'
+import { ErpDataTable } from '@/products/erp/frontend/components/ErpDataTable'
+import { ErpEmptyState } from '@/products/erp/frontend/components/ErpEmptyState'
+import { ErpFiltersBar } from '@/products/erp/frontend/components/ErpFiltersBar'
+import { ErpFormDrawer } from '@/products/erp/frontend/components/ErpFormDrawer'
+import { ErpMetricCard } from '@/products/erp/frontend/components/ErpMetricCard'
+import { ErpPageHeader } from '@/products/erp/frontend/components/ErpPageHeader'
+import { ErpSearchBar } from '@/products/erp/frontend/components/ErpSearchBar'
+import { erpClient } from '@/products/erp/frontend/services/erpClient'
+import type { ErpEntityConfig, ErpEntityRecord } from '@/products/erp/shared/types'
+
+export function ErpEntityPage({ config }: { config: ErpEntityConfig }) {
+  const [query, setQuery] = useState('')
+  const [filters, setFilters] = useState<Record<string, string>>({})
+  const [records, setRecords] = useState<ErpEntityRecord[]>([])
+  const [drawerOpen, setDrawerOpen] = useState(false)
+
+  useEffect(() => {
+    let active = true
+
+    erpClient.listEntityRecords(config, { entityId: config.id, query, filters }).then((response) => {
+      if (active) setRecords(response.records)
+    })
+
+    return () => {
+      active = false
+    }
+  }, [config, filters, query])
+
+  const metricCards = useMemo(() => config.metrics.map((metric) => (
+    <ErpMetricCard key={metric.label} metric={metric} />
+  )), [config.metrics])
+
+  return (
+    <div className="flex min-h-full flex-col gap-6">
+      <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+        <ErpPageHeader eyebrow="ERP" title={config.label} description={config.description} />
+        <ErpActionBar primaryActionLabel={config.primaryActionLabel} onPrimaryAction={() => setDrawerOpen(true)} />
+      </div>
+
+      <div className="grid gap-3 md:grid-cols-3">{metricCards}</div>
+
+      <div className="flex flex-col gap-3 rounded-md border border-gray-200 bg-gray-50/60 p-3 lg:flex-row lg:items-center">
+        <ErpSearchBar value={query} placeholder={config.searchPlaceholder} onChange={setQuery} />
+        <ErpFiltersBar
+          filters={config.filters}
+          values={filters}
+          onChange={(key, value) => setFilters((current) => ({ ...current, [key]: value }))}
+        />
+      </div>
+
+      {records.length > 0 ? (
+        <ErpDataTable config={config} records={records} />
+      ) : (
+        <ErpEmptyState
+          title={config.emptyState.title}
+          description={config.emptyState.description}
+          actionLabel={config.primaryActionLabel}
+          onAction={() => setDrawerOpen(true)}
+        />
+      )}
+
+      <ErpFormDrawer config={config} open={drawerOpen} onOpenChange={setDrawerOpen} />
+    </div>
+  )
+}

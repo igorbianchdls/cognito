@@ -62,3 +62,6 @@ next-env.d.ts
 
 # Authentication tokens
 .npmrc
+
+# clerk configuration (can include secrets)
+/.clerk/

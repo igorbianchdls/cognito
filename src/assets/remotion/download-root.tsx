@@ -13,6 +13,8 @@ import {
 import {
   OTTO_LOGO_REVEAL_HORIZONTAL_DURATION,
   OttoLogoRevealHorizontal,
+  OTTO_LOGO_REVEAL_REELS_DURATION,
+  OttoLogoRevealReels,
 } from './compositions/OttoLogoRevealHorizontal'
 import {
   OTTO_ERP_ACCOUNTS_DRAWER_ACTION_DURATION,
@@ -26,6 +28,10 @@ import {
   OTTO_ASSISTANT_CONNECTIONS_DURATION,
   OttoAssistantConnections,
 } from './compositions/OttoAssistantConnections'
+import {
+  OTTO_SYNC_ONLY_SCENE_DURATION,
+  OttoSyncOnlyScene,
+} from './compositions/OttoSyncOnlyScene'
 
 function RemotionDownloadRoot() {
   return (
@@ -63,12 +69,28 @@ function RemotionDownloadRoot() {
         width={1080}
       />
       <Composition
+        component={OttoSyncOnlyScene}
+        durationInFrames={OTTO_SYNC_ONLY_SCENE_DURATION}
+        fps={30}
+        height={1920}
+        id="video-otto-sync-only-scene"
+        width={1080}
+      />
+      <Composition
         component={OttoLogoRevealHorizontal}
         durationInFrames={OTTO_LOGO_REVEAL_HORIZONTAL_DURATION}
         fps={30}
         height={720}
         id="otto-logo-reveal-horizontal"
         width={1280}
+      />
+      <Composition
+        component={OttoLogoRevealReels}
+        durationInFrames={OTTO_LOGO_REVEAL_REELS_DURATION}
+        fps={30}
+        height={1920}
+        id="otto-logo-reveal-reels"
+        width={1080}
       />
       <Composition
         component={OttoErpAccountsDrawerAction}

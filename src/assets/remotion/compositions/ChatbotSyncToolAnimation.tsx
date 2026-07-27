@@ -141,19 +141,21 @@ function ToolCallCard({ frame, icon, name, runningUntil, showFrom, showTo, statu
   )
 }
 
-function SyncToolResult({ frame }: { frame: number }) {
-  const localFrame = frame - 122
-  const show = p(frame, 122, 142)
+export function SyncToolResult({ frame, showHeader = true, start = 122 }: { frame: number; showHeader?: boolean; start?: number }) {
+  const localFrame = frame - start
+  const show = p(frame, start, start + 20)
   const list = p(localFrame, 46, 76)
   const cardHeight = interpolate(list, [0, 1], [112, 492], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' })
   const progress = Math.round(interpolate(p(localFrame, 18, 132), [0, 1], [14, 100], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' }))
 
   return (
     <div style={{ marginTop: 22, opacity: show, transform: `translateY(${(1 - show) * 18}px) scale(${0.985 + show * 0.015})` }}>
-      <div style={{ alignItems: 'center', display: 'flex', gap: 12, marginBottom: 14, paddingLeft: 10 }}>
-        <PlaidMark />
-        <span style={{ color: '#777777', fontSize: 20, fontWeight: 430, letterSpacing: 0 }}>Conciliando banco com ERP</span>
-      </div>
+      {showHeader ? (
+        <div style={{ alignItems: 'center', display: 'flex', gap: 12, marginBottom: 14, paddingLeft: 10 }}>
+          <PlaidMark />
+          <span style={{ color: '#777777', fontSize: 20, fontWeight: 430, letterSpacing: 0 }}>Conciliando banco com ERP</span>
+        </div>
+      ) : null}
       <div style={{ background: '#ffffff', border: '1px solid #e5e7eb', borderRadius: 30, boxShadow: '0 18px 46px rgba(15, 23, 42, 0.08)', height: cardHeight, overflow: 'hidden', padding: '16px 0' }}>
         <div style={{ alignItems: 'center', display: 'flex', justifyContent: 'space-between', padding: '0 28px 12px' }}>
           <div style={{ display: 'grid', gap: 5 }}>

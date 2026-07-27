@@ -3,6 +3,7 @@ import { AbsoluteFill, Easing, Img, interpolate, staticFile, useCurrentFrame } f
 const OTTO_LOGO_REVEAL_HORIZONTAL_INTRO_DURATION = 51
 
 export const OTTO_LOGO_REVEAL_HORIZONTAL_DURATION = 141
+export const OTTO_LOGO_REVEAL_REELS_DURATION = 141
 
 const INK = '#242424'
 
@@ -51,6 +52,46 @@ export function OttoLogoRevealHorizontal() {
         />
       </div>
 
+    </AbsoluteFill>
+  )
+}
+
+export function OttoLogoRevealReels() {
+  const frame = useCurrentFrame()
+  const logo = progress(frame, 0, 42)
+  const clip = interpolate(logo, [0, 1], [100, 0])
+  const iconY = interpolate(logo, [0, 1], [24, 0])
+  const iconScale = interpolate(frame, [0, OTTO_LOGO_REVEAL_HORIZONTAL_INTRO_DURATION], [0.92, 1], {
+    extrapolateLeft: 'clamp',
+    extrapolateRight: 'clamp',
+  })
+
+  return (
+    <AbsoluteFill style={{ alignItems: 'center', background: '#ffffff', color: INK, display: 'flex', fontFamily: 'Inter, Arial, Helvetica, sans-serif', justifyContent: 'center', overflow: 'hidden' }}>
+      <div
+        style={{
+          alignItems: 'center',
+          borderRadius: 40,
+          display: 'flex',
+          height: 260,
+          justifyContent: 'center',
+          opacity: interpolate(logo, [0, 0.24, 1], [0, 1, 1]),
+          overflow: 'hidden',
+          transform: `translateY(${iconY}px) scale(${iconScale})`,
+          width: 260,
+        }}
+      >
+        <Img
+          src={staticFile('logoOttoIcon.svg')}
+          style={{
+            clipPath: `inset(0 ${clip}% 0 0)`,
+            display: 'block',
+            filter: `blur(${interpolate(logo, [0, 1], [1.4, 0])}px)`,
+            height: 168,
+            width: 168,
+          }}
+        />
+      </div>
     </AbsoluteFill>
   )
 }
