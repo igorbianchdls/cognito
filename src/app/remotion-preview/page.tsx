@@ -119,6 +119,7 @@ import { OTTO_ERP_HOME_DASHBOARD_DURATION, OttoErpHomeDashboard } from '@/assets
 import { OTTO_INTEGRATION_ACCESS_MAP_DURATION, OttoIntegrationAccessMap } from '@/assets/remotion/compositions/OttoIntegrationAccessMap'
 import { OTTO_INTEGRATION_SIGNAL_MAP_DURATION, OttoIntegrationSignalMap } from '@/assets/remotion/compositions/OttoIntegrationSignalMap'
 import { OTTO_LOGO_REVEAL_HORIZONTAL_DURATION, OTTO_LOGO_REVEAL_REELS_DURATION, OttoLogoRevealHorizontal, OttoLogoRevealReels } from '@/assets/remotion/compositions/OttoLogoRevealHorizontal'
+import { OTTO_FINANCE_AUTOMATION_ONLY_SCENE_DURATION, OttoFinanceAutomationOnlyScene } from '@/assets/remotion/compositions/OttoFinanceAutomationOnlyScene'
 import { OTTO_INVOICE_ONLY_SCENE_DURATION, OttoInvoiceOnlyScene } from '@/assets/remotion/compositions/OttoInvoiceOnlyScene'
 import { OTTO_SYNC_ONLY_SCENE_DURATION, OttoSyncOnlyScene } from '@/assets/remotion/compositions/OttoSyncOnlyScene'
 import {
@@ -3355,6 +3356,18 @@ const catalog: CatalogItem[] = [
     label: 'Otto Invoice Only Scene',
     tags: ['Otto', 'Nota Fiscal', 'Financeiro', 'Prompt'],
     value: 'video-otto-invoice-only-scene',
+    width: 1080,
+  },
+  {
+    code: '<OttoFinanceAutomationOnlyScene />',
+    component: OttoFinanceAutomationOnlyScene,
+    description: 'Cena isolada com prompt e apenas o retangulo de automacao financeira.',
+    duration: OTTO_FINANCE_AUTOMATION_ONLY_SCENE_DURATION,
+    height: 1920,
+    kind: 'Vídeos criados',
+    label: 'Otto Finance Automation Only Scene',
+    tags: ['Otto', 'Financeiro', 'Automacao', 'Prompt'],
+    value: 'video-otto-finance-automation-only-scene',
     width: 1080,
   },
   {
