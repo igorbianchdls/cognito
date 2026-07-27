@@ -119,6 +119,7 @@ import { OTTO_ERP_HOME_DASHBOARD_DURATION, OttoErpHomeDashboard } from '@/assets
 import { OTTO_INTEGRATION_ACCESS_MAP_DURATION, OttoIntegrationAccessMap } from '@/assets/remotion/compositions/OttoIntegrationAccessMap'
 import { OTTO_INTEGRATION_SIGNAL_MAP_DURATION, OttoIntegrationSignalMap } from '@/assets/remotion/compositions/OttoIntegrationSignalMap'
 import { OTTO_LOGO_REVEAL_HORIZONTAL_DURATION, OTTO_LOGO_REVEAL_REELS_DURATION, OttoLogoRevealHorizontal, OttoLogoRevealReels } from '@/assets/remotion/compositions/OttoLogoRevealHorizontal'
+import { OTTO_SYNC_ONLY_SCENE_DURATION, OttoSyncOnlyScene } from '@/assets/remotion/compositions/OttoSyncOnlyScene'
 import {
   OTTO_FINANCIAL_SCENE_COMPONENT_DURATION,
   OttoAdminInboxZeroScene,
@@ -3329,6 +3330,18 @@ const catalog: CatalogItem[] = [
     label: 'Otto Financial Operation Scene',
     tags: ['ChatGPT', 'Financeiro', 'Compras', 'Vendas', 'Caixa', 'Otto'],
     value: 'video-otto-financial-operation-scene',
+    width: 1080,
+  },
+  {
+    code: '<OttoSyncOnlyScene />',
+    component: OttoSyncOnlyScene,
+    description: 'Cena isolada com prompt e apenas o retangulo de sync financeiro.',
+    duration: OTTO_SYNC_ONLY_SCENE_DURATION,
+    height: 1920,
+    kind: 'VÃ­deos criados',
+    label: 'Otto Sync Only Scene',
+    tags: ['Otto', 'Sync', 'Financeiro', 'Prompt'],
+    value: 'video-otto-sync-only-scene',
     width: 1080,
   },
   {
