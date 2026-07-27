@@ -119,6 +119,7 @@ import { OTTO_ERP_HOME_DASHBOARD_DURATION, OttoErpHomeDashboard } from '@/assets
 import { OTTO_INTEGRATION_ACCESS_MAP_DURATION, OttoIntegrationAccessMap } from '@/assets/remotion/compositions/OttoIntegrationAccessMap'
 import { OTTO_INTEGRATION_SIGNAL_MAP_DURATION, OttoIntegrationSignalMap } from '@/assets/remotion/compositions/OttoIntegrationSignalMap'
 import { OTTO_LOGO_REVEAL_HORIZONTAL_DURATION, OTTO_LOGO_REVEAL_REELS_DURATION, OttoLogoRevealHorizontal, OttoLogoRevealReels } from '@/assets/remotion/compositions/OttoLogoRevealHorizontal'
+import { OTTO_INVOICE_ONLY_SCENE_DURATION, OttoInvoiceOnlyScene } from '@/assets/remotion/compositions/OttoInvoiceOnlyScene'
 import { OTTO_SYNC_ONLY_SCENE_DURATION, OttoSyncOnlyScene } from '@/assets/remotion/compositions/OttoSyncOnlyScene'
 import {
   OTTO_FINANCIAL_SCENE_COMPONENT_DURATION,
@@ -3342,6 +3343,18 @@ const catalog: CatalogItem[] = [
     label: 'Otto Sync Only Scene',
     tags: ['Otto', 'Sync', 'Financeiro', 'Prompt'],
     value: 'video-otto-sync-only-scene',
+    width: 1080,
+  },
+  {
+    code: '<OttoInvoiceOnlyScene />',
+    component: OttoInvoiceOnlyScene,
+    description: 'Cena isolada com prompt e apenas o retangulo de emissao de nota fiscal.',
+    duration: OTTO_INVOICE_ONLY_SCENE_DURATION,
+    height: 1920,
+    kind: 'Vídeos criados',
+    label: 'Otto Invoice Only Scene',
+    tags: ['Otto', 'Nota Fiscal', 'Financeiro', 'Prompt'],
+    value: 'video-otto-invoice-only-scene',
     width: 1080,
   },
   {

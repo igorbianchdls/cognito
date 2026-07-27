@@ -17,7 +17,7 @@ function typed(text: string, progress: number) {
   return text.slice(0, Math.floor(text.length * progress))
 }
 
-function PromptOnly({ frame, prompt }: { frame: number; prompt: string }) {
+export function PromptOnly({ frame, prompt }: { frame: number; prompt: string }) {
   const inputIn = p(frame, 0, 18)
   const inputOut = p(frame, 78, 104, [1, 0])
   const typedText = typed(prompt, p(frame, 12, 74))

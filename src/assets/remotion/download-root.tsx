@@ -32,6 +32,10 @@ import {
   OTTO_SYNC_ONLY_SCENE_DURATION,
   OttoSyncOnlyScene,
 } from './compositions/OttoSyncOnlyScene'
+import {
+  OTTO_INVOICE_ONLY_SCENE_DURATION,
+  OttoInvoiceOnlyScene,
+} from './compositions/OttoInvoiceOnlyScene'
 
 function RemotionDownloadRoot() {
   return (
@@ -74,6 +78,14 @@ function RemotionDownloadRoot() {
         fps={30}
         height={1920}
         id="video-otto-sync-only-scene"
+        width={1080}
+      />
+      <Composition
+        component={OttoInvoiceOnlyScene}
+        durationInFrames={OTTO_INVOICE_ONLY_SCENE_DURATION}
+        fps={30}
+        height={1920}
+        id="video-otto-invoice-only-scene"
         width={1080}
       />
       <Composition
