@@ -15,7 +15,10 @@ async function parseJsonResponse<T>(response: Response): Promise<T> {
   return body as T
 }
 
-function buildListUrl(config: ErpEntityConfig, request?: ErpEntityListRequest) {
+function buildListUrl<TRecord extends ErpEntityRecord>(
+  config: ErpEntityConfig<TRecord>,
+  request?: ErpEntityListRequest,
+) {
   const params = new URLSearchParams()
   const query = request?.query?.trim()
   if (query) params.set('query', query)
