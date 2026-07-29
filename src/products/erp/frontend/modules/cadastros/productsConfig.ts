@@ -14,7 +14,6 @@ export const productsConfig: ErpEntityConfig<ErpEntityRecord> = {
     { key: 'sku', label: 'SKU' },
     { key: 'categoria', label: 'Categoria' },
     { key: 'preco', label: 'Preco', kind: 'currency' },
-    { key: 'estoque', label: 'Estoque', kind: 'number' },
     { key: 'status', label: 'Status', kind: 'status' },
   ],
   fields: [
@@ -22,16 +21,15 @@ export const productsConfig: ErpEntityConfig<ErpEntityRecord> = {
     { key: 'sku', label: 'SKU', type: 'text', required: true },
     { key: 'categoria', label: 'Categoria', type: 'select', options: [{ value: 'Kits', label: 'Kits' }, { value: 'Eletronicos', label: 'Eletronicos' }, { value: 'Cabos', label: 'Cabos' }, { value: 'Estrutura', label: 'Estrutura' }] },
     { key: 'preco', label: 'Preco', type: 'number', required: true },
-    { key: 'estoque', label: 'Estoque inicial', type: 'number' },
   ],
   filters: [
     { key: 'status', label: 'Status', allLabel: 'Todos os status', options: [{ value: 'ativo', label: 'Ativo' }, { value: 'pausado', label: 'Pausado' }] },
     { key: 'categoria', label: 'Categoria', allLabel: 'Todas as categorias', options: [{ value: 'Kits', label: 'Kits' }, { value: 'Eletronicos', label: 'Eletronicos' }, { value: 'Cabos', label: 'Cabos' }, { value: 'Estrutura', label: 'Estrutura' }] },
   ],
   metrics: [
-    { label: 'SKUs ativos', value: '312', detail: '28 categorias' },
-    { label: 'Sem estoque', value: '9', detail: 'precisam reposicao', tone: 'danger' },
-    { label: 'Valor em estoque', value: 'R$ 842 mil', detail: 'custo estimado' },
+    { label: 'SKUs ativos', value: '0', detail: 'catalogo conectado' },
+    { label: 'Categorias', value: '0', detail: 'classificacao comercial' },
+    { label: 'Preco medio', value: 'R$ 0,00', detail: 'produtos cadastrados' },
   ],
   emptyState: {
     title: 'Nenhum produto encontrado',
@@ -42,4 +40,3 @@ export const productsConfig: ErpEntityConfig<ErpEntityRecord> = {
     pausado: { label: 'Pausado', tone: 'warning' },
   },
 }
-

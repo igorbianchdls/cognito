@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 
 import { ErpActionBar } from '@/products/erp/frontend/components/ErpActionBar'
 import { ErpDataTable } from '@/products/erp/frontend/components/ErpDataTable'
@@ -18,18 +18,31 @@ export function ErpEntityPage({ config }: { config: ErpEntityConfig }) {
   const [filters, setFilters] = useState<Record<string, string>>({})
   const [records, setRecords] = useState<ErpEntityRecord[]>([])
   const [drawerOpen, setDrawerOpen] = useState(false)
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
 
-  useEffect(() => {
-    let active = true
-
-    erpClient.listEntityRecords(config, { entityId: config.id, query, filters }).then((response) => {
-      if (active) setRecords(response.records)
-    })
-
-    return () => {
-      active = false
+  const loadRecords = useCallback(async () => {
+    setLoading(true)
+    setError(null)
+    try {
+      const response = await erpClient.listEntityRecords(config, { entityId: config.id, query, filters })
+      setRecords(response.records)
+    } catch (loadError) {
+      setError(loadError instanceof Error ? loadError.message : 'Nao foi possivel carregar os dados.')
+      setRecords([])
+    } finally {
+      setLoading(false)
     }
   }, [config, filters, query])
+
+  useEffect(() => {
+    void loadRecords()
+  }, [loadRecords])
+
+  async function createRecord(values: Record<string, unknown>) {
+    await erpClient.createEntityRecord(config, { entityId: config.id, values })
+    await loadRecords()
+  }
 
   const metricCards = useMemo(() => config.metrics.map((metric) => (
     <ErpMetricCard key={metric.label} metric={metric} />
@@ -39,7 +52,12 @@ export function ErpEntityPage({ config }: { config: ErpEntityConfig }) {
     <div className="flex min-h-full flex-col gap-6">
       <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
         <ErpPageHeader eyebrow="ERP" title={config.label} description={config.description} />
-        <ErpActionBar primaryActionLabel={config.primaryActionLabel} onPrimaryAction={() => setDrawerOpen(true)} />
+        <ErpActionBar
+          primaryActionLabel={config.primaryActionLabel}
+          refreshing={loading}
+          onRefresh={() => void loadRecords()}
+          onPrimaryAction={() => setDrawerOpen(true)}
+        />
       </div>
 
       <div className="grid gap-3 md:grid-cols-3">{metricCards}</div>
@@ -53,7 +71,17 @@ export function ErpEntityPage({ config }: { config: ErpEntityConfig }) {
         />
       </div>
 
-      {records.length > 0 ? (
+      {error ? (
+        <div className="rounded-md border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
+          {error}
+        </div>
+      ) : null}
+
+      {loading ? (
+        <div className="rounded-md border border-gray-200 bg-white px-4 py-10 text-center text-sm text-gray-500">
+          Carregando dados...
+        </div>
+      ) : records.length > 0 ? (
         <ErpDataTable config={config} records={records} />
       ) : (
         <ErpEmptyState
@@ -64,7 +92,7 @@ export function ErpEntityPage({ config }: { config: ErpEntityConfig }) {
         />
       )}
 
-      <ErpFormDrawer config={config} open={drawerOpen} onOpenChange={setDrawerOpen} />
+      <ErpFormDrawer config={config} open={drawerOpen} onOpenChange={setDrawerOpen} onSubmit={createRecord} />
     </div>
   )
 }

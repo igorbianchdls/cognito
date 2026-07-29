@@ -1,5 +1,11 @@
 import { erpMockData } from '@/products/erp/frontend/data/mockErpData'
-import type { ErpClient, ErpEntityListRequest, ErpEntityListResponse } from '@/products/erp/shared/contracts'
+import type {
+  ErpClient,
+  ErpEntityCreateRequest,
+  ErpEntityCreateResponse,
+  ErpEntityListRequest,
+  ErpEntityListResponse,
+} from '@/products/erp/shared/contracts'
 import type { ErpEntityConfig, ErpEntityRecord } from '@/products/erp/shared/types'
 import { ERP_STATUS_ALL_VALUE } from '@/products/erp/shared/constants'
 
@@ -32,5 +38,17 @@ export const erpMockClient: ErpClient = {
       total: filteredRecords.length,
     }
   },
-}
 
+  async createEntityRecord<TRecord extends ErpEntityRecord>(
+    config: ErpEntityConfig<TRecord>,
+    request: ErpEntityCreateRequest,
+  ): Promise<ErpEntityCreateResponse<TRecord>> {
+    const record = {
+      id: `mock-${Date.now()}`,
+      ...(request.values as Record<string, string | number | boolean | null | undefined>),
+    } as TRecord
+    const records = (erpMockData[config.id] ?? []) as ErpEntityRecord[]
+    records.unshift(record)
+    return { record }
+  },
+}

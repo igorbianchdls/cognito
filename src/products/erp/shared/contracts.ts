@@ -11,10 +11,22 @@ export type ErpEntityListResponse<TRecord extends ErpEntityRecord = ErpEntityRec
   total: number
 }
 
+export type ErpEntityCreateRequest = {
+  entityId: string
+  values: Record<string, unknown>
+}
+
+export type ErpEntityCreateResponse<TRecord extends ErpEntityRecord = ErpEntityRecord> = {
+  record: TRecord
+}
+
 export type ErpClient = {
   listEntityRecords: <TRecord extends ErpEntityRecord>(
     config: ErpEntityConfig<TRecord>,
     request?: ErpEntityListRequest,
   ) => Promise<ErpEntityListResponse<TRecord>>
+  createEntityRecord: <TRecord extends ErpEntityRecord>(
+    config: ErpEntityConfig<TRecord>,
+    request: ErpEntityCreateRequest,
+  ) => Promise<ErpEntityCreateResponse<TRecord>>
 }
-

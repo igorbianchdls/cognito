@@ -26,13 +26,13 @@ export const customersConfig: ErpEntityConfig<ErpEntityRecord> = {
     { key: 'cidade', label: 'Cidade', type: 'text', placeholder: 'Cidade/UF' },
   ],
   filters: [
-    { key: 'status', label: 'Status', allLabel: 'Todos os status', options: [{ value: 'ativo', label: 'Ativo' }, { value: 'analise', label: 'Em analise' }, { value: 'inativo', label: 'Inativo' }] },
+    { key: 'status', label: 'Status', allLabel: 'Todos os status', options: [{ value: 'ativo', label: 'Ativo' }, { value: 'inativo', label: 'Inativo' }] },
     { key: 'tipo', label: 'Tipo', allLabel: 'Todos os tipos', options: [{ value: 'PF', label: 'Pessoa fisica' }, { value: 'PJ', label: 'Pessoa juridica' }] },
   ],
   metrics: [
-    { label: 'Clientes ativos', value: '128', detail: '+12 no mes', tone: 'success' },
-    { label: 'Em analise', value: '7', detail: 'cadastros pendentes', tone: 'warning' },
-    { label: 'Ticket medio', value: 'R$ 4.820', detail: 'ultimos 90 dias' },
+    { label: 'Clientes ativos', value: '0', detail: 'base conectada', tone: 'success' },
+    { label: 'Inativos', value: '0', detail: 'cadastros pausados' },
+    { label: 'Ticket medio', value: 'R$ 0,00', detail: 'vendas futuras' },
   ],
   emptyState: {
     title: 'Nenhum cliente encontrado',
@@ -40,8 +40,6 @@ export const customersConfig: ErpEntityConfig<ErpEntityRecord> = {
   },
   statusMap: {
     ativo: { label: 'Ativo', tone: 'success' },
-    analise: { label: 'Em analise', tone: 'warning' },
     inativo: { label: 'Inativo', tone: 'default' },
   },
 }
-

@@ -25,13 +25,13 @@ export const suppliersConfig: ErpEntityConfig<ErpEntityRecord> = {
     { key: 'cidade', label: 'Cidade', type: 'text' },
   ],
   filters: [
-    { key: 'status', label: 'Status', allLabel: 'Todos os status', options: [{ value: 'ativo', label: 'Ativo' }, { value: 'analise', label: 'Em analise' }] },
+    { key: 'status', label: 'Status', allLabel: 'Todos os status', options: [{ value: 'ativo', label: 'Ativo' }, { value: 'inativo', label: 'Inativo' }] },
     { key: 'categoria', label: 'Categoria', allLabel: 'Todas as categorias', options: [{ value: 'Distribuicao', label: 'Distribuicao' }, { value: 'Logistica', label: 'Logistica' }, { value: 'Insumos', label: 'Insumos' }] },
   ],
   metrics: [
-    { label: 'Fornecedores ativos', value: '46', detail: '12 criticos' },
-    { label: 'Lead time medio', value: '5,8 dias', detail: '-0,4 vs mes anterior', tone: 'success' },
-    { label: 'Em homologacao', value: '3', detail: 'aguardando documentos', tone: 'warning' },
+    { label: 'Fornecedores ativos', value: '0', detail: 'base conectada' },
+    { label: 'Categorias', value: '0', detail: 'classificacao operacional' },
+    { label: 'Em uso', value: '0', detail: 'compras futuras' },
   ],
   emptyState: {
     title: 'Nenhum fornecedor encontrado',
@@ -39,7 +39,6 @@ export const suppliersConfig: ErpEntityConfig<ErpEntityRecord> = {
   },
   statusMap: {
     ativo: { label: 'Ativo', tone: 'success' },
-    analise: { label: 'Em analise', tone: 'warning' },
+    inativo: { label: 'Inativo', tone: 'default' },
   },
 }
-
