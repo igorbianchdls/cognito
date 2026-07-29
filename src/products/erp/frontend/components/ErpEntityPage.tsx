@@ -11,7 +11,7 @@ import { ErpMetricCard } from '@/products/erp/frontend/components/ErpMetricCard'
 import { ErpPageHeader } from '@/products/erp/frontend/components/ErpPageHeader'
 import { ErpSearchBar } from '@/products/erp/frontend/components/ErpSearchBar'
 import { erpClient } from '@/products/erp/frontend/services/erpClient'
-import type { ErpEntityConfig, ErpEntityRecord } from '@/products/erp/shared/types'
+import type { ErpEntityAction, ErpEntityConfig, ErpEntityRecord } from '@/products/erp/shared/types'
 
 export function ErpEntityPage({ config }: { config: ErpEntityConfig }) {
   const [query, setQuery] = useState('')
@@ -44,6 +44,36 @@ export function ErpEntityPage({ config }: { config: ErpEntityConfig }) {
     await loadRecords()
   }
 
+  async function runAction(action: ErpEntityAction, record: ErpEntityRecord) {
+    const message = action.confirmMessage || `${action.label} este registro?`
+    if (!window.confirm(message)) return
+
+    const actionRecordId = action.id === 'baixar' ? String(record.parcela_id || '') : record.id
+    if (!actionRecordId) {
+      setError('Nao foi possivel localizar a parcela aberta para baixa.')
+      return
+    }
+
+    const values: Record<string, unknown> = {}
+    if (action.id === 'baixar') {
+      const defaultValue = Math.max(0, Number(record.valor || 0) - Number(record.valor_pago || 0))
+      const typedValue = window.prompt('Valor da baixa', defaultValue ? String(defaultValue) : '')
+      if (typedValue === null) return
+      values.valor = typedValue
+    }
+
+    setLoading(true)
+    setError(null)
+    try {
+      await erpClient.runEntityAction(config, { actionId: action.id, recordId: actionRecordId, values })
+      await loadRecords()
+    } catch (actionError) {
+      setError(actionError instanceof Error ? actionError.message : 'Nao foi possivel executar a acao.')
+    } finally {
+      setLoading(false)
+    }
+  }
+
   const metricCards = useMemo(() => config.metrics.map((metric) => (
     <ErpMetricCard key={metric.label} metric={metric} />
   )), [config.metrics])
@@ -55,6 +85,7 @@ export function ErpEntityPage({ config }: { config: ErpEntityConfig }) {
         <ErpActionBar
           primaryActionLabel={config.primaryActionLabel}
           refreshing={loading}
+          showPrimaryAction={config.fields.length > 0}
           onRefresh={() => void loadRecords()}
           onPrimaryAction={() => setDrawerOpen(true)}
         />
@@ -82,13 +113,13 @@ export function ErpEntityPage({ config }: { config: ErpEntityConfig }) {
           Carregando dados...
         </div>
       ) : records.length > 0 ? (
-        <ErpDataTable config={config} records={records} />
+        <ErpDataTable config={config} records={records} onAction={(action, record) => void runAction(action, record)} />
       ) : (
         <ErpEmptyState
           title={config.emptyState.title}
           description={config.emptyState.description}
-          actionLabel={config.primaryActionLabel}
-          onAction={() => setDrawerOpen(true)}
+          actionLabel={config.fields.length > 0 ? config.primaryActionLabel : undefined}
+          onAction={config.fields.length > 0 ? () => setDrawerOpen(true) : undefined}
         />
       )}
 

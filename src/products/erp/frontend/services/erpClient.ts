@@ -2,6 +2,8 @@ import type {
   ErpClient,
   ErpEntityCreateRequest,
   ErpEntityCreateResponse,
+  ErpEntityActionRequest,
+  ErpEntityActionResponse,
   ErpEntityListRequest,
   ErpEntityListResponse,
 } from '@/products/erp/shared/contracts'
@@ -31,6 +33,26 @@ function buildListUrl<TRecord extends ErpEntityRecord>(
   return `/api/erp/${encodeURIComponent(config.id)}${suffix ? `?${suffix}` : ''}`
 }
 
+function buildActionUrl(config: ErpEntityConfig, request: ErpEntityActionRequest) {
+  if (config.id === 'pedidos') {
+    return `/api/erp/vendas/${encodeURIComponent(request.recordId)}/${encodeURIComponent(request.actionId)}`
+  }
+
+  if (config.id === 'pedidos-compra') {
+    return `/api/erp/compras/${encodeURIComponent(request.recordId)}/${encodeURIComponent(request.actionId)}`
+  }
+
+  if (config.id === 'contas-a-receber' && request.actionId === 'baixar') {
+    return `/api/erp/contas-receber-parcelas/${encodeURIComponent(request.recordId)}/baixar`
+  }
+
+  if (config.id === 'contas-a-pagar' && request.actionId === 'baixar') {
+    return `/api/erp/contas-pagar-parcelas/${encodeURIComponent(request.recordId)}/baixar`
+  }
+
+  throw new Error('Acao indisponivel para este modulo.')
+}
+
 export const erpClient: ErpClient = {
   async listEntityRecords<TRecord extends ErpEntityRecord>(
     config: ErpEntityConfig<TRecord>,
@@ -56,5 +78,22 @@ export const erpClient: ErpClient = {
       body: JSON.stringify({ values: request.values }),
     })
     return parseJsonResponse<ErpEntityCreateResponse<TRecord>>(response)
+  },
+
+  async runEntityAction(
+    config: ErpEntityConfig,
+    request: ErpEntityActionRequest,
+  ): Promise<ErpEntityActionResponse> {
+    const response = await fetch(buildActionUrl(config, request), {
+      method: 'POST',
+      headers: {
+        Accept: 'application/json',
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ values: request.values || {} }),
+    })
+    return {
+      result: await parseJsonResponse<unknown>(response),
+    }
   },
 }

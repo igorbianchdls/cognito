@@ -1,4 +1,4 @@
-import { IconDotsVertical } from '@tabler/icons-react'
+import { IconCheck, IconDotsVertical, IconReceipt, IconX } from '@tabler/icons-react'
 
 import { Button } from '@/components/ui/button'
 import {
@@ -10,7 +10,7 @@ import {
   TableRow,
 } from '@/components/ui/table'
 import { cn } from '@/lib/utils'
-import type { ErpEntityConfig, ErpEntityRecord, ErpTableColumn } from '@/products/erp/shared/types'
+import type { ErpEntityAction, ErpEntityConfig, ErpEntityRecord, ErpTableColumn } from '@/products/erp/shared/types'
 import { ErpStatusBadge } from '@/products/erp/frontend/components/ErpStatusBadge'
 
 function formatCellValue(record: ErpEntityRecord, column: ErpTableColumn, config: ErpEntityConfig) {
@@ -33,13 +33,23 @@ function formatCellValue(record: ErpEntityRecord, column: ErpTableColumn, config
   return String(value ?? '-')
 }
 
+function ActionIcon({ action }: { action: ErpEntityAction }) {
+  if (action.id === 'confirmar') return <IconCheck className="size-4" stroke={1.8} />
+  if (action.id === 'cancelar') return <IconX className="size-4" stroke={1.8} />
+  return <IconReceipt className="size-4" stroke={1.8} />
+}
+
 export function ErpDataTable({
   config,
   records,
+  onAction,
 }: {
   config: ErpEntityConfig
   records: ErpEntityRecord[]
+  onAction?: (action: ErpEntityAction, record: ErpEntityRecord) => void
 }) {
+  const actions = config.actions || []
+
   return (
     <div className="overflow-hidden rounded-md border border-gray-200 bg-white">
       <Table>
@@ -50,7 +60,7 @@ export function ErpDataTable({
                 {column.label}
               </TableHead>
             ))}
-            <TableHead className="h-10 w-12 bg-gray-50 px-2 text-right" />
+            <TableHead className="h-10 w-36 bg-gray-50 px-2 text-right" />
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -62,9 +72,26 @@ export function ErpDataTable({
                 </TableCell>
               ))}
               <TableCell className="px-2 py-2 text-right">
-                <Button variant="ghost" size="icon" aria-label={`Acoes de ${record.id}`}>
-                  <IconDotsVertical className="size-4" stroke={1.8} />
-                </Button>
+                {actions.length > 0 ? (
+                  <div className="flex justify-end gap-1">
+                    {actions.map((action) => (
+                      <Button
+                        key={action.id}
+                        variant={action.tone === 'danger' ? 'destructive' : 'ghost'}
+                        size="sm"
+                        aria-label={`${action.label} ${record.id}`}
+                        onClick={() => onAction?.(action, record)}
+                      >
+                        <ActionIcon action={action} />
+                        <span className="hidden lg:inline">{action.label}</span>
+                      </Button>
+                    ))}
+                  </div>
+                ) : (
+                  <Button variant="ghost" size="icon" aria-label={`Acoes de ${record.id}`}>
+                    <IconDotsVertical className="size-4" stroke={1.8} />
+                  </Button>
+                )}
               </TableCell>
             </TableRow>
           ))}
@@ -73,4 +100,3 @@ export function ErpDataTable({
     </div>
   )
 }
-

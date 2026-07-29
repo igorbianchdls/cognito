@@ -51,4 +51,8 @@ export const erpMockClient: ErpClient = {
     records.unshift(record)
     return { record }
   },
+
+  async runEntityAction(_config, request) {
+    return { result: { ok: true, actionId: request.actionId } }
+  },
 }

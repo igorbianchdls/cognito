@@ -79,6 +79,13 @@ export type ErpEntityField = {
   required?: boolean
 }
 
+export type ErpEntityAction = {
+  id: 'confirmar' | 'cancelar' | 'baixar'
+  label: string
+  tone?: 'default' | 'success' | 'warning' | 'danger'
+  confirmMessage?: string
+}
+
 export type ErpEntityConfig<TRecord extends ErpEntityRecord = ErpEntityRecord> = {
   id: ErpModuleId
   sectionId: ErpSectionId
@@ -96,5 +103,6 @@ export type ErpEntityConfig<TRecord extends ErpEntityRecord = ErpEntityRecord> =
     title: string
     description: string
   }
+  actions?: ErpEntityAction[]
   statusMap?: Record<string, { label: string; tone: 'default' | 'success' | 'warning' | 'danger' }>
 }

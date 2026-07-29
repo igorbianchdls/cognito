@@ -7,11 +7,13 @@ export function ErpActionBar({
   onPrimaryAction,
   onRefresh,
   refreshing,
+  showPrimaryAction = true,
 }: {
   primaryActionLabel: string
   onPrimaryAction: () => void
   onRefresh?: () => void
   refreshing?: boolean
+  showPrimaryAction?: boolean
 }) {
   return (
     <div className="flex shrink-0 items-center gap-2">
@@ -21,10 +23,12 @@ export function ErpActionBar({
       <Button variant="outline" size="icon" aria-label="Exportar">
         <IconDownload className="size-4" stroke={1.8} />
       </Button>
-      <Button size="sm" onClick={onPrimaryAction}>
-        <IconPlus className="size-4" stroke={1.8} />
-        {primaryActionLabel}
-      </Button>
+      {showPrimaryAction ? (
+        <Button size="sm" onClick={onPrimaryAction}>
+          <IconPlus className="size-4" stroke={1.8} />
+          {primaryActionLabel}
+        </Button>
+      ) : null}
     </div>
   )
 }

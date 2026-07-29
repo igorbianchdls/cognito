@@ -20,6 +20,16 @@ export type ErpEntityCreateResponse<TRecord extends ErpEntityRecord = ErpEntityR
   record: TRecord
 }
 
+export type ErpEntityActionRequest = {
+  actionId: string
+  recordId: string
+  values?: Record<string, unknown>
+}
+
+export type ErpEntityActionResponse = {
+  result: unknown
+}
+
 export type ErpClient = {
   listEntityRecords: <TRecord extends ErpEntityRecord>(
     config: ErpEntityConfig<TRecord>,
@@ -29,4 +39,8 @@ export type ErpClient = {
     config: ErpEntityConfig<TRecord>,
     request: ErpEntityCreateRequest,
   ) => Promise<ErpEntityCreateResponse<TRecord>>
+  runEntityAction: (
+    config: ErpEntityConfig,
+    request: ErpEntityActionRequest,
+  ) => Promise<ErpEntityActionResponse>
 }

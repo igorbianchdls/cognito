@@ -10,8 +10,8 @@ export function ErpEmptyState({
 }: {
   title: string
   description: string
-  actionLabel: string
-  onAction: () => void
+  actionLabel?: string
+  onAction?: () => void
 }) {
   return (
     <div className="flex min-h-[280px] flex-col items-center justify-center rounded-md border border-dashed border-gray-200 bg-gray-50/60 px-6 text-center">
@@ -20,10 +20,11 @@ export function ErpEmptyState({
       </div>
       <h3 className="text-base font-semibold tracking-normal text-gray-950">{title}</h3>
       <p className="mt-1 max-w-md text-sm leading-6 text-gray-600">{description}</p>
-      <Button className="mt-5" size="sm" onClick={onAction}>
-        {actionLabel}
-      </Button>
+      {actionLabel && onAction ? (
+        <Button className="mt-5" size="sm" onClick={onAction}>
+          {actionLabel}
+        </Button>
+      ) : null}
     </div>
   )
 }
-
