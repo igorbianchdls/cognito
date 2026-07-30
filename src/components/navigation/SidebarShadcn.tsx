@@ -3,7 +3,6 @@
 import * as React from "react"
 import { usePathname } from "next/navigation"
 import {
-  IconBuildingStore,
   IconChartBar,
   IconFileText,
   IconGridDots,
@@ -15,6 +14,7 @@ import {
 
 import { NavMainSimple } from "@/components/navigation/nav-main-simple"
 import { NavUser } from "@/components/nav-user"
+import { ERP_NAVIGATION } from "@/products/erp/shared/navigation"
 import {
   Sidebar,
   SidebarContent,
@@ -24,12 +24,19 @@ import {
 
 const BrandIcon = (props: { className?: string; style?: React.CSSProperties }) => <IconGridDots stroke={1.75} {...props} />
 const IntegrationsIcon = (props: { className?: string; style?: React.CSSProperties }) => <IconPlugConnected stroke={1.75} {...props} />
-const ErpIcon = (props: { className?: string; style?: React.CSSProperties }) => <IconBuildingStore stroke={1.75} {...props} />
 const DashboardsIcon = (props: { className?: string; style?: React.CSSProperties }) => <IconChartBar stroke={1.75} {...props} />
 const SlidesIcon = (props: { className?: string; style?: React.CSSProperties }) => <IconPresentation stroke={1.75} {...props} />
 const ReportsIcon = (props: { className?: string; style?: React.CSSProperties }) => <IconFileText stroke={1.75} {...props} />
 const ChatIcon = (props: { className?: string; style?: React.CSSProperties }) => <IconMessageCircle stroke={1.75} {...props} />
 const HistoryIcon = (props: { className?: string; style?: React.CSSProperties }) => <IconHistory stroke={1.75} {...props} />
+
+type NavigationItem = {
+  title: string
+  url?: string
+  icon?: React.ComponentType<{ className?: string; style?: React.CSSProperties }>
+  activePrefix?: string
+  exactActive?: boolean
+}
 
 // Font variable mapping helper
 function fontVar(name?: string) {
@@ -56,8 +63,32 @@ const DEFAULT_ITEM_TEXT_STYLE: React.CSSProperties = {
   textTransform: 'none',
 }
 
+const erpSectionItems: NavigationItem[] = ERP_NAVIGATION.map((section) => {
+  const SectionIcon = section.icon
+
+  return {
+    title: section.label,
+    url: section.href,
+    icon: (props) => <SectionIcon stroke={1.75} {...props} />,
+    activePrefix: section.id === 'overview' ? undefined : `/erp/${section.id}`,
+    exactActive: section.id === 'overview',
+  }
+})
+
 // Navigation data adapted to shadcn format
-const navigationData = {
+const navigationData: {
+  user: {
+    name: string
+    email: string
+    avatar: string
+  }
+  teams: Array<{
+    name: string
+    logo: typeof BrandIcon
+    plan: string
+  }>
+  navMain: NavigationItem[]
+} = {
   user: {
     name: "Usuário",
     email: "usuario@exemplo.com",
@@ -84,11 +115,7 @@ const navigationData = {
       url: "/integracoes",
       icon: IntegrationsIcon,
     },
-    {
-      title: "ERP",
-      url: "/erp",
-      icon: ErpIcon,
-    },
+    ...erpSectionItems,
     {
       title: "Dashboards",
       url: "/artifacts/dashboards",
@@ -119,7 +146,11 @@ export function SidebarShadcn({ bgColor, textColor, itemTextColor, itemTextStyle
   // Update active state based on current path
   const navMainWithActiveState = navigationData.navMain.map(item => ({
     ...item,
-    isActive: item.url ? pathname === item.url || pathname.startsWith(`${item.url}/`) : false
+    isActive: item.url
+      ? item.exactActive
+        ? pathname === item.url
+        : pathname === item.url || pathname.startsWith(item.activePrefix ?? `${item.url}/`)
+      : false
   }))
 
   const dataWithActiveState = {

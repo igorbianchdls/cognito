@@ -1,7 +1,6 @@
 import type { ReactNode } from 'react'
 
 import { ErpSectionTabs } from '@/products/erp/frontend/layout/ErpSectionTabs'
-import { ErpSidebar } from '@/products/erp/frontend/layout/ErpSidebar'
 import { ErpTopbar } from '@/products/erp/frontend/layout/ErpTopbar'
 import type { ErpModuleId, ErpSectionId } from '@/products/erp/shared/types'
 
@@ -16,7 +15,6 @@ export function ErpShell({
 }) {
   return (
     <div className="flex h-full overflow-hidden bg-white">
-      <ErpSidebar />
       <div className="flex min-w-0 flex-1 flex-col">
         <ErpTopbar />
         <div className="border-b border-gray-200 px-4 md:px-8">
@@ -31,4 +29,3 @@ export function ErpShell({
     </div>
   )
 }
-
