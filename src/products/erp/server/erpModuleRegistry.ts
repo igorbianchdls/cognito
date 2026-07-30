@@ -5,11 +5,13 @@ export type ErpConnectedModuleId = Extract<
   | 'clientes'
   | 'fornecedores'
   | 'produtos'
+  | 'servicos'
   | 'categorias'
   | 'pedidos'
   | 'pedidos-compra'
   | 'contas-a-receber'
   | 'contas-a-pagar'
+  | 'contas-financeiras'
 >
 
 export function isErpConnectedModuleId(value: string): value is ErpConnectedModuleId {
@@ -17,10 +19,12 @@ export function isErpConnectedModuleId(value: string): value is ErpConnectedModu
     value === 'clientes'
     || value === 'fornecedores'
     || value === 'produtos'
+    || value === 'servicos'
     || value === 'categorias'
     || value === 'pedidos'
     || value === 'pedidos-compra'
     || value === 'contas-a-receber'
     || value === 'contas-a-pagar'
+    || value === 'contas-financeiras'
   )
 }

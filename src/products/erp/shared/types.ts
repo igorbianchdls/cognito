@@ -7,6 +7,7 @@ export type ErpModuleId =
   | 'clientes'
   | 'fornecedores'
   | 'produtos'
+  | 'servicos'
   | 'categorias'
   | 'pedidos'
   | 'orcamentos'
@@ -19,6 +20,7 @@ export type ErpModuleId =
   | 'transferencias'
   | 'contas-a-receber'
   | 'contas-a-pagar'
+  | 'contas-financeiras'
   | 'fluxo-de-caixa'
 
 export type ErpEntityFieldType = 'text' | 'email' | 'tel' | 'number' | 'date' | 'select' | 'textarea'

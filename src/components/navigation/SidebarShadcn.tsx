@@ -3,18 +3,27 @@
 import * as React from "react"
 import { usePathname } from "next/navigation"
 import {
+  IconAddressBook,
+  IconBriefcase,
+  IconBuildingBank,
   IconChartBar,
   IconFileText,
   IconGridDots,
   IconHistory,
   IconMessageCircle,
+  IconPackage,
   IconPresentation,
   IconPlugConnected,
+  IconReceipt,
+  IconReceipt2,
+  IconShoppingBag,
+  IconTags,
+  IconTruckDelivery,
+  IconUsers,
 } from "@tabler/icons-react"
 
 import { NavMainSimple } from "@/components/navigation/nav-main-simple"
 import { NavUser } from "@/components/nav-user"
-import { ERP_NAVIGATION } from "@/products/erp/shared/navigation"
 import {
   Sidebar,
   SidebarContent,
@@ -29,6 +38,17 @@ const SlidesIcon = (props: { className?: string; style?: React.CSSProperties }) 
 const ReportsIcon = (props: { className?: string; style?: React.CSSProperties }) => <IconFileText stroke={1.75} {...props} />
 const ChatIcon = (props: { className?: string; style?: React.CSSProperties }) => <IconMessageCircle stroke={1.75} {...props} />
 const HistoryIcon = (props: { className?: string; style?: React.CSSProperties }) => <IconHistory stroke={1.75} {...props} />
+const OverviewIcon = (props: { className?: string; style?: React.CSSProperties }) => <IconChartBar stroke={1.75} {...props} />
+const CustomersIcon = (props: { className?: string; style?: React.CSSProperties }) => <IconUsers stroke={1.75} {...props} />
+const SuppliersIcon = (props: { className?: string; style?: React.CSSProperties }) => <IconTruckDelivery stroke={1.75} {...props} />
+const ProductsIcon = (props: { className?: string; style?: React.CSSProperties }) => <IconPackage stroke={1.75} {...props} />
+const ServicesIcon = (props: { className?: string; style?: React.CSSProperties }) => <IconBriefcase stroke={1.75} {...props} />
+const CategoriesIcon = (props: { className?: string; style?: React.CSSProperties }) => <IconTags stroke={1.75} {...props} />
+const SalesIcon = (props: { className?: string; style?: React.CSSProperties }) => <IconShoppingBag stroke={1.75} {...props} />
+const PurchasesIcon = (props: { className?: string; style?: React.CSSProperties }) => <IconAddressBook stroke={1.75} {...props} />
+const ReceivablesIcon = (props: { className?: string; style?: React.CSSProperties }) => <IconReceipt stroke={1.75} {...props} />
+const PayablesIcon = (props: { className?: string; style?: React.CSSProperties }) => <IconReceipt2 stroke={1.75} {...props} />
+const FinancialAccountsIcon = (props: { className?: string; style?: React.CSSProperties }) => <IconBuildingBank stroke={1.75} {...props} />
 
 type NavigationItem = {
   title: string
@@ -63,17 +83,19 @@ const DEFAULT_ITEM_TEXT_STYLE: React.CSSProperties = {
   textTransform: 'none',
 }
 
-const erpSectionItems: NavigationItem[] = ERP_NAVIGATION.map((section) => {
-  const SectionIcon = section.icon
-
-  return {
-    title: section.label,
-    url: section.href,
-    icon: (props) => <SectionIcon stroke={1.75} {...props} />,
-    activePrefix: section.id === 'overview' ? undefined : `/erp/${section.id}`,
-    exactActive: section.id === 'overview',
-  }
-})
+const erpSidebarItems: NavigationItem[] = [
+  { title: "Visao geral", url: "/erp", icon: OverviewIcon, exactActive: true },
+  { title: "Clientes", url: "/erp/cadastros/clientes", icon: CustomersIcon },
+  { title: "Fornecedores", url: "/erp/cadastros/fornecedores", icon: SuppliersIcon },
+  { title: "Produtos", url: "/erp/cadastros/produtos", icon: ProductsIcon },
+  { title: "Servicos", url: "/erp/cadastros/servicos", icon: ServicesIcon },
+  { title: "Categorias", url: "/erp/cadastros/categorias", icon: CategoriesIcon },
+  { title: "Vendas", url: "/erp/vendas/pedidos", icon: SalesIcon, activePrefix: "/erp/vendas" },
+  { title: "Compras", url: "/erp/compras/pedidos-compra", icon: PurchasesIcon, activePrefix: "/erp/compras" },
+  { title: "Contas a receber", url: "/erp/financeiro/contas-a-receber", icon: ReceivablesIcon },
+  { title: "Contas a pagar", url: "/erp/financeiro/contas-a-pagar", icon: PayablesIcon },
+  { title: "Contas financeiras", url: "/erp/financeiro/contas-financeiras", icon: FinancialAccountsIcon },
+]
 
 // Navigation data adapted to shadcn format
 const navigationData: {
@@ -132,7 +154,7 @@ const navigationData: {
       icon: ReportsIcon,
     },
   ],
-  erpNavMain: erpSectionItems,
+  erpNavMain: erpSidebarItems,
 }
 
 import { cn } from "@/lib/utils"

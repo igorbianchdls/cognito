@@ -100,4 +100,74 @@ export const payablesConfig: ErpEntityConfig<ErpEntityRecord> = {
   statusMap: financialStatusMap,
 }
 
-export const financeiroEntityConfigs = [receivablesConfig, payablesConfig]
+export const financialAccountsConfig: ErpEntityConfig<ErpEntityRecord> = {
+  id: 'contas-financeiras',
+  sectionId: 'financeiro',
+  label: 'Contas financeiras',
+  singularLabel: 'conta financeira',
+  description: 'Cadastre caixas, bancos, carteiras e cartoes usados em recebimentos e pagamentos.',
+  route: '/erp/financeiro/contas-financeiras',
+  searchPlaceholder: 'Buscar por nome, banco, agencia ou conta',
+  primaryActionLabel: 'Nova conta financeira',
+  columns: [
+    { key: 'nome', label: 'Nome', width: 'min-w-[220px]' },
+    { key: 'tipo', label: 'Tipo' },
+    { key: 'banco', label: 'Banco' },
+    { key: 'agencia', label: 'Agencia' },
+    { key: 'conta', label: 'Conta' },
+    { key: 'saldo_inicial', label: 'Saldo inicial', kind: 'currency' },
+    { key: 'status', label: 'Status', kind: 'status' },
+  ],
+  fields: [
+    { key: 'nome', label: 'Nome', type: 'text', placeholder: 'Caixa, Banco principal...', required: true },
+    {
+      key: 'tipo',
+      label: 'Tipo',
+      type: 'select',
+      required: true,
+      options: [
+        { value: 'caixa', label: 'Caixa' },
+        { value: 'banco', label: 'Banco' },
+        { value: 'carteira', label: 'Carteira' },
+        { value: 'cartao', label: 'Cartao' },
+        { value: 'outro', label: 'Outro' },
+      ],
+    },
+    { key: 'banco', label: 'Banco', type: 'text', placeholder: 'Nome do banco' },
+    { key: 'agencia', label: 'Agencia', type: 'text' },
+    { key: 'conta', label: 'Conta', type: 'text' },
+    { key: 'digito', label: 'Digito', type: 'text' },
+    { key: 'saldo_inicial', label: 'Saldo inicial', type: 'number' },
+    { key: 'data_saldo_inicial', label: 'Data do saldo inicial', type: 'date' },
+  ],
+  filters: [
+    {
+      key: 'tipo',
+      label: 'Tipo',
+      allLabel: 'Todos os tipos',
+      options: [
+        { value: 'caixa', label: 'Caixa' },
+        { value: 'banco', label: 'Banco' },
+        { value: 'carteira', label: 'Carteira' },
+        { value: 'cartao', label: 'Cartao' },
+        { value: 'outro', label: 'Outro' },
+      ],
+    },
+    { key: 'status', label: 'Status', allLabel: 'Todos os status', options: [{ value: 'ativo', label: 'Ativo' }, { value: 'inativo', label: 'Inativo' }] },
+  ],
+  metrics: [
+    { label: 'Contas ativas', value: '0', detail: 'caixas e bancos conectados', tone: 'success' },
+    { label: 'Bancos', value: '0', detail: 'contas bancarias' },
+    { label: 'Saldo inicial', value: 'R$ 0,00', detail: 'base cadastrada' },
+  ],
+  emptyState: {
+    title: 'Nenhuma conta financeira encontrada',
+    description: 'Cadastre caixa, banco ou carteira para usar nas baixas financeiras.',
+  },
+  statusMap: {
+    ativo: { label: 'Ativo', tone: 'success' },
+    inativo: { label: 'Inativo', tone: 'default' },
+  },
+}
+
+export const financeiroEntityConfigs = [receivablesConfig, payablesConfig, financialAccountsConfig]

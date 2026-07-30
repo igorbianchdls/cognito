@@ -248,6 +248,12 @@ function activeFromStatus(value: unknown) {
   return normalized !== 'inativo' && normalized !== 'pausado'
 }
 
+function financialAccountType(value: unknown) {
+  const normalized = text(value).toLowerCase()
+  if (['caixa', 'banco', 'carteira', 'cartao', 'outro'].includes(normalized)) return normalized
+  return 'banco'
+}
+
 function appendSearch(params: unknown[], query?: string) {
   const normalized = text(query)
   if (!normalized) return ''
@@ -489,6 +495,10 @@ export async function listErpEntityRecords(input: ListInput): Promise<ErpEntityR
     return listProductRecords(input)
   }
 
+  if (input.entityId === 'servicos') {
+    return listServiceRecords(input)
+  }
+
   if (input.entityId === 'categorias') {
     return listCategoryRecords(input)
   }
@@ -507,6 +517,10 @@ export async function listErpEntityRecords(input: ListInput): Promise<ErpEntityR
 
   if (input.entityId === 'contas-a-pagar') {
     return listPayables(input)
+  }
+
+  if (input.entityId === 'contas-financeiras') {
+    return listFinancialAccountRecords(input)
   }
 
   return []
@@ -592,6 +606,45 @@ async function listProductRecords(input: ListInput): Promise<ErpEntityRecord[]> 
     sku: String(row.sku ?? ''),
     categoria: String(row.categoria ?? ''),
     preco: Number(row.preco_venda ?? 0),
+    status: row.ativo ? 'ativo' : 'pausado',
+  }))
+}
+
+async function listServiceRecords(input: ListInput): Promise<ErpEntityRecord[]> {
+  const params: unknown[] = [input.tenantId]
+  const rows = await runQuery<Record<string, unknown>>(
+    `WITH rows AS (
+       SELECT
+         servicos.id::text,
+         servicos.nome,
+         servicos.codigo,
+         servicos.preco,
+         servicos.custo,
+         servicos.ativo,
+         COALESCE(categorias.nome, '') AS categoria,
+         concat_ws(' ', servicos.nome, servicos.codigo, servicos.descricao, categorias.nome) AS searchable
+       FROM erp.servicos AS servicos
+       LEFT JOIN erp.categorias AS categorias
+         ON categorias.tenant_id = servicos.tenant_id
+        AND categorias.id = servicos.categoria_id
+       WHERE servicos.tenant_id = $1
+         AND servicos.excluido_em IS NULL
+     )
+     SELECT id, nome, codigo, preco, custo, categoria, ativo
+     FROM rows
+     WHERE true${appendSearch(params, input.query)}${appendStatusFilter(input.filters)}
+     ORDER BY nome ASC
+     LIMIT 200`,
+    params,
+  )
+
+  return rows.map((row) => ({
+    id: String(row.id),
+    nome: String(row.nome ?? ''),
+    codigo: String(row.codigo ?? ''),
+    categoria: String(row.categoria ?? ''),
+    preco: Number(row.preco ?? 0),
+    custo: Number(row.custo ?? 0),
     status: row.ativo ? 'ativo' : 'pausado',
   }))
 }
@@ -814,6 +867,51 @@ async function listPayables(input: ListInput): Promise<ErpEntityRecord[]> {
   }))
 }
 
+async function listFinancialAccountRecords(input: ListInput): Promise<ErpEntityRecord[]> {
+  const params: unknown[] = [input.tenantId]
+  const tipo = text(input.filters?.tipo)
+  let typeSql = ''
+  if (tipo && tipo !== '__all__') {
+    params.push(tipo)
+    typeSql = ` AND tipo = $${params.length}`
+  }
+
+  const rows = await runQuery<Record<string, unknown>>(
+    `WITH rows AS (
+       SELECT
+         id::text,
+         nome,
+         tipo,
+         banco,
+         agencia,
+         conta,
+         saldo_inicial,
+         ativo,
+         concat_ws(' ', nome, tipo, banco, agencia, conta) AS searchable
+       FROM erp.contas_financeiras
+       WHERE tenant_id = $1
+         AND excluido_em IS NULL
+     )
+     SELECT id, nome, tipo, banco, agencia, conta, saldo_inicial, ativo
+     FROM rows
+     WHERE true${appendSearch(params, input.query)}${appendStatusFilter(input.filters)}${typeSql}
+     ORDER BY nome ASC
+     LIMIT 200`,
+    params,
+  )
+
+  return rows.map((row) => ({
+    id: String(row.id),
+    nome: String(row.nome ?? ''),
+    tipo: String(row.tipo ?? ''),
+    banco: String(row.banco ?? ''),
+    agencia: String(row.agencia ?? ''),
+    conta: String(row.conta ?? ''),
+    saldo_inicial: Number(row.saldo_inicial ?? 0),
+    status: row.ativo ? 'ativo' : 'inativo',
+  }))
+}
+
 export async function createErpEntityRecord(input: CreateInput): Promise<ErpEntityRecord> {
   return withTransaction(async (client) => {
     if (input.entityId === 'clientes' || input.entityId === 'fornecedores') {
@@ -822,6 +920,10 @@ export async function createErpEntityRecord(input: CreateInput): Promise<ErpEnti
 
     if (input.entityId === 'produtos') {
       return createProductRecord(client, input)
+    }
+
+    if (input.entityId === 'servicos') {
+      return createServiceRecord(client, input)
     }
 
     if (input.entityId === 'pedidos') {
@@ -834,6 +936,10 @@ export async function createErpEntityRecord(input: CreateInput): Promise<ErpEnti
 
     if (input.entityId === 'contas-a-receber' || input.entityId === 'contas-a-pagar') {
       throw new Error('Crie contas financeiras a partir de vendas, compras ou baixas.')
+    }
+
+    if (input.entityId === 'contas-financeiras') {
+      return createFinancialAccountRecord(client, input)
     }
 
     return createCategoryRecord(client, input)
@@ -1587,6 +1693,75 @@ async function createProductRecord(client: SQLClient, input: CreateInput) {
       optionalText(input.values.sku),
       money(input.values.preco),
       categoryId,
+      activeFromStatus(input.values.status),
+      input.actorId,
+    ],
+  )
+  return fetchCreatedRecord(input.tenantId, input.entityId, result.rows[0]?.id)
+}
+
+async function createServiceRecord(client: SQLClient, input: CreateInput) {
+  assertRequired(input.values.nome, 'Nome do servico')
+  const categoryId = await resolveCategoryId(client, input.tenantId, input.actorId, input.values.categoria, 'servico')
+  const result = await client.query(
+    `INSERT INTO erp.servicos (
+       tenant_id,
+       nome,
+       codigo,
+       descricao,
+       preco,
+       custo,
+       categoria_id,
+       ativo,
+       criado_por,
+       atualizado_por
+     )
+     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $9)
+     RETURNING id`,
+    [
+      input.tenantId,
+      text(input.values.nome),
+      optionalText(input.values.codigo),
+      optionalText(input.values.descricao),
+      money(input.values.preco),
+      money(input.values.custo),
+      categoryId,
+      activeFromStatus(input.values.status),
+      input.actorId,
+    ],
+  )
+  return fetchCreatedRecord(input.tenantId, input.entityId, result.rows[0]?.id)
+}
+
+async function createFinancialAccountRecord(client: SQLClient, input: CreateInput) {
+  assertRequired(input.values.nome, 'Nome da conta financeira')
+  const result = await client.query(
+    `INSERT INTO erp.contas_financeiras (
+       tenant_id,
+       nome,
+       tipo,
+       banco,
+       agencia,
+       conta,
+       digito,
+       saldo_inicial,
+       data_saldo_inicial,
+       ativo,
+       criado_por,
+       atualizado_por
+     )
+     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $11)
+     RETURNING id`,
+    [
+      input.tenantId,
+      text(input.values.nome),
+      financialAccountType(input.values.tipo),
+      optionalText(input.values.banco),
+      optionalText(input.values.agencia),
+      optionalText(input.values.conta),
+      optionalText(input.values.digito),
+      money(input.values.saldo_inicial),
+      dateText(input.values.data_saldo_inicial),
       activeFromStatus(input.values.status),
       input.actorId,
     ],

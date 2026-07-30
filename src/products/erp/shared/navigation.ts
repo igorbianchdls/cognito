@@ -31,6 +31,7 @@ export const ERP_NAVIGATION: ErpNavigationItem[] = [
       { id: 'clientes', label: 'Clientes', href: '/erp/cadastros/clientes', description: 'Base comercial e fiscal de clientes.' },
       { id: 'fornecedores', label: 'Fornecedores', href: '/erp/cadastros/fornecedores', description: 'Parceiros de compra, servicos e operacao.' },
       { id: 'produtos', label: 'Produtos', href: '/erp/cadastros/produtos', description: 'SKUs, precos, categorias e saldos.' },
+      { id: 'servicos', label: 'Servicos', href: '/erp/cadastros/servicos', description: 'Servicos vendidos, precos e classificacao.' },
       { id: 'categorias', label: 'Categorias', href: '/erp/cadastros/categorias', description: 'Classificacao para produtos e relatórios.' },
     ],
   },
@@ -79,6 +80,7 @@ export const ERP_NAVIGATION: ErpNavigationItem[] = [
     modules: [
       { id: 'contas-a-receber', label: 'Contas a receber', href: '/erp/financeiro/contas-a-receber', description: 'Titulos e cobrancas.' },
       { id: 'contas-a-pagar', label: 'Contas a pagar', href: '/erp/financeiro/contas-a-pagar', description: 'Compromissos e vencimentos.' },
+      { id: 'contas-financeiras', label: 'Contas financeiras', href: '/erp/financeiro/contas-financeiras', description: 'Caixas, bancos, carteiras e cartoes.' },
       { id: 'fluxo-de-caixa', label: 'Fluxo de caixa', href: '/erp/financeiro/fluxo-de-caixa', description: 'Entradas, saidas e previsao.' },
     ],
   },
@@ -93,4 +95,3 @@ export function getErpModule(sectionId?: string, moduleId?: string) {
   if (section.id === 'overview') return undefined
   return section.modules.find((module) => module.id === moduleId) ?? section.modules[0]
 }
-
