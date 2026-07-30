@@ -88,6 +88,7 @@ const navigationData: {
     plan: string
   }>
   navMain: NavigationItem[]
+  erpNavMain: NavigationItem[]
 } = {
   user: {
     name: "Usuário",
@@ -115,7 +116,6 @@ const navigationData: {
       url: "/integracoes",
       icon: IntegrationsIcon,
     },
-    ...erpSectionItems,
     {
       title: "Dashboards",
       url: "/artifacts/dashboards",
@@ -132,6 +132,7 @@ const navigationData: {
       icon: ReportsIcon,
     },
   ],
+  erpNavMain: erpSectionItems,
 }
 
 import { cn } from "@/lib/utils"
@@ -144,7 +145,7 @@ export function SidebarShadcn({ bgColor, textColor, itemTextColor, itemTextStyle
   // Static defaults only (avoid visual flash on hydration)
 
   // Update active state based on current path
-  const navMainWithActiveState = navigationData.navMain.map(item => ({
+  const withActiveState = (items: NavigationItem[]) => items.map(item => ({
     ...item,
     isActive: item.url
       ? item.exactActive
@@ -155,7 +156,8 @@ export function SidebarShadcn({ bgColor, textColor, itemTextColor, itemTextStyle
 
   const dataWithActiveState = {
     ...navigationData,
-    navMain: navMainWithActiveState,
+    navMain: withActiveState(navigationData.navMain),
+    erpNavMain: withActiveState(navigationData.erpNavMain),
   }
 
   // Apply default values consistently (no localStorage overrides)
@@ -191,6 +193,7 @@ export function SidebarShadcn({ bgColor, textColor, itemTextColor, itemTextStyle
       </SidebarHeader>
       <SidebarContent className="ui-text">
         <NavMainSimple items={dataWithActiveState.navMain} itemTextStyle={finalItemTextStyle} iconSizePx={finalIconSizePx} />
+        <NavMainSimple label="ERP" items={dataWithActiveState.erpNavMain} itemTextStyle={finalItemTextStyle} iconSizePx={finalIconSizePx} />
       </SidebarContent>
       <SidebarFooter>
         <NavUser user={dataWithActiveState.user} />
