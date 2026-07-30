@@ -14,10 +14,10 @@ type SidebarIconComponent = React.ComponentType<{
   style?: React.CSSProperties
 }>
 
-const verticalSidebarItemClassName =
-  "mx-auto h-16 w-auto min-w-9 flex-col items-center justify-center gap-1 overflow-visible px-0.5 py-2 text-center group-data-[collapsible=icon]:h-8 group-data-[collapsible=icon]:w-8 group-data-[collapsible=icon]:p-2"
-const verticalSidebarTitleClassName =
-  "max-w-full overflow-visible whitespace-nowrap text-center leading-[1.2] group-data-[collapsible=icon]:hidden"
+const sidebarItemClassName =
+  "h-9 w-full justify-start gap-2 rounded-md px-2 text-left group-data-[collapsible=icon]:mx-auto group-data-[collapsible=icon]:h-8 group-data-[collapsible=icon]:w-8 group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:p-2"
+const sidebarTitleClassName =
+  "min-w-0 truncate leading-none group-data-[collapsible=icon]:hidden"
 
 export function NavMainSimple({
   items,
@@ -49,10 +49,10 @@ export function NavMainSimple({
               tooltip={item.title}
               onClick={() => handleNavigation(item.url)}
               isActive={item.isActive}
-              className={verticalSidebarItemClassName}
+              className={sidebarItemClassName}
             >
               {item.icon && <item.icon className="shrink-0 text-[#808080]" style={{ width: iconSizePx, height: iconSizePx }} />}
-              <span className={verticalSidebarTitleClassName} style={itemTextStyle}>{item.title}</span>
+              <span className={sidebarTitleClassName} style={itemTextStyle}>{item.title}</span>
             </SidebarMenuButton>
           </SidebarMenuItem>
         ))}
