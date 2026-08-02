@@ -82,14 +82,18 @@ export function AuthUserMenu() {
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <SidebarMenuButton
-                  className="mx-auto h-14 w-14 justify-center p-1"
+                  className="h-12 w-full justify-start gap-2 px-2 group-data-[collapsible=icon]:mx-auto group-data-[collapsible=icon]:h-8 group-data-[collapsible=icon]:w-8 group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:p-0"
                 >
-                  <Avatar className="size-12 rounded-md">
+                  <Avatar className="size-8 shrink-0 rounded-md group-data-[collapsible=icon]:size-7">
                     <AvatarImage alt={displayName} src={avatarUrl} />
                     <AvatarFallback className="rounded-md bg-sidebar-accent text-xs font-semibold text-sidebar-accent-foreground">
                       {initials}
                     </AvatarFallback>
                   </Avatar>
+                  <div className="grid min-w-0 flex-1 text-left leading-tight group-data-[collapsible=icon]:hidden">
+                    <span className="truncate text-sm font-medium text-sidebar-accent-foreground">{displayName}</span>
+                    {email ? <span className="truncate text-xs text-sidebar-accent-foreground/70">{email}</span> : null}
+                  </div>
                 </SidebarMenuButton>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-64" side="right" sideOffset={8}>
