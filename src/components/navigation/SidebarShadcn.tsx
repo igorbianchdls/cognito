@@ -85,6 +85,8 @@ const DEFAULT_ITEM_TEXT_STYLE: React.CSSProperties = {
 
 const erpSidebarItems: NavigationItem[] = [
   { title: "Visao geral", url: "/erp", icon: OverviewIcon, exactActive: true },
+  { title: "Contas a Pagar", url: "/erp/financeiro/contas-a-pagar", icon: PayablesIcon },
+  { title: "Contas a Receber", url: "/erp/financeiro/contas-a-receber", icon: ReceivablesIcon },
   { title: "Clientes", url: "/erp/cadastros/clientes", icon: CustomersIcon },
   { title: "Fornecedores", url: "/erp/cadastros/fornecedores", icon: SuppliersIcon },
   { title: "Produtos", url: "/erp/cadastros/produtos", icon: ProductsIcon },
@@ -92,8 +94,6 @@ const erpSidebarItems: NavigationItem[] = [
   { title: "Categorias", url: "/erp/cadastros/categorias", icon: CategoriesIcon },
   { title: "Vendas", url: "/erp/vendas/pedidos", icon: SalesIcon, activePrefix: "/erp/vendas" },
   { title: "Compras", url: "/erp/compras/pedidos-compra", icon: PurchasesIcon, activePrefix: "/erp/compras" },
-  { title: "Contas a receber", url: "/erp/financeiro/contas-a-receber", icon: ReceivablesIcon },
-  { title: "Contas a pagar", url: "/erp/financeiro/contas-a-pagar", icon: PayablesIcon },
   { title: "Contas financeiras", url: "/erp/financeiro/contas-financeiras", icon: FinancialAccountsIcon },
 ]
 
@@ -208,9 +208,9 @@ export function SidebarShadcn({ bgColor, textColor, itemTextColor, itemTextStyle
       {...props}
     >
       <SidebarHeader className={cn("gap-0 p-0")} style={{ backgroundColor: 'var(--sidebar)' }}>
-        <div className="flex h-[58px] w-full items-center justify-start gap-2 px-3 group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:px-0">
+        <div className="flex h-[58px] w-full items-center justify-start gap-2 px-4 group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:px-0">
           <img src="/logoOttoIcon.svg" alt="Otto" className="h-4 w-4 shrink-0 object-contain" />
-          <span className="text-[15px] font-medium leading-none tracking-normal text-[#181818] group-data-[collapsible=icon]:hidden" style={{ fontFamily: fontVar('Geist') }}>Otto</span>
+          <span className="text-[18px] font-medium leading-none tracking-normal text-[#181818] group-data-[collapsible=icon]:hidden" style={{ fontFamily: fontVar('Geist') }}>Otto</span>
         </div>
       </SidebarHeader>
       <SidebarContent className="ui-text">
