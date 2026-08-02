@@ -195,7 +195,7 @@ export function SidebarShadcn({ bgColor, textColor, itemTextColor, itemTextStyle
   const inlineStyle = inlineStyleBase as React.CSSProperties & Record<string, string | number>
   // Defaults requested: compact sidebar typography/colors
   inlineStyle['--sidebar'] = finalBgColor
-  inlineStyle['--sidebar-width'] = '168px'
+  inlineStyle['--sidebar-width'] = '240px'
   inlineStyle['--sidebar-accent-foreground'] = finalItemTextColor
   inlineStyle['--ui-font-size'] = '14px'
   inlineStyle['--ui-tracking-pct'] = '-2'
@@ -210,7 +210,7 @@ export function SidebarShadcn({ bgColor, textColor, itemTextColor, itemTextStyle
       <SidebarHeader className={cn("gap-0 p-0")} style={{ backgroundColor: 'var(--sidebar)' }}>
         <div className="flex h-[58px] w-full items-center justify-start gap-2 px-3 group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:px-0">
           <img src="/logoOttoIcon.svg" alt="Otto" className="h-4 w-4 shrink-0 object-contain" />
-          <span className="text-[12px] font-semibold leading-none tracking-normal text-[#181818] group-data-[collapsible=icon]:hidden" style={{ fontFamily: fontVar('Geist') }}>Otto</span>
+          <span className="text-[15px] font-medium leading-none tracking-normal text-[#181818] group-data-[collapsible=icon]:hidden" style={{ fontFamily: fontVar('Geist') }}>Otto</span>
         </div>
       </SidebarHeader>
       <SidebarContent className="ui-text">
