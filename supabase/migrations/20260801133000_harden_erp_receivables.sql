@@ -1,0 +1,349 @@
+BEGIN;
+
+ALTER TABLE erp.contas_financeiras
+  ADD COLUMN IF NOT EXISTS padrao boolean NOT NULL DEFAULT false;
+
+ALTER TABLE erp.vendas
+  ADD COLUMN IF NOT EXISTS cobranca_emails text[] NOT NULL DEFAULT ARRAY[]::text[],
+  ADD COLUMN IF NOT EXISTS cobranca_whatsapp text,
+  ADD COLUMN IF NOT EXISTS configuracao_lembretes jsonb NOT NULL DEFAULT '{}'::jsonb;
+
+ALTER TABLE erp.contas_receber
+  ADD COLUMN IF NOT EXISTS origem text NOT NULL DEFAULT 'manual',
+  ADD COLUMN IF NOT EXISTS cliente_nome_snapshot text,
+  ADD COLUMN IF NOT EXISTS cliente_documento_snapshot text,
+  ADD COLUMN IF NOT EXISTS cobranca_emails text[] NOT NULL DEFAULT ARRAY[]::text[],
+  ADD COLUMN IF NOT EXISTS cobranca_whatsapp text,
+  ADD COLUMN IF NOT EXISTS configuracao_lembretes jsonb NOT NULL DEFAULT '{}'::jsonb,
+  ADD COLUMN IF NOT EXISTS cancelado_em timestamptz,
+  ADD COLUMN IF NOT EXISTS motivo_cancelamento text;
+
+ALTER TABLE erp.pagamentos
+  ADD COLUMN IF NOT EXISTS origem text NOT NULL DEFAULT 'manual',
+  ADD COLUMN IF NOT EXISTS chave_idempotencia text,
+  ADD COLUMN IF NOT EXISTS motivo_estorno text;
+
+WITH primeiras_contas AS (
+  SELECT DISTINCT ON (tenant_id) tenant_id, id
+  FROM erp.contas_financeiras
+  WHERE ativo = true AND excluido_em IS NULL
+  ORDER BY tenant_id, id
+)
+UPDATE erp.contas_financeiras AS contas
+SET padrao = true
+FROM primeiras_contas
+WHERE contas.tenant_id = primeiras_contas.tenant_id
+  AND contas.id = primeiras_contas.id
+  AND NOT EXISTS (
+    SELECT 1
+    FROM erp.contas_financeiras AS padrao
+    WHERE padrao.tenant_id = contas.tenant_id
+      AND padrao.padrao = true
+      AND padrao.ativo = true
+      AND padrao.excluido_em IS NULL
+  );
+
+UPDATE erp.contas_receber
+SET origem = 'venda'
+WHERE venda_id IS NOT NULL AND origem = 'manual';
+
+UPDATE erp.contas_receber AS contas
+SET
+  cliente_nome_snapshot = COALESCE(contas.cliente_nome_snapshot, entidades.nome),
+  cliente_documento_snapshot = COALESCE(contas.cliente_documento_snapshot, entidades.documento),
+  cobranca_emails = CASE
+    WHEN cardinality(contas.cobranca_emails) > 0 THEN contas.cobranca_emails
+    WHEN cardinality(entidades.contato_cobranca_emails) > 0 THEN entidades.contato_cobranca_emails
+    WHEN entidades.email IS NOT NULL AND btrim(entidades.email) <> '' THEN ARRAY[entidades.email]
+    ELSE ARRAY[]::text[]
+  END,
+  cobranca_whatsapp = COALESCE(
+    contas.cobranca_whatsapp,
+    entidades.contato_cobranca_whatsapp,
+    entidades.celular,
+    entidades.telefone
+  )
+FROM erp.entidades AS entidades
+WHERE entidades.tenant_id = contas.tenant_id
+  AND entidades.id = contas.cliente_id;
+
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_constraint
+    WHERE conname = 'vendas_configuracao_lembretes_object_chk'
+      AND conrelid = 'erp.vendas'::regclass
+  ) THEN
+    ALTER TABLE erp.vendas
+      ADD CONSTRAINT vendas_configuracao_lembretes_object_chk
+      CHECK (jsonb_typeof(configuracao_lembretes) = 'object');
+  END IF;
+
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_constraint
+    WHERE conname = 'contas_receber_origem_chk'
+      AND conrelid = 'erp.contas_receber'::regclass
+  ) THEN
+    ALTER TABLE erp.contas_receber
+      ADD CONSTRAINT contas_receber_origem_chk
+      CHECK (origem IN ('manual', 'venda', 'contrato', 'api', 'importacao'));
+  END IF;
+
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_constraint
+    WHERE conname = 'contas_receber_configuracao_lembretes_object_chk'
+      AND conrelid = 'erp.contas_receber'::regclass
+  ) THEN
+    ALTER TABLE erp.contas_receber
+      ADD CONSTRAINT contas_receber_configuracao_lembretes_object_chk
+      CHECK (jsonb_typeof(configuracao_lembretes) = 'object');
+  END IF;
+
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_constraint
+    WHERE conname = 'pagamentos_origem_operacional_chk'
+      AND conrelid = 'erp.pagamentos'::regclass
+  ) THEN
+    ALTER TABLE erp.pagamentos
+      ADD CONSTRAINT pagamentos_origem_operacional_chk
+      CHECK (origem IN ('manual', 'conciliacao', 'boleto', 'pix', 'cartao', 'api', 'estorno'));
+  END IF;
+
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_constraint
+    WHERE conname = 'pagamentos_chave_idempotencia_chk'
+      AND conrelid = 'erp.pagamentos'::regclass
+  ) THEN
+    ALTER TABLE erp.pagamentos
+      ADD CONSTRAINT pagamentos_chave_idempotencia_chk
+      CHECK (chave_idempotencia IS NULL OR btrim(chave_idempotencia) <> '');
+  END IF;
+END $$;
+
+CREATE UNIQUE INDEX IF NOT EXISTS contas_financeiras_padrao_unica_idx
+  ON erp.contas_financeiras (tenant_id)
+  WHERE padrao = true AND ativo = true AND excluido_em IS NULL;
+
+CREATE UNIQUE INDEX IF NOT EXISTS contas_receber_parcelas_numero_unico_idx
+  ON erp.contas_receber_parcelas (tenant_id, conta_receber_id, numero_parcela)
+  WHERE excluido_em IS NULL;
+
+CREATE UNIQUE INDEX IF NOT EXISTS pagamentos_chave_idempotencia_unica_idx
+  ON erp.pagamentos (tenant_id, chave_idempotencia)
+  WHERE chave_idempotencia IS NOT NULL AND excluido_em IS NULL;
+
+CREATE TABLE IF NOT EXISTS erp.vendas_recebimentos_previstos (
+  id bigint GENERATED BY DEFAULT AS IDENTITY PRIMARY KEY,
+  tenant_id bigint NOT NULL REFERENCES shared.tenants (id) ON DELETE RESTRICT,
+  venda_id bigint NOT NULL,
+  numero_parcela integer NOT NULL,
+  descricao text,
+  data_vencimento date NOT NULL,
+  valor numeric(18,2) NOT NULL,
+  conta_financeira_id bigint,
+  metodo_pagamento_id bigint,
+  criado_em timestamptz NOT NULL DEFAULT now(),
+  atualizado_em timestamptz NOT NULL DEFAULT now(),
+  excluido_em timestamptz,
+  criado_por bigint REFERENCES shared.users (id) ON DELETE SET NULL,
+  atualizado_por bigint REFERENCES shared.users (id) ON DELETE SET NULL,
+  metadata jsonb NOT NULL DEFAULT '{}'::jsonb,
+  CONSTRAINT vendas_recebimentos_previstos_tenant_id_id_key UNIQUE (tenant_id, id),
+  CONSTRAINT vendas_recebimentos_previstos_valores_chk CHECK (numero_parcela > 0 AND valor > 0),
+  CONSTRAINT vendas_recebimentos_previstos_metadata_object_chk CHECK (jsonb_typeof(metadata) = 'object'),
+  CONSTRAINT vendas_recebimentos_previstos_venda_fk FOREIGN KEY (tenant_id, venda_id)
+    REFERENCES erp.vendas (tenant_id, id) ON DELETE CASCADE,
+  CONSTRAINT vendas_recebimentos_previstos_conta_fk FOREIGN KEY (tenant_id, conta_financeira_id)
+    REFERENCES erp.contas_financeiras (tenant_id, id) ON DELETE RESTRICT,
+  CONSTRAINT vendas_recebimentos_previstos_metodo_fk FOREIGN KEY (tenant_id, metodo_pagamento_id)
+    REFERENCES erp.metodos_pagamento (tenant_id, id) ON DELETE RESTRICT
+);
+
+CREATE TABLE IF NOT EXISTS erp.cobrancas (
+  id bigint GENERATED BY DEFAULT AS IDENTITY PRIMARY KEY,
+  tenant_id bigint NOT NULL REFERENCES shared.tenants (id) ON DELETE RESTRICT,
+  conta_receber_parcela_id bigint NOT NULL,
+  provedor text,
+  tipo text NOT NULL,
+  referencia_externa text,
+  chave_idempotencia text NOT NULL,
+  status text NOT NULL DEFAULT 'rascunho',
+  valor numeric(18,2) NOT NULL,
+  data_vencimento date NOT NULL,
+  cobranca_emails text[] NOT NULL DEFAULT ARRAY[]::text[],
+  cobranca_whatsapp text,
+  configuracao_lembretes jsonb NOT NULL DEFAULT '{}'::jsonb,
+  linha_digitavel text,
+  codigo_barras text,
+  pix_copia_cola text,
+  qr_code_url text,
+  link_pagamento_url text,
+  payload_enviado jsonb NOT NULL DEFAULT '{}'::jsonb,
+  resposta_provedor jsonb NOT NULL DEFAULT '{}'::jsonb,
+  erro_codigo text,
+  erro_mensagem text,
+  emitida_em timestamptz,
+  enviada_em timestamptz,
+  visualizada_em timestamptz,
+  paga_em timestamptz,
+  cancelada_em timestamptz,
+  criado_em timestamptz NOT NULL DEFAULT now(),
+  atualizado_em timestamptz NOT NULL DEFAULT now(),
+  excluido_em timestamptz,
+  criado_por bigint REFERENCES shared.users (id) ON DELETE SET NULL,
+  atualizado_por bigint REFERENCES shared.users (id) ON DELETE SET NULL,
+  metadata jsonb NOT NULL DEFAULT '{}'::jsonb,
+  CONSTRAINT cobrancas_tenant_id_id_key UNIQUE (tenant_id, id),
+  CONSTRAINT cobrancas_tipo_chk CHECK (tipo IN ('boleto', 'pix', 'link', 'cartao')),
+  CONSTRAINT cobrancas_status_chk CHECK (
+    status IN ('rascunho', 'pendente', 'emitida', 'enviada', 'visualizada', 'paga', 'vencida', 'cancelada', 'falha')
+  ),
+  CONSTRAINT cobrancas_valor_chk CHECK (valor > 0),
+  CONSTRAINT cobrancas_configuracao_lembretes_object_chk CHECK (jsonb_typeof(configuracao_lembretes) = 'object'),
+  CONSTRAINT cobrancas_payload_object_chk CHECK (jsonb_typeof(payload_enviado) = 'object'),
+  CONSTRAINT cobrancas_resposta_object_chk CHECK (jsonb_typeof(resposta_provedor) = 'object'),
+  CONSTRAINT cobrancas_metadata_object_chk CHECK (jsonb_typeof(metadata) = 'object'),
+  CONSTRAINT cobrancas_parcela_fk FOREIGN KEY (tenant_id, conta_receber_parcela_id)
+    REFERENCES erp.contas_receber_parcelas (tenant_id, id) ON DELETE RESTRICT
+);
+
+CREATE TABLE IF NOT EXISTS erp.cobrancas_eventos (
+  id bigint GENERATED BY DEFAULT AS IDENTITY PRIMARY KEY,
+  tenant_id bigint NOT NULL REFERENCES shared.tenants (id) ON DELETE RESTRICT,
+  cobranca_id bigint NOT NULL,
+  evento_externo_id text,
+  hash_evento text,
+  evento text NOT NULL,
+  status_anterior text,
+  status_novo text,
+  payload jsonb NOT NULL DEFAULT '{}'::jsonb,
+  ocorrido_em timestamptz,
+  recebido_em timestamptz NOT NULL DEFAULT now(),
+  processado_em timestamptz,
+  erro_mensagem text,
+  criado_em timestamptz NOT NULL DEFAULT now(),
+  atualizado_em timestamptz NOT NULL DEFAULT now(),
+  excluido_em timestamptz,
+  criado_por bigint REFERENCES shared.users (id) ON DELETE SET NULL,
+  atualizado_por bigint REFERENCES shared.users (id) ON DELETE SET NULL,
+  metadata jsonb NOT NULL DEFAULT '{}'::jsonb,
+  CONSTRAINT cobrancas_eventos_tenant_id_id_key UNIQUE (tenant_id, id),
+  CONSTRAINT cobrancas_eventos_identificacao_chk CHECK (evento_externo_id IS NOT NULL OR hash_evento IS NOT NULL),
+  CONSTRAINT cobrancas_eventos_payload_object_chk CHECK (jsonb_typeof(payload) = 'object'),
+  CONSTRAINT cobrancas_eventos_metadata_object_chk CHECK (jsonb_typeof(metadata) = 'object'),
+  CONSTRAINT cobrancas_eventos_cobranca_fk FOREIGN KEY (tenant_id, cobranca_id)
+    REFERENCES erp.cobrancas (tenant_id, id) ON DELETE CASCADE
+);
+
+CREATE TABLE IF NOT EXISTS erp.cobrancas_notificacoes (
+  id bigint GENERATED BY DEFAULT AS IDENTITY PRIMARY KEY,
+  tenant_id bigint NOT NULL REFERENCES shared.tenants (id) ON DELETE RESTRICT,
+  cobranca_id bigint NOT NULL,
+  canal text NOT NULL,
+  destinatario text NOT NULL,
+  referencia_externa text,
+  status text NOT NULL DEFAULT 'agendada',
+  agendada_em timestamptz NOT NULL,
+  enviada_em timestamptz,
+  entregue_em timestamptz,
+  visualizada_em timestamptz,
+  erro_mensagem text,
+  criado_em timestamptz NOT NULL DEFAULT now(),
+  atualizado_em timestamptz NOT NULL DEFAULT now(),
+  excluido_em timestamptz,
+  criado_por bigint REFERENCES shared.users (id) ON DELETE SET NULL,
+  atualizado_por bigint REFERENCES shared.users (id) ON DELETE SET NULL,
+  metadata jsonb NOT NULL DEFAULT '{}'::jsonb,
+  CONSTRAINT cobrancas_notificacoes_tenant_id_id_key UNIQUE (tenant_id, id),
+  CONSTRAINT cobrancas_notificacoes_canal_chk CHECK (canal IN ('email', 'sms', 'whatsapp')),
+  CONSTRAINT cobrancas_notificacoes_status_chk CHECK (
+    status IN ('agendada', 'enviando', 'enviada', 'entregue', 'visualizada', 'falha', 'cancelada')
+  ),
+  CONSTRAINT cobrancas_notificacoes_metadata_object_chk CHECK (jsonb_typeof(metadata) = 'object'),
+  CONSTRAINT cobrancas_notificacoes_cobranca_fk FOREIGN KEY (tenant_id, cobranca_id)
+    REFERENCES erp.cobrancas (tenant_id, id) ON DELETE CASCADE
+);
+
+CREATE UNIQUE INDEX IF NOT EXISTS vendas_recebimentos_previstos_numero_unico_idx
+  ON erp.vendas_recebimentos_previstos (tenant_id, venda_id, numero_parcela)
+  WHERE excluido_em IS NULL;
+
+CREATE INDEX IF NOT EXISTS vendas_recebimentos_previstos_venda_idx
+  ON erp.vendas_recebimentos_previstos (tenant_id, venda_id, data_vencimento)
+  WHERE excluido_em IS NULL;
+
+CREATE UNIQUE INDEX IF NOT EXISTS cobrancas_chave_idempotencia_unica_idx
+  ON erp.cobrancas (tenant_id, chave_idempotencia)
+  WHERE excluido_em IS NULL;
+
+CREATE UNIQUE INDEX IF NOT EXISTS cobrancas_referencia_externa_unica_idx
+  ON erp.cobrancas (tenant_id, provedor, referencia_externa)
+  WHERE referencia_externa IS NOT NULL AND excluido_em IS NULL;
+
+CREATE UNIQUE INDEX IF NOT EXISTS cobrancas_parcela_tipo_ativa_unica_idx
+  ON erp.cobrancas (tenant_id, conta_receber_parcela_id, tipo)
+  WHERE excluido_em IS NULL AND status NOT IN ('cancelada', 'falha');
+
+CREATE INDEX IF NOT EXISTS cobrancas_parcela_status_idx
+  ON erp.cobrancas (tenant_id, conta_receber_parcela_id, status)
+  WHERE excluido_em IS NULL;
+
+CREATE UNIQUE INDEX IF NOT EXISTS cobrancas_eventos_externo_unico_idx
+  ON erp.cobrancas_eventos (tenant_id, evento_externo_id)
+  WHERE evento_externo_id IS NOT NULL AND excluido_em IS NULL;
+
+CREATE UNIQUE INDEX IF NOT EXISTS cobrancas_eventos_hash_unico_idx
+  ON erp.cobrancas_eventos (tenant_id, hash_evento)
+  WHERE hash_evento IS NOT NULL AND excluido_em IS NULL;
+
+CREATE INDEX IF NOT EXISTS cobrancas_notificacoes_agendamento_idx
+  ON erp.cobrancas_notificacoes (tenant_id, status, agendada_em)
+  WHERE excluido_em IS NULL;
+
+DO $$
+DECLARE
+  table_name text;
+  table_names text[] := ARRAY[
+    'vendas_recebimentos_previstos',
+    'cobrancas',
+    'cobrancas_eventos',
+    'cobrancas_notificacoes'
+  ];
+BEGIN
+  FOREACH table_name IN ARRAY table_names LOOP
+    EXECUTE format('DROP TRIGGER IF EXISTS set_atualizado_em ON erp.%I', table_name);
+    EXECUTE format(
+      'CREATE TRIGGER set_atualizado_em BEFORE UPDATE ON erp.%I FOR EACH ROW EXECUTE FUNCTION erp.set_atualizado_em()',
+      table_name
+    );
+
+    EXECUTE format('ALTER TABLE erp.%I ENABLE ROW LEVEL SECURITY', table_name);
+
+    EXECUTE format(
+      'CREATE POLICY %I ON erp.%I FOR SELECT USING (shared.is_tenant_member(tenant_id))',
+      table_name || '_select_policy', table_name
+    );
+    EXECUTE format(
+      'CREATE POLICY %I ON erp.%I FOR INSERT WITH CHECK (shared.has_tenant_role(tenant_id, ARRAY[''owner'', ''admin'', ''member'']))',
+      table_name || '_insert_policy', table_name
+    );
+    EXECUTE format(
+      'CREATE POLICY %I ON erp.%I FOR UPDATE USING (shared.has_tenant_role(tenant_id, ARRAY[''owner'', ''admin'', ''member''])) WITH CHECK (shared.has_tenant_role(tenant_id, ARRAY[''owner'', ''admin'', ''member'']))',
+      table_name || '_update_policy', table_name
+    );
+    EXECUTE format(
+      'CREATE POLICY %I ON erp.%I FOR DELETE USING (shared.has_tenant_role(tenant_id, ARRAY[''owner'', ''admin'']))',
+      table_name || '_delete_policy', table_name
+    );
+  END LOOP;
+END $$;
+
+GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA erp TO authenticated, service_role;
+GRANT USAGE, SELECT ON ALL SEQUENCES IN SCHEMA erp TO authenticated, service_role;
+
+COMMENT ON TABLE erp.vendas_recebimentos_previstos IS 'Parcelas e formas de recebimento planejadas antes da confirmacao da venda.';
+COMMENT ON TABLE erp.cobrancas IS 'Instrumentos de cobranca emitidos para parcelas a receber, como boleto e Pix.';
+COMMENT ON TABLE erp.cobrancas_eventos IS 'Historico idempotente de eventos recebidos dos provedores de cobranca.';
+COMMENT ON TABLE erp.cobrancas_notificacoes IS 'Agenda e historico de lembretes enviados para cada cobranca.';
+
+COMMIT;

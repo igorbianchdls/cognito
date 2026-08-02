@@ -116,6 +116,7 @@ export const financialAccountsConfig: ErpEntityConfig<ErpEntityRecord> = {
     { key: 'agencia', label: 'Agencia' },
     { key: 'conta', label: 'Conta' },
     { key: 'saldo_inicial', label: 'Saldo inicial', kind: 'currency' },
+    { key: 'padrao', label: 'Padrao' },
     { key: 'status', label: 'Status', kind: 'status' },
   ],
   fields: [
@@ -139,6 +140,15 @@ export const financialAccountsConfig: ErpEntityConfig<ErpEntityRecord> = {
     { key: 'digito', label: 'Digito', type: 'text' },
     { key: 'saldo_inicial', label: 'Saldo inicial', type: 'number' },
     { key: 'data_saldo_inicial', label: 'Data do saldo inicial', type: 'date' },
+    {
+      key: 'padrao',
+      label: 'Conta padrao',
+      type: 'select',
+      options: [
+        { value: 'nao', label: 'Nao' },
+        { value: 'sim', label: 'Sim' },
+      ],
+    },
   ],
   filters: [
     {

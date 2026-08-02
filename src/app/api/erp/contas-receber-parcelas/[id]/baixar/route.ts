@@ -28,6 +28,7 @@ export async function POST(request: Request, context: RouteContext) {
     const result = await settleReceivableInstallment({
       actorId: tenant.sharedUserId,
       id: installmentId,
+      idempotencyKey: request.headers.get('idempotency-key') || undefined,
       tenantId: tenant.tenantId,
       values: body.values || {},
     })

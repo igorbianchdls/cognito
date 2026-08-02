@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server'
 
 import { resolveAuthTenant } from '@/products/auth/server/authTenantResolver'
-import { settlePayableInstallment } from '@/products/erp/server/erpRepository'
+import { reverseErpPayment } from '@/products/erp/server/erpRepository'
 
 export const dynamic = 'force-dynamic'
 export const revalidate = 0
@@ -13,30 +13,27 @@ type RouteContext = {
 
 export async function POST(request: Request, context: RouteContext) {
   const { id } = await context.params
-  const installmentId = Number(id)
-  if (!Number.isInteger(installmentId) || installmentId <= 0) {
-    return NextResponse.json({ error: 'Parcela invalida.' }, { status: 400 })
+  const paymentId = Number(id)
+  if (!Number.isInteger(paymentId) || paymentId <= 0) {
+    return NextResponse.json({ error: 'Pagamento invalido.' }, { status: 400 })
   }
 
   const tenant = await resolveAuthTenant({ access: 'manage' })
-  if (!tenant) {
-    return NextResponse.json({ error: 'Acesso negado.' }, { status: 403 })
-  }
+  if (!tenant) return NextResponse.json({ error: 'Acesso negado.' }, { status: 403 })
 
   try {
-    const body = (await request.json().catch(() => ({}))) as { values?: Record<string, unknown> }
-    const result = await settlePayableInstallment({
+    const body = (await request.json().catch(() => ({}))) as { motivo?: unknown }
+    const result = await reverseErpPayment({
       actorId: tenant.sharedUserId,
-      id: installmentId,
+      id: paymentId,
       idempotencyKey: request.headers.get('idempotency-key') || undefined,
+      reason: typeof body.motivo === 'string' ? body.motivo : null,
       tenantId: tenant.tenantId,
-      values: body.values || {},
     })
-
     return NextResponse.json(result)
   } catch (error) {
     return NextResponse.json(
-      { error: error instanceof Error ? error.message : 'Nao foi possivel baixar a parcela.' },
+      { error: error instanceof Error ? error.message : 'Nao foi possivel estornar o pagamento.' },
       { status: 400 },
     )
   }

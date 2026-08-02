@@ -11,7 +11,7 @@ type RouteContext = {
   params: Promise<{ id: string }>
 }
 
-export async function POST(_request: Request, context: RouteContext) {
+export async function POST(request: Request, context: RouteContext) {
   const { id } = await context.params
   const saleId = Number(id)
   if (!Number.isInteger(saleId) || saleId <= 0) {
@@ -24,9 +24,11 @@ export async function POST(_request: Request, context: RouteContext) {
   }
 
   try {
+    const body = (await request.json().catch(() => ({}))) as { values?: { motivo?: unknown } }
     const result = await cancelErpSale({
       actorId: tenant.sharedUserId,
       id: saleId,
+      reason: typeof body.values?.motivo === 'string' ? body.values.motivo : null,
       tenantId: tenant.tenantId,
     })
 

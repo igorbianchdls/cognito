@@ -246,6 +246,21 @@ async function createSale(client, tenantId, actorId, args) {
   const sale = saleResult.rows[0]
 
   await client.query(
+    `INSERT INTO erp.vendas_recebimentos_previstos (
+       tenant_id,
+       venda_id,
+       numero_parcela,
+       descricao,
+       data_vencimento,
+       valor,
+       criado_por,
+       atualizado_por
+     )
+     VALUES ($1, $2, 1, 'Parcela 1', $3, $4, $5, $5)`,
+    [tenantId, sale.id, dueDate, total, actorId],
+  )
+
+  await client.query(
     `INSERT INTO erp.vendas_itens (
        tenant_id,
        venda_id,

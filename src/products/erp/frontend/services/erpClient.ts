@@ -84,11 +84,15 @@ export const erpClient: ErpClient = {
     config: ErpEntityConfig,
     request: ErpEntityActionRequest,
   ): Promise<ErpEntityActionResponse> {
+    const idempotencyKey = typeof crypto !== 'undefined' && 'randomUUID' in crypto
+      ? crypto.randomUUID()
+      : `${Date.now()}-${Math.random()}`
     const response = await fetch(buildActionUrl(config, request), {
       method: 'POST',
       headers: {
         Accept: 'application/json',
         'Content-Type': 'application/json',
+        'Idempotency-Key': idempotencyKey,
       },
       body: JSON.stringify({ values: request.values || {} }),
     })
