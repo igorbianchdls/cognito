@@ -8,6 +8,8 @@ import { ErpShell } from '@/products/erp/frontend/layout/ErpShell'
 import { PurchaseWorkspacePage } from '@/products/erp/frontend/modules/compras/PurchaseWorkspacePage'
 import { PurchaseInvoicesPage } from '@/products/erp/frontend/modules/compras/PurchaseInvoicesPage'
 import { PayablesWorkspacePage } from '@/products/erp/frontend/modules/financeiro/PayablesWorkspacePage'
+import { ReceivablesWorkspacePage } from '@/products/erp/frontend/modules/financeiro/ReceivablesWorkspacePage'
+import { SalesWorkspacePage } from '@/products/erp/frontend/modules/vendas/SalesWorkspacePage'
 import { getErpEntityConfig } from '@/products/erp/frontend/modules/entityRegistry'
 import { OverviewPage } from '@/products/erp/frontend/modules/overview/OverviewPage'
 import { getErpModule, getErpSection } from '@/products/erp/shared/navigation'
@@ -29,7 +31,7 @@ function ErpPlaceholderPage({
         <div className="text-xs font-medium uppercase tracking-normal text-gray-500">ERP</div>
         <h1 className="mt-2 text-2xl font-semibold tracking-normal text-gray-950">{module?.label ?? section.label}</h1>
         <p className="mt-3 text-sm leading-6 text-gray-600">
-          Esta area ja esta navegavel e pronta para receber uma configuracao reutilizavel como os cadastros. O proximo passo e definir colunas, campos, filtros e dados mockados deste modulo.
+          Este modulo ainda nao faz parte da versao operacional. Quando for ativado, usara os mesmos contratos, controles de acesso e componentes reutilizaveis dos demais modulos do ERP.
         </p>
       </div>
     </div>
@@ -55,6 +57,8 @@ export default function ErpPage({
           <ErpShell sectionId={sectionConfig.id} moduleId={moduleConfig?.id}>
             {sectionConfig.id === 'overview' ? (
               <OverviewPage />
+            ) : sectionConfig.id === 'vendas' && moduleConfig?.id === 'pedidos' ? (
+              <SalesWorkspacePage />
             ) : sectionConfig.id === 'compras' && moduleConfig?.id === 'pedidos-compra' ? (
               <PurchaseWorkspacePage />
             ) : sectionConfig.id === 'compras' && moduleConfig?.id === 'parcelas-a-pagar' ? (
@@ -63,6 +67,8 @@ export default function ErpPage({
               <PurchaseInvoicesPage />
             ) : sectionConfig.id === 'financeiro' && moduleConfig?.id === 'contas-a-pagar' ? (
               <PayablesWorkspacePage />
+            ) : sectionConfig.id === 'financeiro' && moduleConfig?.id === 'contas-a-receber' ? (
+              <ReceivablesWorkspacePage />
             ) : entityConfig ? (
               <ErpEntityPage config={entityConfig} />
             ) : (

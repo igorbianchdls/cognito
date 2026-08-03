@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server'
 
 import { resolveAuthTenant } from '@/products/auth/server/authTenantResolver'
-import { createErpEntityRecord, listErpEntityRecords } from '@/products/erp/server/erpRepository'
+import { createErpEntityRecord, listErpEntityPage } from '@/products/erp/server/erpRepository'
 
 export const dynamic = 'force-dynamic'
 export const revalidate = 0
@@ -21,13 +21,15 @@ export async function GET(request: Request) {
 
   try {
     const url = new URL(request.url)
-    const records = await listErpEntityRecords({
+    const page = await listErpEntityPage({
       entityId: 'pedidos',
       tenantId: tenant.tenantId,
       query: url.searchParams.get('query') || '',
       filters: parseFilters(url.searchParams),
+      page: Number(url.searchParams.get('page') || 1),
+      pageSize: Number(url.searchParams.get('pageSize') || 50),
     })
-    return NextResponse.json({ records, total: records.length })
+    return NextResponse.json(page)
   } catch (error) {
     return NextResponse.json(
       { error: error instanceof Error ? error.message : 'Nao foi possivel carregar vendas.' },
@@ -47,6 +49,7 @@ export async function POST(request: Request) {
       entityId: 'pedidos',
       tenantId: tenant.tenantId,
       values: body.values || {},
+      idempotencyKey: request.headers.get('idempotency-key') || undefined,
     })
     return NextResponse.json({ record }, { status: 201 })
   } catch (error) {

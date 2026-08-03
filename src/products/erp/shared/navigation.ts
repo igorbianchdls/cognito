@@ -1,6 +1,5 @@
 import {
   IconAddressBook,
-  IconBuildingWarehouse,
   IconCashBanknote,
   IconClipboardList,
   IconHomeStats,
@@ -30,7 +29,7 @@ export const ERP_NAVIGATION: ErpNavigationItem[] = [
     modules: [
       { id: 'clientes', label: 'Clientes', href: '/erp/cadastros/clientes', description: 'Base comercial e fiscal de clientes.' },
       { id: 'fornecedores', label: 'Fornecedores', href: '/erp/cadastros/fornecedores', description: 'Parceiros de compra, servicos e operacao.' },
-      { id: 'produtos', label: 'Produtos', href: '/erp/cadastros/produtos', description: 'SKUs, precos, categorias e saldos.' },
+      { id: 'produtos', label: 'Produtos', href: '/erp/cadastros/produtos', description: 'SKUs, precos e categorias.' },
       { id: 'servicos', label: 'Servicos', href: '/erp/cadastros/servicos', description: 'Servicos vendidos, precos e classificacao.' },
       { id: 'categorias', label: 'Categorias', href: '/erp/cadastros/categorias', description: 'Classificacao para produtos e relatórios.' },
     ],
@@ -43,8 +42,6 @@ export const ERP_NAVIGATION: ErpNavigationItem[] = [
     description: 'Pedidos, orcamentos e faturamento.',
     modules: [
       { id: 'pedidos', label: 'Pedidos', href: '/erp/vendas/pedidos', description: 'Pedidos de venda e acompanhamento.' },
-      { id: 'orcamentos', label: 'Orcamentos', href: '/erp/vendas/orcamentos', description: 'Propostas antes da aprovacao.' },
-      { id: 'notas-fiscais', label: 'Notas fiscais', href: '/erp/vendas/notas-fiscais', description: 'Emissao e status fiscal.' },
     ],
   },
   {
@@ -60,18 +57,6 @@ export const ERP_NAVIGATION: ErpNavigationItem[] = [
     ],
   },
   {
-    id: 'estoque',
-    label: 'Estoque',
-    href: '/erp/estoque/movimentacoes',
-    icon: IconBuildingWarehouse,
-    description: 'Saldos, movimentos e inventarios.',
-    modules: [
-      { id: 'movimentacoes', label: 'Movimentacoes', href: '/erp/estoque/movimentacoes', description: 'Entradas, saidas e ajustes.' },
-      { id: 'inventario', label: 'Inventario', href: '/erp/estoque/inventario', description: 'Contagens e divergencias.' },
-      { id: 'transferencias', label: 'Transferencias', href: '/erp/estoque/transferencias', description: 'Movimentos entre locais.' },
-    ],
-  },
-  {
     id: 'financeiro',
     label: 'Financeiro',
     href: '/erp/financeiro/contas-a-receber',
@@ -81,7 +66,6 @@ export const ERP_NAVIGATION: ErpNavigationItem[] = [
       { id: 'contas-a-receber', label: 'Contas a receber', href: '/erp/financeiro/contas-a-receber', description: 'Titulos e cobrancas.' },
       { id: 'contas-a-pagar', label: 'Contas a pagar', href: '/erp/financeiro/contas-a-pagar', description: 'Compromissos e vencimentos.' },
       { id: 'contas-financeiras', label: 'Contas financeiras', href: '/erp/financeiro/contas-financeiras', description: 'Caixas, bancos, carteiras e cartoes.' },
-      { id: 'fluxo-de-caixa', label: 'Fluxo de caixa', href: '/erp/financeiro/fluxo-de-caixa', description: 'Entradas, saidas e previsao.' },
     ],
   },
 ]

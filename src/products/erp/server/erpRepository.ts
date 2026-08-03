@@ -1,4 +1,5 @@
 import { runQuery, withTransaction, type SQLClient } from '@/lib/postgres'
+import { parseNfeXml } from '@/products/erp/server/fiscal/nfeParser'
 import type { ErpEntityRecord } from '@/products/erp/shared/types'
 import type { ErpConnectedModuleId } from '@/products/erp/server/erpModuleRegistry'
 
@@ -7,6 +8,8 @@ type ListInput = {
   entityId: ErpConnectedModuleId
   query?: string
   filters?: Record<string, string>
+  page?: number
+  pageSize?: number
 }
 
 type CreateInput = {
@@ -52,6 +55,7 @@ type SaleRow = {
   centro_custo_id: string | number | null
   conta_financeira_id: string | number | null
   metodo_pagamento_id: string | number | null
+  subtotal: string | number | null
   total: string | number | null
   condicao_pagamento: unknown
   cobranca_emails: unknown
@@ -74,6 +78,7 @@ type PurchaseRow = {
   centro_custo_id: string | number | null
   conta_financeira_id: string | number | null
   metodo_pagamento_id: string | number | null
+  subtotal: string | number | null
   total: string | number | null
   condicao_pagamento: unknown
   gera_financeiro: boolean
@@ -443,6 +448,23 @@ function appendRecordStatusFilter(params: unknown[], filters?: Record<string, st
   if (!status || status === 'todos' || status === '__all__') return ''
   params.push(status)
   return ` AND status = $${params.length}`
+}
+
+function normalizedPage(input: ListInput) {
+  const page = Number(input.page)
+  return Number.isFinite(page) ? Math.max(1, Math.floor(page)) : 1
+}
+
+function normalizedPageSize(input: ListInput) {
+  const pageSize = Number(input.pageSize)
+  return Number.isFinite(pageSize) ? Math.min(100, Math.max(10, Math.floor(pageSize))) : 50
+}
+
+function appendPagination(params: unknown[], input: ListInput) {
+  const pageSize = normalizedPageSize(input)
+  const offset = (normalizedPage(input) - 1) * pageSize
+  params.push(pageSize, offset)
+  return ` LIMIT $${params.length - 1} OFFSET $${params.length}`
 }
 
 function appendTipoFilter(params: unknown[], filters?: Record<string, string>) {
@@ -873,7 +895,7 @@ function mapConfirmPurchaseResult(
 }
 
 export async function listErpPurchaseCatalogs(tenantId: number) {
-  const [suppliers, products, services, categories, costCenters, financialAccounts, paymentMethods, operationNatures] = await Promise.all([
+  const [suppliers, products, services, categories, costCenters, financialAccounts, paymentMethods, operationNatures, purchaseCandidates] = await Promise.all([
     runQuery(`SELECT id::text, nome, documento FROM erp.entidades WHERE tenant_id = $1 AND eh_fornecedor = true AND ativo = true AND excluido_em IS NULL ORDER BY nome`, [tenantId]),
     runQuery(`SELECT id::text, nome, COALESCE(sku, codigo, '') AS codigo, COALESCE(unidade_medida, 'UN') AS unidade, custo AS valor_padrao FROM erp.produtos WHERE tenant_id = $1 AND ativo = true AND excluido_em IS NULL ORDER BY nome`, [tenantId]),
     runQuery(`SELECT id::text, nome, COALESCE(codigo, '') AS codigo, 'UN'::text AS unidade, custo AS valor_padrao FROM erp.servicos WHERE tenant_id = $1 AND ativo = true AND excluido_em IS NULL ORDER BY nome`, [tenantId]),
@@ -882,9 +904,62 @@ export async function listErpPurchaseCatalogs(tenantId: number) {
     runQuery(`SELECT id::text, nome, tipo, padrao FROM erp.contas_financeiras WHERE tenant_id = $1 AND ativo = true AND excluido_em IS NULL ORDER BY padrao DESC, nome`, [tenantId]),
     runQuery(`SELECT id::text, nome, tipo FROM erp.metodos_pagamento WHERE tenant_id = $1 AND ativo = true AND excluido_em IS NULL ORDER BY nome`, [tenantId]),
     runQuery(`SELECT id::text, nome, codigo, atualiza_estoque, gera_financeiro_padrao FROM erp.naturezas_operacao_compra WHERE tenant_id = $1 AND ativo = true AND excluido_em IS NULL ORDER BY nome`, [tenantId]),
+    runQuery(`SELECT compras.id::text, compras.numero, compras.total, entidades.nome AS fornecedor
+      FROM erp.compras AS compras
+      JOIN erp.entidades AS entidades ON entidades.tenant_id = compras.tenant_id AND entidades.id = compras.fornecedor_id
+      WHERE compras.tenant_id = $1 AND compras.tipo_movimento <> 'cancelada' AND compras.excluido_em IS NULL
+        AND NOT EXISTS (
+          SELECT 1 FROM erp.notas_fiscais AS notas
+          WHERE notas.tenant_id = compras.tenant_id AND notas.compra_id = compras.id AND notas.excluido_em IS NULL
+        )
+      ORDER BY compras.data_compra DESC, compras.id DESC LIMIT 200`, [tenantId]),
   ])
 
-  return { suppliers, products, services, categories, costCenters, financialAccounts, paymentMethods, operationNatures }
+  return { suppliers, products, services, categories, costCenters, financialAccounts, paymentMethods, operationNatures, purchaseCandidates }
+}
+
+export async function listErpSalesCatalogs(tenantId: number) {
+  const [customers, products, services, categories, costCenters, financialAccounts, paymentMethods] = await Promise.all([
+    runQuery(`SELECT id::text, nome, documento, email, celular, telefone, contato_cobranca_emails, contato_cobranca_whatsapp
+      FROM erp.entidades WHERE tenant_id = $1 AND eh_cliente = true AND ativo = true AND excluido_em IS NULL ORDER BY nome`, [tenantId]),
+    runQuery(`SELECT id::text, nome, COALESCE(sku, codigo, '') AS codigo, COALESCE(unidade_medida, 'UN') AS unidade, preco_venda AS valor_padrao
+      FROM erp.produtos WHERE tenant_id = $1 AND ativo = true AND excluido_em IS NULL ORDER BY nome`, [tenantId]),
+    runQuery(`SELECT id::text, nome, COALESCE(codigo, '') AS codigo, 'UN'::text AS unidade, preco AS valor_padrao
+      FROM erp.servicos WHERE tenant_id = $1 AND ativo = true AND excluido_em IS NULL ORDER BY nome`, [tenantId]),
+    runQuery(`SELECT id::text, nome FROM erp.categorias WHERE tenant_id = $1 AND ativo = true AND excluido_em IS NULL ORDER BY nome`, [tenantId]),
+    runQuery(`SELECT id::text, nome FROM erp.centros_custo WHERE tenant_id = $1 AND ativo = true AND excluido_em IS NULL ORDER BY nome`, [tenantId]),
+    runQuery(`SELECT id::text, nome, tipo, padrao FROM erp.contas_financeiras WHERE tenant_id = $1 AND ativo = true AND excluido_em IS NULL ORDER BY padrao DESC, nome`, [tenantId]),
+    runQuery(`SELECT id::text, nome, tipo FROM erp.metodos_pagamento WHERE tenant_id = $1 AND ativo = true AND excluido_em IS NULL ORDER BY nome`, [tenantId]),
+  ])
+  return { customers, products, services, categories, costCenters, financialAccounts, paymentMethods }
+}
+
+export async function getErpOverview(tenantId: number) {
+  const rows = await runQuery<Record<string, unknown>>(
+    `SELECT
+      (SELECT COALESCE(sum(GREATEST(parcelas.valor - parcelas.valor_pago, 0)), 0)
+       FROM erp.contas_receber_parcelas AS parcelas
+       JOIN erp.contas_receber AS contas ON contas.tenant_id = parcelas.tenant_id AND contas.id = parcelas.conta_receber_id
+       WHERE parcelas.tenant_id = $1 AND parcelas.status NOT IN ('pago', 'cancelado')
+         AND parcelas.excluido_em IS NULL AND contas.excluido_em IS NULL) AS saldo_receber,
+      (SELECT COALESCE(sum(GREATEST(parcelas.valor - parcelas.valor_pago, 0)), 0)
+       FROM erp.contas_pagar_parcelas AS parcelas
+       JOIN erp.contas_pagar AS contas ON contas.tenant_id = parcelas.tenant_id AND contas.id = parcelas.conta_pagar_id
+       WHERE parcelas.tenant_id = $1 AND parcelas.status NOT IN ('pago', 'cancelado')
+         AND parcelas.excluido_em IS NULL AND contas.excluido_em IS NULL) AS saldo_pagar,
+      (SELECT COALESCE(sum(GREATEST(valor - valor_pago, 0)), 0) FROM erp.contas_receber_parcelas
+       WHERE tenant_id = $1 AND data_vencimento < CURRENT_DATE AND status NOT IN ('pago', 'cancelado') AND excluido_em IS NULL) AS receber_vencido,
+      (SELECT count(*)::int FROM erp.vendas WHERE tenant_id = $1 AND status = 'rascunho' AND excluido_em IS NULL) AS vendas_rascunho,
+      (SELECT count(*)::int FROM erp.compras WHERE tenant_id = $1 AND tipo_movimento IN ('cotacao', 'pedido_compra', 'pedido_recorrente') AND excluido_em IS NULL) AS compras_abertas,
+      (SELECT count(*)::int FROM erp.entidades WHERE tenant_id = $1 AND eh_cliente = true AND ativo = true AND excluido_em IS NULL) AS clientes_ativos`,
+    [tenantId],
+  )
+  const row = rows[0] || {}
+  return {
+    saldoReceber: Number(row.saldo_receber || 0), saldoPagar: Number(row.saldo_pagar || 0),
+    receberVencido: Number(row.receber_vencido || 0), vendasRascunho: Number(row.vendas_rascunho || 0),
+    comprasAbertas: Number(row.compras_abertas || 0), clientesAtivos: Number(row.clientes_ativos || 0),
+  }
 }
 
 export async function listErpPurchaseInvoices(tenantId: number) {
@@ -926,23 +1001,57 @@ export async function listErpPurchaseInvoices(tenantId: number) {
   }))
 }
 
+export async function listErpPayments(input: { tenantId: number; type: 'receber' | 'pagar'; accountId: number }) {
+  const receiving = input.type === 'receber'
+  const rows = await runQuery<Record<string, unknown>>(
+    `SELECT pagamentos.id::text, pagamentos.tipo, pagamentos.origem, pagamentos.data_pagamento,
+       pagamentos.valor, pagamentos.juros, pagamentos.multa, pagamentos.desconto, pagamentos.taxa,
+       pagamentos.valor_liquido, pagamentos.estornado_em, pagamentos.estorno_de_pagamento_id::text,
+       parcelas.numero_parcela, financeiras.nome AS conta_financeira, metodos.nome AS metodo_pagamento
+     FROM erp.pagamentos AS pagamentos
+     JOIN ${receiving ? 'erp.contas_receber_parcelas' : 'erp.contas_pagar_parcelas'} AS parcelas
+       ON parcelas.tenant_id = pagamentos.tenant_id
+      AND parcelas.id = pagamentos.${receiving ? 'conta_receber_parcela_id' : 'conta_pagar_parcela_id'}
+     LEFT JOIN erp.contas_financeiras AS financeiras
+       ON financeiras.tenant_id = pagamentos.tenant_id AND financeiras.id = pagamentos.conta_financeira_id
+     LEFT JOIN erp.metodos_pagamento AS metodos
+       ON metodos.tenant_id = pagamentos.tenant_id AND metodos.id = pagamentos.metodo_pagamento_id
+     WHERE pagamentos.tenant_id = $1
+       AND parcelas.${receiving ? 'conta_receber_id' : 'conta_pagar_id'} = $2
+       AND pagamentos.excluido_em IS NULL
+     ORDER BY pagamentos.data_pagamento DESC, pagamentos.id DESC`,
+    [input.tenantId, input.accountId],
+  )
+  return rows.map((row) => ({
+    id: String(row.id), tipo: String(row.tipo), origem: String(row.origem),
+    data_pagamento: dateText(row.data_pagamento) || '', valor: Number(row.valor || 0),
+    juros: Number(row.juros || 0), multa: Number(row.multa || 0), desconto: Number(row.desconto || 0),
+    taxa: Number(row.taxa || 0), valor_liquido: Number(row.valor_liquido || 0),
+    estornado_em: row.estornado_em ? new Date(String(row.estornado_em)).toISOString() : '',
+    estorno_de_pagamento_id: String(row.estorno_de_pagamento_id || ''),
+    numero_parcela: Number(row.numero_parcela || 0), conta_financeira: String(row.conta_financeira || ''),
+    metodo_pagamento: String(row.metodo_pagamento || ''),
+  }))
+}
+
 export async function importErpPurchaseInvoice(input: {
   tenantId: number
   actorId: number
   values: Record<string, unknown>
 }) {
   return withTransaction(async (client) => {
-    const key = text(input.values.chave_acesso).replace(/\D/g, '')
-    if (key.length !== 44) throw new Error('Chave de acesso da NF-e invalida.')
+    const parsedNfe = parseNfeXml(input.values.xml)
+    const values = { ...input.values, ...parsedNfe }
+    const key = parsedNfe.chave_acesso
     await client.query(`SELECT pg_advisory_xact_lock(hashtextextended($1, 0))`, [`erp:nfe-entrada:${input.tenantId}:${key}`])
-    const supplierData = jsonObject(input.values.fornecedor) as Record<string, unknown>
+    const supplierData = jsonObject(values.fornecedor) as Record<string, unknown>
     const supplierName = optionalText(supplierData.nome)
     const supplierDocument = text(supplierData.documento).replace(/\D/g, '')
     if (!supplierName || !supplierDocument) throw new Error('Fornecedor da NF-e invalido.')
-    const total = money(input.values.valor_total)
-    if (total <= 0) throw new Error('Valor total da NF-e precisa ser maior que zero.')
-    const issueDate = dateText(input.values.data_emissao) || new Date().toISOString().slice(0, 10)
-    const recipientDocument = text(input.values.destinatario_documento).replace(/\D/g, '')
+    const total = money(values.valor_total)
+    const issueDate = dateText(values.data_emissao) || new Date().toISOString().slice(0, 10)
+    const recipientDocument = text(values.destinatario_documento).replace(/\D/g, '')
+    if (!recipientDocument) throw new Error('Destinatario da NF-e nao identificado.')
 
     const fiscalConfig = await client.query(
       `SELECT regexp_replace(cnpj, '\\D', '', 'g') AS cnpj
@@ -966,7 +1075,7 @@ export async function importErpPurchaseInvoice(input: {
     if (existingResult.rows[0]) return { invoice: existingResult.rows[0], reused: true }
 
     let supplierResult = await client.query(
-      `SELECT id, nome, documento FROM erp.entidades
+      `SELECT id, nome, documento, eh_fornecedor FROM erp.entidades
        WHERE tenant_id = $1 AND regexp_replace(COALESCE(documento, ''), '\\D', '', 'g') = $2
          AND excluido_em IS NULL LIMIT 1`,
       [input.tenantId, supplierDocument],
@@ -988,28 +1097,34 @@ export async function importErpPurchaseInvoice(input: {
     }
     const supplier = supplierResult.rows[0]
 
-    const items = Array.isArray(input.values.itens) ? input.values.itens as Record<string, unknown>[] : []
+    const items = Array.isArray(values.itens) ? values.itens as Record<string, unknown>[] : []
     if (items.length === 0) throw new Error('A NF-e nao possui itens validos.')
     const generatePurchase = booleanValue(input.values.gerar_compra ?? true)
     const generateFinancial = booleanValue(input.values.gera_financeiro ?? true)
     let purchase: PurchaseRow | null = null
 
     if (generatePurchase) {
-      const existingPurchase = await client.query(
-        `SELECT compras.*
-         FROM erp.compras AS compras
-         WHERE compras.tenant_id = $1 AND compras.fornecedor_id = $2
-           AND compras.total = $3 AND compras.data_compra <= $4
-           AND compras.tipo_movimento <> 'cancelada' AND compras.excluido_em IS NULL
-           AND NOT EXISTS (
-             SELECT 1 FROM erp.notas_fiscais AS notas
-             WHERE notas.tenant_id = compras.tenant_id AND notas.compra_id = compras.id AND notas.excluido_em IS NULL
-           )
-         ORDER BY compras.data_compra DESC, compras.id DESC LIMIT 1
-         FOR UPDATE`,
-        [input.tenantId, supplier.id, total, issueDate],
-      )
-      purchase = existingPurchase.rows[0] as PurchaseRow | undefined || null
+      const requestedPurchaseId = optionalNumericId(input.values.compra_id)
+      if (requestedPurchaseId) {
+        const existingPurchase = await client.query(
+          `SELECT compras.*
+           FROM erp.compras AS compras
+           WHERE compras.tenant_id = $1 AND compras.id = $2
+             AND compras.fornecedor_id = $3 AND compras.total = $4
+             AND compras.tipo_movimento <> 'cancelada' AND compras.excluido_em IS NULL
+             AND NOT EXISTS (
+               SELECT 1 FROM erp.notas_fiscais AS notas
+               WHERE notas.tenant_id = compras.tenant_id AND notas.compra_id = compras.id AND notas.excluido_em IS NULL
+             )
+           FOR UPDATE`,
+          [input.tenantId, requestedPurchaseId, supplier.id, total],
+        )
+        purchase = existingPurchase.rows[0] as PurchaseRow | undefined || null
+        if (!purchase) throw new Error('A compra escolhida nao pertence ao fornecedor ou possui total diferente da NF-e.')
+        if (Math.abs(money(purchase.subtotal) - money(values.valor_produtos)) > 0.02) {
+          throw new Error('O subtotal da compra escolhida nao confere com os produtos da NF-e.')
+        }
+      }
 
       if (!purchase) {
         const purchaseResult = await client.query(
@@ -1023,11 +1138,11 @@ export async function importErpPurchaseInvoice(input: {
              $7, $8, $9, $10, $11, $12, $13, $14::jsonb, now(), now(), $15, $15)
            RETURNING *`,
           [
-            input.tenantId, supplier.id, optionalText(input.values.numero) || `NFE-${key.slice(-8)}`,
+            input.tenantId, supplier.id, optionalText(values.numero) || `NFE-${key.slice(-8)}`,
             issueDate, supplier.nome, supplier.documento, optionalNumericId(input.values.categoria_id),
-            optionalNumericId(input.values.natureza_operacao_id), money(input.values.valor_produtos) || total,
-            money(input.values.desconto), money(input.values.frete), total, generateFinancial,
-            JSON.stringify({ parcelas: [{ numero_parcela: 1, descricao: 'Parcela 1', data_vencimento: dateText(input.values.data_vencimento) || issueDate, valor: total }] }),
+            optionalNumericId(input.values.natureza_operacao_id), money(values.valor_produtos) || total,
+            money(values.desconto), money(values.frete), total, generateFinancial,
+            JSON.stringify({ parcelas: [{ numero_parcela: 1, descricao: 'Parcela 1', data_vencimento: dateText(values.data_vencimento) || issueDate, valor: total }] }),
             input.actorId,
           ],
         )
@@ -1069,7 +1184,7 @@ export async function importErpPurchaseInvoice(input: {
           `INSERT INTO erp.compras_parcelas_previstas (
              tenant_id, compra_id, numero_parcela, descricao, data_vencimento, valor, criado_por, atualizado_por
            ) VALUES ($1, $2, 1, 'Parcela 1', $3, $4, $5, $5)`,
-          [input.tenantId, purchase.id, dateText(input.values.data_vencimento) || issueDate, total, input.actorId],
+          [input.tenantId, purchase.id, dateText(values.data_vencimento) || issueDate, total, input.actorId],
         )
       } else {
         const updatedPurchase = await client.query(
@@ -1092,7 +1207,7 @@ export async function importErpPurchaseInvoice(input: {
        ) VALUES ($1, $2, $3, 'nfe', 'entrada', 'normal', 'emitida', $4, $5, $6,
          $7, $8, $9, $10::jsonb, $11, $11)
        RETURNING id::text, compra_id::text, status, chave_acesso`,
-      [input.tenantId, purchase?.id || null, supplier.id, optionalText(input.values.numero), optionalText(input.values.serie), key, money(input.values.valor_produtos), total, issueDate, JSON.stringify({ xml: optionalText(input.values.xml) }), input.actorId],
+      [input.tenantId, purchase?.id || null, supplier.id, optionalText(values.numero), optionalText(values.serie), key, money(values.valor_produtos), total, issueDate, JSON.stringify({ xml: parsedNfe.xml, xml_hash: parsedNfe.xml_hash }), input.actorId],
     )
     const invoice = invoiceResult.rows[0]
 
@@ -1147,6 +1262,19 @@ export async function listErpEntityRecords(input: ListInput): Promise<ErpEntityR
   }
 
   return []
+}
+
+export async function listErpEntityPage(input: ListInput) {
+  const rawRecords = await listErpEntityRecords(input)
+  const total = rawRecords.length > 0 ? Number(rawRecords[0].__total ?? rawRecords.length) : 0
+  const records = rawRecords.map(({ __total: _total, ...record }) => record as ErpEntityRecord)
+
+  return {
+    records,
+    total,
+    page: normalizedPage(input),
+    pageSize: normalizedPageSize(input),
+  }
 }
 
 async function listEntityRoleRecords(input: ListInput): Promise<ErpEntityRecord[]> {
@@ -1335,11 +1463,10 @@ async function listSaleRecords(input: ListInput): Promise<ErpEntityRecord[]> {
        WHERE vendas.tenant_id = $1
          AND vendas.excluido_em IS NULL
      )
-     SELECT id, numero, data_venda, status, total, cliente
+     SELECT id, numero, data_venda, status, total, cliente, count(*) OVER ()::int AS __total
      FROM rows
      WHERE true${appendSearch(params, input.query)}${appendRecordStatusFilter(params, input.filters)}
-     ORDER BY data_venda DESC, id DESC
-     LIMIT 200`,
+     ORDER BY data_venda DESC, id DESC${appendPagination(params, input)}`,
     params,
   )
 
@@ -1350,6 +1477,7 @@ async function listSaleRecords(input: ListInput): Promise<ErpEntityRecord[]> {
     data: dateText(row.data_venda) || '',
     total: Number(row.total ?? 0),
     status: String(row.status ?? ''),
+    __total: Number(row.__total ?? 0),
   }))
 }
 
@@ -1385,11 +1513,10 @@ async function listPurchaseRecords(input: ListInput): Promise<ErpEntityRecord[]>
          ${movementClause}
      )
      SELECT id, numero, data_compra, data_prevista_entrega, status, tipo_compra, tipo_movimento,
-       total, gera_financeiro, fornecedor, tipo_lancamento
+       total, gera_financeiro, fornecedor, tipo_lancamento, count(*) OVER ()::int AS __total
      FROM rows
      WHERE true${appendSearch(params, input.query)}${appendRecordStatusFilter(params, input.filters)}
-     ORDER BY data_compra DESC, id DESC
-     LIMIT 200`,
+     ORDER BY data_compra DESC, id DESC${appendPagination(params, input)}`,
     params,
   )
 
@@ -1404,6 +1531,7 @@ async function listPurchaseRecords(input: ListInput): Promise<ErpEntityRecord[]>
     tipo_movimento: String(row.tipo_movimento ?? ''),
     financeiro: row.gera_financeiro ? (row.tipo_lancamento === 'previsao' ? 'Previsao' : row.tipo_lancamento === 'efetivo' ? 'Efetivo' : 'Ao efetivar') : 'Nao gera',
     status: String(row.status ?? ''),
+    __total: Number(row.__total ?? 0),
   }))
 }
 
@@ -1444,11 +1572,11 @@ async function listReceivables(input: ListInput): Promise<ErpEntityRecord[]> {
          AND contas.excluido_em IS NULL
        GROUP BY contas.id, contas.descricao, contas.numero_documento, contas.valor_total, contas.status, entidades.nome
      )
-     SELECT id, descricao, numero_documento, valor_total, valor_pago, status, cliente, vencimento, parcela_id
+     SELECT id, descricao, numero_documento, valor_total, valor_pago, status, cliente, vencimento, parcela_id,
+       count(*) OVER ()::int AS __total
      FROM rows
      WHERE true${appendSearch(params, input.query)}${appendRecordStatusFilter(params, input.filters)}
-     ORDER BY vencimento ASC NULLS LAST, id DESC
-     LIMIT 200`,
+     ORDER BY vencimento ASC NULLS LAST, id DESC${appendPagination(params, input)}`,
     params,
   )
 
@@ -1462,6 +1590,7 @@ async function listReceivables(input: ListInput): Promise<ErpEntityRecord[]> {
     valor: Number(row.valor_total ?? 0),
     valor_pago: Number(row.valor_pago ?? 0),
     status: String(row.status ?? ''),
+    __total: Number(row.__total ?? 0),
   }))
 }
 
@@ -1518,11 +1647,10 @@ async function listPayables(input: ListInput): Promise<ErpEntityRecord[]> {
      )
      SELECT conta_id, parcela_id, descricao, numero_documento, origem, tipo_lancamento,
        numero_parcela, data_vencimento, valor, valor_pago, saldo, status, fornecedor,
-       categoria, centro_custo, conta_financeira
+       categoria, centro_custo, conta_financeira, count(*) OVER ()::int AS __total
      FROM rows
      WHERE true${appendSearch(params, input.query)}${appendRecordStatusFilter(params, input.filters)}
-     ORDER BY data_vencimento ASC, parcela_id DESC
-     LIMIT 500`,
+     ORDER BY data_vencimento ASC, parcela_id DESC${appendPagination(params, input)}`,
     params,
   )
 
@@ -1544,6 +1672,7 @@ async function listPayables(input: ListInput): Promise<ErpEntityRecord[]> {
     centro_custo: String(row.centro_custo ?? ''),
     conta_financeira: String(row.conta_financeira ?? ''),
     status: String(row.status ?? ''),
+    __total: Number(row.__total ?? 0),
   }))
 }
 
@@ -2068,6 +2197,18 @@ export async function cancelErpPurchase(input: IdActionInput) {
     const purchase = purchaseResult.rows[0] as { id: string | number; status: string } | undefined
     if (!purchase) throw new Error('Compra nao encontrada.')
     if (purchase.status === 'cancelada') return { id: String(purchase.id), status: 'cancelada' }
+
+    const invoiceResult = await client.query(
+      `SELECT id
+       FROM erp.notas_fiscais
+       WHERE tenant_id = $1
+         AND compra_id = $2
+         AND excluido_em IS NULL
+         AND status NOT IN ('cancelada', 'falha')
+       LIMIT 1`,
+      [input.tenantId, purchase.id],
+    )
+    if (invoiceResult.rows[0]) throw new Error('Desvincule ou cancele a nota fiscal antes de cancelar a compra.')
 
     const paymentResult = await client.query(
       `SELECT pagamentos.id
@@ -2773,16 +2914,19 @@ async function createFinancialAccountRecord(client: SQLClient, input: CreateInpu
 }
 
 async function createSaleRecord(client: SQLClient, input: CreateInput) {
-  const customerId = numericId(input.values.cliente_id, 'Cliente')
-  const productId = numericId(input.values.produto_id, 'Produto')
-  const quantity = Number(input.values.quantidade || 1)
-  const unitValue = positiveMoney(input.values.valor_unitario)
-  if (!Number.isFinite(quantity) || quantity <= 0) throw new Error('Quantidade invalida.')
-  if (!unitValue) throw new Error('Valor unitario precisa ser maior que zero.')
+  const idempotencyKey = normalizedIdempotencyKey(input.idempotencyKey || input.values.chave_idempotencia)
+  if (idempotencyKey) {
+    await client.query(`SELECT pg_advisory_xact_lock(hashtextextended($1, 0))`, [`erp:venda:${input.tenantId}:${idempotencyKey}`])
+    const existing = await client.query(
+      `SELECT id FROM erp.vendas
+       WHERE tenant_id = $1 AND chave_idempotencia = $2 AND excluido_em IS NULL LIMIT 1`,
+      [input.tenantId, idempotencyKey],
+    )
+    if (existing.rows[0]) return fetchCreatedRecord(input.tenantId, input.entityId, existing.rows[0].id)
+  }
 
-  const total = Number((quantity * unitValue).toFixed(2))
+  const customerId = numericId(input.values.cliente_id, 'Cliente')
   const saleDate = dateText(input.values.data_venda) || new Date().toISOString().slice(0, 10)
-  const dueDate = dateText(input.values.data_vencimento) || saleDate
   const number = optionalText(input.values.numero) || `VEN-${Date.now()}`
 
   const customerResult = await client.query(
@@ -2797,6 +2941,82 @@ async function createSaleRecord(client: SQLClient, input: CreateInput) {
   )
   if (!customerResult.rows[0]) throw new Error('Cliente nao encontrado.')
 
+  const rawItems = Array.isArray(input.values.itens) && input.values.itens.length > 0
+    ? input.values.itens as Record<string, unknown>[]
+    : [{
+        tipo: 'produto',
+        item_id: input.values.produto_id,
+        descricao: input.values.descricao,
+        quantidade: input.values.quantidade,
+        valor_unitario: input.values.valor_unitario,
+      }]
+  if (rawItems.length > 100) throw new Error('A venda aceita no maximo 100 itens.')
+
+  const items: Array<{
+    tipo: 'produto' | 'servico'
+    itemId: number
+    descricao: string
+    quantidade: number
+    valorUnitario: number
+    desconto: number
+    total: number
+    custo: number
+  }> = []
+  for (const [index, raw] of rawItems.entries()) {
+    const tipo = text(raw.tipo || raw.kind) === 'servico' ? 'servico' : 'produto'
+    const itemId = numericId(raw.item_id || raw.produto_id || raw.servico_id, `Item ${index + 1}`)
+    const quantity = Number(raw.quantidade || 1)
+    const unitValue = positiveMoney(raw.valor_unitario)
+    const discount = money(raw.desconto)
+    if (!Number.isFinite(quantity) || quantity <= 0) throw new Error(`Quantidade do item ${index + 1} invalida.`)
+    if (!unitValue) throw new Error(`Valor unitario do item ${index + 1} precisa ser maior que zero.`)
+    const catalog = await client.query(
+      tipo === 'servico'
+        ? `SELECT nome, custo FROM erp.servicos WHERE tenant_id = $1 AND id = $2 AND ativo = true AND excluido_em IS NULL`
+        : `SELECT nome, custo FROM erp.produtos WHERE tenant_id = $1 AND id = $2 AND ativo = true AND excluido_em IS NULL`,
+      [input.tenantId, itemId],
+    )
+    if (!catalog.rows[0]) throw new Error(`Item ${index + 1} nao encontrado.`)
+    const gross = Number((quantity * unitValue).toFixed(2))
+    if (discount > gross) throw new Error(`Desconto do item ${index + 1} supera o valor bruto.`)
+    items.push({
+      tipo,
+      itemId,
+      descricao: optionalText(raw.descricao) || String(catalog.rows[0].nome),
+      quantidade: quantity,
+      valorUnitario: unitValue,
+      desconto: discount,
+      total: Number((gross - discount).toFixed(2)),
+      custo: money(catalog.rows[0].custo),
+    })
+  }
+
+  const subtotal = Number(items.reduce((sum, item) => sum + item.total, 0).toFixed(2))
+  const discount = money(input.values.desconto)
+  const freight = money(input.values.frete)
+  const total = Number((subtotal - discount + freight).toFixed(2))
+  if (total <= 0) throw new Error('Total da venda precisa ser maior que zero.')
+
+  const rawInstallments = Array.isArray(input.values.parcelas) && input.values.parcelas.length > 0
+    ? input.values.parcelas as Record<string, unknown>[]
+    : [{ numero_parcela: 1, descricao: 'Parcela 1', data_vencimento: dateText(input.values.data_vencimento) || saleDate, valor: total }]
+  if (rawInstallments.length > 48) throw new Error('A condicao de pagamento aceita no maximo 48 parcelas.')
+  const installments = rawInstallments.map((raw, index) => {
+    const value = positiveMoney(raw.valor)
+    const dueDate = dateText(raw.data_vencimento)
+    if (!value || !dueDate) throw new Error(`Parcela ${index + 1} invalida.`)
+    return {
+      numero: Number(raw.numero_parcela || index + 1),
+      descricao: optionalText(raw.descricao) || `Parcela ${index + 1}`,
+      vencimento: dueDate,
+      valor: value,
+      contaFinanceiraId: optionalNumericId(raw.conta_financeira_id) || optionalNumericId(input.values.conta_financeira_id),
+      metodoPagamentoId: optionalNumericId(raw.metodo_pagamento_id) || optionalNumericId(input.values.metodo_pagamento_id),
+    }
+  })
+  const installmentTotal = Number(installments.reduce((sum, installment) => sum + installment.valor, 0).toFixed(2))
+  if (installmentTotal !== total) throw new Error('A soma das parcelas precisa ser igual ao total da venda.')
+
   const saleResult = await client.query(
     `INSERT INTO erp.vendas (
        tenant_id,
@@ -2806,76 +3026,80 @@ async function createSaleRecord(client: SQLClient, input: CreateInput) {
        data_competencia,
        status,
        situacao,
+       categoria_id,
+       centro_custo_id,
+       conta_financeira_id,
+       metodo_pagamento_id,
        subtotal,
+       desconto,
+       frete,
        total,
        condicao_pagamento,
+       observacoes,
+       observacoes_pagamento,
+       cobranca_emails,
+       cobranca_whatsapp,
+       chave_idempotencia,
        criado_por,
        atualizado_por
      )
-     VALUES ($1, $2, $3, $4, $4, 'rascunho', 'em_andamento', $5, $5, $6::jsonb, $7, $7)
+     VALUES ($1, $2, $3, $4, $5, 'rascunho', 'em_andamento', $6, $7, $8, $9,
+       $10, $11, $12, $13, $14::jsonb, $15, $16, $17, $18, $19, $20, $20)
      RETURNING id`,
     [
       input.tenantId,
       customerId,
       number,
       saleDate,
+      dateText(input.values.data_competencia) || saleDate,
+      optionalNumericId(input.values.categoria_id),
+      optionalNumericId(input.values.centro_custo_id),
+      optionalNumericId(input.values.conta_financeira_id),
+      optionalNumericId(input.values.metodo_pagamento_id),
+      subtotal,
+      discount,
+      freight,
       total,
-      JSON.stringify({ parcelas: [{ numero_parcela: 1, descricao: 'Parcela 1', data_vencimento: dueDate, valor: total }] }),
+      JSON.stringify({ parcelas: installments.map((installment) => ({
+        numero_parcela: installment.numero,
+        descricao: installment.descricao,
+        data_vencimento: installment.vencimento,
+        valor: installment.valor,
+        conta_financeira_id: installment.contaFinanceiraId,
+        metodo_pagamento_id: installment.metodoPagamentoId,
+      })) }),
+      optionalText(input.values.observacoes),
+      optionalText(input.values.observacoes_pagamento),
+      stringArray(input.values.cobranca_emails),
+      optionalText(input.values.cobranca_whatsapp),
+      idempotencyKey,
       input.actorId,
     ],
   )
   const saleId = Number(saleResult.rows[0]?.id)
 
-  await client.query(
-    `INSERT INTO erp.vendas_recebimentos_previstos (
-       tenant_id,
-       venda_id,
-       numero_parcela,
-       descricao,
-       data_vencimento,
-       valor,
-       conta_financeira_id,
-       metodo_pagamento_id,
-       criado_por,
-       atualizado_por
-     )
-     VALUES ($1, $2, 1, 'Parcela 1', $3, $4, $5, $6, $7, $7)`,
-    [
-      input.tenantId,
-      saleId,
-      dueDate,
-      total,
-      paymentMethodId(input.values.conta_financeira_id),
-      paymentMethodId(input.values.metodo_pagamento_id),
-      input.actorId,
-    ],
-  )
+  for (const installment of installments) {
+    await client.query(
+      `INSERT INTO erp.vendas_recebimentos_previstos (
+         tenant_id, venda_id, numero_parcela, descricao, data_vencimento, valor,
+         conta_financeira_id, metodo_pagamento_id, criado_por, atualizado_por
+       ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $9)`,
+      [input.tenantId, saleId, installment.numero, installment.descricao, installment.vencimento,
+        installment.valor, installment.contaFinanceiraId, installment.metodoPagamentoId, input.actorId],
+    )
+  }
 
-  await client.query(
-    `INSERT INTO erp.vendas_itens (
-       tenant_id,
-       venda_id,
-       produto_id,
-       descricao,
-       quantidade,
-       valor_unitario,
-       custo_unitario,
-       total,
-       criado_por,
-       atualizado_por
-     )
-     VALUES ($1, $2, $3, $4, $5, $6, 0, $7, $8, $8)`,
-    [
-      input.tenantId,
-      saleId,
-      productId,
-      optionalText(input.values.descricao) || `Produto ${productId}`,
-      quantity,
-      unitValue,
-      total,
-      input.actorId,
-    ],
-  )
+  for (const item of items) {
+    await client.query(
+      `INSERT INTO erp.vendas_itens (
+         tenant_id, venda_id, produto_id, servico_id, descricao, quantidade,
+         valor_unitario, custo_unitario, desconto, total, criado_por, atualizado_por
+       ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $11)`,
+      [input.tenantId, saleId, item.tipo === 'produto' ? item.itemId : null,
+        item.tipo === 'servico' ? item.itemId : null, item.descricao, item.quantidade,
+        item.valorUnitario, item.custo, item.desconto, item.total, input.actorId],
+    )
+  }
 
   return fetchCreatedRecord(input.tenantId, input.entityId, saleId)
 }
@@ -3078,8 +3302,14 @@ function shiftDate(value: string, frequency: string, interval: number, occurrenc
   const amount = interval * occurrence
   if (frequency === 'dia') date.setUTCDate(date.getUTCDate() + amount)
   else if (frequency === 'semana') date.setUTCDate(date.getUTCDate() + (amount * 7))
-  else if (frequency === 'ano') date.setUTCFullYear(date.getUTCFullYear() + amount)
-  else date.setUTCMonth(date.getUTCMonth() + amount)
+  else {
+    const originalDay = date.getUTCDate()
+    const targetMonths = frequency === 'ano' ? amount * 12 : amount
+    date.setUTCDate(1)
+    date.setUTCMonth(date.getUTCMonth() + targetMonths)
+    const lastDay = new Date(Date.UTC(date.getUTCFullYear(), date.getUTCMonth() + 1, 0, 12)).getUTCDate()
+    date.setUTCDate(Math.min(originalDay, lastDay))
+  }
   return date.toISOString().slice(0, 10)
 }
 

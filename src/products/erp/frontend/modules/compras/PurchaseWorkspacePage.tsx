@@ -11,6 +11,7 @@ import { Label } from '@/components/ui/label'
 import { Switch } from '@/components/ui/switch'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { Textarea } from '@/components/ui/textarea'
+import { ErpPagination } from '@/products/erp/frontend/components/ErpPagination'
 
 type CatalogItem = {
   id: string
@@ -91,8 +92,10 @@ function newItem(): PurchaseItem {
 }
 
 function datePlusMonths(dateText: string, months: number) {
-  const date = new Date(`${dateText}T12:00:00Z`)
-  date.setUTCMonth(date.getUTCMonth() + months)
+  const [year, month, day] = dateText.split('-').map(Number)
+  const date = new Date(Date.UTC(year, month - 1 + months, 1, 12))
+  const lastDay = new Date(Date.UTC(date.getUTCFullYear(), date.getUTCMonth() + 1, 0, 12)).getUTCDate()
+  date.setUTCDate(Math.min(day, lastDay))
   return date.toISOString().slice(0, 10)
 }
 
@@ -111,6 +114,8 @@ async function parseResponse<T>(response: Response): Promise<T> {
 
 export function PurchaseWorkspacePage() {
   const [records, setRecords] = useState<PurchaseRecord[]>([])
+  const [page, setPage] = useState(1)
+  const [totalRecords, setTotalRecords] = useState(0)
   const [catalogs, setCatalogs] = useState<PurchaseCatalogs>(emptyCatalogs)
   const [query, setQuery] = useState('')
   const [movementFilter, setMovementFilter] = useState('')
@@ -148,21 +153,22 @@ export function PurchaseWorkspacePage() {
     setError(null)
     try {
       const params = new URLSearchParams()
+      params.set('page', String(page)); params.set('pageSize', '50')
       if (query.trim()) params.set('query', query.trim())
       if (movementFilter) params.set('filter.tipo_movimento', movementFilter)
       const [recordsResponse, catalogsResponse] = await Promise.all([
         fetch(`/api/erp/compras${params.size ? `?${params}` : ''}`, { cache: 'no-store' }),
         fetch('/api/erp/compras/catalogos', { cache: 'no-store' }),
       ])
-      const recordBody = await parseResponse<{ records: PurchaseRecord[] }>(recordsResponse)
-      setRecords(recordBody.records)
+      const recordBody = await parseResponse<{ records: PurchaseRecord[]; total: number }>(recordsResponse)
+      setRecords(recordBody.records); setTotalRecords(recordBody.total)
       setCatalogs(await parseResponse<PurchaseCatalogs>(catalogsResponse))
     } catch (loadError) {
       setError(loadError instanceof Error ? loadError.message : 'Nao foi possivel carregar compras.')
     } finally {
       setLoading(false)
     }
-  }, [movementFilter, query])
+  }, [movementFilter, page, query])
 
   useEffect(() => { void loadData() }, [loadData])
 
@@ -291,8 +297,8 @@ export function PurchaseWorkspacePage() {
       </div>
 
       <div className="flex flex-col gap-2 border-y py-3 md:flex-row">
-        <Input value={query} placeholder="Buscar por numero ou fornecedor" className="md:max-w-sm" onChange={(event) => setQuery(event.target.value)} />
-        <select value={movementFilter} className="h-10 rounded-md bg-gray-50 px-3 text-sm" onChange={(event) => setMovementFilter(event.target.value)}>
+        <Input value={query} placeholder="Buscar por numero ou fornecedor" className="md:max-w-sm" onChange={(event) => { setQuery(event.target.value); setPage(1) }} />
+        <select value={movementFilter} className="h-10 rounded-md bg-gray-50 px-3 text-sm" onChange={(event) => { setMovementFilter(event.target.value); setPage(1) }}>
           <option value="">Todos os movimentos</option><option value="cotacao">Cotacoes</option><option value="pedido_recorrente">Pedidos recorrentes</option><option value="pedido_compra">Pedidos de compra</option><option value="compra">Compras</option><option value="cancelada">Canceladas</option>
         </select>
       </div>
@@ -303,6 +309,7 @@ export function PurchaseWorkspacePage() {
           <TableBody>{loading ? <TableRow><TableCell colSpan={8} className="h-32 text-center text-gray-500"><Loader2 className="mx-auto mb-2 size-5 animate-spin" />Carregando</TableCell></TableRow> : records.length === 0 ? <TableRow><TableCell colSpan={8} className="h-32 text-center text-gray-500">Nenhuma compra encontrada.</TableCell></TableRow> : records.map((record) => <TableRow key={record.id}>
             <TableCell className="font-medium">{record.numero}</TableCell><TableCell>{record.fornecedor}</TableCell><TableCell><Badge variant="outline">{movementLabel(record.tipo_movimento)}</Badge></TableCell><TableCell>{record.data}</TableCell><TableCell>{record.entrega || '-'}</TableCell><TableCell>{record.financeiro}</TableCell><TableCell className="text-right font-medium">{formatCurrency(record.total)}</TableCell><TableCell><div className="flex justify-end gap-1">{!['compra', 'cancelada'].includes(record.tipo_movimento) ? <Button size="icon" variant="ghost" title="Efetivar compra" onClick={() => void runAction(record, 'confirmar')}><Check className="size-4" /></Button> : null}{record.tipo_movimento !== 'cancelada' ? <Button size="icon" variant="ghost" title="Cancelar" onClick={() => void runAction(record, 'cancelar')}><X className="size-4" /></Button> : null}</div></TableCell>
           </TableRow>)}</TableBody></Table>
+        <ErpPagination page={page} pageSize={50} total={totalRecords} onPageChange={setPage} />
       </div>
 
       <Dialog open={editorOpen} onOpenChange={setEditorOpen}><DialogContent className="h-[94vh] max-w-[min(1180px,96vw)] gap-0 overflow-hidden p-0">
