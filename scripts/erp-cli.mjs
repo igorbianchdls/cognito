@@ -162,6 +162,30 @@ async function ensureCustomer(client, tenantId, actorId, args) {
   return result.rows[0]
 }
 
+async function ensureSupplier(client, tenantId, actorId, args) {
+  if (args['supplier-id']) {
+    const supplierId = intArg(args['supplier-id'], 'Fornecedor')
+    const result = await client.query(
+      `SELECT id, nome, documento FROM erp.entidades
+       WHERE tenant_id = $1 AND id = $2 AND eh_fornecedor = true AND excluido_em IS NULL`,
+      [tenantId, supplierId],
+    )
+    if (!result.rows[0]) throw new Error(`Fornecedor ${supplierId} nao encontrado neste tenant.`)
+    return result.rows[0]
+  }
+
+  const stamp = Date.now()
+  const result = await client.query(
+    `INSERT INTO erp.entidades (
+       tenant_id, tipo_pessoa, nome, documento, eh_cliente, eh_fornecedor,
+       ativo, criado_por, atualizado_por
+     ) VALUES ($1, 'juridica', $2, $3, false, true, true, $4, $4)
+     RETURNING id, nome, documento`,
+    [tenantId, args['supplier-name'] || `Fornecedor CLI ${stamp}`, `FORN-CLI-${stamp}`, actorId],
+  )
+  return result.rows[0]
+}
+
 async function ensureProduct(client, tenantId, actorId, args) {
   if (args['product-id']) {
     const productId = intArg(args['product-id'], 'Produto')
@@ -817,6 +841,86 @@ async function runSupabaseSmoke(args) {
   }
 }
 
+async function runPurchaseSmoke(pool, tenant, actor, args) {
+  return withTransaction(pool, async (client) => {
+    const supplier = await ensureSupplier(client, tenant.id, actor.id, args)
+    const product = await ensureProduct(client, tenant.id, actor.id, args)
+    const quantity = money(args.quantity, 2)
+    const unitValue = money(args['unit-price'], 125)
+    const total = Number((quantity * unitValue).toFixed(2))
+    const date = args.date || today()
+    const dueDate = args['due-date'] || date
+    const number = args.number || `CLI-COM-${Date.now()}`
+
+    const purchaseResult = await client.query(
+      `INSERT INTO erp.compras (
+         tenant_id, fornecedor_id, numero, data_compra, data_competencia,
+         status, tipo_compra, tipo_movimento, origem, fornecedor_nome_snapshot,
+         fornecedor_documento_snapshot, subtotal, total, gera_financeiro,
+         condicao_pagamento, criado_por, atualizado_por
+       ) VALUES ($1, $2, $3, $4, $4, 'confirmada', 'produto', 'pedido_compra',
+         'manual', $5, $6, $7, $7, true, $8::jsonb, $9, $9)
+       RETURNING id, numero, tipo_movimento, total`,
+      [tenant.id, supplier.id, number, date, supplier.nome, supplier.documento, total, JSON.stringify({ parcelas: [{ numero_parcela: 1, data_vencimento: dueDate, valor: total }] }), actor.id],
+    )
+    const purchase = purchaseResult.rows[0]
+
+    await client.query(
+      `INSERT INTO erp.compras_itens (
+         tenant_id, compra_id, produto_id, descricao, quantidade, valor_unitario,
+         valor_bruto, valor_liquido, total, item_descricao_snapshot, criado_por, atualizado_por
+       ) VALUES ($1, $2, $3, $4, $5, $6, $7, $7, $7, $4, $8, $8)`,
+      [tenant.id, purchase.id, product.id, product.nome, quantity, unitValue, total, actor.id],
+    )
+    await client.query(
+      `INSERT INTO erp.compras_parcelas_previstas (
+         tenant_id, compra_id, numero_parcela, descricao, data_vencimento, valor, criado_por, atualizado_por
+       ) VALUES ($1, $2, 1, 'Parcela 1', $3, $4, $5, $5)`,
+      [tenant.id, purchase.id, dueDate, total, actor.id],
+    )
+
+    const payableResult = await client.query(
+      `INSERT INTO erp.contas_pagar (
+         tenant_id, fornecedor_id, compra_id, descricao, numero_documento,
+         data_competencia, data_emissao, valor_total, status, origem,
+         tipo_lancamento, fornecedor_nome_snapshot, fornecedor_documento_snapshot,
+         criado_por, atualizado_por
+       ) VALUES ($1, $2, $3, $4, $5, $6, $6, $7, 'aberto', 'compra',
+         'previsao', $8, $9, $10, $10)
+       RETURNING id, tipo_lancamento`,
+      [tenant.id, supplier.id, purchase.id, `Previsao ${number}`, number, date, total, supplier.nome, supplier.documento, actor.id],
+    )
+    const payable = payableResult.rows[0]
+    await client.query(
+      `INSERT INTO erp.contas_pagar_parcelas (
+         tenant_id, conta_pagar_id, numero_parcela, descricao, data_vencimento,
+         data_pagamento_previsto, valor, valor_bruto, valor_liquido, valor_pago,
+         status, criado_por, atualizado_por
+       ) VALUES ($1, $2, 1, 'Parcela 1', $3, $3, $4, $4, $4, 0, 'aberto', $5, $5)`,
+      [tenant.id, payable.id, dueDate, total, actor.id],
+    )
+
+    await client.query(
+      `UPDATE erp.compras SET status = 'recebida', tipo_movimento = 'compra', recebida_em = now(), atualizado_por = $3
+       WHERE tenant_id = $1 AND id = $2`,
+      [tenant.id, purchase.id, actor.id],
+    )
+    const effectiveResult = await client.query(
+      `UPDATE erp.contas_pagar SET tipo_lancamento = 'efetivo', efetivado_em = now(), descricao = $3, atualizado_por = $4
+       WHERE tenant_id = $1 AND id = $2 RETURNING id, tipo_lancamento`,
+      [tenant.id, payable.id, `Compra ${number}`, actor.id],
+    )
+    const countResult = await client.query(
+      `SELECT count(*)::int AS total FROM erp.contas_pagar
+       WHERE tenant_id = $1 AND compra_id = $2 AND excluido_em IS NULL`,
+      [tenant.id, purchase.id],
+    )
+    const payableCount = Number(countResult.rows[0]?.total || 0)
+    const ok = payableCount === 1 && String(effectiveResult.rows[0]?.id) === String(payable.id) && effectiveResult.rows[0]?.tipo_lancamento === 'efetivo'
+    return { ok, supplier, product, purchase, payable: effectiveResult.rows[0], payableCount }
+  })
+}
+
 async function setupContext(pool, args) {
   return withTransaction(pool, async (client) => {
     const tenant = await resolveTenant(client, args)
@@ -834,11 +938,13 @@ Uso:
   node scripts/erp-cli.mjs sale:smoke [--tenant-id 1] [--actor-id 1]
   node scripts/erp-cli.mjs sale:create [--tenant-id 1] [--customer-id 1] [--product-id 1] [--quantity 2] [--unit-price 150]
   node scripts/erp-cli.mjs sale:confirm --sale-id 123 [--tenant-id 1]
+  node scripts/erp-cli.mjs purchase:smoke [--tenant-id 1] [--actor-id 1]
 
 Comandos:
   sale:smoke    cria cliente/produto/venda, confirma duas vezes e valida idempotencia
   sale:create   cria uma venda rascunho com um item
   sale:confirm  confirma uma venda existente e gera contas a receber
+  purchase:smoke cria pedido, previsao e compra efetiva sem duplicar contas a pagar
 
 Obs:
   sale:smoke usa Supabase CLI por padrao. Use --transport pg para forcar conexao direta.
@@ -931,6 +1037,22 @@ async function main() {
       }, null, 2))
 
       if (!ok) process.exitCode = 1
+      return
+    }
+
+    if (command === 'purchase:smoke') {
+      const result = await runPurchaseSmoke(pool, tenant, actor, args)
+      console.log(JSON.stringify({
+        ok: result.ok,
+        tenant,
+        actor,
+        supplier: result.supplier,
+        product: result.product,
+        purchase: result.purchase,
+        payable: result.payable,
+        checks: { payableCount: result.payableCount, reusedForecast: result.ok },
+      }, null, 2))
+      if (!result.ok) process.exitCode = 1
       return
     }
 

@@ -5,6 +5,9 @@ import { SidebarShadcn } from '@/components/navigation/SidebarShadcn'
 import { SidebarInset, SidebarProvider } from '@/components/ui/sidebar'
 import { ErpEntityPage } from '@/products/erp/frontend/components/ErpEntityPage'
 import { ErpShell } from '@/products/erp/frontend/layout/ErpShell'
+import { PurchaseWorkspacePage } from '@/products/erp/frontend/modules/compras/PurchaseWorkspacePage'
+import { PurchaseInvoicesPage } from '@/products/erp/frontend/modules/compras/PurchaseInvoicesPage'
+import { PayablesWorkspacePage } from '@/products/erp/frontend/modules/financeiro/PayablesWorkspacePage'
 import { getErpEntityConfig } from '@/products/erp/frontend/modules/entityRegistry'
 import { OverviewPage } from '@/products/erp/frontend/modules/overview/OverviewPage'
 import { getErpModule, getErpSection } from '@/products/erp/shared/navigation'
@@ -52,6 +55,14 @@ export default function ErpPage({
           <ErpShell sectionId={sectionConfig.id} moduleId={moduleConfig?.id}>
             {sectionConfig.id === 'overview' ? (
               <OverviewPage />
+            ) : sectionConfig.id === 'compras' && moduleConfig?.id === 'pedidos-compra' ? (
+              <PurchaseWorkspacePage />
+            ) : sectionConfig.id === 'compras' && moduleConfig?.id === 'parcelas-a-pagar' ? (
+              <PayablesWorkspacePage purchaseOnly />
+            ) : sectionConfig.id === 'compras' && moduleConfig?.id === 'notas-compra' ? (
+              <PurchaseInvoicesPage />
+            ) : sectionConfig.id === 'financeiro' && moduleConfig?.id === 'contas-a-pagar' ? (
+              <PayablesWorkspacePage />
             ) : entityConfig ? (
               <ErpEntityPage config={entityConfig} />
             ) : (
@@ -63,4 +74,3 @@ export default function ErpPage({
     </SidebarProvider>
   )
 }
-

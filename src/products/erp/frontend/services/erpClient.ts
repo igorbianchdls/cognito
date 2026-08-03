@@ -74,6 +74,7 @@ export const erpClient: ErpClient = {
       headers: {
         Accept: 'application/json',
         'Content-Type': 'application/json',
+        'Idempotency-Key': typeof crypto !== 'undefined' && 'randomUUID' in crypto ? crypto.randomUUID() : `${Date.now()}-${Math.random()}`,
       },
       body: JSON.stringify({ values: request.values }),
     })

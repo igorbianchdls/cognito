@@ -54,9 +54,9 @@ export const ERP_NAVIGATION: ErpNavigationItem[] = [
     icon: IconClipboardList,
     description: 'Ciclo de compras e recebimentos.',
     modules: [
-      { id: 'pedidos-compra', label: 'Pedidos de compra', href: '/erp/compras/pedidos-compra', description: 'Compras em andamento.' },
-      { id: 'cotacoes', label: 'Cotacoes', href: '/erp/compras/cotacoes', description: 'Comparacao de fornecedores.' },
-      { id: 'recebimentos', label: 'Recebimentos', href: '/erp/compras/recebimentos', description: 'Entradas aguardando conferencia.' },
+      { id: 'pedidos-compra', label: 'Compras', href: '/erp/compras/pedidos-compra', description: 'Cotacoes, pedidos e compras efetivas.' },
+      { id: 'parcelas-a-pagar', label: 'Parcelas a pagar', href: '/erp/compras/parcelas-a-pagar', description: 'Parcelas originadas de compras.' },
+      { id: 'notas-compra', label: 'Notas de compra', href: '/erp/compras/notas-compra', description: 'NF-e recebidas e vinculacoes.' },
     ],
   },
   {

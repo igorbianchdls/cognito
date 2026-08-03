@@ -15,6 +15,8 @@ export type ErpModuleId =
   | 'pedidos-compra'
   | 'cotacoes'
   | 'recebimentos'
+  | 'parcelas-a-pagar'
+  | 'notas-compra'
   | 'movimentacoes'
   | 'inventario'
   | 'transferencias'

@@ -47,6 +47,7 @@ export async function POST(request: Request) {
       entityId: 'pedidos-compra',
       tenantId: tenant.tenantId,
       values: body.values || {},
+      idempotencyKey: request.headers.get('idempotency-key') || undefined,
     })
     return NextResponse.json({ record }, { status: 201 })
   } catch (error) {
