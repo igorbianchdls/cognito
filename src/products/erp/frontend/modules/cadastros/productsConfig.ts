@@ -19,12 +19,11 @@ export const productsConfig: ErpEntityConfig<ErpEntityRecord> = {
   fields: [
     { key: 'nome', label: 'Nome do produto', type: 'text', required: true },
     { key: 'sku', label: 'SKU', type: 'text', required: true },
-    { key: 'categoria', label: 'Categoria', type: 'select', options: [{ value: 'Kits', label: 'Kits' }, { value: 'Eletronicos', label: 'Eletronicos' }, { value: 'Cabos', label: 'Cabos' }, { value: 'Estrutura', label: 'Estrutura' }] },
+    { key: 'categoria', label: 'Categoria', type: 'select' },
     { key: 'preco', label: 'Preco', type: 'number', required: true },
   ],
   filters: [
     { key: 'status', label: 'Status', allLabel: 'Todos os status', options: [{ value: 'ativo', label: 'Ativo' }, { value: 'pausado', label: 'Pausado' }] },
-    { key: 'categoria', label: 'Categoria', allLabel: 'Todas as categorias', options: [{ value: 'Kits', label: 'Kits' }, { value: 'Eletronicos', label: 'Eletronicos' }, { value: 'Cabos', label: 'Cabos' }, { value: 'Estrutura', label: 'Estrutura' }] },
   ],
   metrics: [
     { label: 'SKUs ativos', value: '0', detail: 'catalogo conectado' },

@@ -6,6 +6,7 @@ import type {
   ErpEntityActionResponse,
   ErpEntityListRequest,
   ErpEntityListResponse,
+  ErpEntityUpdateRequest,
 } from '@/products/erp/shared/contracts'
 import type { ErpEntityConfig, ErpEntityRecord } from '@/products/erp/shared/types'
 
@@ -24,6 +25,8 @@ function buildListUrl<TRecord extends ErpEntityRecord>(
   const params = new URLSearchParams()
   const query = request?.query?.trim()
   if (query) params.set('query', query)
+  if (request?.page) params.set('page', String(request.page))
+  if (request?.pageSize) params.set('pageSize', String(request.pageSize))
 
   Object.entries(request?.filters || {}).forEach(([key, value]) => {
     if (value) params.set(`filter.${key}`, value)
@@ -77,6 +80,31 @@ export const erpClient: ErpClient = {
         'Idempotency-Key': typeof crypto !== 'undefined' && 'randomUUID' in crypto ? crypto.randomUUID() : `${Date.now()}-${Math.random()}`,
       },
       body: JSON.stringify({ values: request.values }),
+    })
+    return parseJsonResponse<ErpEntityCreateResponse<TRecord>>(response)
+  },
+
+  async getEntityRecord<TRecord extends ErpEntityRecord>(config: ErpEntityConfig<TRecord>, id: string) {
+    const response = await fetch(`/api/erp/${encodeURIComponent(config.id)}/${encodeURIComponent(id)}`, { cache: 'no-store' })
+    return parseJsonResponse<ErpEntityCreateResponse<TRecord>>(response)
+  },
+
+  async updateEntityRecord<TRecord extends ErpEntityRecord>(
+    config: ErpEntityConfig<TRecord>, id: string, request: ErpEntityUpdateRequest,
+  ) {
+    const response = await fetch(`/api/erp/${encodeURIComponent(config.id)}/${encodeURIComponent(id)}`, {
+      method: 'PATCH',
+      headers: { Accept: 'application/json', 'Content-Type': 'application/json' },
+      body: JSON.stringify(request),
+    })
+    return parseJsonResponse<ErpEntityCreateResponse<TRecord>>(response)
+  },
+
+  async deactivateEntityRecord<TRecord extends ErpEntityRecord>(config: ErpEntityConfig<TRecord>, id: string, expectedVersion: number) {
+    const response = await fetch(`/api/erp/${encodeURIComponent(config.id)}/${encodeURIComponent(id)}`, {
+      method: 'DELETE',
+      headers: { Accept: 'application/json', 'Content-Type': 'application/json' },
+      body: JSON.stringify({ expectedVersion }),
     })
     return parseJsonResponse<ErpEntityCreateResponse<TRecord>>(response)
   },

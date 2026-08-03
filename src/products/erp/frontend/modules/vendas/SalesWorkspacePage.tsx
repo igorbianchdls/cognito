@@ -1,7 +1,7 @@
 'use client'
 
 import { useCallback, useDeferredValue, useEffect, useMemo, useState } from 'react'
-import { CalendarDays, Check, Loader2, Plus, RefreshCw, Trash2, X } from 'lucide-react'
+import { CalendarDays, Check, Eye, Loader2, Pencil, Plus, RefreshCw, Trash2, X } from 'lucide-react'
 
 import { Button } from '@/components/ui/button'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
@@ -10,6 +10,7 @@ import { Label } from '@/components/ui/label'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { Textarea } from '@/components/ui/textarea'
 import { ErpPagination } from '@/products/erp/frontend/components/ErpPagination'
+import { ErpDocumentDetailsDialog } from '@/products/erp/frontend/components/ErpDocumentDetailsDialog'
 
 type Option = { id: string; nome: string; codigo?: string; unidade?: string; valor_padrao?: number; padrao?: boolean }
 type Customer = Option & { documento?: string; email?: string; celular?: string; telefone?: string; contato_cobranca_emails?: string[]; contato_cobranca_whatsapp?: string }
@@ -62,6 +63,10 @@ export function SalesWorkspacePage() {
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [editorOpen, setEditorOpen] = useState(false)
+  const [detailsOpen, setDetailsOpen] = useState(false)
+  const [detailsLoading, setDetailsLoading] = useState(false)
+  const [details, setDetails] = useState<{ sale: Record<string, unknown>; items: Record<string, unknown>[]; installments: Record<string, unknown>[]; events: Record<string, unknown>[] } | null>(null)
+  const [editingSale, setEditingSale] = useState<{ id: string; version: number } | null>(null)
 
   const [customerId, setCustomerId] = useState('')
   const [number, setNumber] = useState('')
@@ -122,6 +127,7 @@ export function SalesWorkspacePage() {
     setItems([newItem()]); setDiscount('0'); setFreight('0'); setBillingEmails(''); setBillingWhatsapp(''); setNotes('')
     setInstallments([{ numero: 1, vencimento: date, valor: '0', contaFinanceiraId: catalogs.financialAccounts.find((item) => item.padrao)?.id || '', metodoPagamentoId: '' }])
     setError(null)
+    setEditingSale(null)
   }
 
   function selectCustomer(id: string) {
@@ -149,10 +155,10 @@ export function SalesWorkspacePage() {
   async function saveSale() {
     setSaving(true); setError(null)
     try {
-      await parseResponse(await fetch('/api/erp/vendas', {
-        method: 'POST',
+      await parseResponse(await fetch(editingSale ? `/api/erp/vendas/${editingSale.id}` : '/api/erp/vendas', {
+        method: editingSale ? 'PATCH' : 'POST',
         headers: { 'Content-Type': 'application/json', 'Idempotency-Key': crypto.randomUUID() },
-        body: JSON.stringify({ values: {
+        body: JSON.stringify({ expectedVersion: editingSale?.version, values: {
           cliente_id: customerId, numero: number, data_venda: saleDate, data_competencia: competence,
           categoria_id: categoryId, centro_custo_id: costCenterId, desconto: discount, frete: freight,
           itens: items.map((item) => ({ tipo: item.tipo, item_id: item.itemId, descricao: item.descricao, quantidade: item.quantidade, valor_unitario: item.valorUnitario, desconto: item.desconto })),
@@ -176,18 +182,54 @@ export function SalesWorkspacePage() {
     finally { setLoading(false) }
   }
 
+  async function openDetails(record: SaleRecord) {
+    setDetailsOpen(true); setDetailsLoading(true); setDetails(null); setError(null)
+    try {
+      setDetails(await parseResponse(await fetch(`/api/erp/vendas/${record.id}`, { cache: 'no-store' })))
+    } catch (detailError) {
+      setError(detailError instanceof Error ? detailError.message : 'Nao foi possivel carregar a venda.')
+      setDetailsOpen(false)
+    } finally { setDetailsLoading(false) }
+  }
+
+  async function openEdit(record: SaleRecord) {
+    setLoading(true); setError(null)
+    try {
+      const body = await parseResponse<{ sale: Record<string, unknown>; items: Record<string, unknown>[]; installments: Record<string, unknown>[] }>(
+        await fetch(`/api/erp/vendas/${record.id}`, { cache: 'no-store' }),
+      )
+      const sale = body.sale
+      setEditingSale({ id: record.id, version: Number(sale.versao || 1) })
+      setCustomerId(String(sale.cliente_id || '')); setNumber(String(sale.numero || ''))
+      setSaleDate(String(sale.data_venda || '').slice(0, 10)); setCompetence(String(sale.data_competencia || sale.data_venda || '').slice(0, 10))
+      setCategoryId(String(sale.categoria_id || '')); setCostCenterId(String(sale.centro_custo_id || ''))
+      setDiscount(String(sale.desconto || 0)); setFreight(String(sale.frete || 0)); setNotes(String(sale.observacoes || ''))
+      setBillingEmails(Array.isArray(sale.cobranca_emails) ? sale.cobranca_emails.join(', ') : '')
+      setBillingWhatsapp(String(sale.cobranca_whatsapp || ''))
+      setItems(body.items.map((item) => ({ rowId: crypto.randomUUID(), tipo: item.tipo === 'servico' ? 'servico' : 'produto',
+        itemId: String(item.item_id || ''), descricao: String(item.descricao || ''), unidade: 'UN', quantidade: String(item.quantidade || 1),
+        valorUnitario: String(item.valor_unitario || 0), desconto: String(item.desconto || 0) })))
+      setInstallments(body.installments.map((row) => ({ numero: Number(row.numero_parcela || 1), vencimento: String(row.data_vencimento || '').slice(0, 10),
+        valor: String(row.valor || 0), contaFinanceiraId: String(row.conta_financeira_id || ''), metodoPagamentoId: String(row.metodo_pagamento_id || '') })))
+      setEditorOpen(true)
+    } catch (editError) { setError(editError instanceof Error ? editError.message : 'Nao foi possivel editar a venda.') }
+    finally { setLoading(false) }
+  }
+
   return <div className="flex min-h-full flex-col gap-5">
     <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between"><div><p className="text-xs font-medium text-gray-500">ERP / Vendas</p><h1 className="mt-1 text-2xl font-semibold text-gray-950">Vendas</h1><p className="mt-1 text-sm text-gray-600">Pedidos, recebimentos previstos e confirmacao financeira.</p></div><div className="flex gap-2"><Button variant="outline" size="icon" title="Atualizar" onClick={() => void loadData()}><RefreshCw className="size-4" /></Button><Button onClick={() => { resetForm(); setEditorOpen(true) }}><Plus className="size-4" />Nova venda</Button></div></div>
     <div className="flex flex-col gap-2 border-y py-3 md:flex-row"><Input value={query} placeholder="Buscar por numero ou cliente" className="md:max-w-sm" onChange={(event) => { setQuery(event.target.value); setPage(1) }} /><select value={status} className="h-10 rounded-md bg-gray-50 px-3 text-sm" onChange={(event) => { setStatus(event.target.value); setPage(1) }}><option value="">Todas as situacoes</option><option value="rascunho">Rascunho</option><option value="confirmada">Confirmada</option><option value="faturada">Faturada</option><option value="cancelada">Cancelada</option></select></div>
     {error ? <div className="rounded-md border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">{error}</div> : null}
-    <div className="overflow-hidden rounded-md border bg-white"><Table><TableHeader><TableRow className="bg-gray-50"><TableHead>Numero</TableHead><TableHead>Cliente</TableHead><TableHead>Data</TableHead><TableHead className="text-right">Total</TableHead><TableHead>Situacao</TableHead><TableHead className="w-28" /></TableRow></TableHeader><TableBody>{loading ? <TableRow><TableCell colSpan={6} className="h-32 text-center text-gray-500"><Loader2 className="mx-auto mb-2 size-5 animate-spin" />Carregando</TableCell></TableRow> : records.length === 0 ? <TableRow><TableCell colSpan={6} className="h-32 text-center text-gray-500">Nenhuma venda encontrada.</TableCell></TableRow> : records.map((record) => <TableRow key={record.id}><TableCell className="font-medium">{record.numero}</TableCell><TableCell>{record.cliente}</TableCell><TableCell>{record.data}</TableCell><TableCell className="text-right font-medium">{currency(record.total)}</TableCell><TableCell><span className={`inline-flex rounded-full border px-2 py-1 text-xs font-medium ${statusTone(record.status)}`}>{record.status}</span></TableCell><TableCell><div className="flex justify-end gap-1">{record.status === 'rascunho' ? <Button size="icon" variant="ghost" title="Confirmar venda" onClick={() => void runAction(record, 'confirmar')}><Check className="size-4" /></Button> : null}{record.status !== 'cancelada' ? <Button size="icon" variant="ghost" title="Cancelar venda" onClick={() => void runAction(record, 'cancelar')}><X className="size-4" /></Button> : null}</div></TableCell></TableRow>)}</TableBody></Table><ErpPagination page={page} pageSize={50} total={totalRecords} onPageChange={setPage} /></div>
+    <div className="overflow-hidden rounded-md border bg-white"><Table><TableHeader><TableRow className="bg-gray-50"><TableHead>Numero</TableHead><TableHead>Cliente</TableHead><TableHead>Data</TableHead><TableHead className="text-right">Total</TableHead><TableHead>Situacao</TableHead><TableHead className="w-44" /></TableRow></TableHeader><TableBody>{loading ? <TableRow><TableCell colSpan={6} className="h-32 text-center text-gray-500"><Loader2 className="mx-auto mb-2 size-5 animate-spin" />Carregando</TableCell></TableRow> : records.length === 0 ? <TableRow><TableCell colSpan={6} className="h-32 text-center text-gray-500">Nenhuma venda encontrada.</TableCell></TableRow> : records.map((record) => <TableRow key={record.id}><TableCell className="font-medium">{record.numero}</TableCell><TableCell>{record.cliente}</TableCell><TableCell>{record.data}</TableCell><TableCell className="text-right font-medium">{currency(record.total)}</TableCell><TableCell><span className={`inline-flex rounded-full border px-2 py-1 text-xs font-medium ${statusTone(record.status)}`}>{record.status}</span></TableCell><TableCell><div className="flex justify-end gap-1"><Button size="icon" variant="ghost" title="Ver detalhes" onClick={() => void openDetails(record)}><Eye className="size-4" /></Button>{record.status === 'rascunho' ? <Button size="icon" variant="ghost" title="Editar venda" onClick={() => void openEdit(record)}><Pencil className="size-4" /></Button> : null}{record.status === 'rascunho' ? <Button size="icon" variant="ghost" title="Confirmar venda" onClick={() => void runAction(record, 'confirmar')}><Check className="size-4" /></Button> : null}{record.status !== 'cancelada' ? <Button size="icon" variant="ghost" title="Cancelar venda" onClick={() => void runAction(record, 'cancelar')}><X className="size-4" /></Button> : null}</div></TableCell></TableRow>)}</TableBody></Table><ErpPagination page={page} pageSize={50} total={totalRecords} onPageChange={setPage} /></div>
 
-    <Dialog open={editorOpen} onOpenChange={setEditorOpen}><DialogContent className="h-[94vh] max-w-[min(1180px,96vw)] gap-0 overflow-hidden p-0"><DialogHeader className="border-b px-6 py-4"><DialogTitle>Nova venda</DialogTitle></DialogHeader><div className="overflow-y-auto">
+    <Dialog open={editorOpen} onOpenChange={setEditorOpen}><DialogContent className="h-[94vh] max-w-[min(1180px,96vw)] gap-0 overflow-hidden p-0"><DialogHeader className="border-b px-6 py-4"><DialogTitle>{editingSale ? 'Editar venda' : 'Nova venda'}</DialogTitle></DialogHeader><div className="overflow-y-auto">
       <section className="grid gap-4 border-b px-6 py-5"><h2 className="text-sm font-semibold">Informacoes da venda</h2><div className="grid gap-4 md:grid-cols-4"><FieldSelect label="Cliente *" value={customerId} onChange={selectCustomer} options={catalogs.customers.map((item) => [item.id, `${item.nome}${item.documento ? ` - ${item.documento}` : ''}`])} /><FieldInput label="Numero" value={number} onChange={setNumber} placeholder="Automatico" /><FieldInput label="Data da venda" value={saleDate} onChange={setSaleDate} type="date" /><FieldInput label="Competencia" value={competence} onChange={setCompetence} type="date" /><FieldSelect label="Categoria financeira" value={categoryId} onChange={setCategoryId} options={catalogs.categories.map((item) => [item.id, item.nome])} /><FieldSelect label="Centro de custo" value={costCenterId} onChange={setCostCenterId} options={catalogs.costCenters.map((item) => [item.id, item.nome])} /><FieldInput label="Emails de cobranca" value={billingEmails} onChange={setBillingEmails} placeholder="financeiro@cliente.com" /><FieldInput label="WhatsApp de cobranca" value={billingWhatsapp} onChange={setBillingWhatsapp} /></div></section>
       <section className="grid gap-4 border-b px-6 py-5"><div className="flex items-center justify-between"><h2 className="text-sm font-semibold">Itens da venda</h2><Button variant="outline" size="sm" onClick={() => setItems((current) => [...current, newItem()])}><Plus className="size-4" />Adicionar item</Button></div><div className="hidden grid-cols-[120px_2fr_100px_120px_120px_120px_40px] gap-2 px-1 text-xs font-medium text-gray-500 md:grid"><span>Tipo</span><span>Produto ou servico</span><span>Quantidade</span><span>Valor unitario</span><span>Desconto</span><span>Total</span><span /></div>{items.map((item) => { const catalog = item.tipo === 'produto' ? catalogs.products : catalogs.services; const itemTotal = Math.max(0, money(item.quantidade) * money(item.valorUnitario) - money(item.desconto)); return <div key={item.rowId} className="grid gap-2 rounded-md border p-3 md:grid-cols-[120px_2fr_100px_120px_120px_120px_40px]"><select value={item.tipo} className="h-10 rounded-md bg-gray-50 px-2 text-sm" onChange={(event) => setItems((current) => current.map((row) => row.rowId === item.rowId ? { ...newItem(), rowId: row.rowId, tipo: event.target.value as 'produto' | 'servico' } : row))}><option value="produto">Produto</option><option value="servico">Servico</option></select><select value={item.itemId} className="h-10 rounded-md bg-gray-50 px-2 text-sm" onChange={(event) => selectCatalogItem(item.rowId, event.target.value)}><option value="">Selecione</option>{catalog.map((option) => <option key={option.id} value={option.id}>{option.codigo ? `${option.codigo} - ` : ''}{option.nome}</option>)}</select><Input type="number" min="0.0001" step="0.0001" value={item.quantidade} onChange={(event) => setItems((current) => current.map((row) => row.rowId === item.rowId ? { ...row, quantidade: event.target.value } : row))} /><Input type="number" min="0" step="0.01" value={item.valorUnitario} onChange={(event) => setItems((current) => current.map((row) => row.rowId === item.rowId ? { ...row, valorUnitario: event.target.value } : row))} /><Input type="number" min="0" step="0.01" value={item.desconto} onChange={(event) => setItems((current) => current.map((row) => row.rowId === item.rowId ? { ...row, desconto: event.target.value } : row))} /><div className="flex h-10 items-center justify-end font-medium">{currency(itemTotal)}</div><Button variant="ghost" size="icon" title="Remover item" disabled={items.length === 1} onClick={() => setItems((current) => current.filter((row) => row.rowId !== item.rowId))}><Trash2 className="size-4" /></Button></div>})}<div className="grid gap-4 md:grid-cols-4"><FieldInput label="Desconto geral" value={discount} onChange={setDiscount} type="number" /><FieldInput label="Frete" value={freight} onChange={setFreight} type="number" /><div className="md:col-span-2 rounded-md bg-gray-50 p-4 text-right"><p className="text-xs text-gray-500">Total da venda</p><p className="mt-1 text-2xl font-semibold">{currency(total)}</p></div></div></section>
       <section className="grid gap-4 border-b px-6 py-5"><div className="flex items-end justify-between"><h2 className="text-sm font-semibold">Condicao de pagamento</h2><div className="grid gap-1"><Label>Parcelas</Label><Input className="w-24" type="number" min="1" max="48" value={installments.length} onChange={(event) => changeInstallmentCount(Number(event.target.value))} /></div></div><div className="hidden grid-cols-[80px_160px_140px_1fr_1fr] gap-2 text-xs font-medium text-gray-500 md:grid"><span>Parcela</span><span>Vencimento</span><span>Valor</span><span>Conta</span><span>Metodo</span></div>{installments.map((row, index) => <div key={row.numero} className="grid gap-2 md:grid-cols-[80px_160px_140px_1fr_1fr]"><Input value={`${row.numero}/${installments.length}`} disabled /><Input type="date" value={row.vencimento} onChange={(event) => setInstallments((current) => current.map((item, itemIndex) => itemIndex === index ? { ...item, vencimento: event.target.value } : item))} /><Input type="number" step="0.01" value={row.valor} onChange={(event) => setInstallments((current) => current.map((item, itemIndex) => itemIndex === index ? { ...item, valor: event.target.value } : item))} /><select value={row.contaFinanceiraId} className="h-10 rounded-md bg-gray-50 px-2 text-sm" onChange={(event) => setInstallments((current) => current.map((item, itemIndex) => itemIndex === index ? { ...item, contaFinanceiraId: event.target.value } : item))}><option value="">Selecione</option>{catalogs.financialAccounts.map((option) => <option key={option.id} value={option.id}>{option.nome}</option>)}</select><select value={row.metodoPagamentoId} className="h-10 rounded-md bg-gray-50 px-2 text-sm" onChange={(event) => setInstallments((current) => current.map((item, itemIndex) => itemIndex === index ? { ...item, metodoPagamentoId: event.target.value } : item))}><option value="">Selecione</option>{catalogs.paymentMethods.map((option) => <option key={option.id} value={option.id}>{option.nome}</option>)}</select></div>)}</section>
       <section className="grid gap-2 px-6 py-5"><Label>Observacoes</Label><Textarea value={notes} className="min-h-24" onChange={(event) => setNotes(event.target.value)} /></section>
-    </div><div className="flex items-center justify-between border-t bg-white px-6 py-4"><div className="flex items-center gap-2 text-sm text-gray-500"><CalendarDays className="size-4" />A confirmacao gera contas a receber</div><div className="flex gap-2"><Button variant="outline" onClick={() => setEditorOpen(false)}>Cancelar</Button><Button disabled={saving} onClick={() => void saveSale()}>{saving ? <Loader2 className="size-4 animate-spin" /> : null}Salvar venda</Button></div></div></DialogContent></Dialog>
+    </div><div className="flex items-center justify-between border-t bg-white px-6 py-4"><div className="flex items-center gap-2 text-sm text-gray-500"><CalendarDays className="size-4" />A confirmacao gera contas a receber</div><div className="flex gap-2"><Button variant="outline" onClick={() => setEditorOpen(false)}>Cancelar</Button><Button disabled={saving} onClick={() => void saveSale()}>{saving ? <Loader2 className="size-4 animate-spin" /> : null}{editingSale ? 'Salvar alteracoes' : 'Salvar venda'}</Button></div></div></DialogContent></Dialog>
+    <ErpDocumentDetailsDialog open={detailsOpen} onOpenChange={setDetailsOpen} title="Detalhes da venda"
+      loading={detailsLoading} document={details?.sale} items={details?.items} installments={details?.installments} events={details?.events} />
   </div>
 }
 

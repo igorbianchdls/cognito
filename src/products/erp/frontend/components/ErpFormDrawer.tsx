@@ -69,11 +69,15 @@ export function ErpFormDrawer({
   open,
   onOpenChange,
   onSubmit,
+  initialValues,
+  fieldOptions,
 }: {
   config: ErpEntityConfig
   open: boolean
   onOpenChange: (open: boolean) => void
   onSubmit: (values: Record<string, unknown>) => Promise<void>
+  initialValues?: Record<string, unknown> | null
+  fieldOptions?: Record<string, Array<{ value: string; label: string }>>
 }) {
   const [values, setValues] = useState<Record<string, string>>({})
   const [saving, setSaving] = useState(false)
@@ -82,9 +86,11 @@ export function ErpFormDrawer({
   useEffect(() => {
     if (!open) return
     setError(null)
-    setValues({})
+    setValues(Object.fromEntries(
+      Object.entries(initialValues || {}).map(([key, value]) => [key, value == null ? '' : String(value)]),
+    ))
     setSaving(false)
-  }, [config.id, open])
+  }, [config.id, initialValues, open])
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
@@ -111,7 +117,7 @@ export function ErpFormDrawer({
       <SheetContent className="w-full gap-0 overflow-hidden p-0 sm:max-w-xl">
         <form className="flex h-full flex-col" onSubmit={submit}>
           <SheetHeader className="border-b border-gray-200 px-6 py-5">
-            <SheetTitle className="text-lg">Novo {config.singularLabel}</SheetTitle>
+            <SheetTitle className="text-lg">{initialValues ? 'Editar' : 'Novo'} {config.singularLabel}</SheetTitle>
             <p className="text-sm leading-6 text-gray-600">
               Preencha os dados principais para salvar no ERP.
             </p>
@@ -125,7 +131,7 @@ export function ErpFormDrawer({
                     {field.required ? <span className="ml-1 text-rose-600">*</span> : null}
                   </Label>
                   <FieldControl
-                    field={field}
+                    field={{ ...field, options: fieldOptions?.[field.key] || field.options }}
                     value={values[field.key] || ''}
                     onChange={(value) => setValues((current) => ({ ...current, [field.key]: value }))}
                   />
@@ -143,7 +149,7 @@ export function ErpFormDrawer({
               Cancelar
             </Button>
             <Button type="submit" disabled={saving}>
-              {saving ? 'Salvando...' : 'Salvar'}
+              {saving ? 'Salvando...' : initialValues ? 'Salvar alteracoes' : 'Salvar'}
             </Button>
           </SheetFooter>
         </form>

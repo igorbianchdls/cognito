@@ -1,7 +1,7 @@
 'use client'
 
 import { useCallback, useEffect, useMemo, useState } from 'react'
-import { CalendarDays, Check, Loader2, Plus, RefreshCw, Trash2, X } from 'lucide-react'
+import { CalendarDays, Check, Eye, Loader2, Pencil, Plus, RefreshCw, Trash2, X } from 'lucide-react'
 
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -12,6 +12,7 @@ import { Switch } from '@/components/ui/switch'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { Textarea } from '@/components/ui/textarea'
 import { ErpPagination } from '@/products/erp/frontend/components/ErpPagination'
+import { ErpDocumentDetailsDialog } from '@/products/erp/frontend/components/ErpDocumentDetailsDialog'
 
 type CatalogItem = {
   id: string
@@ -120,6 +121,10 @@ export function PurchaseWorkspacePage() {
   const [query, setQuery] = useState('')
   const [movementFilter, setMovementFilter] = useState('')
   const [editorOpen, setEditorOpen] = useState(false)
+  const [detailsOpen, setDetailsOpen] = useState(false)
+  const [detailsLoading, setDetailsLoading] = useState(false)
+  const [details, setDetails] = useState<{ purchase: Record<string, unknown>; items: Record<string, unknown>[]; installments: Record<string, unknown>[]; events: Record<string, unknown>[]; invoices: Record<string, unknown>[] } | null>(null)
+  const [editingPurchase, setEditingPurchase] = useState<{ id: string; version: number } | null>(null)
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -199,6 +204,7 @@ export function PurchaseWorkspacePage() {
     setItems([newItem()]); setDesconto('0'); setFrete('0'); setSeguro('0'); setOutrasDespesas('0')
     setImpostosRetidos('0'); setInstallments([{ numero: 1, vencimento: date, valor: '0', observacoes: '' }])
     setObservacoes(''); setError(null)
+    setEditingPurchase(null)
   }
 
   function openEditor() { resetForm(); setEditorOpen(true) }
@@ -229,10 +235,10 @@ export function PurchaseWorkspacePage() {
   async function savePurchase() {
     setSaving(true); setError(null)
     try {
-      const response = await fetch('/api/erp/compras', {
-        method: 'POST',
+      const response = await fetch(editingPurchase ? `/api/erp/compras/${editingPurchase.id}` : '/api/erp/compras', {
+        method: editingPurchase ? 'PATCH' : 'POST',
         headers: { 'Content-Type': 'application/json', 'Idempotency-Key': crypto.randomUUID() },
-        body: JSON.stringify({ values: {
+        body: JSON.stringify({ expectedVersion: editingPurchase?.version, values: {
           tipo_compra: tipoCompra, tipo_movimento: tipoMovimento, fornecedor_id: fornecedorId,
           numero, data_compra: dataCompra, data_competencia: dataCompetencia,
           data_prevista_entrega: dataEntrega, categoria_id: categoriaId, centro_custo_id: centroCustoId,
@@ -275,6 +281,46 @@ export function PurchaseWorkspacePage() {
     }
   }
 
+  async function openDetails(record: PurchaseRecord) {
+    setDetailsOpen(true); setDetailsLoading(true); setDetails(null); setError(null)
+    try {
+      setDetails(await parseResponse(await fetch(`/api/erp/compras/${record.id}`, { cache: 'no-store' })))
+    } catch (detailError) {
+      setError(detailError instanceof Error ? detailError.message : 'Nao foi possivel carregar a compra.')
+      setDetailsOpen(false)
+    } finally { setDetailsLoading(false) }
+  }
+
+  async function openEdit(record: PurchaseRecord) {
+    setLoading(true); setError(null)
+    try {
+      const body = await parseResponse<{ purchase: Record<string, unknown>; items: Record<string, unknown>[]; installments: Record<string, unknown>[] }>(
+        await fetch(`/api/erp/compras/${record.id}`, { cache: 'no-store' }),
+      )
+      const purchase = body.purchase
+      setEditingPurchase({ id: record.id, version: Number(purchase.versao || 1) })
+      setTipoCompra(purchase.tipo_compra === 'servico' ? 'servico' : 'produto'); setTipoMovimento('cotacao')
+      setFornecedorId(String(purchase.fornecedor_id || '')); setNumero(String(purchase.numero || ''))
+      setDataCompra(String(purchase.data_compra || '').slice(0, 10)); setDataCompetencia(String(purchase.data_competencia || purchase.data_compra || '').slice(0, 10))
+      setDataEntrega(String(purchase.data_prevista_entrega || '').slice(0, 10)); setCategoriaId(String(purchase.categoria_id || ''))
+      setCentroCustoId(String(purchase.centro_custo_id || '')); setNaturezaId(String(purchase.natureza_operacao_id || ''))
+      setGeraFinanceiro(Boolean(purchase.gera_financeiro)); setContaFinanceiraId(String(purchase.conta_financeira_id || ''))
+      setMetodoPagamentoId(String(purchase.metodo_pagamento_id || '')); setDesconto(String(purchase.desconto || 0))
+      setFrete(String(purchase.frete || 0)); setSeguro(String(purchase.seguro || 0)); setOutrasDespesas(String(purchase.outras_despesas || 0))
+      setImpostosRetidos(String(purchase.impostos_retidos || 0)); setObservacoes(String(purchase.observacoes || ''))
+      setItems(body.items.map((item) => {
+        const gross = money(item.quantidade as number) * money(item.valor_unitario as number)
+        const percent = gross > 0 ? (money(item.valor_desconto as number) / gross) * 100 : 0
+        return { rowId: crypto.randomUUID(), kind: item.tipo === 'servico' ? 'servico' : 'produto', itemId: String(item.item_id || ''),
+          descricao: String(item.descricao || ''), detalhes: String(item.detalhes || ''), unidade: String(item.unidade || 'UN'),
+          quantidade: String(item.quantidade || 1), valorUnitario: String(item.valor_unitario || 0), percentualDesconto: percent.toFixed(4) }
+      }))
+      setInstallments(body.installments.map((row) => ({ numero: Number(row.numero_parcela || 1), vencimento: String(row.data_vencimento || '').slice(0, 10), valor: String(row.valor || 0), observacoes: String(row.descricao || '') })))
+      setEditorOpen(true)
+    } catch (editError) { setError(editError instanceof Error ? editError.message : 'Nao foi possivel editar a compra.') }
+    finally { setLoading(false) }
+  }
+
   const summary = useMemo(() => ({
     total: records.reduce((sum, record) => sum + record.total, 0),
     pedidos: records.filter((record) => record.tipo_movimento.includes('pedido')).length,
@@ -307,13 +353,13 @@ export function PurchaseWorkspacePage() {
       <div className="overflow-hidden rounded-md border bg-white">
         <Table><TableHeader><TableRow className="bg-gray-50"><TableHead>Numero</TableHead><TableHead>Fornecedor</TableHead><TableHead>Movimento</TableHead><TableHead>Data</TableHead><TableHead>Entrega</TableHead><TableHead>Financeiro</TableHead><TableHead className="text-right">Total</TableHead><TableHead className="w-32" /></TableRow></TableHeader>
           <TableBody>{loading ? <TableRow><TableCell colSpan={8} className="h-32 text-center text-gray-500"><Loader2 className="mx-auto mb-2 size-5 animate-spin" />Carregando</TableCell></TableRow> : records.length === 0 ? <TableRow><TableCell colSpan={8} className="h-32 text-center text-gray-500">Nenhuma compra encontrada.</TableCell></TableRow> : records.map((record) => <TableRow key={record.id}>
-            <TableCell className="font-medium">{record.numero}</TableCell><TableCell>{record.fornecedor}</TableCell><TableCell><Badge variant="outline">{movementLabel(record.tipo_movimento)}</Badge></TableCell><TableCell>{record.data}</TableCell><TableCell>{record.entrega || '-'}</TableCell><TableCell>{record.financeiro}</TableCell><TableCell className="text-right font-medium">{formatCurrency(record.total)}</TableCell><TableCell><div className="flex justify-end gap-1">{!['compra', 'cancelada'].includes(record.tipo_movimento) ? <Button size="icon" variant="ghost" title="Efetivar compra" onClick={() => void runAction(record, 'confirmar')}><Check className="size-4" /></Button> : null}{record.tipo_movimento !== 'cancelada' ? <Button size="icon" variant="ghost" title="Cancelar" onClick={() => void runAction(record, 'cancelar')}><X className="size-4" /></Button> : null}</div></TableCell>
+            <TableCell className="font-medium">{record.numero}</TableCell><TableCell>{record.fornecedor}</TableCell><TableCell><Badge variant="outline">{movementLabel(record.tipo_movimento)}</Badge></TableCell><TableCell>{record.data}</TableCell><TableCell>{record.entrega || '-'}</TableCell><TableCell>{record.financeiro}</TableCell><TableCell className="text-right font-medium">{formatCurrency(record.total)}</TableCell><TableCell><div className="flex justify-end gap-1"><Button size="icon" variant="ghost" title="Ver detalhes" onClick={() => void openDetails(record)}><Eye className="size-4" /></Button>{record.tipo_movimento === 'cotacao' ? <Button size="icon" variant="ghost" title="Editar cotacao" onClick={() => void openEdit(record)}><Pencil className="size-4" /></Button> : null}{!['compra', 'cancelada'].includes(record.tipo_movimento) ? <Button size="icon" variant="ghost" title="Efetivar compra" onClick={() => void runAction(record, 'confirmar')}><Check className="size-4" /></Button> : null}{record.tipo_movimento !== 'cancelada' ? <Button size="icon" variant="ghost" title="Cancelar" onClick={() => void runAction(record, 'cancelar')}><X className="size-4" /></Button> : null}</div></TableCell>
           </TableRow>)}</TableBody></Table>
         <ErpPagination page={page} pageSize={50} total={totalRecords} onPageChange={setPage} />
       </div>
 
       <Dialog open={editorOpen} onOpenChange={setEditorOpen}><DialogContent className="h-[94vh] max-w-[min(1180px,96vw)] gap-0 overflow-hidden p-0">
-        <DialogHeader className="border-b px-6 py-4"><DialogTitle>Nova compra</DialogTitle></DialogHeader>
+        <DialogHeader className="border-b px-6 py-4"><DialogTitle>{editingPurchase ? 'Editar cotacao' : 'Nova compra'}</DialogTitle></DialogHeader>
         <div className="overflow-y-auto">
           <section className="grid gap-4 border-b px-6 py-5"><h2 className="text-sm font-semibold">Informacoes da compra</h2>
             <div className="grid gap-4 md:grid-cols-4"><div className="grid gap-2"><Label>Tipo de compra</Label><div className="flex h-10 overflow-hidden rounded-md border"><button className={`flex-1 text-sm ${tipoCompra === 'produto' ? 'bg-gray-950 text-white' : 'bg-white'}`} onClick={() => { setTipoCompra('produto'); setItems([newItem()]) }}>Produtos</button><button className={`flex-1 text-sm ${tipoCompra === 'servico' ? 'bg-gray-950 text-white' : 'bg-white'}`} onClick={() => { setTipoCompra('servico'); setItems([{ ...newItem(), kind: 'servico' }]) }}>Servicos</button></div></div>
@@ -347,8 +393,11 @@ export function PurchaseWorkspacePage() {
           </section>
           <section className="grid gap-2 px-6 py-5"><Label>Observacoes complementares</Label><Textarea value={observacoes} className="min-h-24" onChange={(event) => setObservacoes(event.target.value)} /></section>
         </div>
-        <div className="flex items-center justify-between border-t bg-white px-6 py-4"><div className="flex items-center gap-2 text-sm text-gray-500"><CalendarDays className="size-4" />{tipoMovimento === 'compra' ? 'Gera despesa efetiva' : tipoMovimento.includes('pedido') ? 'Gera previsao financeira' : 'Sem impacto financeiro'}</div><div className="flex gap-2"><Button variant="outline" onClick={() => setEditorOpen(false)}>Cancelar</Button><Button disabled={saving} onClick={() => void savePurchase()}>{saving ? <Loader2 className="size-4 animate-spin" /> : null}Salvar compra</Button></div></div>
+        <div className="flex items-center justify-between border-t bg-white px-6 py-4"><div className="flex items-center gap-2 text-sm text-gray-500"><CalendarDays className="size-4" />{tipoMovimento === 'compra' ? 'Gera despesa efetiva' : tipoMovimento.includes('pedido') ? 'Gera previsao financeira' : 'Sem impacto financeiro'}</div><div className="flex gap-2"><Button variant="outline" onClick={() => setEditorOpen(false)}>Cancelar</Button><Button disabled={saving} onClick={() => void savePurchase()}>{saving ? <Loader2 className="size-4 animate-spin" /> : null}{editingPurchase ? 'Salvar alteracoes' : 'Salvar compra'}</Button></div></div>
       </DialogContent></Dialog>
+      <ErpDocumentDetailsDialog open={detailsOpen} onOpenChange={setDetailsOpen} title="Detalhes da compra"
+        loading={detailsLoading} document={details?.purchase} items={details?.items} installments={details?.installments}
+        events={details?.events} invoices={details?.invoices} />
     </div>
   )
 }

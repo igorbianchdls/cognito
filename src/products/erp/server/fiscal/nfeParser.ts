@@ -16,6 +16,23 @@ export type ParsedNfe = {
   valor_total: number
   frete: number
   desconto: number
+  totais: {
+    base_icms: number
+    valor_icms: number
+    base_icms_st: number
+    valor_icms_st: number
+    valor_fcp: number
+    valor_fcp_st: number
+    valor_ipi: number
+    valor_ii: number
+    valor_pis: number
+    valor_cofins: number
+    valor_seguro: number
+    outras_despesas: number
+  }
+  protocolo: string
+  codigo_status_sefaz: string
+  motivo_status_sefaz: string
   itens: Array<{
     codigo: string
     descricao: string
@@ -77,7 +94,18 @@ export function parseNfeXml(xmlValue: unknown): ParsedNfe {
   }
 
   const processNode = object(parsed.nfeProc)
-  const nfeNode = object(processNode.NFe || parsed.NFe)
+  const protocolInfo = object(object(processNode.protNFe).infProt)
+  if (Object.keys(processNode).length === 0 || Object.keys(protocolInfo).length === 0) {
+    throw new Error('Envie o XML processado da NF-e, com protocolo de autorizacao da SEFAZ.')
+  }
+
+  const statusCode = string(protocolInfo.cStat)
+  const statusReason = string(protocolInfo.xMotivo)
+  if (statusCode !== '100') {
+    throw new Error(`A NF-e nao esta autorizada pela SEFAZ${statusCode ? ` (${statusCode}${statusReason ? ` - ${statusReason}` : ''})` : ''}.`)
+  }
+
+  const nfeNode = object(processNode.NFe)
   const info = object(nfeNode.infNFe)
   if (Object.keys(info).length === 0) throw new Error('O XML nao contem uma NF-e autorizavel.')
 
@@ -87,7 +115,7 @@ export function parseNfeXml(xmlValue: unknown): ParsedNfe {
   const total = object(object(info.total).ICMSTot)
   const billing = object(info.cobr)
   const firstInstallment = object(array(billing.dup)[0])
-  const accessKey = string(info['@_Id'] || object(processNode.protNFe).infProt)
+  const accessKey = string(info['@_Id'] || protocolInfo.chNFe)
     .replace(/^NFe/, '')
     .replace(/\D/g, '')
 
@@ -142,6 +170,23 @@ export function parseNfeXml(xmlValue: unknown): ParsedNfe {
     valor_total: valueTotal,
     frete: number(total.vFrete),
     desconto: number(total.vDesc),
+    totais: {
+      base_icms: number(total.vBC),
+      valor_icms: number(total.vICMS),
+      base_icms_st: number(total.vBCST),
+      valor_icms_st: number(total.vST),
+      valor_fcp: number(total.vFCP),
+      valor_fcp_st: number(total.vFCPST),
+      valor_ipi: number(total.vIPI),
+      valor_ii: number(total.vII),
+      valor_pis: number(total.vPIS),
+      valor_cofins: number(total.vCOFINS),
+      valor_seguro: number(total.vSeg),
+      outras_despesas: number(total.vOutro),
+    },
+    protocolo: string(protocolInfo.nProt),
+    codigo_status_sefaz: statusCode,
+    motivo_status_sefaz: statusReason,
     itens: items,
     xml,
     xml_hash: createHash('sha256').update(xml).digest('hex'),

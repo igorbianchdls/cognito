@@ -8,6 +8,7 @@ import { ErpEmptyState } from '@/products/erp/frontend/components/ErpEmptyState'
 import { ErpFiltersBar } from '@/products/erp/frontend/components/ErpFiltersBar'
 import { ErpFormDrawer } from '@/products/erp/frontend/components/ErpFormDrawer'
 import { ErpMetricCard } from '@/products/erp/frontend/components/ErpMetricCard'
+import { ErpPagination } from '@/products/erp/frontend/components/ErpPagination'
 import { ErpPageHeader } from '@/products/erp/frontend/components/ErpPageHeader'
 import { ErpSearchBar } from '@/products/erp/frontend/components/ErpSearchBar'
 import { erpClient } from '@/products/erp/frontend/services/erpClient'
@@ -18,6 +19,12 @@ export function ErpEntityPage({ config }: { config: ErpEntityConfig }) {
   const [filters, setFilters] = useState<Record<string, string>>({})
   const [records, setRecords] = useState<ErpEntityRecord[]>([])
   const [drawerOpen, setDrawerOpen] = useState(false)
+  const [editingRecord, setEditingRecord] = useState<ErpEntityRecord | null>(null)
+  const [metrics, setMetrics] = useState(config.metrics)
+  const [fieldOptions, setFieldOptions] = useState<Record<string, Array<{ value: string; label: string }>>>({})
+  const [page, setPage] = useState(1)
+  const [total, setTotal] = useState(0)
+  const pageSize = 50
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
@@ -25,23 +32,71 @@ export function ErpEntityPage({ config }: { config: ErpEntityConfig }) {
     setLoading(true)
     setError(null)
     try {
-      const response = await erpClient.listEntityRecords(config, { entityId: config.id, query, filters })
+      const response = await erpClient.listEntityRecords(config, { entityId: config.id, query, filters, page, pageSize })
       setRecords(response.records)
+      setTotal(response.total)
     } catch (loadError) {
       setError(loadError instanceof Error ? loadError.message : 'Nao foi possivel carregar os dados.')
       setRecords([])
     } finally {
       setLoading(false)
     }
-  }, [config, filters, query])
+  }, [config, filters, page, query])
 
   useEffect(() => {
     void loadRecords()
   }, [loadRecords])
 
+  useEffect(() => {
+    const categoryType = config.id === 'produtos' ? 'produto' : config.id === 'servicos' ? 'servico' : ''
+    void Promise.all([
+      fetch(`/api/erp/${encodeURIComponent(config.id)}/resumo`, { cache: 'no-store' })
+        .then((response) => response.ok ? response.json() : Promise.reject())
+        .then((body: { metrics?: typeof config.metrics }) => setMetrics(body.metrics || config.metrics))
+        .catch(() => setMetrics(config.metrics)),
+      categoryType
+        ? fetch(`/api/erp/catalogos/categorias?tipo=${categoryType}`, { cache: 'no-store' })
+          .then((response) => response.ok ? response.json() : Promise.reject())
+          .then((body: { options?: Array<{ value: string; label: string }> }) => setFieldOptions({ categoria: body.options || [] }))
+          .catch(() => setFieldOptions({}))
+        : Promise.resolve(),
+    ])
+  }, [config])
+
   async function createRecord(values: Record<string, unknown>) {
-    await erpClient.createEntityRecord(config, { entityId: config.id, values })
+    if (editingRecord) {
+      await erpClient.updateEntityRecord(config, editingRecord.id, {
+        values,
+        expectedVersion: Number(editingRecord.versao || 0),
+      })
+    } else {
+      await erpClient.createEntityRecord(config, { entityId: config.id, values })
+    }
+    setEditingRecord(null)
     await loadRecords()
+  }
+
+  async function editRecord(record: ErpEntityRecord) {
+    setError(null)
+    try {
+      const response = await erpClient.getEntityRecord(config, record.id)
+      setEditingRecord(response.record)
+      setDrawerOpen(true)
+    } catch (editError) {
+      setError(editError instanceof Error ? editError.message : 'Nao foi possivel abrir o registro.')
+    }
+  }
+
+  async function deactivateRecord(record: ErpEntityRecord) {
+    if (!window.confirm(`Desativar este ${config.singularLabel}?`)) return
+    setLoading(true)
+    setError(null)
+    try {
+      await erpClient.deactivateEntityRecord(config, record.id, Number(record.versao || 0))
+      await loadRecords()
+    } catch (deactivateError) {
+      setError(deactivateError instanceof Error ? deactivateError.message : 'Nao foi possivel desativar o registro.')
+    } finally { setLoading(false) }
   }
 
   async function runAction(action: ErpEntityAction, record: ErpEntityRecord) {
@@ -74,9 +129,9 @@ export function ErpEntityPage({ config }: { config: ErpEntityConfig }) {
     }
   }
 
-  const metricCards = useMemo(() => config.metrics.map((metric) => (
+  const metricCards = useMemo(() => metrics.map((metric) => (
     <ErpMetricCard key={metric.label} metric={metric} />
-  )), [config.metrics])
+  )), [metrics])
 
   return (
     <div className="flex min-h-full flex-col gap-6">
@@ -87,18 +142,18 @@ export function ErpEntityPage({ config }: { config: ErpEntityConfig }) {
           refreshing={loading}
           showPrimaryAction={config.fields.length > 0}
           onRefresh={() => void loadRecords()}
-          onPrimaryAction={() => setDrawerOpen(true)}
+          onPrimaryAction={() => { setEditingRecord(null); setDrawerOpen(true) }}
         />
       </div>
 
       <div className="grid gap-3 md:grid-cols-3">{metricCards}</div>
 
       <div className="flex flex-col gap-3 rounded-md border border-gray-200 bg-gray-50/60 p-3 lg:flex-row lg:items-center">
-        <ErpSearchBar value={query} placeholder={config.searchPlaceholder} onChange={setQuery} />
+        <ErpSearchBar value={query} placeholder={config.searchPlaceholder} onChange={(value) => { setQuery(value); setPage(1) }} />
         <ErpFiltersBar
           filters={config.filters}
           values={filters}
-          onChange={(key, value) => setFilters((current) => ({ ...current, [key]: value }))}
+          onChange={(key, value) => { setFilters((current) => ({ ...current, [key]: value })); setPage(1) }}
         />
       </div>
 
@@ -113,17 +168,22 @@ export function ErpEntityPage({ config }: { config: ErpEntityConfig }) {
           Carregando dados...
         </div>
       ) : records.length > 0 ? (
-        <ErpDataTable config={config} records={records} onAction={(action, record) => void runAction(action, record)} />
+        <div>
+          <ErpDataTable config={config} records={records} onAction={(action, record) => void runAction(action, record)}
+            onEdit={(record) => void editRecord(record)} onDeactivate={(record) => void deactivateRecord(record)} />
+          <ErpPagination page={page} pageSize={pageSize} total={total} onPageChange={setPage} />
+        </div>
       ) : (
         <ErpEmptyState
           title={config.emptyState.title}
           description={config.emptyState.description}
           actionLabel={config.fields.length > 0 ? config.primaryActionLabel : undefined}
-          onAction={config.fields.length > 0 ? () => setDrawerOpen(true) : undefined}
+          onAction={config.fields.length > 0 ? () => { setEditingRecord(null); setDrawerOpen(true) } : undefined}
         />
       )}
 
-      <ErpFormDrawer config={config} open={drawerOpen} onOpenChange={setDrawerOpen} onSubmit={createRecord} />
+      <ErpFormDrawer config={config} open={drawerOpen} onOpenChange={(open) => { setDrawerOpen(open); if (!open) setEditingRecord(null) }}
+        onSubmit={createRecord} initialValues={editingRecord} fieldOptions={fieldOptions} />
     </div>
   )
 }

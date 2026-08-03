@@ -20,13 +20,12 @@ export const suppliersConfig: ErpEntityConfig<ErpEntityRecord> = {
   fields: [
     { key: 'nome', label: 'Nome do fornecedor', type: 'text', required: true },
     { key: 'documento', label: 'CNPJ', type: 'text', required: true },
-    { key: 'categoria', label: 'Categoria', type: 'select', options: [{ value: 'Distribuicao', label: 'Distribuicao' }, { value: 'Logistica', label: 'Logistica' }, { value: 'Insumos', label: 'Insumos' }] },
+    { key: 'categoria', label: 'Categoria', type: 'text', placeholder: 'Ex: Distribuicao, logistica ou insumos' },
     { key: 'email', label: 'Email', type: 'email' },
     { key: 'cidade', label: 'Cidade', type: 'text' },
   ],
   filters: [
     { key: 'status', label: 'Status', allLabel: 'Todos os status', options: [{ value: 'ativo', label: 'Ativo' }, { value: 'inativo', label: 'Inativo' }] },
-    { key: 'categoria', label: 'Categoria', allLabel: 'Todas as categorias', options: [{ value: 'Distribuicao', label: 'Distribuicao' }, { value: 'Logistica', label: 'Logistica' }, { value: 'Insumos', label: 'Insumos' }] },
   ],
   metrics: [
     { label: 'Fornecedores ativos', value: '0', detail: 'base conectada' },

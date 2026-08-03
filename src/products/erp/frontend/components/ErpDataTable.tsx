@@ -1,4 +1,4 @@
-import { IconCheck, IconDotsVertical, IconReceipt, IconX } from '@tabler/icons-react'
+import { IconBan, IconCheck, IconEdit, IconReceipt, IconX } from '@tabler/icons-react'
 
 import { Button } from '@/components/ui/button'
 import {
@@ -43,10 +43,14 @@ export function ErpDataTable({
   config,
   records,
   onAction,
+  onEdit,
+  onDeactivate,
 }: {
   config: ErpEntityConfig
   records: ErpEntityRecord[]
   onAction?: (action: ErpEntityAction, record: ErpEntityRecord) => void
+  onEdit?: (record: ErpEntityRecord) => void
+  onDeactivate?: (record: ErpEntityRecord) => void
 }) {
   const actions = config.actions || []
 
@@ -88,9 +92,16 @@ export function ErpDataTable({
                     ))}
                   </div>
                 ) : (
-                  <Button variant="ghost" size="icon" aria-label={`Acoes de ${record.id}`}>
-                    <IconDotsVertical className="size-4" stroke={1.8} />
-                  </Button>
+                  <div className="flex justify-end gap-1">
+                    <Button variant="ghost" size="icon" title="Editar" aria-label={`Editar ${record.id}`} onClick={() => onEdit?.(record)}>
+                      <IconEdit className="size-4" stroke={1.8} />
+                    </Button>
+                    {record.status !== 'inativo' && record.status !== 'pausado' ? (
+                      <Button variant="ghost" size="icon" title="Desativar" aria-label={`Desativar ${record.id}`} onClick={() => onDeactivate?.(record)}>
+                        <IconBan className="size-4" stroke={1.8} />
+                      </Button>
+                    ) : null}
+                  </div>
                 )}
               </TableCell>
             </TableRow>
