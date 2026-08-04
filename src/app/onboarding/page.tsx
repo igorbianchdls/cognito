@@ -2,6 +2,7 @@ import { redirect } from 'next/navigation'
 
 import { ensureClerkTenantBootstrap } from '@/products/auth/server/clerkTenantBootstrap'
 import { AuthOnboardingForm } from '@/products/auth/frontend/components/AuthOnboardingForm'
+import { AuthLayout } from '@/products/auth/frontend/components/AuthLayout'
 
 export const dynamic = 'force-dynamic'
 export const revalidate = 0
@@ -18,11 +19,11 @@ export default async function OnboardingPage() {
   if (!state.needsOnboarding) redirect('/integracoes')
 
   return (
-    <main className="flex min-h-screen items-center justify-center bg-slate-50 px-4 py-8 text-slate-950">
+    <AuthLayout mode="onboarding">
       <AuthOnboardingForm
         email={state.email}
         defaultCompanyName={getDefaultCompanyName(state.email)}
       />
-    </main>
+    </AuthLayout>
   )
 }

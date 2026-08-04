@@ -15,8 +15,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Cognito",
-  description: "Cognito integrations, MCP tools, and artifacts.",
+  title: "Otto",
+  description: "Gestão empresarial simples para pequenas empresas.",
 };
 
 export default function RootLayout({
