@@ -7,6 +7,7 @@ const isPublicRoute = createRouteMatcher([
   '/sso-callback(.*)',
   '/lp(.*)',
   '/lp-a(.*)',
+  '/emissor-nota-fiscal(.*)',
   '/__clerk/:path*',
   '/api/clerk/webhooks(.*)',
   '/api/integracoes(.*)',
