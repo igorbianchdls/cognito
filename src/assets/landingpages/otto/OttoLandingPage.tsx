@@ -106,7 +106,7 @@ export function OttoLandingPage() {
           <div className="mx-auto max-w-[850px] text-center">
             <div className="inline-flex items-center gap-2 rounded-md border border-[#dce5dc] bg-[#f5faf6] px-3 py-2 text-xs font-medium text-[#326342]">
               <span className="h-1.5 w-1.5 rounded-full bg-[#3b9b54]" />
-              Gestão simples para negócios reais
+              Gestão empresarial, sem complicação
             </div>
             <h1 className="mt-7 text-[42px] font-medium leading-[1.08] text-[#181818] sm:text-[56px] lg:text-[64px]">
               ERP financeiro para pequenas empresas.
