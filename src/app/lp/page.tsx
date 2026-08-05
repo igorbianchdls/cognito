@@ -2,8 +2,8 @@ import type { Metadata } from 'next'
 import { OttoLandingPage } from '@/assets/landingpages/otto/OttoLandingPage'
 
 export const metadata: Metadata = {
-  title: 'Otto | Funcionarios de IA para financeiro e operacao',
-  description: 'Contrate funcionarios de IA que conectam sistemas, documentos, plataformas e planilhas para cuidar do financeiro e da operacao.',
+  title: 'Otto | ERP financeiro para pequenas empresas',
+  description: 'Organize vendas, compras, contas a pagar, contas a receber e documentos em um sistema simples e conectado.',
 }
 
 export default function LandingPage() {
