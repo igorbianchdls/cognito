@@ -31,7 +31,7 @@ export function FiscalPricingSection() {
       <div className="mx-auto max-w-[1180px]">
         <div className="mx-auto max-w-[650px] text-center">
           <p className="text-xs font-medium uppercase text-[#17653a]">Planos</p>
-          <h2 className="mt-4 text-[36px] font-medium leading-[1.16] text-[#181b19] sm:text-[44px]">Emissão fiscal que cabe na empresa.</h2>
+          <h2 className="mt-4 text-[42px] font-medium leading-[1.1] text-[#181b19] sm:text-[54px]">Emissão fiscal que cabe na empresa.</h2>
           <p className="mt-5 text-[15px] leading-7 text-[#646c66]">Escolha a estrutura adequada para sua rotina. Os planos têm cobrança mensal e podem acompanhar o crescimento da operação.</p>
         </div>
 

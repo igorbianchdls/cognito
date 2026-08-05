@@ -80,12 +80,12 @@ export function FiscalLandingPage() {
 
       <section className="overflow-hidden px-5 pb-20 pt-14 sm:px-8 sm:pb-28 sm:pt-20">
         <div className="mx-auto max-w-[1180px]">
-          <div className="mx-auto max-w-[880px] text-center">
+          <div className="mx-auto max-w-[1020px] text-center">
             <div className="inline-flex items-center gap-2 rounded-md border border-[#d8e6dc] bg-[#f2f8f4] px-3 py-2 text-xs font-medium text-[#17653a]">
               <span className="h-1.5 w-1.5 rounded-full bg-[#3d9b5c]" />
               Emissão fiscal sem complicação
             </div>
-            <h1 className="mt-7 text-[42px] font-medium leading-[1.08] text-[#181b19] sm:text-[56px] lg:text-[64px]">
+            <h1 className="mt-7 text-[50px] font-medium leading-[1.04] text-[#181b19] sm:text-[68px] lg:text-[80px]">
               Emissor de nota fiscal para pequenas empresas.
             </h1>
             <p className="mx-auto mt-6 max-w-[720px] text-base leading-7 text-[#5e6760] sm:text-lg sm:leading-8">
@@ -127,7 +127,7 @@ export function FiscalLandingPage() {
           <div className="grid gap-12 lg:grid-cols-[0.8fr_1.2fr] lg:gap-20">
             <div>
               <p className="text-xs font-medium uppercase text-[#17653a]">Feito para emitir</p>
-              <h2 className="mt-4 text-[36px] font-medium leading-[1.16] text-[#181b19] sm:text-[44px]">Da venda ao documento autorizado.</h2>
+              <h2 className="mt-4 text-[42px] font-medium leading-[1.1] text-[#181b19] sm:text-[54px]">Da venda ao documento autorizado.</h2>
               <p className="mt-5 max-w-[460px] text-[15px] leading-7 text-[#636c65]">
                 Uma experiência fiscal clara para quem precisa emitir corretamente, encontrar documentos e resolver pendências sem navegar por telas confusas.
               </p>
@@ -156,7 +156,7 @@ export function FiscalLandingPage() {
         <div className="mx-auto max-w-[1180px]">
           <div className="max-w-[640px]">
             <p className="text-xs font-medium uppercase text-[#17653a]">Como funciona</p>
-            <h2 className="mt-4 text-[36px] font-medium leading-[1.16] text-[#181b19] sm:text-[44px]">Três etapas até a emissão.</h2>
+            <h2 className="mt-4 text-[42px] font-medium leading-[1.1] text-[#181b19] sm:text-[54px]">Três etapas até a emissão.</h2>
             <p className="mt-5 text-[15px] leading-7 text-[#646c66]">Você revisa antes do envio e acompanha a resposta fiscal sem perder o contexto do documento.</p>
           </div>
 
@@ -176,7 +176,7 @@ export function FiscalLandingPage() {
         <div className="mx-auto grid max-w-[1100px] gap-12 lg:grid-cols-[0.9fr_1.1fr] lg:items-center lg:gap-20">
           <div>
             <p className="text-xs font-medium uppercase text-[#a0582f]">Pendências fiscais</p>
-            <h2 className="mt-4 text-[36px] font-medium leading-[1.16] text-[#181b19] sm:text-[44px]">Saiba o que corrigir antes de tentar novamente.</h2>
+            <h2 className="mt-4 text-[42px] font-medium leading-[1.1] text-[#181b19] sm:text-[54px]">Saiba o que corrigir antes de tentar novamente.</h2>
             <p className="mt-5 text-[15px] leading-7 text-[#646c66]">Uma rejeição não precisa virar uma busca por códigos difíceis. Veja a mensagem, identifique o campo envolvido e retome a emissão pelo mesmo documento.</p>
             <div className="mt-7 grid gap-3 text-sm text-[#4f5751]">
               <span className="inline-flex items-center gap-2"><CheckCircle2 className="h-4 w-4 text-[#2f8450]" />Motivo da rejeição preservado no histórico</span>
@@ -210,7 +210,7 @@ export function FiscalLandingPage() {
           <div className="grid gap-10 lg:grid-cols-[0.8fr_1.2fr] lg:items-center lg:gap-20">
             <div>
               <p className="text-xs font-medium uppercase text-[#17653a]">Venda conectada</p>
-              <h2 className="mt-4 text-[34px] font-medium leading-[1.18] text-[#181b19] sm:text-[42px]">Emita sem digitar tudo outra vez.</h2>
+              <h2 className="mt-4 text-[40px] font-medium leading-[1.1] text-[#181b19] sm:text-[50px]">Emita sem digitar tudo outra vez.</h2>
               <p className="mt-5 text-[15px] leading-7 text-[#626b64]">Cliente, itens, quantidades e valores seguem da operação comercial para a revisão fiscal.</p>
             </div>
             <div className="grid gap-3 sm:grid-cols-4">
@@ -232,7 +232,7 @@ export function FiscalLandingPage() {
         <div className="mx-auto max-w-[1180px]">
           <div className="max-w-[620px]">
             <p className="text-xs font-medium uppercase text-[#17653a]">Segurança operacional</p>
-            <h2 className="mt-4 text-[36px] font-medium leading-[1.16] text-[#181b19] sm:text-[44px]">Controle para uma rotina fiscal séria.</h2>
+            <h2 className="mt-4 text-[42px] font-medium leading-[1.1] text-[#181b19] sm:text-[54px]">Controle para uma rotina fiscal séria.</h2>
           </div>
           <div className="mt-12 grid gap-0 border-y border-[#dfe4e0] md:grid-cols-3">
             {securityPoints.map((point, index) => {
@@ -249,7 +249,7 @@ export function FiscalLandingPage() {
         <div className="mx-auto grid max-w-[1050px] gap-12 lg:grid-cols-[0.7fr_1.3fr] lg:gap-20">
           <div>
             <p className="text-xs font-medium uppercase text-[#17653a]">Dúvidas</p>
-            <h2 className="mt-4 text-[34px] font-medium leading-[1.18] text-[#181b19] sm:text-[42px]">Antes da primeira emissão.</h2>
+            <h2 className="mt-4 text-[40px] font-medium leading-[1.1] text-[#181b19] sm:text-[50px]">Antes da primeira emissão.</h2>
             <p className="mt-5 text-sm leading-7 text-[#687069]">Algumas exigências variam por documento, município e configuração fiscal da empresa.</p>
           </div>
           <div className="border-t border-[#dfe4e0]">
@@ -269,7 +269,7 @@ export function FiscalLandingPage() {
         <div className="mx-auto flex max-w-[980px] flex-col items-start justify-between gap-7 md:flex-row md:items-center">
           <div>
             <p className="text-xs font-medium uppercase text-[#17653a]">Sua próxima nota</p>
-            <h2 className="mt-3 max-w-[620px] text-[32px] font-medium leading-[1.18] text-[#18231b] sm:text-[40px]">Emita com clareza desde o primeiro documento.</h2>
+            <h2 className="mt-3 max-w-[760px] text-[40px] font-medium leading-[1.1] text-[#18231b] sm:text-[50px]">Emita com clareza desde o primeiro documento.</h2>
           </div>
           <Link href="/sign-up" className="inline-flex h-12 shrink-0 items-center justify-center gap-2 rounded-md bg-[#17653a] px-5 text-sm font-medium text-white hover:bg-[#11542f]">Começar a emitir <ArrowRight className="h-4 w-4" /></Link>
         </div>

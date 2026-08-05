@@ -88,9 +88,9 @@ const assistantActions = [
 function SectionHeading({ eyebrow, title, description, align = 'left' }: { eyebrow: string; title: string; description: string; align?: 'center' | 'left' }) {
   const centered = align === 'center'
   return (
-    <div className={centered ? 'mx-auto max-w-[700px] text-center' : 'max-w-[620px]'}>
+    <div className={centered ? 'mx-auto max-w-[820px] text-center' : 'max-w-[720px]'}>
       <p className="text-xs font-medium uppercase text-[#317543]">{eyebrow}</p>
-      <h2 className="mt-4 text-[34px] font-medium leading-[1.18] text-[#181818] sm:text-[44px]">{title}</h2>
+      <h2 className="mt-4 text-[42px] font-medium leading-[1.1] text-[#181818] sm:text-[54px]">{title}</h2>
       <p className="mt-5 text-[15px] leading-7 text-[#626862] sm:text-base">{description}</p>
     </div>
   )
@@ -103,12 +103,12 @@ export function OttoLandingPage() {
 
       <section className="overflow-hidden px-5 pb-20 pt-16 sm:px-8 sm:pb-28 sm:pt-24">
         <div className="mx-auto max-w-[1180px]">
-          <div className="mx-auto max-w-[850px] text-center">
+          <div className="mx-auto max-w-[1000px] text-center">
             <div className="inline-flex items-center gap-2 rounded-md border border-[#dce5dc] bg-[#f5faf6] px-3 py-2 text-xs font-medium text-[#326342]">
               <span className="h-1.5 w-1.5 rounded-full bg-[#3b9b54]" />
               Gestão empresarial, sem complicação
             </div>
-            <h1 className="mt-7 text-[42px] font-medium leading-[1.08] text-[#181818] sm:text-[56px] lg:text-[64px]">
+            <h1 className="mt-7 text-[50px] font-medium leading-[1.04] text-[#181818] sm:text-[68px] lg:text-[80px]">
               ERP financeiro para pequenas empresas.
             </h1>
             <p className="mx-auto mt-6 max-w-[700px] text-base leading-7 text-[#5f655f] sm:text-lg sm:leading-8">
@@ -264,7 +264,7 @@ export function OttoLandingPage() {
             <span className="text-xs font-medium uppercase">Fiscal e documentos</span>
           </div>
           <div>
-            <h2 className="text-[28px] font-medium leading-[1.2] text-[#28251f] sm:text-[36px]">Documentos organizados hoje. Emissão fiscal preparada para evoluir.</h2>
+            <h2 className="text-[40px] font-medium leading-[1.1] text-[#28251f] sm:text-[50px]">Documentos organizados hoje. Emissão fiscal preparada para evoluir.</h2>
             <p className="mt-4 max-w-[700px] text-[15px] leading-7 text-[#70695c]">A Otto já importa e valida XMLs de compras, vincula documentos a fornecedores e mantém os totais fiscais. A emissão por API será adicionada em uma próxima etapa.</p>
           </div>
         </div>
@@ -296,7 +296,7 @@ export function OttoLandingPage() {
 
       <section className="px-5 pb-10 sm:px-8 sm:pb-14">
         <div className="mx-auto max-w-[1180px] rounded-lg border border-[#d6e5d7] bg-[#edf7ef] px-6 py-14 text-center sm:px-10 sm:py-16">
-          <h2 className="mx-auto max-w-[700px] text-[34px] font-medium leading-[1.16] text-[#18301e] sm:text-[44px]">Comece a organizar sua empresa com clareza.</h2>
+          <h2 className="mx-auto max-w-[820px] text-[42px] font-medium leading-[1.1] text-[#18301e] sm:text-[52px]">Comece a organizar sua empresa com clareza.</h2>
           <p className="mx-auto mt-5 max-w-[580px] text-[15px] leading-7 text-[#526856]">Centralize a operação financeira e evolua no ritmo do seu negócio.</p>
           <Link href="/sign-up" className="mt-7 inline-flex h-12 items-center justify-center gap-2 rounded-md bg-[#181818] px-5 text-sm font-medium text-white hover:bg-[#303030]">
             Criar minha conta
