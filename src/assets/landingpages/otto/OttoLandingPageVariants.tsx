@@ -69,8 +69,8 @@ const whiteTitleStyle = { color: '#ffffff', letterSpacing: '-0.02em' }
 const heroTitleStyle = { ...whiteTitleStyle, fontSize: 'var(--otto-title-size)', lineHeight: 0.95 }
 const sectionTitleStyle = { ...whiteTitleStyle, fontSize: 'var(--otto-title-size)', lineHeight: 0.95 }
 const cardTitleStyle = { ...whiteTitleStyle, fontSize: '18px', lineHeight: 1.25 }
-const responsiveHeroTitleClassName = '[--otto-title-size:40px] md:[--otto-title-size:50px]'
-const responsiveSectionTitleClassName = '[--otto-title-size:30px] md:[--otto-title-size:50px]'
+const responsiveHeroTitleClassName = '[--otto-title-size:52px] md:[--otto-title-size:72px] lg:[--otto-title-size:88px]'
+const responsiveSectionTitleClassName = '[--otto-title-size:42px] md:[--otto-title-size:62px]'
 const mobileCarouselTrackClassName =
   'flex gap-3 overflow-x-auto scroll-smooth pb-2 scrollbar-hide [-webkit-overflow-scrolling:touch] [scroll-snap-type:x_mandatory] lg:grid lg:overflow-visible lg:pb-0 lg:[scroll-snap-type:none]'
 const mobileCarouselCardClassName = 'min-w-[78vw] snap-start lg:min-w-0'

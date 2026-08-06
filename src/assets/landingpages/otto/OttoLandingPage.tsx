@@ -86,7 +86,7 @@ function SectionHeading({ eyebrow, title, description, align = 'left' }: { eyebr
   return (
     <div className={centered ? 'mx-auto max-w-[820px] text-center' : 'max-w-[720px]'}>
       <p className="text-xs font-medium uppercase text-[#317543]">{eyebrow}</p>
-      <h2 className="mt-4 text-[42px] font-medium leading-[1.1] text-[#181818] sm:text-[54px]">{title}</h2>
+      <h2 className="mt-4 [--ui-title-font-size:46px] font-medium text-[#181818] sm:[--ui-title-font-size:64px]" style={{ lineHeight: 1.06 }}>{title}</h2>
       <p className="mt-5 text-[15px] leading-7 text-[#626862] sm:text-base">{description}</p>
     </div>
   )
@@ -104,7 +104,7 @@ export function OttoLandingPage() {
               <span className="h-1.5 w-1.5 rounded-full bg-[#3b9b54]" />
               Gestão empresarial conectada ao ChatGPT e Claude
             </div>
-            <h1 className="mt-7 text-[50px] font-medium leading-[1.04] text-[#181818] sm:text-[68px] lg:text-[80px]">
+            <h1 className="mt-7 [--ui-title-font-size:52px] font-medium text-[#181818] sm:[--ui-title-font-size:72px] lg:[--ui-title-font-size:88px]" style={{ lineHeight: 1 }}>
               Sistema de Gestão 100% integrado ao Claude e ChatGPT.
             </h1>
             <p className="mx-auto mt-6 max-w-[760px] text-base leading-7 text-[#5f655f] sm:text-lg sm:leading-8">
@@ -260,7 +260,7 @@ export function OttoLandingPage() {
             <span className="text-xs font-medium uppercase">Fiscal e documentos</span>
           </div>
           <div>
-            <h2 className="text-[40px] font-medium leading-[1.1] text-[#28251f] sm:text-[50px]">Documentos organizados hoje. Emissão fiscal preparada para evoluir.</h2>
+            <h2 className="[--ui-title-font-size:44px] font-medium text-[#28251f] sm:[--ui-title-font-size:60px]" style={{ lineHeight: 1.06 }}>Documentos organizados hoje. Emissão fiscal preparada para evoluir.</h2>
             <p className="mt-4 max-w-[700px] text-[15px] leading-7 text-[#70695c]">A Otto já importa e valida XMLs de compras, vincula documentos a fornecedores e mantém os totais fiscais. A emissão por API será adicionada em uma próxima etapa.</p>
           </div>
         </div>
@@ -292,7 +292,7 @@ export function OttoLandingPage() {
 
       <section className="px-5 pb-10 sm:px-8 sm:pb-14">
         <div className="mx-auto max-w-[1180px] rounded-lg border border-[#d6e5d7] bg-[#edf7ef] px-6 py-14 text-center sm:px-10 sm:py-16">
-          <h2 className="mx-auto max-w-[820px] text-[42px] font-medium leading-[1.1] text-[#18301e] sm:text-[52px]">Leve sua empresa para o ChatGPT e o Claude.</h2>
+          <h2 className="mx-auto max-w-[900px] [--ui-title-font-size:46px] font-medium text-[#18301e] sm:[--ui-title-font-size:62px]" style={{ lineHeight: 1.06 }}>Leve sua empresa para o ChatGPT e o Claude.</h2>
           <p className="mx-auto mt-5 max-w-[640px] text-[15px] leading-7 text-[#526856]">Centralize a gestão na Otto e use os assistentes para consultar informações e preparar rotinas com muito menos atrito.</p>
           <Link href="/sign-up" className="mt-7 inline-flex h-12 items-center justify-center gap-2 rounded-md bg-[#181818] px-5 text-sm font-medium text-white hover:bg-[#303030]">
             Criar minha conta

@@ -57,7 +57,7 @@ export function InvoiceShowcase() {
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <div>
               <p className="text-[11px] font-medium text-[#788079]">DOCUMENTOS FISCAIS</p>
-              <h2 className="mt-1 text-xl font-semibold text-[#1c211d]">Notas fiscais</h2>
+              <h2 className="mt-1 [--ui-title-font-size:20px] font-semibold text-[#1c211d]">Notas fiscais</h2>
             </div>
             <button type="button" className="inline-flex h-10 items-center justify-center gap-2 rounded-md bg-[#17653a] px-4 text-xs font-medium text-white">
               <Plus className="h-4 w-4" /> Nova nota fiscal
