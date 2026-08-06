@@ -54,7 +54,7 @@ export function PricingSection() {
       <div className="mx-auto max-w-[1180px]">
         <div className="mx-auto max-w-[660px] text-center">
           <p className="text-xs font-medium uppercase text-[#2f7441]">Planos</p>
-          <h2 className="mt-4 [--ui-title-font-size:46px] font-medium text-[#181818] sm:[--ui-title-font-size:64px]" style={{ lineHeight: 1.06 }}>
+          <h2 className="mt-4 [--ui-title-font-size:40px] font-medium text-[#181818] sm:[--ui-title-font-size:48px]" style={{ lineHeight: 1.06 }}>
             Escolha o plano da sua empresa.
           </h2>
           <p className="mt-5 text-[15px] leading-7 text-[#646a64]">
