@@ -57,7 +57,7 @@ export function PricingSection() {
           <h2 className="mt-4 [--ui-title-font-size:40px] font-medium text-[#181818] sm:[--ui-title-font-size:48px]" style={{ lineHeight: 1.06 }}>
             Escolha o plano da sua empresa.
           </h2>
-          <p className="mt-5 text-[15px] leading-7 text-[#646a64]">
+          <p className="mt-5 text-[15px] text-[#646a64]" style={{ lineHeight: 1.5 }}>
             Use a Otto pela aplicação web, ChatGPT ou Claude e evolua conforme sua operação cresce. Todos os planos têm cobrança mensal.
           </p>
         </div>

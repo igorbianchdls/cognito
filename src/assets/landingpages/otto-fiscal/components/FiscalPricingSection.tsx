@@ -32,7 +32,7 @@ export function FiscalPricingSection() {
         <div className="mx-auto max-w-[650px] text-center">
           <p className="text-xs font-medium uppercase text-[#17653a]">Planos</p>
           <h2 className="mt-4 [--ui-title-font-size:40px] font-medium text-[#181b19] sm:[--ui-title-font-size:48px]" style={{ lineHeight: 1.06 }}>Emissão fiscal que cabe na empresa.</h2>
-          <p className="mt-5 text-[15px] leading-7 text-[#646c66]">Emita pela aplicação e use o ChatGPT para preparar e consultar a rotina. Os planos têm cobrança mensal e acompanham o crescimento da operação.</p>
+          <p className="mt-5 text-[15px] text-[#646c66]" style={{ lineHeight: 1.5 }}>Emita pela aplicação e use o ChatGPT para preparar e consultar a rotina. Os planos têm cobrança mensal e acompanham o crescimento da operação.</p>
         </div>
 
         <div className="mt-12 grid items-stretch gap-4 lg:grid-cols-3">

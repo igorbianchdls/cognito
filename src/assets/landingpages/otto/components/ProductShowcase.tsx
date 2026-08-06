@@ -46,7 +46,7 @@ export function ProductShowcase() {
 
       <div className="mb-8 grid gap-3 md:grid-cols-[1fr_1.15fr] md:items-end">
         <h2 className="max-w-[620px] [--ui-title-font-size:40px] font-medium text-[#181818] sm:[--ui-title-font-size:48px]" style={{ lineHeight: 1.06 }}>{active.title}</h2>
-        <p className="max-w-[560px] text-[15px] leading-7 text-[#626862] md:justify-self-end">{active.description}</p>
+        <p className="max-w-[560px] text-[15px] text-[#626862] md:justify-self-end" style={{ lineHeight: 1.5 }}>{active.description}</p>
       </div>
 
       <div className="overflow-hidden rounded-lg border border-[#dfe3df] bg-white shadow-[0_28px_80px_-52px_rgba(30,50,34,0.38)]">

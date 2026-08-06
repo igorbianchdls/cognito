@@ -89,7 +89,7 @@ export function FiscalLandingPage() {
             <h1 className="mt-7 [--ui-title-font-size:40px] font-medium text-[#181b19] sm:[--ui-title-font-size:48px]" style={{ lineHeight: 1 }}>
               Sistema de Emissão de Nota Fiscal 100% integrado ao ChatGPT.
             </h1>
-            <p className="mx-auto mt-6 max-w-[760px] text-base leading-7 text-[#5e6760] sm:text-lg sm:leading-8">
+            <p className="mx-auto mt-6 max-w-[760px] text-base text-[#5e6760] sm:text-lg" style={{ lineHeight: 1.5 }}>
               Prepare notas a partir das vendas, consulte documentos e acompanhe autorizações e rejeições por conversa. A Otto mantém os dados fiscais, as permissões e o histórico organizados.
             </p>
             <div className="mt-8 flex flex-col justify-center gap-3 sm:flex-row">
@@ -128,7 +128,7 @@ export function FiscalLandingPage() {
           <div>
             <p className="text-xs font-medium uppercase text-[#17653a]">ChatGPT + Otto</p>
             <h2 className="mt-4 [--ui-title-font-size:40px] font-medium text-[#181b19] sm:[--ui-title-font-size:48px]" style={{ lineHeight: 1.06 }}>Prepare uma nota com uma conversa.</h2>
-            <p className="mt-5 text-[15px] leading-7 text-[#646c66]">O ChatGPT vira a interface. A Otto encontra a venda, reúne os dados fiscais autorizados e devolve o documento pronto para você revisar.</p>
+            <p className="mt-5 text-[15px] text-[#646c66]" style={{ lineHeight: 1.5 }}>O ChatGPT vira a interface. A Otto encontra a venda, reúne os dados fiscais autorizados e devolve o documento pronto para você revisar.</p>
             <div className="mt-7 grid gap-3 text-sm text-[#4f5751]">
               <span className="inline-flex items-center gap-2"><CheckCircle2 className="h-4 w-4 text-[#2f8450]" />Dados preenchidos a partir da venda</span>
               <span className="inline-flex items-center gap-2"><CheckCircle2 className="h-4 w-4 text-[#2f8450]" />Pendências apontadas antes do envio</span>
@@ -165,7 +165,7 @@ export function FiscalLandingPage() {
             <div>
               <p className="text-xs font-medium uppercase text-[#17653a]">Emissão assistida</p>
               <h2 className="mt-4 [--ui-title-font-size:40px] font-medium text-[#181b19] sm:[--ui-title-font-size:48px]" style={{ lineHeight: 1.06 }}>Da conversa ao documento autorizado.</h2>
-              <p className="mt-5 max-w-[460px] text-[15px] leading-7 text-[#636c65]">
+              <p className="mt-5 max-w-[460px] text-[15px] text-[#636c65]" style={{ lineHeight: 1.5 }}>
                 Use o ChatGPT para iniciar e consultar a rotina. Use a Otto para revisar, confirmar e manter cada documento fiscal sob controle.
               </p>
               <Link href="/sign-up" className="mt-7 inline-flex items-center gap-2 text-sm font-medium text-[#17653a] hover:text-[#104e2d]">
@@ -194,7 +194,7 @@ export function FiscalLandingPage() {
           <div className="max-w-[640px]">
             <p className="text-xs font-medium uppercase text-[#17653a]">Como funciona</p>
             <h2 className="mt-4 [--ui-title-font-size:40px] font-medium text-[#181b19] sm:[--ui-title-font-size:48px]" style={{ lineHeight: 1.06 }}>Do pedido no ChatGPT à emissão.</h2>
-            <p className="mt-5 text-[15px] leading-7 text-[#646c66]">A conversa acelera o preenchimento, enquanto a Otto mantém revisão, transmissão e histórico no fluxo correto.</p>
+            <p className="mt-5 text-[15px] text-[#646c66]" style={{ lineHeight: 1.5 }}>A conversa acelera o preenchimento, enquanto a Otto mantém revisão, transmissão e histórico no fluxo correto.</p>
           </div>
 
           <div className="mt-12 grid gap-0 border-y border-[#dce2dd] lg:grid-cols-3">
@@ -214,7 +214,7 @@ export function FiscalLandingPage() {
           <div>
             <p className="text-xs font-medium uppercase text-[#a0582f]">Pendências fiscais</p>
             <h2 className="mt-4 [--ui-title-font-size:40px] font-medium text-[#181b19] sm:[--ui-title-font-size:48px]" style={{ lineHeight: 1.06 }}>Entenda uma rejeição sem decifrar códigos fiscais.</h2>
-            <p className="mt-5 text-[15px] leading-7 text-[#646c66]">Consulte a pendência pelo ChatGPT e receba uma explicação clara com base na resposta fiscal preservada pela Otto.</p>
+            <p className="mt-5 text-[15px] text-[#646c66]" style={{ lineHeight: 1.5 }}>Consulte a pendência pelo ChatGPT e receba uma explicação clara com base na resposta fiscal preservada pela Otto.</p>
             <div className="mt-7 grid gap-3 text-sm text-[#4f5751]">
               <span className="inline-flex items-center gap-2"><CheckCircle2 className="h-4 w-4 text-[#2f8450]" />Motivo da rejeição preservado no histórico</span>
               <span className="inline-flex items-center gap-2"><CheckCircle2 className="h-4 w-4 text-[#2f8450]" />Nova tentativa sem duplicar o documento</span>
@@ -248,7 +248,7 @@ export function FiscalLandingPage() {
             <div>
               <p className="text-xs font-medium uppercase text-[#17653a]">Venda conectada</p>
               <h2 className="mt-4 [--ui-title-font-size:40px] font-medium text-[#181b19] sm:[--ui-title-font-size:48px]" style={{ lineHeight: 1.06 }}>Peça pelo ChatGPT. Revise na Otto.</h2>
-              <p className="mt-5 text-[15px] leading-7 text-[#626b64]">Cliente, itens, quantidades e valores seguem da venda para a conversa e chegam organizados à revisão fiscal.</p>
+              <p className="mt-5 text-[15px] text-[#626b64]" style={{ lineHeight: 1.5 }}>Cliente, itens, quantidades e valores seguem da venda para a conversa e chegam organizados à revisão fiscal.</p>
             </div>
             <div className="grid gap-3 sm:grid-cols-4">
               {[
@@ -287,7 +287,7 @@ export function FiscalLandingPage() {
           <div>
             <p className="text-xs font-medium uppercase text-[#17653a]">Dúvidas</p>
             <h2 className="mt-4 [--ui-title-font-size:40px] font-medium text-[#181b19] sm:[--ui-title-font-size:48px]" style={{ lineHeight: 1.06 }}>Antes da primeira emissão.</h2>
-            <p className="mt-5 text-sm leading-7 text-[#687069]">Algumas exigências variam por documento, município e configuração fiscal da empresa.</p>
+            <p className="mt-5 text-sm text-[#687069]" style={{ lineHeight: 1.5 }}>Algumas exigências variam por documento, município e configuração fiscal da empresa.</p>
           </div>
           <div className="border-t border-[#dfe4e0]">
             {fiscalFaq.map((item) => (
