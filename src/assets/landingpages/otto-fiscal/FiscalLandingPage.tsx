@@ -14,6 +14,7 @@ import {
   Link2,
   LockKeyhole,
   Mail,
+  MessageSquareText,
   ReceiptText,
   RefreshCw,
   Send,
@@ -28,42 +29,42 @@ import { fiscalFaq } from '@/assets/landingpages/otto-fiscal/fiscalLandingConten
 
 const benefits = [
   {
-    icon: Sparkles,
-    title: 'Menos preenchimento',
-    description: 'Use os dados já cadastrados do cliente, dos produtos, dos serviços e da venda para montar a nota.',
+    icon: MessageSquareText,
+    title: 'Prepare pelo ChatGPT',
+    description: 'Peça uma nota a partir da venda e deixe a Otto reunir cliente, itens, valores e dados fiscais para revisão.',
   },
   {
     icon: Clock3,
-    title: 'Situação em tempo real',
-    description: 'Acompanhe rascunhos, documentos processando, notas autorizadas e situações que exigem correção.',
+    title: 'Consulte a situação por conversa',
+    description: 'Encontre rascunhos, notas autorizadas e documentos que exigem correção sem navegar por várias telas.',
   },
   {
     icon: FileCheck2,
-    title: 'Documentos organizados',
-    description: 'Mantenha XML, documento auxiliar e eventos fiscais reunidos no histórico de cada emissão.',
+    title: 'Encontre XML e DANFE',
+    description: 'Localize documentos fiscais pelo ChatGPT enquanto a Otto preserva arquivos, eventos e histórico.',
   },
   {
     icon: Link2,
     title: 'Venda conectada à nota',
-    description: 'Transforme uma venda em documento fiscal sem redigitar cliente, itens, valores e informações comerciais.',
+    description: 'Transforme uma venda em documento fiscal sem redigitar dados e confirme antes de transmitir.',
   },
 ]
 
 const steps = [
   {
     number: '01',
-    title: 'Configure a empresa',
-    description: 'Informe os dados fiscais, o regime tributário, o certificado e as credenciais exigidas para emissão.',
+    title: 'Peça pelo ChatGPT',
+    description: 'Informe a venda ou descreva o documento fiscal que deseja preparar.',
   },
   {
     number: '02',
-    title: 'Revise a nota',
-    description: 'Selecione a venda ou preencha o documento, confira cliente, itens, natureza da operação e impostos.',
+    title: 'A Otto prepara a nota',
+    description: 'Cliente, itens, natureza da operação e configurações fiscais são reunidos para revisão.',
   },
   {
     number: '03',
-    title: 'Envie e acompanhe',
-    description: 'Transmita o documento e acompanhe a autorização. XML e documento auxiliar ficam disponíveis no histórico.',
+    title: 'Revise, envie e acompanhe',
+    description: 'Confirme os dados antes da transmissão e consulte depois a autorização, o XML e o documento auxiliar.',
   },
 ]
 
@@ -83,26 +84,26 @@ export function FiscalLandingPage() {
           <div className="mx-auto max-w-[1020px] text-center">
             <div className="inline-flex items-center gap-2 rounded-md border border-[#d8e6dc] bg-[#f2f8f4] px-3 py-2 text-xs font-medium text-[#17653a]">
               <span className="h-1.5 w-1.5 rounded-full bg-[#3d9b5c]" />
-              Emissão fiscal sem complicação
+              Emissão fiscal integrada ao ChatGPT
             </div>
             <h1 className="mt-7 text-[50px] font-medium leading-[1.04] text-[#181b19] sm:text-[68px] lg:text-[80px]">
-              Emissor de nota fiscal para pequenas empresas.
+              Sistema de Emissão de Nota Fiscal 100% integrado ao ChatGPT.
             </h1>
-            <p className="mx-auto mt-6 max-w-[720px] text-base leading-7 text-[#5e6760] sm:text-lg sm:leading-8">
-              Emita NF-e e NFS-e, acompanhe cada autorização e mantenha XML e documentos auxiliares organizados em um só lugar.
+            <p className="mx-auto mt-6 max-w-[760px] text-base leading-7 text-[#5e6760] sm:text-lg sm:leading-8">
+              Prepare notas a partir das vendas, consulte documentos e acompanhe autorizações e rejeições por conversa. A Otto mantém os dados fiscais, as permissões e o histórico organizados.
             </p>
             <div className="mt-8 flex flex-col justify-center gap-3 sm:flex-row">
               <Link href="/sign-up" className="inline-flex h-12 items-center justify-center gap-2 rounded-md bg-[#17653a] px-5 text-sm font-medium text-white transition-colors hover:bg-[#11542f]">
                 Começar a emitir <ArrowRight className="h-4 w-4" />
               </Link>
-              <a href="#como-funciona" className="inline-flex h-12 items-center justify-center rounded-md border border-[#d5dbd6] bg-white px-5 text-sm font-medium text-[#303631] transition-colors hover:bg-[#f5f7f5]">
-                Ver como funciona
+              <a href="#chatgpt" className="inline-flex h-12 items-center justify-center rounded-md border border-[#d5dbd6] bg-white px-5 text-sm font-medium text-[#303631] transition-colors hover:bg-[#f5f7f5]">
+                Ver a integração
               </a>
             </div>
             <div className="mt-5 flex flex-wrap items-center justify-center gap-x-5 gap-y-2 text-xs text-[#747c76]">
-              <span className="inline-flex items-center gap-1.5"><CircleCheck className="h-3.5 w-3.5 text-[#2f8450]" />NF-e de produtos</span>
-              <span className="inline-flex items-center gap-1.5"><CircleCheck className="h-3.5 w-3.5 text-[#2f8450]" />NFS-e de serviços</span>
-              <span className="inline-flex items-center gap-1.5"><CircleCheck className="h-3.5 w-3.5 text-[#2f8450]" />XML e documento auxiliar</span>
+              <span className="inline-flex items-center gap-1.5"><MessageSquareText className="h-3.5 w-3.5 text-[#2f8450]" />ChatGPT conectado</span>
+              <span className="inline-flex items-center gap-1.5"><CircleCheck className="h-3.5 w-3.5 text-[#2f8450]" />Revisão antes do envio</span>
+              <span className="inline-flex items-center gap-1.5"><CircleCheck className="h-3.5 w-3.5 text-[#2f8450]" />Histórico fiscal preservado</span>
             </div>
           </div>
 
@@ -118,18 +119,54 @@ export function FiscalLandingPage() {
           <span className="inline-flex items-center gap-2"><FileText className="h-4 w-4 text-[#397b50]" />NFS-e</span>
           <span className="inline-flex items-center gap-2"><FileCheck2 className="h-4 w-4 text-[#397b50]" />XML e DANFE</span>
           <span className="inline-flex items-center gap-2"><RefreshCw className="h-4 w-4 text-[#397b50]" />Eventos fiscais</span>
-          <span className="inline-flex items-center gap-2"><BadgeCheck className="h-4 w-4 text-[#397b50]" />Integração via Focus NFe</span>
+          <span className="inline-flex items-center gap-2"><MessageSquareText className="h-4 w-4 text-[#397b50]" />ChatGPT integrado</span>
         </div>
       </section>
 
-      <section id="recursos" className="scroll-mt-24 px-5 py-20 sm:px-8 sm:py-28">
+      <section id="chatgpt" className="scroll-mt-24 px-5 py-20 sm:px-8 sm:py-28">
+        <div className="mx-auto grid max-w-[1100px] gap-12 lg:grid-cols-[0.85fr_1.15fr] lg:items-center lg:gap-20">
+          <div>
+            <p className="text-xs font-medium uppercase text-[#17653a]">ChatGPT + Otto</p>
+            <h2 className="mt-4 text-[42px] font-medium leading-[1.1] text-[#181b19] sm:text-[54px]">Prepare uma nota com uma conversa.</h2>
+            <p className="mt-5 text-[15px] leading-7 text-[#646c66]">O ChatGPT vira a interface. A Otto encontra a venda, reúne os dados fiscais autorizados e devolve o documento pronto para você revisar.</p>
+            <div className="mt-7 grid gap-3 text-sm text-[#4f5751]">
+              <span className="inline-flex items-center gap-2"><CheckCircle2 className="h-4 w-4 text-[#2f8450]" />Dados preenchidos a partir da venda</span>
+              <span className="inline-flex items-center gap-2"><CheckCircle2 className="h-4 w-4 text-[#2f8450]" />Pendências apontadas antes do envio</span>
+              <span className="inline-flex items-center gap-2"><CheckCircle2 className="h-4 w-4 text-[#2f8450]" />Transmissão sujeita à sua confirmação</span>
+            </div>
+          </div>
+
+          <div className="overflow-hidden rounded-lg border border-[#dfe4e0] bg-white shadow-[0_24px_70px_-48px_rgba(25,70,42,0.42)]">
+            <div className="flex h-14 items-center border-b border-[#e3e7e4] bg-[#fafcfb] px-4">
+              <span className="grid h-8 w-8 place-items-center rounded-md bg-[#e5f2e9] text-[#17653a]"><MessageSquareText className="h-4 w-4" /></span>
+              <div className="ml-3"><p className="text-xs font-semibold text-[#252b27]">Otto no ChatGPT</p><p className="mt-0.5 text-[10px] text-[#818982]">Conectado à operação fiscal</p></div>
+              <span className="ml-auto text-[10px] font-medium text-[#397b50]">Dados autorizados</span>
+            </div>
+            <div className="bg-[#f7f9f7] p-5 sm:p-6">
+              <div className="ml-auto max-w-[82%] rounded-lg bg-[#e8ece9] px-4 py-3 text-sm leading-6 text-[#333a35]">Prepare a nota fiscal da venda 317.</div>
+              <div className="mt-5 max-w-[94%]">
+                <div className="flex items-center gap-2 text-xs font-semibold text-[#2f3631]"><Sparkles className="h-4 w-4 text-[#247244]" />Nota preparada para revisão</div>
+                <p className="mt-3 text-sm leading-6 text-[#5e675f]">Localizei a venda, o cliente e os itens. Antes de transmitir, confirme a natureza da operação e os dados tributários.</p>
+                <div className="mt-4 grid gap-px overflow-hidden rounded-md border border-[#dfe4e0] bg-[#dfe4e0] sm:grid-cols-3">
+                  <div className="bg-white p-3"><p className="text-[10px] text-[#858c86]">Venda</p><p className="mt-1 text-xs font-medium text-[#303631]">317</p></div>
+                  <div className="bg-white p-3"><p className="text-[10px] text-[#858c86]">Cliente</p><p className="mt-1 truncate text-xs font-medium text-[#303631]">Bruna Schmitz</p></div>
+                  <div className="bg-white p-3"><p className="text-[10px] text-[#858c86]">Total</p><p className="mt-1 text-xs font-medium text-[#303631]">R$ 375,00</p></div>
+                </div>
+                <button type="button" className="mt-4 inline-flex h-10 items-center gap-2 rounded-md bg-[#17653a] px-4 text-xs font-medium text-white">Revisar nota <ArrowRight className="h-3.5 w-3.5" /></button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section id="recursos" className="scroll-mt-24 border-t border-[#e3e7e4] px-5 py-20 sm:px-8 sm:py-28">
         <div className="mx-auto max-w-[1180px]">
           <div className="grid gap-12 lg:grid-cols-[0.8fr_1.2fr] lg:gap-20">
             <div>
-              <p className="text-xs font-medium uppercase text-[#17653a]">Feito para emitir</p>
-              <h2 className="mt-4 text-[42px] font-medium leading-[1.1] text-[#181b19] sm:text-[54px]">Da venda ao documento autorizado.</h2>
+              <p className="text-xs font-medium uppercase text-[#17653a]">Emissão assistida</p>
+              <h2 className="mt-4 text-[42px] font-medium leading-[1.1] text-[#181b19] sm:text-[54px]">Da conversa ao documento autorizado.</h2>
               <p className="mt-5 max-w-[460px] text-[15px] leading-7 text-[#636c65]">
-                Uma experiência fiscal clara para quem precisa emitir corretamente, encontrar documentos e resolver pendências sem navegar por telas confusas.
+                Use o ChatGPT para iniciar e consultar a rotina. Use a Otto para revisar, confirmar e manter cada documento fiscal sob controle.
               </p>
               <Link href="/sign-up" className="mt-7 inline-flex items-center gap-2 text-sm font-medium text-[#17653a] hover:text-[#104e2d]">
                 Conhecer o emissor <ArrowRight className="h-4 w-4" />
@@ -156,8 +193,8 @@ export function FiscalLandingPage() {
         <div className="mx-auto max-w-[1180px]">
           <div className="max-w-[640px]">
             <p className="text-xs font-medium uppercase text-[#17653a]">Como funciona</p>
-            <h2 className="mt-4 text-[42px] font-medium leading-[1.1] text-[#181b19] sm:text-[54px]">Três etapas até a emissão.</h2>
-            <p className="mt-5 text-[15px] leading-7 text-[#646c66]">Você revisa antes do envio e acompanha a resposta fiscal sem perder o contexto do documento.</p>
+            <h2 className="mt-4 text-[42px] font-medium leading-[1.1] text-[#181b19] sm:text-[54px]">Do pedido no ChatGPT à emissão.</h2>
+            <p className="mt-5 text-[15px] leading-7 text-[#646c66]">A conversa acelera o preenchimento, enquanto a Otto mantém revisão, transmissão e histórico no fluxo correto.</p>
           </div>
 
           <div className="mt-12 grid gap-0 border-y border-[#dce2dd] lg:grid-cols-3">
@@ -176,8 +213,8 @@ export function FiscalLandingPage() {
         <div className="mx-auto grid max-w-[1100px] gap-12 lg:grid-cols-[0.9fr_1.1fr] lg:items-center lg:gap-20">
           <div>
             <p className="text-xs font-medium uppercase text-[#a0582f]">Pendências fiscais</p>
-            <h2 className="mt-4 text-[42px] font-medium leading-[1.1] text-[#181b19] sm:text-[54px]">Saiba o que corrigir antes de tentar novamente.</h2>
-            <p className="mt-5 text-[15px] leading-7 text-[#646c66]">Uma rejeição não precisa virar uma busca por códigos difíceis. Veja a mensagem, identifique o campo envolvido e retome a emissão pelo mesmo documento.</p>
+            <h2 className="mt-4 text-[42px] font-medium leading-[1.1] text-[#181b19] sm:text-[54px]">Entenda uma rejeição sem decifrar códigos fiscais.</h2>
+            <p className="mt-5 text-[15px] leading-7 text-[#646c66]">Consulte a pendência pelo ChatGPT e receba uma explicação clara com base na resposta fiscal preservada pela Otto.</p>
             <div className="mt-7 grid gap-3 text-sm text-[#4f5751]">
               <span className="inline-flex items-center gap-2"><CheckCircle2 className="h-4 w-4 text-[#2f8450]" />Motivo da rejeição preservado no histórico</span>
               <span className="inline-flex items-center gap-2"><CheckCircle2 className="h-4 w-4 text-[#2f8450]" />Nova tentativa sem duplicar o documento</span>
@@ -210,8 +247,8 @@ export function FiscalLandingPage() {
           <div className="grid gap-10 lg:grid-cols-[0.8fr_1.2fr] lg:items-center lg:gap-20">
             <div>
               <p className="text-xs font-medium uppercase text-[#17653a]">Venda conectada</p>
-              <h2 className="mt-4 text-[40px] font-medium leading-[1.1] text-[#181b19] sm:text-[50px]">Emita sem digitar tudo outra vez.</h2>
-              <p className="mt-5 text-[15px] leading-7 text-[#626b64]">Cliente, itens, quantidades e valores seguem da operação comercial para a revisão fiscal.</p>
+              <h2 className="mt-4 text-[40px] font-medium leading-[1.1] text-[#181b19] sm:text-[50px]">Peça pelo ChatGPT. Revise na Otto.</h2>
+              <p className="mt-5 text-[15px] leading-7 text-[#626b64]">Cliente, itens, quantidades e valores seguem da venda para a conversa e chegam organizados à revisão fiscal.</p>
             </div>
             <div className="grid gap-3 sm:grid-cols-4">
               {[
@@ -269,7 +306,7 @@ export function FiscalLandingPage() {
         <div className="mx-auto flex max-w-[980px] flex-col items-start justify-between gap-7 md:flex-row md:items-center">
           <div>
             <p className="text-xs font-medium uppercase text-[#17653a]">Sua próxima nota</p>
-            <h2 className="mt-3 max-w-[760px] text-[40px] font-medium leading-[1.1] text-[#18231b] sm:text-[50px]">Emita com clareza desde o primeiro documento.</h2>
+            <h2 className="mt-3 max-w-[760px] text-[40px] font-medium leading-[1.1] text-[#18231b] sm:text-[50px]">Leve sua emissão fiscal para o ChatGPT.</h2>
           </div>
           <Link href="/sign-up" className="inline-flex h-12 shrink-0 items-center justify-center gap-2 rounded-md bg-[#17653a] px-5 text-sm font-medium text-white hover:bg-[#11542f]">Começar a emitir <ArrowRight className="h-4 w-4" /></Link>
         </div>

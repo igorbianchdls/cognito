@@ -142,9 +142,9 @@ const capabilityCards: CapabilityCardCopy[] = [
 
 const variantA: VariantCopy = {
   route: '/lp-a',
-  headline: 'Automatize o financeiro do seu negocio com funcionarios de IA.',
-  subtitle: 'Otto conecta seus sistemas, documentos, plataformas e planilhas para criar funcionarios de IA que acompanham o financeiro, organizam a operacao, geram relatorios e automatizam tarefas do dia a dia.',
-  primaryCta: 'Criar meu primeiro funcionario de IA',
+  headline: 'Sistema de Gestao 100% integrado ao Claude e ChatGPT.',
+  subtitle: 'A Otto conecta sistemas, documentos, plataformas e planilhas ao Claude e ChatGPT para consultar a empresa, preparar operacoes e acompanhar o financeiro com dados reais.',
+  primaryCta: 'Conectar minha empresa',
   secondaryCta: 'Ver integracoes',
   productEyebrow: 'Produto',
   productTitle: 'Cada funcionario de IA recebe uma funcao, acessa as fontes certas e trabalha com os dados reais da empresa.',

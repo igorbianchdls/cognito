@@ -1,5 +1,6 @@
 export const landingNavigation = [
   { href: '#produto', label: 'Produto' },
+  { href: '#assistente', label: 'ChatGPT e Claude' },
   { href: '#recursos', label: 'Recursos' },
   { href: '#integracoes', label: 'Integrações' },
   { href: '#preco', label: 'Preço' },
@@ -99,8 +100,20 @@ export const frequentlyAskedQuestions = [
     answer: 'Hoje a Otto organiza e valida documentos fiscais de entrada. A emissão por API está sendo preparada para uma próxima etapa do produto.',
   },
   {
+    question: 'Como a Otto funciona com o ChatGPT e o Claude?',
+    answer: 'A Otto conecta os assistentes aos dados autorizados da empresa. Assim, você pode consultar informações e preparar rotinas por conversa sem perder a organização, as permissões e o histórico do sistema.',
+  },
+  {
+    question: 'A IA pode alterar dados sem minha autorização?',
+    answer: 'Não nas ações sensíveis. A Otto aplica as permissões do usuário e solicita confirmação antes de concluir operações que alteram dados importantes da empresa.',
+  },
+  {
+    question: 'Quais dados ficam disponíveis para os assistentes?',
+    answer: 'Somente o contexto necessário para a solicitação e permitido para o usuário autenticado. Os dados continuam separados por empresa e controlados pela Otto.',
+  },
+  {
     question: 'Posso usar a Otto sem ChatGPT ou Claude?',
-    answer: 'Sim. O ERP funciona diretamente pela aplicação web. ChatGPT e Claude são interfaces adicionais para consultas e rotinas assistidas.',
+    answer: 'Sim. O sistema funciona integralmente pela aplicação web. ChatGPT e Claude são interfaces conectadas para consultas e preparação de rotinas.',
   },
   {
     question: 'Como meus dados são protegidos?',

@@ -3,8 +3,8 @@ import type { Metadata } from 'next'
 import { FiscalLandingPage } from '@/assets/landingpages/otto-fiscal/FiscalLandingPage'
 
 export const metadata: Metadata = {
-  title: 'Otto | Emissor de nota fiscal simples e conectado',
-  description: 'Emita NF-e e NFS-e, acompanhe autorizações e mantenha XML e DANFE organizados em um só lugar.',
+  title: 'Otto | Emissão de nota fiscal integrada ao ChatGPT',
+  description: 'Prepare notas a partir das vendas e consulte autorizações, rejeições, XML e DANFE pelo ChatGPT com a segurança da Otto.',
 }
 
 export default function InvoiceIssuerLandingPage() {

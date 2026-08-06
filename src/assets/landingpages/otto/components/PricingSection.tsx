@@ -11,6 +11,7 @@ const plans = [
       'Clientes, fornecedores, produtos e serviços',
       'Vendas e compras',
       'Contas a pagar e contas a receber',
+      'Consultas pelo ChatGPT e Claude',
       'Suporte por e-mail',
     ],
     featured: false,
@@ -24,6 +25,7 @@ const plans = [
       'Tudo do plano Essencial',
       'Contas financeiras e centros de custo',
       'Baixas parciais, totais e estornos',
+      'Preparação de operações por conversa',
       'Organização de documentos fiscais',
       'Suporte prioritário',
     ],
@@ -37,6 +39,7 @@ const plans = [
       'Até 10 usuários',
       'Tudo do plano Gestão',
       'Histórico de alterações',
+      'Permissões e contexto para a equipe',
       'Compras e pagamentos recorrentes',
       'Implantação guiada',
       'Atendimento prioritário',
@@ -55,7 +58,7 @@ export function PricingSection() {
             Escolha o plano da sua empresa.
           </h2>
           <p className="mt-5 text-[15px] leading-7 text-[#646a64]">
-            Comece com o essencial e evolua conforme sua operação cresce. Todos os planos têm cobrança mensal.
+            Use a Otto pela aplicação web, ChatGPT ou Claude e evolua conforme sua operação cresce. Todos os planos têm cobrança mensal.
           </p>
         </div>
 
