@@ -1,4 +1,4 @@
-import { IconBan, IconCheck, IconEdit, IconReceipt, IconX } from '@tabler/icons-react'
+import { IconBan, IconCheck, IconEdit, IconPackageExport, IconReceipt, IconX } from '@tabler/icons-react'
 
 import { Button } from '@/components/ui/button'
 import {
@@ -35,6 +35,7 @@ function formatCellValue(record: ErpEntityRecord, column: ErpTableColumn, config
 
 function ActionIcon({ action }: { action: ErpEntityAction }) {
   if (action.id === 'confirmar') return <IconCheck className="size-4" stroke={1.8} />
+  if (action.id === 'faturar') return <IconPackageExport className="size-4" stroke={1.8} />
   if (action.id === 'cancelar') return <IconX className="size-4" stroke={1.8} />
   return <IconReceipt className="size-4" stroke={1.8} />
 }

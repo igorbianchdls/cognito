@@ -48,6 +48,7 @@ export const vendasConfig: ErpEntityConfig<ErpEntityRecord> = {
   },
   actions: [
     { id: 'confirmar', label: 'Confirmar', tone: 'success', confirmMessage: 'Confirmar esta venda e gerar contas a receber?' },
+    { id: 'faturar', label: 'Faturar', tone: 'success', confirmMessage: 'Faturar esta venda e efetivar a saida do estoque?' },
     { id: 'cancelar', label: 'Cancelar', tone: 'danger', confirmMessage: 'Cancelar esta venda?' },
   ],
   statusMap: {

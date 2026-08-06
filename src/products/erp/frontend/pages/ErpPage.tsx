@@ -4,6 +4,8 @@ import PageContainer from '@/components/layout/PageContainer'
 import { SidebarShadcn } from '@/components/navigation/SidebarShadcn'
 import { SidebarInset, SidebarProvider } from '@/components/ui/sidebar'
 import { ErpEntityPage } from '@/products/erp/frontend/components/ErpEntityPage'
+import { ErpImportExportPage } from '@/products/erp/frontend/components/ErpImportExportPage'
+import { ErpOperationsWorkspacePage } from '@/products/erp/frontend/components/ErpOperationsWorkspacePage'
 import { ErpShell } from '@/products/erp/frontend/layout/ErpShell'
 import { PurchaseWorkspacePage } from '@/products/erp/frontend/modules/compras/PurchaseWorkspacePage'
 import { PurchaseInvoicesPage } from '@/products/erp/frontend/modules/compras/PurchaseInvoicesPage'
@@ -13,6 +15,7 @@ import { SalesWorkspacePage } from '@/products/erp/frontend/modules/vendas/Sales
 import { getErpEntityConfig } from '@/products/erp/frontend/modules/entityRegistry'
 import { OverviewPage } from '@/products/erp/frontend/modules/overview/OverviewPage'
 import { getErpModule, getErpSection } from '@/products/erp/shared/navigation'
+import { ERP_OPERATION_CONFIGS } from '@/products/erp/shared/operations'
 import type { ErpModuleId, ErpSectionId } from '@/products/erp/shared/types'
 
 function ErpPlaceholderPage({
@@ -48,6 +51,7 @@ export default function ErpPage({
   const entityConfig = getErpEntityConfig(section, module)
   const sectionConfig = getErpSection(section)
   const moduleConfig = getErpModule(section, module)
+  const operationConfig = moduleConfig ? ERP_OPERATION_CONFIGS[moduleConfig.id] : undefined
 
   return (
     <SidebarProvider>
@@ -69,6 +73,10 @@ export default function ErpPage({
               <PayablesWorkspacePage />
             ) : sectionConfig.id === 'financeiro' && moduleConfig?.id === 'contas-a-receber' ? (
               <ReceivablesWorkspacePage />
+            ) : sectionConfig.id === 'cadastros' && moduleConfig?.id === 'importacoes' ? (
+              <ErpImportExportPage />
+            ) : operationConfig ? (
+              <ErpOperationsWorkspacePage config={operationConfig} />
             ) : entityConfig ? (
               <ErpEntityPage config={entityConfig} />
             ) : (

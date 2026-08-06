@@ -1,6 +1,6 @@
 import type { ComponentType, CSSProperties } from 'react'
 
-export type ErpSectionId = 'overview' | 'cadastros' | 'vendas' | 'compras' | 'estoque' | 'financeiro'
+export type ErpSectionId = 'overview' | 'cadastros' | 'vendas' | 'compras' | 'estoque' | 'financeiro' | 'relatorios'
 
 export type ErpModuleId =
   | 'overview'
@@ -12,6 +12,7 @@ export type ErpModuleId =
   | 'pedidos'
   | 'orcamentos'
   | 'notas-fiscais'
+  | 'contratos'
   | 'pedidos-compra'
   | 'cotacoes'
   | 'recebimentos'
@@ -19,11 +20,23 @@ export type ErpModuleId =
   | 'notas-compra'
   | 'movimentacoes'
   | 'inventario'
+  | 'inventarios'
+  | 'posicao-estoque'
+  | 'locais-estoque'
   | 'transferencias'
+  | 'kits'
+  | 'conversoes-unidades'
   | 'contas-a-receber'
   | 'contas-a-pagar'
   | 'contas-financeiras'
   | 'fluxo-de-caixa'
+  | 'conciliacao-bancaria'
+  | 'transferencias-financeiras'
+  | 'importacoes'
+  | 'dre'
+  | 'aging-receber'
+  | 'aging-pagar'
+  | 'giro-estoque'
 
 export type ErpEntityFieldType = 'text' | 'email' | 'tel' | 'number' | 'date' | 'select' | 'textarea'
 
@@ -84,7 +97,7 @@ export type ErpEntityField = {
 }
 
 export type ErpEntityAction = {
-  id: 'confirmar' | 'cancelar' | 'baixar'
+  id: 'confirmar' | 'faturar' | 'cancelar' | 'baixar'
   label: string
   tone?: 'default' | 'success' | 'warning' | 'danger'
   confirmMessage?: string

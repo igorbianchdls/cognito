@@ -1,5 +1,11 @@
 import { runQuery, withTransaction, type SQLClient } from '@/lib/postgres'
 import { parseNfeXml } from '@/products/erp/server/fiscal/nfeParser'
+import {
+  receiveStockForPurchase,
+  releaseStockForSale,
+  reserveStockForSale,
+  reverseStockForPurchase,
+} from '@/products/erp/server/erpStockRepository'
 import type { ErpEntityRecord } from '@/products/erp/shared/types'
 import type { ErpConnectedModuleId } from '@/products/erp/server/erpModuleRegistry'
 
@@ -1460,6 +1466,8 @@ async function listProductRecords(input: ListInput): Promise<ErpEntityRecord[]> 
          produtos.nome,
          produtos.sku,
          produtos.preco_venda,
+         produtos.controla_estoque,
+         produtos.estoque_minimo,
          produtos.versao,
          produtos.ativo,
          COALESCE(categorias.nome, '') AS categoria,
@@ -1471,7 +1479,7 @@ async function listProductRecords(input: ListInput): Promise<ErpEntityRecord[]> 
        WHERE produtos.tenant_id = $1
          AND produtos.excluido_em IS NULL
      )
-     SELECT id, nome, sku, preco_venda, categoria, versao, ativo,
+     SELECT id, nome, sku, preco_venda, controla_estoque, estoque_minimo, categoria, versao, ativo,
        count(*) OVER ()::int AS __total
      FROM rows
      WHERE true${appendSearch(params, input.query)}${appendStatusFilter(input.filters)}${categorySql}
@@ -1485,6 +1493,8 @@ async function listProductRecords(input: ListInput): Promise<ErpEntityRecord[]> 
     sku: String(row.sku ?? ''),
     categoria: String(row.categoria ?? ''),
     preco: Number(row.preco_venda ?? 0),
+    controla_estoque: row.controla_estoque ? 'Sim' : 'Nao',
+    estoque_minimo: Number(row.estoque_minimo ?? 0),
     versao: Number(row.versao ?? 1),
     status: row.ativo ? 'ativo' : 'pausado',
     __total: Number(row.__total ?? 0),
@@ -1897,6 +1907,9 @@ export async function getErpEntityRecord(input: {
   } else if (input.entityId === 'produtos') {
     sql = `SELECT produtos.id::text, produtos.nome, produtos.sku,
       COALESCE(categorias.nome, '') AS categoria, produtos.preco_venda AS preco,
+      CASE WHEN produtos.controla_estoque THEN 'sim' ELSE 'nao' END AS controla_estoque,
+      CASE WHEN produtos.permite_estoque_negativo THEN 'sim' ELSE 'nao' END AS permite_estoque_negativo,
+      produtos.estoque_minimo, produtos.ponto_reposicao,
       CASE WHEN produtos.ativo THEN 'ativo' ELSE 'pausado' END AS status, produtos.versao
       FROM erp.produtos LEFT JOIN erp.categorias
         ON categorias.tenant_id = produtos.tenant_id AND categorias.id = produtos.categoria_id
@@ -1979,10 +1992,13 @@ export async function updateErpEntityRecord(input: UpdateInput): Promise<ErpEnti
       const categoryId = await resolveCategoryId(client, input.tenantId, input.actorId, input.values.categoria, 'produto')
       result = await client.query(
         `UPDATE erp.produtos SET nome = $3, sku = $4, codigo = $4, preco_venda = $5,
-           categoria_id = $6, ativo = $7, versao = versao + 1, atualizado_por = $8
-         WHERE tenant_id = $1 AND id = $2 AND versao = $9 RETURNING *`,
+           categoria_id = $6, ativo = $7, controla_estoque = $8, permite_estoque_negativo = $9,
+           estoque_minimo = $10, ponto_reposicao = $11, versao = versao + 1, atualizado_por = $12
+         WHERE tenant_id = $1 AND id = $2 AND versao = $13 RETURNING *`,
         [input.tenantId, id, text(input.values.nome), optionalText(input.values.sku), money(input.values.preco),
-          categoryId, activeFromStatus(input.values.status), input.actorId, input.expectedVersion],
+          categoryId, activeFromStatus(input.values.status), input.values.controla_estoque !== 'nao',
+          input.values.permite_estoque_negativo === 'sim', money(input.values.estoque_minimo),
+          money(input.values.ponto_reposicao), input.actorId, input.expectedVersion],
       )
     } else if (input.entityId === 'servicos') {
       assertRequired(input.values.nome, 'Nome do servico')
@@ -2331,6 +2347,11 @@ export async function confirmErpSale(input: ConfirmSaleInput): Promise<ConfirmEr
       [input.tenantId, sale.id, input.actorId],
     )
     const updatedSale = updatedSaleResult.rows[0] as SaleRow
+    await reserveStockForSale(client, {
+      tenantId: input.tenantId,
+      actorId: input.actorId,
+      saleId: Number(sale.id),
+    })
     await client.query(
       `INSERT INTO erp.vendas_eventos (tenant_id, venda_id, evento, status_anterior, status_novo, versao, dados, criado_por)
        VALUES ($1, $2, 'confirmada', $3, $4, $5, '{}'::jsonb, $6)`,
@@ -2497,6 +2518,12 @@ export async function cancelErpSale(input: IdActionInput & { reason?: string | n
     )
     if (paymentResult.rows[0]) throw new Error('Venda com pagamento nao pode ser cancelada sem estorno.')
 
+    await releaseStockForSale(client, {
+      tenantId: input.tenantId,
+      actorId: input.actorId,
+      saleId: Number(sale.id),
+    })
+
     await client.query(
       `UPDATE erp.contas_receber_parcelas AS parcelas
        SET status = 'cancelado', atualizado_por = $3
@@ -2625,6 +2652,11 @@ export async function confirmErpPurchase(input: IdActionInput): Promise<ConfirmE
       [input.tenantId, purchase.id, input.actorId],
     )
     const updatedPurchase = updatedPurchaseResult.rows[0] as PurchaseRow
+    await receiveStockForPurchase(client, {
+      tenantId: input.tenantId,
+      actorId: input.actorId,
+      purchaseId: Number(purchase.id),
+    })
 
     if (!updatedPurchase.gera_financeiro) {
       await client.query(
@@ -2690,6 +2722,12 @@ export async function cancelErpPurchase(input: IdActionInput) {
       [input.tenantId, purchase.id],
     )
     if (paymentResult.rows[0]) throw new Error('Compra com pagamento nao pode ser cancelada sem estorno.')
+
+    await reverseStockForPurchase(client, {
+      tenantId: input.tenantId,
+      actorId: input.actorId,
+      purchaseId: Number(purchase.id),
+    })
 
     await client.query(
       `UPDATE erp.contas_pagar_parcelas AS parcelas
@@ -3274,11 +3312,15 @@ async function createProductRecord(client: SQLClient, input: CreateInput) {
        codigo,
        preco_venda,
        categoria_id,
+       controla_estoque,
+       permite_estoque_negativo,
+       estoque_minimo,
+       ponto_reposicao,
        ativo,
        criado_por,
        atualizado_por
      )
-     VALUES ($1, $2, $3, $3, $4, $5, $6, $7, $7)
+     VALUES ($1, $2, $3, $3, $4, $5, $6, $7, $8, $9, $10, $11, $11)
      RETURNING id`,
     [
       input.tenantId,
@@ -3286,6 +3328,10 @@ async function createProductRecord(client: SQLClient, input: CreateInput) {
       optionalText(input.values.sku),
       money(input.values.preco),
       categoryId,
+      input.values.controla_estoque !== 'nao',
+      input.values.permite_estoque_negativo === 'sim',
+      money(input.values.estoque_minimo),
+      money(input.values.ponto_reposicao),
       activeFromStatus(input.values.status),
       input.actorId,
     ],
@@ -3633,6 +3679,7 @@ async function createPurchaseRecord(client: SQLClient, input: CreateInput) {
        tipo_compra,
        tipo_movimento,
        natureza_operacao_id,
+       atualiza_estoque,
        origem,
        fornecedor_nome_snapshot,
        fornecedor_documento_snapshot,
@@ -3656,7 +3703,9 @@ async function createPurchaseRecord(client: SQLClient, input: CreateInput) {
        atualizado_por
      )
      VALUES (
-       $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, 'manual', $11, $12,
+       $1, $2, $3, $4, $5, $6, $7, $8, $9, $10,
+       COALESCE((SELECT atualiza_estoque FROM erp.naturezas_operacao_compra WHERE tenant_id = $1 AND id = $10), false),
+       'manual', $11, $12,
        $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24,
        $25::jsonb, $26, $27, $28, $29, $29
      )
@@ -3857,6 +3906,7 @@ export async function updateErpPurchaseDraft(input: {
          fornecedor_id = source.fornecedor_id, numero = $4, data_compra = source.data_compra,
          data_competencia = source.data_competencia, data_prevista_entrega = source.data_prevista_entrega,
          tipo_compra = source.tipo_compra, natureza_operacao_id = source.natureza_operacao_id,
+         atualiza_estoque = source.atualiza_estoque,
          fornecedor_nome_snapshot = source.fornecedor_nome_snapshot,
          fornecedor_documento_snapshot = source.fornecedor_documento_snapshot,
          categoria_id = source.categoria_id, centro_custo_id = source.centro_custo_id,

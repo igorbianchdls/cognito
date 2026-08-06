@@ -6,6 +6,7 @@ import {
   IconAddressBook,
   IconBriefcase,
   IconBuildingBank,
+  IconBuildingWarehouse,
   IconChartBar,
   IconFileText,
   IconGridDots,
@@ -16,6 +17,7 @@ import {
   IconPlugConnected,
   IconReceipt,
   IconReceipt2,
+  IconReportAnalytics,
   IconShoppingBag,
   IconTags,
   IconTruckDelivery,
@@ -49,6 +51,8 @@ const PurchasesIcon = (props: { className?: string; style?: React.CSSProperties 
 const ReceivablesIcon = (props: { className?: string; style?: React.CSSProperties }) => <IconReceipt stroke={1.75} {...props} />
 const PayablesIcon = (props: { className?: string; style?: React.CSSProperties }) => <IconReceipt2 stroke={1.75} {...props} />
 const FinancialAccountsIcon = (props: { className?: string; style?: React.CSSProperties }) => <IconBuildingBank stroke={1.75} {...props} />
+const StockIcon = (props: { className?: string; style?: React.CSSProperties }) => <IconBuildingWarehouse stroke={1.75} {...props} />
+const ErpReportsIcon = (props: { className?: string; style?: React.CSSProperties }) => <IconReportAnalytics stroke={1.75} {...props} />
 
 type NavigationItem = {
   title: string
@@ -94,7 +98,9 @@ const erpSidebarItems: NavigationItem[] = [
   { title: "Categorias", url: "/erp/cadastros/categorias", icon: CategoriesIcon },
   { title: "Vendas", url: "/erp/vendas/pedidos", icon: SalesIcon, activePrefix: "/erp/vendas" },
   { title: "Compras", url: "/erp/compras/pedidos-compra", icon: PurchasesIcon, activePrefix: "/erp/compras" },
+  { title: "Estoque", url: "/erp/estoque/posicao-estoque", icon: StockIcon, activePrefix: "/erp/estoque" },
   { title: "Contas financeiras", url: "/erp/financeiro/contas-financeiras", icon: FinancialAccountsIcon },
+  { title: "Relatorios ERP", url: "/erp/relatorios/dre", icon: ErpReportsIcon, activePrefix: "/erp/relatorios" },
 ]
 
 // Navigation data adapted to shadcn format
