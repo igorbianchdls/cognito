@@ -15,6 +15,8 @@
     "plugin:build": "node scripts/plugin/build-widget.mjs",
     "erp:cli": "node scripts/erp-cli.mjs",
     "erp:foundation-smoke": "node scripts/erp-foundation-smoke.mjs",
+    "erp:professional-smoke": "node scripts/erp-professional-smoke.mjs",
+    "erp:typecheck": "tsc -p tsconfig.erp.json --pretty false",
     "plugin:smoke": "node scripts/plugin/smoke-test.mjs",
     "chatgpt-app:build": "node scripts/chatgpt-app/build-widget.mjs",
     "chatgpt-app:chatgpt-test": "node scripts/chatgpt-app/chatgpt-test-plan.mjs",

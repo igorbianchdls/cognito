@@ -1,0 +1,14 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "incremental": false
+  },
+  "include": [
+    "next-env.d.ts",
+    "src/app/api/erp/**/*.ts",
+    "src/products/erp/**/*.ts",
+    "src/products/erp/**/*.tsx",
+    "src/components/navigation/SidebarShadcn.tsx"
+  ],
+  "exclude": ["node_modules", ".next"]
+}

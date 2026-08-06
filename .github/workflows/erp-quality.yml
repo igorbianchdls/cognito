@@ -1,0 +1,34 @@
+name: ERP Quality
+
+on:
+  pull_request:
+    paths:
+      - 'src/products/erp/**'
+      - 'src/app/api/erp/**'
+      - 'supabase/migrations/**'
+      - 'scripts/erp-*.mjs'
+      - 'tsconfig.erp.json'
+  push:
+    branches: [main]
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9.12.3
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm run erp:typecheck
+      - run: pnpm run build
+      - name: Supabase integration smoke
+        if: ${{ secrets.SUPABASE_DB_URL != '' }}
+        env:
+          SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
+        run: pnpm run erp:professional-smoke

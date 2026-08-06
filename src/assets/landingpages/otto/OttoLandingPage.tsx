@@ -17,6 +17,7 @@ import {
 } from 'lucide-react'
 
 import { LandingHeader } from '@/assets/landingpages/otto/components/LandingHeader'
+import { FinancialBenefitsSection } from '@/assets/landingpages/otto/components/FinancialBenefitsSection'
 import { PricingSection } from '@/assets/landingpages/otto/components/PricingSection'
 import { ProductShowcase } from '@/assets/landingpages/otto/components/ProductShowcase'
 import { frequentlyAskedQuestions } from '@/assets/landingpages/otto/landingContent'
@@ -131,6 +132,8 @@ export function OttoLandingPage() {
           </div>
         </div>
       </section>
+
+      <FinancialBenefitsSection />
 
       <section id="integracoes" className="scroll-mt-24 border-y border-[#e4e7e3] bg-[#f7f8f6] px-5 py-10 sm:px-8">
         <div className="mx-auto max-w-[1180px]">

@@ -32,6 +32,8 @@ import {
   SidebarFooter,
   SidebarHeader,
 } from "@/components/ui/sidebar"
+import { useErpAccess } from "@/products/erp/frontend/hooks/useErpAccess"
+import type { ErpCapability } from "@/products/erp/shared/professionalContracts"
 
 const BrandIcon = (props: { className?: string; style?: React.CSSProperties }) => <IconGridDots stroke={1.75} {...props} />
 const IntegrationsIcon = (props: { className?: string; style?: React.CSSProperties }) => <IconPlugConnected stroke={1.75} {...props} />
@@ -60,6 +62,7 @@ type NavigationItem = {
   icon?: React.ComponentType<{ className?: string; style?: React.CSSProperties }>
   activePrefix?: string
   exactActive?: boolean
+  capability?: ErpCapability
 }
 
 // Font variable mapping helper
@@ -88,19 +91,19 @@ const DEFAULT_ITEM_TEXT_STYLE: React.CSSProperties = {
 }
 
 const erpSidebarItems: NavigationItem[] = [
-  { title: "Visao geral", url: "/erp", icon: OverviewIcon, exactActive: true },
-  { title: "Contas a Pagar", url: "/erp/financeiro/contas-a-pagar", icon: PayablesIcon },
-  { title: "Contas a Receber", url: "/erp/financeiro/contas-a-receber", icon: ReceivablesIcon },
-  { title: "Clientes", url: "/erp/cadastros/clientes", icon: CustomersIcon },
-  { title: "Fornecedores", url: "/erp/cadastros/fornecedores", icon: SuppliersIcon },
-  { title: "Produtos", url: "/erp/cadastros/produtos", icon: ProductsIcon },
-  { title: "Servicos", url: "/erp/cadastros/servicos", icon: ServicesIcon },
-  { title: "Categorias", url: "/erp/cadastros/categorias", icon: CategoriesIcon },
-  { title: "Vendas", url: "/erp/vendas/pedidos", icon: SalesIcon, activePrefix: "/erp/vendas" },
-  { title: "Compras", url: "/erp/compras/pedidos-compra", icon: PurchasesIcon, activePrefix: "/erp/compras" },
-  { title: "Estoque", url: "/erp/estoque/posicao-estoque", icon: StockIcon, activePrefix: "/erp/estoque" },
-  { title: "Contas financeiras", url: "/erp/financeiro/contas-financeiras", icon: FinancialAccountsIcon },
-  { title: "Relatorios ERP", url: "/erp/relatorios/dre", icon: ErpReportsIcon, activePrefix: "/erp/relatorios" },
+  { title: "Visao geral", url: "/erp", icon: OverviewIcon, exactActive: true, capability: "erp.relatorios.visualizar" },
+  { title: "Contas a Pagar", url: "/erp/financeiro/contas-a-pagar", icon: PayablesIcon, capability: "erp.financeiro.visualizar" },
+  { title: "Contas a Receber", url: "/erp/financeiro/contas-a-receber", icon: ReceivablesIcon, capability: "erp.financeiro.visualizar" },
+  { title: "Clientes", url: "/erp/cadastros/clientes", icon: CustomersIcon, capability: "erp.cadastros.visualizar" },
+  { title: "Fornecedores", url: "/erp/cadastros/fornecedores", icon: SuppliersIcon, capability: "erp.cadastros.visualizar" },
+  { title: "Produtos", url: "/erp/cadastros/produtos", icon: ProductsIcon, capability: "erp.cadastros.visualizar" },
+  { title: "Servicos", url: "/erp/cadastros/servicos", icon: ServicesIcon, capability: "erp.cadastros.visualizar" },
+  { title: "Categorias", url: "/erp/cadastros/categorias", icon: CategoriesIcon, capability: "erp.cadastros.visualizar" },
+  { title: "Vendas", url: "/erp/vendas/pedidos", icon: SalesIcon, activePrefix: "/erp/vendas", capability: "erp.vendas.visualizar" },
+  { title: "Compras", url: "/erp/compras/pedidos-compra", icon: PurchasesIcon, activePrefix: "/erp/compras", capability: "erp.compras.visualizar" },
+  { title: "Estoque", url: "/erp/estoque/posicao-estoque", icon: StockIcon, activePrefix: "/erp/estoque", capability: "erp.estoque.visualizar" },
+  { title: "Contas financeiras", url: "/erp/financeiro/contas-financeiras", icon: FinancialAccountsIcon, capability: "erp.financeiro.visualizar" },
+  { title: "Relatorios ERP", url: "/erp/relatorios/dre", icon: ErpReportsIcon, activePrefix: "/erp/relatorios", capability: "erp.relatorios.visualizar" },
 ]
 
 // Navigation data adapted to shadcn format
@@ -167,6 +170,7 @@ import { cn } from "@/lib/utils"
 
 export function SidebarShadcn({ bgColor, textColor, itemTextColor, itemTextStyle, style, borderless, headerBorderless, className, headerVariant: _headerVariant = 'compact', showHeaderTrigger: _showHeaderTrigger = true, iconSizePx = 24, ...props }: React.ComponentProps<typeof Sidebar> & { bgColor?: string; textColor?: string; itemTextColor?: string; itemTextStyle?: React.CSSProperties; borderless?: boolean; headerBorderless?: boolean; className?: string; headerVariant?: 'default' | 'compact'; showHeaderTrigger?: boolean; iconSizePx?: number }) {
   const pathname = usePathname()
+  const access = useErpAccess()
   void _headerVariant
   void _showHeaderTrigger
 
@@ -185,7 +189,7 @@ export function SidebarShadcn({ bgColor, textColor, itemTextColor, itemTextStyle
   const dataWithActiveState = {
     ...navigationData,
     navMain: withActiveState(navigationData.navMain),
-    erpNavMain: withActiveState(navigationData.erpNavMain),
+    erpNavMain: withActiveState(navigationData.erpNavMain.filter((item) => !item.capability || access.can(item.capability))),
   }
 
   // Apply default values consistently (no localStorage overrides)

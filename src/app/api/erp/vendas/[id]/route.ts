@@ -1,13 +1,13 @@
 import { NextResponse } from 'next/server'
 
-import { resolveAuthTenant } from '@/products/auth/server/authTenantResolver'
+import { resolveErpAccess } from '@/products/erp/server/erpAccess'
 import { getErpSaleDetails, updateErpSaleDraft } from '@/products/erp/server/erpRepository'
 
 export const dynamic = 'force-dynamic'
 export const runtime = 'nodejs'
 
 export async function GET(_request: Request, context: { params: Promise<{ id: string }> }) {
-  const tenant = await resolveAuthTenant({ access: 'read' })
+  const tenant = await resolveErpAccess('erp.vendas.visualizar')
   if (!tenant) return NextResponse.json({ error: 'Nao autenticado.' }, { status: 401 })
   try {
     return NextResponse.json(await getErpSaleDetails(tenant.tenantId, (await context.params).id))
@@ -17,7 +17,7 @@ export async function GET(_request: Request, context: { params: Promise<{ id: st
 }
 
 export async function PATCH(request: Request, context: { params: Promise<{ id: string }> }) {
-  const tenant = await resolveAuthTenant({ access: 'manage' })
+  const tenant = await resolveErpAccess('erp.vendas.gerenciar')
   if (!tenant) return NextResponse.json({ error: 'Acesso negado.' }, { status: 403 })
   try {
     const body = await request.json().catch(() => ({})) as { values?: Record<string, unknown>; expectedVersion?: number }

@@ -1,5 +1,8 @@
 'use client'
 
+import { Printer } from 'lucide-react'
+
+import { Button } from '@/components/ui/button'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 
@@ -12,9 +15,10 @@ function display(value: unknown) {
   return String(value)
 }
 
-const headerFields = ['numero', 'status', 'tipo_movimento', 'cliente_nome', 'fornecedor_nome', 'data_venda', 'data_compra', 'data_prevista_entrega', 'total', 'observacoes']
+const headerFields = ['numero', 'tipo_documento', 'status', 'situacao', 'tipo_movimento', 'cliente_nome', 'fornecedor_nome', 'data_venda', 'data_compra', 'validade_em', 'previsao_entrega', 'data_prevista_entrega', 'total', 'observacoes']
 const labels: Record<string, string> = {
   numero: 'Numero', status: 'Situacao', tipo_movimento: 'Movimento', cliente_nome: 'Cliente',
+  tipo_documento: 'Documento', situacao: 'Negociacao', validade_em: 'Validade', previsao_entrega: 'Previsao de entrega',
   fornecedor_nome: 'Fornecedor', data_venda: 'Data da venda', data_compra: 'Data da compra',
   data_prevista_entrega: 'Entrega prevista', total: 'Total', observacoes: 'Observacoes',
 }
@@ -32,7 +36,7 @@ export function ErpDocumentDetailsDialog({ open, onOpenChange, title, loading, d
 }) {
   return <Dialog open={open} onOpenChange={onOpenChange}>
     <DialogContent className="h-[88vh] max-w-[min(980px,96vw)] overflow-hidden p-0">
-      <DialogHeader className="border-b px-6 py-4"><DialogTitle>{title}</DialogTitle></DialogHeader>
+      <DialogHeader className="flex-row items-center justify-between border-b px-6 py-4"><DialogTitle>{title}</DialogTitle><Button variant="outline" size="sm" onClick={() => window.print()}><Printer className="size-4" />Imprimir / PDF</Button></DialogHeader>
       <div className="overflow-y-auto px-6 py-5">
         {loading ? <div className="py-20 text-center text-sm text-gray-500">Carregando detalhes...</div> : document ? <div className="grid gap-6">
           <section className="grid gap-3"><h3 className="text-sm font-semibold">Informacoes</h3><dl className="grid gap-3 rounded-md border bg-gray-50 p-4 sm:grid-cols-2 lg:grid-cols-4">

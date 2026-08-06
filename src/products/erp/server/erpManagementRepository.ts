@@ -236,12 +236,15 @@ export async function createManagementOperation(input: ActorInput & {
       )
       await client.query(
         `INSERT INTO erp.conciliacoes_bancarias_itens
-           (tenant_id, conciliacao_id, transacao_bancaria_id, pagamento_id, valor_conciliado, criado_por)
-         VALUES ($1, $2, $3, $4, $5, $6)`,
-        [input.tenantId, reconciliation.rows[0].id, transactionId, paymentId, transaction.valor, input.actorId],
+           (tenant_id, conciliacao_id, transacao_bancaria_id, pagamento_id, valor_conciliado, origem_conciliacao, criado_por)
+         VALUES ($1, $2, $3, $4, $5, $6, $7)`,
+        [input.tenantId, reconciliation.rows[0].id, transactionId, paymentId, transaction.valor,
+          input.values.origem_conciliacao === 'sugerida' ? 'sugerida' : 'manual', input.actorId],
       )
       await client.query(`UPDATE erp.transacoes_bancarias SET status = 'conciliada', atualizado_por = $3 WHERE tenant_id = $1 AND id = $2`, [input.tenantId, transactionId, input.actorId])
-      await client.query(`UPDATE erp.pagamentos SET conciliado = true, origem = 'conciliacao', atualizado_por = $3 WHERE tenant_id = $1 AND id = $2`, [input.tenantId, paymentId, input.actorId])
+      await client.query(`UPDATE erp.pagamentos SET conciliado = true,
+        metadata = metadata || jsonb_build_object('origem_antes_conciliacao', origem),
+        origem = 'conciliacao', atualizado_por = $3 WHERE tenant_id = $1 AND id = $2`, [input.tenantId, paymentId, input.actorId])
       return { id: String(reconciliation.rows[0].id), status: 'concluida' }
     }
     if (input.resource === 'transferencias-financeiras') {

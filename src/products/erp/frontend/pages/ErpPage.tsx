@@ -11,7 +11,12 @@ import { PurchaseWorkspacePage } from '@/products/erp/frontend/modules/compras/P
 import { PurchaseInvoicesPage } from '@/products/erp/frontend/modules/compras/PurchaseInvoicesPage'
 import { PayablesWorkspacePage } from '@/products/erp/frontend/modules/financeiro/PayablesWorkspacePage'
 import { ReceivablesWorkspacePage } from '@/products/erp/frontend/modules/financeiro/ReceivablesWorkspacePage'
+import { BankReconciliationPage } from '@/products/erp/frontend/modules/financeiro/BankReconciliationPage'
+import { PeriodClosuresPage } from '@/products/erp/frontend/modules/financeiro/PeriodClosuresPage'
 import { SalesWorkspacePage } from '@/products/erp/frontend/modules/vendas/SalesWorkspacePage'
+import { ServiceOrdersWorkspacePage } from '@/products/erp/frontend/modules/vendas/ServiceOrdersWorkspacePage'
+import { AutomationWorkspacePage } from '@/products/erp/frontend/modules/relatorios/AutomationWorkspacePage'
+import { isProfessionalReport, ProfessionalReportPage } from '@/products/erp/frontend/modules/relatorios/ProfessionalReportPage'
 import { getErpEntityConfig } from '@/products/erp/frontend/modules/entityRegistry'
 import { OverviewPage } from '@/products/erp/frontend/modules/overview/OverviewPage'
 import { getErpModule, getErpSection } from '@/products/erp/shared/navigation'
@@ -63,6 +68,10 @@ export default function ErpPage({
               <OverviewPage />
             ) : sectionConfig.id === 'vendas' && moduleConfig?.id === 'pedidos' ? (
               <SalesWorkspacePage />
+            ) : sectionConfig.id === 'vendas' && moduleConfig?.id === 'orcamentos' ? (
+              <SalesWorkspacePage documentType="orcamento" />
+            ) : sectionConfig.id === 'vendas' && moduleConfig?.id === 'ordens-servico' ? (
+              <ServiceOrdersWorkspacePage />
             ) : sectionConfig.id === 'compras' && moduleConfig?.id === 'pedidos-compra' ? (
               <PurchaseWorkspacePage />
             ) : sectionConfig.id === 'compras' && moduleConfig?.id === 'parcelas-a-pagar' ? (
@@ -73,8 +82,16 @@ export default function ErpPage({
               <PayablesWorkspacePage />
             ) : sectionConfig.id === 'financeiro' && moduleConfig?.id === 'contas-a-receber' ? (
               <ReceivablesWorkspacePage />
+            ) : sectionConfig.id === 'financeiro' && moduleConfig?.id === 'conciliacao-bancaria' ? (
+              <BankReconciliationPage />
+            ) : sectionConfig.id === 'financeiro' && moduleConfig?.id === 'fechamentos' ? (
+              <PeriodClosuresPage />
             ) : sectionConfig.id === 'cadastros' && moduleConfig?.id === 'importacoes' ? (
               <ErpImportExportPage />
+            ) : sectionConfig.id === 'relatorios' && moduleConfig?.id === 'automacoes' ? (
+              <AutomationWorkspacePage />
+            ) : sectionConfig.id === 'relatorios' && isProfessionalReport(moduleConfig?.id) ? (
+              <ProfessionalReportPage reportId={moduleConfig.id} />
             ) : operationConfig ? (
               <ErpOperationsWorkspacePage config={operationConfig} />
             ) : entityConfig ? (

@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server'
 
-import { resolveAuthTenant } from '@/products/auth/server/authTenantResolver'
+import { resolveErpAccess } from '@/products/erp/server/erpAccess'
 import { createErpEntityRecord, listErpEntityPage } from '@/products/erp/server/erpRepository'
 
 export const dynamic = 'force-dynamic'
@@ -16,7 +16,7 @@ function parseFilters(searchParams: URLSearchParams) {
 }
 
 export async function GET(request: Request) {
-  const tenant = await resolveAuthTenant({ access: 'read' })
+  const tenant = await resolveErpAccess('erp.compras.visualizar')
   if (!tenant) return NextResponse.json({ error: 'Nao autenticado.' }, { status: 401 })
 
   try {
@@ -39,7 +39,7 @@ export async function GET(request: Request) {
 }
 
 export async function POST(request: Request) {
-  const tenant = await resolveAuthTenant({ access: 'manage' })
+  const tenant = await resolveErpAccess('erp.compras.gerenciar')
   if (!tenant) return NextResponse.json({ error: 'Acesso negado.' }, { status: 403 })
 
   try {

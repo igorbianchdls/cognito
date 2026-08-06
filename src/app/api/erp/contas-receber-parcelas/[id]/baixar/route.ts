@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server'
 
-import { resolveAuthTenant } from '@/products/auth/server/authTenantResolver'
+import { resolveErpAccess } from '@/products/erp/server/erpAccess'
 import { settleReceivableInstallment } from '@/products/erp/server/erpRepository'
 
 export const dynamic = 'force-dynamic'
@@ -18,7 +18,7 @@ export async function POST(request: Request, context: RouteContext) {
     return NextResponse.json({ error: 'Parcela invalida.' }, { status: 400 })
   }
 
-  const tenant = await resolveAuthTenant({ access: 'manage' })
+  const tenant = await resolveErpAccess('erp.financeiro.baixar')
   if (!tenant) {
     return NextResponse.json({ error: 'Acesso negado.' }, { status: 403 })
   }

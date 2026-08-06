@@ -1,5 +1,6 @@
 import { runQuery, withTransaction, type SQLClient } from '@/lib/postgres'
 import { parseNfeXml } from '@/products/erp/server/fiscal/nfeParser'
+import { assertErpPeriodOpen } from '@/products/erp/server/erpPeriodRepository'
 import {
   receiveStockForPurchase,
   releaseStockForSale,
@@ -73,6 +74,7 @@ type SaleRow = {
   cobranca_emails: unknown
   cobranca_whatsapp: string | null
   configuracao_lembretes: unknown
+  tipo_documento?: string
   versao?: string | number
 }
 
@@ -706,7 +708,7 @@ async function fetchReceivableForSale(
   }
 }
 
-async function createOrUpdatePurchasePayable(
+export async function createOrUpdatePurchasePayable(
   client: Pick<SQLClient, 'query'>,
   purchase: PurchaseRow,
   actorId: number,
@@ -909,7 +911,7 @@ function mapConfirmPurchaseResult(
 }
 
 export async function listErpPurchaseCatalogs(tenantId: number) {
-  const [suppliers, products, services, categories, costCenters, financialAccounts, paymentMethods, operationNatures, purchaseCandidates] = await Promise.all([
+  const [suppliers, products, services, categories, costCenters, financialAccounts, paymentMethods, operationNatures, locations, purchaseCandidates] = await Promise.all([
     runQuery(`SELECT id::text, nome, documento FROM erp.entidades WHERE tenant_id = $1 AND eh_fornecedor = true AND ativo = true AND excluido_em IS NULL ORDER BY nome`, [tenantId]),
     runQuery(`SELECT id::text, nome, COALESCE(sku, codigo, '') AS codigo, COALESCE(unidade_medida, 'UN') AS unidade, custo AS valor_padrao FROM erp.produtos WHERE tenant_id = $1 AND ativo = true AND excluido_em IS NULL ORDER BY nome`, [tenantId]),
     runQuery(`SELECT id::text, nome, COALESCE(codigo, '') AS codigo, 'UN'::text AS unidade, custo AS valor_padrao FROM erp.servicos WHERE tenant_id = $1 AND ativo = true AND excluido_em IS NULL ORDER BY nome`, [tenantId]),
@@ -918,6 +920,7 @@ export async function listErpPurchaseCatalogs(tenantId: number) {
     runQuery(`SELECT id::text, nome, tipo, padrao FROM erp.contas_financeiras WHERE tenant_id = $1 AND ativo = true AND excluido_em IS NULL ORDER BY padrao DESC, nome`, [tenantId]),
     runQuery(`SELECT id::text, nome, tipo FROM erp.metodos_pagamento WHERE tenant_id = $1 AND ativo = true AND excluido_em IS NULL ORDER BY nome`, [tenantId]),
     runQuery(`SELECT id::text, nome, codigo, atualiza_estoque, gera_financeiro_padrao FROM erp.naturezas_operacao_compra WHERE tenant_id = $1 AND ativo = true AND excluido_em IS NULL ORDER BY nome`, [tenantId]),
+    runQuery(`SELECT id::text, nome, codigo, padrao FROM erp.locais_estoque WHERE tenant_id = $1 AND ativo = true AND permite_compra = true AND excluido_em IS NULL ORDER BY padrao DESC, nome`, [tenantId]),
     runQuery(`SELECT compras.id::text, compras.numero, compras.total, entidades.nome AS fornecedor
       FROM erp.compras AS compras
       JOIN erp.entidades AS entidades ON entidades.tenant_id = compras.tenant_id AND entidades.id = compras.fornecedor_id
@@ -929,13 +932,15 @@ export async function listErpPurchaseCatalogs(tenantId: number) {
       ORDER BY compras.data_compra DESC, compras.id DESC LIMIT 200`, [tenantId]),
   ])
 
-  return { suppliers, products, services, categories, costCenters, financialAccounts, paymentMethods, operationNatures, purchaseCandidates }
+  return { suppliers, products, services, categories, costCenters, financialAccounts, paymentMethods, operationNatures, locations, purchaseCandidates }
 }
 
 export async function listErpSalesCatalogs(tenantId: number) {
-  const [customers, products, services, categories, costCenters, financialAccounts, paymentMethods] = await Promise.all([
+  const [customers, responsibles, products, services, categories, costCenters, financialAccounts, paymentMethods] = await Promise.all([
     runQuery(`SELECT id::text, nome, documento, email, celular, telefone, contato_cobranca_emails, contato_cobranca_whatsapp
       FROM erp.entidades WHERE tenant_id = $1 AND eh_cliente = true AND ativo = true AND excluido_em IS NULL ORDER BY nome`, [tenantId]),
+    runQuery(`SELECT id::text, nome, documento FROM erp.entidades
+      WHERE tenant_id = $1 AND ativo = true AND excluido_em IS NULL ORDER BY nome`, [tenantId]),
     runQuery(`SELECT id::text, nome, COALESCE(sku, codigo, '') AS codigo, COALESCE(unidade_medida, 'UN') AS unidade, preco_venda AS valor_padrao
       FROM erp.produtos WHERE tenant_id = $1 AND ativo = true AND excluido_em IS NULL ORDER BY nome`, [tenantId]),
     runQuery(`SELECT id::text, nome, COALESCE(codigo, '') AS codigo, 'UN'::text AS unidade, preco AS valor_padrao
@@ -945,7 +950,7 @@ export async function listErpSalesCatalogs(tenantId: number) {
     runQuery(`SELECT id::text, nome, tipo, padrao FROM erp.contas_financeiras WHERE tenant_id = $1 AND ativo = true AND excluido_em IS NULL ORDER BY padrao DESC, nome`, [tenantId]),
     runQuery(`SELECT id::text, nome, tipo FROM erp.metodos_pagamento WHERE tenant_id = $1 AND ativo = true AND excluido_em IS NULL ORDER BY nome`, [tenantId]),
   ])
-  return { customers, products, services, categories, costCenters, financialAccounts, paymentMethods }
+  return { customers, responsibles, products, services, categories, costCenters, financialAccounts, paymentMethods }
 }
 
 export async function getErpOverview(tenantId: number) {
@@ -1060,7 +1065,7 @@ export async function getErpSaleDetails(tenantId: number, idValue: string | numb
     runQuery<Record<string, unknown>>(
       `SELECT itens.id::text, CASE WHEN itens.produto_id IS NOT NULL THEN 'produto' ELSE 'servico' END AS tipo,
          COALESCE(itens.produto_id, itens.servico_id)::text AS item_id, itens.descricao, itens.quantidade,
-         itens.valor_unitario, itens.desconto, itens.total
+         itens.valor_unitario, itens.desconto, itens.total, itens.quantidade_faturada
        FROM erp.vendas_itens itens WHERE itens.tenant_id = $1 AND itens.venda_id = $2
          AND itens.excluido_em IS NULL ORDER BY itens.id`, [tenantId, id],
     ),
@@ -1091,8 +1096,11 @@ export async function getErpPurchaseDetails(tenantId: number, idValue: string | 
     runQuery<Record<string, unknown>>(
       `SELECT itens.id::text, CASE WHEN itens.produto_id IS NOT NULL THEN 'produto' ELSE 'servico' END AS tipo,
          COALESCE(itens.produto_id, itens.servico_id)::text AS item_id, itens.descricao, itens.detalhes,
-         itens.unidade, itens.quantidade, itens.valor_unitario, itens.valor_desconto, itens.total
-       FROM erp.compras_itens itens WHERE itens.tenant_id = $1 AND itens.compra_id = $2
+         itens.unidade, itens.quantidade, itens.quantidade_recebida, itens.local_estoque_id::text,
+         itens.valor_unitario, itens.valor_desconto, itens.total, COALESCE(produtos.controla_estoque, false) AS controla_estoque
+       FROM erp.compras_itens itens
+       LEFT JOIN erp.produtos produtos ON produtos.tenant_id = itens.tenant_id AND produtos.id = itens.produto_id
+       WHERE itens.tenant_id = $1 AND itens.compra_id = $2
          AND itens.excluido_em IS NULL ORDER BY itens.id`, [tenantId, id],
     ),
     runQuery<Record<string, unknown>>(
@@ -1594,24 +1602,32 @@ async function listCategoryRecords(input: ListInput): Promise<ErpEntityRecord[]>
 
 async function listSaleRecords(input: ListInput): Promise<ErpEntityRecord[]> {
   const params: unknown[] = [input.tenantId]
+  const documentType = optionalText(input.filters?.tipo_documento)
+  const documentClause = documentType ? ` AND vendas.tipo_documento = $${params.push(documentType)}` : ''
   const rows = await runQuery<Record<string, unknown>>(
     `WITH rows AS (
        SELECT
          vendas.id::text,
          vendas.numero,
          vendas.data_venda,
-         vendas.status,
-         vendas.total,
+          vendas.status,
+          vendas.situacao,
+          vendas.tipo_documento,
+          vendas.validade_em,
+          vendas.versao,
+          vendas.total,
          entidades.nome AS cliente,
          concat_ws(' ', vendas.numero, entidades.nome, vendas.status) AS searchable
        FROM erp.vendas AS vendas
        JOIN erp.entidades AS entidades
          ON entidades.tenant_id = vendas.tenant_id
         AND entidades.id = vendas.cliente_id
-       WHERE vendas.tenant_id = $1
-         AND vendas.excluido_em IS NULL
-     )
-     SELECT id, numero, data_venda, status, total, cliente, count(*) OVER ()::int AS __total
+        WHERE vendas.tenant_id = $1
+          AND vendas.excluido_em IS NULL
+          ${documentClause}
+      )
+      SELECT id, numero, data_venda, status, situacao, tipo_documento, validade_em, versao,
+        total, cliente, count(*) OVER ()::int AS __total
      FROM rows
      WHERE true${appendSearch(params, input.query)}${appendRecordStatusFilter(params, input.filters)}
      ORDER BY data_venda DESC, id DESC${appendPagination(params, input)}`,
@@ -1625,6 +1641,10 @@ async function listSaleRecords(input: ListInput): Promise<ErpEntityRecord[]> {
     data: dateText(row.data_venda) || '',
     total: Number(row.total ?? 0),
     status: String(row.status ?? ''),
+    situacao: String(row.situacao ?? ''),
+    tipo_documento: String(row.tipo_documento ?? 'venda'),
+    validade: dateText(row.validade_em) || '',
+    versao: Number(row.versao ?? 1),
     __total: Number(row.__total ?? 0),
   }))
 }
@@ -2244,8 +2264,9 @@ export async function confirmErpSale(input: ConfirmSaleInput): Promise<ConfirmEr
          condicao_pagamento,
          cobranca_emails,
          cobranca_whatsapp,
-         configuracao_lembretes,
-         versao
+          configuracao_lembretes,
+          tipo_documento,
+          versao
        FROM erp.vendas
        WHERE tenant_id = $1
          AND id = $2
@@ -2255,6 +2276,9 @@ export async function confirmErpSale(input: ConfirmSaleInput): Promise<ConfirmEr
     )
     const sale = saleResult.rows[0] as SaleRow | undefined
     if (!sale) throw new Error('Venda nao encontrada.')
+    if (sale.tipo_documento === 'orcamento') {
+      throw new Error('Converta o orcamento em venda antes de confirmar o financeiro.')
+    }
 
     if (sale.status === 'cancelada') {
       throw new Error('Venda cancelada nao pode ser confirmada.')
@@ -2271,6 +2295,9 @@ export async function confirmErpSale(input: ConfirmSaleInput): Promise<ConfirmEr
     if (sale.status !== 'rascunho') {
       throw new Error('Venda ja saiu de rascunho e ainda nao possui contas a receber.')
     }
+
+    await assertErpPeriodOpen(client, { tenantId: input.tenantId, module: 'vendas', date: String(sale.data_venda) })
+    await assertErpPeriodOpen(client, { tenantId: input.tenantId, module: 'financeiro', date: String(sale.data_venda) })
 
     if (!sale.cliente_id) {
       throw new Error('Venda precisa ter cliente para ser confirmada.')
@@ -2603,11 +2630,13 @@ export async function confirmErpPurchase(input: IdActionInput): Promise<ConfirmE
     if (money(purchase.total) <= 0) throw new Error('Compra precisa ter total maior que zero para ser confirmada.')
 
     const itemResult = await client.query(
-      `SELECT count(*)::int AS total
-       FROM erp.compras_itens
-       WHERE tenant_id = $1
-         AND compra_id = $2
-         AND excluido_em IS NULL`,
+      `SELECT count(*)::int AS total,
+         count(*) FILTER (WHERE itens.produto_id IS NOT NULL AND produtos.controla_estoque)::int AS itens_estoque
+       FROM erp.compras_itens itens
+       LEFT JOIN erp.produtos produtos ON produtos.tenant_id = itens.tenant_id AND produtos.id = itens.produto_id
+       WHERE itens.tenant_id = $1
+         AND itens.compra_id = $2
+         AND itens.excluido_em IS NULL`,
       [input.tenantId, purchase.id],
     )
     if (Number(itemResult.rows[0]?.total || 0) <= 0) {
@@ -2615,16 +2644,22 @@ export async function confirmErpPurchase(input: IdActionInput): Promise<ConfirmE
     }
 
     const existingFinancial = await fetchPayableForPurchase(client, input.tenantId, purchase.id)
-    if (purchase.tipo_movimento === 'compra' && existingFinancial?.payable.tipo_lancamento === 'efetivo') {
-      return mapConfirmPurchaseResult(purchase, existingFinancial.payable, existingFinancial.installments)
+    if (purchase.tipo_movimento === 'compra' && ['confirmada', 'parcialmente_recebida', 'recebida'].includes(String(purchase.status))
+      && (!purchase.gera_financeiro || existingFinancial?.payable.tipo_lancamento === 'efetivo')) {
+      return mapConfirmPurchaseResult(purchase, existingFinancial?.payable || null, existingFinancial?.installments || [])
+    }
+
+    await assertErpPeriodOpen(client, { tenantId: input.tenantId, module: 'compras', date: String(purchase.data_compra) })
+    if (purchase.gera_financeiro) {
+      await assertErpPeriodOpen(client, { tenantId: input.tenantId, module: 'financeiro', date: String(purchase.data_compra) })
     }
 
     const updatedPurchaseResult = await client.query(
       `UPDATE erp.compras
-       SET status = 'recebida',
+       SET status = CASE WHEN $4::int = 0 THEN 'recebida' ELSE 'confirmada' END,
            tipo_movimento = 'compra',
            confirmada_em = COALESCE(confirmada_em, now()),
-           recebida_em = COALESCE(recebida_em, now()),
+           recebida_em = CASE WHEN $4::int = 0 THEN COALESCE(recebida_em, now()) ELSE recebida_em END,
            versao = versao + 1,
            atualizado_por = $3
        WHERE tenant_id = $1
@@ -2649,19 +2684,13 @@ export async function confirmErpPurchase(input: IdActionInput): Promise<ConfirmE
          gera_financeiro,
          fornecedor_nome_snapshot,
          fornecedor_documento_snapshot`,
-      [input.tenantId, purchase.id, input.actorId],
+      [input.tenantId, purchase.id, input.actorId, Number(itemResult.rows[0]?.itens_estoque || 0)],
     )
     const updatedPurchase = updatedPurchaseResult.rows[0] as PurchaseRow
-    await receiveStockForPurchase(client, {
-      tenantId: input.tenantId,
-      actorId: input.actorId,
-      purchaseId: Number(purchase.id),
-    })
-
     if (!updatedPurchase.gera_financeiro) {
       await client.query(
         `INSERT INTO erp.compras_eventos (tenant_id, compra_id, evento, dados, criado_por)
-         VALUES ($1, $2, 'efetivada_sem_financeiro', '{}'::jsonb, $3)`,
+         VALUES ($1, $2, 'confirmada_sem_financeiro', '{}'::jsonb, $3)`,
         [input.tenantId, updatedPurchase.id, input.actorId],
       )
       return mapConfirmPurchaseResult(updatedPurchase, null, [])
@@ -2670,7 +2699,7 @@ export async function confirmErpPurchase(input: IdActionInput): Promise<ConfirmE
     if (!financial) return mapConfirmPurchaseResult(updatedPurchase, null, [])
     await client.query(
       `INSERT INTO erp.compras_eventos (tenant_id, compra_id, evento, dados, criado_por)
-       VALUES ($1, $2, 'efetivada', $3::jsonb, $4)`,
+       VALUES ($1, $2, 'confirmada', $3::jsonb, $4)`,
       [input.tenantId, updatedPurchase.id, JSON.stringify({ conta_pagar_id: financial.payable.id }), input.actorId],
     )
     return mapConfirmPurchaseResult(updatedPurchase, financial.payable, financial.installments)
@@ -2940,6 +2969,7 @@ export async function settleReceivableInstallment(input: SettleInstallmentInput)
     )
     const methodId = paymentMethodId(input.values.metodo_pagamento_id || installment.metodo_pagamento_id)
     const paymentDate = dateText(input.values.data_pagamento) || new Date().toISOString().slice(0, 10)
+    await assertErpPeriodOpen(client, { tenantId: input.tenantId, module: 'financeiro', date: paymentDate })
     const netValue = paymentNetValue(amount, input.values)
 
     const paymentResult = await client.query(
@@ -3067,6 +3097,7 @@ export async function settlePayableInstallment(input: SettleInstallmentInput) {
     )
     const methodId = paymentMethodId(input.values.metodo_pagamento_id || installment.metodo_pagamento_id)
     const paymentDate = dateText(input.values.data_pagamento) || new Date().toISOString().slice(0, 10)
+    await assertErpPeriodOpen(client, { tenantId: input.tenantId, module: 'financeiro', date: paymentDate })
     const netValue = payablePaymentNetValue(amount, input.values)
 
     const paymentResult = await client.query(
@@ -3150,6 +3181,7 @@ export async function reverseErpPayment(input: ReversePaymentInput) {
          desconto,
          taxa,
          valor_liquido,
+         data_pagamento,
          estornado_em,
          estorno_de_pagamento_id
        FROM erp.pagamentos
@@ -3176,6 +3208,12 @@ export async function reverseErpPayment(input: ReversePaymentInput) {
       )
       return { payment, reversal: existingReversal.rows[0] || null }
     }
+
+    await assertErpPeriodOpen(client, {
+      tenantId: input.tenantId,
+      module: 'financeiro',
+      date: String(payment.data_pagamento).slice(0, 10),
+    })
 
     const receivableInstallmentId = payment.conta_receber_parcela_id
     const payableInstallmentId = payment.conta_pagar_parcela_id
@@ -3434,8 +3472,12 @@ async function createSaleRecord(client: SQLClient, input: CreateInput) {
   }
 
   const customerId = numericId(input.values.cliente_id, 'Cliente')
+  const documentType = ['orcamento', 'pedido', 'venda'].includes(text(input.values.tipo_documento))
+    ? text(input.values.tipo_documento)
+    : 'venda'
   const saleDate = dateText(input.values.data_venda) || new Date().toISOString().slice(0, 10)
-  const number = optionalText(input.values.numero) || `VEN-${Date.now()}`
+  const numberPrefix = documentType === 'orcamento' ? 'ORC' : documentType === 'pedido' ? 'PED' : 'VEN'
+  const number = optionalText(input.values.numero) || `${numberPrefix}-${Date.now()}`
 
   const customerResult = await client.query(
     `SELECT id
@@ -3529,11 +3571,13 @@ async function createSaleRecord(client: SQLClient, input: CreateInput) {
     `INSERT INTO erp.vendas (
        tenant_id,
        cliente_id,
+       vendedor_id,
        numero,
        data_venda,
        data_competencia,
        status,
        situacao,
+       tipo_documento,
        categoria_id,
        centro_custo_id,
        conta_financeira_id,
@@ -3547,19 +3591,25 @@ async function createSaleRecord(client: SQLClient, input: CreateInput) {
        observacoes_pagamento,
        cobranca_emails,
        cobranca_whatsapp,
+       validade_em,
+       previsao_entrega,
+       local_estoque_id,
+       venda_origem_id,
        chave_idempotencia,
        criado_por,
        atualizado_por
      )
-     VALUES ($1, $2, $3, $4, $5, 'rascunho', 'em_andamento', $6, $7, $8, $9,
-       $10, $11, $12, $13, $14::jsonb, $15, $16, $17, $18, $19, $20, $20)
+     VALUES ($1, $2, $3, $4, $5, $6, 'rascunho', 'em_andamento', $7, $8, $9, $10, $11,
+       $12, $13, $14, $15, $16::jsonb, $17, $18, $19, $20, $21, $22, $23, $24, $25, $26, $26)
      RETURNING id`,
     [
       input.tenantId,
       customerId,
+      optionalNumericId(input.values.vendedor_id),
       number,
       saleDate,
       dateText(input.values.data_competencia) || saleDate,
+      documentType,
       optionalNumericId(input.values.categoria_id),
       optionalNumericId(input.values.centro_custo_id),
       optionalNumericId(input.values.conta_financeira_id),
@@ -3580,6 +3630,10 @@ async function createSaleRecord(client: SQLClient, input: CreateInput) {
       optionalText(input.values.observacoes_pagamento),
       stringArray(input.values.cobranca_emails),
       optionalText(input.values.cobranca_whatsapp),
+      dateText(input.values.validade_em),
+      optionalText(input.values.previsao_entrega),
+      optionalNumericId(input.values.local_estoque_id),
+      optionalNumericId(input.values.venda_origem_id),
       idempotencyKey,
       input.actorId,
     ],
@@ -3848,7 +3902,10 @@ export async function updateErpSaleDraft(input: {
     const updated = await client.query(
       `UPDATE erp.vendas AS target SET
          cliente_id = source.cliente_id, numero = $4, data_venda = source.data_venda,
-         data_competencia = source.data_competencia, categoria_id = source.categoria_id,
+         data_competencia = source.data_competencia, vendedor_id = source.vendedor_id,
+         tipo_documento = source.tipo_documento, validade_em = source.validade_em,
+         previsao_entrega = source.previsao_entrega, local_estoque_id = source.local_estoque_id,
+         categoria_id = source.categoria_id,
          centro_custo_id = source.centro_custo_id, conta_financeira_id = source.conta_financeira_id,
          metodo_pagamento_id = source.metodo_pagamento_id, subtotal = source.subtotal,
          desconto = source.desconto, frete = source.frete, total = source.total,

@@ -1,0 +1,576 @@
+.demo {
+  position: relative;
+  min-height: 360px;
+  overflow: hidden;
+  border: 1px solid #dce2dd;
+  border-radius: 8px;
+  background: #ffffff;
+  box-shadow: 0 28px 70px -54px rgba(24, 52, 31, 0.5);
+  color: #252a26;
+}
+
+.demoHeader {
+  display: flex;
+  min-height: 68px;
+  align-items: center;
+  gap: 12px;
+  border-bottom: 1px solid #e3e7e4;
+  padding: 14px 16px;
+  background: #fbfcfb;
+}
+
+.iconBox,
+.channelIcon {
+  display: grid;
+  flex: 0 0 auto;
+  place-items: center;
+  border-radius: 6px;
+  background: #e7f3ea;
+  color: #28743d;
+}
+
+.iconBox {
+  width: 38px;
+  height: 38px;
+}
+
+.iconBox svg {
+  width: 18px;
+  height: 18px;
+}
+
+.amberIcon {
+  background: #fff1d8;
+  color: #9b6214;
+}
+
+.blueIcon {
+  background: #e7f0f7;
+  color: #2d6591;
+}
+
+.demoTitle,
+.demoMeta,
+.timelineLabel,
+.channelRow p {
+  margin: 0;
+}
+
+.demoTitle {
+  font-size: 13px;
+  font-weight: 650;
+  color: #282e29;
+}
+
+.demoMeta {
+  margin-top: 3px;
+  font-size: 11px;
+  color: #7b837c;
+}
+
+.openStatus,
+.secureStatus,
+.liveStatus {
+  margin-left: auto;
+  border-radius: 5px;
+  padding: 6px 9px;
+  font-size: 10px;
+  font-weight: 650;
+}
+
+.openStatus {
+  background: #fff2dc;
+  color: #91601b;
+}
+
+.secureStatus {
+  background: #f4eee3;
+  color: #795a28;
+}
+
+.liveStatus {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: #e8f3eb;
+  color: #28743d;
+}
+
+.liveStatus i {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #3b9b54;
+  animation: livePulse 2s ease-in-out infinite;
+}
+
+.amountRow {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  border-bottom: 1px solid #e6e9e6;
+}
+
+.amountRow > div {
+  display: grid;
+  gap: 5px;
+  padding: 15px 16px;
+}
+
+.amountRow > div + div {
+  border-left: 1px solid #e6e9e6;
+}
+
+.amountRow span,
+.timelineLabel,
+.metricsGrid span,
+.chartHeader span {
+  font-size: 10px;
+  color: #858c86;
+}
+
+.amountRow strong {
+  font-size: 13px;
+  font-weight: 650;
+}
+
+.reminderTimeline {
+  display: grid;
+  gap: 8px;
+  padding: 14px 16px 72px;
+}
+
+.timelineLabel {
+  margin-bottom: 2px;
+  font-weight: 650;
+  text-transform: uppercase;
+}
+
+.channelRow {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 10px;
+  min-height: 48px;
+  border: 1px solid #e2e6e3;
+  border-radius: 6px;
+  padding: 7px 9px;
+  background: #ffffff;
+  opacity: 0.38;
+  transform: translateX(-8px);
+  animation: channelCycle 6.8s ease-in-out infinite;
+  animation-delay: var(--animation-delay);
+}
+
+.channelIcon {
+  width: 30px;
+  height: 30px;
+}
+
+.channelIcon svg {
+  width: 14px;
+  height: 14px;
+}
+
+.channelRow > span:nth-child(2) {
+  display: grid;
+  gap: 2px;
+}
+
+.channelRow strong,
+.channelRow small {
+  font-size: 11px;
+}
+
+.channelRow small,
+.paymentConfirmed small,
+.payableItem small {
+  color: #858c86;
+}
+
+.channelResult {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 9px;
+  font-weight: 650;
+  color: #317543;
+}
+
+.channelResult svg {
+  width: 11px;
+  height: 11px;
+}
+
+.paymentConfirmed {
+  position: absolute;
+  right: 16px;
+  bottom: 14px;
+  left: 16px;
+  display: flex;
+  min-height: 48px;
+  align-items: center;
+  gap: 10px;
+  border: 1px solid #bcd8c3;
+  border-radius: 6px;
+  padding: 9px 11px;
+  background: #edf7ef;
+  color: #25683a;
+  opacity: 0;
+  transform: translateY(12px);
+  animation: paymentConfirmed 6.8s ease-in-out infinite;
+}
+
+.paymentConfirmed svg {
+  width: 18px;
+  height: 18px;
+}
+
+.paymentConfirmed span {
+  display: grid;
+  gap: 2px;
+}
+
+.paymentConfirmed strong,
+.paymentConfirmed small {
+  font-size: 11px;
+}
+
+.calendarTrack {
+  position: relative;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  margin: 16px;
+  overflow: hidden;
+  border: 1px solid #e2e6e3;
+  border-radius: 6px;
+}
+
+.calendarTrack > span {
+  display: grid;
+  min-height: 62px;
+  place-items: center;
+  align-content: center;
+  gap: 4px;
+  background: #ffffff;
+}
+
+.calendarTrack > span + span {
+  border-left: 1px solid #e2e6e3;
+}
+
+.calendarTrack small {
+  font-size: 9px;
+  color: #858c86;
+}
+
+.calendarTrack strong {
+  font-size: 15px;
+}
+
+.calendarTrack .activeDay {
+  background: #fff8eb;
+  color: #86571a;
+}
+
+.calendarMarker {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 33.333%;
+  height: 3px;
+  background: #c58222;
+  animation: calendarMove 6.4s ease-in-out infinite;
+}
+
+.payableItem {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 10px;
+  margin: 0 16px;
+  border-bottom: 1px solid #e4e7e4;
+  padding: 0 0 15px;
+}
+
+.payableLogo {
+  display: grid;
+  width: 34px;
+  height: 34px;
+  place-items: center;
+  border-radius: 6px;
+  background: #f1f3f1;
+  font-size: 10px;
+  font-weight: 700;
+  color: #5d645e;
+}
+
+.payableItem > span:nth-child(2) {
+  display: grid;
+  gap: 3px;
+}
+
+.payableItem strong,
+.payableItem small {
+  font-size: 11px;
+}
+
+.scheduleProgress {
+  padding: 15px 16px 56px;
+}
+
+.progressHeader,
+.progressSteps {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  font-size: 9px;
+  color: #7c837d;
+}
+
+.progressTrack {
+  height: 5px;
+  margin: 11px 0 10px;
+  overflow: hidden;
+  border-radius: 3px;
+  background: #ecefeb;
+}
+
+.progressTrack i {
+  display: block;
+  width: 100%;
+  height: 100%;
+  background: #b8781e;
+  transform: scaleX(0.06);
+  transform-origin: left;
+  animation: progressFill 6.4s ease-in-out infinite;
+}
+
+.progressSteps span {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.progressSteps i {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: #c9cec9;
+  animation: stepStatus 6.4s ease-in-out infinite;
+}
+
+.progressSteps span:nth-child(2) i { animation-delay: 0.45s; }
+.progressSteps span:nth-child(3) i { animation-delay: 0.9s; }
+
+.paidStamp {
+  position: absolute;
+  right: 16px;
+  bottom: 14px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  border-radius: 5px;
+  padding: 8px 10px;
+  background: #e9f5ec;
+  font-size: 10px;
+  font-weight: 700;
+  color: #28743d;
+  opacity: 0;
+  transform: translateY(8px);
+  animation: paidStamp 6.4s ease-in-out infinite;
+}
+
+.paidStamp svg {
+  width: 14px;
+  height: 14px;
+}
+
+.metricsGrid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  border-bottom: 1px solid #e4e7e4;
+}
+
+.metricsGrid > div {
+  display: grid;
+  gap: 5px;
+  padding: 14px 12px;
+}
+
+.metricsGrid > div + div {
+  border-left: 1px solid #e4e7e4;
+}
+
+.metricsGrid strong {
+  overflow: hidden;
+  font-size: 13px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.metricsGrid small {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  font-size: 9px;
+  color: #28743d;
+}
+
+.metricsGrid svg {
+  width: 10px;
+  height: 10px;
+}
+
+.chartArea {
+  padding: 16px 16px 12px;
+}
+
+.chartHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.chartHeader strong {
+  font-size: 10px;
+  color: #2d6591;
+}
+
+.chart {
+  display: grid;
+  height: 112px;
+  grid-template-columns: repeat(8, 1fr);
+  align-items: end;
+  gap: 8px;
+  margin-top: 14px;
+  border-bottom: 1px solid #dfe4e0;
+  background-image: linear-gradient(to bottom, transparent 32%, #edf0ed 33%, transparent 34%, transparent 65%, #edf0ed 66%, transparent 67%);
+}
+
+.chart > span {
+  display: block;
+  min-height: 8px;
+  border-radius: 3px 3px 0 0;
+  background: #9db8cc;
+  transform: scaleY(0.14);
+  transform-origin: bottom;
+  animation: barRise 5.8s ease-in-out infinite;
+  animation-delay: var(--bar-delay);
+}
+
+.chart .currentBar {
+  background: #2d6591;
+}
+
+.chartLabels {
+  display: grid;
+  grid-template-columns: repeat(8, 1fr);
+  gap: 8px;
+  padding-top: 7px;
+  text-align: center;
+}
+
+.chartLabels span {
+  font-size: 8px;
+  color: #929993;
+}
+
+.reportFooter {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  display: flex;
+  min-height: 42px;
+  align-items: center;
+  gap: 7px;
+  border-top: 1px solid #e4e7e4;
+  padding: 10px 16px;
+  background: #fbfcfb;
+  font-size: 9px;
+  color: #79817a;
+}
+
+.reportFooter svg {
+  width: 12px;
+  height: 12px;
+  color: #2d6591;
+}
+
+.reportFooter span {
+  margin-left: auto;
+  font-weight: 650;
+  color: #2d6591;
+}
+
+@keyframes channelCycle {
+  0%, 10%, 92%, 100% { opacity: 0.38; transform: translateX(-8px); }
+  18%, 72% { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes paymentConfirmed {
+  0%, 58%, 100% { opacity: 0; transform: translateY(12px); }
+  66%, 88% { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes calendarMove {
+  0%, 12% { transform: translateX(0); }
+  38%, 70% { transform: translateX(100%); }
+  88%, 100% { transform: translateX(200%); }
+}
+
+@keyframes progressFill {
+  0%, 12% { transform: scaleX(0.06); }
+  56% { transform: scaleX(0.56); }
+  78%, 92% { transform: scaleX(1); }
+  100% { transform: scaleX(0.06); }
+}
+
+@keyframes stepStatus {
+  0%, 18%, 100% { background: #c9cec9; box-shadow: none; }
+  45%, 86% { background: #b8781e; box-shadow: 0 0 0 3px #faecd7; }
+}
+
+@keyframes paidStamp {
+  0%, 62%, 100% { opacity: 0; transform: translateY(8px); }
+  72%, 91% { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes barRise {
+  0%, 12%, 100% { transform: scaleY(0.14); opacity: 0.55; }
+  28%, 82% { transform: scaleY(1); opacity: 1; }
+}
+
+@keyframes livePulse {
+  0%, 100% { opacity: 0.45; transform: scale(0.85); }
+  50% { opacity: 1; transform: scale(1); }
+}
+
+@media (max-width: 520px) {
+  .demo { min-height: 350px; }
+  .metricsGrid strong { font-size: 11px; }
+  .metricsGrid > div { padding-inline: 9px; }
+  .chart { gap: 6px; }
+  .reportFooter span { display: none; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .channelRow,
+  .paymentConfirmed,
+  .calendarMarker,
+  .progressTrack i,
+  .progressSteps i,
+  .paidStamp,
+  .chart > span,
+  .liveStatus i {
+    animation: none;
+  }
+
+  .channelRow { opacity: 1; transform: none; }
+  .paymentConfirmed,
+  .paidStamp { opacity: 1; transform: none; }
+  .calendarMarker { transform: translateX(100%); }
+  .progressTrack i { transform: scaleX(1); }
+  .chart > span { transform: scaleY(1); opacity: 1; }
+}

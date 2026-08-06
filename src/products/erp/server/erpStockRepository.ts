@@ -1,7 +1,14 @@
 import { runQuery, withTransaction, type SQLClient } from '@/lib/postgres'
+import { assertErpPeriodOpen } from '@/products/erp/server/erpPeriodRepository'
 
 type ActorInput = { tenantId: number; actorId: number }
-type StockItemInput = { produtoId: number; quantidade: number; custoUnitario?: number }
+type StockItemInput = {
+  produtoId: number
+  quantidade: number
+  custoUnitario?: number
+  vendaItemId?: number | null
+  compraItemId?: number | null
+}
 
 function requiredId(value: unknown, label: string) {
   const parsed = Number(value)
@@ -46,7 +53,7 @@ async function ensureDefaultStockLocation(client: Pick<SQLClient, 'query'>, inpu
   return Number(created.rows[0].id)
 }
 
-async function resolveStockLocation(
+export async function resolveStockLocation(
   client: Pick<SQLClient, 'query'>,
   input: ActorInput & { localEstoqueId?: number | null },
 ) {
@@ -91,7 +98,7 @@ async function lockStockBalance(
   return { product, balance: balanceResult.rows[0] }
 }
 
-async function applyStockMovement(
+export async function applyStockMovement(
   client: Pick<SQLClient, 'query'>,
   input: ActorInput & {
     produtoId: number
@@ -151,7 +158,7 @@ async function applyStockMovement(
   return created.rows[0]
 }
 
-async function createFinalStockDocument(
+export async function createFinalStockDocument(
   client: Pick<SQLClient, 'query'>,
   input: ActorInput & {
     tipo: string
@@ -172,6 +179,12 @@ async function createFinalStockDocument(
   )
   if (existing.rows[0]) return existing.rows[0]
 
+  await assertErpPeriodOpen(client, {
+    tenantId: input.tenantId,
+    module: 'estoque',
+    date: new Date().toISOString().slice(0, 10),
+  })
+
   const documentResult = await client.query(
     `INSERT INTO erp.documentos_estoque
        (tenant_id, tipo, data_documento, status, local_estoque_id, entidade_id,
@@ -185,11 +198,13 @@ async function createFinalStockDocument(
   const documentId = Number(documentResult.rows[0].id)
   for (const [index, item] of input.items.entries()) {
     const itemResult = await client.query(
-      `INSERT INTO erp.documentos_estoque_itens
-         (tenant_id, documento_estoque_id, produto_id, quantidade, custo_unitario, criado_por)
-       VALUES ($1, $2, $3, $4, $5, $6) RETURNING id`,
-      [input.tenantId, documentId, item.produtoId, Math.abs(item.quantidade),
-        Math.max(0, Number(item.custoUnitario || 0)), input.actorId],
+       `INSERT INTO erp.documentos_estoque_itens
+          (tenant_id, documento_estoque_id, produto_id, quantidade, custo_unitario,
+           venda_item_id, compra_item_id, criado_por)
+        VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING id`,
+       [input.tenantId, documentId, item.produtoId, Math.abs(item.quantidade),
+         Math.max(0, Number(item.custoUnitario || 0)), item.vendaItemId || null,
+         item.compraItemId || null, input.actorId],
     )
     const direction = ['entrada', 'devolucao_cliente'].includes(input.tipo) ? 1 : -1
     const signedQuantity = input.tipo === 'ajuste' ? item.quantidade : Math.abs(item.quantidade) * direction
