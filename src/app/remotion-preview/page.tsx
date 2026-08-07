@@ -92,6 +92,7 @@ import { CLAUDE_FINANCIAL_OPERATION_SCENE_DURATION, OTTO_AI_EMPLOYEES_CHATGPT_CL
 import { ChatGptOperationalFlowsVideo } from '@/assets/remotion/compositions/ChatGptOperationalFlowsVideo'
 import { ChatGptTaskLauncherAnimation } from '@/assets/remotion/compositions/ChatGptTaskLauncherAnimation'
 import { CODEX_CHARTS_DURATION, CodexChartsAnimation } from '@/assets/remotion/compositions/CodexChartsAnimation'
+import { PROMPT_TO_CHART_EXACT_DURATION, PromptToChartExactVideo } from '@/assets/remotion/compositions/PromptToChartExactVideo'
 import { CHATBOT_DASHBOARD_MOBILE_DURATION, CHATGPT_POWERPOINT_OUTLINE_MOBILE_DURATION, CLAUDE_POWERPOINT_OUTLINE_MOBILE_DURATION, COWORK_POWERPOINT_EXPORT_DURATION, COWORK_POWERPOINT_EXPORT_MOBILE_DURATION, ChatGptPowerPointOutlineMobileAnimation, ChatbotToDashboardMobileAnimation, ClaudePowerPointOutlineMobileAnimation, CoworkPowerPointExportAnimation, CoworkPowerPointExportMobileAnimation } from '@/assets/remotion/compositions/CoworkPowerPointExportAnimation'
 import { CLAUDE_FINANCIAL_AGENTS_VIDEO_DURATION, ClaudeFinancialAgentsVideo } from '@/assets/remotion/compositions/ClaudeFinancialAgentsVideo'
 import { ClaudeMobileAnimation } from '@/assets/remotion/compositions/ClaudeMobileMarketing'
@@ -3428,6 +3429,18 @@ const catalog: CatalogItem[] = [
     label: 'Codex Charts',
     tags: ['ChatGPT', 'Charts', 'Interactive', 'Video'],
     value: 'video-codex-charts',
+    width: 1280,
+  },
+  {
+    code: '<PromptToChartExactVideo />',
+    component: PromptToChartExactVideo,
+    description: 'Video horizontal fiel as referencias, com prompt digitado e transicao para o grafico de crescimento do PIB.',
+    duration: PROMPT_TO_CHART_EXACT_DURATION,
+    height: 720,
+    kind: 'VÃ­deos criados',
+    label: 'Prompt to Chart Exact',
+    tags: ['ChatGPT', 'Prompt', 'Typing', 'Chart', 'Video'],
+    value: 'video-prompt-to-chart-exact',
     width: 1280,
   },
   {
