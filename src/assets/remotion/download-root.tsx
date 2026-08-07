@@ -44,6 +44,10 @@ import {
   OTTO_FINANCE_AI_50S_DURATION,
   OttoFinanceAi50sVideo,
 } from './compositions/OttoFinanceAi50sVideo'
+import {
+  PROMPT_TO_CHART_EXACT_DURATION,
+  PromptToChartExactVideo,
+} from './compositions/PromptToChartExactVideo'
 
 function RemotionDownloadRoot() {
   return (
@@ -111,6 +115,14 @@ function RemotionDownloadRoot() {
         height={1920}
         id="video-otto-finance-ai-50s"
         width={1080}
+      />
+      <Composition
+        component={PromptToChartExactVideo}
+        durationInFrames={PROMPT_TO_CHART_EXACT_DURATION}
+        fps={30}
+        height={720}
+        id="video-prompt-to-chart-exact"
+        width={1280}
       />
       <Composition
         component={OttoLogoRevealHorizontal}
