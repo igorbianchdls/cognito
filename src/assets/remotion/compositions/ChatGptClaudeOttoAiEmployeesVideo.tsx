@@ -31,7 +31,7 @@ export const CLAUDE_FINANCIAL_OPERATION_SCENE_DURATION = OTTO_FINANCIAL_OPERATIO
 const FONT = IOS_REMOTION_FONT_STACK
 const CLAUDE_RESPONSE_SERIF = '"Libre Baskerville", Baskerville, Georgia, "Times New Roman", serif'
 
-type ResultRow = {
+export type OttoAiEmployeesResultRow = {
   background?: string
   description: string
   erp?: string
@@ -42,6 +42,8 @@ type ResultRow = {
   tone: string
   value?: string
 }
+
+type ResultRow = OttoAiEmployeesResultRow
 
 type ActionStep = {
   result: {
@@ -237,6 +239,22 @@ function CascadeResultCard({ localFrame, result }: { localFrame: number; result:
       </div>
     </div>
   )
+}
+
+export function OttoAiEmployeesSyncCard({
+  frame,
+  kind = 'list',
+  rows,
+  subtitle,
+  title,
+}: {
+  frame: number
+  kind?: ActionStep['result']['kind']
+  rows: OttoAiEmployeesResultRow[]
+  subtitle: string
+  title: string
+}) {
+  return <CascadeResultCard localFrame={frame} result={{ kind, rows, subtitle, title }} />
 }
 
 function BrandIconBox({ row }: { row: Pick<ResultRow, 'icon' | 'initials' | 'tone'> }) {

@@ -15,10 +15,11 @@ function progress(frame: number, from: number, to: number, output: [number, numb
   })
 }
 
-function PromptInputScene() {
+export function ExactPromptInputScene({ duration = PROMPT_SCENE_DURATION, prompt = PROMPT }: { duration?: number; prompt?: string }) {
   const frame = useCurrentFrame()
-  const visibleCharacters = Math.floor(progress(frame, 14, 106, [0, PROMPT.length]))
-  const exit = progress(frame, 130, PROMPT_SCENE_DURATION, [1, 0])
+  const typingEnd = Math.min(106, duration - 34)
+  const visibleCharacters = Math.floor(progress(frame, 14, typingEnd, [0, prompt.length]))
+  const exit = progress(frame, duration - 20, duration, [1, 0])
   const showCursor = frame < 112 && Math.floor(frame / 10) % 2 === 0
 
   return (
@@ -52,7 +53,7 @@ function PromptInputScene() {
 
         <div style={{ alignItems: 'center', display: 'flex', minWidth: 0, overflow: 'hidden' }}>
           <span style={{ color: '#202124', fontSize: 19, fontWeight: 400, letterSpacing: 0, whiteSpace: 'nowrap' }}>
-            {PROMPT.slice(0, visibleCharacters)}
+            {prompt.slice(0, visibleCharacters)}
             {showCursor ? <span style={{ borderRight: '1.5px solid #202124', marginLeft: 1 }}>&nbsp;</span> : null}
           </span>
         </div>
@@ -201,7 +202,7 @@ export function PromptToChartExactVideo() {
   return (
     <AbsoluteFill style={{ background: '#ffffff' }}>
       <Sequence durationInFrames={PROMPT_SCENE_DURATION}>
-        <PromptInputScene />
+        <ExactPromptInputScene />
       </Sequence>
       <Sequence from={PROMPT_SCENE_DURATION} durationInFrames={150}>
         <ChartScene />

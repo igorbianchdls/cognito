@@ -112,9 +112,9 @@ function RemotionDownloadRoot() {
         component={OttoFinanceAi50sVideo}
         durationInFrames={OTTO_FINANCE_AI_50S_DURATION}
         fps={30}
-        height={1920}
+        height={720}
         id="video-otto-finance-ai-50s"
-        width={1080}
+        width={1280}
       />
       <Composition
         component={PromptToChartExactVideo}
