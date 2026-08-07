@@ -80,13 +80,26 @@ const expenseRows = [
   row({ description: '6 a pagar · 9 a receber', initials: 'CX', name: 'Contas e caixa', status: 'Atualizado', tone: '#16845b', value: 'Hoje' }),
 ]
 
-const invoiceRows = [
-  row({ description: 'Aurora Tecnologia Ltda.', initials: 'CL', name: 'Cliente identificado', status: 'Validado', tone: '#2563eb', value: 'CNPJ OK' }),
-  row({ description: 'Consultoria mensal', initials: 'SV', name: 'Serviço reconhecido', status: 'Completo', tone: '#7c3aed', value: 'R$ 12.400' }),
-  row({ description: 'Tomador, descrição e município', initials: 'DD', name: 'Dados preenchidos', status: 'Completo', tone: '#0891b2', value: 'Cadastro OK' }),
-  row({ description: 'ISS e retenções calculados', initials: 'TX', name: 'Impostos revisados', status: 'Revisado', tone: '#d97757', value: 'R$ 248' }),
-  row({ description: 'Autorizada pela prefeitura', initials: 'NF', name: 'Nota fiscal #01942', status: 'Emitida', tone: '#16845b', value: 'PDF + XML' }),
-  row({ description: 'PDF e XML enviados ao cliente', initials: 'EV', name: 'Envio e financeiro', status: 'Atualizado', tone: '#0f766e', value: 'Conta a receber criada' }),
+const recentSalesRows = [
+  row({ description: 'Aurora Tecnologia · Consultoria', initials: '42', name: 'Venda #01942', status: 'Confirmada', tone: '#2563eb', value: 'R$ 12.400' }),
+  row({ description: 'Lume Comércio · Implantação', initials: '41', name: 'Venda #01941', status: 'Confirmada', tone: '#0f766e', value: 'R$ 8.900' }),
+  row({ description: 'Studio Norte · Projeto mensal', initials: '40', name: 'Venda #01940', status: 'Confirmada', tone: '#7c3aed', value: 'R$ 5.440' }),
+  row({ description: 'Prisma Tech · Licenciamento', initials: '39', name: 'Venda #01939', status: 'Confirmada', tone: '#0891b2', value: 'R$ 4.200' }),
+  row({ description: 'Nova Oficina · Assessoria', initials: '38', name: 'Venda #01938', status: 'Confirmada', tone: '#d97757', value: 'R$ 3.280' }),
+  row({ description: 'Vitta Serviços · Treinamento', initials: '37', name: 'Venda #01937', status: 'Confirmada', tone: '#16845b', value: 'R$ 2.170' }),
+  row({ description: 'Mercado Norte · Suporte', initials: '36', name: 'Venda #01936', status: 'Confirmada', tone: '#475569', value: 'R$ 1.580' }),
+  row({ description: 'Delta Logística · Integração', initials: '35', name: 'Venda #01935', status: 'Confirmada', tone: '#ea580c', value: 'R$ 2.640' }),
+]
+
+const invoiceEmissionRows = [
+  row({ description: 'Venda #01942 · Aurora Tecnologia', initials: 'NF', name: 'NFS-e #02841', status: 'Emitida', tone: '#2563eb', value: 'R$ 12.400' }),
+  row({ description: 'Venda #01941 · Lume Comércio', initials: 'NF', name: 'NFS-e #02842', status: 'Emitida', tone: '#0f766e', value: 'R$ 8.900' }),
+  row({ description: 'Venda #01940 · Studio Norte', initials: 'NF', name: 'NFS-e #02843', status: 'Emitida', tone: '#7c3aed', value: 'R$ 5.440' }),
+  row({ description: 'Venda #01939 · Prisma Tech', initials: 'NF', name: 'NFS-e #02844', status: 'Emitida', tone: '#0891b2', value: 'R$ 4.200' }),
+  row({ description: 'Venda #01938 · Nova Oficina', initials: 'NF', name: 'NFS-e #02845', status: 'Emitida', tone: '#d97757', value: 'R$ 3.280' }),
+  row({ description: 'Venda #01937 · Vitta Serviços', initials: 'NF', name: 'NFS-e #02846', status: 'Emitida', tone: '#16845b', value: 'R$ 2.170' }),
+  row({ description: 'Venda #01936 · Mercado Norte', initials: 'NF', name: 'NFS-e #02847', status: 'Emitida', tone: '#475569', value: 'R$ 1.580' }),
+  row({ description: 'Venda #01935 · Delta Logística', initials: 'NF', name: 'NFS-e #02848', status: 'Emitida', tone: '#ea580c', value: 'R$ 2.640' }),
 ]
 
 const collectionRows = [
@@ -111,20 +124,22 @@ function SyncScene({
   duration,
   kind = 'list',
   rows,
+  speed = 1.3,
   subtitle,
   title,
 }: {
   duration: number
   kind?: 'list' | 'reconciliation'
   rows: OttoAiEmployeesResultRow[]
+  speed?: number
   subtitle: string
   title: string
 }) {
   const frame = useCurrentFrame()
   return (
     <Scene duration={duration}>
-      <div style={{ left: '50%', position: 'absolute', top: '50%', transform: 'translate(-50%, -50%)', width: 940 }}>
-        <OttoAiEmployeesSyncCard frame={frame * 1.3} kind={kind} rows={rows} subtitle={subtitle} title={title} />
+      <div style={{ left: '50%', position: 'absolute', top: '50%', transform: `translate(-50%, -50%) scale(${rows.length > 6 ? 0.94 : 1})`, width: 940 }}>
+        <OttoAiEmployeesSyncCard frame={frame * speed} kind={kind} rows={rows} subtitle={subtitle} title={title} />
       </div>
     </Scene>
   )
@@ -295,14 +310,15 @@ export function OttoFinanceAi50sVideo() {
       <Sequence from={310} durationInFrames={110}><SyncScene duration={110} rows={expenseRows} subtitle="Categorias, contas a pagar, contas a receber e caixa" title="Organização financeira" /></Sequence>
       <Sequence from={420} durationInFrames={90}><ExactPromptInputScene duration={90} prompt="Mostre a projeção do fluxo de caixa dos próximos 6 meses." /></Sequence>
       <Sequence from={510} durationInFrames={140}><CashFlowChart duration={140} /></Sequence>
-      <Sequence from={650} durationInFrames={90}><ExactPromptInputScene duration={90} prompt="Emita a nota desta venda e envie ao cliente." /></Sequence>
-      <Sequence from={740} durationInFrames={120}><SyncScene duration={120} rows={invoiceRows} subtitle="Cliente, serviço, impostos, emissão e atualização financeira" title="Emissão inteligente de nota fiscal" /></Sequence>
-      <Sequence from={860} durationInFrames={110}><SyncScene duration={110} rows={collectionRows} subtitle="Clientes em atraso e acompanhamentos automáticos" title="Cobranças e recebimentos" /></Sequence>
-      <Sequence from={970} durationInFrames={90}><ExactPromptInputScene duration={90} prompt="Quais clientes concentram os valores em atraso?" /></Sequence>
-      <Sequence from={1060} durationInFrames={140}><OverdueChart duration={140} /></Sequence>
-      <Sequence from={1200} durationInFrames={110}><SyncScene duration={110} rows={fiscalRows} subtitle="Obrigações, regime, créditos e oportunidades legais" title="Análise fiscal e tributária" /></Sequence>
-      <Sequence from={1310} durationInFrames={100}><CompatibilityScene duration={100} /></Sequence>
-      <Sequence from={1410} durationInFrames={90}><OutroScene duration={90} /></Sequence>
+      <Sequence from={650} durationInFrames={85}><ExactPromptInputScene duration={85} prompt="Emita as notas fiscais das minhas vendas recentes." /></Sequence>
+      <Sequence from={735} durationInFrames={90}><SyncScene duration={90} rows={recentSalesRows} speed={1.8} subtitle="Vendas confirmadas, clientes e valores prontos para faturar" title="Últimas 8 vendas" /></Sequence>
+      <Sequence from={825} durationInFrames={100}><SyncScene duration={100} rows={invoiceEmissionRows} speed={1.8} subtitle="Notas autorizadas, enviadas e vinculadas ao financeiro" title="Emissão de 8 notas fiscais" /></Sequence>
+      <Sequence from={925} durationInFrames={100}><SyncScene duration={100} rows={collectionRows} subtitle="Clientes em atraso e acompanhamentos automáticos" title="Cobranças e recebimentos" /></Sequence>
+      <Sequence from={1025} durationInFrames={85}><ExactPromptInputScene duration={85} prompt="Quais clientes concentram os valores em atraso?" /></Sequence>
+      <Sequence from={1110} durationInFrames={130}><OverdueChart duration={130} /></Sequence>
+      <Sequence from={1240} durationInFrames={100}><SyncScene duration={100} rows={fiscalRows} subtitle="Obrigações, regime, créditos e oportunidades legais" title="Análise fiscal e tributária" /></Sequence>
+      <Sequence from={1340} durationInFrames={80}><CompatibilityScene duration={80} /></Sequence>
+      <Sequence from={1420} durationInFrames={80}><OutroScene duration={80} /></Sequence>
     </AbsoluteFill>
   )
 }
