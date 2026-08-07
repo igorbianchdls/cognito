@@ -24,7 +24,7 @@ import type {
   ConnectedDomainRecord,
   ConnectedDomainToolResult,
 } from '@/products/plugin/server/domain-adapters/shared/adapterTypes'
-import type { CognitoMcpServerContext } from '@/products/mcp/server/cognitoMcpServer'
+import type { CognitoMcpServerContext } from '@/products/plugin/server/toolCore'
 
 type JsonRecord = Record<string, unknown>
 

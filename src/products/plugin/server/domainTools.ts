@@ -36,8 +36,8 @@ import { executePaidMediaTool } from '@/products/plugin/server/domain-adapters/p
 import { PAID_MEDIA_RESOURCES } from '@/products/plugin/server/domain-adapters/paid-media/paidMediaTypes'
 import { executeSocialTool } from '@/products/plugin/server/domain-adapters/social/socialService'
 import { SOCIAL_RESOURCES } from '@/products/plugin/server/domain-adapters/social/socialTypes'
-import type { CognitoMcpServerContext } from '@/products/mcp/server/cognitoMcpServer'
-import type { McpToolInputSchema } from '@/products/mcp/tools/dashboardSchemas'
+import type { CognitoMcpServerContext } from '@/products/plugin/server/toolCore'
+import type { McpToolInputSchema } from '@/products/plugin/server/dashboardSchemas'
 import {
   integrationErrorInfoFromUnknown,
   isProviderReauthError,

@@ -13,7 +13,7 @@ import type {
   ConnectedDomainToolResult,
 } from '@/products/plugin/server/domain-adapters/shared/adapterTypes'
 import { DomainAdapterError } from '@/products/plugin/server/domain-adapters/shared/adapterErrors'
-import type { CognitoMcpServerContext } from '@/products/mcp/server/cognitoMcpServer'
+import type { CognitoMcpServerContext } from '@/products/plugin/server/toolCore'
 
 type JsonRecord = Record<string, unknown>
 

@@ -20,7 +20,7 @@ assert(compiler.includes('compileArtifactJsxToTree'), 'generic artifact compiler
 
 const manifest = await source('src/products/artifacts/dashboard/language/dashboardLanguageManifest.ts')
 const definition = await source('src/products/artifacts/dashboard/language/dashboardLanguageDefinition.tsx')
-const dashboardTools = await source('src/products/mcp/tools/dashboardTools.ts')
+const dashboardTools = await source('src/products/plugin/server/dashboardTools.ts')
 const chartPalettes = await source('src/products/artifacts/dashboard/chartPalettes.ts')
 assert(manifest.includes("DASHBOARD_DSL_VERSION = 'dashboard.v1'"), 'dashboard DSL version missing')
 assert(definition.includes('dashboardLanguageManifest'), 'dashboard language definition must derive from manifest')

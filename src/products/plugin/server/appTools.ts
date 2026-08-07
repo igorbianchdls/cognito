@@ -1,6 +1,6 @@
-import { type McpToolInputSchema } from '@/products/mcp/tools/dashboardSchemas'
+import { type McpToolInputSchema } from '@/products/plugin/server/dashboardSchemas'
 import { runQuery } from '@/lib/postgres'
-import { callCognitoMcpTool, type CognitoMcpServerContext } from '@/products/mcp/server/cognitoMcpServer'
+import { callCognitoMcpTool, type CognitoMcpServerContext } from '@/products/plugin/server/toolCore'
 import { DASHBOARD_WIDGET_RESOURCE_URI } from '@/products/plugin/server/appResources'
 import {
   buildArtifactUrl,
@@ -9,8 +9,8 @@ import {
   listMcpDashboards,
   readMcpArtifact,
   readMcpDashboard,
-} from '@/products/mcp/adapters/artifactsAdapter'
-import { MCP_ARTIFACT_TOOL_NAMES } from '@/products/mcp/shared/toolNames'
+} from '@/products/plugin/server/artifactsAdapter'
+import { MCP_ARTIFACT_TOOL_NAMES } from '@/products/plugin/server/toolNames'
 import { createDashboardEmbedToken } from '@/products/plugin/server/embedToken'
 import {
   callPluginDomainTool,

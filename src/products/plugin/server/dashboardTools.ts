@@ -6,8 +6,8 @@ import {
   readMcpDashboard,
   updateMcpDashboardFull,
   type McpJsonMap,
-} from '@/products/mcp/adapters/artifactsAdapter'
-import { MCP_DASHBOARD_TOOL_NAMES, type McpDashboardToolName } from '@/products/mcp/shared/toolNames'
+} from '@/products/plugin/server/artifactsAdapter'
+import { MCP_DASHBOARD_TOOL_NAMES, type McpDashboardToolName } from '@/products/plugin/server/toolNames'
 import {
   DASHBOARD_DSL_VERSION,
   DASHBOARD_SUPPORTED_CHART_PALETTES,

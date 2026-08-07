@@ -2,7 +2,7 @@
 
 Shared Plugin layer for interactive Cognito dashboard UI.
 
-This product owns the host-agnostic pieces that can be reused by Claude, ChatGPT, and any Plugin-compatible client:
+This product owns the host-agnostic artifact preview and authoring pieces used internally by the application:
 
 - `ui://widget/dashboard-v4.html` resource
 - `dashboards` list/search tool
@@ -12,10 +12,7 @@ This product owns the host-agnostic pieces that can be reused by Claude, ChatGPT
 - dashboard/ecommerce/marketing/SQL result widget
 - widget source and built HTML
 
-Host-specific wrappers stay outside this product:
-
-- `src/products/chatgpt-app` keeps OpenAI-specific OAuth, metadata, and endpoint behavior.
-- `src/products/claude-app` will add Claude-specific connector docs, OAuth, smoke tests, and endpoint behavior.
+External AI clients are served exclusively by `src/products/ai-platform` and `/api/ai/mcp`.
 
 ## Commands
 
@@ -35,13 +32,6 @@ The smoke test validates:
 - `dashboards`, `open_artifact`, and `artifact_authoring` registration source
 - widget runtime globals
 
-See also:
-
-```txt
-src/products/plugin/docs/overview.md
-src/products/plugin/docs/inventory.md
-```
-
 ## Current State
 
-This is the first extraction step. The code is copied from `chatgpt-app`, isolated under `plugin`, and standardized around Plugin `_meta.ui`. OpenAI-only fields are added by the ChatGPT wrapper.
+The plugin remains an internal artifact rendering layer and is not an MCP or OAuth server.

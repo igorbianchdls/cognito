@@ -1,4 +1,4 @@
-import { MCP_DASHBOARD_TOOL_NAMES } from '@/products/mcp/shared/toolNames'
+import { MCP_DASHBOARD_TOOL_NAMES } from '@/products/plugin/server/toolNames'
 
 export type McpToolInputSchema = {
   type: 'object'

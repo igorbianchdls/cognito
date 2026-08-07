@@ -1,5 +1,5 @@
-import { MCP_ARTIFACT_TOOL_NAMES } from '@/products/mcp/shared/toolNames'
-import type { McpToolDefinition, McpToolInputSchema } from '@/products/mcp/tools/dashboardSchemas'
+import { MCP_ARTIFACT_TOOL_NAMES } from '@/products/plugin/server/toolNames'
+import type { McpToolDefinition, McpToolInputSchema } from '@/products/plugin/server/dashboardSchemas'
 
 export const ARTIFACT_AUTHORING_SCHEMA = {
   type: 'object',

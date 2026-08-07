@@ -27,8 +27,6 @@ declare global {
       callTool: (name: string, args?: Record<string, unknown>) => Promise<ToolCallResult | null>
       renderToolResult: (result: ToolCallResult | unknown) => void
     }
-    CognitoChatGptApp?: Window['CognitoPlugin']
-    CognitoMcpApp?: Window['CognitoPlugin']
   }
 }
 
@@ -129,7 +127,7 @@ async function initializePluginsBridge() {
     })
     rpcNotify('ui/notifications/initialized')
   } catch {
-    // ChatGPT compatibility globals do not require the Plugin init handshake.
+    // The host may not implement the optional Plugin initialization handshake.
   }
 }
 
@@ -160,8 +158,6 @@ export function installCognitoWidgetRuntime() {
   }
 
   window.CognitoPlugin = runtime
-  window.CognitoChatGptApp = window.CognitoPlugin
-  window.CognitoMcpApp = window.CognitoPlugin
 }
 
 export function sendPluginMessage(text: string) {

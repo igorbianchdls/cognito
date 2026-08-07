@@ -11,15 +11,11 @@ const isPublicRoute = createRouteMatcher([
   '/__clerk/:path*',
   '/api/clerk/webhooks(.*)',
   '/api/integracoes(.*)',
-  '/api/mcp(.*)',
-  '/api/chatgpt-app(.*)',
-  '/api/claude-app(.*)',
   '/api/ai/mcp(.*)',
   '/.well-known(.*)',
   '/artifacts/dashboards/:path*',
   '/artifacts/reports/:path*',
   '/artifacts/slides/:path*',
-  '/internal/mcp-ui(.*)',
 ])
 
 const handleClerkMiddleware = clerkMiddleware(async (auth, request) => {

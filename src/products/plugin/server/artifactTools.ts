@@ -6,9 +6,9 @@ import {
   updateMcpArtifactFull,
   type McpArtifactKind,
   type McpJsonMap,
-} from '@/products/mcp/adapters/artifactsAdapter'
-import { MCP_ARTIFACT_TOOL_NAMES, type McpArtifactToolName } from '@/products/mcp/shared/toolNames'
-import { getDashboardContract, McpDashboardToolInputError } from '@/products/mcp/tools/dashboardTools'
+} from '@/products/plugin/server/artifactsAdapter'
+import { MCP_ARTIFACT_TOOL_NAMES, type McpArtifactToolName } from '@/products/plugin/server/toolNames'
+import { getDashboardContract, McpDashboardToolInputError } from '@/products/plugin/server/dashboardTools'
 import {
   DOCUMENT_SUPPORTED_HTML_TAGS,
   DOCUMENT_SPECIAL_COMPONENTS,

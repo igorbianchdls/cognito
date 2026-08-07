@@ -1,7 +1,7 @@
-import { DASHBOARD_AUTHORING_PROMPT } from '@/products/mcp/prompts/dashboardAuthoringPrompt'
-import { ARTIFACT_MCP_TOOL_DEFINITIONS } from '@/products/mcp/tools/artifactSchemas'
-import { executeMcpArtifactTool } from '@/products/mcp/tools/artifactTools'
-import { MCP_ARTIFACT_TOOL_NAME_SET } from '@/products/mcp/shared/toolNames'
+import { DASHBOARD_AUTHORING_PROMPT } from '@/products/plugin/server/dashboardAuthoringPrompt'
+import { ARTIFACT_MCP_TOOL_DEFINITIONS } from '@/products/plugin/server/artifactSchemas'
+import { executeMcpArtifactTool } from '@/products/plugin/server/artifactTools'
+import { MCP_ARTIFACT_TOOL_NAME_SET } from '@/products/plugin/server/toolNames'
 
 export const COGNITO_MCP_SERVER_INFO = {
   name: 'cognito',

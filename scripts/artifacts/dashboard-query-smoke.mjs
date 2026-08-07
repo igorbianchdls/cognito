@@ -94,12 +94,12 @@ assert(queryPreview.includes('SENSITIVE_FIELD_PATTERN'), 'dashboard query previe
 assert(queryPreview.includes('dashboard_query_component_not_found'), 'dashboard query preview must report missing component')
 assert(queryPreview.includes('dashboard_query_component_without_query'), 'dashboard query preview must report component without query')
 
-const artifactsAdapter = await source('src/products/mcp/adapters/artifactsAdapter.ts')
+const artifactsAdapter = await source('src/products/plugin/server/artifactsAdapter.ts')
 assert(artifactsAdapter.includes('query_preflight'), 'dashboard MCP create/update must return query preflight report')
 assert(artifactsAdapter.includes('withDashboardQueryPreflight'), 'dashboard MCP adapter must attach query preflight report')
 assert(artifactsAdapter.includes('previewMcpDashboardQuery'), 'dashboard MCP adapter must expose query preview')
 
-const dashboardTools = await source('src/products/mcp/tools/dashboardTools.ts')
+const dashboardTools = await source('src/products/plugin/server/dashboardTools.ts')
 assert(dashboardTools.includes('dataset normalized'), 'dashboard authoring contract must point dataQuery to normalized dataset')
 assert(dashboardTools.includes('query_preflight'), 'dashboard authoring contract must document query preflight')
 assert(dashboardTools.includes('query_preview'), 'dashboard authoring contract must document query preview')

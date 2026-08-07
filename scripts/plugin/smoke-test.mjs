@@ -47,7 +47,6 @@ async function main() {
   const widgetHtml = await readFile(widgetHtmlPath, 'utf8')
   assert(widgetHtml.includes('Cognito Dashboards'), 'widget HTML missing title')
   assert(widgetHtml.includes('CognitoPlugin'), 'widget HTML missing Plugin runtime')
-  assert(widgetHtml.includes('CognitoChatGptApp'), 'widget HTML missing ChatGPT compatibility alias')
   assert(widgetHtml.includes('createElement("iframe"') || widgetHtml.includes('iframe'), 'widget HTML missing iframe renderer')
   assert(widgetHtml.includes('dashboard-embed-frame'), 'widget HTML missing embed frame styles')
   console.log('widget html ok')
@@ -100,7 +99,7 @@ async function main() {
   assert(!toolsSource.includes('openai/widgetAccessible'), 'plugin tools should not include OpenAI widgetAccessible')
   console.log('tools source ok')
 
-  const artifactsAdapterSource = await readFile(path.join(root, 'src/products/mcp/adapters/artifactsAdapter.ts'), 'utf8')
+  const artifactsAdapterSource = await readFile(path.join(root, 'src/products/plugin/server/artifactsAdapter.ts'), 'utf8')
   assert(artifactsAdapterSource.includes('thumbnail_data_url: thumbnailDataUrl || null'), 'dashboard list should expose thumbnail_data_url')
   assert(artifactsAdapterSource.includes('buildArtifactUrl'), 'generic artifact URL builder missing')
   assert(artifactsAdapterSource.includes('listMcpArtifacts'), 'generic artifact list adapter missing')
@@ -165,7 +164,7 @@ async function main() {
   assert(domainToolsSource.includes("'estoque/estoque-atual': 'estoque.estoques_atual'"), 'estoque/estoque-atual should map to estoque.estoques_atual')
   console.log('domain tools source ok')
 
-  const dashboardToolsSource = await readFile(path.join(root, 'src/products/mcp/tools/dashboardTools.ts'), 'utf8')
+  const dashboardToolsSource = await readFile(path.join(root, 'src/products/plugin/server/dashboardTools.ts'), 'utf8')
   const dashboardManifestSource = await readFile(
     path.join(root, 'src/products/artifacts/dashboard/language/dashboardLanguageManifest.ts'),
     'utf8',
@@ -181,11 +180,11 @@ async function main() {
   assert(!dashboardToolsSource.includes('data={[{ label:'), 'dashboard example should not use Chart.data')
   console.log('dashboard authoring contract ok')
 
-  const artifactToolsSource = await readFile(path.join(root, 'src/products/mcp/tools/artifactTools.ts'), 'utf8')
+  const artifactToolsSource = await readFile(path.join(root, 'src/products/plugin/server/artifactTools.ts'), 'utf8')
   assert(artifactToolsSource.includes('getDashboardContract'), 'artifact tool should reuse dashboard contract')
   assert(!artifactToolsSource.includes('getPagedArtifactContract'), 'artifact tool should not expose paged artifact contracts')
   assert(artifactToolsSource.includes('assertSourceMatchesKind'), 'artifact source kind guard missing')
-  const artifactSchemasSource = await readFile(path.join(root, 'src/products/mcp/tools/artifactSchemas.ts'), 'utf8')
+  const artifactSchemasSource = await readFile(path.join(root, 'src/products/plugin/server/artifactSchemas.ts'), 'utf8')
   assert(artifactSchemasSource.includes("enum: ['dashboard', 'report', 'slide']"), 'artifact authoring kind enum should include reports and slides')
   assert(artifactSchemasSource.includes("enum: ['get_contract', 'create', 'patch', 'update_full', 'query_preview']"), 'artifact authoring action enum missing')
   console.log('artifact authoring contract ok')
@@ -264,33 +263,9 @@ async function main() {
   assert(stylesSource.includes('.connector-row'), 'connectors row style missing')
   console.log('web source ok')
 
-  const chatGptToolsSource = await readFile(path.join(root, 'src/products/chatgpt-app/server/appTools.ts'), 'utf8')
-  assert(chatGptToolsSource.includes("case 'artifact_authoring'"), 'ChatGPT tool invocation text should handle artifact_authoring')
-  assert(chatGptToolsSource.includes("case 'open_artifact'"), 'ChatGPT tool invocation text should handle open_artifact')
-  assert(chatGptToolsSource.includes("case 'chart'"), 'ChatGPT tool invocation text should handle chart')
-  assert(chatGptToolsSource.includes("case 'crm'"), 'ChatGPT tool invocation text should handle crm')
-  assert(chatGptToolsSource.includes("case 'erp_acoes'"), 'ChatGPT tool invocation text should handle erp_acoes')
-  assert(chatGptToolsSource.includes("case 'data_catalog'"), 'ChatGPT tool invocation text should handle data_catalog')
-  assert(chatGptToolsSource.includes("case 'analysis'"), 'ChatGPT tool invocation text should handle analysis')
-  assert(chatGptToolsSource.includes("case 'actions'"), 'ChatGPT tool invocation text should handle actions')
-  assert(chatGptToolsSource.includes("case 'alerts'"), 'ChatGPT tool invocation text should handle alerts')
-  assert(chatGptToolsSource.includes("case 'schedules'"), 'ChatGPT tool invocation text should handle schedules')
-  assert(chatGptToolsSource.includes("case 'connectors'"), 'ChatGPT tool invocation text should handle connectors')
-  assert(chatGptToolsSource.includes('Consultando CRM...'), 'ChatGPT crm invoking text missing')
-  assert(chatGptToolsSource.includes('Preparando acao no ERP...'), 'ChatGPT erp_acoes invoking text missing')
-  assert(chatGptToolsSource.includes('Lendo catalogo de dados...'), 'ChatGPT data_catalog invoking text missing')
-  assert(chatGptToolsSource.includes('Dados de CRM carregados.'), 'ChatGPT crm invoked text missing')
-  console.log('chatgpt tool metadata ok')
-
-  const chatGptResourcesSource = await readFile(path.join(root, 'src/products/chatgpt-app/server/appResources.ts'), 'utf8')
-  assert(chatGptResourcesSource.includes('frameDomains'), 'ChatGPT resource mapper should read frameDomains')
-  assert(chatGptResourcesSource.includes('frame_domains'), 'ChatGPT widget CSP should expose frame_domains')
-  console.log('chatgpt resource metadata ok')
-
   const componentPath = path.join(root, 'src/products/plugin/web/dist/component.js')
   const componentJs = await readFile(componentPath, 'utf8')
   assert(componentJs.includes('CognitoPlugin'), 'component missing Plugin runtime')
-  assert(componentJs.includes('CognitoChatGptApp'), 'component missing ChatGPT alias')
   console.log('component runtime ok')
 
   console.log('Plugin smoke test passed')
