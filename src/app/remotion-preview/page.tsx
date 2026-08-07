@@ -3437,7 +3437,7 @@ const catalog: CatalogItem[] = [
     description: 'Video horizontal fiel as referencias, com prompt digitado e transicao para o grafico de crescimento do PIB.',
     duration: PROMPT_TO_CHART_EXACT_DURATION,
     height: 720,
-    kind: 'VÃ­deos criados',
+    kind: 'Vídeos criados',
     label: 'Prompt to Chart Exact',
     tags: ['ChatGPT', 'Prompt', 'Typing', 'Chart', 'Video'],
     value: 'video-prompt-to-chart-exact',
