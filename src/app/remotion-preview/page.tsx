@@ -121,6 +121,7 @@ import { OTTO_INTEGRATION_ACCESS_MAP_DURATION, OttoIntegrationAccessMap } from '
 import { OTTO_INTEGRATION_SIGNAL_MAP_DURATION, OttoIntegrationSignalMap } from '@/assets/remotion/compositions/OttoIntegrationSignalMap'
 import { OTTO_LOGO_REVEAL_HORIZONTAL_DURATION, OTTO_LOGO_REVEAL_REELS_DURATION, OttoLogoRevealHorizontal, OttoLogoRevealReels } from '@/assets/remotion/compositions/OttoLogoRevealHorizontal'
 import { OTTO_FINANCE_AUTOMATION_ONLY_SCENE_DURATION, OttoFinanceAutomationOnlyScene } from '@/assets/remotion/compositions/OttoFinanceAutomationOnlyScene'
+import { OTTO_FINANCE_AI_50S_DURATION, OttoFinanceAi50sVideo } from '@/assets/remotion/compositions/OttoFinanceAi50sVideo'
 import { OTTO_INVOICE_ONLY_SCENE_DURATION, OttoInvoiceOnlyScene } from '@/assets/remotion/compositions/OttoInvoiceOnlyScene'
 import { OTTO_SYNC_ONLY_SCENE_DURATION, OttoSyncOnlyScene } from '@/assets/remotion/compositions/OttoSyncOnlyScene'
 import {
@@ -3369,6 +3370,18 @@ const catalog: CatalogItem[] = [
     label: 'Otto Finance Automation Only Scene',
     tags: ['Otto', 'Financeiro', 'Automacao', 'Prompt'],
     value: 'video-otto-finance-automation-only-scene',
+    width: 1080,
+  },
+  {
+    code: '<OttoFinanceAi50sVideo />',
+    component: OttoFinanceAi50sVideo,
+    description: 'Video completo da Otto com prompts, conciliacao, despesas, notas fiscais, cobrancas, fiscal e integracao com ChatGPT e Claude.',
+    duration: OTTO_FINANCE_AI_50S_DURATION,
+    height: 1920,
+    kind: 'Vídeos criados',
+    label: 'Otto Finance AI 50s',
+    tags: ['Otto', 'Financeiro', 'Sync', 'ChatGPT', 'Claude', 'Video'],
+    value: 'video-otto-finance-ai-50s',
     width: 1080,
   },
   {
