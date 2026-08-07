@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server'
 
-import { resolveAuthTenant } from '@/products/auth/server/authTenantResolver'
+import { resolveErpAccess } from '@/products/erp/server/erpAccess'
 import { getErpOverview } from '@/products/erp/server/erpRepository'
 
 export const dynamic = 'force-dynamic'
@@ -8,8 +8,8 @@ export const revalidate = 0
 export const runtime = 'nodejs'
 
 export async function GET() {
-  const tenant = await resolveAuthTenant({ access: 'read' })
-  if (!tenant) return NextResponse.json({ error: 'Nao autenticado.' }, { status: 401 })
+  const tenant = await resolveErpAccess('erp.relatorios.visualizar')
+  if (!tenant) return NextResponse.json({ error: 'Acesso negado.' }, { status: 403 })
   try {
     return NextResponse.json(await getErpOverview(tenant.tenantId))
   } catch (error) {

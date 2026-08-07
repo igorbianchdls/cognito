@@ -9,14 +9,7 @@ import type {
   ErpEntityUpdateRequest,
 } from '@/products/erp/shared/contracts'
 import type { ErpEntityConfig, ErpEntityRecord } from '@/products/erp/shared/types'
-
-async function parseJsonResponse<T>(response: Response): Promise<T> {
-  const body = (await response.json().catch(() => ({}))) as { error?: string }
-  if (!response.ok) {
-    throw new Error(body.error || 'Nao foi possivel completar a operacao.')
-  }
-  return body as T
-}
+import { parseErpResponse } from '@/products/erp/frontend/services/erpProfessionalClient'
 
 function buildListUrl<TRecord extends ErpEntityRecord>(
   config: ErpEntityConfig<TRecord>,
@@ -65,7 +58,7 @@ export const erpClient: ErpClient = {
       cache: 'no-store',
       headers: { Accept: 'application/json' },
     })
-    return parseJsonResponse<ErpEntityListResponse<TRecord>>(response)
+    return parseErpResponse<ErpEntityListResponse<TRecord>>(response)
   },
 
   async createEntityRecord<TRecord extends ErpEntityRecord>(
@@ -81,12 +74,12 @@ export const erpClient: ErpClient = {
       },
       body: JSON.stringify({ values: request.values }),
     })
-    return parseJsonResponse<ErpEntityCreateResponse<TRecord>>(response)
+    return parseErpResponse<ErpEntityCreateResponse<TRecord>>(response)
   },
 
   async getEntityRecord<TRecord extends ErpEntityRecord>(config: ErpEntityConfig<TRecord>, id: string) {
     const response = await fetch(`/api/erp/${encodeURIComponent(config.id)}/${encodeURIComponent(id)}`, { cache: 'no-store' })
-    return parseJsonResponse<ErpEntityCreateResponse<TRecord>>(response)
+    return parseErpResponse<ErpEntityCreateResponse<TRecord>>(response)
   },
 
   async updateEntityRecord<TRecord extends ErpEntityRecord>(
@@ -97,7 +90,7 @@ export const erpClient: ErpClient = {
       headers: { Accept: 'application/json', 'Content-Type': 'application/json' },
       body: JSON.stringify(request),
     })
-    return parseJsonResponse<ErpEntityCreateResponse<TRecord>>(response)
+    return parseErpResponse<ErpEntityCreateResponse<TRecord>>(response)
   },
 
   async deactivateEntityRecord<TRecord extends ErpEntityRecord>(config: ErpEntityConfig<TRecord>, id: string, expectedVersion: number) {
@@ -106,7 +99,7 @@ export const erpClient: ErpClient = {
       headers: { Accept: 'application/json', 'Content-Type': 'application/json' },
       body: JSON.stringify({ expectedVersion }),
     })
-    return parseJsonResponse<ErpEntityCreateResponse<TRecord>>(response)
+    return parseErpResponse<ErpEntityCreateResponse<TRecord>>(response)
   },
 
   async runEntityAction(
@@ -126,7 +119,7 @@ export const erpClient: ErpClient = {
       body: JSON.stringify({ values: request.values || {} }),
     })
     return {
-      result: await parseJsonResponse<unknown>(response),
+      result: await parseErpResponse<unknown>(response),
     }
   },
 }

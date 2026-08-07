@@ -10,15 +10,14 @@ import { Label } from '@/components/ui/label'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { ErpStatusBadge } from '@/products/erp/frontend/components/ErpStatusBadge'
+import { parseErpResponse } from '@/products/erp/frontend/services/erpProfessionalClient'
 import type { ErpOperationConfig, ErpOperationField } from '@/products/erp/shared/operations'
 
 type OperationRecord = Record<string, unknown> & { id: string }
 type Catalogs = Record<string, Array<{ value: string; label: string }>>
 
 async function parseResponse<T>(response: Response): Promise<T> {
-  const body = await response.json().catch(() => ({})) as { error?: string }
-  if (!response.ok) throw new Error(body.error || 'Nao foi possivel concluir a operacao.')
-  return body as T
+  return parseErpResponse<T>(response)
 }
 
 function formatValue(value: unknown, kind?: string) {
@@ -99,7 +98,7 @@ export function ErpOperationsWorkspacePage({ config }: { config: ErpOperationCon
     try {
       const [recordsResponse, catalogsResponse] = await Promise.all([
         fetch(`/api/erp/operacoes/${encodeURIComponent(config.resource)}`, { cache: 'no-store' }),
-        fetch('/api/erp/operacoes/catalogos', { cache: 'no-store' }),
+        fetch(`/api/erp/operacoes/catalogos?resource=${encodeURIComponent(config.resource)}`, { cache: 'no-store' }),
       ])
       const result = await parseResponse<{ records: OperationRecord[] }>(recordsResponse)
       setRecords(result.records)

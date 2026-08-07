@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server'
 
-import { resolveAuthTenant } from '@/products/auth/server/authTenantResolver'
+import { resolveErpAccess } from '@/products/erp/server/erpAccess'
 import { exportErpRecords, importErpRows, isImportType } from '@/products/erp/server/erpImportRepository'
 
 export const dynamic = 'force-dynamic'
@@ -11,8 +11,8 @@ function csvCell(value: unknown) {
 }
 
 export async function GET(_request: Request, context: { params: Promise<{ type: string }> }) {
-  const tenant = await resolveAuthTenant({ access: 'read' })
-  if (!tenant) return NextResponse.json({ error: 'Nao autenticado.' }, { status: 401 })
+  const tenant = await resolveErpAccess('erp.cadastros.visualizar')
+  if (!tenant) return NextResponse.json({ error: 'Acesso negado.' }, { status: 403 })
   const { type } = await context.params
   if (!isImportType(type)) return NextResponse.json({ error: 'Tipo de exportacao invalido.' }, { status: 404 })
   try {
@@ -28,7 +28,7 @@ export async function GET(_request: Request, context: { params: Promise<{ type: 
 }
 
 export async function POST(request: Request, context: { params: Promise<{ type: string }> }) {
-  const tenant = await resolveAuthTenant({ access: 'manage' })
+  const tenant = await resolveErpAccess('erp.cadastros.gerenciar')
   if (!tenant) return NextResponse.json({ error: 'Acesso negado.' }, { status: 403 })
   const { type } = await context.params
   if (!isImportType(type)) return NextResponse.json({ error: 'Tipo de importacao invalido.' }, { status: 404 })

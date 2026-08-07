@@ -6,6 +6,7 @@ import { BanknoteArrowDown, BanknoteArrowUp, ClipboardList, Landmark, Loader2, P
 import { Button } from '@/components/ui/button'
 import { ErpMetricCard } from '@/products/erp/frontend/components/ErpMetricCard'
 import { ErpPageHeader } from '@/products/erp/frontend/components/ErpPageHeader'
+import { getErpErrorMessage } from '@/products/erp/frontend/services/erpProfessionalClient'
 
 type Overview = { saldoReceber: number; saldoPagar: number; receberVencido: number; vendasRascunho: number; comprasAbertas: number; clientesAtivos: number }
 type ProfessionalOverview = { saldo_receber: number; saldo_pagar: number; receber_vencido: number; pagar_proximos_7_dias: number; vendas_mes: number; compras_mes: number; vendas_mes_anterior: number; compras_mes_anterior: number; saldo_atual: number; margem_bruta_mes: number; produtos_repor: number; conciliacoes_pendentes: number; ordens_abertas: number }
@@ -28,8 +29,8 @@ export function OverviewPage() {
       ])
       const body = await response.json().catch(() => ({})) as Overview & { error?: string }
       const professionalBody = await professionalResponse.json().catch(() => ({})) as ProfessionalOverview & { error?: string | { message?: string } }
-      if (!response.ok) throw new Error(body.error || 'Nao foi possivel carregar o resumo.')
-      if (!professionalResponse.ok) throw new Error(typeof professionalBody.error === 'string' ? professionalBody.error : professionalBody.error?.message || 'Nao foi possivel carregar os indicadores.')
+      if (!response.ok) throw new Error(getErpErrorMessage(body, 'Nao foi possivel carregar o resumo.'))
+      if (!professionalResponse.ok) throw new Error(getErpErrorMessage(professionalBody, 'Nao foi possivel carregar os indicadores.'))
       setData(body); setProfessional(professionalBody)
     } catch (loadError) { setError(loadError instanceof Error ? loadError.message : 'Nao foi possivel carregar o resumo.') }
     finally { setLoading(false) }

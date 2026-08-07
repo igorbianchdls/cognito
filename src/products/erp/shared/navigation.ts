@@ -24,6 +24,7 @@ export const ERP_NAVIGATION: ErpNavigationItem[] = [
     modules: [
       { id: 'clientes', label: 'Clientes', href: '/erp/cadastros/clientes', description: 'Base comercial e fiscal de clientes.' },
       { id: 'fornecedores', label: 'Fornecedores', href: '/erp/cadastros/fornecedores', description: 'Parceiros de compra, servicos e operacao.' },
+      { id: 'vendedores', label: 'Vendedores', href: '/erp/cadastros/vendedores', description: 'Responsaveis comerciais das vendas.' },
       { id: 'produtos', label: 'Produtos', href: '/erp/cadastros/produtos', description: 'SKUs, precos e categorias.' },
       { id: 'servicos', label: 'Servicos', href: '/erp/cadastros/servicos', description: 'Servicos vendidos, precos e classificacao.' },
       { id: 'categorias', label: 'Categorias', href: '/erp/cadastros/categorias', description: 'Classificacao para produtos e relatorios.' },

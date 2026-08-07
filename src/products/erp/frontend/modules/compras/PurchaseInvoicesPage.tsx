@@ -9,6 +9,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { Label } from '@/components/ui/label'
 import { Switch } from '@/components/ui/switch'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
+import { parseErpResponse } from '@/products/erp/frontend/services/erpProfessionalClient'
 
 type Option = { id: string; nome: string }
 type PurchaseCandidate = { id: string; numero: string; total: number; fornecedor: string }
@@ -60,9 +61,7 @@ function parseNfeXml(xml: string): ParsedInvoice {
 }
 
 async function parseResponse<T>(response: Response): Promise<T> {
-  const body = await response.json().catch(() => ({})) as { error?: string }
-  if (!response.ok) throw new Error(body.error || 'Nao foi possivel completar a operacao.')
-  return body as T
+  return parseErpResponse<T>(response)
 }
 
 export function PurchaseInvoicesPage() {

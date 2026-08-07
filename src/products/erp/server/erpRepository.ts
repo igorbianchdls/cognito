@@ -940,7 +940,7 @@ export async function listErpSalesCatalogs(tenantId: number) {
     runQuery(`SELECT id::text, nome, documento, email, celular, telefone, contato_cobranca_emails, contato_cobranca_whatsapp
       FROM erp.entidades WHERE tenant_id = $1 AND eh_cliente = true AND ativo = true AND excluido_em IS NULL ORDER BY nome`, [tenantId]),
     runQuery(`SELECT id::text, nome, documento FROM erp.entidades
-      WHERE tenant_id = $1 AND ativo = true AND excluido_em IS NULL ORDER BY nome`, [tenantId]),
+      WHERE tenant_id = $1 AND eh_vendedor = true AND ativo = true AND excluido_em IS NULL ORDER BY nome`, [tenantId]),
     runQuery(`SELECT id::text, nome, COALESCE(sku, codigo, '') AS codigo, COALESCE(unidade_medida, 'UN') AS unidade, preco_venda AS valor_padrao
       FROM erp.produtos WHERE tenant_id = $1 AND ativo = true AND excluido_em IS NULL ORDER BY nome`, [tenantId]),
     runQuery(`SELECT id::text, nome, COALESCE(codigo, '') AS codigo, 'UN'::text AS unidade, preco AS valor_padrao
@@ -1362,8 +1362,20 @@ export async function importErpPurchaseInvoice(input: {
   })
 }
 
+type EntityRoleModuleId = 'clientes' | 'fornecedores' | 'vendedores'
+
+function isEntityRoleModule(entityId: ErpConnectedModuleId): entityId is EntityRoleModuleId {
+  return entityId === 'clientes' || entityId === 'fornecedores' || entityId === 'vendedores'
+}
+
+function entityRoleColumn(entityId: EntityRoleModuleId) {
+  if (entityId === 'clientes') return 'eh_cliente'
+  if (entityId === 'fornecedores') return 'eh_fornecedor'
+  return 'eh_vendedor'
+}
+
 export async function listErpEntityRecords(input: ListInput): Promise<ErpEntityRecord[]> {
-  if (input.entityId === 'clientes' || input.entityId === 'fornecedores') {
+  if (isEntityRoleModule(input.entityId)) {
     return listEntityRoleRecords(input)
   }
 
@@ -1417,7 +1429,8 @@ export async function listErpEntityPage(input: ListInput) {
 
 async function listEntityRoleRecords(input: ListInput): Promise<ErpEntityRecord[]> {
   const params: unknown[] = [input.tenantId]
-  const roleColumn = input.entityId === 'clientes' ? 'eh_cliente' : 'eh_fornecedor'
+  if (!isEntityRoleModule(input.entityId)) throw new Error('Tipo de entidade invalido.')
+  const roleColumn = entityRoleColumn(input.entityId)
   const rows = await runQuery<Record<string, unknown>>(
     `WITH rows AS (
        SELECT
@@ -1425,6 +1438,7 @@ async function listEntityRoleRecords(input: ListInput): Promise<ErpEntityRecord[
          nome,
          documento,
          email,
+         telefone,
          cidade,
          tipo_pessoa,
          versao,
@@ -1436,7 +1450,7 @@ async function listEntityRoleRecords(input: ListInput): Promise<ErpEntityRecord[
          AND ${roleColumn} = true
          AND excluido_em IS NULL
      )
-     SELECT id, nome, documento, email, cidade, tipo_pessoa, versao, ativo, categoria,
+     SELECT id, nome, documento, email, telefone, cidade, tipo_pessoa, versao, ativo, categoria,
        count(*) OVER ()::int AS __total
      FROM rows
      WHERE true${appendSearch(params, input.query)}${appendStatusFilter(input.filters)}${appendTipoFilter(params, input.filters)}
@@ -1449,6 +1463,7 @@ async function listEntityRoleRecords(input: ListInput): Promise<ErpEntityRecord[
     nome: String(row.nome ?? ''),
     documento: String(row.documento ?? ''),
     email: String(row.email ?? ''),
+    telefone: String(row.telefone ?? ''),
     cidade: String(row.cidade ?? ''),
     categoria: String(row.categoria ?? ''),
     tipo: displayPersonType(row.tipo_pessoa),
@@ -1897,6 +1912,7 @@ async function listFinancialAccountRecords(input: ListInput): Promise<ErpEntityR
 const editableModuleTables = {
   clientes: { table: 'entidades', eventType: 'entidade' },
   fornecedores: { table: 'entidades', eventType: 'entidade' },
+  vendedores: { table: 'entidades', eventType: 'entidade' },
   produtos: { table: 'produtos', eventType: 'produto' },
   servicos: { table: 'servicos', eventType: 'servico' },
   categorias: { table: 'categorias', eventType: 'categoria' },
@@ -1917,8 +1933,8 @@ export async function getErpEntityRecord(input: {
   assertEditableModule(input.entityId)
   const id = numericId(input.id, 'Registro')
   let sql = ''
-  if (input.entityId === 'clientes' || input.entityId === 'fornecedores') {
-    const role = input.entityId === 'clientes' ? 'eh_cliente' : 'eh_fornecedor'
+  if (isEntityRoleModule(input.entityId)) {
+    const role = entityRoleColumn(input.entityId)
     sql = `SELECT id::text, nome, documento, email, telefone, cidade,
       CASE tipo_pessoa WHEN 'fisica' THEN 'PF' WHEN 'juridica' THEN 'PJ' ELSE 'Estrangeira' END AS tipo,
       COALESCE(metadata ->> 'categoria', '') AS categoria,
@@ -1983,8 +1999,9 @@ export async function updateErpEntityRecord(input: UpdateInput): Promise<ErpEnti
   const id = numericId(input.id, 'Registro')
   await withTransaction(async (client) => {
     const table = editableModuleTables[entityId].table
+    const roleClause = isEntityRoleModule(input.entityId) ? ` AND ${entityRoleColumn(input.entityId)} = true` : ''
     const currentResult = await client.query(
-      `SELECT * FROM erp.${table} WHERE tenant_id = $1 AND id = $2 AND excluido_em IS NULL FOR UPDATE`,
+      `SELECT * FROM erp.${table} WHERE tenant_id = $1 AND id = $2${roleClause} AND excluido_em IS NULL FOR UPDATE`,
       [input.tenantId, id],
     )
     const current = currentResult.rows[0]
@@ -1994,7 +2011,7 @@ export async function updateErpEntityRecord(input: UpdateInput): Promise<ErpEnti
     }
 
     let result: { rows: Record<string, unknown>[] }
-    if (input.entityId === 'clientes' || input.entityId === 'fornecedores') {
+    if (isEntityRoleModule(input.entityId)) {
       assertRequired(input.values.nome, 'Nome')
       const category = optionalText(input.values.categoria)
       result = await client.query(
@@ -2002,7 +2019,7 @@ export async function updateErpEntityRecord(input: UpdateInput): Promise<ErpEnti
            telefone = $7, cidade = $8, ativo = $9,
            metadata = metadata || jsonb_build_object('categoria', $10::text),
            versao = versao + 1, atualizado_por = $11
-         WHERE tenant_id = $1 AND id = $2 AND versao = $12 RETURNING *`,
+         WHERE tenant_id = $1 AND id = $2 AND ${entityRoleColumn(input.entityId)} = true AND versao = $12 RETURNING *`,
         [input.tenantId, id, normalizePersonType(input.values.tipo), text(input.values.nome),
           optionalText(input.values.documento), optionalText(input.values.email), optionalText(input.values.telefone),
           optionalText(input.values.cidade), activeFromStatus(input.values.status), category || '', input.actorId, input.expectedVersion],
@@ -2078,8 +2095,9 @@ export async function deactivateErpEntityRecord(input: IdActionInput & { entityI
   const id = numericId(input.id, 'Registro')
   await withTransaction(async (client) => {
     const table = editableModuleTables[entityId].table
+    const roleClause = isEntityRoleModule(input.entityId) ? ` AND ${entityRoleColumn(input.entityId)} = true` : ''
     const currentResult = await client.query(
-      `SELECT * FROM erp.${table} WHERE tenant_id = $1 AND id = $2 AND excluido_em IS NULL FOR UPDATE`,
+      `SELECT * FROM erp.${table} WHERE tenant_id = $1 AND id = $2${roleClause} AND excluido_em IS NULL FOR UPDATE`,
       [input.tenantId, id],
     )
     const current = currentResult.rows[0]
@@ -2087,7 +2105,7 @@ export async function deactivateErpEntityRecord(input: IdActionInput & { entityI
     if (Number(current.versao) !== input.expectedVersion) throw new Error('CONFLITO_VERSAO: este registro foi alterado por outra pessoa.')
     const result = await client.query(
       `UPDATE erp.${table} SET ativo = false, versao = versao + 1, atualizado_por = $3
-       WHERE tenant_id = $1 AND id = $2 AND versao = $4 RETURNING *`,
+       WHERE tenant_id = $1 AND id = $2${roleClause} AND versao = $4 RETURNING *`,
       [input.tenantId, id, input.actorId, input.expectedVersion],
     )
     const updated = result.rows[0]
@@ -2100,8 +2118,8 @@ export async function deactivateErpEntityRecord(input: IdActionInput & { entityI
 export async function getErpEntitySummary(tenantId: number, entityId: ErpConnectedModuleId) {
   assertEditableModule(entityId)
   let sql = ''
-  if (entityId === 'clientes' || entityId === 'fornecedores') {
-    const role = entityId === 'clientes' ? 'eh_cliente' : 'eh_fornecedor'
+  if (isEntityRoleModule(entityId)) {
+    const role = entityRoleColumn(entityId)
     sql = `SELECT count(*) FILTER (WHERE ativo)::int AS ativos,
       count(*) FILTER (WHERE NOT ativo)::int AS inativos,
       count(DISTINCT NULLIF(metadata ->> 'categoria', ''))::int AS categorias
@@ -2140,8 +2158,9 @@ export async function getErpEntitySummary(tenantId: number, entityId: ErpConnect
     { label: 'Conta padrao', value: String(row.padrao || 0), detail: 'selecionada automaticamente' },
     { label: 'Saldo inicial', value: currency(row.saldo), detail: 'soma das contas ativas' },
   ] }
+  const roleLabel = entityId === 'clientes' ? 'Clientes' : entityId === 'fornecedores' ? 'Fornecedores' : 'Vendedores'
   return { metrics: [
-    { label: entityId === 'clientes' ? 'Clientes ativos' : 'Fornecedores ativos', value: String(row.ativos || 0), detail: 'base conectada', tone: 'success' },
+    { label: `${roleLabel} ativos`, value: String(row.ativos || 0), detail: 'base conectada', tone: 'success' },
     { label: 'Inativos', value: String(row.inativos || 0), detail: 'cadastros pausados' },
     { label: 'Categorias', value: String(row.categorias || 0), detail: 'classificacoes em uso' },
   ] }
@@ -2206,7 +2225,7 @@ export async function searchErpCatalog(input: {
 
 export async function createErpEntityRecord(input: CreateInput): Promise<ErpEntityRecord> {
   const created = await withTransaction(async (client) => {
-    if (input.entityId === 'clientes' || input.entityId === 'fornecedores') {
+    if (isEntityRoleModule(input.entityId)) {
       return createEntityRoleRecord(client, input)
     }
 
@@ -3301,7 +3320,7 @@ export async function reverseErpPayment(input: ReversePaymentInput) {
 
 async function createEntityRoleRecord(client: SQLClient, input: CreateInput) {
   assertRequired(input.values.nome, 'Nome')
-  const isCustomer = input.entityId === 'clientes'
+  if (!isEntityRoleModule(input.entityId)) throw new Error('Tipo de entidade invalido.')
   const category = optionalText(input.values.categoria)
   const result = await client.query(
     `INSERT INTO erp.entidades (
@@ -3314,12 +3333,13 @@ async function createEntityRoleRecord(client: SQLClient, input: CreateInput) {
        cidade,
        eh_cliente,
        eh_fornecedor,
+       eh_vendedor,
        ativo,
        metadata,
        criado_por,
        atualizado_por
      )
-     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11::jsonb, $12, $12)
+     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12::jsonb, $13, $13)
      RETURNING id`,
     [
       input.tenantId,
@@ -3329,8 +3349,9 @@ async function createEntityRoleRecord(client: SQLClient, input: CreateInput) {
       optionalText(input.values.email),
       optionalText(input.values.telefone),
       optionalText(input.values.cidade),
-      isCustomer,
-      !isCustomer,
+      input.entityId === 'clientes',
+      input.entityId === 'fornecedores',
+      input.entityId === 'vendedores',
       activeFromStatus(input.values.status),
       JSON.stringify(category ? { categoria: category } : {}),
       input.actorId,

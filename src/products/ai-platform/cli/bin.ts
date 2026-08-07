@@ -1,5 +1,6 @@
 #!/usr/bin/env node
 import { config } from 'dotenv'
+import { z } from 'zod4'
 
 config({ path: '.env.local', quiet: true })
 config({ quiet: true })
@@ -30,7 +31,15 @@ async function main() {
     if (command === 'describe') {
       const tool = getAiTool(positional)
       if (!tool) throw new Error('Ferramenta nao encontrada.')
-      print({ name: tool.name, title: tool.title, description: tool.description, risk: tool.risk, capability: tool.capability })
+      print({
+        name: tool.name,
+        title: tool.title,
+        description: tool.description,
+        risk: tool.risk,
+        capability: tool.capability,
+        inputSchema: z.toJSONSchema(tool.inputSchema),
+        outputSchema: tool.outputSchema ? z.toJSONSchema(tool.outputSchema) : null,
+      })
       return
     }
     if (command !== 'call' || !positional) throw new Error('Use: pnpm otto tools call <tool> --args "{...}".')

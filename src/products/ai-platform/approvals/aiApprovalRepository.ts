@@ -44,22 +44,48 @@ export async function claimAiApproval(input: {
   commitToolName: string
   payload: Record<string, unknown>
 }) {
+  await recoverStaleAiApprovals(input.principal.tenantId)
   const rows = await runQuery<{ id: string }>(
-    `UPDATE shared.ai_action_approvals SET status = 'processing'
+    `UPDATE shared.ai_action_approvals SET status = 'processing', processing_at = now(),
+       processing_attempts = processing_attempts + 1
      WHERE id = $1::uuid AND tenant_id = $2 AND tool_name = $3 AND payload_hash = $4
-       AND status = 'approved' AND expires_at > now()
+       AND requested_by = $5
+       AND connection_id IS NOT DISTINCT FROM $6::bigint
+       AND status = 'approved' AND expires_at > now() AND processing_attempts < 3
      RETURNING id::text`,
-    [input.approvalId, input.principal.tenantId, input.commitToolName, payloadHash(input.payload)],
+    [input.approvalId, input.principal.tenantId, input.commitToolName, payloadHash(input.payload),
+      input.principal.userId, input.principal.connectionId],
   )
   if (!rows[0]) throw new Error('Aprovacao inexistente, expirada, alterada ou ainda nao aprovada.')
 }
 
-export async function finishAiApproval(approvalId: string, succeeded: boolean) {
+export async function recoverStaleAiApprovals(tenantId: number) {
+  await runQuery(
+    `UPDATE shared.ai_action_approvals
+     SET status = CASE
+       WHEN expires_at <= now() OR processing_attempts >= 3 THEN 'expired'
+       ELSE 'approved'
+     END,
+     processing_at = NULL
+     WHERE tenant_id = $1 AND status = 'processing'
+       AND processing_at < now() - interval '5 minutes'`,
+    [tenantId],
+  )
+}
+
+export async function finishAiApproval(input: {
+  principal: AiPrincipal
+  approvalId: string
+  succeeded: boolean
+}) {
   await runQuery(
     `UPDATE shared.ai_action_approvals
      SET status = $2, consumed_at = CASE WHEN $2 = 'consumed' THEN now() ELSE consumed_at END
-     WHERE id = $1::uuid AND status = 'processing'`,
-    [approvalId, succeeded ? 'consumed' : 'approved'],
+       , processing_at = NULL
+     WHERE id = $1::uuid AND tenant_id = $3 AND requested_by = $4
+       AND connection_id IS NOT DISTINCT FROM $5::bigint AND status = 'processing'`,
+    [input.approvalId, input.succeeded ? 'consumed' : 'approved', input.principal.tenantId,
+      input.principal.userId, input.principal.connectionId],
   )
 }
 
@@ -73,10 +99,10 @@ export async function executeWithAiApproval<T>(input: {
   await claimAiApproval(input)
   try {
     const result = await input.execute()
-    await finishAiApproval(input.approvalId, true)
+    await finishAiApproval({ principal: input.principal, approvalId: input.approvalId, succeeded: true })
     return result
   } catch (error) {
-    await finishAiApproval(input.approvalId, false).catch(() => undefined)
+    await finishAiApproval({ principal: input.principal, approvalId: input.approvalId, succeeded: false }).catch(() => undefined)
     throw error
   }
 }

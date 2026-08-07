@@ -40,6 +40,7 @@ type TenantRow = {
 
 type ClerkProfile = {
   clerkUserId: string
+  clerkOrganizationId: string | null
   email: string
   fullName: string | null
   avatarUrl: string | null
@@ -113,6 +114,7 @@ async function getCurrentClerkProfile(): Promise<ClerkProfile | null> {
   const fullName = user.fullName || [user.firstName, user.lastName].filter(Boolean).join(' ') || null
   return {
     clerkUserId: authState.userId,
+    clerkOrganizationId: authState.orgId || null,
     email,
     fullName,
     avatarUrl: user.imageUrl || null,
@@ -339,6 +341,9 @@ function buildBootstrapResult(
   sharedUserId: number,
   memberships: AuthTenantMembership[],
 ): ClerkTenantBootstrapResult {
+  const activeTenant = profile.clerkOrganizationId
+    ? memberships.find((membership) => membership.clerkOrganizationId === profile.clerkOrganizationId) || null
+    : memberships[0] || null
   return {
     clerkUserId: profile.clerkUserId,
     sharedUserId,
@@ -347,7 +352,7 @@ function buildBootstrapResult(
     avatarUrl: profile.avatarUrl,
     memberships,
     needsOnboarding: memberships.length === 0,
-    activeTenant: memberships[0] || null,
+    activeTenant,
   }
 }
 

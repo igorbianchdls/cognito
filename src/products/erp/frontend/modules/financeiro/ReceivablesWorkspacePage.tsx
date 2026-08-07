@@ -10,6 +10,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { ErpPagination } from '@/products/erp/frontend/components/ErpPagination'
+import { parseErpResponse } from '@/products/erp/frontend/services/erpProfessionalClient'
 
 type Option = { id: string; nome: string; padrao?: boolean }
 type Catalogs = { financialAccounts: Option[]; paymentMethods: Option[] }
@@ -20,9 +21,7 @@ const today = () => new Date().toISOString().slice(0, 10)
 const currency = (value: number) => new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value)
 
 async function parseResponse<T>(response: Response): Promise<T> {
-  const body = await response.json().catch(() => ({})) as { error?: string }
-  if (!response.ok) throw new Error(body.error || 'Nao foi possivel concluir a operacao.')
-  return body as T
+  return parseErpResponse<T>(response)
 }
 
 function statusTone(status: string) {

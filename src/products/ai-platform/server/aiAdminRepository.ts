@@ -1,4 +1,5 @@
 import { runQuery } from '@/lib/postgres'
+import { recoverStaleAiApprovals } from '@/products/ai-platform/approvals/aiApprovalRepository'
 
 export async function listAiConnections(tenantId: number) {
   return runQuery<Record<string, unknown>>(
@@ -33,6 +34,7 @@ export async function updateAiConnection(input: {
 }
 
 export async function listAiApprovals(tenantId: number) {
+  await recoverStaleAiApprovals(tenantId)
   await runQuery(
     `UPDATE shared.ai_action_approvals SET status = 'expired'
      WHERE tenant_id = $1 AND status IN ('pending','approved') AND expires_at <= now()`,
@@ -47,6 +49,20 @@ export async function listAiApprovals(tenantId: number) {
      LEFT JOIN shared.users AS approvers ON approvers.id = approvals.approved_by
      WHERE approvals.tenant_id = $1
      ORDER BY approvals.requested_at DESC LIMIT 200`,
+    [tenantId],
+  )
+}
+
+export async function listAiExecutions(tenantId: number) {
+  return runQuery<Record<string, unknown>>(
+    `SELECT executions.id::text, executions.tool_name, executions.source, executions.risk,
+       executions.status, executions.correlation_id::text, executions.output_summary,
+       executions.error_code, executions.error_message, executions.duration_ms,
+       executions.started_at, executions.finished_at, users.full_name AS user_name
+     FROM shared.ai_tool_executions AS executions
+     LEFT JOIN shared.users AS users ON users.id = executions.user_id
+     WHERE executions.tenant_id = $1
+     ORDER BY executions.started_at DESC LIMIT 100`,
     [tenantId],
   )
 }

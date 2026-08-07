@@ -6,6 +6,14 @@ export type SQLClient = {
 
 let pool: InstanceType<typeof Pool> | null = null;
 
+export function assertErpTenantScopedQuery(sql: string, params?: unknown[]) {
+  if (!/\berp\.[a-z_][a-z0-9_]*/i.test(sql)) return
+  const tenantId = Number(params?.[0] || 0)
+  if (!Number.isInteger(tenantId) || tenantId <= 0 || !/\btenant_id\b/i.test(sql) || !/\$1\b/.test(sql)) {
+    throw new Error('Consulta ERP sem escopo de tenant explicito.')
+  }
+}
+
 function getPool() {
   if (!process.env.SUPABASE_DB_URL) {
     throw new Error('SUPABASE_DB_URL não está configurada');
@@ -25,6 +33,7 @@ export async function runQuery<T = Record<string, unknown>>(
   sql: string,
   params?: unknown[]
 ): Promise<T[]> {
+  assertErpTenantScopedQuery(sql, params)
   const client = await getPool().connect();
   try {
     const result = await client.query(sql, params);
@@ -42,7 +51,14 @@ export async function closePool() {
 }
 
 export async function withTransaction<T>(fn: (client: SQLClient) => Promise<T>): Promise<T> {
-  const client = (await getPool().connect()) as unknown as SQLClient;
+  const rawClient = await getPool().connect();
+  const client: SQLClient = {
+    async query(sql, params) {
+      assertErpTenantScopedQuery(sql, params)
+      return rawClient.query(sql, params) as Promise<{ rows: Record<string, unknown>[] }>
+    },
+    release: () => rawClient.release(),
+  }
   try {
     await client.query('BEGIN');
     try {

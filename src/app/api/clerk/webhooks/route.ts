@@ -47,6 +47,7 @@ function getWebhookProfile(data: JsonRecord): ClerkProfileInput | null {
 
   return {
     clerkUserId,
+    clerkOrganizationId: null,
     email,
     fullName,
     avatarUrl: toText(data.image_url) || toText(data.profile_image_url) || null,

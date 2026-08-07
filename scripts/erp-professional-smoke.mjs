@@ -33,7 +33,24 @@ try {
     EXISTS (SELECT 1 FROM pg_policies WHERE schemaname = 'erp' AND tablename = 'compras' AND cmd = 'UPDATE' AND qual LIKE '%has_erp_capability%') AS compras_protegidas,
     EXISTS (SELECT 1 FROM pg_policies WHERE schemaname = 'erp' AND tablename = 'pagamentos' AND cmd = 'INSERT' AND with_check LIKE '%has_erp_capability%') AS financeiro_protegido,
     EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema = 'erp' AND table_name = 'vendas_itens' AND column_name = 'quantidade_faturada') AS faturamento_parcial,
-    EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema = 'erp' AND table_name = 'compras_itens' AND column_name = 'quantidade_recebida') AS recebimento_parcial`)
+    EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema = 'erp' AND table_name = 'compras_itens' AND column_name = 'quantidade_recebida') AS recebimento_parcial,
+    EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema = 'shared' AND table_name = 'ai_action_approvals' AND column_name = 'processing_at') AS aprovacao_processing_at,
+    EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema = 'shared' AND table_name = 'ai_action_approvals' AND column_name = 'processing_attempts') AS aprovacao_tentativas,
+    EXISTS (SELECT 1 FROM pg_indexes WHERE schemaname = 'shared' AND indexname = 'ai_action_approvals_processing_idx') AS aprovacao_processing_index,
+    NOT EXISTS (
+      SELECT 1 FROM pg_policies
+      WHERE schemaname = 'erp' AND cmd <> 'SELECT'
+        AND tablename = ANY (ARRAY[
+          'arquivos','cobrancas','cobrancas_eventos','cobrancas_notificacoes','compras_arquivos',
+          'compras_eventos','compras_recorrencias','compras_recorrencias_geracoes','configuracoes_fiscais',
+          'contas_pagar_arquivos','contas_pagar_eventos','contratos_vendas','contratos_vendas_geracoes',
+          'contratos_vendas_itens','conversoes_unidades_produto','importacoes_bancarias','importacoes_dados',
+          'importacoes_dados_linhas','kits_produtos','kits_produtos_itens','metodos_pagamento',
+          'naturezas_operacao_compra','notas_fiscais_eventos','notas_fiscais_itens','rateios_financeiros',
+          'recorrencias_financeiras','transferencias_estoque_itens','transferencias_financeiras'
+        ])
+        AND concat_ws(' ', qual, with_check) LIKE '%has_tenant_role%'
+    ) AS politicas_residuais_protegidas`)
   for (const [name, value] of Object.entries(structure.rows[0])) assert(value, `Estrutura profissional ausente: ${name}`)
 
   const tenant = await client.query('SELECT id FROM shared.tenants ORDER BY id LIMIT 1')

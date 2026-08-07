@@ -1,4 +1,5 @@
 import { createMcpHandler, withMcpAuth } from 'mcp-handler'
+import { z } from 'zod4'
 
 import { executeAiTool } from '@/products/ai-platform/application/executeAiTool'
 import { resolveMcpPrincipal, verifyOttoMcpToken } from '@/products/ai-platform/auth/mcpAuth'
@@ -10,6 +11,14 @@ const baseHandler = createMcpHandler((server) => {
       title: tool.title,
       description: tool.description,
       inputSchema: tool.inputSchema,
+      ...(tool.outputSchema ? {
+        outputSchema: z.object({
+          ok: z.literal(true),
+          tool: z.string(),
+          correlationId: z.string().uuid(),
+          data: tool.outputSchema,
+        }),
+      } : {}),
       annotations: tool.annotations,
     }, async (args, context) => {
       try {

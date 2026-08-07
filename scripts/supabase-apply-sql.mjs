@@ -32,8 +32,10 @@ function sleep(ms) {
 }
 
 async function runOnce(connectionString, sql) {
+  const normalizedConnection = new URL(connectionString);
+  normalizedConnection.searchParams.delete("sslmode");
   const client = new Client({
-    connectionString,
+    connectionString: normalizedConnection.toString(),
     ssl: { rejectUnauthorized: false },
     connectionTimeoutMillis: 8000,
     query_timeout: 120000,
@@ -102,4 +104,3 @@ async function main() {
 }
 
 await main();
-

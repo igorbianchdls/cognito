@@ -6,6 +6,7 @@ export type ErpModuleId =
   | 'overview'
   | 'clientes'
   | 'fornecedores'
+  | 'vendedores'
   | 'produtos'
   | 'servicos'
   | 'categorias'

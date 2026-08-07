@@ -1,8 +1,10 @@
 import { NextResponse } from 'next/server'
+import { z } from 'zod'
 
-import { resolveAuthTenant } from '@/products/auth/server/authTenantResolver'
+import { erpErrorResponse, parseErpBody } from '@/products/erp/server/erpApi'
+import { resolveErpAccess } from '@/products/erp/server/erpAccess'
 import { createErpEntityRecord, listErpEntityPage } from '@/products/erp/server/erpRepository'
-import { isErpConnectedModuleId } from '@/products/erp/server/erpModuleRegistry'
+import { getErpModuleCapability, isErpConnectedModuleId } from '@/products/erp/server/erpModuleRegistry'
 
 export const dynamic = 'force-dynamic'
 export const revalidate = 0
@@ -11,6 +13,8 @@ export const runtime = 'nodejs'
 type RouteContext = {
   params: Promise<{ entityId: string }>
 }
+
+const createSchema = z.object({ values: z.record(z.string(), z.unknown()).default({}) })
 
 function parseFilters(searchParams: URLSearchParams) {
   const filters: Record<string, string> = {}
@@ -28,9 +32,9 @@ export async function GET(request: Request, context: RouteContext) {
     return NextResponse.json({ error: 'Modulo ERP nao encontrado.' }, { status: 404 })
   }
 
-  const tenant = await resolveAuthTenant({ access: 'read' })
+  const tenant = await resolveErpAccess(getErpModuleCapability(entityId, 'read'))
   if (!tenant) {
-    return NextResponse.json({ error: 'Nao autenticado.' }, { status: 401 })
+    return NextResponse.json({ error: 'Acesso negado.' }, { status: 403 })
   }
 
   try {
@@ -46,10 +50,7 @@ export async function GET(request: Request, context: RouteContext) {
 
     return NextResponse.json(page)
   } catch (error) {
-    return NextResponse.json(
-      { error: error instanceof Error ? error.message : 'Nao foi possivel carregar dados do ERP.' },
-      { status: 400 },
-    )
+    return erpErrorResponse(error)
   }
 }
 
@@ -59,26 +60,23 @@ export async function POST(request: Request, context: RouteContext) {
     return NextResponse.json({ error: 'Modulo ERP nao encontrado.' }, { status: 404 })
   }
 
-  const tenant = await resolveAuthTenant({ access: 'manage' })
+  const tenant = await resolveErpAccess(getErpModuleCapability(entityId, 'manage'))
   if (!tenant) {
     return NextResponse.json({ error: 'Acesso negado.' }, { status: 403 })
   }
 
   try {
-    const body = (await request.json().catch(() => ({}))) as { values?: Record<string, unknown> }
+    const body = await parseErpBody(request, createSchema)
     const record = await createErpEntityRecord({
       actorId: tenant.sharedUserId,
       entityId,
       tenantId: tenant.tenantId,
-      values: body.values || {},
+      values: body.values,
       idempotencyKey: request.headers.get('idempotency-key') || undefined,
     })
 
     return NextResponse.json({ record }, { status: 201 })
   } catch (error) {
-    return NextResponse.json(
-      { error: error instanceof Error ? error.message : 'Nao foi possivel salvar no ERP.' },
-      { status: 400 },
-    )
+    return erpErrorResponse(error)
   }
 }

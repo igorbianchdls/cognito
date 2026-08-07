@@ -1,13 +1,13 @@
 import { NextResponse } from 'next/server'
 
-import { resolveAuthTenant } from '@/products/auth/server/authTenantResolver'
+import { resolveErpAccess } from '@/products/erp/server/erpAccess'
 import { processErpFinancialRecurrences } from '@/products/erp/server/erpRepository'
 
 export const dynamic = 'force-dynamic'
 export const runtime = 'nodejs'
 
 export async function POST(request: Request) {
-  const tenant = await resolveAuthTenant({ access: 'manage' })
+  const tenant = await resolveErpAccess('erp.financeiro.gerenciar')
   if (!tenant) return NextResponse.json({ error: 'Acesso negado.' }, { status: 403 })
   try {
     const body = await request.json().catch(() => ({})) as { ate?: string; limite?: number }

@@ -37,6 +37,8 @@ const retries = Math.max(1, Number(getArg("--retries") || 8));
 const dbUrl = process.env.SUPABASE_DB_URL;
 
 const effectiveDbUrl = dbUrlArg || dbUrl;
+const normalizedConnection = new URL(effectiveDbUrl);
+normalizedConnection.searchParams.delete("sslmode");
 
 if (!dbUrl) {
   console.error("SUPABASE_DB_URL ausente (adicione em .env.local ou passe --db-url).");
@@ -66,7 +68,7 @@ function sleep(ms) {
 let lastError = null;
 for (let attempt = 1; attempt <= retries; attempt += 1) {
   const client = new Client({
-    connectionString: effectiveDbUrl,
+    connectionString: normalizedConnection.toString(),
     ssl: { rejectUnauthorized: false },
   });
 

@@ -1,12 +1,12 @@
 import { NextResponse } from 'next/server'
 
-import { resolveAuthTenant } from '@/products/auth/server/authTenantResolver'
+import { resolveErpAccess } from '@/products/erp/server/erpAccess'
 import { importErpBankStatement } from '@/products/erp/server/erpBankImportRepository'
 
 export const runtime = 'nodejs'
 
 export async function POST(request: Request) {
-  const tenant = await resolveAuthTenant({ access: 'manage' })
+  const tenant = await resolveErpAccess('erp.financeiro.gerenciar')
   if (!tenant) return NextResponse.json({ error: 'Acesso negado.' }, { status: 403 })
   try {
     const body = (await request.json()) as { accountId?: number | string; fileName?: string; content?: string }

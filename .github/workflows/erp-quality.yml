@@ -5,8 +5,14 @@ on:
     paths:
       - 'src/products/erp/**'
       - 'src/app/api/erp/**'
+      - 'src/app/api/ai/**'
+      - 'src/products/ai-platform/**'
+      - 'src/products/auth/**'
+      - 'src/lib/postgres.ts'
       - 'supabase/migrations/**'
       - 'scripts/erp-*.mjs'
+      - 'scripts/erp-security-smoke.ts'
+      - 'scripts/ai-platform-smoke.ts'
       - 'tsconfig.erp.json'
   push:
     branches: [main]
@@ -26,6 +32,9 @@ jobs:
           cache: pnpm
       - run: pnpm install --frozen-lockfile
       - run: pnpm run erp:typecheck
+      - run: pnpm run ai:typecheck
+      - run: pnpm run ai:smoke
+      - run: pnpm run security:smoke
       - run: pnpm run build
       - name: Supabase integration smoke
         if: ${{ secrets.SUPABASE_DB_URL != '' }}

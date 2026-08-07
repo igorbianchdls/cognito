@@ -1,12 +1,15 @@
+export function getErpErrorMessage(body: unknown, fallback = 'Nao foi possivel concluir a operacao.') {
+  if (!body || typeof body !== 'object') return fallback
+  const value = body as { error?: string | { message?: string }; message?: string }
+  if (typeof value.error === 'string') return value.error
+  if (value.error && typeof value.error.message === 'string') return value.error.message
+  return value.message || fallback
+}
+
 export async function parseErpResponse<T>(response: Response): Promise<T> {
-  const body = await response.json().catch(() => ({})) as {
-    error?: string | { message?: string; correlationId?: string }
-  }
+  const body = await response.json().catch(() => ({}))
   if (!response.ok) {
-    const message = typeof body.error === 'string'
-      ? body.error
-      : body.error?.message || 'Nao foi possivel concluir a operacao.'
-    throw new Error(message)
+    throw new Error(getErpErrorMessage(body))
   }
   return body as T
 }

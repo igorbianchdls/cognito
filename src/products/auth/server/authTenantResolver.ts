@@ -27,7 +27,7 @@ export async function resolveAuthTenant(options?: {
   const requestedTenantId = normalizeTenantId(options?.requestedTenantId)
   const membership: AuthTenantMembership | undefined = requestedTenantId
     ? bootstrap.memberships.find((item) => item.tenantId === requestedTenantId)
-    : bootstrap.memberships[0]
+    : bootstrap.activeTenant || undefined
 
   if (!membership) return null
   if (!authRoleCanAccess(membership.role, options?.access || 'read')) return null
