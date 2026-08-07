@@ -67,20 +67,26 @@ const reconciliationRows = [
   row({ description: 'Cartão corporativo · 03 ago', erp: 'Software', initials: 'CC', name: 'Cartão empresarial', status: 'Conciliado', tone: '#2563eb', value: 'R$ 920' }),
   row({ description: 'TED recebida · 04 ago', erp: 'Cliente Aurora', initials: 'TD', name: 'Conta corrente', status: 'Conciliado', tone: '#7c3aed', value: 'R$ 7.250' }),
   row({ description: 'Débito automático · 04 ago', erp: 'Energia', initials: 'DA', name: 'Banco principal', status: 'Conciliado', tone: '#d97757', value: 'R$ 1.460' }),
+  row({ description: 'Boleto compensado · 05 ago', erp: 'Fornecedor Delta', initials: 'BL', name: 'Conta pagamentos', status: 'Conciliado', tone: '#0891b2', value: 'R$ 2.640' }),
+  row({ description: 'Tarifa bancária · 05 ago', erp: 'Despesas bancárias', initials: 'TB', name: 'Banco principal', status: 'Conciliado', tone: '#475569', value: 'R$ 89' }),
 ]
 
 const expenseRows = [
   row({ description: 'Assinatura mensal reconhecida', initials: 'NL', name: 'Notion Labs', status: 'Classificada', tone: '#111827', value: 'Software · R$ 410' }),
   row({ description: 'Campanha de mídia paga', initials: 'MA', name: 'Meta Ads', status: 'Classificada', tone: '#1877f2', value: 'Marketing · R$ 3.460' }),
   row({ description: 'Entrega para cliente', initials: 'FS', name: 'Frete Sul', status: 'Classificada', tone: '#ea580c', value: 'Logística · R$ 1.280' }),
+  row({ description: 'Infraestrutura em nuvem', initials: 'AW', name: 'AWS Brasil', status: 'Classificada', tone: '#111827', value: 'Tecnologia · R$ 2.790' }),
+  row({ description: 'Ferramentas de produtividade', initials: 'GW', name: 'Google Workspace', status: 'Classificada', tone: '#4285f4', value: 'Software · R$ 860' }),
   row({ description: '6 a pagar · 9 a receber', initials: 'CX', name: 'Contas e caixa', status: 'Atualizado', tone: '#16845b', value: 'Hoje' }),
 ]
 
 const invoiceRows = [
   row({ description: 'Aurora Tecnologia Ltda.', initials: 'CL', name: 'Cliente identificado', status: 'Validado', tone: '#2563eb', value: 'CNPJ OK' }),
   row({ description: 'Consultoria mensal', initials: 'SV', name: 'Serviço reconhecido', status: 'Completo', tone: '#7c3aed', value: 'R$ 12.400' }),
+  row({ description: 'Tomador, descrição e município', initials: 'DD', name: 'Dados preenchidos', status: 'Completo', tone: '#0891b2', value: 'Cadastro OK' }),
   row({ description: 'ISS e retenções calculados', initials: 'TX', name: 'Impostos revisados', status: 'Revisado', tone: '#d97757', value: 'R$ 248' }),
-  row({ description: 'PDF e XML enviados ao cliente', initials: 'NF', name: 'Nota fiscal #01942', status: 'Emitida', tone: '#16845b', value: 'Financeiro atualizado' }),
+  row({ description: 'Autorizada pela prefeitura', initials: 'NF', name: 'Nota fiscal #01942', status: 'Emitida', tone: '#16845b', value: 'PDF + XML' }),
+  row({ description: 'PDF e XML enviados ao cliente', initials: 'EV', name: 'Envio e financeiro', status: 'Atualizado', tone: '#0f766e', value: 'Conta a receber criada' }),
 ]
 
 const collectionRows = [
@@ -88,12 +94,16 @@ const collectionRows = [
   row({ description: 'Vencimento em 01 ago', initials: 'NO', name: 'Nova Oficina', status: 'Cobrança enviada', tone: '#2563eb', value: 'R$ 3.280' }),
   row({ description: 'Vencimento em 29 jul', initials: 'SN', name: 'Studio Norte', status: 'Cobrança enviada', tone: '#7c3aed', value: 'R$ 5.440' }),
   row({ description: 'Acompanhamento programado', initials: 'VS', name: 'Vitta Serviços', status: 'Monitorando', tone: '#d97757', value: 'R$ 2.170' }),
+  row({ description: 'Vencimento em 25 jul', initials: 'PT', name: 'Prisma Tech', status: 'Cobrança enviada', tone: '#0891b2', value: 'R$ 1.940' }),
+  row({ description: 'Acompanhamento programado', initials: 'MN', name: 'Mercado Norte', status: 'Monitorando', tone: '#475569', value: 'R$ 1.580' }),
 ]
 
 const fiscalRows = [
   row({ description: 'Calendário e vencimentos', initials: 'OF', name: 'Obrigações fiscais', status: 'Verificado', tone: '#2563eb', value: 'Em dia' }),
   row({ description: 'Enquadramento atual da empresa', initials: 'RT', name: 'Regime tributário', status: 'Analisado', tone: '#7c3aed', value: 'Validado' }),
   row({ description: 'Créditos previstos na legislação', initials: 'CR', name: 'Créditos permitidos', status: 'Verificado', tone: '#16845b', value: 'Disponíveis' }),
+  row({ description: 'Datas e entregas dos próximos meses', initials: 'CT', name: 'Calendário tributário', status: 'Atualizado', tone: '#0891b2', value: '12 obrigações' }),
+  row({ description: 'Cenários do regime atual e alternativo', initials: 'SC', name: 'Simulação comparativa', status: 'Concluída', tone: '#475569', value: '3 cenários' }),
   row({ description: 'Alternativa dentro da legislação', initials: 'EC', name: 'Economia tributária', status: 'Identificada', tone: '#d97757', value: 'Oportunidade' }),
 ]
 
@@ -114,7 +124,7 @@ function SyncScene({
   return (
     <Scene duration={duration}>
       <div style={{ left: '50%', position: 'absolute', top: '50%', transform: 'translate(-50%, -50%)', width: 940 }}>
-        <OttoAiEmployeesSyncCard frame={frame} kind={kind} rows={rows} subtitle={subtitle} title={title} />
+        <OttoAiEmployeesSyncCard frame={frame * 1.3} kind={kind} rows={rows} subtitle={subtitle} title={title} />
       </div>
     </Scene>
   )
@@ -137,7 +147,7 @@ function ChartResponseScene({
   const enter = p(frame, 0, 18)
   return (
     <Scene duration={duration}>
-      <div style={{ left: '50%', opacity: enter, position: 'absolute', top: '50%', transform: `translate(-50%, -50%) translateY(${(1 - enter) * 10}px)`, width: 760 }}>
+      <div style={{ left: '50%', opacity: enter, position: 'absolute', top: '50%', transform: `translate(-50%, -50%) translateY(${(1 - enter) * 10}px) scale(${1 + enter * 0.15})`, width: 760 }}>
         <p style={{ color: '#292b29', fontSize: 16, lineHeight: 1.45, margin: '0 0 22px' }}>{summary}</p>
         <strong style={{ display: 'block', fontSize: 18, fontWeight: 720, marginBottom: 8 }}>{title}</strong>
         <span style={{ color: MUTED, display: 'block', fontSize: 14, marginBottom: 12 }}>{subtitle}</span>
