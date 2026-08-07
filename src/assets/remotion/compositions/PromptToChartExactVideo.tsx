@@ -178,7 +178,7 @@ function ChartScene() {
 
   return (
     <AbsoluteFill style={{ alignItems: 'center', background: '#ffffff', display: 'flex', fontFamily: FONT, justifyContent: 'center' }}>
-      <div style={{ opacity: enter, transform: `translateY(${(1 - enter) * 8}px)`, width: 540 }}>
+      <div style={{ opacity: enter, transform: `translateY(${(1 - enter) * 8}px) scale(${1 + enter * 0.12})`, width: 540 }}>
         <p style={{ color: '#252725', fontSize: 13, letterSpacing: 0, lineHeight: 1.48, margin: '0 0 22px' }}>
           Here&apos;s a line chart showing the <strong>approximate nominal GDP growth</strong> of the current top 10<br />
           economies from <strong>2015 to 2025</strong> (trillions of U.S. dollars). Values are rounded and based<br />
