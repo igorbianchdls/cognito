@@ -6,6 +6,7 @@ import {
 import { DASHBOARD_WIDGET_RESOURCE_URI, listCognitoChatGptAppResources } from '@/products/chatgpt-app/server/appResources'
 import { listCognitoChatGptAppTools } from '@/products/chatgpt-app/server/appTools'
 import { getChatGptAppOAuthWwwAuthenticateHeader } from '@/products/chatgpt-app/server/oauth'
+import { legacyAiDisabledResponse } from '@/products/ai-platform/server/legacyAiGuard'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -13,6 +14,8 @@ export const revalidate = 0
 export const maxDuration = 60
 
 export async function GET() {
+  const disabled = legacyAiDisabledResponse()
+  if (disabled) return disabled
   const tools = listCognitoChatGptAppTools().tools
   const resources = listCognitoChatGptAppResources().resources
 
@@ -38,6 +41,8 @@ export async function GET() {
 }
 
 export async function POST(req: Request) {
+  const disabled = legacyAiDisabledResponse()
+  if (disabled) return disabled
   const auth = verifyChatGptAppRequest(req)
   if (!auth.ok) {
     return Response.json(

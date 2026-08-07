@@ -13,10 +13,13 @@
     "artifacts:dashboard-query-smoke": "node scripts/artifacts/dashboard-query-smoke.mjs",
     "artifacts:typecheck": "tsc -p tsconfig.artifacts.json --pretty false",
     "plugin:build": "node scripts/plugin/build-widget.mjs",
-    "erp:cli": "node scripts/erp-cli.mjs",
+    "otto": "tsx src/products/ai-platform/cli/bin.ts",
+    "erp:cli": "pnpm otto",
     "erp:foundation-smoke": "node scripts/erp-foundation-smoke.mjs",
     "erp:professional-smoke": "node scripts/erp-professional-smoke.mjs",
     "erp:typecheck": "tsc -p tsconfig.erp.json --pretty false",
+    "ai:typecheck": "tsc -p tsconfig.ai-platform.json --pretty false",
+    "ai:smoke": "tsx scripts/ai-platform-smoke.ts",
     "plugin:smoke": "node scripts/plugin/smoke-test.mjs",
     "chatgpt-app:build": "node scripts/chatgpt-app/build-widget.mjs",
     "chatgpt-app:chatgpt-test": "node scripts/chatgpt-app/chatgpt-test-plan.mjs",
@@ -35,6 +38,7 @@
     "@ai-sdk/react": "^2.0.8",
     "@anthropic-ai/claude-agent-sdk": "^0.1.77",
     "@anthropic-ai/claude-code": "^1.0.128",
+    "@clerk/mcp-tools": "^0.6.0",
     "@clerk/nextjs": "^7.4.3",
     "@dnd-kit/core": "^6.3.1",
     "@dnd-kit/sortable": "^10.0.0",
@@ -45,6 +49,7 @@
     "@iconify-json/simple-icons": "^1.2.69",
     "@iconify/react": "^6.0.2",
     "@icons-pack/react-simple-icons": "^13.7.0",
+    "@modelcontextprotocol/server": "^2.0.0",
     "@monaco-editor/react": "^4.7.0",
     "@nanostores/persistent": "^1.1.0",
     "@nanostores/react": "^1.0.0",
@@ -107,6 +112,7 @@
     "lodash": "^4.17.21",
     "lodash.throttle": "^4.1.1",
     "lucide-react": "^0.539.0",
+    "mcp-handler": "^2.1.0",
     "nanostores": "^1.0.1",
     "next": "16.0.10",
     "node-record-lpcm16": "^1.0.1",
@@ -136,7 +142,8 @@
     "tailwind-scrollbar-hide": "^4.0.0",
     "tailwindcss-animate": "^1.0.7",
     "use-stick-to-bottom": "^1.1.1",
-    "zod": "^3.25.76"
+    "zod": "^3.25.76",
+    "zod4": "npm:zod@^4"
   },
   "devDependencies": {
     "@ariakit/react": "^0.4.18",
@@ -155,6 +162,7 @@
     "sass": "^1.92.1",
     "supabase": "^2.106.0",
     "tailwindcss": "^4",
+    "tsx": "^4.23.9",
     "typescript": "5.9.3"
   },
   "overrides": {

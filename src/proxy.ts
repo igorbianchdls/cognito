@@ -1,5 +1,5 @@
 import { clerkMiddleware, createRouteMatcher } from '@clerk/nextjs/server'
-import { NextResponse } from 'next/server'
+import { NextResponse, type NextFetchEvent, type NextRequest } from 'next/server'
 
 const isPublicRoute = createRouteMatcher([
   '/sign-in(.*)',
@@ -14,19 +14,28 @@ const isPublicRoute = createRouteMatcher([
   '/api/mcp(.*)',
   '/api/chatgpt-app(.*)',
   '/api/claude-app(.*)',
+  '/api/ai/mcp(.*)',
+  '/.well-known(.*)',
   '/artifacts/dashboards/:path*',
   '/artifacts/reports/:path*',
   '/artifacts/slides/:path*',
   '/internal/mcp-ui(.*)',
 ])
 
-export default clerkMiddleware(async (auth, request) => {
+const handleClerkMiddleware = clerkMiddleware(async (auth, request) => {
   if (!isPublicRoute(request)) {
     await auth.protect()
   }
 
   return NextResponse.next()
 })
+
+export default function proxy(request: NextRequest, event: NextFetchEvent) {
+  if (!process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY && isPublicRoute(request)) {
+    return NextResponse.next()
+  }
+  return handleClerkMiddleware(request, event)
+}
 
 export const config = {
   matcher: [

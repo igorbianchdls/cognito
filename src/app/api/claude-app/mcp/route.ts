@@ -4,6 +4,7 @@ import {
   handleClaudeAppMcpHttpRequest,
 } from '@/products/claude-app/server/claudeAppServer'
 import { getClaudeAppOAuthWwwAuthenticateHeader } from '@/products/claude-app/server/oauth'
+import { legacyAiDisabledResponse } from '@/products/ai-platform/server/legacyAiGuard'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -11,6 +12,8 @@ export const revalidate = 0
 export const maxDuration = 60
 
 export async function GET() {
+  const disabled = legacyAiDisabledResponse()
+  if (disabled) return disabled
   return Response.json({
     ok: true,
     product: 'claude-app',
@@ -22,6 +25,8 @@ export async function GET() {
 }
 
 export async function POST(req: Request) {
+  const disabled = legacyAiDisabledResponse()
+  if (disabled) return disabled
   const auth = verifyClaudeAppRequest(req)
   if (!auth.ok) {
     return Response.json(

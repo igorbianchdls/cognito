@@ -19,6 +19,7 @@ import {
   IconReceipt2,
   IconReportAnalytics,
   IconShoppingBag,
+  IconSparkles,
   IconTags,
   IconTruckDelivery,
   IconUsers,
@@ -37,6 +38,7 @@ import type { ErpCapability } from "@/products/erp/shared/professionalContracts"
 
 const BrandIcon = (props: { className?: string; style?: React.CSSProperties }) => <IconGridDots stroke={1.75} {...props} />
 const IntegrationsIcon = (props: { className?: string; style?: React.CSSProperties }) => <IconPlugConnected stroke={1.75} {...props} />
+const AiIcon = (props: { className?: string; style?: React.CSSProperties }) => <IconSparkles stroke={1.75} {...props} />
 const DashboardsIcon = (props: { className?: string; style?: React.CSSProperties }) => <IconChartBar stroke={1.75} {...props} />
 const SlidesIcon = (props: { className?: string; style?: React.CSSProperties }) => <IconPresentation stroke={1.75} {...props} />
 const ReportsIcon = (props: { className?: string; style?: React.CSSProperties }) => <IconFileText stroke={1.75} {...props} />
@@ -146,6 +148,11 @@ const navigationData: {
       title: "Integrações",
       url: "/integracoes",
       icon: IntegrationsIcon,
+    },
+    {
+      title: "IA",
+      url: "/configuracoes/integracoes-ia",
+      icon: AiIcon,
     },
     {
       title: "Dashboards",

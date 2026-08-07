@@ -1,0 +1,15 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": { "incremental": false },
+  "include": [
+    "next-env.d.ts",
+    "src/products/ai-platform/**/*.ts",
+    "src/products/ai-platform/**/*.tsx",
+    "src/products/erp/application/**/*.ts",
+    "src/app/api/ai/**/*.ts",
+    "src/app/configuracoes/integracoes-ia/**/*.tsx",
+    "src/app/.well-known/**/*.ts",
+    "src/proxy.ts"
+  ],
+  "exclude": ["node_modules"]
+}
