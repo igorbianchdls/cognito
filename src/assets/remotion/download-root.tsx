@@ -40,6 +40,10 @@ import {
   OTTO_FINANCE_AUTOMATION_ONLY_SCENE_DURATION,
   OttoFinanceAutomationOnlyScene,
 } from './compositions/OttoFinanceAutomationOnlyScene'
+import {
+  OTTO_FINANCE_AI_50S_DURATION,
+  OttoFinanceAi50sVideo,
+} from './compositions/OttoFinanceAi50sVideo'
 
 function RemotionDownloadRoot() {
   return (
@@ -98,6 +102,14 @@ function RemotionDownloadRoot() {
         fps={30}
         height={1920}
         id="video-otto-finance-automation-only-scene"
+        width={1080}
+      />
+      <Composition
+        component={OttoFinanceAi50sVideo}
+        durationInFrames={OTTO_FINANCE_AI_50S_DURATION}
+        fps={30}
+        height={1920}
+        id="video-otto-finance-ai-50s"
         width={1080}
       />
       <Composition
