@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react'
 import {
+  ArrowUp,
   AudioLines,
   BookOpen,
   Clock3,
@@ -20,14 +21,21 @@ import {
   ThumbsUp,
   Upload,
 } from 'lucide-react'
-import { AbsoluteFill } from 'remotion'
+import { AbsoluteFill, interpolate, useCurrentFrame } from 'remotion'
 
-export const CHATGPT_PLUS_STATIC_UI_DURATION = 90
+export const CHATGPT_PLUS_STATIC_UI_DURATION = 360
 
 const FONT = 'Arial, Helvetica, sans-serif'
 const INK = '#0d0d0d'
 const MUTED = '#8b8b8b'
 const SIDEBAR = '#f9f9f9'
+
+function p(frame: number, from: number, to: number, output: [number, number] = [0, 1]) {
+  return interpolate(frame, [from, to], output, {
+    extrapolateLeft: 'clamp',
+    extrapolateRight: 'clamp',
+  })
+}
 
 const recentChats = [
   'ICMS para restaurantes PE',
@@ -61,9 +69,9 @@ function ActionButton({ children }: { children: ReactNode }) {
   return <span style={{ alignItems: 'center', color: '#5d5d5d', display: 'inline-flex', height: 24, justifyContent: 'center', width: 24 }}>{children}</span>
 }
 
-function ResponseActions() {
+function ResponseActions({ progress = 1 }: { progress?: number }) {
   return (
-    <div style={{ alignItems: 'center', display: 'flex', gap: 4, marginTop: 13 }}>
+    <div style={{ alignItems: 'center', display: 'flex', gap: 4, marginTop: 13, opacity: progress, transform: `translateY(${(1 - progress) * 5}px)` }}>
       <ActionButton><Copy size={18} strokeWidth={1.6} /></ActionButton>
       <ActionButton><ThumbsUp size={17} strokeWidth={1.6} /></ActionButton>
       <ActionButton><ThumbsDown size={17} strokeWidth={1.6} /></ActionButton>
@@ -81,6 +89,43 @@ function SourcePill({ children }: { children: ReactNode }) {
       {children}
       <span style={{ color: '#9a9a9a' }}>+1</span>
     </span>
+  )
+}
+
+type TextSegment = { bold?: boolean; text: string }
+
+function StreamingParagraph({
+  end,
+  marginBottom = 15,
+  segments,
+  source,
+  start,
+}: {
+  end: number
+  marginBottom?: number
+  segments: TextSegment[]
+  source?: string
+  start: number
+}) {
+  const frame = useCurrentFrame()
+  if (frame < start) return null
+
+  const totalCharacters = segments.reduce((total, segment) => total + segment.text.length, 0)
+  const visibleCharacters = Math.floor(p(frame, start, end, [0, totalCharacters]))
+  const complete = visibleCharacters >= totalCharacters
+  let consumed = 0
+
+  return (
+    <p style={{ margin: `0 0 ${marginBottom}px` }}>
+      {segments.map((segment, index) => {
+        const localCount = Math.max(0, Math.min(segment.text.length, visibleCharacters - consumed))
+        consumed += segment.text.length
+        const content = segment.text.slice(0, localCount)
+        return segment.bold ? <strong key={`${segment.text}-${index}`}>{content}</strong> : <span key={`${segment.text}-${index}`}>{content}</span>
+      })}
+      {complete && source ? <SourcePill>{source}</SourcePill> : null}
+      {!complete ? <span style={{ background: INK, display: 'inline-block', height: 16, marginLeft: 2, opacity: Math.floor(frame / 5) % 2 ? 0.25 : 0.9, verticalAlign: '-2px', width: 2 }} /> : null}
+    </p>
   )
 }
 
@@ -148,40 +193,81 @@ function PreviousAnswer() {
 }
 
 function CurrentAnswer() {
+  const frame = useCurrentFrame()
+  const actionsIn = p(frame, 312, 332)
+
   return (
     <div style={{ fontSize: 16, lineHeight: 1.58 }}>
-      <p style={{ margin: '0 0 15px' }}>Sim. <strong>Nos dois.</strong></p>
-      <p style={{ margin: '0 0 15px' }}>No <strong>Mercado Livre</strong>, o vendedor pode criar cupons pela Central de Promoções, inclusive cupons voltados a todos os compradores elegíveis.<SourcePill>Mercado Livre</SourcePill></p>
-      <p style={{ margin: '0 0 15px' }}>Na <strong>Shopee</strong>, também é possível trabalhar com cupons da loja e divulgar códigos de cupom junto com o link do produto ou da loja. A própria central de ajuda da Shopee orienta vendedores a compartilhar esses códigos com seguidores.<SourcePill>Central de Ajuda</SourcePill></p>
-      <p style={{ margin: 0 }}>Então, se sua ideia for usar algo como <strong>INFLUENCER10</strong> para rastrear vendas vindas de Instagram/TikTok, a <strong>Shopee é mais naturalmente compatível com esse tipo de código promocional.</strong> No Mercado Livre também dá para usar cupons, mas a flexibilidade do código e as regras dependem da promoção disponível para sua conta.<SourcePill>Mercado Livre</SourcePill></p>
-      <ResponseActions />
+      <StreamingParagraph end={89} segments={[{ text: 'Sim. ' }, { bold: true, text: 'Nos dois.' }]} start={76} />
+      <StreamingParagraph
+        end={145}
+        segments={[
+          { text: 'No ' },
+          { bold: true, text: 'Mercado Livre' },
+          { text: ', o vendedor pode criar cupons pela Central de Promoções, inclusive cupons voltados a todos os compradores elegíveis.' },
+        ]}
+        source="Mercado Livre"
+        start={92}
+      />
+      <StreamingParagraph
+        end={210}
+        segments={[
+          { text: 'Na ' },
+          { bold: true, text: 'Shopee' },
+          { text: ', também é possível trabalhar com cupons da loja e divulgar códigos de cupom junto com o link do produto ou da loja. A própria central de ajuda da Shopee orienta vendedores a compartilhar esses códigos com seguidores.' },
+        ]}
+        source="Central de Ajuda"
+        start={148}
+      />
+      <StreamingParagraph
+        end={308}
+        marginBottom={0}
+        segments={[
+          { text: 'Então, se sua ideia for usar algo como ' },
+          { bold: true, text: 'INFLUENCER10' },
+          { text: ' para rastrear vendas vindas de Instagram/TikTok, a ' },
+          { bold: true, text: 'Shopee é mais naturalmente compatível com esse tipo de código promocional.' },
+          { text: ' No Mercado Livre também dá para usar cupons, mas a flexibilidade do código e as regras dependem da promoção disponível para sua conta.' },
+        ]}
+        source="Mercado Livre"
+        start={213}
+      />
+      {frame >= 308 ? <ResponseActions progress={actionsIn} /> : null}
     </div>
   )
 }
 
 function MessageComposer() {
+  const frame = useCurrentFrame()
+  const prompt = 'Posso criar cupom de desconto no mercado livre e shopee?'
+  const isWriting = frame < 53
+  const typedCharacters = Math.floor(p(frame, 3, 47, [0, prompt.length]))
+
   return (
     <>
       <div style={{ bottom: 95, color: '#999999', fontSize: 12, left: '50%', position: 'absolute', transform: 'translateX(-50%)' }}>O ChatGPT pode cometer erros. Por isso, lembre-se de conferir informações relevantes.</div>
       <div style={{ alignItems: 'center', background: '#ffffff', border: '1px solid #e1e1e1', borderRadius: 28, bottom: 28, boxShadow: '0 3px 16px rgba(0,0,0,0.08)', display: 'flex', height: 54, left: '50%', padding: '0 8px 0 18px', position: 'absolute', transform: 'translateX(-50%)', width: 768 }}>
         <Plus size={21} strokeWidth={1.7} />
-        <span style={{ color: '#8b8b8b', fontSize: 16, marginLeft: 18 }}>Pergunte ao ChatGPT</span>
+        <span style={{ color: isWriting ? INK : '#8b8b8b', fontSize: 16, marginLeft: 18 }}>{isWriting ? prompt.slice(0, typedCharacters) : 'Pergunte ao ChatGPT'}</span>
         <span style={{ color: '#8b8b8b', fontSize: 14, marginLeft: 'auto' }}>Instantâneo⌄</span>
         <Mic size={19} style={{ marginLeft: 24 }} strokeWidth={1.8} />
-        <span style={{ alignItems: 'center', background: '#050505', borderRadius: 999, color: '#ffffff', display: 'flex', height: 38, justifyContent: 'center', marginLeft: 17, width: 38 }}><AudioLines size={21} strokeWidth={2} /></span>
+        <span style={{ alignItems: 'center', background: '#050505', borderRadius: 999, color: '#ffffff', display: 'flex', height: 38, justifyContent: 'center', marginLeft: 17, width: 38 }}>{isWriting ? <ArrowUp size={21} strokeWidth={2.2} /> : <AudioLines size={21} strokeWidth={2} />}</span>
       </div>
     </>
   )
 }
 
 export function ChatGptPlusStaticUi() {
+  const frame = useCurrentFrame()
+  const userMessageIn = p(frame, 54, 70)
+
   return (
     <AbsoluteFill style={{ background: '#ffffff', color: INK, fontFamily: FONT, overflow: 'hidden' }}>
       <Sidebar />
       <main style={{ bottom: 0, left: 262, overflow: 'hidden', position: 'absolute', right: 0, top: 0 }}>
         <div style={{ alignItems: 'center', display: 'flex', gap: 18, position: 'absolute', right: 27, top: 18 }}><Share size={18} strokeWidth={1.6} /><MoreHorizontal size={20} strokeWidth={1.8} /></div>
         <div style={{ left: '50%', position: 'absolute', top: -17, transform: 'translateX(-50%)', width: 770 }}><PreviousAnswer /></div>
-        <div style={{ alignItems: 'center', background: '#f4f4f4', borderRadius: 22, display: 'flex', fontSize: 15, minHeight: 44, padding: '0 17px', position: 'absolute', right: 'calc(50% - 385px)', top: 365 }}>Posso criar cupom de desconto no mercado livre e shopee?</div>
+        <div style={{ alignItems: 'center', background: '#f4f4f4', borderRadius: 22, display: 'flex', fontSize: 15, minHeight: 44, opacity: userMessageIn, padding: '0 17px', position: 'absolute', right: 'calc(50% - 385px)', top: 365, transform: `translateY(${(1 - userMessageIn) * 8}px) scale(${0.98 + userMessageIn * 0.02})`, transformOrigin: 'right center' }}>Posso criar cupom de desconto no mercado livre e shopee?</div>
         <div style={{ left: '50%', position: 'absolute', top: 454, transform: 'translateX(-50%)', width: 770 }}><CurrentAnswer /></div>
         <MessageComposer />
         <div style={{ background: '#858585', borderRadius: 999, bottom: 24, height: 33, position: 'absolute', right: 4, width: 8 }} />
