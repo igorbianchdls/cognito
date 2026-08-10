@@ -12,6 +12,13 @@ import { OttoFinancialDashboard } from './OttoFinancialDashboard'
 import { TypingText } from '@/assets/remotion/saas/motionComponents'
 import type { SaaSTheme } from '@/assets/remotion/saas/types'
 import { IOS_REMOTION_FONT_STACK, loadSfProFonts } from '@/assets/remotion/fonts/sfPro'
+import AmazonIcon from '@/components/icons/AmazonIcon'
+import { BancoDoBrasilIcon, BradescoIcon, ItauIcon, MercadoPagoIcon, NubankIcon, SantanderIcon } from '@/components/icons/BankLogos'
+import GoogleAdsIcon from '@/components/icons/GoogleAdsIcon'
+import HotmartIcon from '@/components/icons/HotmartIcon'
+import MetaIcon from '@/components/icons/MetaIcon'
+import NuvemshopIcon from '@/components/icons/NuvemshopIcon'
+import ShopifyIcon from '@/components/icons/ShopifyIcon'
 
 loadSfProFonts()
 
@@ -51,34 +58,26 @@ function Scene({ children, duration }: { children: ReactNode; duration: number }
   )
 }
 
-function row({
-  description,
-  erp,
-  initials,
-  name,
-  status,
-  tone,
-  value,
-}: OttoAiEmployeesResultRow): OttoAiEmployeesResultRow {
-  return { description, erp, initials, name, status, tone, value }
+function row(value: OttoAiEmployeesResultRow): OttoAiEmployeesResultRow {
+  return value
 }
 
 const reconciliationRows = [
-  row({ description: 'PIX recebido · 03 ago', erp: 'Venda #1842', initials: 'PX', name: 'Banco principal', status: 'Conciliado', tone: '#0f766e', value: 'R$ 4.800' }),
-  row({ description: 'Cartão corporativo · 03 ago', erp: 'Software', initials: 'CC', name: 'Cartão empresarial', status: 'Conciliado', tone: '#2563eb', value: 'R$ 920' }),
-  row({ description: 'TED recebida · 04 ago', erp: 'Cliente Aurora', initials: 'TD', name: 'Conta corrente', status: 'Conciliado', tone: '#7c3aed', value: 'R$ 7.250' }),
-  row({ description: 'Débito automático · 04 ago', erp: 'Energia', initials: 'DA', name: 'Banco principal', status: 'Conciliado', tone: '#d97757', value: 'R$ 1.460' }),
-  row({ description: 'Boleto compensado · 05 ago', erp: 'Fornecedor Delta', initials: 'BL', name: 'Conta pagamentos', status: 'Conciliado', tone: '#0891b2', value: 'R$ 2.640' }),
-  row({ description: 'Tarifa bancária · 05 ago', erp: 'Despesas bancárias', initials: 'TB', name: 'Banco principal', status: 'Conciliado', tone: '#475569', value: 'R$ 89' }),
+  row({ description: 'PIX recebido · 03 ago', erp: 'Venda #1842', icon: ItauIcon, initials: 'IT', name: 'Itaú Empresas', status: 'Conciliado', tone: '#ff7900', value: 'R$ 4.800' }),
+  row({ description: 'Cartão corporativo · 03 ago', erp: 'Software', icon: NubankIcon, initials: 'NU', name: 'Nubank PJ', status: 'Conciliado', tone: '#820ad1', value: 'R$ 920' }),
+  row({ description: 'TED recebida · 04 ago', erp: 'Cliente Aurora', icon: SantanderIcon, initials: 'ST', name: 'Santander Empresas', status: 'Conciliado', tone: '#e60000', value: 'R$ 7.250' }),
+  row({ description: 'Débito automático · 04 ago', erp: 'Energia', icon: BancoDoBrasilIcon, initials: 'BB', name: 'Banco do Brasil', status: 'Conciliado', tone: '#0038a8', value: 'R$ 1.460' }),
+  row({ description: 'Boleto compensado · 05 ago', erp: 'Fornecedor Delta', icon: BradescoIcon, initials: 'BR', name: 'Bradesco Empresas', status: 'Conciliado', tone: '#cc092f', value: 'R$ 2.640' }),
+  row({ description: 'Tarifa da conta · 05 ago', erp: 'Despesas bancárias', icon: MercadoPagoIcon, initials: 'MP', name: 'Mercado Pago', status: 'Conciliado', tone: '#00b1ea', value: 'R$ 89' }),
 ]
 
 const expenseRows = [
-  row({ description: 'Assinatura mensal reconhecida', initials: 'NL', name: 'Notion Labs', status: 'Classificada', tone: '#111827', value: 'Software · R$ 410' }),
-  row({ description: 'Campanha de mídia paga', initials: 'MA', name: 'Meta Ads', status: 'Classificada', tone: '#1877f2', value: 'Marketing · R$ 3.460' }),
-  row({ description: 'Entrega para cliente', initials: 'FS', name: 'Frete Sul', status: 'Classificada', tone: '#ea580c', value: 'Logística · R$ 1.280' }),
-  row({ description: 'Infraestrutura em nuvem', initials: 'AW', name: 'AWS Brasil', status: 'Classificada', tone: '#111827', value: 'Tecnologia · R$ 2.790' }),
-  row({ description: 'Ferramentas de produtividade', initials: 'GW', name: 'Google Workspace', status: 'Classificada', tone: '#4285f4', value: 'Software · R$ 860' }),
-  row({ description: '6 a pagar · 9 a receber', initials: 'CX', name: 'Contas e caixa', status: 'Atualizado', tone: '#16845b', value: 'Hoje' }),
+  row({ description: 'Campanha de mídia paga', icon: MetaIcon, initials: 'MA', name: 'Meta Ads', status: 'Classificada', tone: '#1877f2', value: 'Marketing · R$ 3.460' }),
+  row({ description: 'Campanhas de pesquisa', icon: GoogleAdsIcon, initials: 'GA', name: 'Google Ads', status: 'Classificada', tone: '#f4b400', value: 'Marketing · R$ 2.180' }),
+  row({ description: 'Taxas sobre vendas digitais', icon: HotmartIcon, initials: 'HM', name: 'Hotmart', status: 'Classificada', tone: '#f04e23', value: 'Taxas · R$ 1.290' }),
+  row({ description: 'Mensalidade da loja virtual', icon: ShopifyIcon, initials: 'SH', name: 'Shopify', status: 'Classificada', tone: '#95bf47', value: 'E-commerce · R$ 540' }),
+  row({ description: 'Aplicativos e serviços da loja', icon: NuvemshopIcon, initials: 'NS', name: 'Nuvemshop', status: 'Classificada', tone: '#006bc8', value: 'Software · R$ 410' }),
+  row({ description: 'Compra de materiais de escritório', icon: AmazonIcon, initials: 'AZ', name: 'Amazon', status: 'Classificada', tone: '#ff9900', value: 'Materiais · R$ 860' }),
 ]
 
 const recentSalesRows = [
@@ -320,9 +319,9 @@ export function OttoFinanceAi50sVideo() {
   return (
     <AbsoluteFill style={{ background: '#ffffff' }}>
       <Sequence durationInFrames={90}><OttoLogoRevealHorizontal /></Sequence>
-      <Sequence from={90} durationInFrames={75}><ExactPromptInputScene duration={75} label="Por onde começamos?" prompt="Otto, organize o financeiro da minha empresa." /></Sequence>
+      <Sequence from={90} durationInFrames={75}><ExactPromptInputScene duration={75} label="Por onde começamos?" prompt="Concilie as movimentações bancárias e depois classifique as despesas." /></Sequence>
       <Sequence from={165} durationInFrames={105}><SyncScene assistantText="Vou cruzar cada movimentação bancária com os lançamentos do Otto e confirmar as correspondências." duration={105} kind="reconciliation" rows={reconciliationRows} subtitle="Bancos, cartões e lançamentos do Otto" title="Conciliação bancária" /></Sequence>
-      <Sequence from={270} durationInFrames={90}><SyncScene assistantText="Agora vou classificar as despesas e atualizar contas a pagar, contas a receber e a posição de caixa." duration={90} rows={expenseRows} subtitle="Categorias, contas a pagar, contas a receber e caixa" title="Organização financeira" /></Sequence>
+      <Sequence from={270} durationInFrames={90}><SyncScene assistantText="Agora vou classificar cada despesa por categoria e atualizar os lançamentos correspondentes." duration={90} rows={expenseRows} subtitle="Fornecedores, categorias, valores e status" title="Classificação de despesas" /></Sequence>
       <Sequence from={360} durationInFrames={75}><ExactPromptInputScene duration={75} label="Por onde começamos?" prompt="Mostre a projeção do fluxo de caixa dos próximos 6 meses." /></Sequence>
       <Sequence from={435} durationInFrames={105}><CashFlowChart duration={105} /></Sequence>
       <Sequence from={540} durationInFrames={75}><ExactPromptInputScene duration={75} label="Por onde começamos?" prompt="Emita as notas fiscais das minhas vendas recentes." /></Sequence>
