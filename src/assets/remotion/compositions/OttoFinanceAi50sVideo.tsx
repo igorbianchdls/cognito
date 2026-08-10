@@ -143,11 +143,14 @@ function SyncScene({
   const cardScale = rows.length > 6 ? 0.84 : 0.92
   const cardWidth = 940 / cardScale
   const textIn = p(frame, 0, 14)
+  const typedCharacters = Math.floor(p(frame, 2, 22, [0, assistantText.length]))
+  const showTextCursor = frame < 26 && Math.floor(frame / 4) % 2 === 0
   return (
     <Scene duration={duration}>
       <div style={{ left: '50%', position: 'absolute', top: 30, transform: 'translateX(-50%)', width: 940 }}>
         <div style={{ color: '#242424', fontSize: 18, fontWeight: 440, lineHeight: 1.4, opacity: textIn, transform: `translateY(${(1 - textIn) * 8}px)` }}>
-          {assistantText}
+          {assistantText.slice(0, typedCharacters)}
+          {showTextCursor ? <span style={{ borderRight: '1.5px solid #242424', marginLeft: 2 }}>&nbsp;</span> : null}
         </div>
         <div style={{ left: '50%', marginTop: 12, position: 'relative', transform: `translateX(-50%) scale(${cardScale})`, transformOrigin: 'top center', width: cardWidth }}>
           <OttoAiEmployeesSyncCard frame={cardFrame} kind={kind} rows={rows} subtitle={subtitle} title={title} />
@@ -317,19 +320,19 @@ export function OttoFinanceAi50sVideo() {
   return (
     <AbsoluteFill style={{ background: '#ffffff' }}>
       <Sequence durationInFrames={90}><OttoLogoRevealHorizontal /></Sequence>
-      <Sequence from={90} durationInFrames={75}><ExactPromptInputScene duration={75} prompt="Otto, organize o financeiro da minha empresa." /></Sequence>
+      <Sequence from={90} durationInFrames={75}><ExactPromptInputScene duration={75} label="Por onde começamos?" prompt="Otto, organize o financeiro da minha empresa." /></Sequence>
       <Sequence from={165} durationInFrames={105}><SyncScene assistantText="Vou cruzar cada movimentação bancária com os lançamentos do Otto e confirmar as correspondências." duration={105} kind="reconciliation" rows={reconciliationRows} subtitle="Bancos, cartões e lançamentos do Otto" title="Conciliação bancária" /></Sequence>
       <Sequence from={270} durationInFrames={90}><SyncScene assistantText="Agora vou classificar as despesas e atualizar contas a pagar, contas a receber e a posição de caixa." duration={90} rows={expenseRows} subtitle="Categorias, contas a pagar, contas a receber e caixa" title="Organização financeira" /></Sequence>
-      <Sequence from={360} durationInFrames={75}><ExactPromptInputScene duration={75} prompt="Mostre a projeção do fluxo de caixa dos próximos 6 meses." /></Sequence>
+      <Sequence from={360} durationInFrames={75}><ExactPromptInputScene duration={75} label="Por onde começamos?" prompt="Mostre a projeção do fluxo de caixa dos próximos 6 meses." /></Sequence>
       <Sequence from={435} durationInFrames={105}><CashFlowChart duration={105} /></Sequence>
-      <Sequence from={540} durationInFrames={75}><ExactPromptInputScene duration={75} prompt="Emita as notas fiscais das minhas vendas recentes." /></Sequence>
+      <Sequence from={540} durationInFrames={75}><ExactPromptInputScene duration={75} label="Por onde começamos?" prompt="Emita as notas fiscais das minhas vendas recentes." /></Sequence>
       <Sequence from={615} durationInFrames={90}><SyncScene assistantText="Vou buscar as oito vendas mais recentes e validar clientes, serviços e valores antes da emissão." duration={90} rows={recentSalesRows} speed={2.3} subtitle="Vendas confirmadas, clientes e valores prontos para faturar" title="Últimas 8 vendas" /></Sequence>
       <Sequence from={705} durationInFrames={90}><SyncScene assistantText="As vendas estão validadas. Agora vou emitir as oito notas, enviá-las e atualizar o financeiro." duration={90} rows={invoiceEmissionRows} speed={2.3} subtitle="Notas autorizadas, enviadas e vinculadas ao financeiro" title="Emissão de 8 notas fiscais" /></Sequence>
       <Sequence from={795} durationInFrames={90}><SyncScene assistantText="Vou identificar os recebimentos vencidos, enviar as cobranças e programar os próximos acompanhamentos." duration={90} rows={collectionRows} subtitle="Clientes em atraso e acompanhamentos automáticos" title="Cobranças e recebimentos" /></Sequence>
-      <Sequence from={885} durationInFrames={75}><ExactPromptInputScene duration={75} prompt="Quais clientes concentram os valores em atraso?" /></Sequence>
+      <Sequence from={885} durationInFrames={75}><ExactPromptInputScene duration={75} label="Por onde começamos?" prompt="Quais clientes concentram os valores em atraso?" /></Sequence>
       <Sequence from={960} durationInFrames={105}><OverdueChart duration={105} /></Sequence>
       <Sequence from={1065} durationInFrames={90}><SyncScene assistantText="Vou revisar as obrigações fiscais, comparar os cenários tributários e verificar oportunidades permitidas pela legislação." duration={90} rows={fiscalRows} subtitle="Obrigações, regime, créditos e oportunidades legais" title="Análise fiscal e tributária" /></Sequence>
-      <Sequence from={1155} durationInFrames={75}><ExactPromptInputScene duration={75} prompt="Crie um dashboard com vendas, caixa, cobranças e situação fiscal." /></Sequence>
+      <Sequence from={1155} durationInFrames={75}><ExactPromptInputScene duration={75} label="Por onde começamos?" prompt="Crie um dashboard com vendas, caixa, cobranças e situação fiscal." /></Sequence>
       <Sequence from={1230} durationInFrames={135}><OttoFinancialDashboard /></Sequence>
       <Sequence from={1365} durationInFrames={60}><CompatibilityScene duration={60} /></Sequence>
       <Sequence from={1425} durationInFrames={75}><OutroScene duration={75} /></Sequence>

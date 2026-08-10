@@ -15,12 +15,13 @@ function progress(frame: number, from: number, to: number, output: [number, numb
   })
 }
 
-export function ExactPromptInputScene({ duration = PROMPT_SCENE_DURATION, prompt = PROMPT }: { duration?: number; prompt?: string }) {
+export function ExactPromptInputScene({ duration = PROMPT_SCENE_DURATION, label, prompt = PROMPT }: { duration?: number; label?: string; prompt?: string }) {
   const frame = useCurrentFrame()
   const typingEnd = Math.min(106, duration - 34)
   const visibleCharacters = Math.floor(progress(frame, 14, typingEnd, [0, prompt.length]))
   const exit = progress(frame, duration - 20, duration, [1, 0])
   const showCursor = frame < 112 && Math.floor(frame / 10) % 2 === 0
+  const labelIn = progress(frame, 0, 14)
 
   return (
     <AbsoluteFill
@@ -33,20 +34,22 @@ export function ExactPromptInputScene({ duration = PROMPT_SCENE_DURATION, prompt
         opacity: exit,
       }}
     >
-      <div
-        style={{
-          alignItems: 'center',
-          background: '#ffffff',
-          border: '1.5px solid #d8ddda',
-          borderRadius: 999,
-          boxShadow: '0 2px 5px rgba(20, 24, 22, 0.05)',
-          display: 'grid',
-          gridTemplateColumns: '52px minmax(0, 1fr) auto 46px 54px',
-          height: 66,
-          padding: '0 10px 0 12px',
-          width: 920,
-        }}
-      >
+      <div style={{ display: 'grid', gap: 28, justifyItems: 'center' }}>
+        {label ? <div style={{ color: '#202124', fontSize: 28, fontWeight: 500, opacity: labelIn, transform: `translateY(${(1 - labelIn) * 8}px)` }}>{label}</div> : null}
+        <div
+          style={{
+            alignItems: 'center',
+            background: '#ffffff',
+            border: '1.5px solid #d8ddda',
+            borderRadius: 999,
+            boxShadow: '0 2px 5px rgba(20, 24, 22, 0.05)',
+            display: 'grid',
+            gridTemplateColumns: '52px minmax(0, 1fr) auto 46px 54px',
+            height: 66,
+            padding: '0 10px 0 12px',
+            width: 920,
+          }}
+        >
         <span style={{ alignItems: 'center', display: 'flex', justifyContent: 'center' }}>
           <Plus color="#252525" size={26} strokeWidth={1.8} />
         </span>
@@ -70,6 +73,7 @@ export function ExactPromptInputScene({ duration = PROMPT_SCENE_DURATION, prompt
         <span style={{ alignItems: 'center', background: '#050505', borderRadius: 999, display: 'flex', height: 44, justifyContent: 'center', width: 44 }}>
           <ArrowUp color="#ffffff" size={26} strokeWidth={2.4} />
         </span>
+        </div>
       </div>
     </AbsoluteFill>
   )
