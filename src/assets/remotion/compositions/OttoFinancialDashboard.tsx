@@ -56,6 +56,18 @@ function chartPath(values: number[]) {
   }).join(' ')
 }
 
+function piePoint(angle: number, radius = 56) {
+  const radians = ((angle - 90) * Math.PI) / 180
+  return { x: 70 + radius * Math.cos(radians), y: 70 + radius * Math.sin(radians) }
+}
+
+function pieSlicePath(startAngle: number, endAngle: number) {
+  const start = piePoint(startAngle)
+  const end = piePoint(endAngle)
+  const largeArc = endAngle - startAngle > 180 ? 1 : 0
+  return `M 70 70 L ${start.x.toFixed(2)} ${start.y.toFixed(2)} A 56 56 0 ${largeArc} 1 ${end.x.toFixed(2)} ${end.y.toFixed(2)} Z`
+}
+
 function KpiCard({ index }: { index: number }) {
   const frame = useCurrentFrame()
   const item = kpis[index]
@@ -113,21 +125,53 @@ function CashFlowPanel() {
 function RevenuePanel() {
   const frame = useCurrentFrame()
   const rows = [
-    { color: BLUE, label: 'Serviços', value: 76 },
-    { color: GREEN, label: 'Assinaturas', value: 58 },
-    { color: '#a587dc', label: 'Projetos', value: 42 },
+    { color: BLUE, label: 'Serviços', value: 46 },
+    { color: GREEN, label: 'Assinaturas', value: 34 },
+    { color: '#a587dc', label: 'Projetos', value: 20 },
   ]
   const enter = p(frame, 38, 58)
+  let angle = 0
+  const slices = rows.map((item) => {
+    const startAngle = angle
+    angle += item.value * 3.6
+    return { ...item, endAngle: angle, startAngle }
+  })
 
   return (
     <section style={{ background: '#ffffff', border: `1px solid ${BORDER}`, borderRadius: 8, opacity: enter, padding: '16px 18px', transform: `translateY(${(1 - enter) * 10}px)` }}>
       <strong style={{ display: 'block', fontSize: 15 }}>Receita por origem</strong>
       <span style={{ color: MUTED, fontSize: 11 }}>Participação no período</span>
-      <div style={{ display: 'grid', gap: 14, marginTop: 18 }}>
-        {rows.map((item, index) => {
-          const rowIn = p(frame, 54 + index * 8, 76 + index * 8)
-          return <div key={item.label}><div style={{ alignItems: 'center', display: 'flex', fontSize: 11, justifyContent: 'space-between', marginBottom: 6 }}><span>{item.label}</span><strong>{item.value}%</strong></div><div style={{ background: '#edf0ee', borderRadius: 999, height: 7, overflow: 'hidden' }}><div style={{ background: item.color, borderRadius: 999, height: '100%', width: `${item.value * rowIn}%` }} /></div></div>
-        })}
+      <div style={{ alignItems: 'center', display: 'grid', gap: 18, gridTemplateColumns: '140px 1fr', marginTop: 12 }}>
+        <svg aria-label="Distribuição da receita por origem" height="140" viewBox="0 0 140 140" width="140">
+          <circle cx="70" cy="70" fill="#edf0ee" r="56" />
+          {slices.map((item, index) => {
+            const sliceIn = p(frame, 54 + index * 8, 78 + index * 8)
+            return (
+              <path
+                d={pieSlicePath(item.startAngle, item.endAngle)}
+                fill={item.color}
+                key={item.label}
+                opacity={sliceIn}
+                stroke="#ffffff"
+                strokeLinejoin="round"
+                strokeWidth="3"
+                style={{ transform: `scale(${0.88 + sliceIn * 0.12})`, transformBox: 'fill-box', transformOrigin: 'center' }}
+              />
+            )
+          })}
+        </svg>
+        <div style={{ display: 'grid', gap: 13 }}>
+          {rows.map((item, index) => {
+            const rowIn = p(frame, 62 + index * 8, 82 + index * 8)
+            return (
+              <div key={item.label} style={{ alignItems: 'center', display: 'grid', fontSize: 11, gap: 8, gridTemplateColumns: '9px 1fr auto', opacity: rowIn }}>
+                <span style={{ background: item.color, borderRadius: 999, height: 9, width: 9 }} />
+                <span style={{ color: MUTED }}>{item.label}</span>
+                <strong style={{ color: INK }}>{item.value}%</strong>
+              </div>
+            )
+          })}
+        </div>
       </div>
     </section>
   )
