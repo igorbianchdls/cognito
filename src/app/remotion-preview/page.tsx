@@ -92,6 +92,7 @@ import { CLAUDE_FINANCIAL_OPERATION_SCENE_DURATION, OTTO_AI_EMPLOYEES_CHATGPT_CL
 import { ChatGptOperationalFlowsVideo } from '@/assets/remotion/compositions/ChatGptOperationalFlowsVideo'
 import { ChatGptTaskLauncherAnimation } from '@/assets/remotion/compositions/ChatGptTaskLauncherAnimation'
 import { CODEX_CHARTS_DURATION, CodexChartsAnimation } from '@/assets/remotion/compositions/CodexChartsAnimation'
+import { CHATGPT_PLUS_STATIC_UI_DURATION, ChatGptPlusStaticUi } from '@/assets/remotion/compositions/ChatGptPlusStaticUi'
 import { PROMPT_TO_CHART_EXACT_DURATION, PromptToChartExactVideo } from '@/assets/remotion/compositions/PromptToChartExactVideo'
 import { CHATBOT_DASHBOARD_MOBILE_DURATION, CHATGPT_POWERPOINT_OUTLINE_MOBILE_DURATION, CLAUDE_POWERPOINT_OUTLINE_MOBILE_DURATION, COWORK_POWERPOINT_EXPORT_DURATION, COWORK_POWERPOINT_EXPORT_MOBILE_DURATION, ChatGptPowerPointOutlineMobileAnimation, ChatbotToDashboardMobileAnimation, ClaudePowerPointOutlineMobileAnimation, CoworkPowerPointExportAnimation, CoworkPowerPointExportMobileAnimation } from '@/assets/remotion/compositions/CoworkPowerPointExportAnimation'
 import { CLAUDE_FINANCIAL_AGENTS_VIDEO_DURATION, ClaudeFinancialAgentsVideo } from '@/assets/remotion/compositions/ClaudeFinancialAgentsVideo'
@@ -1980,6 +1981,18 @@ const catalog: CatalogItem[] = [
     tags: ['Gallery', 'Vertical', 'Pipeline'],
     value: 'gallery-artifact-pipeline',
     width: 1080,
+  },
+  {
+    code: '<ChatGptPlusStaticUi />',
+    component: ChatGptPlusStaticUi,
+    description: 'Interface estática do ChatGPT Plus com sidebar, conversa, fontes, ações e campo de mensagem.',
+    duration: CHATGPT_PLUS_STATIC_UI_DURATION,
+    height: 960,
+    kind: 'Componentes',
+    label: 'ChatGPT Plus UI',
+    tags: ['ChatGPT', 'Desktop', 'Chat', 'Static UI'],
+    value: 'component-chatgpt-plus-static-ui',
+    width: 1920,
   },
   {
     code: '<BrowserFrame theme={theme} url="ledger.ai/workspace">...</BrowserFrame>',

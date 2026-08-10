@@ -49,6 +49,10 @@ import {
   OttoFinancialDashboard,
 } from './compositions/OttoFinancialDashboard'
 import {
+  CHATGPT_PLUS_STATIC_UI_DURATION,
+  ChatGptPlusStaticUi,
+} from './compositions/ChatGptPlusStaticUi'
+import {
   PROMPT_TO_CHART_EXACT_DURATION,
   PromptToChartExactVideo,
 } from './compositions/PromptToChartExactVideo'
@@ -127,6 +131,14 @@ function RemotionDownloadRoot() {
         height={720}
         id="actions-otto-financial-dashboard"
         width={1280}
+      />
+      <Composition
+        component={ChatGptPlusStaticUi}
+        durationInFrames={CHATGPT_PLUS_STATIC_UI_DURATION}
+        fps={30}
+        height={960}
+        id="component-chatgpt-plus-static-ui"
+        width={1920}
       />
       <Composition
         component={PromptToChartExactVideo}
