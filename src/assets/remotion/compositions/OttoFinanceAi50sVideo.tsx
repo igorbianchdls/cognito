@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react'
+import { SiMercadopago, SiNubank } from '@icons-pack/react-simple-icons'
 import { AbsoluteFill, Img, interpolate, Sequence, staticFile, useCurrentFrame } from 'remotion'
 import { Landmark, ReceiptText, Scale } from 'lucide-react'
 
@@ -13,7 +14,6 @@ import { TypingText } from '@/assets/remotion/saas/motionComponents'
 import type { SaaSTheme } from '@/assets/remotion/saas/types'
 import { IOS_REMOTION_FONT_STACK, loadSfProFonts } from '@/assets/remotion/fonts/sfPro'
 import AmazonIcon from '@/components/icons/AmazonIcon'
-import { BancoDoBrasilIcon, BradescoIcon, ItauIcon, MercadoPagoIcon, NubankIcon, SantanderIcon } from '@/components/icons/BankLogos'
 import GoogleAdsIcon from '@/components/icons/GoogleAdsIcon'
 import HotmartIcon from '@/components/icons/HotmartIcon'
 import MetaIcon from '@/components/icons/MetaIcon'
@@ -62,13 +62,42 @@ function row(value: OttoAiEmployeesResultRow): OttoAiEmployeesResultRow {
   return value
 }
 
+function bankAssetIcon(src: string, cropSymbol = false) {
+  return function BankAssetIcon({ className }: { className?: string }) {
+    return (
+      <span
+        className={className}
+        style={{ alignItems: 'center', display: 'flex', justifyContent: cropSymbol ? 'flex-start' : 'center', overflow: 'hidden' }}
+      >
+        <Img
+          src={staticFile(src)}
+          style={{ display: 'block', flex: 'none', height: '100%', maxWidth: 'none', objectFit: 'contain', width: cropSymbol ? 'auto' : '100%' }}
+        />
+      </span>
+    )
+  }
+}
+
+function NubankBrandIcon({ className }: { className?: string }) {
+  return <SiNubank className={className} color="#820ad1" />
+}
+
+function MercadoPagoBrandIcon({ className }: { className?: string }) {
+  return <SiMercadopago className={className} color="#009ee3" />
+}
+
+const ItauBrandIcon = bankAssetIcon('brand-logos/banks/itau.svg')
+const SantanderBrandIcon = bankAssetIcon('brand-logos/banks/santander.svg', true)
+const BancoDoBrasilBrandIcon = bankAssetIcon('brand-logos/banks/banco-do-brasil.svg', true)
+const BradescoBrandIcon = bankAssetIcon('brand-logos/banks/bradesco.svg', true)
+
 const reconciliationRows = [
-  row({ description: 'PIX recebido · 03 ago', erp: 'Venda #1842', icon: ItauIcon, initials: 'IT', name: 'Itaú Empresas', status: 'Conciliado', tone: '#ff7900', value: 'R$ 4.800' }),
-  row({ description: 'Cartão corporativo · 03 ago', erp: 'Software', icon: NubankIcon, initials: 'NU', name: 'Nubank PJ', status: 'Conciliado', tone: '#820ad1', value: 'R$ 920' }),
-  row({ description: 'TED recebida · 04 ago', erp: 'Cliente Aurora', icon: SantanderIcon, initials: 'ST', name: 'Santander Empresas', status: 'Conciliado', tone: '#e60000', value: 'R$ 7.250' }),
-  row({ description: 'Débito automático · 04 ago', erp: 'Energia', icon: BancoDoBrasilIcon, initials: 'BB', name: 'Banco do Brasil', status: 'Conciliado', tone: '#0038a8', value: 'R$ 1.460' }),
-  row({ description: 'Boleto compensado · 05 ago', erp: 'Fornecedor Delta', icon: BradescoIcon, initials: 'BR', name: 'Bradesco Empresas', status: 'Conciliado', tone: '#cc092f', value: 'R$ 2.640' }),
-  row({ description: 'Tarifa da conta · 05 ago', erp: 'Despesas bancárias', icon: MercadoPagoIcon, initials: 'MP', name: 'Mercado Pago', status: 'Conciliado', tone: '#00b1ea', value: 'R$ 89' }),
+  row({ description: 'PIX recebido · 03 ago', erp: 'Venda #1842', icon: ItauBrandIcon, initials: 'IT', name: 'Itaú Empresas', status: 'Conciliado', tone: '#ff7900', value: 'R$ 4.800' }),
+  row({ description: 'Cartão corporativo · 03 ago', erp: 'Software', icon: NubankBrandIcon, initials: 'NU', name: 'Nubank PJ', status: 'Conciliado', tone: '#820ad1', value: 'R$ 920' }),
+  row({ description: 'TED recebida · 04 ago', erp: 'Cliente Aurora', icon: SantanderBrandIcon, initials: 'ST', name: 'Santander Empresas', status: 'Conciliado', tone: '#e60000', value: 'R$ 7.250' }),
+  row({ description: 'Débito automático · 04 ago', erp: 'Energia', icon: BancoDoBrasilBrandIcon, initials: 'BB', name: 'Banco do Brasil', status: 'Conciliado', tone: '#0038a8', value: 'R$ 1.460' }),
+  row({ description: 'Boleto compensado · 05 ago', erp: 'Fornecedor Delta', icon: BradescoBrandIcon, initials: 'BR', name: 'Bradesco Empresas', status: 'Conciliado', tone: '#cc092f', value: 'R$ 2.640' }),
+  row({ description: 'Tarifa da conta · 05 ago', erp: 'Despesas bancárias', icon: MercadoPagoBrandIcon, initials: 'MP', name: 'Mercado Pago', status: 'Conciliado', tone: '#00b1ea', value: 'R$ 89' }),
 ]
 
 const expenseRows = [
