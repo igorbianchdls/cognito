@@ -146,12 +146,8 @@ function SyncScene({
   return (
     <Scene duration={duration}>
       <div style={{ left: '50%', position: 'absolute', top: 30, transform: 'translateX(-50%)', width: 940 }}>
-        <div style={{ alignItems: 'flex-start', display: 'flex', gap: 12, opacity: textIn, transform: `translateY(${(1 - textIn) * 8}px)` }}>
-          <span style={{ alignItems: 'center', background: '#111111', borderRadius: 999, color: '#ffffff', display: 'flex', flex: '0 0 auto', fontSize: 14, fontWeight: 760, height: 30, justifyContent: 'center', width: 30 }}>O</span>
-          <div style={{ display: 'grid', gap: 3, paddingTop: 1 }}>
-            <strong style={{ fontSize: 15, fontWeight: 720 }}>Otto</strong>
-            <span style={{ color: '#333333', fontSize: 17, fontWeight: 430, lineHeight: 1.35 }}>{assistantText}</span>
-          </div>
+        <div style={{ color: '#242424', fontSize: 18, fontWeight: 440, lineHeight: 1.4, opacity: textIn, transform: `translateY(${(1 - textIn) * 8}px)` }}>
+          {assistantText}
         </div>
         <div style={{ left: '50%', marginTop: 12, position: 'relative', transform: `translateX(-50%) scale(${cardScale})`, transformOrigin: 'top center', width: cardWidth }}>
           <OttoAiEmployeesSyncCard frame={cardFrame} kind={kind} rows={rows} subtitle={subtitle} title={title} />
