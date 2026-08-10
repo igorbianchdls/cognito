@@ -45,6 +45,10 @@ import {
   OttoFinanceAi50sVideo,
 } from './compositions/OttoFinanceAi50sVideo'
 import {
+  OTTO_FINANCIAL_DASHBOARD_DURATION,
+  OttoFinancialDashboard,
+} from './compositions/OttoFinancialDashboard'
+import {
   PROMPT_TO_CHART_EXACT_DURATION,
   PromptToChartExactVideo,
 } from './compositions/PromptToChartExactVideo'
@@ -114,6 +118,14 @@ function RemotionDownloadRoot() {
         fps={30}
         height={720}
         id="video-otto-finance-ai-50s"
+        width={1280}
+      />
+      <Composition
+        component={OttoFinancialDashboard}
+        durationInFrames={OTTO_FINANCIAL_DASHBOARD_DURATION}
+        fps={30}
+        height={720}
+        id="actions-otto-financial-dashboard"
         width={1280}
       />
       <Composition

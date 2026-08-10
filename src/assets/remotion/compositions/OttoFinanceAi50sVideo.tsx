@@ -8,6 +8,7 @@ import {
 } from './ChatGptClaudeOttoAiEmployeesVideo'
 import { OttoLogoRevealHorizontal } from './OttoLogoRevealHorizontal'
 import { ExactPromptInputScene } from './PromptToChartExactVideo'
+import { OttoFinancialDashboard } from './OttoFinancialDashboard'
 import { TypingText } from '@/assets/remotion/saas/motionComponents'
 import type { SaaSTheme } from '@/assets/remotion/saas/types'
 import { IOS_REMOTION_FONT_STACK, loadSfProFonts } from '@/assets/remotion/fonts/sfPro'
@@ -121,13 +122,15 @@ const fiscalRows = [
 ]
 
 function SyncScene({
+  assistantText,
   duration,
   kind = 'list',
   rows,
-  speed = 1.3,
+  speed = 1.8,
   subtitle,
   title,
 }: {
+  assistantText: string
   duration: number
   kind?: 'list' | 'reconciliation'
   rows: OttoAiEmployeesResultRow[]
@@ -136,10 +139,23 @@ function SyncScene({
   title: string
 }) {
   const frame = useCurrentFrame()
+  const cardFrame = Math.max(0, frame - 12) * speed
+  const cardScale = rows.length > 6 ? 0.84 : 0.92
+  const cardWidth = 940 / cardScale
+  const textIn = p(frame, 0, 14)
   return (
     <Scene duration={duration}>
-      <div style={{ left: '50%', position: 'absolute', top: '50%', transform: `translate(-50%, -50%) scale(${rows.length > 6 ? 0.94 : 1})`, width: 940 }}>
-        <OttoAiEmployeesSyncCard frame={frame * speed} kind={kind} rows={rows} subtitle={subtitle} title={title} />
+      <div style={{ left: '50%', position: 'absolute', top: 30, transform: 'translateX(-50%)', width: 940 }}>
+        <div style={{ alignItems: 'flex-start', display: 'flex', gap: 12, opacity: textIn, transform: `translateY(${(1 - textIn) * 8}px)` }}>
+          <span style={{ alignItems: 'center', background: '#111111', borderRadius: 999, color: '#ffffff', display: 'flex', flex: '0 0 auto', fontSize: 14, fontWeight: 760, height: 30, justifyContent: 'center', width: 30 }}>O</span>
+          <div style={{ display: 'grid', gap: 3, paddingTop: 1 }}>
+            <strong style={{ fontSize: 15, fontWeight: 720 }}>Otto</strong>
+            <span style={{ color: '#333333', fontSize: 17, fontWeight: 430, lineHeight: 1.35 }}>{assistantText}</span>
+          </div>
+        </div>
+        <div style={{ left: '50%', marginTop: 12, position: 'relative', transform: `translateX(-50%) scale(${cardScale})`, transformOrigin: 'top center', width: cardWidth }}>
+          <OttoAiEmployeesSyncCard frame={cardFrame} kind={kind} rows={rows} subtitle={subtitle} title={title} />
+        </div>
       </div>
     </Scene>
   )
@@ -271,7 +287,7 @@ function CompatibilityScene({ duration }: { duration: number }) {
       <div style={{ alignItems: 'center', display: 'flex', inset: 0, justifyContent: 'center', padding: '0 80px', position: 'absolute' }}>
         <TypingText
           delay={16}
-          speed={0.58}
+          speed={duration <= 70 ? 1.4 : 0.58}
           style={{ display: 'block', fontSize: 64, fontWeight: 720, letterSpacing: 0, lineHeight: 1.16, maxWidth: 1000, textAlign: 'center' }}
           text="O Otto funciona diretamente no seu ChatGPT ou Claude."
           theme={typingTheme}
@@ -283,15 +299,15 @@ function CompatibilityScene({ duration }: { duration: number }) {
 
 function OutroScene({ duration }: { duration: number }) {
   const frame = useCurrentFrame()
-  const logoIn = p(frame, 4, 30)
-  const textIn = p(frame, 34, 62)
+  const logoIn = p(frame, 4, 22)
+  const textIn = p(frame, 22, 40)
   return (
     <Scene duration={duration}>
       <div style={{ alignItems: 'center', display: 'flex', flexDirection: 'column', inset: 0, justifyContent: 'center', position: 'absolute' }}>
         <Img src={staticFile('logoOtto.svg')} style={{ height: 250, opacity: logoIn, width: 590 }} />
         <div style={{ background: '#e5e7eb', height: 2, margin: '8px 0 26px', opacity: textIn, width: 120 }} />
         <strong style={{ fontSize: 36, fontWeight: 600, opacity: textIn }}>Administre sua empresa conversando com a IA.</strong>
-        <div style={{ alignItems: 'center', color: MUTED, display: 'flex', fontSize: 18, gap: 28, marginTop: 28, opacity: p(frame, 58, 82) }}>
+        <div style={{ alignItems: 'center', color: MUTED, display: 'flex', fontSize: 18, gap: 28, marginTop: 28, opacity: p(frame, 38, 56) }}>
           <span style={{ alignItems: 'center', display: 'flex', gap: 8 }}><Landmark size={20} />Financeiro</span>
           <span style={{ alignItems: 'center', display: 'flex', gap: 8 }}><ReceiptText size={20} />Fiscal</span>
           <span style={{ alignItems: 'center', display: 'flex', gap: 8 }}><Scale size={20} />Contabilidade</span>
@@ -305,20 +321,22 @@ export function OttoFinanceAi50sVideo() {
   return (
     <AbsoluteFill style={{ background: '#ffffff' }}>
       <Sequence durationInFrames={90}><OttoLogoRevealHorizontal /></Sequence>
-      <Sequence from={90} durationInFrames={90}><ExactPromptInputScene duration={90} prompt="Otto, organize o financeiro da minha empresa." /></Sequence>
-      <Sequence from={180} durationInFrames={130}><SyncScene duration={130} kind="reconciliation" rows={reconciliationRows} subtitle="Bancos, cartões e lançamentos do Otto" title="Conciliação bancária" /></Sequence>
-      <Sequence from={310} durationInFrames={110}><SyncScene duration={110} rows={expenseRows} subtitle="Categorias, contas a pagar, contas a receber e caixa" title="Organização financeira" /></Sequence>
-      <Sequence from={420} durationInFrames={90}><ExactPromptInputScene duration={90} prompt="Mostre a projeção do fluxo de caixa dos próximos 6 meses." /></Sequence>
-      <Sequence from={510} durationInFrames={140}><CashFlowChart duration={140} /></Sequence>
-      <Sequence from={650} durationInFrames={85}><ExactPromptInputScene duration={85} prompt="Emita as notas fiscais das minhas vendas recentes." /></Sequence>
-      <Sequence from={735} durationInFrames={90}><SyncScene duration={90} rows={recentSalesRows} speed={1.8} subtitle="Vendas confirmadas, clientes e valores prontos para faturar" title="Últimas 8 vendas" /></Sequence>
-      <Sequence from={825} durationInFrames={100}><SyncScene duration={100} rows={invoiceEmissionRows} speed={1.8} subtitle="Notas autorizadas, enviadas e vinculadas ao financeiro" title="Emissão de 8 notas fiscais" /></Sequence>
-      <Sequence from={925} durationInFrames={100}><SyncScene duration={100} rows={collectionRows} subtitle="Clientes em atraso e acompanhamentos automáticos" title="Cobranças e recebimentos" /></Sequence>
-      <Sequence from={1025} durationInFrames={85}><ExactPromptInputScene duration={85} prompt="Quais clientes concentram os valores em atraso?" /></Sequence>
-      <Sequence from={1110} durationInFrames={130}><OverdueChart duration={130} /></Sequence>
-      <Sequence from={1240} durationInFrames={100}><SyncScene duration={100} rows={fiscalRows} subtitle="Obrigações, regime, créditos e oportunidades legais" title="Análise fiscal e tributária" /></Sequence>
-      <Sequence from={1340} durationInFrames={80}><CompatibilityScene duration={80} /></Sequence>
-      <Sequence from={1420} durationInFrames={80}><OutroScene duration={80} /></Sequence>
+      <Sequence from={90} durationInFrames={75}><ExactPromptInputScene duration={75} prompt="Otto, organize o financeiro da minha empresa." /></Sequence>
+      <Sequence from={165} durationInFrames={105}><SyncScene assistantText="Vou cruzar cada movimentação bancária com os lançamentos do Otto e confirmar as correspondências." duration={105} kind="reconciliation" rows={reconciliationRows} subtitle="Bancos, cartões e lançamentos do Otto" title="Conciliação bancária" /></Sequence>
+      <Sequence from={270} durationInFrames={90}><SyncScene assistantText="Agora vou classificar as despesas e atualizar contas a pagar, contas a receber e a posição de caixa." duration={90} rows={expenseRows} subtitle="Categorias, contas a pagar, contas a receber e caixa" title="Organização financeira" /></Sequence>
+      <Sequence from={360} durationInFrames={75}><ExactPromptInputScene duration={75} prompt="Mostre a projeção do fluxo de caixa dos próximos 6 meses." /></Sequence>
+      <Sequence from={435} durationInFrames={105}><CashFlowChart duration={105} /></Sequence>
+      <Sequence from={540} durationInFrames={75}><ExactPromptInputScene duration={75} prompt="Emita as notas fiscais das minhas vendas recentes." /></Sequence>
+      <Sequence from={615} durationInFrames={90}><SyncScene assistantText="Vou buscar as oito vendas mais recentes e validar clientes, serviços e valores antes da emissão." duration={90} rows={recentSalesRows} speed={2.3} subtitle="Vendas confirmadas, clientes e valores prontos para faturar" title="Últimas 8 vendas" /></Sequence>
+      <Sequence from={705} durationInFrames={90}><SyncScene assistantText="As vendas estão validadas. Agora vou emitir as oito notas, enviá-las e atualizar o financeiro." duration={90} rows={invoiceEmissionRows} speed={2.3} subtitle="Notas autorizadas, enviadas e vinculadas ao financeiro" title="Emissão de 8 notas fiscais" /></Sequence>
+      <Sequence from={795} durationInFrames={90}><SyncScene assistantText="Vou identificar os recebimentos vencidos, enviar as cobranças e programar os próximos acompanhamentos." duration={90} rows={collectionRows} subtitle="Clientes em atraso e acompanhamentos automáticos" title="Cobranças e recebimentos" /></Sequence>
+      <Sequence from={885} durationInFrames={75}><ExactPromptInputScene duration={75} prompt="Quais clientes concentram os valores em atraso?" /></Sequence>
+      <Sequence from={960} durationInFrames={105}><OverdueChart duration={105} /></Sequence>
+      <Sequence from={1065} durationInFrames={90}><SyncScene assistantText="Vou revisar as obrigações fiscais, comparar os cenários tributários e verificar oportunidades permitidas pela legislação." duration={90} rows={fiscalRows} subtitle="Obrigações, regime, créditos e oportunidades legais" title="Análise fiscal e tributária" /></Sequence>
+      <Sequence from={1155} durationInFrames={75}><ExactPromptInputScene duration={75} prompt="Crie um dashboard com vendas, caixa, cobranças e situação fiscal." /></Sequence>
+      <Sequence from={1230} durationInFrames={135}><OttoFinancialDashboard /></Sequence>
+      <Sequence from={1365} durationInFrames={60}><CompatibilityScene duration={60} /></Sequence>
+      <Sequence from={1425} durationInFrames={75}><OutroScene duration={75} /></Sequence>
     </AbsoluteFill>
   )
 }

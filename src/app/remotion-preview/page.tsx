@@ -122,6 +122,7 @@ import { OTTO_INTEGRATION_SIGNAL_MAP_DURATION, OttoIntegrationSignalMap } from '
 import { OTTO_LOGO_REVEAL_HORIZONTAL_DURATION, OTTO_LOGO_REVEAL_REELS_DURATION, OttoLogoRevealHorizontal, OttoLogoRevealReels } from '@/assets/remotion/compositions/OttoLogoRevealHorizontal'
 import { OTTO_FINANCE_AUTOMATION_ONLY_SCENE_DURATION, OttoFinanceAutomationOnlyScene } from '@/assets/remotion/compositions/OttoFinanceAutomationOnlyScene'
 import { OTTO_FINANCE_AI_50S_DURATION, OttoFinanceAi50sVideo } from '@/assets/remotion/compositions/OttoFinanceAi50sVideo'
+import { OTTO_FINANCIAL_DASHBOARD_DURATION, OttoFinancialDashboard } from '@/assets/remotion/compositions/OttoFinancialDashboard'
 import { OTTO_INVOICE_ONLY_SCENE_DURATION, OttoInvoiceOnlyScene } from '@/assets/remotion/compositions/OttoInvoiceOnlyScene'
 import { OTTO_SYNC_ONLY_SCENE_DURATION, OttoSyncOnlyScene } from '@/assets/remotion/compositions/OttoSyncOnlyScene'
 import {
@@ -2191,6 +2192,18 @@ const catalog: CatalogItem[] = [
     label: 'Otto ERP Home Dashboard',
     tags: ['ERP', 'Dashboard', 'Otto', 'Financeiro'],
     value: 'actions-otto-erp-home-dashboard',
+    width: 1280,
+  },
+  {
+    code: '<OttoFinancialDashboard />',
+    component: OttoFinancialDashboard,
+    description: 'Dashboard financeiro animado da Otto com KPIs, fluxo de caixa, receita por origem e status operacional.',
+    duration: OTTO_FINANCIAL_DASHBOARD_DURATION,
+    height: 720,
+    kind: 'Actions',
+    label: 'Otto Financial Dashboard',
+    tags: ['Otto', 'Dashboard', 'Financeiro', 'KPIs', 'Charts'],
+    value: 'actions-otto-financial-dashboard',
     width: 1280,
   },
   {
