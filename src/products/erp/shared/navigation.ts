@@ -33,7 +33,7 @@ export const ERP_NAVIGATION: ErpNavigationItem[] = [
   },
   {
     id: 'vendas', label: 'Vendas', href: '/erp/vendas/pedidos', icon: IconShoppingBag,
-    description: 'Pedidos, contratos e faturamento.',
+    description: 'Pedidos, contratos, atendimento e emissao fiscal.',
     modules: [
       { id: 'orcamentos', label: 'Orcamentos', href: '/erp/vendas/orcamentos', description: 'Propostas comerciais e conversao em venda.' },
       { id: 'pedidos', label: 'Pedidos', href: '/erp/vendas/pedidos', description: 'Pedidos de venda e acompanhamento.' },

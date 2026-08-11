@@ -25,19 +25,26 @@ export async function GET(request: Request, context: { params: Promise<{ resourc
   const tenant = await resolveErpAccess(getErpOperationCapability(resource, false))
   if (!tenant) return NextResponse.json({ error: 'Nao autenticado.' }, { status: 401 })
   try {
-    const records = ERP_STOCK_RESOURCES.has(resource)
-      ? await listStockOperation(tenant.tenantId, resource)
-      : await listManagementOperation(tenant.tenantId, resource)
     const url = new URL(request.url)
-    if (url.searchParams.get('format') === 'csv') {
-      return new Response(`\uFEFF${toCsv(records)}`, {
+    const isCsv = url.searchParams.get('format') === 'csv'
+    const input = {
+      page: Number(url.searchParams.get('page') || 1),
+      pageSize: Number(url.searchParams.get('pageSize') || 50),
+      query: url.searchParams.get('query') || '',
+      exportLimit: isCsv ? 10_000 : undefined,
+    }
+    const page = ERP_STOCK_RESOURCES.has(resource)
+      ? await listStockOperation(tenant.tenantId, resource, input)
+      : await listManagementOperation(tenant.tenantId, resource, input)
+    if (isCsv) {
+      return new Response(`\uFEFF${toCsv(page.records)}`, {
         headers: {
           'Content-Type': 'text/csv; charset=utf-8',
           'Content-Disposition': `attachment; filename="${resource}.csv"`,
         },
       })
     }
-    return NextResponse.json({ records, total: records.length })
+    return NextResponse.json(page)
   } catch (error) {
     return NextResponse.json({ error: error instanceof Error ? error.message : 'Nao foi possivel carregar o modulo.' }, { status: 400 })
   }

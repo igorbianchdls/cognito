@@ -1,4 +1,9 @@
-import { Pool } from 'pg';
+import { existsSync, readFileSync } from 'node:fs'
+import { resolve } from 'node:path'
+
+import { Pool } from 'pg'
+
+import { getErpDatabaseContext } from '@/lib/erpDatabaseContext'
 export type SQLClient = {
   query: (sql: string, params?: unknown[]) => Promise<{ rows: Record<string, unknown>[] }>
   release: () => void
@@ -6,11 +11,49 @@ export type SQLClient = {
 
 let pool: InstanceType<typeof Pool> | null = null;
 
+export type PostgresPoolConfig = {
+  connectionString: string
+  max: number
+  ssl?: { ca: string; rejectUnauthorized: boolean }
+}
+
 export function assertErpTenantScopedQuery(sql: string, params?: unknown[]) {
   if (!/\berp\.[a-z_][a-z0-9_]*/i.test(sql)) return
   const tenantId = Number(params?.[0] || 0)
   if (!Number.isInteger(tenantId) || tenantId <= 0 || !/\btenant_id\b/i.test(sql) || !/\$1\b/.test(sql)) {
     throw new Error('Consulta ERP sem escopo de tenant explicito.')
+  }
+  const context = getErpDatabaseContext()
+  if (!context && process.env.ERP_ALLOW_PRIVILEGED_DB_CONTEXT !== 'true') {
+    throw new Error('Consulta ERP sem contexto autenticado de tenant.')
+  }
+  if (context && context.tenantId !== tenantId) {
+    throw new Error('Consulta ERP tentou acessar um tenant diferente do contexto autenticado.')
+  }
+}
+
+function isLocalDatabase(hostname: string) {
+  return ['localhost', '127.0.0.1', '::1'].includes(hostname)
+}
+
+export function buildPostgresPoolConfig(connectionString: string): PostgresPoolConfig {
+  const url = new URL(connectionString)
+  if (isLocalDatabase(url.hostname)) return { connectionString, max: 5 }
+
+  const certificatePath = process.env.SUPABASE_DB_CA_FILE
+    ? resolve(process.env.SUPABASE_DB_CA_FILE)
+    : resolve(process.cwd(), 'certificates', 'supabase-prod-ca-2021.crt')
+  const certificate = process.env.SUPABASE_DB_CA?.replaceAll('\\n', '\n')
+    || (existsSync(certificatePath) ? readFileSync(certificatePath, 'utf8') : '')
+  if (!certificate) {
+    throw new Error('Certificado CA do Supabase nao configurado. Defina SUPABASE_DB_CA ou SUPABASE_DB_CA_FILE.')
+  }
+
+  for (const key of ['sslmode', 'sslrootcert', 'sslcert', 'sslkey']) url.searchParams.delete(key)
+  return {
+    connectionString: url.toString(),
+    max: 5,
+    ssl: { ca: certificate, rejectUnauthorized: true },
   }
 }
 
@@ -20,10 +63,7 @@ function getPool() {
   }
 
   if (!pool) {
-    pool = new Pool({
-      connectionString: process.env.SUPABASE_DB_URL,
-      max: 5,
-    });
+    pool = new Pool(buildPostgresPoolConfig(process.env.SUPABASE_DB_URL))
   }
 
   return pool;
@@ -36,7 +76,20 @@ export async function runQuery<T = Record<string, unknown>>(
   assertErpTenantScopedQuery(sql, params)
   const client = await getPool().connect();
   try {
-    const result = await client.query(sql, params);
+    const context = getErpDatabaseContext()
+    if (/\berp\.[a-z_][a-z0-9_]*/i.test(sql) && context) {
+      await client.query('BEGIN')
+      try {
+        await applyErpRuntimeContext(client, context)
+        const result = await client.query(sql, params)
+        await client.query('COMMIT')
+        return result.rows as T[]
+      } catch (error) {
+        await client.query('ROLLBACK').catch(() => undefined)
+        throw error
+      }
+    }
+    const result = await client.query(sql, params)
     return result.rows as T[];
   } finally {
     client.release();
@@ -55,6 +108,15 @@ export async function withTransaction<T>(fn: (client: SQLClient) => Promise<T>):
   const client: SQLClient = {
     async query(sql, params) {
       assertErpTenantScopedQuery(sql, params)
+      const context = getErpDatabaseContext()
+      if (/\berp\.[a-z_][a-z0-9_]*/i.test(sql) && context) {
+        await applyErpRuntimeContext(rawClient, context)
+        try {
+          return await rawClient.query(sql, params) as { rows: Record<string, unknown>[] }
+        } finally {
+          await rawClient.query('RESET ROLE').catch(() => undefined)
+        }
+      }
       return rawClient.query(sql, params) as Promise<{ rows: Record<string, unknown>[] }>
     },
     release: () => rawClient.release(),
@@ -72,6 +134,17 @@ export async function withTransaction<T>(fn: (client: SQLClient) => Promise<T>):
   } finally {
     client.release();
   }
+}
+
+async function applyErpRuntimeContext(
+  client: Pick<SQLClient, 'query'>,
+  context: { tenantId: number; userId: number },
+) {
+  await client.query('SET LOCAL ROLE erp_runtime')
+  await client.query(
+    `SELECT set_config('app.erp_tenant_id', $1, true), set_config('app.erp_user_id', $2, true)`,
+    [String(context.tenantId), String(context.userId)],
+  )
 }
 
 function assertSafeIdentifier(identifier: string, label: string) {

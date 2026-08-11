@@ -912,9 +912,9 @@ function mapConfirmPurchaseResult(
 
 export async function listErpPurchaseCatalogs(tenantId: number) {
   const [suppliers, products, services, categories, costCenters, financialAccounts, paymentMethods, operationNatures, locations, purchaseCandidates] = await Promise.all([
-    runQuery(`SELECT id::text, nome, documento FROM erp.entidades WHERE tenant_id = $1 AND eh_fornecedor = true AND ativo = true AND excluido_em IS NULL ORDER BY nome`, [tenantId]),
-    runQuery(`SELECT id::text, nome, COALESCE(sku, codigo, '') AS codigo, COALESCE(unidade_medida, 'UN') AS unidade, custo AS valor_padrao FROM erp.produtos WHERE tenant_id = $1 AND ativo = true AND excluido_em IS NULL ORDER BY nome`, [tenantId]),
-    runQuery(`SELECT id::text, nome, COALESCE(codigo, '') AS codigo, 'UN'::text AS unidade, custo AS valor_padrao FROM erp.servicos WHERE tenant_id = $1 AND ativo = true AND excluido_em IS NULL ORDER BY nome`, [tenantId]),
+    runQuery(`SELECT id::text, nome, documento FROM erp.entidades WHERE tenant_id = $1 AND eh_fornecedor = true AND ativo = true AND excluido_em IS NULL ORDER BY nome LIMIT 50`, [tenantId]),
+    runQuery(`SELECT id::text, nome, COALESCE(sku, codigo, '') AS codigo, COALESCE(unidade_medida, 'UN') AS unidade, custo AS valor_padrao FROM erp.produtos WHERE tenant_id = $1 AND ativo = true AND excluido_em IS NULL ORDER BY nome LIMIT 50`, [tenantId]),
+    runQuery(`SELECT id::text, nome, COALESCE(codigo, '') AS codigo, 'UN'::text AS unidade, custo AS valor_padrao FROM erp.servicos WHERE tenant_id = $1 AND ativo = true AND excluido_em IS NULL ORDER BY nome LIMIT 50`, [tenantId]),
     runQuery(`SELECT id::text, nome FROM erp.categorias WHERE tenant_id = $1 AND tipo IN ('despesa', 'geral') AND ativo = true AND excluido_em IS NULL ORDER BY nome`, [tenantId]),
     runQuery(`SELECT id::text, nome FROM erp.centros_custo WHERE tenant_id = $1 AND ativo = true AND excluido_em IS NULL ORDER BY nome`, [tenantId]),
     runQuery(`SELECT id::text, nome, tipo, padrao FROM erp.contas_financeiras WHERE tenant_id = $1 AND ativo = true AND excluido_em IS NULL ORDER BY padrao DESC, nome`, [tenantId]),
@@ -938,13 +938,13 @@ export async function listErpPurchaseCatalogs(tenantId: number) {
 export async function listErpSalesCatalogs(tenantId: number) {
   const [customers, responsibles, products, services, categories, costCenters, financialAccounts, paymentMethods] = await Promise.all([
     runQuery(`SELECT id::text, nome, documento, email, celular, telefone, contato_cobranca_emails, contato_cobranca_whatsapp
-      FROM erp.entidades WHERE tenant_id = $1 AND eh_cliente = true AND ativo = true AND excluido_em IS NULL ORDER BY nome`, [tenantId]),
+      FROM erp.entidades WHERE tenant_id = $1 AND eh_cliente = true AND ativo = true AND excluido_em IS NULL ORDER BY nome LIMIT 50`, [tenantId]),
     runQuery(`SELECT id::text, nome, documento FROM erp.entidades
       WHERE tenant_id = $1 AND eh_vendedor = true AND ativo = true AND excluido_em IS NULL ORDER BY nome`, [tenantId]),
     runQuery(`SELECT id::text, nome, COALESCE(sku, codigo, '') AS codigo, COALESCE(unidade_medida, 'UN') AS unidade, preco_venda AS valor_padrao
-      FROM erp.produtos WHERE tenant_id = $1 AND ativo = true AND excluido_em IS NULL ORDER BY nome`, [tenantId]),
+      FROM erp.produtos WHERE tenant_id = $1 AND ativo = true AND excluido_em IS NULL ORDER BY nome LIMIT 50`, [tenantId]),
     runQuery(`SELECT id::text, nome, COALESCE(codigo, '') AS codigo, 'UN'::text AS unidade, preco AS valor_padrao
-      FROM erp.servicos WHERE tenant_id = $1 AND ativo = true AND excluido_em IS NULL ORDER BY nome`, [tenantId]),
+      FROM erp.servicos WHERE tenant_id = $1 AND ativo = true AND excluido_em IS NULL ORDER BY nome LIMIT 50`, [tenantId]),
     runQuery(`SELECT id::text, nome FROM erp.categorias WHERE tenant_id = $1 AND tipo IN ('receita', 'geral') AND ativo = true AND excluido_em IS NULL ORDER BY nome`, [tenantId]),
     runQuery(`SELECT id::text, nome FROM erp.centros_custo WHERE tenant_id = $1 AND ativo = true AND excluido_em IS NULL ORDER BY nome`, [tenantId]),
     runQuery(`SELECT id::text, nome, tipo, padrao FROM erp.contas_financeiras WHERE tenant_id = $1 AND ativo = true AND excluido_em IS NULL ORDER BY padrao DESC, nome`, [tenantId]),
@@ -1065,7 +1065,7 @@ export async function getErpSaleDetails(tenantId: number, idValue: string | numb
     runQuery<Record<string, unknown>>(
       `SELECT itens.id::text, CASE WHEN itens.produto_id IS NOT NULL THEN 'produto' ELSE 'servico' END AS tipo,
          COALESCE(itens.produto_id, itens.servico_id)::text AS item_id, itens.descricao, itens.quantidade,
-         itens.valor_unitario, itens.desconto, itens.total, itens.quantidade_faturada
+         itens.valor_unitario, itens.desconto, itens.total, itens.quantidade_atendida
        FROM erp.vendas_itens itens WHERE itens.tenant_id = $1 AND itens.venda_id = $2
          AND itens.excluido_em IS NULL ORDER BY itens.id`, [tenantId, id],
     ),
@@ -1626,6 +1626,8 @@ async function listSaleRecords(input: ListInput): Promise<ErpEntityRecord[]> {
          vendas.numero,
          vendas.data_venda,
           vendas.status,
+          vendas.atendimento_status,
+          vendas.fiscal_status,
           vendas.situacao,
           vendas.tipo_documento,
           vendas.validade_em,
@@ -1641,7 +1643,7 @@ async function listSaleRecords(input: ListInput): Promise<ErpEntityRecord[]> {
           AND vendas.excluido_em IS NULL
           ${documentClause}
       )
-      SELECT id, numero, data_venda, status, situacao, tipo_documento, validade_em, versao,
+      SELECT id, numero, data_venda, status, atendimento_status, fiscal_status, situacao, tipo_documento, validade_em, versao,
         total, cliente, count(*) OVER ()::int AS __total
      FROM rows
      WHERE true${appendSearch(params, input.query)}${appendRecordStatusFilter(params, input.filters)}
@@ -1656,6 +1658,8 @@ async function listSaleRecords(input: ListInput): Promise<ErpEntityRecord[]> {
     data: dateText(row.data_venda) || '',
     total: Number(row.total ?? 0),
     status: String(row.status ?? ''),
+    atendimento_status: String(row.atendimento_status ?? 'pendente'),
+    fiscal_status: String(row.fiscal_status ?? 'nao_emitida'),
     situacao: String(row.situacao ?? ''),
     tipo_documento: String(row.tipo_documento ?? 'venda'),
     validade: dateText(row.validade_em) || '',
@@ -2190,7 +2194,9 @@ export async function searchErpCatalog(input: {
   if (input.type === 'cliente' || input.type === 'fornecedor') {
     const role = input.type === 'cliente' ? 'eh_cliente' : 'eh_fornecedor'
     return runQuery(
-      `SELECT id::text, nome, documento, email FROM erp.entidades
+      `SELECT id::text, nome, documento, email, celular, telefone,
+         contato_cobranca_emails, contato_cobranca_whatsapp
+       FROM erp.entidades
        WHERE tenant_id = $1 AND ${role} = true AND ativo = true AND excluido_em IS NULL
          AND concat_ws(' ', nome, documento, email) ILIKE $2
        ORDER BY nome LIMIT $3`, [input.tenantId, query, limit],
@@ -2305,7 +2311,7 @@ export async function confirmErpSale(input: ConfirmSaleInput): Promise<ConfirmEr
 
     const existingFinancial = await fetchReceivableForSale(client, input.tenantId, sale.id)
     if (existingFinancial) {
-      if ((sale.status === 'confirmada' || sale.status === 'faturada') && existingFinancial.receivable.status !== 'cancelado') {
+      if (sale.status === 'confirmada' && existingFinancial.receivable.status !== 'cancelado') {
         return mapConfirmSaleResult(sale, existingFinancial.receivable, existingFinancial.installments)
       }
       throw new Error('Venda e conta a receber estao em estados inconsistentes e precisam ser revisadas.')
@@ -2350,7 +2356,8 @@ export async function confirmErpSale(input: ConfirmSaleInput): Promise<ConfirmEr
     }
 
     const itemsResult = await client.query(
-      `SELECT count(*)::int AS total
+      `SELECT count(*)::int AS total,
+         count(*) FILTER (WHERE produto_id IS NOT NULL)::int AS produtos
        FROM erp.vendas_itens
        WHERE tenant_id = $1
          AND venda_id = $2
@@ -2366,6 +2373,7 @@ export async function confirmErpSale(input: ConfirmSaleInput): Promise<ConfirmEr
        SET
          status = 'confirmada',
          situacao = 'aprovada',
+         atendimento_status = CASE WHEN $4 > 0 THEN 'pendente' ELSE 'nao_aplicavel' END,
          confirmada_em = COALESCE(confirmada_em, now()),
          versao = versao + 1,
          atualizado_por = $3
@@ -2390,7 +2398,7 @@ export async function confirmErpSale(input: ConfirmSaleInput): Promise<ConfirmEr
          cobranca_whatsapp,
          configuracao_lembretes,
          versao`,
-      [input.tenantId, sale.id, input.actorId],
+      [input.tenantId, sale.id, input.actorId, Number(itemsResult.rows[0]?.produtos || 0)],
     )
     const updatedSale = updatedSaleResult.rows[0] as SaleRow
     await reserveStockForSale(client, {
@@ -2595,7 +2603,8 @@ export async function cancelErpSale(input: IdActionInput & { reason?: string | n
     )
     const updated = await client.query(
       `UPDATE erp.vendas
-       SET status = 'cancelada', situacao = 'cancelada', cancelada_em = COALESCE(cancelada_em, now()),
+       SET status = 'cancelada', situacao = 'cancelada', atendimento_status = 'cancelado',
+         fiscal_status = 'cancelada', cancelada_em = COALESCE(cancelada_em, now()),
          versao = versao + 1, atualizado_por = $3
        WHERE tenant_id = $1
          AND id = $2

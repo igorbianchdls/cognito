@@ -18,7 +18,12 @@ function assert(condition, message) {
 loadLocalEnv()
 assert(process.env.SUPABASE_DB_URL, 'SUPABASE_DB_URL nao configurada.')
 
-const client = new pg.Client({ connectionString: process.env.SUPABASE_DB_URL })
+const connection = new URL(process.env.SUPABASE_DB_URL)
+for (const key of ['sslmode', 'sslrootcert', 'sslcert', 'sslkey']) connection.searchParams.delete(key)
+const client = new pg.Client({
+  connectionString: connection.toString(),
+  ssl: { ca: readFileSync('certificates/supabase-prod-ca-2021.crt', 'utf8'), rejectUnauthorized: true },
+})
 await client.connect()
 
 try {

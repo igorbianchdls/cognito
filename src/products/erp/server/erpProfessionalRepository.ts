@@ -710,7 +710,7 @@ export async function receivePurchaseItems(
   });
 }
 
-export async function fulfillSaleItems(
+export async function attendSaleItems(
   input: ActorInput & {
     saleId: number;
     values: PartialStockActionInput;
@@ -720,7 +720,7 @@ export async function fulfillSaleItems(
   return withTransaction(async (client) => {
     await client.query(
       `SELECT pg_advisory_xact_lock(hashtextextended($1, 0))`,
-      [`erp:faturamento:${input.tenantId}:${input.idempotencyKey}`],
+      [`erp:atendimento:${input.tenantId}:${input.idempotencyKey}`],
     );
     const saleResult = await client.query(
       `SELECT * FROM erp.vendas WHERE tenant_id = $1 AND id = $2 AND excluido_em IS NULL FOR UPDATE`,
@@ -729,10 +729,10 @@ export async function fulfillSaleItems(
     const sale = saleResult.rows[0];
     if (!sale)
       throw new ErpDomainError("SALE_NOT_FOUND", "Venda nao encontrada.", 404);
-    if (!["confirmada", "parcialmente_faturada"].includes(String(sale.status)))
+    if (String(sale.status) !== "confirmada" || !["pendente", "parcial"].includes(String(sale.atendimento_status)))
       throw new ErpDomainError(
         "INVALID_STATE",
-        "Venda precisa estar confirmada para faturar.",
+        "Venda precisa estar confirmada e pendente para atender.",
         409,
       );
     const groups = new Map<
@@ -757,7 +757,7 @@ export async function fulfillSaleItems(
           404,
         );
       const pending =
-        Number(item.quantidade) - Number(item.quantidade_faturada || 0);
+        Number(item.quantidade) - Number(item.quantidade_atendida || 0);
       if (requested.quantidade > pending + 0.0001)
         throw new ErpDomainError(
           "QUANTITY_EXCEEDS_PENDING",
@@ -805,7 +805,7 @@ export async function fulfillSaleItems(
         );
       }
       await client.query(
-        `UPDATE erp.vendas_itens SET quantidade_faturada = quantidade_faturada + $4, atualizado_por = $5
+        `UPDATE erp.vendas_itens SET quantidade_atendida = quantidade_atendida + $4, atualizado_por = $5
          WHERE tenant_id = $1 AND venda_id = $2 AND id = $3`,
         [
           input.tenantId,
@@ -827,7 +827,7 @@ export async function fulfillSaleItems(
           localEstoqueId: locationId,
           entidadeId: Number(sale.cliente_id),
           vendaId: input.saleId,
-          motivo: input.values.observacoes || "Faturamento parcial de venda",
+          motivo: input.values.observacoes || "Atendimento parcial de venda",
           chaveIdempotencia: `${input.idempotencyKey}:local:${locationId}:${groupIndex++}`,
           items,
           movementType: "saida_venda",
@@ -836,17 +836,17 @@ export async function fulfillSaleItems(
       );
     }
     const pendingResult = await client.query(
-      `SELECT count(*) FILTER (WHERE produto_id IS NOT NULL AND quantidade_faturada < quantidade)::int AS pendentes
+      `SELECT count(*) FILTER (WHERE produto_id IS NOT NULL AND quantidade_atendida < quantidade)::int AS pendentes
        FROM erp.vendas_itens WHERE tenant_id = $1 AND venda_id = $2 AND excluido_em IS NULL`,
       [input.tenantId, input.saleId],
     );
     const complete = Number(pendingResult.rows[0]?.pendentes || 0) === 0;
-    const nextStatus = complete ? "faturada" : "parcialmente_faturada";
+    const nextAttendanceStatus = complete ? "atendido" : "parcial";
     await client.query(
-      `UPDATE erp.vendas SET status = $3, situacao = $3,
-         faturada_em = CASE WHEN $3 = 'faturada' THEN now() ELSE faturada_em END,
+      `UPDATE erp.vendas SET atendimento_status = $3,
+         atendida_em = CASE WHEN $3 = 'atendido' THEN now() ELSE atendida_em END,
          versao = versao + 1, atualizado_por = $4 WHERE tenant_id = $1 AND id = $2`,
-      [input.tenantId, input.saleId, nextStatus, input.actorId],
+      [input.tenantId, input.saleId, nextAttendanceStatus, input.actorId],
     );
     await client.query(
       `INSERT INTO erp.vendas_eventos (tenant_id, venda_id, evento, status_anterior, status_novo, versao, dados, criado_por)
@@ -854,14 +854,14 @@ export async function fulfillSaleItems(
       [
         input.tenantId,
         input.saleId,
-        complete ? "faturada" : "faturamento_parcial",
+        complete ? "atendimento_concluido" : "atendimento_parcial",
         sale.status,
-        nextStatus,
-        json({ documents }),
+        sale.status,
+        json({ documents, atendimento_status: nextAttendanceStatus }),
         input.actorId,
       ],
     );
-    return { documents, status: nextStatus };
+    return { documents, status: "confirmada", atendimento_status: nextAttendanceStatus };
   });
 }
 

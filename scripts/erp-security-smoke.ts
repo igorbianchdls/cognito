@@ -2,6 +2,7 @@ import assert from 'node:assert/strict'
 import { readFileSync } from 'node:fs'
 
 import { assertErpTenantScopedQuery } from '../src/lib/postgres'
+import { runWithErpDatabaseContext } from '../src/lib/erpDatabaseContext'
 import { getErpModuleCapability } from '../src/products/erp/server/erpModuleRegistry'
 import { getErpOperationCapability } from '../src/products/erp/server/erpOperationAccess'
 import { getAiTool, listAiTools } from '../src/products/ai-platform/tools/toolRegistry'
@@ -12,17 +13,20 @@ assert.equal(getErpModuleCapability('contas-a-receber', 'read'), 'erp.financeiro
 assert.equal(getErpOperationCapability('movimentacoes', true), 'erp.estoque.movimentar')
 assert.equal(getErpOperationCapability('dre', false), 'erp.relatorios.visualizar')
 
-assert.doesNotThrow(() => assertErpTenantScopedQuery(
-  'SELECT id FROM erp.entidades WHERE tenant_id = $1',
-  [10],
-))
+assert.doesNotThrow(() => runWithErpDatabaseContext({ tenantId: 10, userId: 20 }, () => assertErpTenantScopedQuery(
+  'SELECT id FROM erp.entidades WHERE tenant_id = $1', [10],
+)))
 assert.throws(
-  () => assertErpTenantScopedQuery('SELECT id FROM erp.entidades', []),
+  () => runWithErpDatabaseContext({ tenantId: 10, userId: 20 }, () => assertErpTenantScopedQuery('SELECT id FROM erp.entidades', [])),
   /tenant/,
 )
 assert.throws(
-  () => assertErpTenantScopedQuery('SELECT id FROM erp.entidades WHERE tenant_id = $2', [10, 20]),
+  () => runWithErpDatabaseContext({ tenantId: 10, userId: 20 }, () => assertErpTenantScopedQuery('SELECT id FROM erp.entidades WHERE tenant_id = $2', [10, 20])),
   /tenant/,
+)
+assert.throws(
+  () => runWithErpDatabaseContext({ tenantId: 10, userId: 20 }, () => assertErpTenantScopedQuery('SELECT id FROM erp.entidades WHERE tenant_id = $1', [11])),
+  /diferente/,
 )
 
 const saleTool = getAiTool('erp_save_sale_draft')

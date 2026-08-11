@@ -10,8 +10,11 @@ for (const line of readFileSync('.env.local', 'utf8').split(/\r?\n/)) {
 function assert(condition, message) { if (!condition) throw new Error(message) }
 assert(process.env.SUPABASE_DB_URL, 'SUPABASE_DB_URL nao configurada.')
 const connection = new URL(process.env.SUPABASE_DB_URL)
-connection.searchParams.delete('sslmode')
-const client = new pg.Client({ connectionString: connection.toString(), ssl: { rejectUnauthorized: false } })
+for (const key of ['sslmode', 'sslrootcert', 'sslcert', 'sslkey']) connection.searchParams.delete(key)
+const client = new pg.Client({
+  connectionString: connection.toString(),
+  ssl: { ca: readFileSync('certificates/supabase-prod-ca-2021.crt', 'utf8'), rejectUnauthorized: true },
+})
 await client.connect()
 
 try {
@@ -32,7 +35,8 @@ try {
     EXISTS (SELECT 1 FROM pg_policies WHERE schemaname = 'erp' AND tablename = 'vendas' AND cmd = 'INSERT' AND with_check LIKE '%has_erp_capability%') AS vendas_protegidas,
     EXISTS (SELECT 1 FROM pg_policies WHERE schemaname = 'erp' AND tablename = 'compras' AND cmd = 'UPDATE' AND qual LIKE '%has_erp_capability%') AS compras_protegidas,
     EXISTS (SELECT 1 FROM pg_policies WHERE schemaname = 'erp' AND tablename = 'pagamentos' AND cmd = 'INSERT' AND with_check LIKE '%has_erp_capability%') AS financeiro_protegido,
-    EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema = 'erp' AND table_name = 'vendas_itens' AND column_name = 'quantidade_faturada') AS faturamento_parcial,
+    EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema = 'erp' AND table_name = 'vendas_itens' AND column_name = 'quantidade_atendida') AS atendimento_parcial,
+    EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema = 'erp' AND table_name = 'vendas' AND column_name = 'fiscal_status') AS status_fiscal_separado,
     EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema = 'erp' AND table_name = 'compras_itens' AND column_name = 'quantidade_recebida') AS recebimento_parcial,
     EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema = 'shared' AND table_name = 'ai_action_approvals' AND column_name = 'processing_at') AS aprovacao_processing_at,
     EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema = 'shared' AND table_name = 'ai_action_approvals' AND column_name = 'processing_attempts') AS aprovacao_tentativas,

@@ -20,6 +20,7 @@
     "ai:typecheck": "tsc -p tsconfig.ai-platform.json --pretty false",
     "ai:smoke": "tsx scripts/ai-platform-smoke.ts",
     "security:smoke": "tsx scripts/erp-security-smoke.ts",
+    "erp:runtime-smoke": "tsx scripts/erp-runtime-isolation-smoke.ts",
     "plugin:smoke": "node scripts/plugin/smoke-test.mjs",
     "service:hello": "node services/hello-service.mjs",
     "safe:npm": "node scripts/safe-npm-install.mjs",

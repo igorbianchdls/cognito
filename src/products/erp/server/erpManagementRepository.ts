@@ -2,6 +2,22 @@ import { runQuery, withTransaction } from '@/lib/postgres'
 
 type ActorInput = { tenantId: number; actorId: number }
 
+export type ErpOperationListInput = {
+  page?: number
+  pageSize?: number
+  query?: string
+  exportLimit?: number
+}
+
+export type ErpOperationPage = {
+  records: Record<string, unknown>[]
+  total: number
+  page: number
+  pageSize: number
+}
+
+export type ErpOperationCatalogSource = 'products' | 'services' | 'customers' | 'accounts' | 'locations' | 'payments'
+
 function requiredId(value: unknown, label: string) {
   const parsed = Number(value)
   if (!Number.isInteger(parsed) || parsed <= 0) throw new Error(`${label} invalido.`)
@@ -32,31 +48,81 @@ function dateText(value: unknown, fallback = true) {
   return normalized
 }
 
-export async function listErpOperationsCatalogs(tenantId: number) {
-  const [products, services, customers, accounts, locations, payments] = await Promise.all([
-    runQuery(`SELECT id::text AS value, nome AS label FROM erp.produtos WHERE tenant_id = $1 AND ativo AND excluido_em IS NULL ORDER BY nome`, [tenantId]),
-    runQuery(`SELECT id::text AS value, nome AS label FROM erp.servicos WHERE tenant_id = $1 AND ativo AND excluido_em IS NULL ORDER BY nome`, [tenantId]),
-    runQuery(`SELECT id::text AS value, nome AS label FROM erp.entidades WHERE tenant_id = $1 AND eh_cliente AND ativo AND excluido_em IS NULL ORDER BY nome`, [tenantId]),
-    runQuery(`SELECT id::text AS value, nome AS label FROM erp.contas_financeiras WHERE tenant_id = $1 AND ativo AND excluido_em IS NULL ORDER BY padrao DESC, nome`, [tenantId]),
-    runQuery(`SELECT id::text AS value, nome AS label FROM erp.locais_estoque WHERE tenant_id = $1 AND ativo AND excluido_em IS NULL ORDER BY padrao DESC, nome`, [tenantId]),
-    runQuery(
-      `SELECT pagamentos.id::text AS value,
-         concat(CASE WHEN pagamentos.tipo = 'receber' THEN 'Recebimento' ELSE 'Pagamento' END,
-           ' - ', to_char(pagamentos.data_pagamento, 'DD/MM/YYYY'), ' - R$ ', to_char(pagamentos.valor_liquido, 'FM999G999G990D00')) AS label
-       FROM erp.pagamentos
-       WHERE pagamentos.tenant_id = $1 AND pagamentos.excluido_em IS NULL
-         AND pagamentos.estornado_em IS NULL AND pagamentos.estorno_de_pagamento_id IS NULL
-         AND NOT pagamentos.conciliado
-       ORDER BY pagamentos.data_pagamento DESC LIMIT 200`,
-      [tenantId],
-    ),
-  ])
-  return { products, services, customers, accounts, locations, payments }
+export async function searchErpOperationsCatalog(input: {
+  tenantId: number
+  source: ErpOperationCatalogSource
+  query?: string
+  limit?: number
+}) {
+  const limit = Math.min(50, Math.max(10, Math.floor(Number(input.limit) || 20)))
+  const params: unknown[] = [input.tenantId, input.query?.trim() || '', limit]
+  const commonSearch = `($2 = '' OR concat_ws(' ', nome, codigo) ILIKE '%' || $2 || '%')`
+  if (input.source === 'products') {
+    return runQuery(`SELECT id::text AS value, concat_ws(' - ', nome, NULLIF(sku, '')) AS label FROM erp.produtos WHERE tenant_id = $1 AND ativo AND excluido_em IS NULL AND ${commonSearch} ORDER BY nome LIMIT $3`, params)
+  }
+  if (input.source === 'services') {
+    return runQuery(`SELECT id::text AS value, concat_ws(' - ', nome, NULLIF(codigo, '')) AS label FROM erp.servicos WHERE tenant_id = $1 AND ativo AND excluido_em IS NULL AND ${commonSearch} ORDER BY nome LIMIT $3`, params)
+  }
+  if (input.source === 'customers') {
+    return runQuery(`SELECT id::text AS value, concat_ws(' - ', nome, NULLIF(documento, '')) AS label FROM erp.entidades WHERE tenant_id = $1 AND eh_cliente AND ativo AND excluido_em IS NULL AND ($2 = '' OR concat_ws(' ', nome, documento, email) ILIKE '%' || $2 || '%') ORDER BY nome LIMIT $3`, params)
+  }
+  if (input.source === 'accounts') {
+    return runQuery(`SELECT id::text AS value, nome AS label FROM erp.contas_financeiras WHERE tenant_id = $1 AND ativo AND excluido_em IS NULL AND ($2 = '' OR concat_ws(' ', nome, banco, conta) ILIKE '%' || $2 || '%') ORDER BY padrao DESC, nome LIMIT $3`, params)
+  }
+  if (input.source === 'locations') {
+    return runQuery(`SELECT id::text AS value, concat_ws(' - ', nome, NULLIF(codigo, '')) AS label FROM erp.locais_estoque WHERE tenant_id = $1 AND ativo AND excluido_em IS NULL AND ${commonSearch} ORDER BY padrao DESC, nome LIMIT $3`, params)
+  }
+  return runQuery(
+    `SELECT pagamentos.id::text AS value,
+       concat(CASE WHEN pagamentos.tipo = 'receber' THEN 'Recebimento' ELSE 'Pagamento' END,
+         ' - ', to_char(pagamentos.data_pagamento, 'DD/MM/YYYY'), ' - R$ ', to_char(pagamentos.valor_liquido, 'FM999G999G990D00')) AS label
+     FROM erp.pagamentos
+     WHERE pagamentos.tenant_id = $1 AND pagamentos.excluido_em IS NULL
+       AND pagamentos.estornado_em IS NULL AND pagamentos.estorno_de_pagamento_id IS NULL
+       AND NOT pagamentos.conciliado
+       AND ($2 = '' OR concat_ws(' ', pagamentos.tipo, pagamentos.origem, pagamentos.valor_liquido::text) ILIKE '%' || $2 || '%')
+     ORDER BY pagamentos.data_pagamento DESC LIMIT $3`,
+    params,
+  )
 }
 
-export async function listManagementOperation(tenantId: number, resource: string) {
+function normalizedOperationPage(input: ErpOperationListInput) {
+  const page = Math.max(1, Math.floor(Number(input.page) || 1))
+  const pageSize = input.exportLimit
+    ? Math.min(10_000, Math.max(1, Math.floor(input.exportLimit)))
+    : Math.min(100, Math.max(10, Math.floor(Number(input.pageSize) || 50)))
+  return { page, pageSize }
+}
+
+async function listOperationPage(
+  tenantId: number,
+  selectSql: string,
+  orderBy: string,
+  input: ErpOperationListInput,
+): Promise<ErpOperationPage> {
+  const { page, pageSize } = normalizedOperationPage(input)
+  const offset = input.exportLimit ? 0 : (page - 1) * pageSize
+  const rows = await runQuery<Record<string, unknown>>(
+    `WITH operation_records AS (${selectSql})
+     SELECT operation_records.*, count(*) OVER ()::int AS __total
+     FROM operation_records
+     WHERE ($2 = '' OR to_jsonb(operation_records)::text ILIKE '%' || $2 || '%')
+     ORDER BY ${orderBy}
+     LIMIT $3 OFFSET $4`,
+    [tenantId, input.query?.trim() || '', pageSize, offset],
+  )
+  const total = rows.length ? Number(rows[0].__total || 0) : 0
+  return {
+    records: rows.map(({ __total: _total, ...record }) => record),
+    total,
+    page,
+    pageSize,
+  }
+}
+
+export async function listManagementOperation(tenantId: number, resource: string, input: ErpOperationListInput = {}) {
   if (resource === 'contratos') {
-    return runQuery(
+    return listOperationPage(tenantId,
       `SELECT contratos.id::text, contratos.numero, entidades.nome AS cliente, contratos.descricao,
          contratos.data_inicio, contratos.data_fim, contratos.periodicidade,
          contratos.proxima_geracao_em, contratos.status,
@@ -65,12 +131,12 @@ export async function listManagementOperation(tenantId: number, resource: string
        JOIN erp.entidades ON entidades.tenant_id = contratos.tenant_id AND entidades.id = contratos.cliente_id
        LEFT JOIN erp.contratos_vendas_itens AS itens ON itens.tenant_id = contratos.tenant_id AND itens.contrato_id = contratos.id
        WHERE contratos.tenant_id = $1 AND contratos.excluido_em IS NULL
-       GROUP BY contratos.id, entidades.nome ORDER BY contratos.data_inicio DESC, contratos.id DESC`,
-      [tenantId],
+       GROUP BY contratos.id, entidades.nome`,
+      'data_inicio DESC, id DESC', input,
     )
   }
   if (resource === 'fluxo-de-caixa') {
-    return runQuery(
+    return listOperationPage(tenantId,
       `SELECT fluxo.data::text AS id, fluxo.data, contas.nome AS conta,
          sum(fluxo.entradas)::numeric(18,2) AS entradas,
          sum(fluxo.saidas)::numeric(18,2) AS saidas,
@@ -78,73 +144,71 @@ export async function listManagementOperation(tenantId: number, resource: string
        FROM erp.vw_fluxo_caixa_diario AS fluxo
        JOIN erp.contas_financeiras AS contas ON contas.tenant_id = fluxo.tenant_id AND contas.id = fluxo.conta_financeira_id
        WHERE fluxo.tenant_id = $1
-       GROUP BY fluxo.data, contas.nome ORDER BY fluxo.data DESC LIMIT 366`,
-      [tenantId],
+       GROUP BY fluxo.data, contas.nome`,
+      'data DESC, id DESC', input,
     )
   }
   if (resource === 'dre') {
-    return runQuery(
+    return listOperationPage(tenantId,
       `SELECT concat(competencia::text, '-', COALESCE(categoria_id::text, 'sem-categoria'), '-', tipo) AS id,
          competencia, COALESCE(categoria, 'Sem categoria') AS categoria, tipo, valor
-       FROM erp.vw_dre_gerencial WHERE tenant_id = $1 ORDER BY competencia DESC, tipo, categoria`,
-      [tenantId],
+       FROM erp.vw_dre_gerencial WHERE tenant_id = $1`,
+      'competencia DESC, tipo, categoria', input,
     )
   }
   if (resource === 'conciliacao-bancaria') {
-    return runQuery(
+    return listOperationPage(tenantId,
       `SELECT transacoes.id::text, transacoes.data_transacao AS data, contas.nome AS conta,
          transacoes.descricao, transacoes.tipo, transacoes.valor, transacoes.contraparte,
          transacoes.status
        FROM erp.transacoes_bancarias AS transacoes
        JOIN erp.contas_financeiras AS contas ON contas.tenant_id = transacoes.tenant_id AND contas.id = transacoes.conta_financeira_id
-       WHERE transacoes.tenant_id = $1 AND transacoes.excluido_em IS NULL
-       ORDER BY transacoes.data_transacao DESC, transacoes.id DESC LIMIT 500`,
-      [tenantId],
+       WHERE transacoes.tenant_id = $1 AND transacoes.excluido_em IS NULL`,
+      'data DESC, id DESC', input,
     )
   }
   if (resource === 'transferencias-financeiras') {
-    return runQuery(
+    return listOperationPage(tenantId,
       `SELECT transferencias.id::text, transferencias.data_transferencia AS data,
          origem.nome AS origem, destino.nome AS destino, transferencias.valor,
          transferencias.descricao, transferencias.status
        FROM erp.transferencias_financeiras AS transferencias
        JOIN erp.contas_financeiras AS origem ON origem.tenant_id = transferencias.tenant_id AND origem.id = transferencias.conta_origem_id
        JOIN erp.contas_financeiras AS destino ON destino.tenant_id = transferencias.tenant_id AND destino.id = transferencias.conta_destino_id
-       WHERE transferencias.tenant_id = $1 AND transferencias.excluido_em IS NULL
-       ORDER BY transferencias.data_transferencia DESC, transferencias.id DESC`,
-      [tenantId],
+       WHERE transferencias.tenant_id = $1 AND transferencias.excluido_em IS NULL`,
+      'data DESC, id DESC', input,
     )
   }
   if (resource === 'importacoes') {
-    return runQuery(
+    return listOperationPage(tenantId,
       `SELECT id::text, nome_arquivo AS arquivo, tipo, criado_em AS data, total_linhas,
          total_importadas AS importadas, total_erros AS erros, status
-       FROM erp.importacoes_dados WHERE tenant_id = $1 ORDER BY criado_em DESC LIMIT 200`,
-      [tenantId],
+       FROM erp.importacoes_dados WHERE tenant_id = $1`,
+      'data DESC, id DESC', input,
     )
   }
   if (resource === 'aging-receber') {
-    return runQuery(
+    return listOperationPage(tenantId,
       `SELECT parcela_id::text AS id, cliente, data_vencimento AS vencimento, saldo,
          dias_atraso, faixa AS status FROM erp.vw_aging_receber
-       WHERE tenant_id = $1 ORDER BY data_vencimento`,
-      [tenantId],
+       WHERE tenant_id = $1`,
+      'vencimento, id', input,
     )
   }
   if (resource === 'aging-pagar') {
-    return runQuery(
+    return listOperationPage(tenantId,
       `SELECT parcela_id::text AS id, fornecedor, data_vencimento AS vencimento, saldo,
          dias_atraso, faixa AS status FROM erp.vw_aging_pagar
-       WHERE tenant_id = $1 ORDER BY data_vencimento`,
-      [tenantId],
+       WHERE tenant_id = $1`,
+      'vencimento, id', input,
     )
   }
   if (resource === 'giro-estoque') {
-    return runQuery(
+    return listOperationPage(tenantId,
       `SELECT concat(produto_id::text, '-', local_estoque_id::text) AS id, produto,
          local_estoque AS local, quantidade_fisica, saidas_90_dias, giro_90_dias
-       FROM erp.vw_giro_estoque WHERE tenant_id = $1 ORDER BY giro_90_dias DESC, produto`,
-      [tenantId],
+       FROM erp.vw_giro_estoque WHERE tenant_id = $1`,
+      'giro_90_dias DESC, produto', input,
     )
   }
   throw new Error('Modulo gerencial desconhecido.')

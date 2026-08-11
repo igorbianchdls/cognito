@@ -1,4 +1,5 @@
 import { runQuery } from '@/lib/postgres'
+import { setErpDatabaseContext } from '@/lib/erpDatabaseContext'
 import type { AiPrincipal } from '@/products/ai-platform/shared/types'
 import { ERP_CAPABILITIES, type ErpCapability } from '@/products/erp/shared/professionalContracts'
 
@@ -55,7 +56,7 @@ function normalizePrincipal(
   const capabilities = row.role === 'owner' || row.role === 'admin'
     ? [...ERP_CAPABILITIES]
     : row.capabilities || []
-  return {
+  const principal = {
     tenantId: Number(row.tenant_id),
     tenantName: row.tenant_name,
     tenantSlug: row.tenant_slug,
@@ -69,6 +70,8 @@ function normalizePrincipal(
     connectionId: input.connectionId || null,
     writeEnabled: input.writeEnabled ?? false,
   }
+  setErpDatabaseContext({ tenantId: principal.tenantId, userId: principal.userId })
+  return principal
 }
 
 export async function resolveErpPrincipal(input: {

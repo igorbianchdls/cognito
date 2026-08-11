@@ -1,4 +1,5 @@
 import { runQuery, withTransaction, type SQLClient } from '@/lib/postgres'
+import type { ErpOperationListInput, ErpOperationPage } from '@/products/erp/server/erpManagementRepository'
 import { assertErpPeriodOpen } from '@/products/erp/server/erpPeriodRepository'
 
 type ActorInput = { tenantId: number; actorId: number }
@@ -308,17 +309,17 @@ export async function releaseStockForSale(client: Pick<SQLClient, 'query'>, inpu
   }
 }
 
-export async function fulfillStockForSale(input: ActorInput & { saleId: number }) {
+export async function attendStockForSale(input: ActorInput & { saleId: number }) {
   return withTransaction(async (client) => {
     const saleResult = await client.query(
-      `SELECT id, cliente_id, status FROM erp.vendas
+      `SELECT id, cliente_id, status, atendimento_status FROM erp.vendas
        WHERE tenant_id = $1 AND id = $2 AND excluido_em IS NULL FOR UPDATE`,
       [input.tenantId, input.saleId],
     )
     const sale = saleResult.rows[0]
     if (!sale) throw new Error('Venda nao encontrada.')
-    if (sale.status === 'faturada') return { id: String(sale.id), status: 'faturada' }
-    if (sale.status !== 'confirmada') throw new Error('Apenas venda confirmada pode ser faturada.')
+    if (sale.atendimento_status === 'atendido') return { id: String(sale.id), status: 'confirmada', atendimento_status: 'atendido' }
+    if (sale.status !== 'confirmada') throw new Error('Apenas venda confirmada pode ser atendida.')
 
     const reservations = await client.query(
       `SELECT * FROM erp.reservas_estoque
@@ -350,15 +351,15 @@ export async function fulfillStockForSale(input: ActorInput & { saleId: number }
       )
     }
     const updated = await client.query(
-      `UPDATE erp.vendas SET status = 'faturada', situacao = 'faturada', faturada_em = COALESCE(faturada_em, now()),
+      `UPDATE erp.vendas SET atendimento_status = 'atendido', atendida_em = COALESCE(atendida_em, now()),
          versao = versao + 1, atualizado_por = $3
-       WHERE tenant_id = $1 AND id = $2 RETURNING id::text, status, versao`,
+       WHERE tenant_id = $1 AND id = $2 RETURNING id::text, status, atendimento_status, fiscal_status, versao`,
       [input.tenantId, input.saleId, input.actorId],
     )
     await client.query(
       `INSERT INTO erp.vendas_eventos
          (tenant_id, venda_id, evento, status_anterior, status_novo, versao, dados, criado_por)
-       VALUES ($1, $2, 'faturada', 'confirmada', 'faturada', $3, $4::jsonb, $5)`,
+       VALUES ($1, $2, 'atendimento_concluido', 'confirmada', 'confirmada', $3, $4::jsonb, $5)`,
       [input.tenantId, input.saleId, Number(updated.rows[0].versao),
         JSON.stringify({ movimenta_estoque: reservations.rows.length > 0 }), input.actorId],
     )
@@ -430,38 +431,62 @@ export async function reverseStockForPurchase(client: Pick<SQLClient, 'query'>, 
   }
 }
 
-export async function listStockOperation(tenantId: number, resource: string) {
+async function listStockOperationPage(
+  tenantId: number,
+  selectSql: string,
+  orderBy: string,
+  input: ErpOperationListInput,
+): Promise<ErpOperationPage> {
+  const page = Math.max(1, Math.floor(Number(input.page) || 1))
+  const pageSize = input.exportLimit
+    ? Math.min(10_000, Math.max(1, Math.floor(input.exportLimit)))
+    : Math.min(100, Math.max(10, Math.floor(Number(input.pageSize) || 50)))
+  const offset = input.exportLimit ? 0 : (page - 1) * pageSize
+  const rows = await runQuery<Record<string, unknown>>(
+    `WITH operation_records AS (${selectSql})
+     SELECT operation_records.*, count(*) OVER ()::int AS __total
+     FROM operation_records
+     WHERE ($2 = '' OR to_jsonb(operation_records)::text ILIKE '%' || $2 || '%')
+     ORDER BY ${orderBy}
+     LIMIT $3 OFFSET $4`,
+    [tenantId, input.query?.trim() || '', pageSize, offset],
+  )
+  const total = rows.length ? Number(rows[0].__total || 0) : 0
+  return { records: rows.map(({ __total: _total, ...record }) => record), total, page, pageSize }
+}
+
+export async function listStockOperation(tenantId: number, resource: string, input: ErpOperationListInput = {}) {
   if (resource === 'posicao-estoque') {
-    return runQuery(
+    return listStockOperationPage(tenantId,
       `SELECT produto_id::text AS id, codigo, sku, produto, unidade_medida, local_estoque,
          quantidade_fisica, quantidade_reservada, quantidade_disponivel, custo_medio,
          valor_estoque, estoque_minimo, situacao
-       FROM erp.vw_posicao_estoque WHERE tenant_id = $1 ORDER BY produto, local_estoque`,
-      [tenantId],
+       FROM erp.vw_posicao_estoque WHERE tenant_id = $1`,
+      'produto, local_estoque', input,
     )
   }
   if (resource === 'movimentacoes') {
-    return runQuery(
+    return listStockOperationPage(tenantId,
       `SELECT movimentos.id::text, movimentos.ocorrido_em AS data, produtos.nome AS produto,
          locais.nome AS local, movimentos.tipo, movimentos.quantidade, movimentos.custo_unitario,
          movimentos.saldo_apos, movimentos.origem_tipo AS origem
        FROM erp.movimentacoes_estoque AS movimentos
        JOIN erp.produtos AS produtos ON produtos.tenant_id = movimentos.tenant_id AND produtos.id = movimentos.produto_id
        JOIN erp.locais_estoque AS locais ON locais.tenant_id = movimentos.tenant_id AND locais.id = movimentos.local_estoque_id
-       WHERE movimentos.tenant_id = $1 ORDER BY movimentos.ocorrido_em DESC LIMIT 500`,
-      [tenantId],
+       WHERE movimentos.tenant_id = $1`,
+      'data DESC, id DESC', input,
     )
   }
   if (resource === 'locais-estoque') {
-    return runQuery(
+    return listStockOperationPage(tenantId,
       `SELECT id::text, nome, codigo, CASE WHEN padrao THEN 'Padrao' ELSE 'Secundario' END AS tipo,
          CASE WHEN ativo THEN 'ativo' ELSE 'inativo' END AS status, permite_venda, permite_compra
-       FROM erp.locais_estoque WHERE tenant_id = $1 AND excluido_em IS NULL ORDER BY padrao DESC, nome`,
-      [tenantId],
+       FROM erp.locais_estoque WHERE tenant_id = $1 AND excluido_em IS NULL`,
+      'tipo, nome', input,
     )
   }
   if (resource === 'inventarios') {
-    return runQuery(
+    return listStockOperationPage(tenantId,
       `SELECT inventarios.id::text, inventarios.numero, locais.nome AS local,
          inventarios.data_inventario AS data, inventarios.tipo, inventarios.status,
          count(itens.id)::int AS itens
@@ -469,12 +494,12 @@ export async function listStockOperation(tenantId: number, resource: string) {
        JOIN erp.locais_estoque AS locais ON locais.tenant_id = inventarios.tenant_id AND locais.id = inventarios.local_estoque_id
        LEFT JOIN erp.inventarios_itens AS itens ON itens.tenant_id = inventarios.tenant_id AND itens.inventario_id = inventarios.id
        WHERE inventarios.tenant_id = $1 AND inventarios.excluido_em IS NULL
-       GROUP BY inventarios.id, locais.nome ORDER BY inventarios.data_inventario DESC, inventarios.id DESC`,
-      [tenantId],
+       GROUP BY inventarios.id, locais.nome`,
+      'data DESC, id DESC', input,
     )
   }
   if (resource === 'transferencias') {
-    return runQuery(
+    return listStockOperationPage(tenantId,
       `SELECT transferencias.id::text, transferencias.numero, origem.nome AS origem,
          destino.nome AS destino, transferencias.data_transferencia AS data, transferencias.status,
          count(itens.id)::int AS itens
@@ -483,32 +508,31 @@ export async function listStockOperation(tenantId: number, resource: string) {
        JOIN erp.locais_estoque AS destino ON destino.tenant_id = transferencias.tenant_id AND destino.id = transferencias.local_destino_id
        LEFT JOIN erp.transferencias_estoque_itens AS itens ON itens.tenant_id = transferencias.tenant_id AND itens.transferencia_id = transferencias.id
        WHERE transferencias.tenant_id = $1 AND transferencias.excluido_em IS NULL
-       GROUP BY transferencias.id, origem.nome, destino.nome ORDER BY transferencias.data_transferencia DESC, transferencias.id DESC`,
-      [tenantId],
+       GROUP BY transferencias.id, origem.nome, destino.nome`,
+      'data DESC, id DESC', input,
     )
   }
   if (resource === 'kits') {
-    return runQuery(
+    return listStockOperationPage(tenantId,
       `SELECT kits.id::text, produtos.nome AS produto, produtos.codigo,
          count(itens.id)::int AS componentes, CASE WHEN kits.ativo THEN 'ativo' ELSE 'inativo' END AS status
        FROM erp.kits_produtos AS kits
        JOIN erp.produtos ON produtos.tenant_id = kits.tenant_id AND produtos.id = kits.produto_id
        LEFT JOIN erp.kits_produtos_itens AS itens ON itens.tenant_id = kits.tenant_id AND itens.kit_id = kits.id
        WHERE kits.tenant_id = $1 AND kits.excluido_em IS NULL
-       GROUP BY kits.id, produtos.nome, produtos.codigo ORDER BY produtos.nome`,
-      [tenantId],
+       GROUP BY kits.id, produtos.nome, produtos.codigo`,
+      'produto, id', input,
     )
   }
   if (resource === 'conversoes-unidades') {
-    return runQuery(
+    return listStockOperationPage(tenantId,
       `SELECT conversoes.id::text, produtos.nome AS produto, conversoes.unidade_origem,
          conversoes.unidade_destino, conversoes.fator,
          CASE WHEN conversoes.ativo THEN 'ativo' ELSE 'inativo' END AS status
        FROM erp.conversoes_unidades_produto AS conversoes
        JOIN erp.produtos ON produtos.tenant_id = conversoes.tenant_id AND produtos.id = conversoes.produto_id
-       WHERE conversoes.tenant_id = $1 AND conversoes.excluido_em IS NULL
-       ORDER BY produtos.nome, conversoes.unidade_origem`,
-      [tenantId],
+       WHERE conversoes.tenant_id = $1 AND conversoes.excluido_em IS NULL`,
+      'produto, unidade_origem', input,
     )
   }
   throw new Error('Modulo de estoque desconhecido.')

@@ -1,0 +1,16 @@
+   ▲ Next.js 16.0.10 (Turbopack)
+   - Local:         http://localhost:3000
+   - Network:       http://192.168.0.14:3000
+   - Environments: .env.local
+
+ ✓ Starting...
+ ○ Compiling proxy ...
+ ✓ Ready in 22.3s
+ ○ Compiling /_not-found/page ...
+
+[35m
+[Clerk]:[0m You are running in keyless mode.
+You can [35mclaim your keys[0m by visiting https://dashboard.clerk.com/apps/claim?framework=nextjs&token=0vovn4aaacknyyjgf8qrkuhzzpn60lf7t052rw0f&return_url=http%3A%2F%2Flocalhost%3A3000%2F
+
+ GET /erp 404 in 55s (compile: 49s, proxy.ts: 4.4s, render: 1417ms)
+[?25h

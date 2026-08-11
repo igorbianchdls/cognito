@@ -43,6 +43,7 @@ import {
 import { Textarea } from "@/components/ui/textarea";
 import { ErpPagination } from "@/products/erp/frontend/components/ErpPagination";
 import { ErpDocumentDetailsDialog } from "@/products/erp/frontend/components/ErpDocumentDetailsDialog";
+import { ErpAsyncCatalogSelect, type ErpCatalogRecord } from "@/products/erp/frontend/components/ErpAsyncCatalogSelect";
 import { useErpAccess } from "@/products/erp/frontend/hooks/useErpAccess";
 
 type Option = {
@@ -78,6 +79,8 @@ type SaleRecord = {
   data: string;
   total: number;
   status: string;
+  atendimento_status: string;
+  fiscal_status: string;
   situacao: string;
   validade?: string;
   versao: number;
@@ -161,7 +164,7 @@ async function parseResponse<T>(response: Response): Promise<T> {
 }
 
 function statusTone(status: string) {
-  if (status === "confirmada" || status === "faturada")
+  if (["confirmada", "atendido", "emitida", "nao_aplicavel"].includes(status))
     return "border-emerald-200 bg-emerald-50 text-emerald-700";
   if (status === "cancelada")
     return "border-gray-200 bg-gray-100 text-gray-500";
@@ -329,9 +332,15 @@ export function SalesWorkspacePage({
     setEditingSale(null);
   }
 
-  function selectCustomer(id: string) {
+  function selectCustomer(id: string, record?: ErpCatalogRecord) {
     setCustomerId(id);
-    const customer = catalogs.customers.find((item) => item.id === id);
+    const customer = (record as Customer | undefined) || catalogs.customers.find((item) => item.id === id);
+    if (record) {
+      setCatalogs((current) => ({
+        ...current,
+        customers: [record as Customer, ...current.customers.filter((item) => item.id !== record.id)],
+      }));
+    }
     setBillingEmails(
       (customer?.contato_cobranca_emails?.length
         ? customer.contato_cobranca_emails
@@ -348,13 +357,13 @@ export function SalesWorkspacePage({
     );
   }
 
-  function selectCatalogItem(rowId: string, id: string) {
+  function selectCatalogItem(rowId: string, id: string, record?: ErpCatalogRecord) {
     setItems((current) =>
       current.map((row) => {
         if (row.rowId !== rowId) return row;
         const catalog =
           row.tipo === "produto" ? catalogs.products : catalogs.services;
-        const selected = catalog.find((item) => item.id === id);
+        const selected = (record as Option | undefined) || catalog.find((item) => item.id === id);
         return {
           ...row,
           itemId: id,
@@ -450,14 +459,12 @@ export function SalesWorkspacePage({
 
   async function runAction(
     record: SaleRecord,
-    action: "confirmar" | "faturar" | "cancelar",
+    action: "confirmar" | "cancelar",
   ) {
     const actionLabel =
       action === "confirmar"
         ? "Confirmar"
-        : action === "faturar"
-          ? "Faturar"
-          : "Cancelar";
+        : "Cancelar";
     if (!window.confirm(`${actionLabel} a venda ${record.numero}?`)) return;
     setLoading(true);
     setError(null);
@@ -562,7 +569,7 @@ export function SalesWorkspacePage({
           const balance = Math.max(
             0,
             Number(item.quantidade || 0) -
-              Number(item.quantidade_faturada || 0),
+              Number(item.quantidade_atendida || 0),
           );
           return {
             id: String(item.id),
@@ -574,7 +581,7 @@ export function SalesWorkspacePage({
         .filter((item) => item.pendente > 0);
       if (!pending.length) {
         await parseResponse(
-          await fetch(`/api/erp/vendas/${record.id}/faturar`, {
+          await fetch(`/api/erp/vendas/${record.id}/atender`, {
             method: "POST",
           }),
         );
@@ -588,7 +595,7 @@ export function SalesWorkspacePage({
       setError(
         fulfillError instanceof Error
           ? fulfillError.message
-          : "Nao foi possivel preparar o faturamento.",
+          : "Nao foi possivel preparar o atendimento.",
       );
     } finally {
       setLoading(false);
@@ -601,7 +608,7 @@ export function SalesWorkspacePage({
     setError(null);
     try {
       await parseResponse(
-        await fetch(`/api/erp/vendas/${fulfillSale.id}/faturar-parcial`, {
+        await fetch(`/api/erp/vendas/${fulfillSale.id}/atender-parcial`, {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
@@ -624,7 +631,7 @@ export function SalesWorkspacePage({
       setError(
         fulfillError instanceof Error
           ? fulfillError.message
-          : "Nao foi possivel faturar os produtos.",
+          : "Nao foi possivel atender os produtos.",
       );
     } finally {
       setSaving(false);
@@ -751,7 +758,6 @@ export function SalesWorkspacePage({
           <option value="">Todas as situacoes</option>
           <option value="rascunho">Rascunho</option>
           <option value="confirmada">Confirmada</option>
-          <option value="faturada">Faturada</option>
           <option value="cancelada">Cancelada</option>
         </select>
       </div>
@@ -769,6 +775,8 @@ export function SalesWorkspacePage({
               <TableHead>{isQuote ? "Validade" : "Data"}</TableHead>
               <TableHead className="text-right">Total</TableHead>
               <TableHead>Situacao</TableHead>
+              {!isQuote ? <TableHead>Atendimento</TableHead> : null}
+              {!isQuote ? <TableHead>Fiscal</TableHead> : null}
               <TableHead className="w-64" />
             </TableRow>
           </TableHeader>
@@ -776,7 +784,7 @@ export function SalesWorkspacePage({
             {loading ? (
               <TableRow>
                 <TableCell
-                  colSpan={6}
+                  colSpan={isQuote ? 6 : 8}
                   className="h-32 text-center text-gray-500"
                 >
                   <Loader2 className="mx-auto mb-2 size-5 animate-spin" />
@@ -786,7 +794,7 @@ export function SalesWorkspacePage({
             ) : records.length === 0 ? (
               <TableRow>
                 <TableCell
-                  colSpan={6}
+                  colSpan={isQuote ? 6 : 8}
                   className="h-32 text-center text-gray-500"
                 >
                   Nenhum {isQuote ? "orcamento" : "pedido"} encontrado.
@@ -803,6 +811,8 @@ export function SalesWorkspacePage({
                   <TableCell className="text-right font-medium">
                     {currency(record.total)}
                   </TableCell>
+                  {!isQuote ? <TableCell><span className={`inline-flex rounded-full border px-2 py-1 text-xs font-medium ${statusTone(record.atendimento_status)}`}>{record.atendimento_status.replaceAll("_", " ")}</span></TableCell> : null}
+                  {!isQuote ? <TableCell><span className={`inline-flex rounded-full border px-2 py-1 text-xs font-medium ${statusTone(record.fiscal_status)}`}>{record.fiscal_status.replaceAll("_", " ")}</span></TableCell> : null}
                   <TableCell>
                     <span
                       className={`inline-flex rounded-full border px-2 py-1 text-xs font-medium ${statusTone(record.status)}`}
@@ -903,13 +913,11 @@ export function SalesWorkspacePage({
                                   <Check className="size-4" />
                                 </Button>
                               ) : null}
-                              {["confirmada", "parcialmente_faturada"].includes(
-                                record.status,
-                              ) ? (
+                              {record.status === "confirmada" && ["pendente", "parcial"].includes(record.atendimento_status) ? (
                                 <Button
                                   size="icon"
                                   variant="ghost"
-                                  title="Registrar faturamento"
+                                  title="Registrar atendimento"
                                   onClick={() => void openFulfill(record)}
                                 >
                                   <PackageCheck className="size-4" />
@@ -961,14 +969,12 @@ export function SalesWorkspacePage({
                 Informacoes {isQuote ? "do orcamento" : "da venda"}
               </h2>
               <div className="grid gap-4 md:grid-cols-4">
-                <FieldSelect
+                <ErpAsyncCatalogSelect
                   label="Cliente *"
+                  type="cliente"
                   value={customerId}
                   onChange={selectCustomer}
-                  options={catalogs.customers.map((item) => [
-                    item.id,
-                    `${item.nome}${item.documento ? ` - ${item.documento}` : ""}`,
-                  ])}
+                  selectedLabel={catalogs.customers.find((item) => item.id === customerId)?.nome}
                 />
                 <FieldSelect
                   label="Vendedor responsavel"
@@ -1106,21 +1112,18 @@ export function SalesWorkspacePage({
                       <option value="produto">Produto</option>
                       <option value="servico">Servico</option>
                     </select>
-                    <select
+                    <ErpAsyncCatalogSelect
+                      type={item.tipo}
                       value={item.itemId}
-                      className="h-10 rounded-md bg-gray-50 px-2 text-sm"
-                      onChange={(event) =>
-                        selectCatalogItem(item.rowId, event.target.value)
-                      }
-                    >
-                      <option value="">Selecione</option>
-                      {catalog.map((option) => (
-                        <option key={option.id} value={option.id}>
-                          {option.codigo ? `${option.codigo} - ` : ""}
-                          {option.nome}
-                        </option>
-                      ))}
-                    </select>
+                      selectedLabel={catalog.find((option) => option.id === item.itemId)?.nome}
+                      onChange={(value, record) => {
+                        setCatalogs((current) => {
+                          const key = item.tipo === "produto" ? "products" : "services";
+                          return { ...current, [key]: [record as Option, ...current[key].filter((option) => option.id !== record.id)] };
+                        });
+                        selectCatalogItem(item.rowId, value, record);
+                      }}
+                    />
                     <Input
                       type="number"
                       min="0.0001"
@@ -1342,7 +1345,7 @@ export function SalesWorkspacePage({
       <Dialog open={fulfillOpen} onOpenChange={setFulfillOpen}>
         <DialogContent className="max-w-[min(760px,96vw)]">
           <DialogHeader>
-            <DialogTitle>Faturar produtos de {fulfillSale?.numero}</DialogTitle>
+            <DialogTitle>Atender produtos de {fulfillSale?.numero}</DialogTitle>
           </DialogHeader>
           <p className="text-sm text-gray-600">
             Informe as quantidades entregues agora. O saldo restante continuara
@@ -1395,7 +1398,7 @@ export function SalesWorkspacePage({
               ) : (
                 <PackageCheck className="size-4" />
               )}
-              Confirmar faturamento
+              Confirmar atendimento
             </Button>
           </div>
         </DialogContent>

@@ -12,6 +12,7 @@ import { Switch } from '@/components/ui/switch'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { Textarea } from '@/components/ui/textarea'
 import { ErpPagination } from '@/products/erp/frontend/components/ErpPagination'
+import { ErpAsyncCatalogSelect } from '@/products/erp/frontend/components/ErpAsyncCatalogSelect'
 import { parseErpResponse } from '@/products/erp/frontend/services/erpProfessionalClient'
 
 type Option = { id: string; nome: string; documento?: string; padrao?: boolean }
@@ -200,7 +201,7 @@ export function PayablesWorkspacePage({ purchaseOnly = false }: { purchaseOnly?:
     </TableBody></Table><ErpPagination page={page} pageSize={50} total={totalRecords} onPageChange={setPage} /></div>
 
     <Dialog open={expenseOpen} onOpenChange={setExpenseOpen}><DialogContent className="max-h-[92vh] max-w-3xl overflow-y-auto"><DialogHeader><DialogTitle>Nova despesa</DialogTitle></DialogHeader><div className="grid gap-4 py-2 md:grid-cols-2">
-      <FormSelect label="Fornecedor *" value={supplierId} onChange={setSupplierId} options={catalogs.suppliers.map((item) => [item.id, item.nome])} /><FormInput label="Descricao *" value={description} onChange={setDescription} />
+      <ErpAsyncCatalogSelect label="Fornecedor *" type="fornecedor" value={supplierId} selectedLabel={catalogs.suppliers.find((item) => item.id === supplierId)?.nome} onChange={(value, record) => { setSupplierId(value); setCatalogs((current) => ({ ...current, suppliers: [record, ...current.suppliers.filter((item) => item.id !== record.id)] })) }} /><FormInput label="Descricao *" value={description} onChange={setDescription} />
       <FormInput label="Valor *" value={amount} onChange={setAmount} type="number" /><FormSelect label="Categoria *" value={categoryId} onChange={setCategoryId} options={catalogs.categories.map((item) => [item.id, item.nome])} />
       <FormInput label="Competencia" value={competence} onChange={setCompetence} type="date" /><FormInput label="Primeiro vencimento" value={dueDate} onChange={setDueDate} type="date" />
       <FormSelect label="Centro de custo" value={costCenterId} onChange={setCostCenterId} options={catalogs.costCenters.map((item) => [item.id, item.nome])} /><FormInput label="Parcelas" value={String(installmentCount)} onChange={(value) => setInstallmentCount(Math.min(48, Math.max(1, Number(value))))} type="number" />

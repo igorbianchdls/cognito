@@ -1,6 +1,6 @@
 'use client'
 
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useDeferredValue, useEffect, useState } from 'react'
 import { CheckCircle2, Download, Loader2, Play, Plus, RefreshCw, Search, Upload } from 'lucide-react'
 
 import { Button } from '@/components/ui/button'
@@ -10,11 +10,12 @@ import { Label } from '@/components/ui/label'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { ErpStatusBadge } from '@/products/erp/frontend/components/ErpStatusBadge'
+import { ErpPagination } from '@/products/erp/frontend/components/ErpPagination'
 import { parseErpResponse } from '@/products/erp/frontend/services/erpProfessionalClient'
 import type { ErpOperationConfig, ErpOperationField } from '@/products/erp/shared/operations'
 
 type OperationRecord = Record<string, unknown> & { id: string }
-type Catalogs = Record<string, Array<{ value: string; label: string }>>
+type CatalogOption = { value: string; label: string }
 
 async function parseResponse<T>(response: Response): Promise<T> {
   return parseErpResponse<T>(response)
@@ -41,14 +42,79 @@ function toneForStatus(value: unknown) {
   return 'default' as const
 }
 
-function FieldControl({ field, value, catalogs, onChange }: {
+function AsyncCatalogSelect({ resource, source, value, onChange, required }: {
+  resource: string
+  source: NonNullable<ErpOperationField['optionSource']>
+  value: string
+  onChange: (value: string) => void
+  required?: boolean
+}) {
+  const [query, setQuery] = useState('')
+  const deferredQuery = useDeferredValue(query)
+  const [options, setOptions] = useState<CatalogOption[]>([])
+  const [selectedLabel, setSelectedLabel] = useState('')
+  const [open, setOpen] = useState(false)
+  const [loading, setLoading] = useState(false)
+
+  useEffect(() => { if (!value) setSelectedLabel('') }, [value])
+
+  useEffect(() => {
+    if (!open) return
+    const controller = new AbortController()
+    setLoading(true)
+    const params = new URLSearchParams({ resource, source, q: deferredQuery, limit: '20' })
+    fetch(`/api/erp/operacoes/catalogos?${params}`, { cache: 'no-store', signal: controller.signal })
+      .then((response) => parseResponse<{ records: CatalogOption[] }>(response))
+      .then((body) => setOptions(body.records))
+      .catch((error) => { if (error instanceof Error && error.name !== 'AbortError') setOptions([]) })
+      .finally(() => { if (!controller.signal.aborted) setLoading(false) })
+    return () => controller.abort()
+  }, [deferredQuery, open, resource, source])
+
+  return (
+    <div className="relative">
+      <Input
+        value={open ? query : selectedLabel}
+        placeholder={value && !selectedLabel ? `Selecionado: ${value}` : 'Buscar e selecionar'}
+        required={required && !value}
+        role="combobox"
+        aria-expanded={open}
+        onFocus={() => { setQuery(''); setOpen(true) }}
+        onBlur={() => window.setTimeout(() => setOpen(false), 120)}
+        onChange={(event) => { setQuery(event.target.value); setOpen(true) }}
+      />
+      {open ? (
+        <div className="absolute z-50 mt-1 max-h-56 w-full overflow-y-auto rounded-md border border-gray-200 bg-white p-1 shadow-lg">
+          {loading ? <div className="flex items-center gap-2 px-3 py-2 text-sm text-gray-500"><Loader2 className="size-4 animate-spin" />Buscando</div> : null}
+          {!loading && !options.length ? <div className="px-3 py-2 text-sm text-gray-500">Nenhum resultado.</div> : null}
+          {!loading ? options.map((option) => (
+            <button
+              key={option.value}
+              type="button"
+              className="block w-full rounded px-3 py-2 text-left text-sm text-gray-700 hover:bg-gray-100"
+              onMouseDown={(event) => event.preventDefault()}
+              onClick={() => { onChange(option.value); setSelectedLabel(option.label); setOpen(false) }}
+            >
+              {option.label}
+            </button>
+          )) : null}
+        </div>
+      ) : null}
+    </div>
+  )
+}
+
+function FieldControl({ field, value, resource, onChange }: {
   field: ErpOperationField
   value: string
-  catalogs: Catalogs
+  resource: string
   onChange: (value: string) => void
 }) {
+  if (field.type === 'select' && field.optionSource) {
+    return <AsyncCatalogSelect resource={resource} source={field.optionSource} value={value} onChange={onChange} required={field.required} />
+  }
   if (field.type === 'select') {
-    const options = field.optionSource ? catalogs[field.optionSource] || [] : field.options || []
+    const options = field.options || []
     return (
       <select
         id={field.key}
@@ -78,12 +144,14 @@ function FieldControl({ field, value, catalogs, onChange }: {
 
 export function ErpOperationsWorkspacePage({ config }: { config: ErpOperationConfig }) {
   const [records, setRecords] = useState<OperationRecord[]>([])
-  const [catalogs, setCatalogs] = useState<Catalogs>({})
+  const [page, setPage] = useState(1)
+  const [total, setTotal] = useState(0)
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
   const [success, setSuccess] = useState('')
   const [query, setQuery] = useState('')
+  const deferredQuery = useDeferredValue(query)
   const [dialogOpen, setDialogOpen] = useState(false)
   const [dialogMode, setDialogMode] = useState<'create' | 'row'>('create')
   const [selectedRecord, setSelectedRecord] = useState<OperationRecord | null>(null)
@@ -96,27 +164,19 @@ export function ErpOperationsWorkspacePage({ config }: { config: ErpOperationCon
     setLoading(true)
     setError('')
     try {
-      const [recordsResponse, catalogsResponse] = await Promise.all([
-        fetch(`/api/erp/operacoes/${encodeURIComponent(config.resource)}`, { cache: 'no-store' }),
-        fetch(`/api/erp/operacoes/catalogos?resource=${encodeURIComponent(config.resource)}`, { cache: 'no-store' }),
-      ])
-      const result = await parseResponse<{ records: OperationRecord[] }>(recordsResponse)
+      const params = new URLSearchParams({ page: String(page), pageSize: '50', query: deferredQuery })
+      const recordsResponse = await fetch(`/api/erp/operacoes/${encodeURIComponent(config.resource)}?${params}`, { cache: 'no-store' })
+      const result = await parseResponse<{ records: OperationRecord[]; total: number }>(recordsResponse)
       setRecords(result.records)
-      if (catalogsResponse.ok) setCatalogs(await catalogsResponse.json() as Catalogs)
+      setTotal(result.total)
     } catch (loadError) {
       setError(loadError instanceof Error ? loadError.message : 'Nao foi possivel carregar os dados.')
     } finally {
       setLoading(false)
     }
-  }, [config.resource])
+  }, [config.resource, deferredQuery, page])
 
   useEffect(() => { void load() }, [load])
-
-  const visibleRecords = useMemo(() => {
-    const normalized = query.trim().toLocaleLowerCase('pt-BR')
-    if (!normalized) return records
-    return records.filter((record) => Object.values(record).some((value) => String(value ?? '').toLocaleLowerCase('pt-BR').includes(normalized)))
-  }, [query, records])
 
   const currencyColumn = config.columns.find((column) => column.kind === 'currency')
   const monetaryTotal = currencyColumn
@@ -209,7 +269,7 @@ export function ErpOperationsWorkspacePage({ config }: { config: ErpOperationCon
         </div>
         <div className="flex flex-wrap items-center gap-2">
           <Button variant="outline" size="sm" asChild>
-            <a href={`/api/erp/operacoes/${encodeURIComponent(config.resource)}?format=csv`}><Download className="size-4" />Exportar</a>
+            <a href={`/api/erp/operacoes/${encodeURIComponent(config.resource)}?format=csv&query=${encodeURIComponent(deferredQuery)}`}><Download className="size-4" />Exportar</a>
           </Button>
           {config.moduleId === 'conciliacao-bancaria' ? <Button variant="outline" size="sm" onClick={() => { setError(''); setOfxOpen(true) }}><Upload className="size-4" />Importar OFX</Button> : null}
           {config.processAction ? <Button variant="outline" size="sm" onClick={() => void process()} disabled={saving}><Play className="size-4" />{config.processAction.label}</Button> : null}
@@ -218,9 +278,9 @@ export function ErpOperationsWorkspacePage({ config }: { config: ErpOperationCon
       </header>
 
       <section className="grid border-y border-gray-200 bg-gray-50/60 sm:grid-cols-3">
-        <div className="px-4 py-4"><div className="text-xs font-medium text-gray-500">Registros</div><div className="mt-1 text-xl font-semibold text-gray-950">{records.length}</div></div>
-        <div className="border-t border-gray-200 px-4 py-4 sm:border-l sm:border-t-0"><div className="text-xs font-medium text-gray-500">Exigem atencao</div><div className="mt-1 text-xl font-semibold text-gray-950">{attentionCount}</div></div>
-        <div className="border-t border-gray-200 px-4 py-4 sm:border-l sm:border-t-0"><div className="text-xs font-medium text-gray-500">{currencyColumn?.label || 'Atualizacao'}</div><div className="mt-1 text-xl font-semibold text-gray-950">{monetaryTotal === null ? 'Em tempo real' : formatValue(monetaryTotal, 'currency')}</div></div>
+        <div className="px-4 py-4"><div className="text-xs font-medium text-gray-500">Registros</div><div className="mt-1 text-xl font-semibold text-gray-950">{total}</div></div>
+        <div className="border-t border-gray-200 px-4 py-4 sm:border-l sm:border-t-0"><div className="text-xs font-medium text-gray-500">Atencao nesta pagina</div><div className="mt-1 text-xl font-semibold text-gray-950">{attentionCount}</div></div>
+        <div className="border-t border-gray-200 px-4 py-4 sm:border-l sm:border-t-0"><div className="text-xs font-medium text-gray-500">{currencyColumn ? `${currencyColumn.label} nesta pagina` : 'Atualizacao'}</div><div className="mt-1 text-xl font-semibold text-gray-950">{monetaryTotal === null ? 'Em tempo real' : formatValue(monetaryTotal, 'currency')}</div></div>
       </section>
 
       {error && !dialogOpen ? <div className="rounded-md border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">{error}</div> : null}
@@ -229,7 +289,7 @@ export function ErpOperationsWorkspacePage({ config }: { config: ErpOperationCon
       <div className="flex items-center gap-2">
         <div className="relative max-w-md flex-1">
           <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-gray-400" />
-          <Input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Buscar nesta lista" className="h-10 pl-9" />
+          <Input value={query} onChange={(event) => { setQuery(event.target.value); setPage(1) }} placeholder="Buscar em todos os registros" className="h-10 pl-9" />
         </div>
         <Button variant="ghost" size="icon" onClick={() => void load()} title="Atualizar"><RefreshCw className="size-4" /></Button>
       </div>
@@ -241,7 +301,7 @@ export function ErpOperationsWorkspacePage({ config }: { config: ErpOperationCon
           <Table>
             <TableHeader><TableRow className="hover:bg-white">{config.columns.map((column) => <TableHead key={column.key} className="h-10 whitespace-nowrap bg-gray-50 text-xs font-semibold uppercase tracking-normal text-gray-500">{column.label}</TableHead>)}{config.rowAction ? <TableHead className="w-28 bg-gray-50" /> : null}</TableRow></TableHeader>
             <TableBody>
-              {visibleRecords.length ? visibleRecords.map((record) => (
+              {records.length ? records.map((record) => (
                 <TableRow key={record.id}>
                   {config.columns.map((column) => (
                     <TableCell key={column.key} className="whitespace-nowrap text-sm text-gray-700">
@@ -253,6 +313,7 @@ export function ErpOperationsWorkspacePage({ config }: { config: ErpOperationCon
               )) : <TableRow><TableCell colSpan={config.columns.length + (config.rowAction ? 1 : 0)} className="h-32 text-center text-sm text-gray-500">Nenhum registro encontrado.</TableCell></TableRow>}
             </TableBody>
           </Table>
+          <ErpPagination page={page} pageSize={50} total={total} onPageChange={setPage} />
         </div>
       )}
 
@@ -263,7 +324,7 @@ export function ErpOperationsWorkspacePage({ config }: { config: ErpOperationCon
             {activeFields.map((field) => (
               <div key={field.key} className="space-y-2">
                 <Label htmlFor={field.key}>{field.label}{field.required ? ' *' : ''}</Label>
-                <FieldControl field={field} value={values[field.key] || ''} catalogs={catalogs} onChange={(value) => setValues((current) => ({ ...current, [field.key]: value }))} />
+                <FieldControl field={field} value={values[field.key] || ''} resource={activeResource} onChange={(value) => setValues((current) => ({ ...current, [field.key]: value }))} />
               </div>
             ))}
           </div>
@@ -279,7 +340,7 @@ export function ErpOperationsWorkspacePage({ config }: { config: ErpOperationCon
         <DialogContent className="sm:max-w-lg">
           <DialogHeader><DialogTitle>Importar extrato OFX</DialogTitle><DialogDescription>Transacoes repetidas sao identificadas automaticamente pelo banco e pelo arquivo.</DialogDescription></DialogHeader>
           <div className="space-y-4 py-2">
-            <div className="space-y-2"><Label htmlFor="ofx-account">Conta financeira *</Label><select id="ofx-account" value={ofxAccountId} onChange={(event) => setOfxAccountId(event.target.value)} className="h-10 w-full rounded-md border border-gray-200 bg-white px-3 text-sm outline-none focus:border-gray-400"><option value="">Selecione</option>{(catalogs.accounts || []).map((account) => <option key={account.value} value={account.value}>{account.label}</option>)}</select></div>
+            <div className="space-y-2"><Label htmlFor="ofx-account">Conta financeira *</Label><AsyncCatalogSelect resource={config.resource} source="accounts" value={ofxAccountId} onChange={setOfxAccountId} required /></div>
             <div className="space-y-2"><Label htmlFor="ofx-file">Arquivo OFX *</Label><Input id="ofx-file" type="file" accept=".ofx,application/x-ofx" onChange={(event) => setOfxFile(event.target.files?.[0] || null)} /></div>
             {error ? <div className="rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">{error}</div> : null}
           </div>

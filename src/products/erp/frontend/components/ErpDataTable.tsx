@@ -35,7 +35,7 @@ function formatCellValue(record: ErpEntityRecord, column: ErpTableColumn, config
 
 function ActionIcon({ action }: { action: ErpEntityAction }) {
   if (action.id === 'confirmar') return <IconCheck className="size-4" stroke={1.8} />
-  if (action.id === 'faturar') return <IconPackageExport className="size-4" stroke={1.8} />
+  if (action.id === 'atender') return <IconPackageExport className="size-4" stroke={1.8} />
   if (action.id === 'cancelar') return <IconX className="size-4" stroke={1.8} />
   return <IconReceipt className="size-4" stroke={1.8} />
 }

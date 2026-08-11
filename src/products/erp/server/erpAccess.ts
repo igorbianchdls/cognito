@@ -1,4 +1,5 @@
 import { runQuery } from '@/lib/postgres'
+import { setErpDatabaseContext } from '@/lib/erpDatabaseContext'
 import { resolveAuthTenant } from '@/products/auth/server/authTenantResolver'
 import type { AuthTenantContext } from '@/products/auth/shared/authContracts'
 import { ERP_CAPABILITIES, type ErpAccessProfile, type ErpCapability } from '@/products/erp/shared/professionalContracts'
@@ -26,6 +27,7 @@ export async function resolveErpSession(): Promise<ErpAccessContext | null> {
   const capabilities = tenant.role === 'owner' || tenant.role === 'admin'
     ? [...ERP_CAPABILITIES]
     : rows[0]?.capabilities || []
+  setErpDatabaseContext({ tenantId: tenant.tenantId, userId: tenant.sharedUserId })
   return { ...tenant, erpProfile: profile, capabilities }
 }
 

@@ -34,6 +34,7 @@ import {
 } from "@/components/ui/table";
 import { Textarea } from "@/components/ui/textarea";
 import { useErpAccess } from "@/products/erp/frontend/hooks/useErpAccess";
+import { ErpAsyncCatalogSelect, type ErpCatalogRecord } from "@/products/erp/frontend/components/ErpAsyncCatalogSelect";
 import {
   parseErpResponse,
   formatErpCurrency,
@@ -208,13 +209,13 @@ export function ServiceOrdersWorkspacePage() {
     setError(null);
   }
 
-  function selectItem(rowId: string, itemId: string) {
+  function selectItem(rowId: string, itemId: string, record?: ErpCatalogRecord) {
     setItems((current) =>
       current.map((row) => {
         if (row.rowId !== rowId) return row;
         const catalog =
           row.tipo === "produto" ? catalogs.products : catalogs.services;
-        const selected = catalog.find((option) => option.id === itemId);
+        const selected = (record as Option | undefined) || catalog.find((option) => option.id === itemId);
         return {
           ...row,
           itemId,
@@ -542,11 +543,15 @@ export function ServiceOrdersWorkspacePage() {
               <section className="grid gap-4">
                 <h2 className="text-sm font-semibold">Atendimento</h2>
                 <div className="grid gap-4 md:grid-cols-4">
-                  <SelectField
+                  <ErpAsyncCatalogSelect
                     label="Cliente *"
+                    type="cliente"
                     value={clienteId}
-                    onChange={setClienteId}
-                    options={catalogs.customers}
+                    onChange={(value, record) => {
+                      setClienteId(value);
+                      setCatalogs((current) => ({ ...current, customers: [record as Option, ...current.customers.filter((item) => item.id !== record.id)] }));
+                    }}
+                    selectedLabel={catalogs.customers.find((item) => item.id === clienteId)?.nome}
                   />
                   <SelectField
                     label="Responsavel"
@@ -642,20 +647,18 @@ export function ServiceOrdersWorkspacePage() {
                         <option value="servico">Servico</option>
                         <option value="produto">Produto</option>
                       </select>
-                      <select
-                        className="h-10 rounded-md bg-white px-2 text-sm"
+                      <ErpAsyncCatalogSelect
+                        type={item.tipo}
                         value={item.itemId}
-                        onChange={(event) =>
-                          selectItem(item.rowId, event.target.value)
-                        }
-                      >
-                        <option value="">Selecione</option>
-                        {options.map((option) => (
-                          <option key={option.id} value={option.id}>
-                            {option.nome}
-                          </option>
-                        ))}
-                      </select>
+                        selectedLabel={options.find((option) => option.id === item.itemId)?.nome}
+                        onChange={(value, record) => {
+                          setCatalogs((current) => {
+                            const key = item.tipo === "produto" ? "products" : "services";
+                            return { ...current, [key]: [record as Option, ...current[key].filter((option) => option.id !== record.id)] };
+                          });
+                          selectItem(item.rowId, value, record);
+                        }}
+                      />
                       {(["quantidade", "valor", "desconto"] as const).map(
                         (key) => (
                           <Input

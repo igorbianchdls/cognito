@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 
 import { runQuery } from '@/lib/postgres'
+import { runWithErpDatabaseContext } from '@/lib/erpDatabaseContext'
 import { erpErrorResponse } from '@/products/erp/server/erpApi'
 import { runErpAutomation } from '@/products/erp/server/erpProfessionalRepository'
 
@@ -55,7 +56,10 @@ export async function GET(request: Request) {
     const results: AutomationResult[] = []
     for (let index = 0; index < tenants.length; index += tenantConcurrency) {
       const batch = tenants.slice(index, index + tenantConcurrency)
-      const batchResults = await Promise.all(batch.map((tenant) => runTenantAutomations(tenant, competence)))
+      const batchResults = await Promise.all(batch.map((tenant) => runWithErpDatabaseContext(
+        { tenantId: tenant.tenant_id, userId: tenant.actor_id },
+        () => runTenantAutomations(tenant, competence),
+      )))
       results.push(...batchResults.flat())
     }
     return NextResponse.json({

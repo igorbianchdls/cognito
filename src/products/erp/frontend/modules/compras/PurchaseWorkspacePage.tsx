@@ -36,6 +36,7 @@ import {
 import { Textarea } from "@/components/ui/textarea";
 import { ErpPagination } from "@/products/erp/frontend/components/ErpPagination";
 import { ErpDocumentDetailsDialog } from "@/products/erp/frontend/components/ErpDocumentDetailsDialog";
+import { ErpAsyncCatalogSelect, type ErpCatalogRecord } from "@/products/erp/frontend/components/ErpAsyncCatalogSelect";
 import { useErpAccess } from "@/products/erp/frontend/hooks/useErpAccess";
 
 type CatalogItem = {
@@ -349,10 +350,10 @@ export function PurchaseWorkspacePage() {
     );
   }
 
-  function selectItem(rowId: string, itemId: string) {
+  function selectItem(rowId: string, itemId: string, record?: ErpCatalogRecord) {
     const catalog =
       tipoCompra === "produto" ? catalogs.products : catalogs.services;
-    const selected = catalog.find((item) => item.id === itemId);
+    const selected = (record as CatalogItem | undefined) || catalog.find((item) => item.id === itemId);
     setItems((current) =>
       current.map((item) =>
         item.rowId === rowId
@@ -913,14 +914,15 @@ export function PurchaseWorkspacePage() {
                     ["compra", "Compra"],
                   ]}
                 />
-                <FieldSelect
+                <ErpAsyncCatalogSelect
                   label="Fornecedor *"
+                  type="fornecedor"
                   value={fornecedorId}
-                  onChange={setFornecedorId}
-                  options={catalogs.suppliers.map((item) => [
-                    item.id,
-                    `${item.nome}${item.documento ? ` - ${item.documento}` : ""}`,
-                  ])}
+                  onChange={(value, record) => {
+                    setFornecedorId(value);
+                    setCatalogs((current) => ({ ...current, suppliers: [record as CatalogItem, ...current.suppliers.filter((item) => item.id !== record.id)] }));
+                  }}
+                  selectedLabel={catalogs.suppliers.find((item) => item.id === fornecedorId)?.nome}
                 />
                 <FieldInput
                   label="Numero"
@@ -999,24 +1001,18 @@ export function PurchaseWorkspacePage() {
                     key={item.rowId}
                     className="grid gap-2 rounded-md bg-gray-50 p-3 lg:grid-cols-[2fr_1.2fr_90px_110px_110px_40px]"
                   >
-                    <select
+                    <ErpAsyncCatalogSelect
+                      type={tipoCompra}
                       value={item.itemId}
-                      className="h-10 rounded-md bg-white px-3 text-sm"
-                      onChange={(event) =>
-                        selectItem(item.rowId, event.target.value)
-                      }
-                    >
-                      <option value="">
-                        Selecione{" "}
-                        {tipoCompra === "produto" ? "o produto" : "o servico"}
-                      </option>
-                      {itemCatalog.map((catalogItem) => (
-                        <option key={catalogItem.id} value={catalogItem.id}>
-                          {catalogItem.codigo ? `${catalogItem.codigo} - ` : ""}
-                          {catalogItem.nome}
-                        </option>
-                      ))}
-                    </select>
+                      selectedLabel={itemCatalog.find((catalogItem) => catalogItem.id === item.itemId)?.nome}
+                      onChange={(value, record) => {
+                        setCatalogs((current) => {
+                          const key = tipoCompra === "produto" ? "products" : "services";
+                          return { ...current, [key]: [record as CatalogItem, ...current[key].filter((catalogItem) => catalogItem.id !== record.id)] };
+                        });
+                        selectItem(item.rowId, value, record);
+                      }}
+                    />
                     <Input
                       value={item.detalhes}
                       placeholder="Detalhes do item"

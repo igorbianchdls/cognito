@@ -1,0 +1,19 @@
+
+> cognito@0.1.0 dev C:\Users\Administrador\Documents\creatto\cognito\cognito
+> next dev "-p" "3000"
+
+   ▲ Next.js 16.0.10 (Turbopack)
+   - Local:         http://localhost:3000
+   - Network:       http://192.168.0.14:3000
+   - Environments: .env.local
+
+ ✓ Starting...
+ ○ Compiling proxy ...
+ ✓ Ready in 20.3s
+ ○ Compiling /_not-found/page ...
+
+[35m
+[Clerk]:[0m You are running in keyless mode.
+You can [35mclaim your keys[0m by visiting https://dashboard.clerk.com/apps/claim?framework=nextjs&token=0vovn4aaacknyyjgf8qrkuhzzpn60lf7t052rw0f&return_url=http%3A%2F%2Flocalhost%3A3000%2F
+
+ GET /erp 404 in 24.6s (compile: 21.8s, proxy.ts: 964ms, render: 1833ms)

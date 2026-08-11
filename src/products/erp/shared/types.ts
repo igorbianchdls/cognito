@@ -111,7 +111,7 @@ export type ErpEntityField = {
 }
 
 export type ErpEntityAction = {
-  id: 'confirmar' | 'faturar' | 'cancelar' | 'baixar'
+  id: 'confirmar' | 'atender' | 'cancelar' | 'baixar'
   label: string
   tone?: 'default' | 'success' | 'warning' | 'danger'
   confirmMessage?: string
