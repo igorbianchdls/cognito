@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react'
 import { SiMercadopago, SiNubank } from '@icons-pack/react-simple-icons'
-import { AbsoluteFill, Img, interpolate, Sequence, staticFile, useCurrentFrame } from 'remotion'
+import { AbsoluteFill, Img, interpolate, Sequence, staticFile, useCurrentFrame, useVideoConfig } from 'remotion'
 import { Check, Landmark, MousePointer2, ReceiptText, Scale } from 'lucide-react'
 
 import {
@@ -150,7 +150,9 @@ const fiscalRows = [
 ]
 
 function InvoiceDocumentPreview({ frame }: { frame: number }) {
+  const { height, width } = useVideoConfig()
   const show = p(frame, 55, 64)
+  const squareOffset = height >= width ? 170 : 0
 
   return (
     <div
@@ -163,7 +165,7 @@ function InvoiceDocumentPreview({ frame }: { frame: number }) {
         opacity: show,
         padding: '26px 30px 24px',
         position: 'absolute',
-        top: 64,
+        top: 64 + squareOffset,
         transform: `translateX(-50%) translateY(${(1 - show) * 18}px) scale(${0.96 + show * 0.04})`,
         width: 510,
         zIndex: 20,
@@ -230,6 +232,7 @@ function SyncScene({
   title: string
 }) {
   const frame = useCurrentFrame()
+  const { height, width } = useVideoConfig()
   const cardFrame = Math.max(0, frame - 12) * speed
   const cardScale = rows.length > 6 ? 0.84 : 0.92
   const cardWidth = 940 / cardScale
@@ -240,9 +243,10 @@ function SyncScene({
   const cursorOpacity = invoicePreview ? p(frame, 36, 42) * p(frame, 55, 61, [1, 0]) : 0
   const cardBlur = invoicePreview ? p(frame, 54, 62, [0, 5]) : 0
   const cardOpacity = invoicePreview ? p(frame, 54, 62, [1, 0.66]) : 1
+  const squareOffset = height >= width ? 170 : 0
   return (
     <Scene duration={duration}>
-      <div style={{ left: '50%', position: 'absolute', top: 30, transform: 'translateX(-50%)', width: 940 }}>
+      <div style={{ left: '50%', position: 'absolute', top: 30 + squareOffset, transform: 'translateX(-50%)', width: 940 }}>
         <div style={{ color: '#242424', fontSize: 18, fontWeight: 440, lineHeight: 1.4, opacity: textIn, transform: `translateY(${(1 - textIn) * 8}px)` }}>
           {assistantText.slice(0, typedCharacters)}
           {showTextCursor ? <span style={{ borderRight: '1.5px solid #242424', marginLeft: 2 }}>&nbsp;</span> : null}
@@ -434,10 +438,10 @@ export function OttoFinanceAi50sVideo() {
       <Sequence from={90} durationInFrames={75}><ExactPromptInputScene duration={75} label="Por onde começamos?" prompt="Emita as notas fiscais das minhas vendas recentes." /></Sequence>
       <Sequence from={165} durationInFrames={90}><SyncScene assistantText="Vou buscar as oito vendas mais recentes e validar clientes, serviços e valores antes da emissão." duration={90} rows={recentSalesRows} speed={2.3} subtitle="Vendas confirmadas, clientes e valores prontos para faturar" title="Últimas 8 vendas" /></Sequence>
       <Sequence from={255} durationInFrames={180}><SyncScene assistantText="As vendas estão validadas. Agora vou emitir as oito notas, enviá-las e atualizar o financeiro." duration={180} invoicePreview rows={invoiceEmissionRows} speed={2.3} subtitle="Notas autorizadas, enviadas e vinculadas ao financeiro" title="Emissão de 8 notas fiscais" /></Sequence>
-      <Sequence from={435} durationInFrames={45}><ExactPromptInputScene duration={45} label="Por onde começamos?" prompt="Concilie as movimentações bancárias e depois classifique as despesas." /></Sequence>
-      <Sequence from={480} durationInFrames={90}><SyncScene assistantText="Vou cruzar cada movimentação bancária com os lançamentos do Otto e confirmar as correspondências." duration={90} kind="reconciliation" rows={reconciliationRows} subtitle="Bancos, cartões e lançamentos do Otto" title="Conciliação bancária" /></Sequence>
-      <Sequence from={570} durationInFrames={75}><SyncScene assistantText="Agora vou classificar cada despesa por categoria e atualizar os lançamentos correspondentes." duration={75} rows={expenseRows} subtitle="Fornecedores, categorias, valores e status" title="Classificação de despesas" /></Sequence>
-      <Sequence from={645} durationInFrames={45}><ExactPromptInputScene duration={45} label="Por onde começamos?" prompt="Mostre a projeção do fluxo de caixa dos próximos 6 meses." /></Sequence>
+      <Sequence from={435} durationInFrames={50}><ExactPromptInputScene duration={50} label="Por onde começamos?" prompt="Concilie as movimentações bancárias e depois classifique as despesas." /></Sequence>
+      <Sequence from={485} durationInFrames={85}><SyncScene assistantText="Vou cruzar cada movimentação bancária com os lançamentos do Otto e confirmar as correspondências." duration={85} kind="reconciliation" rows={reconciliationRows} speed={2.3} subtitle="Bancos, cartões e lançamentos do Otto" title="Conciliação bancária" /></Sequence>
+      <Sequence from={570} durationInFrames={70}><SyncScene assistantText="Agora vou classificar cada despesa por categoria e atualizar os lançamentos correspondentes." duration={70} rows={expenseRows} speed={2.3} subtitle="Fornecedores, categorias, valores e status" title="Classificação de despesas" /></Sequence>
+      <Sequence from={640} durationInFrames={50}><ExactPromptInputScene duration={50} label="Por onde começamos?" prompt="Mostre a projeção do fluxo de caixa dos próximos 6 meses." /></Sequence>
       <Sequence from={690} durationInFrames={105}><CashFlowChart duration={105} /></Sequence>
       <Sequence from={795} durationInFrames={90}><SyncScene assistantText="Vou identificar os recebimentos vencidos, enviar as cobranças e programar os próximos acompanhamentos." duration={90} rows={collectionRows} subtitle="Clientes em atraso e acompanhamentos automáticos" title="Cobranças e recebimentos" /></Sequence>
       <Sequence from={885} durationInFrames={75}><ExactPromptInputScene duration={75} label="Por onde começamos?" prompt="Quais clientes concentram os valores em atraso?" /></Sequence>
