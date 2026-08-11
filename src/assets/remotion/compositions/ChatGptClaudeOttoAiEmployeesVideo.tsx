@@ -39,6 +39,7 @@ export type OttoAiEmployeesResultRow = {
   initials: string
   name: string
   status: string
+  statusIcon?: ComponentType<{ className?: string; size?: number }>
   tone: string
   value?: string
 }
@@ -270,6 +271,7 @@ function BrandIconBox({ row }: { row: Pick<ResultRow, 'icon' | 'initials' | 'ton
 function ResultRowItem({ index, localFrame, row }: { index: number; localFrame: number; row: ResultRow }) {
   const rowIn = p(localFrame, 8 + index * 10, 22 + index * 10)
   const complete = localFrame >= 62 + index * 10
+  const StatusIcon = row.statusIcon
   const alert = row.status.includes('Revisar') || row.status.includes('Atraso') || row.status.includes('Risco') || row.status.includes('Pendente') || row.status.includes('Divergencia')
   const statusBackground = row.background ?? (alert ? '#fff7ed' : '#ecfdf3')
   const statusColor = row.background ? row.tone : alert ? '#c2410c' : '#166534'
@@ -282,7 +284,10 @@ function ResultRowItem({ index, localFrame, row }: { index: number; localFrame: 
         <span style={{ color: '#8a8a8a', fontSize: 15, fontWeight: 420, lineHeight: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{row.description}</span>
       </div>
       <span style={{ color: '#111111', fontSize: 18, fontWeight: 540, whiteSpace: 'nowrap' }}>{row.value}</span>
-      <span style={{ background: statusBackground, borderRadius: 999, color: statusColor, fontSize: 16, fontWeight: 760, padding: '8px 11px', whiteSpace: 'nowrap' }}>{complete ? row.status : 'Sincronizando'}</span>
+      <div style={{ alignItems: 'center', display: 'flex', gap: 7 }}>
+        {complete && StatusIcon ? <StatusIcon className="h-5 w-5" size={19} /> : null}
+        <span style={{ background: statusBackground, borderRadius: 999, color: statusColor, fontSize: 16, fontWeight: 760, padding: '8px 11px', whiteSpace: 'nowrap' }}>{complete ? row.status : 'Sincronizando'}</span>
+      </div>
       <Spinner active={!complete} />
     </div>
   )
