@@ -17,9 +17,9 @@ import {
 } from 'lucide-react'
 import { AbsoluteFill, interpolate, useCurrentFrame } from 'remotion'
 
-import { CHATGPT_PLUS_SYNC_PROMPT, ChatGptPlusSyncConversation } from './ChatGptPlusSyncConversation'
+import { CHATGPT_PLUS_PROMPT_SCHEDULE, ChatGptPlusSyncConversation } from './ChatGptPlusSyncConversation'
 
-export const CHATGPT_PLUS_STATIC_UI_DURATION = 600
+export const CHATGPT_PLUS_STATIC_UI_DURATION = 1650
 
 const FONT = 'Arial, Helvetica, sans-serif'
 const INK = '#0d0d0d'
@@ -113,17 +113,17 @@ function Sidebar() {
 
 function MessageComposer() {
   const frame = useCurrentFrame()
-  const prompt = CHATGPT_PLUS_SYNC_PROMPT
-  const isWriting = frame < 53
-  const typedCharacters = Math.floor(p(frame, 3, 47, [0, prompt.length]))
+  const activePrompt = CHATGPT_PLUS_PROMPT_SCHEDULE.find((prompt) => frame >= prompt.start && frame < prompt.send)
+  const typedCharacters = activePrompt ? Math.floor(p(frame, activePrompt.start + 3, activePrompt.typingEnd, [0, activePrompt.text.length])) : 0
+  const isWriting = Boolean(activePrompt)
 
   return (
     <>
       <div style={{ bottom: 95, color: '#999999', fontSize: 12, left: '50%', position: 'absolute', transform: 'translateX(-50%)' }}>O ChatGPT pode cometer erros. Por isso, lembre-se de conferir informações relevantes.</div>
       <div style={{ alignItems: 'center', background: '#ffffff', border: '1px solid #e1e1e1', borderRadius: 28, bottom: 28, boxShadow: '0 3px 16px rgba(0,0,0,0.08)', display: 'flex', height: 54, left: '50%', padding: '0 8px 0 18px', position: 'absolute', transform: 'translateX(-50%)', width: 768 }}>
         <Plus size={21} strokeWidth={1.7} />
-        <span style={{ color: isWriting ? INK : '#8b8b8b', fontSize: 16, marginLeft: 18 }}>{isWriting ? prompt.slice(0, typedCharacters) : 'Pergunte ao ChatGPT'}</span>
-        <span style={{ color: '#8b8b8b', fontSize: 14, marginLeft: 'auto' }}>Instantâneo⌄</span>
+        <span style={{ color: isWriting ? INK : '#8b8b8b', flex: 1, fontSize: 16, marginLeft: 18, minWidth: 0, overflow: 'hidden', whiteSpace: 'nowrap' }}>{activePrompt ? activePrompt.text.slice(0, typedCharacters) : 'Pergunte ao ChatGPT'}</span>
+        <span style={{ color: '#8b8b8b', flex: 'none', fontSize: 14, marginLeft: 18 }}>Instantâneo⌄</span>
         <Mic size={19} style={{ marginLeft: 24 }} strokeWidth={1.8} />
         <span style={{ alignItems: 'center', background: '#050505', borderRadius: 999, color: '#ffffff', display: 'flex', height: 38, justifyContent: 'center', marginLeft: 17, width: 38 }}>{isWriting ? <ArrowUp size={21} strokeWidth={2.2} /> : <AudioLines size={21} strokeWidth={2} />}</span>
       </div>
