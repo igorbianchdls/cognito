@@ -19,7 +19,6 @@ import {
 import { LandingHeader } from '@/assets/landingpages/otto/components/LandingHeader'
 import { FinancialBenefitsSection } from '@/assets/landingpages/otto/components/FinancialBenefitsSection'
 import { PricingSection } from '@/assets/landingpages/otto/components/PricingSection'
-import { ProductShowcase } from '@/assets/landingpages/otto/components/ProductShowcase'
 import { frequentlyAskedQuestions } from '@/assets/landingpages/otto/landingContent'
 import BlingIcon from '@/components/icons/BlingIcon'
 import ContaAzulIcon from '@/components/icons/ContaAzulIcon'
@@ -129,9 +128,6 @@ export function OttoLandingPage() {
             <AnimatedHeroPrompt />
           </div>
 
-          <div className="mt-10 sm:mt-14">
-            <ProductShowcase />
-          </div>
         </div>
       </section>
 
