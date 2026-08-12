@@ -1,5 +1,5 @@
 export const fiscalNavigation = [
-  { label: 'ChatGPT', href: '#chatgpt' },
+  { label: 'ChatGPT e Claude', href: '#chatgpt' },
   { label: 'Recursos', href: '#recursos' },
   { label: 'Como funciona', href: '#como-funciona' },
   { label: 'Planos', href: '#planos' },
@@ -8,39 +8,39 @@ export const fiscalNavigation = [
 
 export const fiscalFaq = [
   {
-    question: 'Como funciona a integração com o ChatGPT?',
-    answer: 'Você pode pedir a preparação de uma nota, consultar documentos e acompanhar situações por conversa. A Otto acessa somente os dados autorizados e mantém a operação fiscal organizada.',
+    question: 'Posso emitir pelo ChatGPT e Claude?',
+    answer: 'Você pode pedir a preparação da nota, consultar documentos e acompanhar situações pelo ChatGPT ou Claude. A Otto acessa somente os dados autorizados e mantém a operação fiscal organizada.',
   },
   {
-    question: 'A nota é transmitida automaticamente pelo ChatGPT?',
-    answer: 'Não. O ChatGPT pode ajudar a preparar e consultar a operação, mas a transmissão exige revisão e confirmação na Otto.',
+    question: 'A Otto preenche os dados automaticamente?',
+    answer: 'A Otto pode localizar a venda e reunir cliente, itens, valores e configurações fiscais autorizadas. Os dados ficam prontos para revisão antes da transmissão.',
   },
   {
-    question: 'Posso localizar XML e DANFE pelo ChatGPT?',
-    answer: 'Sim. Quando o documento estiver disponível e o usuário tiver permissão, a Otto pode localizar a emissão e disponibilizar os arquivos correspondentes.',
+    question: 'Preciso confirmar antes da emissão?',
+    answer: 'Sim. A conversa ajuda a preparar a operação, mas a transmissão exige revisão e confirmação na Otto.',
   },
   {
-    question: 'Qual é a diferença entre NF-e e NFS-e?',
-    answer: 'A NF-e registra a venda de produtos e mercadorias. A NFS-e registra a prestação de serviços e segue as regras do município do prestador.',
+    question: 'Quais tipos de nota são suportados?',
+    answer: 'A NF-e registra vendas de produtos e mercadorias. A NFS-e registra prestações de serviços e segue as regras do município. A disponibilidade deve ser confirmada durante a configuração.',
   },
   {
-    question: 'Preciso de certificado digital?',
+    question: 'A emissão funciona em qualquer município?',
+    answer: 'A disponibilidade de NFS-e depende da integração e das regras de cada município. A compatibilidade deve ser confirmada durante a configuração fiscal da empresa.',
+  },
+  {
+    question: 'Como funciona o certificado digital?',
     answer: 'Para NF-e, normalmente é necessário um certificado digital A1 válido. Na NFS-e, a exigência depende do município e pode envolver certificado ou credenciais municipais.',
   },
   {
-    question: 'Consigo emitir uma nota a partir de uma venda?',
-    answer: 'Sim. Você pode solicitar pelo ChatGPT, e os dados da venda, do cliente e dos itens preenchem o documento fiscal para revisão antes do envio.',
+    question: 'A nota pode ser enviada ao cliente?',
+    answer: 'Depois da autorização, os documentos correspondentes podem ser organizados para envio ao cliente conforme o fluxo configurado pela empresa.',
   },
   {
-    question: 'O XML e o DANFE ficam armazenados?',
-    answer: 'Sim. Os documentos autorizados permanecem organizados no histórico fiscal para consulta e download quando necessário.',
+    question: 'O XML e o documento auxiliar ficam armazenados?',
+    answer: 'Os documentos autorizados permanecem organizados no histórico fiscal para consulta e download quando necessário.',
   },
   {
-    question: 'É possível cancelar uma nota?',
-    answer: 'Quando o documento e o prazo permitirem, o cancelamento pode ser solicitado pela própria operação fiscal e acompanhado até a resposta do órgão autorizador.',
-  },
-  {
-    question: 'A emissão de NFS-e funciona em qualquer cidade?',
-    answer: 'A disponibilidade depende da integração e das regras de cada município. A compatibilidade deve ser confirmada durante a configuração fiscal da empresa.',
+    question: 'O financeiro é atualizado depois da emissão?',
+    answer: 'A nota pode permanecer vinculada à venda e ao lançamento correspondente, mantendo documento e operação financeira no mesmo histórico.',
   },
 ]

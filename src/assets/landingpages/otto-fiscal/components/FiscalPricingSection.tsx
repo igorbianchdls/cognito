@@ -5,15 +5,15 @@ const fiscalPlans = [
   {
     name: 'Inicial',
     price: '69',
-    description: 'Para começar a emitir com organização e segurança.',
-    features: ['1 CNPJ', 'Emissão de NF-e ou NFS-e', 'ChatGPT conectado à Otto', 'XML e documento auxiliar organizados', 'Acompanhamento de situação', 'Suporte por e-mail'],
+    description: 'Para começar a emitir por conversa com organização e segurança.',
+    features: ['1 CNPJ', 'Emissão de NF-e ou NFS-e', 'ChatGPT e Claude conectados à Otto', 'XML e documento auxiliar organizados', 'Acompanhamento de situação', 'Suporte por e-mail'],
     featured: false,
   },
   {
     name: 'Negócios',
     price: '129',
     description: 'Para quem emite com frequência e quer ganhar tempo.',
-    features: ['1 CNPJ', 'Emissão de NF-e e NFS-e', 'Notas a partir de vendas pelo ChatGPT', 'Consultas fiscais por conversa', 'Cancelamento e eventos fiscais', 'Histórico completo', 'Suporte prioritário'],
+    features: ['1 CNPJ', 'Emissão de NF-e e NFS-e', 'Notas a partir de vendas pelo ChatGPT ou Claude', 'Consultas fiscais por conversa', 'Cancelamento e eventos fiscais', 'Histórico completo', 'Suporte prioritário'],
     featured: true,
   },
   {
@@ -31,8 +31,8 @@ export function FiscalPricingSection() {
       <div className="mx-auto max-w-[1180px]">
         <div className="mx-auto max-w-[650px] text-center">
           <p className="text-xs font-medium uppercase text-[#17653a]">Planos</p>
-          <h2 className="mt-4 [--ui-title-font-size:40px] font-medium text-[#181b19] sm:[--ui-title-font-size:48px]" style={{ lineHeight: 1.06 }}>Emissão fiscal que cabe na empresa.</h2>
-          <p className="mt-5 text-[15px] text-[#646c66]" style={{ lineHeight: 1.5 }}>Emita pela aplicação e use o ChatGPT para preparar e consultar a rotina. Os planos têm cobrança mensal e acompanham o crescimento da operação.</p>
+          <h2 className="mt-4 [--ui-title-font-size:40px] font-medium text-[#181b19] sm:[--ui-title-font-size:48px]" style={{ lineHeight: 1.06 }}>Menos trabalho manual. Mais notas sob controle.</h2>
+          <p className="mt-5 text-[15px] text-[#646c66]" style={{ lineHeight: 1.5 }}>Use o ChatGPT ou Claude para preparar e consultar a rotina. A Otto mantém dados, confirmações e documentos organizados conforme a operação cresce.</p>
         </div>
 
         <div className="mt-12 grid items-stretch gap-4 lg:grid-cols-3">

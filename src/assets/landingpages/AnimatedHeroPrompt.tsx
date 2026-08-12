@@ -37,6 +37,34 @@ const promptSteps: PromptStep[] = [
   },
 ]
 
+const fiscalPromptSteps: PromptStep[] = [
+  {
+    prompt: 'Emita as notas fiscais das minhas últimas vendas.',
+    result: 'Notas preparadas para sua confirmação.',
+    status: 'Preparando notas fiscais...',
+  },
+  {
+    prompt: 'Prepare a nota fiscal da venda 317.',
+    result: 'Cliente, itens e valores encontrados.',
+    status: 'Consultando a venda 317...',
+  },
+  {
+    prompt: 'Mostre as notas que precisam de correção.',
+    result: 'Pendências fiscais localizadas e explicadas.',
+    status: 'Verificando rejeições...',
+  },
+  {
+    prompt: 'Envie o PDF e o XML para o cliente.',
+    result: 'Documentos separados para envio.',
+    status: 'Localizando os documentos...',
+  },
+  {
+    prompt: 'Quais notas foram autorizadas hoje?',
+    result: 'Emissões autorizadas apresentadas pela Otto.',
+    status: 'Consultando as autorizações...',
+  },
+]
+
 type AnimationPhase = 'clearing' | 'result' | 'submitting' | 'typing'
 
 export function AnimatedHeroPrompt({ variant = 'default' }: { variant?: 'default' | 'fiscal' }) {
@@ -46,8 +74,9 @@ export function AnimatedHeroPrompt({ variant = 'default' }: { variant?: 'default
   const [reducedMotion, setReducedMotion] = useState(false)
   const [text, setText] = useState('')
 
-  const activeStep = promptSteps[activeIndex]
   const isFiscal = variant === 'fiscal'
+  const steps = isFiscal ? fiscalPromptSteps : promptSteps
+  const activeStep = steps[activeIndex]
 
   useEffect(() => {
     const media = window.matchMedia('(prefers-reduced-motion: reduce)')
@@ -67,7 +96,7 @@ export function AnimatedHeroPrompt({ variant = 'default' }: { variant?: 'default
 
   useEffect(() => {
     if (reducedMotion) {
-      setText(promptSteps[0].prompt)
+      setText(steps[0].prompt)
       setActiveIndex(0)
       setPhase('result')
       return
@@ -105,11 +134,11 @@ export function AnimatedHeroPrompt({ variant = 'default' }: { variant?: 'default
     }
 
     const timeout = window.setTimeout(() => {
-      setActiveIndex((current) => (current + 1) % promptSteps.length)
+      setActiveIndex((current) => (current + 1) % steps.length)
       setPhase('typing')
     }, 220)
     return () => window.clearTimeout(timeout)
-  }, [activeStep.prompt, isPageVisible, phase, reducedMotion, text])
+  }, [activeStep.prompt, isPageVisible, phase, reducedMotion, steps, text])
 
   const isSubmitting = phase === 'submitting'
   const showResult = phase === 'result'
@@ -160,7 +189,7 @@ export function AnimatedHeroPrompt({ variant = 'default' }: { variant?: 'default
       </div>
 
       <div aria-hidden className="mt-2 flex justify-center gap-1.5">
-        {promptSteps.map((step, index) => (
+        {steps.map((step, index) => (
           <span
             className="h-1 rounded-full transition-all duration-300"
             key={step.prompt}
