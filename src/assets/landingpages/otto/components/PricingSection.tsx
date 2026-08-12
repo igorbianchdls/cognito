@@ -11,7 +11,7 @@ const plans = [
       'Clientes, fornecedores, produtos e serviços',
       'Vendas e compras',
       'Contas a pagar e contas a receber',
-      'Consultas pelo ChatGPT e Claude',
+      'ChatGPT e Claude conectados à Otto',
       'Suporte por e-mail',
     ],
     featured: false,
@@ -25,7 +25,7 @@ const plans = [
       'Tudo do plano Essencial',
       'Contas financeiras e centros de custo',
       'Baixas parciais, totais e estornos',
-      'Preparação de operações por conversa',
+      'Operações financeiras pelo ChatGPT ou Claude',
       'Organização de documentos fiscais',
       'Suporte prioritário',
     ],
@@ -39,7 +39,7 @@ const plans = [
       'Até 10 usuários',
       'Tudo do plano Gestão',
       'Histórico de alterações',
-      'Permissões e contexto para a equipe',
+      'ChatGPT e Claude com permissões por usuário',
       'Compras e pagamentos recorrentes',
       'Implantação guiada',
       'Atendimento prioritário',
@@ -55,10 +55,10 @@ export function PricingSection() {
         <div className="mx-auto max-w-[660px] text-center">
           <p className="text-xs font-medium uppercase text-[#2f7441]">Planos</p>
           <h2 className="mt-4 [--ui-title-font-size:40px] font-medium text-[#181818] sm:[--ui-title-font-size:48px]" style={{ lineHeight: 1.06 }}>
-            Escolha o plano da sua empresa.
+            ChatGPT e Claude em todos os planos.
           </h2>
           <p className="mt-5 text-[15px] text-[#646a64]" style={{ lineHeight: 1.5 }}>
-            Use a Otto pela aplicação web, ChatGPT ou Claude e evolua conforme sua operação cresce. Todos os planos têm cobrança mensal.
+            Escolha o nível de gestão que sua empresa precisa. Em todos eles, ChatGPT e Claude acessam somente os dados e as ações autorizadas pela Otto.
           </p>
         </div>
 

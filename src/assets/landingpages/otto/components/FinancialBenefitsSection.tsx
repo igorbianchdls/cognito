@@ -140,17 +140,17 @@ function ReportsAnimation() {
 
 export function FinancialBenefitsSection() {
   return (
-    <section id="controle-financeiro" className="border-y border-[#e4e7e3] bg-[#f7f8f6] px-5 py-20 sm:px-8 sm:py-28" aria-label="Automação e controle financeiro">
+    <section id="controle-financeiro" className="border-y border-[#e4e7e3] bg-[#f7f8f6] px-5 py-20 sm:px-8 sm:py-28" aria-label="Recursos financeiros disponíveis pelo ChatGPT e Claude">
       <div className="mx-auto max-w-[1180px]">
         <div className="grid gap-14 border-b border-[#dfe3de] pb-20 lg:grid-cols-2 lg:items-center lg:gap-20 sm:pb-28">
           <div className="max-w-[520px]">
-            <span className="text-xs font-medium uppercase text-[#317543]">Cobrança automática</span>
+            <span className="text-xs font-medium uppercase text-[#317543]">Cobranças no ChatGPT e Claude</span>
             <h2 className="mt-4 [--ui-title-font-size:40px] font-medium text-[#181818] sm:[--ui-title-font-size:48px]" style={{ lineHeight: 1.06 }}>
-              Receba no Prazo e Reduza a Inadimplência
+              Peça uma cobrança. A Otto acompanha até receber.
             </h2>
-            <p className="mt-6 text-base font-semibold text-[#303630]" style={{ lineHeight: 1.5 }}>Seus clientes nunca mais vão esquecer um pagamento!</p>
+            <p className="mt-6 text-base font-semibold text-[#303630]" style={{ lineHeight: 1.5 }}>No ChatGPT ou Claude, diga quais clientes precisam ser cobrados.</p>
             <p className="mt-3 max-w-[480px] text-[15px] text-[#626862]" style={{ lineHeight: 1.5 }}>
-              Envie lembretes automáticos por <strong className="font-semibold text-[#303630]">WhatsApp, e-mail, SMS e receba mais rápido.</strong>
+              A Otto prepara os lembretes por <strong className="font-semibold text-[#303630]">WhatsApp, e-mail e SMS</strong>, acompanha as respostas e registra o pagamento.
             </p>
           </div>
           <CollectionAnimation />
@@ -159,13 +159,13 @@ export function FinancialBenefitsSection() {
         <div className="grid gap-14 border-b border-[#dfe3de] py-20 lg:grid-cols-2 lg:items-center lg:gap-20 sm:py-28">
           <div className="lg:order-2 lg:justify-self-end">
             <div className="max-w-[520px]">
-              <span className="text-xs font-medium uppercase text-[#9a6418]">Contas a pagar</span>
+              <span className="text-xs font-medium uppercase text-[#9a6418]">Contas a pagar no ChatGPT e Claude</span>
               <h2 className="mt-4 [--ui-title-font-size:40px] font-medium text-[#181818] sm:[--ui-title-font-size:48px]" style={{ lineHeight: 1.06 }}>
-                Pague suas Contas no Prazo e Evite Multas
+                Veja o que vence e prepare pagamentos por conversa.
               </h2>
-              <p className="mt-6 text-base font-semibold text-[#303630]" style={{ lineHeight: 1.5 }}>Juros e multas por atraso <strong>NUNCA MAIS!</strong></p>
+              <p className="mt-6 text-base font-semibold text-[#303630]" style={{ lineHeight: 1.5 }}>Pergunte ao ChatGPT ou Claude o que precisa ser pago nesta semana.</p>
               <p className="mt-3 max-w-[480px] text-[15px] text-[#626862]" style={{ lineHeight: 1.5 }}>
-                Agende pagamentos automaticamente e tenha total controle das suas contas.
+                A Otto reúne contas, valores e vencimentos, prepara o agendamento e mantém tudo sob sua confirmação.
               </p>
             </div>
           </div>
@@ -174,13 +174,13 @@ export function FinancialBenefitsSection() {
 
         <div className="grid gap-14 pt-20 lg:grid-cols-2 lg:items-center lg:gap-20 sm:pt-28">
           <div className="max-w-[520px]">
-            <span className="text-xs font-medium uppercase text-[#2d6591]">Inteligência de negócio</span>
+            <span className="text-xs font-medium uppercase text-[#2d6591]">Relatórios no ChatGPT e Claude</span>
             <h2 className="mt-4 [--ui-title-font-size:40px] font-medium text-[#181818] sm:[--ui-title-font-size:48px]" style={{ lineHeight: 1.06 }}>
-              Relatórios Claros e em Tempo Real
+              Pergunte. Receba o financeiro já explicado.
             </h2>
-            <p className="mt-6 text-base font-semibold text-[#303630]" style={{ lineHeight: 1.5 }}>Tenha total controle do seu negócio!</p>
+            <p className="mt-6 text-base font-semibold text-[#303630]" style={{ lineHeight: 1.5 }}>Peça um resumo, um comparativo ou um dashboard no ChatGPT ou Claude.</p>
             <p className="mt-3 max-w-[500px] text-[15px] text-[#626862]" style={{ lineHeight: 1.5 }}>
-              O sistema conta com mais de 100 relatórios inteligentes que oferecem informações precisas para facilitar suas decisões e aumentar seus lucros.
+              A Otto consulta os dados reais da empresa e devolve indicadores claros para você decidir com mais segurança.
             </p>
           </div>
           <ReportsAnimation />

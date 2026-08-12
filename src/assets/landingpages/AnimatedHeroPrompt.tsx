@@ -11,29 +11,29 @@ type PromptStep = {
 
 const promptSteps: PromptStep[] = [
   {
-    prompt: 'Emita as notas fiscais das minhas últimas vendas.',
-    result: 'Notas preparadas para sua confirmação.',
+    prompt: 'Prepare as notas fiscais das minhas últimas vendas.',
+    result: 'A Otto preparou as notas para sua confirmação.',
     status: 'Preparando notas fiscais...',
   },
   {
     prompt: 'Concilie as movimentações bancárias desta semana.',
-    result: 'Movimentações conciliadas com os lançamentos.',
+    result: 'A Otto conciliou as movimentações com os lançamentos.',
     status: 'Conciliando movimentações...',
   },
   {
     prompt: 'Classifique as despesas que ainda estão pendentes.',
-    result: 'Despesas classificadas nas categorias corretas.',
+    result: 'A Otto classificou as despesas pendentes.',
     status: 'Classificando despesas...',
   },
   {
     prompt: 'Envie cobranças para os clientes em atraso.',
-    result: 'Cobranças enviadas e acompanhamentos programados.',
+    result: 'A Otto preparou as cobranças e os acompanhamentos.',
     status: 'Preparando cobranças...',
   },
   {
-    prompt: 'Mostre se posso pagar menos imposto dentro da lei.',
-    result: 'Cenários tributários analisados pela Otto.',
-    status: 'Analisando oportunidades fiscais...',
+    prompt: 'Crie um dashboard do financeiro deste mês.',
+    result: 'A Otto criou o dashboard com os dados da empresa.',
+    status: 'Consolidando o financeiro...',
   },
 ]
 
@@ -147,7 +147,9 @@ export function AnimatedHeroPrompt({ variant = 'default' }: { variant?: 'default
 
   return (
     <div className="mx-auto mt-10 w-full max-w-[920px] sm:mt-12">
-      <p className="mb-4 text-center text-sm font-medium text-[#343934] sm:text-base">Por onde começamos?</p>
+      <p className="mb-4 text-center text-sm font-medium text-[#343934] sm:text-base">
+        {isFiscal ? 'Por onde começamos?' : 'O que você quer fazer no ChatGPT ou Claude?'}
+      </p>
 
       <div
         className="grid h-[66px] w-full items-center gap-2 rounded-full border border-[#d8ddda] bg-white px-2.5 shadow-[0_12px_35px_-25px_rgba(20,35,24,0.45)] sm:grid-cols-[46px_minmax(0,1fr)_42px_48px] sm:px-3"

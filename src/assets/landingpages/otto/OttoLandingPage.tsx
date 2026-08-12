@@ -1,19 +1,24 @@
 import Image from 'next/image'
 import Link from 'next/link'
+import { SiClaude, SiOpenai } from '@icons-pack/react-simple-icons'
 import {
   ArrowRight,
   BadgeCheck,
   Bot,
   Building2,
   ChevronDown,
+  CircleDollarSign,
   FileCheck2,
   FileText,
+  HandCoins,
   Landmark,
   LockKeyhole,
   MessageSquareText,
   PackageCheck,
   ReceiptText,
   RefreshCw,
+  ShoppingCart,
+  UsersRound,
 } from 'lucide-react'
 
 import { LandingHeader } from '@/assets/landingpages/otto/components/LandingHeader'
@@ -40,17 +45,17 @@ const integrations = [
 const outcomes = [
   {
     icon: MessageSquareText,
-    title: 'Pergunte sobre a empresa',
-    description: 'Consulte saldos, vencimentos, vendas e compras pelo ChatGPT ou Claude usando os dados reais da Otto.',
+    title: 'Consulte pelo ChatGPT ou Claude',
+    description: 'Pergunte sobre saldos, vencimentos, vendas e compras usando os dados reais organizados pela Otto.',
   },
   {
     icon: RefreshCw,
-    title: 'Prepare operações por conversa',
-    description: 'Transforme pedidos em cadastros, vendas e rotinas financeiras prontas para revisão.',
+    title: 'Execute rotinas por conversa',
+    description: 'Transforme pedidos feitos no ChatGPT ou Claude em operações financeiras prontas para revisão.',
   },
   {
     icon: BadgeCheck,
-    title: 'Confirme antes de executar',
+    title: 'A Otto confirma e registra',
     description: 'Ações importantes respeitam as permissões da equipe e permanecem registradas no sistema.',
   },
 ]
@@ -58,21 +63,54 @@ const outcomes = [
 const operationSteps = [
   {
     number: '01',
-    icon: Building2,
-    title: 'Organize os dados na Otto',
-    description: 'Clientes, vendas, compras, financeiro e documentos ficam reunidos em uma base confiável.',
+    icon: MessageSquareText,
+    title: 'Peça no ChatGPT ou Claude',
+    description: 'Escreva o que precisa fazer como faria em uma conversa, sem procurar menus ou preencher vários formulários.',
   },
   {
     number: '02',
-    icon: MessageSquareText,
-    title: 'Converse no ChatGPT ou Claude',
-    description: 'Consulte a empresa e prepare rotinas usando apenas o contexto que você tem permissão para acessar.',
+    icon: Building2,
+    title: 'A Otto encontra e prepara',
+    description: 'A Otto consulta clientes, vendas, compras e financeiro usando somente o contexto autorizado da empresa.',
   },
   {
     number: '03',
     icon: BadgeCheck,
-    title: 'Revise e acompanhe na Otto',
-    description: 'Confirme ações sensíveis e preserve responsáveis, alterações e resultados no sistema de gestão.',
+    title: 'Você confirma e acompanha',
+    description: 'Revise ações sensíveis e acompanhe responsáveis, alterações e resultados no histórico da Otto.',
+  },
+]
+
+const capabilities = [
+  {
+    icon: CircleDollarSign,
+    title: 'Gestão financeira',
+    description: 'Consulte saldos, fluxo de caixa e vencimentos diretamente pelo ChatGPT ou Claude.',
+  },
+  {
+    icon: Landmark,
+    title: 'Conciliação bancária',
+    description: 'Peça para conciliar movimentações e identificar lançamentos que ainda precisam de atenção.',
+  },
+  {
+    icon: HandCoins,
+    title: 'Cobranças e recebimentos',
+    description: 'Envie cobranças, acompanhe atrasos e consulte quem ainda não pagou por conversa.',
+  },
+  {
+    icon: UsersRound,
+    title: 'Vendas e clientes',
+    description: 'Encontre clientes, registre vendas e acompanhe recebimentos no ChatGPT ou Claude.',
+  },
+  {
+    icon: ShoppingCart,
+    title: 'Compras e fornecedores',
+    description: 'Consulte compras, fornecedores e contas relacionadas sem navegar por várias telas.',
+  },
+  {
+    icon: FileCheck2,
+    title: 'Fiscal e relatórios',
+    description: 'Prepare documentos e peça relatórios financeiros com os dados organizados pela Otto.',
   },
 ]
 
@@ -103,17 +141,17 @@ export function OttoLandingPage() {
           <div className="mx-auto max-w-[1000px] text-center">
             <div className="inline-flex items-center gap-2 rounded-md border border-[#dce5dc] bg-[#f5faf6] px-3 py-2 text-xs font-medium text-[#326342]">
               <span className="h-1.5 w-1.5 rounded-full bg-[#3b9b54]" />
-              Gestão empresarial conectada ao ChatGPT e Claude
+              ChatGPT e Claude conectados à gestão da sua empresa
             </div>
             <h1 className="mt-7 [--ui-title-font-size:40px] font-medium text-[#181818] sm:[--ui-title-font-size:48px]" style={{ lineHeight: 1 }}>
-              Sistema de Gestão 100% integrado ao Claude e ChatGPT.
+              Opere o financeiro da sua empresa pelo ChatGPT ou Claude.
             </h1>
             <p className="mx-auto mt-6 max-w-[760px] text-base text-[#5f655f] sm:text-lg" style={{ lineHeight: 1.5 }}>
-              Consulte vendas, compras, financeiro, clientes e documentos por conversa. A Otto conecta os assistentes que você já usa aos dados reais da sua empresa, com permissões e histórico.
+              A Otto conecta o ChatGPT e o Claude ao financeiro, às vendas, às compras e aos documentos da sua empresa. Você faz o pedido na conversa; a Otto encontra os dados, prepara a operação e registra o resultado.
             </p>
             <div className="mt-8 flex flex-col justify-center gap-3 sm:flex-row">
               <Link href="/sign-up" className="inline-flex h-12 items-center justify-center gap-2 rounded-md bg-[#181818] px-5 text-sm font-medium text-white transition-colors hover:bg-[#303030]">
-                Começar agora
+                Começar com ChatGPT ou Claude
                 <ArrowRight className="h-4 w-4" />
               </Link>
               <a href="#assistente" className="inline-flex h-12 items-center justify-center rounded-md border border-[#d8dcd7] bg-white px-5 text-sm font-medium text-[#3c413c] transition-colors hover:bg-[#f5f6f4]">
@@ -121,8 +159,8 @@ export function OttoLandingPage() {
               </a>
             </div>
             <div className="mt-7 flex flex-wrap justify-center gap-x-6 gap-y-2 text-xs text-[#777d77]">
-              <span className="inline-flex items-center gap-2"><MessageSquareText className="h-3.5 w-3.5" /> ChatGPT</span>
-              <span className="inline-flex items-center gap-2"><Bot className="h-3.5 w-3.5" /> Claude</span>
+              <span className="inline-flex items-center gap-2"><SiOpenai aria-hidden="true" className="h-3.5 w-3.5" color="#111111" /> ChatGPT conectado</span>
+              <span className="inline-flex items-center gap-2"><SiClaude aria-hidden="true" className="h-3.5 w-3.5" color="#D97757" /> Claude conectado</span>
               <span className="inline-flex items-center gap-2"><LockKeyhole className="h-3.5 w-3.5" /> Dados e permissões protegidos</span>
             </div>
             <AnimatedHeroPrompt />
@@ -137,8 +175,8 @@ export function OttoLandingPage() {
         <div className="mx-auto max-w-[1180px]">
           <div className="flex flex-col gap-7 lg:flex-row lg:items-center lg:justify-between">
             <div className="max-w-[330px]">
-              <p className="text-sm font-medium text-[#303530]">ChatGPT e Claude na frente. A Otto como base.</p>
-              <p className="mt-1 text-xs leading-5 text-[#747a74]">Reúna as fontes da empresa e use os assistentes com contexto, controle e dados confiáveis.</p>
+              <p className="text-sm font-medium text-[#303530]">ChatGPT e Claude como interface. A Otto como sistema de gestão.</p>
+              <p className="mt-1 text-xs leading-5 text-[#747a74]">Conecte as fontes da empresa e transforme conversas em operações com contexto, controle e dados confiáveis.</p>
             </div>
             <div className="grid flex-1 grid-cols-2 gap-px overflow-hidden rounded-lg border border-[#dde1dc] bg-[#dde1dc] sm:grid-cols-3 lg:max-w-[700px] lg:grid-cols-6">
               {integrations.map((integration) => {
@@ -159,9 +197,9 @@ export function OttoLandingPage() {
         <div className="mx-auto max-w-[1180px]">
           <SectionHeading
             align="center"
-            eyebrow="Gestão por conversa"
-            title="Peça, consulte e acompanhe sem procurar em várias telas."
-            description="ChatGPT e Claude se tornam portas de entrada para a empresa, enquanto a Otto mantém cada informação organizada e rastreável."
+            eyebrow="ChatGPT e Claude + Otto"
+            title="ChatGPT e Claude agora podem operar o financeiro da sua empresa."
+            description="Você conversa no assistente que já usa. A Otto consulta os dados autorizados, prepara as ações e mantém cada resultado organizado e rastreável."
           />
 
           <div className="mt-14 grid border-y border-[#e2e5e1] md:grid-cols-3">
@@ -179,12 +217,38 @@ export function OttoLandingPage() {
         </div>
       </section>
 
-      <section className="border-y border-[#e4e7e3] bg-[#f6f7f5] px-5 py-20 sm:px-8 sm:py-28">
+      <section id="produto" className="scroll-mt-24 border-y border-[#e4e7e3] bg-[#f7f8f6] px-5 py-20 sm:px-8 sm:py-28">
+        <div className="mx-auto max-w-[1180px]">
+          <SectionHeading
+            eyebrow="ERP completo no ChatGPT e Claude"
+            title="Tudo o que sua empresa precisa, disponível na conversa."
+            description="A Otto centraliza a operação. ChatGPT e Claude oferecem uma forma mais direta de consultar informações e preparar o trabalho do dia a dia."
+          />
+
+          <div className="mt-14 grid border-l border-t border-[#dfe3de] md:grid-cols-2 lg:grid-cols-3">
+            {capabilities.map((capability) => {
+              const Icon = capability.icon
+              return (
+                <div
+                  className="border-r border-b border-[#dfe3de] p-7 md:p-8"
+                  key={capability.title}
+                >
+                  <Icon className="h-5 w-5 text-[#347848]" />
+                  <h3 className="mt-5 text-lg font-medium text-[#202320]">{capability.title}</h3>
+                  <p className="mt-3 text-sm leading-6 text-[#686e68]">{capability.description}</p>
+                </div>
+              )
+            })}
+          </div>
+        </div>
+      </section>
+
+      <section className="px-5 py-20 sm:px-8 sm:py-28">
         <div className="mx-auto max-w-[1180px]">
           <SectionHeading
             eyebrow="Como funciona"
-            title="Da conversa ao registro, com controle."
-            description="A integração aproxima a gestão da rotina da equipe sem abrir mão de revisão, permissões e histórico."
+            title="Do pedido no ChatGPT ou Claude ao registro na Otto."
+            description="A conversa simplifica a rotina sem abrir mão de revisão, permissões e histórico."
           />
 
           <div className="mt-14 grid gap-0 border-t border-[#dfe3de] lg:grid-cols-3">
@@ -210,13 +274,13 @@ export function OttoLandingPage() {
           <div>
             <SectionHeading
               eyebrow="ChatGPT + Claude + Otto"
-              title="Converse com a sua empresa, não apenas com um chatbot."
-              description="A Otto fornece aos assistentes o contexto autorizado da empresa para responder com base em clientes, vendas, compras e informações financeiras reais."
+              title="ChatGPT e Claude viram a interface do seu ERP."
+              description="A Otto fornece o contexto autorizado para que ChatGPT e Claude respondam e preparem operações com base em clientes, vendas, compras e informações financeiras reais."
             />
             <div className="mt-8 grid gap-4 text-sm text-[#4f554f]">
-              <div className="flex items-start gap-3"><BadgeCheck className="mt-0.5 h-4 w-4 shrink-0 text-[#317543]" /> Consulte saldos, vencimentos, vendas e compras.</div>
-              <div className="flex items-start gap-3"><BadgeCheck className="mt-0.5 h-4 w-4 shrink-0 text-[#317543]" /> Prepare operações e revise antes de confirmar.</div>
-              <div className="flex items-start gap-3"><BadgeCheck className="mt-0.5 h-4 w-4 shrink-0 text-[#317543]" /> Continue qualquer rotina pela aplicação web.</div>
+              <div className="flex items-start gap-3"><BadgeCheck className="mt-0.5 h-4 w-4 shrink-0 text-[#317543]" /> Peça no ChatGPT ou Claude usando linguagem natural.</div>
+              <div className="flex items-start gap-3"><BadgeCheck className="mt-0.5 h-4 w-4 shrink-0 text-[#317543]" /> A Otto encontra os dados e prepara a operação.</div>
+              <div className="flex items-start gap-3"><BadgeCheck className="mt-0.5 h-4 w-4 shrink-0 text-[#317543]" /> Você confirma ações sensíveis antes da execução.</div>
             </div>
           </div>
 
@@ -261,8 +325,8 @@ export function OttoLandingPage() {
             <span className="text-xs font-medium uppercase">Fiscal e documentos</span>
           </div>
           <div>
-            <h2 className="[--ui-title-font-size:40px] font-medium text-[#28251f] sm:[--ui-title-font-size:48px]" style={{ lineHeight: 1.06 }}>Documentos organizados hoje. Emissão fiscal preparada para evoluir.</h2>
-            <p className="mt-4 max-w-[700px] text-[15px] text-[#70695c]" style={{ lineHeight: 1.5 }}>A Otto já importa e valida XMLs de compras, vincula documentos a fornecedores e mantém os totais fiscais. A emissão por API será adicionada em uma próxima etapa.</p>
+            <h2 className="[--ui-title-font-size:40px] font-medium text-[#28251f] sm:[--ui-title-font-size:48px]" style={{ lineHeight: 1.06 }}>Consulte documentos fiscais pelo ChatGPT ou Claude.</h2>
+            <p className="mt-4 max-w-[700px] text-[15px] text-[#70695c]" style={{ lineHeight: 1.5 }}>Peça para localizar XMLs, conferir fornecedores e consultar totais fiscais. A Otto mantém os documentos vinculados à operação e prepara a emissão para revisão.</p>
           </div>
         </div>
       </section>
@@ -293,10 +357,10 @@ export function OttoLandingPage() {
 
       <section className="px-5 pb-10 sm:px-8 sm:pb-14">
         <div className="mx-auto max-w-[1180px] rounded-lg border border-[#d6e5d7] bg-[#edf7ef] px-6 py-14 text-center sm:px-10 sm:py-16">
-          <h2 className="mx-auto max-w-[900px] [--ui-title-font-size:40px] font-medium text-[#18301e] sm:[--ui-title-font-size:48px]" style={{ lineHeight: 1.06 }}>Leve sua empresa para o ChatGPT e o Claude.</h2>
-          <p className="mx-auto mt-5 max-w-[640px] text-[15px] text-[#526856]" style={{ lineHeight: 1.5 }}>Centralize a gestão na Otto e use os assistentes para consultar informações e preparar rotinas com muito menos atrito.</p>
+          <h2 className="mx-auto max-w-[900px] [--ui-title-font-size:40px] font-medium text-[#18301e] sm:[--ui-title-font-size:48px]" style={{ lineHeight: 1.06 }}>Administre sua empresa pelo ChatGPT ou Claude.</h2>
+          <p className="mx-auto mt-5 max-w-[640px] text-[15px] text-[#526856]" style={{ lineHeight: 1.5 }}>Conecte sua empresa à Otto e transforme pedidos feitos no ChatGPT ou Claude em operações financeiras organizadas.</p>
           <Link href="/sign-up" className="mt-7 inline-flex h-12 items-center justify-center gap-2 rounded-md bg-[#181818] px-5 text-sm font-medium text-white hover:bg-[#303030]">
-            Criar minha conta
+            Conectar ao ChatGPT ou Claude
             <ArrowRight className="h-4 w-4" />
           </Link>
         </div>

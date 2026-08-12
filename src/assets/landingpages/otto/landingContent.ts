@@ -101,14 +101,14 @@ export const frequentlyAskedQuestions = [
   },
   {
     question: 'Como a Otto funciona com o ChatGPT e o Claude?',
-    answer: 'A Otto conecta os assistentes aos dados autorizados da empresa. Assim, você pode consultar informações e preparar rotinas por conversa sem perder a organização, as permissões e o histórico do sistema.',
+    answer: 'Você faz o pedido no ChatGPT ou Claude. A Otto consulta os dados autorizados da empresa, prepara a operação e mantém permissões, confirmações e histórico no sistema de gestão.',
   },
   {
-    question: 'A IA pode alterar dados sem minha autorização?',
+    question: 'ChatGPT ou Claude podem alterar dados sem minha autorização?',
     answer: 'Não nas ações sensíveis. A Otto aplica as permissões do usuário e solicita confirmação antes de concluir operações que alteram dados importantes da empresa.',
   },
   {
-    question: 'Quais dados ficam disponíveis para os assistentes?',
+    question: 'Quais dados ficam disponíveis no ChatGPT e no Claude?',
     answer: 'Somente o contexto necessário para a solicitação e permitido para o usuário autenticado. Os dados continuam separados por empresa e controlados pela Otto.',
   },
   {
@@ -121,6 +121,6 @@ export const frequentlyAskedQuestions = [
   },
   {
     question: 'Como funciona a implantação?',
-    answer: 'A configuração inicial organiza a empresa, os cadastros e as primeiras rotinas. Depois, integrações e automações podem ser adicionadas progressivamente.',
+    answer: 'A configuração inicial organiza a empresa, os cadastros e as primeiras rotinas. Depois, a Otto conecta o contexto autorizado ao ChatGPT e ao Claude e novas integrações podem ser adicionadas progressivamente.',
   },
 ]
