@@ -123,6 +123,11 @@ import { OTTO_INTEGRATION_SIGNAL_MAP_DURATION, OttoIntegrationSignalMap } from '
 import { OTTO_LOGO_REVEAL_HORIZONTAL_DURATION, OTTO_LOGO_REVEAL_REELS_DURATION, OttoLogoRevealHorizontal, OttoLogoRevealReels } from '@/assets/remotion/compositions/OttoLogoRevealHorizontal'
 import { OTTO_FINANCE_AUTOMATION_ONLY_SCENE_DURATION, OttoFinanceAutomationOnlyScene } from '@/assets/remotion/compositions/OttoFinanceAutomationOnlyScene'
 import { OTTO_FINANCE_AI_50S_DURATION, OttoFinanceAi50sVideo } from '@/assets/remotion/compositions/OttoFinanceAi50sVideo'
+import { OTTO_FINANCE_AI_50S_SQUARE_DURATION, OttoFinanceAi50sSquareVideo } from '@/assets/remotion/compositions/OttoFinanceAi50sSquareVideo'
+import { OTTO_FINANCE_AI_53S_NARRATED_DURATION, OttoFinanceAi53sNarratedVideo } from '@/assets/remotion/compositions/OttoFinanceAi53sNarratedVideo'
+import { OTTO_INVOICE_AI_60S_NARRATED_DURATION, OttoInvoiceAi60sNarratedVideo } from '@/assets/remotion/compositions/OttoInvoiceAi60sNarratedVideo'
+import { OTTO_INVOICE_DIRECT_53S_NARRATED_DURATION, OttoInvoiceDirect53sNarratedVideo } from '@/assets/remotion/compositions/OttoInvoiceDirect53sNarratedVideo'
+import { OTTO_FINANCIAL_OPERATORS_50S_NARRATED_DURATION, OttoFinancialOperators50sNarratedVideo } from '@/assets/remotion/compositions/OttoFinancialOperators50sNarratedVideo'
 import { OTTO_FINANCIAL_DASHBOARD_DURATION, OttoFinancialDashboard } from '@/assets/remotion/compositions/OttoFinancialDashboard'
 import { OTTO_INVOICE_ONLY_SCENE_DURATION, OttoInvoiceOnlyScene } from '@/assets/remotion/compositions/OttoInvoiceOnlyScene'
 import { OTTO_SYNC_ONLY_SCENE_DURATION, OttoSyncOnlyScene } from '@/assets/remotion/compositions/OttoSyncOnlyScene'
@@ -3408,6 +3413,66 @@ const catalog: CatalogItem[] = [
     label: 'Otto Finance AI 50s',
     tags: ['Otto', 'Financeiro', 'Sync', 'ChatGPT', 'Claude', 'Video'],
     value: 'video-otto-finance-ai-50s',
+    width: 1280,
+  },
+  {
+    code: '<OttoFinanceAi50sSquareVideo />',
+    component: OttoFinanceAi50sSquareVideo,
+    description: 'Versão quadrada do vídeo completo da Otto, adaptada nativamente para 1080 por 1080.',
+    duration: OTTO_FINANCE_AI_50S_SQUARE_DURATION,
+    height: 1080,
+    kind: 'Vídeos criados',
+    label: 'Otto Finance AI 50s Square',
+    tags: ['Otto', 'Financeiro', 'Square', '1080x1080', 'Video'],
+    value: 'video-otto-finance-ai-50s-square',
+    width: 1080,
+  },
+  {
+    code: '<OttoFinanceAi53sNarratedVideo />',
+    component: OttoFinanceAi53sNarratedVideo,
+    description: 'Vídeo horizontal de 53 segundos sincronizado por blocos com a narração completa da Otto.',
+    duration: OTTO_FINANCE_AI_53S_NARRATED_DURATION,
+    height: 720,
+    kind: 'Vídeos criados',
+    label: 'Otto Finance AI 53s Narrated',
+    tags: ['Otto', 'Financeiro', 'Narração', 'Sincronizado', 'Horizontal', 'Video'],
+    value: 'video-otto-finance-ai-53s-narrated',
+    width: 1280,
+  },
+  {
+    code: '<OttoInvoiceAi60sNarratedVideo />',
+    component: OttoInvoiceAi60sNarratedVideo,
+    description: 'Vídeo horizontal focado na emissão de nota fiscal pelo ChatGPT e Claude, com confirmação de valor e rotinas financeiras da Otto.',
+    duration: OTTO_INVOICE_AI_60S_NARRATED_DURATION,
+    height: 720,
+    kind: 'Vídeos criados',
+    label: 'Otto Invoice AI 60s Narrated',
+    tags: ['Otto', 'Nota Fiscal', 'ChatGPT', 'Claude', 'Narração', 'Horizontal'],
+    value: 'video-otto-invoice-ai-60s-narrated',
+    width: 1280,
+  },
+  {
+    code: '<OttoInvoiceDirect53sNarratedVideo />',
+    component: OttoInvoiceDirect53sNarratedVideo,
+    description: 'Vídeo horizontal com abertura direta na emissão de nota fiscal pelo ChatGPT e Claude, confirmação de valor e automações da Otto.',
+    duration: OTTO_INVOICE_DIRECT_53S_NARRATED_DURATION,
+    height: 720,
+    kind: 'Vídeos criados',
+    label: 'Otto Invoice Direct 53s Narrated',
+    tags: ['Otto', 'Nota Fiscal', 'ChatGPT', 'Claude', 'Direto', 'Horizontal'],
+    value: 'video-otto-invoice-direct-53s-narrated',
+    width: 1280,
+  },
+  {
+    code: '<OttoFinancialOperators50sNarratedVideo />',
+    component: OttoFinancialOperators50sNarratedVideo,
+    description: 'Vídeo horizontal mostrando ChatGPT e Claude operando o financeiro por meio da Otto.',
+    duration: OTTO_FINANCIAL_OPERATORS_50S_NARRATED_DURATION,
+    height: 720,
+    kind: 'Vídeos criados',
+    label: 'Otto Financial Operators 50s Narrated',
+    tags: ['Otto', 'Financeiro', 'ChatGPT', 'Claude', 'Operações', 'Horizontal'],
+    value: 'video-otto-financial-operators-50s-narrated',
     width: 1280,
   },
   {

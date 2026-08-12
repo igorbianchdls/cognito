@@ -15,7 +15,7 @@ function progress(frame: number, start: number, end: number) {
   })
 }
 
-export function OttoLogoRevealHorizontal() {
+export function OttoLogoRevealHorizontal({ centerX = 0, centerY = 330 }: { centerX?: number; centerY?: number | string }) {
   const frame = useCurrentFrame()
   const logo = progress(frame, 0, 36)
   const clip = interpolate(logo, [0, 1], [100, 0])
@@ -35,8 +35,8 @@ export function OttoLogoRevealHorizontal() {
           opacity: interpolate(logo, [0, 0.28, 1], [0, 1, 1]),
           overflow: 'hidden',
           position: 'absolute',
-          top: 330,
-          transform: `translate(-50%, -50%) scale(${lockupScale})`,
+          top: centerY,
+          transform: `translate(-50%, -50%) translateX(${centerX}px) scale(${lockupScale})`,
         }}
       >
         <Img

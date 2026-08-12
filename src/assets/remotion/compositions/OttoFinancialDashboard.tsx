@@ -198,27 +198,29 @@ function StatusPanel() {
   )
 }
 
-export function OttoFinancialDashboard() {
+export function OttoFinancialDashboard({ square = false }: { square?: boolean }) {
   const frame = useCurrentFrame()
   const shellIn = p(frame, 0, 20)
 
   return (
     <AbsoluteFill style={{ background: '#f5f7f6', color: INK, fontFamily: FONT, opacity: shellIn, overflow: 'hidden' }}>
-      <header style={{ alignItems: 'center', background: '#ffffff', borderBottom: `1px solid ${BORDER}`, display: 'flex', height: 64, justifyContent: 'space-between', padding: '0 28px' }}>
-        <div style={{ alignItems: 'center', display: 'flex', gap: 12 }}>
-          <Img src={staticFile('logoOttoIcon.svg')} style={{ height: 30, width: 30 }} />
-          <div><strong style={{ display: 'block', fontSize: 16 }}>Visão financeira</strong><span style={{ color: MUTED, fontSize: 11 }}>Atualizado agora pela Otto</span></div>
-        </div>
-        <div style={{ alignItems: 'center', display: 'flex', gap: 8 }}><span style={{ color: MUTED, fontSize: 11 }}>Período</span><span style={{ background: '#f3f5f4', border: `1px solid ${BORDER}`, borderRadius: 6, fontSize: 11, fontWeight: 650, padding: '8px 11px' }}>Últimos 30 dias</span></div>
-      </header>
+      <div style={square ? { left: 0, position: 'absolute', right: 0, top: 'calc(50% + 28px)', transform: 'translateY(-50%)' } : undefined}>
+        <header style={{ alignItems: 'center', background: '#ffffff', borderBottom: `1px solid ${BORDER}`, display: 'flex', height: 64, justifyContent: 'space-between', padding: '0 28px' }}>
+          <div style={{ alignItems: 'center', display: 'flex', gap: 12 }}>
+            <Img src={staticFile('logoOttoIcon.svg')} style={{ height: 30, width: 30 }} />
+            <div><strong style={{ display: 'block', fontSize: 16 }}>Visão financeira</strong><span style={{ color: MUTED, fontSize: 11 }}>Atualizado agora pela Otto</span></div>
+          </div>
+          <div style={{ alignItems: 'center', display: 'flex', gap: 8 }}><span style={{ color: MUTED, fontSize: 11 }}>Período</span><span style={{ background: '#f3f5f4', border: `1px solid ${BORDER}`, borderRadius: 6, fontSize: 11, fontWeight: 650, padding: '8px 11px' }}>Últimos 30 dias</span></div>
+        </header>
 
-      <main style={{ display: 'grid', gap: 16, padding: '20px 28px 24px' }}>
-        <div style={{ display: 'grid', gap: 14, gridTemplateColumns: 'repeat(4, 1fr)' }}>{kpis.map((_, index) => <KpiCard index={index} key={kpis[index].label} />)}</div>
-        <div style={{ display: 'grid', gap: 16, gridTemplateColumns: 'minmax(0, 2fr) minmax(300px, 0.92fr)' }}>
-          <CashFlowPanel />
-          <div style={{ display: 'grid', gap: 14, gridTemplateRows: '1fr auto' }}><RevenuePanel /><StatusPanel /></div>
-        </div>
-      </main>
+        <main style={{ display: 'grid', gap: 16, padding: '20px 28px 24px' }}>
+          <div style={{ display: 'grid', gap: 14, gridTemplateColumns: 'repeat(4, 1fr)' }}>{kpis.map((_, index) => <KpiCard index={index} key={kpis[index].label} />)}</div>
+          <div style={{ display: 'grid', gap: 16, gridTemplateColumns: 'minmax(0, 2fr) minmax(300px, 0.92fr)' }}>
+            <CashFlowPanel />
+            <div style={{ display: 'grid', gap: 14, gridTemplateRows: '1fr auto' }}><RevenuePanel /><StatusPanel /></div>
+          </div>
+        </main>
+      </div>
     </AbsoluteFill>
   )
 }

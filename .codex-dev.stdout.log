@@ -1,0 +1,17 @@
+   ▲ Next.js 16.0.10 (Turbopack)
+   - Local:         http://localhost:3000
+   - Network:       http://192.168.0.14:3000
+   - Environments: .env.local
+
+ ✓ Starting...
+ ○ Compiling proxy ...
+ ✓ Ready in 25.6s
+ ○ Compiling /lp ...
+
+[35m
+[Clerk]:[0m You are running in keyless mode.
+You can [35mclaim your keys[0m by visiting https://dashboard.clerk.com/apps/claim?framework=nextjs&token=0vovn4aaacknyyjgf8qrkuhzzpn60lf7t052rw0f&return_url=http%3A%2F%2F127.0.0.1%3A3000%2F
+
+ GET /lp 200 in 837ms (compile: 103ms, proxy.ts: 21ms, render: 713ms)
+ ○ Compiling /emissor-nota-fiscal ...
+ GET /emissor-nota-fiscal 200 in 7.4s (compile: 5.0s, proxy.ts: 12ms, render: 2.4s)

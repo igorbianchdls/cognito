@@ -27,6 +27,7 @@ import GoogleAdsIcon from '@/components/icons/GoogleAdsIcon'
 import MetaIcon from '@/components/icons/MetaIcon'
 import OmieIcon from '@/components/icons/OmieIcon'
 import ShopifyIcon from '@/components/icons/ShopifyIcon'
+import { AnimatedHeroPrompt } from '@/assets/landingpages/AnimatedHeroPrompt'
 
 const integrations = [
   { icon: ContaAzulIcon, label: 'Conta Azul' },
@@ -125,9 +126,10 @@ export function OttoLandingPage() {
               <span className="inline-flex items-center gap-2"><Bot className="h-3.5 w-3.5" /> Claude</span>
               <span className="inline-flex items-center gap-2"><LockKeyhole className="h-3.5 w-3.5" /> Dados e permissões protegidos</span>
             </div>
+            <AnimatedHeroPrompt />
           </div>
 
-          <div className="mt-14 sm:mt-20">
+          <div className="mt-10 sm:mt-14">
             <ProductShowcase />
           </div>
         </div>

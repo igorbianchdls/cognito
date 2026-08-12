@@ -45,6 +45,26 @@ import {
   OttoFinanceAi50sVideo,
 } from './compositions/OttoFinanceAi50sVideo'
 import {
+  OTTO_FINANCE_AI_50S_SQUARE_DURATION,
+  OttoFinanceAi50sSquareVideo,
+} from './compositions/OttoFinanceAi50sSquareVideo'
+import {
+  OTTO_FINANCE_AI_53S_NARRATED_DURATION,
+  OttoFinanceAi53sNarratedVideo,
+} from './compositions/OttoFinanceAi53sNarratedVideo'
+import {
+  OTTO_INVOICE_AI_60S_NARRATED_DURATION,
+  OttoInvoiceAi60sNarratedVideo,
+} from './compositions/OttoInvoiceAi60sNarratedVideo'
+import {
+  OTTO_INVOICE_DIRECT_53S_NARRATED_DURATION,
+  OttoInvoiceDirect53sNarratedVideo,
+} from './compositions/OttoInvoiceDirect53sNarratedVideo'
+import {
+  OTTO_FINANCIAL_OPERATORS_50S_NARRATED_DURATION,
+  OttoFinancialOperators50sNarratedVideo,
+} from './compositions/OttoFinancialOperators50sNarratedVideo'
+import {
   OTTO_FINANCIAL_DASHBOARD_DURATION,
   OttoFinancialDashboard,
 } from './compositions/OttoFinancialDashboard'
@@ -122,6 +142,46 @@ function RemotionDownloadRoot() {
         fps={30}
         height={720}
         id="video-otto-finance-ai-50s"
+        width={1280}
+      />
+      <Composition
+        component={OttoFinanceAi50sSquareVideo}
+        durationInFrames={OTTO_FINANCE_AI_50S_SQUARE_DURATION}
+        fps={30}
+        height={1080}
+        id="video-otto-finance-ai-50s-square"
+        width={1080}
+      />
+      <Composition
+        component={OttoFinanceAi53sNarratedVideo}
+        durationInFrames={OTTO_FINANCE_AI_53S_NARRATED_DURATION}
+        fps={30}
+        height={720}
+        id="video-otto-finance-ai-53s-narrated"
+        width={1280}
+      />
+      <Composition
+        component={OttoInvoiceAi60sNarratedVideo}
+        durationInFrames={OTTO_INVOICE_AI_60S_NARRATED_DURATION}
+        fps={30}
+        height={720}
+        id="video-otto-invoice-ai-60s-narrated"
+        width={1280}
+      />
+      <Composition
+        component={OttoInvoiceDirect53sNarratedVideo}
+        durationInFrames={OTTO_INVOICE_DIRECT_53S_NARRATED_DURATION}
+        fps={30}
+        height={720}
+        id="video-otto-invoice-direct-53s-narrated"
+        width={1280}
+      />
+      <Composition
+        component={OttoFinancialOperators50sNarratedVideo}
+        durationInFrames={OTTO_FINANCIAL_OPERATORS_50S_NARRATED_DURATION}
+        fps={30}
+        height={720}
+        id="video-otto-financial-operators-50s-narrated"
         width={1280}
       />
       <Composition

@@ -91,7 +91,7 @@ const SantanderBrandIcon = bankAssetIcon('brand-logos/banks/santander.svg', true
 const BancoDoBrasilBrandIcon = bankAssetIcon('brand-logos/banks/banco-do-brasil.svg', true)
 const BradescoBrandIcon = bankAssetIcon('brand-logos/banks/bradesco.svg', true)
 
-const reconciliationRows = [
+export const reconciliationRows = [
   row({ description: 'PIX recebido · 03 ago', erp: 'Venda #1842', icon: ItauBrandIcon, initials: 'IT', name: 'Itaú Empresas', status: 'Conciliado', tone: '#ff7900', value: 'R$ 4.800' }),
   row({ description: 'Cartão corporativo · 03 ago', erp: 'Software', icon: NubankBrandIcon, initials: 'NU', name: 'Nubank PJ', status: 'Conciliado', tone: '#820ad1', value: 'R$ 920' }),
   row({ description: 'TED recebida · 04 ago', erp: 'Cliente Aurora', icon: SantanderBrandIcon, initials: 'ST', name: 'Santander Empresas', status: 'Conciliado', tone: '#e60000', value: 'R$ 7.250' }),
@@ -100,7 +100,7 @@ const reconciliationRows = [
   row({ description: 'Tarifa da conta · 05 ago', erp: 'Despesas bancárias', icon: MercadoPagoBrandIcon, initials: 'MP', name: 'Mercado Pago', status: 'Conciliado', tone: '#00b1ea', value: 'R$ 89' }),
 ]
 
-const expenseRows = [
+export const expenseRows = [
   row({ description: 'Campanha de mídia paga', icon: MetaIcon, initials: 'MA', name: 'Meta Ads', status: 'Classificada', tone: '#1877f2', value: 'Marketing · R$ 3.460' }),
   row({ description: 'Campanhas de pesquisa', icon: GoogleAdsIcon, initials: 'GA', name: 'Google Ads', status: 'Classificada', tone: '#f4b400', value: 'Marketing · R$ 2.180' }),
   row({ description: 'Taxas sobre vendas digitais', icon: HotmartIcon, initials: 'HM', name: 'Hotmart', status: 'Classificada', tone: '#f04e23', value: 'Taxas · R$ 1.290' }),
@@ -109,7 +109,7 @@ const expenseRows = [
   row({ description: 'Compra de materiais de escritório', icon: AmazonIcon, initials: 'AZ', name: 'Amazon', status: 'Classificada', tone: '#ff9900', value: 'Materiais · R$ 860' }),
 ]
 
-const recentSalesRows = [
+export const recentSalesRows = [
   row({ description: 'Aurora Tecnologia · Consultoria', initials: '42', name: 'Venda #01942', status: 'Confirmada', tone: '#2563eb', value: 'R$ 12.400' }),
   row({ description: 'Lume Comércio · Implantação', initials: '41', name: 'Venda #01941', status: 'Confirmada', tone: '#0f766e', value: 'R$ 8.900' }),
   row({ description: 'Studio Norte · Projeto mensal', initials: '40', name: 'Venda #01940', status: 'Confirmada', tone: '#7c3aed', value: 'R$ 5.440' }),
@@ -120,7 +120,7 @@ const recentSalesRows = [
   row({ description: 'Delta Logística · Integração', initials: '35', name: 'Venda #01935', status: 'Confirmada', tone: '#ea580c', value: 'R$ 2.640' }),
 ]
 
-const invoiceEmissionRows = [
+export const invoiceEmissionRows = [
   row({ description: 'Venda #01942 · Aurora Tecnologia', initials: 'NF', name: 'NFS-e #02841', status: 'Emitida', statusIcon: ReceiptText, tone: '#2563eb', value: 'R$ 12.400' }),
   row({ description: 'Venda #01941 · Lume Comércio', initials: 'NF', name: 'NFS-e #02842', status: 'Emitida', statusIcon: ReceiptText, tone: '#0f766e', value: 'R$ 8.900' }),
   row({ description: 'Venda #01940 · Studio Norte', initials: 'NF', name: 'NFS-e #02843', status: 'Emitida', statusIcon: ReceiptText, tone: '#7c3aed', value: 'R$ 5.440' }),
@@ -131,7 +131,7 @@ const invoiceEmissionRows = [
   row({ description: 'Venda #01935 · Delta Logística', initials: 'NF', name: 'NFS-e #02848', status: 'Emitida', statusIcon: ReceiptText, tone: '#ea580c', value: 'R$ 2.640' }),
 ]
 
-const collectionRows = [
+export const collectionRows = [
   row({ description: 'Vencimento em 04 ago', initials: 'LC', name: 'Lume Comércio', status: 'Cobrança enviada', tone: '#0f766e', value: 'R$ 8.900' }),
   row({ description: 'Vencimento em 01 ago', initials: 'NO', name: 'Nova Oficina', status: 'Cobrança enviada', tone: '#2563eb', value: 'R$ 3.280' }),
   row({ description: 'Vencimento em 29 jul', initials: 'SN', name: 'Studio Norte', status: 'Cobrança enviada', tone: '#7c3aed', value: 'R$ 5.440' }),
@@ -140,7 +140,7 @@ const collectionRows = [
   row({ description: 'Acompanhamento programado', initials: 'MN', name: 'Mercado Norte', status: 'Monitorando', tone: '#475569', value: 'R$ 1.580' }),
 ]
 
-const fiscalRows = [
+export const fiscalRows = [
   row({ description: 'Calendário e vencimentos', initials: 'OF', name: 'Obrigações fiscais', status: 'Verificado', tone: '#2563eb', value: 'Em dia' }),
   row({ description: 'Enquadramento atual da empresa', initials: 'RT', name: 'Regime tributário', status: 'Analisado', tone: '#7c3aed', value: 'Validado' }),
   row({ description: 'Créditos previstos na legislação', initials: 'CR', name: 'Créditos permitidos', status: 'Verificado', tone: '#16845b', value: 'Disponíveis' }),
@@ -149,10 +149,10 @@ const fiscalRows = [
   row({ description: 'Alternativa dentro da legislação', initials: 'EC', name: 'Economia tributária', status: 'Identificada', tone: '#d97757', value: 'Oportunidade' }),
 ]
 
-function InvoiceDocumentPreview({ frame }: { frame: number }) {
+function InvoiceDocumentPreview({ frame, showFrom = 55 }: { frame: number; showFrom?: number }) {
   const { height, width } = useVideoConfig()
-  const show = p(frame, 55, 64)
-  const squareOffset = height >= width ? 170 : 0
+  const show = p(frame, showFrom, showFrom + 9)
+  const square = height >= width
 
   return (
     <div
@@ -165,8 +165,8 @@ function InvoiceDocumentPreview({ frame }: { frame: number }) {
         opacity: show,
         padding: '26px 30px 24px',
         position: 'absolute',
-        top: 64 + squareOffset,
-        transform: `translateX(-50%) translateY(${(1 - show) * 18}px) scale(${0.96 + show * 0.04})`,
+        top: square ? '50%' : 64,
+        transform: `translateX(-50%) ${square ? 'translateY(-50%) ' : ''}translateY(${(1 - show) * 18}px) scale(${0.96 + show * 0.04})`,
         width: 510,
         zIndex: 20,
       }}
@@ -212,10 +212,11 @@ function InvoiceDocumentPreview({ frame }: { frame: number }) {
   )
 }
 
-function SyncScene({
+export function SyncScene({
   assistantText,
   duration,
   invoicePreview = false,
+  invoicePreviewStart = 55,
   kind = 'list',
   rows,
   speed = 1.8,
@@ -225,6 +226,7 @@ function SyncScene({
   assistantText: string
   duration: number
   invoicePreview?: boolean
+  invoicePreviewStart?: number
   kind?: 'list' | 'reconciliation'
   rows: OttoAiEmployeesResultRow[]
   speed?: number
@@ -236,17 +238,18 @@ function SyncScene({
   const cardFrame = Math.max(0, frame - 12) * speed
   const cardScale = rows.length > 6 ? 0.84 : 0.92
   const cardWidth = 940 / cardScale
+  const square = height >= width
+  const squareContentHeight = 37 + (126 + rows.length * 72) * cardScale
   const textIn = p(frame, 0, 14)
   const typedCharacters = Math.floor(p(frame, 2, 22, [0, assistantText.length]))
   const showTextCursor = frame < 26 && Math.floor(frame / 4) % 2 === 0
-  const cursorMove = p(frame, 40, 52)
-  const cursorOpacity = invoicePreview ? p(frame, 36, 42) * p(frame, 55, 61, [1, 0]) : 0
-  const cardBlur = invoicePreview ? p(frame, 54, 62, [0, 5]) : 0
-  const cardOpacity = invoicePreview ? p(frame, 54, 62, [1, 0.66]) : 1
-  const squareOffset = height >= width ? 170 : 0
+  const cursorMove = p(frame, invoicePreviewStart - 15, invoicePreviewStart - 3)
+  const cursorOpacity = invoicePreview ? p(frame, invoicePreviewStart - 19, invoicePreviewStart - 13) * p(frame, invoicePreviewStart, invoicePreviewStart + 6, [1, 0]) : 0
+  const cardBlur = invoicePreview ? p(frame, invoicePreviewStart - 1, invoicePreviewStart + 7, [0, 5]) : 0
+  const cardOpacity = invoicePreview ? p(frame, invoicePreviewStart - 1, invoicePreviewStart + 7, [1, 0.66]) : 1
   return (
     <Scene duration={duration}>
-      <div style={{ left: '50%', position: 'absolute', top: 30 + squareOffset, transform: 'translateX(-50%)', width: 940 }}>
+      <div style={{ left: '50%', position: 'absolute', top: square ? (height - squareContentHeight) / 2 : 30, transform: 'translateX(-50%)', width: 940 }}>
         <div style={{ color: '#242424', fontSize: 18, fontWeight: 440, lineHeight: 1.4, opacity: textIn, transform: `translateY(${(1 - textIn) * 8}px)` }}>
           {assistantText.slice(0, typedCharacters)}
           {showTextCursor ? <span style={{ borderRight: '1.5px solid #242424', marginLeft: 2 }}>&nbsp;</span> : null}
@@ -262,7 +265,7 @@ function SyncScene({
               opacity: cursorOpacity,
               position: 'absolute',
               top: interpolate(cursorMove, [0, 1], [230, 128]),
-              transform: `scale(${frame >= 52 && frame < 55 ? 0.82 : 1})`,
+              transform: `scale(${frame >= invoicePreviewStart - 3 && frame < invoicePreviewStart ? 0.82 : 1})`,
               zIndex: 12,
             }}
           >
@@ -270,7 +273,7 @@ function SyncScene({
           </div>
         ) : null}
       </div>
-      {invoicePreview ? <InvoiceDocumentPreview frame={frame} /> : null}
+      {invoicePreview ? <InvoiceDocumentPreview frame={frame} showFrom={invoicePreviewStart} /> : null}
     </Scene>
   )
 }
@@ -359,8 +362,8 @@ const overdueClients = [
   { color: '#e97b48', name: 'Vitta Serviços', value: 2.17 },
 ]
 
-function OverdueChart({ duration }: { duration: number }) {
-  const frame = useCurrentFrame()
+export function OverdueChart({ animationSpeed = 1, duration }: { animationSpeed?: number; duration: number }) {
+  const frame = useCurrentFrame() * animationSpeed
   return (
     <ChartResponseScene
       duration={duration}
@@ -395,7 +398,7 @@ function OverdueChart({ duration }: { duration: number }) {
   )
 }
 
-function CompatibilityScene({ duration }: { duration: number }) {
+export function CompatibilityScene({ duration }: { duration: number }) {
   return (
     <Scene duration={duration}>
       <div style={{ alignItems: 'center', display: 'flex', inset: 0, justifyContent: 'center', padding: '0 80px', position: 'absolute' }}>
@@ -411,7 +414,7 @@ function CompatibilityScene({ duration }: { duration: number }) {
   )
 }
 
-function OutroScene({ duration }: { duration: number }) {
+export function OutroScene({ duration }: { duration: number }) {
   const frame = useCurrentFrame()
   const logoIn = p(frame, 4, 22)
   const textIn = p(frame, 22, 40)
@@ -431,24 +434,24 @@ function OutroScene({ duration }: { duration: number }) {
   )
 }
 
-export function OttoFinanceAi50sVideo() {
+export function OttoFinanceAi50sVideo({ square = false }: { square?: boolean }) {
   return (
     <AbsoluteFill style={{ background: '#ffffff' }}>
-      <Sequence durationInFrames={90}><OttoLogoRevealHorizontal /></Sequence>
-      <Sequence from={90} durationInFrames={87}><ExactPromptInputScene duration={87} label="Por onde começamos?" prompt="Emita as notas fiscais das minhas vendas recentes." /></Sequence>
+      <Sequence durationInFrames={90}><OttoLogoRevealHorizontal centerX={square ? 45 : 0} centerY={square ? '50%' : 330} /></Sequence>
+      <Sequence from={90} durationInFrames={87}><ExactPromptInputScene duration={87} label="Por onde começamos?" prompt="Emita as notas fiscais das minhas vendas recentes." typingDurationScale={1.15} /></Sequence>
       <Sequence from={177} durationInFrames={90}><SyncScene assistantText="Vou buscar as oito vendas mais recentes e validar clientes, serviços e valores antes da emissão." duration={90} rows={recentSalesRows} speed={2.3} subtitle="Vendas confirmadas, clientes e valores prontos para faturar" title="Últimas 8 vendas" /></Sequence>
       <Sequence from={267} durationInFrames={120}><SyncScene assistantText="As vendas estão validadas. Agora vou emitir as oito notas, enviá-las e atualizar o financeiro." duration={120} invoicePreview rows={invoiceEmissionRows} speed={2.3} subtitle="Notas autorizadas, enviadas e vinculadas ao financeiro" title="Emissão de 8 notas fiscais" /></Sequence>
-      <Sequence from={387} durationInFrames={62}><ExactPromptInputScene duration={62} label="Por onde começamos?" prompt="Concilie as movimentações bancárias e depois classifique as despesas." /></Sequence>
+      <Sequence from={387} durationInFrames={62}><ExactPromptInputScene duration={62} label="Por onde começamos?" prompt="Concilie as movimentações bancárias e depois classifique as despesas." typingDurationScale={1.15} /></Sequence>
       <Sequence from={449} durationInFrames={85}><SyncScene assistantText="Vou cruzar cada movimentação bancária com os lançamentos do Otto e confirmar as correspondências." duration={85} kind="reconciliation" rows={reconciliationRows} speed={2.3} subtitle="Bancos, cartões e lançamentos do Otto" title="Conciliação bancária" /></Sequence>
       <Sequence from={534} durationInFrames={70}><SyncScene assistantText="Agora vou classificar cada despesa por categoria e atualizar os lançamentos correspondentes." duration={70} rows={expenseRows} speed={2.3} subtitle="Fornecedores, categorias, valores e status" title="Classificação de despesas" /></Sequence>
-      <Sequence from={604} durationInFrames={62}><ExactPromptInputScene duration={62} label="Por onde começamos?" prompt="Mostre a projeção do fluxo de caixa dos próximos 6 meses." /></Sequence>
+      <Sequence from={604} durationInFrames={62}><ExactPromptInputScene duration={62} label="Por onde começamos?" prompt="Mostre a projeção do fluxo de caixa dos próximos 6 meses." typingDurationScale={1.15} /></Sequence>
       <Sequence from={666} durationInFrames={105}><CashFlowChart duration={105} /></Sequence>
       <Sequence from={771} durationInFrames={90}><SyncScene assistantText="Vou identificar os recebimentos vencidos, enviar as cobranças e programar os próximos acompanhamentos." duration={90} rows={collectionRows} subtitle="Clientes em atraso e acompanhamentos automáticos" title="Cobranças e recebimentos" /></Sequence>
-      <Sequence from={861} durationInFrames={87}><ExactPromptInputScene duration={87} label="Por onde começamos?" prompt="Quais clientes concentram os valores em atraso?" /></Sequence>
+      <Sequence from={861} durationInFrames={87}><ExactPromptInputScene duration={87} label="Por onde começamos?" prompt="Quais clientes concentram os valores em atraso?" typingDurationScale={1.15} /></Sequence>
       <Sequence from={948} durationInFrames={105}><OverdueChart duration={105} /></Sequence>
       <Sequence from={1053} durationInFrames={90}><SyncScene assistantText="Vou revisar as obrigações fiscais, comparar os cenários tributários e verificar oportunidades permitidas pela legislação." duration={90} rows={fiscalRows} subtitle="Obrigações, regime, créditos e oportunidades legais" title="Análise fiscal e tributária" /></Sequence>
-      <Sequence from={1143} durationInFrames={87}><ExactPromptInputScene duration={87} label="Por onde começamos?" prompt="Crie um dashboard com vendas, caixa, cobranças e situação fiscal." /></Sequence>
-      <Sequence from={1230} durationInFrames={135}><OttoFinancialDashboard /></Sequence>
+      <Sequence from={1143} durationInFrames={87}><ExactPromptInputScene duration={87} label="Por onde começamos?" prompt="Crie um dashboard com vendas, caixa, cobranças e situação fiscal." typingDurationScale={1.15} /></Sequence>
+      <Sequence from={1230} durationInFrames={135}><OttoFinancialDashboard square={square} /></Sequence>
       <Sequence from={1365} durationInFrames={60}><CompatibilityScene duration={60} /></Sequence>
       <Sequence from={1425} durationInFrames={75}><OutroScene duration={75} /></Sequence>
     </AbsoluteFill>

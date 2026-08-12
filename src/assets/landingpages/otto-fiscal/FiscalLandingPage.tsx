@@ -26,6 +26,7 @@ import { FiscalLandingHeader } from '@/assets/landingpages/otto-fiscal/component
 import { FiscalPricingSection } from '@/assets/landingpages/otto-fiscal/components/FiscalPricingSection'
 import { InvoiceShowcase } from '@/assets/landingpages/otto-fiscal/components/InvoiceShowcase'
 import { fiscalFaq } from '@/assets/landingpages/otto-fiscal/fiscalLandingContent'
+import { AnimatedHeroPrompt } from '@/assets/landingpages/AnimatedHeroPrompt'
 
 const benefits = [
   {
@@ -105,9 +106,10 @@ export function FiscalLandingPage() {
               <span className="inline-flex items-center gap-1.5"><CircleCheck className="h-3.5 w-3.5 text-[#2f8450]" />Revisão antes do envio</span>
               <span className="inline-flex items-center gap-1.5"><CircleCheck className="h-3.5 w-3.5 text-[#2f8450]" />Histórico fiscal preservado</span>
             </div>
+            <AnimatedHeroPrompt variant="fiscal" />
           </div>
 
-          <div className="mt-12 sm:mt-16">
+          <div className="mt-10 sm:mt-14">
             <InvoiceShowcase />
           </div>
         </div>
