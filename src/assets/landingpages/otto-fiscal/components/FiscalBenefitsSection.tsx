@@ -10,20 +10,15 @@ import {
   SiWoocommerce,
 } from '@icons-pack/react-simple-icons'
 import {
-  BadgeCheck,
   Check,
-  CheckCircle2,
-  CircleDollarSign,
   FileCheck2,
   FileText,
-  FolderCheck,
   Mail,
   MessageSquareText,
   MousePointer2,
   ReceiptText,
   RefreshCw,
   Send,
-  ShieldCheck,
   WalletCards,
 } from 'lucide-react'
 
@@ -38,186 +33,89 @@ const paymentIntegrations = [
   { color: '#96588A', icon: SiWoocommerce, label: 'WooCommerce' },
 ]
 
-const invoiceData = [
-  ['Cliente', 'Bruna Schmitz'],
-  ['Serviço', 'Consultoria financeira'],
-  ['Município', 'Recife, PE'],
-  ['Valor', 'R$ 375,00'],
-]
-
 function SalesRuleDemo() {
   return (
-    <div className={`${styles.demo} ${styles.salesDemo}`} role="img" aria-label="Venda registrada e nota fiscal emitida conforme a regra escolhida">
-      <div className={styles.demoHeader}>
-        <span className={styles.greenIcon}><ReceiptText aria-hidden="true" /></span>
-        <div><strong>Regra de emissão</strong><small>Venda → nota fiscal</small></div>
-        <span className={styles.statusNeutral}>Automática</span>
+    <div className={`${styles.demo} ${styles.refDemo} ${styles.refSalesDemo}`} role="img" aria-label="Venda registrada e nota fiscal emitida conforme a regra escolhida">
+      <div className={styles.refTitle}><i /></div>
+      <div className={styles.refRuleCards}>
+        {['Cobrança', 'Pagamento', 'Garantia'].map((label, index) => <div key={label} className={styles.refRuleCard} style={{ '--item-delay': `${index * 0.45}s` } as CSSProperties}><span><i /></span><strong>{label}</strong><b /></div>)}
       </div>
-
-      <div className={styles.ruleOptions}>
-        {['Na cobrança', 'Após o pagamento', 'Após a garantia'].map((label, index) => (
-          <div className={styles.ruleOption} key={label} style={{ '--option-index': index } as CSSProperties}>
-            <span><i />{label}</span>
-            <small>{index === 0 ? 'Ao gerar a cobrança' : index === 1 ? 'Quando o valor entrar' : 'Depois do prazo definido'}</small>
-          </div>
-        ))}
+      <div className={styles.refSaleToInvoice}>
+        <div><ReceiptText aria-hidden="true" /><span><i /><b /></span></div><em><i /></em><div><FileCheck2 aria-hidden="true" /><span><i /><b /></span></div>
       </div>
-
-      <div className={styles.saleFlow}>
-        <div className={styles.saleCard}><small>Venda #317</small><strong>R$ 375,00</strong><span>Bruna Schmitz</span></div>
-        <span className={styles.flowConnector}><i /></span>
-        <div className={styles.invoiceCard}><FileCheck2 /><span><small>NFS-e</small><strong>Nota emitida</strong></span></div>
-      </div>
-      <MousePointer2 aria-hidden="true" className={styles.salesCursor} />
+      <div className={styles.refBottomAction}><i /><button type="button">Ativar regra</button></div>
+      <MousePointer2 aria-hidden="true" className={styles.refSalesPointer} />
+      <div className={styles.refSuccess}><Check aria-hidden="true" /></div>
     </div>
   )
 }
 
 function DeliveryDemo() {
   return (
-    <div className={`${styles.demo} ${styles.deliveryDemo}`} role="img" aria-label="Nota fiscal autorizada e enviada automaticamente ao cliente">
-      <div className={styles.demoHeader}>
-        <span className={styles.blueIcon}><Send aria-hidden="true" /></span>
-        <div><strong>Envio ao cliente</strong><small>NFS-e 000317</small></div>
-        <span className={styles.statusSuccess}>Autorizada</span>
-      </div>
-
-      <div className={styles.deliveryDocument}>
-        <span><FileText /></span>
-        <div><small>Documento fiscal</small><strong>NFS-e 000317</strong><p>PDF e XML disponíveis</p></div>
-        <CheckCircle2 />
-      </div>
-
-      <div className={styles.recipientBox}>
-        <small>Enviar para</small>
-        <strong>Bruna Schmitz</strong>
-        <span><Mail />bruna@empresa.com.br</span>
-      </div>
-
-      <div className={styles.deliveryAction}><span>Documentos anexados</span><button type="button"><Send />Enviar agora</button></div>
-      <MousePointer2 aria-hidden="true" className={styles.deliveryCursor} />
-      <div className={styles.deliverySuccess}><CheckCircle2 /><span><strong>Enviado ao cliente</strong><small>PDF e XML entregues automaticamente</small></span></div>
+    <div className={`${styles.demo} ${styles.refDemo} ${styles.refDeliveryDemo}`} role="img" aria-label="Nota fiscal autorizada e enviada automaticamente ao cliente">
+      <div className={styles.refTitle}><i /></div>
+      <div className={styles.refFiscalDocument}><span><FileText aria-hidden="true" /></span><div><i /><i /><i /></div><b>XML</b></div>
+      <div className={styles.refRecipient}><Mail aria-hidden="true" /><div><i /><i /></div><Check aria-hidden="true" /></div>
+      <span className={styles.refFlyingMail}><Mail aria-hidden="true" /></span>
+      <div className={styles.refBottomAction}><i /><button type="button">Enviar</button></div>
+      <MousePointer2 aria-hidden="true" className={styles.refDeliveryPointer} />
+      <div className={styles.refSuccess}><Check aria-hidden="true" /></div>
     </div>
   )
 }
 
 function IntegrationsDemo() {
   return (
-    <div className={`${styles.demo} ${styles.integrationsDemo}`} role="img" aria-label="Plataformas de pagamento conectadas à Otto">
-      <div className={styles.demoHeader}>
-        <span className={styles.violetIcon}><RefreshCw aria-hidden="true" /></span>
-        <div><strong>Integrações</strong><small>Plataformas de pagamento</small></div>
-        <span className={styles.statusNeutral}>+70 disponíveis</span>
-      </div>
-
-      <div className={styles.integrationGrid}>
+    <div className={`${styles.demo} ${styles.refDemo} ${styles.refIntegrationsDemo}`} role="img" aria-label="Plataformas de pagamento conectadas à Otto">
+      <div className={styles.refTitle}><i /></div>
+      <div className={styles.refIntegrationGrid}>
         {paymentIntegrations.map((integration, index) => {
           const Icon = integration.icon
-          return (
-            <div className={styles.integrationItem} key={integration.label} style={{ '--integration-delay': `${index * 0.22}s` } as CSSProperties}>
-              <Icon color={integration.color} />
-              <span>{integration.label}</span>
-              <i><Check /></i>
-            </div>
-          )
+          return <div className={styles.refIntegrationItem} key={integration.label} style={{ '--item-delay': `${index * 0.24}s`, '--brand-color': integration.color } as CSSProperties}><Icon /><i><Check aria-hidden="true" /></i></div>
         })}
       </div>
-
-      <div className={styles.importFlow}>
-        <span>Importando vendas</span><strong>24 encontradas</strong>
-        <div><i /></div>
-      </div>
-      <MousePointer2 aria-hidden="true" className={styles.integrationCursor} />
-      <div className={styles.integrationSuccess}><CheckCircle2 />Plataforma conectada e vendas sincronizadas</div>
+      <span className={styles.refSyncCore}><RefreshCw aria-hidden="true" /></span>
+      <div className={styles.refSyncProgress}><i /></div>
+      <MousePointer2 aria-hidden="true" className={styles.refIntegrationPointer} />
+      <div className={styles.refSuccess}><Check aria-hidden="true" /></div>
     </div>
   )
 }
 
 function AssistantsDemo() {
   return (
-    <div className={`${styles.demo} ${styles.assistantDemo}`} role="img" aria-label="Nota fiscal preparada por uma conversa no ChatGPT ou Claude">
-      <div className={styles.demoHeader}>
-        <span className={styles.darkIcon}><MessageSquareText aria-hidden="true" /></span>
-        <div><strong>Otto conectada</strong><small>Escolha onde conversar</small></div>
-        <div className={styles.providers}>
-          <span className={styles.chatgpt}><SiOpenai color="#111111" />ChatGPT</span>
-          <span className={styles.claude}><SiClaude color="#D97757" />Claude</span>
-        </div>
-      </div>
-
-      <div className={styles.chatArea}>
-        <div className={styles.promptBubble}><span>Emita a nota fiscal da venda 317.</span></div>
-        <div className={styles.assistantResponse}>
-          <p><BadgeCheck />A Otto encontrou a venda e preparou a nota.</p>
-          <div className={styles.invoiceSummary}>
-            {invoiceData.slice(0, 3).map(([label, value], index) => (
-              <span key={label} style={{ '--row-delay': `${index * 0.3}s` } as CSSProperties}><small>{label}</small><strong>{value}</strong></span>
-            ))}
-          </div>
-          <button type="button">Revisar e confirmar</button>
-        </div>
-      </div>
-      <MousePointer2 aria-hidden="true" className={styles.assistantCursor} />
+    <div className={`${styles.demo} ${styles.refDemo} ${styles.refAssistantDemo}`} role="img" aria-label="Nota fiscal preparada por uma conversa no ChatGPT ou Claude">
+      <div className={styles.refAssistantCards}><div><span><SiOpenai /></span><i /><i /></div><div><span><SiClaude /></span><i /><i /></div></div>
+      <div className={styles.refPromptBar}><MessageSquareText aria-hidden="true" /><i /><button type="button"><Send aria-hidden="true" /></button></div>
+      <span className={styles.refAssistantBridge}><FileText aria-hidden="true" /></span>
+      <div className={styles.refAssistantInvoice}><div><FileCheck2 aria-hidden="true" /><i /></div>{[74, 58, 83].map((width, index) => <span key={width} style={{ '--item-delay': `${index * .25}s` } as CSSProperties}><i style={{ width: `${width}%` }} /><b /></span>)}</div>
+      <MousePointer2 aria-hidden="true" className={styles.refAssistantPointer} />
     </div>
   )
 }
 
 function ValidationDemo() {
   return (
-    <div className={`${styles.demo} ${styles.validationDemo}`} role="img" aria-label="Dados fiscais verificados e corrigidos antes da emissão">
-      <div className={styles.demoHeader}>
-        <span className={styles.amberIcon}><ShieldCheck aria-hidden="true" /></span>
-        <div><strong>Validação fiscal</strong><small>Antes da transmissão</small></div>
-        <span className={styles.statusWarning}>1 pendência</span>
-      </div>
-
-      <div className={styles.validationForm}>
-        <div><small>Cliente</small><strong>Bruna Schmitz</strong><Check /></div>
-        <div className={styles.invalidField}><small>Código do serviço</small><strong>—</strong><span>Obrigatório</span></div>
-        <div><small>Município</small><strong>Recife, PE</strong><Check /></div>
-        <div><small>Valor</small><strong>R$ 375,00</strong><Check /></div>
-      </div>
-
-      <div className={styles.correctionSuggestion}><RefreshCw /><span><small>Sugestão da Otto</small><strong>17.01 · Consultoria financeira</strong></span><button type="button">Aplicar</button></div>
-      <MousePointer2 aria-hidden="true" className={styles.validationCursor} />
-      <div className={styles.validationSuccess}><CheckCircle2 /><span><strong>Dados validados</strong><small>Nota pronta para transmissão</small></span></div>
+    <div className={`${styles.demo} ${styles.refDemo} ${styles.refValidationDemo}`} role="img" aria-label="Dados fiscais verificados e corrigidos antes da emissão">
+      <div className={styles.refTitle}><i /></div>
+      <div className={styles.refValidationForm}>{[72, 42, 84, 61].map((width, index) => <div className={index === 1 ? styles.refInvalidField : undefined} key={width} style={{ '--item-delay': `${index * .25}s` } as CSSProperties}><span /><i style={{ width: `${width}%` }} /><b>{index === 1 ? '!' : <Check aria-hidden="true" />}</b></div>)}</div>
+      <div className={styles.refSuggestion}><RefreshCw aria-hidden="true" /><div><i /><i /></div><button type="button">Aplicar</button></div>
+      <MousePointer2 aria-hidden="true" className={styles.refValidationPointer} />
+      <div className={styles.refSuccess}><Check aria-hidden="true" /></div>
     </div>
   )
 }
 
 function ConnectedFlowDemo() {
-  const steps = [
-    { icon: FileCheck2, label: 'Nota autorizada', detail: 'NFS-e 000317' },
-    { icon: FolderCheck, label: 'Documentos organizados', detail: 'PDF e XML' },
-    { icon: Send, label: 'Cliente notificado', detail: 'E-mail entregue' },
-    { icon: WalletCards, label: 'Financeiro atualizado', detail: 'Venda 317' },
-  ]
-
   return (
-    <div className={`${styles.demo} ${styles.connectedDemo}`} role="img" aria-label="Nota fiscal vinculada à venda, ao cliente e ao financeiro">
-      <div className={styles.demoHeader}>
-        <span className={styles.greenIcon}><CircleDollarSign aria-hidden="true" /></span>
-        <div><strong>Operação conectada</strong><small>Nota, cliente e financeiro</small></div>
-        <span className={styles.statusSuccess}>Automático</span>
+    <div className={`${styles.demo} ${styles.refDemo} ${styles.refConnectedDemo}`} role="img" aria-label="Nota fiscal vinculada à venda, ao cliente e ao financeiro">
+      <div className={styles.refTitle}><i /></div>
+      <div className={styles.refConnectedFlow}>
+        {[ReceiptText, FileCheck2, Mail, WalletCards].map((Icon, index) => <div key={index} style={{ '--item-delay': `${index * .55}s` } as CSSProperties}><span><Icon aria-hidden="true" /></span><i /><i /><b><Check aria-hidden="true" /></b></div>)}
       </div>
-
-      <div className={styles.connectedSummary}>
-        <div><small>Venda</small><strong>#317</strong></div>
-        <div><small>Nota fiscal</small><strong>000317</strong></div>
-        <div><small>Financeiro</small><strong>R$ 375,00</strong></div>
-      </div>
-
-      <div className={styles.connectedSteps}>
-        {steps.map((step, index) => {
-          const Icon = step.icon
-          return (
-            <div key={step.label} style={{ '--step-delay': `${index * 0.55}s` } as CSSProperties}>
-              <span><Icon /></span><p><strong>{step.label}</strong><small>{step.detail}</small></p><CheckCircle2 />
-            </div>
-          )
-        })}
-      </div>
-      <div className={styles.connectedSuccess}><CheckCircle2 />Tudo atualizado pela Otto</div>
+      <div className={styles.refConnectedLine}><i /></div>
+      <span className={styles.refConnectedCore}><RefreshCw aria-hidden="true" /></span>
+      <div className={styles.refSuccess}><Check aria-hidden="true" /></div>
     </div>
   )
 }

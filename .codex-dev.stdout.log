@@ -177,3 +177,24 @@ You can [35mclaim your keys[0m by visiting https://dashboard.clerk.com/apps/cl
  GET /lp 200 in 5.6s (compile: 103ms, proxy.ts: 31ms, render: 5.5s)
  GET /lp 200 in 5.9s (compile: 229ms, proxy.ts: 21ms, render: 5.7s)
  GET /lp 200 in 5.7s (compile: 1825ms, proxy.ts: 52ms, render: 3.8s)
+ ✓ Compiled in 17.6s
+ ✓ Compiled in 3.8s
+ ✓ Compiled in 12.7s
+ ○ Compiling /lp ...
+
+[35m
+[Clerk]:[0m You are running in keyless mode.
+You can [35mclaim your keys[0m by visiting https://dashboard.clerk.com/apps/claim?framework=nextjs&token=0vovn4aaacknyyjgf8qrkuhzzpn60lf7t052rw0f&return_url=http%3A%2F%2F127.0.0.1%3A3000%2F
+
+ GET /lp 200 in 107s (compile: 26.8s, proxy.ts: 3.3s, render: 77s)
+ GET /lp 200 in 32.7s (compile: 1122ms, proxy.ts: 272ms, render: 31.3s)
+ GET /lp 200 in 11.6s (compile: 678ms, proxy.ts: 150ms, render: 10.8s)
+ ✓ Compiled in 30.4s
+ ○ Compiling /lp ...
+ GET /lp 200 in 67s (compile: 20.5s, proxy.ts: 765ms, render: 46s)
+
+[35m
+[Clerk]:[0m You are running in keyless mode.
+You can [35mclaim your keys[0m by visiting https://dashboard.clerk.com/apps/claim?framework=nextjs&token=0vovn4aaacknyyjgf8qrkuhzzpn60lf7t052rw0f&return_url=http%3A%2F%2F127.0.0.1%3A3000%2F
+
+ GET /lp 200 in 28.2s (compile: 7.8s, proxy.ts: 1310ms, render: 19.1s)
