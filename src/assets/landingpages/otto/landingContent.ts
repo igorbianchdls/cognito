@@ -1,8 +1,6 @@
 export const landingNavigation = [
-  { href: '#produto', label: 'Produto' },
-  { href: '#assistente', label: 'ChatGPT e Claude' },
-  { href: '#recursos', label: 'Recursos' },
-  { href: '#integracoes', label: 'Integrações' },
+  { href: '#beneficios', label: 'Benefícios' },
+  { href: '#chatgpt-claude', label: 'ChatGPT e Claude' },
   { href: '#preco', label: 'Preço' },
   { href: '#duvidas', label: 'Dúvidas' },
 ]
