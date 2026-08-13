@@ -1,65 +1,164 @@
+'use client'
+
+import { useState } from 'react'
 import Link from 'next/link'
-import { Check } from 'lucide-react'
+import { Check, Copy, HelpCircle, MessageCircle, RotateCcw } from 'lucide-react'
+
+import styles from '@/assets/landingpages/otto-fiscal/components/FiscalPricingSection.module.css'
 
 const fiscalPlans = [
   {
-    name: 'Inicial',
-    price: '69',
-    description: 'Para começar a emitir por conversa com organização e segurança.',
-    features: ['1 CNPJ', 'Emissão de NF-e ou NFS-e', 'ChatGPT e Claude conectados à Otto', 'XML e documento auxiliar organizados', 'Acompanhamento de situação', 'Suporte por e-mail'],
+    name: 'Essencial',
+    monthlyPrice: 89,
+    annualPrice: 74,
+    annualTotal: '890',
+    monthlyVolume: '150 notas /mês',
+    annualVolume: '1.800 notas /ano',
+    additional: 'R$ 0,62 por nota adicional',
     featured: false,
+    features: [
+      'Taxa de adesão grátis',
+      '+ de 70 integrações',
+      'Emissão de NF-e ou NFS-e',
+      'ChatGPT e Claude conectados à Otto',
+      'Cadastro de CNPJ automático',
+      'Importação retroativa (máx. 500)',
+      'Suporte via WhatsApp, chat e e-mail',
+    ],
   },
   {
-    name: 'Negócios',
-    price: '129',
-    description: 'Para quem emite com frequência e quer ganhar tempo.',
-    features: ['1 CNPJ', 'Emissão de NF-e e NFS-e', 'Notas a partir de vendas pelo ChatGPT ou Claude', 'Consultas fiscais por conversa', 'Cancelamento e eventos fiscais', 'Histórico completo', 'Suporte prioritário'],
+    name: 'Avançado',
+    monthlyPrice: 189,
+    annualPrice: 157,
+    annualTotal: '1.890',
+    monthlyVolume: '600 notas /mês',
+    annualVolume: '7.200 notas /ano',
+    additional: 'R$ 0,44 por nota adicional',
     featured: true,
+    features: [
+      'Taxa de adesão grátis',
+      '+ de 70 integrações',
+      'Emissão de NF-e e NFS-e',
+      'Notas pelo ChatGPT ou Claude',
+      'Cancelamento e eventos fiscais',
+      'Fechamento mensal automático',
+      'Cadastro de CNPJ automático',
+      'Importação retroativa (máx. 1.000)',
+      'Suporte prioritário',
+    ],
   },
   {
-    name: 'Pro',
-    price: '199',
-    description: 'Para equipes e operações fiscais mais estruturadas.',
-    features: ['Até 3 CNPJs', 'Tudo do plano Negócios', 'Acesso para a equipe', 'Permissões por usuário', 'Configurações fiscais por empresa', 'Implantação guiada', 'Atendimento prioritário'],
+    name: 'Profissional',
+    monthlyPrice: 249,
+    annualPrice: 207,
+    annualTotal: '2.490',
+    monthlyVolume: '2.000 notas /mês',
+    annualVolume: '24.000 notas /ano',
+    additional: 'R$ 0,35 por nota adicional',
     featured: false,
+    features: [
+      'Taxa de adesão grátis',
+      '+ de 70 integrações',
+      'Tudo do plano Avançado',
+      'ChatGPT e Claude com permissões',
+      'Múltiplos CNPJs',
+      'Importação retroativa ilimitada',
+      'Onboarding assistido',
+      'Atendimento com especialista',
+      'Apoio técnico para integração',
+    ],
+  },
+  {
+    name: 'Enterprise',
+    monthlyPrice: null,
+    annualPrice: null,
+    annualTotal: null,
+    monthlyVolume: '+ de 2.000 notas /mês',
+    annualVolume: '+ de 24 mil notas /ano',
+    additional: 'Planos sob medida',
+    featured: false,
+    features: [
+      'Taxa de adesão grátis',
+      '+ de 70 integrações',
+      'Tudo do plano Profissional',
+      'Volume personalizado',
+      'Múltiplos CNPJs e equipes',
+      'Implantação acompanhada',
+      'SLA e suporte dedicado',
+      'Apoio técnico para integração',
+    ],
   },
 ]
 
 export function FiscalPricingSection() {
+  const [billing, setBilling] = useState<'monthly' | 'annual'>('annual')
+  const annual = billing === 'annual'
+
   return (
-    <section id="planos" className="scroll-mt-24 border-y border-[#e2e7e3] bg-white px-5 py-20 sm:px-8 sm:py-28">
-      <div className="mx-auto max-w-[1180px]">
-        <div className="mx-auto max-w-[650px] text-center">
-          <p className="text-xs font-medium uppercase text-[#17653a]">Planos</p>
-          <h2 className="mt-4 [--ui-title-font-size:40px] font-medium text-[#181b19] sm:[--ui-title-font-size:48px]" style={{ lineHeight: 1.06 }}>Menos trabalho manual. Mais notas sob controle.</h2>
-          <p className="mt-5 text-[15px] text-[#646c66]" style={{ lineHeight: 1.5 }}>Use o ChatGPT ou Claude para preparar e consultar a rotina. A Otto mantém dados, confirmações e documentos organizados conforme a operação cresce.</p>
+    <section id="planos" className={styles.section}>
+      <div className={styles.container}>
+        <div className={styles.headingGroup}>
+          <h2 className={styles.heading}>Planos que <span>crescem com você</span></h2>
+          <p>Quanto mais emite, menos paga por nota.</p>
         </div>
 
-        <div className="mt-12 grid items-stretch gap-4 lg:grid-cols-3">
-          {fiscalPlans.map((plan) => (
-            <article key={plan.name} className={`relative flex min-h-full flex-col rounded-lg border bg-white p-6 sm:p-7 ${plan.featured ? 'border-[#4d9563] shadow-[0_12px_36px_rgba(31,86,51,0.10)]' : 'border-[#dde3de]'}`}>
-              {plan.featured ? <span className="absolute right-5 top-5 rounded-md bg-[#e6f2e9] px-2.5 py-1 text-[11px] font-medium text-[#17653a]">Mais escolhido</span> : null}
-              <p className="text-sm font-semibold text-[#202521]">{plan.name}</p>
-              <p className="mt-3 min-h-12 text-sm leading-6 text-[#69716b]">{plan.description}</p>
-              <div className="mt-6 flex items-end gap-1.5">
-                <span className="pb-1 text-sm text-[#747c76]">R$</span>
-                <span className="text-[48px] font-medium leading-none text-[#181b19]">{plan.price}</span>
-                <span className="pb-1 text-sm text-[#747c76]">/mês</span>
-              </div>
-              <div className="my-7 h-px bg-[#e6e9e6]" />
-              <div className="grid flex-1 gap-3">
-                {plan.features.map((feature) => (
-                  <div key={feature} className="flex items-start gap-3 text-sm leading-6 text-[#454c47]">
-                    <span className="mt-1 grid h-4 w-4 shrink-0 place-items-center rounded-full bg-[#e2f2e6] text-[#287442]"><Check className="h-3 w-3" /></span>
-                    {feature}
-                  </div>
-                ))}
-              </div>
-              <Link href="/sign-up" className={`mt-8 inline-flex h-11 items-center justify-center rounded-md px-5 text-sm font-medium transition-colors ${plan.featured ? 'bg-[#17653a] text-white hover:bg-[#11542f]' : 'border border-[#ccd3cd] bg-white text-[#242a25] hover:bg-[#f3f5f3]'}`}>
-                Começar a emitir
-              </Link>
-            </article>
-          ))}
+        <div className={styles.billingRow}>
+          <div className={styles.billingToggle} aria-label="Período de cobrança">
+            <button type="button" className={!annual ? styles.activeToggle : undefined} onClick={() => setBilling('monthly')}>Mensal</button>
+            <button type="button" className={annual ? styles.activeToggle : undefined} onClick={() => setBilling('annual')}>Anual</button>
+          </div>
+          <span className={styles.savings}>2 meses grátis</span>
+        </div>
+
+        <div className={styles.plansGrid}>
+          {fiscalPlans.map((plan) => {
+            const price = annual ? plan.annualPrice : plan.monthlyPrice
+            const volume = annual ? plan.annualVolume : plan.monthlyVolume
+
+            return (
+              <article className={`${styles.planCard} ${plan.featured ? styles.featuredCard : ''}`} key={plan.name}>
+                {plan.featured ? <span className={styles.popularBadge}>Mais popular</span> : null}
+                <p className={styles.planEyebrow}>PLANO</p>
+                <h3>{plan.name}</h3>
+
+                {price ? (
+                  <>
+                    <div className={styles.price}><span>R$</span><strong>{price}</strong><small>/mês</small></div>
+                    <p className={styles.billingDetail}>{annual ? `R$ ${plan.annualTotal}/ano · cobrado anualmente` : 'cobrado mensalmente'}</p>
+                  </>
+                ) : (
+                  <div className={styles.customPrice}><small>Valor</small><strong>Sob Consulta</strong></div>
+                )}
+
+                <div className={styles.volumeBlock}>
+                  <strong>{volume}</strong>
+                  <span>{plan.additional}</span>
+                </div>
+
+                {price ? (
+                  <div className={styles.offerBox}>{annual ? '2 MESES GRÁTIS' : 'SEM FIDELIDADE'}<Copy aria-hidden="true" /></div>
+                ) : null}
+
+                <Link className={`${styles.cta} ${!price ? styles.enterpriseCta : ''}`} href="/sign-up">
+                  {!price ? <MessageCircle aria-hidden="true" /> : null}
+                  {!price ? 'Falar com especialista' : 'Começar'}
+                  {price ? <span>→</span> : null}
+                </Link>
+
+                <p className={styles.refund}><RotateCcw aria-hidden="true" />7 dias para pedir reembolso</p>
+
+                <div className={styles.features}>
+                  {plan.features.map((feature, index) => (
+                    <div key={feature}>
+                      <Check aria-hidden="true" className={index === 0 ? styles.greenCheck : undefined} />
+                      <span>{feature}</span>
+                      {feature.includes('integrações') || feature.includes('CNPJ') || feature.includes('ChatGPT') ? <HelpCircle aria-hidden="true" /> : null}
+                    </div>
+                  ))}
+                </div>
+              </article>
+            )
+          })}
         </div>
       </div>
     </section>

@@ -1,0 +1,80 @@
+.section {
+  scroll-margin-top: 96px;
+  border-block: 1px solid #e9e6ed;
+  padding: 82px 20px 96px;
+  background: #fff;
+  color: #140a20;
+}
+
+.container { max-width: 1180px; margin: 0 auto; }
+.headingGroup { text-align: center; }
+.headingGroup .heading.heading {
+  margin: 0;
+  font-family: var(--ui-font-family), Arial, sans-serif !important;
+  font-size: 48px !important;
+  font-weight: 750 !important;
+  line-height: 1.05;
+  color: #160a22;
+}
+.heading span { color: #17653a; }
+.headingGroup > p { margin: 13px 0 0; font-size: 15px; color: #777080; }
+
+.billingRow { display: flex; align-items: center; justify-content: center; gap: 15px; margin: 42px 0 40px; }
+.billingToggle { display: grid; width: 205px; grid-template-columns: 1fr 1fr; border: 1px solid #dedbe4; border-radius: 28px; padding: 4px; background: #f4f3f7; }
+.billingToggle button { height: 40px; border: 0; border-radius: 22px; background: transparent; font-size: 15px; color: #807a87; cursor: pointer; transition: background .2s ease, color .2s ease, box-shadow .2s ease; }
+.billingToggle .activeToggle { background: #17653a; box-shadow: 0 5px 14px rgb(23 101 58 / 24%); color: #fff; }
+.savings { border: 1px solid #b8dfc8; border-radius: 18px; padding: 7px 13px; background: #edfaf2; font-size: 12px; font-weight: 700; color: #138349; }
+
+.plansGrid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 16px; align-items: stretch; }
+.planCard { position: relative; display: flex; min-width: 0; flex-direction: column; border: 1px solid #e1dee5; border-radius: 18px; padding: 26px 24px 30px; background: #fff; }
+.featuredCard { border: 2px solid #209255; padding: 25px 23px 29px; box-shadow: 0 12px 34px rgb(23 101 58 / 12%); }
+.popularBadge { position: absolute; top: -17px; left: 50%; min-width: 122px; border-radius: 18px; padding: 9px 15px; background: #17653a; box-shadow: 0 7px 16px rgb(23 101 58 / 22%); text-align: center; font-size: 12px; font-weight: 750; color: #fff; transform: translateX(-50%); }
+.planEyebrow { margin: 0; font-size: 10px; font-weight: 650; letter-spacing: .1em; color: #a19ba6; }
+.featuredCard .planEyebrow { color: #2b9a5d; }
+.planCard h3 { margin: 7px 0 0; font-size: 25px; font-weight: 750; line-height: 1.1; color: #160a22; }
+
+.price { display: flex; min-height: 60px; align-items: baseline; margin-top: 19px; white-space: nowrap; }
+.price > span { margin-right: 3px; font-size: 38px; font-weight: 780; letter-spacing: 0; }
+.price strong { font-size: 47px; font-weight: 780; line-height: 1; letter-spacing: 0; }
+.price small { margin-left: 4px; font-size: 14px; color: #756f7b; }
+.featuredCard .price > span,
+.featuredCard .price strong { color: #209255; }
+.billingDetail { min-height: 20px; margin: 0; font-size: 11px; color: #8d8791; }
+.featuredCard .billingDetail { color: #64ae82; }
+.customPrice { display: grid; min-height: 79px; align-content: end; gap: 5px; }
+.customPrice small { font-size: 11px; color: #8d8791; }
+.customPrice strong { font-size: 29px; line-height: 1.1; }
+
+.volumeBlock { display: grid; gap: 5px; margin-top: 18px; border-top: 1px solid #e7e3e9; padding-top: 17px; }
+.volumeBlock strong { font-size: 20px; line-height: 1.2; }
+.featuredCard .volumeBlock strong { color: #209255; }
+.volumeBlock span { min-height: 18px; font-size: 11px; color: #8b8590; }
+.offerBox { display: flex; height: 42px; align-items: center; justify-content: center; gap: 7px; margin-top: 20px; border: 1px solid #afd8bf; border-radius: 10px; background: #f2faf5; font-size: 13px; color: #17653a; }
+.offerBox :global(.lucide) { width: 12px !important; height: 12px !important; }
+
+.cta { display: flex; height: 51px; align-items: center; justify-content: center; gap: 6px; margin-top: 8px; border-radius: 10px; background: #17653a; box-shadow: 0 8px 18px rgb(23 101 58 / 18%); font-size: 14px; font-weight: 750; color: #fff; text-decoration: none; transition: background .2s ease, transform .2s ease; }
+.cta:hover { background: #11542f; transform: translateY(-1px); }
+.enterpriseCta { margin-top: 20px; border: 1px solid #4ac77d; background: #edfaf2; box-shadow: none; color: #158348; }
+.enterpriseCta:hover { background: #def5e7; }
+.enterpriseCta :global(.lucide) { width: 17px !important; height: 17px !important; }
+.refund { display: flex; min-height: 42px; align-items: center; justify-content: center; gap: 4px; margin: 0; border-bottom: 1px solid #e8e5ea; font-size: 10px; color: #aaa5ad; }
+.refund :global(.lucide) { width: 10px !important; height: 10px !important; }
+
+.features { display: grid; gap: 10px; padding-top: 18px; }
+.features > div { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: start; gap: 8px; font-size: 12px; line-height: 1.35; color: #77717b; }
+.features > div > :global(.lucide-check) { width: 14px !important; height: 14px !important; stroke-width: 2.5 !important; color: #2ba45f; }
+.features > div > .greenCheck { color: #0bb86a; }
+.features > div > :global(.lucide-circle-help) { width: 12px !important; height: 12px !important; color: #c4bec7; }
+
+@media (max-width: 1100px) {
+  .plansGrid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 28px 16px; }
+}
+
+@media (max-width: 640px) {
+  .section { padding: 66px 20px 76px; }
+  .headingGroup .heading.heading { font-size: 39px !important; }
+  .billingRow { flex-wrap: wrap; margin-block: 34px 38px; }
+  .plansGrid { grid-template-columns: 1fr; gap: 32px; }
+  .planCard { padding: 26px 24px 30px; }
+  .featuredCard { padding: 25px 23px 29px; }
+}

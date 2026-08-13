@@ -198,3 +198,29 @@ You can [35mclaim your keys[0m by visiting https://dashboard.clerk.com/apps/cl
 You can [35mclaim your keys[0m by visiting https://dashboard.clerk.com/apps/claim?framework=nextjs&token=0vovn4aaacknyyjgf8qrkuhzzpn60lf7t052rw0f&return_url=http%3A%2F%2F127.0.0.1%3A3000%2F
 
  GET /lp 200 in 28.2s (compile: 7.8s, proxy.ts: 1310ms, render: 19.1s)
+ ✓ Compiled in 10.2s
+ ✓ Compiled in 2.1s
+ ✓ Compiled in 1678ms
+
+[35m
+[Clerk]:[0m You are running in keyless mode.
+You can [35mclaim your keys[0m by visiting https://dashboard.clerk.com/apps/claim?framework=nextjs&token=0vovn4aaacknyyjgf8qrkuhzzpn60lf7t052rw0f&return_url=http%3A%2F%2F127.0.0.1%3A3000%2F
+
+ GET /emissor-nota-fiscal 200 in 28.6s (compile: 12.3s, proxy.ts: 562ms, render: 15.7s)
+ GET /emissor-nota-fiscal 200 in 6.5s (compile: 1345ms, proxy.ts: 135ms, render: 5.0s)
+ ✓ Compiled in 10.7s
+ ○ Compiling /emissor-nota-fiscal ...
+
+[35m
+[Clerk]:[0m You are running in keyless mode.
+You can [35mclaim your keys[0m by visiting https://dashboard.clerk.com/apps/claim?framework=nextjs&token=0vovn4aaacknyyjgf8qrkuhzzpn60lf7t052rw0f&return_url=http%3A%2F%2F127.0.0.1%3A3000%2F
+
+   ▲ Next.js 16.0.10 (Turbopack)
+   - Local:         http://localhost:3000
+   - Network:       http://192.168.0.14:3000
+   - Environments: .env.local
+
+ ✓ Starting...
+ ○ Compiling proxy ...
+ ✓ Ready in 19s
+ ○ Compiling /emissor-nota-fiscal ...
