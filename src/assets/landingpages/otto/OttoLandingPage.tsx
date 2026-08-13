@@ -8,12 +8,12 @@ import { FinancialBenefitsSection } from '@/assets/landingpages/otto/components/
 import { LandingHeader } from '@/assets/landingpages/otto/components/LandingHeader'
 import { PricingSection } from '@/assets/landingpages/otto/components/PricingSection'
 import { frequentlyAskedQuestions } from '@/assets/landingpages/otto/landingContent'
-import { instrumentSerif } from '@/assets/landingpages/otto/fonts'
+import { instrumentSerif, montserrat } from '@/assets/landingpages/otto/fonts'
 import typography from '@/assets/landingpages/LandingTypography.module.css'
 
 export function OttoLandingPage() {
   return (
-    <main className={`${instrumentSerif.variable} ${typography.root} min-h-screen bg-white text-[#181818] [color-scheme:light]`}>
+    <main className={`${instrumentSerif.variable} ${montserrat.variable} ${typography.root} min-h-screen bg-white text-[#181818] [color-scheme:light]`}>
       <LandingHeader />
 
       <section className="overflow-hidden px-5 pt-16 pb-20 sm:px-8 sm:pt-24 sm:pb-28">

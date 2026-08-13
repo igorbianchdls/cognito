@@ -89,3 +89,20 @@ https://nextjs.org/docs/messages/module-not-found
 Read more: https://nextjs.org/docs/app/api-reference/config/next-config-js/allowedDevOrigins
  ⚠ Server is approaching the used memory threshold, restarting...
 [baseline-browser-mapping] The data in this module is over two months old.  To ensure accurate Baseline data, please update: `npm i baseline-browser-mapping@latest -D`
+ ⚠ Cross origin request detected from 127.0.0.1 to /_next/* resource. In a future major version of Next.js, you will need to explicitly configure "allowedDevOrigins" in next.config to allow this.
+Read more: https://nextjs.org/docs/app/api-reference/config/next-config-js/allowedDevOrigins
+ ⨯ Error: aborted
+    at ignore-listed frames {
+  code: 'ECONNRESET',
+  digest: '4115862311'
+}
+C:\Users\Administrador\Documents\creatto\cognito\cognito\node_modules\.pnpm\next@16.0.10_@babel+core@7.28.6_@opentelemetry+api@1.9.0_react-dom@19.2.1_react@19.2.1__react@19.2.1_sass@1.93.3\node_modules\next\dist\compiled\next-server\app-page-turbo.runtime.dev.js: Invalid source map. Only conformant source maps can be used to find the original code. Cause: Error: sourceMapURL could not be parsed
+ ⨯ Error: Element type is invalid: expected a string (for built-in components) or a class/function (for composite components) but got: undefined. You likely forgot to export your component from the file it's defined in, or you might have mixed up default and named imports.
+    at ignore-listed frames {
+  digest: '385779059'
+}
+C:\Users\Administrador\Documents\creatto\cognito\cognito\node_modules\.pnpm\next@16.0.10_@babel+core@7.28.6_@opentelemetry+api@1.9.0_react-dom@19.2.1_react@19.2.1__react@19.2.1_sass@1.93.3\node_modules\next\dist\compiled\next-server\app-page-turbo.runtime.dev.js: Invalid source map. Only conformant source maps can be used to find the original code. Cause: Error: sourceMapURL could not be parsed
+ ⨯ Error: Element type is invalid: expected a string (for built-in components) or a class/function (for composite components) but got: undefined. You likely forgot to export your component from the file it's defined in, or you might have mixed up default and named imports.
+    at ignore-listed frames {
+  digest: '385779059'
+}

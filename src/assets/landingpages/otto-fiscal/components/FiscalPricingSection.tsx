@@ -6,7 +6,19 @@ import { Check, Copy, HelpCircle, MessageCircle, RotateCcw } from 'lucide-react'
 
 import styles from '@/assets/landingpages/otto-fiscal/components/FiscalPricingSection.module.css'
 
-const fiscalPlans = [
+export type GrowthPricingPlan = {
+  name: string
+  monthlyPrice: number | null
+  annualPrice: number | null
+  annualTotal: string | null
+  monthlyVolume: string
+  annualVolume: string
+  additional: string
+  featured: boolean
+  features: string[]
+}
+
+const fiscalPlans: GrowthPricingPlan[] = [
   {
     name: 'Essencial',
     monthlyPrice: 89,
@@ -90,16 +102,22 @@ const fiscalPlans = [
   },
 ]
 
-export function FiscalPricingSection() {
-  const [billing, setBilling] = useState<'monthly' | 'annual'>('annual')
+type GrowthPricingSectionProps = {
+  id: string
+  plans: GrowthPricingPlan[]
+  subtitle: string
+}
+
+export function GrowthPricingSection({ id, plans, subtitle }: GrowthPricingSectionProps) {
+  const [billing, setBilling] = useState<'monthly' | 'annual'>('monthly')
   const annual = billing === 'annual'
 
   return (
-    <section id="planos" className={styles.section}>
+    <section id={id} className={styles.section}>
       <div className={styles.container}>
         <div className={styles.headingGroup}>
           <h2 className={styles.heading}>Planos que <span>crescem com você</span></h2>
-          <p>Quanto mais emite, menos paga por nota.</p>
+          <p>{subtitle}</p>
         </div>
 
         <div className={styles.billingRow}>
@@ -111,7 +129,7 @@ export function FiscalPricingSection() {
         </div>
 
         <div className={styles.plansGrid}>
-          {fiscalPlans.map((plan) => {
+          {plans.map((plan) => {
             const price = annual ? plan.annualPrice : plan.monthlyPrice
             const volume = annual ? plan.annualVolume : plan.monthlyVolume
 
@@ -163,4 +181,8 @@ export function FiscalPricingSection() {
       </div>
     </section>
   )
+}
+
+export function FiscalPricingSection() {
+  return <GrowthPricingSection id="planos" plans={fiscalPlans} subtitle="Quanto mais emite, menos paga por nota." />
 }

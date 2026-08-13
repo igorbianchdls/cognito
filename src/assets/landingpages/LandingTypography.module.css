@@ -1,3 +1,9 @@
+.root,
+.root * {
+  font-family: var(--font-montserrat), Arial, sans-serif !important;
+  letter-spacing: 0 !important;
+}
+
 .root h1,
 .root h2 {
   font-family: var(--font-instrument-serif, Georgia), serif !important;

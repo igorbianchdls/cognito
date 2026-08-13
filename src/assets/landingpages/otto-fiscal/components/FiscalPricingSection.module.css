@@ -10,7 +10,7 @@
 .headingGroup { text-align: center; }
 .headingGroup .heading.heading {
   margin: 0;
-  font-family: var(--ui-font-family), Arial, sans-serif !important;
+  font-family: var(--font-montserrat), Arial, sans-serif !important;
   font-size: 48px !important;
   font-weight: 750 !important;
   line-height: 1.05;

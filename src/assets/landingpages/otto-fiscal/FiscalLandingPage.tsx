@@ -4,7 +4,7 @@ import Link from 'next/link'
 import { ArrowRight, CircleCheck, Mail } from 'lucide-react'
 
 import { AnimatedHeroPrompt } from '@/assets/landingpages/AnimatedHeroPrompt'
-import { instrumentSerif } from '@/assets/landingpages/otto/fonts'
+import { instrumentSerif, montserrat } from '@/assets/landingpages/otto/fonts'
 import typography from '@/assets/landingpages/LandingTypography.module.css'
 import { FiscalBenefitsSection } from '@/assets/landingpages/otto-fiscal/components/FiscalBenefitsSection'
 import { FiscalLandingHeader } from '@/assets/landingpages/otto-fiscal/components/FiscalLandingHeader'
@@ -13,7 +13,7 @@ import { fiscalFaq } from '@/assets/landingpages/otto-fiscal/fiscalLandingConten
 
 export function FiscalLandingPage() {
   return (
-    <main className={`${instrumentSerif.variable} ${typography.root} min-h-screen bg-white text-[#181b19] [color-scheme:light]`}>
+    <main className={`${instrumentSerif.variable} ${montserrat.variable} ${typography.root} min-h-screen bg-white text-[#181b19] [color-scheme:light]`}>
       <FiscalLandingHeader />
 
       <section className="overflow-hidden px-5 pt-14 pb-20 sm:px-8 sm:pt-20 sm:pb-28">
