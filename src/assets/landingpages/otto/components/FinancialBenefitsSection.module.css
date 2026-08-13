@@ -1,12 +1,13 @@
 .demo {
   position: relative;
-  min-height: 360px;
+  min-height: 400px;
   overflow: hidden;
   border: 1px solid #dce2dd;
   border-radius: 8px;
   background: #ffffff;
   box-shadow: 0 28px 70px -54px rgba(24, 52, 31, 0.5);
   color: #252a26;
+  isolation: isolate;
 }
 
 .demoHeader {
@@ -235,6 +236,60 @@
   font-size: 11px;
 }
 
+.collectionAction,
+.scheduleAction {
+  position: absolute;
+  right: 16px;
+  bottom: 14px;
+  left: 16px;
+  display: flex;
+  min-height: 42px;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  border-top: 1px solid #e3e7e4;
+  padding-top: 10px;
+  background: #ffffff;
+  font-size: 9px;
+  color: #7c837d;
+}
+
+.collectionAction button,
+.scheduleAction button {
+  height: 32px;
+  border: 0;
+  border-radius: 5px;
+  padding: 0 12px;
+  background: #179447;
+  font-size: 10px;
+  font-weight: 700;
+  color: #ffffff;
+  transform-origin: center;
+}
+
+.collectionAction button {
+  animation: collectionButton 7.2s ease-in-out infinite;
+}
+
+.collectionCursor,
+.scheduleCursor,
+.assistantCursor,
+.reconciliationCursor,
+.invoiceCursor {
+  position: absolute;
+  z-index: 8;
+  width: 25px;
+  height: 25px;
+  fill: #ffffff;
+  color: #1f2521;
+  filter: drop-shadow(0 2px 2px rgba(20, 30, 22, 0.16));
+  pointer-events: none;
+}
+
+.collectionCursor {
+  animation: collectionCursor 7.2s ease-in-out infinite;
+}
+
 .calendarTrack {
   position: relative;
   display: grid;
@@ -315,7 +370,7 @@
 }
 
 .scheduleProgress {
-  padding: 15px 16px 56px;
+  padding: 15px 16px 72px;
 }
 
 .progressHeader,
@@ -385,6 +440,15 @@
   height: 14px;
 }
 
+.scheduleAction button {
+  background: #b8781e;
+  animation: scheduleButton 6.4s ease-in-out infinite;
+}
+
+.scheduleCursor {
+  animation: scheduleCursor 6.4s ease-in-out infinite;
+}
+
 .metricsGrid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
@@ -395,7 +459,13 @@
   display: grid;
   gap: 5px;
   padding: 14px 12px;
+  opacity: 0;
+  transform: translateY(8px);
+  animation: metricReveal 5.8s ease-in-out infinite;
 }
+
+.metricsGrid > div:nth-child(2) { animation-delay: 0.16s; }
+.metricsGrid > div:nth-child(3) { animation-delay: 0.32s; }
 
 .metricsGrid > div + div {
   border-left: 1px solid #e4e7e4;
@@ -438,6 +508,7 @@
 }
 
 .chart {
+  position: relative;
   display: grid;
   height: 112px;
   grid-template-columns: repeat(8, 1fr);
@@ -461,6 +532,26 @@
 
 .chart .currentBar {
   background: #2d6591;
+}
+
+.chartLine {
+  position: absolute;
+  inset: 5px 0 0;
+  z-index: 2;
+  width: 100%;
+  height: calc(100% - 8px);
+  overflow: visible;
+  pointer-events: none;
+}
+
+.chartLine polyline {
+  stroke: #183e86;
+  stroke-width: 2.5;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-dasharray: 520;
+  stroke-dashoffset: 520;
+  animation: lineDraw 5.8s ease-in-out infinite;
 }
 
 .chartLabels {
@@ -502,6 +593,182 @@
   margin-left: auto;
   font-weight: 650;
   color: #2d6591;
+}
+
+.assistantProvider {
+  display: inline-flex;
+  height: 32px;
+  align-items: center;
+  gap: 6px;
+  border: 1px solid #dfe3df;
+  border-radius: 6px;
+  padding: 0 8px;
+  background: #ffffff;
+  font-size: 10px;
+  font-weight: 600;
+  transform-origin: center;
+}
+
+.chatGptProvider {
+  animation: chatGptProvider 7.4s ease-in-out infinite;
+}
+
+.claudeProvider {
+  border-color: #eaded9;
+  background: #fffaf8;
+  animation: claudeProvider 7.4s ease-in-out infinite;
+}
+
+.assistantPrompt,
+.invoicePrompt {
+  overflow: hidden;
+  animation: promptBubble 7.4s ease-in-out infinite;
+}
+
+.assistantPrompt span,
+.invoicePrompt span {
+  display: block;
+  overflow: hidden;
+  white-space: nowrap;
+  clip-path: inset(0 100% 0 0);
+  animation: promptTyping 7.4s steps(34, end) infinite;
+}
+
+.assistantResponse {
+  opacity: 0;
+  transform: translateY(10px);
+  animation: responseReveal 7.4s ease-in-out infinite;
+}
+
+.assistantRow,
+.expenseRow,
+.invoiceRow {
+  opacity: 0;
+  transform: translateY(7px);
+}
+
+.assistantRow {
+  animation: assistantRow 7.4s ease-in-out infinite;
+  animation-delay: var(--row-delay);
+}
+
+.assistantCursor {
+  animation: assistantCursor 7.4s ease-in-out infinite;
+}
+
+.reconcileSummary {
+  opacity: 0;
+  transform: translateY(8px);
+  animation: reconcileSummary 8.4s ease-in-out infinite;
+}
+
+.expenseRow {
+  animation: expenseRow 8.4s ease-in-out infinite;
+  animation-delay: var(--row-delay);
+  min-height: 44px;
+}
+
+.expenseCategory,
+.expenseStatus {
+  opacity: 0;
+  animation: classificationReveal 8.4s ease-in-out infinite;
+  animation-delay: calc(var(--row-delay) + 0.48s);
+}
+
+.reconciliationCursor {
+  animation: reconciliationCursor 8.4s ease-in-out infinite;
+}
+
+.reconciliationSuccess {
+  position: absolute;
+  right: 14px;
+  bottom: 12px;
+  left: 14px;
+  z-index: 7;
+  display: flex;
+  min-height: 42px;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  border: 1px solid #bcd8c3;
+  border-radius: 6px;
+  background: #edf7ef;
+  font-size: 10px;
+  font-weight: 700;
+  color: #25683a;
+  opacity: 0;
+  transform: translateY(10px);
+  animation: reconciliationSuccess 8.4s ease-in-out infinite;
+}
+
+.reconciliationSuccess svg {
+  width: 15px;
+  height: 15px;
+}
+
+.invoicePrompt,
+.invoicePrompt span {
+  animation-duration: 8.2s;
+}
+
+.invoiceDetails {
+  opacity: 0;
+  transform: translateY(9px);
+  animation: invoiceDetails 8.2s ease-in-out infinite;
+}
+
+.invoiceRow {
+  animation: invoiceRow 8.2s ease-in-out infinite;
+  animation-delay: var(--row-delay);
+}
+
+.invoiceButton {
+  transform-origin: center;
+  animation: invoiceButton 8.2s ease-in-out infinite;
+}
+
+.invoiceCursor {
+  animation: invoiceCursor 8.2s ease-in-out infinite;
+}
+
+.invoiceSuccess {
+  position: absolute;
+  inset: 0;
+  z-index: 10;
+  display: grid;
+  place-items: center;
+  align-content: center;
+  gap: 8px;
+  background: rgba(255, 255, 255, 0.96);
+  opacity: 0;
+  transform: scale(0.98);
+  animation: invoiceSuccess 8.2s ease-in-out infinite;
+  pointer-events: none;
+}
+
+.invoiceSuccess span {
+  display: grid;
+  width: 62px;
+  height: 62px;
+  place-items: center;
+  border-radius: 50%;
+  background: #33b45f;
+  color: #ffffff;
+}
+
+.invoiceSuccess svg {
+  width: 31px;
+  height: 31px;
+}
+
+.invoiceSuccess strong {
+  margin-top: 5px;
+  font-size: 16px;
+}
+
+.invoiceSuccess small {
+  font-size: 10px;
+  color: #737a74;
 }
 
 @keyframes channelCycle {
@@ -547,12 +814,167 @@
   50% { opacity: 1; transform: scale(1); }
 }
 
+@keyframes collectionButton {
+  0%, 48%, 100% { transform: scale(1); background: #179447; }
+  54%, 58% { transform: scale(0.92); background: #127a39; }
+  64%, 92% { transform: scale(1); background: #179447; }
+}
+
+@keyframes collectionCursor {
+  0%, 34%, 100% { left: 72%; top: 58%; opacity: 0; transform: translate(0, 0) scale(1); }
+  40% { left: 72%; top: 58%; opacity: 1; }
+  52% { left: 82%; top: 86%; opacity: 1; transform: translate(0, 0) scale(1); }
+  56% { left: 82%; top: 86%; opacity: 1; transform: translate(1px, 1px) scale(0.82); }
+  62%, 70% { left: 82%; top: 86%; opacity: 1; transform: translate(0, 0) scale(1); }
+  76% { left: 82%; top: 86%; opacity: 0; }
+}
+
+@keyframes scheduleButton {
+  0%, 54%, 100% { transform: scale(1); }
+  62%, 66% { transform: scale(0.92); }
+  72%, 92% { transform: scale(1); }
+}
+
+@keyframes scheduleCursor {
+  0%, 38%, 100% { left: 56%; top: 27%; opacity: 0; transform: scale(1); }
+  44% { left: 56%; top: 27%; opacity: 1; }
+  60% { left: 80%; top: 87%; opacity: 1; transform: scale(1); }
+  64% { left: 80%; top: 87%; opacity: 1; transform: scale(0.82); }
+  70%, 78% { left: 80%; top: 87%; opacity: 1; transform: scale(1); }
+  84% { opacity: 0; }
+}
+
+@keyframes metricReveal {
+  0%, 8%, 100% { opacity: 0; transform: translateY(8px); }
+  22%, 88% { opacity: 1; transform: translateY(0); }
+  94% { opacity: 0; transform: translateY(-3px); }
+}
+
+@keyframes lineDraw {
+  0%, 23%, 100% { stroke-dashoffset: 520; opacity: 0; }
+  34% { opacity: 1; }
+  62%, 88% { stroke-dashoffset: 0; opacity: 1; }
+  96% { stroke-dashoffset: 0; opacity: 0; }
+}
+
+@keyframes chatGptProvider {
+  0%, 8%, 45%, 100% { box-shadow: 0 0 0 0 rgba(32, 36, 33, 0); transform: translateY(0); }
+  15%, 35% { border-color: #8f9891; box-shadow: 0 0 0 3px rgba(32, 36, 33, 0.08); transform: translateY(-1px); }
+}
+
+@keyframes claudeProvider {
+  0%, 42%, 90%, 100% { box-shadow: 0 0 0 0 rgba(217, 119, 87, 0); transform: translateY(0); }
+  52%, 78% { border-color: #d97757; box-shadow: 0 0 0 3px rgba(217, 119, 87, 0.10); transform: translateY(-1px); }
+}
+
+@keyframes promptBubble {
+  0%, 11%, 100% { opacity: 0; transform: translateY(8px) scale(0.98); }
+  17%, 88% { opacity: 1; transform: translateY(0) scale(1); }
+  95% { opacity: 0; transform: translateY(-3px) scale(1); }
+}
+
+@keyframes promptTyping {
+  0%, 15%, 100% { clip-path: inset(0 100% 0 0); }
+  36%, 90% { clip-path: inset(0 0 0 0); }
+  96% { clip-path: inset(0 0 0 0); opacity: 0; }
+}
+
+@keyframes responseReveal {
+  0%, 37%, 100% { opacity: 0; transform: translateY(10px); }
+  46%, 90% { opacity: 1; transform: translateY(0); }
+  96% { opacity: 0; transform: translateY(-3px); }
+}
+
+@keyframes assistantRow {
+  0%, 45%, 100% { opacity: 0; transform: translateY(7px); }
+  55%, 90% { opacity: 1; transform: translateY(0); }
+  96% { opacity: 0; transform: translateY(-2px); }
+}
+
+@keyframes assistantCursor {
+  0%, 4%, 100% { left: 67%; top: 9%; opacity: 0; transform: scale(1); }
+  9% { left: 67%; top: 9%; opacity: 1; }
+  14% { left: 67%; top: 9%; opacity: 1; transform: scale(0.82); }
+  20% { left: 67%; top: 9%; opacity: 1; transform: scale(1); }
+  44% { left: 84%; top: 9%; opacity: 1; transform: scale(1); }
+  49% { left: 84%; top: 9%; opacity: 1; transform: scale(0.82); }
+  56% { left: 84%; top: 9%; opacity: 1; transform: scale(1); }
+  64% { opacity: 0; }
+}
+
+@keyframes reconcileSummary {
+  0%, 6%, 100% { opacity: 0; transform: translateY(8px); }
+  14%, 92% { opacity: 1; transform: translateY(0); }
+  97% { opacity: 0; transform: translateY(-2px); }
+}
+
+@keyframes expenseRow {
+  0%, 15%, 100% { opacity: 0; transform: translateY(7px); }
+  27%, 91% { opacity: 1; transform: translateY(0); }
+  97% { opacity: 0; transform: translateY(-2px); }
+}
+
+@keyframes classificationReveal {
+  0%, 31%, 100% { opacity: 0; }
+  43%, 92% { opacity: 1; }
+  97% { opacity: 0; }
+}
+
+@keyframes reconciliationCursor {
+  0%, 24%, 100% { left: 74%; top: 39%; opacity: 0; transform: scale(1); }
+  30% { opacity: 1; }
+  68% { left: 74%; top: 78%; opacity: 1; transform: scale(1); }
+  72% { transform: scale(0.82); }
+  77% { transform: scale(1); }
+  82% { opacity: 0; }
+}
+
+@keyframes reconciliationSuccess {
+  0%, 76%, 100% { opacity: 0; transform: translateY(10px); }
+  83%, 94% { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes invoiceDetails {
+  0%, 35%, 100% { opacity: 0; transform: translateY(9px); }
+  44%, 91% { opacity: 1; transform: translateY(0); }
+  97% { opacity: 0; transform: translateY(-2px); }
+}
+
+@keyframes invoiceRow {
+  0%, 42%, 100% { opacity: 0; transform: translateY(7px); }
+  52%, 91% { opacity: 1; transform: translateY(0); }
+  97% { opacity: 0; transform: translateY(-2px); }
+}
+
+@keyframes invoiceButton {
+  0%, 68%, 100% { transform: scale(1); }
+  74%, 78% { transform: scale(0.92); }
+  84%, 94% { transform: scale(1); }
+}
+
+@keyframes invoiceCursor {
+  0%, 58%, 100% { left: 61%; top: 66%; opacity: 0; transform: scale(1); }
+  64% { left: 61%; top: 66%; opacity: 1; }
+  72% { left: 82%; top: 88%; opacity: 1; transform: scale(1); }
+  76% { transform: scale(0.82); }
+  82% { transform: scale(1); opacity: 1; }
+  86% { opacity: 0; }
+}
+
+@keyframes invoiceSuccess {
+  0%, 80%, 100% { opacity: 0; transform: scale(0.98); }
+  86%, 95% { opacity: 1; transform: scale(1); }
+}
+
 @media (max-width: 520px) {
-  .demo { min-height: 350px; }
+  .demo { min-height: 380px; }
   .metricsGrid strong { font-size: 11px; }
   .metricsGrid > div { padding-inline: 9px; }
   .chart { gap: 6px; }
   .reportFooter span { display: none; }
+  .assistantProvider { padding-inline: 6px; font-size: 9px; }
+  .collectionAction span,
+  .scheduleAction span { display: none; }
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -563,9 +985,35 @@
   .progressSteps i,
   .paidStamp,
   .chart > span,
-  .liveStatus i {
+  .chartLine polyline,
+  .liveStatus i,
+  .collectionAction button,
+  .scheduleAction button,
+  .metricsGrid > div,
+  .assistantProvider,
+  .assistantPrompt,
+  .assistantPrompt span,
+  .assistantResponse,
+  .assistantRow,
+  .reconcileSummary,
+  .expenseRow,
+  .expenseCategory,
+  .expenseStatus,
+  .reconciliationSuccess,
+  .invoicePrompt,
+  .invoicePrompt span,
+  .invoiceDetails,
+  .invoiceRow,
+  .invoiceButton,
+  .invoiceSuccess {
     animation: none;
   }
+
+  .collectionCursor,
+  .scheduleCursor,
+  .assistantCursor,
+  .reconciliationCursor,
+  .invoiceCursor { display: none; }
 
   .channelRow { opacity: 1; transform: none; }
   .paymentConfirmed,
@@ -573,4 +1021,18 @@
   .calendarMarker { transform: translateX(100%); }
   .progressTrack i { transform: scaleX(1); }
   .chart > span { transform: scaleY(1); opacity: 1; }
+  .chartLine polyline { stroke-dashoffset: 0; opacity: 1; }
+  .metricsGrid > div,
+  .assistantPrompt,
+  .assistantPrompt span,
+  .assistantResponse,
+  .assistantRow,
+  .reconcileSummary,
+  .expenseRow,
+  .expenseCategory,
+  .expenseStatus,
+  .invoicePrompt,
+  .invoicePrompt span,
+  .invoiceDetails,
+  .invoiceRow { opacity: 1; transform: none; clip-path: none; }
 }
