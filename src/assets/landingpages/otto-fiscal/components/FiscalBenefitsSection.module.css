@@ -1,0 +1,427 @@
+.demo {
+  position: relative;
+  min-height: 400px;
+  overflow: hidden;
+  border: 1px solid #dce2dd;
+  border-radius: 8px;
+  background: #fff;
+  box-shadow: 0 28px 70px -54px rgba(24, 52, 31, 0.5);
+  color: #252a26;
+  isolation: isolate;
+}
+
+.demoHeader {
+  display: flex;
+  min-height: 68px;
+  align-items: center;
+  gap: 12px;
+  border-bottom: 1px solid #e3e7e4;
+  padding: 14px 16px;
+  background: #fbfcfb;
+}
+
+.demoHeader > span:first-child {
+  display: grid;
+  width: 38px;
+  height: 38px;
+  flex: 0 0 auto;
+  place-items: center;
+  border-radius: 6px;
+}
+
+.demoHeader > span:first-child svg { width: 18px; height: 18px; }
+.demoHeader > div:not(.providers) { display: grid; gap: 3px; }
+.demoHeader strong { font-size: 13px; font-weight: 700; }
+.demoHeader small { font-size: 11px; color: #7b837c; }
+.greenIcon { background: #e7f3ea; color: #28743d; }
+.blueIcon { background: #e7f0f7; color: #2d6591; }
+.violetIcon { background: #eeecff; color: #635bff; }
+.darkIcon { background: #eceeed; color: #171918; }
+.amberIcon { background: #fff1d8; color: #9b6214; }
+
+.statusNeutral,
+.statusSuccess,
+.statusWarning {
+  margin-left: auto;
+  border-radius: 5px;
+  padding: 6px 9px;
+  font-size: 10px;
+  font-weight: 700;
+}
+
+.statusNeutral { background: #f0f2f0; color: #5f6761; }
+.statusSuccess { background: #e8f3eb; color: #28743d; }
+.statusWarning { background: #fff2dc; color: #91601b; animation: warningPulse 7.2s ease-in-out infinite; }
+
+.ruleOptions {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  padding: 16px;
+}
+
+.ruleOption {
+  display: grid;
+  min-height: 76px;
+  align-content: center;
+  gap: 7px;
+  border: 1px solid #dfe4e0;
+  border-radius: 6px;
+  padding: 10px;
+  background: #fff;
+  animation: ruleSelection 7s ease-in-out infinite;
+  animation-delay: calc(var(--option-index) * 1.05s);
+}
+
+.ruleOption span { display: flex; align-items: center; gap: 6px; font-size: 10px; font-weight: 700; }
+.ruleOption i { width: 8px; height: 8px; border: 1px solid #aeb5af; border-radius: 50%; }
+.ruleOption small { font-size: 8px; line-height: 1.35; color: #818882; }
+
+.saleFlow {
+  display: grid;
+  grid-template-columns: 1fr 64px 1fr;
+  align-items: center;
+  gap: 10px;
+  padding: 30px 26px 22px;
+}
+
+.saleCard,
+.invoiceCard {
+  min-height: 112px;
+  border: 1px solid #dfe4e0;
+  border-radius: 6px;
+  background: #fff;
+}
+
+.saleCard {
+  display: grid;
+  align-content: center;
+  gap: 6px;
+  padding: 15px;
+  opacity: 0;
+  transform: translateX(-12px);
+  animation: saleEnter 7s ease-in-out infinite;
+}
+
+.saleCard small,
+.saleCard span { font-size: 9px; color: #7b837c; }
+.saleCard strong { font-size: 16px; }
+.flowConnector { height: 2px; overflow: hidden; background: #e2e6e3; }
+.flowConnector i { display: block; width: 100%; height: 100%; background: #2e9b52; transform: scaleX(0); transform-origin: left; animation: flowGrow 7s ease-in-out infinite; }
+.invoiceCard { display: flex; align-items: center; justify-content: center; gap: 10px; opacity: 0; transform: scale(.92); animation: invoiceAppear 7s ease-in-out infinite; }
+.invoiceCard > svg { width: 27px; height: 27px; color: #2e9b52; }
+.invoiceCard span { display: grid; gap: 4px; }
+.invoiceCard small { font-size: 9px; color: #7b837c; }
+.invoiceCard strong { font-size: 12px; color: #28743d; }
+
+.salesCursor,
+.deliveryCursor,
+.integrationCursor,
+.assistantCursor,
+.validationCursor {
+  position: absolute;
+  z-index: 8;
+  width: 25px;
+  height: 25px;
+  fill: #fff;
+  color: #1f2521;
+  filter: drop-shadow(0 2px 2px rgba(20, 30, 22, .16));
+  pointer-events: none;
+}
+
+.salesCursor { animation: salesCursor 7s ease-in-out infinite; }
+
+.deliveryDocument {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 12px;
+  margin: 16px 16px 0;
+  border: 1px solid #dfe4e0;
+  border-radius: 6px;
+  padding: 13px;
+  opacity: 0;
+  transform: translateY(9px);
+  animation: documentEnter 6.4s ease-in-out infinite;
+}
+
+.deliveryDocument > span { display: grid; width: 38px; height: 44px; place-items: center; border-radius: 5px; background: #e7f0f7; color: #2d6591; }
+.deliveryDocument > span svg { width: 19px; height: 19px; }
+.deliveryDocument div { display: grid; gap: 3px; }
+.deliveryDocument small,
+.deliveryDocument p { margin: 0; font-size: 9px; color: #7b837c; }
+.deliveryDocument strong { font-size: 12px; }
+.deliveryDocument > svg { width: 18px; height: 18px; color: #2e9b52; }
+
+.recipientBox {
+  display: grid;
+  gap: 5px;
+  margin: 12px 16px;
+  border-bottom: 1px solid #e3e7e4;
+  padding: 10px 0 14px;
+  opacity: 0;
+  transform: translateY(8px);
+  animation: recipientEnter 6.4s ease-in-out infinite;
+}
+
+.recipientBox small { font-size: 9px; color: #7b837c; }
+.recipientBox strong { font-size: 12px; }
+.recipientBox span { display: flex; align-items: center; gap: 6px; font-size: 10px; color: #667068; }
+.recipientBox svg { width: 13px; height: 13px; }
+
+.deliveryAction {
+  position: absolute;
+  right: 16px;
+  bottom: 14px;
+  left: 16px;
+  display: flex;
+  min-height: 46px;
+  align-items: center;
+  justify-content: space-between;
+  border-top: 1px solid #e3e7e4;
+  padding-top: 10px;
+  font-size: 9px;
+  color: #7b837c;
+}
+
+.deliveryAction button,
+.assistantResponse button,
+.correctionSuggestion button {
+  display: inline-flex;
+  height: 34px;
+  align-items: center;
+  gap: 6px;
+  border: 0;
+  border-radius: 5px;
+  padding: 0 12px;
+  background: #17653a;
+  font-size: 10px;
+  font-weight: 700;
+  color: #fff;
+}
+
+.deliveryAction svg { width: 13px; height: 13px; }
+.deliveryAction button { animation: deliveryButton 6.4s ease-in-out infinite; }
+.deliveryCursor { animation: deliveryCursor 6.4s ease-in-out infinite; }
+.deliverySuccess,
+.validationSuccess {
+  position: absolute;
+  right: 16px;
+  bottom: 14px;
+  left: 16px;
+  z-index: 7;
+  display: flex;
+  min-height: 50px;
+  align-items: center;
+  gap: 10px;
+  border: 1px solid #bcd8c3;
+  border-radius: 6px;
+  padding: 9px 11px;
+  background: #edf7ef;
+  color: #25683a;
+  opacity: 0;
+  transform: translateY(11px);
+  animation: deliverySuccess 6.4s ease-in-out infinite;
+}
+
+.deliverySuccess > svg,
+.validationSuccess > svg { width: 19px; height: 19px; }
+.deliverySuccess span,
+.validationSuccess span { display: grid; gap: 2px; }
+.deliverySuccess strong,
+.deliverySuccess small,
+.validationSuccess strong,
+.validationSuccess small { font-size: 10px; }
+.deliverySuccess small,
+.validationSuccess small { color: #6f8073; }
+
+.integrationGrid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  padding: 16px;
+}
+
+.integrationItem {
+  position: relative;
+  display: grid;
+  min-height: 78px;
+  place-items: center;
+  align-content: center;
+  gap: 8px;
+  border: 1px solid #e0e4e1;
+  border-radius: 6px;
+  background: #fff;
+  opacity: 0;
+  transform: translateY(9px);
+  animation: integrationEnter 7.4s ease-in-out infinite;
+  animation-delay: var(--integration-delay);
+}
+
+.integrationItem > svg { width: 22px; height: 22px; }
+.integrationItem > span { font-size: 9px; font-weight: 600; color: #555d57; }
+.integrationItem > i { position: absolute; top: 5px; right: 5px; display: grid; width: 16px; height: 16px; place-items: center; border-radius: 50%; background: #e5f3e8; color: #28743d; opacity: 0; animation: integrationCheck 7.4s ease-in-out infinite; animation-delay: calc(var(--integration-delay) + .7s); }
+.integrationItem > i svg { width: 10px; height: 10px; }
+
+.importFlow {
+  position: absolute;
+  right: 16px;
+  bottom: 14px;
+  left: 16px;
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 8px;
+  font-size: 9px;
+  color: #7b837c;
+  opacity: 0;
+  animation: importShow 7.4s ease-in-out infinite;
+}
+
+.importFlow strong { color: #4d5550; }
+.importFlow div { grid-column: 1 / -1; height: 5px; overflow: hidden; border-radius: 3px; background: #e8ebe8; }
+.importFlow i { display: block; width: 100%; height: 100%; background: #635bff; transform: scaleX(0); transform-origin: left; animation: importProgress 7.4s ease-in-out infinite; }
+.integrationCursor { animation: integrationCursor 7.4s ease-in-out infinite; }
+.integrationSuccess,
+.connectedSuccess {
+  position: absolute;
+  right: 16px;
+  bottom: 13px;
+  left: 16px;
+  z-index: 7;
+  display: flex;
+  min-height: 42px;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  border: 1px solid #c3d9c8;
+  border-radius: 6px;
+  background: #edf7ef;
+  font-size: 10px;
+  font-weight: 700;
+  color: #25683a;
+  opacity: 0;
+  transform: translateY(10px);
+  animation: integrationSuccess 7.4s ease-in-out infinite;
+}
+.integrationSuccess svg,
+.connectedSuccess svg { width: 15px; height: 15px; }
+
+.providers { display: flex; gap: 6px; margin-left: auto; }
+.providers span { display: inline-flex; height: 30px; align-items: center; gap: 5px; border: 1px solid #dfe3df; border-radius: 6px; padding: 0 7px; background: #fff; font-size: 9px; font-weight: 600; }
+.providers svg { width: 13px; height: 13px; }
+.chatgpt { animation: providerChatGpt 7.4s ease-in-out infinite; }
+.claude { animation: providerClaude 7.4s ease-in-out infinite; }
+.chatArea { padding: 18px; background: #f8f9f7; }
+.promptBubble { max-width: 82%; margin-left: auto; overflow: hidden; border-radius: 7px; padding: 11px 13px; background: #e7eae7; font-size: 11px; color: #343a35; opacity: 0; transform: translateY(8px); animation: promptShow 7.4s ease-in-out infinite; }
+.promptBubble span { display: block; overflow: hidden; white-space: nowrap; clip-path: inset(0 100% 0 0); animation: promptType 7.4s steps(36, end) infinite; }
+.assistantResponse { margin-top: 16px; opacity: 0; transform: translateY(10px); animation: assistantResponse 7.4s ease-in-out infinite; }
+.assistantResponse > p { display: flex; align-items: center; gap: 7px; margin: 0 0 10px; font-size: 10px; font-weight: 700; }
+.assistantResponse > p svg { width: 14px; height: 14px; color: #28743d; }
+.invoiceSummary { display: grid; grid-template-columns: repeat(3, 1fr); overflow: hidden; border: 1px solid #dfe3df; border-radius: 6px; background: #fff; }
+.invoiceSummary > span { display: grid; gap: 4px; padding: 10px; opacity: 0; transform: translateY(6px); animation: summaryRow 7.4s ease-in-out infinite; animation-delay: var(--row-delay); }
+.invoiceSummary > span + span { border-left: 1px solid #e3e6e3; }
+.invoiceSummary small { font-size: 8px; color: #7b837c; }
+.invoiceSummary strong { overflow: hidden; font-size: 10px; text-overflow: ellipsis; white-space: nowrap; }
+.assistantResponse button { margin-top: 12px; }
+.assistantCursor { animation: assistantCursor 7.4s ease-in-out infinite; }
+
+.validationForm { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; padding: 16px 16px 10px; }
+.validationForm > div { position: relative; display: grid; min-height: 62px; align-content: center; gap: 5px; border: 1px solid #dfe4e0; border-radius: 6px; padding: 9px 11px; opacity: 0; transform: translateY(7px); animation: validationField 7.2s ease-in-out infinite; }
+.validationForm > div:nth-child(2) { animation-delay: .16s; }
+.validationForm > div:nth-child(3) { animation-delay: .32s; }
+.validationForm > div:nth-child(4) { animation-delay: .48s; }
+.validationForm small { font-size: 8px; color: #7b837c; }
+.validationForm strong { font-size: 10px; }
+.validationForm svg { position: absolute; top: 9px; right: 9px; width: 12px; height: 12px; color: #2e9b52; }
+.validationForm .invalidField { border-color: #e5b7a8; background: #fff9f6; animation-name: invalidField; }
+.invalidField span { position: absolute; right: 8px; bottom: 7px; font-size: 8px; font-weight: 700; color: #b14f36; animation: invalidLabel 7.2s ease-in-out infinite; }
+.correctionSuggestion { display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: 10px; margin: 3px 16px; border: 1px solid #ead5b2; border-radius: 6px; padding: 10px; background: #fffaf0; opacity: 0; transform: translateY(9px); animation: suggestionEnter 7.2s ease-in-out infinite; }
+.correctionSuggestion > svg { width: 17px; height: 17px; color: #a36b18; }
+.correctionSuggestion span { display: grid; gap: 3px; }
+.correctionSuggestion small { font-size: 8px; color: #8c7b5c; }
+.correctionSuggestion strong { font-size: 9px; }
+.correctionSuggestion button { height: 30px; background: #a36b18; }
+.validationCursor { animation: validationCursor 7.2s ease-in-out infinite; }
+.validationSuccess { animation: validationSuccess 7.2s ease-in-out infinite; }
+
+.connectedSummary { display: grid; grid-template-columns: repeat(3, 1fr); border-bottom: 1px solid #e4e7e4; }
+.connectedSummary > div { display: grid; gap: 5px; padding: 13px; opacity: 0; transform: translateY(7px); animation: connectedSummary 7.4s ease-in-out infinite; }
+.connectedSummary > div:nth-child(2) { animation-delay: .18s; }
+.connectedSummary > div:nth-child(3) { animation-delay: .36s; }
+.connectedSummary > div + div { border-left: 1px solid #e4e7e4; }
+.connectedSummary small { font-size: 8px; color: #7b837c; }
+.connectedSummary strong { font-size: 11px; }
+.connectedSteps { display: grid; gap: 0; padding: 10px 16px 58px; }
+.connectedSteps > div { display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: 10px; min-height: 50px; border-bottom: 1px solid #e6e9e6; opacity: 0; transform: translateX(-9px); animation: connectedStep 7.4s ease-in-out infinite; animation-delay: var(--step-delay); }
+.connectedSteps > div > span { display: grid; width: 30px; height: 30px; place-items: center; border-radius: 6px; background: #e7f3ea; color: #28743d; }
+.connectedSteps > div > span svg { width: 14px; height: 14px; }
+.connectedSteps p { display: grid; gap: 2px; margin: 0; }
+.connectedSteps strong,
+.connectedSteps small { font-size: 9px; }
+.connectedSteps small { color: #7b837c; }
+.connectedSteps > div > svg { width: 15px; height: 15px; color: #2e9b52; opacity: 0; animation: connectedCheck 7.4s ease-in-out infinite; animation-delay: calc(var(--step-delay) + .45s); }
+.connectedSuccess { animation: connectedSuccess 7.4s ease-in-out infinite; }
+
+@keyframes ruleSelection {
+  0%, 7%, 100% { border-color: #dfe4e0; background: #fff; transform: translateY(0); }
+  15%, 31% { border-color: #55a66d; background: #f2f9f4; transform: translateY(-2px); }
+  39%, 92% { border-color: #dfe4e0; background: #fff; transform: translateY(0); }
+}
+@keyframes saleEnter { 0%, 28%, 100% { opacity: 0; transform: translateX(-12px); } 38%, 91% { opacity: 1; transform: translateX(0); } 97% { opacity: 0; } }
+@keyframes flowGrow { 0%, 43%, 100% { transform: scaleX(0); } 58%, 91% { transform: scaleX(1); } 97% { opacity: 0; } }
+@keyframes invoiceAppear { 0%, 54%, 100% { opacity: 0; transform: scale(.92); } 66%, 92% { opacity: 1; transform: scale(1); } 97% { opacity: 0; } }
+@keyframes salesCursor { 0%, 4%, 100% { left: 22%; top: 23%; opacity: 0; transform: scale(1); } 10% { opacity: 1; } 19% { left: 22%; top: 23%; opacity: 1; transform: scale(.82); } 25% { transform: scale(1); } 32% { opacity: 0; } }
+
+@keyframes documentEnter { 0%, 7%, 100% { opacity: 0; transform: translateY(9px); } 18%, 91% { opacity: 1; transform: translateY(0); } 97% { opacity: 0; } }
+@keyframes recipientEnter { 0%, 23%, 100% { opacity: 0; transform: translateY(8px); } 34%, 91% { opacity: 1; transform: translateY(0); } 97% { opacity: 0; } }
+@keyframes deliveryButton { 0%, 53%, 100% { transform: scale(1); } 62%, 66% { transform: scale(.91); } 72%, 93% { transform: scale(1); } }
+@keyframes deliveryCursor { 0%, 38%, 100% { left: 55%; top: 61%; opacity: 0; transform: scale(1); } 45% { opacity: 1; } 60% { left: 82%; top: 87%; opacity: 1; transform: scale(1); } 64% { transform: scale(.82); } 70% { transform: scale(1); } 77% { opacity: 0; } }
+@keyframes deliverySuccess { 0%, 67%, 100% { opacity: 0; transform: translateY(11px); } 76%, 93% { opacity: 1; transform: translateY(0); } }
+
+@keyframes integrationEnter { 0%, 7%, 100% { opacity: 0; transform: translateY(9px); } 18%, 91% { opacity: 1; transform: translateY(0); } 97% { opacity: 0; } }
+@keyframes integrationCheck { 0%, 29%, 100% { opacity: 0; transform: scale(.6); } 39%, 91% { opacity: 1; transform: scale(1); } 97% { opacity: 0; } }
+@keyframes importShow { 0%, 45%, 100% { opacity: 0; } 56%, 91% { opacity: 1; } 97% { opacity: 0; } }
+@keyframes importProgress { 0%, 50%, 100% { transform: scaleX(0); } 78%, 92% { transform: scaleX(1); } 97% { opacity: 0; } }
+@keyframes integrationCursor { 0%, 20%, 100% { left: 20%; top: 34%; opacity: 0; transform: scale(1); } 27% { opacity: 1; } 39% { left: 49%; top: 56%; opacity: 1; transform: scale(1); } 43% { transform: scale(.82); } 50% { transform: scale(1); } 58% { opacity: 0; } }
+@keyframes integrationSuccess { 0%, 79%, 100% { opacity: 0; transform: translateY(10px); } 86%, 94% { opacity: 1; transform: translateY(0); } }
+
+@keyframes providerChatGpt { 0%, 8%, 45%, 100% { border-color: #dfe3df; box-shadow: none; transform: translateY(0); } 15%, 35% { border-color: #838c85; box-shadow: 0 0 0 3px rgba(30,35,31,.08); transform: translateY(-1px); } }
+@keyframes providerClaude { 0%, 42%, 91%, 100% { border-color: #dfe3df; box-shadow: none; transform: translateY(0); } 52%, 78% { border-color: #d97757; box-shadow: 0 0 0 3px rgba(217,119,87,.1); transform: translateY(-1px); } }
+@keyframes promptShow { 0%, 10%, 100% { opacity: 0; transform: translateY(8px); } 17%, 91% { opacity: 1; transform: translateY(0); } 97% { opacity: 0; } }
+@keyframes promptType { 0%, 15%, 100% { clip-path: inset(0 100% 0 0); } 36%, 92% { clip-path: inset(0); } 97% { opacity: 0; } }
+@keyframes assistantResponse { 0%, 38%, 100% { opacity: 0; transform: translateY(10px); } 47%, 91% { opacity: 1; transform: translateY(0); } 97% { opacity: 0; } }
+@keyframes summaryRow { 0%, 45%, 100% { opacity: 0; transform: translateY(6px); } 56%, 91% { opacity: 1; transform: translateY(0); } 97% { opacity: 0; } }
+@keyframes assistantCursor { 0%, 4%, 100% { left: 67%; top: 9%; opacity: 0; transform: scale(1); } 10% { opacity: 1; } 15% { transform: scale(.82); } 21% { transform: scale(1); } 45% { left: 84%; top: 9%; opacity: 1; } 50% { transform: scale(.82); } 56% { transform: scale(1); } 63% { opacity: 0; } }
+
+@keyframes warningPulse { 0%, 100% { opacity: .72; } 45% { opacity: 1; } }
+@keyframes validationField { 0%, 7%, 100% { opacity: 0; transform: translateY(7px); } 19%, 91% { opacity: 1; transform: translateY(0); } 97% { opacity: 0; } }
+@keyframes invalidField { 0%, 7%, 100% { opacity: 0; transform: translateY(7px); border-color: #e5b7a8; background: #fff9f6; } 19%, 58% { opacity: 1; transform: translateY(0); border-color: #e5b7a8; background: #fff9f6; } 68%, 91% { opacity: 1; transform: translateY(0); border-color: #7fbc8f; background: #f5fbf6; } 97% { opacity: 0; } }
+@keyframes invalidLabel { 0%, 18%, 64%, 100% { opacity: 0; } 25%, 56% { opacity: 1; } }
+@keyframes suggestionEnter { 0%, 34%, 100% { opacity: 0; transform: translateY(9px); } 44%, 73% { opacity: 1; transform: translateY(0); } 82% { opacity: 0; transform: translateY(-4px); } }
+@keyframes validationCursor { 0%, 39%, 100% { left: 55%; top: 69%; opacity: 0; transform: scale(1); } 46% { opacity: 1; } 57% { left: 83%; top: 72%; opacity: 1; transform: scale(1); } 61% { transform: scale(.82); } 67% { transform: scale(1); } 75% { opacity: 0; } }
+@keyframes validationSuccess { 0%, 73%, 100% { opacity: 0; transform: translateY(11px); } 82%, 94% { opacity: 1; transform: translateY(0); } }
+
+@keyframes connectedSummary { 0%, 7%, 100% { opacity: 0; transform: translateY(7px); } 18%, 92% { opacity: 1; transform: translateY(0); } 97% { opacity: 0; } }
+@keyframes connectedStep { 0%, 21%, 100% { opacity: 0; transform: translateX(-9px); } 34%, 92% { opacity: 1; transform: translateX(0); } 97% { opacity: 0; } }
+@keyframes connectedCheck { 0%, 40%, 100% { opacity: 0; transform: scale(.6); } 50%, 92% { opacity: 1; transform: scale(1); } 97% { opacity: 0; } }
+@keyframes connectedSuccess { 0%, 81%, 100% { opacity: 0; transform: translateY(10px); } 87%, 95% { opacity: 1; transform: translateY(0); } }
+
+@media (max-width: 520px) {
+  .demo { min-height: 390px; }
+  .ruleOptions { gap: 5px; padding-inline: 10px; }
+  .ruleOption { padding: 7px; }
+  .saleFlow { grid-template-columns: 1fr 34px 1fr; padding-inline: 12px; }
+  .providers span { padding-inline: 5px; font-size: 8px; }
+  .integrationGrid { padding-inline: 10px; }
+  .deliveryAction span { display: none; }
+  .invoiceSummary > span { padding-inline: 7px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .demo *, .demo *::before, .demo *::after { animation: none !important; }
+  .salesCursor, .deliveryCursor, .integrationCursor, .assistantCursor, .validationCursor { display: none; }
+  .saleCard, .invoiceCard, .deliveryDocument, .recipientBox, .integrationItem, .importFlow, .promptBubble, .assistantResponse, .invoiceSummary > span, .validationForm > div, .correctionSuggestion, .connectedSummary > div, .connectedSteps > div { opacity: 1; transform: none; }
+  .promptBubble span { clip-path: none; }
+  .flowConnector i, .importFlow i { transform: scaleX(1); }
+  .integrationItem > i, .connectedSteps > div > svg { opacity: 1; transform: none; }
+}

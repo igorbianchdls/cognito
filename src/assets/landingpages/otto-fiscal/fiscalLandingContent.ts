@@ -1,7 +1,6 @@
 export const fiscalNavigation = [
-  { label: 'ChatGPT e Claude', href: '#chatgpt' },
-  { label: 'Recursos', href: '#recursos' },
-  { label: 'Como funciona', href: '#como-funciona' },
+  { label: 'Benefícios', href: '#beneficios-fiscais' },
+  { label: 'ChatGPT e Claude', href: '#chatgpt-claude-fiscal' },
   { label: 'Planos', href: '#planos' },
   { label: 'Dúvidas', href: '#duvidas' },
 ]
