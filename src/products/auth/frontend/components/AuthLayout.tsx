@@ -87,6 +87,24 @@ export function AuthLayout({ children, mode }: AuthLayoutProps) {
   const isSignUp = mode === 'sign-up'
   const isOnboarding = mode === 'onboarding'
 
+  if (isSignUp) {
+    return (
+      <main className="flex min-h-dvh items-center justify-center bg-[#f3f5f2] px-4 py-5 text-[#181818] sm:px-6 sm:py-12">
+        <div className="w-full max-w-[430px]">
+          <section className="rounded-lg border border-black/10 bg-white px-5 py-6 shadow-[0_24px_70px_-40px_rgba(24,24,24,0.4)] sm:px-8 sm:py-9">
+            <div className="mb-6 flex justify-center sm:mb-8">
+              <OttoBrand />
+            </div>
+            {children}
+          </section>
+          <p className="mt-5 text-center text-[11px] text-[#858b86]">
+            © {new Date().getFullYear()} Otto. Gestão empresarial simples e segura.
+          </p>
+        </div>
+      </main>
+    )
+  }
+
   return (
     <main className="min-h-dvh bg-white text-[#181818]">
       <div className="grid min-h-dvh lg:grid-cols-[minmax(430px,44%)_1fr]">
