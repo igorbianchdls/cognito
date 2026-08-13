@@ -156,3 +156,24 @@ You can [35mclaim your keys[0m by visiting https://dashboard.clerk.com/apps/cl
 
  GET /lp 200 in 35.7s (compile: 16.5s, proxy.ts: 897ms, render: 18.4s)
  GET /emissor-nota-fiscal 200 in 39.1s (compile: 9.5s, proxy.ts: 394ms, render: 29.2s)
+ ✓ Compiled in 7.2s
+ ✓ Compiled in 2.5s
+ ○ Compiling /lp ...
+
+[35m
+[Clerk]:[0m You are running in keyless mode.
+You can [35mclaim your keys[0m by visiting https://dashboard.clerk.com/apps/claim?framework=nextjs&token=0vovn4aaacknyyjgf8qrkuhzzpn60lf7t052rw0f&return_url=http%3A%2F%2F127.0.0.1%3A3000%2F
+
+ GET /lp 200 in 44s (compile: 18.2s, proxy.ts: 584ms, render: 25.2s)
+ POST /lp 200 in 7.4s (compile: 998ms, proxy.ts: 587ms, render: 5.8s)
+ GET /lp 200 in 13.7s (compile: 215ms, proxy.ts: 24ms, render: 13.4s)
+ POST /lp 200 in 8.0s (compile: 3.9s, proxy.ts: 274ms, render: 3.9s)
+ GET /lp 200 in 16.4s (compile: 93ms, proxy.ts: 49ms, render: 16.2s)
+ GET /lp 200 in 20.2s (compile: 64ms, proxy.ts: 33ms, render: 20.1s)
+ GET /lp 200 in 9.2s (compile: 564ms, proxy.ts: 238ms, render: 8.4s)
+ POST /lp 200 in 2.7s (compile: 547ms, proxy.ts: 74ms, render: 2.1s)
+ GET /lp 200 in 6.3s (compile: 77ms, proxy.ts: 31ms, render: 6.2s)
+ GET /lp 200 in 6.2s (compile: 244ms, proxy.ts: 38ms, render: 6.0s)
+ GET /lp 200 in 5.6s (compile: 103ms, proxy.ts: 31ms, render: 5.5s)
+ GET /lp 200 in 5.9s (compile: 229ms, proxy.ts: 21ms, render: 5.7s)
+ GET /lp 200 in 5.7s (compile: 1825ms, proxy.ts: 52ms, render: 3.8s)

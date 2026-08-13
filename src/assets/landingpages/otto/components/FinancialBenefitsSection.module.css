@@ -1067,6 +1067,207 @@
 .caChartLegend span:nth-of-type(3) { background: #17377b; }
 .caChartLegend i { width: 24%; height: 6px; border-radius: 3px; background: #c9d4db; }
 
+.caAssistantTop,
+.caReconciliationTitle {
+  position: absolute;
+  top: 45px;
+  right: 3%;
+  left: 3%;
+  height: 28px;
+  border-bottom: 2px solid #edf1f3;
+}
+.caAssistantTop i,
+.caReconciliationTitle i { display: block; width: 35%; height: 7px; border-radius: 4px; background: #8e9291; }
+.caProviderCards { position: absolute; top: 100px; right: 8%; left: 8%; display: grid; grid-template-columns: 1fr 1fr; gap: 22px; }
+.caProviderCard {
+  display: grid;
+  height: 82px;
+  grid-template-columns: auto 1fr;
+  align-items: center;
+  gap: 12px;
+  border: 1px solid #dfe5e7;
+  border-radius: 6px;
+  padding: 12px;
+  background: #fff;
+  transform-origin: center;
+}
+.caOpenAiCard { animation: caOpenAiCard 8s ease-in-out infinite; }
+.caClaudeCard { animation: caClaudeCard 8s ease-in-out infinite; }
+.caProviderCard > span { display: grid; width: 44px; height: 44px; place-items: center; border-radius: 50%; background: #edf0ef; color: #111; }
+.caClaudeCard > span { background: #fff0eb; color: #d97757; }
+.caProviderCard > span svg { width: 22px; height: 22px; }
+.caProviderCard > div { display: grid; gap: 6px; }
+.caProviderCard strong { font-size: 10px; color: #3d4440; }
+.caProviderCard i { width: 92%; height: 5px; border-radius: 3px; background: #cbd5dc; }
+.caProviderCard i:last-child { width: 62%; }
+.caAssistantPrompt,
+.caInvoicePrompt {
+  position: absolute;
+  right: 13%;
+  left: 13%;
+  display: flex;
+  height: 44px;
+  align-items: center;
+  gap: 10px;
+  border: 1px solid #dce2e4;
+  border-radius: 22px;
+  padding: 0 7px 0 14px;
+  background: #fff;
+}
+.caAssistantPrompt { top: 207px; animation: caAssistantPrompt 8s ease-in-out infinite; }
+.caAssistantPrompt > :global(.lucide),
+.caInvoicePrompt > :global(.lucide) { width: 16px !important; height: 16px !important; color: #8a9290; }
+.caAssistantPrompt i,
+.caInvoicePrompt i { width: 67%; height: 6px; border-radius: 3px; background: #c8d2d9; transform-origin: left; }
+.caAssistantPrompt i { animation: caPromptType 8s steps(18, end) infinite; }
+.caAssistantPrompt button,
+.caInvoicePrompt button { display: grid; width: 31px; height: 31px; margin-left: auto; place-items: center; border: 0; border-radius: 50%; background: #151716; color: #fff; }
+.caAssistantPrompt button :global(.lucide),
+.caInvoicePrompt button :global(.lucide) { width: 13px !important; height: 13px !important; }
+.caAssistantResult {
+  position: absolute;
+  right: 18%;
+  bottom: 28px;
+  left: 18%;
+  min-height: 110px;
+  border: 1px solid #dfe5e7;
+  border-radius: 6px;
+  padding: 12px;
+  background: #fff;
+  opacity: 0;
+  transform: translateY(18px) scale(.88);
+  animation: caAssistantResult 8s ease-in-out infinite;
+}
+.caResultHeader { display: flex; align-items: center; gap: 9px; border-bottom: 1px solid #e7ecee; padding-bottom: 9px; }
+.caResultHeader span { display: grid; width: 24px; height: 24px; place-items: center; border-radius: 50%; background: #e7f6eb; color: #27934b; }
+.caResultHeader span :global(.lucide) { width: 13px !important; height: 13px !important; }
+.caResultHeader i { width: 42%; height: 6px; border-radius: 3px; background: #9da5a3; }
+.caResultRow { display: flex; height: 23px; align-items: center; gap: 10px; border-bottom: 1px solid #edf0f1; opacity: 0; animation: caResultRow 8s ease-in-out infinite; animation-delay: var(--result-delay); }
+.caResultRow i { height: 5px; border-radius: 3px; background: #c7d2d9; }
+.caResultRow b { width: 11px; height: 11px; margin-left: auto; border-radius: 50%; background: #50d167; }
+.caOttoBridge {
+  position: absolute;
+  top: 168px;
+  left: 50%;
+  z-index: 4;
+  display: grid;
+  width: 46px;
+  height: 46px;
+  place-items: center;
+  border-radius: 50% 50% 50% 0;
+  background: #11a9e5;
+  color: #fff;
+  transform: translateX(-50%);
+  animation: caOttoBridge 8s ease-in-out infinite;
+}
+.caOttoBridge :global(.lucide) { width: 20px !important; height: 20px !important; }
+.caAssistantPointer,
+.caReconciliationPointer,
+.caInvoicePointer { position: absolute; z-index: 9; width: 30px !important; height: 30px !important; fill: #fff; color: #111; filter: drop-shadow(0 1px 1px rgb(0 0 0 / 18%)); }
+.caAssistantPointer { animation: caAssistantPointer 8s ease-in-out infinite; }
+
+.caLedgerPair { position: absolute; top: 92px; right: 4%; left: 4%; display: grid; grid-template-columns: 1fr 1fr; gap: 58px; }
+.caLedger { position: relative; height: 225px; border: 1px solid #dfe5e7; border-radius: 6px; background: #fff; }
+.caBankLedger { animation: caLedgerEnterLeft 8s ease-in-out infinite; }
+.caOttoLedger { animation: caLedgerEnterRight 8s ease-in-out infinite; }
+.caLedgerHeader { display: flex; height: 47px; align-items: center; gap: 9px; border-bottom: 2px solid #edf1f3; padding: 0 12px; color: #2c91d4; }
+.caLedgerHeader :global(.lucide) { width: 19px !important; height: 19px !important; }
+.caLedgerHeader i { width: 48%; height: 6px; border-radius: 3px; background: #9ca3a1; }
+.caLedgerRow { display: grid; height: 44px; grid-template-columns: auto 1fr auto; align-items: center; gap: 8px; border-bottom: 1px solid #edf0f1; padding: 0 10px; opacity: .22; animation: caLedgerRowMatch 8s ease-in-out infinite; animation-delay: var(--match-delay); }
+.caLedgerRow > span { width: 17px; height: 17px; border-radius: 50%; background: #e7f3fa; }
+.caOttoLedger .caLedgerRow > span { background: #e7f6eb; }
+.caLedgerRow > i { height: 5px; border-radius: 3px; background: #c5d0d7; }
+.caLedgerRow > b { display: grid; width: 17px; height: 17px; place-items: center; border: 1px solid #bdc8cc; border-radius: 50%; color: #fff; }
+.caLedgerRow > b :global(.lucide) { width: 10px !important; height: 10px !important; }
+.caOttoLedger .caLedgerRow > b { animation: caMatchCheck 8s ease-in-out infinite; animation-delay: var(--match-delay); }
+.caMatchLines { position: absolute; top: 151px; right: calc(50% - 28px); left: calc(50% - 28px); display: grid; gap: 43px; }
+.caMatchLines i { display: block; height: 2px; background: #35a5ef; transform: scaleX(0); animation: caMatchLine 8s ease-in-out infinite; animation-delay: var(--match-delay); }
+.caReconciliationAction { position: absolute; right: 5%; bottom: 24px; left: 5%; display: flex; height: 42px; align-items: center; justify-content: space-between; border-top: 2px solid #edf1f3; padding: 0 10px; }
+.caReconciliationAction i { width: 21%; height: 20px; border-radius: 4px; background: #cbd7df; }
+.caReconciliationAction button,
+.caInvoiceAction button { height: 25px; border: 0; border-radius: 4px; padding: 0 16px; background: #159b45; font-size: 8px; font-weight: 700; color: #fff; }
+.caReconciliationAction button { animation: caReconciliationButton 8s ease-in-out infinite; }
+.caReconciliationPointer { animation: caReconciliationPointer 8s ease-in-out infinite; }
+.caReconciliationSuccess,
+.caInvoiceSuccess {
+  position: absolute;
+  top: 82px;
+  left: 50%;
+  z-index: 11;
+  display: grid;
+  width: 205px;
+  height: 205px;
+  place-items: center;
+  border-radius: 50% 50% 50% 0;
+  background: #4fd164;
+  color: #fff;
+  opacity: 0;
+  transform: translateX(-50%) scale(.15);
+}
+.caReconciliationSuccess { animation: caReconciliationSuccess 8s ease-in-out infinite; }
+.caReconciliationSuccess :global(.lucide),
+.caInvoiceSuccess :global(.lucide) { width: 92px !important; height: 92px !important; stroke-width: 2.5 !important; }
+
+.caInvoicePrompt { top: 38px; animation: caInvoicePromptEnter 8s ease-in-out infinite; }
+.caInvoicePrompt i { animation: caInvoicePromptType 8s steps(20, end) infinite; }
+.caInvoiceSheet {
+  position: absolute;
+  top: 108px;
+  right: 15%;
+  left: 15%;
+  height: 260px;
+  border: 1px solid #dfe5e7;
+  border-radius: 5px;
+  background: #fff;
+  opacity: 0;
+  transform: translateY(20px) scale(.76);
+  transform-origin: top center;
+  animation: caInvoiceSheetEnter 8s ease-in-out infinite;
+}
+.caInvoiceSheetHeader { display: grid; height: 60px; grid-template-columns: auto 1fr auto; align-items: center; gap: 10px; border-bottom: 2px solid #edf1f3; padding: 0 13px; }
+.caInvoiceSheetHeader > span { display: grid; width: 34px; height: 38px; place-items: center; border-radius: 4px; background: #e7f0f7; color: #2d6591; }
+.caInvoiceSheetHeader > span :global(.lucide) { width: 18px !important; height: 18px !important; }
+.caInvoiceSheetHeader > div { display: grid; gap: 7px; }
+.caInvoiceSheetHeader i { width: 76%; height: 6px; border-radius: 3px; background: #939a98; }
+.caInvoiceSheetHeader i:last-child { width: 53%; background: #cbd5dc; }
+.caInvoiceSheetHeader b { display: grid; width: 28px; height: 28px; place-items: center; border-radius: 50%; background: #fff1d8; font-size: 9px; color: #8e641a; }
+.caInvoiceFields { padding: 8px 13px 0; }
+.caInvoiceFields > div { display: grid; height: 31px; grid-template-columns: 27% 1fr; align-items: center; gap: 12px; border-bottom: 1px solid #edf0f1; opacity: 0; animation: caInvoiceField 8s ease-in-out infinite; animation-delay: var(--invoice-delay); }
+.caInvoiceFields span { width: 70%; height: 5px; border-radius: 3px; background: #9ea6a3; }
+.caInvoiceFields i { height: 6px; border-radius: 3px; background: #c8d3da; }
+.caInvoiceTotal { display: flex; height: 40px; align-items: center; justify-content: space-between; padding: 0 13px; }
+.caInvoiceTotal i { width: 20%; height: 5px; border-radius: 3px; background: #9ea6a3; }
+.caInvoiceTotal strong { font-size: 11px; color: #303630; }
+.caInvoiceAction { display: flex; height: 46px; align-items: center; justify-content: space-between; border-top: 2px solid #edf1f3; padding: 0 13px; }
+.caInvoiceAction i { width: 23%; height: 18px; border-radius: 4px; background: #cbd7df; }
+.caInvoiceAction button { animation: caInvoiceButton 8s ease-in-out infinite; }
+.caInvoicePointer { animation: caInvoicePointer 8s ease-in-out infinite; }
+.caInvoiceSuccess { animation: caInvoiceSuccess 8s ease-in-out infinite; }
+
+@keyframes caOpenAiCard { 0%, 7%, 100% { opacity: 0; transform: translate(-24px, 12px) scale(.65); } 18%, 86% { opacity: 1; transform: none; } 94% { opacity: 0; transform: translateY(-8px) scale(.85); } }
+@keyframes caClaudeCard { 0%, 11%, 100% { opacity: 0; transform: translate(24px, 12px) scale(.65); } 22%, 86% { opacity: 1; transform: none; } 94% { opacity: 0; transform: translateY(-8px) scale(.85); } }
+@keyframes caAssistantPrompt { 0%, 18%, 100% { opacity: 0; transform: translateY(15px) scale(.82); } 28%, 86% { opacity: 1; transform: none; } 94% { opacity: 0; transform: translateY(-8px); } }
+@keyframes caPromptType { 0%, 28%, 100% { transform: scaleX(.04); } 48%, 88% { transform: scaleX(1); } }
+@keyframes caAssistantResult { 0%, 48%, 100% { opacity: 0; transform: translateY(18px) scale(.88); } 59%, 89% { opacity: 1; transform: none; } 96% { opacity: 0; transform: translateY(-8px); } }
+@keyframes caResultRow { 0%, 54%, 100% { opacity: 0; transform: translateX(-8px); } 65%, 90% { opacity: 1; transform: none; } 96% { opacity: 0; } }
+@keyframes caOttoBridge { 0%, 15%, 100% { opacity: 0; transform: translateX(-50%) scale(.3); } 25%, 54% { opacity: 1; transform: translateX(-50%) scale(1); } 61%, 89% { opacity: .14; transform: translate(-50%, 95px) scale(.45); } 96% { opacity: 0; } }
+@keyframes caAssistantPointer { 0%, 18%, 100% { top: 29%; left: 22%; opacity: 0; } 25% { opacity: 1; } 37% { top: 29%; left: 72%; opacity: 1; transform: scale(1); } 41% { transform: scale(.8); } 48% { transform: scale(1); } 56% { top: 54%; left: 79%; opacity: 1; } 62% { transform: scale(.8); } 69% { transform: scale(1); opacity: 1; } 75% { opacity: 0; } }
+@keyframes caLedgerEnterLeft { 0%, 7%, 100% { opacity: 0; transform: translateX(-28px) scale(.8); } 18%, 88% { opacity: 1; transform: none; } 96% { opacity: 0; transform: translateX(-10px); } }
+@keyframes caLedgerEnterRight { 0%, 10%, 100% { opacity: 0; transform: translateX(28px) scale(.8); } 21%, 88% { opacity: 1; transform: none; } 96% { opacity: 0; transform: translateX(10px); } }
+@keyframes caLedgerRowMatch { 0%, 20%, 100% { opacity: .2; transform: translateY(5px); } 34%, 88% { opacity: 1; transform: none; } 96% { opacity: .2; } }
+@keyframes caMatchCheck { 0%, 30%, 100% { border-color: #bdc8cc; background: transparent; } 43%, 90% { border-color: #4fd164; background: #4fd164; } }
+@keyframes caMatchLine { 0%, 27%, 100% { transform: scaleX(0); transform-origin: left; opacity: 0; } 40%, 83% { transform: scaleX(1); opacity: 1; } 92% { opacity: 0; } }
+@keyframes caReconciliationButton { 0%, 65%, 100% { transform: scale(1); } 71% { transform: scale(.9); } }
+@keyframes caReconciliationPointer { 0%, 48%, 100% { top: 55%; left: 48%; opacity: 0; } 56% { opacity: 1; } 68% { top: 87%; left: 81%; opacity: 1; transform: scale(1); } 72% { transform: scale(.8); } 78% { transform: scale(1); } 83% { opacity: 0; } }
+@keyframes caReconciliationSuccess { 0%, 73%, 100% { opacity: 0; transform: translateX(-50%) scale(.15); } 81%, 91% { opacity: 1; transform: translateX(-50%) scale(1); } 97% { opacity: 0; transform: translateX(-50%) scale(1.08); } }
+@keyframes caInvoicePromptEnter { 0%, 7%, 100% { opacity: 0; transform: translateY(-12px) scale(.8); } 17%, 87% { opacity: 1; transform: none; } 95% { opacity: 0; } }
+@keyframes caInvoicePromptType { 0%, 17%, 100% { transform: scaleX(.04); } 34%, 88% { transform: scaleX(1); } }
+@keyframes caInvoiceSheetEnter { 0%, 30%, 100% { opacity: 0; transform: translateY(20px) scale(.76); } 42%, 88% { opacity: 1; transform: none; } 96% { opacity: 0; transform: translateY(-8px) scale(.94); } }
+@keyframes caInvoiceField { 0%, 39%, 100% { opacity: 0; transform: translateX(-8px); } 52%, 89% { opacity: 1; transform: none; } 96% { opacity: 0; } }
+@keyframes caInvoiceButton { 0%, 69%, 100% { transform: scale(1); } 75% { transform: scale(.9); } }
+@keyframes caInvoicePointer { 0%, 32%, 100% { top: 21%; left: 74%; opacity: 0; } 40% { opacity: 1; } 55% { top: 48%; left: 68%; opacity: 1; } 70% { top: 86%; left: 73%; opacity: 1; transform: scale(1); } 75% { transform: scale(.8); } 81% { transform: scale(1); } 85% { opacity: 0; } }
+@keyframes caInvoiceSuccess { 0%, 77%, 100% { opacity: 0; transform: translateX(-50%) scale(.15); } 84%, 93% { opacity: 1; transform: translateX(-50%) scale(1); } 98% { opacity: 0; transform: translateX(-50%) scale(1.08); } }
+
 @keyframes caCardOne {
   0%, 8%, 100% { opacity: 0; transform: translateY(18px) scale(.7); }
   17%, 62% { opacity: 1; transform: translateY(0) scale(1); }
@@ -1341,11 +1542,17 @@
 @media (max-width: 520px) {
   .demo { min-height: 380px; }
   .caReferenceDemo { min-height: 350px; }
+  .caInvoiceDemo { min-height: 380px; }
   .caChannelCards { top: 105px; right: 6%; left: 6%; gap: 4%; }
   .caChannelCard { height: 150px; }
   .caChatChannel { right: 13%; }
   .caChartCard { width: 46%; transform: scale(.96); }
   .caChartPlot { gap: 9px; padding-inline: 12px; }
+  .caProviderCards { right: 4%; left: 4%; gap: 10px; }
+  .caAssistantResult { right: 10%; left: 10%; }
+  .caLedgerPair { gap: 30px; }
+  .caMatchLines { right: calc(50% - 15px); left: calc(50% - 15px); }
+  .caInvoiceSheet { right: 8%; left: 8%; }
   .metricsGrid strong { font-size: 11px; }
   .metricsGrid > div { padding-inline: 9px; }
   .chart { gap: 6px; }
@@ -1366,6 +1573,24 @@
   .caPaymentSuccess,
   .caChartCard,
   .caChartPlot > span,
+  .caProviderCard,
+  .caAssistantPrompt,
+  .caAssistantPrompt i,
+  .caAssistantResult,
+  .caResultRow,
+  .caOttoBridge,
+  .caLedger,
+  .caLedgerRow,
+  .caOttoLedger .caLedgerRow > b,
+  .caMatchLines i,
+  .caReconciliationAction button,
+  .caReconciliationSuccess,
+  .caInvoicePrompt,
+  .caInvoicePrompt i,
+  .caInvoiceSheet,
+  .caInvoiceFields > div,
+  .caInvoiceAction button,
+  .caInvoiceSuccess,
   .channelRow,
   .paymentConfirmed,
   .calendarMarker,
@@ -1399,6 +1624,9 @@
 
   .caCollectionPointer,
   .caPaymentPointer,
+  .caAssistantPointer,
+  .caReconciliationPointer,
+  .caInvoicePointer,
   .collectionCursor,
   .scheduleCursor,
   .assistantCursor,
@@ -1409,8 +1637,21 @@
   .caFloatingChannel,
   .caPaymentForm,
   .caChartCard,
-  .caChartPlot > span { opacity: 1; transform: none; }
+  .caChartPlot > span,
+  .caProviderCard,
+  .caAssistantPrompt,
+  .caAssistantResult,
+  .caResultRow,
+  .caLedger,
+  .caLedgerRow,
+  .caMatchLines i,
+  .caInvoicePrompt,
+  .caInvoiceSheet,
+  .caInvoiceFields > div { opacity: 1; transform: none; }
   .caPaymentSuccess { display: none; }
+  .caReconciliationSuccess,
+  .caInvoiceSuccess,
+  .caOttoBridge { display: none; }
   .caField i { opacity: 1; transform: none; }
   .caToggle i { transform: translateX(30px); background: #35a5ef; }
   .channelRow { opacity: 1; transform: none; }
