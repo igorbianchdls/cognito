@@ -10,12 +10,11 @@ import {
   SiUber,
 } from '@icons-pack/react-simple-icons'
 import {
-  BarChart3,
   BadgeCheck,
-  CalendarClock,
   Check,
   CheckCircle2,
-  Clock3,
+  ChevronDown,
+  CircleDollarSign,
   FileText,
   Landmark,
   Mail,
@@ -24,19 +23,11 @@ import {
   MousePointer2,
   ReceiptText,
   Send,
+  Smartphone,
   Tags,
-  TrendingUp,
 } from 'lucide-react'
 
 import styles from '@/assets/landingpages/otto/components/FinancialBenefitsSection.module.css'
-
-const reminderChannels = [
-  { icon: MessageCircle, label: 'WhatsApp', detail: 'Entregue', delay: '0s' },
-  { icon: Mail, label: 'E-mail', detail: 'Aberto', delay: '1.1s' },
-  { icon: MessageSquareText, label: 'SMS', detail: 'Enviado', delay: '2.2s' },
-]
-
-const reportBars = [38, 54, 46, 68, 61, 82, 74, 92]
 
 const expenseRows = [
   { amount: 'R$ 2.480,00', category: 'Marketing', color: '#4285F4', icon: SiGoogleads, merchant: 'Google Ads' },
@@ -49,131 +40,86 @@ const expenseRows = [
 
 function CollectionAnimation() {
   return (
-    <div className={`${styles.demo} ${styles.collectionDemo}`} role="img" aria-label="Cobrança automática enviada por WhatsApp, e-mail e SMS até a confirmação do pagamento">
-      <div className={styles.demoHeader}>
-        <span className={styles.iconBox}><ReceiptText aria-hidden="true" /></span>
-        <div>
-          <p className={styles.demoTitle}>Cobrança #2841</p>
-          <p className={styles.demoMeta}>Mercado Horizonte</p>
+    <div className={`${styles.demo} ${styles.caReferenceDemo} ${styles.caCollectionDemo}`} role="img" aria-label="Canais de cobrança automática por WhatsApp, SMS e e-mail">
+      <div className={styles.caTopLine}><i /></div>
+      <div className={styles.caChannelCards}>
+        <div className={`${styles.caChannelCard} ${styles.caCardOne}`}>
+          <span className={styles.caCardHeader}><i /><b /></span>
+          <span className={styles.caIllustration}><MessageCircle aria-hidden="true" /></span>
+          <i className={styles.caCardFooter} />
         </div>
-        <span className={styles.openStatus}>A receber</span>
+        <div className={`${styles.caChannelCard} ${styles.caCardTwo}`}>
+          <span className={styles.caCardHeader}><i /><b /></span>
+          <span className={styles.caIllustration}><Smartphone aria-hidden="true" /><em>SMS</em></span>
+          <i className={styles.caCardFooter} />
+        </div>
+        <div className={`${styles.caChannelCard} ${styles.caCardThree}`}>
+          <span className={styles.caCardHeader}><i /><b /></span>
+          <span className={styles.caIllustration}><CircleDollarSign aria-hidden="true" /><em>PIX</em></span>
+          <i className={styles.caCardFooter} />
+        </div>
       </div>
-
-      <div className={styles.amountRow}>
-        <div><span>Valor</span><strong>R$ 2.480,00</strong></div>
-        <div><span>Vencimento</span><strong>Hoje</strong></div>
-      </div>
-
-      <div className={styles.reminderTimeline}>
-        <p className={styles.timelineLabel}>Régua automática</p>
-        {reminderChannels.map((channel) => {
-          const Icon = channel.icon
-          return (
-            <div
-              key={channel.label}
-              className={styles.channelRow}
-              style={{ '--animation-delay': channel.delay } as CSSProperties}
-            >
-              <span className={styles.channelIcon}><Icon aria-hidden="true" /></span>
-              <span><strong>{channel.label}</strong><small>Lembrete automático</small></span>
-              <span className={styles.channelResult}><Check aria-hidden="true" />{channel.detail}</span>
-            </div>
-          )
-        })}
-      </div>
-
-      <div className={styles.collectionAction}>
-        <span>3 canais selecionados</span>
-        <button type="button">Enviar lembretes</button>
-      </div>
-      <MousePointer2 aria-hidden="true" className={styles.collectionCursor} />
-
-      <div className={styles.paymentConfirmed}>
-        <CheckCircle2 aria-hidden="true" />
-        <span><strong>Pagamento recebido</strong><small>Baixa registrada automaticamente</small></span>
-      </div>
+      <span className={`${styles.caFloatingChannel} ${styles.caChatChannel}`}><MessageSquareText aria-hidden="true" /></span>
+      <span className={`${styles.caFloatingChannel} ${styles.caWhatsappChannel}`}><MessageCircle aria-hidden="true" /></span>
+      <span className={`${styles.caFloatingChannel} ${styles.caEmailChannel}`}><Mail aria-hidden="true" /></span>
+      <div className={styles.caBottomBar}><i /><button type="button">Enviar</button></div>
+      <MousePointer2 aria-hidden="true" className={styles.caCollectionPointer} />
     </div>
   )
 }
 
 function PayablesAnimation() {
   return (
-    <div className={`${styles.demo} ${styles.payablesDemo}`} role="img" aria-label="Conta agendada e paga automaticamente antes do vencimento">
-      <div className={styles.demoHeader}>
-        <span className={`${styles.iconBox} ${styles.amberIcon}`}><CalendarClock aria-hidden="true" /></span>
-        <div>
-          <p className={styles.demoTitle}>Agenda de pagamentos</p>
-          <p className={styles.demoMeta}>Próximos vencimentos</p>
+    <div className={`${styles.demo} ${styles.caReferenceDemo} ${styles.caPayablesDemo}`} role="img" aria-label="Formulário de pagamento preenchido e agendado automaticamente">
+      <div className={styles.caPaymentForm}>
+        <div className={styles.caFormTitle}><i /></div>
+        <div className={styles.caFormRule} />
+        <div className={styles.caFormGrid}>
+          <span className={`${styles.caField} ${styles.caDateField}`}><i /><b /></span>
+          <span className={styles.caField}><i /><ChevronDown aria-hidden="true" /></span>
+          <span className={`${styles.caField} ${styles.caWideField}`}><i /></span>
+          <span className={`${styles.caField} ${styles.caMoneyField}`}><b>R$</b><i /></span>
+          <span className={styles.caToggle}><i /><b /></span>
+          <span className={styles.caField}><i /><ChevronDown aria-hidden="true" /></span>
+          <span className={styles.caField}><i /><ChevronDown aria-hidden="true" /></span>
+          <span className={styles.caField}><i /></span>
         </div>
-        <span className={styles.secureStatus}>Programado</span>
-      </div>
-
-      <div className={styles.calendarTrack}>
-        <span><small>SEG</small><strong>12</strong></span>
-        <span className={styles.activeDay}><small>TER</small><strong>13</strong></span>
-        <span><small>QUA</small><strong>14</strong></span>
-        <i className={styles.calendarMarker} aria-hidden="true" />
-      </div>
-
-      <div className={styles.payableItem}>
-        <span className={styles.payableLogo}>EN</span>
-        <span><strong>Energia da unidade</strong><small>Conta operacional · vence dia 13</small></span>
-        <strong>R$ 1.286,40</strong>
-      </div>
-
-      <div className={styles.scheduleProgress}>
-        <div className={styles.progressHeader}><span>Pagamento automático</span><span>Agendado para 08:00</span></div>
-        <div className={styles.progressTrack}><i aria-hidden="true" /></div>
-        <div className={styles.progressSteps}>
-          <span><i />Agendado</span>
-          <span><i />Processando</span>
-          <span><i />Pago</span>
+        <div className={styles.caFormDivider} />
+        <div className={styles.caFormSubtitle}><i /><span><b /></span></div>
+        <div className={styles.caFormGridBottom}>
+          <span className={styles.caField}><i /><ChevronDown aria-hidden="true" /></span>
+          <span className={`${styles.caField} ${styles.caDateField}`}><i /><b /></span>
+          <span className={styles.caField}><i /><ChevronDown aria-hidden="true" /></span>
+          <span className={styles.caField}><i /><ChevronDown aria-hidden="true" /></span>
+          <span className={styles.caCheckbox}><b /></span><i className={styles.caMiniLine} />
+          <span className={styles.caCheckbox}><b /></span><i className={styles.caMiniLine} />
         </div>
+        <div className={styles.caFormAction}><i /><button type="button">Agendar</button></div>
       </div>
-
-      <div className={styles.scheduleAction}>
-        <span>Revise antes de confirmar</span>
-        <button type="button">Agendar pagamento</button>
-      </div>
-      <MousePointer2 aria-hidden="true" className={styles.scheduleCursor} />
-
-      <div className={styles.paidStamp}><CheckCircle2 aria-hidden="true" />Pago no prazo</div>
+      <MousePointer2 aria-hidden="true" className={styles.caPaymentPointer} />
+      <div className={styles.caPaymentSuccess}><Check aria-hidden="true" /></div>
     </div>
   )
 }
 
 function ReportsAnimation() {
   return (
-    <div className={`${styles.demo} ${styles.reportsDemo}`} role="img" aria-label="Relatório financeiro em tempo real com receita, margem e evolução mensal">
-      <div className={styles.demoHeader}>
-        <span className={`${styles.iconBox} ${styles.blueIcon}`}><BarChart3 aria-hidden="true" /></span>
-        <div>
-          <p className={styles.demoTitle}>Visão financeira</p>
-          <p className={styles.demoMeta}>Atualizado agora</p>
+    <div className={`${styles.demo} ${styles.caReferenceDemo} ${styles.caReportsDemo}`} role="img" aria-label="Dois relatórios financeiros animados em tempo real">
+      <div className={`${styles.caChartCard} ${styles.caChartCardPrimary}`}>
+        <div className={styles.caChartCardHeader}><i /><span><b /><b /><b /></span></div>
+        <div className={styles.caChartPlot}>
+          <span style={{ '--chart-height': '58%' } as CSSProperties} /><span style={{ '--chart-height': '78%' } as CSSProperties} /><span style={{ '--chart-height': '44%' } as CSSProperties} /><span style={{ '--chart-height': '64%' } as CSSProperties} /><span style={{ '--chart-height': '73%' } as CSSProperties} />
+          <svg aria-hidden="true" preserveAspectRatio="none" viewBox="0 0 200 80"><polyline points="8,49 50,31 92,56 134,39 184,22" /><circle cx="8" cy="49" r="3" /><circle cx="50" cy="31" r="3" /><circle cx="92" cy="56" r="3" /><circle cx="134" cy="39" r="3" /><circle cx="184" cy="22" r="3" /></svg>
         </div>
-        <span className={styles.liveStatus}><i />Ao vivo</span>
+        <div className={styles.caChartLegend}><span /><i /><span /><i /><span /></div>
       </div>
-
-      <div className={styles.metricsGrid}>
-        <div><span>Receita</span><strong>R$ 184.620</strong><small><TrendingUp aria-hidden="true" /> 12,8%</small></div>
-        <div><span>Margem</span><strong>31,4%</strong><small><TrendingUp aria-hidden="true" /> 4,2%</small></div>
-        <div><span>Resultado</span><strong>R$ 57.971</strong><small><TrendingUp aria-hidden="true" /> 9,6%</small></div>
-      </div>
-
-      <div className={styles.chartArea}>
-        <div className={styles.chartHeader}><span>Resultado nos últimos 8 meses</span><strong>+27,6%</strong></div>
-        <div className={styles.chart}>
-          {reportBars.map((height, index) => (
-            <span key={`${height}-${index}`} className={index === reportBars.length - 1 ? styles.currentBar : undefined} style={{ height: `${height}%`, '--bar-delay': `${index * 0.11}s` } as CSSProperties} />
-          ))}
-          <svg aria-hidden="true" className={styles.chartLine} preserveAspectRatio="none" viewBox="0 0 400 100">
-            <polyline fill="none" points="0,76 55,65 110,72 165,48 220,54 275,29 330,38 400,13" />
-          </svg>
+      <div className={`${styles.caChartCard} ${styles.caChartCardSecondary}`}>
+        <div className={styles.caChartCardHeader}><i /><span><b /><b /><b /></span></div>
+        <div className={`${styles.caChartPlot} ${styles.caSimpleChart}`}>
+          <span style={{ '--chart-height': '78%' } as CSSProperties} /><span style={{ '--chart-height': '39%' } as CSSProperties} /><span style={{ '--chart-height': '64%' } as CSSProperties} /><span style={{ '--chart-height': '72%' } as CSSProperties} />
         </div>
-        <div className={styles.chartLabels}><span>Jan</span><span>Fev</span><span>Mar</span><span>Abr</span><span>Mai</span><span>Jun</span><span>Jul</span><span>Ago</span></div>
+        <div className={styles.caChartLegend}><span /><i /><span /><i /><span /></div>
       </div>
-
-      <div className={styles.reportFooter}><Clock3 aria-hidden="true" /> Dados consolidados em tempo real <span>Mais de 100 relatórios</span></div>
     </div>
   )
 }

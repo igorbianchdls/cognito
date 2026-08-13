@@ -148,3 +148,11 @@ You can [35mclaim your keys[0m by visiting https://dashboard.clerk.com/apps/cl
 
  GET /emissor-nota-fiscal 200 in 5.8s (compile: 86ms, proxy.ts: 21ms, render: 5.6s)
  POST /emissor-nota-fiscal 200 in 969ms (compile: 99ms, proxy.ts: 31ms, render: 839ms)
+ ✓ Compiled in 12.6s
+
+[35m
+[Clerk]:[0m You are running in keyless mode.
+You can [35mclaim your keys[0m by visiting https://dashboard.clerk.com/apps/claim?framework=nextjs&token=0vovn4aaacknyyjgf8qrkuhzzpn60lf7t052rw0f&return_url=http%3A%2F%2F127.0.0.1%3A3000%2F
+
+ GET /lp 200 in 35.7s (compile: 16.5s, proxy.ts: 897ms, render: 18.4s)
+ GET /emissor-nota-fiscal 200 in 39.1s (compile: 9.5s, proxy.ts: 394ms, render: 29.2s)
