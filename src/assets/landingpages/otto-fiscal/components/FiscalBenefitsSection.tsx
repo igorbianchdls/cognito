@@ -224,7 +224,7 @@ function ConnectedFlowDemo() {
 
 export function FiscalBenefitsSection() {
   return (
-    <section id="beneficios-fiscais" className="scroll-mt-24 border-y border-[#e4e8e5] bg-[#f8faf8] px-5 py-20 sm:px-8 sm:py-28" aria-label="Benefícios da emissão fiscal pela Otto">
+    <section id="beneficios-fiscais" className="scroll-mt-24 border-y border-[#e4e8e5] bg-[#fbfcfb] px-5 py-20 sm:px-8 sm:py-28" aria-label="Benefícios da emissão fiscal pela Otto">
       <div className="mx-auto max-w-[1180px]">
         <div className="grid gap-14 border-b border-[#dfe4e0] pb-20 lg:grid-cols-2 lg:items-center lg:gap-20 sm:pb-28">
           <div className="max-w-[520px]">

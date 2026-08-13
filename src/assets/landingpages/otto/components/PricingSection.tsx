@@ -50,7 +50,7 @@ const plans = [
 
 export function PricingSection() {
   return (
-    <section id="preco" className="scroll-mt-24 border-y border-[#e3e6e2] bg-[#f6f7f5] px-5 py-20 sm:px-8 sm:py-28">
+    <section id="preco" className="scroll-mt-24 border-y border-[#e3e6e2] bg-white px-5 py-20 sm:px-8 sm:py-28">
       <div className="mx-auto max-w-[1180px]">
         <div className="mx-auto max-w-[660px] text-center">
           <p className="text-xs font-medium uppercase text-[#2f7441]">Planos</p>

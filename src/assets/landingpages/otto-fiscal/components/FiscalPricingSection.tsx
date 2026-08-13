@@ -27,7 +27,7 @@ const fiscalPlans = [
 
 export function FiscalPricingSection() {
   return (
-    <section id="planos" className="scroll-mt-24 border-y border-[#e2e7e3] bg-[#f6f8f6] px-5 py-20 sm:px-8 sm:py-28">
+    <section id="planos" className="scroll-mt-24 border-y border-[#e2e7e3] bg-white px-5 py-20 sm:px-8 sm:py-28">
       <div className="mx-auto max-w-[1180px]">
         <div className="mx-auto max-w-[650px] text-center">
           <p className="text-xs font-medium uppercase text-[#17653a]">Planos</p>

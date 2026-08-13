@@ -318,7 +318,7 @@ function InvoiceDemo() {
 
 export function FinancialBenefitsSection() {
   return (
-    <section id="beneficios" className="scroll-mt-24 border-y border-[#e4e7e3] bg-[#f7f8f6] px-5 py-20 sm:px-8 sm:py-28" aria-label="Recursos financeiros disponíveis pelo ChatGPT e Claude">
+    <section id="beneficios" className="scroll-mt-24 border-y border-[#e4e7e3] bg-[#fbfcfb] px-5 py-20 sm:px-8 sm:py-28" aria-label="Recursos financeiros disponíveis pelo ChatGPT e Claude">
       <div className="mx-auto max-w-[1180px]">
         <div className="grid gap-14 border-b border-[#dfe3de] pb-20 lg:grid-cols-2 lg:items-center lg:gap-20 sm:pb-28">
           <div className="max-w-[520px]">
