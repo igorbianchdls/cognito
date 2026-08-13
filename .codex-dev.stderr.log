@@ -1,1 +1,87 @@
 [baseline-browser-mapping] The data in this module is over two months old.  To ensure accurate Baseline data, please update: `npm i baseline-browser-mapping@latest -D`
+ ⨯ ./src/assets/landingpages/otto-fiscal/FiscalLandingPage.tsx:7:1
+Module not found: Can't resolve '@/assets/landingpages/otto-fiscal/components/FiscalBenefitsSection'
+[0m [90m  5 |[39m
+ [90m  6 |[39m [36mimport[39m { [33mAnimatedHeroPrompt[39m } [36mfrom[39m [32m'@/assets/landingpages/AnimatedHeroPrompt'[39m
+[31m[1m>[22m[39m[90m  7 |[39m [36mimport[39m { [33mFiscalBenefitsSection[39m } [36mfrom[39m [32m'@/assets/landingpages/otto-fiscal/components/FiscalBenefitsSection'[39m
+ [90m    |[39m [31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m
+ [90m  8 |[39m [36mimport[39m { [33mFiscalLandingHeader[39m } [36mfrom[39m [32m'@/assets/landingpages/otto-fiscal/components/FiscalLandingHeader'[39m
+ [90m  9 |[39m [36mimport[39m { [33mFiscalPricingSection[39m } [36mfrom[39m [32m'@/assets/landingpages/otto-fiscal/components/FiscalPricingSection'[39m
+ [90m 10 |[39m [36mimport[39m { fiscalFaq } [36mfrom[39m [32m'@/assets/landingpages/otto-fiscal/fiscalLandingContent'[39m[0m
+
+Import map: aliased to relative './src/assets/landingpages/otto-fiscal/components/FiscalBenefitsSection' inside of [project]/
+
+
+Import trace:
+  Server Component:
+    ./src/assets/landingpages/otto-fiscal/FiscalLandingPage.tsx
+    ./src/app/emissor-nota-fiscal/page.tsx
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+ ⨯ ./src/assets/landingpages/otto-fiscal/FiscalLandingPage.tsx:7:1
+Module not found: Can't resolve '@/assets/landingpages/otto-fiscal/components/FiscalBenefitsSection'
+[0m [90m  5 |[39m
+ [90m  6 |[39m [36mimport[39m { [33mAnimatedHeroPrompt[39m } [36mfrom[39m [32m'@/assets/landingpages/AnimatedHeroPrompt'[39m
+[31m[1m>[22m[39m[90m  7 |[39m [36mimport[39m { [33mFiscalBenefitsSection[39m } [36mfrom[39m [32m'@/assets/landingpages/otto-fiscal/components/FiscalBenefitsSection'[39m
+ [90m    |[39m [31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m
+ [90m  8 |[39m [36mimport[39m { [33mFiscalLandingHeader[39m } [36mfrom[39m [32m'@/assets/landingpages/otto-fiscal/components/FiscalLandingHeader'[39m
+ [90m  9 |[39m [36mimport[39m { [33mFiscalPricingSection[39m } [36mfrom[39m [32m'@/assets/landingpages/otto-fiscal/components/FiscalPricingSection'[39m
+ [90m 10 |[39m [36mimport[39m { fiscalFaq } [36mfrom[39m [32m'@/assets/landingpages/otto-fiscal/fiscalLandingContent'[39m[0m
+
+Import map: aliased to relative './src/assets/landingpages/otto-fiscal/components/FiscalBenefitsSection' inside of [project]/
+
+
+Import trace:
+  Server Component:
+    ./src/assets/landingpages/otto-fiscal/FiscalLandingPage.tsx
+    ./src/app/emissor-nota-fiscal/page.tsx
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+ ⨯ ./src/assets/landingpages/otto-fiscal/components/FiscalBenefitsSection.tsx:30:1
+Module not found: Can't resolve '@/assets/landingpages/otto-fiscal/components/FiscalBenefitsSection.module.css'
+[0m [90m 28 |[39m } [36mfrom[39m [32m'lucide-react'[39m
+ [90m 29 |[39m
+[31m[1m>[22m[39m[90m 30 |[39m [36mimport[39m styles [36mfrom[39m [32m'@/assets/landingpages/otto-fiscal/components/FiscalBenefitsSection.module.css'[39m
+ [90m    |[39m [31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m
+ [90m 31 |[39m
+ [90m 32 |[39m [36mconst[39m paymentIntegrations [33m=[39m [
+ [90m 33 |[39m   { color[33m:[39m [32m'#635BFF'[39m[33m,[39m icon[33m:[39m [33mSiStripe[39m[33m,[39m label[33m:[39m [32m'Stripe'[39m }[33m,[39m[0m
+
+Import map: aliased to relative './src/assets/landingpages/otto-fiscal/components/FiscalBenefitsSection.module.css' inside of [project]/
+
+
+Import trace:
+  Server Component:
+    ./src/assets/landingpages/otto-fiscal/components/FiscalBenefitsSection.tsx
+    ./src/assets/landingpages/otto-fiscal/FiscalLandingPage.tsx
+    ./src/app/emissor-nota-fiscal/page.tsx
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+ ⨯ ./src/assets/landingpages/otto-fiscal/components/FiscalBenefitsSection.tsx:30:1
+Module not found: Can't resolve '@/assets/landingpages/otto-fiscal/components/FiscalBenefitsSection.module.css'
+[0m [90m 28 |[39m } [36mfrom[39m [32m'lucide-react'[39m
+ [90m 29 |[39m
+[31m[1m>[22m[39m[90m 30 |[39m [36mimport[39m styles [36mfrom[39m [32m'@/assets/landingpages/otto-fiscal/components/FiscalBenefitsSection.module.css'[39m
+ [90m    |[39m [31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m
+ [90m 31 |[39m
+ [90m 32 |[39m [36mconst[39m paymentIntegrations [33m=[39m [
+ [90m 33 |[39m   { color[33m:[39m [32m'#635BFF'[39m[33m,[39m icon[33m:[39m [33mSiStripe[39m[33m,[39m label[33m:[39m [32m'Stripe'[39m }[33m,[39m[0m
+
+Import map: aliased to relative './src/assets/landingpages/otto-fiscal/components/FiscalBenefitsSection.module.css' inside of [project]/
+
+
+Import trace:
+  Server Component:
+    ./src/assets/landingpages/otto-fiscal/components/FiscalBenefitsSection.tsx
+    ./src/assets/landingpages/otto-fiscal/FiscalLandingPage.tsx
+    ./src/app/emissor-nota-fiscal/page.tsx
+
+https://nextjs.org/docs/messages/module-not-found
+
+

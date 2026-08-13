@@ -1,0 +1,7 @@
+.root h1,
+.root h2 {
+  font-family: var(--font-instrument-serif, Georgia), serif !important;
+  font-weight: 400 !important;
+  font-synthesis: none;
+  letter-spacing: 0 !important;
+}

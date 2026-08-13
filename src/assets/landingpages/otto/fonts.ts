@@ -1,5 +1,12 @@
 import localFont from 'next/font/local'
+import { Instrument_Serif } from 'next/font/google'
 import type { CSSProperties } from 'react'
+
+export const instrumentSerif = Instrument_Serif({
+  variable: '--font-instrument-serif',
+  subsets: ['latin'],
+  weight: '400',
+})
 
 export const sfPro = localFont({
   variable: '--font-sf-pro',
