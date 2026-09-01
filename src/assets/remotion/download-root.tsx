@@ -84,6 +84,10 @@ import {
   OTTO_INVOICE_TWO_STEPS_DURATION,
   OttoInvoiceTwoSteps,
 } from './compositions/OttoInvoiceTwoSteps'
+import {
+  OTTO_INVOICE_TWO_STEPS_LIST_DURATION,
+  OttoInvoiceTwoStepsList,
+} from './compositions/OttoInvoiceTwoStepsList'
 
 function RemotionDownloadRoot() {
   return (
@@ -230,6 +234,14 @@ function RemotionDownloadRoot() {
         fps={30}
         height={864}
         id="video-otto-invoice-two-steps"
+        width={1536}
+      />
+      <Composition
+        component={OttoInvoiceTwoStepsList}
+        durationInFrames={OTTO_INVOICE_TWO_STEPS_LIST_DURATION}
+        fps={30}
+        height={864}
+        id="video-otto-invoice-two-steps-list"
         width={1536}
       />
       <Composition

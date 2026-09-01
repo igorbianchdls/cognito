@@ -131,6 +131,7 @@ import { OTTO_FINANCIAL_OPERATORS_50S_NARRATED_DURATION, OttoFinancialOperators5
 import { OTTO_FINANCIAL_DASHBOARD_DURATION, OttoFinancialDashboard } from '@/assets/remotion/compositions/OttoFinancialDashboard'
 import { OTTO_INVOICE_ONLY_SCENE_DURATION, OttoInvoiceOnlyScene } from '@/assets/remotion/compositions/OttoInvoiceOnlyScene'
 import { OTTO_INVOICE_TWO_STEPS_DURATION, OttoInvoiceTwoSteps } from '@/assets/remotion/compositions/OttoInvoiceTwoSteps'
+import { OTTO_INVOICE_TWO_STEPS_LIST_DURATION, OttoInvoiceTwoStepsList } from '@/assets/remotion/compositions/OttoInvoiceTwoStepsList'
 import { OTTO_SYNC_ONLY_SCENE_DURATION, OttoSyncOnlyScene } from '@/assets/remotion/compositions/OttoSyncOnlyScene'
 import {
   OTTO_FINANCIAL_SCENE_COMPONENT_DURATION,
@@ -3402,6 +3403,18 @@ const catalog: CatalogItem[] = [
     label: 'Otto — Vendas para Notas Fiscais',
     tags: ['Otto', 'Vendas', 'Nota Fiscal', 'Carrossel', 'Automação'],
     value: 'video-otto-invoice-two-steps',
+    width: 1536,
+  },
+  {
+    code: '<OttoInvoiceTwoStepsList />',
+    component: OttoInvoiceTwoStepsList,
+    description: 'Fluxo em duas etapas usando um container animado: encontra vendas e transforma cada linha em uma nota fiscal autorizada.',
+    duration: OTTO_INVOICE_TWO_STEPS_LIST_DURATION,
+    height: 864,
+    kind: 'Vídeos criados',
+    label: 'Otto — Vendas para Notas Fiscais · Lista',
+    tags: ['Otto', 'Vendas', 'Nota Fiscal', 'Lista', 'Automação'],
+    value: 'video-otto-invoice-two-steps-list',
     width: 1536,
   },
   {
