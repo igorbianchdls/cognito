@@ -45,6 +45,19 @@ function Avatar({index}: {index: number}) {
   )
 }
 
+function FiscalDocumentIcon() {
+  return (
+    <div style={{alignItems: 'center', background: '#eff6ff', border: '1px solid #cfe2ff', borderRadius: 14, boxShadow: '0 6px 16px rgba(11,103,240,.12)', display: 'flex', height: 52, justifyContent: 'center', width: 52}}>
+      <div style={{background: '#fff', border: `2px solid ${BLUE}`, borderRadius: 5, height: 30, position: 'relative', width: 24}}>
+        <span style={{borderBottom: '8px solid transparent', borderLeft: `8px solid ${BLUE}`, height: 0, position: 'absolute', right: -2, top: -2, width: 0}} />
+        <span style={{background: BLUE, borderRadius: 99, height: 2, left: 5, position: 'absolute', top: 11, width: 10}} />
+        <span style={{background: '#8dbbf9', borderRadius: 99, height: 2, left: 5, position: 'absolute', top: 17, width: 13}} />
+        <span style={{background: '#8dbbf9', borderRadius: 99, height: 2, left: 5, position: 'absolute', top: 23, width: 9}} />
+      </div>
+    </div>
+  )
+}
+
 function Spinner({active, color}: {active: boolean; color: string}) {
   const frame = useCurrentFrame()
   return active ? (
@@ -104,7 +117,10 @@ function ResultRow({frame, index}: {frame: number; index: number}) {
 
   return (
     <div style={{alignItems: 'center', background: `rgba(11,103,240,${flash})`, borderTop: '1px solid #edf0f4', display: 'grid', gap: 16, gridTemplateColumns: '52px minmax(0,1fr) 130px 158px 28px', height: 76, opacity: rowIn, padding: '0 26px', transform: `translateY(${(1 - rowIn) * 18}px)`, transition: 'background .2s ease'}}>
-      <Avatar index={index} />
+      <div style={{height: 52, position: 'relative', width: 52}}>
+        <div style={{inset: 0, opacity: 1 - stageTwo, position: 'absolute', transform: `scale(${1 - stageTwo * 0.12}) rotate(${-stageTwo * 6}deg)`}}><Avatar index={index} /></div>
+        <div style={{inset: 0, opacity: stageTwo, position: 'absolute', transform: `scale(${0.88 + stageTwo * 0.12}) rotate(${(1 - stageTwo) * 6}deg)`}}><FiscalDocumentIcon /></div>
+      </div>
       <div style={{display: 'grid', gap: 6, minWidth: 0, position: 'relative'}}>
         <strong style={{color: '#111827', fontSize: 20, fontWeight: 650, letterSpacing: '-.01em', lineHeight: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap'}}>{sale.customer}</strong>
         <div style={{height: 17, position: 'relative'}}>
