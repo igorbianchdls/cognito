@@ -148,16 +148,23 @@ function ListContainer({frame}: {frame: number}) {
   const stageTwo = stageOpacity(frame, 2)
   const stageTwoLocal = frame - STAGE_CHANGE
   const searchProgress = Math.round(interpolate(tween(frame, 22, 125), [0, 1], [12, 100]))
-  const headerHeight = interpolate(stageTwo, [0, 1], [104, 0])
+  const completedCount = sales.filter((_, index) => frame - STAGE_CHANGE - index * 22 >= 72).length
+  const issueProgress = Math.round((completedCount / sales.length) * 100)
   const fiscalRowsHeight = 76 * (1 + sales.slice(1).reduce((total, _, index) => total + tween(stageTwoLocal, 46 + index * 28, 66 + index * 28), 0))
-  const containerHeight = interpolate(stageTwo, [0, 1], [104 + sales.length * 76, fiscalRowsHeight])
+  const containerHeight = interpolate(stageTwo, [0, 1], [104 + sales.length * 76, 104 + fiscalRowsHeight])
 
   return (
     <div style={{left: '50%', opacity: show, position: 'absolute', top: 272, transform: `translateX(-50%) translateY(${(1 - show) * 18}px) scale(${0.985 + show * 0.015})`, width: 1030}}>
       <div style={{background: '#fff', border: '1px solid #dfe5ed', borderRadius: 25, boxShadow: '0 28px 70px rgba(20,36,67,.13), 0 7px 20px rgba(20,36,67,.06)', height: containerHeight, overflow: 'hidden'}}>
-        <div style={{alignItems: 'center', display: 'flex', height: headerHeight, justifyContent: 'space-between', opacity: 1 - stageTwo, overflow: 'hidden', padding: '0 28px'}}>
-          <div style={{display: 'grid', gap: 6}}><strong style={{color: '#111827', fontSize: 24, fontWeight: 680}}>Vendas encontradas</strong><span style={{color: '#7b8798', fontSize: 16}}>Registros disponíveis para emissão fiscal</span></div>
-          <span style={{background: searchProgress === 100 ? '#ecfdf3' : '#eff6ff', border: `1px solid ${searchProgress === 100 ? '#bbf7d0' : '#cfe2ff'}`, borderRadius: 999, color: searchProgress === 100 ? GREEN : BLUE, fontSize: 18, fontWeight: 750, padding: '10px 15px'}}>{searchProgress}%</span>
+        <div style={{alignItems: 'center', display: 'flex', height: 104, justifyContent: 'space-between', overflow: 'hidden', padding: '0 28px'}}>
+          <div style={{height: 54, position: 'relative', width: 650}}>
+            <div style={{display: 'grid', gap: 6, left: 0, opacity: 1 - stageTwo, position: 'absolute', top: 0}}><strong style={{color: '#111827', fontSize: 24, fontWeight: 680}}>Vendas encontradas</strong><span style={{color: '#7b8798', fontSize: 16}}>Registros disponíveis para emissão fiscal</span></div>
+            <div style={{display: 'grid', gap: 6, left: 0, opacity: stageTwo, position: 'absolute', top: 0}}><strong style={{color: '#111827', fontSize: 24, fontWeight: 680}}>{completedCount === sales.length ? '5 notas emitidas' : 'Emitindo notas fiscais'}</strong><span style={{color: '#7b8798', fontSize: 16}}>{completedCount === sales.length ? 'Notas autorizadas e enviadas aos clientes' : 'Gerando uma NFS-e para cada venda encontrada'}</span></div>
+          </div>
+          <div style={{height: 44, position: 'relative', width: 78}}>
+            <span style={{background: searchProgress === 100 ? '#ecfdf3' : '#eff6ff', border: `1px solid ${searchProgress === 100 ? '#bbf7d0' : '#cfe2ff'}`, borderRadius: 999, color: searchProgress === 100 ? GREEN : BLUE, fontSize: 18, fontWeight: 750, opacity: 1 - stageTwo, padding: '10px 15px', position: 'absolute', right: 0, top: 0}}>{searchProgress}%</span>
+            <span style={{background: issueProgress === 100 ? '#ecfdf3' : '#eff6ff', border: `1px solid ${issueProgress === 100 ? '#bbf7d0' : '#cfe2ff'}`, borderRadius: 999, color: issueProgress === 100 ? GREEN : BLUE, fontSize: 18, fontWeight: 750, opacity: stageTwo, padding: '10px 15px', position: 'absolute', right: 0, top: 0}}>{issueProgress}%</span>
+          </div>
         </div>
         {sales.map((sale, index) => <ResultRow frame={frame} index={index} key={sale.number} />)}
       </div>
