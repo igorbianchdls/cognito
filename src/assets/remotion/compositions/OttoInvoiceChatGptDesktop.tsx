@@ -157,7 +157,7 @@ function OttoPanel() {
   return (
     <div style={{background: '#fff', bottom: 0, left: RIGHT_LEFT, overflow: 'hidden', position: 'absolute', right: 0, top: 70}}>
       <div style={{height: 864, left: OTTO_LEFT, position: 'absolute', top: 0, transform: `scale(${OTTO_SCALE})`, transformOrigin: 'top left', width: 1536}}>
-        <OttoInvoiceTwoStepsList />
+        <OttoInvoiceTwoStepsList compact itemsCount={8} />
       </div>
     </div>
   )

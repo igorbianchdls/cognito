@@ -14,6 +14,9 @@ const sales = [
   {customer: 'Ana Martins', company: 'Otto Sistemas Ltda', number: 'NFS-e 00005782', service: 'Consultoria financeira', value: 'R$ 1.250,00'},
   {customer: 'Juliana Lima', company: 'Empresa XYZ Ltda', number: 'NFS-e 00005783', service: 'Treinamento empresarial', value: 'R$ 2.500,00'},
   {customer: 'Marcos Alves', company: 'Alves Comércio Ltda', number: 'NFS-e 00005784', service: 'Manutenção de sistemas', value: 'R$ 450,00'},
+  {customer: 'Lucas Ferreira', company: 'Beta Digital Ltda', number: 'NFS-e 00005785', service: 'Marketing digital', value: 'R$ 3.200,00'},
+  {customer: 'Mariana Costa', company: 'Costa Arquitetura', number: 'NFS-e 00005786', service: 'Projeto arquitetônico', value: 'R$ 4.800,00'},
+  {customer: 'Rafael Mendes', company: 'Mendes Tecnologia', number: 'NFS-e 00005787', service: 'Desenvolvimento de software', value: 'R$ 6.900,00'},
 ]
 
 type Stage = 1 | 2
@@ -34,7 +37,7 @@ function Avatar({index}: {index: number}) {
   return (
     <div style={{
       backgroundImage: `url(${staticFile('remotion/invoice-three-steps/avatar-sheet.png')})`,
-      backgroundPosition: `${index * 25}% center`,
+      backgroundPosition: `${(index % 5) * 25}% center`,
       backgroundRepeat: 'no-repeat',
       backgroundSize: '500% auto',
       border: '3px solid #ffffff',
@@ -67,16 +70,17 @@ function FiscalInvoiceThumbnail({number}: {number: string}) {
   )
 }
 
-function Spinner({active, color}: {active: boolean; color: string}) {
+function Spinner({active, color, compact}: {active: boolean; color: string; compact?: boolean}) {
   const frame = useCurrentFrame()
+  const size = compact ? 20 : 25
   return active ? (
-    <span style={{border: '3px solid #d9e1ec', borderRadius: 999, borderRightColor: color, display: 'block', height: 25, transform: `rotate(${frame * 18}deg)`, width: 25}} />
+    <span style={{border: compact ? '2px solid #d9e1ec' : '3px solid #d9e1ec', borderRadius: 999, borderRightColor: color, display: 'block', height: size, transform: `rotate(${frame * 18}deg)`, width: size}} />
   ) : (
-    <span style={{alignItems: 'center', background: GREEN, borderRadius: 999, color: '#fff', display: 'flex', fontSize: 14, fontWeight: 900, height: 25, justifyContent: 'center', width: 25}}>✓</span>
+    <span style={{alignItems: 'center', background: GREEN, borderRadius: 999, color: '#fff', display: 'flex', fontSize: compact ? 11 : 14, fontWeight: 900, height: size, justifyContent: 'center', width: size}}>✓</span>
   )
 }
 
-function SceneHeader({frame, stage}: {frame: number; stage: Stage}) {
+function SceneHeader({compact, frame, stage}: {compact?: boolean; frame: number; stage: Stage}) {
   const opacity = stageOpacity(frame, stage)
   const copy = stage === 1
     ? ['Buscando suas vendas...', 'Localizando as vendas prontas para emissão']
@@ -88,9 +92,9 @@ function SceneHeader({frame, stage}: {frame: number; stage: Stage}) {
         <span style={{alignItems: 'center', background: BLUE, borderRadius: 999, color: '#fff', display: 'flex', fontSize: 12, height: 22, justifyContent: 'center', width: 22}}>{stage}</span>
         ETAPA {stage} DE 2
       </div>
-      <div style={{color: '#05070d', fontSize: 58, fontWeight: 790, letterSpacing: '-.05em', lineHeight: 1, marginTop: 20}}>{copy[0]}</div>
-      <div style={{color: '#405474', fontSize: 20, fontWeight: 500, marginTop: 14}}>{copy[1]}</div>
-      <div style={{alignItems: 'center', display: 'flex', marginTop: 18}}>
+      <div style={{color: '#05070d', fontSize: compact ? 54 : 58, fontWeight: 790, letterSpacing: '-.05em', lineHeight: 1, marginTop: compact ? 17 : 20}}>{copy[0]}</div>
+      {!compact ? <div style={{color: '#405474', fontSize: 20, fontWeight: 500, marginTop: 14}}>{copy[1]}</div> : null}
+      <div style={{alignItems: 'center', display: 'flex', marginTop: compact ? 16 : 18}}>
         <span style={{background: stage === 1 ? BLUE : '#8795aa', borderRadius: 999, boxShadow: stage === 1 ? '0 0 0 5px #e5f0ff' : 'none', height: 13, width: 13}} />
         <span style={{background: '#aeb9ca', height: 2, width: 104}} />
         <span style={{background: stage === 2 ? BLUE : '#8795aa', borderRadius: 999, boxShadow: stage === 2 ? '0 0 0 5px #e5f0ff' : 'none', height: 13, width: 13}} />
@@ -99,21 +103,25 @@ function SceneHeader({frame, stage}: {frame: number; stage: Stage}) {
   )
 }
 
-function StatusPill({background, color, label}: {background: string; color: string; label: string}) {
-  return <span style={{background, border: `1px solid ${color}22`, borderRadius: 999, color, fontSize: 15, fontWeight: 760, minWidth: 144, padding: '9px 13px', textAlign: 'center', whiteSpace: 'nowrap'}}>{label}</span>
+function StatusPill({background, color, compact, label}: {background: string; color: string; compact?: boolean; label: string}) {
+  return <span style={{background, border: `1px solid ${color}22`, borderRadius: 999, color, fontSize: compact ? 12 : 15, fontWeight: 760, minWidth: compact ? 116 : 144, padding: compact ? '7px 10px' : '9px 13px', textAlign: 'center', whiteSpace: 'nowrap'}}>{label}</span>
 }
 
-function ResultRow({frame, index}: {frame: number; index: number}) {
+function ResultRow({compact, frame, index}: {compact?: boolean; frame: number; index: number}) {
   const sale = sales[index]
+  const rowHeight = compact ? 53 : 76
+  const iconScale = compact ? 0.72 : 1
+  const fiscalDelay = compact ? 14 : 28
+  const issueDelay = compact ? 14 : 22
   const rowIn = tween(frame, 30 + index * 13, 46 + index * 13)
   const stageTwo = stageOpacity(frame, 2)
   const stageTwoLocal = frame - STAGE_CHANGE
-  const fiscalRowIn = index === 0 ? 1 : tween(stageTwoLocal, 18 + index * 28, 38 + index * 28)
+  const fiscalRowIn = index === 0 ? 1 : tween(stageTwoLocal, 12 + index * fiscalDelay, 26 + index * fiscalDelay)
   const visible = interpolate(stageTwo, [0, 1], [rowIn, fiscalRowIn])
   const searchDone = frame >= 78 + index * 13
-  const issueFrame = frame - STAGE_CHANGE - index * 22
-  const authorized = issueFrame >= 72
-  const emitting = issueFrame >= 30 && !authorized
+  const issueFrame = frame - STAGE_CHANGE - index * issueDelay
+  const authorized = issueFrame >= (compact ? 64 : 72)
+  const emitting = issueFrame >= (compact ? 24 : 30) && !authorized
   const status = stageTwo < 0.5
     ? searchDone
       ? {background: '#ecfdf3', color: '#166534', label: 'Pronta para emitir'}
@@ -125,56 +133,61 @@ function ResultRow({frame, index}: {frame: number; index: number}) {
         : {background: '#fff7ed', color: '#c2410c', label: 'Preparando...'}
 
   return (
-    <div style={{alignItems: 'center', background: '#ffffff', borderTop: '1px solid #edf0f4', display: 'grid', gap: 16, gridTemplateColumns: '52px minmax(0,1fr) 130px 158px 28px', height: 76, opacity: visible, padding: '0 26px', transform: `translateY(${(1 - visible) * 18}px)`}}>
-      <div style={{height: 52, position: 'relative', width: 52}}>
-        <div style={{inset: 0, opacity: 1 - stageTwo, position: 'absolute', transform: `scale(${1 - stageTwo * 0.12}) rotate(${-stageTwo * 6}deg)`}}><Avatar index={index} /></div>
-        <div style={{inset: 0, opacity: stageTwo, position: 'absolute', transform: `scale(${0.88 + stageTwo * 0.12}) rotate(${(1 - stageTwo) * 5}deg)`}}><FiscalInvoiceThumbnail number={sale.number} /></div>
+    <div style={{alignItems: 'center', background: '#ffffff', borderTop: '1px solid #edf0f4', display: 'grid', gap: compact ? 11 : 16, gridTemplateColumns: compact ? '40px minmax(0,1fr) 105px 126px 22px' : '52px minmax(0,1fr) 130px 158px 28px', height: rowHeight, opacity: visible, padding: compact ? '0 20px' : '0 26px', transform: `translateY(${(1 - visible) * (compact ? 12 : 18)}px)`}}>
+      <div style={{height: compact ? 40 : 52, position: 'relative', width: compact ? 40 : 52}}>
+        <div style={{inset: 0, opacity: 1 - stageTwo, position: 'absolute', transform: `scale(${iconScale * (1 - stageTwo * 0.12)}) rotate(${-stageTwo * 6}deg)`, transformOrigin: 'top left'}}><Avatar index={index} /></div>
+        <div style={{inset: 0, opacity: stageTwo, position: 'absolute', transform: `scale(${iconScale * (0.88 + stageTwo * 0.12)}) rotate(${(1 - stageTwo) * 5}deg)`, transformOrigin: 'top left'}}><FiscalInvoiceThumbnail number={sale.number} /></div>
       </div>
-      <div style={{display: 'grid', gap: 6, minWidth: 0, position: 'relative'}}>
-        <strong style={{color: '#111827', fontSize: 20, fontWeight: 650, letterSpacing: '-.01em', lineHeight: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap'}}>{sale.customer}</strong>
-        <div style={{height: 17, position: 'relative'}}>
-          <span style={{color: '#7a8799', fontSize: 14, left: 0, opacity: 1 - stageTwo, overflow: 'hidden', position: 'absolute', textOverflow: 'ellipsis', top: 0, whiteSpace: 'nowrap'}}>{sale.company} · {sale.service}</span>
-          <span style={{color: '#66758b', fontSize: 14, left: 0, opacity: stageTwo, overflow: 'hidden', position: 'absolute', textOverflow: 'ellipsis', top: 0, whiteSpace: 'nowrap'}}>{sale.number} · {sale.service}</span>
+      <div style={{display: 'grid', gap: compact ? 4 : 6, minWidth: 0, position: 'relative'}}>
+        <strong style={{color: '#111827', fontSize: compact ? 16 : 20, fontWeight: 650, letterSpacing: '-.01em', lineHeight: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap'}}>{sale.customer}</strong>
+        <div style={{height: compact ? 13 : 17, position: 'relative'}}>
+          <span style={{color: '#7a8799', fontSize: compact ? 11 : 14, left: 0, opacity: 1 - stageTwo, overflow: 'hidden', position: 'absolute', textOverflow: 'ellipsis', top: 0, whiteSpace: 'nowrap'}}>{sale.company} · {sale.service}</span>
+          <span style={{color: '#66758b', fontSize: compact ? 11 : 14, left: 0, opacity: stageTwo, overflow: 'hidden', position: 'absolute', textOverflow: 'ellipsis', top: 0, whiteSpace: 'nowrap'}}>{sale.number} · {sale.service}</span>
         </div>
       </div>
-      <strong style={{color: '#111827', fontSize: 18, fontWeight: 620, textAlign: 'right', whiteSpace: 'nowrap'}}>{sale.value}</strong>
-      <StatusPill {...status} />
-      <Spinner active={stageTwo < 0.5 ? !searchDone : !authorized} color={status.color} />
+      <strong style={{color: '#111827', fontSize: compact ? 14 : 18, fontWeight: 620, textAlign: 'right', whiteSpace: 'nowrap'}}>{sale.value}</strong>
+      <StatusPill {...status} compact={compact} />
+      <Spinner active={stageTwo < 0.5 ? !searchDone : !authorized} color={status.color} compact={compact} />
     </div>
   )
 }
 
-function ListContainer({frame}: {frame: number}) {
+function ListContainer({compact, frame, itemsCount}: {compact?: boolean; frame: number; itemsCount: number}) {
+  const visibleSales = sales.slice(0, itemsCount)
+  const rowHeight = compact ? 53 : 76
+  const headerHeight = compact ? 72 : 104
+  const bottomGap = compact ? 12 : CONTAINER_BOTTOM_GAP
+  const issueDelay = compact ? 14 : 22
   const show = tween(frame, 16, 34)
   const stageTwo = stageOpacity(frame, 2)
   const stageTwoLocal = frame - STAGE_CHANGE
   const searchProgress = Math.round(interpolate(tween(frame, 22, 125), [0, 1], [12, 100]))
-  const completedCount = sales.filter((_, index) => frame - STAGE_CHANGE - index * 22 >= 72).length
-  const issueProgress = Math.round((completedCount / sales.length) * 100)
-  const searchRowsHeight = 76 * (1 + sales.slice(1).reduce((total, _, index) => total + tween(frame, 43 + index * 13, 59 + index * 13), 0))
-  const fiscalRowsHeight = 76 * (1 + sales.slice(1).reduce((total, _, index) => total + tween(stageTwoLocal, 46 + index * 28, 66 + index * 28), 0))
-  const containerHeight = interpolate(stageTwo, [0, 1], [104 + searchRowsHeight + CONTAINER_BOTTOM_GAP, 104 + fiscalRowsHeight + CONTAINER_BOTTOM_GAP])
+  const completedCount = visibleSales.filter((_, index) => frame - STAGE_CHANGE - index * issueDelay >= (compact ? 64 : 72)).length
+  const issueProgress = Math.round((completedCount / visibleSales.length) * 100)
+  const searchRowsHeight = rowHeight * (1 + visibleSales.slice(1).reduce((total, _, index) => total + tween(frame, 43 + index * 13, 59 + index * 13), 0))
+  const fiscalRowsHeight = rowHeight * (1 + visibleSales.slice(1).reduce((total, _, index) => total + tween(stageTwoLocal, compact ? 26 + index * 14 : 46 + index * 28, compact ? 40 + index * 14 : 66 + index * 28), 0))
+  const containerHeight = interpolate(stageTwo, [0, 1], [headerHeight + searchRowsHeight + bottomGap, headerHeight + fiscalRowsHeight + bottomGap])
 
   return (
-    <div style={{left: '50%', opacity: show, position: 'absolute', top: 272, transform: `translateX(-50%) translateY(${(1 - show) * 18}px) scale(${0.985 + show * 0.015})`, width: 1030}}>
-      <div style={{background: '#fff', border: '1px solid #dfe5ed', borderRadius: 25, boxShadow: '0 28px 70px rgba(20,36,67,.13), 0 7px 20px rgba(20,36,67,.06)', height: containerHeight, overflow: 'hidden'}}>
-        <div style={{alignItems: 'center', display: 'flex', height: 104, justifyContent: 'space-between', overflow: 'hidden', padding: '0 28px'}}>
-          <div style={{height: 54, position: 'relative', width: 650}}>
-            <div style={{display: 'grid', gap: 6, left: 0, opacity: 1 - stageTwo, position: 'absolute', top: 0}}><strong style={{color: '#111827', fontSize: 24, fontWeight: 680}}>Vendas encontradas</strong><span style={{color: '#7b8798', fontSize: 16}}>Registros disponíveis para emissão fiscal</span></div>
-            <div style={{display: 'grid', gap: 6, left: 0, opacity: stageTwo, position: 'absolute', top: 0}}><strong style={{color: '#111827', fontSize: 24, fontWeight: 680}}>{completedCount === sales.length ? '5 notas emitidas' : 'Emitindo notas fiscais'}</strong><span style={{color: '#7b8798', fontSize: 16}}>{completedCount === sales.length ? 'Notas autorizadas e enviadas aos clientes' : 'Gerando uma NFS-e para cada venda encontrada'}</span></div>
+    <div style={{left: '50%', opacity: show, position: 'absolute', top: compact ? 280 : 272, transform: `translateX(-50%) translateY(${(1 - show) * 18}px) scale(${0.985 + show * 0.015})`, width: compact ? 1040 : 1030}}>
+      <div style={{background: '#fff', border: '1px solid #dfe5ed', borderRadius: compact ? 20 : 25, boxShadow: '0 28px 70px rgba(20,36,67,.13), 0 7px 20px rgba(20,36,67,.06)', height: containerHeight, overflow: 'hidden'}}>
+        <div style={{alignItems: 'center', display: 'flex', height: headerHeight, justifyContent: 'space-between', overflow: 'hidden', padding: compact ? '0 22px' : '0 28px'}}>
+          <div style={{height: compact ? 28 : 54, position: 'relative', width: 650}}>
+            <div style={{display: 'grid', gap: 6, left: 0, opacity: 1 - stageTwo, position: 'absolute', top: 0}}><strong style={{color: '#111827', fontSize: compact ? 21 : 24, fontWeight: 680}}>Vendas encontradas</strong>{!compact ? <span style={{color: '#7b8798', fontSize: 16}}>Registros disponíveis para emissão fiscal</span> : null}</div>
+            <div style={{display: 'grid', gap: 6, left: 0, opacity: stageTwo, position: 'absolute', top: 0}}><strong style={{color: '#111827', fontSize: compact ? 21 : 24, fontWeight: 680}}>{completedCount === visibleSales.length ? `${visibleSales.length} notas emitidas` : 'Emitindo notas fiscais'}</strong>{!compact ? <span style={{color: '#7b8798', fontSize: 16}}>{completedCount === visibleSales.length ? 'Notas autorizadas e enviadas aos clientes' : 'Gerando uma NFS-e para cada venda encontrada'}</span> : null}</div>
           </div>
           <div style={{height: 44, position: 'relative', width: 78}}>
             <span style={{background: searchProgress === 100 ? '#ecfdf3' : '#eff6ff', border: `1px solid ${searchProgress === 100 ? '#bbf7d0' : '#cfe2ff'}`, borderRadius: 999, color: searchProgress === 100 ? GREEN : BLUE, fontSize: 18, fontWeight: 750, opacity: 1 - stageTwo, padding: '10px 15px', position: 'absolute', right: 0, top: 0}}>{searchProgress}%</span>
             <span style={{background: issueProgress === 100 ? '#ecfdf3' : '#eff6ff', border: `1px solid ${issueProgress === 100 ? '#bbf7d0' : '#cfe2ff'}`, borderRadius: 999, color: issueProgress === 100 ? GREEN : BLUE, fontSize: 18, fontWeight: 750, opacity: stageTwo, padding: '10px 15px', position: 'absolute', right: 0, top: 0}}>{issueProgress}%</span>
           </div>
         </div>
-        {sales.map((sale, index) => <ResultRow frame={frame} index={index} key={sale.number} />)}
+        {visibleSales.map((sale, index) => <ResultRow compact={compact} frame={frame} index={index} key={sale.number} />)}
       </div>
     </div>
   )
 }
 
-export function OttoInvoiceTwoStepsList() {
+export function OttoInvoiceTwoStepsList({compact = false, itemsCount = 5}: {compact?: boolean; itemsCount?: number} = {}) {
   const frame = useCurrentFrame()
   const {fps} = useVideoConfig()
   const opening = spring({config: {damping: 18, stiffness: 100}, fps, frame})
@@ -182,8 +195,8 @@ export function OttoInvoiceTwoStepsList() {
 
   return (
     <AbsoluteFill style={{background: 'radial-gradient(circle at 50% 42%, #fff 0%, #fbfcfe 56%, #f3f6fa 100%)', color: NAVY, fontFamily: 'Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif', overflow: 'hidden'}}>
-      {[1, 2].map((stage) => <SceneHeader frame={frame} key={stage} stage={stage as Stage} />)}
-      <ListContainer frame={frame} />
+      {[1, 2].map((stage) => <SceneHeader compact={compact} frame={frame} key={stage} stage={stage as Stage} />)}
+      <ListContainer compact={compact} frame={frame} itemsCount={itemsCount} />
       <AbsoluteFill style={{background: '#fff', opacity: Math.max(1 - opening, 1 - closing), pointerEvents: 'none', zIndex: 200}} />
     </AbsoluteFill>
   )
