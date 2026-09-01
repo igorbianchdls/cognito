@@ -132,6 +132,7 @@ import { OTTO_FINANCIAL_DASHBOARD_DURATION, OttoFinancialDashboard } from '@/ass
 import { OTTO_INVOICE_ONLY_SCENE_DURATION, OttoInvoiceOnlyScene } from '@/assets/remotion/compositions/OttoInvoiceOnlyScene'
 import { OTTO_INVOICE_TWO_STEPS_DURATION, OttoInvoiceTwoSteps } from '@/assets/remotion/compositions/OttoInvoiceTwoSteps'
 import { OTTO_INVOICE_TWO_STEPS_LIST_DURATION, OttoInvoiceTwoStepsList } from '@/assets/remotion/compositions/OttoInvoiceTwoStepsList'
+import { OTTO_INVOICE_CHATGPT_DESKTOP_DURATION, OttoInvoiceChatGptDesktop } from '@/assets/remotion/compositions/OttoInvoiceChatGptDesktop'
 import { OTTO_SYNC_ONLY_SCENE_DURATION, OttoSyncOnlyScene } from '@/assets/remotion/compositions/OttoSyncOnlyScene'
 import {
   OTTO_FINANCIAL_SCENE_COMPONENT_DURATION,
@@ -3415,6 +3416,18 @@ const catalog: CatalogItem[] = [
     label: 'Otto — Vendas para Notas Fiscais · Lista',
     tags: ['Otto', 'Vendas', 'Nota Fiscal', 'Lista', 'Automação'],
     value: 'video-otto-invoice-two-steps-list',
+    width: 1536,
+  },
+  {
+    code: '<OttoInvoiceChatGptDesktop />',
+    component: OttoInvoiceChatGptDesktop,
+    description: 'Interface desktop do ChatGPT com sidebar, conversa simples e automação Otto de vendas para notas fiscais no painel direito.',
+    duration: OTTO_INVOICE_CHATGPT_DESKTOP_DURATION,
+    height: 864,
+    kind: 'Vídeos criados',
+    label: 'ChatGPT + Otto — Vendas para Notas Fiscais',
+    tags: ['ChatGPT', 'Otto', 'Vendas', 'Nota Fiscal', 'Desktop'],
+    value: 'video-otto-invoice-chatgpt-desktop',
     width: 1536,
   },
   {

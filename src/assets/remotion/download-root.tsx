@@ -88,6 +88,10 @@ import {
   OTTO_INVOICE_TWO_STEPS_LIST_DURATION,
   OttoInvoiceTwoStepsList,
 } from './compositions/OttoInvoiceTwoStepsList'
+import {
+  OTTO_INVOICE_CHATGPT_DESKTOP_DURATION,
+  OttoInvoiceChatGptDesktop,
+} from './compositions/OttoInvoiceChatGptDesktop'
 
 function RemotionDownloadRoot() {
   return (
@@ -242,6 +246,14 @@ function RemotionDownloadRoot() {
         fps={30}
         height={864}
         id="video-otto-invoice-two-steps-list"
+        width={1536}
+      />
+      <Composition
+        component={OttoInvoiceChatGptDesktop}
+        durationInFrames={OTTO_INVOICE_CHATGPT_DESKTOP_DURATION}
+        fps={30}
+        height={864}
+        id="video-otto-invoice-chatgpt-desktop"
         width={1536}
       />
       <Composition
