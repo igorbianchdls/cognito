@@ -106,11 +106,13 @@ function ResultRow({frame, index}: {frame: number; index: number}) {
   const sale = sales[index]
   const rowIn = tween(frame, 30 + index * 13, 46 + index * 13)
   const stageTwo = stageOpacity(frame, 2)
+  const stageTwoLocal = frame - STAGE_CHANGE
+  const fiscalRowIn = index === 0 ? 1 : tween(stageTwoLocal, 18 + index * 28, 38 + index * 28)
+  const visible = interpolate(stageTwo, [0, 1], [rowIn, fiscalRowIn])
   const searchDone = frame >= 78 + index * 13
   const issueFrame = frame - STAGE_CHANGE - index * 22
   const authorized = issueFrame >= 72
   const emitting = issueFrame >= 30 && !authorized
-  const active = stageTwo > 0.5 && !authorized
   const status = stageTwo < 0.5
     ? searchDone
       ? {background: '#ecfdf3', color: '#166534', label: 'Pronta para emitir'}
@@ -121,10 +123,8 @@ function ResultRow({frame, index}: {frame: number; index: number}) {
         ? {background: '#eff6ff', color: BLUE, label: 'Emitindo...'}
         : {background: '#fff7ed', color: '#c2410c', label: 'Preparando...'}
 
-  const flash = active ? interpolate(frame % 26, [0, 13, 26], [0.02, 0.09, 0.02]) : 0
-
   return (
-    <div style={{alignItems: 'center', background: `rgba(11,103,240,${flash})`, borderTop: '1px solid #edf0f4', display: 'grid', gap: 16, gridTemplateColumns: '52px minmax(0,1fr) 130px 158px 28px', height: 76, opacity: rowIn, padding: '0 26px', transform: `translateY(${(1 - rowIn) * 18}px)`, transition: 'background .2s ease'}}>
+    <div style={{alignItems: 'center', background: '#ffffff', borderTop: '1px solid #edf0f4', display: 'grid', gap: 16, gridTemplateColumns: '52px minmax(0,1fr) 130px 158px 28px', height: 76, opacity: visible, padding: '0 26px', transform: `translateY(${(1 - visible) * 18}px)`}}>
       <div style={{height: 52, position: 'relative', width: 52}}>
         <div style={{inset: 0, opacity: 1 - stageTwo, position: 'absolute', transform: `scale(${1 - stageTwo * 0.12}) rotate(${-stageTwo * 6}deg)`}}><Avatar index={index} /></div>
         <div style={{inset: 0, opacity: stageTwo, position: 'absolute', transform: `scale(${0.88 + stageTwo * 0.12}) rotate(${(1 - stageTwo) * 5}deg)`}}><FiscalInvoiceThumbnail number={sale.number} /></div>
@@ -146,12 +146,15 @@ function ResultRow({frame, index}: {frame: number; index: number}) {
 function ListContainer({frame}: {frame: number}) {
   const show = tween(frame, 16, 34)
   const stageTwo = stageOpacity(frame, 2)
+  const stageTwoLocal = frame - STAGE_CHANGE
   const searchProgress = Math.round(interpolate(tween(frame, 22, 125), [0, 1], [12, 100]))
   const headerHeight = interpolate(stageTwo, [0, 1], [104, 0])
+  const fiscalRowsHeight = 76 * (1 + sales.slice(1).reduce((total, _, index) => total + tween(stageTwoLocal, 46 + index * 28, 66 + index * 28), 0))
+  const containerHeight = interpolate(stageTwo, [0, 1], [104 + sales.length * 76, fiscalRowsHeight])
 
   return (
     <div style={{left: '50%', opacity: show, position: 'absolute', top: 272, transform: `translateX(-50%) translateY(${(1 - show) * 18}px) scale(${0.985 + show * 0.015})`, width: 1030}}>
-      <div style={{background: '#fff', border: '1px solid #dfe5ed', borderRadius: 25, boxShadow: '0 28px 70px rgba(20,36,67,.13), 0 7px 20px rgba(20,36,67,.06)', overflow: 'hidden'}}>
+      <div style={{background: '#fff', border: '1px solid #dfe5ed', borderRadius: 25, boxShadow: '0 28px 70px rgba(20,36,67,.13), 0 7px 20px rgba(20,36,67,.06)', height: containerHeight, overflow: 'hidden'}}>
         <div style={{alignItems: 'center', display: 'flex', height: headerHeight, justifyContent: 'space-between', opacity: 1 - stageTwo, overflow: 'hidden', padding: '0 28px'}}>
           <div style={{display: 'grid', gap: 6}}><strong style={{color: '#111827', fontSize: 24, fontWeight: 680}}>Vendas encontradas</strong><span style={{color: '#7b8798', fontSize: 16}}>Registros disponíveis para emissão fiscal</span></div>
           <span style={{background: searchProgress === 100 ? '#ecfdf3' : '#eff6ff', border: `1px solid ${searchProgress === 100 ? '#bbf7d0' : '#cfe2ff'}`, borderRadius: 999, color: searchProgress === 100 ? GREEN : BLUE, fontSize: 18, fontWeight: 750, padding: '10px 15px'}}>{searchProgress}%</span>
