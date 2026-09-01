@@ -29,7 +29,8 @@ const SIDEBAR_WIDTH = 64
 const CHAT_WIDTH = 370
 const RIGHT_LEFT = SIDEBAR_WIDTH + CHAT_WIDTH
 const RIGHT_WIDTH = 1536 - RIGHT_LEFT
-const RIGHT_HEIGHT = 864 - 70
+const RIGHT_HEADER_HEIGHT = 56
+const RIGHT_HEIGHT = 864 - RIGHT_HEADER_HEIGHT
 const OTTO_SCALE = RIGHT_HEIGHT / 864
 const OTTO_LEFT = (RIGHT_WIDTH - 1536 * OTTO_SCALE) / 2
 
@@ -139,15 +140,15 @@ function ChatPanel({frame}: {frame: number}) {
 
 function RightToolbar() {
   return (
-    <header style={{alignItems: 'center', background: '#fff', borderBottom: '1px solid #e7e7e7', display: 'flex', height: 70, left: RIGHT_LEFT, padding: '0 34px', position: 'absolute', right: 0, top: 0, zIndex: 20}}>
-      <span style={{color: '#111', fontSize: 13, fontWeight: 560}}>otto-vendas-notas-fiscais</span><ChevronDown size={14} strokeWidth={1.8} style={{marginLeft: 7}} />
-      <div style={{alignItems: 'center', display: 'flex', gap: 25, marginLeft: 'auto'}}>
-        <Share size={19} strokeWidth={1.7} />
-        <Code2 size={20} strokeWidth={1.65} />
-        <Zap size={20} strokeWidth={1.7} />
-        <Github size={19} strokeWidth={1.7} />
-        <MoreVertical size={20} strokeWidth={1.7} />
-        <span style={{border: '1px solid #dfe3e8', borderRadius: 9, fontSize: 13, fontWeight: 560, padding: '10px 15px'}}>Publicar</span>
+    <header style={{alignItems: 'center', background: '#fff', borderBottom: '1px solid #e9ebee', display: 'flex', height: RIGHT_HEADER_HEIGHT, left: RIGHT_LEFT, padding: '0 28px', position: 'absolute', right: 0, top: 0, zIndex: 20}}>
+      <span style={{color: '#111', fontSize: 12.5, fontWeight: 560}}>otto-vendas-notas-fiscais</span><ChevronDown size={13} strokeWidth={1.8} style={{marginLeft: 6}} />
+      <div style={{alignItems: 'center', display: 'flex', gap: 20, marginLeft: 'auto'}}>
+        <Share size={17} strokeWidth={1.7} />
+        <Code2 size={18} strokeWidth={1.65} />
+        <Zap size={18} strokeWidth={1.7} />
+        <Github size={17} strokeWidth={1.7} />
+        <MoreVertical size={18} strokeWidth={1.7} />
+        <span style={{border: '1px solid #dfe3e8', borderRadius: 8, fontSize: 12, fontWeight: 560, padding: '8px 13px'}}>Publicar</span>
       </div>
     </header>
   )
@@ -155,7 +156,7 @@ function RightToolbar() {
 
 function OttoPanel() {
   return (
-    <div style={{background: '#fff', bottom: 0, left: RIGHT_LEFT, overflow: 'hidden', position: 'absolute', right: 0, top: 70}}>
+    <div style={{background: '#fff', bottom: 0, left: RIGHT_LEFT, overflow: 'hidden', position: 'absolute', right: 0, top: RIGHT_HEADER_HEIGHT}}>
       <div style={{height: 864, left: OTTO_LEFT, position: 'absolute', top: 0, transform: `scale(${OTTO_SCALE})`, transformOrigin: 'top left', width: 1536}}>
         <OttoInvoiceTwoStepsList compact itemsCount={10} />
       </div>

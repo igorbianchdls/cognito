@@ -1,4 +1,4 @@
-import {AbsoluteFill, Easing, interpolate, spring, staticFile, useCurrentFrame, useVideoConfig} from 'remotion'
+import {AbsoluteFill, Easing, interpolate, spring, useCurrentFrame, useVideoConfig} from 'remotion'
 
 export const OTTO_INVOICE_TWO_STEPS_LIST_DURATION = 360
 
@@ -9,16 +9,16 @@ const STAGE_CHANGE = 168
 const CONTAINER_BOTTOM_GAP = 16
 
 const sales = [
-  {customer: 'Fernanda Silva', company: 'Distribuidora FS', number: 'NFS-e 00005780', service: 'Suporte técnico', value: 'R$ 450,00'},
-  {customer: 'Carlos Souza', company: 'Carlos Souza ME', number: 'NFS-e 00005781', service: 'Design gráfico', value: 'R$ 980,00'},
-  {customer: 'Ana Martins', company: 'Otto Sistemas Ltda', number: 'NFS-e 00005782', service: 'Consultoria financeira', value: 'R$ 1.250,00'},
-  {customer: 'Juliana Lima', company: 'Empresa XYZ Ltda', number: 'NFS-e 00005783', service: 'Treinamento empresarial', value: 'R$ 2.500,00'},
-  {customer: 'Marcos Alves', company: 'Alves Comércio Ltda', number: 'NFS-e 00005784', service: 'Manutenção de sistemas', value: 'R$ 450,00'},
-  {customer: 'Lucas Ferreira', company: 'Beta Digital Ltda', number: 'NFS-e 00005785', service: 'Marketing digital', value: 'R$ 3.200,00'},
-  {customer: 'Mariana Costa', company: 'Costa Arquitetura', number: 'NFS-e 00005786', service: 'Projeto arquitetônico', value: 'R$ 4.800,00'},
-  {customer: 'Rafael Mendes', company: 'Mendes Tecnologia', number: 'NFS-e 00005787', service: 'Desenvolvimento de software', value: 'R$ 6.900,00'},
-  {customer: 'Beatriz Rocha', company: 'Rocha Consultoria', number: 'NFS-e 00005788', service: 'Assessoria empresarial', value: 'R$ 2.850,00'},
-  {customer: 'Gustavo Lima', company: 'GL Comércio Ltda', number: 'NFS-e 00005789', service: 'Gestão comercial', value: 'R$ 5.300,00'},
+  {company: 'Distribuidora FS', mark: 'FS', number: 'NFS-e 00005780', service: 'Suporte técnico', tone: '#2563eb', value: 'R$ 450,00'},
+  {company: 'Carlos Souza ME', mark: 'CS', number: 'NFS-e 00005781', service: 'Design gráfico', tone: '#7c3aed', value: 'R$ 980,00'},
+  {company: 'Otto Sistemas Ltda', mark: 'O', number: 'NFS-e 00005782', service: 'Consultoria financeira', tone: '#0f766e', value: 'R$ 1.250,00'},
+  {company: 'Empresa XYZ Ltda', mark: 'XYZ', number: 'NFS-e 00005783', service: 'Treinamento empresarial', tone: '#ea580c', value: 'R$ 2.500,00'},
+  {company: 'Alves Comércio Ltda', mark: 'AC', number: 'NFS-e 00005784', service: 'Manutenção de sistemas', tone: '#dc2626', value: 'R$ 450,00'},
+  {company: 'Beta Digital Ltda', mark: 'B', number: 'NFS-e 00005785', service: 'Marketing digital', tone: '#0891b2', value: 'R$ 3.200,00'},
+  {company: 'Costa Arquitetura', mark: 'CA', number: 'NFS-e 00005786', service: 'Projeto arquitetônico', tone: '#4f46e5', value: 'R$ 4.800,00'},
+  {company: 'Mendes Tecnologia', mark: 'MT', number: 'NFS-e 00005787', service: 'Desenvolvimento de software', tone: '#0284c7', value: 'R$ 6.900,00'},
+  {company: 'Rocha Consultoria', mark: 'RC', number: 'NFS-e 00005788', service: 'Assessoria empresarial', tone: '#9333ea', value: 'R$ 2.850,00'},
+  {company: 'GL Comércio Ltda', mark: 'GL', number: 'NFS-e 00005789', service: 'Gestão comercial', tone: '#16a34a', value: 'R$ 5.300,00'},
 ]
 
 type Stage = 1 | 2
@@ -35,19 +35,24 @@ function stageOpacity(frame: number, stage: Stage) {
   return stage === 1 ? tween(frame, STAGE_CHANGE - 12, STAGE_CHANGE + 8, [1, 0]) : tween(frame, STAGE_CHANGE - 4, STAGE_CHANGE + 16)
 }
 
-function Avatar({index}: {index: number}) {
+function CompanyLogo({index}: {index: number}) {
+  const sale = sales[index]
   return (
     <div style={{
-      backgroundImage: `url(${staticFile('remotion/invoice-three-steps/avatar-sheet.png')})`,
-      backgroundPosition: `${(index % 5) * 25}% center`,
-      backgroundRepeat: 'no-repeat',
-      backgroundSize: '500% auto',
+      alignItems: 'center',
+      background: `linear-gradient(145deg, ${sale.tone} 0%, ${sale.tone}d9 100%)`,
       border: '3px solid #ffffff',
-      borderRadius: 999,
-      boxShadow: '0 5px 15px rgba(15,23,42,.13)',
+      borderRadius: index % 3 === 0 ? 14 : index % 3 === 1 ? 999 : 11,
+      boxShadow: `0 5px 15px ${sale.tone}2e`,
+      color: '#ffffff',
+      display: 'flex',
+      fontSize: sale.mark.length > 2 ? 11 : 15,
+      fontWeight: 850,
       height: 52,
+      justifyContent: 'center',
+      letterSpacing: '-.03em',
       width: 52,
-    }} />
+    }}>{sale.mark}</div>
   )
 }
 
@@ -137,13 +142,13 @@ function ResultRow({compact, frame, index}: {compact?: boolean; frame: number; i
   return (
     <div style={{alignItems: 'center', background: '#ffffff', borderTop: '1px solid #edf0f4', display: 'grid', gap: compact ? 11 : 16, gridTemplateColumns: compact ? '40px minmax(0,1fr) 105px 126px 22px' : '52px minmax(0,1fr) 130px 158px 28px', height: rowHeight, opacity: visible, padding: compact ? '0 20px' : '0 26px', transform: `translateY(${(1 - visible) * (compact ? 12 : 18)}px)`}}>
       <div style={{height: compact ? 40 : 52, position: 'relative', width: compact ? 40 : 52}}>
-        <div style={{inset: 0, opacity: 1 - stageTwo, position: 'absolute', transform: `scale(${iconScale * (1 - stageTwo * 0.12)}) rotate(${-stageTwo * 6}deg)`, transformOrigin: 'top left'}}><Avatar index={index} /></div>
+        <div style={{inset: 0, opacity: 1 - stageTwo, position: 'absolute', transform: `scale(${iconScale * (1 - stageTwo * 0.12)}) rotate(${-stageTwo * 6}deg)`, transformOrigin: 'top left'}}><CompanyLogo index={index} /></div>
         <div style={{inset: 0, opacity: stageTwo, position: 'absolute', transform: `scale(${iconScale * (0.88 + stageTwo * 0.12)}) rotate(${(1 - stageTwo) * 5}deg)`, transformOrigin: 'top left'}}><FiscalInvoiceThumbnail number={sale.number} /></div>
       </div>
       <div style={{display: 'grid', gap: compact ? 4 : 6, minWidth: 0, position: 'relative'}}>
-        <strong style={{color: '#111827', fontSize: compact ? 16 : 20, fontWeight: 650, letterSpacing: '-.01em', lineHeight: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap'}}>{sale.customer}</strong>
+        <strong style={{color: '#111827', fontSize: compact ? 16 : 20, fontWeight: 650, letterSpacing: '-.01em', lineHeight: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap'}}>{sale.company}</strong>
         <div style={{height: compact ? 13 : 17, position: 'relative'}}>
-          <span style={{color: '#7a8799', fontSize: compact ? 11 : 14, left: 0, opacity: 1 - stageTwo, overflow: 'hidden', position: 'absolute', textOverflow: 'ellipsis', top: 0, whiteSpace: 'nowrap'}}>{sale.company} · {sale.service}</span>
+          <span style={{color: '#7a8799', fontSize: compact ? 11 : 14, left: 0, opacity: 1 - stageTwo, overflow: 'hidden', position: 'absolute', textOverflow: 'ellipsis', top: 0, whiteSpace: 'nowrap'}}>{sale.service}</span>
           <span style={{color: '#66758b', fontSize: compact ? 11 : 14, left: 0, opacity: stageTwo, overflow: 'hidden', position: 'absolute', textOverflow: 'ellipsis', top: 0, whiteSpace: 'nowrap'}}>{sale.number} · {sale.service}</span>
         </div>
       </div>
