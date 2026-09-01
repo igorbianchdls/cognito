@@ -29,7 +29,9 @@ const SIDEBAR_WIDTH = 64
 const CHAT_WIDTH = 370
 const RIGHT_LEFT = SIDEBAR_WIDTH + CHAT_WIDTH
 const RIGHT_WIDTH = 1536 - RIGHT_LEFT
-const OTTO_SCALE = RIGHT_WIDTH / 1536
+const RIGHT_HEIGHT = 864 - 70
+const OTTO_SCALE = RIGHT_HEIGHT / 864
+const OTTO_LEFT = (RIGHT_WIDTH - 1536 * OTTO_SCALE) / 2
 
 function tween(frame: number, from: number, to: number, output: [number, number] = [0, 1]) {
   return interpolate(frame, [from, to], output, {extrapolateLeft: 'clamp', extrapolateRight: 'clamp'})
@@ -125,15 +127,9 @@ function ChatPanel({frame}: {frame: number}) {
         </div>
 
         <div style={{display: 'grid', gap: 18, marginTop: 35, opacity: assistantIn, transform: `translateY(${(1 - assistantIn) * 12}px)`}}>
-          <div style={{alignItems: 'flex-start', display: 'grid', gap: 12, gridTemplateColumns: '27px 1fr'}}>
-            <ChatGptMark size={25} />
-            <p style={{color: '#202123', fontSize: 14, lineHeight: 1.65, margin: 0}}>Perfeito! Vou localizar as vendas prontas e emitir as notas fiscais para cada cliente.</p>
-          </div>
-          <div style={{display: 'grid', gap: 4, marginLeft: 38}}>{checklist.map((item) => <ChecklistItem {...item} frame={frame} key={item.label} />)}</div>
-          <div style={{alignItems: 'flex-start', display: 'grid', gap: 12, gridTemplateColumns: '27px 1fr', marginTop: 4, opacity: finalIn, transform: `translateY(${(1 - finalIn) * 8}px)`}}>
-            <span style={{alignItems: 'center', background: '#10a37f', borderRadius: 999, color: '#fff', display: 'flex', fontSize: 11, height: 22, justifyContent: 'center', marginTop: 1, width: 22}}>✓</span>
-            <p style={{color: '#202123', fontSize: 14, lineHeight: 1.65, margin: 0}}>Notas fiscais emitidas e enviadas com sucesso.</p>
-          </div>
+          <p style={{color: '#202123', fontSize: 14, lineHeight: 1.65, margin: 0, width: '100%'}}>Perfeito! Vou localizar as vendas prontas e emitir as notas fiscais para cada cliente.</p>
+          <div style={{display: 'grid', gap: 4, width: '100%'}}>{checklist.map((item) => <ChecklistItem {...item} frame={frame} key={item.label} />)}</div>
+          <p style={{color: '#202123', fontSize: 14, lineHeight: 1.65, margin: '4px 0 0', opacity: finalIn, transform: `translateY(${(1 - finalIn) * 8}px)`, width: '100%'}}>Notas fiscais emitidas e enviadas com sucesso.</p>
         </div>
       </div>
       <Composer />
@@ -160,7 +156,7 @@ function RightToolbar() {
 function OttoPanel() {
   return (
     <div style={{background: '#fff', bottom: 0, left: RIGHT_LEFT, overflow: 'hidden', position: 'absolute', right: 0, top: 70}}>
-      <div style={{height: 864, left: 0, position: 'absolute', top: 26, transform: `scale(${OTTO_SCALE})`, transformOrigin: 'top left', width: 1536}}>
+      <div style={{height: 864, left: OTTO_LEFT, position: 'absolute', top: 0, transform: `scale(${OTTO_SCALE})`, transformOrigin: 'top left', width: 1536}}>
         <OttoInvoiceTwoStepsList />
       </div>
     </div>
