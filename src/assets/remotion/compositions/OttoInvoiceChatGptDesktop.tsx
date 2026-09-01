@@ -40,7 +40,11 @@ function IconButton({children}: {children: ReactNode}) {
 }
 
 function ChatGptMark({size = 28}: {size?: number}) {
-  return <Img src={staticFile('gptLogo.svg')} style={{height: size, objectFit: 'contain', width: size}} />
+  return (
+    <span style={{display: 'block', flexShrink: 0, height: size, overflow: 'hidden', position: 'relative', width: size}}>
+      <Img src={staticFile('gptLogo.svg')} style={{filter: 'brightness(0)', height: size, left: 0, maxWidth: 'none', position: 'absolute', top: 0, width: size * (407 / 120)}} />
+    </span>
+  )
 }
 
 function Sidebar() {
