@@ -6,6 +6,7 @@ const BLUE = '#0b67f0'
 const GREEN = '#149653'
 const NAVY = '#071329'
 const STAGE_CHANGE = 168
+const CONTAINER_BOTTOM_GAP = 16
 
 const sales = [
   {customer: 'Fernanda Silva', company: 'Distribuidora FS', number: 'NFS-e 00005780', service: 'Suporte técnico', value: 'R$ 450,00'},
@@ -150,8 +151,9 @@ function ListContainer({frame}: {frame: number}) {
   const searchProgress = Math.round(interpolate(tween(frame, 22, 125), [0, 1], [12, 100]))
   const completedCount = sales.filter((_, index) => frame - STAGE_CHANGE - index * 22 >= 72).length
   const issueProgress = Math.round((completedCount / sales.length) * 100)
+  const searchRowsHeight = 76 * (1 + sales.slice(1).reduce((total, _, index) => total + tween(frame, 43 + index * 13, 59 + index * 13), 0))
   const fiscalRowsHeight = 76 * (1 + sales.slice(1).reduce((total, _, index) => total + tween(stageTwoLocal, 46 + index * 28, 66 + index * 28), 0))
-  const containerHeight = interpolate(stageTwo, [0, 1], [104 + sales.length * 76, 104 + fiscalRowsHeight])
+  const containerHeight = interpolate(stageTwo, [0, 1], [104 + searchRowsHeight + CONTAINER_BOTTOM_GAP, 104 + fiscalRowsHeight + CONTAINER_BOTTOM_GAP])
 
   return (
     <div style={{left: '50%', opacity: show, position: 'absolute', top: 272, transform: `translateX(-50%) translateY(${(1 - show) * 18}px) scale(${0.985 + show * 0.015})`, width: 1030}}>
