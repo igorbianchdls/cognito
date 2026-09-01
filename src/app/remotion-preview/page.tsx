@@ -130,6 +130,7 @@ import { OTTO_INVOICE_DIRECT_53S_NARRATED_DURATION, OttoInvoiceDirect53sNarrated
 import { OTTO_FINANCIAL_OPERATORS_50S_NARRATED_DURATION, OttoFinancialOperators50sNarratedVideo } from '@/assets/remotion/compositions/OttoFinancialOperators50sNarratedVideo'
 import { OTTO_FINANCIAL_DASHBOARD_DURATION, OttoFinancialDashboard } from '@/assets/remotion/compositions/OttoFinancialDashboard'
 import { OTTO_INVOICE_ONLY_SCENE_DURATION, OttoInvoiceOnlyScene } from '@/assets/remotion/compositions/OttoInvoiceOnlyScene'
+import { OTTO_INVOICE_TWO_STEPS_DURATION, OttoInvoiceTwoSteps } from '@/assets/remotion/compositions/OttoInvoiceTwoSteps'
 import { OTTO_SYNC_ONLY_SCENE_DURATION, OttoSyncOnlyScene } from '@/assets/remotion/compositions/OttoSyncOnlyScene'
 import {
   OTTO_FINANCIAL_SCENE_COMPONENT_DURATION,
@@ -3390,6 +3391,18 @@ const catalog: CatalogItem[] = [
     tags: ['Otto', 'Nota Fiscal', 'Financeiro', 'Prompt'],
     value: 'video-otto-invoice-only-scene',
     width: 1080,
+  },
+  {
+    code: '<OttoInvoiceTwoSteps />',
+    component: OttoInvoiceTwoSteps,
+    description: 'Carrossel horizontal em duas etapas: busca das vendas prontas e emissão automática das respectivas notas fiscais.',
+    duration: OTTO_INVOICE_TWO_STEPS_DURATION,
+    height: 864,
+    kind: 'Vídeos criados',
+    label: 'Otto — Vendas para Notas Fiscais',
+    tags: ['Otto', 'Vendas', 'Nota Fiscal', 'Carrossel', 'Automação'],
+    value: 'video-otto-invoice-two-steps',
+    width: 1536,
   },
   {
     code: '<OttoFinanceAutomationOnlyScene />',
