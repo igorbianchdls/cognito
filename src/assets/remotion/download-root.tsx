@@ -76,6 +76,14 @@ import {
   PROMPT_TO_CHART_EXACT_DURATION,
   PromptToChartExactVideo,
 } from './compositions/PromptToChartExactVideo'
+import {
+  OTTO_INVOICE_THREE_STEPS_DURATION,
+  OttoInvoiceThreeSteps,
+} from './compositions/OttoInvoiceThreeSteps'
+import {
+  OTTO_INVOICE_TWO_STEPS_DURATION,
+  OttoInvoiceTwoSteps,
+} from './compositions/OttoInvoiceTwoSteps'
 
 function RemotionDownloadRoot() {
   return (
@@ -207,6 +215,22 @@ function RemotionDownloadRoot() {
         height={720}
         id="video-prompt-to-chart-exact"
         width={1280}
+      />
+      <Composition
+        component={OttoInvoiceThreeSteps}
+        durationInFrames={OTTO_INVOICE_THREE_STEPS_DURATION}
+        fps={30}
+        height={864}
+        id="video-otto-invoice-three-steps"
+        width={1536}
+      />
+      <Composition
+        component={OttoInvoiceTwoSteps}
+        durationInFrames={OTTO_INVOICE_TWO_STEPS_DURATION}
+        fps={30}
+        height={864}
+        id="video-otto-invoice-two-steps"
+        width={1536}
       />
       <Composition
         component={OttoLogoRevealHorizontal}
