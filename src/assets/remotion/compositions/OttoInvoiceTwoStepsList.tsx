@@ -17,6 +17,8 @@ const sales = [
   {customer: 'Lucas Ferreira', company: 'Beta Digital Ltda', number: 'NFS-e 00005785', service: 'Marketing digital', value: 'R$ 3.200,00'},
   {customer: 'Mariana Costa', company: 'Costa Arquitetura', number: 'NFS-e 00005786', service: 'Projeto arquitetônico', value: 'R$ 4.800,00'},
   {customer: 'Rafael Mendes', company: 'Mendes Tecnologia', number: 'NFS-e 00005787', service: 'Desenvolvimento de software', value: 'R$ 6.900,00'},
+  {customer: 'Beatriz Rocha', company: 'Rocha Consultoria', number: 'NFS-e 00005788', service: 'Assessoria empresarial', value: 'R$ 2.850,00'},
+  {customer: 'Gustavo Lima', company: 'GL Comércio Ltda', number: 'NFS-e 00005789', service: 'Gestão comercial', value: 'R$ 5.300,00'},
 ]
 
 type Stage = 1 | 2
@@ -169,7 +171,7 @@ function ListContainer({compact, frame, itemsCount}: {compact?: boolean; frame: 
   const containerHeight = interpolate(stageTwo, [0, 1], [headerHeight + searchRowsHeight + bottomGap, headerHeight + fiscalRowsHeight + bottomGap])
 
   return (
-    <div style={{left: '50%', opacity: show, position: 'absolute', top: compact ? 280 : 272, transform: `translateX(-50%) translateY(${(1 - show) * 18}px) scale(${0.985 + show * 0.015})`, width: compact ? 1040 : 1030}}>
+    <div style={{left: '50%', opacity: show, position: 'absolute', top: compact ? 220 : 272, transform: `translateX(-50%) translateY(${(1 - show) * 18}px) scale(${0.985 + show * 0.015})`, width: compact ? 1040 : 1030}}>
       <div style={{background: '#fff', border: '1px solid #dfe5ed', borderRadius: compact ? 20 : 25, boxShadow: '0 28px 70px rgba(20,36,67,.13), 0 7px 20px rgba(20,36,67,.06)', height: containerHeight, overflow: 'hidden'}}>
         <div style={{alignItems: 'center', display: 'flex', height: headerHeight, justifyContent: 'space-between', overflow: 'hidden', padding: compact ? '0 22px' : '0 28px'}}>
           <div style={{height: compact ? 28 : 54, position: 'relative', width: 650}}>
