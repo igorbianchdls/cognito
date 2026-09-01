@@ -45,15 +45,23 @@ function Avatar({index}: {index: number}) {
   )
 }
 
-function FiscalDocumentIcon() {
+function FiscalInvoiceThumbnail({number}: {number: string}) {
+  const shortNumber = number.replace('NFS-e ', '')
   return (
-    <div style={{alignItems: 'center', background: '#eff6ff', border: '1px solid #cfe2ff', borderRadius: 14, boxShadow: '0 6px 16px rgba(11,103,240,.12)', display: 'flex', height: 52, justifyContent: 'center', width: 52}}>
-      <div style={{background: '#fff', border: `2px solid ${BLUE}`, borderRadius: 5, height: 30, position: 'relative', width: 24}}>
-        <span style={{borderBottom: '8px solid transparent', borderLeft: `8px solid ${BLUE}`, height: 0, position: 'absolute', right: -2, top: -2, width: 0}} />
-        <span style={{background: BLUE, borderRadius: 99, height: 2, left: 5, position: 'absolute', top: 11, width: 10}} />
-        <span style={{background: '#8dbbf9', borderRadius: 99, height: 2, left: 5, position: 'absolute', top: 17, width: 13}} />
-        <span style={{background: '#8dbbf9', borderRadius: 99, height: 2, left: 5, position: 'absolute', top: 23, width: 9}} />
+    <div style={{background: '#fff', border: '1px solid #bfc9d7', borderRadius: 4, boxShadow: '0 6px 15px rgba(15,23,42,.14)', height: 60, overflow: 'hidden', padding: '4px 4px 3px', position: 'relative', width: 52}}>
+      <div style={{alignItems: 'flex-start', borderBottom: '1px solid #ccd4df', display: 'flex', height: 13, justifyContent: 'space-between', paddingBottom: 2}}>
+        <div>
+          <strong style={{color: '#1f2937', display: 'block', fontSize: 3.7, letterSpacing: '-.02em', lineHeight: 1}}>NOTA FISCAL</strong>
+          <span style={{color: '#59677a', display: 'block', fontSize: 2.7, lineHeight: 1.2}}>DE SERVIÇOS · NFS-e</span>
+        </div>
+        <div style={{backgroundColor: '#fff', backgroundImage: 'repeating-linear-gradient(0deg,#111 0 1px,transparent 1px 2px),repeating-linear-gradient(90deg,#111 0 1px,transparent 1px 2px)', border: '1px solid #111', height: 9, width: 9}} />
       </div>
+      <div style={{alignItems: 'center', borderBottom: '1px solid #d8dee7', display: 'flex', height: 8, justifyContent: 'space-between'}}><span style={{color: '#6b7280', fontSize: 2.6}}>NÚMERO</span><strong style={{color: '#111827', fontSize: 3.3}}>{shortNumber}</strong></div>
+      {[['PRESTADOR', 'OTTO SISTEMAS LTDA'], ['TOMADOR', 'DADOS DO CLIENTE'], ['SERVIÇO', 'DESCRIÇÃO E VALORES']].map(([label, value]) => (
+        <div key={label} style={{borderBottom: '1px solid #d8dee7', height: 8, paddingTop: 1}}><span style={{color: '#718096', display: 'block', fontSize: 2.2, lineHeight: 1}}>{label}</span><strong style={{color: '#263244', display: 'block', fontSize: 2.7, lineHeight: 1.2}}>{value}</strong></div>
+      ))}
+      <div style={{display: 'grid', gap: 1, gridTemplateColumns: 'repeat(3,1fr)', marginTop: 2}}>{[0, 1, 2].map((cell) => <span key={cell} style={{background: cell === 2 ? '#dbeafe' : '#e7ebf0', borderRadius: 1, height: 5}} />)}</div>
+      <span style={{background: GREEN, borderRadius: 99, bottom: 2, height: 3, position: 'absolute', right: 3, width: 11}} />
     </div>
   )
 }
@@ -119,7 +127,7 @@ function ResultRow({frame, index}: {frame: number; index: number}) {
     <div style={{alignItems: 'center', background: `rgba(11,103,240,${flash})`, borderTop: '1px solid #edf0f4', display: 'grid', gap: 16, gridTemplateColumns: '52px minmax(0,1fr) 130px 158px 28px', height: 76, opacity: rowIn, padding: '0 26px', transform: `translateY(${(1 - rowIn) * 18}px)`, transition: 'background .2s ease'}}>
       <div style={{height: 52, position: 'relative', width: 52}}>
         <div style={{inset: 0, opacity: 1 - stageTwo, position: 'absolute', transform: `scale(${1 - stageTwo * 0.12}) rotate(${-stageTwo * 6}deg)`}}><Avatar index={index} /></div>
-        <div style={{inset: 0, opacity: stageTwo, position: 'absolute', transform: `scale(${0.88 + stageTwo * 0.12}) rotate(${(1 - stageTwo) * 6}deg)`}}><FiscalDocumentIcon /></div>
+        <div style={{inset: 0, opacity: stageTwo, position: 'absolute', transform: `scale(${0.88 + stageTwo * 0.12}) rotate(${(1 - stageTwo) * 5}deg)`}}><FiscalInvoiceThumbnail number={sale.number} /></div>
       </div>
       <div style={{display: 'grid', gap: 6, minWidth: 0, position: 'relative'}}>
         <strong style={{color: '#111827', fontSize: 20, fontWeight: 650, letterSpacing: '-.01em', lineHeight: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap'}}>{sale.customer}</strong>
@@ -138,23 +146,17 @@ function ResultRow({frame, index}: {frame: number; index: number}) {
 function ListContainer({frame}: {frame: number}) {
   const show = tween(frame, 16, 34)
   const stageTwo = stageOpacity(frame, 2)
-  const completedCount = sales.filter((_, index) => frame - STAGE_CHANGE - index * 22 >= 72).length
   const searchProgress = Math.round(interpolate(tween(frame, 22, 125), [0, 1], [12, 100]))
-  const issueProgress = Math.round((completedCount / sales.length) * 100)
-  const progress = stageTwo < 0.5 ? searchProgress : issueProgress
+  const headerHeight = interpolate(stageTwo, [0, 1], [104, 0])
 
   return (
     <div style={{left: '50%', opacity: show, position: 'absolute', top: 272, transform: `translateX(-50%) translateY(${(1 - show) * 18}px) scale(${0.985 + show * 0.015})`, width: 1030}}>
       <div style={{background: '#fff', border: '1px solid #dfe5ed', borderRadius: 25, boxShadow: '0 28px 70px rgba(20,36,67,.13), 0 7px 20px rgba(20,36,67,.06)', overflow: 'hidden'}}>
-        <div style={{alignItems: 'center', display: 'flex', height: 104, justifyContent: 'space-between', padding: '0 28px'}}>
-          <div style={{height: 54, position: 'relative', width: 650}}>
-            <div style={{display: 'grid', gap: 6, left: 0, opacity: 1 - stageTwo, position: 'absolute', top: 0}}><strong style={{color: '#111827', fontSize: 24, fontWeight: 680}}>Vendas encontradas</strong><span style={{color: '#7b8798', fontSize: 16}}>Registros disponíveis para emissão fiscal</span></div>
-            <div style={{display: 'grid', gap: 6, left: 0, opacity: stageTwo, position: 'absolute', top: 0}}><strong style={{color: '#111827', fontSize: 24, fontWeight: 680}}>{completedCount === sales.length ? '5 notas emitidas' : 'Emitindo notas fiscais'}</strong><span style={{color: '#7b8798', fontSize: 16}}>{completedCount === sales.length ? 'Notas autorizadas e enviadas aos clientes' : 'Gerando uma NFS-e para cada venda encontrada'}</span></div>
-          </div>
-          <span style={{background: progress === 100 ? '#ecfdf3' : '#eff6ff', border: `1px solid ${progress === 100 ? '#bbf7d0' : '#cfe2ff'}`, borderRadius: 999, color: progress === 100 ? GREEN : BLUE, fontSize: 18, fontWeight: 750, padding: '10px 15px'}}>{progress}%</span>
+        <div style={{alignItems: 'center', display: 'flex', height: headerHeight, justifyContent: 'space-between', opacity: 1 - stageTwo, overflow: 'hidden', padding: '0 28px'}}>
+          <div style={{display: 'grid', gap: 6}}><strong style={{color: '#111827', fontSize: 24, fontWeight: 680}}>Vendas encontradas</strong><span style={{color: '#7b8798', fontSize: 16}}>Registros disponíveis para emissão fiscal</span></div>
+          <span style={{background: searchProgress === 100 ? '#ecfdf3' : '#eff6ff', border: `1px solid ${searchProgress === 100 ? '#bbf7d0' : '#cfe2ff'}`, borderRadius: 999, color: searchProgress === 100 ? GREEN : BLUE, fontSize: 18, fontWeight: 750, padding: '10px 15px'}}>{searchProgress}%</span>
         </div>
         {sales.map((sale, index) => <ResultRow frame={frame} index={index} key={sale.number} />)}
-        <div style={{alignItems: 'center', background: '#f7fcf9', borderTop: '1px solid #dcefe3', color: GREEN, display: 'flex', fontSize: 15, fontWeight: 720, gap: 9, height: tween(frame, 318, 334, [0, 48]), justifyContent: 'center', opacity: tween(frame, 318, 334), overflow: 'hidden'}}><span style={{alignItems: 'center', background: GREEN, borderRadius: 999, color: '#fff', display: 'flex', fontSize: 11, height: 20, justifyContent: 'center', width: 20}}>✓</span>Notas emitidas e enviadas com sucesso</div>
       </div>
     </div>
   )
