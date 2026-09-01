@@ -1,6 +1,6 @@
 import type {ReactNode} from 'react'
 import {
-  AudioLines,
+  ArrowUp,
   Boxes,
   ChartNoAxesColumn,
   ChevronDown,
@@ -9,7 +9,6 @@ import {
   Code2,
   Database,
   Github,
-  Globe2,
   Mic,
   MoreVertical,
   Plus,
@@ -92,17 +91,14 @@ function ChecklistItem({activeFrom, completeAt, frame, label}: {activeFrom: numb
 
 function Composer() {
   return (
-    <div style={{background: '#ffffff', bottom: 52, left: 24, position: 'absolute', right: 24}}>
-      <div style={{border: '1px solid #d9d9d9', borderRadius: 27, boxShadow: '0 1px 3px rgba(0,0,0,.03)', height: 112, padding: '18px 18px 14px'}}>
-        <span style={{color: '#667085', display: 'block', fontSize: 15}}>Mensagem para o ChatGPT</span>
-        <div style={{alignItems: 'center', bottom: 13, display: 'flex', left: 17, position: 'absolute', right: 15}}>
-          <Plus size={23} strokeWidth={1.65} />
-          <Globe2 size={20} strokeWidth={1.55} style={{marginLeft: 18}} />
-          <div style={{marginLeft: 'auto'}}><Mic size={20} strokeWidth={1.65} /></div>
-          <div style={{alignItems: 'center', background: '#050505', borderRadius: 999, color: '#fff', display: 'flex', height: 42, justifyContent: 'center', marginLeft: 13, width: 42}}><AudioLines size={20} strokeWidth={2} /></div>
-        </div>
+    <div style={{background: '#ffffff', bottom: 20, left: 20, position: 'absolute', right: 20}}>
+      <div style={{color: '#5f5f5f', fontSize: 10.5, marginBottom: 15, textAlign: 'center'}}>ChatGPT é uma IA e pode cometer erros.</div>
+      <div style={{alignItems: 'center', border: '1px solid #cfcfcf', borderRadius: 999, boxShadow: '0 2px 8px rgba(0,0,0,.07)', boxSizing: 'border-box', display: 'flex', height: 54, padding: '0 8px 0 11px', width: '100%'}}>
+        <span style={{alignItems: 'center', color: '#232323', display: 'flex', flexShrink: 0, height: 34, justifyContent: 'center', width: 34}}><Plus size={22} strokeWidth={1.65} /></span>
+        <span style={{color: '#8b8b8b', flex: 1, fontSize: 15, marginLeft: 4, whiteSpace: 'nowrap'}}>Pergunte ao ChatGPT</span>
+        <span style={{alignItems: 'center', color: '#171717', display: 'flex', flexShrink: 0, height: 34, justifyContent: 'center', width: 34}}><Mic size={19} strokeWidth={1.75} /></span>
+        <span style={{alignItems: 'center', background: '#b3b3b3', borderRadius: 999, color: '#fff', display: 'flex', flexShrink: 0, height: 38, justifyContent: 'center', marginLeft: 5, width: 38}}><ArrowUp size={20} strokeWidth={1.9} /></span>
       </div>
-      <div style={{color: '#747b8c', fontSize: 10.5, lineHeight: 1.45, marginTop: 15, textAlign: 'center'}}>O ChatGPT pode cometer erros. Considere<br />verificar informações importantes.</div>
     </div>
   )
 }
