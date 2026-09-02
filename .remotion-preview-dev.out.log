@@ -1,0 +1,9 @@
+   ▲ Next.js 16.0.10 (Turbopack)
+   - Local:         http://127.0.0.1:3000
+   - Network:       http://127.0.0.1:3000
+   - Environments: .env.local
+
+ ✓ Starting...
+ ○ Compiling proxy ...
+ ✓ Ready in 58.9s
+ ○ Compiling /_error ...

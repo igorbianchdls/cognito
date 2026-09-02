@@ -30,9 +30,6 @@ const CHAT_WIDTH = 370
 const RIGHT_LEFT = SIDEBAR_WIDTH + CHAT_WIDTH
 const RIGHT_WIDTH = 1536 - RIGHT_LEFT
 const RIGHT_HEADER_HEIGHT = 56
-const RIGHT_HEIGHT = 864 - RIGHT_HEADER_HEIGHT
-const OTTO_SCALE = RIGHT_HEIGHT / 864
-const OTTO_LEFT = (RIGHT_WIDTH - 1536 * OTTO_SCALE) / 2
 
 function tween(frame: number, from: number, to: number, output: [number, number] = [0, 1]) {
   return interpolate(frame, [from, to], output, {extrapolateLeft: 'clamp', extrapolateRight: 'clamp'})
@@ -154,17 +151,21 @@ function RightToolbar() {
   )
 }
 
-function OttoPanel() {
+function OttoPanel({viewportHeight}: {viewportHeight: number}) {
+  const rightHeight = viewportHeight - RIGHT_HEADER_HEIGHT
+  const ottoScale = rightHeight / 864
+  const ottoLeft = (RIGHT_WIDTH - 1536 * ottoScale) / 2
+
   return (
     <div style={{background: '#fff', bottom: 0, left: RIGHT_LEFT, overflow: 'hidden', position: 'absolute', right: 0, top: RIGHT_HEADER_HEIGHT}}>
-      <div style={{height: 864, left: OTTO_LEFT, position: 'absolute', top: 0, transform: `scale(${OTTO_SCALE})`, transformOrigin: 'top left', width: 1536}}>
+      <div style={{height: 864, left: ottoLeft, position: 'absolute', top: 0, transform: `scale(${ottoScale})`, transformOrigin: 'top left', width: 1536}}>
         <OttoInvoiceTwoStepsList compact itemsCount={10} />
       </div>
     </div>
   )
 }
 
-export function OttoInvoiceChatGptDesktop() {
+export function OttoInvoiceChatGptDesktop({viewportHeight = 864}: {viewportHeight?: number} = {}) {
   const frame = useCurrentFrame()
 
   return (
@@ -172,7 +173,7 @@ export function OttoInvoiceChatGptDesktop() {
       <Sidebar />
       <ChatPanel frame={frame} />
       <RightToolbar />
-      <OttoPanel />
+      <OttoPanel viewportHeight={viewportHeight} />
     </AbsoluteFill>
   )
 }

@@ -133,6 +133,7 @@ import { OTTO_INVOICE_ONLY_SCENE_DURATION, OttoInvoiceOnlyScene } from '@/assets
 import { OTTO_INVOICE_TWO_STEPS_DURATION, OttoInvoiceTwoSteps } from '@/assets/remotion/compositions/OttoInvoiceTwoSteps'
 import { OTTO_INVOICE_TWO_STEPS_LIST_DURATION, OttoInvoiceTwoStepsList } from '@/assets/remotion/compositions/OttoInvoiceTwoStepsList'
 import { OTTO_INVOICE_CHATGPT_DESKTOP_DURATION, OttoInvoiceChatGptDesktop } from '@/assets/remotion/compositions/OttoInvoiceChatGptDesktop'
+import { OTTO_INVOICE_CHATGPT_LAPTOP_DURATION, OttoInvoiceChatGptLaptop } from '@/assets/remotion/compositions/OttoInvoiceChatGptLaptop'
 import { OTTO_SYNC_ONLY_SCENE_DURATION, OttoSyncOnlyScene } from '@/assets/remotion/compositions/OttoSyncOnlyScene'
 import {
   OTTO_FINANCIAL_SCENE_COMPONENT_DURATION,
@@ -3429,6 +3430,18 @@ const catalog: CatalogItem[] = [
     tags: ['ChatGPT', 'Otto', 'Vendas', 'Nota Fiscal', 'Desktop'],
     value: 'video-otto-invoice-chatgpt-desktop',
     width: 1536,
+  },
+  {
+    code: '<OttoInvoiceChatGptLaptop />',
+    component: OttoInvoiceChatGptLaptop,
+    description: 'A experiência ChatGPT + Otto de vendas para notas fiscais aplicada ao vivo na tela de um notebook em um cenário vertical.',
+    duration: OTTO_INVOICE_CHATGPT_LAPTOP_DURATION,
+    height: 1920,
+    kind: 'Vídeos criados',
+    label: 'Laptop — ChatGPT + Otto: Vendas para Notas Fiscais',
+    tags: ['ChatGPT', 'Otto', 'Vendas', 'Nota Fiscal', 'Laptop', 'Vertical'],
+    value: 'video-otto-invoice-chatgpt-laptop',
+    width: 1080,
   },
   {
     code: '<OttoFinanceAutomationOnlyScene />',
