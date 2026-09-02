@@ -118,17 +118,18 @@ function ResultRow({compact, frame, index}: {compact?: boolean; frame: number; i
   const sale = sales[index]
   const rowHeight = compact ? 53 : 76
   const iconScale = compact ? 0.72 : 1
-  const fiscalDelay = compact ? 14 : 28
-  const issueDelay = compact ? 14 : 22
-  const rowIn = tween(frame, 30 + index * 13, 46 + index * 13)
+  const searchDelay = compact ? 8 : 13
+  const fiscalDelay = compact ? 12 : 28
+  const issueDelay = compact ? 12 : 22
+  const rowIn = tween(frame, 30 + index * searchDelay, 46 + index * searchDelay)
   const stageTwo = stageOpacity(frame, 2)
   const stageTwoLocal = frame - STAGE_CHANGE
   const fiscalRowIn = index === 0 ? 1 : tween(stageTwoLocal, 12 + index * fiscalDelay, 26 + index * fiscalDelay)
   const visible = interpolate(stageTwo, [0, 1], [rowIn, fiscalRowIn])
-  const searchDone = frame >= 78 + index * 13
+  const searchDone = frame >= (compact ? 68 : 78) + index * searchDelay
   const issueFrame = frame - STAGE_CHANGE - index * issueDelay
-  const authorized = issueFrame >= (compact ? 64 : 72)
-  const emitting = issueFrame >= (compact ? 24 : 30) && !authorized
+  const authorized = issueFrame >= (compact ? 60 : 72)
+  const emitting = issueFrame >= (compact ? 22 : 30) && !authorized
   const status = stageTwo < 0.5
     ? searchDone
       ? {background: '#ecfdf3', color: '#166534', label: 'Pronta para emitir'}
@@ -164,15 +165,15 @@ function ListContainer({compact, frame, itemsCount}: {compact?: boolean; frame: 
   const rowHeight = compact ? 53 : 76
   const headerHeight = compact ? 72 : 104
   const bottomGap = compact ? 12 : CONTAINER_BOTTOM_GAP
-  const issueDelay = compact ? 14 : 22
+  const issueDelay = compact ? 12 : 22
   const show = tween(frame, 16, 34)
   const stageTwo = stageOpacity(frame, 2)
   const stageTwoLocal = frame - STAGE_CHANGE
   const searchProgress = Math.round(interpolate(tween(frame, 22, 125), [0, 1], [12, 100]))
-  const completedCount = visibleSales.filter((_, index) => frame - STAGE_CHANGE - index * issueDelay >= (compact ? 64 : 72)).length
+  const completedCount = visibleSales.filter((_, index) => frame - STAGE_CHANGE - index * issueDelay >= (compact ? 60 : 72)).length
   const issueProgress = Math.round((completedCount / visibleSales.length) * 100)
-  const searchRowsHeight = rowHeight * (1 + visibleSales.slice(1).reduce((total, _, index) => total + tween(frame, 43 + index * 13, 59 + index * 13), 0))
-  const fiscalRowsHeight = rowHeight * (1 + visibleSales.slice(1).reduce((total, _, index) => total + tween(stageTwoLocal, compact ? 26 + index * 14 : 46 + index * 28, compact ? 40 + index * 14 : 66 + index * 28), 0))
+  const searchRowsHeight = rowHeight * (1 + visibleSales.slice(1).reduce((total, _, index) => total + tween(frame, compact ? 38 + index * 8 : 43 + index * 13, compact ? 54 + index * 8 : 59 + index * 13), 0))
+  const fiscalRowsHeight = rowHeight * (1 + visibleSales.slice(1).reduce((total, _, index) => total + tween(stageTwoLocal, compact ? 24 + index * 12 : 46 + index * 28, compact ? 38 + index * 12 : 66 + index * 28), 0))
   const containerHeight = interpolate(stageTwo, [0, 1], [headerHeight + searchRowsHeight + bottomGap, headerHeight + fiscalRowsHeight + bottomGap])
 
   return (

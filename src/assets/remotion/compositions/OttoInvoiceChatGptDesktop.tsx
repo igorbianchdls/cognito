@@ -118,7 +118,7 @@ function ChatPanel({frame}: {frame: number}) {
   return (
     <section style={{background: '#fff', borderRight: '1px solid #e7e7e7', bottom: 0, left: SIDEBAR_WIDTH, position: 'absolute', top: 0, width: CHAT_WIDTH, zIndex: 20}}>
       <header style={{alignItems: 'center', display: 'flex', height: 70, justifyContent: 'space-between', padding: '0 24px'}}>
-        <div style={{alignItems: 'center', display: 'flex', gap: 6}}><strong style={{fontSize: 18, fontWeight: 650}}>ChatGPT</strong><span style={{color: '#5d6380', fontSize: 18, fontWeight: 520}}>4o</span><ChevronDown color="#5d6380" size={15} strokeWidth={1.9} /></div>
+        <div style={{alignItems: 'center', display: 'flex', gap: 6}}><strong style={{fontSize: 18, fontWeight: 650}}>ChatGPT</strong><span style={{color: '#5d6380', fontSize: 18, fontWeight: 520}}>5.6 Sol</span><ChevronDown color="#5d6380" size={15} strokeWidth={1.9} /></div>
         <SquarePen size={20} strokeWidth={1.8} />
       </header>
 
