@@ -155,7 +155,7 @@ function InvoiceRow({frame, index, completed, rawProgress}: {frame: number; inde
   )
 }
 
-function ToolCard({frame}: {frame: number}) {
+function ToolCard({frame, titleFontSize}: {frame: number; titleFontSize: number}) {
   const cardIn = tween(frame, 38, 54)
   const rawProgress = tween(frame, 60, 316, [0, invoices.length])
   const completed = Math.min(invoices.length, Math.floor(rawProgress))
@@ -171,7 +171,7 @@ function ToolCard({frame}: {frame: number}) {
         <ChevronDown size={17} style={{marginLeft: 'auto', transform: 'rotate(180deg)'}} />
       </div>
       <div style={{padding: '7px 20px 0'}}>
-        <div style={{alignItems: 'center', display: 'flex'}}><h1 style={{fontSize: MAIN_TITLE_FONT_SIZE, fontWeight: 800, letterSpacing: '-0.01em', lineHeight: 1.05, margin: 0, whiteSpace: 'nowrap'}}>Emitindo nota fiscal</h1></div>
+        <div style={{alignItems: 'center', display: 'flex'}}><h1 style={{fontSize: titleFontSize, fontWeight: 800, letterSpacing: '-0.01em', lineHeight: 1.05, margin: 0, whiteSpace: 'nowrap'}}>Emitindo nota fiscal</h1></div>
         <div style={{fontSize: 12.5, fontWeight: 620, marginTop: 13}}>{completed} de {invoices.length} notas emitidas</div>
         <div style={{background: '#eceeed', borderRadius: 999, height: 5, marginTop: 11, overflow: 'hidden'}}><div style={{background: CHAT_GREEN, borderRadius: 999, height: '100%', width: `${progress * 100}%`}} /></div>
         <div style={{border: '1px solid #dedede', borderRadius: 12, marginTop: 22, overflow: 'hidden'}}>
@@ -197,7 +197,7 @@ function Composer() {
   )
 }
 
-function ChatArea({frame}: {frame: number}) {
+function ChatArea({frame, titleFontSize}: {frame: number; titleFontSize: number}) {
   const userIn = tween(frame, 4, 19)
   const replyIn = tween(frame, 22, 38)
   const finalIn = tween(frame, 320, 340)
@@ -215,7 +215,7 @@ function ChatArea({frame}: {frame: number}) {
           <div style={{background: '#f4f4f4', borderRadius: 20, fontSize: 14, lineHeight: 1.55, maxWidth: 355, padding: '13px 18px'}}>Chat, emita as notas fiscais das vendas de hoje e envie para cada cliente por WhatsApp.</div>
         </div>
         <p style={{fontSize: 14, lineHeight: 1.55, margin: '21px 0 10px', opacity: replyIn, transform: `translateY(${(1 - replyIn) * 7}px)`}}>Perfeito! Vou buscar as vendas de hoje e emitir as notas fiscais para cada cliente.</p>
-        <ToolCard frame={frame} />
+        <ToolCard frame={frame} titleFontSize={titleFontSize} />
         <p style={{fontSize: 13.5, margin: '13px 0 0', opacity: finalIn}}>Pronto! As notas fiscais foram emitidas e enviadas para os clientes pelo WhatsApp.</p>
       </div>
       <Composer />
@@ -224,14 +224,14 @@ function ChatArea({frame}: {frame: number}) {
   )
 }
 
-export function OttoInvoiceChatGptNative() {
+export function OttoInvoiceChatGptNative({titleFontSize = MAIN_TITLE_FONT_SIZE}: {titleFontSize?: number} = {}) {
   const frame = useCurrentFrame()
 
   return (
     <AbsoluteFill style={{background: '#fff', color: '#171717', fontFamily: CHATGPT_MOBILE_FONT_STACK, letterSpacing: '-0.01em', overflow: 'hidden'}}>
       <BrowserChrome />
       <Sidebar />
-      <ChatArea frame={frame} />
+      <ChatArea frame={frame} titleFontSize={titleFontSize} />
     </AbsoluteFill>
   )
 }

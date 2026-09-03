@@ -63,7 +63,7 @@ function applyCameraZoom(geometry: ScreenGeometry, cameraZoom: number, translate
   }
 }
 
-function AdaptedScreen({geometry}: {geometry: ScreenGeometry}) {
+function AdaptedScreen({geometry, titleFontSize}: {geometry: ScreenGeometry; titleFontSize?: number}) {
   const scale = geometry.height / SOURCE_HEIGHT
   const sourceWidth = geometry.width / scale
 
@@ -91,7 +91,7 @@ function AdaptedScreen({geometry}: {geometry: ScreenGeometry}) {
           width: sourceWidth,
         }}
       >
-        <OttoInvoiceChatGptNative />
+        <OttoInvoiceChatGptNative titleFontSize={titleFontSize} />
       </div>
 
       <div
@@ -132,7 +132,7 @@ export function OttoInvoiceChatGptDualScreen({cameraZoom = 1}: {cameraZoom?: num
           width: '100%',
         }}
       />
-      <AdaptedScreen geometry={tvGeometry} />
+      <AdaptedScreen geometry={tvGeometry} titleFontSize={80 / TV_CONTENT_SCALE} />
       <AdaptedScreen geometry={laptopGeometry} />
     </AbsoluteFill>
   )
