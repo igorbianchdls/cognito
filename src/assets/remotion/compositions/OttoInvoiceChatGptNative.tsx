@@ -9,7 +9,6 @@ import {
   Clock3,
   ExternalLink,
   FileText,
-  Globe2,
   Library,
   LockKeyhole,
   Mic,
@@ -196,19 +195,14 @@ function ToolCard({frame}: {frame: number}) {
 
 function Composer() {
   return (
-    <div style={{bottom: 17, left: '50%', position: 'absolute', transform: 'translateX(-50%)', width: 812}}>
-      <div style={{background: '#fff', border: '1px solid #dcdcdc', borderRadius: 23, boxShadow: '0 1px 6px rgba(0,0,0,.05)', height: 94, padding: '13px 15px'}}>
-        <div style={{color: '#6a6a6a', fontSize: 14}}>Mensagem ChatGPT</div>
-        <div style={{alignItems: 'center', bottom: 12, display: 'flex', left: 14, position: 'absolute', right: 13}}>
-          <span style={{alignItems: 'center', border: '1px solid #ddd', borderRadius: 999, display: 'flex', height: 34, justifyContent: 'center', width: 34}}><Plus size={20} /></span>
-          <span style={{alignItems: 'center', border: '1px solid #ddd', borderRadius: 18, display: 'flex', fontSize: 12, gap: 7, height: 34, marginLeft: 8, padding: '0 12px'}}><Globe2 size={16} /> Buscar</span>
-          <span style={{alignItems: 'center', border: '1px solid #ddd', borderRadius: 18, display: 'flex', fontSize: 12, gap: 7, height: 34, marginLeft: 8, padding: '0 12px'}}><Sparkles size={15} /> Raciocinar</span>
-          <span style={{alignItems: 'center', border: '1px solid #ddd', borderRadius: 999, display: 'flex', height: 34, justifyContent: 'center', marginLeft: 8, width: 34}}><MoreHorizontal size={18} /></span>
-          <Mic size={18} style={{marginLeft: 'auto', marginRight: 15}} />
-          <span style={{alignItems: 'center', background: '#000', borderRadius: 999, color: '#fff', display: 'flex', height: 36, justifyContent: 'center', width: 36}}><ArrowUp size={19} /></span>
-        </div>
+    <div style={{bottom: 20, left: '50%', position: 'absolute', transform: 'translateX(-50%)', width: 812}}>
+      <div style={{color: '#545454', fontSize: 11.5, marginBottom: 15, textAlign: 'center'}}>ChatGPT é uma IA e pode cometer erros.</div>
+      <div style={{alignItems: 'center', background: '#fff', border: '1px solid #cfcfcf', borderRadius: 999, boxShadow: '0 2px 9px rgba(0,0,0,.08)', boxSizing: 'border-box', display: 'flex', height: 54, padding: '0 8px 0 13px', width: '100%'}}>
+        <span style={{alignItems: 'center', color: '#252525', display: 'flex', flexShrink: 0, height: 36, justifyContent: 'center', width: 36}}><Plus size={22} strokeWidth={1.7} /></span>
+        <span style={{color: '#8a8a8a', flex: 1, fontSize: 15.5, marginLeft: 5}}>Pergunte ao ChatGPT</span>
+        <span style={{alignItems: 'center', color: '#191919', display: 'flex', flexShrink: 0, height: 36, justifyContent: 'center', width: 36}}><Mic size={19} strokeWidth={1.8} /></span>
+        <span style={{alignItems: 'center', background: '#b2b2b2', borderRadius: 999, color: '#fff', display: 'flex', flexShrink: 0, height: 38, justifyContent: 'center', marginLeft: 5, width: 38}}><ArrowUp size={20} strokeWidth={1.9} /></span>
       </div>
-      <div style={{color: '#777', fontSize: 11.5, marginTop: 12, textAlign: 'center'}}>O ChatGPT pode cometer erros. Considere verificar informações importantes.</div>
     </div>
   )
 }
