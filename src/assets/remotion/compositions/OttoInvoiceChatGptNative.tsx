@@ -169,7 +169,7 @@ function ToolCard({frame}: {frame: number}) {
         <ChevronDown size={17} style={{marginLeft: 'auto', transform: 'rotate(180deg)'}} />
       </div>
       <div style={{padding: '4px 20px 0'}}>
-        <div style={{alignItems: 'center', display: 'flex'}}><h1 style={{fontSize: 100, fontWeight: 800, letterSpacing: '-0.01em', lineHeight: 1, margin: 0, whiteSpace: 'nowrap'}}>Emitindo nota fiscal</h1></div>
+        <div style={{alignItems: 'center', display: 'flex'}}><h1 style={{fontSize: 120, fontWeight: 800, letterSpacing: '-0.01em', lineHeight: 1, margin: 0, whiteSpace: 'nowrap'}}>Emitindo nota fiscal</h1></div>
         <div style={{fontSize: 12.5, fontWeight: 620, marginTop: 8}}>{completed} de {invoices.length} notas emitidas</div>
         <div style={{background: '#eceeed', borderRadius: 999, height: 5, marginTop: 8, overflow: 'hidden'}}><div style={{background: CHAT_GREEN, borderRadius: 999, height: '100%', width: `${progress * 100}%`}} /></div>
         <div style={{border: '1px solid #dedede', borderRadius: 12, marginTop: 12, overflow: 'hidden'}}>
