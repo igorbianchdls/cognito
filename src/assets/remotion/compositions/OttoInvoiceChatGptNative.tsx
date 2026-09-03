@@ -169,7 +169,7 @@ function ToolCard({frame}: {frame: number}) {
         <ChevronDown size={17} style={{marginLeft: 'auto', transform: 'rotate(180deg)'}} />
       </div>
       <div style={{padding: '7px 20px 0'}}>
-        <div style={{alignItems: 'center', display: 'flex'}}><h1 style={{fontSize: 34, letterSpacing: '-1.25px', lineHeight: 1.05, margin: 0}}>Emitindo múltiplas notas fiscais</h1><FileText color="#879098" size={38} strokeWidth={1.3} style={{marginLeft: 18}} /></div>
+        <div style={{alignItems: 'center', display: 'flex'}}><h1 style={{fontSize: 42, fontWeight: 800, letterSpacing: '-0.01em', lineHeight: 1.05, margin: 0}}>Emitindo nota fiscal</h1><FileText color="#879098" size={40} strokeWidth={1.3} style={{marginLeft: 18}} /></div>
         <div style={{fontSize: 12.5, fontWeight: 620, marginTop: 13}}>{completed} de 8 notas emitidas</div>
         <div style={{background: '#eceeed', borderRadius: 999, height: 5, marginTop: 11, overflow: 'hidden'}}><div style={{background: CHAT_GREEN, borderRadius: 999, height: '100%', width: `${progress * 100}%`}} /></div>
         <div style={{border: '1px solid #dedede', borderRadius: 12, marginTop: 22, overflow: 'hidden'}}>
@@ -226,7 +226,7 @@ export function OttoInvoiceChatGptNative() {
   const frame = useCurrentFrame()
 
   return (
-    <AbsoluteFill style={{background: '#fff', color: '#171717', fontFamily: CHATGPT_MOBILE_FONT_STACK, letterSpacing: '-0.02em', overflow: 'hidden'}}>
+    <AbsoluteFill style={{background: '#fff', color: '#171717', fontFamily: CHATGPT_MOBILE_FONT_STACK, letterSpacing: '-0.01em', overflow: 'hidden'}}>
       <BrowserChrome />
       <Sidebar />
       <ChatArea frame={frame} />

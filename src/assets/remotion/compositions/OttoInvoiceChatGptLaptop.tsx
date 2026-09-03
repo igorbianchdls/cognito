@@ -8,7 +8,7 @@ import {
 export const OTTO_INVOICE_CHATGPT_LAPTOP_DURATION = OTTO_INVOICE_CHATGPT_NATIVE_DURATION
 
 const VIDEO_WIDTH = 1536
-const VIDEO_HEIGHT = 1024
+const LAPTOP_VIEWPORT_HEIGHT = 968
 
 const SCREEN = {
   height: 521,
@@ -17,8 +17,7 @@ const SCREEN = {
   width: 827,
 }
 
-const SCREEN_SCALE = SCREEN.height / VIDEO_HEIGHT
-const VIDEO_LEFT = (SCREEN.width - VIDEO_WIDTH * SCREEN_SCALE) / 2
+const SCREEN_SCALE = SCREEN.width / VIDEO_WIDTH
 
 export function OttoInvoiceChatGptLaptop() {
   return (
@@ -43,8 +42,8 @@ export function OttoInvoiceChatGptLaptop() {
       >
         <div
           style={{
-            height: VIDEO_HEIGHT,
-            left: VIDEO_LEFT,
+            height: LAPTOP_VIEWPORT_HEIGHT,
+            left: 0,
             position: 'absolute',
             top: 0,
             transform: `scale(${SCREEN_SCALE})`,
