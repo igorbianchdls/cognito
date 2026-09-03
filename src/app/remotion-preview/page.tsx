@@ -135,6 +135,7 @@ import { OTTO_INVOICE_TWO_STEPS_LIST_DURATION, OttoInvoiceTwoStepsList } from '@
 import { OTTO_INVOICE_CHATGPT_DESKTOP_DURATION, OttoInvoiceChatGptDesktop } from '@/assets/remotion/compositions/OttoInvoiceChatGptDesktop'
 import { OTTO_INVOICE_CHATGPT_LAPTOP_DURATION, OttoInvoiceChatGptLaptop } from '@/assets/remotion/compositions/OttoInvoiceChatGptLaptop'
 import { OTTO_INVOICE_CHATGPT_NATIVE_DURATION, OttoInvoiceChatGptNative } from '@/assets/remotion/compositions/OttoInvoiceChatGptNative'
+import { OTTO_INVOICE_CHATGPT_DUAL_SCREEN_DURATION, OttoInvoiceChatGptDualScreen } from '@/assets/remotion/compositions/OttoInvoiceChatGptDualScreen'
 import { OTTO_SYNC_ONLY_SCENE_DURATION, OttoSyncOnlyScene } from '@/assets/remotion/compositions/OttoSyncOnlyScene'
 import {
   OTTO_FINANCIAL_SCENE_COMPONENT_DURATION,
@@ -3455,6 +3456,18 @@ const catalog: CatalogItem[] = [
     tags: ['ChatGPT', 'Otto', 'Notas Fiscais', 'Navegador', 'Desktop'],
     value: 'video-otto-invoice-chatgpt-native',
     width: 1536,
+  },
+  {
+    code: '<OttoInvoiceChatGptDualScreen />',
+    component: OttoInvoiceChatGptDualScreen,
+    description: 'A experiência ChatGPT com emissão de notas fiscais aplicada simultaneamente à TV e ao notebook, respeitando a perspectiva de cada tela.',
+    duration: OTTO_INVOICE_CHATGPT_DUAL_SCREEN_DURATION,
+    height: 1920,
+    kind: 'Vídeos criados',
+    label: 'TV + Laptop — ChatGPT: Emissão de notas fiscais',
+    tags: ['ChatGPT', 'Otto', 'Notas Fiscais', 'TV', 'Laptop', 'Vertical'],
+    value: 'video-otto-invoice-chatgpt-dual-screen',
+    width: 1080,
   },
   {
     code: '<OttoFinanceAutomationOnlyScene />',
