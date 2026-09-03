@@ -41,8 +41,6 @@ const invoices = [
   {company: 'Marketing Digital SA', value: 'R$ 870,00'},
   {company: 'Juliana Costa MEI', value: 'R$ 540,00'},
   {company: 'Tech Solutions LTDA', value: 'R$ 1.990,00'},
-  {company: 'Nova Era Comércio LTDA', value: 'R$ 1.420,00'},
-  {company: 'Horizonte Tecnologia ME', value: 'R$ 760,00'},
 ]
 
 function tween(frame: number, from: number, to: number, output: [number, number] = [0, 1]) {
@@ -143,7 +141,7 @@ function InvoiceRow({frame, index, completed, rawProgress}: {frame: number; inde
   const stateLabel = status === 'done' ? 'Emitida' : status === 'active' ? 'Emitindo...' : 'Aguardando...'
 
   return (
-    <div style={{alignItems: 'center', borderBottom: index === invoices.length - 1 ? 'none' : '1px solid #e6e6e6', display: 'grid', gridTemplateColumns: '112px 1fr 255px 105px', height: 38, padding: '0 14px'}}>
+    <div style={{alignItems: 'center', borderBottom: index === invoices.length - 1 ? 'none' : '1px solid #e6e6e6', display: 'grid', gridTemplateColumns: '112px 1fr 255px 105px', height: 46, padding: '0 14px'}}>
       <div style={{alignItems: 'center', display: 'flex', gap: 12}}><FileText color="#454b50" size={18} strokeWidth={1.6} /><span style={{fontSize: 13.5}}>NFS-e</span></div>
       <div><div style={{fontSize: 13, fontWeight: 650}}>{invoices[index].company}</div><div style={{fontSize: 11.5, marginTop: 2}}>{invoices[index].value}</div></div>
       <div style={{alignItems: 'center', display: 'flex', gap: 12}}>
@@ -171,7 +169,7 @@ function ToolCard({frame}: {frame: number}) {
         <ChevronDown size={17} style={{marginLeft: 'auto', transform: 'rotate(180deg)'}} />
       </div>
       <div style={{padding: '4px 20px 0'}}>
-        <div style={{alignItems: 'center', display: 'flex'}}><h1 style={{fontSize: 100, fontWeight: 800, letterSpacing: '-0.01em', lineHeight: 1, margin: 0, transform: 'scale(1.25)', transformOrigin: 'left center', whiteSpace: 'nowrap'}}>Emitindo nota fiscal</h1><FileText color="#879098" size={60} strokeWidth={1.3} style={{marginLeft: 220}} /></div>
+        <div style={{alignItems: 'center', display: 'flex'}}><h1 style={{fontSize: 100, fontWeight: 800, letterSpacing: '-0.01em', lineHeight: 1, margin: 0, whiteSpace: 'nowrap'}}>Emitindo nota fiscal</h1></div>
         <div style={{fontSize: 12.5, fontWeight: 620, marginTop: 8}}>{completed} de {invoices.length} notas emitidas</div>
         <div style={{background: '#eceeed', borderRadius: 999, height: 5, marginTop: 8, overflow: 'hidden'}}><div style={{background: CHAT_GREEN, borderRadius: 999, height: '100%', width: `${progress * 100}%`}} /></div>
         <div style={{border: '1px solid #dedede', borderRadius: 12, marginTop: 12, overflow: 'hidden'}}>
@@ -210,7 +208,7 @@ function ChatArea({frame}: {frame: number}) {
         <span style={{alignItems: 'center', background: '#687785', borderRadius: 999, color: '#fff', display: 'flex', fontSize: 11, height: 36, justifyContent: 'center', marginLeft: 20, width: 36}}>VO</span>
       </header>
 
-      <div style={{bottom: 0, left: '50%', position: 'absolute', top: 64, transform: 'translateX(-50%)', width: 1280}}>
+      <div style={{bottom: 0, left: '50%', position: 'absolute', top: 64, transform: 'translateX(-50%)', width: '70%'}}>
         <div style={{display: 'flex', justifyContent: 'flex-end', opacity: userIn, transform: `translateY(${(1 - userIn) * 8}px)`}}>
           <div style={{background: '#f4f4f4', borderRadius: 20, fontSize: 14, lineHeight: 1.55, maxWidth: 355, padding: '13px 18px'}}>Chat, emita as notas fiscais das vendas de hoje e envie para cada cliente por WhatsApp.</div>
         </div>
