@@ -101,6 +101,10 @@ import {
   OttoInvoiceChatGptNative,
 } from './compositions/OttoInvoiceChatGptNative'
 import {
+  OTTO_INVOICE_CHATGPT_TV_CONTENT_DURATION,
+  OttoInvoiceChatGptTvContent,
+} from './compositions/OttoInvoiceChatGptTvContent'
+import {
   OTTO_INVOICE_CHATGPT_DUAL_SCREEN_DURATION,
   OttoInvoiceChatGptDualScreen,
 } from './compositions/OttoInvoiceChatGptDualScreen'
@@ -287,6 +291,14 @@ function RemotionDownloadRoot() {
         height={1024}
         id="video-otto-invoice-chatgpt-native"
         width={1536}
+      />
+      <Composition
+        component={OttoInvoiceChatGptTvContent}
+        durationInFrames={OTTO_INVOICE_CHATGPT_TV_CONTENT_DURATION}
+        fps={30}
+        height={547}
+        id="video-otto-invoice-chatgpt-tv-content"
+        width={986}
       />
       <Composition
         component={OttoInvoiceChatGptDualScreen}

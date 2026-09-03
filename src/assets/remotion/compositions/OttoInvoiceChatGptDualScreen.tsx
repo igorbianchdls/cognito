@@ -4,6 +4,11 @@ import {
   OTTO_INVOICE_CHATGPT_NATIVE_DURATION,
   OttoInvoiceChatGptNative,
 } from '@/assets/remotion/compositions/OttoInvoiceChatGptNative'
+import {
+  OTTO_INVOICE_CHATGPT_TV_CONTENT_HEIGHT,
+  OTTO_INVOICE_CHATGPT_TV_CONTENT_WIDTH,
+  OttoInvoiceChatGptTvContent,
+} from '@/assets/remotion/compositions/OttoInvoiceChatGptTvContent'
 
 export const OTTO_INVOICE_CHATGPT_DUAL_SCREEN_DURATION = OTTO_INVOICE_CHATGPT_NATIVE_DURATION
 
@@ -63,7 +68,7 @@ function applyCameraZoom(geometry: ScreenGeometry, cameraZoom: number, translate
   }
 }
 
-function AdaptedScreen({geometry, titleFontSize}: {geometry: ScreenGeometry; titleFontSize?: number}) {
+function AdaptedScreen({geometry}: {geometry: ScreenGeometry}) {
   const scale = geometry.height / SOURCE_HEIGHT
   const sourceWidth = geometry.width / scale
 
@@ -91,7 +96,7 @@ function AdaptedScreen({geometry, titleFontSize}: {geometry: ScreenGeometry; tit
           width: sourceWidth,
         }}
       >
-        <OttoInvoiceChatGptNative titleFontSize={titleFontSize} />
+        <OttoInvoiceChatGptNative />
       </div>
 
       <div
@@ -115,6 +120,41 @@ function AdaptedScreen({geometry, titleFontSize}: {geometry: ScreenGeometry; tit
   )
 }
 
+function TvScreen({geometry}: {geometry: ScreenGeometry}) {
+  const scale = geometry.height / OTTO_INVOICE_CHATGPT_TV_CONTENT_HEIGHT
+
+  return (
+    <div
+      style={{
+        background: '#fff',
+        clipPath: geometry.clipPath,
+        height: geometry.height,
+        left: geometry.left,
+        overflow: 'hidden',
+        position: 'absolute',
+        top: geometry.top,
+        width: geometry.width,
+      }}
+    >
+      <div
+        style={{
+          height: OTTO_INVOICE_CHATGPT_TV_CONTENT_HEIGHT,
+          left: 0,
+          position: 'absolute',
+          top: 0,
+          transform: `scale(${scale})`,
+          transformOrigin: 'top left',
+          width: OTTO_INVOICE_CHATGPT_TV_CONTENT_WIDTH,
+        }}
+      >
+        <OttoInvoiceChatGptTvContent />
+      </div>
+      <div style={{background: geometry.reflection, inset: 0, mixBlendMode: 'soft-light', pointerEvents: 'none', position: 'absolute'}} />
+      <div style={{boxShadow: 'inset 0 0 18px rgba(0,0,0,.24)', inset: 0, pointerEvents: 'none', position: 'absolute'}} />
+    </div>
+  )
+}
+
 export function OttoInvoiceChatGptDualScreen({cameraZoom = 1}: {cameraZoom?: number} = {}) {
   const {translateX, translateY} = getCameraTransform(cameraZoom)
   const tvGeometry = applyCameraZoom(TV_SCREEN, cameraZoom, translateX, translateY)
@@ -132,7 +172,7 @@ export function OttoInvoiceChatGptDualScreen({cameraZoom = 1}: {cameraZoom?: num
           width: '100%',
         }}
       />
-      <AdaptedScreen geometry={tvGeometry} titleFontSize={80 / TV_CONTENT_SCALE} />
+      <TvScreen geometry={tvGeometry} />
       <AdaptedScreen geometry={laptopGeometry} />
     </AbsoluteFill>
   )

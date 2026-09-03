@@ -135,6 +135,7 @@ import { OTTO_INVOICE_TWO_STEPS_LIST_DURATION, OttoInvoiceTwoStepsList } from '@
 import { OTTO_INVOICE_CHATGPT_DESKTOP_DURATION, OttoInvoiceChatGptDesktop } from '@/assets/remotion/compositions/OttoInvoiceChatGptDesktop'
 import { OTTO_INVOICE_CHATGPT_LAPTOP_DURATION, OttoInvoiceChatGptLaptop } from '@/assets/remotion/compositions/OttoInvoiceChatGptLaptop'
 import { OTTO_INVOICE_CHATGPT_NATIVE_DURATION, OttoInvoiceChatGptNative } from '@/assets/remotion/compositions/OttoInvoiceChatGptNative'
+import { OTTO_INVOICE_CHATGPT_TV_CONTENT_DURATION, OttoInvoiceChatGptTvContent } from '@/assets/remotion/compositions/OttoInvoiceChatGptTvContent'
 import { OTTO_INVOICE_CHATGPT_DUAL_SCREEN_DURATION, OttoInvoiceChatGptDualScreen } from '@/assets/remotion/compositions/OttoInvoiceChatGptDualScreen'
 import { OTTO_INVOICE_CHATGPT_TV_ZOOM_DURATION, OttoInvoiceChatGptTvZoom } from '@/assets/remotion/compositions/OttoInvoiceChatGptTvZoom'
 import { OTTO_SYNC_ONLY_SCENE_DURATION, OttoSyncOnlyScene } from '@/assets/remotion/compositions/OttoSyncOnlyScene'
@@ -3457,6 +3458,18 @@ const catalog: CatalogItem[] = [
     tags: ['ChatGPT', 'Otto', 'Notas Fiscais', 'Navegador', 'Desktop'],
     value: 'video-otto-invoice-chatgpt-native',
     width: 1536,
+  },
+  {
+    code: '<OttoInvoiceChatGptTvContent />',
+    component: OttoInvoiceChatGptTvContent,
+    description: 'Conteúdo dedicado exibido dentro da TV, com o título principal em 80 px visuais antes do zoom da câmera.',
+    duration: OTTO_INVOICE_CHATGPT_TV_CONTENT_DURATION,
+    height: 547,
+    kind: 'Vídeos criados',
+    label: 'ChatGPT — Conteúdo da TV (H1 80 px)',
+    tags: ['ChatGPT', 'Otto', 'Notas Fiscais', 'TV', '80px'],
+    value: 'video-otto-invoice-chatgpt-tv-content',
+    width: 986,
   },
   {
     code: '<OttoInvoiceChatGptDualScreen />',
