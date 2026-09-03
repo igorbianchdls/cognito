@@ -9,6 +9,8 @@ export const OTTO_INVOICE_CHATGPT_DUAL_SCREEN_DURATION = OTTO_INVOICE_CHATGPT_NA
 
 const SOURCE_HEIGHT = 968
 const CHATGPT_SIDEBAR_WIDTH = 262
+const FINAL_CAMERA_ZOOM = 1.8
+const FRAME_CENTER = {x: 540, y: 960}
 
 type ScreenGeometry = {
   clipPath: string
@@ -38,17 +40,25 @@ const LAPTOP_SCREEN: ScreenGeometry = {
 }
 
 const TV_CONTENT_SCALE = TV_SCREEN.height / SOURCE_HEIGHT
-const TV_FOCUS = {
+const TV_CONTAINER_CENTER = {
   x: TV_SCREEN.left + (TV_SCREEN.width + CHATGPT_SIDEBAR_WIDTH * TV_CONTENT_SCALE) / 2,
-  y: TV_SCREEN.top + TV_SCREEN.height / 2,
+  y: TV_SCREEN.top + TV_SCREEN.height * 0.543,
 }
 
-function applyCameraZoom(geometry: ScreenGeometry, cameraZoom: number): ScreenGeometry {
+function getCameraTransform(cameraZoom: number) {
+  const progress = Math.max(0, Math.min(1, (cameraZoom - 1) / (FINAL_CAMERA_ZOOM - 1)))
+  return {
+    translateX: progress * (FRAME_CENTER.x - TV_CONTAINER_CENTER.x * FINAL_CAMERA_ZOOM),
+    translateY: progress * (FRAME_CENTER.y - TV_CONTAINER_CENTER.y * FINAL_CAMERA_ZOOM),
+  }
+}
+
+function applyCameraZoom(geometry: ScreenGeometry, cameraZoom: number, translateX: number, translateY: number): ScreenGeometry {
   return {
     ...geometry,
     height: geometry.height * cameraZoom,
-    left: TV_FOCUS.x + (geometry.left - TV_FOCUS.x) * cameraZoom,
-    top: TV_FOCUS.y + (geometry.top - TV_FOCUS.y) * cameraZoom,
+    left: geometry.left * cameraZoom + translateX,
+    top: geometry.top * cameraZoom + translateY,
     width: geometry.width * cameraZoom,
   }
 }
@@ -106,8 +116,9 @@ function AdaptedScreen({geometry}: {geometry: ScreenGeometry}) {
 }
 
 export function OttoInvoiceChatGptDualScreen({cameraZoom = 1}: {cameraZoom?: number} = {}) {
-  const tvGeometry = applyCameraZoom(TV_SCREEN, cameraZoom)
-  const laptopGeometry = applyCameraZoom(LAPTOP_SCREEN, cameraZoom)
+  const {translateX, translateY} = getCameraTransform(cameraZoom)
+  const tvGeometry = applyCameraZoom(TV_SCREEN, cameraZoom, translateX, translateY)
+  const laptopGeometry = applyCameraZoom(LAPTOP_SCREEN, cameraZoom, translateX, translateY)
 
   return (
     <AbsoluteFill style={{background: '#23190f', overflow: 'hidden'}}>
@@ -116,8 +127,8 @@ export function OttoInvoiceChatGptDualScreen({cameraZoom = 1}: {cameraZoom?: num
         style={{
           height: '100%',
           objectFit: 'cover',
-          transform: `scale(${cameraZoom})`,
-          transformOrigin: `${TV_FOCUS.x}px ${TV_FOCUS.y}px`,
+          transform: `matrix(${cameraZoom}, 0, 0, ${cameraZoom}, ${translateX}, ${translateY})`,
+          transformOrigin: 'top left',
           width: '100%',
         }}
       />
