@@ -226,7 +226,7 @@ export function OttoInvoiceChatGptNative() {
   const frame = useCurrentFrame()
 
   return (
-    <AbsoluteFill style={{background: '#fff', color: '#171717', fontFamily: CHATGPT_MOBILE_FONT_STACK, overflow: 'hidden'}}>
+    <AbsoluteFill style={{background: '#fff', color: '#171717', fontFamily: CHATGPT_MOBILE_FONT_STACK, letterSpacing: '-0.02em', overflow: 'hidden'}}>
       <BrowserChrome />
       <Sidebar />
       <ChatArea frame={frame} />

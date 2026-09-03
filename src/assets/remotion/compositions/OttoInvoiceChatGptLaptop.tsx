@@ -1,14 +1,14 @@
 import {AbsoluteFill, Img, staticFile} from 'remotion'
 
 import {
-  OTTO_INVOICE_CHATGPT_DESKTOP_DURATION,
-  OttoInvoiceChatGptDesktop,
-} from '@/assets/remotion/compositions/OttoInvoiceChatGptDesktop'
+  OTTO_INVOICE_CHATGPT_NATIVE_DURATION,
+  OttoInvoiceChatGptNative,
+} from '@/assets/remotion/compositions/OttoInvoiceChatGptNative'
 
-export const OTTO_INVOICE_CHATGPT_LAPTOP_DURATION = OTTO_INVOICE_CHATGPT_DESKTOP_DURATION
+export const OTTO_INVOICE_CHATGPT_LAPTOP_DURATION = OTTO_INVOICE_CHATGPT_NATIVE_DURATION
 
-const DESKTOP_WIDTH = 1536
-const DESKTOP_HEIGHT = 968
+const VIDEO_WIDTH = 1536
+const VIDEO_HEIGHT = 1024
 
 const SCREEN = {
   height: 521,
@@ -17,7 +17,8 @@ const SCREEN = {
   width: 827,
 }
 
-const SCREEN_SCALE = SCREEN.width / DESKTOP_WIDTH
+const SCREEN_SCALE = SCREEN.height / VIDEO_HEIGHT
+const VIDEO_LEFT = (SCREEN.width - VIDEO_WIDTH * SCREEN_SCALE) / 2
 
 export function OttoInvoiceChatGptLaptop() {
   return (
@@ -29,7 +30,7 @@ export function OttoInvoiceChatGptLaptop() {
 
       <div
         style={{
-          background: '#656565',
+          background: '#ffffff',
           borderRadius: 7,
           boxShadow: 'inset 0 0 18px rgba(0,0,0,0.28)',
           height: SCREEN.height,
@@ -42,16 +43,16 @@ export function OttoInvoiceChatGptLaptop() {
       >
         <div
           style={{
-            height: DESKTOP_HEIGHT,
-            left: 0,
+            height: VIDEO_HEIGHT,
+            left: VIDEO_LEFT,
             position: 'absolute',
             top: 0,
             transform: `scale(${SCREEN_SCALE})`,
             transformOrigin: 'top left',
-            width: DESKTOP_WIDTH,
+            width: VIDEO_WIDTH,
           }}
         >
-          <OttoInvoiceChatGptDesktop viewportHeight={DESKTOP_HEIGHT} />
+          <OttoInvoiceChatGptNative />
         </div>
 
         <div
