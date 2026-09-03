@@ -8,6 +8,7 @@ import {
 export const OTTO_INVOICE_CHATGPT_DUAL_SCREEN_DURATION = OTTO_INVOICE_CHATGPT_NATIVE_DURATION
 
 const SOURCE_HEIGHT = 968
+const CHATGPT_SIDEBAR_WIDTH = 262
 
 type ScreenGeometry = {
   clipPath: string
@@ -36,8 +37,9 @@ const LAPTOP_SCREEN: ScreenGeometry = {
   width: 458.18,
 }
 
+const TV_CONTENT_SCALE = TV_SCREEN.height / SOURCE_HEIGHT
 const TV_FOCUS = {
-  x: TV_SCREEN.left + TV_SCREEN.width / 2,
+  x: TV_SCREEN.left + (TV_SCREEN.width + CHATGPT_SIDEBAR_WIDTH * TV_CONTENT_SCALE) / 2,
   y: TV_SCREEN.top + TV_SCREEN.height / 2,
 }
 

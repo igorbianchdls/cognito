@@ -11,7 +11,7 @@ export function OttoInvoiceChatGptTvZoom() {
   const frame = useCurrentFrame()
   const cameraZoom = interpolate(
     frame,
-    [0, OTTO_INVOICE_CHATGPT_TV_ZOOM_DURATION - 1],
+    [0, OTTO_INVOICE_CHATGPT_TV_ZOOM_DURATION / 2],
     [1, 1.8],
     {
       easing: Easing.inOut(Easing.cubic),
