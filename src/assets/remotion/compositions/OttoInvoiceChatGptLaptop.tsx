@@ -22,7 +22,7 @@ const SCREEN_SCALE = SCREEN.width / VIDEO_WIDTH
 export function OttoInvoiceChatGptLaptop() {
   return (
     <AbsoluteFill style={{background: '#17110d', overflow: 'hidden'}}>
-      <AbsoluteFill style={{transform: 'scale(1.3)', transformOrigin: '50% 44%'}}>
+      <AbsoluteFill style={{transform: 'scale(1.6)', transformOrigin: '50% 44%'}}>
         <Img
           src={staticFile('remotion/laptop-chatgpt-otto/laptop-screen-bg.png')}
           style={{height: '100%', objectFit: 'cover', width: '100%'}}
