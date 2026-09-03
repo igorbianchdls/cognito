@@ -42,7 +42,7 @@ const LAPTOP_SCREEN: ScreenGeometry = {
 const TV_CONTENT_SCALE = TV_SCREEN.height / SOURCE_HEIGHT
 const TV_CONTAINER_CENTER = {
   x: TV_SCREEN.left + (TV_SCREEN.width + CHATGPT_SIDEBAR_WIDTH * TV_CONTENT_SCALE) / 2,
-  y: TV_SCREEN.top + TV_SCREEN.height * 0.543,
+  y: TV_SCREEN.top + TV_SCREEN.height * 0.585,
 }
 
 function getCameraTransform(cameraZoom: number) {
@@ -63,9 +63,13 @@ function applyCameraZoom(geometry: ScreenGeometry, cameraZoom: number, translate
   }
 }
 
-function AdaptedScreen({geometry, titleFontSize}: {geometry: ScreenGeometry; titleFontSize: number}) {
+function AdaptedScreen({geometry, overlayTitle = false}: {geometry: ScreenGeometry; overlayTitle?: boolean}) {
   const scale = geometry.height / SOURCE_HEIGHT
   const sourceWidth = geometry.width / scale
+  const mainWidth = sourceWidth - CHATGPT_SIDEBAR_WIDTH
+  const conversationWidth = mainWidth * 0.7
+  const titleLeft = (CHATGPT_SIDEBAR_WIDTH + (mainWidth - conversationWidth) / 2 + 20) * scale
+  const titleTop = 288 * scale
 
   return (
     <div
@@ -91,8 +95,29 @@ function AdaptedScreen({geometry, titleFontSize}: {geometry: ScreenGeometry; tit
           width: sourceWidth,
         }}
       >
-        <OttoInvoiceChatGptNative titleFontSize={titleFontSize} titleScaleX={1} />
+        <OttoInvoiceChatGptNative hideTitle={overlayTitle} titleFontSize={overlayTitle ? 90 / scale : 73} />
       </div>
+
+      {overlayTitle ? (
+        <div
+          style={{
+            color: '#171717',
+            fontFamily: '"SF Pro Text", "SF Pro Display", -apple-system, BlinkMacSystemFont, system-ui, sans-serif',
+            fontSize: 90,
+            fontWeight: 800,
+            left: titleLeft,
+            letterSpacing: '-0.01em',
+            lineHeight: 1,
+            position: 'absolute',
+            top: titleTop,
+            transform: 'scaleX(0.64)',
+            transformOrigin: 'left center',
+            whiteSpace: 'nowrap',
+          }}
+        >
+          Emitindo nota fiscal
+        </div>
+      ) : null}
 
       <div
         style={{
@@ -117,9 +142,6 @@ function AdaptedScreen({geometry, titleFontSize}: {geometry: ScreenGeometry; tit
 
 export function OttoInvoiceChatGptDualScreen({cameraZoom = 1}: {cameraZoom?: number} = {}) {
   const {translateX, translateY} = getCameraTransform(cameraZoom)
-  const cameraProgress = Math.max(0, Math.min(1, (cameraZoom - 1) / (FINAL_CAMERA_ZOOM - 1)))
-  const visibleTitleSize = 52 + cameraProgress * 38
-  const titleSourceSize = visibleTitleSize / (TV_CONTENT_SCALE * cameraZoom)
   const tvGeometry = applyCameraZoom(TV_SCREEN, cameraZoom, translateX, translateY)
   const laptopGeometry = applyCameraZoom(LAPTOP_SCREEN, cameraZoom, translateX, translateY)
 
@@ -135,8 +157,8 @@ export function OttoInvoiceChatGptDualScreen({cameraZoom = 1}: {cameraZoom?: num
           width: '100%',
         }}
       />
-      <AdaptedScreen geometry={tvGeometry} titleFontSize={titleSourceSize} />
-      <AdaptedScreen geometry={laptopGeometry} titleFontSize={titleSourceSize} />
+      <AdaptedScreen geometry={tvGeometry} overlayTitle />
+      <AdaptedScreen geometry={laptopGeometry} />
     </AbsoluteFill>
   )
 }

@@ -153,7 +153,7 @@ function InvoiceRow({frame, index, completed, rawProgress}: {frame: number; inde
   )
 }
 
-function ToolCard({frame, titleFontSize, titleScaleX}: {frame: number; titleFontSize: number; titleScaleX: number}) {
+function ToolCard({frame, hideTitle, titleFontSize, titleScaleX}: {frame: number; hideTitle: boolean; titleFontSize: number; titleScaleX: number}) {
   const cardIn = tween(frame, 38, 54)
   const rawProgress = tween(frame, 60, 316, [0, invoices.length])
   const completed = Math.min(invoices.length, Math.floor(rawProgress))
@@ -161,7 +161,7 @@ function ToolCard({frame, titleFontSize, titleScaleX}: {frame: number; titleFont
   const allDone = completed === invoices.length
 
   return (
-    <div style={{background: '#fff', border: '1px solid #e4e4e4', borderRadius: 20, boxShadow: '0 2px 11px rgba(0,0,0,.07)', height: 600, opacity: cardIn, overflow: 'hidden', transform: `translateY(${(1 - cardIn) * 10}px)`, width: '100%'}}>
+    <div style={{background: '#fff', border: '1px solid #e4e4e4', borderRadius: 20, boxShadow: '0 2px 11px rgba(0,0,0,.07)', height: 680, opacity: cardIn, overflow: 'hidden', transform: `translateY(${(1 - cardIn) * 10}px)`, width: '100%'}}>
       <div style={{alignItems: 'center', display: 'flex', height: 55, padding: '0 20px'}}>
         <span style={{alignItems: 'center', border: '1px solid #ddd', borderRadius: 7, display: 'flex', height: 27, justifyContent: 'center', width: 27}}><FileText size={15} /></span>
         <strong style={{fontSize: 13.5, marginLeft: 11}}>Otto · Emitir notas fiscais</strong>
@@ -169,7 +169,7 @@ function ToolCard({frame, titleFontSize, titleScaleX}: {frame: number; titleFont
         <ChevronDown size={17} style={{marginLeft: 'auto', transform: 'rotate(180deg)'}} />
       </div>
       <div style={{padding: '7px 20px 0'}}>
-        <div style={{alignItems: 'center', display: 'flex'}}><h1 style={{fontSize: titleFontSize, fontWeight: 800, letterSpacing: '-0.01em', lineHeight: 1.05, margin: 0, transform: `scaleX(${titleScaleX})`, transformOrigin: 'left center', whiteSpace: 'nowrap'}}>Emitindo nota fiscal</h1></div>
+        <div style={{alignItems: 'center', display: 'flex'}}><h1 style={{fontSize: titleFontSize, fontWeight: 800, letterSpacing: '-0.01em', lineHeight: 1.05, margin: 0, opacity: hideTitle ? 0 : 1, transform: `scaleX(${titleScaleX})`, transformOrigin: 'left center', whiteSpace: 'nowrap'}}>Emitindo nota fiscal</h1></div>
         <div style={{fontSize: 12.5, fontWeight: 620, marginTop: 13}}>{completed} de {invoices.length} notas emitidas</div>
         <div style={{background: '#eceeed', borderRadius: 999, height: 5, marginTop: 11, overflow: 'hidden'}}><div style={{background: CHAT_GREEN, borderRadius: 999, height: '100%', width: `${progress * 100}%`}} /></div>
         <div style={{border: '1px solid #dedede', borderRadius: 12, marginTop: 22, overflow: 'hidden'}}>
@@ -195,7 +195,7 @@ function Composer() {
   )
 }
 
-function ChatArea({frame, titleFontSize, titleScaleX}: {frame: number; titleFontSize: number; titleScaleX: number}) {
+function ChatArea({frame, hideTitle, titleFontSize, titleScaleX}: {frame: number; hideTitle: boolean; titleFontSize: number; titleScaleX: number}) {
   const userIn = tween(frame, 4, 19)
   const replyIn = tween(frame, 22, 38)
   const finalIn = tween(frame, 320, 340)
@@ -213,7 +213,7 @@ function ChatArea({frame, titleFontSize, titleScaleX}: {frame: number; titleFont
           <div style={{background: '#f4f4f4', borderRadius: 20, fontSize: 14, lineHeight: 1.55, maxWidth: 355, padding: '13px 18px'}}>Chat, emita as notas fiscais das vendas de hoje e envie para cada cliente por WhatsApp.</div>
         </div>
         <p style={{fontSize: 14, lineHeight: 1.55, margin: '21px 0 10px', opacity: replyIn, transform: `translateY(${(1 - replyIn) * 7}px)`}}>Perfeito! Vou buscar as vendas de hoje e emitir as notas fiscais para cada cliente.</p>
-        <ToolCard frame={frame} titleFontSize={titleFontSize} titleScaleX={titleScaleX} />
+        <ToolCard frame={frame} hideTitle={hideTitle} titleFontSize={titleFontSize} titleScaleX={titleScaleX} />
         <p style={{fontSize: 13.5, margin: '13px 0 0', opacity: finalIn}}>Pronto! As notas fiscais foram emitidas e enviadas para os clientes pelo WhatsApp.</p>
       </div>
       <Composer />
@@ -222,14 +222,14 @@ function ChatArea({frame, titleFontSize, titleScaleX}: {frame: number; titleFont
   )
 }
 
-export function OttoInvoiceChatGptNative({titleFontSize = 73, titleScaleX = 1}: {titleFontSize?: number; titleScaleX?: number} = {}) {
+export function OttoInvoiceChatGptNative({hideTitle = false, titleFontSize = 73, titleScaleX = 1}: {hideTitle?: boolean; titleFontSize?: number; titleScaleX?: number} = {}) {
   const frame = useCurrentFrame()
 
   return (
     <AbsoluteFill style={{background: '#fff', color: '#171717', fontFamily: CHATGPT_MOBILE_FONT_STACK, letterSpacing: '-0.01em', overflow: 'hidden'}}>
       <BrowserChrome />
       <Sidebar />
-      <ChatArea frame={frame} titleFontSize={titleFontSize} titleScaleX={titleScaleX} />
+      <ChatArea frame={frame} hideTitle={hideTitle} titleFontSize={titleFontSize} titleScaleX={titleScaleX} />
     </AbsoluteFill>
   )
 }
