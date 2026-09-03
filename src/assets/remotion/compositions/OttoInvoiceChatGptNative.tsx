@@ -141,7 +141,7 @@ function InvoiceRow({frame, index, completed}: {frame: number; index: number; co
   const stateLabel = status === 'done' ? 'Emitida' : status === 'active' ? 'Emitindo...' : 'Aguardando...'
 
   return (
-    <div style={{alignItems: 'center', borderBottom: index === invoices.length - 1 ? 'none' : '1px solid #e6e6e6', display: 'grid', gridTemplateColumns: '112px 1fr 255px 105px', height: 51, padding: '0 14px'}}>
+    <div style={{alignItems: 'center', borderBottom: index === invoices.length - 1 ? 'none' : '1px solid #e6e6e6', display: 'grid', gridTemplateColumns: '112px 1fr 255px 105px', height: 47, padding: '0 14px'}}>
       <div style={{alignItems: 'center', display: 'flex', gap: 12}}><FileText color="#454b50" size={18} strokeWidth={1.6} /><span style={{fontSize: 13.5}}>NFS-e</span></div>
       <div><div style={{fontSize: 13, fontWeight: 650}}>{invoices[index].company}</div><div style={{fontSize: 11.5, marginTop: 2}}>{invoices[index].value}</div></div>
       <div style={{alignItems: 'center', display: 'flex', gap: 12}}>
@@ -161,7 +161,7 @@ function ToolCard({frame}: {frame: number}) {
   const allDone = completed === 8
 
   return (
-    <div style={{background: '#fff', border: '1px solid #e4e4e4', borderRadius: 20, boxShadow: '0 2px 11px rgba(0,0,0,.07)', height: 575, opacity: cardIn, overflow: 'hidden', transform: `translateY(${(1 - cardIn) * 10}px)`, width: '100%'}}>
+    <div style={{background: '#fff', border: '1px solid #e4e4e4', borderRadius: 20, boxShadow: '0 2px 11px rgba(0,0,0,.07)', height: 600, opacity: cardIn, overflow: 'hidden', transform: `translateY(${(1 - cardIn) * 10}px)`, width: '100%'}}>
       <div style={{alignItems: 'center', display: 'flex', height: 55, padding: '0 20px'}}>
         <span style={{alignItems: 'center', border: '1px solid #ddd', borderRadius: 7, display: 'flex', height: 27, justifyContent: 'center', width: 27}}><FileText size={15} /></span>
         <strong style={{fontSize: 13.5, marginLeft: 11}}>Otto · Emitir notas fiscais</strong>
@@ -169,7 +169,7 @@ function ToolCard({frame}: {frame: number}) {
         <ChevronDown size={17} style={{marginLeft: 'auto', transform: 'rotate(180deg)'}} />
       </div>
       <div style={{padding: '7px 20px 0'}}>
-        <div style={{alignItems: 'center', display: 'flex'}}><h1 style={{fontSize: 42, fontWeight: 800, letterSpacing: '-0.01em', lineHeight: 1.05, margin: 0}}>Emitindo nota fiscal</h1><FileText color="#879098" size={40} strokeWidth={1.3} style={{marginLeft: 18}} /></div>
+        <div style={{alignItems: 'center', display: 'flex'}}><h1 style={{fontSize: 60, fontWeight: 800, letterSpacing: '-0.01em', lineHeight: 1.02, margin: 0}}>Emitindo nota fiscal</h1><FileText color="#879098" size={48} strokeWidth={1.3} style={{marginLeft: 18}} /></div>
         <div style={{fontSize: 12.5, fontWeight: 620, marginTop: 13}}>{completed} de 8 notas emitidas</div>
         <div style={{background: '#eceeed', borderRadius: 999, height: 5, marginTop: 11, overflow: 'hidden'}}><div style={{background: CHAT_GREEN, borderRadius: 999, height: '100%', width: `${progress * 100}%`}} /></div>
         <div style={{border: '1px solid #dedede', borderRadius: 12, marginTop: 22, overflow: 'hidden'}}>
