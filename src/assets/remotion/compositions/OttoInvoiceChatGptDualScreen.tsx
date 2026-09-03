@@ -19,12 +19,12 @@ type ScreenGeometry = {
 }
 
 const TV_SCREEN: ScreenGeometry = {
-  clipPath: 'polygon(0% 0%, 100% 0%, 99% 100%, 1% 100%)',
-  height: 544.31,
-  left: 47.66,
+  clipPath: 'polygon(0.1% 0%, 99.9% 0%, 99.8% 100%, 0.2% 100%)',
+  height: 546.6,
+  left: 46.8,
   reflection: 'linear-gradient(112deg, rgba(255,224,190,.10) 0%, rgba(255,255,255,.015) 43%, rgba(0,0,0,.08) 100%)',
-  top: 366.31,
-  width: 984.11,
+  top: 365.13,
+  width: 986.32,
 }
 
 const LAPTOP_SCREEN: ScreenGeometry = {
@@ -92,7 +92,7 @@ export function OttoInvoiceChatGptDualScreen() {
   return (
     <AbsoluteFill style={{background: '#23190f', overflow: 'hidden'}}>
       <Img
-        src={staticFile('remotion/laptop-chatgpt-otto/dual-screen-bg.png')}
+        src={staticFile('remotion/laptop-chatgpt-otto/dual-screen-bg-v2.png')}
         style={{height: '100%', objectFit: 'cover', width: '100%'}}
       />
       <AdaptedScreen geometry={TV_SCREEN} />
