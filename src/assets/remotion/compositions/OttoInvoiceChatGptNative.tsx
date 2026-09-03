@@ -162,20 +162,20 @@ function ToolCard({frame}: {frame: number}) {
 
   return (
     <div style={{background: '#fff', border: '1px solid #e4e4e4', borderRadius: 20, boxShadow: '0 2px 11px rgba(0,0,0,.07)', height: 600, opacity: cardIn, overflow: 'hidden', transform: `translateY(${(1 - cardIn) * 10}px)`, width: '100%'}}>
-      <div style={{alignItems: 'center', display: 'flex', height: 50, padding: '0 20px'}}>
+      <div style={{alignItems: 'center', display: 'flex', height: 55, padding: '0 20px'}}>
         <span style={{alignItems: 'center', border: '1px solid #ddd', borderRadius: 7, display: 'flex', height: 27, justifyContent: 'center', width: 27}}><FileText size={15} /></span>
         <strong style={{fontSize: 13.5, marginLeft: 11}}>Otto · Emitir notas fiscais</strong>
         <span style={{color: allDone ? CHAT_GREEN : '#646a70', fontSize: 12, marginLeft: 18}}>{allDone ? 'Concluído' : 'Executando...'}</span>
         <ChevronDown size={17} style={{marginLeft: 'auto', transform: 'rotate(180deg)'}} />
       </div>
-      <div style={{padding: '4px 20px 0'}}>
-        <div style={{alignItems: 'center', display: 'flex'}}><h1 style={{fontSize: 120, fontWeight: 800, letterSpacing: '-0.01em', lineHeight: 1, margin: 0, whiteSpace: 'nowrap'}}>Emitindo nota fiscal</h1></div>
-        <div style={{fontSize: 12.5, fontWeight: 620, marginTop: 8}}>{completed} de {invoices.length} notas emitidas</div>
-        <div style={{background: '#eceeed', borderRadius: 999, height: 5, marginTop: 8, overflow: 'hidden'}}><div style={{background: CHAT_GREEN, borderRadius: 999, height: '100%', width: `${progress * 100}%`}} /></div>
-        <div style={{border: '1px solid #dedede', borderRadius: 12, marginTop: 12, overflow: 'hidden'}}>
+      <div style={{padding: '7px 20px 0'}}>
+        <div style={{alignItems: 'center', display: 'flex'}}><h1 style={{fontSize: 44, fontWeight: 800, letterSpacing: '-0.01em', lineHeight: 1.05, margin: 0, whiteSpace: 'nowrap'}}>Emitindo múltiplas notas fiscais</h1><FileText color="#879098" size={40} strokeWidth={1.3} style={{marginLeft: 18}} /></div>
+        <div style={{fontSize: 12.5, fontWeight: 620, marginTop: 13}}>{completed} de {invoices.length} notas emitidas</div>
+        <div style={{background: '#eceeed', borderRadius: 999, height: 5, marginTop: 11, overflow: 'hidden'}}><div style={{background: CHAT_GREEN, borderRadius: 999, height: '100%', width: `${progress * 100}%`}} /></div>
+        <div style={{border: '1px solid #dedede', borderRadius: 12, marginTop: 22, overflow: 'hidden'}}>
           {invoices.map((_, index) => <InvoiceRow completed={completed} frame={frame} index={index} key={invoices[index].company} rawProgress={rawProgress} />)}
         </div>
-        <div style={{display: 'flex', fontSize: 12, marginTop: 9}}><strong>Total: {invoices.length} notas fiscais</strong><span style={{color: '#5e646a', marginLeft: 'auto'}}>{completed} de {invoices.length} concluídas</span></div>
+        <div style={{display: 'flex', fontSize: 12, marginTop: 14}}><strong>Total: {invoices.length} notas fiscais</strong><span style={{color: '#5e646a', marginLeft: 'auto'}}>{completed} de {invoices.length} concluídas</span></div>
       </div>
     </div>
   )
