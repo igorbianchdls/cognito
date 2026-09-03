@@ -7,7 +7,7 @@ import {
 
 export const OTTO_INVOICE_CHATGPT_DUAL_SCREEN_DURATION = OTTO_INVOICE_CHATGPT_NATIVE_DURATION
 
-const VIDEO_WIDTH = 1536
+const SOURCE_HEIGHT = 968
 
 type ScreenGeometry = {
   clipPath: string
@@ -19,26 +19,26 @@ type ScreenGeometry = {
 }
 
 const TV_SCREEN: ScreenGeometry = {
-  clipPath: 'polygon(0% 0%, 100% 0%, 97.7% 100%, 2.3% 100%)',
-  height: 606.25,
-  left: 38.75,
+  clipPath: 'polygon(0% 0%, 100% 0%, 99% 100%, 1% 100%)',
+  height: 544.31,
+  left: 47.66,
   reflection: 'linear-gradient(112deg, rgba(255,224,190,.10) 0%, rgba(255,255,255,.015) 43%, rgba(0,0,0,.08) 100%)',
-  top: 386.25,
-  width: 992.5,
+  top: 366.31,
+  width: 984.11,
 }
 
 const LAPTOP_SCREEN: ScreenGeometry = {
-  clipPath: 'polygon(2.8% 0%, 97.5% 0%, 100% 100%, 0% 100%)',
-  height: 315,
-  left: 287.5,
+  clipPath: 'polygon(2.5% 0%, 97.8% 0%, 100% 100%, 0% 100%)',
+  height: 302.01,
+  left: 332.44,
   reflection: 'linear-gradient(118deg, rgba(255,213,169,.09) 0%, rgba(255,255,255,.02) 48%, rgba(0,0,0,.08) 100%)',
-  top: 1111.25,
-  width: 491.25,
+  top: 1084.02,
+  width: 458.18,
 }
 
 function AdaptedScreen({geometry}: {geometry: ScreenGeometry}) {
-  const scale = geometry.width / VIDEO_WIDTH
-  const viewportHeight = geometry.height / scale
+  const scale = geometry.height / SOURCE_HEIGHT
+  const sourceWidth = geometry.width / scale
 
   return (
     <div
@@ -55,13 +55,13 @@ function AdaptedScreen({geometry}: {geometry: ScreenGeometry}) {
     >
       <div
         style={{
-          height: viewportHeight,
+          height: SOURCE_HEIGHT,
           left: 0,
           position: 'absolute',
           top: 0,
           transform: `scale(${scale})`,
           transformOrigin: 'top left',
-          width: VIDEO_WIDTH,
+          width: sourceWidth,
         }}
       >
         <OttoInvoiceChatGptNative />
