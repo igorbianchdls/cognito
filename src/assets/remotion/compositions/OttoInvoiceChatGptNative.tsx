@@ -32,7 +32,7 @@ const BROWSER_HEIGHT = 40
 const SIDEBAR_WIDTH = 262
 const CHAT_GREEN = '#10a37f'
 const ITEM_TITLE_FONT_SIZE = 13
-const MAIN_TITLE_FONT_SIZE = ITEM_TITLE_FONT_SIZE * 3
+const MAIN_TITLE_FONT_SIZE = 50
 
 const invoices = [
   {company: 'Ana Clara LTDA', value: 'R$ 1.250,00'},
