@@ -136,6 +136,7 @@ import { OTTO_INVOICE_CHATGPT_DESKTOP_DURATION, OttoInvoiceChatGptDesktop } from
 import { OTTO_INVOICE_CHATGPT_LAPTOP_DURATION, OttoInvoiceChatGptLaptop } from '@/assets/remotion/compositions/OttoInvoiceChatGptLaptop'
 import { OTTO_INVOICE_CHATGPT_NATIVE_DURATION, OttoInvoiceChatGptNative } from '@/assets/remotion/compositions/OttoInvoiceChatGptNative'
 import { OTTO_INVOICE_CHATGPT_DUAL_SCREEN_DURATION, OttoInvoiceChatGptDualScreen } from '@/assets/remotion/compositions/OttoInvoiceChatGptDualScreen'
+import { OTTO_INVOICE_CHATGPT_TV_ZOOM_DURATION, OttoInvoiceChatGptTvZoom } from '@/assets/remotion/compositions/OttoInvoiceChatGptTvZoom'
 import { OTTO_SYNC_ONLY_SCENE_DURATION, OttoSyncOnlyScene } from '@/assets/remotion/compositions/OttoSyncOnlyScene'
 import {
   OTTO_FINANCIAL_SCENE_COMPONENT_DURATION,
@@ -3467,6 +3468,18 @@ const catalog: CatalogItem[] = [
     label: 'TV + Laptop — ChatGPT: Emissão de notas fiscais',
     tags: ['ChatGPT', 'Otto', 'Notas Fiscais', 'TV', 'Laptop', 'Vertical'],
     value: 'video-otto-invoice-chatgpt-dual-screen',
+    width: 1080,
+  },
+  {
+    code: '<OttoInvoiceChatGptTvZoom />',
+    component: OttoInvoiceChatGptTvZoom,
+    description: 'A cena com TV e notebook inicia em enquadramento completo e aproxima progressivamente o centro da TV de 100% até 180%.',
+    duration: OTTO_INVOICE_CHATGPT_TV_ZOOM_DURATION,
+    height: 1920,
+    kind: 'Vídeos criados',
+    label: 'TV + Laptop — Zoom progressivo na TV',
+    tags: ['ChatGPT', 'Otto', 'TV', 'Laptop', 'Zoom', 'Vertical'],
+    value: 'video-otto-invoice-chatgpt-tv-zoom',
     width: 1080,
   },
   {

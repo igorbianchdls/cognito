@@ -104,6 +104,10 @@ import {
   OTTO_INVOICE_CHATGPT_DUAL_SCREEN_DURATION,
   OttoInvoiceChatGptDualScreen,
 } from './compositions/OttoInvoiceChatGptDualScreen'
+import {
+  OTTO_INVOICE_CHATGPT_TV_ZOOM_DURATION,
+  OttoInvoiceChatGptTvZoom,
+} from './compositions/OttoInvoiceChatGptTvZoom'
 
 function RemotionDownloadRoot() {
   return (
@@ -290,6 +294,14 @@ function RemotionDownloadRoot() {
         fps={30}
         height={1920}
         id="video-otto-invoice-chatgpt-dual-screen"
+        width={1080}
+      />
+      <Composition
+        component={OttoInvoiceChatGptTvZoom}
+        durationInFrames={OTTO_INVOICE_CHATGPT_TV_ZOOM_DURATION}
+        fps={30}
+        height={1920}
+        id="video-otto-invoice-chatgpt-tv-zoom"
         width={1080}
       />
       <Composition

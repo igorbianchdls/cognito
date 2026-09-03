@@ -36,6 +36,21 @@ const LAPTOP_SCREEN: ScreenGeometry = {
   width: 458.18,
 }
 
+const TV_FOCUS = {
+  x: TV_SCREEN.left + TV_SCREEN.width / 2,
+  y: TV_SCREEN.top + TV_SCREEN.height / 2,
+}
+
+function applyCameraZoom(geometry: ScreenGeometry, cameraZoom: number): ScreenGeometry {
+  return {
+    ...geometry,
+    height: geometry.height * cameraZoom,
+    left: TV_FOCUS.x + (geometry.left - TV_FOCUS.x) * cameraZoom,
+    top: TV_FOCUS.y + (geometry.top - TV_FOCUS.y) * cameraZoom,
+    width: geometry.width * cameraZoom,
+  }
+}
+
 function AdaptedScreen({geometry}: {geometry: ScreenGeometry}) {
   const scale = geometry.height / SOURCE_HEIGHT
   const sourceWidth = geometry.width / scale
@@ -88,15 +103,24 @@ function AdaptedScreen({geometry}: {geometry: ScreenGeometry}) {
   )
 }
 
-export function OttoInvoiceChatGptDualScreen() {
+export function OttoInvoiceChatGptDualScreen({cameraZoom = 1}: {cameraZoom?: number} = {}) {
+  const tvGeometry = applyCameraZoom(TV_SCREEN, cameraZoom)
+  const laptopGeometry = applyCameraZoom(LAPTOP_SCREEN, cameraZoom)
+
   return (
     <AbsoluteFill style={{background: '#23190f', overflow: 'hidden'}}>
       <Img
         src={staticFile('remotion/laptop-chatgpt-otto/dual-screen-bg-v2.png')}
-        style={{height: '100%', objectFit: 'cover', width: '100%'}}
+        style={{
+          height: '100%',
+          objectFit: 'cover',
+          transform: `scale(${cameraZoom})`,
+          transformOrigin: `${TV_FOCUS.x}px ${TV_FOCUS.y}px`,
+          width: '100%',
+        }}
       />
-      <AdaptedScreen geometry={TV_SCREEN} />
-      <AdaptedScreen geometry={LAPTOP_SCREEN} />
+      <AdaptedScreen geometry={tvGeometry} />
+      <AdaptedScreen geometry={laptopGeometry} />
     </AbsoluteFill>
   )
 }
