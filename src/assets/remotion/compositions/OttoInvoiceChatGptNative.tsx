@@ -28,7 +28,7 @@ import {CHATGPT_MOBILE_FONT_STACK} from '@/assets/remotion/compositions/ChatGptM
 
 export const OTTO_INVOICE_CHATGPT_NATIVE_DURATION = 360
 
-const BROWSER_HEIGHT = 82
+const BROWSER_HEIGHT = 40
 const SIDEBAR_WIDTH = 262
 const CHAT_GREEN = '#10a37f'
 
@@ -61,20 +61,8 @@ function BrowserButton({children}: {children: ReactNode}) {
 
 function BrowserChrome() {
   return (
-    <div style={{background: '#f1f3f4', borderBottom: '1px solid #d9dcdf', height: BROWSER_HEIGHT, left: 0, position: 'absolute', right: 0, top: 0}}>
-      <div style={{alignItems: 'center', background: '#e5e8eb', display: 'flex', height: 42, paddingLeft: 18}}>
-        <div style={{display: 'flex', gap: 8, marginRight: 14}}>
-          {['#ff5f57', '#febc2e', '#28c840'].map((color) => <span key={color} style={{background: color, borderRadius: 999, height: 13, width: 13}} />)}
-        </div>
-        <div style={{alignItems: 'center', background: '#fff', borderRadius: '11px 11px 0 0', display: 'flex', gap: 9, height: 36, padding: '0 14px', width: 236}}>
-          <ChatGptMark size={18} />
-          <span style={{fontSize: 14}}>ChatGPT</span>
-          <span style={{color: '#586069', fontSize: 18, marginLeft: 'auto'}}>×</span>
-        </div>
-        <Plus color="#4f555b" size={21} strokeWidth={1.6} style={{marginLeft: 8}} />
-        <ChevronDown color="#4f555b" size={17} style={{marginLeft: 'auto', marginRight: 13}} />
-      </div>
-      <div style={{alignItems: 'center', background: '#fff', display: 'flex', height: 40, padding: '0 15px'}}>
+    <div style={{background: '#fff', borderBottom: '1px solid #d9dcdf', height: BROWSER_HEIGHT, left: 0, position: 'absolute', right: 0, top: 0}}>
+      <div style={{alignItems: 'center', display: 'flex', height: 40, padding: '0 15px'}}>
         <BrowserButton><ArrowLeft size={18} /></BrowserButton>
         <BrowserButton><ArrowRight size={18} /></BrowserButton>
         <BrowserButton><RefreshCw size={17} /></BrowserButton>
