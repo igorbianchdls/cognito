@@ -91,7 +91,7 @@ function AdaptedScreen({geometry, primary = false, titleScaleX = 1}: {geometry: 
           width: sourceWidth,
         }}
       >
-        <OttoInvoiceChatGptNative titleFontSize={primary ? 90 / scale : 73} titleScaleX={titleScaleX} />
+        <OttoInvoiceChatGptNative titleFontSize={primary ? 120 / scale : 73} titleScaleX={titleScaleX} />
       </div>
 
       <div
