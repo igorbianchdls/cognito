@@ -134,6 +134,7 @@ import { OTTO_INVOICE_TWO_STEPS_DURATION, OttoInvoiceTwoSteps } from '@/assets/r
 import { OTTO_INVOICE_TWO_STEPS_LIST_DURATION, OttoInvoiceTwoStepsList } from '@/assets/remotion/compositions/OttoInvoiceTwoStepsList'
 import { OTTO_INVOICE_CHATGPT_DESKTOP_DURATION, OttoInvoiceChatGptDesktop } from '@/assets/remotion/compositions/OttoInvoiceChatGptDesktop'
 import { OTTO_INVOICE_CHATGPT_LAPTOP_DURATION, OttoInvoiceChatGptLaptop } from '@/assets/remotion/compositions/OttoInvoiceChatGptLaptop'
+import { OTTO_INVOICE_CHATGPT_NATIVE_DURATION, OttoInvoiceChatGptNative } from '@/assets/remotion/compositions/OttoInvoiceChatGptNative'
 import { OTTO_SYNC_ONLY_SCENE_DURATION, OttoSyncOnlyScene } from '@/assets/remotion/compositions/OttoSyncOnlyScene'
 import {
   OTTO_FINANCIAL_SCENE_COMPONENT_DURATION,
@@ -3442,6 +3443,18 @@ const catalog: CatalogItem[] = [
     tags: ['ChatGPT', 'Otto', 'Vendas', 'Nota Fiscal', 'Laptop', 'Vertical'],
     value: 'video-otto-invoice-chatgpt-laptop',
     width: 1080,
+  },
+  {
+    code: '<OttoInvoiceChatGptNative />',
+    component: OttoInvoiceChatGptNative,
+    description: 'Interface completa do ChatGPT em uma janela de navegador, com a emissão de oito notas fiscais progredindo linha a linha.',
+    duration: OTTO_INVOICE_CHATGPT_NATIVE_DURATION,
+    height: 1024,
+    kind: 'Vídeos criados',
+    label: 'ChatGPT padrão — Emissão de notas fiscais',
+    tags: ['ChatGPT', 'Otto', 'Notas Fiscais', 'Navegador', 'Desktop'],
+    value: 'video-otto-invoice-chatgpt-native',
+    width: 1536,
   },
   {
     code: '<OttoFinanceAutomationOnlyScene />',

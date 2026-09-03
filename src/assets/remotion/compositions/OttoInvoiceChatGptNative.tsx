@@ -1,0 +1,253 @@
+import type {ReactNode} from 'react'
+import {
+  ArrowLeft,
+  ArrowRight,
+  ArrowUp,
+  ChevronDown,
+  CircleHelp,
+  CircleUserRound,
+  Clock3,
+  ExternalLink,
+  FileText,
+  Globe2,
+  Library,
+  LockKeyhole,
+  Mic,
+  MoreHorizontal,
+  MoreVertical,
+  Plus,
+  RefreshCw,
+  Search,
+  Share,
+  Sparkles,
+  SquarePen,
+  Star,
+} from 'lucide-react'
+import {AbsoluteFill, Img, interpolate, staticFile, useCurrentFrame} from 'remotion'
+
+import {CHATGPT_MOBILE_FONT_STACK} from '@/assets/remotion/compositions/ChatGptMobileBase'
+
+export const OTTO_INVOICE_CHATGPT_NATIVE_DURATION = 360
+
+const BROWSER_HEIGHT = 82
+const SIDEBAR_WIDTH = 262
+const CHAT_GREEN = '#10a37f'
+
+const invoices = [
+  {company: 'Ana Clara LTDA', value: 'R$ 1.250,00'},
+  {company: 'Bruno Serviços ME', value: 'R$ 980,00'},
+  {company: 'Clínica Viva Bem', value: 'R$ 2.300,00'},
+  {company: 'Lucas Consultoria', value: 'R$ 1.750,00'},
+  {company: 'Studio Design LTDA', value: 'R$ 1.100,00'},
+  {company: 'Marketing Digital SA', value: 'R$ 870,00'},
+  {company: 'Juliana Costa MEI', value: 'R$ 540,00'},
+  {company: 'Tech Solutions LTDA', value: 'R$ 1.990,00'},
+]
+
+function tween(frame: number, from: number, to: number, output: [number, number] = [0, 1]) {
+  return interpolate(frame, [from, to], output, {extrapolateLeft: 'clamp', extrapolateRight: 'clamp'})
+}
+
+function ChatGptMark({size = 25}: {size?: number}) {
+  return (
+    <span style={{display: 'block', flexShrink: 0, height: size, overflow: 'hidden', position: 'relative', width: size}}>
+      <Img src={staticFile('gptLogo.svg')} style={{filter: 'brightness(0)', height: size, left: 0, maxWidth: 'none', position: 'absolute', top: 0, width: size * (407 / 120)}} />
+    </span>
+  )
+}
+
+function BrowserButton({children}: {children: ReactNode}) {
+  return <span style={{alignItems: 'center', color: '#596068', display: 'flex', height: 32, justifyContent: 'center', width: 32}}>{children}</span>
+}
+
+function BrowserChrome() {
+  return (
+    <div style={{background: '#f1f3f4', borderBottom: '1px solid #d9dcdf', height: BROWSER_HEIGHT, left: 0, position: 'absolute', right: 0, top: 0}}>
+      <div style={{alignItems: 'center', background: '#e5e8eb', display: 'flex', height: 42, paddingLeft: 18}}>
+        <div style={{display: 'flex', gap: 8, marginRight: 14}}>
+          {['#ff5f57', '#febc2e', '#28c840'].map((color) => <span key={color} style={{background: color, borderRadius: 999, height: 13, width: 13}} />)}
+        </div>
+        <div style={{alignItems: 'center', background: '#fff', borderRadius: '11px 11px 0 0', display: 'flex', gap: 9, height: 36, padding: '0 14px', width: 236}}>
+          <ChatGptMark size={18} />
+          <span style={{fontSize: 14}}>ChatGPT</span>
+          <span style={{color: '#586069', fontSize: 18, marginLeft: 'auto'}}>×</span>
+        </div>
+        <Plus color="#4f555b" size={21} strokeWidth={1.6} style={{marginLeft: 8}} />
+        <ChevronDown color="#4f555b" size={17} style={{marginLeft: 'auto', marginRight: 13}} />
+      </div>
+      <div style={{alignItems: 'center', background: '#fff', display: 'flex', height: 40, padding: '0 15px'}}>
+        <BrowserButton><ArrowLeft size={18} /></BrowserButton>
+        <BrowserButton><ArrowRight size={18} /></BrowserButton>
+        <BrowserButton><RefreshCw size={17} /></BrowserButton>
+        <div style={{alignItems: 'center', background: '#f1f3f4', borderRadius: 20, display: 'flex', flex: 1, height: 30, marginLeft: 7, padding: '0 13px'}}>
+          <LockKeyhole color="#5f6368" size={13} />
+          <span style={{fontSize: 15, marginLeft: 9}}>chatgpt.com</span>
+          <Star color="#62676c" size={17} style={{marginLeft: 'auto'}} />
+        </div>
+        <CircleUserRound color="#707780" size={22} style={{marginLeft: 13}} />
+        <MoreVertical color="#5f6368" size={20} style={{marginLeft: 9}} />
+      </div>
+    </div>
+  )
+}
+
+const sidebarEntries = [
+  {icon: <SquarePen size={19} />, label: 'Novo chat'},
+  {icon: <Search size={20} />, label: 'Buscar chats'},
+  {icon: <Library size={20} />, label: 'Biblioteca'},
+  {icon: <span style={{fontSize: 22, lineHeight: 1}}>⌘</span>, label: 'Explorar GPTs'},
+]
+
+function Sidebar() {
+  return (
+    <aside style={{background: '#f9f9f9', bottom: 0, left: 0, padding: '18px 11px', position: 'absolute', top: BROWSER_HEIGHT, width: SIDEBAR_WIDTH}}>
+      <div style={{alignItems: 'center', display: 'flex', justifyContent: 'space-between', padding: '0 9px 22px'}}>
+        <ChatGptMark size={24} />
+        <SquarePen size={20} strokeWidth={1.8} />
+      </div>
+      <div style={{display: 'grid', gap: 2}}>
+        {sidebarEntries.map((item) => (
+          <div key={item.label} style={{alignItems: 'center', display: 'flex', gap: 13, height: 39, padding: '0 9px'}}>
+            {item.icon}<span style={{fontSize: 14}}>{item.label}</span>
+          </div>
+        ))}
+      </div>
+      <div style={{color: '#666', fontSize: 12, margin: '29px 8px 8px'}}>Chats</div>
+      {['Emitir notas fiscais', 'Resumo de vendas', 'Fluxo de caixa semanal', 'Clientes inadimplentes'].map((label, index) => (
+        <div key={label} style={{alignItems: 'center', background: index === 0 ? '#e9e9e9' : 'transparent', borderRadius: 8, display: 'flex', fontSize: 13.5, height: 38, padding: '0 9px'}}>
+          <span>{label}</span>{index === 0 ? <MoreHorizontal size={18} style={{marginLeft: 'auto'}} /> : null}
+        </div>
+      ))}
+      <div style={{color: '#666', fontSize: 12, margin: '29px 8px 8px'}}>7 dias anteriores</div>
+      {['Relatório financeiro', 'Análise de estoque'].map((label) => <div key={label} style={{fontSize: 13.5, height: 38, padding: '9px'}}>{label}</div>)}
+
+      <div style={{bottom: 74, left: 18, position: 'absolute', right: 18}}>
+        <div style={{alignItems: 'center', display: 'flex', gap: 12}}>
+          <span style={{alignItems: 'center', border: '1px solid #d8d8d8', borderRadius: 999, display: 'flex', height: 29, justifyContent: 'center', width: 29}}><Sparkles size={16} /></span>
+          <div><div style={{fontSize: 13}}>Fazer upgrade do plano</div><div style={{color: '#777', fontSize: 11, marginTop: 3}}>Mais acesso aos melhores modelos</div></div>
+        </div>
+      </div>
+      <div style={{alignItems: 'center', bottom: 15, display: 'flex', gap: 10, left: 17, position: 'absolute', right: 16}}>
+        <span style={{alignItems: 'center', background: '#687785', borderRadius: 999, color: '#fff', display: 'flex', fontSize: 11, height: 31, justifyContent: 'center', width: 31}}>VO</span>
+        <span style={{fontSize: 13}}>Você</span><MoreHorizontal size={18} style={{marginLeft: 'auto'}} />
+      </div>
+    </aside>
+  )
+}
+
+type InvoiceStatus = 'done' | 'active' | 'waiting'
+
+function StatusIcon({frame, status}: {frame: number; status: InvoiceStatus}) {
+  if (status === 'done') {
+    return <span style={{alignItems: 'center', border: `2px solid ${CHAT_GREEN}`, borderRadius: 999, color: CHAT_GREEN, display: 'flex', fontSize: 12, fontWeight: 800, height: 18, justifyContent: 'center', width: 18}}>✓</span>
+  }
+  if (status === 'active') {
+    return <span style={{border: `2px dotted ${CHAT_GREEN}`, borderRadius: 999, height: 18, transform: `rotate(${frame * 7}deg)`, width: 18}} />
+  }
+  return <Clock3 color="#aeb4ba" size={19} strokeWidth={1.7} />
+}
+
+function InvoiceRow({frame, index, completed}: {frame: number; index: number; completed: number}) {
+  const status: InvoiceStatus = index < completed ? 'done' : index === completed && completed < invoices.length ? 'active' : 'waiting'
+  const activeProgress = status === 'active' ? tween(frame, 60 + index * 31, 84 + index * 31) : 0
+  const secondary = status === 'done' ? 'Enviada por WhatsApp' : status === 'active' ? (activeProgress < 0.48 ? 'Preparando nota fiscal' : 'Gerando XML') : 'Na fila para emissão'
+  const stateLabel = status === 'done' ? 'Emitida' : status === 'active' ? 'Emitindo...' : 'Aguardando...'
+
+  return (
+    <div style={{alignItems: 'center', borderBottom: index === invoices.length - 1 ? 'none' : '1px solid #e6e6e6', display: 'grid', gridTemplateColumns: '112px 1fr 255px 105px', height: 51, padding: '0 14px'}}>
+      <div style={{alignItems: 'center', display: 'flex', gap: 12}}><FileText color="#454b50" size={18} strokeWidth={1.6} /><span style={{fontSize: 13.5}}>NFS-e</span></div>
+      <div><div style={{fontSize: 13, fontWeight: 650}}>{invoices[index].company}</div><div style={{fontSize: 11.5, marginTop: 2}}>{invoices[index].value}</div></div>
+      <div style={{alignItems: 'center', display: 'flex', gap: 12}}>
+        <StatusIcon frame={frame} status={status} />
+        <div><div style={{color: status === 'done' ? CHAT_GREEN : '#26313a', fontSize: 12.5, fontWeight: 650}}>{stateLabel}</div><div style={{color: '#596169', fontSize: 11.5, marginTop: 2}}>{secondary}</div></div>
+      </div>
+      <button style={{alignItems: 'center', background: '#fff', border: '1px solid #dedede', borderRadius: 18, color: status === 'done' ? '#171717' : '#a7a7a7', display: 'flex', fontFamily: 'inherit', fontSize: 11.5, gap: 6, justifyContent: 'center', padding: '7px 10px'}}>Ver nota <ExternalLink size={12} /></button>
+    </div>
+  )
+}
+
+function ToolCard({frame}: {frame: number}) {
+  const cardIn = tween(frame, 38, 54)
+  const rawProgress = tween(frame, 60, 316, [0, 8])
+  const completed = Math.min(8, Math.floor(rawProgress))
+  const progress = Math.min(1, rawProgress / 8)
+  const allDone = completed === 8
+
+  return (
+    <div style={{background: '#fff', border: '1px solid #e4e4e4', borderRadius: 20, boxShadow: '0 2px 11px rgba(0,0,0,.07)', height: 575, opacity: cardIn, overflow: 'hidden', transform: `translateY(${(1 - cardIn) * 10}px)`, width: '100%'}}>
+      <div style={{alignItems: 'center', display: 'flex', height: 55, padding: '0 20px'}}>
+        <span style={{alignItems: 'center', border: '1px solid #ddd', borderRadius: 7, display: 'flex', height: 27, justifyContent: 'center', width: 27}}><FileText size={15} /></span>
+        <strong style={{fontSize: 13.5, marginLeft: 11}}>Otto · Emitir notas fiscais</strong>
+        <span style={{color: allDone ? CHAT_GREEN : '#646a70', fontSize: 12, marginLeft: 18}}>{allDone ? 'Concluído' : 'Executando...'}</span>
+        <ChevronDown size={17} style={{marginLeft: 'auto', transform: 'rotate(180deg)'}} />
+      </div>
+      <div style={{padding: '7px 20px 0'}}>
+        <div style={{alignItems: 'center', display: 'flex'}}><h1 style={{fontSize: 34, letterSpacing: '-1.25px', lineHeight: 1.05, margin: 0}}>Emitindo múltiplas notas fiscais</h1><FileText color="#879098" size={38} strokeWidth={1.3} style={{marginLeft: 18}} /></div>
+        <div style={{fontSize: 12.5, fontWeight: 620, marginTop: 13}}>{completed} de 8 notas emitidas</div>
+        <div style={{background: '#eceeed', borderRadius: 999, height: 5, marginTop: 11, overflow: 'hidden'}}><div style={{background: CHAT_GREEN, borderRadius: 999, height: '100%', width: `${progress * 100}%`}} /></div>
+        <div style={{border: '1px solid #dedede', borderRadius: 12, marginTop: 22, overflow: 'hidden'}}>
+          {invoices.map((_, index) => <InvoiceRow completed={completed} frame={frame} index={index} key={invoices[index].company} />)}
+        </div>
+        <div style={{display: 'flex', fontSize: 12, marginTop: 14}}><strong>Total: 8 notas fiscais</strong><span style={{color: '#5e646a', marginLeft: 'auto'}}>{completed} de 8 concluídas</span></div>
+      </div>
+    </div>
+  )
+}
+
+function Composer() {
+  return (
+    <div style={{bottom: 17, left: '50%', position: 'absolute', transform: 'translateX(-50%)', width: 812}}>
+      <div style={{background: '#fff', border: '1px solid #dcdcdc', borderRadius: 23, boxShadow: '0 1px 6px rgba(0,0,0,.05)', height: 94, padding: '13px 15px'}}>
+        <div style={{color: '#6a6a6a', fontSize: 14}}>Mensagem ChatGPT</div>
+        <div style={{alignItems: 'center', bottom: 12, display: 'flex', left: 14, position: 'absolute', right: 13}}>
+          <span style={{alignItems: 'center', border: '1px solid #ddd', borderRadius: 999, display: 'flex', height: 34, justifyContent: 'center', width: 34}}><Plus size={20} /></span>
+          <span style={{alignItems: 'center', border: '1px solid #ddd', borderRadius: 18, display: 'flex', fontSize: 12, gap: 7, height: 34, marginLeft: 8, padding: '0 12px'}}><Globe2 size={16} /> Buscar</span>
+          <span style={{alignItems: 'center', border: '1px solid #ddd', borderRadius: 18, display: 'flex', fontSize: 12, gap: 7, height: 34, marginLeft: 8, padding: '0 12px'}}><Sparkles size={15} /> Raciocinar</span>
+          <span style={{alignItems: 'center', border: '1px solid #ddd', borderRadius: 999, display: 'flex', height: 34, justifyContent: 'center', marginLeft: 8, width: 34}}><MoreHorizontal size={18} /></span>
+          <Mic size={18} style={{marginLeft: 'auto', marginRight: 15}} />
+          <span style={{alignItems: 'center', background: '#000', borderRadius: 999, color: '#fff', display: 'flex', height: 36, justifyContent: 'center', width: 36}}><ArrowUp size={19} /></span>
+        </div>
+      </div>
+      <div style={{color: '#777', fontSize: 11.5, marginTop: 12, textAlign: 'center'}}>O ChatGPT pode cometer erros. Considere verificar informações importantes.</div>
+    </div>
+  )
+}
+
+function ChatArea({frame}: {frame: number}) {
+  const userIn = tween(frame, 4, 19)
+  const replyIn = tween(frame, 22, 38)
+  const finalIn = tween(frame, 320, 340)
+
+  return (
+    <main style={{background: '#fff', bottom: 0, left: SIDEBAR_WIDTH, position: 'absolute', right: 0, top: BROWSER_HEIGHT}}>
+      <header style={{alignItems: 'center', display: 'flex', height: 64, padding: '0 27px'}}>
+        <div style={{alignItems: 'center', display: 'flex', fontSize: 18, fontWeight: 600, gap: 6}}>ChatGPT 5.6 Sol <ChevronDown color="#656b70" size={15} /></div>
+        <button style={{alignItems: 'center', background: '#fff', border: '1px solid #dedede', borderRadius: 19, display: 'flex', fontFamily: 'inherit', fontSize: 13, fontWeight: 600, gap: 8, marginLeft: 'auto', padding: '9px 17px'}}><Share size={16} /> Compartilhar</button>
+        <span style={{alignItems: 'center', background: '#687785', borderRadius: 999, color: '#fff', display: 'flex', fontSize: 11, height: 36, justifyContent: 'center', marginLeft: 20, width: 36}}>VO</span>
+      </header>
+
+      <div style={{bottom: 0, left: '50%', position: 'absolute', top: 64, transform: 'translateX(-50%)', width: 812}}>
+        <div style={{display: 'flex', justifyContent: 'flex-end', opacity: userIn, transform: `translateY(${(1 - userIn) * 8}px)`}}>
+          <div style={{background: '#f4f4f4', borderRadius: 20, fontSize: 14, lineHeight: 1.55, maxWidth: 355, padding: '13px 18px'}}>Chat, emita as notas fiscais das vendas de hoje e envie para cada cliente por WhatsApp.</div>
+        </div>
+        <p style={{fontSize: 14, lineHeight: 1.55, margin: '21px 0 10px', opacity: replyIn, transform: `translateY(${(1 - replyIn) * 7}px)`}}>Perfeito! Vou buscar as vendas de hoje e emitir as notas fiscais para cada cliente.</p>
+        <ToolCard frame={frame} />
+        <p style={{fontSize: 13.5, margin: '13px 0 0', opacity: finalIn}}>Pronto! As notas fiscais foram emitidas e enviadas para os clientes pelo WhatsApp.</p>
+      </div>
+      <Composer />
+      <CircleHelp color="#777" size={27} style={{bottom: 18, position: 'absolute', right: 18}} />
+    </main>
+  )
+}
+
+export function OttoInvoiceChatGptNative() {
+  const frame = useCurrentFrame()
+
+  return (
+    <AbsoluteFill style={{background: '#fff', color: '#171717', fontFamily: CHATGPT_MOBILE_FONT_STACK, overflow: 'hidden'}}>
+      <BrowserChrome />
+      <Sidebar />
+      <ChatArea frame={frame} />
+    </AbsoluteFill>
+  )
+}
