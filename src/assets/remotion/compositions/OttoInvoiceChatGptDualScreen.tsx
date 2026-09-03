@@ -40,6 +40,7 @@ const LAPTOP_SCREEN: ScreenGeometry = {
 }
 
 const TV_CONTENT_SCALE = TV_SCREEN.height / SOURCE_HEIGHT
+const TV_TITLE_SOURCE_SIZE = 73 / TV_CONTENT_SCALE
 const TV_CONTAINER_CENTER = {
   x: TV_SCREEN.left + (TV_SCREEN.width + CHATGPT_SIDEBAR_WIDTH * TV_CONTENT_SCALE) / 2,
   y: TV_SCREEN.top + TV_SCREEN.height * 0.543,
@@ -91,7 +92,7 @@ function AdaptedScreen({geometry}: {geometry: ScreenGeometry}) {
           width: sourceWidth,
         }}
       >
-        <OttoInvoiceChatGptNative />
+        <OttoInvoiceChatGptNative titleFontSize={TV_TITLE_SOURCE_SIZE} titleScaleX={0.78} />
       </div>
 
       <div
