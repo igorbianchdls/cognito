@@ -40,7 +40,6 @@ const LAPTOP_SCREEN: ScreenGeometry = {
 }
 
 const TV_CONTENT_SCALE = TV_SCREEN.height / SOURCE_HEIGHT
-const TV_TITLE_SOURCE_SIZE = 73 / TV_CONTENT_SCALE
 const TV_CONTAINER_CENTER = {
   x: TV_SCREEN.left + (TV_SCREEN.width + CHATGPT_SIDEBAR_WIDTH * TV_CONTENT_SCALE) / 2,
   y: TV_SCREEN.top + TV_SCREEN.height * 0.543,
@@ -64,7 +63,7 @@ function applyCameraZoom(geometry: ScreenGeometry, cameraZoom: number, translate
   }
 }
 
-function AdaptedScreen({geometry}: {geometry: ScreenGeometry}) {
+function AdaptedScreen({geometry, titleFontSize}: {geometry: ScreenGeometry; titleFontSize: number}) {
   const scale = geometry.height / SOURCE_HEIGHT
   const sourceWidth = geometry.width / scale
 
@@ -92,7 +91,7 @@ function AdaptedScreen({geometry}: {geometry: ScreenGeometry}) {
           width: sourceWidth,
         }}
       >
-        <OttoInvoiceChatGptNative titleFontSize={TV_TITLE_SOURCE_SIZE} titleScaleX={0.78} />
+        <OttoInvoiceChatGptNative titleFontSize={titleFontSize} titleScaleX={1} />
       </div>
 
       <div
@@ -118,6 +117,9 @@ function AdaptedScreen({geometry}: {geometry: ScreenGeometry}) {
 
 export function OttoInvoiceChatGptDualScreen({cameraZoom = 1}: {cameraZoom?: number} = {}) {
   const {translateX, translateY} = getCameraTransform(cameraZoom)
+  const cameraProgress = Math.max(0, Math.min(1, (cameraZoom - 1) / (FINAL_CAMERA_ZOOM - 1)))
+  const visibleTitleSize = 52 + cameraProgress * 38
+  const titleSourceSize = visibleTitleSize / (TV_CONTENT_SCALE * cameraZoom)
   const tvGeometry = applyCameraZoom(TV_SCREEN, cameraZoom, translateX, translateY)
   const laptopGeometry = applyCameraZoom(LAPTOP_SCREEN, cameraZoom, translateX, translateY)
 
@@ -133,8 +135,8 @@ export function OttoInvoiceChatGptDualScreen({cameraZoom = 1}: {cameraZoom?: num
           width: '100%',
         }}
       />
-      <AdaptedScreen geometry={tvGeometry} />
-      <AdaptedScreen geometry={laptopGeometry} />
+      <AdaptedScreen geometry={tvGeometry} titleFontSize={titleSourceSize} />
+      <AdaptedScreen geometry={laptopGeometry} titleFontSize={titleSourceSize} />
     </AbsoluteFill>
   )
 }
