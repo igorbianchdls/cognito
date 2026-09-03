@@ -41,6 +41,8 @@ const invoices = [
   {company: 'Marketing Digital SA', value: 'R$ 870,00'},
   {company: 'Juliana Costa MEI', value: 'R$ 540,00'},
   {company: 'Tech Solutions LTDA', value: 'R$ 1.990,00'},
+  {company: 'Nova Era Comércio LTDA', value: 'R$ 1.420,00'},
+  {company: 'Horizonte Tecnologia ME', value: 'R$ 760,00'},
 ]
 
 function tween(frame: number, from: number, to: number, output: [number, number] = [0, 1]) {
@@ -134,14 +136,14 @@ function StatusIcon({frame, status}: {frame: number; status: InvoiceStatus}) {
   return <Clock3 color="#aeb4ba" size={19} strokeWidth={1.7} />
 }
 
-function InvoiceRow({frame, index, completed}: {frame: number; index: number; completed: number}) {
+function InvoiceRow({frame, index, completed, rawProgress}: {frame: number; index: number; completed: number; rawProgress: number}) {
   const status: InvoiceStatus = index < completed ? 'done' : index === completed && completed < invoices.length ? 'active' : 'waiting'
-  const activeProgress = status === 'active' ? tween(frame, 60 + index * 31, 84 + index * 31) : 0
+  const activeProgress = status === 'active' ? Math.max(0, Math.min(1, rawProgress - index)) : 0
   const secondary = status === 'done' ? 'Enviada por WhatsApp' : status === 'active' ? (activeProgress < 0.48 ? 'Preparando nota fiscal' : 'Gerando XML') : 'Na fila para emissão'
   const stateLabel = status === 'done' ? 'Emitida' : status === 'active' ? 'Emitindo...' : 'Aguardando...'
 
   return (
-    <div style={{alignItems: 'center', borderBottom: index === invoices.length - 1 ? 'none' : '1px solid #e6e6e6', display: 'grid', gridTemplateColumns: '112px 1fr 255px 105px', height: 47, padding: '0 14px'}}>
+    <div style={{alignItems: 'center', borderBottom: index === invoices.length - 1 ? 'none' : '1px solid #e6e6e6', display: 'grid', gridTemplateColumns: '112px 1fr 255px 105px', height: 38, padding: '0 14px'}}>
       <div style={{alignItems: 'center', display: 'flex', gap: 12}}><FileText color="#454b50" size={18} strokeWidth={1.6} /><span style={{fontSize: 13.5}}>NFS-e</span></div>
       <div><div style={{fontSize: 13, fontWeight: 650}}>{invoices[index].company}</div><div style={{fontSize: 11.5, marginTop: 2}}>{invoices[index].value}</div></div>
       <div style={{alignItems: 'center', display: 'flex', gap: 12}}>
@@ -155,27 +157,27 @@ function InvoiceRow({frame, index, completed}: {frame: number; index: number; co
 
 function ToolCard({frame}: {frame: number}) {
   const cardIn = tween(frame, 38, 54)
-  const rawProgress = tween(frame, 60, 316, [0, 8])
-  const completed = Math.min(8, Math.floor(rawProgress))
-  const progress = Math.min(1, rawProgress / 8)
-  const allDone = completed === 8
+  const rawProgress = tween(frame, 60, 316, [0, invoices.length])
+  const completed = Math.min(invoices.length, Math.floor(rawProgress))
+  const progress = Math.min(1, rawProgress / invoices.length)
+  const allDone = completed === invoices.length
 
   return (
     <div style={{background: '#fff', border: '1px solid #e4e4e4', borderRadius: 20, boxShadow: '0 2px 11px rgba(0,0,0,.07)', height: 600, opacity: cardIn, overflow: 'hidden', transform: `translateY(${(1 - cardIn) * 10}px)`, width: '100%'}}>
-      <div style={{alignItems: 'center', display: 'flex', height: 55, padding: '0 20px'}}>
+      <div style={{alignItems: 'center', display: 'flex', height: 50, padding: '0 20px'}}>
         <span style={{alignItems: 'center', border: '1px solid #ddd', borderRadius: 7, display: 'flex', height: 27, justifyContent: 'center', width: 27}}><FileText size={15} /></span>
         <strong style={{fontSize: 13.5, marginLeft: 11}}>Otto · Emitir notas fiscais</strong>
         <span style={{color: allDone ? CHAT_GREEN : '#646a70', fontSize: 12, marginLeft: 18}}>{allDone ? 'Concluído' : 'Executando...'}</span>
         <ChevronDown size={17} style={{marginLeft: 'auto', transform: 'rotate(180deg)'}} />
       </div>
-      <div style={{padding: '7px 20px 0'}}>
-        <div style={{alignItems: 'center', display: 'flex'}}><h1 style={{fontSize: 60, fontWeight: 800, letterSpacing: '-0.01em', lineHeight: 1.02, margin: 0}}>Emitindo nota fiscal</h1><FileText color="#879098" size={48} strokeWidth={1.3} style={{marginLeft: 18}} /></div>
-        <div style={{fontSize: 12.5, fontWeight: 620, marginTop: 13}}>{completed} de 8 notas emitidas</div>
-        <div style={{background: '#eceeed', borderRadius: 999, height: 5, marginTop: 11, overflow: 'hidden'}}><div style={{background: CHAT_GREEN, borderRadius: 999, height: '100%', width: `${progress * 100}%`}} /></div>
-        <div style={{border: '1px solid #dedede', borderRadius: 12, marginTop: 22, overflow: 'hidden'}}>
-          {invoices.map((_, index) => <InvoiceRow completed={completed} frame={frame} index={index} key={invoices[index].company} />)}
+      <div style={{padding: '4px 20px 0'}}>
+        <div style={{alignItems: 'center', display: 'flex'}}><h1 style={{fontSize: 72, fontWeight: 800, letterSpacing: '-0.01em', lineHeight: 1.02, margin: 0}}>Emitindo nota fiscal</h1><FileText color="#879098" size={54} strokeWidth={1.3} style={{marginLeft: 18}} /></div>
+        <div style={{fontSize: 12.5, fontWeight: 620, marginTop: 8}}>{completed} de {invoices.length} notas emitidas</div>
+        <div style={{background: '#eceeed', borderRadius: 999, height: 5, marginTop: 8, overflow: 'hidden'}}><div style={{background: CHAT_GREEN, borderRadius: 999, height: '100%', width: `${progress * 100}%`}} /></div>
+        <div style={{border: '1px solid #dedede', borderRadius: 12, marginTop: 12, overflow: 'hidden'}}>
+          {invoices.map((_, index) => <InvoiceRow completed={completed} frame={frame} index={index} key={invoices[index].company} rawProgress={rawProgress} />)}
         </div>
-        <div style={{display: 'flex', fontSize: 12, marginTop: 14}}><strong>Total: 8 notas fiscais</strong><span style={{color: '#5e646a', marginLeft: 'auto'}}>{completed} de 8 concluídas</span></div>
+        <div style={{display: 'flex', fontSize: 12, marginTop: 9}}><strong>Total: {invoices.length} notas fiscais</strong><span style={{color: '#5e646a', marginLeft: 'auto'}}>{completed} de {invoices.length} concluídas</span></div>
       </div>
     </div>
   )
