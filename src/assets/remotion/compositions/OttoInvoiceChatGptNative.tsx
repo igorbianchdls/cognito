@@ -161,7 +161,7 @@ function ToolCard({frame, hideTitle, titleFontSize, titleScaleX}: {frame: number
   const allDone = completed === invoices.length
 
   return (
-    <div style={{background: '#fff', border: '1px solid #e4e4e4', borderRadius: 20, boxShadow: '0 2px 11px rgba(0,0,0,.07)', height: 680, opacity: cardIn, overflow: 'hidden', transform: `translateY(${(1 - cardIn) * 10}px)`, width: '100%'}}>
+    <div style={{background: '#fff', border: '1px solid #e4e4e4', borderRadius: 20, boxShadow: '0 2px 11px rgba(0,0,0,.07)', height: 720, opacity: cardIn, overflow: 'hidden', transform: `translateY(${(1 - cardIn) * 10}px)`, width: '100%'}}>
       <div style={{alignItems: 'center', display: 'flex', height: 55, padding: '0 20px'}}>
         <span style={{alignItems: 'center', border: '1px solid #ddd', borderRadius: 7, display: 'flex', height: 27, justifyContent: 'center', width: 27}}><FileText size={15} /></span>
         <strong style={{fontSize: 13.5, marginLeft: 11}}>Otto · Emitir notas fiscais</strong>

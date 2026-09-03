@@ -1,4 +1,4 @@
-import {AbsoluteFill, Img, staticFile} from 'remotion'
+import {AbsoluteFill, Img, interpolate, staticFile, useCurrentFrame} from 'remotion'
 
 import {
   OTTO_INVOICE_CHATGPT_NATIVE_DURATION,
@@ -42,7 +42,7 @@ const LAPTOP_SCREEN: ScreenGeometry = {
 const TV_CONTENT_SCALE = TV_SCREEN.height / SOURCE_HEIGHT
 const TV_CONTAINER_CENTER = {
   x: TV_SCREEN.left + (TV_SCREEN.width + CHATGPT_SIDEBAR_WIDTH * TV_CONTENT_SCALE) / 2,
-  y: TV_SCREEN.top + TV_SCREEN.height * 0.585,
+  y: TV_SCREEN.top + TV_SCREEN.height * 0.605,
 }
 
 function getCameraTransform(cameraZoom: number) {
@@ -64,12 +64,17 @@ function applyCameraZoom(geometry: ScreenGeometry, cameraZoom: number, translate
 }
 
 function AdaptedScreen({geometry, overlayTitle = false}: {geometry: ScreenGeometry; overlayTitle?: boolean}) {
+  const frame = useCurrentFrame()
   const scale = geometry.height / SOURCE_HEIGHT
   const sourceWidth = geometry.width / scale
   const mainWidth = sourceWidth - CHATGPT_SIDEBAR_WIDTH
   const conversationWidth = mainWidth * 0.7
   const titleLeft = (CHATGPT_SIDEBAR_WIDTH + (mainWidth - conversationWidth) / 2 + 20) * scale
   const titleTop = 288 * scale
+  const titleIn = interpolate(frame, [38, 54], [0, 1], {
+    extrapolateLeft: 'clamp',
+    extrapolateRight: 'clamp',
+  })
 
   return (
     <div
@@ -95,7 +100,7 @@ function AdaptedScreen({geometry, overlayTitle = false}: {geometry: ScreenGeomet
           width: sourceWidth,
         }}
       >
-        <OttoInvoiceChatGptNative hideTitle={overlayTitle} titleFontSize={overlayTitle ? 90 / scale : 73} />
+        <OttoInvoiceChatGptNative hideTitle={overlayTitle} titleFontSize={overlayTitle ? 110 / scale : 73} />
       </div>
 
       {overlayTitle ? (
@@ -108,9 +113,10 @@ function AdaptedScreen({geometry, overlayTitle = false}: {geometry: ScreenGeomet
             left: titleLeft,
             letterSpacing: '-0.01em',
             lineHeight: 1,
+            opacity: titleIn,
             position: 'absolute',
             top: titleTop,
-            transform: 'scaleX(0.64)',
+            transform: `translateY(${(1 - titleIn) * 8}px) scaleX(0.64)`,
             transformOrigin: 'left center',
             whiteSpace: 'nowrap',
           }}
