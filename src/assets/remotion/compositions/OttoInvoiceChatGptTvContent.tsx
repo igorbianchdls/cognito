@@ -33,7 +33,7 @@ function Row({completed, frame, index}: {completed: number; frame: number; index
     <FileText color="#60666c" size={12} /><span style={{fontSize: 9}}>NFS-e</span>
     <div style={{lineHeight: 1.12}}><strong style={{display: 'block', fontSize: 9.2}}>{invoices[index][0]}</strong><span style={{color: '#555', fontSize: 7.6}}>{invoices[index][1]}</span></div>
     <div style={{alignItems: 'center', display: 'flex', gap: 5}}>{done ? <CheckCircle2 color={GREEN} size={13} /> : active ? <LoaderCircle color={GREEN} size={13} style={{transform: `rotate(${frame * 9}deg)`}} /> : <Clock3 color="#b8bec4" size={13} />}<div style={{lineHeight: 1.12}}><strong style={{color: done ? GREEN : '#333', display: 'block', fontSize: 8.7}}>{done ? 'Emitida' : active ? 'Emitindo...' : 'Aguardando...'}</strong><span style={{color: '#666', fontSize: 7.2}}>{done ? 'Enviada por WhatsApp' : active ? 'Gerando XML' : 'Na fila para emissão'}</span></div></div>
-    <span style={{alignItems: 'center', border: '1px solid #ddd', borderRadius: 12, color: done ? '#222' : '#aaa', display: 'flex', fontSize: 7.8, gap: 3, justifyContent: 'center', padding: '4px'}}>Ver nota <ExternalLink size={4} /></span>
+    <span style={{alignItems: 'center', border: '1px solid #ddd', borderRadius: 12, color: done ? '#222' : '#aaa', display: 'flex', fontSize: 7.8, gap: 3, justifyContent: 'center', padding: '4px'}}>Ver nota <ExternalLink height={4} size={4} style={{flexShrink: 0, height: 4, minHeight: 4, minWidth: 4, width: 4}} width={4} /></span>
   </div>
 }
 
