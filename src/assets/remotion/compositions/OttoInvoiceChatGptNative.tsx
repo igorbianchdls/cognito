@@ -206,6 +206,7 @@ function ChatArea({absoluteFrame, frame, titleFontSize, withIntro}: {absoluteFra
   const typedPrompt = introPrompt.slice(0, typedCharacters)
   const introOpacity = withIntro ? tween(absoluteFrame, 64, 76, [1, 0]) : 0
   const conversationOpacity = withIntro ? tween(absoluteFrame, 72, 82) : 1
+  const conversationLift = tween(frame, 220, 316, [0, -72])
 
   return (
     <main style={{background: '#fff', bottom: 0, left: SIDEBAR_WIDTH, position: 'absolute', right: 0, top: BROWSER_HEIGHT}}>
@@ -225,7 +226,7 @@ function ChatArea({absoluteFrame, frame, titleFontSize, withIntro}: {absoluteFra
         </div>
       </div> : null}
 
-      <div style={{bottom: 0, left: '50%', opacity: conversationOpacity, position: 'absolute', top: 64, transform: 'translateX(-50%)', width: '70%'}}>
+      <div style={{bottom: 0, left: '50%', opacity: conversationOpacity, position: 'absolute', top: 64, transform: `translateX(-50%) translateY(${conversationLift}px)`, width: '70%'}}>
         <div style={{display: 'flex', justifyContent: 'flex-end', opacity: userIn, transform: `translateY(${(1 - userIn) * 8}px)`}}>
           <div style={{background: '#f4f4f4', borderRadius: 20, fontSize: 14, lineHeight: 1.55, maxWidth: 355, padding: '13px 18px'}}>Chat, emita as notas fiscais das vendas de hoje e envie para cada cliente por WhatsApp.</div>
         </div>
