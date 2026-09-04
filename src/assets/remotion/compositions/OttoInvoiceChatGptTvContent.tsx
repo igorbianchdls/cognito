@@ -1,5 +1,5 @@
 import type {ReactNode} from 'react'
-import {ArrowUp, CheckCircle2, ChevronDown, CircleHelp, Clock3, ExternalLink, FileText, Grid2X2, Library, LoaderCircle, Mic, MoreHorizontal, Plus, Search, Share, Sparkles, SquarePen} from 'lucide-react'
+import {ArrowUp, CheckCircle2, ChevronDown, CircleHelp, Clock3, FileText, Grid2X2, Library, LoaderCircle, Mic, MoreHorizontal, Plus, Search, Share, Sparkles, SquarePen} from 'lucide-react'
 import {AbsoluteFill, Img, interpolate, staticFile, useCurrentFrame} from 'remotion'
 
 import {CHATGPT_MOBILE_FONT_STACK} from '@/assets/remotion/compositions/ChatGptMobileBase'
@@ -22,6 +22,10 @@ function ChatGptMark() {
   return <span style={{display: 'block', flexShrink: 0, height: 19, overflow: 'hidden', position: 'relative', width: 19}}><Img src={staticFile('gptLogo.svg')} style={{filter: 'brightness(0)', height: 19, left: 0, maxWidth: 'none', position: 'absolute', top: 0, width: 64.44}} /></span>
 }
 
+function ExternalLinkIcon() {
+  return <svg fill="none" height="4" style={{display: 'block', flexShrink: 0}} viewBox="0 0 24 24" width="4" xmlns="http://www.w3.org/2000/svg"><path d="M14 5h5v5M19 5l-8 8M19 13v5a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1h5" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" /></svg>
+}
+
 function SideRow({active, icon, label}: {active?: boolean; icon?: ReactNode; label: string}) {
   return <div style={{alignItems: 'center', background: active ? '#e9e9e9' : 'transparent', borderRadius: 7, display: 'flex', height: 30, padding: '0 9px'}}>{icon ? <span style={{display: 'flex', marginRight: 9}}>{icon}</span> : null}<span style={{fontSize: 10.5, fontWeight: active ? 600 : 450}}>{label}</span>{active ? <MoreHorizontal size={13} style={{marginLeft: 'auto'}} /> : null}</div>
 }
@@ -33,7 +37,7 @@ function Row({completed, frame, index}: {completed: number; frame: number; index
     <FileText color="#60666c" size={12} /><span style={{fontSize: 9}}>NFS-e</span>
     <div style={{lineHeight: 1.12}}><strong style={{display: 'block', fontSize: 9.2}}>{invoices[index][0]}</strong><span style={{color: '#555', fontSize: 7.6}}>{invoices[index][1]}</span></div>
     <div style={{alignItems: 'center', display: 'flex', gap: 5}}>{done ? <CheckCircle2 color={GREEN} size={13} /> : active ? <LoaderCircle color={GREEN} size={13} style={{transform: `rotate(${frame * 9}deg)`}} /> : <Clock3 color="#b8bec4" size={13} />}<div style={{lineHeight: 1.12}}><strong style={{color: done ? GREEN : '#333', display: 'block', fontSize: 8.7}}>{done ? 'Emitida' : active ? 'Emitindo...' : 'Aguardando...'}</strong><span style={{color: '#666', fontSize: 7.2}}>{done ? 'Enviada por WhatsApp' : active ? 'Gerando XML' : 'Na fila para emissão'}</span></div></div>
-    <span style={{alignItems: 'center', border: '1px solid #ddd', borderRadius: 12, color: done ? '#222' : '#aaa', display: 'flex', fontSize: 7.8, gap: 3, justifyContent: 'center', padding: '4px'}}>Ver nota <ExternalLink size={4} /></span>
+    <span style={{alignItems: 'center', border: '1px solid #ddd', borderRadius: 12, color: done ? '#222' : '#aaa', display: 'flex', fontSize: 7.8, gap: 3, justifyContent: 'center', padding: '4px'}}>Ver nota <ExternalLinkIcon /></span>
   </div>
 }
 
