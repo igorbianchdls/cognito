@@ -1,5 +1,5 @@
 import type {ReactNode} from 'react'
-import {ArrowUp, CheckCircle2, ChevronDown, CircleHelp, Clock3, Grid2X2, Library, LoaderCircle, Mic, MoreHorizontal, Plus, Search, Sparkles, SquarePen} from 'lucide-react'
+import {ArrowUp, CheckCircle2, ChevronDown, CircleHelp, Clock3, Grid2X2, Library, LoaderCircle, Mic, MoreHorizontal, Plus, Search, SquarePen} from 'lucide-react'
 import {AbsoluteFill, Img, interpolate, staticFile, useCurrentFrame} from 'remotion'
 
 import {CHATGPT_MOBILE_FONT_STACK} from '@/assets/remotion/compositions/ChatGptMobileBase'
@@ -35,7 +35,7 @@ function ShareIcon() {
 }
 
 function SideRow({active, icon, label}: {active?: boolean; icon?: ReactNode; label: string}) {
-  return <div style={{alignItems: 'center', background: active ? '#e9e9e9' : 'transparent', borderRadius: 7, display: 'flex', height: 30, padding: '0 9px'}}>{icon ? <span className="tv-sidebar-item-icon" style={{display: 'flex', marginRight: 9}}>{icon}</span> : null}<span style={{fontSize: 10.5, fontWeight: active ? 600 : 450}}>{label}</span>{active ? <MoreHorizontal size={13} style={{marginLeft: 'auto'}} /> : null}</div>
+  return <div style={{alignItems: 'center', background: active ? '#e9e9e9' : 'transparent', borderRadius: 7, display: 'flex', height: 30, padding: '0 9px'}}>{icon ? <span className="tv-sidebar-item-icon" style={{display: 'flex', marginRight: 9}}>{icon}</span> : null}<span style={{fontSize: 9, fontWeight: active ? 600 : 450}}>{label}</span>{active ? <MoreHorizontal size={13} style={{marginLeft: 'auto'}} /> : null}</div>
 }
 
 function Row({completed, frame, index}: {completed: number; frame: number; index: number}) {
@@ -63,7 +63,6 @@ export function OttoInvoiceChatGptTvContent() {
       <div style={{marginTop: 14}}><SideRow icon={<SquarePen size={14} />} label="Novo chat" /><SideRow icon={<Search size={14} />} label="Buscar chats" /><SideRow icon={<Library size={14} />} label="Biblioteca" /><SideRow icon={<Grid2X2 size={14} />} label="Explorar GPTs" /></div>
       <div style={{color: '#666', fontSize: 8.3, margin: '16px 9px 6px'}}>Chats</div><SideRow active label="Emitir notas fiscais" /><SideRow label="Resumo de vendas" /><SideRow label="Fluxo de caixa semanal" /><SideRow label="Clientes inadimplentes" />
       <div style={{color: '#666', fontSize: 8.3, margin: '13px 9px 5px'}}>7 dias anteriores</div><SideRow label="Relatório financeiro" /><SideRow label="Análise de estoque" />
-      <div style={{alignItems: 'center', bottom: 44, display: 'flex', gap: 8, left: 12, position: 'absolute'}}><Sparkles size={14} /><div><strong style={{display: 'block', fontSize: 9}}>Fazer upgrade do plano</strong><span style={{color: '#777', fontSize: 7.4}}>Mais acesso aos melhores modelos</span></div></div>
       <div style={{alignItems: 'center', bottom: 9, display: 'flex', left: 12, position: 'absolute', right: 12}}><span style={{background: '#687785', borderRadius: 99, color: '#fff', display: 'grid', fontSize: 7.5, height: 23, placeItems: 'center', width: 23}}>VO</span><strong style={{fontSize: 9.5, marginLeft: 8}}>Você</strong><MoreHorizontal size={13} style={{marginLeft: 'auto'}} /></div>
     </aside>
     <main style={{bottom: 0, left: SIDEBAR, position: 'absolute', right: 0, top: 0}}>
