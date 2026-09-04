@@ -12,6 +12,7 @@ export const OTTO_INVOICE_CHATGPT_TV_CONTENT_WIDTH = 986.32
 export const OTTO_INVOICE_CHATGPT_TV_CONTENT_HEIGHT = 546.6
 
 const GREEN = '#10a37f'
+const ROYAL_BLUE = '#4169e1'
 const SIDEBAR = 164
 const invoices = [
   ['Ana Clara LTDA', 'R$ 1.250,00'], ['Bruno Serviços ME', 'R$ 980,00'], ['Clínica Viva Bem', 'R$ 2.300,00'], ['Lucas Consultoria', 'R$ 1.750,00'],
@@ -58,10 +59,11 @@ export function OttoInvoiceChatGptTvContent() {
   const raw = tween(frame, 60, 316, [0, 8])
   const completed = Math.min(8, Math.floor(raw))
   const progress = Math.min(1, raw / 8)
+  const isResponding = frame >= 19 && completed < 8
   const revealRow = (index: number) => index === 0 ? 1 : interpolate(raw, [index, index + 0.22], [0, 1], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp'})
 
   return <AbsoluteFill style={{background: '#fff', color: '#171717', fontFamily: CHATGPT_MOBILE_FONT_STACK, overflow: 'hidden'}}>
-    <style>{`.tv-sidebar-item-icon .lucide { width: 12px !important; height: 12px !important; }.tv-sidebar-header-icon .lucide { width: 12px !important; height: 12px !important; }`}</style>
+    <style>{`.tv-sidebar-item-icon .lucide { width: 12px !important; height: 12px !important; }.tv-sidebar-header-icon .lucide { width: 12px !important; height: 12px !important; }.tv-prompt-input .lucide { width: 14px !important; height: 14px !important; }`}</style>
     <aside style={{background: '#f9f9f9', borderRight: '1px solid #ededed', bottom: 0, left: 0, padding: '12px 8px', position: 'absolute', top: 0, width: SIDEBAR}}>
       <div style={{alignItems: 'center', display: 'flex', height: 24, padding: '0 8px'}}><strong style={{fontSize: 12.5, fontWeight: 650}}>ChatGPT</strong><span className="tv-sidebar-header-icon" style={{color: '#8f8f8f', display: 'flex', gap: 11, marginLeft: 'auto'}}><Search /><PanelLeft /></span></div>
       <div style={{marginTop: 14}}><SideRow icon={<SquarePen size={14} />} label="Novo chat" /><SideRow icon={<Search size={14} />} label="Buscar chats" /><SideRow icon={<Library size={14} />} label="Biblioteca" /><SideRow icon={<Grid2X2 size={14} />} label="Explorar GPTs" /></div>
@@ -74,7 +76,7 @@ export function OttoInvoiceChatGptTvContent() {
 
       <div style={{left: '50%', opacity: introOpacity, position: 'absolute', top: '48%', transform: `translate(-50%, -50%) translateY(${(1 - introOpacity) * -8}px)`, width: '60%', zIndex: 5}}>
         <div style={{fontSize: 20, fontWeight: 450, marginBottom: 20, textAlign: 'center'}}>O que tem na agenda de hoje?</div>
-        <div style={{alignItems: 'center', background: '#fff', border: '1px solid #d4d4d4', borderRadius: 24, boxShadow: '0 5px 20px rgba(0,0,0,.07)', display: 'flex', minHeight: 44, padding: '0 7px 0 10px'}}><Plus size={15} /><span style={{color: typedPrompt ? '#333' : '#888', flex: 1, fontSize: 9.5, marginLeft: 8}}>{typedPrompt || 'Pergunte ao ChatGPT'}{typedCharacters > 0 && typedCharacters < introPrompt.length ? <span style={{borderRight: '1px solid #444', marginLeft: 1, opacity: Math.floor(absoluteFrame / 7) % 2 ? 0.25 : 1}} /> : null}</span><Mic size={12} /><span style={{background: typedPrompt ? '#111' : '#aaa', borderRadius: 99, color: '#fff', display: 'grid', height: 28, marginLeft: 6, placeItems: 'center', transform: `scale(${typedCharacters === introPrompt.length ? tween(absoluteFrame, 58, 64, [1, 0.88]) : 1})`, width: 28}}><ArrowUp size={14} /></span></div>
+        <div className="tv-prompt-input" style={{alignItems: 'center', background: '#fff', border: '1px solid #d4d4d4', borderRadius: 24, boxShadow: '0 5px 20px rgba(0,0,0,.07)', display: 'flex', minHeight: 44, padding: '0 7px 0 10px'}}><Plus size={15} /><span style={{color: typedPrompt ? '#333' : '#888', flex: 1, fontSize: 9.5, marginLeft: 8}}>{typedPrompt || 'Pergunte ao ChatGPT'}{typedCharacters > 0 && typedCharacters < introPrompt.length ? <span style={{borderRight: '1px solid #444', marginLeft: 1, opacity: Math.floor(absoluteFrame / 7) % 2 ? 0.25 : 1}} /> : null}</span><Mic size={12} /><span style={{background: typedPrompt ? ROYAL_BLUE : '#aaa', borderRadius: 99, color: '#fff', display: 'grid', height: 28, marginLeft: 6, placeItems: 'center', transform: `scale(${typedCharacters === introPrompt.length ? tween(absoluteFrame, 58, 64, [1, 0.88]) : 1})`, width: 28}}><ArrowUp size={14} /></span></div>
       </div>
 
       <section style={{bottom: 52, left: 0, opacity: conversationOpacity, overflow: 'hidden', position: 'absolute', right: 0, top: 38}}>
@@ -87,7 +89,7 @@ export function OttoInvoiceChatGptTvContent() {
           </div>
         </div>
       </section>
-      <div style={{alignItems: 'center', background: '#fff', border: '1px solid #d4d4d4', borderRadius: 22, bottom: 7, boxShadow: '0 1px 5px rgba(0,0,0,.05)', display: 'flex', height: 36, left: '50%', opacity: conversationOpacity, padding: '0 6px 0 8px', position: 'absolute', transform: 'translateX(-50%)', width: '60%', zIndex: 10}}><Plus size={14} /><span style={{color: '#888', flex: 1, fontSize: 9.5, marginLeft: 7}}>Pergunte ao ChatGPT</span><Mic size={12} /><span style={{background: '#aaa', borderRadius: 99, color: '#fff', display: 'grid', height: 25, marginLeft: 5, placeItems: 'center', width: 25}}><ArrowUp size={13} /></span></div>
+      <div className="tv-prompt-input" style={{alignItems: 'center', background: '#fff', border: '1px solid #d4d4d4', borderRadius: 22, bottom: 7, boxShadow: '0 1px 5px rgba(0,0,0,.05)', display: 'flex', height: 36, left: '50%', opacity: conversationOpacity, padding: '0 6px 0 8px', position: 'absolute', transform: 'translateX(-50%)', width: '60%', zIndex: 10}}><Plus size={14} /><span style={{color: '#888', flex: 1, fontSize: 9.5, marginLeft: 7}}>Pergunte ao ChatGPT</span><Mic size={12} /><span style={{background: isResponding ? ROYAL_BLUE : '#aaa', borderRadius: 99, color: '#fff', display: 'grid', height: 25, marginLeft: 5, placeItems: 'center', width: 25}}>{isResponding ? <span style={{background: '#fff', borderRadius: 1, height: 6, width: 6}} /> : <ArrowUp size={13} />}</span></div>
       <CircleHelp color="#777" size={15} style={{bottom: 11, opacity: conversationOpacity, position: 'absolute', right: 10}} />
     </main>
   </AbsoluteFill>
