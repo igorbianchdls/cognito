@@ -31,6 +31,14 @@ export function OttoInvoiceChatGptOfficeMonitor() {
   const zoomProgress = (cameraZoom - 1) / (FINAL_ZOOM - 1)
   const translateX = zoomProgress * (540 - ZOOM_TARGET.x * FINAL_ZOOM)
   const translateY = zoomProgress * (960 - ZOOM_TARGET.y * FINAL_ZOOM)
+  const handheldIn = interpolate(frame, [0, 24], [0, 1], {
+    easing: Easing.out(Easing.cubic),
+    extrapolateLeft: 'clamp',
+    extrapolateRight: 'clamp',
+  })
+  const handheldX = handheldIn * (Math.sin(frame * 0.071) * 1.7 + Math.sin(frame * 0.019 + 1.3) * 1.1 + Math.sin(frame * 0.151 + 0.4) * 0.45)
+  const handheldY = handheldIn * (Math.sin(frame * 0.059 + 0.8) * 1.45 + Math.sin(frame * 0.021 + 2.1) * 1 + Math.sin(frame * 0.137) * 0.4)
+  const handheldRotation = handheldIn * (Math.sin(frame * 0.043 + 1.2) * 0.055 + Math.sin(frame * 0.013) * 0.035 + Math.sin(frame * 0.097 + 0.5) * 0.015)
 
   return (
     <AbsoluteFill style={{background: '#171717', overflow: 'hidden'}}>
@@ -45,6 +53,17 @@ export function OttoInvoiceChatGptOfficeMonitor() {
           width: 1080,
         }}
       >
+        <div
+          style={{
+            height: '100%',
+            left: 0,
+            position: 'absolute',
+            top: 0,
+            transform: `translate(${handheldX}px, ${handheldY}px) rotate(${handheldRotation}deg) scale(1.006)`,
+            transformOrigin: '50% 50%',
+            width: '100%',
+          }}
+        >
         <Img
           src={staticFile('remotion/laptop-chatgpt-otto/office-monitor-bg.png')}
           style={{height: '100%', objectFit: 'cover', width: '100%'}}
@@ -76,6 +95,7 @@ export function OttoInvoiceChatGptOfficeMonitor() {
           </div>
           <div style={{background: 'linear-gradient(120deg, rgba(255,255,255,.035), transparent 44%, rgba(0,0,0,.035))', inset: 0, pointerEvents: 'none', position: 'absolute'}} />
           <div style={{boxShadow: 'inset 0 0 9px rgba(0,0,0,.18)', inset: 0, pointerEvents: 'none', position: 'absolute'}} />
+        </div>
         </div>
       </div>
     </AbsoluteFill>
