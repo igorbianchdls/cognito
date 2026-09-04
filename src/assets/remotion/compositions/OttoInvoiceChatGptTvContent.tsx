@@ -23,7 +23,7 @@ function ChatGptMark() {
 }
 
 function ExternalLinkIcon() {
-  return <svg fill="none" height="4" style={{display: 'block', flexShrink: 0}} viewBox="0 0 24 24" width="4" xmlns="http://www.w3.org/2000/svg"><path d="M14 5h5v5M19 5l-8 8M19 13v5a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1h5" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" /></svg>
+  return <svg fill="none" height="10" style={{display: 'block', flexShrink: 0}} viewBox="0 0 24 24" width="10" xmlns="http://www.w3.org/2000/svg"><path d="M14 5h5v5M19 5l-8 8M19 13v5a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1h5" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" /></svg>
 }
 
 function SideRow({active, icon, label}: {active?: boolean; icon?: ReactNode; label: string}) {
