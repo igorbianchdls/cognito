@@ -138,6 +138,7 @@ import { OTTO_INVOICE_CHATGPT_NATIVE_DURATION, OttoInvoiceChatGptNative } from '
 import { OTTO_INVOICE_CHATGPT_TV_CONTENT_DURATION, OttoInvoiceChatGptTvContent } from '@/assets/remotion/compositions/OttoInvoiceChatGptTvContent'
 import { OTTO_INVOICE_CHATGPT_DUAL_SCREEN_DURATION, OttoInvoiceChatGptDualScreen } from '@/assets/remotion/compositions/OttoInvoiceChatGptDualScreen'
 import { OTTO_INVOICE_CHATGPT_TV_ZOOM_DURATION, OttoInvoiceChatGptTvZoom } from '@/assets/remotion/compositions/OttoInvoiceChatGptTvZoom'
+import { OTTO_INVOICE_CHATGPT_OFFICE_MONITOR_DURATION, OttoInvoiceChatGptOfficeMonitor } from '@/assets/remotion/compositions/OttoInvoiceChatGptOfficeMonitor'
 import { OTTO_SYNC_ONLY_SCENE_DURATION, OttoSyncOnlyScene } from '@/assets/remotion/compositions/OttoSyncOnlyScene'
 import {
   OTTO_FINANCIAL_SCENE_COMPONENT_DURATION,
@@ -3481,6 +3482,18 @@ const catalog: CatalogItem[] = [
     label: 'TV + Laptop — ChatGPT: Emissão de notas fiscais',
     tags: ['ChatGPT', 'Otto', 'Notas Fiscais', 'TV', 'Laptop', 'Vertical'],
     value: 'video-otto-invoice-chatgpt-dual-screen',
+    width: 1080,
+  },
+  {
+    code: '<OttoInvoiceChatGptOfficeMonitor />',
+    component: OttoInvoiceChatGptOfficeMonitor,
+    description: 'A experiência do ChatGPT com emissão de notas fiscais aplicada ao monitor de uma estação de trabalho corporativa.',
+    duration: OTTO_INVOICE_CHATGPT_OFFICE_MONITOR_DURATION,
+    height: 1920,
+    kind: 'Vídeos criados',
+    label: 'Monitor corporativo — ChatGPT: Emissão de notas fiscais',
+    tags: ['ChatGPT', 'Otto', 'Notas Fiscais', 'Monitor', 'Escritório', 'Vertical'],
+    value: 'video-otto-invoice-chatgpt-office-monitor',
     width: 1080,
   },
   {
