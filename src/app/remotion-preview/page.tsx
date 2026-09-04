@@ -3500,7 +3500,7 @@ const catalog: CatalogItem[] = [
   {
     code: '<OttoInvoiceChatGptOfficeMonitor />',
     component: OttoInvoiceChatGptOfficeMonitor,
-    description: 'A experiência do ChatGPT com emissão de notas fiscais aplicada ao monitor de uma estação de trabalho corporativa.',
+    description: 'A experiência do ChatGPT aplicada ao monitor corporativo, com aproximação progressiva centralizada no container de emissão de notas fiscais.',
     duration: OTTO_INVOICE_CHATGPT_OFFICE_MONITOR_DURATION,
     height: 1920,
     kind: 'Vídeos criados',

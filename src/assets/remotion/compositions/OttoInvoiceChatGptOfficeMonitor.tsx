@@ -1,4 +1,4 @@
-import {AbsoluteFill, Img, staticFile} from 'remotion'
+import {AbsoluteFill, Easing, Img, interpolate, staticFile, useCurrentFrame} from 'remotion'
 
 import {
   OTTO_INVOICE_CHATGPT_MONITOR_CONTENT_DURATION,
@@ -16,43 +16,67 @@ const SCREEN = {
   width: 993,
 }
 
+const ZOOM_TARGET = {x: 622, y: 936}
+const FINAL_ZOOM = 1.8
+
 export function OttoInvoiceChatGptOfficeMonitor() {
+  const frame = useCurrentFrame()
   const scaleX = SCREEN.width / OTTO_INVOICE_CHATGPT_MONITOR_CONTENT_WIDTH
   const scaleY = SCREEN.height / OTTO_INVOICE_CHATGPT_MONITOR_CONTENT_HEIGHT
+  const cameraZoom = interpolate(frame, [0, OTTO_INVOICE_CHATGPT_OFFICE_MONITOR_DURATION / 2], [1, FINAL_ZOOM], {
+    easing: Easing.inOut(Easing.cubic),
+    extrapolateLeft: 'clamp',
+    extrapolateRight: 'clamp',
+  })
+  const zoomProgress = (cameraZoom - 1) / (FINAL_ZOOM - 1)
+  const translateX = zoomProgress * (540 - ZOOM_TARGET.x * FINAL_ZOOM)
+  const translateY = zoomProgress * (960 - ZOOM_TARGET.y * FINAL_ZOOM)
 
   return (
     <AbsoluteFill style={{background: '#171717', overflow: 'hidden'}}>
-      <Img
-        src={staticFile('remotion/laptop-chatgpt-otto/office-monitor-bg.png')}
-        style={{height: '100%', objectFit: 'cover', width: '100%'}}
-      />
       <div
         style={{
-          background: '#fff',
-          clipPath: 'polygon(0.1% 0%, 99.9% 0%, 100% 99.8%, 0% 100%)',
-          height: SCREEN.height,
-          left: SCREEN.left,
-          overflow: 'hidden',
+          height: 1920,
+          left: 0,
           position: 'absolute',
-          top: SCREEN.top,
-          width: SCREEN.width,
+          top: 0,
+          transform: `matrix(${cameraZoom}, 0, 0, ${cameraZoom}, ${translateX}, ${translateY})`,
+          transformOrigin: 'top left',
+          width: 1080,
         }}
       >
+        <Img
+          src={staticFile('remotion/laptop-chatgpt-otto/office-monitor-bg.png')}
+          style={{height: '100%', objectFit: 'cover', width: '100%'}}
+        />
         <div
           style={{
-            height: OTTO_INVOICE_CHATGPT_MONITOR_CONTENT_HEIGHT,
-            left: 0,
+            background: '#fff',
+            clipPath: 'polygon(0.1% 0%, 99.9% 0%, 100% 99.8%, 0% 100%)',
+            height: SCREEN.height,
+            left: SCREEN.left,
+            overflow: 'hidden',
             position: 'absolute',
-            top: 0,
-            transform: `scale(${scaleX}, ${scaleY})`,
-            transformOrigin: 'top left',
-            width: OTTO_INVOICE_CHATGPT_MONITOR_CONTENT_WIDTH,
+            top: SCREEN.top,
+            width: SCREEN.width,
           }}
         >
-          <OttoInvoiceChatGptMonitorContent />
+          <div
+            style={{
+              height: OTTO_INVOICE_CHATGPT_MONITOR_CONTENT_HEIGHT,
+              left: 0,
+              position: 'absolute',
+              top: 0,
+              transform: `scale(${scaleX}, ${scaleY})`,
+              transformOrigin: 'top left',
+              width: OTTO_INVOICE_CHATGPT_MONITOR_CONTENT_WIDTH,
+            }}
+          >
+            <OttoInvoiceChatGptMonitorContent />
+          </div>
+          <div style={{background: 'linear-gradient(120deg, rgba(255,255,255,.035), transparent 44%, rgba(0,0,0,.035))', inset: 0, pointerEvents: 'none', position: 'absolute'}} />
+          <div style={{boxShadow: 'inset 0 0 9px rgba(0,0,0,.18)', inset: 0, pointerEvents: 'none', position: 'absolute'}} />
         </div>
-        <div style={{background: 'linear-gradient(120deg, rgba(255,255,255,.035), transparent 44%, rgba(0,0,0,.035))', inset: 0, pointerEvents: 'none', position: 'absolute'}} />
-        <div style={{boxShadow: 'inset 0 0 9px rgba(0,0,0,.18)', inset: 0, pointerEvents: 'none', position: 'absolute'}} />
       </div>
     </AbsoluteFill>
   )
