@@ -1,16 +1,14 @@
 import {AbsoluteFill, Img, staticFile} from 'remotion'
 
+import {OttoInvoiceChatGptNative} from '@/assets/remotion/compositions/OttoInvoiceChatGptNative'
 import {
-  OTTO_INVOICE_CHATGPT_NATIVE_DURATION,
-  OttoInvoiceChatGptNative,
-} from '@/assets/remotion/compositions/OttoInvoiceChatGptNative'
-import {
+  OTTO_INVOICE_CHATGPT_TV_CONTENT_DURATION,
   OTTO_INVOICE_CHATGPT_TV_CONTENT_HEIGHT,
   OTTO_INVOICE_CHATGPT_TV_CONTENT_WIDTH,
   OttoInvoiceChatGptTvContent,
 } from '@/assets/remotion/compositions/OttoInvoiceChatGptTvContent'
 
-export const OTTO_INVOICE_CHATGPT_DUAL_SCREEN_DURATION = OTTO_INVOICE_CHATGPT_NATIVE_DURATION
+export const OTTO_INVOICE_CHATGPT_DUAL_SCREEN_DURATION = OTTO_INVOICE_CHATGPT_TV_CONTENT_DURATION
 
 const SOURCE_HEIGHT = 968
 const CHATGPT_SIDEBAR_WIDTH = 262

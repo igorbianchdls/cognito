@@ -6,7 +6,8 @@ import {CHATGPT_MOBILE_FONT_STACK} from '@/assets/remotion/compositions/ChatGptM
 import {OTTO_INVOICE_CHATGPT_NATIVE_DURATION} from '@/assets/remotion/compositions/OttoInvoiceChatGptNative'
 import {IOS_REMOTION_DISPLAY_FONT_STACK} from '@/assets/remotion/fonts/sfPro'
 
-export const OTTO_INVOICE_CHATGPT_TV_CONTENT_DURATION = OTTO_INVOICE_CHATGPT_NATIVE_DURATION
+const TV_CONTENT_INTRO_DURATION = 78
+export const OTTO_INVOICE_CHATGPT_TV_CONTENT_DURATION = OTTO_INVOICE_CHATGPT_NATIVE_DURATION + TV_CONTENT_INTRO_DURATION
 export const OTTO_INVOICE_CHATGPT_TV_CONTENT_WIDTH = 986.32
 export const OTTO_INVOICE_CHATGPT_TV_CONTENT_HEIGHT = 546.6
 
@@ -46,12 +47,19 @@ function Row({completed, frame, index}: {completed: number; frame: number; index
 }
 
 export function OttoInvoiceChatGptTvContent() {
-  const frame = useCurrentFrame()
+  const absoluteFrame = useCurrentFrame()
+  const frame = Math.max(0, absoluteFrame - TV_CONTENT_INTRO_DURATION)
+  const introPrompt = 'Chat, emita as notas fiscais das vendas de hoje e envie por WhatsApp.'
+  const typedCharacters = Math.floor(tween(absoluteFrame, 16, 58, [0, introPrompt.length]))
+  const typedPrompt = introPrompt.slice(0, typedCharacters)
+  const introOpacity = tween(absoluteFrame, 64, 76, [1, 0])
+  const conversationOpacity = tween(absoluteFrame, 72, 82)
   const cardIn = tween(frame, 38, 54)
   const raw = tween(frame, 60, 316, [0, 8])
   const completed = Math.min(8, Math.floor(raw))
   const progress = Math.min(1, raw / 8)
   const revealRow = (index: number) => index === 0 ? 1 : interpolate(raw, [index, index + 0.22], [0, 1], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp'})
+
   return <AbsoluteFill style={{background: '#fff', color: '#171717', fontFamily: CHATGPT_MOBILE_FONT_STACK, overflow: 'hidden'}}>
     <style>{`.tv-sidebar-item-icon .lucide { width: 12px !important; height: 12px !important; }.tv-sidebar-header-icon .lucide { width: 12px !important; height: 12px !important; }`}</style>
     <aside style={{background: '#f9f9f9', borderRight: '1px solid #ededed', bottom: 0, left: 0, padding: '12px 8px', position: 'absolute', top: 0, width: SIDEBAR}}>
@@ -63,16 +71,24 @@ export function OttoInvoiceChatGptTvContent() {
     </aside>
     <main style={{bottom: 0, left: SIDEBAR, position: 'absolute', right: 0, top: 0}}>
       <header style={{alignItems: 'center', background: '#fff', display: 'flex', height: 38, padding: '0 18px', position: 'relative', zIndex: 20}}><strong style={{fontSize: 12}}>ChatGPT 5.6 Sol</strong><ChevronDown size={11} style={{marginLeft: 4}} /><span style={{alignItems: 'center', border: '1px solid #ddd', borderRadius: 15, display: 'flex', fontSize: 9, fontWeight: 600, gap: 5, marginLeft: 'auto', padding: '6px 10px'}}><ShareIcon /> Compartilhar</span><span style={{background: '#687785', borderRadius: 99, color: '#fff', display: 'grid', fontSize: 7.5, height: 25, marginLeft: 11, placeItems: 'center', width: 25}}>VO</span></header>
-      <section style={{bottom: 52, left: 0, overflow: 'hidden', position: 'absolute', right: 0, top: 38}}>
+
+      <div style={{left: '50%', opacity: introOpacity, position: 'absolute', top: '48%', transform: `translate(-50%, -50%) translateY(${(1 - introOpacity) * -8}px)`, width: '60%', zIndex: 5}}>
+        <div style={{fontSize: 20, fontWeight: 450, marginBottom: 20, textAlign: 'center'}}>O que tem na agenda de hoje?</div>
+        <div style={{alignItems: 'center', background: '#fff', border: '1px solid #d4d4d4', borderRadius: 24, boxShadow: '0 5px 20px rgba(0,0,0,.07)', display: 'flex', minHeight: 44, padding: '0 7px 0 10px'}}><Plus size={15} /><span style={{color: typedPrompt ? '#333' : '#888', flex: 1, fontSize: 9.5, marginLeft: 8}}>{typedPrompt || 'Pergunte ao ChatGPT'}{typedCharacters > 0 && typedCharacters < introPrompt.length ? <span style={{borderRight: '1px solid #444', marginLeft: 1, opacity: Math.floor(absoluteFrame / 7) % 2 ? 0.25 : 1}} /> : null}</span><Mic size={12} /><span style={{background: typedPrompt ? '#111' : '#aaa', borderRadius: 99, color: '#fff', display: 'grid', height: 28, marginLeft: 6, placeItems: 'center', transform: `scale(${typedCharacters === introPrompt.length ? tween(absoluteFrame, 58, 64, [1, 0.88]) : 1})`, width: 28}}><ArrowUp size={14} /></span></div>
+      </div>
+
+      <section style={{bottom: 52, left: 0, opacity: conversationOpacity, overflow: 'hidden', position: 'absolute', right: 0, top: 38}}>
         <div style={{left: '50%', position: 'absolute', top: 8, transform: 'translateX(-50%)', width: '60%'}}>
-        <div style={{display: 'flex', justifyContent: 'flex-end', opacity: tween(frame, 4, 19)}}><div style={{background: '#f4f4f4', borderRadius: 15, fontSize: 9.2, lineHeight: 1.35, padding: '7px 11px', width: 230}}>Chat, emita as notas fiscais das vendas de hoje e envie por WhatsApp.</div></div><p style={{fontSize: 9.2, margin: '6px 0', opacity: tween(frame, 22, 38)}}>Perfeito! Vou emitir as notas fiscais para cada cliente.</p>
-        <div style={{background: '#fff', border: '1px solid #dedede', borderRadius: 13, boxShadow: '0 3px 12px rgba(0,0,0,.08)', opacity: cardIn, overflow: 'hidden', transform: `translateY(${(1 - cardIn) * 7}px)`}}>
-          <div style={{alignItems: 'center', display: 'flex', height: 29, padding: '0 11px'}}><span style={{border: '1px solid #ddd', borderRadius: 5, display: 'grid', height: 17, placeItems: 'center', width: 17}}><InvoiceIcon size={10} /></span><strong style={{fontSize: 9.3, marginLeft: 7}}>Otto · Emitir notas fiscais</strong><span style={{color: completed === 8 ? GREEN : '#666', fontSize: 8.3, marginLeft: 10}}>{completed === 8 ? 'Concluído' : 'Executando...'}</span><ChevronDown size={11} style={{marginLeft: 'auto', transform: 'rotate(180deg)'}} /></div>
-          <div style={{padding: '3px 11px 9px'}}><div style={{overflow: 'hidden'}}><h1 style={{fontFamily: IOS_REMOTION_DISPLAY_FONT_STACK, fontSize: 120, fontWeight: 700, letterSpacing: 0, lineHeight: 0.95, margin: '0 0 12px', whiteSpace: 'nowrap'}}>Emitindo múltiplas notas fiscais</h1></div><div style={{fontSize: 9, fontWeight: 650, marginTop: 0}}>{completed} de 8 notas emitidas</div><div style={{background: '#eceeed', borderRadius: 99, height: 4, marginTop: 5, overflow: 'hidden'}}><div style={{background: GREEN, height: '100%', width: `${progress * 100}%`}} /></div><div style={{border: '1px solid #ddd', borderRadius: 8, marginTop: 8, overflow: 'hidden'}}>{invoices.map((_, index) => { const reveal = revealRow(index); return <div key={invoices[index][0]} style={{maxHeight: reveal * 64, opacity: reveal, overflow: 'hidden', transform: `translateY(${(1 - reveal) * 5}px)`}}><Row completed={completed} frame={frame} index={index} /></div> })}</div><div style={{display: 'flex', fontSize: 8.5, marginTop: 7}}><strong>Total: 8 notas fiscais</strong><span style={{color: '#666', marginLeft: 'auto'}}>{completed} de 8 concluídas</span></div></div>
-        </div>
+          <div style={{display: 'flex', justifyContent: 'flex-end', opacity: tween(frame, 4, 19)}}><div style={{background: '#f4f4f4', borderRadius: 15, fontSize: 9.2, lineHeight: 1.35, padding: '7px 11px', width: 230}}>Chat, emita as notas fiscais das vendas de hoje e envie por WhatsApp.</div></div>
+          <p style={{fontSize: 9.2, margin: '6px 0', opacity: tween(frame, 22, 38)}}>Perfeito! Vou emitir as notas fiscais para cada cliente.</p>
+          <div style={{background: '#fff', border: '1px solid #dedede', borderRadius: 13, boxShadow: '0 3px 12px rgba(0,0,0,.08)', opacity: cardIn, overflow: 'hidden', transform: `translateY(${(1 - cardIn) * 7}px)`}}>
+            <div style={{alignItems: 'center', display: 'flex', height: 29, padding: '0 11px'}}><span style={{border: '1px solid #ddd', borderRadius: 5, display: 'grid', height: 17, placeItems: 'center', width: 17}}><InvoiceIcon size={10} /></span><strong style={{fontSize: 9.3, marginLeft: 7}}>Otto · Emitir notas fiscais</strong><span style={{color: completed === 8 ? GREEN : '#666', fontSize: 8.3, marginLeft: 10}}>{completed === 8 ? 'Concluído' : 'Executando...'}</span><ChevronDown size={11} style={{marginLeft: 'auto', transform: 'rotate(180deg)'}} /></div>
+                       <div style={{padding: '3px 11px 9px'}}><div style={{overflow: 'hidden'}}><h1 style={{fontFamily: IOS_REMOTION_DISPLAY_FONT_STACK, fontSize: 130, fontWeight: 700, letterSpacing: 0, lineHeight: 0.95, margin: '0 0 12px', whiteSpace: 'nowrap'}}>Emitindo múltiplas notas fiscais</h1></div><div style={{fontSize: 9, fontWeight: 650, marginTop: 0}}>{completed} de 8 notas emitidas</div><div style={{background: '#eceeed', borderRadius: 99, height: 4, marginTop: 5, overflow: 'hidden'}}><div style={{background: GREEN, height: '100%', width: `${progress * 100}%`}} /></div><div style={{border: '1px solid #ddd', borderRadius: 8, marginTop: 8, overflow: 'hidden'}}>{invoices.map((invoice, index) => { const reveal = revealRow(index); return <div key={invoice[0]} style={{maxHeight: reveal * 64, opacity: reveal, overflow: 'hidden', transform: `translateY(${(1 - reveal) * 5}px)`}}><Row completed={completed} frame={frame} index={index} /></div> })}</div><div style={{display: 'flex', fontSize: 8.5, marginTop: 7}}><strong>Total: 8 notas fiscais</strong><span style={{color: '#666', marginLeft: 'auto'}}>{completed} de 8 concluídas</span></div></div>
+          </div>
         </div>
       </section>
-      <div style={{alignItems: 'center', background: '#fff', border: '1px solid #d4d4d4', borderRadius: 22, bottom: 7, boxShadow: '0 1px 5px rgba(0,0,0,.05)', display: 'flex', height: 36, left: '50%', padding: '0 6px 0 8px', position: 'absolute', transform: 'translateX(-50%)', width: '60%', zIndex: 10}}><Plus size={14} /><span style={{color: '#888', flex: 1, fontSize: 9.5, marginLeft: 7}}>Pergunte ao ChatGPT</span><Mic size={12} /><span style={{background: '#aaa', borderRadius: 99, color: '#fff', display: 'grid', height: 25, marginLeft: 5, placeItems: 'center', width: 25}}><ArrowUp size={13} /></span></div><CircleHelp color="#777" size={15} style={{bottom: 11, position: 'absolute', right: 10}} />
+      <div style={{alignItems: 'center', background: '#fff', border: '1px solid #d4d4d4', borderRadius: 22, bottom: 7, boxShadow: '0 1px 5px rgba(0,0,0,.05)', display: 'flex', height: 36, left: '50%', opacity: conversationOpacity, padding: '0 6px 0 8px', position: 'absolute', transform: 'translateX(-50%)', width: '60%', zIndex: 10}}><Plus size={14} /><span style={{color: '#888', flex: 1, fontSize: 9.5, marginLeft: 7}}>Pergunte ao ChatGPT</span><Mic size={12} /><span style={{background: '#aaa', borderRadius: 99, color: '#fff', display: 'grid', height: 25, marginLeft: 5, placeItems: 'center', width: 25}}><ArrowUp size={13} /></span></div>
+      <CircleHelp color="#777" size={15} style={{bottom: 11, opacity: conversationOpacity, position: 'absolute', right: 10}} />
     </main>
   </AbsoluteFill>
 }
