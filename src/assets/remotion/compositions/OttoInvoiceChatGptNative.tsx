@@ -206,7 +206,7 @@ function ChatArea({absoluteFrame, frame, titleFontSize, withIntro}: {absoluteFra
   const typedPrompt = introPrompt.slice(0, typedCharacters)
   const introOpacity = withIntro ? tween(absoluteFrame, 64, 76, [1, 0]) : 0
   const conversationOpacity = withIntro ? tween(absoluteFrame, 72, 82) : 1
-  const conversationLift = tween(frame, 220, 316, [0, -72])
+  const conversationLift = tween(frame, 220, 292, [0, -100])
 
   return (
     <main style={{background: '#fff', bottom: 0, left: SIDEBAR_WIDTH, position: 'absolute', right: 0, top: BROWSER_HEIGHT}}>
