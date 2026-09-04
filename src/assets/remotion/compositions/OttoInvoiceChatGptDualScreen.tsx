@@ -94,7 +94,7 @@ function AdaptedScreen({geometry}: {geometry: ScreenGeometry}) {
           width: sourceWidth,
         }}
       >
-        <OttoInvoiceChatGptNative />
+        <OttoInvoiceChatGptNative withIntro />
       </div>
 
       <div

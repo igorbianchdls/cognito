@@ -197,10 +197,15 @@ function Composer() {
   )
 }
 
-function ChatArea({frame, titleFontSize}: {frame: number; titleFontSize: number}) {
+function ChatArea({absoluteFrame, frame, titleFontSize, withIntro}: {absoluteFrame: number; frame: number; titleFontSize: number; withIntro: boolean}) {
   const userIn = tween(frame, 4, 19)
   const replyIn = tween(frame, 22, 38)
   const finalIn = tween(frame, 320, 340)
+  const introPrompt = 'Chat, emita as notas fiscais das vendas de hoje e envie por WhatsApp.'
+  const typedCharacters = Math.floor(tween(absoluteFrame, 16, 58, [0, introPrompt.length]))
+  const typedPrompt = introPrompt.slice(0, typedCharacters)
+  const introOpacity = withIntro ? tween(absoluteFrame, 64, 76, [1, 0]) : 0
+  const conversationOpacity = withIntro ? tween(absoluteFrame, 72, 82) : 1
 
   return (
     <main style={{background: '#fff', bottom: 0, left: SIDEBAR_WIDTH, position: 'absolute', right: 0, top: BROWSER_HEIGHT}}>
@@ -210,7 +215,17 @@ function ChatArea({frame, titleFontSize}: {frame: number; titleFontSize: number}
         <span style={{alignItems: 'center', background: '#687785', borderRadius: 999, color: '#fff', display: 'flex', fontSize: 11, height: 36, justifyContent: 'center', marginLeft: 20, width: 36}}>VO</span>
       </header>
 
-      <div style={{bottom: 0, left: '50%', position: 'absolute', top: 64, transform: 'translateX(-50%)', width: '70%'}}>
+      {withIntro ? <div style={{left: '50%', opacity: introOpacity, position: 'absolute', top: '48%', transform: `translate(-50%, -50%) translateY(${(1 - introOpacity) * -12}px)`, width: 812}}>
+        <div style={{fontSize: 30, fontWeight: 450, marginBottom: 28, textAlign: 'center'}}>O que tem na agenda de hoje?</div>
+        <div style={{alignItems: 'center', background: '#fff', border: '1px solid #cfcfcf', borderRadius: 999, boxShadow: '0 3px 14px rgba(0,0,0,.08)', boxSizing: 'border-box', display: 'flex', height: 48, padding: '0 7px 0 13px', width: '100%'}}>
+          <Plus size={18} strokeWidth={1.7} />
+          <span style={{color: typedPrompt ? '#333' : '#8a8a8a', flex: 1, fontSize: 15, marginLeft: 13}}>{typedPrompt || 'Pergunte ao ChatGPT'}{typedCharacters > 0 && typedCharacters < introPrompt.length ? <span style={{borderRight: '1px solid #444', marginLeft: 1, opacity: Math.floor(absoluteFrame / 7) % 2 ? 0.25 : 1}} /> : null}</span>
+          <Mic size={17} strokeWidth={1.8} />
+          <span style={{alignItems: 'center', background: typedPrompt ? '#4169e1' : '#b2b2b2', borderRadius: 999, color: '#fff', display: 'flex', flexShrink: 0, height: 32, justifyContent: 'center', marginLeft: 7, transform: `scale(${typedCharacters === introPrompt.length ? tween(absoluteFrame, 58, 64, [1, 0.88]) : 1})`, width: 32}}><ArrowUp size={17} strokeWidth={1.9} /></span>
+        </div>
+      </div> : null}
+
+      <div style={{bottom: 0, left: '50%', opacity: conversationOpacity, position: 'absolute', top: 64, transform: 'translateX(-50%)', width: '70%'}}>
         <div style={{display: 'flex', justifyContent: 'flex-end', opacity: userIn, transform: `translateY(${(1 - userIn) * 8}px)`}}>
           <div style={{background: '#f4f4f4', borderRadius: 20, fontSize: 14, lineHeight: 1.55, maxWidth: 355, padding: '13px 18px'}}>Chat, emita as notas fiscais das vendas de hoje e envie para cada cliente por WhatsApp.</div>
         </div>
@@ -218,20 +233,21 @@ function ChatArea({frame, titleFontSize}: {frame: number; titleFontSize: number}
         <ToolCard frame={frame} titleFontSize={titleFontSize} />
         <p style={{fontSize: 13.5, margin: '13px 0 0', opacity: finalIn}}>Pronto! As notas fiscais foram emitidas e enviadas para os clientes pelo WhatsApp.</p>
       </div>
-      <Composer />
-      <CircleHelp color="#777" size={27} style={{bottom: 18, position: 'absolute', right: 18}} />
+      <div style={{opacity: conversationOpacity}}><Composer /></div>
+      <CircleHelp color="#777" size={27} style={{bottom: 18, opacity: conversationOpacity, position: 'absolute', right: 18}} />
     </main>
   )
 }
 
-export function OttoInvoiceChatGptNative({titleFontSize = MAIN_TITLE_FONT_SIZE}: {titleFontSize?: number} = {}) {
-  const frame = useCurrentFrame()
+export function OttoInvoiceChatGptNative({titleFontSize = MAIN_TITLE_FONT_SIZE, withIntro = false}: {titleFontSize?: number; withIntro?: boolean} = {}) {
+  const absoluteFrame = useCurrentFrame()
+  const frame = withIntro ? Math.max(0, absoluteFrame - 78) : absoluteFrame
 
   return (
     <AbsoluteFill style={{background: '#fff', color: '#171717', fontFamily: CHATGPT_MOBILE_FONT_STACK, letterSpacing: '-0.01em', overflow: 'hidden'}}>
       <BrowserChrome />
       <Sidebar />
-      <ChatArea frame={frame} titleFontSize={titleFontSize} />
+      <ChatArea absoluteFrame={absoluteFrame} frame={frame} titleFontSize={titleFontSize} withIntro={withIntro} />
     </AbsoluteFill>
   )
 }
