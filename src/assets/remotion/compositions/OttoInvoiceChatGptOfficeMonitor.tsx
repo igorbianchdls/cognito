@@ -1,13 +1,13 @@
 import {AbsoluteFill, Img, staticFile} from 'remotion'
 
 import {
-  OTTO_INVOICE_CHATGPT_TV_CONTENT_DURATION,
-  OTTO_INVOICE_CHATGPT_TV_CONTENT_HEIGHT,
-  OTTO_INVOICE_CHATGPT_TV_CONTENT_WIDTH,
-  OttoInvoiceChatGptTvContent,
-} from '@/assets/remotion/compositions/OttoInvoiceChatGptTvContent'
+  OTTO_INVOICE_CHATGPT_MONITOR_CONTENT_DURATION,
+  OTTO_INVOICE_CHATGPT_MONITOR_CONTENT_HEIGHT,
+  OTTO_INVOICE_CHATGPT_MONITOR_CONTENT_WIDTH,
+  OttoInvoiceChatGptMonitorContent,
+} from '@/assets/remotion/compositions/OttoInvoiceChatGptMonitorContent'
 
-export const OTTO_INVOICE_CHATGPT_OFFICE_MONITOR_DURATION = OTTO_INVOICE_CHATGPT_TV_CONTENT_DURATION
+export const OTTO_INVOICE_CHATGPT_OFFICE_MONITOR_DURATION = OTTO_INVOICE_CHATGPT_MONITOR_CONTENT_DURATION
 
 const SCREEN = {
   height: 545,
@@ -17,8 +17,8 @@ const SCREEN = {
 }
 
 export function OttoInvoiceChatGptOfficeMonitor() {
-  const scaleX = SCREEN.width / OTTO_INVOICE_CHATGPT_TV_CONTENT_WIDTH
-  const scaleY = SCREEN.height / OTTO_INVOICE_CHATGPT_TV_CONTENT_HEIGHT
+  const scaleX = SCREEN.width / OTTO_INVOICE_CHATGPT_MONITOR_CONTENT_WIDTH
+  const scaleY = SCREEN.height / OTTO_INVOICE_CHATGPT_MONITOR_CONTENT_HEIGHT
 
   return (
     <AbsoluteFill style={{background: '#171717', overflow: 'hidden'}}>
@@ -40,16 +40,16 @@ export function OttoInvoiceChatGptOfficeMonitor() {
       >
         <div
           style={{
-            height: OTTO_INVOICE_CHATGPT_TV_CONTENT_HEIGHT,
+            height: OTTO_INVOICE_CHATGPT_MONITOR_CONTENT_HEIGHT,
             left: 0,
             position: 'absolute',
             top: 0,
             transform: `scale(${scaleX}, ${scaleY})`,
             transformOrigin: 'top left',
-            width: OTTO_INVOICE_CHATGPT_TV_CONTENT_WIDTH,
+            width: OTTO_INVOICE_CHATGPT_MONITOR_CONTENT_WIDTH,
           }}
         >
-          <OttoInvoiceChatGptTvContent titleFontSize={180} />
+          <OttoInvoiceChatGptMonitorContent />
         </div>
         <div style={{background: 'linear-gradient(120deg, rgba(255,255,255,.035), transparent 44%, rgba(0,0,0,.035))', inset: 0, pointerEvents: 'none', position: 'absolute'}} />
         <div style={{boxShadow: 'inset 0 0 9px rgba(0,0,0,.18)', inset: 0, pointerEvents: 'none', position: 'absolute'}} />

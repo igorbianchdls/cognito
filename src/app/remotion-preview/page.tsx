@@ -139,6 +139,7 @@ import { OTTO_INVOICE_CHATGPT_TV_CONTENT_DURATION, OttoInvoiceChatGptTvContent }
 import { OTTO_INVOICE_CHATGPT_DUAL_SCREEN_DURATION, OttoInvoiceChatGptDualScreen } from '@/assets/remotion/compositions/OttoInvoiceChatGptDualScreen'
 import { OTTO_INVOICE_CHATGPT_TV_ZOOM_DURATION, OttoInvoiceChatGptTvZoom } from '@/assets/remotion/compositions/OttoInvoiceChatGptTvZoom'
 import { OTTO_INVOICE_CHATGPT_OFFICE_MONITOR_DURATION, OttoInvoiceChatGptOfficeMonitor } from '@/assets/remotion/compositions/OttoInvoiceChatGptOfficeMonitor'
+import { OTTO_INVOICE_CHATGPT_MONITOR_CONTENT_DURATION, OttoInvoiceChatGptMonitorContent } from '@/assets/remotion/compositions/OttoInvoiceChatGptMonitorContent'
 import { OTTO_SYNC_ONLY_SCENE_DURATION, OttoSyncOnlyScene } from '@/assets/remotion/compositions/OttoSyncOnlyScene'
 import {
   OTTO_FINANCIAL_SCENE_COMPONENT_DURATION,
@@ -3470,6 +3471,18 @@ const catalog: CatalogItem[] = [
     label: 'ChatGPT — Conteúdo da TV (H1 80 px)',
     tags: ['ChatGPT', 'Otto', 'Notas Fiscais', 'TV', '80px'],
     value: 'video-otto-invoice-chatgpt-tv-content',
+    width: 986,
+  },
+  {
+    code: '<OttoInvoiceChatGptMonitorContent />',
+    component: OttoInvoiceChatGptMonitorContent,
+    description: 'Conteúdo-base do ChatGPT criado para monitores, sem a abertura central e com H1 de 180 px.',
+    duration: OTTO_INVOICE_CHATGPT_MONITOR_CONTENT_DURATION,
+    height: 547,
+    kind: 'Vídeos criados',
+    label: 'ChatGPT — Base para monitor (sem introdução, H1 180 px)',
+    tags: ['ChatGPT', 'Otto', 'Notas Fiscais', 'Monitor', '180px'],
+    value: 'video-otto-invoice-chatgpt-monitor-content',
     width: 986,
   },
   {

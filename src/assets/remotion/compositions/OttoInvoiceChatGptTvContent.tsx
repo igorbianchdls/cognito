@@ -8,6 +8,7 @@ import {IOS_REMOTION_DISPLAY_FONT_STACK} from '@/assets/remotion/fonts/sfPro'
 
 const TV_CONTENT_INTRO_DURATION = 78
 export const OTTO_INVOICE_CHATGPT_TV_CONTENT_DURATION = OTTO_INVOICE_CHATGPT_NATIVE_DURATION + TV_CONTENT_INTRO_DURATION
+export const OTTO_INVOICE_CHATGPT_TV_CONTENT_NO_INTRO_DURATION = OTTO_INVOICE_CHATGPT_NATIVE_DURATION
 export const OTTO_INVOICE_CHATGPT_TV_CONTENT_WIDTH = 986.32
 export const OTTO_INVOICE_CHATGPT_TV_CONTENT_HEIGHT = 546.6
 
@@ -47,14 +48,14 @@ function Row({completed, frame, index}: {completed: number; frame: number; index
   </div>
 }
 
-export function OttoInvoiceChatGptTvContent({titleFontSize = 140}: {titleFontSize?: number} = {}) {
+export function OttoInvoiceChatGptTvContent({titleFontSize = 140, withIntro = true}: {titleFontSize?: number; withIntro?: boolean} = {}) {
   const absoluteFrame = useCurrentFrame()
-  const frame = Math.max(0, absoluteFrame - TV_CONTENT_INTRO_DURATION)
+  const frame = withIntro ? Math.max(0, absoluteFrame - TV_CONTENT_INTRO_DURATION) : absoluteFrame
   const introPrompt = 'Chat, emita as notas fiscais das vendas de hoje e envie por WhatsApp.'
   const typedCharacters = Math.floor(tween(absoluteFrame, 16, 58, [0, introPrompt.length]))
   const typedPrompt = introPrompt.slice(0, typedCharacters)
-  const introOpacity = tween(absoluteFrame, 64, 76, [1, 0])
-  const conversationOpacity = tween(absoluteFrame, 72, 82)
+  const introOpacity = withIntro ? tween(absoluteFrame, 64, 76, [1, 0]) : 0
+  const conversationOpacity = withIntro ? tween(absoluteFrame, 72, 82) : 1
   const cardIn = tween(frame, 38, 54)
   const raw = tween(frame, 60, 316, [0, 8])
   const completed = Math.min(8, Math.floor(raw))
@@ -75,10 +76,10 @@ export function OttoInvoiceChatGptTvContent({titleFontSize = 140}: {titleFontSiz
     <main style={{bottom: 0, left: SIDEBAR, position: 'absolute', right: 0, top: 0}}>
       <header style={{alignItems: 'center', background: '#fff', display: 'flex', height: 38, padding: '0 18px', position: 'relative', zIndex: 20}}><strong style={{fontSize: 12}}>ChatGPT 5.6 Sol</strong><ChevronDown size={11} style={{marginLeft: 4}} /><span style={{alignItems: 'center', border: '1px solid #ddd', borderRadius: 15, display: 'flex', fontSize: 9, fontWeight: 600, gap: 5, marginLeft: 'auto', padding: '6px 10px'}}><ShareIcon /> Compartilhar</span><span style={{background: '#687785', borderRadius: 99, color: '#fff', display: 'grid', fontSize: 7.5, height: 25, marginLeft: 11, placeItems: 'center', width: 25}}>VO</span></header>
 
-      <div style={{left: '50%', opacity: introOpacity, position: 'absolute', top: '48%', transform: `translate(-50%, -50%) translateY(${(1 - introOpacity) * -8}px)`, width: '60%', zIndex: 5}}>
+      {withIntro ? <div style={{left: '50%', opacity: introOpacity, position: 'absolute', top: '48%', transform: `translate(-50%, -50%) translateY(${(1 - introOpacity) * -8}px)`, width: '60%', zIndex: 5}}>
         <div style={{fontSize: 20, fontWeight: 450, marginBottom: 20, textAlign: 'center'}}>O que tem na agenda de hoje?</div>
         <div className="tv-prompt-input" style={{alignItems: 'center', background: '#fff', border: '1px solid #d4d4d4', borderRadius: 20, boxShadow: '0 5px 20px rgba(0,0,0,.07)', display: 'flex', minHeight: 38, padding: '0 6px 0 10px'}}><Plus size={15} /><span style={{color: typedPrompt ? '#333' : '#888', flex: 1, fontSize: 9.5, marginLeft: 8}}>{typedPrompt || 'Pergunte ao ChatGPT'}{typedCharacters > 0 && typedCharacters < introPrompt.length ? <span style={{borderRight: '1px solid #444', marginLeft: 1, opacity: Math.floor(absoluteFrame / 7) % 2 ? 0.25 : 1}} /> : null}</span><Mic size={12} /><span style={{background: typedPrompt ? ROYAL_BLUE : '#aaa', borderRadius: 99, color: '#fff', display: 'grid', height: 24, marginLeft: 5, placeItems: 'center', transform: `scale(${typedCharacters === introPrompt.length ? tween(absoluteFrame, 58, 64, [1, 0.88]) : 1})`, width: 24}}><ArrowUp size={14} /></span></div>
-      </div>
+      </div> : null}
 
       <section style={{bottom: 52, left: 0, opacity: conversationOpacity, overflow: 'hidden', position: 'absolute', right: 0, top: 38}}>
         <div style={{left: '50%', position: 'absolute', top: 8, transform: `translateX(-50%) translateY(${conversationLift}px)`, width: '60%'}}>
