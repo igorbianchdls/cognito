@@ -48,7 +48,7 @@ function Row({completed, frame, index}: {completed: number; frame: number; index
   </div>
 }
 
-export function OttoInvoiceChatGptTvContent({promptBottom = 7, titleFontSize = 140, titleVerticalPadding = 0, withIntro = true}: {promptBottom?: number; titleFontSize?: number; titleVerticalPadding?: number; withIntro?: boolean} = {}) {
+export function OttoInvoiceChatGptTvContent({conversationLiftAmount = 38, conversationLiftEnd = 7.5, promptBottom = 7, titleFontSize = 140, titleVerticalPadding = 0, withIntro = true}: {conversationLiftAmount?: number; conversationLiftEnd?: number; promptBottom?: number; titleFontSize?: number; titleVerticalPadding?: number; withIntro?: boolean} = {}) {
   const absoluteFrame = useCurrentFrame()
   const frame = withIntro ? Math.max(0, absoluteFrame - TV_CONTENT_INTRO_DURATION) : absoluteFrame
   const introPrompt = 'Chat, emita as notas fiscais das vendas de hoje e envie por WhatsApp.'
@@ -61,7 +61,7 @@ export function OttoInvoiceChatGptTvContent({promptBottom = 7, titleFontSize = 1
   const completed = Math.min(8, Math.floor(raw))
   const progress = Math.min(1, raw / 8)
   const isResponding = frame >= 19 && completed < 8
-  const conversationLift = tween(raw, 5.25, 7.5, [0, -38])
+  const conversationLift = tween(raw, 5.25, conversationLiftEnd, [0, -conversationLiftAmount])
   const revealRow = (index: number) => index === 0 ? 1 : interpolate(raw, [index, index + 0.22], [0, 1], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp'})
 
   return <AbsoluteFill style={{background: '#fff', color: '#171717', fontFamily: CHATGPT_MOBILE_FONT_STACK, overflow: 'hidden'}}>

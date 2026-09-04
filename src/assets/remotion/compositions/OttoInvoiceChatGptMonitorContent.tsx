@@ -10,5 +10,5 @@ export const OTTO_INVOICE_CHATGPT_MONITOR_CONTENT_WIDTH = OTTO_INVOICE_CHATGPT_T
 export const OTTO_INVOICE_CHATGPT_MONITOR_CONTENT_HEIGHT = OTTO_INVOICE_CHATGPT_TV_CONTENT_HEIGHT
 
 export function OttoInvoiceChatGptMonitorContent() {
-  return <OttoInvoiceChatGptTvContent promptBottom={14} titleFontSize={200} titleVerticalPadding={6} withIntro={false} />
+  return <OttoInvoiceChatGptTvContent conversationLiftAmount={52} conversationLiftEnd={7.1} promptBottom={14} titleFontSize={220} titleVerticalPadding={6} withIntro={false} />
 }
