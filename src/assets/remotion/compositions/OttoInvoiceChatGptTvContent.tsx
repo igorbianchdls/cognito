@@ -1,6 +1,6 @@
 import type {ReactNode} from 'react'
-import {ArrowUp, CheckCircle2, ChevronDown, CircleHelp, Clock3, Grid2X2, Library, LoaderCircle, Mic, MoreHorizontal, Plus, Search, SquarePen} from 'lucide-react'
-import {AbsoluteFill, Img, interpolate, staticFile, useCurrentFrame} from 'remotion'
+import {ArrowUp, CheckCircle2, ChevronDown, CircleHelp, Clock3, Grid2X2, Library, LoaderCircle, Mic, MoreHorizontal, PanelLeft, Plus, Search, SquarePen} from 'lucide-react'
+import {AbsoluteFill, interpolate, useCurrentFrame} from 'remotion'
 
 import {CHATGPT_MOBILE_FONT_STACK} from '@/assets/remotion/compositions/ChatGptMobileBase'
 import {OTTO_INVOICE_CHATGPT_NATIVE_DURATION} from '@/assets/remotion/compositions/OttoInvoiceChatGptNative'
@@ -17,10 +17,6 @@ const invoices = [
   ['Studio Design LTDA', 'R$ 1.100,00'], ['Marketing Digital SA', 'R$ 870,00'], ['Juliana Costa MEI', 'R$ 540,00'], ['Tech Solutions LTDA', 'R$ 1.990,00'],
 ]
 const tween = (frame: number, from: number, to: number, output: [number, number] = [0, 1]) => interpolate(frame, [from, to], output, {extrapolateLeft: 'clamp', extrapolateRight: 'clamp'})
-
-function ChatGptMark() {
-  return <span style={{display: 'block', flexShrink: 0, height: 19, overflow: 'hidden', position: 'relative', width: 19}}><Img src={staticFile('gptLogo.svg')} style={{filter: 'brightness(0)', height: 19, left: 0, maxWidth: 'none', position: 'absolute', top: 0, width: 64.44}} /></span>
-}
 
 function ExternalLinkIcon() {
   return <svg fill="none" height="10" style={{display: 'block', flexShrink: 0}} viewBox="0 0 24 24" width="10" xmlns="http://www.w3.org/2000/svg"><path d="M14 5h5v5M19 5l-8 8M19 13v5a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1h5" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" /></svg>
@@ -57,9 +53,9 @@ export function OttoInvoiceChatGptTvContent() {
   const progress = Math.min(1, raw / 8)
   const revealRow = (index: number) => index === 0 ? 1 : interpolate(raw, [index, index + 0.22], [0, 1], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp'})
   return <AbsoluteFill style={{background: '#fff', color: '#171717', fontFamily: CHATGPT_MOBILE_FONT_STACK, overflow: 'hidden'}}>
-    <style>{`.tv-sidebar-item-icon .lucide { width: 12px !important; height: 12px !important; }`}</style>
+    <style>{`.tv-sidebar-item-icon .lucide { width: 12px !important; height: 12px !important; }.tv-sidebar-header-icon .lucide { width: 14px !important; height: 14px !important; }`}</style>
     <aside style={{background: '#f9f9f9', borderRight: '1px solid #ededed', bottom: 0, left: 0, padding: '12px 8px', position: 'absolute', top: 0, width: SIDEBAR}}>
-      <div style={{alignItems: 'center', display: 'flex', height: 24, padding: '0 8px'}}><ChatGptMark /><SquarePen size={15} style={{marginLeft: 'auto'}} /></div>
+      <div style={{alignItems: 'center', display: 'flex', height: 24, padding: '0 8px'}}><strong style={{fontSize: 12.5, fontWeight: 650}}>ChatGPT</strong><span className="tv-sidebar-header-icon" style={{display: 'flex', gap: 11, marginLeft: 'auto'}}><Search /><PanelLeft /></span></div>
       <div style={{marginTop: 14}}><SideRow icon={<SquarePen size={14} />} label="Novo chat" /><SideRow icon={<Search size={14} />} label="Buscar chats" /><SideRow icon={<Library size={14} />} label="Biblioteca" /><SideRow icon={<Grid2X2 size={14} />} label="Explorar GPTs" /></div>
       <div style={{color: '#666', fontSize: 8.3, margin: '16px 9px 6px'}}>Chats</div><SideRow active label="Emitir notas fiscais" /><SideRow label="Resumo de vendas" /><SideRow label="Fluxo de caixa semanal" /><SideRow label="Clientes inadimplentes" />
       <div style={{color: '#666', fontSize: 8.3, margin: '13px 9px 5px'}}>7 dias anteriores</div><SideRow label="Relatório financeiro" /><SideRow label="Análise de estoque" />
