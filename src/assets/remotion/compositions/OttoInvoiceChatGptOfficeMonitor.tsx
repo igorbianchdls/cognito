@@ -49,7 +49,7 @@ export function OttoInvoiceChatGptOfficeMonitor() {
             width: OTTO_INVOICE_CHATGPT_TV_CONTENT_WIDTH,
           }}
         >
-          <OttoInvoiceChatGptTvContent />
+          <OttoInvoiceChatGptTvContent titleFontSize={180} />
         </div>
         <div style={{background: 'linear-gradient(120deg, rgba(255,255,255,.035), transparent 44%, rgba(0,0,0,.035))', inset: 0, pointerEvents: 'none', position: 'absolute'}} />
         <div style={{boxShadow: 'inset 0 0 9px rgba(0,0,0,.18)', inset: 0, pointerEvents: 'none', position: 'absolute'}} />
