@@ -31,7 +31,7 @@ function ShareIcon() {
 }
 
 function SideRow({active, icon, label}: {active?: boolean; icon?: ReactNode; label: string}) {
-  return <div style={{alignItems: 'center', background: active ? '#e9e9e9' : 'transparent', borderRadius: 7, display: 'flex', height: 30, padding: '0 9px'}}>{icon ? <span className="tv-sidebar-item-icon" style={{display: 'flex', marginRight: 9}}>{icon}</span> : null}<span style={{fontSize: 9, fontWeight: active ? 600 : 450}}>{label}</span>{active ? <MoreHorizontal size={13} style={{marginLeft: 'auto'}} /> : null}</div>
+  return <div style={{alignItems: 'center', background: active ? '#e9e9e9' : 'transparent', borderRadius: 7, display: 'flex', height: 30, padding: '0 9px'}}>{icon ? <span className="tv-sidebar-item-icon" style={{display: 'flex', marginRight: 9}}>{icon}</span> : null}<span style={{fontSize: 9, fontWeight: active ? 600 : 450, letterSpacing: '-0.01em'}}>{label}</span>{active ? <MoreHorizontal size={13} style={{marginLeft: 'auto'}} /> : null}</div>
 }
 
 function Row({completed, frame, index}: {completed: number; frame: number; index: number}) {
@@ -53,9 +53,9 @@ export function OttoInvoiceChatGptTvContent() {
   const progress = Math.min(1, raw / 8)
   const revealRow = (index: number) => index === 0 ? 1 : interpolate(raw, [index, index + 0.22], [0, 1], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp'})
   return <AbsoluteFill style={{background: '#fff', color: '#171717', fontFamily: CHATGPT_MOBILE_FONT_STACK, overflow: 'hidden'}}>
-    <style>{`.tv-sidebar-item-icon .lucide { width: 12px !important; height: 12px !important; }.tv-sidebar-header-icon .lucide { width: 14px !important; height: 14px !important; }`}</style>
+    <style>{`.tv-sidebar-item-icon .lucide { width: 12px !important; height: 12px !important; }.tv-sidebar-header-icon .lucide { width: 12px !important; height: 12px !important; }`}</style>
     <aside style={{background: '#f9f9f9', borderRight: '1px solid #ededed', bottom: 0, left: 0, padding: '12px 8px', position: 'absolute', top: 0, width: SIDEBAR}}>
-      <div style={{alignItems: 'center', display: 'flex', height: 24, padding: '0 8px'}}><strong style={{fontSize: 12.5, fontWeight: 650}}>ChatGPT</strong><span className="tv-sidebar-header-icon" style={{display: 'flex', gap: 11, marginLeft: 'auto'}}><Search /><PanelLeft /></span></div>
+      <div style={{alignItems: 'center', display: 'flex', height: 24, padding: '0 8px'}}><strong style={{fontSize: 12.5, fontWeight: 650}}>ChatGPT</strong><span className="tv-sidebar-header-icon" style={{color: '#8f8f8f', display: 'flex', gap: 11, marginLeft: 'auto'}}><Search /><PanelLeft /></span></div>
       <div style={{marginTop: 14}}><SideRow icon={<SquarePen size={14} />} label="Novo chat" /><SideRow icon={<Search size={14} />} label="Buscar chats" /><SideRow icon={<Library size={14} />} label="Biblioteca" /><SideRow icon={<Grid2X2 size={14} />} label="Explorar GPTs" /></div>
       <div style={{color: '#666', fontSize: 8.3, margin: '16px 9px 6px'}}>Chats</div><SideRow active label="Emitir notas fiscais" /><SideRow label="Resumo de vendas" /><SideRow label="Fluxo de caixa semanal" /><SideRow label="Clientes inadimplentes" />
       <div style={{color: '#666', fontSize: 8.3, margin: '13px 9px 5px'}}>7 dias anteriores</div><SideRow label="Relatório financeiro" /><SideRow label="Análise de estoque" />
