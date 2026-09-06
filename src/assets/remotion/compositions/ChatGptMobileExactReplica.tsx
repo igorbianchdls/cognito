@@ -1,9 +1,7 @@
-import type {ReactNode} from 'react'
-import {AbsoluteFill, Img, staticFile} from 'remotion'
+import {useEffect, useState, type ReactNode} from 'react'
+import {AbsoluteFill, continueRender, delayRender, Img, staticFile} from 'remotion'
 
 import {IOS_REMOTION_DISPLAY_FONT_STACK, IOS_REMOTION_FONT_STACK, loadSfProFonts} from '@/assets/remotion/fonts/sfPro'
-
-loadSfProFonts()
 
 export const CHATGPT_MOBILE_EXACT_REPLICA_DURATION = 90
 
@@ -69,7 +67,7 @@ function ActionRow({top}: {top: number}) {
 }
 
 function UserBubble({children, height, right = 32, top, width}: {children: ReactNode; height: number; right?: number; top: number; width: number}) {
-  return <div style={{alignItems: 'center', background: BUBBLE, borderRadius: 46, boxSizing: 'border-box', display: 'flex', fontSize: 32, fontWeight: 400, height, lineHeight: 1.48, padding: '0 30px', position: 'absolute', right, top, width}}>{children}</div>
+  return <div style={{alignItems: 'center', background: BUBBLE, borderRadius: 46, boxSizing: 'border-box', display: 'flex', fontSize: 32, fontWeight: 400, height, letterSpacing: '-0.01em', lineHeight: 1.48, padding: '0 30px', position: 'absolute', right, top, width}}>{children}</div>
 }
 
 function AssistantText({children, top}: {children: ReactNode; top: number}) {
@@ -81,6 +79,26 @@ function EmojiCrop({height, left, sourceX, sourceY, top, width}: {height: number
 }
 
 export function ChatGptMobileExactReplica() {
+  const [fontReady, setFontReady] = useState(false)
+  const [fontHandle] = useState(() => delayRender('Carregando SF Pro'))
+
+  useEffect(() => {
+    let active = true
+
+    Promise.resolve(loadSfProFonts())
+      .then(async () => {
+        if (typeof document !== 'undefined') await document.fonts.ready
+        if (active) setFontReady(true)
+      })
+      .finally(() => continueRender(fontHandle))
+
+    return () => {
+      active = false
+    }
+  }, [fontHandle])
+
+  if (!fontReady) return <AbsoluteFill style={{background: '#fff'}} />
+
   return <AbsoluteFill style={{background: '#fff', color: INK, fontFamily: IOS_REMOTION_FONT_STACK, overflow: 'hidden'}}>
     <div style={{fontFamily: IOS_REMOTION_DISPLAY_FONT_STACK, fontSize: 35, fontWeight: 600, left: 58, letterSpacing: '0.01em', position: 'absolute', top: 29}}>02:36</div>
     <div style={{alignItems: 'center', display: 'flex', gap: 7, position: 'absolute', right: 34, top: 36}}><SignalIcon /><WifiIcon /><BatteryIcon /></div>
@@ -114,7 +132,7 @@ export function ChatGptMobileExactReplica() {
 
     <div style={{alignItems: 'center', background: '#f2f2f2', borderRadius: 52, bottom: 68, display: 'flex', height: 96, left: 68, padding: '0 16px 0 27px', position: 'absolute', right: 68}}>
       <PlusIcon />
-      <span style={{color: '#969696', fontSize: 32, fontWeight: 400, marginLeft: 28}}>Perguntar ao ChatGPT</span>
+      <span style={{color: '#969696', fontSize: 32, fontWeight: 400, letterSpacing: '-0.01em', marginLeft: 28}}>Perguntar ao ChatGPT</span>
       <span style={{marginLeft: 'auto'}}><MicrophoneIcon /></span>
       <span style={{alignItems: 'center', background: '#000', borderRadius: 999, display: 'flex', height: 64, justifyContent: 'center', marginLeft: 45, width: 64}}><VoiceIcon /></span>
     </div>
