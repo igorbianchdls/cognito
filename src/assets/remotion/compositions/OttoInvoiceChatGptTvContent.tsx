@@ -49,21 +49,21 @@ function Row({completed, frame, index}: {completed: number; frame: number; index
 }
 
 function MobileStatusIcon({active, done, frame}: {active: boolean; done: boolean; frame: number}) {
-  if (done) return <svg fill="none" height="26" viewBox="0 0 24 24" width="26"><circle cx="12" cy="12" r="9" stroke={GREEN} strokeWidth="1.8" /><path d="m7.7 12.1 2.7 2.7 5.9-6" stroke={GREEN} strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.8" /></svg>
-  if (active) return <svg fill="none" height="26" style={{transform: `rotate(${frame * 10}deg)`}} viewBox="0 0 24 24" width="26"><circle cx="12" cy="12" r="9" stroke="#d9eee8" strokeWidth="2" /><path d="M12 3a9 9 0 0 1 9 9" stroke={GREEN} strokeLinecap="round" strokeWidth="2.2" /></svg>
-  return <svg fill="none" height="26" viewBox="0 0 24 24" width="26"><circle cx="12" cy="12" r="9" stroke="#b8bec4" strokeWidth="1.8" /><path d="M12 7v5l3 2" stroke="#b8bec4" strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.8" /></svg>
+  if (done) return <svg fill="none" height="27" viewBox="0 0 24 24" width="27"><circle cx="12" cy="12" r="9" stroke={GREEN} strokeWidth="1.8" /><path d="m7.7 12.1 2.7 2.7 5.9-6" stroke={GREEN} strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.8" /></svg>
+  if (active) return <svg fill="none" height="27" style={{transform: `rotate(${frame * 10}deg)`}} viewBox="0 0 24 24" width="27"><circle cx="12" cy="12" r="9" stroke="#d9eee8" strokeWidth="2" /><path d="M12 3a9 9 0 0 1 9 9" stroke={GREEN} strokeLinecap="round" strokeWidth="2.2" /></svg>
+  return <svg fill="none" height="27" viewBox="0 0 24 24" width="27"><circle cx="12" cy="12" r="9" stroke="#b8bec4" strokeWidth="1.8" /><path d="M12 7v5l3 2" stroke="#b8bec4" strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.8" /></svg>
 }
 
 function MobileInvoiceRow({completed, frame, index}: {completed: number; frame: number; index: number}) {
   const done = index < completed
   const active = index === completed && completed < 8
 
-  return <div style={{alignItems: 'center', borderTop: index ? '1px solid #e9e9e9' : 'none', boxSizing: 'border-box', display: 'grid', gap: 8, gridTemplateColumns: '36px 62px 1.22fr 1.1fr 100px', minHeight: 86, padding: '12px'}}>
-    <InvoiceIcon color="#60666c" size={24} />
-    <span style={{fontSize: 16}}>NFS-e</span>
-    <div style={{lineHeight: 1.22}}><strong style={{display: 'block', fontSize: 19}}>{invoices[index][0]}</strong><span style={{color: '#555', fontSize: 15}}>{invoices[index][1]}</span></div>
-    <div style={{alignItems: 'center', display: 'flex', gap: 9}}><MobileStatusIcon active={active} done={done} frame={frame} /><div style={{lineHeight: 1.22}}><strong style={{color: done ? GREEN : '#333', display: 'block', fontSize: 17}}>{done ? 'Emitida' : active ? 'Emitindo...' : 'Aguardando...'}</strong><span style={{color: '#666', fontSize: 14}}>{done ? 'Enviada por WhatsApp' : active ? 'Gerando XML' : 'Na fila para emissão'}</span></div></div>
-    <span style={{alignItems: 'center', border: '1px solid #ddd', borderRadius: 18, color: done ? '#222' : '#aaa', display: 'flex', fontSize: 13, gap: 5, justifyContent: 'center', padding: '8px 7px'}}>Ver nota <ExternalLinkIcon size={12} /></span>
+  return <div style={{alignItems: 'center', borderTop: index ? '1px solid #e9e9e9' : 'none', boxSizing: 'border-box', display: 'grid', gap: 8, gridTemplateColumns: '37px 64px 1.24fr 1.12fr 102px', minHeight: 92, padding: '13px 12px'}}>
+    <InvoiceIcon color="#60666c" size={25} />
+    <span style={{fontSize: 17.5}}>NFS-e</span>
+    <div style={{lineHeight: 1.22}}><strong style={{display: 'block', fontSize: 21}}>{invoices[index][0]}</strong><span style={{color: '#555', fontSize: 16.5}}>{invoices[index][1]}</span></div>
+    <div style={{alignItems: 'center', display: 'flex', gap: 9}}><MobileStatusIcon active={active} done={done} frame={frame} /><div style={{lineHeight: 1.22}}><strong style={{color: done ? GREEN : '#333', display: 'block', fontSize: 18.5}}>{done ? 'Emitida' : active ? 'Emitindo...' : 'Aguardando...'}</strong><span style={{color: '#666', fontSize: 15.5}}>{done ? 'Enviada por WhatsApp' : active ? 'Gerando XML' : 'Na fila para emissão'}</span></div></div>
+    <span style={{alignItems: 'center', border: '1px solid #ddd', borderRadius: 18, color: done ? '#222' : '#aaa', display: 'flex', fontSize: 14, gap: 5, justifyContent: 'center', padding: '8px 7px'}}>Ver nota <ExternalLinkIcon size={12} /></span>
   </div>
 }
 
@@ -82,7 +82,7 @@ export function OttoInvoiceEmissionMobilePanel({start, top}: {start: number; top
       <h1 className="chatgpt-mobile-invoice-title" style={{fontFamily: IOS_REMOTION_DISPLAY_FONT_STACK, fontSize: 40, fontWeight: 650, letterSpacing: '-0.025em', lineHeight: 1.03, margin: '0 0 18px', whiteSpace: 'nowrap'}}>Emitindo múltiplas notas fiscais</h1>
       <div style={{fontSize: 15, fontWeight: 650}}>{completed} de 8 notas emitidas</div>
       <div style={{background: '#eceeed', borderRadius: 99, height: 7, marginTop: 9, overflow: 'hidden'}}><div style={{background: GREEN, height: '100%', width: `${progress * 100}%`}} /></div>
-      <div style={{border: '1px solid #ddd', borderRadius: 14, marginTop: 16, overflow: 'hidden'}}>{invoices.map((invoice, index) => { const reveal = revealRow(index); return <div key={invoice[0]} style={{maxHeight: reveal * 86, opacity: reveal, overflow: 'hidden', transform: `translateY(${(1 - reveal) * 7}px)`}}><MobileInvoiceRow completed={completed} frame={frame} index={index} /></div> })}</div>
+      <div style={{border: '1px solid #ddd', borderRadius: 14, marginTop: 16, overflow: 'hidden'}}>{invoices.map((invoice, index) => { const reveal = revealRow(index); return <div key={invoice[0]} style={{maxHeight: reveal * 92, opacity: reveal, overflow: 'hidden', transform: `translateY(${(1 - reveal) * 7}px)`}}><MobileInvoiceRow completed={completed} frame={frame} index={index} /></div> })}</div>
       <div style={{display: 'flex', fontSize: 13, marginTop: 14}}><strong>Total: 8 notas fiscais</strong><span style={{color: '#666', marginLeft: 'auto'}}>{completed} de 8 concluídas</span></div>
     </div>
   </div>

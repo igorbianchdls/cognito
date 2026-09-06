@@ -178,7 +178,6 @@ export function ChatGptMobileExactReplica() {
       <div style={{left: 58, position: 'absolute', top: 121}}><MenuIcon /></div>
       <div style={{position: 'absolute', right: 137, top: 121}}><ComposeIcon /></div>
       <div style={{position: 'absolute', right: 56, top: 124}}><DotsIcon color="#050505" size={37} /></div>
-      <div style={{color: '#989898', fontSize: 27, fontWeight: 600, height: 13, left: 0, overflow: 'hidden', position: 'absolute', textAlign: 'center', top: 179, width: '100%'}}><div style={{transform: 'translateY(-14px)'}}>sexta-feira 17:00</div></div>
     </div>
 
     <ConversationTrack>
@@ -221,8 +220,8 @@ export function ChatGptMobileExactReplica() {
       <TypedAssistantText start={472} text="Perfeito! Vou emitir as notas fiscais das oito vendas." top={3237} />
       <OttoInvoiceEmissionMobilePanel start={492} top={3335} />
 
-      <TypedAssistantText start={728} text="Pronto! As 8 notas fiscais foram emitidas e enviadas." top={4320} />
-      <Reveal start={743}><ActionRow top={4470} /></Reveal>
+      <TypedAssistantText start={728} text="Pronto! As 8 notas fiscais foram emitidas e enviadas." top={4350} />
+      <Reveal start={743}><ActionRow top={4500} /></Reveal>
     </ConversationTrack>
 
     <div style={{background: '#fff', bottom: 0, height: 188, left: 0, position: 'absolute', right: 0, zIndex: 20}}>
