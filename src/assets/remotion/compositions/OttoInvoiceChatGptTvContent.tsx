@@ -1,6 +1,6 @@
 import type {ReactNode} from 'react'
 import {ArrowUp, CheckCircle2, ChevronDown, CircleHelp, Clock3, Grid2X2, Library, LoaderCircle, Mic, MoreHorizontal, PanelLeft, Plus, Search, SquarePen} from 'lucide-react'
-import {AbsoluteFill, interpolate, useCurrentFrame} from 'remotion'
+import {AbsoluteFill, interpolate, staticFile, useCurrentFrame} from 'remotion'
 
 import {CHATGPT_MOBILE_FONT_STACK} from '@/assets/remotion/compositions/ChatGptMobileBase'
 import {OTTO_INVOICE_CHATGPT_NATIVE_DURATION} from '@/assets/remotion/compositions/OttoInvoiceChatGptNative'
@@ -54,12 +54,31 @@ function MobileStatusIcon({active, done, frame}: {active: boolean; done: boolean
   return <svg fill="none" height="27" viewBox="0 0 24 24" width="27"><circle cx="12" cy="12" r="9" stroke="#b8bec4" strokeWidth="1.8" /><path d="M12 7v5l3 2" stroke="#b8bec4" strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.8" /></svg>
 }
 
+function CustomerMark({index}: {index: number}) {
+  const portraitPosition = index === 0 ? 0 : index === 3 ? 25 : index === 6 ? 75 : null
+
+  if (portraitPosition !== null) {
+    return <div style={{backgroundColor: '#e8e8e8', backgroundImage: `url(${staticFile('remotion/invoice-three-steps/avatar-sheet.png')})`, backgroundPosition: `${portraitPosition}% 38%`, backgroundRepeat: 'no-repeat', backgroundSize: '500% auto', border: '1px solid #d8d8d8', borderRadius: '50%', boxSizing: 'border-box', height: 40, width: 40}} />
+  }
+
+  const marks: Record<number, {background: string; foreground: string; graphic: ReactNode}> = {
+    1: {background: '#3399dc', foreground: '#fff', graphic: <path d="M8.2 18.1 6 20.3l-2.3-2.3 2.2-2.2a5.7 5.7 0 0 1 6.8-7.4l3.1-3.1a1.6 1.6 0 0 1 2.3 0l.7.7a1.6 1.6 0 0 1 0 2.3l-3.2 3.1a5.7 5.7 0 0 1-7.4 6.7Z" fill="currentColor" />},
+    2: {background: '#f3fbf5', foreground: '#1a9c4a', graphic: <><path d="M9 3h6v6h6v6h-6v6H9v-6H3V9h6Z" fill="currentColor" /><path d="m5 18 5-4 4 2 5-5" fill="none" stroke="#fff" strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.6" /></>},
+    4: {background: '#6f2da8', foreground: '#fff', graphic: <><path d="M12 20C6.2 18.2 4 14.1 4 8.4c4.4.2 7 2.2 8 6 1-3.8 3.6-5.8 8-6 0 5.7-2.2 9.8-8 11.6Z" fill="currentColor" /><path d="M12 14.5V21" stroke="#fff" strokeLinecap="round" strokeWidth="1.5" /></>},
+    5: {background: '#ff7a22', foreground: '#fff', graphic: <><rect fill="currentColor" height="7" rx="1" width="3" x="4" y="13" /><rect fill="currentColor" height="11" rx="1" width="3" x="9" y="9" /><rect fill="currentColor" height="15" rx="1" width="3" x="14" y="5" /><rect fill="currentColor" height="18" rx="1" width="3" x="19" y="2" /></>},
+    7: {background: '#0d4c78', foreground: '#fff', graphic: <><path d="M7 5v4m0 6v4m5-14v14m5-14v4m0 6v4M5 9h4v6H5Zm10 0h4v6h-4Z" fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" /><circle cx="12" cy="5" fill="currentColor" r="1.5" /><circle cx="12" cy="19" fill="currentColor" r="1.5" /></>},
+  }
+  const mark = marks[index]
+
+  return <span style={{alignItems: 'center', background: mark.background, border: index === 2 ? '1px solid #cfe6d5' : 'none', borderRadius: '50%', boxSizing: 'border-box', color: mark.foreground, display: 'flex', height: 40, justifyContent: 'center', width: 40}}><svg fill="none" height="25" viewBox="0 0 24 24" width="25">{mark.graphic}</svg></span>
+}
+
 function MobileInvoiceRow({completed, frame, index}: {completed: number; frame: number; index: number}) {
   const done = index < completed
   const active = index === completed && completed < 8
 
-  return <div style={{alignItems: 'center', borderTop: index ? '1px solid #e9e9e9' : 'none', boxSizing: 'border-box', display: 'grid', gap: 8, gridTemplateColumns: '37px 64px 1.24fr 1.12fr 102px', minHeight: 92, padding: '13px 12px'}}>
-    <InvoiceIcon color="#60666c" size={25} />
+  return <div style={{alignItems: 'center', borderTop: index ? '1px solid #e9e9e9' : 'none', boxSizing: 'border-box', display: 'grid', gap: 8, gridTemplateColumns: '44px 64px 1.24fr 1.12fr 102px', minHeight: 92, padding: '13px 12px'}}>
+    <CustomerMark index={index} />
     <span style={{fontSize: 17.5}}>NFS-e</span>
     <div style={{lineHeight: 1.22}}><strong style={{display: 'block', fontSize: 21}}>{invoices[index][0]}</strong><span style={{color: '#555', fontSize: 16.5}}>{invoices[index][1]}</span></div>
     <div style={{alignItems: 'center', display: 'flex', gap: 9}}><MobileStatusIcon active={active} done={done} frame={frame} /><div style={{lineHeight: 1.22}}><strong style={{color: done ? GREEN : '#333', display: 'block', fontSize: 18.5}}>{done ? 'Emitida' : active ? 'Emitindo...' : 'Aguardando...'}</strong><span style={{color: '#666', fontSize: 15.5}}>{done ? 'Enviada por WhatsApp' : active ? 'Gerando XML' : 'Na fila para emissão'}</span></div></div>
