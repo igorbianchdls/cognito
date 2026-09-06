@@ -155,9 +155,25 @@ export function ChatGptMobileExactReplica() {
 
   if (!fontReady) return <AbsoluteFill style={{background: '#fff'}} />
 
-  return <AbsoluteFill style={{background: '#fff', color: INK, fontFamily: IOS_REMOTION_FONT_STACK, overflow: 'hidden'}}>
+  return <AbsoluteFill className="chatgpt-mobile-exact" style={{background: '#fff', color: INK, fontFamily: IOS_REMOTION_FONT_STACK, overflow: 'hidden'}}>
+    <style>{`
+      .chatgpt-mobile-exact,
+      .chatgpt-mobile-exact * {
+        font-family: ${IOS_REMOTION_FONT_STACK} !important;
+      }
+      .chatgpt-mobile-exact .chatgpt-mobile-display,
+      .chatgpt-mobile-exact .chatgpt-mobile-invoice-title {
+        font-family: ${IOS_REMOTION_DISPLAY_FONT_STACK} !important;
+      }
+      .chatgpt-mobile-exact .chatgpt-mobile-invoice-title {
+        font-size: 50px !important;
+        font-weight: 650 !important;
+        letter-spacing: -0.035em !important;
+        line-height: 1.03 !important;
+      }
+    `}</style>
     <div style={{background: '#fff', height: 205, left: 0, position: 'absolute', right: 0, top: 0, zIndex: 20}}>
-      <div style={{fontFamily: IOS_REMOTION_DISPLAY_FONT_STACK, fontSize: 35, fontWeight: 600, left: 58, letterSpacing: '0.01em', position: 'absolute', top: 29}}>02:36</div>
+      <div className="chatgpt-mobile-display" style={{fontFamily: IOS_REMOTION_DISPLAY_FONT_STACK, fontSize: 35, fontWeight: 600, left: 58, letterSpacing: '0.01em', position: 'absolute', top: 29}}>02:36</div>
       <div style={{alignItems: 'center', display: 'flex', gap: 7, position: 'absolute', right: 34, top: 36}}><SignalIcon /><WifiIcon /><BatteryIcon /></div>
       <div style={{left: 58, position: 'absolute', top: 121}}><MenuIcon /></div>
       <div style={{position: 'absolute', right: 137, top: 121}}><ComposeIcon /></div>
