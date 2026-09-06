@@ -166,9 +166,9 @@ export function ChatGptMobileExactReplica() {
         font-family: ${IOS_REMOTION_DISPLAY_FONT_STACK} !important;
       }
       .chatgpt-mobile-exact .chatgpt-mobile-invoice-title {
-        font-size: 50px !important;
+        font-size: 40px !important;
         font-weight: 650 !important;
-        letter-spacing: -0.035em !important;
+        letter-spacing: -0.025em !important;
         line-height: 1.03 !important;
       }
     `}</style>
@@ -221,8 +221,8 @@ export function ChatGptMobileExactReplica() {
       <TypedAssistantText start={472} text="Perfeito! Vou emitir as notas fiscais das oito vendas." top={3237} />
       <OttoInvoiceEmissionMobilePanel start={492} top={3335} />
 
-      <TypedAssistantText start={728} text="Pronto! As 8 notas fiscais foram emitidas e enviadas." top={4250} />
-      <Reveal start={743}><ActionRow top={4400} /></Reveal>
+      <TypedAssistantText start={728} text="Pronto! As 8 notas fiscais foram emitidas e enviadas." top={4320} />
+      <Reveal start={743}><ActionRow top={4470} /></Reveal>
     </ConversationTrack>
 
     <div style={{background: '#fff', bottom: 0, height: 188, left: 0, position: 'absolute', right: 0, zIndex: 20}}>
