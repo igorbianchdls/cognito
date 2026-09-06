@@ -81,7 +81,7 @@ function AssistantText({children, top}: {children: ReactNode; top: number}) {
 
 function TypedAssistantText({start, text, top}: {start: number; text: string; top: number}) {
   const frame = useCurrentFrame()
-  const visibleCharacters = Math.max(0, Math.min(text.length, Math.floor(frame - start + 1)))
+  const visibleCharacters = Math.max(0, Math.min(text.length, Math.floor((frame - start + 1) * 3)))
 
   return <AssistantText top={top}>{text.slice(0, visibleCharacters)}</AssistantText>
 }
@@ -146,22 +146,22 @@ export function ChatGptMobileExactReplica() {
 
     <Reveal start={10}><UserBubble height={92} top={245} width={582}>Pergunte pra mim o que eu quero</UserBubble></Reveal>
     <TypedAssistantText start={32} text="O que você quer?" top={409} />
-    <Reveal start={50}><ActionRow top={482} /></Reveal>
+    <Reveal start={40}><ActionRow top={482} /></Reveal>
 
     <Reveal start={65}><UserBubble height={92} top={585} width={524}>Pergunte cm um emoii no final</UserBubble></Reveal>
     <TypedAssistantText start={87} text="O que você quer?" top={750} />
-    <TypedEmojiCrop boundaries={[46]} height={42} left={308} sourceX={308} sourceY={750} start={103} top={750} width={46} />
-    <Reveal start={106}><ActionRow top={822} /></Reveal>
+    <TypedEmojiCrop boundaries={[46]} height={42} left={308} sourceX={308} sourceY={750} start={93} top={750} width={46} />
+    <Reveal start={96}><ActionRow top={822} /></Reveal>
 
     <Reveal start={120}><UserBubble height={144} top={925} width={491}><span>Pergunte com vários emojis<br />no final</span></UserBubble></Reveal>
     <TypedAssistantText start={142} text="O que você quer?" top={1145} />
-    <TypedEmojiCrop boundaries={[50, 96, 143, 185, 234, 279, 326, 374, 421, 481]} height={44} left={307} sourceX={307} sourceY={1138} start={158} top={1138} width={481} />
-    <Reveal start={171}><ActionRow top={1217} /></Reveal>
+    <TypedEmojiCrop boundaries={[50, 96, 143, 185, 234, 279, 326, 374, 421, 481]} height={44} left={307} sourceX={307} sourceY={1138} start={148} top={1138} width={481} />
+    <Reveal start={160}><ActionRow top={1217} /></Reveal>
 
-    <Reveal start={183}><UserBubble height={90} top={1317} width={286}>Menos emojis</UserBubble></Reveal>
-    <TypedAssistantText start={205} text="O que você quer?" top={1486} />
-    <TypedEmojiCrop boundaries={[50, 93, 138]} height={44} left={308} sourceX={308} sourceY={1480} start={221} top={1480} width={138} />
-    <Reveal start={226}><ActionRow top={1554} /></Reveal>
+    <Reveal start={175}><UserBubble height={90} top={1317} width={286}>Menos emojis</UserBubble></Reveal>
+    <TypedAssistantText start={197} text="O que você quer?" top={1486} />
+    <TypedEmojiCrop boundaries={[50, 93, 138]} height={44} left={308} sourceX={308} sourceY={1480} start={203} top={1480} width={138} />
+    <Reveal start={208}><ActionRow top={1554} /></Reveal>
 
     <div style={{alignItems: 'center', background: '#f2f2f2', borderRadius: 52, bottom: 68, display: 'flex', height: 96, left: 68, padding: '0 16px 0 27px', position: 'absolute', right: 68}}>
       <PlusIcon />
