@@ -3,7 +3,7 @@ import {AbsoluteFill, continueRender, delayRender, Img, interpolate, spring, sta
 
 import {IOS_REMOTION_DISPLAY_FONT_STACK, IOS_REMOTION_FONT_STACK, loadSfProFonts} from '@/assets/remotion/fonts/sfPro'
 
-export const CHATGPT_MOBILE_EXACT_REPLICA_DURATION = 250
+export const CHATGPT_MOBILE_EXACT_REPLICA_DURATION = 470
 
 const INK = '#171717'
 const ICON = '#666666'
@@ -81,7 +81,7 @@ function AssistantText({children, top}: {children: ReactNode; top: number}) {
 
 function TypedAssistantText({start, text, top}: {start: number; text: string; top: number}) {
   const frame = useCurrentFrame()
-  const visibleCharacters = Math.max(0, Math.min(text.length, Math.floor((frame - start + 1) * 3)))
+  const visibleCharacters = Math.max(0, Math.min(text.length, Math.floor((frame - start + 1) * 6)))
 
   return <AssistantText top={top}>{text.slice(0, visibleCharacters)}</AssistantText>
 }
@@ -113,6 +113,22 @@ function Reveal({children, start}: {children: ReactNode; start: number}) {
   return <AbsoluteFill style={{opacity, pointerEvents: 'none', transform: `translateY(${(1 - entrance) * 14}px)`}}>{children}</AbsoluteFill>
 }
 
+function ConversationTrack({children}: {children: ReactNode}) {
+  const frame = useCurrentFrame()
+  const {fps} = useVideoConfig()
+  const scrollStep = (start: number) => spring({
+    config: {damping: 26, mass: 0.85, stiffness: 120},
+    delay: start,
+    fps,
+    frame,
+  })
+  const scrollY = -340 * (scrollStep(218) + scrollStep(273) + scrollStep(328) + scrollStep(383))
+
+  return <AbsoluteFill style={{clipPath: 'inset(230px 0 188px 0)', zIndex: 1}}>
+    <AbsoluteFill style={{transform: `translateY(${scrollY}px)`}}>{children}</AbsoluteFill>
+  </AbsoluteFill>
+}
+
 export function ChatGptMobileExactReplica() {
   const [fontReady, setFontReady] = useState(false)
   const [fontHandle] = useState(() => delayRender('Carregando SF Pro'))
@@ -135,40 +151,60 @@ export function ChatGptMobileExactReplica() {
   if (!fontReady) return <AbsoluteFill style={{background: '#fff'}} />
 
   return <AbsoluteFill style={{background: '#fff', color: INK, fontFamily: IOS_REMOTION_FONT_STACK, overflow: 'hidden'}}>
-    <div style={{fontFamily: IOS_REMOTION_DISPLAY_FONT_STACK, fontSize: 35, fontWeight: 600, left: 58, letterSpacing: '0.01em', position: 'absolute', top: 29}}>02:36</div>
-    <div style={{alignItems: 'center', display: 'flex', gap: 7, position: 'absolute', right: 34, top: 36}}><SignalIcon /><WifiIcon /><BatteryIcon /></div>
-
-    <div style={{left: 58, position: 'absolute', top: 121}}><MenuIcon /></div>
-    <div style={{position: 'absolute', right: 137, top: 121}}><ComposeIcon /></div>
-    <div style={{position: 'absolute', right: 56, top: 124}}><DotsIcon color="#050505" size={37} /></div>
-
-    <div style={{color: '#989898', fontSize: 27, fontWeight: 600, height: 13, left: 0, overflow: 'hidden', position: 'absolute', textAlign: 'center', top: 179, width: '100%'}}><div style={{transform: 'translateY(-14px)'}}>sexta-feira 17:00</div></div>
-
-    <Reveal start={10}><UserBubble height={92} top={245} width={582}>Pergunte pra mim o que eu quero</UserBubble></Reveal>
-    <TypedAssistantText start={32} text="O que você quer?" top={409} />
-    <Reveal start={40}><ActionRow top={482} /></Reveal>
-
-    <Reveal start={65}><UserBubble height={92} top={585} width={524}>Pergunte cm um emoii no final</UserBubble></Reveal>
-    <TypedAssistantText start={87} text="O que você quer?" top={750} />
-    <TypedEmojiCrop boundaries={[46]} height={42} left={308} sourceX={308} sourceY={750} start={93} top={750} width={46} />
-    <Reveal start={96}><ActionRow top={822} /></Reveal>
-
-    <Reveal start={120}><UserBubble height={144} top={925} width={491}><span>Pergunte com vários emojis<br />no final</span></UserBubble></Reveal>
-    <TypedAssistantText start={142} text="O que você quer?" top={1145} />
-    <TypedEmojiCrop boundaries={[50, 96, 143, 185, 234, 279, 326, 374, 421, 481]} height={44} left={307} sourceX={307} sourceY={1138} start={148} top={1138} width={481} />
-    <Reveal start={160}><ActionRow top={1217} /></Reveal>
-
-    <Reveal start={175}><UserBubble height={90} top={1317} width={286}>Menos emojis</UserBubble></Reveal>
-    <TypedAssistantText start={197} text="O que você quer?" top={1486} />
-    <TypedEmojiCrop boundaries={[50, 93, 138]} height={44} left={308} sourceX={308} sourceY={1480} start={203} top={1480} width={138} />
-    <Reveal start={208}><ActionRow top={1554} /></Reveal>
-
-    <div style={{alignItems: 'center', background: '#f2f2f2', borderRadius: 52, bottom: 68, display: 'flex', height: 96, left: 68, padding: '0 16px 0 27px', position: 'absolute', right: 68}}>
-      <PlusIcon />
-      <span style={{color: '#969696', fontSize: 32, fontWeight: 400, letterSpacing: '-0.01em', marginLeft: 28}}>Perguntar ao ChatGPT</span>
-      <span style={{marginLeft: 'auto'}}><MicrophoneIcon /></span>
-      <span style={{alignItems: 'center', background: '#000', borderRadius: 999, display: 'flex', height: 64, justifyContent: 'center', marginLeft: 45, width: 64}}><VoiceIcon /></span>
+    <div style={{background: '#fff', height: 205, left: 0, position: 'absolute', right: 0, top: 0, zIndex: 20}}>
+      <div style={{fontFamily: IOS_REMOTION_DISPLAY_FONT_STACK, fontSize: 35, fontWeight: 600, left: 58, letterSpacing: '0.01em', position: 'absolute', top: 29}}>02:36</div>
+      <div style={{alignItems: 'center', display: 'flex', gap: 7, position: 'absolute', right: 34, top: 36}}><SignalIcon /><WifiIcon /><BatteryIcon /></div>
+      <div style={{left: 58, position: 'absolute', top: 121}}><MenuIcon /></div>
+      <div style={{position: 'absolute', right: 137, top: 121}}><ComposeIcon /></div>
+      <div style={{position: 'absolute', right: 56, top: 124}}><DotsIcon color="#050505" size={37} /></div>
+      <div style={{color: '#989898', fontSize: 27, fontWeight: 600, height: 13, left: 0, overflow: 'hidden', position: 'absolute', textAlign: 'center', top: 179, width: '100%'}}><div style={{transform: 'translateY(-14px)'}}>sexta-feira 17:00</div></div>
     </div>
-    <div style={{background: '#000', borderRadius: 999, bottom: 15, height: 11, left: '50%', position: 'absolute', transform: 'translateX(-50%)', width: 296}} />
+
+    <ConversationTrack>
+      <Reveal start={10}><UserBubble height={92} top={245} width={582}>Pergunte pra mim o que eu quero</UserBubble></Reveal>
+      <TypedAssistantText start={32} text="O que você quer?" top={409} />
+      <Reveal start={37}><ActionRow top={482} /></Reveal>
+
+      <Reveal start={65}><UserBubble height={92} top={585} width={524}>Pergunte cm um emoii no final</UserBubble></Reveal>
+      <TypedAssistantText start={87} text="O que você quer?" top={750} />
+      <TypedEmojiCrop boundaries={[46]} height={42} left={308} sourceX={308} sourceY={750} start={90} top={750} width={46} />
+      <Reveal start={93}><ActionRow top={822} /></Reveal>
+
+      <Reveal start={120}><UserBubble height={144} top={925} width={491}><span>Pergunte com vários emojis<br />no final</span></UserBubble></Reveal>
+      <TypedAssistantText start={142} text="O que você quer?" top={1145} />
+      <TypedEmojiCrop boundaries={[50, 96, 143, 185, 234, 279, 326, 374, 421, 481]} height={44} left={307} sourceX={307} sourceY={1138} start={145} top={1138} width={481} />
+      <Reveal start={157}><ActionRow top={1217} /></Reveal>
+
+      <Reveal start={175}><UserBubble height={90} top={1317} width={286}>Menos emojis</UserBubble></Reveal>
+      <TypedAssistantText start={197} text="O que você quer?" top={1486} />
+      <TypedEmojiCrop boundaries={[50, 93, 138]} height={44} left={308} sourceX={308} sourceY={1480} start={200} top={1480} width={138} />
+      <Reveal start={205}><ActionRow top={1554} /></Reveal>
+
+      <Reveal start={230}><UserBubble height={90} top={1657} width={330}>Agora sem emojis</UserBubble></Reveal>
+      <TypedAssistantText start={252} text="O que você quer?" top={1826} />
+      <Reveal start={257}><ActionRow top={1894} /></Reveal>
+
+      <Reveal start={285}><UserBubble height={92} top={1997} width={535}>Pergunte com mais educação</UserBubble></Reveal>
+      <TypedAssistantText start={307} text="O que você gostaria?" top={2166} />
+      <Reveal start={312}><ActionRow top={2234} /></Reveal>
+
+      <Reveal start={340}><UserBubble height={92} top={2337} width={450}>Agora seja mais direto</UserBubble></Reveal>
+      <TypedAssistantText start={362} text="Como posso ajudar?" top={2506} />
+      <Reveal start={367}><ActionRow top={2574} /></Reveal>
+
+      <Reveal start={395}><UserBubble height={90} top={2677} width={360}>Perfeito, obrigado</UserBubble></Reveal>
+      <TypedAssistantText start={417} text="Por nada!" top={2846} />
+      <Reveal start={421}><ActionRow top={2914} /></Reveal>
+    </ConversationTrack>
+
+    <div style={{background: '#fff', bottom: 0, height: 188, left: 0, position: 'absolute', right: 0, zIndex: 20}}>
+      <div style={{alignItems: 'center', background: '#f2f2f2', borderRadius: 52, bottom: 68, display: 'flex', height: 96, left: 68, padding: '0 16px 0 27px', position: 'absolute', right: 68}}>
+        <PlusIcon />
+        <span style={{color: '#969696', fontSize: 32, fontWeight: 400, letterSpacing: '-0.01em', marginLeft: 28}}>Perguntar ao ChatGPT</span>
+        <span style={{marginLeft: 'auto'}}><MicrophoneIcon /></span>
+        <span style={{alignItems: 'center', background: '#000', borderRadius: 999, display: 'flex', height: 64, justifyContent: 'center', marginLeft: 45, width: 64}}><VoiceIcon /></span>
+      </div>
+      <div style={{background: '#000', borderRadius: 999, bottom: 15, height: 11, left: '50%', position: 'absolute', transform: 'translateX(-50%)', width: 296}} />
+    </div>
   </AbsoluteFill>
 }
