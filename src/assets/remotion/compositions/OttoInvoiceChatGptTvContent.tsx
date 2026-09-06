@@ -77,13 +77,12 @@ export function OttoInvoiceEmissionMobilePanel({start, top}: {start: number; top
   const revealRow = (index: number) => index === 0 ? 1 : interpolate(raw, [index, index + 0.22], [0, 1], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp'})
 
   return <div style={{background: '#fff', border: '1px solid #dedede', borderRadius: 24, boxShadow: '0 8px 30px rgba(0,0,0,.09)', left: 34, opacity: cardIn, overflow: 'hidden', position: 'absolute', right: 34, top, transform: `translateY(${(1 - cardIn) * 12}px)`}}>
-    <div style={{alignItems: 'center', display: 'flex', height: 64, padding: '0 20px'}}><span style={{border: '1px solid #ddd', borderRadius: 9, display: 'grid', height: 34, placeItems: 'center', width: 34}}><InvoiceIcon size={20} /></span><strong style={{fontSize: 17, marginLeft: 11}}>Otto · Emitir notas fiscais</strong><span style={{color: completed === 8 ? GREEN : '#666', fontSize: 14, marginLeft: 12}}>{completed === 8 ? 'Concluído' : 'Executando...'}</span><svg fill="none" height="20" style={{marginLeft: 'auto', transform: 'rotate(180deg)'}} viewBox="0 0 24 24" width="20"><path d="m7 9 5 5 5-5" stroke="#555" strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.8" /></svg></div>
-    <div style={{padding: '4px 20px 18px'}}>
+    <div style={{padding: '22px 20px 20px'}}>
       <h1 className="chatgpt-mobile-invoice-title" style={{fontFamily: IOS_REMOTION_DISPLAY_FONT_STACK, fontSize: 40, fontWeight: 650, letterSpacing: '-0.025em', lineHeight: 1.03, margin: '0 0 18px', whiteSpace: 'nowrap'}}>Emitindo múltiplas notas fiscais</h1>
-      <div style={{fontSize: 15, fontWeight: 650}}>{completed} de 8 notas emitidas</div>
+      <div style={{fontSize: 18, fontWeight: 650}}>{completed} de 8 notas emitidas</div>
       <div style={{background: '#eceeed', borderRadius: 99, height: 7, marginTop: 9, overflow: 'hidden'}}><div style={{background: GREEN, height: '100%', width: `${progress * 100}%`}} /></div>
       <div style={{border: '1px solid #ddd', borderRadius: 14, marginTop: 16, overflow: 'hidden'}}>{invoices.map((invoice, index) => { const reveal = revealRow(index); return <div key={invoice[0]} style={{maxHeight: reveal * 92, opacity: reveal, overflow: 'hidden', transform: `translateY(${(1 - reveal) * 7}px)`}}><MobileInvoiceRow completed={completed} frame={frame} index={index} /></div> })}</div>
-      <div style={{display: 'flex', fontSize: 13, marginTop: 14}}><strong>Total: 8 notas fiscais</strong><span style={{color: '#666', marginLeft: 'auto'}}>{completed} de 8 concluídas</span></div>
+      <div style={{display: 'flex', fontSize: 16, marginTop: 16}}><strong>Total: 8 notas fiscais</strong><span style={{color: '#555', fontWeight: 520, marginLeft: 'auto'}}>{completed} de 8 concluídas</span></div>
     </div>
   </div>
 }
