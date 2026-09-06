@@ -203,7 +203,7 @@ export function ChatGptMobileExactReplica() {
 
       <Reveal start={450}><UserBubble height={144} top={3017} width={690}><span>Chat, emita as notas fiscais das vendas de hoje e envie para cada cliente.</span></UserBubble></Reveal>
       <TypedAssistantText start={472} text="Perfeito! Vou emitir as notas fiscais das oito vendas." top={3237} />
-      <OttoInvoiceEmissionMobilePanel start={492} top={3375} />
+      <OttoInvoiceEmissionMobilePanel start={492} top={3335} />
 
       <TypedAssistantText start={728} text="Pronto! As 8 notas fiscais foram emitidas e enviadas." top={4250} />
       <Reveal start={743}><ActionRow top={4400} /></Reveal>
