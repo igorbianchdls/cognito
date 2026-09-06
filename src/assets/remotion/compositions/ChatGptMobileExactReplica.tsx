@@ -1,9 +1,10 @@
 import {useEffect, useState, type ReactNode} from 'react'
 import {AbsoluteFill, continueRender, delayRender, Img, interpolate, spring, staticFile, useCurrentFrame, useVideoConfig} from 'remotion'
 
+import {OttoInvoiceEmissionMobilePanel} from '@/assets/remotion/compositions/OttoInvoiceChatGptTvContent'
 import {IOS_REMOTION_DISPLAY_FONT_STACK, IOS_REMOTION_FONT_STACK, loadSfProFonts} from '@/assets/remotion/fonts/sfPro'
 
-export const CHATGPT_MOBILE_EXACT_REPLICA_DURATION = 470
+export const CHATGPT_MOBILE_EXACT_REPLICA_DURATION = 780
 
 const INK = '#171717'
 const ICON = '#666666'
@@ -81,7 +82,7 @@ function AssistantText({children, top}: {children: ReactNode; top: number}) {
 
 function TypedAssistantText({start, text, top}: {start: number; text: string; top: number}) {
   const frame = useCurrentFrame()
-  const visibleCharacters = Math.max(0, Math.min(text.length, Math.floor((frame - start + 1) * 6)))
+  const visibleCharacters = Math.max(0, Math.min(text.length, Math.floor((frame - start + 1) * 5)))
 
   return <AssistantText top={top}>{text.slice(0, visibleCharacters)}</AssistantText>
 }
@@ -122,7 +123,11 @@ function ConversationTrack({children}: {children: ReactNode}) {
     fps,
     frame,
   })
-  const scrollY = -340 * (scrollStep(218) + scrollStep(273) + scrollStep(328) + scrollStep(383))
+  const previousConversationScroll = -340 * (scrollStep(218) + scrollStep(273) + scrollStep(328) + scrollStep(383) + scrollStep(438))
+  const invoiceEntranceScroll = -520 * scrollStep(480)
+  const invoiceGrowthScroll = -75 * ([529, 553, 577, 601, 625, 649, 673].reduce((total, start) => total + scrollStep(start), 0))
+  const completionScroll = -200 * scrollStep(710)
+  const scrollY = previousConversationScroll + invoiceEntranceScroll + invoiceGrowthScroll + completionScroll
 
   return <AbsoluteFill style={{clipPath: 'inset(230px 0 188px 0)', zIndex: 1}}>
     <AbsoluteFill style={{transform: `translateY(${scrollY}px)`}}>{children}</AbsoluteFill>
@@ -195,6 +200,13 @@ export function ChatGptMobileExactReplica() {
       <Reveal start={395}><UserBubble height={90} top={2677} width={360}>Perfeito, obrigado</UserBubble></Reveal>
       <TypedAssistantText start={417} text="Por nada!" top={2846} />
       <Reveal start={421}><ActionRow top={2914} /></Reveal>
+
+      <Reveal start={450}><UserBubble height={144} top={3017} width={690}><span>Chat, emita as notas fiscais das vendas de hoje e envie para cada cliente.</span></UserBubble></Reveal>
+      <TypedAssistantText start={472} text="Perfeito! Vou emitir as notas fiscais das oito vendas." top={3237} />
+      <OttoInvoiceEmissionMobilePanel start={492} top={3375} />
+
+      <TypedAssistantText start={728} text="Pronto! As 8 notas fiscais foram emitidas e enviadas." top={4250} />
+      <Reveal start={743}><ActionRow top={4400} /></Reveal>
     </ConversationTrack>
 
     <div style={{background: '#fff', bottom: 0, height: 188, left: 0, position: 'absolute', right: 0, zIndex: 20}}>

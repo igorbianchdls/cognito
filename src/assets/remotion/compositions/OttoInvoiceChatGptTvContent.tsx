@@ -48,6 +48,46 @@ function Row({completed, frame, index}: {completed: number; frame: number; index
   </div>
 }
 
+function MobileStatusIcon({active, done, frame}: {active: boolean; done: boolean; frame: number}) {
+  if (done) return <svg fill="none" height="24" viewBox="0 0 24 24" width="24"><circle cx="12" cy="12" r="9" stroke={GREEN} strokeWidth="1.8" /><path d="m7.7 12.1 2.7 2.7 5.9-6" stroke={GREEN} strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.8" /></svg>
+  if (active) return <svg fill="none" height="24" style={{transform: `rotate(${frame * 10}deg)`}} viewBox="0 0 24 24" width="24"><circle cx="12" cy="12" r="9" stroke="#d9eee8" strokeWidth="2" /><path d="M12 3a9 9 0 0 1 9 9" stroke={GREEN} strokeLinecap="round" strokeWidth="2.2" /></svg>
+  return <svg fill="none" height="24" viewBox="0 0 24 24" width="24"><circle cx="12" cy="12" r="9" stroke="#b8bec4" strokeWidth="1.8" /><path d="M12 7v5l3 2" stroke="#b8bec4" strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.8" /></svg>
+}
+
+function MobileInvoiceRow({completed, frame, index}: {completed: number; frame: number; index: number}) {
+  const done = index < completed
+  const active = index === completed && completed < 8
+
+  return <div style={{alignItems: 'center', borderTop: index ? '1px solid #e9e9e9' : 'none', boxSizing: 'border-box', display: 'grid', gap: 8, gridTemplateColumns: '30px 55px 1.15fr 1.05fr 90px', minHeight: 68, padding: '10px 12px'}}>
+    <InvoiceIcon color="#60666c" size={20} />
+    <span style={{fontSize: 14}}>NFS-e</span>
+    <div style={{lineHeight: 1.18}}><strong style={{display: 'block', fontSize: 14.5}}>{invoices[index][0]}</strong><span style={{color: '#555', fontSize: 12}}>{invoices[index][1]}</span></div>
+    <div style={{alignItems: 'center', display: 'flex', gap: 8}}><MobileStatusIcon active={active} done={done} frame={frame} /><div style={{lineHeight: 1.18}}><strong style={{color: done ? GREEN : '#333', display: 'block', fontSize: 13.5}}>{done ? 'Emitida' : active ? 'Emitindo...' : 'Aguardando...'}</strong><span style={{color: '#666', fontSize: 11}}>{done ? 'Enviada por WhatsApp' : active ? 'Gerando XML' : 'Na fila para emissão'}</span></div></div>
+    <span style={{alignItems: 'center', border: '1px solid #ddd', borderRadius: 18, color: done ? '#222' : '#aaa', display: 'flex', fontSize: 11.5, gap: 4, justifyContent: 'center', padding: '7px 6px'}}>Ver nota <ExternalLinkIcon /></span>
+  </div>
+}
+
+export function OttoInvoiceEmissionMobilePanel({start, top}: {start: number; top: number}) {
+  const frame = useCurrentFrame()
+  const localFrame = frame - start
+  const cardIn = tween(localFrame, 0, 12)
+  const raw = tween(localFrame, 18, 210, [0, 8])
+  const completed = Math.min(8, Math.floor(raw))
+  const progress = Math.min(1, raw / 8)
+  const revealRow = (index: number) => index === 0 ? 1 : interpolate(raw, [index, index + 0.22], [0, 1], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp'})
+
+  return <div style={{background: '#fff', border: '1px solid #dedede', borderRadius: 24, boxShadow: '0 8px 30px rgba(0,0,0,.09)', left: 34, opacity: cardIn, overflow: 'hidden', position: 'absolute', right: 34, top, transform: `translateY(${(1 - cardIn) * 12}px)`}}>
+    <div style={{alignItems: 'center', display: 'flex', height: 64, padding: '0 20px'}}><span style={{border: '1px solid #ddd', borderRadius: 9, display: 'grid', height: 34, placeItems: 'center', width: 34}}><InvoiceIcon size={20} /></span><strong style={{fontSize: 17, marginLeft: 11}}>Otto · Emitir notas fiscais</strong><span style={{color: completed === 8 ? GREEN : '#666', fontSize: 14, marginLeft: 12}}>{completed === 8 ? 'Concluído' : 'Executando...'}</span><svg fill="none" height="20" style={{marginLeft: 'auto', transform: 'rotate(180deg)'}} viewBox="0 0 24 24" width="20"><path d="m7 9 5 5 5-5" stroke="#555" strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.8" /></svg></div>
+    <div style={{padding: '4px 20px 18px'}}>
+      <h1 style={{fontFamily: IOS_REMOTION_DISPLAY_FONT_STACK, fontSize: 40, fontWeight: 650, letterSpacing: '-0.02em', lineHeight: 1.03, margin: '0 0 16px', whiteSpace: 'nowrap'}}>Emitindo múltiplas notas fiscais</h1>
+      <div style={{fontSize: 15, fontWeight: 650}}>{completed} de 8 notas emitidas</div>
+      <div style={{background: '#eceeed', borderRadius: 99, height: 7, marginTop: 9, overflow: 'hidden'}}><div style={{background: GREEN, height: '100%', width: `${progress * 100}%`}} /></div>
+      <div style={{border: '1px solid #ddd', borderRadius: 14, marginTop: 16, overflow: 'hidden'}}>{invoices.map((invoice, index) => { const reveal = revealRow(index); return <div key={invoice[0]} style={{maxHeight: reveal * 68, opacity: reveal, overflow: 'hidden', transform: `translateY(${(1 - reveal) * 7}px)`}}><MobileInvoiceRow completed={completed} frame={frame} index={index} /></div> })}</div>
+      <div style={{display: 'flex', fontSize: 13, marginTop: 14}}><strong>Total: 8 notas fiscais</strong><span style={{color: '#666', marginLeft: 'auto'}}>{completed} de 8 concluídas</span></div>
+    </div>
+  </div>
+}
+
 export function OttoInvoiceChatGptTvContent({conversationLiftAmount = 38, conversationLiftEnd = 7.5, promptBottom = 7, titleFontSize = 140, titleVerticalPadding = 0, withIntro = true}: {conversationLiftAmount?: number; conversationLiftEnd?: number; promptBottom?: number; titleFontSize?: number; titleVerticalPadding?: number; withIntro?: boolean} = {}) {
   const absoluteFrame = useCurrentFrame()
   const frame = withIntro ? Math.max(0, absoluteFrame - TV_CONTENT_INTRO_DURATION) : absoluteFrame
