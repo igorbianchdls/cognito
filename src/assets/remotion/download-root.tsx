@@ -73,6 +73,10 @@ import {
   ChatGptPlusStaticUi,
 } from './compositions/ChatGptPlusStaticUi'
 import {
+  CHATGPT_MOBILE_EXACT_REPLICA_DURATION,
+  ChatGptMobileExactReplica,
+} from './compositions/ChatGptMobileExactReplica'
+import {
   PROMPT_TO_CHART_EXACT_DURATION,
   PromptToChartExactVideo,
 } from './compositions/PromptToChartExactVideo'
@@ -112,6 +116,10 @@ import {
   OTTO_INVOICE_CHATGPT_TV_ZOOM_DURATION,
   OttoInvoiceChatGptTvZoom,
 } from './compositions/OttoInvoiceChatGptTvZoom'
+import {
+  OTTO_INVOICE_CHATGPT_OFFICE_MONITOR_DURATION,
+  OttoInvoiceChatGptOfficeMonitor,
+} from './compositions/OttoInvoiceChatGptOfficeMonitor'
 
 function RemotionDownloadRoot() {
   return (
@@ -237,6 +245,14 @@ function RemotionDownloadRoot() {
         width={1920}
       />
       <Composition
+        component={ChatGptMobileExactReplica}
+        durationInFrames={CHATGPT_MOBILE_EXACT_REPLICA_DURATION}
+        fps={30}
+        height={1792}
+        id="component-chatgpt-mobile-exact-replica"
+        width={828}
+      />
+      <Composition
         component={PromptToChartExactVideo}
         durationInFrames={PROMPT_TO_CHART_EXACT_DURATION}
         fps={30}
@@ -314,6 +330,14 @@ function RemotionDownloadRoot() {
         fps={30}
         height={1920}
         id="video-otto-invoice-chatgpt-tv-zoom"
+        width={1080}
+      />
+      <Composition
+        component={OttoInvoiceChatGptOfficeMonitor}
+        durationInFrames={OTTO_INVOICE_CHATGPT_OFFICE_MONITOR_DURATION}
+        fps={30}
+        height={1920}
+        id="video-otto-invoice-chatgpt-office-monitor"
         width={1080}
       />
       <Composition

@@ -93,6 +93,7 @@ import { ChatGptOperationalFlowsVideo } from '@/assets/remotion/compositions/Cha
 import { ChatGptTaskLauncherAnimation } from '@/assets/remotion/compositions/ChatGptTaskLauncherAnimation'
 import { CODEX_CHARTS_DURATION, CodexChartsAnimation } from '@/assets/remotion/compositions/CodexChartsAnimation'
 import { CHATGPT_PLUS_STATIC_UI_DURATION, ChatGptPlusStaticUi } from '@/assets/remotion/compositions/ChatGptPlusStaticUi'
+import { CHATGPT_MOBILE_EXACT_REPLICA_DURATION, ChatGptMobileExactReplica } from '@/assets/remotion/compositions/ChatGptMobileExactReplica'
 import { PROMPT_TO_CHART_EXACT_DURATION, PromptToChartExactVideo } from '@/assets/remotion/compositions/PromptToChartExactVideo'
 import { CHATBOT_DASHBOARD_MOBILE_DURATION, CHATGPT_POWERPOINT_OUTLINE_MOBILE_DURATION, CLAUDE_POWERPOINT_OUTLINE_MOBILE_DURATION, COWORK_POWERPOINT_EXPORT_DURATION, COWORK_POWERPOINT_EXPORT_MOBILE_DURATION, ChatGptPowerPointOutlineMobileAnimation, ChatbotToDashboardMobileAnimation, ClaudePowerPointOutlineMobileAnimation, CoworkPowerPointExportAnimation, CoworkPowerPointExportMobileAnimation } from '@/assets/remotion/compositions/CoworkPowerPointExportAnimation'
 import { CLAUDE_FINANCIAL_AGENTS_VIDEO_DURATION, ClaudeFinancialAgentsVideo } from '@/assets/remotion/compositions/ClaudeFinancialAgentsVideo'
@@ -2008,6 +2009,18 @@ const catalog: CatalogItem[] = [
     tags: ['ChatGPT', 'Desktop', 'Chat', 'Static UI'],
     value: 'component-chatgpt-plus-static-ui',
     width: 1920,
+  },
+  {
+    code: '<ChatGptMobileExactReplica />',
+    component: ChatGptMobileExactReplica,
+    description: 'Réplica mobile estática do ChatGPT em SF Pro, com ícones vetoriais próprios e layout fiel à referência.',
+    duration: CHATGPT_MOBILE_EXACT_REPLICA_DURATION,
+    height: 1792,
+    kind: 'Componentes',
+    label: 'ChatGPT Mobile — Réplica exata',
+    tags: ['ChatGPT', 'Mobile', 'SF Pro', 'iPhone', 'Custom Icons'],
+    value: 'component-chatgpt-mobile-exact-replica',
+    width: 828,
   },
   {
     code: '<BrowserFrame theme={theme} url="ledger.ai/workspace">...</BrowserFrame>',
