@@ -1,9 +1,9 @@
 import {useEffect, useState, type ReactNode} from 'react'
-import {AbsoluteFill, continueRender, delayRender, Img, staticFile} from 'remotion'
+import {AbsoluteFill, continueRender, delayRender, Img, interpolate, spring, staticFile, useCurrentFrame, useVideoConfig} from 'remotion'
 
 import {IOS_REMOTION_DISPLAY_FONT_STACK, IOS_REMOTION_FONT_STACK, loadSfProFonts} from '@/assets/remotion/fonts/sfPro'
 
-export const CHATGPT_MOBILE_EXACT_REPLICA_DURATION = 90
+export const CHATGPT_MOBILE_EXACT_REPLICA_DURATION = 250
 
 const INK = '#171717'
 const ICON = '#666666'
@@ -26,7 +26,10 @@ function MenuIcon() {
 }
 
 function ComposeIcon() {
-  return <svg fill="none" height="43" viewBox="0 0 43 43" width="43"><path d="M26 7H11a6 6 0 0 0-6 6v19a6 6 0 0 0 6 6h19a6 6 0 0 0 6-6V18" stroke="#050505" strokeLinecap="round" strokeLinejoin="round" strokeWidth="4.5" /><path d="m19 27 2-8L34.7 5.3a4.4 4.4 0 0 1 6.2 6.2L27 25z" stroke="#050505" strokeLinecap="round" strokeLinejoin="round" strokeWidth="4.5" /></svg>
+  return <svg fill="none" height="43" viewBox="0 0 43 43" width="43">
+    <path d="M25.5 7.5H12.2a6.2 6.2 0 0 0-6.2 6.2v17.1a6.2 6.2 0 0 0 6.2 6.2h17.1a6.2 6.2 0 0 0 6.2-6.2V18" stroke="#050505" strokeLinecap="round" strokeLinejoin="round" strokeWidth="3.35" />
+    <path d="m18.5 28.2 2.1-8.1L34.3 6.4a4.15 4.15 0 0 1 5.9 5.9L26.5 26z" stroke="#050505" strokeLinecap="round" strokeLinejoin="round" strokeWidth="3.35" />
+  </svg>
 }
 
 function DotsIcon({color = ICON, size = 34}: {color?: string; size?: number}) {
@@ -38,15 +41,11 @@ function CopyIcon() {
 }
 
 function ThumbIcon({down = false}: {down?: boolean}) {
-  return <svg fill="none" height="32" style={{transform: down ? 'scaleY(-1)' : undefined}} viewBox="0 0 35 35" width="32"><path d="M12 15 17 5c.8-1.7 3.2-2.1 4.5-.8.8.8 1.1 2 .8 3.1L21 13h6.7c3.4 0 5.8 3.3 4.8 6.5l-2 7A4.8 4.8 0 0 1 26 30H13" stroke={ICON} strokeLinecap="round" strokeLinejoin="round" strokeWidth="3.5" /><rect height="16" rx="3" stroke={ICON} strokeWidth="3.5" width="8" x="3" y="14" /></svg>
+  return <svg fill="none" height="27" style={{transform: down ? 'scaleY(-1)' : undefined}} viewBox="0 0 35 35" width="27"><path d="M12 15 17 5c.8-1.7 3.2-2.1 4.5-.8.8.8 1.1 2 .8 3.1L21 13h6.7c3.4 0 5.8 3.3 4.8 6.5l-2 7A4.8 4.8 0 0 1 26 30H13" stroke={ICON} strokeLinecap="round" strokeLinejoin="round" strokeWidth="3.5" /><rect height="16" rx="3" stroke={ICON} strokeWidth="3.5" width="8" x="3" y="14" /></svg>
 }
 
 function ShareIcon() {
   return <svg fill="none" height="33" viewBox="0 0 36 36" width="33"><path d="M18 3v21M11 10l7-7 7 7" stroke={ICON} strokeLinecap="round" strokeLinejoin="round" strokeWidth="3.6" /><path d="M8 17H5v13h26V17h-3" stroke={ICON} strokeLinecap="round" strokeLinejoin="round" strokeWidth="3.6" /></svg>
-}
-
-function DownIcon() {
-  return <svg fill="none" height="38" viewBox="0 0 40 40" width="38"><path d="M20 6v26M10 22l10 10 10-10" stroke="#050505" strokeLinecap="round" strokeLinejoin="round" strokeWidth="4" /></svg>
 }
 
 function PlusIcon() {
@@ -63,7 +62,13 @@ function VoiceIcon() {
 }
 
 function ActionRow({top}: {top: number}) {
-  return <div style={{alignItems: 'center', display: 'flex', gap: 22, left: 34, position: 'absolute', top}}><CopyIcon /><div style={{display: 'flex', width: 47}}><ThumbIcon /><span style={{display: 'flex', marginLeft: -13}}><ThumbIcon down /></span></div><ShareIcon /><DotsIcon size={30} /></div>
+  return <div style={{height: 34, left: 34, position: 'absolute', top, width: 220}}>
+    <span style={{display: 'flex', left: 0, position: 'absolute', top: 0}}><CopyIcon /></span>
+    <span style={{display: 'flex', left: 57, position: 'absolute', top: 2}}><ThumbIcon /></span>
+    <span style={{display: 'flex', left: 88, position: 'absolute', top: 2}}><ThumbIcon down /></span>
+    <span style={{display: 'flex', left: 123, position: 'absolute', top: 0}}><ShareIcon /></span>
+    <span style={{display: 'flex', left: 181, position: 'absolute', top: 1}}><DotsIcon size={30} /></span>
+  </div>
 }
 
 function UserBubble({children, height, right = 32, top, width}: {children: ReactNode; height: number; right?: number; top: number; width: number}) {
@@ -76,6 +81,23 @@ function AssistantText({children, top}: {children: ReactNode; top: number}) {
 
 function EmojiCrop({height, left, sourceX, sourceY, top, width}: {height: number; left: number; sourceX: number; sourceY: number; top: number; width: number}) {
   return <div style={{background: '#fff', height, left, overflow: 'hidden', position: 'absolute', top, width}}><Img src={staticFile('remotion/references/chatgpt-mobile-exact-reference.png')} style={{height: 1792, left: -sourceX, maxWidth: 'none', position: 'absolute', top: -sourceY, width: 828}} /></div>
+}
+
+function Reveal({children, start}: {children: ReactNode; start: number}) {
+  const frame = useCurrentFrame()
+  const {fps} = useVideoConfig()
+  const entrance = spring({
+    config: {damping: 22, mass: 0.7, stiffness: 180},
+    delay: start,
+    fps,
+    frame,
+  })
+  const opacity = interpolate(frame, [start, start + 8], [0, 1], {
+    extrapolateLeft: 'clamp',
+    extrapolateRight: 'clamp',
+  })
+
+  return <AbsoluteFill style={{opacity, pointerEvents: 'none', transform: `translateY(${(1 - entrance) * 14}px)`}}>{children}</AbsoluteFill>
 }
 
 export function ChatGptMobileExactReplica() {
@@ -109,26 +131,30 @@ export function ChatGptMobileExactReplica() {
 
     <div style={{color: '#989898', fontSize: 27, fontWeight: 600, height: 13, left: 0, overflow: 'hidden', position: 'absolute', textAlign: 'center', top: 179, width: '100%'}}><div style={{transform: 'translateY(-14px)'}}>sexta-feira 17:00</div></div>
 
-    <UserBubble height={92} top={245} width={582}>Pergunte pra mim o que eu quero</UserBubble>
-    <AssistantText top={409}>O que você quer?</AssistantText>
-    <ActionRow top={482} />
+    <Reveal start={10}><UserBubble height={92} top={245} width={582}>Pergunte pra mim o que eu quero</UserBubble></Reveal>
+    <Reveal start={32}><AssistantText top={409}>O que você quer?</AssistantText></Reveal>
+    <Reveal start={42}><ActionRow top={482} /></Reveal>
 
-    <UserBubble height={92} top={585} width={524}>Pergunte cm um emoii no final</UserBubble>
-    <AssistantText top={750}>O que você quer?</AssistantText>
-    <EmojiCrop height={42} left={308} sourceX={308} sourceY={750} top={750} width={46} />
-    <ActionRow top={822} />
+    <Reveal start={65}><UserBubble height={92} top={585} width={524}>Pergunte cm um emoii no final</UserBubble></Reveal>
+    <Reveal start={87}>
+      <AssistantText top={750}>O que você quer?</AssistantText>
+      <EmojiCrop height={42} left={308} sourceX={308} sourceY={750} top={750} width={46} />
+    </Reveal>
+    <Reveal start={97}><ActionRow top={822} /></Reveal>
 
-    <UserBubble height={144} top={925} width={491}><span>Pergunte com vários emojis<br />no final</span></UserBubble>
-    <AssistantText top={1145}>O que você quer?</AssistantText>
-    <EmojiCrop height={44} left={307} sourceX={307} sourceY={1138} top={1138} width={481} />
-    <ActionRow top={1217} />
+    <Reveal start={120}><UserBubble height={144} top={925} width={491}><span>Pergunte com vários emojis<br />no final</span></UserBubble></Reveal>
+    <Reveal start={142}>
+      <AssistantText top={1145}>O que você quer?</AssistantText>
+      <EmojiCrop height={44} left={307} sourceX={307} sourceY={1138} top={1138} width={481} />
+    </Reveal>
+    <Reveal start={152}><ActionRow top={1217} /></Reveal>
 
-    <UserBubble height={90} top={1317} width={286}>Menos emojis</UserBubble>
-    <AssistantText top={1486}>O que você quer?</AssistantText>
-    <EmojiCrop height={44} left={308} sourceX={308} sourceY={1480} top={1480} width={138} />
-    <ActionRow top={1554} />
-
-    <div style={{alignItems: 'center', background: '#fff', border: '1px solid #e8e8e8', borderRadius: 999, boxShadow: '0 4px 15px rgba(0,0,0,.16)', display: 'flex', height: 68, justifyContent: 'center', left: '50%', position: 'absolute', top: 1533, transform: 'translateX(-50%)', width: 68}}><DownIcon /></div>
+    <Reveal start={175}><UserBubble height={90} top={1317} width={286}>Menos emojis</UserBubble></Reveal>
+    <Reveal start={197}>
+      <AssistantText top={1486}>O que você quer?</AssistantText>
+      <EmojiCrop height={44} left={308} sourceX={308} sourceY={1480} top={1480} width={138} />
+    </Reveal>
+    <Reveal start={207}><ActionRow top={1554} /></Reveal>
 
     <div style={{alignItems: 'center', background: '#f2f2f2', borderRadius: 52, bottom: 68, display: 'flex', height: 96, left: 68, padding: '0 16px 0 27px', position: 'absolute', right: 68}}>
       <PlusIcon />
