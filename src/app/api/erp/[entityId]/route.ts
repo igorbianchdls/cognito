@@ -1,5 +1,6 @@
+import { erpFailure } from "@/products/erp/server/erpApi"
 import { NextResponse } from 'next/server'
-import { z } from 'zod'
+import { erpCreateEnvelopeSchema, readErpIdempotencyKey } from '@/products/erp/shared/erpTransport'
 
 import { erpErrorResponse, parseErpBody } from '@/products/erp/server/erpApi'
 import { resolveErpAccess } from '@/products/erp/server/erpAccess'
@@ -14,7 +15,7 @@ type RouteContext = {
   params: Promise<{ entityId: string }>
 }
 
-const createSchema = z.object({ values: z.record(z.string(), z.unknown()).default({}) })
+const createSchema = erpCreateEnvelopeSchema
 
 function parseFilters(searchParams: URLSearchParams) {
   const filters: Record<string, string> = {}
@@ -29,12 +30,12 @@ function parseFilters(searchParams: URLSearchParams) {
 export async function GET(request: Request, context: RouteContext) {
   const { entityId } = await context.params
   if (!isErpConnectedModuleId(entityId)) {
-    return NextResponse.json({ error: 'Modulo ERP nao encontrado.' }, { status: 404 })
+    return erpFailure('Modulo ERP nao encontrado.', 404)
   }
 
   const tenant = await resolveErpAccess(getErpModuleCapability(entityId, 'read'))
   if (!tenant) {
-    return NextResponse.json({ error: 'Acesso negado.' }, { status: 403 })
+    return erpFailure('Acesso negado.', 403)
   }
 
   try {
@@ -57,12 +58,12 @@ export async function GET(request: Request, context: RouteContext) {
 export async function POST(request: Request, context: RouteContext) {
   const { entityId } = await context.params
   if (!isErpConnectedModuleId(entityId)) {
-    return NextResponse.json({ error: 'Modulo ERP nao encontrado.' }, { status: 404 })
+    return erpFailure('Modulo ERP nao encontrado.', 404)
   }
 
   const tenant = await resolveErpAccess(getErpModuleCapability(entityId, 'manage'))
   if (!tenant) {
-    return NextResponse.json({ error: 'Acesso negado.' }, { status: 403 })
+    return erpFailure('Acesso negado.', 403)
   }
 
   try {
@@ -72,7 +73,7 @@ export async function POST(request: Request, context: RouteContext) {
       entityId,
       tenantId: tenant.tenantId,
       values: body.values,
-      idempotencyKey: request.headers.get('idempotency-key') || undefined,
+      idempotencyKey: readErpIdempotencyKey(request.headers),
     })
 
     return NextResponse.json({ record }, { status: 201 })

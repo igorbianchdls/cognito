@@ -1,4 +1,6 @@
 import { runQuery, withTransaction, type SQLClient } from '@/lib/postgres'
+import { preflightDashboardQueries } from '@/products/artifacts/dashboard/query/dashboardQueryPreflight'
+import { DASHBOARD_QUERY_RETIRED_CODE, DASHBOARD_QUERY_RETIRED_MESSAGE } from '@/products/artifacts/dashboard/query/dashboardQueryPolicy'
 import type { ArtifactKind } from '@/products/artifacts/core/types/artifactTypes'
 
 type JsonMap = Record<string, unknown>
@@ -610,6 +612,10 @@ export async function writeArtifactByType(input: WriteArtifactInput) {
   const expectedVersion = normalizePositiveInt(input.expectedVersion, 'expected_version')
   const title = toNullableText(input.title)
   const source = normalizeSource(input.source)
+  if (artifactType === 'dashboard') {
+    const preflight = preflightDashboardQueries({ source })
+    if (!preflight.ok) throw new ArtifactToolError(410, DASHBOARD_QUERY_RETIRED_CODE, DASHBOARD_QUERY_RETIRED_MESSAGE, preflight)
+  }
   const workspaceId = toNullableText(input.workspaceId)
   const slug = toNullableText(input.slug)
   const metadata = input.metadata == null ? null : toObj(input.metadata)
@@ -806,6 +812,11 @@ export async function patchArtifactByType(input: PatchArtifactInput) {
         matches = result.matches
       } else {
         nextSource = normalizeSource(operation.source, 'operation.source')
+      }
+
+      if (artifactType === 'dashboard') {
+        const preflight = preflightDashboardQueries({ source: nextSource })
+        if (!preflight.ok) throw new ArtifactToolError(410, DASHBOARD_QUERY_RETIRED_CODE, DASHBOARD_QUERY_RETIRED_MESSAGE, preflight)
       }
 
       const nextVersion = (artifact.current_draft_version || 0) + 1

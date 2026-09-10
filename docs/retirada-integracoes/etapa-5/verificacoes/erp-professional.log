@@ -1,0 +1,14 @@
+node:internal/modules/run_main:123
+    triggerUncaughtException(
+    ^
+
+Error: getaddrinfo ENOTFOUND db.mtadnxqoqxzbdksktwdr.supabase.co
+    at GetAddrInfoReqWrap.onlookupall [as oncomplete] (node:dns:122:26) {
+  errno: -3008,
+  code: 'ENOTFOUND',
+  syscall: 'getaddrinfo',
+  hostname: 'db.mtadnxqoqxzbdksktwdr.supabase.co'
+}
+
+Node.js v22.17.0
+exit_code=1

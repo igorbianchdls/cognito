@@ -5,7 +5,6 @@ import {
   Bell,
   CalendarClock,
   Database,
-  Plug,
   FileText,
   Megaphone,
   ShoppingCart,
@@ -120,7 +119,6 @@ export function getToolLabel(tool?: string) {
   if (tool === 'actions') return 'Acoes'
   if (tool === 'alerts') return 'Alertas'
   if (tool === 'schedules') return 'Agendamentos'
-  if (tool === 'connectors') return 'Conectores'
   if (tool === 'sql' || tool === 'sql_execution') return 'SQL'
   if (tool === 'ecommerce') return 'Ecommerce'
   if (tool === 'marketing') return 'Marketing'
@@ -143,7 +141,6 @@ export function getToolVisual(tool?: string): ToolVisual {
   if (tool === 'actions') return { label: 'Acoes', icon: createElement(Zap, { size: 19, strokeWidth: 2.4 }), tone: 'marketing' }
   if (tool === 'alerts') return { label: 'Alertas', icon: createElement(Bell, { size: 19, strokeWidth: 2.4 }), tone: 'marketing' }
   if (tool === 'schedules') return { label: 'Agendamentos', icon: createElement(CalendarClock, { size: 19, strokeWidth: 2.4 }), tone: 'crm' }
-  if (tool === 'connectors') return { label: 'Conectores', icon: createElement(Plug, { size: 19, strokeWidth: 2.4 }), tone: 'sql' }
   if (tool === 'sql' || tool === 'sql_execution') return { label: 'SQL', icon: createElement(Database, { size: 19, strokeWidth: 2.4 }), tone: 'sql' }
   return { label: humanizeKey(tool || 'Resultado'), icon: createElement(BadgeDollarSign, { size: 19, strokeWidth: 2.4 }), tone: 'neutral' }
 }

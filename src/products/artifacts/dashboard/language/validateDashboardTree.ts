@@ -1,5 +1,7 @@
 'use client'
 
+import { DASHBOARD_QUERY_RETIRED_MESSAGE } from '@/products/artifacts/dashboard/query/dashboardQueryPolicy'
+
 import {
   DASHBOARD_SUPPORTED_CHART_PALETTE_SET,
   DASHBOARD_SUPPORTED_CHART_TYPE_SET,
@@ -38,69 +40,24 @@ function ensureObjectProp(node: DashboardTreeNode, propName: string, path: numbe
 function validateChartNode(node: DashboardTreeNode, path: number[]) {
   if (node.type !== 'Chart') return
   ensureStringProp(node, 'type', path)
-  const normalizedType = normalizeDashboardChartType(node.props.type)
-  if (!normalizedType) {
-    throw new Error(`Chart.type invalido em ${formatNodePath(path)}`)
-  }
-
-  if (!DASHBOARD_SUPPORTED_CHART_TYPE_SET.has(normalizedType)) {
-    throw new Error(`Chart.type="${String(node.props.type)}" nao suportado em ${formatNodePath(path)}`)
-  }
-
-  ensureObjectProp(node, 'dataQuery', path)
+  if (!DASHBOARD_SUPPORTED_CHART_TYPE_SET.has(normalizeDashboardChartType(node.props.type))) throw new Error('Tipo de gráfico não suportado.')
+  if (!Array.isArray(node.props.data)) throw new Error('Chart.data deve ser uma lista de registros.')
 }
 
 function validateKpiNode(node: DashboardTreeNode, path: number[]) {
   if (node.type !== 'KPI') return
-  const valuePath = typeof node.props?.valuePath === 'string' ? node.props.valuePath.trim() : ''
-  const comparisonMode = typeof node.props?.comparisonMode === 'string' ? node.props.comparisonMode.trim() : ''
-  const hasDataQuery =
-    Boolean(node.props?.dataQuery) &&
-    typeof node.props?.dataQuery === 'object' &&
-    !Array.isArray(node.props?.dataQuery)
-
-  if (!valuePath && !hasDataQuery) {
-    throw new Error(`KPI requer valuePath ou dataQuery em ${formatNodePath(path)}`)
-  }
-
-  if (hasDataQuery) {
-    const dataQuery = node.props?.dataQuery as Record<string, unknown>
-    const hasSqlQuery = typeof dataQuery.query === 'string' && dataQuery.query.trim()
-    const hasLegacyQuery =
-      typeof dataQuery.model === 'string' &&
-      dataQuery.model.trim() &&
-      typeof dataQuery.measure === 'string' &&
-      dataQuery.measure.trim()
-
-    if (!hasSqlQuery && !hasLegacyQuery) {
-      throw new Error(`KPI.dataQuery invalido em ${formatNodePath(path)}`)
-    }
-  }
-
-  if (
-    comparisonMode &&
-    comparisonMode !== 'previous_period' &&
-    comparisonMode !== 'previous_month' &&
-    comparisonMode !== 'previous_year'
-  ) {
-    throw new Error(`KPI.comparisonMode="${comparisonMode}" nao suportado em ${formatNodePath(path)}`)
-  }
+  if (!Object.prototype.hasOwnProperty.call(node.props, 'value') && !node.props.valuePath) throw new Error('KPI requer value ou valuePath.')
 }
 
 function validateQueryNode(node: DashboardTreeNode, path: number[]) {
-  if (node.type !== 'Query') return
-  const dataQuery = ensureObjectProp(node, 'dataQuery', path)
-  if (typeof dataQuery.query !== 'string' || !String(dataQuery.query).trim()) {
-    throw new Error(`Query.dataQuery.query obrigatorio em ${formatNodePath(path)}`)
-  }
+  if (node.type === 'Query' || node.props?.dataQuery != null || node.props?.query != null) throw new Error(DASHBOARD_QUERY_RETIRED_MESSAGE)
+  const source = node.props?.source
+  if (source && typeof source === 'object' && ('query' in source || ('type' in source && source.type === 'query'))) throw new Error(DASHBOARD_QUERY_RETIRED_MESSAGE)
 }
 
 function validateTableNode(node: DashboardTreeNode, path: number[]) {
   if (node.type !== 'Table' && node.type !== 'PivotTable') return
-  const dataQuery = ensureObjectProp(node, 'dataQuery', path)
-  if (typeof dataQuery.query !== 'string' || !String(dataQuery.query).trim()) {
-    throw new Error(`${node.type}.dataQuery.query obrigatorio em ${formatNodePath(path)}`)
-  }
+  if (!Array.isArray(node.props.data) && !(node.type === 'Table' && node.props.dataPath)) throw new Error(node.type + '.data deve ser uma lista de registros.')
 }
 
 function validateDatePickerNode(node: DashboardTreeNode, path: number[]) {
@@ -187,6 +144,7 @@ function validateTabsNode(node: DashboardTreeNode, path: number[]) {
 }
 
 function validateNode(node: DashboardTreeNode, path: number[]) {
+  validateQueryNode(node, path)
   const type = String(node.type || '').trim()
   const isSupported =
     DASHBOARD_SUPPORTED_COMPONENT_SET.has(type) || DASHBOARD_SUPPORTED_HTML_TAG_SET.has(type.toLowerCase())
@@ -198,7 +156,6 @@ function validateNode(node: DashboardTreeNode, path: number[]) {
   validateDashboardNode(node, path)
   validateFilterNode(node, path)
   validateKpiNode(node, path)
-  validateQueryNode(node, path)
   validateChartNode(node, path)
   validateTableNode(node, path)
   validateDatePickerNode(node, path)

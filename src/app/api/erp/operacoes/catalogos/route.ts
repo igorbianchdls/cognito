@@ -1,3 +1,4 @@
+import { erpFailure, erpErrorResponse as erpFailureResponse } from "@/products/erp/server/erpApi"
 import { NextResponse } from 'next/server'
 
 import { resolveErpAccess } from '@/products/erp/server/erpAccess'
@@ -11,12 +12,12 @@ export async function GET(request: Request) {
   const resource = new URL(request.url).searchParams.get('resource') || ''
   const params = new URL(request.url).searchParams
   const source = params.get('source') as ErpOperationCatalogSource | null
-  if (!resource) return NextResponse.json({ error: 'Recurso obrigatorio.' }, { status: 400 })
+  if (!resource) return erpFailure('Recurso obrigatorio.', 400)
   if (!source || !['products', 'services', 'customers', 'accounts', 'locations', 'payments'].includes(source)) {
-    return NextResponse.json({ error: 'Catalogo invalido.' }, { status: 400 })
+    return erpFailure('Catalogo invalido.', 400)
   }
   const tenant = await resolveErpAccess(getErpOperationCapability(resource, false))
-  if (!tenant) return NextResponse.json({ error: 'Acesso negado.' }, { status: 403 })
+  if (!tenant) return erpFailure('Acesso negado.', 403)
   try {
     return NextResponse.json({ records: await searchErpOperationsCatalog({
       tenantId: tenant.tenantId,
@@ -25,6 +26,6 @@ export async function GET(request: Request) {
       limit: Number(params.get('limit') || 20),
     }) })
   } catch (error) {
-    return NextResponse.json({ error: error instanceof Error ? error.message : 'Nao foi possivel carregar os catalogos.' }, { status: 400 })
+    return erpFailureResponse(error)
   }
 }

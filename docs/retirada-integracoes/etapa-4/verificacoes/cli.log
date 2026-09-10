@@ -1,0 +1,7 @@
+Uso: node scripts/plugin/tool-call.mjs --tenant <id> --tool <nome> --args <json>
+Ferramentas locais: erp, erp_acoes, crm, ecommerce, marketing, sql, sql_execution, financial_statement.
+Credenciais: ambiente atual, .env.local ou .env; nenhum carregamento remoto.
+Opcoes: --action, --resource, --id, --limit, --params-json, --filters-json, --payload-json, --idempotency-key.
+Escritas erp_acoes usam dry_run por padrao; --execute --confirm permite executar.
+--allow-error aceita resposta de erro; --help mostra esta ajuda.
+exit_code=0

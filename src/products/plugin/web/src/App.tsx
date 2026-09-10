@@ -7,7 +7,6 @@ import type {
   AnalysisStructuredContent,
   AutomationStructuredContent,
   ChartResultStructuredContent,
-  ConnectorsStructuredContent,
   DataCatalogStructuredContent,
   DataResultStructuredContent,
   DashboardListStructuredContent,
@@ -17,7 +16,6 @@ import type {
 import { AnalysisView } from '@/products/plugin/web/src/views/AnalysisView'
 import { AutomationView } from '@/products/plugin/web/src/views/AutomationView'
 import { ChartResultView } from '@/products/plugin/web/src/views/ChartResultView'
-import { ConnectorsView } from '@/products/plugin/web/src/views/ConnectorsView'
 import { DashboardListView } from '@/products/plugin/web/src/views/DashboardListView'
 import { DashboardPreviewView } from '@/products/plugin/web/src/views/DashboardPreviewView'
 import { DataCatalogView } from '@/products/plugin/web/src/views/DataCatalogView'
@@ -80,16 +78,13 @@ export function App() {
       {view === 'automation' || view === 'automation_list' || view === 'action_result' || tool === 'actions' || tool === 'alerts' || tool === 'schedules' ? (
         <AutomationView data={structuredContent as AutomationStructuredContent} />
       ) : null}
-      {view === 'connectors' || tool === 'connectors' ? (
-        <ConnectorsView data={structuredContent as ConnectorsStructuredContent} />
-      ) : null}
       {view === 'data_catalog' || tool === 'data_catalog' ? (
         <DataCatalogView data={structuredContent as DataCatalogStructuredContent} />
       ) : null}
       {isDataTool ? (
         <DataResultView data={structuredContent as DataResultStructuredContent} />
       ) : null}
-      {!view && !isDataTool ? (
+      {!isDataTool && !['dashboard_list', 'dashboard_preview', 'chart', 'analysis', 'table', 'automation', 'automation_list', 'action_result', 'data_catalog'].includes(view || '') && !['analysis', 'table', 'actions', 'alerts', 'schedules', 'data_catalog'].includes(tool || '') ? (
         <EmptyState
           title="Formato nao reconhecido"
           description="A resposta da tool nao informou uma view renderizavel."

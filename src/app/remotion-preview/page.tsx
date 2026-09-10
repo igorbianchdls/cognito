@@ -2214,7 +2214,7 @@ const catalog: CatalogItem[] = [
   {
     code: '<OttoIntegrationAccessMap />',
     component: OttoIntegrationAccessMap,
-    description: 'Simulacao da tela de integracoes do Otto com 12 cards, scroll inicial, conexoes por botao, modal e drawer.',
+    description: 'Estudo visual historico de cards, modal e drawer; nao representa recursos atuais do ERP.',
     duration: OTTO_INTEGRATION_ACCESS_MAP_DURATION,
     height: 720,
     kind: 'Actions',
@@ -2298,7 +2298,7 @@ const catalog: CatalogItem[] = [
   {
     code: '<OttoWebsiteIntegration />',
     component: OttoWebsiteIntegration,
-    description: 'Otto configurando credenciais e permissoes granulares em uma interface web de integracoes.',
+    description: 'Estudo visual historico de configuracao de credenciais; nao representa conectores disponiveis.',
     duration: OTTO_WEBSITE_INTEGRATION_DURATION,
     height: 720,
     kind: 'Actions',

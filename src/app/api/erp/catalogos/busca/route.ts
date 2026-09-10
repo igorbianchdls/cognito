@@ -1,3 +1,4 @@
+import { erpFailure } from "@/products/erp/server/erpApi"
 import { NextResponse } from 'next/server'
 
 import { resolveErpAccess } from '@/products/erp/server/erpAccess'
@@ -10,10 +11,10 @@ const catalogTypes = ['cliente', 'fornecedor', 'produto', 'servico', 'categoria'
 
 export async function GET(request: Request) {
   const tenant = await resolveErpAccess('erp.cadastros.visualizar')
-  if (!tenant) return NextResponse.json({ error: 'Acesso negado.' }, { status: 403 })
+  if (!tenant) return erpFailure('Acesso negado.', 403)
   const params = new URL(request.url).searchParams
   const type = params.get('tipo')
-  if (!catalogTypes.some((value) => value === type)) return NextResponse.json({ error: 'Tipo de catalogo invalido.' }, { status: 400 })
+  if (!catalogTypes.some((value) => value === type)) return erpFailure('Tipo de catalogo invalido.', 400)
   return NextResponse.json({ records: await searchErpCatalog({
     tenantId: tenant.tenantId,
     type: type as (typeof catalogTypes)[number],

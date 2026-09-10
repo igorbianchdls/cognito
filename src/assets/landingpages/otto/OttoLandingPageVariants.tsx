@@ -1,17 +1,6 @@
-import type { ComponentType } from 'react'
 import type { LucideIcon } from 'lucide-react'
 import Link from 'next/link'
 import { sfPro, sfProLandingStyle } from '@/assets/landingpages/otto/fonts'
-import BlingIcon from '@/components/icons/BlingIcon'
-import ContaAzulIcon from '@/components/icons/ContaAzulIcon'
-import GoogleAdsIcon from '@/components/icons/GoogleAdsIcon'
-import MetaIcon from '@/components/icons/MetaIcon'
-import NuvemshopIcon from '@/components/icons/NuvemshopIcon'
-import OmieIcon from '@/components/icons/OmieIcon'
-import PipedriveIcon from '@/components/icons/PipedriveIcon'
-import RdStationIcon from '@/components/icons/RdStationIcon'
-import TinyIcon from '@/components/icons/TinyIcon'
-import TotvsIcon from '@/components/icons/TotvsIcon'
 import {
   ArrowRight,
   BarChart3,
@@ -32,11 +21,6 @@ import {
 type CardCopy = {
   title: string
   description: string
-}
-
-type IntegrationLogoCopy = {
-  name: string
-  Icon: ComponentType<{ className?: string }>
 }
 
 type CapabilityCardCopy = CardCopy & {
@@ -75,27 +59,15 @@ const mobileCarouselTrackClassName =
   'flex gap-3 overflow-x-auto scroll-smooth pb-2 scrollbar-hide [-webkit-overflow-scrolling:touch] [scroll-snap-type:x_mandatory] lg:grid lg:overflow-visible lg:pb-0 lg:[scroll-snap-type:none]'
 const mobileCarouselCardClassName = 'min-w-[78vw] snap-start lg:min-w-0'
 
-const landingIntegrationRows: IntegrationLogoCopy[][] = [
-  [
-    { name: 'Conta Azul', Icon: ContaAzulIcon },
-    { name: 'Omie', Icon: OmieIcon },
-    { name: 'Bling', Icon: BlingIcon },
-    { name: 'Tiny', Icon: TinyIcon },
-    { name: 'TOTVS', Icon: TotvsIcon },
-  ],
-  [
-    { name: 'RD Station', Icon: RdStationIcon },
-    { name: 'Pipedrive', Icon: PipedriveIcon },
-    { name: 'Nuvemshop', Icon: NuvemshopIcon },
-    { name: 'Meta Ads', Icon: MetaIcon },
-    { name: 'Google Ads', Icon: GoogleAdsIcon },
-  ],
+const landingModuleRows = [
+  [{ name: 'Financeiro', Icon: Calculator }, { name: 'Compras', Icon: FileText }, { name: 'Vendas', Icon: Tags }],
+  [{ name: 'Estoque', Icon: LayoutDashboard }, { name: 'Relatorios', Icon: BarChart3 }, { name: 'Cadastros', Icon: Landmark }],
 ]
 
 const howItWorksSteps: CardCopy[] = [
   {
-    title: 'Conecte as fontes',
-    description: 'ERP, banco, planilhas, documentos e plataformas entram como base de trabalho.',
+    title: 'Organize sua empresa',
+    description: 'Cadastros, lancamentos e documentos ficam organizados no ERP.',
   },
   {
     title: 'O funcionario de IA executa',
@@ -143,9 +115,9 @@ const capabilityCards: CapabilityCardCopy[] = [
 const variantA: VariantCopy = {
   route: '/lp-a',
   headline: 'Sistema de Gestao 100% integrado ao Claude e ChatGPT.',
-  subtitle: 'A Otto conecta sistemas, documentos, plataformas e planilhas ao Claude e ChatGPT para consultar a empresa, preparar operacoes e acompanhar o financeiro com dados reais.',
-  primaryCta: 'Conectar minha empresa',
-  secondaryCta: 'Ver integracoes',
+  subtitle: 'A Otto organiza financeiro, compras, vendas e estoque em um ERP com IA para consultar dados, preparar operacoes e acompanhar a empresa.',
+  primaryCta: 'Comecar no ERP',
+  secondaryCta: 'Conhecer o ERP',
   productEyebrow: 'Produto',
   productTitle: 'Cada funcionario de IA recebe uma funcao, acessa as fontes certas e trabalha com os dados reais da empresa.',
   cards: [
@@ -154,8 +126,8 @@ const variantA: VariantCopy = {
       description: 'Crie funcionarios para financeiro, operacao, compras, cobranca, documentos ou relatorios.',
     },
     {
-      title: 'Conecte as fontes',
-      description: 'Integre sistemas, bancos, plataformas, planilhas e arquivos usados pela sua empresa.',
+      title: 'Organize sua empresa',
+      description: 'Cadastre clientes, fornecedores, produtos e lancamentos da sua empresa.',
     },
     {
       title: 'Automatize a rotina',
@@ -163,7 +135,7 @@ const variantA: VariantCopy = {
     },
   ],
   workflowTitle: 'Funcionario de IA',
-  workflowItems: ['Funcao definida', 'Fontes conectadas', 'Rotina automatizada', 'Relatorio entregue'],
+  workflowItems: ['Funcao definida', 'Dados organizados', 'Rotina automatizada', 'Relatorio entregue'],
   workflowEyebrow: 'Rotina operacional',
   workflowHeading: 'A empresa ganha gente trabalhando em cima dos dados, sem aumentar a equipe.',
   workflowDescription: 'Otto transforma dados espalhados em funcionarios de IA com responsabilidades claras: analisar, conferir, cobrar, resumir, reportar e acionar o time certo.',
@@ -214,8 +186,8 @@ const rolloutSteps: CardCopy[] = [
     description: 'Defina uma tarefa recorrente do financeiro ou da operacao que hoje depende de trabalho manual.',
   },
   {
-    title: 'Conecte os dados',
-    description: 'Libere os sistemas, planilhas, documentos e plataformas necessarios para executar a rotina.',
+    title: 'Organize os dados',
+    description: 'Defina o acesso aos cadastros, documentos e lancamentos necessarios para executar a rotina.',
   },
   {
     title: 'Valide as primeiras entregas',
@@ -254,32 +226,32 @@ function getTheme(copy: VariantCopy) {
   }
 }
 
-function LandingIntegrationsMarqueeSection() {
+function LandingModulesMarqueeSection() {
   return (
-    <section id="integracoes" className="border-b border-white/10 bg-[#080808] px-6 py-16 sm:px-8">
+    <section id="modulos" className="border-b border-white/10 bg-[#080808] px-6 py-16 sm:px-8">
       <div className="mx-auto max-w-[1180px]">
         <div className="mb-10 max-w-[680px]">
-          <p className="text-sm font-semibold uppercase text-violet-200">Integracoes</p>
+          <p className="text-sm font-semibold uppercase text-violet-200">Modulos do ERP</p>
           <p className={`mt-4 font-semibold text-white ${responsiveSectionTitleClassName}`} style={sectionTitleStyle}>
-            Conecte os sistemas que guardam o financeiro e a operacao da empresa.
+            Financeiro e operacao reunidos no mesmo ERP.
           </p>
           <p className="mt-5 text-base leading-7 text-white/60">
-            Otto usa essas fontes para dar contexto aos funcionarios de IA: ERPs, CRMs, ecommerce, anuncios, documentos e planilhas.
+            Gerencie contas, compras, vendas e estoque com os dados da sua empresa e apoio da IA.
           </p>
         </div>
 
-        <div className="space-y-4" aria-label="Integracoes disponiveis em movimento">
-          {landingIntegrationRows.map((row, rowIndex) => (
-            <div key={rowIndex} className="integracoes-logo-marquee">
+        <div className="space-y-4" aria-label="Modulos do ERP em movimento">
+          {landingModuleRows.map((row, rowIndex) => (
+            <div key={rowIndex} className="erp-logo-marquee">
               <div
-                className={`integracoes-logo-marquee__track ${
+                className={`erp-logo-marquee__track ${
                   rowIndex === 0
-                    ? 'integracoes-logo-marquee__track--left'
-                    : 'integracoes-logo-marquee__track--right'
+                    ? 'erp-logo-marquee__track--left'
+                    : 'erp-logo-marquee__track--right'
                 }`}
               >
                 {[...row, ...row].map(({ Icon, name }, index) => (
-                  <div key={`${name}-${index}`} className="integracoes-logo-marquee__item">
+                  <div key={`${name}-${index}`} className="erp-logo-marquee__item">
                     <Icon className="h-8 w-8 rounded-md" />
                     <span>{name}</span>
                   </div>
@@ -300,7 +272,7 @@ function LandingHowItWorksSection() {
         <div>
           <p className="text-sm font-semibold uppercase text-violet-200">Como funciona</p>
           <p className={`mt-4 font-semibold text-white ${responsiveSectionTitleClassName}`} style={sectionTitleStyle}>
-            O usuario pede uma rotina. Otto usa as integracoes e entrega o trabalho pronto para revisar.
+            O usuario pede uma rotina. Otto consulta os dados do ERP e prepara o trabalho para revisar.
           </p>
           <p className="mt-5 text-base leading-7 text-white/60">
             A experiencia parece um chat, mas por tras cada funcionario de IA busca dados, cruza informacoes e executa etapas com limites claros.
@@ -321,41 +293,41 @@ function LandingHowItWorksSection() {
           </div>
         </div>
 
-        <div className="integracoes-chat-demo" aria-label="Animacao mostrando Otto usando integracoes">
-          <div className="integracoes-chat-demo__phone">
-            <div className="integracoes-chat-demo__status">
+        <div className="erp-chat-demo" aria-label="Demonstracao de uma rotina financeira no ERP">
+          <div className="erp-chat-demo__phone">
+            <div className="erp-chat-demo__status">
               <span>18:07</span>
               <span>Otto</span>
               <span>...</span>
             </div>
 
-            <div className="integracoes-chat-demo__conversation">
-              <div className="integracoes-chat-demo__bubble integracoes-chat-demo__bubble--user integracoes-chat-demo__step integracoes-chat-demo__step--1">
-                Concilie o banco com o ERP e me mostre pendencias da semana.
+            <div className="erp-chat-demo__conversation">
+              <div className="erp-chat-demo__bubble erp-chat-demo__bubble--user erp-chat-demo__step erp-chat-demo__step--1">
+                Consulte minhas contas a pagar e me mostre as pendencias da semana.
               </div>
 
-              <div className="integracoes-chat-demo__assistant integracoes-chat-demo__step integracoes-chat-demo__step--2">
-                <div className="integracoes-chat-demo__assistant-header">Otto</div>
-                Vou buscar extrato, lancamentos do ERP e planilhas financeiras conectadas.
+              <div className="erp-chat-demo__assistant erp-chat-demo__step erp-chat-demo__step--2">
+                <div className="erp-chat-demo__assistant-header">Otto</div>
+                Vou consultar os lancamentos e vencimentos registrados no ERP.
               </div>
 
-              <div className="integracoes-chat-demo__tool integracoes-chat-demo__step integracoes-chat-demo__step--3">
-                <span>consultar_conta_azul</span>
+              <div className="erp-chat-demo__tool erp-chat-demo__step erp-chat-demo__step--3">
+                <span>consultar_contas_a_pagar</span>
                 <strong>124 lancamentos encontrados</strong>
               </div>
 
-              <div className="integracoes-chat-demo__tool integracoes-chat-demo__step integracoes-chat-demo__step--4">
-                <span>conciliar_extrato</span>
-                <strong>14 movimentos conciliados</strong>
+              <div className="erp-chat-demo__tool erp-chat-demo__step erp-chat-demo__step--4">
+                <span>consultar_vencimentos</span>
+                <strong>14 contas vencendo na semana</strong>
               </div>
 
-              <div className="integracoes-chat-demo__assistant integracoes-chat-demo__step integracoes-chat-demo__step--5">
-                <div className="integracoes-chat-demo__assistant-header">Otto</div>
-                Feito. Separei 3 divergencias, 2 contas vencendo hoje e um resumo para aprovacao.
+              <div className="erp-chat-demo__assistant erp-chat-demo__step erp-chat-demo__step--5">
+                <div className="erp-chat-demo__assistant-header">Otto</div>
+                Feito. Separei 3 contas atrasadas, 2 contas vencendo hoje e um resumo para revisao.
               </div>
             </div>
 
-            <div className="integracoes-chat-demo__input">
+            <div className="erp-chat-demo__input">
               <span>Pedir uma rotina financeira</span>
               <i />
             </div>
@@ -410,7 +382,7 @@ function LandingCapabilitiesSection() {
             Funcionarios de IA para tirar rotinas financeiras do manual.
           </p>
           <p className="mt-5 text-base leading-7 text-white/60">
-            Cada rotina combina dados conectados, regras do negocio e aprovacao humana quando a acao pede controle.
+            Cada rotina combina dados do ERP, regras do negocio e aprovacao humana quando a acao pede controle.
           </p>
         </div>
 
@@ -433,7 +405,7 @@ function LandingCapabilitiesSection() {
 function LandingPricingSection() {
   const pricingItems = [
     'Funcionario de IA para rotinas financeiras',
-    'Conexao com sistemas, documentos e planilhas',
+    'Gestao de cadastros, documentos e lancamentos',
     'Relatorios, alertas e tarefas automatizadas',
     'Aprovacao humana para acoes sensiveis',
   ]
@@ -492,10 +464,10 @@ function LandingPricingSection() {
               <ArrowRight size={18} strokeWidth={1.5} />
             </Link>
             <Link
-              href="/integracoes"
+              href="/sign-up"
               className="inline-flex min-h-11 items-center gap-2 rounded-full border border-white/15 bg-white/5 px-5 py-3 text-sm font-semibold text-white"
             >
-              Ver integracoes
+              Conhecer o ERP
               <ArrowRight size={18} strokeWidth={1.5} />
             </Link>
           </div>
@@ -520,7 +492,7 @@ function OttoLandingExperimentPage({ copy }: { copy: VariantCopy }) {
               <span className="text-lg font-semibold text-white">Otto</span>
             </Link>
             <nav className="hidden items-center gap-6 text-sm font-medium text-white/55 md:flex">
-              <a href="#integracoes">Integracoes</a>
+              <a href="#modulos">Modulos do ERP</a>
               <a href="#como-funciona">Como funciona</a>
               <a href="#o-que-faz">O que faz</a>
               <a href="#produto">Produto</a>
@@ -539,7 +511,7 @@ function OttoLandingExperimentPage({ copy }: { copy: VariantCopy }) {
             </p>
             <div className="mt-8 flex flex-wrap gap-3">
               <Link
-                href="/integracoes"
+                href="/sign-up"
                 className="inline-flex min-h-11 items-center gap-2 rounded-full bg-white px-5 py-3 text-sm font-semibold text-[#040404]"
               >
                 {copy.primaryCta}
@@ -557,7 +529,7 @@ function OttoLandingExperimentPage({ copy }: { copy: VariantCopy }) {
         </div>
       </section>
 
-      <LandingIntegrationsMarqueeSection />
+      <LandingModulesMarqueeSection />
       <LandingHowItWorksSection />
       <LandingCapabilitiesSection />
 
@@ -695,10 +667,10 @@ function OttoLandingExperimentPage({ copy }: { copy: VariantCopy }) {
             </p>
             <div className="mt-8 flex flex-wrap gap-3">
               <Link
-                href="/integracoes"
+                href="/sign-up"
                 className="inline-flex min-h-11 items-center gap-2 rounded-full bg-white px-5 py-3 text-sm font-semibold text-[#040404]"
               >
-                Conectar minha empresa
+                Comecar no ERP
                 <ArrowRight size={18} strokeWidth={1.5} />
               </Link>
               <Link

@@ -1,4 +1,6 @@
+import { createSalesContract, generateContractSales } from './erpSalesContracts'
 import { runQuery, withTransaction } from '@/lib/postgres'
+import { ErpDomainError } from '@/products/erp/server/erpApi'
 
 type ActorInput = { tenantId: number; actorId: number }
 
@@ -121,6 +123,9 @@ async function listOperationPage(
 }
 
 export async function listManagementOperation(tenantId: number, resource: string, input: ErpOperationListInput = {}) {
+  if (['fluxo-de-caixa', 'dre', 'aging-receber', 'aging-pagar'].includes(resource)) {
+    throw new ErpDomainError('REPORT_RETIRED', 'Este relatorio foi descontinuado.', 410)
+  }
   if (resource === 'contratos') {
     return listOperationPage(tenantId,
       `SELECT contratos.id::text, contratos.numero, entidades.nome AS cliente, contratos.descricao,
@@ -129,31 +134,10 @@ export async function listManagementOperation(tenantId: number, resource: string
          COALESCE(sum(itens.total), 0) AS valor
        FROM erp.contratos_vendas AS contratos
        JOIN erp.entidades ON entidades.tenant_id = contratos.tenant_id AND entidades.id = contratos.cliente_id
-       LEFT JOIN erp.contratos_vendas_itens AS itens ON itens.tenant_id = contratos.tenant_id AND itens.contrato_id = contratos.id
+       LEFT JOIN erp.contratos_vendas_itens AS itens ON itens.tenant_id = contratos.tenant_id AND itens.contrato_id = contratos.id AND itens.contrato_versao_id = (SELECT v.id FROM erp.contratos_vendas_versoes v WHERE v.tenant_id=contratos.tenant_id AND v.contrato_id=contratos.id AND v.status='efetivada' ORDER BY v.numero DESC LIMIT 1)
        WHERE contratos.tenant_id = $1 AND contratos.excluido_em IS NULL
        GROUP BY contratos.id, entidades.nome`,
       'data_inicio DESC, id DESC', input,
-    )
-  }
-  if (resource === 'fluxo-de-caixa') {
-    return listOperationPage(tenantId,
-      `SELECT fluxo.data::text AS id, fluxo.data, contas.nome AS conta,
-         sum(fluxo.entradas)::numeric(18,2) AS entradas,
-         sum(fluxo.saidas)::numeric(18,2) AS saidas,
-         sum(fluxo.saldo_dia)::numeric(18,2) AS saldo
-       FROM erp.vw_fluxo_caixa_diario AS fluxo
-       JOIN erp.contas_financeiras AS contas ON contas.tenant_id = fluxo.tenant_id AND contas.id = fluxo.conta_financeira_id
-       WHERE fluxo.tenant_id = $1
-       GROUP BY fluxo.data, contas.nome`,
-      'data DESC, id DESC', input,
-    )
-  }
-  if (resource === 'dre') {
-    return listOperationPage(tenantId,
-      `SELECT concat(competencia::text, '-', COALESCE(categoria_id::text, 'sem-categoria'), '-', tipo) AS id,
-         competencia, COALESCE(categoria, 'Sem categoria') AS categoria, tipo, valor
-       FROM erp.vw_dre_gerencial WHERE tenant_id = $1`,
-      'competencia DESC, tipo, categoria', input,
     )
   }
   if (resource === 'conciliacao-bancaria') {
@@ -187,22 +171,6 @@ export async function listManagementOperation(tenantId: number, resource: string
       'data DESC, id DESC', input,
     )
   }
-  if (resource === 'aging-receber') {
-    return listOperationPage(tenantId,
-      `SELECT parcela_id::text AS id, cliente, data_vencimento AS vencimento, saldo,
-         dias_atraso, faixa AS status FROM erp.vw_aging_receber
-       WHERE tenant_id = $1`,
-      'vencimento, id', input,
-    )
-  }
-  if (resource === 'aging-pagar') {
-    return listOperationPage(tenantId,
-      `SELECT parcela_id::text AS id, fornecedor, data_vencimento AS vencimento, saldo,
-         dias_atraso, faixa AS status FROM erp.vw_aging_pagar
-       WHERE tenant_id = $1`,
-      'vencimento, id', input,
-    )
-  }
   if (resource === 'giro-estoque') {
     return listOperationPage(tenantId,
       `SELECT concat(produto_id::text, '-', local_estoque_id::text) AS id, produto,
@@ -220,37 +188,7 @@ export async function createManagementOperation(input: ActorInput & {
   idempotencyKey: string
 }) {
   return withTransaction(async (client) => {
-    if (input.resource === 'contratos') {
-      const customerId = requiredId(input.values.cliente_id, 'Cliente')
-      const productId = input.values.produto_id ? requiredId(input.values.produto_id, 'Produto') : null
-      const serviceId = input.values.servico_id ? requiredId(input.values.servico_id, 'Servico') : null
-      if ((productId ? 1 : 0) + (serviceId ? 1 : 0) !== 1) throw new Error('Escolha um produto ou um servico.')
-      const startDate = dateText(input.values.data_inicio)
-      const number = optionalText(input.values.numero) || `CTR-${Date.now()}`
-      const quantity = amount(input.values.quantidade || 1, 'Quantidade')
-      const unitValue = amount(input.values.valor_unitario, 'Valor unitario', true)
-      const total = Number((quantity * unitValue).toFixed(2))
-      const contract = await client.query(
-        `INSERT INTO erp.contratos_vendas
-           (tenant_id, cliente_id, numero, descricao, data_inicio, data_fim, periodicidade,
-            dia_vencimento, proxima_geracao_em, status, chave_idempotencia, criado_por, atualizado_por)
-         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $5, 'ativo', $9, $10, $10)
-         RETURNING id`,
-        [input.tenantId, customerId, number, requiredText(input.values.descricao, 'Descricao'), startDate,
-          optionalText(input.values.data_fim), optionalText(input.values.periodicidade) || 'mensal',
-          Math.min(31, Math.max(1, Number(input.values.dia_vencimento || 1))), input.idempotencyKey, input.actorId],
-      )
-      const contractId = Number(contract.rows[0].id)
-      await client.query(
-        `INSERT INTO erp.contratos_vendas_itens
-           (tenant_id, contrato_id, produto_id, servico_id, descricao, quantidade,
-            valor_unitario, total, criado_por, atualizado_por)
-         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $9)`,
-        [input.tenantId, contractId, productId, serviceId, requiredText(input.values.item_descricao || input.values.descricao, 'Descricao do item'),
-          quantity, unitValue, total, input.actorId],
-      )
-      return { id: String(contractId), status: 'ativo' }
-    }
+    if (input.resource === 'contratos') return createSalesContract(client,input)
     if (input.resource === 'conciliacao-bancaria') {
       const accountId = requiredId(input.values.conta_financeira_id, 'Conta financeira')
       const value = amount(input.values.valor, 'Valor')
@@ -329,79 +267,6 @@ export async function createManagementOperation(input: ActorInput & {
   })
 }
 
-function nextContractDate(current: string, periodicity: string) {
-  const date = new Date(`${current}T12:00:00Z`)
-  const days = periodicity === 'semanal' ? 7 : periodicity === 'quinzenal' ? 15 : 0
-  if (days) date.setUTCDate(date.getUTCDate() + days)
-  else {
-    const months = periodicity === 'bimestral' ? 2 : periodicity === 'trimestral' ? 3 : periodicity === 'semestral' ? 6 : periodicity === 'anual' ? 12 : 1
-    date.setUTCMonth(date.getUTCMonth() + months)
-  }
-  return date.toISOString().slice(0, 10)
-}
-
 export async function processDueSalesContracts(input: ActorInput & { until?: string }) {
-  return withTransaction(async (client) => {
-    const until = input.until ? dateText(input.until, false) : new Date().toISOString().slice(0, 10)
-    const contracts = await client.query(
-      `SELECT * FROM erp.contratos_vendas
-       WHERE tenant_id = $1 AND status = 'ativo' AND excluido_em IS NULL
-         AND proxima_geracao_em <= $2::date AND (data_fim IS NULL OR proxima_geracao_em <= data_fim)
-       ORDER BY proxima_geracao_em, id FOR UPDATE SKIP LOCKED`,
-      [input.tenantId, until],
-    )
-    const generated: Array<{ contractId: string; saleId: string }> = []
-    for (const contract of contracts.rows) {
-      const competence = String(contract.proxima_geracao_em).slice(0, 10)
-      const generationKey = `contrato:${String(contract.id)}:${competence}`
-      const existing = await client.query(
-        `SELECT venda_id FROM erp.contratos_vendas_geracoes
-         WHERE tenant_id = $1 AND chave_idempotencia = $2`,
-        [input.tenantId, generationKey],
-      )
-      if (existing.rows[0]?.venda_id) continue
-      const items = await client.query(
-        `SELECT * FROM erp.contratos_vendas_itens WHERE tenant_id = $1 AND contrato_id = $2 ORDER BY id`,
-        [input.tenantId, contract.id],
-      )
-      if (!items.rows.length) continue
-      const total = items.rows.reduce((sum, item) => sum + Number(item.total || 0), 0)
-      const sale = await client.query(
-        `INSERT INTO erp.vendas
-           (tenant_id, cliente_id, numero, data_venda, data_competencia, status, situacao,
-            origem, categoria_id, centro_custo_id, conta_financeira_id, metodo_pagamento_id,
-            subtotal, total, condicao_pagamento, chave_idempotencia, criado_por, atualizado_por)
-         VALUES ($1, $2, $3, $4, $4, 'rascunho', 'em_aberto', 'contrato', $5, $6, $7, $8,
-           $9, $9, $10::jsonb, $11, $12, $12) RETURNING id`,
-        [input.tenantId, contract.cliente_id, `CTR-${String(contract.id)}-${competence.replaceAll('-', '')}`,
-          competence, contract.categoria_id, contract.centro_custo_id, contract.conta_financeira_id,
-          contract.metodo_pagamento_id, total,
-          JSON.stringify({ parcelas: [{ numero: 1, vencimento: competence, valor: total }] }), generationKey, input.actorId],
-      )
-      const saleId = Number(sale.rows[0].id)
-      for (const item of items.rows) {
-        await client.query(
-          `INSERT INTO erp.vendas_itens
-             (tenant_id, venda_id, produto_id, servico_id, descricao, quantidade,
-              valor_unitario, desconto, total, criado_por, atualizado_por)
-           VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $10)`,
-          [input.tenantId, saleId, item.produto_id, item.servico_id, item.descricao,
-            item.quantidade, item.valor_unitario, item.desconto, item.total, input.actorId],
-        )
-      }
-      await client.query(
-        `INSERT INTO erp.contratos_vendas_geracoes
-           (tenant_id, contrato_id, competencia, venda_id, status, chave_idempotencia, processado_em, criado_por)
-         VALUES ($1, $2, $3, $4, 'concluida', $5, now(), $6)`,
-        [input.tenantId, contract.id, competence, saleId, generationKey, input.actorId],
-      )
-      await client.query(
-        `UPDATE erp.contratos_vendas SET proxima_geracao_em = $3, atualizado_por = $4
-         WHERE tenant_id = $1 AND id = $2`,
-        [input.tenantId, contract.id, nextContractDate(competence, String(contract.periodicidade)), input.actorId],
-      )
-      generated.push({ contractId: String(contract.id), saleId: String(saleId) })
-    }
-    return { generated, total: generated.length }
-  })
+  return generateContractSales(input)
 }

@@ -13,12 +13,12 @@ type IntegrationApp = {
 }
 
 const defaultIntegrationApps: IntegrationApp[] = [
-  { category: 'ERP', health: 'Healthy', label: 'NetSuite', latency: '2 min', mark: 'N', records: '18.4k', status: 'Connected' },
-  { category: 'CRM', health: 'Healthy', label: 'Salesforce', latency: '4 min', mark: 'S', records: '9.8k', status: 'Connected' },
-  { category: 'Billing', health: 'Warning', label: 'Stripe', latency: '12 min', mark: 'St', records: '42.1k', status: 'Delayed' },
-  { category: 'Warehouse', health: 'Healthy', label: 'BigQuery', latency: '1 min', mark: 'BQ', records: '2.1m', status: 'Streaming' },
-  { category: 'Support', health: 'Healthy', label: 'Zendesk', latency: '6 min', mark: 'Z', records: '5.2k', status: 'Connected' },
-  { category: 'Sheets', health: 'Issue', label: 'Google Sheets', latency: 'Paused', mark: 'G', records: '240', status: 'Needs auth' },
+  { category: 'ERP', health: 'Healthy', label: 'Financeiro', mark: 'F', records: '18.4k', status: 'Ativo' },
+  { category: 'ERP', health: 'Healthy', label: 'Vendas', mark: 'V', records: '9.8k', status: 'Ativo' },
+  { category: 'ERP', health: 'Warning', label: 'Compras', mark: 'C', records: '42.1k', status: 'Revisao pendente' },
+  { category: 'ERP', health: 'Healthy', label: 'Relatorios', mark: 'R', records: '2.1k', status: 'Ativo' },
+  { category: 'ERP', health: 'Healthy', label: 'Estoque', mark: 'E', records: '5.2k', status: 'Ativo' },
+  { category: 'ERP', health: 'Healthy', label: 'Cadastros', mark: 'CA', records: '240', status: 'Ativo' },
 ]
 
 function getHealthColor(health: IntegrationApp['health'], theme: SaaSTheme) {
@@ -72,8 +72,8 @@ export function IntegrationCatalogMock({
     <div style={{ background: '#FFFFFF', border: `1px solid ${theme.border}`, borderRadius: 26, display: 'grid', gap: 18, padding: 22 }}>
       <header style={{ alignItems: 'end', display: 'flex', justifyContent: 'space-between' }}>
         <div style={{ display: 'grid', gap: 5 }}>
-          <strong style={{ color: theme.text, fontSize: 28, fontWeight: 920, letterSpacing: 0 }}>Integration catalog</strong>
-          <span style={{ color: theme.muted, fontSize: 15, fontWeight: 700, letterSpacing: 0 }}>Connectors grouped by system type and sync state.</span>
+          <strong style={{ color: theme.text, fontSize: 28, fontWeight: 920, letterSpacing: 0 }}>Modulos do ERP</strong>
+          <span style={{ color: theme.muted, fontSize: 15, fontWeight: 700, letterSpacing: 0 }}>Areas da empresa organizadas no mesmo sistema.</span>
         </div>
         <span style={{ background: '#ECFDF3', border: `1px solid ${theme.positive}33`, borderRadius: 999, color: theme.positive, fontSize: 14, fontWeight: 900, letterSpacing: 0, padding: '10px 13px' }}>{apps.length} sources</span>
       </header>
@@ -112,12 +112,12 @@ export function IntegrationPipelineMock({
     { label: 'Extract', metric: '6 sources', status: 'Live' },
     { label: 'Normalize', metric: '42 fields', status: 'Mapped' },
     { label: 'Validate', metric: '3 checks', status: 'Clean' },
-    { label: 'Publish', metric: 'Warehouse', status: 'Ready' },
+    { label: 'Publish', metric: 'Relatorio', status: 'Ready' },
   ]
   return (
     <div style={{ background: theme.text, borderRadius: 28, color: '#FFFFFF', display: 'grid', gap: 24, padding: 26 }}>
       <header style={{ display: 'flex', justifyContent: 'space-between' }}>
-        <strong style={{ fontSize: 28, fontWeight: 920, letterSpacing: 0 }}>Sync pipeline</strong>
+        <strong style={{ fontSize: 28, fontWeight: 920, letterSpacing: 0 }}>Rotina do ERP</strong>
         <span style={{ color: 'rgba(255,255,255,0.62)', fontSize: 15, fontWeight: 780, letterSpacing: 0 }}>Last run: 09:42</span>
       </header>
       <div style={{ alignItems: 'stretch', display: 'grid', gap: 14, gridTemplateColumns: `repeat(${pipelineSteps.length}, 1fr)` }}>
@@ -146,7 +146,7 @@ export function IntegrationHealthMatrixMock({
   return (
     <div style={{ background: '#FFFFFF', border: `1px solid ${theme.border}`, borderRadius: 26, overflow: 'hidden' }}>
       <header style={{ background: '#F8FBF9', borderBottom: `1px solid ${theme.border}`, display: 'flex', justifyContent: 'space-between', padding: '18px 20px' }}>
-        <strong style={{ color: theme.text, fontSize: 24, fontWeight: 910, letterSpacing: 0 }}>Connector health</strong>
+        <strong style={{ color: theme.text, fontSize: 24, fontWeight: 910, letterSpacing: 0 }}>Situacao dos modulos</strong>
         <span style={{ color: theme.muted, fontSize: 14, fontWeight: 780, letterSpacing: 0 }}>SLA monitor</span>
       </header>
       <div style={{ display: 'grid', gridTemplateColumns: '1.35fr 0.8fr 0.8fr 0.8fr' }}>

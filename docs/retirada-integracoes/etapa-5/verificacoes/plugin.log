@@ -1,0 +1,12 @@
+Testing Plugin shared layer
+widget html ok
+resources metadata ok
+tools source ok
+artifact adapter source ok
+domain tools source ok
+dashboard authoring contract ok
+artifact authoring contract ok
+web source ok
+component runtime ok
+Plugin smoke test passed
+exit_code=0

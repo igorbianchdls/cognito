@@ -15,8 +15,9 @@ function display(value: unknown) {
   return String(value)
 }
 
-const headerFields = ['numero', 'tipo_documento', 'status', 'situacao', 'tipo_movimento', 'cliente_nome', 'fornecedor_nome', 'data_venda', 'data_compra', 'validade_em', 'previsao_entrega', 'data_prevista_entrega', 'total', 'observacoes']
+const headerFields = ['numero', 'tipo_documento', 'status', 'situacao', 'tipo_movimento', 'cliente_nome', 'fornecedor_nome', 'data_venda', 'data_compra', 'validade_em', 'previsao_entrega', 'data_prevista_entrega', 'tipo_desconto', 'desconto', 'desconto_calculado', 'total', 'observacoes']
 const labels: Record<string, string> = {
+  tipo_desconto:'Tipo de desconto', desconto:'Desconto informado', desconto_calculado:'Desconto em reais',
   numero: 'Numero', status: 'Situacao', tipo_movimento: 'Movimento', cliente_nome: 'Cliente',
   tipo_documento: 'Documento', situacao: 'Negociacao', validade_em: 'Validade', previsao_entrega: 'Previsao de entrega',
   fornecedor_nome: 'Fornecedor', data_venda: 'Data da venda', data_compra: 'Data da compra',
@@ -42,6 +43,7 @@ export function ErpDocumentDetailsDialog({ open, onOpenChange, title, loading, d
           <section className="grid gap-3"><h3 className="text-sm font-semibold">Informacoes</h3><dl className="grid gap-3 rounded-md border bg-gray-50 p-4 sm:grid-cols-2 lg:grid-cols-4">
             {headerFields.filter((key) => document[key] != null && document[key] !== '').map((key) => <div key={key}><dt className="text-xs text-gray-500">{labels[key]}</dt><dd className="mt-1 text-sm font-medium text-gray-900">{display(document[key])}</dd></div>)}
           </dl></section>
+          {document.cliente_snapshot && typeof document.cliente_snapshot==='object' ? <section className="grid gap-2"><h3 className="text-sm font-semibold">Dados do cliente no documento</h3><dl className="grid gap-2 rounded border p-3 sm:grid-cols-2">{Object.entries(document.cliente_snapshot as Record<string,unknown>).filter(([key,value])=>key!=='origem' && value!=null && value!=='').map(([key,value])=><div key={key}><dt className="text-xs text-gray-500">{key.replaceAll('_',' ')}</dt><dd className="text-sm">{display(value)}</dd></div>)}</dl></section> : null}
           <DetailTable title="Itens" rows={items || []} columns={['descricao', 'quantidade', 'valor_unitario', 'desconto', 'valor_desconto', 'total']} />
           <DetailTable title="Parcelas previstas" rows={installments || []} columns={['numero_parcela', 'data_vencimento', 'valor']} />
           {invoices.length ? <DetailTable title="Notas fiscais vinculadas" rows={invoices} columns={['numero', 'serie', 'chave_acesso', 'status', 'valor_total']} /> : null}

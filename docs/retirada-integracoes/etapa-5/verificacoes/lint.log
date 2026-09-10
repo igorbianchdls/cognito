@@ -1,0 +1,27 @@
+[baseline-browser-mapping] The data in this module is over two months old.  To ensure accurate Baseline data, please update: `npm i baseline-browser-mapping@latest -D`
+exit_code=1
+{
+  "files": 620,
+  "errors": 639,
+  "warnings": 216,
+  "rules": {
+    "react-hooks/rules-of-hooks": 6,
+    "@typescript-eslint/no-unused-vars": 119,
+    "@typescript-eslint/no-require-imports": 36,
+    "react-hooks/error-boundaries": 3,
+    "react/no-unescaped-entities": 8,
+    "react-hooks/set-state-in-effect": 9,
+    "react-hooks/immutability": 3,
+    "react/jsx-key": 15,
+    "@next/next/no-img-element": 18,
+    "@typescript-eslint/no-explicit-any": 545,
+    "react-hooks/purity": 1,
+    "@typescript-eslint/no-unsafe-function-type": 1,
+    "react-hooks/static-components": 3,
+    "react-hooks/exhaustive-deps": 79,
+    "react/display-name": 1,
+    "react-hooks/use-memo": 6,
+    "react-hooks/preserve-manual-memoization": 1,
+    "@next/next/no-assign-module-variable": 1
+  }
+}

@@ -8,7 +8,6 @@ export const DASHBOARD_SUPPORTED_COMPONENTS = [
   'Tabs',
   'Tab',
   'TabPanel',
-  'Query',
   'Chart',
   'BarChart',
   'LineChart',
@@ -39,7 +38,6 @@ export const DASHBOARD_CONTAINER_COMPONENTS = [
   'Tabs',
   'Tab',
   'TabPanel',
-  'Query',
   'Filter',
 ] as const
 

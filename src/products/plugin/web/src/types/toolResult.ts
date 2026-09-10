@@ -132,20 +132,6 @@ export type AutomationStructuredContent = {
   count?: number
 }
 
-export type ConnectorsStructuredContent = {
-  ok?: boolean
-  tool?: 'connectors' | string
-  view?: 'connectors'
-  action?: string
-  title?: string
-  subtitle?: string | null
-  summary?: unknown
-  result?: unknown
-  rows?: unknown[]
-  columns?: string[]
-  count?: number
-}
-
 export type DashboardStructuredContent =
   | DashboardListStructuredContent
   | DashboardPreviewStructuredContent
@@ -154,5 +140,4 @@ export type DashboardStructuredContent =
   | AnalysisStructuredContent
   | TableStructuredContent
   | AutomationStructuredContent
-  | ConnectorsStructuredContent
   | DataResultStructuredContent

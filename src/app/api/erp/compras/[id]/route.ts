@@ -1,3 +1,4 @@
+import { erpFailure, erpErrorResponse as erpFailureResponse } from "@/products/erp/server/erpApi"
 import { NextResponse } from 'next/server'
 
 import { resolveErpAccess } from '@/products/erp/server/erpAccess'
@@ -8,20 +9,20 @@ export const runtime = 'nodejs'
 
 export async function GET(_request: Request, context: { params: Promise<{ id: string }> }) {
   const tenant = await resolveErpAccess('erp.compras.visualizar')
-  if (!tenant) return NextResponse.json({ error: 'Nao autenticado.' }, { status: 401 })
+  if (!tenant) return erpFailure('Nao autenticado.', 401)
   try {
     return NextResponse.json(await getErpPurchaseDetails(tenant.tenantId, (await context.params).id))
   } catch (error) {
-    return NextResponse.json({ error: error instanceof Error ? error.message : 'Nao foi possivel carregar a compra.' }, { status: 404 })
+    return erpFailureResponse(error)
   }
 }
 
 export async function PATCH(request: Request, context: { params: Promise<{ id: string }> }) {
   const tenant = await resolveErpAccess('erp.compras.gerenciar')
-  if (!tenant) return NextResponse.json({ error: 'Acesso negado.' }, { status: 403 })
+  if (!tenant) return erpFailure('Acesso negado.', 403)
   try {
     const body = await request.json().catch(() => ({})) as { values?: Record<string, unknown>; expectedVersion?: number }
-    if (!Number.isInteger(body.expectedVersion) || Number(body.expectedVersion) <= 0) return NextResponse.json({ error: 'Versao da compra e obrigatoria.' }, { status: 400 })
+    if (!Number.isInteger(body.expectedVersion) || Number(body.expectedVersion) <= 0) return erpFailure('Versao da compra e obrigatoria.', 400)
     return NextResponse.json(await updateErpPurchaseDraft({ tenantId: tenant.tenantId, actorId: tenant.sharedUserId,
       id: (await context.params).id, expectedVersion: Number(body.expectedVersion), values: body.values || {} }))
   } catch (error) {

@@ -17,6 +17,6 @@ export function useErpAccess() {
   return {
     loading: capabilities === null,
     capabilities: capabilities || [],
-    can: (capability: ErpCapability) => capabilities === null || capabilities.includes(capability),
+    can: (capability: ErpCapability) => capabilities !== null && capabilities.includes(capability),
   }
 }

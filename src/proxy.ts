@@ -10,7 +10,6 @@ const isPublicRoute = createRouteMatcher([
   '/emissor-nota-fiscal(.*)',
   '/__clerk/:path*',
   '/api/clerk/webhooks(.*)',
-  '/api/integracoes(.*)',
   '/api/ai/mcp(.*)',
   '/.well-known(.*)',
   '/artifacts/dashboards/:path*',

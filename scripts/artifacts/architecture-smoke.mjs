@@ -49,23 +49,7 @@ assert(documentManifest.includes("SLIDE_DSL_VERSION = 'slide.v1'"), 'slide DSL v
 assert(documentManifest.includes('DOCUMENT_SUPPORTED_HTML_TAGS'), 'document HTML-like manifest missing')
 
 const queryService = await source('src/products/artifacts/dashboard/query/dashboardQueryService.ts')
-assert(queryService.includes('defaultDataset'), 'dashboard query must resolve a tenant dataset server-side')
-assert(queryService.includes('dryRun: true'), 'dashboard query must perform a BigQuery dry run')
-assert(queryService.includes('maximumBytesBilled'), 'dashboard query must enforce a processing limit')
-assert(queryService.includes('referencedTables'), 'dashboard query must validate BigQuery resolved table references')
-assert(queryService.includes('dashboard_query_audit'), 'dashboard query must write audit records')
-assert(!queryService.includes('Dashboard legado'), 'legacy dashboard query flow must be removed')
-
-const integrationFinalizer = await source('src/products/integracoes/server/finalizeConnectedIntegration.ts')
-assert(integrationFinalizer.includes('provisionTenantBigQuery'), 'post-auth flow must provision BigQuery')
-assert(integrationFinalizer.includes("trigger: 'initial'"), 'post-auth flow must enqueue initial sync')
-assert(!integrationFinalizer.includes('publishSyncMessage'), 'post-auth flow must use sync dispatch outbox')
-
-const dispatchOutbox = await source('src/products/integracoes/cloud/src/control-api/routes/dispatchOutbox.ts')
-assert(dispatchOutbox.includes('claimSyncDispatchOutbox'), 'integrations cloud must expose sync outbox dispatcher')
-
-const semanticViews = await source('src/products/integracoes/datawarehouse/analytics/semanticViews.ts')
-assert(semanticViews.includes('ROW_NUMBER() OVER'), 'analytics current views must deduplicate normalized rows')
-assert(semanticViews.includes('_history'), 'analytics history views must be exposed')
-
+assert(queryService.includes('readDashboardArtifact'), 'legacy query endpoint must preserve ownership checks')
+assert(queryService.includes('410'), 'legacy query endpoint must report retirement')
+assert(!/bigquery|products\/integracoes|createQueryJob/i.test(queryService), 'dashboard must not import an external query engine')
 console.log('artifacts architecture smoke ok')

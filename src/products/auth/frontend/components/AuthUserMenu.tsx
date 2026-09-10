@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { Show, SignInButton, SignUpButton, useClerk, useUser } from '@clerk/nextjs'
-import { Loader2, LogIn, LogOut, Plug, Settings, UserPlus } from 'lucide-react'
+import { LayoutDashboard, Loader2, LogIn, LogOut, Settings, UserPlus } from 'lucide-react'
 
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import {
@@ -117,9 +117,9 @@ export function AuthUserMenu() {
                   <span>Gerenciar conta</span>
                 </DropdownMenuItem>
                 <DropdownMenuItem asChild>
-                  <Link href="/integracoes">
-                    <Plug className="size-4" />
-                    <span>Integrações</span>
+                  <Link href="/erp">
+                    <LayoutDashboard className="size-4" />
+                    <span>ERP</span>
                   </Link>
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />

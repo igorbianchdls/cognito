@@ -1,7 +1,9 @@
-import { runQuery, withTransaction, type SQLClient } from "@/lib/postgres";
+import { lineTotal, sumMoney } from '@/products/erp/shared/erpMoney'
+import { assertCommercialReplay } from '@/products/erp/shared/commercialContracts'
+import { runQuery, withTransaction } from "@/lib/postgres";
 import { processDueSalesContracts } from "@/products/erp/server/erpManagementRepository";
 import {
-  createErpEntityRecord,
+  createSaleRecord,
   createOrUpdatePurchasePayable,
   getErpSaleDetails,
   processErpFinancialRecurrences,
@@ -28,6 +30,7 @@ function id(value: unknown, label: string) {
 }
 
 function date(value: unknown) {
+  if(value instanceof Date)return value.toISOString().slice(0,10);
   const normalized = String(value || "").slice(0, 10);
   return /^\d{4}-\d{2}-\d{2}$/.test(normalized)
     ? normalized
@@ -76,7 +79,7 @@ export async function listServiceOrders(input: {
 export async function getServiceOrder(tenantId: number, orderId: number) {
   const [orders, items, events] = await Promise.all([
     runQuery<Record<string, unknown>>(
-      `SELECT ordens.*, clientes.nome AS cliente_nome, responsaveis.nome AS responsavel_nome
+      `SELECT ordens.*, COALESCE(ordens.cliente_snapshot->>'nome',clientes.nome) AS cliente_nome, responsaveis.nome AS responsavel_nome
        FROM erp.ordens_servico ordens
        JOIN erp.entidades clientes ON clientes.tenant_id = ordens.tenant_id AND clientes.id = ordens.cliente_id
        LEFT JOIN erp.entidades responsaveis ON responsaveis.tenant_id = ordens.tenant_id AND responsaveis.id = ordens.responsavel_id
@@ -107,20 +110,28 @@ export async function createServiceOrder(
   input: ActorInput & {
     values: ServiceOrderCreateInput;
     idempotencyKey?: string | null;
+    orderId?: number;
+    expectedVersion?: number;
   },
 ) {
   return withTransaction(async (client) => {
     const key = stringValue(input.idempotencyKey);
+    let current: Record<string,unknown> | undefined;
+    if(input.orderId) {
+      current=(await client.query('SELECT * FROM erp.ordens_servico WHERE tenant_id=$1 AND id=$2 AND excluido_em IS NULL FOR UPDATE',[input.tenantId,input.orderId])).rows[0];
+      if(!current || Number(current.versao)!==input.expectedVersion)throw new ErpDomainError('VERSION_CONFLICT','Ordem alterada; recarregue os dados.',409);
+      if(current.status!=='rascunho' || current.venda_id || current.orcamento_id)throw new ErpDomainError('INVALID_STATE','Somente ordens em rascunho e sem documento gerado podem ser editadas.',409);
+    }
     if (key) {
       await client.query(
         `SELECT pg_advisory_xact_lock(hashtextextended($1, 0))`,
         [`erp:os:${input.tenantId}:${key}`],
       );
       const existing = await client.query(
-        `SELECT id::text FROM erp.ordens_servico WHERE tenant_id = $1 AND chave_idempotencia = $2 AND excluido_em IS NULL`,
+        `SELECT id::text, metadata FROM erp.ordens_servico WHERE tenant_id = $1 AND chave_idempotencia = $2 AND excluido_em IS NULL`,
         [input.tenantId, key],
       );
-      if (existing.rows[0]) return existing.rows[0];
+      if (existing.rows[0]) { assertCommercialReplay((existing.rows[0].metadata as Record<string,unknown>)?.commercialRequest,input.values); return {id:existing.rows[0].id}; }
     }
 
     const customer = await client.query(
@@ -147,28 +158,20 @@ export async function createServiceOrder(
           `Item ${index + 1} nao encontrado.`,
           422,
         );
-      const total = Number(
-        Math.max(
-          0,
-          item.quantidade * item.valor_unitario - item.desconto,
-        ).toFixed(2),
-      );
+      const total = lineTotal(item.quantidade,item.valor_unitario,item.desconto);
       normalizedItems.push({ ...item, total });
     }
-    const subtotal = Number(
-      normalizedItems
-        .reduce((sum, item) => sum + Number(item.total), 0)
-        .toFixed(2),
-    );
+    const subtotal = sumMoney(normalizedItems.map(item=>Number(item.total)));
     if (input.values.desconto > subtotal)
       throw new ErpDomainError(
         "INVALID_DISCOUNT",
         "Desconto supera o subtotal.",
         422,
       );
-    const total = Number((subtotal - input.values.desconto).toFixed(2));
-    const number = stringValue(input.values.numero) || `OS-${Date.now()}`;
+    const total = sumMoney([subtotal,-input.values.desconto]);
+    const number = stringValue(input.values.numero) || String(current?.numero || `OS-${Date.now()}`);
     const created = await client.query(
+      input.orderId ? `UPDATE erp.ordens_servico SET cliente_id=$2,responsavel_id=$3,numero=$4,status=$5,data_inicio=$6,previsao_entrega=$7,equipamento=$8,marca=$9,modelo=$10,numero_serie=$11,problema_informado=$12,diagnostico=$13,observacoes_publicas=$14,observacoes_internas=$15,subtotal=$16,desconto=$17,total=$18,atualizado_por=$20,versao=versao+1 WHERE tenant_id=$1 AND id=$19 RETURNING id::text,numero,status,versao` :
       `INSERT INTO erp.ordens_servico
          (tenant_id, cliente_id, responsavel_id, numero, status, data_inicio, previsao_entrega,
           equipamento, marca, modelo, numero_serie, problema_informado, diagnostico,
@@ -181,7 +184,7 @@ export async function createServiceOrder(
         input.values.cliente_id,
         input.values.responsavel_id,
         number,
-        input.values.status,
+        current ? String(current.status) : input.values.status,
         input.values.data_inicio,
         input.values.previsao_entrega,
         input.values.equipamento,
@@ -195,11 +198,13 @@ export async function createServiceOrder(
         subtotal,
         input.values.desconto,
         total,
-        key,
+        input.orderId || key,
         input.actorId,
       ],
     );
     const order = created.rows[0];
+    if (!input.orderId) await client.query("UPDATE erp.ordens_servico SET metadata=metadata || jsonb_build_object('commercialRequest',$3::jsonb) WHERE tenant_id=$1 AND id=$2",[input.tenantId,order.id,json(input.values)]);
+    if(input.orderId)await client.query('DELETE FROM erp.ordens_servico_itens WHERE tenant_id=$1 AND ordem_servico_id=$2',[input.tenantId,input.orderId]);
     for (const item of normalizedItems) {
       await client.query(
         `INSERT INTO erp.ordens_servico_itens
@@ -222,13 +227,14 @@ export async function createServiceOrder(
     }
     await client.query(
       `INSERT INTO erp.ordens_servico_eventos (tenant_id, ordem_servico_id, evento, status_novo, dados, criado_por)
-       VALUES ($1,$2,'criada',$3,$4::jsonb,$5)`,
+       VALUES ($1,$2,$6,$3,$4::jsonb,$5)`,
       [
         input.tenantId,
         order.id,
         input.values.status,
         json({ total }),
         input.actorId,
+        input.orderId ? 'atualizada' : 'criada',
       ],
     );
     return order;
@@ -254,8 +260,10 @@ async function convertServiceOrder(
     expectedVersion: number;
   },
 ) {
-  const details = await getServiceOrder(input.tenantId, input.orderId);
-  const order = details.order;
+  return withTransaction(async client=>{
+  const order=(await client.query('SELECT * FROM erp.ordens_servico WHERE tenant_id=$1 AND id=$2 AND excluido_em IS NULL FOR UPDATE',[input.tenantId,input.orderId])).rows[0];
+  if(!order)throw new ErpDomainError('NOT_FOUND','Ordem não encontrada.',404);
+  const details={items:(await client.query('SELECT * FROM erp.ordens_servico_itens WHERE tenant_id=$1 AND ordem_servico_id=$2 ORDER BY id',[input.tenantId,input.orderId])).rows};
   if (Number(order.versao) !== input.expectedVersion)
     throw new ErpDomainError(
       "VERSION_CONFLICT",
@@ -271,7 +279,7 @@ async function convertServiceOrder(
   const existingId =
     input.documentType === "orcamento" ? order.orcamento_id : order.venda_id;
   if (existingId) return { id: String(existingId), reused: true };
-  const record = await createErpEntityRecord({
+  const record = await createSaleRecord(client,{
     tenantId: input.tenantId,
     actorId: input.actorId,
     entityId: "pedidos",
@@ -304,7 +312,7 @@ async function convertServiceOrder(
       ],
     },
   });
-  const linked = await withTransaction(async (client) => {
+  const linked = await (async () => {
     const column =
       input.documentType === "orcamento" ? "orcamento_id" : "venda_id";
     const updated = await client.query(
@@ -319,7 +327,7 @@ async function convertServiceOrder(
         input.expectedVersion,
       ],
     );
-    if (!updated.rows[0]) return false;
+    if (!updated.rows[0]) throw new ErpDomainError('VERSION_CONFLICT','A ordem foi alterada.',409);
     await client.query(
       `INSERT INTO erp.ordens_servico_eventos (tenant_id, ordem_servico_id, evento, dados, criado_por)
        VALUES ($1,$2,$3,$4::jsonb,$5)`,
@@ -332,8 +340,9 @@ async function convertServiceOrder(
       ],
     );
     return true;
-  });
+  })();
   return { id: String(record.id), reused: !linked };
+  });
 }
 
 export async function runServiceOrderAction(
@@ -401,8 +410,10 @@ export async function runServiceOrderAction(
 export async function convertQuoteToSale(
   input: ActorInput & { quoteId: number; expectedVersion: number },
 ) {
-  const details = await getErpSaleDetails(input.tenantId, input.quoteId);
-  const quote = details.sale;
+  return withTransaction(async client=>{
+  const quote=(await client.query('SELECT * FROM erp.vendas WHERE tenant_id=$1 AND id=$2 AND excluido_em IS NULL FOR UPDATE',[input.tenantId,input.quoteId])).rows[0];
+  if(!quote)throw new ErpDomainError('NOT_FOUND','Orçamento não encontrado.',404);
+  const details={items:(await client.query('SELECT * FROM erp.vendas_itens WHERE tenant_id=$1 AND venda_id=$2 ORDER BY id',[input.tenantId,input.quoteId])).rows,installments:(await client.query('SELECT * FROM erp.vendas_recebimentos_previstos WHERE tenant_id=$1 AND venda_id=$2 ORDER BY numero_parcela',[input.tenantId,input.quoteId])).rows};
   if (quote.tipo_documento !== "orcamento")
     throw new ErpDomainError(
       "NOT_A_QUOTE",
@@ -421,12 +432,12 @@ export async function convertQuoteToSale(
       "Orcamento recusado ou cancelado nao pode ser convertido.",
       409,
     );
-  const existing = await runQuery<{ id: string }>(
+  const existing = await client.query(
     `SELECT id::text FROM erp.vendas WHERE tenant_id = $1 AND venda_origem_id = $2 AND excluido_em IS NULL LIMIT 1`,
     [input.tenantId, input.quoteId],
   );
-  if (existing[0]) return { sale: existing[0], reused: true };
-  const record = await createErpEntityRecord({
+  if (existing.rows[0]) return { sale: existing.rows[0], reused: true };
+  const record = await createSaleRecord(client,{
     tenantId: input.tenantId,
     actorId: input.actorId,
     entityId: "pedidos",
@@ -436,7 +447,9 @@ export async function convertQuoteToSale(
       tipo_documento: "venda",
       venda_origem_id: input.quoteId,
       numero: undefined,
-      itens: details.items,
+      chave_idempotencia: undefined,
+      data_venda: date(quote.data_venda), data_competencia: date(quote.data_competencia),
+      itens: details.items.map(item=>({tipo:item.produto_id?'produto':'servico',item_id:item.produto_id||item.servico_id,descricao:item.descricao,quantidade:item.quantidade,valor_unitario:item.valor_unitario,desconto:item.desconto})),
       parcelas: details.installments.map((row) => ({
         numero_parcela: row.numero_parcela,
         descricao: row.descricao,
@@ -447,14 +460,14 @@ export async function convertQuoteToSale(
       })),
     },
   });
-  const linked = await withTransaction(async (client) => {
+  const linked = await (async () => {
     const updated = await client.query(
       `UPDATE erp.vendas SET situacao = 'aprovado', versao = versao + 1, atualizado_por = $3
        WHERE tenant_id = $1 AND id = $2 AND versao = $4
        RETURNING id`,
       [input.tenantId, input.quoteId, input.actorId, input.expectedVersion],
     );
-    if (!updated.rows[0]) return false;
+    if (!updated.rows[0]) throw new ErpDomainError('VERSION_CONFLICT','Orçamento alterado.',409);
     await client.query(
       `INSERT INTO erp.vendas_eventos (tenant_id, venda_id, evento, status_anterior, status_novo, versao, dados, criado_por)
        VALUES ($1,$2,'convertido_em_venda','rascunho','rascunho',$3,$4::jsonb,$5)`,
@@ -467,8 +480,9 @@ export async function convertQuoteToSale(
       ],
     );
     return true;
-  });
+  })();
   return { sale: { id: String(record.id) }, reused: !linked };
+  });
 }
 
 export async function runQuoteAction(
@@ -1236,12 +1250,14 @@ export async function listProfessionalReport(input: {
   from?: string;
   to?: string;
 }) {
+  if (["dre-competencia", "fluxo-diario", "fluxo-mensal"].includes(input.report)) {
+    throw new ErpDomainError("REPORT_RETIRED", "Este relatorio foi descontinuado.", 410);
+  }
   const from =
     input.from ||
     new Date(new Date().getFullYear(), 0, 1).toISOString().slice(0, 10);
   const to = input.to || new Date().toISOString().slice(0, 10);
   const reports: Record<string, string> = {
-    "dre-competencia": `SELECT competencia, categoria, tipo, valor FROM erp.vw_dre_gerencial WHERE tenant_id = $1 AND competencia BETWEEN $2 AND $3 ORDER BY competencia, tipo, categoria`,
     "dre-caixa": `SELECT date_trunc('month', pagamentos.data_pagamento)::date AS competencia,
       COALESCE(categorias.nome, 'Sem categoria') AS categoria,
       CASE WHEN pagamentos.tipo = 'receber' THEN 'receita' ELSE 'despesa' END AS tipo,
@@ -1255,8 +1271,6 @@ export async function listProfessionalReport(input: {
       WHERE pagamentos.tenant_id = $1 AND pagamentos.data_pagamento BETWEEN $2 AND $3
         AND pagamentos.estornado_em IS NULL AND pagamentos.estorno_de_pagamento_id IS NULL AND pagamentos.excluido_em IS NULL
       GROUP BY 1, 2, 3 ORDER BY 1, 3, 2`,
-    "fluxo-diario": `SELECT data, conta, entradas, saidas, saldo_dia AS saldo FROM erp.vw_fluxo_caixa_diario WHERE tenant_id = $1 AND data BETWEEN $2 AND $3 ORDER BY data, conta`,
-    "fluxo-mensal": `SELECT date_trunc('month', data)::date AS competencia, sum(entradas)::numeric(18,2) AS entradas, sum(saidas)::numeric(18,2) AS saidas, sum(saldo_dia)::numeric(18,2) AS saldo FROM erp.vw_fluxo_caixa_diario WHERE tenant_id = $1 AND data BETWEEN $2 AND $3 GROUP BY 1 ORDER BY 1`,
     "posicao-financeira": `SELECT tipo, status, count(*)::int AS parcelas, sum(saldo)::numeric(18,2) AS saldo FROM (
       SELECT 'receber'::text AS tipo, status, greatest(valor - valor_pago, 0) AS saldo FROM erp.contas_receber_parcelas WHERE tenant_id = $1 AND data_vencimento BETWEEN $2 AND $3 AND excluido_em IS NULL
       UNION ALL SELECT 'pagar'::text, status, greatest(valor - valor_pago, 0) FROM erp.contas_pagar_parcelas WHERE tenant_id = $1 AND data_vencimento BETWEEN $2 AND $3 AND excluido_em IS NULL

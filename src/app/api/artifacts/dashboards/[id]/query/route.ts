@@ -18,7 +18,7 @@ export async function POST(
     if (!tenant) return Response.json({ ok: false, error: 'Não autenticado' }, { status: 401 })
     const { id } = await context.params
     const payload = (await req.json().catch(() => ({}))) as Record<string, unknown>
-    const result = await executeDashboardQuery({
+    return await executeDashboardQuery({
       artifactId: id,
       tenantId: tenant.tenantId,
       actorId: tenant.sharedUserId,
@@ -28,7 +28,6 @@ export async function POST(
         : {},
       limit: Number(payload.limit || 1000),
     })
-    return Response.json({ ok: true, ...result })
   } catch (error) {
     if (error instanceof ArtifactToolError) {
       return Response.json(

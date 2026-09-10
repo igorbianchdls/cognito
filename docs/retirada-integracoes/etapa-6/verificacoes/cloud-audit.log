@@ -1,0 +1,2 @@
+Cloud inventory unavailable: gcloud not installed or not in PATH.
+exit_code=1

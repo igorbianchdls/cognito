@@ -9,7 +9,6 @@ type ChartDraft = {
   chartType: string
   format: string
   height: string
-  query: string
 }
 
 export function ChartEditorModal({
@@ -215,39 +214,7 @@ export function ChartEditorModal({
           </div>
         </section>
 
-        <section
-          style={{
-            display: 'grid',
-            gap: 10,
-            padding: 18,
-            borderRadius: 20,
-            background: sectionBackground,
-          }}
-        >
-          <div>
-            <div style={{ fontSize: 15, fontWeight: 700, color: '#0f172a' }}>Query</div>
-            <p style={{ margin: '6px 0 0', fontSize: 13, lineHeight: 1.6, color: '#64748b' }}>
-              Área visual para consulta ou instrução de dados do chart.
-            </p>
-          </div>
-          <textarea
-            value={value.query}
-            onChange={(event) => patch({ query: event.target.value })}
-            placeholder="SELECT ..."
-            style={{
-              minHeight: 160,
-              resize: 'vertical',
-              border: 'none',
-              borderRadius: 16,
-              padding: '14px 16px',
-              fontSize: 14,
-              lineHeight: 1.65,
-              color: '#0f172a',
-              outline: 'none',
-              background: fieldBackground,
-            }}
-          />
-        </section>
+
       </div>
     </ComponentEditorModalShell>
   )

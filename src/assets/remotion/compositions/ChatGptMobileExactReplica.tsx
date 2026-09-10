@@ -1,10 +1,10 @@
 import {useEffect, useState, type ReactNode} from 'react'
 import {AbsoluteFill, continueRender, delayRender, Img, interpolate, spring, staticFile, useCurrentFrame, useVideoConfig} from 'remotion'
 
-import {OttoInvoiceEmissionMobilePanel} from '@/assets/remotion/compositions/OttoInvoiceChatGptTvContent'
+import {OttoAccountsPayableMobilePanel, OttoInvoiceEmissionMobilePanel} from '@/assets/remotion/compositions/OttoInvoiceChatGptTvContent'
 import {IOS_REMOTION_DISPLAY_FONT_STACK, IOS_REMOTION_FONT_STACK, loadSfProFonts} from '@/assets/remotion/fonts/sfPro'
 
-export const CHATGPT_MOBILE_EXACT_REPLICA_DURATION = 780
+export const CHATGPT_MOBILE_EXACT_REPLICA_DURATION = 1120
 
 const INK = '#171717'
 const ICON = '#666666'
@@ -80,11 +80,12 @@ function AssistantText({children, top}: {children: ReactNode; top: number}) {
   return <div style={{fontSize: 34, fontWeight: 400, left: 33, letterSpacing: '-0.018em', lineHeight: 1.3, position: 'absolute', top}}>{children}</div>
 }
 
-function TypedAssistantText({start, text, top}: {start: number; text: string; top: number}) {
+function TypedAssistantText({end, start, text, top}: {end?: number; start: number; text: string; top: number}) {
   const frame = useCurrentFrame()
   const visibleCharacters = Math.max(0, Math.min(text.length, Math.floor((frame - start + 1) * 5)))
+  const opacity = end === undefined ? 1 : interpolate(frame, [end, end + 8], [1, 0], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp'})
 
-  return <AssistantText top={top}>{text.slice(0, visibleCharacters)}</AssistantText>
+  return <div style={{opacity}}><AssistantText top={top}>{text.slice(0, visibleCharacters)}</AssistantText></div>
 }
 
 function TypedEmojiCrop({boundaries, height, left, sourceX, sourceY, start, top, width}: {boundaries: number[]; height: number; left: number; sourceX: number; sourceY: number; start: number; top: number; width: number}) {
@@ -126,8 +127,12 @@ function ConversationTrack({children}: {children: ReactNode}) {
   const previousConversationScroll = -340 * (scrollStep(218) + scrollStep(273) + scrollStep(328) + scrollStep(383) + scrollStep(438))
   const invoiceEntranceScroll = -520 * scrollStep(480)
   const invoiceGrowthScroll = -75 * ([529, 553, 577, 601, 625, 649, 673].reduce((total, start) => total + scrollStep(start), 0))
-  const completionScroll = -200 * scrollStep(710)
-  const scrollY = previousConversationScroll + invoiceEntranceScroll + invoiceGrowthScroll + completionScroll
+  const invoiceCompletionScroll = -200 * scrollStep(710)
+  const accountsPromptScroll = -450 * scrollStep(760)
+  const accountsEntranceScroll = -500 * scrollStep(800)
+  const accountsGrowthScroll = -75 * ([849, 873, 897, 921, 945, 969, 993].reduce((total, start) => total + scrollStep(start), 0))
+  const accountsCompletionScroll = -200 * scrollStep(1030)
+  const scrollY = previousConversationScroll + invoiceEntranceScroll + invoiceGrowthScroll + invoiceCompletionScroll + accountsPromptScroll + accountsEntranceScroll + accountsGrowthScroll + accountsCompletionScroll
 
   return <AbsoluteFill style={{clipPath: 'inset(230px 0 188px 0)', zIndex: 1}}>
     <AbsoluteFill style={{transform: `translateY(${scrollY}px)`}}>{children}</AbsoluteFill>
@@ -222,6 +227,13 @@ export function ChatGptMobileExactReplica() {
 
       <TypedAssistantText start={728} text="Pronto! As 8 notas fiscais foram emitidas e enviadas." top={4350} />
       <Reveal start={743}><ActionRow top={4500} /></Reveal>
+
+      <Reveal start={770}><UserBubble height={144} top={4595} width={690}><span>Agora busque as contas a pagar deste mês e organize por vencimento.</span></UserBubble></Reveal>
+      <TypedAssistantText end={1022} start={792} text="Perfeito! Vou buscar e organizar suas contas a pagar." top={4815} />
+      <OttoAccountsPayableMobilePanel start={812} top={4913} />
+
+      <TypedAssistantText start={1048} text="Pronto! Encontrei e organizei as 8 contas a pagar." top={5935} />
+      <Reveal start={1063}><ActionRow top={6085} /></Reveal>
     </ConversationTrack>
 
     <div style={{background: '#fff', bottom: 0, height: 188, left: 0, position: 'absolute', right: 0, zIndex: 20}}>

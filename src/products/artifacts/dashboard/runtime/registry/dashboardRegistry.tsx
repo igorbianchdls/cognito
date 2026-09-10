@@ -20,7 +20,7 @@ import DashboardFilter from '@/products/artifacts/dashboard/runtime/components/f
 import DashboardKpi from '@/products/artifacts/dashboard/runtime/components/kpi/DashboardKpi'
 import { DashboardKpiCompare } from '@/products/artifacts/dashboard/runtime/components/kpi/DashboardKpiCompare'
 import DashboardPivotTable from '@/products/artifacts/dashboard/runtime/components/table/DashboardPivotTable'
-import DashboardQuery, {
+import {
   getDashboardQueryDeltaColor,
   resolveDashboardQueryTemplate,
   useDashboardQueryResult,
@@ -335,7 +335,6 @@ export const dashboardChartRegistry: Record<string, DashboardRenderComponent> = 
 export const dashboardDataRegistry: Record<string, DashboardRenderComponent> = {
   KPI: ({ element, children }) => <DashboardKpi element={element}>{children}</DashboardKpi>,
   KPICompare: ({ element }) => <DashboardKpiCompare element={element} />,
-  Query: ({ element, children }) => <DashboardQuery element={element}>{children}</DashboardQuery>,
   Table: ({ element }) => <DashboardTable element={element} />,
   PivotTable: ({ element }) => <DashboardPivotTable element={element} />,
   Filter: ({ element, onAction }) => <DashboardFilter element={element} onAction={onAction} />,

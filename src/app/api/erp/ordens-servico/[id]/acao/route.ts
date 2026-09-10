@@ -1,3 +1,4 @@
+import { erpFailure } from "@/products/erp/server/erpApi"
 import { NextResponse } from 'next/server'
 
 import { erpErrorResponse, parseErpBody } from '@/products/erp/server/erpApi'
@@ -9,10 +10,9 @@ export const runtime = 'nodejs'
 
 export async function POST(request: Request, context: { params: Promise<{ id: string }> }) {
   const tenant = await resolveErpAccess('erp.vendas.gerenciar')
-  if (!tenant) return NextResponse.json({ error: 'Acesso negado.' }, { status: 403 })
+  if (!tenant) return erpFailure('Acesso negado.', 403)
   try {
     const [{ id }, values] = await Promise.all([context.params, parseErpBody(request, serviceOrderActionSchema)])
     return NextResponse.json({ result: await runServiceOrderAction({ tenantId: tenant.tenantId, actorId: tenant.sharedUserId, orderId: Number(id), ...values }) })
   } catch (error) { return erpErrorResponse(error) }
 }
-

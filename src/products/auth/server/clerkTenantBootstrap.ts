@@ -6,7 +6,6 @@ import {
   updateClerkOrganizationMetadata,
   type ClerkOrganizationPayload,
 } from '@/products/auth/server/clerkOrganizationClient'
-import { provisionTenantBigQuery } from '@/products/integracoes/datawarehouse/provisioning/tenantBigQueryProvisioning'
 import type {
   AuthTenantMembership,
   ClerkTenantBootstrapResult,
@@ -426,11 +425,6 @@ export async function createClerkOnboardingTenant(companyName: string): Promise<
       publicMetadata: {
         app: 'cognito',
       },
-    }).catch(() => undefined)
-
-    await provisionTenantBigQuery({
-      tenantId,
-      reason: 'clerk_onboarding',
     }).catch(() => undefined)
   }
 

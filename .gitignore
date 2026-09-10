@@ -30,6 +30,7 @@ a
 
 # production
 /build
+# Legacy generated bundles: kept ignored until local cleanup is permitted.
 src/products/integracoes/cloud/dist/
 
 # misc
@@ -47,7 +48,7 @@ yarn-error.log*
 .env*
 !.env.example
 
-# BigQuery Credentials
+# Credentials
 credentials/
 *.json
 !package*.json

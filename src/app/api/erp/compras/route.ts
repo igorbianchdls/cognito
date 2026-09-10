@@ -1,3 +1,4 @@
+import { erpFailure, erpErrorResponse as erpFailureResponse } from "@/products/erp/server/erpApi"
 import { NextResponse } from 'next/server'
 
 import { resolveErpAccess } from '@/products/erp/server/erpAccess'
@@ -17,7 +18,7 @@ function parseFilters(searchParams: URLSearchParams) {
 
 export async function GET(request: Request) {
   const tenant = await resolveErpAccess('erp.compras.visualizar')
-  if (!tenant) return NextResponse.json({ error: 'Nao autenticado.' }, { status: 401 })
+  if (!tenant) return erpFailure('Nao autenticado.', 401)
 
   try {
     const url = new URL(request.url)
@@ -31,16 +32,13 @@ export async function GET(request: Request) {
     })
     return NextResponse.json(page)
   } catch (error) {
-    return NextResponse.json(
-      { error: error instanceof Error ? error.message : 'Nao foi possivel carregar compras.' },
-      { status: 400 },
-    )
+    return erpFailureResponse(error)
   }
 }
 
 export async function POST(request: Request) {
   const tenant = await resolveErpAccess('erp.compras.gerenciar')
-  if (!tenant) return NextResponse.json({ error: 'Acesso negado.' }, { status: 403 })
+  if (!tenant) return erpFailure('Acesso negado.', 403)
 
   try {
     const body = (await request.json().catch(() => ({}))) as { values?: Record<string, unknown> }
@@ -53,9 +51,6 @@ export async function POST(request: Request) {
     })
     return NextResponse.json({ record }, { status: 201 })
   } catch (error) {
-    return NextResponse.json(
-      { error: error instanceof Error ? error.message : 'Nao foi possivel salvar a compra.' },
-      { status: 400 },
-    )
+    return erpFailureResponse(error)
   }
 }

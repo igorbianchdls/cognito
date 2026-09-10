@@ -7,7 +7,7 @@
     "dev": "next dev",
     "build": "pnpm plugin:build && next build",
     "start": "next start",
-    "lint": "next lint",
+    "lint": "eslint src scripts",
     "artifacts:smoke": "node scripts/artifacts/architecture-smoke.mjs",
     "artifacts:dashboard-query-smoke": "node scripts/artifacts/dashboard-query-smoke.mjs",
     "artifacts:typecheck": "tsc -p tsconfig.artifacts.json --pretty false",
@@ -26,7 +26,9 @@
     "safe:npm": "node scripts/safe-npm-install.mjs",
     "safe:install": "node scripts/safe-npm-install.mjs install",
     "safe:add:assemblyai": "node scripts/safe-npm-install.mjs install assemblyai",
-    "safe:add:elevenlabs": "node scripts/safe-npm-install.mjs install @elevenlabs/elevenlabs-js"
+    "safe:add:elevenlabs": "node scripts/safe-npm-install.mjs install @elevenlabs/elevenlabs-js",
+    "plugin:retirement-smoke": "node scripts/plugin/retirement-smoke.mjs",
+    "plugin:widget-browser-smoke": "node scripts/plugin/widget-browser-smoke.mjs"
   },
   "dependencies": {
     "@ai-sdk/anthropic": "^2.0.0",
@@ -41,7 +43,6 @@
     "@dnd-kit/utilities": "^3.2.2",
     "@elevenlabs/elevenlabs-js": "^2.34.0",
     "@floating-ui/react": "^0.27.16",
-    "@google-cloud/bigquery": "^8.1.1",
     "@iconify-json/simple-icons": "^1.2.69",
     "@iconify/react": "^6.0.2",
     "@icons-pack/react-simple-icons": "^13.7.0",

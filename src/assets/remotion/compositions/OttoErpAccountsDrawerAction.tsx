@@ -181,7 +181,7 @@ const pages: PageData[] = [
     metricLabel: 'Servicos ativos',
     metricValue: '18',
     rows: [
-      { category: 'Implantacao', color: BLUE, description: 'Setup financeiro, fiscal e integracoes', due: '5 dias', initials: 'IM', name: 'Implantacao Otto', status: 'Em andamento', value: 'R$ 12.400' },
+      { category: 'Implantacao', color: BLUE, description: 'Setup financeiro, fiscal e estoque', due: '5 dias', initials: 'IM', name: 'Implantacao Otto', status: 'Em andamento', value: 'R$ 12.400' },
       { category: 'Consultoria', color: GREEN, description: 'Mapeamento de processos financeiros', due: 'Hoje', initials: 'CO', name: 'Consultoria operacional', status: 'Agendada', value: 'R$ 8.900' },
       { category: 'Fiscal', color: AMBER, description: 'Revisao de notas, XMLs e obrigacoes', due: 'Semanal', initials: 'RF', name: 'Revisao fiscal', status: 'Recorrente', value: 'R$ 4.800/m' },
       { category: 'Treinamento', color: TEAL, description: 'Capacitacao de time financeiro e gestores', due: '12 Jul', initials: 'TR', name: 'Treinamento equipe', status: 'Confirmado', value: 'R$ 3.600' },

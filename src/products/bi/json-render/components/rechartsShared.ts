@@ -265,6 +265,9 @@ export function useChartServerRows(
     };
   }, [JSON.stringify(dq), JSON.stringify((data as any)?.filters), JSON.stringify(resolvedFields), isSqlQueryMode]);
 
+  if (Array.isArray(dq?.inlineRows) && !isSqlQueryMode) {
+    return { queryError: null, serverRows: dq.inlineRows, loading: false };
+  }
   if (isSqlQueryMode) {
     return {
       queryError: dashboardQuery.error,

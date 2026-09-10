@@ -1,0 +1,9 @@
+file:///C:/Users/Administrador/Documents/creatto/cognito/cognito/scripts/retirement/migration-smoke.mjs:21
+    catch(error) { throw new Error(`Historical migration ${file}: ${error.message}`) }
+                         ^
+
+Error: Historical migration 34_integracoes_marketing_advertising_connectors.sql: check constraint "integration_provider_capabilities_domain_check" of relation "integration_provider_capabilities" is violated by some row
+    at file:///C:/Users/Administrador/Documents/creatto/cognito/cognito/scripts/retirement/migration-smoke.mjs:21:26
+
+Node.js v22.17.0
+exit_code=1

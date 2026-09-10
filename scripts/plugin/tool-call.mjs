@@ -1,15 +1,12 @@
 #!/usr/bin/env node
 
 import { createRequire } from 'node:module'
-import { execFileSync } from 'node:child_process'
 import { existsSync, readFileSync } from 'node:fs'
 import { mkdir, writeFile } from 'node:fs/promises'
 import path from 'node:path'
 import { build } from 'esbuild'
 import dotenv from 'dotenv'
 
-import { loadIntegrationCliEnv } from '../../src/products/integracoes/cli/shared/env.mjs'
-import { printError } from '../../src/products/integracoes/cli/shared/output.mjs'
 
 const root = process.cwd()
 const cacheDir = path.join(root, '.next/cache/plugin-cli')
@@ -19,43 +16,16 @@ const booleanFlags = new Set([
   '--confirm',
   '--execute',
   '--help',
-  '--include-provider-fields',
-  '--no-gcloud-adc',
-  '--no-vercel-env',
 ])
 
 function usage() {
   return [
-    'Uso:',
-    '  node scripts/plugin/tool-call.mjs --tenant <id> --tool <tool> [opcoes]',
-    '',
-    'Exemplos:',
-    '  node scripts/plugin/tool-call.mjs --tenant 3 --tool connected_erp_bigquery --provider conta_azul --action listar --resource produtos --limit 2',
-    '  node scripts/plugin/tool-call.mjs --tenant 3 --tool connected_erp_api --provider conta_azul --action listar --resource produtos --limit 2 --allow-error',
-    '  node scripts/plugin/tool-call.mjs --tenant 3 --tool connected_erp_api --provider conta_azul --action criar --resource clientes --payload-json \'{"nome":"Cliente Teste CLI"}\'',
-    '',
-    'Opcoes:',
-    '  --tenant <id>                  Tenant usado no contexto da tool.',
-    '  --tool <nome>                  Tool do plugin, ex: connected_erp_bigquery, connected_erp_api, connected_erp ou connected_erp_actions.',
-    '  --args <json>                  Args completos da tool. Alias: --args-json.',
-    '  --provider <slug>              Provider conectado, ex: conta_azul.',
-    '  --action <acao>                Acao da tool.',
-    '  --resource <resource>          Resource da tool.',
-    '  --id <id>                      ID do registro para leitura/atualizacao.',
-    '  --limit <n>                    Limite de linhas.',
-    '  --params-json <json>           Define args.params.',
-    '  --filters-json <json>          Define args.filters.',
-    '  --payload-json <json>          Define args.payload.',
-    '  --idempotency-key <key>        Chave de idempotencia para acoes.',
-    '  --include-provider-fields      Inclui campos brutos/provider quando suportado.',
-    '  --vercel-env <env>             Ambiente Vercel para carregar envs quando faltarem credenciais. Default: production.',
-    '  --vercel-env-file <path>       Arquivo .env ja baixado do Vercel/cache para carregar.',
-    '  --no-vercel-env                Nao tenta puxar envs do Vercel automaticamente.',
-    '  --gcloud-adc-file <path>       Arquivo ADC explicitamente usado em GOOGLE_APPLICATION_CREDENTIALS.',
-    '  --no-gcloud-adc                Nao tenta detectar ADC local do gcloud.',
-    '  --execute --confirm           Permite dry_run=false em acoes de escrita via connected_erp_api ou connected_erp_actions.',
-    '  --allow-error                  Retorna exit code 0 mesmo quando a tool falhar.',
-    '  --help                        Mostra esta ajuda.',
+    'Uso: node scripts/plugin/tool-call.mjs --tenant <id> --tool <nome> --args <json>',
+    'Ferramentas locais: erp, erp_acoes, crm, ecommerce, marketing, sql, sql_execution, financial_statement.',
+    'Credenciais: ambiente atual, .env.local ou .env; nenhum carregamento remoto.',
+    'Opcoes: --action, --resource, --id, --limit, --params-json, --filters-json, --payload-json, --idempotency-key.',
+    'Escritas erp_acoes usam dry_run por padrao; --execute --confirm permite executar.',
+    '--allow-error aceita resposta de erro; --help mostra esta ajuda.',
   ].join('\n')
 }
 
@@ -145,123 +115,6 @@ function loadEnvFileIfExists(filePath) {
   return Object.keys(values).length
 }
 
-function hasBigQueryCredentials() {
-  return Boolean(
-    process.env.GOOGLE_OAUTH_ACCESS_TOKEN?.trim()
-      || process.env.BIGQUERY_CREDENTIALS_JSON?.trim()
-      || process.env.GOOGLE_APPLICATION_CREDENTIALS_JSON?.trim()
-      || process.env.GOOGLE_APPLICATION_CREDENTIALS?.trim(),
-  )
-}
-
-function resolvePath(value) {
-  if (!value) return value
-  return path.isAbsolute(value) ? value : path.join(root, value)
-}
-
-function tryRun(command, args) {
-  try {
-    return execFileSync(command, args, {
-      cwd: root,
-      encoding: 'utf8',
-      stdio: ['ignore', 'pipe', 'pipe'],
-    }).trim()
-  } catch {
-    return ''
-  }
-}
-
-async function loadVercelEnv(parsed) {
-  if (parsed.flags.has('--no-vercel-env') || hasBigQueryCredentials()) return
-
-  const explicitFile = parsed.values.get('--vercel-env-file')
-  if (explicitFile) {
-    loadEnvFileIfExists(resolvePath(explicitFile))
-    return
-  }
-
-  const environment = parsed.values.get('--vercel-env') || process.env.PLUGIN_TOOL_VERCEL_ENV || 'production'
-  const envFile = path.join(cacheDir, `vercel-${environment}.env`)
-  await mkdir(cacheDir, { recursive: true })
-
-  if (existsSync(envFile)) {
-    loadEnvFileIfExists(envFile)
-    if (hasBigQueryCredentials()) return
-  }
-
-  const output = tryRun('vercel', ['env', 'pull', envFile, '--environment', environment, '--yes'])
-  if (output || existsSync(envFile)) {
-    loadEnvFileIfExists(envFile)
-  }
-}
-
-function windowsPathToWslPath(value) {
-  if (!value) return ''
-  const converted = tryRun('wslpath', ['-u', value])
-  return converted || value
-}
-
-function detectWindowsGcloudAdcFile() {
-  const configDir = tryRun('cmd.exe', ['/c', 'gcloud', 'info', '--format="value(config.paths.global_config_dir)"'])
-  if (!configDir) return ''
-  return path.join(windowsPathToWslPath(configDir), 'application_default_credentials.json')
-}
-
-function detectGcloudAdcFile() {
-  const candidates = [
-    process.env.GOOGLE_APPLICATION_CREDENTIALS?.trim(),
-    path.join(process.env.HOME || '', '.config/gcloud/application_default_credentials.json'),
-    detectWindowsGcloudAdcFile(),
-  ].filter(Boolean)
-
-  return candidates.find((candidate) => existsSync(candidate)) || ''
-}
-
-function detectGcloudAccessToken() {
-  const linuxToken = tryRun('gcloud', ['auth', 'print-access-token'])
-  if (linuxToken) return linuxToken
-
-  return tryRun('cmd.exe', ['/c', 'gcloud', 'auth', 'print-access-token'])
-}
-
-function loadGcloudAdc(parsed) {
-  if (parsed.flags.has('--no-gcloud-adc')) return
-
-  const explicitFile = resolvePath(parsed.values.get('--gcloud-adc-file'))
-  const adcFile = explicitFile || detectGcloudAdcFile()
-  if (adcFile && existsSync(adcFile)) {
-    process.env.GOOGLE_APPLICATION_CREDENTIALS ||= adcFile
-    return
-  }
-
-  const accessToken = detectGcloudAccessToken()
-  if (accessToken) {
-    process.env.GOOGLE_OAUTH_ACCESS_TOKEN ||= accessToken
-  }
-}
-
-function assertBigQueryToolCredentials(tool) {
-  if (tool !== 'connected_erp_bigquery') return
-  if (
-    process.env.BIGQUERY_CREDENTIALS_JSON?.trim()
-    || process.env.GOOGLE_APPLICATION_CREDENTIALS_JSON?.trim()
-    || process.env.GOOGLE_APPLICATION_CREDENTIALS?.trim()
-  ) return
-
-  if (process.env.GOOGLE_OAUTH_ACCESS_TOKEN?.trim()) {
-    throw new Error(
-      'Credencial BigQuery local incompleta: gcloud retornou access token, mas o client precisa de service account JSON ou ADC. '
-      + 'Defina BIGQUERY_CREDENTIALS_JSON/GOOGLE_APPLICATION_CREDENTIALS_JSON, rode gcloud auth application-default login, '
-      + 'ou use --gcloud-adc-file <arquivo>.',
-    )
-  }
-}
-
-async function loadRuntimeCredentials(parsed) {
-  await loadVercelEnv(parsed)
-  loadGcloudAdc(parsed)
-}
-
 function requiredPositiveInt(args, name) {
   const parsed = optionalPositiveInt(args, name)
   if (!parsed) throw new Error(`${name} deve ser um inteiro positivo.`)
@@ -279,7 +132,6 @@ function buildToolArgs(parsed) {
   }
 
   const toolArgs = { ...baseArgs }
-  assignIfPresent(toolArgs, 'provider', parsed.values.get('--provider'))
   assignIfPresent(toolArgs, 'action', parsed.values.get('--action'))
   assignIfPresent(toolArgs, 'resource', parsed.values.get('--resource'))
   assignIfPresent(toolArgs, 'id', parsed.values.get('--id'))
@@ -289,25 +141,14 @@ function buildToolArgs(parsed) {
   assignIfPresent(toolArgs, 'payload', optionalJson(parsed, '--payload-json'))
   assignIfPresent(toolArgs, 'idempotency_key', parsed.values.get('--idempotency-key'))
 
-  if (parsed.flags.has('--include-provider-fields')) {
-    toolArgs.include_provider_fields = true
-  }
 
   return toolArgs
 }
 
-function isConnectedErpReadAction(action) {
-  return action === 'listar' || action === 'ler' || action === 'listar_live' || action === 'ler_live'
-}
-
-function requiresConnectedErpWriteSafety(tool, toolArgs) {
-  if (tool === 'connected_erp_actions') return true
-  if (tool !== 'connected_erp_api') return false
-  return !isConnectedErpReadAction(String(toolArgs.action || 'listar').toLowerCase())
-}
+function requiresWriteSafety(tool) { return tool === 'erp_acoes' }
 
 function prepareActionSafety(tool, toolArgs, parsed) {
-  if (!requiresConnectedErpWriteSafety(tool, toolArgs)) return
+  if (!requiresWriteSafety(tool)) return
 
   const wantsExecute = parsed.flags.has('--execute')
   const confirmed = parsed.flags.has('--confirm')
@@ -398,12 +239,11 @@ async function main(argv = process.argv.slice(2)) {
     return 0
   }
 
-  loadIntegrationCliEnv()
-  await loadRuntimeCredentials(parsed)
+  loadEnvFileIfExists(path.join(root, '.env.local'))
+  loadEnvFileIfExists(path.join(root, '.env'))
 
   const tenantId = requiredPositiveInt(parsed, '--tenant')
   const tool = requiredValue(parsed, '--tool')
-  assertBigQueryToolCredentials(tool)
   const toolArgs = buildToolArgs(parsed)
   prepareActionSafety(tool, toolArgs, parsed)
 
@@ -420,6 +260,6 @@ try {
   const code = await main()
   process.exit(code)
 } catch (error) {
-  printError(error)
+  console.error(error instanceof Error ? error.message : String(error))
   process.exit(1)
 }

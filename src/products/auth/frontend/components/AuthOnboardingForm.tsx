@@ -39,7 +39,7 @@ export function AuthOnboardingForm({ defaultCompanyName = '', email }: Props) {
         throw new Error(String(payload?.error || `HTTP ${response.status}`))
       }
 
-      router.replace('/integracoes')
+      router.replace('/erp')
       router.refresh()
     } catch (submitError) {
       setError(getErrorMessage(submitError))

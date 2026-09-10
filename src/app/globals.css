@@ -245,11 +245,11 @@ p, li, label, input, textarea, select, button {
   letter-spacing: 0 !important;
 }
 
-.integracoes-page-title {
+.artifact-page-title {
   font-size: 24px !important;
 }
 
-@keyframes integracoes-marquee-left {
+@keyframes erp-marquee-left {
   from {
     transform: translateX(0);
   }
@@ -258,7 +258,7 @@ p, li, label, input, textarea, select, button {
   }
 }
 
-@keyframes integracoes-marquee-right {
+@keyframes erp-marquee-right {
   from {
     transform: translateX(calc(-50% - 12px));
   }
@@ -267,12 +267,12 @@ p, li, label, input, textarea, select, button {
   }
 }
 
-.integracoes-logo-marquee {
+.erp-logo-marquee {
   overflow: hidden;
   width: 100%;
 }
 
-.integracoes-logo-marquee__track {
+.erp-logo-marquee__track {
   display: grid;
   width: max-content;
   grid-auto-flow: column;
@@ -281,15 +281,15 @@ p, li, label, input, textarea, select, button {
   will-change: transform;
 }
 
-.integracoes-logo-marquee__track--left {
-  animation: integracoes-marquee-left 24s linear infinite;
+.erp-logo-marquee__track--left {
+  animation: erp-marquee-left 24s linear infinite;
 }
 
-.integracoes-logo-marquee__track--right {
-  animation: integracoes-marquee-right 24s linear infinite;
+.erp-logo-marquee__track--right {
+  animation: erp-marquee-right 24s linear infinite;
 }
 
-.integracoes-logo-marquee__item {
+.erp-logo-marquee__item {
   display: flex;
   min-height: 76px;
   align-items: center;
@@ -304,17 +304,17 @@ p, li, label, input, textarea, select, button {
   box-shadow: 0 10px 26px rgba(23, 32, 58, 0.05);
 }
 
-.integracoes-logo-marquee__item span {
+.erp-logo-marquee__item span {
   white-space: nowrap;
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .integracoes-logo-marquee__track {
+  .erp-logo-marquee__track {
     animation: none;
   }
 }
 
-@keyframes integracoes-chat-phone-float {
+@keyframes erp-chat-phone-float {
   0%,
   100% {
     transform: translateY(0) rotate(-1deg);
@@ -324,7 +324,7 @@ p, li, label, input, textarea, select, button {
   }
 }
 
-@keyframes integracoes-chat-step {
+@keyframes erp-chat-step {
   0%,
   8% {
     opacity: 0;
@@ -342,7 +342,7 @@ p, li, label, input, textarea, select, button {
   }
 }
 
-.integracoes-chat-demo {
+.erp-chat-demo {
   display: flex;
   justify-content: center;
   min-height: 520px;
@@ -350,8 +350,8 @@ p, li, label, input, textarea, select, button {
   padding: 22px 0;
 }
 
-.integracoes-chat-demo__phone {
-  animation: integracoes-chat-phone-float 7s ease-in-out infinite;
+.erp-chat-demo__phone {
+  animation: erp-chat-phone-float 7s ease-in-out infinite;
   background: #f7f7f5;
   border: 10px solid #111111;
   border-radius: 46px;
@@ -365,7 +365,7 @@ p, li, label, input, textarea, select, button {
   width: min(100%, 330px);
 }
 
-.integracoes-chat-demo__status {
+.erp-chat-demo__status {
   align-items: center;
   color: #111111;
   display: flex;
@@ -375,7 +375,7 @@ p, li, label, input, textarea, select, button {
   padding: 18px 20px 10px;
 }
 
-.integracoes-chat-demo__conversation {
+.erp-chat-demo__conversation {
   display: flex;
   flex: 1;
   flex-direction: column;
@@ -384,35 +384,35 @@ p, li, label, input, textarea, select, button {
   padding: 14px 18px 16px;
 }
 
-.integracoes-chat-demo__bubble {
+.erp-chat-demo__bubble {
   border-radius: 24px;
   font-size: 13px;
   line-height: 1.45;
   padding: 12px 14px;
 }
 
-.integracoes-chat-demo__bubble--user {
+.erp-chat-demo__bubble--user {
   align-self: flex-end;
   background: #ededeb;
   color: #111111;
   max-width: 245px;
 }
 
-.integracoes-chat-demo__assistant {
+.erp-chat-demo__assistant {
   color: #202a3d;
   font-size: 13px;
   line-height: 1.5;
   max-width: 268px;
 }
 
-.integracoes-chat-demo__assistant-header {
+.erp-chat-demo__assistant-header {
   color: #225f42;
   font-size: 12px;
   font-weight: 700;
   margin-bottom: 5px;
 }
 
-.integracoes-chat-demo__tool {
+.erp-chat-demo__tool {
   background: #ffffff;
   border: 1px solid #e1e6ef;
   border-radius: 18px;
@@ -424,42 +424,42 @@ p, li, label, input, textarea, select, button {
   padding: 12px 14px;
 }
 
-.integracoes-chat-demo__tool span {
+.erp-chat-demo__tool span {
   color: #66748d;
   font-size: 11px;
   font-weight: 700;
 }
 
-.integracoes-chat-demo__tool strong {
+.erp-chat-demo__tool strong {
   font-size: 13px;
   font-weight: 700;
 }
 
-.integracoes-chat-demo__step {
-  animation: integracoes-chat-step 12s ease-in-out infinite both;
+.erp-chat-demo__step {
+  animation: erp-chat-step 12s ease-in-out infinite both;
 }
 
-.integracoes-chat-demo__step--1 {
+.erp-chat-demo__step--1 {
   animation-delay: 0s;
 }
 
-.integracoes-chat-demo__step--2 {
+.erp-chat-demo__step--2 {
   animation-delay: 1.2s;
 }
 
-.integracoes-chat-demo__step--3 {
+.erp-chat-demo__step--3 {
   animation-delay: 2.4s;
 }
 
-.integracoes-chat-demo__step--4 {
+.erp-chat-demo__step--4 {
   animation-delay: 3.6s;
 }
 
-.integracoes-chat-demo__step--5 {
+.erp-chat-demo__step--5 {
   animation-delay: 4.8s;
 }
 
-.integracoes-chat-demo__input {
+.erp-chat-demo__input {
   align-items: center;
   background: #ffffff;
   border: 1px solid #e1e6ef;
@@ -472,7 +472,7 @@ p, li, label, input, textarea, select, button {
   padding: 11px 12px 11px 16px;
 }
 
-.integracoes-chat-demo__input i {
+.erp-chat-demo__input i {
   background: #1b2440;
   border-radius: 999px;
   display: block;
@@ -481,8 +481,8 @@ p, li, label, input, textarea, select, button {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .integracoes-chat-demo__phone,
-  .integracoes-chat-demo__step {
+  .erp-chat-demo__phone,
+  .erp-chat-demo__step {
     animation: none;
   }
 }

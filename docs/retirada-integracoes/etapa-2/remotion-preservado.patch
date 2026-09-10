@@ -1,0 +1,129 @@
+diff --git a/src/assets/remotion/compositions/ChatGptMobileExactReplica.tsx b/src/assets/remotion/compositions/ChatGptMobileExactReplica.tsx
+index d52e8f842..d7028adbd 100644
+--- a/src/assets/remotion/compositions/ChatGptMobileExactReplica.tsx
++++ b/src/assets/remotion/compositions/ChatGptMobileExactReplica.tsx
+@@ -1,10 +1,10 @@
+ import {useEffect, useState, type ReactNode} from 'react'
+ import {AbsoluteFill, continueRender, delayRender, Img, interpolate, spring, staticFile, useCurrentFrame, useVideoConfig} from 'remotion'
+ 
+-import {OttoInvoiceEmissionMobilePanel} from '@/assets/remotion/compositions/OttoInvoiceChatGptTvContent'
++import {OttoAccountsPayableMobilePanel, OttoInvoiceEmissionMobilePanel} from '@/assets/remotion/compositions/OttoInvoiceChatGptTvContent'
+ import {IOS_REMOTION_DISPLAY_FONT_STACK, IOS_REMOTION_FONT_STACK, loadSfProFonts} from '@/assets/remotion/fonts/sfPro'
+ 
+-export const CHATGPT_MOBILE_EXACT_REPLICA_DURATION = 780
++export const CHATGPT_MOBILE_EXACT_REPLICA_DURATION = 1120
+ 
+ const INK = '#171717'
+ const ICON = '#666666'
+@@ -80,11 +80,12 @@ function AssistantText({children, top}: {children: ReactNode; top: number}) {
+   return <div style={{fontSize: 34, fontWeight: 400, left: 33, letterSpacing: '-0.018em', lineHeight: 1.3, position: 'absolute', top}}>{children}</div>
+ }
+ 
+-function TypedAssistantText({start, text, top}: {start: number; text: string; top: number}) {
++function TypedAssistantText({end, start, text, top}: {end?: number; start: number; text: string; top: number}) {
+   const frame = useCurrentFrame()
+   const visibleCharacters = Math.max(0, Math.min(text.length, Math.floor((frame - start + 1) * 5)))
++  const opacity = end === undefined ? 1 : interpolate(frame, [end, end + 8], [1, 0], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp'})
+ 
+-  return <AssistantText top={top}>{text.slice(0, visibleCharacters)}</AssistantText>
++  return <div style={{opacity}}><AssistantText top={top}>{text.slice(0, visibleCharacters)}</AssistantText></div>
+ }
+ 
+ function TypedEmojiCrop({boundaries, height, left, sourceX, sourceY, start, top, width}: {boundaries: number[]; height: number; left: number; sourceX: number; sourceY: number; start: number; top: number; width: number}) {
+@@ -126,8 +127,12 @@ function ConversationTrack({children}: {children: ReactNode}) {
+   const previousConversationScroll = -340 * (scrollStep(218) + scrollStep(273) + scrollStep(328) + scrollStep(383) + scrollStep(438))
+   const invoiceEntranceScroll = -520 * scrollStep(480)
+   const invoiceGrowthScroll = -75 * ([529, 553, 577, 601, 625, 649, 673].reduce((total, start) => total + scrollStep(start), 0))
+-  const completionScroll = -200 * scrollStep(710)
+-  const scrollY = previousConversationScroll + invoiceEntranceScroll + invoiceGrowthScroll + completionScroll
++  const invoiceCompletionScroll = -200 * scrollStep(710)
++  const accountsPromptScroll = -450 * scrollStep(760)
++  const accountsEntranceScroll = -500 * scrollStep(800)
++  const accountsGrowthScroll = -75 * ([849, 873, 897, 921, 945, 969, 993].reduce((total, start) => total + scrollStep(start), 0))
++  const accountsCompletionScroll = -200 * scrollStep(1030)
++  const scrollY = previousConversationScroll + invoiceEntranceScroll + invoiceGrowthScroll + invoiceCompletionScroll + accountsPromptScroll + accountsEntranceScroll + accountsGrowthScroll + accountsCompletionScroll
+ 
+   return <AbsoluteFill style={{clipPath: 'inset(230px 0 188px 0)', zIndex: 1}}>
+     <AbsoluteFill style={{transform: `translateY(${scrollY}px)`}}>{children}</AbsoluteFill>
+@@ -222,6 +227,13 @@ export function ChatGptMobileExactReplica() {
+ 
+       <TypedAssistantText start={728} text="Pronto! As 8 notas fiscais foram emitidas e enviadas." top={4350} />
+       <Reveal start={743}><ActionRow top={4500} /></Reveal>
++
++      <Reveal start={770}><UserBubble height={144} top={4595} width={690}><span>Agora busque as contas a pagar deste mês e organize por vencimento.</span></UserBubble></Reveal>
++      <TypedAssistantText end={1022} start={792} text="Perfeito! Vou buscar e organizar suas contas a pagar." top={4815} />
++      <OttoAccountsPayableMobilePanel start={812} top={4913} />
++
++      <TypedAssistantText start={1048} text="Pronto! Encontrei e organizei as 8 contas a pagar." top={5935} />
++      <Reveal start={1063}><ActionRow top={6085} /></Reveal>
+     </ConversationTrack>
+ 
+     <div style={{background: '#fff', bottom: 0, height: 188, left: 0, position: 'absolute', right: 0, zIndex: 20}}>
+diff --git a/src/assets/remotion/compositions/OttoInvoiceChatGptTvContent.tsx b/src/assets/remotion/compositions/OttoInvoiceChatGptTvContent.tsx
+index 5a7f0c026..4eb66601a 100644
+--- a/src/assets/remotion/compositions/OttoInvoiceChatGptTvContent.tsx
++++ b/src/assets/remotion/compositions/OttoInvoiceChatGptTvContent.tsx
+@@ -19,6 +19,16 @@ const invoices = [
+   ['Ana Clara LTDA', 'R$ 1.250,00'], ['Bruno Serviços ME', 'R$ 980,00'], ['Clínica Viva Bem', 'R$ 2.300,00'], ['Lucas Consultoria', 'R$ 1.750,00'],
+   ['Studio Design LTDA', 'R$ 1.100,00'], ['Marketing Digital SA', 'R$ 870,00'], ['Juliana Costa MEI', 'R$ 540,00'], ['Tech Solutions LTDA', 'R$ 1.990,00'],
+ ]
++const payableAccounts = [
++  {date: '06 set. 2026', name: 'Ana Clara LTDA', status: 'Pago', value: 'R$ 1.250,00'},
++  {date: '07 set. 2026', name: 'Bruno Serviços ME', status: 'A pagar', value: 'R$ 980,00'},
++  {date: '08 set. 2026', name: 'Clínica Viva Bem', status: 'Agendado', value: 'R$ 2.300,00'},
++  {date: '09 set. 2026', name: 'Lucas Consultoria', status: 'Vencido', value: 'R$ 1.750,00'},
++  {date: '10 set. 2026', name: 'Studio Design LTDA', status: 'A pagar', value: 'R$ 1.100,00'},
++  {date: '11 set. 2026', name: 'Marketing Digital SA', status: 'Pago', value: 'R$ 870,00'},
++  {date: '12 set. 2026', name: 'Juliana Costa MEI', status: 'Agendado', value: 'R$ 540,00'},
++  {date: '13 set. 2026', name: 'Tech Solutions LTDA', status: 'A pagar', value: 'R$ 1.990,00'},
++]
+ const tween = (frame: number, from: number, to: number, output: [number, number] = [0, 1]) => interpolate(frame, [from, to], output, {extrapolateLeft: 'clamp', extrapolateRight: 'clamp'})
+ 
+ function ExternalLinkIcon({size = 10}: {size?: number} = {}) {
+@@ -105,6 +115,46 @@ export function OttoInvoiceEmissionMobilePanel({start, top}: {start: number; top
+   </div>
+ }
+ 
++const payableTagColors: Record<string, {background: string; color: string}> = {
++  Agendado: {background: '#e7f0ff', color: '#2764b6'},
++  'A pagar': {background: '#fff1c7', color: '#906700'},
++  Pago: {background: '#dff3e8', color: '#24724b'},
++  Vencido: {background: '#ffe4e2', color: '#b42318'},
++}
++
++function MobilePayableRow({index}: {index: number}) {
++  const account = payableAccounts[index]
++  const tag = payableTagColors[account.status]
++
++  return <div style={{alignItems: 'center', borderTop: index ? '1px solid #e9e9e9' : 'none', boxSizing: 'border-box', display: 'grid', gap: 12, gridTemplateColumns: '44px 1.32fr 118px 108px 116px', minHeight: 92, padding: '13px 12px'}}>
++    <CustomerMark index={index} />
++    <strong style={{display: 'block', fontSize: 20.5, lineHeight: 1.18}}>{account.name}</strong>
++    <span style={{color: '#555', fontSize: 15.5, lineHeight: 1.2}}>{account.date}</span>
++    <span style={{background: tag.background, borderRadius: 7, color: tag.color, display: 'inline-flex', fontSize: 15.5, fontWeight: 600, justifyContent: 'center', justifySelf: 'start', lineHeight: 1, padding: '8px 10px'}}>{account.status}</span>
++    <strong style={{fontSize: 16.5, fontWeight: 600, justifySelf: 'end', whiteSpace: 'nowrap'}}>{account.value}</strong>
++  </div>
++}
++
++export function OttoAccountsPayableMobilePanel({start, top}: {start: number; top: number}) {
++  const frame = useCurrentFrame()
++  const localFrame = frame - start
++  const cardIn = tween(localFrame, 0, 12)
++  const raw = tween(localFrame, 18, 210, [0, 8])
++  const found = Math.min(8, Math.floor(raw))
++  const progress = Math.min(1, raw / 8)
++  const revealRow = (index: number) => index === 0 ? 1 : interpolate(raw, [index, index + 0.22], [0, 1], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp'})
++
++  return <div style={{background: '#fff', border: '1px solid #dedede', borderRadius: 24, boxShadow: '0 8px 30px rgba(0,0,0,.09)', left: 34, opacity: cardIn, overflow: 'hidden', position: 'absolute', right: 34, top, transform: `translateY(${(1 - cardIn) * 12}px)`}}>
++    <div style={{padding: '22px 20px 20px'}}>
++      <h1 className="chatgpt-mobile-invoice-title" style={{fontFamily: IOS_REMOTION_DISPLAY_FONT_STACK, fontSize: 40, fontWeight: 650, letterSpacing: '-0.025em', lineHeight: 1.03, margin: '0 0 18px', whiteSpace: 'nowrap'}}>Contas a pagar</h1>
++      <div style={{fontSize: 18, fontWeight: 650}}>{found} de 8 contas encontradas</div>
++      <div style={{background: '#eceeed', borderRadius: 99, height: 7, marginTop: 9, overflow: 'hidden'}}><div style={{background: GREEN, height: '100%', width: `${progress * 100}%`}} /></div>
++      <div style={{border: '1px solid #ddd', borderRadius: 14, marginTop: 16, overflow: 'hidden'}}>{payableAccounts.map((account, index) => { const reveal = revealRow(index); return <div key={account.name} style={{maxHeight: reveal * 92, opacity: reveal, overflow: 'hidden', transform: `translateY(${(1 - reveal) * 7}px)`}}><MobilePayableRow index={index} /></div> })}</div>
++      <div style={{display: 'flex', fontSize: 16, marginTop: 16}}><strong>Total: 8 contas</strong><span style={{color: '#555', fontWeight: 520, marginLeft: 'auto'}}>R$ 10.780,00</span></div>
++    </div>
++  </div>
++}
++
+ export function OttoInvoiceChatGptTvContent({conversationLiftAmount = 38, conversationLiftEnd = 7.5, promptBottom = 7, titleFontSize = 140, titleVerticalPadding = 0, withIntro = true}: {conversationLiftAmount?: number; conversationLiftEnd?: number; promptBottom?: number; titleFontSize?: number; titleVerticalPadding?: number; withIntro?: boolean} = {}) {
+   const absoluteFrame = useCurrentFrame()
+   const frame = withIntro ? Math.max(0, absoluteFrame - TV_CONTENT_INTRO_DURATION) : absoluteFrame

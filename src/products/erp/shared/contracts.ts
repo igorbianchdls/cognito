@@ -16,6 +16,7 @@ export type ErpEntityListResponse<TRecord extends ErpEntityRecord = ErpEntityRec
 }
 
 export type ErpEntityCreateRequest = {
+  operation?: ErpMutationExecutor
   entityId: string
   values: Record<string, unknown>
 }
@@ -30,6 +31,7 @@ export type ErpEntityUpdateRequest = {
 }
 
 export type ErpEntityActionRequest = {
+  operation?: ErpMutationExecutor
   actionId: string
   recordId: string
   values?: Record<string, unknown>
@@ -38,6 +40,8 @@ export type ErpEntityActionRequest = {
 export type ErpEntityActionResponse = {
   result: unknown
 }
+
+export type ErpMutationExecutor = { submit: <T>(url: string, values: unknown, validate?: (body: unknown) => T) => Promise<T> }
 
 export type ErpClient = {
   listEntityRecords: <TRecord extends ErpEntityRecord>(

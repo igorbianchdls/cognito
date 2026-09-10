@@ -221,7 +221,7 @@ function OperationList() {
     <div style={{ background: '#FFFFFF', border: `1px solid ${LINE}`, borderRadius: 18, overflow: 'hidden' }}>
       <div style={{ borderBottom: `1px solid ${LINE}`, padding: '17px 18px' }}>
         <div style={{ color: INK, fontSize: 18, fontWeight: 780 }}>Operacao de hoje</div>
-        <div style={{ color: MUTED, fontSize: 12, fontWeight: 500, marginTop: 4 }}>Financeiro, fiscal e integracoes</div>
+        <div style={{ color: MUTED, fontSize: 12, fontWeight: 500, marginTop: 4 }}>Financeiro, fiscal e estoque</div>
       </div>
       {rows.map(([title, subtitle, status, color], index) => {
         const rowIn = ease(frame, 96 + index * 8, 116 + index * 8)

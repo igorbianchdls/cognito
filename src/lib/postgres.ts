@@ -104,11 +104,15 @@ export async function closePool() {
 }
 
 export async function withTransaction<T>(fn: (client: SQLClient) => Promise<T>): Promise<T> {
+  const transactionContext = getErpDatabaseContext()
   const rawClient = await getPool().connect();
   const client: SQLClient = {
     async query(sql, params) {
       assertErpTenantScopedQuery(sql, params)
       const context = getErpDatabaseContext()
+      if (context?.tenantId !== transactionContext?.tenantId || context?.userId !== transactionContext?.userId) {
+        throw new Error('O contexto autenticado mudou durante a transacao.')
+      }
       if (/\berp\.[a-z_][a-z0-9_]*/i.test(sql) && context) {
         await applyErpRuntimeContext(rawClient, context)
         try {
@@ -125,10 +129,12 @@ export async function withTransaction<T>(fn: (client: SQLClient) => Promise<T>):
     await client.query('BEGIN');
     try {
       const result = await fn(client);
+      // Constraints diferidas tambem devem executar sob o contexto restrito.
+      if (transactionContext) await applyErpRuntimeContext(rawClient, transactionContext)
       await client.query('COMMIT');
       return result;
     } catch (err) {
-      try { await client.query('ROLLBACK'); } catch {}
+      try { await rawClient.query('ROLLBACK'); } catch {}
       throw err;
     }
   } finally {

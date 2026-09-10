@@ -8,11 +8,15 @@ import {
 import { dashboardLanguageDefinition } from '@/products/artifacts/dashboard/language/dashboardLanguageDefinition'
 import { resolveDashboardChartPaletteColors } from '@/products/artifacts/dashboard/language/dashboardLanguageManifest'
 import { validateDashboardTree } from '@/products/artifacts/dashboard/language/validateDashboardTree'
+import { preflightDashboardQueries } from '@/products/artifacts/dashboard/query/dashboardQueryPreflight'
+import { DASHBOARD_QUERY_RETIRED_MESSAGE } from '@/products/artifacts/dashboard/query/dashboardQueryPolicy'
 
 export type { WorkspaceSourceFile }
 export type { DashboardTreeNode }
 
 export async function parseDashboardJsxToTree(entryPath: string, files: WorkspaceSourceFile[]): Promise<DashboardTreeNode> {
+  const entry = files.find(file => file.path === entryPath)
+  if (entry && !preflightDashboardQueries({ source: entry.content }).ok) throw new Error(DASHBOARD_QUERY_RETIRED_MESSAGE)
   const parsed = await compileArtifactJsxToTree(dashboardLanguageDefinition, entryPath, files)
   if (parsed.kind !== 'dashboard') {
     throw new Error(`O parser de dashboard recebeu um artefato do tipo "${parsed.kind}"`)

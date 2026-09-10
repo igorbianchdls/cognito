@@ -14,10 +14,6 @@ import {
   type DashboardListItem,
 } from '@/products/artifacts/dashboard/persistence/dashboardArtifactsService'
 import { preflightDashboardQueries } from '@/products/artifacts/dashboard/query/dashboardQueryPreflight'
-import {
-  normalizeDashboardQueryPreviewError,
-  previewDashboardQuery,
-} from '@/products/artifacts/dashboard/query/dashboardQueryPreview'
 
 export type McpJsonMap = Record<string, unknown>
 export type McpArtifactKind = ArtifactKind
@@ -91,15 +87,6 @@ export type McpDashboardPatchInput = {
 export type McpDashboardDeleteInput = {
   tenantId: number
   artifactId: string
-}
-
-export type McpDashboardQueryPreviewInput = {
-  tenantId: number
-  artifactId: string
-  componentId: string
-  sampleLimit?: number | null
-  includeProfile?: boolean
-  actorId?: string | null
 }
 
 export type McpArtifactReadInput = {
@@ -251,25 +238,6 @@ export async function readMcpDashboard(input: McpDashboardReadInput) {
   })
 
   return withDashboardUrl(artifact)
-}
-
-export async function previewMcpDashboardQuery(input: McpDashboardQueryPreviewInput) {
-  const actorId = input.actorId == null || input.actorId === '' ? null : Number(input.actorId)
-  try {
-    return await previewDashboardQuery({
-      artifactId: input.artifactId,
-      tenantId: input.tenantId,
-      componentId: input.componentId,
-      sampleLimit: input.sampleLimit,
-      includeProfile: input.includeProfile,
-      actorId: Number.isFinite(actorId) ? actorId : null,
-    })
-  } catch (error) {
-    return normalizeDashboardQueryPreviewError({
-      componentId: input.componentId,
-      error,
-    })
-  }
 }
 
 function withArtifactUrl<T extends { artifact_id: string; artifact_type?: string }>(artifact: T) {

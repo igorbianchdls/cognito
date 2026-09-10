@@ -94,10 +94,10 @@ export function ErpDataTable({
                   </div>
                 ) : (
                   <div className="flex justify-end gap-1">
-                    <Button variant="ghost" size="icon" title="Editar" aria-label={`Editar ${record.id}`} onClick={() => onEdit?.(record)}>
+                    {onEdit ? <Button variant="ghost" size="icon" title="Editar" aria-label={`Editar ${record.id}`} onClick={() => onEdit(record)}>
                       <IconEdit className="size-4" stroke={1.8} />
-                    </Button>
-                    {record.status !== 'inativo' && record.status !== 'pausado' ? (
+                    </Button> : null}
+                    {onDeactivate && record.status !== 'inativo' && record.status !== 'pausado' ? (
                       <Button variant="ghost" size="icon" title="Desativar" aria-label={`Desativar ${record.id}`} onClick={() => onDeactivate?.(record)}>
                         <IconBan className="size-4" stroke={1.8} />
                       </Button>

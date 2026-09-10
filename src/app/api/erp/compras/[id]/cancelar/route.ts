@@ -1,3 +1,4 @@
+import { erpFailure, erpErrorResponse as erpFailureResponse } from "@/products/erp/server/erpApi"
 import { NextResponse } from 'next/server'
 
 import { resolveErpAccess } from '@/products/erp/server/erpAccess'
@@ -15,12 +16,12 @@ export async function POST(_request: Request, context: RouteContext) {
   const { id } = await context.params
   const purchaseId = Number(id)
   if (!Number.isInteger(purchaseId) || purchaseId <= 0) {
-    return NextResponse.json({ error: 'Compra invalida.' }, { status: 400 })
+    return erpFailure('Compra invalida.', 400)
   }
 
   const tenant = await resolveErpAccess('erp.compras.gerenciar')
   if (!tenant) {
-    return NextResponse.json({ error: 'Acesso negado.' }, { status: 403 })
+    return erpFailure('Acesso negado.', 403)
   }
 
   try {
@@ -32,9 +33,6 @@ export async function POST(_request: Request, context: RouteContext) {
 
     return NextResponse.json(result)
   } catch (error) {
-    return NextResponse.json(
-      { error: error instanceof Error ? error.message : 'Nao foi possivel cancelar a compra.' },
-      { status: 400 },
-    )
+    return erpFailureResponse(error)
   }
 }

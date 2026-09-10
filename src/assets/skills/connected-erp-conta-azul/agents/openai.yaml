@@ -1,7 +1,0 @@
-interface:
-  display_name: "Connected ERP Conta Azul"
-  short_description: "ERP Conta Azul via tools do projeto."
-  default_prompt: "Use $connected-erp-conta-azul para operar Conta Azul via connected_erp_api e consultar dados normalizados via connected_erp_bigquery, com dry-run antes de ações reais."
-
-policy:
-  allow_implicit_invocation: true

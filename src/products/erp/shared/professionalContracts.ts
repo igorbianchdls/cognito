@@ -1,4 +1,5 @@
 import { z } from 'zod'
+import { erpDateSchema, erpMoneySchema } from './erpTransport'
 
 export const ERP_CAPABILITIES = [
   'erp.vendas.visualizar',
@@ -23,9 +24,9 @@ export type ErpAccessProfile = 'administrador' | 'financeiro' | 'vendas' | 'comp
 
 const id = z.coerce.number().int().positive()
 const optionalId = z.union([id, z.literal(''), z.null()]).optional().transform((value) => value || null)
-const money = z.coerce.number().finite().nonnegative()
+const money = erpMoneySchema
 const quantity = z.coerce.number().finite().positive()
-const isoDate = z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Data invalida.')
+const isoDate = erpDateSchema
 
 export const serviceOrderItemSchema = z.object({
   tipo: z.enum(['produto', 'servico']),

@@ -1,6 +1,9 @@
 'use client'
 
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useErpAccess } from '@/products/erp/frontend/hooks/useErpAccess'
+import { ErpMutation } from '@/products/erp/frontend/services/erpMutation'
+import { getErpModuleCapability, isErpConnectedModuleId } from '@/products/erp/shared/moduleAccess'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 
 import { ErpActionBar } from '@/products/erp/frontend/components/ErpActionBar'
 import { ErpDataTable } from '@/products/erp/frontend/components/ErpDataTable'
@@ -15,6 +18,12 @@ import { erpClient } from '@/products/erp/frontend/services/erpClient'
 import type { ErpEntityAction, ErpEntityConfig, ErpEntityRecord } from '@/products/erp/shared/types'
 
 export function ErpEntityPage({ config }: { config: ErpEntityConfig }) {
+  const access = useErpAccess()
+  const canManage = isErpConnectedModuleId(config.id) && access.can(getErpModuleCapability(config.id, 'manage'))
+  const canAct = (action: ErpEntityAction) => action.id === 'baixar' ? access.can('erp.financeiro.baixar') : canManage
+  const visibleConfig = { ...config, actions: config.actions?.filter(canAct) }
+  const createOperation = useRef(new ErpMutation())
+  const actionOperations = useRef(new Map<string, ErpMutation>())
   const [query, setQuery] = useState('')
   const [filters, setFilters] = useState<Record<string, string>>({})
   const [records, setRecords] = useState<ErpEntityRecord[]>([])
@@ -55,22 +64,23 @@ export function ErpEntityPage({ config }: { config: ErpEntityConfig }) {
         .then((body: { metrics?: typeof config.metrics }) => setMetrics(body.metrics || config.metrics))
         .catch(() => setMetrics(config.metrics)),
       categoryType
-        ? fetch(`/api/erp/catalogos/categorias?tipo=${categoryType}`, { cache: 'no-store' })
+        ? fetch(`/api/erp/catalogos/categorias?tipo=${categoryType}${config.id === 'servicos' ? '&identificador=id' : ''}`, { cache: 'no-store' })
           .then((response) => response.ok ? response.json() : Promise.reject())
-          .then((body: { options?: Array<{ value: string; label: string }> }) => setFieldOptions({ categoria: body.options || [] }))
+          .then((body: { options?: Array<{ value: string; label: string }> }) => setFieldOptions({ [config.id === 'servicos' ? 'categoria_id' : 'categoria']: body.options || [] }))
           .catch(() => setFieldOptions({}))
         : Promise.resolve(),
     ])
   }, [config])
 
   async function createRecord(values: Record<string, unknown>) {
+    if (!canManage) throw new Error('Você não tem permissão para salvar este cadastro.')
     if (editingRecord) {
       await erpClient.updateEntityRecord(config, editingRecord.id, {
         values,
         expectedVersion: Number(editingRecord.versao || 0),
       })
     } else {
-      await erpClient.createEntityRecord(config, { entityId: config.id, values })
+      await erpClient.createEntityRecord(config, { entityId: config.id, values, operation: createOperation.current })
     }
     setEditingRecord(null)
     await loadRecords()
@@ -100,6 +110,7 @@ export function ErpEntityPage({ config }: { config: ErpEntityConfig }) {
   }
 
   async function runAction(action: ErpEntityAction, record: ErpEntityRecord) {
+    if (!canAct(action)) return
     const message = action.confirmMessage || `${action.label} este registro?`
     if (!window.confirm(message)) return
 
@@ -109,7 +120,7 @@ export function ErpEntityPage({ config }: { config: ErpEntityConfig }) {
       return
     }
 
-    const values: Record<string, unknown> = {}
+    const values: Record<string, unknown> = config.id === 'pedidos' ? {expectedVersion:Number(record.versao)} : {}
     if (action.id === 'baixar') {
       const defaultValue = Math.max(0, Number(record.valor || 0) - Number(record.valor_pago || 0))
       const typedValue = window.prompt('Valor da baixa', defaultValue ? String(defaultValue) : '')
@@ -120,7 +131,9 @@ export function ErpEntityPage({ config }: { config: ErpEntityConfig }) {
     setLoading(true)
     setError(null)
     try {
-      await erpClient.runEntityAction(config, { actionId: action.id, recordId: actionRecordId, values })
+      const key = action.id + ':' + actionRecordId
+      if (!actionOperations.current.has(key)) actionOperations.current.set(key, new ErpMutation(undefined, action.id === 'baixar'))
+      await erpClient.runEntityAction(config, { actionId: action.id, recordId: actionRecordId, values, operation: actionOperations.current.get(key) })
       await loadRecords()
     } catch (actionError) {
       setError(actionError instanceof Error ? actionError.message : 'Nao foi possivel executar a acao.')
@@ -140,7 +153,7 @@ export function ErpEntityPage({ config }: { config: ErpEntityConfig }) {
         <ErpActionBar
           primaryActionLabel={config.primaryActionLabel}
           refreshing={loading}
-          showPrimaryAction={config.fields.length > 0}
+          showPrimaryAction={canManage && config.fields.length > 0}
           onRefresh={() => void loadRecords()}
           onPrimaryAction={() => { setEditingRecord(null); setDrawerOpen(true) }}
         />
@@ -169,16 +182,16 @@ export function ErpEntityPage({ config }: { config: ErpEntityConfig }) {
         </div>
       ) : records.length > 0 ? (
         <div>
-          <ErpDataTable config={config} records={records} onAction={(action, record) => void runAction(action, record)}
-            onEdit={(record) => void editRecord(record)} onDeactivate={(record) => void deactivateRecord(record)} />
+          <ErpDataTable config={visibleConfig} records={records} onAction={(action, record) => void runAction(action, record)}
+            onEdit={canManage ? (record) => void editRecord(record) : undefined} onDeactivate={canManage ? (record) => void deactivateRecord(record) : undefined} />
           <ErpPagination page={page} pageSize={pageSize} total={total} onPageChange={setPage} />
         </div>
       ) : (
         <ErpEmptyState
           title={config.emptyState.title}
           description={config.emptyState.description}
-          actionLabel={config.fields.length > 0 ? config.primaryActionLabel : undefined}
-          onAction={config.fields.length > 0 ? () => { setEditingRecord(null); setDrawerOpen(true) } : undefined}
+          actionLabel={canManage && config.fields.length > 0 ? config.primaryActionLabel : undefined}
+          onAction={canManage && config.fields.length > 0 ? () => { setEditingRecord(null); setDrawerOpen(true) } : undefined}
         />
       )}
 

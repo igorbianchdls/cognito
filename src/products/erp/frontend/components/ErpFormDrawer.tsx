@@ -2,6 +2,9 @@
 
 import { useEffect, useState, type FormEvent } from 'react'
 
+import { ErpRegistrationRelations } from './ErpRegistrationRelations'
+import { parseRegistrationRelations, type RegistrationRelations } from '@/products/erp/shared/registrationContracts'
+
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -56,7 +59,9 @@ function FieldControl({
   return (
     <Input
       value={value}
+      id={field.key}
       type={field.type}
+      step={field.type === 'number' ? 'any' : undefined}
       placeholder={field.placeholder}
       className="bg-white ring-1 ring-gray-200"
       onChange={(event) => onChange(event.target.value)}
@@ -79,21 +84,33 @@ export function ErpFormDrawer({
   initialValues?: Record<string, unknown> | null
   fieldOptions?: Record<string, Array<{ value: string; label: string }>>
 }) {
+  const hasRelations = ['clientes','fornecedores','vendedores'].includes(config.id)
+  const [relations, setRelations] = useState<RegistrationRelations>({contatos:[],enderecos:[]})
   const [values, setValues] = useState<Record<string, string>>({})
+  const [relationsReady, setRelationsReady] = useState(false)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
     if (!open) return
     setError(null)
+    setRelationsReady(!hasRelations)
+    if (hasRelations) {
+      try {
+        const clean = (raw: unknown) => JSON.parse(String(raw || '[]')).map((row: Record<string,unknown>) => Object.fromEntries(Object.entries(row).map(([key,value])=>[key,value === null ? '' : value])))
+        setRelations(parseRegistrationRelations({contatos:clean(initialValues?.contatos_json),enderecos:clean(initialValues?.enderecos_json)}))
+        setRelationsReady(true)
+      } catch { setError('Não foi possível ler os contatos e endereços. Reabra o cadastro.'); return }
+    }
     setValues(Object.fromEntries(
       Object.entries(initialValues || {}).map(([key, value]) => [key, value == null ? '' : String(value)]),
     ))
     setSaving(false)
-  }, [config.id, initialValues, open])
+  }, [config.id, hasRelations, initialValues, open])
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
+    if (saving || (hasRelations && !relationsReady)) return
     const missingField = config.fields.find((field) => field.required && !String(values[field.key] || '').trim())
     if (missingField) {
       setError(`${missingField.label} e obrigatorio.`)
@@ -103,7 +120,8 @@ export function ErpFormDrawer({
     setSaving(true)
     setError(null)
     try {
-      await onSubmit(values)
+      const payload = Object.fromEntries(config.fields.map(field=>[field.key,values[field.key] ?? '']))
+      await onSubmit(hasRelations ? {...payload,...parseRegistrationRelations(relations)} : payload)
       onOpenChange(false)
     } catch (submitError) {
       setError(submitError instanceof Error ? submitError.message : 'Nao foi possivel salvar.')
@@ -137,6 +155,7 @@ export function ErpFormDrawer({
                   />
                 </div>
               ))}
+              {hasRelations && <ErpRegistrationRelations value={relations} onChange={setRelations} disabled={saving} />}
               {error ? (
                 <div className="rounded-md border border-rose-200 bg-rose-50 px-3 py-2 text-sm text-rose-700">
                   {error}
@@ -148,7 +167,7 @@ export function ErpFormDrawer({
             <Button type="button" variant="outline" disabled={saving} onClick={() => onOpenChange(false)}>
               Cancelar
             </Button>
-            <Button type="submit" disabled={saving}>
+            <Button type="submit" disabled={saving || (hasRelations && !relationsReady)}>
               {saving ? 'Salvando...' : initialValues ? 'Salvar alteracoes' : 'Salvar'}
             </Button>
           </SheetFooter>

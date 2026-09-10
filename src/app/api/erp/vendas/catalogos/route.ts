@@ -1,3 +1,4 @@
+import { erpFailure, erpErrorResponse as erpFailureResponse } from "@/products/erp/server/erpApi"
 import { NextResponse } from 'next/server'
 
 import { resolveErpAccess } from '@/products/erp/server/erpAccess'
@@ -9,14 +10,11 @@ export const runtime = 'nodejs'
 
 export async function GET() {
   const tenant = await resolveErpAccess('erp.vendas.visualizar')
-  if (!tenant) return NextResponse.json({ error: 'Nao autenticado.' }, { status: 401 })
+  if (!tenant) return erpFailure('Nao autenticado.', 401)
 
   try {
     return NextResponse.json(await listErpSalesCatalogs(tenant.tenantId))
   } catch (error) {
-    return NextResponse.json(
-      { error: error instanceof Error ? error.message : 'Nao foi possivel carregar os catalogos de vendas.' },
-      { status: 400 },
-    )
+    return erpFailureResponse(error)
   }
 }

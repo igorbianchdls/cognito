@@ -2,7 +2,6 @@ import {
   createMcpDashboard,
   listMcpDashboards,
   patchMcpDashboard,
-  previewMcpDashboardQuery,
   readMcpDashboard,
   updateMcpDashboardFull,
   type McpJsonMap,
@@ -45,190 +44,23 @@ const DASHBOARD_DATE_PICKER_PRESETS = DASHBOARD_SUPPORTED_DATE_PICKER_PRESETS
 const DASHBOARD_FORMATS = ['currency', 'number', 'percent', 'integer', 'date', 'datetime', 'text'] as const
 
 const DASHBOARD_COMPONENT_PROPS = {
-  Dashboard: {
-    required: ['id', 'title'],
-    props: {
-      id: 'string estavel, sem espacos',
-      title: 'string',
-      theme: 'string opcional, normalmente light',
-      chartPalette: DASHBOARD_SUPPORTED_CHART_PALETTES,
-      borderPreset: 'string opcional',
-    },
-  },
-  KPI: {
-    required: ['id', 'label'],
-    props: {
-      id: 'string estavel, sem espacos',
-      label: 'string',
-      dataQuery: 'objeto com query SQL; preferido para KPI dinamico',
-      valuePath: 'string opcional quando o valor vem de um Query ancestral',
-      comparisonMode: ['previous_period', 'previous_month', 'previous_year'],
-      format: DASHBOARD_FORMATS,
-    },
-    data_contract: 'A query deve retornar uma linha com alias numerico value.',
-  },
-  KPICompare: {
-    required: ['id', 'label', 'dataQuery'],
-    props: {
-      id: 'string estavel, sem espacos',
-      label: 'string',
-      dataQuery: 'objeto com query SQL',
-      format: DASHBOARD_FORMATS,
-    },
-    data_contract: 'Use value para valor atual e previous_value quando houver comparativo.',
-  },
-  Chart: {
-    required: ['id', 'type', 'dataQuery'],
-    props: {
-      id: 'string estavel, sem espacos',
-      type: DASHBOARD_SUPPORTED_CHART_TYPES,
-      dataQuery: 'objeto com query SQL',
-      xAxis: "{ dataKey: 'label' } para bar/line/composed",
-      series: "array como [{ dataKey: 'value', label: 'Receita' }]",
-      format: DASHBOARD_FORMATS,
-      height: 'number ou string; use 280-360 para cards comuns',
-    },
-    data_contract:
-      'Charts simples devem retornar key opcional, label e value. Series multiplas devem retornar label e uma coluna numerica por serie declarada.',
-  },
-  Query: {
-    required: ['dataQuery'],
-    props: {
-      dataQuery: 'objeto com query SQL',
-      format: DASHBOARD_FORMATS,
-      children: 'layout opcional quando usar dados compartilhados',
-    },
-  },
-  Table: {
-    required: ['id', 'dataQuery'],
-    props: {
-      id: 'string estavel, sem espacos',
-      dataQuery: 'objeto com query SQL',
-      columns: 'array opcional com key, label, format, align',
-      height: 'number ou string opcional',
-    },
-    data_contract: 'A query deve retornar linhas tabulares com aliases estaveis para colunas.',
-  },
-  PivotTable: {
-    required: ['id', 'dataQuery'],
-    props: {
-      id: 'string estavel, sem espacos',
-      dataQuery: 'objeto com query SQL',
-      rows: 'array de campos de linha',
-      columns: 'array de campos de coluna',
-      values: 'array de metricas',
-    },
-  },
-  Filter: {
-    required: ['id', 'field', 'table'],
-    props: {
-      id: 'string estavel, sem espacos',
-      label: 'string',
-      field: 'nome da coluna filtrada',
-      table: 'schema.tabela base do filtro',
-      multiple: 'boolean opcional',
-    },
-  },
-  DatePicker: {
-    required: ['id', 'field', 'table'],
-    props: {
-      id: 'string estavel, sem espacos',
-      label: 'string',
-      field: 'coluna de data',
-      table: 'schema.tabela base do filtro',
-      presets: DASHBOARD_DATE_PICKER_PRESETS,
-    },
-  },
-  Tabs: {
-    required: ['defaultValue'],
-    props: {
-      defaultValue: 'value de um Tab filho',
-      children: 'Tab e TabPanel com values correspondentes',
-    },
-  },
-  Tab: {
-    required: ['value'],
-    props: {
-      value: 'string que identifica a aba',
-      children: 'label da aba',
-    },
-  },
-  TabPanel: {
-    required: ['value'],
-    props: {
-      value: 'string igual a um Tab.value',
-      children: 'conteudo da aba',
-    },
-  },
+ Dashboard: { required: ['id', 'title'], props: { id: 'string', title: 'string', theme: 'string opcional', chartPalette: DASHBOARD_SUPPORTED_CHART_PALETTES } },
+ KPI: { required: ['id', 'value'], props: { id: 'string', title: 'string', value: 'numero fornecido; null para valor ainda indisponivel', format: DASHBOARD_FORMATS } },
+ Chart: { required: ['id', 'type', 'data'], props: { id: 'string', type: DASHBOARD_SUPPORTED_CHART_TYPES, data: 'array de registros fornecidos', xAxis: "{ dataKey: 'label' }", series: "[{ dataKey: 'value', label: 'Valor' }]", height: 'number ou string', format: DASHBOARD_FORMATS } },
+ Table: { required: ['id', 'data'], props: { id: 'string', data: 'array de registros fornecidos', columns: "[{ accessorKey: 'label', header: 'Descricao' }]" } },
+ PivotTable: { required: ['id', 'data'], props: { id: 'string', data: 'array de registros fornecidos', rows: 'campos de linha', columns: 'campos de coluna', values: 'metricas agregadas localmente' } },
+ Tabs: { required: ['defaultValue'], props: { defaultValue: 'valor inicial', children: 'Tab e TabPanel com valores correspondentes' } },
+ Tab: { required: ['value'], props: { value: 'identificador da aba', children: 'rotulo' } },
+ TabPanel: { required: ['value'], props: { value: 'identificador da aba', children: 'conteudo' } },
 } as const
 
-const DASHBOARD_DATA_QUERY_CONTRACT = {
-  shape: {
-    query: 'SQL BigQuery SELECT/CTE usando nomes logicos do dataset normalized do tenant.',
-    limit: 'number opcional',
-  },
-  placeholders: ['@de', '@ate', 'parametros nomeados de filtros definidos no dashboard'],
-  aliases: {
-    KPI: ['value'],
-    Chart: ['key opcional', 'label', 'value'],
-    Table: ['aliases estaveis que batem com columns[].key quando columns for usado'],
-  },
-  rules: [
-    'Use SELECT/CTE de leitura; nao use INSERT, UPDATE, DELETE, DDL ou multiplas instrucoes.',
-    'Nao informe project ou dataset. Use FROM vendas, FROM clientes, FROM contas_receber etc.',
-    'As views logicas ja pertencem ao tenant autenticado e representam o estado atual deduplicado.',
-    'Use o sufixo _history apenas quando precisar consultar todas as cargas.',
-    'Para filtros de data recebidos como texto ISO, use DATE(@de) e DATE(@ate) na SQL.',
-    'Para moeda/percentual, retorne numero bruto e use format no componente.',
-  ],
-} as const
 
-const DASHBOARD_VALID_EXAMPLE = `<Dashboard
-  id="dashboard-comercial"
-  title="Dashboard Comercial"
-  theme="light"
-  chartPalette="teal"
->
-  <section style={{ display: 'flex', gap: 16, flexWrap: 'wrap' }}>
-    <section data-ui="card" style={{ flex: '1 1 280px' }}>
-      <h2 data-ui="section-title-sm">Receita</h2>
-      <KPI
-        id="kpi-receita-total"
-        label="Receita"
-        format="currency"
-        dataQuery={{
-          query: \`
-            SELECT COALESCE(SUM(valor_total), 0) AS value
-            FROM vendas
-          \`,
-          limit: 1,
-        }}
-      />
-    </section>
 
-    <section data-ui="card" style={{ flex: '2 1 560px' }}>
-      <h2 data-ui="section-title-sm">Vendas por mes</h2>
-      <Chart
-        id="chart-vendas-mes"
-        type="bar"
-        format="currency"
-        height={320}
-        dataQuery={{
-          query: \`
-            SELECT
-              FORMAT_DATE('%Y-%m', DATE_TRUNC(DATE(data_pedido), MONTH)) AS label,
-              COALESCE(SUM(valor_total), 0) AS value
-            FROM vendas
-            GROUP BY 1
-            ORDER BY 1
-          \`,
-          limit: 12,
-        }}
-        xAxis={{ dataKey: 'label' }}
-        series={[{ dataKey: 'value', label: 'Receita' }]}
-      />
-    </section>
-  </section>
+const DASHBOARD_VALID_EXAMPLE = `<Dashboard id="resumo" title="Resumo">
+  <header><h1>Resumo</h1><p>Preencha os componentes com dados verificados.</p></header>
+  <KPI id="indicador" title="Indicador" value={null} format="number" />
+  <Chart id="grafico" type="bar" data={[]} height={280} xAxis={{ dataKey: 'label' }} series={[{ dataKey: 'value', label: 'Valor' }]} />
+  <Table id="tabela" data={[]} columns={[{ accessorKey: 'label', header: 'Descricao' }]} />
 </Dashboard>`
 
 export type McpDashboardToolContext = {
@@ -309,70 +141,26 @@ function normalizePatchOperation(value: unknown) {
 }
 
 export function getDashboardContract(includeExample: boolean) {
-  return {
-    artifact_type: 'dashboard',
-    dsl_version: DASHBOARD_DSL_VERSION,
-    source_path: 'app/dashboard.tsx',
-    source_format:
-      'TSX declarativo completo exportando um componente default ou comecando diretamente em um root <Dashboard>.',
-    authoring_model:
-      'Use TSX como DSL declarativa: layout flexivel, mas componentes e props devem seguir este contrato. Nao gere React livre.',
-    supported_components: [...DASHBOARD_AUTHORING_COMPONENTS],
-    supported_html_tags: [...DASHBOARD_SUPPORTED_HTML_TAGS],
-    supported_chart_types: [...DASHBOARD_SUPPORTED_CHART_TYPES],
-    supported_chart_palettes: [...DASHBOARD_SUPPORTED_CHART_PALETTES],
-    supported_date_picker_presets: [...DASHBOARD_DATE_PICKER_PRESETS],
-    supported_formats: [...DASHBOARD_FORMATS],
-    component_props: DASHBOARD_COMPONENT_PROPS,
-    data_query_contract: DASHBOARD_DATA_QUERY_CONTRACT,
-    query_preview_contract: {
-      tool: 'artifact_authoring',
-      action: 'query_preview',
-      purpose: 'Ler amostra limitada e perfil agregado de um componente dataQuery para debug/agente.',
-      input: {
-        kind: 'dashboard',
-        id: 'artifact_id do dashboard',
-        component_id: 'id do KPI, Chart, Query, Table ou PivotTable',
-        sample_limit: 'default 5; maximo 20',
-        include_profile: 'default true',
-      },
-      rules: [
-        'Nunca use query_preview como exportacao de dados.',
-        'Use query_preflight do create/update_full para saude das queries sem dados.',
-        'Use query_preview apenas quando precisar entender exemplos de valores retornados por um componente.',
-      ],
-    },
-    rules: [
-      'Gere source TSX completo, autocontido e declarativo para um dashboard.',
-      'O root Dashboard deve ter id e title nao vazios.',
-      'Nao use imports externos nao suportados pelo preview do workspace.',
-      'Nao use componentes fora de supported_components nem props inventadas para componentes de dados.',
-      'Use ids estaveis em paineis, charts, KPIs, tabelas e filtros.',
-      'Use dataQuery para KPI, Chart, Query, Table e PivotTable dinamicos.',
-      'Nao use Chart.data nem KPI.value para dados dinamicos; use dataQuery e format.',
-      'Queries de KPI devem retornar alias value; queries de Chart devem retornar label e value por padrao.',
-      'Antes de editar dashboard existente, use artifact_authoring com kind=dashboard.',
-      'Para pequenas edicoes, prefira artifact_authoring action=patch com replace_text especifico.',
-      'Para reescrita completa, use artifact_authoring action=update_full.',
-    ],
-    create_flow: [
-      'Chame artifact_authoring com kind=dashboard e action=get_contract se precisar relembrar o formato.',
-      'Gere source TSX.',
-      'Chame artifact_authoring com kind=dashboard, action=create, title e source.',
-      'Confira query_preflight no retorno: cada dataQuery recebe ok, status, code, rowCount, columns e metadata quando executada.',
-      'Retorne artifact_id, version, url e qualquer falha de query_preflight ao usuario.',
-      'Se precisar entender valores reais de um componente, chame artifact_authoring com action=query_preview, id e component_id.',
-    ],
-    edit_flow: [
-      'Chame artifact_authoring com kind=dashboard e action=patch ou update_full.',
-      'Se expected_version for omitida, a tool usa a versao draft atual automaticamente.',
-      'Use replace_text para edicoes pontuais e update_full para reescrita completa.',
-      'Em update_full, confira query_preflight antes de considerar o dashboard pronto.',
-      'Retorne a nova versao, URL e qualquer falha de query_preflight.',
-      'Use action=query_preview apenas para debug ou explicacao de dados de um componente especifico.',
-    ],
-    example_source: includeExample ? DASHBOARD_VALID_EXAMPLE : null,
-  }
+ return {
+  kind: 'dashboard', dsl_version: DASHBOARD_DSL_VERSION, source_format: 'tsx',
+  supported_components: DASHBOARD_AUTHORING_COMPONENTS.filter(component => component !== 'KPICompare' && component !== 'Filter' && component !== 'DatePicker'),
+  supported_html_tags: [...DASHBOARD_SUPPORTED_HTML_TAGS],
+  supported_chart_types: [...DASHBOARD_SUPPORTED_CHART_TYPES],
+  supported_chart_palettes: [...DASHBOARD_SUPPORTED_CHART_PALETTES],
+  supported_formats: [...DASHBOARD_FORMATS], component_props: DASHBOARD_COMPONENT_PROPS,
+  data_contract: { mode: 'inline', queries_supported: false, description: 'Dados fornecidos diretamente. Nao executa SQL nem consulta fontes externas.' },
+  rules: [
+   'Gere source TSX completo, autocontido e declarativo. Use ids estaveis.',
+   'Use tags HTML suportadas para layout e texto; nao use componentes inventados.',
+   'Use KPI.value e Chart.data, Table.data ou PivotTable.data com dados verificados.',
+   'Nao gere dataQuery, query, Query nem consultas SQL. Nao invente valores de negocio.',
+   'Sem dados suficientes, use listas vazias e value=null com indicacao de indisponibilidade.',
+   'Os relatorios nativos do ERP permanecem disponiveis no ERP.',
+  ],
+  create_flow: ['Consulte artifact_authoring kind=dashboard action=get_contract.', 'Gere TSX e salve com action=create, title e source.', 'Retorne artifact_id, version e url.'],
+  edit_flow: ['Use artifact_authoring action=patch para alteracoes pontuais ou update_full para reescrita.', 'Se expected_version for omitida, a tool usa a versao draft atual automaticamente.', 'Retorne a nova versao e URL.'],
+  example_source: includeExample ? DASHBOARD_VALID_EXAMPLE : null,
+ }
 }
 
 export async function executeMcpDashboardTool(
@@ -454,19 +242,6 @@ export async function executeMcpDashboardTool(
         ok: true,
         tool: MCP_DASHBOARD_TOOL_NAMES.dashboardGetContract,
         result: getDashboardContract(Boolean(args.include_example)),
-      }
-
-    case MCP_DASHBOARD_TOOL_NAMES.dashboardQueryPreview:
-      return {
-        ok: true,
-        tool: MCP_DASHBOARD_TOOL_NAMES.dashboardQueryPreview,
-        result: await previewMcpDashboardQuery({
-          artifactId: requiredText(args, 'artifact_id'),
-          tenantId,
-          componentId: requiredText(args, 'component_id'),
-          sampleLimit: optionalPositiveInt(args.sample_limit),
-          includeProfile: args.include_profile !== false,
-        }),
       }
 
     default:

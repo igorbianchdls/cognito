@@ -1,3 +1,12 @@
+import type { ErpErrorBody, ErpRecovery } from '@/products/erp/shared/erpErrors'
+import { decimalNumber } from '@/products/erp/shared/erpMoney'
+
+export class ErpRequestError extends Error {
+  constructor(message: string, public readonly code: string, public readonly status: number,
+    public readonly details?: unknown, public readonly correlationId?: string,
+    public readonly recovery: ErpRecovery = 'none') { super(message); this.name = 'ErpRequestError' }
+}
+
 export function getErpErrorMessage(body: unknown, fallback = 'Nao foi possivel concluir a operacao.') {
   if (!body || typeof body !== 'object') return fallback
   const value = body as { error?: string | { message?: string }; message?: string }
@@ -6,17 +15,29 @@ export function getErpErrorMessage(body: unknown, fallback = 'Nao foi possivel c
   return value.message || fallback
 }
 
-export async function parseErpResponse<T>(response: Response): Promise<T> {
-  const body = await response.json().catch(() => ({}))
-  if (!response.ok) {
-    throw new Error(getErpErrorMessage(body))
+export function parseErpPayload<T>(body: unknown, schema?: { parse: (input: unknown) => unknown }): T {
+  if (!schema) return body as T
+  try { return schema.parse(body) as T } catch {
+    throw new ErpRequestError('A resposta recebida está incompleta. Confira o resultado antes de repetir.', 'INVALID_RESPONSE', 200, undefined, undefined, 'verify')
   }
-  return body as T
+}
+
+export async function parseErpResponse<T>(response: Response, schema?: { parse: (input: unknown) => unknown }): Promise<T> {
+  const body = await response.json().catch(() => null)
+  if (!response.ok) {
+    const error = (body as ErpErrorBody | null)?.error
+    const structured = error && typeof error === 'object' ? error : undefined
+    const recovery = structured?.recovery || (response.status >= 500 ? 'verify' : 'none')
+    throw new ErpRequestError(getErpErrorMessage(body), structured?.code || 'ERP_OPERATION_ERROR', response.status,
+      structured?.details, structured?.correlationId || response.headers.get('x-correlation-id') || undefined, recovery)
+  }
+  if (body === null) throw new ErpRequestError('A resposta não pôde ser confirmada. Confira o resultado antes de repetir.', 'INVALID_RESPONSE', response.status, undefined, response.headers.get('x-correlation-id') || undefined, 'verify')
+  return parseErpPayload<T>(body, schema)
 }
 
 export function formatErpCurrency(value: unknown) {
   return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' })
-    .format(Number(value || 0))
+    .format(decimalNumber(value ?? 0))
 }
 
 export function formatErpValue(value: unknown) {

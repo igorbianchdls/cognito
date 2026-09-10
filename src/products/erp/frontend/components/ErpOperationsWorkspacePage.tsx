@@ -1,5 +1,8 @@
 'use client'
 
+import { ErpContractDetails } from './ErpContractDetails'
+import { ErpMutation } from '@/products/erp/frontend/services/erpMutation'
+import { useErpAccess } from '@/products/erp/frontend/hooks/useErpAccess'
 import { useCallback, useDeferredValue, useEffect, useState } from 'react'
 import { CheckCircle2, Download, Loader2, Play, Plus, RefreshCw, Search, Upload } from 'lucide-react'
 
@@ -154,6 +157,7 @@ export function ErpOperationsWorkspacePage({ config }: { config: ErpOperationCon
   const deferredQuery = useDeferredValue(query)
   const [dialogOpen, setDialogOpen] = useState(false)
   const [dialogMode, setDialogMode] = useState<'create' | 'row'>('create')
+  const [contractId,setContractId] = useState<string|null>(null)
   const [selectedRecord, setSelectedRecord] = useState<OperationRecord | null>(null)
   const [values, setValues] = useState<Record<string, string>>({})
   const [ofxOpen, setOfxOpen] = useState(false)
@@ -203,18 +207,24 @@ export function ErpOperationsWorkspacePage({ config }: { config: ErpOperationCon
   const activeFields = dialogMode === 'row' ? config.rowAction?.fields || [] : config.fields || []
   const activeResource = dialogMode === 'row' ? config.rowAction?.resource || config.resource : config.resource
 
+  const access = useErpAccess()
+  const [createOperation] = useState(()=>new ErpMutation(undefined,true))
   const submit = async () => {
+    if (saving || (config.resource === 'contratos' && !access.can('erp.vendas.gerenciar'))) return
     setSaving(true)
     setError('')
     try {
       const bodyValues: Record<string, unknown> = { ...values }
       if (dialogMode === 'row' && selectedRecord) bodyValues.transacao_bancaria_id = selectedRecord.id
+      if (activeResource === 'contratos') await createOperation.submit('/api/erp/operacoes/contratos',{values:bodyValues})
+      else {
       const response = await fetch(`/api/erp/operacoes/${encodeURIComponent(activeResource)}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'Idempotency-Key': crypto.randomUUID() },
         body: JSON.stringify({ values: bodyValues }),
       })
       await parseResponse(response)
+      }
       setDialogOpen(false)
       setSuccess(dialogMode === 'row' ? 'Operacao concluida.' : 'Registro salvo.')
       await load()
@@ -226,13 +236,13 @@ export function ErpOperationsWorkspacePage({ config }: { config: ErpOperationCon
   }
 
   const process = async () => {
-    if (!config.processAction) return
+    if (!config.processAction || saving || (config.resource === 'contratos' && !access.can('erp.vendas.gerenciar'))) return
     setSaving(true)
     setError('')
     try {
       const response = await fetch(config.processAction.endpoint, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '{}' })
-      const result = await parseResponse<{ total?: number }>(response)
-      setSuccess(`${result.total || 0} venda(s) gerada(s).`)
+      const result = await parseResponse<{ total?: number; skipped?: Array<{contractId:string;reason:string}> }>(response)
+      setSuccess(`${result.total || 0} venda(s) gerada(s). ${result.skipped?.map(item=>`Contrato ${item.contractId}: ${item.reason}`).join(' ') || ''}`)
       await load()
     } catch (processError) {
       setError(processError instanceof Error ? processError.message : 'Nao foi possivel processar.')
@@ -262,6 +272,7 @@ export function ErpOperationsWorkspacePage({ config }: { config: ErpOperationCon
 
   return (
     <div className="space-y-6">
+      {contractId && <ErpContractDetails id={contractId} onClose={()=>setContractId(null)} onSaved={()=>void load()} />}
       <header className="flex flex-col gap-4 border-b border-gray-200 pb-5 lg:flex-row lg:items-end lg:justify-between">
         <div className="min-w-0">
           <h1 className="text-2xl font-semibold tracking-normal text-gray-950">{config.title}</h1>
@@ -272,8 +283,8 @@ export function ErpOperationsWorkspacePage({ config }: { config: ErpOperationCon
             <a href={`/api/erp/operacoes/${encodeURIComponent(config.resource)}?format=csv&query=${encodeURIComponent(deferredQuery)}`}><Download className="size-4" />Exportar</a>
           </Button>
           {config.moduleId === 'conciliacao-bancaria' ? <Button variant="outline" size="sm" onClick={() => { setError(''); setOfxOpen(true) }}><Upload className="size-4" />Importar OFX</Button> : null}
-          {config.processAction ? <Button variant="outline" size="sm" onClick={() => void process()} disabled={saving}><Play className="size-4" />{config.processAction.label}</Button> : null}
-          {config.primaryAction ? <Button size="sm" onClick={openCreate}><Plus className="size-4" />{config.primaryAction}</Button> : null}
+          {config.processAction && (config.resource !== 'contratos' || access.can('erp.vendas.gerenciar')) ? <Button variant="outline" size="sm" onClick={() => void process()} disabled={saving}><Play className="size-4" />{config.processAction.label}</Button> : null}
+          {config.primaryAction && (config.resource !== 'contratos' || access.can('erp.vendas.gerenciar')) ? <Button size="sm" onClick={openCreate}><Plus className="size-4" />{config.primaryAction}</Button> : null}
         </div>
       </header>
 
@@ -305,7 +316,7 @@ export function ErpOperationsWorkspacePage({ config }: { config: ErpOperationCon
                 <TableRow key={record.id}>
                   {config.columns.map((column) => (
                     <TableCell key={column.key} className="whitespace-nowrap text-sm text-gray-700">
-                      {column.kind === 'status' ? <ErpStatusBadge label={formatValue(record[column.key])} tone={toneForStatus(record[column.key])} /> : formatValue(record[column.key], column.kind)}
+                      {config.resource === 'contratos' && column.key === 'numero' ? <button className="underline" onClick={()=>setContractId(String(record.id))}>{String(record.numero)}</button> : column.kind === 'status' ? <ErpStatusBadge label={formatValue(record[column.key])} tone={toneForStatus(record[column.key])} /> : formatValue(record[column.key], column.kind)}
                     </TableCell>
                   ))}
                   {config.rowAction ? <TableCell className="text-right"><Button variant="ghost" size="sm" onClick={() => openRowAction(record)} disabled={String(record.status) !== 'pendente'}>{config.rowAction.label}</Button></TableCell> : null}

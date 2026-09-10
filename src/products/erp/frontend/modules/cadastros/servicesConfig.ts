@@ -18,10 +18,11 @@ export const servicesConfig: ErpEntityConfig<ErpEntityRecord> = {
     { key: 'status', label: 'Status', kind: 'status' },
   ],
   fields: [
+    { key: 'status', label: 'Situação', type: 'select', options: [{value:'ativo',label:'Ativo'},{value:'pausado',label:'Inativo'}] },
     { key: 'nome', label: 'Nome do servico', type: 'text', required: true },
     { key: 'codigo', label: 'Codigo', type: 'text', placeholder: 'Ex: SERV-001' },
     { key: 'descricao', label: 'Descricao', type: 'textarea' },
-    { key: 'categoria', label: 'Categoria', type: 'select' },
+    { key: 'categoria_id', label: 'Categoria', type: 'select' },
     { key: 'preco', label: 'Preco', type: 'number', required: true },
     { key: 'custo', label: 'Custo', type: 'number' },
   ],

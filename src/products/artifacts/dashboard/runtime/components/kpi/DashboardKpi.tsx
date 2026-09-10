@@ -30,6 +30,7 @@ function pickFirstNumericValue(row: AnyRecord | undefined, keys: string[]): numb
 }
 
 function formatValue(value: number | null, format: ValueFormat): string {
+  if (value === null) return '-'
   const numeric = Number(value)
   if (!Number.isFinite(numeric)) return '-'
   if (format === 'currency') {
@@ -277,7 +278,8 @@ export default function DashboardKpi({
     dashboardQuery.loading,
   ])
 
-  const pathNumericValue = Number(valueFromPath)
+  const suppliedValue = valuePath ? valueFromPath : props.value
+  const pathNumericValue = suppliedValue == null || suppliedValue === '' ? NaN : Number(suppliedValue)
   const displayValue = hasServerQuery(dataQuery)
     ? queryState.value
     : (Number.isFinite(pathNumericValue) ? pathNumericValue : null)

@@ -1,43 +1,24 @@
 import { NextResponse } from 'next/server'
-
 import { resolveErpAccess } from '@/products/erp/server/erpAccess'
 import { settleReceivableInstallment } from '@/products/erp/server/erpRepository'
-
+import { ErpDomainError, erpErrorResponse, parseErpBody } from '@/products/erp/server/erpApi'
+import { erpCreateEnvelopeSchema, readErpIdempotencyKey } from '@/products/erp/shared/erpTransport'
 export const dynamic = 'force-dynamic'
 export const revalidate = 0
 export const runtime = 'nodejs'
-
-type RouteContext = {
-  params: Promise<{ id: string }>
-}
+type RouteContext = { params: Promise<{ id: string }> }
 
 export async function POST(request: Request, context: RouteContext) {
-  const { id } = await context.params
-  const installmentId = Number(id)
-  if (!Number.isInteger(installmentId) || installmentId <= 0) {
-    return NextResponse.json({ error: 'Parcela invalida.' }, { status: 400 })
-  }
-
-  const tenant = await resolveErpAccess('erp.financeiro.baixar')
-  if (!tenant) {
-    return NextResponse.json({ error: 'Acesso negado.' }, { status: 403 })
-  }
-
   try {
-    const body = (await request.json().catch(() => ({}))) as { values?: Record<string, unknown> }
-    const result = await settleReceivableInstallment({
-      actorId: tenant.sharedUserId,
-      id: installmentId,
-      idempotencyKey: request.headers.get('idempotency-key') || undefined,
-      tenantId: tenant.tenantId,
-      values: body.values || {},
-    })
-
-    return NextResponse.json(result)
-  } catch (error) {
-    return NextResponse.json(
-      { error: error instanceof Error ? error.message : 'Nao foi possivel baixar a parcela.' },
-      { status: 400 },
-    )
-  }
+    const id = Number((await context.params).id)
+    if (!Number.isSafeInteger(id) || id <= 0) throw new ErpDomainError('INVALID_REFERENCE', 'Parcela inválida.')
+    const tenant = await resolveErpAccess('erp.financeiro.baixar')
+    if (!tenant) throw new ErpDomainError('ACCESS_DENIED', 'Você não tem permissão para registrar pagamentos.', 403)
+    const key = readErpIdempotencyKey(request.headers, true)
+    const body = await parseErpBody(request, erpCreateEnvelopeSchema)
+    return NextResponse.json(await settleReceivableInstallment({
+      actorId: tenant.sharedUserId, tenantId: tenant.tenantId, id,
+      idempotencyKey: key, values: body.values,
+    }))
+  } catch (error) { return erpErrorResponse(error) }
 }

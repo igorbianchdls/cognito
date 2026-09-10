@@ -1,3 +1,4 @@
+import { erpFailure, erpErrorResponse as erpFailureResponse } from "@/products/erp/server/erpApi"
 import { NextResponse } from 'next/server'
 
 import { resolveErpAccess } from '@/products/erp/server/erpAccess'
@@ -12,9 +13,9 @@ function csvCell(value: unknown) {
 
 export async function GET(_request: Request, context: { params: Promise<{ type: string }> }) {
   const tenant = await resolveErpAccess('erp.cadastros.visualizar')
-  if (!tenant) return NextResponse.json({ error: 'Acesso negado.' }, { status: 403 })
+  if (!tenant) return erpFailure('Acesso negado.', 403)
   const { type } = await context.params
-  if (!isImportType(type)) return NextResponse.json({ error: 'Tipo de exportacao invalido.' }, { status: 404 })
+  if (!isImportType(type)) return erpFailure('Tipo de exportacao invalido.', 404)
   try {
     const records = await exportErpRecords(tenant.tenantId, type)
     const columns = records.length ? Object.keys(records[0]) : ['id']
@@ -23,15 +24,15 @@ export async function GET(_request: Request, context: { params: Promise<{ type: 
       headers: { 'Content-Type': 'text/csv; charset=utf-8', 'Content-Disposition': `attachment; filename="${type}.csv"` },
     })
   } catch (error) {
-    return NextResponse.json({ error: error instanceof Error ? error.message : 'Nao foi possivel exportar os dados.' }, { status: 400 })
+    return erpFailureResponse(error)
   }
 }
 
 export async function POST(request: Request, context: { params: Promise<{ type: string }> }) {
   const tenant = await resolveErpAccess('erp.cadastros.gerenciar')
-  if (!tenant) return NextResponse.json({ error: 'Acesso negado.' }, { status: 403 })
+  if (!tenant) return erpFailure('Acesso negado.', 403)
   const { type } = await context.params
-  if (!isImportType(type)) return NextResponse.json({ error: 'Tipo de importacao invalido.' }, { status: 404 })
+  if (!isImportType(type)) return erpFailure('Tipo de importacao invalido.', 404)
   try {
     const body = (await request.json()) as { fileName?: string; rows?: Record<string, unknown>[] }
     const result = await importErpRows({
@@ -43,6 +44,6 @@ export async function POST(request: Request, context: { params: Promise<{ type: 
     })
     return NextResponse.json(result, { status: 201 })
   } catch (error) {
-    return NextResponse.json({ error: error instanceof Error ? error.message : 'Nao foi possivel importar os dados.' }, { status: 400 })
+    return erpFailureResponse(error)
   }
 }

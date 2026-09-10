@@ -13,7 +13,6 @@ import {
   syncClerkProfile,
   type ClerkProfileInput,
 } from '@/products/auth/server/clerkTenantBootstrap'
-import { provisionTenantBigQuery } from '@/products/integracoes/datawarehouse/provisioning/tenantBigQueryProvisioning'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -99,13 +98,7 @@ export async function POST(req: NextRequest) {
 
     if (eventType === 'organization.created' || eventType === 'organization.updated') {
       const tenantId = await withTransaction((client) => syncClerkOrganization(client, data))
-      const provisioning = tenantId
-        ? await provisionTenantBigQuery({ tenantId, reason: `clerk_webhook:${eventType}` }).catch((error) => ({
-          ok: false,
-          error: error instanceof Error ? error.message : String(error),
-        }))
-        : null
-      return Response.json({ ok: true, tenantId, provisioning })
+      return Response.json({ ok: true, tenantId })
     }
 
     if (isOrganizationMembershipEvent(eventType)) {

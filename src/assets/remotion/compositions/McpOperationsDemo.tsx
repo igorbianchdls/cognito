@@ -10,7 +10,6 @@ import {
 import type {
   AnalysisStructuredContent,
   ChartResultStructuredContent,
-  ConnectorsStructuredContent,
   DashboardListStructuredContent,
   DataCatalogStructuredContent,
   DataResultStructuredContent,
@@ -18,7 +17,6 @@ import type {
 } from '@/products/plugin/web/src/types/toolResult'
 import { AnimatedMcpAnalysisView } from '@/assets/remotion/components/AnimatedMcpAnalysisView'
 import { AnimatedMcpChartView } from '@/assets/remotion/components/AnimatedMcpChartView'
-import { AnimatedMcpConnectorsView } from '@/assets/remotion/components/AnimatedMcpConnectorsView'
 import { AnimatedMcpDashboardListView } from '@/assets/remotion/components/AnimatedMcpDashboardListView'
 import { AnimatedMcpDataCatalogView } from '@/assets/remotion/components/AnimatedMcpDataCatalogView'
 import { AnimatedMcpDreView } from '@/assets/remotion/components/AnimatedMcpDreView'
@@ -234,27 +232,6 @@ const chatGptSequenceTableData = {
     { Fornecedor: 'Prime Fornecedores', Vencimento: '15 jun', Status: 'aberto', 'Valor liquido': 31280 },
   ],
 } satisfies DataResultStructuredContent
-
-const chatGptSequenceConnectorsData = {
-  ok: true,
-  tool: 'connectors',
-  view: 'connectors',
-  title: 'Conectores',
-  subtitle: 'Fontes usadas nesta resposta',
-  summary: {
-    total: 4,
-    connected: 3,
-    warning: 1,
-    last_sync_at: '2026-06-04T17:42:00.000Z',
-  },
-  rows: [
-    { name: 'ERP Omie', domain: 'erp', status: 'connected', last_sync_at: '2026-06-04T17:42:00.000Z', records: 18420 },
-    { name: 'Shopify', domain: 'ecommerce', status: 'connected', last_sync_at: '2026-06-04T17:39:00.000Z', records: 12880 },
-    { name: 'Meta Ads', domain: 'marketing', status: 'connected', last_sync_at: '2026-06-04T17:31:00.000Z', records: 6420 },
-    { name: 'Banco', domain: 'financeiro', status: 'warning', last_sync_at: '2026-06-04T09:10:00.000Z', records: 980 },
-  ],
-  columns: ['name', 'domain', 'status', 'last_sync_at', 'records'],
-} satisfies ConnectorsStructuredContent
 
 const chatGptSequenceDataCatalogData = {
   ok: true,

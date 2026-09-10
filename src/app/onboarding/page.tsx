@@ -16,7 +16,7 @@ function getDefaultCompanyName(email: string) {
 export default async function OnboardingPage() {
   const state = await ensureClerkTenantBootstrap()
   if (!state) redirect('/sign-in')
-  if (!state.needsOnboarding) redirect('/integracoes')
+  if (!state.needsOnboarding) redirect('/erp')
 
   return (
     <AuthLayout mode="onboarding">

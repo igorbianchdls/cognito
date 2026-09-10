@@ -1,3 +1,4 @@
+import { erpFailure } from "@/products/erp/server/erpApi"
 import { NextResponse } from 'next/server'
 
 import { runQuery } from '@/lib/postgres'
@@ -41,9 +42,9 @@ async function runTenantAutomations(
 
 export async function GET(request: Request) {
   const secret = process.env.CRON_SECRET
-  if (!secret) return NextResponse.json({ error: 'CRON_SECRET nao configurado.' }, { status: 503 })
+  if (!secret) return erpFailure('CRON_SECRET nao configurado.', 503)
   if (request.headers.get('authorization') !== `Bearer ${secret}`) {
-    return NextResponse.json({ error: 'Acesso negado.' }, { status: 401 })
+    return erpFailure('Acesso negado.', 401)
   }
   try {
     const tenants = await runQuery<{ tenant_id: number; actor_id: number }>(

@@ -17,12 +17,10 @@ export const sellersConfig: ErpEntityConfig<ErpEntityRecord> = {
     { key: 'status', label: 'Status', kind: 'status' },
   ],
   fields: [
+    { key: 'status', label: 'Situação', type: 'select', options: [{value:'ativo',label:'Ativo'},{value:'inativo',label:'Inativo'}] },
     { key: 'nome', label: 'Nome', type: 'text', required: true },
     { key: 'tipo', label: 'Tipo de pessoa', type: 'select', options: [{ value: 'PF', label: 'Pessoa fisica' }, { value: 'PJ', label: 'Pessoa juridica' }] },
     { key: 'documento', label: 'CPF/CNPJ', type: 'text' },
-    { key: 'telefone', label: 'Telefone', type: 'tel' },
-    { key: 'email', label: 'Email', type: 'email' },
-    { key: 'cidade', label: 'Cidade', type: 'text' },
   ],
   filters: [{ key: 'status', label: 'Status', allLabel: 'Todos os status', options: [{ value: 'ativo', label: 'Ativo' }, { value: 'inativo', label: 'Inativo' }] }],
   metrics: [

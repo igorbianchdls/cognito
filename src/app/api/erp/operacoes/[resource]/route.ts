@@ -1,3 +1,6 @@
+import { erpCreateEnvelopeSchema, readErpIdempotencyKey } from '@/products/erp/shared/erpTransport'
+import { parseErpBody } from '@/products/erp/server/erpApi'
+import { erpFailure, erpErrorResponse as erpFailureResponse } from "@/products/erp/server/erpApi"
 import { NextResponse } from 'next/server'
 
 import { resolveErpAccess } from '@/products/erp/server/erpAccess'
@@ -23,7 +26,7 @@ function toCsv(records: Record<string, unknown>[]) {
 export async function GET(request: Request, context: { params: Promise<{ resource: string }> }) {
   const { resource } = await context.params
   const tenant = await resolveErpAccess(getErpOperationCapability(resource, false))
-  if (!tenant) return NextResponse.json({ error: 'Nao autenticado.' }, { status: 401 })
+  if (!tenant) return erpFailure('Nao autenticado.', 401)
   try {
     const url = new URL(request.url)
     const isCsv = url.searchParams.get('format') === 'csv'
@@ -46,22 +49,22 @@ export async function GET(request: Request, context: { params: Promise<{ resourc
     }
     return NextResponse.json(page)
   } catch (error) {
-    return NextResponse.json({ error: error instanceof Error ? error.message : 'Nao foi possivel carregar o modulo.' }, { status: 400 })
+    return erpFailureResponse(error)
   }
 }
 
 export async function POST(request: Request, context: { params: Promise<{ resource: string }> }) {
   const { resource } = await context.params
   const tenant = await resolveErpAccess(getErpOperationCapability(resource, true))
-  if (!tenant) return NextResponse.json({ error: 'Acesso negado.' }, { status: 403 })
+  if (!tenant) return erpFailure('Acesso negado.', 403)
   try {
-    const body = (await request.json().catch(() => ({}))) as { values?: Record<string, unknown> }
-    const idempotencyKey = request.headers.get('idempotency-key') || `${resource}:${Date.now()}`
+    const body = await parseErpBody(request,erpCreateEnvelopeSchema)
+    const idempotencyKey = readErpIdempotencyKey(request.headers,resource==='contratos') || `${resource}:${Date.now()}`
     const record = ERP_STOCK_RESOURCES.has(resource)
       ? await createStockOperation({ tenantId: tenant.tenantId, actorId: tenant.sharedUserId, resource, values: body.values || {}, idempotencyKey })
       : await createManagementOperation({ tenantId: tenant.tenantId, actorId: tenant.sharedUserId, resource, values: body.values || {}, idempotencyKey })
     return NextResponse.json({ record }, { status: 201 })
   } catch (error) {
-    return NextResponse.json({ error: error instanceof Error ? error.message : 'Nao foi possivel concluir a operacao.' }, { status: 400 })
+    return erpFailureResponse(error)
   }
 }

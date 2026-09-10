@@ -18,11 +18,11 @@ export const suppliersConfig: ErpEntityConfig<ErpEntityRecord> = {
     { key: 'status', label: 'Status', kind: 'status' },
   ],
   fields: [
+    { key: 'status', label: 'Situação', type: 'select', options: [{value:'ativo',label:'Ativo'},{value:'inativo',label:'Inativo'}] },
     { key: 'nome', label: 'Nome do fornecedor', type: 'text', required: true },
-    { key: 'documento', label: 'CNPJ', type: 'text', required: true },
+    { key: 'tipo', label: 'Tipo de pessoa', type: 'select', required: true, options: [{value:'PF',label:'Pessoa física'},{value:'PJ',label:'Pessoa jurídica'}] },
+    { key: 'documento', label: 'CPF/CNPJ', type: 'text', required: true },
     { key: 'categoria', label: 'Categoria', type: 'text', placeholder: 'Ex: Distribuicao, logistica ou insumos' },
-    { key: 'email', label: 'Email', type: 'email' },
-    { key: 'cidade', label: 'Cidade', type: 'text' },
   ],
   filters: [
     { key: 'status', label: 'Status', allLabel: 'Todos os status', options: [{ value: 'ativo', label: 'Ativo' }, { value: 'inativo', label: 'Inativo' }] },

@@ -1,5 +1,7 @@
 "use client";
 
+import { lineTotal, sumMoney } from '@/products/erp/shared/erpMoney';
+import { ErpMutation } from '@/products/erp/frontend/services/erpMutation';
 import { useCallback, useEffect, useMemo, useState } from "react";
 import {
   Check,
@@ -123,6 +125,8 @@ export function ServiceOrdersWorkspacePage() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [editing,setEditing] = useState<{id:string;version:number}|null>(null);
+  const [generalDiscount,setGeneralDiscount] = useState('0');
   const [editorOpen, setEditorOpen] = useState(false);
   const [detailOpen, setDetailOpen] = useState(false);
   const [details, setDetails] = useState<{
@@ -177,22 +181,12 @@ export function ServiceOrdersWorkspacePage() {
     return () => clearTimeout(timer);
   }, [load]);
 
-  const total = useMemo(
-    () =>
-      items.reduce(
-        (sum, item) =>
-          sum +
-          Math.max(
-            0,
-            Number(item.quantidade || 0) * Number(item.valor || 0) -
-              Number(item.desconto || 0),
-          ),
-        0,
-      ),
-    [items],
-  );
+  const total = useMemo(()=>{
+    try { return Math.max(0,sumMoney([...items.map(i=>Number(i.quantidade)>0?lineTotal(i.quantidade,i.valor,i.desconto||0):0),-Number(generalDiscount||0)])); } catch {return 0;}
+  },[items,generalDiscount]);
 
   function reset() {
+    setEditing(null);setGeneralDiscount("0");
     setClienteId("");
     setResponsavelId("");
     setDataInicio(today());
@@ -226,18 +220,13 @@ export function ServiceOrdersWorkspacePage() {
     );
   }
 
+  const [createOperation] = useState(()=>new ErpMutation(undefined,true));
   async function save() {
+    if (saving || !canManage) return;
     setSaving(true);
     setError(null);
     try {
-      await parseErpResponse(
-        await fetch("/api/erp/ordens-servico", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            "Idempotency-Key": crypto.randomUUID(),
-          },
-          body: JSON.stringify({
+      const payload = {
             cliente_id: clienteId,
             responsavel_id: responsavelId || null,
             data_inicio: dataInicio,
@@ -250,7 +239,7 @@ export function ServiceOrdersWorkspacePage() {
             diagnostico: diagnostico || null,
             observacoes_publicas: observacoesPublicas || null,
             observacoes_internas: observacoesInternas || null,
-            desconto: 0,
+            desconto: generalDiscount,
             itens: items.map((item) => ({
               tipo: item.tipo,
               item_id: item.itemId,
@@ -259,9 +248,9 @@ export function ServiceOrdersWorkspacePage() {
               valor_unitario: item.valor,
               desconto: item.desconto,
             })),
-          }),
-        }),
-      );
+      };
+      if(editing)await parseErpResponse(await fetch(`/api/erp/ordens-servico/${editing.id}`,{method:"PATCH",headers:{"Content-Type":"application/json"},body:JSON.stringify({values:payload,expectedVersion:editing.version})}));
+      else await createOperation.submit("/api/erp/ordens-servico",payload);
       setEditorOpen(false);
       await load();
     } catch (saveError) {
@@ -275,6 +264,15 @@ export function ServiceOrdersWorkspacePage() {
     }
   }
 
+  async function editOrder(record: ServiceOrder) {
+    try {
+      const d=await parseErpResponse<{order:Record<string,unknown>;items:Record<string,unknown>[]}>(await fetch(`/api/erp/ordens-servico/${record.id}`));
+      const o=d.order, str=(key:string)=>String(o[key]||'');
+      setEditing({id:String(record.id),version:Number(o.versao)});setClienteId(str('cliente_id'));setResponsavelId(str('responsavel_id'));setDataInicio(str('data_inicio').slice(0,10));setPrevisao(str('previsao_entrega').slice(0,10));
+      setEquipamento(str('equipamento'));setMarca(str('marca'));setModelo(str('modelo'));setSerie(str('numero_serie'));setProblema(str('problema_informado'));setDiagnostico(str('diagnostico'));setObservacoesPublicas(str('observacoes_publicas'));setObservacoesInternas(str('observacoes_internas'));setGeneralDiscount(str('desconto')||'0');
+      setItems(d.items.map(i=>({rowId:crypto.randomUUID(),tipo:i.produto_id?'produto':'servico',itemId:String(i.produto_id||i.servico_id),descricao:String(i.descricao),quantidade:String(i.quantidade),valor:String(i.valor_unitario),desconto:String(i.desconto||0)})));setError(null);setEditorOpen(true);
+    }catch(e){setError(e instanceof Error?e.message:'Não foi possível abrir a ordem.')}
+  }
   async function openDetails(record: ServiceOrder) {
     setDetailOpen(true);
     setDetails(null);
@@ -452,6 +450,7 @@ export function ServiceOrdersWorkspacePage() {
                       >
                         <Eye className="size-4" />
                       </Button>
+                      {canManage && record.status==='rascunho' && <Button variant="ghost" size="sm" onClick={()=>void editOrder(record)}>Editar</Button>}
                       {canManage ? (
                         <>
                           {["rascunho", "orcamento_pendente"].includes(
@@ -536,7 +535,7 @@ export function ServiceOrdersWorkspacePage() {
       <Dialog open={editorOpen} onOpenChange={setEditorOpen}>
         <DialogContent className="h-[92vh] max-w-[min(1060px,96vw)] overflow-hidden p-0">
           <DialogHeader className="border-b px-6 py-4">
-            <DialogTitle>Nova ordem de servico</DialogTitle>
+            <DialogTitle>{editing ? "Editar ordem de serviço" : "Nova ordem de serviço"}</DialogTitle>
           </DialogHeader>
           <div className="overflow-y-auto px-6 py-5">
             <div className="grid gap-6">
@@ -721,7 +720,8 @@ export function ServiceOrdersWorkspacePage() {
             <Button variant="outline" onClick={() => setEditorOpen(false)}>
               Cancelar
             </Button>
-            <Button disabled={saving} onClick={() => void save()}>
+            <label className="text-sm">Desconto geral<Input type="number" step="0.01" value={generalDiscount} onChange={e=>setGeneralDiscount(e.target.value)}/></label>
+            <Button disabled={saving || !canManage} onClick={() => void save()}>
               {saving ? <Loader2 className="size-4 animate-spin" /> : null}
               Salvar ordem
             </Button>

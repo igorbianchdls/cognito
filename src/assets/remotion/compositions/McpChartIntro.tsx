@@ -20,7 +20,6 @@ import {
 import type {
   AnalysisStructuredContent,
   ChartResultStructuredContent,
-  ConnectorsStructuredContent,
   DashboardListStructuredContent,
   DataCatalogStructuredContent,
   DataResultStructuredContent,
@@ -113,19 +112,10 @@ const tableData = {
   ],
 } satisfies DataResultStructuredContent
 
-const connectorsData = {
-  ok: true,
-  tool: 'connectors',
-  view: 'connectors',
-  title: 'Conectores sincronizados',
-  subtitle: 'Fontes disponíveis para consulta',
-  rows: [
-    { connector_id: 'erp-conta-azul', domain: 'erp', plataforma: 'conta_azul', name: 'Conta Azul', health: 'connected', last_sync_at: '2026-05-28T17:10:00.000Z', accounts_count: 1 },
-    { connector_id: 'erp-omie', domain: 'erp', plataforma: 'omie', name: 'Omie ERP', health: 'connected', last_sync_at: '2026-05-28T16:40:00.000Z', accounts_count: 2 },
-    { connector_id: 'erp-bling', domain: 'erp', plataforma: 'bling', name: 'Bling', health: 'connected', last_sync_at: '2026-05-28T15:55:00.000Z', accounts_count: 1 },
-    { connector_id: 'infra-gcp', domain: 'infra', plataforma: 'google_ads', name: 'Google Cloud', health: 'connected', last_sync_at: '2026-05-28T15:20:00.000Z', accounts_count: 1 },
-  ],
-} satisfies ConnectorsStructuredContent
+const modulesData = {
+  title: 'Modulos do ERP',
+  rows: [{ name: 'Financeiro' }, { name: 'Compras' }, { name: 'Vendas' }, { name: 'Estoque' }],
+}
 
 const dreData = {
   ok: true,
@@ -617,14 +607,14 @@ function ChatGptMobileTemplate() {
 
           <UserBubble style={secondUserStyle}>Do meu ERP</UserBubble>
           <AssistantBubble style={connectorsTextStyle}>
-            Primeiro, estes conectores estão sincronizados.
+            Primeiro, estes sao os modulos da sua empresa.
           </AssistantBubble>
           <RichCard style={connectorsStyle}>
-            <AnimatedMcpConnectorsView data={connectorsData} startFrame={246} />
+            <AnimatedMcpConnectorsView data={modulesData} startFrame={246} />
           </RichCard>
 
           <AssistantBubble style={tableTextStyle}>
-            Encontrei estas contas a pagar conectadas ao ERP.
+            Encontrei estas contas a pagar registradas no ERP.
           </AssistantBubble>
           <RichCard style={tableStyle}>
             <AnimatedMcpTableView data={tableData} startFrame={388} />

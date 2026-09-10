@@ -27,7 +27,6 @@ export const PLUGIN_PUBLIC_TOOL_NAMES = {
   actions: 'actions',
   alerts: 'alerts',
   schedules: 'schedules',
-  connectors: 'connectors',
   artifactAuthoring: 'artifact_authoring',
 } as const
 
@@ -483,37 +482,6 @@ const SCHEDULES_SCHEMA = {
     day_of_week: { type: 'string' },
     time: { type: 'string', description: 'Horario HH:mm.' },
   },
-} as const satisfies McpToolInputSchema
-
-const CONNECTORS_SCHEMA = {
-  type: 'object',
-  properties: {
-    action: {
-      type: 'string',
-      enum: ['list', 'listar', 'mostrar', 'quais', 'status', 'test_connection', 'sync_now', 'reconnect_url'],
-      description:
-        'Acao operacional de conectores. Use list/status para mostrar integracoes; test_connection para teste estrutural; sync_now para preview de sincronizacao; reconnect_url para orientar reconexao.',
-    },
-    domain: {
-      type: 'string',
-      enum: ['erp', 'crm', 'marketing', 'ecommerce'],
-      description: 'Filtro opcional por dominio.',
-    },
-    plataforma: {
-      type: 'string',
-      description: 'Filtro opcional por plataforma, como shopify, shopee, amazon, mercadolivre, meta_ads ou google_ads.',
-    },
-    connector_id: {
-      type: 'string',
-      description: 'ID logico retornado pela listagem, como ecommerce:12 ou marketing:3.',
-    },
-    dry_run: {
-      type: 'boolean',
-      description: 'Default true para acoes operacionais. No v1, sync_now e test_connection nao chamam APIs externas.',
-    },
-    limit: { type: 'integer' },
-  },
-  additionalProperties: true,
 } as const satisfies McpToolInputSchema
 
 const GENERIC_APP_OUTPUT_SCHEMA = {
@@ -2021,161 +1989,6 @@ RETURNING id::int, title, status, artifact_kind, prompt, frequency, day_of_week,
   return makeWidgetResult(structuredContent, JSON.stringify(structuredContent, null, 2))
 }
 
-function normalizeConnectorAction(value: unknown) {
-  const action = String(value || 'list').trim().toLowerCase()
-  if (action === 'listar' || action === 'mostrar' || action === 'quais') return 'list'
-  if (
-    action === 'list' ||
-    action === 'status' ||
-    action === 'test_connection' ||
-    action === 'sync_now' ||
-    action === 'reconnect_url'
-  ) {
-    return action
-  }
-  throw new Error('action invalida para connectors. Use list, status, test_connection, sync_now ou reconnect_url.')
-}
-
-function buildConnectorSummary(rows: JsonRecord[]) {
-  const connected = rows.filter((row) => row.health === 'connected').length
-  const warning = rows.filter((row) => row.health === 'warning').length
-  const error = rows.filter((row) => row.health === 'error').length
-  const lastSyncAt = rows
-    .map((row) => optionalText(row.last_sync_at))
-    .filter((value): value is string => Boolean(value))
-    .sort()
-    .pop() || null
-
-  return {
-    total: rows.length,
-    connected,
-    warning,
-    error,
-    last_sync_at: lastSyncAt,
-  }
-}
-
-async function listConnectorRows(tenantId: number, input: JsonRecord) {
-  const rows = await runQuery<JsonRecord>(
-    `
-WITH latest_runs AS (
-  SELECT
-    DISTINCT ON (connector_id)
-    connector_id,
-    status AS last_run_status,
-    started_at AS last_run_started_at,
-    finished_at AS last_run_finished_at,
-    records_in AS last_run_records_in,
-    records_updated AS last_run_records_updated,
-    records_failed AS last_run_records_failed,
-    error_message AS last_run_error
-  FROM plugin.connector_sync_runs
-  WHERE tenant_id = $1::int
-  ORDER BY connector_id, started_at DESC
-)
-SELECT
-  c.id::text AS id,
-  CONCAT(c.domain, ':', c.id::text) AS connector_id,
-  c.domain,
-  c.provider AS plataforma,
-  c.provider,
-  c.name,
-  c.external_account_id AS external_id,
-  c.status AS connection_status,
-  CASE
-    WHEN c.status = 'connected' THEN 'connected'
-    WHEN c.status = 'error' THEN 'error'
-    ELSE 'warning'
-  END AS health,
-  c.last_sync_at,
-  c.updated_at AS source_updated_at,
-  c.scopes_json AS scopes,
-  NULL::timestamptz AS expires_at,
-  c.last_error,
-  c.records_synced,
-  c.source_table,
-  c.source_id,
-  c.metadata_json,
-  r.last_run_status,
-  r.last_run_started_at,
-  r.last_run_finished_at,
-  r.last_run_records_in,
-  r.last_run_records_updated,
-  r.last_run_records_failed,
-  r.last_run_error
-FROM plugin.connectors c
-LEFT JOIN latest_runs r ON r.connector_id = c.id
-WHERE c.tenant_id = $1::int
-ORDER BY c.domain, c.provider, c.name
-    `.trim(),
-    [tenantId],
-  )
-
-  const domain = optionalText(input.domain)
-  const platform = optionalText(input.plataforma || input.platform)
-  const connectorId = optionalText(input.connector_id || input.id)
-  return rows
-    .filter((row) => !domain || row.domain === domain)
-    .filter((row) => !platform || row.plataforma === platform)
-    .filter((row) => !connectorId || row.connector_id === connectorId || row.id === connectorId)
-    .slice(0, normalizeLimit(input.limit, 50, 200))
-}
-
-async function callConnectors(args: unknown, context: CognitoMcpServerContext) {
-  const input = asRecord(args)
-  const action = normalizeConnectorAction(input.action)
-  const tenantId = getTenantId(context)
-  const rows = await listConnectorRows(tenantId, input)
-  const connectorId = optionalText(input.connector_id || input.id)
-  const selected = connectorId ? rows[0] || null : null
-  const summary = buildConnectorSummary(rows)
-
-  if (action === 'test_connection' || action === 'sync_now' || action === 'reconnect_url') {
-    const target = selected || rows[0] || null
-    const dryRun = input.dry_run !== false
-    const result = {
-      action,
-      dry_run: dryRun,
-      connector_id: target?.connector_id || connectorId || null,
-      status: action === 'reconnect_url' ? 'url_ready' : 'preview',
-      message: action === 'reconnect_url'
-        ? 'Use a URL interna para iniciar reconexao no app.'
-        : 'No v1 esta tool nao chama APIs externas; retorna validacao estrutural e preview operacional.',
-      reconnect_url: action === 'reconnect_url' && target
-        ? `/settings/integrations/${target.domain}/${target.plataforma}?connector_id=${encodeURIComponent(String(target.connector_id))}`
-        : null,
-    }
-    const structuredContent = {
-      ok: true,
-      tool: PLUGIN_PUBLIC_TOOL_NAMES.connectors,
-      view: 'connectors',
-      action,
-      title: action === 'reconnect_url' ? 'Reconectar integracao' : action === 'sync_now' ? 'Sincronizacao manual' : 'Teste de integracao',
-      subtitle: target ? String(target.name || target.connector_id) : 'Nenhum conector encontrado para o filtro',
-      summary,
-      result,
-      rows: target ? [target] : rows,
-      columns: inferRowsColumns(target ? [target] : rows),
-      count: target ? 1 : rows.length,
-    }
-    return makeWidgetResult(structuredContent, JSON.stringify(structuredContent, null, 2), false)
-  }
-
-  const structuredContent = {
-    ok: true,
-    tool: PLUGIN_PUBLIC_TOOL_NAMES.connectors,
-    view: 'connectors',
-    action,
-    title: action === 'status' ? 'Status das Integracoes' : 'Conectores',
-    subtitle: `${rows.length} conector${rows.length === 1 ? '' : 'es'} · ${summary.connected} conectado${summary.connected === 1 ? '' : 's'} · ${summary.warning} atencao · ${summary.error} erro${summary.error === 1 ? '' : 's'}`,
-    summary,
-    rows,
-    columns: inferRowsColumns(rows),
-    count: rows.length,
-  }
-  return makeWidgetResult(structuredContent, JSON.stringify(structuredContent, null, 2))
-}
-
 export function listCognitoPluginTools() {
   return {
     tools: [
@@ -2292,20 +2105,6 @@ export function listCognitoPluginTools() {
         },
       },
       {
-        name: PLUGIN_PUBLIC_TOOL_NAMES.connectors,
-        title: 'Connectors',
-        description:
-          'Mostra status operacional das integracoes conectadas: ERP, CRM, ecommerce e marketing. Use para listar conectores, verificar ultimo sync, erros, escopos, volume sincronizado, testar conexao, preparar sync manual ou obter URL de reconexao.',
-        inputSchema: CONNECTORS_SCHEMA,
-        outputSchema: GENERIC_APP_OUTPUT_SCHEMA,
-        securitySchemes: COGNITO_READ_SECURITY_SCHEMES,
-        annotations: READ_ONLY_ANNOTATIONS,
-        _meta: {
-          ...DASHBOARD_WIDGET_META,
-          securitySchemes: COGNITO_READ_SECURITY_SCHEMES,
-        },
-      },
-      {
         name: PLUGIN_PUBLIC_TOOL_NAMES.artifactAuthoring,
         title: 'Artifact authoring',
         description:
@@ -2389,10 +2188,6 @@ export async function callCognitoPluginTool(
 
   if (name === PLUGIN_PUBLIC_TOOL_NAMES.schedules) {
     return callSchedules(args, context)
-  }
-
-  if (name === PLUGIN_PUBLIC_TOOL_NAMES.connectors) {
-    return callConnectors(args, context)
   }
 
   if (name === PLUGIN_PUBLIC_TOOL_NAMES.artifactAuthoring) {

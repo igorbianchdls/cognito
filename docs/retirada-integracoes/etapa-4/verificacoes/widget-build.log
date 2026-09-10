@@ -1,0 +1,4 @@
+Built Plugin widget:
+- src\products\plugin\web\dist\component.js
+- src\products\plugin\web\dist\widget.html
+exit_code=0

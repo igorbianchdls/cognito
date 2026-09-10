@@ -295,8 +295,9 @@ export default function JsonRenderPivotTable({ element }: { element: any }) {
       const query = typeof dq?.query === "string" ? dq.query.trim() : "";
       if (!query) {
         if (!cancelled) {
-          setRawRows([]);
-          setQueryError("PivotTable requer dataQuery.query");
+          setRawRows(normalizeRows(Array.isArray(props.data) ? props.data : []));
+          setQueryError(null);
+          setIsLoading(false);
         }
         return;
       }
@@ -338,7 +339,7 @@ export default function JsonRenderPivotTable({ element }: { element: any }) {
     return () => {
       cancelled = true;
     };
-  }, [JSON.stringify(dq), JSON.stringify((data as AnyRecord)?.filters)]);
+  }, [JSON.stringify(dq), JSON.stringify(props.data), JSON.stringify((data as AnyRecord)?.filters)]);
 
   const preparedRows = React.useMemo(
     () => attachColumnKeys(rawRows, columnFields),

@@ -1,0 +1,9 @@
+[dotenv@17.2.3] injecting env (2) from .env.local -- tip: 🗂️ backup and recover secrets: https://dotenvx.com/ops
+Error: getaddrinfo ENOTFOUND db.mtadnxqoqxzbdksktwdr.supabase.co
+    at GetAddrInfoReqWrap.onlookupall [as oncomplete] (node:dns:122:26) {
+  errno: -3008,
+  code: 'ENOTFOUND',
+  syscall: 'getaddrinfo',
+  hostname: 'db.mtadnxqoqxzbdksktwdr.supabase.co'
+}
+exit_code=1

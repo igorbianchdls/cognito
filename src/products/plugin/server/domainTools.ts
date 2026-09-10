@@ -1,47 +1,7 @@
 import { runQuery } from '@/lib/postgres'
-import {
-  createIntegrationEvent,
-  createIntegrationPluginActionAudit,
-  getIntegrationPluginPermissions,
-  listIntegrationConnections,
-  updateIntegrationConnection,
-} from '@/products/integracoes/server/integrationConnectionRepository'
 import { DASHBOARD_WIDGET_RESOURCE_URI } from '@/products/plugin/server/appResources'
-import type { ConnectedDomainToolResult } from '@/products/plugin/server/domain-adapters/shared/adapterTypes'
-import type { ConnectedProviderApiAdapter } from '@/products/plugin/server/domain-adapters/shared/connectedProviderApiAdapter'
-import { executeAnalyticsTool } from '@/products/plugin/server/domain-adapters/analytics/analyticsService'
-import { ANALYTICS_RESOURCES } from '@/products/plugin/server/domain-adapters/analytics/analyticsTypes'
-import { executeConnectedCrmTool } from '@/products/plugin/server/domain-adapters/crm/connectedCrmService'
-import {
-  getCrmApiAdapter,
-  listCrmApiAdapterProviders,
-} from '@/products/plugin/server/domain-adapters/crm/crmApiAdapterRegistry'
-import { CONNECTED_CRM_RESOURCES } from '@/products/plugin/server/domain-adapters/crm/crmTypes'
-import { executeConnectedErpTool } from '@/products/plugin/server/domain-adapters/erp/connectedErpService'
-import {
-  getErpApiAdapter,
-  listErpApiAdapterProviders,
-} from '@/products/plugin/server/domain-adapters/erp/erpApiAdapterRegistry'
-import { CONNECTED_ERP_RESOURCES } from '@/products/plugin/server/domain-adapters/erp/erpTypes'
-import { executeEcommerceConnectedTool } from '@/products/plugin/server/domain-adapters/ecommerce-connected/ecommerceConnectedService'
-import {
-  getEcommerceConnectedApiAdapter,
-  listEcommerceConnectedApiAdapterProviders,
-} from '@/products/plugin/server/domain-adapters/ecommerce-connected/ecommerceConnectedApiAdapterRegistry'
-import {
-  ECOMMERCE_CONNECTED_RESOURCES,
-  type EcommerceConnectedProviderAction,
-} from '@/products/plugin/server/domain-adapters/ecommerce-connected/ecommerceConnectedTypes'
-import { executePaidMediaTool } from '@/products/plugin/server/domain-adapters/paid-media/paidMediaService'
-import { PAID_MEDIA_RESOURCES } from '@/products/plugin/server/domain-adapters/paid-media/paidMediaTypes'
-import { executeSocialTool } from '@/products/plugin/server/domain-adapters/social/socialService'
-import { SOCIAL_RESOURCES } from '@/products/plugin/server/domain-adapters/social/socialTypes'
 import type { CognitoMcpServerContext } from '@/products/plugin/server/toolCore'
 import type { McpToolInputSchema } from '@/products/plugin/server/dashboardSchemas'
-import {
-  integrationErrorInfoFromUnknown,
-  isProviderReauthError,
-} from '@/products/integracoes/shared/integrationErrors'
 
 type JsonRecord = Record<string, unknown>
 
@@ -106,32 +66,8 @@ type DataCatalogAction =
 type DataCatalogDomain = 'erp' | 'crm' | 'marketing' | 'ecommerce'
 
 type CrudAction = 'listar' | 'ler'
-type ConnectedReadAction = 'listar' | 'ler' | 'listar_live' | 'ler_live'
-type ConnectedApiReadAction = 'listar' | 'ler' | 'listar_live' | 'ler_live'
 
 type ErpAcoesAction = 'criar' | 'atualizar' | 'baixar' | 'cancelar' | 'estornar' | 'reabrir'
-type ConnectedErpAction =
-  | 'criar'
-  | 'atualizar'
-  | 'baixar'
-  | 'cancelar'
-  | 'deletar'
-  | 'estornar'
-  | 'reabrir'
-  | 'alterar_status'
-type ConnectedErpApiAction = ConnectedApiReadAction | ConnectedErpAction
-type ConnectedCrmAction =
-  | 'criar'
-  | 'atualizar'
-  | 'arquivar'
-  | 'reativar'
-  | 'converter'
-  | 'mover_estagio'
-  | 'ganhar'
-  | 'perder'
-  | 'concluir'
-  | 'reabrir'
-  | 'cancelar'
 
 type SqlExecutionAction = 'execute'
 type FinancialStatementKind = 'dre' | 'cash_flow'
@@ -514,17 +450,14 @@ const ERP_ACOES_SCHEMA = {
 function createCrudSchema(
   allowedResources: string[],
   description: string,
-  actions: readonly string[] = ['listar', 'ler'],
 ) {
   return {
     type: 'object',
     properties: {
       action: {
         type: 'string',
-        enum: actions,
-        description: actions.includes('listar_live')
-          ? 'Use listar/ler para dados sincronizados no BigQuery. Use listar_live/ler_live para consultar diretamente a API do provider quando precisar do estado atual.'
-          : 'Use listar para consultar registros e ler para buscar um registro especifico por params.id.',
+        enum: ['listar', 'ler'],
+        description: 'Use listar para consultar registros e ler para buscar um registro especifico por params.id.',
       },
       resource: {
         type: 'string',
@@ -553,265 +486,6 @@ const CRM_SCHEMA = createCrudSchema(
   'Resource canonico do CRM. Use crm/contas, crm/contatos, crm/leads, crm/oportunidades ou crm/atividades.',
 )
 
-const CONNECTED_ERP_SCHEMA = createCrudSchema(
-  [...CONNECTED_ERP_RESOURCES],
-  'Resource canonico de ERP conectado via /integracoes. Use clientes, fornecedores, contas-a-receber, contas-a-pagar, pedidos-venda, pedidos-compra, itens-venda, notas-fiscais, expedicoes, separacoes, produtos, categorias ou estoque-atual.',
-  ['listar', 'ler', 'listar_live', 'ler_live'] satisfies ConnectedReadAction[],
-)
-
-const CONNECTED_ERP_BIGQUERY_SCHEMA = createCrudSchema(
-  [...CONNECTED_ERP_RESOURCES],
-  'Resource canonico de ERP conectado via /integracoes. Consulta somente dados sincronizados/normalizados no BigQuery. Use para dashboards, historico e analises. Suporta params/filters com q/search, de/date_from, ate/date_to, date_field/data_campo, status/situacao, valor_min/max, value_field, sort_by/sort_dir, filtros *_id, documento e numero. Para analises agregadas use mode=aggregate, metric=count|sum|avg|min|max, value_field e group_by/granularity=day|week|month|year. Use connected_erp_api quando precisar ler diretamente a API do provider.',
-  ['listar', 'ler'] satisfies CrudAction[],
-)
-
-const CONNECTED_CRM_SCHEMA = createCrudSchema(
-  [...CONNECTED_CRM_RESOURCES],
-  'Resource canonico de CRM conectado via /integracoes. Use contas, contatos, leads, oportunidades ou atividades.',
-  ['listar', 'ler', 'listar_live', 'ler_live'] satisfies ConnectedReadAction[],
-)
-
-const CONNECTED_ERP_ACTIONS_ALLOWED_RESOURCES = [
-  'clientes',
-  'fornecedores',
-  'contas-a-receber',
-  'contas-a-pagar',
-  'pedidos-venda',
-  'centros-custo',
-  'produtos',
-  'servicos',
-  'contratos',
-] as const
-
-const CONNECTED_CRM_ACTIONS_ALLOWED_RESOURCES = [
-  'contas',
-  'contatos',
-  'leads',
-  'oportunidades',
-  'atividades',
-] as const
-
-const ECOMMERCE_CONNECTED_ACTIONS_ALLOWED_RESOURCES = [
-  'produtos',
-  'variantes',
-  'cupons',
-  'pedidos',
-] as const
-
-const CONNECTED_ERP_ACTIONS_SCHEMA = {
-  type: 'object',
-  properties: {
-    provider: {
-      type: 'string',
-      description: 'Provider conectado em /integracoes, como omie, conta_azul, bling ou olist_erp. Opcional quando houver apenas uma conexao ativa.',
-    },
-    resource: {
-      type: 'string',
-      enum: CONNECTED_ERP_ACTIONS_ALLOWED_RESOURCES,
-      description: 'Recurso transacional do ERP conectado.',
-    },
-    action: {
-      type: 'string',
-      enum: ['criar', 'atualizar', 'baixar', 'cancelar', 'deletar', 'estornar', 'reabrir', 'alterar_status'],
-      description: 'Acao executada diretamente na API do provider quando suportada. dry_run=true por padrao.',
-    },
-    id: {
-      type: 'string',
-      description: 'ID externo ou ID do provider. Obrigatorio para atualizar, baixar, cancelar e deletar.',
-    },
-    payload: {
-      type: 'object',
-      description: 'Campos da operacao enviados ao provider. O contrato exato varia por resource/provider.',
-      additionalProperties: true,
-    },
-    dry_run: {
-      type: 'boolean',
-      description: 'Default true. Quando true, valida intencao/permissao e retorna preview sem chamar a API.',
-    },
-    confirmed: {
-      type: 'boolean',
-      description: 'Obrigatorio como true para execucao real quando a conexao exige confirmacao.',
-    },
-    idempotency_key: {
-      type: 'string',
-      description: 'Chave opcional para rastrear operacoes sensiveis e evitar duplicidade.',
-    },
-  },
-  required: ['resource', 'action'],
-  additionalProperties: true,
-} as const satisfies McpToolInputSchema
-
-const CONNECTED_ERP_API_SCHEMA = {
-  type: 'object',
-  properties: {
-    provider: {
-      type: 'string',
-      description: 'Provider conectado em /integracoes, como omie, conta_azul, bling ou olist_erp. Opcional quando houver apenas uma conexao ativa.',
-    },
-    resource: {
-      type: 'string',
-      enum: [...CONNECTED_ERP_RESOURCES],
-      description: 'Recurso do ERP conectado operado diretamente via API do provider.',
-    },
-    action: {
-      type: 'string',
-      enum: ['listar', 'ler', 'listar_live', 'ler_live', 'criar', 'atualizar', 'baixar', 'cancelar', 'deletar', 'estornar', 'reabrir', 'alterar_status'] satisfies ConnectedErpApiAction[],
-      description: 'Use listar/ler para leitura live na API do provider. Use criar/atualizar/baixar/cancelar/deletar somente quando suportado pelo provider/resource. dry_run=true por padrao para escritas.',
-    },
-    id: {
-      type: 'string',
-      description: 'ID externo ou ID do provider. Obrigatorio para ler, atualizar, baixar, cancelar e deletar.',
-    },
-    limit: {
-      type: 'integer',
-      description: 'Limite de linhas para listar/listar_live.',
-    },
-    params: {
-      type: 'object',
-      description: 'Filtros de leitura live enviados/aplicados pelo adapter da API. Suporta q/search, status/situacao, de/date_from, ate/date_to, date_field/data_campo, valor_min/max, sort_by/sort_dir, external_id, cliente_id, fornecedor_id, produto_id, categoria_id, centro_custo_id, vendedor_id, conta_financeira_id, documento e numero quando o provider/resource expuser esses campos.',
-      additionalProperties: true,
-    },
-    filters: {
-      type: 'object',
-      description: 'Alias de params para filtros de leitura live.',
-      additionalProperties: true,
-    },
-    include_provider_fields: {
-      type: 'boolean',
-      description: 'Inclui campos brutos/provider quando suportado.',
-    },
-    payload: {
-      type: 'object',
-      description: 'Campos da operacao enviados ao provider em acoes de escrita. O contrato exato varia por resource/provider.',
-      additionalProperties: true,
-    },
-    dry_run: {
-      type: 'boolean',
-      description: 'Default true para acoes de escrita. Quando true, valida intencao/permissao e retorna preview sem chamar a API.',
-    },
-    confirmed: {
-      type: 'boolean',
-      description: 'Obrigatorio como true para execucao real quando a conexao exige confirmacao.',
-    },
-    idempotency_key: {
-      type: 'string',
-      description: 'Chave opcional para rastrear operacoes sensiveis e evitar duplicidade.',
-    },
-  },
-  required: ['action', 'resource'],
-  additionalProperties: true,
-} as const satisfies McpToolInputSchema
-
-const CONNECTED_CRM_ACTIONS_SCHEMA = {
-  type: 'object',
-  properties: {
-    provider: {
-      type: 'string',
-      description: 'Provider conectado em /integracoes, como hubspot, pipedrive, salesforce, bitrix24 ou rd_station_crm.',
-    },
-    resource: {
-      type: 'string',
-      enum: CONNECTED_CRM_ACTIONS_ALLOWED_RESOURCES,
-      description: 'Recurso transacional do CRM conectado.',
-    },
-    action: {
-      type: 'string',
-      enum: ['criar', 'atualizar', 'arquivar', 'reativar', 'converter', 'mover_estagio', 'ganhar', 'perder', 'concluir', 'reabrir', 'cancelar'],
-      description: 'Acao executada diretamente na API do provider. dry_run=true por padrao.',
-    },
-    id: {
-      type: 'string',
-      description: 'ID externo ou ID do provider. Obrigatorio para atualizar, arquivar, reativar, converter, mover_estagio, ganhar, perder, concluir, reabrir e cancelar.',
-    },
-    payload: {
-      type: 'object',
-      description: 'Campos da operacao enviados ao provider. O contrato exato varia por resource/provider.',
-      additionalProperties: true,
-    },
-    dry_run: {
-      type: 'boolean',
-      description: 'Default true. Quando true, valida intencao/permissao e retorna preview sem chamar a API.',
-    },
-    confirmed: {
-      type: 'boolean',
-      description: 'Obrigatorio como true para execucao real quando a conexao exige confirmacao.',
-    },
-    idempotency_key: {
-      type: 'string',
-      description: 'Chave opcional para rastrear operacoes sensiveis e evitar duplicidade.',
-    },
-  },
-  required: ['resource', 'action'],
-  additionalProperties: true,
-} as const satisfies McpToolInputSchema
-
-const ECOMMERCE_CONNECTED_ACTIONS_SCHEMA = {
-  type: 'object',
-  properties: {
-    provider: {
-      type: 'string',
-      description: 'Provider ecommerce conectado em /integracoes, como shopify, nuvemshop ou loja_integrada.',
-    },
-    resource: {
-      type: 'string',
-      enum: ECOMMERCE_CONNECTED_ACTIONS_ALLOWED_RESOURCES,
-      description: 'Recurso transacional do ecommerce conectado.',
-    },
-    action: {
-      type: 'string',
-      enum: ['criar', 'atualizar', 'cancelar', 'deletar', 'alterar_status'],
-      description: 'Acao executada diretamente na API do provider quando suportada. dry_run=true por padrao.',
-    },
-    id: {
-      type: 'string',
-      description: 'ID externo ou ID do provider. Obrigatorio para atualizar, cancelar, deletar e alterar_status.',
-    },
-    payload: {
-      type: 'object',
-      description: 'Campos da operacao enviados ao provider. O contrato exato varia por resource/provider.',
-      additionalProperties: true,
-    },
-    dry_run: {
-      type: 'boolean',
-      description: 'Default true. Quando true, valida intencao/permissao e retorna preview sem chamar a API.',
-    },
-    confirmed: {
-      type: 'boolean',
-      description: 'Obrigatorio como true para execucao real quando a conexao exige confirmacao.',
-    },
-    idempotency_key: {
-      type: 'string',
-      description: 'Chave opcional para rastrear operacoes sensiveis e evitar duplicidade.',
-    },
-  },
-  required: ['resource', 'action'],
-  additionalProperties: true,
-} as const satisfies McpToolInputSchema
-
-const PAID_MEDIA_SCHEMA = createCrudSchema(
-  [...PAID_MEDIA_RESOURCES],
-  'Resource canonico de midia paga conectada via /integracoes. Use contas, campanhas, grupos, anuncios, criativos, keywords, desempenho-diario ou conversoes.',
-  ['listar', 'ler', 'listar_live', 'ler_live'] satisfies ConnectedReadAction[],
-)
-
-const SOCIAL_SCHEMA = createCrudSchema(
-  [...SOCIAL_RESOURCES],
-  'Resource canonico de social organico conectado via /integracoes. Use perfis, posts, videos, comentarios, audiencia, desempenho-diario ou engajamento.',
-  ['listar', 'ler', 'listar_live', 'ler_live'] satisfies ConnectedReadAction[],
-)
-
-const ANALYTICS_SCHEMA = createCrudSchema(
-  [...ANALYTICS_RESOURCES],
-  'Resource canonico de analytics/SEO conectado via /integracoes. Use propriedades, paginas, landing-pages, eventos, conversoes, canais, consultas, perfil-negocio, reviews ou posts-locais.',
-  ['listar', 'ler', 'listar_live', 'ler_live'] satisfies ConnectedReadAction[],
-)
-
-const ECOMMERCE_CONNECTED_SCHEMA = createCrudSchema(
-  [...ECOMMERCE_CONNECTED_RESOURCES],
-  'Resource canonico de ecommerce conectado via /integracoes. Use lojas, pedidos, itens-pedido, produtos, variantes, clientes, pagamentos, reembolsos, frete, estoque, categorias, cupons ou carrinhos-abandonados.',
-  ['listar', 'ler', 'listar_live', 'ler_live'] satisfies ConnectedReadAction[],
-)
-
 const CRUD_OUTPUT_SCHEMA = {
   type: 'object',
   properties: {
@@ -834,46 +508,6 @@ const CRUD_OUTPUT_SCHEMA = {
     count: { type: 'integer' },
   },
   required: ['success', 'tool', 'action', 'resource', 'title', 'rows', 'columns', 'count'],
-  additionalProperties: true,
-} as const satisfies McpToolInputSchema
-
-const CONNECTED_DOMAIN_OUTPUT_SCHEMA = {
-  type: 'object',
-  properties: {
-    success: { type: 'boolean' },
-    tool: { type: 'string' },
-    action: { type: 'string' },
-    resource: { type: 'string' },
-    title: { type: 'string' },
-    rows: {
-      type: 'array',
-      items: {
-        type: 'object',
-        additionalProperties: true,
-      },
-    },
-    columns: {
-      type: 'array',
-      items: { type: 'string' },
-    },
-    count: { type: 'integer' },
-    providers: {
-      type: 'array',
-      items: {
-        type: 'object',
-        additionalProperties: true,
-      },
-    },
-    errors: {
-      type: 'array',
-      items: { type: 'string' },
-    },
-    warnings: {
-      type: 'array',
-      items: { type: 'string' },
-    },
-  },
-  required: ['success', 'tool', 'action', 'resource', 'title', 'rows', 'columns', 'count', 'providers'],
   additionalProperties: true,
 } as const satisfies McpToolInputSchema
 
@@ -904,51 +538,6 @@ const ERP_ACOES_OUTPUT_SCHEMA = {
     },
   },
   required: ['success', 'tool', 'action', 'resource', 'title', 'dry_run', 'rows', 'columns', 'count'],
-  additionalProperties: true,
-} as const satisfies McpToolInputSchema
-
-const CONNECTED_ERP_API_OUTPUT_SCHEMA = {
-  type: 'object',
-  properties: {
-    success: { type: 'boolean' },
-    tool: { type: 'string' },
-    action: { type: 'string' },
-    resource: { type: 'string' },
-    title: { type: 'string' },
-    dry_run: { type: 'boolean' },
-    rows: {
-      type: 'array',
-      items: {
-        type: 'object',
-        additionalProperties: true,
-      },
-    },
-    columns: {
-      type: 'array',
-      items: { type: 'string' },
-    },
-    count: { type: 'integer' },
-    providers: {
-      type: 'array',
-      items: {
-        type: 'object',
-        additionalProperties: true,
-      },
-    },
-    result: {
-      type: 'object',
-      additionalProperties: true,
-    },
-    errors: {
-      type: 'array',
-      items: { type: 'string' },
-    },
-    warnings: {
-      type: 'array',
-      items: { type: 'string' },
-    },
-  },
-  required: ['success', 'tool', 'action', 'resource', 'title', 'rows', 'columns', 'count'],
   additionalProperties: true,
 } as const satisfies McpToolInputSchema
 
@@ -1089,7 +678,7 @@ const DATA_CATALOG_SCHEMA = {
       type: 'string',
       enum: ['fontes', 'recursos', 'campos', 'relacionamentos', 'qualidade', 'cobertura', 'pronto_para_dashboard'],
       description:
-        'Tipo de consulta ao catalogo. Use fontes para ver dominios conectados; recursos para listar tabelas canonicas; campos para schema; relacionamentos, qualidade, cobertura ou pronto_para_dashboard para avaliar um recurso.',
+        'Tipo de consulta ao catalogo. Use fontes para ver dominios locais; recursos para listar tabelas canonicas; campos para schema; relacionamentos, qualidade, cobertura ou pronto_para_dashboard para avaliar um recurso.',
     },
     domain: {
       type: 'string',
@@ -1176,30 +765,14 @@ const FINANCIAL_STATEMENT_OUTPUT_SCHEMA = {
 export const PLUGIN_DOMAIN_TOOL_NAMES = {
   erp: 'erp',
   erpAcoes: 'erp_acoes',
-  connectedErp: 'connected_erp',
-  connectedErpBigQuery: 'connected_erp_bigquery',
-  connectedErpApi: 'connected_erp_api',
-  connectedErpActions: 'connected_erp_actions',
   crm: 'crm',
-  connectedCrm: 'connected_crm',
-  connectedCrmActions: 'connected_crm_actions',
   sql: 'sql',
   sqlExecution: 'sql_execution',
   financialStatement: 'financial_statement',
   ecommerce: 'ecommerce',
-  ecommerceConnected: 'ecommerce_connected',
-  ecommerceConnectedActions: 'ecommerce_connected_actions',
   marketing: 'marketing',
-  paidMedia: 'paid_media',
-  social: 'social',
-  analytics: 'analytics',
   dataCatalog: 'data_catalog',
 } as const
-
-function isEnvEnabled(name: string) {
-  const value = String(process.env[name] || '').trim().toLowerCase()
-  return value === '1' || value === 'true' || value === 'yes' || value === 'on'
-}
 
 const ERP_DOMAIN_TOOL_DEFINITION = {
   name: PLUGIN_DOMAIN_TOOL_NAMES.erp,
@@ -1237,78 +810,6 @@ const CRM_DOMAIN_TOOL_DEFINITION = {
   _meta: TOOL_META,
 } as const satisfies DomainToolDefinition
 
-const CONNECTED_ERP_DOMAIN_TOOL_DEFINITION = {
-  name: PLUGIN_DOMAIN_TOOL_NAMES.connectedErp,
-  title: 'Connected ERP',
-  description:
-    'Compatibilidade/deprecated. Consulta ERPs conectados pelo cliente em /integracoes. Preferir connected_erp_bigquery para dados sincronizados/normalizados e connected_erp_api para leitura live/API.',
-  inputSchema: CONNECTED_ERP_SCHEMA,
-  outputSchema: CONNECTED_DOMAIN_OUTPUT_SCHEMA,
-  securitySchemes: READ_SECURITY_SCHEMES,
-  annotations: READ_ONLY_ANNOTATIONS,
-  _meta: TOOL_META,
-} as const satisfies DomainToolDefinition
-
-const CONNECTED_ERP_BIGQUERY_DOMAIN_TOOL_DEFINITION = {
-  name: PLUGIN_DOMAIN_TOOL_NAMES.connectedErpBigQuery,
-  title: 'Connected ERP BigQuery',
-  description:
-    'Consulta dados de ERPs conectados ja sincronizados e normalizados no BigQuery. Use para dashboards, analises historicas, relatorios e consultas sem efeito colateral. Acoes suportadas: listar e ler. Nao chama a API do ERP.',
-  inputSchema: CONNECTED_ERP_BIGQUERY_SCHEMA,
-  outputSchema: CONNECTED_DOMAIN_OUTPUT_SCHEMA,
-  securitySchemes: READ_SECURITY_SCHEMES,
-  annotations: READ_ONLY_ANNOTATIONS,
-  _meta: TOOL_META,
-} as const satisfies DomainToolDefinition
-
-const CONNECTED_ERP_API_DOMAIN_TOOL_DEFINITION = {
-  name: PLUGIN_DOMAIN_TOOL_NAMES.connectedErpApi,
-  title: 'Connected ERP API',
-  description:
-    'Opera diretamente na API do ERP conectado em /integracoes. Use listar/ler para leitura live do provider e criar/atualizar/baixar/cancelar/deletar para acoes transacionais quando suportadas. Escritas usam dry_run=true por padrao e dry_run=false exige confirmacao.',
-  inputSchema: CONNECTED_ERP_API_SCHEMA,
-  outputSchema: CONNECTED_ERP_API_OUTPUT_SCHEMA,
-  securitySchemes: READ_SECURITY_SCHEMES,
-  annotations: WRITE_ANNOTATIONS,
-  _meta: TOOL_META,
-} as const satisfies DomainToolDefinition
-
-const CONNECTED_ERP_ACTIONS_DOMAIN_TOOL_DEFINITION = {
-  name: PLUGIN_DOMAIN_TOOL_NAMES.connectedErpActions,
-  title: 'Connected ERP actions',
-  description:
-    'Compatibilidade/deprecated. Executa acoes transacionais diretamente na API do ERP conectado em /integracoes. Preferir connected_erp_api para novas chamadas. dry_run=true por padrao; dry_run=false exige confirmacao e adapter provider implementado.',
-  inputSchema: CONNECTED_ERP_ACTIONS_SCHEMA,
-  outputSchema: ERP_ACOES_OUTPUT_SCHEMA,
-  securitySchemes: READ_SECURITY_SCHEMES,
-  annotations: WRITE_ANNOTATIONS,
-  _meta: TOOL_META,
-} as const satisfies DomainToolDefinition
-
-const CONNECTED_CRM_DOMAIN_TOOL_DEFINITION = {
-  name: PLUGIN_DOMAIN_TOOL_NAMES.connectedCrm,
-  title: 'Connected CRM',
-  description:
-    'Consulta CRMs conectados pelo cliente em /integracoes. listar/ler usam BigQuery sincronizado; listar_live/ler_live sao reservadas para leitura direta na API do provider quando o adapter live estiver implementado. Mantem a tool crm atual separada.',
-  inputSchema: CONNECTED_CRM_SCHEMA,
-  outputSchema: CONNECTED_DOMAIN_OUTPUT_SCHEMA,
-  securitySchemes: READ_SECURITY_SCHEMES,
-  annotations: READ_ONLY_ANNOTATIONS,
-  _meta: TOOL_META,
-} as const satisfies DomainToolDefinition
-
-const CONNECTED_CRM_ACTIONS_DOMAIN_TOOL_DEFINITION = {
-  name: PLUGIN_DOMAIN_TOOL_NAMES.connectedCrmActions,
-  title: 'Connected CRM actions',
-  description:
-    'Executa acoes transacionais diretamente na API do CRM conectado em /integracoes. Use para criar, atualizar, arquivar, reativar, converter, mover estagio, ganhar, perder, concluir, reabrir e cancelar. dry_run=true por padrao; dry_run=false exige confirmacao e adapter provider implementado.',
-  inputSchema: CONNECTED_CRM_ACTIONS_SCHEMA,
-  outputSchema: ERP_ACOES_OUTPUT_SCHEMA,
-  securitySchemes: READ_SECURITY_SCHEMES,
-  annotations: WRITE_ANNOTATIONS,
-  _meta: TOOL_META,
-} as const satisfies DomainToolDefinition
-
 const ECOMMERCE_DOMAIN_TOOL_DEFINITION = {
   name: PLUGIN_DOMAIN_TOOL_NAMES.ecommerce,
   title: 'Ecommerce metrics',
@@ -1318,30 +819,6 @@ const ECOMMERCE_DOMAIN_TOOL_DEFINITION = {
   outputSchema: METRICS_OUTPUT_SCHEMA,
   securitySchemes: READ_SECURITY_SCHEMES,
   annotations: READ_ONLY_ANNOTATIONS,
-  _meta: TOOL_META,
-} as const satisfies DomainToolDefinition
-
-const ECOMMERCE_CONNECTED_DOMAIN_TOOL_DEFINITION = {
-  name: PLUGIN_DOMAIN_TOOL_NAMES.ecommerceConnected,
-  title: 'Ecommerce connected',
-  description:
-    'Consulta ecommerce conectado pelo cliente em /integracoes. listar/ler usam BigQuery normalized; listar_live/ler_live leem direto na API do provider quando suportado. Providers: Shopify, Nuvemshop e Loja Integrada.',
-  inputSchema: ECOMMERCE_CONNECTED_SCHEMA,
-  outputSchema: CONNECTED_DOMAIN_OUTPUT_SCHEMA,
-  securitySchemes: READ_SECURITY_SCHEMES,
-  annotations: READ_ONLY_ANNOTATIONS,
-  _meta: TOOL_META,
-} as const satisfies DomainToolDefinition
-
-const ECOMMERCE_CONNECTED_ACTIONS_DOMAIN_TOOL_DEFINITION = {
-  name: PLUGIN_DOMAIN_TOOL_NAMES.ecommerceConnectedActions,
-  title: 'Ecommerce connected actions',
-  description:
-    'Executa acoes transacionais diretamente na API do ecommerce conectado em /integracoes. Use para criar, atualizar, cancelar e deletar quando o provider/resource suportar. dry_run=true por padrao; dry_run=false exige confirmacao e adapter provider implementado.',
-  inputSchema: ECOMMERCE_CONNECTED_ACTIONS_SCHEMA,
-  outputSchema: ERP_ACOES_OUTPUT_SCHEMA,
-  securitySchemes: READ_SECURITY_SCHEMES,
-  annotations: WRITE_ANNOTATIONS,
   _meta: TOOL_META,
 } as const satisfies DomainToolDefinition
 
@@ -1381,47 +858,11 @@ const MARKETING_DOMAIN_TOOL_DEFINITION = {
   _meta: TOOL_META,
 } as const satisfies DomainToolDefinition
 
-const PAID_MEDIA_DOMAIN_TOOL_DEFINITION = {
-  name: PLUGIN_DOMAIN_TOOL_NAMES.paidMedia,
-  title: 'Paid media',
-  description:
-    'Consulta midia paga conectada pelo cliente em /integracoes. Use para Meta Ads, Google Ads e futuros providers pagos; recursos incluem contas, campanhas, grupos, anuncios, criativos, keywords, desempenho diario e conversoes.',
-  inputSchema: PAID_MEDIA_SCHEMA,
-  outputSchema: CONNECTED_DOMAIN_OUTPUT_SCHEMA,
-  securitySchemes: READ_SECURITY_SCHEMES,
-  annotations: READ_ONLY_ANNOTATIONS,
-  _meta: TOOL_META,
-} as const satisfies DomainToolDefinition
-
-const SOCIAL_DOMAIN_TOOL_DEFINITION = {
-  name: PLUGIN_DOMAIN_TOOL_NAMES.social,
-  title: 'Social',
-  description:
-    'Consulta social organico conectado pelo cliente em /integracoes. Use para Instagram, YouTube, LinkedIn e TikTok; recursos incluem perfis, posts, videos, comentarios, audiencia, desempenho diario e engajamento.',
-  inputSchema: SOCIAL_SCHEMA,
-  outputSchema: CONNECTED_DOMAIN_OUTPUT_SCHEMA,
-  securitySchemes: READ_SECURITY_SCHEMES,
-  annotations: READ_ONLY_ANNOTATIONS,
-  _meta: TOOL_META,
-} as const satisfies DomainToolDefinition
-
-const ANALYTICS_DOMAIN_TOOL_DEFINITION = {
-  name: PLUGIN_DOMAIN_TOOL_NAMES.analytics,
-  title: 'Analytics',
-  description:
-    'Consulta analytics, SEO e perfil local conectados pelo cliente em /integracoes. listar/ler usam BigQuery normalized; listar_live/ler_live leem direto na API do provider. Use para GA4, Google Search Console e Google Business Profile; recursos incluem propriedades, paginas, eventos, conversoes, canais, consultas, perfil-negocio, reviews e posts-locais.',
-  inputSchema: ANALYTICS_SCHEMA,
-  outputSchema: CONNECTED_DOMAIN_OUTPUT_SCHEMA,
-  securitySchemes: READ_SECURITY_SCHEMES,
-  annotations: READ_ONLY_ANNOTATIONS,
-  _meta: TOOL_META,
-} as const satisfies DomainToolDefinition
-
 const DATA_CATALOG_DOMAIN_TOOL_DEFINITION = {
   name: PLUGIN_DOMAIN_TOOL_NAMES.dataCatalog,
   title: 'Data catalog',
   description:
-    'Mostra o catalogo de dados conectados do tenant: fontes, recursos, campos, relacionamentos, qualidade, cobertura por periodo e prontidao para dashboard/relatorio. Use antes de analises quando precisar saber quais dados existem e se estao completos.',
+    'Mostra o catalogo de dados locais do tenant: fontes, recursos, campos, relacionamentos, qualidade, cobertura por periodo e prontidao para dashboard/relatorio. Use antes de analises quando precisar saber quais dados existem e se estao completos.',
   inputSchema: DATA_CATALOG_SCHEMA,
   outputSchema: DATA_CATALOG_OUTPUT_SCHEMA,
   securitySchemes: READ_SECURITY_SCHEMES,
@@ -1430,48 +871,21 @@ const DATA_CATALOG_DOMAIN_TOOL_DEFINITION = {
 } as const satisfies DomainToolDefinition
 
 export function listPluginDomainToolDefinitions() {
-  return [
-    ERP_DOMAIN_TOOL_DEFINITION,
-    ERP_ACOES_DOMAIN_TOOL_DEFINITION,
-    CONNECTED_ERP_BIGQUERY_DOMAIN_TOOL_DEFINITION,
-    CONNECTED_ERP_API_DOMAIN_TOOL_DEFINITION,
-    CONNECTED_ERP_DOMAIN_TOOL_DEFINITION,
-    CONNECTED_ERP_ACTIONS_DOMAIN_TOOL_DEFINITION,
-    CRM_DOMAIN_TOOL_DEFINITION,
-    CONNECTED_CRM_DOMAIN_TOOL_DEFINITION,
-    CONNECTED_CRM_ACTIONS_DOMAIN_TOOL_DEFINITION,
-    ECOMMERCE_DOMAIN_TOOL_DEFINITION,
-    ECOMMERCE_CONNECTED_DOMAIN_TOOL_DEFINITION,
-    ECOMMERCE_CONNECTED_ACTIONS_DOMAIN_TOOL_DEFINITION,
-    SQL_DOMAIN_TOOL_DEFINITION,
-    FINANCIAL_STATEMENT_TOOL_DEFINITION,
-    MARKETING_DOMAIN_TOOL_DEFINITION,
-    PAID_MEDIA_DOMAIN_TOOL_DEFINITION,
-    SOCIAL_DOMAIN_TOOL_DEFINITION,
-    ANALYTICS_DOMAIN_TOOL_DEFINITION,
-    DATA_CATALOG_DOMAIN_TOOL_DEFINITION,
-  ]
+  return [...PLUGIN_DOMAIN_TOOL_DEFINITIONS]
 }
 
 export const PLUGIN_DOMAIN_TOOL_DEFINITIONS = [
   ERP_DOMAIN_TOOL_DEFINITION,
   ERP_ACOES_DOMAIN_TOOL_DEFINITION,
-  CONNECTED_ERP_BIGQUERY_DOMAIN_TOOL_DEFINITION,
-  CONNECTED_ERP_API_DOMAIN_TOOL_DEFINITION,
-  CONNECTED_ERP_DOMAIN_TOOL_DEFINITION,
-  CONNECTED_ERP_ACTIONS_DOMAIN_TOOL_DEFINITION,
+
   CRM_DOMAIN_TOOL_DEFINITION,
-  CONNECTED_CRM_DOMAIN_TOOL_DEFINITION,
-  CONNECTED_CRM_ACTIONS_DOMAIN_TOOL_DEFINITION,
+
   ECOMMERCE_DOMAIN_TOOL_DEFINITION,
-  ECOMMERCE_CONNECTED_DOMAIN_TOOL_DEFINITION,
-  ECOMMERCE_CONNECTED_ACTIONS_DOMAIN_TOOL_DEFINITION,
+
   SQL_DOMAIN_TOOL_DEFINITION,
   FINANCIAL_STATEMENT_TOOL_DEFINITION,
   MARKETING_DOMAIN_TOOL_DEFINITION,
-  PAID_MEDIA_DOMAIN_TOOL_DEFINITION,
-  SOCIAL_DOMAIN_TOOL_DEFINITION,
-  ANALYTICS_DOMAIN_TOOL_DEFINITION,
+
   DATA_CATALOG_DOMAIN_TOOL_DEFINITION,
 ] as const satisfies readonly DomainToolDefinition[]
 
@@ -4602,658 +4016,6 @@ async function callSqlExecution(
   }
 }
 
-async function callConnectedErp(args: unknown, context: CognitoMcpServerContext) {
-  const structuredContent = await executeConnectedErpTool(args, context)
-  return {
-    content: [{ type: 'text', text: JSON.stringify(structuredContent, null, 2) }],
-    structuredContent,
-    isError: !structuredContent.success,
-  }
-}
-
-function connectedReadResponse(
-  structuredContent: ConnectedDomainToolResult,
-  toolName: string,
-  source: 'bigquery' | 'api',
-  actionOverride?: string,
-) {
-  const patched = {
-    ...structuredContent,
-    tool: toolName,
-    ...(actionOverride ? { action: actionOverride } : {}),
-    title: `${toolName} - ${structuredContent.resource}`,
-    source,
-  }
-  return {
-    content: [{ type: 'text', text: JSON.stringify(patched, null, 2) }],
-    structuredContent: patched,
-    isError: !patched.success,
-  }
-}
-
-function connectedErpErrorResponse(input: {
-  tool: string
-  action: string
-  resource: string
-  message: string
-}) {
-  const structuredContent = {
-    success: false,
-    tool: input.tool,
-    action: input.action,
-    resource: input.resource,
-    title: `${input.tool} - ${input.resource || 'recurso invalido'}`,
-    rows: [],
-    columns: [],
-    count: 0,
-    providers: [],
-    errors: [input.message],
-  }
-  return {
-    content: [{ type: 'text', text: JSON.stringify(structuredContent, null, 2) }],
-    structuredContent,
-    isError: true,
-  }
-}
-
-async function callConnectedErpBigQuery(args: unknown, context: CognitoMcpServerContext) {
-  const input = toObj(args)
-  const action = toText(input.action || 'listar').toLowerCase()
-  const resource = toText(input.resource)
-
-  if (action === 'listar_live' || action === 'ler_live') {
-    return connectedErpErrorResponse({
-      tool: PLUGIN_DOMAIN_TOOL_NAMES.connectedErpBigQuery,
-      action,
-      resource,
-      message: 'connected_erp_bigquery consulta somente dados sincronizados no BigQuery. Use connected_erp_api para leitura live na API do provider.',
-    })
-  }
-
-  const structuredContent = await executeConnectedErpTool({
-    ...input,
-    action: action || 'listar',
-  }, context)
-  return connectedReadResponse(structuredContent, PLUGIN_DOMAIN_TOOL_NAMES.connectedErpBigQuery, 'bigquery')
-}
-
-function isConnectedErpApiReadAction(action: string): action is ConnectedApiReadAction {
-  return action === 'listar' || action === 'ler' || action === 'listar_live' || action === 'ler_live'
-}
-
-function toConnectedErpLiveAction(action: ConnectedApiReadAction) {
-  if (action === 'listar') return 'listar_live'
-  if (action === 'ler') return 'ler_live'
-  return action
-}
-
-async function callConnectedErpApi(args: unknown, context: CognitoMcpServerContext) {
-  const input = toObj(args)
-  const action = toText(input.action || 'listar').toLowerCase()
-
-  if (isConnectedErpApiReadAction(action)) {
-    const liveAction = toConnectedErpLiveAction(action)
-    const structuredContent = await executeConnectedErpTool({
-      ...input,
-      action: liveAction,
-    }, context)
-    return connectedReadResponse(
-      structuredContent,
-      PLUGIN_DOMAIN_TOOL_NAMES.connectedErpApi,
-      'api',
-      action === 'listar' || action === 'ler' ? action : undefined,
-    )
-  }
-
-  return callConnectedProviderAction({
-    args,
-    context,
-    domain: 'erp',
-    tool: PLUGIN_DOMAIN_TOOL_NAMES.connectedErpApi,
-    resources: CONNECTED_ERP_ACTIONS_ALLOWED_RESOURCES,
-    actionsByResource: CONNECTED_ERP_ACTIONS_BY_RESOURCE,
-  })
-}
-
-async function callConnectedCrm(args: unknown, context: CognitoMcpServerContext) {
-  const structuredContent = await executeConnectedCrmTool(args, context)
-  return {
-    content: [{ type: 'text', text: JSON.stringify(structuredContent, null, 2) }],
-    structuredContent,
-    isError: !structuredContent.success,
-  }
-}
-
-const CONNECTED_ERP_ACTIONS_BY_RESOURCE: Record<string, readonly ConnectedErpAction[]> = {
-  clientes: ['criar', 'atualizar', 'deletar'],
-  fornecedores: ['criar', 'atualizar', 'deletar'],
-  'contas-a-receber': ['criar', 'atualizar', 'baixar'],
-  'contas-a-pagar': ['criar', 'atualizar', 'baixar'],
-  'pedidos-venda': ['criar', 'atualizar', 'cancelar'],
-  'centros-custo': ['criar'],
-  produtos: ['criar', 'atualizar', 'deletar'],
-  servicos: ['criar', 'atualizar'],
-  contratos: ['criar', 'atualizar', 'deletar'],
-}
-
-const CONNECTED_CRM_ACTIONS_BY_RESOURCE: Record<string, readonly ConnectedCrmAction[]> = {
-  contas: ['criar', 'atualizar', 'arquivar', 'reativar'],
-  contatos: ['criar', 'atualizar', 'arquivar', 'reativar'],
-  leads: ['criar', 'atualizar', 'converter', 'arquivar', 'reativar'],
-  oportunidades: ['criar', 'atualizar', 'mover_estagio', 'ganhar', 'perder', 'reabrir', 'arquivar'],
-  atividades: ['criar', 'atualizar', 'concluir', 'cancelar', 'reabrir'],
-}
-
-const ECOMMERCE_CONNECTED_ACTIONS_BY_RESOURCE: Record<string, readonly EcommerceConnectedProviderAction[]> = {
-  produtos: ['criar', 'atualizar', 'deletar'],
-  variantes: ['criar', 'atualizar', 'deletar'],
-  cupons: ['criar', 'atualizar', 'deletar'],
-  pedidos: ['cancelar'],
-}
-
-const CONNECTED_DESTRUCTIVE_ACTIONS = new Set([
-  'cancelar',
-  'deletar',
-  'estornar',
-  'arquivar',
-  'perder',
-])
-
-const CONNECTED_ACTIONS_REQUIRING_ID = new Set([
-  'atualizar',
-  'baixar',
-  'cancelar',
-  'deletar',
-  'estornar',
-  'reabrir',
-  'alterar_status',
-  'arquivar',
-  'reativar',
-  'converter',
-  'mover_estagio',
-  'ganhar',
-  'perder',
-  'concluir',
-])
-
-function inferActionPermissionKind(action: string): 'write' | 'destructive' {
-  return CONNECTED_DESTRUCTIVE_ACTIONS.has(action) ? 'destructive' : 'write'
-}
-
-async function markConnectionPendingAuth(input: {
-  tenantId: number
-  connectionId: string
-  provider: string
-  error: unknown
-}) {
-  const info = integrationErrorInfoFromUnknown(input.error)
-  await updateIntegrationConnection(input.connectionId, input.tenantId, {
-    status: 'pending_auth',
-    metadata: {
-      oauthRefreshFailedAt: new Date().toISOString(),
-      oauthRefreshError: info.safeMessage,
-      lastAuthErrorSource: info.source,
-      lastAuthErrorCode: info.code,
-      lastAuthErrorMessage: info.safeMessage,
-      lastAuthErrorHttpStatus: info.httpStatus || null,
-      lastAuthErrorRaw: info.rawErrorRedacted || null,
-      authFailureSource: 'plugin_action',
-    },
-  })
-  await createIntegrationEvent({
-    tenantId: input.tenantId,
-    connectionId: input.connectionId,
-    eventType: 'connection.reconnect_requested',
-    severity: 'error',
-    actor: 'mcp',
-    message: 'Falha OAuth ao executar acao no provider. Reautenticacao necessaria.',
-    metadata: {
-      provider: input.provider,
-      errorSource: info.source,
-      errorCode: info.code,
-      errorMessage: info.safeMessage,
-      httpStatus: info.httpStatus || null,
-      rawErrorRedacted: info.rawErrorRedacted || null,
-    },
-  })
-}
-
-async function buildConnectedActionResponse(input: {
-  tenantId?: number
-  tool: string
-  domain: 'erp' | 'crm' | 'ecommerce'
-  provider: string | null
-  connectionId?: string | null
-  displayName?: string | null
-  action: string
-  resource: string
-  dryRun: boolean
-  success: boolean
-  message: string
-  id?: string | null
-  idempotencyKey?: string | null
-  payload?: JsonRecord
-  permissionKind?: 'write' | 'destructive'
-}) {
-  const auditStatus = input.success
-    ? input.dryRun ? 'preview' : 'executed'
-    : input.message.toLowerCase().includes('falha') || input.message.toLowerCase().includes('erro')
-      ? 'error'
-      : 'blocked'
-  let auditId: string | null = null
-  let auditWarning: string | null = null
-
-  if (input.tenantId) {
-    try {
-      const audit = await createIntegrationPluginActionAudit({
-        tenantId: input.tenantId,
-        connectionId: input.connectionId || null,
-        domain: input.domain,
-        provider: input.provider,
-        tool: input.tool,
-        resource: input.resource,
-        action: input.action,
-        dryRun: input.dryRun,
-        permissionKind: input.permissionKind || null,
-        status: auditStatus,
-        success: input.success,
-        message: input.message,
-        targetId: input.id || null,
-        idempotencyKey: input.idempotencyKey || null,
-        payload: input.payload || {},
-        metadata: {
-          displayName: input.displayName || null,
-        },
-        actor: 'mcp',
-      })
-      auditId = audit.id
-    } catch (error) {
-      auditWarning = error instanceof Error ? error.message : 'Falha ao gravar audit MCP.'
-    }
-  }
-
-  const row = {
-    status_operacao: input.success ? (input.dryRun ? 'preview' : 'executado') : 'bloqueado',
-    domain: input.domain,
-    provider: input.provider,
-    connection_id: input.connectionId || null,
-    display_name: input.displayName || null,
-    recurso: input.resource,
-    acao: input.action,
-    dry_run: input.dryRun,
-    permissao: input.permissionKind || null,
-    mensagem: input.message,
-    id: input.id || null,
-    idempotency_key: input.idempotencyKey || null,
-    audit_id: auditId,
-  }
-  const rows = [row]
-  const structuredContent = {
-    success: input.success,
-    tool: input.tool,
-    action: input.action,
-    resource: input.resource,
-    title: `${input.tool} - ${input.resource}`,
-    dry_run: input.dryRun,
-    rows,
-    columns: inferColumns(rows),
-    count: rows.length,
-    result: {
-      ...row,
-      payload: input.payload || {},
-    },
-    ...(auditWarning ? { warnings: [`Audit MCP nao gravado: ${auditWarning}`] } : {}),
-  }
-  return {
-    content: [{ type: 'text', text: JSON.stringify(structuredContent, null, 2) }],
-    structuredContent,
-    isError: !input.success,
-  }
-}
-
-async function callConnectedProviderAction(params: {
-  args: unknown
-  context: CognitoMcpServerContext
-  domain: 'erp' | 'crm' | 'ecommerce'
-  tool: string
-  resources: readonly string[]
-  actionsByResource: Record<string, readonly string[]>
-}) {
-  const input = toObj(params.args)
-  const tenantId = getTenantId(params.context)
-  const provider = toOptionalText(input.provider)
-  const resource = toText(input.resource)
-  const action = toText(input.action).toLowerCase()
-  const payload = toObj(input.payload)
-  const id = toOptionalText(input.id ?? payload.id ?? payload.external_id)
-  const dryRun = input.dry_run !== false
-  const idempotencyKey = toOptionalText(input.idempotency_key)
-  const permissionKind = inferActionPermissionKind(action)
-
-  if (!params.resources.includes(resource)) {
-    return buildConnectedActionResponse({
-      tenantId,
-      tool: params.tool,
-      domain: params.domain,
-      provider,
-      action,
-      resource,
-      dryRun,
-      success: false,
-      message: `resource invalido. Permitidos: ${params.resources.join(', ')}.`,
-      id,
-      idempotencyKey,
-      payload,
-      permissionKind,
-    })
-  }
-
-  const allowedActions = params.actionsByResource[resource] || []
-  if (!allowedActions.includes(action)) {
-    return buildConnectedActionResponse({
-      tenantId,
-      tool: params.tool,
-      domain: params.domain,
-      provider,
-      action,
-      resource,
-      dryRun,
-      success: false,
-      message: `action ${action || '(vazia)'} nao permitida para ${resource}. Permitidas: ${allowedActions.join(', ')}.`,
-      id,
-      idempotencyKey,
-      payload,
-      permissionKind,
-    })
-  }
-
-  if (CONNECTED_ACTIONS_REQUIRING_ID.has(action) && !id) {
-    return buildConnectedActionResponse({
-      tenantId,
-      tool: params.tool,
-      domain: params.domain,
-      provider,
-      action,
-      resource,
-      dryRun,
-      success: false,
-      message: `id e obrigatorio para ${resource}/${action}.`,
-      id,
-      idempotencyKey,
-      payload,
-      permissionKind,
-    })
-  }
-
-  const connections = (await listIntegrationConnections({
-    tenantId,
-    domain: params.domain,
-    provider: provider || undefined,
-    limit: 2,
-  })).filter((connection) => connection.status === 'connected' || connection.status === 'warning' || connection.status === 'syncing')
-
-  if (!connections.length) {
-    return buildConnectedActionResponse({
-      tenantId,
-      tool: params.tool,
-      domain: params.domain,
-      provider,
-      action,
-      resource,
-      dryRun,
-      success: false,
-      message: provider
-        ? `Nenhuma conexao ativa encontrada para provider ${provider}.`
-        : `Nenhuma conexao ${params.domain.toUpperCase()} ativa encontrada.`,
-      id,
-      idempotencyKey,
-      payload,
-      permissionKind,
-    })
-  }
-  if (!provider && connections.length > 1) {
-    return buildConnectedActionResponse({
-      tenantId,
-      tool: params.tool,
-      domain: params.domain,
-      provider,
-      action,
-      resource,
-      dryRun,
-      success: false,
-      message: 'Mais de uma conexao ativa encontrada. Informe provider para escolher a API de destino.',
-      id,
-      idempotencyKey,
-      payload,
-      permissionKind,
-    })
-  }
-
-  const connection = connections[0]
-  const permissions = await getIntegrationPluginPermissions(connection.id, tenantId)
-  if (!permissions?.enabled) {
-    return buildConnectedActionResponse({
-      tenantId,
-      tool: params.tool,
-      domain: params.domain,
-      provider: connection.provider,
-      connectionId: connection.id,
-      displayName: connection.displayName,
-      action,
-      resource,
-      dryRun,
-      success: false,
-      message: `MCP nao esta habilitado para a conexao ${connection.displayName}.`,
-      id,
-      idempotencyKey,
-      payload,
-      permissionKind,
-    })
-  }
-
-  if (!dryRun) {
-    if (permissions.requireConfirmation && input.confirmed !== true) {
-      return buildConnectedActionResponse({
-        tenantId,
-        tool: params.tool,
-        domain: params.domain,
-        provider: connection.provider,
-        connectionId: connection.id,
-        displayName: connection.displayName,
-        action,
-        resource,
-        dryRun,
-        success: false,
-        message: 'Confirmacao explicita obrigatoria para executar esta acao no provider.',
-        id,
-        idempotencyKey,
-        payload,
-        permissionKind,
-      })
-    }
-
-    const apiAdapter = (params.domain === 'erp'
-      ? getErpApiAdapter(connection.provider)
-      : params.domain === 'crm'
-        ? getCrmApiAdapter(connection.provider)
-        : getEcommerceConnectedApiAdapter(connection.provider)) as ConnectedProviderApiAdapter<string, string> | undefined
-    const registeredAdapters = params.domain === 'erp'
-      ? listErpApiAdapterProviders()
-      : params.domain === 'crm'
-        ? listCrmApiAdapterProviders()
-        : listEcommerceConnectedApiAdapterProviders()
-
-    if (!apiAdapter) {
-      return buildConnectedActionResponse({
-        tenantId,
-        tool: params.tool,
-        domain: params.domain,
-        provider: connection.provider,
-        connectionId: connection.id,
-        displayName: connection.displayName,
-        action,
-        resource,
-        dryRun,
-        success: false,
-        message: `Provider ${connection.provider} ainda nao possui adapter API de escrita registrado. Registrados: ${registeredAdapters.join(', ') || 'nenhum'}.`,
-        id,
-        idempotencyKey,
-        payload,
-        permissionKind,
-      })
-    }
-
-    if (!apiAdapter.supportsAction(resource, action)) {
-      return buildConnectedActionResponse({
-        tenantId,
-        tool: params.tool,
-        domain: params.domain,
-        provider: connection.provider,
-        connectionId: connection.id,
-        displayName: connection.displayName,
-        action,
-        resource,
-        dryRun,
-        success: false,
-        message: `Provider ${connection.provider} nao suporta ${resource}/${action} via API.`,
-        id,
-        idempotencyKey,
-        payload,
-        permissionKind,
-      })
-    }
-
-    try {
-      const result = await apiAdapter.executeAction({
-        tenantId,
-        connection,
-        resource,
-        action,
-        id,
-        payload,
-        idempotencyKey,
-        dryRun,
-      })
-
-      return buildConnectedActionResponse({
-        tenantId,
-        tool: params.tool,
-        domain: params.domain,
-        provider: connection.provider,
-        connectionId: connection.id,
-        displayName: connection.displayName,
-        action,
-        resource,
-        dryRun,
-        success: result.ok,
-        message: result.message,
-        id: result.id || id,
-        idempotencyKey,
-        payload: {
-          ...payload,
-          ...(result.metadata || {}),
-          status: result.status || null,
-          previousStatus: result.previousStatus || null,
-          nextStatus: result.nextStatus || null,
-        },
-        permissionKind,
-      })
-    } catch (error) {
-      const message = error instanceof Error ? error.message : 'Falha ao executar acao no provider.'
-      if (isProviderReauthError(error)) {
-        await markConnectionPendingAuth({
-          tenantId,
-          connectionId: connection.id,
-          provider: connection.provider,
-          error,
-        }).catch(() => {})
-      }
-
-      return buildConnectedActionResponse({
-        tenantId,
-        tool: params.tool,
-        domain: params.domain,
-        provider: connection.provider,
-        connectionId: connection.id,
-        displayName: connection.displayName,
-        action,
-        resource,
-        dryRun,
-        success: false,
-        message,
-        id,
-        idempotencyKey,
-        payload,
-        permissionKind,
-      })
-    }
-  }
-
-  return buildConnectedActionResponse({
-    tenantId,
-    tool: params.tool,
-    domain: params.domain,
-    provider: connection.provider,
-    connectionId: connection.id,
-    displayName: connection.displayName,
-    action,
-    resource,
-    dryRun,
-    success: true,
-    message: 'Preview validado. Nenhuma chamada foi enviada ao provider.',
-    id,
-    idempotencyKey,
-    payload,
-    permissionKind,
-  })
-}
-
-async function callConnectedErpActions(args: unknown, context: CognitoMcpServerContext) {
-  return callConnectedProviderAction({
-    args,
-    context,
-    domain: 'erp',
-    tool: PLUGIN_DOMAIN_TOOL_NAMES.connectedErpActions,
-    resources: CONNECTED_ERP_ACTIONS_ALLOWED_RESOURCES,
-    actionsByResource: CONNECTED_ERP_ACTIONS_BY_RESOURCE,
-  })
-}
-
-async function callConnectedCrmActions(args: unknown, context: CognitoMcpServerContext) {
-  return callConnectedProviderAction({
-    args,
-    context,
-    domain: 'crm',
-    tool: PLUGIN_DOMAIN_TOOL_NAMES.connectedCrmActions,
-    resources: CONNECTED_CRM_ACTIONS_ALLOWED_RESOURCES,
-    actionsByResource: CONNECTED_CRM_ACTIONS_BY_RESOURCE,
-  })
-}
-
-async function callEcommerceConnectedActions(args: unknown, context: CognitoMcpServerContext) {
-  return callConnectedProviderAction({
-    args,
-    context,
-    domain: 'ecommerce',
-    tool: PLUGIN_DOMAIN_TOOL_NAMES.ecommerceConnectedActions,
-    resources: ECOMMERCE_CONNECTED_ACTIONS_ALLOWED_RESOURCES,
-    actionsByResource: ECOMMERCE_CONNECTED_ACTIONS_BY_RESOURCE,
-  })
-}
-
-async function callConnectedDomain(
-  execute: (args: unknown, context: CognitoMcpServerContext) => Promise<ConnectedDomainToolResult>,
-  args: unknown,
-  context: CognitoMcpServerContext,
-) {
-  const structuredContent = await execute(args, context)
-  return {
-    content: [{ type: 'text', text: JSON.stringify(structuredContent, null, 2) }],
-    structuredContent,
-    isError: structuredContent.success === false,
-  }
-}
-
 export function isPluginDomainTool(name: string) {
   return PLUGIN_DOMAIN_TOOL_NAME_SET.has(name)
 }
@@ -5268,26 +4030,10 @@ export async function callPluginDomainTool(
       return callCrud(args, context, PLUGIN_DOMAIN_TOOL_NAMES.erp, ERP_ALLOWED_RESOURCES)
     case PLUGIN_DOMAIN_TOOL_NAMES.erpAcoes:
       return callErpAcoes(args, context)
-    case PLUGIN_DOMAIN_TOOL_NAMES.connectedErpBigQuery:
-      return callConnectedErpBigQuery(args, context)
-    case PLUGIN_DOMAIN_TOOL_NAMES.connectedErpApi:
-      return callConnectedErpApi(args, context)
-    case PLUGIN_DOMAIN_TOOL_NAMES.connectedErp:
-      return callConnectedErp(args, context)
-    case PLUGIN_DOMAIN_TOOL_NAMES.connectedErpActions:
-      return callConnectedErpActions(args, context)
     case PLUGIN_DOMAIN_TOOL_NAMES.crm:
       return callCrud(args, context, PLUGIN_DOMAIN_TOOL_NAMES.crm, CRM_ALLOWED_RESOURCES)
-    case PLUGIN_DOMAIN_TOOL_NAMES.connectedCrm:
-      return callConnectedCrm(args, context)
-    case PLUGIN_DOMAIN_TOOL_NAMES.connectedCrmActions:
-      return callConnectedCrmActions(args, context)
     case PLUGIN_DOMAIN_TOOL_NAMES.ecommerce:
       return callEcommerce(args, context)
-    case PLUGIN_DOMAIN_TOOL_NAMES.ecommerceConnected:
-      return callConnectedDomain(executeEcommerceConnectedTool, args, context)
-    case PLUGIN_DOMAIN_TOOL_NAMES.ecommerceConnectedActions:
-      return callEcommerceConnectedActions(args, context)
     case PLUGIN_DOMAIN_TOOL_NAMES.sql:
       return callSqlExecution(args, context, PLUGIN_DOMAIN_TOOL_NAMES.sql)
     case PLUGIN_DOMAIN_TOOL_NAMES.sqlExecution:
@@ -5296,12 +4042,6 @@ export async function callPluginDomainTool(
       return callFinancialStatement(args, context)
     case PLUGIN_DOMAIN_TOOL_NAMES.marketing:
       return callMarketing(args, context)
-    case PLUGIN_DOMAIN_TOOL_NAMES.paidMedia:
-      return callConnectedDomain(executePaidMediaTool, args, context)
-    case PLUGIN_DOMAIN_TOOL_NAMES.social:
-      return callConnectedDomain(executeSocialTool, args, context)
-    case PLUGIN_DOMAIN_TOOL_NAMES.analytics:
-      return callConnectedDomain(executeAnalyticsTool, args, context)
     case PLUGIN_DOMAIN_TOOL_NAMES.dataCatalog:
       return callDataCatalog(args, context)
     default:

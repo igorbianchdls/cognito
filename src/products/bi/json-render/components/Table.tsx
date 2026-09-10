@@ -92,10 +92,10 @@ export default function JsonRenderTable({ element }: { element: any }) {
 
   const filtersSignature = JSON.stringify((data as AnyRecord)?.filters || {});
   const dataPathRaw = React.useMemo(() => {
-    if (!dataPath) return [];
+    if (!dataPath) return Array.isArray(props.data) ? props.data : [];
     const value = getByPath((data || {}) as AnyRecord, dataPath);
     return Array.isArray(value) ? value : [];
-  }, [data, dataPath]);
+  }, [data, dataPath, props.data]);
   const dataPathSignature = React.useMemo(() => JSON.stringify(dataPathRaw), [dataPathRaw]);
   const resolvedQueryFilters = React.useMemo(() => {
     const filters = applyPrimaryDateRange({ ...(dq.filters || {}) } as AnyRecord, data);

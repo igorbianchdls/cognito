@@ -1,5 +1,7 @@
 "use client";
 
+import { ErpMutation } from '@/products/erp/frontend/services/erpMutation';
+import { lineTotal, sumMoney, discountAmount } from '@/products/erp/shared/erpMoney';
 import {
   useCallback,
   useDeferredValue,
@@ -218,6 +220,7 @@ export function SalesWorkspacePage({
   const [categoryId, setCategoryId] = useState("");
   const [costCenterId, setCostCenterId] = useState("");
   const [items, setItems] = useState<SaleItem[]>([newItem()]);
+  const [discountType,setDiscountType] = useState<'valor'|'percentual'>('valor');
   const [discount, setDiscount] = useState("0");
   const [freight, setFreight] = useState("0");
   const [installments, setInstallments] = useState<Installment[]>([
@@ -271,21 +274,13 @@ export function SalesWorkspacePage({
     void loadData();
   }, [loadData]);
 
-  const subtotal = useMemo(
-    () =>
-      items.reduce(
-        (sum, item) =>
-          sum +
-          Math.max(
-            0,
-            money(item.quantidade) * money(item.valorUnitario) -
-              money(item.desconto),
-          ),
-        0,
-      ),
-    [items],
-  );
-  const total = Math.max(0, subtotal - money(discount) + money(freight));
+  const subtotal = useMemo(()=>sumMoney(items.map(item=>{
+    if (!money(item.quantidade)) return 0;
+    try { return lineTotal(item.quantidade,item.valorUnitario,item.desconto||0) } catch { return 0 }
+  })),[items]);
+  let discountError=''; let appliedDiscount=0;
+  try { appliedDiscount=discountAmount(subtotal,discount||0,discountType) } catch(e){ discountError=e instanceof Error?e.message:'Desconto inválido.' }
+  const total = Math.max(0,sumMoney([subtotal,-appliedDiscount,money(freight)]));
 
   useEffect(() => {
     setInstallments((current) => {
@@ -314,6 +309,7 @@ export function SalesWorkspacePage({
     setCostCenterId("");
     setItems([newItem()]);
     setDiscount("0");
+    setDiscountType("valor");
     setFreight("0");
     setBillingEmails("");
     setBillingWhatsapp("");
@@ -390,22 +386,14 @@ export function SalesWorkspacePage({
     );
   }
 
+  const [createOperation] = useState(()=>new ErpMutation(undefined,true));
   async function saveSale() {
+    if (saving) return;
+    if (discountError) {setError(discountError);return;}
     setSaving(true);
     setError(null);
     try {
-      await parseResponse(
-        await fetch(
-          editingSale ? `/api/erp/vendas/${editingSale.id}` : "/api/erp/vendas",
-          {
-            method: editingSale ? "PATCH" : "POST",
-            headers: {
-              "Content-Type": "application/json",
-              "Idempotency-Key": crypto.randomUUID(),
-            },
-            body: JSON.stringify({
-              expectedVersion: editingSale?.version,
-              values: {
+      const payload = {values: {
                 cliente_id: customerId,
                 vendedor_id: sellerId || null,
                 numero: number,
@@ -417,6 +405,7 @@ export function SalesWorkspacePage({
                 categoria_id: categoryId,
                 centro_custo_id: costCenterId,
                 desconto: discount,
+                tipo_desconto: discountType,
                 frete: freight,
                 itens: items.map((item) => ({
                   tipo: item.tipo,
@@ -439,11 +428,10 @@ export function SalesWorkspacePage({
                   .filter(Boolean),
                 cobranca_whatsapp: billingWhatsapp,
                 observacoes: notes,
-              },
-            }),
-          },
-        ),
-      );
+
+      }};
+      if (editingSale) await parseResponse(await fetch(`/api/erp/vendas/${editingSale.id}`,{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify({...payload,expectedVersion:editingSale.version})}));
+      else await createOperation.submit('/api/erp/vendas',payload);
       setEditorOpen(false);
       await loadData();
     } catch (saveError) {
@@ -476,7 +464,7 @@ export function SalesWorkspacePage({
             "Content-Type": "application/json",
             "Idempotency-Key": crypto.randomUUID(),
           },
-          body: JSON.stringify({ values: {} }),
+          body: JSON.stringify({ values: {expectedVersion:record.versao} }),
         }),
       );
       await loadData();
@@ -661,6 +649,7 @@ export function SalesWorkspacePage({
       setCategoryId(String(sale.categoria_id || ""));
       setCostCenterId(String(sale.centro_custo_id || ""));
       setDiscount(String(sale.desconto || 0));
+      setDiscountType(sale.tipo_desconto === "percentual" ? "percentual" : "valor");
       setFreight(String(sale.frete || 0));
       setNotes(String(sale.observacoes || ""));
       setBillingEmails(
@@ -1080,11 +1069,8 @@ export function SalesWorkspacePage({
                   item.tipo === "produto"
                     ? catalogs.products
                     : catalogs.services;
-                const itemTotal = Math.max(
-                  0,
-                  money(item.quantidade) * money(item.valorUnitario) -
-                    money(item.desconto),
-                );
+                let itemTotal=0;
+                try {if(money(item.quantidade)>0)itemTotal=lineTotal(item.quantidade,item.valorUnitario,item.desconto||0)} catch { /* Validation on save reports invalid items. */ }
                 return (
                   <div
                     key={item.rowId}
@@ -1188,9 +1174,11 @@ export function SalesWorkspacePage({
                   </div>
                 );
               })}
+              <label className="grid gap-1 text-sm">Tipo de desconto<select className="rounded border p-2" value={discountType} onChange={e=>setDiscountType(e.target.value as 'valor'|'percentual')}><option value="valor">Valor em reais</option><option value="percentual">Percentual</option></select></label>
+              {discountError && <p role="alert" className="text-sm text-red-700">{discountError}</p>}
               <div className="grid gap-4 md:grid-cols-4">
                 <FieldInput
-                  label="Desconto geral"
+                  label={discountType === "percentual" ? "Desconto geral (%)" : "Desconto geral (R$)"}
                   value={discount}
                   onChange={setDiscount}
                   type="number"

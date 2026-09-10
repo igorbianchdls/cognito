@@ -174,10 +174,6 @@ export default function DashboardChart({
     chartType: typeof type === 'string' ? type : 'bar',
     format: typeof props.format === 'string' ? props.format : 'number',
     height: props.height === undefined ? '' : String(props.height),
-    query:
-      props.dataQuery && typeof props.dataQuery === 'object' && typeof (props.dataQuery as AnyRecord).query === 'string'
-        ? String((props.dataQuery as AnyRecord).query)
-        : '',
   }))
   const defaults = {
     titleStyle: chartTheme.titleStyle,
@@ -192,7 +188,7 @@ export default function DashboardChart({
   } as AnyRecord
   const chartNode = renderChartByType(type, {
     ...element,
-    props: deepMerge(defaults, (element?.props || {}) as AnyRecord),
+    props: deepMerge(defaults, { ...props, ...(Array.isArray(props.data) && !props.dataQuery ? { dataQuery: { inlineRows: props.data } } : {}) }),
   })
 
   return (
