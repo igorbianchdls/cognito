@@ -283,7 +283,7 @@ function RemotionDownloadRoot() {
       <Composition
         component={ChatGptMobileFinancialDirectVideo}
         durationInFrames={CHATGPT_MOBILE_FINANCIAL_DIRECT_DURATION}
-        fps={60}
+        fps={90}
         height={1792}
         id="video-chatgpt-mobile-financial-direct"
         width={828}

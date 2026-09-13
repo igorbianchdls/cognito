@@ -2065,7 +2065,7 @@ const catalog: CatalogItem[] = [
     component: ChatGptMobileFinancialDirectVideo,
     description: 'Variação direta da conversa: prompt e mensagens aparecem prontos, enquanto os containers executam as operações.',
     duration: CHATGPT_MOBILE_FINANCIAL_DIRECT_DURATION,
-    fps: 60,
+    fps: 90,
     height: 1792,
     kind: 'Vídeos criados',
     label: 'ChatGPT Mobile — Operação Financeira Direta',
