@@ -275,7 +275,7 @@ function RemotionDownloadRoot() {
       <Composition
         component={ChatGptMobileFinancialOperationsVideo}
         durationInFrames={CHATGPT_MOBILE_FINANCIAL_OPERATIONS_DURATION}
-        fps={30}
+        fps={60}
         height={1792}
         id="video-chatgpt-mobile-financial-operations"
         width={828}
@@ -283,7 +283,7 @@ function RemotionDownloadRoot() {
       <Composition
         component={ChatGptMobileFinancialDirectVideo}
         durationInFrames={CHATGPT_MOBILE_FINANCIAL_DIRECT_DURATION}
-        fps={30}
+        fps={60}
         height={1792}
         id="video-chatgpt-mobile-financial-direct"
         width={828}
@@ -291,7 +291,7 @@ function RemotionDownloadRoot() {
       <Composition
         component={ChatGptMobileFinancialScrollVideo}
         durationInFrames={CHATGPT_MOBILE_FINANCIAL_SCROLL_DURATION}
-        fps={30}
+        fps={60}
         height={1792}
         id="video-chatgpt-mobile-financial-scroll"
         width={828}
@@ -299,7 +299,7 @@ function RemotionDownloadRoot() {
       <Composition
         component={ChatGptMobileFinancialScrollItemsVideo}
         durationInFrames={CHATGPT_MOBILE_FINANCIAL_SCROLL_ITEMS_DURATION}
-        fps={30}
+        fps={60}
         height={1792}
         id="video-chatgpt-mobile-financial-scroll-items"
         width={828}

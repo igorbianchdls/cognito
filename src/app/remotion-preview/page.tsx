@@ -239,6 +239,7 @@ type CatalogItem = {
   code: string
   component: ComponentType
   description: string
+  fps?: number
   height?: number
   kind: CatalogKind
   label: string
@@ -2051,6 +2052,7 @@ const catalog: CatalogItem[] = [
     component: ChatGptMobileFinancialOperationsVideo,
     description: 'Conversa mobile completa com mensagens da IA e operações financeiras animadas pela Otto.',
     duration: CHATGPT_MOBILE_FINANCIAL_OPERATIONS_DURATION,
+    fps: 60,
     height: 1792,
     kind: 'Vídeos criados',
     label: 'ChatGPT Mobile — Operação Financeira Otto',
@@ -2063,6 +2065,7 @@ const catalog: CatalogItem[] = [
     component: ChatGptMobileFinancialDirectVideo,
     description: 'Variação direta da conversa: prompt e mensagens aparecem prontos, enquanto os containers executam as operações.',
     duration: CHATGPT_MOBILE_FINANCIAL_DIRECT_DURATION,
+    fps: 60,
     height: 1792,
     kind: 'Vídeos criados',
     label: 'ChatGPT Mobile — Operação Financeira Direta',
@@ -2075,6 +2078,7 @@ const catalog: CatalogItem[] = [
     component: ChatGptMobileFinancialScrollVideo,
     description: 'Conversa financeira concluída, apresentada somente por uma rolagem vertical suave.',
     duration: CHATGPT_MOBILE_FINANCIAL_SCROLL_DURATION,
+    fps: 60,
     height: 1792,
     kind: 'Vídeos criados',
     label: 'ChatGPT Mobile — Conversa Pronta em Rolagem',
@@ -2087,6 +2091,7 @@ const catalog: CatalogItem[] = [
     component: ChatGptMobileFinancialScrollItemsVideo,
     description: 'Conversa pronta com rolagem suave e animação restrita aos itens internos dos containers.',
     duration: CHATGPT_MOBILE_FINANCIAL_SCROLL_ITEMS_DURATION,
+    fps: 60,
     height: 1792,
     kind: 'Vídeos criados',
     label: 'ChatGPT Mobile — Rolagem com Itens Animados',
@@ -4246,7 +4251,7 @@ export default function RemotionPreviewPage() {
               compositionWidth={width}
               controls
               durationInFrames={duration}
-              fps={30}
+              fps={selectedItem.fps ?? 30}
               style={{
                 aspectRatio,
                 background: theme.background,

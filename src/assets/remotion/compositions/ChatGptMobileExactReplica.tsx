@@ -94,9 +94,9 @@ function StaticUserBubble({start, text, top}: {start: number; text: string; top:
   </div>
 }
 
-function TypedAssistantText({end, instant = false, start, text, top}: {end?: number; instant?: boolean; start: number; text: string; top: number}) {
+function TypedAssistantText({end, instant = false, speed = 5, start, text, top}: {end?: number; instant?: boolean; speed?: number; start: number; text: string; top: number}) {
   const frame = useCurrentFrame()
-  const visibleCharacters = frame < start ? 0 : instant ? text.length : Math.max(0, Math.min(text.length, Math.floor((frame - start + 1) * 5)))
+  const visibleCharacters = frame < start ? 0 : instant ? text.length : Math.max(0, Math.min(text.length, Math.floor((frame - start + 1) * speed)))
   const opacity = end === undefined ? 1 : interpolate(frame, [end, end + 8], [1, 0], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp'})
 
   return <div style={{opacity}}><AssistantText top={top}>{text.slice(0, visibleCharacters)}</AssistantText></div>
@@ -213,10 +213,10 @@ function FinancialConversationTrack({children}: {children: ReactNode}) {
     fps,
     frame,
   })
-  const invoiceScroll = -1020 * scrollStep(340)
-  const receivablesScroll = -1230 * scrollStep(595)
-  const collectionScroll = -1080 * scrollStep(815)
-  const summaryScroll = -780 * scrollStep(1008)
+  const invoiceScroll = -1170 * scrollStep(340)
+  const receivablesScroll = -1335 * scrollStep(595)
+  const collectionScroll = -1175 * scrollStep(815)
+  const summaryScroll = -760 * scrollStep(1008)
   const scrollY = invoiceScroll + receivablesScroll + collectionScroll + summaryScroll
 
   return <AbsoluteFill style={{clipPath: 'inset(230px 0 188px 0)', zIndex: 1}}>
@@ -243,7 +243,7 @@ function BasicConversationTrack({children}: {children: ReactNode}) {
 
 function StaticScrollTrack({children}: {children: ReactNode}) {
   const frame = useCurrentFrame()
-  const scrollY = interpolate(frame, [0, 50, 1130, 1179], [0, 0, -4110, -4110], {
+  const scrollY = interpolate(frame, [0, 50, 1130, 1179], [0, 0, -4440, -4440], {
     easing: Easing.inOut(Easing.cubic),
     extrapolateLeft: 'clamp',
     extrapolateRight: 'clamp',
@@ -254,7 +254,7 @@ function StaticScrollTrack({children}: {children: ReactNode}) {
 
 function AnimatedItemsScrollTrack({children}: {children: ReactNode}) {
   const frame = useCurrentFrame()
-  const scrollY = interpolate(frame, [0, 50, 1130, 1179], [0, 0, -4110, -4110], {
+  const scrollY = interpolate(frame, [0, 50, 1130, 1179], [0, 0, -4440, -4440], {
     easing: Easing.inOut(Easing.cubic),
     extrapolateLeft: 'clamp',
     extrapolateRight: 'clamp',
@@ -316,7 +316,7 @@ function BasicConversation() {
   </>
 }
 
-function FinancialConversation({instantMessages = false, staticContainers = false}: {instantMessages?: boolean; staticContainers?: boolean}) {
+function FinancialConversation({instantMessages = false, messageSpeed = 5, staticContainers = false}: {instantMessages?: boolean; messageSpeed?: number; staticContainers?: boolean}) {
   return <>
     <StaticUserBubble
       start={0}
@@ -326,6 +326,7 @@ function FinancialConversation({instantMessages = false, staticContainers = fals
 
     <TypedAssistantText
       instant={instantMessages}
+      speed={messageSpeed}
       start={96}
       text="Claro. Vou começar identificando e validando as vendas realizadas hoje."
       top={520}
@@ -339,22 +340,24 @@ function FinancialConversation({instantMessages = false, staticContainers = fals
       staticCard={staticContainers}
       subtitle="Conferindo clientes, valores e dados fiscais"
       title="Vendas de hoje"
-      top={625}
+      top={680}
     />
 
     <TypedAssistantText
       instant={instantMessages}
+      speed={messageSpeed}
       start={300}
       text={'Encontrei 8 vendas e confirmei os dados necessários para emissão.\n\nAgora vou preencher, emitir e enviar as notas fiscais para cada cliente.'}
-      top={1585}
+      top={1675}
     />
-    <OttoInvoiceEmissionMobilePanel start={345} staticCard={staticContainers} top={1820} />
+    <OttoInvoiceEmissionMobilePanel start={345} staticCard={staticContainers} top={1970} />
 
     <TypedAssistantText
       instant={instantMessages}
+      speed={messageSpeed}
       start={570}
       text={'As 8 notas foram emitidas e enviadas aos clientes.\n\nAgora vou criar os lançamentos correspondentes no contas a receber.'}
-      top={2770}
+      top={2960}
     />
     <MobileOperationPanel
       accent="#16875f"
@@ -365,14 +368,15 @@ function FinancialConversation({instantMessages = false, staticContainers = fals
       staticCard={staticContainers}
       subtitle="Criando os recebimentos vinculados às notas"
       title="Atualizando contas a receber"
-      top={2995}
+      top={3250}
     />
 
     <TypedAssistantText
       instant={instantMessages}
+      speed={messageSpeed}
       start={790}
       text={'O contas a receber foi atualizado com os 8 novos lançamentos.\n\nPor fim, vou identificar os clientes em atraso e enviar as cobranças.'}
-      top={3960}
+      top={4245}
     />
     <MobileOperationPanel
       accent="#8055c7"
@@ -383,16 +387,17 @@ function FinancialConversation({instantMessages = false, staticContainers = fals
       staticCard={staticContainers}
       subtitle="Enviando lembretes por WhatsApp e e-mail"
       title="Cobrando clientes em atraso"
-      top={4185}
+      top={4535}
     />
 
     <TypedAssistantText
       instant={instantMessages}
+      speed={messageSpeed}
       start={1010}
       text={'Concluído. Enviei 4 cobranças por WhatsApp e e-mail.\n\nResumo: 8 vendas processadas, 8 notas emitidas e enviadas, 8 lançamentos atualizados e 4 clientes cobrados.'}
-      top={4790}
+      top={5200}
     />
-    <Reveal start={1065}><ActionRow top={5200} /></Reveal>
+    <Reveal start={1065}><ActionRow top={5530} /></Reveal>
   </>
 }
 
@@ -446,7 +451,7 @@ function ChatGptMobileExperience({variant}: {variant: ChatGptMobileExperienceVar
 
     {variant === 'basic' ? <BasicConversationTrack><BasicConversation /></BasicConversationTrack> : null}
     {variant === 'financial' ? <FinancialConversationTrack><FinancialConversation /></FinancialConversationTrack> : null}
-    {variant === 'direct' ? <FinancialConversationTrack><FinancialConversation instantMessages /></FinancialConversationTrack> : null}
+    {variant === 'direct' ? <FinancialConversationTrack><FinancialConversation messageSpeed={9} /></FinancialConversationTrack> : null}
     {variant === 'scroll' ? <StaticScrollTrack><FinancialConversation instantMessages /></StaticScrollTrack> : null}
     {variant === 'scroll-items' ? <AnimatedItemsScrollTrack><FinancialConversation instantMessages staticContainers /></AnimatedItemsScrollTrack> : null}
 
