@@ -322,10 +322,14 @@ function BasicConversation() {
   </>
 }
 
-function FinancialConversation({collectionRows = overdueCustomers, instantMessages = false, itemCount = 8, messageSpeed = 5, staticContainers = false}: {collectionRows?: OperationRow[]; instantMessages?: boolean; itemCount?: number; messageSpeed?: number; staticContainers?: boolean}) {
+function FinancialConversation({collectionRows = overdueCustomers, compactSpacing = false, instantMessages = false, itemCount = 8, messageSpeed = 5, staticContainers = false}: {collectionRows?: OperationRow[]; compactSpacing?: boolean; instantMessages?: boolean; itemCount?: number; messageSpeed?: number; staticContainers?: boolean}) {
   const salesRows = todaySales.slice(0, itemCount)
   const receivableRows = receivables.slice(0, itemCount)
   const launchedTotal = itemCount === 6 ? 'R$ 8.250,00' : 'R$ 10.780,00'
+  const salesTop = compactSpacing ? 640 : 680
+  const invoiceTop = compactSpacing ? 1885 : 1970
+  const receivablesTop = compactSpacing ? 3175 : 3250
+  const collectionTop = compactSpacing ? 4460 : 4535
 
   return <>
     <StaticUserBubble
@@ -350,7 +354,7 @@ function FinancialConversation({collectionRows = overdueCustomers, instantMessag
       staticCard={staticContainers}
       subtitle="Conferindo clientes, valores e dados fiscais"
       title="Vendas de hoje"
-      top={680}
+      top={salesTop}
     />
 
     <TypedAssistantText
@@ -360,7 +364,7 @@ function FinancialConversation({collectionRows = overdueCustomers, instantMessag
       text={`Encontrei ${itemCount} vendas e confirmei os dados necessários para emissão.\n\nAgora vou preencher, emitir e enviar as notas fiscais para cada cliente.`}
       top={1675}
     />
-    <OttoInvoiceEmissionMobilePanel itemCount={itemCount} start={345} staticCard={staticContainers} top={1970} />
+    <OttoInvoiceEmissionMobilePanel itemCount={itemCount} start={345} staticCard={staticContainers} top={invoiceTop} />
 
     <TypedAssistantText
       instant={instantMessages}
@@ -378,7 +382,7 @@ function FinancialConversation({collectionRows = overdueCustomers, instantMessag
       staticCard={staticContainers}
       subtitle="Criando os recebimentos vinculados às notas"
       title="Atualizando contas a receber"
-      top={3250}
+      top={receivablesTop}
     />
 
     <TypedAssistantText
@@ -397,7 +401,7 @@ function FinancialConversation({collectionRows = overdueCustomers, instantMessag
       staticCard={staticContainers}
       subtitle="Enviando lembretes por WhatsApp e e-mail"
       title="Cobrando clientes em atraso"
-      top={4535}
+      top={collectionTop}
     />
 
     <TypedAssistantText
@@ -461,7 +465,7 @@ function ChatGptMobileExperience({variant}: {variant: ChatGptMobileExperienceVar
 
     {variant === 'basic' ? <BasicConversationTrack><BasicConversation /></BasicConversationTrack> : null}
     {variant === 'financial' ? <FinancialConversationTrack><FinancialConversation /></FinancialConversationTrack> : null}
-    {variant === 'direct' ? <FinancialConversationTrack><FinancialConversation collectionRows={directOverdueCustomers} itemCount={6} messageSpeed={9} /></FinancialConversationTrack> : null}
+    {variant === 'direct' ? <FinancialConversationTrack><FinancialConversation collectionRows={directOverdueCustomers} compactSpacing itemCount={6} messageSpeed={9} /></FinancialConversationTrack> : null}
     {variant === 'scroll' ? <StaticScrollTrack><FinancialConversation instantMessages /></StaticScrollTrack> : null}
     {variant === 'scroll-items' ? <AnimatedItemsScrollTrack><FinancialConversation instantMessages staticContainers /></AnimatedItemsScrollTrack> : null}
 
