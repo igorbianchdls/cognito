@@ -80,11 +80,13 @@ import {
   CHATGPT_MOBILE_EXACT_REPLICA_DURATION,
   CHATGPT_MOBILE_FINANCIAL_DIRECT_DURATION,
   CHATGPT_MOBILE_FINANCIAL_OPERATIONS_DURATION,
+  CHATGPT_MOBILE_SALES_COLLECTIONS_DURATION,
   CHATGPT_MOBILE_FINANCIAL_SCROLL_DURATION,
   CHATGPT_MOBILE_FINANCIAL_SCROLL_ITEMS_DURATION,
   ChatGptMobileExactReplica,
   ChatGptMobileFinancialDirectVideo,
   ChatGptMobileFinancialOperationsVideo,
+  ChatGptMobileSalesCollectionsVideo,
   ChatGptMobileFinancialScrollVideo,
   ChatGptMobileFinancialScrollItemsVideo,
 } from './compositions/ChatGptMobileExactReplica'
@@ -286,6 +288,14 @@ function RemotionDownloadRoot() {
         fps={90}
         height={1792}
         id="video-chatgpt-mobile-financial-direct"
+        width={828}
+      />
+      <Composition
+        component={ChatGptMobileSalesCollectionsVideo}
+        durationInFrames={CHATGPT_MOBILE_SALES_COLLECTIONS_DURATION}
+        fps={90}
+        height={1792}
+        id="video-chatgpt-mobile-sales-collections"
         width={828}
       />
       <Composition

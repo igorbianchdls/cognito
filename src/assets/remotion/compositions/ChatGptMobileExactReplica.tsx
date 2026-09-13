@@ -8,6 +8,7 @@ import {IOS_REMOTION_DISPLAY_FONT_STACK, IOS_REMOTION_FONT_STACK, loadSfProFonts
 export const CHATGPT_MOBILE_EXACT_REPLICA_DURATION = 1120
 export const CHATGPT_MOBILE_FINANCIAL_OPERATIONS_DURATION = 1180
 export const CHATGPT_MOBILE_FINANCIAL_DIRECT_DURATION = 1180
+export const CHATGPT_MOBILE_SALES_COLLECTIONS_DURATION = 1180
 export const CHATGPT_MOBILE_FINANCIAL_SCROLL_DURATION = 975
 export const CHATGPT_MOBILE_FINANCIAL_SCROLL_ITEMS_DURATION = 1180
 
@@ -89,7 +90,7 @@ function StaticUserBubble({start, text, top}: {start: number; text: string; top:
   const frame = useCurrentFrame()
   const visible = frame >= start
 
-  return <div style={{background: BUBBLE, borderRadius: 38, boxSizing: 'border-box', fontSize: 31, fontWeight: 400, letterSpacing: '-0.01em', lineHeight: 1.36, minHeight: 230, opacity: visible ? 1 : 0, padding: '25px 30px', position: 'absolute', right: 32, top, width: 700}}>
+  return <div style={{background: BUBBLE, borderRadius: 38, boxSizing: 'border-box', fontSize: 31, fontWeight: 400, letterSpacing: '-0.01em', lineHeight: 1.36, opacity: visible ? 1 : 0, padding: '25px 30px 18px', position: 'absolute', right: 32, top, width: 700}}>
     {text}
   </div>
 }
@@ -170,6 +171,11 @@ const directOverdueCustomers: OperationRow[] = [
   {detail: '2 dias em atraso · WhatsApp', initials: 'CH', name: 'Casa Horizonte', value: 'R$ 920,00'},
   {detail: '1 dia em atraso · E-mail', initials: 'PC', name: 'Ponto Certo Comércio', value: 'R$ 1.150,00'},
 ]
+
+const invoiceDeliveries: OperationRow[] = todaySales.slice(0, 6).map((sale, index) => ({
+  ...sale,
+  detail: index % 2 === 0 ? 'Nota enviada por WhatsApp' : 'Nota enviada por e-mail',
+}))
 
 const avatarColors = ['#3977c3', '#8c54b8', '#2f8d68', '#d16b45', '#5678a8', '#b55c82', '#477e91', '#7b6bba']
 
@@ -326,15 +332,15 @@ function FinancialConversation({collectionRows = overdueCustomers, compactSpacin
   const salesRows = todaySales.slice(0, itemCount)
   const receivableRows = receivables.slice(0, itemCount)
   const launchedTotal = itemCount === 6 ? 'R$ 8.250,00' : 'R$ 10.780,00'
-  const salesTop = compactSpacing ? 640 : 680
-  const firstFollowupTop = compactSpacing ? 1446 : 1675
-  const invoiceTop = compactSpacing ? 1712 : 1970
-  const secondFollowupTop = compactSpacing ? 2499 : 2960
-  const receivablesTop = compactSpacing ? 2765 : 3250
-  const thirdFollowupTop = compactSpacing ? 3571 : 4245
-  const collectionTop = compactSpacing ? 3837 : 4535
-  const summaryTop = compactSpacing ? 4643 : 5200
-  const actionsTop = compactSpacing ? 4997 : 5530
+  const salesTop = compactSpacing ? 585 : 625
+  const firstFollowupTop = compactSpacing ? 1391 : 1620
+  const invoiceTop = compactSpacing ? 1657 : 1915
+  const secondFollowupTop = compactSpacing ? 2444 : 2905
+  const receivablesTop = compactSpacing ? 2710 : 3195
+  const thirdFollowupTop = compactSpacing ? 3516 : 4190
+  const collectionTop = compactSpacing ? 3782 : 4480
+  const summaryTop = compactSpacing ? 4588 : 5145
+  const actionsTop = compactSpacing ? 4942 : 5475
 
   return <>
     <StaticUserBubble
@@ -348,7 +354,7 @@ function FinancialConversation({collectionRows = overdueCustomers, compactSpacin
       speed={messageSpeed}
       start={96}
       text="Claro. Vou começar identificando e validando as vendas realizadas hoje."
-      top={520}
+      top={465}
     />
     <MobileOperationPanel
       accent="#2878d0"
@@ -420,7 +426,81 @@ function FinancialConversation({collectionRows = overdueCustomers, compactSpacin
   </>
 }
 
-type ChatGptMobileExperienceVariant = 'basic' | 'financial' | 'direct' | 'scroll' | 'scroll-items'
+function SalesCollectionsConversation() {
+  const salesRows = todaySales.slice(0, 6)
+
+  return <>
+    <StaticUserBubble
+      start={0}
+      text="Chat, registra as vendas de hoje, registra as notas, manda pros clientes e cobra quem nao pagou."
+      top={245}
+    />
+
+    <TypedAssistantText speed={9} start={96} text="Certo. Vou localizar e registrar as vendas realizadas hoje." top={465} />
+    <MobileOperationPanel
+      accent="#2878d0"
+      doneLabel="6 vendas registradas"
+      icon={<SearchCheck size={20} strokeWidth={1.8} />}
+      rows={salesRows}
+      start={135}
+      subtitle="Conferindo clientes, valores e dados das vendas"
+      title="Registrando vendas de hoje"
+      top={585}
+    />
+
+    <TypedAssistantText
+      speed={9}
+      start={300}
+      text={'Registrei as 6 vendas realizadas hoje.\n\nAgora vou emitir e registrar as notas fiscais correspondentes.'}
+      top={1391}
+    />
+    <OttoInvoiceEmissionMobilePanel itemCount={6} start={345} top={1657} />
+
+    <TypedAssistantText
+      speed={9}
+      start={570}
+      text={'As 6 notas foram emitidas e registradas.\n\nAgora vou enviá-las para cada cliente por WhatsApp ou e-mail.'}
+      top={2444}
+    />
+    <MobileOperationPanel
+      accent="#16875f"
+      doneLabel="6 notas enviadas"
+      icon={<Send size={20} strokeWidth={1.8} />}
+      rows={invoiceDeliveries}
+      start={625}
+      subtitle="Entregando cada documento ao cliente correto"
+      title="Enviando notas aos clientes"
+      top={2710}
+    />
+
+    <TypedAssistantText
+      speed={9}
+      start={790}
+      text={'As 6 notas já foram enviadas aos clientes.\n\nAgora vou identificar quem ainda não pagou e enviar as cobranças.'}
+      top={3516}
+    />
+    <MobileOperationPanel
+      accent="#8055c7"
+      doneLabel="6 cobranças enviadas"
+      icon={<Send size={20} strokeWidth={1.8} />}
+      rows={directOverdueCustomers}
+      start={845}
+      subtitle="Enviando lembretes por WhatsApp e e-mail"
+      title="Cobrando pagamentos pendentes"
+      top={3782}
+    />
+
+    <TypedAssistantText
+      speed={9}
+      start={1010}
+      text={'Concluído. Registrei 6 vendas e 6 notas, enviei os documentos aos clientes e cobrei 6 pagamentos pendentes.'}
+      top={4588}
+    />
+    <Reveal start={1065}><ActionRow top={4854} /></Reveal>
+  </>
+}
+
+type ChatGptMobileExperienceVariant = 'basic' | 'financial' | 'direct' | 'sales-collections' | 'scroll' | 'scroll-items'
 
 function ChatGptMobileExperience({variant}: {variant: ChatGptMobileExperienceVariant}) {
   const [fontReady, setFontReady] = useState(false)
@@ -471,6 +551,7 @@ function ChatGptMobileExperience({variant}: {variant: ChatGptMobileExperienceVar
     {variant === 'basic' ? <BasicConversationTrack><BasicConversation /></BasicConversationTrack> : null}
     {variant === 'financial' ? <FinancialConversationTrack><FinancialConversation /></FinancialConversationTrack> : null}
     {variant === 'direct' ? <FinancialConversationTrack compact><FinancialConversation collectionRows={directOverdueCustomers} compactSpacing itemCount={6} messageSpeed={9} /></FinancialConversationTrack> : null}
+    {variant === 'sales-collections' ? <FinancialConversationTrack compact><SalesCollectionsConversation /></FinancialConversationTrack> : null}
     {variant === 'scroll' ? <StaticScrollTrack><FinancialConversation instantMessages /></StaticScrollTrack> : null}
     {variant === 'scroll-items' ? <AnimatedItemsScrollTrack><FinancialConversation instantMessages staticContainers /></AnimatedItemsScrollTrack> : null}
 
@@ -496,6 +577,10 @@ export function ChatGptMobileFinancialOperationsVideo() {
 
 export function ChatGptMobileFinancialDirectVideo() {
   return <ChatGptMobileExperience variant="direct" />
+}
+
+export function ChatGptMobileSalesCollectionsVideo() {
+  return <ChatGptMobileExperience variant="sales-collections" />
 }
 
 export function ChatGptMobileFinancialScrollVideo() {
