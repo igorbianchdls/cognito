@@ -1,4 +1,5 @@
 import { runQuery, withTransaction, type SQLClient } from "@/lib/postgres";
+import { assertErpPeriodOpen } from './erpPeriodRepository';
 import {
   contractSchema,
   assertCommercialReplay,
@@ -342,6 +343,7 @@ export async function generateContractSales(input: Actor & { until?: string }) {
       );
       const total = sumMoney(items.rows.map((i) => String(i.total)));
       const due = contractDueDate(start, end, v);
+      await assertErpPeriodOpen(client,{tenantId:input.tenantId,module:'vendas',date:start});
       const sale = await client.query(
         `INSERT INTO erp.vendas(tenant_id,cliente_id,numero,data_venda,data_competencia,status,situacao,origem,categoria_id,centro_custo_id,conta_financeira_id,metodo_pagamento_id,subtotal,total,condicao_pagamento,chave_idempotencia,criado_por,atualizado_por)
         VALUES($1,$2,$3,$4,$4,'rascunho','em_aberto','contrato',$5,$6,$7,$8,$9,$9,$10::jsonb,$11,$12,$12) RETURNING id`,

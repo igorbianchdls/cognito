@@ -59,7 +59,8 @@ export async function POST(request: Request, context: { params: Promise<{ resour
   if (!tenant) return erpFailure('Acesso negado.', 403)
   try {
     const body = await parseErpBody(request,erpCreateEnvelopeSchema)
-    const idempotencyKey = readErpIdempotencyKey(request.headers,resource==='contratos') || `${resource}:${Date.now()}`
+    const requiresDurableOperation = resource === 'contratos' || resource === 'transferencias-financeiras' || resource === 'conciliar-transacao'
+    const idempotencyKey = readErpIdempotencyKey(request.headers, requiresDurableOperation) || `${resource}:${Date.now()}`
     const record = ERP_STOCK_RESOURCES.has(resource)
       ? await createStockOperation({ tenantId: tenant.tenantId, actorId: tenant.sharedUserId, resource, values: body.values || {}, idempotencyKey })
       : await createManagementOperation({ tenantId: tenant.tenantId, actorId: tenant.sharedUserId, resource, values: body.values || {}, idempotencyKey })

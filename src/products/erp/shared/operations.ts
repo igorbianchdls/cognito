@@ -156,15 +156,6 @@ export const ERP_OPERATION_CONFIGS: Record<string, ErpOperationConfig> = {
       { key: 'dia_vencimento', label: 'Dia de vencimento', type: 'number' },
     ],
   },
-  'fluxo-de-caixa': {
-    moduleId: 'fluxo-de-caixa', resource: 'fluxo-de-caixa', title: 'Fluxo de caixa',
-    description: 'Entradas, saidas e variacao diaria realizadas por conta financeira.',
-    columns: [
-      { key: 'data', label: 'Data', kind: 'date' }, { key: 'conta', label: 'Conta' },
-      { key: 'entradas', label: 'Entradas', kind: 'currency' }, { key: 'saidas', label: 'Saidas', kind: 'currency' },
-      { key: 'saldo', label: 'Saldo do dia', kind: 'currency' },
-    ],
-  },
   'conciliacao-bancaria': {
     moduleId: 'conciliacao-bancaria', resource: 'conciliacao-bancaria', title: 'Conciliacao bancaria',
     description: 'Transacoes do extrato comparadas com recebimentos e pagamentos do ERP.', primaryAction: 'Adicionar transacao',
@@ -201,37 +192,14 @@ export const ERP_OPERATION_CONFIGS: Record<string, ErpOperationConfig> = {
       { key: 'descricao', label: 'Descricao', type: 'text' },
     ],
   },
-  dre: {
-    moduleId: 'dre', resource: 'dre', title: 'DRE gerencial',
-    description: 'Receitas e despesas por competencia e categoria gerencial.',
-    columns: [
-      { key: 'competencia', label: 'Competencia', kind: 'date' }, { key: 'categoria', label: 'Categoria' },
-      { key: 'tipo', label: 'Tipo', kind: 'status' }, { key: 'valor', label: 'Valor', kind: 'currency' },
-    ],
-  },
-  'aging-receber': {
-    moduleId: 'aging-receber', resource: 'aging-receber', title: 'Aging de recebimentos',
-    description: 'Titulos a receber classificados por faixa de atraso.',
-    columns: [
-      { key: 'cliente', label: 'Cliente' }, { key: 'vencimento', label: 'Vencimento', kind: 'date' },
-      { key: 'saldo', label: 'Saldo', kind: 'currency' }, { key: 'dias_atraso', label: 'Dias', kind: 'number' }, { key: 'status', label: 'Faixa', kind: 'status' },
-    ],
-  },
-  'aging-pagar': {
-    moduleId: 'aging-pagar', resource: 'aging-pagar', title: 'Aging de pagamentos',
-    description: 'Titulos a pagar classificados por faixa de atraso.',
-    columns: [
-      { key: 'fornecedor', label: 'Fornecedor' }, { key: 'vencimento', label: 'Vencimento', kind: 'date' },
-      { key: 'saldo', label: 'Saldo', kind: 'currency' }, { key: 'dias_atraso', label: 'Dias', kind: 'number' }, { key: 'status', label: 'Faixa', kind: 'status' },
-    ],
-  },
   'giro-estoque': {
-    moduleId: 'giro-estoque', resource: 'giro-estoque', title: 'Giro de estoque',
-    description: 'Saidas e giro dos ultimos 90 dias por produto e local.',
+    moduleId: 'giro-estoque', resource: 'giro-estoque', title: 'Saídas e estoque atual',
+    description: 'Movimentos negativos dos últimos 90 dias divididos pelo saldo atual. Inclui vendas, transferências, ajustes e estornos de entradas.',
     columns: [
       { key: 'produto', label: 'Produto' }, { key: 'local', label: 'Local' },
       { key: 'quantidade_fisica', label: 'Saldo', kind: 'number' }, { key: 'saidas_90_dias', label: 'Saidas em 90 dias', kind: 'number' },
-      { key: 'giro_90_dias', label: 'Giro', kind: 'number' },
+      { key: 'giro_90_dias', label: 'Saídas / saldo atual', kind: 'number' },
+      { key: 'referencia', label: 'Base de cálculo' },
     ],
   },
 }

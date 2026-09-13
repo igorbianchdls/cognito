@@ -166,7 +166,7 @@ async function main() {
 
   const dashboardToolsSource = await readFile(path.join(root, 'src/products/plugin/server/dashboardTools.ts'), 'utf8')
   const dashboardManifestSource = await readFile(
-    path.join(root, 'src/products/artifacts/dashboard/language/dashboardLanguageManifest.ts'),
+    path.join(root, 'src/products/plugin/server/artifactRuntime/dashboardLanguageManifest.ts'),
     'utf8',
   )
   assert(dashboardManifestSource.includes("DASHBOARD_DSL_VERSION = 'dashboard.v1'"), 'dashboard DSL version missing')

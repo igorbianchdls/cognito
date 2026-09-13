@@ -30,8 +30,6 @@ import {
 
 type ReportId =
   | "dre-caixa"
-  | "fluxo-diario"
-  | "fluxo-mensal"
   | "posicao-financeira"
   | "vendas-clientes"
   | "vendas-vendedores"
@@ -50,28 +48,12 @@ type ReportDefinition = {
 
 const reports: Record<ReportId, ReportDefinition> = {
   "dre-caixa": {
-    title: "DRE por caixa",
-    description: "Receitas e despesas conforme o momento do pagamento.",
+    title: "Resultado dos pagamentos por caixa",
+    description: "Recebimentos e pagamentos por data, líquidos de taxas e com estornos na data da reversão. Categorias distribuídas pelos rateios. Exclui adiantamentos, transferências e aplicações de crédito.",
     currency: ["valor"],
     numeric: [],
     chartLabel: "categoria",
     chartValue: "valor",
-  },
-  "fluxo-diario": {
-    title: "Fluxo de caixa diario",
-    description: "Entradas, saidas e saldo realizado por dia e conta.",
-    currency: ["entradas", "saidas", "saldo"],
-    numeric: [],
-    chartLabel: "data",
-    chartValue: "saldo",
-  },
-  "fluxo-mensal": {
-    title: "Fluxo de caixa mensal",
-    description: "Entradas, saidas e resultado consolidado por mes.",
-    currency: ["entradas", "saidas", "saldo"],
-    numeric: [],
-    chartLabel: "competencia",
-    chartValue: "saldo",
   },
   "posicao-financeira": {
     title: "Posicao financeira",
@@ -115,7 +97,7 @@ const reports: Record<ReportId, ReportDefinition> = {
   },
   "compras-categorias": {
     title: "Compras por categoria",
-    description: "Volume de despesas agrupado por categoria.",
+    description: "Compras confirmadas ou recebidas pela categoria comercial do documento.",
     currency: ["total"],
     numeric: ["compras"],
     chartLabel: "categoria",
@@ -148,6 +130,7 @@ export function ProfessionalReportPage({ reportId }: { reportId: ReportId }) {
 
   const load = useCallback(async () => {
     setLoading(true);
+    setRecords([]);
     setError(null);
     try {
       const params = new URLSearchParams({ from, to });
@@ -225,7 +208,7 @@ export function ProfessionalReportPage({ reportId }: { reportId: ReportId }) {
           >
             <RefreshCw className="size-4" />
           </Button>
-          <Button variant="outline" onClick={exportCsv}>
+          <Button variant="outline" disabled={loading || Boolean(error) || !records.length} onClick={exportCsv}>
             <Download className="size-4" />
             CSV
           </Button>
@@ -240,6 +223,7 @@ export function ProfessionalReportPage({ reportId }: { reportId: ReportId }) {
           De
           <Input
             type="date"
+            disabled={reportId === "valor-estoque"}
             value={from}
             onChange={(event) => setFrom(event.target.value)}
           />
@@ -248,6 +232,7 @@ export function ProfessionalReportPage({ reportId }: { reportId: ReportId }) {
           Ate
           <Input
             type="date"
+            disabled={reportId === "valor-estoque"}
             value={to}
             onChange={(event) => setTo(event.target.value)}
           />

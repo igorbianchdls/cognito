@@ -1,10 +1,11 @@
 import {useEffect, useState, type ReactNode} from 'react'
+import {CheckCircle2, LoaderCircle, SearchCheck, Send, WalletCards} from 'lucide-react'
 import {AbsoluteFill, continueRender, delayRender, Img, interpolate, spring, staticFile, useCurrentFrame, useVideoConfig} from 'remotion'
 
-import {OttoAccountsPayableMobilePanel, OttoInvoiceEmissionMobilePanel} from '@/assets/remotion/compositions/OttoInvoiceChatGptTvContent'
+import {OttoInvoiceEmissionMobilePanel} from '@/assets/remotion/compositions/OttoInvoiceChatGptTvContent'
 import {IOS_REMOTION_DISPLAY_FONT_STACK, IOS_REMOTION_FONT_STACK, loadSfProFonts} from '@/assets/remotion/fonts/sfPro'
 
-export const CHATGPT_MOBILE_EXACT_REPLICA_DURATION = 1120
+export const CHATGPT_MOBILE_EXACT_REPLICA_DURATION = 1180
 
 const INK = '#171717'
 const ICON = '#666666'
@@ -77,7 +78,18 @@ function UserBubble({children, height, right = 32, top, width}: {children: React
 }
 
 function AssistantText({children, top}: {children: ReactNode; top: number}) {
-  return <div style={{fontSize: 34, fontWeight: 400, left: 33, letterSpacing: '-0.018em', lineHeight: 1.3, position: 'absolute', top}}>{children}</div>
+  return <div style={{fontSize: 34, fontWeight: 400, left: 33, letterSpacing: '-0.018em', lineHeight: 1.3, position: 'absolute', top, whiteSpace: 'pre-wrap', width: 760}}>{children}</div>
+}
+
+function TypedUserBubble({start, text, top}: {start: number; text: string; top: number}) {
+  const frame = useCurrentFrame()
+  const visibleCharacters = Math.max(0, Math.min(text.length, Math.floor((frame - start + 1) * 2)))
+  const visible = frame >= start
+
+  return <div style={{background: BUBBLE, borderRadius: 38, boxSizing: 'border-box', fontSize: 31, fontWeight: 400, letterSpacing: '-0.01em', lineHeight: 1.36, minHeight: 230, opacity: visible ? 1 : 0, padding: '25px 30px', position: 'absolute', right: 32, top, width: 700}}>
+    {text.slice(0, visibleCharacters)}
+    {visibleCharacters > 0 && visibleCharacters < text.length ? <span style={{borderRight: '2px solid #555', marginLeft: 2, opacity: Math.floor(frame / 7) % 2 ? 0.3 : 1}} /> : null}
+  </div>
 }
 
 function TypedAssistantText({end, start, text, top}: {end?: number; start: number; text: string; top: number}) {
@@ -115,6 +127,81 @@ function Reveal({children, start}: {children: ReactNode; start: number}) {
   return <AbsoluteFill style={{opacity, pointerEvents: 'none', transform: `translateY(${(1 - entrance) * 14}px)`}}>{children}</AbsoluteFill>
 }
 
+type OperationRow = {
+  detail: string
+  initials: string
+  name: string
+  value: string
+}
+
+const todaySales: OperationRow[] = [
+  {detail: 'Venda #1048', initials: 'AC', name: 'Ana Clara LTDA', value: 'R$ 1.250,00'},
+  {detail: 'Venda #1049', initials: 'BS', name: 'Bruno Serviços ME', value: 'R$ 980,00'},
+  {detail: 'Venda #1050', initials: 'CV', name: 'Clínica Viva Bem', value: 'R$ 2.300,00'},
+  {detail: 'Venda #1051', initials: 'LC', name: 'Lucas Consultoria', value: 'R$ 1.750,00'},
+  {detail: 'Venda #1052', initials: 'SD', name: 'Studio Design LTDA', value: 'R$ 1.100,00'},
+  {detail: 'Venda #1053', initials: 'MD', name: 'Marketing Digital SA', value: 'R$ 870,00'},
+  {detail: 'Venda #1054', initials: 'JC', name: 'Juliana Costa MEI', value: 'R$ 540,00'},
+  {detail: 'Venda #1055', initials: 'TS', name: 'Tech Solutions LTDA', value: 'R$ 1.990,00'},
+]
+
+const receivables: OperationRow[] = [
+  {detail: 'Vence em 13 set.', initials: 'AC', name: 'Ana Clara LTDA', value: 'R$ 1.250,00'},
+  {detail: 'Vence em 13 set.', initials: 'BS', name: 'Bruno Serviços ME', value: 'R$ 980,00'},
+  {detail: 'Vence em 14 set.', initials: 'CV', name: 'Clínica Viva Bem', value: 'R$ 2.300,00'},
+  {detail: 'Vence em 14 set.', initials: 'LC', name: 'Lucas Consultoria', value: 'R$ 1.750,00'},
+  {detail: 'Vence em 15 set.', initials: 'SD', name: 'Studio Design LTDA', value: 'R$ 1.100,00'},
+  {detail: 'Vence em 15 set.', initials: 'MD', name: 'Marketing Digital SA', value: 'R$ 870,00'},
+  {detail: 'Vence em 16 set.', initials: 'JC', name: 'Juliana Costa MEI', value: 'R$ 540,00'},
+  {detail: 'Vence em 16 set.', initials: 'TS', name: 'Tech Solutions LTDA', value: 'R$ 1.990,00'},
+]
+
+const overdueCustomers: OperationRow[] = [
+  {detail: '12 dias em atraso · WhatsApp', initials: 'MN', name: 'Mercado Nova Era', value: 'R$ 2.480,00'},
+  {detail: '8 dias em atraso · E-mail', initials: 'AF', name: 'Almeida & Filhos', value: 'R$ 1.320,00'},
+  {detail: '5 dias em atraso · WhatsApp', initials: 'PB', name: 'Padaria Boa Massa', value: 'R$ 760,00'},
+  {detail: '3 dias em atraso · E-mail', initials: 'GM', name: 'Grupo Monteiro', value: 'R$ 1.890,00'},
+]
+
+const avatarColors = ['#3977c3', '#8c54b8', '#2f8d68', '#d16b45', '#5678a8', '#b55c82', '#477e91', '#7b6bba']
+
+function MobileOperationPanel({accent, doneLabel, icon, rows, start, subtitle, title, top}: {accent: string; doneLabel: string; icon: ReactNode; rows: OperationRow[]; start: number; subtitle: string; title: string; top: number}) {
+  const frame = useCurrentFrame()
+  const localFrame = frame - start
+  const cardIn = interpolate(localFrame, [0, 12], [0, 1], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp'})
+  const raw = interpolate(localFrame, [18, 150], [0, rows.length], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp'})
+  const completed = Math.min(rows.length, Math.floor(raw))
+  const progress = Math.min(1, raw / rows.length)
+
+  return <div style={{background: '#fff', border: '1px solid #dedede', borderRadius: 24, boxShadow: '0 8px 30px rgba(0,0,0,.09)', left: 34, opacity: cardIn, overflow: 'hidden', position: 'absolute', right: 34, top, transform: `translateY(${(1 - cardIn) * 12}px)`}}>
+    <div style={{alignItems: 'center', borderBottom: '1px solid #ececec', display: 'flex', height: 58, padding: '0 20px'}}>
+      <span style={{alignItems: 'center', border: '1px solid #dedede', borderRadius: 10, color: accent, display: 'flex', height: 33, justifyContent: 'center', width: 33}}>{icon}</span>
+      <strong style={{fontSize: 19, marginLeft: 11}}>Otto</strong>
+      <span style={{color: completed === rows.length ? '#13865f' : '#666', fontSize: 16, marginLeft: 12}}>{completed === rows.length ? 'Concluído' : 'Executando...'}</span>
+    </div>
+    <div style={{padding: '20px 20px 19px'}}>
+      <h1 className="chatgpt-mobile-invoice-title" style={{fontFamily: IOS_REMOTION_DISPLAY_FONT_STACK, fontSize: 40, fontWeight: 650, letterSpacing: '-0.025em', lineHeight: 1.03, margin: 0}}>{title}</h1>
+      <div style={{color: '#606060', fontSize: 17, marginTop: 8}}>{subtitle}</div>
+      <div style={{alignItems: 'center', display: 'flex', fontSize: 17, fontWeight: 650, marginTop: 16}}><span>{completed} de {rows.length}</span><span style={{color: '#666', fontWeight: 500, marginLeft: 'auto'}}>{Math.round(progress * 100)}%</span></div>
+      <div style={{background: '#eceeed', borderRadius: 99, height: 7, marginTop: 8, overflow: 'hidden'}}><div style={{background: accent, height: '100%', width: `${progress * 100}%`}} /></div>
+      <div style={{border: '1px solid #ddd', borderRadius: 14, marginTop: 16, overflow: 'hidden'}}>
+        {rows.map((row, index) => {
+          const reveal = index === 0 ? 1 : interpolate(raw, [index, index + 0.22], [0, 1], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp'})
+          const done = index < completed
+          const active = index === completed && completed < rows.length
+          return <div key={row.name} style={{alignItems: 'center', borderTop: index ? '1px solid #e9e9e9' : 'none', boxSizing: 'border-box', display: 'grid', gap: 11, gridTemplateColumns: '43px 1fr 126px 42px', maxHeight: reveal * 82, minHeight: 82, opacity: reveal, overflow: 'hidden', padding: '10px 12px', transform: `translateY(${(1 - reveal) * 7}px)`}}>
+            <span style={{alignItems: 'center', background: avatarColors[index % avatarColors.length], borderRadius: 99, color: '#fff', display: 'flex', fontSize: 14, fontWeight: 700, height: 39, justifyContent: 'center', width: 39}}>{row.initials}</span>
+            <span><strong style={{display: 'block', fontSize: 19, lineHeight: 1.2}}>{row.name}</strong><span style={{color: '#666', display: 'block', fontSize: 15, marginTop: 3}}>{row.detail}</span></span>
+            <strong style={{fontSize: 16, justifySelf: 'end', whiteSpace: 'nowrap'}}>{row.value}</strong>
+            <span style={{display: 'flex', justifyContent: 'center'}}>{done ? <CheckCircle2 color={accent} size={27} /> : active ? <LoaderCircle color={accent} size={27} style={{transform: `rotate(${frame * 10}deg)`}} /> : <span style={{border: '2px solid #d4d4d4', borderRadius: 99, height: 22, width: 22}} />}</span>
+          </div>
+        })}
+      </div>
+      <div style={{alignItems: 'center', display: 'flex', fontSize: 16, marginTop: 15}}><strong>{doneLabel}</strong><span style={{color: '#666', marginLeft: 'auto'}}>{completed === rows.length ? 'Tudo certo' : 'Processando'}</span></div>
+    </div>
+  </div>
+}
+
 function ConversationTrack({children}: {children: ReactNode}) {
   const frame = useCurrentFrame()
   const {fps} = useVideoConfig()
@@ -124,15 +211,11 @@ function ConversationTrack({children}: {children: ReactNode}) {
     fps,
     frame,
   })
-  const previousConversationScroll = -340 * (scrollStep(218) + scrollStep(273) + scrollStep(328) + scrollStep(383) + scrollStep(438))
-  const invoiceEntranceScroll = -520 * scrollStep(480)
-  const invoiceGrowthScroll = -75 * ([529, 553, 577, 601, 625, 649, 673].reduce((total, start) => total + scrollStep(start), 0))
-  const invoiceCompletionScroll = -200 * scrollStep(710)
-  const accountsPromptScroll = -450 * scrollStep(760)
-  const accountsEntranceScroll = -500 * scrollStep(800)
-  const accountsGrowthScroll = -75 * ([849, 873, 897, 921, 945, 969, 993].reduce((total, start) => total + scrollStep(start), 0))
-  const accountsCompletionScroll = -200 * scrollStep(1030)
-  const scrollY = previousConversationScroll + invoiceEntranceScroll + invoiceGrowthScroll + invoiceCompletionScroll + accountsPromptScroll + accountsEntranceScroll + accountsGrowthScroll + accountsCompletionScroll
+  const invoiceScroll = -1020 * scrollStep(340)
+  const receivablesScroll = -1230 * scrollStep(595)
+  const collectionScroll = -1080 * scrollStep(815)
+  const summaryScroll = -780 * scrollStep(1008)
+  const scrollY = invoiceScroll + receivablesScroll + collectionScroll + summaryScroll
 
   return <AbsoluteFill style={{clipPath: 'inset(230px 0 188px 0)', zIndex: 1}}>
     <AbsoluteFill style={{transform: `translateY(${scrollY}px)`}}>{children}</AbsoluteFill>
@@ -186,54 +269,73 @@ export function ChatGptMobileExactReplica() {
     </div>
 
     <ConversationTrack>
-      <Reveal start={10}><UserBubble height={92} top={245} width={582}>Pergunte pra mim o que eu quero</UserBubble></Reveal>
-      <TypedAssistantText start={32} text="O que você quer?" top={409} />
-      <Reveal start={37}><ActionRow top={482} /></Reveal>
+      <TypedUserBubble
+        start={14}
+        text="Chat, emite as notas das vendas de hoje, manda pros clientes, atualiza o contas a receber e cobra quem tá atrasado."
+        top={245}
+      />
 
-      <Reveal start={65}><UserBubble height={92} top={585} width={524}>Pergunte cm um emoii no final</UserBubble></Reveal>
-      <TypedAssistantText start={87} text="O que você quer?" top={750} />
-      <TypedEmojiCrop boundaries={[46]} height={42} left={308} sourceX={308} sourceY={750} start={90} top={750} width={46} />
-      <Reveal start={93}><ActionRow top={822} /></Reveal>
+      <TypedAssistantText
+        start={96}
+        text="Claro. Vou começar identificando e validando as vendas realizadas hoje."
+        top={520}
+      />
+      <MobileOperationPanel
+        accent="#2878d0"
+        doneLabel="8 vendas validadas"
+        icon={<SearchCheck size={20} strokeWidth={1.8} />}
+        rows={todaySales}
+        start={135}
+        subtitle="Conferindo clientes, valores e dados fiscais"
+        title="Vendas de hoje"
+        top={625}
+      />
 
-      <Reveal start={120}><UserBubble height={144} top={925} width={491}><span>Pergunte com vários emojis<br />no final</span></UserBubble></Reveal>
-      <TypedAssistantText start={142} text="O que você quer?" top={1145} />
-      <TypedEmojiCrop boundaries={[50, 96, 143, 185, 234, 279, 326, 374, 421, 481]} height={44} left={307} sourceX={307} sourceY={1138} start={145} top={1138} width={481} />
-      <Reveal start={157}><ActionRow top={1217} /></Reveal>
+      <TypedAssistantText
+        start={300}
+        text={'Encontrei 8 vendas e confirmei os dados necessários para emissão.\n\nAgora vou preencher, emitir e enviar as notas fiscais para cada cliente.'}
+        top={1585}
+      />
+      <OttoInvoiceEmissionMobilePanel start={345} top={1820} />
 
-      <Reveal start={175}><UserBubble height={90} top={1317} width={286}>Menos emojis</UserBubble></Reveal>
-      <TypedAssistantText start={197} text="O que você quer?" top={1486} />
-      <TypedEmojiCrop boundaries={[50, 93, 138]} height={44} left={308} sourceX={308} sourceY={1480} start={200} top={1480} width={138} />
-      <Reveal start={205}><ActionRow top={1554} /></Reveal>
+      <TypedAssistantText
+        start={570}
+        text={'As 8 notas foram emitidas e enviadas aos clientes.\n\nAgora vou criar os lançamentos correspondentes no contas a receber.'}
+        top={2770}
+      />
+      <MobileOperationPanel
+        accent="#16875f"
+        doneLabel="R$ 10.780,00 lançados"
+        icon={<WalletCards size={20} strokeWidth={1.8} />}
+        rows={receivables}
+        start={625}
+        subtitle="Criando os recebimentos vinculados às notas"
+        title="Atualizando contas a receber"
+        top={2995}
+      />
 
-      <Reveal start={230}><UserBubble height={90} top={1657} width={330}>Agora sem emojis</UserBubble></Reveal>
-      <TypedAssistantText start={252} text="O que você quer?" top={1826} />
-      <Reveal start={257}><ActionRow top={1894} /></Reveal>
+      <TypedAssistantText
+        start={790}
+        text={'O contas a receber foi atualizado com os 8 novos lançamentos.\n\nPor fim, vou identificar os clientes em atraso e enviar as cobranças.'}
+        top={3960}
+      />
+      <MobileOperationPanel
+        accent="#8055c7"
+        doneLabel="4 cobranças enviadas"
+        icon={<Send size={20} strokeWidth={1.8} />}
+        rows={overdueCustomers}
+        start={845}
+        subtitle="Enviando lembretes por WhatsApp e e-mail"
+        title="Cobrando clientes em atraso"
+        top={4185}
+      />
 
-      <Reveal start={285}><UserBubble height={92} top={1997} width={535}>Pergunte com mais educação</UserBubble></Reveal>
-      <TypedAssistantText start={307} text="O que você gostaria?" top={2166} />
-      <Reveal start={312}><ActionRow top={2234} /></Reveal>
-
-      <Reveal start={340}><UserBubble height={92} top={2337} width={450}>Agora seja mais direto</UserBubble></Reveal>
-      <TypedAssistantText start={362} text="Como posso ajudar?" top={2506} />
-      <Reveal start={367}><ActionRow top={2574} /></Reveal>
-
-      <Reveal start={395}><UserBubble height={90} top={2677} width={360}>Perfeito, obrigado</UserBubble></Reveal>
-      <TypedAssistantText start={417} text="Por nada!" top={2846} />
-      <Reveal start={421}><ActionRow top={2914} /></Reveal>
-
-      <Reveal start={450}><UserBubble height={144} top={3017} width={690}><span>Chat, emita as notas fiscais das vendas de hoje e envie para cada cliente.</span></UserBubble></Reveal>
-      <TypedAssistantText start={472} text="Perfeito! Vou emitir as notas fiscais das oito vendas." top={3237} />
-      <OttoInvoiceEmissionMobilePanel start={492} top={3335} />
-
-      <TypedAssistantText start={728} text="Pronto! As 8 notas fiscais foram emitidas e enviadas." top={4350} />
-      <Reveal start={743}><ActionRow top={4500} /></Reveal>
-
-      <Reveal start={770}><UserBubble height={144} top={4595} width={690}><span>Agora busque as contas a pagar deste mês e organize por vencimento.</span></UserBubble></Reveal>
-      <TypedAssistantText end={1022} start={792} text="Perfeito! Vou buscar e organizar suas contas a pagar." top={4815} />
-      <OttoAccountsPayableMobilePanel start={812} top={4913} />
-
-      <TypedAssistantText start={1048} text="Pronto! Encontrei e organizei as 8 contas a pagar." top={5935} />
-      <Reveal start={1063}><ActionRow top={6085} /></Reveal>
+      <TypedAssistantText
+        start={1010}
+        text={'Concluído. Enviei 4 cobranças por WhatsApp e e-mail.\n\nResumo: 8 vendas processadas, 8 notas emitidas e enviadas, 8 lançamentos atualizados e 4 clientes cobrados.'}
+        top={4790}
+      />
+      <Reveal start={1065}><ActionRow top={5200} /></Reveal>
     </ConversationTrack>
 
     <div style={{background: '#fff', bottom: 0, height: 188, left: 0, position: 'absolute', right: 0, zIndex: 20}}>

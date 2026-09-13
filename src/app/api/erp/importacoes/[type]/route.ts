@@ -1,5 +1,7 @@
 import { erpFailure, erpErrorResponse as erpFailureResponse } from "@/products/erp/server/erpApi"
 import { NextResponse } from 'next/server'
+import { z } from 'zod'
+import { parseErpBody } from '@/products/erp/server/erpApi'
 
 import { resolveErpAccess } from '@/products/erp/server/erpAccess'
 import { exportErpRecords, importErpRows, isImportType } from '@/products/erp/server/erpImportRepository'
@@ -34,7 +36,7 @@ export async function POST(request: Request, context: { params: Promise<{ type: 
   const { type } = await context.params
   if (!isImportType(type)) return erpFailure('Tipo de importacao invalido.', 404)
   try {
-    const body = (await request.json()) as { fileName?: string; rows?: Record<string, unknown>[] }
+    const body = await parseErpBody(request,z.object({fileName:z.string().trim().min(1).max(255).optional(),rows:z.array(z.record(z.string(),z.unknown())).min(1).max(5000)}).strict())
     const result = await importErpRows({
       tenantId: tenant.tenantId,
       actorId: tenant.sharedUserId,

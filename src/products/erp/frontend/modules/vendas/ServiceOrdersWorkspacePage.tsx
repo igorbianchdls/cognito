@@ -1,4 +1,5 @@
 "use client";
+import { ErpHistoryPanel } from '@/products/erp/frontend/components/ErpHistoryPanel';
 
 import { lineTotal, sumMoney } from '@/products/erp/shared/erpMoney';
 import { ErpMutation } from '@/products/erp/frontend/services/erpMutation';
@@ -763,7 +764,7 @@ export function ServiceOrdersWorkspacePage() {
                 )}
               </dl>
               <SimpleTable title="Itens" rows={details.items} />
-              <SimpleTable title="Historico" rows={details.events} />
+              <ErpHistoryPanel kind="ordens-servico" id={String(details.order.id)}/>
             </div>
           ) : (
             <div className="py-16 text-center text-sm text-gray-500">

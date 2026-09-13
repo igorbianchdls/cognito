@@ -13,7 +13,7 @@ import {
   DOCUMENT_SPECIAL_COMPONENTS,
   REPORT_DSL_VERSION,
   SLIDE_DSL_VERSION,
-} from '@/products/artifacts/document/language/documentLanguageManifest'
+} from '@/products/plugin/server/artifactRuntime/documentLanguageManifest'
 
 type JsonRecord = Record<string, unknown>
 type ArtifactAction = 'get_contract' | 'create' | 'patch' | 'update_full'

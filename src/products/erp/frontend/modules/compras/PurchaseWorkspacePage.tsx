@@ -1358,6 +1358,7 @@ export function PurchaseWorkspacePage() {
         </DialogContent>
       </Dialog>
       <ErpDocumentDetailsDialog
+        documentKind="compras"
         open={detailsOpen}
         onOpenChange={setDetailsOpen}
         title="Detalhes da compra"

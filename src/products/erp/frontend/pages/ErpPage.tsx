@@ -15,7 +15,7 @@ import { BankReconciliationPage } from '@/products/erp/frontend/modules/financei
 import { PeriodClosuresPage } from '@/products/erp/frontend/modules/financeiro/PeriodClosuresPage'
 import { SalesWorkspacePage } from '@/products/erp/frontend/modules/vendas/SalesWorkspacePage'
 import { ServiceOrdersWorkspacePage } from '@/products/erp/frontend/modules/vendas/ServiceOrdersWorkspacePage'
-import { AutomationWorkspacePage } from '@/products/erp/frontend/modules/relatorios/AutomationWorkspacePage'
+import { AutomationWorkspacePage } from '@/products/erp/frontend/components/ErpRoutineWorkspacePage'
 import { isProfessionalReport, ProfessionalReportPage } from '@/products/erp/frontend/modules/relatorios/ProfessionalReportPage'
 import { getErpEntityConfig } from '@/products/erp/frontend/modules/entityRegistry'
 import { OverviewPage } from '@/products/erp/frontend/modules/overview/OverviewPage'
@@ -31,13 +31,13 @@ function ErpPlaceholderPage({
   moduleId?: ErpModuleId
 }) {
   const section = getErpSection(sectionId)
-  const module = getErpModule(sectionId, moduleId)
+  const selectedModule = getErpModule(sectionId, moduleId)
 
   return (
     <div className="flex min-h-[420px] flex-col justify-center rounded-md border border-dashed border-gray-200 bg-gray-50/70 px-8">
       <div className="max-w-xl">
         <div className="text-xs font-medium uppercase tracking-normal text-gray-500">ERP</div>
-        <h1 className="mt-2 text-2xl font-semibold tracking-normal text-gray-950">{module?.label ?? section.label}</h1>
+        <h1 className="mt-2 text-2xl font-semibold tracking-normal text-gray-950">{selectedModule?.label ?? section.label}</h1>
         <p className="mt-3 text-sm leading-6 text-gray-600">
           Este modulo ainda nao faz parte da versao operacional. Quando for ativado, usara os mesmos contratos, controles de acesso e componentes reutilizaveis dos demais modulos do ERP.
         </p>
@@ -57,13 +57,15 @@ export default function ErpPage({
   const sectionConfig = getErpSection(section)
   const moduleConfig = getErpModule(section, module)
   const operationConfig = moduleConfig ? ERP_OPERATION_CONFIGS[moduleConfig.id] : undefined
+  const usesFinancialWorkspaceChrome = sectionConfig.id === 'financeiro'
+    && ['contas-a-pagar', 'contas-a-receber'].includes(moduleConfig?.id ?? '')
 
   return (
     <SidebarProvider>
       <SidebarShadcn />
       <SidebarInset className="h-screen overflow-hidden">
         <PageContainer className="bg-white">
-          <ErpShell sectionId={sectionConfig.id} moduleId={moduleConfig?.id}>
+          <ErpShell sectionId={sectionConfig.id} moduleId={moduleConfig?.id} hideSectionTabs={usesFinancialWorkspaceChrome}>
             {sectionConfig.id === 'overview' ? (
               <OverviewPage />
             ) : sectionConfig.id === 'vendas' && moduleConfig?.id === 'pedidos' ? (
@@ -88,7 +90,7 @@ export default function ErpPage({
               <PeriodClosuresPage />
             ) : sectionConfig.id === 'cadastros' && moduleConfig?.id === 'importacoes' ? (
               <ErpImportExportPage />
-            ) : sectionConfig.id === 'relatorios' && moduleConfig?.id === 'automacoes' ? (
+            ) : sectionConfig.id === 'cadastros' && moduleConfig?.id === 'automacoes' ? (
               <AutomationWorkspacePage />
             ) : sectionConfig.id === 'relatorios' && isProfessionalReport(moduleConfig?.id) ? (
               <ProfessionalReportPage reportId={moduleConfig.id} />

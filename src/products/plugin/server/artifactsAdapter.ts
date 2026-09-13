@@ -3,7 +3,7 @@ import {
   writeArtifact,
   patchArtifact,
   type ArtifactKind,
-} from '@/products/artifacts/backend/artifactService'
+} from '@/products/plugin/server/artifactRuntime/artifactService'
 import {
   deleteDashboardArtifact,
   listArtifactsByType,
@@ -12,8 +12,8 @@ import {
   writeDashboardArtifact,
   type ArtifactSourceKind,
   type DashboardListItem,
-} from '@/products/artifacts/dashboard/persistence/dashboardArtifactsService'
-import { preflightDashboardQueries } from '@/products/artifacts/dashboard/query/dashboardQueryPreflight'
+} from '@/products/plugin/server/artifactRuntime/dashboardArtifactsService'
+import { preflightDashboardQueries } from '@/products/plugin/server/artifactRuntime/dashboardQueryPreflight'
 
 export type McpJsonMap = Record<string, unknown>
 export type McpArtifactKind = ArtifactKind

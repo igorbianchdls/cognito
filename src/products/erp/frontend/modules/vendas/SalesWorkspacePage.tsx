@@ -1393,6 +1393,7 @@ export function SalesWorkspacePage({
       </Dialog>
       <Dialog open={fiscalOpen} onOpenChange={setFiscalOpen}><DialogContent className="max-w-[min(720px,96vw)]"><DialogHeader><DialogTitle>Pre-validacao fiscal</DialogTitle></DialogHeader>{fiscalLoading ? <div className="py-16 text-center text-sm text-gray-500"><Loader2 className="mx-auto mb-2 size-5 animate-spin" />Validando cadastros e itens...</div> : fiscalResult ? <div className="grid gap-4"><div className={`rounded-md border px-4 py-3 text-sm ${fiscalResult.ready ? 'border-emerald-200 bg-emerald-50 text-emerald-700' : 'border-amber-200 bg-amber-50 text-amber-800'}`}>{fiscalResult.ready ? 'A venda possui os dados minimos para a futura emissao fiscal.' : 'Existem campos que precisam ser corrigidos antes da emissao.'}</div><div className="grid gap-2">{fiscalResult.issues.map((issue) => <div key={`${issue.code}-${issue.field}`} className="grid grid-cols-[80px_1fr] gap-3 border-b py-3"><span className={`text-xs font-medium uppercase ${issue.severity === 'error' ? 'text-rose-600' : 'text-amber-600'}`}>{issue.severity === 'error' ? 'Impeditivo' : 'Aviso'}</span><div><p className="text-sm text-gray-900">{issue.message}</p><p className="mt-1 text-xs text-gray-500">{issue.field}</p></div></div>)}</div></div> : null}</DialogContent></Dialog>
       <ErpDocumentDetailsDialog
+        documentKind="vendas"
         open={detailsOpen}
         onOpenChange={setDetailsOpen}
         title={`Detalhes ${isQuote ? "do orcamento" : "da venda"}`}

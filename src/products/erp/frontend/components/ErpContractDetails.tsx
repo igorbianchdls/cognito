@@ -1,5 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
+import { ErpHistoryPanel } from './ErpHistoryPanel'
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -114,6 +115,7 @@ export function ErpContractDetails({
           <p>Carregando contrato…</p>
         ) : (
           <>
+            <ErpHistoryPanel kind="contratos" id={id}/>
             <h3 className="font-semibold">Versões comerciais</h3>
             {detail.versions.map((v) => (
               <div key={v.numero} className="rounded border p-3 text-sm">

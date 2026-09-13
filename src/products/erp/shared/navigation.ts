@@ -9,11 +9,12 @@ import {
 } from '@tabler/icons-react'
 
 import type { ErpModuleId, ErpNavigationItem, ErpSectionId } from '@/products/erp/shared/types'
+import { isRetiredErpReport } from './reportCatalog'
 
 export const ERP_DEFAULT_SECTION: ErpSectionId = 'overview'
 export const ERP_DEFAULT_MODULE: ErpModuleId = 'overview'
 
-export const ERP_NAVIGATION: ErpNavigationItem[] = [
+const navigation: ErpNavigationItem[] = [
   {
     id: 'overview', label: 'Visao geral', href: '/erp', icon: IconHomeStats,
     description: 'Resumo operacional do ERP.', modules: [],
@@ -70,34 +71,35 @@ export const ERP_NAVIGATION: ErpNavigationItem[] = [
       { id: 'contas-a-receber', label: 'Contas a receber', href: '/erp/financeiro/contas-a-receber', description: 'Titulos e cobrancas.' },
       { id: 'contas-a-pagar', label: 'Contas a pagar', href: '/erp/financeiro/contas-a-pagar', description: 'Compromissos e vencimentos.' },
       { id: 'contas-financeiras', label: 'Contas financeiras', href: '/erp/financeiro/contas-financeiras', description: 'Caixas, bancos, carteiras e cartoes.' },
-      { id: 'fluxo-de-caixa', label: 'Fluxo de caixa', href: '/erp/financeiro/fluxo-de-caixa', description: 'Entradas, saidas e saldo diario.' },
       { id: 'conciliacao-bancaria', label: 'Conciliacao', href: '/erp/financeiro/conciliacao-bancaria', description: 'Extrato e lancamentos financeiros.' },
       { id: 'transferencias-financeiras', label: 'Transferencias', href: '/erp/financeiro/transferencias-financeiras', description: 'Movimentos entre contas.' },
       { id: 'fechamentos', label: 'Fechamentos', href: '/erp/financeiro/fechamentos', description: 'Bloqueio e reabertura de periodos operacionais.' },
     ],
   },
   {
-    id: 'relatorios', label: 'Relatorios', href: '/erp/relatorios/dre', icon: IconReportAnalytics,
+    id: 'relatorios', label: 'Relatorios', href: '/erp/relatorios/posicao-financeira', icon: IconReportAnalytics,
     description: 'Indicadores gerenciais do ERP.',
     modules: [
-      { id: 'dre', label: 'DRE', href: '/erp/relatorios/dre', description: 'Resultado por competencia e categoria.' },
-      { id: 'dre-caixa', label: 'DRE por caixa', href: '/erp/relatorios/dre-caixa', description: 'Resultado gerencial conforme pagamentos realizados.' },
-      { id: 'fluxo-diario', label: 'Fluxo diario', href: '/erp/relatorios/fluxo-diario', description: 'Entradas, saidas e saldo por dia.' },
-      { id: 'fluxo-mensal', label: 'Fluxo mensal', href: '/erp/relatorios/fluxo-mensal', description: 'Entradas, saidas e resultado por mes.' },
+      { id: 'dre-caixa', label: 'Resultado dos pagamentos', href: '/erp/relatorios/dre-caixa', description: 'Recebimentos, pagamentos e estornos por data e categoria.' },
       { id: 'posicao-financeira', label: 'Posicao financeira', href: '/erp/relatorios/posicao-financeira', description: 'Titulos a pagar e receber por situacao.' },
-      { id: 'aging-receber', label: 'Aging a receber', href: '/erp/relatorios/aging-receber', description: 'Faixas de atraso de clientes.' },
-      { id: 'aging-pagar', label: 'Aging a pagar', href: '/erp/relatorios/aging-pagar', description: 'Faixas de atraso de fornecedores.' },
       { id: 'vendas-clientes', label: 'Vendas por cliente', href: '/erp/relatorios/vendas-clientes', description: 'Receita e volume por cliente.' },
       { id: 'vendas-vendedores', label: 'Vendas por vendedor', href: '/erp/relatorios/vendas-vendedores', description: 'Receita e volume por responsavel.' },
       { id: 'vendas-produtos', label: 'Vendas por produto', href: '/erp/relatorios/vendas-produtos', description: 'Quantidade e receita por item vendido.' },
       { id: 'compras-fornecedores', label: 'Compras por fornecedor', href: '/erp/relatorios/compras-fornecedores', description: 'Compras e volume por fornecedor.' },
       { id: 'compras-categorias', label: 'Compras por categoria', href: '/erp/relatorios/compras-categorias', description: 'Despesas agrupadas por categoria.' },
-      { id: 'giro-estoque', label: 'Giro de estoque', href: '/erp/relatorios/giro-estoque', description: 'Saidas e giro em 90 dias.' },
+      { id: 'giro-estoque', label: 'Saídas e estoque atual', href: '/erp/relatorios/giro-estoque', description: 'Movimentos negativos em 90 dias e saldo atual.' },
       { id: 'valor-estoque', label: 'Valor do estoque', href: '/erp/relatorios/valor-estoque', description: 'Posicao valorizada por produto e local.' },
-      { id: 'automacoes', label: 'Rotinas automaticas', href: '/erp/relatorios/automacoes', description: 'Execucoes internas idempotentes do ERP.' },
     ],
   },
 ]
+
+export const ERP_NAVIGATION: ErpNavigationItem[] = navigation.map(section => ({
+  ...section,
+  modules: section.modules.filter(module => !isRetiredErpReport(module.id) && module.id !== 'automacoes'),
+}))
+ERP_NAVIGATION.find(section => section.id === 'cadastros')!.modules.push({
+  id: 'automacoes', label: 'Rotinas e recorrências', href: '/erp/cadastros/automacoes', description: 'Execuções, resultados e próximas ocorrências.',
+})
 
 export function getErpSection(sectionId?: string) {
   return ERP_NAVIGATION.find((section) => section.id === sectionId) ?? ERP_NAVIGATION[0]

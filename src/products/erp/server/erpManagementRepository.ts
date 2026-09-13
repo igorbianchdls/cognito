@@ -1,6 +1,8 @@
+import { isRetiredErpReport } from '@/products/erp/shared/reportCatalog'
 import { createSalesContract, generateContractSales } from './erpSalesContracts'
 import { runQuery, withTransaction } from '@/lib/postgres'
 import { ErpDomainError } from '@/products/erp/server/erpApi'
+import { assertErpPeriodOpen } from '@/products/erp/server/erpPeriodRepository'
 
 type ActorInput = { tenantId: number; actorId: number }
 
@@ -48,6 +50,10 @@ function dateText(value: unknown, fallback = true) {
   if (!normalized && fallback) return new Date().toISOString().slice(0, 10)
   if (!normalized || !/^\d{4}-\d{2}-\d{2}$/.test(normalized)) throw new Error('Data invalida.')
   return normalized
+}
+
+function databaseDateText(value: unknown) {
+  return value instanceof Date ? value.toISOString().slice(0, 10) : dateText(value)
 }
 
 export async function searchErpOperationsCatalog(input: {
@@ -123,7 +129,7 @@ async function listOperationPage(
 }
 
 export async function listManagementOperation(tenantId: number, resource: string, input: ErpOperationListInput = {}) {
-  if (['fluxo-de-caixa', 'dre', 'aging-receber', 'aging-pagar'].includes(resource)) {
+  if (isRetiredErpReport(resource)) {
     throw new ErpDomainError('REPORT_RETIRED', 'Este relatorio foi descontinuado.', 410)
   }
   if (resource === 'contratos') {
@@ -173,9 +179,15 @@ export async function listManagementOperation(tenantId: number, resource: string
   }
   if (resource === 'giro-estoque') {
     return listOperationPage(tenantId,
-      `SELECT concat(produto_id::text, '-', local_estoque_id::text) AS id, produto,
-         local_estoque AS local, quantidade_fisica, saidas_90_dias, giro_90_dias
-       FROM erp.vw_giro_estoque WHERE tenant_id = $1`,
+      `SELECT concat(p.produto_id::text, '-', p.local_estoque_id::text) AS id, p.produto,
+         p.local_estoque AS local, p.quantidade_fisica, m.saidas AS saidas_90_dias,
+         CASE WHEN p.quantidade_fisica>0 THEN m.saidas/p.quantidade_fisica ELSE NULL END AS giro_90_dias,
+         CASE WHEN p.quantidade_fisica>0 THEN 'Saldo atual' ELSE 'Sem saldo para calcular' END AS referencia
+       FROM erp.vw_posicao_estoque p
+       CROSS JOIN LATERAL (SELECT COALESCE(sum(-quantidade),0) AS saidas FROM erp.movimentacoes_estoque
+         WHERE tenant_id=p.tenant_id AND produto_id=p.produto_id AND local_estoque_id=p.local_estoque_id
+           AND quantidade<0 AND ocorrido_em BETWEEN now()-interval '90 days' AND now()) m
+       WHERE p.tenant_id = $1`,
       'giro_90_dias DESC, produto', input,
     )
   }
@@ -228,38 +240,69 @@ export async function createManagementOperation(input: ActorInput & {
       if (!payment) throw new Error('Pagamento disponivel para conciliacao nao encontrado.')
       if (Number(payment.conta_financeira_id) !== Number(transaction.conta_financeira_id)) throw new Error('Pagamento e extrato pertencem a contas diferentes.')
       if ((transaction.tipo === 'credito') !== (payment.tipo === 'receber')) throw new Error('Credito deve conciliar com recebimento e debito com pagamento.')
-      if (Math.abs(Number(payment.valor_liquido) - Number(transaction.valor)) > 0.01) throw new Error('Os valores da transacao e do pagamento sao diferentes.')
+      await assertErpPeriodOpen(client, { tenantId: input.tenantId, module: 'financeiro', date: databaseDateText(transaction.data_transacao) })
+      const alreadyReconciled = await client.query(
+        `SELECT COALESCE(sum(valor_conciliado),0) AS valor
+         FROM erp.conciliacoes_bancarias_itens
+         WHERE tenant_id = $1 AND transacao_bancaria_id = $2 AND desfeito_em IS NULL`,
+        [input.tenantId, transactionId],
+      )
+      const paymentReconciled = await client.query(
+        `SELECT COALESCE(sum(valor_conciliado),0) AS valor
+         FROM erp.conciliacoes_bancarias_itens
+         WHERE tenant_id = $1 AND pagamento_id = $2 AND desfeito_em IS NULL`,
+        [input.tenantId, paymentId],
+      )
+      const requested = input.values.valor_conciliado == null
+        ? Math.min(Number(transaction.valor) - Number(alreadyReconciled.rows[0]?.valor || 0), Number(payment.valor_liquido) - Number(paymentReconciled.rows[0]?.valor || 0))
+        : amount(input.values.valor_conciliado, 'Valor conciliado')
+      if (requested <= 0) throw new Error('Nao existe saldo conciliavel entre os movimentos.')
       const reconciliation = await client.query(
         `INSERT INTO erp.conciliacoes_bancarias
            (tenant_id, conta_financeira_id, periodo_inicio, periodo_fim, status,
             conciliado_em, criado_por, atualizado_por)
          VALUES ($1, $2, $3, $3, 'concluida', now(), $4, $4) RETURNING id`,
-        [input.tenantId, transaction.conta_financeira_id, transaction.data_transacao, input.actorId],
+        [input.tenantId, transaction.conta_financeira_id, databaseDateText(transaction.data_transacao), input.actorId],
       )
       await client.query(
         `INSERT INTO erp.conciliacoes_bancarias_itens
            (tenant_id, conciliacao_id, transacao_bancaria_id, pagamento_id, valor_conciliado, origem_conciliacao, criado_por)
          VALUES ($1, $2, $3, $4, $5, $6, $7)`,
-        [input.tenantId, reconciliation.rows[0].id, transactionId, paymentId, transaction.valor,
+        [input.tenantId, reconciliation.rows[0].id, transactionId, paymentId, requested,
           input.values.origem_conciliacao === 'sugerida' ? 'sugerida' : 'manual', input.actorId],
       )
-      await client.query(`UPDATE erp.transacoes_bancarias SET status = 'conciliada', atualizado_por = $3 WHERE tenant_id = $1 AND id = $2`, [input.tenantId, transactionId, input.actorId])
-      await client.query(`UPDATE erp.pagamentos SET conciliado = true,
-        metadata = metadata || jsonb_build_object('origem_antes_conciliacao', origem),
-        origem = 'conciliacao', atualizado_por = $3 WHERE tenant_id = $1 AND id = $2`, [input.tenantId, paymentId, input.actorId])
-      return { id: String(reconciliation.rows[0].id), status: 'concluida' }
+      return { id: String(reconciliation.rows[0].id), status: 'concluida', valor_conciliado: requested }
     }
     if (input.resource === 'transferencias-financeiras') {
       const originId = requiredId(input.values.conta_origem_id, 'Conta de origem')
       const destinationId = requiredId(input.values.conta_destino_id, 'Conta de destino')
       if (originId === destinationId) throw new Error('Origem e destino devem ser diferentes.')
+      const transferDate = dateText(input.values.data)
+      const transferAmount = amount(input.values.valor, 'Valor')
+      const description = optionalText(input.values.descricao)
+      await assertErpPeriodOpen(client, { tenantId: input.tenantId, module: 'financeiro', date: transferDate })
+      const existing = await client.query(
+        `SELECT id::text, conta_origem_id, conta_destino_id, data_transferencia, valor, descricao, status
+         FROM erp.transferencias_financeiras
+         WHERE tenant_id = $1 AND chave_idempotencia = $2 LIMIT 1`,
+        [input.tenantId, input.idempotencyKey],
+      )
+      if (existing.rows[0]) {
+        const row = existing.rows[0]
+        if (Number(row.conta_origem_id) !== originId || Number(row.conta_destino_id) !== destinationId
+          || databaseDateText(row.data_transferencia) !== transferDate || Number(row.valor) !== transferAmount
+          || String(row.descricao || '') !== String(description || '')) {
+          throw new ErpDomainError('IDEMPOTENCY_CONFLICT', 'Esta identificacao ja foi usada em outra transferencia.', 409)
+        }
+        return row
+      }
       const created = await client.query(
         `INSERT INTO erp.transferencias_financeiras
            (tenant_id, conta_origem_id, conta_destino_id, data_transferencia, valor,
-            descricao, status, criado_por, atualizado_por)
-         VALUES ($1, $2, $3, $4, $5, $6, 'concluida', $7, $7) RETURNING id::text, status`,
-        [input.tenantId, originId, destinationId, dateText(input.values.data),
-          amount(input.values.valor, 'Valor'), optionalText(input.values.descricao), input.actorId],
+            descricao, status, chave_idempotencia, criado_por, atualizado_por)
+         VALUES ($1, $2, $3, $4, $5, $6, 'concluida', $7, $8, $8) RETURNING id::text, status`,
+        [input.tenantId, originId, destinationId, transferDate,
+          transferAmount, description, input.idempotencyKey, input.actorId],
       )
       return created.rows[0]
     }

@@ -3,6 +3,8 @@
 import { useCallback, useEffect, useState } from 'react'
 import { Download, FileSpreadsheet, Loader2, Upload } from 'lucide-react'
 import Papa from 'papaparse'
+import { ErpImportDetails } from './ErpImportDetails'
+import { parseErpResponse } from '@/products/erp/frontend/services/erpProfessionalClient'
 
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -19,6 +21,8 @@ const types: Array<{ value: ImportType; label: string }> = [
 ]
 
 export function ErpImportExportPage() {
+  const [detailId,setDetailId]=useState<string|null>(null)
+  const [historyError,setHistoryError]=useState('')
   const [type, setType] = useState<ImportType>('clientes')
   const [file, setFile] = useState<File | null>(null)
   const [history, setHistory] = useState<ImportRecord[]>([])
@@ -27,11 +31,11 @@ export function ErpImportExportPage() {
   const [error, setError] = useState('')
 
   const loadHistory = useCallback(async () => {
-    const response = await fetch('/api/erp/operacoes/importacoes', { cache: 'no-store' })
-    if (response.ok) {
-      const body = await response.json() as { records: ImportRecord[] }
+    setHistoryError('')
+    try {
+      const body = await parseErpResponse<{records:ImportRecord[]}>(await fetch('/api/erp/operacoes/importacoes', { cache: 'no-store' }))
       setHistory(body.records)
-    }
+    } catch(e) {setHistoryError(e instanceof Error?e.message:'Não foi possível carregar as importações.')}
   }, [])
 
   useEffect(() => { void loadHistory() }, [loadHistory])
@@ -55,8 +59,8 @@ export function ErpImportExportPage() {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ fileName: file.name, rows }),
       })
-      const result = await response.json() as { error?: string; imported?: number; errors?: number }
-      if (!response.ok) throw new Error(result.error || 'Nao foi possivel importar o arquivo.')
+      const result = await parseErpResponse<{id:string;imported:number;errors:number}>(response)
+      setDetailId(result.id)
       setMessage(`${result.imported || 0} registro(s) importado(s); ${result.errors || 0} erro(s).`)
       setFile(null)
       await loadHistory()
@@ -91,12 +95,15 @@ export function ErpImportExportPage() {
 
       <section className="space-y-3">
         <h2 className="text-base font-semibold text-gray-950">Historico</h2>
+        {historyError?<p role="alert">{historyError}</p>:null}
+        <div className="flex flex-wrap gap-2">{history.map(record=><Button key={record.id} variant="outline" onClick={()=>setDetailId(record.id)}>Detalhes: {record.arquivo}</Button>)}</div>
         <div className="overflow-x-auto rounded-md border border-gray-200">
           <Table><TableHeader><TableRow className="hover:bg-white"><TableHead className="bg-gray-50">Arquivo</TableHead><TableHead className="bg-gray-50">Tipo</TableHead><TableHead className="bg-gray-50">Linhas</TableHead><TableHead className="bg-gray-50">Importadas</TableHead><TableHead className="bg-gray-50">Erros</TableHead><TableHead className="bg-gray-50">Status</TableHead></TableRow></TableHeader>
             <TableBody>{history.length ? history.map((record) => <TableRow key={record.id}><TableCell>{record.arquivo}</TableCell><TableCell>{record.tipo}</TableCell><TableCell>{record.total_linhas}</TableCell><TableCell>{record.importadas}</TableCell><TableCell>{record.erros}</TableCell><TableCell><ErpStatusBadge label={record.status} tone={record.status === 'concluida' ? 'success' : record.status === 'falha' ? 'danger' : 'warning'} /></TableCell></TableRow>) : <TableRow><TableCell colSpan={6} className="h-24 text-center text-sm text-gray-500">Nenhuma importacao realizada.</TableCell></TableRow>}</TableBody>
           </Table>
         </div>
       </section>
+      {detailId?<ErpImportDetails id={detailId} onClose={()=>setDetailId(null)}/>:null}
     </div>
   )
 }

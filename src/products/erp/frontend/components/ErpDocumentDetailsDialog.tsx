@@ -1,6 +1,8 @@
 'use client'
 
 import { Printer } from 'lucide-react'
+import { useState } from 'react'
+import { ErpHistoryPanel } from './ErpHistoryPanel'
 
 import { Button } from '@/components/ui/button'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
@@ -24,7 +26,8 @@ const labels: Record<string, string> = {
   data_prevista_entrega: 'Entrega prevista', total: 'Total', observacoes: 'Observacoes',
 }
 
-export function ErpDocumentDetailsDialog({ open, onOpenChange, title, loading, document, items, installments, events, invoices = [] }: {
+export function ErpDocumentDetailsDialog({ open, onOpenChange, title, loading, document, items, installments, events, invoices = [], documentKind }: {
+  documentKind?: string
   open: boolean
   onOpenChange: (open: boolean) => void
   title: string
@@ -35,6 +38,7 @@ export function ErpDocumentDetailsDialog({ open, onOpenChange, title, loading, d
   events?: DetailRecord[]
   invoices?: DetailRecord[]
 }) {
+  const [fiscalId,setFiscalId]=useState<string|null>(null)
   return <Dialog open={open} onOpenChange={onOpenChange}>
     <DialogContent className="h-[88vh] max-w-[min(980px,96vw)] overflow-hidden p-0">
       <DialogHeader className="flex-row items-center justify-between border-b px-6 py-4"><DialogTitle>{title}</DialogTitle><Button variant="outline" size="sm" onClick={() => window.print()}><Printer className="size-4" />Imprimir / PDF</Button></DialogHeader>
@@ -47,7 +51,9 @@ export function ErpDocumentDetailsDialog({ open, onOpenChange, title, loading, d
           <DetailTable title="Itens" rows={items || []} columns={['descricao', 'quantidade', 'valor_unitario', 'desconto', 'valor_desconto', 'total']} />
           <DetailTable title="Parcelas previstas" rows={installments || []} columns={['numero_parcela', 'data_vencimento', 'valor']} />
           {invoices.length ? <DetailTable title="Notas fiscais vinculadas" rows={invoices} columns={['numero', 'serie', 'chave_acesso', 'status', 'valor_total']} /> : null}
-          <DetailTable title="Historico" rows={events || []} columns={['evento', 'status_anterior', 'status_novo', 'versao', 'criado_em']} />
+          {invoices.filter(invoice=>invoice.id).map(invoice=><Button key={String(invoice.id)} variant="outline" onClick={()=>setFiscalId(fiscalId===String(invoice.id)?null:String(invoice.id))}>Histórico da nota {String(invoice.numero)}</Button>)}
+          {fiscalId && invoices.some(invoice=>String(invoice.id)===fiscalId)?<ErpHistoryPanel kind={documentKind==='compras'?'notas-compra':'notas-fiscais'} id={fiscalId}/>:null}
+          {documentKind && document.id ? <ErpHistoryPanel kind={documentKind} id={String(document.id)}/> : <DetailTable title="Historico" rows={events || []} columns={['evento', 'status_anterior', 'status_novo', 'versao', 'criado_em']} />}
         </div> : <div className="py-20 text-center text-sm text-gray-500">Documento nao encontrado.</div>}
       </div>
     </DialogContent>

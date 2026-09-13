@@ -1,3 +1,7 @@
+import { isRetiredErpReport } from '@/products/erp/shared/reportCatalog'
+import { cashResultSql } from './erpCashReport'
+import { processPurchaseRecurrences } from './erpRoutineRepository'
+import { erpDateSchema } from '@/products/erp/shared/erpTransport'
 import { lineTotal, sumMoney } from '@/products/erp/shared/erpMoney'
 import { assertCommercialReplay } from '@/products/erp/shared/commercialContracts'
 import { runQuery, withTransaction } from "@/lib/postgres";
@@ -7,12 +11,14 @@ import {
   createOrUpdatePurchasePayable,
   getErpSaleDetails,
   processErpFinancialRecurrences,
+  financialCompositionSql,
 } from "@/products/erp/server/erpRepository";
 import {
   createFinalStockDocument,
   resolveStockLocation,
 } from "@/products/erp/server/erpStockRepository";
 import { ErpDomainError } from "@/products/erp/server/erpApi";
+import { assertErpPeriodOpen } from "@/products/erp/server/erpPeriodRepository";
 import type {
   FiscalPreflightIssue,
   FiscalPreflightResult,
@@ -1044,7 +1050,7 @@ export async function suggestBankReconciliations(tenantId: number) {
        LEFT JOIN erp.regras_conciliacao_bancaria regras ON regras.tenant_id = transacoes.tenant_id
          AND (regras.conta_financeira_id = transacoes.conta_financeira_id OR regras.conta_financeira_id IS NULL)
          AND regras.ativo AND regras.excluido_em IS NULL
-       LEFT JOIN erp.conciliacoes_bancarias_itens conciliados ON conciliados.tenant_id = pagamentos.tenant_id AND conciliados.pagamento_id = pagamentos.id
+       LEFT JOIN erp.conciliacoes_bancarias_itens conciliados ON conciliados.tenant_id = pagamentos.tenant_id AND conciliados.pagamento_id = pagamentos.id AND conciliados.desfeito_em IS NULL
        WHERE transacoes.tenant_id = $1 AND transacoes.status = 'pendente' AND transacoes.excluido_em IS NULL
          AND conciliados.id IS NULL
          AND abs(transacoes.valor - abs(pagamentos.valor_liquido)) <= COALESCE(regras.tolerancia_valor, 0)
@@ -1106,43 +1112,36 @@ export async function undoBankReconciliation(
 ) {
   return withTransaction(async (client) => {
     const current = await client.query(
-      `SELECT itens.id, itens.conciliacao_id, itens.pagamento_id
+      `SELECT itens.id, itens.conciliacao_id, transacoes.data_transacao
        FROM erp.conciliacoes_bancarias_itens itens
+       JOIN erp.transacoes_bancarias transacoes ON transacoes.tenant_id = itens.tenant_id AND transacoes.id = itens.transacao_bancaria_id
        WHERE itens.tenant_id = $1 AND itens.transacao_bancaria_id = $2 AND itens.desfeito_em IS NULL FOR UPDATE`,
       [input.tenantId, input.transactionId],
     );
-    const item = current.rows[0];
-    if (!item)
+    const items = current.rows;
+    if (!items.length)
       throw new ErpDomainError(
         "RECONCILIATION_NOT_FOUND",
         "Conciliacao ativa nao encontrada.",
         404,
       );
+    const transactionDate = items[0].data_transacao instanceof Date
+      ? items[0].data_transacao.toISOString().slice(0, 10)
+      : String(items[0].data_transacao).slice(0, 10)
+    await assertErpPeriodOpen(client, { tenantId: input.tenantId, module: 'financeiro', date: transactionDate })
     await client.query(
       `UPDATE erp.conciliacoes_bancarias_itens SET desfeito_em = now(), desfeito_por = $3
-       WHERE tenant_id = $1 AND id = $2`,
-      [input.tenantId, item.id, input.actorId],
+       WHERE tenant_id = $1 AND transacao_bancaria_id = $2 AND desfeito_em IS NULL`,
+      [input.tenantId, input.transactionId, input.actorId],
     );
     await client.query(
       `UPDATE erp.conciliacoes_bancarias SET status = 'cancelada', atualizado_por = $3
-       WHERE tenant_id = $1 AND id = $2`,
-      [input.tenantId, item.conciliacao_id, input.actorId],
+       WHERE tenant_id = $1 AND id = ANY($2::bigint[])
+         AND NOT EXISTS (SELECT 1 FROM erp.conciliacoes_bancarias_itens ativo
+           WHERE ativo.tenant_id = $1 AND ativo.conciliacao_id = conciliacoes_bancarias.id AND ativo.desfeito_em IS NULL)`,
+      [input.tenantId, [...new Set(items.map((item) => Number(item.conciliacao_id)))], input.actorId],
     );
-    await client.query(
-      `UPDATE erp.transacoes_bancarias SET status = 'pendente', atualizado_por = $3
-       WHERE tenant_id = $1 AND id = $2`,
-      [input.tenantId, input.transactionId, input.actorId],
-    );
-    if (item.pagamento_id) {
-      await client.query(
-        `UPDATE erp.pagamentos SET conciliado = false,
-           origem = COALESCE(metadata ->> 'origem_antes_conciliacao', 'manual'),
-           metadata = metadata - 'origem_antes_conciliacao', atualizado_por = $3
-         WHERE tenant_id = $1 AND id = $2`,
-        [input.tenantId, item.pagamento_id, input.actorId],
-      );
-    }
-    return { id: String(item.id), status: "desfeita" };
+    return { ids: items.map((item) => String(item.id)), status: "desfeita" };
   });
 }
 
@@ -1151,41 +1150,39 @@ export async function runErpAutomation(
 ) {
   const competence = date(input.competencia);
   const key = `${input.tipo}:${competence}`;
-  const existing = await runQuery<Record<string, unknown>>(
-    `SELECT id::text, status, resultado, erro FROM erp.execucoes_automacao WHERE tenant_id = $1 AND chave_idempotencia = $2`,
-    [input.tenantId, key],
-  );
-  if (existing[0]?.status === "concluida") return existing[0];
-  const execution = await runQuery<Record<string, unknown>>(
-    `INSERT INTO erp.execucoes_automacao
-       (tenant_id, tipo, competencia, status, tentativas, chave_idempotencia, iniciado_em, criado_por, atualizado_por)
-     VALUES ($1,$2,$3,'processando',1,$4,now(),$5,$5)
-     ON CONFLICT (tenant_id, chave_idempotencia) DO UPDATE SET
-       status = 'processando', tentativas = erp.execucoes_automacao.tentativas + 1,
-       iniciado_em = now(), erro = NULL, atualizado_por = EXCLUDED.atualizado_por
-     RETURNING id`,
-    [input.tenantId, input.tipo, competence, key, input.actorId],
-  );
+  const claim = await withTransaction(async client => {
+    await client.query('SELECT pg_advisory_xact_lock(hashtextextended($1,0))',[`erp:execution:${input.tenantId}:${key}`]);
+    const current = await client.query(`SELECT id::text,status,resultado,erro FROM erp.execucoes_automacao WHERE tenant_id=$1 AND chave_idempotencia=$2 FOR UPDATE`,[input.tenantId,key]);
+    if (current.rows[0] && ['concluida','processando'].includes(String(current.rows[0].status))) return {claimed:false,record:current.rows[0]};
+    const result = current.rows[0] ? await client.query(`UPDATE erp.execucoes_automacao SET status='processando',tentativas=tentativas+1,iniciado_em=now(),finalizado_em=NULL,erro=NULL,resultado='{}'::jsonb,atualizado_por=$3 WHERE tenant_id=$1 AND id=$2 RETURNING id::text`,[input.tenantId,current.rows[0].id,input.actorId]) : await client.query(`INSERT INTO erp.execucoes_automacao(tenant_id,tipo,competencia,status,tentativas,chave_idempotencia,iniciado_em,criado_por,atualizado_por) VALUES($1,$2,$3,'processando',1,$4,now(),$5,$5) RETURNING id::text`,[input.tenantId,input.tipo,competence,key,input.actorId]);
+    return {claimed:true,record:result.rows[0]};
+  });
+  if(!claim.claimed)return claim.record;
+  const execution=[claim.record];
   try {
     let result: unknown = { total: 0 };
     if (input.tipo === "contratos")
       result = await processDueSalesContracts({ ...input, until: competence });
-    else if (input.tipo === "recorrencias_financeiras")
-      result = await processErpFinancialRecurrences({
+    else if (input.tipo === "recorrencias_financeiras") {
+      const financial = await processErpFinancialRecurrences({
         ...input,
         throughDate: competence,
       });
+      const purchases = await processPurchaseRecurrences({...input,throughDate:competence});
+      result = {financial,purchases};
+    }
     else if (input.tipo === "titulos_vencidos") {
-      const updates = await runQuery<{ total: number }>(
-        `WITH receber AS (
-           UPDATE erp.contas_receber_parcelas SET status = 'vencido'
-           WHERE tenant_id = $1 AND status IN ('aberto','parcial') AND data_vencimento < $2 AND excluido_em IS NULL RETURNING 1
+      const updates = await withTransaction(async client => {
+        await assertErpPeriodOpen(client,{tenantId:input.tenantId,module:'financeiro',date:competence});
+        const updated = await client.query(`WITH receber AS (
+           UPDATE erp.contas_receber_parcelas p SET status='vencido' WHERE p.tenant_id=$1 AND p.status IN ('aberto','parcial') AND p.data_vencimento<$2 AND p.excluido_em IS NULL
+             AND p.id IN (SELECT parcelas.id FROM erp.contas_receber_parcelas parcelas ${financialCompositionSql('receber')} WHERE parcelas.tenant_id=$1 AND composicao.saldo>0) RETURNING 1
          ), pagar AS (
-           UPDATE erp.contas_pagar_parcelas SET status = 'vencido'
-           WHERE tenant_id = $1 AND status IN ('aberto','parcial') AND data_vencimento < $2 AND excluido_em IS NULL RETURNING 1
-         ) SELECT ((SELECT count(*) FROM receber) + (SELECT count(*) FROM pagar))::int AS total`,
-        [input.tenantId, competence],
-      );
+           UPDATE erp.contas_pagar_parcelas p SET status='vencido' WHERE p.tenant_id=$1 AND p.status IN ('aberto','parcial') AND p.data_vencimento<$2 AND p.excluido_em IS NULL
+             AND p.id IN (SELECT parcelas.id FROM erp.contas_pagar_parcelas parcelas JOIN erp.contas_pagar c ON c.tenant_id=parcelas.tenant_id AND c.id=parcelas.conta_pagar_id ${financialCompositionSql('pagar')} WHERE parcelas.tenant_id=$1 AND composicao.saldo>0 AND c.tipo_lancamento='efetivo') RETURNING 1
+         ) SELECT ((SELECT count(*) FROM receber)+(SELECT count(*) FROM pagar))::int AS total`,[input.tenantId,competence]);
+        return updated.rows;
+      });
       result = updates[0];
     } else if (input.tipo === "estoque_minimo") {
       const rows = await runQuery(
@@ -1193,12 +1190,10 @@ export async function runErpAutomation(
         [input.tenantId],
       );
       result = rows[0];
+    } else if (input.tipo === 'indicadores') {
+      result = await getProfessionalOverview(input.tenantId);
     } else {
-      const rows = await runQuery(
-        `SELECT count(*)::int AS total FROM erp.vendas WHERE tenant_id = $1 AND excluido_em IS NULL`,
-        [input.tenantId],
-      );
-      result = rows[0];
+      throw new ErpDomainError('VALIDATION_ERROR', 'Rotina desconhecida.', 422);
     }
     const completed = await runQuery(
       `UPDATE erp.execucoes_automacao SET status = 'concluida', resultado = $3::jsonb, finalizado_em = now(), atualizado_por = $4
@@ -1224,20 +1219,25 @@ export async function runErpAutomation(
 export async function getProfessionalOverview(tenantId: number) {
   const rows = await runQuery<Record<string, unknown>>(
     `SELECT
-       COALESCE((SELECT sum(valor - valor_pago) FROM erp.contas_receber_parcelas WHERE tenant_id = $1 AND status IN ('aberto','parcial','vencido') AND excluido_em IS NULL),0) AS saldo_receber,
-       COALESCE((SELECT sum(valor - valor_pago) FROM erp.contas_pagar_parcelas WHERE tenant_id = $1 AND status IN ('aberto','parcial','vencido') AND excluido_em IS NULL),0) AS saldo_pagar,
-       COALESCE((SELECT sum(valor - valor_pago) FROM erp.contas_receber_parcelas WHERE tenant_id = $1 AND status = 'vencido' AND excluido_em IS NULL),0) AS receber_vencido,
-       COALESCE((SELECT sum(valor - valor_pago) FROM erp.contas_pagar_parcelas WHERE tenant_id = $1 AND data_vencimento BETWEEN CURRENT_DATE AND CURRENT_DATE + 7 AND status IN ('aberto','parcial') AND excluido_em IS NULL),0) AS pagar_proximos_7_dias,
-       COALESCE((SELECT sum(total) FROM erp.vendas WHERE tenant_id = $1 AND data_venda >= date_trunc('month', CURRENT_DATE) AND status <> 'cancelada' AND tipo_documento = 'venda' AND excluido_em IS NULL),0) AS vendas_mes,
-       COALESCE((SELECT sum(total) FROM erp.compras WHERE tenant_id = $1 AND data_compra >= date_trunc('month', CURRENT_DATE) AND status <> 'cancelada' AND excluido_em IS NULL),0) AS compras_mes,
-       COALESCE((SELECT sum(total) FROM erp.vendas WHERE tenant_id = $1 AND data_venda >= date_trunc('month', CURRENT_DATE) - interval '1 month' AND data_venda < date_trunc('month', CURRENT_DATE) AND status <> 'cancelada' AND tipo_documento = 'venda' AND excluido_em IS NULL),0) AS vendas_mes_anterior,
-       COALESCE((SELECT sum(total) FROM erp.compras WHERE tenant_id = $1 AND data_compra >= date_trunc('month', CURRENT_DATE) - interval '1 month' AND data_compra < date_trunc('month', CURRENT_DATE) AND status <> 'cancelada' AND excluido_em IS NULL),0) AS compras_mes_anterior,
-       (COALESCE((SELECT sum(saldo_inicial) FROM erp.contas_financeiras WHERE tenant_id = $1 AND ativo AND excluido_em IS NULL),0)
-         + COALESCE((SELECT sum(valor_liquido) FROM erp.pagamentos WHERE tenant_id = $1 AND tipo = 'receber' AND estornado_em IS NULL AND estorno_de_pagamento_id IS NULL AND excluido_em IS NULL),0)
-         - COALESCE((SELECT sum(valor_liquido) FROM erp.pagamentos WHERE tenant_id = $1 AND tipo = 'pagar' AND estornado_em IS NULL AND estorno_de_pagamento_id IS NULL AND excluido_em IS NULL),0)) AS saldo_atual,
-       COALESCE((SELECT sum(itens.total - (itens.custo_unitario * itens.quantidade)) FROM erp.vendas_itens itens JOIN erp.vendas vendas ON vendas.tenant_id = itens.tenant_id AND vendas.id = itens.venda_id WHERE itens.tenant_id = $1 AND vendas.data_venda >= date_trunc('month', CURRENT_DATE) AND vendas.status <> 'cancelada' AND itens.excluido_em IS NULL),0) AS margem_bruta_mes,
+       COALESCE((SELECT sum(composicao.saldo) FROM erp.contas_receber_parcelas parcelas ${financialCompositionSql('receber')} WHERE parcelas.tenant_id = $1 AND parcelas.status IN ('aberto','parcial','vencido') AND parcelas.excluido_em IS NULL),0) AS saldo_receber,
+       COALESCE((SELECT sum(composicao.saldo) FROM erp.contas_pagar_parcelas parcelas JOIN erp.contas_pagar contas ON contas.tenant_id=parcelas.tenant_id AND contas.id=parcelas.conta_pagar_id ${financialCompositionSql('pagar')} WHERE parcelas.tenant_id = $1 AND contas.tipo_lancamento='efetivo' AND parcelas.status IN ('aberto','parcial','vencido') AND parcelas.excluido_em IS NULL),0) AS saldo_pagar,
+       COALESCE((SELECT sum(composicao.saldo) FROM erp.contas_receber_parcelas parcelas ${financialCompositionSql('receber')} WHERE parcelas.tenant_id = $1 AND parcelas.status IN ('aberto','parcial','vencido') AND parcelas.data_vencimento < CURRENT_DATE AND parcelas.excluido_em IS NULL),0) AS receber_vencido,
+       COALESCE((SELECT sum(composicao.saldo) FROM erp.contas_pagar_parcelas parcelas JOIN erp.contas_pagar contas ON contas.tenant_id=parcelas.tenant_id AND contas.id=parcelas.conta_pagar_id ${financialCompositionSql('pagar')} WHERE parcelas.tenant_id = $1 AND contas.tipo_lancamento='efetivo' AND parcelas.data_vencimento BETWEEN CURRENT_DATE AND CURRENT_DATE + 7 AND parcelas.status IN ('aberto','parcial','vencido') AND parcelas.excluido_em IS NULL),0) AS pagar_proximos_7_dias,
+       COALESCE((SELECT sum(total) FROM erp.vendas WHERE tenant_id = $1 AND data_venda >= date_trunc('month', CURRENT_DATE) AND data_venda < date_trunc('month', CURRENT_DATE) + interval '1 month' AND status IN ('confirmada','faturada') AND tipo_documento = 'venda' AND excluido_em IS NULL),0) AS vendas_mes,
+       COALESCE((SELECT sum(total) FROM erp.compras WHERE tenant_id = $1 AND data_compra >= date_trunc('month', CURRENT_DATE) AND data_compra < date_trunc('month', CURRENT_DATE) + interval '1 month' AND status IN ('confirmada','recebida') AND tipo_movimento='compra' AND excluido_em IS NULL),0) AS compras_mes,
+       COALESCE((SELECT sum(total) FROM erp.vendas WHERE tenant_id = $1 AND data_venda >= date_trunc('month', CURRENT_DATE) - interval '1 month' AND data_venda < date_trunc('month', CURRENT_DATE) AND status IN ('confirmada','faturada') AND tipo_documento = 'venda' AND excluido_em IS NULL),0) AS vendas_mes_anterior,
+       COALESCE((SELECT sum(total) FROM erp.compras WHERE tenant_id = $1 AND data_compra >= date_trunc('month', CURRENT_DATE) - interval '1 month' AND data_compra < date_trunc('month', CURRENT_DATE) AND status IN ('confirmada','recebida') AND tipo_movimento='compra' AND excluido_em IS NULL),0) AS compras_mes_anterior,
+       (COALESCE((SELECT sum(saldo_inicial) FROM erp.contas_financeiras WHERE tenant_id = $1 AND excluido_em IS NULL),0)
+         + COALESCE((SELECT sum(CASE WHEN estorno_de_pagamento_id IS NULL THEN valor_liquido ELSE -valor_liquido END) FROM erp.pagamentos WHERE tenant_id = $1 AND tipo = 'receber' AND data_pagamento <= CURRENT_DATE AND excluido_em IS NULL),0)
+         - COALESCE((SELECT sum(CASE WHEN estorno_de_pagamento_id IS NULL THEN valor_liquido ELSE -valor_liquido END) FROM erp.pagamentos WHERE tenant_id = $1 AND tipo = 'pagar' AND data_pagamento <= CURRENT_DATE AND excluido_em IS NULL),0)
+         + COALESCE((SELECT sum(CASE
+             WHEN a.tipo='reversao' THEN CASE WHEN (original.lado='receber')=(original.tipo='constituicao') THEN -a.valor ELSE a.valor END
+             WHEN (a.lado='receber')=(a.tipo='constituicao') THEN a.valor ELSE -a.valor END)
+           FROM erp.adiantamentos a LEFT JOIN erp.adiantamentos original ON original.tenant_id=a.tenant_id AND original.id=a.reversao_de_id
+           WHERE a.tenant_id=$1 AND a.data_movimento<=CURRENT_DATE),0)) AS saldo_atual,
+       NULL::numeric AS margem_bruta_mes,
        (SELECT count(*) FROM erp.vw_posicao_estoque WHERE tenant_id = $1 AND situacao = 'repor')::int AS produtos_repor,
-       (SELECT count(*) FROM erp.transacoes_bancarias WHERE tenant_id = $1 AND status = 'pendente' AND excluido_em IS NULL)::int AS conciliacoes_pendentes,
+       (SELECT count(*) FROM erp.transacoes_bancarias WHERE tenant_id = $1 AND status IN ('pendente','parcial') AND excluido_em IS NULL)::int AS conciliacoes_pendentes,
        (SELECT count(*) FROM erp.ordens_servico WHERE tenant_id = $1 AND status IN ('aprovada','em_execucao') AND excluido_em IS NULL)::int AS ordens_abertas`,
     [tenantId],
   );
@@ -1250,36 +1250,25 @@ export async function listProfessionalReport(input: {
   from?: string;
   to?: string;
 }) {
-  if (["dre-competencia", "fluxo-diario", "fluxo-mensal"].includes(input.report)) {
+  if (isRetiredErpReport(input.report)) {
     throw new ErpDomainError("REPORT_RETIRED", "Este relatorio foi descontinuado.", 410);
   }
   const from =
     input.from ||
     new Date(new Date().getFullYear(), 0, 1).toISOString().slice(0, 10);
   const to = input.to || new Date().toISOString().slice(0, 10);
+  if (!erpDateSchema.safeParse(from).success || !erpDateSchema.safeParse(to).success || from > to) throw new ErpDomainError('VALIDATION_ERROR','Informe um período válido para o relatório.',422);
   const reports: Record<string, string> = {
-    "dre-caixa": `SELECT date_trunc('month', pagamentos.data_pagamento)::date AS competencia,
-      COALESCE(categorias.nome, 'Sem categoria') AS categoria,
-      CASE WHEN pagamentos.tipo = 'receber' THEN 'receita' ELSE 'despesa' END AS tipo,
-      sum(CASE WHEN pagamentos.tipo = 'receber' THEN pagamentos.valor_liquido ELSE -pagamentos.valor_liquido END)::numeric(18,2) AS valor
-      FROM erp.pagamentos
-      LEFT JOIN erp.contas_receber_parcelas receber_parcelas ON receber_parcelas.tenant_id = pagamentos.tenant_id AND receber_parcelas.id = pagamentos.conta_receber_parcela_id
-      LEFT JOIN erp.contas_receber receber ON receber.tenant_id = receber_parcelas.tenant_id AND receber.id = receber_parcelas.conta_receber_id
-      LEFT JOIN erp.contas_pagar_parcelas pagar_parcelas ON pagar_parcelas.tenant_id = pagamentos.tenant_id AND pagar_parcelas.id = pagamentos.conta_pagar_parcela_id
-      LEFT JOIN erp.contas_pagar pagar ON pagar.tenant_id = pagar_parcelas.tenant_id AND pagar.id = pagar_parcelas.conta_pagar_id
-      LEFT JOIN erp.categorias categorias ON categorias.tenant_id = pagamentos.tenant_id AND categorias.id = COALESCE(receber.categoria_id, pagar.categoria_id)
-      WHERE pagamentos.tenant_id = $1 AND pagamentos.data_pagamento BETWEEN $2 AND $3
-        AND pagamentos.estornado_em IS NULL AND pagamentos.estorno_de_pagamento_id IS NULL AND pagamentos.excluido_em IS NULL
-      GROUP BY 1, 2, 3 ORDER BY 1, 3, 2`,
+    "dre-caixa": cashResultSql,
     "posicao-financeira": `SELECT tipo, status, count(*)::int AS parcelas, sum(saldo)::numeric(18,2) AS saldo FROM (
-      SELECT 'receber'::text AS tipo, status, greatest(valor - valor_pago, 0) AS saldo FROM erp.contas_receber_parcelas WHERE tenant_id = $1 AND data_vencimento BETWEEN $2 AND $3 AND excluido_em IS NULL
-      UNION ALL SELECT 'pagar'::text, status, greatest(valor - valor_pago, 0) FROM erp.contas_pagar_parcelas WHERE tenant_id = $1 AND data_vencimento BETWEEN $2 AND $3 AND excluido_em IS NULL
+      SELECT 'receber'::text AS tipo, parcelas.status, composicao.saldo FROM erp.contas_receber_parcelas parcelas JOIN erp.contas_receber contas ON contas.tenant_id=parcelas.tenant_id AND contas.id=parcelas.conta_receber_id ${financialCompositionSql('receber')} WHERE parcelas.tenant_id = $1 AND contas.status<>'cancelado' AND contas.excluido_em IS NULL AND parcelas.status<>'cancelado' AND parcelas.data_vencimento BETWEEN $2 AND $3 AND parcelas.excluido_em IS NULL
+      UNION ALL SELECT 'pagar'::text, parcelas.status, composicao.saldo FROM erp.contas_pagar_parcelas parcelas JOIN erp.contas_pagar contas ON contas.tenant_id=parcelas.tenant_id AND contas.id=parcelas.conta_pagar_id ${financialCompositionSql('pagar')} WHERE parcelas.tenant_id = $1 AND contas.tipo_lancamento='efetivo' AND contas.status<>'cancelado' AND contas.excluido_em IS NULL AND parcelas.status<>'cancelado' AND parcelas.data_vencimento BETWEEN $2 AND $3 AND parcelas.excluido_em IS NULL
       ) posicao GROUP BY tipo, status ORDER BY tipo, status`,
-    "vendas-clientes": `SELECT entidades.nome AS cliente, count(*)::int AS vendas, sum(vendas.total)::numeric(18,2) AS total FROM erp.vendas JOIN erp.entidades ON entidades.tenant_id = vendas.tenant_id AND entidades.id = vendas.cliente_id WHERE vendas.tenant_id = $1 AND vendas.data_venda BETWEEN $2 AND $3 AND vendas.status <> 'cancelada' AND vendas.tipo_documento = 'venda' AND vendas.excluido_em IS NULL GROUP BY entidades.nome ORDER BY total DESC`,
-    "vendas-vendedores": `SELECT COALESCE(vendedores.nome, 'Sem vendedor') AS vendedor, count(*)::int AS vendas, sum(vendas.total)::numeric(18,2) AS total FROM erp.vendas LEFT JOIN erp.entidades vendedores ON vendedores.tenant_id = vendas.tenant_id AND vendedores.id = vendas.vendedor_id WHERE vendas.tenant_id = $1 AND vendas.data_venda BETWEEN $2 AND $3 AND vendas.status <> 'cancelada' AND vendas.tipo_documento = 'venda' AND vendas.excluido_em IS NULL GROUP BY 1 ORDER BY total DESC`,
-    "vendas-produtos": `SELECT itens.descricao AS produto, sum(itens.quantidade)::numeric(18,4) AS quantidade, sum(itens.total)::numeric(18,2) AS total FROM erp.vendas_itens itens JOIN erp.vendas vendas ON vendas.tenant_id = itens.tenant_id AND vendas.id = itens.venda_id WHERE itens.tenant_id = $1 AND vendas.data_venda BETWEEN $2 AND $3 AND vendas.status <> 'cancelada' AND vendas.tipo_documento = 'venda' AND itens.excluido_em IS NULL GROUP BY itens.descricao ORDER BY total DESC`,
-    "compras-fornecedores": `SELECT entidades.nome AS fornecedor, count(*)::int AS compras, sum(compras.total)::numeric(18,2) AS total FROM erp.compras JOIN erp.entidades ON entidades.tenant_id = compras.tenant_id AND entidades.id = compras.fornecedor_id WHERE compras.tenant_id = $1 AND compras.data_compra BETWEEN $2 AND $3 AND compras.status <> 'cancelada' AND compras.excluido_em IS NULL GROUP BY entidades.nome ORDER BY total DESC`,
-    "compras-categorias": `SELECT COALESCE(categorias.nome, 'Sem categoria') AS categoria, count(*)::int AS compras, sum(compras.total)::numeric(18,2) AS total FROM erp.compras LEFT JOIN erp.categorias ON categorias.tenant_id = compras.tenant_id AND categorias.id = compras.categoria_id WHERE compras.tenant_id = $1 AND compras.data_compra BETWEEN $2 AND $3 AND compras.status <> 'cancelada' AND compras.excluido_em IS NULL GROUP BY 1 ORDER BY total DESC`,
+    "vendas-clientes": `SELECT entidades.nome AS cliente, count(*)::int AS vendas, sum(vendas.total)::numeric(18,2) AS total FROM erp.vendas JOIN erp.entidades ON entidades.tenant_id = vendas.tenant_id AND entidades.id = vendas.cliente_id WHERE vendas.tenant_id = $1 AND vendas.data_venda BETWEEN $2 AND $3 AND vendas.status IN ('confirmada','faturada') AND vendas.tipo_documento = 'venda' AND vendas.excluido_em IS NULL GROUP BY entidades.id,entidades.nome ORDER BY total DESC`,
+    "vendas-vendedores": `SELECT COALESCE(vendedores.nome, 'Sem vendedor') AS vendedor, count(*)::int AS vendas, sum(vendas.total)::numeric(18,2) AS total FROM erp.vendas LEFT JOIN erp.entidades vendedores ON vendedores.tenant_id = vendas.tenant_id AND vendedores.id = vendas.vendedor_id WHERE vendas.tenant_id = $1 AND vendas.data_venda BETWEEN $2 AND $3 AND vendas.status IN ('confirmada','faturada') AND vendas.tipo_documento = 'venda' AND vendas.excluido_em IS NULL GROUP BY vendedores.id,vendedores.nome ORDER BY total DESC`,
+    "vendas-produtos": `SELECT itens.descricao AS produto, sum(itens.quantidade)::numeric(18,4) AS quantidade, sum(itens.total * vendas.total / NULLIF(vendas.subtotal,0))::numeric(18,2) AS total FROM erp.vendas_itens itens JOIN erp.vendas vendas ON vendas.tenant_id = itens.tenant_id AND vendas.id = itens.venda_id WHERE itens.tenant_id = $1 AND vendas.data_venda BETWEEN $2 AND $3 AND vendas.status IN ('confirmada','faturada') AND vendas.tipo_documento = 'venda' AND vendas.excluido_em IS NULL AND itens.excluido_em IS NULL GROUP BY itens.produto_id,itens.servico_id,itens.descricao ORDER BY total DESC`,
+    "compras-fornecedores": `SELECT entidades.nome AS fornecedor, count(*)::int AS compras, sum(compras.total)::numeric(18,2) AS total FROM erp.compras JOIN erp.entidades ON entidades.tenant_id = compras.tenant_id AND entidades.id = compras.fornecedor_id WHERE compras.tenant_id = $1 AND compras.data_compra BETWEEN $2 AND $3 AND compras.status IN ('confirmada','recebida') AND compras.tipo_movimento='compra' AND compras.excluido_em IS NULL GROUP BY entidades.id,entidades.nome ORDER BY total DESC`,
+    "compras-categorias": `SELECT COALESCE(categorias.nome, 'Sem categoria') AS categoria, count(*)::int AS compras, sum(compras.total)::numeric(18,2) AS total FROM erp.compras LEFT JOIN erp.categorias ON categorias.tenant_id = compras.tenant_id AND categorias.id = compras.categoria_id WHERE compras.tenant_id = $1 AND compras.data_compra BETWEEN $2 AND $3 AND compras.status IN ('confirmada','recebida') AND compras.tipo_movimento='compra' AND compras.excluido_em IS NULL GROUP BY categorias.id,categorias.nome ORDER BY total DESC`,
     "valor-estoque": `SELECT produto, sku, local_estoque AS local, quantidade_fisica, custo_medio, valor_estoque FROM erp.vw_posicao_estoque WHERE tenant_id = $1 ORDER BY valor_estoque DESC`,
   };
   const sql = reports[input.report];

@@ -14,7 +14,7 @@ import {
   DASHBOARD_SUPPORTED_COMPONENTS,
   DASHBOARD_SUPPORTED_DATE_PICKER_PRESETS,
   DASHBOARD_SUPPORTED_HTML_TAGS,
-} from '@/products/artifacts/dashboard/language/dashboardLanguageManifest'
+} from '@/products/plugin/server/artifactRuntime/dashboardLanguageManifest'
 
 type JsonRecord = Record<string, unknown>
 

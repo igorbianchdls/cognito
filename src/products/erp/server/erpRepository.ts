@@ -129,6 +129,7 @@ type NormalizedInstallment = {
   metodoPagamentoId?: string | number | null
   percentual?: number | null
   observacoes?: string | null
+  commercialForecastId?: string | number | null
 }
 
 type PurchaseItemInput = {
@@ -338,6 +339,34 @@ async function ensureFinancialAccountId(
   throw new ErpDomainError('VALIDATION_ERROR', 'Selecione uma conta financeira para registrar a baixa.')
 }
 
+export function financialCompositionSql(financialSide: 'receber' | 'pagar', installmentAlias = 'parcelas') {
+  const installmentColumn = `conta_${financialSide}_parcela_id`
+  return `CROSS JOIN LATERAL (
+    SELECT ${installmentAlias}.valor,
+      COALESCE((SELECT sum(valor) FROM erp.pagamentos pagamento
+        WHERE pagamento.tenant_id=${installmentAlias}.tenant_id AND pagamento.${installmentColumn}=${installmentAlias}.id
+          AND pagamento.estorno_de_pagamento_id IS NULL AND pagamento.estornado_em IS NULL AND pagamento.excluido_em IS NULL),0) AS dinheiro,
+      COALESCE((SELECT sum(CASE WHEN aplicacao.reversao_de_id IS NULL THEN aplicacao.valor ELSE -aplicacao.valor END)
+        FROM erp.adiantamentos_aplicacoes aplicacao WHERE aplicacao.tenant_id=${installmentAlias}.tenant_id
+          AND aplicacao.${installmentColumn}=${installmentAlias}.id),0) AS credito,
+      COALESCE((SELECT sum(link.valor) FROM erp.renegociacoes_parcelas link
+        JOIN erp.renegociacoes acordo ON acordo.tenant_id=link.tenant_id AND acordo.id=link.renegociacao_id
+        WHERE link.tenant_id=${installmentAlias}.tenant_id AND link.${installmentColumn}=${installmentAlias}.id
+          AND link.papel='origem' AND acordo.status='efetivada'),0) AS transferido,
+      ${installmentAlias}.valor
+        - COALESCE((SELECT sum(valor) FROM erp.pagamentos pagamento WHERE pagamento.tenant_id=${installmentAlias}.tenant_id
+          AND pagamento.${installmentColumn}=${installmentAlias}.id AND pagamento.estorno_de_pagamento_id IS NULL
+          AND pagamento.estornado_em IS NULL AND pagamento.excluido_em IS NULL),0)
+        - COALESCE((SELECT sum(CASE WHEN aplicacao.reversao_de_id IS NULL THEN aplicacao.valor ELSE -aplicacao.valor END)
+          FROM erp.adiantamentos_aplicacoes aplicacao WHERE aplicacao.tenant_id=${installmentAlias}.tenant_id
+            AND aplicacao.${installmentColumn}=${installmentAlias}.id),0)
+        - COALESCE((SELECT sum(link.valor) FROM erp.renegociacoes_parcelas link
+          JOIN erp.renegociacoes acordo ON acordo.tenant_id=link.tenant_id AND acordo.id=link.renegociacao_id
+          WHERE link.tenant_id=${installmentAlias}.tenant_id AND link.${installmentColumn}=${installmentAlias}.id
+            AND link.papel='origem' AND acordo.status='efetivada'),0) AS saldo
+  ) composicao`
+}
+
 async function updateReceivableStatus(
   client: Pick<SQLClient, 'query'>,
   tenantId: number,
@@ -347,17 +376,18 @@ async function updateReceivableStatus(
   await client.query(
     `WITH totals AS (
        SELECT
-         COALESCE(sum(valor), 0) AS total,
-         COALESCE(sum(valor_pago), 0) AS paid
-       FROM erp.contas_receber_parcelas
-       WHERE tenant_id = $1
-         AND conta_receber_id = $2
-         AND excluido_em IS NULL
-         AND status <> 'cancelado'
+         COALESCE(sum(composicao.saldo), 0) AS saldo,
+         COALESCE(sum(composicao.dinheiro + composicao.credito), 0) AS liquidado,
+         bool_and(composicao.transferido > 0) AS renegociado
+       FROM erp.contas_receber_parcelas parcelas
+       ${financialCompositionSql('receber')}
+       WHERE parcelas.tenant_id = $1 AND parcelas.conta_receber_id = $2
+         AND parcelas.excluido_em IS NULL AND parcelas.status <> 'cancelado'
      )
      UPDATE erp.contas_receber
      SET status = CASE
-       WHEN totals.total > 0 AND totals.paid >= totals.total THEN 'pago'
+       WHEN totals.renegociado THEN 'renegociado'
+       WHEN totals.saldo = 0 THEN 'pago'
        WHEN EXISTS (
          SELECT 1
          FROM erp.contas_receber_parcelas AS vencidas
@@ -365,10 +395,10 @@ async function updateReceivableStatus(
            AND vencidas.conta_receber_id = $2
            AND vencidas.excluido_em IS NULL
            AND vencidas.status <> 'cancelado'
-           AND vencidas.valor_pago < vencidas.valor
+           AND vencidas.status NOT IN ('pago','renegociado')
            AND vencidas.data_vencimento < CURRENT_DATE
        ) THEN 'vencido'
-       WHEN totals.paid > 0 THEN 'parcial'
+       WHEN totals.liquidado > 0 THEN 'parcial'
        ELSE 'aberto'
      END,
      atualizado_por = $3
@@ -388,17 +418,18 @@ async function updatePayableStatus(
   await client.query(
     `WITH totals AS (
        SELECT
-         COALESCE(sum(valor), 0) AS total,
-         COALESCE(sum(valor_pago), 0) AS paid
-       FROM erp.contas_pagar_parcelas
-       WHERE tenant_id = $1
-         AND conta_pagar_id = $2
-         AND excluido_em IS NULL
-         AND status <> 'cancelado'
+         COALESCE(sum(composicao.saldo), 0) AS saldo,
+         COALESCE(sum(composicao.dinheiro + composicao.credito), 0) AS liquidado,
+         bool_and(composicao.transferido > 0) AS renegociado
+       FROM erp.contas_pagar_parcelas parcelas
+       ${financialCompositionSql('pagar')}
+       WHERE parcelas.tenant_id = $1 AND parcelas.conta_pagar_id = $2
+         AND parcelas.excluido_em IS NULL AND parcelas.status <> 'cancelado'
      )
      UPDATE erp.contas_pagar
      SET status = CASE
-       WHEN totals.total > 0 AND totals.paid >= totals.total THEN 'pago'
+       WHEN totals.renegociado THEN 'renegociado'
+       WHEN totals.saldo = 0 THEN 'pago'
        WHEN EXISTS (
          SELECT 1
          FROM erp.contas_pagar_parcelas AS vencidas
@@ -406,10 +437,10 @@ async function updatePayableStatus(
            AND vencidas.conta_pagar_id = $2
            AND vencidas.excluido_em IS NULL
            AND vencidas.status <> 'cancelado'
-           AND vencidas.valor_pago < vencidas.valor
+           AND vencidas.status NOT IN ('pago','renegociado')
            AND vencidas.data_vencimento < CURRENT_DATE
        ) THEN 'vencido'
-       WHEN totals.paid > 0 THEN 'parcial'
+       WHEN totals.liquidado > 0 THEN 'parcial'
        ELSE 'aberto'
      END,
      atualizado_por = $3
@@ -580,7 +611,7 @@ function normalizePaymentConditionInstallments(sale: SaleRow): NormalizedInstall
 
 async function resolveSaleInstallments(client: Pick<SQLClient, 'query'>, sale: SaleRow) {
   const plannedResult = await client.query(
-    `SELECT numero_parcela, descricao, data_vencimento, valor, conta_financeira_id, metodo_pagamento_id
+    `SELECT id, numero_parcela, descricao, data_vencimento, valor, conta_financeira_id, metodo_pagamento_id
      FROM erp.vendas_recebimentos_previstos
      WHERE tenant_id = $1
        AND venda_id = $2
@@ -597,6 +628,7 @@ async function resolveSaleInstallments(client: Pick<SQLClient, 'query'>, sale: S
     valor: money(row.valor),
     contaFinanceiraId: paymentMethodId(row.conta_financeira_id),
     metodoPagamentoId: paymentMethodId(row.metodo_pagamento_id),
+    commercialForecastId: row.id as string | number,
   })))
 }
 
@@ -658,7 +690,7 @@ function normalizePurchaseInstallments(purchase: PurchaseRow): NormalizedInstall
 
 async function resolvePurchaseInstallments(client: Pick<SQLClient, 'query'>, purchase: PurchaseRow) {
   const plannedResult = await client.query(
-    `SELECT numero_parcela, descricao, data_vencimento, valor, percentual, conta_financeira_id, metodo_pagamento_id, observacoes
+    `SELECT id, numero_parcela, descricao, data_vencimento, valor, percentual, conta_financeira_id, metodo_pagamento_id, observacoes
      FROM erp.compras_parcelas_previstas
      WHERE tenant_id = $1
        AND compra_id = $2
@@ -677,6 +709,7 @@ async function resolvePurchaseInstallments(client: Pick<SQLClient, 'query'>, pur
     contaFinanceiraId: paymentMethodId(row.conta_financeira_id),
     metodoPagamentoId: paymentMethodId(row.metodo_pagamento_id),
     observacoes: optionalText(row.observacoes),
+    commercialForecastId: row.id as string | number,
   })))
 }
 
@@ -810,9 +843,9 @@ export async function createOrUpdatePurchasePayable(
       `INSERT INTO erp.contas_pagar_parcelas (
          tenant_id, conta_pagar_id, numero_parcela, descricao, data_vencimento,
          data_pagamento_previsto, valor, valor_bruto, valor_liquido, valor_pago,
-         status, conta_financeira_id, metodo_pagamento_id, observacoes, criado_por, atualizado_por
+         status, conta_financeira_id, metodo_pagamento_id, observacoes, parcela_prevista_id, criado_por, atualizado_por
        )
-       VALUES ($1, $2, $3, $4, $5, $5, $6, $6, $6, 0, 'aberto', $7, $8, $9, $10, $10)
+       VALUES ($1, $2, $3, $4, $5, $5, $6, $6, $6, 0, 'aberto', $7, $8, $9, $10, $11, $11)
        RETURNING id::text, numero_parcela, valor, status`,
       [
         purchase.tenant_id,
@@ -824,6 +857,7 @@ export async function createOrUpdatePurchasePayable(
         installment.contaFinanceiraId || purchase.conta_financeira_id,
         installment.metodoPagamentoId || purchase.metodo_pagamento_id,
         installment.observacoes,
+        installment.commercialForecastId,
         actorId,
       ],
     )
@@ -961,18 +995,21 @@ export async function listErpSalesCatalogs(tenantId: number) {
 export async function getErpOverview(tenantId: number) {
   const rows = await runQuery<Record<string, unknown>>(
     `SELECT
-      (SELECT COALESCE(sum(GREATEST(parcelas.valor - parcelas.valor_pago, 0)), 0)
+      (SELECT COALESCE(sum(composicao.saldo), 0)
        FROM erp.contas_receber_parcelas AS parcelas
        JOIN erp.contas_receber AS contas ON contas.tenant_id = parcelas.tenant_id AND contas.id = parcelas.conta_receber_id
-       WHERE parcelas.tenant_id = $1 AND parcelas.status NOT IN ('pago', 'cancelado')
+       ${financialCompositionSql('receber')}
+       WHERE parcelas.tenant_id = $1 AND parcelas.status NOT IN ('pago', 'cancelado', 'renegociado')
          AND parcelas.excluido_em IS NULL AND contas.excluido_em IS NULL) AS saldo_receber,
-      (SELECT COALESCE(sum(GREATEST(parcelas.valor - parcelas.valor_pago, 0)), 0)
+      (SELECT COALESCE(sum(composicao.saldo), 0)
        FROM erp.contas_pagar_parcelas AS parcelas
        JOIN erp.contas_pagar AS contas ON contas.tenant_id = parcelas.tenant_id AND contas.id = parcelas.conta_pagar_id
-       WHERE parcelas.tenant_id = $1 AND parcelas.status NOT IN ('pago', 'cancelado')
+       ${financialCompositionSql('pagar')}
+       WHERE parcelas.tenant_id = $1 AND contas.tipo_lancamento='efetivo' AND parcelas.status NOT IN ('pago', 'cancelado', 'renegociado')
          AND parcelas.excluido_em IS NULL AND contas.excluido_em IS NULL) AS saldo_pagar,
-      (SELECT COALESCE(sum(GREATEST(valor - valor_pago, 0)), 0) FROM erp.contas_receber_parcelas
-       WHERE tenant_id = $1 AND data_vencimento < CURRENT_DATE AND status NOT IN ('pago', 'cancelado') AND excluido_em IS NULL) AS receber_vencido,
+      (SELECT COALESCE(sum(composicao.saldo), 0) FROM erp.contas_receber_parcelas parcelas
+       ${financialCompositionSql('receber')}
+       WHERE parcelas.tenant_id = $1 AND parcelas.data_vencimento < CURRENT_DATE AND parcelas.status NOT IN ('pago', 'cancelado', 'renegociado') AND parcelas.excluido_em IS NULL) AS receber_vencido,
       (SELECT count(*)::int FROM erp.vendas WHERE tenant_id = $1 AND status = 'rascunho' AND excluido_em IS NULL) AS vendas_rascunho,
       (SELECT count(*)::int FROM erp.compras WHERE tenant_id = $1 AND tipo_movimento IN ('cotacao', 'pedido_compra', 'pedido_recorrente') AND excluido_em IS NULL) AS compras_abertas,
       (SELECT count(*)::int FROM erp.entidades WHERE tenant_id = $1 AND eh_cliente = true AND ativo = true AND excluido_em IS NULL) AS clientes_ativos`,
@@ -1422,11 +1459,29 @@ export async function listErpEntityRecords(input: ListInput): Promise<ErpEntityR
 export async function listErpEntityPage(input: ListInput) {
   const rawRecords = await listErpEntityRecords(input)
   const total = rawRecords.length > 0 ? Number(rawRecords[0].__total ?? rawRecords.length) : 0
-  const records = rawRecords.map(({ __total: _total, ...record }) => record as ErpEntityRecord)
+  const summaryRecord = rawRecords[0] ?? {}
+  const summary = {
+    overdue: Number(summaryRecord.__summary_overdue ?? 0),
+    dueToday: Number(summaryRecord.__summary_due_today ?? 0),
+    upcoming: Number(summaryRecord.__summary_upcoming ?? 0),
+    paid: Number(summaryRecord.__summary_paid ?? 0),
+    total: Number(summaryRecord.__summary_total ?? 0),
+  }
+  const records = rawRecords.map((rawRecord) => {
+    const record = { ...rawRecord }
+    delete record.__total
+    delete record.__summary_overdue
+    delete record.__summary_due_today
+    delete record.__summary_upcoming
+    delete record.__summary_paid
+    delete record.__summary_total
+    return record as ErpEntityRecord
+  })
 
   return {
     records,
     total,
+    summary,
     page: normalizedPage(input),
     pageSize: normalizedPageSize(input),
   }
@@ -1641,6 +1696,7 @@ async function listSaleRecords(input: ListInput): Promise<ErpEntityRecord[]> {
           vendas.versao,
           vendas.total,
          entidades.nome AS cliente,
+         entidades.id::text AS entidade_id,
          concat_ws(' ', vendas.numero, entidades.nome, vendas.status) AS searchable
        FROM erp.vendas AS vendas
        JOIN erp.entidades AS entidades
@@ -1662,6 +1718,7 @@ async function listSaleRecords(input: ListInput): Promise<ErpEntityRecord[]> {
     id: String(row.id),
     numero: String(row.numero ?? ''),
     cliente: String(row.cliente ?? ''),
+    entidade_id: String(row.entidade_id ?? ''),
     data: dateText(row.data_venda) || '',
     total: Number(row.total ?? 0),
     status: String(row.status ?? ''),
@@ -1692,6 +1749,7 @@ async function listPurchaseRecords(input: ListInput): Promise<ErpEntityRecord[]>
          compras.total,
          compras.gera_financeiro,
          entidades.nome AS fornecedor,
+         entidades.id::text AS entidade_id,
          contas.tipo_lancamento,
          concat_ws(' ', compras.numero, entidades.nome, compras.status, compras.tipo_movimento) AS searchable
        FROM erp.compras AS compras
@@ -1731,60 +1789,98 @@ async function listPurchaseRecords(input: ListInput): Promise<ErpEntityRecord[]>
 
 async function listReceivables(input: ListInput): Promise<ErpEntityRecord[]> {
   const params: unknown[] = [input.tenantId]
+  const dueStart = dateText(input.filters?.vencimento_inicio)
+  const dueEnd = dateText(input.filters?.vencimento_fim)
+  const dueStartClause = dueStart ? ` AND parcelas.data_vencimento >= $${params.push(dueStart)}` : ''
+  const dueEndClause = dueEnd ? ` AND parcelas.data_vencimento <= $${params.push(dueEnd)}` : ''
   const rows = await runQuery<Record<string, unknown>>(
     `WITH rows AS (
        SELECT
-         contas.id::text,
+         contas.id::text AS conta_id,
+         parcelas.id::text AS parcela_id,
          contas.descricao,
          contas.numero_documento,
-         contas.valor_total,
+         contas.origem,
+         parcelas.numero_parcela,
+         parcelas.data_vencimento,
+         composicao.valor,
+         composicao.dinheiro AS valor_pago,
+         composicao.credito,
+         composicao.transferido AS renegociado,
+         composicao.saldo,
+         parcelas.valor_bruto,
+         parcelas.valor_liquido AS valor_liquido_previsto,
+         parcelas.juros AS juros_previstos,
+         parcelas.multa AS multa_prevista,
+         parcelas.desconto AS desconto_previsto,
+         parcelas.taxa AS taxa_prevista,
+         parcelas.recebimento_previsto_id::text,
          CASE
-           WHEN contas.status = 'cancelado' THEN 'cancelado'
-           WHEN COALESCE(sum(parcelas.valor) FILTER (WHERE parcelas.status <> 'cancelado'), 0) > 0
-             AND COALESCE(sum(parcelas.valor_pago) FILTER (WHERE parcelas.status <> 'cancelado'), 0)
-               >= COALESCE(sum(parcelas.valor) FILTER (WHERE parcelas.status <> 'cancelado'), 0) THEN 'pago'
-           WHEN bool_or(parcelas.status <> 'cancelado' AND parcelas.valor_pago < parcelas.valor AND parcelas.data_vencimento < CURRENT_DATE)
-             THEN 'vencido'
-           WHEN COALESCE(sum(parcelas.valor_pago) FILTER (WHERE parcelas.status <> 'cancelado'), 0) > 0 THEN 'parcial'
-           ELSE 'aberto'
+           WHEN contas.status = 'cancelado' OR parcelas.status = 'cancelado' THEN 'cancelado'
+           WHEN composicao.transferido > 0 THEN 'renegociado'
+           WHEN composicao.saldo = 0 THEN 'pago'
+           WHEN parcelas.data_vencimento < CURRENT_DATE THEN 'vencido'
+           WHEN composicao.dinheiro + composicao.credito > 0 THEN 'parcial'
+           ELSE parcelas.status
          END AS status,
          entidades.nome AS cliente,
-         min(parcelas.data_vencimento) FILTER (WHERE parcelas.status NOT IN ('pago', 'cancelado')) AS vencimento,
-         (array_agg(parcelas.id::text ORDER BY CASE WHEN parcelas.status <> 'pago' THEN 0 ELSE 1 END, parcelas.data_vencimento ASC, parcelas.id ASC)
-           FILTER (WHERE parcelas.status NOT IN ('pago', 'cancelado')))[1] AS parcela_id,
-         COALESCE(sum(parcelas.valor_pago) FILTER (WHERE parcelas.status <> 'cancelado'), 0) AS valor_pago,
          concat_ws(' ', contas.descricao, contas.numero_documento, entidades.nome, contas.status) AS searchable
        FROM erp.contas_receber AS contas
        JOIN erp.entidades AS entidades
          ON entidades.tenant_id = contas.tenant_id
         AND entidades.id = contas.cliente_id
-       LEFT JOIN erp.contas_receber_parcelas AS parcelas
+       JOIN erp.contas_receber_parcelas AS parcelas
          ON parcelas.tenant_id = contas.tenant_id
         AND parcelas.conta_receber_id = contas.id
         AND parcelas.excluido_em IS NULL
+       ${financialCompositionSql('receber')}
        WHERE contas.tenant_id = $1
          AND contas.excluido_em IS NULL
-       GROUP BY contas.id, contas.descricao, contas.numero_documento, contas.valor_total, contas.status, entidades.nome
+         ${dueStartClause}
+         ${dueEndClause}
      )
-     SELECT id, descricao, numero_documento, valor_total, valor_pago, status, cliente, vencimento, parcela_id,
-       count(*) OVER ()::int AS __total
+     SELECT *,
+       count(*) OVER ()::int AS __total,
+       sum(CASE WHEN status = 'vencido' THEN saldo ELSE 0 END) OVER () AS __summary_overdue,
+       sum(CASE WHEN data_vencimento = CURRENT_DATE AND status NOT IN ('pago', 'cancelado', 'renegociado') THEN saldo ELSE 0 END) OVER () AS __summary_due_today,
+       sum(CASE WHEN data_vencimento > CURRENT_DATE AND status NOT IN ('pago', 'cancelado', 'renegociado') THEN saldo ELSE 0 END) OVER () AS __summary_upcoming,
+       sum(valor_pago) OVER () AS __summary_paid,
+       sum(valor) OVER () AS __summary_total
      FROM rows
      WHERE true${appendSearch(params, input.query)}${appendRecordStatusFilter(params, input.filters)}
-     ORDER BY vencimento ASC NULLS LAST, id DESC${appendPagination(params, input)}`,
+     ORDER BY data_vencimento ASC NULLS LAST, parcela_id DESC${appendPagination(params, input)}`,
     params,
   )
 
   return rows.map((row) => ({
-    id: String(row.id),
+    id: String(row.parcela_id),
+    conta_id: String(row.conta_id),
     parcela_id: String(row.parcela_id ?? ''),
     descricao: String(row.descricao ?? ''),
     documento: String(row.numero_documento ?? ''),
     cliente: String(row.cliente ?? ''),
-    vencimento: dateText(row.vencimento) || '',
-    valor: Number(row.valor_total ?? 0),
+    parcela: Number(row.numero_parcela ?? 0),
+    vencimento: dateText(row.data_vencimento) || '',
+    valor: Number(row.valor ?? 0),
     valor_pago: Number(row.valor_pago ?? 0),
+    credito: Number(row.credito ?? 0),
+    renegociado: Number(row.renegociado ?? 0),
+    saldo: Number(row.saldo ?? 0),
+    origem: String(row.origem ?? ''),
+    recebimento_previsto_id: String(row.recebimento_previsto_id ?? ''),
+    valor_bruto: Number(row.valor_bruto ?? 0),
+    valor_liquido_previsto: Number(row.valor_liquido_previsto ?? 0),
+    juros_previstos: Number(row.juros_previstos ?? 0),
+    multa_prevista: Number(row.multa_prevista ?? 0),
+    desconto_previsto: Number(row.desconto_previsto ?? 0),
+    taxa_prevista: Number(row.taxa_prevista ?? 0),
     status: String(row.status ?? ''),
     __total: Number(row.__total ?? 0),
+    __summary_overdue: Number(row.__summary_overdue ?? 0),
+    __summary_due_today: Number(row.__summary_due_today ?? 0),
+    __summary_upcoming: Number(row.__summary_upcoming ?? 0),
+    __summary_paid: Number(row.__summary_paid ?? 0),
+    __summary_total: Number(row.__summary_total ?? 0),
   }))
 }
 
@@ -1792,8 +1888,12 @@ async function listPayables(input: ListInput): Promise<ErpEntityRecord[]> {
   const params: unknown[] = [input.tenantId]
   const origin = optionalText(input.filters?.origem)
   const launchType = optionalText(input.filters?.tipo_lancamento)
+  const dueStart = dateText(input.filters?.vencimento_inicio)
+  const dueEnd = dateText(input.filters?.vencimento_fim)
   const originClause = origin ? ` AND contas.origem = $${params.push(origin)}` : ''
   const launchTypeClause = launchType ? ` AND contas.tipo_lancamento = $${params.push(launchType)}` : ''
+  const dueStartClause = dueStart ? ` AND parcelas.data_vencimento >= $${params.push(dueStart)}` : ''
+  const dueEndClause = dueEnd ? ` AND parcelas.data_vencimento <= $${params.push(dueEnd)}` : ''
   const rows = await runQuery<Record<string, unknown>>(
     `WITH rows AS (
        SELECT
@@ -1805,14 +1905,24 @@ async function listPayables(input: ListInput): Promise<ErpEntityRecord[]> {
          contas.tipo_lancamento,
          parcelas.numero_parcela,
          parcelas.data_vencimento,
-         parcelas.valor,
-         parcelas.valor_pago,
-         GREATEST(parcelas.valor - parcelas.valor_pago, 0) AS saldo,
+         composicao.valor,
+         composicao.dinheiro AS valor_pago,
+         composicao.credito,
+         composicao.transferido AS renegociado,
+         composicao.saldo,
+         parcelas.valor_bruto,
+         parcelas.valor_liquido AS valor_liquido_previsto,
+         parcelas.juros AS juros_previstos,
+         parcelas.multa AS multa_prevista,
+         parcelas.desconto AS desconto_previsto,
+         parcelas.taxa AS taxa_prevista,
+         parcelas.parcela_prevista_id::text,
          CASE
            WHEN contas.status = 'cancelado' OR parcelas.status = 'cancelado' THEN 'cancelado'
-           WHEN parcelas.valor_pago >= parcelas.valor THEN 'pago'
+           WHEN composicao.transferido > 0 THEN 'renegociado'
+           WHEN composicao.saldo = 0 THEN 'pago'
            WHEN parcelas.data_vencimento < CURRENT_DATE THEN 'vencido'
-           WHEN parcelas.valor_pago > 0 THEN 'parcial'
+           WHEN composicao.dinheiro + composicao.credito > 0 THEN 'parcial'
            ELSE parcelas.status
          END AS status,
          entidades.nome AS fornecedor,
@@ -1828,6 +1938,7 @@ async function listPayables(input: ListInput): Promise<ErpEntityRecord[]> {
          ON parcelas.tenant_id = contas.tenant_id
         AND parcelas.conta_pagar_id = contas.id
         AND parcelas.excluido_em IS NULL
+       ${financialCompositionSql('pagar')}
        LEFT JOIN erp.categorias AS categorias
          ON categorias.tenant_id = contas.tenant_id AND categorias.id = contas.categoria_id
        LEFT JOIN erp.centros_custo AS centros
@@ -1838,10 +1949,19 @@ async function listPayables(input: ListInput): Promise<ErpEntityRecord[]> {
          AND contas.excluido_em IS NULL
          ${originClause}
          ${launchTypeClause}
+         ${dueStartClause}
+         ${dueEndClause}
      )
      SELECT conta_id, parcela_id, descricao, numero_documento, origem, tipo_lancamento,
-       numero_parcela, data_vencimento, valor, valor_pago, saldo, status, fornecedor,
-       categoria, centro_custo, conta_financeira, count(*) OVER ()::int AS __total
+       numero_parcela, data_vencimento, valor, valor_pago, credito, renegociado, saldo,
+       valor_bruto, valor_liquido_previsto, juros_previstos, multa_prevista, desconto_previsto,
+       taxa_prevista, parcela_prevista_id, status, fornecedor, entidade_id,
+       categoria, centro_custo, conta_financeira, count(*) OVER ()::int AS __total,
+       sum(CASE WHEN status = 'vencido' THEN saldo ELSE 0 END) OVER () AS __summary_overdue,
+       sum(CASE WHEN data_vencimento = CURRENT_DATE AND status NOT IN ('pago', 'cancelado', 'renegociado') THEN saldo ELSE 0 END) OVER () AS __summary_due_today,
+       sum(CASE WHEN data_vencimento > CURRENT_DATE AND status NOT IN ('pago', 'cancelado', 'renegociado') THEN saldo ELSE 0 END) OVER () AS __summary_upcoming,
+       sum(valor_pago) OVER () AS __summary_paid,
+       sum(valor) OVER () AS __summary_total
      FROM rows
      WHERE true${appendSearch(params, input.query)}${appendRecordStatusFilter(params, input.filters)}
      ORDER BY data_vencimento ASC, parcela_id DESC${appendPagination(params, input)}`,
@@ -1855,18 +1975,33 @@ async function listPayables(input: ListInput): Promise<ErpEntityRecord[]> {
     descricao: String(row.descricao ?? ''),
     documento: String(row.numero_documento ?? ''),
     fornecedor: String(row.fornecedor ?? ''),
+    entidade_id: String(row.entidade_id ?? ''),
     parcela: Number(row.numero_parcela ?? 0),
     vencimento: dateText(row.data_vencimento) || '',
     valor: Number(row.valor ?? 0),
     valor_pago: Number(row.valor_pago ?? 0),
+    credito: Number(row.credito ?? 0),
+    renegociado: Number(row.renegociado ?? 0),
     saldo: Number(row.saldo ?? 0),
     origem: String(row.origem ?? ''),
     tipo_lancamento: String(row.tipo_lancamento ?? ''),
+    parcela_prevista_id: String(row.parcela_prevista_id ?? ''),
+    valor_bruto: Number(row.valor_bruto ?? 0),
+    valor_liquido_previsto: Number(row.valor_liquido_previsto ?? 0),
+    juros_previstos: Number(row.juros_previstos ?? 0),
+    multa_prevista: Number(row.multa_prevista ?? 0),
+    desconto_previsto: Number(row.desconto_previsto ?? 0),
+    taxa_prevista: Number(row.taxa_prevista ?? 0),
     categoria: String(row.categoria ?? ''),
     centro_custo: String(row.centro_custo ?? ''),
     conta_financeira: String(row.conta_financeira ?? ''),
     status: String(row.status ?? ''),
     __total: Number(row.__total ?? 0),
+    __summary_overdue: Number(row.__summary_overdue ?? 0),
+    __summary_due_today: Number(row.__summary_due_today ?? 0),
+    __summary_upcoming: Number(row.__summary_upcoming ?? 0),
+    __summary_paid: Number(row.__summary_paid ?? 0),
+    __summary_total: Number(row.__summary_total ?? 0),
   }))
 }
 
@@ -2241,7 +2376,12 @@ export async function searchErpCatalog(input: {
 }
 
 export async function createErpEntityRecord(input: CreateInput): Promise<ErpEntityRecord> {
-  const created = await withTransaction(async (client) => {
+  const created = await withTransaction(client => createErpEntityWithClient(client,input))
+  if (input.entityId === 'contas-a-pagar') return created
+  return fetchCreatedRecord(input.tenantId, input.entityId, created.id)
+}
+
+export async function createErpEntityWithClient(client: SQLClient, input: CreateInput): Promise<ErpEntityRecord> {
     if (isEntityRoleModule(input.entityId)) {
       return createEntityRoleRecord(client, input)
     }
@@ -2275,9 +2415,6 @@ export async function createErpEntityRecord(input: CreateInput): Promise<ErpEnti
     }
 
     return createCategoryRecord(client, input)
-  })
-  if (input.entityId === 'contas-a-pagar') return created
-  return fetchCreatedRecord(input.tenantId, input.entityId, created.id)
 }
 
 export async function confirmErpSale(input: ConfirmSaleInput): Promise<ConfirmErpSaleResult> {
@@ -2496,10 +2633,11 @@ export async function confirmErpSale(input: ConfirmSaleInput): Promise<ConfirmEr
            status,
            conta_financeira_id,
            metodo_pagamento_id,
+           recebimento_previsto_id,
            criado_por,
            atualizado_por
          )
-         VALUES ($1, $2, $3, $4, $5, $5, $6, $6, $6, 0, 'aberto', $7, $8, $9, $9)
+         VALUES ($1, $2, $3, $4, $5, $5, $6, $6, $6, 0, 'aberto', $7, $8, $9, $10, $10)
          RETURNING id::text, numero_parcela, valor, status`,
         [
           input.tenantId,
@@ -2510,6 +2648,7 @@ export async function confirmErpSale(input: ConfirmSaleInput): Promise<ConfirmEr
           installment.valor,
           installment.contaFinanceiraId ?? updatedSale.conta_financeira_id,
           installment.metodoPagamentoId ?? updatedSale.metodo_pagamento_id,
+          installment.commercialForecastId,
           input.actorId,
         ],
       )
@@ -2879,25 +3018,22 @@ async function recalculateReceivableInstallment(
 ) {
   const result = await client.query(
     `WITH totals AS (
-       SELECT COALESCE(sum(valor), 0) AS paid
-       FROM erp.pagamentos
-       WHERE tenant_id = $1
-         AND conta_receber_parcela_id = $2
-         AND estorno_de_pagamento_id IS NULL
-         AND estornado_em IS NULL
-         AND excluido_em IS NULL
+       SELECT composicao.* FROM erp.contas_receber_parcelas parcelas
+       ${financialCompositionSql('receber')}
+       WHERE parcelas.tenant_id=$1 AND parcelas.id=$2
      )
      UPDATE erp.contas_receber_parcelas AS parcelas
      SET
-       valor_pago = totals.paid,
+       valor_pago = totals.dinheiro,
        data_pagamento = CASE
-         WHEN totals.paid >= parcelas.valor THEN COALESCE($4::date, parcelas.data_pagamento, CURRENT_DATE)
+         WHEN totals.saldo = 0 THEN COALESCE($4::date, parcelas.data_pagamento, CURRENT_DATE)
          ELSE NULL
        END,
        status = CASE
-         WHEN totals.paid >= parcelas.valor THEN 'pago'
+         WHEN totals.transferido > 0 THEN 'renegociado'
+         WHEN totals.saldo = 0 THEN 'pago'
          WHEN parcelas.data_vencimento < CURRENT_DATE THEN 'vencido'
-         WHEN totals.paid > 0 THEN 'parcial'
+         WHEN totals.dinheiro + totals.credito > 0 THEN 'parcial'
          ELSE 'aberto'
        END,
        atualizado_por = $3
@@ -2919,25 +3055,22 @@ async function recalculatePayableInstallment(
 ) {
   const result = await client.query(
     `WITH totals AS (
-       SELECT COALESCE(sum(valor), 0) AS paid
-       FROM erp.pagamentos
-       WHERE tenant_id = $1
-         AND conta_pagar_parcela_id = $2
-         AND estorno_de_pagamento_id IS NULL
-         AND estornado_em IS NULL
-         AND excluido_em IS NULL
+       SELECT composicao.* FROM erp.contas_pagar_parcelas parcelas
+       ${financialCompositionSql('pagar')}
+       WHERE parcelas.tenant_id=$1 AND parcelas.id=$2
      )
      UPDATE erp.contas_pagar_parcelas AS parcelas
      SET
-       valor_pago = totals.paid,
+       valor_pago = totals.dinheiro,
        data_pagamento = CASE
-         WHEN totals.paid >= parcelas.valor THEN COALESCE($4::date, parcelas.data_pagamento, CURRENT_DATE)
+         WHEN totals.saldo = 0 THEN COALESCE($4::date, parcelas.data_pagamento, CURRENT_DATE)
          ELSE NULL
        END,
        status = CASE
-         WHEN totals.paid >= parcelas.valor THEN 'pago'
+         WHEN totals.transferido > 0 THEN 'renegociado'
+         WHEN totals.saldo = 0 THEN 'pago'
          WHEN parcelas.data_vencimento < CURRENT_DATE THEN 'vencido'
-         WHEN totals.paid > 0 THEN 'parcial'
+         WHEN totals.dinheiro + totals.credito > 0 THEN 'parcial'
          ELSE 'aberto'
        END,
        atualizado_por = $3
@@ -2955,6 +3088,16 @@ export async function settleReceivableInstallment(input: SettleInstallmentInput)
   const requestIdentity = settlementIdentity('receber', input.id, input.values)
   return withTransaction(async (client) => {
     await client.query('SELECT pg_advisory_xact_lock(hashtextextended($1, 0))', [`erp:pagamento:${input.tenantId}:${idempotencyKey}`])
+    const existingPaymentResult = await client.query(
+      `SELECT id::text, tipo, conta_receber_parcela_id::text, valor, valor_liquido, metadata
+       FROM erp.pagamentos WHERE tenant_id=$1 AND chave_idempotencia=$2 LIMIT 1`,
+      [input.tenantId, idempotencyKey],
+    )
+    const existingPayment = existingPaymentResult.rows[0] as Record<string, unknown> | undefined
+    if (existingPayment) {
+      if (existingPayment.tipo !== 'receber' || String(existingPayment.conta_receber_parcela_id) !== String(input.id)) throw new ErpDomainError('IDEMPOTENCY_CONFLICT', 'Esta identificacao ja foi usada em outra baixa.', 409)
+      assertSettlementReplay(existingPayment.metadata, requestIdentity)
+    }
     const installmentResult = await client.query(
       `SELECT
          parcelas.id,
@@ -2963,11 +3106,15 @@ export async function settleReceivableInstallment(input: SettleInstallmentInput)
          parcelas.valor_pago,
          parcelas.status,
          parcelas.conta_financeira_id,
-         parcelas.metodo_pagamento_id
+         parcelas.metodo_pagamento_id,
+         composicao.credito,
+         composicao.transferido,
+         composicao.saldo
        FROM erp.contas_receber_parcelas AS parcelas
        JOIN erp.contas_receber AS contas
          ON contas.tenant_id = parcelas.tenant_id
         AND contas.id = parcelas.conta_receber_id
+       ${financialCompositionSql('receber')}
        WHERE parcelas.tenant_id = $1
          AND parcelas.id = $2
          AND parcelas.excluido_em IS NULL
@@ -2977,30 +3124,11 @@ export async function settleReceivableInstallment(input: SettleInstallmentInput)
     )
     const installment = installmentResult.rows[0] as Record<string, unknown> | undefined
     if (!installment) throw new ErpDomainError('VALIDATION_ERROR', 'Parcela a receber nao encontrada.')
-    if (idempotencyKey) {
-      const existingPaymentResult = await client.query(
-        `SELECT id::text, tipo, conta_receber_parcela_id::text, valor, valor_liquido, metadata
-         FROM erp.pagamentos
-         WHERE tenant_id = $1
-           AND chave_idempotencia = $2
-         LIMIT 1`,
-        [input.tenantId, idempotencyKey],
-      )
-      const existingPayment = existingPaymentResult.rows[0] as Record<string, unknown> | undefined
-      if (existingPayment) {
-        if (existingPayment.tipo !== 'receber' || String(existingPayment.conta_receber_parcela_id) !== String(installment.id)) {
-          throw new ErpDomainError('VALIDATION_ERROR', 'Chave de idempotencia ja utilizada em outra baixa.')
-        }
-        assertSettlementReplay(existingPayment.metadata, requestIdentity)
-        return { payment: existingPayment, installment }
-      }
-    }
+    if (existingPayment) return { payment: existingPayment, installment }
     if (installment.status === 'cancelado') throw new ErpDomainError('VALIDATION_ERROR', 'Parcela cancelada nao pode ser baixada.')
     if (installment.status === 'pago') throw new ErpDomainError('VALIDATION_ERROR', 'Parcela ja esta paga.')
 
-    const total = money(installment.valor)
-    const paid = money(installment.valor_pago)
-    const remaining = sumMoney([total, -paid])
+    const remaining = money(installment.saldo)
     const amount = requestIdentity.amount === 'remaining' ? remaining : paymentAdjustment(input.values.valor)
     if (amount <= 0 || amount > remaining) throw new ErpDomainError('VALIDATION_ERROR', 'Valor da baixa invalido.')
 
@@ -3087,6 +3215,16 @@ export async function settlePayableInstallment(input: SettleInstallmentInput) {
   const requestIdentity = settlementIdentity('pagar', input.id, input.values)
   return withTransaction(async (client) => {
     await client.query('SELECT pg_advisory_xact_lock(hashtextextended($1, 0))', [`erp:pagamento:${input.tenantId}:${idempotencyKey}`])
+    const existingPaymentResult = await client.query(
+      `SELECT id::text, tipo, conta_pagar_parcela_id::text, valor, valor_liquido, metadata
+       FROM erp.pagamentos WHERE tenant_id=$1 AND chave_idempotencia=$2 LIMIT 1`,
+      [input.tenantId, idempotencyKey],
+    )
+    const existingPayment = existingPaymentResult.rows[0] as Record<string, unknown> | undefined
+    if (existingPayment) {
+      if (existingPayment.tipo !== 'pagar' || String(existingPayment.conta_pagar_parcela_id) !== String(input.id)) throw new ErpDomainError('IDEMPOTENCY_CONFLICT', 'Esta identificacao ja foi usada em outra baixa.', 409)
+      assertSettlementReplay(existingPayment.metadata, requestIdentity)
+    }
     const installmentResult = await client.query(
       `SELECT
          parcelas.id,
@@ -3095,11 +3233,16 @@ export async function settlePayableInstallment(input: SettleInstallmentInput) {
          parcelas.valor_pago,
          parcelas.status,
          parcelas.conta_financeira_id,
-         parcelas.metodo_pagamento_id
+         parcelas.metodo_pagamento_id,
+         contas.tipo_lancamento,
+         composicao.credito,
+         composicao.transferido,
+         composicao.saldo
        FROM erp.contas_pagar_parcelas AS parcelas
        JOIN erp.contas_pagar AS contas
          ON contas.tenant_id = parcelas.tenant_id
         AND contas.id = parcelas.conta_pagar_id
+       ${financialCompositionSql('pagar')}
        WHERE parcelas.tenant_id = $1
          AND parcelas.id = $2
          AND parcelas.excluido_em IS NULL
@@ -3109,30 +3252,12 @@ export async function settlePayableInstallment(input: SettleInstallmentInput) {
     )
     const installment = installmentResult.rows[0] as Record<string, unknown> | undefined
     if (!installment) throw new ErpDomainError('VALIDATION_ERROR', 'Parcela a pagar nao encontrada.')
-    if (idempotencyKey) {
-      const existingPaymentResult = await client.query(
-        `SELECT id::text, tipo, conta_pagar_parcela_id::text, valor, valor_liquido, metadata
-         FROM erp.pagamentos
-         WHERE tenant_id = $1
-           AND chave_idempotencia = $2
-         LIMIT 1`,
-        [input.tenantId, idempotencyKey],
-      )
-      const existingPayment = existingPaymentResult.rows[0] as Record<string, unknown> | undefined
-      if (existingPayment) {
-        if (existingPayment.tipo !== 'pagar' || String(existingPayment.conta_pagar_parcela_id) !== String(installment.id)) {
-          throw new ErpDomainError('VALIDATION_ERROR', 'Chave de idempotencia ja utilizada em outra baixa.')
-        }
-        assertSettlementReplay(existingPayment.metadata, requestIdentity)
-        return { payment: existingPayment, installment }
-      }
-    }
+    if (existingPayment) return { payment: existingPayment, installment }
     if (installment.status === 'cancelado') throw new ErpDomainError('VALIDATION_ERROR', 'Parcela cancelada nao pode ser baixada.')
     if (installment.status === 'pago') throw new ErpDomainError('VALIDATION_ERROR', 'Parcela ja esta paga.')
+    if (installment.tipo_lancamento === 'previsao') throw new ErpDomainError('VALIDATION_ERROR', 'Efetive a previsao antes de registrar o pagamento.')
 
-    const total = money(installment.valor)
-    const paid = money(installment.valor_pago)
-    const remaining = sumMoney([total, -paid])
+    const remaining = money(installment.saldo)
     const amount = requestIdentity.amount === 'remaining' ? remaining : paymentAdjustment(input.values.valor)
     if (amount <= 0 || amount > remaining) throw new ErpDomainError('VALIDATION_ERROR', 'Valor da baixa invalido.')
 
@@ -3258,11 +3383,8 @@ export async function reverseErpPayment(input: ReversePaymentInput) {
       return { payment, reversal: existingReversal.rows[0] || null }
     }
 
-    await assertErpPeriodOpen(client, {
-      tenantId: input.tenantId,
-      module: 'financeiro',
-      date: String(payment.data_pagamento).slice(0, 10),
-    })
+    const reversalDate = new Date().toISOString().slice(0, 10)
+    await assertErpPeriodOpen(client, { tenantId: input.tenantId, module: 'financeiro', date: reversalDate })
 
     const receivableInstallmentId = payment.conta_receber_parcela_id
     const payableInstallmentId = payment.conta_pagar_parcela_id
@@ -3273,8 +3395,15 @@ export async function reverseErpPayment(input: ReversePaymentInput) {
       [input.tenantId, installmentId],
     )
 
-    const idempotencyKey = normalizedIdempotencyKey(input.idempotencyKey) || `estorno-pagamento-${payment.id}`
+    const idempotencyKey = requireOperationKey(input.idempotencyKey)
     const reason = optionalText(input.reason)
+    if (!reason) throw new ErpDomainError('VALIDATION_ERROR', 'Informe o motivo do estorno.')
+    await client.query(
+      `UPDATE erp.pagamentos
+       SET estornado_em = now(), atualizado_por = $3
+       WHERE tenant_id = $1 AND id = $2 AND estornado_em IS NULL`,
+      [input.tenantId, payment.id, input.actorId],
+    )
     const reversalResult = await client.query(
       `INSERT INTO erp.pagamentos (
          tenant_id,
@@ -3297,7 +3426,7 @@ export async function reverseErpPayment(input: ReversePaymentInput) {
          criado_por,
          atualizado_por
        )
-       VALUES ($1, $2, 'estorno', $3, $4, $5, $6, $7, CURRENT_DATE, $8, $9, $10, $11, $12, $13, $14, $15, $16, $16)
+       VALUES ($1, $2, 'estorno', $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $17)
        RETURNING id::text, tipo, valor, valor_liquido, estorno_de_pagamento_id::text`,
       [
         input.tenantId,
@@ -3307,6 +3436,7 @@ export async function reverseErpPayment(input: ReversePaymentInput) {
         payableInstallmentId,
         payment.conta_financeira_id,
         payment.metodo_pagamento_id,
+        reversalDate,
         payment.valor,
         payment.juros,
         payment.multa,
@@ -3317,13 +3447,6 @@ export async function reverseErpPayment(input: ReversePaymentInput) {
         reason,
         input.actorId,
       ],
-    )
-
-    await client.query(
-      `UPDATE erp.pagamentos
-       SET estornado_em = now(), motivo_estorno = $3, atualizado_por = $4
-       WHERE tenant_id = $1 AND id = $2`,
-      [input.tenantId, payment.id, reason, input.actorId],
     )
 
     if (payment.tipo === 'receber') {
@@ -3931,9 +4054,8 @@ async function createPurchaseRecord(client: SQLClient, input: CreateInput) {
     )
   }
 
-  if (generateFinancial && (movement === 'pedido_compra' || movement === 'pedido_recorrente')) {
-    await createOrUpdatePurchasePayable(client, purchase, input.actorId, 'previsao')
-  } else if (generateFinancial && movement === 'compra' && total > 0) {
+  // Orders retain commercial forecasts; the database accepts financial origins only after effectuation.
+  if (generateFinancial && movement === 'compra' && total > 0) {
     await createOrUpdatePurchasePayable(client, purchase, input.actorId, 'efetivo')
   }
 
@@ -4058,7 +4180,7 @@ export async function updateErpPurchaseDraft(input: {
   return getErpPurchaseDetails(input.tenantId, id)
 }
 
-function shiftDate(value: string, frequency: string, interval: number, occurrence: number) {
+export function shiftDate(value: string, frequency: string, interval: number, occurrence: number) {
   const date = new Date(`${value}T12:00:00.000Z`)
   const amount = interval * occurrence
   if (frequency === 'dia') date.setUTCDate(date.getUTCDate() + amount)
@@ -4138,7 +4260,11 @@ async function createManualPayableRecord(client: SQLClient, input: CreateInput):
   const repeat = booleanValue(input.values.repetir) || Object.keys(recurrence).length > 0
   const frequency = ['dia', 'semana', 'mes', 'ano'].includes(text(recurrence.frequencia)) ? text(recurrence.frequencia) : 'mes'
   const interval = Math.max(1, Number(recurrence.intervalo || 1))
-  const occurrenceCount = repeat ? Math.min(366, Math.max(1, Number(recurrence.quantidade_ocorrencias || 1))) : 1
+  const endType = text(recurrence.termino_tipo) || 'ocorrencias'
+  if (!['data','ocorrencias','indeterminado'].includes(endType)) throw new ErpDomainError('VALIDATION_ERROR','Término de recorrência inválido.')
+  const occurrenceCount = endType === 'ocorrencias' ? Math.min(366, Math.max(1, Number(recurrence.quantidade_ocorrencias || 1))) : null
+  const endDate = endType === 'data' ? dateText(recurrence.termino_em) : null
+  if (endType === 'data' && (!endDate || endDate < competence)) throw new ErpDomainError('VALIDATION_ERROR','Informe uma data final igual ou posterior ao início.')
   let recurrenceId: number | null = null
   if (repeat) {
     const recurrenceResult = await client.query(
@@ -4146,11 +4272,11 @@ async function createManualPayableRecord(client: SQLClient, input: CreateInput):
          tenant_id, tipo, intervalo, frequencia, inicio_em, termino_tipo,
          termino_em, quantidade_ocorrencias, proxima_competencia, gerado_ate,
          criado_por, atualizado_por, metadata
-       ) VALUES ($1, 'pagar', $2, $3, $4, 'ocorrencias', $5, $6, $7, $4, $8, $8, $9::jsonb)
+       ) VALUES ($1, 'pagar', $2, $3, $4, $10, $5, $6, $7, $4, $8, $8, $9::jsonb)
        RETURNING id`,
-      [input.tenantId, interval, frequency, competence, dateText(recurrence.termino_em), occurrenceCount,
-        shiftDate(competence, frequency, interval, 1), input.actorId,
-        JSON.stringify({ descricao: description, modelo: { ...input.values, repetir: false, recorrencia: null } })],
+      [input.tenantId, interval, frequency, competence, endDate, occurrenceCount,
+        occurrenceCount === 1 || (endDate && shiftDate(competence,frequency,interval,1)>endDate) ? null : shiftDate(competence, frequency, interval, 1), input.actorId,
+        JSON.stringify({ descricao: description, modelo: { ...input.values, repetir: false, recorrencia: null } }),endType],
     )
     recurrenceId = Number(recurrenceResult.rows[0]?.id)
   }
@@ -4230,6 +4356,7 @@ async function createManualPayableRecord(client: SQLClient, input: CreateInput):
     }
   }
 
+  if(recurrenceId)await client.query(`UPDATE erp.recorrencias_financeiras SET ativa=false,encerrada_em=now(),atualizado_por=$3 WHERE tenant_id=$1 AND id=$2 AND proxima_competencia IS NULL`,[input.tenantId,recurrenceId,input.actorId])
   return {
     id: firstInstallmentId,
     descricao: description,
@@ -4255,11 +4382,11 @@ export async function processErpFinancialRecurrences(input: {
   return withTransaction(async (client) => {
     const recurrenceResult = await client.query(
       `SELECT * FROM erp.recorrencias_financeiras
-       WHERE tenant_id = $1 AND tipo = 'pagar' AND ativa = true
+       WHERE tenant_id = $1 AND ativa = true
          AND pausada_em IS NULL AND encerrada_em IS NULL AND excluido_em IS NULL
          AND proxima_competencia IS NOT NULL AND proxima_competencia <= $2
        ORDER BY proxima_competencia, id
-       FOR UPDATE SKIP LOCKED
+           FOR UPDATE SKIP LOCKED
        LIMIT $3`,
       [input.tenantId, throughDate, limit],
     )
@@ -4270,30 +4397,25 @@ export async function processErpFinancialRecurrences(input: {
       if (generated >= limit) break
       const metadata = jsonObject(recurrence.metadata) as Record<string, unknown>
       const model = jsonObject(metadata.modelo) as Record<string, unknown>
-      if (Object.keys(model).length === 0) {
-        await client.query(
-          `UPDATE erp.recorrencias_financeiras SET ativa = false, encerrada_em = now(),
-             metadata = metadata || '{"erro":"modelo_ausente"}'::jsonb, atualizado_por = $3
-           WHERE tenant_id = $1 AND id = $2`,
-          [input.tenantId, recurrence.id, input.actorId],
-        )
-        continue
-      }
+      if (Object.keys(model).length === 0) throw new ErpDomainError('RECURRENCE_MODEL_MISSING',`Recorrência ${recurrence.id}: modelo ausente. Revise a configuração.`,422)
 
       const countResult = await client.query(
-        `SELECT count(*)::int AS total FROM erp.contas_pagar
-         WHERE tenant_id = $1 AND recorrencia_financeira_id = $2 AND excluido_em IS NULL`,
+        `SELECT count(*)::int AS total FROM erp.${recurrence.tipo === 'receber' ? 'contas_receber' : 'contas_pagar'}
+         WHERE tenant_id = $1 AND recorrencia_financeira_id = $2`,
         [input.tenantId, recurrence.id],
       )
       let occurrence = Number(countResult.rows[0]?.total || 0)
       let next = dateText(recurrence.proxima_competencia)
       let generatedForRecurrence = 0
-      const maxOccurrences = Number(recurrence.quantidade_ocorrencias || 366)
+      const maxOccurrences = recurrence.termino_tipo === 'ocorrencias' ? Number(recurrence.quantidade_ocorrencias) : Infinity
       const frequency = text(recurrence.frequencia)
       const interval = Number(recurrence.intervalo || 1)
       const start = dateText(recurrence.inicio_em) || throughDate
 
-      while (next && next <= throughDate && occurrence < maxOccurrences && generated < limit) {
+      // The calendar, not the count of surviving documents, identifies an occurrence.
+      occurrence = recurrenceOccurrenceIndex(start,next || start,frequency,interval)
+      while (next && next <= throughDate && (!recurrence.termino_em || next <= dateText(recurrence.termino_em)!) && occurrence < maxOccurrences && generated < limit) {
+        await assertErpPeriodOpen(client,{tenantId:input.tenantId,module:'financeiro',date:next})
         const shiftModelDate = (value: unknown) => {
           const date = dateText(value)
           return date ? shiftDate(date, frequency, interval, occurrence) : undefined
@@ -4314,6 +4436,9 @@ export async function processErpFinancialRecurrences(input: {
           parcelas: installments,
         }
         const idempotencyKey = `recorrencia:${recurrence.id}:${next}`
+        if (recurrence.tipo === 'receber') {
+          await createRecurringReceivable(client, {...input,recurrenceId:Number(recurrence.id),key:idempotencyKey,values})
+        } else {
         const record = await createManualPayableRecord(client, {
           tenantId: input.tenantId, actorId: input.actorId, entityId: 'contas-a-pagar', values, idempotencyKey,
         })
@@ -4325,6 +4450,7 @@ export async function processErpFinancialRecurrences(input: {
              AND parcelas.conta_pagar_id = contas.id AND parcelas.id = $2`,
           [input.tenantId, numericId(record.id, 'Parcela'), recurrence.id, input.actorId],
         )
+        }
         generated += 1
         generatedForRecurrence += 1
         occurrence += 1
@@ -4345,6 +4471,28 @@ export async function processErpFinancialRecurrences(input: {
     }
     return { generated, throughDate, processed }
   })
+}
+
+export function recurrenceOccurrenceIndex(start:string,current:string,frequency:string,interval:number) {
+  const a=new Date(`${start}T12:00:00Z`),b=new Date(`${current}T12:00:00Z`)
+  const units=frequency==='dia'?(b.getTime()-a.getTime())/86400000:frequency==='semana'?(b.getTime()-a.getTime())/(86400000*7):frequency==='mes'?(b.getUTCFullYear()-a.getUTCFullYear())*12+b.getUTCMonth()-a.getUTCMonth():b.getUTCFullYear()-a.getUTCFullYear()
+  const index=units/interval
+  if (!Number.isInteger(index)||index<0||shiftDate(start,frequency,interval,index)!==current) throw new ErpDomainError('VALIDATION_ERROR','Próxima ocorrência fora do calendário da recorrência.')
+  return index
+}
+
+async function createRecurringReceivable(client:SQLClient,input:{tenantId:number;actorId:number;recurrenceId:number;key:string;values:Record<string,unknown>}) {
+  const existing=await client.query(`SELECT id FROM erp.contas_receber WHERE tenant_id=$1 AND recorrencia_financeira_id=$2 AND data_competencia=$3`,[input.tenantId,input.recurrenceId,input.values.data_competencia])
+  if(existing.rows.length)return
+  const total=positiveMoney(input.values.valor_total ?? input.values.valor),customer=numericId(input.values.cliente_id,'Cliente')
+  const valid=await client.query(`SELECT id FROM erp.entidades WHERE tenant_id=$1 AND id=$2 AND eh_cliente AND excluido_em IS NULL`,[input.tenantId,customer])
+  if(!valid.rows.length||!total)throw new ErpDomainError('VALIDATION_ERROR','Modelo recorrente exige cliente válido e valor positivo.')
+  const parts=Array.isArray(input.values.parcelas)&&input.values.parcelas.length?input.values.parcelas as Record<string,unknown>[]:[{valor:total,data_vencimento:input.values.data_vencimento}]
+  if(sumMoney(parts.map(p=>String(p.valor)))!==total)throw new ErpDomainError('VALIDATION_ERROR','Parcelas devem distribuir integralmente o valor da recorrência.')
+  const title=await client.query(`INSERT INTO erp.contas_receber(tenant_id,cliente_id,descricao,valor_total,data_competencia,data_emissao,status,origem,recorrencia_financeira_id,chave_idempotencia,categoria_id,centro_custo_id,criado_por,atualizado_por)
+    VALUES($1,$2,$3,$4,$5,$6,'aberto','api',$7,$8,$9,$10,$11,$11) RETURNING id`,[input.tenantId,customer,optionalText(input.values.descricao)||'Receita recorrente',total,input.values.data_competencia,input.values.data_emissao,input.recurrenceId,input.key,optionalNumericId(input.values.categoria_id),optionalNumericId(input.values.centro_custo_id),input.actorId])
+  for(const [index,p] of parts.entries())await client.query(`INSERT INTO erp.contas_receber_parcelas(tenant_id,conta_receber_id,numero_parcela,data_vencimento,valor,valor_bruto,valor_liquido,status,conta_financeira_id,metodo_pagamento_id,criado_por,atualizado_por)
+    VALUES($1,$2,$3,$4,$5,$5,$5,'aberto',$6,$7,$8,$8)`,[input.tenantId,title.rows[0].id,index+1,dateText(p.data_vencimento),positiveMoney(p.valor),optionalNumericId(input.values.conta_financeira_id),optionalNumericId(input.values.metodo_pagamento_id),input.actorId])
 }
 
 async function createCategoryRecord(client: SQLClient, input: CreateInput) {

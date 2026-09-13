@@ -31,7 +31,7 @@ export function OverviewPage() {
       const professionalBody = await professionalResponse.json().catch(() => ({})) as ProfessionalOverview & { error?: string | { message?: string } }
       if (!response.ok) throw new Error(getErpErrorMessage(body, 'Nao foi possivel carregar o resumo.'))
       if (!professionalResponse.ok) throw new Error(getErpErrorMessage(professionalBody, 'Nao foi possivel carregar os indicadores.'))
-      setData(body); setProfessional(professionalBody)
+      setData(body); setProfessional(Object.fromEntries(Object.keys(professionalEmpty).map(key=>[key,Number(professionalBody[key as keyof ProfessionalOverview] ?? 0)])) as ProfessionalOverview)
     } catch (loadError) { setError(loadError instanceof Error ? loadError.message : 'Nao foi possivel carregar o resumo.') }
     finally { setLoading(false) }
   }, [])
@@ -41,10 +41,10 @@ export function OverviewPage() {
   const percent = (current: number, previous: number) => previous ? `${current >= previous ? '+' : ''}${(((current - previous) / previous) * 100).toFixed(1)}% contra o mes anterior` : 'sem base no mes anterior'
   const metrics = [
     { label: 'Saldo atual', value: currency(professional.saldo_atual), detail: 'contas financeiras' },
-    { label: 'Saldo projetado', value: currency(professional.saldo_atual + professional.saldo_receber - professional.saldo_pagar), detail: 'saldo mais recebimentos menos pagamentos', tone: 'success' as const },
+    { label: 'Caixa após saldos em aberto', value: currency(professional.saldo_atual + professional.saldo_receber - professional.saldo_pagar), detail: 'sem prazo projetado; exclui previsões a pagar', tone: 'success' as const },
     { label: 'Vendas no mes', value: currency(professional.vendas_mes), detail: percent(professional.vendas_mes, professional.vendas_mes_anterior), tone: 'success' as const },
     { label: 'Compras no mes', value: currency(professional.compras_mes), detail: percent(professional.compras_mes, professional.compras_mes_anterior), tone: 'warning' as const },
-    { label: 'Margem bruta', value: currency(professional.margem_bruta_mes), detail: 'vendas menos custo dos itens' },
+
     { label: 'Recebimentos vencidos', value: currency(professional.receber_vencido), detail: 'exigem acompanhamento', tone: 'danger' as const },
     { label: 'A pagar em 7 dias', value: currency(professional.pagar_proximos_7_dias), detail: 'proximos vencimentos', tone: 'warning' as const },
     { label: 'Clientes ativos', value: String(data.clientesAtivos), detail: 'cadastros disponiveis' },
@@ -62,7 +62,7 @@ export function OverviewPage() {
   return <div className="flex min-h-full flex-col gap-6">
     <div className="flex items-start justify-between"><ErpPageHeader eyebrow="ERP" title="Visao geral" description="Posicao operacional e financeira atual." /><Button variant="outline" size="icon" title="Atualizar" onClick={() => void load()}>{loading ? <Loader2 className="size-4 animate-spin" /> : <RefreshCw className="size-4" />}</Button></div>
     {error ? <div className="rounded-md border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">{error}</div> : null}
-    <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">{metrics.map((metric) => <ErpMetricCard key={metric.label} metric={metric} />)}</div>
-    <section className="border-t pt-5"><div className="mb-4 flex items-center gap-2"><Users className="size-4 text-gray-500" /><h2 className="text-sm font-semibold text-gray-950">Filas de trabalho</h2></div><div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">{queues.map((queue) => { const Icon = queue.icon; return <a key={queue.label} href={queue.href} className="flex items-center gap-3 rounded-md border bg-white px-4 py-4 transition-colors hover:bg-gray-50"><div className="flex size-9 items-center justify-center rounded-md bg-gray-100 text-gray-700"><Icon className="size-5" /></div><div className="min-w-0 flex-1 text-sm font-medium text-gray-950">{queue.label}</div><div className="text-base font-semibold text-gray-950">{queue.value}</div></a> })}</div></section>
+    <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">{metrics.map((metric) => <ErpMetricCard key={metric.label} metric={{...metric,value:loading?'Carregando…':error?'Indisponível':metric.value}} />)}</div>
+    <section className="border-t pt-5"><div className="mb-4 flex items-center gap-2"><Users className="size-4 text-gray-500" /><h2 className="text-sm font-semibold text-gray-950">Filas de trabalho</h2></div><div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">{queues.map((queue) => { const Icon = queue.icon; return <a key={queue.label} href={queue.href} className="flex items-center gap-3 rounded-md border bg-white px-4 py-4 transition-colors hover:bg-gray-50"><div className="flex size-9 items-center justify-center rounded-md bg-gray-100 text-gray-700"><Icon className="size-5" /></div><div className="min-w-0 flex-1 text-sm font-medium text-gray-950">{queue.label}</div><div className="text-base font-semibold text-gray-950">{loading?'…':error?'Indisponível':queue.value}</div></a> })}</div></section>
   </div>
 }

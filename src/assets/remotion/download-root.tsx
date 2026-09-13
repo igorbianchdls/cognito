@@ -73,6 +73,10 @@ import {
   ChatGptPlusStaticUi,
 } from './compositions/ChatGptPlusStaticUi'
 import {
+  OTTO_RAMP_PAYABLES_UI_DURATION,
+  OttoRampPayablesUi,
+} from './compositions/OttoRampPayablesUi'
+import {
   CHATGPT_MOBILE_EXACT_REPLICA_DURATION,
   ChatGptMobileExactReplica,
 } from './compositions/ChatGptMobileExactReplica'
@@ -243,6 +247,14 @@ function RemotionDownloadRoot() {
         height={960}
         id="component-chatgpt-plus-static-ui"
         width={1920}
+      />
+      <Composition
+        component={OttoRampPayablesUi}
+        durationInFrames={OTTO_RAMP_PAYABLES_UI_DURATION}
+        fps={30}
+        height={1080}
+        id="component-otto-ramp-payables-ui"
+        width={1456}
       />
       <Composition
         component={ChatGptMobileExactReplica}

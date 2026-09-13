@@ -14,6 +14,5 @@ export default async function ErpSectionRoute({
     redirect('/erp')
   }
 
-  redirect(sectionConfig.modules[0].href)
+  redirect(sectionConfig.href)
 }
-

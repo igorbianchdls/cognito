@@ -93,6 +93,7 @@ import { ChatGptOperationalFlowsVideo } from '@/assets/remotion/compositions/Cha
 import { ChatGptTaskLauncherAnimation } from '@/assets/remotion/compositions/ChatGptTaskLauncherAnimation'
 import { CODEX_CHARTS_DURATION, CodexChartsAnimation } from '@/assets/remotion/compositions/CodexChartsAnimation'
 import { CHATGPT_PLUS_STATIC_UI_DURATION, ChatGptPlusStaticUi } from '@/assets/remotion/compositions/ChatGptPlusStaticUi'
+import { OTTO_RAMP_PAYABLES_UI_DURATION, OttoRampPayablesUi } from '@/assets/remotion/compositions/OttoRampPayablesUi'
 import { CHATGPT_MOBILE_EXACT_REPLICA_DURATION, ChatGptMobileExactReplica } from '@/assets/remotion/compositions/ChatGptMobileExactReplica'
 import { PROMPT_TO_CHART_EXACT_DURATION, PromptToChartExactVideo } from '@/assets/remotion/compositions/PromptToChartExactVideo'
 import { CHATBOT_DASHBOARD_MOBILE_DURATION, CHATGPT_POWERPOINT_OUTLINE_MOBILE_DURATION, CLAUDE_POWERPOINT_OUTLINE_MOBILE_DURATION, COWORK_POWERPOINT_EXPORT_DURATION, COWORK_POWERPOINT_EXPORT_MOBILE_DURATION, ChatGptPowerPointOutlineMobileAnimation, ChatbotToDashboardMobileAnimation, ClaudePowerPointOutlineMobileAnimation, CoworkPowerPointExportAnimation, CoworkPowerPointExportMobileAnimation } from '@/assets/remotion/compositions/CoworkPowerPointExportAnimation'
@@ -2009,6 +2010,18 @@ const catalog: CatalogItem[] = [
     tags: ['ChatGPT', 'Desktop', 'Chat', 'Static UI'],
     value: 'component-chatgpt-plus-static-ui',
     width: 1920,
+  },
+  {
+    code: '<OttoRampPayablesUi />',
+    component: OttoRampPayablesUi,
+    description: 'Tela de contas a pagar da Otto com navegação e tabela no padrão visual da Ramp.',
+    duration: OTTO_RAMP_PAYABLES_UI_DURATION,
+    height: 1080,
+    kind: 'Componentes',
+    label: 'Otto ERP — Contas a pagar',
+    tags: ['Otto', 'ERP', 'Financeiro', 'Ramp', 'Desktop'],
+    value: 'component-otto-ramp-payables-ui',
+    width: 1456,
   },
   {
     code: '<ChatGptMobileExactReplica />',

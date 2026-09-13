@@ -17,13 +17,8 @@ function files(dir) {
     return entry.isDirectory() ? files(file) : [file]
   })
 }
-// Two ignored, unreferenced local cloud bundles could not be deleted by approval review.
-const localBlockedBundles = new Set([
-  'src/products/integracoes/cloud/dist/control-api/index.cjs',
-  'src/products/integracoes/cloud/dist/worker/index.cjs',
-])
 for (const root of retiredRoots) {
-  assert.deepEqual(files(root).filter(file => !localBlockedBundles.has(file)), [], `Retired source remains: ${root}`)
+  assert.deepEqual(files(root), [], `Retired source remains: ${root}`)
 }
 for (const file of [
   'src/lib/bigqueryClient.ts', 'src/products/plugin/web/src/views/ConnectorsView.tsx',
@@ -47,4 +42,4 @@ const graph = await build({
 })
 assert(!Object.keys(graph.metafile.inputs).some(file => /bigquery|integracoes\/|domain-adapters\//i.test(file)))
 assert(!Object.values(graph.metafile.outputs).flatMap(output => output.imports).some(item => /bigquery/i.test(item.path)))
-console.log('Retirement: routes, sources, dependency graph, lockfile and rebuilt widget verified; only two blocked local bundles allowed.')
+console.log('Retirement: routes, sources, dependency graph, lockfile and rebuilt widget verified.')
