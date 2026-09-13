@@ -78,7 +78,13 @@ import {
 } from './compositions/OttoRampPayablesUi'
 import {
   CHATGPT_MOBILE_EXACT_REPLICA_DURATION,
+  CHATGPT_MOBILE_FINANCIAL_DIRECT_DURATION,
+  CHATGPT_MOBILE_FINANCIAL_OPERATIONS_DURATION,
+  CHATGPT_MOBILE_FINANCIAL_SCROLL_DURATION,
   ChatGptMobileExactReplica,
+  ChatGptMobileFinancialDirectVideo,
+  ChatGptMobileFinancialOperationsVideo,
+  ChatGptMobileFinancialScrollVideo,
 } from './compositions/ChatGptMobileExactReplica'
 import {
   PROMPT_TO_CHART_EXACT_DURATION,
@@ -262,6 +268,30 @@ function RemotionDownloadRoot() {
         fps={30}
         height={1792}
         id="component-chatgpt-mobile-exact-replica"
+        width={828}
+      />
+      <Composition
+        component={ChatGptMobileFinancialOperationsVideo}
+        durationInFrames={CHATGPT_MOBILE_FINANCIAL_OPERATIONS_DURATION}
+        fps={30}
+        height={1792}
+        id="video-chatgpt-mobile-financial-operations"
+        width={828}
+      />
+      <Composition
+        component={ChatGptMobileFinancialDirectVideo}
+        durationInFrames={CHATGPT_MOBILE_FINANCIAL_DIRECT_DURATION}
+        fps={30}
+        height={1792}
+        id="video-chatgpt-mobile-financial-direct"
+        width={828}
+      />
+      <Composition
+        component={ChatGptMobileFinancialScrollVideo}
+        durationInFrames={CHATGPT_MOBILE_FINANCIAL_SCROLL_DURATION}
+        fps={30}
+        height={1792}
+        id="video-chatgpt-mobile-financial-scroll"
         width={828}
       />
       <Composition

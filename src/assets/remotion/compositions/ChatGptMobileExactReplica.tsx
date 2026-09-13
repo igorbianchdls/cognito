@@ -1,11 +1,14 @@
 import {useEffect, useState, type ReactNode} from 'react'
 import {CheckCircle2, LoaderCircle, SearchCheck, Send, WalletCards} from 'lucide-react'
-import {AbsoluteFill, continueRender, delayRender, Img, interpolate, spring, staticFile, useCurrentFrame, useVideoConfig} from 'remotion'
+import {AbsoluteFill, continueRender, delayRender, Easing, Freeze, Img, interpolate, spring, staticFile, useCurrentFrame, useVideoConfig} from 'remotion'
 
-import {OttoInvoiceEmissionMobilePanel} from '@/assets/remotion/compositions/OttoInvoiceChatGptTvContent'
+import {OttoAccountsPayableMobilePanel, OttoInvoiceEmissionMobilePanel} from '@/assets/remotion/compositions/OttoInvoiceChatGptTvContent'
 import {IOS_REMOTION_DISPLAY_FONT_STACK, IOS_REMOTION_FONT_STACK, loadSfProFonts} from '@/assets/remotion/fonts/sfPro'
 
-export const CHATGPT_MOBILE_EXACT_REPLICA_DURATION = 1180
+export const CHATGPT_MOBILE_EXACT_REPLICA_DURATION = 1120
+export const CHATGPT_MOBILE_FINANCIAL_OPERATIONS_DURATION = 1180
+export const CHATGPT_MOBILE_FINANCIAL_DIRECT_DURATION = 1180
+export const CHATGPT_MOBILE_FINANCIAL_SCROLL_DURATION = 1180
 
 const INK = '#171717'
 const ICON = '#666666'
@@ -81,20 +84,18 @@ function AssistantText({children, top}: {children: ReactNode; top: number}) {
   return <div style={{fontSize: 34, fontWeight: 400, left: 33, letterSpacing: '-0.018em', lineHeight: 1.3, position: 'absolute', top, whiteSpace: 'pre-wrap', width: 760}}>{children}</div>
 }
 
-function TypedUserBubble({start, text, top}: {start: number; text: string; top: number}) {
+function StaticUserBubble({start, text, top}: {start: number; text: string; top: number}) {
   const frame = useCurrentFrame()
-  const visibleCharacters = Math.max(0, Math.min(text.length, Math.floor((frame - start + 1) * 2)))
   const visible = frame >= start
 
   return <div style={{background: BUBBLE, borderRadius: 38, boxSizing: 'border-box', fontSize: 31, fontWeight: 400, letterSpacing: '-0.01em', lineHeight: 1.36, minHeight: 230, opacity: visible ? 1 : 0, padding: '25px 30px', position: 'absolute', right: 32, top, width: 700}}>
-    {text.slice(0, visibleCharacters)}
-    {visibleCharacters > 0 && visibleCharacters < text.length ? <span style={{borderRight: '2px solid #555', marginLeft: 2, opacity: Math.floor(frame / 7) % 2 ? 0.3 : 1}} /> : null}
+    {text}
   </div>
 }
 
-function TypedAssistantText({end, start, text, top}: {end?: number; start: number; text: string; top: number}) {
+function TypedAssistantText({end, instant = false, start, text, top}: {end?: number; instant?: boolean; start: number; text: string; top: number}) {
   const frame = useCurrentFrame()
-  const visibleCharacters = Math.max(0, Math.min(text.length, Math.floor((frame - start + 1) * 5)))
+  const visibleCharacters = frame < start ? 0 : instant ? text.length : Math.max(0, Math.min(text.length, Math.floor((frame - start + 1) * 5)))
   const opacity = end === undefined ? 1 : interpolate(frame, [end, end + 8], [1, 0], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp'})
 
   return <div style={{opacity}}><AssistantText top={top}>{text.slice(0, visibleCharacters)}</AssistantText></div>
@@ -202,7 +203,7 @@ function MobileOperationPanel({accent, doneLabel, icon, rows, start, subtitle, t
   </div>
 }
 
-function ConversationTrack({children}: {children: ReactNode}) {
+function FinancialConversationTrack({children}: {children: ReactNode}) {
   const frame = useCurrentFrame()
   const {fps} = useVideoConfig()
   const scrollStep = (start: number) => spring({
@@ -222,7 +223,167 @@ function ConversationTrack({children}: {children: ReactNode}) {
   </AbsoluteFill>
 }
 
-export function ChatGptMobileExactReplica() {
+function BasicConversationTrack({children}: {children: ReactNode}) {
+  const frame = useCurrentFrame()
+  const {fps} = useVideoConfig()
+  const scrollStep = (start: number) => spring({config: {damping: 26, mass: 0.85, stiffness: 120}, delay: start, fps, frame})
+  const previousConversationScroll = -340 * (scrollStep(218) + scrollStep(273) + scrollStep(328) + scrollStep(383) + scrollStep(438))
+  const invoiceEntranceScroll = -520 * scrollStep(480)
+  const invoiceGrowthScroll = -75 * ([529, 553, 577, 601, 625, 649, 673].reduce((total, start) => total + scrollStep(start), 0))
+  const invoiceCompletionScroll = -200 * scrollStep(710)
+  const accountsPromptScroll = -450 * scrollStep(760)
+  const accountsEntranceScroll = -500 * scrollStep(800)
+  const accountsGrowthScroll = -75 * ([849, 873, 897, 921, 945, 969, 993].reduce((total, start) => total + scrollStep(start), 0))
+  const accountsCompletionScroll = -200 * scrollStep(1030)
+  const scrollY = previousConversationScroll + invoiceEntranceScroll + invoiceGrowthScroll + invoiceCompletionScroll + accountsPromptScroll + accountsEntranceScroll + accountsGrowthScroll + accountsCompletionScroll
+
+  return <AbsoluteFill style={{clipPath: 'inset(230px 0 188px 0)', zIndex: 1}}><AbsoluteFill style={{transform: `translateY(${scrollY}px)`}}>{children}</AbsoluteFill></AbsoluteFill>
+}
+
+function StaticScrollTrack({children}: {children: ReactNode}) {
+  const frame = useCurrentFrame()
+  const scrollY = interpolate(frame, [0, 50, 1130, 1179], [0, 0, -4110, -4110], {
+    easing: Easing.inOut(Easing.cubic),
+    extrapolateLeft: 'clamp',
+    extrapolateRight: 'clamp',
+  })
+
+  return <AbsoluteFill style={{clipPath: 'inset(230px 0 188px 0)', zIndex: 1}}><AbsoluteFill style={{transform: `translateY(${scrollY}px)`}}><Freeze frame={1100}>{children}</Freeze></AbsoluteFill></AbsoluteFill>
+}
+
+function BasicConversation() {
+  return <>
+    <Reveal start={10}><UserBubble height={92} top={245} width={582}>Pergunte pra mim o que eu quero</UserBubble></Reveal>
+    <TypedAssistantText start={32} text="O que você quer?" top={409} />
+    <Reveal start={37}><ActionRow top={482} /></Reveal>
+
+    <Reveal start={65}><UserBubble height={92} top={585} width={524}>Pergunte cm um emoii no final</UserBubble></Reveal>
+    <TypedAssistantText start={87} text="O que você quer?" top={750} />
+    <TypedEmojiCrop boundaries={[46]} height={42} left={308} sourceX={308} sourceY={750} start={90} top={750} width={46} />
+    <Reveal start={93}><ActionRow top={822} /></Reveal>
+
+    <Reveal start={120}><UserBubble height={144} top={925} width={491}><span>Pergunte com vários emojis<br />no final</span></UserBubble></Reveal>
+    <TypedAssistantText start={142} text="O que você quer?" top={1145} />
+    <TypedEmojiCrop boundaries={[50, 96, 143, 185, 234, 279, 326, 374, 421, 481]} height={44} left={307} sourceX={307} sourceY={1138} start={145} top={1138} width={481} />
+    <Reveal start={157}><ActionRow top={1217} /></Reveal>
+
+    <Reveal start={175}><UserBubble height={90} top={1317} width={286}>Menos emojis</UserBubble></Reveal>
+    <TypedAssistantText start={197} text="O que você quer?" top={1486} />
+    <TypedEmojiCrop boundaries={[50, 93, 138]} height={44} left={308} sourceX={308} sourceY={1480} start={200} top={1480} width={138} />
+    <Reveal start={205}><ActionRow top={1554} /></Reveal>
+
+    <Reveal start={230}><UserBubble height={90} top={1657} width={330}>Agora sem emojis</UserBubble></Reveal>
+    <TypedAssistantText start={252} text="O que você quer?" top={1826} />
+    <Reveal start={257}><ActionRow top={1894} /></Reveal>
+
+    <Reveal start={285}><UserBubble height={92} top={1997} width={535}>Pergunte com mais educação</UserBubble></Reveal>
+    <TypedAssistantText start={307} text="O que você gostaria?" top={2166} />
+    <Reveal start={312}><ActionRow top={2234} /></Reveal>
+
+    <Reveal start={340}><UserBubble height={92} top={2337} width={450}>Agora seja mais direto</UserBubble></Reveal>
+    <TypedAssistantText start={362} text="Como posso ajudar?" top={2506} />
+    <Reveal start={367}><ActionRow top={2574} /></Reveal>
+
+    <Reveal start={395}><UserBubble height={90} top={2677} width={360}>Perfeito, obrigado</UserBubble></Reveal>
+    <TypedAssistantText start={417} text="Por nada!" top={2846} />
+    <Reveal start={421}><ActionRow top={2914} /></Reveal>
+
+    <Reveal start={450}><UserBubble height={144} top={3017} width={690}><span>Chat, emita as notas fiscais das vendas de hoje e envie para cada cliente.</span></UserBubble></Reveal>
+    <TypedAssistantText start={472} text="Perfeito! Vou emitir as notas fiscais das oito vendas." top={3237} />
+    <OttoInvoiceEmissionMobilePanel start={492} top={3335} />
+
+    <TypedAssistantText start={728} text="Pronto! As 8 notas fiscais foram emitidas e enviadas." top={4350} />
+    <Reveal start={743}><ActionRow top={4500} /></Reveal>
+
+    <Reveal start={770}><UserBubble height={144} top={4595} width={690}><span>Agora busque as contas a pagar deste mês e organize por vencimento.</span></UserBubble></Reveal>
+    <TypedAssistantText end={1022} start={792} text="Perfeito! Vou buscar e organizar suas contas a pagar." top={4815} />
+    <OttoAccountsPayableMobilePanel start={812} top={4913} />
+
+    <TypedAssistantText start={1048} text="Pronto! Encontrei e organizei as 8 contas a pagar." top={5935} />
+    <Reveal start={1063}><ActionRow top={6085} /></Reveal>
+  </>
+}
+
+function FinancialConversation({instantMessages = false}: {instantMessages?: boolean}) {
+  return <>
+    <StaticUserBubble
+      start={0}
+      text="Chat, emite as notas das vendas de hoje, manda pros clientes, atualiza o contas a receber e cobra quem tá atrasado."
+      top={245}
+    />
+
+    <TypedAssistantText
+      instant={instantMessages}
+      start={96}
+      text="Claro. Vou começar identificando e validando as vendas realizadas hoje."
+      top={520}
+    />
+    <MobileOperationPanel
+      accent="#2878d0"
+      doneLabel="8 vendas validadas"
+      icon={<SearchCheck size={20} strokeWidth={1.8} />}
+      rows={todaySales}
+      start={135}
+      subtitle="Conferindo clientes, valores e dados fiscais"
+      title="Vendas de hoje"
+      top={625}
+    />
+
+    <TypedAssistantText
+      instant={instantMessages}
+      start={300}
+      text={'Encontrei 8 vendas e confirmei os dados necessários para emissão.\n\nAgora vou preencher, emitir e enviar as notas fiscais para cada cliente.'}
+      top={1585}
+    />
+    <OttoInvoiceEmissionMobilePanel start={345} top={1820} />
+
+    <TypedAssistantText
+      instant={instantMessages}
+      start={570}
+      text={'As 8 notas foram emitidas e enviadas aos clientes.\n\nAgora vou criar os lançamentos correspondentes no contas a receber.'}
+      top={2770}
+    />
+    <MobileOperationPanel
+      accent="#16875f"
+      doneLabel="R$ 10.780,00 lançados"
+      icon={<WalletCards size={20} strokeWidth={1.8} />}
+      rows={receivables}
+      start={625}
+      subtitle="Criando os recebimentos vinculados às notas"
+      title="Atualizando contas a receber"
+      top={2995}
+    />
+
+    <TypedAssistantText
+      instant={instantMessages}
+      start={790}
+      text={'O contas a receber foi atualizado com os 8 novos lançamentos.\n\nPor fim, vou identificar os clientes em atraso e enviar as cobranças.'}
+      top={3960}
+    />
+    <MobileOperationPanel
+      accent="#8055c7"
+      doneLabel="4 cobranças enviadas"
+      icon={<Send size={20} strokeWidth={1.8} />}
+      rows={overdueCustomers}
+      start={845}
+      subtitle="Enviando lembretes por WhatsApp e e-mail"
+      title="Cobrando clientes em atraso"
+      top={4185}
+    />
+
+    <TypedAssistantText
+      instant={instantMessages}
+      start={1010}
+      text={'Concluído. Enviei 4 cobranças por WhatsApp e e-mail.\n\nResumo: 8 vendas processadas, 8 notas emitidas e enviadas, 8 lançamentos atualizados e 4 clientes cobrados.'}
+      top={4790}
+    />
+    <Reveal start={1065}><ActionRow top={5200} /></Reveal>
+  </>
+}
+
+type ChatGptMobileExperienceVariant = 'basic' | 'financial' | 'direct' | 'scroll'
+
+function ChatGptMobileExperience({variant}: {variant: ChatGptMobileExperienceVariant}) {
   const [fontReady, setFontReady] = useState(false)
   const [fontHandle] = useState(() => delayRender('Carregando SF Pro'))
 
@@ -268,75 +429,10 @@ export function ChatGptMobileExactReplica() {
       <div style={{position: 'absolute', right: 56, top: 124}}><DotsIcon color="#050505" size={37} /></div>
     </div>
 
-    <ConversationTrack>
-      <TypedUserBubble
-        start={14}
-        text="Chat, emite as notas das vendas de hoje, manda pros clientes, atualiza o contas a receber e cobra quem tá atrasado."
-        top={245}
-      />
-
-      <TypedAssistantText
-        start={96}
-        text="Claro. Vou começar identificando e validando as vendas realizadas hoje."
-        top={520}
-      />
-      <MobileOperationPanel
-        accent="#2878d0"
-        doneLabel="8 vendas validadas"
-        icon={<SearchCheck size={20} strokeWidth={1.8} />}
-        rows={todaySales}
-        start={135}
-        subtitle="Conferindo clientes, valores e dados fiscais"
-        title="Vendas de hoje"
-        top={625}
-      />
-
-      <TypedAssistantText
-        start={300}
-        text={'Encontrei 8 vendas e confirmei os dados necessários para emissão.\n\nAgora vou preencher, emitir e enviar as notas fiscais para cada cliente.'}
-        top={1585}
-      />
-      <OttoInvoiceEmissionMobilePanel start={345} top={1820} />
-
-      <TypedAssistantText
-        start={570}
-        text={'As 8 notas foram emitidas e enviadas aos clientes.\n\nAgora vou criar os lançamentos correspondentes no contas a receber.'}
-        top={2770}
-      />
-      <MobileOperationPanel
-        accent="#16875f"
-        doneLabel="R$ 10.780,00 lançados"
-        icon={<WalletCards size={20} strokeWidth={1.8} />}
-        rows={receivables}
-        start={625}
-        subtitle="Criando os recebimentos vinculados às notas"
-        title="Atualizando contas a receber"
-        top={2995}
-      />
-
-      <TypedAssistantText
-        start={790}
-        text={'O contas a receber foi atualizado com os 8 novos lançamentos.\n\nPor fim, vou identificar os clientes em atraso e enviar as cobranças.'}
-        top={3960}
-      />
-      <MobileOperationPanel
-        accent="#8055c7"
-        doneLabel="4 cobranças enviadas"
-        icon={<Send size={20} strokeWidth={1.8} />}
-        rows={overdueCustomers}
-        start={845}
-        subtitle="Enviando lembretes por WhatsApp e e-mail"
-        title="Cobrando clientes em atraso"
-        top={4185}
-      />
-
-      <TypedAssistantText
-        start={1010}
-        text={'Concluído. Enviei 4 cobranças por WhatsApp e e-mail.\n\nResumo: 8 vendas processadas, 8 notas emitidas e enviadas, 8 lançamentos atualizados e 4 clientes cobrados.'}
-        top={4790}
-      />
-      <Reveal start={1065}><ActionRow top={5200} /></Reveal>
-    </ConversationTrack>
+    {variant === 'basic' ? <BasicConversationTrack><BasicConversation /></BasicConversationTrack> : null}
+    {variant === 'financial' ? <FinancialConversationTrack><FinancialConversation /></FinancialConversationTrack> : null}
+    {variant === 'direct' ? <FinancialConversationTrack><FinancialConversation instantMessages /></FinancialConversationTrack> : null}
+    {variant === 'scroll' ? <StaticScrollTrack><FinancialConversation instantMessages /></StaticScrollTrack> : null}
 
     <div style={{background: '#fff', bottom: 0, height: 188, left: 0, position: 'absolute', right: 0, zIndex: 20}}>
       <div style={{alignItems: 'center', background: '#f2f2f2', borderRadius: 52, bottom: 68, display: 'flex', height: 96, left: 68, padding: '0 16px 0 27px', position: 'absolute', right: 68}}>
@@ -348,4 +444,20 @@ export function ChatGptMobileExactReplica() {
       <div style={{background: '#000', borderRadius: 999, bottom: 15, height: 11, left: '50%', position: 'absolute', transform: 'translateX(-50%)', width: 296}} />
     </div>
   </AbsoluteFill>
+}
+
+export function ChatGptMobileExactReplica() {
+  return <ChatGptMobileExperience variant="basic" />
+}
+
+export function ChatGptMobileFinancialOperationsVideo() {
+  return <ChatGptMobileExperience variant="financial" />
+}
+
+export function ChatGptMobileFinancialDirectVideo() {
+  return <ChatGptMobileExperience variant="direct" />
+}
+
+export function ChatGptMobileFinancialScrollVideo() {
+  return <ChatGptMobileExperience variant="scroll" />
 }

@@ -94,7 +94,16 @@ import { ChatGptTaskLauncherAnimation } from '@/assets/remotion/compositions/Cha
 import { CODEX_CHARTS_DURATION, CodexChartsAnimation } from '@/assets/remotion/compositions/CodexChartsAnimation'
 import { CHATGPT_PLUS_STATIC_UI_DURATION, ChatGptPlusStaticUi } from '@/assets/remotion/compositions/ChatGptPlusStaticUi'
 import { OTTO_RAMP_PAYABLES_UI_DURATION, OttoRampPayablesUi } from '@/assets/remotion/compositions/OttoRampPayablesUi'
-import { CHATGPT_MOBILE_EXACT_REPLICA_DURATION, ChatGptMobileExactReplica } from '@/assets/remotion/compositions/ChatGptMobileExactReplica'
+import {
+  CHATGPT_MOBILE_EXACT_REPLICA_DURATION,
+  CHATGPT_MOBILE_FINANCIAL_DIRECT_DURATION,
+  CHATGPT_MOBILE_FINANCIAL_OPERATIONS_DURATION,
+  CHATGPT_MOBILE_FINANCIAL_SCROLL_DURATION,
+  ChatGptMobileExactReplica,
+  ChatGptMobileFinancialDirectVideo,
+  ChatGptMobileFinancialOperationsVideo,
+  ChatGptMobileFinancialScrollVideo,
+} from '@/assets/remotion/compositions/ChatGptMobileExactReplica'
 import { PROMPT_TO_CHART_EXACT_DURATION, PromptToChartExactVideo } from '@/assets/remotion/compositions/PromptToChartExactVideo'
 import { CHATBOT_DASHBOARD_MOBILE_DURATION, CHATGPT_POWERPOINT_OUTLINE_MOBILE_DURATION, CLAUDE_POWERPOINT_OUTLINE_MOBILE_DURATION, COWORK_POWERPOINT_EXPORT_DURATION, COWORK_POWERPOINT_EXPORT_MOBILE_DURATION, ChatGptPowerPointOutlineMobileAnimation, ChatbotToDashboardMobileAnimation, ClaudePowerPointOutlineMobileAnimation, CoworkPowerPointExportAnimation, CoworkPowerPointExportMobileAnimation } from '@/assets/remotion/compositions/CoworkPowerPointExportAnimation'
 import { CLAUDE_FINANCIAL_AGENTS_VIDEO_DURATION, ClaudeFinancialAgentsVideo } from '@/assets/remotion/compositions/ClaudeFinancialAgentsVideo'
@@ -2033,6 +2042,42 @@ const catalog: CatalogItem[] = [
     label: 'ChatGPT Mobile — Réplica exata',
     tags: ['ChatGPT', 'Mobile', 'SF Pro', 'iPhone', 'Custom Icons'],
     value: 'component-chatgpt-mobile-exact-replica',
+    width: 828,
+  },
+  {
+    code: '<ChatGptMobileFinancialOperationsVideo />',
+    component: ChatGptMobileFinancialOperationsVideo,
+    description: 'Conversa mobile completa com mensagens da IA e operações financeiras animadas pela Otto.',
+    duration: CHATGPT_MOBILE_FINANCIAL_OPERATIONS_DURATION,
+    height: 1792,
+    kind: 'Vídeos criados',
+    label: 'ChatGPT Mobile — Operação Financeira Otto',
+    tags: ['ChatGPT', 'Mobile', 'Otto', 'Financeiro', 'Notas fiscais'],
+    value: 'video-chatgpt-mobile-financial-operations',
+    width: 828,
+  },
+  {
+    code: '<ChatGptMobileFinancialDirectVideo />',
+    component: ChatGptMobileFinancialDirectVideo,
+    description: 'Variação direta da conversa: prompt e mensagens aparecem prontos, enquanto os containers executam as operações.',
+    duration: CHATGPT_MOBILE_FINANCIAL_DIRECT_DURATION,
+    height: 1792,
+    kind: 'Vídeos criados',
+    label: 'ChatGPT Mobile — Operação Financeira Direta',
+    tags: ['ChatGPT', 'Mobile', 'Otto', 'Financeiro', 'Direto'],
+    value: 'video-chatgpt-mobile-financial-direct',
+    width: 828,
+  },
+  {
+    code: '<ChatGptMobileFinancialScrollVideo />',
+    component: ChatGptMobileFinancialScrollVideo,
+    description: 'Conversa financeira concluída, apresentada somente por uma rolagem vertical suave.',
+    duration: CHATGPT_MOBILE_FINANCIAL_SCROLL_DURATION,
+    height: 1792,
+    kind: 'Vídeos criados',
+    label: 'ChatGPT Mobile — Conversa Pronta em Rolagem',
+    tags: ['ChatGPT', 'Mobile', 'Otto', 'Scroll', 'Sem animação'],
+    value: 'video-chatgpt-mobile-financial-scroll',
     width: 828,
   },
   {
