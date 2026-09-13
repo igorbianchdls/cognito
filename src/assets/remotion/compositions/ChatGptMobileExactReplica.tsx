@@ -210,7 +210,7 @@ function MobileOperationPanel({accent, doneLabel, icon, rows, start, staticCard 
   </div>
 }
 
-function FinancialConversationTrack({children}: {children: ReactNode}) {
+function FinancialConversationTrack({children, compact = false}: {children: ReactNode; compact?: boolean}) {
   const frame = useCurrentFrame()
   const {fps} = useVideoConfig()
   const scrollStep = (start: number) => spring({
@@ -219,10 +219,10 @@ function FinancialConversationTrack({children}: {children: ReactNode}) {
     fps,
     frame,
   })
-  const invoiceScroll = -1170 * scrollStep(340)
-  const receivablesScroll = -1335 * scrollStep(595)
-  const collectionScroll = -1175 * scrollStep(815)
-  const summaryScroll = -760 * scrollStep(1008)
+  const invoiceScroll = (compact ? -1110 : -1170) * scrollStep(340)
+  const receivablesScroll = (compact ? -940 : -1335) * scrollStep(595)
+  const collectionScroll = (compact ? -1070 : -1175) * scrollStep(815)
+  const summaryScroll = (compact ? -780 : -760) * scrollStep(1008)
   const scrollY = invoiceScroll + receivablesScroll + collectionScroll + summaryScroll
 
   return <AbsoluteFill style={{clipPath: 'inset(230px 0 188px 0)', zIndex: 1}}>
@@ -327,9 +327,14 @@ function FinancialConversation({collectionRows = overdueCustomers, compactSpacin
   const receivableRows = receivables.slice(0, itemCount)
   const launchedTotal = itemCount === 6 ? 'R$ 8.250,00' : 'R$ 10.780,00'
   const salesTop = compactSpacing ? 640 : 680
-  const invoiceTop = compactSpacing ? 1885 : 1970
-  const receivablesTop = compactSpacing ? 3175 : 3250
-  const collectionTop = compactSpacing ? 4460 : 4535
+  const firstFollowupTop = compactSpacing ? 1446 : 1675
+  const invoiceTop = compactSpacing ? 1712 : 1970
+  const secondFollowupTop = compactSpacing ? 2499 : 2960
+  const receivablesTop = compactSpacing ? 2765 : 3250
+  const thirdFollowupTop = compactSpacing ? 3571 : 4245
+  const collectionTop = compactSpacing ? 3837 : 4535
+  const summaryTop = compactSpacing ? 4643 : 5200
+  const actionsTop = compactSpacing ? 4997 : 5530
 
   return <>
     <StaticUserBubble
@@ -362,7 +367,7 @@ function FinancialConversation({collectionRows = overdueCustomers, compactSpacin
       speed={messageSpeed}
       start={300}
       text={`Encontrei ${itemCount} vendas e confirmei os dados necessários para emissão.\n\nAgora vou preencher, emitir e enviar as notas fiscais para cada cliente.`}
-      top={1675}
+      top={firstFollowupTop}
     />
     <OttoInvoiceEmissionMobilePanel itemCount={itemCount} start={345} staticCard={staticContainers} top={invoiceTop} />
 
@@ -371,7 +376,7 @@ function FinancialConversation({collectionRows = overdueCustomers, compactSpacin
       speed={messageSpeed}
       start={570}
       text={`As ${itemCount} notas foram emitidas e enviadas aos clientes.\n\nAgora vou criar os lançamentos correspondentes no contas a receber.`}
-      top={2960}
+      top={secondFollowupTop}
     />
     <MobileOperationPanel
       accent="#16875f"
@@ -390,7 +395,7 @@ function FinancialConversation({collectionRows = overdueCustomers, compactSpacin
       speed={messageSpeed}
       start={790}
       text={`O contas a receber foi atualizado com os ${itemCount} novos lançamentos.\n\nPor fim, vou identificar os clientes em atraso e enviar as cobranças.`}
-      top={4245}
+      top={thirdFollowupTop}
     />
     <MobileOperationPanel
       accent="#8055c7"
@@ -409,9 +414,9 @@ function FinancialConversation({collectionRows = overdueCustomers, compactSpacin
       speed={messageSpeed}
       start={1010}
       text={`Concluído. Enviei ${collectionRows.length} cobranças por WhatsApp e e-mail.\n\nResumo: ${itemCount} vendas processadas, ${itemCount} notas emitidas e enviadas, ${itemCount} lançamentos atualizados e ${collectionRows.length} clientes cobrados.`}
-      top={5200}
+      top={summaryTop}
     />
-    <Reveal start={1065}><ActionRow top={5530} /></Reveal>
+    <Reveal start={1065}><ActionRow top={actionsTop} /></Reveal>
   </>
 }
 
@@ -465,7 +470,7 @@ function ChatGptMobileExperience({variant}: {variant: ChatGptMobileExperienceVar
 
     {variant === 'basic' ? <BasicConversationTrack><BasicConversation /></BasicConversationTrack> : null}
     {variant === 'financial' ? <FinancialConversationTrack><FinancialConversation /></FinancialConversationTrack> : null}
-    {variant === 'direct' ? <FinancialConversationTrack><FinancialConversation collectionRows={directOverdueCustomers} compactSpacing itemCount={6} messageSpeed={9} /></FinancialConversationTrack> : null}
+    {variant === 'direct' ? <FinancialConversationTrack compact><FinancialConversation collectionRows={directOverdueCustomers} compactSpacing itemCount={6} messageSpeed={9} /></FinancialConversationTrack> : null}
     {variant === 'scroll' ? <StaticScrollTrack><FinancialConversation instantMessages /></StaticScrollTrack> : null}
     {variant === 'scroll-items' ? <AnimatedItemsScrollTrack><FinancialConversation instantMessages staticContainers /></AnimatedItemsScrollTrack> : null}
 
