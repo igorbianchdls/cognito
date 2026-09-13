@@ -9,6 +9,7 @@ export const CHATGPT_MOBILE_EXACT_REPLICA_DURATION = 1120
 export const CHATGPT_MOBILE_FINANCIAL_OPERATIONS_DURATION = 1180
 export const CHATGPT_MOBILE_FINANCIAL_DIRECT_DURATION = 1180
 export const CHATGPT_MOBILE_FINANCIAL_SCROLL_DURATION = 1180
+export const CHATGPT_MOBILE_FINANCIAL_SCROLL_ITEMS_DURATION = 1180
 
 const INK = '#171717'
 const ICON = '#666666'
@@ -166,10 +167,10 @@ const overdueCustomers: OperationRow[] = [
 
 const avatarColors = ['#3977c3', '#8c54b8', '#2f8d68', '#d16b45', '#5678a8', '#b55c82', '#477e91', '#7b6bba']
 
-function MobileOperationPanel({accent, doneLabel, icon, rows, start, subtitle, title, top}: {accent: string; doneLabel: string; icon: ReactNode; rows: OperationRow[]; start: number; subtitle: string; title: string; top: number}) {
+function MobileOperationPanel({accent, doneLabel, icon, rows, start, staticCard = false, subtitle, title, top}: {accent: string; doneLabel: string; icon: ReactNode; rows: OperationRow[]; start: number; staticCard?: boolean; subtitle: string; title: string; top: number}) {
   const frame = useCurrentFrame()
   const localFrame = frame - start
-  const cardIn = interpolate(localFrame, [0, 12], [0, 1], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp'})
+  const cardIn = staticCard ? 1 : interpolate(localFrame, [0, 12], [0, 1], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp'})
   const raw = interpolate(localFrame, [18, 150], [0, rows.length], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp'})
   const completed = Math.min(rows.length, Math.floor(raw))
   const progress = Math.min(1, raw / rows.length)
@@ -251,6 +252,17 @@ function StaticScrollTrack({children}: {children: ReactNode}) {
   return <AbsoluteFill style={{clipPath: 'inset(230px 0 188px 0)', zIndex: 1}}><AbsoluteFill style={{transform: `translateY(${scrollY}px)`}}><Freeze frame={1100}>{children}</Freeze></AbsoluteFill></AbsoluteFill>
 }
 
+function AnimatedItemsScrollTrack({children}: {children: ReactNode}) {
+  const frame = useCurrentFrame()
+  const scrollY = interpolate(frame, [0, 50, 1130, 1179], [0, 0, -4110, -4110], {
+    easing: Easing.inOut(Easing.cubic),
+    extrapolateLeft: 'clamp',
+    extrapolateRight: 'clamp',
+  })
+
+  return <AbsoluteFill style={{clipPath: 'inset(230px 0 188px 0)', zIndex: 1}}><AbsoluteFill style={{transform: `translateY(${scrollY}px)`}}>{children}</AbsoluteFill></AbsoluteFill>
+}
+
 function BasicConversation() {
   return <>
     <Reveal start={10}><UserBubble height={92} top={245} width={582}>Pergunte pra mim o que eu quero</UserBubble></Reveal>
@@ -304,7 +316,7 @@ function BasicConversation() {
   </>
 }
 
-function FinancialConversation({instantMessages = false}: {instantMessages?: boolean}) {
+function FinancialConversation({instantMessages = false, staticContainers = false}: {instantMessages?: boolean; staticContainers?: boolean}) {
   return <>
     <StaticUserBubble
       start={0}
@@ -324,6 +336,7 @@ function FinancialConversation({instantMessages = false}: {instantMessages?: boo
       icon={<SearchCheck size={20} strokeWidth={1.8} />}
       rows={todaySales}
       start={135}
+      staticCard={staticContainers}
       subtitle="Conferindo clientes, valores e dados fiscais"
       title="Vendas de hoje"
       top={625}
@@ -335,7 +348,7 @@ function FinancialConversation({instantMessages = false}: {instantMessages?: boo
       text={'Encontrei 8 vendas e confirmei os dados necessários para emissão.\n\nAgora vou preencher, emitir e enviar as notas fiscais para cada cliente.'}
       top={1585}
     />
-    <OttoInvoiceEmissionMobilePanel start={345} top={1820} />
+    <OttoInvoiceEmissionMobilePanel start={345} staticCard={staticContainers} top={1820} />
 
     <TypedAssistantText
       instant={instantMessages}
@@ -349,6 +362,7 @@ function FinancialConversation({instantMessages = false}: {instantMessages?: boo
       icon={<WalletCards size={20} strokeWidth={1.8} />}
       rows={receivables}
       start={625}
+      staticCard={staticContainers}
       subtitle="Criando os recebimentos vinculados às notas"
       title="Atualizando contas a receber"
       top={2995}
@@ -366,6 +380,7 @@ function FinancialConversation({instantMessages = false}: {instantMessages?: boo
       icon={<Send size={20} strokeWidth={1.8} />}
       rows={overdueCustomers}
       start={845}
+      staticCard={staticContainers}
       subtitle="Enviando lembretes por WhatsApp e e-mail"
       title="Cobrando clientes em atraso"
       top={4185}
@@ -381,7 +396,7 @@ function FinancialConversation({instantMessages = false}: {instantMessages?: boo
   </>
 }
 
-type ChatGptMobileExperienceVariant = 'basic' | 'financial' | 'direct' | 'scroll'
+type ChatGptMobileExperienceVariant = 'basic' | 'financial' | 'direct' | 'scroll' | 'scroll-items'
 
 function ChatGptMobileExperience({variant}: {variant: ChatGptMobileExperienceVariant}) {
   const [fontReady, setFontReady] = useState(false)
@@ -433,6 +448,7 @@ function ChatGptMobileExperience({variant}: {variant: ChatGptMobileExperienceVar
     {variant === 'financial' ? <FinancialConversationTrack><FinancialConversation /></FinancialConversationTrack> : null}
     {variant === 'direct' ? <FinancialConversationTrack><FinancialConversation instantMessages /></FinancialConversationTrack> : null}
     {variant === 'scroll' ? <StaticScrollTrack><FinancialConversation instantMessages /></StaticScrollTrack> : null}
+    {variant === 'scroll-items' ? <AnimatedItemsScrollTrack><FinancialConversation instantMessages staticContainers /></AnimatedItemsScrollTrack> : null}
 
     <div style={{background: '#fff', bottom: 0, height: 188, left: 0, position: 'absolute', right: 0, zIndex: 20}}>
       <div style={{alignItems: 'center', background: '#f2f2f2', borderRadius: 52, bottom: 68, display: 'flex', height: 96, left: 68, padding: '0 16px 0 27px', position: 'absolute', right: 68}}>
@@ -460,4 +476,8 @@ export function ChatGptMobileFinancialDirectVideo() {
 
 export function ChatGptMobileFinancialScrollVideo() {
   return <ChatGptMobileExperience variant="scroll" />
+}
+
+export function ChatGptMobileFinancialScrollItemsVideo() {
+  return <ChatGptMobileExperience variant="scroll-items" />
 }

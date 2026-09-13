@@ -95,10 +95,10 @@ function MobileInvoiceRow({completed, frame, index}: {completed: number; frame: 
   </div>
 }
 
-export function OttoInvoiceEmissionMobilePanel({start, top}: {start: number; top: number}) {
+export function OttoInvoiceEmissionMobilePanel({start, staticCard = false, top}: {start: number; staticCard?: boolean; top: number}) {
   const frame = useCurrentFrame()
   const localFrame = frame - start
-  const cardIn = tween(localFrame, 0, 12)
+  const cardIn = staticCard ? 1 : tween(localFrame, 0, 12)
   const raw = tween(localFrame, 18, 210, [0, 8])
   const completed = Math.min(8, Math.floor(raw))
   const progress = Math.min(1, raw / 8)

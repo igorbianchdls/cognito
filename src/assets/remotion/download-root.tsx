@@ -81,10 +81,12 @@ import {
   CHATGPT_MOBILE_FINANCIAL_DIRECT_DURATION,
   CHATGPT_MOBILE_FINANCIAL_OPERATIONS_DURATION,
   CHATGPT_MOBILE_FINANCIAL_SCROLL_DURATION,
+  CHATGPT_MOBILE_FINANCIAL_SCROLL_ITEMS_DURATION,
   ChatGptMobileExactReplica,
   ChatGptMobileFinancialDirectVideo,
   ChatGptMobileFinancialOperationsVideo,
   ChatGptMobileFinancialScrollVideo,
+  ChatGptMobileFinancialScrollItemsVideo,
 } from './compositions/ChatGptMobileExactReplica'
 import {
   PROMPT_TO_CHART_EXACT_DURATION,
@@ -292,6 +294,14 @@ function RemotionDownloadRoot() {
         fps={30}
         height={1792}
         id="video-chatgpt-mobile-financial-scroll"
+        width={828}
+      />
+      <Composition
+        component={ChatGptMobileFinancialScrollItemsVideo}
+        durationInFrames={CHATGPT_MOBILE_FINANCIAL_SCROLL_ITEMS_DURATION}
+        fps={30}
+        height={1792}
+        id="video-chatgpt-mobile-financial-scroll-items"
         width={828}
       />
       <Composition

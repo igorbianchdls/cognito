@@ -99,10 +99,12 @@ import {
   CHATGPT_MOBILE_FINANCIAL_DIRECT_DURATION,
   CHATGPT_MOBILE_FINANCIAL_OPERATIONS_DURATION,
   CHATGPT_MOBILE_FINANCIAL_SCROLL_DURATION,
+  CHATGPT_MOBILE_FINANCIAL_SCROLL_ITEMS_DURATION,
   ChatGptMobileExactReplica,
   ChatGptMobileFinancialDirectVideo,
   ChatGptMobileFinancialOperationsVideo,
   ChatGptMobileFinancialScrollVideo,
+  ChatGptMobileFinancialScrollItemsVideo,
 } from '@/assets/remotion/compositions/ChatGptMobileExactReplica'
 import { PROMPT_TO_CHART_EXACT_DURATION, PromptToChartExactVideo } from '@/assets/remotion/compositions/PromptToChartExactVideo'
 import { CHATBOT_DASHBOARD_MOBILE_DURATION, CHATGPT_POWERPOINT_OUTLINE_MOBILE_DURATION, CLAUDE_POWERPOINT_OUTLINE_MOBILE_DURATION, COWORK_POWERPOINT_EXPORT_DURATION, COWORK_POWERPOINT_EXPORT_MOBILE_DURATION, ChatGptPowerPointOutlineMobileAnimation, ChatbotToDashboardMobileAnimation, ClaudePowerPointOutlineMobileAnimation, CoworkPowerPointExportAnimation, CoworkPowerPointExportMobileAnimation } from '@/assets/remotion/compositions/CoworkPowerPointExportAnimation'
@@ -2078,6 +2080,18 @@ const catalog: CatalogItem[] = [
     label: 'ChatGPT Mobile — Conversa Pronta em Rolagem',
     tags: ['ChatGPT', 'Mobile', 'Otto', 'Scroll', 'Sem animação'],
     value: 'video-chatgpt-mobile-financial-scroll',
+    width: 828,
+  },
+  {
+    code: '<ChatGptMobileFinancialScrollItemsVideo />',
+    component: ChatGptMobileFinancialScrollItemsVideo,
+    description: 'Conversa pronta com rolagem suave e animação restrita aos itens internos dos containers.',
+    duration: CHATGPT_MOBILE_FINANCIAL_SCROLL_ITEMS_DURATION,
+    height: 1792,
+    kind: 'Vídeos criados',
+    label: 'ChatGPT Mobile — Rolagem com Itens Animados',
+    tags: ['ChatGPT', 'Mobile', 'Otto', 'Scroll', 'Containers'],
+    value: 'video-chatgpt-mobile-financial-scroll-items',
     width: 828,
   },
   {
