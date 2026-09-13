@@ -291,7 +291,7 @@ function RemotionDownloadRoot() {
       <Composition
         component={ChatGptMobileFinancialScrollVideo}
         durationInFrames={CHATGPT_MOBILE_FINANCIAL_SCROLL_DURATION}
-        fps={60}
+        fps={75}
         height={1792}
         id="video-chatgpt-mobile-financial-scroll"
         width={828}

@@ -2078,7 +2078,7 @@ const catalog: CatalogItem[] = [
     component: ChatGptMobileFinancialScrollVideo,
     description: 'Conversa financeira concluída, apresentada somente por uma rolagem vertical suave.',
     duration: CHATGPT_MOBILE_FINANCIAL_SCROLL_DURATION,
-    fps: 60,
+    fps: 75,
     height: 1792,
     kind: 'Vídeos criados',
     label: 'ChatGPT Mobile — Conversa Pronta em Rolagem',
