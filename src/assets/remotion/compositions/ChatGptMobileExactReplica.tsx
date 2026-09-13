@@ -165,6 +165,12 @@ const overdueCustomers: OperationRow[] = [
   {detail: '3 dias em atraso · E-mail', initials: 'GM', name: 'Grupo Monteiro', value: 'R$ 1.890,00'},
 ]
 
+const directOverdueCustomers: OperationRow[] = [
+  ...overdueCustomers,
+  {detail: '2 dias em atraso · WhatsApp', initials: 'CH', name: 'Casa Horizonte', value: 'R$ 920,00'},
+  {detail: '1 dia em atraso · E-mail', initials: 'PC', name: 'Ponto Certo Comércio', value: 'R$ 1.150,00'},
+]
+
 const avatarColors = ['#3977c3', '#8c54b8', '#2f8d68', '#d16b45', '#5678a8', '#b55c82', '#477e91', '#7b6bba']
 
 function MobileOperationPanel({accent, doneLabel, icon, rows, start, staticCard = false, subtitle, title, top}: {accent: string; doneLabel: string; icon: ReactNode; rows: OperationRow[]; start: number; staticCard?: boolean; subtitle: string; title: string; top: number}) {
@@ -316,7 +322,11 @@ function BasicConversation() {
   </>
 }
 
-function FinancialConversation({instantMessages = false, messageSpeed = 5, staticContainers = false}: {instantMessages?: boolean; messageSpeed?: number; staticContainers?: boolean}) {
+function FinancialConversation({collectionRows = overdueCustomers, instantMessages = false, itemCount = 8, messageSpeed = 5, staticContainers = false}: {collectionRows?: OperationRow[]; instantMessages?: boolean; itemCount?: number; messageSpeed?: number; staticContainers?: boolean}) {
+  const salesRows = todaySales.slice(0, itemCount)
+  const receivableRows = receivables.slice(0, itemCount)
+  const launchedTotal = itemCount === 6 ? 'R$ 8.250,00' : 'R$ 10.780,00'
+
   return <>
     <StaticUserBubble
       start={0}
@@ -335,7 +345,7 @@ function FinancialConversation({instantMessages = false, messageSpeed = 5, stati
       accent="#2878d0"
       doneLabel="8 vendas validadas"
       icon={<SearchCheck size={20} strokeWidth={1.8} />}
-      rows={todaySales}
+      rows={salesRows}
       start={135}
       staticCard={staticContainers}
       subtitle="Conferindo clientes, valores e dados fiscais"
@@ -347,23 +357,23 @@ function FinancialConversation({instantMessages = false, messageSpeed = 5, stati
       instant={instantMessages}
       speed={messageSpeed}
       start={300}
-      text={'Encontrei 8 vendas e confirmei os dados necessários para emissão.\n\nAgora vou preencher, emitir e enviar as notas fiscais para cada cliente.'}
+      text={`Encontrei ${itemCount} vendas e confirmei os dados necessários para emissão.\n\nAgora vou preencher, emitir e enviar as notas fiscais para cada cliente.`}
       top={1675}
     />
-    <OttoInvoiceEmissionMobilePanel start={345} staticCard={staticContainers} top={1970} />
+    <OttoInvoiceEmissionMobilePanel itemCount={itemCount} start={345} staticCard={staticContainers} top={1970} />
 
     <TypedAssistantText
       instant={instantMessages}
       speed={messageSpeed}
       start={570}
-      text={'As 8 notas foram emitidas e enviadas aos clientes.\n\nAgora vou criar os lançamentos correspondentes no contas a receber.'}
+      text={`As ${itemCount} notas foram emitidas e enviadas aos clientes.\n\nAgora vou criar os lançamentos correspondentes no contas a receber.`}
       top={2960}
     />
     <MobileOperationPanel
       accent="#16875f"
-      doneLabel="R$ 10.780,00 lançados"
+      doneLabel={`${launchedTotal} lançados`}
       icon={<WalletCards size={20} strokeWidth={1.8} />}
-      rows={receivables}
+      rows={receivableRows}
       start={625}
       staticCard={staticContainers}
       subtitle="Criando os recebimentos vinculados às notas"
@@ -375,14 +385,14 @@ function FinancialConversation({instantMessages = false, messageSpeed = 5, stati
       instant={instantMessages}
       speed={messageSpeed}
       start={790}
-      text={'O contas a receber foi atualizado com os 8 novos lançamentos.\n\nPor fim, vou identificar os clientes em atraso e enviar as cobranças.'}
+      text={`O contas a receber foi atualizado com os ${itemCount} novos lançamentos.\n\nPor fim, vou identificar os clientes em atraso e enviar as cobranças.`}
       top={4245}
     />
     <MobileOperationPanel
       accent="#8055c7"
-      doneLabel="4 cobranças enviadas"
+      doneLabel={`${collectionRows.length} cobranças enviadas`}
       icon={<Send size={20} strokeWidth={1.8} />}
-      rows={overdueCustomers}
+      rows={collectionRows}
       start={845}
       staticCard={staticContainers}
       subtitle="Enviando lembretes por WhatsApp e e-mail"
@@ -394,7 +404,7 @@ function FinancialConversation({instantMessages = false, messageSpeed = 5, stati
       instant={instantMessages}
       speed={messageSpeed}
       start={1010}
-      text={'Concluído. Enviei 4 cobranças por WhatsApp e e-mail.\n\nResumo: 8 vendas processadas, 8 notas emitidas e enviadas, 8 lançamentos atualizados e 4 clientes cobrados.'}
+      text={`Concluído. Enviei ${collectionRows.length} cobranças por WhatsApp e e-mail.\n\nResumo: ${itemCount} vendas processadas, ${itemCount} notas emitidas e enviadas, ${itemCount} lançamentos atualizados e ${collectionRows.length} clientes cobrados.`}
       top={5200}
     />
     <Reveal start={1065}><ActionRow top={5530} /></Reveal>
@@ -451,7 +461,7 @@ function ChatGptMobileExperience({variant}: {variant: ChatGptMobileExperienceVar
 
     {variant === 'basic' ? <BasicConversationTrack><BasicConversation /></BasicConversationTrack> : null}
     {variant === 'financial' ? <FinancialConversationTrack><FinancialConversation /></FinancialConversationTrack> : null}
-    {variant === 'direct' ? <FinancialConversationTrack><FinancialConversation messageSpeed={9} /></FinancialConversationTrack> : null}
+    {variant === 'direct' ? <FinancialConversationTrack><FinancialConversation collectionRows={directOverdueCustomers} itemCount={6} messageSpeed={9} /></FinancialConversationTrack> : null}
     {variant === 'scroll' ? <StaticScrollTrack><FinancialConversation instantMessages /></StaticScrollTrack> : null}
     {variant === 'scroll-items' ? <AnimatedItemsScrollTrack><FinancialConversation instantMessages staticContainers /></AnimatedItemsScrollTrack> : null}
 
