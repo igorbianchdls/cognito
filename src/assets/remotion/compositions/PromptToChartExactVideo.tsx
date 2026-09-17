@@ -16,11 +16,13 @@ function progress(frame: number, from: number, to: number, output: [number, numb
 }
 
 export function ExactPromptInputScene({
+  background = '#fbfdfc',
   duration = PROMPT_SCENE_DURATION,
   label,
   prompt = PROMPT,
   typingDurationScale = 1,
 }: {
+  background?: string
   duration?: number
   label?: string
   prompt?: string
@@ -38,7 +40,7 @@ export function ExactPromptInputScene({
     <AbsoluteFill
       style={{
         alignItems: 'center',
-        background: '#fbfdfc',
+        background,
         display: 'flex',
         fontFamily: FONT,
         justifyContent: 'center',

@@ -167,7 +167,7 @@ export function OttoInvoiceAi60sNarratedVideo() {
       <Sequence from={150} durationInFrames={120}><TypedStatement duration={120} speed={0.55} text="Emita notas fiscais diretamente pelo ChatGPT ou Claude." /></Sequence>
 
       <Sequence from={270} durationInFrames={105}>
-        <ConversationScene withSidebar={withSidebar}><ExactPromptInputScene duration={105} label="Por onde começamos?" prompt="Emita a nota fiscal da venda para a Aurora Tecnologia." typingDurationScale={1.15} /></ConversationScene>
+        <ConversationScene withSidebar={withSidebar}><ExactPromptInputScene background={withSidebar ? '#ffffff' : undefined} duration={105} label="Por onde começamos?" prompt="Emita a nota fiscal da venda para a Aurora Tecnologia." typingDurationScale={1.15} /></ConversationScene>
       </Sequence>
       <Sequence from={375} durationInFrames={120}><ConversationScene withSidebar={withSidebar}><InvoiceConfirmationScene duration={120} /></ConversationScene></Sequence>
       <Sequence from={495} durationInFrames={165}>
@@ -177,7 +177,7 @@ export function OttoInvoiceAi60sNarratedVideo() {
       <Sequence from={660} durationInFrames={60}><TypedStatement duration={60} speed={0.62} text="Mas não faz só isso." /></Sequence>
 
       <Sequence from={720} durationInFrames={90}>
-        <ConversationScene withSidebar={withSidebar}><ExactPromptInputScene duration={90} label="Por onde começamos?" prompt="Concilie as movimentações bancárias e classifique as despesas." typingDurationScale={1.15} /></ConversationScene>
+        <ConversationScene withSidebar={withSidebar}><ExactPromptInputScene background={withSidebar ? '#ffffff' : undefined} duration={90} label="Por onde começamos?" prompt="Concilie as movimentações bancárias e classifique as despesas." typingDurationScale={1.15} /></ConversationScene>
       </Sequence>
       <Sequence from={810} durationInFrames={90}>
         <ConversationScene withSidebar={withSidebar}><SyncScene assistantText="Vou cruzar cada movimentação com o lançamento correspondente." duration={90} kind="reconciliation" rows={reconciliationRows} speed={2.5} subtitle="Bancos, cartões e lançamentos do Otto" title="Conciliação bancária" /></ConversationScene>
@@ -187,7 +187,7 @@ export function OttoInvoiceAi60sNarratedVideo() {
       </Sequence>
 
       <Sequence from={990} durationInFrames={90}>
-        <ConversationScene withSidebar={withSidebar}><ExactPromptInputScene duration={90} label="Por onde começamos?" prompt="Organize as contas, cobre os atrasados e verifique as obrigações fiscais." typingDurationScale={1.15} /></ConversationScene>
+        <ConversationScene withSidebar={withSidebar}><ExactPromptInputScene background={withSidebar ? '#ffffff' : undefined} duration={90} label="Por onde começamos?" prompt="Organize as contas, cobre os atrasados e verifique as obrigações fiscais." typingDurationScale={1.15} /></ConversationScene>
       </Sequence>
       <Sequence from={1080} durationInFrames={60}>
         <ConversationScene withSidebar={withSidebar}><SyncScene assistantText="Vou organizar pagamentos e recebimentos." duration={60} rows={accountsRows} speed={3} subtitle="Vencimentos e recebimentos programados" title="Contas a pagar e a receber" /></ConversationScene>
@@ -201,9 +201,9 @@ export function OttoInvoiceAi60sNarratedVideo() {
 
       <Sequence from={1260} durationInFrames={120}><CompatibilityScene duration={120} /></Sequence>
       <Sequence from={1380} durationInFrames={105}>
-        <ConversationScene withSidebar={withSidebar}><ExactPromptInputScene duration={105} label="Por onde começamos?" prompt="Crie um dashboard com vendas, financeiro, contabilidade e notas fiscais." typingDurationScale={1.15} /></ConversationScene>
+        <ConversationScene withSidebar={withSidebar}><ExactPromptInputScene background={withSidebar ? '#ffffff' : undefined} duration={105} label="Por onde começamos?" prompt="Crie um dashboard com vendas, financeiro, contabilidade e notas fiscais." typingDurationScale={1.15} /></ConversationScene>
       </Sequence>
-      <Sequence from={1485} durationInFrames={255}><OttoFinancialDashboard /></Sequence>
+      <Sequence from={1485} durationInFrames={255}><OttoFinancialDashboard showExtendedKpis={withSidebar} /></Sequence>
       <Sequence from={1740} durationInFrames={60}><OutroScene duration={60} /></Sequence>
     </AbsoluteFill>
   )

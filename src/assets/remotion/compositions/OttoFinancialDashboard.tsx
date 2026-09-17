@@ -198,7 +198,39 @@ function StatusPanel({ animationSpeed = 1 }: { animationSpeed?: number }) {
   )
 }
 
-export function OttoFinancialDashboard({ animationSpeed = 1, square = false }: { animationSpeed?: number; square?: boolean }) {
+const operationalKpis = [
+  { accent: BLUE, detail: '100% enviadas aos clientes', icon: ReceiptText, label: 'Notas fiscais', suffix: '', value: 32 },
+  { accent: GREEN, detail: '184 de 192 movimentações', icon: CheckCircle2, label: 'Conciliação automática', suffix: '%', value: 96 },
+  { accent: '#8b5fc0', detail: '12 regras aplicadas', icon: WalletCards, label: 'Despesas classificadas', suffix: '', value: 128 },
+  { accent: '#b45309', detail: '+8,2% sobre o mês anterior', icon: Clock3, label: 'Recebimentos no prazo', suffix: '%', value: 94 },
+]
+
+function OperationalKpis({ animationSpeed = 1 }: { animationSpeed?: number }) {
+  const frame = useCurrentFrame() * animationSpeed
+
+  return (
+    <section style={{ display: 'grid', gap: 14, gridTemplateColumns: 'repeat(4, 1fr)' }}>
+      {operationalKpis.map((item, index) => {
+        const Icon = item.icon
+        const enter = p(frame, 74 + index * 6, 94 + index * 6)
+        const value = Math.round(p(frame, 80 + index * 6, 116 + index * 6, [0, item.value]))
+
+        return (
+          <div key={item.label} style={{ background: '#ffffff', border: `1px solid ${BORDER}`, borderRadius: 8, minHeight: 118, opacity: enter, padding: '15px 17px', transform: `translateY(${(1 - enter) * 10}px)` }}>
+            <div style={{ alignItems: 'center', display: 'flex', justifyContent: 'space-between' }}>
+              <span style={{ color: MUTED, fontSize: 12, fontWeight: 620 }}>{item.label}</span>
+              <span style={{ alignItems: 'center', background: `${item.accent}14`, borderRadius: 7, color: item.accent, display: 'flex', height: 29, justifyContent: 'center', width: 29 }}><Icon size={16} strokeWidth={2.1} /></span>
+            </div>
+            <strong style={{ color: INK, display: 'block', fontSize: 25, fontWeight: 730, marginTop: 7 }}>{value}{item.suffix}</strong>
+            <span style={{ color: MUTED, display: 'block', fontSize: 10.5, fontWeight: 540, marginTop: 4 }}>{item.detail}</span>
+          </div>
+        )
+      })}
+    </section>
+  )
+}
+
+export function OttoFinancialDashboard({ animationSpeed = 1, showExtendedKpis = false, square = false }: { animationSpeed?: number; showExtendedKpis?: boolean; square?: boolean }) {
   const frame = useCurrentFrame() * animationSpeed
   const shellIn = p(frame, 0, 20)
 
@@ -219,6 +251,7 @@ export function OttoFinancialDashboard({ animationSpeed = 1, square = false }: {
             <CashFlowPanel animationSpeed={animationSpeed} />
             <div style={{ display: 'grid', gap: 14, gridTemplateRows: '1fr auto' }}><RevenuePanel animationSpeed={animationSpeed} /><StatusPanel animationSpeed={animationSpeed} /></div>
           </div>
+          {showExtendedKpis ? <OperationalKpis animationSpeed={animationSpeed} /> : null}
         </main>
       </div>
     </AbsoluteFill>
