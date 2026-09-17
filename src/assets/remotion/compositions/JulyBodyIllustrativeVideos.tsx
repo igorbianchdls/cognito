@@ -28,7 +28,7 @@ const invoiceStatusStages = [
   'RPS enviado',
   'Aguardando Prefeitura',
   'NFS-e autorizada',
-  'Enviada ao cliente',
+  'Nota emitida',
 ]
 const invoiceStatusStageStyles = [
   {background: '#eff6ff', color: '#1d4ed8'},
@@ -39,7 +39,7 @@ const invoiceStatusStageStyles = [
 ]
 const invoiceProgressRows = invoiceEmissionRows.map((item) => ({
   ...item,
-  status: 'Enviada ao cliente',
+  status: 'Nota emitida',
   statusStageStyles: invoiceStatusStageStyles,
   statusStages: invoiceStatusStages,
 }))
