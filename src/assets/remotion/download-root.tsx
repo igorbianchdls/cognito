@@ -214,9 +214,9 @@ function RemotionDownloadRoot() {
         component={OttoFinanceAi53sNarratedVideo}
         durationInFrames={OTTO_FINANCE_AI_53S_NARRATED_DURATION}
         fps={30}
-        height={720}
+        height={960}
         id="video-otto-finance-ai-53s-narrated"
-        width={1280}
+        width={1080}
       />
       <Composition
         component={OttoInvoiceAi60sNarratedVideo}

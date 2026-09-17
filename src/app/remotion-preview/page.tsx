@@ -3665,14 +3665,14 @@ const catalog: CatalogItem[] = [
   {
     code: '<OttoFinanceAi53sNarratedVideo />',
     component: OttoFinanceAi53sNarratedVideo,
-    description: 'Vídeo horizontal de 53 segundos sincronizado por blocos com a narração completa da Otto.',
+    description: 'Vídeo de 53 segundos em 1080×960, sincronizado por blocos com a narração completa da Otto.',
     duration: OTTO_FINANCE_AI_53S_NARRATED_DURATION,
-    height: 720,
+    height: 960,
     kind: 'Vídeos criados',
     label: 'Otto Finance AI 53s Narrated',
-    tags: ['Otto', 'Financeiro', 'Narração', 'Sincronizado', 'Horizontal', 'Video'],
+    tags: ['Otto', 'Financeiro', 'Narração', 'Sincronizado', '1080x960', 'Video'],
     value: 'video-otto-finance-ai-53s-narrated',
-    width: 1280,
+    width: 1080,
   },
   {
     code: '<OttoInvoiceAi60sNarratedVideo />',
