@@ -1,8 +1,8 @@
 import type {ReactNode} from 'react'
 import {Boxes, Clock3, Search, Settings, SquarePen} from 'lucide-react'
-import {AbsoluteFill, Audio, Img, interpolate, Sequence, staticFile, useCurrentFrame} from 'remotion'
+import {AbsoluteFill, Audio, Img, Sequence, staticFile} from 'remotion'
 
-import {IOS_REMOTION_FONT_STACK, loadSfProFonts} from '@/assets/remotion/fonts/sfPro'
+import {loadSfProFonts} from '@/assets/remotion/fonts/sfPro'
 import {
   collectionRows,
   CompatibilityScene,
@@ -17,16 +17,12 @@ import {OttoFinancialDashboard} from './OttoFinancialDashboard'
 import {OttoLogoRevealHorizontal} from './OttoLogoRevealHorizontal'
 import {ExactPromptInputScene} from './PromptToChartExactVideo'
 import {TypedStatement} from './OttoInvoiceAi60sNarratedVideo'
-import {ChatGptConversationChart} from './ChatGptConversationCharts'
-import type {ChatGptConversationChartKind} from './ChatGptConversationCharts'
 
 loadSfProFonts()
 
 export const JULY_BODY_ILLUSTRATIVE_1_DURATION = 1091
 export const JULY_BODY_ILLUSTRATIVE_2_DURATION = 904
 
-const FONT = IOS_REMOTION_FONT_STACK
-const INK = '#181818'
 const invoiceStatusStages = [
   'Validando RPS',
   'RPS enviado',
@@ -47,13 +43,6 @@ const invoiceProgressRows = invoiceEmissionRows.map((item) => ({
   statusStageStyles: invoiceStatusStageStyles,
   statusStages: invoiceStatusStages,
 }))
-
-function progress(frame: number, from: number, to: number, output: [number, number] = [0, 1]) {
-  return interpolate(frame, [from, to], output, {
-    extrapolateLeft: 'clamp',
-    extrapolateRight: 'clamp',
-  })
-}
 
 function ChatGptCollapsedSidebar() {
   const iconStyle = {alignItems: 'center', color: '#171717', display: 'flex', height: 38, justifyContent: 'center', width: 38} as const
@@ -84,21 +73,6 @@ function ConversationScene({children}: {children: ReactNode}) {
   )
 }
 
-function ChartResponseScene({assistantText, duration, kind}: {assistantText: string; duration: number; kind: ChatGptConversationChartKind}) {
-  const frame = useCurrentFrame()
-  const opacity = progress(frame, 0, 9) * progress(frame, duration - 9, duration, [1, 0])
-  const textIn = progress(frame, 0, 14)
-
-  return (
-    <AbsoluteFill style={{alignItems: 'center', background: '#ffffff', display: 'flex', fontFamily: FONT, justifyContent: 'center', opacity}}>
-      <div style={{width: 850}}>
-        <p style={{color: INK, fontSize: 18, lineHeight: 1.4, margin: '0 0 18px', opacity: textIn, transform: `translateY(${(1 - textIn) * 8}px)`}}>{assistantText}</p>
-        <ChatGptConversationChart frame={frame} kind={kind} />
-      </div>
-    </AbsoluteFill>
-  )
-}
-
 function PromptScene({duration, prompt}: {duration: number; prompt: string}) {
   return (
     <ConversationScene>
@@ -124,24 +98,18 @@ function JulyBodyIllustrativeVideo1Content() {
       <Sequence from={453} durationInFrames={84}><OttoFinancialDashboard animationSpeed={1.9} showExtendedKpis /></Sequence>
       <Sequence from={537} durationInFrames={36}><TypedStatement duration={36} speed={0.28} text="Mas não faz só isso." /></Sequence>
 
-      <Sequence from={573} durationInFrames={73}>
-        <ConversationScene><SyncScene assistantText="Também vou conciliar as movimentações bancárias." duration={73} kind="reconciliation" rows={reconciliationRows} speed={3} subtitle="Bancos, cartões e lançamentos do Otto" title="Conciliação bancária" /></ConversationScene>
+      <Sequence from={573} durationInFrames={135}>
+        <ConversationScene><SyncScene assistantText="Também vou conciliar as movimentações bancárias." duration={135} kind="reconciliation" paceToDuration rows={reconciliationRows} subtitle="Bancos, cartões e lançamentos do Otto" title="Conciliação bancária" /></ConversationScene>
       </Sequence>
-      <Sequence from={646} durationInFrames={39}>
-        <ConversationScene><SyncScene assistantText="Agora vou classificar as despesas automaticamente." duration={39} rows={expenseRows} speed={3.5} subtitle="Categorias contábeis atualizadas" title="Classificação de despesas" /></ConversationScene>
+      <Sequence from={708} durationInFrames={125}>
+        <ConversationScene><SyncScene assistantText="Agora vou classificar as despesas automaticamente." duration={125} paceToDuration rows={expenseRows} subtitle="Categorias contábeis atualizadas" title="Classificação de despesas" /></ConversationScene>
       </Sequence>
-      <Sequence from={685} durationInFrames={55}>
-        <ConversationScene><SyncScene assistantText="Vou organizar pagamentos e recebimentos." duration={55} rows={accountsRows} speed={3.4} subtitle="Vencimentos e recebimentos programados" title="Contas a pagar e a receber" /></ConversationScene>
+      <Sequence from={833} durationInFrames={125}>
+        <ConversationScene><SyncScene assistantText="Vou organizar pagamentos e recebimentos." duration={125} paceToDuration rows={accountsRows} subtitle="Vencimentos e recebimentos programados" title="Contas a pagar e a receber" /></ConversationScene>
       </Sequence>
-      <Sequence from={740} durationInFrames={50}>
-        <ConversationScene><SyncScene assistantText="Também vou cobrar os clientes em atraso." duration={50} rows={collectionRows} speed={3.5} subtitle="Lembretes e cobranças automáticas" title="Clientes em atraso" /></ConversationScene>
+      <Sequence from={958} durationInFrames={133}>
+        <ConversationScene><SyncScene assistantText="Também vou cobrar os clientes em atraso." duration={133} paceToDuration rows={collectionRows} subtitle="Lembretes e cobranças automáticas" title="Clientes em atraso" /></ConversationScene>
       </Sequence>
-
-      <Sequence from={790} durationInFrames={58}><PromptScene duration={58} prompt="Mostre todo o meu financeiro em um único relatório." /></Sequence>
-      <Sequence from={848} durationInFrames={94}>
-        <ConversationScene><ChartResponseScene assistantText="Pronto. Centralizei vendas, notas, financeiro e contabilidade sem planilhas ou trabalho manual." duration={94} kind="cashflow" /></ConversationScene>
-      </Sequence>
-      <Sequence from={942} durationInFrames={149}><OutroScene duration={149} /></Sequence>
     </AbsoluteFill>
   )
 }

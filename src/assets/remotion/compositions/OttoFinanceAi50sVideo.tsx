@@ -239,7 +239,9 @@ export function SyncScene({
   const { height, width } = useVideoConfig()
   const completionCardFrame = Math.max(1, ...rows.map((item, index) => item.statusStages
     ? 24 + index * 10 + (item.statusStages.length - 1) * 16
-    : 62 + index * 10))
+    : kind === 'reconciliation'
+      ? 76 + index * 10
+      : 62 + index * 10))
   const cardFrame = paceToDuration
     ? p(frame, 12, Math.max(13, duration - 14), [0, completionCardFrame])
     : Math.max(0, frame - 12) * speed
