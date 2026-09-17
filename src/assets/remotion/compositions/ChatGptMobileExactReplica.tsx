@@ -9,6 +9,9 @@ export const CHATGPT_MOBILE_EXACT_REPLICA_DURATION = 1120
 export const CHATGPT_MOBILE_FINANCIAL_OPERATIONS_DURATION = 1180
 export const CHATGPT_MOBILE_FINANCIAL_DIRECT_DURATION = 1180
 export const CHATGPT_MOBILE_SALES_COLLECTIONS_DURATION = 1180
+export const CHATGPT_MOBILE_UNINVOICED_SALES_DURATION = 1180
+export const CHATGPT_MOBILE_COMPLETE_SALE_DURATION = 1180
+export const CHATGPT_MOBILE_RECONCILIATION_INVOICES_DURATION = 1180
 export const CHATGPT_MOBILE_FINANCIAL_SCROLL_DURATION = 975
 export const CHATGPT_MOBILE_FINANCIAL_SCROLL_ITEMS_DURATION = 1180
 
@@ -177,6 +180,16 @@ const invoiceDeliveries: OperationRow[] = todaySales.slice(0, 6).map((sale, inde
   detail: index % 2 === 0 ? 'Nota enviada por WhatsApp' : 'Nota enviada por e-mail',
 }))
 
+const uninvoicedSales = todaySales.slice(0, 6).map((sale) => ({...sale, detail: `${sale.detail} · Sem nota fiscal`}))
+const whatsappInvoiceDeliveries = todaySales.slice(0, 6).map((sale) => ({...sale, detail: 'Nota fiscal enviada pelo WhatsApp'}))
+const completeSaleRows: OperationRow[] = [{detail: 'Venda #1056 · Registrada hoje', initials: 'AT', name: 'Aurora Tecnologia', value: 'R$ 4.000,00'}]
+const completeSaleInvoiceRows: OperationRow[] = [{detail: 'NFS-e #02856 · Autorizada', initials: 'AT', name: 'Aurora Tecnologia', value: 'R$ 4.000,00'}]
+const completeSaleChargeRows: OperationRow[] = [{detail: 'Cobrança enviada pelo WhatsApp', initials: 'AT', name: 'Aurora Tecnologia', value: 'R$ 4.000,00'}]
+const completeSaleReceivableRows: OperationRow[] = [{detail: 'Vencimento em 7 dias', initials: 'AT', name: 'Aurora Tecnologia', value: 'R$ 4.000,00'}]
+const receivedToday = todaySales.slice(0, 6).map((sale, index) => ({...sale, detail: `${index % 2 === 0 ? 'PIX' : 'TED'} recebido hoje`}))
+const settledPayments = receivedToday.slice(0, 4).map((sale) => ({...sale, detail: 'Pagamento identificado · Baixa confirmada'}))
+const pendingPayments: OperationRow[] = receivedToday.slice(4, 6).map((sale) => ({...sale, detail: 'Venda ainda pendente de pagamento'}))
+
 const avatarColors = ['#3977c3', '#8c54b8', '#2f8d68', '#d16b45', '#5678a8', '#b55c82', '#477e91', '#7b6bba']
 
 function MobileOperationPanel({accent, doneLabel, icon, rows, start, staticCard = false, subtitle, title, top}: {accent: string; doneLabel: string; icon: ReactNode; rows: OperationRow[]; start: number; staticCard?: boolean; subtitle: string; title: string; top: number}) {
@@ -234,6 +247,19 @@ function FinancialConversationTrack({children, compact = false}: {children: Reac
   return <AbsoluteFill style={{clipPath: 'inset(230px 0 188px 0)', zIndex: 1}}>
     <AbsoluteFill style={{transform: `translateY(${scrollY}px)`}}>{children}</AbsoluteFill>
   </AbsoluteFill>
+}
+
+function TimedConversationTrack({children, steps}: {children: ReactNode; steps: Array<{amount: number; start: number}>}) {
+  const frame = useCurrentFrame()
+  const {fps} = useVideoConfig()
+  const scrollY = steps.reduce((total, step) => total + step.amount * spring({
+    config: {damping: 26, mass: 0.85, stiffness: 120},
+    delay: step.start,
+    fps,
+    frame,
+  }), 0)
+
+  return <AbsoluteFill style={{clipPath: 'inset(230px 0 188px 0)', zIndex: 1}}><AbsoluteFill style={{transform: `translateY(${scrollY}px)`}}>{children}</AbsoluteFill></AbsoluteFill>
 }
 
 function BasicConversationTrack({children}: {children: ReactNode}) {
@@ -500,7 +526,67 @@ function SalesCollectionsConversation() {
   </>
 }
 
-type ChatGptMobileExperienceVariant = 'basic' | 'financial' | 'direct' | 'sales-collections' | 'scroll' | 'scroll-items'
+function UninvoicedSalesConversation() {
+  return <>
+    <StaticUserBubble start={0} text="Chat, busca todas as vendas de hoje sem nota fiscal, emite cada nota com os dados do cliente e envia pelo WhatsApp. No final, me diz quantas foram emitidas e o valor total." top={245} />
+
+    <TypedAssistantText speed={9} start={96} text="Claro. Vou localizar as vendas de hoje que ainda estão sem nota fiscal." top={525} />
+    <MobileOperationPanel accent="#2878d0" doneLabel="6 vendas sem nota localizadas" icon={<SearchCheck size={20} strokeWidth={1.8} />} rows={uninvoicedSales} start={135} subtitle="Validando clientes, serviços e valores" title="Vendas sem nota fiscal" top={645} />
+
+    <TypedAssistantText speed={9} start={300} text={'Encontrei 6 vendas sem nota, totalizando R$ 8.250,00.\n\nAgora vou preencher e emitir cada documento fiscal.'} top={1451} />
+    <OttoInvoiceEmissionMobilePanel itemCount={6} start={345} top={1717} />
+
+    <TypedAssistantText speed={9} start={570} text={'As 6 notas fiscais foram autorizadas.\n\nAgora vou enviar cada nota ao cliente correto pelo WhatsApp.'} top={2504} />
+    <MobileOperationPanel accent="#16875f" doneLabel="6 notas enviadas pelo WhatsApp" icon={<Send size={20} strokeWidth={1.8} />} rows={whatsappInvoiceDeliveries} start={625} subtitle="Entregando os documentos aos clientes" title="Enviando notas pelo WhatsApp" top={2770} />
+
+    <TypedAssistantText speed={9} start={815} text={'Concluído. Foram emitidas e enviadas 6 notas fiscais pelo WhatsApp, no valor total de R$ 8.250,00.'} top={3576} />
+    <Reveal start={865}><ActionRow top={3800} /></Reveal>
+  </>
+}
+
+function CompleteSaleConversation() {
+  return <>
+    <StaticUserBubble start={0} text="Chat, registra essa venda de quatro mil reais, emite a nota fiscal, gera a cobrança pro cliente e atualiza meu contas a receber." top={245} />
+
+    <TypedAssistantText speed={9} start={76} text="Certo. Vou começar registrando a venda de R$ 4.000,00 para a Aurora Tecnologia." top={505} />
+    <MobileOperationPanel accent="#2878d0" doneLabel="Venda registrada" icon={<SearchCheck size={20} strokeWidth={1.8} />} rows={completeSaleRows} start={110} subtitle="Cliente, serviço e valor confirmados" title="Registrando a venda" top={625} />
+
+    <TypedAssistantText speed={9} start={300} text={'A venda foi registrada com sucesso.\n\nAgora vou emitir a nota fiscal correspondente.'} top={1090} />
+    <MobileOperationPanel accent="#3d91d8" doneLabel="Nota fiscal emitida" icon={<CheckCircle2 size={20} strokeWidth={1.8} />} rows={completeSaleInvoiceRows} start={340} subtitle="Documento autorizado e vinculado à venda" title="Emitindo a nota fiscal" top={1310} />
+
+    <TypedAssistantText speed={9} start={520} text={'A nota fiscal foi emitida e vinculada à venda.\n\nAgora vou gerar e enviar a cobrança ao cliente.'} top={1770} />
+    <MobileOperationPanel accent="#8055c7" doneLabel="Cobrança gerada e enviada" icon={<Send size={20} strokeWidth={1.8} />} rows={completeSaleChargeRows} start={560} subtitle="Link de pagamento enviado pelo WhatsApp" title="Gerando a cobrança" top={1990} />
+
+    <TypedAssistantText speed={9} start={740} text={'A cobrança já foi enviada.\n\nPor fim, vou atualizar o contas a receber com o novo lançamento.'} top={2450} />
+    <MobileOperationPanel accent="#16875f" doneLabel="R$ 4.000,00 lançados" icon={<WalletCards size={20} strokeWidth={1.8} />} rows={completeSaleReceivableRows} start={780} subtitle="Recebimento vinculado à venda e à nota" title="Atualizando contas a receber" top={2670} />
+
+    <TypedAssistantText speed={9} start={960} text={'Concluído. Registrei a venda de R$ 4.000,00, emiti a nota fiscal, enviei a cobrança e atualizei o contas a receber.'} top={3130} />
+    <Reveal start={1015}><ActionRow top={3395} /></Reveal>
+  </>
+}
+
+function ReconciliationInvoicesConversation() {
+  return <>
+    <StaticUserBubble start={0} text="Chat, confere os pagamentos que caíram na conta hoje, dá baixa no que já foi pago, emite as notas fiscais dessas vendas e me mostra o que ainda ficou pendente." top={245} />
+
+    <TypedAssistantText speed={9} start={96} text="Claro. Vou conferir as entradas bancárias de hoje e relacioná-las às vendas." top={525} />
+    <MobileOperationPanel accent="#2878d0" doneLabel="6 pagamentos identificados" icon={<SearchCheck size={20} strokeWidth={1.8} />} rows={receivedToday} start={135} subtitle="Cruzando banco, clientes, vendas e valores" title="Pagamentos recebidos hoje" top={645} />
+
+    <TypedAssistantText speed={9} start={300} text={'Identifiquei 6 pagamentos recebidos hoje.\n\nAgora vou dar baixa nas quatro vendas com correspondência confirmada.'} top={1451} />
+    <MobileOperationPanel accent="#16875f" doneLabel="4 pagamentos baixados" icon={<CheckCircle2 size={20} strokeWidth={1.8} />} rows={settledPayments} start={345} subtitle="Atualizando vendas e contas a receber" title="Dando baixa nos pagamentos" top={1717} />
+
+    <TypedAssistantText speed={9} start={570} text={'As quatro baixas foram registradas.\n\nAgora vou emitir as notas fiscais dessas vendas pagas.'} top={2359} />
+    <OttoInvoiceEmissionMobilePanel itemCount={4} start={625} top={2625} />
+
+    <TypedAssistantText speed={9} start={790} text={'As 4 notas fiscais foram emitidas.\n\nPor fim, vou separar as vendas que continuam pendentes.'} top={3258} />
+    <MobileOperationPanel accent="#b45309" doneLabel="2 vendas pendentes" icon={<WalletCards size={20} strokeWidth={1.8} />} rows={pendingPayments} start={845} subtitle="Pagamentos ainda não identificados na conta" title="O que ainda ficou pendente" top={3524} />
+
+    <TypedAssistantText speed={9} start={1010} text={'Concluído. Identifiquei 6 pagamentos, dei baixa em 4 vendas, emiti 4 notas fiscais e encontrei 2 vendas ainda pendentes.'} top={4070} />
+    <Reveal start={1065}><ActionRow top={4336} /></Reveal>
+  </>
+}
+
+type ChatGptMobileExperienceVariant = 'basic' | 'financial' | 'direct' | 'sales-collections' | 'uninvoiced-sales' | 'complete-sale' | 'reconciliation-invoices' | 'scroll' | 'scroll-items'
 
 function ChatGptMobileExperience({variant}: {variant: ChatGptMobileExperienceVariant}) {
   const [fontReady, setFontReady] = useState(false)
@@ -552,6 +638,9 @@ function ChatGptMobileExperience({variant}: {variant: ChatGptMobileExperienceVar
     {variant === 'financial' ? <FinancialConversationTrack><FinancialConversation /></FinancialConversationTrack> : null}
     {variant === 'direct' ? <FinancialConversationTrack compact><FinancialConversation collectionRows={directOverdueCustomers} compactSpacing itemCount={6} messageSpeed={9} /></FinancialConversationTrack> : null}
     {variant === 'sales-collections' ? <FinancialConversationTrack compact><SalesCollectionsConversation /></FinancialConversationTrack> : null}
+    {variant === 'uninvoiced-sales' ? <TimedConversationTrack steps={[{amount: -1110, start: 340}, {amount: -940, start: 595}, {amount: -1070, start: 815}]}><UninvoicedSalesConversation /></TimedConversationTrack> : null}
+    {variant === 'complete-sale' ? <TimedConversationTrack steps={[{amount: -800, start: 300}, {amount: -680, start: 520}, {amount: -680, start: 740}, {amount: -680, start: 960}]}><CompleteSaleConversation /></TimedConversationTrack> : null}
+    {variant === 'reconciliation-invoices' ? <TimedConversationTrack steps={[{amount: -1110, start: 340}, {amount: -900, start: 595}, {amount: -900, start: 815}, {amount: -650, start: 1008}]}><ReconciliationInvoicesConversation /></TimedConversationTrack> : null}
     {variant === 'scroll' ? <StaticScrollTrack><FinancialConversation instantMessages /></StaticScrollTrack> : null}
     {variant === 'scroll-items' ? <AnimatedItemsScrollTrack><FinancialConversation instantMessages staticContainers /></AnimatedItemsScrollTrack> : null}
 
@@ -581,6 +670,18 @@ export function ChatGptMobileFinancialDirectVideo() {
 
 export function ChatGptMobileSalesCollectionsVideo() {
   return <ChatGptMobileExperience variant="sales-collections" />
+}
+
+export function ChatGptMobileUninvoicedSalesVideo() {
+  return <ChatGptMobileExperience variant="uninvoiced-sales" />
+}
+
+export function ChatGptMobileCompleteSaleVideo() {
+  return <ChatGptMobileExperience variant="complete-sale" />
+}
+
+export function ChatGptMobileReconciliationInvoicesVideo() {
+  return <ChatGptMobileExperience variant="reconciliation-invoices" />
 }
 
 export function ChatGptMobileFinancialScrollVideo() {

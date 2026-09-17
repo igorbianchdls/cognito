@@ -82,12 +82,18 @@ import {
   CHATGPT_MOBILE_FINANCIAL_DIRECT_DURATION,
   CHATGPT_MOBILE_FINANCIAL_OPERATIONS_DURATION,
   CHATGPT_MOBILE_SALES_COLLECTIONS_DURATION,
+  CHATGPT_MOBILE_UNINVOICED_SALES_DURATION,
+  CHATGPT_MOBILE_COMPLETE_SALE_DURATION,
+  CHATGPT_MOBILE_RECONCILIATION_INVOICES_DURATION,
   CHATGPT_MOBILE_FINANCIAL_SCROLL_DURATION,
   CHATGPT_MOBILE_FINANCIAL_SCROLL_ITEMS_DURATION,
   ChatGptMobileExactReplica,
   ChatGptMobileFinancialDirectVideo,
   ChatGptMobileFinancialOperationsVideo,
   ChatGptMobileSalesCollectionsVideo,
+  ChatGptMobileUninvoicedSalesVideo,
+  ChatGptMobileCompleteSaleVideo,
+  ChatGptMobileReconciliationInvoicesVideo,
   ChatGptMobileFinancialScrollVideo,
   ChatGptMobileFinancialScrollItemsVideo,
 } from './compositions/ChatGptMobileExactReplica'
@@ -305,6 +311,30 @@ function RemotionDownloadRoot() {
         fps={90}
         height={1792}
         id="video-chatgpt-mobile-sales-collections"
+        width={828}
+      />
+      <Composition
+        component={ChatGptMobileUninvoicedSalesVideo}
+        durationInFrames={CHATGPT_MOBILE_UNINVOICED_SALES_DURATION}
+        fps={90}
+        height={1792}
+        id="video-chatgpt-mobile-uninvoiced-sales"
+        width={828}
+      />
+      <Composition
+        component={ChatGptMobileCompleteSaleVideo}
+        durationInFrames={CHATGPT_MOBILE_COMPLETE_SALE_DURATION}
+        fps={90}
+        height={1792}
+        id="video-chatgpt-mobile-complete-sale"
+        width={828}
+      />
+      <Composition
+        component={ChatGptMobileReconciliationInvoicesVideo}
+        durationInFrames={CHATGPT_MOBILE_RECONCILIATION_INVOICES_DURATION}
+        fps={90}
+        height={1792}
+        id="video-chatgpt-mobile-reconciliation-invoices"
         width={828}
       />
       <Composition
