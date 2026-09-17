@@ -142,11 +142,11 @@ import {
   OttoInvoiceChatGptOfficeMonitor,
 } from './compositions/OttoInvoiceChatGptOfficeMonitor'
 import {
-  JULY_BODY_VIDEO_1_DURATION,
-  JULY_BODY_VIDEO_2_DURATION,
-  JulyBodyAnimatedVideo1,
-  JulyBodyAnimatedVideo2,
-} from './compositions/JulyBodyAnimatedVideos'
+  JULY_BODY_ILLUSTRATIVE_1_DURATION,
+  JULY_BODY_ILLUSTRATIVE_2_DURATION,
+  JulyBodyIllustrativeVideo1,
+  JulyBodyIllustrativeVideo2,
+} from './compositions/JulyBodyIllustrativeVideos'
 
 function RemotionDownloadRoot() {
   return (
@@ -488,19 +488,19 @@ function RemotionDownloadRoot() {
         width={1280}
       />
       <Composition
-        component={JulyBodyAnimatedVideo1}
-        durationInFrames={JULY_BODY_VIDEO_1_DURATION}
+        component={JulyBodyIllustrativeVideo1}
+        durationInFrames={JULY_BODY_ILLUSTRATIVE_1_DURATION}
         fps={30}
         height={880}
-        id="body-july-animated-1"
+        id="body-july-illustrative-1"
         width={1080}
       />
       <Composition
-        component={JulyBodyAnimatedVideo2}
-        durationInFrames={JULY_BODY_VIDEO_2_DURATION}
+        component={JulyBodyIllustrativeVideo2}
+        durationInFrames={JULY_BODY_ILLUSTRATIVE_2_DURATION}
         fps={30}
         height={880}
-        id="body-july-animated-2"
+        id="body-july-illustrative-2"
         width={1080}
       />
     </>

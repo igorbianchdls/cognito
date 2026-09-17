@@ -160,7 +160,7 @@ import { OTTO_INVOICE_CHATGPT_TV_CONTENT_DURATION, OttoInvoiceChatGptTvContent }
 import { OTTO_INVOICE_CHATGPT_DUAL_SCREEN_DURATION, OttoInvoiceChatGptDualScreen } from '@/assets/remotion/compositions/OttoInvoiceChatGptDualScreen'
 import { OTTO_INVOICE_CHATGPT_TV_ZOOM_DURATION, OttoInvoiceChatGptTvZoom } from '@/assets/remotion/compositions/OttoInvoiceChatGptTvZoom'
 import { OTTO_INVOICE_CHATGPT_OFFICE_MONITOR_DURATION, OttoInvoiceChatGptOfficeMonitor } from '@/assets/remotion/compositions/OttoInvoiceChatGptOfficeMonitor'
-import { JULY_BODY_VIDEO_1_DURATION, JULY_BODY_VIDEO_2_DURATION, JulyBodyAnimatedVideo1, JulyBodyAnimatedVideo2 } from '@/assets/remotion/compositions/JulyBodyAnimatedVideos'
+import { JULY_BODY_ILLUSTRATIVE_1_DURATION, JULY_BODY_ILLUSTRATIVE_2_DURATION, JulyBodyIllustrativeVideo1, JulyBodyIllustrativeVideo2 } from '@/assets/remotion/compositions/JulyBodyIllustrativeVideos'
 import { OTTO_INVOICE_CHATGPT_MONITOR_CONTENT_DURATION, OttoInvoiceChatGptMonitorContent } from '@/assets/remotion/compositions/OttoInvoiceChatGptMonitorContent'
 import { OTTO_SYNC_ONLY_SCENE_DURATION, OttoSyncOnlyScene } from '@/assets/remotion/compositions/OttoSyncOnlyScene'
 import {
@@ -2021,29 +2021,29 @@ const catalog: CatalogItem[] = [
     width: 1080,
   },
   {
-    code: '<JulyBodyAnimatedVideo1 />',
-    component: JulyBodyAnimatedVideo1,
-    description: 'Vídeo horizontal com a apresentação da Otto, emissão de notas no ChatGPT e Claude, operações financeiras e CTA final.',
-    duration: JULY_BODY_VIDEO_1_DURATION,
+    code: '<JulyBodyIllustrativeVideo1 />',
+    component: JulyBodyIllustrativeVideo1,
+    description: 'Vídeo ilustrativo em Remotion sobre a Otto, notas fiscais no ChatGPT e Claude e automações financeiras, sincronizado com a narração original.',
+    duration: JULY_BODY_ILLUSTRATIVE_1_DURATION,
     fps: 30,
     height: 880,
     kind: 'Body Animado',
-    label: 'July Body — Otto e Notas Fiscais',
-    tags: ['Otto', 'Body', 'ChatGPT', 'Claude', 'Notas fiscais'],
-    value: 'body-july-animated-1',
+    label: 'July Body Ilustrativo — Otto e Notas Fiscais',
+    tags: ['Otto', 'Remotion', 'ChatGPT', 'Claude', 'Notas fiscais'],
+    value: 'body-july-illustrative-1',
     width: 1080,
   },
   {
-    code: '<JulyBodyAnimatedVideo2 />',
-    component: JulyBodyAnimatedVideo2,
-    description: 'Vídeo horizontal sobre o funcionário financeiro de IA da Otto, com operações automatizadas e integração ao ChatGPT.',
-    duration: JULY_BODY_VIDEO_2_DURATION,
+    code: '<JulyBodyIllustrativeVideo2 />',
+    component: JulyBodyIllustrativeVideo2,
+    description: 'Vídeo ilustrativo em Remotion sobre o funcionário financeiro de IA da Otto, com prompts, operações, integração e dashboard.',
+    duration: JULY_BODY_ILLUSTRATIVE_2_DURATION,
     fps: 30,
     height: 880,
     kind: 'Body Animado',
-    label: 'July Body — Funcionário Financeiro de IA',
-    tags: ['Otto', 'Body', 'Financeiro', 'ChatGPT', 'Automação'],
-    value: 'body-july-animated-2',
+    label: 'July Body Ilustrativo — Funcionário Financeiro de IA',
+    tags: ['Otto', 'Remotion', 'Financeiro', 'ChatGPT', 'Automação'],
+    value: 'body-july-illustrative-2',
     width: 1080,
   },
   {
