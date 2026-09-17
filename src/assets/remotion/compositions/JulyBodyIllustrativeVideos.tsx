@@ -5,10 +5,8 @@ import {AbsoluteFill, Audio, Img, interpolate, Sequence, staticFile, useCurrentF
 import {IOS_REMOTION_FONT_STACK, loadSfProFonts} from '@/assets/remotion/fonts/sfPro'
 import {
   collectionRows,
-  CompatibilityScene,
   expenseRows,
   invoiceEmissionRows,
-  OutroScene,
   reconciliationRows,
   SyncScene,
 } from './OttoFinanceAi50sVideo'
@@ -21,7 +19,7 @@ import {TypedStatement} from './OttoInvoiceAi60sNarratedVideo'
 loadSfProFonts()
 
 export const JULY_BODY_ILLUSTRATIVE_1_DURATION = 1181
-export const JULY_BODY_ILLUSTRATIVE_2_DURATION = 904
+export const JULY_BODY_ILLUSTRATIVE_2_DURATION = 994
 
 const invoiceStatusStages = [
   'Validando RPS',
@@ -177,31 +175,27 @@ function JulyBodyIllustrativeVideo2Content() {
       <Sequence durationInFrames={75}><TypedStatement duration={75} speed={0.54} text="Se liga nisso aqui." /></Sequence>
       <Sequence from={75} durationInFrames={50}><OttoLogoRevealHorizontal centerX={45} centerY="50%" /></Sequence>
       <Sequence from={125} durationInFrames={45}><TypedStatement duration={45} speed={0.34} text="Um funcionário de IA que cuida do financeiro da sua empresa." /></Sequence>
-      <Sequence from={170} durationInFrames={52}><TypedStatement duration={52} speed={0.65} text="E não para por aí." /></Sequence>
+      <Sequence from={170} durationInFrames={60}><TypedStatement duration={60} speed={0.65} text="E não para por aí." /></Sequence>
 
-      <Sequence from={222} durationInFrames={58}><PromptScene duration={58} prompt="Registre as vendas de hoje, organize as contas e emita as notas fiscais." /></Sequence>
-      <Sequence from={280} durationInFrames={47}>
-        <ConversationScene><SyncScene assistantText="Vou registrar as vendas e emitir as notas correspondentes." duration={47} paceToDuration rows={invoiceProgressRows} subtitle="Acompanhe cada etapa da emissão em tempo real" title="Vendas e notas fiscais" /></ConversationScene>
+      <Sequence from={230} durationInFrames={60}><PromptScene duration={60} prompt="Registre as vendas de hoje, organize as contas e emita as notas fiscais." /></Sequence>
+      <Sequence from={290} durationInFrames={110}>
+        <ConversationScene><SyncScene assistantText="Vou registrar as vendas e emitir as notas correspondentes." duration={110} paceToDuration rows={invoiceProgressRows} subtitle="Acompanhe cada etapa da emissão em tempo real" title="Vendas e notas fiscais" /></ConversationScene>
       </Sequence>
-      <Sequence from={327} durationInFrames={44}>
-        <ConversationScene><SyncScene assistantText="Agora vou atualizar as contas da empresa." duration={44} rows={accountsStatusRows} speed={3.5} subtitle="Pagamentos e recebimentos organizados" title="Contas a pagar e a receber" /></ConversationScene>
+      <Sequence from={400} durationInFrames={80}>
+        <ConversationScene><SyncScene assistantText="Agora vou atualizar as contas da empresa." duration={80} paceToDuration rows={accountsStatusRows} subtitle="Pagamentos e recebimentos organizados" title="Contas a pagar e a receber" /></ConversationScene>
       </Sequence>
-      <Sequence from={371} durationInFrames={28}>
-        <ConversationScene><SyncScene assistantText="Conciliando os pagamentos bancários." duration={28} kind="reconciliation" rows={reconciliationStatusRows} speed={4} subtitle="Movimentações conferidas" title="Conciliação bancária" /></ConversationScene>
+      <Sequence from={480} durationInFrames={80}>
+        <ConversationScene><SyncScene assistantText="Conciliando os pagamentos bancários." duration={80} kind="reconciliation" paceToDuration rows={reconciliationStatusRows} subtitle="Movimentações conferidas" title="Conciliação bancária" /></ConversationScene>
       </Sequence>
-      <Sequence from={399} durationInFrames={28}>
-        <ConversationScene><SyncScene assistantText="Classificando as despesas." duration={28} rows={expenseStatusRows} speed={4} subtitle="Categorias atualizadas" title="Classificação de despesas" /></ConversationScene>
+      <Sequence from={560} durationInFrames={80}>
+        <ConversationScene><SyncScene assistantText="Classificando as despesas." duration={80} paceToDuration rows={expenseStatusRows} subtitle="Categorias atualizadas" title="Classificação de despesas" /></ConversationScene>
       </Sequence>
-      <Sequence from={427} durationInFrames={27}>
-        <ConversationScene><SyncScene assistantText="Enviando as cobranças pendentes." duration={27} rows={collectionStatusRows} speed={4} subtitle="Clientes notificados" title="Cobranças automáticas" /></ConversationScene>
+      <Sequence from={640} durationInFrames={80}>
+        <ConversationScene><SyncScene assistantText="Enviando as cobranças pendentes." duration={80} paceToDuration rows={collectionStatusRows} subtitle="Clientes notificados" title="Cobranças automáticas" /></ConversationScene>
       </Sequence>
-
-      <Sequence from={454} durationInFrames={66}><TypedStatement duration={66} speed={0.45} text="E o melhor: funciona diretamente dentro do seu ChatGPT." /></Sequence>
-      <Sequence from={520} durationInFrames={70}><PromptScene duration={70} prompt="Otto, cuide do financeiro da minha empresa sem planilhas e sem trabalho manual." /></Sequence>
-      <Sequence from={590} durationInFrames={60}><CompatibilityScene duration={60} /></Sequence>
-      <Sequence from={650} durationInFrames={50}><PromptScene duration={50} prompt="Crie um dashboard com a visão completa do meu financeiro." /></Sequence>
-      <Sequence from={700} durationInFrames={86}><OttoFinancialDashboard animationSpeed={1.9} showExtendedKpis /></Sequence>
-      <Sequence from={786} durationInFrames={118}><OutroScene duration={118} /></Sequence>
+      <Sequence from={720} durationInFrames={50}><PromptScene duration={50} prompt="Crie um dashboard com a visão completa do meu financeiro." /></Sequence>
+      <Sequence from={770} durationInFrames={70}><OttoFinancialDashboard animationSpeed={2.3} showExtendedKpis /></Sequence>
+      <Sequence from={840} durationInFrames={154}><CenteredCtaScene /></Sequence>
     </AbsoluteFill>
   )
 }
