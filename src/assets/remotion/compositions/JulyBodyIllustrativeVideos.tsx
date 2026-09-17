@@ -28,16 +28,25 @@ export const JULY_BODY_ILLUSTRATIVE_2_DURATION = 904
 const FONT = IOS_REMOTION_FONT_STACK
 const INK = '#181818'
 const invoiceStatusStages = [
-  'Validando dados',
-  'Calculando impostos',
-  'Enviando à prefeitura',
-  'Nota autorizada',
+  'Validando RPS',
+  'RPS enviado',
+  'Aguardando Prefeitura',
+  'NFS-e autorizada',
   'Enviada ao cliente',
   'Financeiro atualizado',
+]
+const invoiceStatusStageStyles = [
+  {background: '#eff6ff', color: '#1d4ed8'},
+  {background: '#f5f3ff', color: '#6d28d9'},
+  {background: '#fef3c7', color: '#a16207'},
+  {background: '#dcfce7', color: '#166534'},
+  {background: '#f3e8ff', color: '#7e22ce'},
+  {background: '#ccfbf1', color: '#0f766e'},
 ]
 const invoiceProgressRows = invoiceEmissionRows.map((item) => ({
   ...item,
   status: 'Financeiro atualizado',
+  statusStageStyles: invoiceStatusStageStyles,
   statusStages: invoiceStatusStages,
 }))
 
@@ -113,7 +122,8 @@ function JulyBodyIllustrativeVideo1Content() {
         <ConversationScene><SyncScene assistantText="Vou validar os dados, calcular os impostos, emitir as notas, enviá-las aos clientes e atualizar o financeiro." duration={198} rows={invoiceProgressRows} speed={2.3} subtitle="Acompanhe cada etapa da emissão em tempo real" title="Emissão de notas fiscais" /></ConversationScene>
       </Sequence>
 
-      <Sequence from={403} durationInFrames={134}><OttoFinancialDashboard showExtendedKpis /></Sequence>
+      <Sequence from={403} durationInFrames={45}><PromptScene duration={45} prompt="Crie um dashboard com vendas, notas fiscais, financeiro e contabilidade." /></Sequence>
+      <Sequence from={448} durationInFrames={89}><OttoFinancialDashboard animationSpeed={1.8} showExtendedKpis /></Sequence>
       <Sequence from={537} durationInFrames={36}><TypedStatement duration={36} speed={0.28} text="Mas não faz só isso." /></Sequence>
 
       <Sequence from={573} durationInFrames={73}>
@@ -168,7 +178,8 @@ function JulyBodyIllustrativeVideo2Content() {
       <Sequence from={454} durationInFrames={66}><TypedStatement duration={66} speed={0.45} text="E o melhor: funciona diretamente dentro do seu ChatGPT." /></Sequence>
       <Sequence from={520} durationInFrames={70}><PromptScene duration={70} prompt="Otto, cuide do financeiro da minha empresa sem planilhas e sem trabalho manual." /></Sequence>
       <Sequence from={590} durationInFrames={60}><CompatibilityScene duration={60} /></Sequence>
-      <Sequence from={650} durationInFrames={136}><OttoFinancialDashboard showExtendedKpis /></Sequence>
+      <Sequence from={650} durationInFrames={50}><PromptScene duration={50} prompt="Crie um dashboard com a visão completa do meu financeiro." /></Sequence>
+      <Sequence from={700} durationInFrames={86}><OttoFinancialDashboard animationSpeed={1.9} showExtendedKpis /></Sequence>
       <Sequence from={786} durationInFrames={118}><OutroScene duration={118} /></Sequence>
     </AbsoluteFill>
   )

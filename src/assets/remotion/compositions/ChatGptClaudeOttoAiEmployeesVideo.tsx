@@ -40,6 +40,7 @@ export type OttoAiEmployeesResultRow = {
   name: string
   status: string
   statusIcon?: ComponentType<{ className?: string; size?: number }>
+  statusStageStyles?: Array<{ background: string; color: string }>
   statusStages?: string[]
   tone: string
   value?: string
@@ -281,8 +282,9 @@ function ResultRowItem({ index, localFrame, row }: { index: number; localFrame: 
   const StatusIcon = row.statusIcon
   const alert = row.status.includes('Revisar') || row.status.includes('Atraso') || row.status.includes('Risco') || row.status.includes('Pendente') || row.status.includes('Divergencia')
   const stagedProcessing = Boolean(row.statusStages && !complete)
-  const statusBackground = stagedProcessing ? '#eff6ff' : row.background ?? (alert ? '#fff7ed' : '#ecfdf3')
-  const statusColor = stagedProcessing ? '#1d4ed8' : row.background ? row.tone : alert ? '#c2410c' : '#166534'
+  const stagedStyle = row.statusStageStyles?.[stagedStatusIndex]
+  const statusBackground = stagedStyle?.background ?? (stagedProcessing ? '#eff6ff' : row.background ?? (alert ? '#fff7ed' : '#ecfdf3'))
+  const statusColor = stagedStyle?.color ?? (stagedProcessing ? '#1d4ed8' : row.background ? row.tone : alert ? '#c2410c' : '#166534')
 
   return (
     <div style={{ alignItems: 'center', display: 'grid', gap: 13, gridTemplateColumns: '42px 1fr auto auto 28px', height: 72, opacity: rowIn, padding: '0 22px', transform: `translateY(${(1 - rowIn) * 18}px)` }}>

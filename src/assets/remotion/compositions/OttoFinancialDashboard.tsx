@@ -203,26 +203,29 @@ const operationalKpis = [
   { accent: GREEN, detail: '184 de 192 movimentações', icon: CheckCircle2, label: 'Conciliação automática', suffix: '%', value: 96 },
   { accent: '#8b5fc0', detail: '12 regras aplicadas', icon: WalletCards, label: 'Despesas classificadas', suffix: '', value: 128 },
   { accent: '#b45309', detail: '+8,2% sobre o mês anterior', icon: Clock3, label: 'Recebimentos no prazo', suffix: '%', value: 94 },
+  { accent: '#2563eb', detail: 'Próximos 30 dias', icon: ArrowDownRight, label: 'Contas a pagar', suffix: '', value: 27 },
+  { accent: '#16845b', detail: 'Próximos 30 dias', icon: ArrowUpRight, label: 'Contas a receber', suffix: '', value: 41 },
+  { accent: '#c2410c', detail: 'Lembretes automáticos', icon: CircleAlert, label: 'Cobranças enviadas', suffix: '', value: 18 },
+  { accent: '#7c3aed', detail: 'Calendário em dia', icon: CheckCircle2, label: 'Obrigações fiscais', suffix: '', value: 12 },
 ]
 
 function OperationalKpis({ animationSpeed = 1 }: { animationSpeed?: number }) {
   const frame = useCurrentFrame() * animationSpeed
 
   return (
-    <section style={{ display: 'grid', gap: 14, gridTemplateColumns: 'repeat(4, 1fr)' }}>
+    <section style={{ display: 'grid', gap: 10, gridTemplateColumns: 'repeat(4, 1fr)' }}>
       {operationalKpis.map((item, index) => {
         const Icon = item.icon
         const enter = p(frame, 74 + index * 6, 94 + index * 6)
         const value = Math.round(p(frame, 80 + index * 6, 116 + index * 6, [0, item.value]))
 
         return (
-          <div key={item.label} style={{ background: '#ffffff', border: `1px solid ${BORDER}`, borderRadius: 8, minHeight: 118, opacity: enter, padding: '15px 17px', transform: `translateY(${(1 - enter) * 10}px)` }}>
+          <div key={item.label} style={{ background: '#ffffff', border: `1px solid ${BORDER}`, borderRadius: 8, minHeight: 72, opacity: enter, padding: '10px 13px', transform: `translateY(${(1 - enter) * 10}px)` }}>
             <div style={{ alignItems: 'center', display: 'flex', justifyContent: 'space-between' }}>
-              <span style={{ color: MUTED, fontSize: 12, fontWeight: 620 }}>{item.label}</span>
-              <span style={{ alignItems: 'center', background: `${item.accent}14`, borderRadius: 7, color: item.accent, display: 'flex', height: 29, justifyContent: 'center', width: 29 }}><Icon size={16} strokeWidth={2.1} /></span>
+              <span style={{ color: MUTED, fontSize: 10.5, fontWeight: 620 }}>{item.label}</span>
+              <span style={{ alignItems: 'center', background: `${item.accent}14`, borderRadius: 6, color: item.accent, display: 'flex', height: 24, justifyContent: 'center', width: 24 }}><Icon size={14} strokeWidth={2.1} /></span>
             </div>
-            <strong style={{ color: INK, display: 'block', fontSize: 25, fontWeight: 730, marginTop: 7 }}>{value}{item.suffix}</strong>
-            <span style={{ color: MUTED, display: 'block', fontSize: 10.5, fontWeight: 540, marginTop: 4 }}>{item.detail}</span>
+            <div style={{ alignItems: 'baseline', display: 'flex', gap: 7, marginTop: 4 }}><strong style={{ color: INK, fontSize: 20, fontWeight: 730 }}>{value}{item.suffix}</strong><span style={{ color: MUTED, fontSize: 9, fontWeight: 540 }}>{item.detail}</span></div>
           </div>
         )
       })}
