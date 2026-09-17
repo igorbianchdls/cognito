@@ -1,8 +1,8 @@
 import type {ReactNode} from 'react'
 import {Boxes, Clock3, Search, Settings, SquarePen} from 'lucide-react'
-import {AbsoluteFill, Audio, Img, Sequence, staticFile} from 'remotion'
+import {AbsoluteFill, Audio, Img, interpolate, Sequence, staticFile, useCurrentFrame} from 'remotion'
 
-import {loadSfProFonts} from '@/assets/remotion/fonts/sfPro'
+import {IOS_REMOTION_FONT_STACK, loadSfProFonts} from '@/assets/remotion/fonts/sfPro'
 import {
   collectionRows,
   CompatibilityScene,
@@ -20,7 +20,7 @@ import {TypedStatement} from './OttoInvoiceAi60sNarratedVideo'
 
 loadSfProFonts()
 
-export const JULY_BODY_ILLUSTRATIVE_1_DURATION = 1091
+export const JULY_BODY_ILLUSTRATIVE_1_DURATION = 1181
 export const JULY_BODY_ILLUSTRATIVE_2_DURATION = 904
 
 const invoiceStatusStages = [
@@ -43,6 +43,28 @@ const invoiceProgressRows = invoiceEmissionRows.map((item) => ({
   statusStageStyles: invoiceStatusStageStyles,
   statusStages: invoiceStatusStages,
 }))
+const reconciliationStatusRows = reconciliationRows.map((item) => ({...item, background: '#dcfce7', statusColor: '#166534'}))
+const expenseStatusRows = expenseRows.map((item) => ({...item, background: '#f3e8ff', statusColor: '#7e22ce'}))
+const accountsStatusRows = accountsRows.map((item) => ({...item, background: '#dbeafe', statusColor: '#1d4ed8'}))
+const collectionStatusRows = collectionRows.map((item) => ({...item, background: '#ffedd5', statusColor: '#c2410c'}))
+
+function CenteredCtaScene() {
+  const frame = useCurrentFrame()
+  const enter = interpolate(frame, [0, 18], [0, 1], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp'})
+  const lineTwo = interpolate(frame, [12, 30], [0, 1], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp'})
+
+  return (
+    <AbsoluteFill style={{alignItems: 'center', background: '#ffffff', color: '#181818', display: 'flex', fontFamily: IOS_REMOTION_FONT_STACK, justifyContent: 'center', padding: '0 90px'}}>
+      <div style={{opacity: enter, textAlign: 'center', transform: `translateY(${(1 - enter) * 12}px)`}}>
+        <span style={{color: '#747474', display: 'block', fontSize: 25, fontWeight: 600, marginBottom: 16}}>Quer conhecer?</span>
+        <strong style={{display: 'block', fontSize: 60, fontWeight: 760, letterSpacing: 0, lineHeight: 1.08}}>
+          Comente <span style={{background: '#c9f227', borderRadius: 6, display: 'inline-block', padding: '2px 10px'}}>OTTO</span> aqui embaixo.
+        </strong>
+        <span style={{color: '#555555', display: 'block', fontSize: 27, fontWeight: 520, marginTop: 18, opacity: lineTwo}}>Eu te chamo no direct.</span>
+      </div>
+    </AbsoluteFill>
+  )
+}
 
 function ChatGptCollapsedSidebar() {
   const iconStyle = {alignItems: 'center', color: '#171717', display: 'flex', height: 38, justifyContent: 'center', width: 38} as const
@@ -96,20 +118,21 @@ function JulyBodyIllustrativeVideo1Content() {
 
       <Sequence from={403} durationInFrames={50}><PromptScene duration={50} prompt="Crie um dashboard com vendas, notas fiscais, financeiro e contabilidade." /></Sequence>
       <Sequence from={453} durationInFrames={84}><OttoFinancialDashboard animationSpeed={1.9} showExtendedKpis /></Sequence>
-      <Sequence from={537} durationInFrames={36}><TypedStatement duration={36} speed={0.28} text="Mas não faz só isso." /></Sequence>
+      <Sequence from={537} durationInFrames={36}><TypedStatement duration={36} speed={0.9} text="Mas não faz só isso." /></Sequence>
 
-      <Sequence from={573} durationInFrames={135}>
-        <ConversationScene><SyncScene assistantText="Também vou conciliar as movimentações bancárias." duration={135} kind="reconciliation" paceToDuration rows={reconciliationRows} subtitle="Bancos, cartões e lançamentos do Otto" title="Conciliação bancária" /></ConversationScene>
+      <Sequence from={573} durationInFrames={100}>
+        <ConversationScene><SyncScene assistantText="Também vou conciliar as movimentações bancárias." duration={100} kind="reconciliation" paceToDuration rows={reconciliationStatusRows} subtitle="Bancos, cartões e lançamentos do Otto" title="Conciliação bancária" /></ConversationScene>
       </Sequence>
-      <Sequence from={708} durationInFrames={125}>
-        <ConversationScene><SyncScene assistantText="Agora vou classificar as despesas automaticamente." duration={125} paceToDuration rows={expenseRows} subtitle="Categorias contábeis atualizadas" title="Classificação de despesas" /></ConversationScene>
+      <Sequence from={673} durationInFrames={92}>
+        <ConversationScene><SyncScene assistantText="Agora vou classificar as despesas automaticamente." duration={92} paceToDuration rows={expenseStatusRows} subtitle="Categorias contábeis atualizadas" title="Classificação de despesas" /></ConversationScene>
       </Sequence>
-      <Sequence from={833} durationInFrames={125}>
-        <ConversationScene><SyncScene assistantText="Vou organizar pagamentos e recebimentos." duration={125} paceToDuration rows={accountsRows} subtitle="Vencimentos e recebimentos programados" title="Contas a pagar e a receber" /></ConversationScene>
+      <Sequence from={765} durationInFrames={92}>
+        <ConversationScene><SyncScene assistantText="Vou organizar pagamentos e recebimentos." duration={92} paceToDuration rows={accountsStatusRows} subtitle="Vencimentos e recebimentos programados" title="Contas a pagar e a receber" /></ConversationScene>
       </Sequence>
-      <Sequence from={958} durationInFrames={133}>
-        <ConversationScene><SyncScene assistantText="Também vou cobrar os clientes em atraso." duration={133} paceToDuration rows={collectionRows} subtitle="Lembretes e cobranças automáticas" title="Clientes em atraso" /></ConversationScene>
+      <Sequence from={857} durationInFrames={85}>
+        <ConversationScene><SyncScene assistantText="Também vou cobrar os clientes em atraso." duration={85} paceToDuration rows={collectionStatusRows} subtitle="Lembretes e cobranças automáticas" title="Clientes em atraso" /></ConversationScene>
       </Sequence>
+      <Sequence from={942} durationInFrames={239}><CenteredCtaScene /></Sequence>
     </AbsoluteFill>
   )
 }
@@ -122,23 +145,23 @@ function JulyBodyIllustrativeVideo2Content() {
       <Sequence durationInFrames={75}><TypedStatement duration={75} speed={0.54} text="Se liga nisso aqui." /></Sequence>
       <Sequence from={75} durationInFrames={50}><OttoLogoRevealHorizontal centerX={45} centerY="50%" /></Sequence>
       <Sequence from={125} durationInFrames={45}><TypedStatement duration={45} speed={0.34} text="Um funcionário de IA que cuida do financeiro da sua empresa." /></Sequence>
-      <Sequence from={170} durationInFrames={52}><TypedStatement duration={52} speed={0.35} text="E não para por aí." /></Sequence>
+      <Sequence from={170} durationInFrames={52}><TypedStatement duration={52} speed={0.65} text="E não para por aí." /></Sequence>
 
       <Sequence from={222} durationInFrames={58}><PromptScene duration={58} prompt="Registre as vendas de hoje, organize as contas e emita as notas fiscais." /></Sequence>
       <Sequence from={280} durationInFrames={47}>
         <ConversationScene><SyncScene assistantText="Vou registrar as vendas e emitir as notas correspondentes." duration={47} paceToDuration rows={invoiceProgressRows} subtitle="Acompanhe cada etapa da emissão em tempo real" title="Vendas e notas fiscais" /></ConversationScene>
       </Sequence>
       <Sequence from={327} durationInFrames={44}>
-        <ConversationScene><SyncScene assistantText="Agora vou atualizar as contas da empresa." duration={44} rows={accountsRows} speed={3.5} subtitle="Pagamentos e recebimentos organizados" title="Contas a pagar e a receber" /></ConversationScene>
+        <ConversationScene><SyncScene assistantText="Agora vou atualizar as contas da empresa." duration={44} rows={accountsStatusRows} speed={3.5} subtitle="Pagamentos e recebimentos organizados" title="Contas a pagar e a receber" /></ConversationScene>
       </Sequence>
       <Sequence from={371} durationInFrames={28}>
-        <ConversationScene><SyncScene assistantText="Conciliando os pagamentos bancários." duration={28} kind="reconciliation" rows={reconciliationRows} speed={4} subtitle="Movimentações conferidas" title="Conciliação bancária" /></ConversationScene>
+        <ConversationScene><SyncScene assistantText="Conciliando os pagamentos bancários." duration={28} kind="reconciliation" rows={reconciliationStatusRows} speed={4} subtitle="Movimentações conferidas" title="Conciliação bancária" /></ConversationScene>
       </Sequence>
       <Sequence from={399} durationInFrames={28}>
-        <ConversationScene><SyncScene assistantText="Classificando as despesas." duration={28} rows={expenseRows} speed={4} subtitle="Categorias atualizadas" title="Classificação de despesas" /></ConversationScene>
+        <ConversationScene><SyncScene assistantText="Classificando as despesas." duration={28} rows={expenseStatusRows} speed={4} subtitle="Categorias atualizadas" title="Classificação de despesas" /></ConversationScene>
       </Sequence>
       <Sequence from={427} durationInFrames={27}>
-        <ConversationScene><SyncScene assistantText="Enviando as cobranças pendentes." duration={27} rows={collectionRows} speed={4} subtitle="Clientes notificados" title="Cobranças automáticas" /></ConversationScene>
+        <ConversationScene><SyncScene assistantText="Enviando as cobranças pendentes." duration={27} rows={collectionStatusRows} speed={4} subtitle="Clientes notificados" title="Cobranças automáticas" /></ConversationScene>
       </Sequence>
 
       <Sequence from={454} durationInFrames={66}><TypedStatement duration={66} speed={0.45} text="E o melhor: funciona diretamente dentro do seu ChatGPT." /></Sequence>

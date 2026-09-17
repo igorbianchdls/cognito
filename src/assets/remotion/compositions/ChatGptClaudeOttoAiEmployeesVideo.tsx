@@ -39,6 +39,7 @@ export type OttoAiEmployeesResultRow = {
   initials: string
   name: string
   status: string
+  statusColor?: string
   statusIcon?: ComponentType<{ className?: string; size?: number }>
   statusStageStyles?: Array<{ background: string; color: string }>
   statusStages?: string[]
@@ -284,7 +285,7 @@ function ResultRowItem({ index, localFrame, row }: { index: number; localFrame: 
   const stagedProcessing = Boolean(row.statusStages && !complete)
   const stagedStyle = row.statusStageStyles?.[stagedStatusIndex]
   const statusBackground = stagedStyle?.background ?? (stagedProcessing ? '#eff6ff' : row.background ?? (alert ? '#fff7ed' : '#ecfdf3'))
-  const statusColor = stagedStyle?.color ?? (stagedProcessing ? '#1d4ed8' : row.background ? row.tone : alert ? '#c2410c' : '#166534')
+  const statusColor = stagedStyle?.color ?? (stagedProcessing ? '#1d4ed8' : row.statusColor ?? (row.background ? row.tone : alert ? '#c2410c' : '#166534'))
 
   return (
     <div style={{ alignItems: 'center', display: 'grid', gap: 13, gridTemplateColumns: '42px 1fr auto auto 28px', height: 72, opacity: rowIn, padding: '0 22px', transform: `translateY(${(1 - rowIn) * 18}px)` }}>
@@ -307,6 +308,8 @@ function ReconciliationResultRow({ index, localFrame, row }: { index: number; lo
   const rowIn = p(localFrame, 10 + index * 10, 24 + index * 10)
   const complete = localFrame >= 76 + index * 10
   const review = complete && (row.status === 'Revisar' || row.status === 'Divergencia')
+  const completeBackground = row.background ?? (review ? '#fff7ed' : '#ecfdf3')
+  const completeColor = row.statusColor ?? (review ? '#c2410c' : '#166534')
 
   return (
     <div style={{ alignItems: 'center', display: 'grid', gap: 12, gridTemplateColumns: '42px 1fr 38px 0.78fr auto 28px', height: 72, opacity: rowIn, padding: '0 22px', transform: `translateY(${(1 - rowIn) * 18}px)` }}>
@@ -315,9 +318,9 @@ function ReconciliationResultRow({ index, localFrame, row }: { index: number; lo
         <strong style={{ color: '#111111', fontSize: 20, fontWeight: 610, letterSpacing: -0.1, lineHeight: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{row.name}</strong>
         <span style={{ color: '#8a8a8a', fontSize: 15, fontWeight: 420, lineHeight: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{row.description} · {row.value}</span>
       </div>
-      <span style={{ alignItems: 'center', background: complete ? (review ? '#fff7ed' : '#ecfdf3') : '#f2f4f7', borderRadius: 999, color: complete ? (review ? '#c2410c' : '#166534') : '#667085', display: 'flex', fontSize: 20, fontWeight: 850, height: 38, justifyContent: 'center', width: 38 }}>{complete ? (review ? '!' : '✓') : '·'}</span>
+      <span style={{ alignItems: 'center', background: complete ? completeBackground : '#f2f4f7', borderRadius: 999, color: complete ? completeColor : '#667085', display: 'flex', fontSize: 20, fontWeight: 850, height: 38, justifyContent: 'center', width: 38 }}>{complete ? (review ? '!' : '✓') : '·'}</span>
       <div style={{ color: '#111111', fontSize: 20, fontWeight: 520, letterSpacing: -0.1, minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{row.erp}</div>
-      <span style={{ color: review ? '#c2410c' : complete ? '#166534' : '#111111', fontSize: 19, fontWeight: 540, letterSpacing: -0.1, lineHeight: 1 }}>{complete ? row.status : 'Verificando'}</span>
+      <span style={{ color: complete ? completeColor : '#111111', fontSize: 19, fontWeight: 540, letterSpacing: -0.1, lineHeight: 1 }}>{complete ? row.status : 'Verificando'}</span>
       <Spinner active={!complete} />
     </div>
   )
