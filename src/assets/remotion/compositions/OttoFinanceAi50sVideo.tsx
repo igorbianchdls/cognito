@@ -218,6 +218,7 @@ export function SyncScene({
   invoicePreview = false,
   invoicePreviewStart = 55,
   kind = 'list',
+  paceToDuration = false,
   rows,
   speed = 1.8,
   subtitle,
@@ -228,6 +229,7 @@ export function SyncScene({
   invoicePreview?: boolean
   invoicePreviewStart?: number
   kind?: 'list' | 'reconciliation'
+  paceToDuration?: boolean
   rows: OttoAiEmployeesResultRow[]
   speed?: number
   subtitle: string
@@ -235,7 +237,12 @@ export function SyncScene({
 }) {
   const frame = useCurrentFrame()
   const { height, width } = useVideoConfig()
-  const cardFrame = Math.max(0, frame - 12) * speed
+  const completionCardFrame = Math.max(1, ...rows.map((item, index) => item.statusStages
+    ? 24 + index * 10 + (item.statusStages.length - 1) * 16
+    : 62 + index * 10))
+  const cardFrame = paceToDuration
+    ? p(frame, 12, Math.max(13, duration - 14), [0, completionCardFrame])
+    : Math.max(0, frame - 12) * speed
   const cardScale = rows.length > 6 ? 0.84 : 0.92
   const cardWidth = 940 / cardScale
   const square = height / width >= 0.8

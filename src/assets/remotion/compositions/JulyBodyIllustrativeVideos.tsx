@@ -33,7 +33,6 @@ const invoiceStatusStages = [
   'Aguardando Prefeitura',
   'NFS-e autorizada',
   'Enviada ao cliente',
-  'Financeiro atualizado',
 ]
 const invoiceStatusStageStyles = [
   {background: '#eff6ff', color: '#1d4ed8'},
@@ -41,11 +40,10 @@ const invoiceStatusStageStyles = [
   {background: '#fef3c7', color: '#a16207'},
   {background: '#dcfce7', color: '#166534'},
   {background: '#f3e8ff', color: '#7e22ce'},
-  {background: '#ccfbf1', color: '#0f766e'},
 ]
 const invoiceProgressRows = invoiceEmissionRows.map((item) => ({
   ...item,
-  status: 'Financeiro atualizado',
+  status: 'Enviada ao cliente',
   statusStageStyles: invoiceStatusStageStyles,
   statusStages: invoiceStatusStages,
 }))
@@ -119,11 +117,11 @@ function JulyBodyIllustrativeVideo1Content() {
 
       <Sequence from={150} durationInFrames={55}><PromptScene duration={55} prompt="Emita as notas fiscais das vendas de hoje pelo ChatGPT." /></Sequence>
       <Sequence from={205} durationInFrames={198}>
-        <ConversationScene><SyncScene assistantText="Vou validar os dados, calcular os impostos, emitir as notas, enviá-las aos clientes e atualizar o financeiro." duration={198} rows={invoiceProgressRows} speed={2.3} subtitle="Acompanhe cada etapa da emissão em tempo real" title="Emissão de notas fiscais" /></ConversationScene>
+        <ConversationScene><SyncScene assistantText="Vou validar os dados, calcular os impostos, emitir as notas, enviá-las aos clientes e atualizar o financeiro." duration={198} paceToDuration rows={invoiceProgressRows} subtitle="Acompanhe cada etapa da emissão em tempo real" title="Emissão de notas fiscais" /></ConversationScene>
       </Sequence>
 
-      <Sequence from={403} durationInFrames={45}><PromptScene duration={45} prompt="Crie um dashboard com vendas, notas fiscais, financeiro e contabilidade." /></Sequence>
-      <Sequence from={448} durationInFrames={89}><OttoFinancialDashboard animationSpeed={1.8} showExtendedKpis /></Sequence>
+      <Sequence from={403} durationInFrames={50}><PromptScene duration={50} prompt="Crie um dashboard com vendas, notas fiscais, financeiro e contabilidade." /></Sequence>
+      <Sequence from={453} durationInFrames={84}><OttoFinancialDashboard animationSpeed={1.9} showExtendedKpis /></Sequence>
       <Sequence from={537} durationInFrames={36}><TypedStatement duration={36} speed={0.28} text="Mas não faz só isso." /></Sequence>
 
       <Sequence from={573} durationInFrames={73}>
@@ -160,7 +158,7 @@ function JulyBodyIllustrativeVideo2Content() {
 
       <Sequence from={222} durationInFrames={58}><PromptScene duration={58} prompt="Registre as vendas de hoje, organize as contas e emita as notas fiscais." /></Sequence>
       <Sequence from={280} durationInFrames={47}>
-        <ConversationScene><SyncScene assistantText="Vou registrar as vendas e emitir as notas correspondentes." duration={47} rows={invoiceProgressRows} speed={5} subtitle="Acompanhe cada etapa da emissão em tempo real" title="Vendas e notas fiscais" /></ConversationScene>
+        <ConversationScene><SyncScene assistantText="Vou registrar as vendas e emitir as notas correspondentes." duration={47} paceToDuration rows={invoiceProgressRows} subtitle="Acompanhe cada etapa da emissão em tempo real" title="Vendas e notas fiscais" /></ConversationScene>
       </Sequence>
       <Sequence from={327} durationInFrames={44}>
         <ConversationScene><SyncScene assistantText="Agora vou atualizar as contas da empresa." duration={44} rows={accountsRows} speed={3.5} subtitle="Pagamentos e recebimentos organizados" title="Contas a pagar e a receber" /></ConversationScene>
