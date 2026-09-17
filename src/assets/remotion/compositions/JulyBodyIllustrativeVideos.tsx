@@ -16,7 +16,7 @@ import {accountsRows} from './OttoFinanceAi53sNarratedVideo'
 import {OttoFinancialDashboard} from './OttoFinancialDashboard'
 import {OttoLogoRevealHorizontal} from './OttoLogoRevealHorizontal'
 import {ExactPromptInputScene} from './PromptToChartExactVideo'
-import {InvoiceConfirmationScene, TypedStatement} from './OttoInvoiceAi60sNarratedVideo'
+import {TypedStatement} from './OttoInvoiceAi60sNarratedVideo'
 import {ChatGptConversationChart} from './ChatGptConversationCharts'
 import type {ChatGptConversationChartKind} from './ChatGptConversationCharts'
 
@@ -27,6 +27,19 @@ export const JULY_BODY_ILLUSTRATIVE_2_DURATION = 904
 
 const FONT = IOS_REMOTION_FONT_STACK
 const INK = '#181818'
+const invoiceStatusStages = [
+  'Validando dados',
+  'Calculando impostos',
+  'Enviando à prefeitura',
+  'Nota autorizada',
+  'Enviada ao cliente',
+  'Financeiro atualizado',
+]
+const invoiceProgressRows = invoiceEmissionRows.map((item) => ({
+  ...item,
+  status: 'Financeiro atualizado',
+  statusStages: invoiceStatusStages,
+}))
 
 function progress(frame: number, from: number, to: number, output: [number, number] = [0, 1]) {
   return interpolate(frame, [from, to], output, {
@@ -96,9 +109,8 @@ function JulyBodyIllustrativeVideo1Content() {
       <Sequence from={97} durationInFrames={53}><OttoLogoRevealHorizontal centerX={45} centerY="50%" /></Sequence>
 
       <Sequence from={150} durationInFrames={55}><PromptScene duration={55} prompt="Emita as notas fiscais das vendas de hoje pelo ChatGPT." /></Sequence>
-      <Sequence from={205} durationInFrames={120}><ConversationScene><InvoiceConfirmationScene duration={120} /></ConversationScene></Sequence>
-      <Sequence from={325} durationInFrames={78}>
-        <ConversationScene><SyncScene assistantText="Dados conferidos. Vou emitir as notas, enviá-las aos clientes e atualizar o financeiro." duration={78} invoicePreview invoicePreviewStart={38} rows={invoiceEmissionRows} speed={3} subtitle="Notas autorizadas, enviadas e vinculadas ao financeiro" title="Emissão de notas fiscais" /></ConversationScene>
+      <Sequence from={205} durationInFrames={198}>
+        <ConversationScene><SyncScene assistantText="Vou validar os dados, calcular os impostos, emitir as notas, enviá-las aos clientes e atualizar o financeiro." duration={198} rows={invoiceProgressRows} speed={2.3} subtitle="Acompanhe cada etapa da emissão em tempo real" title="Emissão de notas fiscais" /></ConversationScene>
       </Sequence>
 
       <Sequence from={403} durationInFrames={134}><OttoFinancialDashboard showExtendedKpis /></Sequence>
@@ -138,7 +150,7 @@ function JulyBodyIllustrativeVideo2Content() {
 
       <Sequence from={222} durationInFrames={58}><PromptScene duration={58} prompt="Registre as vendas de hoje, organize as contas e emita as notas fiscais." /></Sequence>
       <Sequence from={280} durationInFrames={47}>
-        <ConversationScene><SyncScene assistantText="Vou registrar as vendas e emitir as notas correspondentes." duration={47} rows={invoiceEmissionRows} speed={3.4} subtitle="Vendas registradas e notas autorizadas" title="Vendas e notas fiscais" /></ConversationScene>
+        <ConversationScene><SyncScene assistantText="Vou registrar as vendas e emitir as notas correspondentes." duration={47} rows={invoiceProgressRows} speed={5} subtitle="Acompanhe cada etapa da emissão em tempo real" title="Vendas e notas fiscais" /></ConversationScene>
       </Sequence>
       <Sequence from={327} durationInFrames={44}>
         <ConversationScene><SyncScene assistantText="Agora vou atualizar as contas da empresa." duration={44} rows={accountsRows} speed={3.5} subtitle="Pagamentos e recebimentos organizados" title="Contas a pagar e a receber" /></ConversationScene>

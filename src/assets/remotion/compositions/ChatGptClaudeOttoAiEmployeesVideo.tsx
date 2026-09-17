@@ -40,6 +40,7 @@ export type OttoAiEmployeesResultRow = {
   name: string
   status: string
   statusIcon?: ComponentType<{ className?: string; size?: number }>
+  statusStages?: string[]
   tone: string
   value?: string
 }
@@ -270,11 +271,18 @@ function BrandIconBox({ row }: { row: Pick<ResultRow, 'icon' | 'initials' | 'ton
 
 function ResultRowItem({ index, localFrame, row }: { index: number; localFrame: number; row: ResultRow }) {
   const rowIn = p(localFrame, 8 + index * 10, 22 + index * 10)
-  const complete = localFrame >= 62 + index * 10
+  const stagedStatusIndex = row.statusStages
+    ? Math.min(row.statusStages.length - 1, Math.max(0, Math.floor((localFrame - (24 + index * 10)) / 16)))
+    : 0
+  const complete = row.statusStages
+    ? stagedStatusIndex === row.statusStages.length - 1
+    : localFrame >= 62 + index * 10
+  const visibleStatus = row.statusStages?.[stagedStatusIndex] ?? (complete ? row.status : 'Sincronizando')
   const StatusIcon = row.statusIcon
   const alert = row.status.includes('Revisar') || row.status.includes('Atraso') || row.status.includes('Risco') || row.status.includes('Pendente') || row.status.includes('Divergencia')
-  const statusBackground = row.background ?? (alert ? '#fff7ed' : '#ecfdf3')
-  const statusColor = row.background ? row.tone : alert ? '#c2410c' : '#166534'
+  const stagedProcessing = Boolean(row.statusStages && !complete)
+  const statusBackground = stagedProcessing ? '#eff6ff' : row.background ?? (alert ? '#fff7ed' : '#ecfdf3')
+  const statusColor = stagedProcessing ? '#1d4ed8' : row.background ? row.tone : alert ? '#c2410c' : '#166534'
 
   return (
     <div style={{ alignItems: 'center', display: 'grid', gap: 13, gridTemplateColumns: '42px 1fr auto auto 28px', height: 72, opacity: rowIn, padding: '0 22px', transform: `translateY(${(1 - rowIn) * 18}px)` }}>
@@ -286,7 +294,7 @@ function ResultRowItem({ index, localFrame, row }: { index: number; localFrame: 
       <span style={{ color: '#111111', fontSize: 18, fontWeight: 540, whiteSpace: 'nowrap' }}>{row.value}</span>
       <div style={{ alignItems: 'center', display: 'flex', gap: 7 }}>
         {complete && StatusIcon ? <StatusIcon className="h-5 w-5" size={19} /> : null}
-        <span style={{ background: statusBackground, borderRadius: 999, color: statusColor, fontSize: 16, fontWeight: 760, padding: '8px 11px', whiteSpace: 'nowrap' }}>{complete ? row.status : 'Sincronizando'}</span>
+        <span style={{ background: statusBackground, borderRadius: 999, color: statusColor, fontSize: 16, fontWeight: 760, padding: '8px 11px', whiteSpace: 'nowrap' }}>{visibleStatus}</span>
       </div>
       <Spinner active={!complete} />
     </div>
