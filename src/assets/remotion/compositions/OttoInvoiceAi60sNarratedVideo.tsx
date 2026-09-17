@@ -19,10 +19,13 @@ import { ExactPromptInputScene } from './PromptToChartExactVideo'
 import { TypingText } from '@/assets/remotion/saas/motionComponents'
 import type { SaaSTheme } from '@/assets/remotion/saas/types'
 import { IOS_REMOTION_FONT_STACK, loadSfProFonts } from '@/assets/remotion/fonts/sfPro'
+import { ChatGptConversationChart } from './ChatGptConversationCharts'
+import type { ChatGptConversationChartKind } from './ChatGptConversationCharts'
 
 loadSfProFonts()
 
 export const OTTO_INVOICE_AI_60S_NARRATED_DURATION = 1800
+export const OTTO_INVOICE_AI_75S_NARRATED_880_DURATION = 2250
 
 const FONT = IOS_REMOTION_FONT_STACK
 const INK = '#181818'
@@ -85,6 +88,21 @@ function ConversationScene({ children, withSidebar }: { children: ReactNode; wit
       <ChatGptCollapsedSidebar />
       <div style={{ bottom: 0, left: 64, overflow: 'hidden', position: 'absolute', right: 0, top: 0 }}>
         {children}
+      </div>
+    </AbsoluteFill>
+  )
+}
+
+function ChartResponseScene({ assistantText, duration, kind }: { assistantText: string; duration: number; kind: ChatGptConversationChartKind }) {
+  const frame = useCurrentFrame()
+  const opacity = progress(frame, 0, 10) * progress(frame, duration - 10, duration, [1, 0])
+  const textIn = progress(frame, 0, 16)
+
+  return (
+    <AbsoluteFill style={{ alignItems: 'center', background: '#ffffff', display: 'flex', fontFamily: FONT, justifyContent: 'center', opacity }}>
+      <div style={{ width: 850 }}>
+        <p style={{ color: INK, fontSize: 18, lineHeight: 1.4, margin: '0 0 18px', opacity: textIn, transform: `translateY(${(1 - textIn) * 8}px)` }}>{assistantText}</p>
+        <ChatGptConversationChart frame={frame} kind={kind} />
       </div>
     </AbsoluteFill>
   )
@@ -159,6 +177,7 @@ export function InvoiceConfirmationScene({ duration }: { duration: number }) {
 export function OttoInvoiceAi60sNarratedVideo() {
   const { height, width } = useVideoConfig()
   const withSidebar = width === 1080 && height === 880
+  const chartBlock = withSidebar ? 150 : 0
 
   return (
     <AbsoluteFill style={{ background: '#ffffff' }}>
@@ -174,37 +193,70 @@ export function OttoInvoiceAi60sNarratedVideo() {
         <ConversationScene withSidebar={withSidebar}><SyncScene assistantText="Valor confirmado. Vou emitir a nota, enviá-la ao cliente e atualizar o financeiro." duration={165} invoicePreview invoicePreviewStart={55} rows={invoiceEmissionRows} speed={2.4} subtitle="Nota autorizada, enviada e vinculada ao financeiro" title="Emissão de nota fiscal" /></ConversationScene>
       </Sequence>
 
-      <Sequence from={660} durationInFrames={60}><TypedStatement duration={60} speed={0.62} text="Mas não faz só isso." /></Sequence>
+      {withSidebar ? (
+        <>
+          <Sequence from={660} durationInFrames={60}>
+            <ConversationScene withSidebar><ExactPromptInputScene background="#ffffff" duration={60} label="Por onde começamos?" prompt="Mostre o impacto das notas emitidas no meu fluxo de caixa." typingDurationScale={0.9} /></ConversationScene>
+          </Sequence>
+          <Sequence from={720} durationInFrames={90}>
+            <ConversationScene withSidebar><ChartResponseScene assistantText="Claro. Projetei entradas, saídas e o saldo dos próximos seis meses." duration={90} kind="cashflow" /></ConversationScene>
+          </Sequence>
+        </>
+      ) : null}
 
-      <Sequence from={720} durationInFrames={90}>
+      <Sequence from={660 + chartBlock} durationInFrames={60}><TypedStatement duration={60} speed={0.62} text="Mas não faz só isso." /></Sequence>
+
+      <Sequence from={720 + chartBlock} durationInFrames={90}>
         <ConversationScene withSidebar={withSidebar}><ExactPromptInputScene background={withSidebar ? '#ffffff' : undefined} duration={90} label="Por onde começamos?" prompt="Concilie as movimentações bancárias e classifique as despesas." typingDurationScale={1.15} /></ConversationScene>
       </Sequence>
-      <Sequence from={810} durationInFrames={90}>
+      <Sequence from={810 + chartBlock} durationInFrames={90}>
         <ConversationScene withSidebar={withSidebar}><SyncScene assistantText="Vou cruzar cada movimentação com o lançamento correspondente." duration={90} kind="reconciliation" rows={reconciliationRows} speed={2.5} subtitle="Bancos, cartões e lançamentos do Otto" title="Conciliação bancária" /></ConversationScene>
       </Sequence>
-      <Sequence from={900} durationInFrames={90}>
+      <Sequence from={900 + chartBlock} durationInFrames={90}>
         <ConversationScene withSidebar={withSidebar}><SyncScene assistantText="Agora vou atualizar as categorias contábeis de cada despesa." duration={90} rows={expenseRows} speed={2.5} subtitle="Fornecedores, categorias, valores e status" title="Classificação de despesas" /></ConversationScene>
       </Sequence>
 
-      <Sequence from={990} durationInFrames={90}>
+      {withSidebar ? (
+        <>
+          <Sequence from={990 + chartBlock} durationInFrames={60}>
+            <ConversationScene withSidebar><ExactPromptInputScene background="#ffffff" duration={60} label="Por onde começamos?" prompt="Mostre como meu faturamento está distribuído por origem." typingDurationScale={0.9} /></ConversationScene>
+          </Sequence>
+          <Sequence from={1050 + chartBlock} durationInFrames={90}>
+            <ConversationScene withSidebar><ChartResponseScene assistantText="Organizei o faturamento entre serviços, assinaturas, projetos e treinamentos." duration={90} kind="revenue" /></ConversationScene>
+          </Sequence>
+        </>
+      ) : null}
+
+      <Sequence from={990 + chartBlock * 2} durationInFrames={90}>
         <ConversationScene withSidebar={withSidebar}><ExactPromptInputScene background={withSidebar ? '#ffffff' : undefined} duration={90} label="Por onde começamos?" prompt="Organize as contas, cobre os atrasados e verifique as obrigações fiscais." typingDurationScale={1.15} /></ConversationScene>
       </Sequence>
-      <Sequence from={1080} durationInFrames={60}>
+      <Sequence from={1080 + chartBlock * 2} durationInFrames={60}>
         <ConversationScene withSidebar={withSidebar}><SyncScene assistantText="Vou organizar pagamentos e recebimentos." duration={60} rows={accountsRows} speed={3} subtitle="Vencimentos e recebimentos programados" title="Contas a pagar e a receber" /></ConversationScene>
       </Sequence>
-      <Sequence from={1140} durationInFrames={60}>
+      <Sequence from={1140 + chartBlock * 2} durationInFrames={60}>
         <ConversationScene withSidebar={withSidebar}><SyncScene assistantText="Agora vou acompanhar os clientes em atraso." duration={60} rows={collectionRows} speed={3} subtitle="Cobranças e acompanhamentos automáticos" title="Clientes em atraso" /></ConversationScene>
       </Sequence>
-      <Sequence from={1200} durationInFrames={60}>
+      <Sequence from={1200 + chartBlock * 2} durationInFrames={60}>
         <ConversationScene withSidebar={withSidebar}><SyncScene assistantText="Também vou verificar oportunidades fiscais permitidas pela lei." duration={60} rows={fiscalRows} speed={3} subtitle="Obrigações e economia tributária legal" title="Análise fiscal" /></ConversationScene>
       </Sequence>
 
-      <Sequence from={1260} durationInFrames={120}><CompatibilityScene duration={120} /></Sequence>
-      <Sequence from={1380} durationInFrames={105}>
+      {withSidebar ? (
+        <>
+          <Sequence from={1260 + chartBlock * 2} durationInFrames={60}>
+            <ConversationScene withSidebar><ExactPromptInputScene background="#ffffff" duration={60} label="Por onde começamos?" prompt="Compare meu cenário tributário atual com o otimizado." typingDurationScale={0.9} /></ConversationScene>
+          </Sequence>
+          <Sequence from={1320 + chartBlock * 2} durationInFrames={90}>
+            <ConversationScene withSidebar><ChartResponseScene assistantText="Comparei o cenário atual com oportunidades de economia permitidas pela legislação." duration={90} kind="tax" /></ConversationScene>
+          </Sequence>
+        </>
+      ) : null}
+
+      <Sequence from={1260 + chartBlock * 3} durationInFrames={120}><CompatibilityScene duration={120} /></Sequence>
+      <Sequence from={1380 + chartBlock * 3} durationInFrames={105}>
         <ConversationScene withSidebar={withSidebar}><ExactPromptInputScene background={withSidebar ? '#ffffff' : undefined} duration={105} label="Por onde começamos?" prompt="Crie um dashboard com vendas, financeiro, contabilidade e notas fiscais." typingDurationScale={1.15} /></ConversationScene>
       </Sequence>
-      <Sequence from={1485} durationInFrames={255}><OttoFinancialDashboard showExtendedKpis={withSidebar} /></Sequence>
-      <Sequence from={1740} durationInFrames={60}><OutroScene duration={60} /></Sequence>
+      <Sequence from={1485 + chartBlock * 3} durationInFrames={255}><OttoFinancialDashboard showExtendedKpis={withSidebar} /></Sequence>
+      <Sequence from={1740 + chartBlock * 3} durationInFrames={60}><OutroScene duration={60} /></Sequence>
     </AbsoluteFill>
   )
 }

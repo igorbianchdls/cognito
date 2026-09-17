@@ -140,7 +140,7 @@ import { OTTO_FINANCE_AUTOMATION_ONLY_SCENE_DURATION, OttoFinanceAutomationOnlyS
 import { OTTO_FINANCE_AI_50S_DURATION, OttoFinanceAi50sVideo } from '@/assets/remotion/compositions/OttoFinanceAi50sVideo'
 import { OTTO_FINANCE_AI_50S_SQUARE_DURATION, OttoFinanceAi50sSquareVideo } from '@/assets/remotion/compositions/OttoFinanceAi50sSquareVideo'
 import { OTTO_FINANCE_AI_53S_NARRATED_DURATION, OttoFinanceAi53sNarratedVideo } from '@/assets/remotion/compositions/OttoFinanceAi53sNarratedVideo'
-import { OTTO_INVOICE_AI_60S_NARRATED_DURATION, OttoInvoiceAi60sNarratedVideo } from '@/assets/remotion/compositions/OttoInvoiceAi60sNarratedVideo'
+import { OTTO_INVOICE_AI_60S_NARRATED_DURATION, OTTO_INVOICE_AI_75S_NARRATED_880_DURATION, OttoInvoiceAi60sNarratedVideo } from '@/assets/remotion/compositions/OttoInvoiceAi60sNarratedVideo'
 import { OTTO_INVOICE_DIRECT_53S_NARRATED_DURATION, OttoInvoiceDirect53sNarratedVideo } from '@/assets/remotion/compositions/OttoInvoiceDirect53sNarratedVideo'
 import { OTTO_FINANCIAL_OPERATORS_50S_NARRATED_DURATION, OttoFinancialOperators50sNarratedVideo } from '@/assets/remotion/compositions/OttoFinancialOperators50sNarratedVideo'
 import { OTTO_FINANCIAL_DASHBOARD_DURATION, OttoFinancialDashboard } from '@/assets/remotion/compositions/OttoFinancialDashboard'
@@ -3689,12 +3689,12 @@ const catalog: CatalogItem[] = [
   {
     code: '<OttoInvoiceAi60sNarratedVideo />',
     component: OttoInvoiceAi60sNarratedVideo,
-    description: 'Variação em 1080×880 focada na emissão de nota fiscal pelo ChatGPT e Claude.',
-    duration: OTTO_INVOICE_AI_60S_NARRATED_DURATION,
+    description: 'Variação em 1080×880 com emissão de nota fiscal, automações e três sequências de prompt para gráficos financeiros.',
+    duration: OTTO_INVOICE_AI_75S_NARRATED_880_DURATION,
     height: 880,
     kind: 'Vídeos criados',
-    label: 'Otto Invoice AI 60s Narrated — 1080×880',
-    tags: ['Otto', 'Nota Fiscal', 'ChatGPT', 'Claude', 'Narração', '1080x880'],
+    label: 'Otto Invoice AI 75s Narrated — 1080×880',
+    tags: ['Otto', 'Nota Fiscal', 'ChatGPT', 'Claude', 'Charts', 'Narração', '1080x880'],
     value: 'video-otto-invoice-ai-60s-narrated-1080x880',
     width: 1080,
   },

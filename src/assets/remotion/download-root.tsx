@@ -53,6 +53,7 @@ import {
   OttoFinanceAi53sNarratedVideo,
 } from './compositions/OttoFinanceAi53sNarratedVideo'
 import {
+  OTTO_INVOICE_AI_75S_NARRATED_880_DURATION,
   OTTO_INVOICE_AI_60S_NARRATED_DURATION,
   OttoInvoiceAi60sNarratedVideo,
 } from './compositions/OttoInvoiceAi60sNarratedVideo'
@@ -228,7 +229,7 @@ function RemotionDownloadRoot() {
       />
       <Composition
         component={OttoInvoiceAi60sNarratedVideo}
-        durationInFrames={OTTO_INVOICE_AI_60S_NARRATED_DURATION}
+        durationInFrames={OTTO_INVOICE_AI_75S_NARRATED_880_DURATION}
         fps={30}
         height={880}
         id="video-otto-invoice-ai-60s-narrated-1080x880"
