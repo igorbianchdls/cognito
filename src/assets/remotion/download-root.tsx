@@ -141,6 +141,12 @@ import {
   OTTO_INVOICE_CHATGPT_OFFICE_MONITOR_DURATION,
   OttoInvoiceChatGptOfficeMonitor,
 } from './compositions/OttoInvoiceChatGptOfficeMonitor'
+import {
+  JULY_BODY_VIDEO_1_DURATION,
+  JULY_BODY_VIDEO_2_DURATION,
+  JulyBodyAnimatedVideo1,
+  JulyBodyAnimatedVideo2,
+} from './compositions/JulyBodyAnimatedVideos'
 
 function RemotionDownloadRoot() {
   return (
@@ -480,6 +486,22 @@ function RemotionDownloadRoot() {
         height={720}
         id="actions-otto-assistant-connections"
         width={1280}
+      />
+      <Composition
+        component={JulyBodyAnimatedVideo1}
+        durationInFrames={JULY_BODY_VIDEO_1_DURATION}
+        fps={30}
+        height={880}
+        id="body-july-animated-1"
+        width={1080}
+      />
+      <Composition
+        component={JulyBodyAnimatedVideo2}
+        durationInFrames={JULY_BODY_VIDEO_2_DURATION}
+        fps={30}
+        height={880}
+        id="body-july-animated-2"
+        width={1080}
       />
     </>
   )

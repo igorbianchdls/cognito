@@ -160,6 +160,7 @@ import { OTTO_INVOICE_CHATGPT_TV_CONTENT_DURATION, OttoInvoiceChatGptTvContent }
 import { OTTO_INVOICE_CHATGPT_DUAL_SCREEN_DURATION, OttoInvoiceChatGptDualScreen } from '@/assets/remotion/compositions/OttoInvoiceChatGptDualScreen'
 import { OTTO_INVOICE_CHATGPT_TV_ZOOM_DURATION, OttoInvoiceChatGptTvZoom } from '@/assets/remotion/compositions/OttoInvoiceChatGptTvZoom'
 import { OTTO_INVOICE_CHATGPT_OFFICE_MONITOR_DURATION, OttoInvoiceChatGptOfficeMonitor } from '@/assets/remotion/compositions/OttoInvoiceChatGptOfficeMonitor'
+import { JULY_BODY_VIDEO_1_DURATION, JULY_BODY_VIDEO_2_DURATION, JulyBodyAnimatedVideo1, JulyBodyAnimatedVideo2 } from '@/assets/remotion/compositions/JulyBodyAnimatedVideos'
 import { OTTO_INVOICE_CHATGPT_MONITOR_CONTENT_DURATION, OttoInvoiceChatGptMonitorContent } from '@/assets/remotion/compositions/OttoInvoiceChatGptMonitorContent'
 import { OTTO_SYNC_ONLY_SCENE_DURATION, OttoSyncOnlyScene } from '@/assets/remotion/compositions/OttoSyncOnlyScene'
 import {
@@ -241,7 +242,7 @@ import {
   RotatingWords,
 } from '@/assets/remotion/saas/index'
 
-type CatalogKind = 'Componentes' | 'Mockups' | 'Motion' | 'Tipografia Animada' | 'Marketing' | 'Vídeos criados' | 'Galerias' | 'Animações' | 'Actions' | 'Logo' | 'Templates'
+type CatalogKind = 'Componentes' | 'Mockups' | 'Motion' | 'Tipografia Animada' | 'Marketing' | 'Vídeos criados' | 'Body Animado' | 'Galerias' | 'Animações' | 'Actions' | 'Logo' | 'Templates'
 
 type CatalogItem = {
   code: string
@@ -2017,6 +2018,32 @@ const catalog: CatalogItem[] = [
     label: 'Artifact Pipeline',
     tags: ['Gallery', 'Vertical', 'Pipeline'],
     value: 'gallery-artifact-pipeline',
+    width: 1080,
+  },
+  {
+    code: '<JulyBodyAnimatedVideo1 />',
+    component: JulyBodyAnimatedVideo1,
+    description: 'Vídeo horizontal com a apresentação da Otto, emissão de notas no ChatGPT e Claude, operações financeiras e CTA final.',
+    duration: JULY_BODY_VIDEO_1_DURATION,
+    fps: 30,
+    height: 880,
+    kind: 'Body Animado',
+    label: 'July Body — Otto e Notas Fiscais',
+    tags: ['Otto', 'Body', 'ChatGPT', 'Claude', 'Notas fiscais'],
+    value: 'body-july-animated-1',
+    width: 1080,
+  },
+  {
+    code: '<JulyBodyAnimatedVideo2 />',
+    component: JulyBodyAnimatedVideo2,
+    description: 'Vídeo horizontal sobre o funcionário financeiro de IA da Otto, com operações automatizadas e integração ao ChatGPT.',
+    duration: JULY_BODY_VIDEO_2_DURATION,
+    fps: 30,
+    height: 880,
+    kind: 'Body Animado',
+    label: 'July Body — Funcionário Financeiro de IA',
+    tags: ['Otto', 'Body', 'Financeiro', 'ChatGPT', 'Automação'],
+    value: 'body-july-animated-2',
     width: 1080,
   },
   {
@@ -4141,10 +4168,10 @@ const catalog: CatalogItem[] = [
   },
 ]
 
-const kinds: Array<'Todos' | CatalogKind> = ['Todos', 'Logo', 'Componentes', 'Mockups', 'Motion', 'Tipografia Animada', 'Marketing', 'Vídeos criados', 'Galerias', 'Animações', 'Actions', 'Templates']
+const kinds: Array<'Todos' | CatalogKind> = ['Todos', 'Logo', 'Componentes', 'Mockups', 'Motion', 'Tipografia Animada', 'Marketing', 'Vídeos criados', 'Body Animado', 'Galerias', 'Animações', 'Actions', 'Templates']
 
 function Thumbnail({ item }: { item: CatalogItem }) {
-  const color = item.kind === 'Motion' ? '#245BDB' : item.kind === 'Tipografia Animada' ? '#DB2777' : item.kind === 'Marketing' ? '#C28F2C' : item.kind === 'Vídeos criados' ? '#0F766E' : item.kind === 'Galerias' ? '#7C3AED' : item.kind === 'Animações' ? '#0EA5E9' : item.kind === 'Actions' ? '#1677F2' : item.kind === 'Logo' ? '#111827' : item.kind === 'Templates' ? '#9333EA' : item.kind === 'Mockups' ? '#22A06B' : '#101828'
+  const color = item.kind === 'Motion' ? '#245BDB' : item.kind === 'Tipografia Animada' ? '#DB2777' : item.kind === 'Marketing' ? '#C28F2C' : item.kind === 'Vídeos criados' ? '#0F766E' : item.kind === 'Body Animado' ? '#C2410C' : item.kind === 'Galerias' ? '#7C3AED' : item.kind === 'Animações' ? '#0EA5E9' : item.kind === 'Actions' ? '#1677F2' : item.kind === 'Logo' ? '#111827' : item.kind === 'Templates' ? '#9333EA' : item.kind === 'Mockups' ? '#22A06B' : '#101828'
   return (
     <div style={{ background: '#F8FBF9', border: '1px solid #E3E8EF', borderRadius: 12, display: 'grid', gap: 10, height: 96, padding: 12 }}>
       <div style={{ alignItems: 'center', display: 'flex', justifyContent: 'space-between' }}>
