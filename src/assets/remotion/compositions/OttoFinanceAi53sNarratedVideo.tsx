@@ -102,7 +102,7 @@ export function OttoFinanceAi53sNarratedVideo() {
       <Sequence from={150} durationInFrames={90}>
         <ExactPromptInputScene duration={90} label="Por onde começamos?" prompt="Organize todo o financeiro e a contabilidade da empresa." typingDurationScale={1.15} />
       </Sequence>
-      <Sequence from={240} durationInFrames={60}><OttoFinancialDashboard square /></Sequence>
+      <Sequence from={240} durationInFrames={60}><OttoFinancialDashboard animationSpeed={2} square /></Sequence>
 
       <Sequence from={300} durationInFrames={90}>
         <ExactPromptInputScene duration={90} label="Por onde começamos?" prompt="Emita as notas fiscais das minhas vendas recentes." typingDurationScale={1.15} />
@@ -142,7 +142,7 @@ export function OttoFinanceAi53sNarratedVideo() {
       <Sequence from={1320} durationInFrames={90}>
         <ExactPromptInputScene duration={90} label="Por onde começamos?" prompt="Crie um dashboard com vendas, financeiro, contabilidade e notas fiscais." typingDurationScale={1.15} />
       </Sequence>
-      <Sequence from={1410} durationInFrames={120}><OttoFinancialDashboard square /></Sequence>
+      <Sequence from={1410} durationInFrames={120}><OttoFinancialDashboard animationSpeed={1.15} square /></Sequence>
       <Sequence from={1530} durationInFrames={60}><OutroScene duration={60} /></Sequence>
     </AbsoluteFill>
   )

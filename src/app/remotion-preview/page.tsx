@@ -3677,14 +3677,14 @@ const catalog: CatalogItem[] = [
   {
     code: '<OttoInvoiceAi60sNarratedVideo />',
     component: OttoInvoiceAi60sNarratedVideo,
-    description: 'Vídeo horizontal focado na emissão de nota fiscal pelo ChatGPT e Claude, com confirmação de valor e rotinas financeiras da Otto.',
+    description: 'Vídeo em 1080×800 focado na emissão de nota fiscal pelo ChatGPT e Claude, com confirmação de valor e rotinas financeiras da Otto.',
     duration: OTTO_INVOICE_AI_60S_NARRATED_DURATION,
-    height: 720,
+    height: 800,
     kind: 'Vídeos criados',
     label: 'Otto Invoice AI 60s Narrated',
-    tags: ['Otto', 'Nota Fiscal', 'ChatGPT', 'Claude', 'Narração', 'Horizontal'],
+    tags: ['Otto', 'Nota Fiscal', 'ChatGPT', 'Claude', 'Narração', '1080x800'],
     value: 'video-otto-invoice-ai-60s-narrated',
-    width: 1280,
+    width: 1080,
   },
   {
     code: '<OttoInvoiceDirect53sNarratedVideo />',

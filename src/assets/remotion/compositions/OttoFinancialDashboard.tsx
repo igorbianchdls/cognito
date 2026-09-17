@@ -68,8 +68,8 @@ function pieSlicePath(startAngle: number, endAngle: number) {
   return `M 70 70 L ${start.x.toFixed(2)} ${start.y.toFixed(2)} A 56 56 0 ${largeArc} 1 ${end.x.toFixed(2)} ${end.y.toFixed(2)} Z`
 }
 
-function KpiCard({ index }: { index: number }) {
-  const frame = useCurrentFrame()
+function KpiCard({ animationSpeed = 1, index }: { animationSpeed?: number; index: number }) {
+  const frame = useCurrentFrame() * animationSpeed
   const item = kpis[index]
   const Icon = item.icon
   const enter = p(frame, 8 + index * 7, 28 + index * 7)
@@ -89,8 +89,8 @@ function KpiCard({ index }: { index: number }) {
   )
 }
 
-function CashFlowPanel() {
-  const frame = useCurrentFrame()
+function CashFlowPanel({ animationSpeed = 1 }: { animationSpeed?: number }) {
+  const frame = useCurrentFrame() * animationSpeed
   const enter = p(frame, 30, 50)
   const draw = p(frame, 42, 104)
 
@@ -122,8 +122,8 @@ function CashFlowPanel() {
   )
 }
 
-function RevenuePanel() {
-  const frame = useCurrentFrame()
+function RevenuePanel({ animationSpeed = 1 }: { animationSpeed?: number }) {
+  const frame = useCurrentFrame() * animationSpeed
   const rows = [
     { color: BLUE, label: 'Serviços', value: 46 },
     { color: GREEN, label: 'Assinaturas', value: 34 },
@@ -177,8 +177,8 @@ function RevenuePanel() {
   )
 }
 
-function StatusPanel() {
-  const frame = useCurrentFrame()
+function StatusPanel({ animationSpeed = 1 }: { animationSpeed?: number }) {
+  const frame = useCurrentFrame() * animationSpeed
   const rows = [
     { icon: CheckCircle2, label: 'Financeiro atualizado', tone: GREEN, value: 'Agora' },
     { icon: ReceiptText, label: 'Notas fiscais emitidas', tone: BLUE, value: '8 notas' },
@@ -198,8 +198,8 @@ function StatusPanel() {
   )
 }
 
-export function OttoFinancialDashboard({ square = false }: { square?: boolean }) {
-  const frame = useCurrentFrame()
+export function OttoFinancialDashboard({ animationSpeed = 1, square = false }: { animationSpeed?: number; square?: boolean }) {
+  const frame = useCurrentFrame() * animationSpeed
   const shellIn = p(frame, 0, 20)
 
   return (
@@ -214,10 +214,10 @@ export function OttoFinancialDashboard({ square = false }: { square?: boolean })
         </header>
 
         <main style={{ display: 'grid', gap: 16, padding: '20px 28px 24px' }}>
-          <div style={{ display: 'grid', gap: 14, gridTemplateColumns: 'repeat(4, 1fr)' }}>{kpis.map((_, index) => <KpiCard index={index} key={kpis[index].label} />)}</div>
-          <div style={{ display: 'grid', gap: 16, gridTemplateColumns: 'minmax(0, 2fr) minmax(300px, 0.92fr)' }}>
-            <CashFlowPanel />
-            <div style={{ display: 'grid', gap: 14, gridTemplateRows: '1fr auto' }}><RevenuePanel /><StatusPanel /></div>
+          <div style={{ display: 'grid', gap: 14, gridTemplateColumns: square ? 'repeat(2, 1fr)' : 'repeat(4, 1fr)' }}>{kpis.map((_, index) => <KpiCard animationSpeed={animationSpeed} index={index} key={kpis[index].label} />)}</div>
+          <div style={{ display: 'grid', gap: 16, gridTemplateColumns: square ? 'minmax(0, 1.55fr) minmax(320px, 0.9fr)' : 'minmax(0, 2fr) minmax(300px, 0.92fr)' }}>
+            <CashFlowPanel animationSpeed={animationSpeed} />
+            <div style={{ display: 'grid', gap: 14, gridTemplateRows: '1fr auto' }}><RevenuePanel animationSpeed={animationSpeed} /><StatusPanel animationSpeed={animationSpeed} /></div>
           </div>
         </main>
       </div>

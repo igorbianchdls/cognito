@@ -127,7 +127,7 @@ export function OttoInvoiceAi60sNarratedVideo() {
   return (
     <AbsoluteFill style={{ background: '#ffffff' }}>
       <Sequence durationInFrames={90}><TypedStatement duration={90} speed={0.75} text="Essa IA está deixando os contadores preocupados." /></Sequence>
-      <Sequence from={90} durationInFrames={60}><OttoLogoRevealHorizontal /></Sequence>
+      <Sequence from={90} durationInFrames={60}><OttoLogoRevealHorizontal centerX={45} centerY="50%" /></Sequence>
       <Sequence from={150} durationInFrames={120}><TypedStatement duration={120} speed={0.55} text="Emita notas fiscais diretamente pelo ChatGPT ou Claude." /></Sequence>
 
       <Sequence from={270} durationInFrames={105}>
