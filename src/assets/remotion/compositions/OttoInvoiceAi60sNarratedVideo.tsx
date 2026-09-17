@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react'
-import { Check, MousePointer2 } from 'lucide-react'
-import { AbsoluteFill, interpolate, Sequence, useCurrentFrame } from 'remotion'
+import { Boxes, Check, Clock3, MousePointer2, Search, Settings, SquarePen } from 'lucide-react'
+import { AbsoluteFill, Img, interpolate, Sequence, staticFile, useCurrentFrame, useVideoConfig } from 'remotion'
 
 import {
   collectionRows,
@@ -53,6 +53,39 @@ function TextScene({ children, duration }: { children: ReactNode; duration: numb
   return (
     <AbsoluteFill style={{ alignItems: 'center', background: '#ffffff', display: 'flex', fontFamily: FONT, justifyContent: 'center', opacity, padding: '0 100px' }}>
       {children}
+    </AbsoluteFill>
+  )
+}
+
+function ChatGptCollapsedSidebar() {
+  const iconStyle = { alignItems: 'center', color: '#171717', display: 'flex', height: 38, justifyContent: 'center', width: 38 } as const
+
+  return (
+    <aside style={{ alignItems: 'center', background: '#f9f9f9', borderRight: '1px solid #e7e7e7', bottom: 0, display: 'flex', flexDirection: 'column', left: 0, padding: '18px 0 15px', position: 'absolute', top: 0, width: 64, zIndex: 30 }}>
+      <span style={{ display: 'block', height: 29, overflow: 'hidden', position: 'relative', width: 29 }}>
+        <Img src={staticFile('gptLogo.svg')} style={{ filter: 'brightness(0)', height: 29, left: 0, maxWidth: 'none', position: 'absolute', top: 0, width: 98 }} />
+      </span>
+      <div style={{ display: 'grid', gap: 8, marginTop: 31 }}>
+        <span style={iconStyle}><SquarePen size={21} strokeWidth={1.8} /></span>
+        <span style={iconStyle}><Search size={21} strokeWidth={1.8} /></span>
+        <span style={iconStyle}><Clock3 size={21} strokeWidth={1.75} /></span>
+        <span style={iconStyle}><Boxes size={21} strokeWidth={1.7} /></span>
+      </div>
+      <span style={{ ...iconStyle, marginTop: 'auto' }}><Settings size={21} strokeWidth={1.75} /></span>
+      <span style={{ alignItems: 'center', background: '#202123', borderRadius: 999, color: '#ffffff', display: 'flex', fontSize: 11, fontWeight: 700, height: 32, justifyContent: 'center', marginTop: 10, width: 32 }}>O</span>
+    </aside>
+  )
+}
+
+function ConversationScene({ children, withSidebar }: { children: ReactNode; withSidebar: boolean }) {
+  if (!withSidebar) return <>{children}</>
+
+  return (
+    <AbsoluteFill style={{ background: '#ffffff' }}>
+      <ChatGptCollapsedSidebar />
+      <div style={{ bottom: 0, left: 64, overflow: 'hidden', position: 'absolute', right: 0, top: 0 }}>
+        {children}
+      </div>
     </AbsoluteFill>
   )
 }
@@ -124,6 +157,9 @@ export function InvoiceConfirmationScene({ duration }: { duration: number }) {
 }
 
 export function OttoInvoiceAi60sNarratedVideo() {
+  const { height, width } = useVideoConfig()
+  const withSidebar = width === 1080 && height === 880
+
   return (
     <AbsoluteFill style={{ background: '#ffffff' }}>
       <Sequence durationInFrames={90}><TypedStatement duration={90} speed={0.75} text="Essa IA está deixando os contadores preocupados." /></Sequence>
@@ -131,41 +167,41 @@ export function OttoInvoiceAi60sNarratedVideo() {
       <Sequence from={150} durationInFrames={120}><TypedStatement duration={120} speed={0.55} text="Emita notas fiscais diretamente pelo ChatGPT ou Claude." /></Sequence>
 
       <Sequence from={270} durationInFrames={105}>
-        <ExactPromptInputScene duration={105} label="Por onde começamos?" prompt="Emita a nota fiscal da venda para a Aurora Tecnologia." typingDurationScale={1.15} />
+        <ConversationScene withSidebar={withSidebar}><ExactPromptInputScene duration={105} label="Por onde começamos?" prompt="Emita a nota fiscal da venda para a Aurora Tecnologia." typingDurationScale={1.15} /></ConversationScene>
       </Sequence>
-      <Sequence from={375} durationInFrames={120}><InvoiceConfirmationScene duration={120} /></Sequence>
+      <Sequence from={375} durationInFrames={120}><ConversationScene withSidebar={withSidebar}><InvoiceConfirmationScene duration={120} /></ConversationScene></Sequence>
       <Sequence from={495} durationInFrames={165}>
-        <SyncScene assistantText="Valor confirmado. Vou emitir a nota, enviá-la ao cliente e atualizar o financeiro." duration={165} invoicePreview invoicePreviewStart={55} rows={invoiceEmissionRows} speed={2.4} subtitle="Nota autorizada, enviada e vinculada ao financeiro" title="Emissão de nota fiscal" />
+        <ConversationScene withSidebar={withSidebar}><SyncScene assistantText="Valor confirmado. Vou emitir a nota, enviá-la ao cliente e atualizar o financeiro." duration={165} invoicePreview invoicePreviewStart={55} rows={invoiceEmissionRows} speed={2.4} subtitle="Nota autorizada, enviada e vinculada ao financeiro" title="Emissão de nota fiscal" /></ConversationScene>
       </Sequence>
 
       <Sequence from={660} durationInFrames={60}><TypedStatement duration={60} speed={0.62} text="Mas não faz só isso." /></Sequence>
 
       <Sequence from={720} durationInFrames={90}>
-        <ExactPromptInputScene duration={90} label="Por onde começamos?" prompt="Concilie as movimentações bancárias e classifique as despesas." typingDurationScale={1.15} />
+        <ConversationScene withSidebar={withSidebar}><ExactPromptInputScene duration={90} label="Por onde começamos?" prompt="Concilie as movimentações bancárias e classifique as despesas." typingDurationScale={1.15} /></ConversationScene>
       </Sequence>
       <Sequence from={810} durationInFrames={90}>
-        <SyncScene assistantText="Vou cruzar cada movimentação com o lançamento correspondente." duration={90} kind="reconciliation" rows={reconciliationRows} speed={2.5} subtitle="Bancos, cartões e lançamentos do Otto" title="Conciliação bancária" />
+        <ConversationScene withSidebar={withSidebar}><SyncScene assistantText="Vou cruzar cada movimentação com o lançamento correspondente." duration={90} kind="reconciliation" rows={reconciliationRows} speed={2.5} subtitle="Bancos, cartões e lançamentos do Otto" title="Conciliação bancária" /></ConversationScene>
       </Sequence>
       <Sequence from={900} durationInFrames={90}>
-        <SyncScene assistantText="Agora vou atualizar as categorias contábeis de cada despesa." duration={90} rows={expenseRows} speed={2.5} subtitle="Fornecedores, categorias, valores e status" title="Classificação de despesas" />
+        <ConversationScene withSidebar={withSidebar}><SyncScene assistantText="Agora vou atualizar as categorias contábeis de cada despesa." duration={90} rows={expenseRows} speed={2.5} subtitle="Fornecedores, categorias, valores e status" title="Classificação de despesas" /></ConversationScene>
       </Sequence>
 
       <Sequence from={990} durationInFrames={90}>
-        <ExactPromptInputScene duration={90} label="Por onde começamos?" prompt="Organize as contas, cobre os atrasados e verifique as obrigações fiscais." typingDurationScale={1.15} />
+        <ConversationScene withSidebar={withSidebar}><ExactPromptInputScene duration={90} label="Por onde começamos?" prompt="Organize as contas, cobre os atrasados e verifique as obrigações fiscais." typingDurationScale={1.15} /></ConversationScene>
       </Sequence>
       <Sequence from={1080} durationInFrames={60}>
-        <SyncScene assistantText="Vou organizar pagamentos e recebimentos." duration={60} rows={accountsRows} speed={3} subtitle="Vencimentos e recebimentos programados" title="Contas a pagar e a receber" />
+        <ConversationScene withSidebar={withSidebar}><SyncScene assistantText="Vou organizar pagamentos e recebimentos." duration={60} rows={accountsRows} speed={3} subtitle="Vencimentos e recebimentos programados" title="Contas a pagar e a receber" /></ConversationScene>
       </Sequence>
       <Sequence from={1140} durationInFrames={60}>
-        <SyncScene assistantText="Agora vou acompanhar os clientes em atraso." duration={60} rows={collectionRows} speed={3} subtitle="Cobranças e acompanhamentos automáticos" title="Clientes em atraso" />
+        <ConversationScene withSidebar={withSidebar}><SyncScene assistantText="Agora vou acompanhar os clientes em atraso." duration={60} rows={collectionRows} speed={3} subtitle="Cobranças e acompanhamentos automáticos" title="Clientes em atraso" /></ConversationScene>
       </Sequence>
       <Sequence from={1200} durationInFrames={60}>
-        <SyncScene assistantText="Também vou verificar oportunidades fiscais permitidas pela lei." duration={60} rows={fiscalRows} speed={3} subtitle="Obrigações e economia tributária legal" title="Análise fiscal" />
+        <ConversationScene withSidebar={withSidebar}><SyncScene assistantText="Também vou verificar oportunidades fiscais permitidas pela lei." duration={60} rows={fiscalRows} speed={3} subtitle="Obrigações e economia tributária legal" title="Análise fiscal" /></ConversationScene>
       </Sequence>
 
       <Sequence from={1260} durationInFrames={120}><CompatibilityScene duration={120} /></Sequence>
       <Sequence from={1380} durationInFrames={105}>
-        <ExactPromptInputScene duration={105} label="Por onde começamos?" prompt="Crie um dashboard com vendas, financeiro, contabilidade e notas fiscais." typingDurationScale={1.15} />
+        <ConversationScene withSidebar={withSidebar}><ExactPromptInputScene duration={105} label="Por onde começamos?" prompt="Crie um dashboard com vendas, financeiro, contabilidade e notas fiscais." typingDurationScale={1.15} /></ConversationScene>
       </Sequence>
       <Sequence from={1485} durationInFrames={255}><OttoFinancialDashboard /></Sequence>
       <Sequence from={1740} durationInFrames={60}><OutroScene duration={60} /></Sequence>

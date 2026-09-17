@@ -3687,6 +3687,18 @@ const catalog: CatalogItem[] = [
     width: 1080,
   },
   {
+    code: '<OttoInvoiceAi60sNarratedVideo />',
+    component: OttoInvoiceAi60sNarratedVideo,
+    description: 'Variação em 1080×880 focada na emissão de nota fiscal pelo ChatGPT e Claude.',
+    duration: OTTO_INVOICE_AI_60S_NARRATED_DURATION,
+    height: 880,
+    kind: 'Vídeos criados',
+    label: 'Otto Invoice AI 60s Narrated — 1080×880',
+    tags: ['Otto', 'Nota Fiscal', 'ChatGPT', 'Claude', 'Narração', '1080x880'],
+    value: 'video-otto-invoice-ai-60s-narrated-1080x880',
+    width: 1080,
+  },
+  {
     code: '<OttoInvoiceDirect53sNarratedVideo />',
     component: OttoInvoiceDirect53sNarratedVideo,
     description: 'Vídeo horizontal com abertura direta na emissão de nota fiscal pelo ChatGPT e Claude, confirmação de valor e automações da Otto.',

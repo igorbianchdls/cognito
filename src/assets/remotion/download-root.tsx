@@ -227,6 +227,14 @@ function RemotionDownloadRoot() {
         width={1080}
       />
       <Composition
+        component={OttoInvoiceAi60sNarratedVideo}
+        durationInFrames={OTTO_INVOICE_AI_60S_NARRATED_DURATION}
+        fps={30}
+        height={880}
+        id="video-otto-invoice-ai-60s-narrated-1080x880"
+        width={1080}
+      />
+      <Composition
         component={OttoInvoiceDirect53sNarratedVideo}
         durationInFrames={OTTO_INVOICE_DIRECT_53S_NARRATED_DURATION}
         fps={30}
