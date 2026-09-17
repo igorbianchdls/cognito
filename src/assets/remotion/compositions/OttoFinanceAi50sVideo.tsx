@@ -152,7 +152,7 @@ export const fiscalRows = [
 function InvoiceDocumentPreview({ frame, showFrom = 55 }: { frame: number; showFrom?: number }) {
   const { height, width } = useVideoConfig()
   const show = p(frame, showFrom, showFrom + 9)
-  const square = height >= width
+  const square = height / width >= 0.8
 
   return (
     <div
@@ -238,7 +238,7 @@ export function SyncScene({
   const cardFrame = Math.max(0, frame - 12) * speed
   const cardScale = rows.length > 6 ? 0.84 : 0.92
   const cardWidth = 940 / cardScale
-  const square = height >= width
+  const square = height / width >= 0.8
   const squareContentHeight = 37 + (126 + rows.length * 72) * cardScale
   const textIn = p(frame, 0, 14)
   const typedCharacters = Math.floor(p(frame, 2, 22, [0, assistantText.length]))
