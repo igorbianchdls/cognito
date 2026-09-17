@@ -281,7 +281,7 @@ function ResultRowItem({ index, localFrame, row }: { index: number; localFrame: 
     : localFrame >= 62 + index * 10
   const visibleStatus = row.statusStages?.[stagedStatusIndex] ?? (complete ? row.status : 'Sincronizando')
   const StatusIcon = row.statusIcon
-  const alert = row.status.includes('Revisar') || row.status.includes('Atraso') || row.status.includes('Risco') || row.status.includes('Pendente') || row.status.includes('Divergencia')
+  const alert = row.status.includes('Revis') || row.status.includes('Atraso') || row.status.includes('Risco') || row.status.includes('Pendente') || row.status.includes('Diverg')
   const stagedProcessing = Boolean(row.statusStages && !complete)
   const stagedStyle = row.statusStageStyles?.[stagedStatusIndex]
   const statusBackground = stagedStyle?.background ?? (stagedProcessing ? '#eff6ff' : row.background ?? (alert ? '#fff7ed' : '#ecfdf3'))
@@ -307,7 +307,7 @@ function ResultRowItem({ index, localFrame, row }: { index: number; localFrame: 
 function ReconciliationResultRow({ index, localFrame, row }: { index: number; localFrame: number; row: ResultRow }) {
   const rowIn = p(localFrame, 10 + index * 10, 24 + index * 10)
   const complete = localFrame >= 76 + index * 10
-  const review = complete && (row.status === 'Revisar' || row.status === 'Divergencia')
+  const review = complete && (row.status.includes('Revis') || row.status.includes('Diverg'))
   const completeBackground = row.background ?? (review ? '#fff7ed' : '#ecfdf3')
   const completeColor = row.statusColor ?? (review ? '#c2410c' : '#166534')
 

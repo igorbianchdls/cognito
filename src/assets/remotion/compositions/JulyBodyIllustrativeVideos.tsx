@@ -43,10 +43,42 @@ const invoiceProgressRows = invoiceEmissionRows.map((item) => ({
   statusStageStyles: invoiceStatusStageStyles,
   statusStages: invoiceStatusStages,
 }))
-const reconciliationStatusRows = reconciliationRows.map((item) => ({...item, background: '#dcfce7', statusColor: '#166534'}))
-const expenseStatusRows = expenseRows.map((item) => ({...item, background: '#f3e8ff', statusColor: '#7e22ce'}))
-const accountsStatusRows = accountsRows.map((item) => ({...item, background: '#dbeafe', statusColor: '#1d4ed8'}))
-const collectionStatusRows = collectionRows.map((item) => ({...item, background: '#ffedd5', statusColor: '#c2410c'}))
+const reconciliationStatuses = [
+  {background: '#dcfce7', status: 'Conciliado auto', statusColor: '#166534'},
+  {background: '#dbeafe', status: 'Regra aplicada', statusColor: '#1d4ed8'},
+  {background: '#f3e8ff', status: 'Correspondência', statusColor: '#7e22ce'},
+  {background: '#dcfce7', status: 'Conciliado auto', statusColor: '#166534'},
+  {background: '#fef3c7', status: 'Revisar', statusColor: '#a16207'},
+  {background: '#fee2e2', status: 'Divergência', statusColor: '#b91c1c'},
+]
+const expenseStatuses = [
+  {background: '#dcfce7', status: 'Classificada auto', statusColor: '#166534'},
+  {background: '#dbeafe', status: 'Regra aplicada', statusColor: '#1d4ed8'},
+  {background: '#f3e8ff', status: 'Sugestão da IA', statusColor: '#7e22ce'},
+  {background: '#fef3c7', status: 'Revisão necessária', statusColor: '#a16207'},
+  {background: '#dcfce7', status: 'Classificada auto', statusColor: '#166534'},
+  {background: '#fee2e2', status: 'Sem categoria', statusColor: '#b91c1c'},
+]
+const accountsStatuses = [
+  {background: '#dbeafe', status: 'Agendado', statusColor: '#1d4ed8'},
+  {background: '#dcfce7', status: 'A receber', statusColor: '#166534'},
+  {background: '#ffedd5', status: 'Vence hoje', statusColor: '#c2410c'},
+  {background: '#f3e8ff', status: 'Confirmado', statusColor: '#7e22ce'},
+  {background: '#fee2e2', status: 'Em atraso', statusColor: '#b91c1c'},
+  {background: '#ccfbf1', status: 'Programado', statusColor: '#0f766e'},
+]
+const collectionStatuses = [
+  {background: '#dbeafe', status: 'Cobrança enviada', statusColor: '#1d4ed8'},
+  {background: '#dcfce7', status: 'WhatsApp entregue', statusColor: '#166534'},
+  {background: '#fef3c7', status: 'Aguardando resposta', statusColor: '#a16207'},
+  {background: '#f3e8ff', status: 'Promessa de pagamento', statusColor: '#7e22ce'},
+  {background: '#fee2e2', status: 'Em atraso', statusColor: '#b91c1c'},
+  {background: '#ccfbf1', status: 'Monitorando', statusColor: '#0f766e'},
+]
+const reconciliationStatusRows = reconciliationRows.map((item, index) => ({...item, ...reconciliationStatuses[index]}))
+const expenseStatusRows = expenseRows.map((item, index) => ({...item, ...expenseStatuses[index]}))
+const accountsStatusRows = accountsRows.map((item, index) => ({...item, ...accountsStatuses[index]}))
+const collectionStatusRows = collectionRows.map((item, index) => ({...item, ...collectionStatuses[index]}))
 
 function CenteredCtaScene() {
   const frame = useCurrentFrame()
