@@ -41,6 +41,7 @@ export type OttoAiEmployeesResultRow = {
   status: string
   statusColor?: string
   statusIcon?: ComponentType<{ className?: string; size?: number }>
+  statusStageDuration?: number
   statusStageStyles?: Array<{ background: string; color: string }>
   statusStages?: string[]
   tone: string
@@ -222,11 +223,11 @@ function BrandPill({ label, tone }: { label: string; tone: string }) {
   )
 }
 
-function CascadeResultCard({ localFrame, result }: { localFrame: number; result: ActionStep['result'] }) {
+function CascadeResultCard({ expandedFromStart = false, localFrame, result }: { expandedFromStart?: boolean; localFrame: number; result: ActionStep['result'] }) {
   const show = p(localFrame, 0, 18)
   const rows = result.rows ?? []
   const rowHeight = 72
-  const cardHeight = result.kind === 'dashboard' || result.kind === 'dashboardOutline' || result.kind === 'reportOutline' || result.kind === 'slides' ? 552 : result.kind === 'employee' || result.kind === 'cashflow' || result.kind === 'insights' ? 500 : interpolate(p(localFrame, 34, 78), [0, 1], [116, 126 + rows.length * rowHeight], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' })
+  const cardHeight = result.kind === 'dashboard' || result.kind === 'dashboardOutline' || result.kind === 'reportOutline' || result.kind === 'slides' ? 552 : result.kind === 'employee' || result.kind === 'cashflow' || result.kind === 'insights' ? 500 : expandedFromStart ? 126 + rows.length * rowHeight : interpolate(p(localFrame, 34, 78), [0, 1], [116, 126 + rows.length * rowHeight], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' })
   const progress = Math.round(interpolate(p(localFrame, 18, 154), [0, 1], [18, 100], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' }))
 
   return (
@@ -246,19 +247,21 @@ function CascadeResultCard({ localFrame, result }: { localFrame: number; result:
 }
 
 export function OttoAiEmployeesSyncCard({
+  expandedFromStart = false,
   frame,
   kind = 'list',
   rows,
   subtitle,
   title,
 }: {
+  expandedFromStart?: boolean
   frame: number
   kind?: ActionStep['result']['kind']
   rows: OttoAiEmployeesResultRow[]
   subtitle: string
   title: string
 }) {
-  return <CascadeResultCard localFrame={frame} result={{ kind, rows, subtitle, title }} />
+  return <CascadeResultCard expandedFromStart={expandedFromStart} localFrame={frame} result={{ kind, rows, subtitle, title }} />
 }
 
 function BrandIconBox({ row }: { row: Pick<ResultRow, 'icon' | 'initials' | 'tone'> }) {
@@ -273,8 +276,9 @@ function BrandIconBox({ row }: { row: Pick<ResultRow, 'icon' | 'initials' | 'ton
 
 function ResultRowItem({ index, localFrame, row }: { index: number; localFrame: number; row: ResultRow }) {
   const rowIn = p(localFrame, 8 + index * 10, 22 + index * 10)
+  const statusStageDuration = row.statusStageDuration ?? 16
   const stagedStatusIndex = row.statusStages
-    ? Math.min(row.statusStages.length - 1, Math.max(0, Math.floor((localFrame - (24 + index * 10)) / 16)))
+    ? Math.min(row.statusStages.length - 1, Math.max(0, Math.floor((localFrame - (24 + index * 10)) / statusStageDuration)))
     : 0
   const complete = row.statusStages
     ? stagedStatusIndex === row.statusStages.length - 1

@@ -149,7 +149,21 @@ export const fiscalRows = [
   row({ description: 'Alternativa dentro da legislação', initials: 'EC', name: 'Economia tributária', status: 'Identificada', tone: '#d97757', value: 'Oportunidade' }),
 ]
 
-function InvoiceDocumentPreview({ frame, showFrom = 55 }: { frame: number; showFrom?: number }) {
+type InvoicePreviewValues = {
+  net: string
+  service: string
+  tax: string
+}
+
+function InvoiceDocumentPreview({
+  frame,
+  showFrom = 55,
+  values = {net: 'R$ 12.152,00', service: 'R$ 12.400,00', tax: 'R$ 248,00'},
+}: {
+  frame: number
+  showFrom?: number
+  values?: InvoicePreviewValues
+}) {
   const { height, width } = useVideoConfig()
   const show = p(frame, showFrom, showFrom + 9)
   const square = height / width >= 0.8
@@ -200,9 +214,9 @@ function InvoiceDocumentPreview({ frame, showFrom = 55 }: { frame: number; showF
       </div>
 
       <div style={{ display: 'grid', gap: 10, paddingTop: 18 }}>
-        <div style={{ alignItems: 'center', color: '#666666', display: 'flex', fontSize: 13, justifyContent: 'space-between' }}><span>Valor do serviço</span><span>R$ 12.400,00</span></div>
-        <div style={{ alignItems: 'center', color: '#666666', display: 'flex', fontSize: 13, justifyContent: 'space-between' }}><span>ISS retido</span><span>R$ 248,00</span></div>
-        <div style={{ alignItems: 'center', borderTop: '1px solid #e5e5e5', display: 'flex', fontSize: 18, fontWeight: 750, justifyContent: 'space-between', marginTop: 3, paddingTop: 13 }}><span>Valor líquido</span><span>R$ 12.152,00</span></div>
+        <div style={{ alignItems: 'center', color: '#666666', display: 'flex', fontSize: 13, justifyContent: 'space-between' }}><span>Valor do serviço</span><span>{values.service}</span></div>
+        <div style={{ alignItems: 'center', color: '#666666', display: 'flex', fontSize: 13, justifyContent: 'space-between' }}><span>ISS retido</span><span>{values.tax}</span></div>
+        <div style={{ alignItems: 'center', borderTop: '1px solid #e5e5e5', display: 'flex', fontSize: 18, fontWeight: 750, justifyContent: 'space-between', marginTop: 3, paddingTop: 13 }}><span>Valor líquido</span><span>{values.net}</span></div>
       </div>
 
       <div style={{ alignItems: 'center', color: '#777777', display: 'flex', fontSize: 11, gap: 8, marginTop: 20 }}>
@@ -214,9 +228,12 @@ function InvoiceDocumentPreview({ frame, showFrom = 55 }: { frame: number; showF
 
 export function SyncScene({
   assistantText,
+  completionAt,
   duration,
+  expandedFromStart = false,
   invoicePreview = false,
   invoicePreviewStart = 55,
+  invoicePreviewValues,
   kind = 'list',
   paceToDuration = false,
   rows,
@@ -225,9 +242,12 @@ export function SyncScene({
   title,
 }: {
   assistantText: string
+  completionAt?: number
   duration: number
+  expandedFromStart?: boolean
   invoicePreview?: boolean
   invoicePreviewStart?: number
+  invoicePreviewValues?: InvoicePreviewValues
   kind?: 'list' | 'reconciliation'
   paceToDuration?: boolean
   rows: OttoAiEmployeesResultRow[]
@@ -238,12 +258,12 @@ export function SyncScene({
   const frame = useCurrentFrame()
   const { height, width } = useVideoConfig()
   const completionCardFrame = Math.max(1, ...rows.map((item, index) => item.statusStages
-    ? 24 + index * 10 + (item.statusStages.length - 1) * 16
+    ? 24 + index * 10 + (item.statusStages.length - 1) * (item.statusStageDuration ?? 16)
     : kind === 'reconciliation'
       ? 76 + index * 10
       : 62 + index * 10))
   const cardFrame = paceToDuration
-    ? p(frame, 12, Math.max(13, duration - 14), [0, completionCardFrame])
+    ? p(frame, 12, Math.max(13, completionAt ?? duration - 14), [0, completionCardFrame])
     : Math.max(0, frame - 12) * speed
   const cardScale = rows.length > 6 ? 0.84 : 0.92
   const cardWidth = 940 / cardScale
@@ -264,7 +284,7 @@ export function SyncScene({
           {showTextCursor ? <span style={{ borderRight: '1.5px solid #242424', marginLeft: 2 }}>&nbsp;</span> : null}
         </div>
         <div style={{ filter: `blur(${cardBlur}px)`, left: '50%', marginTop: 12, opacity: cardOpacity, position: 'relative', transform: `translateX(-50%) scale(${cardScale})`, transformOrigin: 'top center', width: cardWidth }}>
-          <OttoAiEmployeesSyncCard frame={cardFrame} kind={kind} rows={rows} subtitle={subtitle} title={title} />
+          <OttoAiEmployeesSyncCard expandedFromStart={expandedFromStart} frame={cardFrame} kind={kind} rows={rows} subtitle={subtitle} title={title} />
         </div>
         {invoicePreview ? (
           <div
@@ -282,7 +302,7 @@ export function SyncScene({
           </div>
         ) : null}
       </div>
-      {invoicePreview ? <InvoiceDocumentPreview frame={frame} showFrom={invoicePreviewStart} /> : null}
+      {invoicePreview ? <InvoiceDocumentPreview frame={frame} showFrom={invoicePreviewStart} values={invoicePreviewValues} /> : null}
     </Scene>
   )
 }
