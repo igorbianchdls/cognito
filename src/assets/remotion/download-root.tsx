@@ -147,6 +147,18 @@ import {
   JulyBodyIllustrativeVideo1,
   JulyBodyIllustrativeVideo2,
 } from './compositions/JulyBodyIllustrativeVideos'
+import {
+  PATY_BODY_2_DURATION,
+  PATY_BODY_GIO_DURATION,
+  PatyBody2IllustrativeVideo,
+  PatyBodyGioIllustrativeVideo,
+} from './compositions/PatyBodyIllustrativeVideos'
+import {
+  OTTO_BATCH_INVOICE_SCRIPT_DURATION,
+  OTTO_SINGLE_INVOICE_SCRIPT_DURATION,
+  OttoBatchInvoiceScriptIllustrativeVideo,
+  OttoSingleInvoiceScriptIllustrativeVideo,
+} from './compositions/OttoInvoiceScriptsIllustrativeVideos'
 
 function RemotionDownloadRoot() {
   return (
@@ -501,6 +513,38 @@ function RemotionDownloadRoot() {
         fps={30}
         height={880}
         id="body-july-illustrative-2"
+        width={1080}
+      />
+      <Composition
+        component={PatyBodyGioIllustrativeVideo}
+        durationInFrames={PATY_BODY_GIO_DURATION}
+        fps={30}
+        height={880}
+        id="body-paty-gio-illustrative"
+        width={1080}
+      />
+      <Composition
+        component={PatyBody2IllustrativeVideo}
+        durationInFrames={PATY_BODY_2_DURATION}
+        fps={30}
+        height={880}
+        id="body-paty-2-illustrative"
+        width={1080}
+      />
+      <Composition
+        component={OttoSingleInvoiceScriptIllustrativeVideo}
+        durationInFrames={OTTO_SINGLE_INVOICE_SCRIPT_DURATION}
+        fps={30}
+        height={880}
+        id="body-otto-single-invoice-script"
+        width={1080}
+      />
+      <Composition
+        component={OttoBatchInvoiceScriptIllustrativeVideo}
+        durationInFrames={OTTO_BATCH_INVOICE_SCRIPT_DURATION}
+        fps={30}
+        height={880}
+        id="body-otto-batch-invoice-script"
         width={1080}
       />
     </>

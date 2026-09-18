@@ -35,7 +35,7 @@ const invoiceStatusStageStyles = [
   {background: '#dcfce7', color: '#166534'},
   {background: '#f3e8ff', color: '#7e22ce'},
 ]
-const invoiceProgressRows = invoiceEmissionRows.map((item) => ({
+export const invoiceProgressRows = invoiceEmissionRows.map((item) => ({
   ...item,
   status: 'Nota emitida',
   statusStageStyles: invoiceStatusStageStyles,
@@ -73,12 +73,12 @@ const collectionStatuses = [
   {background: '#fee2e2', status: 'Em atraso', statusColor: '#b91c1c'},
   {background: '#ccfbf1', status: 'Monitorando', statusColor: '#0f766e'},
 ]
-const reconciliationStatusRows = reconciliationRows.map((item, index) => ({...item, ...reconciliationStatuses[index]}))
-const expenseStatusRows = expenseRows.map((item, index) => ({...item, ...expenseStatuses[index]}))
-const accountsStatusRows = accountsRows.map((item, index) => ({...item, ...accountsStatuses[index]}))
-const collectionStatusRows = collectionRows.map((item, index) => ({...item, ...collectionStatuses[index]}))
+export const reconciliationStatusRows = reconciliationRows.map((item, index) => ({...item, ...reconciliationStatuses[index]}))
+export const expenseStatusRows = expenseRows.map((item, index) => ({...item, ...expenseStatuses[index]}))
+export const accountsStatusRows = accountsRows.map((item, index) => ({...item, ...accountsStatuses[index]}))
+export const collectionStatusRows = collectionRows.map((item, index) => ({...item, ...collectionStatuses[index]}))
 
-function CenteredCtaScene() {
+export function CenteredCtaScene() {
   const frame = useCurrentFrame()
   const enter = interpolate(frame, [0, 18], [0, 1], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp'})
   const lineTwo = interpolate(frame, [12, 30], [0, 1], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp'})
@@ -116,7 +116,7 @@ function ChatGptCollapsedSidebar() {
   )
 }
 
-function ConversationScene({children}: {children: ReactNode}) {
+export function ConversationScene({children}: {children: ReactNode}) {
   return (
     <AbsoluteFill style={{background: '#ffffff'}}>
       <ChatGptCollapsedSidebar />
@@ -125,7 +125,7 @@ function ConversationScene({children}: {children: ReactNode}) {
   )
 }
 
-function PromptScene({duration, prompt}: {duration: number; prompt: string}) {
+export function PromptScene({duration, prompt}: {duration: number; prompt: string}) {
   return (
     <ConversationScene>
       <ExactPromptInputScene background="#ffffff" duration={duration} label="Por onde começamos?" prompt={prompt} typingDurationScale={0.82} />

@@ -161,6 +161,8 @@ import { OTTO_INVOICE_CHATGPT_DUAL_SCREEN_DURATION, OttoInvoiceChatGptDualScreen
 import { OTTO_INVOICE_CHATGPT_TV_ZOOM_DURATION, OttoInvoiceChatGptTvZoom } from '@/assets/remotion/compositions/OttoInvoiceChatGptTvZoom'
 import { OTTO_INVOICE_CHATGPT_OFFICE_MONITOR_DURATION, OttoInvoiceChatGptOfficeMonitor } from '@/assets/remotion/compositions/OttoInvoiceChatGptOfficeMonitor'
 import { JULY_BODY_ILLUSTRATIVE_1_DURATION, JULY_BODY_ILLUSTRATIVE_2_DURATION, JulyBodyIllustrativeVideo1, JulyBodyIllustrativeVideo2 } from '@/assets/remotion/compositions/JulyBodyIllustrativeVideos'
+import { PATY_BODY_2_DURATION, PATY_BODY_GIO_DURATION, PatyBody2IllustrativeVideo, PatyBodyGioIllustrativeVideo } from '@/assets/remotion/compositions/PatyBodyIllustrativeVideos'
+import { OTTO_BATCH_INVOICE_SCRIPT_DURATION, OTTO_SINGLE_INVOICE_SCRIPT_DURATION, OttoBatchInvoiceScriptIllustrativeVideo, OttoSingleInvoiceScriptIllustrativeVideo } from '@/assets/remotion/compositions/OttoInvoiceScriptsIllustrativeVideos'
 import { OTTO_INVOICE_CHATGPT_MONITOR_CONTENT_DURATION, OttoInvoiceChatGptMonitorContent } from '@/assets/remotion/compositions/OttoInvoiceChatGptMonitorContent'
 import { OTTO_SYNC_ONLY_SCENE_DURATION, OttoSyncOnlyScene } from '@/assets/remotion/compositions/OttoSyncOnlyScene'
 import {
@@ -2044,6 +2046,58 @@ const catalog: CatalogItem[] = [
     label: 'July Body Ilustrativo — Funcionário Financeiro de IA',
     tags: ['Otto', 'Remotion', 'Financeiro', 'ChatGPT', 'Automação'],
     value: 'body-july-illustrative-2',
+    width: 1080,
+  },
+  {
+    code: '<PatyBodyGioIllustrativeVideo />',
+    component: PatyBodyGioIllustrativeVideo,
+    description: 'Vídeo ilustrativo com a apresentação completa da Otto, visão financeira, conciliação, notas fiscais, contas, cobranças e despesas.',
+    duration: PATY_BODY_GIO_DURATION,
+    fps: 30,
+    height: 880,
+    kind: 'Body Animado',
+    label: 'Paty Body Ilustrativo — Otto Financeiro Completo',
+    tags: ['Otto', 'Remotion', 'ChatGPT', 'Financeiro', 'Notas fiscais'],
+    value: 'body-paty-gio-illustrative',
+    width: 1080,
+  },
+  {
+    code: '<PatyBody2IllustrativeVideo />',
+    component: PatyBody2IllustrativeVideo,
+    description: 'Vídeo ilustrativo curto sobre o Otto operando vendas, contas, notas fiscais, despesas e conciliação dentro do ChatGPT.',
+    duration: PATY_BODY_2_DURATION,
+    fps: 30,
+    height: 880,
+    kind: 'Body Animado',
+    label: 'Paty Body Ilustrativo — Financeiro no ChatGPT',
+    tags: ['Otto', 'Remotion', 'ChatGPT', 'Contas', 'Conciliação'],
+    value: 'body-paty-2-illustrative',
+    width: 1080,
+  },
+  {
+    code: '<OttoSingleInvoiceScriptIllustrativeVideo />',
+    component: OttoSingleInvoiceScriptIllustrativeVideo,
+    description: 'Vídeo ilustrativo do fluxo completo para emitir uma nota pelo ChatGPT, enviar ao cliente e atualizar o financeiro.',
+    duration: OTTO_SINGLE_INVOICE_SCRIPT_DURATION,
+    fps: 30,
+    height: 880,
+    kind: 'Body Animado',
+    label: 'Otto Ilustrativo — Emissão de Uma Nota',
+    tags: ['Otto', 'ChatGPT', 'Nota fiscal', 'NFS-e', 'Remotion'],
+    value: 'body-otto-single-invoice-script',
+    width: 1080,
+  },
+  {
+    code: '<OttoBatchInvoiceScriptIllustrativeVideo />',
+    component: OttoBatchInvoiceScriptIllustrativeVideo,
+    description: 'Vídeo ilustrativo do fluxo em lote para identificar vendas e emitir, enviar e registrar várias notas fiscais de uma vez.',
+    duration: OTTO_BATCH_INVOICE_SCRIPT_DURATION,
+    fps: 30,
+    height: 880,
+    kind: 'Body Animado',
+    label: 'Otto Ilustrativo — Emissão de Várias Notas',
+    tags: ['Otto', 'ChatGPT', 'Notas fiscais', 'Lote', 'Remotion'],
+    value: 'body-otto-batch-invoice-script',
     width: 1080,
   },
   {
