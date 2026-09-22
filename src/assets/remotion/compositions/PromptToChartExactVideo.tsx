@@ -30,7 +30,7 @@ export function ExactPromptInputScene({
 }) {
   const frame = useCurrentFrame()
   const defaultTypingEnd = Math.min(106, duration - 34)
-  const typingEnd = Math.min(duration - 22, 14 + (defaultTypingEnd - 14) * typingDurationScale)
+  const typingEnd = Math.max(15, Math.min(duration - 22, 14 + (defaultTypingEnd - 14) * typingDurationScale))
   const visibleCharacters = Math.floor(progress(frame, 14, typingEnd, [0, prompt.length]))
   const exit = progress(frame, duration - 20, duration, [1, 0])
   const showCursor = frame < 112 && Math.floor(frame / 10) % 2 === 0

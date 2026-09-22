@@ -159,6 +159,22 @@ import {
   OttoBatchInvoiceScriptIllustrativeVideo,
   OttoSingleInvoiceScriptIllustrativeVideo,
 } from './compositions/OttoInvoiceScriptsIllustrativeVideos'
+import {
+  OTTO_COMPANY_BY_CONVERSATION_DURATION,
+  OttoCompanyByConversationIllustrativeVideo,
+} from './compositions/OttoCompanyByConversationIllustrativeVideo'
+import {
+  OTTO_HOOK_1_DURATION,
+  OTTO_HOOK_2_DURATION,
+  OTTO_HOOK_3_DURATION,
+  OTTO_HOOK_4_DURATION,
+  OTTO_HOOK_5_DURATION,
+  OttoHookAutomatedFinanceVideo,
+  OttoHookBatchInvoicesVideo,
+  OttoHookBoletoPixVideo,
+  OttoHookManageByChatVideo,
+  OttoHookSingleInvoiceVideo,
+} from './compositions/OttoFiveHooksIllustrativeVideos'
 
 function RemotionDownloadRoot() {
   return (
@@ -547,6 +563,19 @@ function RemotionDownloadRoot() {
         id="body-otto-batch-invoice-script"
         width={1080}
       />
+      <Composition
+        component={OttoCompanyByConversationIllustrativeVideo}
+        durationInFrames={OTTO_COMPANY_BY_CONVERSATION_DURATION}
+        fps={30}
+        height={880}
+        id="body-otto-company-by-conversation"
+        width={1080}
+      />
+      <Composition component={OttoHookSingleInvoiceVideo} durationInFrames={OTTO_HOOK_1_DURATION} fps={30} height={880} id="body-otto-hook-single-invoice" width={1080} />
+      <Composition component={OttoHookBatchInvoicesVideo} durationInFrames={OTTO_HOOK_2_DURATION} fps={30} height={880} id="body-otto-hook-batch-invoices" width={1080} />
+      <Composition component={OttoHookAutomatedFinanceVideo} durationInFrames={OTTO_HOOK_3_DURATION} fps={30} height={880} id="body-otto-hook-automated-finance" width={1080} />
+      <Composition component={OttoHookManageByChatVideo} durationInFrames={OTTO_HOOK_4_DURATION} fps={30} height={880} id="body-otto-hook-manage-by-chat" width={1080} />
+      <Composition component={OttoHookBoletoPixVideo} durationInFrames={OTTO_HOOK_5_DURATION} fps={30} height={880} id="body-otto-hook-boleto-pix" width={1080} />
     </>
   )
 }
