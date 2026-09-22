@@ -175,6 +175,12 @@ import {
   OttoHookManageByChatVideo,
   OttoHookSingleInvoiceVideo,
 } from './compositions/OttoFiveHooksIllustrativeVideos'
+import {
+  OTTO_BODY_1_DURATION,
+  OTTO_BODY_2_DURATION,
+  OttoBodyManageByConversationVideo,
+  OttoBodySystemBehindVideo,
+} from './compositions/OttoTwoBodiesIllustrativeVideos'
 
 function RemotionDownloadRoot() {
   return (
@@ -576,6 +582,8 @@ function RemotionDownloadRoot() {
       <Composition component={OttoHookAutomatedFinanceVideo} durationInFrames={OTTO_HOOK_3_DURATION} fps={30} height={880} id="body-otto-hook-automated-finance" width={1080} />
       <Composition component={OttoHookManageByChatVideo} durationInFrames={OTTO_HOOK_4_DURATION} fps={30} height={880} id="body-otto-hook-manage-by-chat" width={1080} />
       <Composition component={OttoHookBoletoPixVideo} durationInFrames={OTTO_HOOK_5_DURATION} fps={30} height={880} id="body-otto-hook-boleto-pix" width={1080} />
+      <Composition component={OttoBodySystemBehindVideo} durationInFrames={OTTO_BODY_1_DURATION} fps={30} height={880} id="body-otto-system-behind" width={1080} />
+      <Composition component={OttoBodyManageByConversationVideo} durationInFrames={OTTO_BODY_2_DURATION} fps={30} height={880} id="body-otto-manage-by-conversation" width={1080} />
     </>
   )
 }
