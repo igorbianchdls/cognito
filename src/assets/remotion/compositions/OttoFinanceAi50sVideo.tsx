@@ -240,6 +240,7 @@ export function SyncScene({
   speed = 1.8,
   subtitle,
   title,
+  visibleTitleFontSize,
 }: {
   assistantText: string
   completionAt?: number
@@ -254,6 +255,7 @@ export function SyncScene({
   speed?: number
   subtitle: string
   title: string
+  visibleTitleFontSize?: number
 }) {
   const frame = useCurrentFrame()
   const { height, width } = useVideoConfig()
@@ -284,7 +286,7 @@ export function SyncScene({
           {showTextCursor ? <span style={{ borderRight: '1.5px solid #242424', marginLeft: 2 }}>&nbsp;</span> : null}
         </div>
         <div style={{ filter: `blur(${cardBlur}px)`, left: '50%', marginTop: 12, opacity: cardOpacity, position: 'relative', transform: `translateX(-50%) scale(${cardScale})`, transformOrigin: 'top center', width: cardWidth }}>
-          <OttoAiEmployeesSyncCard expandedFromStart={expandedFromStart} frame={cardFrame} kind={kind} rows={rows} subtitle={subtitle} title={title} />
+          <OttoAiEmployeesSyncCard expandedFromStart={expandedFromStart} frame={cardFrame} kind={kind} rows={rows} subtitle={subtitle} title={title} titleFontSize={visibleTitleFontSize ? visibleTitleFontSize / cardScale : undefined} />
         </div>
         {invoicePreview ? (
           <div

@@ -49,7 +49,7 @@ function HookTimeline({steps}: {steps: Step[]}) {
             {step.kind === 'dashboard' ? <OttoFinancialDashboard animationSpeed={2} showExtendedKpis /> : null}
             {step.kind === 'sync' ? (
               <ConversationScene>
-                <SyncScene assistantText={step.assistantText} duration={step.duration} kind={step.variant ?? 'list'} paceToDuration rows={step.rows} subtitle={step.subtitle} title={step.title} />
+                <SyncScene assistantText={step.assistantText} duration={step.duration} kind={step.variant ?? 'list'} paceToDuration rows={step.rows} subtitle={step.subtitle} title={step.title} visibleTitleFontSize={32} />
               </ConversationScene>
             ) : null}
           </Sequence>

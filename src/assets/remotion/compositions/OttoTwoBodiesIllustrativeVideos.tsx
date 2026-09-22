@@ -100,7 +100,7 @@ function BodyTimeline({steps}: {steps: Step[]}) {
             {step.kind === 'cta' ? <CenteredCtaScene /> : null}
             {step.kind === 'sync' ? (
               <ConversationScene>
-                <SyncScene assistantText={step.assistantText} duration={step.duration} kind={step.variant ?? 'list'} paceToDuration rows={step.rows} subtitle={step.subtitle} title={step.title} />
+                <SyncScene assistantText={step.assistantText} duration={step.duration} kind={step.variant ?? 'list'} paceToDuration rows={step.rows} subtitle={step.subtitle} title={step.title} visibleTitleFontSize={32} />
               </ConversationScene>
             ) : null}
           </Sequence>

@@ -223,7 +223,7 @@ function BrandPill({ label, tone }: { label: string; tone: string }) {
   )
 }
 
-function CascadeResultCard({ expandedFromStart = false, localFrame, result }: { expandedFromStart?: boolean; localFrame: number; result: ActionStep['result'] }) {
+function CascadeResultCard({ expandedFromStart = false, localFrame, result, titleFontSize = 23 }: { expandedFromStart?: boolean; localFrame: number; result: ActionStep['result']; titleFontSize?: number }) {
   const show = p(localFrame, 0, 18)
   const rows = result.rows ?? []
   const rowHeight = 72
@@ -235,7 +235,7 @@ function CascadeResultCard({ expandedFromStart = false, localFrame, result }: { 
       <div style={{ background: '#ffffff', border: '1px solid #e5e7eb', borderRadius: 30, boxShadow: '0 18px 46px rgba(15, 23, 42, 0.08)', height: cardHeight, overflow: 'hidden', padding: '16px 0' }}>
         <div style={{ alignItems: 'center', display: 'flex', justifyContent: 'space-between', padding: '0 28px 12px' }}>
           <div style={{ display: 'grid', gap: 5 }}>
-            <strong style={{ color: '#111111', fontSize: 23, fontWeight: 650, letterSpacing: -0.12 }}>{result.title}</strong>
+            <strong style={{ color: '#111111', fontSize: titleFontSize, fontWeight: 650, letterSpacing: -0.12 }}>{result.title}</strong>
             <span style={{ color: '#8b8b8b', fontSize: 17, fontWeight: 420 }}>{result.subtitle}</span>
           </div>
           <span style={{ background: '#ecfdf3', border: '1px solid #bbf7d0', borderRadius: 999, color: '#0f8f51', fontSize: 18, fontWeight: 650, padding: '9px 14px' }}>{progress}%</span>
@@ -253,6 +253,7 @@ export function OttoAiEmployeesSyncCard({
   rows,
   subtitle,
   title,
+  titleFontSize,
 }: {
   expandedFromStart?: boolean
   frame: number
@@ -260,8 +261,9 @@ export function OttoAiEmployeesSyncCard({
   rows: OttoAiEmployeesResultRow[]
   subtitle: string
   title: string
+  titleFontSize?: number
 }) {
-  return <CascadeResultCard expandedFromStart={expandedFromStart} localFrame={frame} result={{ kind, rows, subtitle, title }} />
+  return <CascadeResultCard expandedFromStart={expandedFromStart} localFrame={frame} result={{ kind, rows, subtitle, title }} titleFontSize={titleFontSize} />
 }
 
 function BrandIconBox({ row }: { row: Pick<ResultRow, 'icon' | 'initials' | 'tone'> }) {
