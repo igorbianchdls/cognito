@@ -79,19 +79,19 @@ import {
 } from './compositions/OttoRampPayablesUi'
 import {
   CHATGPT_MOBILE_EXACT_REPLICA_DURATION,
-  CHATGPT_MOBILE_FINANCIAL_DIRECT_DURATION,
+  CHATGPT_MOBILE_PIX_WHATSAPP_DURATION,
   CHATGPT_MOBILE_FINANCIAL_OPERATIONS_DURATION,
-  CHATGPT_MOBILE_SALES_COLLECTIONS_DURATION,
-  CHATGPT_MOBILE_UNINVOICED_SALES_DURATION,
+  CHATGPT_MOBILE_STOCK_WHATSAPP_DURATION,
+  CHATGPT_MOBILE_BOLETO_WHATSAPP_DURATION,
   CHATGPT_MOBILE_COMPLETE_SALE_DURATION,
   CHATGPT_MOBILE_RECONCILIATION_INVOICES_DURATION,
   CHATGPT_MOBILE_FINANCIAL_SCROLL_DURATION,
   CHATGPT_MOBILE_FINANCIAL_SCROLL_ITEMS_DURATION,
   ChatGptMobileExactReplica,
-  ChatGptMobileFinancialDirectVideo,
+  ChatGptMobilePixWhatsappVideo,
   ChatGptMobileFinancialOperationsVideo,
-  ChatGptMobileSalesCollectionsVideo,
-  ChatGptMobileUninvoicedSalesVideo,
+  ChatGptMobileStockWhatsappVideo,
+  ChatGptMobileBoletoWhatsappVideo,
   ChatGptMobileCompleteSaleVideo,
   ChatGptMobileReconciliationInvoicesVideo,
   ChatGptMobileFinancialScrollVideo,
@@ -338,27 +338,27 @@ function RemotionDownloadRoot() {
         width={828}
       />
       <Composition
-        component={ChatGptMobileFinancialDirectVideo}
-        durationInFrames={CHATGPT_MOBILE_FINANCIAL_DIRECT_DURATION}
+        component={ChatGptMobilePixWhatsappVideo}
+        durationInFrames={CHATGPT_MOBILE_PIX_WHATSAPP_DURATION}
         fps={90}
         height={1792}
-        id="video-chatgpt-mobile-financial-direct"
+        id="video-chatgpt-mobile-pix-whatsapp"
         width={828}
       />
       <Composition
-        component={ChatGptMobileSalesCollectionsVideo}
-        durationInFrames={CHATGPT_MOBILE_SALES_COLLECTIONS_DURATION}
+        component={ChatGptMobileStockWhatsappVideo}
+        durationInFrames={CHATGPT_MOBILE_STOCK_WHATSAPP_DURATION}
         fps={90}
         height={1792}
-        id="video-chatgpt-mobile-sales-collections"
+        id="video-chatgpt-mobile-stock-whatsapp"
         width={828}
       />
       <Composition
-        component={ChatGptMobileUninvoicedSalesVideo}
-        durationInFrames={CHATGPT_MOBILE_UNINVOICED_SALES_DURATION}
+        component={ChatGptMobileBoletoWhatsappVideo}
+        durationInFrames={CHATGPT_MOBILE_BOLETO_WHATSAPP_DURATION}
         fps={90}
         height={1792}
-        id="video-chatgpt-mobile-uninvoiced-sales"
+        id="video-chatgpt-mobile-boleto-whatsapp"
         width={828}
       />
       <Composition
@@ -557,7 +557,7 @@ function RemotionDownloadRoot() {
         component={OttoSingleInvoiceScriptIllustrativeVideo}
         durationInFrames={OTTO_SINGLE_INVOICE_SCRIPT_DURATION}
         fps={30}
-        height={880}
+        height={800}
         id="body-otto-single-invoice-script"
         width={1080}
       />
@@ -565,7 +565,7 @@ function RemotionDownloadRoot() {
         component={OttoBatchInvoiceScriptIllustrativeVideo}
         durationInFrames={OTTO_BATCH_INVOICE_SCRIPT_DURATION}
         fps={30}
-        height={880}
+        height={800}
         id="body-otto-batch-invoice-script"
         width={1080}
       />

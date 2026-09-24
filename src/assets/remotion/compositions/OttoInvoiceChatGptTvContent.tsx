@@ -83,19 +83,19 @@ function CustomerMark({index}: {index: number}) {
   return <span style={{alignItems: 'center', background: mark.background, border: index === 2 ? '1px solid #cfe6d5' : 'none', borderRadius: '50%', boxSizing: 'border-box', color: mark.foreground, display: 'flex', height: 40, justifyContent: 'center', width: 40}}><svg fill="none" height="25" viewBox="0 0 24 24" width="25">{mark.graphic}</svg></span>
 }
 
-function MobileInvoiceRow({completed, frame, index}: {completed: number; frame: number; index: number}) {
+function MobileInvoiceRow({completed, completedDetail, frame, index}: {completed: number; completedDetail: string; frame: number; index: number}) {
   const done = index < completed
   const active = index === completed && completed < 8
 
   return <div style={{alignItems: 'center', borderTop: index ? '1px solid #e9e9e9' : 'none', boxSizing: 'border-box', display: 'grid', gap: 12, gridTemplateColumns: '44px 1.34fr 1.12fr 90px', minHeight: 92, padding: '13px 12px'}}>
     <CustomerMark index={index} />
     <div style={{lineHeight: 1.22}}><strong style={{display: 'block', fontSize: 21}}>{invoices[index][0]}</strong><span style={{color: '#555', fontSize: 16.5}}>{invoices[index][1]}</span></div>
-    <div style={{alignItems: 'center', display: 'flex', gap: 9}}><MobileStatusIcon active={active} done={done} frame={frame} /><div style={{lineHeight: 1.22}}><strong style={{color: done ? GREEN : '#333', display: 'block', fontSize: 18.5}}>{done ? 'Emitida' : active ? 'Emitindo...' : 'Aguardando...'}</strong><span style={{color: '#666', fontSize: 15.5}}>{done ? 'Enviada por WhatsApp' : active ? 'Gerando XML' : 'Na fila para emissão'}</span></div></div>
+    <div style={{alignItems: 'center', display: 'flex', gap: 9}}><MobileStatusIcon active={active} done={done} frame={frame} /><div style={{lineHeight: 1.22}}><strong style={{color: done ? GREEN : '#333', display: 'block', fontSize: 18.5}}>{done ? 'Emitida' : active ? 'Emitindo...' : 'Aguardando...'}</strong><span style={{color: '#666', fontSize: 15.5}}>{done ? completedDetail : active ? 'Gerando XML' : 'Na fila para emissão'}</span></div></div>
     <span style={{alignItems: 'center', border: '1px solid #ddd', borderRadius: 18, color: done ? '#222' : '#aaa', display: 'flex', fontSize: 14, gap: 5, justifyContent: 'center', padding: '8px 7px'}}>NFS-e <ExternalLinkIcon size={12} /></span>
   </div>
 }
 
-export function OttoInvoiceEmissionMobilePanel({itemCount = 8, start, staticCard = false, top}: {itemCount?: number; start: number; staticCard?: boolean; top: number}) {
+export function OttoInvoiceEmissionMobilePanel({completedDetail = 'Enviada por WhatsApp', itemCount = 8, start, staticCard = false, top}: {completedDetail?: string; itemCount?: number; start: number; staticCard?: boolean; top: number}) {
   const frame = useCurrentFrame()
   const localFrame = frame - start
   const cardIn = staticCard ? 1 : tween(localFrame, 0, 12)
@@ -110,7 +110,7 @@ export function OttoInvoiceEmissionMobilePanel({itemCount = 8, start, staticCard
       <h1 className="chatgpt-mobile-invoice-title" style={{fontFamily: IOS_REMOTION_DISPLAY_FONT_STACK, fontSize: 40, fontWeight: 650, letterSpacing: '-0.025em', lineHeight: 1.03, margin: '0 0 18px', whiteSpace: 'nowrap'}}>Emitindo múltiplas notas fiscais</h1>
       <div style={{fontSize: 18, fontWeight: 650}}>{completed} de {itemCount} notas emitidas</div>
       <div style={{background: '#eceeed', borderRadius: 99, height: 7, marginTop: 9, overflow: 'hidden'}}><div style={{background: GREEN, height: '100%', width: `${progress * 100}%`}} /></div>
-      <div style={{border: '1px solid #ddd', borderRadius: 14, marginTop: 16, overflow: 'hidden'}}>{visibleInvoices.map((invoice, index) => { const reveal = revealRow(index); return <div key={invoice[0]} style={{maxHeight: reveal * 92, opacity: reveal, overflow: 'hidden', transform: `translateY(${(1 - reveal) * 7}px)`}}><MobileInvoiceRow completed={completed} frame={frame} index={index} /></div> })}</div>
+      <div style={{border: '1px solid #ddd', borderRadius: 14, marginTop: 16, overflow: 'hidden'}}>{visibleInvoices.map((invoice, index) => { const reveal = revealRow(index); return <div key={invoice[0]} style={{maxHeight: reveal * 92, opacity: reveal, overflow: 'hidden', transform: `translateY(${(1 - reveal) * 7}px)`}}><MobileInvoiceRow completed={completed} completedDetail={completedDetail} frame={frame} index={index} /></div> })}</div>
       <div style={{display: 'flex', fontSize: 16, marginTop: 16}}><strong>Total: {itemCount} notas fiscais</strong><span style={{color: '#555', fontWeight: 520, marginLeft: 'auto'}}>{completed} de {itemCount} concluídas</span></div>
     </div>
   </div>
