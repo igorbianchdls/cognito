@@ -483,7 +483,7 @@ function OperationWorkflowConversation({prompt, steps, summary}: {prompt: string
     {steps.map((step, index) => <div key={index}>
       <TypedAssistantText speed={9} start={workflowMessageStarts[index]} text={step.assistantText} top={workflowMessageTops[index]} />
       {step.kind === 'invoice'
-        ? <OttoInvoiceEmissionMobilePanel completedDetail="PDF e XML disponíveis" itemCount={6} start={workflowPanelStarts[index]} top={workflowPanelTops[index]} />
+        ? <OttoInvoiceEmissionMobilePanel completedDetail="PDF e XML disponíveis" itemCount={6} start={workflowPanelStarts[index]} title="Emissão de múltiplas notas fiscais" top={workflowPanelTops[index]} />
         : <MobileOperationPanel accent={step.accent} doneLabel={step.doneLabel} icon={step.icon} rows={step.rows} start={workflowPanelStarts[index]} subtitle={step.subtitle} title={step.title} top={workflowPanelTops[index]} />}
     </div>)}
     <TypedAssistantText speed={9} start={1010} text={summary} top={4648} />
@@ -492,24 +492,24 @@ function OperationWorkflowConversation({prompt, steps, summary}: {prompt: string
 }
 
 const pixWhatsappSteps: WorkflowStep[] = [
-  {accent: '#2878d0', assistantText: 'Vou registrar as vendas de hoje e conferir os dados de cada cliente.', doneLabel: '6 vendas registradas', icon: <SearchCheck size={20} strokeWidth={1.8} />, kind: 'panel', rows: sixSales, subtitle: 'Clientes e valores conferidos', title: 'Registrando vendas de hoje'},
+  {accent: '#2878d0', assistantText: 'Vou registrar as vendas de hoje e conferir os dados de cada cliente.', doneLabel: '6 vendas registradas', icon: <SearchCheck size={20} strokeWidth={1.8} />, kind: 'panel', rows: sixSales, subtitle: 'Clientes e valores conferidos', title: 'Registrando vendas'},
   {assistantText: 'Registrei 6 vendas, totalizando R$ 8.250,00.\n\nAgora vou emitir as notas fiscais correspondentes.', kind: 'invoice'},
-  {accent: '#8055c7', assistantText: 'As 6 notas foram emitidas.\n\nAgora vou gerar um PIX para cada venda.', doneLabel: '6 PIX gerados', icon: <WalletCards size={20} strokeWidth={1.8} />, kind: 'panel', rows: pixRows, subtitle: 'Uma cobrança vinculada a cada venda', title: 'Gerando PIX por venda'},
-  {accent: '#16875f', assistantText: 'Gerei 6 cobranças PIX.\n\nVou enviar a nota e o PIX pelo WhatsApp de cada cliente.', doneLabel: '6 envios pelo WhatsApp', icon: <Send size={20} strokeWidth={1.8} />, kind: 'panel', rows: pixWhatsappRows, subtitle: 'Nota e PIX para o cliente correspondente', title: 'Enviando tudo pelo WhatsApp'},
+  {accent: '#8055c7', assistantText: 'As 6 notas foram emitidas.\n\nAgora vou gerar um PIX para cada venda.', doneLabel: '6 PIX gerados', icon: <WalletCards size={20} strokeWidth={1.8} />, kind: 'panel', rows: pixRows, subtitle: 'Uma cobrança vinculada a cada venda', title: 'Gerando PIX'},
+  {accent: '#16875f', assistantText: 'Gerei 6 cobranças PIX.\n\nVou enviar a nota e o PIX pelo WhatsApp de cada cliente.', doneLabel: '6 envios pelo WhatsApp', icon: <Send size={20} strokeWidth={1.8} />, kind: 'panel', rows: pixWhatsappRows, subtitle: 'Nota e PIX para o cliente correspondente', title: 'Envio WhatsApp'},
 ]
 
 const stockWhatsappSteps: WorkflowStep[] = [
-  {accent: '#2878d0', assistantText: 'Vou registrar as vendas e conferir os produtos e clientes de cada uma.', doneLabel: '6 vendas registradas', icon: <SearchCheck size={20} strokeWidth={1.8} />, kind: 'panel', rows: stockSales, subtitle: 'Clientes, produtos e valores identificados', title: 'Registrando as vendas'},
-  {accent: '#b45309', assistantText: 'Registrei as 6 vendas.\n\nAgora vou dar baixa nos produtos correspondentes do estoque.', doneLabel: '6 produtos atualizados', icon: <CheckCircle2 size={20} strokeWidth={1.8} />, kind: 'panel', rows: stockRows, subtitle: 'Saídas vinculadas às vendas', title: 'Baixando produtos do estoque'},
+  {accent: '#2878d0', assistantText: 'Vou registrar as vendas e conferir os produtos e clientes de cada uma.', doneLabel: '6 vendas registradas', icon: <SearchCheck size={20} strokeWidth={1.8} />, kind: 'panel', rows: stockSales, subtitle: 'Clientes, produtos e valores identificados', title: 'Registrando vendas'},
+  {accent: '#b45309', assistantText: 'Registrei as 6 vendas.\n\nAgora vou dar baixa nos produtos correspondentes do estoque.', doneLabel: '6 produtos atualizados', icon: <CheckCircle2 size={20} strokeWidth={1.8} />, kind: 'panel', rows: stockRows, subtitle: 'Saídas vinculadas às vendas', title: 'Atualizando estoque'},
   {assistantText: 'O estoque foi atualizado.\n\nVou emitir as notas fiscais dessas vendas.', kind: 'invoice'},
-  {accent: '#16875f', assistantText: 'As 6 notas fiscais foram emitidas.\n\nVou enviar cada nota pelo WhatsApp do cliente certo.', doneLabel: '6 envios pelo WhatsApp', icon: <Send size={20} strokeWidth={1.8} />, kind: 'panel', rows: stockWhatsappRows, subtitle: 'Documentos vinculados aos clientes', title: 'Enviando notas pelo WhatsApp'},
+  {accent: '#16875f', assistantText: 'As 6 notas fiscais foram emitidas.\n\nVou enviar cada nota pelo WhatsApp do cliente certo.', doneLabel: '6 envios pelo WhatsApp', icon: <Send size={20} strokeWidth={1.8} />, kind: 'panel', rows: stockWhatsappRows, subtitle: 'Documentos vinculados aos clientes', title: 'Envio WhatsApp'},
 ]
 
 const boletoWhatsappSteps: WorkflowStep[] = [
   {accent: '#2878d0', assistantText: 'Vou localizar as vendas pendentes e conferir os dados de cada cliente.', doneLabel: '6 vendas pendentes localizadas', icon: <SearchCheck size={20} strokeWidth={1.8} />, kind: 'panel', rows: pendingSalesRows, subtitle: 'Clientes e valores ainda sem pagamento', title: 'Vendas pendentes'},
   {assistantText: 'Encontrei 6 vendas pendentes, totalizando R$ 8.250,00.\n\nAgora vou emitir as notas fiscais.', kind: 'invoice'},
   {accent: '#8055c7', assistantText: 'As 6 notas foram emitidas.\n\nVou gerar um boleto para cada venda pendente.', doneLabel: '6 boletos gerados', icon: <WalletCards size={20} strokeWidth={1.8} />, kind: 'panel', rows: boletoRows, subtitle: 'Boletos vinculados às vendas', title: 'Gerando boletos'},
-  {accent: '#16875f', assistantText: 'Os 6 boletos foram gerados.\n\nVou enviar cada boleto com a nota pelo WhatsApp do cliente.', doneLabel: '6 envios pelo WhatsApp', icon: <Send size={20} strokeWidth={1.8} />, kind: 'panel', rows: boletoWhatsappRows, subtitle: 'Nota e boleto para o cliente correspondente', title: 'Enviando tudo pelo WhatsApp'},
+  {accent: '#16875f', assistantText: 'Os 6 boletos foram gerados.\n\nVou enviar cada boleto com a nota pelo WhatsApp do cliente.', doneLabel: '6 envios pelo WhatsApp', icon: <Send size={20} strokeWidth={1.8} />, kind: 'panel', rows: boletoWhatsappRows, subtitle: 'Nota e boleto para o cliente correspondente', title: 'Envio WhatsApp'},
 ]
 
 function CompleteSaleConversation() {
