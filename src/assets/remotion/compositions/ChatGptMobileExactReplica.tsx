@@ -468,8 +468,8 @@ type WorkflowStep = {
 
 const workflowMessageStarts = [96, 300, 570, 790]
 const workflowPanelStarts = [135, 345, 625, 845]
-const workflowMessageTops = [525, 1451, 2504, 3576]
-const workflowPanelTops = [645, 1717, 2770, 3842]
+const workflowMessageTops = [525, 1451, 2444, 3416]
+const workflowPanelTops = [645, 1657, 2610, 3622]
 const workflowScrollSteps = [
   {amount: -1110, start: 340},
   {amount: -940, start: 595},
@@ -486,8 +486,8 @@ function OperationWorkflowConversation({prompt, steps, summary}: {prompt: string
         ? <OttoInvoiceEmissionMobilePanel completedDetail="PDF e XML disponíveis" itemCount={6} start={workflowPanelStarts[index]} title="Emissão de múltiplas notas fiscais" top={workflowPanelTops[index]} />
         : <MobileOperationPanel accent={step.accent} doneLabel={step.doneLabel} icon={step.icon} rows={step.rows} start={workflowPanelStarts[index]} subtitle={step.subtitle} title={step.title} top={workflowPanelTops[index]} />}
     </div>)}
-    <TypedAssistantText speed={9} start={1010} text={summary} top={4648} />
-    <Reveal start={1065}><ActionRow top={4914} /></Reveal>
+    <TypedAssistantText speed={9} start={1010} text={summary} top={4428} />
+    <Reveal start={1065}><ActionRow top={4694} /></Reveal>
   </>
 }
 
