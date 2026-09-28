@@ -559,19 +559,19 @@ function BatchInvoicesConversation() {
     <MobileOperationPanel accent="#2878d0" doneLabel="6 vendas sem nota encontradas" icon={<SearchCheck size={20} strokeWidth={1.8} />} rows={salesWithoutInvoiceRows} start={130} subtitle="Vendas elegíveis para emissão" title="Encontrando vendas sem Nota Fiscal" top={680} />
 
     <TypedAssistantText speed={9} start={305} text={'Encontrei 6 vendas sem Nota Fiscal, somando R$ 8.250,00.\n\nAgora vou conferir os dados de cada cliente e serviço.'} top={1470} />
-    <MobileOperationPanel accent="#8055c7" doneLabel="6 cadastros conferidos" icon={<CheckCircle2 size={20} strokeWidth={1.8} />} rows={fiscalDataRows} start={350} subtitle="Clientes, serviços e valores validados" title="Conferindo dados fiscais" top={1680} />
+    <MobileOperationPanel accent="#8055c7" doneLabel="6 cadastros conferidos" icon={<CheckCircle2 size={20} strokeWidth={1.8} />} rows={fiscalDataRows} start={350} subtitle="Clientes, serviços e valores validados" title="Conferindo dados fiscais" top={1750} />
 
-    <TypedAssistantText speed={9} start={535} text={'Os dados fiscais das 6 vendas estão completos.\n\nVou emitir as notas e acompanhar a autorização de cada uma.'} top={2510} />
-    <OttoInvoiceEmissionMobilePanel completedDetail="PDF e XML disponíveis" itemCount={6} start={575} title="Emitindo múltiplas notas fiscais" top={2740} />
+    <TypedAssistantText speed={9} start={535} text={'Os dados fiscais das 6 vendas estão completos.\n\nVou emitir as notas e acompanhar a autorização de cada uma.'} top={2580} />
+    <OttoInvoiceEmissionMobilePanel completedDetail="PDF e XML disponíveis" itemCount={6} start={575} title="Emitindo múltiplas notas fiscais" top={2810} />
 
-    <TypedAssistantText speed={9} start={770} text={'As 6 notas fiscais foram emitidas.\n\nAgora vou enviar cada documento ao cliente correspondente.'} top={3560} />
-    <MobileOperationPanel accent="#16875f" doneLabel="6 notas enviadas" icon={<Send size={20} strokeWidth={1.8} />} rows={invoiceDeliveryRows} start={810} subtitle="Cada nota para o contato do cliente certo" title="Enviando notas aos clientes" top={3780} />
+    <TypedAssistantText speed={9} start={770} text={'As 6 notas fiscais foram emitidas.\n\nAgora vou enviar cada documento ao cliente correspondente.'} top={3630} />
+    <MobileOperationPanel accent="#16875f" doneLabel="6 notas enviadas" icon={<Send size={20} strokeWidth={1.8} />} rows={invoiceDeliveryRows} start={810} subtitle="Cada nota para o contato do cliente certo" title="Enviando notas aos clientes" top={3850} />
 
-    <TypedAssistantText speed={9} start={1005} text={'As notas foram enviadas aos 6 clientes.\n\nPor fim, vou vincular os documentos às vendas e atualizar o contas a receber.'} top={4600} />
-    <MobileOperationPanel accent="#b45309" doneLabel="6 lançamentos atualizados" icon={<WalletCards size={20} strokeWidth={1.8} />} rows={invoiceFinanceRows} start={1045} subtitle="Vendas e contas a receber vinculadas" title="Atualizando o financeiro" top={4820} />
+    <TypedAssistantText speed={9} start={1005} text={'As notas foram enviadas aos 6 clientes.\n\nPor fim, vou vincular os documentos às vendas e atualizar o contas a receber.'} top={4670} />
+    <MobileOperationPanel accent="#b45309" doneLabel="6 lançamentos atualizados" icon={<WalletCards size={20} strokeWidth={1.8} />} rows={invoiceFinanceRows} start={1045} subtitle="Vendas e contas a receber vinculadas" title="Atualizando o financeiro" top={4890} />
 
-    <TypedAssistantText speed={9} start={1250} text="Concluído. Encontrei 6 vendas sem Nota Fiscal, conferi os dados fiscais, emiti e enviei as 6 notas aos clientes e atualizei o financeiro. Valor total: R$ 8.250,00." top={5710} />
-    <Reveal start={1330}><ActionRow top={5970} /></Reveal>
+    <TypedAssistantText speed={9} start={1250} text="Concluído. Encontrei 6 vendas sem Nota Fiscal, conferi os dados fiscais, emiti e enviei as 6 notas aos clientes e atualizei o financeiro. Valor total: R$ 8.250,00." top={5780} />
+    <Reveal start={1290}><ActionRow top={5970} /></Reveal>
   </>
 }
 
@@ -589,7 +589,7 @@ function DirectBatchInvoicesConversation() {
     <MobileOperationPanel accent="#b45309" doneLabel="6 lançamentos atualizados" icon={<WalletCards size={20} strokeWidth={1.8} />} rows={invoiceFinanceRows} start={650} subtitle="Vendas e contas a receber vinculadas" title="Atualizando o financeiro" top={2750} />
 
     <TypedAssistantText speed={9} start={880} text="Concluído. Emissão de 6 notas fiscais autorizada, documentos enviados aos clientes e financeiro atualizado. Valor total: R$ 8.250,00." top={3600} />
-    <Reveal start={950}><ActionRow top={3860} /></Reveal>
+    <Reveal start={920}><ActionRow top={3790} /></Reveal>
   </>
 }
 
@@ -690,7 +690,7 @@ function ChatGptMobileExperience({variant}: {variant: ChatGptMobileExperienceVar
     {variant === 'boleto-whatsapp' ? <TimedConversationTrack steps={workflowScrollSteps}><OperationWorkflowConversation prompt="Chat, pega as vendas que estão pendentes, emite as notas fiscais, gera os boletos e já manda tudo no WhatsApp de cada cliente." steps={boletoWhatsappSteps} summary="Concluído. Encontrei 6 vendas pendentes, emiti 6 notas, gerei 6 boletos e enviei tudo pelo WhatsApp dos clientes." /></TimedConversationTrack> : null}
     {variant === 'pending-sales-bills' ? <TimedConversationTrack steps={workflowScrollSteps}><OperationWorkflowConversation prompt="Chat, pega as vendas que estão pendentes, emite as notas fiscais de cada uma delas, gera os boletos e já manda tudo no WhatsApp de cada cliente." steps={boletoWhatsappSteps} summary="Concluído. Encontrei 6 vendas pendentes, emiti as 6 notas fiscais, gerei 6 boletos e enviei a nota e a cobrança pelo WhatsApp de cada cliente. Total: R$ 8.250,00." /></TimedConversationTrack> : null}
     {variant === 'today-sales-full' ? <TimedConversationTrack steps={[{amount: -1050, start: 340}, {amount: -850, start: 560}, {amount: -900, start: 815}, {amount: -950, start: 1020}, {amount: -950, start: 1225}, {amount: -900, start: 1430}]}><TodaySalesFullConversation /></TimedConversationTrack> : null}
-    {variant === 'batch-invoices' ? <TimedConversationTrack steps={[{amount: -1050, start: 340}, {amount: -940, start: 565}, {amount: -1000, start: 795}, {amount: -990, start: 1025}, {amount: -620, start: 1245}]}><BatchInvoicesConversation /></TimedConversationTrack> : null}
+    {variant === 'batch-invoices' ? <TimedConversationTrack steps={[{amount: -1050, start: 340}, {amount: -1010, start: 565}, {amount: -1000, start: 795}, {amount: -990, start: 1025}, {amount: -620, start: 1245}]}><BatchInvoicesConversation /></TimedConversationTrack> : null}
     {variant === 'direct-batch-invoices' ? <TimedConversationTrack steps={[{amount: -990, start: 365}, {amount: -1040, start: 620}, {amount: -480, start: 880}]}><DirectBatchInvoicesConversation /></TimedConversationTrack> : null}
     {variant === 'complete-sale' ? <TimedConversationTrack steps={[{amount: -800, start: 300}, {amount: -680, start: 520}, {amount: -680, start: 740}, {amount: -680, start: 960}]}><CompleteSaleConversation /></TimedConversationTrack> : null}
     {variant === 'reconciliation-invoices' ? <TimedConversationTrack steps={[{amount: -1110, start: 340}, {amount: -900, start: 595}, {amount: -900, start: 815}, {amount: -650, start: 1008}]}><ReconciliationInvoicesConversation /></TimedConversationTrack> : null}
