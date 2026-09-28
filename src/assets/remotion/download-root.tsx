@@ -86,6 +86,7 @@ import {
   CHATGPT_MOBILE_PENDING_SALES_BILLS_DURATION,
   CHATGPT_MOBILE_TODAY_SALES_FULL_DURATION,
   CHATGPT_MOBILE_BATCH_INVOICES_DURATION,
+  CHATGPT_MOBILE_DIRECT_BATCH_INVOICES_DURATION,
   CHATGPT_MOBILE_COMPLETE_SALE_DURATION,
   CHATGPT_MOBILE_RECONCILIATION_INVOICES_DURATION,
   CHATGPT_MOBILE_FINANCIAL_SCROLL_DURATION,
@@ -98,6 +99,7 @@ import {
   ChatGptMobilePendingSalesBillsVideo,
   ChatGptMobileTodaySalesFullVideo,
   ChatGptMobileBatchInvoicesVideo,
+  ChatGptMobileDirectBatchInvoicesVideo,
   ChatGptMobileCompleteSaleVideo,
   ChatGptMobileReconciliationInvoicesVideo,
   ChatGptMobileFinancialScrollVideo,
@@ -403,6 +405,14 @@ function RemotionDownloadRoot() {
         fps={90}
         height={1792}
         id="video-chatgpt-mobile-batch-invoices"
+        width={828}
+      />
+      <Composition
+        component={ChatGptMobileDirectBatchInvoicesVideo}
+        durationInFrames={CHATGPT_MOBILE_DIRECT_BATCH_INVOICES_DURATION}
+        fps={90}
+        height={1792}
+        id="video-chatgpt-mobile-direct-batch-invoices"
         width={828}
       />
       <Composition

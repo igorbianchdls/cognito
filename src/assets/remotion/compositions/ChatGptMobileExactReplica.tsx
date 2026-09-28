@@ -13,6 +13,7 @@ export const CHATGPT_MOBILE_BOLETO_WHATSAPP_DURATION = 1180
 export const CHATGPT_MOBILE_PENDING_SALES_BILLS_DURATION = 1180
 export const CHATGPT_MOBILE_TODAY_SALES_FULL_DURATION = 1610
 export const CHATGPT_MOBILE_BATCH_INVOICES_DURATION = 1430
+export const CHATGPT_MOBILE_DIRECT_BATCH_INVOICES_DURATION = 1050
 export const CHATGPT_MOBILE_COMPLETE_SALE_DURATION = 1180
 export const CHATGPT_MOBILE_RECONCILIATION_INVOICES_DURATION = 1180
 export const CHATGPT_MOBILE_FINANCIAL_SCROLL_DURATION = 975
@@ -574,6 +575,24 @@ function BatchInvoicesConversation() {
   </>
 }
 
+function DirectBatchInvoicesConversation() {
+  return <>
+    <StaticUserBubble start={0} text="Chat, emite as notas fiscais das minhas 6 vendas pendentes, envia cada nota ao cliente certo e atualiza o financeiro." top={245} />
+
+    <TypedAssistantText speed={9} start={70} text="Vou emitir as 6 notas fiscais e acompanhar a autorização de cada uma." top={515} />
+    <OttoInvoiceEmissionMobilePanel authorizationStages completedDetail="PDF e XML disponíveis" itemCount={6} start={105} title="Emitindo múltiplas notas fiscais" top={650} />
+
+    <TypedAssistantText speed={9} start={345} text={'As 6 notas fiscais foram emitidas.\n\nAgora vou enviar cada documento ao cliente correspondente.'} top={1490} />
+    <MobileOperationPanel accent="#16875f" doneLabel="6 notas enviadas" icon={<Send size={20} strokeWidth={1.8} />} rows={invoiceDeliveryRows} start={395} subtitle="Cada nota para o contato do cliente certo" title="Enviando notas aos clientes" top={1695} />
+
+    <TypedAssistantText speed={9} start={595} text={'As notas chegaram aos 6 clientes.\n\nVou vincular os documentos às vendas e atualizar o contas a receber.'} top={2530} />
+    <MobileOperationPanel accent="#b45309" doneLabel="6 lançamentos atualizados" icon={<WalletCards size={20} strokeWidth={1.8} />} rows={invoiceFinanceRows} start={650} subtitle="Vendas e contas a receber vinculadas" title="Atualizando o financeiro" top={2750} />
+
+    <TypedAssistantText speed={9} start={880} text="Concluído. Emissão de 6 notas fiscais autorizada, documentos enviados aos clientes e financeiro atualizado. Valor total: R$ 8.250,00." top={3600} />
+    <Reveal start={950}><ActionRow top={3860} /></Reveal>
+  </>
+}
+
 function CompleteSaleConversation() {
   return <>
     <StaticUserBubble start={0} text="Chat, registra essa venda de quatro mil reais, emite a nota fiscal, gera a cobrança pro cliente e atualiza meu contas a receber." top={245} />
@@ -616,7 +635,7 @@ function ReconciliationInvoicesConversation() {
   </>
 }
 
-type ChatGptMobileExperienceVariant = 'basic' | 'financial' | 'pix-whatsapp' | 'stock-whatsapp' | 'boleto-whatsapp' | 'pending-sales-bills' | 'today-sales-full' | 'batch-invoices' | 'complete-sale' | 'reconciliation-invoices' | 'scroll' | 'scroll-items'
+type ChatGptMobileExperienceVariant = 'basic' | 'financial' | 'pix-whatsapp' | 'stock-whatsapp' | 'boleto-whatsapp' | 'pending-sales-bills' | 'today-sales-full' | 'batch-invoices' | 'direct-batch-invoices' | 'complete-sale' | 'reconciliation-invoices' | 'scroll' | 'scroll-items'
 
 function ChatGptMobileExperience({variant}: {variant: ChatGptMobileExperienceVariant}) {
   const [fontReady, setFontReady] = useState(false)
@@ -672,6 +691,7 @@ function ChatGptMobileExperience({variant}: {variant: ChatGptMobileExperienceVar
     {variant === 'pending-sales-bills' ? <TimedConversationTrack steps={workflowScrollSteps}><OperationWorkflowConversation prompt="Chat, pega as vendas que estão pendentes, emite as notas fiscais de cada uma delas, gera os boletos e já manda tudo no WhatsApp de cada cliente." steps={boletoWhatsappSteps} summary="Concluído. Encontrei 6 vendas pendentes, emiti as 6 notas fiscais, gerei 6 boletos e enviei a nota e a cobrança pelo WhatsApp de cada cliente. Total: R$ 8.250,00." /></TimedConversationTrack> : null}
     {variant === 'today-sales-full' ? <TimedConversationTrack steps={[{amount: -1050, start: 340}, {amount: -850, start: 560}, {amount: -900, start: 815}, {amount: -950, start: 1020}, {amount: -950, start: 1225}, {amount: -900, start: 1430}]}><TodaySalesFullConversation /></TimedConversationTrack> : null}
     {variant === 'batch-invoices' ? <TimedConversationTrack steps={[{amount: -1050, start: 340}, {amount: -940, start: 565}, {amount: -1000, start: 795}, {amount: -990, start: 1025}, {amount: -620, start: 1245}]}><BatchInvoicesConversation /></TimedConversationTrack> : null}
+    {variant === 'direct-batch-invoices' ? <TimedConversationTrack steps={[{amount: -990, start: 365}, {amount: -1040, start: 620}, {amount: -480, start: 880}]}><DirectBatchInvoicesConversation /></TimedConversationTrack> : null}
     {variant === 'complete-sale' ? <TimedConversationTrack steps={[{amount: -800, start: 300}, {amount: -680, start: 520}, {amount: -680, start: 740}, {amount: -680, start: 960}]}><CompleteSaleConversation /></TimedConversationTrack> : null}
     {variant === 'reconciliation-invoices' ? <TimedConversationTrack steps={[{amount: -1110, start: 340}, {amount: -900, start: 595}, {amount: -900, start: 815}, {amount: -650, start: 1008}]}><ReconciliationInvoicesConversation /></TimedConversationTrack> : null}
     {variant === 'scroll' ? <StaticScrollTrack><FinancialConversation instantMessages /></StaticScrollTrack> : null}
@@ -719,6 +739,10 @@ export function ChatGptMobileTodaySalesFullVideo() {
 
 export function ChatGptMobileBatchInvoicesVideo() {
   return <ChatGptMobileExperience variant="batch-invoices" />
+}
+
+export function ChatGptMobileDirectBatchInvoicesVideo() {
+  return <ChatGptMobileExperience variant="direct-batch-invoices" />
 }
 
 export function ChatGptMobileCompleteSaleVideo() {
