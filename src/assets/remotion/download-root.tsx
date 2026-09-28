@@ -83,6 +83,9 @@ import {
   CHATGPT_MOBILE_FINANCIAL_OPERATIONS_DURATION,
   CHATGPT_MOBILE_STOCK_WHATSAPP_DURATION,
   CHATGPT_MOBILE_BOLETO_WHATSAPP_DURATION,
+  CHATGPT_MOBILE_PENDING_SALES_BILLS_DURATION,
+  CHATGPT_MOBILE_TODAY_SALES_FULL_DURATION,
+  CHATGPT_MOBILE_BATCH_INVOICES_DURATION,
   CHATGPT_MOBILE_COMPLETE_SALE_DURATION,
   CHATGPT_MOBILE_RECONCILIATION_INVOICES_DURATION,
   CHATGPT_MOBILE_FINANCIAL_SCROLL_DURATION,
@@ -92,6 +95,9 @@ import {
   ChatGptMobileFinancialOperationsVideo,
   ChatGptMobileStockWhatsappVideo,
   ChatGptMobileBoletoWhatsappVideo,
+  ChatGptMobilePendingSalesBillsVideo,
+  ChatGptMobileTodaySalesFullVideo,
+  ChatGptMobileBatchInvoicesVideo,
   ChatGptMobileCompleteSaleVideo,
   ChatGptMobileReconciliationInvoicesVideo,
   ChatGptMobileFinancialScrollVideo,
@@ -147,6 +153,20 @@ import {
   JulyBodyIllustrativeVideo1,
   JulyBodyIllustrativeVideo2,
 } from './compositions/JulyBodyIllustrativeVideos'
+import {
+  JULY_TIMED_BODY_1_DURATION,
+  JULY_TIMED_BODY_2_DURATION,
+  JULY_TIMED_HOOK_1_DURATION,
+  JULY_TIMED_HOOK_2_DURATION,
+  JULY_TIMED_HOOK_3_DURATION,
+  JULY_TIMED_HOOK_4_DURATION,
+  JulyTimedBody1Video,
+  JulyTimedBody2Video,
+  JulyTimedHook1Video,
+  JulyTimedHook2Video,
+  JulyTimedHook3Video,
+  JulyTimedHook4Video,
+} from './compositions/JulyTimedIllustrativeVideos'
 import {
   PATY_BODY_2_DURATION,
   PATY_BODY_GIO_DURATION,
@@ -362,6 +382,30 @@ function RemotionDownloadRoot() {
         width={828}
       />
       <Composition
+        component={ChatGptMobilePendingSalesBillsVideo}
+        durationInFrames={CHATGPT_MOBILE_PENDING_SALES_BILLS_DURATION}
+        fps={90}
+        height={1792}
+        id="video-chatgpt-mobile-pending-sales-bills"
+        width={828}
+      />
+      <Composition
+        component={ChatGptMobileTodaySalesFullVideo}
+        durationInFrames={CHATGPT_MOBILE_TODAY_SALES_FULL_DURATION}
+        fps={90}
+        height={1792}
+        id="video-chatgpt-mobile-today-sales-full"
+        width={828}
+      />
+      <Composition
+        component={ChatGptMobileBatchInvoicesVideo}
+        durationInFrames={CHATGPT_MOBILE_BATCH_INVOICES_DURATION}
+        fps={90}
+        height={1792}
+        id="video-chatgpt-mobile-batch-invoices"
+        width={828}
+      />
+      <Composition
         component={ChatGptMobileCompleteSaleVideo}
         durationInFrames={CHATGPT_MOBILE_COMPLETE_SALE_DURATION}
         fps={90}
@@ -537,6 +581,12 @@ function RemotionDownloadRoot() {
         id="body-july-illustrative-2"
         width={1080}
       />
+      <Composition component={JulyTimedBody1Video} durationInFrames={JULY_TIMED_BODY_1_DURATION} fps={30} height={800} id="body-july-timed-1" width={1080} />
+      <Composition component={JulyTimedBody2Video} durationInFrames={JULY_TIMED_BODY_2_DURATION} fps={30} height={800} id="body-july-timed-2" width={1080} />
+      <Composition component={JulyTimedHook1Video} durationInFrames={JULY_TIMED_HOOK_1_DURATION} fps={30} height={800} id="hook-july-timed-1" width={1080} />
+      <Composition component={JulyTimedHook2Video} durationInFrames={JULY_TIMED_HOOK_2_DURATION} fps={30} height={800} id="hook-july-timed-2" width={1080} />
+      <Composition component={JulyTimedHook3Video} durationInFrames={JULY_TIMED_HOOK_3_DURATION} fps={30} height={800} id="hook-july-timed-3" width={1080} />
+      <Composition component={JulyTimedHook4Video} durationInFrames={JULY_TIMED_HOOK_4_DURATION} fps={30} height={800} id="hook-july-timed-4" width={1080} />
       <Composition
         component={PatyBodyGioIllustrativeVideo}
         durationInFrames={PATY_BODY_GIO_DURATION}

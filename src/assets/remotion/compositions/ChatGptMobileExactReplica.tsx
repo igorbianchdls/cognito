@@ -10,6 +10,9 @@ export const CHATGPT_MOBILE_FINANCIAL_OPERATIONS_DURATION = 1180
 export const CHATGPT_MOBILE_PIX_WHATSAPP_DURATION = 1180
 export const CHATGPT_MOBILE_STOCK_WHATSAPP_DURATION = 1180
 export const CHATGPT_MOBILE_BOLETO_WHATSAPP_DURATION = 1180
+export const CHATGPT_MOBILE_PENDING_SALES_BILLS_DURATION = 1180
+export const CHATGPT_MOBILE_TODAY_SALES_FULL_DURATION = 1610
+export const CHATGPT_MOBILE_BATCH_INVOICES_DURATION = 1430
 export const CHATGPT_MOBILE_COMPLETE_SALE_DURATION = 1180
 export const CHATGPT_MOBILE_RECONCILIATION_INVOICES_DURATION = 1180
 export const CHATGPT_MOBILE_FINANCIAL_SCROLL_DURATION = 975
@@ -196,6 +199,12 @@ const stockWhatsappRows: OperationRow[] = stockSales.map((sale) => ({...sale, de
 const pendingSalesRows: OperationRow[] = sixSales.map((sale) => ({...sale, detail: `${sale.detail} · pagamento pendente`}))
 const boletoRows: OperationRow[] = sixSales.map((sale, index) => ({...sale, detail: `Boleto #20${48 + index} · vencimento em 7 dias`}))
 const boletoWhatsappRows: OperationRow[] = sixSales.map((sale) => ({...sale, detail: 'Nota fiscal e boleto enviados pelo WhatsApp'}))
+const unregisteredTodayRows: OperationRow[] = sixSales.slice(2).map((sale) => ({...sale, detail: `${sale.detail} · registro pendente`}))
+const fullWhatsappRows: OperationRow[] = sixSales.map((sale) => ({...sale, detail: 'Nota fiscal, boleto e PIX enviados pelo WhatsApp'}))
+const salesWithoutInvoiceRows: OperationRow[] = sixSales.map((sale) => ({...sale, detail: `${sale.detail} · sem Nota Fiscal`}))
+const fiscalDataRows: OperationRow[] = sixSales.map((sale) => ({...sale, detail: 'Cliente, serviço e valor conferidos'}))
+const invoiceDeliveryRows: OperationRow[] = sixSales.map((sale) => ({...sale, detail: 'Nota enviada ao contato cadastrado'}))
+const invoiceFinanceRows: OperationRow[] = sixSales.map((sale) => ({...sale, detail: 'Venda e conta a receber vinculadas à nota'}))
 
 const avatarColors = ['#3977c3', '#8c54b8', '#2f8d68', '#d16b45', '#5678a8', '#b55c82', '#477e91', '#7b6bba']
 
@@ -512,6 +521,59 @@ const boletoWhatsappSteps: WorkflowStep[] = [
   {accent: '#16875f', assistantText: 'Os 6 boletos foram gerados.\n\nVou enviar cada boleto com a nota pelo WhatsApp do cliente.', doneLabel: '6 envios pelo WhatsApp', icon: <Send size={20} strokeWidth={1.8} />, kind: 'panel', rows: boletoWhatsappRows, subtitle: 'Nota e boleto para o cliente correspondente', title: 'Envio WhatsApp'},
 ]
 
+function TodaySalesFullConversation() {
+  return <>
+    <StaticUserBubble start={0} text="Chat, pega todas as vendas que eu fiz hoje, registra o que ainda estiver pendente e emite as notas fiscais de cada cliente pra mim." top={245} />
+
+    <TypedAssistantText speed={9} start={96} text="Vou conferir as vendas de hoje e registrar apenas as que ainda não estiverem no sistema." top={560} />
+    <MobileOperationPanel accent="#2878d0" doneLabel="4 vendas registradas" icon={<SearchCheck size={20} strokeWidth={1.8} />} rows={unregisteredTodayRows} start={135} subtitle="2 vendas já constavam no sistema" title="Registrando vendas" top={700} />
+
+    <TypedAssistantText speed={9} start={300} text={'Conferi 6 vendas e registrei as 4 que faltavam.\n\nAgora vou emitir a nota fiscal de cada cliente.'} top={1500} />
+    <OttoInvoiceEmissionMobilePanel completedDetail="PDF e XML disponíveis" itemCount={6} start={345} title="Emissão de múltiplas notas fiscais" top={1730} />
+
+    <StaticUserBubble start={535} text="Depois, gera os boletos e o PIX de cada venda, dá baixa no estoque e já manda a nota fiscal e a cobrança no WhatsApp de cada cliente." top={2490} />
+
+    <TypedAssistantText speed={9} start={600} text={'As 6 notas foram emitidas.\n\nVou gerar um boleto para cada venda, como você pediu.'} top={2810} />
+    <MobileOperationPanel accent="#8055c7" doneLabel="6 boletos gerados" icon={<WalletCards size={20} strokeWidth={1.8} />} rows={boletoRows} start={640} subtitle="Boletos vinculados às vendas" title="Gerando boletos" top={3000} />
+
+    <TypedAssistantText speed={9} start={805} text={'Os boletos estão prontos.\n\nAgora vou gerar também um PIX para cada venda.'} top={3770} />
+    <MobileOperationPanel accent="#16875f" doneLabel="6 PIX gerados" icon={<WalletCards size={20} strokeWidth={1.8} />} rows={pixRows} start={845} subtitle="Uma cobrança PIX por venda" title="Gerando PIX" top={3980} />
+
+    <TypedAssistantText speed={9} start={1010} text={'Boleto e PIX foram gerados para as 6 vendas.\n\nVou dar baixa nos produtos correspondentes do estoque.'} top={4720} />
+    <MobileOperationPanel accent="#b45309" doneLabel="6 produtos atualizados" icon={<CheckCircle2 size={20} strokeWidth={1.8} />} rows={stockRows} start={1050} subtitle="Saídas vinculadas às vendas" title="Atualizando estoque" top={4930} />
+
+    <TypedAssistantText end={1430} speed={9} start={1215} text={'O estoque foi atualizado.\n\nPor fim, vou enviar cada nota e cobrança ao WhatsApp do cliente certo.'} top={5670} />
+    <MobileOperationPanel accent="#16875f" doneLabel="6 envios pelo WhatsApp" icon={<Send size={20} strokeWidth={1.8} />} rows={fullWhatsappRows} start={1255} subtitle="Nota, boleto e PIX do cliente correspondente" title="Envio WhatsApp" top={5880} />
+
+    <TypedAssistantText speed={9} start={1420} text="Concluído. Conferi 6 vendas de hoje, registrei as 4 pendentes, emiti 6 notas, gerei 6 boletos e 6 PIX, atualizei o estoque e enviei tudo pelo WhatsApp de cada cliente. Total: R$ 8.250,00." top={6730} />
+    <Reveal start={1490}><ActionRow top={7000} /></Reveal>
+  </>
+}
+
+function BatchInvoicesConversation() {
+  return <>
+    <StaticUserBubble start={0} text="Chat, encontra as vendas sem Nota Fiscal, confere os dados fiscais e emite as notas de todas elas. Depois envia aos clientes e atualiza o financeiro." top={245} />
+
+    <TypedAssistantText speed={9} start={90} text="Vou encontrar as vendas que ainda estão sem Nota Fiscal." top={520} />
+    <MobileOperationPanel accent="#2878d0" doneLabel="6 vendas sem nota encontradas" icon={<SearchCheck size={20} strokeWidth={1.8} />} rows={salesWithoutInvoiceRows} start={130} subtitle="Vendas elegíveis para emissão" title="Encontrando vendas sem Nota Fiscal" top={680} />
+
+    <TypedAssistantText speed={9} start={305} text={'Encontrei 6 vendas sem Nota Fiscal, somando R$ 8.250,00.\n\nAgora vou conferir os dados de cada cliente e serviço.'} top={1470} />
+    <MobileOperationPanel accent="#8055c7" doneLabel="6 cadastros conferidos" icon={<CheckCircle2 size={20} strokeWidth={1.8} />} rows={fiscalDataRows} start={350} subtitle="Clientes, serviços e valores validados" title="Conferindo dados fiscais" top={1680} />
+
+    <TypedAssistantText speed={9} start={535} text={'Os dados fiscais das 6 vendas estão completos.\n\nVou emitir as notas e acompanhar a autorização de cada uma.'} top={2510} />
+    <OttoInvoiceEmissionMobilePanel completedDetail="PDF e XML disponíveis" itemCount={6} start={575} title="Emitindo múltiplas notas fiscais" top={2740} />
+
+    <TypedAssistantText speed={9} start={770} text={'As 6 notas fiscais foram emitidas.\n\nAgora vou enviar cada documento ao cliente correspondente.'} top={3560} />
+    <MobileOperationPanel accent="#16875f" doneLabel="6 notas enviadas" icon={<Send size={20} strokeWidth={1.8} />} rows={invoiceDeliveryRows} start={810} subtitle="Cada nota para o contato do cliente certo" title="Enviando notas aos clientes" top={3780} />
+
+    <TypedAssistantText speed={9} start={1005} text={'As notas foram enviadas aos 6 clientes.\n\nPor fim, vou vincular os documentos às vendas e atualizar o contas a receber.'} top={4600} />
+    <MobileOperationPanel accent="#b45309" doneLabel="6 lançamentos atualizados" icon={<WalletCards size={20} strokeWidth={1.8} />} rows={invoiceFinanceRows} start={1045} subtitle="Vendas e contas a receber vinculadas" title="Atualizando o financeiro" top={4820} />
+
+    <TypedAssistantText speed={9} start={1250} text="Concluído. Encontrei 6 vendas sem Nota Fiscal, conferi os dados fiscais, emiti e enviei as 6 notas aos clientes e atualizei o financeiro. Valor total: R$ 8.250,00." top={5710} />
+    <Reveal start={1330}><ActionRow top={5970} /></Reveal>
+  </>
+}
+
 function CompleteSaleConversation() {
   return <>
     <StaticUserBubble start={0} text="Chat, registra essa venda de quatro mil reais, emite a nota fiscal, gera a cobrança pro cliente e atualiza meu contas a receber." top={245} />
@@ -554,7 +616,7 @@ function ReconciliationInvoicesConversation() {
   </>
 }
 
-type ChatGptMobileExperienceVariant = 'basic' | 'financial' | 'pix-whatsapp' | 'stock-whatsapp' | 'boleto-whatsapp' | 'complete-sale' | 'reconciliation-invoices' | 'scroll' | 'scroll-items'
+type ChatGptMobileExperienceVariant = 'basic' | 'financial' | 'pix-whatsapp' | 'stock-whatsapp' | 'boleto-whatsapp' | 'pending-sales-bills' | 'today-sales-full' | 'batch-invoices' | 'complete-sale' | 'reconciliation-invoices' | 'scroll' | 'scroll-items'
 
 function ChatGptMobileExperience({variant}: {variant: ChatGptMobileExperienceVariant}) {
   const [fontReady, setFontReady] = useState(false)
@@ -607,6 +669,9 @@ function ChatGptMobileExperience({variant}: {variant: ChatGptMobileExperienceVar
     {variant === 'pix-whatsapp' ? <TimedConversationTrack steps={workflowScrollSteps}><OperationWorkflowConversation prompt="Chat, registra as vendas de hoje, emite todas as notas fiscais, gera o PIX de cada uma e já manda tudo no WhatsApp de cada cliente." steps={pixWhatsappSteps} summary="Concluído. Registrei 6 vendas, emiti 6 notas, gerei 6 PIX e enviei cada nota com seu PIX pelo WhatsApp do cliente certo." /></TimedConversationTrack> : null}
     {variant === 'stock-whatsapp' ? <TimedConversationTrack steps={workflowScrollSteps}><OperationWorkflowConversation prompt="Chat, registra todas essas vendas, dá baixa nos produtos do estoque, emite as notas fiscais e já manda tudo no WhatsApp de cada cliente." steps={stockWhatsappSteps} summary="Concluído. Registrei 6 vendas, dei baixa nos produtos, emiti 6 notas fiscais e enviei os documentos pelo WhatsApp de cada cliente." /></TimedConversationTrack> : null}
     {variant === 'boleto-whatsapp' ? <TimedConversationTrack steps={workflowScrollSteps}><OperationWorkflowConversation prompt="Chat, pega as vendas que estão pendentes, emite as notas fiscais, gera os boletos e já manda tudo no WhatsApp de cada cliente." steps={boletoWhatsappSteps} summary="Concluído. Encontrei 6 vendas pendentes, emiti 6 notas, gerei 6 boletos e enviei tudo pelo WhatsApp dos clientes." /></TimedConversationTrack> : null}
+    {variant === 'pending-sales-bills' ? <TimedConversationTrack steps={workflowScrollSteps}><OperationWorkflowConversation prompt="Chat, pega as vendas que estão pendentes, emite as notas fiscais de cada uma delas, gera os boletos e já manda tudo no WhatsApp de cada cliente." steps={boletoWhatsappSteps} summary="Concluído. Encontrei 6 vendas pendentes, emiti as 6 notas fiscais, gerei 6 boletos e enviei a nota e a cobrança pelo WhatsApp de cada cliente. Total: R$ 8.250,00." /></TimedConversationTrack> : null}
+    {variant === 'today-sales-full' ? <TimedConversationTrack steps={[{amount: -1050, start: 340}, {amount: -850, start: 560}, {amount: -900, start: 815}, {amount: -950, start: 1020}, {amount: -950, start: 1225}, {amount: -900, start: 1430}]}><TodaySalesFullConversation /></TimedConversationTrack> : null}
+    {variant === 'batch-invoices' ? <TimedConversationTrack steps={[{amount: -1050, start: 340}, {amount: -940, start: 565}, {amount: -1000, start: 795}, {amount: -990, start: 1025}, {amount: -620, start: 1245}]}><BatchInvoicesConversation /></TimedConversationTrack> : null}
     {variant === 'complete-sale' ? <TimedConversationTrack steps={[{amount: -800, start: 300}, {amount: -680, start: 520}, {amount: -680, start: 740}, {amount: -680, start: 960}]}><CompleteSaleConversation /></TimedConversationTrack> : null}
     {variant === 'reconciliation-invoices' ? <TimedConversationTrack steps={[{amount: -1110, start: 340}, {amount: -900, start: 595}, {amount: -900, start: 815}, {amount: -650, start: 1008}]}><ReconciliationInvoicesConversation /></TimedConversationTrack> : null}
     {variant === 'scroll' ? <StaticScrollTrack><FinancialConversation instantMessages /></StaticScrollTrack> : null}
@@ -642,6 +707,18 @@ export function ChatGptMobileStockWhatsappVideo() {
 
 export function ChatGptMobileBoletoWhatsappVideo() {
   return <ChatGptMobileExperience variant="boleto-whatsapp" />
+}
+
+export function ChatGptMobilePendingSalesBillsVideo() {
+  return <ChatGptMobileExperience variant="pending-sales-bills" />
+}
+
+export function ChatGptMobileTodaySalesFullVideo() {
+  return <ChatGptMobileExperience variant="today-sales-full" />
+}
+
+export function ChatGptMobileBatchInvoicesVideo() {
+  return <ChatGptMobileExperience variant="batch-invoices" />
 }
 
 export function ChatGptMobileCompleteSaleVideo() {
