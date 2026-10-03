@@ -27,6 +27,10 @@ a
 /.next/
 /out/
 /public/remotion/exports/
+/.codex-output/
+/scripts/tmp/
+/supabase/.temp/
+/*.log
 
 # production
 /build

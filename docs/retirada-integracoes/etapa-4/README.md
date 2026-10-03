@@ -19,20 +19,20 @@ Evidências em `verificacoes/`:
 
 | Verificação | Registro |
 | --- | --- |
-| Regeneração dos tipos de rotas | [route-typegen.log](verificacoes/route-typegen.log) |
-| Tipos globais sem cache incremental | [global-typecheck.log](verificacoes/global-typecheck.log) |
-| Auditoria de arquivos, imports, árvore de dependências, lockfile e bundles | [retirement.log](verificacoes/retirement.log) |
-| Build do widget | [widget-build.log](verificacoes/widget-build.log) |
-| Testes do plugin | [plugin.log](verificacoes/plugin.log) |
-| Ferramentas locais e rejeição das externas | [plugin-local.log](verificacoes/plugin-local.log) |
-| IA | [ai.log](verificacoes/ai.log) |
-| Segurança ERP/IA | [security.log](verificacoes/security.log) |
-| Cadastro/autenticação sem provisionamento externo | [auth.log](verificacoes/auth.log) |
-| Dashboards sem consultas externas | [dashboard.log](verificacoes/dashboard.log) |
-| Renderização de componentes em Edge headless | [render.log](verificacoes/render.log) |
-| Arquitetura de artefatos | [architecture.log](verificacoes/architecture.log) |
-| Ajuda do utilitário local | [cli.log](verificacoes/cli.log) |
-| Preservação das alterações Remotion preexistentes | [preservacao.log](verificacoes/preservacao.log) |
+| Regeneração dos tipos de rotas | route-typegen.log (arquivo removido na limpeza do repositório) |
+| Tipos globais sem cache incremental | global-typecheck.log (arquivo removido na limpeza do repositório) |
+| Auditoria de arquivos, imports, árvore de dependências, lockfile e bundles | retirement.log (arquivo removido na limpeza do repositório) |
+| Build do widget | widget-build.log (arquivo removido na limpeza do repositório) |
+| Testes do plugin | plugin.log (arquivo removido na limpeza do repositório) |
+| Ferramentas locais e rejeição das externas | plugin-local.log (arquivo removido na limpeza do repositório) |
+| IA | ai.log (arquivo removido na limpeza do repositório) |
+| Segurança ERP/IA | security.log (arquivo removido na limpeza do repositório) |
+| Cadastro/autenticação sem provisionamento externo | auth.log (arquivo removido na limpeza do repositório) |
+| Dashboards sem consultas externas | dashboard.log (arquivo removido na limpeza do repositório) |
+| Renderização de componentes em Edge headless | render.log (arquivo removido na limpeza do repositório) |
+| Arquitetura de artefatos | architecture.log (arquivo removido na limpeza do repositório) |
+| Ajuda do utilitário local | cli.log (arquivo removido na limpeza do repositório) |
+| Preservação das alterações Remotion preexistentes | preservacao.log (arquivo removido na limpeza do repositório) |
 
 O servidor de desenvolvimento foi iniciado temporariamente para regenerar `.next/dev/types` e encerrado depois. As primeiras verificações encontraram tipos gerados de rotas removidas; eles foram regenerados, sem alterar os contratos de rotas mantidas. O teste de retirada tolera explicitamente somente os dois bundles bloqueados abaixo e verifica que nenhum consumidor importa o produto removido. Não houve execução de ferramentas contra banco real nesses testes.
 

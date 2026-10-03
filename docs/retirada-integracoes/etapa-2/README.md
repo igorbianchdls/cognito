@@ -42,15 +42,15 @@ Todas as **9 verificações executadas passaram**. Logs em `verificacoes/`.
 
 | Verificação | Resultado | Log |
 |---|---|---|
-| Tipos ERP | Código 0 | [erp-typecheck.log](verificacoes/erp-typecheck.log) |
-| Tipos IA | Código 0 | [ai-typecheck.log](verificacoes/ai-typecheck.log) |
-| Tipos artifacts/plugin | Código 0 | [artifacts-typecheck.log](verificacoes/artifacts-typecheck.log) |
-| Tipos globais, sem cache incremental | Código 0 | [global-typecheck.log](verificacoes/global-typecheck.log) |
-| Teste do webhook e árvore de onboarding | Código 0 | [auth.log](verificacoes/auth.log) |
-| Registro e despacho local do plugin | Código 0; 8 ferramentas de domínio mantidas e 12 externas rejeitadas | [plugin-local.log](verificacoes/plugin-local.log) |
-| Smoke existente do plugin | Código 0 | [plugin.log](verificacoes/plugin.log) |
-| Smoke IA | Código 0; 47 ferramentas | [ai.log](verificacoes/ai.log) |
-| Segurança local ERP/IA | Código 0 | [security.log](verificacoes/security.log) |
+| Tipos ERP | Código 0 | erp-typecheck.log (arquivo removido na limpeza do repositório) |
+| Tipos IA | Código 0 | ai-typecheck.log (arquivo removido na limpeza do repositório) |
+| Tipos artifacts/plugin | Código 0 | artifacts-typecheck.log (arquivo removido na limpeza do repositório) |
+| Tipos globais, sem cache incremental | Código 0 | global-typecheck.log (arquivo removido na limpeza do repositório) |
+| Teste do webhook e árvore de onboarding | Código 0 | auth.log (arquivo removido na limpeza do repositório) |
+| Registro e despacho local do plugin | Código 0; 8 ferramentas de domínio mantidas e 12 externas rejeitadas | plugin-local.log (arquivo removido na limpeza do repositório) |
+| Smoke existente do plugin | Código 0 | plugin.log (arquivo removido na limpeza do repositório) |
+| Smoke IA | Código 0; 47 ferramentas | ai.log (arquivo removido na limpeza do repositório) |
+| Segurança local ERP/IA | Código 0 | security.log (arquivo removido na limpeza do repositório) |
 
 O teste novo `scripts/auth/erp-onboarding-smoke.mjs` executa o handler real com fronteiras Clerk/Postgres simuladas: verifica criação/atualização/exclusão de organização, vínculos, convites, usuários e interrupção antes de efeitos quando a verificação de assinatura rejeita o evento. Compila também a árvore real do bootstrap e impede dependências de Integrações/BigQuery. Não é um teste de assinatura criptográfica real nem um cadastro em produção.
 

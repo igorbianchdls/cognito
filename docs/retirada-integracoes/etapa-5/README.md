@@ -15,19 +15,19 @@ Data: 08/09/2026. **Validações implementadas e executadas; etapa ainda não ap
 
 | Verificação | Resultado | Evidência |
 | --- | --- | --- |
-| Build do widget | Aprovado | [widget-build.log](verificacoes/widget-build.log) |
-| Widget final no navegador | Aprovado | [widget-browser.log](verificacoes/widget-browser.log) |
-| Testes do plugin | Aprovado | [plugin.log](verificacoes/plugin.log) |
-| Auditoria de retirada | Aprovado; preserva a exceção explícita dos dois bundles bloqueados na etapa 4 | [retirement.log](verificacoes/retirement.log) |
-| Tipos globais sem cache incremental | Aprovado | [global-typecheck.log](verificacoes/global-typecheck.log) |
-| Lint dos arquivos criados/adaptados nesta etapa | Aprovado | [lint-stage5.log](verificacoes/lint-stage5.log) |
-| Lint geral | Reprovado: 639 erros e 216 avisos em 620 arquivos analisados | [lint.log](verificacoes/lint.log) |
+| Build do widget | Aprovado | widget-build.log (arquivo removido na limpeza do repositório) |
+| Widget final no navegador | Aprovado | widget-browser.log (arquivo removido na limpeza do repositório) |
+| Testes do plugin | Aprovado | plugin.log (arquivo removido na limpeza do repositório) |
+| Auditoria de retirada | Aprovado; preserva a exceção explícita dos dois bundles bloqueados na etapa 4 | retirement.log (arquivo removido na limpeza do repositório) |
+| Tipos globais sem cache incremental | Aprovado | global-typecheck.log (arquivo removido na limpeza do repositório) |
+| Lint dos arquivos criados/adaptados nesta etapa | Aprovado | lint-stage5.log (arquivo removido na limpeza do repositório) |
+| Lint geral | Reprovado: 639 erros e 216 avisos em 620 arquivos analisados | lint.log (arquivo removido na limpeza do repositório) |
 | Comparação de lint dos arquivos modificados | Nenhuma nova ocorrência de erro por regra/mensagem nos arquivos comparados | [lint-comparison.json](verificacoes/lint-comparison.json) |
-| Build de produção | Interrompido por `ENOSPC: no space left on device, write` | [build.log](verificacoes/build.log) |
-| ERP foundation | Bloqueado por DNS (`ENOTFOUND`) | [erp-foundation.log](verificacoes/erp-foundation.log) |
-| ERP professional | Bloqueado por DNS (`ENOTFOUND`) | [erp-professional.log](verificacoes/erp-professional.log) |
-| ERP runtime/isolation | Bloqueado por DNS (`ENOTFOUND`) | [erp-runtime.log](verificacoes/erp-runtime.log) |
-| Alterações Remotion preexistentes | Preservadas, mesmo SHA-256 inicial | [preservacao.log](verificacoes/preservacao.log) |
+| Build de produção | Interrompido por `ENOSPC: no space left on device, write` | build.log (arquivo removido na limpeza do repositório) |
+| ERP foundation | Bloqueado por DNS (`ENOTFOUND`) | erp-foundation.log (arquivo removido na limpeza do repositório) |
+| ERP professional | Bloqueado por DNS (`ENOTFOUND`) | erp-professional.log (arquivo removido na limpeza do repositório) |
+| ERP runtime/isolation | Bloqueado por DNS (`ENOTFOUND`) | erp-runtime.log (arquivo removido na limpeza do repositório) |
+| Alterações Remotion preexistentes | Preservadas, mesmo SHA-256 inicial | preservacao.log (arquivo removido na limpeza do repositório) |
 
 A comparação de lint aplica a mesma configuração atual ao conteúdo de HEAD dos arquivos modificados com erros, comparando contagens por regra/mensagem. Ela não é uma prova de correção funcional, nem torna aprovado o lint geral. O detalhe completo da execução local está em `.next/cache/etapa-5-eslint.json`; o resumo durável está nos registros acima. O lint não havia sido executado corretamente na linha de base, portanto esta etapa tornou visível uma dívida de qualidade antes não medida.
 

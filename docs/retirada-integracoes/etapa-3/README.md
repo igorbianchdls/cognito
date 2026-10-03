@@ -18,14 +18,14 @@ Todos os registros abaixo terminaram com código 0:
 
 | Verificação | Evidência |
 | --- | --- |
-| Tipos globais, sem cache incremental | [global-typecheck.log](verificacoes/global-typecheck.log) |
-| Tipos de artefatos | [artifacts-typecheck.log](verificacoes/artifacts-typecheck.log) |
-| Tipos do ERP | [erp-typecheck.log](verificacoes/erp-typecheck.log) |
-| Templates, contrato, rejeição de consultas e isolamento | [dashboard-inline.log](verificacoes/dashboard-inline.log) |
-| Renderização real em Edge headless | [render.log](verificacoes/render.log) |
-| Arquitetura de artefatos | [architecture.log](verificacoes/architecture.log) |
-| Plugin | [plugin.log](verificacoes/plugin.log) |
-| Ferramentas locais preservadas e externas rejeitadas | [plugin-local.log](verificacoes/plugin-local.log) |
+| Tipos globais, sem cache incremental | global-typecheck.log (arquivo removido na limpeza do repositório) |
+| Tipos de artefatos | artifacts-typecheck.log (arquivo removido na limpeza do repositório) |
+| Tipos do ERP | erp-typecheck.log (arquivo removido na limpeza do repositório) |
+| Templates, contrato, rejeição de consultas e isolamento | dashboard-inline.log (arquivo removido na limpeza do repositório) |
+| Renderização real em Edge headless | render.log (arquivo removido na limpeza do repositório) |
+| Arquitetura de artefatos | architecture.log (arquivo removido na limpeza do repositório) |
+| Plugin | plugin.log (arquivo removido na limpeza do repositório) |
+| Ferramentas locais preservadas e externas rejeitadas | plugin-local.log (arquivo removido na limpeza do repositório) |
 
 O teste de renderização usa os componentes reais em servidor local isolado: verifica indicador 123, indicador sem dados, barra de gráfico, tabela contendo Alice e tabela dinâmica totalizando 20. Não houve consultas de dados ou chamadas externas. O teste do serviço usa persistência simulada para verificar os resultados 410 e 403; não acessa banco real.
 

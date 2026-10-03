@@ -33,7 +33,7 @@ Também foram registrados **24 nomes de objetos de banco** mencionados no SQL e 
 - [Variáveis de ambiente](variaveis-ambiente.md): apenas nomes e consumidores, sem valores.
 - [Infraestrutura e banco: ações futuras](infraestrutura-e-banco.md).
 - [Verificações iniciais](verificacoes.md): comandos, resultados e limitações.
-- [Estado inicial](estado-inicial.txt) e [cópia das diferenças preexistentes](alteracoes-preexistentes.patch).
+- [Estado inicial](estado-inicial.txt) e cópia das diferenças preexistentes (arquivo removido na limpeza do repositório).
 - `gerar-inventario.mjs`: auditoria reproduzível, executada na raiz com `node docs/retirada-integracoes/etapa-1/gerar-inventario.mjs`.
 
 ## Alterações preexistentes preservadas

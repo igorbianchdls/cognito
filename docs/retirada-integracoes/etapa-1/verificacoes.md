@@ -6,16 +6,16 @@ Foram usados os executáveis já instalados no projeto por meio de `node`, sem i
 
 | Verificação | Comando executado na raiz | Resultado | Evidência |
 |---|---|---|---|
-| Tipos ERP | `node node_modules/typescript/bin/tsc -p tsconfig.erp.json --pretty false` | Aprovado, código 0 | [Log](verificacoes/erp-typecheck.log) |
-| Tipos IA | `node node_modules/typescript/bin/tsc -p tsconfig.ai-platform.json --pretty false` | Aprovado, código 0 | [Log](verificacoes/ai-typecheck.log) |
-| Tipos artifacts | `node node_modules/typescript/bin/tsc -p tsconfig.artifacts.json --pretty false` | Aprovado, código 0 | [Log](verificacoes/artifacts-typecheck.log) |
-| Tipos globais | `node node_modules/typescript/bin/tsc -p tsconfig.json --noEmit --incremental false --pretty false` | Aprovado, código 0 | [Log](verificacoes/global-typecheck.log) |
-| Arquitetura artifacts | `node scripts/artifacts/architecture-smoke.mjs` | Aprovado, código 0 | [Log](verificacoes/artifacts-smoke.log) |
-| Contrato de consultas dashboard | `node scripts/artifacts/dashboard-query-smoke.mjs` | Aprovado, código 0 | [Log](verificacoes/dashboard-query-smoke.log) |
-| Plugin | `node scripts/plugin/smoke-test.mjs` | Aprovado, código 0; usa bundle existente | [Log](verificacoes/plugin-smoke.log) |
-| IA | `node node_modules/tsx/dist/cli.mjs scripts/ai-platform-smoke.ts` | Aprovado, código 0; 47 ferramentas válidas | [Log](verificacoes/ai-smoke.log) |
-| Segurança local ERP/IA | `node node_modules/tsx/dist/cli.mjs scripts/erp-security-smoke.ts` | Aprovado, código 0 | [Log](verificacoes/security-smoke.log) |
-| Script de lint atual | `node node_modules/next/dist/bin/next lint` | Falhou, código 1; análise de código não começou | [Log](verificacoes/lint.log) |
+| Tipos ERP | `node node_modules/typescript/bin/tsc -p tsconfig.erp.json --pretty false` | Aprovado, código 0 | Log removido na limpeza do repositório |
+| Tipos IA | `node node_modules/typescript/bin/tsc -p tsconfig.ai-platform.json --pretty false` | Aprovado, código 0 | Log removido na limpeza do repositório |
+| Tipos artifacts | `node node_modules/typescript/bin/tsc -p tsconfig.artifacts.json --pretty false` | Aprovado, código 0 | Log removido na limpeza do repositório |
+| Tipos globais | `node node_modules/typescript/bin/tsc -p tsconfig.json --noEmit --incremental false --pretty false` | Aprovado, código 0 | Log removido na limpeza do repositório |
+| Arquitetura artifacts | `node scripts/artifacts/architecture-smoke.mjs` | Aprovado, código 0 | Log removido na limpeza do repositório |
+| Contrato de consultas dashboard | `node scripts/artifacts/dashboard-query-smoke.mjs` | Aprovado, código 0 | Log removido na limpeza do repositório |
+| Plugin | `node scripts/plugin/smoke-test.mjs` | Aprovado, código 0; usa bundle existente | Log removido na limpeza do repositório |
+| IA | `node node_modules/tsx/dist/cli.mjs scripts/ai-platform-smoke.ts` | Aprovado, código 0; 47 ferramentas válidas | Log removido na limpeza do repositório |
+| Segurança local ERP/IA | `node node_modules/tsx/dist/cli.mjs scripts/erp-security-smoke.ts` | Aprovado, código 0 | Log removido na limpeza do repositório |
+| Script de lint atual | `node node_modules/next/dist/bin/next lint` | Falhou, código 1; análise de código não começou | Log removido na limpeza do repositório |
 
 ## Falha preexistente: lint
 
