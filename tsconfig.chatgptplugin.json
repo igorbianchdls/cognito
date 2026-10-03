@@ -2,7 +2,8 @@
   "extends": "./tsconfig.json",
   "compilerOptions": { "incremental": false },
   "include": [
-    "next-env.d.ts", "src/types.d.ts", "src/products/chatgptplugin/**/*.ts",
+    "next-env.d.ts", "src/types.d.ts", "src/products/chatgptplugin/**/*.ts", "src/products/chatgptplugin/**/*.tsx",
+    "src/app/api/chatgptplugin/**/*.ts", "src/app/chatgptplugin/**/*.tsx",
     "src/app/api/mcp/**/*.ts", "src/app/.well-known/oauth-protected-resource/**/*.ts",
     "scripts/chatgptplugin-*.ts"
   ],

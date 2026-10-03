@@ -12,10 +12,12 @@ async function main() {
   const oauth = await metadata.json()
   const validOAuth = oauth.issuer === settings.issuer && oauth.code_challenge_methods_supported?.includes('S256')
     && oauth.scopes_supported?.includes(settings.scope) && oauth.authorization_endpoint && oauth.token_endpoint
-  const database = await pluginQuery<{ executions: boolean; limits: boolean }>(
-    "SELECT to_regclass('shared.chatgptplugin_executions') IS NOT NULL AS executions, to_regclass('shared.chatgptplugin_rate_windows') IS NOT NULL AS limits",[])
-  const ready = Boolean(validOAuth && database[0]?.executions && database[0]?.limits)
-  console.log(JSON.stringify({ready,oauthReady:Boolean(validOAuth),databaseReady:Boolean(database[0]?.executions && database[0]?.limits)}))
+  const database = await pluginQuery<{ executions: boolean; limits: boolean; drafts:boolean }>(
+    "SELECT to_regclass('shared.chatgptplugin_executions') IS NOT NULL AS executions, to_regclass('shared.chatgptplugin_rate_windows') IS NOT NULL AS limits, to_regclass('shared.chatgptplugin_drafts') IS NOT NULL AS drafts",[])
+  const databaseReady=Boolean(database[0]?.executions && database[0]?.limits && database[0]?.drafts)
+  const writeScopeReady=Boolean(oauth.scopes_supported?.includes('erp:write'))
+  const ready = Boolean(validOAuth && databaseReady && writeScopeReady)
+  console.log(JSON.stringify({ready,oauthReady:Boolean(validOAuth),databaseReady,writeScopeReady,readReady:Boolean(validOAuth && databaseReady)}))
   if (!ready) process.exitCode=1
 }
 void main().catch(() => {console.error('Verificacao indisponivel. Revise OAuth e conexao do banco.');process.exitCode=1})

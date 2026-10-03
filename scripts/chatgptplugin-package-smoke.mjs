@@ -1,0 +1,16 @@
+import assert from 'node:assert/strict';
+import { resolve } from 'node:path';
+import { readFileSync,readdirSync } from 'node:fs';
+import { buildPluginPackage } from './chatgptplugin-package.mjs';
+const output=resolve('dist/chatgptplugin-package-test');
+for(const url of ['http://erp.example.invalid','https://erp.example.invalid/api/mcp','https://user:secret@erp.example.invalid','https://erp.example.invalid?token=secret'])assert.throws(()=>buildPluginPackage(url,output));
+assert.throws(()=>buildPluginPackage('https://erp.example.invalid',resolve('src/package-test')));
+const result=buildPluginPackage('https://erp.example.invalid',output);
+assert.equal(result.name,'chatgptplugin');
+const manifest=JSON.parse(readFileSync(resolve(output,'plugin.json'),'utf8'));
+const mcp=JSON.parse(readFileSync(resolve(output,'mcp.json'),'utf8'));
+assert.equal(manifest.$schema,'https://agent-plugins.org/schemas/1.0.0/plugin.schema.json');
+assert.equal(mcp.mcpServers.chatgptplugin.type,'streamable-http');assert.equal(mcp.mcpServers.chatgptplugin.url,'https://erp.example.invalid/api/mcp');
+assert(readFileSync(resolve(output,'skills/usar-erp/SKILL.md'),'utf8').includes('name: usar-erp'));
+assert.deepEqual(readdirSync(output).sort(),['README.md','mcp.json','plugin.json','skills']);
+console.log(JSON.stringify({status:'passed',packageLayout:true,httpsRequired:true,secretsExcluded:true,installed:false,publicSubmission:false}));

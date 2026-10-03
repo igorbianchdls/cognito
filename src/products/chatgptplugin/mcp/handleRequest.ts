@@ -72,7 +72,7 @@ export async function handlePluginRequest(request: Request, deps: HttpDependenci
         const parsed = JSON.parse(content)
         // SDK preserva securitySchemes em _meta; anuncie tambem no descritor publico.
         if (parsed.result?.tools) for (const tool of parsed.result.tools) {
-          tool.securitySchemes = [{ type:'oauth2',scopes:[config.scope] }]
+          tool.securitySchemes = tool._meta?.securitySchemes || [{ type:'oauth2',scopes:[config.scope] }]
         }
         result = JSON.stringify(parsed)
       }
@@ -91,4 +91,3 @@ export async function handlePluginRequest(request: Request, deps: HttpDependenci
     return Response.json({ error:failure.code,message:failure.message },{ status:failure.status,headers })
   }
 }
-

@@ -1249,6 +1249,8 @@ export async function listProfessionalReport(input: {
   report: string;
   from?: string;
   to?: string;
+  page?: number;
+  pageSize?: number;
 }) {
   if (isRetiredErpReport(input.report)) {
     throw new ErpDomainError("REPORT_RETIRED", "Este relatorio foi descontinuado.", 410);
@@ -1278,5 +1280,10 @@ export async function listProfessionalReport(input: {
     input.report === "valor-estoque"
       ? [input.tenantId]
       : [input.tenantId, from, to];
+  if (input.page !== undefined || input.pageSize !== undefined) {
+    const page = Math.max(1, Math.floor(input.page || 1));
+    const size = Math.min(50, Math.max(10, Math.floor(input.pageSize || 20)));
+    return runQuery<Record<string, unknown>>(`${sql} LIMIT $${parameters.length + 1} OFFSET $${parameters.length + 2}`, [...parameters, size + 1, (page - 1) * size]);
+  }
   return runQuery<Record<string, unknown>>(sql, parameters);
 }

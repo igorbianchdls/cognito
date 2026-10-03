@@ -6,13 +6,16 @@ import type { PluginConfig } from '../shared/config'
 import { reserveExecution, finishExecution } from '../audit/executionRepository'
 import { erpQueries, type ErpQueries } from './erpQueries'
 import { accessSchema, tools } from '../tools/catalog'
+import { actionTools } from '../actions/catalog'
+import { actionDependencies, type ActionDependencies } from '../actions/draftRepository'
 
 export type ExecutionDependencies = {
   queries: ErpQueries
   reserve: typeof reserveExecution
   finish: typeof finishExecution
+  actions?: ActionDependencies
 }
-export const executionDependencies: ExecutionDependencies = { queries: erpQueries, reserve: reserveExecution, finish: finishExecution }
+export const executionDependencies: ExecutionDependencies = { queries: erpQueries, reserve: reserveExecution, finish: finishExecution, actions:actionDependencies }
 function publicError(error: unknown): PluginError {
   if (error instanceof PluginError) return error
   if (error instanceof ErpDomainError && error.code === 'VALIDATION_ERROR') {
@@ -27,26 +30,33 @@ export async function executeTool(principal: PluginPrincipal, name: string, raw:
   let executionId: string | undefined
   try {
     const tool = tools.find(item => item.name === name)
-    if (!tool && name !== 'meu_acesso') throw new PluginError('UNKNOWN_TOOL', 'Ferramenta desconhecida.')
-    const parsed = (tool?.schema || accessSchema).safeParse(raw)
+    const action = actionTools.find(item => item.name === name)
+    const access = name === 'meu_acesso' || name === 'abrir_painel'
+    if (!tool && !action && !access) throw new PluginError('UNKNOWN_TOOL', 'Ferramenta desconhecida.')
+    const parsed = (tool?.schema || action?.schema || accessSchema).safeParse(raw)
     if (!parsed.success) throw new PluginError('INVALID_INPUT', 'Parametros invalidos. Consulte o esquema da ferramenta.')
     const input = parsed.data as Record<string, unknown>
     if (input.vencimento_inicio && input.vencimento_fim && String(input.vencimento_inicio) > String(input.vencimento_fim)) {
       throw new PluginError('INVALID_INPUT', 'O inicio do periodo deve ser anterior ao fim.')
     }
-    const company = name === 'meu_acesso' && input.empresa_id === undefined ? null : selectCompany(principal,input.empresa_id as number | undefined)
-    const allowed = !tool || tool.capabilities.every(capability => company?.capabilities.includes(capability))
+    if (input.inicio && input.fim && (String(input.inicio) > String(input.fim) || Date.parse(String(input.fim)) - Date.parse(String(input.inicio)) > 366 * 86400000)) {
+      throw new PluginError('INVALID_INPUT','Informe um periodo de ate 366 dias, com inicio anterior ao fim.')
+    }
+    const company = access && input.empresa_id === undefined ? null : selectCompany(principal,input.empresa_id as number | undefined)
+    const capabilities = tool?.requiredCapabilities?.(input) || tool?.capabilities || action?.requiredCapabilities(input) || []
+    const allowed = capabilities.every(capability => company?.capabilities.includes(capability))
     // Registre apenas metadados, nunca argumentos ou resultados com dados pessoais.
     executionId = await deps.reserve(principal,name,company?.id || null)
     if (!allowed) throw new PluginError('ACCESS_DENIED', 'Seu perfil nao permite esta consulta.', 403)
+    if (action?.write && !principal.scopes.includes('erp:write')) throw new PluginError('INSUFFICIENT_SCOPE','A conexao precisa da permissao erp:write para preparar rascunhos.',403)
     let timer: ReturnType<typeof setTimeout> | undefined
     let data: unknown
     try {
       data = await Promise.race([
-        name === 'meu_acesso' ? Promise.resolve({ usuario_id: principal.userId,
+        access ? Promise.resolve({ usuario_id: principal.userId,
           empresas: principal.companies, empresa_selecionada: company?.id || null })
           : runWithErpDatabaseContext({ tenantId: company!.id, userId: principal.userId, readOnly: true, statementTimeoutMs: 10000 },
-            () => tool!.execute(deps.queries,company!.id,input)),
+            () => action ? action.execute(deps.actions || actionDependencies,principal,company!.id,input,config) : tool!.execute(deps.queries,company!.id,input)),
         new Promise<never>((_, reject) => { timer = setTimeout(() => reject(new PluginError('TIMEOUT','A consulta excedeu o tempo limite.',504)),config.toolTimeoutMs) }),
       ])
     } finally { if (timer) clearTimeout(timer) }
@@ -64,6 +74,7 @@ export async function executeTool(principal: PluginPrincipal, name: string, raw:
     if (executionId) await deps.finish(executionId,'failed',failure.code,Date.now()-started).catch(() => {
       console.error(JSON.stringify({ scope:'chatgptplugin', code:'AUDIT_UNAVAILABLE', executionId }))
     })
-    return { isError: true, content: [{ type:'text', text: JSON.stringify({ ok:false,code:failure.code,message:failure.message,execution_id:executionId || null }) }] }
+    return { isError: true, content: [{ type:'text', text: JSON.stringify({ ok:false,code:failure.code,message:failure.message,execution_id:executionId || null }) }],
+      ...(failure.code === 'INSUFFICIENT_SCOPE' ? {_meta:{'mcp/www_authenticate':[`Bearer resource_metadata="${config.metadataUrl}", scope="erp:read erp:write", error="insufficient_scope"`]}} : {}) }
   }
 }

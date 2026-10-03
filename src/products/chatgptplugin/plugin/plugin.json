@@ -1,0 +1,20 @@
+{
+  "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
+  "name": "chatgptplugin",
+  "version": "1.1.0",
+  "description": "Consulte o Cognito ERP e prepare cadastros, orcamentos e vendas para revisao humana.",
+  "keywords": ["erp", "vendas", "compras", "financeiro"],
+  "extensions": {
+    "com.openai": {
+      "interface": {
+        "displayName": "Cognito ERP",
+        "shortDescription": "Consulte seu ERP e prepare rascunhos para revisar.",
+        "longDescription": "Consulte clientes, produtos, vendas, compras, estoque e relatorios. Prepare propostas de cadastro, orcamento e venda, revisando os dados no ERP antes de salvar.",
+        "category": "Productivity",
+        "capabilities": ["Read", "Write"],
+        "defaultPrompt": ["Consulte minhas vendas e compras.", "Prepare um orcamento para eu revisar no ERP."],
+        "brandColor": "#345CE6"
+      }
+    }
+  }
+}

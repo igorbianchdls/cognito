@@ -57,6 +57,9 @@ credentials/
 *.json
 !package*.json
 !tsconfig*.json
+!src/products/chatgptplugin/plugin/plugin.json
+/dist/chatgptplugin/
+/dist/chatgptplugin-package-test/
 
 # vercel
 .vercel

@@ -1,0 +1,4 @@
+interface:
+  display_name: "Usar Cognito ERP"
+  short_description: "Consulte seu ERP e prepare propostas para revisar"
+  default_prompt: "Use $usar-erp para consultar minhas vendas e preparar um orçamento para revisão."

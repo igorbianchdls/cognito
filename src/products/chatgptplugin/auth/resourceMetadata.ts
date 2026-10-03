@@ -6,7 +6,7 @@ export function resourceMetadata() {
   try {
     const config = getPluginConfig()
     return Response.json({ resource:config.resource,authorization_servers:[config.issuer],
-      scopes_supported:[config.scope],bearer_methods_supported:['header'],resource_name:'Cognito ERP' },{headers})
+      scopes_supported:[config.scope,'erp:write'],bearer_methods_supported:['header'],resource_name:'Cognito ERP' },{headers})
   } catch (error) {
     const failure = error instanceof PluginError ? error : new PluginError('CONFIGURATION_REQUIRED','Configure o MCP.',503)
     return Response.json({error:failure.code,message:failure.message},{status:failure.status,headers})
