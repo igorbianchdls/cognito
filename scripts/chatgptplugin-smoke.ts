@@ -74,8 +74,8 @@ async function main() {
   })
   await check('Catalogo contratos OAuth e anotacoes',async () => {
     const {body}=await rpc('tools/list')
-    assert.equal(body.result.tools.length,23)
-    for (const tool of body.result.tools) {assert.equal(tool.annotations.readOnlyHint,!['preparar_rascunho','atualizar_configuracoes'].includes(tool.name));assert.equal(tool.securitySchemes[0].type,'oauth2');assert(tool.outputSchema)}
+    assert.equal(body.result.tools.length,24)
+    for (const tool of body.result.tools) {assert.equal(tool.annotations.readOnlyHint,!['preparar_rascunho','preparar_formulario_nativo','atualizar_configuracoes'].includes(tool.name));assert.equal(tool.securitySchemes[0].type,'oauth2');assert(tool.outputSchema)}
     assert.deepEqual(body.result.tools.find((t:{name:string})=>t.name==='preparar_rascunho').securitySchemes[0].scopes,['erp:read','erp:write'])
     assert.deepEqual(body.result.tools.find((t:{name:string})=>t.name==='abrir_painel')._meta['openai/ui'].entrypoints,[{type:'global'},{type:'thread'},{type:'settings',searchTerms:['empresa','preferencias']}])
   })

@@ -1,138 +1,165 @@
 # ChatGPT Plugin — Cognito ERP
 
-Versão 1.2: 23 ferramentas MCP, ações com revisão humana, painel e formulário MCP Apps, configurações nativas, referências a clientes, editor de arquivos e exportação portátil em ZIP. Usa os repositórios e as permissões existentes do ERP.
+Produto `chatgptplugin`, versão **1.3.0**: 24 ferramentas MCP, operações com revisão humana, painel e formulário MCP Apps, formulários nativos OpenAI por MRTR, configurações nativas, menções a clientes, editor de arquivos, onboarding e exportação portátil em pasta e ZIP.
 
-O servidor exige Node.js 22 ou superior. O alias `zod-openai` fornece a versão 4 exigida pelo SDK de extensões; os contratos existentes do ERP continuam usando sua versão instalada.
+O código e as validações desta etapa são locais. OAuth real, migrações no banco remoto, instalação e testes na conta ChatGPT pertencem à próxima etapa. Nenhuma validação local comprova esses serviços funcionando em produção.
 
 ## Estrutura
 
 | Pasta | Responsabilidade |
 | --- | --- |
-| mcp | SDK oficial e transporte Streamable HTTP sem estado |
-| auth | OAuth Clerk, identidade, empresas e descoberta pública |
-| tools | Consultas, contratos de entrada, filtros e paginação |
-| application | Execução, contexto da empresa e adaptadores do ERP |
-| audit | Auditoria e limite persistente de requisições |
-| shared | Configuração, contratos e conexão operacional |
-| actions | Propostas, referências e proteção contra duplicação |
-| approvals | Revisão autenticada e salvamento com auditoria em uma transação |
-| extensions | Painel, formulário, editor e preferências pessoais |
-| plugin | Manifesto portátil, ícone, orientação inicial e skill de uso |
+| `mcp` | SDK oficial, transporte sem sessões e adaptação MCP 2026-07-28 |
+| `auth` | Verificação OAuth Clerk, identidade, empresas e descoberta do recurso protegido |
+| `application` / `tools` | Consultas, contratos, permissões e execução auditada |
+| `actions` | Propostas, referências, estado do registro e operações do ERP |
+| `approvals` | Revisão autenticada e execução após decisão humana |
+| `audit` / `shared` | Auditoria, limites, configuração e acesso ao banco |
+| `extensions` | Painel, editor, preferências e formulários nativos |
+| `plugin` | Manifesto portátil, ícone e skills `usar-erp` / `get-started` |
 
-MCP: /api/mcp. Descoberta: /.well-known/oauth-protected-resource/api/mcp e /.well-known/oauth-protected-resource. Revisão: /chatgptplugin/approvals/<uuid>.
+Requer Node.js 22 ou superior. O ERP usa Zod 3; o alias `zod-openai` fornece Zod 4 para o SDK oficial de extensões. O SDK MCP 1.32 processa ferramentas e recursos; a adaptação HTTP implementa descoberta, metadados e MRTR da revisão 2026-07-28. Clientes antigos usam o transporte anterior e o formulário MCP Apps.
 
 ## Ferramentas
 
-| Nome | Função | Permissão ERP |
+| Ferramenta | Função | Acesso exigido |
 | --- | --- | --- |
-| meu_acesso | Empresas, perfis e permissões | Vínculo ativo |
-| resumo_erp | Indicadores gerais | Relatórios, financeiro, vendas, compras e cadastros |
-| buscar_cadastros | Clientes, fornecedores, produtos e serviços | Cadastros: visualizar |
-| listar_vendas | Pedidos comerciais por busca/status | Vendas: visualizar |
-| obter_venda | Dados comerciais e até 100 itens | Vendas: visualizar |
-| consultar_financeiro | Parcelas a pagar/receber por busca e vencimento | Financeiro: visualizar |
-| consultar_estoque | Posição por produto e local | Estoque: visualizar |
-| listar_compras | Pedidos de compra por busca/status | Compras: visualizar |
-| obter_compra | Dados comerciais e até 100 itens | Compras: visualizar |
-| listar_orcamentos | Apenas documentos do tipo orçamento | Vendas: visualizar |
-| consultar_relatorio | Oito relatórios por período, com paginação | Relatórios e área consultada: visualizar |
-| preparar_rascunho | Proposta de cliente, produto, orçamento ou venda | Cadastros ou vendas: gerenciar; OAuth erp:write |
-| obter_rascunho | Proposta e resultado da revisão | Vínculo ativo; autor e cliente OAuth original |
-| listar_rascunhos | Propostas do próprio usuário e conexão | Vínculo ativo; autor e cliente OAuth original |
-| abrir_painel | Escolha de empresa e consultas interativas | Vínculo ativo; cada consulta verifica suas permissões |
+| `meu_acesso` | Empresas, perfis e permissões da conta | Usuário e vínculos ativos |
+| `resumo_erp` | Indicadores financeiros, vendas, compras e cadastros | Visualização das áreas consultadas |
+| `buscar_cadastros` | Clientes, fornecedores, produtos ou serviços | Cadastros: visualizar |
+| `obter_cliente` | Cliente por ID | Cadastros: visualizar |
+| `listar_vendas` | Pedidos de venda com paginação | Vendas: visualizar |
+| `obter_venda` | Venda e até 100 itens | Vendas: visualizar |
+| `listar_orcamentos` | Orçamentos com paginação | Vendas: visualizar |
+| `listar_compras` | Pedidos de compra | Compras: visualizar |
+| `obter_compra` | Compra e até 100 itens | Compras: visualizar |
+| `consultar_financeiro` | Parcelas a pagar ou receber | Financeiro: visualizar |
+| `listar_contas_financeiras` | Contas ativas para preparar baixas | Financeiro: visualizar |
+| `listar_pagamentos` | Pagamentos e recebimentos para preparar estornos | Financeiro: visualizar |
+| `consultar_estoque` | Posição, reservas e disponibilidade | Estoque: visualizar |
+| `consultar_relatorio` | Oito relatórios por período | Relatórios e área consultada: visualizar |
+| `verificar_fiscal_venda` | Pendências fiscais, sem emitir nota | Vendas: visualizar |
+| `preparar_rascunho` | Preparar uma das 14 operações abaixo | `erp:write` e permissões da operação |
+| `preparar_formulario_nativo` | Formulário OpenAI para preparar rascunho | Mesmo acesso do preparo; cliente MRTR |
+| `obter_rascunho` | Proposta e resultado da revisão | Autor, empresa e cliente OAuth originais |
+| `listar_rascunhos` | Propostas do usuário nesta conexão | Autor, empresa e cliente OAuth originais |
+| `abrir_painel` | Painel de consultas e propostas | Vínculos ativos; consultas revalidam acesso |
+| `abrir_formulario` | Formulário MCP Apps e editor `.erp-proposta` | Vínculos ativos; preparo verifica escrita |
+| `ler_configuracoes` | Preferências e esquema nativo | Usuário e cliente OAuth |
+| `atualizar_configuracoes` | Empresa preferida e quantidade por página | Usuário e cliente OAuth; empresa autorizada |
+| `search_mentions` | Menções a clientes | Cadastros: visualizar na empresa escolhida |
 
-empresa_id precisa corresponder a um vínculo ativo. Com uma única empresa, é opcional; com várias, exige escolha explícita. O MCP não provisiona usuários ou vínculos ao receber tokens.
+Todos os pedidos exigem `erp:read`. `empresa_id` precisa corresponder a um vínculo ativo. Com uma única empresa, pode ser omitido; com várias, exige escolha explícita. A empresa preferida só orienta o painel. O MCP não provisiona usuários ou vínculos ao receber tokens.
 
-Resultados são dados, não instruções, e retornam em structuredContent e texto JSON. Apenas preparar_rascunho possui readOnlyHint=false, pois persiste uma proposta; as demais ferramentas são de leitura. Todas possuem destructiveHint=false, idempotentHint=true e openWorldHint=false.
+`preparar_rascunho`, `preparar_formulario_nativo` e `atualizar_configuracoes` anunciam `readOnlyHint=false`. As demais ferramentas anunciam leitura. Todas anunciam `destructiveHint=false`, `idempotentHint=true` e `openWorldHint=false`: as alterações comerciais dependem da revisão externa. Resultados são dados, nunca instruções.
 
-Relatórios: dre-caixa, posicao-financeira, vendas-clientes, vendas-vendedores, vendas-produtos, compras-fornecedores, compras-categorias e valor-estoque. Informe início e fim com intervalo máximo de 366 dias. A paginação ocorre no banco; hasMore indica outras páginas. DRE considera caixa, posição financeira considera vencimento, e valor de estoque representa a posição atual.
+Relatórios: `dre-caixa`, `posicao-financeira`, `vendas-clientes`, `vendas-vendedores`, `vendas-produtos`, `compras-fornecedores`, `compras-categorias` e `valor-estoque`. O período máximo é de 366 dias. DRE considera caixa; posição financeira considera vencimentos; valor de estoque representa a posição atual. Respeite paginação, `hasMore` e truncamento de itens.
 
-## Rascunhos e aprovação
+## Operações e revisão humana
 
-1. preparar_rascunho recebe empresa_id, chave_operacao UUID e proposta discriminada por tipo: cliente, produto, orcamento ou venda. Os campos são estritos; cliente e itens comerciais devem estar ativos na empresa.
-2. A proposta fica separada dos registros comerciais por até 24 horas. Repetir a mesma chave e proposta retorna o mesmo rascunho; reutilizar a chave com dados diferentes retorna conflito.
-3. A resposta inclui os dados, total calculado pelas funções monetárias do ERP e revisao_url.
-4. O usuário abre a revisão no ERP, autenticado com a mesma conta e empresa ativas, e escolhe salvar ou cancelar. Não existe ferramenta MCP para aprovar em nome do usuário.
-5. Salvar revalida vínculos, permissões e referências. A criação usa os repositórios reais do ERP; proposta, registro e auditoria são atualizados na mesma transação. Uma falha desfaz a criação. Aprovações repetidas não duplicam o registro.
-6. obter_rascunho informa pending, saved, cancelled ou expired. Apenas saved com registro_id confirma criação. Orçamentos e vendas continuam em rascunho comercial, sem confirmação, faturamento ou pagamento.
+| Tipos de proposta | Resultado após aprovação |
+| --- | --- |
+| `cliente`, `produto` | Criação no cadastro |
+| `orcamento`, `venda` | Criação do documento em rascunho comercial |
+| `editar_cliente`, `editar_produto` | Edição dos campos permitidos |
+| `confirmar_venda`, `confirmar_compra` | Confirmação conforme regras do ERP |
+| `cancelar_venda`, `cancelar_compra` | Cancelamento conforme regras do ERP |
+| `atender_venda` | Atendimento e movimentação de estoque |
+| `receber_parcela`, `pagar_parcela` | Baixa com conta, valor e data explícitos |
+| `estornar_pagamento` | Estorno com motivo explícito |
 
-Clientes e produtos só passam a existir no ERP após salvar na revisão. Esta versão não oferece edição de registros existentes, baixas financeiras, estornos ou confirmações comerciais.
+1. O preparo recebe `empresa_id`, `chave_operacao` UUID e proposta com campos estritos. Referências precisam pertencer à empresa e estar em estado permitido.
+2. A proposta fica separada dos registros do ERP por até 24 horas. A mesma chave e proposta retornam o mesmo resultado; a mesma chave com dados diferentes gera conflito.
+3. A resposta inclui a proposta, o resumo do alvo, os valores calculados pelo ERP e `revisao_url`.
+4. O usuário abre a revisão no ERP, autenticado com a mesma conta, e escolhe salvar ou cancelar. Não existe ferramenta MCP de aprovação.
+5. A aprovação bloqueia os registros envolvidos, revalida vínculo e perfil atuais e compara o estado do alvo. Mudanças posteriores exigem nova proposta (`STALE_PROPOSAL`). Operação, resultado e auditoria são gravados na mesma transação; uma falha desfaz a operação.
+6. `obter_rascunho` informa `pending`, `saved`, `cancelled` ou `expired`. `saved` e o resultado retornado confirmam a operação aprovada. Repetir uma aprovação concluída não duplica o efeito.
 
-## Extensions e pacote
+Permissões específicas, contas financeiras ativas, saldos, estoque e períodos fechados continuam sujeitos às regras do ERP. Atendimento e verificação fiscal não emitem nota. Emissão fiscal depende de integração real.
 
-abrir_painel aponta para ui://chatgptplugin/panel/v1.html, MIME text/html;profile=mcp-app, com _meta.ui.resourceUri e _meta["openai/ui"].entrypoints global (sidebar) e thread (painel da conversa). A interface usa a ponte MCP Apps para consultar ferramentas e abrir a revisão externa. Não recebe tokens nem acessa diretamente o banco. O HTML não contém dados privados. Dados externos entram via textContent; links são validados contra a origem configurada. A CSP não permite recursos, conexões ou iframes externos.
+## Interfaces e extensões
 
-O pacote fonte contém plugin/plugin.json, plugin/skills/usar-erp/SKILL.md e apresentação da skill. Para exportar, substitua o domínio do exemplo pela origem HTTPS real:
+- **Painel:** `ui://chatgptplugin/panel/v1.html`, com entradas global, thread e settings. Permite escolher empresa, consultar dados e acompanhar propostas.
+- **Formulário MCP Apps:** `ui://chatgptplugin/form/v1.html`, com entradas thread e file para `.erp-proposta`. Cobre as 14 operações.
+- **Arquivos:** até 24 KB, com JSON estrito. Arquivos do host usam `resources/read`; gravação usa `openai/resources/write` somente com permissão e versão `ifMatch`. Salvar arquivo não salva registros no ERP.
+- **Configurações:** capacidade `openai/settings`, registrada pelo SDK oficial, com preferências isoladas por usuário e cliente OAuth.
+- **Menções:** busca clientes; com várias empresas, usa `ID_EMPRESA: termo`. A leitura de `erp://empresa/ID/clientes/ID` revalida acesso e registra auditoria.
+- **Onboarding:** skill `get-started`, indicada por `onboardingSkill`, apresenta acesso, empresas, painel e revisão.
 
-    pnpm chatgptplugin:package --url https://erp.seudominio.com
+Os HTMLs são modelos sem dados privados ou tokens. Usam a ponte MCP Apps; dados recebidos entram por `textContent`; links de revisão são limitados à origem e ao caminho esperado. A CSP restringe recursos e conexões externas.
 
-O exportador escreve dist/chatgptplugin/ com manifesto, mcp.json, skill e instruções. Só copia arquivos previstos; exclui servidor, banco, .env, credenciais e dependências. Não instala o plugin, não altera configurações pessoais nem recria .agents.
+### Formulários nativos e MRTR
 
-Para ChatGPT, conecte e registre o MCP em modo de desenvolvimento antes da instalação/distribuição. A preparação do pacote e os entrypoints não comprovam funcionamento em uma conta real. Publicação pública ainda exige identidade do desenvolvedor, ícone, URLs de privacidade/suporte e os demais requisitos do painel. File viewers, composer mentions, rich forms e onboarding não foram declarados nesta versão.
+`preparar_formulario_nativo` recebe empresa, tipo e chave UUID. O cliente precisa usar MCP **2026-07-28** e anunciar `extensions["openai/elicitation"].form` em cada chamada. Os campos e respostas são validados pelos esquemas do SDK oficial e pelos contratos estritos das propostas.
 
-## OAuth e configuração
+A primeira resposta tem `resultType: input_required`, `inputRequests.proposta` com método `openai/elicitation/create` e `requestState` opaco. O host coleta os campos e repete a chamada com outro ID JSON-RPC, os mesmos argumentos, o estado e `inputResponses.proposta`. Aceitar prepara o rascunho; cancelar ou recusar não cria proposta. Resposta faltante reapresenta o formulário. Venda e orçamento recebem itens como lista JSON validada; os demais campos usam controles de texto, data, número e seleção.
 
-Cada requisição exige Authorization: Bearer, validado pela API idPOAuthAccessToken.verify da instância Clerk. Verifica validade/revogação, expiração, usuário, escopo erp:read e cliente OAuth permitido. O MCP não aceita cookies de navegador. A origem do emissor precisa corresponder ao domínio da chave pública Clerk.
+O estado usa AES-256-GCM, expira em dez minutos e está vinculado ao usuário, cliente OAuth, empresa, origem e argumentos. Não mantém sessão em memória ou nova tabela. A chave `CHATGPTPLUGIN_FORM_STATE_KEY` deve ser compartilhada entre instâncias. Autenticação, frequência, escopos e permissões são verificados novamente em cada POST. A idempotência persistida do preparo evita duplicar propostas durante a reutilização permitida do estado.
 
-No Clerk, habilite OAuth Applications, crie erp:read e erp:write, anuncie e atribua os escopos ao cliente autorizado. Propostas exigem escrita e a permissão correspondente no ERP; consultas continuam disponíveis com apenas leitura. Configure PKCE S256 e copie callbacks da configuração real do ChatGPT/Inspector. O Clerk conduz consentimento, troca de códigos, renovação e revogação; não há emissor próprio.
+Clientes modernos usam `server/discover`, metadados de versão/capacidades e cabeçalhos `MCP-Protocol-Version`, `Mcp-Method` e `Mcp-Name` quando aplicável. Inconsistências são rejeitadas. Resultados concluídos têm `resultType: complete`. Clientes anteriores usam `initialize` e `abrir_formulario`; não recebem pedidos nativos MRTR.
 
-Preencha .env.local conforme .env.example:
+## Pacote e validação
 
-- NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY e CLERK_SECRET_KEY.
-- SUPABASE_DB_URL e o certificado CA adotado pelo ERP.
-- CHATGPTPLUGIN_BASE_URL: origem pública HTTPS, sem caminho.
-- CHATGPTPLUGIN_OAUTH_ISSUER: origem HTTPS Frontend API da instância Clerk.
-- CHATGPTPLUGIN_OAUTH_CLIENT_IDS: IDs dos clientes permitidos, separados por vírgula.
-- CHATGPTPLUGIN_ALLOWED_ORIGINS: origens extras para clientes MCP no navegador; a origem do serviço e https://chatgpt.com já são permitidas.
+```text
+pnpm chatgptplugin:package --url https://DOMINIO_REAL
+pnpm chatgptplugin:validate-package dist/chatgptplugin
+```
 
-Em desenvolvimento, a origem base pode usar HTTP em localhost. Produção exige HTTPS. Segredos e tokens não devem ir para o repositório, URLs, logs ou respostas. Erros de autenticação HTTP incluem WWW-Authenticate; falta de escrita na ferramenta inclui _meta["mcp/www_authenticate"].
+O exportador produz `dist/chatgptplugin/` e `dist/chatgptplugin.zip`, com exatamente oito arquivos: manifesto, conexão MCP, ícone, duas skills e suas apresentações, e README. O servidor e suas credenciais são configurados separadamente.
 
-## Banco e operação
+A pasta e o ZIP são validados automaticamente. O validador funciona offline com cópias dos esquemas publicados **Agent Plugins 1.0.0**, metadados OpenAI deste produto, URLs, contraste da marca, ícone SVG sem conteúdo ativo, onboarding e YAML das skills. Confere caminhos relativos, duplicidades após normalização, limites de tamanho, cabeçalhos ZIP, conteúdo, CRC e correspondência integral com a pasta. O perfil aceita o ZIP `stored` do exportador. Arquivos extras e links simbólicos são rejeitados.
 
-Migrações preparadas, ainda não aplicadas ao banco remoto:
+O relatório identifica `portable-development` e devolve `publicationReady: false` com as pendências externas. `--require-publication` impede que esse pacote de desenvolvimento seja confundido com publicação validada. Registro elegível do MCP, mapeamento real `.app.json`, URLs oficiais de website/privacidade/termos/suporte e instalação na conta ainda precisam ser concluídos. `Cognito ERP` é a identificação de apresentação do desenvolvedor; a identidade para publicação precisa ser confirmada.
 
-- 20261003130000_create_chatgptplugin.sql: shared.chatgptplugin_executions e shared.chatgptplugin_rate_windows.
-- 20261003140000_chatgptplugin_drafts.sql: shared.chatgptplugin_drafts, com proposta, autor, empresa, cliente OAuth, chave, prazo e resultado.
-- 20261003150000_chatgptplugin_operations_settings.sql: estado do registro a aprovar e preferências por usuário/cliente OAuth.
+O exportador não instala, não publica e não recria `.agents`. O teste usa `erp.example.invalid`, domínio fictício que não permite conexão real.
 
-As tabelas têm RLS e acesso revogado para anon/authenticated. O backend usa a conexão administrativa existente. A auditoria armazena apenas metadados, sem argumentos ou resultados; propostas podem conter dados pessoais informados pelo usuário. Revise todas as migrações pendentes antes de atualizar o banco: a migração anterior de retirada de tabelas antigas bloqueia se encontrar registros.
+## Configuração para a próxima etapa
 
-Limites: 60 requisições por usuário/minuto; corpo MCP de 64 KB; resposta estruturada de 128 KB; páginas de 10 a 50 registros; detalhes com até 100 itens; propostas com até 50 itens e 24 KB; consultas ERP com statement_timeout de 10 segundos e ferramenta com prazo de 15 segundos. Consultas usam erp_runtime com contexto autenticado e transações somente de leitura. A revisão usa escrita restrita, prazo de consulta de 10 segundos e lock de 5 segundos. A decisão HTTP aceita até 1 KB e exige origem do ERP, sessão de navegador e corpo estrito.
+Cada POST valida `Authorization: Bearer` pela API Clerk `idPOAuthAccessToken.verify`: validade, revogação, expiração, usuário, cliente permitido e `erp:read`. O emissor precisa corresponder à instância Clerk. Cookies não substituem OAuth no MCP. Aprovação usa sessão do navegador, origem do ERP e corpo estrito.
 
-Agende diariamente pnpm chatgptplugin:maintenance: remove janelas de frequência após dois dias, auditoria e propostas encerradas após 90 dias, marca execuções interrompidas e propostas expiradas. O agendamento remoto não foi configurado.
+Variáveis previstas em `.env.example`:
 
-## Validação local
+- `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY` e `CLERK_SECRET_KEY`.
+- `SUPABASE_DB_URL` e o certificado CA adotado pelo ERP.
+- `CHATGPTPLUGIN_BASE_URL`: origem pública HTTPS, sem caminho.
+- `CHATGPTPLUGIN_OAUTH_ISSUER`: origem HTTPS da instância Clerk.
+- `CHATGPTPLUGIN_OAUTH_CLIENT_IDS`: clientes permitidos, separados por vírgula.
+- `CHATGPTPLUGIN_ALLOWED_ORIGINS`: origens adicionais; serviço e `https://chatgpt.com` já são permitidos.
+- `CHATGPTPLUGIN_FORM_STATE_KEY`: chave aleatória de 32 bytes em base64, mantida apenas no servidor.
 
-    pnpm chatgptplugin:typecheck
-    pnpm chatgptplugin:smoke
-    pnpm chatgptplugin:database-smoke
-    pnpm chatgptplugin:interface-smoke
-    pnpm chatgptplugin:form-smoke
-    pnpm chatgptplugin:package-smoke
-    pnpm security:smoke
-    pnpm build
-    pnpm chatgptplugin:check-config
+No Clerk, configure OAuth Applications, `erp:read`, `erp:write`, PKCE S256 e callbacks reais. Não envie segredos ao chat ou ao pacote. Desenvolvimento admite origem HTTP em localhost; produção exige HTTPS.
 
-Os testes são locais, sem banco remoto ou ChatGPT real. O protocolo usa o SDK oficial; o banco usa PostgreSQL local e repositórios reais. A interface usa navegador dedicado e host MCP Apps simulado, com dados artificiais. Nenhuma rota de simulação foi adicionada à aplicação. O teste de pacote usa domínio .invalid e não instala nem publica nada.
+Migrações preparadas, sem aplicação ao banco remoto nesta etapa:
 
-Os testes cobrem protocolo, configurações nativas, referências entre empresas, revisão, edição, confirmação comercial, estoque, baixa, estorno e rollback por falha de auditoria. As telas verificam seleção de empresa, paginação, bloqueio de HTML injetado, preservação de chaves de tentativa e leitura/escrita de arquivo com controle de versão. Confira o resultado dos comandos acima para a execução atual.
+- `20261003130000_create_chatgptplugin.sql`: execuções e janelas de frequência.
+- `20261003140000_chatgptplugin_drafts.sql`: propostas, autor, empresa, cliente OAuth, idempotência e resultado.
+- `20261003150000_chatgptplugin_operations_settings.sql`: estado do alvo e preferências.
 
-Validação local em 03/10/2026: 31 grupos do protocolo e 16 grupos no PostgreSQL local aprovados; painel, formulário e arquivo aprovados no navegador; pacote ZIP e as duas skills validados; compilação completa e checagem de tipos aprovadas. Nenhum teste confirmou instalação real no ChatGPT.
+As tabelas têm RLS e acesso revogado para `anon` / `authenticated`. O backend usa a conexão administrativa existente. Auditoria guarda metadados; propostas podem conter dados pessoais. Revise as migrações pendentes antes de aplicar: a retirada anterior de tabelas antigas bloqueia se encontrar registros.
 
-## Operações e extensões da versão 1.2
+Limites: 60 pedidos por usuário/minuto; corpo MCP de 64 KB; resultado estruturado de 128 KB; páginas de 10 a 50; detalhes de até 100 itens; propostas de até 50 itens e 24 KB. Consultas têm prazo de 10 segundos no banco e 15 segundos na ferramenta. Revisão tem prazo de consulta de 10 segundos, lock de 5 segundos e decisão HTTP de até 1 KB.
 
-`preparar_rascunho` aceita criação de cliente/produto/orçamento/venda, edição de cliente/produto, confirmação/cancelamento de venda/compra, atendimento de venda, recebimento/pagamento de parcela e estorno. A ferramenta só prepara a proposta. A tela autenticada revalida o perfil atual, compara o estado do registro e executa a ação junto com a auditoria na mesma transação. Uma alteração posterior exige nova proposta (`STALE_PROPOSAL`). As regras comerciais e os períodos fechados do ERP continuam aplicáveis.
+`chatgptplugin:maintenance` remove janelas antigas, auditoria/propostas encerradas após 90 dias e marca execuções interrompidas e propostas expiradas. O agendamento remoto será configurado depois.
 
-`obter_cliente`, `listar_contas_financeiras`, `listar_pagamentos` e `verificar_fiscal_venda` completam as consultas necessárias às ações. Baixas exigem conta financeira, valor e data explícitos. Atendimento de estoque e verificação fiscal não emitem notas. A emissão fiscal ainda depende de integração real.
+## Validação local e limites da evidência
 
-O SDK oficial `@openai/mcp-extensions` registra `ler_configuracoes`, `atualizar_configuracoes` e `search_mentions`. Configurações usam a capacidade `openai/settings` e ficam isoladas por usuário e cliente OAuth. A quantidade por página e a empresa preferida são usadas no painel; as ferramentas ainda exigem empresa explícita quando há vários vínculos. Mencionar clientes com várias empresas requer busca no formato `ID_EMPRESA: termo`. A leitura da referência `erp://empresa/.../clientes/...` revalida acesso e registra a consulta.
+```text
+pnpm chatgptplugin:typecheck
+pnpm chatgptplugin:smoke
+pnpm chatgptplugin:mrtr-smoke
+pnpm chatgptplugin:database-smoke
+pnpm chatgptplugin:interface-smoke
+pnpm chatgptplugin:form-smoke
+pnpm chatgptplugin:package-smoke
+pnpm security:smoke
+pnpm build
+```
 
-`abrir_formulario` exibe os campos das propostas e permite abrir arquivos `.erp-proposta`. O editor aceita arquivos de até 24 KB, rejeita campos extras e não executa dados importados. Arquivos fornecidos pelo host usam `resources/read`; a gravação usa `openai/resources/write` apenas quando o host anuncia permissão e versão (`ifMatch`). O servidor continua sem sessões; os formulários são componentes MCP Apps. Elicitação nativa por MRTR ainda não está habilitada.
+Protocolo usa o SDK real com dependências autenticadas simuladas. MRTR percorre o endpoint HTTP em chamadas independentes, com formulários oficiais, expiração, alteração de estado, troca de usuário/cliente, revogação, campos inválidos, cancelamento e idempotência. Banco usa PGlite local e SQL/repositórios reais. Painel e editor usam navegador dedicado com host MCP Apps simulado. Pacote inclui rejeição de manifestos, skills, caminhos e ZIP inválidos. Não há rotas de simulação na aplicação.
 
-O manifesto inclui entrypoints global/thread/settings/file, ícone e `onboardingSkill`. O comando `chatgptplugin:package --url https://DOMINIO_REAL` exporta pasta e ZIP em `dist`, contendo somente manifesto, conexão MCP, ícone e skills. Não inclui o servidor, credenciais ou banco. O ZIP de teste usa domínio `.invalid`; não é um pacote conectado para instalação real.
+Validação em 03/10/2026: 31 grupos do protocolo, 12 grupos MRTR, 16 grupos no banco local e 37 verificações negativas do pacote aprovados. Painel, formulário/editor, isolamento/permissões, checagem de tipos e compilação completa aprovados.
 
-## Pendências externas
+PGlite serializa as transações da suíte: os testes locais **não comprovam concorrência entre duas conexões PostgreSQL reais**. Essa validação pertence à etapa de banco, junto com migrações, isolamento e rollback no ambiente de teste.
 
-O ambiente local segue sem domínio MCP, emissor/clientes OAuth e credenciais Clerk. Não há comprovação de OAuth, banco remoto, instalação ou conexão ChatGPT funcionando. Configure credenciais localmente, aplique migrações revisadas em teste, implante em HTTPS e execute chatgptplugin:check-config. Depois valide Inspector e ChatGPT: consentimento, perfis, revogação, empresa, consultas, propostas e revisão humana.
+Depois de configurar OAuth, banco e domínio, execute `chatgptplugin:check-config` e valide Inspector/ChatGPT: consentimento, perfis, revogação, empresas, consultas, configurações, menções, formulário nativo, arquivos, propostas e aprovação humana. Instalação e renderização no host real ainda não foram comprovadas.
 
-Referências: [MCP OpenAI](https://developers.openai.com/plugins/build/mcp-server), [OAuth](https://developers.openai.com/plugins/build/auth), [MCP Apps UI](https://developers.openai.com/plugins/build/chatgpt-ui), [Plugin Extensions](https://developers.openai.com/plugins/build/extensions), [pacote portátil](https://developers.openai.com/plugins/build/plugins).
+Referências: [extensões OpenAI](https://developers.openai.com/plugins/build/extensions), [pacote portátil](https://developers.openai.com/plugins/build/plugins), [requisitos de pacote](https://developers.openai.com/plugins/deploy/submission-errors), [MRTR](https://modelcontextprotocol.io/specification/2026-07-28/basic/patterns/mrtr), [Streamable HTTP](https://modelcontextprotocol.io/specification/2026-07-28/basic/transports/streamable-http).

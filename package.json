@@ -25,6 +25,8 @@
     "chatgptplugin:interface-smoke": "tsx scripts/chatgptplugin-interface-smoke.ts",
     "chatgptplugin:form-smoke": "tsx scripts/chatgptplugin-form-smoke.ts",
     "chatgptplugin:package-smoke": "node scripts/chatgptplugin-package-smoke.mjs",
+    "chatgptplugin:mrtr-smoke": "tsx scripts/chatgptplugin-mrtr-smoke.ts",
+    "chatgptplugin:validate-package": "node scripts/chatgptplugin-validate-package.mjs",
     "security:smoke": "tsx scripts/erp-security-smoke.ts",
     "erp:runtime-smoke": "tsx scripts/erp-runtime-isolation-smoke.ts",
     "service:hello": "node services/hello-service.mjs",
@@ -145,6 +147,8 @@
     "zod": "^3.25.76"
   },
   "devDependencies": {
+    "ajv": "8.20.0",
+    "js-yaml": "4.1.0",
     "@electric-sql/pglite": "0.3.14",
     "@ariakit/react": "^0.4.18",
     "@eslint/eslintrc": "^3",

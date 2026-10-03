@@ -1,7 +1,8 @@
 import assert from 'node:assert/strict';
 import { resolve } from 'node:path';
 import { readFileSync,readdirSync } from 'node:fs';
-import { buildPluginPackage } from './chatgptplugin-package.mjs';
+import { buildPluginPackage,encodePackageZip } from './chatgptplugin-package.mjs';
+import { validatePluginPackage,validatePackageEntries,readPackageZip,PACKAGE_FILES } from './chatgptplugin-validate-package.mjs';
 const output=resolve('dist/chatgptplugin-package-test');
 for(const url of ['http://erp.example.invalid','https://erp.example.invalid/api/mcp','https://user:secret@erp.example.invalid','https://erp.example.invalid?token=secret'])assert.throws(()=>buildPluginPackage(url,output));
 assert.throws(()=>buildPluginPackage('https://erp.example.invalid',resolve('src/package-test')));
@@ -16,4 +17,46 @@ assert.deepEqual(readdirSync(output).sort(),['README.md','assets','mcp.json','pl
 assert.equal(readFileSync(result.archive).readUInt32LE(0),0x04034b50);
 assert(readFileSync(resolve(output,'assets/icon.svg'),'utf8').includes('viewBox="0 0 128 128"'));
 assert.equal(manifest.extensions['com.openai'].onboardingSkill,'./skills/get-started/SKILL.md');
-console.log(JSON.stringify({status:'passed',packageLayout:true,httpsRequired:true,secretsExcluded:true,installed:false,publicSubmission:false}));
+const validation=validatePluginPackage(output,result.archive);
+assert.equal(validation.zipIntegrity,true);assert.equal(validation.schemas,'Agent Plugins 1.0.0');assert.equal(validation.skills,2);assert.equal(validation.publicationReady,false);
+assert.throws(()=>validatePluginPackage(output,result.archive,{requirePublication:true}),/Publicação ainda depende/);
+const entries=new Map(PACKAGE_FILES.map(name=>[name,readFileSync(resolve(output,name))]));
+let checks=0;
+function reject(label,mutate){const files=new Map(entries);mutate(files);assert.throws(()=>validatePackageEntries(files),undefined,label);checks++;}
+function modifyJson(files,name,change){const value=JSON.parse(files.get(name).toString());change(value);files.set(name,Buffer.from(JSON.stringify(value)));}
+reject('Unknown manifest fields',files=>modifyJson(files,'plugin.json',m=>{m.secret='should never ship'}));
+reject('Invalid identity',files=>modifyJson(files,'plugin.json',m=>{m.name='Wrong Name'}));
+reject('Invalid SemVer',files=>modifyJson(files,'plugin.json',m=>{m.version='latest'}));
+reject('Leading zero SemVer prerelease',files=>modifyJson(files,'plugin.json',m=>{m.version='1.0.0-01'}));
+reject('Missing author',files=>modifyJson(files,'plugin.json',m=>{delete m.author}));
+reject('Missing required listing',files=>modifyJson(files,'plugin.json',m=>{delete m.extensions['com.openai'].interface.displayName}));
+reject('Unknown category',files=>modifyJson(files,'plugin.json',m=>{m.extensions['com.openai'].interface.category='not a category'}));
+reject('Overlong directory prompt',files=>modifyJson(files,'plugin.json',m=>{m.extensions['com.openai'].interface.defaultPrompt=['x'.repeat(129)]}));
+reject('Invisible/control characters',files=>modifyJson(files,'plugin.json',m=>{m.extensions['com.openai'].interface.displayName='Invisible\u200B'}));
+reject('Listing URL credentials',files=>modifyJson(files,'plugin.json',m=>{m.extensions['com.openai'].interface.websiteURL='https://user:password@example.invalid'}));
+reject('Low contrast color',files=>modifyJson(files,'plugin.json',m=>{m.extensions['com.openai'].interface.brandColor='#FFFFFF'}));
+reject('Missing icon',files=>{files.delete('assets/icon.svg')});
+reject('External or active SVG',files=>{files.set('assets/icon.svg',Buffer.from('<svg width="128" height="128" viewBox="0 0 128 128"><script>alert(1)</script></svg>'))});
+reject('Missing onboarding',files=>modifyJson(files,'plugin.json',m=>{m.extensions['com.openai'].onboardingSkill='./skills/missing/SKILL.md'}));
+reject('Traversal icon path',files=>modifyJson(files,'plugin.json',m=>{m.extensions['com.openai'].interface.logo='./../secret.svg'}));
+reject('Extra secret file',files=>{files.set('.env',Buffer.from('secret'))});
+reject('Unsafe archive path',files=>{files.set('../outside',Buffer.from('bad'))});
+reject('Case duplicate path',files=>{files.set('PLUGIN.JSON',files.get('plugin.json'))});
+reject('Invalid UTF8',files=>{files.set('plugin.json',Buffer.from([0xff,0xfe]))});
+reject('Malformed skill YAML',files=>{files.set('skills/get-started/SKILL.md',Buffer.from('---\nname: [broken\n---\nInstructions'))});
+reject('Missing skill body',files=>{files.set('skills/get-started/SKILL.md',Buffer.from('---\nname: get-started\ndescription: test\n---\n '))});
+reject('Duplicate/mismatched skill identity',files=>{files.set('skills/get-started/SKILL.md',Buffer.from('---\nname: usar-erp\ndescription: test\n---\nInstructions'))});
+reject('Invalid skill presentation YAML',files=>{files.set('skills/get-started/agents/openai.yaml',Buffer.from('interface: [oops'))});
+reject('Unsupported MCP type',files=>modifyJson(files,'mcp.json',m=>{m.mcpServers.chatgptplugin.type='invalid'}));
+reject('Insecure MCP endpoint',files=>modifyJson(files,'mcp.json',m=>{m.mcpServers.chatgptplugin.url='http://erp.example.invalid/api/mcp'}));
+reject('Secret MCP headers',files=>modifyJson(files,'mcp.json',m=>{m.mcpServers.chatgptplugin.headers={Authorization:'Bearer secret'}}));
+reject('Invalid endpoint path',files=>modifyJson(files,'mcp.json',m=>{m.mcpServers.chatgptplugin.url='https://erp.example.invalid/other?token=secret'}));
+const bytes=readFileSync(result.archive);
+const crcCorruption=Buffer.from(bytes);crcCorruption[30+bytes.readUInt16LE(26)]^=1;assert.throws(()=>readPackageZip(crcCorruption),/CRC/);checks++;
+const inconsistent=Buffer.from(bytes);inconsistent.writeUInt32LE(0,18);assert.throws(()=>readPackageZip(inconsistent),/divergentes/);checks++;
+assert.throws(()=>readPackageZip(bytes.subarray(0,-5)));checks++;
+const wrongEntryCount=Buffer.from(bytes);wrongEntryCount.writeUInt16LE(5001,bytes.length-12);assert.throws(()=>readPackageZip(wrongEntryCount));checks++;
+for(const name of ['../outside','/absolute','a\\b','a//b','a/./b']){const archive=encodePackageZip([{name,data:Buffer.from('bad')}]);assert.throws(()=>readPackageZip(archive));checks++;}
+const duplicateZip=encodePackageZip([{name:'plugin.json',data:Buffer.from('{}')},{name:'PLUGIN.JSON',data:Buffer.from('{}')}]);assert.throws(()=>readPackageZip(duplicateZip),/duplicado/);checks++;
+const textZip=encodePackageZip([{name:'skills/test.txt',data:Buffer.from('UTF-8 correto: ação, preço, revisão')}]);assert.equal(readPackageZip(textZip).get('skills/test.txt').toString(),'UTF-8 correto: ação, preço, revisão');
+console.log(JSON.stringify({status:'passed',packageLayout:true,schemas:true,metadata:true,skills:2,zipIntegrity:true,negativeChecks:checks,httpsRequired:true,secretsExcluded:true,installed:false,publicSubmission:false}));

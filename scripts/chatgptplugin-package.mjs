@@ -1,6 +1,7 @@
 import { readFileSync,writeFileSync,mkdirSync,copyFileSync,readdirSync,existsSync,lstatSync } from 'node:fs';
 import { resolve,dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { PACKAGE_FILES,validatePackageEntries,validatePluginPackage } from './chatgptplugin-validate-package.mjs';
 
 const root=resolve(dirname(fileURLToPath(import.meta.url)),'..');
 export function buildPluginPackage(baseUrl,output=resolve(root,'dist/chatgptplugin')) {
@@ -9,8 +10,8 @@ export function buildPluginPackage(baseUrl,output=resolve(root,'dist/chatgptplug
   const target=resolve(output),dist=resolve(root,'dist');
   if(!target.startsWith(dist+'\\')&&!target.startsWith(dist+'/'))throw new Error('O pacote deve ficar dentro de dist.');
   const source=resolve(root,'src/products/chatgptplugin/plugin');
-  const files=['plugin.json','assets/icon.svg','skills/usar-erp/SKILL.md','skills/usar-erp/agents/openai.yaml','skills/get-started/SKILL.md','skills/get-started/agents/openai.yaml'];
-  const allowed=new Set([...files,'mcp.json','README.md']);
+  const files=PACKAGE_FILES.filter(file=>!['mcp.json','README.md'].includes(file));
+  const allowed=new Set(PACKAGE_FILES);
   function inspect(directory,prefix='') {
     for(const entry of readdirSync(directory,{withFileTypes:true})) {
       const path=prefix+entry.name;
@@ -32,16 +33,19 @@ export function buildPluginPackage(baseUrl,output=resolve(root,'dist/chatgptplug
   }
   const config={$schema:'https://agent-plugins.org/schemas/1.0.0/mcp.schema.json',mcpServers:{chatgptplugin:{type:'streamable-http',url:url.origin+'/api/mcp'}}};
   writeFileSync(resolve(target,'mcp.json'),JSON.stringify(config,null,2)+'\n');
-  writeFileSync(resolve(target,'README.md'),`# Cognito ERP — ChatGPT Plugin\n\nPacote privado de desenvolvimento. MCP: ${config.mcpServers.chatgptplugin.url}\n\nConecte o MCP no ChatGPT em modo de desenvolvimento e autorize sua conta Clerk. Consultas exigem erp:read; propostas exigem tambem erp:write e as permissoes do ERP. Salvar exige revisao no ERP.\n\nPara publicacao, complete a identidade do desenvolvedor, icone, URLs de privacidade/suporte e o registro real do MCP no painel de desenvolvedor. Este pacote nao representa publicacao ou instalacao concluida.\n`);
+  writeFileSync(resolve(target,'README.md'),`# Cognito ERP — ChatGPT Plugin\n\nPacote privado de desenvolvimento. MCP: ${config.mcpServers.chatgptplugin.url}\n\nConecte o MCP no ChatGPT em modo de desenvolvimento e autorize sua conta Clerk. Consultas exigem erp:read; propostas exigem tambem erp:write e as permissoes do ERP. Salvar exige revisao no ERP. Formulario nativo usa MCP 2026-07-28/MRTR e requer a chave de continuidade configurada no servidor.\n\nIcone e duas skills incluidos. A validacao local confere esquemas portateis, metadados, skills, caminhos e integridade ZIP. Para publicacao, configure as URLs oficiais de website/privacidade/termos/suporte, confirme a identidade do desenvolvedor e registre o MCP no painel. Instalacao, OAuth e elegibilidade real ainda exigem validacao na conta.\n`);
   // Exportacao por lista explicita: nunca inclui .env, credenciais, banco ou codigo do servidor.
   const manifest=JSON.parse(readFileSync(resolve(target,'plugin.json'),'utf8'));
   if(manifest.name!=='chatgptplugin'||readdirSync(target).some(file=>file.startsWith('.env')))throw new Error('Pacote invalido.');
   const archive=target+'.zip';
   if(existsSync(archive)&&lstatSync(archive).isSymbolicLink())throw new Error('O arquivo ZIP deve ser local ao projeto.');
-  writeFileSync(archive,zip([...allowed].map(file=>({name:file,data:readFileSync(resolve(target,file))}))));
-  return {directory:target,archive,name:manifest.name,version:manifest.version,mcp:config.mcpServers.chatgptplugin.url};
+  const entries=new Map([...allowed].map(file=>[file,readFileSync(resolve(target,file))]));
+  validatePackageEntries(entries);
+  writeFileSync(archive,encodePackageZip([...entries].map(([name,data])=>({name,data}))));
+  const validation=validatePluginPackage(target,archive);
+  return {directory:target,archive,name:manifest.name,version:manifest.version,mcp:config.mcpServers.chatgptplugin.url,validation};
 }
-function zip(files) {
+export function encodePackageZip(files) {
   const blocks=[],directory=[];let offset=0;
   for(const {name,data} of files){
     const filename=Buffer.from(name);let crc=0xffffffff;

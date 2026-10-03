@@ -9,6 +9,7 @@ export type PluginConfig = {
   origins: string[]
   toolTimeoutMs: number
   requestsPerMinute: number
+  nativeFormKey?: string
 }
 function serviceUrl(value: string | undefined, name: string, local = false): URL {
   if (!value) throw new PluginError('CONFIGURATION_REQUIRED', `Configure ${name}.`, 503)
@@ -35,7 +36,6 @@ export function getPluginConfig(): PluginConfig {
     scope: 'erp:read', clientIds,
     origins: [base.origin, 'https://chatgpt.com', ...(process.env.CHATGPTPLUGIN_ALLOWED_ORIGINS || '')
       .split(',').filter(Boolean).map(v => serviceUrl(v.trim(), 'CHATGPTPLUGIN_ALLOWED_ORIGINS', true).origin)],
-    toolTimeoutMs: 15000, requestsPerMinute: 60,
+    toolTimeoutMs: 15000, requestsPerMinute: 60, nativeFormKey:process.env.CHATGPTPLUGIN_FORM_STATE_KEY,
   }
 }
-
