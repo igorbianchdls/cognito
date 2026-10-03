@@ -21,6 +21,9 @@ const handleClerkMiddleware = clerkMiddleware(async (auth, request) => {
 })
 
 export default function proxy(request: NextRequest, event: NextFetchEvent) {
+  // Estas rotas possuem verificacao OAuth propria; nao aceitam sessao do navegador.
+  if (['/api/mcp', '/.well-known/oauth-protected-resource', '/.well-known/oauth-protected-resource/api/mcp']
+    .includes(request.nextUrl.pathname)) return NextResponse.next()
   if (!process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY && isPublicRoute(request)) {
     return NextResponse.next()
   }

@@ -15,6 +15,11 @@
     "erp:stage6:strict": "node scripts/erp/stage6-validation.mjs --require-external",
     "erp:stage6:concurrency": "node scripts/erp/stage6-two-connections.mjs",
     "erp:retired-ai-audit": "tsx scripts/erp/audit-retired-ai.ts",
+    "chatgptplugin:typecheck": "tsc -p tsconfig.chatgptplugin.json --pretty false",
+    "chatgptplugin:smoke": "tsx scripts/chatgptplugin-smoke.ts",
+    "chatgptplugin:database-smoke": "node scripts/chatgptplugin-database-smoke.mjs",
+    "chatgptplugin:check-config": "tsx scripts/chatgptplugin-check-config.ts",
+    "chatgptplugin:maintenance": "tsx scripts/chatgptplugin-maintenance.ts",
     "security:smoke": "tsx scripts/erp-security-smoke.ts",
     "erp:runtime-smoke": "tsx scripts/erp-runtime-isolation-smoke.ts",
     "service:hello": "node services/hello-service.mjs",
@@ -24,6 +29,7 @@
     "safe:add:elevenlabs": "node scripts/safe-npm-install.mjs install @elevenlabs/elevenlabs-js"
   },
   "dependencies": {
+    "@modelcontextprotocol/sdk": "1.32.0",
     "@ai-sdk/anthropic": "^2.0.0",
     "@ai-sdk/openai": "^2.0.62",
     "@ai-sdk/react": "^2.0.8",
@@ -132,6 +138,7 @@
     "zod": "^3.25.76"
   },
   "devDependencies": {
+    "@electric-sql/pglite": "0.3.14",
     "@ariakit/react": "^0.4.18",
     "@eslint/eslintrc": "^3",
     "@tailwindcss/postcss": "^4",

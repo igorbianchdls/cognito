@@ -144,8 +144,12 @@ export async function withTransaction<T>(fn: (client: SQLClient) => Promise<T>):
 
 async function applyErpRuntimeContext(
   client: Pick<SQLClient, 'query'>,
-  context: { tenantId: number; userId: number },
+  context: { tenantId: number; userId: number; statementTimeoutMs?: number; readOnly?: boolean },
 ) {
+  if (context.readOnly) await client.query('SET TRANSACTION READ ONLY')
+  if (context.statementTimeoutMs !== undefined) {
+    await client.query("SELECT set_config('statement_timeout', $1, true)", [String(context.statementTimeoutMs)])
+  }
   await client.query('SET LOCAL ROLE erp_runtime')
   await client.query(
     `SELECT set_config('app.erp_tenant_id', $1, true), set_config('app.erp_user_id', $2, true)`,

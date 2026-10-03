@@ -1,0 +1,10 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": { "incremental": false },
+  "include": [
+    "next-env.d.ts", "src/types.d.ts", "src/products/chatgptplugin/**/*.ts",
+    "src/app/api/mcp/**/*.ts", "src/app/.well-known/oauth-protected-resource/**/*.ts",
+    "scripts/chatgptplugin-*.ts"
+  ],
+  "exclude": ["node_modules", ".next"]
+}

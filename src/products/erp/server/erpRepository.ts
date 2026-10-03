@@ -1926,6 +1926,7 @@ async function listPayables(input: ListInput): Promise<ErpEntityRecord[]> {
            ELSE parcelas.status
          END AS status,
          entidades.nome AS fornecedor,
+         entidades.id::text AS entidade_id,
          categorias.nome AS categoria,
          centros.nome AS centro_custo,
          financeiras.nome AS conta_financeira,
