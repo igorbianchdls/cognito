@@ -4,7 +4,7 @@ import { PluginError } from '../shared/contracts'
 
 export async function proposalReferences(tenantId:number,proposal:Proposal,client?:SQLClient) {
   const query=async (sql:string,params:unknown[]) => client ? (await client.query(`${sql} FOR SHARE`,params)).rows as {id:string;nome:string}[] : runQuery<{id:string;nome:string}>(sql,params)
-  if (proposal.tipo === 'cliente' || proposal.tipo === 'produto') return {cliente:null,itens:[]}
+  if (proposal.tipo !== 'orcamento' && proposal.tipo !== 'venda') return {cliente:null,itens:[]}
   const customer=await query(`SELECT id::text,nome FROM erp.entidades WHERE tenant_id=$1 AND id=$2 AND eh_cliente AND ativo AND excluido_em IS NULL`,[tenantId,proposal.dados.cliente_id])
   if (!customer[0]) throw new PluginError('INVALID_REFERENCE','Escolha um cliente ativo desta empresa.')
   const products=proposal.dados.itens.filter(item=>item.tipo==='produto').map(item=>item.item_id)

@@ -1,9 +1,10 @@
 import { randomUUID } from 'node:crypto'
-import { withTransaction, type SQLClient } from '@/lib/postgres'
+import { withTransaction,runWithErpTransactionClient, type SQLClient } from '@/lib/postgres'
 import { runWithErpDatabaseContext } from '@/lib/erpDatabaseContext'
 import { createErpEntityWithClient } from '@/products/erp/server/erpRepository'
 import type { ErpAccessContext } from '@/products/erp/server/erpAccess'
-import { proposalSchema,proposalCapability,proposalEntity,proposalValues,proposalPreview } from '../actions/contracts'
+import { proposalSchema,proposalCapabilities,proposalEntity,proposalValues,proposalPreview } from '../actions/contracts'
+import { operationSnapshot,executeOperation } from '../actions/operations'
 import { PluginError } from '../shared/contracts'
 import { pluginQuery } from '../shared/database'
 import { draftView,type DraftRow } from '../actions/draftRepository'
@@ -13,7 +14,7 @@ export async function loadApproval(id:string,session:ErpAccessContext,resource:s
   const rows = await pluginQuery<DraftRow>('SELECT * FROM shared.chatgptplugin_drafts WHERE id=$1 AND user_id=$2 AND tenant_id=$3',[id,session.sharedUserId,session.tenantId])
   if (!rows[0]) throw new PluginError('NOT_FOUND','Rascunho nao disponivel nesta conta e empresa.',404)
   const proposal = proposalSchema.parse(rows[0].proposal)
-  if (!session.capabilities.includes(proposalCapability(proposal))) throw new PluginError('ACCESS_DENIED','Seu perfil nao permite salvar este rascunho.',403)
+  if (!proposalCapabilities(proposal).every(cap=>session.capabilities.includes(cap))) throw new PluginError('ACCESS_DENIED','Seu perfil nao permite salvar este rascunho.',403)
   const references=await runWithErpDatabaseContext({tenantId:session.tenantId,userId:session.sharedUserId,readOnly:true,statementTimeoutMs:10000},
     () => proposalReferences(session.tenantId,proposal)).catch(() => null)
   return {...draftView(rows[0],{resource}),empresa_nome:session.tenantName,referencias:references}
@@ -40,7 +41,7 @@ export async function decideApproval(id:string,session:ErpAccessContext,decision
     if (!row) throw new PluginError('NOT_FOUND','Rascunho nao disponivel nesta conta e empresa.',404)
     const proposal = proposalSchema.parse(row.proposal)
     proposalPreview(proposal)
-    await assertCurrentAccess(client,session,proposalCapability(proposal))
+    for(const capability of proposalCapabilities(proposal))await assertCurrentAccess(client,session,capability)
     if (row.status === 'saved' && decision === 'save') return {status:'saved',registro_id:row.record_id}
     if (row.status === 'cancelled' && decision === 'cancel') return {status:'cancelled',registro_id:null}
     if (row.status !== 'pending') throw new PluginError('INVALID_STATE','Este rascunho ja foi encerrado.',409)
@@ -48,13 +49,19 @@ export async function decideApproval(id:string,session:ErpAccessContext,decision
     let recordId:string|null = null
     if (decision === 'save') {
       await proposalReferences(session.tenantId,proposal,client)
-      const record = await createErpEntityWithClient(client,{tenantId:session.tenantId,actorId:session.sharedUserId,
-        entityId:proposalEntity(proposal),values:proposalValues(proposal),idempotencyKey:`chatgptplugin:${row.id}`})
-      recordId = String(record.id)
+      if ('registro_id' in proposal.dados) {
+        const snapshot=await operationSnapshot(session.tenantId,proposal,client)
+        if(!snapshot||!row.target_snapshot||snapshot.hash!==row.target_snapshot.hash)throw new PluginError('STALE_PROPOSAL','O registro mudou. Prepare uma nova proposta para revisar os dados atuais.',409)
+        recordId=await runWithErpTransactionClient(client,()=>executeOperation(session.tenantId,session.sharedUserId,proposal,`chatgptplugin:${row.id}`))
+      } else {
+        const record = await createErpEntityWithClient(client,{tenantId:session.tenantId,actorId:session.sharedUserId,
+          entityId:proposalEntity(proposal),values:proposalValues(proposal),idempotencyKey:`chatgptplugin:${row.id}`})
+        recordId = String(record.id)
+      }
     }
     const status = decision === 'save' ? 'saved' : 'cancelled'
     await client.query('UPDATE shared.chatgptplugin_drafts SET status=$2,record_id=$3,decided_at=now() WHERE id=$1',[id,status,recordId])
-    // A auditoria e a criacao comercial pertencem a mesma transacao: falha em qualquer etapa desfaz tudo.
+    // Auditoria e operacao pertencem a mesma transacao: falha em qualquer etapa desfaz tudo.
     await client.query(`INSERT INTO shared.chatgptplugin_executions(id,user_id,tenant_id,oauth_client_id,tool_name,status,duration_ms,finished_at)
       VALUES ($1,$2,$3,$4,$5,'succeeded',0,now())`,[randomUUID(),session.sharedUserId,session.tenantId,row.oauth_client_id,decision === 'save' ? 'aprovar_rascunho' : 'cancelar_rascunho'])
     return {status,registro_id:recordId}

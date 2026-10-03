@@ -61,7 +61,7 @@ export async function handlePluginRequest(request: Request, deps: HttpDependenci
     await deps.limit(principal,config.requestsPerMinute)
     if (request.method !== 'POST') return Response.json({error:'Use POST; este servidor nao mantem sessoes SSE.'},{ status:405,headers:{ ...headers,Allow:'POST, OPTIONS' } })
     const body = await readBody(request)
-    const server = createPluginServer(principal,config,deps.execution)
+    const server = await createPluginServer(principal,config,deps.execution)
     const transport = new WebStandardStreamableHTTPServerTransport({ sessionIdGenerator:undefined,enableJsonResponse:true })
     try {
       await server.connect(transport)

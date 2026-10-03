@@ -2830,9 +2830,11 @@ export async function confirmErpPurchase(input: IdActionInput): Promise<ConfirmE
       return mapConfirmPurchaseResult(purchase, existingFinancial?.payable || null, existingFinancial?.installments || [])
     }
 
-    await assertErpPeriodOpen(client, { tenantId: input.tenantId, module: 'compras', date: String(purchase.data_compra) })
+    const purchaseDate=dateText(purchase.data_compra)
+    if(!purchaseDate)throw new ErpDomainError('VALIDATION_ERROR','Compra precisa ter data valida para ser confirmada.')
+    await assertErpPeriodOpen(client, { tenantId: input.tenantId, module: 'compras', date: purchaseDate })
     if (purchase.gera_financeiro) {
-      await assertErpPeriodOpen(client, { tenantId: input.tenantId, module: 'financeiro', date: String(purchase.data_compra) })
+      await assertErpPeriodOpen(client, { tenantId: input.tenantId, module: 'financeiro', date: purchaseDate })
     }
 
     const updatedPurchaseResult = await client.query(

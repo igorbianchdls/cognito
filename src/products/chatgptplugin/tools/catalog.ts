@@ -21,6 +21,15 @@ function page(input: Record<string, unknown>) {
   return { query: input.busca as string | undefined, page: input.pagina as number, pageSize: input.por_pagina as number }
 }
 export const tools: ToolDefinition[] = [
+  {name:'obter_cliente',title:'Consultar cliente',description:'Consultar um cliente por ID nesta empresa.',schema:z.object({empresa_id:company,cliente_id:z.number().int().positive()}).strict(),capabilities:['erp.cadastros.visualizar'],execute:(q,id,input)=>q.customer(id,Number(input.cliente_id))},
+  {name:'verificar_fiscal_venda',title:'Verificar dados fiscais da venda',description:'Verificar pendencias fiscais. Nao emite nota fiscal nem autoriza documentos na SEFAZ.',
+    schema:z.object({empresa_id:company,venda_id:z.number().int().positive()}).strict(),capabilities:['erp.vendas.visualizar','erp.cadastros.visualizar'],
+    execute:(q,id,input)=>q.fiscal(id,Number(input.venda_id))},
+  {name:'listar_contas_financeiras',title:'Listar contas financeiras',description:'Consultar IDs e nomes de contas financeiras ativas para preparar baixas de parcelas.',
+    schema:z.object({empresa_id:company}).strict(),capabilities:['erp.financeiro.visualizar'],execute:(q,id)=>q.financialAccounts(id)},
+  {name:'listar_pagamentos',title:'Listar pagamentos',description:'Consultar pagamentos e recebimentos, incluindo IDs para preparar estornos com revisao humana.',
+    schema:z.object({empresa_id:company,pagina:paging.pagina,por_pagina:paging.por_pagina,tipo:z.enum(['receber','pagar']).optional()}).strict(),capabilities:['erp.financeiro.visualizar'],
+    execute:(q,id,input)=>q.payments(id,{page:Number(input.pagina),pageSize:Number(input.por_pagina),type:input.tipo as string|undefined})},
   { name: 'resumo_erp', title: 'Resumo do ERP', description: 'Consultar indicadores financeiros, vendas, compras e cadastros da empresa. Requer permissoes de todas essas areas.',
     schema: z.object({ empresa_id: company }).strict(),
     capabilities: ['erp.relatorios.visualizar','erp.financeiro.visualizar','erp.vendas.visualizar','erp.compras.visualizar','erp.cadastros.visualizar'],

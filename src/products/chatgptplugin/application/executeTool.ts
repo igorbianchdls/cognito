@@ -8,12 +8,14 @@ import { erpQueries, type ErpQueries } from './erpQueries'
 import { accessSchema, tools } from '../tools/catalog'
 import { actionTools } from '../actions/catalog'
 import { actionDependencies, type ActionDependencies } from '../actions/draftRepository'
+import { preferencesDependencies } from '../extensions/settings'
 
 export type ExecutionDependencies = {
   queries: ErpQueries
   reserve: typeof reserveExecution
   finish: typeof finishExecution
   actions?: ActionDependencies
+  preferences?: typeof preferencesDependencies
 }
 export const executionDependencies: ExecutionDependencies = { queries: erpQueries, reserve: reserveExecution, finish: finishExecution, actions:actionDependencies }
 function publicError(error: unknown): PluginError {
@@ -31,7 +33,7 @@ export async function executeTool(principal: PluginPrincipal, name: string, raw:
   try {
     const tool = tools.find(item => item.name === name)
     const action = actionTools.find(item => item.name === name)
-    const access = name === 'meu_acesso' || name === 'abrir_painel'
+    const access = name === 'meu_acesso' || name === 'abrir_painel' || name === 'abrir_formulario'
     if (!tool && !action && !access) throw new PluginError('UNKNOWN_TOOL', 'Ferramenta desconhecida.')
     const parsed = (tool?.schema || action?.schema || accessSchema).safeParse(raw)
     if (!parsed.success) throw new PluginError('INVALID_INPUT', 'Parametros invalidos. Consulte o esquema da ferramenta.')

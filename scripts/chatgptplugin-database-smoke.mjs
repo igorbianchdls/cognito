@@ -21,6 +21,7 @@ function load(name,parent=resolve(root,'entry.ts')) {
 }
 const postgres=load('@/lib/postgres'); const context=load('@/lib/erpDatabaseContext');let queue=Promise.resolve();
 stubs['@/lib/postgres']={...postgres,runQuery(sql,params){
+  const ambient=postgres.getErpTransactionClient();if(ambient)return ambient.query(sql,params).then(r=>r.rows);
   const saved=context.getErpDatabaseContext();
   const task=queue.then(async()=>{
     postgres.assertErpTenantScopedQuery(sql,params);
@@ -33,6 +34,7 @@ stubs['@/lib/postgres']={...postgres,runQuery(sql,params){
     }finally{await db.exec('ROLLBACK');}
   });queue=task.catch(()=>undefined);return task;
 },withTransaction(fn){
+  const ambient=postgres.getErpTransactionClient();if(ambient)return fn(ambient);
   const saved=context.getErpDatabaseContext();
   const task=queue.then(async()=>{
     assert(saved&&!saved.readOnly,'Apenas a revisao autenticada abre transacao de escrita');
@@ -41,7 +43,7 @@ stubs['@/lib/postgres']={...postgres,runQuery(sql,params){
       postgres.assertErpTenantScopedQuery(sql,params);
       const erp=/\berp\.[a-z_][a-z0-9_]*/i.test(sql);
       if(erp){await db.exec('SET LOCAL ROLE erp_runtime');await db.query("SELECT set_config('app.erp_tenant_id',$1,true),set_config('app.erp_user_id',$2,true)",[String(saved.tenantId),String(saved.userId)]);}
-      try{return await db.query(sql,params);}finally{if(erp)await db.exec('RESET ROLE');}
+      try{return await db.query(sql,params);}catch(error){console.error('Local transaction failure:',error.code,error.message);throw error;}finally{if(erp)await db.exec('RESET ROLE').catch(()=>undefined);}
     }};
     try{const result=await fn(client);await db.exec('COMMIT');return result;}catch(error){await db.exec('ROLLBACK');throw error;}
   });queue=task.catch(()=>undefined);return task;
@@ -59,6 +61,7 @@ async function main(){
   }
   await db.exec(readFileSync('supabase/migrations/20261003130000_create_chatgptplugin.sql','utf8'));
   await db.exec(readFileSync('supabase/migrations/20261003140000_chatgptplugin_drafts.sql','utf8'));
+  await db.exec(readFileSync('supabase/migrations/20261003150000_chatgptplugin_operations_settings.sql','utf8'));
   await db.exec(`
     INSERT INTO shared.erp_permission_profiles(id,nome) VALUES('consulta','Consulta');
     INSERT INTO shared.erp_profile_permissions(profile_id,capability) VALUES('consulta','erp.cadastros.visualizar');
@@ -69,7 +72,7 @@ async function main(){
     INSERT INTO erp.produtos(id,tenant_id,nome,sku,preco_venda,ativo) VALUES(101,1,'Produto A','A',10,true),(201,2,'Produto B','B',20,true);
     INSERT INTO erp.vendas(id,tenant_id,cliente_id,numero,status,subtotal,total) VALUES(101,1,101,'A-1','rascunho',10,10),(201,2,201,'B-1','rascunho',20,20);
     INSERT INTO erp.vendas_itens(tenant_id,venda_id,produto_id,descricao,quantidade,valor_unitario,total) VALUES(1,101,101,'Produto A',1,10,10);
-    INSERT INTO erp.locais_estoque(id,tenant_id,nome,codigo) VALUES(1,1,'Local A','A'),(2,2,'Local B','B');
+    INSERT INTO erp.locais_estoque(id,tenant_id,nome,codigo,padrao) VALUES(1,1,'Local A','A',true),(2,2,'Local B','B',true);
     INSERT INTO erp.saldos_estoque(tenant_id,produto_id,local_estoque_id,quantidade_fisica) VALUES(1,101,1,7),(2,201,2,9);
     INSERT INTO erp.compras(id,tenant_id,fornecedor_id,numero,status,subtotal,total) VALUES(101,1,101,'CA-1','rascunho',10,10),(201,2,201,'CB-1','rascunho',20,20);
     INSERT INTO erp.vendas(id,tenant_id,cliente_id,numero,status,tipo_documento,subtotal,total) VALUES(102,1,101,'OA-1','rascunho','orcamento',10,10),(202,2,201,'OB-1','rascunho','orcamento',20,20);
@@ -116,7 +119,7 @@ async function main(){
     assert.equal((await db.query('SELECT requests FROM shared.chatgptplugin_rate_windows')).rows[0].requests,4);
   });
   await check('Tabelas operacionais nao expostas ao navegador',async()=>{
-    for(const role of ['anon','authenticated'])for(const table of ['chatgptplugin_executions','chatgptplugin_drafts']){await db.exec(`BEGIN; SET LOCAL ROLE ${role}`);try{await assert.rejects(db.query(`SELECT * FROM shared.${table}`),e=>e.code==='42501');}finally{await db.exec('ROLLBACK');}}
+    for(const role of ['anon','authenticated'])for(const table of ['chatgptplugin_executions','chatgptplugin_drafts','chatgptplugin_settings']){await db.exec(`BEGIN; SET LOCAL ROLE ${role}`);try{await assert.rejects(db.query(`SELECT * FROM shared.${table}`),e=>e.code==='42501');}finally{await db.exec('ROLLBACK');}}
   });
   const {randomUUID}=require('node:crypto');
   const {decideApproval}=load('@/products/chatgptplugin/approvals/approvalRepository');
@@ -159,7 +162,72 @@ async function main(){
     await assert.rejects(decideApproval(draft.rascunho_id,session,'save'));
     assert.equal((await db.query("SELECT count(*)::int AS n FROM erp.produtos WHERE nome='Rollback'")).rows[0].n,0);
     assert.equal((await db.query('SELECT status FROM shared.chatgptplugin_drafts WHERE id=$1',[draft.rascunho_id])).rows[0].status,'pending');
+    const edit=await prepare({tipo:'editar_produto',dados:{registro_id:101,preco:999}});
+    await assert.rejects(decideApproval(edit.rascunho_id,session,'save'));
+    assert.equal(Number((await db.query('SELECT preco_venda FROM erp.produtos WHERE id=101')).rows[0].preco_venda),10);
+    assert.equal((await db.query('SELECT status FROM shared.chatgptplugin_drafts WHERE id=$1',[edit.rascunho_id])).rows[0].status,'pending');
     await db.exec('DROP TRIGGER reject_approval ON shared.chatgptplugin_executions; DROP FUNCTION shared.reject_plugin_approval()');
+  });
+  await check('Edicao preserva campos e rejeita proposta desatualizada',async()=>{
+    const draft=await prepare({tipo:'editar_produto',dados:{registro_id:101,preco:12}});
+    assert.equal(draft.alvo.registro_id,101);assert(!('hash' in draft.alvo));
+    await decideApproval(draft.rascunho_id,session,'save');
+    const row=(await db.query('SELECT nome,sku,preco_venda,versao FROM erp.produtos WHERE tenant_id=1 AND id=101')).rows[0];
+    assert.equal(row.nome,'Produto A');assert.equal(row.sku,'A');assert.equal(Number(row.preco_venda),12);
+    const stale=await prepare({tipo:'editar_produto',dados:{registro_id:101,nome:'Desatualizado'}});
+    await db.exec('UPDATE erp.produtos SET versao=versao+1 WHERE tenant_id=1 AND id=101');
+    await assert.rejects(decideApproval(stale.rascunho_id,session,'save'),e=>e.code==='STALE_PROPOSAL');
+    assert.equal((await db.query('SELECT nome FROM erp.produtos WHERE id=101')).rows[0].nome,'Produto A');
+    const customer=await prepare({tipo:'editar_cliente',dados:{registro_id:101,nome:'Cliente revisado'}});
+    await decideApproval(customer.rascunho_id,session,'save');
+    assert.equal((await db.query('SELECT nome FROM erp.entidades WHERE id=101')).rows[0].nome,'Cliente revisado');
+    assert.equal((await executeTool(owner,'preparar_rascunho',{empresa_id:1,chave_operacao:randomUUID(),proposta:{tipo:'editar_produto',dados:{registro_id:201,nome:'Outra empresa'}}},settings)).isError,true);
+  });
+  let saleId;
+  await check('Confirmacao e atendimento usam a transacao auditada do ERP',async()=>{
+    const sale=await prepare({tipo:'venda',dados:{cliente_id:101,data_venda:'2026-10-03',data_vencimento:'2026-10-10',itens:[{tipo:'produto',item_id:101,quantidade:1,valor_unitario:12}]}});
+    saleId=Number((await decideApproval(sale.rascunho_id,session,'save')).registro_id);
+    const confirmation=await prepare({tipo:'confirmar_venda',dados:{registro_id:saleId}});
+    const results=await Promise.all([decideApproval(confirmation.rascunho_id,session,'save'),decideApproval(confirmation.rascunho_id,session,'save')]);assert.equal(results[0].registro_id,results[1].registro_id);
+    assert.equal((await db.query('SELECT status FROM erp.vendas WHERE id=$1',[saleId])).rows[0].status,'confirmada');
+    assert.equal((await db.query('SELECT count(*)::int AS n FROM erp.contas_receber WHERE venda_id=$1',[saleId])).rows[0].n,1);
+    const attendance=await prepare({tipo:'atender_venda',dados:{registro_id:saleId}});
+    await decideApproval(attendance.rascunho_id,session,'save');
+    assert.equal((await db.query('SELECT atendimento_status FROM erp.vendas WHERE id=$1',[saleId])).rows[0].atendimento_status,'atendido');
+    const financial=await call(owner,'consultar_financeiro',{empresa_id:1,tipo:'receber'});assert(financial.records.length>0);
+  });
+  await check('Recebimento estorno pagamento e cancelamento com repositorios reais',async()=>{
+    await db.exec("INSERT INTO erp.contas_financeiras(id,tenant_id,nome,tipo) VALUES(901,1,'Caixa A','caixa'),(902,2,'Caixa B','caixa')");
+    const installment=(await db.query('SELECT p.id FROM erp.contas_receber_parcelas p JOIN erp.contas_receber c ON c.id=p.conta_receber_id AND c.tenant_id=p.tenant_id WHERE c.venda_id=$1',[saleId])).rows[0];
+    const receive=await prepare({tipo:'receber_parcela',dados:{registro_id:Number(installment.id),valor:12,data_pagamento:'2026-10-03',conta_financeira_id:901}});
+    await decideApproval(receive.rascunho_id,session,'save');await decideApproval(receive.rascunho_id,session,'save');
+    const payments=await call(owner,'listar_pagamentos',{empresa_id:1});assert.equal(payments.records.length,1);
+    const reverse=await prepare({tipo:'estornar_pagamento',dados:{registro_id:Number(payments.records[0].id),motivo:'Recebimento lançado por engano'}});
+    await decideApproval(reverse.rascunho_id,session,'save');
+    assert.equal((await db.query('SELECT status FROM erp.contas_receber_parcelas WHERE id=$1',[installment.id])).rows[0].status,'aberto');
+    await db.query("UPDATE erp.compras SET data_compra='2026-10-03',condicao_pagamento=$1::jsonb WHERE id=101",[JSON.stringify({parcelas:[{numero_parcela:1,data_vencimento:'2026-10-10',valor:10}]})]);
+    await db.exec("INSERT INTO erp.compras_itens(tenant_id,compra_id,produto_id,descricao,quantidade,valor_unitario,total) VALUES(1,101,101,'Produto A',1,10,10)");
+    await db.exec("INSERT INTO erp.compras_parcelas_previstas(tenant_id,compra_id,numero_parcela,data_vencimento,valor) VALUES(1,101,1,'2026-10-10',10)");
+    const purchase=await prepare({tipo:'confirmar_compra',dados:{registro_id:101}});await decideApproval(purchase.rascunho_id,session,'save');
+    const payable=(await db.query('SELECT p.id FROM erp.contas_pagar_parcelas p JOIN erp.contas_pagar c ON c.id=p.conta_pagar_id AND c.tenant_id=p.tenant_id WHERE c.compra_id=101')).rows[0];assert(payable);
+    const pay=await prepare({tipo:'pagar_parcela',dados:{registro_id:Number(payable.id),valor:10,data_pagamento:'2026-10-03',conta_financeira_id:901}});await decideApproval(pay.rascunho_id,session,'save');
+    const paid=(await db.query("SELECT id FROM erp.pagamentos WHERE tenant_id=1 AND tipo='pagar' AND estorno_de_pagamento_id IS NULL")).rows[0];
+    const undo=await prepare({tipo:'estornar_pagamento',dados:{registro_id:Number(paid.id),motivo:'Pagamento indevido'}});await decideApproval(undo.rascunho_id,session,'save');
+    const cancel=await prepare({tipo:'cancelar_compra',dados:{registro_id:101}});await decideApproval(cancel.rascunho_id,session,'save');
+    assert.equal((await db.query('SELECT status FROM erp.compras WHERE id=101')).rows[0].status,'cancelada');
+    await call(owner,'listar_contas_financeiras',{empresa_id:1});await call(owner,'verificar_fiscal_venda',{empresa_id:1,venda_id:saleId});
+    const cancelSale=await prepare({tipo:'cancelar_venda',dados:{registro_id:101,motivo:'Venda desistida pelo cliente'}});await decideApproval(cancelSale.rascunho_id,session,'save');
+    assert.equal((await db.query('SELECT status FROM erp.vendas WHERE id=101')).rows[0].status,'cancelada');
+  });
+  await check('Preferencias ficam isoladas por usuario e conexao OAuth',async()=>{
+    const prefs=load('@/products/chatgptplugin/extensions/settings');
+    assert.equal((await prefs.readPreferences(owner)).por_pagina,20);
+    await prefs.updatePreferences(owner,{empresa_preferida:'1',por_pagina:30});
+    assert.equal((await prefs.readPreferences({...owner,clientId:'outro-client'})).por_pagina,20);
+    assert.equal((await prefs.readPreferences({...owner,userId:2})).empresa_preferida,'');
+    await assert.rejects(prefs.updatePreferences(owner,{empresa_preferida:'999'}));
+    await assert.rejects(prefs.updatePreferences(owner,{tenant_id:2}));
+    await prefs.updatePreferences(owner,{por_pagina:40});assert.equal((await prefs.readPreferences(owner)).empresa_preferida,'1');
   });
   console.log(JSON.stringify({status:'passed',checks,realDatabaseAccess:false,localPostgres:true}));
 }

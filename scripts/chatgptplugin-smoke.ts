@@ -3,8 +3,8 @@ import { randomUUID } from 'node:crypto'
 import { handlePluginRequest, type HttpDependencies } from '../src/products/chatgptplugin/mcp/handleRequest'
 import { resolvePluginPrincipal, validateOAuthToken } from '../src/products/chatgptplugin/auth/resolvePrincipal'
 import { PluginError, selectCompany, type PluginPrincipal } from '../src/products/chatgptplugin/shared/contracts'
-import { getErpDatabaseContext } from '../src/lib/erpDatabaseContext'
-import { assertErpTenantScopedQuery } from '../src/lib/postgres'
+import { getErpDatabaseContext,runWithErpDatabaseContext } from '../src/lib/erpDatabaseContext'
+import { assertErpTenantScopedQuery,runWithErpTransactionClient,getErpTransactionClient } from '../src/lib/postgres'
 import { ERP_CAPABILITIES } from '../src/products/erp/shared/professionalContracts'
 import { executeTool, type ExecutionDependencies } from '../src/products/chatgptplugin/application/executeTool'
 import type { PluginConfig } from '../src/products/chatgptplugin/shared/config'
@@ -24,9 +24,14 @@ function context(company: number) {
   calls.push({company,user:current!.userId})
 }
 const execution: ExecutionDependencies = {
+  preferences:{read:async()=>({empresa_preferida:'',por_pagina:20}),update:async(_p,set)=>({empresa_preferida:'',por_pagina:20,...set as object})},
   reserve:async () => {const id=randomUUID();events.push({id,status:'running'});return id},
   finish:async (id,status,code) => {events.push({id,status,code})},
   queries:{
+    customer:async(id,customerId)=>{context(id);return {record:{id:String(customerId),nome:'Cliente'}}},
+    fiscal:async id=>{context(id);return {ready:false,issues:[]}},
+    financialAccounts:async id=>{context(id);return {records:[],hasMore:false}},
+    payments:async(id,input)=>{context(id);return {records:[],page:input.page,pageSize:input.pageSize,hasMore:false}},
     overview:async id => {context(id);return {saldoReceber:1,saldoPagar:2,receberVencido:0,vendasRascunho:3,comprasAbertas:4,clientesAtivos:5}},
     page:async (id,_type,input) => {context(id);return {records:[{id:'1',nome:'Produto'}],total:1,page:input.page || 1,pageSize:input.pageSize || 20}},
     sale:async (id,saleId) => {context(id);return {sale:{id:saleId},items:[],totalItems:0,itemsTruncated:false}},
@@ -69,10 +74,10 @@ async function main() {
   })
   await check('Catalogo contratos OAuth e anotacoes',async () => {
     const {body}=await rpc('tools/list')
-    assert.equal(body.result.tools.length,15)
-    for (const tool of body.result.tools) {assert.equal(tool.annotations.readOnlyHint,tool.name !== 'preparar_rascunho');assert.equal(tool.securitySchemes[0].type,'oauth2');assert(tool.outputSchema)}
+    assert.equal(body.result.tools.length,23)
+    for (const tool of body.result.tools) {assert.equal(tool.annotations.readOnlyHint,!['preparar_rascunho','atualizar_configuracoes'].includes(tool.name));assert.equal(tool.securitySchemes[0].type,'oauth2');assert(tool.outputSchema)}
     assert.deepEqual(body.result.tools.find((t:{name:string})=>t.name==='preparar_rascunho').securitySchemes[0].scopes,['erp:read','erp:write'])
-    assert.deepEqual(body.result.tools.find((t:{name:string})=>t.name==='abrir_painel')._meta['openai/ui'].entrypoints,[{type:'global'},{type:'thread'}])
+    assert.deepEqual(body.result.tools.find((t:{name:string})=>t.name==='abrir_painel')._meta['openai/ui'].entrypoints,[{type:'global'},{type:'thread'},{type:'settings',searchTerms:['empresa','preferencias']}])
   })
   for (const [name,args] of [['meu_acesso',{}],['resumo_erp',{}],['buscar_cadastros',{tipo:'produtos'}],['listar_vendas',{}],['obter_venda',{venda_id:1}],['consultar_financeiro',{tipo:'pagar'}],['consultar_estoque',{}]] as const) {
     await check(name,async () => {const {body}=await rpc('tools/call',{name,arguments:args});assert(!body.result?.isError,JSON.stringify(body));assert.equal(body.result.structuredContent.ok,true)})
@@ -81,7 +86,7 @@ async function main() {
     await check(name,async()=>{const {body}=await rpc('tools/call',{name,arguments:args});assert(!body.result?.isError,JSON.stringify(body))})
   }
   await check('Recurso UI registrado e sem dados privados',async()=>{
-    const resources=await rpc('resources/list');assert.equal(resources.body.result.resources.length,1)
+    const resources=await rpc('resources/list');assert.equal(resources.body.result.resources.length,2)
     const resource=await rpc('resources/read',{uri:'ui://chatgptplugin/panel/v1.html'})
     assert.equal(resource.body.result.contents[0].mimeType,'text/html;profile=mcp-app')
     assert(resource.body.result.contents[0].text.includes('ui/initialize'))
@@ -93,7 +98,7 @@ async function main() {
     assert.equal(denied.isError,true);assert(denied._meta?.['mcp/www_authenticate'])
     const p={...principal,scopes:['erp:read','erp:write']}
     let prepared=0
-    const draft={rascunho_id:randomUUID(),empresa_id:1,status:'pending' as const,registro_id:null,criado_em:new Date().toISOString(),expira_em:new Date().toISOString(),proposta:{tipo:'cliente' as const,dados:{nome:'Cliente',tipo:'fisica' as const}},revisao_url:settings.resource}
+    const draft={rascunho_id:randomUUID(),empresa_id:1,status:'pending' as const,registro_id:null,alvo:null,criado_em:new Date().toISOString(),expira_em:new Date().toISOString(),proposta:{tipo:'cliente' as const,dados:{nome:'Cliente',tipo:'fisica' as const}},revisao_url:settings.resource}
     const deps:ExecutionDependencies={...execution,actions:{prepare:async()=>{prepared++;return draft},get:async()=>draft,list:async()=>({records:[],page:1,pageSize:20,hasMore:false})}}
     const readonly={...p,companies:[{...p.companies[0],capabilities:['erp.cadastros.visualizar'] as typeof p.companies[0]['capabilities']}]}
     assert.equal((await executeTool(readonly,'preparar_rascunho',args,settings,deps)).isError,true);assert.equal(prepared,0)
@@ -148,6 +153,38 @@ async function main() {
     }
     assert.equal((await handlePluginRequest(new Request(settings.resource,{headers:{authorization:'Bearer test'}}),dependencies)).status,405)
     assert.equal((await handlePluginRequest(new Request(settings.resource,{method:'OPTIONS',headers:{origin:'https://chatgpt.com'}}),dependencies)).status,204)
+  })
+  await check('Extensoes oficiais anunciam e validam configuracoes',async()=>{
+    const initialized=await rpc('initialize',{protocolVersion:'2025-06-18',capabilities:{},clientInfo:{name:'smoke',version:'1'}})
+    assert.equal(initialized.body.result.capabilities.extensions['openai/settings'].readTool,'ler_configuracoes')
+    const read=await rpc('tools/call',{name:'ler_configuracoes',arguments:{}});assert.equal(read.body.result.structuredContent.values.por_pagina,20)
+    const update=await rpc('tools/call',{name:'atualizar_configuracoes',arguments:{set:{por_pagina:30}}});assert.equal(update.body.result.structuredContent.values.por_pagina,30)
+    const invalid=await rpc('tools/call',{name:'atualizar_configuracoes',arguments:{set:{por_pagina:1000}}});assert(invalid.body.result?.isError||invalid.body.error)
+    const empty=await rpc('tools/call',{name:'atualizar_configuracoes',arguments:{set:{}}});assert(empty.body.result?.isError||empty.body.error)
+  })
+  await check('Mencoes e leitura de recursos revalidam empresa e permissoes',async()=>{
+    const mentions=await rpc('tools/call',{name:'search_mentions',arguments:{query:'Cliente'}});assert.equal(mentions.body.result.structuredContent.items[0].resourceUri,'erp://empresa/1/clientes/1')
+    const resource=await rpc('resources/read',{uri:'erp://empresa/1/clientes/1'});assert.equal(JSON.parse(resource.body.result.contents[0].text).id,'1')
+    const foreign=await rpc('resources/read',{uri:'erp://empresa/999/clientes/1'});assert(foreign.body.error)
+    const multi={...dependencies,resolve:async()=>({...principal,companies:[...principal.companies,{...principal.companies[0],id:2}]})}
+    const noSelection=await rpc('tools/call',{name:'search_mentions',arguments:{query:'Cliente'}},multi);assert.equal(noSelection.body.result.structuredContent.items.length,0)
+    const selection=await rpc('tools/call',{name:'search_mentions',arguments:{query:'2: Cliente'}},multi);assert.equal(selection.body.result.structuredContent.items[0].resourceUri,'erp://empresa/2/clientes/1')
+  })
+  await check('Formulario e entrada de arquivo registrados',async()=>{
+    const form=await rpc('tools/call',{name:'abrir_formulario',arguments:{file:{name:'proposta.erp-proposta',resourceUri:'file:///proposta'}}});assert(!form.body.result?.isError)
+    const resource=await rpc('resources/read',{uri:'ui://chatgptplugin/form/v1.html'});assert(resource.body.result.contents[0].text.includes('openai/resources/write'))
+  })
+  await check('Transacao composta nao troca empresa usuario ou modo de leitura',async()=>{
+    const client={release(){},query:async()=>({rows:[]})}
+    assert.equal(getErpTransactionClient(),undefined)
+    await runWithErpDatabaseContext({tenantId:1,userId:1},()=>runWithErpTransactionClient(client,async()=>{
+      assert.equal(getErpTransactionClient(),client)
+      for(const change of [{tenantId:2,userId:1},{tenantId:1,userId:2},{tenantId:1,userId:1,readOnly:true}]) {
+        assert.throws(()=>runWithErpDatabaseContext(change,()=>getErpTransactionClient()))
+      }
+    }))
+    assert.equal(getErpTransactionClient(),undefined)
+    assert.throws(()=>runWithErpDatabaseContext({tenantId:1,userId:1,readOnly:true},()=>runWithErpTransactionClient(client,async()=>undefined)))
   })
   assert(events.some(event => event.status==='succeeded'));assert(events.some(event => event.code==='ACCESS_DENIED'))
   console.log(JSON.stringify({status:'passed',checks:checked,realDatabaseAccess:false}))

@@ -52,7 +52,7 @@ importers:
         version: 13.8.0(react@19.2.1)
       '@modelcontextprotocol/sdk':
         specifier: 1.32.0
-        version: 1.32.0(zod@3.25.76)
+        version: 1.32.0(@cfworker/json-schema@4.1.1)(zod@3.25.76)
       '@monaco-editor/react':
         specifier: ^4.7.0
         version: 4.7.0(monaco-editor@0.54.0)(react-dom@19.2.1(react@19.2.1))(react@19.2.1)
@@ -101,6 +101,9 @@ importers:
       '@openai/codex-sdk':
         specifier: ^0.98.0
         version: 0.98.0
+      '@openai/mcp-extensions':
+        specifier: 0.1.0
+        version: 0.1.0(@modelcontextprotocol/sdk@1.32.0(@cfworker/json-schema@4.1.1)(zod@3.25.76))
       '@radix-ui/react-accordion':
         specifier: ^1.2.12
         version: 1.2.12(@types/react-dom@19.2.3(@types/react@19.2.7))(@types/react@19.2.7)(react-dom@19.2.1(react@19.2.1))(react@19.2.1)
@@ -329,6 +332,9 @@ importers:
       zod:
         specifier: ^3.25.76
         version: 3.25.76
+      zod-openai:
+        specifier: npm:zod@4.4.3
+        version: zod@4.4.3
     devDependencies:
       '@ariakit/react':
         specifier: ^0.4.18
@@ -547,6 +553,9 @@ packages:
   '@babel/types@7.28.6':
     resolution: {integrity: sha512-0ZrskXVEHSWIqZM/sQZ4EV3jZJXRkio/WCxaqKZP1g//CEWEPSfeZFcms4XeKBCHU0ZKnIkdJeU/kF+eRp5lBg==}
     engines: {node: '>=6.9.0'}
+
+  '@cfworker/json-schema@4.1.1':
+    resolution: {integrity: sha512-gAmrUZSGtKc3AiBL71iNWxDsyUC5uMaKKGdvzYsBoTW/xi42JQHl7eKV2OYzCUqvc+D2RCcf7EXY2iCyFIk6og==}
 
   '@clerk/backend@3.5.0':
     resolution: {integrity: sha512-g1bjzqj7/mb6rnrQ5zr+ybjpilTIWADaCoHE1HnEAjQfbcdfn3gb9PPX0wJ1KWw8OOQEQYSjzXPzvofEB1j+ww==}
@@ -1425,6 +1434,16 @@ packages:
     resolution: {integrity: sha512-CKjrhAmzTvWn7Vbsi27iZRKBAJw9a7ZTTkWQDbLgQZP1weGbDIBk1r6wiLEp1ZmDO7w0fHPLYgnVspiOrYgcxg==}
     engines: {node: '>=16'}
     hasBin: true
+
+  '@openai/mcp-extensions@0.1.0':
+    resolution: {integrity: sha512-AkQ7hRS9DSUTBHgwVwd+BO6yh1y75SldqNTt8YISUnJODKD3Esg+zC2mq96FMmgzCTV7VRykkgzBzkF6W1zkdw==}
+    engines: {node: '>=22'}
+    peerDependencies:
+      '@modelcontextprotocol/ext-apps': ^1.7.5
+      '@modelcontextprotocol/sdk': ^1.29.0
+    peerDependenciesMeta:
+      '@modelcontextprotocol/ext-apps':
+        optional: true
 
   '@opentelemetry/api@1.9.0':
     resolution: {integrity: sha512-3giAOQvZiH5F9bMlMiv8+GSPMeqg0dbaeo58/0SlA9sxSqZhnUtxzX9/2FzyhS9sWQf5S0GJE0AKBrFqjpeYcg==}
@@ -5949,6 +5968,9 @@ packages:
   zod@4.3.6:
     resolution: {integrity: sha512-rftlrkhHZOcjDwkGlnUtZZkvaPHCsDATp4pGpuOOMDaTdDDXF91wuVDJoWoPsKX/3YPQ5fHuF3STjcYyKr+Qhg==}
 
+  zod@4.4.3:
+    resolution: {integrity: sha512-ytENFjIJFl2UwYglde2jchW2Hwm4GJFLDiSXWdTrJQBIN9Fcyp7n4DhxJEiWNAJMV1/BqWfW/kkg71UDcHJyTQ==}
+
   zwitch@2.0.4:
     resolution: {integrity: sha512-bXE4cR/kVZhKZX/RjPEflHaKVhUVl85noU3v6b8apfQEc1x4A+zBxjZ4lN8LqGd6WZ3dl98pY4o717VFmoPp+A==}
 
@@ -6156,6 +6178,8 @@ snapshots:
     dependencies:
       '@babel/helper-string-parser': 7.27.1
       '@babel/helper-validator-identifier': 7.28.5
+
+  '@cfworker/json-schema@4.1.1': {}
 
   '@clerk/backend@3.5.0(react-dom@19.2.1(react@19.2.1))(react@19.2.1)':
     dependencies:
@@ -6617,7 +6641,7 @@ snapshots:
     dependencies:
       mediabunny: 1.45.0
 
-  '@modelcontextprotocol/sdk@1.32.0(zod@3.25.76)':
+  '@modelcontextprotocol/sdk@1.32.0(@cfworker/json-schema@4.1.1)(zod@3.25.76)':
     dependencies:
       '@hono/node-server': 2.1.3(hono@4.13.12)
       ajv: 8.20.0
@@ -6636,6 +6660,8 @@ snapshots:
       raw-body: 3.0.2
       zod: 3.25.76
       zod-to-json-schema: 3.25.2(zod@3.25.76)
+    optionalDependencies:
+      '@cfworker/json-schema': 4.1.1
     transitivePeerDependencies:
       - supports-color
 
@@ -7088,6 +7114,12 @@ snapshots:
   '@openai/codex-sdk@0.98.0': {}
 
   '@openai/codex@0.98.0': {}
+
+  '@openai/mcp-extensions@0.1.0(@modelcontextprotocol/sdk@1.32.0(@cfworker/json-schema@4.1.1)(zod@3.25.76))':
+    dependencies:
+      '@cfworker/json-schema': 4.1.1
+      '@modelcontextprotocol/sdk': 1.32.0(@cfworker/json-schema@4.1.1)(zod@3.25.76)
+      zod: 4.4.3
 
   '@opentelemetry/api@1.9.0': {}
 
@@ -12351,5 +12383,7 @@ snapshots:
   zod@3.25.76: {}
 
   zod@4.3.6: {}
+
+  zod@4.4.3: {}
 
   zwitch@2.0.4: {}

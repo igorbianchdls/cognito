@@ -1,0 +1,4 @@
+interface:
+  display_name: "Conectar Cognito ERP"
+  short_description: "Conecte sua conta e prepare a primeira proposta"
+  default_prompt: "Use $get-started para conectar minha conta do Cognito ERP e conferir as empresas disponíveis."

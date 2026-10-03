@@ -2,6 +2,7 @@ import { existsSync, readFileSync } from 'node:fs'
 import { resolve } from 'node:path'
 
 import { Pool } from 'pg'
+import { AsyncLocalStorage } from 'node:async_hooks'
 
 import { getErpDatabaseContext } from '@/lib/erpDatabaseContext'
 export type SQLClient = {
@@ -10,6 +11,21 @@ export type SQLClient = {
 }
 
 let pool: InstanceType<typeof Pool> | null = null;
+const transactionStorage = new AsyncLocalStorage<{client:SQLClient;tenantId:number;userId:number}>()
+
+/** Reutiliza uma transacao aberta; operacoes compostas nao podem confirmar parcialmente. */
+export function runWithErpTransactionClient<T>(client:SQLClient,fn:()=>Promise<T>):Promise<T> {
+  const context=getErpDatabaseContext()
+  if(!context||context.readOnly)throw new Error('Transacao composta exige contexto ERP autenticado de escrita.')
+  return transactionStorage.run({client,tenantId:context.tenantId,userId:context.userId},fn)
+}
+export function getErpTransactionClient():SQLClient|undefined {
+  const transaction=transactionStorage.getStore()
+  if(!transaction)return undefined
+  const context=getErpDatabaseContext()
+  if(context?.tenantId!==transaction.tenantId||context?.userId!==transaction.userId||context.readOnly)throw new Error('Contexto diferente da transacao composta.')
+  return transaction.client
+}
 
 export type PostgresPoolConfig = {
   connectionString: string
@@ -74,6 +90,8 @@ export async function runQuery<T = Record<string, unknown>>(
   params?: unknown[]
 ): Promise<T[]> {
   assertErpTenantScopedQuery(sql, params)
+  const transactionClient=getErpTransactionClient()
+  if(transactionClient)return (await transactionClient.query(sql,params)).rows as T[]
   const client = await getPool().connect();
   try {
     const context = getErpDatabaseContext()
@@ -104,6 +122,8 @@ export async function closePool() {
 }
 
 export async function withTransaction<T>(fn: (client: SQLClient) => Promise<T>): Promise<T> {
+  const transactionClient=getErpTransactionClient()
+  if(transactionClient)return fn(transactionClient)
   const transactionContext = getErpDatabaseContext()
   const rawClient = await getPool().connect();
   const client: SQLClient = {

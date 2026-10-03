@@ -2,6 +2,7 @@
   "name": "cognito",
   "version": "0.1.0",
   "private": true,
+  "engines": { "node": ">=22.0.0" },
   "packageManager": "pnpm@9.12.3",
   "scripts": {
     "dev": "next dev",
@@ -22,6 +23,7 @@
     "chatgptplugin:maintenance": "tsx scripts/chatgptplugin-maintenance.ts",
     "chatgptplugin:package": "node scripts/chatgptplugin-package.mjs",
     "chatgptplugin:interface-smoke": "tsx scripts/chatgptplugin-interface-smoke.ts",
+    "chatgptplugin:form-smoke": "tsx scripts/chatgptplugin-form-smoke.ts",
     "chatgptplugin:package-smoke": "node scripts/chatgptplugin-package-smoke.mjs",
     "security:smoke": "tsx scripts/erp-security-smoke.ts",
     "erp:runtime-smoke": "tsx scripts/erp-runtime-isolation-smoke.ts",
@@ -32,6 +34,8 @@
     "safe:add:elevenlabs": "node scripts/safe-npm-install.mjs install @elevenlabs/elevenlabs-js"
   },
   "dependencies": {
+    "@openai/mcp-extensions": "0.1.0",
+    "zod-openai": "npm:zod@4.4.3",
     "@modelcontextprotocol/sdk": "1.32.0",
     "@ai-sdk/anthropic": "^2.0.0",
     "@ai-sdk/openai": "^2.0.62",

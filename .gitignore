@@ -60,6 +60,8 @@ credentials/
 !src/products/chatgptplugin/plugin/plugin.json
 /dist/chatgptplugin/
 /dist/chatgptplugin-package-test/
+/dist/chatgptplugin.zip
+/dist/chatgptplugin-package-test.zip
 
 # vercel
 .vercel

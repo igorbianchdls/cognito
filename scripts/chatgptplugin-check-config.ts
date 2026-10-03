@@ -12,9 +12,13 @@ async function main() {
   const oauth = await metadata.json()
   const validOAuth = oauth.issuer === settings.issuer && oauth.code_challenge_methods_supported?.includes('S256')
     && oauth.scopes_supported?.includes(settings.scope) && oauth.authorization_endpoint && oauth.token_endpoint
-  const database = await pluginQuery<{ executions: boolean; limits: boolean; drafts:boolean }>(
-    "SELECT to_regclass('shared.chatgptplugin_executions') IS NOT NULL AS executions, to_regclass('shared.chatgptplugin_rate_windows') IS NOT NULL AS limits, to_regclass('shared.chatgptplugin_drafts') IS NOT NULL AS drafts",[])
-  const databaseReady=Boolean(database[0]?.executions && database[0]?.limits && database[0]?.drafts)
+  const database = await pluginQuery<{ executions: boolean; limits: boolean; drafts:boolean;settings:boolean;operations:boolean }>(
+    `SELECT to_regclass('shared.chatgptplugin_executions') IS NOT NULL AS executions,
+      to_regclass('shared.chatgptplugin_rate_windows') IS NOT NULL AS limits,
+      to_regclass('shared.chatgptplugin_drafts') IS NOT NULL AS drafts,
+      to_regclass('shared.chatgptplugin_settings') IS NOT NULL AS settings,
+      EXISTS(SELECT 1 FROM information_schema.columns WHERE table_schema='shared' AND table_name='chatgptplugin_drafts' AND column_name='target_snapshot') AS operations`,[])
+  const databaseReady=Boolean(database[0]?.executions && database[0]?.limits && database[0]?.drafts && database[0]?.settings && database[0]?.operations)
   const writeScopeReady=Boolean(oauth.scopes_supported?.includes('erp:write'))
   const ready = Boolean(validOAuth && databaseReady && writeScopeReady)
   console.log(JSON.stringify({ready,oauthReady:Boolean(validOAuth),databaseReady,writeScopeReady,readReady:Boolean(validOAuth && databaseReady)}))

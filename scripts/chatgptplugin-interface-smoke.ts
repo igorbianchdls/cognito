@@ -47,7 +47,7 @@ async function main() {
     await frame.getByRole('button',{name:'Abrir revisão no ERP',exact:true}).click()
     await page.waitForFunction(()=>((window as unknown as {opened:string[]}).opened.length===1))
     const calls=await page.evaluate(()=>(window as unknown as {calls:{name:string;arguments:{empresa_id?:number;pagina?:number}}[]}).calls)
-    assert(calls.filter(c=>c.name!=='meu_acesso').every(c=>c.arguments.empresa_id===2))
+    assert(calls.filter(c=>!['meu_acesso','ler_configuracoes'].includes(c.name)).every(c=>c.arguments.empresa_id===2))
     assert(calls.some(c=>c.arguments.pagina===2));assert(!calls.some(c=>c.name.includes('aprovar')))
     mkdirSync('.cache',{recursive:true});await page.screenshot({path:resolve('.cache/chatgptplugin-panel.png'),fullPage:true})
     console.log(JSON.stringify({status:'passed',approvalHttp:true,panelBridge:true,xssBlocked:true,pagination:true,companySelection:true,humanReviewLink:true,realChatGPT:false}))
