@@ -38,9 +38,6 @@ try {
     EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema = 'erp' AND table_name = 'vendas_itens' AND column_name = 'quantidade_atendida') AS atendimento_parcial,
     EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema = 'erp' AND table_name = 'vendas' AND column_name = 'fiscal_status') AS status_fiscal_separado,
     EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema = 'erp' AND table_name = 'compras_itens' AND column_name = 'quantidade_recebida') AS recebimento_parcial,
-    EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema = 'shared' AND table_name = 'ai_action_approvals' AND column_name = 'processing_at') AS aprovacao_processing_at,
-    EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema = 'shared' AND table_name = 'ai_action_approvals' AND column_name = 'processing_attempts') AS aprovacao_tentativas,
-    EXISTS (SELECT 1 FROM pg_indexes WHERE schemaname = 'shared' AND indexname = 'ai_action_approvals_processing_idx') AS aprovacao_processing_index,
     NOT EXISTS (
       SELECT 1 FROM pg_policies
       WHERE schemaname = 'erp' AND cmd <> 'SELECT'

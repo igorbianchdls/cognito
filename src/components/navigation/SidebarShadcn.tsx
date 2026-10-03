@@ -7,7 +7,7 @@ import {
   IconAddressBook, IconBuildingWarehouse, IconCashBanknote,
   IconChartBar, IconClipboardList, IconFileInvoice,
   IconPackage, IconReportAnalytics, IconSearch, IconSettings, IconShoppingBag,
-  IconSparkles, IconTruckDelivery, IconUsers,
+  IconTruckDelivery, IconUsers,
 } from "@tabler/icons-react"
 import { CircleHelp } from "lucide-react"
 
@@ -87,7 +87,6 @@ const navigation: NavigationItem[] = [
     ],
   },
   { title: "Relatórios", url: "/erp/relatorios/posicao-financeira", icon: IconReportAnalytics, activePrefix: "/erp/relatorios", capability: "erp.relatorios.visualizar" },
-  { title: "IA", url: "/configuracoes/integracoes-ia", icon: IconSparkles },
 ]
 
 function activeItem(item: NavigationItem, pathname: string): SimpleNavigationItem {

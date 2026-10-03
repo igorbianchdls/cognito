@@ -10,8 +10,6 @@ const isPublicRoute = createRouteMatcher([
   '/emissor-nota-fiscal(.*)',
   '/__clerk/:path*',
   '/api/clerk/webhooks(.*)',
-  '/api/ai/mcp(.*)',
-  '/.well-known(.*)',
 ])
 
 const handleClerkMiddleware = clerkMiddleware(async (auth, request) => {

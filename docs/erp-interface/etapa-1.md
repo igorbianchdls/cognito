@@ -21,7 +21,6 @@ Implementação local em 09/09/2026. Escopo: contratos compartilhados, valores m
 | Contratos e processamento de ciclos | Repositório de gestão e `/contratos/processar` | Etapa 3: versões, ciclos e vínculos comerciais |
 | Baixas, estornos e posições financeiras | Páginas financeiras e repositórios ERP | Etapa 4: créditos, renegociações, saldos e todas as ações financeiras |
 | Recorrências, automações e importações | Processadores e repositórios específicos | Etapa 5: produtores indiretos, histórico, navegação e remoção das dependências das views financeiras |
-| Ferramentas de IA | `erpAiApplication` e `erpTools` | Validar os mesmos contratos ao adaptar cada módulo; a ferramenta de baixa já exige chave |
 | Fluxos completos | Interface, API e banco de teste | Etapa 6: testes de ponta a ponta, concorrência e capacidade |
 
 Compras, estoque e fiscal não receberam novas funcionalidades. A padronização de erros em rotas existentes é infraestrutura compartilhada.
