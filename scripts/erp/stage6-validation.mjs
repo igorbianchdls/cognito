@@ -11,7 +11,6 @@ const commands = [
   ['views', 'node', ['scripts/erp/retire-views-smoke.mjs']],
   ['interface-estatica', 'node', ['scripts/erp/stage6-static-smoke.mjs']],
   ['tipos', process.execPath, ['node_modules/typescript/bin/tsc', '-p', 'tsconfig.erp.json', '--pretty', 'false']],
-  ['plugin', process.execPath, ['scripts/plugin/build-widget.mjs']],
 ]
 
 function run(command, args) {

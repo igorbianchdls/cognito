@@ -5,10 +5,9 @@
   "packageManager": "pnpm@9.12.3",
   "scripts": {
     "dev": "next dev",
-    "build": "pnpm plugin:build && next build",
+    "build": "next build",
     "start": "next start",
     "lint": "eslint src scripts",
-    "plugin:build": "node scripts/plugin/build-widget.mjs",
     "otto": "tsx src/products/ai-platform/cli/bin.ts",
     "erp:cli": "pnpm otto",
     "erp:foundation-smoke": "node scripts/erp-foundation-smoke.mjs",
@@ -21,14 +20,11 @@
     "ai:smoke": "tsx scripts/ai-platform-smoke.ts",
     "security:smoke": "tsx scripts/erp-security-smoke.ts",
     "erp:runtime-smoke": "tsx scripts/erp-runtime-isolation-smoke.ts",
-    "plugin:smoke": "node scripts/plugin/smoke-test.mjs",
     "service:hello": "node services/hello-service.mjs",
     "safe:npm": "node scripts/safe-npm-install.mjs",
     "safe:install": "node scripts/safe-npm-install.mjs install",
     "safe:add:assemblyai": "node scripts/safe-npm-install.mjs install assemblyai",
-    "safe:add:elevenlabs": "node scripts/safe-npm-install.mjs install @elevenlabs/elevenlabs-js",
-    "plugin:retirement-smoke": "node scripts/plugin/retirement-smoke.mjs",
-    "plugin:widget-browser-smoke": "node scripts/plugin/widget-browser-smoke.mjs"
+    "safe:add:elevenlabs": "node scripts/safe-npm-install.mjs install @elevenlabs/elevenlabs-js"
   },
   "dependencies": {
     "@ai-sdk/anthropic": "^2.0.0",
