@@ -1,8 +1,10 @@
 import {db,restoreCatalog,assert} from './evolution-fixture.mjs';
-import {readFileSync,writeFileSync} from 'node:fs';
+import {readFileSync,writeFileSync,mkdirSync} from 'node:fs';
 import {createHash} from 'node:crypto';
 const checks=[];
 const integritySql=readFileSync('supabase/migrations/20260909040000_harden_erp_service_integrity.sql','utf8');
+const readAccessSql=process.env.ERP_TEST_READ_ACCESS==='1' ? readFileSync('supabase/migrations/20261003170000_harden_erp_read_access.sql','utf8') : null;
+const reportDirectory=readAccessSql ? '.cache/erp-audit/read-access' : 'docs/avaliacao-erp/melhorias-estruturais';
 const evolutionFiles=['03-cadastros-documentos-contratos.sql','04-adiantamentos-renegociacoes.sql'];
 const evolutionSql=evolutionFiles.map(f=>readFileSync('scripts/erp/sql/'+f,'utf8'));
 const scalar=async sql=>Object.values((await db.query(sql)).rows[0])[0];
@@ -26,6 +28,7 @@ const agreement=(side='receber',value=1000)=>`
  UPDATE erp.renegociacoes SET status='efetivada',efetivada_em=now() WHERE id=100;
 `;
 try{
+ mkdirSync(reportDirectory,{recursive:true});
  await restoreCatalog();
  for(const f of ['01-integridade-historicos.sql','02-periodos-fechados.sql']) await db.exec(readFileSync('scripts/erp/sql/'+f,'utf8'));
  await db.exec(`
@@ -58,6 +61,7 @@ try{
  assert.equal(Number(await scalar('SELECT count(*) FROM erp.contratos_vendas_itens WHERE contrato_versao_id IS NOT NULL')),1);checks.push('itens existentes versionados');
  await db.exec(readFileSync('supabase/migrations/20260909033000_drop_erp_financial_views.sql','utf8'));
  await db.exec(integritySql);
+ if(readAccessSql) await db.exec(readAccessSql);
  assert.equal(Number(await scalar("SELECT count(*) FROM pg_views WHERE schemaname='erp'")),2);checks.push('apenas views de estoque');
  await test('contato multifinalidade',`INSERT INTO erp.entidades_contatos(tenant_id,entidade_id,nome,email,finalidades,principais) VALUES(1,101,'Financeiro','f@example.invalid',ARRAY['financeiro','comercial'],ARRAY['financeiro']);`);
  await test('principal duplicado',`INSERT INTO erp.entidades_contatos(tenant_id,entidade_id,nome,email,principais) VALUES(1,101,'Um','f@example.invalid',ARRAY['comercial']),(1,101,'Dois','d@example.invalid',ARRAY['comercial']);`,'23514');
@@ -128,7 +132,6 @@ try{
  await test('dois ciclos semanais na mesma competencia',`UPDATE erp.contratos_vendas_versoes SET periodicidade='semanal' WHERE contrato_id=101;`+activate+`INSERT INTO erp.contratos_vendas_geracoes(tenant_id,contrato_id,contrato_versao_id,competencia,periodo_inicio,periodo_fim,chave_idempotencia) SELECT 1,101,id,'2026-02-01','2026-02-01','2026-02-07','semana1' FROM erp.contratos_vendas_versoes WHERE contrato_id=101; INSERT INTO erp.contratos_vendas_geracoes(tenant_id,contrato_id,contrato_versao_id,competencia,periodo_inicio,periodo_fim,chave_idempotencia) SELECT 1,101,id,'2026-02-01','2026-02-08','2026-02-14','semana2' FROM erp.contratos_vendas_versoes WHERE contrato_id=101;`);
  await test('contato novo reflete no cadastro sem mudar documento antigo',`UPDATE erp.entidades_contatos SET email='novo@example.invalid' WHERE entidade_id=101;`,null,async()=>{assert.equal(await scalar('SELECT email FROM erp.entidades WHERE id=101'),'novo@example.invalid');assert.equal(await scalar("SELECT cliente_snapshot->>'email' FROM erp.vendas WHERE id=101"),'a@example.invalid');});
  const body=evolutionSql.map(sql=>sql.replace(/^BEGIN;\s*$/m,'').replace(/COMMIT;\s*$/,'')).join('\n');
- const result={status:'passed',passed:checks.length,digest:createHash('sha256').update(integritySql).digest('hex'),checks};console.log(JSON.stringify({status:result.status,checks:result.passed}));
- writeFileSync('docs/avaliacao-erp/melhorias-estruturais/regressoes-anteriores.json',JSON.stringify(result,null,2));
+ const result={status:'passed',passed:checks.length,digest:createHash('sha256').update(readAccessSql||integritySql).digest('hex'),checks};console.log(JSON.stringify({status:result.status,checks:result.passed}));
+ writeFileSync(reportDirectory+'/regressoes-anteriores.json',JSON.stringify(result,null,2));
 }catch(e){console.error(JSON.stringify({passed:checks.length,last:checks.at(-1),code:e.code,message:e.message,where:e.where},null,2));process.exitCode=1;}finally{await db.close();}
-

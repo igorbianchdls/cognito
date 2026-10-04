@@ -1186,8 +1186,8 @@ export async function importErpPurchaseInvoice(input: {
 
     const fiscalConfig = await client.query(
       `SELECT regexp_replace(cnpj, '\\D', '', 'g') AS cnpj
-       FROM erp.configuracoes_fiscais
-       WHERE tenant_id = $1 AND ativo = true AND excluido_em IS NULL
+       FROM erp.fiscal_issuer_for_operations($1)
+       WHERE tenant_id = $1
        ORDER BY id LIMIT 1`,
       [input.tenantId],
     )

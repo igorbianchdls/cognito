@@ -11,7 +11,7 @@ import { draftView,type DraftRow } from '../actions/draftRepository'
 import { proposalReferences } from '../actions/references'
 
 export async function loadApproval(id:string,session:ErpAccessContext,resource:string) {
-  const rows = await pluginQuery<DraftRow>('SELECT * FROM shared.chatgptplugin_drafts WHERE id=$1 AND user_id=$2 AND tenant_id=$3',[id,session.sharedUserId,session.tenantId])
+  const rows = await pluginQuery<DraftRow>("SELECT * FROM plugin.drafts WHERE id=$1 AND user_id=$2 AND tenant_id=$3 AND integration='chatgpt'",[id,session.sharedUserId,session.tenantId])
   if (!rows[0]) throw new PluginError('NOT_FOUND','Rascunho nao disponivel nesta conta e empresa.',404)
   const proposal = proposalSchema.parse(rows[0].proposal)
   if (!proposalCapabilities(proposal).every(cap=>session.capabilities.includes(cap))) throw new PluginError('ACCESS_DENIED','Seu perfil nao permite salvar este rascunho.',403)
@@ -36,7 +36,7 @@ async function assertCurrentAccess(client:SQLClient,session:ErpAccessContext,cap
 export async function decideApproval(id:string,session:ErpAccessContext,decision:'save'|'cancel') {
   return runWithErpDatabaseContext({tenantId:session.tenantId,userId:session.sharedUserId,statementTimeoutMs:10000},() => withTransaction(async client => {
     await client.query("SELECT set_config('statement_timeout','10000',true),set_config('lock_timeout','5000',true)")
-    const result = await client.query('SELECT * FROM shared.chatgptplugin_drafts WHERE id=$1 AND tenant_id=$2 AND user_id=$3 FOR UPDATE',[id,session.tenantId,session.sharedUserId])
+    const result = await client.query("SELECT * FROM plugin.drafts WHERE id=$1 AND tenant_id=$2 AND user_id=$3 AND integration='chatgpt' FOR UPDATE",[id,session.tenantId,session.sharedUserId])
     const row = result.rows[0] as DraftRow | undefined
     if (!row) throw new PluginError('NOT_FOUND','Rascunho nao disponivel nesta conta e empresa.',404)
     const proposal = proposalSchema.parse(row.proposal)
@@ -60,10 +60,10 @@ export async function decideApproval(id:string,session:ErpAccessContext,decision
       }
     }
     const status = decision === 'save' ? 'saved' : 'cancelled'
-    await client.query('UPDATE shared.chatgptplugin_drafts SET status=$2,record_id=$3,decided_at=now() WHERE id=$1',[id,status,recordId])
+    await client.query("UPDATE plugin.drafts SET status=$2,record_id=$3,decided_at=now() WHERE id=$1 AND integration='chatgpt'",[id,status,recordId])
     // Auditoria e operacao pertencem a mesma transacao: falha em qualquer etapa desfaz tudo.
-    await client.query(`INSERT INTO shared.chatgptplugin_executions(id,user_id,tenant_id,oauth_client_id,tool_name,status,duration_ms,finished_at)
-      VALUES ($1,$2,$3,$4,$5,'succeeded',0,now())`,[randomUUID(),session.sharedUserId,session.tenantId,row.oauth_client_id,decision === 'save' ? 'aprovar_rascunho' : 'cancelar_rascunho'])
+    await client.query(`INSERT INTO plugin.executions(id,user_id,tenant_id,oauth_client_id,tool_name,status,duration_ms,finished_at,integration)
+      VALUES ($1,$2,$3,$4,$5,'succeeded',0,now(),'chatgpt')`,[randomUUID(),session.sharedUserId,session.tenantId,row.oauth_client_id,decision === 'save' ? 'aprovar_rascunho' : 'cancelar_rascunho'])
     return {status,registro_id:recordId}
   }))
 }

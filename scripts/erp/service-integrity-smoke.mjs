@@ -4,6 +4,8 @@ import {createHash} from 'node:crypto';
 import {catalog} from './evolution-catalog.mjs';
 const checks=[];
 const integritySql=readFileSync('supabase/migrations/20260909040000_harden_erp_service_integrity.sql','utf8');
+const readAccessSql=process.env.ERP_TEST_READ_ACCESS==='1' ? readFileSync('supabase/migrations/20261003170000_harden_erp_read_access.sql','utf8') : null;
+const reportDirectory=readAccessSql ? '.cache/erp-audit/read-access' : 'docs/avaliacao-erp/melhorias-estruturais';
 const evolutionFiles=['03-cadastros-documentos-contratos.sql','04-adiantamentos-renegociacoes.sql'];
 const evolutionSql=evolutionFiles.map(f=>readFileSync('scripts/erp/sql/'+f,'utf8'));
 const scalar=async sql=>Object.values((await db.query(sql)).rows[0])[0];
@@ -27,7 +29,7 @@ const agreement=(side='receber',value=1000)=>`
  UPDATE erp.renegociacoes SET status='efetivada',efetivada_em=now() WHERE id=100;
 `;
 try{
- mkdirSync('docs/avaliacao-erp/melhorias-estruturais',{recursive:true});
+ mkdirSync(reportDirectory,{recursive:true});
  await restoreCatalog();
  for(const f of ['01-integridade-historicos.sql','02-periodos-fechados.sql']) await db.exec(readFileSync('scripts/erp/sql/'+f,'utf8'));
  await db.exec(`
@@ -56,8 +58,9 @@ try{
 
 
  await db.exec(readFileSync('supabase/migrations/20260909033000_drop_erp_financial_views.sql','utf8'));
- writeFileSync('docs/avaliacao-erp/melhorias-estruturais/catalogo-antes-isolado.json',JSON.stringify(await catalog(db),null,2)+'\n');
+ writeFileSync(reportDirectory+'/catalogo-antes-isolado.json',JSON.stringify(await catalog(db),null,2)+'\n');
  await db.exec(integritySql);
+ if(readAccessSql) await db.exec(readAccessSql);
  const probes=[];
  async function probe(name,sql,observe){
   if(name.startsWith('view_')) return;
@@ -73,7 +76,7 @@ try{
      assert.deepEqual(e,{email:'comercial@example.invalid',telefone:'111',celular:'222'});
     }
     if(name==='leitura_financeira_perfil_consulta'){
-     const r=(await db.query(observe)).rows[0];assert(Number(r.titulos)>0);assert(Number(r.eventos)>0);
+     const r=(await db.query(observe)).rows[0];if(readAccessSql){assert.equal(Number(r.titulos),0);assert.equal(Number(r.eventos),0);}else{assert(Number(r.titulos)>0);assert(Number(r.eventos)>0);}
     }
     if(name==='pagamento_com_desconto') {const r=(await db.query(observe)).rows[0];assert.equal(Number(r.valor_pago),1000);assert.equal(r.status,'pago');}
    }else{
@@ -150,8 +153,8 @@ try{
  await extra('previsao_link_financeiro',sale+`INSERT INTO erp.contas_receber(id,tenant_id,cliente_id,venda_id,descricao,valor_total) VALUES(500,1,101,103,'Titulo',100); INSERT INTO erp.contas_receber_parcelas(tenant_id,conta_receber_id,data_vencimento,valor,recebimento_previsto_id) SELECT 1,500,'2026-03-01',100,id FROM erp.vendas_recebimentos_previstos WHERE venda_id=103;`);
 
  const result={date:new Date().toISOString(),engine:'PostgreSQL isolado/PGlite',status:'passed',checks:probes.length,probes};
- result.digest=createHash('sha256').update(integritySql).digest('hex');
- writeFileSync('docs/avaliacao-erp/melhorias-estruturais/catalogo-esperado.json',JSON.stringify(await catalog(db),null,2)+'\n');
- writeFileSync('docs/avaliacao-erp/melhorias-estruturais/provas.json',JSON.stringify(result,null,2)+'\n');
+ result.digest=createHash('sha256').update(readAccessSql||integritySql).digest('hex');
+ writeFileSync(reportDirectory+'/catalogo-esperado.json',JSON.stringify(await catalog(db),null,2)+'\n');
+ writeFileSync(reportDirectory+'/provas.json',JSON.stringify(result,null,2)+'\n');
  console.log(JSON.stringify({status:'passed',checks:probes.length}));
 }catch(e){console.error({code:e.code,message:e.message,where:e.where,position:e.position,internalPosition:e.internalPosition,internalQuery:e.internalQuery});process.exitCode=1;}finally{await db.close();}

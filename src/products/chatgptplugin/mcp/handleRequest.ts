@@ -35,13 +35,20 @@ async function readBody(request: Request): Promise<unknown> {
   const reader = request.body.getReader()
   const chunks: Uint8Array[] = []
   let size = 0
-  const timeout = setTimeout(() => { void reader.cancel() },5000)
+  let timeout: ReturnType<typeof setTimeout> | undefined
+  const deadline = new Promise<never>((_resolve,reject) => {
+    timeout = setTimeout(() => {
+      // Reject before cancellation can make an unfinished body look complete.
+      reject(new PluginError('TIMEOUT','Corpo da requisicao incompleto.',408))
+      void reader.cancel().catch(() => undefined)
+    },5000)
+  })
   try {
     for (;;) {
-      const { done,value } = await reader.read()
+      const { done,value } = await Promise.race([reader.read(),deadline])
       if (done) break
       size += value.byteLength
-      if (size > 64*1024) { await reader.cancel(); throw new PluginError('REQUEST_TOO_LARGE','Corpo excede 64 KB.',413) }
+      if (size > 64*1024) { void reader.cancel().catch(() => undefined); throw new PluginError('REQUEST_TOO_LARGE','Corpo excede 64 KB.',413) }
       chunks.push(value)
     }
     let parsed:unknown

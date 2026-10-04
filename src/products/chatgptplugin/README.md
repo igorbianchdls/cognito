@@ -128,15 +128,21 @@ Variáveis previstas em `.env.example`:
 
 No Clerk, configure OAuth Applications, `erp:read`, `erp:write`, PKCE S256 e callbacks reais. Não envie segredos ao chat ou ao pacote. Desenvolvimento admite origem HTTP em localhost; produção exige HTTPS.
 
-Migrações preparadas, sem aplicação ao banco remoto nesta etapa:
+Persistência no schema privado `plugin`, compartilhado pelas integrações ChatGPT e Claude. As quatro tabelas são `executions`, `rate_windows`, `drafts` e `settings`; todas identificam a integração. O produto ChatGPT filtra `integration='chatgpt'`, inclusive na aprovação humana, idempotência, manutenção, limites e preferências. Usuários, empresas e permissões continuam em `shared`; operações continuam em `erp`.
 
+Migrações aplicadas ao Supabase em 03/10/2026:
+
+- `20261003120000_retire_ai_platform.sql`: retirada das três tabelas antigas após arquivamento dos registros.
 - `20261003130000_create_chatgptplugin.sql`: execuções e janelas de frequência.
 - `20261003140000_chatgptplugin_drafts.sql`: propostas, autor, empresa, cliente OAuth, idempotência e resultado.
 - `20261003150000_chatgptplugin_operations_settings.sql`: estado do alvo e preferências.
+- `20261003160000_create_plugin_schema.sql`: transfere as quatro tabelas para `plugin`, remove o prefixo dos nomes e separa as integrações nas chaves e consultas.
 
-As tabelas têm RLS e acesso revogado para `anon` / `authenticated`. O backend usa a conexão administrativa existente. Auditoria guarda metadados; propostas podem conter dados pessoais. Revise as migrações pendentes antes de aplicar: a retirada anterior de tabelas antigas bloqueia se encontrar registros.
+As tabelas têm RLS e acesso ao schema/tabelas revogado para `PUBLIC`, `anon` e `authenticated`. O backend usa a conexão administrativa existente; `service_role` tem acesso concedido. Auditoria guarda metadados; propostas podem conter dados pessoais.
 
-Limites: 60 pedidos por usuário/minuto; corpo MCP de 64 KB; resultado estruturado de 128 KB; páginas de 10 a 50; detalhes de até 100 itens; propostas de até 50 itens e 24 KB. Consultas têm prazo de 10 segundos no banco e 15 segundos na ferramenta. Revisão tem prazo de consulta de 10 segundos, lock de 5 segundos e decisão HTTP de até 1 KB.
+`chatgptplugin:apply-database --apply` é o aplicador específico do projeto autorizado: arquiva os registros antigos em `.cache/database-backups`, confere o arquivo, aplica as cinco migrações e registra o histórico em uma única transação. Uma falha desfaz as alterações no banco. A migração de retirada mantém a proteção contra registros não arquivados e usa `DROP RESTRICT`. A aplicação realizada arquivou quatro registros; o recibo está em `docs/plugin-database.md`.
+
+Limites: 60 pedidos por usuário/minuto; corpo MCP de 64 KB; resultado estruturado de 128 KB; páginas de 10 a 50; detalhes de até 100 itens; propostas de até 50 itens e 24 KB. Recebimento do corpo tem prazo total de 5 segundos: se a transmissão não terminar, retorna HTTP 408 sem executar ferramentas, mesmo com JSON válido já recebido. Consultas têm prazo de 10 segundos no banco e 15 segundos na ferramenta. Revisão tem prazo de consulta de 10 segundos, lock de 5 segundos e decisão HTTP de até 1 KB.
 
 `chatgptplugin:maintenance` remove janelas antigas, auditoria/propostas encerradas após 90 dias e marca execuções interrompidas e propostas expiradas. O agendamento remoto será configurado depois.
 
@@ -156,10 +162,14 @@ pnpm build
 
 Protocolo usa o SDK real com dependências autenticadas simuladas. MRTR percorre o endpoint HTTP em chamadas independentes, com formulários oficiais, expiração, alteração de estado, troca de usuário/cliente, revogação, campos inválidos, cancelamento e idempotência. Banco usa PGlite local e SQL/repositórios reais. Painel e editor usam navegador dedicado com host MCP Apps simulado. Pacote inclui rejeição de manifestos, skills, caminhos e ZIP inválidos. Não há rotas de simulação na aplicação.
 
-Validação em 03/10/2026: 31 grupos do protocolo, 12 grupos MRTR, 16 grupos no banco local e 37 verificações negativas do pacote aprovados. Painel, formulário/editor, isolamento/permissões, checagem de tipos e compilação completa aprovados.
+Validação em 03/10/2026: 32 grupos do protocolo, 12 grupos MRTR, 17 grupos no banco local e 37 verificações negativas do pacote aprovados. Painel, formulário/editor, isolamento/permissões, checagem de tipos e compilação completa aprovados.
+
+Após a correção do prazo de recebimento, protocolo, MRTR e checagem de tipos foram repetidos e aprovados. O teste cobre transmissão interrompida com JSON válido ou parcial, cancelamento com erro ou pendente e transmissão em partes concluída normalmente; os casos vencidos não executam ferramentas.
+
+Após a adoção de `plugin`, os 17 grupos locais de banco, os 32 grupos de protocolo e a checagem de tipos foram repetidos. Cinco grupos também foram aprovados no Supabase real: estrutura/RLS, ausência das tabelas antigas, bloqueio para os papéis do navegador, propostas/preferências distintas por integração e rollback dos registros temporários de validação. Esses testes não usam OAuth nem aprovam operações do ERP remoto.
 
 PGlite serializa as transações da suíte: os testes locais **não comprovam concorrência entre duas conexões PostgreSQL reais**. Essa validação pertence à etapa de banco, junto com migrações, isolamento e rollback no ambiente de teste.
 
-Depois de configurar OAuth, banco e domínio, execute `chatgptplugin:check-config` e valide Inspector/ChatGPT: consentimento, perfis, revogação, empresas, consultas, configurações, menções, formulário nativo, arquivos, propostas e aprovação humana. Instalação e renderização no host real ainda não foram comprovadas.
+Depois de configurar OAuth e domínio e concluir a validação do banco, execute `chatgptplugin:check-config` e valide Inspector/ChatGPT: consentimento, perfis, revogação, empresas, consultas, configurações, menções, formulário nativo, arquivos, propostas e aprovação humana. Instalação e renderização no host real ainda não foram comprovadas.
 
 Referências: [extensões OpenAI](https://developers.openai.com/plugins/build/extensions), [pacote portátil](https://developers.openai.com/plugins/build/plugins), [requisitos de pacote](https://developers.openai.com/plugins/deploy/submission-errors), [MRTR](https://modelcontextprotocol.io/specification/2026-07-28/basic/patterns/mrtr), [Streamable HTTP](https://modelcontextprotocol.io/specification/2026-07-28/basic/transports/streamable-http).

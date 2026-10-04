@@ -19,6 +19,7 @@
     "chatgptplugin:typecheck": "tsc -p tsconfig.chatgptplugin.json --pretty false",
     "chatgptplugin:smoke": "tsx scripts/chatgptplugin-smoke.ts",
     "chatgptplugin:database-smoke": "node scripts/chatgptplugin-database-smoke.mjs",
+    "chatgptplugin:apply-database": "tsx scripts/chatgptplugin-apply-database.ts",
     "chatgptplugin:check-config": "tsx scripts/chatgptplugin-check-config.ts",
     "chatgptplugin:maintenance": "tsx scripts/chatgptplugin-maintenance.ts",
     "chatgptplugin:package": "node scripts/chatgptplugin-package.mjs",

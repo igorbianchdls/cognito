@@ -45,7 +45,7 @@ stubs['@/lib/postgres']={...postgres,runQuery(sql,params){
       if(erp){await db.exec('SET LOCAL ROLE erp_runtime');await db.query("SELECT set_config('app.erp_tenant_id',$1,true),set_config('app.erp_user_id',$2,true)",[String(saved.tenantId),String(saved.userId)]);}
       try{return await db.query(sql,params);}catch(error){console.error('Local transaction failure:',error.code,error.message);throw error;}finally{if(erp)await db.exec('RESET ROLE').catch(()=>undefined);}
     }};
-    try{const result=await fn(client);await db.exec('COMMIT');return result;}catch(error){await db.exec('ROLLBACK');throw error;}
+    try{const result=await fn(client);await db.exec('SET LOCAL ROLE erp_runtime');await db.query("SELECT set_config('app.erp_tenant_id',$1,true),set_config('app.erp_user_id',$2,true)",[String(saved.tenantId),String(saved.userId)]);await db.exec('COMMIT');return result;}catch(error){await db.exec('ROLLBACK');throw error;}
   });queue=task.catch(()=>undefined);return task;
 }};
 stubs['../shared/database']={pluginQuery:async(sql,params)=>(await db.query(sql,params)).rows};
@@ -56,12 +56,13 @@ async function main(){
   for(const file of ['01-integridade-historicos.sql','02-periodos-fechados.sql','03-cadastros-documentos-contratos.sql','04-adiantamentos-renegociacoes.sql']) {
     await db.exec(readFileSync(`scripts/erp/sql/${file}`,'utf8'));
   }
-  for(const file of ['20260909033000_drop_erp_financial_views.sql','20260909040000_harden_erp_service_integrity.sql']) {
+  for(const file of ['20260909033000_drop_erp_financial_views.sql','20260909040000_harden_erp_service_integrity.sql','20261003170000_harden_erp_read_access.sql']) {
     await db.exec(readFileSync(`supabase/migrations/${file}`,'utf8'));
   }
   await db.exec(readFileSync('supabase/migrations/20261003130000_create_chatgptplugin.sql','utf8'));
   await db.exec(readFileSync('supabase/migrations/20261003140000_chatgptplugin_drafts.sql','utf8'));
   await db.exec(readFileSync('supabase/migrations/20261003150000_chatgptplugin_operations_settings.sql','utf8'));
+  await db.exec(readFileSync('supabase/migrations/20261003160000_create_plugin_schema.sql','utf8'));
   await db.exec(`
     INSERT INTO shared.erp_permission_profiles(id,nome) VALUES('consulta','Consulta');
     INSERT INTO shared.erp_profile_permissions(profile_id,capability) VALUES('consulta','erp.cadastros.visualizar');
@@ -110,16 +111,16 @@ async function main(){
     await assert.rejects(loadPluginPrincipal('user_2','client',['erp:read']));
   });
   await check('Auditoria persiste sem argumentos ou resultados',async()=>{
-    const rows=(await db.query("SELECT status,error_code,duration_ms FROM shared.chatgptplugin_executions")).rows;
+    const rows=(await db.query("SELECT status,error_code,duration_ms FROM plugin.executions")).rows;
     assert(rows.some(r=>r.status==='succeeded'));assert(rows.some(r=>r.error_code==='ACCESS_DENIED'));assert(rows.every(r=>r.duration_ms>=0));
   });
   await check('Limite atomico entre chamadas concorrentes',async()=>{
     const outcomes=await Promise.allSettled(Array.from({length:4},()=>audit.consumeRequestLimit(owner,2)));
     assert.equal(outcomes.filter(x=>x.status==='fulfilled').length,2);
-    assert.equal((await db.query('SELECT requests FROM shared.chatgptplugin_rate_windows')).rows[0].requests,4);
+    assert.equal((await db.query('SELECT requests FROM plugin.rate_windows')).rows[0].requests,4);
   });
   await check('Tabelas operacionais nao expostas ao navegador',async()=>{
-    for(const role of ['anon','authenticated'])for(const table of ['chatgptplugin_executions','chatgptplugin_drafts','chatgptplugin_settings']){await db.exec(`BEGIN; SET LOCAL ROLE ${role}`);try{await assert.rejects(db.query(`SELECT * FROM shared.${table}`),e=>e.code==='42501');}finally{await db.exec('ROLLBACK');}}
+    for(const role of ['anon','authenticated'])for(const table of ['executions','rate_windows','drafts','settings']){await db.exec(`BEGIN; SET LOCAL ROLE ${role}`);try{await assert.rejects(db.query(`SELECT * FROM plugin.${table}`),e=>e.code==='42501');}finally{await db.exec('ROLLBACK');}}
   });
   const {randomUUID}=require('node:crypto');
   const {decideApproval}=load('@/products/chatgptplugin/approvals/approvalRepository');
@@ -152,21 +153,21 @@ async function main(){
   });
   await check('Cancelamento prazo e revogacao bloqueiam salvamento',async()=>{
     const cancelled=await prepare({tipo:'cliente',dados:{nome:'Cancelado'}});await decideApproval(cancelled.rascunho_id,session,'cancel');await assert.rejects(decideApproval(cancelled.rascunho_id,session,'save'));
-    const expired=await prepare({tipo:'cliente',dados:{nome:'Expirado'}});await db.query("UPDATE shared.chatgptplugin_drafts SET expires_at=now()-interval '1 second' WHERE id=$1",[expired.rascunho_id]);await assert.rejects(decideApproval(expired.rascunho_id,session,'save'));
+    const expired=await prepare({tipo:'cliente',dados:{nome:'Expirado'}});await db.query("UPDATE plugin.drafts SET expires_at=now()-interval '1 second' WHERE id=$1",[expired.rascunho_id]);await assert.rejects(decideApproval(expired.rascunho_id,session,'save'));
     const restricted=await prepare({tipo:'cliente',dados:{nome:'Sem permissao'}});await db.exec("UPDATE shared.tenant_memberships SET role='member',erp_profile_id='consulta' WHERE tenant_id=1 AND user_id=1");await assert.rejects(decideApproval(restricted.rascunho_id,session,'save'));await db.exec("UPDATE shared.tenant_memberships SET role='owner' WHERE tenant_id=1 AND user_id=1");
     const revoked=await prepare({tipo:'cliente',dados:{nome:'Revogado'}});await db.exec("UPDATE shared.tenant_memberships SET status='suspended' WHERE tenant_id=1 AND user_id=1");await assert.rejects(decideApproval(revoked.rascunho_id,session,'save'));await db.exec("UPDATE shared.tenant_memberships SET status='active' WHERE tenant_id=1 AND user_id=1");
   });
   await check('Falha na auditoria desfaz criacao e preserva proposta',async()=>{
     const draft=await prepare({tipo:'produto',dados:{nome:'Rollback',preco:12}});
-    await db.exec("CREATE FUNCTION shared.reject_plugin_approval() RETURNS trigger LANGUAGE plpgsql AS $$ BEGIN IF NEW.tool_name='aprovar_rascunho' THEN RAISE EXCEPTION 'audit failure'; END IF; RETURN NEW; END $$; CREATE TRIGGER reject_approval BEFORE INSERT ON shared.chatgptplugin_executions FOR EACH ROW EXECUTE FUNCTION shared.reject_plugin_approval()");
+    await db.exec("CREATE FUNCTION shared.reject_plugin_approval() RETURNS trigger LANGUAGE plpgsql AS $$ BEGIN IF NEW.tool_name='aprovar_rascunho' THEN RAISE EXCEPTION 'audit failure'; END IF; RETURN NEW; END $$; CREATE TRIGGER reject_approval BEFORE INSERT ON plugin.executions FOR EACH ROW EXECUTE FUNCTION shared.reject_plugin_approval()");
     await assert.rejects(decideApproval(draft.rascunho_id,session,'save'));
     assert.equal((await db.query("SELECT count(*)::int AS n FROM erp.produtos WHERE nome='Rollback'")).rows[0].n,0);
-    assert.equal((await db.query('SELECT status FROM shared.chatgptplugin_drafts WHERE id=$1',[draft.rascunho_id])).rows[0].status,'pending');
+    assert.equal((await db.query('SELECT status FROM plugin.drafts WHERE id=$1',[draft.rascunho_id])).rows[0].status,'pending');
     const edit=await prepare({tipo:'editar_produto',dados:{registro_id:101,preco:999}});
     await assert.rejects(decideApproval(edit.rascunho_id,session,'save'));
     assert.equal(Number((await db.query('SELECT preco_venda FROM erp.produtos WHERE id=101')).rows[0].preco_venda),10);
-    assert.equal((await db.query('SELECT status FROM shared.chatgptplugin_drafts WHERE id=$1',[edit.rascunho_id])).rows[0].status,'pending');
-    await db.exec('DROP TRIGGER reject_approval ON shared.chatgptplugin_executions; DROP FUNCTION shared.reject_plugin_approval()');
+    assert.equal((await db.query('SELECT status FROM plugin.drafts WHERE id=$1',[edit.rascunho_id])).rows[0].status,'pending');
+    await db.exec('DROP TRIGGER reject_approval ON plugin.executions; DROP FUNCTION shared.reject_plugin_approval()');
   });
   await check('Edicao preserva campos e rejeita proposta desatualizada',async()=>{
     const draft=await prepare({tipo:'editar_produto',dados:{registro_id:101,preco:12}});
@@ -228,6 +229,39 @@ async function main(){
     await assert.rejects(prefs.updatePreferences(owner,{empresa_preferida:'999'}));
     await assert.rejects(prefs.updatePreferences(owner,{tenant_id:2}));
     await prefs.updatePreferences(owner,{por_pagina:40});assert.equal((await prefs.readPreferences(owner)).empresa_preferida,'1');
+  });
+  await check('ChatGPT e Claude isolam propostas limites preferencias e auditoria',async()=>{
+    const key=randomUUID(),claudeDraft=randomUUID(),claudeExecution=randomUUID();
+    const proposal={tipo:'cliente',dados:{nome:'Proposta Claude'}};
+    await db.query("INSERT INTO plugin.drafts(id,tenant_id,user_id,oauth_client_id,operation_key,proposal,integration) VALUES($1,1,1,'client',$2,$3::jsonb,'claude')",[claudeDraft,key,JSON.stringify(proposal)]);
+    const chatgptDraft=await prepare({tipo:'cliente',dados:{nome:'Proposta ChatGPT'}},key);
+    assert.notEqual(chatgptDraft.rascunho_id,claudeDraft);
+    assert.equal((await executeTool(owner,'obter_rascunho',{empresa_id:1,rascunho_id:claudeDraft},settings)).isError,true);
+    await assert.rejects(decideApproval(claudeDraft,session,'save'),e=>e.code==='NOT_FOUND');
+    await assert.rejects(decideApproval(claudeDraft,session,'cancel'),e=>e.code==='NOT_FOUND');
+    const list=await call(owner,'listar_rascunhos',{empresa_id:1});assert(!list.records.some(row=>row.rascunho_id===claudeDraft));
+    await db.exec("INSERT INTO plugin.rate_windows(user_id,window_start,requests,integration) VALUES(1,date_trunc('minute',now()),99,'claude'); DELETE FROM plugin.rate_windows WHERE user_id=1 AND integration='chatgpt'");
+    await audit.consumeRequestLimit(owner,1);
+    assert.equal((await db.query("SELECT requests FROM plugin.rate_windows WHERE integration='claude'")).rows[0].requests,99);
+    await assert.rejects(audit.consumeRequestLimit(owner,1),e=>e.code==='RATE_LIMITED');
+    const prefs=load('@/products/chatgptplugin/extensions/settings');
+    await db.exec("INSERT INTO plugin.settings(user_id,oauth_client_id,values,integration) VALUES(1,'client','{\"por_pagina\":50}','claude')");
+    assert.equal((await prefs.readPreferences(owner)).por_pagina,40);
+    await prefs.updatePreferences(owner,{por_pagina:30});
+    assert.equal((await db.query("SELECT values FROM plugin.settings WHERE integration='claude'")).rows[0].values.por_pagina,50);
+    await db.query("INSERT INTO plugin.executions(id,user_id,oauth_client_id,tool_name,status,integration) VALUES($1,1,'client','claude-test','running','claude')",[claudeExecution]);
+    await audit.finishExecution(claudeExecution,'failed','TEST',1);
+    assert.equal((await db.query('SELECT status FROM plugin.executions WHERE id=$1',[claudeExecution])).rows[0].status,'running');
+    await assert.rejects(db.query("INSERT INTO plugin.settings(user_id,oauth_client_id,integration) VALUES(1,'client','unknown')"),e=>e.code==='23514');
+    for(const name of ['executions','rate_windows','drafts','settings'])assert.equal((await db.query('SELECT to_regclass($1) AS relation',[`shared.chatgptplugin_${name}`])).rows[0].relation,null);
+  });
+  await check('Perfil de vendas pre-valida fiscal sem ler configuracao completa',async()=>{
+    await db.exec("INSERT INTO shared.tenant_memberships(tenant_id,user_id,role,status) VALUES(1,2,'viewer','active')");
+    await db.exec("INSERT INTO shared.erp_profile_permissions(profile_id,capability) VALUES('consulta','erp.vendas.visualizar'); INSERT INTO erp.configuracoes_fiscais(tenant_id,cnpj,razao_social,token_secret_ref) VALUES(1,'12345678000199','Empresa A','secret-local')");
+    const salesReader=await loadPluginPrincipal('user_2','client',['erp:read']);
+    const fiscal=await call(salesReader,'verificar_fiscal_venda',{empresa_id:1,venda_id:101});
+    assert(!fiscal.issues.some(issue=>['FISCAL_CONFIG_MISSING','ISSUER_DOCUMENT_MISSING'].includes(issue.code)));
+    const result=await executeTool(salesReader,'listar_contas_financeiras',{empresa_id:1},settings);assert.equal(result.isError,true);
   });
   console.log(JSON.stringify({status:'passed',checks,realDatabaseAccess:false,localPostgres:true}));
 }

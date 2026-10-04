@@ -895,8 +895,7 @@ export async function preflightSaleFiscal(
     `SELECT entidades.*, configs.id AS configuracao_id, configs.cnpj AS emitente_cnpj,
        configs.inscricao_estadual AS emitente_ie, configs.endereco_codigo_municipio AS emitente_codigo_municipio
      FROM erp.entidades
-     LEFT JOIN erp.configuracoes_fiscais configs
-       ON configs.tenant_id = entidades.tenant_id AND configs.ativo AND configs.excluido_em IS NULL
+     LEFT JOIN erp.fiscal_issuer_for_operations($1) configs ON configs.tenant_id = entidades.tenant_id
      WHERE entidades.tenant_id = $1 AND entidades.id = $2`,
     [tenantId, sale.cliente_id],
   );

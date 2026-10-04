@@ -154,6 +154,36 @@ async function main() {
     assert.equal((await handlePluginRequest(new Request(settings.resource,{headers:{authorization:'Bearer test'}}),dependencies)).status,405)
     assert.equal((await handlePluginRequest(new Request(settings.resource,{method:'OPTIONS',headers:{origin:'https://chatgpt.com'}}),dependencies)).status,204)
   })
+  await check('Corpo sem fim expira sem executar ferramenta, mesmo se o cancelamento falhar',async()=>{
+    const body=JSON.stringify({jsonrpc:'2.0',id:1,method:'tools/call',params:{name:'meu_acesso',arguments:{}}})
+    await Promise.all(['valid','partial','cancel-rejects','cancel-pending','closed'].map(async scenario=>{
+      let executions=0,cancelled=false
+      const deps:HttpDependencies={...dependencies,execution:{...execution,
+        reserve:async()=>{executions++;return randomUUID()},finish:async()=>undefined}}
+      const bytes=new TextEncoder().encode(scenario==='partial'?body.slice(0,-1):body)
+      const stream=new ReadableStream<Uint8Array>({
+        start(controller){
+          controller.enqueue(bytes.slice(0,20));controller.enqueue(bytes.slice(20))
+          if(scenario==='closed')controller.close()
+        },
+        cancel(){
+          cancelled=true
+          if(scenario==='cancel-rejects')return Promise.reject(new Error('Cancelamento falhou'))
+          if(scenario==='cancel-pending')return new Promise<void>(()=>{})
+        },
+      })
+      const response=await handlePluginRequest(new Request(settings.resource,{method:'POST',
+        headers:{authorization:'Bearer test','content-type':'application/json',accept:'application/json, text/event-stream'},
+        body:stream,duplex:'half'} as RequestInit),deps)
+      const result=await response.json()
+      assert.equal(response.status,scenario==='closed'?200:408,scenario)
+      assert.equal(executions,scenario==='closed'?1:0,scenario)
+      assert.equal(cancelled,scenario!=='closed',scenario)
+      if(scenario==='closed')assert.equal(result.result.isError,undefined)
+      else assert.equal(result.error,'TIMEOUT',scenario)
+      assert.equal(stream.locked,false,scenario)
+    }))
+  })
   await check('Extensoes oficiais anunciam e validam configuracoes',async()=>{
     const initialized=await rpc('initialize',{protocolVersion:'2025-06-18',capabilities:{},clientInfo:{name:'smoke',version:'1'}})
     assert.equal(initialized.body.result.capabilities.extensions['openai/settings'].readTool,'ler_configuracoes')
