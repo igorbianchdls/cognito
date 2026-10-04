@@ -1,8 +1,8 @@
 # ChatGPT Plugin — Cognito ERP
 
-Produto `chatgptplugin`, versão **1.3.0**: 24 ferramentas MCP, operações com revisão humana, painel e formulário MCP Apps, formulários nativos OpenAI por MRTR, configurações nativas, menções a clientes, editor de arquivos, onboarding e exportação portátil em pasta e ZIP.
+Produto `chatgptplugin`, versão **1.4.0**: 28 ferramentas MCP, operações com revisão humana, painel e formulário MCP Apps, formulários nativos OpenAI por MRTR, configurações nativas, menções a clientes, editor de arquivos, onboarding e exportação portátil em pasta e ZIP.
 
-O código e as validações desta etapa são locais. OAuth real, migrações no banco remoto, instalação e testes na conta ChatGPT pertencem à próxima etapa. Nenhuma validação local comprova esses serviços funcionando em produção.
+As consultas e os cards foram validados localmente e contra o Supabase real. O schema `plugin` e o ERP já estão configurados no banco. A versão 1.4.0 ainda exige publicação do código e validação da conexão e renderização dentro da conta ChatGPT; os testes locais não comprovam esse fluxo externo.
 
 ## Estrutura
 
@@ -15,6 +15,8 @@ O código e as validações desta etapa são locais. OAuth real, migrações no 
 | `approvals` | Revisão autenticada e execução após decisão humana |
 | `audit` / `shared` | Auditoria, limites, configuração e acesso ao banco |
 | `extensions` | Painel, editor, preferências e formulários nativos |
+| `ui/cards` | Tabela, detalhes, análise, seleção, revisão e resultado |
+| `ui/components`, `bridge`, `contracts`, `styles` | Componentes compartilhados, ponte MCP Apps, contratos e tema |
 | `plugin` | Manifesto portátil, ícone e skills `usar-erp` / `get-started` |
 
 Requer Node.js 22 ou superior. O ERP usa Zod 3; o alias `zod-openai` fornece Zod 4 para o SDK oficial de extensões. O SDK MCP 1.32 processa ferramentas e recursos; a adaptação HTTP implementa descoberta, metadados e MRTR da revisão 2026-07-28. Clientes antigos usam o transporte anterior e o formulário MCP Apps.
@@ -27,12 +29,16 @@ Requer Node.js 22 ou superior. O ERP usa Zod 3; o alias `zod-openai` fornece Zod
 | `resumo_erp` | Indicadores financeiros, vendas, compras e cadastros | Visualização das áreas consultadas |
 | `buscar_cadastros` | Clientes, fornecedores, produtos ou serviços | Cadastros: visualizar |
 | `obter_cliente` | Cliente por ID | Cadastros: visualizar |
+| `obter_cadastro` | Cliente, fornecedor, produto ou serviço por ID | Cadastros: visualizar |
 | `listar_vendas` | Pedidos de venda com paginação | Vendas: visualizar |
 | `obter_venda` | Venda e até 100 itens | Vendas: visualizar |
 | `listar_orcamentos` | Orçamentos com paginação | Vendas: visualizar |
 | `listar_compras` | Pedidos de compra | Compras: visualizar |
 | `obter_compra` | Compra e até 100 itens | Compras: visualizar |
 | `consultar_financeiro` | Parcelas a pagar ou receber | Financeiro: visualizar |
+| `obter_parcela_financeira` | Composição de saldo e histórico de pagamentos | Financeiro: visualizar |
+| `analisar_periodo` | Agregados completos por mês | Relatórios e área consultada: visualizar |
+| `renderizar_card` | Card focado no pedido, consultando novamente a fonte | Acesso da consulta escolhida; rascunhos isolados por autor/conexão |
 | `listar_contas_financeiras` | Contas ativas para preparar baixas | Financeiro: visualizar |
 | `listar_pagamentos` | Pagamentos e recebimentos para preparar estornos | Financeiro: visualizar |
 | `consultar_estoque` | Posição, reservas e disponibilidade | Estoque: visualizar |
@@ -53,6 +59,24 @@ Todos os pedidos exigem `erp:read`. `empresa_id` precisa corresponder a um vínc
 `preparar_rascunho`, `preparar_formulario_nativo` e `atualizar_configuracoes` anunciam `readOnlyHint=false`. As demais ferramentas anunciam leitura. Todas anunciam `destructiveHint=false`, `idempotentHint=true` e `openWorldHint=false`: as alterações comerciais dependem da revisão externa. Resultados são dados, nunca instruções.
 
 Relatórios: `dre-caixa`, `posicao-financeira`, `vendas-clientes`, `vendas-vendedores`, `vendas-produtos`, `compras-fornecedores`, `compras-categorias` e `valor-estoque`. O período máximo é de 366 dias. DRE considera caixa; posição financeira considera vencimentos; valor de estoque representa a posição atual. Respeite paginação, `hasMore` e truncamento de itens.
+
+## Cards por pedido
+
+Recurso MCP Apps `ui://chatgptplugin/cards/v1.html`, associado a `renderizar_card` por `_meta.ui.resourceUri`. HTML autocontido, sem dependências externas, CSP sem destinos de conexão/recursos; dados chegam pela ponte `postMessage` e são inseridos com `textContent`. As consultas de dados continuam utilizáveis sem interface.
+
+```json
+{"card":"tabela","consulta":"consultar_financeiro","empresa_id":1,"parametros":{"tipo":"pagar","por_pagina":20}}
+```
+
+Os seis tipos e suas fontes estão documentados em `ui/contracts/cards.ts`. Cada apresentação revalida os argumentos, a empresa e as permissões através da mesma execução auditada da tool original. O modelo não fornece linhas, valores ou estado de aprovação. `empresa_id` dentro de `parametros` é recusado. Nenhum card executa operações comerciais por conta própria.
+
+Tabela oferece filtros, paginação, ordenação explícita da página e abertura de detalhes. `consultar_financeiro.summary` considera todas as parcelas filtradas: `em_aberto` inclui vencidas, `vencidas` considera saldo vencido e `vence_em_7_dias` considera amanhã até sete dias após `referencia`. Saldo reutiliza a composição do ERP, incluindo pagamentos, créditos, estornos e renegociações. Não some uma página para afirmar o total geral.
+
+Vendas e compras aceitam `inicio` e `fim` por data do documento. `summary.valor_total` inclui todos os documentos filtrados; `valor_confirmado` exclui rascunhos e cancelados. `analisar_periodo` usa vendas confirmadas/faturadas do tipo venda e compras confirmadas/recebidas do tipo compra; financeiro usa saldos pendentes por vencimento. Os agrupamentos mensais são calculados no banco, até 366 dias.
+
+Seleção envia a referência autorizada para a conversa. Revisão mostra a proposta existente e abre sua aprovação no ERP. Pedir ajuste envia uma mensagem para preparar nova proposta e mantém a anterior pendente. Resultado atualiza `obter_rascunho`; somente `saved` com registro confirma execução. Criação de conta a pagar ainda não é um tipo de proposta suportado.
+
+Validação desta versão: 95 verificações no MCP com Supabase real, cobrindo 25 tools de leitura e invariância de 18 tabelas comerciais; seis cards verificados em navegador, incluindo filtros, paginação, seleção, revisão, resultado, erro/repetição, mobile, tema e proteção contra HTML recebido nos dados. Revisão e resultado de rascunhos existentes foram exercitados com fixtures locais: a conexão de leitura de teste não possuía rascunho persistido. Recusas `NOT_FOUND` foram verificadas no banco real. Recibo: `docs/chatgptplugin/ui-cards-20261004.md`.
 
 ## Operações e revisão humana
 
@@ -165,6 +189,7 @@ pnpm chatgptplugin:auth-smoke
 pnpm chatgptplugin:mrtr-smoke
 pnpm chatgptplugin:database-smoke
 pnpm chatgptplugin:interface-smoke
+pnpm chatgptplugin:cards-smoke
 pnpm chatgptplugin:form-smoke
 pnpm chatgptplugin:package-smoke
 pnpm security:smoke
@@ -187,9 +212,9 @@ PGlite serializa as transações da suíte: os testes locais **não comprovam co
 
 `pnpm chatgptplugin:live-read-smoke` abre um servidor HTTP temporário somente em `127.0.0.1`, com `/api/mcp` atendido pelo handler real do produto. As ferramentas usam os repositórios reais, o contexto restrito `erp_runtime` e o Supabase configurado em `.env.local`. O teste usa um vínculo existente de owner/admin e tokens locais aleatórios, mantidos em memória. Não configura OAuth, não usa Clerk e não acrescenta uma rota de teste à aplicação.
 
-O teste só chama descoberta, `meu_acesso` e `consultar_financeiro` com `tipo: pagar`. As recusas exercitam ausência de identidade, perfil de teste com permissão financeira removida, empresa fora dos vínculos e período inválido. Registros comerciais são somente lidos; logs em `plugin.executions` e contadores em `plugin.rate_windows` são gravados pelas dependências reais de auditoria e limites. Cada execução consome aproximadamente 20 chamadas do limite por usuário. Nenhum registro comercial fictício é inserido para preencher a consulta.
+O modo básico consulta contas a pagar. `pnpm chatgptplugin:live-read-smoke --all-read` cobre as 25 ferramentas de leitura, oito relatórios, os novos detalhes, indicadores e apresentações. As recusas exercitam ausência de identidade, perfil sem permissão financeira, empresa fora dos vínculos e período inválido. Registros comerciais são somente lidos; auditoria em `plugin.executions` e limites em `plugin.rate_windows` são gravados pelas dependências reais. Chamadas são espaçadas para respeitar o limite configurado. Nenhum registro comercial é criado pelo teste.
 
-Resultado: 21 verificações aprovadas e duas parcelas reais comparadas com registros e movimentos do banco. Foi corrigida a perda do total em páginas vazias; a regressão local de total, resumo e filtros também passou, completando 19 grupos do banco local. O relatório sem credenciais ou dados dos fornecedores fica em `.cache/erp-audit/mcp-live-read.json`. Detalhes em `docs/avaliacao-erp/testes-mcp-consultas.md`.
+Resultado de 04/10/2026: 95 verificações aprovadas, zero falhas, incluindo comparação independente de totais financeiros, filtros comerciais e agrupamentos mensais. As 18 tabelas comerciais verificadas e os rascunhos/preferências da conexão permaneceram iguais. Relatório: `.cache/erp-audit/mcp-all-read.json`. Evidências dos cards: `docs/chatgptplugin/ui-cards-20261004.md`.
 
 Depois de configurar OAuth e domínio e concluir a validação do banco, execute `chatgptplugin:check-config` e valide Inspector/ChatGPT: consentimento, perfis, revogação, empresas, consultas, configurações, menções, formulário nativo, arquivos, propostas e aprovação humana. Instalação e renderização no host real ainda não foram comprovadas.
 

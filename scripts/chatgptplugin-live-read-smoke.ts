@@ -14,6 +14,7 @@ import { consumeRequestLimit } from '../src/products/chatgptplugin/audit/executi
 import { PluginError, type PluginPrincipal } from '../src/products/chatgptplugin/shared/contracts'
 import { MODERN_VERSION } from '../src/products/chatgptplugin/mcp/modernProtocol'
 import type { PluginConfig } from '../src/products/chatgptplugin/shared/config'
+import { runReadToolCases } from './chatgptplugin-read-tool-cases'
 
 // HTTP local -> handler MCP real -> repositorios reais -> Supabase.
 // A autenticacao de teste existe apenas nesta instancia em memoria, em loopback.
@@ -33,15 +34,21 @@ const report = {
   missingProductionConfiguration: ['CHATGPTPLUGIN_BASE_URL','CHATGPTPLUGIN_OAUTH_ISSUER','CHATGPTPLUGIN_OAUTH_CLIENT_IDS','CLERK_SECRET_KEY','NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY'].filter(key => !process.env[key]),
   date: new Date().toISOString(), status: 'running', checks: [] as { name: string; status: string; elapsedMs: number; code?: string }[],
   companyId: null as number | null, payableInstallments: null as number | null,
+  readCoverage: null as unknown,
 }
 let settings: PluginConfig
 let dependencies: HttpDependencies
 let sequence = 0
 let phase = 'connect'
+const allReadMode = process.argv.includes('--all-read')
+const demoMode = process.argv.includes('--demo') || allReadMode
 const ids: string[] = []
+const calledTools = new Set<string>()
+let requestMinute = 0
+let requestsThisMinute = 0
 const server = createServer(async (request, response) => {
   try {
-    if (request.url !== '/api/mcp' || request.method !== 'POST') { response.writeHead(404).end(); return }
+    if (request.url !== '/api/mcp' || !['POST','GET','OPTIONS'].includes(request.method || '')) { response.writeHead(404).end(); return }
     const chunks: Buffer[] = []
     let size = 0
     for await (const chunk of request) {
@@ -51,12 +58,25 @@ const server = createServer(async (request, response) => {
     }
     const headers = new Headers()
     for (const [name, value] of Object.entries(request.headers)) if (value !== undefined) headers.set(name, Array.isArray(value) ? value.join(',') : value)
-    const result = await handlePluginRequest(new Request(settings.resource, { method: 'POST', headers, body: Buffer.concat(chunks) }), dependencies)
+    const result = await handlePluginRequest(new Request(settings.resource, { method: request.method, headers,
+      ...(request.method === 'POST' ? { body: Buffer.concat(chunks) } : {}) }), dependencies)
     response.writeHead(result.status, Object.fromEntries(result.headers))
     response.end(Buffer.from(await result.arrayBuffer()))
   } catch { response.writeHead(500).end('Local test server failure') }
 })
 async function rpc(method: string, params: Record<string, unknown> = {}, options: { modern?: boolean; authorization?: string } = {}) {
+  if (method === 'tools/call') {
+    assert(!['preparar_rascunho','preparar_formulario_nativo','atualizar_configuracoes'].includes(String(params.name)), 'WRITE_TOOL_FORBIDDEN')
+    calledTools.add(String(params.name))
+  }
+  let minute = Math.floor(Date.now() / 60000)
+  if (requestMinute !== minute) { requestMinute = minute; requestsThisMinute = 0 }
+  if (requestsThisMinute >= 45) {
+    console.log('Aguardando próxima janela do limite real de consultas.')
+    await new Promise(done => setTimeout(done, 60000 - Date.now() % 60000 + 100))
+    minute = Math.floor(Date.now() / 60000); requestMinute = minute; requestsThisMinute = 0
+  }
+  requestsThisMinute++
   const modern = options.modern === true
   const id = ++sequence
   const response = await fetch(settings.resource, {
@@ -94,7 +114,7 @@ async function check(name: string, fn: () => Promise<void>) {
   catch (error) {
     const code = String((error as { code?: string }).code || (error as Error).name)
     report.checks.push({ name, status: 'failed', elapsedMs: Date.now() - started, code })
-    console.log('FAIL ' + name + ' [' + code + ']')
+    console.log('FAIL ' + name + ' [' + code + '] ' + String((error as Error).message).slice(0, 300))
   }
 }
 type RecordRow = Record<string, string | number>
@@ -148,7 +168,33 @@ async function main() {
       vencimento: row.vencimento, valor: value, valor_pago: paid, saldo: balance, status, tipo_lancamento: row.tipo_lancamento || '' }
   }).sort((a, b) => String(a.vencimento).localeCompare(String(b.vencimento)) || (String(a.id) < String(b.id) ? 1 : String(a.id) > String(b.id) ? -1 : 0))
   report.payableInstallments = expected.length
+  // Independent reference queries for the optional realistic demonstration.
+  let demoExpected: any = null
+  if (demoMode) {
+    const counts = (await client.query(`SELECT
+      (SELECT count(*)::int FROM erp.vendas WHERE tenant_id=$1 AND excluido_em IS NULL) sales,
+      (SELECT count(*)::int FROM erp.compras WHERE tenant_id=$1 AND excluido_em IS NULL) purchases,
+      (SELECT count(*)::int FROM erp.contas_receber_parcelas WHERE tenant_id=$1 AND excluido_em IS NULL) receivables,
+      (SELECT count(*)::int FROM erp.saldos_estoque WHERE tenant_id=$1) stock,
+      (SELECT count(*)::int FROM erp.entidades WHERE tenant_id=$1 AND eh_cliente AND ativo AND excluido_em IS NULL) customers`, [companyId])).rows[0]
+    const sale = (await client.query(`SELECT v.id::text,v.numero,v.total,
+      (SELECT count(*)::int FROM erp.vendas_itens i WHERE i.tenant_id=v.tenant_id AND i.venda_id=v.id) items
+      FROM erp.vendas v WHERE v.tenant_id=$1 AND v.status='confirmada' ORDER BY v.id LIMIT 1`, [companyId])).rows[0]
+    const purchase = (await client.query(`SELECT v.id::text,v.numero,v.total,
+      (SELECT count(*)::int FROM erp.compras_itens i WHERE i.tenant_id=v.tenant_id AND i.compra_id=v.id) items
+      FROM erp.compras v WHERE v.tenant_id=$1 AND v.status='recebida' ORDER BY v.id LIMIT 1`, [companyId])).rows[0]
+    const receivables = (await client.query(`SELECT p.id::text,p.valor,e.nome cliente,t.descricao,
+      coalesce((SELECT sum(m.valor) FROM erp.pagamentos m WHERE m.tenant_id=p.tenant_id AND m.conta_receber_parcela_id=p.id AND m.estornado_em IS NULL AND m.estorno_de_pagamento_id IS NULL AND m.excluido_em IS NULL),0) paid
+      FROM erp.contas_receber_parcelas p JOIN erp.contas_receber t ON t.tenant_id=p.tenant_id AND t.id=p.conta_receber_id
+      JOIN erp.entidades e ON e.tenant_id=t.tenant_id AND e.id=t.cliente_id WHERE p.tenant_id=$1`, [companyId])).rows
+    demoExpected = { counts, sale, purchase, receivables }
+    assert.equal(counts.sales, 150, 'FULL_DEMO_DATA_REQUIRED')
+    assert.equal(counts.purchases, 60)
+  }
   await client.query('ROLLBACK')
+  const currentWindow = (await client.query("SELECT requests FROM plugin.rate_windows WHERE user_id=$1 AND integration='chatgpt' AND window_start=date_trunc('minute',now())", [principal.userId])).rows[0]
+  requestMinute = Math.floor(Date.now() / 60000)
+  requestsThisMinute = Number(currentWindow?.requests || 0)
   phase = 'local_http'
   await new Promise<void>(resolveListening => server.listen(0, '127.0.0.1', resolveListening))
   const address = server.address()
@@ -171,8 +217,8 @@ async function main() {
     const result = await rpc('initialize', { protocolVersion: '2025-11-25', capabilities: {}, clientInfo: { name: 'local-live-read-test', version: '1' } })
     assert.equal(result.status, 200); assert.equal(result.body.result.serverInfo.name, 'cognito-chatgptplugin')
   })
-  await check('Catalogo anuncia 24 tools', async () => {
-    const result = await rpc('tools/list'); assert.equal(result.status, 200); assert.equal(result.body.result.tools.length, 24)
+  await check('Catalogo anuncia 28 tools', async () => {
+    const result = await rpc('tools/list'); assert.equal(result.status, 200); assert.equal(result.body.result.tools.length,28)
     assert(result.body.result.tools.some((tool: { name: string }) => tool.name === 'consultar_financeiro'))
   })
   await check('meu_acesso corresponde aos vinculos do Supabase', async () => {
@@ -203,6 +249,70 @@ async function main() {
     const discovery = await rpc('server/discover', {}, { modern: true }); assert.equal(discovery.status, 200); assert.equal(discovery.body.result.resultType, 'complete')
     matches(await query({}, true), expected)
   })
+  if (demoMode) {
+    await check('Demo: contas a receber e saldos independentes', async () => {
+      const result = (await call('consultar_financeiro', { empresa_id: companyId, tipo: 'receber' })).data
+      assert.equal(result.total, demoExpected.counts.receivables)
+      assert(result.records.length > 0)
+      for (const row of result.records) {
+        const reference = demoExpected.receivables.find((r: any) => r.id === row.id)
+        assert(reference)
+        assert.equal(row.cliente, reference.cliente)
+        assert.equal(row.descricao, reference.descricao)
+        assert.equal(Number(row.valor), Number(reference.valor))
+        assert.equal(Number(row.valor_pago), Number(reference.paid))
+        assert.equal(Math.round(Number(row.saldo) * 100), Math.round((Number(reference.valor) - Number(reference.paid)) * 100))
+      }
+    })
+    await check('Demo: pagar com vencimento entre 5 e 11 de outubro', async () => {
+      const selected = expected.filter(r => String(r.vencimento) >= '2026-10-05' && String(r.vencimento) <= '2026-10-11')
+      assert(selected.length > 0)
+      matches(await query({ vencimento_inicio: '2026-10-05', vencimento_fim: '2026-10-11' }), selected)
+    })
+    await check('Demo: 150 vendas disponíveis para consulta', async () => {
+      const result = (await call('listar_vendas', { empresa_id: companyId })).data
+      assert.equal(result.total, demoExpected.counts.sales)
+      assert(result.records.length > 0)
+    })
+    await check('Demo: detalhes e itens de uma venda', async () => {
+      const result = (await call('obter_venda', { empresa_id: companyId, venda_id: Number(demoExpected.sale.id) })).data
+      assert.equal(result.sale.numero, demoExpected.sale.numero)
+      assert.equal(Number(result.sale.total), Number(demoExpected.sale.total))
+      assert.equal(result.totalItems, demoExpected.sale.items)
+    })
+    await check('Demo: 60 compras disponíveis para consulta', async () => {
+      const result = (await call('listar_compras', { empresa_id: companyId })).data
+      assert.equal(result.total, demoExpected.counts.purchases)
+      assert(result.records.length > 0)
+    })
+    await check('Demo: detalhes e itens de uma compra', async () => {
+      const result = (await call('obter_compra', { empresa_id: companyId, compra_id: Number(demoExpected.purchase.id) })).data
+      assert.equal(result.purchase.numero, demoExpected.purchase.numero)
+      assert.equal(Number(result.purchase.total), Number(demoExpected.purchase.total))
+      assert.equal(result.totalItems, demoExpected.purchase.items)
+    })
+    await check('Demo: estoque por produto e local sem saldo negativo', async () => {
+      const result = (await call('consultar_estoque', { empresa_id: companyId, por_pagina: 50 })).data
+      assert.equal(result.total, demoExpected.counts.stock)
+      assert(result.records.every((row: any) => Number(row.quantidade_fisica) >= 0))
+    })
+    await check('Demo: resumo do ERP reconhece os 30 clientes', async () => {
+      const result = (await call('resumo_erp', { empresa_id: companyId })).data
+      assert.equal(result.clientesAtivos, demoExpected.counts.customers)
+      assert(result.saldoReceber > 0 && result.saldoPagar > 0)
+    })
+  }
+  if (allReadMode) {
+    phase = 'all_read_tools'
+    const facts = await runReadToolCases({ client, companyId, userId: principal.userId, clientId: principal.clientId,
+      resource: settings.resource, token: testToken, rpc, call, check })
+    await check('Cobertura: todas as 25 tools de leitura foram chamadas', async () => {
+      const result = await rpc('tools/list')
+      const names = result.body.result.tools.filter((tool: any) => tool.annotations?.readOnlyHint).map((tool: any) => tool.name).sort()
+      assert.deepEqual([...calledTools].sort(), names)
+      report.readCoverage = { ...facts, readTools: names.length, toolNames: names, writeToolsCalled: 0 }
+    })
+  }
   await check('Sem identificacao recusa HTTP com 401', async () => {
     const result = await rpc('tools/call', { name: 'meu_acesso', arguments: {} }, { authorization: '' }); assert.equal(result.status, 401)
   })
@@ -239,7 +349,7 @@ void main().catch(error => {
   if (server.listening) await new Promise<void>(done => server.close(() => done()))
   await client.query('ROLLBACK').catch(() => undefined)
   await Promise.allSettled([client.end(), closePool(), closePluginDatabase()])
-  const output = resolve('.cache/erp-audit/mcp-live-read.json')
+  const output = resolve('.cache/erp-audit/' + (allReadMode ? 'mcp-all-read.json' : 'mcp-live-read.json'))
   mkdirSync(resolve('.cache/erp-audit'), { recursive: true })
   writeFileSync(output, JSON.stringify(report, null, 2) + '\n')
   console.log(JSON.stringify({ status: report.status, passed: report.checks.filter(check => check.status === 'passed').length,

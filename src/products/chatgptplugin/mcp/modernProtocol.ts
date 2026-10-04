@@ -4,7 +4,7 @@ import { z } from 'zod'
 // contract, then delegates unchanged tool/resource execution to the same SDK.
 export const MODERN_VERSION='2026-07-28'
 export const SUPPORTED_VERSIONS=[MODERN_VERSION,'2025-11-25','2025-06-18','2025-03-26']
-export const SERVER_INFO={name:'cognito-chatgptplugin',version:'1.3.0'}
+export const SERVER_INFO={name:'cognito-chatgptplugin',version:'1.4.0'}
 export const versionKey='io.modelcontextprotocol/protocolVersion'
 export const capabilitiesKey='io.modelcontextprotocol/clientCapabilities'
 const envelope=z.object({jsonrpc:z.literal('2.0'),id:z.union([z.string(),z.number().finite()]),method:z.string().min(1),params:z.record(z.unknown())}).strict()

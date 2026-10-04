@@ -28,6 +28,9 @@ const execution: ExecutionDependencies = {
   reserve:async () => {const id=randomUUID();events.push({id,status:'running'});return id},
   finish:async (id,status,code) => {events.push({id,status,code})},
   queries:{
+    registration:async(id,recordId)=>{context(id);return {record:{id:String(recordId),nome:"Cadastro"}}},
+    installment:async(id,side,recordId)=>{context(id);return {record:{id:String(recordId),saldo:12},history:[],historyTruncated:false}},
+    analysis:async(id,type,from,to)=>{context(id);return {tipo:type,inicio:from,fim:to,criterio:"Teste",summary:{quantidade:0,valor_total:0,valor_medio:0},records:[]}},
     customer:async(id,customerId)=>{context(id);return {record:{id:String(customerId),nome:'Cliente'}}},
     fiscal:async id=>{context(id);return {ready:false,issues:[]}},
     financialAccounts:async id=>{context(id);return {records:[],hasMore:false}},
@@ -75,7 +78,7 @@ async function main() {
   })
   await check('Catalogo contratos OAuth e anotacoes',async () => {
     const {body}=await rpc('tools/list')
-    assert.equal(body.result.tools.length,24)
+    assert.equal(body.result.tools.length,28)
     for (const tool of body.result.tools) {assert.equal(tool.annotations.readOnlyHint,!['preparar_rascunho','preparar_formulario_nativo','atualizar_configuracoes'].includes(tool.name));assert.equal(tool.securitySchemes[0].type,'oauth2');assert(tool.outputSchema)}
     assert.deepEqual(body.result.tools.find((t:{name:string})=>t.name==='preparar_rascunho').securitySchemes[0].scopes,['erp:read','erp:write'])
     assert.deepEqual(body.result.tools.find((t:{name:string})=>t.name==='abrir_painel')._meta['openai/ui'].entrypoints,[{type:'global'},{type:'thread'},{type:'settings',searchTerms:['empresa','preferencias']}])
@@ -87,7 +90,7 @@ async function main() {
     await check(name,async()=>{const {body}=await rpc('tools/call',{name,arguments:args});assert(!body.result?.isError,JSON.stringify(body))})
   }
   await check('Recurso UI registrado e sem dados privados',async()=>{
-    const resources=await rpc('resources/list');assert.equal(resources.body.result.resources.length,2)
+    const resources=await rpc('resources/list');assert.equal(resources.body.result.resources.length,3)
     const resource=await rpc('resources/read',{uri:'ui://chatgptplugin/panel/v1.html'})
     assert.equal(resource.body.result.contents[0].mimeType,'text/html;profile=mcp-app')
     assert(resource.body.result.contents[0].text.includes('ui/initialize'))

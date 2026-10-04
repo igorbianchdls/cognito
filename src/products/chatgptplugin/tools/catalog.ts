@@ -20,7 +20,20 @@ export type ToolDefinition = {
 function page(input: Record<string, unknown>) {
   return { query: input.busca as string | undefined, page: input.pagina as number, pageSize: input.por_pagina as number }
 }
+function commercialFilters(input:Record<string,unknown>) {
+  return Object.fromEntries(['status','inicio','fim'].filter(k=>input[k]).map(k=>[k,String(input[k])]))
+}
 export const tools: ToolDefinition[] = [
+  {name:'obter_cadastro',title:'Detalhes do cadastro',description:'Consultar um cliente, fornecedor, produto ou serviço por ID autorizado.',
+    schema:z.object({empresa_id:company,tipo:z.enum(['clientes','fornecedores','produtos','servicos']),registro_id:z.number().int().positive()}).strict(),capabilities:['erp.cadastros.visualizar'],
+    execute:(q,id,input)=>q.registration(id,input.tipo as 'clientes',Number(input.registro_id))},
+  {name:'obter_parcela_financeira',title:'Detalhes da parcela',description:'Consultar uma parcela a pagar ou receber, sua composição de saldo e histórico de pagamentos. Não efetua baixas.',
+    schema:z.object({empresa_id:company,tipo:z.enum(['pagar','receber']),parcela_id:z.number().int().positive()}).strict(),capabilities:['erp.financeiro.visualizar'],
+    execute:(q,id,input)=>q.installment(id,input.tipo as 'pagar',Number(input.parcela_id))},
+  {name:'analisar_periodo',title:'Indicadores por período',description:'Agregados completos por mês de vendas/compras confirmadas ou saldos financeiros pendentes por vencimento. Período máximo de 366 dias.',
+    schema:z.object({empresa_id:company,tipo:z.enum(['vendas','compras','pagar','receber']),inicio:requiredDate,fim:requiredDate}).strict(),capabilities:['erp.relatorios.visualizar'],
+    requiredCapabilities:input=>['erp.relatorios.visualizar',input.tipo==='vendas'?'erp.vendas.visualizar':input.tipo==='compras'?'erp.compras.visualizar':'erp.financeiro.visualizar'],
+    execute:(q,id,input)=>q.analysis(id,input.tipo as 'vendas',String(input.inicio),String(input.fim))},
   {name:'obter_cliente',title:'Consultar cliente',description:'Consultar um cliente por ID nesta empresa.',schema:z.object({empresa_id:company,cliente_id:z.number().int().positive()}).strict(),capabilities:['erp.cadastros.visualizar'],execute:(q,id,input)=>q.customer(id,Number(input.cliente_id))},
   {name:'verificar_fiscal_venda',title:'Verificar dados fiscais da venda',description:'Verificar pendencias fiscais. Nao emite nota fiscal nem autoriza documentos na SEFAZ.',
     schema:z.object({empresa_id:company,venda_id:z.number().int().positive()}).strict(),capabilities:['erp.vendas.visualizar','erp.cadastros.visualizar'],
@@ -39,8 +52,8 @@ export const tools: ToolDefinition[] = [
       status: z.enum(['ativo','inativo']).optional() }).strict(), capabilities: ['erp.cadastros.visualizar'],
     execute: (q,id,input) => q.page(id,input.tipo as 'clientes', { ...page(input), filters: input.status ? { status: String(input.status) } : {} }) },
   { name: 'listar_vendas', title: 'Listar vendas', description: 'Buscar pedidos de venda por numero, cliente ou status, com paginacao.',
-    schema: z.object({ ...paging, status: z.enum(['rascunho','confirmada','cancelada','faturada']).optional() }).strict(),
-    capabilities: ['erp.vendas.visualizar'], execute: (q,id,input) => q.page(id,'pedidos', { ...page(input), filters: input.status ? { status: String(input.status) } : {} }) },
+    schema: z.object({ ...paging, status: z.enum(['rascunho','confirmada','cancelada','faturada']).optional(),inicio:isoDate,fim:isoDate }).strict(),
+    capabilities: ['erp.vendas.visualizar'], execute: (q,id,input) => q.page(id,'pedidos', { ...page(input), filters: commercialFilters(input) }) },
   { name: 'obter_venda', title: 'Consultar venda', description: 'Consultar uma venda pelo ID retornado por listar_vendas. Retorna dados comerciais e ate 100 itens.',
     schema: z.object({ empresa_id: company, venda_id: z.number().int().positive() }).strict(), capabilities: ['erp.vendas.visualizar'],
     execute: (q,id,input) => q.sale(id, input.venda_id as number) },
@@ -52,8 +65,8 @@ export const tools: ToolDefinition[] = [
   { name: 'consultar_estoque', title: 'Consultar estoque', description: 'Consultar posicao de estoque, reservas e disponibilidade por produto e local, com busca e paginacao.',
     schema: z.object(paging).strict(), capabilities: ['erp.estoque.visualizar'], execute: (q,id,input) => q.stock(id,page(input)) },
   { name:'listar_compras', title:'Listar compras', description:'Buscar pedidos de compra por numero, fornecedor e status.',
-    schema:z.object({...paging,status:z.enum(['rascunho','confirmada','recebida','cancelada']).optional()}).strict(), capabilities:['erp.compras.visualizar'],
-    execute:(q,id,input) => q.page(id,'pedidos-compra',{...page(input),filters:input.status ? {status:String(input.status)} : {}}) },
+    schema:z.object({...paging,status:z.enum(['rascunho','confirmada','recebida','cancelada']).optional(),inicio:isoDate,fim:isoDate}).strict(), capabilities:['erp.compras.visualizar'],
+    execute:(q,id,input) => q.page(id,'pedidos-compra',{...page(input),filters:commercialFilters(input)}) },
   { name:'obter_compra', title:'Consultar compra', description:'Consultar uma compra e ate 100 itens pelo ID retornado por listar_compras.',
     schema:z.object({empresa_id:company,compra_id:z.number().int().positive()}).strict(),capabilities:['erp.compras.visualizar'],
     execute:(q,id,input) => q.purchase(id,input.compra_id as number) },

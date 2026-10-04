@@ -9,6 +9,7 @@ import { accessSchema, tools } from '../tools/catalog'
 import { actionTools } from '../actions/catalog'
 import { actionDependencies, type ActionDependencies } from '../actions/draftRepository'
 import { preferencesDependencies } from '../extensions/settings'
+import { cardSchema,cardSources } from '../ui/contracts/cards'
 
 export type ExecutionDependencies = {
   queries: ErpQueries
@@ -33,9 +34,10 @@ export async function executeTool(principal: PluginPrincipal, name: string, raw:
   try {
     const tool = tools.find(item => item.name === name)
     const action = actionTools.find(item => item.name === name)
+    const presentation=name==='renderizar_card'
     const access = name === 'meu_acesso' || name === 'abrir_painel' || name === 'abrir_formulario'
-    if (!tool && !action && !access) throw new PluginError('UNKNOWN_TOOL', 'Ferramenta desconhecida.')
-    const parsed = (tool?.schema || action?.schema || accessSchema).safeParse(raw)
+    if (!tool && !action && !access && !presentation) throw new PluginError('UNKNOWN_TOOL', 'Ferramenta desconhecida.')
+    const parsed = (presentation?cardSchema:tool?.schema || action?.schema || accessSchema).safeParse(raw)
     if (!parsed.success) throw new PluginError('INVALID_INPUT', 'Parametros invalidos. Consulte o esquema da ferramenta.')
     const input = parsed.data as Record<string, unknown>
     if (input.vencimento_inicio && input.vencimento_fim && String(input.vencimento_inicio) > String(input.vencimento_fim)) {
@@ -44,7 +46,8 @@ export async function executeTool(principal: PluginPrincipal, name: string, raw:
     if (input.inicio && input.fim && (String(input.inicio) > String(input.fim) || Date.parse(String(input.fim)) - Date.parse(String(input.inicio)) > 366 * 86400000)) {
       throw new PluginError('INVALID_INPUT','Informe um periodo de ate 366 dias, com inicio anterior ao fim.')
     }
-    const company = access && input.empresa_id === undefined ? null : selectCompany(principal,input.empresa_id as number | undefined)
+    const companyChoice=presentation&&input.card==='selecao'&&input.consulta==='meu_acesso'
+    const company = (access||companyChoice) && input.empresa_id === undefined ? null : selectCompany(principal,input.empresa_id as number | undefined)
     const capabilities = tool?.requiredCapabilities?.(input) || tool?.capabilities || action?.requiredCapabilities(input) || []
     const allowed = capabilities.every(capability => company?.capabilities.includes(capability))
     // Registre apenas metadados, nunca argumentos ou resultados com dados pessoais.
@@ -55,7 +58,17 @@ export async function executeTool(principal: PluginPrincipal, name: string, raw:
     let data: unknown
     try {
       data = await Promise.race([
-        access ? Promise.resolve({ usuario_id: principal.userId,
+        presentation ? (async()=>{
+          const card=input.card as keyof typeof cardSources,source=String(input.consulta)
+          if(!(cardSources[card] as readonly string[]).includes(source))throw new PluginError('INVALID_INPUT','Consulta incompatível com este card.')
+          const parameters=input.parametros as Record<string,unknown>
+          const result=await executeTool(principal,source,{...parameters,...(company?{empresa_id:company.id}:{})},config,deps)
+          if(result.isError){
+            const failure=JSON.parse((result.content[0] as {text:string}).text)
+            throw new PluginError(failure.code,failure.message)
+          }
+          return {card,consulta:source,parametros:parameters,empresa:company?{id:company.id,nome:company.name}:null,dados:result.structuredContent!.data}
+        })() : access ? Promise.resolve({ usuario_id: principal.userId,
           empresas: principal.companies, empresa_selecionada: company?.id || null })
           : runWithErpDatabaseContext({ tenantId: company!.id, userId: principal.userId, readOnly: true, statementTimeoutMs: 10000 },
             () => action ? action.execute(deps.actions || actionDependencies,principal,company!.id,input,config) : tool!.execute(deps.queries,company!.id,input)),

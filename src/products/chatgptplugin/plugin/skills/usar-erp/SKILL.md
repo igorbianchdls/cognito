@@ -7,7 +7,17 @@ Use `meu_acesso` para descobrir as empresas e permissoes da conta. Se houver var
 
 Localize registros com `buscar_cadastros`, `listar_vendas`, `listar_orcamentos` ou `listar_compras`. Use os IDs retornados nas consultas de detalhe. Para valores financeiros, use `consultar_financeiro`; para relatorios, `consultar_relatorio` com periodo explicito. DRE considera caixa e posicao financeira considera vencimentos. Respeite paginacao, limites e indicacoes de itens truncados antes de afirmar totais completos.
 
-Abra `abrir_painel` quando uma lista interativa ajudar a consultar dados ou acompanhar propostas. As ferramentas continuam disponiveis em clientes sem interface.
+Use `renderizar_card` quando uma apresentação visual ajudar. Mostre somente os dados do pedido atual, sem abas de módulos que não foram consultados. Informe empresa no nível principal e os argumentos da consulta em `parametros`, sem repetir empresa_id. Nunca forneça linhas ou totais produzidos pelo modelo; o servidor consulta novamente a fonte autorizada.
+
+- `tabela`: consultar_financeiro, listar_vendas/compras/orcamentos, buscar_cadastros, consultar_estoque, listar_pagamentos/contas_financeiras ou consultar_relatorio.
+- `detalhes`: obter_cliente/cadastro/venda/compra/parcela_financeira com o ID retornado na consulta.
+- `analise`: analisar_periodo para agregados completos por mês ou consultar_relatorio para um relatório paginado. Informe início e fim. Valores financeiros representam saldo pendente por vencimento; vendas e compras consideram documentos confirmados.
+- `selecao`: meu_acesso para escolher empresa, buscar_cadastros para escolher cliente/fornecedor/produto/serviço ou listar_contas_financeiras. A escolha é enviada à conversa; não executa operação.
+- `revisao` e `resultado`: obter_rascunho com rascunho_id. Revisão abre a aprovação autenticada no ERP; resultado consulta o estado persistido.
+
+Totais retornados em summary acompanham todos os registros filtrados, incluindo os que estão em outras páginas. Em contas financeiras, em_aberto inclui vencidas; vence_em_7_dias considera amanhã até sete dias após a referência retornada. Não some a página para afirmar um total geral. Para vendas/compras, valor_total inclui cancelados e rascunhos quando o filtro os inclui; valor_confirmado os exclui. Ordenação interativa da tabela é apenas da página exibida.
+
+Use `abrir_painel` quando o usuário pedir navegação geral. As ferramentas continuam disponíveis em clientes sem interface.
 
 Quando o usuario pedir um novo cliente, produto, orcamento ou venda:
 

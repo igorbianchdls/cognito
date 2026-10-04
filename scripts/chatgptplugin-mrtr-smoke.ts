@@ -34,7 +34,7 @@ async function main(){
   const {OpenAIFormSchema,createOpenAIFormContentSchema}=await import('@openai/mcp-extensions/server')
   await check('Discovery e consultas modernas sem initialize',async()=>{
     const discovery=await rpc('server/discover');assert.equal(discovery.body.result.resultType,'complete');assert(discovery.body.result.supportedVersions.includes(MODERN_VERSION));assert(discovery.body.result.capabilities.extensions['openai/settings']);assert.deepEqual(discovery.body.result.capabilities.tools,{})
-    const tools=await rpc('tools/list');assert.equal(tools.body.result.tools.length,24);assert.equal(tools.body.result.resultType,'complete');assert.deepEqual(tools.body.result.tools.find((t:{name:string})=>t.name==='preparar_formulario_nativo').securitySchemes[0].scopes,['erp:read','erp:write'])
+    const tools=await rpc('tools/list');assert.equal(tools.body.result.tools.length,28);assert.equal(tools.body.result.resultType,'complete');assert.deepEqual(tools.body.result.tools.find((t:{name:string})=>t.name==='preparar_formulario_nativo').securitySchemes[0].scopes,['erp:read','erp:write'])
     const access=await rpc('tools/call',{name:'meu_acesso',arguments:{}});assert.equal(access.body.result.structuredContent.data.empresas[0].id,1)
     const resource=await rpc('resources/read',{uri:'ui://chatgptplugin/form/v1.html'});assert.equal(resource.body.result.resultType,'complete');assert(resource.body.result.contents[0].text.includes('ui/initialize'))
   })
