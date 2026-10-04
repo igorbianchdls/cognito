@@ -23,7 +23,10 @@ async function main() {
   const writeScopeReady=Boolean(oauth.scopes_supported?.includes('erp:write'))
   const nativeFormsReady=nativeFormKeyReady(settings)
   const ready = Boolean(validOAuth && databaseReady && writeScopeReady && nativeFormsReady)
-  console.log(JSON.stringify({ready,oauthReady:Boolean(validOAuth),databaseReady,writeScopeReady,nativeFormsReady,readReady:Boolean(validOAuth && databaseReady)}))
+  // Metadados e tabelas nao comprovam audiencia, consentimento ou emissao de um token real.
+  console.log(JSON.stringify({ready,configurationOnly:true,tokenAudienceVerified:false,
+    oauthReady:Boolean(validOAuth),databaseReady,writeScopeReady,nativeFormsReady,readReady:Boolean(validOAuth && databaseReady),
+    requiredTokenAudience:settings.resource,pending:['Verificar um OAuth access token real destinado ao MCP.']}))
   if (!ready) process.exitCode=1
 }
 void main().catch(() => {console.error('Verificacao indisponivel. Revise OAuth e conexao do banco.');process.exitCode=1})

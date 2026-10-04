@@ -1,4 +1,4 @@
-import { clerkClient } from '@clerk/nextjs/server'
+import { clerkClient, verifyToken } from '@clerk/nextjs/server'
 import { pluginQuery } from '../shared/database'
 import { ERP_CAPABILITIES, type ErpCapability, type ErpAccessProfile } from '@/products/erp/shared/professionalContracts'
 import { PluginError, type PluginPrincipal, type PluginCompany } from '../shared/contracts'
@@ -6,14 +6,73 @@ import type { PluginConfig } from '../shared/config'
 
 export type VerifiedOAuthToken = {
   subject: string; clientId: string; scopes: string[]; revoked: boolean; expired: boolean; expiration: number | null
+  issuer: string; audience: unknown
 }
 export function validateOAuthToken(token: VerifiedOAuthToken, config: PluginConfig) {
   const expirationMs = token.expiration === null ? null : token.expiration < 1e12 ? token.expiration * 1000 : token.expiration
-  if (token.revoked || token.expired || (expirationMs !== null && (!Number.isFinite(expirationMs) || expirationMs <= Date.now()))
+  const audiences = typeof token.audience === 'string' ? [token.audience] : token.audience
+  if (token.issuer !== config.issuer || !Array.isArray(audiences) || !audiences.length
+    || !audiences.every(item => typeof item === 'string' && item.length > 0) || !audiences.includes(config.resource)
+    || token.revoked || token.expired || expirationMs === null || !Number.isFinite(expirationMs) || expirationMs <= Date.now()
     || !token.subject.startsWith('user_') || !config.clientIds.includes(token.clientId)) {
     throw new PluginError('UNAUTHENTICATED', 'Token OAuth invalido ou expirado.', 401)
   }
   if (!token.scopes.includes(config.scope)) throw new PluginError('INSUFFICIENT_SCOPE', 'A conexao precisa da permissao erp:read.', 403)
+}
+
+type IntrospectedOAuthToken = Omit<VerifiedOAuthToken, 'issuer' | 'audience'>
+export type OAuthVerificationDependencies = {
+  verifyJwt: (token: string, options: Parameters<typeof verifyToken>[1]) => Promise<Record<string, unknown>>
+  introspect: (token: string) => Promise<IntrospectedOAuthToken>
+}
+const oauthVerification: OAuthVerificationDependencies = {
+  verifyJwt: verifyToken,
+  introspect: async token => (await clerkClient()).idPOAuthAccessToken.verify(token),
+}
+
+export async function verifyClerkOAuthToken(accessToken: string, config: PluginConfig,
+  dependencies: OAuthVerificationDependencies = oauthVerification): Promise<VerifiedOAuthToken> {
+  // A introspeccao do SDK descarta aud/iss. Obtenha esses campos apenas do JWT verificado.
+  if (!/^[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+$/.test(accessToken)) {
+    throw new PluginError('UNAUTHENTICATED', 'Use um token OAuth com destino verificavel.', 401)
+  }
+  let claims: Record<string, unknown>
+  try {
+    claims = await dependencies.verifyJwt(accessToken, {
+      secretKey: process.env.CLERK_SECRET_KEY, audience: config.resource,
+      headerType: ['at+jwt', 'application/at+jwt'], clockSkewInMs: 0,
+    })
+  } catch (error) {
+    const reason = (error as { reason?: string })?.reason
+    if (['jwk-remote-failed-to-load', 'jwk-failed-to-resolve', 'jwk-remote-invalid', 'secret-key-invalid'].includes(reason || '')) {
+      throw new PluginError('AUTH_UNAVAILABLE', 'Autenticacao temporariamente indisponivel.', 503)
+    }
+    throw new PluginError('UNAUTHENTICATED', 'Token OAuth invalido.', 401)
+  }
+  const scopes = Array.isArray(claims.scp) ? claims.scp : typeof claims.scope === 'string' ? claims.scope.split(' ').filter(Boolean) : []
+  const verified: VerifiedOAuthToken = {
+    subject: typeof claims.sub === 'string' ? claims.sub : '',
+    clientId: typeof claims.client_id === 'string' ? claims.client_id : '',
+    scopes: scopes.every(scope => typeof scope === 'string') ? scopes as string[] : [],
+    issuer: typeof claims.iss === 'string' ? claims.iss : '', audience: claims.aud,
+    revoked: false, expired: false, expiration: typeof claims.exp === 'number' ? claims.exp : null,
+  }
+  // O SDK ignora aud ausente; esta verificacao exige o recurso canonico, inclusive o caminho.
+  validateOAuthToken(verified, config)
+  let introspected: IntrospectedOAuthToken
+  try { introspected = await dependencies.introspect(accessToken) }
+  catch (error) {
+    const status = (error as { status?: number })?.status
+    if (status === 400 || status === 401 || status === 404) throw new PluginError('UNAUTHENTICATED', 'Token OAuth invalido.', 401)
+    throw new PluginError('AUTH_UNAVAILABLE', 'Autenticacao temporariamente indisponivel.', 503)
+  }
+  const token = { ...introspected, issuer: verified.issuer, audience: verified.audience }
+  validateOAuthToken(token, config)
+  if (token.subject !== verified.subject || token.clientId !== verified.clientId
+    || token.scopes.some(scope => !verified.scopes.includes(scope)) || verified.scopes.some(scope => !token.scopes.includes(scope))) {
+    throw new PluginError('UNAUTHENTICATED', 'Token OAuth inconsistente.', 401)
+  }
+  return token
 }
 
 export async function loadPluginPrincipal(clerkUserId: string, clientId: string, scopes: string[]): Promise<PluginPrincipal> {
@@ -54,15 +113,6 @@ export async function resolvePluginPrincipal(request: Request, config: PluginCon
   if (clerkHost !== new URL(config.issuer).hostname) {
     throw new PluginError('CONFIGURATION_REQUIRED', 'O emissor OAuth deve pertencer a instancia Clerk configurada.', 503)
   }
-  // A API da instancia Clerk verifica validade e revogacao, sem cookies de sessao.
-  const client = await clerkClient()
-  let token: VerifiedOAuthToken
-  try { token = await client.idPOAuthAccessToken.verify(match[1]) }
-  catch (error) {
-    const status = (error as { status?: number }).status
-    if (status === 400 || status === 401 || status === 404) throw new PluginError('UNAUTHENTICATED', 'Token OAuth invalido.', 401)
-    throw new PluginError('AUTH_UNAVAILABLE', 'Autenticacao temporariamente indisponivel.', 503)
-  }
-  validateOAuthToken(token, config)
+  const token = await verifyClerkOAuthToken(match[1], config)
   return loadPluginPrincipal(token.subject, token.clientId, token.scopes)
 }

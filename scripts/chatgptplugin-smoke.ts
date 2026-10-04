@@ -56,12 +56,13 @@ async function rpc(method: string,params: unknown = {},deps=dependencies,extra: 
 async function main() {
   await check('OAuth valido em segundos e milissegundos',() => {
     for (const expiration of [Math.floor(Date.now()/1000)+3600,Date.now()+3600000]) {
-      validateOAuthToken({subject:'user_1',clientId:'client_test',scopes:['erp:read'],revoked:false,expired:false,expiration},settings)
+      validateOAuthToken({subject:'user_1',clientId:'client_test',scopes:['erp:read'],revoked:false,expired:false,expiration,issuer:settings.issuer,audience:settings.resource},settings)
     }
   })
   await check('OAuth invalido revogado expirado scope audience',() => {
-    const token={subject:'user_1',clientId:'client_test',scopes:['erp:read'],revoked:false,expired:false,expiration:Date.now()+3600000}
-    for (const overrides of [{revoked:true},{expired:true},{expiration:1},{scopes:[]},{clientId:'another'},{subject:'org_1'}]) {
+    const token={subject:'user_1',clientId:'client_test',scopes:['erp:read'],revoked:false,expired:false,expiration:Date.now()+3600000,issuer:settings.issuer,audience:settings.resource}
+    for (const overrides of [{revoked:true},{expired:true},{expiration:1},{expiration:null},{scopes:[]},{clientId:'another'},{subject:'org_1'},
+      {audience:undefined},{audience:'https://other.example/api/mcp'},{audience:settings.resource+'/'},{issuer:'https://another.clerk.accounts.dev'}]) {
       assert.throws(() => validateOAuthToken({...token,...overrides},settings),PluginError)
     }
   })

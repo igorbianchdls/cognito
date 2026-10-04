@@ -263,6 +263,20 @@ async function main(){
     assert(!fiscal.issues.some(issue=>['FISCAL_CONFIG_MISSING','ISSUER_DOCUMENT_MISSING'].includes(issue.code)));
     const result=await executeTool(salesReader,'listar_contas_financeiras',{empresa_id:1},settings);assert.equal(result.isError,true);
   });
+  await check('Pagina financeira vazia preserva total e resumo com os mesmos filtros',async()=>{
+    const {listErpEntityPage}=load('@/products/erp/server/erpRepository');
+    const read=load('@/lib/erpDatabaseContext');
+    await read.runWithErpDatabaseContext({tenantId:1,userId:1,readOnly:true},async()=>{
+      const input={tenantId:1,entityId:'contas-a-pagar',pageSize:10};
+      const first=await listErpEntityPage({...input,page:1});assert(first.total>0);
+      const empty=await listErpEntityPage({...input,page:100});assert.deepEqual(empty.records,[]);assert.equal(empty.page,100);
+      assert.equal(empty.total,first.total);assert.deepEqual(empty.summary,first.summary);
+      const filteredFirst=await listErpEntityPage({...input,page:1,filters:{status:'pago'}});
+      const filteredEmpty=await listErpEntityPage({...input,page:100,filters:{status:'pago'}});
+      assert.equal(filteredEmpty.total,filteredFirst.total);assert.deepEqual(filteredEmpty.summary,filteredFirst.summary);
+      const none=await listErpEntityPage({...input,page:100,query:'registro_ausente_'+randomUUID()});assert.equal(none.total,0);assert.deepEqual(none.records,[]);
+    });
+  });
   console.log(JSON.stringify({status:'passed',checks,realDatabaseAccess:false,localPostgres:true}));
 }
 try{await main();}catch(error){console.error(error.message);process.exitCode=1;}finally{await db.close();}

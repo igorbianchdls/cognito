@@ -128,6 +128,16 @@ Variáveis previstas em `.env.example`:
 
 No Clerk, configure OAuth Applications, `erp:read`, `erp:write`, PKCE S256 e callbacks reais. Não envie segredos ao chat ou ao pacote. Desenvolvimento admite origem HTTP em localhost; produção exige HTTPS.
 
+### Destino dos tokens OAuth
+
+O MCP exige um **OAuth access token JWT** assinado pela instância Clerk configurada, com tipo `at+jwt` ou `application/at+jwt`, `iss` igual a `CHATGPTPLUGIN_OAUTH_ISSUER` e `aud` contendo o recurso canônico `${CHATGPTPLUGIN_BASE_URL}/api/mcp`. A comparação inclui o caminho e é exata: origem, Client ID e endereço com barra adicional não substituem o recurso. Tokens de sessão, ID tokens e tokens opacos sem destino verificável são recusados.
+
+A assinatura, validade temporal e audiência são verificadas pelo SDK Clerk. Uma checagem adicional exige audiência presente e bem formada, porque o SDK instalado ignora `aud` ausente. Depois, a API Clerk verifica o token; revogação, expiração, cliente permitido e scopes continuam obrigatórios. Usuário, cliente e scopes precisam concordar entre JWT e resposta Clerk antes de carregar os vínculos do ERP. Destino inválido retorna HTTP 401 com `WWW-Authenticate` e os metadados para reconexão; indisponibilidade da autenticação retorna 503.
+
+**Requisito de integração ainda não comprovado:** a resposta de verificação do SDK instalado não expõe `aud`/`iss`, e não foi obtido um access token real desta instância Clerk. É necessário confirmar que a emissão OAuth aceita o `resource` solicitado pelo ChatGPT e inclui o endereço do MCP em `aud`. Selecionar formato JWT, alterar claims de sessão ou obter um ID token com audiência de Client ID não comprova esse requisito. Se o emissor não oferecer esse vínculo, será necessário adaptar a emissão antes de liberar a conexão; o MCP mantém a recusa de tokens sem destino. JWTs também têm limitações de revogação imediata no Clerk: manter a chamada de verificação não comprova revogação instantânea.
+
+Referências: [autenticação do plugin OpenAI](https://developers.openai.com/plugins/build/auth), [formatos de token Clerk](https://clerk.com/docs/guides/development/machine-auth/token-formats), [implementação OAuth Clerk](https://clerk.com/docs/guides/configure/auth-strategies/oauth/how-clerk-implements-oauth).
+
 Persistência no schema privado `plugin`, compartilhado pelas integrações ChatGPT e Claude. As quatro tabelas são `executions`, `rate_windows`, `drafts` e `settings`; todas identificam a integração. O produto ChatGPT filtra `integration='chatgpt'`, inclusive na aprovação humana, idempotência, manutenção, limites e preferências. Usuários, empresas e permissões continuam em `shared`; operações continuam em `erp`.
 
 Migrações aplicadas ao Supabase em 03/10/2026:
@@ -151,6 +161,7 @@ Limites: 60 pedidos por usuário/minuto; corpo MCP de 64 KB; resultado estrutura
 ```text
 pnpm chatgptplugin:typecheck
 pnpm chatgptplugin:smoke
+pnpm chatgptplugin:auth-smoke
 pnpm chatgptplugin:mrtr-smoke
 pnpm chatgptplugin:database-smoke
 pnpm chatgptplugin:interface-smoke
@@ -166,9 +177,19 @@ Validação em 03/10/2026: 32 grupos do protocolo, 12 grupos MRTR, 17 grupos no 
 
 Após a correção do prazo de recebimento, protocolo, MRTR e checagem de tipos foram repetidos e aprovados. O teste cobre transmissão interrompida com JSON válido ou parcial, cancelamento com erro ou pendente e transmissão em partes concluída normalmente; os casos vencidos não executam ferramentas.
 
+Após a validação do destino OAuth, 35 grupos de autenticação foram aprovados com chaves RSA temporárias e o verificador real do SDK Clerk. Cobrem audiência ausente, malformada ou incorreta, emissor diferente, adulteração e assinatura de outra chave, validade temporal, tipo de token, cliente, scopes, revogação informada pela introspecção e falhas do serviço. A rejeição HTTP é exercitada sem acessar dados ou auditoria. A introspecção é simulada; os testes não acessam Clerk ou Supabase e não comprovam emissão, renovação, consentimento ou revogação de um token real.
+
 Após a adoção de `plugin`, os 17 grupos locais de banco, os 32 grupos de protocolo e a checagem de tipos foram repetidos. Cinco grupos também foram aprovados no Supabase real: estrutura/RLS, ausência das tabelas antigas, bloqueio para os papéis do navegador, propostas/preferências distintas por integração e rollback dos registros temporários de validação. Esses testes não usam OAuth nem aprovam operações do ERP remoto.
 
 PGlite serializa as transações da suíte: os testes locais **não comprovam concorrência entre duas conexões PostgreSQL reais**. Essa validação pertence à etapa de banco, junto com migrações, isolamento e rollback no ambiente de teste.
+
+### Consultas MCP com dados reais do Supabase
+
+`pnpm chatgptplugin:live-read-smoke` abre um servidor HTTP temporário somente em `127.0.0.1`, com `/api/mcp` atendido pelo handler real do produto. As ferramentas usam os repositórios reais, o contexto restrito `erp_runtime` e o Supabase configurado em `.env.local`. O teste usa um vínculo existente de owner/admin e tokens locais aleatórios, mantidos em memória. Não configura OAuth, não usa Clerk e não acrescenta uma rota de teste à aplicação.
+
+O teste só chama descoberta, `meu_acesso` e `consultar_financeiro` com `tipo: pagar`. As recusas exercitam ausência de identidade, perfil de teste com permissão financeira removida, empresa fora dos vínculos e período inválido. Registros comerciais são somente lidos; logs em `plugin.executions` e contadores em `plugin.rate_windows` são gravados pelas dependências reais de auditoria e limites. Cada execução consome aproximadamente 20 chamadas do limite por usuário. Nenhum registro comercial fictício é inserido para preencher a consulta.
+
+Resultado: 21 verificações aprovadas e duas parcelas reais comparadas com registros e movimentos do banco. Foi corrigida a perda do total em páginas vazias; a regressão local de total, resumo e filtros também passou, completando 19 grupos do banco local. O relatório sem credenciais ou dados dos fornecedores fica em `.cache/erp-audit/mcp-live-read.json`. Detalhes em `docs/avaliacao-erp/testes-mcp-consultas.md`.
 
 Depois de configurar OAuth e domínio e concluir a validação do banco, execute `chatgptplugin:check-config` e valide Inspector/ChatGPT: consentimento, perfis, revogação, empresas, consultas, configurações, menções, formulário nativo, arquivos, propostas e aprovação humana. Instalação e renderização no host real ainda não foram comprovadas.
 

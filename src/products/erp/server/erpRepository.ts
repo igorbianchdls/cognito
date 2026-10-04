@@ -1458,8 +1458,14 @@ export async function listErpEntityRecords(input: ListInput): Promise<ErpEntityR
 
 export async function listErpEntityPage(input: ListInput) {
   const rawRecords = await listErpEntityRecords(input)
-  const total = rawRecords.length > 0 ? Number(rawRecords[0].__total ?? rawRecords.length) : 0
-  const summaryRecord = rawRecords[0] ?? {}
+  // As contagens e os totais financeiros acompanham as linhas da consulta.
+  // Uma pagina fora do intervalo nao tem linha para carrega-los: recuperar
+  // somente a primeira pagina com os mesmos filtros preserva esses metadados.
+  const metadataRecords = rawRecords.length === 0 && normalizedPage(input) > 1
+    ? await listErpEntityRecords({ ...input, page: 1, pageSize: 10 })
+    : rawRecords
+  const total = metadataRecords.length > 0 ? Number(metadataRecords[0].__total ?? metadataRecords.length) : 0
+  const summaryRecord = metadataRecords[0] ?? {}
   const summary = {
     overdue: Number(summaryRecord.__summary_overdue ?? 0),
     dueToday: Number(summaryRecord.__summary_due_today ?? 0),
