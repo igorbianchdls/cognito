@@ -70,7 +70,7 @@ export const tools: ToolDefinition[] = [
   { name: 'consultar_estoque', title: 'Consultar estoque', description: 'Consultar posicao de estoque, reservas e disponibilidade por produto e local, com busca e paginacao.',
     schema: z.object(paging).strict(), capabilities: ['erp.estoque.visualizar'], execute: (q,id,input) => q.stock(id,page(input)) },
   { name:'listar_compras', title:'Listar compras', description:'Buscar pedidos de compra por numero, fornecedor e status.',
-    schema:z.object({...paging,status:z.enum(['rascunho','confirmada','recebida','cancelada']).optional(),inicio:isoDate,fim:isoDate}).strict(), capabilities:['erp.compras.visualizar'],
+    schema:z.object({...paging,status:z.enum(['rascunho','confirmada','parcialmente_recebida','recebida','cancelada']).optional(),inicio:isoDate,fim:isoDate}).strict(), capabilities:['erp.compras.visualizar'],
     execute:(q,id,input) => q.page(id,'pedidos-compra',{...page(input),filters:commercialFilters(input)}) },
   { name:'obter_compra', title:'Consultar compra', description:'Consultar uma compra e ate 100 itens pelo ID retornado por listar_compras.',
     schema:z.object({empresa_id:company,compra_id:z.number().int().positive()}).strict(),capabilities:['erp.compras.visualizar'],

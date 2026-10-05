@@ -10,6 +10,7 @@ import { ERP_CAPABILITIES, type ErpAccessProfile } from '../src/products/erp/sha
 import { handlePluginRequest, type HttpDependencies } from '../src/products/chatgptplugin/mcp/handleRequest'
 import { executionDependencies } from '../src/products/chatgptplugin/application/executeTool'
 import { closePluginDatabase } from '../src/products/chatgptplugin/shared/database'
+import { loadPluginPrincipal } from '../src/products/chatgptplugin/auth/resolvePrincipal'
 import { consumeRequestLimit } from '../src/products/chatgptplugin/audit/executionRepository'
 import { PluginError, type PluginPrincipal } from '../src/products/chatgptplugin/shared/contracts'
 import { MODERN_VERSION } from '../src/products/chatgptplugin/mcp/modernProtocol'
@@ -41,6 +42,8 @@ let dependencies: HttpDependencies
 let sequence = 0
 let phase = 'connect'
 const allReadMode = process.argv.includes('--all-read')
+const requestedCompany=Number(process.argv.find(arg=>arg.startsWith('--empresa='))?.slice(10))||null
+assert(requestedCompany===null||(Number.isSafeInteger(requestedCompany)&&requestedCompany>0),'Invalid explicit company')
 const demoMode = process.argv.includes('--demo') || allReadMode
 const ids: string[] = []
 const calledTools = new Set<string>()
@@ -121,41 +124,52 @@ type RecordRow = Record<string, string | number>
 async function main() {
   await client.connect()
   await client.query('BEGIN ISOLATION LEVEL REPEATABLE READ READ ONLY')
-  const identity = (await client.query(`SELECT m.user_id,m.tenant_id,
-    (SELECT count(*) FROM erp.contas_pagar_parcelas p JOIN erp.contas_pagar c ON c.tenant_id=p.tenant_id AND c.id=p.conta_pagar_id
-     WHERE p.tenant_id=m.tenant_id AND p.excluido_em IS NULL AND c.excluido_em IS NULL) AS parcels
-    FROM shared.tenant_memberships m JOIN shared.tenants t ON t.id=m.tenant_id
-    WHERE m.status='active' AND t.status='active' AND m.role IN ('owner','admin')
-    ORDER BY parcels DESC,m.tenant_id,m.user_id LIMIT 1`)).rows[0]
+  const identity = (await client.query(`SELECT m.usuario_id,m.empresa_id,u.clerk_user_id,
+    (SELECT count(*) FROM erp.contas_pagar_parcelas p JOIN erp.contas_pagar c ON c.empresa_id=p.empresa_id AND c.id=p.conta_pagar_id
+     WHERE p.empresa_id=m.empresa_id AND p.excluido_em IS NULL AND c.excluido_em IS NULL) AS parcels
+    FROM shared.usuarios_empresas m JOIN shared.empresas t ON t.id=m.empresa_id JOIN shared.usuarios u ON u.id=m.usuario_id
+    WHERE m.status='active' AND t.status='active' AND u.status='active' AND NOT m.suspenso_localmente AND m.role IN ('owner','admin')
+      AND ($1::bigint IS NULL OR m.empresa_id=$1)
+    ORDER BY parcels DESC,m.empresa_id,m.usuario_id LIMIT 1`,[requestedCompany])).rows[0]
   assert(identity, 'ACTIVE_TEST_MEMBERSHIP_REQUIRED')
-  const memberships = (await client.query(`SELECT t.id,t.name,m.role,m.erp_profile_id,
+  const memberships = (await client.query(`SELECT t.id,t.name,m.role,m.perfil_acesso_id,
     coalesce(array_agg(p.capability) FILTER (WHERE p.capability IS NOT NULL),ARRAY[]::text[]) capabilities
-    FROM shared.tenant_memberships m JOIN shared.tenants t ON t.id=m.tenant_id
-    LEFT JOIN shared.erp_profile_permissions p ON p.profile_id=m.erp_profile_id
-    WHERE m.user_id=$1 AND m.status='active' AND t.status='active'
-    GROUP BY t.id,t.name,m.role,m.erp_profile_id ORDER BY t.id`, [identity.user_id])).rows
-  const principal: PluginPrincipal = {
-    userId: Number(identity.user_id), clerkUserId: 'user_local_read_test', clientId: 'mcp-local-read-test', scopes: ['erp:read'],
-    companies: memberships.map(row => ({ id: Number(row.id), name: row.name, profile: row.erp_profile_id as ErpAccessProfile,
+    FROM shared.usuarios_empresas m JOIN shared.empresas t ON t.id=m.empresa_id
+    LEFT JOIN shared.permissoes_perfil p ON p.perfil_acesso_id=m.perfil_acesso_id
+    WHERE m.usuario_id=$1 AND m.status='active' AND t.status='active'
+    GROUP BY t.id,t.name,m.role,m.perfil_acesso_id ORDER BY t.id`, [identity.usuario_id])).rows
+  let principal: PluginPrincipal = {
+    userId: Number(identity.usuario_id), clerkUserId: String(identity.clerk_user_id||'user_local_read_test'), clientId: 'mcp-local-read-test', scopes: ['erp:read'],
+    companies: memberships.map(row => ({ id: Number(row.id), name: row.name, profile: row.perfil_acesso_id as ErpAccessProfile,
       capabilities: ['owner','admin'].includes(row.role) ? [...ERP_CAPABILITIES] : row.capabilities.filter((capability: string) => ERP_CAPABILITIES.includes(capability as typeof ERP_CAPABILITIES[number])) })),
   }
-  const companyId = Number(identity.tenant_id)
+  const companyId = Number(identity.empresa_id)
   report.companyId = companyId
+  if (identity.clerk_user_id) await check('Usuario Clerk resolve a empresa real e suas permissoes', async () => {
+    const resolved = await loadPluginPrincipal(String(identity.clerk_user_id), principal.clientId, principal.scopes)
+    assert.deepEqual(resolved, principal)
+    principal = resolved
+  })
+  const otherCompany = (await client.query('SELECT empresa_id,count(*)::int records FROM erp.vendas WHERE empresa_id<>$1 GROUP BY empresa_id ORDER BY empresa_id LIMIT 1', [companyId])).rows[0]
   const restricted: PluginPrincipal = { ...principal, companies: principal.companies.map(company => ({ ...company, capabilities: company.capabilities.filter(capability => !capability.startsWith('erp.financeiro.')) })) }
   await client.query("SELECT set_config('app.erp_tenant_id',$1,true),set_config('app.erp_user_id',$2,true)", [String(companyId), String(principal.userId)])
   await client.query('SET LOCAL ROLE erp_runtime')
+  if (otherCompany) await check('Isolamento no banco oculta vendas de outra empresa existente', async () => {
+    assert(Number(otherCompany.records) > 0)
+    assert.equal((await client.query('SELECT id FROM erp.vendas WHERE empresa_id=$1', [otherCompany.empresa_id])).rows.length, 0)
+  })
   const today = (await client.query('SELECT CURRENT_DATE::text AS date')).rows[0].date
   const raw = (await client.query(`SELECT p.id::text,p.conta_pagar_id::text conta_id,c.descricao,e.nome fornecedor,
     p.numero_parcela,p.data_vencimento::text vencimento,p.valor,c.status conta_status,p.status parcela_status,c.tipo_lancamento
-    FROM erp.contas_pagar_parcelas p JOIN erp.contas_pagar c ON c.tenant_id=p.tenant_id AND c.id=p.conta_pagar_id
-    JOIN erp.entidades e ON e.tenant_id=c.tenant_id AND e.id=c.fornecedor_id
-    WHERE p.tenant_id=$1 AND p.excluido_em IS NULL AND c.excluido_em IS NULL`, [companyId])).rows
+    FROM erp.contas_pagar_parcelas p JOIN erp.contas_pagar c ON c.empresa_id=p.empresa_id AND c.id=p.conta_pagar_id
+    JOIN erp.entidades e ON e.empresa_id=c.empresa_id AND e.id=c.fornecedor_id
+    WHERE p.empresa_id=$1 AND p.excluido_em IS NULL AND c.excluido_em IS NULL`, [companyId])).rows
   // Calculo independente em JS, a partir dos registros e movimentos do banco.
   const payments = (await client.query(`SELECT conta_pagar_parcela_id::text AS id,sum(valor) AS value FROM erp.pagamentos
-    WHERE tenant_id=$1 AND estorno_de_pagamento_id IS NULL AND estornado_em IS NULL AND excluido_em IS NULL GROUP BY conta_pagar_parcela_id`, [companyId])).rows
-  const credits = (await client.query(`SELECT conta_pagar_parcela_id::text AS id,valor,reversao_de_id FROM erp.adiantamentos_aplicacoes WHERE tenant_id=$1`, [companyId])).rows
+    WHERE empresa_id=$1 AND estorno_de_pagamento_id IS NULL AND estornado_em IS NULL AND excluido_em IS NULL GROUP BY conta_pagar_parcela_id`, [companyId])).rows
+  const credits = (await client.query(`SELECT conta_pagar_parcela_id::text AS id,valor,reversao_de_id FROM erp.adiantamentos_aplicacoes WHERE empresa_id=$1`, [companyId])).rows
   const agreements = (await client.query(`SELECT p.conta_pagar_parcela_id::text AS id,p.valor FROM erp.renegociacoes_parcelas p
-    JOIN erp.renegociacoes r ON r.tenant_id=p.tenant_id AND r.id=p.renegociacao_id WHERE p.tenant_id=$1 AND p.papel='origem' AND r.status='efetivada'`, [companyId])).rows
+    JOIN erp.renegociacoes r ON r.empresa_id=p.empresa_id AND r.id=p.renegociacao_id WHERE p.empresa_id=$1 AND p.papel='origem' AND r.status='efetivada'`, [companyId])).rows
   const expected: RecordRow[] = raw.map(row => {
     const paid = Number(payments.find(payment => payment.id === row.id)?.value || 0)
     const credit = credits.filter(credit => credit.id === row.id).reduce((sum, credit) => sum + Number(credit.valor) * (credit.reversao_de_id === null ? 1 : -1), 0)
@@ -172,21 +186,21 @@ async function main() {
   let demoExpected: any = null
   if (demoMode) {
     const counts = (await client.query(`SELECT
-      (SELECT count(*)::int FROM erp.vendas WHERE tenant_id=$1 AND excluido_em IS NULL) sales,
-      (SELECT count(*)::int FROM erp.compras WHERE tenant_id=$1 AND excluido_em IS NULL) purchases,
-      (SELECT count(*)::int FROM erp.contas_receber_parcelas WHERE tenant_id=$1 AND excluido_em IS NULL) receivables,
-      (SELECT count(*)::int FROM erp.saldos_estoque WHERE tenant_id=$1) stock,
-      (SELECT count(*)::int FROM erp.entidades WHERE tenant_id=$1 AND eh_cliente AND ativo AND excluido_em IS NULL) customers`, [companyId])).rows[0]
+      (SELECT count(*)::int FROM erp.vendas WHERE empresa_id=$1 AND tipo_documento IN ('venda','pedido') AND excluido_em IS NULL) sales,
+      (SELECT count(*)::int FROM erp.compras WHERE empresa_id=$1 AND excluido_em IS NULL) purchases,
+      (SELECT count(*)::int FROM erp.contas_receber_parcelas WHERE empresa_id=$1 AND excluido_em IS NULL) receivables,
+      (SELECT count(*)::int FROM erp.saldos_estoque WHERE empresa_id=$1) stock,
+      (SELECT count(*)::int FROM erp.entidades WHERE empresa_id=$1 AND eh_cliente AND ativo AND excluido_em IS NULL) customers`, [companyId])).rows[0]
     const sale = (await client.query(`SELECT v.id::text,v.numero,v.total,
-      (SELECT count(*)::int FROM erp.vendas_itens i WHERE i.tenant_id=v.tenant_id AND i.venda_id=v.id) items
-      FROM erp.vendas v WHERE v.tenant_id=$1 AND v.status='confirmada' ORDER BY v.id LIMIT 1`, [companyId])).rows[0]
+      (SELECT count(*)::int FROM erp.vendas_itens i WHERE i.empresa_id=v.empresa_id AND i.venda_id=v.id) items
+      FROM erp.vendas v WHERE v.empresa_id=$1 AND v.status='confirmada' ORDER BY v.id LIMIT 1`, [companyId])).rows[0]
     const purchase = (await client.query(`SELECT v.id::text,v.numero,v.total,
-      (SELECT count(*)::int FROM erp.compras_itens i WHERE i.tenant_id=v.tenant_id AND i.compra_id=v.id) items
-      FROM erp.compras v WHERE v.tenant_id=$1 AND v.status='recebida' ORDER BY v.id LIMIT 1`, [companyId])).rows[0]
+      (SELECT count(*)::int FROM erp.compras_itens i WHERE i.empresa_id=v.empresa_id AND i.compra_id=v.id) items
+      FROM erp.compras v WHERE v.empresa_id=$1 AND v.status='recebida' ORDER BY v.id LIMIT 1`, [companyId])).rows[0]
     const receivables = (await client.query(`SELECT p.id::text,p.valor,e.nome cliente,t.descricao,
-      coalesce((SELECT sum(m.valor) FROM erp.pagamentos m WHERE m.tenant_id=p.tenant_id AND m.conta_receber_parcela_id=p.id AND m.estornado_em IS NULL AND m.estorno_de_pagamento_id IS NULL AND m.excluido_em IS NULL),0) paid
-      FROM erp.contas_receber_parcelas p JOIN erp.contas_receber t ON t.tenant_id=p.tenant_id AND t.id=p.conta_receber_id
-      JOIN erp.entidades e ON e.tenant_id=t.tenant_id AND e.id=t.cliente_id WHERE p.tenant_id=$1`, [companyId])).rows
+      coalesce((SELECT sum(m.valor) FROM erp.pagamentos m WHERE m.empresa_id=p.empresa_id AND m.conta_receber_parcela_id=p.id AND m.estornado_em IS NULL AND m.estorno_de_pagamento_id IS NULL AND m.excluido_em IS NULL),0) paid
+      FROM erp.contas_receber_parcelas p JOIN erp.contas_receber t ON t.empresa_id=p.empresa_id AND t.id=p.conta_receber_id
+      JOIN erp.entidades e ON e.empresa_id=t.empresa_id AND e.id=t.cliente_id WHERE p.empresa_id=$1`, [companyId])).rows
     demoExpected = { counts, sale, purchase, receivables }
     assert.equal(counts.sales, 150, 'FULL_DEMO_DATA_REQUIRED')
     assert.equal(counts.purchases, 60)
@@ -264,10 +278,10 @@ async function main() {
         assert.equal(Math.round(Number(row.saldo) * 100), Math.round((Number(reference.valor) - Number(reference.paid)) * 100))
       }
     })
-    await check('Demo: pagar com vencimento entre 5 e 11 de outubro', async () => {
-      const selected = expected.filter(r => String(r.vencimento) >= '2026-10-05' && String(r.vencimento) <= '2026-10-11')
+    await check('Demo: pagar com vencimento entre 7 e 13 de outubro', async () => {
+      const selected = expected.filter(r => String(r.vencimento) >= '2026-10-07' && String(r.vencimento) <= '2026-10-13')
       assert(selected.length > 0)
-      matches(await query({ vencimento_inicio: '2026-10-05', vencimento_fim: '2026-10-11' }), selected)
+      matches(await query({ vencimento_inicio: '2026-10-07', vencimento_fim: '2026-10-13' }), selected)
     })
     await check('Demo: 150 vendas disponíveis para consulta', async () => {
       const result = (await call('listar_vendas', { empresa_id: companyId })).data
@@ -324,6 +338,11 @@ async function main() {
     const forbidden = Math.max(...principal.companies.map(company => company.id)) + 100000
     const result = await rpc('tools/call', { name: 'consultar_financeiro', arguments: { empresa_id: forbidden, tipo: 'pagar' } })
     assert.equal(result.body.result.isError, true); assert.equal(JSON.parse(result.body.result.content[0].text).code, 'ACCESS_DENIED')
+  })
+  if (otherCompany && !principal.companies.some(company => company.id === Number(otherCompany.empresa_id))) await check('Tool recusa acesso a outra empresa existente', async () => {
+    const result = await rpc('tools/call', { name: 'listar_vendas', arguments: { empresa_id: Number(otherCompany.empresa_id) } })
+    assert.equal(result.body.result.isError, true)
+    assert.equal(JSON.parse(result.body.result.content[0].text).code, 'ACCESS_DENIED')
   })
   await check('Periodo invertido recusa parametros', async () => {
     const result = await rpc('tools/call', { name: 'consultar_financeiro', arguments: { empresa_id: companyId, tipo: 'pagar', vencimento_inicio: '2026-12-31', vencimento_fim: '2026-01-01' } })

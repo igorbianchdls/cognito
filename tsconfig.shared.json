@@ -1,0 +1,6 @@
+{
+  "extends":"./tsconfig.json",
+  "compilerOptions":{"incremental":false},
+  "include":["src/products/auth/**/*.ts","src/products/auth/**/*.tsx","src/app/api/clerk/**/*.ts","src/app/api/settings/**/*.ts","src/lib/postgres.ts"],
+  "exclude":["node_modules",".next"]
+}

@@ -9,17 +9,17 @@ export async function proposalReferences(tenantId:number,proposal:Proposal,clien
   if(proposal.tipo.includes('conta_pagar')||proposal.tipo.includes('conta_receber')){
     if(!proposal.tipo.startsWith('excluir_'))await validateFinancialReferences(client||{query:async(sql,params)=>({rows:await runQuery(sql,params)})},tenantId,proposal.tipo.includes('pagar')?'pagar':'receber',data,Boolean(client))
   }
-  if((proposal.tipo.includes('conta_pagar')||proposal.tipo.includes('conta_receber'))&&!proposal.tipo.startsWith('excluir_')){const side=proposal.tipo.includes('pagar')?'fornecedor':'cliente';const rows=await query(`SELECT id::text,nome FROM erp.entidades WHERE tenant_id=$1 AND id=$2 AND ativo AND excluido_em IS NULL`,[tenantId,data[side+'_id']]);return {cliente:side==='cliente'?rows[0]:null,fornecedor:side==='fornecedor'?rows[0]:null,itens:[]}}
+  if((proposal.tipo.includes('conta_pagar')||proposal.tipo.includes('conta_receber'))&&!proposal.tipo.startsWith('excluir_')){const side=proposal.tipo.includes('pagar')?'fornecedor':'cliente';const rows=await query(`SELECT id::text,nome FROM erp.entidades WHERE empresa_id=$1 AND id=$2 AND ativo AND excluido_em IS NULL`,[tenantId,data[side+'_id']]);return {cliente:side==='cliente'?rows[0]:null,fornecedor:side==='fornecedor'?rows[0]:null,itens:[]}}
   if(!Array.isArray(data.itens))return {cliente:null,fornecedor:null,itens:[]}
   const purchase=proposal.tipo==='compra'||proposal.tipo==='editar_compra',role=purchase?'eh_fornecedor':'eh_cliente'
-  const customer=await query(`SELECT id::text,nome FROM erp.entidades WHERE tenant_id=$1 AND id=$2 AND ${role} AND ativo AND excluido_em IS NULL`,[tenantId,purchase?data.fornecedor_id:data.cliente_id])
+  const customer=await query(`SELECT id::text,nome FROM erp.entidades WHERE empresa_id=$1 AND id=$2 AND ${role} AND ativo AND excluido_em IS NULL`,[tenantId,purchase?data.fornecedor_id:data.cliente_id])
   if (!customer[0]) throw new PluginError('INVALID_REFERENCE','Escolha um cliente ou fornecedor ativo desta empresa.')
   const commercialItems=data.itens as {tipo:string;item_id:number}[]
   const products=commercialItems.filter(item=>item.tipo==='produto').map(item=>item.item_id)
   const services=commercialItems.filter(item=>item.tipo==='servico').map(item=>item.item_id)
   const [productRows,serviceRows]=await Promise.all([
-    products.length ? query('SELECT id::text,nome FROM erp.produtos WHERE tenant_id=$1 AND id=ANY($2::bigint[]) AND ativo AND excluido_em IS NULL',[tenantId,products]) : [],
-    services.length ? query('SELECT id::text,nome FROM erp.servicos WHERE tenant_id=$1 AND id=ANY($2::bigint[]) AND ativo AND excluido_em IS NULL',[tenantId,services]) : [],
+    products.length ? query('SELECT id::text,nome FROM erp.produtos WHERE empresa_id=$1 AND id=ANY($2::bigint[]) AND ativo AND excluido_em IS NULL',[tenantId,products]) : [],
+    services.length ? query('SELECT id::text,nome FROM erp.servicos WHERE empresa_id=$1 AND id=ANY($2::bigint[]) AND ativo AND excluido_em IS NULL',[tenantId,services]) : [],
   ])
   const items=commercialItems.map(item=>{
     const row=(item.tipo==='produto' ? productRows : serviceRows).find(row=>row.id===String(item.item_id))

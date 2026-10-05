@@ -22,7 +22,7 @@ export async function operationSnapshot(tenantId:number,proposal:Proposal,client
   const table=tables[proposal.tipo as keyof typeof tables]
   if(!table)throw new PluginError('INVALID_INPUT','Operacao desconhecida.')
   const query=async(sql:string,params:unknown[])=>client ? (await client.query(sql,params)).rows : runQuery<Record<string,unknown>>(sql,params)
-  const rows=await query(`SELECT * FROM erp.${table} WHERE tenant_id=$1 AND id=$2 AND excluido_em IS NULL${client?' FOR UPDATE':''}`,[tenantId,proposal.dados.registro_id])
+  const rows=await query(`SELECT * FROM erp.${table} WHERE empresa_id=$1 AND id=$2 AND excluido_em IS NULL${client?' FOR UPDATE':''}`,[tenantId,proposal.dados.registro_id])
   const row=rows[0]
   if(!row || (proposal.tipo==='editar_cliente' && !row.eh_cliente))throw new PluginError('INVALID_REFERENCE','Registro nao disponivel nesta empresa.')
   const related:unknown[]=[]
@@ -33,21 +33,21 @@ export async function operationSnapshot(tenantId:number,proposal:Proposal,client
   let parcelas:OperationSnapshot['parcelas']=[],contaFinanceira:OperationSnapshot['conta_financeira']=null
   if(table==='vendas'||table==='compras') {
     const foreign=table==='vendas'?'venda_id':'compra_id'
-    related.push(await query(`SELECT * FROM erp.${table}_itens WHERE tenant_id=$1 AND ${foreign}=$2 ORDER BY id${client?' FOR SHARE':''}`,[tenantId,proposal.dados.registro_id]))
+    related.push(await query(`SELECT * FROM erp.${table}_itens WHERE empresa_id=$1 AND ${foreign}=$2 ORDER BY id${client?' FOR SHARE':''}`,[tenantId,proposal.dados.registro_id]))
     const forecastTable=table==='vendas'?'vendas_recebimentos_previstos':'compras_parcelas_previstas'
-    const forecasts=await query(`SELECT * FROM erp.${forecastTable} WHERE tenant_id=$1 AND ${foreign}=$2 AND excluido_em IS NULL ORDER BY numero_parcela,id${client?' FOR SHARE':''}`,[tenantId,proposal.dados.registro_id])
+    const forecasts=await query(`SELECT * FROM erp.${forecastTable} WHERE empresa_id=$1 AND ${foreign}=$2 AND excluido_em IS NULL ORDER BY numero_parcela,id${client?' FOR SHARE':''}`,[tenantId,proposal.dados.registro_id])
     related.push(forecasts)
     parcelas=forecasts.map(p=>({numero:p.numero_parcela,vencimento:p.data_vencimento,valor:p.valor}))
   }
   if(table==='contas_pagar'||table==='contas_receber'){
     const side=table==='contas_pagar'?'pagar':'receber'
-    const parts=await query(`SELECT * FROM erp.${table}_parcelas WHERE tenant_id=$1 AND conta_${side}_id=$2 ORDER BY id${client?' FOR UPDATE':''}`,[tenantId,proposal.dados.registro_id])
+    const parts=await query(`SELECT * FROM erp.${table}_parcelas WHERE empresa_id=$1 AND conta_${side}_id=$2 ORDER BY id${client?' FOR UPDATE':''}`,[tenantId,proposal.dados.registro_id])
     related.push(parts);parcelas=parts.filter(p=>!p.excluido_em).map(p=>({numero:p.numero_parcela,vencimento:p.data_vencimento,valor:p.valor}))
-    if(side==='receber')related.push(await query('SELECT * FROM erp.cobrancas WHERE tenant_id=$1 AND conta_receber_parcela_id=ANY($2::bigint[]) ORDER BY id',[tenantId,parts.map(p=>p.id)]))
-    for(const movement of ['pagamentos','adiantamentos_aplicacoes','renegociacoes_parcelas'])related.push(await query(`SELECT * FROM erp.${movement} WHERE tenant_id=$1 AND conta_${side}_parcela_id=ANY($2::bigint[]) ORDER BY id`,[tenantId,parts.map(p=>p.id)]))
+    if(side==='receber')related.push(await query('SELECT * FROM erp.cobrancas WHERE empresa_id=$1 AND conta_receber_parcela_id=ANY($2::bigint[]) ORDER BY id',[tenantId,parts.map(p=>p.id)]))
+    for(const movement of ['pagamentos','adiantamentos_aplicacoes','renegociacoes_parcelas'])related.push(await query(`SELECT * FROM erp.${movement} WHERE empresa_id=$1 AND conta_${side}_parcela_id=ANY($2::bigint[]) ORDER BY id`,[tenantId,parts.map(p=>p.id)]))
   }
   if(proposal.tipo==='receber_parcela'||proposal.tipo==='pagar_parcela') {
-    const accounts=await query(`SELECT * FROM erp.contas_financeiras WHERE tenant_id=$1 AND id=$2 AND ativo AND excluido_em IS NULL${client?' FOR SHARE':''}`,[tenantId,proposal.dados.conta_financeira_id])
+    const accounts=await query(`SELECT * FROM erp.contas_financeiras WHERE empresa_id=$1 AND id=$2 AND ativo AND excluido_em IS NULL${client?' FOR SHARE':''}`,[tenantId,proposal.dados.conta_financeira_id])
     if(!accounts[0])throw new PluginError('INVALID_REFERENCE','Escolha uma conta financeira ativa desta empresa.')
     related.push(accounts[0])
     contaFinanceira={id:String(accounts[0].id),nome:String(accounts[0].nome)}
@@ -77,9 +77,9 @@ export async function executeOperation(tenantId:number,actorId:number,proposal:P
   }
   if(['editar_venda','editar_orcamento','editar_compra'].includes(proposal.tipo)){
     const sale=proposal.tipo!=='editar_compra',table=sale?'vendas':'compras'
-    const schedule=await runQuery(`SELECT id FROM erp.${sale?'vendas_recebimentos_previstos':'compras_parcelas_previstas'} WHERE tenant_id=$1 AND ${sale?'venda_id':'compra_id'}=$2 AND excluido_em IS NULL LIMIT 2`,[tenantId,id])
+    const schedule=await runQuery(`SELECT id FROM erp.${sale?'vendas_recebimentos_previstos':'compras_parcelas_previstas'} WHERE empresa_id=$1 AND ${sale?'venda_id':'compra_id'}=$2 AND excluido_em IS NULL LIMIT 2`,[tenantId,id])
     if(schedule.length>1)throw new PluginError('INVALID_STATE','Documento com várias parcelas exige edição no ERP para preservar a condição de pagamento.');
-    const [current]=await runQuery(`SELECT * FROM erp.${table} WHERE tenant_id=$1 AND id=$2`,[tenantId,id])
+    const [current]=await runQuery(`SELECT * FROM erp.${table} WHERE empresa_id=$1 AND id=$2`,[tenantId,id])
     if(['desconto','frete','seguro','outras_despesas','impostos_retidos'].some(field=>Number(current[field]||0)!==0))throw new PluginError('INVALID_STATE','Documento com descontos ou despesas no cabeçalho exige edição no ERP.');
     const {registro_id:_id,...changes}=data
     const preserved=Object.fromEntries(Object.entries(current).map(([key,value])=>[key,value instanceof Date?value.toISOString().slice(0,10):value]))

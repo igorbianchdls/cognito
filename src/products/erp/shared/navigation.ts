@@ -10,6 +10,7 @@ import {
 
 import type { ErpModuleId, ErpNavigationItem, ErpSectionId } from '@/products/erp/shared/types'
 import { isRetiredErpReport } from './reportCatalog'
+import { DASHBOARDS, DASHBOARD_IDS } from './dashboardContracts'
 
 export const ERP_DEFAULT_SECTION: ErpSectionId = 'overview'
 export const ERP_DEFAULT_MODULE: ErpModuleId = 'overview'
@@ -18,6 +19,10 @@ const navigation: ErpNavigationItem[] = [
   {
     id: 'overview', label: 'Visao geral', href: '/erp', icon: IconHomeStats,
     description: 'Resumo operacional do ERP.', modules: [],
+  },
+  {
+    id: 'dashboards', label: 'Dashboards', href: '/erp/dashboards/visao-geral', icon: IconReportAnalytics,
+    description: 'Indicadores e análises da empresa.', modules: DASHBOARD_IDS.map(id=>({id,label:DASHBOARDS[id].title,href:'/erp/dashboards/'+id,description:DASHBOARDS[id].description})),
   },
   {
     id: 'cadastros', label: 'Cadastros', href: '/erp/cadastros/clientes', icon: IconAddressBook,

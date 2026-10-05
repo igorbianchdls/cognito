@@ -13,7 +13,7 @@ export async function assertErpPeriodOpen(
 ) {
   const result = await client.query(
     `SELECT id FROM erp.fechamentos_periodos
-     WHERE tenant_id = $1 AND modulo IN ($2, 'todos') AND reaberto_em IS NULL
+     WHERE empresa_id = $1 AND modulo IN ($2, 'todos') AND reaberto_em IS NULL
        AND $3::date BETWEEN periodo_inicio AND periodo_fim LIMIT 1`,
     [input.tenantId, input.module, input.date],
   );
@@ -28,7 +28,7 @@ export async function assertErpPeriodOpen(
 export async function listErpPeriodClosures(tenantId: number) {
   return runQuery<Record<string, unknown>>(
     `SELECT id::text, modulo, periodo_inicio, periodo_fim, motivo, fechado_em, reaberto_em, motivo_reabertura
-     FROM erp.fechamentos_periodos WHERE tenant_id = $1 ORDER BY periodo_fim DESC, id DESC LIMIT 200`,
+     FROM erp.fechamentos_periodos WHERE empresa_id = $1 ORDER BY periodo_fim DESC, id DESC LIMIT 200`,
     [tenantId],
   );
 }
@@ -48,7 +48,7 @@ export async function closeErpPeriod(input: {
     );
     const overlap = await client.query(
       `SELECT id FROM erp.fechamentos_periodos
-       WHERE tenant_id = $1 AND (modulo = 'todos' OR $2 = 'todos' OR modulo = $2)
+       WHERE empresa_id = $1 AND (modulo = 'todos' OR $2 = 'todos' OR modulo = $2)
        AND reaberto_em IS NULL AND daterange(periodo_inicio, periodo_fim, '[]') && daterange($3::date, $4::date, '[]') LIMIT 1`,
       [input.tenantId, input.modulo, input.periodo_inicio, input.periodo_fim],
     );
@@ -60,7 +60,7 @@ export async function closeErpPeriod(input: {
       );
     const result = await client.query(
       `INSERT INTO erp.fechamentos_periodos
-         (tenant_id, modulo, periodo_inicio, periodo_fim, motivo, criado_por)
+         (empresa_id, modulo, periodo_inicio, periodo_fim, motivo, criado_por)
        VALUES ($1,$2,$3,$4,$5,$6) RETURNING id::text, modulo, periodo_inicio, periodo_fim, fechado_em`,
       [
         input.tenantId,
@@ -83,7 +83,7 @@ export async function reopenErpPeriod(input: {
 }) {
   const result = await runQuery<Record<string, unknown>>(
     `UPDATE erp.fechamentos_periodos SET reaberto_em = now(), reaberto_por = $3, motivo_reabertura = $4
-     WHERE tenant_id = $1 AND id = $2 AND reaberto_em IS NULL RETURNING id::text, modulo, reaberto_em`,
+     WHERE empresa_id = $1 AND id = $2 AND reaberto_em IS NULL RETURNING id::text, modulo, reaberto_em`,
     [input.tenantId, input.id, input.actorId, input.reason],
   );
   if (!result[0])

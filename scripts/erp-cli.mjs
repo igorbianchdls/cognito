@@ -79,16 +79,16 @@ async function withTransaction(pool, fn) {
 async function resolveTenant(client, args) {
   if (args['tenant-id']) {
     const tenantId = intArg(args['tenant-id'], 'Tenant')
-    const result = await client.query('SELECT id, name FROM shared.tenants WHERE id = $1', [tenantId])
+    const result = await client.query('SELECT id, name FROM shared.empresas WHERE id = $1', [tenantId])
     if (!result.rows[0]) throw new Error(`Tenant ${tenantId} nao encontrado.`)
     return result.rows[0]
   }
 
-  const result = await client.query('SELECT id, name FROM shared.tenants ORDER BY id ASC LIMIT 1')
+  const result = await client.query('SELECT id, name FROM shared.empresas ORDER BY id ASC LIMIT 1')
   if (result.rows[0]) return result.rows[0]
 
   const created = await client.query(
-    `INSERT INTO shared.tenants (name, slug)
+    `INSERT INTO shared.empresas (name, slug)
      VALUES ('CLI ERP Test', 'cli-erp-test')
      ON CONFLICT (slug) DO UPDATE SET name = EXCLUDED.name
      RETURNING id, name`,
@@ -99,16 +99,16 @@ async function resolveTenant(client, args) {
 async function resolveActor(client, args) {
   if (args['actor-id']) {
     const actorId = intArg(args['actor-id'], 'Usuario')
-    const result = await client.query('SELECT id, email FROM shared.users WHERE id = $1', [actorId])
+    const result = await client.query('SELECT id, email FROM shared.usuarios WHERE id = $1', [actorId])
     if (!result.rows[0]) throw new Error(`Usuario ${actorId} nao encontrado.`)
     return result.rows[0]
   }
 
-  const result = await client.query('SELECT id, email FROM shared.users ORDER BY id ASC LIMIT 1')
+  const result = await client.query('SELECT id, email FROM shared.usuarios ORDER BY id ASC LIMIT 1')
   if (result.rows[0]) return result.rows[0]
 
   const created = await client.query(
-    `INSERT INTO shared.users (email, full_name)
+    `INSERT INTO shared.usuarios (email, full_name)
      VALUES ('cli-erp-smoke@local.test', 'CLI ERP Smoke')
      RETURNING id, email`,
   )
@@ -117,9 +117,9 @@ async function resolveActor(client, args) {
 
 async function ensureTenantMembership(client, tenantId, actorId) {
   await client.query(
-    `INSERT INTO shared.tenant_memberships (tenant_id, user_id, role, status)
+    `INSERT INTO shared.usuarios_empresas (empresa_id, usuario_id, role, status)
      VALUES ($1, $2, 'admin', 'active')
-     ON CONFLICT (tenant_id, user_id) DO UPDATE
+     ON CONFLICT (empresa_id, usuario_id) DO UPDATE
        SET role = EXCLUDED.role,
            status = EXCLUDED.status`,
     [tenantId, actorId],
@@ -132,7 +132,7 @@ async function ensureCustomer(client, tenantId, actorId, args) {
     const result = await client.query(
       `SELECT id, nome
        FROM erp.entidades
-       WHERE tenant_id = $1
+       WHERE empresa_id = $1
          AND id = $2
          AND eh_cliente = true
          AND excluido_em IS NULL`,
@@ -145,7 +145,7 @@ async function ensureCustomer(client, tenantId, actorId, args) {
   const name = args['customer-name'] || `Cliente CLI ${Date.now()}`
   const result = await client.query(
     `INSERT INTO erp.entidades (
-       tenant_id,
+       empresa_id,
        tipo_pessoa,
        nome,
        documento,
@@ -167,7 +167,7 @@ async function ensureSupplier(client, tenantId, actorId, args) {
     const supplierId = intArg(args['supplier-id'], 'Fornecedor')
     const result = await client.query(
       `SELECT id, nome, documento FROM erp.entidades
-       WHERE tenant_id = $1 AND id = $2 AND eh_fornecedor = true AND excluido_em IS NULL`,
+       WHERE empresa_id = $1 AND id = $2 AND eh_fornecedor = true AND excluido_em IS NULL`,
       [tenantId, supplierId],
     )
     if (!result.rows[0]) throw new Error(`Fornecedor ${supplierId} nao encontrado neste tenant.`)
@@ -177,7 +177,7 @@ async function ensureSupplier(client, tenantId, actorId, args) {
   const stamp = Date.now()
   const result = await client.query(
     `INSERT INTO erp.entidades (
-       tenant_id, tipo_pessoa, nome, documento, eh_cliente, eh_fornecedor,
+       empresa_id, tipo_pessoa, nome, documento, eh_cliente, eh_fornecedor,
        ativo, criado_por, atualizado_por
      ) VALUES ($1, 'juridica', $2, $3, false, true, true, $4, $4)
      RETURNING id, nome, documento`,
@@ -192,7 +192,7 @@ async function ensureProduct(client, tenantId, actorId, args) {
     const result = await client.query(
       `SELECT id, nome, preco_venda
        FROM erp.produtos
-       WHERE tenant_id = $1
+       WHERE empresa_id = $1
          AND id = $2
          AND excluido_em IS NULL`,
       [tenantId, productId],
@@ -204,7 +204,7 @@ async function ensureProduct(client, tenantId, actorId, args) {
   const price = money(args['unit-price'], 150)
   const result = await client.query(
     `INSERT INTO erp.produtos (
-       tenant_id,
+       empresa_id,
        nome,
        sku,
        codigo,
@@ -235,7 +235,7 @@ async function createSale(client, tenantId, actorId, args) {
 
   const saleResult = await client.query(
     `INSERT INTO erp.vendas (
-       tenant_id,
+       empresa_id,
        cliente_id,
        numero,
        data_venda,
@@ -271,7 +271,7 @@ async function createSale(client, tenantId, actorId, args) {
 
   await client.query(
     `INSERT INTO erp.vendas_recebimentos_previstos (
-       tenant_id,
+       empresa_id,
        venda_id,
        numero_parcela,
        descricao,
@@ -286,7 +286,7 @@ async function createSale(client, tenantId, actorId, args) {
 
   await client.query(
     `INSERT INTO erp.vendas_itens (
-       tenant_id,
+       empresa_id,
        venda_id,
        produto_id,
        descricao,
@@ -317,7 +317,7 @@ async function fetchReceivableForSale(client, tenantId, saleId) {
   const receivableResult = await client.query(
     `SELECT id, status
      FROM erp.contas_receber
-     WHERE tenant_id = $1
+     WHERE empresa_id = $1
        AND venda_id = $2
        AND excluido_em IS NULL
      ORDER BY id ASC
@@ -330,7 +330,7 @@ async function fetchReceivableForSale(client, tenantId, saleId) {
   const installmentsResult = await client.query(
     `SELECT id, numero_parcela, valor, status
      FROM erp.contas_receber_parcelas
-     WHERE tenant_id = $1
+     WHERE empresa_id = $1
        AND conta_receber_id = $2
        AND excluido_em IS NULL
      ORDER BY numero_parcela ASC, id ASC`,
@@ -378,7 +378,7 @@ async function confirmSale(client, tenantId, actorId, saleId) {
        total,
        condicao_pagamento
      FROM erp.vendas
-     WHERE tenant_id = $1
+     WHERE empresa_id = $1
        AND id = $2
        AND excluido_em IS NULL
      FOR UPDATE`,
@@ -398,7 +398,7 @@ async function confirmSale(client, tenantId, actorId, saleId) {
   const itemResult = await client.query(
     `SELECT count(*)::int AS total
      FROM erp.vendas_itens
-     WHERE tenant_id = $1
+     WHERE empresa_id = $1
        AND venda_id = $2
        AND excluido_em IS NULL`,
     [tenantId, sale.id],
@@ -414,7 +414,7 @@ async function confirmSale(client, tenantId, actorId, saleId) {
        situacao = 'aprovada',
        confirmada_em = COALESCE(confirmada_em, now()),
        atualizado_por = $3
-     WHERE tenant_id = $1
+     WHERE empresa_id = $1
        AND id = $2
      RETURNING *`,
     [tenantId, sale.id, actorId],
@@ -423,7 +423,7 @@ async function confirmSale(client, tenantId, actorId, saleId) {
 
   const receivableResult = await client.query(
     `INSERT INTO erp.contas_receber (
-       tenant_id,
+       empresa_id,
        cliente_id,
        venda_id,
        descricao,
@@ -458,7 +458,7 @@ async function confirmSale(client, tenantId, actorId, saleId) {
   for (const installment of normalizeInstallments(updatedSale)) {
     const installmentResult = await client.query(
       `INSERT INTO erp.contas_receber_parcelas (
-         tenant_id,
+         empresa_id,
          conta_receber_id,
          numero_parcela,
          descricao,
@@ -498,7 +498,7 @@ async function countReceivables(pool, tenantId, saleId) {
   const result = await pool.query(
     `SELECT count(*)::int AS total
      FROM erp.contas_receber
-     WHERE tenant_id = $1
+     WHERE empresa_id = $1
        AND venda_id = $2
        AND excluido_em IS NULL`,
     [tenantId, saleId],
@@ -555,12 +555,12 @@ DECLARE
 BEGIN
   IF ${tenantId} IS NULL THEN
     SELECT id INTO v_tenant_id
-    FROM shared.tenants
+    FROM shared.empresas
     ORDER BY id ASC
     LIMIT 1;
 
     IF v_tenant_id IS NULL THEN
-      INSERT INTO shared.tenants (name, slug)
+      INSERT INTO shared.empresas (name, slug)
       VALUES ('CLI ERP Test', 'cli-erp-test')
       ON CONFLICT (slug) DO UPDATE SET name = EXCLUDED.name
       RETURNING id INTO v_tenant_id;
@@ -571,12 +571,12 @@ BEGIN
 
   IF ${actorId} IS NULL THEN
     SELECT id INTO v_actor_id
-    FROM shared.users
+    FROM shared.usuarios
     ORDER BY id ASC
     LIMIT 1;
 
     IF v_actor_id IS NULL THEN
-      INSERT INTO shared.users (email, full_name)
+      INSERT INTO shared.usuarios (email, full_name)
       VALUES ('cli-erp-smoke@local.test', 'CLI ERP Smoke')
       RETURNING id INTO v_actor_id;
     END IF;
@@ -584,14 +584,14 @@ BEGIN
     v_actor_id := ${actorId};
   END IF;
 
-  INSERT INTO shared.tenant_memberships (tenant_id, user_id, role, status)
+  INSERT INTO shared.usuarios_empresas (empresa_id, usuario_id, role, status)
   VALUES (v_tenant_id, v_actor_id, 'admin', 'active')
-  ON CONFLICT (tenant_id, user_id) DO UPDATE
+  ON CONFLICT (empresa_id, usuario_id) DO UPDATE
     SET role = EXCLUDED.role,
         status = EXCLUDED.status;
 
   INSERT INTO erp.entidades (
-    tenant_id,
+    empresa_id,
     tipo_pessoa,
     nome,
     documento,
@@ -615,7 +615,7 @@ BEGIN
   RETURNING id INTO v_customer_id;
 
   INSERT INTO erp.produtos (
-    tenant_id,
+    empresa_id,
     nome,
     sku,
     codigo,
@@ -640,7 +640,7 @@ BEGIN
   v_sale_number := 'CLI-VEN-' || extract(epoch from clock_timestamp())::bigint::text;
 
   INSERT INTO erp.vendas (
-    tenant_id,
+    empresa_id,
     cliente_id,
     numero,
     data_venda,
@@ -678,7 +678,7 @@ BEGIN
   RETURNING id INTO v_sale_id;
 
   INSERT INTO erp.vendas_itens (
-    tenant_id,
+    empresa_id,
     venda_id,
     produto_id,
     descricao,
@@ -708,12 +708,12 @@ BEGIN
     situacao = 'aprovada',
     confirmada_em = COALESCE(confirmada_em, now()),
     atualizado_por = v_actor_id
-  WHERE tenant_id = v_tenant_id
+  WHERE empresa_id = v_tenant_id
     AND id = v_sale_id
     AND status = 'rascunho';
 
   INSERT INTO erp.contas_receber (
-    tenant_id,
+    empresa_id,
     cliente_id,
     venda_id,
     descricao,
@@ -741,7 +741,7 @@ BEGIN
   RETURNING id INTO v_receivable_id;
 
   INSERT INTO erp.contas_receber_parcelas (
-    tenant_id,
+    empresa_id,
     conta_receber_id,
     numero_parcela,
     descricao,
@@ -774,7 +774,7 @@ BEGIN
 
   SELECT id INTO v_second_receivable_id
   FROM erp.contas_receber
-  WHERE tenant_id = v_tenant_id
+  WHERE empresa_id = v_tenant_id
     AND venda_id = v_sale_id
     AND excluido_em IS NULL
   ORDER BY id ASC
@@ -782,14 +782,14 @@ BEGIN
 
   SELECT count(*)::int INTO v_receivable_count
   FROM erp.contas_receber
-  WHERE tenant_id = v_tenant_id
+  WHERE empresa_id = v_tenant_id
     AND venda_id = v_sale_id
     AND excluido_em IS NULL;
 
   INSERT INTO erp_cli_result(data)
   VALUES (jsonb_build_object(
     'ok', v_receivable_count = 1 AND v_second_receivable_id = v_receivable_id,
-    'tenant_id', v_tenant_id,
+    'empresa_id', v_tenant_id,
     'actor_id', v_actor_id,
     'customer_id', v_customer_id,
     'product_id', v_product_id,
@@ -854,7 +854,7 @@ async function runPurchaseSmoke(pool, tenant, actor, args) {
 
     const purchaseResult = await client.query(
       `INSERT INTO erp.compras (
-         tenant_id, fornecedor_id, numero, data_compra, data_competencia,
+         empresa_id, fornecedor_id, numero, data_compra, data_competencia,
          status, tipo_compra, tipo_movimento, origem, fornecedor_nome_snapshot,
          fornecedor_documento_snapshot, subtotal, total, gera_financeiro,
          condicao_pagamento, criado_por, atualizado_por
@@ -867,21 +867,21 @@ async function runPurchaseSmoke(pool, tenant, actor, args) {
 
     await client.query(
       `INSERT INTO erp.compras_itens (
-         tenant_id, compra_id, produto_id, descricao, quantidade, valor_unitario,
+         empresa_id, compra_id, produto_id, descricao, quantidade, valor_unitario,
          valor_bruto, valor_liquido, total, item_descricao_snapshot, criado_por, atualizado_por
        ) VALUES ($1, $2, $3, $4, $5, $6, $7, $7, $7, $4, $8, $8)`,
       [tenant.id, purchase.id, product.id, product.nome, quantity, unitValue, total, actor.id],
     )
     await client.query(
       `INSERT INTO erp.compras_parcelas_previstas (
-         tenant_id, compra_id, numero_parcela, descricao, data_vencimento, valor, criado_por, atualizado_por
+         empresa_id, compra_id, numero_parcela, descricao, data_vencimento, valor, criado_por, atualizado_por
        ) VALUES ($1, $2, 1, 'Parcela 1', $3, $4, $5, $5)`,
       [tenant.id, purchase.id, dueDate, total, actor.id],
     )
 
     const payableResult = await client.query(
       `INSERT INTO erp.contas_pagar (
-         tenant_id, fornecedor_id, compra_id, descricao, numero_documento,
+         empresa_id, fornecedor_id, compra_id, descricao, numero_documento,
          data_competencia, data_emissao, valor_total, status, origem,
          tipo_lancamento, fornecedor_nome_snapshot, fornecedor_documento_snapshot,
          criado_por, atualizado_por
@@ -893,7 +893,7 @@ async function runPurchaseSmoke(pool, tenant, actor, args) {
     const payable = payableResult.rows[0]
     await client.query(
       `INSERT INTO erp.contas_pagar_parcelas (
-         tenant_id, conta_pagar_id, numero_parcela, descricao, data_vencimento,
+         empresa_id, conta_pagar_id, numero_parcela, descricao, data_vencimento,
          data_pagamento_previsto, valor, valor_bruto, valor_liquido, valor_pago,
          status, criado_por, atualizado_por
        ) VALUES ($1, $2, 1, 'Parcela 1', $3, $3, $4, $4, $4, 0, 'aberto', $5, $5)`,
@@ -902,17 +902,17 @@ async function runPurchaseSmoke(pool, tenant, actor, args) {
 
     await client.query(
       `UPDATE erp.compras SET status = 'recebida', tipo_movimento = 'compra', recebida_em = now(), atualizado_por = $3
-       WHERE tenant_id = $1 AND id = $2`,
+       WHERE empresa_id = $1 AND id = $2`,
       [tenant.id, purchase.id, actor.id],
     )
     const effectiveResult = await client.query(
       `UPDATE erp.contas_pagar SET tipo_lancamento = 'efetivo', efetivado_em = now(), descricao = $3, atualizado_por = $4
-       WHERE tenant_id = $1 AND id = $2 RETURNING id, tipo_lancamento`,
+       WHERE empresa_id = $1 AND id = $2 RETURNING id, tipo_lancamento`,
       [tenant.id, payable.id, `Compra ${number}`, actor.id],
     )
     const countResult = await client.query(
       `SELECT count(*)::int AS total FROM erp.contas_pagar
-       WHERE tenant_id = $1 AND compra_id = $2 AND excluido_em IS NULL`,
+       WHERE empresa_id = $1 AND compra_id = $2 AND excluido_em IS NULL`,
       [tenant.id, purchase.id],
     )
     const payableCount = Number(countResult.rows[0]?.total || 0)

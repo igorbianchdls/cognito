@@ -1,4 +1,5 @@
 import type { AuthTenantRole } from '@/products/auth/shared/authContracts'
+import type { ErpAccessProfile } from '@/products/erp/shared/professionalContracts'
 
 export type WorkspaceMemberStatus = 'active' | 'invited' | 'suspended'
 
@@ -29,6 +30,8 @@ export type SettingsMember = {
   role: AuthTenantRole
   status: WorkspaceMemberStatus
   userId: number
+  profileId: ErpAccessProfile
+  syncPending?: boolean
 }
 
 export type SettingsState = {
@@ -48,6 +51,8 @@ export type UpdateWorkspaceInput = {
 }
 
 export type UpdateMemberInput = {
+  profileId?: ErpAccessProfile
+  reason?: string
   role?: AuthTenantRole
   status?: WorkspaceMemberStatus
   userId: number

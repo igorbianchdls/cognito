@@ -6,6 +6,7 @@ import type {
   AuthTenantRole,
 } from '@/products/auth/shared/authContracts'
 import type { WorkspaceMemberStatus } from '@/products/auth/shared/settingsContracts'
+import type { ErpAccessProfile } from '@/products/erp/shared/professionalContracts'
 
 export const dynamic = 'force-dynamic'
 export const revalidate = 0
@@ -25,6 +26,8 @@ export async function PATCH(request: Request) {
       role?: unknown
       status?: unknown
       userId?: unknown
+      profileId?: unknown
+      reason?: unknown
     }
     const userId = Number(body.userId || 0)
     const role = typeof body.role === 'string' && roles.has(body.role as AuthTenantRole)
@@ -33,15 +36,20 @@ export async function PATCH(request: Request) {
     const status = typeof body.status === 'string' && statuses.has(body.status as WorkspaceMemberStatus)
       ? (body.status as WorkspaceMemberStatus)
       : undefined
+    if ((body.role!==undefined && role===undefined) || (body.status!==undefined && status===undefined)) {
+      return NextResponse.json({error:'Papel ou estado invalido.'},{status:400})
+    }
 
-    if (!Number.isFinite(userId) || userId <= 0) {
+    if (!Number.isSafeInteger(userId) || userId <= 0) {
       return NextResponse.json({ error: 'Membro invalido.' }, { status: 400 })
     }
 
     const member = await updateWorkspaceMember({
       actorUserId: tenant.sharedUserId,
       tenantId: tenant.tenantId,
-      values: { role, status, userId },
+      values: { role, status, userId,
+        profileId: typeof body.profileId==='string' ? body.profileId as ErpAccessProfile : undefined,
+        reason: typeof body.reason==='string' ? body.reason : undefined },
     })
     return NextResponse.json(member)
   } catch (error) {

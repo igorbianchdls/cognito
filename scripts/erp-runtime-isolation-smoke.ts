@@ -25,32 +25,32 @@ async function main() {
   assert.equal(role.rows[0]?.rolbypassrls, false, 'erp_runtime nao pode ignorar RLS.')
 
   const membership = await client.query(`
-    SELECT memberships.tenant_id, memberships.user_id
-    FROM shared.tenant_memberships AS memberships
+    SELECT memberships.empresa_id, memberships.usuario_id
+    FROM shared.usuarios_empresas AS memberships
     WHERE memberships.status = 'active'
-    ORDER BY memberships.tenant_id, memberships.user_id
+    ORDER BY memberships.empresa_id, memberships.usuario_id
     LIMIT 1
   `)
   assert(membership.rows[0], 'Nenhuma associacao ativa para testar o isolamento.')
-  const tenantId = Number(membership.rows[0].tenant_id)
-  const userId = Number(membership.rows[0].user_id)
+  const tenantId = Number(membership.rows[0].empresa_id)
+  const userId = Number(membership.rows[0].usuario_id)
 
   await client.query('BEGIN')
   await client.query('SET LOCAL ROLE erp_runtime')
   await client.query(`SELECT set_config('app.erp_tenant_id', $1, true), set_config('app.erp_user_id', $2, true)`, [String(tenantId), String(userId)])
-  const ownRows = await client.query(`SELECT count(*)::int AS total FROM erp.entidades WHERE tenant_id = $1`, [tenantId])
+  const ownRows = await client.query(`SELECT count(*)::int AS total FROM erp.entidades WHERE empresa_id = $1`, [tenantId])
   assert(Number.isInteger(ownRows.rows[0]?.total), 'Consulta do tenant autenticado falhou.')
 
   const crossTenantId = tenantId + 1_000_000_000
-  const crossRows = await client.query(`SELECT count(*)::int AS total FROM erp.entidades WHERE tenant_id = $1`, [crossTenantId])
+  const crossRows = await client.query(`SELECT count(*)::int AS total FROM erp.entidades WHERE empresa_id = $1`, [crossTenantId])
   assert.equal(crossRows.rows[0]?.total, 0, 'RLS permitiu leitura fora do tenant configurado.')
   await client.query('ROLLBACK')
 
   await runWithErpDatabaseContext({ tenantId, userId }, async () => {
-    const appRows = await runQuery(`SELECT id::text FROM erp.entidades WHERE tenant_id = $1 LIMIT 1`, [tenantId])
+    const appRows = await runQuery(`SELECT id::text FROM erp.entidades WHERE empresa_id = $1 LIMIT 1`, [tenantId])
     assert(Array.isArray(appRows), 'Pipeline restrito da aplicacao nao conseguiu consultar o tenant.')
     await assert.rejects(
-      () => runQuery(`SELECT id::text FROM erp.entidades WHERE tenant_id = $1 LIMIT 1`, [crossTenantId]),
+      () => runQuery(`SELECT id::text FROM erp.entidades WHERE empresa_id = $1 LIMIT 1`, [crossTenantId]),
       /diferente/,
     )
     const managementResources = ['contratos', 'conciliacao-bancaria', 'transferencias-financeiras', 'importacoes', 'giro-estoque']

@@ -38,6 +38,9 @@ async function restoreCatalog(catalog = baseCatalog) {
     GRANT USAGE ON SCHEMA shared,erp TO erp_runtime,authenticated,service_role;
     CREATE SEQUENCE shared.tenants_id_seq; CREATE SEQUENCE shared.users_id_seq;
     SET check_function_bodies=off;`);
+  for (const schema of new Set(catalog.rls.map(table=>table.schema))) {
+    if (!['erp','shared','auth'].includes(schema)) await db.exec(`CREATE SCHEMA ${ident(schema)}`);
+  }
   for (const table of catalog.rls.filter(x => x.relkind === 'r')) {
     const cols = catalog.columns.filter(x => x.table_schema === table.schema && x.table_name === table.relname);
     const defs = cols.map(x => {

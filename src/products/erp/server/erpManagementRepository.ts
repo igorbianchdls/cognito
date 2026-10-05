@@ -67,26 +67,26 @@ export async function searchErpOperationsCatalog(input: {
   const params: unknown[] = [input.tenantId, input.query?.trim() || '', limit]
   const commonSearch = `($2 = '' OR concat_ws(' ', nome, codigo) ILIKE '%' || $2 || '%')`
   if (input.source === 'products') {
-    return runQuery(`SELECT id::text AS value, concat_ws(' - ', nome, NULLIF(sku, '')) AS label FROM erp.produtos WHERE tenant_id = $1 AND ativo AND excluido_em IS NULL AND ${commonSearch} ORDER BY nome LIMIT $3`, params)
+    return runQuery(`SELECT id::text AS value, concat_ws(' - ', nome, NULLIF(sku, '')) AS label FROM erp.produtos WHERE empresa_id = $1 AND ativo AND excluido_em IS NULL AND ${commonSearch} ORDER BY nome LIMIT $3`, params)
   }
   if (input.source === 'services') {
-    return runQuery(`SELECT id::text AS value, concat_ws(' - ', nome, NULLIF(codigo, '')) AS label FROM erp.servicos WHERE tenant_id = $1 AND ativo AND excluido_em IS NULL AND ${commonSearch} ORDER BY nome LIMIT $3`, params)
+    return runQuery(`SELECT id::text AS value, concat_ws(' - ', nome, NULLIF(codigo, '')) AS label FROM erp.servicos WHERE empresa_id = $1 AND ativo AND excluido_em IS NULL AND ${commonSearch} ORDER BY nome LIMIT $3`, params)
   }
   if (input.source === 'customers') {
-    return runQuery(`SELECT id::text AS value, concat_ws(' - ', nome, NULLIF(documento, '')) AS label FROM erp.entidades WHERE tenant_id = $1 AND eh_cliente AND ativo AND excluido_em IS NULL AND ($2 = '' OR concat_ws(' ', nome, documento, email) ILIKE '%' || $2 || '%') ORDER BY nome LIMIT $3`, params)
+    return runQuery(`SELECT id::text AS value, concat_ws(' - ', nome, NULLIF(documento, '')) AS label FROM erp.entidades WHERE empresa_id = $1 AND eh_cliente AND ativo AND excluido_em IS NULL AND ($2 = '' OR concat_ws(' ', nome, documento, email) ILIKE '%' || $2 || '%') ORDER BY nome LIMIT $3`, params)
   }
   if (input.source === 'accounts') {
-    return runQuery(`SELECT id::text AS value, nome AS label FROM erp.contas_financeiras WHERE tenant_id = $1 AND ativo AND excluido_em IS NULL AND ($2 = '' OR concat_ws(' ', nome, banco, conta) ILIKE '%' || $2 || '%') ORDER BY padrao DESC, nome LIMIT $3`, params)
+    return runQuery(`SELECT id::text AS value, nome AS label FROM erp.contas_financeiras WHERE empresa_id = $1 AND ativo AND excluido_em IS NULL AND ($2 = '' OR concat_ws(' ', nome, banco, conta) ILIKE '%' || $2 || '%') ORDER BY padrao DESC, nome LIMIT $3`, params)
   }
   if (input.source === 'locations') {
-    return runQuery(`SELECT id::text AS value, concat_ws(' - ', nome, NULLIF(codigo, '')) AS label FROM erp.locais_estoque WHERE tenant_id = $1 AND ativo AND excluido_em IS NULL AND ${commonSearch} ORDER BY padrao DESC, nome LIMIT $3`, params)
+    return runQuery(`SELECT id::text AS value, concat_ws(' - ', nome, NULLIF(codigo, '')) AS label FROM erp.locais_estoque WHERE empresa_id = $1 AND ativo AND excluido_em IS NULL AND ${commonSearch} ORDER BY padrao DESC, nome LIMIT $3`, params)
   }
   return runQuery(
     `SELECT pagamentos.id::text AS value,
        concat(CASE WHEN pagamentos.tipo = 'receber' THEN 'Recebimento' ELSE 'Pagamento' END,
          ' - ', to_char(pagamentos.data_pagamento, 'DD/MM/YYYY'), ' - R$ ', to_char(pagamentos.valor_liquido, 'FM999G999G990D00')) AS label
      FROM erp.pagamentos
-     WHERE pagamentos.tenant_id = $1 AND pagamentos.excluido_em IS NULL
+     WHERE pagamentos.empresa_id = $1 AND pagamentos.excluido_em IS NULL
        AND pagamentos.estornado_em IS NULL AND pagamentos.estorno_de_pagamento_id IS NULL
        AND NOT pagamentos.conciliado
        AND ($2 = '' OR concat_ws(' ', pagamentos.tipo, pagamentos.origem, pagamentos.valor_liquido::text) ILIKE '%' || $2 || '%')
@@ -115,9 +115,9 @@ export async function listManagementOperation(tenantId: number, resource: string
          contratos.proxima_geracao_em, contratos.status,
          COALESCE(sum(itens.total), 0) AS valor
        FROM erp.contratos_vendas AS contratos
-       JOIN erp.entidades ON entidades.tenant_id = contratos.tenant_id AND entidades.id = contratos.cliente_id
-       LEFT JOIN erp.contratos_vendas_itens AS itens ON itens.tenant_id = contratos.tenant_id AND itens.contrato_id = contratos.id AND itens.contrato_versao_id = (SELECT v.id FROM erp.contratos_vendas_versoes v WHERE v.tenant_id=contratos.tenant_id AND v.contrato_id=contratos.id AND v.status='efetivada' ORDER BY v.numero DESC LIMIT 1)
-       WHERE contratos.tenant_id = $1 AND contratos.excluido_em IS NULL
+       JOIN erp.entidades ON entidades.empresa_id = contratos.empresa_id AND entidades.id = contratos.cliente_id
+       LEFT JOIN erp.contratos_vendas_itens AS itens ON itens.empresa_id = contratos.empresa_id AND itens.contrato_id = contratos.id AND itens.contrato_versao_id = (SELECT v.id FROM erp.contratos_vendas_versoes v WHERE v.empresa_id=contratos.empresa_id AND v.contrato_id=contratos.id AND v.status='efetivada' ORDER BY v.numero DESC LIMIT 1)
+       WHERE contratos.empresa_id = $1 AND contratos.excluido_em IS NULL
        GROUP BY contratos.id, entidades.nome`,
       'data_inicio DESC, id DESC', input,
     )
@@ -128,8 +128,8 @@ export async function listManagementOperation(tenantId: number, resource: string
          transacoes.descricao, transacoes.tipo, transacoes.valor, transacoes.contraparte,
          transacoes.status
        FROM erp.transacoes_bancarias AS transacoes
-       JOIN erp.contas_financeiras AS contas ON contas.tenant_id = transacoes.tenant_id AND contas.id = transacoes.conta_financeira_id
-       WHERE transacoes.tenant_id = $1 AND transacoes.excluido_em IS NULL`,
+       JOIN erp.contas_financeiras AS contas ON contas.empresa_id = transacoes.empresa_id AND contas.id = transacoes.conta_financeira_id
+       WHERE transacoes.empresa_id = $1 AND transacoes.excluido_em IS NULL`,
       'data DESC, id DESC', input,
     )
   }
@@ -139,9 +139,9 @@ export async function listManagementOperation(tenantId: number, resource: string
          origem.nome AS origem, destino.nome AS destino, transferencias.valor,
          transferencias.descricao, transferencias.status
        FROM erp.transferencias_financeiras AS transferencias
-       JOIN erp.contas_financeiras AS origem ON origem.tenant_id = transferencias.tenant_id AND origem.id = transferencias.conta_origem_id
-       JOIN erp.contas_financeiras AS destino ON destino.tenant_id = transferencias.tenant_id AND destino.id = transferencias.conta_destino_id
-       WHERE transferencias.tenant_id = $1 AND transferencias.excluido_em IS NULL`,
+       JOIN erp.contas_financeiras AS origem ON origem.empresa_id = transferencias.empresa_id AND origem.id = transferencias.conta_origem_id
+       JOIN erp.contas_financeiras AS destino ON destino.empresa_id = transferencias.empresa_id AND destino.id = transferencias.conta_destino_id
+       WHERE transferencias.empresa_id = $1 AND transferencias.excluido_em IS NULL`,
       'data DESC, id DESC', input,
     )
   }
@@ -149,7 +149,7 @@ export async function listManagementOperation(tenantId: number, resource: string
     return listOperationPage(tenantId,
       `SELECT id::text, nome_arquivo AS arquivo, tipo, criado_em AS data, total_linhas,
          total_importadas AS importadas, total_erros AS erros, status
-       FROM erp.importacoes_dados WHERE tenant_id = $1`,
+       FROM erp.importacoes_dados WHERE empresa_id = $1`,
       'data DESC, id DESC', input,
     )
   }
@@ -161,9 +161,9 @@ export async function listManagementOperation(tenantId: number, resource: string
          CASE WHEN p.quantidade_fisica>0 THEN 'Saldo atual' ELSE 'Sem saldo para calcular' END AS referencia
        FROM erp.vw_posicao_estoque p
        CROSS JOIN LATERAL (SELECT COALESCE(sum(-quantidade),0) AS saidas FROM erp.movimentacoes_estoque
-         WHERE tenant_id=p.tenant_id AND produto_id=p.produto_id AND local_estoque_id=p.local_estoque_id
+         WHERE empresa_id=p.empresa_id AND produto_id=p.produto_id AND local_estoque_id=p.local_estoque_id
            AND quantidade<0 AND ocorrido_em BETWEEN now()-interval '90 days' AND now()) m
-       WHERE p.tenant_id = $1`,
+       WHERE p.empresa_id = $1`,
       'giro_90_dias DESC, produto', input,
     )
   }
@@ -184,10 +184,10 @@ export async function createManagementOperation(input: ActorInput & {
       if (!['credito', 'debito'].includes(type)) throw new Error('Tipo de transacao invalido.')
       const transaction = await client.query(
         `INSERT INTO erp.transacoes_bancarias
-           (tenant_id, conta_financeira_id, identificador_externo, data_transacao, tipo,
+           (empresa_id, conta_financeira_id, identificador_externo, data_transacao, tipo,
             valor, descricao, contraparte, criado_por, atualizado_por)
          VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $9)
-         ON CONFLICT (tenant_id, conta_financeira_id, identificador_externo)
+         ON CONFLICT (empresa_id, conta_financeira_id, identificador_externo)
            WHERE identificador_externo IS NOT NULL AND excluido_em IS NULL
          DO UPDATE SET descricao = EXCLUDED.descricao
          RETURNING id::text, status`,
@@ -201,14 +201,14 @@ export async function createManagementOperation(input: ActorInput & {
       const paymentId = requiredId(input.values.pagamento_id, 'Pagamento')
       const transactionResult = await client.query(
         `SELECT * FROM erp.transacoes_bancarias
-         WHERE tenant_id = $1 AND id = $2 AND status = 'pendente' AND excluido_em IS NULL FOR UPDATE`,
+         WHERE empresa_id = $1 AND id = $2 AND status = 'pendente' AND excluido_em IS NULL FOR UPDATE`,
         [input.tenantId, transactionId],
       )
       const transaction = transactionResult.rows[0]
       if (!transaction) throw new Error('Transacao bancaria pendente nao encontrada.')
       const paymentResult = await client.query(
         `SELECT * FROM erp.pagamentos
-         WHERE tenant_id = $1 AND id = $2 AND NOT conciliado AND excluido_em IS NULL
+         WHERE empresa_id = $1 AND id = $2 AND NOT conciliado AND excluido_em IS NULL
            AND estornado_em IS NULL AND estorno_de_pagamento_id IS NULL FOR UPDATE`,
         [input.tenantId, paymentId],
       )
@@ -220,13 +220,13 @@ export async function createManagementOperation(input: ActorInput & {
       const alreadyReconciled = await client.query(
         `SELECT COALESCE(sum(valor_conciliado),0) AS valor
          FROM erp.conciliacoes_bancarias_itens
-         WHERE tenant_id = $1 AND transacao_bancaria_id = $2 AND desfeito_em IS NULL`,
+         WHERE empresa_id = $1 AND transacao_bancaria_id = $2 AND desfeito_em IS NULL`,
         [input.tenantId, transactionId],
       )
       const paymentReconciled = await client.query(
         `SELECT COALESCE(sum(valor_conciliado),0) AS valor
          FROM erp.conciliacoes_bancarias_itens
-         WHERE tenant_id = $1 AND pagamento_id = $2 AND desfeito_em IS NULL`,
+         WHERE empresa_id = $1 AND pagamento_id = $2 AND desfeito_em IS NULL`,
         [input.tenantId, paymentId],
       )
       const requested = input.values.valor_conciliado == null
@@ -235,14 +235,14 @@ export async function createManagementOperation(input: ActorInput & {
       if (requested <= 0) throw new Error('Nao existe saldo conciliavel entre os movimentos.')
       const reconciliation = await client.query(
         `INSERT INTO erp.conciliacoes_bancarias
-           (tenant_id, conta_financeira_id, periodo_inicio, periodo_fim, status,
+           (empresa_id, conta_financeira_id, periodo_inicio, periodo_fim, status,
             conciliado_em, criado_por, atualizado_por)
          VALUES ($1, $2, $3, $3, 'concluida', now(), $4, $4) RETURNING id`,
         [input.tenantId, transaction.conta_financeira_id, databaseDateText(transaction.data_transacao), input.actorId],
       )
       await client.query(
         `INSERT INTO erp.conciliacoes_bancarias_itens
-           (tenant_id, conciliacao_id, transacao_bancaria_id, pagamento_id, valor_conciliado, origem_conciliacao, criado_por)
+           (empresa_id, conciliacao_id, transacao_bancaria_id, pagamento_id, valor_conciliado, origem_conciliacao, criado_por)
          VALUES ($1, $2, $3, $4, $5, $6, $7)`,
         [input.tenantId, reconciliation.rows[0].id, transactionId, paymentId, requested,
           input.values.origem_conciliacao === 'sugerida' ? 'sugerida' : 'manual', input.actorId],
@@ -260,7 +260,7 @@ export async function createManagementOperation(input: ActorInput & {
       const existing = await client.query(
         `SELECT id::text, conta_origem_id, conta_destino_id, data_transferencia, valor, descricao, status
          FROM erp.transferencias_financeiras
-         WHERE tenant_id = $1 AND chave_idempotencia = $2 LIMIT 1`,
+         WHERE empresa_id = $1 AND chave_idempotencia = $2 LIMIT 1`,
         [input.tenantId, input.idempotencyKey],
       )
       if (existing.rows[0]) {
@@ -274,7 +274,7 @@ export async function createManagementOperation(input: ActorInput & {
       }
       const created = await client.query(
         `INSERT INTO erp.transferencias_financeiras
-           (tenant_id, conta_origem_id, conta_destino_id, data_transferencia, valor,
+           (empresa_id, conta_origem_id, conta_destino_id, data_transferencia, valor,
             descricao, status, chave_idempotencia, criado_por, atualizado_por)
          VALUES ($1, $2, $3, $4, $5, $6, 'concluida', $7, $8, $8) RETURNING id::text, status`,
         [input.tenantId, originId, destinationId, transferDate,

@@ -5,6 +5,9 @@ const nextConfig: NextConfig = {
     root: process.cwd(),
   },
   serverExternalPackages: ['playwright-core', '@sparticuz/chromium'],
+  outputFileTracingIncludes: {
+    '/*': ['./certificates/supabase-prod-ca-2021.crt'],
+  },
   async redirects() {
     return [
       {

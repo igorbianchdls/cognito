@@ -47,7 +47,15 @@
     "safe:npm": "node scripts/safe-npm-install.mjs",
     "safe:install": "node scripts/safe-npm-install.mjs install",
     "safe:add:assemblyai": "node scripts/safe-npm-install.mjs install assemblyai",
-    "safe:add:elevenlabs": "node scripts/safe-npm-install.mjs install @elevenlabs/elevenlabs-js"
+    "safe:add:elevenlabs": "node scripts/safe-npm-install.mjs install @elevenlabs/elevenlabs-js",
+    "shared:typecheck": "tsc -p tsconfig.shared.json --pretty false",
+    "shared:smoke": "node scripts/shared/shared-smoke.mjs",
+    "shared:backup": "node scripts/shared/backup.mjs",
+    "shared:concurrency": "node scripts/shared/concurrency.mjs",
+    "shared:check-database": "node scripts/shared/apply.mjs --check",
+    "erp:dashboards-smoke": "tsx scripts/erp/dashboards-smoke.ts",
+    "erp:dashboards-http-smoke": "node scripts/erp/dashboards-http-smoke.mjs",
+    "erp:dashboards-ui-smoke": "node scripts/erp/dashboards-ui-smoke.mjs"
   },
   "dependencies": {
     "@openai/mcp-extensions": "0.1.0",

@@ -77,17 +77,17 @@ async function main() {
   try {
     const rows = await client.query(
       `SELECT
-         tenants.id::bigint AS tenant_id,
+         tenants.id::bigint AS empresa_id,
          tenants.name::text AS tenant_name,
          tenants.slug::text AS tenant_slug,
-         users.id::bigint AS user_id,
+         users.id::bigint AS usuario_id,
          users.email::text AS email,
          users.clerk_user_id::text AS clerk_user_id
-       FROM shared.tenant_memberships AS memberships
-       JOIN shared.tenants AS tenants
-         ON tenants.id = memberships.tenant_id
-       JOIN shared.users AS users
-         ON users.id = memberships.user_id
+       FROM shared.usuarios_empresas AS memberships
+       JOIN shared.empresas AS tenants
+         ON tenants.id = memberships.empresa_id
+       JOIN shared.usuarios AS users
+         ON users.id = memberships.usuario_id
        WHERE tenants.status = 'active'
          AND tenants.clerk_organization_id IS NULL
          AND memberships.status = 'active'
@@ -105,7 +105,7 @@ async function main() {
         private_metadata: {
           ownerClerkUserId: row.clerk_user_id,
           source: "cognito_backfill",
-          tenantId: Number(row.tenant_id),
+          tenantId: Number(row.empresa_id),
         },
         public_metadata: {
           app: "cognito",
@@ -115,7 +115,7 @@ async function main() {
       await client.query("BEGIN");
       try {
         await client.query(
-          `UPDATE shared.tenants
+          `UPDATE shared.empresas
            SET
              clerk_organization_id = $2,
              clerk_organization_slug = $3,
@@ -123,24 +123,24 @@ async function main() {
              updated_at = now()
            WHERE id = $1`,
           [
-            row.tenant_id,
+            row.empresa_id,
             org.id,
             org.slug || null,
             JSON.stringify({ clerkOrganizationId: org.id, source: "cognito_backfill" }),
           ],
         );
         await client.query(
-          `UPDATE shared.tenant_memberships
+          `UPDATE shared.usuarios_empresas
            SET
              clerk_organization_id = $3,
              clerk_role = 'org:admin',
              metadata = COALESCE(metadata, '{}'::jsonb) || $4::jsonb,
              updated_at = now()
-           WHERE tenant_id = $1
-             AND user_id = $2`,
+           WHERE empresa_id = $1
+             AND usuario_id = $2`,
           [
-            row.tenant_id,
-            row.user_id,
+            row.empresa_id,
+            row.usuario_id,
             org.id,
             JSON.stringify({ clerkOrganizationId: org.id, source: "cognito_backfill" }),
           ],
@@ -155,7 +155,7 @@ async function main() {
         email: row.email,
         ok: true,
         organizationId: org.id,
-        tenantId: Number(row.tenant_id),
+        tenantId: Number(row.empresa_id),
       }));
     }
 

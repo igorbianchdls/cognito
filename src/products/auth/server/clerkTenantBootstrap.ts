@@ -17,13 +17,14 @@ type SharedUserRow = {
   full_name: string | null
   avatar_url: string | null
   clerk_user_id: string | null
+  status: string
 }
 
 type TenantMembershipRow = {
   clerk_membership_id: string | null
   clerk_organization_id: string | null
   clerk_organization_slug: string | null
-  tenant_id: string | number
+  empresa_id: string | number
   tenant_name: string
   tenant_slug: string | null
   role: string
@@ -43,6 +44,7 @@ type ClerkProfile = {
   email: string
   fullName: string | null
   avatarUrl: string | null
+  emailVerified?: boolean
 }
 
 export type ClerkProfileInput = ClerkProfile
@@ -92,10 +94,10 @@ function normalizeMembership(row: TenantMembershipRow): AuthTenantMembership {
     clerkMembershipId: row.clerk_membership_id,
     clerkOrganizationId: row.clerk_organization_id,
     clerkOrganizationSlug: row.clerk_organization_slug,
-    tenantId: Number(row.tenant_id),
+    tenantId: Number(row.empresa_id),
     tenantName: row.tenant_name,
     tenantSlug: row.tenant_slug,
-    role: role === 'admin' || role === 'member' || role === 'viewer' ? role : 'owner',
+    role: role === 'owner' || role === 'admin' || role === 'viewer' ? role : 'member',
   }
 }
 
@@ -105,7 +107,8 @@ async function getCurrentClerkProfile(): Promise<ClerkProfile | null> {
 
   const client = await clerkClient()
   const user = await client.users.getUser(authState.userId)
-  const email = user.primaryEmailAddress?.emailAddress || user.emailAddresses[0]?.emailAddress || ''
+  const primaryEmail = user.primaryEmailAddress || user.emailAddresses[0]
+  const email = primaryEmail?.emailAddress || ''
   if (!email) {
     throw new Error('Usuario Clerk sem email principal.')
   }
@@ -115,6 +118,7 @@ async function getCurrentClerkProfile(): Promise<ClerkProfile | null> {
     clerkUserId: authState.userId,
     clerkOrganizationId: authState.orgId || null,
     email,
+    emailVerified: primaryEmail?.verification?.status === 'verified',
     fullName,
     avatarUrl: user.imageUrl || null,
   }
@@ -125,8 +129,8 @@ async function findUserByClerkId(
   clerkUserId: string,
 ): Promise<SharedUserRow | null> {
   const result = await client.query(
-    `SELECT id, email, full_name, avatar_url, clerk_user_id
-     FROM shared.users
+    `SELECT id, email, full_name, avatar_url, clerk_user_id, status
+     FROM shared.usuarios
      WHERE clerk_user_id = $1
      LIMIT 1`,
     [clerkUserId],
@@ -138,8 +142,9 @@ async function linkUserByEmail(
   client: Pick<SQLClient, 'query'>,
   profile: ClerkProfile,
 ): Promise<SharedUserRow | null> {
+  if (!profile.emailVerified) return null
   const result = await client.query(
-    `UPDATE shared.users
+    `UPDATE shared.usuarios
      SET
        clerk_user_id = $1,
        email = $2,
@@ -148,8 +153,9 @@ async function linkUserByEmail(
        metadata = metadata || jsonb_build_object('linkedBy', 'clerk', 'linkedAt', now()),
        updated_at = now()
      WHERE clerk_user_id IS NULL
+       AND auth_user_id IS NULL AND password_hash='' AND status='active'
        AND lower(email::text) = lower($2::text)
-     RETURNING id, email, full_name, avatar_url, clerk_user_id`,
+     RETURNING id, email, full_name, avatar_url, clerk_user_id, status`,
     [profile.clerkUserId, profile.email, profile.fullName || '', profile.avatarUrl || ''],
   )
   return (result.rows[0] as SharedUserRow | undefined) || null
@@ -160,11 +166,11 @@ async function createSharedUser(
   profile: ClerkProfile,
 ): Promise<SharedUserRow> {
   const result = await client.query(
-    `INSERT INTO shared.users
+    `INSERT INTO shared.usuarios
        (email, password_hash, full_name, avatar_url, clerk_user_id, metadata, updated_at)
      VALUES
        ($1, '', $2, $3, $4, $5::jsonb, now())
-     RETURNING id, email, full_name, avatar_url, clerk_user_id`,
+     RETURNING id, email, full_name, avatar_url, clerk_user_id, status`,
     [
       profile.email,
       profile.fullName,
@@ -182,7 +188,7 @@ async function touchSharedUser(
   profile: ClerkProfile,
 ) {
   await client.query(
-    `UPDATE shared.users
+    `UPDATE shared.usuarios
      SET
        email = $2,
        full_name = COALESCE(NULLIF($3, ''), full_name),
@@ -194,13 +200,19 @@ async function touchSharedUser(
   )
 }
 
-async function syncSharedUser(
+export async function syncSharedUser(
   client: Pick<SQLClient, 'query'>,
   profile: ClerkProfile,
 ): Promise<SharedUserRow> {
+  profile = { ...profile, email: profile.email.trim().toLowerCase() }
+  if (!profile.email.includes('@') || !profile.clerkUserId.startsWith('user_')) throw new Error('Identidade Clerk invalida.')
+  // Consistent ordering serializes both same-identity and same-email bootstrap races.
+  for (const key of [`email:${profile.email}`, `user:${profile.clerkUserId}`].sort())
+    await client.query('SELECT pg_advisory_xact_lock(73006,hashtext($1))', [key])
   let user = await findUserByClerkId(client, profile.clerkUserId)
   if (!user) user = await linkUserByEmail(client, profile)
   if (!user) return createSharedUser(client, profile)
+  if (user.status !== 'active') throw new Error('Usuario suspenso ou desativado.')
   await touchSharedUser(client, user, profile)
   return user
 }
@@ -211,18 +223,20 @@ async function listMemberships(
 ): Promise<AuthTenantMembership[]> {
   const result = await client.query(
     `SELECT
-       tenants.id::text AS tenant_id,
+       tenants.id::text AS empresa_id,
        tenants.name::text AS tenant_name,
        tenants.slug::text AS tenant_slug,
        tenants.clerk_organization_id::text AS clerk_organization_id,
        tenants.clerk_organization_slug::text AS clerk_organization_slug,
        memberships.clerk_membership_id::text AS clerk_membership_id,
        memberships.role::text AS role
-     FROM shared.tenant_memberships AS memberships
-     JOIN shared.tenants AS tenants
-       ON tenants.id = memberships.tenant_id
-     WHERE memberships.user_id = $1
+     FROM shared.usuarios_empresas AS memberships
+     JOIN shared.empresas AS tenants
+       ON tenants.id = memberships.empresa_id
+     WHERE memberships.usuario_id = $1
        AND memberships.status = 'active'
+       AND NOT memberships.suspenso_localmente
+       AND EXISTS(SELECT 1 FROM shared.usuarios WHERE id=$1 AND status='active')
        AND tenants.status = 'active'
      ORDER BY
        CASE memberships.role
@@ -262,17 +276,17 @@ async function createInitialTenant(
 
   const tenantResult = options.clerkOrganization
     ? await client.query(
-      `INSERT INTO shared.tenants
+      `INSERT INTO shared.empresas
          (name, slug, status, clerk_organization_id, clerk_organization_slug, metadata, updated_at)
        VALUES
          ($1, $2, 'active', $3, $4, $5::jsonb, now())
        ON CONFLICT (clerk_organization_id)
        DO UPDATE SET
          name = EXCLUDED.name,
-         slug = COALESCE(EXCLUDED.slug, shared.tenants.slug),
-         status = 'active',
+         slug = COALESCE(EXCLUDED.slug, shared.empresas.slug),
+         status = shared.empresas.status,
          clerk_organization_slug = EXCLUDED.clerk_organization_slug,
-         metadata = COALESCE(shared.tenants.metadata, '{}'::jsonb) || EXCLUDED.metadata,
+         metadata = COALESCE(shared.empresas.metadata, '{}'::jsonb) || EXCLUDED.metadata,
          updated_at = now()
        RETURNING id, name, slug, clerk_organization_id, clerk_organization_slug`,
       [
@@ -284,7 +298,7 @@ async function createInitialTenant(
       ],
     )
     : await client.query(
-      `INSERT INTO shared.tenants (name, slug, status, metadata, updated_at)
+      `INSERT INTO shared.empresas (name, slug, status, metadata, updated_at)
        VALUES ($1, $2, 'active', $3::jsonb, now())
        ON CONFLICT (slug)
        DO UPDATE SET
@@ -295,20 +309,20 @@ async function createInitialTenant(
   const tenant = tenantResult.rows[0] as TenantRow
 
   await client.query(
-    `INSERT INTO shared.tenant_memberships
-       (tenant_id, user_id, role, status, clerk_organization_id, clerk_role, metadata, updated_at)
+    `INSERT INTO shared.usuarios_empresas
+       (empresa_id, usuario_id, role, status, clerk_organization_id, clerk_role, metadata, updated_at)
      VALUES
        ($1, $2, 'owner', 'active', $3, $4, $5::jsonb, now())
-     ON CONFLICT (tenant_id, user_id)
+     ON CONFLICT (empresa_id, usuario_id)
      DO UPDATE SET
        role = CASE
-         WHEN shared.tenant_memberships.role IN ('owner', 'admin') THEN shared.tenant_memberships.role
+         WHEN shared.usuarios_empresas.role IN ('owner', 'admin') THEN shared.usuarios_empresas.role
          ELSE EXCLUDED.role
        END,
-       status = 'active',
-       clerk_organization_id = COALESCE(EXCLUDED.clerk_organization_id, shared.tenant_memberships.clerk_organization_id),
-       clerk_role = COALESCE(EXCLUDED.clerk_role, shared.tenant_memberships.clerk_role),
-       metadata = COALESCE(shared.tenant_memberships.metadata, '{}'::jsonb) || EXCLUDED.metadata,
+       status = shared.usuarios_empresas.status,
+       clerk_organization_id = COALESCE(EXCLUDED.clerk_organization_id, shared.usuarios_empresas.clerk_organization_id),
+       clerk_role = COALESCE(EXCLUDED.clerk_role, shared.usuarios_empresas.clerk_role),
+       metadata = COALESCE(shared.usuarios_empresas.metadata, '{}'::jsonb) || EXCLUDED.metadata,
        updated_at = now()`,
     [
       tenant.id,
@@ -432,41 +446,41 @@ export async function createClerkOnboardingTenant(companyName: string): Promise<
 }
 
 export async function syncClerkProfile(profile: ClerkProfileInput): Promise<ClerkTenantBootstrapResult> {
-  return withTransaction(async (client) => {
+  return withTransaction(client => syncClerkProfileWithClient(client,profile))
+}
+
+export async function syncClerkProfileWithClient(client: Pick<SQLClient,'query'>,profile: ClerkProfileInput): Promise<ClerkTenantBootstrapResult> {
     const user = await syncSharedUser(client, profile)
     const sharedUserId = Number(user.id)
     const memberships = await listMemberships(client, sharedUserId)
     return buildBootstrapResult(profile, sharedUserId, memberships)
-  })
 }
 
 export async function markClerkUserDeleted(clerkUserId: string): Promise<boolean> {
+  return withTransaction(client=>markClerkUserDeletedWithClient(client,clerkUserId))
+}
+
+export async function markClerkUserDeletedWithClient(client: Pick<SQLClient,'query'>,clerkUserId: string): Promise<boolean> {
   const id = toText(clerkUserId)
   if (!id) return false
 
-  return withTransaction(async (client) => {
-    const result = await client.query(
-      `UPDATE shared.users
-       SET
-         metadata = metadata || jsonb_build_object('clerkDeleted', true, 'clerkDeletedAt', now()),
-         updated_at = now()
-       WHERE clerk_user_id = $1
-       RETURNING id`,
-      [id],
-    )
-    const userId = result.rows[0]?.id
-    if (!userId) return false
+  {
+    const existing=await client.query('SELECT id FROM shared.usuarios WHERE clerk_user_id=$1',[id])
+    const userId=existing.rows[0]?.id
+    if(!userId)return false
+    await client.query("UPDATE shared.empresas e SET status='suspended',updated_at=now() WHERE e.status='active' AND EXISTS(SELECT 1 FROM shared.usuarios_empresas m WHERE m.empresa_id=e.id AND m.usuario_id=$1 AND m.role='owner' AND m.status='active') AND NOT EXISTS(SELECT 1 FROM shared.usuarios_empresas m JOIN shared.usuarios u ON u.id=m.usuario_id WHERE m.empresa_id=e.id AND m.usuario_id<>$1 AND m.role='owner' AND m.status='active' AND u.status='active')",[userId])
+    await client.query("UPDATE shared.usuarios SET status='disabled',metadata=metadata||jsonb_build_object('clerkDeleted',true,'clerkDeletedAt',now()),updated_at=now() WHERE id=$1",[userId])
 
     await client.query(
-      `UPDATE shared.tenant_memberships
+      `UPDATE shared.usuarios_empresas
        SET
          status = 'suspended',
          metadata = metadata || jsonb_build_object('suspendedBy', 'clerk_webhook', 'suspendedAt', now()),
          updated_at = now()
-       WHERE user_id = $1
+       WHERE usuario_id = $1
          AND status = 'active'`,
       [userId],
     )
     return true
-  })
+  }
 }

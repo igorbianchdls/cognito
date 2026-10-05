@@ -1,4 +1,6 @@
 import { withTransaction, type SQLClient } from '@/lib/postgres'
+import { clerkClient } from '@clerk/nextjs/server'
+import { syncSharedUser } from './clerkTenantBootstrap'
 import type { AuthTenantRole } from '@/products/auth/shared/authContracts'
 
 type JsonRecord = Record<string, unknown>
@@ -125,7 +127,7 @@ function normalizeMembership(data: JsonRecord, deleted = false): ClerkMembership
     clerkUserId,
     email: toText(publicUser.identifier) || toText(publicUser.email_address) || null,
     fullName,
-    role: normalizeRole(data.role, { ...privateMetadata, ...metadata }),
+    role: normalizeRole(data.role, { ...metadata, ...privateMetadata }),
     status: deleted ? 'suspended' : 'active',
   }
 }
@@ -161,7 +163,7 @@ export async function syncClerkOrganization(
   const tenantId = Number(organization.metadata.clerkPrivateMetadata && asRecord(organization.metadata.clerkPrivateMetadata).tenantId)
   if (Number.isFinite(tenantId) && tenantId > 0) {
     const updated = await client.query(
-      `UPDATE shared.tenants
+      `UPDATE shared.empresas
        SET
          name = $2,
          slug = COALESCE($3, slug),
@@ -169,28 +171,26 @@ export async function syncClerkOrganization(
          clerk_organization_slug = $3,
          metadata = COALESCE(metadata, '{}'::jsonb) || $5::jsonb,
          updated_at = now()
-       WHERE id = $1
+       WHERE id = $1 AND (clerk_organization_id IS NULL OR clerk_organization_id=$4)
        RETURNING id`,
       [tenantId, organization.name, organization.slug, organization.id, JSON.stringify(organization.metadata)],
     )
     if (updated.rows[0]?.id) return Number(updated.rows[0].id)
+    throw new Error('Referencia de empresa no Clerk invalida ou em conflito.')
   }
 
   const result = await client.query(
-    `INSERT INTO shared.tenants
+    `INSERT INTO shared.empresas
        (name, slug, status, clerk_organization_id, clerk_organization_slug, metadata, updated_at)
      VALUES
        ($1, $2, 'active', $3, $4, $5::jsonb, now())
      ON CONFLICT (clerk_organization_id)
      DO UPDATE SET
        name = EXCLUDED.name,
-       slug = COALESCE(EXCLUDED.slug, shared.tenants.slug),
-       status = CASE
-         WHEN shared.tenants.status = 'disabled' THEN shared.tenants.status
-         ELSE 'active'
-       END,
+       slug = COALESCE(EXCLUDED.slug, shared.empresas.slug),
+       status = shared.empresas.status,
        clerk_organization_slug = EXCLUDED.clerk_organization_slug,
-       metadata = COALESCE(shared.tenants.metadata, '{}'::jsonb) || EXCLUDED.metadata,
+       metadata = COALESCE(shared.empresas.metadata, '{}'::jsonb) || EXCLUDED.metadata,
        updated_at = now()
      RETURNING id`,
     [
@@ -210,36 +210,21 @@ async function ensureWebhookUser(
 ): Promise<number | null> {
   const existing = await client.query(
     `SELECT id
-     FROM shared.users
+     FROM shared.usuarios
      WHERE clerk_user_id = $1
      LIMIT 1`,
     [membership.clerkUserId],
   )
   if (existing.rows[0]?.id) return Number(existing.rows[0].id)
-  if (!membership.email) return null
-
-  const result = await client.query(
-    `INSERT INTO shared.users
-       (email, password_hash, full_name, avatar_url, clerk_user_id, metadata, updated_at)
-     VALUES
-       ($1, '', $2, $3, $4, $5::jsonb, now())
-     ON CONFLICT (clerk_user_id)
-     DO UPDATE SET
-       email = EXCLUDED.email,
-       full_name = COALESCE(EXCLUDED.full_name, shared.users.full_name),
-       avatar_url = COALESCE(EXCLUDED.avatar_url, shared.users.avatar_url),
-       metadata = COALESCE(shared.users.metadata, '{}'::jsonb) || EXCLUDED.metadata,
-       updated_at = now()
-     RETURNING id`,
-    [
-      membership.email,
-      membership.fullName,
-      membership.avatarUrl,
-      membership.clerkUserId,
-      JSON.stringify({ source: 'clerk_organization_membership', linkedBy: 'clerk_webhook' }),
-    ],
-  )
-  return Number(result.rows[0]?.id || 0) || null
+  // Membership identifiers are not proof of a verified primary email.
+  const user = await (await clerkClient()).users.getUser(membership.clerkUserId)
+  const email = user.primaryEmailAddress || user.emailAddresses[0]
+  if (!email) throw new Error('Usuario Clerk sem email principal.')
+  const row = await syncSharedUser(client,{
+    clerkUserId: user.id,clerkOrganizationId: null,email: email.emailAddress,
+    emailVerified: email.verification?.status==='verified',fullName: user.fullName || null,avatarUrl: user.imageUrl || null,
+  })
+  return Number(row.id)
 }
 
 export async function syncClerkOrganizationMembership(
@@ -251,36 +236,54 @@ export async function syncClerkOrganizationMembership(
   if (!membership) return false
 
   const tenantResult = await client.query(
-    `SELECT id
-     FROM shared.tenants
+    `SELECT id,metadata,proprietario_definido
+     FROM shared.empresas
      WHERE clerk_organization_id = $1
      LIMIT 1`,
     [membership.clerkOrganizationId],
   )
   const tenantId = Number(tenantResult.rows[0]?.id || 0)
   if (!tenantId) return false
+  // Onboarding can race the default org:admin membership webhook. The owner
+  // supplied by our Backend API establishes ownership once; stale metadata
+  // must never restore ownership after a later, explicit local transfer.
+  const company=tenantResult.rows[0]
+  const metadata=asRecord(company.metadata)
+  const firstOwner=toText(metadata.ownerClerkUserId)||toText(asRecord(metadata.clerkPrivateMetadata).ownerClerkUserId)
+  if(!company.proprietario_definido && firstOwner===membership.clerkUserId)membership.role='owner'
 
   const userId = await ensureWebhookUser(client, membership)
   if (!userId) return false
 
+  if (options.deleted) {
+    await client.query(`UPDATE shared.empresas e SET status='suspended',updated_at=now()
+      WHERE e.id=$1 AND e.status='active' AND EXISTS(SELECT 1 FROM shared.usuarios_empresas WHERE empresa_id=$1 AND usuario_id=$2 AND role='owner' AND status='active')
+      AND NOT EXISTS(SELECT 1 FROM shared.usuarios_empresas WHERE empresa_id=$1 AND usuario_id<>$2 AND role='owner' AND status='active')`,[tenantId,userId])
+  }
+
   await client.query(
-    `INSERT INTO shared.tenant_memberships
-       (tenant_id, user_id, role, status, clerk_organization_id, clerk_membership_id, clerk_role, metadata, updated_at)
+    `INSERT INTO shared.usuarios_empresas
+       (empresa_id, usuario_id, role, status, clerk_organization_id, clerk_membership_id, clerk_role, metadata, updated_at)
      VALUES
        ($1, $2, $3, $4, $5, $6, $7, $8::jsonb, now())
-     ON CONFLICT (tenant_id, user_id)
+     ON CONFLICT (empresa_id, usuario_id)
      DO UPDATE SET
        role = CASE
-         WHEN shared.tenant_memberships.role = 'owner'
+         WHEN shared.usuarios_empresas.metadata->>'accessRoleManaged'='true' THEN shared.usuarios_empresas.role
+         WHEN shared.usuarios_empresas.role = 'owner'
            AND EXCLUDED.role <> 'owner'
-           THEN shared.tenant_memberships.role
+           THEN shared.usuarios_empresas.role
          ELSE EXCLUDED.role
        END,
-       status = EXCLUDED.status,
+       status = CASE WHEN shared.usuarios_empresas.suspenso_localmente THEN 'suspended' ELSE EXCLUDED.status END,
+       perfil_acesso_id = CASE WHEN EXCLUDED.role NOT IN ('owner','admin') AND shared.usuarios_empresas.role NOT IN ('owner','admin')
+         THEN shared.usuarios_empresas.perfil_acesso_id
+         WHEN EXCLUDED.role NOT IN ('owner','admin') AND shared.usuarios_empresas.metadata->>'accessRoleManaged' IS DISTINCT FROM 'true' THEN 'consulta'
+         ELSE shared.usuarios_empresas.perfil_acesso_id END,
        clerk_organization_id = EXCLUDED.clerk_organization_id,
-       clerk_membership_id = COALESCE(EXCLUDED.clerk_membership_id, shared.tenant_memberships.clerk_membership_id),
+       clerk_membership_id = COALESCE(EXCLUDED.clerk_membership_id, shared.usuarios_empresas.clerk_membership_id),
        clerk_role = EXCLUDED.clerk_role,
-       metadata = COALESCE(shared.tenant_memberships.metadata, '{}'::jsonb) || EXCLUDED.metadata,
+       metadata = COALESCE(shared.usuarios_empresas.metadata, '{}'::jsonb) || EXCLUDED.metadata,
        updated_at = now()`,
     [
       tenantId,
@@ -309,46 +312,57 @@ export async function syncClerkOrganizationInvitation(
 
   const tenantResult = await client.query(
     `SELECT id
-     FROM shared.tenants
+     FROM shared.empresas
      WHERE clerk_organization_id = $1
      LIMIT 1`,
     [invitation.clerkOrganizationId],
   )
   const tenantId = Number(tenantResult.rows[0]?.id || 0) || null
+  if (!tenantId) throw new Error('Empresa do convite nao encontrada.')
 
   await client.query(
-    `INSERT INTO shared.tenant_invitations
-       (tenant_id, clerk_organization_id, clerk_invitation_id, email, role, status, metadata, updated_at)
+    `INSERT INTO shared.convites_empresa
+       (empresa_id, clerk_organization_id, clerk_invitation_id, email, role, status, metadata, updated_at,perfil_acesso_id,expira_em,convidado_por)
      VALUES
-       ($1, $2, $3, $4, $5, $6, $7::jsonb, now())
+       ($1, $2, $3, $4, $5, $6, $7::jsonb, now(),$8,$9,
+        (SELECT id FROM shared.usuarios WHERE clerk_user_id=$10))
      ON CONFLICT (clerk_invitation_id)
      DO UPDATE SET
-       tenant_id = COALESCE(EXCLUDED.tenant_id, shared.tenant_invitations.tenant_id),
+       empresa_id = COALESCE(EXCLUDED.empresa_id, shared.convites_empresa.empresa_id),
        email = EXCLUDED.email,
        role = EXCLUDED.role,
        status = EXCLUDED.status,
-       metadata = COALESCE(shared.tenant_invitations.metadata, '{}'::jsonb) || EXCLUDED.metadata,
+       expira_em = EXCLUDED.expira_em,
+       perfil_acesso_id = EXCLUDED.perfil_acesso_id,
+       metadata = COALESCE(shared.convites_empresa.metadata, '{}'::jsonb) || EXCLUDED.metadata,
        updated_at = now()`,
     [
       tenantId,
       invitation.clerkOrganizationId,
       invitation.clerkInvitationId,
-      invitation.email,
+      invitation.email.trim().toLowerCase(),
       invitation.role,
       invitation.status,
       JSON.stringify(invitation.metadata),
+      ['owner','admin'].includes(invitation.role) ? 'administrador' : 'consulta',
+      Number.isFinite(Number(data.expires_at)) && Number(data.expires_at)>0 ? new Date(Number(data.expires_at)).toISOString() : null,
+      toText(data.inviter_id),
     ],
   )
   return true
 }
 
 export async function markClerkOrganizationDeleted(clerkOrganizationId: string): Promise<boolean> {
+  return withTransaction(client=>markClerkOrganizationDeletedWithClient(client,clerkOrganizationId))
+}
+
+export async function markClerkOrganizationDeletedWithClient(client: Pick<SQLClient,'query'>,clerkOrganizationId: string): Promise<boolean> {
   const id = toText(clerkOrganizationId)
   if (!id) return false
 
-  return withTransaction(async (client) => {
+  {
     const result = await client.query(
-      `UPDATE shared.tenants
+      `UPDATE shared.empresas
        SET
          status = 'disabled',
          metadata = COALESCE(metadata, '{}'::jsonb) || jsonb_build_object('clerkDeleted', true, 'clerkDeletedAt', now()),
@@ -361,14 +375,14 @@ export async function markClerkOrganizationDeleted(clerkOrganizationId: string):
     if (!tenantId) return false
 
     await client.query(
-      `UPDATE shared.tenant_memberships
+      `UPDATE shared.usuarios_empresas
        SET
          status = 'suspended',
          metadata = COALESCE(metadata, '{}'::jsonb) || jsonb_build_object('suspendedBy', 'clerk_organization_deleted', 'suspendedAt', now()),
          updated_at = now()
-       WHERE tenant_id = $1`,
+       WHERE empresa_id = $1`,
       [tenantId],
     )
     return true
-  })
+  }
 }

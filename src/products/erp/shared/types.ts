@@ -1,9 +1,15 @@
 import type { ComponentType, CSSProperties } from 'react'
 
-export type ErpSectionId = 'overview' | 'cadastros' | 'vendas' | 'compras' | 'estoque' | 'financeiro' | 'relatorios'
+export type ErpSectionId = 'overview' | 'dashboards' | 'cadastros' | 'vendas' | 'compras' | 'estoque' | 'financeiro' | 'relatorios'
 
 export type ErpModuleId =
   | 'overview'
+  | 'visao-geral'
+  | 'financeiro'
+  | 'vendas'
+  | 'compras'
+  | 'estoque'
+  | 'resultados'
   | 'clientes'
   | 'fornecedores'
   | 'vendedores'

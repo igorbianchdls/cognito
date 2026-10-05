@@ -376,6 +376,34 @@ export const ERP_API_ROUTES = [
     "transportOnlyFiscal": false
   },
   {
+    "path": "/api/erp/dashboards/[dashboardId]/registros",
+    "route": "src/app/api/erp/dashboards/[dashboardId]/registros/route.ts",
+    "handler": "src/products/erp/api/handlers/dashboards/records.ts",
+    "methods": [
+      "GET"
+    ],
+    "authentication": "session",
+    "maxBodyBytes": 1048576,
+    "capabilities": [],
+    "permissionRule": "Session or dynamic module/operation capability; see handler.",
+    "idempotency": "Business-operation rules; see handler.",
+    "transportOnlyFiscal": false
+  },
+  {
+    "path": "/api/erp/dashboards/[dashboardId]",
+    "route": "src/app/api/erp/dashboards/[dashboardId]/route.ts",
+    "handler": "src/products/erp/api/handlers/dashboards/index.ts",
+    "methods": [
+      "GET"
+    ],
+    "authentication": "session",
+    "maxBodyBytes": 1048576,
+    "capabilities": [],
+    "permissionRule": "Session or dynamic module/operation capability; see handler.",
+    "idempotency": "Business-operation rules; see handler.",
+    "transportOnlyFiscal": false
+  },
+  {
     "path": "/api/erp/estoque/contagem",
     "route": "src/app/api/erp/estoque/contagem/route.ts",
     "handler": "src/products/erp/api/handlers/estoque/contagem.ts",

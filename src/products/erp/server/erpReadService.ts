@@ -29,13 +29,13 @@ export const erpReadService = {
   },
   fiscal:preflightSaleFiscal,
   async financialAccounts(tenantId:number) {
-    const rows=await runQuery('SELECT id::text,nome,tipo FROM erp.contas_financeiras WHERE tenant_id=$1 AND ativo AND excluido_em IS NULL ORDER BY nome,id LIMIT 101',[tenantId])
+    const rows=await runQuery('SELECT id::text,nome,tipo FROM erp.contas_financeiras WHERE empresa_id=$1 AND ativo AND excluido_em IS NULL ORDER BY nome,id LIMIT 101',[tenantId])
     return {records:rows.slice(0,100),hasMore:rows.length>100}
   },
   async payments(tenantId:number,input:{page:number;pageSize:number;type?:string}) {
     const rows=await runQuery(`SELECT id::text,tipo,conta_receber_parcela_id::text,conta_pagar_parcela_id::text,conta_financeira_id::text,
       data_pagamento,valor,valor_liquido,estornado_em,estorno_de_pagamento_id::text FROM erp.pagamentos
-      WHERE tenant_id=$1 AND excluido_em IS NULL AND ($2::text IS NULL OR tipo=$2) ORDER BY erp.pagamentos.id DESC LIMIT $3 OFFSET $4`,
+      WHERE empresa_id=$1 AND excluido_em IS NULL AND ($2::text IS NULL OR tipo=$2) ORDER BY erp.pagamentos.id DESC LIMIT $3 OFFSET $4`,
       [tenantId,input.type||null,input.pageSize+1,(input.page-1)*input.pageSize])
     return {records:rows.slice(0,input.pageSize),page:input.page,pageSize:input.pageSize,hasMore:rows.length>input.pageSize}
   },

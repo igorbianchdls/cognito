@@ -1,6 +1,7 @@
 import { clerkClient, verifyToken } from '@clerk/nextjs/server'
 import { pluginQuery } from '../shared/database'
-import { ERP_CAPABILITIES, type ErpCapability, type ErpAccessProfile } from '@/products/erp/shared/professionalContracts'
+import { type ErpCapability, type ErpAccessProfile } from '@/products/erp/shared/professionalContracts'
+import { effectiveCapabilities } from '@/products/auth/server/accessPolicy'
 import { PluginError, type PluginPrincipal, type PluginCompany } from '../shared/contracts'
 import type { PluginConfig } from '../shared/config'
 
@@ -77,27 +78,26 @@ export async function verifyClerkOAuthToken(accessToken: string, config: PluginC
 
 export async function loadPluginPrincipal(clerkUserId: string, clientId: string, scopes: string[]): Promise<PluginPrincipal> {
   const rows = await pluginQuery<{
-    user_id: string; tenant_id: string; tenant_name: string; role: string
+    user_id: string; empresa_id: string; tenant_name: string; role: string
     profile: ErpAccessProfile; capabilities: ErpCapability[]
   }>(
-    `SELECT users.id::text AS user_id, tenants.id::text AS tenant_id, tenants.name AS tenant_name,
-       memberships.role, memberships.erp_profile_id AS profile,
+    `SELECT users.id::text AS user_id, tenants.id::text AS empresa_id, tenants.name AS tenant_name,
+       memberships.role, memberships.perfil_acesso_id AS profile,
        COALESCE(array_agg(permissions.capability) FILTER (WHERE permissions.capability IS NOT NULL), ARRAY[]::text[]) AS capabilities
-     FROM shared.users AS users
-     JOIN shared.tenant_memberships AS memberships ON memberships.user_id = users.id
-     JOIN shared.tenants AS tenants ON tenants.id = memberships.tenant_id
-     LEFT JOIN shared.erp_profile_permissions AS permissions ON permissions.profile_id = memberships.erp_profile_id
-     WHERE users.clerk_user_id = $1 AND memberships.status = 'active' AND tenants.status = 'active'
+     FROM shared.usuarios AS users
+     JOIN shared.usuarios_empresas AS memberships ON memberships.usuario_id = users.id
+     JOIN shared.empresas AS tenants ON tenants.id = memberships.empresa_id
+     LEFT JOIN shared.permissoes_perfil AS permissions ON permissions.perfil_acesso_id = memberships.perfil_acesso_id
+     WHERE users.clerk_user_id = $1 AND users.status='active' AND memberships.status = 'active' AND NOT memberships.suspenso_localmente AND tenants.status = 'active'
        AND memberships.role IN ('owner','admin','member','viewer')
-     GROUP BY users.id, tenants.id, tenants.name, memberships.role, memberships.erp_profile_id
+     GROUP BY users.id, tenants.id, tenants.name, memberships.role, memberships.perfil_acesso_id
      ORDER BY tenants.id`, [clerkUserId],
   )
   if (!rows.length) throw new PluginError('ACCESS_DENIED', 'Usuario sem vinculo ativo com uma empresa do ERP.', 403)
   const companies: PluginCompany[] = rows.map(row => ({
-    id: Number(row.tenant_id), name: row.tenant_name,
+    id: Number(row.empresa_id), name: row.tenant_name,
     profile: row.profile || (['owner', 'admin'].includes(row.role) ? 'administrador' : 'consulta'),
-    capabilities: ['owner', 'admin'].includes(row.role) ? [...ERP_CAPABILITIES]
-      : row.capabilities.filter(c => ERP_CAPABILITIES.includes(c)),
+    capabilities: effectiveCapabilities(row.role, row.capabilities),
   }))
   return { userId: Number(rows[0].user_id), clerkUserId, clientId, scopes, companies }
 }

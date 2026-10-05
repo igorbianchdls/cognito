@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-require-imports -- CommonJS local test harness. */
 // Local diagnostic only: fictitious data, no environment credentials or remote connection.
 const fs = require('node:fs');
 const path = require('node:path');
@@ -13,6 +14,7 @@ const today = new Intl.DateTimeFormat('sv-SE',{timeZone:'America/Fortaleza'}).fo
   const { db, restoreCatalog } = await import(pathToFileURL(path.join(root, 'scripts/erp/evolution-fixture.mjs')).href);
   try {
     await restoreCatalog();
+    const {applySharedMigration}=await import('../shared/schema-contract.mjs');
     // Apply the existing migrations to align the local fixture with current access rules.
     for (const f of ['01-integridade-historicos.sql','02-periodos-fechados.sql','03-cadastros-documentos-contratos.sql','04-adiantamentos-renegociacoes.sql']) {
       await db.exec(fs.readFileSync(path.join(root, 'scripts/erp/sql', f), 'utf8'));
@@ -22,6 +24,7 @@ const today = new Intl.DateTimeFormat('sv-SE',{timeZone:'America/Fortaleza'}).fo
     }
     await db.exec(fs.readFileSync(path.join(root, 'supabase/migrations/20261005020000_harden_erp_stock_operations.sql'), 'utf8'));
     await db.exec(fs.readFileSync(path.join(root, 'supabase/migrations/20261005021000_anchor_contract_cycles.sql'), 'utf8'));
+    await applySharedMigration(db);
     const client = { query: (sql, params) => db.query(sql, params), release() {} };
     let transactionSequence=0;
     const pg = { runQuery: async (sql, params) => (await db.query(sql, params)).rows,
@@ -46,17 +49,17 @@ const today = new Intl.DateTimeFormat('sv-SE',{timeZone:'America/Fortaleza'}).fo
     }
     const stock = load('src/products/erp/server/erpStockRepository.ts');
     await db.exec(`
-      INSERT INTO shared.tenants(id,name,slug) VALUES(1,'Local audit','local-audit');
-      INSERT INTO shared.users(id,email,full_name) VALUES(1,'owner@example.invalid','Owner'),(2,'adjuster@example.invalid','Adjuster');
-      INSERT INTO shared.erp_permission_profiles(id,nome) VALUES('stock-audit','Stock audit');
-      INSERT INTO shared.erp_profile_permissions(profile_id,capability) VALUES('stock-audit','erp.estoque.visualizar'),('stock-audit','erp.estoque.ajustar');
-      INSERT INTO shared.tenant_memberships(tenant_id,user_id,role,status,erp_profile_id) VALUES(1,1,'owner','active','stock-audit'),(1,2,'member','active','stock-audit');
-      INSERT INTO erp.entidades(id,tenant_id,nome,eh_cliente) VALUES(101,1,'Local client',true);
-      INSERT INTO erp.produtos(id,tenant_id,nome,unidade_medida,controla_estoque,permite_estoque_negativo) VALUES(101,1,'Local product','UN',true,false),(102,1,'Other product','UN',true,false);
-      INSERT INTO erp.locais_estoque(id,tenant_id,nome,codigo,padrao) VALUES(101,1,'Origin','ORIGIN',true),(102,1,'Destination','DEST',false);
-      INSERT INTO erp.vendas(id,tenant_id,cliente_id,numero,data_venda,subtotal,total,local_estoque_id) VALUES(301,1,101,'LOCAL-SALE','2026-10-01',160,160,101);
-      INSERT INTO erp.vendas_itens(id,tenant_id,venda_id,produto_id,descricao,quantidade,valor_unitario,total) VALUES(401,1,301,101,'Local product',8,20,160);
-      INSERT INTO erp.vendas_recebimentos_previstos(tenant_id,venda_id,numero_parcela,data_vencimento,valor) VALUES(1,301,1,'2026-10-01',160);
+      INSERT INTO shared.empresas(id,name,slug) VALUES(1,'Local audit','local-audit');
+      INSERT INTO shared.usuarios(id,email,full_name) VALUES(1,'owner@example.invalid','Owner'),(2,'adjuster@example.invalid','Adjuster');
+      INSERT INTO shared.perfis_acesso(id,nome) VALUES('stock-audit','Stock audit');
+      INSERT INTO shared.permissoes_perfil(perfil_acesso_id,capability) VALUES('stock-audit','erp.estoque.visualizar'),('stock-audit','erp.estoque.ajustar');
+      INSERT INTO shared.usuarios_empresas(empresa_id,usuario_id,role,status,perfil_acesso_id) VALUES(1,1,'owner','active','stock-audit'),(1,2,'member','active','stock-audit');
+      INSERT INTO erp.entidades(id,empresa_id,nome,eh_cliente) VALUES(101,1,'Local client',true);
+      INSERT INTO erp.produtos(id,empresa_id,nome,unidade_medida,controla_estoque,permite_estoque_negativo) VALUES(101,1,'Local product','UN',true,false),(102,1,'Other product','UN',true,false);
+      INSERT INTO erp.locais_estoque(id,empresa_id,nome,codigo,padrao) VALUES(101,1,'Origin','ORIGIN',true),(102,1,'Destination','DEST',false);
+      INSERT INTO erp.vendas(id,empresa_id,cliente_id,numero,data_venda,subtotal,total,local_estoque_id) VALUES(301,1,101,'LOCAL-SALE','2026-10-01',160,160,101);
+      INSERT INTO erp.vendas_itens(id,empresa_id,venda_id,produto_id,descricao,quantidade,valor_unitario,total) VALUES(401,1,301,101,'Local product',8,20,160);
+      INSERT INTO erp.vendas_recebimentos_previstos(empresa_id,venda_id,numero_parcela,data_vencimento,valor) VALUES(1,301,1,'2026-10-01',160);
       SELECT setval(pg_get_serial_sequence('erp.vendas','id'),(SELECT max(id) FROM erp.vendas),true);
       SELECT setval(pg_get_serial_sequence('erp.vendas_itens','id'),(SELECT max(id) FROM erp.vendas_itens),true);
     `);
@@ -83,7 +86,7 @@ const today = new Intl.DateTimeFormat('sv-SE',{timeZone:'America/Fortaleza'}).fo
     });
     await scenario('Inactive product permits release of historical reservation', async () => {
       await stock.reserveStockForSale(client,{tenantId:1,actorId:1,saleId:301});
-      await db.query('UPDATE erp.produtos SET ativo=false WHERE tenant_id=1 AND id=101');
+      await db.query('UPDATE erp.produtos SET ativo=false WHERE empresa_id=1 AND id=101');
       await stock.releaseStockForSale(client,{tenantId:1,actorId:1,saleId:301});
       const r=(await db.query('SELECT quantidade_reservada FROM erp.saldos_estoque WHERE local_estoque_id=101')).rows[0];
       assert.equal(Number(r.quantidade_reservada),0);return r;
@@ -104,7 +107,7 @@ const today = new Intl.DateTimeFormat('sv-SE',{timeZone:'America/Fortaleza'}).fo
       const input={tenantId:1,actorId:1,resource:'inventarios',idempotencyKey:'dated-inventory',values:{local_estoque_id:101,produto_id:101,quantidade_contada:11,data:today}};
       await assert.rejects(stock.createStockOperation({...input, values:{...input.values,data:'2026-02-03'}}), /dia atual/);
       const inventory=await stock.createStockOperation(input);
-      const r=(await db.query("SELECT i.data_inventario::text,m.data_operacional::text AS movement_date FROM erp.inventarios i JOIN erp.movimentacoes_estoque m ON m.tenant_id=i.tenant_id AND m.origem_id=i.id AND m.origem_tipo='inventario' WHERE i.id=$1",[inventory.id])).rows[0];
+      const r=(await db.query("SELECT i.data_inventario::text,m.data_operacional::text AS movement_date FROM erp.inventarios i JOIN erp.movimentacoes_estoque m ON m.empresa_id=i.empresa_id AND m.origem_id=i.id AND m.origem_tipo='inventario' WHERE i.id=$1",[inventory.id])).rows[0];
       assert.equal(r.data_inventario,r.movement_date);return r;
     });
     await scenario('Adjust-only permission updates inventory', async () => {
@@ -133,15 +136,15 @@ const today = new Intl.DateTimeFormat('sv-SE',{timeZone:'America/Fortaleza'}).fo
       const r=(await db.query('SELECT quantidade_fisica,custo_medio FROM erp.saldos_estoque WHERE local_estoque_id=102')).rows[0];assert.equal(Number(r.quantidade_fisica),10);assert.equal(Number(r.custo_medio),30);return r;
     });
     await scenario('Own sale consumes its reservation atomically',async()=>{
-      await db.query("UPDATE erp.vendas SET status='confirmada' WHERE tenant_id=1 AND id=301");
+      await db.query("UPDATE erp.vendas SET status='confirmada' WHERE empresa_id=1 AND id=301");
       await stock.reserveStockForSale(client,{tenantId:1,actorId:1,saleId:301});
       await stock.attendStockForSale({tenantId:1,actorId:1,saleId:301});
       const r=(await db.query('SELECT quantidade_fisica,quantidade_reservada FROM erp.saldos_estoque WHERE local_estoque_id=101')).rows[0];assert.equal(Number(r.quantidade_fisica),2);assert.equal(Number(r.quantidade_reservada),0);return r;
     });
     await scenario('Release after partial fulfillment only releases remaining reservation',async()=>{
       await stock.reserveStockForSale(client,{tenantId:1,actorId:1,saleId:301});
-      await db.query('UPDATE erp.saldos_estoque SET quantidade_reservada=5 WHERE tenant_id=1 AND produto_id=101 AND local_estoque_id=101');
-      await db.query('UPDATE erp.reservas_estoque SET quantidade_atendida=3 WHERE tenant_id=1 AND venda_id=301');
+      await db.query('UPDATE erp.saldos_estoque SET quantidade_reservada=5 WHERE empresa_id=1 AND produto_id=101 AND local_estoque_id=101');
+      await db.query('UPDATE erp.reservas_estoque SET quantidade_atendida=3 WHERE empresa_id=1 AND venda_id=301');
       await stock.applyStockMovement(client,{tenantId:1,actorId:1,produtoId:101,localEstoqueId:101,quantidade:-3,tipo:'saida',origemTipo:'venda',origemId:301,chaveIdempotencia:'partial-output'});
       await stock.releaseStockForSale(client,{tenantId:1,actorId:1,saleId:301});
       const r=(await db.query('SELECT quantidade_fisica,quantidade_reservada FROM erp.saldos_estoque WHERE local_estoque_id=101')).rows[0];assert.equal(Number(r.quantidade_fisica),7);assert.equal(Number(r.quantidade_reservada),0);return r;
@@ -159,7 +162,7 @@ const today = new Intl.DateTimeFormat('sv-SE',{timeZone:'America/Fortaleza'}).fo
       await db.exec('SAVEPOINT stale_count');await assert.rejects(stock.createStockOperation({tenantId:1,actorId:1,resource:'inventarios',idempotencyKey:'stale-count',values:{local_estoque_id:101,itens:items}}),e=>e.code==='STOCK_COUNT_CONFLICT');await db.exec('ROLLBACK TO SAVEPOINT stale_count');return {items:2,staleRejected:true};
     });
     await scenario('Deferred database guard rejects an unbacked balance',async()=>{
-      await db.exec('SAVEPOINT bad_balance');await db.query('UPDATE erp.saldos_estoque SET quantidade_fisica=99 WHERE tenant_id=1 AND produto_id=101');
+      await db.exec('SAVEPOINT bad_balance');await db.query('UPDATE erp.saldos_estoque SET quantidade_fisica=99 WHERE empresa_id=1 AND produto_id=101');
       await assert.rejects(db.exec('SET CONSTRAINTS ALL IMMEDIATE'),e=>e.code==='23514');await db.exec('ROLLBACK TO SAVEPOINT bad_balance');return {rejected:true};
     });
     await scenario('Adjust-only actor cannot insert ordinary output',async()=>{
@@ -183,15 +186,15 @@ const today = new Intl.DateTimeFormat('sv-SE',{timeZone:'America/Fortaleza'}).fo
       await period.reopenErpPeriod({tenantId:1,actorId:1,id:Number(closed.id)});return {closedAndReopened:true};
     });
     await scenario('Stock balance cannot change its product link',async()=>{
-      await db.exec('SAVEPOINT changed_link');await assert.rejects(db.query('UPDATE erp.saldos_estoque SET produto_id=102 WHERE tenant_id=1 AND produto_id=101'),e=>e.code==='23514');await db.exec('ROLLBACK TO SAVEPOINT changed_link');return {rejected:true};
+      await db.exec('SAVEPOINT changed_link');await assert.rejects(db.query('UPDATE erp.saldos_estoque SET produto_id=102 WHERE empresa_id=1 AND produto_id=101'),e=>e.code==='23514');await db.exec('ROLLBACK TO SAVEPOINT changed_link');return {rejected:true};
     });
     await scenario('Contract backlog is generated once and resumes after pause',async()=>{
       const contracts=load('src/products/erp/server/erpSalesContracts.ts');
       const created=await contracts.createSalesContract(client,{tenantId:1,actorId:1,idempotencyKey:'contract-backlog',values:{cliente_id:101,descricao:'Local recurring service',data_inicio:'2026-01-31',periodicidade:'mensal',dia_vencimento:15,produto_id:101,quantidade:1,valor_unitario:20}});
       const first=await contracts.generateContractSales({tenantId:1,actorId:1,until:'2026-05-31'});assert.equal(first.total,5);assert.equal(first.skipped.length,0);assert.equal(first.remaining,0);
       const repeated=await contracts.generateContractSales({tenantId:1,actorId:1,until:'2026-05-31'});assert.equal(repeated.total,0);
-      await db.query("UPDATE erp.contratos_vendas SET status='pausado' WHERE tenant_id=1 AND id=$1",[created.id]);assert.equal((await contracts.generateContractSales({tenantId:1,actorId:1,until:'2026-06-30'})).total,0);
-      await db.query("UPDATE erp.contratos_vendas SET status='ativo' WHERE tenant_id=1 AND id=$1",[created.id]);assert.equal((await contracts.generateContractSales({tenantId:1,actorId:1,until:'2026-06-30'})).total,1);
+      await db.query("UPDATE erp.contratos_vendas SET status='pausado' WHERE empresa_id=1 AND id=$1",[created.id]);assert.equal((await contracts.generateContractSales({tenantId:1,actorId:1,until:'2026-06-30'})).total,0);
+      await db.query("UPDATE erp.contratos_vendas SET status='ativo' WHERE empresa_id=1 AND id=$1",[created.id]);assert.equal((await contracts.generateContractSales({tenantId:1,actorId:1,until:'2026-06-30'})).total,1);
       return {backlogCycles:5,repeated:0,resumedCycles:1};
     });
     await scenario('Contract cycle limit resumes without duplicate generations',async()=>{
@@ -207,37 +210,37 @@ const today = new Intl.DateTimeFormat('sv-SE',{timeZone:'America/Fortaleza'}).fo
       for(let index=0;index<9;index++)await contracts.createSalesContract(client,{tenantId:1,actorId:1,idempotencyKey:'contract-global-limit-'+index,values:{cliente_id:101,descricao:'Batch contract '+index,data_inicio:'2024-01-31',periodicidade:'mensal',dia_vencimento:15,produto_id:101,quantidade:1,valor_unitario:20}});
       const batches=[];for(let index=0;index<3;index++){const batch=await contracts.generateContractSales({tenantId:1,actorId:1,until:'2026-12-31'});assert.equal(batch.skipped.length,0);assert(batch.total<=200);batches.push(batch.total);if(index===0)assert.equal(batch.total,200);if(index===2)assert.equal(batch.remaining,0)}
       assert.equal(batches.reduce((sum,value)=>sum+value,0),324);
-      const count=(await db.query('SELECT count(*)::int AS n,count(DISTINCT (contrato_id,periodo_inicio))::int AS distinct_n FROM erp.contratos_vendas_geracoes WHERE tenant_id=1')).rows[0];assert.equal(count.n,324);assert.equal(count.distinct_n,324);
+      const count=(await db.query('SELECT count(*)::int AS n,count(DISTINCT (contrato_id,periodo_inicio))::int AS distinct_n FROM erp.contratos_vendas_geracoes WHERE empresa_id=1')).rows[0];assert.equal(count.n,324);assert.equal(count.distinct_n,324);
       return {batches,uniqueCycles:324};
     });
     await scenario('Contract revision preserves prior cycles and uses new conditions afterwards',async()=>{
       const contracts=load('src/products/erp/server/erpSalesContracts.ts');
       const created=await contracts.createSalesContract(client,{tenantId:1,actorId:1,idempotencyKey:'contract-revision',values:{cliente_id:101,descricao:'Revised contract',data_inicio:'2026-01-31',periodicidade:'mensal',dia_vencimento:15,produto_id:101,quantidade:1,valor_unitario:20}});
       assert.equal((await contracts.generateContractSales({tenantId:1,actorId:1,until:'2026-02-28'})).total,2);
-      const header=(await db.query('SELECT versao FROM erp.contratos_vendas WHERE tenant_id=1 AND id=$1',[created.id])).rows[0];
-      const items=(await db.query('SELECT id::text FROM erp.contratos_vendas_itens WHERE tenant_id=1 AND contrato_id=$1',[created.id])).rows;
+      const header=(await db.query('SELECT versao FROM erp.contratos_vendas WHERE empresa_id=1 AND id=$1',[created.id])).rows[0];
+      const items=(await db.query('SELECT id::text FROM erp.contratos_vendas_itens WHERE empresa_id=1 AND contrato_id=$1',[created.id])).rows;
       await contracts.reviseSalesContract({tenantId:1,actorId:1,id:Number(created.id),expectedVersion:Number(header.versao),inicio:'2026-03-31',motivo:'New agreed conditions',itens:items.map(item=>({id:item.id,quantidade:2,valor_unitario:30}))});
       assert.equal((await contracts.generateContractSales({tenantId:1,actorId:1,until:'2026-04-30'})).total,2);
-      const sales=(await db.query('SELECT v.total FROM erp.contratos_vendas_geracoes g JOIN erp.vendas v ON v.tenant_id=g.tenant_id AND v.id=g.venda_id WHERE g.tenant_id=1 AND g.contrato_id=$1 ORDER BY g.periodo_inicio',[created.id])).rows;
+      const sales=(await db.query('SELECT v.total FROM erp.contratos_vendas_geracoes g JOIN erp.vendas v ON v.empresa_id=g.empresa_id AND v.id=g.venda_id WHERE g.empresa_id=1 AND g.contrato_id=$1 ORDER BY g.periodo_inicio',[created.id])).rows;
       assert.deepEqual(sales.map(row=>Number(row.total)),[20,20,60,60]);return {cycleTotals:[20,20,60,60]};
     });
     await scenario('Expired automation is reclaimed and completed only once',async()=>{
       const {runRecoverableErpAutomation}=load('src/products/erp/server/erpAutomationRunner.ts');
-      await db.query("INSERT INTO erp.execucoes_automacao(tenant_id,tipo,competencia,status,tentativas,chave_idempotencia,iniciado_em,criado_por) VALUES(1,'estoque_minimo',$1,'processando',1,$2,now()-interval '20 minutes',1)",[today,'estoque_minimo:'+today]);
+      await db.query("INSERT INTO erp.execucoes_automacao(empresa_id,tipo,competencia,status,tentativas,chave_idempotencia,iniciado_em,criado_por) VALUES(1,'estoque_minimo',$1,'processando',1,$2,now()-interval '20 minutes',1)",[today,'estoque_minimo:'+today]);
       let calls=0;const input={tenantId:1,actorId:1,tipo:'estoque_minimo',competencia:today};
       const first=await runRecoverableErpAutomation(input,async()=>{calls++;return {total:1}}),again=await runRecoverableErpAutomation(input,async()=>{calls++;return {total:2}});
-      assert.equal(first.status,'concluida');assert.equal(again.id,first.id);assert.equal(calls,1);assert.equal(Number((await db.query('SELECT tentativas FROM erp.execucoes_automacao WHERE tenant_id=1 AND id=$1',[first.id])).rows[0].tentativas),2);return {attempts:2,workCalls:1};
+      assert.equal(first.status,'concluida');assert.equal(again.id,first.id);assert.equal(calls,1);assert.equal(Number((await db.query('SELECT tentativas FROM erp.execucoes_automacao WHERE empresa_id=1 AND id=$1',[first.id])).rows[0].tentativas),2);return {attempts:2,workCalls:1};
     });
     await scenario('Active automation lease does not execute a second worker',async()=>{
       const {runRecoverableErpAutomation}=load('src/products/erp/server/erpAutomationRunner.ts');
-      await db.query("INSERT INTO erp.execucoes_automacao(tenant_id,tipo,competencia,status,tentativas,chave_idempotencia,iniciado_em,criado_por) VALUES(1,'estoque_minimo',$1,'processando',1,$2,now(),1)",[today,'estoque_minimo:'+today]);
+      await db.query("INSERT INTO erp.execucoes_automacao(empresa_id,tipo,competencia,status,tentativas,chave_idempotencia,iniciado_em,criado_por) VALUES(1,'estoque_minimo',$1,'processando',1,$2,now(),1)",[today,'estoque_minimo:'+today]);
       const result=await runRecoverableErpAutomation({tenantId:1,actorId:1,tipo:'estoque_minimo',competencia:today},async()=>{throw new Error('Unexpected second worker')});assert.equal(result.status,'processando');return {workCalls:0};
     });
     await scenario('Automation failure rolls back business changes and supports retry',async()=>{
       const {runRecoverableErpAutomation}=load('src/products/erp/server/erpAutomationRunner.ts');
-      const input={tenantId:1,actorId:1,tipo:'estoque_minimo',competencia:today};const before=(await db.query('SELECT preco_venda FROM erp.produtos WHERE tenant_id=1 AND id=101')).rows[0].preco_venda;
-      await assert.rejects(runRecoverableErpAutomation(input,async()=>{await db.query('UPDATE erp.produtos SET preco_venda=999 WHERE tenant_id=1 AND id=101');throw new Error('Local work failure')}),/Local work failure/);
-      assert.equal((await db.query('SELECT preco_venda FROM erp.produtos WHERE tenant_id=1 AND id=101')).rows[0].preco_venda,before);assert.equal((await db.query('SELECT status FROM erp.execucoes_automacao WHERE tenant_id=1')).rows[0].status,'falha');
+      const input={tenantId:1,actorId:1,tipo:'estoque_minimo',competencia:today};const before=(await db.query('SELECT preco_venda FROM erp.produtos WHERE empresa_id=1 AND id=101')).rows[0].preco_venda;
+      await assert.rejects(runRecoverableErpAutomation(input,async()=>{await db.query('UPDATE erp.produtos SET preco_venda=999 WHERE empresa_id=1 AND id=101');throw new Error('Local work failure')}),/Local work failure/);
+      assert.equal((await db.query('SELECT preco_venda FROM erp.produtos WHERE empresa_id=1 AND id=101')).rows[0].preco_venda,before);assert.equal((await db.query('SELECT status FROM erp.execucoes_automacao WHERE empresa_id=1')).rows[0].status,'falha');
       const retried=await runRecoverableErpAutomation(input,async()=>({total:1}));assert.equal(retried.status,'concluida');return {businessRolledBack:true,retryCompleted:true};
     });
     await scenario('Partial contract batches remain recoverable under the same daily key',async()=>{

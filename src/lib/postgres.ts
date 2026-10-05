@@ -36,8 +36,8 @@ export type PostgresPoolConfig = {
 export function assertErpTenantScopedQuery(sql: string, params?: unknown[]) {
   if (!/\berp\.[a-z_][a-z0-9_]*/i.test(sql)) return
   const tenantId = Number(params?.[0] || 0)
-  if (!Number.isInteger(tenantId) || tenantId <= 0 || !/\btenant_id\b/i.test(sql) || !/\$1\b/.test(sql)) {
-    throw new Error('Consulta ERP sem escopo de tenant explicito.')
+  if (!Number.isInteger(tenantId) || tenantId <= 0 || !/\bempresa_id\b/i.test(sql) || !/\$1\b/.test(sql)) {
+    throw new Error('Consulta ERP sem escopo de empresa explicito.')
   }
   const context = getErpDatabaseContext()
   if (!context && process.env.ERP_ALLOW_PRIVILEGED_DB_CONTEXT !== 'true') {
@@ -172,7 +172,7 @@ async function applyErpRuntimeContext(
   }
   await client.query('SET LOCAL ROLE erp_runtime')
   await client.query(
-    `SELECT set_config('app.erp_tenant_id', $1, true), set_config('app.erp_user_id', $2, true)`,
+    `SELECT set_config('app.erp_empresa_id', $1, true), set_config('app.erp_tenant_id', $1, true), set_config('app.erp_user_id', $2, true)`,
     [String(context.tenantId), String(context.userId)],
   )
 }

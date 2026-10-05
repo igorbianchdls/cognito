@@ -48,14 +48,14 @@ export async function importErpBankStatement(input: {
   return withTransaction(async (client) => {
     const account = await client.query(
       `SELECT id FROM erp.contas_financeiras
-       WHERE tenant_id = $1 AND id = $2 AND ativo AND excluido_em IS NULL FOR UPDATE`,
+       WHERE empresa_id = $1 AND id = $2 AND ativo AND excluido_em IS NULL FOR UPDATE`,
       [input.tenantId, input.accountId],
     )
     if (!account.rows[0]) throw new Error('Conta financeira nao encontrada ou inativa.')
     const existing = await client.query(
       `SELECT id::text, total_importadas, total_ignoradas, status
        FROM erp.importacoes_bancarias
-       WHERE tenant_id = $1 AND conta_financeira_id = $2 AND hash_arquivo = $3`,
+       WHERE empresa_id = $1 AND conta_financeira_id = $2 AND hash_arquivo = $3`,
       [input.tenantId, input.accountId, hash],
     )
     if (existing.rows[0]) return { ...existing.rows[0], reused: true }
@@ -63,7 +63,7 @@ export async function importErpBankStatement(input: {
     const dates = transactions.map((transaction) => transaction.date).sort()
     const importedFile = await client.query(
       `INSERT INTO erp.importacoes_bancarias
-         (tenant_id, conta_financeira_id, formato, nome_arquivo, hash_arquivo,
+         (empresa_id, conta_financeira_id, formato, nome_arquivo, hash_arquivo,
           periodo_inicio, periodo_fim, status, total_linhas, criado_por)
        VALUES ($1, $2, 'ofx', $3, $4, $5, $6, 'processando', $7, $8) RETURNING id`,
       [input.tenantId, input.accountId, input.fileName, hash, dates[0], dates[dates.length - 1], transactions.length, input.actorId],
@@ -74,10 +74,10 @@ export async function importErpBankStatement(input: {
     for (const transaction of transactions) {
       const result = await client.query(
         `INSERT INTO erp.transacoes_bancarias
-           (tenant_id, conta_financeira_id, importacao_bancaria_id, identificador_externo,
+           (empresa_id, conta_financeira_id, importacao_bancaria_id, identificador_externo,
             data_transacao, tipo, valor, descricao, documento, contraparte, criado_por, atualizado_por)
          VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $11)
-         ON CONFLICT (tenant_id, conta_financeira_id, identificador_externo)
+         ON CONFLICT (empresa_id, conta_financeira_id, identificador_externo)
            WHERE identificador_externo IS NOT NULL AND excluido_em IS NULL DO NOTHING
          RETURNING id`,
         [input.tenantId, input.accountId, importId, transaction.externalId, transaction.date,
@@ -91,7 +91,7 @@ export async function importErpBankStatement(input: {
     await client.query(
       `UPDATE erp.importacoes_bancarias SET status = $3, total_importadas = $4,
          total_ignoradas = $5, concluido_em = now()
-       WHERE tenant_id = $1 AND id = $2`,
+       WHERE empresa_id = $1 AND id = $2`,
       [input.tenantId, importId, status, imported, ignored],
     )
     return { id: String(importId), status, total: transactions.length, imported, ignored, reused: false }

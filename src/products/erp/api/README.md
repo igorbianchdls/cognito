@@ -26,7 +26,7 @@ As consultas antes localizadas em `chatgptplugin/application/cardQueries.ts` e `
 ## Acesso e proteção
 
 - A API de uso normal exige uma sessão Clerk do SaaS e uma associação ativa com a empresa selecionada. Ainda não é uma API pública com chave de integração.
-- O tenant e o usuário vêm da sessão. Não envie `tenant_id`, `criado_por` ou `atualizado_por` no corpo.
+- O tenant e o usuário vêm da sessão. Não envie `empresa_id` (nem o nome antigo `tenant_id`), `criado_por` ou `atualizado_por` no corpo.
 - Cada método exige a capacidade correspondente. O banco também aplica o papel `erp_runtime`, RLS e escopo explícito do tenant.
 - GET executa consultas ERP em modo somente leitura; limite SQL de 10 segundos. Escritas têm limite SQL de 30 segundos por instrução.
 - Corpo JSON de até 1 MiB; OFX e importações de dados aceitam até 4 MiB. A contagem inclui bytes efetivamente recebidos, mesmo sem `Content-Length`.
@@ -183,6 +183,8 @@ Para adicionar uma operação: crie/estenda a regra em `server`, reutilize contr
 | `/api/erp/contas-receber-parcelas/[id]/baixar` | POST | session | 1 MiB | `erp.financeiro.baixar` |
 | `/api/erp/contratos/[id]` | GET, PATCH | session | 1 MiB | `erp.vendas.gerenciar`, `erp.vendas.visualizar` |
 | `/api/erp/contratos/processar` | POST | session | 1 MiB | `erp.vendas.gerenciar` |
+| `/api/erp/dashboards/[dashboardId]/registros` | GET | session | 1 MiB | Sessão / regra dinâmica |
+| `/api/erp/dashboards/[dashboardId]` | GET | session | 1 MiB | Sessão / regra dinâmica |
 | `/api/erp/estoque/contagem` | GET | session | 1 MiB | `erp.estoque.ajustar` |
 | `/api/erp/fechamentos` | GET, POST, PATCH | session | 1 MiB | `erp.configuracoes.gerenciar`, `erp.financeiro.visualizar` |
 | `/api/erp/financeiro/[operation]` | GET, POST | session | 1 MiB | `erp.financeiro.estornar`, `erp.financeiro.gerenciar`, `erp.financeiro.visualizar` |

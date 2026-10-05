@@ -95,7 +95,7 @@ async function main(){
   })
   await check('Conteúdo inválido, campos extras e datas impossíveis rejeitados',async()=>{
     const before=calls
-    for(const [tipo,content] of [['cliente',{nome:'Teste',tipo:'fisica',tenant_id:2}],['cliente',{tipo:'fisica'}],['produto',{nome:'Teste',preco:-1,controla_estoque:'sim'}],['venda',{cliente_id:1,data_venda:'2026-02-31',data_vencimento:'2026-03-01',itens:'[]'}],['venda',{cliente_id:1,data_venda:'2026-03-01',data_vencimento:'2026-03-01',itens:'not json'}],['editar_cliente',{registro_id:1}]] as const){const params=parameters(tipo),initial=await rpc('tools/call',params);assert.equal((await rpc('tools/call',{...params,requestState:initial.body.result.requestState,inputResponses:{proposta:{action:'accept',content}}})).body.error.code,-32602)}
+    for(const [tipo,content] of [['cliente',{nome:'Teste',tipo:'fisica',empresa_id:2}],['cliente',{tipo:'fisica'}],['produto',{nome:'Teste',preco:-1,controla_estoque:'sim'}],['venda',{cliente_id:1,data_venda:'2026-02-31',data_vencimento:'2026-03-01',itens:'[]'}],['venda',{cliente_id:1,data_venda:'2026-03-01',data_vencimento:'2026-03-01',itens:'not json'}],['editar_cliente',{registro_id:1}]] as const){const params=parameters(tipo),initial=await rpc('tools/call',params);assert.equal((await rpc('tools/call',{...params,requestState:initial.body.result.requestState,inputResponses:{proposta:{action:'accept',content}}})).body.error.code,-32602)}
     assert.equal((await rpc('tools/call',{...parameters(),inputResponses:{proposta:{action:'accept',content:{nome:'Teste',tipo:'fisica'}}}})).body.error.code,-32602);assert.equal(calls,before)
   })
   await check('Venda e baixa válidas atravessam o mesmo preparo auditado',async()=>{

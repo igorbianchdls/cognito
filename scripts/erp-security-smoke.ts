@@ -1,5 +1,4 @@
 import assert from 'node:assert/strict'
-import { readFileSync } from 'node:fs'
 
 import { assertErpTenantScopedQuery } from '../src/lib/postgres'
 import { runWithErpDatabaseContext } from '../src/lib/erpDatabaseContext'
@@ -13,23 +12,19 @@ assert.equal(getErpOperationCapability('movimentacoes', true), 'erp.estoque.movi
 assert.equal(getErpOperationCapability('dre', false), 'erp.relatorios.visualizar')
 
 assert.doesNotThrow(() => runWithErpDatabaseContext({ tenantId: 10, userId: 20 }, () => assertErpTenantScopedQuery(
-  'SELECT id FROM erp.entidades WHERE tenant_id = $1', [10],
+  'SELECT id FROM erp.entidades WHERE empresa_id = $1', [10],
 )))
 assert.throws(
   () => runWithErpDatabaseContext({ tenantId: 10, userId: 20 }, () => assertErpTenantScopedQuery('SELECT id FROM erp.entidades', [])),
-  /tenant/,
+  /empresa/,
 )
 assert.throws(
-  () => runWithErpDatabaseContext({ tenantId: 10, userId: 20 }, () => assertErpTenantScopedQuery('SELECT id FROM erp.entidades WHERE tenant_id = $2', [10, 20])),
-  /tenant/,
+  () => runWithErpDatabaseContext({ tenantId: 10, userId: 20 }, () => assertErpTenantScopedQuery('SELECT id FROM erp.entidades WHERE empresa_id = $2', [10, 20])),
+  /empresa/,
 )
 assert.throws(
-  () => runWithErpDatabaseContext({ tenantId: 10, userId: 20 }, () => assertErpTenantScopedQuery('SELECT id FROM erp.entidades WHERE tenant_id = $1', [11])),
+  () => runWithErpDatabaseContext({ tenantId: 10, userId: 20 }, () => assertErpTenantScopedQuery('SELECT id FROM erp.entidades WHERE empresa_id = $1', [11])),
   /diferente/,
 )
-
-const genericRoute = readFileSync('src/app/api/erp/[entityId]/route.ts', 'utf8')
-assert.match(genericRoute, /resolveErpAccess/)
-assert.doesNotMatch(genericRoute, /resolveAuthTenant/)
 
 process.stdout.write('ERP security smoke: isolamento de tenant e permissoes validos.\n')

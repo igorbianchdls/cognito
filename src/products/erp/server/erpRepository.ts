@@ -63,7 +63,7 @@ type ReversePaymentInput = IdActionInput & {
 
 type SaleRow = {
   id: string | number
-  tenant_id: string | number
+  empresa_id: string | number
   cliente_id: string | number | null
   numero: string | null
   data_venda: string | Date | null
@@ -86,7 +86,7 @@ type SaleRow = {
 
 type PurchaseRow = {
   id: string | number
-  tenant_id: string | number
+  empresa_id: string | number
   fornecedor_id: string | number | null
   numero: string | null
   data_compra: string | Date | null
@@ -314,7 +314,7 @@ async function ensureFinancialAccountId(
     const selected = await client.query(
       `SELECT id
        FROM erp.contas_financeiras
-       WHERE tenant_id = $1
+       WHERE empresa_id = $1
          AND id = $2
          AND ativo = true
          AND excluido_em IS NULL`,
@@ -327,7 +327,7 @@ async function ensureFinancialAccountId(
   const existing = await client.query(
     `SELECT id, padrao
      FROM erp.contas_financeiras
-     WHERE tenant_id = $1
+     WHERE empresa_id = $1
        AND ativo = true
        AND excluido_em IS NULL
      ORDER BY padrao DESC, id ASC
@@ -344,25 +344,25 @@ export function financialCompositionSql(financialSide: 'receber' | 'pagar', inst
   return `CROSS JOIN LATERAL (
     SELECT ${installmentAlias}.valor,
       COALESCE((SELECT sum(valor) FROM erp.pagamentos pagamento
-        WHERE pagamento.tenant_id=${installmentAlias}.tenant_id AND pagamento.${installmentColumn}=${installmentAlias}.id
+        WHERE pagamento.empresa_id=${installmentAlias}.empresa_id AND pagamento.${installmentColumn}=${installmentAlias}.id
           AND pagamento.estorno_de_pagamento_id IS NULL AND pagamento.estornado_em IS NULL AND pagamento.excluido_em IS NULL),0) AS dinheiro,
       COALESCE((SELECT sum(CASE WHEN aplicacao.reversao_de_id IS NULL THEN aplicacao.valor ELSE -aplicacao.valor END)
-        FROM erp.adiantamentos_aplicacoes aplicacao WHERE aplicacao.tenant_id=${installmentAlias}.tenant_id
+        FROM erp.adiantamentos_aplicacoes aplicacao WHERE aplicacao.empresa_id=${installmentAlias}.empresa_id
           AND aplicacao.${installmentColumn}=${installmentAlias}.id),0) AS credito,
       COALESCE((SELECT sum(link.valor) FROM erp.renegociacoes_parcelas link
-        JOIN erp.renegociacoes acordo ON acordo.tenant_id=link.tenant_id AND acordo.id=link.renegociacao_id
-        WHERE link.tenant_id=${installmentAlias}.tenant_id AND link.${installmentColumn}=${installmentAlias}.id
+        JOIN erp.renegociacoes acordo ON acordo.empresa_id=link.empresa_id AND acordo.id=link.renegociacao_id
+        WHERE link.empresa_id=${installmentAlias}.empresa_id AND link.${installmentColumn}=${installmentAlias}.id
           AND link.papel='origem' AND acordo.status='efetivada'),0) AS transferido,
       ${installmentAlias}.valor
-        - COALESCE((SELECT sum(valor) FROM erp.pagamentos pagamento WHERE pagamento.tenant_id=${installmentAlias}.tenant_id
+        - COALESCE((SELECT sum(valor) FROM erp.pagamentos pagamento WHERE pagamento.empresa_id=${installmentAlias}.empresa_id
           AND pagamento.${installmentColumn}=${installmentAlias}.id AND pagamento.estorno_de_pagamento_id IS NULL
           AND pagamento.estornado_em IS NULL AND pagamento.excluido_em IS NULL),0)
         - COALESCE((SELECT sum(CASE WHEN aplicacao.reversao_de_id IS NULL THEN aplicacao.valor ELSE -aplicacao.valor END)
-          FROM erp.adiantamentos_aplicacoes aplicacao WHERE aplicacao.tenant_id=${installmentAlias}.tenant_id
+          FROM erp.adiantamentos_aplicacoes aplicacao WHERE aplicacao.empresa_id=${installmentAlias}.empresa_id
             AND aplicacao.${installmentColumn}=${installmentAlias}.id),0)
         - COALESCE((SELECT sum(link.valor) FROM erp.renegociacoes_parcelas link
-          JOIN erp.renegociacoes acordo ON acordo.tenant_id=link.tenant_id AND acordo.id=link.renegociacao_id
-          WHERE link.tenant_id=${installmentAlias}.tenant_id AND link.${installmentColumn}=${installmentAlias}.id
+          JOIN erp.renegociacoes acordo ON acordo.empresa_id=link.empresa_id AND acordo.id=link.renegociacao_id
+          WHERE link.empresa_id=${installmentAlias}.empresa_id AND link.${installmentColumn}=${installmentAlias}.id
             AND link.papel='origem' AND acordo.status='efetivada'),0) AS saldo
   ) composicao`
 }
@@ -381,7 +381,7 @@ async function updateReceivableStatus(
          bool_and(composicao.transferido > 0) AS renegociado
        FROM erp.contas_receber_parcelas parcelas
        ${financialCompositionSql('receber')}
-       WHERE parcelas.tenant_id = $1 AND parcelas.conta_receber_id = $2
+       WHERE parcelas.empresa_id = $1 AND parcelas.conta_receber_id = $2
          AND parcelas.excluido_em IS NULL AND parcelas.status <> 'cancelado'
      )
      UPDATE erp.contas_receber
@@ -391,7 +391,7 @@ async function updateReceivableStatus(
        WHEN EXISTS (
          SELECT 1
          FROM erp.contas_receber_parcelas AS vencidas
-         WHERE vencidas.tenant_id = $1
+         WHERE vencidas.empresa_id = $1
            AND vencidas.conta_receber_id = $2
            AND vencidas.excluido_em IS NULL
            AND vencidas.status <> 'cancelado'
@@ -403,7 +403,7 @@ async function updateReceivableStatus(
      END,
      atualizado_por = $3
      FROM totals
-     WHERE contas_receber.tenant_id = $1
+     WHERE contas_receber.empresa_id = $1
        AND contas_receber.id = $2`,
     [tenantId, receivableId, actorId],
   )
@@ -423,7 +423,7 @@ async function updatePayableStatus(
          bool_and(composicao.transferido > 0) AS renegociado
        FROM erp.contas_pagar_parcelas parcelas
        ${financialCompositionSql('pagar')}
-       WHERE parcelas.tenant_id = $1 AND parcelas.conta_pagar_id = $2
+       WHERE parcelas.empresa_id = $1 AND parcelas.conta_pagar_id = $2
          AND parcelas.excluido_em IS NULL AND parcelas.status <> 'cancelado'
      )
      UPDATE erp.contas_pagar
@@ -433,7 +433,7 @@ async function updatePayableStatus(
        WHEN EXISTS (
          SELECT 1
          FROM erp.contas_pagar_parcelas AS vencidas
-         WHERE vencidas.tenant_id = $1
+         WHERE vencidas.empresa_id = $1
            AND vencidas.conta_pagar_id = $2
            AND vencidas.excluido_em IS NULL
            AND vencidas.status <> 'cancelado'
@@ -445,7 +445,7 @@ async function updatePayableStatus(
      END,
      atualizado_por = $3
      FROM totals
-     WHERE contas_pagar.tenant_id = $1
+     WHERE contas_pagar.empresa_id = $1
        AND contas_pagar.id = $2`,
     [tenantId, payableId, actorId],
   )
@@ -542,7 +542,7 @@ async function resolveCategoryId(
   const existing = await client.query(
     `SELECT id
      FROM erp.categorias
-     WHERE tenant_id = $1
+     WHERE empresa_id = $1
        AND lower(nome) = lower($2)
        AND tipo IN ($3, 'geral')
        AND excluido_em IS NULL
@@ -553,7 +553,7 @@ async function resolveCategoryId(
   if (existingId) return Number(existingId)
 
   const created = await client.query(
-    `INSERT INTO erp.categorias (tenant_id, nome, tipo, criado_por, atualizado_por)
+    `INSERT INTO erp.categorias (empresa_id, nome, tipo, criado_por, atualizado_por)
      VALUES ($1, $2, $3, $4, $4)
      RETURNING id`,
     [tenantId, normalized, type, actorId],
@@ -613,11 +613,11 @@ async function resolveSaleInstallments(client: Pick<SQLClient, 'query'>, sale: S
   const plannedResult = await client.query(
     `SELECT id, numero_parcela, descricao, data_vencimento, valor, conta_financeira_id, metodo_pagamento_id
      FROM erp.vendas_recebimentos_previstos
-     WHERE tenant_id = $1
+     WHERE empresa_id = $1
        AND venda_id = $2
        AND excluido_em IS NULL
      ORDER BY numero_parcela ASC, id ASC`,
-    [sale.tenant_id, sale.id],
+    [sale.empresa_id, sale.id],
   )
   if (plannedResult.rows.length === 0) return normalizePaymentConditionInstallments(sale)
 
@@ -692,11 +692,11 @@ async function resolvePurchaseInstallments(client: Pick<SQLClient, 'query'>, pur
   const plannedResult = await client.query(
     `SELECT id, numero_parcela, descricao, data_vencimento, valor, percentual, conta_financeira_id, metodo_pagamento_id, observacoes
      FROM erp.compras_parcelas_previstas
-     WHERE tenant_id = $1
+     WHERE empresa_id = $1
        AND compra_id = $2
        AND excluido_em IS NULL
      ORDER BY numero_parcela ASC, id ASC`,
-    [purchase.tenant_id, purchase.id],
+    [purchase.empresa_id, purchase.id],
   )
   if (plannedResult.rows.length === 0) return normalizePurchaseInstallments(purchase)
 
@@ -721,7 +721,7 @@ async function fetchReceivableForSale(
   const receivableResult = await client.query(
     `SELECT id::text, status
      FROM erp.contas_receber
-     WHERE tenant_id = $1
+     WHERE empresa_id = $1
        AND venda_id = $2
        AND excluido_em IS NULL
      LIMIT 1`,
@@ -733,7 +733,7 @@ async function fetchReceivableForSale(
   const installmentsResult = await client.query(
     `SELECT id::text, numero_parcela, valor, status
      FROM erp.contas_receber_parcelas
-     WHERE tenant_id = $1
+     WHERE empresa_id = $1
        AND conta_receber_id = $2
        AND excluido_em IS NULL
      ORDER BY numero_parcela ASC, id ASC`,
@@ -755,7 +755,7 @@ export async function createOrUpdatePurchasePayable(
   if (!purchase.gera_financeiro || money(purchase.total) <= 0) return null
 
   const installments = await resolvePurchaseInstallments(client, purchase)
-  const existing = await fetchPayableForPurchase(client, Number(purchase.tenant_id), purchase.id)
+  const existing = await fetchPayableForPurchase(client, Number(purchase.empresa_id), purchase.id)
   let payable: ReceivableRow
 
   if (existing) {
@@ -781,10 +781,10 @@ export async function createOrUpdatePurchasePayable(
            fornecedor_nome_snapshot = $11,
            fornecedor_documento_snapshot = $12,
            atualizado_por = $13
-       WHERE tenant_id = $1 AND id = $2
+       WHERE empresa_id = $1 AND id = $2
        RETURNING id::text, status, tipo_lancamento`,
       [
-        purchase.tenant_id,
+        purchase.empresa_id,
         existing.payable.id,
         type,
         `${type === 'previsao' ? 'Previsao' : 'Compra'} ${purchase.numero || purchase.id}`,
@@ -803,13 +803,13 @@ export async function createOrUpdatePurchasePayable(
     await client.query(
       `UPDATE erp.contas_pagar_parcelas
        SET excluido_em = now(), atualizado_por = $3
-       WHERE tenant_id = $1 AND conta_pagar_id = $2 AND excluido_em IS NULL`,
-      [purchase.tenant_id, payable.id, actorId],
+       WHERE empresa_id = $1 AND conta_pagar_id = $2 AND excluido_em IS NULL`,
+      [purchase.empresa_id, payable.id, actorId],
     )
   } else {
     const created = await client.query(
       `INSERT INTO erp.contas_pagar (
-         tenant_id, fornecedor_id, compra_id, descricao, numero_documento,
+         empresa_id, fornecedor_id, compra_id, descricao, numero_documento,
          data_competencia, data_emissao, valor_total, status, categoria_id,
          centro_custo_id, origem, tipo_lancamento, fornecedor_nome_snapshot,
          fornecedor_documento_snapshot, efetivado_em, criado_por, atualizado_por
@@ -818,7 +818,7 @@ export async function createOrUpdatePurchasePayable(
          CASE WHEN $11 = 'efetivo' THEN now() ELSE NULL END, $14, $14)
        RETURNING id::text, status, tipo_lancamento`,
       [
-        purchase.tenant_id,
+        purchase.empresa_id,
         purchase.fornecedor_id,
         purchase.id,
         `${type === 'previsao' ? 'Previsao' : 'Compra'} ${purchase.numero || purchase.id}`,
@@ -841,14 +841,14 @@ export async function createOrUpdatePurchasePayable(
   for (const installment of installments) {
     const result = await client.query(
       `INSERT INTO erp.contas_pagar_parcelas (
-         tenant_id, conta_pagar_id, numero_parcela, descricao, data_vencimento,
+         empresa_id, conta_pagar_id, numero_parcela, descricao, data_vencimento,
          data_pagamento_previsto, valor, valor_bruto, valor_liquido, valor_pago,
          status, conta_financeira_id, metodo_pagamento_id, observacoes, parcela_prevista_id, criado_por, atualizado_por
        )
        VALUES ($1, $2, $3, $4, $5, $5, $6, $6, $6, 0, 'aberto', $7, $8, $9, $10, $11, $11)
        RETURNING id::text, numero_parcela, valor, status`,
       [
-        purchase.tenant_id,
+        purchase.empresa_id,
         payable.id,
         installment.numeroParcela,
         installment.descricao,
@@ -865,9 +865,9 @@ export async function createOrUpdatePurchasePayable(
   }
 
   await client.query(
-    `INSERT INTO erp.contas_pagar_eventos (tenant_id, conta_pagar_id, evento, dados, criado_por)
+    `INSERT INTO erp.contas_pagar_eventos (empresa_id, conta_pagar_id, evento, dados, criado_por)
      VALUES ($1, $2, $3, $4::jsonb, $5)`,
-    [purchase.tenant_id, payable.id, type === 'efetivo' ? 'efetivada' : 'previsao_criada', JSON.stringify({ compra_id: purchase.id }), actorId],
+    [purchase.empresa_id, payable.id, type === 'efetivo' ? 'efetivada' : 'previsao_criada', JSON.stringify({ compra_id: purchase.id }), actorId],
   )
   return { payable, installments: createdInstallments }
 }
@@ -880,7 +880,7 @@ async function fetchPayableForPurchase(
   const payableResult = await client.query(
     `SELECT id::text, status, tipo_lancamento
      FROM erp.contas_pagar
-     WHERE tenant_id = $1
+     WHERE empresa_id = $1
        AND compra_id = $2
        AND excluido_em IS NULL
      LIMIT 1`,
@@ -892,7 +892,7 @@ async function fetchPayableForPurchase(
   const installmentsResult = await client.query(
     `SELECT id::text, numero_parcela, valor, status
      FROM erp.contas_pagar_parcelas
-     WHERE tenant_id = $1
+     WHERE empresa_id = $1
        AND conta_pagar_id = $2
        AND excluido_em IS NULL
      ORDER BY numero_parcela ASC, id ASC`,
@@ -951,22 +951,22 @@ function mapConfirmPurchaseResult(
 
 export async function listErpPurchaseCatalogs(tenantId: number) {
   const [suppliers, products, services, categories, costCenters, financialAccounts, paymentMethods, operationNatures, locations, purchaseCandidates] = await Promise.all([
-    runQuery(`SELECT id::text, nome, documento FROM erp.entidades WHERE tenant_id = $1 AND eh_fornecedor = true AND ativo = true AND excluido_em IS NULL ORDER BY nome LIMIT 50`, [tenantId]),
-    runQuery(`SELECT id::text, nome, COALESCE(sku, codigo, '') AS codigo, COALESCE(unidade_medida, 'UN') AS unidade, custo AS valor_padrao FROM erp.produtos WHERE tenant_id = $1 AND ativo = true AND excluido_em IS NULL ORDER BY nome LIMIT 50`, [tenantId]),
-    runQuery(`SELECT id::text, nome, COALESCE(codigo, '') AS codigo, 'UN'::text AS unidade, custo AS valor_padrao FROM erp.servicos WHERE tenant_id = $1 AND ativo = true AND excluido_em IS NULL ORDER BY nome LIMIT 50`, [tenantId]),
-    runQuery(`SELECT id::text, nome FROM erp.categorias WHERE tenant_id = $1 AND tipo IN ('despesa', 'geral') AND ativo = true AND excluido_em IS NULL ORDER BY nome`, [tenantId]),
-    runQuery(`SELECT id::text, nome FROM erp.centros_custo WHERE tenant_id = $1 AND ativo = true AND excluido_em IS NULL ORDER BY nome`, [tenantId]),
-    runQuery(`SELECT id::text, nome, tipo, padrao FROM erp.contas_financeiras WHERE tenant_id = $1 AND ativo = true AND excluido_em IS NULL ORDER BY padrao DESC, nome`, [tenantId]),
-    runQuery(`SELECT id::text, nome, tipo FROM erp.metodos_pagamento WHERE tenant_id = $1 AND ativo = true AND excluido_em IS NULL ORDER BY nome`, [tenantId]),
-    runQuery(`SELECT id::text, nome, codigo, atualiza_estoque, gera_financeiro_padrao FROM erp.naturezas_operacao_compra WHERE tenant_id = $1 AND ativo = true AND excluido_em IS NULL ORDER BY nome`, [tenantId]),
-    runQuery(`SELECT id::text, nome, codigo, padrao FROM erp.locais_estoque WHERE tenant_id = $1 AND ativo = true AND permite_compra = true AND excluido_em IS NULL ORDER BY padrao DESC, nome`, [tenantId]),
+    runQuery(`SELECT id::text, nome, documento FROM erp.entidades WHERE empresa_id = $1 AND eh_fornecedor = true AND ativo = true AND excluido_em IS NULL ORDER BY nome LIMIT 50`, [tenantId]),
+    runQuery(`SELECT id::text, nome, COALESCE(sku, codigo, '') AS codigo, COALESCE(unidade_medida, 'UN') AS unidade, custo AS valor_padrao FROM erp.produtos WHERE empresa_id = $1 AND ativo = true AND excluido_em IS NULL ORDER BY nome LIMIT 50`, [tenantId]),
+    runQuery(`SELECT id::text, nome, COALESCE(codigo, '') AS codigo, 'UN'::text AS unidade, custo AS valor_padrao FROM erp.servicos WHERE empresa_id = $1 AND ativo = true AND excluido_em IS NULL ORDER BY nome LIMIT 50`, [tenantId]),
+    runQuery(`SELECT id::text, nome FROM erp.categorias WHERE empresa_id = $1 AND tipo IN ('despesa', 'geral') AND ativo = true AND excluido_em IS NULL ORDER BY nome`, [tenantId]),
+    runQuery(`SELECT id::text, nome FROM erp.centros_custo WHERE empresa_id = $1 AND ativo = true AND excluido_em IS NULL ORDER BY nome`, [tenantId]),
+    runQuery(`SELECT id::text, nome, tipo, padrao FROM erp.contas_financeiras WHERE empresa_id = $1 AND ativo = true AND excluido_em IS NULL ORDER BY padrao DESC, nome`, [tenantId]),
+    runQuery(`SELECT id::text, nome, tipo FROM erp.metodos_pagamento WHERE empresa_id = $1 AND ativo = true AND excluido_em IS NULL ORDER BY nome`, [tenantId]),
+    runQuery(`SELECT id::text, nome, codigo, atualiza_estoque, gera_financeiro_padrao FROM erp.naturezas_operacao_compra WHERE empresa_id = $1 AND ativo = true AND excluido_em IS NULL ORDER BY nome`, [tenantId]),
+    runQuery(`SELECT id::text, nome, codigo, padrao FROM erp.locais_estoque WHERE empresa_id = $1 AND ativo = true AND permite_compra = true AND excluido_em IS NULL ORDER BY padrao DESC, nome`, [tenantId]),
     runQuery(`SELECT compras.id::text, compras.numero, compras.total, entidades.nome AS fornecedor
       FROM erp.compras AS compras
-      JOIN erp.entidades AS entidades ON entidades.tenant_id = compras.tenant_id AND entidades.id = compras.fornecedor_id
-      WHERE compras.tenant_id = $1 AND compras.tipo_movimento <> 'cancelada' AND compras.excluido_em IS NULL
+      JOIN erp.entidades AS entidades ON entidades.empresa_id = compras.empresa_id AND entidades.id = compras.fornecedor_id
+      WHERE compras.empresa_id = $1 AND compras.tipo_movimento <> 'cancelada' AND compras.excluido_em IS NULL
         AND NOT EXISTS (
           SELECT 1 FROM erp.notas_fiscais AS notas
-          WHERE notas.tenant_id = compras.tenant_id AND notas.compra_id = compras.id AND notas.excluido_em IS NULL
+          WHERE notas.empresa_id = compras.empresa_id AND notas.compra_id = compras.id AND notas.excluido_em IS NULL
         )
       ORDER BY compras.data_compra DESC, compras.id DESC LIMIT 200`, [tenantId]),
   ])
@@ -977,17 +977,17 @@ export async function listErpPurchaseCatalogs(tenantId: number) {
 export async function listErpSalesCatalogs(tenantId: number) {
   const [customers, responsibles, products, services, categories, costCenters, financialAccounts, paymentMethods] = await Promise.all([
     runQuery(`SELECT id::text, nome, documento, email, celular, telefone, contato_cobranca_emails, contato_cobranca_whatsapp
-      FROM erp.entidades WHERE tenant_id = $1 AND eh_cliente = true AND ativo = true AND excluido_em IS NULL ORDER BY nome LIMIT 50`, [tenantId]),
+      FROM erp.entidades WHERE empresa_id = $1 AND eh_cliente = true AND ativo = true AND excluido_em IS NULL ORDER BY nome LIMIT 50`, [tenantId]),
     runQuery(`SELECT id::text, nome, documento FROM erp.entidades
-      WHERE tenant_id = $1 AND eh_vendedor = true AND ativo = true AND excluido_em IS NULL ORDER BY nome`, [tenantId]),
+      WHERE empresa_id = $1 AND eh_vendedor = true AND ativo = true AND excluido_em IS NULL ORDER BY nome`, [tenantId]),
     runQuery(`SELECT id::text, nome, COALESCE(sku, codigo, '') AS codigo, COALESCE(unidade_medida, 'UN') AS unidade, preco_venda AS valor_padrao
-      FROM erp.produtos WHERE tenant_id = $1 AND ativo = true AND excluido_em IS NULL ORDER BY nome LIMIT 50`, [tenantId]),
+      FROM erp.produtos WHERE empresa_id = $1 AND ativo = true AND excluido_em IS NULL ORDER BY nome LIMIT 50`, [tenantId]),
     runQuery(`SELECT id::text, nome, COALESCE(codigo, '') AS codigo, 'UN'::text AS unidade, preco AS valor_padrao
-      FROM erp.servicos WHERE tenant_id = $1 AND ativo = true AND excluido_em IS NULL ORDER BY nome LIMIT 50`, [tenantId]),
-    runQuery(`SELECT id::text, nome FROM erp.categorias WHERE tenant_id = $1 AND tipo IN ('receita', 'geral') AND ativo = true AND excluido_em IS NULL ORDER BY nome`, [tenantId]),
-    runQuery(`SELECT id::text, nome FROM erp.centros_custo WHERE tenant_id = $1 AND ativo = true AND excluido_em IS NULL ORDER BY nome`, [tenantId]),
-    runQuery(`SELECT id::text, nome, tipo, padrao FROM erp.contas_financeiras WHERE tenant_id = $1 AND ativo = true AND excluido_em IS NULL ORDER BY padrao DESC, nome`, [tenantId]),
-    runQuery(`SELECT id::text, nome, tipo FROM erp.metodos_pagamento WHERE tenant_id = $1 AND ativo = true AND excluido_em IS NULL ORDER BY nome`, [tenantId]),
+      FROM erp.servicos WHERE empresa_id = $1 AND ativo = true AND excluido_em IS NULL ORDER BY nome LIMIT 50`, [tenantId]),
+    runQuery(`SELECT id::text, nome FROM erp.categorias WHERE empresa_id = $1 AND tipo IN ('receita', 'geral') AND ativo = true AND excluido_em IS NULL ORDER BY nome`, [tenantId]),
+    runQuery(`SELECT id::text, nome FROM erp.centros_custo WHERE empresa_id = $1 AND ativo = true AND excluido_em IS NULL ORDER BY nome`, [tenantId]),
+    runQuery(`SELECT id::text, nome, tipo, padrao FROM erp.contas_financeiras WHERE empresa_id = $1 AND ativo = true AND excluido_em IS NULL ORDER BY padrao DESC, nome`, [tenantId]),
+    runQuery(`SELECT id::text, nome, tipo FROM erp.metodos_pagamento WHERE empresa_id = $1 AND ativo = true AND excluido_em IS NULL ORDER BY nome`, [tenantId]),
   ])
   return { customers, responsibles, products, services, categories, costCenters, financialAccounts, paymentMethods }
 }
@@ -997,22 +997,22 @@ export async function getErpOverview(tenantId: number) {
     `SELECT
       (SELECT COALESCE(sum(composicao.saldo), 0)
        FROM erp.contas_receber_parcelas AS parcelas
-       JOIN erp.contas_receber AS contas ON contas.tenant_id = parcelas.tenant_id AND contas.id = parcelas.conta_receber_id
+       JOIN erp.contas_receber AS contas ON contas.empresa_id = parcelas.empresa_id AND contas.id = parcelas.conta_receber_id
        ${financialCompositionSql('receber')}
-       WHERE parcelas.tenant_id = $1 AND parcelas.status NOT IN ('pago', 'cancelado', 'renegociado')
+       WHERE parcelas.empresa_id = $1 AND parcelas.status NOT IN ('pago', 'cancelado', 'renegociado')
          AND parcelas.excluido_em IS NULL AND contas.excluido_em IS NULL) AS saldo_receber,
       (SELECT COALESCE(sum(composicao.saldo), 0)
        FROM erp.contas_pagar_parcelas AS parcelas
-       JOIN erp.contas_pagar AS contas ON contas.tenant_id = parcelas.tenant_id AND contas.id = parcelas.conta_pagar_id
+       JOIN erp.contas_pagar AS contas ON contas.empresa_id = parcelas.empresa_id AND contas.id = parcelas.conta_pagar_id
        ${financialCompositionSql('pagar')}
-       WHERE parcelas.tenant_id = $1 AND contas.tipo_lancamento='efetivo' AND parcelas.status NOT IN ('pago', 'cancelado', 'renegociado')
+       WHERE parcelas.empresa_id = $1 AND contas.tipo_lancamento='efetivo' AND parcelas.status NOT IN ('pago', 'cancelado', 'renegociado')
          AND parcelas.excluido_em IS NULL AND contas.excluido_em IS NULL) AS saldo_pagar,
       (SELECT COALESCE(sum(composicao.saldo), 0) FROM erp.contas_receber_parcelas parcelas
        ${financialCompositionSql('receber')}
-       WHERE parcelas.tenant_id = $1 AND parcelas.data_vencimento < CURRENT_DATE AND parcelas.status NOT IN ('pago', 'cancelado', 'renegociado') AND parcelas.excluido_em IS NULL) AS receber_vencido,
-      (SELECT count(*)::int FROM erp.vendas WHERE tenant_id = $1 AND status = 'rascunho' AND excluido_em IS NULL) AS vendas_rascunho,
-      (SELECT count(*)::int FROM erp.compras WHERE tenant_id = $1 AND tipo_movimento IN ('cotacao', 'pedido_compra', 'pedido_recorrente') AND excluido_em IS NULL) AS compras_abertas,
-      (SELECT count(*)::int FROM erp.entidades WHERE tenant_id = $1 AND eh_cliente = true AND ativo = true AND excluido_em IS NULL) AS clientes_ativos`,
+       WHERE parcelas.empresa_id = $1 AND parcelas.data_vencimento < CURRENT_DATE AND parcelas.status NOT IN ('pago', 'cancelado', 'renegociado') AND parcelas.excluido_em IS NULL) AS receber_vencido,
+      (SELECT count(*)::int FROM erp.vendas WHERE empresa_id = $1 AND status = 'rascunho' AND excluido_em IS NULL) AS vendas_rascunho,
+      (SELECT count(*)::int FROM erp.compras WHERE empresa_id = $1 AND tipo_movimento IN ('cotacao', 'pedido_compra', 'pedido_recorrente') AND excluido_em IS NULL) AS compras_abertas,
+      (SELECT count(*)::int FROM erp.entidades WHERE empresa_id = $1 AND eh_cliente = true AND ativo = true AND excluido_em IS NULL) AS clientes_ativos`,
     [tenantId],
   )
   const row = rows[0] || {}
@@ -1038,10 +1038,10 @@ export async function listErpPurchaseInvoices(tenantId: number) {
        compras.numero AS compra_numero
      FROM erp.notas_fiscais AS notas
      JOIN erp.entidades AS entidades
-       ON entidades.tenant_id = notas.tenant_id AND entidades.id = notas.entidade_id
+       ON entidades.empresa_id = notas.empresa_id AND entidades.id = notas.entidade_id
      LEFT JOIN erp.compras AS compras
-       ON compras.tenant_id = notas.tenant_id AND compras.id = notas.compra_id
-     WHERE notas.tenant_id = $1
+       ON compras.empresa_id = notas.empresa_id AND compras.id = notas.compra_id
+     WHERE notas.empresa_id = $1
        AND notas.direcao = 'entrada'
        AND notas.excluido_em IS NULL
      ORDER BY notas.emitida_em DESC NULLS LAST, notas.id DESC
@@ -1071,13 +1071,13 @@ export async function listErpPayments(input: { tenantId: number; type: 'receber'
        parcelas.numero_parcela, financeiras.nome AS conta_financeira, metodos.nome AS metodo_pagamento
      FROM erp.pagamentos AS pagamentos
      JOIN ${receiving ? 'erp.contas_receber_parcelas' : 'erp.contas_pagar_parcelas'} AS parcelas
-       ON parcelas.tenant_id = pagamentos.tenant_id
+       ON parcelas.empresa_id = pagamentos.empresa_id
       AND parcelas.id = pagamentos.${receiving ? 'conta_receber_parcela_id' : 'conta_pagar_parcela_id'}
      LEFT JOIN erp.contas_financeiras AS financeiras
-       ON financeiras.tenant_id = pagamentos.tenant_id AND financeiras.id = pagamentos.conta_financeira_id
+       ON financeiras.empresa_id = pagamentos.empresa_id AND financeiras.id = pagamentos.conta_financeira_id
      LEFT JOIN erp.metodos_pagamento AS metodos
-       ON metodos.tenant_id = pagamentos.tenant_id AND metodos.id = pagamentos.metodo_pagamento_id
-     WHERE pagamentos.tenant_id = $1
+       ON metodos.empresa_id = pagamentos.empresa_id AND metodos.id = pagamentos.metodo_pagamento_id
+     WHERE pagamentos.empresa_id = $1
        AND parcelas.${receiving ? 'conta_receber_id' : 'conta_pagar_id'} = $2
        AND pagamentos.excluido_em IS NULL
      ORDER BY pagamentos.data_pagamento DESC, pagamentos.id DESC`,
@@ -1101,25 +1101,25 @@ export async function getErpSaleDetails(tenantId: number, idValue: string | numb
     runQuery<Record<string, unknown>>(
       `SELECT vendas.*, COALESCE(vendas.cliente_snapshot->>'nome',entidades.nome) AS cliente_nome, COALESCE(vendas.cliente_snapshot->>'documento',entidades.documento) AS cliente_documento
        FROM erp.vendas JOIN erp.entidades
-         ON entidades.tenant_id = vendas.tenant_id AND entidades.id = vendas.cliente_id
-       WHERE vendas.tenant_id = $1 AND vendas.id = $2 AND vendas.excluido_em IS NULL`, [tenantId, id],
+         ON entidades.empresa_id = vendas.empresa_id AND entidades.id = vendas.cliente_id
+       WHERE vendas.empresa_id = $1 AND vendas.id = $2 AND vendas.excluido_em IS NULL`, [tenantId, id],
     ),
     runQuery<Record<string, unknown>>(
       `SELECT itens.id::text, CASE WHEN itens.produto_id IS NOT NULL THEN 'produto' ELSE 'servico' END AS tipo,
          COALESCE(itens.produto_id, itens.servico_id)::text AS item_id, itens.descricao, itens.quantidade,
          itens.valor_unitario, itens.desconto, itens.total, itens.quantidade_atendida
-       FROM erp.vendas_itens itens WHERE itens.tenant_id = $1 AND itens.venda_id = $2
+       FROM erp.vendas_itens itens WHERE itens.empresa_id = $1 AND itens.venda_id = $2
          AND itens.excluido_em IS NULL ORDER BY itens.id`, [tenantId, id],
     ),
     runQuery<Record<string, unknown>>(
       `SELECT id::text, numero_parcela, descricao, data_vencimento, valor,
          conta_financeira_id::text, metodo_pagamento_id::text
-       FROM erp.vendas_recebimentos_previstos WHERE tenant_id = $1 AND venda_id = $2
+       FROM erp.vendas_recebimentos_previstos WHERE empresa_id = $1 AND venda_id = $2
          AND excluido_em IS NULL ORDER BY numero_parcela`, [tenantId, id],
     ),
     runQuery<Record<string, unknown>>(
       `SELECT evento, status_anterior, status_novo, versao, dados, criado_em
-       FROM erp.vendas_eventos WHERE tenant_id = $1 AND venda_id = $2 ORDER BY criado_em DESC`, [tenantId, id],
+       FROM erp.vendas_eventos WHERE empresa_id = $1 AND venda_id = $2 ORDER BY criado_em DESC`, [tenantId, id],
     ),
   ])
   if (!sales[0]) throw new ErpDomainError('VALIDATION_ERROR', 'Venda nao encontrada.')
@@ -1132,8 +1132,8 @@ export async function getErpPurchaseDetails(tenantId: number, idValue: string | 
     runQuery<Record<string, unknown>>(
       `SELECT compras.*, entidades.nome AS fornecedor_nome, entidades.documento AS fornecedor_documento
        FROM erp.compras JOIN erp.entidades
-         ON entidades.tenant_id = compras.tenant_id AND entidades.id = compras.fornecedor_id
-       WHERE compras.tenant_id = $1 AND compras.id = $2 AND compras.excluido_em IS NULL`, [tenantId, id],
+         ON entidades.empresa_id = compras.empresa_id AND entidades.id = compras.fornecedor_id
+       WHERE compras.empresa_id = $1 AND compras.id = $2 AND compras.excluido_em IS NULL`, [tenantId, id],
     ),
     runQuery<Record<string, unknown>>(
       `SELECT itens.id::text, CASE WHEN itens.produto_id IS NOT NULL THEN 'produto' ELSE 'servico' END AS tipo,
@@ -1141,23 +1141,23 @@ export async function getErpPurchaseDetails(tenantId: number, idValue: string | 
          itens.unidade, itens.quantidade, itens.quantidade_recebida, itens.local_estoque_id::text,
          itens.valor_unitario, itens.valor_desconto, itens.total, COALESCE(produtos.controla_estoque, false) AS controla_estoque
        FROM erp.compras_itens itens
-       LEFT JOIN erp.produtos produtos ON produtos.tenant_id = itens.tenant_id AND produtos.id = itens.produto_id
-       WHERE itens.tenant_id = $1 AND itens.compra_id = $2
+       LEFT JOIN erp.produtos produtos ON produtos.empresa_id = itens.empresa_id AND produtos.id = itens.produto_id
+       WHERE itens.empresa_id = $1 AND itens.compra_id = $2
          AND itens.excluido_em IS NULL ORDER BY itens.id`, [tenantId, id],
     ),
     runQuery<Record<string, unknown>>(
       `SELECT id::text, numero_parcela, descricao, data_vencimento, valor,
          conta_financeira_id::text, metodo_pagamento_id::text
-       FROM erp.compras_parcelas_previstas WHERE tenant_id = $1 AND compra_id = $2
+       FROM erp.compras_parcelas_previstas WHERE empresa_id = $1 AND compra_id = $2
          AND excluido_em IS NULL ORDER BY numero_parcela`, [tenantId, id],
     ),
     runQuery<Record<string, unknown>>(
       `SELECT evento, dados, criado_em FROM erp.compras_eventos
-       WHERE tenant_id = $1 AND compra_id = $2 ORDER BY criado_em DESC`, [tenantId, id],
+       WHERE empresa_id = $1 AND compra_id = $2 ORDER BY criado_em DESC`, [tenantId, id],
     ),
     runQuery<Record<string, unknown>>(
       `SELECT id::text, numero, serie, chave_acesso, status, valor_total, emitida_em
-       FROM erp.notas_fiscais WHERE tenant_id = $1 AND compra_id = $2 AND excluido_em IS NULL
+       FROM erp.notas_fiscais WHERE empresa_id = $1 AND compra_id = $2 AND excluido_em IS NULL
        ORDER BY criado_em DESC`, [tenantId, id],
     ),
   ])
@@ -1186,8 +1186,8 @@ export async function importErpPurchaseInvoice(input: {
 
     const fiscalConfig = await client.query(
       `SELECT regexp_replace(cnpj, '\\D', '', 'g') AS cnpj
-       FROM erp.fiscal_issuer_for_operations($1)
-       WHERE tenant_id = $1
+       FROM erp.fiscal_issuer_for_operations($1) AS config(empresa_id,id,cnpj,inscricao_estadual,endereco_codigo_municipio)
+       WHERE empresa_id = $1
        ORDER BY id LIMIT 1`,
       [input.tenantId],
     )
@@ -1202,7 +1202,7 @@ export async function importErpPurchaseInvoice(input: {
     const existingResult = await client.query(
       `SELECT id::text, compra_id::text, status
        FROM erp.notas_fiscais
-       WHERE tenant_id = $1 AND chave_acesso = $2 AND direcao = 'entrada' AND excluido_em IS NULL
+       WHERE empresa_id = $1 AND chave_acesso = $2 AND direcao = 'entrada' AND excluido_em IS NULL
        LIMIT 1`,
       [input.tenantId, key],
     )
@@ -1210,14 +1210,14 @@ export async function importErpPurchaseInvoice(input: {
 
     let supplierResult = await client.query(
       `SELECT id, nome, documento, eh_fornecedor FROM erp.entidades
-       WHERE tenant_id = $1 AND regexp_replace(COALESCE(documento, ''), '\\D', '', 'g') = $2
+       WHERE empresa_id = $1 AND regexp_replace(COALESCE(documento, ''), '\\D', '', 'g') = $2
          AND excluido_em IS NULL LIMIT 1`,
       [input.tenantId, supplierDocument],
     )
     if (!supplierResult.rows[0]) {
       supplierResult = await client.query(
         `INSERT INTO erp.entidades (
-           tenant_id, tipo_pessoa, nome, documento, eh_cliente, eh_fornecedor,
+           empresa_id, tipo_pessoa, nome, documento, eh_cliente, eh_fornecedor,
            ativo, criado_por, atualizado_por, metadata
          ) VALUES ($1, 'juridica', $2, $3, false, true, true, $4, $4, $5::jsonb)
          RETURNING id, nome, documento`,
@@ -1225,7 +1225,7 @@ export async function importErpPurchaseInvoice(input: {
       )
     } else if (!Boolean((supplierResult.rows[0] as Record<string, unknown>).eh_fornecedor)) {
       await client.query(
-        `UPDATE erp.entidades SET eh_fornecedor = true, atualizado_por = $3 WHERE tenant_id = $1 AND id = $2`,
+        `UPDATE erp.entidades SET eh_fornecedor = true, atualizado_por = $3 WHERE empresa_id = $1 AND id = $2`,
         [input.tenantId, supplierResult.rows[0].id, input.actorId],
       )
     }
@@ -1246,12 +1246,12 @@ export async function importErpPurchaseInvoice(input: {
         const existingPurchase = await client.query(
           `SELECT compras.*
            FROM erp.compras AS compras
-           WHERE compras.tenant_id = $1 AND compras.id = $2
+           WHERE compras.empresa_id = $1 AND compras.id = $2
              AND compras.fornecedor_id = $3 AND compras.total = $4
              AND compras.tipo_movimento <> 'cancelada' AND compras.excluido_em IS NULL
              AND NOT EXISTS (
                SELECT 1 FROM erp.notas_fiscais AS notas
-               WHERE notas.tenant_id = compras.tenant_id AND notas.compra_id = compras.id AND notas.excluido_em IS NULL
+               WHERE notas.empresa_id = compras.empresa_id AND notas.compra_id = compras.id AND notas.excluido_em IS NULL
              )
            FOR UPDATE`,
           [input.tenantId, requestedPurchaseId, supplier.id, total],
@@ -1266,7 +1266,7 @@ export async function importErpPurchaseInvoice(input: {
       if (!purchase) {
         const purchaseResult = await client.query(
           `INSERT INTO erp.compras (
-             tenant_id, fornecedor_id, numero, data_compra, data_competencia,
+             empresa_id, fornecedor_id, numero, data_compra, data_competencia,
              status, tipo_compra, tipo_movimento, origem, fornecedor_nome_snapshot,
              fornecedor_documento_snapshot, categoria_id, natureza_operacao_id,
              subtotal, desconto, frete, impostos_adicionais, total, gera_financeiro, condicao_pagamento,
@@ -1292,8 +1292,8 @@ export async function importErpPurchaseInvoice(input: {
             `SELECT produtos.id, produtos.nome, produtos.unidade_medida
              FROM erp.fornecedores_produtos AS vinculos
              JOIN erp.produtos AS produtos
-               ON produtos.tenant_id = vinculos.tenant_id AND produtos.id = vinculos.produto_id
-             WHERE vinculos.tenant_id = $1 AND vinculos.fornecedor_id = $2
+               ON produtos.empresa_id = vinculos.empresa_id AND produtos.id = vinculos.produto_id
+             WHERE vinculos.empresa_id = $1 AND vinculos.fornecedor_id = $2
                AND lower(vinculos.codigo_fornecedor) = lower($3)
                AND vinculos.ativo = true AND vinculos.excluido_em IS NULL
                AND produtos.excluido_em IS NULL
@@ -1303,7 +1303,7 @@ export async function importErpPurchaseInvoice(input: {
           if (!productResult.rows[0]) {
             productResult = await client.query(
               `INSERT INTO erp.produtos (
-                 tenant_id, nome, codigo, sku, unidade_medida, ncm, custo, preco_venda,
+                 empresa_id, nome, codigo, sku, unidade_medida, ncm, custo, preco_venda,
                  ativo, criado_por, atualizado_por, metadata
                ) VALUES ($1, $2, NULL, $3, $4, $5, $6, $6, true, $7, $7, $8::jsonb)
                RETURNING id, nome, unidade_medida`,
@@ -1317,11 +1317,11 @@ export async function importErpPurchaseInvoice(input: {
           if (code) {
             await client.query(
               `INSERT INTO erp.fornecedores_produtos (
-                 tenant_id, fornecedor_id, produto_id, codigo_fornecedor,
+                 empresa_id, fornecedor_id, produto_id, codigo_fornecedor,
                  descricao_fornecedor, unidade_fornecedor, ultimo_custo, ultima_compra_em,
                  criado_por, atualizado_por
                ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $9)
-               ON CONFLICT (tenant_id, fornecedor_id, lower(codigo_fornecedor))
+               ON CONFLICT (empresa_id, fornecedor_id, lower(codigo_fornecedor))
                  WHERE excluido_em IS NULL
                DO UPDATE SET produto_id = EXCLUDED.produto_id,
                  descricao_fornecedor = EXCLUDED.descricao_fornecedor,
@@ -1335,7 +1335,7 @@ export async function importErpPurchaseInvoice(input: {
           }
           await client.query(
             `INSERT INTO erp.compras_itens (
-               tenant_id, compra_id, produto_id, descricao, unidade, quantidade,
+               empresa_id, compra_id, produto_id, descricao, unidade, quantidade,
                valor_unitario, valor_bruto, valor_liquido, total, item_codigo_snapshot,
                item_descricao_snapshot, item_unidade_snapshot, criado_por, atualizado_por,
                metadata
@@ -1345,7 +1345,7 @@ export async function importErpPurchaseInvoice(input: {
         }
         await client.query(
           `INSERT INTO erp.compras_parcelas_previstas (
-             tenant_id, compra_id, numero_parcela, descricao, data_vencimento, valor, criado_por, atualizado_por
+             empresa_id, compra_id, numero_parcela, descricao, data_vencimento, valor, criado_por, atualizado_por
            ) VALUES ($1, $2, 1, 'Parcela 1', $3, $4, $5, $5)`,
           [input.tenantId, purchase.id, dateText(values.data_vencimento) || issueDate, total, input.actorId],
         )
@@ -1353,7 +1353,7 @@ export async function importErpPurchaseInvoice(input: {
         const updatedPurchase = await client.query(
           `UPDATE erp.compras SET status = 'recebida', tipo_movimento = 'compra', origem = 'xml',
              gera_financeiro = $3, recebida_em = COALESCE(recebida_em, now()), atualizado_por = $4
-           WHERE tenant_id = $1 AND id = $2 RETURNING *`,
+           WHERE empresa_id = $1 AND id = $2 RETURNING *`,
           [input.tenantId, purchase.id, generateFinancial, input.actorId],
         )
         purchase = updatedPurchase.rows[0] as PurchaseRow
@@ -1364,7 +1364,7 @@ export async function importErpPurchaseInvoice(input: {
 
     const invoiceResult = await client.query(
       `INSERT INTO erp.notas_fiscais (
-         tenant_id, compra_id, entidade_id, tipo, direcao, finalidade, status,
+         empresa_id, compra_id, entidade_id, tipo, direcao, finalidade, status,
          numero, serie, chave_acesso, protocolo, valor_produtos, valor_total, emitida_em,
          xml_hash, destinatario_documento, codigo_status_sefaz, motivo_status_sefaz,
          payload_enviado, criado_por, atualizado_por
@@ -1380,7 +1380,7 @@ export async function importErpPurchaseInvoice(input: {
 
     await client.query(
       `INSERT INTO erp.notas_fiscais_totais (
-         tenant_id, nota_fiscal_id, base_icms, valor_icms, base_icms_st, valor_icms_st,
+         empresa_id, nota_fiscal_id, base_icms, valor_icms, base_icms_st, valor_icms_st,
          valor_fcp, valor_fcp_st, valor_ipi, valor_ii, valor_pis, valor_cofins,
          valor_seguro, outras_despesas, desconto, frete, criado_por, atualizado_por
        ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $17)`,
@@ -1394,7 +1394,7 @@ export async function importErpPurchaseInvoice(input: {
     for (const rawItem of items) {
       await client.query(
         `INSERT INTO erp.notas_fiscais_itens (
-           tenant_id, nota_fiscal_id, tipo_item, descricao, quantidade, valor_unitario,
+           empresa_id, nota_fiscal_id, tipo_item, descricao, quantidade, valor_unitario,
            valor_total, ncm, cfop, payload_item, criado_por, atualizado_por
          ) VALUES ($1, $2, 'produto', $3, $4, $5, $6, $7, $8, $9::jsonb, $10, $10)`,
         [input.tenantId, invoice.id, optionalText(rawItem.descricao) || 'Item NF-e', Number(rawItem.quantidade || 1), money(rawItem.valor_unitario), money(rawItem.valor_total), optionalText(rawItem.ncm), optionalText(rawItem.cfop), JSON.stringify(rawItem), input.actorId],
@@ -1503,18 +1503,18 @@ async function listEntityRoleRecords(input: ListInput): Promise<ErpEntityRecord[
          id::text,
          nome,
          documento,
-         COALESCE((SELECT NULLIF(c.email,'') FROM erp.entidades_contatos c WHERE c.tenant_id=entidades.tenant_id AND c.entidade_id=entidades.id AND c.ativo ORDER BY ('comercial'=ANY(c.principais)) DESC, c.id LIMIT 1), '') AS email,
-         COALESCE((SELECT NULLIF(c.telefone,'') FROM erp.entidades_contatos c WHERE c.tenant_id=entidades.tenant_id AND c.entidade_id=entidades.id AND c.ativo ORDER BY ('comercial'=ANY(c.principais)) DESC, c.id LIMIT 1), '') AS telefone,
-         COALESCE((SELECT NULLIF(c.cidade,'') FROM erp.entidades_enderecos c WHERE c.tenant_id=entidades.tenant_id AND c.entidade_id=entidades.id AND c.ativo ORDER BY ('comercial'=ANY(c.principais)) DESC, c.id LIMIT 1), '') AS cidade,
+         COALESCE((SELECT NULLIF(c.email,'') FROM erp.entidades_contatos c WHERE c.empresa_id=entidades.empresa_id AND c.entidade_id=entidades.id AND c.ativo ORDER BY ('comercial'=ANY(c.principais)) DESC, c.id LIMIT 1), '') AS email,
+         COALESCE((SELECT NULLIF(c.telefone,'') FROM erp.entidades_contatos c WHERE c.empresa_id=entidades.empresa_id AND c.entidade_id=entidades.id AND c.ativo ORDER BY ('comercial'=ANY(c.principais)) DESC, c.id LIMIT 1), '') AS telefone,
+         COALESCE((SELECT NULLIF(c.cidade,'') FROM erp.entidades_enderecos c WHERE c.empresa_id=entidades.empresa_id AND c.entidade_id=entidades.id AND c.ativo ORDER BY ('comercial'=ANY(c.principais)) DESC, c.id LIMIT 1), '') AS cidade,
          tipo_pessoa,
          versao,
          ativo,
          COALESCE(metadata ->> 'categoria', '') AS categoria,
          concat_ws(' ', nome, documento, email, cidade, COALESCE(metadata ->> 'categoria', ''),
-           (SELECT string_agg(concat_ws(' ',c.nome,c.email,c.telefone),' ') FROM erp.entidades_contatos c WHERE c.tenant_id=entidades.tenant_id AND c.entidade_id=entidades.id AND c.ativo),
-           (SELECT string_agg(concat_ws(' ',e.cidade,e.logradouro),' ') FROM erp.entidades_enderecos e WHERE e.tenant_id=entidades.tenant_id AND e.entidade_id=entidades.id AND e.ativo)) AS searchable
+           (SELECT string_agg(concat_ws(' ',c.nome,c.email,c.telefone),' ') FROM erp.entidades_contatos c WHERE c.empresa_id=entidades.empresa_id AND c.entidade_id=entidades.id AND c.ativo),
+           (SELECT string_agg(concat_ws(' ',e.cidade,e.logradouro),' ') FROM erp.entidades_enderecos e WHERE e.empresa_id=entidades.empresa_id AND e.entidade_id=entidades.id AND e.ativo)) AS searchable
        FROM erp.entidades
-       WHERE tenant_id = $1
+       WHERE empresa_id = $1
          AND ${roleColumn} = true
          AND excluido_em IS NULL
      )
@@ -1565,9 +1565,9 @@ async function listProductRecords(input: ListInput): Promise<ErpEntityRecord[]> 
          concat_ws(' ', produtos.nome, produtos.sku, produtos.codigo, categorias.nome) AS searchable
        FROM erp.produtos AS produtos
        LEFT JOIN erp.categorias AS categorias
-         ON categorias.tenant_id = produtos.tenant_id
+         ON categorias.empresa_id = produtos.empresa_id
         AND categorias.id = produtos.categoria_id
-       WHERE produtos.tenant_id = $1
+       WHERE produtos.empresa_id = $1
          AND produtos.excluido_em IS NULL
      )
      SELECT id, nome, sku, preco_venda, controla_estoque, estoque_minimo, categoria, versao, ativo,
@@ -1608,9 +1608,9 @@ async function listServiceRecords(input: ListInput): Promise<ErpEntityRecord[]> 
          concat_ws(' ', servicos.nome, servicos.codigo, servicos.descricao, servicos.categoria_id::text, categorias.nome) AS searchable
        FROM erp.servicos AS servicos
        LEFT JOIN erp.categorias AS categorias
-         ON categorias.tenant_id = servicos.tenant_id
+         ON categorias.empresa_id = servicos.empresa_id
         AND categorias.id = servicos.categoria_id
-       WHERE servicos.tenant_id = $1
+       WHERE servicos.empresa_id = $1
          AND servicos.excluido_em IS NULL
      )
      SELECT id, nome, codigo, preco, custo, categoria, versao, ativo,
@@ -1648,19 +1648,19 @@ async function listCategoryRecords(input: ListInput): Promise<ErpEntityRecord[]>
          (
            SELECT count(*)::int
            FROM erp.produtos AS produtos
-           WHERE produtos.tenant_id = categorias.tenant_id
+           WHERE produtos.empresa_id = categorias.empresa_id
              AND produtos.categoria_id = categorias.id
              AND produtos.excluido_em IS NULL
          ) + (
            SELECT count(*)::int
            FROM erp.servicos AS servicos
-           WHERE servicos.tenant_id = categorias.tenant_id
+           WHERE servicos.empresa_id = categorias.empresa_id
              AND servicos.categoria_id = categorias.id
              AND servicos.excluido_em IS NULL
          ) AS itens,
          concat_ws(' ', categorias.nome, categorias.metadata ->> 'descricao') AS searchable
        FROM erp.categorias AS categorias
-       WHERE categorias.tenant_id = $1
+       WHERE categorias.empresa_id = $1
          AND categorias.excluido_em IS NULL
      )
      SELECT id, nome, descricao, tipo, versao, itens, ativo,
@@ -1706,9 +1706,9 @@ async function listSaleRecords(input: ListInput): Promise<ErpEntityRecord[]> {
          concat_ws(' ', vendas.numero, entidades.nome, vendas.status) AS searchable
        FROM erp.vendas AS vendas
        JOIN erp.entidades AS entidades
-         ON entidades.tenant_id = vendas.tenant_id
+         ON entidades.empresa_id = vendas.empresa_id
         AND entidades.id = vendas.cliente_id
-        WHERE vendas.tenant_id = $1
+        WHERE vendas.empresa_id = $1
           AND vendas.excluido_em IS NULL
           ${documentClause}
       )
@@ -1760,13 +1760,13 @@ async function listPurchaseRecords(input: ListInput): Promise<ErpEntityRecord[]>
          concat_ws(' ', compras.numero, entidades.nome, compras.status, compras.tipo_movimento) AS searchable
        FROM erp.compras AS compras
        JOIN erp.entidades AS entidades
-         ON entidades.tenant_id = compras.tenant_id
+         ON entidades.empresa_id = compras.empresa_id
         AND entidades.id = compras.fornecedor_id
        LEFT JOIN erp.contas_pagar AS contas
-         ON contas.tenant_id = compras.tenant_id
+         ON contas.empresa_id = compras.empresa_id
         AND contas.compra_id = compras.id
         AND contas.excluido_em IS NULL
-       WHERE compras.tenant_id = $1
+       WHERE compras.empresa_id = $1
          AND compras.excluido_em IS NULL
          ${movementClause}
      )
@@ -1833,14 +1833,14 @@ async function listReceivables(input: ListInput): Promise<ErpEntityRecord[]> {
          concat_ws(' ', contas.descricao, contas.numero_documento, entidades.nome, contas.status) AS searchable
        FROM erp.contas_receber AS contas
        JOIN erp.entidades AS entidades
-         ON entidades.tenant_id = contas.tenant_id
+         ON entidades.empresa_id = contas.empresa_id
         AND entidades.id = contas.cliente_id
        JOIN erp.contas_receber_parcelas AS parcelas
-         ON parcelas.tenant_id = contas.tenant_id
+         ON parcelas.empresa_id = contas.empresa_id
         AND parcelas.conta_receber_id = contas.id
         AND parcelas.excluido_em IS NULL
        ${financialCompositionSql('receber')}
-       WHERE contas.tenant_id = $1
+       WHERE contas.empresa_id = $1
          AND contas.excluido_em IS NULL
          ${dueStartClause}
          ${dueEndClause}
@@ -1939,20 +1939,20 @@ async function listPayables(input: ListInput): Promise<ErpEntityRecord[]> {
          concat_ws(' ', contas.descricao, contas.numero_documento, entidades.nome, contas.status, contas.origem) AS searchable
        FROM erp.contas_pagar AS contas
        JOIN erp.entidades AS entidades
-         ON entidades.tenant_id = contas.tenant_id
+         ON entidades.empresa_id = contas.empresa_id
         AND entidades.id = contas.fornecedor_id
        JOIN erp.contas_pagar_parcelas AS parcelas
-         ON parcelas.tenant_id = contas.tenant_id
+         ON parcelas.empresa_id = contas.empresa_id
         AND parcelas.conta_pagar_id = contas.id
         AND parcelas.excluido_em IS NULL
        ${financialCompositionSql('pagar')}
        LEFT JOIN erp.categorias AS categorias
-         ON categorias.tenant_id = contas.tenant_id AND categorias.id = contas.categoria_id
+         ON categorias.empresa_id = contas.empresa_id AND categorias.id = contas.categoria_id
        LEFT JOIN erp.centros_custo AS centros
-         ON centros.tenant_id = contas.tenant_id AND centros.id = contas.centro_custo_id
+         ON centros.empresa_id = contas.empresa_id AND centros.id = contas.centro_custo_id
        LEFT JOIN erp.contas_financeiras AS financeiras
-         ON financeiras.tenant_id = parcelas.tenant_id AND financeiras.id = parcelas.conta_financeira_id
-       WHERE contas.tenant_id = $1
+         ON financeiras.empresa_id = parcelas.empresa_id AND financeiras.id = parcelas.conta_financeira_id
+       WHERE contas.empresa_id = $1
          AND contas.excluido_em IS NULL
          ${originClause}
          ${launchTypeClause}
@@ -2036,7 +2036,7 @@ async function listFinancialAccountRecords(input: ListInput): Promise<ErpEntityR
          ativo,
          concat_ws(' ', nome, tipo, banco, agencia, conta) AS searchable
        FROM erp.contas_financeiras
-       WHERE tenant_id = $1
+       WHERE empresa_id = $1
          AND excluido_em IS NULL
      )
      SELECT id, nome, tipo, banco, agencia, conta, saldo_inicial, padrao, versao, ativo,
@@ -2092,9 +2092,9 @@ export async function getErpEntityRecord(input: {
       CASE tipo_pessoa WHEN 'fisica' THEN 'PF' WHEN 'juridica' THEN 'PJ' ELSE 'Estrangeira' END AS tipo,
       COALESCE(metadata ->> 'categoria', '') AS categoria,
       CASE WHEN ativo THEN 'ativo' ELSE 'inativo' END AS status, versao,
-      (SELECT COALESCE(jsonb_agg((to_jsonb(c) - 'tenant_id' - 'entidade_id' - 'ativo' - 'criado_em' - 'criado_por' - 'atualizado_em') || jsonb_build_object('id',c.id::text) ORDER BY c.id), '[]'::jsonb)::text FROM erp.entidades_contatos c WHERE c.tenant_id=entidades.tenant_id AND c.entidade_id=entidades.id AND c.ativo) AS contatos_json,
-      (SELECT COALESCE(jsonb_agg((to_jsonb(e) - 'tenant_id' - 'entidade_id' - 'ativo' - 'criado_em' - 'criado_por' - 'atualizado_em') || jsonb_build_object('id',e.id::text) ORDER BY e.id), '[]'::jsonb)::text FROM erp.entidades_enderecos e WHERE e.tenant_id=entidades.tenant_id AND e.entidade_id=entidades.id AND e.ativo) AS enderecos_json
-      FROM erp.entidades WHERE tenant_id = $1 AND id = $2 AND ${role} = true AND excluido_em IS NULL`
+      (SELECT COALESCE(jsonb_agg((to_jsonb(c) - 'empresa_id' - 'entidade_id' - 'ativo' - 'criado_em' - 'criado_por' - 'atualizado_em') || jsonb_build_object('id',c.id::text) ORDER BY c.id), '[]'::jsonb)::text FROM erp.entidades_contatos c WHERE c.empresa_id=entidades.empresa_id AND c.entidade_id=entidades.id AND c.ativo) AS contatos_json,
+      (SELECT COALESCE(jsonb_agg((to_jsonb(e) - 'empresa_id' - 'entidade_id' - 'ativo' - 'criado_em' - 'criado_por' - 'atualizado_em') || jsonb_build_object('id',e.id::text) ORDER BY e.id), '[]'::jsonb)::text FROM erp.entidades_enderecos e WHERE e.empresa_id=entidades.empresa_id AND e.entidade_id=entidades.id AND e.ativo) AS enderecos_json
+      FROM erp.entidades WHERE empresa_id = $1 AND id = $2 AND ${role} = true AND excluido_em IS NULL`
   } else if (input.entityId === 'produtos') {
     sql = `SELECT produtos.id::text, produtos.nome, produtos.sku,
       COALESCE(categorias.nome, '') AS categoria, produtos.preco_venda AS preco,
@@ -2103,24 +2103,24 @@ export async function getErpEntityRecord(input: {
       produtos.estoque_minimo, produtos.ponto_reposicao,
       CASE WHEN produtos.ativo THEN 'ativo' ELSE 'pausado' END AS status, produtos.versao
       FROM erp.produtos LEFT JOIN erp.categorias
-        ON categorias.tenant_id = produtos.tenant_id AND categorias.id = produtos.categoria_id
-      WHERE produtos.tenant_id = $1 AND produtos.id = $2 AND produtos.excluido_em IS NULL`
+        ON categorias.empresa_id = produtos.empresa_id AND categorias.id = produtos.categoria_id
+      WHERE produtos.empresa_id = $1 AND produtos.id = $2 AND produtos.excluido_em IS NULL`
   } else if (input.entityId === 'servicos') {
     sql = `SELECT servicos.id::text, servicos.nome, servicos.codigo, servicos.descricao, servicos.categoria_id::text,
       COALESCE(categorias.nome, '') AS categoria, servicos.preco, servicos.custo,
       CASE WHEN servicos.ativo THEN 'ativo' ELSE 'pausado' END AS status, servicos.versao
       FROM erp.servicos LEFT JOIN erp.categorias
-        ON categorias.tenant_id = servicos.tenant_id AND categorias.id = servicos.categoria_id
-      WHERE servicos.tenant_id = $1 AND servicos.id = $2 AND servicos.excluido_em IS NULL`
+        ON categorias.empresa_id = servicos.empresa_id AND categorias.id = servicos.categoria_id
+      WHERE servicos.empresa_id = $1 AND servicos.id = $2 AND servicos.excluido_em IS NULL`
   } else if (input.entityId === 'categorias') {
     sql = `SELECT id::text, nome, tipo, COALESCE(metadata ->> 'descricao', '') AS descricao,
       CASE WHEN ativo THEN 'ativo' ELSE 'inativo' END AS status, versao
-      FROM erp.categorias WHERE tenant_id = $1 AND id = $2 AND excluido_em IS NULL`
+      FROM erp.categorias WHERE empresa_id = $1 AND id = $2 AND excluido_em IS NULL`
   } else {
     sql = `SELECT id::text, nome, tipo, banco, agencia, conta, digito, saldo_inicial,
       data_saldo_inicial, CASE WHEN padrao THEN 'sim' ELSE 'nao' END AS padrao,
       CASE WHEN ativo THEN 'ativo' ELSE 'inativo' END AS status, versao
-      FROM erp.contas_financeiras WHERE tenant_id = $1 AND id = $2 AND excluido_em IS NULL`
+      FROM erp.contas_financeiras WHERE empresa_id = $1 AND id = $2 AND excluido_em IS NULL`
   }
 
   const rows = await runQuery<Record<string, unknown>>(sql, [input.tenantId, id])
@@ -2141,7 +2141,7 @@ async function appendRegistrationEvent(
 ) {
   await client.query(
     `INSERT INTO erp.cadastros_eventos (
-       tenant_id, entidade_tipo, entidade_id, evento, versao, dados, criado_por
+       empresa_id, entidade_tipo, entidade_id, evento, versao, dados, criado_por
      ) VALUES ($1, $2, $3, $4, $5, $6::jsonb, $7)`,
     [input.tenantId, editableModuleTables[input.entityId].eventType, input.id, event, version,
       JSON.stringify({ antes: before, depois: after }), input.actorId],
@@ -2156,7 +2156,7 @@ export async function updateErpEntityRecord(input: UpdateInput): Promise<ErpEnti
     const table = editableModuleTables[entityId].table
     const roleClause = isEntityRoleModule(input.entityId) ? ` AND ${entityRoleColumn(input.entityId)} = true` : ''
     const currentResult = await client.query(
-      `SELECT * FROM erp.${table} WHERE tenant_id = $1 AND id = $2${roleClause} AND excluido_em IS NULL FOR UPDATE`,
+      `SELECT * FROM erp.${table} WHERE empresa_id = $1 AND id = $2${roleClause} AND excluido_em IS NULL FOR UPDATE`,
       [input.tenantId, id],
     )
     const current = currentResult.rows[0]
@@ -2174,7 +2174,7 @@ export async function updateErpEntityRecord(input: UpdateInput): Promise<ErpEnti
            telefone = $7, cidade = $8, ativo = $9,
            metadata = metadata || jsonb_build_object('categoria', $10::text),
            versao = versao + 1, atualizado_por = $11
-         WHERE tenant_id = $1 AND id = $2 AND ${entityRoleColumn(input.entityId)} = true AND versao = $12 RETURNING *`,
+         WHERE empresa_id = $1 AND id = $2 AND ${entityRoleColumn(input.entityId)} = true AND versao = $12 RETURNING *`,
         [input.tenantId, id, normalizePersonType(input.values.tipo), text(input.values.nome),
           optionalText(input.values.documento), current.email, current.telefone,
           current.cidade, activeFromStatus(input.values.status), category || '', input.actorId, input.expectedVersion],
@@ -2186,7 +2186,7 @@ export async function updateErpEntityRecord(input: UpdateInput): Promise<ErpEnti
         `UPDATE erp.produtos SET nome = $3, sku = $4, codigo = $4, preco_venda = $5,
            categoria_id = $6, ativo = $7, controla_estoque = $8, permite_estoque_negativo = $9,
            estoque_minimo = $10, ponto_reposicao = $11, versao = versao + 1, atualizado_por = $12
-         WHERE tenant_id = $1 AND id = $2 AND versao = $13 RETURNING *`,
+         WHERE empresa_id = $1 AND id = $2 AND versao = $13 RETURNING *`,
         [input.tenantId, id, text(input.values.nome), optionalText(input.values.sku), money(input.values.preco),
           categoryId, activeFromStatus(input.values.status), input.values.controla_estoque !== 'nao',
           input.values.permite_estoque_negativo === 'sim', money(input.values.estoque_minimo),
@@ -2198,7 +2198,7 @@ export async function updateErpEntityRecord(input: UpdateInput): Promise<ErpEnti
       result = await client.query(
         `UPDATE erp.servicos SET nome = $3, codigo = $4, descricao = $5, preco = $6, custo = $7,
            categoria_id = $8, ativo = $9, versao = versao + 1, atualizado_por = $10
-         WHERE tenant_id = $1 AND id = $2 AND versao = $11 RETURNING *`,
+         WHERE empresa_id = $1 AND id = $2 AND versao = $11 RETURNING *`,
         [input.tenantId, id, text(input.values.nome), optionalText(input.values.codigo), optionalText(input.values.descricao),
           money(input.values.preco), money(input.values.custo), categoryId, activeFromStatus(input.values.status),
           input.actorId, input.expectedVersion],
@@ -2211,7 +2211,7 @@ export async function updateErpEntityRecord(input: UpdateInput): Promise<ErpEnti
         `UPDATE erp.categorias SET nome = $3, tipo = $4, ativo = $5,
            metadata = metadata || jsonb_build_object('descricao', $6::text),
            versao = versao + 1, atualizado_por = $7
-         WHERE tenant_id = $1 AND id = $2 AND versao = $8 RETURNING *`,
+         WHERE empresa_id = $1 AND id = $2 AND versao = $8 RETURNING *`,
         [input.tenantId, id, text(input.values.nome), categoryType, activeFromStatus(input.values.status),
           optionalText(input.values.descricao) || '', input.actorId, input.expectedVersion],
       )
@@ -2221,7 +2221,7 @@ export async function updateErpEntityRecord(input: UpdateInput): Promise<ErpEnti
       if (makeDefault) {
         await client.query(
           `UPDATE erp.contas_financeiras SET padrao = false, atualizado_por = $2
-           WHERE tenant_id = $1 AND id <> $3 AND padrao = true`,
+           WHERE empresa_id = $1 AND id <> $3 AND padrao = true`,
           [input.tenantId, input.actorId, id],
         )
       }
@@ -2229,7 +2229,7 @@ export async function updateErpEntityRecord(input: UpdateInput): Promise<ErpEnti
         `UPDATE erp.contas_financeiras SET nome = $3, tipo = $4, banco = $5, agencia = $6,
            conta = $7, digito = $8, saldo_inicial = $9, data_saldo_inicial = $10,
            padrao = $11, ativo = $12, versao = versao + 1, atualizado_por = $13
-         WHERE tenant_id = $1 AND id = $2 AND versao = $14 RETURNING *`,
+         WHERE empresa_id = $1 AND id = $2 AND versao = $14 RETURNING *`,
         [input.tenantId, id, text(input.values.nome), financialAccountType(input.values.tipo),
           optionalText(input.values.banco), optionalText(input.values.agencia), optionalText(input.values.conta),
           optionalText(input.values.digito), money(input.values.saldo_inicial), dateText(input.values.data_saldo_inicial),
@@ -2254,7 +2254,7 @@ export async function deactivateErpEntityRecord(input: IdActionInput & { entityI
     const table = editableModuleTables[entityId].table
     const roleClause = isEntityRoleModule(input.entityId) ? ` AND ${entityRoleColumn(input.entityId)} = true` : ''
     const currentResult = await client.query(
-      `SELECT * FROM erp.${table} WHERE tenant_id = $1 AND id = $2${roleClause} AND excluido_em IS NULL FOR UPDATE`,
+      `SELECT * FROM erp.${table} WHERE empresa_id = $1 AND id = $2${roleClause} AND excluido_em IS NULL FOR UPDATE`,
       [input.tenantId, id],
     )
     const current = currentResult.rows[0]
@@ -2262,7 +2262,7 @@ export async function deactivateErpEntityRecord(input: IdActionInput & { entityI
     if (Number(current.versao) !== input.expectedVersion) throw new ErpDomainError('VALIDATION_ERROR', 'CONFLITO_VERSAO: este registro foi alterado por outra pessoa.')
     const result = await client.query(
       `UPDATE erp.${table} SET ativo = false, versao = versao + 1, atualizado_por = $3
-       WHERE tenant_id = $1 AND id = $2${roleClause} AND versao = $4 RETURNING *`,
+       WHERE empresa_id = $1 AND id = $2${roleClause} AND versao = $4 RETURNING *`,
       [input.tenantId, id, input.actorId, input.expectedVersion],
     )
     const updated = result.rows[0]
@@ -2280,23 +2280,23 @@ export async function getErpEntitySummary(tenantId: number, entityId: ErpConnect
     sql = `SELECT count(*) FILTER (WHERE ativo)::int AS ativos,
       count(*) FILTER (WHERE NOT ativo)::int AS inativos,
       count(DISTINCT NULLIF(metadata ->> 'categoria', ''))::int AS categorias
-      FROM erp.entidades WHERE tenant_id = $1 AND ${role} = true AND excluido_em IS NULL`
+      FROM erp.entidades WHERE empresa_id = $1 AND ${role} = true AND excluido_em IS NULL`
   } else if (entityId === 'produtos') {
     sql = `SELECT count(*) FILTER (WHERE ativo)::int AS ativos, count(DISTINCT categoria_id)::int AS categorias,
       COALESCE(avg(preco_venda) FILTER (WHERE ativo), 0)::numeric(18,2) AS media
-      FROM erp.produtos WHERE tenant_id = $1 AND excluido_em IS NULL`
+      FROM erp.produtos WHERE empresa_id = $1 AND excluido_em IS NULL`
   } else if (entityId === 'servicos') {
     sql = `SELECT count(*) FILTER (WHERE ativo)::int AS ativos, count(DISTINCT categoria_id)::int AS categorias,
       COALESCE(avg(preco) FILTER (WHERE ativo), 0)::numeric(18,2) AS media
-      FROM erp.servicos WHERE tenant_id = $1 AND excluido_em IS NULL`
+      FROM erp.servicos WHERE empresa_id = $1 AND excluido_em IS NULL`
   } else if (entityId === 'categorias') {
     sql = `SELECT count(*) FILTER (WHERE ativo)::int AS ativos,
-      count(*) FILTER (WHERE ativo AND NOT EXISTS (SELECT 1 FROM erp.produtos p WHERE p.tenant_id = categorias.tenant_id AND p.categoria_id = categorias.id AND p.excluido_em IS NULL) AND NOT EXISTS (SELECT 1 FROM erp.servicos s WHERE s.tenant_id = categorias.tenant_id AND s.categoria_id = categorias.id AND s.excluido_em IS NULL))::int AS sem_itens,
-      count(DISTINCT tipo)::int AS tipos FROM erp.categorias WHERE tenant_id = $1 AND excluido_em IS NULL`
+      count(*) FILTER (WHERE ativo AND NOT EXISTS (SELECT 1 FROM erp.produtos p WHERE p.empresa_id = categorias.empresa_id AND p.categoria_id = categorias.id AND p.excluido_em IS NULL) AND NOT EXISTS (SELECT 1 FROM erp.servicos s WHERE s.empresa_id = categorias.empresa_id AND s.categoria_id = categorias.id AND s.excluido_em IS NULL))::int AS sem_itens,
+      count(DISTINCT tipo)::int AS tipos FROM erp.categorias WHERE empresa_id = $1 AND excluido_em IS NULL`
   } else {
     sql = `SELECT count(*) FILTER (WHERE ativo)::int AS ativos, count(*) FILTER (WHERE padrao AND ativo)::int AS padrao,
       COALESCE(sum(saldo_inicial) FILTER (WHERE ativo), 0)::numeric(18,2) AS saldo
-      FROM erp.contas_financeiras WHERE tenant_id = $1 AND excluido_em IS NULL`
+      FROM erp.contas_financeiras WHERE empresa_id = $1 AND excluido_em IS NULL`
   }
   const row = (await runQuery<Record<string, unknown>>(sql, [tenantId]))[0] || {}
   const currency = (value: unknown) => new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(Number(value || 0))
@@ -2329,7 +2329,7 @@ export async function listErpCategoryOptions(tenantId: number, type?: string, us
   const typeClause = allowedType ? ` AND tipo IN ($${params.push(allowedType)}, 'geral')` : ''
   const rows = await runQuery<{ id: string; nome: string; tipo: string }>(
     `SELECT id::text, nome, tipo FROM erp.categorias
-     WHERE tenant_id = $1 AND ativo = true AND excluido_em IS NULL${typeClause}
+     WHERE empresa_id = $1 AND ativo = true AND excluido_em IS NULL${typeClause}
      ORDER BY nome ASC LIMIT 100`, params,
   )
   return rows.map((row) => ({ value: useId ? row.id : row.nome, label: row.nome, tipo: row.tipo }))
@@ -2350,7 +2350,7 @@ export async function searchErpCatalog(input: {
       `SELECT id::text, nome, documento, email, celular, telefone,
          contato_cobranca_emails, contato_cobranca_whatsapp
        FROM erp.entidades
-       WHERE tenant_id = $1 AND ${role} = true AND ativo = true AND excluido_em IS NULL
+       WHERE empresa_id = $1 AND ${role} = true AND ativo = true AND excluido_em IS NULL
          AND concat_ws(' ', nome, documento, email) ILIKE $2
        ORDER BY nome LIMIT $3`, [input.tenantId, query, limit],
     )
@@ -2358,7 +2358,7 @@ export async function searchErpCatalog(input: {
   if (input.type === 'produto') {
     return runQuery(
       `SELECT id::text, nome, COALESCE(sku, codigo, '') AS codigo, unidade_medida AS unidade, preco_venda AS valor_padrao
-       FROM erp.produtos WHERE tenant_id = $1 AND ativo = true AND excluido_em IS NULL
+       FROM erp.produtos WHERE empresa_id = $1 AND ativo = true AND excluido_em IS NULL
          AND concat_ws(' ', nome, sku, codigo, codigo_barras) ILIKE $2
        ORDER BY nome LIMIT $3`, [input.tenantId, query, limit],
     )
@@ -2366,7 +2366,7 @@ export async function searchErpCatalog(input: {
   if (input.type === 'servico') {
     return runQuery(
       `SELECT id::text, nome, COALESCE(codigo, '') AS codigo, preco AS valor_padrao
-       FROM erp.servicos WHERE tenant_id = $1 AND ativo = true AND excluido_em IS NULL
+       FROM erp.servicos WHERE empresa_id = $1 AND ativo = true AND excluido_em IS NULL
          AND concat_ws(' ', nome, codigo, descricao) ILIKE $2
        ORDER BY nome LIMIT $3`, [input.tenantId, query, limit],
     )
@@ -2377,7 +2377,7 @@ export async function searchErpCatalog(input: {
   const typeClause = categoryType ? ` AND tipo IN ($${params.push(categoryType)}, 'geral')` : ''
   return runQuery(
     `SELECT id::text, nome, tipo FROM erp.categorias
-     WHERE tenant_id = $1 AND ativo = true AND excluido_em IS NULL AND nome ILIKE $2${typeClause}
+     WHERE empresa_id = $1 AND ativo = true AND excluido_em IS NULL AND nome ILIKE $2${typeClause}
      ORDER BY nome LIMIT $3`, params,
   )
 }
@@ -2429,7 +2429,7 @@ export async function confirmErpSale(input: ConfirmSaleInput): Promise<ConfirmEr
     const saleResult = await client.query(
       `SELECT
          id,
-         tenant_id,
+         empresa_id,
          cliente_id,
          numero,
          data_venda,
@@ -2448,7 +2448,7 @@ export async function confirmErpSale(input: ConfirmSaleInput): Promise<ConfirmEr
           tipo_documento,
           versao
        FROM erp.vendas
-       WHERE tenant_id = $1
+       WHERE empresa_id = $1
          AND id = $2
          AND excluido_em IS NULL
        FOR UPDATE`,
@@ -2499,7 +2499,7 @@ export async function confirmErpSale(input: ConfirmSaleInput): Promise<ConfirmEr
          contato_cobranca_emails,
          contato_cobranca_whatsapp
        FROM erp.entidades
-       WHERE tenant_id = $1
+       WHERE empresa_id = $1
          AND id = $2
          AND eh_cliente = true
          AND excluido_em IS NULL
@@ -2515,7 +2515,7 @@ export async function confirmErpSale(input: ConfirmSaleInput): Promise<ConfirmEr
       `SELECT count(*)::int AS total,
          count(*) FILTER (WHERE produto_id IS NOT NULL)::int AS produtos
        FROM erp.vendas_itens
-       WHERE tenant_id = $1
+       WHERE empresa_id = $1
          AND venda_id = $2
          AND excluido_em IS NULL`,
       [input.tenantId, sale.id],
@@ -2533,11 +2533,11 @@ export async function confirmErpSale(input: ConfirmSaleInput): Promise<ConfirmEr
          confirmada_em = COALESCE(confirmada_em, now()),
          versao = versao + 1,
          atualizado_por = $3
-       WHERE tenant_id = $1
+       WHERE empresa_id = $1
          AND id = $2
        RETURNING
          id,
-         tenant_id,
+         empresa_id,
          cliente_id,
          numero,
          data_venda,
@@ -2563,7 +2563,7 @@ export async function confirmErpSale(input: ConfirmSaleInput): Promise<ConfirmEr
       saleId: Number(sale.id),
     })
     await client.query(
-      `INSERT INTO erp.vendas_eventos (tenant_id, venda_id, evento, status_anterior, status_novo, versao, dados, criado_por)
+      `INSERT INTO erp.vendas_eventos (empresa_id, venda_id, evento, status_anterior, status_novo, versao, dados, criado_por)
        VALUES ($1, $2, 'confirmada', $3, $4, $5, '{}'::jsonb, $6)`,
       [input.tenantId, sale.id, sale.status, updatedSale.status, Number(updatedSale.versao || Number(sale.versao || 1) + 1), input.actorId],
     )
@@ -2580,7 +2580,7 @@ export async function confirmErpSale(input: ConfirmSaleInput): Promise<ConfirmEr
 
     const receivableResult = await client.query(
       `INSERT INTO erp.contas_receber (
-         tenant_id,
+         empresa_id,
          cliente_id,
          venda_id,
          descricao,
@@ -2627,7 +2627,7 @@ export async function confirmErpSale(input: ConfirmSaleInput): Promise<ConfirmEr
     for (const installment of installments) {
       const installmentResult = await client.query(
         `INSERT INTO erp.contas_receber_parcelas (
-           tenant_id,
+           empresa_id,
            conta_receber_id,
            numero_parcela,
            descricao,
@@ -2669,9 +2669,9 @@ export async function confirmErpSale(input: ConfirmSaleInput): Promise<ConfirmEr
 export async function cancelErpSale(input: IdActionInput & { reason?: string | null; expectedVersion?: number }) {
   return withTransaction(async (client) => {
     const saleResult = await client.query(
-      `SELECT id, tenant_id, status, versao
+      `SELECT id, empresa_id, status, versao
        FROM erp.vendas
-       WHERE tenant_id = $1
+       WHERE empresa_id = $1
          AND id = $2
          AND excluido_em IS NULL
        FOR UPDATE`,
@@ -2685,7 +2685,7 @@ export async function cancelErpSale(input: IdActionInput & { reason?: string | n
     const invoiceResult = await client.query(
       `SELECT id
        FROM erp.notas_fiscais
-       WHERE tenant_id = $1
+       WHERE empresa_id = $1
          AND venda_id = $2
          AND excluido_em IS NULL
          AND status NOT IN ('cancelada', 'falha')
@@ -2698,12 +2698,12 @@ export async function cancelErpSale(input: IdActionInput & { reason?: string | n
       `SELECT cobrancas.id
        FROM erp.cobrancas AS cobrancas
        JOIN erp.contas_receber_parcelas AS parcelas
-         ON parcelas.tenant_id = cobrancas.tenant_id
+         ON parcelas.empresa_id = cobrancas.empresa_id
         AND parcelas.id = cobrancas.conta_receber_parcela_id
        JOIN erp.contas_receber AS contas
-         ON contas.tenant_id = parcelas.tenant_id
+         ON contas.empresa_id = parcelas.empresa_id
         AND contas.id = parcelas.conta_receber_id
-       WHERE cobrancas.tenant_id = $1
+       WHERE cobrancas.empresa_id = $1
          AND contas.venda_id = $2
          AND cobrancas.excluido_em IS NULL
          AND cobrancas.status NOT IN ('cancelada', 'falha')
@@ -2716,12 +2716,12 @@ export async function cancelErpSale(input: IdActionInput & { reason?: string | n
       `SELECT pagamentos.id
        FROM erp.pagamentos AS pagamentos
        JOIN erp.contas_receber_parcelas AS parcelas
-         ON parcelas.tenant_id = pagamentos.tenant_id
+         ON parcelas.empresa_id = pagamentos.empresa_id
         AND parcelas.id = pagamentos.conta_receber_parcela_id
        JOIN erp.contas_receber AS contas
-         ON contas.tenant_id = parcelas.tenant_id
+         ON contas.empresa_id = parcelas.empresa_id
         AND contas.id = parcelas.conta_receber_id
-       WHERE pagamentos.tenant_id = $1
+       WHERE pagamentos.empresa_id = $1
          AND contas.venda_id = $2
          AND pagamentos.excluido_em IS NULL
          AND pagamentos.estornado_em IS NULL
@@ -2741,9 +2741,9 @@ export async function cancelErpSale(input: IdActionInput & { reason?: string | n
       `UPDATE erp.contas_receber_parcelas AS parcelas
        SET status = 'cancelado', atualizado_por = $3
        FROM erp.contas_receber AS contas
-       WHERE parcelas.tenant_id = contas.tenant_id
+       WHERE parcelas.empresa_id = contas.empresa_id
          AND parcelas.conta_receber_id = contas.id
-         AND contas.tenant_id = $1
+         AND contas.empresa_id = $1
          AND contas.venda_id = $2
          AND parcelas.excluido_em IS NULL`,
       [input.tenantId, sale.id, input.actorId],
@@ -2755,7 +2755,7 @@ export async function cancelErpSale(input: IdActionInput & { reason?: string | n
          cancelado_em = COALESCE(cancelado_em, now()),
          motivo_cancelamento = COALESCE($4, motivo_cancelamento),
          atualizado_por = $3
-       WHERE tenant_id = $1
+       WHERE empresa_id = $1
          AND venda_id = $2
          AND excluido_em IS NULL`,
       [input.tenantId, sale.id, input.actorId, optionalText(input.reason)],
@@ -2765,13 +2765,13 @@ export async function cancelErpSale(input: IdActionInput & { reason?: string | n
        SET status = 'cancelada', situacao = 'cancelada', atendimento_status = 'cancelado',
          fiscal_status = 'cancelada', cancelada_em = COALESCE(cancelada_em, now()),
          versao = versao + 1, atualizado_por = $3
-       WHERE tenant_id = $1
+       WHERE empresa_id = $1
          AND id = $2
        RETURNING id::text, status, versao`,
       [input.tenantId, sale.id, input.actorId],
     )
     await client.query(
-      `INSERT INTO erp.vendas_eventos (tenant_id, venda_id, evento, status_anterior, status_novo, versao, dados, criado_por)
+      `INSERT INTO erp.vendas_eventos (empresa_id, venda_id, evento, status_anterior, status_novo, versao, dados, criado_por)
        VALUES ($1, $2, 'cancelada', $3, 'cancelada', $4, $5::jsonb, $6)`,
       [input.tenantId, sale.id, sale.status, Number(updated.rows[0]?.versao || 1),
         JSON.stringify({ motivo: optionalText(input.reason) }), input.actorId],
@@ -2785,7 +2785,7 @@ export async function confirmErpPurchase(input: IdActionInput): Promise<ConfirmE
     const purchaseResult = await client.query(
       `SELECT
          id,
-         tenant_id,
+         empresa_id,
          fornecedor_id,
          numero,
          data_compra,
@@ -2804,7 +2804,7 @@ export async function confirmErpPurchase(input: IdActionInput): Promise<ConfirmE
          fornecedor_nome_snapshot,
          fornecedor_documento_snapshot
        FROM erp.compras
-       WHERE tenant_id = $1
+       WHERE empresa_id = $1
          AND id = $2
          AND excluido_em IS NULL
        FOR UPDATE`,
@@ -2820,8 +2820,8 @@ export async function confirmErpPurchase(input: IdActionInput): Promise<ConfirmE
       `SELECT count(*)::int AS total,
          count(*) FILTER (WHERE itens.produto_id IS NOT NULL AND produtos.controla_estoque)::int AS itens_estoque
        FROM erp.compras_itens itens
-       LEFT JOIN erp.produtos produtos ON produtos.tenant_id = itens.tenant_id AND produtos.id = itens.produto_id
-       WHERE itens.tenant_id = $1
+       LEFT JOIN erp.produtos produtos ON produtos.empresa_id = itens.empresa_id AND produtos.id = itens.produto_id
+       WHERE itens.empresa_id = $1
          AND itens.compra_id = $2
          AND itens.excluido_em IS NULL`,
       [input.tenantId, purchase.id],
@@ -2851,11 +2851,11 @@ export async function confirmErpPurchase(input: IdActionInput): Promise<ConfirmE
            recebida_em = CASE WHEN $4::int = 0 THEN COALESCE(recebida_em, now()) ELSE recebida_em END,
            versao = versao + 1,
            atualizado_por = $3
-       WHERE tenant_id = $1
+       WHERE empresa_id = $1
          AND id = $2
        RETURNING
          id,
-         tenant_id,
+         empresa_id,
          fornecedor_id,
          numero,
          data_compra,
@@ -2878,7 +2878,7 @@ export async function confirmErpPurchase(input: IdActionInput): Promise<ConfirmE
     const updatedPurchase = updatedPurchaseResult.rows[0] as PurchaseRow
     if (!updatedPurchase.gera_financeiro) {
       await client.query(
-        `INSERT INTO erp.compras_eventos (tenant_id, compra_id, evento, dados, criado_por)
+        `INSERT INTO erp.compras_eventos (empresa_id, compra_id, evento, dados, criado_por)
          VALUES ($1, $2, 'confirmada_sem_financeiro', '{}'::jsonb, $3)`,
         [input.tenantId, updatedPurchase.id, input.actorId],
       )
@@ -2887,7 +2887,7 @@ export async function confirmErpPurchase(input: IdActionInput): Promise<ConfirmE
     const financial = await createOrUpdatePurchasePayable(client, updatedPurchase, input.actorId, 'efetivo')
     if (!financial) return mapConfirmPurchaseResult(updatedPurchase, null, [])
     await client.query(
-      `INSERT INTO erp.compras_eventos (tenant_id, compra_id, evento, dados, criado_por)
+      `INSERT INTO erp.compras_eventos (empresa_id, compra_id, evento, dados, criado_por)
        VALUES ($1, $2, 'confirmada', $3::jsonb, $4)`,
       [input.tenantId, updatedPurchase.id, JSON.stringify({ conta_pagar_id: financial.payable.id }), input.actorId],
     )
@@ -2898,9 +2898,9 @@ export async function confirmErpPurchase(input: IdActionInput): Promise<ConfirmE
 export async function cancelErpPurchase(input: IdActionInput) {
   return withTransaction(async (client) => {
     const purchaseResult = await client.query(
-      `SELECT id, tenant_id, status
+      `SELECT id, empresa_id, status
        FROM erp.compras
-       WHERE tenant_id = $1
+       WHERE empresa_id = $1
          AND id = $2
          AND excluido_em IS NULL
        FOR UPDATE`,
@@ -2913,7 +2913,7 @@ export async function cancelErpPurchase(input: IdActionInput) {
     const invoiceResult = await client.query(
       `SELECT id
        FROM erp.notas_fiscais
-       WHERE tenant_id = $1
+       WHERE empresa_id = $1
          AND compra_id = $2
          AND excluido_em IS NULL
          AND status NOT IN ('cancelada', 'falha')
@@ -2926,12 +2926,12 @@ export async function cancelErpPurchase(input: IdActionInput) {
       `SELECT pagamentos.id
        FROM erp.pagamentos AS pagamentos
        JOIN erp.contas_pagar_parcelas AS parcelas
-         ON parcelas.tenant_id = pagamentos.tenant_id
+         ON parcelas.empresa_id = pagamentos.empresa_id
         AND parcelas.id = pagamentos.conta_pagar_parcela_id
        JOIN erp.contas_pagar AS contas
-         ON contas.tenant_id = parcelas.tenant_id
+         ON contas.empresa_id = parcelas.empresa_id
         AND contas.id = parcelas.conta_pagar_id
-       WHERE pagamentos.tenant_id = $1
+       WHERE pagamentos.empresa_id = $1
          AND contas.compra_id = $2
          AND pagamentos.excluido_em IS NULL
          AND pagamentos.estornado_em IS NULL
@@ -2951,9 +2951,9 @@ export async function cancelErpPurchase(input: IdActionInput) {
       `UPDATE erp.contas_pagar_parcelas AS parcelas
        SET status = 'cancelado', atualizado_por = $3
        FROM erp.contas_pagar AS contas
-       WHERE parcelas.tenant_id = contas.tenant_id
+       WHERE parcelas.empresa_id = contas.empresa_id
          AND parcelas.conta_pagar_id = contas.id
-         AND contas.tenant_id = $1
+         AND contas.empresa_id = $1
          AND contas.compra_id = $2
          AND parcelas.excluido_em IS NULL`,
       [input.tenantId, purchase.id, input.actorId],
@@ -2961,7 +2961,7 @@ export async function cancelErpPurchase(input: IdActionInput) {
     await client.query(
       `UPDATE erp.contas_pagar
        SET status = 'cancelado', cancelado_em = COALESCE(cancelado_em, now()), atualizado_por = $3
-       WHERE tenant_id = $1
+       WHERE empresa_id = $1
          AND compra_id = $2
          AND excluido_em IS NULL`,
       [input.tenantId, purchase.id, input.actorId],
@@ -2969,13 +2969,13 @@ export async function cancelErpPurchase(input: IdActionInput) {
     const updated = await client.query(
       `UPDATE erp.compras
        SET status = 'cancelada', tipo_movimento = 'cancelada', cancelada_em = COALESCE(cancelada_em, now()), versao = versao + 1, atualizado_por = $3
-       WHERE tenant_id = $1
+       WHERE empresa_id = $1
          AND id = $2
        RETURNING id::text, status`,
       [input.tenantId, purchase.id, input.actorId],
     )
     await client.query(
-      `INSERT INTO erp.compras_eventos (tenant_id, compra_id, evento, dados, criado_por)
+      `INSERT INTO erp.compras_eventos (empresa_id, compra_id, evento, dados, criado_por)
        VALUES ($1, $2, 'cancelada', '{}'::jsonb, $3)`,
       [input.tenantId, purchase.id, input.actorId],
     )
@@ -3029,7 +3029,7 @@ async function recalculateReceivableInstallment(
     `WITH totals AS (
        SELECT composicao.* FROM erp.contas_receber_parcelas parcelas
        ${financialCompositionSql('receber')}
-       WHERE parcelas.tenant_id=$1 AND parcelas.id=$2
+       WHERE parcelas.empresa_id=$1 AND parcelas.id=$2
      )
      UPDATE erp.contas_receber_parcelas AS parcelas
      SET
@@ -3047,7 +3047,7 @@ async function recalculateReceivableInstallment(
        END,
        atualizado_por = $3
      FROM totals
-     WHERE parcelas.tenant_id = $1
+     WHERE parcelas.empresa_id = $1
        AND parcelas.id = $2
      RETURNING parcelas.id::text, parcelas.conta_receber_id::text, parcelas.valor, parcelas.valor_pago, parcelas.status`,
     [tenantId, installmentId, actorId, paymentDate || null],
@@ -3066,7 +3066,7 @@ async function recalculatePayableInstallment(
     `WITH totals AS (
        SELECT composicao.* FROM erp.contas_pagar_parcelas parcelas
        ${financialCompositionSql('pagar')}
-       WHERE parcelas.tenant_id=$1 AND parcelas.id=$2
+       WHERE parcelas.empresa_id=$1 AND parcelas.id=$2
      )
      UPDATE erp.contas_pagar_parcelas AS parcelas
      SET
@@ -3084,7 +3084,7 @@ async function recalculatePayableInstallment(
        END,
        atualizado_por = $3
      FROM totals
-     WHERE parcelas.tenant_id = $1
+     WHERE parcelas.empresa_id = $1
        AND parcelas.id = $2
      RETURNING parcelas.id::text, parcelas.conta_pagar_id::text, parcelas.valor, parcelas.valor_pago, parcelas.status`,
     [tenantId, installmentId, actorId, paymentDate || null],
@@ -3099,7 +3099,7 @@ export async function settleReceivableInstallment(input: SettleInstallmentInput)
     await client.query('SELECT pg_advisory_xact_lock(hashtextextended($1, 0))', [`erp:pagamento:${input.tenantId}:${idempotencyKey}`])
     const existingPaymentResult = await client.query(
       `SELECT id::text, tipo, conta_receber_parcela_id::text, valor, valor_liquido, metadata
-       FROM erp.pagamentos WHERE tenant_id=$1 AND chave_idempotencia=$2 LIMIT 1`,
+       FROM erp.pagamentos WHERE empresa_id=$1 AND chave_idempotencia=$2 LIMIT 1`,
       [input.tenantId, idempotencyKey],
     )
     const existingPayment = existingPaymentResult.rows[0] as Record<string, unknown> | undefined
@@ -3121,10 +3121,10 @@ export async function settleReceivableInstallment(input: SettleInstallmentInput)
          composicao.saldo
        FROM erp.contas_receber_parcelas AS parcelas
        JOIN erp.contas_receber AS contas
-         ON contas.tenant_id = parcelas.tenant_id
+         ON contas.empresa_id = parcelas.empresa_id
         AND contas.id = parcelas.conta_receber_id
        ${financialCompositionSql('receber')}
-       WHERE parcelas.tenant_id = $1
+       WHERE parcelas.empresa_id = $1
          AND parcelas.id = $2
          AND parcelas.excluido_em IS NULL
          AND contas.excluido_em IS NULL
@@ -3157,7 +3157,7 @@ export async function settleReceivableInstallment(input: SettleInstallmentInput)
 
     const paymentResult = await client.query(
       `INSERT INTO erp.pagamentos (
-         tenant_id,
+         empresa_id,
          tipo,
          origem,
          chave_idempotencia,
@@ -3203,7 +3203,7 @@ export async function settleReceivableInstallment(input: SettleInstallmentInput)
          conta_financeira_id = $3,
          metodo_pagamento_id = $4,
          atualizado_por = $5
-       WHERE tenant_id = $1
+       WHERE empresa_id = $1
          AND id = $2
          AND (conta_financeira_id IS DISTINCT FROM $3::bigint OR metodo_pagamento_id IS DISTINCT FROM $4::bigint)`,
       [input.tenantId, installment.id, financialAccountId, methodId, input.actorId],
@@ -3231,7 +3231,7 @@ export async function settlePayableInstallment(input: SettleInstallmentInput) {
     await client.query('SELECT pg_advisory_xact_lock(hashtextextended($1, 0))', [`erp:pagamento:${input.tenantId}:${idempotencyKey}`])
     const existingPaymentResult = await client.query(
       `SELECT id::text, tipo, conta_pagar_parcela_id::text, valor, valor_liquido, metadata
-       FROM erp.pagamentos WHERE tenant_id=$1 AND chave_idempotencia=$2 LIMIT 1`,
+       FROM erp.pagamentos WHERE empresa_id=$1 AND chave_idempotencia=$2 LIMIT 1`,
       [input.tenantId, idempotencyKey],
     )
     const existingPayment = existingPaymentResult.rows[0] as Record<string, unknown> | undefined
@@ -3254,10 +3254,10 @@ export async function settlePayableInstallment(input: SettleInstallmentInput) {
          composicao.saldo
        FROM erp.contas_pagar_parcelas AS parcelas
        JOIN erp.contas_pagar AS contas
-         ON contas.tenant_id = parcelas.tenant_id
+         ON contas.empresa_id = parcelas.empresa_id
         AND contas.id = parcelas.conta_pagar_id
        ${financialCompositionSql('pagar')}
-       WHERE parcelas.tenant_id = $1
+       WHERE parcelas.empresa_id = $1
          AND parcelas.id = $2
          AND parcelas.excluido_em IS NULL
          AND contas.excluido_em IS NULL
@@ -3291,7 +3291,7 @@ export async function settlePayableInstallment(input: SettleInstallmentInput) {
 
     const paymentResult = await client.query(
       `INSERT INTO erp.pagamentos (
-         tenant_id,
+         empresa_id,
          tipo,
          origem,
          chave_idempotencia,
@@ -3337,7 +3337,7 @@ export async function settlePayableInstallment(input: SettleInstallmentInput) {
          conta_financeira_id = $3,
          metodo_pagamento_id = $4,
          atualizado_por = $5
-       WHERE tenant_id = $1
+       WHERE empresa_id = $1
          AND id = $2
          AND (conta_financeira_id IS DISTINCT FROM $3::bigint OR metodo_pagamento_id IS DISTINCT FROM $4::bigint)`,
       [input.tenantId, installment.id, financialAccountId, methodId, input.actorId],
@@ -3378,7 +3378,7 @@ export async function reverseErpPayment(input: ReversePaymentInput) {
          estornado_em,
          estorno_de_pagamento_id
        FROM erp.pagamentos
-       WHERE tenant_id = $1
+       WHERE empresa_id = $1
          AND id = $2
          AND excluido_em IS NULL
        FOR UPDATE`,
@@ -3392,7 +3392,7 @@ export async function reverseErpPayment(input: ReversePaymentInput) {
       const existingReversal = await client.query(
         `SELECT id::text, tipo, valor, valor_liquido, estorno_de_pagamento_id::text
          FROM erp.pagamentos
-         WHERE tenant_id = $1
+         WHERE empresa_id = $1
            AND estorno_de_pagamento_id = $2
            AND excluido_em IS NULL
          ORDER BY id ASC
@@ -3410,7 +3410,7 @@ export async function reverseErpPayment(input: ReversePaymentInput) {
     const installmentTable = payment.tipo === 'receber' ? 'erp.contas_receber_parcelas' : 'erp.contas_pagar_parcelas'
     const installmentId = payment.tipo === 'receber' ? receivableInstallmentId : payableInstallmentId
     await client.query(
-      `SELECT id FROM ${installmentTable} WHERE tenant_id = $1 AND id = $2 FOR UPDATE`,
+      `SELECT id FROM ${installmentTable} WHERE empresa_id = $1 AND id = $2 FOR UPDATE`,
       [input.tenantId, installmentId],
     )
 
@@ -3420,12 +3420,12 @@ export async function reverseErpPayment(input: ReversePaymentInput) {
     await client.query(
       `UPDATE erp.pagamentos
        SET estornado_em = now(), atualizado_por = $3
-       WHERE tenant_id = $1 AND id = $2 AND estornado_em IS NULL`,
+       WHERE empresa_id = $1 AND id = $2 AND estornado_em IS NULL`,
       [input.tenantId, payment.id, input.actorId],
     )
     const reversalResult = await client.query(
       `INSERT INTO erp.pagamentos (
-         tenant_id,
+         empresa_id,
          tipo,
          origem,
          chave_idempotencia,
@@ -3496,7 +3496,7 @@ async function createEntityRoleRecord(client: SQLClient, input: CreateInput) {
   const category = optionalText(input.values.categoria)
   const result = await client.query(
     `INSERT INTO erp.entidades (
-       tenant_id,
+       empresa_id,
        tipo_pessoa,
        nome,
        documento,
@@ -3540,7 +3540,7 @@ async function createProductRecord(client: SQLClient, input: CreateInput) {
   const categoryId = await resolveCategoryId(client, input.tenantId, input.actorId, input.values.categoria, 'produto')
   const result = await client.query(
     `INSERT INTO erp.produtos (
-       tenant_id,
+       empresa_id,
        nome,
        sku,
        codigo,
@@ -3577,7 +3577,7 @@ async function resolveServiceCategory(client: Pick<SQLClient, 'query'>, input: C
   if (input.values.categoria_id === '' || input.values.categoria_id === null) return null
   if (input.values.categoria_id === undefined) return resolveCategoryId(client, input.tenantId, input.actorId, input.values.categoria, 'servico')
   const id = numericId(input.values.categoria_id, 'Categoria')
-  const result = await client.query("SELECT id FROM erp.categorias WHERE tenant_id=$1 AND id=$2 AND ativo AND excluido_em IS NULL AND tipo IN ('servico','geral')", [input.tenantId,id])
+  const result = await client.query("SELECT id FROM erp.categorias WHERE empresa_id=$1 AND id=$2 AND ativo AND excluido_em IS NULL AND tipo IN ('servico','geral')", [input.tenantId,id])
   if (!result.rows[0]) throw new ErpDomainError('INVALID_REFERENCE', 'Selecione uma categoria ativa de serviços da empresa.', 422)
   return id
 }
@@ -3587,7 +3587,7 @@ async function createServiceRecord(client: SQLClient, input: CreateInput) {
   const categoryId = await resolveServiceCategory(client, input)
   const result = await client.query(
     `INSERT INTO erp.servicos (
-       tenant_id,
+       empresa_id,
        nome,
        codigo,
        descricao,
@@ -3618,19 +3618,19 @@ async function createServiceRecord(client: SQLClient, input: CreateInput) {
 async function createFinancialAccountRecord(client: SQLClient, input: CreateInput) {
   assertRequired(input.values.nome, 'Nome da conta financeira')
   const existingResult = await client.query(
-    `SELECT id FROM erp.contas_financeiras WHERE tenant_id = $1 AND ativo = true AND excluido_em IS NULL LIMIT 1`,
+    `SELECT id FROM erp.contas_financeiras WHERE empresa_id = $1 AND ativo = true AND excluido_em IS NULL LIMIT 1`,
     [input.tenantId],
   )
   const shouldBeDefault = booleanValue(input.values.padrao) || !existingResult.rows[0]
   if (shouldBeDefault) {
     await client.query(
-      `UPDATE erp.contas_financeiras SET padrao = false, atualizado_por = $2 WHERE tenant_id = $1 AND padrao = true`,
+      `UPDATE erp.contas_financeiras SET padrao = false, atualizado_por = $2 WHERE empresa_id = $1 AND padrao = true`,
       [input.tenantId, input.actorId],
     )
   }
   const result = await client.query(
     `INSERT INTO erp.contas_financeiras (
-       tenant_id,
+       empresa_id,
        nome,
        tipo,
        banco,
@@ -3670,7 +3670,7 @@ export async function createSaleRecord(client: SQLClient, input: CreateInput) {
     await client.query(`SELECT pg_advisory_xact_lock(hashtextextended($1, 0))`, [`erp:venda:${input.tenantId}:${idempotencyKey}`])
     const existing = await client.query(
       `SELECT id, metadata FROM erp.vendas
-       WHERE tenant_id = $1 AND chave_idempotencia = $2 AND excluido_em IS NULL LIMIT 1`,
+       WHERE empresa_id = $1 AND chave_idempotencia = $2 AND excluido_em IS NULL LIMIT 1`,
       [input.tenantId, idempotencyKey],
     )
     if (existing.rows[0]) { assertCommercialReplay((existing.rows[0].metadata as Record<string,unknown>)?.commercialRequest,input.values); return { id: String(existing.rows[0].id) } }
@@ -3687,7 +3687,7 @@ export async function createSaleRecord(client: SQLClient, input: CreateInput) {
   const customerResult = await client.query(
     `SELECT id
      FROM erp.entidades
-     WHERE tenant_id = $1
+     WHERE empresa_id = $1
        AND id = $2
        AND eh_cliente = true
        AND excluido_em IS NULL
@@ -3727,8 +3727,8 @@ export async function createSaleRecord(client: SQLClient, input: CreateInput) {
     if (!unitValue) throw new ErpDomainError('VALIDATION_ERROR', `Valor unitario do item ${index + 1} precisa ser maior que zero.`)
     const catalog = await client.query(
       tipo === 'servico'
-        ? `SELECT nome, custo FROM erp.servicos WHERE tenant_id = $1 AND id = $2 AND ativo = true AND excluido_em IS NULL`
-        : `SELECT nome, custo FROM erp.produtos WHERE tenant_id = $1 AND id = $2 AND ativo = true AND excluido_em IS NULL`,
+        ? `SELECT nome, custo FROM erp.servicos WHERE empresa_id = $1 AND id = $2 AND ativo = true AND excluido_em IS NULL`
+        : `SELECT nome, custo FROM erp.produtos WHERE empresa_id = $1 AND id = $2 AND ativo = true AND excluido_em IS NULL`,
       [input.tenantId, itemId],
     )
     if (!catalog.rows[0]) throw new ErpDomainError('VALIDATION_ERROR', `Item ${index + 1} nao encontrado.`)
@@ -3777,7 +3777,7 @@ export async function createSaleRecord(client: SQLClient, input: CreateInput) {
 
   const saleResult = await client.query(
     `INSERT INTO erp.vendas (
-       tenant_id,
+       empresa_id,
        cliente_id,
        vendedor_id,
        numero,
@@ -3848,12 +3848,12 @@ export async function createSaleRecord(client: SQLClient, input: CreateInput) {
     ],
   )
   const saleId = Number(saleResult.rows[0]?.id)
-  await client.query("UPDATE erp.vendas SET metadata=metadata || jsonb_build_object('commercialRequest',$3::jsonb) WHERE tenant_id=$1 AND id=$2",[input.tenantId,saleId,JSON.stringify(input.values)])
+  await client.query("UPDATE erp.vendas SET metadata=metadata || jsonb_build_object('commercialRequest',$3::jsonb) WHERE empresa_id=$1 AND id=$2",[input.tenantId,saleId,JSON.stringify(input.values)])
 
   for (const installment of installments) {
     await client.query(
       `INSERT INTO erp.vendas_recebimentos_previstos (
-         tenant_id, venda_id, numero_parcela, descricao, data_vencimento, valor,
+         empresa_id, venda_id, numero_parcela, descricao, data_vencimento, valor,
          conta_financeira_id, metodo_pagamento_id, criado_por, atualizado_por
        ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $9)`,
       [input.tenantId, saleId, installment.numero, installment.descricao, installment.vencimento,
@@ -3864,7 +3864,7 @@ export async function createSaleRecord(client: SQLClient, input: CreateInput) {
   for (const item of items) {
     await client.query(
       `INSERT INTO erp.vendas_itens (
-         tenant_id, venda_id, produto_id, servico_id, descricao, quantidade,
+         empresa_id, venda_id, produto_id, servico_id, descricao, quantidade,
          valor_unitario, custo_unitario, desconto, total, criado_por, atualizado_por
        ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $11)`,
       [input.tenantId, saleId, item.tipo === 'produto' ? item.itemId : null,
@@ -3875,7 +3875,7 @@ export async function createSaleRecord(client: SQLClient, input: CreateInput) {
 
   if (!input.temporary) {
     await client.query(
-      `INSERT INTO erp.vendas_eventos (tenant_id, venda_id, evento, status_novo, versao, dados, criado_por)
+      `INSERT INTO erp.vendas_eventos (empresa_id, venda_id, evento, status_novo, versao, dados, criado_por)
        VALUES ($1, $2, 'criada', 'rascunho', 1, '{}'::jsonb, $3)`,
       [input.tenantId, saleId, input.actorId],
     )
@@ -3890,7 +3890,7 @@ async function createPurchaseRecord(client: SQLClient, input: CreateInput) {
     await client.query(`SELECT pg_advisory_xact_lock(hashtextextended($1, 0))`, [`erp:compra:${input.tenantId}:${idempotencyKey}`])
     const existing = await client.query(
       `SELECT id FROM erp.compras
-       WHERE tenant_id = $1 AND chave_idempotencia = $2 AND excluido_em IS NULL LIMIT 1`,
+       WHERE empresa_id = $1 AND chave_idempotencia = $2 AND excluido_em IS NULL LIMIT 1`,
       [input.tenantId, idempotencyKey],
     )
     if (existing.rows[0]) return { id: String(existing.rows[0].id) }
@@ -3916,7 +3916,7 @@ async function createPurchaseRecord(client: SQLClient, input: CreateInput) {
   const supplierResult = await client.query(
     `SELECT id, nome, documento
      FROM erp.entidades
-     WHERE tenant_id = $1
+     WHERE empresa_id = $1
        AND id = $2
        AND eh_fornecedor = true
        AND excluido_em IS NULL
@@ -3933,7 +3933,7 @@ async function createPurchaseRecord(client: SQLClient, input: CreateInput) {
 
   const purchaseResult = await client.query(
     `INSERT INTO erp.compras (
-       tenant_id,
+       empresa_id,
        fornecedor_id,
        numero,
        data_compra,
@@ -3968,12 +3968,12 @@ async function createPurchaseRecord(client: SQLClient, input: CreateInput) {
      )
      VALUES (
        $1, $2, $3, $4, $5, $6, $7, $8, $9, $10,
-       COALESCE((SELECT atualiza_estoque FROM erp.naturezas_operacao_compra WHERE tenant_id = $1 AND id = $10), false),
+       COALESCE((SELECT atualiza_estoque FROM erp.naturezas_operacao_compra WHERE empresa_id = $1 AND id = $10), false),
        'manual', $11, $12,
        $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24,
        $25::jsonb, $26, $27, $28, $29, $29
      )
-     RETURNING id, tenant_id, fornecedor_id, numero, data_compra, data_competencia,
+     RETURNING id, empresa_id, fornecedor_id, numero, data_compra, data_competencia,
        status, tipo_compra, tipo_movimento, origem, categoria_id, centro_custo_id,
        conta_financeira_id, metodo_pagamento_id, total, condicao_pagamento,
        gera_financeiro, fornecedor_nome_snapshot, fornecedor_documento_snapshot`,
@@ -4014,7 +4014,7 @@ async function createPurchaseRecord(client: SQLClient, input: CreateInput) {
   for (const item of items) {
     await client.query(
       `INSERT INTO erp.compras_itens (
-         tenant_id, compra_id, produto_id, servico_id, descricao, detalhes, unidade,
+         empresa_id, compra_id, produto_id, servico_id, descricao, detalhes, unidade,
          quantidade, valor_unitario, percentual_desconto, valor_desconto, valor_bruto,
          valor_liquido, total, item_descricao_snapshot, item_unidade_snapshot,
          criado_por, atualizado_por
@@ -4044,7 +4044,7 @@ async function createPurchaseRecord(client: SQLClient, input: CreateInput) {
   for (const installment of normalizedInstallments) {
     await client.query(
       `INSERT INTO erp.compras_parcelas_previstas (
-         tenant_id, compra_id, numero_parcela, descricao, data_vencimento, valor,
+         empresa_id, compra_id, numero_parcela, descricao, data_vencimento, valor,
          percentual, conta_financeira_id, metodo_pagamento_id, observacoes,
          criado_por, atualizado_por
        )
@@ -4067,7 +4067,7 @@ async function createPurchaseRecord(client: SQLClient, input: CreateInput) {
 
   if (!input.temporary) {
     await client.query(
-      `INSERT INTO erp.compras_eventos (tenant_id, compra_id, evento, dados, criado_por)
+      `INSERT INTO erp.compras_eventos (empresa_id, compra_id, evento, dados, criado_por)
        VALUES ($1, $2, 'criada', $3::jsonb, $4)`,
       [input.tenantId, purchaseId, JSON.stringify({ tipo_movimento: movement }), input.actorId],
     )
@@ -4092,7 +4092,7 @@ export async function updateErpSaleDraft(input: {
   await withTransaction(async (client) => {
     const currentResult = await client.query(
       `SELECT id, numero, status, versao FROM erp.vendas
-       WHERE tenant_id = $1 AND id = $2 AND excluido_em IS NULL FOR UPDATE`, [input.tenantId, id],
+       WHERE empresa_id = $1 AND id = $2 AND excluido_em IS NULL FOR UPDATE`, [input.tenantId, id],
     )
     const current = currentResult.rows[0]
     if (!current) throw new ErpDomainError('VALIDATION_ERROR', 'Venda nao encontrada.')
@@ -4104,10 +4104,10 @@ export async function updateErpSaleDraft(input: {
       values: { ...input.values, numero: `TMP-VEN-${id}-${Date.now()}` },
     })
     const stagedId = numericId(staged.id, 'Venda temporaria')
-    await client.query(`DELETE FROM erp.vendas_itens WHERE tenant_id = $1 AND venda_id = $2`, [input.tenantId, id])
-    await client.query(`DELETE FROM erp.vendas_recebimentos_previstos WHERE tenant_id = $1 AND venda_id = $2`, [input.tenantId, id])
-    await client.query(`UPDATE erp.vendas_itens SET venda_id = $3 WHERE tenant_id = $1 AND venda_id = $2`, [input.tenantId, stagedId, id])
-    await client.query(`UPDATE erp.vendas_recebimentos_previstos SET venda_id = $3 WHERE tenant_id = $1 AND venda_id = $2`, [input.tenantId, stagedId, id])
+    await client.query(`DELETE FROM erp.vendas_itens WHERE empresa_id = $1 AND venda_id = $2`, [input.tenantId, id])
+    await client.query(`DELETE FROM erp.vendas_recebimentos_previstos WHERE empresa_id = $1 AND venda_id = $2`, [input.tenantId, id])
+    await client.query(`UPDATE erp.vendas_itens SET venda_id = $3 WHERE empresa_id = $1 AND venda_id = $2`, [input.tenantId, stagedId, id])
+    await client.query(`UPDATE erp.vendas_recebimentos_previstos SET venda_id = $3 WHERE empresa_id = $1 AND venda_id = $2`, [input.tenantId, stagedId, id])
     const updated = await client.query(
       `UPDATE erp.vendas AS target SET
          cliente_id = source.cliente_id, numero = $4, data_venda = source.data_venda,
@@ -4122,15 +4122,15 @@ export async function updateErpSaleDraft(input: {
          observacoes_pagamento = source.observacoes_pagamento, cobranca_emails = source.cobranca_emails,
          cobranca_whatsapp = source.cobranca_whatsapp, versao = target.versao + 1, atualizado_por = $5
        FROM erp.vendas AS source
-       WHERE target.tenant_id = $1 AND target.id = $2 AND source.tenant_id = target.tenant_id
+       WHERE target.empresa_id = $1 AND target.id = $2 AND source.empresa_id = target.empresa_id
          AND source.id = $3 AND target.versao = $6
        RETURNING target.versao, target.numero, target.total`,
       [input.tenantId, id, stagedId, optionalText(input.values.numero) || current.numero, input.actorId, input.expectedVersion],
     )
     if (!updated.rows[0]) throw new ErpDomainError('VALIDATION_ERROR', 'CONFLITO_VERSAO: esta venda foi alterada por outra pessoa.')
-    await client.query(`DELETE FROM erp.vendas WHERE tenant_id = $1 AND id = $2`, [input.tenantId, stagedId])
+    await client.query(`DELETE FROM erp.vendas WHERE empresa_id = $1 AND id = $2`, [input.tenantId, stagedId])
     await client.query(
-      `INSERT INTO erp.vendas_eventos (tenant_id, venda_id, evento, status_anterior, status_novo, versao, dados, criado_por)
+      `INSERT INTO erp.vendas_eventos (empresa_id, venda_id, evento, status_anterior, status_novo, versao, dados, criado_por)
        VALUES ($1, $2, 'atualizada', 'rascunho', 'rascunho', $3, $4::jsonb, $5)`,
       [input.tenantId, id, updated.rows[0].versao, JSON.stringify({ numero: updated.rows[0].numero, total: updated.rows[0].total }), input.actorId],
     )
@@ -4149,7 +4149,7 @@ export async function updateErpPurchaseDraft(input: {
   await withTransaction(async (client) => {
     const currentResult = await client.query(
       `SELECT id, numero, status, tipo_movimento, versao FROM erp.compras
-       WHERE tenant_id = $1 AND id = $2 AND excluido_em IS NULL FOR UPDATE`, [input.tenantId, id],
+       WHERE empresa_id = $1 AND id = $2 AND excluido_em IS NULL FOR UPDATE`, [input.tenantId, id],
     )
     const current = currentResult.rows[0]
     if (!current) throw new ErpDomainError('VALIDATION_ERROR', 'Compra nao encontrada.')
@@ -4163,10 +4163,10 @@ export async function updateErpPurchaseDraft(input: {
       values: { ...input.values, numero: `TMP-COM-${id}-${Date.now()}`, tipo_movimento: 'cotacao' },
     })
     const stagedId = numericId(staged.id, 'Compra temporaria')
-    await client.query(`DELETE FROM erp.compras_itens WHERE tenant_id = $1 AND compra_id = $2`, [input.tenantId, id])
-    await client.query(`DELETE FROM erp.compras_parcelas_previstas WHERE tenant_id = $1 AND compra_id = $2`, [input.tenantId, id])
-    await client.query(`UPDATE erp.compras_itens SET compra_id = $3 WHERE tenant_id = $1 AND compra_id = $2`, [input.tenantId, stagedId, id])
-    await client.query(`UPDATE erp.compras_parcelas_previstas SET compra_id = $3 WHERE tenant_id = $1 AND compra_id = $2`, [input.tenantId, stagedId, id])
+    await client.query(`DELETE FROM erp.compras_itens WHERE empresa_id = $1 AND compra_id = $2`, [input.tenantId, id])
+    await client.query(`DELETE FROM erp.compras_parcelas_previstas WHERE empresa_id = $1 AND compra_id = $2`, [input.tenantId, id])
+    await client.query(`UPDATE erp.compras_itens SET compra_id = $3 WHERE empresa_id = $1 AND compra_id = $2`, [input.tenantId, stagedId, id])
+    await client.query(`UPDATE erp.compras_parcelas_previstas SET compra_id = $3 WHERE empresa_id = $1 AND compra_id = $2`, [input.tenantId, stagedId, id])
     const updated = await client.query(
       `UPDATE erp.compras AS target SET
          fornecedor_id = source.fornecedor_id, numero = $4, data_compra = source.data_compra,
@@ -4183,15 +4183,15 @@ export async function updateErpPurchaseDraft(input: {
          condicao_pagamento = source.condicao_pagamento, gera_financeiro = source.gera_financeiro,
          observacoes = source.observacoes, versao = target.versao + 1, atualizado_por = $5
        FROM erp.compras AS source
-       WHERE target.tenant_id = $1 AND target.id = $2 AND source.tenant_id = target.tenant_id
+       WHERE target.empresa_id = $1 AND target.id = $2 AND source.empresa_id = target.empresa_id
          AND source.id = $3 AND target.versao = $6
        RETURNING target.versao, target.numero, target.total`,
       [input.tenantId, id, stagedId, optionalText(input.values.numero) || current.numero, input.actorId, input.expectedVersion],
     )
     if (!updated.rows[0]) throw new ErpDomainError('VALIDATION_ERROR', 'CONFLITO_VERSAO: esta compra foi alterada por outra pessoa.')
-    await client.query(`DELETE FROM erp.compras WHERE tenant_id = $1 AND id = $2`, [input.tenantId, stagedId])
+    await client.query(`DELETE FROM erp.compras WHERE empresa_id = $1 AND id = $2`, [input.tenantId, stagedId])
     await client.query(
-      `INSERT INTO erp.compras_eventos (tenant_id, compra_id, evento, dados, criado_por)
+      `INSERT INTO erp.compras_eventos (empresa_id, compra_id, evento, dados, criado_por)
        VALUES ($1, $2, 'atualizada', $3::jsonb, $4)`,
       [input.tenantId, id, JSON.stringify({ versao: updated.rows[0].versao, numero: updated.rows[0].numero, total: updated.rows[0].total }), input.actorId],
     )
@@ -4225,10 +4225,10 @@ async function createManualPayableRecord(client: SQLClient, input: CreateInput):
          contas.tipo_lancamento, parcelas.status
        FROM erp.contas_pagar AS contas
        JOIN erp.contas_pagar_parcelas AS parcelas
-         ON parcelas.tenant_id = contas.tenant_id AND parcelas.conta_pagar_id = contas.id AND parcelas.excluido_em IS NULL
+         ON parcelas.empresa_id = contas.empresa_id AND parcelas.conta_pagar_id = contas.id AND parcelas.excluido_em IS NULL
        JOIN erp.entidades AS entidades
-         ON entidades.tenant_id = contas.tenant_id AND entidades.id = contas.fornecedor_id
-       WHERE contas.tenant_id = $1 AND contas.chave_idempotencia = $2 AND contas.excluido_em IS NULL
+         ON entidades.empresa_id = contas.empresa_id AND entidades.id = contas.fornecedor_id
+       WHERE contas.empresa_id = $1 AND contas.chave_idempotencia = $2 AND contas.excluido_em IS NULL
        ORDER BY parcelas.numero_parcela LIMIT 1`,
       [input.tenantId, idempotencyKey],
     )
@@ -4249,7 +4249,7 @@ async function createManualPayableRecord(client: SQLClient, input: CreateInput):
 
   const supplierResult = await client.query(
     `SELECT id, nome, documento FROM erp.entidades
-     WHERE tenant_id = $1 AND id = $2 AND eh_fornecedor = true AND excluido_em IS NULL`,
+     WHERE empresa_id = $1 AND id = $2 AND eh_fornecedor = true AND excluido_em IS NULL`,
     [input.tenantId, supplierId],
   )
   const supplier = supplierResult.rows[0]
@@ -4288,7 +4288,7 @@ async function createManualPayableRecord(client: SQLClient, input: CreateInput):
   if (repeat) {
     const recurrenceResult = await client.query(
       `INSERT INTO erp.recorrencias_financeiras (
-         tenant_id, tipo, intervalo, frequencia, inicio_em, termino_tipo,
+         empresa_id, tipo, intervalo, frequencia, inicio_em, termino_tipo,
          termino_em, quantidade_ocorrencias, proxima_competencia, gerado_ate,
          criado_por, atualizado_por, metadata
        ) VALUES ($1, 'pagar', $2, $3, $4, $10, $5, $6, $7, $4, $8, $8, $9::jsonb)
@@ -4306,7 +4306,7 @@ async function createManualPayableRecord(client: SQLClient, input: CreateInput):
     const occurrenceCompetence = shiftDate(competence, frequency, interval, occurrence)
     const payableResult = await client.query(
       `INSERT INTO erp.contas_pagar (
-         tenant_id, fornecedor_id, descricao, numero_documento, data_competencia,
+         empresa_id, fornecedor_id, descricao, numero_documento, data_competencia,
          data_emissao, valor_total, status, categoria_id, centro_custo_id, observacoes,
          origem, tipo_lancamento, recorrencia_financeira_id, fornecedor_nome_snapshot,
          fornecedor_documento_snapshot, efetivado_em, chave_idempotencia, criado_por, atualizado_por
@@ -4337,7 +4337,7 @@ async function createManualPayableRecord(client: SQLClient, input: CreateInput):
     for (const installment of installments) {
       const installmentResult = await client.query(
         `INSERT INTO erp.contas_pagar_parcelas (
-           tenant_id, conta_pagar_id, numero_parcela, descricao, data_vencimento,
+           empresa_id, conta_pagar_id, numero_parcela, descricao, data_vencimento,
            data_pagamento_previsto, valor, valor_bruto, valor_liquido, valor_pago,
            status, conta_financeira_id, metodo_pagamento_id, observacoes, criado_por, atualizado_por
          ) VALUES ($1, $2, $3, $4, $5, $5, $6, $6, $6, 0, 'aberto', $7, $8, $9, $10, $10)
@@ -4366,7 +4366,7 @@ async function createManualPayableRecord(client: SQLClient, input: CreateInput):
         const rateio = raw as Record<string, unknown>
         await client.query(
           `INSERT INTO erp.rateios_financeiros (
-             tenant_id, tipo, conta_pagar_id, categoria_id, centro_custo_id, valor,
+             empresa_id, tipo, conta_pagar_id, categoria_id, centro_custo_id, valor,
              percentual, observacoes, criado_por, atualizado_por
            ) VALUES ($1, 'pagar', $2, $3, $4, $5, $6, $7, $8, $8)`,
           [input.tenantId, payableId, optionalNumericId(rateio.categoria_id), optionalNumericId(rateio.centro_custo_id), money(rateio.valor), rateio.percentual == null ? null : Number(rateio.percentual), optionalText(rateio.observacoes), input.actorId],
@@ -4375,7 +4375,7 @@ async function createManualPayableRecord(client: SQLClient, input: CreateInput):
     }
   }
 
-  if(recurrenceId)await client.query(`UPDATE erp.recorrencias_financeiras SET ativa=false,encerrada_em=now(),atualizado_por=$3 WHERE tenant_id=$1 AND id=$2 AND proxima_competencia IS NULL`,[input.tenantId,recurrenceId,input.actorId])
+  if(recurrenceId)await client.query(`UPDATE erp.recorrencias_financeiras SET ativa=false,encerrada_em=now(),atualizado_por=$3 WHERE empresa_id=$1 AND id=$2 AND proxima_competencia IS NULL`,[input.tenantId,recurrenceId,input.actorId])
   return {
     id: firstInstallmentId,
     descricao: description,
@@ -4401,7 +4401,7 @@ export async function processErpFinancialRecurrences(input: {
   return withTransaction(async (client) => {
     const recurrenceResult = await client.query(
       `SELECT * FROM erp.recorrencias_financeiras
-       WHERE tenant_id = $1 AND ativa = true
+       WHERE empresa_id = $1 AND ativa = true
          AND pausada_em IS NULL AND encerrada_em IS NULL AND excluido_em IS NULL
          AND proxima_competencia IS NOT NULL AND proxima_competencia <= $2
        ORDER BY proxima_competencia, id
@@ -4420,7 +4420,7 @@ export async function processErpFinancialRecurrences(input: {
 
       const countResult = await client.query(
         `SELECT count(*)::int AS total FROM erp.${recurrence.tipo === 'receber' ? 'contas_receber' : 'contas_pagar'}
-         WHERE tenant_id = $1 AND recorrencia_financeira_id = $2`,
+         WHERE empresa_id = $1 AND recorrencia_financeira_id = $2`,
         [input.tenantId, recurrence.id],
       )
       let occurrence = Number(countResult.rows[0]?.total || 0)
@@ -4465,7 +4465,7 @@ export async function processErpFinancialRecurrences(input: {
           `UPDATE erp.contas_pagar AS contas SET recorrencia_financeira_id = $3,
              origem = 'recorrencia', atualizado_por = $4
            FROM erp.contas_pagar_parcelas AS parcelas
-           WHERE contas.tenant_id = $1 AND parcelas.tenant_id = contas.tenant_id
+           WHERE contas.empresa_id = $1 AND parcelas.empresa_id = contas.empresa_id
              AND parcelas.conta_pagar_id = contas.id AND parcelas.id = $2`,
           [input.tenantId, numericId(record.id, 'Parcela'), recurrence.id, input.actorId],
         )
@@ -4482,7 +4482,7 @@ export async function processErpFinancialRecurrences(input: {
         `UPDATE erp.recorrencias_financeiras SET proxima_competencia = $3,
            gerado_ate = $4, ativa = $5, encerrada_em = CASE WHEN $5 THEN NULL ELSE COALESCE(encerrada_em, now()) END,
            atualizado_por = $6
-         WHERE tenant_id = $1 AND id = $2`,
+         WHERE empresa_id = $1 AND id = $2`,
         [input.tenantId, recurrence.id, ended ? null : next, generatedForRecurrence > 0 ? shiftDate(start, frequency, interval, occurrence - 1) : recurrence.gerado_ate,
           !ended, input.actorId],
       )
@@ -4501,16 +4501,16 @@ export function recurrenceOccurrenceIndex(start:string,current:string,frequency:
 }
 
 async function createRecurringReceivable(client:SQLClient,input:{tenantId:number;actorId:number;recurrenceId:number;key:string;values:Record<string,unknown>}) {
-  const existing=await client.query(`SELECT id FROM erp.contas_receber WHERE tenant_id=$1 AND recorrencia_financeira_id=$2 AND data_competencia=$3`,[input.tenantId,input.recurrenceId,input.values.data_competencia])
+  const existing=await client.query(`SELECT id FROM erp.contas_receber WHERE empresa_id=$1 AND recorrencia_financeira_id=$2 AND data_competencia=$3`,[input.tenantId,input.recurrenceId,input.values.data_competencia])
   if(existing.rows.length)return
   const total=positiveMoney(input.values.valor_total ?? input.values.valor),customer=numericId(input.values.cliente_id,'Cliente')
-  const valid=await client.query(`SELECT id FROM erp.entidades WHERE tenant_id=$1 AND id=$2 AND eh_cliente AND excluido_em IS NULL`,[input.tenantId,customer])
+  const valid=await client.query(`SELECT id FROM erp.entidades WHERE empresa_id=$1 AND id=$2 AND eh_cliente AND excluido_em IS NULL`,[input.tenantId,customer])
   if(!valid.rows.length||!total)throw new ErpDomainError('VALIDATION_ERROR','Modelo recorrente exige cliente válido e valor positivo.')
   const parts=Array.isArray(input.values.parcelas)&&input.values.parcelas.length?input.values.parcelas as Record<string,unknown>[]:[{valor:total,data_vencimento:input.values.data_vencimento}]
   if(sumMoney(parts.map(p=>String(p.valor)))!==total)throw new ErpDomainError('VALIDATION_ERROR','Parcelas devem distribuir integralmente o valor da recorrência.')
-  const title=await client.query(`INSERT INTO erp.contas_receber(tenant_id,cliente_id,descricao,valor_total,data_competencia,data_emissao,status,origem,recorrencia_financeira_id,chave_idempotencia,categoria_id,centro_custo_id,criado_por,atualizado_por)
+  const title=await client.query(`INSERT INTO erp.contas_receber(empresa_id,cliente_id,descricao,valor_total,data_competencia,data_emissao,status,origem,recorrencia_financeira_id,chave_idempotencia,categoria_id,centro_custo_id,criado_por,atualizado_por)
     VALUES($1,$2,$3,$4,$5,$6,'aberto','api',$7,$8,$9,$10,$11,$11) RETURNING id`,[input.tenantId,customer,optionalText(input.values.descricao)||'Receita recorrente',total,input.values.data_competencia,input.values.data_emissao,input.recurrenceId,input.key,optionalNumericId(input.values.categoria_id),optionalNumericId(input.values.centro_custo_id),input.actorId])
-  for(const [index,p] of parts.entries())await client.query(`INSERT INTO erp.contas_receber_parcelas(tenant_id,conta_receber_id,numero_parcela,data_vencimento,valor,valor_bruto,valor_liquido,status,conta_financeira_id,metodo_pagamento_id,criado_por,atualizado_por)
+  for(const [index,p] of parts.entries())await client.query(`INSERT INTO erp.contas_receber_parcelas(empresa_id,conta_receber_id,numero_parcela,data_vencimento,valor,valor_bruto,valor_liquido,status,conta_financeira_id,metodo_pagamento_id,criado_por,atualizado_por)
     VALUES($1,$2,$3,$4,$5,$5,$5,'aberto',$6,$7,$8,$8)`,[input.tenantId,title.rows[0].id,index+1,dateText(p.data_vencimento),positiveMoney(p.valor),optionalNumericId(input.values.conta_financeira_id),optionalNumericId(input.values.metodo_pagamento_id),input.actorId])
 }
 
@@ -4521,7 +4521,7 @@ async function createCategoryRecord(client: SQLClient, input: CreateInput) {
     : 'geral'
   const result = await client.query(
     `INSERT INTO erp.categorias (
-       tenant_id,
+       empresa_id,
        nome,
        tipo,
        ativo,

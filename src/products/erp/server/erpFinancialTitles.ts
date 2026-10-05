@@ -14,9 +14,9 @@ const hash = (value: unknown) => createHash('sha256').update(JSON.stringify(cano
 type Actor = { tenantId: number; actorId: number; side: FinancialSide }
 
 async function snapshot(client: SQLClient, input: Actor & { id: number }, lock = false) {
-  const title = (await client.query(`SELECT t.*,t.atualizado_em::text AS updated_version FROM erp.contas_${input.side} t WHERE tenant_id=$1 AND id=$2 AND excluido_em IS NULL${lock ? ' FOR UPDATE' : ''}`, [input.tenantId, input.id])).rows[0]
+  const title = (await client.query(`SELECT t.*,t.atualizado_em::text AS updated_version FROM erp.contas_${input.side} t WHERE empresa_id=$1 AND id=$2 AND excluido_em IS NULL${lock ? ' FOR UPDATE' : ''}`, [input.tenantId, input.id])).rows[0]
   if (!title) throw new ErpDomainError('NOT_FOUND', 'Título não disponível nesta empresa.', 404)
-  const parts = (await client.query(`SELECT p.*,p.atualizado_em::text AS updated_version FROM erp.contas_${input.side}_parcelas p WHERE tenant_id=$1 AND conta_${input.side}_id=$2 ORDER BY id${lock ? ' FOR UPDATE' : ''}`, [input.tenantId, input.id])).rows
+  const parts = (await client.query(`SELECT p.*,p.atualizado_em::text AS updated_version FROM erp.contas_${input.side}_parcelas p WHERE empresa_id=$1 AND conta_${input.side}_id=$2 ORDER BY id${lock ? ' FOR UPDATE' : ''}`, [input.tenantId, input.id])).rows
   return hash({ title, parts })
 }
 
@@ -36,14 +36,14 @@ export function createFinancialTitle(input: Actor & { values: Record<string, unk
   return withTransaction(async client => {
     await client.query('SELECT pg_advisory_xact_lock(hashtextextended($1,0))', [`${input.tenantId}:financial-title:${input.side}:${input.key}`])
     const fingerprint = hash(input.values)
-    const existing = (await client.query(`SELECT id,metadata,excluido_em FROM erp.contas_${input.side} WHERE tenant_id=$1 AND chave_idempotencia=$2 FOR UPDATE`, [input.tenantId, input.key])).rows[0]
+    const existing = (await client.query(`SELECT id,metadata,excluido_em FROM erp.contas_${input.side} WHERE empresa_id=$1 AND chave_idempotencia=$2 FOR UPDATE`, [input.tenantId, input.key])).rows[0]
     if (existing) {
       if ((existing.metadata as Record<string, unknown>)?.api_request_hash !== fingerprint) throw new ErpDomainError('IDEMPOTENCY_CONFLICT', 'Esta identificação já foi usada com dados diferentes.', 409)
       if (existing.excluido_em) throw new ErpDomainError('IDEMPOTENCY_CONFLICT', 'Esta identificação pertence a um título excluído. Use uma nova identificação.', 409)
       return representation(client, { ...input, id: Number(existing.id) }, true)
     }
     const id = Number(await createManualFinancialTitle(client, input.tenantId, input.actorId, input.side, input.values, input.key, 'api'))
-    await client.query(`UPDATE erp.contas_${input.side} SET metadata=metadata||jsonb_build_object('api_request_hash',$3::text) WHERE tenant_id=$1 AND id=$2`, [input.tenantId, id, fingerprint])
+    await client.query(`UPDATE erp.contas_${input.side} SET metadata=metadata||jsonb_build_object('api_request_hash',$3::text) WHERE empresa_id=$1 AND id=$2`, [input.tenantId, id, fingerprint])
     return representation(client, { ...input, id })
   })
 }

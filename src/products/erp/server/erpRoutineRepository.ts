@@ -16,7 +16,7 @@ export async function processPurchaseRecurrences(input: {
   const through = erpDateSchema.parse(input.throughDate)
   return withTransaction(async (client) => {
     const recurrences = await client.query(
-      `SELECT * FROM erp.compras_recorrencias WHERE tenant_id=$1 AND ativa AND excluido_em IS NULL AND proxima_competencia<=$2 ORDER BY proxima_competencia,id LIMIT 50 FOR UPDATE SKIP LOCKED`,
+      `SELECT * FROM erp.compras_recorrencias WHERE empresa_id=$1 AND ativa AND excluido_em IS NULL AND proxima_competencia<=$2 ORDER BY proxima_competencia,id LIMIT 50 FOR UPDATE SKIP LOCKED`,
       [input.tenantId, through],
     )
     const generated: Array<{ recurrenceId: string; purchaseId: string; date: string }> = []
@@ -24,7 +24,7 @@ export async function processPurchaseRecurrences(input: {
       if (generated.length >= 50) break
       const model = (
         await client.query(
-          `SELECT * FROM erp.compras WHERE tenant_id=$1 AND id=$2 AND excluido_em IS NULL AND status<>'cancelada'`,
+          `SELECT * FROM erp.compras WHERE empresa_id=$1 AND id=$2 AND excluido_em IS NULL AND status<>'cancelada'`,
           [input.tenantId, r.compra_modelo_id],
         )
       ).rows[0]
@@ -36,13 +36,13 @@ export async function processPurchaseRecurrences(input: {
         )
       const items = (
         await client.query(
-          `SELECT produto_id,servico_id,descricao,detalhes,unidade,quantidade,valor_unitario,percentual_desconto,valor_desconto FROM erp.compras_itens WHERE tenant_id=$1 AND compra_id=$2 AND excluido_em IS NULL ORDER BY id`,
+          `SELECT produto_id,servico_id,descricao,detalhes,unidade,quantidade,valor_unitario,percentual_desconto,valor_desconto FROM erp.compras_itens WHERE empresa_id=$1 AND compra_id=$2 AND excluido_em IS NULL ORDER BY id`,
           [input.tenantId, model.id],
         )
       ).rows
       const forecasts = (
         await client.query(
-          `SELECT numero_parcela,descricao,data_vencimento,valor,conta_financeira_id,metodo_pagamento_id FROM erp.compras_parcelas_previstas WHERE tenant_id=$1 AND compra_id=$2 AND excluido_em IS NULL ORDER BY numero_parcela`,
+          `SELECT numero_parcela,descricao,data_vencimento,valor,conta_financeira_id,metodo_pagamento_id FROM erp.compras_parcelas_previstas WHERE empresa_id=$1 AND compra_id=$2 AND excluido_em IS NULL ORDER BY numero_parcela`,
           [input.tenantId, model.id],
         )
       ).rows
@@ -60,7 +60,7 @@ export async function processPurchaseRecurrences(input: {
       ) {
         const existing = (
           await client.query(
-            `SELECT compra_id FROM erp.compras_recorrencias_geracoes WHERE tenant_id=$1 AND recorrencia_id=$2 AND competencia=$3`,
+            `SELECT compra_id FROM erp.compras_recorrencias_geracoes WHERE empresa_id=$1 AND recorrencia_id=$2 AND competencia=$3`,
             [input.tenantId, r.id, next],
           )
         ).rows[0]
@@ -101,7 +101,7 @@ export async function processPurchaseRecurrences(input: {
             },
           })
           await client.query(
-            `INSERT INTO erp.compras_recorrencias_geracoes(tenant_id,recorrencia_id,compra_id,competencia,criado_por,atualizado_por) VALUES($1,$2,$3,$4,$5,$5)`,
+            `INSERT INTO erp.compras_recorrencias_geracoes(empresa_id,recorrencia_id,compra_id,competencia,criado_por,atualizado_por) VALUES($1,$2,$3,$4,$5,$5)`,
             [input.tenantId, r.id, purchase.id, next, input.actorId],
           )
           generated.push({
@@ -115,7 +115,7 @@ export async function processPurchaseRecurrences(input: {
       }
       const ended = index >= max || Boolean(r.termino_em && next > day(r.termino_em))
       await client.query(
-        `UPDATE erp.compras_recorrencias SET proxima_competencia=$3,ativa=$4,atualizado_por=$5 WHERE tenant_id=$1 AND id=$2`,
+        `UPDATE erp.compras_recorrencias SET proxima_competencia=$3,ativa=$4,atualizado_por=$5 WHERE empresa_id=$1 AND id=$2`,
         [input.tenantId, r.id, ended ? null : next, !ended, input.actorId],
       )
     }
@@ -126,24 +126,24 @@ export async function processPurchaseRecurrences(input: {
 export async function listRecurrenceHistory(tenantId: number, page = 1) {
   const offset = (Math.max(1, Math.min(10000, Math.floor(page) || 1)) - 1) * 30
   const financial = await runQuery(
-    `SELECT id::text,tipo,metadata->>'descricao' AS descricao,inicio_em,termino_tipo,termino_em,quantidade_ocorrencias,frequencia,intervalo,proxima_competencia,gerado_ate,ativa,pausada_em,encerrada_em,atualizado_em FROM erp.recorrencias_financeiras WHERE tenant_id=$1 AND excluido_em IS NULL ORDER BY id DESC LIMIT 31 OFFSET $2`,
+    `SELECT id::text,tipo,metadata->>'descricao' AS descricao,inicio_em,termino_tipo,termino_em,quantidade_ocorrencias,frequencia,intervalo,proxima_competencia,gerado_ate,ativa,pausada_em,encerrada_em,atualizado_em FROM erp.recorrencias_financeiras WHERE empresa_id=$1 AND excluido_em IS NULL ORDER BY id DESC LIMIT 31 OFFSET $2`,
     [tenantId, offset],
   )
   const purchases = await runQuery(
-    `SELECT id::text,compra_modelo_id::text,inicio_em,termino_tipo,termino_em,quantidade_ocorrencias,frequencia,intervalo,proxima_competencia,ativa FROM erp.compras_recorrencias WHERE tenant_id=$1 AND excluido_em IS NULL ORDER BY id DESC LIMIT 31 OFFSET $2`,
+    `SELECT id::text,compra_modelo_id::text,inicio_em,termino_tipo,termino_em,quantidade_ocorrencias,frequencia,intervalo,proxima_competencia,ativa FROM erp.compras_recorrencias WHERE empresa_id=$1 AND excluido_em IS NULL ORDER BY id DESC LIMIT 31 OFFSET $2`,
     [tenantId, offset],
   )
   const occurrences = await runQuery(
-    `SELECT id::text,recorrencia_financeira_id::text AS recorrencia_id,'receber' AS lado,data_competencia,status FROM erp.contas_receber WHERE tenant_id=$1 AND recorrencia_financeira_id IS NOT NULL
-    UNION ALL SELECT id::text,recorrencia_financeira_id::text,'pagar',data_competencia,status FROM erp.contas_pagar WHERE tenant_id=$1 AND recorrencia_financeira_id IS NOT NULL ORDER BY data_competencia DESC,id DESC LIMIT 31 OFFSET $2`,
+    `SELECT id::text,recorrencia_financeira_id::text AS recorrencia_id,'receber' AS lado,data_competencia,status FROM erp.contas_receber WHERE empresa_id=$1 AND recorrencia_financeira_id IS NOT NULL
+    UNION ALL SELECT id::text,recorrencia_financeira_id::text,'pagar',data_competencia,status FROM erp.contas_pagar WHERE empresa_id=$1 AND recorrencia_financeira_id IS NOT NULL ORDER BY data_competencia DESC,id DESC LIMIT 31 OFFSET $2`,
     [tenantId, offset],
   )
   const purchaseOccurrences = await runQuery(
-    `SELECT id::text,recorrencia_id::text,compra_id::text,competencia,criado_em FROM erp.compras_recorrencias_geracoes WHERE tenant_id=$1 ORDER BY criado_em DESC,id DESC LIMIT 31 OFFSET $2`,
+    `SELECT id::text,recorrencia_id::text,compra_id::text,competencia,criado_em FROM erp.compras_recorrencias_geracoes WHERE empresa_id=$1 ORDER BY criado_em DESC,id DESC LIMIT 31 OFFSET $2`,
     [tenantId, offset],
   )
   const contracts = await runQuery(
-    `SELECT id::text,contrato_id::text,venda_id::text,periodo_inicio,periodo_fim,status,processado_em FROM erp.contratos_vendas_geracoes WHERE tenant_id=$1 ORDER BY criado_em DESC,id DESC LIMIT 31 OFFSET $2`,
+    `SELECT id::text,contrato_id::text,venda_id::text,periodo_inicio,periodo_fim,status,processado_em FROM erp.contratos_vendas_geracoes WHERE empresa_id=$1 ORDER BY criado_em DESC,id DESC LIMIT 31 OFFSET $2`,
     [tenantId, offset],
   )
   return {
@@ -169,7 +169,7 @@ export async function changeFinancialRecurrence(input: {
     throw new ErpDomainError('VALIDATION_ERROR', 'Ação de recorrência inválida.', 422)
   return withTransaction(async (client) => {
     const rows = await client.query(
-      `SELECT * FROM erp.recorrencias_financeiras WHERE tenant_id=$1 AND id=$2 AND excluido_em IS NULL FOR UPDATE`,
+      `SELECT * FROM erp.recorrencias_financeiras WHERE empresa_id=$1 AND id=$2 AND excluido_em IS NULL FOR UPDATE`,
       [input.tenantId, input.id],
     )
     const row = rows.rows[0]
@@ -203,7 +203,7 @@ export async function changeFinancialRecurrence(input: {
       pausada_em=CASE WHEN $3='pausar' THEN now() WHEN $3='retomar' THEN NULL ELSE pausada_em END,
       encerrada_em=CASE WHEN $3='encerrar' THEN now() ELSE NULL END,
       proxima_competencia=CASE WHEN $3='encerrar' THEN NULL ELSE proxima_competencia END,atualizado_por=$4
-      WHERE tenant_id=$1 AND id=$2 RETURNING id::text,ativa,pausada_em,encerrada_em,proxima_competencia,atualizado_em`,
+      WHERE empresa_id=$1 AND id=$2 RETURNING id::text,ativa,pausada_em,encerrada_em,proxima_competencia,atualizado_em`,
       [input.tenantId, input.id, input.action, input.actorId],
     )
     return result.rows[0]

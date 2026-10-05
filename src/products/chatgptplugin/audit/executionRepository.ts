@@ -5,7 +5,7 @@ import { PluginError, type PluginPrincipal } from '../shared/contracts'
 export async function reserveExecution(principal: PluginPrincipal, tool: string, companyId: number | null) {
   const id = randomUUID()
   await pluginQuery(
-    `INSERT INTO plugin.executions(id, user_id, tenant_id, oauth_client_id, tool_name, status, integration)
+    `INSERT INTO plugin.executions(id, user_id, empresa_id, oauth_client_id, tool_name, status, integration)
      VALUES ($1,$2,$3,$4,$5,'running','chatgpt')`, [id, principal.userId, companyId, principal.clientId, tool],
   )
   return id

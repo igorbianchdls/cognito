@@ -11,7 +11,7 @@ export const erpDateSchema = z.string().regex(/^\d{4}-\d{2}-\d{2}$/).refine(valu
 export const erpMoneySchema = z.union([z.string().min(1), z.number().finite()]).transform((value, ctx) => {
   try { return nonNegativeDecimal(value) } catch { ctx.addIssue({ code: 'custom', message: 'Valor monetário inválido.' }); return z.NEVER }
 })
-const controlledFields = new Set(['tenant_id', 'criado_por', 'atualizado_por', 'requisicao_original', 'requisicao_idempotente', 'historico_estados', 'snapshot_efetivado_em', 'desconto_calculado'])
+const controlledFields = new Set(['tenant_id', 'empresa_id', 'criado_por', 'atualizado_por', 'requisicao_original', 'requisicao_idempotente', 'historico_estados', 'snapshot_efetivado_em', 'desconto_calculado'])
 export const erpValuesSchema = z.record(z.string(), z.unknown()).superRefine((values, ctx) => {
   for (const field of Object.keys(values)) if (controlledFields.has(field)) ctx.addIssue({ code: 'custom', path: [field], message: 'Campo controlado pelo sistema.' })
 })

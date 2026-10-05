@@ -1,5 +1,7 @@
 # Dados demonstrativos do ERP — 04/10/2026
 
+Este documento registra a carga histórica da empresa CLI. O executor evoluiu e os comandos antigos abaixo descrevem aquela versão. Para a carga vinculada ao usuário real Igor Bianch e os comandos atuais, consulte [Dados demonstrativos de 06/10/2026](dados-demonstrativos-20261006.md).
+
 ## Escopo
 
 Carga autorizada para a empresa 1 do projeto Supabase `mtadnxqoqxzbdksktwdr`. O cenário representa uma empresa fictícia de serviços de tecnologia e venda de equipamentos.

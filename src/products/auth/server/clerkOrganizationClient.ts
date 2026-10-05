@@ -44,6 +44,7 @@ async function clerkApiRequest<T>(path: string, init: ClerkApiRequestInit = {}):
     },
     body: init.body ? JSON.stringify(init.body) : undefined,
     cache: 'no-store',
+    signal: AbortSignal.timeout(8000),
   })
 
   const text = await response.text()
@@ -118,7 +119,7 @@ export async function updateClerkOrganizationMembership(input: {
   clerkUserId: string
   organizationId: string
 }) {
-  return clerkApiRequest<Record<string, unknown>>(
+  await clerkApiRequest<Record<string, unknown>>(
     `/organizations/${encodeURIComponent(input.organizationId)}/memberships/${encodeURIComponent(input.clerkUserId)}`,
     {
       body: {
@@ -126,5 +127,9 @@ export async function updateClerkOrganizationMembership(input: {
       },
       method: 'PATCH',
     },
+  )
+  return clerkApiRequest<Record<string, unknown>>(
+    `/organizations/${encodeURIComponent(input.organizationId)}/memberships/${encodeURIComponent(input.clerkUserId)}/metadata`,
+    { method: 'PATCH', body: { public_metadata: { appRole: input.appRole }, private_metadata: { appRole: input.appRole } } },
   )
 }

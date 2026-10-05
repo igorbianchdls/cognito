@@ -858,7 +858,7 @@ function SimpleTable({
   const columns = rows.length
     ? Object.keys(rows[0])
         .filter(
-          (key) => !["tenant_id", "metadata", "excluido_em"].includes(key),
+          (key) => !["empresa_id", "metadata", "excluido_em"].includes(key),
         )
         .slice(0, 7)
     : [];

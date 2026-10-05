@@ -47,7 +47,7 @@ async function main() {
     await frame.getByRole('button',{name:'Abrir revisão no ERP',exact:true}).click()
     await page.waitForFunction(()=>((window as unknown as {opened:string[]}).opened.length===1))
     await frame.getByText('Arquivo de proposta',{exact:true}).click()
-    await frame.locator('#document').fill(JSON.stringify({tipo:'cliente',dados:{nome:'Importado',tenant_id:2}}))
+    await frame.locator('#document').fill(JSON.stringify({tipo:'cliente',dados:{nome:'Importado',empresa_id:2}}))
     await frame.getByRole('button',{name:'Carregar no formulário',exact:true}).click()
     await frame.getByText('O arquivo contém campos não suportados neste formulário.').waitFor()
     await page.evaluate(()=>document.querySelector<HTMLIFrameElement>('#app')!.contentWindow!.postMessage({jsonrpc:'2.0',method:'ui/notifications/tool-input',params:{arguments:{file:{name:'aberto.erp-proposta',resourceUri:'file:///aberto.erp-proposta'}}}},'*'))

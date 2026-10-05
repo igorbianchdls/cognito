@@ -1,3 +1,4 @@
+import {applySharedMigration} from '../shared/schema-contract.mjs'
 import assert from 'node:assert/strict'
 import { readFileSync, existsSync, mkdirSync, writeFileSync } from 'node:fs'
 import { resolve, dirname } from 'node:path'
@@ -28,12 +29,12 @@ class LocalPool {
 async function resolveIdentity() {
   const actor=identity.getStore()
   if(!actor) return null
-  const [row]=await postgres.runQuery(`SELECT m.tenant_id,m.user_id,m.role,t.name,t.slug,u.email,u.clerk_user_id
-    FROM shared.tenant_memberships m JOIN shared.tenants t ON t.id=m.tenant_id
-    JOIN shared.users u ON u.id=m.user_id
-    WHERE m.tenant_id=$1 AND m.user_id=$2 AND m.status='active' AND t.status='active'`,[actor.tenantId,actor.userId])
+  const [row]=await postgres.runQuery(`SELECT m.empresa_id,m.usuario_id,m.role,t.name,t.slug,u.email,u.clerk_user_id
+    FROM shared.usuarios_empresas m JOIN shared.empresas t ON t.id=m.empresa_id
+    JOIN shared.usuarios u ON u.id=m.usuario_id
+    WHERE m.empresa_id=$1 AND m.usuario_id=$2 AND m.status='active' AND t.status='active'`,[actor.tenantId,actor.userId])
   if(!row) return null
-  return {tenantId:Number(row.tenant_id),sharedUserId:Number(row.user_id),role:row.role,tenantName:row.name,tenantSlug:row.slug,email:row.email,clerkUserId:row.clerk_user_id,authMode:'clerk'}
+  return {tenantId:Number(row.empresa_id),sharedUserId:Number(row.usuario_id),role:row.role,tenantName:row.name,tenantSlug:row.slug,email:row.email,clerkUserId:row.clerk_user_id,authMode:'clerk'}
 }
 function load(name,parent=resolve(root,'entry.ts')) {
   if(name==='pg') return {Pool:LocalPool}
@@ -67,19 +68,20 @@ try {
   await restoreCatalog()
   for(const file of ['01-integridade-historicos.sql','02-periodos-fechados.sql','03-cadastros-documentos-contratos.sql','04-adiantamentos-renegociacoes.sql']) await db.exec(readFileSync('scripts/erp/sql/'+file,'utf8'))
   for(const file of ['20260909033000_drop_erp_financial_views.sql','20260909040000_harden_erp_service_integrity.sql','20261003170000_harden_erp_read_access.sql','20261005020000_harden_erp_stock_operations.sql','20261005021000_anchor_contract_cycles.sql']) await db.exec(readFileSync('supabase/migrations/'+file,'utf8'))
+  await applySharedMigration(db)
   await db.exec(`BEGIN;
-    INSERT INTO shared.erp_permission_profiles(id,nome) VALUES('api-reader','API Reader');
-    INSERT INTO shared.erp_profile_permissions(profile_id,capability) VALUES('api-reader','erp.cadastros.visualizar'),('api-reader','erp.financeiro.visualizar');
-    INSERT INTO shared.tenants(id,name,slug) VALUES(1,'Empresa fictícia A','api-a'),(2,'Empresa fictícia B','api-b');
-    INSERT INTO shared.users(id,email,full_name,clerk_user_id) VALUES(1,'owner@example.invalid','Owner','local_owner'),(2,'reader@example.invalid','Reader','local_reader');
-    INSERT INTO shared.tenant_memberships(tenant_id,user_id,role,status,erp_profile_id) VALUES(1,1,'owner','active','api-reader'),(2,1,'owner','active','api-reader'),(1,2,'viewer','active','api-reader');
-    INSERT INTO erp.entidades(id,tenant_id,nome,eh_cliente,eh_fornecedor) VALUES(101,1,'Parceiro A',true,true),(201,2,'Parceiro B',true,true);
-    INSERT INTO erp.categorias(id,tenant_id,nome,tipo) VALUES(101,1,'Despesa A','despesa'),(102,1,'Receita A','receita'),(201,2,'Despesa B','despesa');
-    INSERT INTO erp.contas_financeiras(id,tenant_id,nome,tipo,saldo_inicial) VALUES(101,1,'Conta A','banco',0),(201,2,'Conta B','banco',0);
-    INSERT INTO erp.produtos(id,tenant_id,nome,sku,preco_venda,controla_estoque,permite_estoque_negativo) VALUES(101,1,'Produto A','A',20,true,false),(201,2,'Produto B','B',20,true,false);
-    INSERT INTO erp.locais_estoque(id,tenant_id,nome,codigo,padrao) VALUES(101,1,'Local A','A',true),(201,2,'Local B','B',true);
-    INSERT INTO erp.saldos_estoque(tenant_id,produto_id,local_estoque_id,quantidade_fisica) VALUES(1,101,101,10),(2,201,201,10);
-    INSERT INTO erp.movimentacoes_estoque(tenant_id,produto_id,local_estoque_id,tipo,origem_tipo,quantidade,custo_unitario,saldo_apos,custo_medio_apos,chave_idempotencia) VALUES(1,101,101,'entrada','manual',10,0,10,0,'local-opening-a'),(2,201,201,'entrada','manual',10,0,10,0,'local-opening-b');
+    INSERT INTO shared.perfis_acesso(id,nome) VALUES('api-reader','API Reader');
+    INSERT INTO shared.permissoes_perfil(perfil_acesso_id,capability) VALUES('api-reader','erp.cadastros.visualizar'),('api-reader','erp.financeiro.visualizar');
+    INSERT INTO shared.empresas(id,name,slug) VALUES(1,'Empresa fictícia A','api-a'),(2,'Empresa fictícia B','api-b');
+    INSERT INTO shared.usuarios(id,email,full_name,clerk_user_id) VALUES(1,'owner@example.invalid','Owner','local_owner'),(2,'reader@example.invalid','Reader','local_reader');
+    INSERT INTO shared.usuarios_empresas(empresa_id,usuario_id,role,status,perfil_acesso_id) VALUES(1,1,'owner','active','api-reader'),(2,1,'owner','active','api-reader'),(1,2,'viewer','active','api-reader');
+    INSERT INTO erp.entidades(id,empresa_id,nome,eh_cliente,eh_fornecedor) VALUES(101,1,'Parceiro A',true,true),(201,2,'Parceiro B',true,true);
+    INSERT INTO erp.categorias(id,empresa_id,nome,tipo) VALUES(101,1,'Despesa A','despesa'),(102,1,'Receita A','receita'),(201,2,'Despesa B','despesa');
+    INSERT INTO erp.contas_financeiras(id,empresa_id,nome,tipo,saldo_inicial) VALUES(101,1,'Conta A','banco',0),(201,2,'Conta B','banco',0);
+    INSERT INTO erp.produtos(id,empresa_id,nome,sku,preco_venda,controla_estoque,permite_estoque_negativo) VALUES(101,1,'Produto A','A',20,true,false),(201,2,'Produto B','B',20,true,false);
+    INSERT INTO erp.locais_estoque(id,empresa_id,nome,codigo,padrao) VALUES(101,1,'Local A','A',true),(201,2,'Local B','B',true);
+    INSERT INTO erp.saldos_estoque(empresa_id,produto_id,local_estoque_id,quantidade_fisica) VALUES(1,101,101,10),(2,201,201,10);
+    INSERT INTO erp.movimentacoes_estoque(empresa_id,produto_id,local_estoque_id,tipo,origem_tipo,quantidade,custo_unitario,saldo_apos,custo_medio_apos,chave_idempotencia) VALUES(1,101,101,'entrada','manual',10,0,10,0,'local-opening-a'),(2,201,201,'entrada','manual',10,0,10,0,'local-opening-b');
     COMMIT;`)
   // Explicit fixture IDs must never cause a later sequence collision.
   for(const row of (await db.query(`SELECT table_schema,table_name,column_name FROM information_schema.columns WHERE table_schema IN ('erp','shared') AND (is_identity='YES' OR column_default LIKE 'nextval%')`)).rows) {
@@ -115,7 +117,7 @@ try {
   await check('Invalid JSON and content type return canonical errors',async()=>{
     assert.equal((await call('/api/erp/clientes',{method:'POST',raw:'{'})).status,400)
     assert.equal((await call('/api/erp/clientes',{method:'POST',raw:'{}',headers:{'Content-Type':'text/plain'}})).status,415)
-    assert.equal((await call('/api/erp/clientes',{method:'POST',body:{values:{nome:'Injection',tenant_id:2}}})).status,422)
+    assert.equal((await call('/api/erp/clientes',{method:'POST',body:{values:{nome:'Injection',empresa_id:2}}})).status,422)
   })
   await check('Streamed body without declared length is bounded before execution',async()=>{
     const before=(await db.query('SELECT count(*)::int AS n FROM erp.entidades')).rows[0].n
@@ -130,7 +132,7 @@ try {
     const edit=await call('/api/erp/clientes/'+customer.id,{method:'PATCH',body:{expectedVersion:Number(customer.versao),values:{nome:'Cliente atualizado',email:'crud@example.invalid'}}});assert.equal(edit.status,200,JSON.stringify(edit.data));customer=edit.data.record
     assert.equal((await call('/api/erp/clientes/'+customer.id,{method:'PATCH',body:{expectedVersion:1,values:{nome:'Old'}}})).status,409)
     const remove=await call('/api/erp/clientes/'+customer.id,{method:'DELETE',body:{expectedVersion:Number(customer.versao)}});assert.equal(remove.status,200);assert.equal(remove.data.record.status,'inativo')
-    const events=(await db.query('SELECT evento FROM erp.cadastros_eventos WHERE tenant_id=1 AND entidade_id=$1 ORDER BY id',[customer.id])).rows;assert(events.length>=2)
+    const events=(await db.query('SELECT evento FROM erp.cadastros_eventos WHERE empresa_id=1 AND entidade_id=$1 ORDER BY id',[customer.id])).rows;assert(events.length>=2)
     return {id:customer.id,events:events.map(row=>row.evento)}
   })
   await check('HTTP requests isolate company context even when simultaneous',async()=>{
@@ -157,7 +159,7 @@ try {
       const cleared=await call(path,{method:'PATCH',body:{values:{...values,observacoes:null,numero_documento:null,conta_financeira_id:null}},headers:{'If-Match':edit.headers.get('etag')}});assert.equal(cleared.status,200,JSON.stringify(cleared.data));assert.equal(cleared.data.record.observacoes,null);assert.equal(cleared.data.record.conta_financeira_id,null)
       const removed=await call(path,{method:'DELETE',body:{motivo:'Registro fictício encerrado'},headers:{'If-Match':cleared.headers.get('etag')}});assert.equal(removed.status,200,JSON.stringify(removed.data));assert.equal(removed.data.deleted,true);assert.equal((await call(path)).status,404)
       assert.equal((await call('/api/erp/titulos/'+side,{method:'POST',body:{values:financialValues(side)},headers:{'Idempotency-Key':key}})).status,409)
-      assert.equal((await db.query(`SELECT count(*)::int AS n FROM erp.contas_${side} WHERE tenant_id=1 AND id=$1 AND excluido_em IS NOT NULL`,[id])).rows[0].n,1)
+      assert.equal((await db.query(`SELECT count(*)::int AS n FROM erp.contas_${side} WHERE empresa_id=1 AND id=$1 AND excluido_em IS NOT NULL`,[id])).rows[0].n,1)
       return {id,deletedLogically:true,repetitionPreserved:true}
     })
   }
@@ -196,7 +198,7 @@ try {
       assert.equal((await call(path,{method:'PATCH',body:{expectedVersion:1,values}})).status,409)
       assert.equal((await call(path,{method:'DELETE',body:{expectedVersion:1,motivo:'Versão antiga'}})).status,409)
       const removed=await call(path,{method:'DELETE',body:{expectedVersion:Number(record.versao),motivo:'Rascunho fictício'}});assert.equal(removed.status,200,JSON.stringify(removed.data));assert.equal(removed.data.deleted,true)
-      assert.equal((await db.query(`SELECT count(*)::int AS n FROM erp.${type} WHERE tenant_id=1 AND id=$1 AND excluido_em IS NOT NULL`,[id])).rows[0].n,1)
+      assert.equal((await db.query(`SELECT count(*)::int AS n FROM erp.${type} WHERE empresa_id=1 AND id=$1 AND excluido_em IS NOT NULL`,[id])).rows[0].n,1)
       const confirmedDraft=await call('/api/erp/'+type,{method:'POST',body:{values:{...values,numero:'LOCAL-CONFIRM-'+type}},headers:{'Idempotency-Key':'local-confirm-'+type}})
       assert.equal(confirmedDraft.status,201,JSON.stringify(confirmedDraft.data))
       const confirmedPath='/api/erp/'+type+'/'+confirmedDraft.data.record.id
@@ -213,7 +215,7 @@ try {
     try{
       const response=await call('/api/erp/titulos/pagar',{method:'POST',body:{values:financialValues('pagar')},headers:{'Idempotency-Key':'local-audit-rollback'}})
       assert.equal(response.status,500);assert.equal(await count(),before)
-      assert.equal((await db.query("SELECT count(*)::int AS n FROM erp.contas_pagar WHERE tenant_id=1 AND chave_idempotencia='local-audit-rollback'")).rows[0].n,0)
+      assert.equal((await db.query("SELECT count(*)::int AS n FROM erp.contas_pagar WHERE empresa_id=1 AND chave_idempotencia='local-audit-rollback'")).rows[0].n,0)
     }finally{await db.exec('DROP TRIGGER local_api_audit_failure ON erp.contas_pagar_eventos; DROP FUNCTION erp.local_api_audit_failure();')}
     const retry=await createTitle('pagar','local-audit-rollback');assert.equal(retry.status,201)
   })
@@ -221,7 +223,7 @@ try {
     const values={local_estoque_id:101,produto_id:101,tipo:'entrada',quantidade:2,custo_unitario:0},body={values},headers={'Idempotency-Key':'local-stock'}
     const a=await call('/api/erp/operacoes/movimentacoes',{method:'POST',body,headers});assert.equal(a.status,201,JSON.stringify(a.data))
     const b=await call('/api/erp/operacoes/movimentacoes',{method:'POST',body,headers});assert.equal(b.status,201);assert.equal(a.data.record.id,b.data.record.id)
-    assert.equal(Number((await db.query('SELECT quantidade_fisica FROM erp.saldos_estoque WHERE tenant_id=1 AND produto_id=101')).rows[0].quantidade_fisica),12)
+    assert.equal(Number((await db.query('SELECT quantidade_fisica FROM erp.saldos_estoque WHERE empresa_id=1 AND produto_id=101')).rows[0].quantidade_fisica),12)
   })
   await check('Existing GET groups return compatible data envelopes',async()=>{
     const paths=['/api/erp/acesso','/api/erp/resumo','/api/erp/resumo/profissional','/api/erp/clientes','/api/erp/produtos','/api/erp/categorias','/api/erp/contas-financeiras','/api/erp/vendas','/api/erp/vendas/catalogos','/api/erp/compras','/api/erp/compras/catalogos','/api/erp/catalogos/busca?tipo=produto','/api/erp/catalogos/categorias','/api/erp/operacoes/movimentacoes','/api/erp/operacoes/catalogos?resource=movimentacoes&source=products','/api/erp/automacoes','/api/erp/conciliacao/concluidas','/api/erp/conciliacao/regras','/api/erp/conciliacao/sugestoes','/api/erp/recorrencias','/api/erp/pagamentos?tipo=pagar&conta_id='+paid.id,'/api/erp/fechamentos','/api/erp/estoque/contagem?local=101&produtos=101','/api/erp/notas-compra','/api/erp/ordens-servico','/api/erp/financeiro/adiantamentos','/api/erp/relatorios/posicao-financeira?from=2026-10-01&to=2026-10-31']
@@ -230,7 +232,7 @@ try {
   })
   await check('Membership revocation is effective on the next HTTP request',async()=>{
     assert.equal((await call('/api/erp/clientes',{token:'reader'})).status,200)
-    await db.exec("UPDATE shared.tenant_memberships SET status='suspended' WHERE tenant_id=1 AND user_id=2")
+    await db.exec("UPDATE shared.usuarios_empresas SET status='suspended' WHERE empresa_id=1 AND usuario_id=2")
     assert.equal((await call('/api/erp/clientes',{token:'reader'})).status,401)
   })
   await check('Cron requires its own secret and retired fiscal actions stay disabled',async()=>{

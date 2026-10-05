@@ -19,8 +19,8 @@ function context(company: number) {
   const current = getErpDatabaseContext()
   assert.equal(current?.tenantId,company); assert.equal(current?.userId,1)
   assert.equal(current?.readOnly,true); assert.equal(current?.statementTimeoutMs,10000)
-  assertErpTenantScopedQuery('SELECT * FROM erp.entidades WHERE tenant_id = $1',[company])
-  assert.throws(() => assertErpTenantScopedQuery('SELECT * FROM erp.entidades WHERE tenant_id = $1',[company+10]))
+  assertErpTenantScopedQuery('SELECT * FROM erp.entidades WHERE empresa_id = $1',[company])
+  assert.throws(() => assertErpTenantScopedQuery('SELECT * FROM erp.entidades WHERE empresa_id = $1',[company+10]))
   calls.push({company,user:current!.userId})
 }
 const execution: ExecutionDependencies = {
@@ -108,7 +108,7 @@ async function main() {
     const readonly={...p,companies:[{...p.companies[0],capabilities:['erp.cadastros.visualizar'] as typeof p.companies[0]['capabilities']}]}
     assert.equal((await executeTool(readonly,'preparar_rascunho',args,settings,deps)).isError,true);assert.equal(prepared,0)
     assert(!(await executeTool(p,'preparar_rascunho',args,settings,deps)).isError);assert.equal(prepared,1)
-    const invalid={...args,proposta:{tipo:'cliente',dados:{nome:'Cliente',tenant_id:999}}}
+    const invalid={...args,proposta:{tipo:'cliente',dados:{nome:'Cliente',empresa_id:999}}}
     assert.equal((await executeTool(p,'preparar_rascunho',invalid,settings,deps)).isError,true);assert.equal(prepared,1)
   })
   await check('Relatorio respeita periodo e acesso a area',async()=>{
@@ -132,7 +132,7 @@ async function main() {
     assert(results.every(r => !r.isError));assert.equal(getErpDatabaseContext(),null)
   })
   await check('Validacao de campos desconhecidos limites datas',async () => {
-    for (const args of [{tenant_id:2},{por_pagina:100},{pagina:0}]) assert.equal((await executeTool(principal,'listar_vendas',args,settings,execution)).isError,true)
+    for (const args of [{empresa_id:2},{por_pagina:100},{pagina:0}]) assert.equal((await executeTool(principal,'listar_vendas',args,settings,execution)).isError,true)
     assert.equal((await executeTool(principal,'consultar_financeiro',{tipo:'pagar',vencimento_inicio:'2026-02-31'},settings,execution)).isError,true)
     assert.equal((await executeTool(principal,'consultar_financeiro',{tipo:'pagar',vencimento_inicio:'2026-02-20',vencimento_fim:'2026-02-01'},settings,execution)).isError,true)
     const invalid=await rpc('tools/call',{name:'listar_vendas',arguments:{por_pagina:100}});assert(invalid.body.result?.isError || invalid.body.error)

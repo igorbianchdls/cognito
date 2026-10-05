@@ -22,6 +22,7 @@ import {
   updateSettingsWorkspace,
 } from '@/products/auth/frontend/services/settingsApi'
 import type { AuthTenantRole } from '@/products/auth/shared/authContracts'
+import type { ErpAccessProfile } from '@/products/erp/shared/professionalContracts'
 import type {
   SettingsMember,
   SettingsState,
@@ -37,16 +38,16 @@ type SaveState = 'idle' | 'saving' | 'saved' | 'error'
 type SettingsSection = 'profile' | 'security' | 'workspace' | 'members'
 
 const ROLE_LABELS: Record<AuthTenantRole, string> = {
-  admin: 'Admin',
-  member: 'Member',
-  owner: 'Owner',
-  viewer: 'Viewer',
+  admin: 'Administrador',
+  member: 'Membro',
+  owner: 'Proprietário',
+  viewer: 'Visualizador',
 }
 
 const STATUS_LABELS: Record<WorkspaceMemberStatus, string> = {
-  active: 'Active',
-  invited: 'Invited',
-  suspended: 'Suspended',
+  active: 'Ativo',
+  invited: 'Convidado',
+  suspended: 'Suspenso',
 }
 
 const NAV_ITEMS: Array<{ icon: LucideIcon; label: string; value: SettingsSection }> = [
@@ -155,7 +156,7 @@ export default function SettingsPanel({ initialState, variant = 'modal' }: Setti
     }
   }
 
-  async function saveMember(userId: number, patch: { role?: AuthTenantRole; status?: WorkspaceMemberStatus }) {
+  async function saveMember(userId: number, patch: { role?: AuthTenantRole; status?: WorkspaceMemberStatus; profileId?: ErpAccessProfile }) {
     setError(null)
     setMembersSave((current) => ({ ...current, [userId]: 'saving' }))
     try {
@@ -318,7 +319,7 @@ export default function SettingsPanel({ initialState, variant = 'modal' }: Setti
                 const memberSave = membersSave[member.userId] || 'idle'
                 return (
                   <div
-                    className="grid gap-3 py-5 md:grid-cols-[minmax(0,1fr)_140px_140px]"
+                    className="grid gap-3 py-5 md:grid-cols-[minmax(0,1fr)_120px_130px_110px]"
                     key={member.userId}
                   >
                     <div className="flex min-w-0 items-center gap-3">
@@ -328,10 +329,11 @@ export default function SettingsPanel({ initialState, variant = 'modal' }: Setti
                           {member.fullName || member.email}
                         </p>
                         <p className="truncate text-xs text-slate-500">{member.email}</p>
+                        {member.syncPending ? <p className="text-xs text-amber-700">Sincronização de acesso pendente.</p> : null}
                       </div>
                     </div>
                     <Select
-                      disabled={!canManageWorkspace || memberSave === 'saving'}
+                      disabled={!canManageWorkspace || memberSave === 'saving' || (state.currentUserRole!=='owner' && member.role==='owner')}
                       value={member.role}
                       onValueChange={(value) => {
                         void saveMember(member.userId, { role: value as AuthTenantRole })
@@ -342,14 +344,21 @@ export default function SettingsPanel({ initialState, variant = 'modal' }: Setti
                       </SelectTrigger>
                       <SelectContent>
                         {Object.entries(ROLE_LABELS).map(([value, label]) => (
-                          <SelectItem key={value} value={value}>
+                          <SelectItem key={value} value={value} disabled={value==='owner'&&state.currentUserRole!=='owner'}>
                             {label}
                           </SelectItem>
                         ))}
                       </SelectContent>
                     </Select>
+                    <Select disabled={!canManageWorkspace || memberSave==='saving' || ['owner','admin'].includes(member.role)}
+                      value={member.profileId} onValueChange={value=>{void saveMember(member.userId,{profileId:value as ErpAccessProfile})}}>
+                      <SelectTrigger aria-label="Perfil de acesso" className="w-full border border-slate-200 bg-white"><SelectValue /></SelectTrigger>
+                      <SelectContent>{['administrador','consulta','financeiro','vendas','compras','estoque'].map(profile=>(
+                        <SelectItem key={profile} value={profile} disabled={profile==='administrador'&&!['owner','admin'].includes(member.role)}>{profile.charAt(0).toUpperCase()+profile.slice(1)}</SelectItem>
+                      ))}</SelectContent>
+                    </Select>
                     <Select
-                      disabled={!canManageWorkspace || memberSave === 'saving'}
+                      disabled={!canManageWorkspace || memberSave === 'saving' || (state.currentUserRole!=='owner' && member.role==='owner')}
                       value={member.status}
                       onValueChange={(value) => {
                         void saveMember(member.userId, { status: value as WorkspaceMemberStatus })
@@ -359,7 +368,7 @@ export default function SettingsPanel({ initialState, variant = 'modal' }: Setti
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
-                        {Object.entries(STATUS_LABELS).map(([value, label]) => (
+                        {Object.entries(STATUS_LABELS).filter(([value])=>value!=='invited').map(([value, label]) => (
                           <SelectItem key={value} value={value}>
                             {label}
                           </SelectItem>

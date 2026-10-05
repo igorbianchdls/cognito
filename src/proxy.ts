@@ -12,8 +12,12 @@ const isPublicRoute = createRouteMatcher([
   '/api/clerk/webhooks(.*)',
 ])
 
+// These read endpoints authenticate through withErpHttp and return its JSON
+// 401/403 envelope. Keep Clerk middleware active so auth() has its context.
+const isDashboardApiRoute = createRouteMatcher(['/api/erp/dashboards(.*)'])
+
 const handleClerkMiddleware = clerkMiddleware(async (auth, request) => {
-  if (!isPublicRoute(request)) {
+  if (!isPublicRoute(request) && !isDashboardApiRoute(request)) {
     await auth.protect()
   }
 
@@ -21,8 +25,9 @@ const handleClerkMiddleware = clerkMiddleware(async (auth, request) => {
 })
 
 export default function proxy(request: NextRequest, event: NextFetchEvent) {
-  // Estas rotas possuem verificacao OAuth propria; nao aceitam sessao do navegador.
-  if (['/api/mcp', '/.well-known/oauth-protected-resource', '/.well-known/oauth-protected-resource/api/mcp']
+  // MCP verifies OAuth; internal jobs verify CRON_SECRET in their own handlers.
+  if (['/api/mcp', '/.well-known/oauth-protected-resource', '/.well-known/oauth-protected-resource/api/mcp',
+    '/api/clerk/reconcile', '/api/chatgptplugin/internal/maintenance', '/api/erp/internal/automacoes']
     .includes(request.nextUrl.pathname)) return NextResponse.next()
   if (!process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY && isPublicRoute(request)) {
     return NextResponse.next()

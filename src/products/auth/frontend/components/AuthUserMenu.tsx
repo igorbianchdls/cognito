@@ -54,8 +54,6 @@ export function AuthUserMenu() {
   useEffect(() => {
     if (!isSettingsOpen) return
     let isCurrent = true
-    setIsSettingsLoading(true)
-    setSettingsError(null)
     void fetchSettingsState()
       .then((state) => {
         if (isCurrent) setSettingsState(state)
@@ -112,7 +110,11 @@ export function AuthUserMenu() {
                   </div>
                 </DropdownMenuLabel>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem onSelect={() => setIsSettingsOpen(true)}>
+                <DropdownMenuItem onSelect={() => {
+                  setIsSettingsLoading(true)
+                  setSettingsError(null)
+                  setIsSettingsOpen(true)
+                }}>
                   <Settings className="size-4" />
                   <span>Gerenciar conta</span>
                 </DropdownMenuItem>

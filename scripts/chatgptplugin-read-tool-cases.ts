@@ -22,7 +22,7 @@ export async function runReadToolCases(ctx: Context) {
   try {
     await client.query("SELECT set_config('app.erp_tenant_id',$1,true),set_config('app.erp_user_id',$2,true)", [String(companyId), String(userId)])
     await client.query('SET LOCAL ROLE erp_runtime')
-    for (const name of names) db[name] = await sql(`SELECT * FROM erp.${name} WHERE tenant_id=$1 ORDER BY id`)
+    for (const name of names) db[name] = await sql(`SELECT * FROM erp.${name} WHERE empresa_id=$1 ORDER BY id`)
   } finally { await client.query('ROLLBACK') }
   const pluginQuery = "SELECT * FROM (SELECT 'settings' kind,to_jsonb(s) value FROM plugin.settings s WHERE user_id=$1 AND oauth_client_id=$2 AND integration='chatgpt' UNION ALL SELECT 'draft',to_jsonb(d) FROM plugin.drafts d WHERE user_id=$1 AND oauth_client_id=$2 AND integration='chatgpt') records ORDER BY kind,value::text"
   const pluginSnapshot = (await client.query(pluginQuery, [userId,clientId])).rows
@@ -102,10 +102,10 @@ export async function runReadToolCases(ctx: Context) {
     assert.equal(result.total, db.vendas.filter(r => r.tipo_documento === 'orcamento' && !r.excluido_em).length)
     assert(result.records.every((r: Row) => r.tipo_documento === 'orcamento'))
   })
-  for (const [tool, table, states] of [['listar_vendas','vendas',['confirmada','rascunho','cancelada']], ['listar_compras','compras',['recebida','rascunho','cancelada']]] as const)
+  for (const [tool, table, states] of [['listar_vendas','vendas',['confirmada','rascunho','cancelada']], ['listar_compras','compras',['confirmada','parcialmente_recebida','recebida','rascunho','cancelada']]] as const)
     for (const status of states) await check(tool + ': filtro ' + status, async () => {
       const result = (await call(tool, { empresa_id: companyId, status })).data
-      assert.equal(result.total, db[table].filter(r => r.status === status && !r.excluido_em).length)
+      assert.equal(result.total, db[table].filter(r => r.status === status && !r.excluido_em && (table!=='vendas'||r.tipo_documento!=='orcamento')).length)
       assert(result.records.every((r: Row) => r.status === status))
     })
   for (const [name, uri] of [['abrir_painel','ui://chatgptplugin/panel.html'],['abrir_formulario','ui://chatgptplugin/form.html']]) await check(name + ': resposta e recurso HTML', async () => {
@@ -139,16 +139,16 @@ export async function runReadToolCases(ctx: Context) {
   })
   await check('listar_rascunhos: consulta isolada por usuário e conexão', async () => {
     const data = (await call('listar_rascunhos', { empresa_id: companyId })).data
-    assert.equal(data.records.length, Math.min(20, pluginSnapshot.filter(r => r.kind === 'draft' && Number(r.value.tenant_id) === companyId).length))
+    assert.equal(data.records.length, Math.min(20, pluginSnapshot.filter(r => r.kind === 'draft' && Number(r.value.empresa_id) === companyId).length))
   })
-  const existingDraft = pluginSnapshot.find(r => r.kind === 'draft' && Number(r.value.tenant_id) === companyId)?.value
+  const existingDraft = pluginSnapshot.find(r => r.kind === 'draft' && Number(r.value.empresa_id) === companyId)?.value
   await check('obter_rascunho: ' + (existingDraft ? 'consulta de registro existente' : 'ausência retorna NOT_FOUND'), async () => {
     if (existingDraft) { const data = (await call('obter_rascunho', { empresa_id: companyId, rascunho_id: existingDraft.id })).data; assert.equal(data.rascunho_id, existingDraft.id) }
     else await rejected('obter_rascunho', { empresa_id: companyId, rascunho_id: randomUUID() }, 'NOT_FOUND')
   })
   const from = '2026-07-01', to = '2026-12-31'
   const confirmedSales = db.vendas.filter(r => ['confirmada','faturada'].includes(r.status) && r.tipo_documento === 'venda' && !r.excluido_em && day(r.data_venda) >= from && day(r.data_venda) <= to)
-  const receivedPurchases = db.compras.filter(r => ['confirmada','recebida'].includes(r.status) && r.tipo_movimento === 'compra' && !r.excluido_em && day(r.data_compra) >= from && day(r.data_compra) <= to)
+  const receivedPurchases = db.compras.filter(r => ['confirmada','parcialmente_recebida','recebida'].includes(r.status) && r.tipo_movimento === 'compra' && !r.excluido_em && day(r.data_compra) >= from && day(r.data_compra) <= to)
   for (const type of ['dre-caixa','posicao-financeira','vendas-clientes','vendas-vendedores','vendas-produtos','compras-fornecedores','compras-categorias','valor-estoque']) await check('consultar_relatorio: ' + type, async () => {
     const records: Row[] = []
     for (let page = 1; page <= 10; page++) {
@@ -226,14 +226,14 @@ export async function runReadToolCases(ctx: Context) {
   for(const type of ['vendas','compras','pagar','receber'])await check('analisar_periodo: agregados completos '+type,async()=>{
     const from='2026-07-01',to='2026-12-31'
     const expected=type==='pagar'||type==='receber'?financialRows(type).filter(r=>!['cancelado','renegociado','pago'].includes(r.status)&&r.due>=from&&r.due<=to).map(r=>({value:r.saldo,date:r.due}))
-      :db[type].filter(r=>!r.excluido_em&&(type==='vendas'?['confirmada','faturada'].includes(r.status)&&r.tipo_documento==='venda':['confirmada','recebida'].includes(r.status)&&r.tipo_movimento==='compra')&&day(r[type==='vendas'?'data_venda':'data_compra'])>=from&&day(r[type==='vendas'?'data_venda':'data_compra'])<=to).map(r=>({value:cents(r.total),date:day(r[type==='vendas'?'data_venda':'data_compra'])}))
+      :db[type].filter(r=>!r.excluido_em&&(type==='vendas'?['confirmada','faturada'].includes(r.status)&&r.tipo_documento==='venda':['confirmada','parcialmente_recebida','recebida'].includes(r.status)&&r.tipo_movimento==='compra')&&day(r[type==='vendas'?'data_venda':'data_compra'])>=from&&day(r[type==='vendas'?'data_venda':'data_compra'])<=to).map(r=>({value:cents(r.total),date:day(r[type==='vendas'?'data_venda':'data_compra'])}))
     const result=(await call('analisar_periodo',{empresa_id:companyId,tipo:type,inicio:from,fim:to})).data
     assert.equal(Number(result.summary.quantidade),expected.length);assert.equal(cents(result.summary.valor_total),expected.reduce((s,r)=>s+r.value,0))
     for(const group of result.records){const rows=expected.filter(r=>r.date.slice(0,7)===group.periodo);assert.equal(Number(group.quantidade),rows.length);assert.equal(cents(group.valor),rows.reduce((s,r)=>s+r.value,0))}
     assert.equal(result.records.reduce((s:number,r:Row)=>s+Number(r.quantidade),0),expected.length)
   })
   for(const type of ['vendas','compras'])await check('Cards: período comercial e total '+type,async()=>{
-    const expected=db[type].filter(r=>!r.excluido_em&&day(r[type==='vendas'?'data_venda':'data_compra'])>='2026-09-01'&&day(r[type==='vendas'?'data_venda':'data_compra'])<='2026-09-30')
+    const expected=db[type].filter(r=>!r.excluido_em&&(type!=='vendas'||r.tipo_documento!=='orcamento')&&day(r[type==='vendas'?'data_venda':'data_compra'])>='2026-09-01'&&day(r[type==='vendas'?'data_venda':'data_compra'])<='2026-09-30')
     const result=(await call(type==='vendas'?'listar_vendas':'listar_compras',{empresa_id:companyId,inicio:'2026-09-01',fim:'2026-09-30'})).data
     assert.equal(result.total,expected.length);assert.equal(cents(result.summary.valor_total),expected.reduce((s,r)=>s+cents(r.total),0))
   })
@@ -244,6 +244,12 @@ export async function runReadToolCases(ctx: Context) {
     assert.equal(result.card,card);assert.equal(result.empresa.id,companyId)
     const source=(await call(consulta,{empresa_id:companyId,...parametros})).data
     assert.deepEqual(result.dados,source)
+  })
+  await check('renderizar_card: tabela filtra compras parcialmente recebidas',async()=>{
+    const expected=db.compras.filter(row=>row.status==='parcialmente_recebida'&&!row.excluido_em)
+    const result=(await call('renderizar_card',{empresa_id:companyId,card:'tabela',consulta:'listar_compras',parametros:{status:'parcialmente_recebida'}})).data
+    assert.equal(result.dados.total,expected.length)
+    assert(result.dados.records.every((row:Row)=>row.status==='parcialmente_recebida'))
   })
   for(const card of ['revisao','resultado'])await check('renderizar_card: rascunho '+card+' isolado',async()=>{
     if(existingDraft){const result=(await call('renderizar_card',{empresa_id:companyId,card,consulta:'obter_rascunho',parametros:{rascunho_id:existingDraft.id}})).data;assert.equal(result.dados.rascunho_id,existingDraft.id)}
@@ -258,7 +264,7 @@ export async function runReadToolCases(ctx: Context) {
   await check('Dados comerciais, rascunhos e preferências permanecem iguais', async () => {
     await client.query('BEGIN READ ONLY')
     try {
-      for (const name of names) assert.equal(fingerprint((await sql(`SELECT * FROM erp.${name} WHERE tenant_id=$1 ORDER BY id`))), fingerprint(db[name]), name)
+      for (const name of names) assert.equal(fingerprint((await sql(`SELECT * FROM erp.${name} WHERE empresa_id=$1 ORDER BY id`))), fingerprint(db[name]), name)
       const after = (await client.query(pluginQuery, [userId,clientId])).rows
       assert.equal(fingerprint(after), fingerprint(pluginSnapshot))
     } finally { await client.query('ROLLBACK') }
