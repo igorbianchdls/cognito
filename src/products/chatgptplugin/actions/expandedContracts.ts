@@ -1,5 +1,6 @@
 import { z } from 'zod'
 import { requiredDate } from '../tools/catalog'
+import { financialTitleCreateSchema, financialTitleEditSchema } from '@/products/erp/shared/financialTitleContracts'
 
 const id=z.number().int().positive(), name=z.string().trim().min(1).max(200)
 const text=z.string().trim().max(2000), money=z.number().finite().min(0).max(100000000).multipleOf(0.01)
@@ -10,14 +11,8 @@ const account=z.object({nome:name,tipo:z.enum(['caixa','banco','carteira','carta
 export const commercialItems=z.array(z.object({tipo:z.enum(['produto','servico']),item_id:id,quantidade:z.number().finite().positive().max(100000).multipleOf(0.0001),valor_unitario:money.refine(v=>v>0),desconto:money.default(0)}).strict()).min(1).max(50)
 export const saleData=z.object({cliente_id:id,data_venda:requiredDate,data_vencimento:requiredDate,itens:commercialItems,observacoes:text.optional()}).strict()
 const purchase=z.object({fornecedor_id:id,data_compra:requiredDate,data_vencimento:requiredDate,itens:commercialItems,observacoes:text.optional()}).strict()
-const installments=z.array(z.object({data_vencimento:requiredDate,valor:money.refine(v=>v>0)}).strict()).min(1).max(48)
-function financial(side:'pagar'|'receber') {
-  return z.object({...(side==='pagar'?{fornecedor_id:id}:{cliente_id:id}),descricao:name,numero_documento:z.string().trim().max(60).optional(),
-    valor_total:money.refine(v=>v>0),data_competencia:requiredDate,data_emissao:requiredDate,categoria_id:id,centro_custo_id:id.optional(),conta_financeira_id:id.optional(),observacoes:text.optional(),parcelas:installments}).strict()
-}
-function financialEdit(side:'pagar'|'receber') {
-  return financial(side).extend({registro_id:id,numero_documento:z.string().trim().max(60).nullable().optional(),centro_custo_id:id.nullable().optional(),conta_financeira_id:id.nullable().optional(),observacoes:text.nullable().optional()}).strict()
-}
+function financial(side:'pagar'|'receber') { return financialTitleCreateSchema(side).innerType() }
+function financialEdit(side:'pagar'|'receber') { return financialTitleEditSchema(side).innerType().extend({registro_id:id}).strict() }
 function operation<T extends string,S extends z.ZodTypeAny>(tipo:T,dados:S){return z.object({tipo:z.literal(tipo),dados}).strict()}
 function patch<S extends z.ZodRawShape>(schema:z.ZodObject<S>){return schema.partial().extend({registro_id:id}).strict().refine(d=>Object.keys(d).length>1,'Informe ao menos uma alteração.')}
 const deletion=z.object({registro_id:id,motivo:z.string().trim().min(3).max(1000)}).strict()

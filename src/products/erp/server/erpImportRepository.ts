@@ -2,7 +2,7 @@ import { createHash } from 'node:crypto'
 
 import { runQuery, withTransaction } from '@/lib/postgres'
 import { createErpEntityWithClient, listErpEntityRecords } from '@/products/erp/server/erpRepository'
-import { ErpDomainError } from './erpApi'
+import { ErpDomainError } from '../shared/erpErrors'
 import type { ErpConnectedModuleId } from '@/products/erp/server/erpModuleRegistry'
 
 type ImportType = 'clientes' | 'fornecedores' | 'produtos' | 'servicos'
@@ -151,4 +151,8 @@ export async function getImportDetails(tenantId:number,id:string,page=1) {
 
 export async function exportErpRecords(tenantId: number, type: ImportType) {
   return listErpEntityRecords({ tenantId, entityId: type as ErpConnectedModuleId, query: '', filters: {} })
+}
+
+export function listImportErrorLines(tenantId:number,id:string) {
+  return runQuery(`SELECT numero_linha,status,erros FROM erp.importacoes_dados_linhas WHERE tenant_id=$1 AND importacao_id=$2 AND status='erro' ORDER BY numero_linha`,[tenantId,id])
 }

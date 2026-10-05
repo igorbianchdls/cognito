@@ -3133,7 +3133,10 @@ export async function settleReceivableInstallment(input: SettleInstallmentInput)
     )
     const installment = installmentResult.rows[0] as Record<string, unknown> | undefined
     if (!installment) throw new ErpDomainError('VALIDATION_ERROR', 'Parcela a receber nao encontrada.')
-    if (existingPayment) return { payment: existingPayment, installment }
+    if (existingPayment) return {
+      payment: { id: String(existingPayment.id), valor: existingPayment.valor, valor_liquido: existingPayment.valor_liquido },
+      installment: { id: String(installment.id), conta_receber_id: String(installment.conta_receber_id), valor: installment.valor, valor_pago: installment.valor_pago, status: installment.status },
+    }
     if (installment.status === 'cancelado') throw new ErpDomainError('VALIDATION_ERROR', 'Parcela cancelada nao pode ser baixada.')
     if (installment.status === 'pago') throw new ErpDomainError('VALIDATION_ERROR', 'Parcela ja esta paga.')
 
@@ -3263,7 +3266,10 @@ export async function settlePayableInstallment(input: SettleInstallmentInput) {
     )
     const installment = installmentResult.rows[0] as Record<string, unknown> | undefined
     if (!installment) throw new ErpDomainError('VALIDATION_ERROR', 'Parcela a pagar nao encontrada.')
-    if (existingPayment) return { payment: existingPayment, installment }
+    if (existingPayment) return {
+      payment: { id: String(existingPayment.id), valor: existingPayment.valor, valor_liquido: existingPayment.valor_liquido },
+      installment: { id: String(installment.id), conta_pagar_id: String(installment.conta_pagar_id), valor: installment.valor, valor_pago: installment.valor_pago, status: installment.status },
+    }
     if (installment.status === 'cancelado') throw new ErpDomainError('VALIDATION_ERROR', 'Parcela cancelada nao pode ser baixada.')
     if (installment.status === 'pago') throw new ErpDomainError('VALIDATION_ERROR', 'Parcela ja esta paga.')
     if (installment.tipo_lancamento === 'previsao') throw new ErpDomainError('VALIDATION_ERROR', 'Efetive a previsao antes de registrar o pagamento.')

@@ -31,15 +31,15 @@ async function addInstallments(client:SQLClient,tenantId:number,actorId:number,s
 async function titleEvent(client:SQLClient,tenantId:number,actorId:number,side:FinancialSide,id:number,event:string,values:Record<string,unknown>){
   await client.query(`INSERT INTO erp.contas_${side}_eventos(tenant_id,conta_${side}_id,evento,dados,criado_por) VALUES($1,$2,$3,$4::jsonb,$5)`,[tenantId,id,event,JSON.stringify(values),actorId])
 }
-export async function createManualFinancialTitle(client:SQLClient,tenantId:number,actorId:number,side:FinancialSide,values:Record<string,unknown>,key:string){
+export async function createManualFinancialTitle(client:SQLClient,tenantId:number,actorId:number,side:FinancialSide,values:Record<string,unknown>,key:string,source:'plugin'|'api'='plugin'){
   await validateFinancialReferences(client,tenantId,side,values);await financialPeriod(client,tenantId,values)
   const party=side==='pagar'?'fornecedor':'cliente'
   const result=await client.query(`INSERT INTO erp.contas_${side}(tenant_id,${party}_id,descricao,numero_documento,valor_total,data_competencia,data_emissao,categoria_id,centro_custo_id,observacoes,origem,status,chave_idempotencia,criado_por,atualizado_por${side==='pagar'?',tipo_lancamento,efetivado_em':''})
     VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,'manual','aberto',$11,$12,$12${side==='pagar'?",'efetivo',now()":''}) RETURNING id`,
     [tenantId,values[party+'_id'],values.descricao,values.numero_documento||null,values.valor_total,values.data_competencia,values.data_emissao,values.categoria_id,values.centro_custo_id||null,values.observacoes||null,key,actorId])
-  const id=Number(result.rows[0].id);await addInstallments(client,tenantId,actorId,side,id,values);await titleEvent(client,tenantId,actorId,side,id,'criada_plugin',values);return String(id)
+  const id=Number(result.rows[0].id);await addInstallments(client,tenantId,actorId,side,id,values);await titleEvent(client,tenantId,actorId,side,id,'criada_'+source,values);return String(id)
 }
-export async function changeManualFinancialTitle(client:SQLClient,tenantId:number,actorId:number,side:FinancialSide,id:number,values:Record<string,unknown>,remove=false){
+export async function changeManualFinancialTitle(client:SQLClient,tenantId:number,actorId:number,side:FinancialSide,id:number,values:Record<string,unknown>,remove=false,source:'plugin'|'api'='plugin'){
   const title=(await client.query(`SELECT * FROM erp.contas_${side} WHERE tenant_id=$1 AND id=$2 AND excluido_em IS NULL FOR UPDATE`,[tenantId,id])).rows[0]
   if(!title)fail('Título não disponível nesta empresa.')
   if(title.origem!=='manual'||title[side==='pagar'?'compra_id':'venda_id']||title.contrato_id||title.recorrencia_financeira_id)fail('Altere ou cancele o documento de origem deste título.')
@@ -74,7 +74,7 @@ export async function changeManualFinancialTitle(client:SQLClient,tenantId:numbe
     await client.query(`UPDATE erp.contas_${side} SET ${party}_id=$3,descricao=$4,numero_documento=$5,valor_total=$6,data_competencia=$7,data_emissao=$8,categoria_id=$9,centro_custo_id=$10,observacoes=$11,status='aberto',atualizado_por=$12 WHERE tenant_id=$1 AND id=$2`,[tenantId,id,values[party+'_id'],values.descricao,values.numero_documento||null,values.valor_total,values.data_competencia,values.data_emissao,values.categoria_id,values.centro_custo_id||null,values.observacoes||null,actorId])
     await addInstallments(client,tenantId,actorId,side,id,values,Math.max(0,...parts.map(p=>Number(p.numero_parcela))))
   }
-  await titleEvent(client,tenantId,actorId,side,id,remove?'excluida_plugin':'atualizada_plugin',{antes:title,parcelas_anteriores:parts,depois:values})
+  await titleEvent(client,tenantId,actorId,side,id,(remove?'excluida_':'atualizada_')+source,{antes:title,parcelas_anteriores:parts,depois:values})
   return String(id)
 }
 

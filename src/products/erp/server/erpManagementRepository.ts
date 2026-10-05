@@ -1,7 +1,7 @@
 import { isRetiredErpReport } from '@/products/erp/shared/reportCatalog'
 import { createSalesContract, generateContractSales } from './erpSalesContracts'
 import { runQuery, withTransaction } from '@/lib/postgres'
-import { ErpDomainError } from '@/products/erp/server/erpApi'
+import { ErpDomainError } from '@/products/erp/shared/erpErrors'
 import { assertErpPeriodOpen } from '@/products/erp/server/erpPeriodRepository'
 import { readOperationPage } from './erpOperationPagination'
 

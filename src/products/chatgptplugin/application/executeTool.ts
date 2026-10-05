@@ -21,6 +21,7 @@ export type ExecutionDependencies = {
 export const executionDependencies: ExecutionDependencies = { queries: erpQueries, reserve: reserveExecution, finish: finishExecution, actions:actionDependencies }
 function publicError(error: unknown): PluginError {
   if (error instanceof PluginError) return error
+  if (error instanceof ErpDomainError && error.code === 'NOT_FOUND') return new PluginError('NOT_FOUND', error.message, 404)
   if (error instanceof ErpDomainError && error.code === 'VALIDATION_ERROR') {
     return new PluginError('NOT_FOUND', 'Registro nao disponivel nesta empresa.', 404)
   }

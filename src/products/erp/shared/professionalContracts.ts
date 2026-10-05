@@ -103,7 +103,7 @@ export const periodCloseSchema = z.object({
   motivo: z.string().trim().max(1000).optional().nullable(),
 }).refine((value) => value.periodo_fim >= value.periodo_inicio, { message: 'Periodo final deve ser igual ou posterior ao inicial.' })
 
-export const periodReopenSchema = z.object({ id: id })
+export const periodReopenSchema = z.object({ id: id, motivo: z.string().trim().min(3).max(1000) }).strict()
 
 export type ServiceOrderCreateInput = z.infer<typeof serviceOrderCreateSchema>
 export type PartialStockActionInput = z.infer<typeof partialStockActionSchema>

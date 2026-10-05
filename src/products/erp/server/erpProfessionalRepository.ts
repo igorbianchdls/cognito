@@ -18,7 +18,7 @@ import {
   createFinalStockDocument,
   resolveStockLocation,
 } from "@/products/erp/server/erpStockRepository";
-import { ErpDomainError } from "@/products/erp/server/erpApi";
+import { ErpDomainError } from "@/products/erp/shared/erpErrors";
 import { assertErpPeriodOpen } from "@/products/erp/server/erpPeriodRepository";
 import type {
   FiscalPreflightIssue,

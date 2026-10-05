@@ -1,5 +1,5 @@
 import { runQuery, withTransaction } from '@/lib/postgres'
-import { ErpDomainError } from './erpApi'
+import { ErpDomainError } from '../shared/erpErrors'
 import { createErpEntityWithClient, shiftDate, recurrenceOccurrenceIndex } from './erpRepository'
 import { assertErpPeriodOpen } from './erpPeriodRepository'
 import { erpDateSchema } from '@/products/erp/shared/erpTransport'

@@ -55,6 +55,20 @@ A tabela `erp.operacoes_estoque` guarda a identidade e resultado das operações
 - Giro: saídas de venda dos últimos 90 dias divididas pelo saldo físico atual; não é custo médio nem giro baseado em estoque médio.
 - Automações: operações parciais/falhas são visíveis e retomáveis; o cron responde com falha quando alguma rotina falha.
 
+## Organização e verificação da API HTTP
+
+Implementada a camada `src/products/erp/api`: contratos HTTP, handlers, contexto, autenticação, limites, respostas e catálogo verificável. As 55 rotas existentes foram extraídas mantendo URLs e configurações; dois endpoints de títulos financeiros e DELETE de rascunhos comerciais completam **57 rotas / 81 métodos**. `src/app/api/erp` contém apenas configuração e exportação dos handlers.
+
+Consultas reutilizáveis passaram para `erp/server/erpReadQueries.ts` e `erpReadService.ts`, com adaptadores no plugin. As regras de negócio e o acesso ao banco continuam em `server`; contratos reutilizáveis ficam em `shared`. Não foi criado outro produto nem alterado o banco remoto nesta etapa.
+
+Correções encontradas nos testes: resposta da baixa repetida mantém o formato original e exclui metadados internos; reabertura de período exige e persiste motivo, solicitado na tela do ERP; identificador inválido na consulta de pagamentos retorna erro de validação.
+
+Evidências locais: **20 grupos HTTP** com dados fictícios, **27 grupos de banco do plugin**, **29 cenários de estoque/contratos/automações**, **13 grupos de formulários do protocolo** e teste visual de formulário aprovados. O HTTP cobre autenticação em 78 métodos, 27 GETs autenticados, CRUD, ETag/versão, idempotência, referências entre empresas, pagamentos/estorno, períodos fechados/reabertura e rollback por falha de auditoria. Não representa teste de todos os caminhos de todos os endpoints.
+
+Tipos ERP/plugin e catálogo aprovados. Análise estática de 269 arquivos: zero erros, oito avisos existentes e nenhuma ocorrência na nova camada API ou nos dois scripts novos.
+
+Guia e exemplos: `src/products/erp/api/README.md`. Catálogo: `routeCatalog.ts`, mantido por `scripts/erp/api-catalog.mjs`. Teste: `scripts/erp/api-http-smoke.mjs`; relatório em `.cache/erp-api/http-smoke.json`. PGlite não comprova concorrência entre duas sessões PostgreSQL. A instalação final e o build continuam pendentes por falta de espaço em disco.
+
 ## Evidências privadas
 
 Relatórios e cópias ficam sob `.cache`, ignorada pelo Git. Não publicar esses arquivos: a cópia contém registros e dados de usuários. Principais relatórios em `erp-audit`: `stock-regression.json`, `stock-count-ui.json`, `storage-regression.json`, `mcp-all-read.json`, `product-lint-final.json`, `dependency-audit-lock-final.json`, `dependency-audit-prod-final.json` e `stock-application/application.json`. A prova de restauração está em `.cache/database-backups/restore-proof.json`.

@@ -1,5 +1,5 @@
 import { runQuery } from '@/lib/postgres'
-import { ErpDomainError } from './erpApi'
+import { ErpDomainError } from '../shared/erpErrors'
 
 const documents: Record<
   string,

@@ -35,6 +35,7 @@ type Closure = {
   motivo?: string;
   fechado_em: string;
   reaberto_em?: string;
+  motivo_reabertura?: string;
 };
 const today = () => new Date().toISOString().slice(0, 10);
 const firstDay = () => `${today().slice(0, 7)}-01`;
@@ -47,6 +48,8 @@ export function PeriodClosuresPage() {
   const [from, setFrom] = useState(firstDay());
   const [to, setTo] = useState(today());
   const [reason, setReason] = useState("");
+  const [reopening, setReopening] = useState<Closure | null>(null);
+  const [reopenReason, setReopenReason] = useState("");
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -109,9 +112,10 @@ export function PeriodClosuresPage() {
         await fetch("/api/erp/fechamentos", {
           method: "PATCH",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ id }),
+          body: JSON.stringify({ id, motivo: reopenReason.trim() }),
         }),
       );
+      setReopening(null);
       await load();
     } catch (reopenError) {
       setError(
@@ -172,7 +176,10 @@ export function PeriodClosuresPage() {
                   <TableCell className="font-medium">{record.modulo}</TableCell>
                   <TableCell>{formatErpValue(record.periodo_inicio)}</TableCell>
                   <TableCell>{formatErpValue(record.periodo_fim)}</TableCell>
-                  <TableCell>{record.motivo || "-"}</TableCell>
+                  <TableCell>
+                    {record.motivo || "-"}
+                    {record.motivo_reabertura ? <p className="text-xs text-gray-500">Reabertura: {record.motivo_reabertura}</p> : null}
+                  </TableCell>
                   <TableCell>
                     {record.reaberto_em ? "Reaberto" : "Fechado"}
                   </TableCell>
@@ -183,7 +190,7 @@ export function PeriodClosuresPage() {
                         variant="ghost"
                         size="sm"
                         disabled={saving}
-                        onClick={() => void reopen(record.id)}
+                        onClick={() => { setReopening(record); setReopenReason(""); setError(null); }}
                       >
                         <UnlockKeyhole className="size-4" />
                         Reabrir
@@ -260,6 +267,24 @@ export function PeriodClosuresPage() {
                 <LockKeyhole className="size-4" />
               )}
               Confirmar fechamento
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+      <Dialog open={Boolean(reopening)} onOpenChange={(value) => { if (!value && !saving) setReopening(null); }}>
+        <DialogContent>
+          <DialogHeader><DialogTitle>Reabrir período</DialogTitle></DialogHeader>
+          <p className="text-sm text-gray-600">Informe o motivo para liberar alterações neste período. A reabertura será registrada no histórico.</p>
+          <label className="grid gap-2">
+            <Label>Motivo da reabertura</Label>
+            <Textarea value={reopenReason} maxLength={1000} onChange={(event) => setReopenReason(event.target.value)} />
+          </label>
+          {error ? <p role="alert" className="text-sm text-rose-700">{error}</p> : null}
+          <div className="flex justify-end gap-2">
+            <Button variant="outline" disabled={saving} onClick={() => setReopening(null)}>Cancelar</Button>
+            <Button disabled={saving || reopenReason.trim().length < 3} onClick={() => { if (reopening) void reopen(reopening.id); }}>
+              {saving ? <Loader2 className="size-4 animate-spin" /> : <UnlockKeyhole className="size-4" />}
+              Confirmar reabertura
             </Button>
           </div>
         </DialogContent>

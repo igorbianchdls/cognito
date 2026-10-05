@@ -1,5 +1,5 @@
 import { runQuery, withTransaction, type SQLClient } from "@/lib/postgres";
-import { ErpDomainError } from "@/products/erp/server/erpApi";
+import { ErpDomainError } from "@/products/erp/shared/erpErrors";
 
 type PeriodModule = "financeiro" | "estoque" | "vendas" | "compras" | "todos";
 
@@ -27,7 +27,7 @@ export async function assertErpPeriodOpen(
 
 export async function listErpPeriodClosures(tenantId: number) {
   return runQuery<Record<string, unknown>>(
-    `SELECT id::text, modulo, periodo_inicio, periodo_fim, motivo, fechado_em, reaberto_em
+    `SELECT id::text, modulo, periodo_inicio, periodo_fim, motivo, fechado_em, reaberto_em, motivo_reabertura
      FROM erp.fechamentos_periodos WHERE tenant_id = $1 ORDER BY periodo_fim DESC, id DESC LIMIT 200`,
     [tenantId],
   );
@@ -79,11 +79,12 @@ export async function reopenErpPeriod(input: {
   tenantId: number;
   actorId: number;
   id: number;
+  reason: string;
 }) {
   const result = await runQuery<Record<string, unknown>>(
-    `UPDATE erp.fechamentos_periodos SET reaberto_em = now(), reaberto_por = $3
+    `UPDATE erp.fechamentos_periodos SET reaberto_em = now(), reaberto_por = $3, motivo_reabertura = $4
      WHERE tenant_id = $1 AND id = $2 AND reaberto_em IS NULL RETURNING id::text, modulo, reaberto_em`,
-    [input.tenantId, input.id, input.actorId],
+    [input.tenantId, input.id, input.actorId, input.reason],
   );
   if (!result[0])
     throw new ErpDomainError(

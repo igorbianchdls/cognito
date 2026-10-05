@@ -1,0 +1,13 @@
+import { NextResponse } from 'next/server'
+import { runScheduledErpAutomations } from '../../../server/erpAutomationSchedule'
+import { withErpHttp } from '../../http/handler'
+import { erpFailure } from '../../http/responses'
+
+async function handleGET(request:Request) {
+  const secret=process.env.CRON_SECRET
+  if (!secret) return erpFailure('CRON_SECRET nao configurado.',503)
+  if (request.headers.get('authorization') !== 'Bearer '+secret) return erpFailure('Acesso negado.',401)
+  const result=await runScheduledErpAutomations()
+  return NextResponse.json(result,{status:result.failures ? 503 : 200})
+}
+export const GET=withErpHttp(handleGET,{operation:'GET /api/erp/internal/automacoes',authentication:'cron'})

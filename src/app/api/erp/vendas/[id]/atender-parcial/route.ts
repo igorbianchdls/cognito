@@ -1,24 +1,3 @@
-import { erpFailure } from "@/products/erp/server/erpApi"
-import { NextResponse } from 'next/server'
-
-import { erpErrorResponse, parseErpBody } from '@/products/erp/server/erpApi'
-import { resolveErpAccess } from '@/products/erp/server/erpAccess'
-import { attendSaleItems } from '@/products/erp/server/erpProfessionalRepository'
-import { partialStockActionSchema } from '@/products/erp/shared/professionalContracts'
-
 export const runtime = 'nodejs'
 
-export async function POST(request: Request, context: { params: Promise<{ id: string }> }) {
-  const tenant = await resolveErpAccess('erp.vendas.gerenciar')
-  if (!tenant) return erpFailure('Acesso negado.', 403)
-  try {
-    const [{ id }, values] = await Promise.all([context.params, parseErpBody(request, partialStockActionSchema)])
-    return NextResponse.json(await attendSaleItems({
-      tenantId: tenant.tenantId,
-      actorId: tenant.sharedUserId,
-      saleId: Number(id),
-      values,
-      idempotencyKey: request.headers.get('idempotency-key') || crypto.randomUUID(),
-    }))
-  } catch (error) { return erpErrorResponse(error) }
-}
+export { POST } from "@/products/erp/api/handlers/vendas/atender-parcial"
