@@ -53,7 +53,9 @@ export const ERP_OPERATION_CONFIGS: Record<string, ErpOperationConfig> = {
         { value: 'ajuste_entrada', label: 'Ajuste de entrada' }, { value: 'ajuste_saida', label: 'Ajuste de saida' },
       ] },
       { key: 'quantidade', label: 'Quantidade', type: 'number', required: true },
-      { key: 'custo_unitario', label: 'Custo unitario', type: 'number' },
+        { key: 'custo_unitario', label: 'Custo unitario', type: 'number' },
+        { key: 'unidade', label: 'Unidade informada (opcional)', type: 'text', placeholder: 'Vazio: unidade base do produto' },
+        { key: 'motivo', label: 'Motivo do ajuste', type: 'text' },
     ],
   },
   'locais-estoque': {
@@ -83,7 +85,8 @@ export const ERP_OPERATION_CONFIGS: Record<string, ErpOperationConfig> = {
       { key: 'data', label: 'Data da contagem', type: 'date' },
       { key: 'local_estoque_id', label: 'Local', type: 'select', optionSource: 'locations', required: true },
       { key: 'produto_id', label: 'Produto', type: 'select', optionSource: 'products', required: true },
-      { key: 'quantidade_contada', label: 'Quantidade contada', type: 'number', required: true },
+        { key: 'quantidade_contada', label: 'Quantidade contada', type: 'number', required: true },
+        { key: 'motivo', label: 'Motivo da contagem', type: 'text', required: true },
     ],
   },
   transferencias: {

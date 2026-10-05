@@ -1,9 +1,10 @@
 'use client'
 
 import { ErpContractDetails } from './ErpContractDetails'
+import { ErpStockCountEditor } from './ErpStockCountEditor'
 import { ErpMutation } from '@/products/erp/frontend/services/erpMutation'
 import { useErpAccess } from '@/products/erp/frontend/hooks/useErpAccess'
-import { useCallback, useDeferredValue, useEffect, useState } from 'react'
+import { useCallback, useDeferredValue, useEffect, useRef, useState } from 'react'
 import { CheckCircle2, Download, Loader2, Play, Plus, RefreshCw, Search, Upload } from 'lucide-react'
 
 import { Button } from '@/components/ui/button'
@@ -16,6 +17,7 @@ import { ErpStatusBadge } from '@/products/erp/frontend/components/ErpStatusBadg
 import { ErpPagination } from '@/products/erp/frontend/components/ErpPagination'
 import { parseErpResponse } from '@/products/erp/frontend/services/erpProfessionalClient'
 import type { ErpOperationConfig, ErpOperationField } from '@/products/erp/shared/operations'
+import { getErpOperationCapability } from '@/products/erp/shared/operationAccess'
 
 type OperationRecord = Record<string, unknown> & { id: string }
 type CatalogOption = { value: string; label: string }
@@ -55,20 +57,19 @@ function AsyncCatalogSelect({ resource, source, value, onChange, required }: {
   const [query, setQuery] = useState('')
   const deferredQuery = useDeferredValue(query)
   const [options, setOptions] = useState<CatalogOption[]>([])
-  const [selectedLabel, setSelectedLabel] = useState('')
+  const [selection, setSelection] = useState({ value: '', label: '' })
+  const selectedLabel = value && selection.value === value ? selection.label : ''
   const [open, setOpen] = useState(false)
   const [loading, setLoading] = useState(false)
-
-  useEffect(() => { if (!value) setSelectedLabel('') }, [value])
 
   useEffect(() => {
     if (!open) return
     const controller = new AbortController()
-    setLoading(true)
+    queueMicrotask(() => { if (!controller.signal.aborted) setLoading(true) })
     const params = new URLSearchParams({ resource, source, q: deferredQuery, limit: '20' })
     fetch(`/api/erp/operacoes/catalogos?${params}`, { cache: 'no-store', signal: controller.signal })
       .then((response) => parseResponse<{ records: CatalogOption[] }>(response))
-      .then((body) => setOptions(body.records))
+      .then((body) => { if (!controller.signal.aborted) setOptions(body.records) })
       .catch((error) => { if (error instanceof Error && error.name !== 'AbortError') setOptions([]) })
       .finally(() => { if (!controller.signal.aborted) setLoading(false) })
     return () => controller.abort()
@@ -96,7 +97,7 @@ function AsyncCatalogSelect({ resource, source, value, onChange, required }: {
               type="button"
               className="block w-full rounded px-3 py-2 text-left text-sm text-gray-700 hover:bg-gray-100"
               onMouseDown={(event) => event.preventDefault()}
-              onClick={() => { onChange(option.value); setSelectedLabel(option.label); setOpen(false) }}
+              onClick={() => { onChange(option.value); setSelection({ value: option.value, label: option.label }); setOpen(false) }}
             >
               {option.label}
             </button>
@@ -163,24 +164,28 @@ export function ErpOperationsWorkspacePage({ config }: { config: ErpOperationCon
   const [ofxOpen, setOfxOpen] = useState(false)
   const [ofxAccountId, setOfxAccountId] = useState('')
   const [ofxFile, setOfxFile] = useState<File | null>(null)
+  const loadRevision=useRef(0)
 
   const load = useCallback(async () => {
+    const revision=++loadRevision.current
     setLoading(true)
     setError('')
     try {
       const params = new URLSearchParams({ page: String(page), pageSize: '50', query: deferredQuery })
       const recordsResponse = await fetch(`/api/erp/operacoes/${encodeURIComponent(config.resource)}?${params}`, { cache: 'no-store' })
       const result = await parseResponse<{ records: OperationRecord[]; total: number }>(recordsResponse)
+      if(revision!==loadRevision.current) return
       setRecords(result.records)
       setTotal(result.total)
     } catch (loadError) {
+      if(revision!==loadRevision.current) return
       setError(loadError instanceof Error ? loadError.message : 'Nao foi possivel carregar os dados.')
     } finally {
-      setLoading(false)
+      if(revision===loadRevision.current) setLoading(false)
     }
   }, [config.resource, deferredQuery, page])
 
-  useEffect(() => { void load() }, [load])
+  useEffect(() => { void load(); return()=>{++loadRevision.current} }, [load])
 
   const currencyColumn = config.columns.find((column) => column.kind === 'currency')
   const monetaryTotal = currencyColumn
@@ -208,23 +213,17 @@ export function ErpOperationsWorkspacePage({ config }: { config: ErpOperationCon
   const activeResource = dialogMode === 'row' ? config.rowAction?.resource || config.resource : config.resource
 
   const access = useErpAccess()
+  const canCreate = access.can(getErpOperationCapability(config.resource, true)) || (config.resource === 'movimentacoes' && access.can('erp.estoque.ajustar'))
+  const canSubmit = access.can(activeResource === 'movimentacoes' && values.tipo?.startsWith('ajuste') ? 'erp.estoque.ajustar' : getErpOperationCapability(activeResource, true))
   const [createOperation] = useState(()=>new ErpMutation(undefined,true))
-  const submit = async () => {
-    if (saving || (config.resource === 'contratos' && !access.can('erp.vendas.gerenciar'))) return
+  const submit = async (additionalValues: Record<string, unknown> = {}) => {
+    if (saving || !canSubmit) return
     setSaving(true)
     setError('')
     try {
-      const bodyValues: Record<string, unknown> = { ...values }
+      const bodyValues: Record<string, unknown> = { ...values, ...additionalValues }
       if (dialogMode === 'row' && selectedRecord) bodyValues.transacao_bancaria_id = selectedRecord.id
-      if (activeResource === 'contratos') await createOperation.submit('/api/erp/operacoes/contratos',{values:bodyValues})
-      else {
-      const response = await fetch(`/api/erp/operacoes/${encodeURIComponent(activeResource)}`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'Idempotency-Key': crypto.randomUUID() },
-        body: JSON.stringify({ values: bodyValues }),
-      })
-      await parseResponse(response)
-      }
+      await createOperation.submit(`/api/erp/operacoes/${encodeURIComponent(activeResource)}`,{values:bodyValues})
       setDialogOpen(false)
       setSuccess(dialogMode === 'row' ? 'Operacao concluida.' : 'Registro salvo.')
       await load()
@@ -236,7 +235,7 @@ export function ErpOperationsWorkspacePage({ config }: { config: ErpOperationCon
   }
 
   const process = async () => {
-    if (!config.processAction || saving || (config.resource === 'contratos' && !access.can('erp.vendas.gerenciar'))) return
+    if (!config.processAction || saving || !canCreate) return
     setSaving(true)
     setError('')
     try {
@@ -283,8 +282,8 @@ export function ErpOperationsWorkspacePage({ config }: { config: ErpOperationCon
             <a href={`/api/erp/operacoes/${encodeURIComponent(config.resource)}?format=csv&query=${encodeURIComponent(deferredQuery)}`}><Download className="size-4" />Exportar</a>
           </Button>
           {config.moduleId === 'conciliacao-bancaria' ? <Button variant="outline" size="sm" onClick={() => { setError(''); setOfxOpen(true) }}><Upload className="size-4" />Importar OFX</Button> : null}
-          {config.processAction && (config.resource !== 'contratos' || access.can('erp.vendas.gerenciar')) ? <Button variant="outline" size="sm" onClick={() => void process()} disabled={saving}><Play className="size-4" />{config.processAction.label}</Button> : null}
-          {config.primaryAction && (config.resource !== 'contratos' || access.can('erp.vendas.gerenciar')) ? <Button size="sm" onClick={openCreate}><Plus className="size-4" />{config.primaryAction}</Button> : null}
+          {config.processAction && canCreate ? <Button variant="outline" size="sm" onClick={() => void process()} disabled={saving}><Play className="size-4" />{config.processAction.label}</Button> : null}
+          {config.primaryAction && canCreate ? <Button size="sm" onClick={openCreate}><Plus className="size-4" />{config.primaryAction}</Button> : null}
         </div>
       </header>
 
@@ -319,7 +318,7 @@ export function ErpOperationsWorkspacePage({ config }: { config: ErpOperationCon
                       {config.resource === 'contratos' && column.key === 'numero' ? <button className="underline" onClick={()=>setContractId(String(record.id))}>{String(record.numero)}</button> : column.kind === 'status' ? <ErpStatusBadge label={formatValue(record[column.key])} tone={toneForStatus(record[column.key])} /> : formatValue(record[column.key], column.kind)}
                     </TableCell>
                   ))}
-                  {config.rowAction ? <TableCell className="text-right"><Button variant="ghost" size="sm" onClick={() => openRowAction(record)} disabled={String(record.status) !== 'pendente'}>{config.rowAction.label}</Button></TableCell> : null}
+                  {config.rowAction ? <TableCell className="text-right"><Button variant="ghost" size="sm" onClick={() => openRowAction(record)} disabled={String(record.status) !== 'pendente' || !access.can(getErpOperationCapability(config.rowAction.resource, true))}>{config.rowAction.label}</Button></TableCell> : null}
                 </TableRow>
               )) : <TableRow><TableCell colSpan={config.columns.length + (config.rowAction ? 1 : 0)} className="h-32 text-center text-sm text-gray-500">Nenhum registro encontrado.</TableCell></TableRow>}
             </TableBody>
@@ -332,17 +331,18 @@ export function ErpOperationsWorkspacePage({ config }: { config: ErpOperationCon
         <DialogContent className="max-h-[85vh] overflow-y-auto sm:max-w-2xl">
           <DialogHeader><DialogTitle>{dialogMode === 'row' ? config.rowAction?.label : config.primaryAction}</DialogTitle><DialogDescription>Preencha os dados obrigatorios para concluir a operacao.</DialogDescription></DialogHeader>
           <div className="grid gap-4 py-2 sm:grid-cols-2">
-            {activeFields.map((field) => (
+            {activeFields.filter(field => activeResource !== 'inventarios' || !['produto_id', 'quantidade_contada'].includes(field.key)).map((field) => (
               <div key={field.key} className="space-y-2">
                 <Label htmlFor={field.key}>{field.label}{field.required ? ' *' : ''}</Label>
-                <FieldControl field={field} value={values[field.key] || ''} resource={activeResource} onChange={(value) => setValues((current) => ({ ...current, [field.key]: value }))} />
+                <FieldControl field={activeResource === 'movimentacoes' && field.key === 'tipo' ? { ...field, options: field.options?.filter(option => access.can(option.value.startsWith('ajuste') ? 'erp.estoque.ajustar' : 'erp.estoque.movimentar')) } : field} value={values[field.key] || ''} resource={activeResource} onChange={(value) => setValues((current) => ({ ...current, [field.key]: value }))} />
               </div>
             ))}
           </div>
+          {activeResource === 'inventarios' && <ErpStockCountEditor key={`${dialogOpen}`} localId={values.local_estoque_id || ''} reason={values.motivo || ''} saving={saving} onSave={submit} />}
           {error ? <div className="rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">{error}</div> : null}
           <DialogFooter>
             <Button variant="outline" onClick={() => setDialogOpen(false)} disabled={saving}>Cancelar</Button>
-            <Button onClick={() => void submit()} disabled={saving}>{saving ? <Loader2 className="size-4 animate-spin" /> : null}Salvar</Button>
+            {activeResource !== 'inventarios' && <Button onClick={() => void submit()} disabled={saving || !canSubmit}>{saving ? <Loader2 className="size-4 animate-spin" /> : null}Salvar</Button>}
           </DialogFooter>
         </DialogContent>
       </Dialog>

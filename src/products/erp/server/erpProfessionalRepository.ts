@@ -1,3 +1,4 @@
+import { runRecoverableErpAutomation } from './erpAutomationRunner'
 import { isRetiredErpReport } from '@/products/erp/shared/reportCatalog'
 import { cashResultSql } from './erpCashReport'
 import { processPurchaseRecurrences } from './erpRoutineRepository'
@@ -638,6 +639,7 @@ export async function receivePurchaseItems(
       const locationId = await resolveStockLocation(client, {
         tenantId: input.tenantId,
         actorId: input.actorId,
+        use: 'compra',
         localEstoqueId:
           Number(requested.local_estoque_id || item.local_estoque_id || 0) ||
           null,
@@ -1144,21 +1146,9 @@ export async function undoBankReconciliation(
   });
 }
 
-export async function runErpAutomation(
-  input: ActorInput & { tipo: string; competencia?: string },
-) {
-  const competence = date(input.competencia);
-  const key = `${input.tipo}:${competence}`;
-  const claim = await withTransaction(async client => {
-    await client.query('SELECT pg_advisory_xact_lock(hashtextextended($1,0))',[`erp:execution:${input.tenantId}:${key}`]);
-    const current = await client.query(`SELECT id::text,status,resultado,erro FROM erp.execucoes_automacao WHERE tenant_id=$1 AND chave_idempotencia=$2 FOR UPDATE`,[input.tenantId,key]);
-    if (current.rows[0] && ['concluida','processando'].includes(String(current.rows[0].status))) return {claimed:false,record:current.rows[0]};
-    const result = current.rows[0] ? await client.query(`UPDATE erp.execucoes_automacao SET status='processando',tentativas=tentativas+1,iniciado_em=now(),finalizado_em=NULL,erro=NULL,resultado='{}'::jsonb,atualizado_por=$3 WHERE tenant_id=$1 AND id=$2 RETURNING id::text`,[input.tenantId,current.rows[0].id,input.actorId]) : await client.query(`INSERT INTO erp.execucoes_automacao(tenant_id,tipo,competencia,status,tentativas,chave_idempotencia,iniciado_em,criado_por,atualizado_por) VALUES($1,$2,$3,'processando',1,$4,now(),$5,$5) RETURNING id::text`,[input.tenantId,input.tipo,competence,key,input.actorId]);
-    return {claimed:true,record:result.rows[0]};
-  });
-  if(!claim.claimed)return claim.record;
-  const execution=[claim.record];
-  try {
+export async function runErpAutomation(input: ActorInput & { tipo: string; competencia?: string }) {
+  const competence=date(input.competencia);
+  return runRecoverableErpAutomation({...input,competencia:competence},async()=>{
     let result: unknown = { total: 0 };
     if (input.tipo === "contratos")
       result = await processDueSalesContracts({ ...input, until: competence });
@@ -1194,25 +1184,8 @@ export async function runErpAutomation(
     } else {
       throw new ErpDomainError('VALIDATION_ERROR', 'Rotina desconhecida.', 422);
     }
-    const completed = await runQuery(
-      `UPDATE erp.execucoes_automacao SET status = 'concluida', resultado = $3::jsonb, finalizado_em = now(), atualizado_por = $4
-       WHERE tenant_id = $1 AND id = $2 RETURNING id::text, status, resultado`,
-      [input.tenantId, execution[0].id, json(result), input.actorId],
-    );
-    return completed[0];
-  } catch (error) {
-    await runQuery(
-      `UPDATE erp.execucoes_automacao SET status = 'falha', erro = $3, finalizado_em = now(), atualizado_por = $4
-       WHERE tenant_id = $1 AND id = $2`,
-      [
-        input.tenantId,
-        execution[0].id,
-        error instanceof Error ? error.message : "Falha desconhecida",
-        input.actorId,
-      ],
-    );
-    throw error;
-  }
+    return result;
+  });
 }
 
 export async function getProfessionalOverview(tenantId: number) {

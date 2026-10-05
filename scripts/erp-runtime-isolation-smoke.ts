@@ -53,7 +53,7 @@ async function main() {
       () => runQuery(`SELECT id::text FROM erp.entidades WHERE tenant_id = $1 LIMIT 1`, [crossTenantId]),
       /diferente/,
     )
-    const managementResources = ['contratos', 'fluxo-de-caixa', 'dre', 'conciliacao-bancaria', 'transferencias-financeiras', 'importacoes', 'aging-receber', 'aging-pagar', 'giro-estoque']
+    const managementResources = ['contratos', 'conciliacao-bancaria', 'transferencias-financeiras', 'importacoes', 'giro-estoque']
     const stockResources = ['posicao-estoque', 'movimentacoes', 'locais-estoque', 'inventarios', 'transferencias', 'kits', 'conversoes-unidades']
     const catalogSources = ['products', 'services', 'customers', 'accounts', 'locations', 'payments'] as const
     const pages = await Promise.all([

@@ -7,7 +7,7 @@ try { ({ PGlite } = await import('@electric-sql/pglite')); }
 catch { ({ PGlite } = await import('../../.next/cache/retirement-pg/node_modules/@electric-sql/pglite/dist/index.js')); }
 const db = new PGlite();
 const root = new URL('../../', import.meta.url);
-const catalog = JSON.parse(readFileSync(new URL('docs/avaliacao-erp/catalogo-revisao-tabelas.json', root), 'utf8'));
+const baseCatalog = JSON.parse(readFileSync(new URL('docs/avaliacao-erp/catalogo-revisao-tabelas.json', root), 'utf8'));
 const sql1 = readFileSync(new URL('scripts/erp/sql/01-integridade-historicos.sql', root), 'utf8');
 const sql2 = readFileSync(new URL('scripts/erp/sql/02-periodos-fechados.sql', root), 'utf8');
 const ident = value => '"' + value.replaceAll('"', '""') + '"';
@@ -30,7 +30,7 @@ async function isolated(sql, expectedCode, { role, tenant = 1, user = 1 } = {}) 
   } finally { await db.exec('ROLLBACK'); }
 }
 
-async function restoreCatalog() {
+async function restoreCatalog(catalog = baseCatalog) {
   await db.exec(`CREATE SCHEMA erp; CREATE SCHEMA shared; CREATE SCHEMA auth;
     CREATE TABLE auth.users(id uuid PRIMARY KEY);
     CREATE ROLE anon; CREATE ROLE authenticated; CREATE ROLE service_role BYPASSRLS;
@@ -49,11 +49,13 @@ async function restoreCatalog() {
     await db.exec(`CREATE TABLE ${qualified(table.schema,table.relname)} (${defs.join(',')})`);
   }
   // Referencias somente depois de todas as PKs/unicidades estarem presentes.
-  for (const type of ['p','u','c','f']) for (const c of catalog.constraints.filter(x => x.type === type)) {
+  for (const type of ['p','u','c']) for (const c of catalog.constraints.filter(x => x.type === type)) {
     await db.exec(`ALTER TABLE ${qualified(c.schema,c.table_name)} ADD CONSTRAINT ${ident(c.name)} ${c.definition}`);
   }
   const constraintIndexes = new Set(catalog.constraints.filter(x=>['p','u'].includes(x.type)).map(x=>x.schema+'.'+x.name));
   for (const index of catalog.indexes) if (!constraintIndexes.has(index.schemaname+'.'+index.indexname)) await db.exec(index.indexdef);
+  // A foreign key can target a unique index without a corresponding UNIQUE constraint.
+  for (const c of catalog.constraints.filter(x => x.type === 'f')) await db.exec(`ALTER TABLE ${qualified(c.schema,c.table_name)} ADD CONSTRAINT ${ident(c.name)} ${c.definition}`);
   for (const f of catalog.functions) await db.exec(f.definition);
   await db.exec('SET check_function_bodies=on');
   // Giro depende de posicao; manter as views originais para provar preservacao.
@@ -79,4 +81,3 @@ async function restoreCatalog() {
 
 
 export {db,restoreCatalog,isolated,root,assert};
-

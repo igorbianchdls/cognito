@@ -129,7 +129,7 @@ async function main() {
         return { userId: 1, clerkUserId: token.subject, clientId: token.clientId, scopes: token.scopes, companies: [] } as PluginPrincipal
       },
       execution: {
-        queries: { registration:unexpectedQuery,installment:unexpectedQuery,analysis:unexpectedQuery,customer: unexpectedQuery, fiscal: unexpectedQuery, financialAccounts: unexpectedQuery,
+        queries: { financialTitle:unexpectedQuery,registration:unexpectedQuery,installment:unexpectedQuery,analysis:unexpectedQuery,customer: unexpectedQuery, fiscal: unexpectedQuery, financialAccounts: unexpectedQuery,
           payments: unexpectedQuery, overview: unexpectedQuery, page: unexpectedQuery, sale: unexpectedQuery,
           stock: unexpectedQuery, purchase: unexpectedQuery, report: unexpectedQuery },
         reserve: async () => { effects++; return randomUUID() }, finish: async () => { effects++ },

@@ -7,9 +7,9 @@ Chame `meu_acesso` para verificar a conexao e apresentar as empresas autorizadas
 
 Apresente a primeira consulta com `renderizar_card`, escolhendo tabela, detalhes, análise ou seleção conforme o pedido. Para várias empresas, use card selecao com consulta meu_acesso. Informe empresa_id no nível principal, consulta e seus parametros. Não envie dados ou totais inventados. O card deve conter somente o assunto consultado. Use abrir_painel se o usuário pedir navegação geral. As preferências podem ser ajustadas nas configurações: empresa preferida e quantidade de registros por página. A preferência não substitui a escolha explícita da empresa nas ferramentas.
 
-Para criar ou alterar dados, abra `abrir_formulario` ou use `preparar_rascunho`. O usuario revisa e aprova na pagina autenticada do ERP. Preparar uma proposta nao executa a operacao. Consulte `obter_rascunho` para conferir o resultado.
+Para criar, alterar ou excluir dados, abra `abrir_formulario` ou use `preparar_rascunho`. O usuario revisa e aprova na pagina autenticada do ERP. Preparar uma proposta nao executa a operacao. Consulte `obter_rascunho` para conferir o resultado.
 
-Depois do preparo, apresente renderizar_card com card revisao, consulta obter_rascunho e parametros contendo rascunho_id. Depois da decisão, use card resultado com a mesma referência. Somente status saved confirma execução; pending, cancelled e expired não confirmam uma operação salva. Criação de contas a pagar ainda não integra as propostas suportadas.
+Depois do preparo, apresente renderizar_card com card revisao, consulta obter_rascunho e parametros contendo rascunho_id. Depois da decisão, use card resultado com a mesma referência. Somente status saved confirma execução; pending, cancelled e expired não confirmam uma operação salva. Contas a pagar/receber, vendas, orçamentos, compras e sete tipos de cadastro suportam criação, edição e exclusão, sujeitas às regras de histórico e estado do ERP.
 
 Em clientes com MCP 2026-07-28 e formularios OpenAI, use `preparar_formulario_nativo` com empresa, tipo e chave UUID para pedir os campos ao usuario. O envio prepara a mesma proposta revisavel; cancelamento nao cria rascunho. Use `abrir_formulario` se o cliente nao suportar o formulario nativo. Nunca trate o envio como aprovacao no ERP.
 

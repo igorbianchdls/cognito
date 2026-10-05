@@ -1,16 +1,22 @@
 import { createHash } from 'node:crypto'
 import { runQuery, type SQLClient } from '@/lib/postgres'
 import { updateErpEntityRecord,getErpEntityRecord,confirmErpSale,confirmErpPurchase,cancelErpSale,cancelErpPurchase,
-  settleReceivableInstallment,settlePayableInstallment,reverseErpPayment } from '@/products/erp/server/erpRepository'
+  settleReceivableInstallment,settlePayableInstallment,reverseErpPayment,updateErpSaleDraft,updateErpPurchaseDraft } from '@/products/erp/server/erpRepository'
+import { getErpTransactionClient } from '@/lib/postgres'
+import { archiveRegistration,archiveCommercialDraft,changeManualFinancialTitle } from '@/products/erp/server/erpCrudRepository'
 import { attendStockForSale } from '@/products/erp/server/erpStockRepository'
 import { PluginError } from '../shared/contracts'
-import type { Proposal } from './contracts'
+import { purchaseValues,type Proposal } from './contracts'
 
-const tables = {editar_cliente:'entidades',editar_produto:'produtos',confirmar_venda:'vendas',cancelar_venda:'vendas',
+const tables = {editar_fornecedor:'entidades',editar_vendedor:'entidades',editar_servico:'servicos',editar_categoria:'categorias',editar_conta_financeira:'contas_financeiras',
+  excluir_cliente:'entidades',excluir_fornecedor:'entidades',excluir_vendedor:'entidades',excluir_produto:'produtos',excluir_servico:'servicos',excluir_categoria:'categorias',excluir_conta_financeira:'contas_financeiras',
+  editar_venda:'vendas',editar_orcamento:'vendas',excluir_venda:'vendas',excluir_orcamento:'vendas',editar_compra:'compras',excluir_compra:'compras',
+  editar_conta_pagar:'contas_pagar',editar_conta_receber:'contas_receber',excluir_conta_pagar:'contas_pagar',excluir_conta_receber:'contas_receber',
+  editar_cliente:'entidades',editar_produto:'produtos',confirmar_venda:'vendas',cancelar_venda:'vendas',
   atender_venda:'vendas',confirmar_compra:'compras',cancelar_compra:'compras',receber_parcela:'contas_receber_parcelas',
   pagar_parcela:'contas_pagar_parcelas',estornar_pagamento:'pagamentos'} as const
 export type OperationSnapshot = {hash:string;registro_id:number;nome:string;status:string|null;valor:string|null;
-  parcelas:{numero:unknown;vencimento:unknown;valor:unknown}[];conta_financeira:{id:string;nome:string}|null}
+  parcelas:{numero:unknown;vencimento:unknown;valor:unknown}[];conta_financeira:{id:string;nome:string}|null;campos?:Record<string,unknown>}
 export async function operationSnapshot(tenantId:number,proposal:Proposal,client?:SQLClient):Promise<OperationSnapshot|null> {
   if (!('registro_id' in proposal.dados)) return null
   const table=tables[proposal.tipo as keyof typeof tables]
@@ -20,6 +26,10 @@ export async function operationSnapshot(tenantId:number,proposal:Proposal,client
   const row=rows[0]
   if(!row || (proposal.tipo==='editar_cliente' && !row.eh_cliente))throw new PluginError('INVALID_REFERENCE','Registro nao disponivel nesta empresa.')
   const related:unknown[]=[]
+  const role=proposal.tipo.endsWith('_fornecedor')?'eh_fornecedor':proposal.tipo.endsWith('_vendedor')?'eh_vendedor':proposal.tipo.endsWith('_cliente')?'eh_cliente':null
+  if(table==='entidades'&&role&&!row[role])throw new PluginError('INVALID_REFERENCE','Cadastro não possui o papel solicitado.')
+  if(table==='vendas'&&proposal.tipo.endsWith('_orcamento')&&row.tipo_documento!=='orcamento')throw new PluginError('INVALID_REFERENCE','O registro não é um orçamento.')
+  if(table==='vendas'&&(proposal.tipo==='editar_venda'||proposal.tipo==='excluir_venda')&&row.tipo_documento==='orcamento')throw new PluginError('INVALID_REFERENCE','Use a operação de orçamento para este registro.')
   let parcelas:OperationSnapshot['parcelas']=[],contaFinanceira:OperationSnapshot['conta_financeira']=null
   if(table==='vendas'||table==='compras') {
     const foreign=table==='vendas'?'venda_id':'compra_id'
@@ -29,6 +39,13 @@ export async function operationSnapshot(tenantId:number,proposal:Proposal,client
     related.push(forecasts)
     parcelas=forecasts.map(p=>({numero:p.numero_parcela,vencimento:p.data_vencimento,valor:p.valor}))
   }
+  if(table==='contas_pagar'||table==='contas_receber'){
+    const side=table==='contas_pagar'?'pagar':'receber'
+    const parts=await query(`SELECT * FROM erp.${table}_parcelas WHERE tenant_id=$1 AND conta_${side}_id=$2 ORDER BY id${client?' FOR UPDATE':''}`,[tenantId,proposal.dados.registro_id])
+    related.push(parts);parcelas=parts.filter(p=>!p.excluido_em).map(p=>({numero:p.numero_parcela,vencimento:p.data_vencimento,valor:p.valor}))
+    if(side==='receber')related.push(await query('SELECT * FROM erp.cobrancas WHERE tenant_id=$1 AND conta_receber_parcela_id=ANY($2::bigint[]) ORDER BY id',[tenantId,parts.map(p=>p.id)]))
+    for(const movement of ['pagamentos','adiantamentos_aplicacoes','renegociacoes_parcelas'])related.push(await query(`SELECT * FROM erp.${movement} WHERE tenant_id=$1 AND conta_${side}_parcela_id=ANY($2::bigint[]) ORDER BY id`,[tenantId,parts.map(p=>p.id)]))
+  }
   if(proposal.tipo==='receber_parcela'||proposal.tipo==='pagar_parcela') {
     const accounts=await query(`SELECT * FROM erp.contas_financeiras WHERE tenant_id=$1 AND id=$2 AND ativo AND excluido_em IS NULL${client?' FOR SHARE':''}`,[tenantId,proposal.dados.conta_financeira_id])
     if(!accounts[0])throw new PluginError('INVALID_REFERENCE','Escolha uma conta financeira ativa desta empresa.')
@@ -37,12 +54,46 @@ export async function operationSnapshot(tenantId:number,proposal:Proposal,client
   }
   // O modelo nunca fornece a versao: o servidor captura o estado a ser aprovado.
   const hash=createHash('sha256').update(JSON.stringify([row,...related])).digest('hex')
-  return {hash,registro_id:proposal.dados.registro_id,nome:String(row.nome||row.numero||row.descricao||`Registro ${row.id}`),parcelas,conta_financeira:contaFinanceira,
-    status:row.status ? String(row.status):null,valor:row.total!==undefined?String(row.total):row.valor!==undefined?String(row.valor):row.preco_venda!==undefined?String(row.preco_venda):null}
+  const mapping:Record<string,string>={preco:'preco_venda',custo:'custo_medio'}
+  const campos=Object.fromEntries(Object.keys(proposal.dados).filter(k=>k!=='registro_id').map(k=>[k,k==='parcelas'?parcelas.map(p=>({data_vencimento:p.vencimento,valor:p.valor})):k==='itens'&&Array.isArray(related[0])?related[0].filter(i=>!i.excluido_em).map(i=>({tipo:i.servico_id?'servico':'produto',item_id:Number(i.servico_id||i.produto_id),quantidade:Number(i.quantidade),valor_unitario:Number(i.valor_unitario),desconto:Number(i.desconto||0)})):row[k]??row[mapping[k]]??null]))
+  return {hash,registro_id:Number(proposal.dados.registro_id),nome:String(row.nome||row.numero||row.descricao||`Registro ${row.id}`),parcelas,conta_financeira:contaFinanceira,campos,
+    status:row.status ? String(row.status):null,valor:row.total!==undefined?String(row.total):row.valor_total!==undefined?String(row.valor_total):row.valor!==undefined?String(row.valor):row.preco_venda!==undefined?String(row.preco_venda):null}
 }
 export async function executeOperation(tenantId:number,actorId:number,proposal:Proposal,key:string):Promise<string> {
   if(!('registro_id' in proposal.dados))throw new PluginError('INVALID_INPUT','Operacao invalida.')
-  const id=proposal.dados.registro_id,input={tenantId,actorId,id,idempotencyKey:key}
+  const id=Number(proposal.dados.registro_id),input={tenantId,actorId,id,idempotencyKey:key}
+  const client=getErpTransactionClient()
+  const data=proposal.dados as Record<string,unknown>
+  if(proposal.tipo.startsWith('excluir_')){
+    if(!client)throw new Error('Exclusão exige transação de aprovação.')
+    const entity=proposal.tipo.slice(8),registration={cliente:'clientes',fornecedor:'fornecedores',vendedor:'vendedores',produto:'produtos',servico:'servicos',categoria:'categorias',conta_financeira:'contas-financeiras'} as const
+    if(entity in registration)return archiveRegistration(client,tenantId,actorId,registration[entity as keyof typeof registration],id,String(data.motivo))
+    if(entity==='conta_pagar'||entity==='conta_receber')return changeManualFinancialTitle(client,tenantId,actorId,entity==='conta_pagar'?'pagar':'receber',id,data,true)
+    return archiveCommercialDraft(client,tenantId,actorId,entity==='compra'?'compras':'vendas',id,String(data.motivo))
+  }
+  if(proposal.tipo==='editar_conta_pagar'||proposal.tipo==='editar_conta_receber'){
+    if(!client)throw new Error('Edição exige transação de aprovação.')
+    return changeManualFinancialTitle(client,tenantId,actorId,proposal.tipo==='editar_conta_pagar'?'pagar':'receber',id,data)
+  }
+  if(['editar_venda','editar_orcamento','editar_compra'].includes(proposal.tipo)){
+    const sale=proposal.tipo!=='editar_compra',table=sale?'vendas':'compras'
+    const schedule=await runQuery(`SELECT id FROM erp.${sale?'vendas_recebimentos_previstos':'compras_parcelas_previstas'} WHERE tenant_id=$1 AND ${sale?'venda_id':'compra_id'}=$2 AND excluido_em IS NULL LIMIT 2`,[tenantId,id])
+    if(schedule.length>1)throw new PluginError('INVALID_STATE','Documento com várias parcelas exige edição no ERP para preservar a condição de pagamento.');
+    const [current]=await runQuery(`SELECT * FROM erp.${table} WHERE tenant_id=$1 AND id=$2`,[tenantId,id])
+    if(['desconto','frete','seguro','outras_despesas','impostos_retidos'].some(field=>Number(current[field]||0)!==0))throw new PluginError('INVALID_STATE','Documento com descontos ou despesas no cabeçalho exige edição no ERP.');
+    const {registro_id:_id,...changes}=data
+    const preserved=Object.fromEntries(Object.entries(current).map(([key,value])=>[key,value instanceof Date?value.toISOString().slice(0,10):value]))
+    delete preserved.chave_idempotencia
+    const values={...preserved,...changes}
+    if(sale)await updateErpSaleDraft({...input,expectedVersion:Number(current.versao),values:{...values,tipo_documento:proposal.tipo==='editar_orcamento'?'orcamento':'venda'}})
+    else await updateErpPurchaseDraft({...input,expectedVersion:Number(current.versao),values:{...purchaseValues(values),tipo_movimento:'cotacao',gera_financeiro:current.gera_financeiro}})
+    return String(id)
+  }
+  const registrationEdit={editar_fornecedor:'fornecedores',editar_vendedor:'vendedores',editar_servico:'servicos',editar_categoria:'categorias',editar_conta_financeira:'contas-financeiras'} as const
+  if(proposal.tipo in registrationEdit){
+    const entityId=registrationEdit[proposal.tipo as keyof typeof registrationEdit],current=await getErpEntityRecord({tenantId,entityId,id}),{registro_id:_id,...changes}=data
+    await updateErpEntityRecord({...input,entityId,expectedVersion:Number(current.versao),values:{...current,...changes}});return String(id)
+  }
   switch(proposal.tipo) {
     case 'editar_cliente': case 'editar_produto': {
       const entityId=proposal.tipo==='editar_cliente'?'clientes':'produtos'

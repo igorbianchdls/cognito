@@ -141,7 +141,7 @@ try {
     await check('historico OS imutavel ate para owner: '+operation.split(' ')[0],()=>isolated(operation,'P0001'));
   }
   await check('runtime nao reescreve eventos', () => isolated("UPDATE erp.vendas_eventos SET evento='alterado' WHERE id=101", '42501', {role:'erp_runtime'}));
-  await check('FK preserva importacao com erro de referencia', () => isolated('DELETE FROM erp.importacoes_bancarias WHERE id=101', '23001'));
+  await check('FK preserva importacao com erro de referencia', () => isolated('DELETE FROM erp.importacoes_bancarias WHERE id=101', '23503'));
   await check('duplicata removida e indice preservado', async () => assert.deepEqual(await value("SELECT to_regclass('erp.fechamentos_periodos_ativo_idx') IS NOT NULL AS kept, to_regclass('erp.fechamentos_periodos_ativo_unico_idx') IS NULL AS removed"), {kept:true,removed:true}));
   await check('primeiro SQL repetivel', () => db.exec(sql1));
 

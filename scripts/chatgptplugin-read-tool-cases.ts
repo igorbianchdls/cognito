@@ -43,10 +43,10 @@ export async function runReadToolCases(ctx: Context) {
     assert.equal(result.body.result.isError, true)
     assert.equal(JSON.parse(result.body.result.content[0].text).code, code)
   }
-  await check('Todas leituras: catálogo distingue 25 consultas e 3 escritas', async () => {
+  await check('Todas leituras: catálogo distingue 26 consultas e 3 escritas', async () => {
     const result = await rpc('tools/list')
     const tools = result.body.result.tools
-    assert.equal(tools.filter((t: Row) => t.annotations?.readOnlyHint).length, 25)
+    assert.equal(tools.filter((t: Row) => t.annotations?.readOnlyHint).length, 26)
     assert.deepEqual(tools.filter((t: Row) => !t.annotations?.readOnlyHint).map((t: Row) => t.name).sort(), ['atualizar_configuracoes','preparar_formulario_nativo','preparar_rascunho'])
     for (const tool of tools.filter((t: Row) => t.annotations?.readOnlyHint)) assert.deepEqual(tool.securitySchemes, [{ type: 'oauth2', scopes: ['erp:read'] }])
   })
@@ -249,6 +249,8 @@ export async function runReadToolCases(ctx: Context) {
     if(existingDraft){const result=(await call('renderizar_card',{empresa_id:companyId,card,consulta:'obter_rascunho',parametros:{rascunho_id:existingDraft.id}})).data;assert.equal(result.dados.rascunho_id,existingDraft.id)}
     else await rejected('renderizar_card',{empresa_id:companyId,card,consulta:'obter_rascunho',parametros:{rascunho_id:randomUUID()}},'NOT_FOUND')
   })
+  for(const type of ['vendedores','categorias','contas-financeiras'])await check('Cadastros adicionais: '+type,async()=>{const rows=(await call('buscar_cadastros',{empresa_id:companyId,tipo:type,por_pagina:50})).data.records;assert(Array.isArray(rows));if(rows[0]){const detail=(await call('obter_cadastro',{empresa_id:companyId,tipo:type,registro_id:Number(rows[0].id)})).data;assert.equal(String(detail.record.id),String(rows[0].id))}})
+  await check('obter_titulo_financeiro: título e parcelas reais',async()=>{const title=db.contas_pagar.find(t=>!t.excluido_em)!;const data=(await call('obter_titulo_financeiro',{empresa_id:companyId,tipo:'pagar',conta_id:Number(title.id)})).data;assert.equal(String(data.record.id),String(title.id));assert.equal(data.installments.length,db.contas_pagar_parcelas.filter(p=>String(p.conta_pagar_id)===String(title.id)&&!p.excluido_em).length)});
   await check('Cards: recurso HTML e políticas sem destinos externos',async()=>{
     const result=await rpc('resources/read',{uri:'ui://chatgptplugin/cards/v1.html'})
     const resource=result.body.result.contents[0];assert.equal(resource.mimeType,'text/html;profile=mcp-app');assert.deepEqual(resource._meta.ui.csp,{connectDomains:[],resourceDomains:[]})

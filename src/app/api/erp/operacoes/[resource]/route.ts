@@ -55,11 +55,12 @@ export async function GET(request: Request, context: { params: Promise<{ resourc
 
 export async function POST(request: Request, context: { params: Promise<{ resource: string }> }) {
   const { resource } = await context.params
-  const tenant = await resolveErpAccess(getErpOperationCapability(resource, true))
-  if (!tenant) return erpFailure('Acesso negado.', 403)
   try {
     const body = await parseErpBody(request,erpCreateEnvelopeSchema)
-    const requiresDurableOperation = resource === 'contratos' || resource === 'transferencias-financeiras' || resource === 'conciliar-transacao'
+    const capability = resource === 'movimentacoes' && String(body.values?.tipo || '').startsWith('ajuste') ? 'erp.estoque.ajustar' : getErpOperationCapability(resource, true)
+    const tenant = await resolveErpAccess(capability)
+    if (!tenant) return erpFailure('Acesso negado.', 403)
+    const requiresDurableOperation = ERP_STOCK_RESOURCES.has(resource) || resource === 'contratos' || resource === 'transferencias-financeiras' || resource === 'conciliar-transacao'
     const idempotencyKey = readErpIdempotencyKey(request.headers, requiresDurableOperation) || `${resource}:${Date.now()}`
     const record = ERP_STOCK_RESOURCES.has(resource)
       ? await createStockOperation({ tenantId: tenant.tenantId, actorId: tenant.sharedUserId, resource, values: body.values || {}, idempotencyKey })

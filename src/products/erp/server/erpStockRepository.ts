@@ -1,6 +1,31 @@
 import { runQuery, withTransaction, type SQLClient } from '@/lib/postgres'
 import type { ErpOperationListInput, ErpOperationPage } from '@/products/erp/server/erpManagementRepository'
 import { assertErpPeriodOpen } from '@/products/erp/server/erpPeriodRepository'
+import { createHash } from 'node:crypto'
+import { ErpDomainError } from '@/products/erp/shared/erpErrors'
+import { readOperationPage } from './erpOperationPagination'
+
+function businessDay() {
+  return new Intl.DateTimeFormat('sv-SE', { timeZone: 'America/Fortaleza' }).format(new Date())
+}
+
+function fingerprint(value: unknown): string {
+  function canonical(v: unknown): unknown {
+    if (Array.isArray(v)) return v.map(canonical)
+    if (v && typeof v === 'object') return Object.fromEntries(Object.entries(v).filter(([, x]) => x !== undefined).sort(([a], [b]) => a.localeCompare(b)).map(([k, x]) => [k, canonical(x)]))
+    return v
+  }
+  return createHash('sha256').update(JSON.stringify(canonical(value))).digest('hex')
+}
+
+async function stockLock(client: Pick<SQLClient, 'query'>, tenantId: number) {
+  // One lock order across reservations, transfers, counts and commercial operations.
+  await client.query('SELECT pg_advisory_xact_lock($1, hashtext(\'erp-stock-ledger\'))', [tenantId])
+}
+
+function assertSameRequest(stored: unknown, hash: string) {
+  if (stored !== hash) throw new ErpDomainError('IDEMPOTENCY_CONFLICT', 'Esta identificação já foi usada com outro conteúdo.', 409)
+}
 
 type ActorInput = { tenantId: number; actorId: number }
 type StockItemInput = {
@@ -13,14 +38,41 @@ type StockItemInput = {
 
 function requiredId(value: unknown, label: string) {
   const parsed = Number(value)
-  if (!Number.isInteger(parsed) || parsed <= 0) throw new Error(`${label} invalido.`)
+  if (!Number.isInteger(parsed) || parsed <= 0) throw new ErpDomainError('STOCK_OPERATION_INVALID', `${label} invalido.`)
   return parsed
 }
 
 function decimal(value: unknown, label: string, allowZero = false) {
+  if (value === null || value === undefined || String(value).trim() === '') throw new ErpDomainError('VALIDATION_ERROR', `${label} obrigatório.`, 422)
   const parsed = Number(String(value ?? '').replace(',', '.'))
-  if (!Number.isFinite(parsed) || (allowZero ? parsed < 0 : parsed <= 0)) throw new Error(`${label} invalido.`)
-  return parsed
+  if (!Number.isFinite(parsed) || (allowZero ? parsed < 0 : parsed <= 0)) throw new ErpDomainError('STOCK_OPERATION_INVALID', `${label} invalido.`)
+  if (parsed >= 1e12) throw new ErpDomainError('STOCK_OPERATION_INVALID', `${label} excede o limite.`)
+  return Number(parsed.toFixed(6))
+}
+
+function quantity(value: unknown, label: string, allowZero = false) {
+  const result = Number(decimal(value, label, allowZero).toFixed(4))
+  if (!allowZero && result === 0) throw new ErpDomainError('VALIDATION_ERROR', `${label} deve ser pelo menos 0,0001.`, 422)
+  return result
+}
+
+export async function readStockCountSnapshot(tenantId: number, localId: number, productIds: number[]) {
+  requiredId(localId, 'Local')
+  if (!productIds.length || productIds.length > 200 || productIds.some(id => !Number.isSafeInteger(id) || id <= 0) || new Set(productIds).size !== productIds.length) {
+    throw new ErpDomainError('VALIDATION_ERROR', 'Selecione entre 1 e 200 produtos diferentes.', 422)
+  }
+  const result = await runQuery(
+    `SELECT p.id::text AS produto_id, p.nome AS produto, p.unidade_medida AS unidade,
+       coalesce(s.quantidade_fisica,0) AS quantidade_sistema,
+       coalesce(s.quantidade_reservada,0) AS quantidade_reservada
+     FROM erp.produtos p
+     JOIN erp.locais_estoque l ON l.tenant_id=p.tenant_id AND l.id=$2 AND l.ativo AND l.excluido_em IS NULL
+     LEFT JOIN erp.saldos_estoque s ON s.tenant_id=p.tenant_id AND s.produto_id=p.id AND s.local_estoque_id=l.id
+     WHERE p.tenant_id=$1 AND p.id=ANY($3::bigint[]) AND p.ativo AND p.excluido_em IS NULL AND p.controla_estoque
+     ORDER BY p.nome,p.id`, [tenantId, localId, productIds],
+  )
+  if (result.length !== productIds.length) throw new ErpDomainError('VALIDATION_ERROR', 'Confira os produtos e o local. A contagem aceita produtos ativos que controlam estoque.', 422)
+  return result
 }
 
 function optionalText(value: unknown) {
@@ -30,8 +82,8 @@ function optionalText(value: unknown) {
 
 function dateText(value: unknown) {
   const normalized = optionalText(value)
-  if (!normalized) return new Date().toISOString().slice(0, 10)
-  if (!/^\d{4}-\d{2}-\d{2}$/.test(normalized)) throw new Error('Data invalida.')
+  if (!normalized) return businessDay()
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(normalized) || new Date(`${normalized}T12:00:00Z`).toISOString().slice(0, 10) !== normalized) throw new ErpDomainError('STOCK_OPERATION_INVALID', 'Data invalida.')
   return normalized
 }
 
@@ -56,15 +108,16 @@ async function ensureDefaultStockLocation(client: Pick<SQLClient, 'query'>, inpu
 
 export async function resolveStockLocation(
   client: Pick<SQLClient, 'query'>,
-  input: ActorInput & { localEstoqueId?: number | null },
+  input: ActorInput & { localEstoqueId?: number | null; use?: 'venda' | 'compra' },
 ) {
-  if (!input.localEstoqueId) return ensureDefaultStockLocation(client, input)
+  const localId = input.localEstoqueId || await ensureDefaultStockLocation(client, input)
   const result = await client.query(
-    `SELECT id FROM erp.locais_estoque
+    `SELECT id, permite_venda, permite_compra FROM erp.locais_estoque
      WHERE tenant_id = $1 AND id = $2 AND ativo AND excluido_em IS NULL`,
-    [input.tenantId, input.localEstoqueId],
+    [input.tenantId, localId],
   )
-  if (!result.rows[0]) throw new Error('Local de estoque nao encontrado ou inativo.')
+  if (!result.rows[0]) throw new ErpDomainError('STOCK_OPERATION_INVALID', 'Local de estoque nao encontrado ou inativo.')
+  if (input.use && !result.rows[0][`permite_${input.use}`]) throw new ErpDomainError('STOCK_OPERATION_INVALID', `Este local não permite operações de ${input.use}.`)
   return Number(result.rows[0].id)
 }
 
@@ -73,16 +126,18 @@ async function lockStockBalance(
   tenantId: number,
   produtoId: number,
   localEstoqueId: number,
+  historical = false,
 ) {
+  await stockLock(client, tenantId)
   const productResult = await client.query(
     `SELECT id, nome, controla_estoque, permite_estoque_negativo
      FROM erp.produtos
-     WHERE tenant_id = $1 AND id = $2 AND ativo AND excluido_em IS NULL`,
-    [tenantId, produtoId],
+     WHERE tenant_id = $1 AND id = $2 AND ($3 OR (ativo AND excluido_em IS NULL))`,
+    [tenantId, produtoId, historical],
   )
   const product = productResult.rows[0]
-  if (!product) throw new Error(`Produto ${produtoId} nao encontrado ou inativo.`)
-  if (!product.controla_estoque) throw new Error(`O produto ${String(product.nome)} nao controla estoque.`)
+  if (!product) throw new ErpDomainError('STOCK_OPERATION_INVALID', `Produto ${produtoId} nao encontrado ou inativo.`)
+  if (!historical && !product.controla_estoque) throw new ErpDomainError('STOCK_OPERATION_INVALID', `O produto ${String(product.nome)} nao controla estoque.`)
 
   await client.query(
     `INSERT INTO erp.saldos_estoque (tenant_id, produto_id, local_estoque_id)
@@ -111,30 +166,46 @@ export async function applyStockMovement(
     origemId?: number | null
     documentoEstoqueId?: number | null
     chaveIdempotencia: string
+    dataOperacional?: string
+    historical?: boolean
+    reverseReceipt?: boolean
+    motivo?: string | null
   },
 ) {
+  if (!input.chaveIdempotencia?.trim()) throw new ErpDomainError('STOCK_OPERATION_INVALID', 'Identificação da operação obrigatória.')
+  if (!Number.isFinite(input.quantidade) || input.quantidade === 0 || Math.abs(input.quantidade) >= 1e12) throw new ErpDomainError('STOCK_OPERATION_INVALID', 'Quantidade inválida.')
+  if (input.custoUnitario !== undefined && (!Number.isFinite(input.custoUnitario) || input.custoUnitario < 0 || input.custoUnitario >= 1e12)) throw new ErpDomainError('STOCK_OPERATION_INVALID', 'Custo inválido.')
+  await stockLock(client, input.tenantId)
+  const requestHash = fingerprint({ produto: input.produtoId, local: input.localEstoqueId, quantidade: input.quantidade, custo: input.custoUnitario, tipo: input.tipo, origem: input.origemTipo, origemId: input.origemId || null, documento: input.documentoEstoqueId || null, data: input.dataOperacional, reverseReceipt: input.reverseReceipt || false })
   const duplicate = await client.query(
-    `SELECT id FROM erp.movimentacoes_estoque WHERE tenant_id = $1 AND chave_idempotencia = $2`,
+    `SELECT id, request_hash FROM erp.movimentacoes_estoque WHERE tenant_id = $1 AND chave_idempotencia = $2`,
     [input.tenantId, input.chaveIdempotencia],
   )
-  if (duplicate.rows[0]) return duplicate.rows[0]
+  if (duplicate.rows[0]) { assertSameRequest(duplicate.rows[0].request_hash, requestHash); return { id: duplicate.rows[0].id } }
+  const operationDate = dateText(input.dataOperacional)
+  if (operationDate !== businessDay()) throw new ErpDomainError('STOCK_DATE_INVALID', 'Movimentos de estoque devem usar o dia atual. A data histórica do documento permanece no documento de origem.', 422)
+  await assertErpPeriodOpen(client, { tenantId: input.tenantId, module: 'estoque', date: operationDate })
 
   const { product, balance } = await lockStockBalance(
     client,
     input.tenantId,
     input.produtoId,
     input.localEstoqueId,
+    input.historical,
   )
   const currentQuantity = Number(balance.quantidade_fisica || 0)
   const currentAverage = Number(balance.custo_medio || 0)
-  const movementQuantity = Number(input.quantidade)
+  const movementQuantity = Number(input.quantidade.toFixed(4))
+  if (!movementQuantity) throw new ErpDomainError('STOCK_OPERATION_INVALID', 'Quantidade abaixo da precisão de estoque.')
   const nextQuantity = Number((currentQuantity + movementQuantity).toFixed(4))
-  if (nextQuantity < 0 && !product.permite_estoque_negativo) {
-    throw new Error(`Saldo insuficiente para ${String(product.nome)}. Disponivel fisico: ${currentQuantity}.`)
+  if (nextQuantity < Number(balance.quantidade_reservada || 0) && !product.permite_estoque_negativo) {
+    throw new ErpDomainError('STOCK_OPERATION_INVALID', `Saldo insuficiente para ${String(product.nome)}. Disponivel fisico: ${currentQuantity}.`)
   }
 
-  const inputCost = Math.max(0, Number(input.custoUnitario || 0))
-  const nextAverage = movementQuantity > 0 && nextQuantity > 0
+  const inputCost = movementQuantity < 0 && !input.reverseReceipt ? currentAverage : Number(input.custoUnitario ?? currentAverage)
+  const remainingValue = currentQuantity * currentAverage + movementQuantity * inputCost
+  if (input.reverseReceipt && nextQuantity > 0 && remainingValue < -0.00001) throw new ErpDomainError('STOCK_OPERATION_INVALID', 'O estorno excede o valor remanescente do estoque; revise o custo antes de cancelar.')
+  const nextAverage = nextQuantity === 0 ? 0 : (movementQuantity > 0 || input.reverseReceipt) && nextQuantity > 0
     ? Number((((currentQuantity * currentAverage) + (movementQuantity * inputCost)) / nextQuantity).toFixed(6))
     : currentAverage
 
@@ -149,12 +220,12 @@ export async function applyStockMovement(
     `INSERT INTO erp.movimentacoes_estoque
        (tenant_id, produto_id, local_estoque_id, documento_estoque_id, tipo, quantidade,
         custo_unitario, custo_medio_apos, saldo_apos, origem_tipo, origem_id,
-        chave_idempotencia, criado_por)
-     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
+        chave_idempotencia, criado_por, request_hash, data_operacional, metadata)
+     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, jsonb_build_object('motivo',$16::text))
      RETURNING id, saldo_apos, custo_medio_apos`,
     [input.tenantId, input.produtoId, input.localEstoqueId, input.documentoEstoqueId || null,
       input.tipo, movementQuantity, inputCost, nextAverage, nextQuantity, input.origemTipo,
-      input.origemId || null, input.chaveIdempotencia, input.actorId],
+      input.origemId || null, input.chaveIdempotencia, input.actorId, requestHash, operationDate, input.motivo || null],
   )
   return created.rows[0]
 }
@@ -174,30 +245,32 @@ export async function createFinalStockDocument(
     originType?: string
   },
 ) {
+  await stockLock(client, input.tenantId)
+  const requestHash = fingerprint({ tipo: input.tipo, local: input.localEstoqueId, entidade: input.entidadeId || null, venda: input.vendaId || null, compra: input.compraId || null, motivo: input.motivo || null, items: input.items, movementType: input.movementType, originType: input.originType })
   const existing = await client.query(
-    `SELECT id FROM erp.documentos_estoque WHERE tenant_id = $1 AND chave_idempotencia = $2`,
+    `SELECT id, request_hash FROM erp.documentos_estoque WHERE tenant_id = $1 AND chave_idempotencia = $2`,
     [input.tenantId, input.chaveIdempotencia],
   )
-  if (existing.rows[0]) return existing.rows[0]
+  if (existing.rows[0]) { assertSameRequest(existing.rows[0].request_hash, requestHash); return { id: existing.rows[0].id } }
 
   await assertErpPeriodOpen(client, {
     tenantId: input.tenantId,
     module: 'estoque',
-    date: new Date().toISOString().slice(0, 10),
+    date: businessDay(),
   })
 
   const documentResult = await client.query(
     `INSERT INTO erp.documentos_estoque
        (tenant_id, tipo, data_documento, status, local_estoque_id, entidade_id,
-        venda_id, compra_id, motivo, chave_idempotencia, finalizado_em, criado_por, atualizado_por)
-     VALUES ($1, $2, CURRENT_DATE, 'finalizado', $3, $4, $5, $6, $7, $8, now(), $9, $9)
+        venda_id, compra_id, motivo, chave_idempotencia, finalizado_em, criado_por, atualizado_por, request_hash)
+     VALUES ($1, $2, $10::date, 'finalizado', $3, $4, $5, $6, $7, $8, now(), $9, $9, $11)
      RETURNING id`,
     [input.tenantId, input.tipo, input.localEstoqueId, input.entidadeId || null,
       input.vendaId || null, input.compraId || null, input.motivo || null,
-      input.chaveIdempotencia, input.actorId],
+      input.chaveIdempotencia, input.actorId, businessDay(), requestHash],
   )
   const documentId = Number(documentResult.rows[0].id)
-  for (const [index, item] of input.items.entries()) {
+  for (const [index, item] of [...input.items].sort((a, b) => a.produtoId - b.produtoId).entries()) {
     const itemResult = await client.query(
        `INSERT INTO erp.documentos_estoque_itens
           (tenant_id, documento_estoque_id, produto_id, quantidade, custo_unitario,
@@ -217,7 +290,7 @@ export async function createFinalStockDocument(
       documentoEstoqueId: documentId,
       tipo: input.movementType || (signedQuantity > 0 ? 'entrada' : 'saida'),
       origemTipo: input.originType || 'documento_estoque',
-      origemId: documentId,
+      origemId: input.compraId || input.vendaId || documentId,
       chaveIdempotencia: `${input.chaveIdempotencia}:item:${Number(itemResult.rows[0].id)}:${index}`,
     })
   }
@@ -225,15 +298,17 @@ export async function createFinalStockDocument(
 }
 
 export async function reserveStockForSale(client: Pick<SQLClient, 'query'>, input: ActorInput & { saleId: number }) {
+  await stockLock(client, input.tenantId)
   const saleResult = await client.query(
     `SELECT id, local_estoque_id FROM erp.vendas
      WHERE tenant_id = $1 AND id = $2 AND excluido_em IS NULL`,
     [input.tenantId, input.saleId],
   )
-  if (!saleResult.rows[0]) throw new Error('Venda nao encontrada para reservar estoque.')
+  if (!saleResult.rows[0]) throw new ErpDomainError('STOCK_OPERATION_INVALID', 'Venda nao encontrada para reservar estoque.')
   const localEstoqueId = await resolveStockLocation(client, {
     ...input,
     localEstoqueId: Number(saleResult.rows[0].local_estoque_id || 0) || null,
+    use: 'venda',
   })
   await client.query(
     `UPDATE erp.vendas SET local_estoque_id = COALESCE(local_estoque_id, $3), atualizado_por = $4
@@ -254,7 +329,7 @@ export async function reserveStockForSale(client: Pick<SQLClient, 'query'>, inpu
      LEFT JOIN erp.kits_produtos_itens AS componentes
        ON componentes.tenant_id = kits.tenant_id AND componentes.kit_id = kits.id
      WHERE itens.tenant_id = $1 AND itens.venda_id = $2 AND itens.excluido_em IS NULL
-       AND produtos.controla_estoque`,
+       AND produtos.controla_estoque ORDER BY produto_id, itens.id`,
     [input.tenantId, input.saleId],
   )
 
@@ -270,7 +345,7 @@ export async function reserveStockForSale(client: Pick<SQLClient, 'query'>, inpu
     const { product, balance } = await lockStockBalance(client, input.tenantId, produtoId, localEstoqueId)
     const available = Number(balance.quantidade_fisica || 0) - Number(balance.quantidade_reservada || 0)
     if (available < quantidade && !product.permite_estoque_negativo) {
-      throw new Error(`Estoque disponivel insuficiente para ${String(product.nome)}. Disponivel: ${available}.`)
+      throw new ErpDomainError('STOCK_OPERATION_INVALID', `Estoque disponivel insuficiente para ${String(product.nome)}. Disponivel: ${available}.`)
     }
     await client.query(
       `UPDATE erp.saldos_estoque
@@ -288,18 +363,19 @@ export async function reserveStockForSale(client: Pick<SQLClient, 'query'>, inpu
 }
 
 export async function releaseStockForSale(client: Pick<SQLClient, 'query'>, input: ActorInput & { saleId: number }) {
+  await stockLock(client, input.tenantId)
   const reservations = await client.query(
     `SELECT * FROM erp.reservas_estoque
      WHERE tenant_id = $1 AND venda_id = $2 AND status = 'ativa' FOR UPDATE`,
     [input.tenantId, input.saleId],
   )
   for (const reservation of reservations.rows) {
-    await lockStockBalance(client, input.tenantId, Number(reservation.produto_id), Number(reservation.local_estoque_id))
+    await lockStockBalance(client, input.tenantId, Number(reservation.produto_id), Number(reservation.local_estoque_id), true)
     await client.query(
       `UPDATE erp.saldos_estoque SET quantidade_reservada = greatest(quantidade_reservada - $4, 0),
          atualizado_em = now(), versao = versao + 1
        WHERE tenant_id = $1 AND produto_id = $2 AND local_estoque_id = $3`,
-      [input.tenantId, reservation.produto_id, reservation.local_estoque_id, reservation.quantidade],
+      [input.tenantId, reservation.produto_id, reservation.local_estoque_id, Number(reservation.quantidade) - Number(reservation.quantidade_atendida || 0)],
     )
     await client.query(
       `UPDATE erp.reservas_estoque SET status = 'liberada', encerrada_em = now(), atualizado_por = $3
@@ -317,9 +393,9 @@ export async function attendStockForSale(input: ActorInput & { saleId: number })
       [input.tenantId, input.saleId],
     )
     const sale = saleResult.rows[0]
-    if (!sale) throw new Error('Venda nao encontrada.')
+    if (!sale) throw new ErpDomainError('STOCK_OPERATION_INVALID', 'Venda nao encontrada.')
     if (sale.atendimento_status === 'atendido') return { id: String(sale.id), status: 'confirmada', atendimento_status: 'atendido' }
-    if (sale.status !== 'confirmada') throw new Error('Apenas venda confirmada pode ser atendida.')
+    if (sale.status !== 'confirmada') throw new ErpDomainError('STOCK_OPERATION_INVALID', 'Apenas venda confirmada pode ser atendida.')
 
     const reservations = await client.query(
       `SELECT * FROM erp.reservas_estoque
@@ -327,22 +403,24 @@ export async function attendStockForSale(input: ActorInput & { saleId: number })
       [input.tenantId, input.saleId],
     )
     for (const reservation of reservations.rows) {
+      await lockStockBalance(client, input.tenantId, Number(reservation.produto_id), Number(reservation.local_estoque_id), true)
+      await client.query(
+        `UPDATE erp.saldos_estoque SET quantidade_reservada = quantidade_reservada - $4,
+           atualizado_em = now(), versao = versao + 1
+         WHERE tenant_id = $1 AND produto_id = $2 AND local_estoque_id = $3`,
+        [input.tenantId, reservation.produto_id, reservation.local_estoque_id, Number(reservation.quantidade) - Number(reservation.quantidade_atendida || 0)],
+      )
       await applyStockMovement(client, {
         ...input,
         produtoId: Number(reservation.produto_id),
         localEstoqueId: Number(reservation.local_estoque_id),
-        quantidade: -Number(reservation.quantidade),
+        quantidade: -(Number(reservation.quantidade) - Number(reservation.quantidade_atendida || 0)),
         tipo: 'saida',
         origemTipo: 'venda',
         origemId: input.saleId,
+        historical: true,
         chaveIdempotencia: `venda:${input.saleId}:reserva:${String(reservation.id)}:saida`,
       })
-      await client.query(
-        `UPDATE erp.saldos_estoque SET quantidade_reservada = greatest(quantidade_reservada - $4, 0),
-           atualizado_em = now(), versao = versao + 1
-         WHERE tenant_id = $1 AND produto_id = $2 AND local_estoque_id = $3`,
-        [input.tenantId, reservation.produto_id, reservation.local_estoque_id, reservation.quantidade],
-      )
       await client.query(
         `UPDATE erp.reservas_estoque SET status = 'atendida', quantidade_atendida = quantidade,
            encerrada_em = now(), atualizado_por = $3
@@ -378,6 +456,7 @@ export async function receiveStockForPurchase(client: Pick<SQLClient, 'query'>, 
   const localEstoqueId = await resolveStockLocation(client, {
     ...input,
     localEstoqueId: Number(purchase.local_estoque_id || 0) || null,
+    use: 'compra',
   })
   await client.query(
     `UPDATE erp.compras SET local_estoque_id = COALESCE(local_estoque_id, $3), atualizado_por = $4
@@ -426,6 +505,8 @@ export async function reverseStockForPurchase(client: Pick<SQLClient, 'query'>, 
       tipo: 'estorno',
       origemTipo: 'cancelamento_compra',
       origemId: input.purchaseId,
+      historical: true,
+      reverseReceipt: true,
       chaveIdempotencia: `compra:${input.purchaseId}:movimento:${String(movement.id)}:estorno`,
     })
   }
@@ -437,22 +518,7 @@ async function listStockOperationPage(
   orderBy: string,
   input: ErpOperationListInput,
 ): Promise<ErpOperationPage> {
-  const page = Math.max(1, Math.floor(Number(input.page) || 1))
-  const pageSize = input.exportLimit
-    ? Math.min(10_000, Math.max(1, Math.floor(input.exportLimit)))
-    : Math.min(100, Math.max(10, Math.floor(Number(input.pageSize) || 50)))
-  const offset = input.exportLimit ? 0 : (page - 1) * pageSize
-  const rows = await runQuery<Record<string, unknown>>(
-    `WITH operation_records AS (${selectSql})
-     SELECT operation_records.*, count(*) OVER ()::int AS __total
-     FROM operation_records
-     WHERE ($2 = '' OR to_jsonb(operation_records)::text ILIKE '%' || $2 || '%')
-     ORDER BY ${orderBy}
-     LIMIT $3 OFFSET $4`,
-    [tenantId, input.query?.trim() || '', pageSize, offset],
-  )
-  const total = rows.length ? Number(rows[0].__total || 0) : 0
-  return { records: rows.map(({ __total: _total, ...record }) => record), total, page, pageSize }
+  return readOperationPage(tenantId, selectSql, orderBy, input)
 }
 
 export async function listStockOperation(tenantId: number, resource: string, input: ErpOperationListInput = {}) {
@@ -535,15 +601,29 @@ export async function listStockOperation(tenantId: number, resource: string, inp
       'produto, unidade_origem', input,
     )
   }
-  throw new Error('Modulo de estoque desconhecido.')
+  throw new ErpDomainError('STOCK_OPERATION_INVALID', 'Modulo de estoque desconhecido.')
 }
 
 export async function createStockOperation(input: ActorInput & { resource: string; values: Record<string, unknown>; idempotencyKey: string }) {
+  if (!input.idempotencyKey?.trim() || input.idempotencyKey.length > 200) throw new ErpDomainError('STOCK_OPERATION_INVALID', 'Identificação da operação inválida.')
   return withTransaction(async (client) => {
+    await stockLock(client, input.tenantId)
+    const requestHash = fingerprint({ resource: input.resource, values: input.values })
+    const previous = await client.query('SELECT request_hash, resultado FROM erp.operacoes_estoque WHERE tenant_id=$1 AND chave_idempotencia=$2', [input.tenantId, input.idempotencyKey])
+    if (previous.rows[0]) { assertSameRequest(previous.rows[0].request_hash, requestHash); return previous.rows[0].resultado }
+    const result = await createStockOperationWithClient(client, input)
+    await client.query(`INSERT INTO erp.operacoes_estoque(tenant_id, recurso, chave_idempotencia, request_hash, resultado, criado_por) VALUES($1,$2,$3,$4,$5::jsonb,$6)`, [input.tenantId, input.resource, input.idempotencyKey, requestHash, JSON.stringify(result), input.actorId])
+    return result
+  })
+}
+
+async function createStockOperationWithClient(client: Pick<SQLClient, 'query'>, input: ActorInput & { resource: string; values: Record<string, unknown>; idempotencyKey: string }) {
+  // The journal and all business effects share the same transaction.
+  return (async () => {
     if (input.resource === 'locais-estoque') {
       const nome = optionalText(input.values.nome)
       const codigo = optionalText(input.values.codigo)
-      if (!nome || !codigo) throw new Error('Nome e codigo sao obrigatorios.')
+      if (!nome || !codigo) throw new ErpDomainError('STOCK_OPERATION_INVALID', 'Nome e codigo sao obrigatorios.')
       const created = await client.query(
         `INSERT INTO erp.locais_estoque
            (tenant_id, nome, codigo, descricao, padrao, permite_venda, permite_compra, criado_por, atualizado_por)
@@ -560,35 +640,58 @@ export async function createStockOperation(input: ActorInput & { resource: strin
         ...input,
         localEstoqueId: requiredId(input.values.local_estoque_id, 'Local de estoque'),
       })
-      const quantidade = decimal(input.values.quantidade, 'Quantidade')
+      let quantidade = decimal(input.values.quantidade, 'Quantidade')
+      let custoUnitario = input.values.custo_unitario === undefined || input.values.custo_unitario === '' ? undefined : decimal(input.values.custo_unitario, 'Custo unitario', true)
+      if (input.values.unidade) {
+        const conversion = await client.query(`SELECT p.unidade_medida, c.fator FROM erp.produtos p LEFT JOIN erp.conversoes_unidades_produto c ON c.tenant_id=p.tenant_id AND c.produto_id=p.id AND lower(c.unidade_origem)=lower($3) AND lower(c.unidade_destino)=lower(p.unidade_medida) AND c.ativo AND c.excluido_em IS NULL WHERE p.tenant_id=$1 AND p.id=$2`, [input.tenantId, produtoId, String(input.values.unidade)])
+        const unit = conversion.rows[0]
+        if (!unit) throw new ErpDomainError('STOCK_OPERATION_INVALID', 'Produto não encontrado.')
+        if (String(input.values.unidade).toLowerCase() !== String(unit.unidade_medida).toLowerCase()) {
+          if (!unit.fator) throw new ErpDomainError('STOCK_OPERATION_INVALID', 'Conversão para a unidade de estoque não cadastrada.')
+          quantidade = decimal(quantidade * Number(unit.fator), 'Quantidade convertida')
+          if (custoUnitario !== undefined) custoUnitario /= Number(unit.fator)
+        }
+      }
       const tipo = String(input.values.tipo || 'entrada')
-      if (!['entrada', 'saida', 'ajuste_entrada', 'ajuste_saida'].includes(tipo)) throw new Error('Tipo de movimento invalido.')
+      if (!['entrada', 'saida', 'ajuste_entrada', 'ajuste_saida'].includes(tipo)) throw new ErpDomainError('STOCK_OPERATION_INVALID', 'Tipo de movimento invalido.')
+      if (tipo.startsWith('ajuste') && !optionalText(input.values.motivo)) throw new ErpDomainError('STOCK_OPERATION_INVALID', 'Informe o motivo do ajuste.')
       const signed = ['saida', 'ajuste_saida'].includes(tipo) ? -quantidade : quantidade
       return applyStockMovement(client, {
         ...input,
         produtoId,
         localEstoqueId,
         quantidade: signed,
-        custoUnitario: decimal(input.values.custo_unitario || 0, 'Custo unitario', true),
+        custoUnitario,
         tipo,
         origemTipo: 'manual',
         chaveIdempotencia: input.idempotencyKey,
+        dataOperacional: dateText(input.values.data),
+        motivo: optionalText(input.values.motivo),
       })
     }
     if (input.resource === 'inventarios') {
+      const operationDate = dateText(input.values.data)
+      if (operationDate !== businessDay()) throw new ErpDomainError('STOCK_DATE_INVALID', 'A contagem deve ser registrada no dia atual.', 422)
       const localEstoqueId = requiredId(input.values.local_estoque_id, 'Local de estoque')
-      const produtoId = requiredId(input.values.produto_id, 'Produto')
-      const counted = decimal(input.values.quantidade_contada, 'Quantidade contada', true)
-      const balance = await lockStockBalance(client, input.tenantId, produtoId, localEstoqueId)
-      const systemQuantity = Number(balance.balance.quantidade_fisica || 0)
+      await resolveStockLocation(client, { ...input, localEstoqueId })
+      const items = Array.isArray(input.values.itens) ? input.values.itens as Record<string, unknown>[] : [input.values]
+      if (!items.length || items.length > 200) throw new ErpDomainError('STOCK_OPERATION_INVALID', 'Informe entre 1 e 200 itens de contagem.')
+      const productIds = items.map(item => requiredId(item.produto_id, 'Produto'))
+      if (new Set(productIds).size !== productIds.length) throw new ErpDomainError('STOCK_OPERATION_INVALID', 'Produto repetido na contagem.')
       const number = optionalText(input.values.numero) || `INV-${Date.now()}`
       const inventory = await client.query(
         `INSERT INTO erp.inventarios
-           (tenant_id, numero, local_estoque_id, data_inventario, tipo, status, iniciado_em, finalizado_em, criado_por, atualizado_por)
-         VALUES ($1, $2, $3, $4, 'parcial', 'finalizado', now(), now(), $5, $5) RETURNING id`,
-        [input.tenantId, number, localEstoqueId, dateText(input.values.data), input.actorId],
+           (tenant_id, numero, local_estoque_id, data_inventario, tipo, status, iniciado_em, finalizado_em, criado_por, atualizado_por, chave_idempotencia, metadata)
+         VALUES ($1, $2, $3, $4, 'parcial', 'finalizado', now(), now(), $5, $5, $6, $7::jsonb) RETURNING id`,
+        [input.tenantId, number, localEstoqueId, operationDate, input.actorId, input.idempotencyKey, JSON.stringify({ motivo: optionalText(input.values.motivo) })],
       )
       const inventoryId = Number(inventory.rows[0].id)
+      for (const item of [...items].sort((a,b) => Number(a.produto_id) - Number(b.produto_id))) {
+      const produtoId = requiredId(item.produto_id, 'Produto')
+      const counted = quantity(item.quantidade_contada, 'Quantidade contada', true)
+      const balance = await lockStockBalance(client, input.tenantId, produtoId, localEstoqueId)
+      const systemQuantity = Number(balance.balance.quantidade_fisica || 0)
+      if (item.quantidade_sistema !== undefined && Number(item.quantidade_sistema) !== systemQuantity) throw new ErpDomainError('STOCK_COUNT_CONFLICT', 'O saldo mudou desde a revisão. Confira a contagem novamente.', 409)
       await client.query(
         `INSERT INTO erp.inventarios_itens
            (tenant_id, inventario_id, produto_id, quantidade_sistema, quantidade_contada, custo_medio, contado_em, criado_por, atualizado_por)
@@ -607,16 +710,25 @@ export async function createStockOperation(input: ActorInput & { resource: strin
           origemTipo: 'inventario',
           origemId: inventoryId,
           chaveIdempotencia: `inventario:${inventoryId}:produto:${produtoId}`,
+          dataOperacional: operationDate,
         })
+      }
       }
       return { id: String(inventoryId), status: 'finalizado' }
     }
     if (input.resource === 'transferencias') {
+      const operationDate = dateText(input.values.data)
+      if (operationDate !== businessDay()) throw new ErpDomainError('STOCK_DATE_INVALID', 'A transferência deve ser registrada no dia atual.', 422)
       const originId = requiredId(input.values.local_origem_id, 'Local de origem')
       const destinationId = requiredId(input.values.local_destino_id, 'Local de destino')
-      if (originId === destinationId) throw new Error('Origem e destino devem ser diferentes.')
+      if (originId === destinationId) throw new ErpDomainError('STOCK_OPERATION_INVALID', 'Origem e destino devem ser diferentes.')
+      await resolveStockLocation(client, { ...input, localEstoqueId: originId })
+      await resolveStockLocation(client, { ...input, localEstoqueId: destinationId })
       const produtoId = requiredId(input.values.produto_id, 'Produto')
-      const quantidade = decimal(input.values.quantidade, 'Quantidade')
+      const quantidade = quantity(input.values.quantidade, 'Quantidade')
+      const origin = await lockStockBalance(client, input.tenantId, produtoId, originId)
+      await lockStockBalance(client, input.tenantId, produtoId, destinationId)
+      const cost = Number(origin.balance.custo_medio)
       const number = optionalText(input.values.numero) || `TRF-${Date.now()}`
       const transfer = await client.query(
         `INSERT INTO erp.transferencias_estoque
@@ -633,12 +745,12 @@ export async function createStockOperation(input: ActorInput & { resource: strin
         [input.tenantId, transferId, produtoId, quantidade, input.actorId],
       )
       await applyStockMovement(client, {
-        ...input, produtoId, localEstoqueId: originId, quantidade: -quantidade,
+        ...input, produtoId, localEstoqueId: originId, quantidade: -quantidade, custoUnitario: cost, dataOperacional: operationDate,
         tipo: 'transferencia_saida', origemTipo: 'transferencia', origemId: transferId,
         chaveIdempotencia: `${input.idempotencyKey}:saida`,
       })
       await applyStockMovement(client, {
-        ...input, produtoId, localEstoqueId: destinationId, quantidade,
+        ...input, produtoId, localEstoqueId: destinationId, quantidade, custoUnitario: cost, dataOperacional: operationDate,
         tipo: 'transferencia_entrada', origemTipo: 'transferencia', origemId: transferId,
         chaveIdempotencia: `${input.idempotencyKey}:entrada`,
       })
@@ -647,7 +759,9 @@ export async function createStockOperation(input: ActorInput & { resource: strin
     if (input.resource === 'kits') {
       const produtoId = requiredId(input.values.produto_id, 'Produto do kit')
       const componentId = requiredId(input.values.produto_componente_id, 'Produto componente')
-      if (produtoId === componentId) throw new Error('O produto nao pode ser componente dele mesmo.')
+      if (produtoId === componentId) throw new ErpDomainError('STOCK_OPERATION_INVALID', 'O produto nao pode ser componente dele mesmo.')
+      const nested = await client.query(`SELECT 1 FROM erp.kits_produtos WHERE tenant_id=$1 AND produto_id=$2 AND ativo AND excluido_em IS NULL UNION ALL SELECT 1 FROM erp.kits_produtos_itens i JOIN erp.kits_produtos k ON k.tenant_id=i.tenant_id AND k.id=i.kit_id AND k.ativo AND k.excluido_em IS NULL WHERE i.tenant_id=$1 AND i.produto_componente_id=$3`, [input.tenantId, componentId, produtoId])
+      if (nested.rows.length) throw new ErpDomainError('STOCK_OPERATION_INVALID', 'Kits aninhados não são permitidos. Selecione componentes individuais.')
       const created = await client.query(
         `INSERT INTO erp.kits_produtos (tenant_id, produto_id, criado_por, atualizado_por)
          VALUES ($1, $2, $3, $3)
@@ -670,8 +784,8 @@ export async function createStockOperation(input: ActorInput & { resource: strin
       const produtoId = requiredId(input.values.produto_id, 'Produto')
       const origin = optionalText(input.values.unidade_origem)?.toUpperCase()
       const destination = optionalText(input.values.unidade_destino)?.toUpperCase()
-      if (!origin || !destination) throw new Error('As unidades de origem e destino sao obrigatorias.')
-      if (origin === destination) throw new Error('As unidades precisam ser diferentes.')
+      if (!origin || !destination) throw new ErpDomainError('STOCK_OPERATION_INVALID', 'As unidades de origem e destino sao obrigatorias.')
+      if (origin === destination) throw new ErpDomainError('STOCK_OPERATION_INVALID', 'As unidades precisam ser diferentes.')
       const created = await client.query(
         `INSERT INTO erp.conversoes_unidades_produto
            (tenant_id, produto_id, unidade_origem, unidade_destino, fator, criado_por, atualizado_por)
@@ -684,6 +798,6 @@ export async function createStockOperation(input: ActorInput & { resource: strin
       )
       return created.rows[0]
     }
-    throw new Error('Operacao de estoque desconhecida.')
-  })
+    throw new ErpDomainError('STOCK_OPERATION_INVALID', 'Operacao de estoque desconhecida.')
+  })()
 }

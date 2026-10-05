@@ -1,13 +1,10 @@
 import { config } from 'dotenv'
-import { pluginQuery, closePluginDatabase } from '../src/products/chatgptplugin/shared/database'
+import { closePluginDatabase } from '../src/products/chatgptplugin/shared/database'
+import { maintainChatgptPlugin } from '../src/products/chatgptplugin/application/maintenance'
 config({path:'.env.local',quiet:true})
 async function main() {
   try {
-    await pluginQuery("DELETE FROM plugin.rate_windows WHERE integration='chatgpt' AND window_start < now() - interval '2 days'",[])
-    await pluginQuery("UPDATE plugin.executions SET status='failed',error_code='INTERRUPTED',finished_at=now() WHERE integration='chatgpt' AND status='running' AND started_at < now() - interval '10 minutes'",[])
-    await pluginQuery("DELETE FROM plugin.executions WHERE integration='chatgpt' AND started_at < now() - interval '90 days'",[])
-    await pluginQuery("UPDATE plugin.drafts SET status='expired',decided_at=now() WHERE integration='chatgpt' AND status='pending' AND expires_at <= now()",[])
-    await pluginQuery("DELETE FROM plugin.drafts WHERE integration='chatgpt' AND created_at < now() - interval '90 days' AND status <> 'pending'",[])
+    await maintainChatgptPlugin()
     console.log('Manutencao do ChatGPT Plugin concluida.')
   } finally { await closePluginDatabase() }
 }

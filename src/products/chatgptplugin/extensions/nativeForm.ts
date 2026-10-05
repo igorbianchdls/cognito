@@ -6,8 +6,10 @@ import { companySchema } from '../tools/catalog'
 import { PluginError,selectCompany,type PluginPrincipal } from '../shared/contracts'
 import type { PluginConfig } from '../shared/config'
 import { executeTool,type ExecutionDependencies } from '../application/executeTool'
+import { baseSchema,proposalFields,fieldLabels } from './proposalFields'
 
-export const proposalKinds=['cliente','produto','orcamento','venda','editar_cliente','editar_produto','confirmar_venda','confirmar_compra','cancelar_compra','atender_venda','cancelar_venda','receber_parcela','pagar_parcela','estornar_pagamento'] as const
+const legacyKinds=['cliente','produto','orcamento','venda','editar_cliente','editar_produto','confirmar_venda','confirmar_compra','cancelar_compra','atender_venda','cancelar_venda','receber_parcela','pagar_parcela','estornar_pagamento'] as const
+export const proposalKinds=proposalSchema.options.map(option=>option.shape.tipo.value) as [Proposal['tipo'],...Proposal['tipo'][]]
 export const nativeFormArgumentsSchema=z.object({empresa_id:companySchema,tipo:z.enum(proposalKinds),chave_operacao:z.string().uuid()}).strict()
 type Arguments=z.infer<typeof nativeFormArgumentsSchema>
 const text=(title:string,maxLength=200):OpenAIFormField=>({type:'string',title,maxLength})
@@ -19,6 +21,18 @@ const stock=()=>choice('Controlar estoque',[['sim','Sim'],['nao','Não']])
 const date=(title:string):OpenAIFormField=>({type:'string',title,format:'date'})
 
 export function nativeProposalForm(tipo:Arguments['tipo']):OpenAIForm {
+  if(!(legacyKinds as readonly string[]).includes(tipo)){
+    const shape=proposalFields(tipo),properties:Record<string,OpenAIFormField>={},required:string[]=[]
+    for(const [field,schema] of Object.entries(shape)){
+      const base=baseSchema(schema),label=fieldLabels[field]||field
+      properties[field]=base instanceof z.ZodArray?{type:'string',title:label,minLength:2,maxLength:20000,description:field==='parcelas'?'Lista JSON com data_vencimento e valor. A soma deve ser igual ao valor_total.':'Lista JSON de itens com tipo, item_id, quantidade, valor_unitario e desconto.'}
+        :base instanceof z.ZodEnum?choice(label,base.options.map((value:string)=>[value,value==='fisica'?'Pessoa física':value==='juridica'?'Pessoa jurídica':value]))
+        :base instanceof z.ZodNumber?field.endsWith('_id')?identifier(label):amount(label)
+        :field.startsWith('data_')?date(label):text(label,field==='motivo'?1000:field==='descricao'||field==='observacoes'?2000:200)
+      if(!schema.isOptional())required.push(field)
+    }
+    return {type:'object',properties,required}
+  }
   let properties:Record<string,OpenAIFormField>,required:string[]
   if(tipo==='cliente') {
     properties={nome:text('Nome'),tipo:person(),email:{type:'string',title:'E-mail',format:'email',maxLength:254},telefone:text('Telefone',30),cidade:text('Cidade',100)};required=['nome','tipo']
@@ -99,9 +113,7 @@ export async function handleNativeForm(params:Record<string,unknown>,id:string|n
     if(Object.keys(content).some(field=>!Object.hasOwn(form.properties,field))||!createOpenAIFormContentSchema(form).safeParse(content).success)
       throw new PluginError('INVALID_INPUT','Confira os campos obrigatórios e os valores do formulário.')
     const data:Record<string,unknown>={...content}
-    if(args.tipo==='venda'||args.tipo==='orcamento') {
-      try {data.itens=JSON.parse(String(data.itens))}catch{throw new PluginError('INVALID_INPUT','Os itens precisam ser uma lista JSON válida.')}
-    }
+    for(const field of ['itens','parcelas'])if(data[field]!==undefined){try{data[field]=JSON.parse(String(data[field]))}catch{throw new PluginError('INVALID_INPUT',field+' precisa ser uma lista JSON válida.')}}
     const proposal=proposalSchema.safeParse({tipo:args.tipo,dados:data})
     if(!proposal.success)throw new PluginError('INVALID_INPUT','Confira os campos, datas, valores e alterações da proposta.')
     const prepared=await executeTool(principal,'preparar_rascunho',{empresa_id:company.id,chave_operacao:args.chave_operacao,proposta:proposal.data},config,deps)

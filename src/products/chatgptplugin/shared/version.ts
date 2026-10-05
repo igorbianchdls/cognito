@@ -1,0 +1,1 @@
+export const CHATGPTPLUGIN_VERSION = '1.6.0'

@@ -3193,6 +3193,7 @@ export async function settleReceivableInstallment(input: SettleInstallmentInput)
       ],
     )
 
+// Uma conta/método já iguais não devem atualizar o resumo antes do recálculo.
     await client.query(
       `UPDATE erp.contas_receber_parcelas
        SET
@@ -3200,7 +3201,8 @@ export async function settleReceivableInstallment(input: SettleInstallmentInput)
          metodo_pagamento_id = $4,
          atualizado_por = $5
        WHERE tenant_id = $1
-         AND id = $2`,
+         AND id = $2
+         AND (conta_financeira_id IS DISTINCT FROM $3::bigint OR metodo_pagamento_id IS DISTINCT FROM $4::bigint)`,
       [input.tenantId, installment.id, financialAccountId, methodId, input.actorId],
     )
     const updatedInstallment = await recalculateReceivableInstallment(
@@ -3322,6 +3324,7 @@ export async function settlePayableInstallment(input: SettleInstallmentInput) {
       ],
     )
 
+// Uma conta/método já iguais não devem atualizar o resumo antes do recálculo.
     await client.query(
       `UPDATE erp.contas_pagar_parcelas
        SET
@@ -3329,7 +3332,8 @@ export async function settlePayableInstallment(input: SettleInstallmentInput) {
          metodo_pagamento_id = $4,
          atualizado_por = $5
        WHERE tenant_id = $1
-         AND id = $2`,
+         AND id = $2
+         AND (conta_financeira_id IS DISTINCT FROM $3::bigint OR metodo_pagamento_id IS DISTINCT FROM $4::bigint)`,
       [input.tenantId, installment.id, financialAccountId, methodId, input.actorId],
     )
     const updatedInstallment = await recalculatePayableInstallment(

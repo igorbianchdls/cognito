@@ -1,11 +1,11 @@
 {
   "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
   "name": "chatgptplugin",
-  "version": "1.4.0",
+  "version": "1.6.0",
   "author": {
     "name": "Cognito ERP"
   },
-  "description": "Consulte o Cognito ERP e prepare operacoes comerciais, financeiras e de estoque para revisao humana.",
+  "description": "Consulte o Cognito ERP e prepare criação, edição e exclusão de cadastros, títulos financeiros e documentos comerciais para revisão humana.",
   "keywords": [
     "erp",
     "vendas",
@@ -21,7 +21,7 @@
         "displayName": "Cognito ERP",
         "shortDescription": "Consultas e propostas do ERP",
         "developerName": "Cognito ERP",
-        "longDescription": "Consulte clientes, produtos, vendas, compras, estoque e relatórios com cards de tabela, detalhes, indicadores e seleção. Prepare operações para revisão e acompanhe seu resultado. Aprovação no ERP, formulários e preferências pessoais.",
+        "longDescription": "Consulte clientes, produtos, vendas, compras, estoque e relatórios com cards de tabela, detalhes, indicadores e seleção. Crie, edite e exclua contas a pagar e receber, vendas, orçamentos, compras e cadastros por propostas revisáveis. Acompanhe o resultado. Aprovação no ERP, formulários e preferências pessoais.",
         "category": "Productivity",
         "capabilities": [
           "Read",

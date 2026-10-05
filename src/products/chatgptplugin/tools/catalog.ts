@@ -24,8 +24,12 @@ function commercialFilters(input:Record<string,unknown>) {
   return Object.fromEntries(['status','inicio','fim'].filter(k=>input[k]).map(k=>[k,String(input[k])]))
 }
 export const tools: ToolDefinition[] = [
-  {name:'obter_cadastro',title:'Detalhes do cadastro',description:'Consultar um cliente, fornecedor, produto ou serviço por ID autorizado.',
-    schema:z.object({empresa_id:company,tipo:z.enum(['clientes','fornecedores','produtos','servicos']),registro_id:z.number().int().positive()}).strict(),capabilities:['erp.cadastros.visualizar'],
+  {name:'obter_titulo_financeiro',title:'Detalhes do título financeiro',description:'Consultar conta a pagar/receber pelo conta_id retornado na listagem, parcelas e histórico. Para editar/excluir use o ID do título, não o da parcela.',
+    schema:z.object({empresa_id:company,tipo:z.enum(['pagar','receber']),conta_id:z.number().int().positive()}).strict(),capabilities:['erp.financeiro.visualizar'],
+    execute:(q,id,input)=>q.financialTitle(id,input.tipo as 'pagar',Number(input.conta_id))},
+  {name:'obter_cadastro',title:'Detalhes do cadastro',description:'Consultar cliente, fornecedor, vendedor, produto, serviço, categoria ou conta financeira por ID autorizado.',
+    schema:z.object({empresa_id:company,tipo:z.enum(['clientes','fornecedores','vendedores','produtos','servicos','categorias','contas-financeiras']),registro_id:z.number().int().positive()}).strict(),capabilities:['erp.cadastros.visualizar'],
+    requiredCapabilities:input=>input.tipo==='contas-financeiras'?['erp.financeiro.visualizar','erp.cadastros.visualizar']:['erp.cadastros.visualizar'],
     execute:(q,id,input)=>q.registration(id,input.tipo as 'clientes',Number(input.registro_id))},
   {name:'obter_parcela_financeira',title:'Detalhes da parcela',description:'Consultar uma parcela a pagar ou receber, sua composição de saldo e histórico de pagamentos. Não efetua baixas.',
     schema:z.object({empresa_id:company,tipo:z.enum(['pagar','receber']),parcela_id:z.number().int().positive()}).strict(),capabilities:['erp.financeiro.visualizar'],
@@ -47,9 +51,10 @@ export const tools: ToolDefinition[] = [
     schema: z.object({ empresa_id: company }).strict(),
     capabilities: ['erp.relatorios.visualizar','erp.financeiro.visualizar','erp.vendas.visualizar','erp.compras.visualizar','erp.cadastros.visualizar'],
     execute: (q, id) => q.overview(id) },
-  { name: 'buscar_cadastros', title: 'Buscar cadastros', description: 'Localizar clientes, fornecedores, produtos ou servicos no ERP, com busca e paginacao.',
-    schema: z.object({ ...paging, tipo: z.enum(['clientes','fornecedores','produtos','servicos']),
+  { name: 'buscar_cadastros', title: 'Buscar cadastros', description: 'Localizar clientes, fornecedores, vendedores, produtos, serviços, categorias e contas financeiras no ERP, com busca e paginação.',
+    schema: z.object({ ...paging, tipo: z.enum(['clientes','fornecedores','vendedores','produtos','servicos','categorias','contas-financeiras']),
       status: z.enum(['ativo','inativo']).optional() }).strict(), capabilities: ['erp.cadastros.visualizar'],
+    requiredCapabilities:input=>input.tipo==='contas-financeiras'?['erp.financeiro.visualizar','erp.cadastros.visualizar']:['erp.cadastros.visualizar'],
     execute: (q,id,input) => q.page(id,input.tipo as 'clientes', { ...page(input), filters: input.status ? { status: String(input.status) } : {} }) },
   { name: 'listar_vendas', title: 'Listar vendas', description: 'Buscar pedidos de venda por numero, cliente ou status, com paginacao.',
     schema: z.object({ ...paging, status: z.enum(['rascunho','confirmada','cancelada','faturada']).optional(),inicio:isoDate,fim:isoDate }).strict(),

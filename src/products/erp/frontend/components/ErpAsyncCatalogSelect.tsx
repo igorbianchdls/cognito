@@ -31,25 +31,22 @@ export function ErpAsyncCatalogSelect({ label, type, value, selectedLabel, categ
   const [query, setQuery] = useState('')
   const deferredQuery = useDeferredValue(query)
   const [records, setRecords] = useState<ErpCatalogRecord[]>([])
-  const [choiceLabel, setChoiceLabel] = useState(selectedLabel || '')
+  const [choice, setChoice] = useState({ id: value, label: selectedLabel || '' })
+  const choiceLabel = value ? selectedLabel || (choice.id === value ? choice.label : '') : ''
   const [open, setOpen] = useState(false)
   const [loading, setLoading] = useState(false)
 
-  useEffect(() => {
-    if (!value) setChoiceLabel('')
-    else if (selectedLabel) setChoiceLabel(selectedLabel)
-  }, [selectedLabel, value])
   useEffect(() => {
     if (!open) return
     const controller = new AbortController()
     const params = new URLSearchParams({ tipo: type, q: deferredQuery, limite: '30' })
     if (categoryType) params.set('categoria_tipo', categoryType)
-    setLoading(true)
+    queueMicrotask(() => { if (!controller.signal.aborted) setLoading(true) })
     fetch(`/api/erp/catalogos/busca?${params}`, { cache: 'no-store', signal: controller.signal })
       .then(async (response) => {
         const body = await response.json() as { records?: ErpCatalogRecord[]; error?: string }
         if (!response.ok) throw new Error(body.error || 'Nao foi possivel buscar o catalogo.')
-        setRecords(body.records || [])
+        if (!controller.signal.aborted) setRecords(body.records || [])
       })
       .catch((error) => { if (error instanceof Error && error.name !== 'AbortError') setRecords([]) })
       .finally(() => { if (!controller.signal.aborted) setLoading(false) })
@@ -79,7 +76,7 @@ export function ErpAsyncCatalogSelect({ label, type, value, selectedLabel, categ
           className="block w-full rounded px-3 py-2 text-left text-sm hover:bg-gray-100"
           onMouseDown={(event) => event.preventDefault()}
           onClick={() => {
-            setChoiceLabel(detail ? `${record.nome} - ${detail}` : record.nome)
+            setChoice({ id: record.id, label: detail ? `${record.nome} - ${detail}` : record.nome })
             setOpen(false)
             onChange(record.id, record)
           }}

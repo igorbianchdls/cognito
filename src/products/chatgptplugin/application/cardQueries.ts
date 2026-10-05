@@ -51,10 +51,19 @@ export async function installmentDetails(tenantId:number, side:'pagar'|'receber'
     ORDER BY pagamentos.id DESC LIMIT 101`,[tenantId,id])
   return {record,history:history.slice(0,100),historyTruncated:history.length>100}
 }
-export async function registrationDetails(tenantId:number, type:'clientes'|'fornecedores'|'produtos'|'servicos', id:number) {
+export async function registrationDetails(tenantId:number, type:'clientes'|'fornecedores'|'vendedores'|'produtos'|'servicos'|'categorias'|'contas-financeiras', id:number) {
   const record=await getErpEntityRecord({tenantId,entityId:type,id})
-  const allowed=['id','nome','tipo','status','versao','documento','email','telefone','cidade','sku','codigo','categoria','preco','descricao','controla_estoque','estoque_minimo']
+  const allowed=['id','nome','tipo','status','versao','documento','email','telefone','cidade','sku','codigo','categoria','categoria_id','preco','custo','descricao','controla_estoque','estoque_minimo','banco','agencia','conta','digito','saldo_inicial','data_saldo_inicial','padrao']
   return {record:Object.fromEntries(allowed.filter(k=>record[k]!==undefined).map(k=>[k,record[k]]))}
+}
+export async function financialTitle(tenantId:number,side:'pagar'|'receber',id:number){
+  const [record]=await runQuery(`SELECT id::text,descricao,numero_documento,valor_total,status,origem,data_competencia,data_emissao,categoria_id::text,centro_custo_id::text,${side==='pagar'?'fornecedor_id':'cliente_id'}::text,observacoes,(SELECT CASE WHEN count(DISTINCT p.conta_financeira_id)=1 AND count(*)=count(p.conta_financeira_id) THEN min(p.conta_financeira_id)::text ELSE NULL END FROM erp.contas_${side}_parcelas p WHERE p.tenant_id=$1 AND p.conta_${side}_id=$2 AND p.excluido_em IS NULL) AS conta_financeira_id FROM erp.contas_${side} WHERE tenant_id=$1 AND id=$2 AND excluido_em IS NULL`,[tenantId,id])
+  if(!record)throw new PluginError('NOT_FOUND','Título não disponível nesta empresa.',404)
+  const parts=await runQuery(`WITH rows AS (${financialRows(side)}) SELECT id::text,parcela,vencimento,valor,valor_pago,credito,renegociado,saldo,status FROM rows WHERE conta_id=$2 ORDER BY parcela LIMIT 101`,[tenantId,id])
+  const history=await runQuery(`SELECT pagamentos.id::text,pagamentos.data_pagamento,pagamentos.valor,pagamentos.estornado_em,pagamentos.estorno_de_pagamento_id::text
+    FROM erp.pagamentos pagamentos JOIN erp.contas_${side}_parcelas parcelas ON parcelas.tenant_id=pagamentos.tenant_id AND parcelas.id=pagamentos.conta_${side}_parcela_id
+    WHERE pagamentos.tenant_id=$1 AND parcelas.conta_${side}_id=$2 AND pagamentos.excluido_em IS NULL ORDER BY pagamentos.id DESC LIMIT 101`,[tenantId,id])
+  return {record,installments:parts.slice(0,100),installmentsTruncated:parts.length>100,history:history.slice(0,100),historyTruncated:history.length>100}
 }
 function commercialRows(type:'vendas'|'compras', document?:string) {
   const sale=type==='vendas',date=sale?'data_venda':'data_compra',party=sale?'cliente':'fornecedor'

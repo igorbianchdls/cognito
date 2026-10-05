@@ -29,7 +29,9 @@ export function ErpEntityPage({ config }: { config: ErpEntityConfig }) {
   const [records, setRecords] = useState<ErpEntityRecord[]>([])
   const [drawerOpen, setDrawerOpen] = useState(false)
   const [editingRecord, setEditingRecord] = useState<ErpEntityRecord | null>(null)
-  const [metrics, setMetrics] = useState(config.metrics)
+  const [metrics, setMetrics] = useState<typeof config.metrics>([])
+  const [metricsError, setMetricsError] = useState(false)
+  const loadRevision = useRef(0)
   const [fieldOptions, setFieldOptions] = useState<Record<string, Array<{ value: string; label: string }>>>({})
   const [page, setPage] = useState(1)
   const [total, setTotal] = useState(0)
@@ -38,31 +40,38 @@ export function ErpEntityPage({ config }: { config: ErpEntityConfig }) {
   const [error, setError] = useState<string | null>(null)
 
   const loadRecords = useCallback(async () => {
+    const revision = ++loadRevision.current
     setLoading(true)
     setError(null)
     try {
-      const response = await erpClient.listEntityRecords(config, { entityId: config.id, query, filters, page, pageSize })
+      const [response, summary] = await Promise.all([
+        erpClient.listEntityRecords(config, { entityId: config.id, query, filters, page, pageSize }),
+        fetch(`/api/erp/${encodeURIComponent(config.id)}/resumo`, { cache: 'no-store' })
+          .then(async response => { if (!response.ok) throw new Error('Resumo indisponível'); return response.json() as Promise<{ metrics?: typeof config.metrics }> })
+          .catch(() => null),
+      ])
+      if (revision !== loadRevision.current) return
       setRecords(response.records)
       setTotal(response.total)
+      setMetrics(summary?.metrics || [])
+      setMetricsError(!summary?.metrics)
     } catch (loadError) {
+      if (revision !== loadRevision.current) return
       setError(loadError instanceof Error ? loadError.message : 'Nao foi possivel carregar os dados.')
       setRecords([])
     } finally {
-      setLoading(false)
+      if (revision === loadRevision.current) setLoading(false)
     }
   }, [config, filters, page, query])
 
   useEffect(() => {
     void loadRecords()
+    return () => { ++loadRevision.current }
   }, [loadRecords])
 
   useEffect(() => {
     const categoryType = config.id === 'produtos' ? 'produto' : config.id === 'servicos' ? 'servico' : ''
     void Promise.all([
-      fetch(`/api/erp/${encodeURIComponent(config.id)}/resumo`, { cache: 'no-store' })
-        .then((response) => response.ok ? response.json() : Promise.reject())
-        .then((body: { metrics?: typeof config.metrics }) => setMetrics(body.metrics || config.metrics))
-        .catch(() => setMetrics(config.metrics)),
       categoryType
         ? fetch(`/api/erp/catalogos/categorias?tipo=${categoryType}${config.id === 'servicos' ? '&identificador=id' : ''}`, { cache: 'no-store' })
           .then((response) => response.ok ? response.json() : Promise.reject())
@@ -148,6 +157,7 @@ export function ErpEntityPage({ config }: { config: ErpEntityConfig }) {
 
   return (
     <div className="flex min-h-full flex-col gap-6">
+      {metricsError ? <p role="status" className="text-sm text-amber-700">Os indicadores estão indisponíveis. Atualize para tentar novamente.</p> : null}
       <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
         <ErpPageHeader eyebrow="ERP" title={config.label} description={config.description} />
         <ErpActionBar

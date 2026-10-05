@@ -13,7 +13,7 @@ export function draftView(row: DraftRow, config: Pick<PluginConfig,'resource'>) 
   return {rascunho_id:row.id,empresa_id:Number(row.tenant_id),status,registro_id:row.record_id,
     criado_em:row.created_at,expira_em:row.expires_at,proposta:proposalPreview(proposalSchema.parse(row.proposal)),
     alvo:row.target_snapshot ? {registro_id:row.target_snapshot.registro_id,nome:row.target_snapshot.nome,status:row.target_snapshot.status,valor:row.target_snapshot.valor,
-      parcelas:row.target_snapshot.parcelas||[],conta_financeira:row.target_snapshot.conta_financeira||null}:null,
+      parcelas:row.target_snapshot.parcelas||[],conta_financeira:row.target_snapshot.conta_financeira||null,campos:row.target_snapshot.campos||{}}:null,
     revisao_url:new URL(`/chatgptplugin/approvals/${row.id}`,config.resource).href}
 }
 export async function prepareDraft(principal: PluginPrincipal, tenantId:number, key:string, proposal:Proposal, config:PluginConfig) {

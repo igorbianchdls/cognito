@@ -217,8 +217,8 @@ async function main() {
     const result = await rpc('initialize', { protocolVersion: '2025-11-25', capabilities: {}, clientInfo: { name: 'local-live-read-test', version: '1' } })
     assert.equal(result.status, 200); assert.equal(result.body.result.serverInfo.name, 'cognito-chatgptplugin')
   })
-  await check('Catalogo anuncia 28 tools', async () => {
-    const result = await rpc('tools/list'); assert.equal(result.status, 200); assert.equal(result.body.result.tools.length,28)
+  await check('Catalogo anuncia 29 tools', async () => {
+    const result = await rpc('tools/list'); assert.equal(result.status, 200); assert.equal(result.body.result.tools.length,29)
     assert(result.body.result.tools.some((tool: { name: string }) => tool.name === 'consultar_financeiro'))
   })
   await check('meu_acesso corresponde aos vinculos do Supabase', async () => {
@@ -306,7 +306,7 @@ async function main() {
     phase = 'all_read_tools'
     const facts = await runReadToolCases({ client, companyId, userId: principal.userId, clientId: principal.clientId,
       resource: settings.resource, token: testToken, rpc, call, check })
-    await check('Cobertura: todas as 25 tools de leitura foram chamadas', async () => {
+    await check('Cobertura: todas as 26 tools de leitura foram chamadas', async () => {
       const result = await rpc('tools/list')
       const names = result.body.result.tools.filter((tool: any) => tool.annotations?.readOnlyHint).map((tool: any) => tool.name).sort()
       assert.deepEqual([...calledTools].sort(), names)

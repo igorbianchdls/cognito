@@ -34,7 +34,7 @@ async function main(){
   const {OpenAIFormSchema,createOpenAIFormContentSchema}=await import('@openai/mcp-extensions/server')
   await check('Discovery e consultas modernas sem initialize',async()=>{
     const discovery=await rpc('server/discover');assert.equal(discovery.body.result.resultType,'complete');assert(discovery.body.result.supportedVersions.includes(MODERN_VERSION));assert(discovery.body.result.capabilities.extensions['openai/settings']);assert.deepEqual(discovery.body.result.capabilities.tools,{})
-    const tools=await rpc('tools/list');assert.equal(tools.body.result.tools.length,28);assert.equal(tools.body.result.resultType,'complete');assert.deepEqual(tools.body.result.tools.find((t:{name:string})=>t.name==='preparar_formulario_nativo').securitySchemes[0].scopes,['erp:read','erp:write'])
+    const tools=await rpc('tools/list');assert.equal(tools.body.result.tools.length,29);assert.equal(tools.body.result.resultType,'complete');assert.deepEqual(tools.body.result.tools.find((t:{name:string})=>t.name==='preparar_formulario_nativo').securitySchemes[0].scopes,['erp:read','erp:write'])
     const access=await rpc('tools/call',{name:'meu_acesso',arguments:{}});assert.equal(access.body.result.structuredContent.data.empresas[0].id,1)
     const resource=await rpc('resources/read',{uri:'ui://chatgptplugin/form/v1.html'});assert.equal(resource.body.result.resultType,'complete');assert(resource.body.result.contents[0].text.includes('ui/initialize'))
   })
@@ -53,7 +53,7 @@ async function main(){
     const before=calls,no=await rpc('tools/call',parameters(),{meta:{[versionKey]:MODERN_VERSION,[capabilitiesKey]:{}}})
     assert.equal(no.body.error.code,-32021);assert.equal(no.response.status,400);assert.equal(calls,before)
   })
-  await check('Todos os 14 tipos usam esquemas oficiais de formulário',async()=>{
+  await check('Todos os 44 tipos usam esquemas oficiais de formulário',async()=>{
     for(const tipo of proposalKinds){const form=OpenAIFormSchema.parse(nativeProposalForm(tipo));assert(form.required!.length>0);const request=await rpc('tools/call',parameters(tipo));assert.equal(request.body.result.resultType,'input_required');assert.equal(request.body.result.inputRequests.proposta.method,'openai/elicitation/create');assert(!createOpenAIFormContentSchema(form).safeParse({}).success)}
   })
   await check('MRTR prepara rascunho e repetições retornam o mesmo resultado',async()=>{
@@ -100,6 +100,9 @@ async function main(){
   })
   await check('Venda e baixa válidas atravessam o mesmo preparo auditado',async()=>{
     for(const [tipo,content] of [['venda',{cliente_id:1,data_venda:'2026-10-03',data_vencimento:'2026-10-10',itens:JSON.stringify([{tipo:'produto',item_id:1,quantidade:2,valor_unitario:10}])}],['pagar_parcela',{registro_id:1,valor:20,data_pagamento:'2026-10-03',conta_financeira_id:1}]] as const){const params=parameters(tipo),initial=await rpc('tools/call',params),result=await rpc('tools/call',{...params,requestState:initial.body.result.requestState,inputResponses:{proposta:{action:'accept',content}}});assert.equal(result.body.result.structuredContent.data.status,'pending')}
+  })
+  await check('Novas contas compras edicoes e exclusoes atravessam MRTR',async()=>{
+    for(const [tipo,content] of [['conta_pagar',{fornecedor_id:1,descricao:'Aluguel',valor_total:100,data_competencia:'2026-10-04',data_emissao:'2026-10-04',categoria_id:1,parcelas:JSON.stringify([{data_vencimento:'2026-10-20',valor:100}])}],['compra',{fornecedor_id:1,data_compra:'2026-10-04',data_vencimento:'2026-10-20',itens:JSON.stringify([{tipo:'produto',item_id:1,quantidade:2,valor_unitario:10}])}],['editar_fornecedor',{registro_id:1,nome:'Fornecedor revisado'}],['excluir_conta_receber',{registro_id:1,motivo:'Conta criada por engano'}]] as const){const params=parameters(tipo),initial=await rpc('tools/call',params),result=await rpc('tools/call',{...params,requestState:initial.body.result.requestState,inputResponses:{proposta:{action:'accept',content}}});assert.equal(result.body.result.structuredContent.data.status,'pending')}
   })
   await check('Falha de auditoria impede solicitar formulário e autenticação é renovada',async()=>{
     const before=calls,result=await rpc('tools/call',parameters(),{deps:{...deps,execution:{...execution,reserve:async()=>{throw new Error('secret database')}}}});assert.equal(result.response.status,503);assert(!JSON.stringify(result.body).includes('secret'));assert.equal(calls,before);assert(events.some(e=>e.status==='failed'))

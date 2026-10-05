@@ -159,8 +159,10 @@ async function main() {
     INSERT INTO erp.contas_pagar(id,tenant_id,fornecedor_id,descricao,valor_total,data_competencia) VALUES(101,1,101,'Titulo ficticio',1000,'2026-02-01');
     INSERT INTO erp.contas_pagar_parcelas(id,tenant_id,conta_pagar_id,data_vencimento,valor) VALUES(101,1,101,'2026-03-01',1000);
     COMMIT;`)
+  let ambientClient=null
   const fakePostgres={
-    withTransaction:async fn=>{await db.exec('BEGIN');try{await db.exec("SET LOCAL ROLE erp_runtime; SELECT set_config('app.erp_tenant_id','1',true),set_config('app.erp_user_id','1',true)");const result=await fn({query:(s,p)=>db.query(s,p),release(){}});await db.exec('COMMIT');return result}catch(e){await db.exec('ROLLBACK');throw e}},
+    runWithErpTransactionClient:async(client,fn)=>{const previous=ambientClient;ambientClient=client;try{return await fn()}finally{ambientClient=previous}},
+    withTransaction:async fn=>{if(ambientClient)return fn(ambientClient);await db.exec('BEGIN');try{await db.exec("SET LOCAL ROLE erp_runtime; SELECT set_config('app.erp_tenant_id','1',true),set_config('app.erp_user_id','1',true)");const result=await fn({query:(s,p)=>db.query(s,p),release(){}});await db.exec('COMMIT');return result}catch(e){await db.exec('ROLLBACK');throw e}},
     runQuery:async(s,p)=>(await db.query(s,p)).rows,
   }
   let permitted=true

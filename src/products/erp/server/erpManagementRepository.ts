@@ -3,6 +3,7 @@ import { createSalesContract, generateContractSales } from './erpSalesContracts'
 import { runQuery, withTransaction } from '@/lib/postgres'
 import { ErpDomainError } from '@/products/erp/server/erpApi'
 import { assertErpPeriodOpen } from '@/products/erp/server/erpPeriodRepository'
+import { readOperationPage } from './erpOperationPagination'
 
 type ActorInput = { tenantId: number; actorId: number }
 
@@ -94,38 +95,13 @@ export async function searchErpOperationsCatalog(input: {
   )
 }
 
-function normalizedOperationPage(input: ErpOperationListInput) {
-  const page = Math.max(1, Math.floor(Number(input.page) || 1))
-  const pageSize = input.exportLimit
-    ? Math.min(10_000, Math.max(1, Math.floor(input.exportLimit)))
-    : Math.min(100, Math.max(10, Math.floor(Number(input.pageSize) || 50)))
-  return { page, pageSize }
-}
-
 async function listOperationPage(
   tenantId: number,
   selectSql: string,
   orderBy: string,
   input: ErpOperationListInput,
 ): Promise<ErpOperationPage> {
-  const { page, pageSize } = normalizedOperationPage(input)
-  const offset = input.exportLimit ? 0 : (page - 1) * pageSize
-  const rows = await runQuery<Record<string, unknown>>(
-    `WITH operation_records AS (${selectSql})
-     SELECT operation_records.*, count(*) OVER ()::int AS __total
-     FROM operation_records
-     WHERE ($2 = '' OR to_jsonb(operation_records)::text ILIKE '%' || $2 || '%')
-     ORDER BY ${orderBy}
-     LIMIT $3 OFFSET $4`,
-    [tenantId, input.query?.trim() || '', pageSize, offset],
-  )
-  const total = rows.length ? Number(rows[0].__total || 0) : 0
-  return {
-    records: rows.map(({ __total: _total, ...record }) => record),
-    total,
-    page,
-    pageSize,
-  }
+  return readOperationPage(tenantId, selectSql, orderBy, input)
 }
 
 export async function listManagementOperation(tenantId: number, resource: string, input: ErpOperationListInput = {}) {

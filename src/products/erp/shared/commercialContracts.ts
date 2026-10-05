@@ -72,6 +72,7 @@ export function assertCommercialReplay(stored: unknown, request: unknown) {
 export function nextCommercialCycle(
   start: string,
   periodicity: string,
+  anchor = start,
 ): string {
   erpDateSchema.parse(start);
   const date = new Date(start + "T12:00:00Z");
@@ -87,7 +88,8 @@ export function nextCommercialCycle(
     };
     if (!months[periodicity])
       throw new ErpDomainError("VALIDATION_ERROR", "Periodicidade inválida.");
-    const day = date.getUTCDate();
+    erpDateSchema.parse(anchor);
+    const day = Number(anchor.slice(8,10));
     date.setUTCDate(1);
     date.setUTCMonth(date.getUTCMonth() + months[periodicity]);
     date.setUTCDate(

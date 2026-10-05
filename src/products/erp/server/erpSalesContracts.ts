@@ -290,7 +290,7 @@ export async function reviseSalesContract(
 
 export async function generateContractSales(input: Actor & { until?: string }) {
   const parsedUntil = erpDateSchema.safeParse(
-    input.until || new Date().toISOString().slice(0, 10),
+    input.until || new Intl.DateTimeFormat('sv-SE', { timeZone: 'America/Fortaleza' }).format(new Date()),
   );
   if (!parsedUntil.success)
     throw new ErpDomainError("VALIDATION_ERROR", "Data limite inválida.");
@@ -303,6 +303,10 @@ export async function generateContractSales(input: Actor & { until?: string }) {
     const generated: Array<{ contractId: string; saleId: string }> = [];
     const skipped: Array<{ contractId: string; reason: string }> = [];
     for (const c of contracts.rows) {
+      for (let cycleIndex=0; cycleIndex<24 && generated.length<200; cycleIndex++) {
+      if (day(c.proxima_geracao_em)>until || (c.data_fim && day(c.proxima_geracao_em)>day(c.data_fim))) break;
+      await client.query('SAVEPOINT contract_cycle');
+      try {
       const start = day(c.proxima_geracao_em);
       const versions = await client.query(
         "SELECT * FROM erp.contratos_vendas_versoes WHERE tenant_id=$1 AND contrato_id=$2 AND status='efetivada' AND vigencia_inicio<=$3::date AND (vigencia_fim IS NULL OR vigencia_fim>=$3::date) ORDER BY numero DESC LIMIT 1",
@@ -314,16 +318,18 @@ export async function generateContractSales(input: Actor & { until?: string }) {
           contractId: String(c.id),
           reason: "Sem versão efetivada para o período.",
         });
-        continue;
+        await client.query('RELEASE SAVEPOINT contract_cycle');
+        break;
       }
-      const next = nextCommercialCycle(start, String(v.periodicidade)),
+      const next = nextCommercialCycle(start, String(v.periodicidade), day(v.vigencia_inicio)),
         end = previousCommercialDay(next);
-      if (v.vigencia_fim && end > day(v.vigencia_fim)) {
+      if ((v.vigencia_fim && end > day(v.vigencia_fim)) || (c.data_fim && end > day(c.data_fim))) {
         skipped.push({
           contractId: String(c.id),
           reason: "O ciclo completo ultrapassa a vigência; revise o contrato.",
         });
-        continue;
+        await client.query('RELEASE SAVEPOINT contract_cycle');
+        break;
       }
       const key = `contrato:${c.id}:${start}`;
       const existing = await client.query(
@@ -331,10 +337,9 @@ export async function generateContractSales(input: Actor & { until?: string }) {
         [input.tenantId, c.id, start],
       );
       if (existing.rows[0]) {
-        skipped.push({
-          contractId: String(c.id),
-          reason: "Ciclo já registrado.",
-        });
+        await client.query('UPDATE erp.contratos_vendas SET proxima_geracao_em=$3,atualizado_por=$4 WHERE tenant_id=$1 AND id=$2',[input.tenantId,c.id,next,input.actorId]);
+        c.proxima_geracao_em=next;
+        await client.query('RELEASE SAVEPOINT contract_cycle');
         continue;
       }
       const items = await client.query(
@@ -408,7 +413,17 @@ export async function generateContractSales(input: Actor & { until?: string }) {
         [input.tenantId, c.id, next, input.actorId],
       );
       generated.push({ contractId: String(c.id), saleId: String(saleId) });
+      c.proxima_geracao_em=next;
+      await client.query('RELEASE SAVEPOINT contract_cycle');
+      } catch(error) {
+        await client.query('ROLLBACK TO SAVEPOINT contract_cycle');
+        await client.query('RELEASE SAVEPOINT contract_cycle');
+        skipped.push({contractId:String(c.id),reason:error instanceof Error ? error.message : 'Falha ao gerar o ciclo.'});
+        break;
+      }
+      }
     }
-    return { generated, total: generated.length, skipped };
+    const remaining = await client.query(`SELECT count(*)::int AS total FROM erp.contratos_vendas WHERE tenant_id=$1 AND status='ativo' AND excluido_em IS NULL AND proxima_geracao_em<=$2::date AND (data_fim IS NULL OR proxima_geracao_em<=data_fim)`, [input.tenantId, until]);
+    return { generated, total: generated.length, skipped, remaining: Number(remaining.rows[0].total) };
   });
 }

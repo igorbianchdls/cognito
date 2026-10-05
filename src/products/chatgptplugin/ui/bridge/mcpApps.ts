@@ -1,3 +1,4 @@
+import { CHATGPTPLUGIN_VERSION } from '../../shared/version'
 export const bridgeScript=String.raw`
 const pending=new Map();let sequence=1,current=null,backRequest=null,busy=false,generation=0,connected=false,queued=null;
 const body=document.getElementById('card'),status=document.getElementById('status');
@@ -11,6 +12,6 @@ async function navigate(args){if(busy)return;busy=true;const ticket=generation;b
 function reload(parametros){return navigate({card:current.card,consulta:current.consulta,...(current.empresa?{empresa_id:current.empresa.id}:{}),parametros})}
 document.getElementById('retry').onclick=()=>reload(current.parametros);
 window.addEventListener('message',event=>{if(event.source!==window.parent)return;const m=event.data;if(!m||m.jsonrpc!=='2.0')return;const waiting=pending.get(m.id);if(waiting){clearTimeout(waiting.timer);pending.delete(m.id);m.error?waiting.reject(new Error(m.error.message||'Falha na conexão')):waiting.resolve(m.result);return}if(m.method==='ui/notifications/host-context-changed')applyTheme(m.params?.theme);if(m.method==='ui/notifications/tool-result'){try{const p=unpack(m.params);if(connected)display(p);else queued=p}catch(error){if(m.params?.isError)showError(error)}}if(m.method==='ui/notifications/tool-cancelled'){generation++;busy=false;body.setAttribute('aria-busy','false');for(const control of body.querySelectorAll('button,input,select'))if(control.dataset.wasDisabled!==undefined)control.disabled=control.dataset.wasDisabled==='true';showError(new Error('Consulta cancelada.'))}});
-request('ui/initialize',{protocolVersion:'2026-01-26',appInfo:{name:'chatgptplugin-cards',version:'1.0.0'},appCapabilities:{}}).then(result=>{connected=true;applyTheme(result?.hostContext?.theme);notify('ui/notifications/initialized',{});if(queued)display(queued);else status.textContent='Aguardando os dados desta consulta…'}).catch(showError);
+request('ui/initialize',{protocolVersion:'2026-01-26',appInfo:{name:'chatgptplugin-cards',version:'${CHATGPTPLUGIN_VERSION}'},appCapabilities:{}}).then(result=>{connected=true;applyTheme(result?.hostContext?.theme);notify('ui/notifications/initialized',{});if(queued)display(queued);else status.textContent='Aguardando os dados desta consulta…'}).catch(showError);
 new ResizeObserver(()=>notify('ui/notifications/size-changed',{height:document.documentElement.scrollHeight})).observe(body);
 `

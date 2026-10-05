@@ -3,11 +3,12 @@ import { listProfessionalReport,preflightSaleFiscal } from '@/products/erp/serve
 import { runQuery } from '@/lib/postgres'
 import { listStockOperation } from '@/products/erp/server/erpStockRepository'
 import type { ErpConnectedModuleId } from '@/products/erp/shared/moduleAccess'
-import { financialSummary, installmentDetails, registrationDetails, commercialPage, analysis } from './cardQueries'
+import { financialSummary, installmentDetails, registrationDetails, commercialPage, analysis,financialTitle } from './cardQueries'
 
 export type PageQuery = { query?: string; page?: number; pageSize?: number; filters?: Record<string, string> }
 const fields: Record<string, string[]> = {
   clientes: ['id','nome','status','tipo'], fornecedores: ['id','nome','status','tipo'],
+  vendedores:['id','nome','status','tipo'],categorias:['id','nome','tipo','status'], 'contas-financeiras':['id','nome','tipo','status','padrao'],
   produtos: ['id','nome','sku','categoria','preco','status'], servicos: ['id','nome','codigo','preco','status'],
   pedidos: ['id','numero','cliente','data','total','status','tipo_documento','atendimento_status','fiscal_status'],
   'pedidos-compra': ['id','numero','fornecedor','data','total','status'],
@@ -19,6 +20,7 @@ export function pickFields(record: Record<string, unknown>, keys: string[]) {
 }
 export const erpQueries = {
   installment: installmentDetails,
+  financialTitle,
   registration: registrationDetails,
   analysis,
   async customer(tenantId:number,id:number) {
@@ -48,16 +50,18 @@ export const erpQueries = {
   async sale(tenantId: number, id: number) {
     const result = await getErpSaleDetails(tenantId, id)
     return {
-      sale: pickFields(result.sale, ['id','numero','cliente_nome','data_venda','status','subtotal','total','versao']),
+      sale: {...pickFields(result.sale, ['id','numero','cliente_id','cliente_nome','data_venda','status','subtotal','total','versao','observacoes']),data_vencimento:result.installments[0]?.data_vencimento},
       items: result.items.slice(0, 100).map(item => pickFields(item, ['id','tipo','item_id','descricao','quantidade','valor_unitario','desconto','total','quantidade_atendida'])),
       totalItems: result.items.length, itemsTruncated: result.items.length > 100,
+      installments: result.installments.slice(0,48).map(item=>pickFields(item,['data_vencimento','valor'])), installmentsTruncated:result.installments.length>48,
     }
   },
   stock(tenantId: number, input: PageQuery) { return listStockOperation(tenantId, 'posicao-estoque', input) },
   async purchase(tenantId: number, id: number) {
     const result = await getErpPurchaseDetails(tenantId, id)
-    return { purchase: pickFields(result.purchase, ['id','numero','fornecedor_nome','data_compra','status','subtotal','total']),
-      items: result.items.slice(0,100).map(item => pickFields(item, ['id','tipo','item_id','descricao','quantidade','quantidade_recebida','valor_unitario','total'])),
+    return { purchase: {...pickFields(result.purchase, ['id','numero','fornecedor_id','fornecedor_nome','data_compra','status','subtotal','total','observacoes']),data_vencimento:result.installments[0]?.data_vencimento},
+      items: result.items.slice(0,100).map(item => ({...pickFields(item, ['id','tipo','item_id','descricao','quantidade','quantidade_recebida','valor_unitario','total']),desconto:item.valor_desconto})),
+      installments: result.installments.slice(0,48).map(item=>pickFields(item,['data_vencimento','valor'])), installmentsTruncated:result.installments.length>48,
       totalItems: result.items.length, itemsTruncated: result.items.length > 100 }
   },
   async report(tenantId: number, report: string, from: string, to: string, input: PageQuery) {

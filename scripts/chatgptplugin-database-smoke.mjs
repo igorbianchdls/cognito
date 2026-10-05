@@ -56,7 +56,7 @@ async function main(){
   for(const file of ['01-integridade-historicos.sql','02-periodos-fechados.sql','03-cadastros-documentos-contratos.sql','04-adiantamentos-renegociacoes.sql']) {
     await db.exec(readFileSync(`scripts/erp/sql/${file}`,'utf8'));
   }
-  for(const file of ['20260909033000_drop_erp_financial_views.sql','20260909040000_harden_erp_service_integrity.sql','20261003170000_harden_erp_read_access.sql']) {
+  for(const file of ['20260909033000_drop_erp_financial_views.sql','20260909040000_harden_erp_service_integrity.sql','20261003170000_harden_erp_read_access.sql','20261005020000_harden_erp_stock_operations.sql','20261005021000_anchor_contract_cycles.sql']) {
     await db.exec(readFileSync(`supabase/migrations/${file}`,'utf8'));
   }
   await db.exec(readFileSync('supabase/migrations/20261003130000_create_chatgptplugin.sql','utf8'));
@@ -75,6 +75,7 @@ async function main(){
     INSERT INTO erp.vendas_itens(tenant_id,venda_id,produto_id,descricao,quantidade,valor_unitario,total) VALUES(1,101,101,'Produto A',1,10,10);
     INSERT INTO erp.locais_estoque(id,tenant_id,nome,codigo,padrao) VALUES(1,1,'Local A','A',true),(2,2,'Local B','B',true);
     INSERT INTO erp.saldos_estoque(tenant_id,produto_id,local_estoque_id,quantidade_fisica) VALUES(1,101,1,7),(2,201,2,9);
+    INSERT INTO erp.movimentacoes_estoque(tenant_id,produto_id,local_estoque_id,tipo,origem_tipo,quantidade,custo_unitario,saldo_apos,custo_medio_apos,chave_idempotencia) VALUES(1,101,1,'entrada','manual',7,0,7,0,'fixture-opening-1'),(2,201,2,'entrada','manual',9,0,9,0,'fixture-opening-2');
     INSERT INTO erp.compras(id,tenant_id,fornecedor_id,numero,status,subtotal,total) VALUES(101,1,101,'CA-1','rascunho',10,10),(201,2,201,'CB-1','rascunho',20,20);
     INSERT INTO erp.vendas(id,tenant_id,cliente_id,numero,status,tipo_documento,subtotal,total) VALUES(102,1,101,'OA-1','rascunho','orcamento',10,10),(202,2,201,'OB-1','rascunho','orcamento',20,20);
   `);
@@ -277,6 +278,100 @@ async function main(){
       const none=await listErpEntityPage({...input,page:100,query:'registro_ausente_'+randomUUID()});assert.equal(none.total,0);assert.deepEqual(none.records,[]);
     });
   });
-  console.log(JSON.stringify({status:'passed',checks,realDatabaseAccess:false,localPostgres:true}));
+  const apply=async(proposta)=>{const draft=await prepare(proposta),result=await decideApproval(draft.rascunho_id,session,'save');assert.equal(result.status,'saved');assert.equal((await decideApproval(draft.rascunho_id,session,'save')).registro_id,result.registro_id);return Number(result.registro_id);};
+  const newIds={};
+  await check('CRUD dos sete cadastros com exclusao logica e auditoria',async()=>{
+    const entries=[['cliente','clientes',{nome:'Cliente CRUD'}],['fornecedor','fornecedores',{nome:'Fornecedor CRUD',email:'fornecedor@example.invalid',telefone:'85999990000'}],['vendedor','vendedores',{nome:'Vendedor CRUD'}],['produto','produtos',{nome:'Produto CRUD',preco:9}],['servico','servicos',{nome:'Servico CRUD',preco:15}],['categoria','categorias',{nome:'Categoria CRUD',tipo:'geral'}],['conta_financeira','contas-financeiras',{nome:'Conta CRUD',tipo:'caixa',data_saldo_inicial:'2026-10-04'}]];
+    for(const [kind,module,dados] of entries){const id=await apply({tipo:kind,dados});newIds[kind]=id;
+      await apply({tipo:'editar_'+kind,dados:{registro_id:id,nome:kind+' revisado'}});
+      const found=await call(owner,'obter_cadastro',{empresa_id:1,tipo:module,registro_id:id});assert.equal(found.record.nome,kind+' revisado');if(kind==='fornecedor'){assert.equal(found.record.email,'fornecedor@example.invalid');assert.equal(found.record.telefone,'85999990000')}
+      const listing=await call(owner,'buscar_cadastros',{empresa_id:1,tipo:module,busca:kind+' revisado'});assert(listing.records.some(r=>Number(r.id)===id));
+      const deletion=await prepare({tipo:'excluir_'+kind,dados:{registro_id:id,motivo:'Cadastro criado apenas para teste'}});
+      assert.equal((await executeTool({...owner,companies:[{...owner.companies[0],capabilities:['erp.cadastros.gerenciar']}]},'preparar_rascunho',{empresa_id:1,chave_operacao:randomUUID(),proposta:{tipo:'excluir_'+kind,dados:{registro_id:id,motivo:'Sem acesso ao historico'}}},settings)).isError,true);
+      await decideApproval(deletion.rascunho_id,session,'save');
+      const table=['cliente','fornecedor','vendedor'].includes(kind)?'entidades':kind==='conta_financeira'?'contas_financeiras':module;
+      const row=(await db.query('SELECT ativo,excluido_em FROM erp.'+table+' WHERE tenant_id=1 AND id=$1',[id])).rows[0];assert(row.excluido_em);assert.equal(row.ativo,false);
+      assert.equal((await executeTool(owner,'obter_cadastro',{empresa_id:1,tipo:module,registro_id:id},settings)).isError,true);
+    }
+  });
+  const financialIds={};
+  const moneyData=side=>({[side==='pagar'?'fornecedor_id':'cliente_id']:101,descricao:'Titulo CRUD '+side,valor_total:120,conta_financeira_id:901,data_competencia:'2026-10-04',data_emissao:'2026-10-04',categoria_id:financialIds[side+'Category'],parcelas:[{data_vencimento:'2026-10-20',valor:60},{data_vencimento:'2026-11-20',valor:60}]});
+  await check('Contas a pagar e receber criadas editadas e excluidas com parcelas historicas',async()=>{
+    for(const side of ['pagar','receber']){
+      financialIds[side+'Category']=await apply({tipo:'categoria',dados:{nome:'Categoria '+side,tipo:side==='pagar'?'despesa':'receita'}});
+      const id=await apply({tipo:'conta_'+side,dados:moneyData(side)});financialIds[side]=id;
+      const found=await call(owner,'obter_titulo_financeiro',{empresa_id:1,tipo:side,conta_id:id});assert.equal(found.installments.length,2);assert.equal(found.record.conta_financeira_id,'901');assert.equal(Number(found.record.valor_total),120);
+      await apply({tipo:'editar_conta_'+side,dados:{...moneyData(side),registro_id:id,descricao:'Titulo revisado',valor_total:90,parcelas:[{data_vencimento:'2026-10-25',valor:90}]}});
+      const edited=await call(owner,'obter_titulo_financeiro',{empresa_id:1,tipo:side,conta_id:id});assert.equal(edited.installments.length,1);assert.equal(Number(edited.record.valor_total),90);assert.equal(edited.record.descricao,'Titulo revisado');
+      const old=(await db.query('SELECT count(*)::int AS n FROM erp.contas_'+side+'_parcelas WHERE tenant_id=1 AND conta_'+side+'_id=$1 AND excluido_em IS NOT NULL',[id])).rows[0];assert.equal(old.n,2);
+      await apply({tipo:'excluir_conta_'+side,dados:{registro_id:id,motivo:'Excluir titulo sem movimento'}});
+      assert((await db.query('SELECT excluido_em FROM erp.contas_'+side+' WHERE id=$1',[id])).rows[0].excluido_em);
+      assert.equal((await executeTool(owner,'obter_titulo_financeiro',{empresa_id:1,tipo:side,conta_id:id},settings)).isError,true);
+    }
+  });
+  await check('CRUD comercial preserva rascunho e nao gera financeiro nem estoque',async()=>{
+    for(const kind of ['venda','orcamento','compra']){const purchase=kind==='compra',table=purchase?'compras':'vendas';
+      const dados={ [purchase?'fornecedor_id':'cliente_id']:101,[purchase?'data_compra':'data_venda']:'2026-10-04',data_vencimento:'2026-10-20',itens:[{tipo:'produto',item_id:101,quantidade:1,valor_unitario:12}]};
+      const id=await apply({tipo:kind,dados});await apply({tipo:'editar_'+kind,dados:{...dados,registro_id:id,itens:[{tipo:'produto',item_id:101,quantidade:3,valor_unitario:12}]}});
+      const row=(await db.query('SELECT status,total FROM erp.'+table+' WHERE tenant_id=1 AND id=$1',[id])).rows[0];assert.equal(row.status,'rascunho');assert.equal(Number(row.total),36);
+      const financial=(await db.query('SELECT count(*)::int AS n FROM erp.contas_'+(purchase?'pagar':'receber')+' WHERE tenant_id=1 AND '+(purchase?'compra_id':'venda_id')+'=$1',[id])).rows[0];assert.equal(financial.n,0);
+      await apply({tipo:'excluir_'+kind,dados:{registro_id:id,motivo:'Descartar documento de teste'}});assert((await db.query('SELECT excluido_em FROM erp.'+table+' WHERE id=$1',[id])).rows[0].excluido_em);
+    }
+  });
+  await check('Valores referencias e permissoes bloqueiam propostas financeiras invalidas',async()=>{
+    for(const dados of [{...moneyData('pagar'),valor_total:119},{...moneyData('pagar'),fornecedor_id:201},{...moneyData('pagar'),categoria_id:financialIds.receberCategory},{...moneyData('pagar'),conta_financeira_id:902}])assert.equal((await executeTool(owner,'preparar_rascunho',{empresa_id:1,chave_operacao:randomUUID(),proposta:{tipo:'conta_pagar',dados}},settings)).isError,true);
+    assert.equal((await executeTool({...owner,companies:[{...owner.companies[0],capabilities:['erp.financeiro.visualizar']}]},'preparar_rascunho',{empresa_id:1,chave_operacao:randomUUID(),proposta:{tipo:'conta_pagar',dados:moneyData('pagar')}},settings)).isError,true);
+  });
+  await check('Titulos com pagamento mesmo estornado e origens comerciais ficam protegidos',async()=>{
+    for(const side of ['pagar','receber']){const id=await apply({tipo:'conta_'+side,dados:moneyData(side)});const part=(await db.query('SELECT id FROM erp.contas_'+side+'_parcelas WHERE tenant_id=1 AND conta_'+side+'_id=$1 ORDER BY id',[id])).rows[0];
+      await apply({tipo:side==='pagar'?'pagar_parcela':'receber_parcela',dados:{registro_id:Number(part.id),valor:60,data_pagamento:'2026-10-04',conta_financeira_id:901}});
+      const payment=(await db.query('SELECT id FROM erp.pagamentos WHERE tenant_id=1 AND conta_'+side+'_parcela_id=$1 AND estorno_de_pagamento_id IS NULL',[part.id])).rows[0];
+      await apply({tipo:'estornar_pagamento',dados:{registro_id:Number(payment.id),motivo:'Estorno para testar preservacao'}});
+      for(const proposal of [{tipo:'editar_conta_'+side,dados:{...moneyData(side),registro_id:id}},{tipo:'excluir_conta_'+side,dados:{registro_id:id,motivo:'Deve bloquear exclusao'}}]){const draft=await prepare(proposal);await assert.rejects(decideApproval(draft.rascunho_id,session,'save'),/histórico/);assert.equal((await call(owner,'obter_rascunho',{empresa_id:1,rascunho_id:draft.rascunho_id})).status,'pending');}
+    }
+    const title=(await db.query('SELECT id FROM erp.contas_receber WHERE tenant_id=1 AND venda_id=$1',[saleId])).rows[0];const draft=await prepare({tipo:'excluir_conta_receber',dados:{registro_id:Number(title.id),motivo:'Titulo de venda'}});await assert.rejects(decideApproval(draft.rascunho_id,session,'save'),/origem/);
+    const deletion=await prepare({tipo:'excluir_venda',dados:{registro_id:saleId,motivo:'Venda confirmada'}});await assert.rejects(decideApproval(deletion.rascunho_id,session,'save'),/rascunho/);
+    const cad=await prepare({tipo:'excluir_produto',dados:{registro_id:101,motivo:'Produto com historico'}});await assert.rejects(decideApproval(cad.rascunho_id,session,'save'),/vínculos/);
+  });
+  await check('Cobrancas existentes e falha de auditoria impedem alteracao parcial',async()=>{
+    const id=await apply({tipo:'conta_receber',dados:moneyData('receber')}),part=(await db.query('SELECT id FROM erp.contas_receber_parcelas WHERE tenant_id=1 AND conta_receber_id=$1 ORDER BY id',[id])).rows[0];
+    await db.query("INSERT INTO erp.cobrancas(tenant_id,conta_receber_parcela_id,provedor,tipo,status,valor,data_vencimento,chave_idempotencia) VALUES(1,$1,'teste','pix','pendente',60,'2026-10-20',$2)",[part.id,randomUUID()]);
+    const d=await prepare({tipo:'excluir_conta_receber',dados:{registro_id:id,motivo:'Titulo com cobranca'}});await assert.rejects(decideApproval(d.rascunho_id,session,'save'),/cobrança/);
+    const draft=await prepare({tipo:'conta_pagar',dados:moneyData('pagar')}),before=(await db.query('SELECT count(*)::int AS n FROM erp.contas_pagar')).rows[0].n;
+    await db.exec("CREATE FUNCTION shared.reject_crud_audit() RETURNS trigger LANGUAGE plpgsql AS $$ BEGIN RAISE EXCEPTION 'audit failure'; END $$; CREATE TRIGGER reject_crud BEFORE INSERT ON plugin.executions FOR EACH ROW EXECUTE FUNCTION shared.reject_crud_audit()");
+    await assert.rejects(decideApproval(draft.rascunho_id,session,'save'));assert.equal((await db.query('SELECT count(*)::int AS n FROM erp.contas_pagar')).rows[0].n,before);
+    await db.exec('DROP TRIGGER reject_crud ON plugin.executions; DROP FUNCTION shared.reject_crud_audit()');
+    assert.equal((await call(owner,'obter_rascunho',{empresa_id:1,rascunho_id:draft.rascunho_id})).status,'pending');
+  });
+  await check('Edicao financeira preserva campos omitidos e so limpa valores explicitamente',async()=>{
+    const center=Number((await db.query("INSERT INTO erp.centros_custo(tenant_id,nome,codigo) VALUES(1,'Centro de teste','CENTRO-TESTE') RETURNING id")).rows[0].id);
+    await db.exec("INSERT INTO erp.contas_financeiras(id,tenant_id,nome,tipo) VALUES(903,1,'Outra conta de teste','caixa')");
+    for(const side of ['pagar','receber']){
+      const id=await apply({tipo:'conta_'+side,dados:{...moneyData(side),numero_documento:'DOCUMENTO-ORIGINAL',centro_custo_id:center,observacoes:'Observacao original'}});
+      const omitted={...moneyData(side),registro_id:id,descricao:'Descricao revisada'};delete omitted.conta_financeira_id;
+      await apply({tipo:'editar_conta_'+side,dados:omitted});
+      const title=(await db.query('SELECT numero_documento,centro_custo_id,observacoes FROM erp.contas_'+side+' WHERE tenant_id=1 AND id=$1',[id])).rows[0];
+      assert.equal(title.numero_documento,'DOCUMENTO-ORIGINAL');assert.equal(Number(title.centro_custo_id),center);assert.equal(title.observacoes,'Observacao original');
+      const parts=(await db.query('SELECT id,conta_financeira_id FROM erp.contas_'+side+'_parcelas WHERE tenant_id=1 AND conta_'+side+'_id=$1 AND excluido_em IS NULL ORDER BY id',[id])).rows;
+      assert.equal(parts.length,2);assert(parts.every(part=>Number(part.conta_financeira_id)===901));
+      await db.query('UPDATE erp.contas_'+side+'_parcelas SET conta_financeira_id=903 WHERE tenant_id=1 AND id=$1',[parts[1].id]);
+      const draft=await prepare({tipo:'editar_conta_'+side,dados:omitted});
+      await assert.rejects(decideApproval(draft.rascunho_id,session,'save'),/contas financeiras diferentes/);
+      assert.deepEqual((await db.query('SELECT id,conta_financeira_id FROM erp.contas_'+side+'_parcelas WHERE tenant_id=1 AND conta_'+side+'_id=$1 AND excluido_em IS NULL ORDER BY id',[id])).rows.map(part=>Number(part.conta_financeira_id)),[901,903]);
+      await apply({tipo:'editar_conta_'+side,dados:{...omitted,numero_documento:null,centro_custo_id:null,observacoes:null,conta_financeira_id:null}});
+      const cleared=(await db.query('SELECT numero_documento,centro_custo_id,observacoes FROM erp.contas_'+side+' WHERE tenant_id=1 AND id=$1',[id])).rows[0];
+      assert.deepEqual(cleared,{numero_documento:null,centro_custo_id:null,observacoes:null});
+      const clearedParts=(await db.query('SELECT conta_financeira_id FROM erp.contas_'+side+'_parcelas WHERE tenant_id=1 AND conta_'+side+'_id=$1 AND excluido_em IS NULL',[id])).rows;
+      assert(clearedParts.every(part=>part.conta_financeira_id===null));
+    }
+  });
+  await check('Periodos fechados e propostas desatualizadas protegem edicao financeira',async()=>{
+    const id=await apply({tipo:'conta_pagar',dados:moneyData('pagar')});
+    const stale=await prepare({tipo:'editar_conta_pagar',dados:{...moneyData('pagar'),registro_id:id}});await db.query("UPDATE erp.contas_pagar SET observacoes='Mudou' WHERE tenant_id=1 AND id=$1",[id]);await assert.rejects(decideApproval(stale.rascunho_id,session,'save'),e=>e.code==='STALE_PROPOSAL');
+    await db.exec("INSERT INTO erp.fechamentos_periodos(tenant_id,modulo,periodo_inicio,periodo_fim,criado_por) VALUES(1,'financeiro','2026-10-01','2026-10-31',1)");
+    const deletion=await prepare({tipo:'excluir_conta_pagar',dados:{registro_id:id,motivo:'Periodo fechado'}});await assert.rejects(decideApproval(deletion.rascunho_id,session,'save'),e=>e.code==='PERIOD_CLOSED');
+    const creation=await prepare({tipo:'conta_pagar',dados:moneyData('pagar')});await assert.rejects(decideApproval(creation.rascunho_id,session,'save'),e=>e.code==='PERIOD_CLOSED');
+  });
+  console.log(JSON.stringify({status:'passed',checks,proposalTypes:44,realDatabaseAccess:false,localPostgres:true}));
 }
 try{await main();}catch(error){console.error(error.message);process.exitCode=1;}finally{await db.close();}

@@ -28,6 +28,7 @@ const execution: ExecutionDependencies = {
   reserve:async () => {const id=randomUUID();events.push({id,status:'running'});return id},
   finish:async (id,status,code) => {events.push({id,status,code})},
   queries:{
+    financialTitle:async()=>({record:{id:"1"},installments:[],installmentsTruncated:false,history:[],historyTruncated:false}),
     registration:async(id,recordId)=>{context(id);return {record:{id:String(recordId),nome:"Cadastro"}}},
     installment:async(id,side,recordId)=>{context(id);return {record:{id:String(recordId),saldo:12},history:[],historyTruncated:false}},
     analysis:async(id,type,from,to)=>{context(id);return {tipo:type,inicio:from,fim:to,criterio:"Teste",summary:{quantidade:0,valor_total:0,valor_medio:0},records:[]}},
@@ -37,9 +38,9 @@ const execution: ExecutionDependencies = {
     payments:async(id,input)=>{context(id);return {records:[],page:input.page,pageSize:input.pageSize,hasMore:false}},
     overview:async id => {context(id);return {saldoReceber:1,saldoPagar:2,receberVencido:0,vendasRascunho:3,comprasAbertas:4,clientesAtivos:5}},
     page:async (id,_type,input) => {context(id);return {records:[{id:'1',nome:'Produto'}],total:1,page:input.page || 1,pageSize:input.pageSize || 20}},
-    sale:async (id,saleId) => {context(id);return {sale:{id:saleId},items:[],totalItems:0,itemsTruncated:false}},
+    sale:async (id,saleId) => {context(id);return {sale:{id:saleId,data_vencimento:null},items:[],totalItems:0,itemsTruncated:false,installments:[],installmentsTruncated:false}},
     stock:async (id,input) => {context(id);return {records:[],total:0,page:input.page || 1,pageSize:input.pageSize || 20}},
-    purchase:async(id,purchaseId) => {context(id);return {purchase:{id:purchaseId},items:[],totalItems:0,itemsTruncated:false}},
+    purchase:async(id,purchaseId) => {context(id);return {purchase:{id:purchaseId,data_vencimento:null},items:[],totalItems:0,itemsTruncated:false,installments:[],installmentsTruncated:false}},
     report:async(id,report,from,to,input) => {context(id);return {report,from,to,records:[],page:input.page || 1,pageSize:input.pageSize || 20,hasMore:false}},
   },
 }
@@ -78,7 +79,7 @@ async function main() {
   })
   await check('Catalogo contratos OAuth e anotacoes',async () => {
     const {body}=await rpc('tools/list')
-    assert.equal(body.result.tools.length,28)
+    assert.equal(body.result.tools.length,29)
     for (const tool of body.result.tools) {assert.equal(tool.annotations.readOnlyHint,!['preparar_rascunho','preparar_formulario_nativo','atualizar_configuracoes'].includes(tool.name));assert.equal(tool.securitySchemes[0].type,'oauth2');assert(tool.outputSchema)}
     assert.deepEqual(body.result.tools.find((t:{name:string})=>t.name==='preparar_rascunho').securitySchemes[0].scopes,['erp:read','erp:write'])
     assert.deepEqual(body.result.tools.find((t:{name:string})=>t.name==='abrir_painel')._meta['openai/ui'].entrypoints,[{type:'global'},{type:'thread'},{type:'settings',searchTerms:['empresa','preferencias']}])
