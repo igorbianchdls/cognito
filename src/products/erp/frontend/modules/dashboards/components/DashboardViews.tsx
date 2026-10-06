@@ -1,6 +1,15 @@
 'use client'
 import Link from 'next/link'
-import { ArrowDownRight, ArrowUpRight, ChevronRight, Info } from 'lucide-react'
+import {
+  ArrowDownRight,
+  ArrowUpRight,
+  ChartNoAxesCombined,
+  ChevronRight,
+  Info,
+  ShoppingCart,
+  Truck,
+  Wallet,
+} from 'lucide-react'
 import {
   Bar,
   BarChart,
@@ -46,16 +55,29 @@ export function DashboardMetrics({ metrics }: { metrics: DashboardMetric[] }) {
   return (
     <section aria-label="Indicadores" className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
       {metrics.map((m) => {
+        const Icon = m.key.endsWith('saldo')
+          ? Wallet
+          : m.key.endsWith('vendas')
+            ? ShoppingCart
+            : m.key.endsWith('compras')
+              ? Truck
+              : ChartNoAxesCombined
         const content = (
           <>
-            <div className="flex items-start justify-between gap-3">
-              <span className="text-sm text-slate-600">{m.label}</span>
-              <Info className="size-4 shrink-0 text-slate-400" aria-hidden="true" />
+            <div className="flex items-center justify-between gap-3">
+              <span className="inline-flex size-10 shrink-0 items-center justify-center rounded-xl bg-slate-50 text-slate-600">
+                <Icon className="size-5" aria-hidden="true" />
+              </span>
+              <span title={m.description} className="cursor-help text-slate-400">
+                <Info className="size-3.5" aria-hidden="true" />
+                <span className="sr-only">{m.description}</span>
+              </span>
             </div>
+            <span className="mt-3 block text-xs font-medium text-slate-500">{m.label}</span>
             <div
               className={
-                'mt-3 break-words text-2xl font-semibold tracking-tight ' +
-                colors[m.tone || 'neutral']
+                'mt-1.5 break-words text-[clamp(20px,2vw,28px)] font-semibold tracking-tight tabular-nums ' +
+                (m.tone === 'danger' ? colors.danger : colors.neutral)
               }
             >
               {dashboardValue(m.value, m.format)}
@@ -86,7 +108,6 @@ export function DashboardMetrics({ metrics }: { metrics: DashboardMetric[] }) {
                 'No período'
               )}
             </div>
-            <p className="mt-3 text-xs leading-5 text-slate-500">{m.description}</p>
           </>
         )
         return m.href ? (
@@ -94,12 +115,12 @@ export function DashboardMetrics({ metrics }: { metrics: DashboardMetric[] }) {
             key={m.key}
             href={m.href}
             title="Abrir registros correspondentes"
-            className="rounded-xl border border-slate-200 bg-white p-4 transition hover:border-slate-400 hover:shadow-sm focus-visible:outline-2 focus-visible:outline-blue-600"
+            className="min-w-0 rounded-2xl border border-slate-200 bg-white p-5 transition hover:border-slate-300 hover:shadow-sm focus-visible:outline-2 focus-visible:outline-blue-600"
           >
             {content}
           </Link>
         ) : (
-          <div key={m.key} className="rounded-xl border border-slate-200 bg-white p-4">
+          <div key={m.key} className="min-w-0 rounded-2xl border border-slate-200 bg-white p-5">
             {content}
           </div>
         )
@@ -112,34 +133,35 @@ export function DashboardChartView({ chart }: { chart: DashboardChart }) {
     Math.abs(v) >= 1000
       ? new Intl.NumberFormat('pt-BR', { notation: 'compact', maximumFractionDigits: 1 }).format(v)
       : dashboardValue(v, chart.format === 'currency' ? 'number' : chart.format)
-  const common = (
-    <>
-      <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
-      <XAxis
-        dataKey="label"
-        tickFormatter={(value) => dashboardDate(String(value)).slice(0, 5)}
-        tick={{ fontSize: 11 }}
-        axisLine={false}
-        tickLine={false}
-        minTickGap={24}
-      />
-      <YAxis
-        tickFormatter={axis}
-        tick={{ fontSize: 11 }}
-        axisLine={false}
-        tickLine={false}
-        width={55}
-      />
-      <Tooltip
-        labelFormatter={(v) => dashboardDate(String(v))}
-        formatter={(value) => dashboardValue(Number(value), chart.format)}
-        contentStyle={{ borderRadius: 10, borderColor: '#e2e8f0', fontSize: 12 }}
-      />
-      <Legend wrapperStyle={{ fontSize: 12, paddingTop: 12 }} />
-    </>
-  )
+  const common = [
+    <CartesianGrid key="grid" strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />,
+    <XAxis
+      key="date-axis"
+      dataKey="label"
+      tickFormatter={(value) => dashboardDate(String(value)).slice(0, 5)}
+      tick={{ fontSize: 11 }}
+      axisLine={false}
+      tickLine={false}
+      minTickGap={24}
+    />,
+    <YAxis
+      key="value-axis"
+      tickFormatter={axis}
+      tick={{ fontSize: 11 }}
+      axisLine={false}
+      tickLine={false}
+      width={55}
+    />,
+    <Tooltip
+      key="tooltip"
+      labelFormatter={(v) => dashboardDate(String(v))}
+      formatter={(value) => dashboardValue(Number(value), chart.format)}
+      contentStyle={{ borderRadius: 10, borderColor: '#e2e8f0', fontSize: 12 }}
+    />,
+    <Legend key="legend" wrapperStyle={{ fontSize: 12, paddingTop: 12 }} />,
+  ]
   return (
-    <section className="min-w-0 rounded-xl border border-slate-200 bg-white p-5">
+    <section className="min-w-0 rounded-2xl border border-slate-200 bg-white p-5">
       <h2 className="font-semibold text-slate-900">{chart.title}</h2>
       <p className="mt-1 text-xs leading-5 text-slate-500">{chart.description}</p>
       {chart.records.length ? (

@@ -45,6 +45,8 @@ Rankings mostram até 8 grupos. Produtos/serviços de vendas distribuem desconto
 
 Os links levam a `/erp/dashboards/[dashboardId]/registros`, com os mesmos critérios de confirmação, vencimento, saldo e previsão. Rankings acrescentam cliente, vendedor, fornecedor, produto, serviço, categoria, centro ou local; pendências acrescentam o registro. A tabela mostra total de toda a consulta, separado da paginação.
 
+A Visão geral inclui resultado pelo caixa somente com as duas capacidades `erp.financeiro.visualizar` e `erp.relatorios.visualizar`. Inclui também ordens atrasadas, ranking de clientes e até cinco parcelas a pagar com saldo nos próximos sete dias; estas parcelas são calculadas com pagamentos, créditos e renegociações, identificadas por data e situação. A opção de previsões é respeitada. A nova consulta usa o mesmo snapshot de leitura e o mesmo contexto de empresa dos demais indicadores. Seus links carregam o ID da parcela para que a conferência não traga títulos diferentes.
+
 Fontes autorizadas são uma lista fixa no contrato. Um usuário com acesso comercial não pode obter parcelas financeiras através do resumo. Períodos de estoque/contas atuais não são simulados como posições históricas.
 
 ## Verificação

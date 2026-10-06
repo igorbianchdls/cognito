@@ -96,6 +96,8 @@ export type DashboardRow = {
   value: number
   format?: DashboardFormat
   href?: string
+  date?: string
+  status?: string
 }
 export type DashboardList = {
   key: string

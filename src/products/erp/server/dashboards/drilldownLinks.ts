@@ -94,7 +94,15 @@ export function attachDrilldownLinks(content: DashboardContent, filters: Dashboa
         scope.dimensionId = id
       }
       if (
-        ['valor', 'pedidos', 'pendencias', 'ordens', 'contratos', 'contas'].includes(list.key) &&
+        [
+          'valor',
+          'pedidos',
+          'pendencias',
+          'proximos-vencimentos',
+          'ordens',
+          'contratos',
+          'contas',
+        ].includes(list.key) &&
         !original?.includes('dre-caixa')
       )
         scope.id = id

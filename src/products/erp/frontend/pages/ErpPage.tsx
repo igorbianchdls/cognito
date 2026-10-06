@@ -82,7 +82,7 @@ function ErpPageContent({
           <ErpShell
             sectionId={sectionConfig.id}
             moduleId={moduleConfig?.id}
-            hideSectionTabs={usesFinancialWorkspaceChrome || sectionConfig.id === 'dashboards'}
+            hideSectionTabs={usesFinancialWorkspaceChrome || ['overview', 'dashboards'].includes(sectionConfig.id)}
           >
             {sectionConfig.id === 'overview' ? (
               <OverviewPage />

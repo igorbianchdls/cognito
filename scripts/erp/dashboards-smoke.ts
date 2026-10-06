@@ -97,6 +97,14 @@ async function main() {
   near(metric('vendas', 'vendas').value, Number(commercial.sales), 'raw_sales')
   assert.equal(metric('vendas', 'quantidade').value, Number(commercial.sale_count))
   near(metric('compras', 'compras').value, Number(commercial.purchases), 'raw_purchases')
+  near(metric('visao-geral', 'erp.relatorios.visualizar-resultado').value, metric('resultados', 'resultado').value, 'overview_cash_result')
+  assert.equal(metric('visao-geral', 'erp.vendas.visualizar-atrasadas').value, metric('servicos', 'atrasadas').value)
+  const upcoming = report.dashboards['visao-geral'].lists.find((l) => l.key === 'proximos-vencimentos')!
+  const reference = report.dashboards['visao-geral'].reference
+  const until = new Date(Date.parse(reference) + 7 * 86400000).toISOString().slice(0, 10)
+  assert(upcoming.rows.length <= 5)
+  assert(upcoming.rows.every((r) => r.value > 0 && r.date! >= reference && r.date! <= until && ['A vencer', 'Parcial', 'Previsão'].includes(r.status!)))
+  report.checks.push('overview_result_and_overdue_orders', 'upcoming_payables_have_dates_and_balances')
   const payments = (
     await db.query(
       "SELECT tipo,sum(valor_liquido*CASE WHEN estorno_de_pagamento_id IS NULL THEN 1 ELSE -1 END) value FROM erp.pagamentos WHERE empresa_id=2 AND excluido_em IS NULL AND data_pagamento BETWEEN '2026-09-01' AND '2026-09-30' GROUP BY tipo",
@@ -216,6 +224,11 @@ async function main() {
   )
   assert.deepEqual(restricted.availableDashboards, ['visao-geral', 'vendas', 'servicos'])
   assert(restricted.metrics.every((m) => m.key.startsWith('erp.vendas.visualizar-')))
+  const financeOnly = await runWithErpDatabaseContext(scope, () => loadDashboard({ ...session, capabilities: ['erp.financeiro.visualizar'] }, 'visao-geral', filters))
+  assert(!financeOnly.metrics.some((m) => m.key.endsWith('-resultado')))
+  assert(!financeOnly.lists.some((l) => l.key === 'clientes'))
+  assert(financeOnly.metrics.every((m) => m.key.startsWith('erp.financeiro.visualizar-')))
+  report.checks.push('overview_result_requires_finance_and_reports')
   await assert.rejects(
     runWithErpDatabaseContext(scope, () => loadDashboard(reader, 'financeiro', filters)),
     (e: { status?: number }) => e.status === 403,
