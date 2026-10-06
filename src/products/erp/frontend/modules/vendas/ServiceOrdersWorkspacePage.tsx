@@ -10,7 +10,6 @@ import {
   Loader2,
   Play,
   Plus,
-  RefreshCw,
   RotateCcw,
   ShoppingBag,
   Trash2,
@@ -37,6 +36,7 @@ import {
 } from "@/components/ui/table";
 import { Textarea } from "@/components/ui/textarea";
 import { useErpAccess } from "@/products/erp/frontend/hooks/useErpAccess";
+import { ErpFilterButton, ErpPeriodSummary, ErpSalesTabs, ErpSearchToolbar, ErpStatusBadge, ErpWorkspaceHeader } from "@/products/erp/frontend/components/ErpWorkspaceChrome";
 import { ErpAsyncCatalogSelect, type ErpCatalogRecord } from "@/products/erp/frontend/components/ErpAsyncCatalogSelect";
 import {
   parseErpResponse,
@@ -100,22 +100,12 @@ const newItem = (): OrderItem => ({
 
 const statusLabels: Record<string, string> = {
   rascunho: "Rascunho",
-  orcamento_pendente: "Orcamento pendente",
+  orcamento_pendente: "Orçamento pendente",
   aprovada: "Aprovada",
-  em_execucao: "Em execucao",
-  concluida: "Concluida",
+  em_execucao: "Em execução",
+  concluida: "Concluída",
   cancelada: "Cancelada",
 };
-
-function statusClass(status: string) {
-  if (status === "concluida")
-    return "border-emerald-200 bg-emerald-50 text-emerald-700";
-  if (status === "cancelada")
-    return "border-gray-200 bg-gray-100 text-gray-500";
-  if (status === "em_execucao")
-    return "border-blue-200 bg-blue-50 text-blue-700";
-  return "border-amber-200 bg-amber-50 text-amber-700";
-}
 
 export function ServiceOrdersWorkspacePage() {
   const canManage = useErpAccess().can("erp.vendas.gerenciar");
@@ -123,6 +113,7 @@ export function ServiceOrdersWorkspacePage() {
   const [catalogs, setCatalogs] = useState<Catalogs>(emptyCatalogs);
   const [query, setQuery] = useState("");
   const [status, setStatus] = useState("");
+  const [filtersOpen, setFiltersOpen] = useState(false);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -328,72 +319,57 @@ export function ServiceOrdersWorkspacePage() {
   }
 
   return (
-    <div className="flex min-h-full flex-col gap-5">
-      <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
-        <div>
-          <p className="text-xs font-medium text-gray-500">ERP / Vendas</p>
-          <h1 className="mt-1 text-2xl font-semibold text-gray-950">
-            Ordens de servico
-          </h1>
-          <p className="mt-1 text-sm text-gray-600">
-            Da entrada do equipamento ate a conclusao e conversao comercial.
-          </p>
-        </div>
-        <div className="flex gap-2">
-          <Button
-            variant="outline"
-            size="icon"
-            title="Atualizar"
-            onClick={() => void load()}
-          >
-            <RefreshCw className="size-4" />
-          </Button>
-          <Button
-            disabled={!canManage}
-            onClick={() => {
-              reset();
-              setEditorOpen(true);
-            }}
-          >
-            <Plus className="size-4" />
-            Nova ordem
-          </Button>
-        </div>
-      </div>
-      <div className="flex flex-col gap-2 border-y py-3 md:flex-row">
-        <Input
-          className="md:max-w-sm"
-          placeholder="Buscar por numero, cliente ou equipamento"
-          value={query}
-          onChange={(event) => setQuery(event.target.value)}
-        />
+    <div className="flex min-h-full min-w-0 flex-col bg-white">
+      <ErpWorkspaceHeader
+        section="Vendas"
+        title="Ordens de serviço"
+        menuItems={[{ label: "Atualizar dados", onSelect: () => void load() }]}
+        primaryAction={canManage ? <Button
+          aria-label="Adicionar ordem de serviço"
+          className="h-11 rounded-md bg-[#c9f20a] px-5 font-medium text-[#142000] shadow-none hover:bg-[#b9df09]"
+          onClick={() => { reset(); setEditorOpen(true); }}
+        ><Plus className="size-4" />Adicionar</Button> : undefined}
+      />
+      <ErpSalesTabs activeHref="/erp/vendas/ordens-servico" />
+      <ErpPeriodSummary title="Resumo dos registros carregados" description="Considera os registros carregados com os filtros atuais." metrics={[
+        { label: 'Ordens de serviço', value: String(records.length) },
+        { label: 'Em execução', value: String(records.filter(record => record.status === 'em_execucao').length) },
+        { label: 'Concluídas', value: String(records.filter(record => record.status === 'concluida').length), tone: 'success' },
+        { label: 'Canceladas', value: String(records.filter(record => record.status === 'cancelada').length), tone: 'danger' },
+        { label: 'Valor listado', value: formatErpCurrency(sumMoney(records.map(record => record.total))) },
+      ]} />
+      <ErpSearchToolbar query={query} onQueryChange={setQuery} placeholder="Pesquisar por número, cliente ou equipamento…" resultLabel={`${records.length} registro${records.length === 1 ? '' : 's'} carregado${records.length === 1 ? '' : 's'}`}>
+        <ErpFilterButton active={Boolean(status)} onClick={() => setFiltersOpen(current => !current)} />
+      </ErpSearchToolbar>
+      {filtersOpen ? <div className="flex flex-wrap gap-2 border-b border-[#e7e7e4] bg-[#fafaf8] px-5 py-3 md:px-8 lg:px-10">
         <select
-          className="h-10 rounded-md bg-gray-50 px-3 text-sm"
+          aria-label="Situação"
+          className="h-10 rounded-md border border-[#dfdfdc] bg-white px-3 text-sm"
           value={status}
           onChange={(event) => setStatus(event.target.value)}
         >
-          <option value="">Todas as situacoes</option>
+          <option value="">Todas as situações</option>
           {Object.entries(statusLabels).map(([value, label]) => (
             <option key={value} value={value}>
               {label}
             </option>
           ))}
         </select>
-      </div>
+      </div> : null}
       {error ? (
-        <div className="rounded-md border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
+        <div role="alert" className="mx-5 mt-4 rounded-md border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700 md:mx-8 lg:mx-10">
           {error}
         </div>
       ) : null}
-      <div className="overflow-hidden rounded-md border bg-white">
-        <Table>
+      <div className="min-h-[300px] min-w-0 flex-1 overflow-x-auto">
+        <Table className="erp-workspace-table min-w-[1050px] border-b border-[#e7e7e4]">
           <TableHeader>
-            <TableRow className="bg-gray-50">
-              <TableHead>Numero</TableHead>
+            <TableRow className="bg-[#fbfbfa] hover:bg-[#fbfbfa]">
+              <TableHead>Número</TableHead>
               <TableHead>Cliente</TableHead>
               <TableHead>Equipamento</TableHead>
-              <TableHead>Previsao</TableHead>
-              <TableHead>Situacao</TableHead>
+              <TableHead>Previsão</TableHead>
+              <TableHead>Situação</TableHead>
               <TableHead className="text-right">Total</TableHead>
               <TableHead className="w-64" />
             </TableRow>
@@ -421,7 +397,7 @@ export function ServiceOrdersWorkspacePage() {
             ) : (
               records.map((record) => (
                 <TableRow key={record.id}>
-                  <TableCell className="font-medium">{record.numero}</TableCell>
+                  <TableCell><button type="button" className="font-medium text-[#245ea6] hover:underline" onClick={() => void openDetails(record)}>{record.numero}</button></TableCell>
                   <TableCell>{record.cliente}</TableCell>
                   <TableCell>
                     {[record.equipamento, record.marca, record.modelo]
@@ -432,13 +408,9 @@ export function ServiceOrdersWorkspacePage() {
                     {formatErpValue(record.previsao_entrega)}
                   </TableCell>
                   <TableCell>
-                    <span
-                      className={`inline-flex rounded-full border px-2 py-1 text-xs font-medium ${statusClass(record.status)}`}
-                    >
-                      {statusLabels[record.status] || record.status}
-                    </span>
+                    <ErpStatusBadge status={record.status} label={statusLabels[record.status]} />
                   </TableCell>
-                  <TableCell className="text-right font-medium">
+                  <TableCell className="text-right font-medium tabular-nums">
                     {formatErpCurrency(record.total)}
                   </TableCell>
                   <TableCell>

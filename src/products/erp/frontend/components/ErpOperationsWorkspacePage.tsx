@@ -15,6 +15,7 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { ErpStatusBadge } from '@/products/erp/frontend/components/ErpStatusBadge'
 import { ErpPagination } from '@/products/erp/frontend/components/ErpPagination'
+import { ErpPeriodSummary, ErpSalesTabs, ErpSearchToolbar, ErpStatusBadge as WorkspaceStatusBadge, ErpWorkspaceHeader } from '@/products/erp/frontend/components/ErpWorkspaceChrome'
 import { parseErpResponse } from '@/products/erp/frontend/services/erpProfessionalClient'
 import type { ErpOperationConfig, ErpOperationField } from '@/products/erp/shared/operations'
 import { getErpOperationCapability } from '@/products/erp/shared/operationAccess'
@@ -147,6 +148,7 @@ function FieldControl({ field, value, resource, onChange }: {
 }
 
 export function ErpOperationsWorkspacePage({ config }: { config: ErpOperationConfig }) {
+  const isSalesWorkspace = config.resource === 'contratos'
   const [records, setRecords] = useState<OperationRecord[]>([])
   const [page, setPage] = useState(1)
   const [total, setTotal] = useState(0)
@@ -270,9 +272,12 @@ export function ErpOperationsWorkspacePage({ config }: { config: ErpOperationCon
   }
 
   return (
-    <div className="space-y-6">
+    <div className={isSalesWorkspace ? 'flex min-h-full min-w-0 flex-col bg-white' : 'space-y-6'}>
       {contractId && <ErpContractDetails id={contractId} onClose={()=>setContractId(null)} onSaved={()=>void load()} />}
-      <header className="flex flex-col gap-4 border-b border-gray-200 pb-5 lg:flex-row lg:items-end lg:justify-between">
+      {isSalesWorkspace ? <>
+        <ErpWorkspaceHeader section="Vendas" title="Contratos" menuItems={[{ label: 'Atualizar dados', onSelect: () => void load() }]} primaryAction={config.primaryAction && canCreate ? <Button aria-label="Adicionar contrato" className="h-11 rounded-md bg-[#c9f20a] px-5 font-medium text-[#142000] shadow-none hover:bg-[#b9df09]" onClick={openCreate}><Plus className="size-4" />Adicionar</Button> : undefined} />
+        <ErpSalesTabs activeHref="/erp/vendas/contratos" />
+      </> : <header className="flex flex-col gap-4 border-b border-gray-200 pb-5 lg:flex-row lg:items-end lg:justify-between">
         <div className="min-w-0">
           <h1 className="text-2xl font-semibold tracking-normal text-gray-950">{config.title}</h1>
           <p className="mt-1 max-w-3xl text-sm leading-6 text-gray-600">{config.description}</p>
@@ -285,37 +290,44 @@ export function ErpOperationsWorkspacePage({ config }: { config: ErpOperationCon
           {config.processAction && canCreate ? <Button variant="outline" size="sm" onClick={() => void process()} disabled={saving}><Play className="size-4" />{config.processAction.label}</Button> : null}
           {config.primaryAction && canCreate ? <Button size="sm" onClick={openCreate}><Plus className="size-4" />{config.primaryAction}</Button> : null}
         </div>
-      </header>
+      </header>}
 
-      <section className="grid border-y border-gray-200 bg-gray-50/60 sm:grid-cols-3">
+      {isSalesWorkspace ? <ErpPeriodSummary title="Resumo desta página" description="Considera os registros carregados com os filtros atuais." metrics={[
+        { label: 'Contratos', value: String(records.length) },
+        { label: 'Ativos', value: String(records.filter(record => record.status === 'ativo').length), tone: 'success' },
+        { label: 'Valor listado', value: formatValue(monetaryTotal, 'currency') },
+      ]} /> : <section className="grid border-y border-gray-200 bg-gray-50/60 sm:grid-cols-3">
         <div className="px-4 py-4"><div className="text-xs font-medium text-gray-500">Registros</div><div className="mt-1 text-xl font-semibold text-gray-950">{total}</div></div>
         <div className="border-t border-gray-200 px-4 py-4 sm:border-l sm:border-t-0"><div className="text-xs font-medium text-gray-500">Atencao nesta pagina</div><div className="mt-1 text-xl font-semibold text-gray-950">{attentionCount}</div></div>
         <div className="border-t border-gray-200 px-4 py-4 sm:border-l sm:border-t-0"><div className="text-xs font-medium text-gray-500">{currencyColumn ? `${currencyColumn.label} nesta pagina` : 'Atualizacao'}</div><div className="mt-1 text-xl font-semibold text-gray-950">{monetaryTotal === null ? 'Em tempo real' : formatValue(monetaryTotal, 'currency')}</div></div>
-      </section>
+      </section>}
 
-      {error && !dialogOpen ? <div className="rounded-md border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">{error}</div> : null}
-      {success ? <div className="flex items-center gap-2 rounded-md border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700"><CheckCircle2 className="size-4" />{success}</div> : null}
+      {error && !dialogOpen ? <div role="alert" className={`${isSalesWorkspace ? 'mx-5 mt-4 md:mx-8 lg:mx-10' : ''} rounded-md border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700`}>{error}</div> : null}
+      {success ? <div role="status" className={`${isSalesWorkspace ? 'mx-5 mt-4 md:mx-8 lg:mx-10' : ''} flex items-center gap-2 rounded-md border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700`}><CheckCircle2 className="size-4" />{success}</div> : null}
 
-      <div className="flex items-center gap-2">
+      {isSalesWorkspace ? <ErpSearchToolbar query={query} onQueryChange={value => { setQuery(value); setPage(1) }} placeholder="Pesquisar contratos…" resultLabel={<>{total ? (page - 1) * 50 + 1 : 0}–{Math.min(page * 50, total)} de {total}</>}>
+        <Button variant="outline" className="h-10 rounded-lg border-[#dfdfdc] font-normal" asChild><a href={`/api/erp/operacoes/${encodeURIComponent(config.resource)}?format=csv&query=${encodeURIComponent(deferredQuery)}`}><Download className="size-4" />Exportar</a></Button>
+        {config.processAction && canCreate ? <Button variant="outline" className="h-10 rounded-lg border-[#dfdfdc] font-normal" onClick={() => void process()} disabled={saving}><Play className="size-4" />{config.processAction.label}</Button> : null}
+      </ErpSearchToolbar> : <div className="flex items-center gap-2">
         <div className="relative max-w-md flex-1">
           <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-gray-400" />
           <Input value={query} onChange={(event) => { setQuery(event.target.value); setPage(1) }} placeholder="Buscar em todos os registros" className="h-10 pl-9" />
         </div>
         <Button variant="ghost" size="icon" onClick={() => void load()} title="Atualizar"><RefreshCw className="size-4" /></Button>
-      </div>
+      </div>}
 
       {loading ? (
-        <div className="space-y-2"><Skeleton className="h-10 w-full" /><Skeleton className="h-12 w-full" /><Skeleton className="h-12 w-full" /></div>
+        <div className={isSalesWorkspace ? 'space-y-2 px-5 py-4 md:px-8 lg:px-10' : 'space-y-2'}><Skeleton className="h-10 w-full" /><Skeleton className="h-12 w-full" /><Skeleton className="h-12 w-full" /></div>
       ) : (
-        <div className="overflow-x-auto rounded-md border border-gray-200 bg-white">
-          <Table>
-            <TableHeader><TableRow className="hover:bg-white">{config.columns.map((column) => <TableHead key={column.key} className="h-10 whitespace-nowrap bg-gray-50 text-xs font-semibold uppercase tracking-normal text-gray-500">{column.label}</TableHead>)}{config.rowAction ? <TableHead className="w-28 bg-gray-50" /> : null}</TableRow></TableHeader>
+        <div className={isSalesWorkspace ? 'min-h-[300px] min-w-0 flex-1 overflow-x-auto' : 'overflow-x-auto rounded-md border border-gray-200 bg-white'}>
+          <Table className={isSalesWorkspace ? 'erp-workspace-table min-w-[1000px] border-b border-[#e7e7e4]' : undefined}>
+            <TableHeader><TableRow className={isSalesWorkspace ? 'bg-[#fbfbfa] hover:bg-[#fbfbfa]' : 'hover:bg-white'}>{config.columns.map((column) => <TableHead key={column.key} className={isSalesWorkspace ? (column.kind === 'currency' ? 'text-right' : undefined) : 'h-10 whitespace-nowrap bg-gray-50 text-xs font-semibold uppercase tracking-normal text-gray-500'}>{column.label}</TableHead>)}{config.rowAction ? <TableHead className="w-28 bg-gray-50" /> : null}</TableRow></TableHeader>
             <TableBody>
               {records.length ? records.map((record) => (
                 <TableRow key={record.id}>
                   {config.columns.map((column) => (
-                    <TableCell key={column.key} className="whitespace-nowrap text-sm text-gray-700">
-                      {config.resource === 'contratos' && column.key === 'numero' ? <button className="underline" onClick={()=>setContractId(String(record.id))}>{String(record.numero)}</button> : column.kind === 'status' ? <ErpStatusBadge label={formatValue(record[column.key])} tone={toneForStatus(record[column.key])} /> : formatValue(record[column.key], column.kind)}
+                    <TableCell key={column.key} className={isSalesWorkspace && column.kind === 'currency' ? 'whitespace-nowrap text-right font-medium tabular-nums' : 'whitespace-nowrap text-sm text-gray-700'}>
+                      {config.resource === 'contratos' && column.key === 'numero' ? <button className="font-medium text-[#245ea6] hover:underline" onClick={()=>setContractId(String(record.id))}>{String(record.numero)}</button> : column.kind === 'status' ? (isSalesWorkspace ? <WorkspaceStatusBadge status={String(record[column.key] || '')} /> : <ErpStatusBadge label={formatValue(record[column.key])} tone={toneForStatus(record[column.key])} />) : formatValue(record[column.key], column.kind)}
                     </TableCell>
                   ))}
                   {config.rowAction ? <TableCell className="text-right"><Button variant="ghost" size="sm" onClick={() => openRowAction(record)} disabled={String(record.status) !== 'pendente' || !access.can(getErpOperationCapability(config.rowAction.resource, true))}>{config.rowAction.label}</Button></TableCell> : null}
@@ -323,7 +335,7 @@ export function ErpOperationsWorkspacePage({ config }: { config: ErpOperationCon
               )) : <TableRow><TableCell colSpan={config.columns.length + (config.rowAction ? 1 : 0)} className="h-32 text-center text-sm text-gray-500">Nenhum registro encontrado.</TableCell></TableRow>}
             </TableBody>
           </Table>
-          <ErpPagination page={page} pageSize={50} total={total} onPageChange={setPage} />
+          <div className={isSalesWorkspace ? 'px-5 py-3 md:px-8 lg:px-10' : undefined}><ErpPagination page={page} pageSize={50} total={total} onPageChange={setPage} /></div>
         </div>
       )}
 

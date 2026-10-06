@@ -2,9 +2,10 @@
 
 import type { ReactNode } from 'react'
 import { useRouter } from 'next/navigation'
-import { CalendarDays, ChevronLeft, ChevronRight, MoreVertical, SlidersHorizontal } from 'lucide-react'
+import { CalendarDays, ChevronLeft, ChevronRight, MoreVertical, Search, SlidersHorizontal } from 'lucide-react'
 
 import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem,
   DropdownMenuTrigger,
@@ -26,7 +27,7 @@ export function ErpWorkspaceHeader({
   menuItems?: Array<{ label: string; onSelect: () => void }>
 }) {
   return (
-    <header className="flex min-h-[124px] items-center justify-between gap-5 px-5 py-6 md:px-8 lg:px-10">
+    <header className="flex min-h-[124px] flex-wrap items-center justify-between gap-5 px-5 py-6 md:px-8 lg:px-10">
       <div className="flex min-w-0 items-start gap-3">
         <SidebarTrigger className="mt-6 md:hidden" />
         <div className="min-w-0">
@@ -59,11 +60,28 @@ const financeTabs = [
 ]
 
 export function ErpFinanceTabs({ activeHref }: { activeHref: string }) {
+  return <ErpWorkspaceTabs label="Financeiro" tabs={financeTabs} activeHref={activeHref} />
+}
+
+export function ErpSalesTabs({ activeHref }: { activeHref: string }) {
+  return <ErpWorkspaceTabs label="Vendas" activeHref={activeHref} tabs={[
+    { label: 'Orçamentos', href: '/erp/vendas/orcamentos' },
+    { label: 'Pedidos', href: '/erp/vendas/pedidos' },
+    { label: 'Ordens de serviço', href: '/erp/vendas/ordens-servico' },
+    { label: 'Contratos', href: '/erp/vendas/contratos' },
+  ]} />
+}
+
+function ErpWorkspaceTabs({ label, tabs, activeHref }: {
+  label: string
+  tabs: Array<{ label: string; href: string }>
+  activeHref: string
+}) {
   const router = useRouter()
   return (
-    <nav aria-label="Financeiro" className="border-b border-[#e7e7e4] px-5 md:px-8 lg:px-10">
+    <nav aria-label={label} className="min-w-0 border-b border-[#e7e7e4] px-5 md:px-8 lg:px-10">
       <div className="flex h-14 gap-8 overflow-x-auto">
-        {financeTabs.map((tab) => {
+        {tabs.map((tab) => {
           const active = activeHref === tab.href
           return (
             <button
@@ -83,6 +101,23 @@ export function ErpFinanceTabs({ activeHref }: { activeHref: string }) {
       </div>
     </nav>
   )
+}
+
+export function ErpSearchToolbar({ query, onQueryChange, placeholder, resultLabel, children }: {
+  query: string
+  onQueryChange: (value: string) => void
+  placeholder: string
+  resultLabel: ReactNode
+  children?: ReactNode
+}) {
+  return <div className="flex flex-col gap-3 border-b border-[#e7e7e4] px-5 py-3 md:px-8 lg:flex-row lg:items-center lg:px-10">
+    <div className="relative w-full lg:max-w-[320px]">
+      <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-[#777]" />
+      <Input aria-label={placeholder} value={query} placeholder={placeholder} className="h-10 rounded-full border-[#dfdfdc] pl-9 shadow-none" onChange={event => onQueryChange(event.target.value)} />
+    </div>
+    <div className="flex flex-wrap items-center gap-3">{children}</div>
+    <div className="text-[13px] text-[#696969] lg:ml-auto">{resultLabel}</div>
+  </div>
 }
 
 export type ErpSummaryMetric = {
@@ -142,24 +177,29 @@ export function ErpFilterButton({ active, onClick }: { active?: boolean; onClick
   )
 }
 
-export function ErpStatusBadge({ status }: { status: string }) {
+export function ErpStatusBadge({ status, label: customLabel }: { status: string; label?: string }) {
   const normalized = status.toLocaleLowerCase('pt-BR')
   const label: Record<string, string> = {
     aberto: 'Em aberto', parcial: 'Pago parcial', vencido: 'Vencido',
     pago: 'Pago', cancelado: 'Cancelado', renegociado: 'Renegociado',
     previsao: 'Previsão',
+    rascunho: 'Rascunho', confirmada: 'Confirmada', cancelada: 'Cancelada',
+    em_andamento: 'Em andamento', aprovado: 'Aprovado', recusado: 'Recusado', convertido: 'Convertido',
+    pendente: 'Pendente', atendido: 'Atendido', emitida: 'Emitida', nao_aplicavel: 'Não aplicável',
+    orcamento_pendente: 'Orçamento pendente', aprovada: 'Aprovada', em_execucao: 'Em execução', concluida: 'Concluída',
+    ativo: 'Ativo', pausado: 'Pausado', encerrado: 'Encerrado', bloqueada: 'Bloqueada',
   }
   return (
     <span className={cn(
       'inline-flex min-h-7 items-center rounded-md px-2.5 text-[13px] font-medium',
-      normalized === 'pago' && 'bg-[#e4f6e7] text-[#21683a]',
-      normalized === 'vencido' && 'bg-[#fbe9e7] text-[#9b392a]',
-      normalized === 'parcial' && 'bg-[#e7f0fb] text-[#285d96]',
-      (normalized === 'aberto' || normalized === 'previsao') && 'bg-[#fff4d9] text-[#71541a]',
+      ['pago', 'confirmada', 'aprovado', 'aprovada', 'atendido', 'emitida', 'concluida', 'ativo', 'convertido'].includes(normalized) && 'bg-[#e4f6e7] text-[#21683a]',
+      ['vencido', 'recusado', 'bloqueada'].includes(normalized) && 'bg-[#fbe9e7] text-[#9b392a]',
+      ['parcial', 'em_execucao'].includes(normalized) && 'bg-[#e7f0fb] text-[#285d96]',
+      ['aberto', 'previsao', 'rascunho', 'pendente', 'em_andamento', 'orcamento_pendente', 'pausado'].includes(normalized) && 'bg-[#fff4d9] text-[#71541a]',
       normalized === 'renegociado' && 'bg-[#eee9fb] text-[#604a96]',
-      normalized === 'cancelado' && 'bg-[#eeeeec] text-[#666]',
+      ['cancelado', 'cancelada', 'encerrado', 'nao_aplicavel'].includes(normalized) && 'bg-[#eeeeec] text-[#666]',
     )}>
-      {label[normalized] ?? status}
+      {customLabel ?? label[normalized] ?? status.replaceAll('_', ' ')}
     </span>
   )
 }

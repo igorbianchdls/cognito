@@ -18,7 +18,6 @@ import {
   PackageCheck,
   Pencil,
   Plus,
-  RefreshCw,
   Send,
   ShieldCheck,
   Trash2,
@@ -44,6 +43,8 @@ import {
 } from "@/components/ui/table";
 import { Textarea } from "@/components/ui/textarea";
 import { ErpPagination } from "@/products/erp/frontend/components/ErpPagination";
+import { ErpFilterButton, ErpPeriodSummary, ErpSalesTabs, ErpSearchToolbar, ErpStatusBadge, ErpWorkspaceHeader } from "@/products/erp/frontend/components/ErpWorkspaceChrome";
+import { formatErpValue } from "@/products/erp/frontend/services/erpProfessionalClient";
 import { ErpDocumentDetailsDialog } from "@/products/erp/frontend/components/ErpDocumentDetailsDialog";
 import { ErpAsyncCatalogSelect, type ErpCatalogRecord } from "@/products/erp/frontend/components/ErpAsyncCatalogSelect";
 import { useErpAccess } from "@/products/erp/frontend/hooks/useErpAccess";
@@ -165,14 +166,6 @@ async function parseResponse<T>(response: Response): Promise<T> {
   return body as T;
 }
 
-function statusTone(status: string) {
-  if (["confirmada", "atendido", "emitida", "nao_aplicavel"].includes(status))
-    return "border-emerald-200 bg-emerald-50 text-emerald-700";
-  if (status === "cancelada")
-    return "border-gray-200 bg-gray-100 text-gray-500";
-  return "border-amber-200 bg-amber-50 text-amber-700";
-}
-
 export function SalesWorkspacePage({
   documentType = "venda",
 }: {
@@ -187,6 +180,7 @@ export function SalesWorkspacePage({
   const [query, setQuery] = useState("");
   const deferredQuery = useDeferredValue(query);
   const [status, setStatus] = useState("");
+  const [filtersOpen, setFiltersOpen] = useState(false);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -692,78 +686,61 @@ export function SalesWorkspacePage({
   }
 
   return (
-    <div className="flex min-h-full flex-col gap-5">
-      <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
-        <div>
-          <p className="text-xs font-medium text-gray-500">ERP / Vendas</p>
-          <h1 className="mt-1 text-2xl font-semibold text-gray-950">
-            {isQuote ? "Orcamentos" : "Vendas"}
-          </h1>
-          <p className="mt-1 text-sm text-gray-600">
-            {isQuote
-              ? "Propostas comerciais com validade, aprovacao e conversao em venda."
-              : "Pedidos, recebimentos previstos e confirmacao financeira."}
-          </p>
-        </div>
-        <div className="flex gap-2">
-          <Button
-            variant="outline"
-            size="icon"
-            title="Atualizar"
-            onClick={() => void loadData()}
-          >
-            <RefreshCw className="size-4" />
-          </Button>
-          <Button
-            disabled={!canManage}
-            onClick={() => {
-              resetForm();
-              setEditorOpen(true);
-            }}
-          >
-            <Plus className="size-4" />
-            {isQuote ? "Novo orcamento" : "Nova venda"}
-          </Button>
-        </div>
-      </div>
-      <div className="flex flex-col gap-2 border-y py-3 md:flex-row">
-        <Input
-          value={query}
-          placeholder="Buscar por numero ou cliente"
-          className="md:max-w-sm"
-          onChange={(event) => {
-            setQuery(event.target.value);
-            setPage(1);
-          }}
-        />
+    <div className="flex min-h-full min-w-0 flex-col bg-white">
+      <ErpWorkspaceHeader
+        section="Vendas"
+        title={isQuote ? "Orçamentos" : "Pedidos de venda"}
+        menuItems={[{ label: "Atualizar dados", onSelect: () => void loadData() }]}
+        primaryAction={canManage ? <Button
+          aria-label={isQuote ? "Adicionar orçamento" : "Adicionar venda"}
+          className="h-11 rounded-md bg-[#c9f20a] px-5 font-medium text-[#142000] shadow-none hover:bg-[#b9df09]"
+          onClick={() => { resetForm(); setEditorOpen(true); }}
+        ><Plus className="size-4" />Adicionar</Button> : undefined}
+      />
+      <ErpSalesTabs activeHref={isQuote ? "/erp/vendas/orcamentos" : "/erp/vendas/pedidos"} />
+      <ErpPeriodSummary title="Resumo desta página" description="Considera os registros carregados com os filtros atuais." metrics={[
+        { label: isQuote ? 'Orçamentos' : 'Pedidos', value: String(records.length) },
+        { label: isQuote ? 'Em andamento' : 'Rascunhos', value: String(records.filter(record => record.status !== 'cancelada' && (isQuote ? record.situacao === 'em_andamento' : record.status === 'rascunho')).length) },
+        { label: isQuote ? 'Aprovados' : 'Confirmados', value: String(records.filter(record => record.status !== 'cancelada' && (isQuote ? record.situacao === 'aprovado' : record.status === 'confirmada')).length), tone: 'success' },
+        { label: isQuote ? 'Recusados' : 'Cancelados', value: String(records.filter(record => isQuote ? record.situacao === 'recusado' : record.status === 'cancelada').length), tone: 'danger' },
+        { label: 'Valor listado', value: currency(sumMoney(records.map(record => record.total))) },
+      ]} />
+      <ErpSearchToolbar
+        query={query}
+        onQueryChange={value => { setQuery(value); setPage(1); }}
+        placeholder="Pesquisar por número ou cliente…"
+        resultLabel={<>{totalRecords ? (page - 1) * 50 + 1 : 0}–{Math.min(page * 50, totalRecords)} de {totalRecords}</>}
+      ><ErpFilterButton active={Boolean(status)} onClick={() => setFiltersOpen(current => !current)} /></ErpSearchToolbar>
+      {filtersOpen ? <div className="flex flex-wrap gap-2 border-b border-[#e7e7e4] bg-[#fafaf8] px-5 py-3 md:px-8 lg:px-10">
         <select
+          aria-label="Situação"
           value={status}
-          className="h-10 rounded-md bg-gray-50 px-3 text-sm"
+          className="h-10 rounded-md border border-[#dfdfdc] bg-white px-3 text-sm"
           onChange={(event) => {
             setStatus(event.target.value);
             setPage(1);
           }}
         >
-          <option value="">Todas as situacoes</option>
+          <option value="">Todas as situações</option>
           <option value="rascunho">Rascunho</option>
           <option value="confirmada">Confirmada</option>
           <option value="cancelada">Cancelada</option>
         </select>
-      </div>
+      </div> : null}
       {error ? (
-        <div className="rounded-md border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
+        <div role="alert" className="mx-5 mt-4 rounded-md border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700 md:mx-8 lg:mx-10">
           {error}
         </div>
       ) : null}
-      <div className="overflow-hidden rounded-md border bg-white">
-        <Table>
+      <div className="min-h-[300px] min-w-0 flex-1 overflow-x-auto">
+        <Table className="erp-workspace-table min-w-[1000px] border-b border-[#e7e7e4]">
           <TableHeader>
-            <TableRow className="bg-gray-50">
-              <TableHead>Numero</TableHead>
+            <TableRow className="bg-[#fbfbfa] hover:bg-[#fbfbfa]">
+              <TableHead>Número</TableHead>
               <TableHead>Cliente</TableHead>
               <TableHead>{isQuote ? "Validade" : "Data"}</TableHead>
               <TableHead className="text-right">Total</TableHead>
-              <TableHead>Situacao</TableHead>
+              <TableHead>Situação</TableHead>
               {!isQuote ? <TableHead>Atendimento</TableHead> : null}
               {!isQuote ? <TableHead>Fiscal</TableHead> : null}
               <TableHead className="w-64" />
@@ -792,25 +769,19 @@ export function SalesWorkspacePage({
             ) : (
               records.map((record) => (
                 <TableRow key={record.id}>
-                  <TableCell className="font-medium">{record.numero}</TableCell>
+                  <TableCell><button type="button" className="font-medium text-[#245ea6] hover:underline" onClick={() => void openDetails(record)}>{record.numero}</button></TableCell>
                   <TableCell>{record.cliente}</TableCell>
                   <TableCell>
-                    {isQuote ? record.validade || "-" : record.data}
+                    {formatErpValue(isQuote ? record.validade : record.data)}
                   </TableCell>
-                  <TableCell className="text-right font-medium">
+                  <TableCell className="text-right font-medium tabular-nums">
                     {currency(record.total)}
                   </TableCell>
-                  {!isQuote ? <TableCell><span className={`inline-flex rounded-full border px-2 py-1 text-xs font-medium ${statusTone(record.atendimento_status)}`}>{record.atendimento_status.replaceAll("_", " ")}</span></TableCell> : null}
-                  {!isQuote ? <TableCell><span className={`inline-flex rounded-full border px-2 py-1 text-xs font-medium ${statusTone(record.fiscal_status)}`}>{record.fiscal_status.replaceAll("_", " ")}</span></TableCell> : null}
                   <TableCell>
-                    <span
-                      className={`inline-flex rounded-full border px-2 py-1 text-xs font-medium ${statusTone(record.status)}`}
-                    >
-                      {isQuote
-                        ? record.situacao.replaceAll("_", " ")
-                        : record.status}
-                    </span>
+                    <ErpStatusBadge status={isQuote && record.status !== 'cancelada' ? record.situacao : record.status} />
                   </TableCell>
+                  {!isQuote ? <TableCell><ErpStatusBadge status={record.atendimento_status} label={record.atendimento_status === 'parcial' ? 'Parcial' : undefined} /></TableCell> : null}
+                  {!isQuote ? <TableCell><ErpStatusBadge status={record.fiscal_status} /></TableCell> : null}
                   <TableCell>
                     <div className="flex justify-end gap-1">
                       <Button
@@ -935,12 +906,12 @@ export function SalesWorkspacePage({
             )}
           </TableBody>
         </Table>
-        <ErpPagination
+        <div className="px-5 py-3 md:px-8 lg:px-10"><ErpPagination
           page={page}
           pageSize={50}
           total={totalRecords}
           onPageChange={setPage}
-        />
+        /></div>
       </div>
 
       <Dialog open={editorOpen} onOpenChange={setEditorOpen}>

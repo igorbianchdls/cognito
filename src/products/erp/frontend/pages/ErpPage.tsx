@@ -70,9 +70,9 @@ function ErpPageContent({
   const sectionConfig = getErpSection(section)
   const moduleConfig = getErpModule(section, module)
   const operationConfig = moduleConfig ? ERP_OPERATION_CONFIGS[moduleConfig.id] : undefined
-  const usesFinancialWorkspaceChrome =
-    sectionConfig.id === 'financeiro' &&
-    ['contas-a-pagar', 'contas-a-receber'].includes(moduleConfig?.id ?? '')
+  const usesWorkspaceChrome =
+    (sectionConfig.id === 'financeiro' && ['contas-a-pagar', 'contas-a-receber'].includes(moduleConfig?.id ?? '')) ||
+    (sectionConfig.id === 'vendas' && ['orcamentos', 'pedidos', 'ordens-servico', 'contratos'].includes(moduleConfig?.id ?? ''))
 
   return (
     <SidebarProvider>
@@ -82,7 +82,7 @@ function ErpPageContent({
           <ErpShell
             sectionId={sectionConfig.id}
             moduleId={moduleConfig?.id}
-            hideSectionTabs={usesFinancialWorkspaceChrome || ['overview', 'dashboards'].includes(sectionConfig.id)}
+            hideSectionTabs={usesWorkspaceChrome || ['overview', 'dashboards'].includes(sectionConfig.id)}
           >
             {sectionConfig.id === 'overview' ? (
               <OverviewPage />
