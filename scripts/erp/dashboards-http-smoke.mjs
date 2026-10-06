@@ -77,6 +77,7 @@ try {
   const reader = { ...owner, capabilities: ['erp.vendas.visualizar'] }
   postgres = load('@/lib/postgres')
   const routes = {
+    access: load('@/products/erp/api/handlers/acesso/index').GET,
     summary: load('@/products/erp/api/handlers/dashboards/index').GET,
     records: load('@/products/erp/api/handlers/dashboards/records').GET,
   }
@@ -85,16 +86,20 @@ try {
       const url = new URL(req.url, base),
         match = url.pathname.match(/^\/api\/erp\/dashboards\/([^/]+)(\/registros)?$/)
       if(serveUi&&!url.pathname.startsWith('/api/')){
+        if(url.pathname==='/logoOttoIcon.svg'){
+          res.writeHead(200,{'content-type':'image/svg+xml'})
+          res.end(readFileSync(resolve(root,'public/logoOttoIcon.svg')));return
+        }
         const asset=url.pathname==='/bundle.js'?'bundle.js':url.pathname==='/styles.css'?'styles.css':'index.html'
         res.writeHead(200,{'content-type':asset.endsWith('.js')?'application/javascript':asset.endsWith('.css')?'text/css':'text/html','cache-control':'no-store'})
         res.end(readFileSync(resolve(root,'.cache/dashboards/ui',asset)));return
       }
-      if (!match) {
+      if (!match && url.pathname !== '/api/erp/acesso') {
         res.writeHead(404)
         res.end()
         return
       }
-      const handler = match[2] ? routes.records : routes.summary,
+      const handler = url.pathname === '/api/erp/acesso' ? routes.access : match[2] ? routes.records : routes.summary,
         actor =
           req.headers['x-local-actor'] === 'owner'
             ? owner
@@ -102,7 +107,7 @@ try {
               ? reader
               : null
       const response = await actors.run(actor, () =>
-        handler(new Request(url), { params: Promise.resolve({ dashboardId: match[1] }) }),
+        handler(new Request(url), { params: Promise.resolve(match ? { dashboardId: match[1] } : {}) }),
       )
       res.writeHead(response.status, Object.fromEntries(response.headers))
       res.end(Buffer.from(await response.arrayBuffer()))
@@ -118,6 +123,9 @@ try {
     console.log(JSON.stringify({uiFixture:base}))
     await new Promise(done=>{process.once('SIGTERM',done);process.once('SIGINT',done)})
   }else{
+  await call('/api/erp/acesso', null, 401)
+  assert.deepEqual((await call('/api/erp/acesso', 'owner', 200)).capabilities, owner.capabilities)
+  assert.deepEqual((await call('/api/erp/acesso', 'reader', 200)).capabilities, reader.capabilities)
   const panels = [
     'visao-geral',
     'financeiro',

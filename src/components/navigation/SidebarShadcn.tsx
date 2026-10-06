@@ -167,7 +167,19 @@ export function SidebarShadcn({ className, style, ...props }: React.ComponentPro
           </button>
         </SidebarHeader>
         <SidebarContent className="py-1">
-          <NavMainSimple items={visibleItems} iconSizePx={18} />
+          {access.loading ? (
+            <p role="status" className="px-5 py-3 text-sm text-[#626262]">Carregando menu…</p>
+          ) : access.error ? (
+            <div role="alert" className="space-y-3 px-5 py-3 text-sm text-[#626262]">
+              <p>Não foi possível carregar o menu.</p>
+              <p className="text-xs">{access.error}</p>
+              <button type="button" onClick={access.refresh} className="rounded-md border bg-white px-3 py-2 text-[#222] hover:bg-[#f4f4f1]">Tentar novamente</button>
+            </div>
+          ) : visibleItems.length ? (
+            <NavMainSimple items={visibleItems} iconSizePx={18} />
+          ) : (
+            <p role="status" className="px-5 py-3 text-sm text-[#626262]">Seu perfil não possui acesso aos módulos do ERP. Solicite acesso ao administrador da empresa.</p>
+          )}
         </SidebarContent>
         <SidebarFooter className="gap-1 border-t border-[#e6e6e2] p-2">
           <SidebarMenu className="gap-0.5">

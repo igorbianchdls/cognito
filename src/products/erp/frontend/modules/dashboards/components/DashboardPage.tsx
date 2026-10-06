@@ -148,7 +148,7 @@ function DashboardPageContent({
     'h-10 min-w-0 rounded-lg border border-slate-200 bg-white px-3 text-sm text-slate-700 focus:outline-2 focus:outline-blue-600'
   return (
     <div
-      className="mx-auto flex min-h-full w-full max-w-[1600px] flex-col gap-5 bg-slate-50 p-4 text-slate-900 md:p-7"
+      className="mx-auto flex min-h-full w-full max-w-[1600px] flex-col gap-5 bg-white p-4 text-slate-900 md:p-7"
       data-dashboard={id}
     >
       <div className="flex flex-wrap items-start justify-between gap-4">

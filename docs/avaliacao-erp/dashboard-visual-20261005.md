@@ -35,7 +35,17 @@ Ao mudar usuário, empresa ou filtro, o conteúdo anterior é descartado e a req
 
 A validação visual usou componentes, CSS, handlers e consultas reais, substituindo apenas a sessão externa do Clerk e a navegação Next no ambiente isolado. O navegador integrado do aplicativo falhou ao iniciar. O teste de filtros detectou e levou à correção do fechamento do painel ao alterar opções. A captura dos estilos de tamanho variável também foi ajustada no script de teste. A inspeção dos gráficos identificou e corrigiu a ausência dos eixos, grade e legenda; os elementos compartilhados passaram a ser filhos diretos reconhecidos pela biblioteca de gráficos. O teste visual passou a exigir eixos e grade em cada dashboard com movimentos.
 
-O relatório e as capturas locais ficam em `.cache/dashboards/`, ignorada pelo Git. A evidência visual apresenta os componentes de conteúdo dentro de `ErpShell`; a navegação global do aplicativo é reutilizada no ERP e não foi recriada na captura isolada.
+O relatório e as capturas locais ficam em `.cache/dashboards/`, ignorada pelo Git. A primeira validação visual apresentou somente o conteúdo dentro de `ErpShell`. A verificação complementar abaixo inclui a navegação global real.
+
+## Correção complementar: menu lateral e fundo branco
+
+O menu consultava permissões somente ao montar, sem aguardar a sessão do Clerk. Falhas HTTP e de conexão eram convertidas silenciosamente em uma lista vazia. O hook agora aguarda a sessão, envia o token, valida a resposta, cancela consultas antigas e recarrega ao mudar usuário, sessão ou organização. As permissões recebidas continuam controlando cada item. A interface diferencia carregamento, erro com tentativa de recuperação e perfil sem acesso.
+
+`/api/erp/acesso` mantém a autenticação no handler e passa a responder com erro JSON em caso de sessão ausente, sem o redirecionamento prévio do proxy. O fundo principal compartilhado pelos dashboards passou a branco.
+
+`scripts/erp/sidebar-ui-smoke.mjs` verifica a barra lateral e o hook reais junto com o dashboard: espera pela sessão, menu do proprietário, expansão e navegação financeira, pesquisa, erro e recuperação, resposta inválida, troca de usuário/empresa, ausência legítima de permissões, saída da sessão e menu em celular. Também confere a cor branca calculada e que o menu não cobre o conteúdo. Foram dez verificações aprovadas, além de tipagem e lint.
+
+A sessão Clerk, navegação/imagem Next e o rodapé de usuário são substituídos apenas no teste local. O endpoint, os componentes, o CSS e as consultas Supabase são reais. As verificações HTTP também cobrem permissões do proprietário, perfil restrito e resposta 401 do endpoint de acesso. Não foi realizado login real em produção nem publicação na Vercel. Captura: `.cache/dashboards/ui/sidebar-dashboard-white.png`.
 
 ## Arquivos principais
 
