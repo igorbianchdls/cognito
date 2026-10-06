@@ -56,6 +56,14 @@ const colors = {
 };
 type DashboardAppearance = "default" | "ramp";
 
+function dashboardSignColor(value: number) {
+  return value > 0
+    ? "erp-dashboard-positive"
+    : value < 0
+      ? "erp-dashboard-danger"
+      : "";
+}
+
 export function DashboardMetrics({
   metrics,
   appearance = "default",
@@ -80,8 +88,8 @@ export function DashboardMetrics({
             </div>
             <div
               className={
-                "erp-dashboard-metric-amount tabular-nums" +
-                (metric.tone === "danger" ? " erp-dashboard-danger" : "")
+                "erp-dashboard-metric-amount tabular-nums " +
+                dashboardSignColor(metric.value)
               }
             >
               {dashboardValue(metric.value, metric.format)}
@@ -97,7 +105,12 @@ export function DashboardMetrics({
                   "Sem base de comparação"
                 ) : (
                   <>
-                    <span className="inline-flex items-center gap-1">
+                    <span
+                      className={
+                        "inline-flex items-center gap-1 " +
+                        dashboardSignColor(metric.variation)
+                      }
+                    >
                       {metric.variation >= 0 ? (
                         <ArrowUpRight className="size-3" aria-hidden="true" />
                       ) : (

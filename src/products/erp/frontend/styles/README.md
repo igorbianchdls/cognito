@@ -12,6 +12,8 @@
 
 `DashboardMetrics`, `DashboardChartView` e `DashboardListView` recebem `appearance="ramp"` na visão geral. Esse parâmetro muda a apresentação; valores, séries, filtros, permissões e links continuam vindo da API. As tabelas usam `ErpRecordIdentity`; a linha secundária aparece apenas quando a consulta fornece um detalhe.
 
+Nos cards de indicadores, valores e variações positivos são verdes, negativos são vermelhos e zero permanece neutro. A seta acompanha a cor da variação; comparações sem base permanecem neutras.
+
 As margens laterais são de 20 px no celular, 40 px em telas intermediárias e 52 px em telas maiores. Os indicadores ficam agrupados à esquerda; no celular, usam duas colunas. As tabelas podem rolar horizontalmente dentro da sua própria região.
 
 ## Colunas

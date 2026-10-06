@@ -45,7 +45,7 @@ try {
     }
   }
   for (const marker of ['.erp-workspace-header', '.erp-workspace-metric-value', '.erp-workspace-column-trigger', '.erp-record-avatar']) assert(styles.includes(marker), 'Missing deployed style ' + marker)
-  if (!baseline) for (const marker of ['.erp-dashboard-metric-card', '.erp-dashboard-header-controls', '.erp-dashboard-table-section']) assert(styles.includes(marker), 'Missing deployed dashboard style ' + marker)
+  if (!baseline) for (const marker of ['.erp-dashboard-metric-card', '.erp-dashboard-header-controls', '.erp-dashboard-table-section', '.erp-dashboard-positive', '.erp-dashboard-danger']) assert(styles.includes(marker), 'Missing deployed dashboard style ' + marker)
   const report = { status: 'passed', production, dashboardOnly, origin, deploymentId: staged.id, realClerkSession: true, businessDataWrites: 0, deployedStylesVerified: true, browserVisualCheck: 'unavailable', results }
   writeFileSync('.cache/workspace-ui/' + (baseline ? 'baseline' : production ? 'production' : 'staged') + '-http.json', JSON.stringify(report, null, 2))
   console.log(JSON.stringify(report))
