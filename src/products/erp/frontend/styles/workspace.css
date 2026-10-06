@@ -85,7 +85,7 @@
 .erp-workspace-surface [data-dashboard] h1 { font-size: clamp(30px, 3.1vw, 44px); font-weight: 400; line-height: 1.12; letter-spacing: -0.035em !important; color: #151515; }
 .erp-workspace-surface [data-dashboard] :is(section, article, a).border { border-color: #eeeeec; border-radius: 6px; box-shadow: none; }
 .erp-workspace-surface [data-dashboard] section[aria-label="Indicadores"] > :is(a, div) { border-radius: 4px; }
-.erp-workspace-surface [data-dashboard] section[aria-label="Indicadores"] .tabular-nums { font-weight: 400; }
+.erp-workspace-surface [data-dashboard] section[aria-label="Indicadores"] .tabular-nums:not(.erp-dashboard-metric-amount) { font-weight: 400; }
 
 @media (min-width: 768px) { .erp-workspace-surface { --erp-gutter: 40px; } }
 @media (min-width: 1280px) { .erp-workspace-surface { --erp-gutter: 52px; } }
