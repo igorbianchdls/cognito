@@ -16,6 +16,7 @@ import { Label } from '@/components/ui/label'
 import { Switch } from '@/components/ui/switch'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { Textarea } from '@/components/ui/textarea'
+import { ErpRecordIdentity } from '@/products/erp/frontend/components/ErpRecordIdentity'
 import { ErpPagination } from '@/products/erp/frontend/components/ErpPagination'
 import { ErpAsyncCatalogSelect } from '@/products/erp/frontend/components/ErpAsyncCatalogSelect'
 import { parseErpResponse } from '@/products/erp/frontend/services/erpProfessionalClient'
@@ -271,18 +272,18 @@ export function PayablesWorkspacePage({ purchaseOnly = false }: { purchaseOnly?:
     {filtersOpen ? <div className="flex flex-wrap gap-2 border-b border-[#e7e7e4] bg-[#fafaf8] px-5 py-3 md:px-8 lg:px-10"><Filter value={status} onChange={(value) => { setStatus(value); setPage(1) }} label="Todas as situações" options={[['aberto','Em aberto'],['parcial','Pago parcial'],['vencido','Vencido'],['pago','Pago'],['cancelado','Cancelado']]} />{!purchaseOnly ? <Filter value={origin} onChange={(value) => { setOrigin(value); setPage(1) }} label="Todas as origens" options={[['manual','Manual'],['compra','Compra'],['recorrencia','Recorrência'],['xml','XML'],['integracao','Integração']]} /> : null}<Filter value={launchType} onChange={(value) => { setLaunchType(value); setPage(1) }} label="Previsão e efetivo" options={[['previsao','Previsão'],['efetivo','Obrigação efetiva']]} /></div> : null}
     {error ? <div role="alert" className="mx-5 mt-4 rounded-md border border-rose-200 bg-rose-50 px-4 py-3 text-[14px] text-rose-700 md:mx-8 lg:mx-10">{error}</div> : null}
     <div className="min-h-[300px] flex-1 overflow-x-auto">
-      <Table className="erp-workspace-table min-w-[1120px] border-b border-[#e7e7e4]">
+      <Table className="erp-workspace-table min-w-[1280px] border-b border-[#e7e7e4]">
         <TableHeader><TableRow className="bg-[#fbfbfa] hover:bg-[#fbfbfa]">
           <TableHead className="w-12 px-4"><Checkbox checked={allSelected} onCheckedChange={(checked) => setSelectedIds(checked ? new Set(records.map((record) => record.parcela_id)) : new Set())} aria-label="Selecionar todos os lançamentos desta página" /></TableHead>
-          <TableHead>Vencimento</TableHead><TableHead>Descrição / fornecedor</TableHead><TableHead>Natureza</TableHead><TableHead className="text-right">Principal</TableHead><TableHead className="text-right">Dinheiro</TableHead><TableHead className="text-right">Crédito</TableHead><TableHead className="text-right">Saldo</TableHead><TableHead>Situação</TableHead><TableHead className="w-44" />
+          <TableHead>Vencimento</TableHead><TableHead>Descrição</TableHead><TableHead>Fornecedor</TableHead><TableHead>Natureza</TableHead><TableHead className="text-right">Principal</TableHead><TableHead className="text-right">Dinheiro</TableHead><TableHead className="text-right">Crédito</TableHead><TableHead className="text-right">Saldo</TableHead><TableHead>Situação</TableHead><TableHead className="w-44" />
         </TableRow></TableHeader>
         <TableBody>
-          {loading ? <TableRow><TableCell colSpan={10} className="h-40 text-center text-[#777]"><Loader2 className="mx-auto mb-2 size-5 animate-spin" />Carregando lançamentos</TableCell></TableRow> : records.length === 0 ? <TableRow><TableCell colSpan={10} className="h-40 text-center text-[#777]">Nenhum lançamento encontrado neste período.</TableCell></TableRow> : records.map((record) => {
+          {loading ? <TableRow><TableCell colSpan={11} className="h-40 text-center text-[#777]"><Loader2 className="mx-auto mb-2 size-5 animate-spin" />Carregando lançamentos</TableCell></TableRow> : records.length === 0 ? <TableRow><TableCell colSpan={11} className="h-40 text-center text-[#777]">Nenhum lançamento encontrado neste período.</TableCell></TableRow> : records.map((record) => {
             const checked = selectedIds.has(record.parcela_id)
             return <TableRow key={record.parcela_id} data-state={checked ? 'selected' : undefined} className="hover:bg-[#fafaf8] data-[state=selected]:bg-[#f5f6ec]">
               <TableCell className="px-4"><Checkbox checked={checked} onCheckedChange={(next) => setSelectedIds((current) => { const copy = new Set(current); if (next) copy.add(record.parcela_id); else copy.delete(record.parcela_id); return copy })} aria-label={'Selecionar ' + record.descricao} /></TableCell>
               <TableCell className="whitespace-nowrap">{dateLabel(record.vencimento)}</TableCell>
-              <TableCell><p className="font-medium text-[#252525]">{record.descricao}</p><p className="mt-0.5 text-[12px] text-[#7a7a7a]">{record.fornecedor} · Parcela {record.parcela}</p></TableCell>
+              <TableCell><ErpRecordIdentity name={record.descricao} category={record.categoria} identityKey={'pagar:' + record.conta_id} icon={<Banknote className="size-5" />} /></TableCell><TableCell><p className="font-medium text-[#252525]">{record.fornecedor}</p><p className="mt-0.5 text-[12px] text-[#7a7a7a]">Parcela {record.parcela}</p></TableCell>
               <TableCell><span className="text-[13px] text-[#5f5f5f]">{record.tipo_lancamento === 'previsao' ? 'Previsão' : 'Obrigação efetiva'}</span></TableCell>
               <TableCell className="text-right tabular-nums">{currency(record.valor)}</TableCell><TableCell className="text-right tabular-nums">{currency(record.valor_pago)}</TableCell><TableCell className="text-right tabular-nums">{currency(record.credito)}</TableCell><TableCell className="text-right font-medium tabular-nums">{currency(record.saldo)}</TableCell>
               <TableCell><ErpStatusBadge status={record.status} /></TableCell>

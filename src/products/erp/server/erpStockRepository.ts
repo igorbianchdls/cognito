@@ -524,20 +524,26 @@ async function listStockOperationPage(
 export async function listStockOperation(tenantId: number, resource: string, input: ErpOperationListInput = {}) {
   if (resource === 'posicao-estoque') {
     return listStockOperationPage(tenantId,
-      `SELECT produto_id::text AS id, codigo, sku, produto, unidade_medida, local_estoque,
-         quantidade_fisica, quantidade_reservada, quantidade_disponivel, custo_medio,
-         valor_estoque, estoque_minimo, situacao
-       FROM erp.vw_posicao_estoque WHERE empresa_id = $1`,
+      `SELECT posicao.produto_id::text AS id, posicao.codigo, posicao.sku, posicao.produto,
+         posicao.unidade_medida, posicao.local_estoque, posicao.quantidade_fisica,
+         posicao.quantidade_reservada, posicao.quantidade_disponivel, posicao.custo_medio,
+         posicao.valor_estoque, posicao.estoque_minimo, posicao.situacao,
+         COALESCE(categorias.nome, '') AS categoria
+       FROM erp.vw_posicao_estoque AS posicao
+       JOIN erp.produtos AS produtos ON produtos.empresa_id = posicao.empresa_id AND produtos.id = posicao.produto_id
+       LEFT JOIN erp.categorias AS categorias ON categorias.empresa_id = produtos.empresa_id AND categorias.id = produtos.categoria_id
+       WHERE posicao.empresa_id = $1`,
       'produto, local_estoque', input,
     )
   }
   if (resource === 'movimentacoes') {
     return listStockOperationPage(tenantId,
-      `SELECT movimentos.id::text, movimentos.ocorrido_em AS data, produtos.nome AS produto,
+      `SELECT movimentos.id::text, movimentos.ocorrido_em AS data, produtos.nome AS produto, COALESCE(categorias.nome, '') AS categoria,
          locais.nome AS local, movimentos.tipo, movimentos.quantidade, movimentos.custo_unitario,
          movimentos.saldo_apos, movimentos.origem_tipo AS origem
        FROM erp.movimentacoes_estoque AS movimentos
        JOIN erp.produtos AS produtos ON produtos.empresa_id = movimentos.empresa_id AND produtos.id = movimentos.produto_id
+       LEFT JOIN erp.categorias AS categorias ON categorias.empresa_id = produtos.empresa_id AND categorias.id = produtos.categoria_id
        JOIN erp.locais_estoque AS locais ON locais.empresa_id = movimentos.empresa_id AND locais.id = movimentos.local_estoque_id
        WHERE movimentos.empresa_id = $1`,
       'data DESC, id DESC', input,
@@ -580,23 +586,25 @@ export async function listStockOperation(tenantId: number, resource: string, inp
   }
   if (resource === 'kits') {
     return listStockOperationPage(tenantId,
-      `SELECT kits.id::text, produtos.nome AS produto, produtos.codigo,
+      `SELECT kits.id::text, produtos.nome AS produto, COALESCE(categorias.nome, '') AS categoria, produtos.codigo,
          count(itens.id)::int AS componentes, CASE WHEN kits.ativo THEN 'ativo' ELSE 'inativo' END AS status
        FROM erp.kits_produtos AS kits
        JOIN erp.produtos ON produtos.empresa_id = kits.empresa_id AND produtos.id = kits.produto_id
+       LEFT JOIN erp.categorias AS categorias ON categorias.empresa_id = produtos.empresa_id AND categorias.id = produtos.categoria_id
        LEFT JOIN erp.kits_produtos_itens AS itens ON itens.empresa_id = kits.empresa_id AND itens.kit_id = kits.id
        WHERE kits.empresa_id = $1 AND kits.excluido_em IS NULL
-       GROUP BY kits.id, produtos.nome, produtos.codigo`,
+       GROUP BY kits.id, produtos.nome, produtos.codigo, categorias.nome`,
       'produto, id', input,
     )
   }
   if (resource === 'conversoes-unidades') {
     return listStockOperationPage(tenantId,
-      `SELECT conversoes.id::text, produtos.nome AS produto, conversoes.unidade_origem,
+      `SELECT conversoes.id::text, produtos.nome AS produto, COALESCE(categorias.nome, '') AS categoria, conversoes.unidade_origem,
          conversoes.unidade_destino, conversoes.fator,
          CASE WHEN conversoes.ativo THEN 'ativo' ELSE 'inativo' END AS status
        FROM erp.conversoes_unidades_produto AS conversoes
        JOIN erp.produtos ON produtos.empresa_id = conversoes.empresa_id AND produtos.id = conversoes.produto_id
+       LEFT JOIN erp.categorias AS categorias ON categorias.empresa_id = produtos.empresa_id AND categorias.id = produtos.categoria_id
        WHERE conversoes.empresa_id = $1 AND conversoes.excluido_em IS NULL`,
       'produto, unidade_origem', input,
     )

@@ -1703,17 +1703,24 @@ async function listSaleRecords(input: ListInput): Promise<ErpEntityRecord[]> {
           vendas.total,
          entidades.nome AS cliente,
          entidades.id::text AS entidade_id,
-         concat_ws(' ', vendas.numero, entidades.nome, vendas.status) AS searchable
+         COALESCE(resumo.primeiro_item, 'Sem itens') || CASE WHEN resumo.quantidade_itens > 1 THEN ' + ' || (resumo.quantidade_itens - 1)::text || CASE WHEN resumo.quantidade_itens = 2 THEN ' item' ELSE ' itens' END ELSE '' END AS descricao,
+         COALESCE(categorias.nome, '') AS categoria,
+         concat_ws(' ', vendas.numero, entidades.nome, vendas.status, resumo.primeiro_item, categorias.nome) AS searchable
        FROM erp.vendas AS vendas
        JOIN erp.entidades AS entidades
          ON entidades.empresa_id = vendas.empresa_id
         AND entidades.id = vendas.cliente_id
+       LEFT JOIN erp.categorias AS categorias ON categorias.empresa_id = vendas.empresa_id AND categorias.id = vendas.categoria_id
+       LEFT JOIN LATERAL (
+         SELECT (array_agg(itens.descricao ORDER BY itens.id))[1] AS primeiro_item, count(*)::int AS quantidade_itens
+         FROM erp.vendas_itens AS itens WHERE itens.empresa_id = vendas.empresa_id AND itens.venda_id = vendas.id AND itens.excluido_em IS NULL
+       ) AS resumo ON true
         WHERE vendas.empresa_id = $1
           AND vendas.excluido_em IS NULL
           ${documentClause}
       )
       SELECT id, numero, data_venda, status, atendimento_status, fiscal_status, situacao, tipo_documento, validade_em, versao,
-        total, cliente, count(*) OVER ()::int AS __total
+        total, cliente, entidade_id, descricao, categoria, count(*) OVER ()::int AS __total
      FROM rows
      WHERE true${appendSearch(params, input.query)}${appendRecordStatusFilter(params, input.filters)}
      ORDER BY data_venda DESC, id DESC${appendPagination(params, input)}`,
@@ -1724,6 +1731,8 @@ async function listSaleRecords(input: ListInput): Promise<ErpEntityRecord[]> {
     id: String(row.id),
     numero: String(row.numero ?? ''),
     cliente: String(row.cliente ?? ''),
+    descricao: String(row.descricao ?? ''),
+    categoria: String(row.categoria ?? ''),
     entidade_id: String(row.entidade_id ?? ''),
     data: dateText(row.data_venda) || '',
     total: Number(row.total ?? 0),
@@ -1757,11 +1766,18 @@ async function listPurchaseRecords(input: ListInput): Promise<ErpEntityRecord[]>
          entidades.nome AS fornecedor,
          entidades.id::text AS entidade_id,
          contas.tipo_lancamento,
-         concat_ws(' ', compras.numero, entidades.nome, compras.status, compras.tipo_movimento) AS searchable
+         COALESCE(resumo.primeiro_item, 'Sem itens') || CASE WHEN resumo.quantidade_itens > 1 THEN ' + ' || (resumo.quantidade_itens - 1)::text || CASE WHEN resumo.quantidade_itens = 2 THEN ' item' ELSE ' itens' END ELSE '' END AS descricao,
+         COALESCE(categorias.nome, '') AS categoria,
+         concat_ws(' ', compras.numero, entidades.nome, compras.status, compras.tipo_movimento, resumo.primeiro_item, categorias.nome) AS searchable
        FROM erp.compras AS compras
        JOIN erp.entidades AS entidades
          ON entidades.empresa_id = compras.empresa_id
         AND entidades.id = compras.fornecedor_id
+       LEFT JOIN erp.categorias AS categorias ON categorias.empresa_id = compras.empresa_id AND categorias.id = compras.categoria_id
+       LEFT JOIN LATERAL (
+         SELECT (array_agg(itens.descricao ORDER BY itens.id))[1] AS primeiro_item, count(*)::int AS quantidade_itens
+         FROM erp.compras_itens AS itens WHERE itens.empresa_id = compras.empresa_id AND itens.compra_id = compras.id AND itens.excluido_em IS NULL
+       ) AS resumo ON true
        LEFT JOIN erp.contas_pagar AS contas
          ON contas.empresa_id = compras.empresa_id
         AND contas.compra_id = compras.id
@@ -1771,7 +1787,7 @@ async function listPurchaseRecords(input: ListInput): Promise<ErpEntityRecord[]>
          ${movementClause}
      )
      SELECT id, numero, data_compra, data_prevista_entrega, status, tipo_compra, tipo_movimento,
-       total, gera_financeiro, fornecedor, tipo_lancamento, count(*) OVER ()::int AS __total
+       total, gera_financeiro, fornecedor, entidade_id, descricao, categoria, tipo_lancamento, count(*) OVER ()::int AS __total
      FROM rows
      WHERE true${appendSearch(params, input.query)}${appendRecordStatusFilter(params, input.filters)}
      ORDER BY data_compra DESC, id DESC${appendPagination(params, input)}`,
@@ -1782,6 +1798,8 @@ async function listPurchaseRecords(input: ListInput): Promise<ErpEntityRecord[]>
     id: String(row.id),
     numero: String(row.numero ?? ''),
     fornecedor: String(row.fornecedor ?? ''),
+    descricao: String(row.descricao ?? ''),
+    categoria: String(row.categoria ?? ''),
     data: dateText(row.data_compra) || '',
     entrega: dateText(row.data_prevista_entrega) || '',
     total: Number(row.total ?? 0),
@@ -1830,11 +1848,13 @@ async function listReceivables(input: ListInput): Promise<ErpEntityRecord[]> {
            ELSE parcelas.status
          END AS status,
          entidades.nome AS cliente,
-         concat_ws(' ', contas.descricao, contas.numero_documento, entidades.nome, contas.status) AS searchable
+         COALESCE(categorias.nome, '') AS categoria,
+         concat_ws(' ', contas.descricao, contas.numero_documento, entidades.nome, contas.status, categorias.nome) AS searchable
        FROM erp.contas_receber AS contas
        JOIN erp.entidades AS entidades
          ON entidades.empresa_id = contas.empresa_id
         AND entidades.id = contas.cliente_id
+       LEFT JOIN erp.categorias AS categorias ON categorias.empresa_id = contas.empresa_id AND categorias.id = contas.categoria_id
        JOIN erp.contas_receber_parcelas AS parcelas
          ON parcelas.empresa_id = contas.empresa_id
         AND parcelas.conta_receber_id = contas.id
@@ -1865,6 +1885,7 @@ async function listReceivables(input: ListInput): Promise<ErpEntityRecord[]> {
     descricao: String(row.descricao ?? ''),
     documento: String(row.numero_documento ?? ''),
     cliente: String(row.cliente ?? ''),
+    categoria: String(row.categoria ?? ''),
     parcela: Number(row.numero_parcela ?? 0),
     vencimento: dateText(row.data_vencimento) || '',
     valor: Number(row.valor ?? 0),

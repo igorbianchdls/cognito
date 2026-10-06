@@ -12,9 +12,16 @@ import {
 import { cn } from '@/lib/utils'
 import type { ErpEntityAction, ErpEntityConfig, ErpEntityRecord, ErpTableColumn } from '@/products/erp/shared/types'
 import { ErpStatusBadge } from '@/products/erp/frontend/components/ErpWorkspaceChrome'
+import { ErpRecordIdentity } from './ErpRecordIdentity'
 
 function formatCellValue(record: ErpEntityRecord, column: ErpTableColumn, config: ErpEntityConfig) {
   const value = record[column.key]
+
+  if (column.key === 'nome') {
+    const typeLabel = config.fields.find(field => field.key === 'tipo')?.options?.find(option => option.value === record.tipo)?.label
+    const category = record.categoria || (['categorias', 'contas-financeiras'].includes(config.id) ? typeLabel || record.tipo : '')
+    return <ErpRecordIdentity name={String(value ?? '')} category={String(category || '')} identityKey={`${config.id}:${record.id}`} />
+  }
 
   if (column.kind === 'currency') {
     return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(Number(value ?? 0))
@@ -54,13 +61,14 @@ export function ErpDataTable({
   onDeactivate?: (record: ErpEntityRecord) => void
 }) {
   const actions = config.actions || []
+  const columns = config.columns.filter(column => column.key !== 'categoria')
 
   return (
     <div className="min-w-0 overflow-x-auto bg-white">
       <Table className="erp-workspace-table min-w-[1000px] border-b border-[#e7e7e4]">
         <TableHeader>
           <TableRow className="bg-[#fbfbfa] hover:bg-[#fbfbfa]">
-            {config.columns.map((column) => (
+            {columns.map((column) => (
               <TableHead key={column.key} className={cn(column.width, ['currency', 'number'].includes(column.kind ?? '') && 'text-right')}>
                 {column.label}
               </TableHead>
@@ -71,7 +79,7 @@ export function ErpDataTable({
         <TableBody>
           {records.map((record) => (
             <TableRow key={record.id}>
-              {config.columns.map((column) => (
+              {columns.map((column) => (
                 <TableCell key={column.key} className={cn(['currency', 'number'].includes(column.kind ?? '') && 'text-right tabular-nums')}>
                   {formatCellValue(record, column, config)}
                 </TableCell>

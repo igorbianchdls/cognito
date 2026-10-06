@@ -12,6 +12,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Skeleton } from '@/components/ui/skeleton'
+import { ErpRecordIdentity } from './ErpRecordIdentity'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { ErpStatusBadge } from '@/products/erp/frontend/components/ErpStatusBadge'
 import { ErpPagination } from '@/products/erp/frontend/components/ErpPagination'
@@ -339,7 +340,7 @@ export function ErpOperationsWorkspacePage({ config }: { config: ErpOperationCon
                 <TableRow key={record.id}>
                   {config.columns.map((column) => (
                     <TableCell key={column.key} className={isWorkspace && ['currency', 'number'].includes(column.kind ?? '') ? 'whitespace-nowrap text-right font-medium tabular-nums' : 'whitespace-nowrap text-sm text-gray-700'}>
-                      {config.resource === 'contratos' && column.key === 'numero' ? <button className="font-medium text-[#245ea6] hover:underline" onClick={()=>setContractId(String(record.id))}>{String(record.numero)}</button> : column.kind === 'status' ? (isWorkspace ? <WorkspaceStatusBadge status={String(record[column.key] || '')} tone={toneForStatus(record[column.key])} /> : <ErpStatusBadge label={formatValue(record[column.key])} tone={toneForStatus(record[column.key])} />) : formatValue(record[column.key], column.kind)}
+                      {config.resource === 'contratos' && column.key === 'numero' ? <button className="font-medium text-[#245ea6] hover:underline" onClick={()=>setContractId(String(record.id))}>{String(record.numero)}</button> : ['nome', 'produto'].includes(column.key) ? <ErpRecordIdentity name={String(record[column.key] || '')} category={String(record.categoria || (config.resource === 'locais-estoque' ? record.tipo : '') || '')} identityKey={`${config.resource}:${record.id}`} /> : column.kind === 'status' ? (isWorkspace ? <WorkspaceStatusBadge status={String(record[column.key] || '')} tone={toneForStatus(record[column.key])} /> : <ErpStatusBadge label={formatValue(record[column.key])} tone={toneForStatus(record[column.key])} />) : formatValue(record[column.key], column.kind)}
                     </TableCell>
                   ))}
                   {config.rowAction ? <TableCell className="text-right"><Button variant="ghost" size="sm" onClick={() => openRowAction(record)} disabled={String(record.status) !== 'pendente' || !access.can(getErpOperationCapability(config.rowAction.resource, true))}>{config.rowAction.label}</Button></TableCell> : null}

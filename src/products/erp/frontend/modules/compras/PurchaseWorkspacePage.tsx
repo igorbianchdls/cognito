@@ -32,6 +32,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Textarea } from "@/components/ui/textarea";
+import { ErpRecordIdentity } from '@/products/erp/frontend/components/ErpRecordIdentity';
 import { ErpPagination } from "@/products/erp/frontend/components/ErpPagination";
 import { ErpDocumentDetailsDialog } from "@/products/erp/frontend/components/ErpDocumentDetailsDialog";
 import { ErpAsyncCatalogSelect, type ErpCatalogRecord } from "@/products/erp/frontend/components/ErpAsyncCatalogSelect";
@@ -62,6 +63,8 @@ type PurchaseCatalogs = {
 };
 
 type PurchaseRecord = {
+  descricao: string;
+  categoria: string;
   id: string;
   numero: string;
   fornecedor: string;
@@ -682,7 +685,7 @@ export function PurchaseWorkspacePage() {
         { label: 'Compras efetivas', value: String(summary.efetivas), tone: 'success' },
         { label: 'Valor listado', value: formatCurrency(summary.total) },
       ]} />
-      <ErpSearchToolbar query={query} onQueryChange={value => { setQuery(value); setPage(1); }} placeholder="Pesquisar por número ou fornecedor…" resultLabel={<>{totalRecords ? (page - 1) * 50 + 1 : 0}–{Math.min(page * 50, totalRecords)} de {totalRecords}</>}>
+      <ErpSearchToolbar query={query} onQueryChange={value => { setQuery(value); setPage(1); }} placeholder="Pesquisar por descrição, número ou fornecedor…" resultLabel={<>{totalRecords ? (page - 1) * 50 + 1 : 0}–{Math.min(page * 50, totalRecords)} de {totalRecords}</>}>
         <ErpFilterButton active={Boolean(movementFilter)} onClick={() => setFiltersOpen(current => !current)} />
       </ErpSearchToolbar>
       {filtersOpen ? <div className="flex flex-wrap gap-2 border-b border-[#e7e7e4] bg-[#fafaf8] px-5 py-3 md:px-8 lg:px-10">
@@ -710,10 +713,11 @@ export function PurchaseWorkspacePage() {
         </div>
       ) : null}
       <div className="min-h-[300px] min-w-0 flex-1 overflow-x-auto">
-        <Table className="erp-workspace-table min-w-[1050px] border-b border-[#e7e7e4]">
+        <Table className="erp-workspace-table min-w-[1240px] border-b border-[#e7e7e4]">
           <TableHeader>
             <TableRow className="bg-[#fbfbfa] hover:bg-[#fbfbfa]">
               <TableHead>Número</TableHead>
+              <TableHead>Descrição</TableHead>
               <TableHead>Fornecedor</TableHead>
               <TableHead>Movimento</TableHead>
               <TableHead>Data</TableHead>
@@ -727,7 +731,7 @@ export function PurchaseWorkspacePage() {
             {loading ? (
               <TableRow>
                 <TableCell
-                  colSpan={8}
+                  colSpan={9}
                   className="h-32 text-center text-gray-500"
                 >
                   <Loader2 className="mx-auto mb-2 size-5 animate-spin" />
@@ -737,7 +741,7 @@ export function PurchaseWorkspacePage() {
             ) : records.length === 0 ? (
               <TableRow>
                 <TableCell
-                  colSpan={8}
+                  colSpan={9}
                   className="h-32 text-center text-gray-500"
                 >
                   Nenhuma compra encontrada.
@@ -747,6 +751,7 @@ export function PurchaseWorkspacePage() {
               records.map((record) => (
                 <TableRow key={record.id}>
                   <TableCell><button type="button" className="font-medium text-[#245ea6] hover:underline" onClick={() => void openDetails(record)}>{record.numero}</button></TableCell>
+                  <TableCell><ErpRecordIdentity name={record.descricao} category={record.categoria} identityKey={'compra:' + record.id} icon={<PackageCheck className="size-5" />} /></TableCell>
                   <TableCell>{record.fornecedor}</TableCell>
                   <TableCell>
                     <ErpStatusBadge status={record.tipo_movimento} label={movementLabel(record.tipo_movimento)} />

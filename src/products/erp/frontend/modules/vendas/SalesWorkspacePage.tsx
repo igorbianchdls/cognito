@@ -42,6 +42,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Textarea } from "@/components/ui/textarea";
+import { ErpRecordIdentity } from '@/products/erp/frontend/components/ErpRecordIdentity';
 import { ErpPagination } from "@/products/erp/frontend/components/ErpPagination";
 import { ErpFilterButton, ErpPeriodSummary, ErpSalesTabs, ErpSearchToolbar, ErpStatusBadge, ErpWorkspaceHeader } from "@/products/erp/frontend/components/ErpWorkspaceChrome";
 import { formatErpValue } from "@/products/erp/frontend/services/erpProfessionalClient";
@@ -76,6 +77,8 @@ type Catalogs = {
   paymentMethods: Option[];
 };
 type SaleRecord = {
+  descricao: string;
+  categoria: string;
   id: string;
   numero: string;
   cliente: string;
@@ -708,7 +711,7 @@ export function SalesWorkspacePage({
       <ErpSearchToolbar
         query={query}
         onQueryChange={value => { setQuery(value); setPage(1); }}
-        placeholder="Pesquisar por número ou cliente…"
+        placeholder="Pesquisar por descrição, número ou cliente…"
         resultLabel={<>{totalRecords ? (page - 1) * 50 + 1 : 0}–{Math.min(page * 50, totalRecords)} de {totalRecords}</>}
       ><ErpFilterButton active={Boolean(status)} onClick={() => setFiltersOpen(current => !current)} /></ErpSearchToolbar>
       {filtersOpen ? <div className="flex flex-wrap gap-2 border-b border-[#e7e7e4] bg-[#fafaf8] px-5 py-3 md:px-8 lg:px-10">
@@ -733,10 +736,11 @@ export function SalesWorkspacePage({
         </div>
       ) : null}
       <div className="min-h-[300px] min-w-0 flex-1 overflow-x-auto">
-        <Table className="erp-workspace-table min-w-[1000px] border-b border-[#e7e7e4]">
+        <Table className="erp-workspace-table min-w-[1240px] border-b border-[#e7e7e4]">
           <TableHeader>
             <TableRow className="bg-[#fbfbfa] hover:bg-[#fbfbfa]">
               <TableHead>Número</TableHead>
+              <TableHead>Descrição</TableHead>
               <TableHead>Cliente</TableHead>
               <TableHead>{isQuote ? "Validade" : "Data"}</TableHead>
               <TableHead className="text-right">Total</TableHead>
@@ -750,7 +754,7 @@ export function SalesWorkspacePage({
             {loading ? (
               <TableRow>
                 <TableCell
-                  colSpan={isQuote ? 6 : 8}
+                  colSpan={isQuote ? 7 : 9}
                   className="h-32 text-center text-gray-500"
                 >
                   <Loader2 className="mx-auto mb-2 size-5 animate-spin" />
@@ -760,7 +764,7 @@ export function SalesWorkspacePage({
             ) : records.length === 0 ? (
               <TableRow>
                 <TableCell
-                  colSpan={isQuote ? 6 : 8}
+                  colSpan={isQuote ? 7 : 9}
                   className="h-32 text-center text-gray-500"
                 >
                   Nenhum {isQuote ? "orcamento" : "pedido"} encontrado.
@@ -770,6 +774,7 @@ export function SalesWorkspacePage({
               records.map((record) => (
                 <TableRow key={record.id}>
                   <TableCell><button type="button" className="font-medium text-[#245ea6] hover:underline" onClick={() => void openDetails(record)}>{record.numero}</button></TableCell>
+                  <TableCell><ErpRecordIdentity name={record.descricao} category={record.categoria} identityKey={'venda:' + record.id} icon={<FileCheck2 className="size-5" />} /></TableCell>
                   <TableCell>{record.cliente}</TableCell>
                   <TableCell>
                     {formatErpValue(isQuote ? record.validade : record.data)}
