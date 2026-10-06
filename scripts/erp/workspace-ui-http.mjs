@@ -33,6 +33,11 @@ try {
   for (const path of dashboardOnly ? ['/erp/dashboards/visao-geral'] : ['/erp/financeiro/contas-a-pagar', '/erp/financeiro/contas-a-receber', '/erp/cadastros/clientes', '/erp/cadastros/fornecedores', '/erp/vendas/pedidos', '/erp/compras/pedidos-compra', '/erp/estoque/posicao-estoque', '/erp/vendas/notas-fiscais', '/erp/dashboards/visao-geral']) {
     const response = await get(path), html = await response.text()
     assert(response.headers.get('content-type')?.includes('text/html'))
+    if (path === '/erp/dashboards/visao-geral' && !baseline) {
+      assert(html.includes('class="erp-dashboard-header-controls"'))
+      assert(!html.includes('class="erp-dashboard-toolbar"'))
+      assert(html.indexOf('aria-label="Período"') < html.indexOf('class="erp-dashboard-content"'))
+    }
     if (!styles) {
       const files = [...new Set([...html.matchAll(/href="([^"<>]+\.css(?:\?[^"<>]*)?)"/g)].map(m => m[1].replaceAll('&amp;', '&')))].filter(path => path.startsWith('/_next/'))
       assert(files.length, 'No page stylesheet')
@@ -40,7 +45,7 @@ try {
     }
   }
   for (const marker of ['.erp-workspace-header', '.erp-workspace-metric-value', '.erp-workspace-column-trigger', '.erp-record-avatar']) assert(styles.includes(marker), 'Missing deployed style ' + marker)
-  if (!baseline) for (const marker of ['.erp-dashboard-metric-card', '.erp-dashboard-toolbar', '.erp-dashboard-table-section']) assert(styles.includes(marker), 'Missing deployed dashboard style ' + marker)
+  if (!baseline) for (const marker of ['.erp-dashboard-metric-card', '.erp-dashboard-header-controls', '.erp-dashboard-table-section']) assert(styles.includes(marker), 'Missing deployed dashboard style ' + marker)
   const report = { status: 'passed', production, dashboardOnly, origin, deploymentId: staged.id, realClerkSession: true, businessDataWrites: 0, deployedStylesVerified: true, browserVisualCheck: 'unavailable', results }
   writeFileSync('.cache/workspace-ui/' + (baseline ? 'baseline' : production ? 'production' : 'staged') + '-http.json', JSON.stringify(report, null, 2))
   console.log(JSON.stringify(report))

@@ -36,16 +36,15 @@
   background: #f6f6f2;
 }
 
-.erp-dashboard-toolbar {
+.erp-dashboard-header-controls {
   display: flex;
   min-width: 0;
   flex-wrap: wrap;
   align-items: flex-end;
-  gap: 16px 28px;
-  padding: 18px var(--erp-gutter);
-  border-bottom: 1px solid #eaeae5;
+  max-width: 100%;
+  gap: 12px;
 }
-.erp-dashboard-toolbar label {
+.erp-dashboard-header-controls label {
   display: flex;
   max-width: 100%;
   min-width: 0;
@@ -53,20 +52,20 @@
   gap: 2px;
   border-bottom: 1px solid #d9dbd0;
 }
-.erp-dashboard-toolbar label > span {
+.erp-dashboard-header-controls label > span {
   color: #818477;
   font-size: 11px;
 }
 .erp-dashboard-dashboard-picker {
-  width: 200px;
+  width: 160px;
 }
 .erp-dashboard-period-picker {
-  width: 300px;
+  width: 230px;
 }
-.erp-dashboard-toolbar .erp-dashboard-control {
+.erp-dashboard-header-controls .erp-dashboard-control {
   width: 100%;
   min-width: 0;
-  height: 36px;
+  height: 38px;
   border: 0;
   border-radius: 0;
   background: #fff;
@@ -80,8 +79,7 @@
   outline-offset: 3px;
 }
 .erp-dashboard-filter-button {
-  margin-left: auto;
-  height: 36px;
+  height: 38px;
   border: 1px solid var(--erp-dashboard-border);
   border-radius: 2px;
   background: #fff;
@@ -413,8 +411,9 @@
     padding-block: 26px 22px;
     gap: 16px;
   }
-  .erp-dashboard-toolbar {
-    gap: 18px;
+  .erp-dashboard-header-controls {
+    width: 100%;
+    gap: 12px;
   }
   .erp-dashboard-dashboard-picker,
   .erp-dashboard-period-picker {

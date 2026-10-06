@@ -8,7 +8,7 @@
 - `ErpWorkspaceChrome` reúne cabeçalho, abas, resumo, busca, período, filtros e seleção em lote.
 - `ErpRecordIdentity` exibe ícone ou inicial circular, nome e categoria.
 - A classe `erp-workspace-table` aplica a mesma aparência às tabelas dos cadastros, financeiro, vendas, compras, estoque e notas de serviço.
-- `dashboards.css`, importado diretamente pelo layout depois de `workspace.css`, define a aparência da **Visão geral**: quatro indicadores em cards retangulares, controles em uma faixa, pendências discretas e seções abertas para gráficos e tabelas. Os demais dashboards mantêm sua organização.
+- `dashboards.css`, importado diretamente pelo layout depois de `workspace.css`, define a aparência da **Visão geral**: quatro indicadores em cards retangulares, seletores de dashboard e período junto aos botões Atualizar e Filtros no cabeçalho, pendências discretas e seções abertas para gráficos e tabelas. Os demais dashboards mantêm sua organização.
 
 `DashboardMetrics`, `DashboardChartView` e `DashboardListView` recebem `appearance="ramp"` na visão geral. Esse parâmetro muda a apresentação; valores, séries, filtros, permissões e links continuam vindo da API. As tabelas usam `ErpRecordIdentity`; a linha secundária aparece apenas quando a consulta fornece um detalhe.
 

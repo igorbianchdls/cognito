@@ -271,49 +271,47 @@ function DashboardPageContent({
             </p>
           ) : null}
         </div>
-        <div className="flex flex-wrap items-center gap-2">
-          {!isOverview ? (
+        <div
+          className={
+            isOverview
+              ? "erp-dashboard-header-controls"
+              : "flex flex-wrap items-center gap-2"
+          }
+        >
+          {isOverview ? (
+            <>
+              <label className="erp-dashboard-dashboard-picker">
+                <span>Visualização</span>
+                {dashboardSelector}
+              </label>
+              <label className="erp-dashboard-period-picker">
+                <span>Período</span>
+                {periodSelector}
+              </label>
+            </>
+          ) : (
             <>
               {dashboardSelector}
               {periodSelector}
             </>
-          ) : null}
+          )}
           {refreshAction}
+          {isOverview ? filterAction : null}
         </div>
       </div>
-      <div
-        className={
-          isOverview
-            ? "erp-dashboard-toolbar"
-            : "flex flex-wrap items-center justify-between gap-3"
-        }
-      >
-        {isOverview ? (
-          <>
-            <label className="erp-dashboard-dashboard-picker">
-              <span>Visualização</span>
-              {dashboardSelector}
-            </label>
-            <label className="erp-dashboard-period-picker">
-              <span>Período</span>
-              {periodSelector}
-            </label>
-            {filterAction}
-          </>
-        ) : (
-          <>
-            <p className="text-xs text-slate-500">
-              Período: {dashboardDate(from)} a {dashboardDate(to)}
-              {includeForecast && ["financeiro", "visao-geral"].includes(id) ? (
-                <span className="ml-2 rounded bg-amber-100 px-1.5 py-0.5 text-amber-800">
-                  Inclui previsões
-                </span>
-              ) : null}
-            </p>
-            {filterAction}
-          </>
-        )}
-      </div>
+      {!isOverview ? (
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <p className="text-xs text-slate-500">
+            Período: {dashboardDate(from)} a {dashboardDate(to)}
+            {includeForecast && ["financeiro", "visao-geral"].includes(id) ? (
+              <span className="ml-2 rounded bg-amber-100 px-1.5 py-0.5 text-amber-800">
+                Inclui previsões
+              </span>
+            ) : null}
+          </p>
+          {filterAction}
+        </div>
+      ) : null}
       <div className={isOverview ? "erp-dashboard-content" : "contents"}>
         {filtersOpen ? (
           <form
