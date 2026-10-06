@@ -1,15 +1,17 @@
 'use client'
 
-import { useCallback, useEffect, useState } from 'react'
-import { FileUp, Loader2, RefreshCw } from 'lucide-react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
+import { FileUp, Loader2 } from 'lucide-react'
 
-import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Label } from '@/components/ui/label'
 import { Switch } from '@/components/ui/switch'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { parseErpResponse } from '@/products/erp/frontend/services/erpProfessionalClient'
+import { formatErpValue } from '@/products/erp/frontend/services/erpProfessionalClient'
+import { ErpFilterButton, ErpModuleWorkspaceTabs, ErpPeriodSummary, ErpSearchToolbar, ErpStatusBadge, ErpWorkspaceHeader } from '@/products/erp/frontend/components/ErpWorkspaceChrome'
+import { sumMoney } from '@/products/erp/shared/erpMoney'
 
 type Option = { id: string; nome: string }
 type PurchaseCandidate = { id: string; numero: string; total: number; fornecedor: string }
@@ -66,6 +68,9 @@ async function parseResponse<T>(response: Response): Promise<T> {
 
 export function PurchaseInvoicesPage() {
   const [records, setRecords] = useState<Invoice[]>([])
+  const [query, setQuery] = useState('')
+  const [status, setStatus] = useState('')
+  const [filtersOpen, setFiltersOpen] = useState(false)
   const [catalogs, setCatalogs] = useState<Catalogs>({ categories: [], operationNatures: [], purchaseCandidates: [] })
   const [parsed, setParsed] = useState<ParsedInvoice | null>(null)
   const [categoryId, setCategoryId] = useState('')
@@ -113,11 +118,27 @@ export function PurchaseInvoicesPage() {
     finally { setSaving(false) }
   }
 
-  return <div className="flex min-h-full flex-col gap-5">
-    <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between"><div><p className="text-xs font-medium text-gray-500">ERP / Compras</p><h1 className="mt-1 text-2xl font-semibold text-gray-950">Notas de compra</h1></div><div className="flex gap-2"><Button variant="outline" size="icon" title="Atualizar" onClick={() => void load()}><RefreshCw className="size-4" /></Button><Button onClick={() => { setParsed(null); setPurchaseId(''); setError(null); setOpen(true) }}><FileUp className="size-4" />Importar XML</Button></div></div>
-    {error ? <div className="rounded-md border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">{error}</div> : null}
-    <div className="overflow-hidden rounded-md border bg-white"><Table><TableHeader><TableRow className="bg-gray-50"><TableHead>Emissao</TableHead><TableHead>Nota</TableHead><TableHead>Fornecedor</TableHead><TableHead>Chave de acesso</TableHead><TableHead className="text-right">Total</TableHead><TableHead>Vinculo</TableHead><TableHead>Status</TableHead></TableRow></TableHeader><TableBody>
-      {loading ? <TableRow><TableCell colSpan={7} className="h-32 text-center"><Loader2 className="mx-auto size-5 animate-spin" /></TableCell></TableRow> : records.length === 0 ? <TableRow><TableCell colSpan={7} className="h-32 text-center text-gray-500">Nenhuma NF-e de compra importada.</TableCell></TableRow> : records.map((record) => <TableRow key={record.id}><TableCell>{record.emitida_em ? record.emitida_em.slice(0, 10) : '-'}</TableCell><TableCell className="font-medium">{record.numero}/{record.serie}</TableCell><TableCell>{record.fornecedor}</TableCell><TableCell className="max-w-56 truncate font-mono text-xs">{record.chave_acesso}</TableCell><TableCell className="text-right font-medium">{currency(record.valor_total)}</TableCell><TableCell>{record.compra_numero || 'Sem compra'}</TableCell><TableCell><Badge variant="outline">{record.status}</Badge></TableCell></TableRow>)}
+  const visibleRecords = useMemo(() => {
+    const search = query.trim().toLocaleLowerCase('pt-BR')
+    return records.filter(record => (!status || record.status === status) && (!search || [record.numero, record.serie, record.fornecedor, record.chave_acesso, record.compra_numero].some(value => String(value || '').toLocaleLowerCase('pt-BR').includes(search))))
+  }, [records, query, status])
+
+  return <div className="flex min-h-full min-w-0 flex-col bg-white">
+    <ErpWorkspaceHeader section="Compras" title="Notas de compra" menuItems={[{ label: 'Atualizar dados', onSelect: () => void load() }]} primaryAction={<Button className="h-11 rounded-md bg-[#c9f20a] px-5 font-medium text-[#142000] shadow-none hover:bg-[#b9df09]" onClick={() => { setParsed(null); setPurchaseId(''); setError(null); setOpen(true) }}><FileUp className="size-4" />Importar XML</Button>} />
+    <ErpModuleWorkspaceTabs sectionId="compras" moduleId="notas-compra" />
+    <ErpPeriodSummary title="Resumo dos registros carregados" description="Considera as notas carregadas com os filtros atuais." metrics={[
+      { label: 'Notas listadas', value: String(visibleRecords.length) },
+      { label: 'Com compra vinculada', value: String(visibleRecords.filter(record => record.compra_id).length), tone: 'success' },
+      { label: 'Sem compra vinculada', value: String(visibleRecords.filter(record => !record.compra_id).length) },
+      { label: 'Valor listado', value: currency(sumMoney(visibleRecords.map(record => record.valor_total))) },
+    ]} />
+    <ErpSearchToolbar query={query} onQueryChange={setQuery} placeholder="Pesquisar nas notas carregadas…" resultLabel={`${visibleRecords.length} de ${records.length} notas carregadas`}>
+      <ErpFilterButton active={Boolean(status)} onClick={() => setFiltersOpen(current => !current)} />
+    </ErpSearchToolbar>
+    {filtersOpen ? <div className="border-b border-[#e7e7e4] bg-[#fafaf8] px-5 py-3 md:px-8 lg:px-10"><select aria-label="Situação" value={status} onChange={event => setStatus(event.target.value)} className="h-10 rounded-md border border-[#dfdfdc] bg-white px-3 text-sm"><option value="">Todas as situações</option>{[...new Set(records.map(record => record.status))].map(value => <option key={value} value={value}>{value.replaceAll('_', ' ')}</option>)}</select></div> : null}
+    {error ? <div role="alert" className="mx-5 mt-4 rounded-md border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700 md:mx-8 lg:mx-10">{error}</div> : null}
+    <div className="min-h-[300px] min-w-0 flex-1 overflow-x-auto"><Table className="erp-workspace-table min-w-[1100px] border-b border-[#e7e7e4]"><TableHeader><TableRow className="bg-[#fbfbfa] hover:bg-[#fbfbfa]"><TableHead>Emissão</TableHead><TableHead>Nota</TableHead><TableHead>Fornecedor</TableHead><TableHead>Chave de acesso</TableHead><TableHead className="text-right">Total</TableHead><TableHead>Vínculo</TableHead><TableHead>Situação</TableHead></TableRow></TableHeader><TableBody>
+      {loading ? <TableRow><TableCell colSpan={7} className="h-32 text-center"><Loader2 className="mx-auto size-5 animate-spin" /></TableCell></TableRow> : visibleRecords.length === 0 ? <TableRow><TableCell colSpan={7} className="h-32 text-center text-gray-500">{records.length ? 'Nenhuma nota corresponde aos filtros.' : 'Nenhuma NF-e de compra importada.'}</TableCell></TableRow> : visibleRecords.map((record) => <TableRow key={record.id}><TableCell>{formatErpValue(record.emitida_em)}</TableCell><TableCell className="font-medium">{record.numero}/{record.serie}</TableCell><TableCell>{record.fornecedor}</TableCell><TableCell className="max-w-56 truncate font-mono text-xs" title={record.chave_acesso}>{record.chave_acesso}</TableCell><TableCell className="text-right font-medium tabular-nums">{currency(record.valor_total)}</TableCell><TableCell>{record.compra_numero || 'Sem compra'}</TableCell><TableCell><ErpStatusBadge status={record.status} /></TableCell></TableRow>)}
     </TableBody></Table></div>
 
     <Dialog open={open} onOpenChange={setOpen}><DialogContent className="max-h-[92vh] max-w-3xl overflow-y-auto"><DialogHeader><DialogTitle>Importar NF-e de compra</DialogTitle></DialogHeader><div className="grid gap-5 py-2">

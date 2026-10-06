@@ -3,17 +3,18 @@
 import { useErpAccess } from '@/products/erp/frontend/hooks/useErpAccess'
 import { ErpMutation } from '@/products/erp/frontend/services/erpMutation'
 import { getErpModuleCapability, isErpConnectedModuleId } from '@/products/erp/shared/moduleAccess'
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
+import { Plus } from 'lucide-react'
+import { Button } from '@/components/ui/button'
 
-import { ErpActionBar } from '@/products/erp/frontend/components/ErpActionBar'
 import { ErpDataTable } from '@/products/erp/frontend/components/ErpDataTable'
 import { ErpEmptyState } from '@/products/erp/frontend/components/ErpEmptyState'
 import { ErpFiltersBar } from '@/products/erp/frontend/components/ErpFiltersBar'
 import { ErpFormDrawer } from '@/products/erp/frontend/components/ErpFormDrawer'
-import { ErpMetricCard } from '@/products/erp/frontend/components/ErpMetricCard'
 import { ErpPagination } from '@/products/erp/frontend/components/ErpPagination'
-import { ErpPageHeader } from '@/products/erp/frontend/components/ErpPageHeader'
-import { ErpSearchBar } from '@/products/erp/frontend/components/ErpSearchBar'
+import { ErpFilterButton, ErpModuleWorkspaceTabs, ErpPeriodSummary, ErpSearchToolbar, ErpWorkspaceHeader } from '@/products/erp/frontend/components/ErpWorkspaceChrome'
+import { getErpSection } from '@/products/erp/shared/navigation'
+import { ERP_STATUS_ALL_VALUE } from '@/products/erp/shared/constants'
 import { erpClient } from '@/products/erp/frontend/services/erpClient'
 import type { ErpEntityAction, ErpEntityConfig, ErpEntityRecord } from '@/products/erp/shared/types'
 
@@ -26,6 +27,7 @@ export function ErpEntityPage({ config }: { config: ErpEntityConfig }) {
   const actionOperations = useRef(new Map<string, ErpMutation>())
   const [query, setQuery] = useState('')
   const [filters, setFilters] = useState<Record<string, string>>({})
+  const [filtersOpen, setFiltersOpen] = useState(false)
   const [records, setRecords] = useState<ErpEntityRecord[]>([])
   const [drawerOpen, setDrawerOpen] = useState(false)
   const [editingRecord, setEditingRecord] = useState<ErpEntityRecord | null>(null)
@@ -151,59 +153,51 @@ export function ErpEntityPage({ config }: { config: ErpEntityConfig }) {
     }
   }
 
-  const metricCards = useMemo(() => metrics.map((metric) => (
-    <ErpMetricCard key={metric.label} metric={metric} />
-  )), [metrics])
-
   return (
-    <div className="flex min-h-full flex-col gap-6">
-      {metricsError ? <p role="status" className="text-sm text-amber-700">Os indicadores estão indisponíveis. Atualize para tentar novamente.</p> : null}
-      <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
-        <ErpPageHeader eyebrow="ERP" title={config.label} description={config.description} />
-        <ErpActionBar
-          primaryActionLabel={config.primaryActionLabel}
-          refreshing={loading}
-          showPrimaryAction={canManage && config.fields.length > 0}
-          onRefresh={() => void loadRecords()}
-          onPrimaryAction={() => { setEditingRecord(null); setDrawerOpen(true) }}
-        />
-      </div>
-
-      <div className="grid gap-3 md:grid-cols-3">{metricCards}</div>
-
-      <div className="flex flex-col gap-3 rounded-md border border-gray-200 bg-gray-50/60 p-3 lg:flex-row lg:items-center">
-        <ErpSearchBar value={query} placeholder={config.searchPlaceholder} onChange={(value) => { setQuery(value); setPage(1) }} />
+    <div className="flex min-h-full min-w-0 flex-col bg-white">
+      <ErpWorkspaceHeader
+        section={['produtos', 'servicos', 'categorias'].includes(config.id) ? 'Produtos e serviços' : getErpSection(config.sectionId).label}
+        title={config.id === 'servicos' ? 'Serviços' : config.label}
+        menuItems={[{ label: 'Atualizar dados', onSelect: () => void loadRecords() }]}
+        primaryAction={canManage && config.fields.length > 0 ? <Button aria-label={`Adicionar ${config.singularLabel}`} className="h-11 rounded-md bg-[#c9f20a] px-5 font-medium text-[#142000] shadow-none hover:bg-[#b9df09]" onClick={() => { setEditingRecord(null); setDrawerOpen(true) }}><Plus className="size-4" />Adicionar</Button> : undefined}
+      />
+      <ErpModuleWorkspaceTabs sectionId={config.sectionId} moduleId={config.id} />
+      {metricsError ? <p role="status" className="mx-5 my-4 text-sm text-amber-700 md:mx-8 lg:mx-10">Os indicadores estão indisponíveis. Atualize para tentar novamente.</p> : metrics.length > 0 ? <ErpPeriodSummary title="Resumo dos cadastros" description="Indicadores gerais da base cadastrada." metrics={metrics.map(metric => ({ label: metric.label, value: metric.value, tone: metric.tone === 'warning' ? 'default' : metric.tone }))} /> : null}
+      <ErpSearchToolbar query={query} onQueryChange={value => { setQuery(value); setPage(1) }} placeholder={config.searchPlaceholder} resultLabel={<>{total ? (page - 1) * pageSize + 1 : 0}–{Math.min(page * pageSize, total)} de {total}</>}>
+        {config.filters.length > 0 ? <ErpFilterButton active={Object.values(filters).some(value => Boolean(value) && value !== ERP_STATUS_ALL_VALUE)} onClick={() => setFiltersOpen(current => !current)} /> : null}
+      </ErpSearchToolbar>
+      {filtersOpen ? <div className="border-b border-[#e7e7e4] bg-[#fafaf8] px-5 py-3 md:px-8 lg:px-10">
         <ErpFiltersBar
           filters={config.filters}
           values={filters}
           onChange={(key, value) => { setFilters((current) => ({ ...current, [key]: value })); setPage(1) }}
         />
-      </div>
+      </div> : null}
 
       {error ? (
-        <div className="rounded-md border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
+        <div role="alert" className="mx-5 mt-4 rounded-md border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700 md:mx-8 lg:mx-10">
           {error}
         </div>
       ) : null}
 
-      {loading ? (
-        <div className="rounded-md border border-gray-200 bg-white px-4 py-10 text-center text-sm text-gray-500">
+      <div className="min-h-[300px] min-w-0 flex-1">{loading ? (
+        <div role="status" className="px-5 py-10 text-center text-sm text-gray-500">
           Carregando dados...
         </div>
       ) : records.length > 0 ? (
         <div>
           <ErpDataTable config={visibleConfig} records={records} onAction={(action, record) => void runAction(action, record)}
             onEdit={canManage ? (record) => void editRecord(record) : undefined} onDeactivate={canManage ? (record) => void deactivateRecord(record) : undefined} />
-          <ErpPagination page={page} pageSize={pageSize} total={total} onPageChange={setPage} />
+          <div className="px-5 py-3 md:px-8 lg:px-10"><ErpPagination page={page} pageSize={pageSize} total={total} onPageChange={setPage} /></div>
         </div>
       ) : (
-        <ErpEmptyState
+        <div className="px-5 py-6 md:px-8 lg:px-10"><ErpEmptyState
           title={config.emptyState.title}
           description={config.emptyState.description}
           actionLabel={canManage && config.fields.length > 0 ? config.primaryActionLabel : undefined}
           onAction={canManage && config.fields.length > 0 ? () => { setEditingRecord(null); setDrawerOpen(true) } : undefined}
-        />
-      )}
+        /></div>
+      )}</div>
 
       <ErpFormDrawer config={config} open={drawerOpen} onOpenChange={(open) => { setDrawerOpen(open); if (!open) setEditingRecord(null) }}
         onSubmit={createRecord} initialValues={editingRecord} fieldOptions={fieldOptions} />

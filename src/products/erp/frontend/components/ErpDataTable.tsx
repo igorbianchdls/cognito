@@ -11,7 +11,7 @@ import {
 } from '@/components/ui/table'
 import { cn } from '@/lib/utils'
 import type { ErpEntityAction, ErpEntityConfig, ErpEntityRecord, ErpTableColumn } from '@/products/erp/shared/types'
-import { ErpStatusBadge } from '@/products/erp/frontend/components/ErpStatusBadge'
+import { ErpStatusBadge } from '@/products/erp/frontend/components/ErpWorkspaceChrome'
 
 function formatCellValue(record: ErpEntityRecord, column: ErpTableColumn, config: ErpEntityConfig) {
   const value = record[column.key]
@@ -27,7 +27,7 @@ function formatCellValue(record: ErpEntityRecord, column: ErpTableColumn, config
   if (column.kind === 'status') {
     const statusValue = String(value ?? '')
     const status = config.statusMap?.[statusValue]
-    return <ErpStatusBadge label={status?.label ?? statusValue} tone={status?.tone ?? 'default'} />
+    return <ErpStatusBadge status={statusValue} label={status?.label} tone={status?.tone} />
   }
 
   return String(value ?? '-')
@@ -56,23 +56,23 @@ export function ErpDataTable({
   const actions = config.actions || []
 
   return (
-    <div className="overflow-hidden rounded-md border border-gray-200 bg-white">
-      <Table>
+    <div className="min-w-0 overflow-x-auto bg-white">
+      <Table className="erp-workspace-table min-w-[1000px] border-b border-[#e7e7e4]">
         <TableHeader>
-          <TableRow className="hover:bg-white">
+          <TableRow className="bg-[#fbfbfa] hover:bg-[#fbfbfa]">
             {config.columns.map((column) => (
-              <TableHead key={column.key} className={cn('h-10 bg-gray-50 px-3 text-xs font-semibold uppercase tracking-normal text-gray-500', column.width)}>
+              <TableHead key={column.key} className={cn(column.width, ['currency', 'number'].includes(column.kind ?? '') && 'text-right')}>
                 {column.label}
               </TableHead>
             ))}
-            <TableHead className="h-10 w-36 bg-gray-50 px-2 text-right" />
+            <TableHead className="w-36 text-right" />
           </TableRow>
         </TableHeader>
         <TableBody>
           {records.map((record) => (
             <TableRow key={record.id}>
               {config.columns.map((column) => (
-                <TableCell key={column.key} className="px-3 py-3 text-sm text-gray-700">
+                <TableCell key={column.key} className={cn(['currency', 'number'].includes(column.kind ?? '') && 'text-right tabular-nums')}>
                   {formatCellValue(record, column, config)}
                 </TableCell>
               ))}

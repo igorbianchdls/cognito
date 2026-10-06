@@ -12,6 +12,8 @@ import {
 } from '@/components/ui/dropdown-menu'
 import { SidebarTrigger } from '@/components/ui/sidebar'
 import { cn } from '@/lib/utils'
+import { getErpSection } from '@/products/erp/shared/navigation'
+import type { ErpSectionId } from '@/products/erp/shared/types'
 
 export function ErpWorkspaceHeader({
   section,
@@ -70,6 +72,19 @@ export function ErpSalesTabs({ activeHref }: { activeHref: string }) {
     { label: 'Ordens de serviço', href: '/erp/vendas/ordens-servico' },
     { label: 'Contratos', href: '/erp/vendas/contratos' },
   ]} />
+}
+
+export function ErpModuleWorkspaceTabs({ sectionId, moduleId }: { sectionId: ErpSectionId; moduleId: string }) {
+  const section = getErpSection(sectionId)
+  const itemGroup = ['produtos', 'servicos', 'categorias']
+  const peopleGroup = ['clientes', 'fornecedores', 'vendedores']
+  const group = sectionId === 'cadastros' ? (itemGroup.includes(moduleId) ? itemGroup : peopleGroup) : undefined
+  const labels: Record<string, string> = {
+    servicos: 'Serviços', 'posicao-estoque': 'Situação', movimentacoes: 'Movimentações', inventarios: 'Inventários',
+    transferencias: 'Transferências', 'conversoes-unidades': 'Conversões',
+  }
+  const modules = section.modules.filter(module => !group || group.includes(module.id))
+  return <ErpWorkspaceTabs label={sectionId === 'cadastros' && itemGroup.includes(moduleId) ? 'Produtos e serviços' : section.label} activeHref={section.modules.find(module => module.id === moduleId)?.href ?? ''} tabs={modules.map(module => ({ label: labels[module.id] ?? module.label, href: module.href }))} />
 }
 
 function ErpWorkspaceTabs({ label, tabs, activeHref }: {
@@ -177,7 +192,7 @@ export function ErpFilterButton({ active, onClick }: { active?: boolean; onClick
   )
 }
 
-export function ErpStatusBadge({ status, label: customLabel }: { status: string; label?: string }) {
+export function ErpStatusBadge({ status, label: customLabel, tone }: { status: string; label?: string; tone?: 'default' | 'success' | 'warning' | 'danger' }) {
   const normalized = status.toLocaleLowerCase('pt-BR')
   const label: Record<string, string> = {
     aberto: 'Em aberto', parcial: 'Pago parcial', vencido: 'Vencido',
@@ -187,17 +202,21 @@ export function ErpStatusBadge({ status, label: customLabel }: { status: string;
     em_andamento: 'Em andamento', aprovado: 'Aprovado', recusado: 'Recusado', convertido: 'Convertido',
     pendente: 'Pendente', atendido: 'Atendido', emitida: 'Emitida', nao_aplicavel: 'Não aplicável',
     orcamento_pendente: 'Orçamento pendente', aprovada: 'Aprovada', em_execucao: 'Em execução', concluida: 'Concluída',
-    ativo: 'Ativo', pausado: 'Pausado', encerrado: 'Encerrado', bloqueada: 'Bloqueada',
+    ativo: 'Ativo', inativo: 'Inativo', pausado: 'Pausado', encerrado: 'Encerrado', bloqueada: 'Bloqueada',
+    cotacao: 'Cotação', pedido_compra: 'Pedido de compra', pedido_recorrente: 'Pedido recorrente', compra: 'Compra',
+    importada: 'Importada', recebida: 'Recebida', parcialmente_recebida: 'Recebida parcialmente',
+    normal: 'Normal', repor: 'Repor', finalizado: 'Finalizado', finalizada: 'Finalizada', em_contagem: 'Em contagem',
+    entrada: 'Entrada', saida: 'Saída', ajuste_entrada: 'Ajuste de entrada', ajuste_saida: 'Ajuste de saída',
   }
   return (
     <span className={cn(
       'inline-flex min-h-7 items-center rounded-md px-2.5 text-[13px] font-medium',
-      ['pago', 'confirmada', 'aprovado', 'aprovada', 'atendido', 'emitida', 'concluida', 'ativo', 'convertido'].includes(normalized) && 'bg-[#e4f6e7] text-[#21683a]',
-      ['vencido', 'recusado', 'bloqueada'].includes(normalized) && 'bg-[#fbe9e7] text-[#9b392a]',
-      ['parcial', 'em_execucao'].includes(normalized) && 'bg-[#e7f0fb] text-[#285d96]',
-      ['aberto', 'previsao', 'rascunho', 'pendente', 'em_andamento', 'orcamento_pendente', 'pausado'].includes(normalized) && 'bg-[#fff4d9] text-[#71541a]',
-      normalized === 'renegociado' && 'bg-[#eee9fb] text-[#604a96]',
-      ['cancelado', 'cancelada', 'encerrado', 'nao_aplicavel'].includes(normalized) && 'bg-[#eeeeec] text-[#666]',
+      (tone ? tone === 'success' : ['pago', 'confirmada', 'aprovado', 'aprovada', 'atendido', 'emitida', 'concluida', 'ativo', 'convertido', 'compra', 'recebida', 'importada', 'normal', 'finalizado', 'finalizada', 'entrada', 'ajuste_entrada'].includes(normalized)) && 'bg-[#e4f6e7] text-[#21683a]',
+      (tone ? tone === 'danger' : ['vencido', 'recusado', 'bloqueada', 'repor'].includes(normalized)) && 'bg-[#fbe9e7] text-[#9b392a]',
+      !tone && ['parcial', 'em_execucao', 'parcialmente_recebida'].includes(normalized) && 'bg-[#e7f0fb] text-[#285d96]',
+      (tone ? tone === 'warning' : ['aberto', 'previsao', 'rascunho', 'pendente', 'em_andamento', 'orcamento_pendente', 'pausado', 'cotacao', 'pedido_compra', 'pedido_recorrente', 'em_contagem'].includes(normalized)) && 'bg-[#fff4d9] text-[#71541a]',
+      !tone && normalized === 'renegociado' && 'bg-[#eee9fb] text-[#604a96]',
+      (tone ? tone === 'default' : ['cancelado', 'cancelada', 'encerrado', 'inativo', 'nao_aplicavel', 'saida', 'ajuste_saida'].includes(normalized)) && 'bg-[#eeeeec] text-[#666]',
     )}>
       {customLabel ?? label[normalized] ?? status.replaceAll('_', ' ')}
     </span>

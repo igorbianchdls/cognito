@@ -72,7 +72,8 @@ function ErpPageContent({
   const operationConfig = moduleConfig ? ERP_OPERATION_CONFIGS[moduleConfig.id] : undefined
   const usesWorkspaceChrome =
     (sectionConfig.id === 'financeiro' && ['contas-a-pagar', 'contas-a-receber'].includes(moduleConfig?.id ?? '')) ||
-    (sectionConfig.id === 'vendas' && ['orcamentos', 'pedidos', 'ordens-servico', 'contratos'].includes(moduleConfig?.id ?? ''))
+    (sectionConfig.id === 'vendas' && ['orcamentos', 'pedidos', 'ordens-servico', 'contratos'].includes(moduleConfig?.id ?? '')) ||
+    ['compras', 'estoque'].includes(sectionConfig.id) || Boolean(entityConfig)
 
   return (
     <SidebarProvider>

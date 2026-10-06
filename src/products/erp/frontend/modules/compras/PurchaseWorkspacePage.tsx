@@ -9,12 +9,10 @@ import {
   PackageCheck,
   Pencil,
   Plus,
-  RefreshCw,
   Trash2,
   X,
 } from "lucide-react";
 
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -38,6 +36,8 @@ import { ErpPagination } from "@/products/erp/frontend/components/ErpPagination"
 import { ErpDocumentDetailsDialog } from "@/products/erp/frontend/components/ErpDocumentDetailsDialog";
 import { ErpAsyncCatalogSelect, type ErpCatalogRecord } from "@/products/erp/frontend/components/ErpAsyncCatalogSelect";
 import { useErpAccess } from "@/products/erp/frontend/hooks/useErpAccess";
+import { ErpFilterButton, ErpModuleWorkspaceTabs, ErpPeriodSummary, ErpSearchToolbar, ErpStatusBadge, ErpWorkspaceHeader } from "@/products/erp/frontend/components/ErpWorkspaceChrome";
+import { formatErpValue } from "@/products/erp/frontend/services/erpProfessionalClient";
 
 type CatalogItem = {
   id: string;
@@ -186,6 +186,7 @@ export function PurchaseWorkspacePage() {
   const [catalogs, setCatalogs] = useState<PurchaseCatalogs>(emptyCatalogs);
   const [query, setQuery] = useState("");
   const [movementFilter, setMovementFilter] = useState("");
+  const [filtersOpen, setFiltersOpen] = useState(false);
   const [editorOpen, setEditorOpen] = useState(false);
   const [detailsOpen, setDetailsOpen] = useState(false);
   const [receiveOpen, setReceiveOpen] = useState(false);
@@ -672,82 +673,47 @@ export function PurchaseWorkspacePage() {
     tipoCompra === "produto" ? catalogs.products : catalogs.services;
 
   return (
-    <div className="flex min-h-full flex-col gap-5">
-      <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
-        <div>
-          <p className="text-xs font-medium text-gray-500">ERP / Compras</p>
-          <h1 className="mt-1 text-2xl font-semibold text-gray-950">Compras</h1>
-        </div>
-        <div className="flex gap-2">
-          <Button
-            variant="outline"
-            size="icon"
-            title="Atualizar"
-            onClick={() => void loadData()}
-          >
-            <RefreshCw className="size-4" />
-          </Button>
-          <Button disabled={!canManage} onClick={openEditor}>
-            <Plus className="size-4" />
-            Nova compra
-          </Button>
-        </div>
-      </div>
-
-      <div className="grid gap-px overflow-hidden rounded-md border bg-gray-200 sm:grid-cols-3">
-        <div className="bg-white p-4">
-          <p className="text-xs text-gray-500">Valor listado</p>
-          <p className="mt-1 text-xl font-semibold">
-            {formatCurrency(summary.total)}
-          </p>
-        </div>
-        <div className="bg-white p-4">
-          <p className="text-xs text-gray-500">Pedidos em aberto</p>
-          <p className="mt-1 text-xl font-semibold">{summary.pedidos}</p>
-        </div>
-        <div className="bg-white p-4">
-          <p className="text-xs text-gray-500">Compras efetivas</p>
-          <p className="mt-1 text-xl font-semibold">{summary.efetivas}</p>
-        </div>
-      </div>
-
-      <div className="flex flex-col gap-2 border-y py-3 md:flex-row">
-        <Input
-          value={query}
-          placeholder="Buscar por numero ou fornecedor"
-          className="md:max-w-sm"
-          onChange={(event) => {
-            setQuery(event.target.value);
-            setPage(1);
-          }}
-        />
+    <div className="flex min-h-full min-w-0 flex-col bg-white">
+      <ErpWorkspaceHeader section="Compras" title="Compras" menuItems={[{ label: 'Atualizar dados', onSelect: () => void loadData() }]} primaryAction={canManage ? <Button aria-label="Adicionar compra" className="h-11 rounded-md bg-[#c9f20a] px-5 font-medium text-[#142000] shadow-none hover:bg-[#b9df09]" onClick={openEditor}><Plus className="size-4" />Adicionar</Button> : undefined} />
+      <ErpModuleWorkspaceTabs sectionId="compras" moduleId="pedidos-compra" />
+      <ErpPeriodSummary title="Resumo desta página" description="Considera os registros carregados com os filtros atuais." metrics={[
+        { label: 'Compras listadas', value: String(records.length) },
+        { label: 'Pedidos', value: String(summary.pedidos) },
+        { label: 'Compras efetivas', value: String(summary.efetivas), tone: 'success' },
+        { label: 'Valor listado', value: formatCurrency(summary.total) },
+      ]} />
+      <ErpSearchToolbar query={query} onQueryChange={value => { setQuery(value); setPage(1); }} placeholder="Pesquisar por número ou fornecedor…" resultLabel={<>{totalRecords ? (page - 1) * 50 + 1 : 0}–{Math.min(page * 50, totalRecords)} de {totalRecords}</>}>
+        <ErpFilterButton active={Boolean(movementFilter)} onClick={() => setFiltersOpen(current => !current)} />
+      </ErpSearchToolbar>
+      {filtersOpen ? <div className="flex flex-wrap gap-2 border-b border-[#e7e7e4] bg-[#fafaf8] px-5 py-3 md:px-8 lg:px-10">
         <select
+          aria-label="Movimento"
           value={movementFilter}
-          className="h-10 rounded-md bg-gray-50 px-3 text-sm"
+          className="h-10 rounded-md border border-[#dfdfdc] bg-white px-3 text-sm"
           onChange={(event) => {
             setMovementFilter(event.target.value);
             setPage(1);
           }}
         >
           <option value="">Todos os movimentos</option>
-          <option value="cotacao">Cotacoes</option>
+          <option value="cotacao">Cotações</option>
           <option value="pedido_recorrente">Pedidos recorrentes</option>
           <option value="pedido_compra">Pedidos de compra</option>
           <option value="compra">Compras</option>
           <option value="cancelada">Canceladas</option>
         </select>
-      </div>
+      </div> : null}
 
       {error ? (
-        <div className="rounded-md border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
+        <div role="alert" className="mx-5 mt-4 rounded-md border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700 md:mx-8 lg:mx-10">
           {error}
         </div>
       ) : null}
-      <div className="overflow-hidden rounded-md border bg-white">
-        <Table>
+      <div className="min-h-[300px] min-w-0 flex-1 overflow-x-auto">
+        <Table className="erp-workspace-table min-w-[1050px] border-b border-[#e7e7e4]">
           <TableHeader>
-            <TableRow className="bg-gray-50">
-              <TableHead>Numero</TableHead>
+            <TableRow className="bg-[#fbfbfa] hover:bg-[#fbfbfa]">
+              <TableHead>Número</TableHead>
               <TableHead>Fornecedor</TableHead>
               <TableHead>Movimento</TableHead>
               <TableHead>Data</TableHead>
@@ -780,17 +746,15 @@ export function PurchaseWorkspacePage() {
             ) : (
               records.map((record) => (
                 <TableRow key={record.id}>
-                  <TableCell className="font-medium">{record.numero}</TableCell>
+                  <TableCell><button type="button" className="font-medium text-[#245ea6] hover:underline" onClick={() => void openDetails(record)}>{record.numero}</button></TableCell>
                   <TableCell>{record.fornecedor}</TableCell>
                   <TableCell>
-                    <Badge variant="outline">
-                      {movementLabel(record.tipo_movimento)}
-                    </Badge>
+                    <ErpStatusBadge status={record.tipo_movimento} label={movementLabel(record.tipo_movimento)} />
                   </TableCell>
-                  <TableCell>{record.data}</TableCell>
+                  <TableCell>{formatErpValue(record.data)}</TableCell>
                   <TableCell>{record.entrega || "-"}</TableCell>
                   <TableCell>{record.financeiro}</TableCell>
-                  <TableCell className="text-right font-medium">
+                  <TableCell className="text-right font-medium tabular-nums">
                     {formatCurrency(record.total)}
                   </TableCell>
                   <TableCell>
@@ -861,12 +825,12 @@ export function PurchaseWorkspacePage() {
             )}
           </TableBody>
         </Table>
-        <ErpPagination
+        <div className="px-5 py-3 md:px-8 lg:px-10"><ErpPagination
           page={page}
           pageSize={50}
           total={totalRecords}
           onPageChange={setPage}
-        />
+        /></div>
       </div>
 
       <Dialog open={editorOpen} onOpenChange={setEditorOpen}>

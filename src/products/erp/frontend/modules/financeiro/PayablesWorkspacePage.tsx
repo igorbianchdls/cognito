@@ -24,6 +24,7 @@ import {
   ErpBulkActionBar,
   ErpFilterButton,
   ErpFinanceTabs,
+  ErpModuleWorkspaceTabs,
   ErpPeriodControl,
   ErpPeriodSummary,
   ErpStatusBadge,
@@ -244,7 +245,7 @@ export function PayablesWorkspacePage({ purchaseOnly = false }: { purchaseOnly?:
       secondaryAction={!purchaseOnly ? <Button variant="outline" className="h-11 rounded-md border-[#d9d9d5] px-4 font-normal" onClick={() => { window.location.href = '/erp/cadastros/importacoes' }}><FileSpreadsheet className="size-4" />Importar planilha<ChevronDown className="size-4" /></Button> : null}
       primaryAction={!purchaseOnly && canManage ? <Button className="h-11 rounded-md bg-[#c9f20a] px-5 font-medium text-[#142000] shadow-none hover:bg-[#b9df09]" onClick={openExpense}><Plus className="size-4" />Adicionar</Button> : undefined}
     />
-    {!purchaseOnly ? <ErpFinanceTabs activeHref="/erp/financeiro/contas-a-pagar" /> : null}
+    {purchaseOnly ? <ErpModuleWorkspaceTabs sectionId="compras" moduleId="parcelas-a-pagar" /> : <ErpFinanceTabs activeHref="/erp/financeiro/contas-a-pagar" />}
     <ErpPeriodSummary
       title="Resumo do período"
       description={new Intl.DateTimeFormat('pt-BR', { month: 'long', year: 'numeric' }).format(period)}

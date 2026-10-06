@@ -21,7 +21,7 @@ export function ErpFiltersBar({
           value={values[filter.key] ?? ERP_STATUS_ALL_VALUE}
           onValueChange={(value) => onChange(filter.key, value)}
         >
-          <SelectTrigger className="h-9 min-w-[168px] bg-white text-sm ring-1 ring-gray-200">
+          <SelectTrigger aria-label={filter.label} className="h-10 min-w-[168px] border border-[#dfdfdc] bg-white text-sm shadow-none">
             <SelectValue placeholder={filter.label} />
           </SelectTrigger>
           <SelectContent>
@@ -37,4 +37,3 @@ export function ErpFiltersBar({
     </div>
   )
 }
-
