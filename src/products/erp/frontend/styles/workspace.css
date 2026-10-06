@@ -27,7 +27,7 @@
 
 .erp-workspace-tabs { min-width: 0; padding-inline: var(--erp-gutter); }
 .erp-workspace-tabs-list { display: flex; height: 56px; align-items: flex-end; gap: 36px; overflow-x: auto; }
-.erp-workspace-tab { padding: 0 0 10px; color: #777; font-size: 14px; font-weight: 400; line-height: 20px; }
+.erp-workspace-tab { padding: 0 0 16px; color: #777; font-size: 14px; font-weight: 400; line-height: 20px; }
 .erp-workspace-tab:hover, .erp-workspace-tab[aria-current="page"] { color: #171717; }
 .erp-workspace-tab[aria-current="page"] { font-weight: 500; }
 
