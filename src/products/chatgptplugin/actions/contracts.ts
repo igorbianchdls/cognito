@@ -5,6 +5,7 @@ import type { ErpConnectedModuleId } from '@/products/erp/shared/moduleAccess'
 import { companySchema, requiredDate } from '../tools/catalog'
 import { PluginError } from '../shared/contracts'
 import { expandedSchemas } from './expandedContracts'
+import {serviceInvoiceInputSchema,simulationScenarioSchema,serviceInvoiceTotals} from '@/products/erp/shared/serviceInvoiceContracts'
 
 const name = z.string().trim().min(1).max(200)
 const money = z.number().finite().min(0).max(100000000).multipleOf(0.01)
@@ -16,6 +17,11 @@ const commercial = z.object({
   observacoes:z.string().trim().max(2000).optional(),
 }).strict()
 export const proposalSchema = z.discriminatedUnion('tipo', [
+  z.object({tipo:z.literal('nota_servico'),dados:serviceInvoiceInputSchema}).strict(),
+  z.object({tipo:z.literal('editar_nota_servico'),dados:serviceInvoiceInputSchema.extend({registro_id:z.number().int().positive()}).strict()}).strict(),
+  z.object({tipo:z.literal('simular_nota_servico'),dados:z.object({registro_id:z.number().int().positive(),cenario:simulationScenarioSchema.default('sucesso')}).strict()}).strict(),
+  z.object({tipo:z.literal('consultar_resultado_nota_servico'),dados:z.object({registro_id:z.number().int().positive()}).strict()}).strict(),
+  ...(['cancelar_nota_servico','excluir_nota_servico'] as const).map(tipo=>z.object({tipo:z.literal(tipo),dados:z.object({registro_id:z.number().int().positive(),motivo:z.string().trim().min(3).max(1000)}).strict()}).strict()),
   ...expandedSchemas,
   z.object({tipo:z.literal('cliente'),dados:z.object({nome:name,tipo:z.enum(['fisica','juridica']).default('fisica'),
     email:z.string().email().max(254).optional(),telefone:z.string().trim().max(30).optional(),cidade:z.string().trim().max(100).optional()}).strict()}).strict(),
@@ -62,6 +68,11 @@ export function proposalEntity(proposal: Proposal): ErpConnectedModuleId {
   return proposal.tipo === 'cliente' ? 'clientes' : proposal.tipo === 'produto' ? 'produtos' : 'pedidos'
 }
 export function proposalPreview(proposal: Proposal) {
+  if(proposal.tipo==='nota_servico'||proposal.tipo==='editar_nota_servico'){
+    const {registro_id:_id,...raw}=proposal.dados as Record<string,unknown>
+    const totals=serviceInvoiceTotals(serviceInvoiceInputSchema.parse(raw))
+    return {tipo:proposal.tipo,dados:{...proposal.dados,itens:totals.items},total:totals.total,modo_operacao:'simulacao',valor_iss:totals.valor_iss,valor_liquido:totals.valor_liquido}
+  }
   const raw=proposal.dados as Record<string,unknown>
   if('parcelas' in raw){try{const parts=raw.parcelas as {valor:number}[];if(sumMoney(parts.map(p=>p.valor))!==raw.valor_total)throw new Error();return {tipo:proposal.tipo,dados:proposal.dados,total:Number(raw.valor_total)}}catch{throw new PluginError('INVALID_INPUT','A soma das parcelas deve ser igual ao valor total.')}}
   if (!('itens' in raw)) return {tipo:proposal.tipo,dados:proposal.dados}

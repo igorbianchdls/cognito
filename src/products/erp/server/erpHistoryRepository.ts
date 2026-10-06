@@ -45,11 +45,13 @@ const documents: Record<
     table: 'notas_fiscais',
     foreign: 'nota_fiscal_id',
     events: 'notas_fiscais_eventos',
+    files: 'notas_fiscais_arquivos',
   },
   'notas-compra': {
     table: 'notas_fiscais',
     foreign: 'nota_fiscal_id',
     events: 'notas_fiscais_eventos',
+    files: 'notas_fiscais_arquivos',
   },
 }
 

@@ -2,6 +2,8 @@
 
 Esta pasta organiza a API HTTP usada pelo SaaS e permite testar o CRUD pelas mesmas regras do ERP. Não é um novo produto nem uma segunda implementação do banco.
 
+Notas de serviço possuem handlers em `handlers/notas-servico`, contratos compartilhados e serviço fiscal comum ao MCP. Consulte [fluxo, endpoints, PDF e simulação](../../../../docs/avaliacao-erp/notas-servico-simulacao-20261006.md).
+
 ## Fluxo e responsabilidades
 
 ```text
@@ -193,6 +195,9 @@ Para adicionar uma operação: crie/estenda a regra em `server`, reutilize contr
 | `/api/erp/importacoes/lotes/[id]` | GET | session | 4 MiB | `erp.cadastros.visualizar` |
 | `/api/erp/internal/automacoes` | GET | cron | 1 MiB | Sessão / regra dinâmica |
 | `/api/erp/notas-compra` | GET, POST | session | 1 MiB | `erp.compras.gerenciar`, `erp.compras.visualizar` |
+| `/api/erp/notas-servico/[id]/[operation]` | GET, POST | session | 0.0625 MiB | `erp.vendas.gerenciar`, `erp.vendas.visualizar` |
+| `/api/erp/notas-servico/[id]` | GET, PATCH | session | 0.0625 MiB | `erp.vendas.gerenciar`, `erp.vendas.visualizar` |
+| `/api/erp/notas-servico` | GET, POST | session | 0.0625 MiB | `erp.vendas.gerenciar`, `erp.vendas.visualizar` |
 | `/api/erp/operacoes/[resource]` | GET, POST | session | 1 MiB | `erp.estoque.ajustar` |
 | `/api/erp/operacoes/catalogos` | GET | session | 1 MiB | Sessão / regra dinâmica |
 | `/api/erp/orcamentos/[id]/acao` | POST | session | 1 MiB | `erp.vendas.gerenciar` |

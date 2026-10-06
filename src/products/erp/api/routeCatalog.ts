@@ -542,6 +542,60 @@ export const ERP_API_ROUTES = [
     "transportOnlyFiscal": true
   },
   {
+    "path": "/api/erp/notas-servico/[id]/[operation]",
+    "route": "src/app/api/erp/notas-servico/[id]/[operation]/route.ts",
+    "handler": "src/products/erp/api/handlers/notas-servico/operation.ts",
+    "methods": [
+      "GET",
+      "POST"
+    ],
+    "authentication": "session",
+    "maxBodyBytes": 65536,
+    "capabilities": [
+      "erp.vendas.gerenciar",
+      "erp.vendas.visualizar"
+    ],
+    "permissionRule": "Capabilities vary by method; see handler.",
+    "idempotency": "Business-operation rules; see handler.",
+    "transportOnlyFiscal": false
+  },
+  {
+    "path": "/api/erp/notas-servico/[id]",
+    "route": "src/app/api/erp/notas-servico/[id]/route.ts",
+    "handler": "src/products/erp/api/handlers/notas-servico/detail.ts",
+    "methods": [
+      "GET",
+      "PATCH"
+    ],
+    "authentication": "session",
+    "maxBodyBytes": 65536,
+    "capabilities": [
+      "erp.vendas.gerenciar",
+      "erp.vendas.visualizar"
+    ],
+    "permissionRule": "Capabilities vary by method; see handler.",
+    "idempotency": "Business-operation rules; see handler.",
+    "transportOnlyFiscal": false
+  },
+  {
+    "path": "/api/erp/notas-servico",
+    "route": "src/app/api/erp/notas-servico/route.ts",
+    "handler": "src/products/erp/api/handlers/notas-servico/index.ts",
+    "methods": [
+      "GET",
+      "POST"
+    ],
+    "authentication": "session",
+    "maxBodyBytes": 65536,
+    "capabilities": [
+      "erp.vendas.gerenciar",
+      "erp.vendas.visualizar"
+    ],
+    "permissionRule": "Capabilities vary by method; see handler.",
+    "idempotency": "Business-operation rules; see handler.",
+    "transportOnlyFiscal": false
+  },
+  {
     "path": "/api/erp/operacoes/[resource]",
     "route": "src/app/api/erp/operacoes/[resource]/route.ts",
     "handler": "src/products/erp/api/handlers/operacoes/resource.ts",

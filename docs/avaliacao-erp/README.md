@@ -1,5 +1,15 @@
 # Avaliação do ERP Creatto para prestadores de serviços
 
+> Avaliação final de 06/10/2026: [testes atuais, resultados e pendências](avaliacao-final-20261006.md).
+
+> Categorias de clientes e fornecedores: [classificação dos 45 cadastros demonstrativos](categorias-clientes-fornecedores-20261006.md).
+
+> Atualização fiscal de 06/10/2026: [base preparada para integração futura](preparacao-fiscal-implementacao-20261006.md), aplicada no Supabase e publicada. O parecer abaixo preserva o diagnóstico original de 08/09/2026; emissão por provedor continua pendente.
+
+> Dados fiscais: [12 notas demonstrativas criadas para a empresa de Igor Bianch](notas-fiscais-demonstrativas-20261006.md), com itens, totais e histórico, sem envio externo.
+
+> NFS-e: [fluxo de simulação na API, site e MCP, com revisão e PDF privado](notas-servico-simulacao-20261006.md). Emissão real continua pendente de integração fiscal.
+
 Data: 08/09/2026. Projeto Supabase: `mtadnxqoqxzbdksktwdr`.
 
 ## Parecer

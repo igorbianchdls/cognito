@@ -890,6 +890,7 @@ export async function attendSaleItems(
 export async function preflightSaleFiscal(
   tenantId: number,
   saleId: number,
+  ambiente: 'homologacao' | 'producao' = 'producao',
 ): Promise<FiscalPreflightResult> {
   const details = await getErpSaleDetails(tenantId, saleId);
   const sale = details.sale;
@@ -897,9 +898,9 @@ export async function preflightSaleFiscal(
     `SELECT entidades.*, configs.id AS configuracao_id, configs.cnpj AS emitente_cnpj,
        configs.inscricao_estadual AS emitente_ie, configs.endereco_codigo_municipio AS emitente_codigo_municipio
      FROM erp.entidades
-     LEFT JOIN erp.fiscal_issuer_for_operations($1) configs(empresa_id,id,cnpj,inscricao_estadual,endereco_codigo_municipio) ON configs.empresa_id = entidades.empresa_id
+     LEFT JOIN erp.fiscal_issuer_for_operations($1,$3) configs(empresa_id,id,cnpj,inscricao_estadual,endereco_codigo_municipio) ON configs.empresa_id = entidades.empresa_id
      WHERE entidades.empresa_id = $1 AND entidades.id = $2`,
-    [tenantId, sale.cliente_id],
+    [tenantId, sale.cliente_id, ambiente],
   );
   const customer = rows[0] || {};
   const issues: FiscalPreflightIssue[] = [];

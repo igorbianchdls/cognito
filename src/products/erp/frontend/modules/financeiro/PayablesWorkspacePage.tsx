@@ -5,7 +5,7 @@ import { useErpAccess } from '@/products/erp/frontend/hooks/useErpAccess'
 import { ErpMutation } from '@/products/erp/frontend/services/erpMutation'
 
 import { useCallback, useEffect, useMemo, useState } from 'react'
-import { Banknote, ChevronDown, FileSpreadsheet, History, Loader2, Plus, RotateCcw, Search } from 'lucide-react'
+import { Banknote, ChevronDown, FileSpreadsheet, History, Loader2, Plus, RotateCcw } from 'lucide-react'
 
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -16,6 +16,7 @@ import { Label } from '@/components/ui/label'
 import { Switch } from '@/components/ui/switch'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { Textarea } from '@/components/ui/textarea'
+import { ErpColumnSelector, useErpTableColumns } from '@/products/erp/frontend/components/ErpTableColumns'
 import { ErpRecordIdentity } from '@/products/erp/frontend/components/ErpRecordIdentity'
 import { ErpPagination } from '@/products/erp/frontend/components/ErpPagination'
 import { ErpAsyncCatalogSelect } from '@/products/erp/frontend/components/ErpAsyncCatalogSelect'
@@ -27,7 +28,7 @@ import {
   ErpFinanceTabs,
   ErpModuleWorkspaceTabs,
   ErpPeriodControl,
-  ErpPeriodSummary,
+  ErpSearchToolbar, ErpPeriodSummary,
   ErpStatusBadge,
   ErpWorkspaceHeader,
 } from '@/products/erp/frontend/components/ErpWorkspaceChrome'
@@ -62,6 +63,18 @@ export function PayablesWorkspacePage({ purchaseOnly = false }: { purchaseOnly?:
   const canSettle = access.can('erp.financeiro.baixar')
   const canReverse = access.can('erp.financeiro.estornar')
   const canManage = access.can('erp.financeiro.gerenciar')
+  const tableColumns = useErpTableColumns([
+    { id: 'descricao', label: 'Descrição', locked: true },
+    { id: 'vencimento', label: 'Vencimento', locked: true },
+    { id: 'entidade', label: 'Fornecedor', locked: true },
+    { id: 'natureza', label: 'Natureza', defaultVisible: false },
+    { id: 'principal', label: 'Principal' },
+    { id: 'dinheiro', label: 'Dinheiro', defaultVisible: false },
+    { id: 'credito', label: 'Crédito', defaultVisible: false },
+    { id: 'saldo', label: 'Saldo', locked: true },
+    { id: 'situacao', label: 'Situação', locked: true },
+  ], 'contas-a-pagar')
+  const visibleCellCount = Object.values(tableColumns.visibility).filter(Boolean).length + 2
   const [records, setRecords] = useState<Payable[]>([])
   const [page, setPage] = useState(1)
   const [totalRecords, setTotalRecords] = useState(0)
@@ -258,34 +271,27 @@ export function PayablesWorkspacePage({ purchaseOnly = false }: { purchaseOnly?:
         { label: 'Total do período', value: currency(periodSummary.total) },
       ]}
     />
-    <div className="flex flex-col gap-3 border-b border-[#e7e7e4] px-5 py-3 md:px-8 lg:flex-row lg:items-center lg:px-10">
-      <div className="relative w-full lg:max-w-[320px]">
-        <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-[#777]" />
-        <Input value={query} placeholder="Pesquisar lançamentos…" className="h-10 rounded-full border-[#dfdfdc] pl-9 shadow-none" onChange={(event) => { setQuery(event.target.value); setPage(1) }} />
-      </div>
+    <ErpSearchToolbar query={query} onQueryChange={value => { setQuery(value); setPage(1) }} placeholder="Pesquisar lançamentos…" resultLabel={<>{totalRecords ? (page - 1) * 50 + 1 : 0}–{Math.min(page * 50, totalRecords)} de {totalRecords}</>} endActions={<ErpColumnSelector {...tableColumns} />}>
       <ErpPeriodControl month={period} onPrevious={() => changeMonth(-1)} onNext={() => changeMonth(1)} />
-      <ErpFilterButton active={Boolean(status || origin || launchType)} onClick={() => setFiltersOpen((current) => !current)} />
-      <div className="ml-auto flex items-center gap-3 text-[13px] text-[#696969]">
-        <span>{totalRecords ? (page - 1) * 50 + 1 : 0}–{Math.min(page * 50, totalRecords)} de {totalRecords}</span>
-      </div>
-    </div>
+      <ErpFilterButton active={Boolean(status || origin || launchType)} onClick={() => setFiltersOpen(current => !current)} />
+    </ErpSearchToolbar>
     {filtersOpen ? <div className="flex flex-wrap gap-2 border-b border-[#e7e7e4] bg-[#fafaf8] px-5 py-3 md:px-8 lg:px-10"><Filter value={status} onChange={(value) => { setStatus(value); setPage(1) }} label="Todas as situações" options={[['aberto','Em aberto'],['parcial','Pago parcial'],['vencido','Vencido'],['pago','Pago'],['cancelado','Cancelado']]} />{!purchaseOnly ? <Filter value={origin} onChange={(value) => { setOrigin(value); setPage(1) }} label="Todas as origens" options={[['manual','Manual'],['compra','Compra'],['recorrencia','Recorrência'],['xml','XML'],['integracao','Integração']]} /> : null}<Filter value={launchType} onChange={(value) => { setLaunchType(value); setPage(1) }} label="Previsão e efetivo" options={[['previsao','Previsão'],['efetivo','Obrigação efetiva']]} /></div> : null}
     {error ? <div role="alert" className="mx-5 mt-4 rounded-md border border-rose-200 bg-rose-50 px-4 py-3 text-[14px] text-rose-700 md:mx-8 lg:mx-10">{error}</div> : null}
     <div className="min-h-[300px] flex-1 overflow-x-auto">
-      <Table className="erp-workspace-table min-w-[1280px] border-b border-[#e7e7e4]">
+      <Table className="erp-workspace-table border-b border-[#e7e7e4]" style={{ minWidth: 980 + ['natureza', 'dinheiro', 'credito'].filter(key => tableColumns.visibility[key]).length * 100 }}>
         <TableHeader><TableRow className="bg-[#fbfbfa] hover:bg-[#fbfbfa]">
           <TableHead className="w-12 px-4"><Checkbox checked={allSelected} onCheckedChange={(checked) => setSelectedIds(checked ? new Set(records.map((record) => record.parcela_id)) : new Set())} aria-label="Selecionar todos os lançamentos desta página" /></TableHead>
-          <TableHead>Vencimento</TableHead><TableHead>Descrição</TableHead><TableHead>Fornecedor</TableHead><TableHead>Natureza</TableHead><TableHead className="text-right">Principal</TableHead><TableHead className="text-right">Dinheiro</TableHead><TableHead className="text-right">Crédito</TableHead><TableHead className="text-right">Saldo</TableHead><TableHead>Situação</TableHead><TableHead className="w-44" />
+          <TableHead>Vencimento</TableHead><TableHead>Descrição</TableHead><TableHead>Fornecedor</TableHead>{tableColumns.visibility.natureza ? <TableHead>Natureza</TableHead> : null}{tableColumns.visibility.principal ? <TableHead className="text-right">Principal</TableHead> : null}{tableColumns.visibility.dinheiro ? <TableHead className="text-right">Dinheiro</TableHead> : null}{tableColumns.visibility.credito ? <TableHead className="text-right">Crédito</TableHead> : null}<TableHead className="text-right">Saldo</TableHead><TableHead>Situação</TableHead><TableHead className="w-44" />
         </TableRow></TableHeader>
         <TableBody>
-          {loading ? <TableRow><TableCell colSpan={11} className="h-40 text-center text-[#777]"><Loader2 className="mx-auto mb-2 size-5 animate-spin" />Carregando lançamentos</TableCell></TableRow> : records.length === 0 ? <TableRow><TableCell colSpan={11} className="h-40 text-center text-[#777]">Nenhum lançamento encontrado neste período.</TableCell></TableRow> : records.map((record) => {
+          {loading ? <TableRow><TableCell colSpan={visibleCellCount} className="h-40 text-center text-[#777]"><Loader2 className="mx-auto mb-2 size-5 animate-spin" />Carregando lançamentos</TableCell></TableRow> : records.length === 0 ? <TableRow><TableCell colSpan={visibleCellCount} className="h-40 text-center text-[#777]">Nenhum lançamento encontrado neste período.</TableCell></TableRow> : records.map((record) => {
             const checked = selectedIds.has(record.parcela_id)
             return <TableRow key={record.parcela_id} data-state={checked ? 'selected' : undefined} className="hover:bg-[#fafaf8] data-[state=selected]:bg-[#f5f6ec]">
               <TableCell className="px-4"><Checkbox checked={checked} onCheckedChange={(next) => setSelectedIds((current) => { const copy = new Set(current); if (next) copy.add(record.parcela_id); else copy.delete(record.parcela_id); return copy })} aria-label={'Selecionar ' + record.descricao} /></TableCell>
               <TableCell className="whitespace-nowrap">{dateLabel(record.vencimento)}</TableCell>
               <TableCell><ErpRecordIdentity name={record.descricao} category={record.categoria} identityKey={'pagar:' + record.conta_id} icon={<Banknote className="size-5" />} /></TableCell><TableCell><p className="font-medium text-[#252525]">{record.fornecedor}</p><p className="mt-0.5 text-[12px] text-[#7a7a7a]">Parcela {record.parcela}</p></TableCell>
-              <TableCell><span className="text-[13px] text-[#5f5f5f]">{record.tipo_lancamento === 'previsao' ? 'Previsão' : 'Obrigação efetiva'}</span></TableCell>
-              <TableCell className="text-right tabular-nums">{currency(record.valor)}</TableCell><TableCell className="text-right tabular-nums">{currency(record.valor_pago)}</TableCell><TableCell className="text-right tabular-nums">{currency(record.credito)}</TableCell><TableCell className="text-right font-medium tabular-nums">{currency(record.saldo)}</TableCell>
+              {tableColumns.visibility.natureza ? <TableCell><span className="text-[13px] text-[#5f5f5f]">{record.tipo_lancamento === 'previsao' ? 'Previsão' : 'Obrigação efetiva'}</span></TableCell> : null}
+              {tableColumns.visibility.principal ? <TableCell className="text-right tabular-nums">{currency(record.valor)}</TableCell> : null}{tableColumns.visibility.dinheiro ? <TableCell className="text-right tabular-nums">{currency(record.valor_pago)}</TableCell> : null}{tableColumns.visibility.credito ? <TableCell className="text-right tabular-nums">{currency(record.credito)}</TableCell> : null}<TableCell className="text-right font-medium tabular-nums">{currency(record.saldo)}</TableCell>
               <TableCell><ErpStatusBadge status={record.status} /></TableCell>
               <TableCell><div className="flex justify-end"><FinancialInstallmentActions record={record} side="pagar" entityName={record.fornecedor} accounts={catalogs.financialAccounts} methods={catalogs.paymentMethods} categories={catalogs.categories} costCenters={catalogs.costCenters} canManage={canManage} canReverse={canReverse} onChanged={loadData} /><Button variant="ghost" size="icon" title="Histórico" onClick={() => void openHistory(record)}><History className="size-4" /></Button>{canManage && record.tipo_lancamento === 'previsao' ? <Button variant="ghost" size="sm" disabled={saving} onClick={() => void makeEffective(record)}>Efetivar</Button> : null}{canSettle && record.tipo_lancamento === 'efetivo' && record.saldo > 0 && !['pago','cancelado','renegociado'].includes(record.status) ? <Button variant="ghost" size="icon" title="Registrar pagamento" onClick={() => openPayment(record)}><Banknote className="size-4" /></Button> : null}</div></TableCell>
             </TableRow>

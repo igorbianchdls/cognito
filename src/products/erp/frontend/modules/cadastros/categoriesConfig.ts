@@ -22,6 +22,7 @@ export const categoriesConfig: ErpEntityConfig<ErpEntityRecord> = {
     { key: 'tipo', label: 'Finalidade', type: 'select', required: true, options: [
       { value: 'produto', label: 'Produto' }, { value: 'servico', label: 'Servico' },
       { value: 'receita', label: 'Receita' }, { value: 'despesa', label: 'Despesa' },
+      { value: 'cliente', label: 'Cliente' }, { value: 'fornecedor', label: 'Fornecedor' },
       { value: 'geral', label: 'Geral' },
     ] },
     { key: 'status', label: 'Status', type: 'select', options: [{ value: 'ativo', label: 'Ativo' }, { value: 'inativo', label: 'Inativo' }] },

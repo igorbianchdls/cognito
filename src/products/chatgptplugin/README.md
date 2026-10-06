@@ -1,8 +1,12 @@
 # ChatGPT Plugin — Cognito ERP
 
-Produto `chatgptplugin`, versão **1.6.0**: 29 ferramentas MCP e 44 tipos de proposta, operações com revisão humana, painel e formulário MCP Apps, formulários nativos OpenAI por MRTR, configurações nativas, menções a clientes, editor de arquivos, onboarding e exportação portátil em pasta e ZIP.
+Produto `chatgptplugin`, versão **1.7.0**: 33 ferramentas MCP e 50 tipos de proposta, incluindo NFS-e simulada e PDF privado, operações com revisão humana, painel e formulário MCP Apps, formulários nativos OpenAI por MRTR, configurações nativas, menções a clientes, editor de arquivos, onboarding e exportação portátil em pasta e ZIP.
 
-As consultas e os cards foram validados localmente e contra o Supabase real. O schema `plugin` e o ERP já estão configurados no banco. A versão 1.6.0 ainda exige publicação do código e validação da conexão e renderização dentro da conta ChatGPT; os testes locais não comprovam esse fluxo externo.
+As consultas e os cards foram validados localmente e contra o Supabase real. A conexão OAuth e a renderização dentro da conta ChatGPT precisam de validação nessa conta; os testes locais não comprovam esse fluxo externo.
+
+## Notas de serviço — 1.7.0
+
+Criação, edição de rascunho, emissão local nos cenários sucesso/rejeição/demora/timeout, consulta de resultado, cancelamento e exclusão de rascunho usam as regras comuns da API e do site. Mudanças exigem aprovação autenticada, conferência de versão e permissão. As quatro tools de consulta e os cards exibem **SIMULAÇÃO - SEM VALIDADE FISCAL**. O PDF fica privado e preserva versões anteriores. Não existe transmissão fiscal real, geração financeira nem movimentação de estoque. Consulte [documentação do fluxo](../../../docs/avaliacao-erp/notas-servico-simulacao-20261006.md).
 
 ## Melhorias de operação — 1.6.0
 

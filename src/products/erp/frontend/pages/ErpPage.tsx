@@ -14,6 +14,7 @@ import { ErpOperationsWorkspacePage } from '@/products/erp/frontend/components/E
 import { ErpShell } from '@/products/erp/frontend/layout/ErpShell'
 import { PurchaseWorkspacePage } from '@/products/erp/frontend/modules/compras/PurchaseWorkspacePage'
 import { PurchaseInvoicesPage } from '@/products/erp/frontend/modules/compras/PurchaseInvoicesPage'
+import {ServiceInvoicesPage} from '@/products/erp/frontend/modules/vendas/ServiceInvoicesPage'
 import { PayablesWorkspacePage } from '@/products/erp/frontend/modules/financeiro/PayablesWorkspacePage'
 import { ReceivablesWorkspacePage } from '@/products/erp/frontend/modules/financeiro/ReceivablesWorkspacePage'
 import { BankReconciliationPage } from '@/products/erp/frontend/modules/financeiro/BankReconciliationPage'
@@ -72,7 +73,7 @@ function ErpPageContent({
   const operationConfig = moduleConfig ? ERP_OPERATION_CONFIGS[moduleConfig.id] : undefined
   const usesWorkspaceChrome =
     (sectionConfig.id === 'financeiro' && ['contas-a-pagar', 'contas-a-receber'].includes(moduleConfig?.id ?? '')) ||
-    (sectionConfig.id === 'vendas' && ['orcamentos', 'pedidos', 'ordens-servico', 'contratos'].includes(moduleConfig?.id ?? '')) ||
+    (sectionConfig.id === 'vendas' && ['orcamentos', 'pedidos', 'ordens-servico', 'contratos','notas-fiscais'].includes(moduleConfig?.id ?? '')) ||
     ['compras', 'estoque'].includes(sectionConfig.id) || Boolean(entityConfig)
 
   return (
@@ -94,6 +95,8 @@ function ErpPageContent({
               ) : (
                 <DashboardRouter key={moduleConfig?.id} id={moduleConfig!.id as DashboardId} />
               )
+            ) : sectionConfig.id === 'vendas' && moduleConfig?.id === 'notas-fiscais' ? (
+              <ServiceInvoicesPage />
             ) : sectionConfig.id === 'vendas' && moduleConfig?.id === 'pedidos' ? (
               <SalesWorkspacePage />
             ) : sectionConfig.id === 'vendas' && moduleConfig?.id === 'orcamentos' ? (

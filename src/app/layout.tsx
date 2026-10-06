@@ -3,6 +3,7 @@ import { ClerkProvider } from "@clerk/nextjs";
 import { Geist, Geist_Mono } from "next/font/google";
 import { clerkPtBrLocalization } from "@/products/auth/frontend/components/ClerkAuthShell";
 import "./globals.css";
+import "@/products/erp/frontend/styles/workspace.css";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",

@@ -43,6 +43,7 @@ const navigation: NavigationItem[] = [
       { title: "Pedidos", url: "/erp/vendas/pedidos" },
       { title: "Ordens de serviço", url: "/erp/vendas/ordens-servico" },
       { title: "Contratos", url: "/erp/vendas/contratos" },
+      {title:'Notas de serviço',url:'/erp/vendas/notas-fiscais'},
     ],
   },
   {

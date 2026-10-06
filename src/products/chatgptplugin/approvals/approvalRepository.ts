@@ -10,6 +10,7 @@ import { pluginQuery } from '../shared/database'
 import { draftView,type DraftRow } from '../actions/draftRepository'
 import { proposalReferences } from '../actions/references'
 import { createManualFinancialTitle } from '@/products/erp/server/erpCrudRepository'
+import {createServiceInvoice} from '@/products/erp/server/fiscal/serviceInvoiceRepository'
 
 export async function loadApproval(id:string,session:ErpAccessContext,resource:string) {
   const rows = await pluginQuery<DraftRow>("SELECT * FROM plugin.drafts WHERE id=$1 AND user_id=$2 AND empresa_id=$3 AND integration='chatgpt'",[id,session.sharedUserId,session.tenantId])
@@ -54,6 +55,8 @@ export async function decideApproval(id:string,session:ErpAccessContext,decision
         const snapshot=await operationSnapshot(session.tenantId,proposal,client)
         if(!snapshot||!row.target_snapshot||snapshot.hash!==row.target_snapshot.hash)throw new PluginError('STALE_PROPOSAL','O registro mudou. Prepare uma nova proposta para revisar os dados atuais.',409)
         recordId=await runWithErpTransactionClient(client,()=>executeOperation(session.tenantId,session.sharedUserId,proposal,`chatgptplugin:${row.id}`))
+      } else if(proposal.tipo==='nota_servico'){
+        recordId=(await runWithErpTransactionClient(client,()=>createServiceInvoice(session.tenantId,session.sharedUserId,proposal.dados,`chatgptplugin:${row.id}`))).record.id
       } else if(proposal.tipo==='conta_pagar'||proposal.tipo==='conta_receber'){
         recordId=await createManualFinancialTitle(client,session.tenantId,session.sharedUserId,proposal.tipo==='conta_pagar'?'pagar':'receber',proposal.dados,`chatgptplugin:${row.id}`)
       } else {

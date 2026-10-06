@@ -5,6 +5,14 @@ description: Consultar o Cognito ERP e preparar criacoes, edicoes, exclusoes, co
 
 Use `meu_acesso` para descobrir as empresas e permissoes da conta. Se houver varias empresas, confirme qual o usuario deseja consultar e passe `empresa_id` em cada ferramenta. Nao suponha que IDs de uma empresa servem em outra.
 
+## Notas de serviço simuladas
+
+Use `listar_notas_servico`, `obter_nota_servico`, `validar_nota_servico` e `obter_pdf_nota_servico`. São exclusivamente documentos de demonstração, sempre **SIMULAÇÃO - SEM VALIDADE FISCAL**. Nunca descreva uma simulação como autorização fiscal real. A ferramenta de PDF retorna o link privado autenticado; abra-o para o usuário, sem inventar arquivos ou chaves fiscais.
+
+Para criar, editar, emitir a simulação, consultar um resultado pendente, cancelar ou excluir um rascunho, prepare uma proposta com os tipos `nota_servico`, `editar_nota_servico`, `simular_nota_servico`, `consultar_resultado_nota_servico`, `cancelar_nota_servico` ou `excluir_nota_servico`. A execução continua exigindo aprovação humana no ERP. Consulte cliente e serviços antes de preparar, use os IDs encontrados e inclua a descrição em cada item. Venda vinculada é opcional. Cancelar ou excluir exige motivo. Somente rascunhos podem ser editados ou excluídos.
+
+Os cenários locais são `sucesso`, `rejeicao`, `demora` e `timeout`. Os dois últimos devem ser resolvidos pela consulta de resultado aprovada, preservando a chave de uma repetição. Não altere contas financeiras ou estoque para simular uma nota. Use o card `tabela` com `listar_notas_servico` ou `detalhes` com `obter_nota_servico`; revisão e resultado usam `obter_rascunho`.
+
 Localize registros com `buscar_cadastros`, `listar_vendas`, `listar_orcamentos` ou `listar_compras`. Use os IDs retornados nas consultas de detalhe. Para valores financeiros, use `consultar_financeiro`; para relatorios, `consultar_relatorio` com periodo explicito. DRE considera caixa e posicao financeira considera vencimentos. Respeite paginacao, limites e indicacoes de itens truncados antes de afirmar totais completos.
 
 Use `renderizar_card` quando uma apresentação visual ajudar. Mostre somente os dados do pedido atual, sem abas de módulos que não foram consultados. Informe empresa no nível principal e os argumentos da consulta em `parametros`, sem repetir empresa_id. Nunca forneça linhas ou totais produzidos pelo modelo; o servidor consulta novamente a fonte autorizada.
@@ -37,7 +45,7 @@ Para preenchimento em controles nativos do ChatGPT, use `preparar_formulario_nat
 
 Use `verificar_fiscal_venda` para identificar pendencias fiscais. O atendimento movimenta estoque; nenhuma dessas ferramentas emite nota fiscal. Emissao depende de integracao fiscal real.
 
-As propostas cobrem 44 tipos. CRUD disponível para clientes, fornecedores, vendedores, produtos, serviços, categorias, contas financeiras, vendas, orçamentos, compras e títulos financeiros manuais a pagar/receber.
+As propostas cobrem 50 tipos. CRUD disponível para clientes, fornecedores, vendedores, produtos, serviços, categorias, contas financeiras, vendas, orçamentos, compras e títulos financeiros manuais a pagar/receber.
 
 Para títulos use obter_titulo_financeiro com conta_id (ID do título). consultar_financeiro e obter_parcela_financeira trabalham com IDs de parcelas; não troque esses IDs. Distribua valor_total em até 48 parcelas {data_vencimento,valor}, com soma exata; escolha categoria receita/despesa/geral compatível e cliente/fornecedor ativo. Não invente datas de competência ou emissão.
 

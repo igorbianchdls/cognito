@@ -12,6 +12,9 @@ export type ParsedNfe = {
   data_vencimento: string
   destinatario_documento: string
   fornecedor: { nome: string; documento: string }
+  ambiente?: 'homologacao' | 'producao'
+  emitente_snapshot: XmlNode
+  destinatario_snapshot: XmlNode
   valor_produtos: number
   valor_total: number
   frete: number
@@ -34,6 +37,7 @@ export type ParsedNfe = {
   codigo_status_sefaz: string
   motivo_status_sefaz: string
   itens: Array<{
+    numero_item: number
     codigo: string
     descricao: string
     ncm: string
@@ -42,6 +46,8 @@ export type ParsedNfe = {
     quantidade: number
     valor_unitario: number
     valor_total: number
+    desconto: number
+    tributos: XmlNode
   }>
   xml: string
   xml_hash: string
@@ -129,8 +135,9 @@ export function parseNfeXml(xmlValue: unknown): ParsedNfe {
   if (!supplierName || supplierDocument.length < 11) throw new Error('Emitente da NF-e invalido.')
   if (valueTotal <= 0) throw new Error('Valor total da NF-e precisa ser maior que zero.')
 
-  const items = array(info.det).map((rawDetail) => {
-    const product = object(object(rawDetail).prod)
+  const items = array(info.det).map((rawDetail, index) => {
+    const detail = object(rawDetail)
+    const product = object(detail.prod)
     const quantity = number(product.qCom)
     const unitValue = number(product.vUnCom)
     const itemTotal = number(product.vProd)
@@ -138,6 +145,7 @@ export function parseNfeXml(xmlValue: unknown): ParsedNfe {
       throw new Error('A NF-e possui item com dados invalidos.')
     }
     return {
+      numero_item: Number(detail['@_nItem']) || index + 1,
       codigo: string(product.cProd),
       descricao: string(product.xProd),
       ncm: string(product.NCM),
@@ -146,6 +154,8 @@ export function parseNfeXml(xmlValue: unknown): ParsedNfe {
       quantidade: quantity,
       valor_unitario: unitValue,
       valor_total: itemTotal,
+      desconto: number(product.vDesc),
+      tributos: object(detail.imposto),
     }
   })
   if (items.length === 0) throw new Error('A NF-e nao possui itens.')
@@ -166,6 +176,9 @@ export function parseNfeXml(xmlValue: unknown): ParsedNfe {
     data_vencimento: dateOf(firstInstallment.dVenc) || issueDate,
     destinatario_documento: recipientDocument,
     fornecedor: { nome: supplierName, documento: supplierDocument },
+    ambiente: string(ide.tpAmb) === '1' ? 'producao' : string(ide.tpAmb) === '2' ? 'homologacao' : undefined,
+    emitente_snapshot: issuer,
+    destinatario_snapshot: recipient,
     valor_produtos: valueProducts,
     valor_total: valueTotal,
     frete: number(total.vFrete),

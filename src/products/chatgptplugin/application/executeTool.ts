@@ -22,6 +22,7 @@ export const executionDependencies: ExecutionDependencies = { queries: erpQuerie
 function publicError(error: unknown): PluginError {
   if (error instanceof PluginError) return error
   if (error instanceof ErpDomainError && error.code === 'NOT_FOUND') return new PluginError('NOT_FOUND', error.message, 404)
+  if(error instanceof ErpDomainError&&['INVALID_STATE','STALE_VERSION','IDEMPOTENCY_CONFLICT'].includes(error.code))return new PluginError(error.code,error.message,409)
   if (error instanceof ErpDomainError && error.code === 'VALIDATION_ERROR') {
     return new PluginError('NOT_FOUND', 'Registro nao disponivel nesta empresa.', 404)
   }
@@ -77,6 +78,7 @@ export async function executeTool(principal: PluginPrincipal, name: string, raw:
       ])
     } finally { if (timer) clearTimeout(timer) }
     // Impedir respostas enormes e normalizar datas/decimais para transporte JSON.
+    if(name==='obter_pdf_nota_servico'&&data&&typeof data==='object'&&'pdf_path' in data)data={...data,url:new URL(String(data.pdf_path),config.resource).href}
     const payload = { ok: true, execution_id: executionId, empresa_id: company?.id || null, data }
     const serialized = JSON.stringify(payload)
     if (Buffer.byteLength(serialized) > 128 * 1024) throw new PluginError('RESULT_TOO_LARGE', 'Refine os filtros para reduzir o resultado.')

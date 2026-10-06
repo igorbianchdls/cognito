@@ -1,3 +1,4 @@
+import {serviceInvoiceQueryStubs} from './erp/service-invoice-query-stubs'
 import assert from 'node:assert/strict'
 import { generateKeyPairSync, randomUUID, sign } from 'node:crypto'
 import { verifyToken } from '@clerk/nextjs/server'
@@ -129,7 +130,7 @@ async function main() {
         return { userId: 1, clerkUserId: token.subject, clientId: token.clientId, scopes: token.scopes, companies: [] } as PluginPrincipal
       },
       execution: {
-        queries: { financialTitle:unexpectedQuery,registration:unexpectedQuery,installment:unexpectedQuery,analysis:unexpectedQuery,customer: unexpectedQuery, fiscal: unexpectedQuery, financialAccounts: unexpectedQuery,
+        queries: {...serviceInvoiceQueryStubs, financialTitle:unexpectedQuery,registration:unexpectedQuery,installment:unexpectedQuery,analysis:unexpectedQuery,customer: unexpectedQuery, fiscal: unexpectedQuery, financialAccounts: unexpectedQuery,
           payments: unexpectedQuery, overview: unexpectedQuery, page: unexpectedQuery, sale: unexpectedQuery,
           stock: unexpectedQuery, purchase: unexpectedQuery, report: unexpectedQuery },
         reserve: async () => { effects++; return randomUUID() }, finish: async () => { effects++ },

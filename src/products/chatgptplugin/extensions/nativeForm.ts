@@ -25,7 +25,8 @@ export function nativeProposalForm(tipo:Arguments['tipo']):OpenAIForm {
     const shape=proposalFields(tipo),properties:Record<string,OpenAIFormField>={},required:string[]=[]
     for(const [field,schema] of Object.entries(shape)){
       const base=baseSchema(schema),label=fieldLabels[field]||field
-      properties[field]=base instanceof z.ZodArray?{type:'string',title:label,minLength:2,maxLength:20000,description:field==='parcelas'?'Lista JSON com data_vencimento e valor. A soma deve ser igual ao valor_total.':'Lista JSON de itens com tipo, item_id, quantidade, valor_unitario e desconto.'}
+      properties[field]=base instanceof z.ZodArray?{type:'string',title:label,minLength:2,maxLength:20000,description:field==='parcelas'?'Lista JSON com data_vencimento e valor. A soma deve ser igual ao valor_total.':tipo.endsWith('nota_servico')?'Lista JSON de serviços com tipo servico, item_id, descricao, quantidade, valor_unitario e desconto.':'Lista JSON de itens com tipo, item_id, quantidade, valor_unitario e desconto.'}
+        :base instanceof z.ZodBoolean?{type:'boolean',title:label}
         :base instanceof z.ZodEnum?choice(label,base.options.map((value:string)=>[value,value==='fisica'?'Pessoa física':value==='juridica'?'Pessoa jurídica':value]))
         :base instanceof z.ZodNumber?field.endsWith('_id')?identifier(label):amount(label)
         :field.startsWith('data_')?date(label):text(label,field==='motivo'?1000:field==='descricao'||field==='observacoes'?2000:200)

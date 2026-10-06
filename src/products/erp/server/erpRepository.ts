@@ -1186,10 +1186,10 @@ export async function importErpPurchaseInvoice(input: {
 
     const fiscalConfig = await client.query(
       `SELECT regexp_replace(cnpj, '\\D', '', 'g') AS cnpj
-       FROM erp.fiscal_issuer_for_operations($1) AS config(empresa_id,id,cnpj,inscricao_estadual,endereco_codigo_municipio)
+       FROM erp.fiscal_issuer_for_operations($1,$2) AS config(empresa_id,id,cnpj,inscricao_estadual,endereco_codigo_municipio)
        WHERE empresa_id = $1
        ORDER BY id LIMIT 1`,
-      [input.tenantId],
+      [input.tenantId, parsedNfe.ambiente || 'producao'],
     )
     const configuredDocument = text(fiscalConfig.rows[0]?.cnpj)
     if (!configuredDocument) {
@@ -1367,14 +1367,15 @@ export async function importErpPurchaseInvoice(input: {
          empresa_id, compra_id, entidade_id, tipo, direcao, finalidade, status,
          numero, serie, chave_acesso, protocolo, valor_produtos, valor_total, emitida_em,
          xml_hash, destinatario_documento, codigo_status_sefaz, motivo_status_sefaz,
-         payload_enviado, criado_por, atualizado_por
+         payload_enviado, criado_por, atualizado_por, modelo_emissao, ambiente, emitente_snapshot, destinatario_snapshot
        ) VALUES ($1, $2, $3, 'nfe', 'entrada', 'normal', 'emitida', $4, $5, $6,
-         $7, $8, $9, $10, $11, $12, $13, $14, $15::jsonb, $16, $16)
+         $7, $8, $9, $10, $11, $12, $13, $14, $15::jsonb, $16, $16, 'nfe', $17, $18::jsonb, $19::jsonb)
        RETURNING id::text, compra_id::text, status, chave_acesso`,
       [input.tenantId, purchase?.id || null, supplier.id, optionalText(values.numero), optionalText(values.serie), key,
         parsedNfe.protocolo, money(values.valor_produtos), total, issueDate, parsedNfe.xml_hash,
         recipientDocument, parsedNfe.codigo_status_sefaz, parsedNfe.motivo_status_sefaz,
-        JSON.stringify({ xml: parsedNfe.xml }), input.actorId],
+        JSON.stringify({ xml: parsedNfe.xml }), input.actorId, parsedNfe.ambiente ?? null,
+        JSON.stringify(parsedNfe.emitente_snapshot), JSON.stringify(parsedNfe.destinatario_snapshot)],
     )
     const invoice = invoiceResult.rows[0]
 
@@ -1391,13 +1392,15 @@ export async function importErpPurchaseInvoice(input: {
         parsedNfe.totais.outras_despesas, money(values.desconto), money(values.frete), input.actorId],
     )
 
-    for (const rawItem of items) {
+    for (const [itemIndex, rawItem] of items.entries()) {
+      const fiscalItem = parsedNfe.itens[itemIndex]
       await client.query(
         `INSERT INTO erp.notas_fiscais_itens (
            empresa_id, nota_fiscal_id, tipo_item, descricao, quantidade, valor_unitario,
-           valor_total, ncm, cfop, payload_item, criado_por, atualizado_por
-         ) VALUES ($1, $2, 'produto', $3, $4, $5, $6, $7, $8, $9::jsonb, $10, $10)`,
-        [input.tenantId, invoice.id, optionalText(rawItem.descricao) || 'Item NF-e', Number(rawItem.quantidade || 1), money(rawItem.valor_unitario), money(rawItem.valor_total), optionalText(rawItem.ncm), optionalText(rawItem.cfop), JSON.stringify(rawItem), input.actorId],
+           valor_total, ncm, cfop, payload_item, criado_por, atualizado_por, numero_item, codigo_item, unidade, desconto, tributos
+         ) VALUES ($1, $2, 'produto', $3, $4, $5, $6, $7, $8, $9::jsonb, $10, $10, $11, $12, $13, $14, $15::jsonb)`,
+        [input.tenantId, invoice.id, optionalText(rawItem.descricao) || 'Item NF-e', Number(rawItem.quantidade || 1), money(rawItem.valor_unitario), money(rawItem.valor_total), optionalText(rawItem.ncm), optionalText(rawItem.cfop), JSON.stringify(rawItem), input.actorId,
+          fiscalItem.numero_item, fiscalItem.codigo, fiscalItem.unidade, fiscalItem.desconto, JSON.stringify(fiscalItem.tributos)],
       )
     }
     return { invoice, purchase: purchase ? { id: String(purchase.id), numero: purchase.numero } : null, reused: false }
@@ -1657,6 +1660,13 @@ async function listCategoryRecords(input: ListInput): Promise<ErpEntityRecord[]>
            WHERE servicos.empresa_id = categorias.empresa_id
              AND servicos.categoria_id = categorias.id
              AND servicos.excluido_em IS NULL
+         ) + (
+           SELECT count(*)::int FROM erp.entidades AS entidades
+           WHERE entidades.empresa_id = categorias.empresa_id
+             AND entidades.excluido_em IS NULL
+             AND entidades.metadata ->> 'categoria' = categorias.nome
+             AND ((categorias.tipo = 'cliente' AND entidades.eh_cliente)
+               OR (categorias.tipo = 'fornecedor' AND entidades.eh_fornecedor))
          ) AS itens,
          concat_ws(' ', categorias.nome, categorias.metadata ->> 'descricao') AS searchable
        FROM erp.categorias AS categorias
@@ -2226,7 +2236,7 @@ export async function updateErpEntityRecord(input: UpdateInput): Promise<ErpEnti
       )
     } else if (input.entityId === 'categorias') {
       assertRequired(input.values.nome, 'Nome da categoria')
-      const categoryType = ['receita', 'despesa', 'produto', 'servico', 'geral'].includes(text(input.values.tipo))
+      const categoryType = ['receita', 'despesa', 'produto', 'servico', 'geral', 'cliente', 'fornecedor'].includes(text(input.values.tipo))
         ? text(input.values.tipo) : 'geral'
       result = await client.query(
         `UPDATE erp.categorias SET nome = $3, tipo = $4, ativo = $5,
@@ -2312,7 +2322,7 @@ export async function getErpEntitySummary(tenantId: number, entityId: ErpConnect
       FROM erp.servicos WHERE empresa_id = $1 AND excluido_em IS NULL`
   } else if (entityId === 'categorias') {
     sql = `SELECT count(*) FILTER (WHERE ativo)::int AS ativos,
-      count(*) FILTER (WHERE ativo AND NOT EXISTS (SELECT 1 FROM erp.produtos p WHERE p.empresa_id = categorias.empresa_id AND p.categoria_id = categorias.id AND p.excluido_em IS NULL) AND NOT EXISTS (SELECT 1 FROM erp.servicos s WHERE s.empresa_id = categorias.empresa_id AND s.categoria_id = categorias.id AND s.excluido_em IS NULL))::int AS sem_itens,
+      count(*) FILTER (WHERE ativo AND NOT EXISTS (SELECT 1 FROM erp.produtos p WHERE p.empresa_id = categorias.empresa_id AND p.categoria_id = categorias.id AND p.excluido_em IS NULL) AND NOT EXISTS (SELECT 1 FROM erp.servicos s WHERE s.empresa_id = categorias.empresa_id AND s.categoria_id = categorias.id AND s.excluido_em IS NULL) AND NOT EXISTS (SELECT 1 FROM erp.entidades e WHERE e.empresa_id=categorias.empresa_id AND e.excluido_em IS NULL AND e.metadata->>'categoria'=categorias.nome AND ((categorias.tipo='cliente' AND e.eh_cliente) OR (categorias.tipo='fornecedor' AND e.eh_fornecedor))))::int AS sem_itens,
       count(DISTINCT tipo)::int AS tipos FROM erp.categorias WHERE empresa_id = $1 AND excluido_em IS NULL`
   } else {
     sql = `SELECT count(*) FILTER (WHERE ativo)::int AS ativos, count(*) FILTER (WHERE padrao AND ativo)::int AS padrao,
@@ -2345,7 +2355,7 @@ export async function getErpEntitySummary(tenantId: number, entityId: ErpConnect
 }
 
 export async function listErpCategoryOptions(tenantId: number, type?: string, useId = false) {
-  const allowedType = ['receita', 'despesa', 'produto', 'servico', 'geral'].includes(text(type)) ? text(type) : null
+  const allowedType = ['receita', 'despesa', 'produto', 'servico', 'geral', 'cliente', 'fornecedor'].includes(text(type)) ? text(type) : null
   const params: unknown[] = [tenantId]
   const typeClause = allowedType ? ` AND tipo IN ($${params.push(allowedType)}, 'geral')` : ''
   const rows = await runQuery<{ id: string; nome: string; tipo: string }>(
@@ -2392,7 +2402,7 @@ export async function searchErpCatalog(input: {
        ORDER BY nome LIMIT $3`, [input.tenantId, query, limit],
     )
   }
-  const categoryType = ['receita', 'despesa', 'produto', 'servico', 'geral'].includes(text(input.categoryType))
+  const categoryType = ['receita', 'despesa', 'produto', 'servico', 'geral', 'cliente', 'fornecedor'].includes(text(input.categoryType))
     ? text(input.categoryType) : null
   const params: unknown[] = [input.tenantId, query, limit]
   const typeClause = categoryType ? ` AND tipo IN ($${params.push(categoryType)}, 'geral')` : ''
@@ -4537,7 +4547,7 @@ async function createRecurringReceivable(client:SQLClient,input:{tenantId:number
 
 async function createCategoryRecord(client: SQLClient, input: CreateInput) {
   assertRequired(input.values.nome, 'Nome da categoria')
-  const categoryType = ['receita', 'despesa', 'produto', 'servico', 'geral'].includes(text(input.values.tipo))
+  const categoryType = ['receita', 'despesa', 'produto', 'servico', 'geral', 'cliente', 'fornecedor'].includes(text(input.values.tipo))
     ? text(input.values.tipo)
     : 'geral'
   const result = await client.query(

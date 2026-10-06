@@ -465,7 +465,8 @@ async function cleanup() {
 async function main() {
   await db.connect();
   connected = true;
-  await db.query("SET default_transaction_read_only=on");
+  // This inspection client only issues SELECTs. Session-wide READ ONLY leaks
+  // to other requests when the Supabase URL uses a transaction pooler.
   const identity = (
     await db.query(
       "SELECT e.name,u.clerk_user_id,u.full_name,u.email,m.role,m.perfil_acesso_id FROM shared.empresas e JOIN shared.usuarios_empresas m ON m.empresa_id=e.id JOIN shared.usuarios u ON u.id=m.usuario_id WHERE e.id=$1 AND u.id=$2 AND m.status='active' AND NOT m.suspenso_localmente AND e.status='active' AND u.status='active' AND m.role='owner'",
@@ -597,7 +598,13 @@ async function main() {
   deps = {
     config: () => settings,
     execution: executionDependencies,
-    limit: consumeRequestLimit,
+    limit: async (identity, maximum) => {
+      try { await consumeRequestLimit(identity, maximum); }
+      catch (error) {
+        console.error("Request-limit database failure: " + ((error as {code?:string}).code || (error as Error).name));
+        throw error;
+      }
+    },
     resolve: async (request) => {
       const credential = request.headers.get("authorization");
       if (credential === "Bearer " + token) return principal;

@@ -53,15 +53,17 @@ export function ErpDataTable({
   onAction,
   onEdit,
   onDeactivate,
+  columnVisibility,
 }: {
   config: ErpEntityConfig
   records: ErpEntityRecord[]
   onAction?: (action: ErpEntityAction, record: ErpEntityRecord) => void
   onEdit?: (record: ErpEntityRecord) => void
   onDeactivate?: (record: ErpEntityRecord) => void
+  columnVisibility?: Record<string, boolean>
 }) {
   const actions = config.actions || []
-  const columns = config.columns.filter(column => column.key !== 'categoria')
+  const columns = config.columns.filter(column => column.key !== 'categoria' && columnVisibility?.[column.key] !== false)
 
   return (
     <div className="min-w-0 overflow-x-auto bg-white">

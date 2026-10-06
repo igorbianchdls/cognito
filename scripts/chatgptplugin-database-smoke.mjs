@@ -65,6 +65,9 @@ async function main(){
   await db.exec(readFileSync('supabase/migrations/20261003150000_chatgptplugin_operations_settings.sql','utf8'));
   await db.exec(readFileSync('supabase/migrations/20261003160000_create_plugin_schema.sql','utf8'));
   await applySharedMigration(db);
+  for(const file of ['20261006010000_prepare_erp_fiscal_integration.sql','20261006020000_service_invoice_simulation.sql']) {
+    await db.exec(readFileSync(`supabase/migrations/${file}`,'utf8'));
+  }
   await db.exec(`
     INSERT INTO shared.perfis_acesso(id,nome) VALUES('consulta','Consulta') ON CONFLICT(id) DO NOTHING;
     INSERT INTO shared.permissoes_perfil(perfil_acesso_id,capability) VALUES('consulta','erp.cadastros.visualizar');
@@ -260,7 +263,7 @@ async function main(){
   });
   await check('Perfil de vendas pre-valida fiscal sem ler configuracao completa',async()=>{
     await db.exec("INSERT INTO shared.usuarios_empresas(empresa_id,usuario_id,role,status) VALUES(1,2,'viewer','active')");
-    await db.exec("INSERT INTO shared.permissoes_perfil(perfil_acesso_id,capability) VALUES('consulta','erp.vendas.visualizar'); INSERT INTO erp.configuracoes_fiscais(empresa_id,cnpj,razao_social,token_secret_ref) VALUES(1,'12345678000199','Empresa A','secret-local')");
+    await db.exec("INSERT INTO shared.permissoes_perfil(perfil_acesso_id,capability) VALUES('consulta','erp.vendas.visualizar'); INSERT INTO erp.configuracoes_fiscais(empresa_id,cnpj,razao_social,token_secret_ref,provedor,ambiente) VALUES(1,'12345678000199','Empresa A','secret-local','fixture_local','producao')");
     const salesReader=await loadPluginPrincipal('user_2','client',['erp:read']);
     const fiscal=await call(salesReader,'verificar_fiscal_venda',{empresa_id:1,venda_id:101});
     assert(!fiscal.issues.some(issue=>['FISCAL_CONFIG_MISSING','ISSUER_DOCUMENT_MISSING'].includes(issue.code)));

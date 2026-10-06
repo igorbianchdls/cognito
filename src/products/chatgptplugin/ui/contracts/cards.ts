@@ -2,8 +2,8 @@ import { z } from 'zod'
 import { companySchema } from '../../tools/catalog'
 
 export const cardSources = {
-  tabela:['consultar_financeiro','listar_vendas','listar_compras','listar_orcamentos','buscar_cadastros','consultar_estoque','listar_pagamentos','listar_contas_financeiras','consultar_relatorio'],
-  detalhes:['obter_cliente','obter_cadastro','obter_venda','obter_compra','obter_parcela_financeira','obter_titulo_financeiro'],
+  tabela:['listar_notas_servico','consultar_financeiro','listar_vendas','listar_compras','listar_orcamentos','buscar_cadastros','consultar_estoque','listar_pagamentos','listar_contas_financeiras','consultar_relatorio'],
+  detalhes:['obter_nota_servico','obter_cliente','obter_cadastro','obter_venda','obter_compra','obter_parcela_financeira','obter_titulo_financeiro'],
   analise:['analisar_periodo','consultar_relatorio'],
   selecao:['meu_acesso','buscar_cadastros','listar_contas_financeiras'],
   revisao:['obter_rascunho'],
@@ -12,7 +12,7 @@ export const cardSources = {
 export const cardSchema=z.object({
   empresa_id:companySchema,
   card:z.enum(['tabela','detalhes','analise','selecao','revisao','resultado']),
-  consulta:z.enum(['consultar_financeiro','listar_vendas','listar_compras','listar_orcamentos','buscar_cadastros','consultar_estoque','listar_pagamentos','listar_contas_financeiras','consultar_relatorio','obter_cliente','obter_cadastro','obter_venda','obter_compra','obter_parcela_financeira','obter_titulo_financeiro','analisar_periodo','meu_acesso','obter_rascunho']),
+  consulta:z.enum(['listar_notas_servico','obter_nota_servico','consultar_financeiro','listar_vendas','listar_compras','listar_orcamentos','buscar_cadastros','consultar_estoque','listar_pagamentos','listar_contas_financeiras','consultar_relatorio','obter_cliente','obter_cadastro','obter_venda','obter_compra','obter_parcela_financeira','obter_titulo_financeiro','analisar_periodo','meu_acesso','obter_rascunho']),
   parametros:z.record(z.unknown()).default({}).refine(value=>Object.keys(value).length<=16&&!Object.hasOwn(value,'empresa_id'),'Informe empresa_id apenas no nível principal.'),
 }).strict()
 export type CardRequest=z.infer<typeof cardSchema>

@@ -7,8 +7,11 @@ import { archiveRegistration,archiveCommercialDraft,changeManualFinancialTitle }
 import { attendStockForSale } from '@/products/erp/server/erpStockRepository'
 import { PluginError } from '../shared/contracts'
 import { purchaseValues,type Proposal } from './contracts'
+import {editServiceInvoice,actOnServiceInvoice} from '@/products/erp/server/fiscal/serviceInvoiceRepository'
+import {serviceInvoiceInputSchema} from '@/products/erp/shared/serviceInvoiceContracts'
 
 const tables = {editar_fornecedor:'entidades',editar_vendedor:'entidades',editar_servico:'servicos',editar_categoria:'categorias',editar_conta_financeira:'contas_financeiras',
+  editar_nota_servico:'notas_fiscais',simular_nota_servico:'notas_fiscais',consultar_resultado_nota_servico:'notas_fiscais',cancelar_nota_servico:'notas_fiscais',excluir_nota_servico:'notas_fiscais',
   excluir_cliente:'entidades',excluir_fornecedor:'entidades',excluir_vendedor:'entidades',excluir_produto:'produtos',excluir_servico:'servicos',excluir_categoria:'categorias',excluir_conta_financeira:'contas_financeiras',
   editar_venda:'vendas',editar_orcamento:'vendas',excluir_venda:'vendas',excluir_orcamento:'vendas',editar_compra:'compras',excluir_compra:'compras',
   editar_conta_pagar:'contas_pagar',editar_conta_receber:'contas_receber',excluir_conta_pagar:'contas_pagar',excluir_conta_receber:'contas_receber',
@@ -26,6 +29,11 @@ export async function operationSnapshot(tenantId:number,proposal:Proposal,client
   const row=rows[0]
   if(!row || (proposal.tipo==='editar_cliente' && !row.eh_cliente))throw new PluginError('INVALID_REFERENCE','Registro nao disponivel nesta empresa.')
   const related:unknown[]=[]
+  if(table==='notas_fiscais'){
+    if(row.modo_operacao!=='simulacao'||row.tipo!=='nfse'||row.direcao!=='saida')throw new PluginError('INVALID_REFERENCE','Escolha uma nota de serviço simulada desta empresa.')
+    related.push(await query('SELECT * FROM erp.notas_fiscais_itens WHERE empresa_id=$1 AND nota_fiscal_id=$2 AND excluido_em IS NULL ORDER BY id',[tenantId,proposal.dados.registro_id]))
+    related.push(await query('SELECT * FROM erp.notas_fiscais_totais WHERE empresa_id=$1 AND nota_fiscal_id=$2',[tenantId,proposal.dados.registro_id]))
+  }
   const role=proposal.tipo.endsWith('_fornecedor')?'eh_fornecedor':proposal.tipo.endsWith('_vendedor')?'eh_vendedor':proposal.tipo.endsWith('_cliente')?'eh_cliente':null
   if(table==='entidades'&&role&&!row[role])throw new PluginError('INVALID_REFERENCE','Cadastro não possui o papel solicitado.')
   if(table==='vendas'&&proposal.tipo.endsWith('_orcamento')&&row.tipo_documento!=='orcamento')throw new PluginError('INVALID_REFERENCE','O registro não é um orçamento.')
@@ -56,6 +64,11 @@ export async function operationSnapshot(tenantId:number,proposal:Proposal,client
   const hash=createHash('sha256').update(JSON.stringify([row,...related])).digest('hex')
   const mapping:Record<string,string>={preco:'preco_venda',custo:'custo_medio'}
   const campos=Object.fromEntries(Object.keys(proposal.dados).filter(k=>k!=='registro_id').map(k=>[k,k==='parcelas'?parcelas.map(p=>({data_vencimento:p.vencimento,valor:p.valor})):k==='itens'&&Array.isArray(related[0])?related[0].filter(i=>!i.excluido_em).map(i=>({tipo:i.servico_id?'servico':'produto',item_id:Number(i.servico_id||i.produto_id),quantidade:Number(i.quantidade),valor_unitario:Number(i.valor_unitario),desconto:Number(i.desconto||0)})):row[k]??row[mapping[k]]??null]))
+  if(table==='notas_fiscais'){
+    const totals=(related[1] as Record<string,unknown>[])[0]||{}
+    Object.assign(campos,{cliente_id:Number(row.entidade_id),observacoes:(row.metadata as Record<string,unknown>)?.observacoes||'',aliquota_iss:Number((related[0] as Record<string,unknown>[])[0]?.aliquota_iss||0),iss_retido:Boolean(totals.iss_retido)})
+    if('itens' in campos)campos.itens=(related[0] as Record<string,unknown>[]).map(i=>({tipo:'servico',item_id:Number(i.servico_id),descricao:i.descricao,quantidade:Number(i.quantidade),valor_unitario:Number(i.valor_unitario),desconto:Number(i.desconto||0)}))
+  }
   return {hash,registro_id:Number(proposal.dados.registro_id),nome:String(row.nome||row.numero||row.descricao||`Registro ${row.id}`),parcelas,conta_financeira:contaFinanceira,campos,
     status:row.status ? String(row.status):null,valor:row.total!==undefined?String(row.total):row.valor_total!==undefined?String(row.valor_total):row.valor!==undefined?String(row.valor):row.preco_venda!==undefined?String(row.preco_venda):null}
 }
@@ -64,6 +77,19 @@ export async function executeOperation(tenantId:number,actorId:number,proposal:P
   const id=Number(proposal.dados.registro_id),input={tenantId,actorId,id,idempotencyKey:key}
   const client=getErpTransactionClient()
   const data=proposal.dados as Record<string,unknown>
+  if(proposal.tipo.endsWith('_nota_servico')){
+    const current=(await runQuery('SELECT versao FROM erp.notas_fiscais WHERE empresa_id=$1 AND id=$2',[tenantId,id]))[0]
+    if(!current)throw new PluginError('NOT_FOUND','Nota não encontrada.',404)
+    if(proposal.tipo==='editar_nota_servico'){
+      const {registro_id:_id,...changes}=data
+      await editServiceInvoice(tenantId,actorId,id,serviceInvoiceInputSchema.parse(changes),key,Number(current.versao))
+    }else{
+      const actions:Record<string,'emitir'|'consultar'|'cancelar'|'excluir'>={simular_nota_servico:'emitir',consultar_resultado_nota_servico:'consultar',cancelar_nota_servico:'cancelar',excluir_nota_servico:'excluir'}
+      const action=actions[proposal.tipo]
+      await actOnServiceInvoice(tenantId,actorId,id,{acao:action,chave_operacao:key,versao:Number(current.versao),cenario:data.cenario as 'sucesso',motivo:data.motivo as string|undefined})
+    }
+    return String(id)
+  }
   if(proposal.tipo.startsWith('excluir_')){
     if(!client)throw new Error('Exclusão exige transação de aprovação.')
     const entity=proposal.tipo.slice(8),registration={cliente:'clientes',fornecedor:'fornecedores',vendedor:'vendedores',produto:'produtos',servico:'servicos',categoria:'categorias',conta_financeira:'contas-financeiras'} as const

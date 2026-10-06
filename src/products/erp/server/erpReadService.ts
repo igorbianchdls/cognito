@@ -1,6 +1,7 @@
 import { getErpOverview, getErpSaleDetails, getErpPurchaseDetails, getErpEntityRecord,listErpEntityPage } from '@/products/erp/server/erpRepository'
 import { listProfessionalReport,preflightSaleFiscal } from '@/products/erp/server/erpProfessionalRepository'
 import { runQuery } from '@/lib/postgres'
+import {listServiceInvoices,getServiceInvoice,validateServiceInvoice,getServiceInvoicePdf} from './fiscal/serviceInvoiceRepository'
 import { listStockOperation } from '@/products/erp/server/erpStockRepository'
 import type { ErpConnectedModuleId } from '@/products/erp/shared/moduleAccess'
 import { financialSummary, installmentDetails, registrationDetails, commercialPage, analysis,financialTitle } from './erpReadQueries'
@@ -19,6 +20,10 @@ export function pickFields(record: Record<string, unknown>, keys: string[]) {
   return Object.fromEntries(keys.filter(key => record[key] !== undefined).map(key => [key, record[key]]))
 }
 export const erpReadService = {
+  serviceInvoices:listServiceInvoices,
+  serviceInvoice:getServiceInvoice,
+  serviceInvoiceValidation:validateServiceInvoice,
+  async serviceInvoicePdf(tenantId:number,id:number){const file=await getServiceInvoicePdf(tenantId,id);return {nome:file.name,versao:file.version,pdf_path:`/api/erp/notas-servico/${id}/pdf`,modo_operacao:'simulacao',aviso:'SIMULAÇÃO - SEM VALIDADE FISCAL'}},
   installment: installmentDetails,
   financialTitle,
   registration: registrationDetails,

@@ -58,8 +58,8 @@ async function main() {
     const writes=await page.evaluate(()=>(window as unknown as {writes:{ifMatch:string;text:string}[]}).writes)
     assert.equal(writes.length,1);assert.equal(writes[0].ifMatch,'v1');assert.equal(JSON.parse(writes[0].text).tipo,'editar_produto')
     assert.equal(JSON.parse(await frame.locator('#document').inputValue()).dados.nome,'Arquivo revisado')
-    assert.equal(await frame.locator('#kind option').count(),44)
-    for(const proposta of [{tipo:'conta_pagar',dados:{fornecedor_id:101,descricao:'Aluguel',valor_total:100,categoria_id:1,data_competencia:'2026-10-04',data_emissao:'2026-10-04',parcelas:[{data_vencimento:'2026-10-20',valor:100}]}},{tipo:'excluir_conta_receber',dados:{registro_id:7,motivo:'Registro duplicado'}}]){
+    assert.equal(await frame.locator('#kind option').count(),50)
+    for(const proposta of [{tipo:'conta_pagar',dados:{fornecedor_id:101,descricao:'Aluguel',valor_total:100,categoria_id:1,data_competencia:'2026-10-04',data_emissao:'2026-10-04',parcelas:[{data_vencimento:'2026-10-20',valor:100}]}},{tipo:'excluir_conta_receber',dados:{registro_id:7,motivo:'Registro duplicado'}},{tipo:'nota_servico',dados:{cliente_id:101,data_competencia:'2026-10-06',codigo_municipio_prestacao:'2304400',modelo_emissao:'nfse_nacional',aliquota_iss:5,iss_retido:true,observacoes:'Teste de simulação',itens:[{tipo:'servico',item_id:501,descricao:'Suporte técnico',quantidade:2,valor_unitario:15,desconto:0}]}},{tipo:'simular_nota_servico',dados:{registro_id:19,cenario:'timeout'}}]){
       await frame.locator('#document').fill(JSON.stringify(proposta));await frame.getByRole('button',{name:'Carregar no formulário',exact:true}).click();await frame.getByText('Dados carregados. Confira o formulário antes de preparar a revisão.').waitFor();await submit.click();await frame.getByText('Proposta preparada. Abra a revisão para aprovar no ERP.').waitFor();
       const sent=await page.evaluate(()=>(window as any).calls.filter((c:any)=>c.name==='preparar_rascunho').at(-1).arguments.proposta);assert.deepEqual(sent,proposta)
     }

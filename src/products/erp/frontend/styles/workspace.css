@@ -1,0 +1,105 @@
+/* ERP main content only. Sidebar and other products keep their own styles. */
+.erp-workspace-surface {
+  --erp-gutter: 24px;
+  --erp-rule: #eeeeec;
+  --erp-quiet: #757575;
+  min-width: 0;
+  background: #fff;
+  color: #202020;
+}
+
+.erp-workspace-header {
+  display: flex;
+  min-width: 0;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  padding: 32px var(--erp-gutter) 22px;
+}
+.erp-workspace-eyebrow { margin: 0 0 12px; color: var(--erp-quiet); font-size: 14px; }
+.erp-workspace-title { margin: 0; font-size: clamp(30px, 3.1vw, 44px); font-weight: 400; line-height: 1.12; letter-spacing: -0.035em; color: #151515; overflow-wrap: anywhere; }
+.erp-workspace-header-actions { display: flex; flex-shrink: 0; align-items: center; gap: 12px; }
+.erp-workspace-header-actions button { height: 44px; border-radius: 3px; font-size: 14px; font-weight: 400; box-shadow: none; }
+.erp-workspace-primary-action button { background: #d5f600; color: #172000; padding-inline: 20px; }
+.erp-workspace-primary-action button:hover { background: #c6e600; }
+.erp-workspace-secondary-action button { border-color: #dcdcd9; background: #fff; }
+
+.erp-workspace-tabs { min-width: 0; padding-inline: var(--erp-gutter); }
+.erp-workspace-tabs-list { display: flex; height: 64px; gap: 36px; overflow-x: auto; }
+.erp-workspace-tab { padding: 0 0 2px; color: #777; font-size: 14px; font-weight: 400; }
+.erp-workspace-tab:hover, .erp-workspace-tab[aria-current="page"] { color: #171717; }
+.erp-workspace-tab[aria-current="page"] { font-weight: 500; }
+
+.erp-workspace-summary { padding: 52px var(--erp-gutter) 48px; }
+.erp-workspace-summary-title { margin: 0; color: #242424; font-size: 27px; line-height: 1.25; font-weight: 500; letter-spacing: -0.025em; }
+.erp-workspace-summary-description { margin-top: 12px; color: var(--erp-quiet); font-size: 14px; line-height: 1.5; }
+.erp-workspace-metrics { display: flex; flex-wrap: wrap; gap: 28px 40px; margin-top: 28px; }
+.erp-workspace-metric { min-width: 136px; max-width: 100%; }
+.erp-workspace-metric-label { color: var(--erp-quiet); font-size: 13px; line-height: 1.5; }
+.erp-workspace-metric-value { margin-top: 4px; color: #202020; font-size: clamp(25px, 2.25vw, 32px); line-height: 1.2; font-weight: 400; letter-spacing: -0.035em; overflow-wrap: anywhere; font-variant-numeric: tabular-nums; }
+.erp-workspace-metric-danger { color: #a43b32; }
+.erp-workspace-metric-success { color: #287944; }
+
+.erp-workspace-toolbar { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 16px; padding: 10px var(--erp-gutter); border-top: 1px solid var(--erp-rule); border-bottom: 1px solid var(--erp-rule); background: #fbfbfa; }
+.erp-workspace-search { width: 260px; max-width: 100%; flex-shrink: 0; }
+.erp-workspace-search-input { height: 36px; border: 1px solid #dededb; border-radius: 999px; background: #fff; font-size: 13px; box-shadow: none; }
+.erp-workspace-toolbar-controls { display: flex; min-width: 0; flex-wrap: wrap; align-items: center; gap: 10px; }
+.erp-workspace-toolbar-controls > select,
+.erp-workspace-toolbar-controls > input { height: 36px; border: 1px solid #dededb; border-radius: 4px; background: #fff; font-size: 13px; }
+.erp-workspace-toolbar-end { display: flex; align-items: center; gap: 16px; margin-left: auto; }
+.erp-workspace-result-count { color: #7c7c7c; font-size: 12px; white-space: nowrap; }
+.erp-workspace-period { display: flex; height: 36px; align-items: center; border: 1px solid #dededb; border-radius: 4px; background: #fff; }
+.erp-workspace-filter { height: 36px; border: 1px solid #dededb; border-radius: 4px; background: #fff; padding-inline: 12px; color: #474747; font-size: 13px; font-weight: 400; box-shadow: none; }
+.erp-workspace-filter:hover, .erp-workspace-filter-active { background: #f2f2ef; border-color: #c7c7c2; }
+.erp-workspace-column-trigger { width: 36px; height: 36px; border: 1px solid #dededb; border-radius: 50%; background: #fff; color: #626262; box-shadow: none; }
+.erp-workspace-column-trigger:hover { background: #f0f0ee; }
+
+.erp-workspace-surface .erp-workspace-table { border-bottom-color: var(--erp-rule); }
+.erp-workspace-surface .erp-workspace-table thead tr { background: #fff; border-bottom-color: var(--erp-rule); }
+.erp-workspace-surface .erp-workspace-table th { height: 38px; padding: 8px 18px; border-right-color: #f3f3f1; color: #777; font-size: 12px; font-weight: 400; }
+.erp-workspace-surface .erp-workspace-table td { height: 70px; padding: 13px 18px; border-right-color: #f3f3f1; color: #303030; font-size: 14px; line-height: 1.4; }
+.erp-workspace-surface .erp-workspace-table tbody tr { border-bottom-color: var(--erp-rule); }
+.erp-workspace-surface .erp-workspace-table tbody tr:hover { background: #fafaf8; }
+.erp-workspace-surface .erp-workspace-table tbody tr[data-state="selected"] { background: #f6f8ec; }
+.erp-workspace-surface .erp-workspace-table th:first-child,
+.erp-workspace-surface .erp-workspace-table td:first-child { padding-left: var(--erp-gutter); }
+.erp-workspace-surface .erp-workspace-table th:first-child:has([role="checkbox"]),
+.erp-workspace-surface .erp-workspace-table td:first-child:has([role="checkbox"]) { padding-inline: 16px 8px; border-right: 0; width: 40px; }
+.erp-workspace-surface .erp-workspace-table th:last-child,
+.erp-workspace-surface .erp-workspace-table td:last-child { padding-right: var(--erp-gutter); border-right: 0; }
+.erp-workspace-surface .erp-workspace-table td p:first-child { font-weight: 400; }
+.erp-workspace-surface .erp-workspace-table td p + p { font-size: 12px; }
+.erp-workspace-surface .erp-workspace-table td button { box-shadow: none; font-weight: 400; }
+.erp-workspace-status { min-height: 24px; white-space: nowrap; }
+.erp-workspace-bulk-bar { display: flex; flex-wrap: wrap; min-height: 60px; align-items: center; justify-content: space-between; gap: 12px; padding: 12px var(--erp-gutter); border-top: 1px solid var(--erp-rule); background: #fff; }
+
+.erp-record-identity { display: flex; min-width: 180px; align-items: center; gap: 14px; }
+.erp-record-avatar { display: flex; width: 36px; height: 36px; flex-shrink: 0; align-items: center; justify-content: center; border-radius: 50%; font-size: 15px; font-weight: 500; }
+.erp-record-name { display: block; max-width: 320px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: #252525; font-size: 16px; font-weight: 400; }
+.erp-record-category { display: block; max-width: 320px; margin-top: 4px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: #7a7a7a; font-size: 12px; font-weight: 400; }
+
+/* Dashboards retain their charts and navigation, with the same neutral chrome. */
+.erp-workspace-surface [data-dashboard] { max-width: none; padding: 32px var(--erp-gutter); color: #202020; }
+.erp-workspace-surface [data-dashboard] h1 { font-size: clamp(30px, 3.1vw, 44px); font-weight: 400; line-height: 1.12; letter-spacing: -0.035em !important; color: #151515; }
+.erp-workspace-surface [data-dashboard] :is(section, article, a).border { border-color: #eeeeec; border-radius: 6px; box-shadow: none; }
+.erp-workspace-surface [data-dashboard] section[aria-label="Indicadores"] > :is(a, div) { border-radius: 4px; }
+.erp-workspace-surface [data-dashboard] section[aria-label="Indicadores"] .tabular-nums { font-weight: 400; }
+
+@media (min-width: 768px) { .erp-workspace-surface { --erp-gutter: 40px; } }
+@media (min-width: 1280px) { .erp-workspace-surface { --erp-gutter: 52px; } }
+@media (max-width: 639px) {
+  .erp-workspace-surface { --erp-gutter: 20px; }
+  .erp-workspace-header { padding-block: 26px 16px; gap: 20px; }
+  .erp-workspace-header-actions { flex-wrap: wrap; max-width: 100%; }
+  .erp-workspace-header-actions button { height: 40px; }
+  .erp-workspace-tabs-list { height: 56px; gap: 28px; }
+  .erp-workspace-summary { padding-block: 32px; }
+  .erp-workspace-summary-title { font-size: 23px; }
+  .erp-workspace-metrics { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 24px 16px; }
+  .erp-workspace-metric { min-width: 0; }
+  .erp-workspace-metric-value { font-size: 25px; }
+  .erp-workspace-search { width: 100%; }
+  .erp-workspace-toolbar { gap: 12px; padding-block: 12px; }
+  .erp-workspace-toolbar-end { gap: 10px; }
+}

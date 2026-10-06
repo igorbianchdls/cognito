@@ -18,7 +18,7 @@ export function browserProposalFields(){
     const tipo=def.shape.tipo.value as Proposal['tipo'],shape=proposalFields(tipo)
     return [tipo,{title:operationLabels[tipo]||tipo,fields:Object.fromEntries(Object.entries(shape).map(([key,s])=>{
       const base=baseSchema(s),json=base instanceof z.ZodArray||base instanceof z.ZodObject
-      return [key,{label:fieldLabels[key]||key.replaceAll('_',' '),json,number:base instanceof z.ZodNumber,date:key.startsWith('data_'),choices:base instanceof z.ZodEnum?base.options:undefined,required:!s.isOptional()}]
+      return [key,{label:fieldLabels[key]||key.replaceAll('_',' '),json,boolean:base instanceof z.ZodBoolean,number:base instanceof z.ZodNumber,date:key.startsWith('data_'),choices:base instanceof z.ZodEnum?base.options:base instanceof z.ZodBoolean?['false','true']:undefined,required:!s.isOptional()}]
     }))}]
   }))
 }

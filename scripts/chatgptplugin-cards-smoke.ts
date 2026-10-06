@@ -1,3 +1,4 @@
+import {serviceInvoiceQueryStubs} from './erp/service-invoice-query-stubs'
 import assert from 'node:assert/strict'
 import { randomUUID } from 'node:crypto'
 import { createServer } from 'node:http'
@@ -18,7 +19,9 @@ async function main(){
   let draftStatus:'pending'|'saved'|'cancelled'|'expired'='pending',queryCalls=0
   const checkedCompany=(company:number)=>{queryCalls++;assert.equal(company,2);assert.equal(getErpDatabaseContext()?.tenantId,2);assert.equal(getErpDatabaseContext()?.readOnly,true)}
   const rows=[{id:'1',descricao:evil,fornecedor:'Fornecedor A',vencimento:'2026-10-08',valor:1234.56,saldo:1234.56,status:'aberto'},{id:'2',descricao:'Licença ERP',fornecedor:'Fornecedor B',vencimento:'2026-09-10',valor:2000,saldo:1800,status:'vencido'}]
-  const deps:ExecutionDependencies={reserve:async()=>randomUUID(),finish:async()=>{},queries:{
+  const deps:ExecutionDependencies={reserve:async()=>randomUUID(),finish:async()=>{},queries:{...serviceInvoiceQueryStubs,
+    serviceInvoice:async company=>{checkedCompany(company);return {record:{id:'19',numero:'DEMO-0019',modo_operacao:'simulacao',pdf_url:'/api/erp/notas-servico/19/pdf'},items:[],events:[],totals:{valor_liquido:100},input:{}} as never},
+    serviceInvoices:async company=>{checkedCompany(company);return {records:[{id:'19',numero:'DEMO-0019',modo_operacao:'simulacao'}],total:1,page:1,pageSize:20,hasMore:false} as never},
     financialTitle:async company=>{checkedCompany(company);return {record:{id:'1',descricao:'Aluguel revisado',valor_total:100},installments:[{id:'10',parcela:1,vencimento:'2026-10-20',valor:100,saldo:100,status:'aberto'}],installmentsTruncated:false,history:[],historyTruncated:false}},
     fiscal:async company=>{checkedCompany(company);return {ready:false,issues:[]}},
     customer:async company=>{checkedCompany(company);return {record:{id:'1',nome:evil}}},
@@ -72,6 +75,7 @@ async function main(){
     resultDraft.proposta={tipo:'excluir_conta_pagar',dados:{registro_id:1,motivo:'Registro duplicado'}};await page.evaluate(data=>(window as any).deliver(data),financialResult);await frame.getByText('O registro foi excluído das consultas. O histórico foi preservado.',{exact:true}).waitFor();assert.equal(await frame.getByRole('button',{name:'Ver registro',exact:true}).count(),0);
     await show({card:'selecao',consulta:'meu_acesso',parametros:{}});await frame.getByRole('heading',{name:'Selecionar empresa',exact:true}).waitFor();await frame.getByRole('button',{name:'Selecionar',exact:true}).click();await frame.getByText(/A escolha foi enviada/).waitFor()
     await show({card:'tabela',consulta:'consultar_financeiro',empresa_id:2,parametros:{tipo:'pagar',busca:'vazio'}});await frame.getByText('Nenhum registro encontrado para esta consulta.',{exact:true}).waitFor();await show({card:'tabela',consulta:'consultar_financeiro',empresa_id:2,parametros:{tipo:'pagar'}});await frame.getByRole('button',{name:'Aplicar',exact:true}).waitFor();await page.setViewportSize({width:390,height:1000});await page.evaluate(()=>{const f=document.querySelector('iframe')!;f.contentWindow!.postMessage({jsonrpc:'2.0',method:'ui/notifications/host-context-changed',params:{theme:'dark'}},'*')});await page.waitForTimeout(100);await shot('tabela-mobile-dark');const sizes=await frame.locator('main').evaluate(el=>({width:el.getBoundingClientRect().width,viewport:window.innerWidth}));assert(sizes.width<=sizes.viewport)
+    await show({card:'tabela',consulta:'listar_notas_servico',empresa_id:2,parametros:{}});await frame.getByText('SIMULAÇÃO - SEM VALIDADE FISCAL. Nenhuma transmissão externa.',{exact:true}).waitFor();await frame.getByRole('button',{name:'Ver detalhes',exact:true}).click();await frame.getByRole('button',{name:'Abrir PDF demonstrativo',exact:true}).waitFor();await frame.getByRole('button',{name:'Abrir PDF demonstrativo',exact:true}).click();await page.waitForFunction(()=>(window as any).opened.includes('https://erp.example.invalid/api/erp/notas-servico/19/pdf'));await shot('detalhes-nota-servico');
     const calls=await page.evaluate(()=>(window as any).calls);assert(calls.every((c:any)=>c.name==='renderizar_card'));assert(calls.some((c:any)=>c.arguments.parametros.pagina===2));assert(calls.some((c:any)=>c.arguments.parametros.status==='vencido'));assert.deepEqual(errors,[])
     console.log(JSON.stringify({status:'passed',cards:6,checks:'permissões, empresa, parâmetros forjados, filtros, paginação, detalhes, seleção, revisão, estado real do rascunho, erro/repetição, mobile, tema, XSS',screenshots:'.cache/chatgptplugin-cards',realChatGPT:false,realDatabase:false}))
   }finally{await browser.close();await new Promise<void>((r,j)=>server.close(error=>error?j(error):r()))}

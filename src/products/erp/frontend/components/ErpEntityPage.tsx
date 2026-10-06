@@ -8,6 +8,7 @@ import { Plus } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 
 import { ErpDataTable } from '@/products/erp/frontend/components/ErpDataTable'
+import { ErpColumnSelector, useErpTableColumns } from '@/products/erp/frontend/components/ErpTableColumns'
 import { ErpEmptyState } from '@/products/erp/frontend/components/ErpEmptyState'
 import { ErpFiltersBar } from '@/products/erp/frontend/components/ErpFiltersBar'
 import { ErpFormDrawer } from '@/products/erp/frontend/components/ErpFormDrawer'
@@ -23,6 +24,9 @@ export function ErpEntityPage({ config }: { config: ErpEntityConfig }) {
   const canManage = isErpConnectedModuleId(config.id) && access.can(getErpModuleCapability(config.id, 'manage'))
   const canAct = (action: ErpEntityAction) => action.id === 'baixar' ? access.can('erp.financeiro.baixar') : canManage
   const visibleConfig = { ...config, actions: config.actions?.filter(canAct) }
+  const tableColumns = useErpTableColumns(config.columns.filter(column => column.key !== 'categoria').map((column, index) => ({
+    id: column.key, label: column.label, locked: index === 0,
+  })), config.id)
   const createOperation = useRef(new ErpMutation())
   const actionOperations = useRef(new Map<string, ErpMutation>())
   const [query, setQuery] = useState('')
@@ -163,7 +167,7 @@ export function ErpEntityPage({ config }: { config: ErpEntityConfig }) {
       />
       <ErpModuleWorkspaceTabs sectionId={config.sectionId} moduleId={config.id} />
       {metricsError ? <p role="status" className="mx-5 my-4 text-sm text-amber-700 md:mx-8 lg:mx-10">Os indicadores estão indisponíveis. Atualize para tentar novamente.</p> : metrics.length > 0 ? <ErpPeriodSummary title="Resumo dos cadastros" description="Indicadores gerais da base cadastrada." metrics={metrics.map(metric => ({ label: metric.label, value: metric.value, tone: metric.tone === 'warning' ? 'default' : metric.tone }))} /> : null}
-      <ErpSearchToolbar query={query} onQueryChange={value => { setQuery(value); setPage(1) }} placeholder={config.searchPlaceholder} resultLabel={<>{total ? (page - 1) * pageSize + 1 : 0}–{Math.min(page * pageSize, total)} de {total}</>}>
+      <ErpSearchToolbar query={query} onQueryChange={value => { setQuery(value); setPage(1) }} placeholder={config.searchPlaceholder} resultLabel={<>{total ? (page - 1) * pageSize + 1 : 0}–{Math.min(page * pageSize, total)} de {total}</>} endActions={<ErpColumnSelector {...tableColumns} />}>
         {config.filters.length > 0 ? <ErpFilterButton active={Object.values(filters).some(value => Boolean(value) && value !== ERP_STATUS_ALL_VALUE)} onClick={() => setFiltersOpen(current => !current)} /> : null}
       </ErpSearchToolbar>
       {filtersOpen ? <div className="border-b border-[#e7e7e4] bg-[#fafaf8] px-5 py-3 md:px-8 lg:px-10">
@@ -186,7 +190,7 @@ export function ErpEntityPage({ config }: { config: ErpEntityConfig }) {
         </div>
       ) : records.length > 0 ? (
         <div>
-          <ErpDataTable config={visibleConfig} records={records} onAction={(action, record) => void runAction(action, record)}
+          <ErpDataTable config={visibleConfig} records={records} columnVisibility={tableColumns.visibility} onAction={(action, record) => void runAction(action, record)}
             onEdit={canManage ? (record) => void editRecord(record) : undefined} onDeactivate={canManage ? (record) => void deactivateRecord(record) : undefined} />
           <div className="px-5 py-3 md:px-8 lg:px-10"><ErpPagination page={page} pageSize={pageSize} total={total} onPageChange={setPage} /></div>
         </div>

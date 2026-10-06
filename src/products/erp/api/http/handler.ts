@@ -29,7 +29,9 @@ async function boundedRequest(request: Request, limit: number): Promise<Request>
     if (!/^application\/(?:[\w.+-]+\+)?json(?:\s*;|$)/i.test(request.headers.get('content-type') || '')) throw new ErpDomainError('UNSUPPORTED_MEDIA_TYPE', 'Envie a requisição como application/json.', 415)
     try { JSON.parse(bytes.toString('utf8')) } catch { throw new ErpDomainError('INVALID_JSON', 'Envie um corpo JSON válido.', 400) }
   }
-  return new Request(request, { body: bytes })
+  // The incoming Next request may already have a consumed/locked stream. Build
+  // from its URL and explicit transport fields instead of inheriting that body.
+  return new Request(request.url, { method: request.method, headers: request.headers, signal: request.signal, body: bytes })
 }
 
 /** All HTTP handlers run inside one request scope; business repositories do not depend on this wrapper. */
@@ -39,17 +41,23 @@ export function withErpHttp<H extends HttpHandler>(handler: H, options: HttpOpti
     const values = args as unknown as [Request, unknown?]
     return erpHttpContext.run({ correlationId, request: values[0] }, async () => {
       let response: Response
+      let phase='session'
       try {
         const session = (options.authentication ?? 'session') === 'session' ? await resolveErpSession() : null
         if ((options.authentication ?? 'session') === 'session' && !session) throw new ErpDomainError('AUTH_REQUIRED', 'Entre na sua conta para acessar o ERP.', 401)
         if (session) erpHttpContext.getStore()!.session = session
+        phase='transport'
         validateErpHttpQuery(values[0])
         await validateErpHttpParams(values[1])
         values[0] = await boundedRequest(values[0], options.maxBodyBytes ?? 1024 * 1024)
+        phase='handler'
         const invoke = () => handler(...args)
         response = session ? await runWithErpDatabaseContext({ tenantId: session.tenantId, userId: session.sharedUserId,
           readOnly: ['GET', 'HEAD'].includes(values[0].method), statementTimeoutMs: ['GET', 'HEAD'].includes(values[0].method) ? 10000 : 30000 }, invoke) : await invoke()
-      } catch (error) { response = erpErrorResponse(error) }
+      } catch (error) {
+        if(error instanceof TypeError) console.error(JSON.stringify({scope:'erp-transport',operation:options.operation,phase,errorType:error.name,message:error.message,correlationId}))
+        response = erpErrorResponse(error)
+      }
       const headers = new Headers(response.headers)
       headers.set('Cache-Control', 'no-store'); headers.set('x-correlation-id', correlationId)
       console.info(JSON.stringify({ scope: 'erp-api', operation: options.operation, correlationId, status: response.status, durationMs: Date.now() - started }))

@@ -1,3 +1,4 @@
+import {serviceInvoiceQueryStubs} from './erp/service-invoice-query-stubs'
 import assert from 'node:assert/strict'
 import { randomUUID } from 'node:crypto'
 import { handlePluginRequest, type HttpDependencies } from '../src/products/chatgptplugin/mcp/handleRequest'
@@ -27,7 +28,7 @@ const execution: ExecutionDependencies = {
   preferences:{read:async()=>({empresa_preferida:'',por_pagina:20}),update:async(_p,set)=>({empresa_preferida:'',por_pagina:20,...set as object})},
   reserve:async () => {const id=randomUUID();events.push({id,status:'running'});return id},
   finish:async (id,status,code) => {events.push({id,status,code})},
-  queries:{
+  queries:{...serviceInvoiceQueryStubs,
     financialTitle:async()=>({record:{id:"1"},installments:[],installmentsTruncated:false,history:[],historyTruncated:false}),
     registration:async(id,recordId)=>{context(id);return {record:{id:String(recordId),nome:"Cadastro"}}},
     installment:async(id,side,recordId)=>{context(id);return {record:{id:String(recordId),saldo:12},history:[],historyTruncated:false}},
@@ -79,7 +80,8 @@ async function main() {
   })
   await check('Catalogo contratos OAuth e anotacoes',async () => {
     const {body}=await rpc('tools/list')
-    assert.equal(body.result.tools.length,29)
+    assert.equal(body.result.tools.length,33)
+    for(const name of ['listar_notas_servico','obter_nota_servico','validar_nota_servico','obter_pdf_nota_servico'])assert(body.result.tools.some((tool:{name:string})=>tool.name===name))
     for (const tool of body.result.tools) {assert.equal(tool.annotations.readOnlyHint,!['preparar_rascunho','preparar_formulario_nativo','atualizar_configuracoes'].includes(tool.name));assert.equal(tool.securitySchemes[0].type,'oauth2');assert(tool.outputSchema)}
     assert.deepEqual(body.result.tools.find((t:{name:string})=>t.name==='preparar_rascunho').securitySchemes[0].scopes,['erp:read','erp:write'])
     assert.deepEqual(body.result.tools.find((t:{name:string})=>t.name==='abrir_painel')._meta['openai/ui'].entrypoints,[{type:'global'},{type:'thread'},{type:'settings',searchTerms:['empresa','preferencias']}])

@@ -16,7 +16,7 @@ const fingerprint = (value: unknown) => createHash('sha256').update(JSON.stringi
 export async function runReadToolCases(ctx: Context) {
   const { client, companyId, userId, clientId, rpc, call, check } = ctx
   const sql = async (statement: string) => (await client.query(statement, [companyId])).rows
-  const names = ['entidades','produtos','servicos','vendas','vendas_itens','compras','compras_itens','contas_receber','contas_receber_parcelas','contas_pagar','contas_pagar_parcelas','pagamentos','saldos_estoque','categorias','contas_financeiras','adiantamentos_aplicacoes','renegociacoes','renegociacoes_parcelas']
+  const names = ['entidades','produtos','servicos','vendas','vendas_itens','compras','compras_itens','contas_receber','contas_receber_parcelas','contas_pagar','contas_pagar_parcelas','pagamentos','saldos_estoque','categorias','contas_financeiras','adiantamentos_aplicacoes','renegociacoes','renegociacoes_parcelas','notas_fiscais','notas_fiscais_itens','notas_fiscais_totais','notas_fiscais_pdfs']
   const db: Record<string, Row[]> = {}
   await client.query('BEGIN ISOLATION LEVEL REPEATABLE READ READ ONLY')
   try {
@@ -43,10 +43,10 @@ export async function runReadToolCases(ctx: Context) {
     assert.equal(result.body.result.isError, true)
     assert.equal(JSON.parse(result.body.result.content[0].text).code, code)
   }
-  await check('Todas leituras: catálogo distingue 26 consultas e 3 escritas', async () => {
+  await check('Todas leituras: catálogo distingue 30 consultas e 3 escritas', async () => {
     const result = await rpc('tools/list')
     const tools = result.body.result.tools
-    assert.equal(tools.filter((t: Row) => t.annotations?.readOnlyHint).length, 26)
+    assert.equal(tools.filter((t: Row) => t.annotations?.readOnlyHint).length, 30)
     assert.deepEqual(tools.filter((t: Row) => !t.annotations?.readOnlyHint).map((t: Row) => t.name).sort(), ['atualizar_configuracoes','preparar_formulario_nativo','preparar_rascunho'])
     for (const tool of tools.filter((t: Row) => t.annotations?.readOnlyHint)) assert.deepEqual(tool.securitySchemes, [{ type: 'oauth2', scopes: ['erp:read'] }])
   })
@@ -261,10 +261,48 @@ export async function runReadToolCases(ctx: Context) {
     const result=await rpc('resources/read',{uri:'ui://chatgptplugin/cards/v1.html'})
     const resource=result.body.result.contents[0];assert.equal(resource.mimeType,'text/html;profile=mcp-app');assert.deepEqual(resource._meta.ui.csp,{connectDomains:[],resourceDomains:[]})
   })
-  await check('Dados comerciais, rascunhos e preferências permanecem iguais', async () => {
+  const notes=db.notas_fiscais.filter(row=>row.tipo==='nfse'&&row.direcao==='saida'&&row.modo_operacao==='simulacao'&&!row.excluido_em)
+  assert(notes.length>0,'Notas simuladas necessárias para validar as quatro ferramentas fiscais')
+  const note=notes[0],noteArgs={empresa_id:companyId,nota_id:Number(note.id)}
+  await check('listar_notas_servico: registros correspondem ao Supabase',async()=>{
+    const data=(await call('listar_notas_servico',{empresa_id:companyId,por_pagina:50})).data
+    assert.equal(data.total,notes.length)
+    assert.deepEqual(data.records.map((r:Row)=>String(r.id)).sort(),notes.map(r=>String(r.id)).sort())
+    assert(data.records.every((r:Row)=>r.modo_operacao==='simulacao'&&r.aviso.includes('SEM VALIDADE FISCAL')))
+  })
+  await check('listar_notas_servico: página vazia preserva o total filtrado',async()=>{
+    const data=(await call('listar_notas_servico',{empresa_id:companyId,pagina:10000})).data
+    assert.deepEqual(data.records,[]);assert.equal(data.total,notes.length);assert.equal(data.hasMore,false)
+  })
+  await check('obter_nota_servico: valores, itens e totais reais',async()=>{
+    const data=(await call('obter_nota_servico',noteArgs)).data
+    assert.equal(data.record.id,String(note.id));assert.equal(cents(data.record.valor_total),cents(note.valor_total))
+    const items=db.notas_fiscais_itens.filter(r=>String(r.nota_fiscal_id)===String(note.id)&&!r.excluido_em)
+    assert.equal(data.items.length,items.length)
+    for(const item of data.items)assert.equal(cents(item.valor_total),cents(items.find(r=>String(r.id)===String(item.id))!.valor_total))
+    const totals=db.notas_fiscais_totais.find(r=>String(r.nota_fiscal_id)===String(note.id))!
+    assert.equal(cents(data.totals.valor_liquido),cents(totals.valor_liquido))
+  })
+  await check('validar_nota_servico: validação somente em simulação',async()=>{
+    const data=(await call('validar_nota_servico',noteArgs)).data
+    assert.equal(typeof data.ready,'boolean');assert.equal(data.modo_operacao,'simulacao')
+  })
+  await check('obter_pdf_nota_servico: URL privada e versão do PDF',async()=>{
+    const data=(await call('obter_pdf_nota_servico',noteArgs)).data
+    assert.equal(new URL(data.url).origin,new URL(ctx.resource).origin)
+    assert.equal(new URL(data.url).pathname,`/api/erp/notas-servico/${note.id}/pdf`)
+    assert(!('bytes' in data)&&!('conteudo' in data))
+    assert(db.notas_fiscais_pdfs.some(r=>String(r.nota_fiscal_id)===String(note.id)))
+  })
+  for(const name of ['obter_nota_servico','validar_nota_servico','obter_pdf_nota_servico'])
+    await check(name+': nota inexistente recusada',()=>rejected(name,{empresa_id:companyId,nota_id:missingId},'NOT_FOUND'))
+  await check('Dados comerciais, fiscais, rascunhos e preferências permanecem iguais', async () => {
     await client.query('BEGIN READ ONLY')
     try {
+      await client.query("SELECT set_config('app.erp_tenant_id',$1,true),set_config('app.erp_user_id',$2,true)",[String(companyId),String(userId)])
+      await client.query('SET LOCAL ROLE erp_runtime')
       for (const name of names) assert.equal(fingerprint((await sql(`SELECT * FROM erp.${name} WHERE empresa_id=$1 ORDER BY id`))), fingerprint(db[name]), name)
+      await client.query('RESET ROLE')
       const after = (await client.query(pluginQuery, [userId,clientId])).rows
       assert.equal(fingerprint(after), fingerprint(pluginSnapshot))
     } finally { await client.query('ROLLBACK') }

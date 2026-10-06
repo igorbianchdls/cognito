@@ -3,6 +3,7 @@ export const formControlsSource=String.raw`
 const catalogKinds={cliente_id:'clientes',fornecedor_id:'fornecedores',vendedor_id:'vendedores',categoria_id:'categorias',conta_financeira_id:'contas-financeiras'};
 let controlsRevision=0;
 function recordCatalog(kind){
+ if(kind.endsWith('_nota_servico'))return {tool:'listar_notas_servico'};
  const target=kind.replace(/^(editar|excluir|confirmar|atender|cancelar|converter)_/,'');
  const registrations={cliente:'clientes',fornecedor:'fornecedores',vendedor:'vendedores',produto:'produtos',servico:'servicos',categoria:'categorias',conta_financeira:'contas-financeiras'};
  if(registrations[target])return {tool:'buscar_cadastros',tipo:registrations[target]};
@@ -34,18 +35,19 @@ function activateCatalog(select,label){
 }
 function arrayControl(name,initial){
  const fieldset=document.createElement('fieldset'),rows=document.createElement('div'),add=document.createElement('button');fieldset.dataset.array='true';
- const values=[];const fields=name==='parcelas'?['data_vencimento','valor']:['tipo','item_id','quantidade','valor_unitario','desconto'];
+ const invoice=$('kind').value==='nota_servico'||$('kind').value==='editar_nota_servico';
+ const values=[];const fields=name==='parcelas'?['data_vencimento','valor']:['tipo','item_id',...(invoice?['descricao']:[]),'quantidade','valor_unitario','desconto'];
  function addRow(data={}){if(values.length>=50)return;const row=document.createElement('div');row.style.cssText='border:1px solid #ccd5df;border-radius:8px;padding:12px;margin:12px 0';const controls={};values.push(controls);
- for(const field of fields){const label=document.createElement('label');label.textContent=({tipo:'Tipo',item_id:'Item',quantidade:'Quantidade',valor_unitario:'Preço unitário',desconto:'Desconto',data_vencimento:'Vencimento',valor:'Valor'})[field];
+ for(const field of fields){const label=document.createElement('label');label.textContent=({tipo:'Tipo',item_id:'Item',descricao:'Descrição do serviço',quantidade:'Quantidade',valor_unitario:'Preço unitário',desconto:'Desconto',data_vencimento:'Vencimento',valor:'Valor'})[field];
  const id='row-'+crypto.randomUUID();label.htmlFor=id;let control;
- if(field==='tipo'){control=document.createElement('select');for(const v of ['produto','servico']){const o=document.createElement('option');o.value=v;o.textContent=v==='produto'?'Produto':'Serviço';control.append(o)}}
+ if(field==='tipo'){control=document.createElement('select');for(const v of invoice?['servico']:['produto','servico']){const o=document.createElement('option');o.value=v;o.textContent=v==='produto'?'Produto':'Serviço';control.append(o)}}
  else if(field==='item_id')control=catalogControl(field,data[field],()=>controls.tipo.value==='servico'?'servicos':'produtos');
- else{control=document.createElement('input');control.type=field==='data_vencimento'?'date':'number';control.min='0';control.step=field==='quantidade'?'0.0001':'0.01'}
- control.id=id;control.required=field!=='desconto';if(field!=='item_id')control.value=data[field]!==undefined?String(data[field]):field==='tipo'?'produto':field==='quantidade'?'1':field==='desconto'?'0':'';controls[field]=control;row.append(label,control);if(field==='item_id')activateCatalog(control,'Item')}
+ else{control=document.createElement('input');control.type=field==='descricao'?'text':field==='data_vencimento'?'date':'number';control.min='0';control.step=field==='quantidade'?'0.0001':'0.01'}
+ control.id=id;control.required=field!=='desconto';if(field!=='item_id')control.value=data[field]!==undefined?String(data[field]):field==='tipo'?(invoice?'servico':'produto'):field==='quantidade'?'1':field==='desconto'?'0':'';controls[field]=control;row.append(label,control);if(field==='item_id')activateCatalog(control,'Item')}
  controls.tipo?.addEventListener('change',()=>{controls.item_id.replaceChildren();const blank=document.createElement('option');blank.value='';blank.textContent='Escolha pelo nome';controls.item_id.append(blank)});
  const remove=document.createElement('button');remove.type='button';remove.textContent='Remover linha';remove.onclick=()=>{values.splice(values.indexOf(controls),1);row.remove()};row.append(remove);rows.append(row)}
  add.type='button';add.textContent=name==='parcelas'?'Adicionar parcela':'Adicionar item';add.onclick=()=>addRow();fieldset.append(rows,add);
- Object.defineProperty(fieldset,'value',{get(){return JSON.stringify(values.map(row=>Object.fromEntries(fields.map(f=>[f,f==='tipo'||f==='data_vencimento'?row[f].value:Number(row[f].value)]))))},set(v){rows.replaceChildren();values.length=0;for(const r of (typeof v==='string'?JSON.parse(v||'[]'):v)||[])addRow(r);if(!values.length)addRow()}});
+ Object.defineProperty(fieldset,'value',{get(){return JSON.stringify(values.map(row=>Object.fromEntries(fields.map(f=>[f,['tipo','data_vencimento','descricao'].includes(f)?row[f].value:Number(row[f].value)]))))},set(v){rows.replaceChildren();values.length=0;for(const r of (typeof v==='string'?JSON.parse(v||'[]'):v)||[])addRow(r);if(!values.length)addRow()}});
  fieldset.value=initial||[];return fieldset;
 }
 function createControl(name,meta,choices,data){
@@ -62,14 +64,15 @@ async function prefillRecord(){
  let name,args;if(registration[kind]){name='obter_cadastro';args={empresa_id,tipo:registration[kind],registro_id:id}}
  else if(kind==='editar_conta_pagar'||kind==='editar_conta_receber'){name='obter_titulo_financeiro';args={empresa_id,tipo:kind.endsWith('pagar')?'pagar':'receber',conta_id:id}}
  else if(kind==='editar_compra'){name='obter_compra';args={empresa_id,compra_id:id}}
+ else if(kind==='editar_nota_servico'){name='obter_nota_servico';args={empresa_id,nota_id:id}}
  else{name='obter_venda';args={empresa_id,venda_id:id}}
  const data=unpack(await request('tools/call',{name,arguments:args}));if(revision!==controlsRevision||empresa_id!==Number($('company').value)||kind!==$('kind').value)return;
  if(data.itemsTruncated||data.installmentsTruncated||(data.items?.length||0)>50)throw new Error('Este documento excede os limites do formulário. Abra a edição no ERP.');
  if((kind==='editar_venda'||kind==='editar_orcamento'||kind==='editar_compra')&&(data.installments?.length||0)>1)throw new Error('Este documento tem várias parcelas. Abra a edição no ERP para preservar a condição de pagamento.');
- const record={...(data.record||data.document||data.sale||data.purchase||{}),registro_id:id};
+ const record={...(data.record||data.document||data.sale||data.purchase||{}),...(kind==='editar_nota_servico'?data.input:{}),registro_id:id};
  record.__labels={cliente_id:record.cliente_nome,fornecedor_id:record.fornecedor_nome};
  if(typeof record.controla_estoque==='boolean')record.controla_estoque=record.controla_estoque?'sim':'nao';
- if(data.items)record.itens=data.items.map(i=>({tipo:i.tipo,item_id:Number(i.item_id),quantidade:Number(i.quantidade),valor_unitario:Number(i.valor_unitario),desconto:Number(i.desconto||0)}));
+ if(data.items&&kind!=='editar_nota_servico')record.itens=data.items.map(i=>({tipo:i.tipo,item_id:Number(i.item_id),quantidade:Number(i.quantidade),valor_unitario:Number(i.valor_unitario),desconto:Number(i.desconto||0)}));
  const parts=data.parcelas||data.installments;if((kind==='editar_conta_pagar'||kind==='editar_conta_receber')&&parts)record.parcelas=parts.filter(p=>!p.excluido_em).map(p=>({data_vencimento:String(p.data_vencimento||p.vencimento).slice(0,10),valor:Number(p.valor)}));
  for(const key of Object.keys(record))if(key.startsWith('data_'))record[key]=String(record[key]).slice(0,10);
  render(record);status.textContent='Dados atuais carregados. Confira as alterações antes de preparar a revisão.';

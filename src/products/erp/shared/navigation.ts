@@ -45,6 +45,7 @@ const navigation: ErpNavigationItem[] = [
       { id: 'pedidos', label: 'Pedidos', href: '/erp/vendas/pedidos', description: 'Pedidos de venda e acompanhamento.' },
       { id: 'ordens-servico', label: 'Ordens de servico', href: '/erp/vendas/ordens-servico', description: 'Execucao de servicos, equipamentos e historico.' },
       { id: 'contratos', label: 'Contratos', href: '/erp/vendas/contratos', description: 'Vendas recorrentes e geracoes.' },
+      {id:'notas-fiscais',label:'Notas de serviço',href:'/erp/vendas/notas-fiscais',description:'NFS-e simuladas, revisão, histórico e PDF demonstrativo.'},
     ],
   },
   {
