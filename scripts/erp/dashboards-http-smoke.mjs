@@ -107,7 +107,7 @@ try {
               ? reader
               : null
       const response = await actors.run(actor, () =>
-        handler(new Request(url), { params: Promise.resolve(match ? { dashboardId: match[1] } : {}) }),
+        handler(new Request(url), { params: match ? Promise.resolve({ dashboardId: match[1] }) : undefined }),
       )
       res.writeHead(response.status, Object.fromEntries(response.headers))
       res.end(Buffer.from(await response.arrayBuffer()))

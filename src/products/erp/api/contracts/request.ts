@@ -22,6 +22,7 @@ export function validateErpHttpQuery(request: Request) {
 
 export async function validateErpHttpParams(context: unknown) {
   if (!context || typeof context !== 'object' || !('params' in context)) return
-  const params = await (context as { params: Promise<Record<string, string>> }).params
-  if (params.id !== undefined) erpHttpIdSchema.parse(params.id)
+  // Next passes { params: undefined } for routes without dynamic segments.
+  const params = await (context as { params?: Promise<Record<string, string>> }).params
+  if (params?.id !== undefined) erpHttpIdSchema.parse(params.id)
 }

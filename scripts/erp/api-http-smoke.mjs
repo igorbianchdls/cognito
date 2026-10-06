@@ -100,7 +100,7 @@ try {
       const params=Object.fromEntries(route.segments.flatMap((segment,index)=>segment.startsWith('[')?[[segment.slice(1,-1),decodeURIComponent(parts[index])]]:[]))
       const chunks=[];for await(const chunk of req)chunks.push(chunk)
       const request=new Request(url,{method:req.method,headers:req.headers,...(['GET','HEAD'].includes(req.method)?{}:{body:Buffer.concat(chunks)})})
-      const response=await identity.run(actors[req.headers['x-test-identity']],()=>route.module[req.method](request,{params:Promise.resolve(params)}))
+      const response=await identity.run(actors[req.headers['x-test-identity']],()=>route.module[req.method](request,{params:Object.keys(params).length?Promise.resolve(params):undefined}))
       res.writeHead(response.status,Object.fromEntries(response.headers));res.end(Buffer.from(await response.arrayBuffer()))
     }catch(error){originalError(error);res.writeHead(500);res.end(JSON.stringify({unexpected:error.message}))}
   })
