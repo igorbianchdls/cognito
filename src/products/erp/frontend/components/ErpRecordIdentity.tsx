@@ -11,11 +11,12 @@ const colors = [
   'bg-[#e9ecf3] text-[#58647f]',
 ]
 
-export function ErpRecordIdentity({ name, category, identityKey, icon }: {
+export function ErpRecordIdentity({ name, category, identityKey, icon, showCategory = true }: {
   name: string
   category?: string | null
   identityKey?: string
   icon?: ReactNode
+  showCategory?: boolean
 }) {
   const label = name.trim() || 'Sem descrição'
   const secondary = category?.trim() || 'Sem categoria'
@@ -29,7 +30,7 @@ export function ErpRecordIdentity({ name, category, identityKey, icon }: {
     </span>
     <div className="min-w-0">
       <span className="erp-record-name" title={label}>{label}</span>
-      <span className="erp-record-category" title={secondary}>{secondary}</span>
+      {showCategory ? <span className="erp-record-category" title={secondary}>{secondary}</span> : null}
     </div>
   </div>
 }

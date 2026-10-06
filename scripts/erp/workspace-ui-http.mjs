@@ -5,7 +5,8 @@ import dotenv from 'dotenv'
 import { connection } from './evolution-db.mjs'
 
 const cfg = dotenv.parse(readFileSync('.env.local')), staged = JSON.parse(readFileSync('.cache/shared/deployment.json'))
-const production = process.argv.includes('--production'), origin = production ? 'https://cognito-seven.vercel.app' : 'https://' + staged.url
+const baseline = process.argv.includes('--baseline'), production = baseline || process.argv.includes('--production'), origin = production ? 'https://cognito-seven.vercel.app' : 'https://' + staged.url
+const dashboardOnly = process.argv.includes('--dashboard-only')
 const db = connection(), results = []
 try {
   await db.connect()
@@ -20,11 +21,16 @@ try {
     const response = await fetch(origin + path, { headers: { Authorization: 'Bearer ' + token.jwt }, signal: AbortSignal.timeout(30000), redirect: 'manual' })
     assert.equal(response.status, 200, path); results.push({ path, http: response.status }); return response
   }
-  for (const path of ['/api/erp/acesso', '/api/erp/contas-a-pagar?pageSize=1', '/api/erp/contas-a-receber?pageSize=1', '/api/erp/clientes?pageSize=1', '/api/erp/fornecedores?pageSize=1']) {
+  for (const path of dashboardOnly ? ['/api/erp/acesso'] : ['/api/erp/acesso', '/api/erp/contas-a-pagar?pageSize=1', '/api/erp/contas-a-receber?pageSize=1', '/api/erp/clientes?pageSize=1', '/api/erp/fornecedores?pageSize=1']) {
     const response = await get(path); assert.equal(response.headers.get('cache-control'), 'no-store'); await response.json()
   }
+  const dashboard = await (await get('/api/erp/dashboards/visao-geral?from=2026-10-01&to=2026-10-06&compare=true&includeForecast=false')).json()
+  assert.equal(dashboard.id, 'visao-geral')
+  assert(dashboard.metrics.length >= 8)
+  assert(dashboard.metrics.every(metric => Number.isFinite(metric.value)))
+  writeFileSync('.cache/workspace-ui/dashboard-data.json', JSON.stringify(dashboard, null, 2))
   let styles = ''
-  for (const path of ['/erp/financeiro/contas-a-pagar', '/erp/financeiro/contas-a-receber', '/erp/cadastros/clientes', '/erp/cadastros/fornecedores', '/erp/vendas/pedidos', '/erp/compras/pedidos-compra', '/erp/estoque/posicao-estoque', '/erp/vendas/notas-fiscais', '/erp/dashboards/visao-geral']) {
+  for (const path of dashboardOnly ? ['/erp/dashboards/visao-geral'] : ['/erp/financeiro/contas-a-pagar', '/erp/financeiro/contas-a-receber', '/erp/cadastros/clientes', '/erp/cadastros/fornecedores', '/erp/vendas/pedidos', '/erp/compras/pedidos-compra', '/erp/estoque/posicao-estoque', '/erp/vendas/notas-fiscais', '/erp/dashboards/visao-geral']) {
     const response = await get(path), html = await response.text()
     assert(response.headers.get('content-type')?.includes('text/html'))
     if (!styles) {
@@ -34,7 +40,8 @@ try {
     }
   }
   for (const marker of ['.erp-workspace-header', '.erp-workspace-metric-value', '.erp-workspace-column-trigger', '.erp-record-avatar']) assert(styles.includes(marker), 'Missing deployed style ' + marker)
-  const report = { status: 'passed', production, origin, deploymentId: staged.id, realClerkSession: true, businessDataWrites: 0, deployedStylesVerified: true, browserVisualCheck: 'unavailable', results }
-  writeFileSync('.cache/workspace-ui/' + (production ? 'production' : 'staged') + '-http.json', JSON.stringify(report, null, 2))
+  if (!baseline) for (const marker of ['.erp-dashboard-metric-card', '.erp-dashboard-toolbar', '.erp-dashboard-table-section']) assert(styles.includes(marker), 'Missing deployed dashboard style ' + marker)
+  const report = { status: 'passed', production, dashboardOnly, origin, deploymentId: staged.id, realClerkSession: true, businessDataWrites: 0, deployedStylesVerified: true, browserVisualCheck: 'unavailable', results }
+  writeFileSync('.cache/workspace-ui/' + (baseline ? 'baseline' : production ? 'production' : 'staged') + '-http.json', JSON.stringify(report, null, 2))
   console.log(JSON.stringify(report))
 } finally { await db.end() }
