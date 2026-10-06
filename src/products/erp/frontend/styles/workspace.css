@@ -26,15 +26,15 @@
 .erp-workspace-secondary-action button { border-color: #dcdcd9; background: #fff; }
 
 .erp-workspace-tabs { min-width: 0; padding-inline: var(--erp-gutter); }
-.erp-workspace-tabs-list { display: flex; height: 64px; gap: 36px; overflow-x: auto; }
-.erp-workspace-tab { padding: 0 0 2px; color: #777; font-size: 14px; font-weight: 400; }
+.erp-workspace-tabs-list { display: flex; height: 56px; align-items: flex-end; gap: 36px; overflow-x: auto; }
+.erp-workspace-tab { padding: 0 0 10px; color: #777; font-size: 14px; font-weight: 400; line-height: 20px; }
 .erp-workspace-tab:hover, .erp-workspace-tab[aria-current="page"] { color: #171717; }
 .erp-workspace-tab[aria-current="page"] { font-weight: 500; }
 
 .erp-workspace-summary { padding: 52px var(--erp-gutter) 48px; }
 .erp-workspace-summary-title { margin: 0; color: #242424; font-size: 27px; line-height: 1.25; font-weight: 500; letter-spacing: -0.025em; }
 .erp-workspace-summary-description { margin-top: 12px; color: var(--erp-quiet); font-size: 14px; line-height: 1.5; }
-.erp-workspace-metrics { display: flex; flex-wrap: wrap; gap: 28px 40px; margin-top: 28px; }
+.erp-workspace-metrics { display: flex; flex-wrap: wrap; gap: 28px 56px; margin-top: 28px; }
 .erp-workspace-metric { min-width: 136px; max-width: 100%; }
 .erp-workspace-metric-label { color: var(--erp-quiet); font-size: 13px; line-height: 1.5; }
 .erp-workspace-metric-value { margin-top: 4px; color: #202020; font-size: clamp(25px, 2.25vw, 32px); line-height: 1.2; font-weight: 400; letter-spacing: -0.035em; overflow-wrap: anywhere; font-variant-numeric: tabular-nums; }
@@ -96,7 +96,7 @@
   .erp-workspace-tabs-list { height: 56px; gap: 28px; }
   .erp-workspace-summary { padding-block: 32px; }
   .erp-workspace-summary-title { font-size: 23px; }
-  .erp-workspace-metrics { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 24px 16px; }
+  .erp-workspace-metrics { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 28px 24px; }
   .erp-workspace-metric { min-width: 0; }
   .erp-workspace-metric-value { font-size: 25px; }
   .erp-workspace-search { width: 100%; }
