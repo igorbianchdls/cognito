@@ -12,6 +12,9 @@ export function normalizeErpError(error: unknown): ErpDomainError {
   const source = error && typeof error === 'object' ? error as { code?: string; message?: string } : {}
   if (source.message?.startsWith('CONFLITO_VERSAO')) return new ErpDomainError('VERSION_CONFLICT', 'Este registro foi alterado. Atualize os dados antes de salvar.', 409, undefined, 'refresh')
   if (error instanceof ErpDomainError) return error
+  if (source.code === '53300' || (source.code === 'XX000' && /EMAXCONNSESSION|max clients reached|max.*connections/i.test(source.message || ''))) {
+    return new ErpDomainError('DATABASE_BUSY', 'O banco está com muitas conexões. Aguarde um momento e tente novamente.', 503, undefined, 'refresh')
+  }
   switch (source.code) {
     case '40001': case '40P01': case '55P03':
       return new ErpDomainError('CONCURRENT_OPERATION', 'Outra operação está em andamento. Tente novamente mantendo a mesma solicitação.', 409, undefined, 'same-operation')
@@ -30,4 +33,3 @@ export function normalizeErpError(error: unknown): ErpDomainError {
       return new ErpDomainError('ERP_OPERATION_ERROR', 'Não foi possível confirmar o resultado da operação. Confira os dados antes de tentar novamente.', 500, undefined, 'verify')
   }
 }
-

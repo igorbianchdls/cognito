@@ -7,8 +7,7 @@ export const project='mtadnxqoqxzbdksktwdr';
 export function connection(){
  const env=dotenv.parse(readFileSync(new URL('.env.local',root)));
  const u=new URL(env.SUPABASE_DB_URL);
- assert.equal(u.username,'postgres.'+project); assert.equal(u.hostname,'aws-1-sa-east-1.pooler.supabase.com'); assert.equal(u.port,'5432');
+ assert.equal(u.username,'postgres.'+project); assert.equal(u.hostname,'aws-1-sa-east-1.pooler.supabase.com'); assert(['5432','6543'].includes(u.port),'Use only the verified session or transaction pooler port');
  for(const k of ['sslmode','sslrootcert','sslcert','sslkey']) u.searchParams.delete(k);
  return new pg.Client({connectionString:u.toString(),ssl:{ca:readFileSync(new URL('certificates/supabase-prod-ca-2021.crt',root),'utf8'),rejectUnauthorized:true},connectionTimeoutMillis:15000,statement_timeout:60000,application_name:'creatto_evolution'});
 }
-

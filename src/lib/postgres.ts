@@ -30,6 +30,8 @@ export function getErpTransactionClient():SQLClient|undefined {
 export type PostgresPoolConfig = {
   connectionString: string
   max: number
+  connectionTimeoutMillis?: number
+  idleTimeoutMillis?: number
   ssl?: { ca: string; rejectUnauthorized: boolean }
 }
 
@@ -68,7 +70,11 @@ export function buildPostgresPoolConfig(connectionString: string): PostgresPoolC
   for (const key of ['sslmode', 'sslrootcert', 'sslcert', 'sslkey']) url.searchParams.delete(key)
   return {
     connectionString: url.toString(),
-    max: 5,
+    // A Vercel instance shares this pool across concurrent requests. Keep it
+    // small and release idle connections instead of holding session slots.
+    max: 2,
+    connectionTimeoutMillis: 15000,
+    idleTimeoutMillis: 5000,
     ssl: { ca: certificate, rejectUnauthorized: true },
   }
 }
