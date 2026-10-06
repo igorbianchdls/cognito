@@ -12,6 +12,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Skeleton } from '@/components/ui/skeleton'
+import { cn } from '@/lib/utils'
 import { ErpRecordIdentity } from './ErpRecordIdentity'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { ErpStatusBadge } from '@/products/erp/frontend/components/ErpStatusBadge'
@@ -153,6 +154,7 @@ export function ErpOperationsWorkspacePage({ config }: { config: ErpOperationCon
   const isSalesWorkspace = config.resource === 'contratos'
   const isStockWorkspace = getErpSection('estoque').modules.some(module => module.id === config.moduleId)
   const isWorkspace = isSalesWorkspace || isStockWorkspace
+  const identityColumn = config.columns.find(column => ['nome', 'produto', 'descricao'].includes(column.key))?.key ?? config.columns[0]?.key
   const workspaceTitles: Record<string, string> = {
     'posicao-estoque': 'Situação do estoque', movimentacoes: 'Movimentações de estoque',
     inventarios: 'Inventários', transferencias: 'Transferências de estoque',
@@ -334,7 +336,7 @@ export function ErpOperationsWorkspacePage({ config }: { config: ErpOperationCon
       ) : (
         <div className={isWorkspace ? 'min-h-[300px] min-w-0 flex-1 overflow-x-auto' : 'overflow-x-auto rounded-md border border-gray-200 bg-white'}>
           <Table className={isWorkspace ? 'erp-workspace-table min-w-[1000px] border-b border-[#e7e7e4]' : undefined}>
-            <TableHeader><TableRow className={isWorkspace ? 'bg-[#fbfbfa] hover:bg-[#fbfbfa]' : 'hover:bg-white'}>{config.columns.map((column) => <TableHead key={column.key} className={isWorkspace ? (['currency', 'number'].includes(column.kind ?? '') ? 'text-right' : undefined) : 'h-10 whitespace-nowrap bg-gray-50 text-xs font-semibold uppercase tracking-normal text-gray-500'}>{column.label}</TableHead>)}{config.rowAction ? <TableHead className="w-28 bg-gray-50" /> : null}</TableRow></TableHeader>
+            <TableHeader><TableRow className={isWorkspace ? 'bg-[#fbfbfa] hover:bg-[#fbfbfa]' : 'hover:bg-white'}>{config.columns.map((column) => <TableHead key={column.key} className={cn(isWorkspace ? (['currency', 'number'].includes(column.kind ?? '') ? 'text-right' : undefined) : 'h-10 whitespace-nowrap bg-gray-50 text-xs font-semibold uppercase tracking-normal text-gray-500', column.key === identityColumn && 'erp-table-identity-heading')}>{column.label}</TableHead>)}{config.rowAction ? <TableHead className="w-28 bg-gray-50" /> : null}</TableRow></TableHeader>
             <TableBody>
               {records.length ? records.map((record) => (
                 <TableRow key={record.id}>

@@ -58,6 +58,7 @@
 .erp-workspace-surface .erp-workspace-table { border-bottom-color: var(--erp-rule); }
 .erp-workspace-surface .erp-workspace-table thead tr { background: #fff; border-bottom-color: var(--erp-rule); }
 .erp-workspace-surface .erp-workspace-table th { height: 38px; padding: 8px 18px; border-right-color: #f3f3f1; color: #777; font-size: 12px; font-weight: 400; }
+.erp-workspace-surface th.erp-table-identity-heading { font-weight: 600; }
 .erp-workspace-surface .erp-workspace-table td { height: 70px; padding: 13px 18px; border-right-color: #f3f3f1; color: #303030; font-size: 14px; line-height: 1.4; }
 .erp-workspace-surface .erp-workspace-table tbody tr { border-bottom-color: var(--erp-rule); }
 .erp-workspace-surface .erp-workspace-table tbody tr:hover { background: #fafaf8; }

@@ -740,7 +740,7 @@ export function SalesWorkspacePage({
           <TableHeader>
             <TableRow className="bg-[#fbfbfa] hover:bg-[#fbfbfa]">
               <TableHead>Número</TableHead>
-              <TableHead>Descrição</TableHead>
+              <TableHead className="erp-table-identity-heading">Descrição</TableHead>
               <TableHead>Cliente</TableHead>
               <TableHead>{isQuote ? "Validade" : "Data"}</TableHead>
               <TableHead className="text-right">Total</TableHead>

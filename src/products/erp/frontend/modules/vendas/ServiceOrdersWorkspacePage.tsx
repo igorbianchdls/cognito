@@ -366,7 +366,7 @@ export function ServiceOrdersWorkspacePage() {
           <TableHeader>
             <TableRow className="bg-[#fbfbfa] hover:bg-[#fbfbfa]">
               <TableHead>Número</TableHead>
-              <TableHead>Cliente</TableHead>
+              <TableHead className="erp-table-identity-heading">Cliente</TableHead>
               <TableHead>Equipamento</TableHead>
               <TableHead>Previsão</TableHead>
               <TableHead>Situação</TableHead>

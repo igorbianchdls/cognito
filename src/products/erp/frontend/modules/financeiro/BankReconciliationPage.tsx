@@ -326,7 +326,7 @@ export function BankReconciliationPage() {
             <TableHeader>
               <TableRow className="bg-gray-50">
                 <TableHead>Data</TableHead>
-                <TableHead>Descricao</TableHead>
+                <TableHead className="erp-table-identity-heading">Descricao</TableHead>
                 <TableHead>Origem</TableHead>
                 <TableHead className="text-right">Valor</TableHead>
                 <TableHead>Conciliada em</TableHead>

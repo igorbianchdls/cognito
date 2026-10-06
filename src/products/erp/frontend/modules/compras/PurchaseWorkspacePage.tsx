@@ -717,7 +717,7 @@ export function PurchaseWorkspacePage() {
           <TableHeader>
             <TableRow className="bg-[#fbfbfa] hover:bg-[#fbfbfa]">
               <TableHead>Número</TableHead>
-              <TableHead>Descrição</TableHead>
+              <TableHead className="erp-table-identity-heading">Descrição</TableHead>
               <TableHead>Fornecedor</TableHead>
               <TableHead>Movimento</TableHead>
               <TableHead>Data</TableHead>

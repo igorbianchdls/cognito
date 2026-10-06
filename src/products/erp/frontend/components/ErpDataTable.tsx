@@ -64,6 +64,7 @@ export function ErpDataTable({
 }) {
   const actions = config.actions || []
   const columns = config.columns.filter(column => column.key !== 'categoria' && columnVisibility?.[column.key] !== false)
+  const identityColumn = config.columns.find(column => ['nome', 'descricao'].includes(column.key))?.key ?? config.columns[0]?.key
 
   return (
     <div className="min-w-0 overflow-x-auto bg-white">
@@ -71,7 +72,7 @@ export function ErpDataTable({
         <TableHeader>
           <TableRow className="bg-[#fbfbfa] hover:bg-[#fbfbfa]">
             {columns.map((column) => (
-              <TableHead key={column.key} className={cn(column.width, ['currency', 'number'].includes(column.kind ?? '') && 'text-right')}>
+              <TableHead key={column.key} className={cn(column.width, column.key === identityColumn && 'erp-table-identity-heading', ['currency', 'number'].includes(column.kind ?? '') && 'text-right')}>
                 {column.label}
               </TableHead>
             ))}
