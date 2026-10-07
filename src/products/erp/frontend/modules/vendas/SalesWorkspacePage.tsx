@@ -49,6 +49,7 @@ import { formatErpValue } from "@/products/erp/frontend/services/erpProfessional
 import { ErpDocumentDetailsDialog } from "@/products/erp/frontend/components/ErpDocumentDetailsDialog";
 import { ErpAsyncCatalogSelect, type ErpCatalogRecord } from "@/products/erp/frontend/components/ErpAsyncCatalogSelect";
 import { useErpAccess } from "@/products/erp/frontend/hooks/useErpAccess";
+import { erpClientToday } from '@/products/erp/frontend/services/erpTimeZone'
 
 type Option = {
   id: string;
@@ -125,7 +126,7 @@ const emptyCatalogs: Catalogs = {
   financialAccounts: [],
   paymentMethods: [],
 };
-const today = () => new Date().toISOString().slice(0, 10);
+const today = () => erpClientToday();
 const money = (value: string | number) =>
   Number(String(value || 0).replace(",", ".")) || 0;
 const currency = (value: number) =>
@@ -164,7 +165,7 @@ async function parseResponse<T>(response: Response): Promise<T> {
     throw new Error(
       typeof body.error === "string"
         ? body.error
-        : body.error?.message || "Nao foi possivel concluir a operacao.",
+        : body.error?.message || "Não foi possível concluir a operação.",
     );
   return body as T;
 }
@@ -260,7 +261,7 @@ export function SalesWorkspacePage({
       setError(
         loadError instanceof Error
           ? loadError.message
-          : `Nao foi possivel carregar ${isQuote ? "os orcamentos" : "as vendas"}.`,
+          : `Não foi possível carregar ${isQuote ? "os orçamentos" : "as vendas"}.`,
       );
     } finally {
       setLoading(false);
@@ -435,7 +436,7 @@ export function SalesWorkspacePage({
       setError(
         saveError instanceof Error
           ? saveError.message
-          : `Nao foi possivel salvar ${isQuote ? "o orcamento" : "a venda"}.`,
+          : `Não foi possível salvar ${isQuote ? "o orçamento" : "a venda"}.`,
       );
     } finally {
       setSaving(false);
@@ -469,7 +470,7 @@ export function SalesWorkspacePage({
       setError(
         actionError instanceof Error
           ? actionError.message
-          : "Nao foi possivel atualizar a venda.",
+          : "Não foi possível atualizar a venda.",
       );
     } finally {
       setLoading(false);
@@ -503,7 +504,7 @@ export function SalesWorkspacePage({
       setError(
         actionError instanceof Error
           ? actionError.message
-          : "Nao foi possivel atualizar o orcamento.",
+          : "Não foi possível atualizar o orçamento.",
       );
     } finally {
       setLoading(false);
@@ -525,7 +526,7 @@ export function SalesWorkspacePage({
       setError(
         detailError instanceof Error
           ? detailError.message
-          : "Nao foi possivel carregar a venda.",
+          : "Não foi possível carregar a venda.",
       );
       setDetailsOpen(false);
     } finally {
@@ -537,7 +538,7 @@ export function SalesWorkspacePage({
     setFiscalOpen(true); setFiscalLoading(true); setFiscalResult(null); setError(null);
     try {
       setFiscalResult(await parseResponse(await fetch(`/api/erp/vendas/${record.id}/pre-validacao-fiscal`, { cache: 'no-store' })));
-    } catch (preflightError) { setError(preflightError instanceof Error ? preflightError.message : 'Nao foi possivel validar os dados fiscais.'); setFiscalOpen(false); }
+    } catch (preflightError) { setError(preflightError instanceof Error ? preflightError.message : 'Não foi possível validar os dados fiscais.'); setFiscalOpen(false); }
     finally { setFiscalLoading(false); }
   }
 
@@ -580,7 +581,7 @@ export function SalesWorkspacePage({
       setError(
         fulfillError instanceof Error
           ? fulfillError.message
-          : "Nao foi possivel preparar o atendimento.",
+          : "Não foi possível preparar o atendimento.",
       );
     } finally {
       setLoading(false);
@@ -616,7 +617,7 @@ export function SalesWorkspacePage({
       setError(
         fulfillError instanceof Error
           ? fulfillError.message
-          : "Nao foi possivel atender os produtos.",
+          : "Não foi possível atender os produtos.",
       );
     } finally {
       setSaving(false);
@@ -681,7 +682,7 @@ export function SalesWorkspacePage({
       setError(
         editError instanceof Error
           ? editError.message
-          : `Nao foi possivel editar ${isQuote ? "o orcamento" : "a venda"}.`,
+          : `Não foi possível editar ${isQuote ? "o orçamento" : "a venda"}.`,
       );
     } finally {
       setLoading(false);
@@ -797,7 +798,7 @@ export function SalesWorkspacePage({
                       >
                         <Eye className="size-4" />
                       </Button>
-                      {!isQuote ? <Button size="icon" variant="ghost" title="Pre-validacao fiscal" onClick={() => void openFiscalPreflight(record)}><ShieldCheck className="size-4" /></Button> : null}
+                      {!isQuote ? <Button size="icon" variant="ghost" title="Pre-validação fiscal" onClick={() => void openFiscalPreflight(record)}><ShieldCheck className="size-4" /></Button> : null}
                       {canManage ? (
                         <>
                           {record.status === "rascunho" ? (
@@ -805,7 +806,7 @@ export function SalesWorkspacePage({
                               size="icon"
                               variant="ghost"
                               title={
-                                isQuote ? "Editar orcamento" : "Editar venda"
+                                isQuote ? "Editar orçamento" : "Editar venda"
                               }
                               onClick={() => void openEdit(record)}
                             >
@@ -931,7 +932,7 @@ export function SalesWorkspacePage({
           <div className="overflow-y-auto">
             <section className="grid gap-4 border-b px-6 py-5">
               <h2 className="text-sm font-semibold">
-                Informacoes {isQuote ? "do orcamento" : "da venda"}
+                Informacoes {isQuote ? "do orçamento" : "da venda"}
               </h2>
               <div className="grid gap-4 md:grid-cols-4">
                 <ErpAsyncCatalogSelect
@@ -942,7 +943,7 @@ export function SalesWorkspacePage({
                   selectedLabel={catalogs.customers.find((item) => item.id === customerId)?.nome}
                 />
                 <FieldSelect
-                  label="Vendedor responsavel"
+                  label="Vendedor responsável"
                   value={sellerId}
                   onChange={setSellerId}
                   options={catalogs.responsibles.map((item) => [
@@ -951,19 +952,19 @@ export function SalesWorkspacePage({
                   ])}
                 />
                 <FieldInput
-                  label="Numero"
+                  label="Número"
                   value={number}
                   onChange={setNumber}
-                  placeholder="Automatico"
+                  placeholder="Automático"
                 />
                 <FieldInput
-                  label={isQuote ? "Data do orcamento" : "Data da venda"}
+                  label={isQuote ? "Data do orçamento" : "Data da venda"}
                   value={saleDate}
                   onChange={setSaleDate}
                   type="date"
                 />
                 <FieldInput
-                  label="Competencia"
+                  label="Competência"
                   value={competence}
                   onChange={setCompetence}
                   type="date"
@@ -977,7 +978,7 @@ export function SalesWorkspacePage({
                       type="date"
                     />
                     <FieldInput
-                      label="Previsao de entrega"
+                      label="Previsão de entrega"
                       value={deliveryForecast}
                       onChange={setDeliveryForecast}
                       type="date"
@@ -1005,13 +1006,13 @@ export function SalesWorkspacePage({
                 {!isQuote ? (
                   <>
                     <FieldInput
-                      label="Emails de cobranca"
+                      label="Emails de cobrança"
                       value={billingEmails}
                       onChange={setBillingEmails}
                       placeholder="financeiro@cliente.com"
                     />
                     <FieldInput
-                      label="WhatsApp de cobranca"
+                      label="WhatsApp de cobrança"
                       value={billingWhatsapp}
                       onChange={setBillingWhatsapp}
                     />
@@ -1033,9 +1034,9 @@ export function SalesWorkspacePage({
               </div>
               <div className="hidden grid-cols-[120px_2fr_100px_120px_120px_120px_40px] gap-2 px-1 text-xs font-medium text-gray-500 md:grid">
                 <span>Tipo</span>
-                <span>Produto ou servico</span>
+                <span>Produto ou serviço</span>
                 <span>Quantidade</span>
-                <span>Valor unitario</span>
+                <span>Valor unitário</span>
                 <span>Desconto</span>
                 <span>Total</span>
                 <span />
@@ -1175,7 +1176,7 @@ export function SalesWorkspacePage({
             </section>
             <section className="grid gap-4 border-b px-6 py-5">
               <div className="flex items-end justify-between">
-                <h2 className="text-sm font-semibold">Condicao de pagamento</h2>
+                <h2 className="text-sm font-semibold">Condição de pagamento</h2>
                 <div className="grid gap-1">
                   <Label>Parcelas</Label>
                   <Input
@@ -1289,8 +1290,8 @@ export function SalesWorkspacePage({
             <div className="flex items-center gap-2 text-sm text-gray-500">
               <CalendarDays className="size-4" />
               {isQuote
-                ? "Orcamentos nao movimentam financeiro ou estoque"
-                : "A confirmacao gera contas a receber"}
+                ? "Orçamentos não movimentam financeiro ou estoque"
+                : "A confirmação gera contas a receber"}
             </div>
             <div className="flex gap-2">
               <Button variant="outline" onClick={() => setEditorOpen(false)}>
@@ -1299,7 +1300,7 @@ export function SalesWorkspacePage({
               <Button disabled={saving} onClick={() => void saveSale()}>
                 {saving ? <Loader2 className="size-4 animate-spin" /> : null}
                 {editingSale
-                  ? "Salvar alteracoes"
+                  ? "Salvar alterações"
                   : `Salvar ${isQuote ? "orcamento" : "venda"}`}
               </Button>
             </div>
@@ -1367,12 +1368,12 @@ export function SalesWorkspacePage({
           </div>
         </DialogContent>
       </Dialog>
-      <Dialog open={fiscalOpen} onOpenChange={setFiscalOpen}><DialogContent className="max-w-[min(720px,96vw)]"><DialogHeader><DialogTitle>Pre-validacao fiscal</DialogTitle></DialogHeader>{fiscalLoading ? <div className="py-16 text-center text-sm text-gray-500"><Loader2 className="mx-auto mb-2 size-5 animate-spin" />Validando cadastros e itens...</div> : fiscalResult ? <div className="grid gap-4"><div className={`rounded-md border px-4 py-3 text-sm ${fiscalResult.ready ? 'border-emerald-200 bg-emerald-50 text-emerald-700' : 'border-amber-200 bg-amber-50 text-amber-800'}`}>{fiscalResult.ready ? 'A venda possui os dados minimos para a futura emissao fiscal.' : 'Existem campos que precisam ser corrigidos antes da emissao.'}</div><div className="grid gap-2">{fiscalResult.issues.map((issue) => <div key={`${issue.code}-${issue.field}`} className="grid grid-cols-[80px_1fr] gap-3 border-b py-3"><span className={`text-xs font-medium uppercase ${issue.severity === 'error' ? 'text-rose-600' : 'text-amber-600'}`}>{issue.severity === 'error' ? 'Impeditivo' : 'Aviso'}</span><div><p className="text-sm text-gray-900">{issue.message}</p><p className="mt-1 text-xs text-gray-500">{issue.field}</p></div></div>)}</div></div> : null}</DialogContent></Dialog>
+      <Dialog open={fiscalOpen} onOpenChange={setFiscalOpen}><DialogContent className="max-w-[min(720px,96vw)]"><DialogHeader><DialogTitle>Pre-validação fiscal</DialogTitle></DialogHeader>{fiscalLoading ? <div className="py-16 text-center text-sm text-gray-500"><Loader2 className="mx-auto mb-2 size-5 animate-spin" />Validando cadastros e itens...</div> : fiscalResult ? <div className="grid gap-4"><div className={`rounded-md border px-4 py-3 text-sm ${fiscalResult.ready ? 'border-emerald-200 bg-emerald-50 text-emerald-700' : 'border-amber-200 bg-amber-50 text-amber-800'}`}>{fiscalResult.ready ? 'A venda possui os dados minimos para a futura emissão fiscal.' : 'Existem campos que precisam ser corrigidos antes da emissão.'}</div><div className="grid gap-2">{fiscalResult.issues.map((issue) => <div key={`${issue.code}-${issue.field}`} className="grid grid-cols-[80px_1fr] gap-3 border-b py-3"><span className={`text-xs font-medium uppercase ${issue.severity === 'error' ? 'text-rose-600' : 'text-amber-600'}`}>{issue.severity === 'error' ? 'Impeditivo' : 'Aviso'}</span><div><p className="text-sm text-gray-900">{issue.message}</p><p className="mt-1 text-xs text-gray-500">{issue.field}</p></div></div>)}</div></div> : null}</DialogContent></Dialog>
       <ErpDocumentDetailsDialog
         documentKind="vendas"
         open={detailsOpen}
         onOpenChange={setDetailsOpen}
-        title={`Detalhes ${isQuote ? "do orcamento" : "da venda"}`}
+        title={`Detalhes ${isQuote ? "do orçamento" : "da venda"}`}
         loading={detailsLoading}
         document={details?.sale}
         items={details?.items}

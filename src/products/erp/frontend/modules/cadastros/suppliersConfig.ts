@@ -5,7 +5,7 @@ export const suppliersConfig: ErpEntityConfig<ErpEntityRecord> = {
   sectionId: 'cadastros',
   label: 'Fornecedores',
   singularLabel: 'fornecedor',
-  description: 'Organize fornecedores por categoria, contato e situacao operacional.',
+  description: 'Organize fornecedores por categoria, contato e situação operacional.',
   route: '/erp/cadastros/fornecedores',
   searchPlaceholder: 'Buscar por fornecedor, documento, email ou categoria',
   primaryActionLabel: 'Novo fornecedor',
@@ -29,7 +29,7 @@ export const suppliersConfig: ErpEntityConfig<ErpEntityRecord> = {
   ],
   metrics: [
     { label: 'Fornecedores ativos', value: '0', detail: 'base conectada' },
-    { label: 'Categorias', value: '0', detail: 'classificacao operacional' },
+    { label: 'Categorias', value: '0', detail: 'classificação operacional' },
     { label: 'Em uso', value: '0', detail: 'compras futuras' },
   ],
   emptyState: {

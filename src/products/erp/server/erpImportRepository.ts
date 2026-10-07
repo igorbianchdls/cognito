@@ -85,8 +85,8 @@ export async function importErpRows(input: {
   fileName: string
   rows: Record<string, unknown>[]
 }) {
-  if (!input.rows.length) throw new Error('O arquivo nao possui linhas para importar.')
-  if (input.rows.length > 5000) throw new Error('Importe no maximo 5.000 linhas por arquivo.')
+  if (!input.rows.length) throw new Error('O arquivo não possui linhas para importar.')
+  if (input.rows.length > 5000) throw new Error('Importe no máximo 5.000 linhas por arquivo.')
   const hash = createHash('sha256').update(JSON.stringify({ type: input.type, rows: input.rows })).digest('hex')
   const importRecord = await withTransaction(async (client) => {
     await client.query('SELECT pg_advisory_xact_lock(hashtextextended($1,0))',[`erp:import:${input.tenantId}:${hash}`])

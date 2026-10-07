@@ -1,3 +1,4 @@
+import { erpToday } from '@/products/erp/server/erpBusinessDate'
 import { runQuery, withTransaction, type SQLClient } from "@/lib/postgres";
 import { assertErpPeriodOpen } from './erpPeriodRepository';
 import {
@@ -290,7 +291,7 @@ export async function reviseSalesContract(
 
 export async function generateContractSales(input: Actor & { until?: string }) {
   const parsedUntil = erpDateSchema.safeParse(
-    input.until || new Intl.DateTimeFormat('sv-SE', { timeZone: 'America/Fortaleza' }).format(new Date()),
+    input.until || erpToday(),
   );
   if (!parsedUntil.success)
     throw new ErpDomainError("VALIDATION_ERROR", "Data limite inválida.");

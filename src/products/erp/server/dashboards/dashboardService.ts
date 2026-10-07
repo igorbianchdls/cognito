@@ -20,6 +20,7 @@ import { resultadosQueries } from './resultadosQueries'
 import { servicosQueries } from './servicosQueries'
 import { visaoGeralQueries } from './visaoGeralQueries'
 import { attachDrilldownLinks } from './drilldownLinks'
+import { normalizeTimeZone } from '@/products/erp/shared/businessDate'
 const queries = {
   'visao-geral': visaoGeralQueries,
   financeiro: financeiroQueries,
@@ -46,7 +47,7 @@ export async function loadDashboard(
       403,
     )
   const filters = dashboardFilterSchema.parse(raw),
-    reference = dashboardToday(),
+    reference = dashboardToday(new Date(), session.timeZone),
     previous = previousDashboardPeriod(filters)
   return withTransaction(async (client) => {
     await client.query('SET TRANSACTION ISOLATION LEVEL REPEATABLE READ READ ONLY')
@@ -69,7 +70,7 @@ export async function loadDashboard(
       period: { from: filters.from, to: filters.to },
       previousPeriod: filters.compare ? previous : null,
       reference,
-      timezone: 'America/Fortaleza',
+      timezone: normalizeTimeZone(session.timeZone),
       generatedAt: new Date().toISOString(),
       availableDashboards: DASHBOARD_IDS.filter((d) =>
         DASHBOARDS[d].capabilities.every((c) => session.capabilities.includes(c)),

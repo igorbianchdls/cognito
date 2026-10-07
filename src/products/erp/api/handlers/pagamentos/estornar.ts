@@ -15,7 +15,7 @@ type RouteContext = {
   const { id } = await context.params
   const paymentId = Number(id)
   if (!Number.isInteger(paymentId) || paymentId <= 0) {
-    return erpFailure('Pagamento invalido.', 400)
+    return erpFailure('Pagamento inválido.', 400)
   }
 
   const tenant = await resolveErpAccess('erp.financeiro.estornar')

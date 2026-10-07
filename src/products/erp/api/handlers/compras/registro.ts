@@ -10,7 +10,7 @@ import { getErpPurchaseDetails, updateErpPurchaseDraft } from '@/products/erp/se
 
  async function handleGET(_request: Request, context: { params: Promise<{ id: string }> }) {
   const tenant = await resolveErpAccess('erp.compras.visualizar')
-  if (!tenant) return erpFailure('Nao autenticado.', 401)
+  if (!tenant) return erpFailure('Não autenticado.', 401)
   try {
     return NextResponse.json(await getErpPurchaseDetails(tenant.tenantId, (await context.params).id))
   } catch (error) {

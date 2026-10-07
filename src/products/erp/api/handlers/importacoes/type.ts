@@ -15,7 +15,7 @@ function csvCell(value: unknown) {
   const tenant = await resolveErpAccess('erp.cadastros.visualizar')
   if (!tenant) return erpFailure('Acesso negado.', 403)
   const { type } = await context.params
-  if (!isImportType(type)) return erpFailure('Tipo de exportacao invalido.', 404)
+  if (!isImportType(type)) return erpFailure('Tipo de exportação inválido.', 404)
   try {
     const records = await exportErpRecords(tenant.tenantId, type)
     const columns = records.length ? Object.keys(records[0]) : ['id']
@@ -32,7 +32,7 @@ function csvCell(value: unknown) {
   const tenant = await resolveErpAccess('erp.cadastros.gerenciar')
   if (!tenant) return erpFailure('Acesso negado.', 403)
   const { type } = await context.params
-  if (!isImportType(type)) return erpFailure('Tipo de importacao invalido.', 404)
+  if (!isImportType(type)) return erpFailure('Tipo de importação inválido.', 404)
   try {
     const body = await parseErpBody(request,z.object({fileName:z.string().trim().min(1).max(255).optional(),rows:z.array(z.record(z.string(),z.unknown())).min(1).max(5000)}).strict())
     const result = await importErpRows({

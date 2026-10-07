@@ -13,7 +13,6 @@ import { Input } from "@/components/ui/input";
 import {
   DASHBOARDS,
   dashboardFilterSchema,
-  dashboardToday,
   type DashboardId,
   type DashboardResponse,
 } from "@/products/erp/shared/dashboardContracts";
@@ -25,6 +24,7 @@ import {
   dashboardDate,
 } from "./DashboardViews";
 import { OverviewDashboardView } from "../visao-geral/OverviewDashboardView";
+import { erpClientToday } from '@/products/erp/frontend/services/erpTimeZone'
 export function DashboardPage({ id }: { id: DashboardId }) {
   const search = useSearchParams(),
     { orgId, userId } = useAuth();
@@ -50,7 +50,7 @@ function DashboardPageContent({
   const search = useSearchParams(),
     router = useRouter(),
     pathname = usePathname(),
-    today = dashboardToday();
+    today = erpClientToday();
   const from = search.get("from") || today.slice(0, 7) + "-01",
     to = search.get("to") || today,
     compare = search.get("compare") !== "false",

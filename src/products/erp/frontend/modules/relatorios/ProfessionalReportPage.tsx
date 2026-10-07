@@ -27,9 +27,15 @@ import {
   formatErpValue,
   parseErpResponse,
 } from "@/products/erp/frontend/services/erpProfessionalClient";
+import { erpClientToday } from '@/products/erp/frontend/services/erpTimeZone'
+import { monthBounds } from '@/products/erp/shared/businessDate'
 
 type ReportId =
   | "dre-caixa"
+  | "dre-competencia"
+  | "fluxo-de-caixa"
+  | "aging-receber"
+  | "aging-pagar"
   | "posicao-financeira"
   | "vendas-clientes"
   | "vendas-vendedores"
@@ -44,9 +50,48 @@ type ReportDefinition = {
   numeric: string[];
   chartLabel: string;
   chartValue: string;
+  /** Período inicial da tela; padrão: início do ano até hoje. */
+  period?: () => { from: string; to: string };
 };
+const agingColumns = ["a_vencer", "vencido_1_30", "vencido_31_60", "vencido_61_90", "vencido_mais_90", "vencido", "total"];
 
 const reports: Record<ReportId, ReportDefinition> = {
+  "fluxo-de-caixa": {
+    title: "Fluxo de caixa",
+    description: "Entradas e saídas realizadas (pagamentos, recebimentos e adiantamentos, líquidos e com estornos) e previstas (saldo das parcelas em aberto pelo vencimento; atrasadas entram no mês atual; inclui contas a pagar em previsão). Saldo acumulado parte do saldo inicial das contas financeiras.",
+    currency: ["entradas_realizadas", "saidas_realizadas", "entradas_previstas", "saidas_previstas", "saldo_inicial_contas", "saldo_mes", "saldo_acumulado"],
+    numeric: [],
+    chartLabel: "competencia",
+    chartValue: "saldo_acumulado",
+    period: () => {
+      const today = erpClientToday();
+      return { from: monthBounds(today).start, to: monthBounds(today, 2).end };
+    },
+  },
+  "aging-receber": {
+    title: "Contas a receber por atraso",
+    description: "Saldo em aberto por cliente e faixa de atraso na data final do período.",
+    currency: agingColumns,
+    numeric: ["parcelas"],
+    chartLabel: "cliente",
+    chartValue: "vencido",
+  },
+  "aging-pagar": {
+    title: "Contas a pagar por atraso",
+    description: "Saldo em aberto por fornecedor e faixa de atraso na data final do período. Não inclui previsões.",
+    currency: agingColumns,
+    numeric: ["parcelas"],
+    chartLabel: "fornecedor",
+    chartValue: "vencido",
+  },
+  "dre-competencia": {
+    title: "Resultado por competência",
+    description: "Receitas e despesas pela data de competência dos títulos e pela categoria (rateios distribuem o valor). Exclui títulos cancelados, previsões e títulos gerados por renegociação; encargos e descontos de renegociações entram na data do acordo.",
+    currency: ["valor"],
+    numeric: [],
+    chartLabel: "categoria",
+    chartValue: "valor",
+  },
   "dre-caixa": {
     title: "Resultado dos pagamentos por caixa",
     description: "Recebimentos e pagamentos por data, líquidos de taxas e com estornos na data da reversão. Categorias distribuídas pelos rateios. Exclui adiantamentos, transferências e aplicações de crédito.",
@@ -56,8 +101,8 @@ const reports: Record<ReportId, ReportDefinition> = {
     chartValue: "valor",
   },
   "posicao-financeira": {
-    title: "Posicao financeira",
-    description: "Saldos de contas a pagar e receber agrupados por situacao.",
+    title: "Posição financeira",
+    description: "Saldos de contas a pagar e receber agrupados por situação.",
     currency: ["saldo"],
     numeric: ["parcelas"],
     chartLabel: "status",
@@ -73,7 +118,7 @@ const reports: Record<ReportId, ReportDefinition> = {
   },
   "vendas-vendedores": {
     title: "Vendas por vendedor",
-    description: "Receita e quantidade de vendas por responsavel.",
+    description: "Receita e quantidade de vendas por responsável.",
     currency: ["total"],
     numeric: ["vendas"],
     chartLabel: "vendedor",
@@ -81,7 +126,7 @@ const reports: Record<ReportId, ReportDefinition> = {
   },
   "vendas-produtos": {
     title: "Vendas por produto",
-    description: "Quantidade e receita por produto ou servico.",
+    description: "Quantidade e receita por produto ou serviço.",
     currency: ["total"],
     numeric: ["quantidade"],
     chartLabel: "produto",
@@ -114,16 +159,16 @@ const reports: Record<ReportId, ReportDefinition> = {
 };
 
 function firstDayOfYear() {
-  return `${new Date().getFullYear()}-01-01`;
+  return `${erpClientToday().slice(0, 4)}-01-01`;
 }
 function today() {
-  return new Date().toISOString().slice(0, 10);
+  return erpClientToday();
 }
 
 export function ProfessionalReportPage({ reportId }: { reportId: ReportId }) {
   const definition = reports[reportId];
-  const [from, setFrom] = useState(firstDayOfYear());
-  const [to, setTo] = useState(today());
+  const [from, setFrom] = useState(() => definition.period?.().from ?? firstDayOfYear());
+  const [to, setTo] = useState(() => definition.period?.().to ?? today());
   const [records, setRecords] = useState<Record<string, unknown>[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -146,7 +191,7 @@ export function ProfessionalReportPage({ reportId }: { reportId: ReportId }) {
       setError(
         loadError instanceof Error
           ? loadError.message
-          : "Nao foi possivel carregar o relatorio.",
+          : "Não foi possível carregar o relatório.",
       );
     } finally {
       setLoading(false);
@@ -193,7 +238,7 @@ export function ProfessionalReportPage({ reportId }: { reportId: ReportId }) {
     <div className="flex min-h-full flex-col gap-5 print:block">
       <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
         <div>
-          <p className="text-xs font-medium text-gray-500">ERP / Relatorios</p>
+          <p className="text-xs font-medium text-gray-500">ERP / Relatórios</p>
           <h1 className="mt-1 text-2xl font-semibold text-gray-950">
             {definition.title}
           </h1>
@@ -293,7 +338,7 @@ export function ProfessionalReportPage({ reportId }: { reportId: ReportId }) {
                   colSpan={Math.max(1, columns.length)}
                   className="h-32 text-center text-gray-500"
                 >
-                  Nenhum resultado no periodo.
+                  Nenhum resultado no período.
                 </TableCell>
               </TableRow>
             ) : (

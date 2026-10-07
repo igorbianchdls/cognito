@@ -5,6 +5,8 @@ export type PluginCompany = {
   name: string
   profile: ErpAccessProfile
   capabilities: ErpCapability[]
+  /** Fuso IANA da empresa; ausente em principais de teste (usa America/Sao_Paulo). */
+  timeZone?: string
 }
 export type PluginPrincipal = {
   userId: number

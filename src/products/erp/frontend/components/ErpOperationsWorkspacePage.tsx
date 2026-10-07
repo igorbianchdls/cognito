@@ -192,7 +192,7 @@ export function ErpOperationsWorkspacePage({ config }: { config: ErpOperationCon
       setTotal(result.total)
     } catch (loadError) {
       if(revision!==loadRevision.current) return
-      setError(loadError instanceof Error ? loadError.message : 'Nao foi possivel carregar os dados.')
+      setError(loadError instanceof Error ? loadError.message : 'Não foi possível carregar os dados.')
     } finally {
       if(revision===loadRevision.current) setLoading(false)
     }
@@ -238,10 +238,10 @@ export function ErpOperationsWorkspacePage({ config }: { config: ErpOperationCon
       if (dialogMode === 'row' && selectedRecord) bodyValues.transacao_bancaria_id = selectedRecord.id
       await createOperation.submit(`/api/erp/operacoes/${encodeURIComponent(activeResource)}`,{values:bodyValues})
       setDialogOpen(false)
-      setSuccess(dialogMode === 'row' ? 'Operacao concluida.' : 'Registro salvo.')
+      setSuccess(dialogMode === 'row' ? 'Operação concluída.' : 'Registro salvo.')
       await load()
     } catch (submitError) {
-      setError(submitError instanceof Error ? submitError.message : 'Nao foi possivel salvar.')
+      setError(submitError instanceof Error ? submitError.message : 'Não foi possível salvar.')
     } finally {
       setSaving(false)
     }
@@ -257,7 +257,7 @@ export function ErpOperationsWorkspacePage({ config }: { config: ErpOperationCon
       setSuccess(`${result.total || 0} venda(s) gerada(s). ${result.skipped?.map(item=>`Contrato ${item.contractId}: ${item.reason}`).join(' ') || ''}`)
       await load()
     } catch (processError) {
-      setError(processError instanceof Error ? processError.message : 'Nao foi possivel processar.')
+      setError(processError instanceof Error ? processError.message : 'Não foi possível processar.')
     } finally {
       setSaving(false)
     }
@@ -278,7 +278,7 @@ export function ErpOperationsWorkspacePage({ config }: { config: ErpOperationCon
       setOfxFile(null)
       await load()
     } catch (importError) {
-      setError(importError instanceof Error ? importError.message : 'Nao foi possivel importar o OFX.')
+      setError(importError instanceof Error ? importError.message : 'Não foi possível importar o OFX.')
     } finally { setSaving(false) }
   }
 
@@ -313,8 +313,8 @@ export function ErpOperationsWorkspacePage({ config }: { config: ErpOperationCon
         ...(currencyColumn && config.resource === 'posicao-estoque' ? [{ label: 'Valor do estoque listado', value: formatValue(monetaryTotal, 'currency') }] : []),
       ]} /> : <section className="grid border-y border-gray-200 bg-gray-50/60 sm:grid-cols-3">
         <div className="px-4 py-4"><div className="text-xs font-medium text-gray-500">Registros</div><div className="mt-1 text-xl font-semibold text-gray-950">{total}</div></div>
-        <div className="border-t border-gray-200 px-4 py-4 sm:border-l sm:border-t-0"><div className="text-xs font-medium text-gray-500">Atencao nesta pagina</div><div className="mt-1 text-xl font-semibold text-gray-950">{attentionCount}</div></div>
-        <div className="border-t border-gray-200 px-4 py-4 sm:border-l sm:border-t-0"><div className="text-xs font-medium text-gray-500">{currencyColumn ? `${currencyColumn.label} nesta pagina` : 'Atualizacao'}</div><div className="mt-1 text-xl font-semibold text-gray-950">{monetaryTotal === null ? 'Em tempo real' : formatValue(monetaryTotal, 'currency')}</div></div>
+        <div className="border-t border-gray-200 px-4 py-4 sm:border-l sm:border-t-0"><div className="text-xs font-medium text-gray-500">Atenção nesta página</div><div className="mt-1 text-xl font-semibold text-gray-950">{attentionCount}</div></div>
+        <div className="border-t border-gray-200 px-4 py-4 sm:border-l sm:border-t-0"><div className="text-xs font-medium text-gray-500">{currencyColumn ? `${currencyColumn.label} nesta página` : 'Atualizacao'}</div><div className="mt-1 text-xl font-semibold text-gray-950">{monetaryTotal === null ? 'Em tempo real' : formatValue(monetaryTotal, 'currency')}</div></div>
       </section>}
 
       {error && !dialogOpen ? <div role="alert" className={`${isWorkspace ? 'mx-5 mt-4 md:mx-8 lg:mx-10' : ''} rounded-md border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700`}>{error}</div> : null}
@@ -356,7 +356,7 @@ export function ErpOperationsWorkspacePage({ config }: { config: ErpOperationCon
 
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
         <DialogContent className="max-h-[85vh] overflow-y-auto sm:max-w-2xl">
-          <DialogHeader><DialogTitle>{dialogMode === 'row' ? config.rowAction?.label : config.primaryAction}</DialogTitle><DialogDescription>Preencha os dados obrigatorios para concluir a operacao.</DialogDescription></DialogHeader>
+          <DialogHeader><DialogTitle>{dialogMode === 'row' ? config.rowAction?.label : config.primaryAction}</DialogTitle><DialogDescription>Preencha os dados obrigatórios para concluir a operação.</DialogDescription></DialogHeader>
           <div className="grid gap-4 py-2 sm:grid-cols-2">
             {activeFields.filter(field => activeResource !== 'inventarios' || !['produto_id', 'quantidade_contada'].includes(field.key)).map((field) => (
               <div key={field.key} className="space-y-2">
@@ -376,7 +376,7 @@ export function ErpOperationsWorkspacePage({ config }: { config: ErpOperationCon
 
       <Dialog open={ofxOpen} onOpenChange={setOfxOpen}>
         <DialogContent className="sm:max-w-lg">
-          <DialogHeader><DialogTitle>Importar extrato OFX</DialogTitle><DialogDescription>Transacoes repetidas sao identificadas automaticamente pelo banco e pelo arquivo.</DialogDescription></DialogHeader>
+          <DialogHeader><DialogTitle>Importar extrato OFX</DialogTitle><DialogDescription>Transacoes repetidas são identificadas automaticamente pelo banco e pelo arquivo.</DialogDescription></DialogHeader>
           <div className="space-y-4 py-2">
             <div className="space-y-2"><Label htmlFor="ofx-account">Conta financeira *</Label><AsyncCatalogSelect resource={config.resource} source="accounts" value={ofxAccountId} onChange={setOfxAccountId} required /></div>
             <div className="space-y-2"><Label htmlFor="ofx-file">Arquivo OFX *</Label><Input id="ofx-file" type="file" accept=".ofx,application/x-ofx" onChange={(event) => setOfxFile(event.target.files?.[0] || null)} /></div>

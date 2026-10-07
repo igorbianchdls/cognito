@@ -113,7 +113,7 @@ export function ErpFormDrawer({
     if (saving || (hasRelations && !relationsReady)) return
     const missingField = config.fields.find((field) => field.required && !String(values[field.key] || '').trim())
     if (missingField) {
-      setError(`${missingField.label} e obrigatorio.`)
+      setError(`${missingField.label} é obrigatório.`)
       return
     }
 
@@ -124,7 +124,7 @@ export function ErpFormDrawer({
       await onSubmit(hasRelations ? {...payload,...parseRegistrationRelations(relations)} : payload)
       onOpenChange(false)
     } catch (submitError) {
-      setError(submitError instanceof Error ? submitError.message : 'Nao foi possivel salvar.')
+      setError(submitError instanceof Error ? submitError.message : 'Não foi possível salvar.')
     } finally {
       setSaving(false)
     }
@@ -168,7 +168,7 @@ export function ErpFormDrawer({
               Cancelar
             </Button>
             <Button type="submit" disabled={saving || (hasRelations && !relationsReady)}>
-              {saving ? 'Salvando...' : initialValues ? 'Salvar alteracoes' : 'Salvar'}
+              {saving ? 'Salvando...' : initialValues ? 'Salvar alterações' : 'Salvar'}
             </Button>
           </SheetFooter>
         </form>

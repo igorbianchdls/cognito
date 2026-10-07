@@ -14,6 +14,7 @@ import {
 } from '@/products/erp/server/erpStockRepository'
 import type { ErpEntityRecord } from '@/products/erp/shared/types'
 import type { ErpConnectedModuleId } from '@/products/erp/server/erpModuleRegistry'
+import { erpToday } from '@/products/erp/server/erpBusinessDate'
 
 type ListInput = {
   tenantId: number
@@ -216,7 +217,7 @@ function jsonObject(value: unknown) {
 function normalizedIdempotencyKey(value: unknown) {
   const normalized = optionalText(value)
   if (!normalized) return null
-  if (normalized.length > 200) throw new ErpDomainError('VALIDATION_ERROR', 'Chave de idempotencia invalida.')
+  if (normalized.length > 200) throw new ErpDomainError('VALIDATION_ERROR', 'Chave de idempotencia inválida.')
   return normalized
 }
 
@@ -266,7 +267,7 @@ function normalizePurchaseItems(values: Record<string, unknown>): PurchaseItemIn
     const produtoId = optionalNumericId(item.produto_id)
     const servicoId = optionalNumericId(item.servico_id)
     if ((produtoId ? 1 : 0) + (servicoId ? 1 : 0) !== 1) {
-      throw new ErpDomainError('VALIDATION_ERROR', `Selecione um produto ou servico no item ${index + 1}.`)
+      throw new ErpDomainError('VALIDATION_ERROR', `Selecione um produto ou serviço no item ${index + 1}.`)
     }
 
     const quantidade = Number(String(item.quantidade ?? 1).replace(',', '.'))
@@ -275,7 +276,7 @@ function normalizePurchaseItems(values: Record<string, unknown>): PurchaseItemIn
       ? null
       : Number(String(item.percentual_desconto).replace(',', '.'))
     if (!Number.isFinite(quantidade) || quantidade <= 0) throw new ErpDomainError('VALIDATION_ERROR', `Quantidade do item ${index + 1} invalida.`)
-    if (!Number.isFinite(valorUnitario) || valorUnitario < 0) throw new ErpDomainError('VALIDATION_ERROR', `Valor unitario do item ${index + 1} invalido.`)
+    if (!Number.isFinite(valorUnitario) || valorUnitario < 0) throw new ErpDomainError('VALIDATION_ERROR', `Valor unitário do item ${index + 1} invalido.`)
     if (percentual != null && (!Number.isFinite(percentual) || percentual < 0 || percentual > 100)) {
       throw new ErpDomainError('VALIDATION_ERROR', `Desconto percentual do item ${index + 1} invalido.`)
     }
@@ -320,7 +321,7 @@ async function ensureFinancialAccountId(
          AND excluido_em IS NULL`,
       [tenantId, requested],
     )
-    if (!selected.rows[0]) throw new ErpDomainError('VALIDATION_ERROR', 'Conta financeira invalida ou inativa.')
+    if (!selected.rows[0]) throw new ErpDomainError('VALIDATION_ERROR', 'Conta financeira inválida ou inativa.')
     return requested
   }
 
@@ -526,7 +527,7 @@ function appendTipoFilter(params: unknown[], filters?: Record<string, string>) {
 }
 
 function assertRequired(value: unknown, label: string) {
-  if (!text(value)) throw new ErpDomainError('VALIDATION_ERROR', `${label} e obrigatorio.`)
+  if (!text(value)) throw new ErpDomainError('VALIDATION_ERROR', `${label} é obrigatório.`)
 }
 
 async function resolveCategoryId(
@@ -565,9 +566,9 @@ function validateSaleInstallments(sale: SaleRow, installments: NormalizedInstall
   const numbers = new Set<number>()
   for (const installment of installments) {
     if (!Number.isInteger(installment.numeroParcela) || installment.numeroParcela <= 0) {
-      throw new ErpDomainError('VALIDATION_ERROR', 'Numero de parcela invalido.')
+      throw new ErpDomainError('VALIDATION_ERROR', 'Número de parcela inválido.')
     }
-    if (numbers.has(installment.numeroParcela)) throw new ErpDomainError('VALIDATION_ERROR', 'Existem parcelas com o mesmo numero.')
+    if (numbers.has(installment.numeroParcela)) throw new ErpDomainError('VALIDATION_ERROR', 'Existem parcelas com o mesmo número.')
     numbers.add(installment.numeroParcela)
   }
 
@@ -586,7 +587,7 @@ function normalizePaymentConditionInstallments(sale: SaleRow): NormalizedInstall
     return validateSaleInstallments(sale, [{
       numeroParcela: 1,
       descricao: 'Parcela 1',
-      dataVencimento: dateText(sale.data_venda) || new Date().toISOString().slice(0, 10),
+      dataVencimento: dateText(sale.data_venda) || erpToday(),
       valor: money(sale.total),
     }])
   }
@@ -640,9 +641,9 @@ function validatePurchaseInstallments(purchase: PurchaseRow, installments: Norma
   const numbers = new Set<number>()
   for (const installment of installments) {
     if (!Number.isInteger(installment.numeroParcela) || installment.numeroParcela <= 0 || installment.numeroParcela > 48) {
-      throw new ErpDomainError('VALIDATION_ERROR', 'Numero de parcela invalido.')
+      throw new ErpDomainError('VALIDATION_ERROR', 'Número de parcela inválido.')
     }
-    if (numbers.has(installment.numeroParcela)) throw new ErpDomainError('VALIDATION_ERROR', 'Existem parcelas com o mesmo numero.')
+    if (numbers.has(installment.numeroParcela)) throw new ErpDomainError('VALIDATION_ERROR', 'Existem parcelas com o mesmo número.')
     numbers.add(installment.numeroParcela)
     if (!dateText(installment.dataVencimento)) throw new ErpDomainError('VALIDATION_ERROR', `Vencimento da parcela ${installment.numeroParcela} invalido.`)
     if (money(installment.valor) <= 0) throw new ErpDomainError('VALIDATION_ERROR', `Valor da parcela ${installment.numeroParcela} invalido.`)
@@ -683,7 +684,7 @@ function normalizePurchaseInstallments(purchase: PurchaseRow): NormalizedInstall
   return validatePurchaseInstallments(purchase, [{
     numeroParcela: 1,
     descricao: 'Parcela 1',
-    dataVencimento: dateText(purchase.data_compra) || new Date().toISOString().slice(0, 10),
+    dataVencimento: dateText(purchase.data_compra) || erpToday(),
     valor: money(purchase.total),
   }])
 }
@@ -761,7 +762,7 @@ export async function createOrUpdatePurchasePayable(
   if (existing) {
     if (existing.payable.status === 'pago' || existing.payable.status === 'parcial') {
       if (type !== existing.payable.tipo_lancamento) {
-        throw new ErpDomainError('VALIDATION_ERROR', 'Nao e possivel alterar a natureza de uma conta que ja possui pagamento.')
+        throw new ErpDomainError('VALIDATION_ERROR', 'Não e possível alterar a natureza de uma conta que já possui pagamento.')
       }
       return existing
     }
@@ -1122,7 +1123,7 @@ export async function getErpSaleDetails(tenantId: number, idValue: string | numb
        FROM erp.vendas_eventos WHERE empresa_id = $1 AND venda_id = $2 ORDER BY criado_em DESC`, [tenantId, id],
     ),
   ])
-  if (!sales[0]) throw new ErpDomainError('VALIDATION_ERROR', 'Venda nao encontrada.')
+  if (!sales[0]) throw new ErpDomainError('VALIDATION_ERROR', 'Venda não encontrada.')
   return { sale: sales[0], items, installments, events }
 }
 
@@ -1161,7 +1162,7 @@ export async function getErpPurchaseDetails(tenantId: number, idValue: string | 
        ORDER BY criado_em DESC`, [tenantId, id],
     ),
   ])
-  if (!purchases[0]) throw new ErpDomainError('VALIDATION_ERROR', 'Compra nao encontrada.')
+  if (!purchases[0]) throw new ErpDomainError('VALIDATION_ERROR', 'Compra não encontrada.')
   return { purchase: purchases[0], items, installments, events, invoices }
 }
 
@@ -1178,11 +1179,11 @@ export async function importErpPurchaseInvoice(input: {
     const supplierData = jsonObject(values.fornecedor) as Record<string, unknown>
     const supplierName = optionalText(supplierData.nome)
     const supplierDocument = text(supplierData.documento).replace(/\D/g, '')
-    if (!supplierName || !supplierDocument) throw new ErpDomainError('VALIDATION_ERROR', 'Fornecedor da NF-e invalido.')
+    if (!supplierName || !supplierDocument) throw new ErpDomainError('VALIDATION_ERROR', 'Fornecedor da NF-e inválido.')
     const total = money(values.valor_total)
-    const issueDate = dateText(values.data_emissao) || new Date().toISOString().slice(0, 10)
+    const issueDate = dateText(values.data_emissao) || erpToday()
     const recipientDocument = text(values.destinatario_documento).replace(/\D/g, '')
-    if (!recipientDocument) throw new ErpDomainError('VALIDATION_ERROR', 'Destinatario da NF-e nao identificado.')
+    if (!recipientDocument) throw new ErpDomainError('VALIDATION_ERROR', 'Destinatario da NF-e não identificado.')
 
     const fiscalConfig = await client.query(
       `SELECT regexp_replace(cnpj, '\\D', '', 'g') AS cnpj
@@ -1196,7 +1197,7 @@ export async function importErpPurchaseInvoice(input: {
       throw new ErpDomainError('VALIDATION_ERROR', 'Configure o CNPJ da empresa antes de importar NF-e de entrada.')
     }
     if (configuredDocument !== recipientDocument) {
-      throw new ErpDomainError('VALIDATION_ERROR', 'A NF-e nao foi emitida para o CNPJ configurado neste tenant.')
+      throw new ErpDomainError('VALIDATION_ERROR', 'A NF-e não foi emitida para o CNPJ configurado neste tenant.')
     }
 
     const existingResult = await client.query(
@@ -1232,7 +1233,7 @@ export async function importErpPurchaseInvoice(input: {
     const supplier = supplierResult.rows[0]
 
     const items = Array.isArray(values.itens) ? values.itens as Record<string, unknown>[] : []
-    if (items.length === 0) throw new ErpDomainError('VALIDATION_ERROR', 'A NF-e nao possui itens validos.')
+    if (items.length === 0) throw new ErpDomainError('VALIDATION_ERROR', 'A NF-e não possui itens válidos.')
     const generatePurchase = booleanValue(input.values.gerar_compra ?? true)
     const generateFinancial = booleanValue(input.values.gera_financeiro ?? true)
     const additionalTaxes = Math.max(0, Number((
@@ -1257,9 +1258,9 @@ export async function importErpPurchaseInvoice(input: {
           [input.tenantId, requestedPurchaseId, supplier.id, total],
         )
         purchase = existingPurchase.rows[0] as PurchaseRow | undefined || null
-        if (!purchase) throw new ErpDomainError('VALIDATION_ERROR', 'A compra escolhida nao pertence ao fornecedor ou possui total diferente da NF-e.')
+        if (!purchase) throw new ErpDomainError('VALIDATION_ERROR', 'A compra escolhida não pertence ao fornecedor ou possui total diferente da NF-e.')
         if (Math.abs(money(purchase.subtotal) - money(values.valor_produtos)) > 0.02) {
-          throw new ErpDomainError('VALIDATION_ERROR', 'O subtotal da compra escolhida nao confere com os produtos da NF-e.')
+          throw new ErpDomainError('VALIDATION_ERROR', 'O subtotal da compra escolhida não confere com os produtos da NF-e.')
         }
       }
 
@@ -1498,7 +1499,7 @@ export async function listErpEntityPage(input: ListInput) {
 
 async function listEntityRoleRecords(input: ListInput): Promise<ErpEntityRecord[]> {
   const params: unknown[] = [input.tenantId]
-  if (!isEntityRoleModule(input.entityId)) throw new ErpDomainError('VALIDATION_ERROR', 'Tipo de entidade invalido.')
+  if (!isEntityRoleModule(input.entityId)) throw new ErpDomainError('VALIDATION_ERROR', 'Tipo de entidade inválido.')
   const roleColumn = entityRoleColumn(input.entityId)
   const rows = await runQuery<Record<string, unknown>>(
     `WITH rows AS (
@@ -1815,7 +1816,7 @@ async function listPurchaseRecords(input: ListInput): Promise<ErpEntityRecord[]>
     total: Number(row.total ?? 0),
     tipo_compra: String(row.tipo_compra ?? ''),
     tipo_movimento: String(row.tipo_movimento ?? ''),
-    financeiro: row.gera_financeiro ? (row.tipo_lancamento === 'previsao' ? 'Previsao' : row.tipo_lancamento === 'efetivo' ? 'Efetivo' : 'Ao efetivar') : 'Nao gera',
+    financeiro: row.gera_financeiro ? (row.tipo_lancamento === 'previsao' ? 'Previsao' : row.tipo_lancamento === 'efetivo' ? 'Efetivo' : 'Ao efetivar') : 'Não gera',
     status: String(row.status ?? ''),
     __total: Number(row.__total ?? 0),
   }))
@@ -2106,7 +2107,7 @@ const editableModuleTables = {
 type EditableModuleId = keyof typeof editableModuleTables
 
 function assertEditableModule(entityId: ErpConnectedModuleId): asserts entityId is EditableModuleId {
-  if (!(entityId in editableModuleTables)) throw new ErpDomainError('VALIDATION_ERROR', 'Este modulo nao permite edicao por esta rota.')
+  if (!(entityId in editableModuleTables)) throw new ErpDomainError('VALIDATION_ERROR', 'Este módulo não permite edição por esta rota.')
 }
 
 export async function getErpEntityRecord(input: {
@@ -2155,7 +2156,7 @@ export async function getErpEntityRecord(input: {
   }
 
   const rows = await runQuery<Record<string, unknown>>(sql, [input.tenantId, id])
-  if (!rows[0]) throw new ErpDomainError('VALIDATION_ERROR', 'Registro nao encontrado.')
+  if (!rows[0]) throw new ErpDomainError('VALIDATION_ERROR', 'Registro não encontrado.')
   return Object.fromEntries(Object.entries(rows[0]).map(([key, value]) => [
     key,
     value instanceof Date ? value.toISOString().slice(0, 10) : value,
@@ -2191,9 +2192,9 @@ export async function updateErpEntityRecord(input: UpdateInput): Promise<ErpEnti
       [input.tenantId, id],
     )
     const current = currentResult.rows[0]
-    if (!current) throw new ErpDomainError('VALIDATION_ERROR', 'Registro nao encontrado.')
+    if (!current) throw new ErpDomainError('VALIDATION_ERROR', 'Registro não encontrado.')
     if (Number(current.versao) !== input.expectedVersion) {
-      throw new ErpDomainError('VALIDATION_ERROR', 'CONFLITO_VERSAO: este registro foi alterado por outra pessoa. Recarregue a pagina.')
+      throw new ErpDomainError('VALIDATION_ERROR', 'CONFLITO_VERSAO: este registro foi alterado por outra pessoa. Recarregue a página.')
     }
 
     let result: { rows: Record<string, unknown>[] }
@@ -2224,7 +2225,7 @@ export async function updateErpEntityRecord(input: UpdateInput): Promise<ErpEnti
           money(input.values.ponto_reposicao), input.actorId, input.expectedVersion],
       )
     } else if (input.entityId === 'servicos') {
-      assertRequired(input.values.nome, 'Nome do servico')
+      assertRequired(input.values.nome, 'Nome do serviço')
       const categoryId = await resolveServiceCategory(client, input)
       result = await client.query(
         `UPDATE erp.servicos SET nome = $3, codigo = $4, descricao = $5, preco = $6, custo = $7,
@@ -2269,7 +2270,7 @@ export async function updateErpEntityRecord(input: UpdateInput): Promise<ErpEnti
     }
 
     const updated = result.rows[0]
-    if (!updated) throw new ErpDomainError('VALIDATION_ERROR', 'CONFLITO_VERSAO: este registro foi alterado por outra pessoa. Recarregue a pagina.')
+    if (!updated) throw new ErpDomainError('VALIDATION_ERROR', 'CONFLITO_VERSAO: este registro foi alterado por outra pessoa. Recarregue a página.')
     const relations = isEntityRoleModule(input.entityId)
       ? await saveRegistrationRelations(client, input.tenantId, id, input.actorId, input.values) : undefined
     await appendRegistrationEvent(client, { ...input, entityId, id }, 'atualizado', Number(updated.versao), current, { ...updated, relations })
@@ -2289,7 +2290,7 @@ export async function deactivateErpEntityRecord(input: IdActionInput & { entityI
       [input.tenantId, id],
     )
     const current = currentResult.rows[0]
-    if (!current) throw new ErpDomainError('VALIDATION_ERROR', 'Registro nao encontrado.')
+    if (!current) throw new ErpDomainError('VALIDATION_ERROR', 'Registro não encontrado.')
     if (Number(current.versao) !== input.expectedVersion) throw new ErpDomainError('VALIDATION_ERROR', 'CONFLITO_VERSAO: este registro foi alterado por outra pessoa.')
     const result = await client.query(
       `UPDATE erp.${table} SET ativo = false, versao = versao + 1, atualizado_por = $3
@@ -2332,18 +2333,18 @@ export async function getErpEntitySummary(tenantId: number, entityId: ErpConnect
   const row = (await runQuery<Record<string, unknown>>(sql, [tenantId]))[0] || {}
   const currency = (value: unknown) => new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(Number(value || 0))
   if (entityId === 'produtos' || entityId === 'servicos') return { metrics: [
-    { label: entityId === 'produtos' ? 'SKUs ativos' : 'Servicos ativos', value: String(row.ativos || 0), detail: 'catalogo conectado', tone: 'success' },
-    { label: 'Categorias', value: String(row.categorias || 0), detail: 'classificacao em uso' },
-    { label: 'Preco medio', value: currency(row.media), detail: 'itens ativos' },
+    { label: entityId === 'produtos' ? 'SKUs ativos' : 'Serviços ativos', value: String(row.ativos || 0), detail: 'catálogo conectado', tone: 'success' },
+    { label: 'Categorias', value: String(row.categorias || 0), detail: 'classificação em uso' },
+    { label: 'Preço médio', value: currency(row.media), detail: 'itens ativos' },
   ] }
   if (entityId === 'categorias') return { metrics: [
     { label: 'Categorias ativas', value: String(row.ativos || 0), detail: 'em uso no ERP' },
-    { label: 'Sem itens', value: String(row.sem_itens || 0), detail: 'avaliar classificacao', tone: 'warning' },
+    { label: 'Sem itens', value: String(row.sem_itens || 0), detail: 'avaliar classificação', tone: 'warning' },
     { label: 'Tipos em uso', value: String(row.tipos || 0), detail: 'finalidades distintas' },
   ] }
   if (entityId === 'contas-financeiras') return { metrics: [
-    { label: 'Contas ativas', value: String(row.ativos || 0), detail: 'disponiveis para baixas' },
-    { label: 'Conta padrao', value: String(row.padrao || 0), detail: 'selecionada automaticamente' },
+    { label: 'Contas ativas', value: String(row.ativos || 0), detail: 'disponíveis para baixas' },
+    { label: 'Conta padrão', value: String(row.padrao || 0), detail: 'selecionada automaticamente' },
     { label: 'Saldo inicial', value: currency(row.saldo), detail: 'soma das contas ativas' },
   ] }
   const roleLabel = entityId === 'clientes' ? 'Clientes' : entityId === 'fornecedores' ? 'Fornecedores' : 'Vendedores'
@@ -2486,14 +2487,14 @@ export async function confirmErpSale(input: ConfirmSaleInput): Promise<ConfirmEr
       [input.tenantId, input.saleId],
     )
     const sale = saleResult.rows[0] as SaleRow | undefined
-    if (!sale) throw new ErpDomainError('VALIDATION_ERROR', 'Venda nao encontrada.')
+    if (!sale) throw new ErpDomainError('VALIDATION_ERROR', 'Venda não encontrada.')
     if(input.expectedVersion !== undefined && Number(saleResult.rows[0].versao)!==input.expectedVersion)throw new ErpDomainError('VERSION_CONFLICT','Venda alterada; atualize antes de continuar.',409,undefined,'refresh')
     if (sale.tipo_documento === 'orcamento') {
-      throw new ErpDomainError('VALIDATION_ERROR', 'Converta o orcamento em venda antes de confirmar o financeiro.')
+      throw new ErpDomainError('VALIDATION_ERROR', 'Converta o orçamento em venda antes de confirmar o financeiro.')
     }
 
     if (sale.status === 'cancelada') {
-      throw new ErpDomainError('VALIDATION_ERROR', 'Venda cancelada nao pode ser confirmada.')
+      throw new ErpDomainError('VALIDATION_ERROR', 'Venda cancelada não pode ser confirmada.')
     }
 
     const existingFinancial = await fetchReceivableForSale(client, input.tenantId, sale.id)
@@ -2505,7 +2506,7 @@ export async function confirmErpSale(input: ConfirmSaleInput): Promise<ConfirmEr
     }
 
     if (sale.status !== 'rascunho') {
-      throw new ErpDomainError('VALIDATION_ERROR', 'Venda ja saiu de rascunho e ainda nao possui contas a receber.')
+      throw new ErpDomainError('VALIDATION_ERROR', 'Venda já saiu de rascunho e ainda não possui contas a receber.')
     }
 
     await assertErpPeriodOpen(client, { tenantId: input.tenantId, module: 'vendas', date: dateText(sale.data_venda)! })
@@ -2539,7 +2540,7 @@ export async function confirmErpSale(input: ConfirmSaleInput): Promise<ConfirmEr
     )
     const customer = customerResult.rows[0] as Record<string, unknown> | undefined
     if (!customer) {
-      throw new ErpDomainError('VALIDATION_ERROR', 'Cliente da venda nao foi encontrado ou nao esta marcado como cliente.')
+      throw new ErpDomainError('VALIDATION_ERROR', 'Cliente da venda não foi encontrado ou não esta marcado como cliente.')
     }
 
     const itemsResult = await client.query(
@@ -2640,7 +2641,7 @@ export async function confirmErpSale(input: ConfirmSaleInput): Promise<ConfirmEr
         `Venda ${updatedSale.numero || updatedSale.id}`,
         updatedSale.numero,
         dateText(updatedSale.data_competencia),
-        dateText(updatedSale.data_venda) || new Date().toISOString().slice(0, 10),
+        dateText(updatedSale.data_venda) || erpToday(),
         money(updatedSale.total),
         updatedSale.categoria_id,
         updatedSale.centro_custo_id,
@@ -2709,7 +2710,7 @@ export async function cancelErpSale(input: IdActionInput & { reason?: string | n
       [input.tenantId, input.id],
     )
     const sale = saleResult.rows[0] as { id: string | number; status: string } | undefined
-    if (!sale) throw new ErpDomainError('VALIDATION_ERROR', 'Venda nao encontrada.')
+    if (!sale) throw new ErpDomainError('VALIDATION_ERROR', 'Venda não encontrada.')
     if(input.expectedVersion !== undefined && Number(saleResult.rows[0].versao)!==input.expectedVersion)throw new ErpDomainError('VERSION_CONFLICT','Venda alterada; atualize antes de continuar.',409,undefined,'refresh')
     if (sale.status === 'cancelada') return { id: String(sale.id), status: 'cancelada' }
 
@@ -2741,7 +2742,7 @@ export async function cancelErpSale(input: IdActionInput & { reason?: string | n
        LIMIT 1`,
       [input.tenantId, sale.id],
     )
-    if (chargeResult.rows[0]) throw new ErpDomainError('VALIDATION_ERROR', 'Cancele a cobranca ativa antes de cancelar a venda.')
+    if (chargeResult.rows[0]) throw new ErpDomainError('VALIDATION_ERROR', 'Cancele a cobrança ativa antes de cancelar a venda.')
 
     const paymentResult = await client.query(
       `SELECT pagamentos.id
@@ -2760,7 +2761,7 @@ export async function cancelErpSale(input: IdActionInput & { reason?: string | n
        LIMIT 1`,
       [input.tenantId, sale.id],
     )
-    if (paymentResult.rows[0]) throw new ErpDomainError('VALIDATION_ERROR', 'Venda com pagamento nao pode ser cancelada sem estorno.')
+    if (paymentResult.rows[0]) throw new ErpDomainError('VALIDATION_ERROR', 'Venda com pagamento não pode ser cancelada sem estorno.')
 
     await releaseStockForSale(client, {
       tenantId: input.tenantId,
@@ -2842,8 +2843,8 @@ export async function confirmErpPurchase(input: IdActionInput): Promise<ConfirmE
       [input.tenantId, input.id],
     )
     const purchase = purchaseResult.rows[0] as PurchaseRow | undefined
-    if (!purchase) throw new ErpDomainError('VALIDATION_ERROR', 'Compra nao encontrada.')
-    if (purchase.status === 'cancelada') throw new ErpDomainError('VALIDATION_ERROR', 'Compra cancelada nao pode ser confirmada.')
+    if (!purchase) throw new ErpDomainError('VALIDATION_ERROR', 'Compra não encontrada.')
+    if (purchase.status === 'cancelada') throw new ErpDomainError('VALIDATION_ERROR', 'Compra cancelada não pode ser confirmada.')
     if (!purchase.fornecedor_id) throw new ErpDomainError('VALIDATION_ERROR', 'Compra precisa ter fornecedor para ser confirmada.')
     if (money(purchase.total) <= 0) throw new ErpDomainError('VALIDATION_ERROR', 'Compra precisa ter total maior que zero para ser confirmada.')
 
@@ -2938,7 +2939,7 @@ export async function cancelErpPurchase(input: IdActionInput) {
       [input.tenantId, input.id],
     )
     const purchase = purchaseResult.rows[0] as { id: string | number; status: string } | undefined
-    if (!purchase) throw new ErpDomainError('VALIDATION_ERROR', 'Compra nao encontrada.')
+    if (!purchase) throw new ErpDomainError('VALIDATION_ERROR', 'Compra não encontrada.')
     if (purchase.status === 'cancelada') return { id: String(purchase.id), status: 'cancelada' }
 
     const invoiceResult = await client.query(
@@ -2970,7 +2971,7 @@ export async function cancelErpPurchase(input: IdActionInput) {
        LIMIT 1`,
       [input.tenantId, purchase.id],
     )
-    if (paymentResult.rows[0]) throw new ErpDomainError('VALIDATION_ERROR', 'Compra com pagamento nao pode ser cancelada sem estorno.')
+    if (paymentResult.rows[0]) throw new ErpDomainError('VALIDATION_ERROR', 'Compra com pagamento não pode ser cancelada sem estorno.')
 
     await reverseStockForPurchase(client, {
       tenantId: input.tenantId,
@@ -3035,7 +3036,7 @@ function paymentNetValue(amount: number, values: Record<string, unknown>) {
   const desconto = paymentAdjustment(values.desconto)
   const taxa = paymentAdjustment(values.taxa)
   const netValue = paymentTotal(amount, juros, multa, desconto, taxa, 'receber')
-  if (netValue < 0) throw new ErpDomainError('VALIDATION_ERROR', 'Desconto e taxa nao podem superar o valor recebido.')
+  if (netValue < 0) throw new ErpDomainError('VALIDATION_ERROR', 'Desconto e taxa não podem superar o valor recebido.')
   return netValue
 }
 
@@ -3045,7 +3046,7 @@ function payablePaymentNetValue(amount: number, values: Record<string, unknown>)
   const desconto = paymentAdjustment(values.desconto)
   const taxa = paymentAdjustment(values.taxa)
   const netValue = paymentTotal(amount, juros, multa, desconto, taxa, 'pagar')
-  if (netValue < 0) throw new ErpDomainError('VALIDATION_ERROR', 'O desconto nao pode superar o valor do pagamento.')
+  if (netValue < 0) throw new ErpDomainError('VALIDATION_ERROR', 'O desconto não pode superar o valor do pagamento.')
   return netValue
 }
 
@@ -3135,7 +3136,7 @@ export async function settleReceivableInstallment(input: SettleInstallmentInput)
     )
     const existingPayment = existingPaymentResult.rows[0] as Record<string, unknown> | undefined
     if (existingPayment) {
-      if (existingPayment.tipo !== 'receber' || String(existingPayment.conta_receber_parcela_id) !== String(input.id)) throw new ErpDomainError('IDEMPOTENCY_CONFLICT', 'Esta identificacao ja foi usada em outra baixa.', 409)
+      if (existingPayment.tipo !== 'receber' || String(existingPayment.conta_receber_parcela_id) !== String(input.id)) throw new ErpDomainError('IDEMPOTENCY_CONFLICT', 'Esta identificação já foi usada em outra baixa.', 409)
       assertSettlementReplay(existingPayment.metadata, requestIdentity)
     }
     const installmentResult = await client.query(
@@ -3163,17 +3164,17 @@ export async function settleReceivableInstallment(input: SettleInstallmentInput)
       [input.tenantId, input.id],
     )
     const installment = installmentResult.rows[0] as Record<string, unknown> | undefined
-    if (!installment) throw new ErpDomainError('VALIDATION_ERROR', 'Parcela a receber nao encontrada.')
+    if (!installment) throw new ErpDomainError('VALIDATION_ERROR', 'Parcela a receber não encontrada.')
     if (existingPayment) return {
       payment: { id: String(existingPayment.id), valor: existingPayment.valor, valor_liquido: existingPayment.valor_liquido },
       installment: { id: String(installment.id), conta_receber_id: String(installment.conta_receber_id), valor: installment.valor, valor_pago: installment.valor_pago, status: installment.status },
     }
-    if (installment.status === 'cancelado') throw new ErpDomainError('VALIDATION_ERROR', 'Parcela cancelada nao pode ser baixada.')
-    if (installment.status === 'pago') throw new ErpDomainError('VALIDATION_ERROR', 'Parcela ja esta paga.')
+    if (installment.status === 'cancelado') throw new ErpDomainError('VALIDATION_ERROR', 'Parcela cancelada não pode ser baixada.')
+    if (installment.status === 'pago') throw new ErpDomainError('VALIDATION_ERROR', 'Parcela já esta paga.')
 
     const remaining = money(installment.saldo)
     const amount = requestIdentity.amount === 'remaining' ? remaining : paymentAdjustment(input.values.valor)
-    if (amount <= 0 || amount > remaining) throw new ErpDomainError('VALIDATION_ERROR', 'Valor da baixa invalido.')
+    if (amount <= 0 || amount > remaining) throw new ErpDomainError('VALIDATION_ERROR', 'Valor da baixa inválido.')
 
     const financialAccountId = await ensureFinancialAccountId(
       client,
@@ -3182,7 +3183,7 @@ export async function settleReceivableInstallment(input: SettleInstallmentInput)
       input.values.conta_financeira_id || installment.conta_financeira_id,
     )
     const methodId = paymentMethodId(input.values.metodo_pagamento_id || installment.metodo_pagamento_id)
-    const paymentDate = dateText(input.values.data_pagamento) || new Date().toISOString().slice(0, 10)
+    const paymentDate = dateText(input.values.data_pagamento) || erpToday()
     await assertErpPeriodOpen(client, { tenantId: input.tenantId, module: 'financeiro', date: paymentDate })
     const netValue = paymentNetValue(amount, input.values)
 
@@ -3267,7 +3268,7 @@ export async function settlePayableInstallment(input: SettleInstallmentInput) {
     )
     const existingPayment = existingPaymentResult.rows[0] as Record<string, unknown> | undefined
     if (existingPayment) {
-      if (existingPayment.tipo !== 'pagar' || String(existingPayment.conta_pagar_parcela_id) !== String(input.id)) throw new ErpDomainError('IDEMPOTENCY_CONFLICT', 'Esta identificacao ja foi usada em outra baixa.', 409)
+      if (existingPayment.tipo !== 'pagar' || String(existingPayment.conta_pagar_parcela_id) !== String(input.id)) throw new ErpDomainError('IDEMPOTENCY_CONFLICT', 'Esta identificação já foi usada em outra baixa.', 409)
       assertSettlementReplay(existingPayment.metadata, requestIdentity)
     }
     const installmentResult = await client.query(
@@ -3296,18 +3297,18 @@ export async function settlePayableInstallment(input: SettleInstallmentInput) {
       [input.tenantId, input.id],
     )
     const installment = installmentResult.rows[0] as Record<string, unknown> | undefined
-    if (!installment) throw new ErpDomainError('VALIDATION_ERROR', 'Parcela a pagar nao encontrada.')
+    if (!installment) throw new ErpDomainError('VALIDATION_ERROR', 'Parcela a pagar não encontrada.')
     if (existingPayment) return {
       payment: { id: String(existingPayment.id), valor: existingPayment.valor, valor_liquido: existingPayment.valor_liquido },
       installment: { id: String(installment.id), conta_pagar_id: String(installment.conta_pagar_id), valor: installment.valor, valor_pago: installment.valor_pago, status: installment.status },
     }
-    if (installment.status === 'cancelado') throw new ErpDomainError('VALIDATION_ERROR', 'Parcela cancelada nao pode ser baixada.')
-    if (installment.status === 'pago') throw new ErpDomainError('VALIDATION_ERROR', 'Parcela ja esta paga.')
-    if (installment.tipo_lancamento === 'previsao') throw new ErpDomainError('VALIDATION_ERROR', 'Efetive a previsao antes de registrar o pagamento.')
+    if (installment.status === 'cancelado') throw new ErpDomainError('VALIDATION_ERROR', 'Parcela cancelada não pode ser baixada.')
+    if (installment.status === 'pago') throw new ErpDomainError('VALIDATION_ERROR', 'Parcela já esta paga.')
+    if (installment.tipo_lancamento === 'previsao') throw new ErpDomainError('VALIDATION_ERROR', 'Efetive a previsão antes de registrar o pagamento.')
 
     const remaining = money(installment.saldo)
     const amount = requestIdentity.amount === 'remaining' ? remaining : paymentAdjustment(input.values.valor)
-    if (amount <= 0 || amount > remaining) throw new ErpDomainError('VALIDATION_ERROR', 'Valor da baixa invalido.')
+    if (amount <= 0 || amount > remaining) throw new ErpDomainError('VALIDATION_ERROR', 'Valor da baixa inválido.')
 
     const financialAccountId = await ensureFinancialAccountId(
       client,
@@ -3316,7 +3317,7 @@ export async function settlePayableInstallment(input: SettleInstallmentInput) {
       input.values.conta_financeira_id || installment.conta_financeira_id,
     )
     const methodId = paymentMethodId(input.values.metodo_pagamento_id || installment.metodo_pagamento_id)
-    const paymentDate = dateText(input.values.data_pagamento) || new Date().toISOString().slice(0, 10)
+    const paymentDate = dateText(input.values.data_pagamento) || erpToday()
     await assertErpPeriodOpen(client, { tenantId: input.tenantId, module: 'financeiro', date: paymentDate })
     const netValue = payablePaymentNetValue(amount, input.values)
 
@@ -3416,8 +3417,8 @@ export async function reverseErpPayment(input: ReversePaymentInput) {
       [input.tenantId, input.id],
     )
     const payment = paymentResult.rows[0] as Record<string, unknown> | undefined
-    if (!payment) throw new ErpDomainError('VALIDATION_ERROR', 'Pagamento nao encontrado.')
-    if (payment.estorno_de_pagamento_id) throw new ErpDomainError('VALIDATION_ERROR', 'Um estorno nao pode ser estornado diretamente.')
+    if (!payment) throw new ErpDomainError('VALIDATION_ERROR', 'Pagamento não encontrado.')
+    if (payment.estorno_de_pagamento_id) throw new ErpDomainError('VALIDATION_ERROR', 'Um estorno não pode ser estornado diretamente.')
 
     if (payment.estornado_em) {
       const existingReversal = await client.query(
@@ -3433,7 +3434,7 @@ export async function reverseErpPayment(input: ReversePaymentInput) {
       return { payment, reversal: existingReversal.rows[0] || null }
     }
 
-    const reversalDate = new Date().toISOString().slice(0, 10)
+    const reversalDate = erpToday()
     await assertErpPeriodOpen(client, { tenantId: input.tenantId, module: 'financeiro', date: reversalDate })
 
     const receivableInstallmentId = payment.conta_receber_parcela_id
@@ -3523,7 +3524,7 @@ export async function reverseErpPayment(input: ReversePaymentInput) {
 
 async function createEntityRoleRecord(client: SQLClient, input: CreateInput) {
   assertRequired(input.values.nome, 'Nome')
-  if (!isEntityRoleModule(input.entityId)) throw new ErpDomainError('VALIDATION_ERROR', 'Tipo de entidade invalido.')
+  if (!isEntityRoleModule(input.entityId)) throw new ErpDomainError('VALIDATION_ERROR', 'Tipo de entidade inválido.')
   const category = optionalText(input.values.categoria)
   const result = await client.query(
     `INSERT INTO erp.entidades (
@@ -3614,7 +3615,7 @@ async function resolveServiceCategory(client: Pick<SQLClient, 'query'>, input: C
 }
 
 async function createServiceRecord(client: SQLClient, input: CreateInput) {
-  assertRequired(input.values.nome, 'Nome do servico')
+  assertRequired(input.values.nome, 'Nome do serviço')
   const categoryId = await resolveServiceCategory(client, input)
   const result = await client.query(
     `INSERT INTO erp.servicos (
@@ -3711,7 +3712,7 @@ export async function createSaleRecord(client: SQLClient, input: CreateInput) {
   const documentType = ['orcamento', 'pedido', 'venda'].includes(text(input.values.tipo_documento))
     ? text(input.values.tipo_documento)
     : 'venda'
-  const saleDate = dateText(input.values.data_venda) || new Date().toISOString().slice(0, 10)
+  const saleDate = dateText(input.values.data_venda) || erpToday()
   const numberPrefix = documentType === 'orcamento' ? 'ORC' : documentType === 'pedido' ? 'PED' : 'VEN'
   const number = optionalText(input.values.numero) || `${numberPrefix}-${Date.now()}`
 
@@ -3725,7 +3726,7 @@ export async function createSaleRecord(client: SQLClient, input: CreateInput) {
      LIMIT 1`,
     [input.tenantId, customerId],
   )
-  if (!customerResult.rows[0]) throw new ErpDomainError('VALIDATION_ERROR', 'Cliente nao encontrado.')
+  if (!customerResult.rows[0]) throw new ErpDomainError('VALIDATION_ERROR', 'Cliente não encontrado.')
 
   const rawItems = Array.isArray(input.values.itens) && input.values.itens.length > 0
     ? input.values.itens as Record<string, unknown>[]
@@ -3736,7 +3737,7 @@ export async function createSaleRecord(client: SQLClient, input: CreateInput) {
         quantidade: input.values.quantidade,
         valor_unitario: input.values.valor_unitario,
       }]
-  if (rawItems.length > 100) throw new ErpDomainError('VALIDATION_ERROR', 'A venda aceita no maximo 100 itens.')
+  if (rawItems.length > 100) throw new ErpDomainError('VALIDATION_ERROR', 'A venda aceita no máximo 100 itens.')
 
   const items: Array<{
     tipo: 'produto' | 'servico'
@@ -3755,14 +3756,14 @@ export async function createSaleRecord(client: SQLClient, input: CreateInput) {
     const unitValue = positiveMoney(raw.valor_unitario)
     const discount = money(raw.desconto)
     if (!Number.isFinite(quantity) || quantity <= 0) throw new ErpDomainError('VALIDATION_ERROR', `Quantidade do item ${index + 1} invalida.`)
-    if (!unitValue) throw new ErpDomainError('VALIDATION_ERROR', `Valor unitario do item ${index + 1} precisa ser maior que zero.`)
+    if (!unitValue) throw new ErpDomainError('VALIDATION_ERROR', `Valor unitário do item ${index + 1} precisa ser maior que zero.`)
     const catalog = await client.query(
       tipo === 'servico'
         ? `SELECT nome, custo FROM erp.servicos WHERE empresa_id = $1 AND id = $2 AND ativo = true AND excluido_em IS NULL`
         : `SELECT nome, custo FROM erp.produtos WHERE empresa_id = $1 AND id = $2 AND ativo = true AND excluido_em IS NULL`,
       [input.tenantId, itemId],
     )
-    if (!catalog.rows[0]) throw new ErpDomainError('VALIDATION_ERROR', `Item ${index + 1} nao encontrado.`)
+    if (!catalog.rows[0]) throw new ErpDomainError('VALIDATION_ERROR', `Item ${index + 1} não encontrado.`)
     const gross = lineTotal(quantity, unitValue)
     if (discount > gross) throw new ErpDomainError('VALIDATION_ERROR', `Desconto do item ${index + 1} supera o valor bruto.`)
     items.push({
@@ -3789,7 +3790,7 @@ export async function createSaleRecord(client: SQLClient, input: CreateInput) {
   const rawInstallments = Array.isArray(input.values.parcelas) && input.values.parcelas.length > 0
     ? input.values.parcelas as Record<string, unknown>[]
     : [{ numero_parcela: 1, descricao: 'Parcela 1', data_vencimento: dateText(input.values.data_vencimento) || saleDate, valor: total }]
-  if (rawInstallments.length > 48) throw new ErpDomainError('VALIDATION_ERROR', 'A condicao de pagamento aceita no maximo 48 parcelas.')
+  if (rawInstallments.length > 48) throw new ErpDomainError('VALIDATION_ERROR', 'A condição de pagamento aceita no máximo 48 parcelas.')
   const installments = rawInstallments.map((raw, index) => {
     const value = positiveMoney(raw.valor)
     const dueDate = dateText(raw.data_vencimento)
@@ -3935,8 +3936,8 @@ async function createPurchaseRecord(client: SQLClient, input: CreateInput) {
   const otherExpenses = money(input.values.outras_despesas)
   const retainedTaxes = money(input.values.impostos_retidos)
   const total = Number((subtotal - discount + freight + insurance + otherExpenses - retainedTaxes).toFixed(2))
-  if (total < 0) throw new ErpDomainError('VALIDATION_ERROR', 'Descontos e retencoes nao podem superar o valor da compra.')
-  const purchaseDate = dateText(input.values.data_compra) || new Date().toISOString().slice(0, 10)
+  if (total < 0) throw new ErpDomainError('VALIDATION_ERROR', 'Descontos e retencoes não podem superar o valor da compra.')
+  const purchaseDate = dateText(input.values.data_compra) || erpToday()
   const dueDate = dateText(input.values.data_vencimento) || purchaseDate
   const number = optionalText(input.values.numero) || `COM-${Date.now()}`
   const generateFinancial = booleanValue(input.values.gera_financeiro ?? true)
@@ -3954,7 +3955,7 @@ async function createPurchaseRecord(client: SQLClient, input: CreateInput) {
      LIMIT 1`,
     [input.tenantId, supplierId],
   )
-  if (!supplierResult.rows[0]) throw new ErpDomainError('VALIDATION_ERROR', 'Fornecedor nao encontrado.')
+  if (!supplierResult.rows[0]) throw new ErpDomainError('VALIDATION_ERROR', 'Fornecedor não encontrado.')
   const supplier = supplierResult.rows[0]
 
   const rawInstallments = Array.isArray(input.values.parcelas)
@@ -4126,7 +4127,7 @@ export async function updateErpSaleDraft(input: {
        WHERE empresa_id = $1 AND id = $2 AND excluido_em IS NULL FOR UPDATE`, [input.tenantId, id],
     )
     const current = currentResult.rows[0]
-    if (!current) throw new ErpDomainError('VALIDATION_ERROR', 'Venda nao encontrada.')
+    if (!current) throw new ErpDomainError('VALIDATION_ERROR', 'Venda não encontrada.')
     if (current.status !== 'rascunho') throw new ErpDomainError('VALIDATION_ERROR', 'Somente vendas em rascunho podem ser editadas.')
     if (Number(current.versao) !== input.expectedVersion) throw new ErpDomainError('VALIDATION_ERROR', 'CONFLITO_VERSAO: esta venda foi alterada por outra pessoa.')
 
@@ -4183,7 +4184,7 @@ export async function updateErpPurchaseDraft(input: {
        WHERE empresa_id = $1 AND id = $2 AND excluido_em IS NULL FOR UPDATE`, [input.tenantId, id],
     )
     const current = currentResult.rows[0]
-    if (!current) throw new ErpDomainError('VALIDATION_ERROR', 'Compra nao encontrada.')
+    if (!current) throw new ErpDomainError('VALIDATION_ERROR', 'Compra não encontrada.')
     if (current.status !== 'rascunho' || current.tipo_movimento !== 'cotacao') {
       throw new ErpDomainError('VALIDATION_ERROR', 'Somente cotacoes em rascunho podem ser editadas.')
     }
@@ -4270,11 +4271,11 @@ async function createManualPayableRecord(client: SQLClient, input: CreateInput):
   }
   const supplierId = numericId(input.values.fornecedor_id, 'Fornecedor')
   const description = optionalText(input.values.descricao)
-  if (!description) throw new ErpDomainError('VALIDATION_ERROR', 'Descricao e obrigatoria.')
+  if (!description) throw new ErpDomainError('VALIDATION_ERROR', 'Descrição é obrigatória.')
   const total = positiveMoney(input.values.valor_total ?? input.values.valor)
   if (!total) throw new ErpDomainError('VALIDATION_ERROR', 'Valor precisa ser maior que zero.')
   const categoryId = numericId(input.values.categoria_id, 'Categoria')
-  const competence = dateText(input.values.data_competencia) || new Date().toISOString().slice(0, 10)
+  const competence = dateText(input.values.data_competencia) || erpToday()
   const issueDate = dateText(input.values.data_emissao) || competence
   const firstDueDate = dateText(input.values.data_vencimento) || competence
 
@@ -4284,12 +4285,12 @@ async function createManualPayableRecord(client: SQLClient, input: CreateInput):
     [input.tenantId, supplierId],
   )
   const supplier = supplierResult.rows[0]
-  if (!supplier) throw new ErpDomainError('VALIDATION_ERROR', 'Fornecedor nao encontrado.')
+  if (!supplier) throw new ErpDomainError('VALIDATION_ERROR', 'Fornecedor não encontrado.')
 
   const rawInstallments = Array.isArray(input.values.parcelas) && input.values.parcelas.length > 0
     ? input.values.parcelas
     : [{ numero_parcela: 1, descricao: 'Parcela 1', data_vencimento: firstDueDate, valor: total }]
-  if (rawInstallments.length > 48) throw new ErpDomainError('VALIDATION_ERROR', 'A condicao de pagamento aceita no maximo 48 parcelas.')
+  if (rawInstallments.length > 48) throw new ErpDomainError('VALIDATION_ERROR', 'A condição de pagamento aceita no máximo 48 parcelas.')
   const installments = rawInstallments.map((raw, index) => {
     const row = raw as Record<string, unknown>
     const value = positiveMoney(row.valor)
@@ -4427,7 +4428,7 @@ export async function processErpFinancialRecurrences(input: {
   throughDate?: string
   limit?: number
 }) {
-  const throughDate = dateText(input.throughDate) || new Date().toISOString().slice(0, 10)
+  const throughDate = dateText(input.throughDate) || erpToday()
   const limit = Math.min(100, Math.max(1, Math.floor(Number(input.limit || 50))))
   return withTransaction(async (client) => {
     const recurrenceResult = await client.query(
@@ -4580,6 +4581,6 @@ async function fetchCreatedRecord(tenantId: number, entityId: ErpConnectedModule
   }
   const records = await listErpEntityRecords({ tenantId, entityId, page: 1, pageSize: 100 })
   const created = records.find((record) => record.id === String(id))
-  if (!created) throw new ErpDomainError('VALIDATION_ERROR', 'Registro criado, mas nao foi possivel recarrega-lo.')
+  if (!created) throw new ErpDomainError('VALIDATION_ERROR', 'Registro criado, mas não foi possível recarrega-lo.')
   return created
 }

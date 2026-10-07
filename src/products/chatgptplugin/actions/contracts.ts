@@ -30,7 +30,8 @@ export const proposalSchema = z.discriminatedUnion('tipo', [
   z.object({tipo:z.literal('orcamento'),dados:commercial}).strict(),
   z.object({tipo:z.literal('venda'),dados:commercial}).strict(),
   z.object({tipo:z.literal('editar_cliente'),dados:z.object({registro_id:z.number().int().positive(),nome:name.optional(),
-    tipo:z.enum(['fisica','juridica']).optional(),documento:z.string().trim().max(30).optional(),status:z.enum(['ativo','inativo']).optional()}).strict()
+    tipo:z.enum(['fisica','juridica']).optional(),documento:z.string().trim().max(30).optional(),status:z.enum(['ativo','inativo']).optional(),
+    email:z.string().email().max(254).optional(),telefone:z.string().trim().min(8).max(30).optional()}).strict()
     .refine(d=>Object.keys(d).length>1,'Informe ao menos uma alteração.')}).strict(),
   z.object({tipo:z.literal('editar_produto'),dados:z.object({registro_id:z.number().int().positive(),nome:name.optional(),
     sku:z.string().trim().max(60).optional(),preco:money.optional(),controla_estoque:z.enum(['sim','nao']).optional(),status:z.enum(['ativo','pausado']).optional()}).strict()

@@ -1,9 +1,10 @@
-import { isRetiredErpReport } from '@/products/erp/shared/reportCatalog'
+import { isRetiredErpOperationReport } from '@/products/erp/shared/reportCatalog'
 import { createSalesContract, generateContractSales } from './erpSalesContracts'
 import { runQuery, withTransaction } from '@/lib/postgres'
 import { ErpDomainError } from '@/products/erp/shared/erpErrors'
 import { assertErpPeriodOpen } from '@/products/erp/server/erpPeriodRepository'
 import { readOperationPage } from './erpOperationPagination'
+import { erpToday } from '@/products/erp/server/erpBusinessDate'
 
 type ActorInput = { tenantId: number; actorId: number }
 
@@ -42,14 +43,14 @@ function optionalText(value: unknown) {
 
 function requiredText(value: unknown, label: string) {
   const normalized = optionalText(value)
-  if (!normalized) throw new Error(`${label} e obrigatorio.`)
+  if (!normalized) throw new Error(`${label} é obrigatório.`)
   return normalized
 }
 
 function dateText(value: unknown, fallback = true) {
   const normalized = optionalText(value)
-  if (!normalized && fallback) return new Date().toISOString().slice(0, 10)
-  if (!normalized || !/^\d{4}-\d{2}-\d{2}$/.test(normalized)) throw new Error('Data invalida.')
+  if (!normalized && fallback) return erpToday()
+  if (!normalized || !/^\d{4}-\d{2}-\d{2}$/.test(normalized)) throw new Error('Data inválida.')
   return normalized
 }
 
@@ -105,8 +106,8 @@ async function listOperationPage(
 }
 
 export async function listManagementOperation(tenantId: number, resource: string, input: ErpOperationListInput = {}) {
-  if (isRetiredErpReport(resource)) {
-    throw new ErpDomainError('REPORT_RETIRED', 'Este relatorio foi descontinuado.', 410)
+  if (isRetiredErpOperationReport(resource)) {
+    throw new ErpDomainError('REPORT_RETIRED', 'Este relatório foi descontinuado.', 410)
   }
   if (resource === 'contratos') {
     return listOperationPage(tenantId,
@@ -167,7 +168,7 @@ export async function listManagementOperation(tenantId: number, resource: string
       'giro_90_dias DESC, produto', input,
     )
   }
-  throw new Error('Modulo gerencial desconhecido.')
+  throw new Error('Módulo gerencial desconhecido.')
 }
 
 export async function createManagementOperation(input: ActorInput & {
@@ -181,7 +182,7 @@ export async function createManagementOperation(input: ActorInput & {
       const accountId = requiredId(input.values.conta_financeira_id, 'Conta financeira')
       const value = amount(input.values.valor, 'Valor')
       const type = String(input.values.tipo || 'credito')
-      if (!['credito', 'debito'].includes(type)) throw new Error('Tipo de transacao invalido.')
+      if (!['credito', 'debito'].includes(type)) throw new Error('Tipo de transacao inválido.')
       const transaction = await client.query(
         `INSERT INTO erp.transacoes_bancarias
            (empresa_id, conta_financeira_id, identificador_externo, data_transacao, tipo,
@@ -197,7 +198,7 @@ export async function createManagementOperation(input: ActorInput & {
       return transaction.rows[0]
     }
     if (input.resource === 'conciliar-transacao') {
-      const transactionId = requiredId(input.values.transacao_bancaria_id, 'Transacao bancaria')
+      const transactionId = requiredId(input.values.transacao_bancaria_id, 'Transacao bancária')
       const paymentId = requiredId(input.values.pagamento_id, 'Pagamento')
       const transactionResult = await client.query(
         `SELECT * FROM erp.transacoes_bancarias
@@ -205,7 +206,7 @@ export async function createManagementOperation(input: ActorInput & {
         [input.tenantId, transactionId],
       )
       const transaction = transactionResult.rows[0]
-      if (!transaction) throw new Error('Transacao bancaria pendente nao encontrada.')
+      if (!transaction) throw new Error('Transacao bancária pendente não encontrada.')
       const paymentResult = await client.query(
         `SELECT * FROM erp.pagamentos
          WHERE empresa_id = $1 AND id = $2 AND NOT conciliado AND excluido_em IS NULL
@@ -213,9 +214,9 @@ export async function createManagementOperation(input: ActorInput & {
         [input.tenantId, paymentId],
       )
       const payment = paymentResult.rows[0]
-      if (!payment) throw new Error('Pagamento disponivel para conciliacao nao encontrado.')
+      if (!payment) throw new Error('Pagamento disponível para conciliação não encontrado.')
       if (Number(payment.conta_financeira_id) !== Number(transaction.conta_financeira_id)) throw new Error('Pagamento e extrato pertencem a contas diferentes.')
-      if ((transaction.tipo === 'credito') !== (payment.tipo === 'receber')) throw new Error('Credito deve conciliar com recebimento e debito com pagamento.')
+      if ((transaction.tipo === 'credito') !== (payment.tipo === 'receber')) throw new Error('Crédito deve conciliar com recebimento e débito com pagamento.')
       await assertErpPeriodOpen(client, { tenantId: input.tenantId, module: 'financeiro', date: databaseDateText(transaction.data_transacao) })
       const alreadyReconciled = await client.query(
         `SELECT COALESCE(sum(valor_conciliado),0) AS valor
@@ -232,7 +233,7 @@ export async function createManagementOperation(input: ActorInput & {
       const requested = input.values.valor_conciliado == null
         ? Math.min(Number(transaction.valor) - Number(alreadyReconciled.rows[0]?.valor || 0), Number(payment.valor_liquido) - Number(paymentReconciled.rows[0]?.valor || 0))
         : amount(input.values.valor_conciliado, 'Valor conciliado')
-      if (requested <= 0) throw new Error('Nao existe saldo conciliavel entre os movimentos.')
+      if (requested <= 0) throw new Error('Não existe saldo conciliavel entre os movimentos.')
       const reconciliation = await client.query(
         `INSERT INTO erp.conciliacoes_bancarias
            (empresa_id, conta_financeira_id, periodo_inicio, periodo_fim, status,
@@ -268,7 +269,7 @@ export async function createManagementOperation(input: ActorInput & {
         if (Number(row.conta_origem_id) !== originId || Number(row.conta_destino_id) !== destinationId
           || databaseDateText(row.data_transferencia) !== transferDate || Number(row.valor) !== transferAmount
           || String(row.descricao || '') !== String(description || '')) {
-          throw new ErpDomainError('IDEMPOTENCY_CONFLICT', 'Esta identificacao ja foi usada em outra transferencia.', 409)
+          throw new ErpDomainError('IDEMPOTENCY_CONFLICT', 'Esta identificação já foi usada em outra transferência.', 409)
         }
         return row
       }
@@ -282,7 +283,7 @@ export async function createManagementOperation(input: ActorInput & {
       )
       return created.rows[0]
     }
-    throw new Error('Operacao gerencial desconhecida.')
+    throw new Error('Operação gerencial desconhecida.')
   })
 }
 

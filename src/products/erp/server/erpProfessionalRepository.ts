@@ -1,6 +1,8 @@
+import { erpToday } from '@/products/erp/server/erpBusinessDate'
 import { runRecoverableErpAutomation } from './erpAutomationRunner'
 import { isRetiredErpReport } from '@/products/erp/shared/reportCatalog'
 import { cashResultSql } from './erpCashReport'
+import { accrualResultSql, agingSql, cashFlowSql } from './erpFinancialReports'
 import { processPurchaseRecurrences } from './erpRoutineRepository'
 import { erpDateSchema } from '@/products/erp/shared/erpTransport'
 import { lineTotal, sumMoney } from '@/products/erp/shared/erpMoney'
@@ -41,7 +43,7 @@ function date(value: unknown) {
   const normalized = String(value || "").slice(0, 10);
   return /^\d{4}-\d{2}-\d{2}$/.test(normalized)
     ? normalized
-    : new Date().toISOString().slice(0, 10);
+    : erpToday();
 }
 
 function stringValue(value: unknown) {
@@ -107,7 +109,7 @@ export async function getServiceOrder(tenantId: number, orderId: number) {
   if (!orders[0])
     throw new ErpDomainError(
       "SERVICE_ORDER_NOT_FOUND",
-      "Ordem de servico nao encontrada.",
+      "Ordem de serviço não encontrada.",
       404,
     );
   return { order: orders[0], items, events };
@@ -148,7 +150,7 @@ export async function createServiceOrder(
     if (!customer.rows[0])
       throw new ErpDomainError(
         "CUSTOMER_NOT_FOUND",
-        "Cliente nao encontrado.",
+        "Cliente não encontrado.",
         422,
       );
 
@@ -162,7 +164,7 @@ export async function createServiceOrder(
       if (!catalog.rows[0])
         throw new ErpDomainError(
           "ITEM_NOT_FOUND",
-          `Item ${index + 1} nao encontrado.`,
+          `Item ${index + 1} não encontrado.`,
           422,
         );
       const total = lineTotal(item.quantidade,item.valor_unitario,item.desconto);
@@ -280,7 +282,7 @@ async function convertServiceOrder(
   if (order.status === "cancelada")
     throw new ErpDomainError(
       "INVALID_STATE",
-      "Ordem cancelada nao pode ser convertida.",
+      "Ordem cancelada não pode ser convertida.",
       409,
     );
   const existingId =
@@ -374,7 +376,7 @@ export async function runServiceOrderAction(
     if (!order)
       throw new ErpDomainError(
         "SERVICE_ORDER_NOT_FOUND",
-        "Ordem de servico nao encontrada.",
+        "Ordem de serviço não encontrada.",
         404,
       );
     if (Number(order.versao) !== input.expectedVersion)
@@ -387,7 +389,7 @@ export async function runServiceOrderAction(
     if (!next)
       throw new ErpDomainError(
         "INVALID_STATE",
-        "Acao indisponivel para a situacao atual.",
+        "Ação indisponível para a situação atual.",
         409,
       );
     const updated = await client.query(
@@ -424,19 +426,19 @@ export async function convertQuoteToSale(
   if (quote.tipo_documento !== "orcamento")
     throw new ErpDomainError(
       "NOT_A_QUOTE",
-      "Documento informado nao e um orcamento.",
+      "Documento informado não e um orçamento.",
       409,
     );
   if (Number(quote.versao) !== input.expectedVersion)
     throw new ErpDomainError(
       "VERSION_CONFLICT",
-      "O orcamento foi alterado por outra pessoa.",
+      "O orçamento foi alterado por outra pessoa.",
       409,
     );
   if (quote.situacao === "recusado" || quote.status === "cancelada")
     throw new ErpDomainError(
       "INVALID_STATE",
-      "Orcamento recusado ou cancelado nao pode ser convertido.",
+      "Orçamento recusado ou cancelado não pode ser convertido.",
       409,
     );
   const existing = await client.query(
@@ -509,19 +511,19 @@ export async function runQuoteAction(
     if (!quote)
       throw new ErpDomainError(
         "QUOTE_NOT_FOUND",
-        "Orcamento nao encontrado.",
+        "Orçamento não encontrado.",
         404,
       );
     if (Number(quote.versao) !== input.expectedVersion)
       throw new ErpDomainError(
         "VERSION_CONFLICT",
-        "O orcamento foi alterado por outra pessoa.",
+        "O orçamento foi alterado por outra pessoa.",
         409,
       );
     if (quote.status === "cancelada" || quote.situacao === "recusado")
       throw new ErpDomainError(
         "INVALID_STATE",
-        "Orcamento encerrado nao pode ser alterado.",
+        "Orçamento encerrado não pode ser alterado.",
         409,
       );
 
@@ -594,13 +596,13 @@ export async function receivePurchaseItems(
     if (!purchase)
       throw new ErpDomainError(
         "PURCHASE_NOT_FOUND",
-        "Compra nao encontrada.",
+        "Compra não encontrada.",
         404,
       );
     if (purchase.status === "cancelada")
       throw new ErpDomainError(
         "INVALID_STATE",
-        "Compra cancelada nao pode ser recebida.",
+        "Compra cancelada não pode ser recebida.",
         409,
       );
 
@@ -625,7 +627,7 @@ export async function receivePurchaseItems(
       if (!item || !item.produto_id || !item.controla_estoque)
         throw new ErpDomainError(
           "INVALID_STOCK_ITEM",
-          "Item nao controla estoque.",
+          "Item não controla estoque.",
           422,
         );
       const pending =
@@ -750,7 +752,7 @@ export async function attendSaleItems(
     );
     const sale = saleResult.rows[0];
     if (!sale)
-      throw new ErpDomainError("SALE_NOT_FOUND", "Venda nao encontrada.", 404);
+      throw new ErpDomainError("SALE_NOT_FOUND", "Venda não encontrada.", 404);
     if (String(sale.status) !== "confirmada" || !["pendente", "parcial"].includes(String(sale.atendimento_status)))
       throw new ErpDomainError(
         "INVALID_STATE",
@@ -775,7 +777,7 @@ export async function attendSaleItems(
       if (!item)
         throw new ErpDomainError(
           "SALE_ITEM_NOT_FOUND",
-          "Item da venda nao encontrado.",
+          "Item da venda não encontrado.",
           404,
         );
       const pending =
@@ -928,7 +930,7 @@ export async function preflightSaleFiscal(
     customer.emitente_codigo_municipio,
     "ISSUER_CITY_CODE_MISSING",
     "configuracao_fiscal.endereco_codigo_municipio",
-    "Informe o codigo IBGE do municipio do emitente.",
+    "Informe o código IBGE do municipio do emitente.",
   );
   required(
     customer.documento,
@@ -944,7 +946,7 @@ export async function preflightSaleFiscal(
       customer.uf,
     "CUSTOMER_ADDRESS_INCOMPLETE",
     "cliente.endereco",
-    "Complete o endereco fiscal do cliente.",
+    "Complete o endereço fiscal do cliente.",
   );
   required(
     Number(sale.total) > 0,
@@ -985,7 +987,7 @@ export async function preflightSaleFiscal(
         issues.push({
           code: "SERVICE_CODE_MISSING",
           field: `itens.${item.id}.codigo_servico_municipal`,
-          message: `Informe o codigo municipal de ${String(item.descricao)}.`,
+          message: `Informe o código municipal de ${String(item.descricao)}.`,
           severity: "warning",
         });
       }
@@ -1090,7 +1092,7 @@ export async function setBankTransactionIgnored(
   if (!rows[0])
     throw new ErpDomainError(
       "BANK_TRANSACTION_NOT_FOUND",
-      "Transacao bancaria nao encontrada.",
+      "Transacao bancária não encontrada.",
       404,
     );
   return rows[0];
@@ -1124,7 +1126,7 @@ export async function undoBankReconciliation(
     if (!items.length)
       throw new ErpDomainError(
         "RECONCILIATION_NOT_FOUND",
-        "Conciliacao ativa nao encontrada.",
+        "Conciliação ativa não encontrada.",
         404,
       );
     const transactionDate = items[0].data_transacao instanceof Date
@@ -1226,15 +1228,19 @@ export async function listProfessionalReport(input: {
   pageSize?: number;
 }) {
   if (isRetiredErpReport(input.report)) {
-    throw new ErpDomainError("REPORT_RETIRED", "Este relatorio foi descontinuado.", 410);
+    throw new ErpDomainError("REPORT_RETIRED", "Este relatório foi descontinuado.", 410);
   }
   const from =
     input.from ||
-    new Date(new Date().getFullYear(), 0, 1).toISOString().slice(0, 10);
-  const to = input.to || new Date().toISOString().slice(0, 10);
+    erpToday().slice(0, 4) + '-01-01';
+  const to = input.to || erpToday();
   if (!erpDateSchema.safeParse(from).success || !erpDateSchema.safeParse(to).success || from > to) throw new ErpDomainError('VALIDATION_ERROR','Informe um período válido para o relatório.',422);
   const reports: Record<string, string> = {
     "dre-caixa": cashResultSql,
+    "dre-competencia": accrualResultSql(),
+    "fluxo-de-caixa": cashFlowSql(),
+    "aging-receber": agingSql("receber"),
+    "aging-pagar": agingSql("pagar"),
     "posicao-financeira": `SELECT tipo, status, count(*)::int AS parcelas, sum(saldo)::numeric(18,2) AS saldo FROM (
       SELECT 'receber'::text AS tipo, parcelas.status, composicao.saldo FROM erp.contas_receber_parcelas parcelas JOIN erp.contas_receber contas ON contas.empresa_id=parcelas.empresa_id AND contas.id=parcelas.conta_receber_id ${financialCompositionSql('receber')} WHERE parcelas.empresa_id = $1 AND contas.status<>'cancelado' AND contas.excluido_em IS NULL AND parcelas.status<>'cancelado' AND parcelas.data_vencimento BETWEEN $2 AND $3 AND parcelas.excluido_em IS NULL
       UNION ALL SELECT 'pagar'::text, parcelas.status, composicao.saldo FROM erp.contas_pagar_parcelas parcelas JOIN erp.contas_pagar contas ON contas.empresa_id=parcelas.empresa_id AND contas.id=parcelas.conta_pagar_id ${financialCompositionSql('pagar')} WHERE parcelas.empresa_id = $1 AND contas.tipo_lancamento='efetivo' AND contas.status<>'cancelado' AND contas.excluido_em IS NULL AND parcelas.status<>'cancelado' AND parcelas.data_vencimento BETWEEN $2 AND $3 AND parcelas.excluido_em IS NULL
@@ -1248,7 +1254,7 @@ export async function listProfessionalReport(input: {
   };
   const sql = reports[input.report];
   if (!sql)
-    throw new ErpDomainError("UNKNOWN_REPORT", "Relatorio desconhecido.", 404);
+    throw new ErpDomainError("UNKNOWN_REPORT", "Relatório desconhecido.", 404);
   const parameters =
     input.report === "valor-estoque"
       ? [input.tenantId]

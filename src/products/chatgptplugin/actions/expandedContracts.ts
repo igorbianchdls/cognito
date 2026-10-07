@@ -18,7 +18,8 @@ function patch<S extends z.ZodRawShape>(schema:z.ZodObject<S>){return schema.par
 const deletion=z.object({registro_id:id,motivo:z.string().trim().min(3).max(1000)}).strict()
 export const expandedSchemas=[
   operation('fornecedor',person),operation('vendedor',person),operation('servico',service),operation('categoria',category),operation('conta_financeira',account),
-  operation('editar_fornecedor',patch(person.omit({email:true,telefone:true}).extend({status:z.enum(['ativo','inativo']).optional()}))),operation('editar_vendedor',patch(person.omit({email:true,telefone:true}).extend({status:z.enum(['ativo','inativo']).optional()}))),operation('editar_servico',patch(service)),operation('editar_categoria',patch(category)),
+  // E-mail e telefone atualizam o contato comercial principal do cadastro.
+  operation('editar_fornecedor',patch(person.extend({status:z.enum(['ativo','inativo']).optional()}))),operation('editar_vendedor',patch(person.extend({status:z.enum(['ativo','inativo']).optional()}))),operation('editar_servico',patch(service)),operation('editar_categoria',patch(category)),
   // O saldo inicial de uma conta com movimentos não pode ser reescrito.
   operation('editar_conta_financeira',patch(account.omit({saldo_inicial:true,data_saldo_inicial:true}))),
   operation('compra',purchase),operation('editar_compra',purchase.extend({registro_id:id}).strict()),

@@ -10,9 +10,9 @@ import { searchErpOperationsCatalog, type ErpOperationCatalogSource } from '@/pr
   const resource = new URL(request.url).searchParams.get('resource') || ''
   const params = new URL(request.url).searchParams
   const source = params.get('source') as ErpOperationCatalogSource | null
-  if (!resource) return erpFailure('Recurso obrigatorio.', 400)
+  if (!resource) return erpFailure('Recurso obrigatório.', 400)
   if (!source || !['products', 'services', 'customers', 'accounts', 'locations', 'payments'].includes(source)) {
-    return erpFailure('Catalogo invalido.', 400)
+    return erpFailure('Catálogo inválido.', 400)
   }
   const tenant = await resolveErpAccess(getErpOperationCapability(resource, false))
   if (!tenant) return erpFailure('Acesso negado.', 403)

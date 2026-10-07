@@ -17,7 +17,7 @@ export async function loadApproval(id:string,session:ErpAccessContext,resource:s
   if (!rows[0]) throw new PluginError('NOT_FOUND','Rascunho não disponível nesta conta e empresa.',404)
   const proposal = proposalSchema.parse(rows[0].proposal)
   if (!proposalCapabilities(proposal).every(cap=>session.capabilities.includes(cap))) throw new PluginError('ACCESS_DENIED','Seu perfil não permite salvar este rascunho.',403)
-  const references=await runWithErpDatabaseContext({tenantId:session.tenantId,userId:session.sharedUserId,readOnly:true,statementTimeoutMs:10000},
+  const references=await runWithErpDatabaseContext({tenantId:session.tenantId,userId:session.sharedUserId,readOnly:true,statementTimeoutMs:10000,timeZone:session.timeZone},
     () => proposalReferences(session.tenantId,proposal)).catch(() => null)
   return {...draftView(rows[0],{resource}),empresa_nome:session.tenantName,referencias:references}
 }
@@ -37,13 +37,13 @@ async function assertCurrentAccess(client:SQLClient,session:Pick<ErpAccessContex
 
 // Quem decide: a sessão do ERP (página de revisão) ou a conexão OAuth do chat, que também
 // precisa ser a mesma que criou o rascunho e usar a tool da mesma operação.
-export type DecisionActor = {tenantId:number;userId:number;clerkUserId:string;oauthClientId?:string;kinds?:readonly string[];tool?:string}
+export type DecisionActor = {tenantId:number;userId:number;clerkUserId:string;timeZone?:string;oauthClientId?:string;kinds?:readonly string[];tool?:string}
 export function decideApproval(id:string,session:ErpAccessContext,decision:'save'|'cancel') {
-  return decideDraft(id,{tenantId:session.tenantId,userId:session.sharedUserId,clerkUserId:session.clerkUserId},decision)
+  return decideDraft(id,{tenantId:session.tenantId,userId:session.sharedUserId,clerkUserId:session.clerkUserId,timeZone:session.timeZone},decision)
 }
 export async function decideDraft(id:string,actor:DecisionActor,decision:'save'|'cancel') {
   const session={tenantId:actor.tenantId,sharedUserId:actor.userId,clerkUserId:actor.clerkUserId}
-  return runWithErpDatabaseContext({tenantId:session.tenantId,userId:session.sharedUserId,statementTimeoutMs:10000},() => withTransaction(async client => {
+  return runWithErpDatabaseContext({tenantId:session.tenantId,userId:session.sharedUserId,statementTimeoutMs:10000,timeZone:actor.timeZone},() => withTransaction(async client => {
     await client.query("SELECT set_config('statement_timeout','10000',true),set_config('lock_timeout','5000',true)")
     const result = await client.query("SELECT * FROM plugin.drafts WHERE id=$1 AND empresa_id=$2 AND user_id=$3 AND integration='chatgpt' FOR UPDATE",[id,session.tenantId,session.sharedUserId])
     const row = result.rows[0] as DraftRow | undefined

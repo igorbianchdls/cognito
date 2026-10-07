@@ -20,7 +20,7 @@ export async function assertErpPeriodOpen(
   if (result.rows[0])
     throw new ErpDomainError(
       "PERIOD_CLOSED",
-      `O periodo esta fechado para o modulo ${input.module}.`,
+      `O período esta fechado para o módulo ${input.module}.`,
       409,
     );
 }
@@ -55,7 +55,7 @@ export async function closeErpPeriod(input: {
     if (overlap.rows[0])
       throw new ErpDomainError(
         "PERIOD_OVERLAP",
-        "Ja existe um fechamento ativo que alcanca esse periodo.",
+        "Já existe um fechamento ativo que alcanca esse período.",
         409,
       );
     const result = await client.query(
@@ -89,7 +89,7 @@ export async function reopenErpPeriod(input: {
   if (!result[0])
     throw new ErpDomainError(
       "PERIOD_CLOSURE_NOT_FOUND",
-      "Fechamento ativo nao encontrado.",
+      "Fechamento ativo não encontrado.",
       404,
     );
   return result[0];

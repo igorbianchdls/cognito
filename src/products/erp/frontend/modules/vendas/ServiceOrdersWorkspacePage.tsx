@@ -43,6 +43,7 @@ import {
   formatErpCurrency,
   formatErpValue,
 } from "@/products/erp/frontend/services/erpProfessionalClient";
+import { erpClientToday } from '@/products/erp/frontend/services/erpTimeZone'
 
 type Option = {
   id: string;
@@ -81,7 +82,7 @@ type OrderItem = {
   desconto: string;
 };
 
-const today = () => new Date().toISOString().slice(0, 10);
+const today = () => erpClientToday();
 const emptyCatalogs: Catalogs = {
   customers: [],
   responsibles: [],
@@ -161,7 +162,7 @@ export function ServiceOrdersWorkspacePage() {
       setError(
         loadError instanceof Error
           ? loadError.message
-          : "Nao foi possivel carregar as ordens.",
+          : "Não foi possível carregar as ordens.",
       );
     } finally {
       setLoading(false);
@@ -249,7 +250,7 @@ export function ServiceOrdersWorkspacePage() {
       setError(
         saveError instanceof Error
           ? saveError.message
-          : "Nao foi possivel salvar a ordem.",
+          : "Não foi possível salvar a ordem.",
       );
     } finally {
       setSaving(false);
@@ -280,7 +281,7 @@ export function ServiceOrdersWorkspacePage() {
       setError(
         detailError instanceof Error
           ? detailError.message
-          : "Nao foi possivel carregar a ordem.",
+          : "Não foi possível carregar a ordem.",
       );
       setDetailOpen(false);
     }
@@ -311,7 +312,7 @@ export function ServiceOrdersWorkspacePage() {
       setError(
         actionError instanceof Error
           ? actionError.message
-          : "Nao foi possivel executar a acao.",
+          : "Não foi possível executar a ação.",
       );
     } finally {
       setLoading(false);
@@ -391,7 +392,7 @@ export function ServiceOrdersWorkspacePage() {
                   colSpan={7}
                   className="h-32 text-center text-gray-500"
                 >
-                  Nenhuma ordem de servico encontrada.
+                  Nenhuma ordem de serviço encontrada.
                 </TableCell>
               </TableRow>
             ) : (
@@ -442,7 +443,7 @@ export function ServiceOrdersWorkspacePage() {
                             <Button
                               size="icon"
                               variant="ghost"
-                              title="Iniciar execucao"
+                              title="Iniciar execução"
                               onClick={() => void runAction(record, "iniciar")}
                             >
                               <Play className="size-4" />
@@ -462,7 +463,7 @@ export function ServiceOrdersWorkspacePage() {
                             <Button
                               size="icon"
                               variant="ghost"
-                              title="Gerar orcamento"
+                              title="Gerar orçamento"
                               onClick={() =>
                                 void runAction(record, "gerar_orcamento")
                               }
@@ -526,19 +527,19 @@ export function ServiceOrdersWorkspacePage() {
                     selectedLabel={catalogs.customers.find((item) => item.id === clienteId)?.nome}
                   />
                   <SelectField
-                    label="Responsavel"
+                    label="Responsável"
                     value={responsavelId}
                     onChange={setResponsavelId}
                     options={catalogs.responsibles}
                   />
                   <InputField
-                    label="Inicio"
+                    label="Início"
                     type="date"
                     value={dataInicio}
                     onChange={setDataInicio}
                   />
                   <InputField
-                    label="Previsao"
+                    label="Previsão"
                     type="date"
                     value={previsao}
                     onChange={setPrevisao}
@@ -555,7 +556,7 @@ export function ServiceOrdersWorkspacePage() {
                     onChange={setModelo}
                   />
                   <InputField
-                    label="Numero de serie"
+                    label="Número de serie"
                     value={serie}
                     onChange={setSerie}
                   />
@@ -575,7 +576,7 @@ export function ServiceOrdersWorkspacePage() {
               </section>
               <section className="grid gap-3 border-t pt-5">
                 <div className="flex items-center justify-between">
-                  <h2 className="text-sm font-semibold">Produtos e servicos</h2>
+                  <h2 className="text-sm font-semibold">Produtos e serviços</h2>
                   <Button
                     variant="outline"
                     size="sm"
@@ -677,12 +678,12 @@ export function ServiceOrdersWorkspacePage() {
               </section>
               <section className="grid gap-4 border-t pt-5 md:grid-cols-2">
                 <TextField
-                  label="Observacoes para o cliente"
+                  label="Observações para o cliente"
                   value={observacoesPublicas}
                   onChange={setObservacoesPublicas}
                 />
                 <TextField
-                  label="Observacoes internas"
+                  label="Observações internas"
                   value={observacoesInternas}
                   onChange={setObservacoesInternas}
                 />

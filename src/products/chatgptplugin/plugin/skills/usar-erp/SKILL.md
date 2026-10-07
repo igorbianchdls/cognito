@@ -19,7 +19,7 @@ Chame `meu_acesso` no início. Com mais de uma empresa, peça ao usuário para e
 | Pagamentos já registrados | `listar_pagamentos` |
 | Estoque | `consultar_estoque` |
 | Evolução mensal | `analisar_periodo` (até 366 dias) |
-| DRE por caixa, posição financeira, vendas ou compras agrupadas, valor do estoque | `consultar_relatorio` |
+| Fluxo de caixa ("vou ter caixa no fim do mês?"), inadimplência por cliente ou fornecedor ("quem está me devendo?"), resultado por competência ou por caixa, posição financeira, vendas ou compras agrupadas, valor do estoque | `consultar_relatorio` (`fluxo-de-caixa`, `aging-receber`, `aging-pagar`, `dre-competencia`, `dre-caixa`, …) |
 
 Os resultados aparecem em cards. Responda em poucas linhas, sem repetir a tabela inteira. Para totais, use `summary`, que considera todos os registros filtrados; não some só a página atual. Se `hasMore` for verdadeiro, avise que há mais registros.
 

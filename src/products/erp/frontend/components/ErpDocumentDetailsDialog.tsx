@@ -21,7 +21,7 @@ const headerFields = ['numero', 'tipo_documento', 'status', 'situacao', 'tipo_mo
 const labels: Record<string, string> = {
   tipo_desconto:'Tipo de desconto', desconto:'Desconto informado', desconto_calculado:'Desconto em reais',
   numero: 'Numero', status: 'Situacao', tipo_movimento: 'Movimento', cliente_nome: 'Cliente',
-  tipo_documento: 'Documento', situacao: 'Negociacao', validade_em: 'Validade', previsao_entrega: 'Previsao de entrega',
+  tipo_documento: 'Documento', situacao: 'Negociacao', validade_em: 'Validade', previsao_entrega: 'Previsão de entrega',
   fornecedor_nome: 'Fornecedor', data_venda: 'Data da venda', data_compra: 'Data da compra',
   data_prevista_entrega: 'Entrega prevista', total: 'Total', observacoes: 'Observacoes',
 }
@@ -53,8 +53,8 @@ export function ErpDocumentDetailsDialog({ open, onOpenChange, title, loading, d
           {invoices.length ? <DetailTable title="Notas fiscais vinculadas" rows={invoices} columns={['numero', 'serie', 'chave_acesso', 'status', 'valor_total']} /> : null}
           {invoices.filter(invoice=>invoice.id).map(invoice=><Button key={String(invoice.id)} variant="outline" onClick={()=>setFiscalId(fiscalId===String(invoice.id)?null:String(invoice.id))}>Histórico da nota {String(invoice.numero)}</Button>)}
           {fiscalId && invoices.some(invoice=>String(invoice.id)===fiscalId)?<ErpHistoryPanel kind={documentKind==='compras'?'notas-compra':'notas-fiscais'} id={fiscalId}/>:null}
-          {documentKind && document.id ? <ErpHistoryPanel kind={documentKind} id={String(document.id)}/> : <DetailTable title="Historico" rows={events || []} columns={['evento', 'status_anterior', 'status_novo', 'versao', 'criado_em']} />}
-        </div> : <div className="py-20 text-center text-sm text-gray-500">Documento nao encontrado.</div>}
+          {documentKind && document.id ? <ErpHistoryPanel kind={documentKind} id={String(document.id)}/> : <DetailTable title="Histórico" rows={events || []} columns={['evento', 'status_anterior', 'status_novo', 'versao', 'criado_em']} />}
+        </div> : <div className="py-20 text-center text-sm text-gray-500">Documento não encontrado.</div>}
       </div>
     </DialogContent>
   </Dialog>

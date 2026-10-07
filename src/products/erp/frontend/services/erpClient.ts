@@ -55,7 +55,7 @@ function buildActionUrl(config: ErpEntityConfig, request: ErpEntityActionRequest
     return `/api/erp/contas-pagar-parcelas/${encodeURIComponent(request.recordId)}/baixar`
   }
 
-  throw new Error('Acao indisponivel para este modulo.')
+  throw new Error('Ação indisponível para este módulo.')
 }
 
 export const erpClient: ErpClient = {

@@ -6,8 +6,9 @@ import { z } from 'zod'
 
 import { ERP_CAPABILITIES, type ErpCapability } from '@/products/erp/shared/professionalContracts'
 import { parseErpResponse } from '@/products/erp/frontend/services/erpProfessionalClient'
+import { setErpTimeZone } from '@/products/erp/frontend/services/erpTimeZone'
 
-const accessSchema = z.object({ capabilities: z.array(z.enum(ERP_CAPABILITIES)) })
+const accessSchema = z.object({ capabilities: z.array(z.enum(ERP_CAPABILITIES)), fuso_horario: z.string().optional() })
 type AccessState = { key: string; capabilities: ErpCapability[]; error: string | null }
 
 export function useErpAccess() {
@@ -31,7 +32,9 @@ export function useErpAccess() {
           signal: controller.signal,
           headers: { Authorization: `Bearer ${token}` },
         })
-        const body = await parseErpResponse<{ capabilities: ErpCapability[] }>(response, accessSchema)
+        const body = await parseErpResponse<{ capabilities: ErpCapability[]; fuso_horario?: string }>(response, accessSchema)
+        // Datas padrão das telas passam a usar o fuso da empresa ativa.
+        setErpTimeZone(body.fuso_horario)
         if (!controller.signal.aborted) setState({ key, capabilities: body.capabilities, error: null })
       } catch (error) {
         if (!controller.signal.aborted) setState({

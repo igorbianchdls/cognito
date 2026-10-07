@@ -5,7 +5,7 @@ export const sellersConfig: ErpEntityConfig<ErpEntityRecord> = {
   sectionId: 'cadastros',
   label: 'Vendedores',
   singularLabel: 'vendedor',
-  description: 'Gerencie os responsaveis comerciais usados em vendas, orcamentos e relatorios.',
+  description: 'Gerencie os responsáveis comerciais usados em vendas, orçamentos e relatórios.',
   route: '/erp/cadastros/vendedores',
   searchPlaceholder: 'Buscar por nome, documento, email ou cidade',
   primaryActionLabel: 'Novo vendedor',
@@ -19,16 +19,16 @@ export const sellersConfig: ErpEntityConfig<ErpEntityRecord> = {
   fields: [
     { key: 'status', label: 'Situação', type: 'select', options: [{value:'ativo',label:'Ativo'},{value:'inativo',label:'Inativo'}] },
     { key: 'nome', label: 'Nome', type: 'text', required: true },
-    { key: 'tipo', label: 'Tipo de pessoa', type: 'select', options: [{ value: 'PF', label: 'Pessoa fisica' }, { value: 'PJ', label: 'Pessoa juridica' }] },
+    { key: 'tipo', label: 'Tipo de pessoa', type: 'select', options: [{ value: 'PF', label: 'Pessoa física' }, { value: 'PJ', label: 'Pessoa jurídica' }] },
     { key: 'documento', label: 'CPF/CNPJ', type: 'text' },
   ],
   filters: [{ key: 'status', label: 'Status', allLabel: 'Todos os status', options: [{ value: 'ativo', label: 'Ativo' }, { value: 'inativo', label: 'Inativo' }] }],
   metrics: [
-    { label: 'Vendedores ativos', value: '0', detail: 'disponiveis nas vendas', tone: 'success' },
+    { label: 'Vendedores ativos', value: '0', detail: 'disponíveis nas vendas', tone: 'success' },
     { label: 'Inativos', value: '0', detail: 'cadastros pausados' },
     { label: 'Categorias', value: '0', detail: 'classificacoes em uso' },
   ],
-  emptyState: { title: 'Nenhum vendedor encontrado', description: 'Cadastre o primeiro responsavel comercial.' },
+  emptyState: { title: 'Nenhum vendedor encontrado', description: 'Cadastre o primeiro responsável comercial.' },
   statusMap: {
     ativo: { label: 'Ativo', tone: 'success' },
     inativo: { label: 'Inativo', tone: 'default' },

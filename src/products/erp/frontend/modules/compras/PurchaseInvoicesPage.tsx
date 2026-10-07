@@ -12,6 +12,7 @@ import { parseErpResponse } from '@/products/erp/frontend/services/erpProfession
 import { formatErpValue } from '@/products/erp/frontend/services/erpProfessionalClient'
 import { ErpFilterButton, ErpModuleWorkspaceTabs, ErpPeriodSummary, ErpSearchToolbar, ErpStatusBadge, ErpWorkspaceHeader } from '@/products/erp/frontend/components/ErpWorkspaceChrome'
 import { sumMoney } from '@/products/erp/shared/erpMoney'
+import { erpClientToday } from '@/products/erp/frontend/services/erpTimeZone'
 
 type Option = { id: string; nome: string }
 type PurchaseCandidate = { id: string; numero: string; total: number; fornecedor: string }
@@ -33,15 +34,15 @@ const numeric = (root: ParentNode, tag: string) => Number(textOf(root, tag) || 0
 function parseNfeXml(xml: string): ParsedInvoice {
   const document = new DOMParser().parseFromString(xml, 'application/xml')
   const parserError = document.querySelector('parsererror')
-  if (parserError) throw new Error('O arquivo XML esta invalido.')
+  if (parserError) throw new Error('O arquivo XML esta inválido.')
   const info = document.querySelector('infNFe')
-  if (!info) throw new Error('O arquivo nao contem uma NF-e valida.')
+  if (!info) throw new Error('O arquivo não contem uma NF-e valida.')
   const issuer = info.querySelector('emit')
   const recipient = info.querySelector('dest')
   const total = info.querySelector('ICMSTot')
   const rawKey = (info.getAttribute('Id') || textOf(document, 'chNFe')).replace(/^NFe/, '').replace(/\D/g, '')
   const issueText = textOf(info, 'dhEmi') || textOf(info, 'dEmi')
-  const issueDate = issueText ? issueText.slice(0, 10) : new Date().toISOString().slice(0, 10)
+  const issueDate = issueText ? issueText.slice(0, 10) : erpClientToday()
   const dueDate = textOf(info, 'dup dVenc') || issueDate
   const items = Array.from(info.querySelectorAll('det')).map((detail) => {
     const product = detail.querySelector('prod') || detail
@@ -92,7 +93,7 @@ export function PurchaseInvoicesPage() {
       ])
       setRecords((await parseResponse<{ records: Invoice[] }>(invoiceResponse)).records)
       setCatalogs(await parseResponse<Catalogs>(catalogResponse))
-    } catch (loadError) { setError(loadError instanceof Error ? loadError.message : 'Nao foi possivel carregar as notas.') }
+    } catch (loadError) { setError(loadError instanceof Error ? loadError.message : 'Não foi possível carregar as notas.') }
     finally { setLoading(false) }
   }, [])
 
@@ -102,7 +103,7 @@ export function PurchaseInvoicesPage() {
     if (!file) return
     setError(null)
     try { setParsed(parseNfeXml(await file.text())) }
-    catch (parseError) { setParsed(null); setError(parseError instanceof Error ? parseError.message : 'XML invalido.') }
+    catch (parseError) { setParsed(null); setError(parseError instanceof Error ? parseError.message : 'XML inválido.') }
   }
 
   async function importInvoice() {
@@ -114,7 +115,7 @@ export function PurchaseInvoicesPage() {
         body: JSON.stringify({ values: { xml: parsed.xml, categoria_id: categoryId, natureza_operacao_id: natureId, compra_id: purchaseId, gerar_compra: generatePurchase, gera_financeiro: generateFinancial } }),
       }))
       setOpen(false); setParsed(null); await load()
-    } catch (importError) { setError(importError instanceof Error ? importError.message : 'Nao foi possivel importar a NF-e.') }
+    } catch (importError) { setError(importError instanceof Error ? importError.message : 'Não foi possível importar a NF-e.') }
     finally { setSaving(false) }
   }
 
@@ -143,7 +144,7 @@ export function PurchaseInvoicesPage() {
 
     <Dialog open={open} onOpenChange={setOpen}><DialogContent className="max-h-[92vh] max-w-3xl overflow-y-auto"><DialogHeader><DialogTitle>Importar NF-e de compra</DialogTitle></DialogHeader><div className="grid gap-5 py-2">
       <div className="grid place-items-center rounded-md border border-dashed bg-gray-50 px-6 py-10"><input type="file" accept=".xml,application/xml,text/xml" className="block max-w-full text-sm" onChange={(event) => void selectFile(event.target.files?.[0])} /></div>
-      {parsed ? <><div className="grid gap-px overflow-hidden rounded-md border bg-gray-200 sm:grid-cols-3"><Summary label="Fornecedor" value={parsed.fornecedor.nome} /><Summary label="Nota" value={`${parsed.numero}/${parsed.serie}`} /><Summary label="Total" value={currency(parsed.valor_total)} /></div><div className="grid gap-4 md:grid-cols-3"><div className="grid gap-2"><Label>Categoria financeira</Label><select value={categoryId} className="h-10 rounded-md bg-gray-50 px-3 text-sm" onChange={(event) => setCategoryId(event.target.value)}><option value="">Selecione</option>{catalogs.categories.map((item) => <option key={item.id} value={item.id}>{item.nome}</option>)}</select></div><div className="grid gap-2"><Label>Natureza da operacao</Label><select value={natureId} className="h-10 rounded-md bg-gray-50 px-3 text-sm" onChange={(event) => setNatureId(event.target.value)}><option value="">Selecione</option>{catalogs.operationNatures.map((item) => <option key={item.id} value={item.id}>{item.nome}</option>)}</select></div><div className="grid gap-2"><Label>Vincular compra existente</Label><select value={purchaseId} disabled={!generatePurchase} className="h-10 rounded-md bg-gray-50 px-3 text-sm" onChange={(event) => setPurchaseId(event.target.value)}><option value="">Criar nova compra</option>{catalogs.purchaseCandidates.map((item) => <option key={item.id} value={item.id}>{item.numero} - {item.fornecedor} - {currency(item.total)}</option>)}</select></div></div><div className="flex flex-wrap gap-6"><div className="flex items-center gap-2"><Switch checked={generatePurchase} onCheckedChange={(checked) => { setGeneratePurchase(checked); if (!checked) setPurchaseId('') }} /><Label>Gerar ou vincular compra</Label></div><div className="flex items-center gap-2"><Switch checked={generateFinancial} onCheckedChange={setGenerateFinancial} disabled={!generatePurchase} /><Label>Gerar financeiro</Label></div></div><div className="rounded-md border"><Table><TableHeader><TableRow><TableHead>Item</TableHead><TableHead>Unidade</TableHead><TableHead className="text-right">Quantidade</TableHead><TableHead className="text-right">Total</TableHead></TableRow></TableHeader><TableBody>{parsed.itens.map((item, index) => <TableRow key={`${item.codigo}-${index}`}><TableCell>{item.codigo} - {item.descricao}</TableCell><TableCell>{item.unidade}</TableCell><TableCell className="text-right">{item.quantidade}</TableCell><TableCell className="text-right">{currency(item.valor_total)}</TableCell></TableRow>)}</TableBody></Table></div></> : null}
+      {parsed ? <><div className="grid gap-px overflow-hidden rounded-md border bg-gray-200 sm:grid-cols-3"><Summary label="Fornecedor" value={parsed.fornecedor.nome} /><Summary label="Nota" value={`${parsed.numero}/${parsed.serie}`} /><Summary label="Total" value={currency(parsed.valor_total)} /></div><div className="grid gap-4 md:grid-cols-3"><div className="grid gap-2"><Label>Categoria financeira</Label><select value={categoryId} className="h-10 rounded-md bg-gray-50 px-3 text-sm" onChange={(event) => setCategoryId(event.target.value)}><option value="">Selecione</option>{catalogs.categories.map((item) => <option key={item.id} value={item.id}>{item.nome}</option>)}</select></div><div className="grid gap-2"><Label>Natureza da operação</Label><select value={natureId} className="h-10 rounded-md bg-gray-50 px-3 text-sm" onChange={(event) => setNatureId(event.target.value)}><option value="">Selecione</option>{catalogs.operationNatures.map((item) => <option key={item.id} value={item.id}>{item.nome}</option>)}</select></div><div className="grid gap-2"><Label>Vincular compra existente</Label><select value={purchaseId} disabled={!generatePurchase} className="h-10 rounded-md bg-gray-50 px-3 text-sm" onChange={(event) => setPurchaseId(event.target.value)}><option value="">Criar nova compra</option>{catalogs.purchaseCandidates.map((item) => <option key={item.id} value={item.id}>{item.numero} - {item.fornecedor} - {currency(item.total)}</option>)}</select></div></div><div className="flex flex-wrap gap-6"><div className="flex items-center gap-2"><Switch checked={generatePurchase} onCheckedChange={(checked) => { setGeneratePurchase(checked); if (!checked) setPurchaseId('') }} /><Label>Gerar ou vincular compra</Label></div><div className="flex items-center gap-2"><Switch checked={generateFinancial} onCheckedChange={setGenerateFinancial} disabled={!generatePurchase} /><Label>Gerar financeiro</Label></div></div><div className="rounded-md border"><Table><TableHeader><TableRow><TableHead>Item</TableHead><TableHead>Unidade</TableHead><TableHead className="text-right">Quantidade</TableHead><TableHead className="text-right">Total</TableHead></TableRow></TableHeader><TableBody>{parsed.itens.map((item, index) => <TableRow key={`${item.codigo}-${index}`}><TableCell>{item.codigo} - {item.descricao}</TableCell><TableCell>{item.unidade}</TableCell><TableCell className="text-right">{item.quantidade}</TableCell><TableCell className="text-right">{currency(item.valor_total)}</TableCell></TableRow>)}</TableBody></Table></div></> : null}
     </div><div className="flex justify-end gap-2"><Button variant="outline" onClick={() => setOpen(false)}>Cancelar</Button><Button disabled={!parsed || saving} onClick={() => void importInvoice()}>{saving ? <Loader2 className="size-4 animate-spin" /> : null}Importar NF-e</Button></div></DialogContent></Dialog>
   </div>
 }

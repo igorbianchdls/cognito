@@ -7,10 +7,10 @@ export const comprasConfig: ErpEntityConfig<ErpEntityRecord> = {
   singularLabel: 'pedido de compra',
   description: 'Registre compras, confirme para gerar contas a pagar e cancele antes de haver pagamento.',
   route: '/erp/compras/pedidos-compra',
-  searchPlaceholder: 'Buscar por numero, fornecedor ou status',
+  searchPlaceholder: 'Buscar por número, fornecedor ou status',
   primaryActionLabel: 'Nova compra',
   columns: [
-    { key: 'numero', label: 'Numero', width: 'min-w-[120px]' },
+    { key: 'numero', label: 'Número', width: 'min-w-[120px]' },
     { key: 'fornecedor', label: 'Fornecedor', width: 'min-w-[220px]' },
     { key: 'data', label: 'Data', kind: 'date' },
     { key: 'total', label: 'Total', kind: 'currency' },
@@ -20,9 +20,9 @@ export const comprasConfig: ErpEntityConfig<ErpEntityRecord> = {
   fields: [
     { key: 'fornecedor_id', label: 'Fornecedor', type: 'number', placeholder: 'ID do fornecedor', required: true },
     { key: 'produto_id', label: 'Produto', type: 'number', placeholder: 'ID do produto', required: true },
-    { key: 'descricao', label: 'Descricao do item', type: 'text', placeholder: 'Descricao que aparecera no pedido' },
+    { key: 'descricao', label: 'Descrição do item', type: 'text', placeholder: 'Descrição que aparecera no pedido' },
     { key: 'quantidade', label: 'Quantidade', type: 'number', placeholder: '1', required: true },
-    { key: 'valor_unitario', label: 'Valor unitario', type: 'number', placeholder: '0,00', required: true },
+    { key: 'valor_unitario', label: 'Valor unitário', type: 'number', placeholder: '0,00', required: true },
     { key: 'data_compra', label: 'Data da compra', type: 'date' },
     { key: 'data_vencimento', label: 'Vencimento', type: 'date' },
     {
@@ -31,7 +31,7 @@ export const comprasConfig: ErpEntityConfig<ErpEntityRecord> = {
       type: 'select',
       options: [
         { value: 'sim', label: 'Sim' },
-        { value: 'nao', label: 'Nao' },
+        { value: 'nao', label: 'Não' },
       ],
     },
   ],
@@ -50,7 +50,7 @@ export const comprasConfig: ErpEntityConfig<ErpEntityRecord> = {
   metrics: [
     { label: 'Compras', value: '0', detail: 'base conectada' },
     { label: 'Confirmadas', value: '0', detail: 'geram contas a pagar', tone: 'success' },
-    { label: 'Rascunhos', value: '0', detail: 'aguardando confirmacao', tone: 'warning' },
+    { label: 'Rascunhos', value: '0', detail: 'aguardando confirmação', tone: 'warning' },
   ],
   emptyState: {
     title: 'Nenhuma compra encontrada',

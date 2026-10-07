@@ -39,6 +39,7 @@ import { ErpAsyncCatalogSelect, type ErpCatalogRecord } from "@/products/erp/fro
 import { useErpAccess } from "@/products/erp/frontend/hooks/useErpAccess";
 import { ErpFilterButton, ErpModuleWorkspaceTabs, ErpPeriodSummary, ErpSearchToolbar, ErpStatusBadge, ErpWorkspaceHeader } from "@/products/erp/frontend/components/ErpWorkspaceChrome";
 import { formatErpValue } from "@/products/erp/frontend/services/erpProfessionalClient";
+import { erpClientToday } from '@/products/erp/frontend/services/erpTimeZone'
 
 type CatalogItem = {
   id: string;
@@ -117,7 +118,7 @@ const emptyCatalogs: PurchaseCatalogs = {
 };
 
 function today() {
-  return new Date().toISOString().slice(0, 10);
+  return erpClientToday();
 }
 
 function money(value: string | number) {
@@ -176,7 +177,7 @@ async function parseResponse<T>(response: Response): Promise<T> {
     throw new Error(
       typeof body.error === "string"
         ? body.error
-        : body.error?.message || "Nao foi possivel completar a operacao.",
+        : body.error?.message || "Não foi possível completar a operação.",
     );
   return body as T;
 }
@@ -265,7 +266,7 @@ export function PurchaseWorkspacePage() {
       setError(
         loadError instanceof Error
           ? loadError.message
-          : "Nao foi possivel carregar compras.",
+          : "Não foi possível carregar compras.",
       );
     } finally {
       setLoading(false);
@@ -442,7 +443,7 @@ export function PurchaseWorkspacePage() {
       setError(
         saveError instanceof Error
           ? saveError.message
-          : "Nao foi possivel salvar a compra.",
+          : "Não foi possível salvar a compra.",
       );
     } finally {
       setSaving(false);
@@ -471,7 +472,7 @@ export function PurchaseWorkspacePage() {
       setError(
         actionError instanceof Error
           ? actionError.message
-          : `Nao foi possivel ${verb} a compra.`,
+          : `Não foi possível ${verb} a compra.`,
       );
       setLoading(false);
     }
@@ -492,7 +493,7 @@ export function PurchaseWorkspacePage() {
       setError(
         detailError instanceof Error
           ? detailError.message
-          : "Nao foi possivel carregar a compra.",
+          : "Não foi possível carregar a compra.",
       );
       setDetailsOpen(false);
     } finally {
@@ -527,7 +528,7 @@ export function PurchaseWorkspacePage() {
         .filter((item) => item.pendente > 0);
       if (!pending.length)
         throw new Error(
-          "Esta compra nao possui produtos pendentes de recebimento.",
+          "Esta compra não possui produtos pendentes de recebimento.",
         );
       setReceivePurchase(record);
       setReceiveItems(pending);
@@ -536,7 +537,7 @@ export function PurchaseWorkspacePage() {
       setError(
         receiveError instanceof Error
           ? receiveError.message
-          : "Nao foi possivel preparar o recebimento.",
+          : "Não foi possível preparar o recebimento.",
       );
     } finally {
       setLoading(false);
@@ -573,7 +574,7 @@ export function PurchaseWorkspacePage() {
       setError(
         receiveError instanceof Error
           ? receiveError.message
-          : "Nao foi possivel registrar o recebimento.",
+          : "Não foi possível registrar o recebimento.",
       );
     } finally {
       setSaving(false);
@@ -653,7 +654,7 @@ export function PurchaseWorkspacePage() {
       setError(
         editError instanceof Error
           ? editError.message
-          : "Nao foi possivel editar a compra.",
+          : "Não foi possível editar a compra.",
       );
     } finally {
       setLoading(false);
@@ -847,7 +848,7 @@ export function PurchaseWorkspacePage() {
           </DialogHeader>
           <div className="overflow-y-auto">
             <section className="grid gap-4 border-b px-6 py-5">
-              <h2 className="text-sm font-semibold">Informacoes da compra</h2>
+              <h2 className="text-sm font-semibold">Informações da compra</h2>
               <div className="grid gap-4 md:grid-cols-4">
                 <div className="grid gap-2">
                   <Label>Tipo de compra</Label>
@@ -894,10 +895,10 @@ export function PurchaseWorkspacePage() {
                   selectedLabel={catalogs.suppliers.find((item) => item.id === fornecedorId)?.nome}
                 />
                 <FieldInput
-                  label="Numero"
+                  label="Número"
                   value={numero}
                   onChange={setNumero}
-                  placeholder="Automatico"
+                  placeholder="Automático"
                 />
                 <FieldInput
                   label="Data da compra"
@@ -906,7 +907,7 @@ export function PurchaseWorkspacePage() {
                   type="date"
                 />
                 <FieldInput
-                  label="Competencia"
+                  label="Competência"
                   value={dataCompetencia}
                   onChange={setDataCompetencia}
                   type="date"
@@ -918,7 +919,7 @@ export function PurchaseWorkspacePage() {
                   type="date"
                 />
                 <FieldSelect
-                  label="Natureza da operacao"
+                  label="Natureza da operação"
                   value={naturezaId}
                   onChange={setNaturezaId}
                   options={catalogs.operationNatures.map((item) => [
@@ -1016,7 +1017,7 @@ export function PurchaseWorkspacePage() {
                       type="number"
                       min="0"
                       step="0.01"
-                      title="Valor unitario"
+                      title="Valor unitário"
                       onChange={(event) =>
                         setItems((current) =>
                           current.map((row) =>
@@ -1106,7 +1107,7 @@ export function PurchaseWorkspacePage() {
             <section className="grid gap-4 border-b px-6 py-5">
               <div className="flex items-center justify-between">
                 <h2 className="text-sm font-semibold">
-                  Informacoes de pagamento
+                  Informações de pagamento
                 </h2>
                 <div className="flex items-center gap-2">
                   <Label htmlFor="gera-financeiro">Gerar financeiro</Label>
@@ -1190,7 +1191,7 @@ export function PurchaseWorkspacePage() {
                         />
                         <Input
                           value={installment.observacoes}
-                          placeholder="Observacoes da parcela"
+                          placeholder="Observações da parcela"
                           onChange={(event) =>
                             setInstallments((current) =>
                               current.map((row, rowIndex) =>
@@ -1207,12 +1208,12 @@ export function PurchaseWorkspacePage() {
                 </>
               ) : (
                 <p className="text-sm text-gray-500">
-                  Esta compra nao criara lancamento financeiro.
+                  Esta compra não criara lançamento financeiro.
                 </p>
               )}
             </section>
             <section className="grid gap-2 px-6 py-5">
-              <Label>Observacoes complementares</Label>
+              <Label>Observações complementares</Label>
               <Textarea
                 value={observacoes}
                 className="min-h-24"
@@ -1226,7 +1227,7 @@ export function PurchaseWorkspacePage() {
               {tipoMovimento === "compra"
                 ? "Gera despesa efetiva"
                 : tipoMovimento.includes("pedido")
-                  ? "Gera previsao financeira"
+                  ? "Gera previsão financeira"
                   : "Sem impacto financeiro"}
             </div>
             <div className="flex gap-2">
@@ -1235,7 +1236,7 @@ export function PurchaseWorkspacePage() {
               </Button>
               <Button disabled={saving} onClick={() => void savePurchase()}>
                 {saving ? <Loader2 className="size-4 animate-spin" /> : null}
-                {editingPurchase ? "Salvar alteracoes" : "Salvar compra"}
+                {editingPurchase ? "Salvar alterações" : "Salvar compra"}
               </Button>
             </div>
           </div>

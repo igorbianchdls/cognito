@@ -1,6 +1,7 @@
 import { runQuery } from '@/lib/postgres'
 import { runWithErpDatabaseContext } from '@/lib/erpDatabaseContext'
 import { runErpAutomation } from './erpProfessionalRepository'
+import { DEFAULT_ERP_TIME_ZONE, businessDay, normalizeTimeZone } from '@/products/erp/shared/businessDate'
 
 const routineTypes = ['contratos', 'recorrencias_financeiras', 'titulos_vencidos', 'indicadores', 'estoque_minimo'] as const
 const tenantConcurrency = 4
@@ -35,21 +36,23 @@ async function runTenantAutomations(
 
 
 export async function runScheduledErpAutomations() {
-    const tenants = await runQuery<{ empresa_id: number; actor_id: number }>(
-      `SELECT DISTINCT ON (memberships.empresa_id) memberships.empresa_id, memberships.usuario_id AS actor_id
+    const tenants = await runQuery<{ empresa_id: number; actor_id: number; fuso_horario: string | null }>(
+      `SELECT DISTINCT ON (memberships.empresa_id) memberships.empresa_id, memberships.usuario_id AS actor_id,
+         to_jsonb(tenants)->>'fuso_horario' AS fuso_horario
        FROM shared.usuarios_empresas memberships
        JOIN shared.empresas tenants ON tenants.id=memberships.empresa_id AND tenants.status='active'
        JOIN shared.usuarios users ON users.id=memberships.usuario_id AND users.clerk_user_id IS NOT NULL
        WHERE memberships.status = 'active' AND memberships.role IN ('owner', 'admin')
        ORDER BY memberships.empresa_id, CASE memberships.role WHEN 'owner' THEN 0 WHEN 'admin' THEN 1 ELSE 2 END, memberships.usuario_id`,
     )
-    const competence = new Intl.DateTimeFormat('sv-SE',{timeZone:'America/Fortaleza'}).format(new Date())
+    // Cada empresa usa o próprio dia; a competência devolvida é a do fuso padrão.
+    const now = new Date(), competence = businessDay(DEFAULT_ERP_TIME_ZONE, now)
     const results: AutomationResult[] = []
     for (let index = 0; index < tenants.length; index += tenantConcurrency) {
       const batch = tenants.slice(index, index + tenantConcurrency)
       const batchResults = await Promise.allSettled(batch.map((tenant) => runWithErpDatabaseContext(
-        { tenantId: tenant.empresa_id, userId: tenant.actor_id },
-        () => runTenantAutomations(tenant, competence),
+        { tenantId: tenant.empresa_id, userId: tenant.actor_id, timeZone: normalizeTimeZone(tenant.fuso_horario) },
+        () => runTenantAutomations(tenant, businessDay(tenant.fuso_horario, now)),
       )))
       batchResults.forEach((result,index) => {
         if(result.status==='fulfilled') results.push(...result.value)

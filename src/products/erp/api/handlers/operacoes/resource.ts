@@ -23,7 +23,7 @@ function toCsv(records: Record<string, unknown>[]) {
  async function handleGET(request: Request, context: { params: Promise<{ resource: string }> }) {
   const { resource } = await context.params
   const tenant = await resolveErpAccess(getErpOperationCapability(resource, false))
-  if (!tenant) return erpFailure('Nao autenticado.', 401)
+  if (!tenant) return erpFailure('Não autenticado.', 401)
   try {
     const url = new URL(request.url)
     const isCsv = url.searchParams.get('format') === 'csv'

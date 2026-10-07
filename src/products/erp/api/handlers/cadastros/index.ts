@@ -27,7 +27,7 @@ function parseFilters(searchParams: URLSearchParams) {
  async function handleGET(request: Request, context: RouteContext) {
   const { entityId } = await context.params
   if (!isErpConnectedModuleId(entityId)) {
-    return erpFailure('Modulo ERP nao encontrado.', 404)
+    return erpFailure('Módulo ERP não encontrado.', 404)
   }
 
   const tenant = await resolveErpAccess(getErpModuleCapability(entityId, 'read'))
@@ -55,7 +55,7 @@ function parseFilters(searchParams: URLSearchParams) {
  async function handlePOST(request: Request, context: RouteContext) {
   const { entityId } = await context.params
   if (!isErpConnectedModuleId(entityId)) {
-    return erpFailure('Modulo ERP nao encontrado.', 404)
+    return erpFailure('Módulo ERP não encontrado.', 404)
   }
 
   const tenant = await resolveErpAccess(getErpModuleCapability(entityId, 'manage'))

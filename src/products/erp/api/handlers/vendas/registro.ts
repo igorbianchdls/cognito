@@ -11,7 +11,7 @@ import { getErpSaleDetails, updateErpSaleDraft } from '@/products/erp/server/erp
 
  async function handleGET(_request: Request, context: { params: Promise<{ id: string }> }) {
   const tenant = await resolveErpAccess('erp.vendas.visualizar')
-  if (!tenant) return erpFailure('Nao autenticado.', 401)
+  if (!tenant) return erpFailure('Não autenticado.', 401)
   try {
     return NextResponse.json(await getErpSaleDetails(tenant.tenantId, (await context.params).id))
   } catch (error) {
@@ -24,7 +24,7 @@ import { getErpSaleDetails, updateErpSaleDraft } from '@/products/erp/server/erp
   if (!tenant) return erpFailure('Acesso negado.', 403)
   try {
     const body = await parseErpBody(request,erpUpdateEnvelopeSchema)
-    if (!Number.isInteger(body.expectedVersion) || Number(body.expectedVersion) <= 0) return erpFailure('Versao da venda e obrigatoria.', 400)
+    if (!Number.isInteger(body.expectedVersion) || Number(body.expectedVersion) <= 0) return erpFailure('Versão da venda é obrigatória.', 400)
     return NextResponse.json(await updateErpSaleDraft({ tenantId: tenant.tenantId, actorId: tenant.sharedUserId,
       id: (await context.params).id, expectedVersion: Number(body.expectedVersion), values: body.values || {} }))
   } catch (error) {

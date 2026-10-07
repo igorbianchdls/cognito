@@ -32,6 +32,7 @@ import {
   ErpStatusBadge,
   ErpWorkspaceHeader,
 } from '@/products/erp/frontend/components/ErpWorkspaceChrome'
+import { erpClientToday, erpClientMonthStart } from '@/products/erp/frontend/services/erpTimeZone'
 
 type Option = { id: string; nome: string; documento?: string; padrao?: boolean }
 type Catalogs = { suppliers: Option[]; categories: Option[]; costCenters: Option[]; financialAccounts: Option[]; paymentMethods: Option[] }
@@ -43,7 +44,7 @@ type Payable = {
 type Payment = { id: string; data_pagamento: string; valor: number; juros: number; multa: number; desconto: number; taxa: number; valor_liquido: number; estornado_em: string; estorno_de_pagamento_id: string; numero_parcela: number; conta_financeira: string; metodo_pagamento: string }
 
 const emptyCatalogs: Catalogs = { suppliers: [], categories: [], costCenters: [], financialAccounts: [], paymentMethods: [] }
-const today = () => new Date().toISOString().slice(0, 10)
+const today = () => erpClientToday()
 const currency = (value: number) => new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value)
 const dateLabel = (value: string) => value ? new Intl.DateTimeFormat('pt-BR', { timeZone: 'UTC' }).format(new Date(value + 'T12:00:00Z')) : '—'
 const monthRange = (value: Date) => {
@@ -83,7 +84,7 @@ export function PayablesWorkspacePage({ purchaseOnly = false }: { purchaseOnly?:
   const [status, setStatus] = useState('')
   const [origin, setOrigin] = useState(purchaseOnly ? 'compra' : '')
   const [launchType, setLaunchType] = useState('')
-  const [period, setPeriod] = useState(() => new Date())
+  const [period, setPeriod] = useState(() => erpClientMonthStart())
   const [filtersOpen, setFiltersOpen] = useState(false)
   const [selectedIds, setSelectedIds] = useState<Set<string>>(() => new Set())
   const [periodSummary, setPeriodSummary] = useState({ overdue: 0, dueToday: 0, upcoming: 0, paid: 0, total: 0 })
@@ -143,7 +144,7 @@ export function PayablesWorkspacePage({ purchaseOnly = false }: { purchaseOnly?:
       setPeriodSummary(payablesPage.summary ?? { overdue: 0, dueToday: 0, upcoming: 0, paid: 0, total: 0 })
       setCatalogs(await parseResponse<Catalogs>(catalogsResponse))
     } catch (loadError) {
-      setError(loadError instanceof Error ? loadError.message : 'Nao foi possivel carregar as contas a pagar.')
+      setError(loadError instanceof Error ? loadError.message : 'Não foi possível carregar as contas a pagar.')
     } finally { setLoading(false) }
   }, [launchType, origin, page, period, query, status])
 
@@ -195,7 +196,7 @@ export function PayablesWorkspacePage({ purchaseOnly = false }: { purchaseOnly?:
         } }),
       }))
       setExpenseOpen(false); await loadData()
-    } catch (saveError) { setError(saveError instanceof Error ? saveError.message : 'Nao foi possivel salvar a despesa.') }
+    } catch (saveError) { setError(saveError instanceof Error ? saveError.message : 'Não foi possível salvar a despesa.') }
     finally { setSaving(false) }
   }
 
@@ -214,7 +215,7 @@ export function PayablesWorkspacePage({ purchaseOnly = false }: { purchaseOnly?:
           metodo_pagamento_id: paymentMethodId, juros: interest, multa: fine, desconto: discount, taxa: fee,
         } })
       setPaymentOpen(false); await loadData()
-    } catch (paymentError) { setError(paymentError instanceof Error ? paymentError.message : 'Nao foi possivel registrar o pagamento.') }
+    } catch (paymentError) { setError(paymentError instanceof Error ? paymentError.message : 'Não foi possível registrar o pagamento.') }
     finally { setSaving(false) }
   }
 
@@ -225,7 +226,7 @@ export function PayablesWorkspacePage({ purchaseOnly = false }: { purchaseOnly?:
         method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ values: { conta_id: record.conta_id } }),
       }))
       await loadData()
-    } catch (cause) { setError(cause instanceof Error ? cause.message : 'Nao foi possivel efetivar a previsao.') }
+    } catch (cause) { setError(cause instanceof Error ? cause.message : 'Não foi possível efetivar a previsão.') }
     finally { setSaving(false) }
   }
 
@@ -234,7 +235,7 @@ export function PayablesWorkspacePage({ purchaseOnly = false }: { purchaseOnly?:
     try {
       const body = await parseResponse<{ records: Payment[] }>(await fetch(`/api/erp/pagamentos?tipo=pagar&conta_id=${record.conta_id}`, { cache: 'no-store' }))
       setPayments(body.records); setHistoryOpen(true)
-    } catch (historyError) { setError(historyError instanceof Error ? historyError.message : 'Nao foi possivel carregar o historico.') }
+    } catch (historyError) { setError(historyError instanceof Error ? historyError.message : 'Não foi possível carregar o histórico.') }
   }
 
   async function reversePayment(payment: Payment) {
@@ -245,7 +246,7 @@ export function PayablesWorkspacePage({ purchaseOnly = false }: { purchaseOnly?:
       await parseResponse(await fetch(`/api/erp/pagamentos/${payment.id}/estornar`, { method: 'POST', headers: { 'Content-Type': 'application/json', 'Idempotency-Key': crypto.randomUUID() }, body: JSON.stringify({ motivo: 'Estorno solicitado no ERP' }) }))
       if (selected) await openHistory(selected)
       await loadData()
-    } catch (reverseError) { setError(reverseError instanceof Error ? reverseError.message : 'Nao foi possivel estornar.') }
+    } catch (reverseError) { setError(reverseError instanceof Error ? reverseError.message : 'Não foi possível estornar.') }
     finally { setSaving(false) }
   }
 
@@ -306,18 +307,18 @@ export function PayablesWorkspacePage({ purchaseOnly = false }: { purchaseOnly?:
     </ErpBulkActionBar>
 
     <Dialog open={expenseOpen} onOpenChange={setExpenseOpen}><DialogContent className="max-h-[92vh] max-w-3xl overflow-y-auto"><DialogHeader><DialogTitle>Nova despesa</DialogTitle></DialogHeader><div className="grid gap-4 py-2 md:grid-cols-2">
-      <ErpAsyncCatalogSelect label="Fornecedor *" type="fornecedor" value={supplierId} selectedLabel={catalogs.suppliers.find((item) => item.id === supplierId)?.nome} onChange={(value, record) => { setSupplierId(value); setCatalogs((current) => ({ ...current, suppliers: [record, ...current.suppliers.filter((item) => item.id !== record.id)] })) }} /><FormInput label="Descricao *" value={description} onChange={setDescription} />
+      <ErpAsyncCatalogSelect label="Fornecedor *" type="fornecedor" value={supplierId} selectedLabel={catalogs.suppliers.find((item) => item.id === supplierId)?.nome} onChange={(value, record) => { setSupplierId(value); setCatalogs((current) => ({ ...current, suppliers: [record, ...current.suppliers.filter((item) => item.id !== record.id)] })) }} /><FormInput label="Descrição *" value={description} onChange={setDescription} />
       <FormInput label="Valor *" value={amount} onChange={setAmount} type="number" /><FormSelect label="Categoria *" value={categoryId} onChange={setCategoryId} options={catalogs.categories.map((item) => [item.id, item.nome])} />
-      <FormInput label="Competencia" value={competence} onChange={setCompetence} type="date" /><FormInput label="Primeiro vencimento" value={dueDate} onChange={setDueDate} type="date" />
+      <FormInput label="Competência" value={competence} onChange={setCompetence} type="date" /><FormInput label="Primeiro vencimento" value={dueDate} onChange={setDueDate} type="date" />
       <FormSelect label="Centro de custo" value={costCenterId} onChange={setCostCenterId} options={catalogs.costCenters.map((item) => [item.id, item.nome])} /><FormInput label="Parcelas" value={String(installmentCount)} onChange={(value) => setInstallmentCount(Math.min(48, Math.max(1, Number(value))))} type="number" />
       <FormSelect label="Forma de pagamento" value={paymentMethodId} onChange={setPaymentMethodId} options={catalogs.paymentMethods.map((item) => [item.id, item.nome])} /><FormSelect label="Conta de pagamento" value={financialAccountId} onChange={setFinancialAccountId} options={catalogs.financialAccounts.map((item) => [item.id, item.nome])} />
       <div className="flex items-center gap-3"><Switch checked={repeat} onCheckedChange={setRepeat} /><Label>Repetir lançamento</Label></div>{repeat ? <div className="grid gap-3"><FormSelect label="Frequência" value={frequency} onChange={setFrequency} options={ [['dia','Dia'],['semana','Semana'],['mes','Mês'],['ano','Ano']] }/><label className="grid gap-1 text-sm">Intervalo<Input type="number" min="1" value={recurrenceInterval} onChange={e=>setRecurrenceInterval(Number(e.target.value))}/></label><FormSelect label="Término" value={endType} onChange={setEndType} options={ [['ocorrencias','Por quantidade'],['data','Por data'],['indeterminado','Sem término']] }/>{endType==='ocorrencias'?<label className="grid gap-1 text-sm">Ocorrências (inclui a primeira)<Input type="number" min="1" max="366" value={occurrences} onChange={e=>setOccurrences(Number(e.target.value))}/></label>:endType==='data'?<label className="grid gap-1 text-sm">Última data de geração<Input type="date" min={competence} value={endDate} onChange={e=>setEndDate(e.target.value)}/></label>:null}</div>:<div/>}
       <div className="grid gap-2 md:col-span-2"><Label>Observacoes</Label><Textarea value={notes} onChange={(event) => setNotes(event.target.value)} /></div>
     </div><div className="flex justify-end gap-2"><Button variant="outline" onClick={() => setExpenseOpen(false)}>Cancelar</Button><Button disabled={saving || !canManage} onClick={() => void saveExpense()}>{saving ? <Loader2 className="size-4 animate-spin" /> : null}Salvar despesa</Button></div></DialogContent></Dialog>
 
-    <Dialog open={paymentOpen} onOpenChange={setPaymentOpen}><DialogContent className="max-w-xl"><DialogHeader><DialogTitle>Registrar pagamento</DialogTitle></DialogHeader><div className="grid gap-4 py-2 md:grid-cols-2"><FormInput label="Valor principal" value={paymentAmount} onChange={setPaymentAmount} type="number" /><FormInput label="Data do pagamento" value={paymentDate} onChange={setPaymentDate} type="date" /><FormSelect label="Conta de pagamento" value={financialAccountId} onChange={setFinancialAccountId} options={catalogs.financialAccounts.map((item) => [item.id, item.nome])} /><FormSelect label="Forma de pagamento" value={paymentMethodId} onChange={setPaymentMethodId} options={catalogs.paymentMethods.map((item) => [item.id, item.nome])} /><FormInput label="Juros" value={interest} onChange={setInterest} type="number" /><FormInput label="Multa" value={fine} onChange={setFine} type="number" /><FormInput label="Desconto" value={discount} onChange={setDiscount} type="number" /><FormInput label="Tarifa" value={fee} onChange={setFee} type="number" /><div className="md:col-span-2 rounded-md bg-gray-50 p-4"><p className="text-xs text-gray-500">Saida da conta financeira</p><p className="mt-1 text-xl font-semibold">{currency(cashOut)}</p></div></div><div className="flex justify-end gap-2"><Button variant="outline" onClick={() => setPaymentOpen(false)}>Cancelar</Button><Button disabled={saving || !canSettle} onClick={() => void savePayment()}>{saving ? <Loader2 className="size-4 animate-spin" /> : null}Confirmar pagamento</Button></div></DialogContent></Dialog>
+    <Dialog open={paymentOpen} onOpenChange={setPaymentOpen}><DialogContent className="max-w-xl"><DialogHeader><DialogTitle>Registrar pagamento</DialogTitle></DialogHeader><div className="grid gap-4 py-2 md:grid-cols-2"><FormInput label="Valor principal" value={paymentAmount} onChange={setPaymentAmount} type="number" /><FormInput label="Data do pagamento" value={paymentDate} onChange={setPaymentDate} type="date" /><FormSelect label="Conta de pagamento" value={financialAccountId} onChange={setFinancialAccountId} options={catalogs.financialAccounts.map((item) => [item.id, item.nome])} /><FormSelect label="Forma de pagamento" value={paymentMethodId} onChange={setPaymentMethodId} options={catalogs.paymentMethods.map((item) => [item.id, item.nome])} /><FormInput label="Juros" value={interest} onChange={setInterest} type="number" /><FormInput label="Multa" value={fine} onChange={setFine} type="number" /><FormInput label="Desconto" value={discount} onChange={setDiscount} type="number" /><FormInput label="Tarifa" value={fee} onChange={setFee} type="number" /><div className="md:col-span-2 rounded-md bg-gray-50 p-4"><p className="text-xs text-gray-500">Saída da conta financeira</p><p className="mt-1 text-xl font-semibold">{currency(cashOut)}</p></div></div><div className="flex justify-end gap-2"><Button variant="outline" onClick={() => setPaymentOpen(false)}>Cancelar</Button><Button disabled={saving || !canSettle} onClick={() => void savePayment()}>{saving ? <Loader2 className="size-4 animate-spin" /> : null}Confirmar pagamento</Button></div></DialogContent></Dialog>
 
-    <Dialog open={historyOpen} onOpenChange={setHistoryOpen}><DialogContent className="max-w-5xl"><DialogHeader><DialogTitle>Historico de pagamentos</DialogTitle></DialogHeader><div className="max-h-[60vh] overflow-auto rounded-md border"><Table><TableHeader><TableRow><TableHead>Data</TableHead><TableHead>Parcela</TableHead><TableHead>Conta / metodo</TableHead><TableHead className="text-right">Principal</TableHead><TableHead className="text-right">Encargos</TableHead><TableHead className="text-right">Desconto</TableHead><TableHead className="text-right">Taxa</TableHead><TableHead className="text-right">Dinheiro</TableHead><TableHead>Situacao</TableHead><TableHead className="w-12" /></TableRow></TableHeader><TableBody>{payments.length === 0 ? <TableRow><TableCell colSpan={10} className="h-24 text-center text-gray-500">Nenhum pagamento registrado.</TableCell></TableRow> : payments.map((payment) => { const reversed = Boolean(payment.estornado_em || payment.estorno_de_pagamento_id); return <TableRow key={payment.id}><TableCell>{payment.data_pagamento}</TableCell><TableCell>{payment.numero_parcela}</TableCell><TableCell><p>{payment.conta_financeira || '-'}</p><p className="text-xs text-gray-500">{payment.metodo_pagamento || '-'}</p></TableCell><TableCell className="text-right">{currency(payment.valor)}</TableCell><TableCell className="text-right">{currency(payment.juros + payment.multa)}</TableCell><TableCell className="text-right">{currency(payment.desconto)}</TableCell><TableCell className="text-right">{currency(payment.taxa)}</TableCell><TableCell className="text-right font-medium">{currency(payment.valor_liquido)}</TableCell><TableCell><Badge variant="outline">{payment.estorno_de_pagamento_id ? 'Estorno' : payment.estornado_em ? 'Estornado' : 'Confirmado'}</Badge></TableCell><TableCell>{canReverse && !reversed ? <Button variant="ghost" size="icon" title="Estornar" disabled={saving} onClick={() => void reversePayment(payment)}><RotateCcw className="size-4" /></Button> : null}</TableCell></TableRow> })}</TableBody></Table></div></DialogContent></Dialog>
+    <Dialog open={historyOpen} onOpenChange={setHistoryOpen}><DialogContent className="max-w-5xl"><DialogHeader><DialogTitle>Histórico de pagamentos</DialogTitle></DialogHeader><div className="max-h-[60vh] overflow-auto rounded-md border"><Table><TableHeader><TableRow><TableHead>Data</TableHead><TableHead>Parcela</TableHead><TableHead>Conta / metodo</TableHead><TableHead className="text-right">Principal</TableHead><TableHead className="text-right">Encargos</TableHead><TableHead className="text-right">Desconto</TableHead><TableHead className="text-right">Taxa</TableHead><TableHead className="text-right">Dinheiro</TableHead><TableHead>Situacao</TableHead><TableHead className="w-12" /></TableRow></TableHeader><TableBody>{payments.length === 0 ? <TableRow><TableCell colSpan={10} className="h-24 text-center text-gray-500">Nenhum pagamento registrado.</TableCell></TableRow> : payments.map((payment) => { const reversed = Boolean(payment.estornado_em || payment.estorno_de_pagamento_id); return <TableRow key={payment.id}><TableCell>{payment.data_pagamento}</TableCell><TableCell>{payment.numero_parcela}</TableCell><TableCell><p>{payment.conta_financeira || '-'}</p><p className="text-xs text-gray-500">{payment.metodo_pagamento || '-'}</p></TableCell><TableCell className="text-right">{currency(payment.valor)}</TableCell><TableCell className="text-right">{currency(payment.juros + payment.multa)}</TableCell><TableCell className="text-right">{currency(payment.desconto)}</TableCell><TableCell className="text-right">{currency(payment.taxa)}</TableCell><TableCell className="text-right font-medium">{currency(payment.valor_liquido)}</TableCell><TableCell><Badge variant="outline">{payment.estorno_de_pagamento_id ? 'Estorno' : payment.estornado_em ? 'Estornado' : 'Confirmado'}</Badge></TableCell><TableCell>{canReverse && !reversed ? <Button variant="ghost" size="icon" title="Estornar" disabled={saving} onClick={() => void reversePayment(payment)}><RotateCcw className="size-4" /></Button> : null}</TableCell></TableRow> })}</TableBody></Table></div></DialogContent></Dialog>
   </div>
 }
 

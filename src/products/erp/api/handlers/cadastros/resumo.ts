@@ -9,7 +9,7 @@ import { getErpModuleCapability, isErpConnectedModuleId } from '@/products/erp/s
 
  async function handleGET(_request: Request, context: { params: Promise<{ entityId: string }> }) {
   const { entityId } = await context.params
-  if (!isErpConnectedModuleId(entityId)) return erpFailure('Modulo ERP nao encontrado.', 404)
+  if (!isErpConnectedModuleId(entityId)) return erpFailure('Módulo ERP não encontrado.', 404)
   const tenant = await resolveErpAccess(getErpModuleCapability(entityId, 'read'))
   if (!tenant) return erpFailure('Acesso negado.', 403)
   try {

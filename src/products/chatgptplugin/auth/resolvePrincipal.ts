@@ -3,6 +3,7 @@ import { clerkClient, verifyToken } from '@clerk/nextjs/server'
 import { pluginQuery } from '../shared/database'
 import { type ErpCapability, type ErpAccessProfile } from '@/products/erp/shared/professionalContracts'
 import { effectiveCapabilities } from '@/products/auth/server/accessPolicy'
+import { normalizeTimeZone } from '@/products/erp/shared/businessDate'
 import { PluginError, type PluginPrincipal, type PluginCompany } from '../shared/contracts'
 import type { PluginConfig } from '../shared/config'
 
@@ -95,10 +96,11 @@ export async function verifyClerkOAuthToken(accessToken: string, config: PluginC
 
 export async function loadPluginPrincipal(clerkUserId: string, clientId: string, scopes: string[]): Promise<PluginPrincipal> {
   const rows = await pluginQuery<{
-    user_id: string; email: string | null; full_name: string | null; empresa_id: string; tenant_name: string; role: string
+    user_id: string; email: string | null; full_name: string | null; empresa_id: string; tenant_name: string; fuso_horario: string | null; role: string
     profile: ErpAccessProfile; capabilities: ErpCapability[]
   }>(
     `SELECT users.id::text AS user_id, users.email::text AS email, users.full_name::text AS full_name, tenants.id::text AS empresa_id, tenants.name AS tenant_name,
+       (SELECT to_jsonb(zone)->>'fuso_horario' FROM shared.empresas AS zone WHERE zone.id = tenants.id) AS fuso_horario,
        memberships.role, memberships.perfil_acesso_id AS profile,
        COALESCE(array_agg(permissions.capability) FILTER (WHERE permissions.capability IS NOT NULL), ARRAY[]::text[]) AS capabilities
      FROM shared.usuarios AS users
@@ -114,7 +116,7 @@ export async function loadPluginPrincipal(clerkUserId: string, clientId: string,
   const companies: PluginCompany[] = rows.map(row => ({
     id: Number(row.empresa_id), name: row.tenant_name,
     profile: row.profile || (['owner', 'admin'].includes(row.role) ? 'administrador' : 'consulta'),
-    capabilities: effectiveCapabilities(row.role, row.capabilities),
+    capabilities: effectiveCapabilities(row.role, row.capabilities), timeZone: normalizeTimeZone(row.fuso_horario),
   }))
   return { userId: Number(rows[0].user_id), clerkUserId, clientId, scopes, companies, name: rows[0].full_name, email: rows[0].email }
 }

@@ -127,7 +127,8 @@ function definition(spec:Spec):ActionDefinition {
       }
       previewOnly(input)
       const proposal=parseProposal(spec,input)
-      const view=await runWithErpDatabaseContext({tenantId:companyId,userId:principal.userId,readOnly:true,statementTimeoutMs:10000},
+      const view=await runWithErpDatabaseContext({tenantId:companyId,userId:principal.userId,readOnly:true,statementTimeoutMs:10000,
+        timeZone:principal.companies.find(item=>item.id===companyId)?.timeZone},
         ()=>deps.prepare(principal,companyId,String(input.chave_operacao),proposal,config))
       return {...view,etapa:'previa',confirmar:{tool:spec.name,argumentos:{empresa_id:companyId,rascunho_id:view.rascunho_id}}}
     }}

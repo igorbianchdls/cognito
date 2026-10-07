@@ -1,8 +1,9 @@
+import { erpToday } from '@/products/erp/server/erpBusinessDate'
 import { NextResponse } from 'next/server'
 import { withErpHttp } from '../../http/handler'
 import { resolveErpApiSession } from '../../http/access'
 import { loadDashboard } from '../../../server/dashboards/dashboardService'
-import { DASHBOARD_IDS, dashboardToday, type DashboardId } from '../../../shared/dashboardContracts'
+import { DASHBOARD_IDS, type DashboardId } from '../../../shared/dashboardContracts'
 import { ErpDomainError } from '../../../shared/erpErrors'
 async function handleGET(request: Request, context: { params: Promise<{ dashboardId: string }> }) {
   const session = await resolveErpApiSession()
@@ -18,7 +19,7 @@ async function handleGET(request: Request, context: { params: Promise<{ dashboar
     if (['compare', 'includeForecast'].includes(key) && !['true', 'false'].includes(value))
       throw new ErpDomainError('VALIDATION_ERROR', 'Informe true ou false para as opções.', 422)
   }
-  const today = dashboardToday()
+  const today = erpToday()
   return NextResponse.json(
     await loadDashboard(session, dashboardId as DashboardId, {
       from: params.get('from') || today.slice(0, 7) + '-01',

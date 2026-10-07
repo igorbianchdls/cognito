@@ -13,12 +13,15 @@ function repository(file){
  const exports={};
  vm.runInNewContext(compiled.outputText,{exports,module:{exports},require:id=>{
   if(id==='@/lib/postgres')return {runQuery:async()=>{queries++;return [];},withTransaction:()=>{throw Error('Unexpected transaction');}};
-  if(id==='@/products/erp/server/erpApi')return {ErpDomainError:DomainError};
+  if(id==='@/products/erp/server/erpApi'||id==='@/products/erp/shared/erpErrors')return {ErpDomainError:DomainError};
   if(id==='@/products/erp/shared/erpTransport')return {erpDateSchema:{safeParse:value=>/^\d{4}-\d{2}-\d{2}$/.test(value||'')?{success:true,data:value}:{success:false}}};
   if(id==='./erpCashReport')return {cashResultSql:()=>''};
+  if(id==='./erpFinancialReports')return {cashFlowSql:()=>'SELECT 1',accrualResultSql:()=>'SELECT 1',agingSql:()=>'SELECT 1'};
+  if(id==='@/products/erp/server/erpBusinessDate')return {erpToday:()=>'2026-10-07'};
   if(id==='@/products/erp/server/erpRepository')return {financialCompositionSql:()=>''};
   if(id==='@/products/erp/shared/reportCatalog')return {
-   isRetiredErpReport:value=>['dre','dre-competencia','fluxo-de-caixa','fluxo-diario','fluxo-mensal','aging-receber','aging-pagar'].includes(value),
+   isRetiredErpReport:value=>['dre','fluxo-diario','fluxo-mensal'].includes(value),
+   isRetiredErpOperationReport:value=>['dre','dre-competencia','fluxo-de-caixa','fluxo-diario','fluxo-mensal','aging-receber','aging-pagar'].includes(value),
   };
   return {};
  }});
@@ -41,10 +44,13 @@ try{
   await assert.rejects(management.listManagementOperation(1,resource),e=>e.status===410&&e.code==='REPORT_RETIRED');checks++;
  }
  const professional=repository('src/products/erp/server/erpProfessionalRepository.ts');
- for(const report of ['dre-competencia','fluxo-diario','fluxo-mensal']){
+ for(const report of ['dre','fluxo-diario','fluxo-mensal']){
   await assert.rejects(professional.listProfessionalReport({tenantId:1,report}),e=>e.status===410&&e.code==='REPORT_RETIRED');checks++;
  }
  assert.equal(queries,0);checks++;
  await professional.listProfessionalReport({tenantId:1,report:'vendas-clientes',from:'2026-01-01',to:'2026-12-31'});assert.equal(queries,1);checks++;
+ // Relatórios recriados como consultas (sem views): voltam a responder.
+ for(const report of ['dre-competencia','fluxo-de-caixa','aging-receber','aging-pagar']){await professional.listProfessionalReport({tenantId:1,report,from:'2026-01-01',to:'2026-12-31'});checks++;}
+ assert.equal(queries,5);checks++;
  console.log(JSON.stringify({status:'passed',checks,tables:tablesBefore.length,views:stockBefore.length,businessFixtures:false}));
 }catch(e){console.error({checks,message:e.message,code:e.code});process.exitCode=1;}finally{await db.close();}

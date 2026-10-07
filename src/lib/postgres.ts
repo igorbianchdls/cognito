@@ -5,6 +5,7 @@ import { Pool } from 'pg'
 import { AsyncLocalStorage } from 'node:async_hooks'
 
 import { getErpDatabaseContext } from '@/lib/erpDatabaseContext'
+import { normalizeTimeZone } from '@/products/erp/shared/businessDate'
 export type SQLClient = {
   query: (sql: string, params?: unknown[]) => Promise<{ rows: Record<string, unknown>[] }>
   release: () => void
@@ -132,6 +133,15 @@ export async function withTransaction<T>(fn: (client: SQLClient) => Promise<T>):
   if(transactionClient)return fn(transactionClient)
   const transactionContext = getErpDatabaseContext()
   const rawClient = await getPool().connect();
+  // O contexto da empresa vale para a transação inteira: aplica uma vez e só alterna o papel
+  // quando uma consulta fora do schema erp (shared/plugin) precisa do papel do servidor.
+  let configured = false, restricted = false
+  async function restrict(context: NonNullable<typeof transactionContext>) {
+    if (restricted) return
+    if (configured) await rawClient.query("SELECT set_config('role', 'erp_runtime', true)")
+    else { await applyErpRuntimeContext(rawClient, context); configured = true }
+    restricted = true
+  }
   const client: SQLClient = {
     async query(sql, params) {
       assertErpTenantScopedQuery(sql, params)
@@ -140,13 +150,10 @@ export async function withTransaction<T>(fn: (client: SQLClient) => Promise<T>):
         throw new Error('O contexto autenticado mudou durante a transacao.')
       }
       if (/\berp\.[a-z_][a-z0-9_]*/i.test(sql) && context) {
-        await applyErpRuntimeContext(rawClient, context)
-        try {
-          return await rawClient.query(sql, params) as { rows: Record<string, unknown>[] }
-        } finally {
-          await rawClient.query('RESET ROLE').catch(() => undefined)
-        }
+        await restrict(context)
+        return await rawClient.query(sql, params) as { rows: Record<string, unknown>[] }
       }
+      if (restricted && !/^\s*(BEGIN|COMMIT|ROLLBACK)\b/i.test(sql)) { await rawClient.query('RESET ROLE'); restricted = false }
       return rawClient.query(sql, params) as Promise<{ rows: Record<string, unknown>[] }>
     },
     release: () => rawClient.release(),
@@ -156,7 +163,7 @@ export async function withTransaction<T>(fn: (client: SQLClient) => Promise<T>):
     try {
       const result = await fn(client);
       // Constraints diferidas tambem devem executar sob o contexto restrito.
-      if (transactionContext) await applyErpRuntimeContext(rawClient, transactionContext)
+      if (transactionContext) await restrict(transactionContext)
       await client.query('COMMIT');
       return result;
     } catch (err) {
@@ -170,17 +177,20 @@ export async function withTransaction<T>(fn: (client: SQLClient) => Promise<T>):
 
 async function applyErpRuntimeContext(
   client: Pick<SQLClient, 'query'>,
-  context: { tenantId: number; userId: number; statementTimeoutMs?: number; readOnly?: boolean },
+  context: { tenantId: number; userId: number; statementTimeoutMs?: number; readOnly?: boolean; timeZone?: string },
 ) {
-  if (context.readOnly) await client.query('SET TRANSACTION READ ONLY')
-  if (context.statementTimeoutMs !== undefined) {
-    await client.query("SELECT set_config('statement_timeout', $1, true)", [String(context.statementTimeoutMs)])
-  }
-  await client.query('SET LOCAL ROLE erp_runtime')
-  await client.query(
-    `SELECT set_config('app.erp_empresa_id', $1, true), set_config('app.erp_tenant_id', $1, true), set_config('app.erp_user_id', $2, true)`,
-    [String(context.tenantId), String(context.userId)],
-  )
+  // Uma ida ao banco: somente leitura, tempo limite, empresa, usuário, fuso e papel restrito,
+  // todos com escopo da transação. app.erp_time_zone converte timestamps em datas da empresa.
+  const timeout = context.statementTimeoutMs !== undefined
+  const settings = [
+    ...(context.readOnly ? ["set_config('transaction_read_only', 'on', true)"] : []),
+    ...(timeout ? ["set_config('statement_timeout', $4, true)"] : []),
+    "set_config('app.erp_empresa_id', $1, true)", "set_config('app.erp_tenant_id', $1, true)",
+    "set_config('app.erp_user_id', $2, true)", "set_config('app.erp_time_zone', $3, true)",
+    "set_config('role', 'erp_runtime', true)",
+  ]
+  await client.query(`SELECT ${settings.join(', ')}`, [String(context.tenantId), String(context.userId),
+    normalizeTimeZone(context.timeZone), ...(timeout ? [String(context.statementTimeoutMs)] : [])])
 }
 
 function assertSafeIdentifier(identifier: string, label: string) {

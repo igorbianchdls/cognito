@@ -14,6 +14,7 @@
     "erp:foundation-smoke": "node scripts/erp-foundation-smoke.mjs",
     "erp:professional-smoke": "node scripts/erp-professional-smoke.mjs",
     "erp:typecheck": "tsc -p tsconfig.erp.json --pretty false",
+    "erp:business-date-smoke": "tsx scripts/erp/business-date-smoke.ts",
     "erp:api-catalog": "node scripts/erp/api-catalog.mjs",
     "erp:api-catalog:write": "node scripts/erp/api-catalog.mjs --write",
     "erp:api-http-smoke": "node scripts/erp/api-http-smoke.mjs",

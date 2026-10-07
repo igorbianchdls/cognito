@@ -12,7 +12,7 @@ const catalogTypes = ['cliente', 'fornecedor', 'produto', 'servico', 'categoria'
   if (!tenant) return erpFailure('Acesso negado.', 403)
   const params = new URL(request.url).searchParams
   const type = params.get('tipo')
-  if (!catalogTypes.some((value) => value === type)) return erpFailure('Tipo de catalogo invalido.', 400)
+  if (!catalogTypes.some((value) => value === type)) return erpFailure('Tipo de catálogo inválido.', 400)
   return NextResponse.json({ records: await searchErpCatalog({
     tenantId: tenant.tenantId,
     type: type as (typeof catalogTypes)[number],

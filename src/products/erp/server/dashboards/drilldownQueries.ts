@@ -1,3 +1,4 @@
+import { erpToday } from '@/products/erp/server/erpBusinessDate'
 import { withTransaction } from '@/lib/postgres'
 import { getErpDatabaseContext } from '@/lib/erpDatabaseContext'
 import { ErpDomainError } from '../../shared/erpErrors'
@@ -5,7 +6,6 @@ import {
   DASHBOARDS,
   DASHBOARD_IDS,
   dashboardRecordsSchema,
-  dashboardToday,
   type DashboardId,
   type DashboardRecord,
   type DashboardRecordsFilters,
@@ -150,7 +150,7 @@ function definition(input: DashboardRecordsFilters): Definition {
     const base = `SELECT s.id,s.produto_id,s.local_estoque_id,p.nome,p.estoque_minimo,l.nome local,s.quantidade_fisica,s.quantidade_reservada,s.quantidade_fisica-s.quantidade_reservada disponivel,s.quantidade_fisica*s.custo_medio valor FROM erp.saldos_estoque s JOIN erp.produtos p ON p.empresa_id=$1 AND p.id=s.produto_id AND p.excluido_em IS NULL JOIN erp.locais_estoque l ON l.empresa_id=$1 AND l.id=s.local_estoque_id WHERE s.empresa_id=$1`
     if (input.status === 'reposicao' || input.status === 'produtos')
       return {
-        sql: `SELECT produto_id::text id,min(nome) label,'Mínimo: '||max(estoque_minimo)||' · físico: '||sum(quantidade_fisica)||' · reservado: '||sum(quantidade_reservada) detail,NULL::date date,'${input.status}'::text status,${input.status === 'reposicao' ? 'sum(disponivel)' : 'sum(valor)'} value,produto_id FROM (${base}) s GROUP BY produto_id ${input.status === 'reposicao' ? 'HAVING sum(disponivel)<max(estoque_minimo)' : ''}`,
+        sql: `SELECT produto_id::text id,min(nome) label,'Mínimo: '||max(estoque_minimo)||' · físico: '||sum(quantidade_fisica)||' · reservado: '||sum(quantidade_reservada) detail,NULL::date date,'${input.status}'::text status,${input.status === 'reposicao' ? 'sum(disponivel)' : 'sum(valor)'} value,produto_id FROM (${base}) s GROUP BY produto_id ${input.status === 'reposicao' ? 'HAVING sum(disponível)<max(estoque_minimo)' : ''}`,
         dimensions: { produto: 'produto_id' },
         statuses: ['reposicao', 'produtos'],
         format: input.status === 'reposicao' ? 'number' : 'currency',
@@ -163,7 +163,7 @@ function definition(input: DashboardRecordsFilters): Definition {
   }
   if (source === 'movimentos')
     return {
-      sql: `SELECT m.id::text id,p.nome label,l.nome||' · '||replace(m.origem_tipo,'_',' ') detail,coalesce(m.data_operacional,(m.ocorrido_em AT TIME ZONE 'America/Fortaleza')::date) date,CASE WHEN m.quantidade>0 THEN 'entrada' ELSE 'saida' END status,m.quantidade value,m.produto_id,m.local_estoque_id FROM erp.movimentacoes_estoque m JOIN erp.produtos p ON p.empresa_id=$1 AND p.id=m.produto_id JOIN erp.locais_estoque l ON l.empresa_id=$1 AND l.id=m.local_estoque_id WHERE m.empresa_id=$1`,
+      sql: `SELECT m.id::text id,p.nome label,l.nome||' · '||replace(m.origem_tipo,'_',' ') detail,coalesce(m.data_operacional,(m.ocorrido_em AT TIME ZONE coalesce(nullif(current_setting('app.erp_time_zone',true),''),'America/Sao_Paulo'))::date) date,CASE WHEN m.quantidade>0 THEN 'entrada' ELSE 'saida' END status,m.quantidade value,m.produto_id,m.local_estoque_id FROM erp.movimentacoes_estoque m JOIN erp.produtos p ON p.empresa_id=$1 AND p.id=m.produto_id JOIN erp.locais_estoque l ON l.empresa_id=$1 AND l.id=m.local_estoque_id WHERE m.empresa_id=$1`,
       dimensions: { produto: 'produto_id', local: 'local_estoque_id' },
       statuses: ['entrada', 'saida'],
       format: 'number',
@@ -176,7 +176,7 @@ function definition(input: DashboardRecordsFilters): Definition {
     }
   if (source === 'ordens')
     return {
-      sql: `SELECT o.id::text id,o.numero label,coalesce(o.problema_informado,'Ordem de serviço') detail,${input.status === 'concluida' ? "(o.concluida_em AT TIME ZONE 'America/Fortaleza')::date" : 'o.previsao_entrega'} date,o.status,o.total value FROM erp.ordens_servico o WHERE o.empresa_id=$1 AND o.excluido_em IS NULL ${input.status === 'concluida' ? "AND o.status='concluida'" : "AND o.status NOT IN ('concluida','cancelada')"}${input.status === 'vencido' ? ' AND o.previsao_entrega<$4::date' : ''}`,
+      sql: `SELECT o.id::text id,o.numero label,coalesce(o.problema_informado,'Ordem de serviço') detail,${input.status === 'concluida' ? "(o.concluida_em AT TIME ZONE coalesce(nullif(current_setting('app.erp_time_zone',true),''),'America/Sao_Paulo'))::date" : 'o.previsao_entrega'} date,o.status,o.total value FROM erp.ordens_servico o WHERE o.empresa_id=$1 AND o.excluido_em IS NULL ${input.status === 'concluida' ? "AND o.status='concluida'" : "AND o.status NOT IN ('concluida','cancelada')"}${input.status === 'vencido' ? ' AND o.previsao_entrega<$4::date' : ''}`,
       statuses: ['abertas', 'vencido', 'concluida'],
     }
   return {
@@ -206,7 +206,7 @@ export async function loadDashboardRecords(
       403,
     )
   const def = definition(input),
-    reference = dashboardToday(),
+    reference = erpToday(),
     params: unknown[] = [
       session.tenantId,
       input.from || null,

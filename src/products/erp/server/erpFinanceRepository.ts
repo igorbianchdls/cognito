@@ -8,7 +8,7 @@ type Side = 'receber' | 'pagar'
 type ActorInput = { tenantId: number; actorId: number }
 
 function side(value: unknown): Side {
-  if (value !== 'receber' && value !== 'pagar') throw new ErpDomainError('VALIDATION_ERROR', 'Lado financeiro invalido.')
+  if (value !== 'receber' && value !== 'pagar') throw new ErpDomainError('VALIDATION_ERROR', 'Lado financeiro inválido.')
   return value
 }
 function id(value: unknown, label: string) {
@@ -103,7 +103,7 @@ export async function getInstallmentComposition(tenantId: number, financialSide:
      WHERE parcelas.empresa_id=$1 AND parcelas.id=$3 AND $2='${financialSide}'`,
     [tenantId, financialSide, installmentId],
   )
-  if (!rows[0]) throw new ErpDomainError('NOT_FOUND', 'Parcela financeira nao encontrada.', 404)
+  if (!rows[0]) throw new ErpDomainError('NOT_FOUND', 'Parcela financeira não encontrada.', 404)
   return Object.fromEntries(Object.entries(rows[0]).map(([key, value]) => [key, typeof value === 'string' && /^-?\d+(\.\d+)?$/.test(value) ? Number(value) : value]))
 }
 
@@ -168,7 +168,7 @@ export async function listInstallmentRenegotiations(tenantId: number, financialS
 export async function createAdvance(input: ActorInput & { idempotencyKey?: string; values: Record<string, unknown> }) {
   const key = requireOperationKey(input.idempotencyKey || input.values.chave_idempotencia)
   const movementType = String(input.values.tipo || 'constituicao')
-  if (!['constituicao', 'devolucao', 'reversao'].includes(movementType)) throw new ErpDomainError('VALIDATION_ERROR', 'Tipo de adiantamento invalido.')
+  if (!['constituicao', 'devolucao', 'reversao'].includes(movementType)) throw new ErpDomainError('VALIDATION_ERROR', 'Tipo de adiantamento inválido.')
   const movementDate = date(input.values.data_movimento, 'Data do movimento')
   return withTransaction(async (client) => {
     await assertErpPeriodOpen(client, { tenantId: input.tenantId, module: 'financeiro', date: movementDate })
@@ -177,7 +177,7 @@ export async function createAdvance(input: ActorInput & { idempotencyKey?: strin
       adiantamento_id: optionalId(input.values.adiantamento_id), reversao_de_id: optionalId(input.values.reversao_de_id),
       conta_financeira_id: id(input.values.conta_financeira_id, 'Conta financeira'),
       metodo_pagamento_id: optionalId(input.values.metodo_pagamento_id), data_movimento: movementDate,
-      data_credito: input.values.data_credito ? date(input.values.data_credito, 'Data do credito') : null,
+      data_credito: input.values.data_credito ? date(input.values.data_credito, 'Data do crédito') : null,
       valor: money(input.values.valor), motivo: text(input.values.motivo, 'Motivo'), chave_idempotencia: key,
     }
     const resultId = await registerIdempotent(client, input.tenantId, 'adiantamentos', values)
@@ -188,7 +188,7 @@ export async function createAdvance(input: ActorInput & { idempotencyKey?: strin
 
 export async function applyAdvance(input: ActorInput & { idempotencyKey?: string; values: Record<string, unknown> }) {
   const key = requireOperationKey(input.idempotencyKey || input.values.chave_idempotencia)
-  const applicationDate = date(input.values.data_aplicacao, 'Data da aplicacao')
+  const applicationDate = date(input.values.data_aplicacao, 'Data da aplicação')
   return withTransaction(async (client) => {
     await assertErpPeriodOpen(client, { tenantId: input.tenantId, module: 'financeiro', date: applicationDate })
     const financialSide = side(input.values.lado)
@@ -211,8 +211,8 @@ export async function reverseAdvanceApplication(input: ActorInput & { applicatio
   return withTransaction(async (client) => {
     const originalResult = await client.query(`SELECT * FROM erp.adiantamentos_aplicacoes WHERE empresa_id=$1 AND id=$2`, [input.tenantId, input.applicationId])
     const original = originalResult.rows[0]
-    if (!original || original.reversao_de_id) throw new ErpDomainError('NOT_FOUND', 'Aplicacao original nao encontrada.', 404)
-    const applicationDate = date(input.values.data_aplicacao, 'Data da reversao')
+    if (!original || original.reversao_de_id) throw new ErpDomainError('NOT_FOUND', 'Aplicação original não encontrada.', 404)
+    const applicationDate = date(input.values.data_aplicacao, 'Data da reversão')
     await assertErpPeriodOpen(client, { tenantId: input.tenantId, module: 'financeiro', date: applicationDate })
     const resultId = await registerIdempotent(client, input.tenantId, 'adiantamentos_aplicacoes', {
       adiantamento_id: original.adiantamento_id, conta_receber_parcela_id: original.conta_receber_parcela_id,
@@ -227,7 +227,7 @@ export async function makePayableEffective(input: ActorInput & { payableId: numb
   return withTransaction(async (client) => {
     const current = await client.query(`SELECT id, tipo_lancamento, data_competencia FROM erp.contas_pagar WHERE empresa_id=$1 AND id=$2 AND excluido_em IS NULL FOR UPDATE`, [input.tenantId, input.payableId])
     const payable = current.rows[0]
-    if (!payable) throw new ErpDomainError('NOT_FOUND', 'Conta a pagar nao encontrada.', 404)
+    if (!payable) throw new ErpDomainError('NOT_FOUND', 'Conta a pagar não encontrada.', 404)
     if (payable.tipo_lancamento === 'efetivo') return { id: String(payable.id), tipo_lancamento: 'efetivo' }
     await assertErpPeriodOpen(client, { tenantId: input.tenantId, module: 'financeiro', date: databaseDate(payable.data_competencia) })
     const result = await client.query(`UPDATE erp.contas_pagar SET tipo_lancamento='efetivo', efetivado_em=now(), atualizado_por=$3 WHERE empresa_id=$1 AND id=$2 AND tipo_lancamento='previsao' RETURNING id::text,tipo_lancamento,efetivado_em`, [input.tenantId, input.payableId, input.actorId])
@@ -241,10 +241,10 @@ export async function replaceFinancialAllocations(input: ActorInput & { financia
   return withTransaction(async (client) => {
     const titleTable = input.financialSide === 'receber' ? 'erp.contas_receber' : 'erp.contas_pagar'
     const title = await client.query(`SELECT id,valor_total,data_competencia FROM ${titleTable} WHERE empresa_id=$1 AND id=$2 AND excluido_em IS NULL FOR UPDATE`, [input.tenantId, input.titleId])
-    if (!title.rows[0]) throw new ErpDomainError('NOT_FOUND', 'Titulo financeiro nao encontrado.', 404)
+    if (!title.rows[0]) throw new ErpDomainError('NOT_FOUND', 'Título financeiro não encontrado.', 404)
     await assertErpPeriodOpen(client, { tenantId: input.tenantId, module: 'financeiro', date: databaseDate(title.rows[0].data_competencia) })
     const total = allocations.reduce((sum, item) => sum + scaledDecimal(item.valor, 2), BigInt(0))
-    if (allocations.length && total !== scaledDecimal(title.rows[0].valor_total, 2)) throw new ErpDomainError('VALIDATION_ERROR', 'O rateio precisa distribuir integralmente o valor do titulo.')
+    if (allocations.length && total !== scaledDecimal(title.rows[0].valor_total, 2)) throw new ErpDomainError('VALIDATION_ERROR', 'O rateio precisa distribuir integralmente o valor do título.')
     await client.query(`UPDATE erp.rateios_financeiros SET excluido_em=now(),atualizado_por=$3 WHERE empresa_id=$1 AND conta_${input.financialSide}_id=$2 AND excluido_em IS NULL`, [input.tenantId, input.titleId, input.actorId])
     for (const allocation of allocations) {
       await client.query(`INSERT INTO erp.rateios_financeiros(empresa_id,tipo,conta_${input.financialSide}_id,categoria_id,centro_custo_id,valor,percentual,observacoes,criado_por,atualizado_por) VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$9)`, [input.tenantId, input.financialSide, input.titleId, optionalId(allocation.categoria_id), optionalId(allocation.centro_custo_id), money(allocation.valor), allocation.percentual == null ? null : money(allocation.percentual, 'Percentual', false), String(allocation.observacoes || '') || null, input.actorId])
@@ -266,24 +266,24 @@ export async function createRenegotiation(input: ActorInput & { idempotencyKey?:
     await assertErpPeriodOpen(client, { tenantId: input.tenantId, module: 'financeiro', date: agreementDate })
     const table = financialSide === 'receber' ? 'receber' : 'pagar'
     const origin = await client.query(`SELECT p.id, c.${financialSide === 'receber' ? 'cliente_id' : 'fornecedor_id'} entidade_id, composicao.saldo FROM erp.contas_${table}_parcelas p JOIN erp.contas_${table} c ON c.empresa_id=p.empresa_id AND c.id=p.conta_${table}_id ${compositionSql(financialSide, 'p')} WHERE p.empresa_id=$1 AND $2='${financialSide}' AND p.id=ANY($3::bigint[]) AND p.excluido_em IS NULL AND c.excluido_em IS NULL FOR UPDATE OF p,c`, [input.tenantId, financialSide, originIds])
-    if (origin.rows.length !== originIds.length) throw new ErpDomainError('NOT_FOUND', 'Uma parcela de origem nao foi encontrada.', 404)
+    if (origin.rows.length !== originIds.length) throw new ErpDomainError('NOT_FOUND', 'Uma parcela de origem não foi encontrada.', 404)
     const entityId = id(input.values.entidade_id, 'Entidade')
     if (origin.rows.some((row) => Number(row.entidade_id) !== entityId || scaledDecimal(row.saldo, 2) <= BigInt(0))) throw new ErpDomainError('VALIDATION_ERROR', 'As origens devem ter saldo e pertencer a mesma entidade.')
     const originTotal = origin.rows.reduce((sum, row) => sum + scaledDecimal(row.saldo, 2), BigInt(0))
     const destinationTotal = destinations.reduce((sum, row) => sum + scaledDecimal(row.valor, 2), BigInt(0))
-    if (destinationTotal !== originTotal - scaledDecimal(discount, 2) + scaledDecimal(charges, 2)) throw new ErpDomainError('VALIDATION_ERROR', 'A composicao das novas parcelas nao fecha com o acordo.')
+    if (destinationTotal !== originTotal - scaledDecimal(discount, 2) + scaledDecimal(charges, 2)) throw new ErpDomainError('VALIDATION_ERROR', 'A composicao das novas parcelas não fecha com o acordo.')
     const request = stable({ origens: originIds, destinos: destinations, desconto: discount, encargos: charges })
     const agreementId = await registerIdempotent(client, input.tenantId, 'renegociacoes', {
-      entidade_id: entityId, lado: financialSide, numero: text(input.values.numero, 'Numero do acordo'), data_acordo: agreementDate,
+      entidade_id: entityId, lado: financialSide, numero: text(input.values.numero, 'Número do acordo'), data_acordo: agreementDate,
       status: 'rascunho', desconto: discount, encargos: charges, categoria_ajuste_id: optionalId(input.values.categoria_ajuste_id),
       motivo: text(input.values.motivo, 'Motivo'), condicoes: JSON.stringify(request), chave_idempotencia: key,
     })
     const existing = await client.query(`SELECT status FROM erp.renegociacoes WHERE empresa_id=$1 AND id=$2`, [input.tenantId, agreementId])
     if (existing.rows[0]?.status !== 'rascunho') return { id: agreementId, status: existing.rows[0]?.status }
     const links = await client.query(`SELECT count(*)::int total FROM erp.renegociacoes_parcelas WHERE empresa_id=$1 AND renegociacao_id=$2`, [input.tenantId, agreementId])
-    if (Number(links.rows[0]?.total) > 0) throw new ErpDomainError('OPERATION_UNCERTAIN', 'O acordo esta incompleto e precisa de revisao.', 409)
+    if (Number(links.rows[0]?.total) > 0) throw new ErpDomainError('OPERATION_UNCERTAIN', 'O acordo esta incompleto e precisa de revisão.', 409)
     for (const [index, row] of origin.rows.entries()) await client.query(`INSERT INTO erp.renegociacoes_parcelas(empresa_id,renegociacao_id,papel,conta_${table}_parcela_id,valor,ordem) VALUES($1,$2,'origem',$3,$4,$5)`, [input.tenantId, agreementId, row.id, row.saldo, index + 1])
-    const titleResult = await client.query(`INSERT INTO erp.contas_${table}(empresa_id,${financialSide === 'receber' ? 'cliente_id' : 'fornecedor_id'},descricao,numero_documento,data_competencia,data_emissao,valor_total,status,origem${financialSide === 'pagar' ? ',tipo_lancamento,efetivado_em' : ''},renegociacao_origem_id,criado_por,atualizado_por) VALUES($1,$2,$3,$4,$5,$5,$6,'aberto','api'${financialSide === 'pagar' ? ",'efetivo',now()" : ''},$7,$8,$8) RETURNING id`, [input.tenantId, entityId, `Renegociacao ${text(input.values.numero, 'Numero do acordo')}`, String(input.values.numero), agreementDate, decimalNumber(decimalText(destinationTotal)), agreementId, input.actorId])
+    const titleResult = await client.query(`INSERT INTO erp.contas_${table}(empresa_id,${financialSide === 'receber' ? 'cliente_id' : 'fornecedor_id'},descricao,numero_documento,data_competencia,data_emissao,valor_total,status,origem${financialSide === 'pagar' ? ',tipo_lancamento,efetivado_em' : ''},renegociacao_origem_id,criado_por,atualizado_por) VALUES($1,$2,$3,$4,$5,$5,$6,'aberto','api'${financialSide === 'pagar' ? ",'efetivo',now()" : ''},$7,$8,$8) RETURNING id`, [input.tenantId, entityId, `Renegociacao ${text(input.values.numero, 'Número do acordo')}`, String(input.values.numero), agreementDate, decimalNumber(decimalText(destinationTotal)), agreementId, input.actorId])
     const titleId = titleResult.rows[0].id
     for (const [index, destination] of destinations.entries()) {
       const value = money(destination.valor)
@@ -300,7 +300,7 @@ export async function reverseRenegotiation(input: ActorInput & { agreementId: nu
   return withTransaction(async (client) => {
     const agreement = await client.query(`SELECT id,lado,data_acordo,status FROM erp.renegociacoes WHERE empresa_id=$1 AND id=$2 FOR UPDATE`, [input.tenantId, input.agreementId])
     const row = agreement.rows[0]
-    if (!row) throw new ErpDomainError('NOT_FOUND', 'Renegociacao nao encontrada.', 404)
+    if (!row) throw new ErpDomainError('NOT_FOUND', 'Renegociação não encontrada.', 404)
     if (row.status === 'revertida') return { id: String(row.id), status: 'revertida' }
     await assertErpPeriodOpen(client, { tenantId: input.tenantId, module: 'financeiro', date: databaseDate(row.data_acordo) })
     const table = side(row.lado)

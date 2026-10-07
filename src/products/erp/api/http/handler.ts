@@ -52,7 +52,7 @@ export function withErpHttp<H extends HttpHandler>(handler: H, options: HttpOpti
         values[0] = await boundedRequest(values[0], options.maxBodyBytes ?? 1024 * 1024)
         phase='handler'
         const invoke = () => handler(...args)
-        response = session ? await runWithErpDatabaseContext({ tenantId: session.tenantId, userId: session.sharedUserId,
+        response = session ? await runWithErpDatabaseContext({ tenantId: session.tenantId, userId: session.sharedUserId, timeZone: session.timeZone,
           readOnly: ['GET', 'HEAD'].includes(values[0].method), statementTimeoutMs: ['GET', 'HEAD'].includes(values[0].method) ? 10000 : 30000 }, invoke) : await invoke()
       } catch (error) {
         if(error instanceof TypeError) console.error(JSON.stringify({scope:'erp-transport',operation:options.operation,phase,errorType:error.name,message:error.message,correlationId}))

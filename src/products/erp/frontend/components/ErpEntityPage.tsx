@@ -63,7 +63,7 @@ export function ErpEntityPage({ config }: { config: ErpEntityConfig }) {
       setMetricsError(!summary?.metrics)
     } catch (loadError) {
       if (revision !== loadRevision.current) return
-      setError(loadError instanceof Error ? loadError.message : 'Nao foi possivel carregar os dados.')
+      setError(loadError instanceof Error ? loadError.message : 'Não foi possível carregar os dados.')
       setRecords([])
     } finally {
       if (revision === loadRevision.current) setLoading(false)
@@ -108,7 +108,7 @@ export function ErpEntityPage({ config }: { config: ErpEntityConfig }) {
       setEditingRecord(response.record)
       setDrawerOpen(true)
     } catch (editError) {
-      setError(editError instanceof Error ? editError.message : 'Nao foi possivel abrir o registro.')
+      setError(editError instanceof Error ? editError.message : 'Não foi possível abrir o registro.')
     }
   }
 
@@ -120,7 +120,7 @@ export function ErpEntityPage({ config }: { config: ErpEntityConfig }) {
       await erpClient.deactivateEntityRecord(config, record.id, Number(record.versao || 0))
       await loadRecords()
     } catch (deactivateError) {
-      setError(deactivateError instanceof Error ? deactivateError.message : 'Nao foi possivel desativar o registro.')
+      setError(deactivateError instanceof Error ? deactivateError.message : 'Não foi possível desativar o registro.')
     } finally { setLoading(false) }
   }
 
@@ -131,7 +131,7 @@ export function ErpEntityPage({ config }: { config: ErpEntityConfig }) {
 
     const actionRecordId = action.id === 'baixar' ? String(record.parcela_id || '') : record.id
     if (!actionRecordId) {
-      setError('Nao foi possivel localizar a parcela aberta para baixa.')
+      setError('Não foi possível localizar a parcela aberta para baixa.')
       return
     }
 
@@ -151,7 +151,7 @@ export function ErpEntityPage({ config }: { config: ErpEntityConfig }) {
       await erpClient.runEntityAction(config, { actionId: action.id, recordId: actionRecordId, values, operation: actionOperations.current.get(key) })
       await loadRecords()
     } catch (actionError) {
-      setError(actionError instanceof Error ? actionError.message : 'Nao foi possivel executar a acao.')
+      setError(actionError instanceof Error ? actionError.message : 'Não foi possível executar a ação.')
     } finally {
       setLoading(false)
     }

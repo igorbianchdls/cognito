@@ -47,6 +47,7 @@ export type ErpModuleId =
   | 'aging-pagar'
   | 'giro-estoque'
   | 'dre-caixa'
+  | 'dre-competencia'
   | 'fluxo-diario'
   | 'fluxo-mensal'
   | 'posicao-financeira'

@@ -45,7 +45,7 @@ export function ErpAsyncCatalogSelect({ label, type, value, selectedLabel, categ
     fetch(`/api/erp/catalogos/busca?${params}`, { cache: 'no-store', signal: controller.signal })
       .then(async (response) => {
         const body = await response.json() as { records?: ErpCatalogRecord[]; error?: string }
-        if (!response.ok) throw new Error(body.error || 'Nao foi possivel buscar o catalogo.')
+        if (!response.ok) throw new Error(body.error || 'Não foi possível buscar o catálogo.')
         if (!controller.signal.aborted) setRecords(body.records || [])
       })
       .catch((error) => { if (error instanceof Error && error.name !== 'AbortError') setRecords([]) })
@@ -57,7 +57,7 @@ export function ErpAsyncCatalogSelect({ label, type, value, selectedLabel, categ
     <Search className="pointer-events-none absolute left-3 top-1/2 z-10 size-4 -translate-y-1/2 text-gray-400" />
     <Input
       value={open ? query : choiceLabel}
-      placeholder={value && !choiceLabel ? `Selecionado: ${value}` : 'Buscar por nome ou codigo'}
+      placeholder={value && !choiceLabel ? `Selecionado: ${value}` : 'Buscar por nome ou código'}
       role="combobox"
       aria-expanded={open}
       className="pl-9"

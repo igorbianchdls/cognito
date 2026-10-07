@@ -16,7 +16,7 @@ type RouteContext = {
   const { id } = await context.params
   const saleId = Number(id)
   if (!Number.isInteger(saleId) || saleId <= 0) {
-    return erpFailure('Venda invalida.', 400)
+    return erpFailure('Venda inválida.', 400)
   }
 
   const tenant = await resolveErpAccess('erp.vendas.gerenciar')

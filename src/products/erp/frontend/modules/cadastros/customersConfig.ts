@@ -19,19 +19,19 @@ export const customersConfig: ErpEntityConfig<ErpEntityRecord> = {
   ],
   fields: [
     { key: 'status', label: 'Situação', type: 'select', options: [{value:'ativo',label:'Ativo'},{value:'inativo',label:'Inativo'}] },
-    { key: 'nome', label: 'Nome', type: 'text', placeholder: 'Nome completo ou razao social', required: true },
-    { key: 'tipo', label: 'Tipo de pessoa', type: 'select', required: true, options: [{ value: 'PF', label: 'Pessoa fisica' }, { value: 'PJ', label: 'Pessoa juridica' }] },
+    { key: 'nome', label: 'Nome', type: 'text', placeholder: 'Nome completo ou razão social', required: true },
+    { key: 'tipo', label: 'Tipo de pessoa', type: 'select', required: true, options: [{ value: 'PF', label: 'Pessoa física' }, { value: 'PJ', label: 'Pessoa jurídica' }] },
     { key: 'documento', label: 'CPF/CNPJ', type: 'text', placeholder: 'Documento fiscal', required: true },
     { key: 'categoria', label: 'Categoria do cliente', type: 'text', placeholder: 'Ex: Varejo, atacado ou corporativo' },
   ],
   filters: [
     { key: 'status', label: 'Status', allLabel: 'Todos os status', options: [{ value: 'ativo', label: 'Ativo' }, { value: 'inativo', label: 'Inativo' }] },
-    { key: 'tipo', label: 'Tipo', allLabel: 'Todos os tipos', options: [{ value: 'PF', label: 'Pessoa fisica' }, { value: 'PJ', label: 'Pessoa juridica' }] },
+    { key: 'tipo', label: 'Tipo', allLabel: 'Todos os tipos', options: [{ value: 'PF', label: 'Pessoa física' }, { value: 'PJ', label: 'Pessoa jurídica' }] },
   ],
   metrics: [
     { label: 'Clientes ativos', value: '0', detail: 'base conectada', tone: 'success' },
     { label: 'Inativos', value: '0', detail: 'cadastros pausados' },
-    { label: 'Ticket medio', value: 'R$ 0,00', detail: 'vendas futuras' },
+    { label: 'Ticket médio', value: 'R$ 0,00', detail: 'vendas futuras' },
   ],
   emptyState: {
     title: 'Nenhum cliente encontrado',

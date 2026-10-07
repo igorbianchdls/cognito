@@ -65,7 +65,7 @@ async function main(){
   await db.exec(readFileSync('supabase/migrations/20261003150000_chatgptplugin_operations_settings.sql','utf8'));
   await db.exec(readFileSync('supabase/migrations/20261003160000_create_plugin_schema.sql','utf8'));
   await applySharedMigration(db);
-  for(const file of ['20261006010000_prepare_erp_fiscal_integration.sql','20261006020000_service_invoice_simulation.sql']) {
+  for(const file of ['20261006010000_prepare_erp_fiscal_integration.sql','20261006020000_service_invoice_simulation.sql','20261007120000_empresa_fuso_horario.sql']) {
     await db.exec(readFileSync(`supabase/migrations/${file}`,'utf8'));
   }
   await db.exec(`
@@ -91,6 +91,13 @@ async function main(){
   const owner=await loadPluginPrincipal('user_1','client',['erp:read','erp:write']);
   const viewer=await loadPluginPrincipal('user_2','client',['erp:read']);
   async function call(p,name,args){const result=await executeTool(p,name,args,settings);assert(!result.isError,JSON.stringify(result));return result.structuredContent.data;}
+  await check('Fuso de cada empresa carregado do banco',async()=>{
+    await db.exec("UPDATE shared.empresas SET fuso_horario='America/Manaus' WHERE id=2");
+    const zoned=await loadPluginPrincipal('user_1','client',['erp:read']);
+    assert.deepEqual(zoned.companies.map(c=>c.timeZone),['America/Sao_Paulo','America/Manaus']);
+    await assert.rejects(db.exec("UPDATE shared.empresas SET fuso_horario='x; DROP' WHERE id=2"));
+    await db.exec("UPDATE shared.empresas SET fuso_horario='America/Sao_Paulo' WHERE id=2");
+  });
   await check('Identidade e perfis carregados do banco',async()=>{assert.equal(owner.companies.length,2);assert.equal(viewer.companies.length,1);assert.deepEqual(viewer.companies[0].capabilities,['erp.cadastros.visualizar']);});
   await check('Todas as consultas usam repositorios reais',async()=>{
     await call(owner,'meu_acesso',{});await call(owner,'resumo_erp',{empresa_id:1});
@@ -408,6 +415,68 @@ async function main(){
     await db.exec("INSERT INTO erp.fechamentos_periodos(empresa_id,modulo,periodo_inicio,periodo_fim,criado_por) VALUES(1,'financeiro','2026-10-01','2026-10-31',1)");
     const deletion=await prepare({tipo:'excluir_conta_pagar',dados:{registro_id:id,motivo:'Periodo fechado'}});await assert.rejects(decideApproval(deletion.rascunho_id,session,'save'),e=>e.code==='PERIOD_CLOSED');
     const creation=await prepare({tipo:'conta_pagar',dados:moneyData('pagar')});await assert.rejects(decideApproval(creation.rascunho_id,session,'save'),e=>e.code==='PERIOD_CLOSED');
+  });
+  await check('Fluxo de caixa, aging e DRE por competencia batem com somas independentes',async()=>{
+    const {runWithErpDatabaseContext}=load('@/lib/erpDatabaseContext');
+    const professional=load('@/products/erp/server/erpProfessionalRepository'),finance=load('@/products/erp/server/erpFinanceRepository');
+    const ctx=fn=>runWithErpDatabaseContext({tenantId:1,userId:1,timeZone:'America/Sao_Paulo'},fn),read=fn=>runWithErpDatabaseContext({tenantId:1,userId:1,readOnly:true,timeZone:'America/Sao_Paulo'},fn);
+    const cents=value=>Math.round(Number(value)*100),sum=(rows,key)=>rows.reduce((total,row)=>total+cents(row[key]),0);
+    const one=async sql=>cents((await db.query(sql)).rows[0].v);
+    // Adiantamento de cliente entra no caixa; a devolução parcial sai.
+    const advance=await ctx(()=>finance.createAdvance({tenantId:1,actorId:1,idempotencyKey:'relatorio-adiantamento',values:{lado:'receber',tipo:'constituicao',entidade_id:101,conta_financeira_id:901,data_movimento:'2026-12-15',valor:50,motivo:'Sinal do cliente'}}));
+    await ctx(()=>finance.createAdvance({tenantId:1,actorId:1,idempotencyKey:'relatorio-devolucao',values:{lado:'receber',tipo:'devolucao',adiantamento_id:Number(advance.id),entidade_id:101,conta_financeira_id:901,data_movimento:'2026-12-16',valor:20,motivo:'Devolucao parcial'}}));
+    // Renegociação com encargos: o título novo não entra no DRE; os encargos entram na data do acordo.
+    const origin=(await db.query("SELECT p.id, c.cliente_id FROM erp.contas_receber_parcelas p JOIN erp.contas_receber c ON c.empresa_id=p.empresa_id AND c.id=p.conta_receber_id WHERE p.empresa_id=1 AND p.excluido_em IS NULL AND c.excluido_em IS NULL AND p.status IN ('aberto','pendente','vencido') AND p.valor_pago=0 ORDER BY p.id LIMIT 1")).rows[0];
+    assert(origin,'Parcela aberta necessaria para renegociar');
+    const originBalance=(await read(()=>professional.listProfessionalReport({tenantId:1,report:'aging-receber',from:'2026-01-01',to:'2026-12-31'}))).reduce((t,r)=>t+cents(r.total),0);
+    const parcelValue=Number((await db.query('SELECT valor FROM erp.contas_receber_parcelas WHERE id=$1',[origin.id])).rows[0].valor);
+    const adjustmentCategory=Number((await db.query('SELECT id FROM erp.categorias WHERE empresa_id=1 AND excluido_em IS NULL ORDER BY id LIMIT 1')).rows[0].id);
+    await ctx(()=>finance.createRenegotiation({tenantId:1,actorId:1,idempotencyKey:'relatorio-renegociacao',values:{lado:'receber',entidade_id:Number(origin.cliente_id),origens:[Number(origin.id)],numero:'REN-REL-1',data_acordo:'2026-12-15',encargos:10,categoria_ajuste_id:adjustmentCategory,motivo:'Acordo de pagamento',destinos:[{valor:parcelValue+10,data_vencimento:'2027-01-15'}]}}));
+    const report=(id,from='2026-01-01',to='2026-12-31')=>read(()=>professional.listProfessionalReport({tenantId:1,report:id,from,to}));
+    const flow=await report('fluxo-de-caixa');
+    assert.equal(flow.length,12);assert.equal(flow[0].competencia instanceof Date?flow[0].competencia.toISOString().slice(0,10):String(flow[0].competencia).slice(0,10),'2026-01-01');
+    const payments=await one("SELECT coalesce(sum(CASE WHEN tipo='receber' THEN 1 ELSE -1 END*CASE WHEN estorno_de_pagamento_id IS NULL THEN 1 ELSE -1 END*valor_liquido),0) v FROM erp.pagamentos WHERE empresa_id=1 AND excluido_em IS NULL AND data_pagamento BETWEEN '2026-01-01' AND '2026-12-31'");
+    assert.equal(sum(flow,'entradas_realizadas')-sum(flow,'saidas_realizadas'),payments+5000-2000);
+    const december=flow.find(row=>String(row.competencia instanceof Date?row.competencia.toISOString():row.competencia).startsWith('2026-12'));
+    assert(cents(december.entradas_realizadas)>=5000&&cents(december.saidas_realizadas)>=2000);
+    let running=cents(flow[0].saldo_acumulado)-cents(flow[0].saldo_mes);
+    for(const row of flow){running+=cents(row.saldo_mes);assert.equal(cents(row.saldo_acumulado),running)}
+    for(const row of flow)assert.equal(cents(row.saldo_mes),cents(row.entradas_realizadas)-cents(row.saidas_realizadas)+cents(row.entradas_previstas)-cents(row.saidas_previstas)+cents(row.saldo_inicial_contas));
+    // Aging: faixas somam o total e o total bate com a posição financeira.
+    const aging=await report('aging-receber');
+    for(const row of aging)assert.equal(cents(row.a_vencer)+cents(row.vencido_1_30)+cents(row.vencido_31_60)+cents(row.vencido_61_90)+cents(row.vencido_mais_90),cents(row.total));
+    // A posição considera vencimentos no período; o aging, todo o saldo em aberto.
+    const position=(await report('posicao-financeira','2000-01-01','2099-12-31')).filter(row=>row.tipo==='receber'&&row.status!=='cancelado');
+    assert.equal(sum(aging,'total'),position.reduce((total,row)=>total+Math.max(0,cents(row.saldo)),0));
+    const payables=await report('aging-pagar');assert(Array.isArray(payables));
+    const late=await report('aging-receber','2026-01-01','2030-12-31');assert.equal(sum(late,'total'),sum(aging,'total'));assert.equal(sum(late,'a_vencer'),0);
+    // DRE por competência: receitas e despesas pelos títulos do período.
+    const accrual=await report('dre-competencia');
+    const revenue=await one("SELECT coalesce(sum(valor_total),0) v FROM erp.contas_receber WHERE empresa_id=1 AND excluido_em IS NULL AND status<>'cancelado' AND renegociacao_origem_id IS NULL AND data_competencia BETWEEN '2026-01-01' AND '2026-12-31'");
+    const expense=await one("SELECT coalesce(sum(valor_total),0) v FROM erp.contas_pagar WHERE empresa_id=1 AND excluido_em IS NULL AND status<>'cancelado' AND renegociacao_origem_id IS NULL AND tipo_lancamento IS DISTINCT FROM 'previsao' AND data_competencia BETWEEN '2026-01-01' AND '2026-12-31'");
+    const adjustments=await one("SELECT coalesce(sum(CASE WHEN lado='receber' THEN encargos-desconto ELSE desconto-encargos END),0) v FROM erp.renegociacoes WHERE empresa_id=1 AND status='efetivada' AND data_acordo BETWEEN '2026-01-01' AND '2026-12-31'");
+    assert.equal(sum(accrual,'valor'),revenue-expense+adjustments);
+    assert.equal(adjustments,1000);assert.equal(sum(aging,'total'),originBalance+1000);
+    assert(accrual.every(row=>['receita','despesa'].includes(row.tipo)));
+    // Rotas antigas continuam 410; relatórios substituídos também.
+    await assert.rejects(report('fluxo-mensal'),e=>e.status===410&&e.code==='REPORT_RETIRED');
+  });
+  await check('Edicao de e-mail e telefone pelo chat atualiza o contato principal',async()=>{
+    const contactOf=async id=>(await db.query("SELECT email,telefone FROM erp.entidades_contatos WHERE empresa_id=1 AND entidade_id=$1 AND ativo ORDER BY ('comercial'=ANY(principais)) DESC,id LIMIT 1",[id])).rows[0];
+    const customer=Number((await db.query("SELECT id FROM erp.entidades WHERE empresa_id=1 AND eh_cliente AND excluido_em IS NULL ORDER BY id LIMIT 1")).rows[0].id);
+    const before=await contactOf(customer);
+    const draft=await prepare({tipo:'editar_cliente',dados:{registro_id:customer,email:'financeiro@cliente.example.invalid',telefone:'(85) 99999-0000'}});
+    assert.equal(draft.alvo.campos.email,before?.email??null);
+    await call(owner,'editar_cadastro',{empresa_id:1,rascunho_id:draft.rascunho_id});
+    assert.deepEqual(await contactOf(customer),{email:'financeiro@cliente.example.invalid',telefone:'(85) 99999-0000'});
+    const supplier=(await call(owner,'criar_cadastro',{empresa_id:1,chave_operacao:randomUUID(),tipo:'fornecedor',dados:{nome:'Fornecedor contato',email:'antes@fornecedor.example.invalid'}}));
+    const saved=await call(owner,'criar_cadastro',{empresa_id:1,rascunho_id:supplier.rascunho_id});
+    const supplierId=Number(saved.registro_id);
+    const edit=await prepare({tipo:'editar_fornecedor',dados:{registro_id:supplierId,telefone:'(11) 3333-4444'}});
+    assert.equal(edit.alvo.campos.telefone,'');
+    await call(owner,'editar_cadastro',{empresa_id:1,rascunho_id:edit.rascunho_id});
+    assert.deepEqual(await contactOf(supplierId),{email:'antes@fornecedor.example.invalid',telefone:'(11) 3333-4444'});
+    assert.equal((await db.query('SELECT count(*)::int n FROM erp.entidades_contatos WHERE empresa_id=1 AND entidade_id=$1 AND ativo',[supplierId])).rows[0].n,1);
   });
   console.log(JSON.stringify({status:'passed',checks,proposalTypes:44,realDatabaseAccess:false,localPostgres:true}));
 }

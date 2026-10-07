@@ -101,7 +101,7 @@ export const periodCloseSchema = z.object({
   periodo_inicio: isoDate,
   periodo_fim: isoDate,
   motivo: z.string().trim().max(1000).optional().nullable(),
-}).refine((value) => value.periodo_fim >= value.periodo_inicio, { message: 'Periodo final deve ser igual ou posterior ao inicial.' })
+}).refine((value) => value.periodo_fim >= value.periodo_inicio, { message: 'Período final deve ser igual ou posterior ao inicial.' })
 
 export const periodReopenSchema = z.object({ id: id, motivo: z.string().trim().min(3).max(1000) }).strict()
 

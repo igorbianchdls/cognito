@@ -1,3 +1,4 @@
+import { DEFAULT_ERP_TIME_ZONE, normalizeTimeZone } from './businessDate'
 import { z } from 'zod'
 import { erpDateSchema } from './erpTransport'
 import type { ErpCapability } from './professionalContracts'
@@ -222,9 +223,9 @@ export type DashboardRecordsResponse = {
   filters: DashboardRecordsFilters
 }
 
-export function dashboardToday(now = new Date()) {
+export function dashboardToday(now = new Date(), timeZone: string = DEFAULT_ERP_TIME_ZONE) {
   const parts = new Intl.DateTimeFormat('en-CA', {
-    timeZone: 'America/Fortaleza',
+    timeZone: normalizeTimeZone(timeZone),
     year: 'numeric',
     month: '2-digit',
     day: '2-digit',

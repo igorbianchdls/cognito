@@ -26,6 +26,7 @@ import {
   formatErpValue,
   parseErpResponse,
 } from "@/products/erp/frontend/services/erpProfessionalClient";
+import { erpClientToday } from '@/products/erp/frontend/services/erpTimeZone'
 
 type Closure = {
   id: string;
@@ -37,7 +38,7 @@ type Closure = {
   reaberto_em?: string;
   motivo_reabertura?: string;
 };
-const today = () => new Date().toISOString().slice(0, 10);
+const today = () => erpClientToday();
 const firstDay = () => `${today().slice(0, 7)}-01`;
 
 export function PeriodClosuresPage() {
@@ -67,7 +68,7 @@ export function PeriodClosuresPage() {
       setError(
         loadError instanceof Error
           ? loadError.message
-          : "Nao foi possivel carregar os fechamentos.",
+          : "Não foi possível carregar os fechamentos.",
       );
     } finally {
       setLoading(false);
@@ -98,7 +99,7 @@ export function PeriodClosuresPage() {
       setError(
         closeError instanceof Error
           ? closeError.message
-          : "Nao foi possivel fechar o periodo.",
+          : "Não foi possível fechar o período.",
       );
     } finally {
       setSaving(false);
@@ -121,7 +122,7 @@ export function PeriodClosuresPage() {
       setError(
         reopenError instanceof Error
           ? reopenError.message
-          : "Nao foi possivel reabrir o periodo.",
+          : "Não foi possível reabrir o período.",
       );
     } finally {
       setSaving(false);
@@ -133,16 +134,16 @@ export function PeriodClosuresPage() {
         <div>
           <p className="text-xs font-medium text-gray-500">ERP / Financeiro</p>
           <h1 className="mt-1 text-2xl font-semibold">
-            Fechamentos de periodo
+            Fechamentos de período
           </h1>
           <p className="mt-1 text-sm text-gray-600">
-            Bloqueie alteracoes retroativas em vendas, compras, financeiro e
+            Bloqueie alterações retroativas em vendas, compras, financeiro e
             estoque.
           </p>
         </div>
         <Button disabled={!canManage} onClick={() => setOpen(true)}>
           <LockKeyhole className="size-4" />
-          Fechar periodo
+          Fechar período
         </Button>
       </div>
       {error ? (
@@ -205,7 +206,7 @@ export function PeriodClosuresPage() {
                   colSpan={7}
                   className="h-28 text-center text-gray-500"
                 >
-                  Nenhum periodo fechado.
+                  Nenhum período fechado.
                 </TableCell>
               </TableRow>
             )}
@@ -215,7 +216,7 @@ export function PeriodClosuresPage() {
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Fechar periodo</DialogTitle>
+            <DialogTitle>Fechar período</DialogTitle>
           </DialogHeader>
           <div className="grid gap-4 sm:grid-cols-2">
             <label className="grid gap-2 sm:col-span-2">

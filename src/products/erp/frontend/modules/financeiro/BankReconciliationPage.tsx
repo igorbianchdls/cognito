@@ -88,7 +88,7 @@ export function BankReconciliationPage() {
       setError(
         loadError instanceof Error
           ? loadError.message
-          : "Nao foi possivel carregar as sugestoes.",
+          : "Não foi possível carregar as sugestoes.",
       );
     } finally {
       setLoading(false);
@@ -124,7 +124,7 @@ export function BankReconciliationPage() {
       setError(
         actionError instanceof Error
           ? actionError.message
-          : "Nao foi possivel conciliar.",
+          : "Não foi possível conciliar.",
       );
     } finally {
       setBusy(null);
@@ -146,7 +146,7 @@ export function BankReconciliationPage() {
       setError(
         actionError instanceof Error
           ? actionError.message
-          : "Nao foi possivel desfazer a conciliacao.",
+          : "Não foi possível desfazer a conciliação.",
       );
     } finally {
       setBusy(null);
@@ -172,7 +172,7 @@ export function BankReconciliationPage() {
       setError(
         actionError instanceof Error
           ? actionError.message
-          : "Nao foi possivel ignorar a transacao.",
+          : "Não foi possível ignorar a transacao.",
       );
     } finally {
       setBusy(null);
@@ -203,7 +203,7 @@ export function BankReconciliationPage() {
       setError(
         ruleError instanceof Error
           ? ruleError.message
-          : "Nao foi possivel salvar a regra.",
+          : "Não foi possível salvar a regra.",
       );
     } finally {
       setBusy(null);
@@ -317,7 +317,7 @@ export function BankReconciliationPage() {
         <div className="mb-4">
           <h2 className="text-base font-semibold">Conciliacoes recentes</h2>
           <p className="mt-1 text-sm text-gray-600">
-            Historico ativo com possibilidade de desfazer sem apagar o registro
+            Histórico ativo com possibilidade de desfazer sem apagar o registro
             original.
           </p>
         </div>
@@ -362,7 +362,7 @@ export function BankReconciliationPage() {
                     colSpan={6}
                     className="h-24 text-center text-gray-500"
                   >
-                    Nenhuma conciliacao ativa.
+                    Nenhuma conciliação ativa.
                   </TableCell>
                 </TableRow>
               )}
@@ -373,7 +373,7 @@ export function BankReconciliationPage() {
       <Dialog open={settingsOpen} onOpenChange={setSettingsOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Regra geral de conciliacao</DialogTitle>
+            <DialogTitle>Regra geral de conciliação</DialogTitle>
           </DialogHeader>
           <div className="grid gap-4 sm:grid-cols-2">
             <label className="grid gap-2">

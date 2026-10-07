@@ -7,7 +7,7 @@ import { listErpPayments } from '@/products/erp/server/erpRepository'
 
  async function handleGET(request: Request) {
   const tenant = await resolveErpAccess('erp.financeiro.visualizar')
-  if (!tenant) return erpFailure('Nao autenticado.', 401)
+  if (!tenant) return erpFailure('Não autenticado.', 401)
   try {
     const url = new URL(request.url)
     const type = url.searchParams.get('tipo') === 'pagar' ? 'pagar' : 'receber'

@@ -96,24 +96,24 @@ export function parseNfeXml(xmlValue: unknown): ParsedNfe {
   try {
     parsed = object(parser.parse(xml))
   } catch {
-    throw new Error('O arquivo XML da NF-e esta invalido.')
+    throw new Error('O arquivo XML da NF-e esta inválido.')
   }
 
   const processNode = object(parsed.nfeProc)
   const protocolInfo = object(object(processNode.protNFe).infProt)
   if (Object.keys(processNode).length === 0 || Object.keys(protocolInfo).length === 0) {
-    throw new Error('Envie o XML processado da NF-e, com protocolo de autorizacao da SEFAZ.')
+    throw new Error('Envie o XML processado da NF-e, com protocolo de autorização da SEFAZ.')
   }
 
   const statusCode = string(protocolInfo.cStat)
   const statusReason = string(protocolInfo.xMotivo)
   if (statusCode !== '100') {
-    throw new Error(`A NF-e nao esta autorizada pela SEFAZ${statusCode ? ` (${statusCode}${statusReason ? ` - ${statusReason}` : ''})` : ''}.`)
+    throw new Error(`A NF-e não esta autorizada pela SEFAZ${statusCode ? ` (${statusCode}${statusReason ? ` - ${statusReason}` : ''})` : ''}.`)
   }
 
   const nfeNode = object(processNode.NFe)
   const info = object(nfeNode.infNFe)
-  if (Object.keys(info).length === 0) throw new Error('O XML nao contem uma NF-e autorizavel.')
+  if (Object.keys(info).length === 0) throw new Error('O XML não contem uma NF-e autorizavel.')
 
   const ide = object(info.ide)
   const issuer = object(info.emit)
@@ -125,14 +125,14 @@ export function parseNfeXml(xmlValue: unknown): ParsedNfe {
     .replace(/^NFe/, '')
     .replace(/\D/g, '')
 
-  if (accessKey.length !== 44) throw new Error('Chave de acesso da NF-e invalida.')
+  if (accessKey.length !== 44) throw new Error('Chave de acesso da NF-e inválida.')
 
   const supplierDocument = documentOf(issuer)
   const recipientDocument = documentOf(recipient)
   const supplierName = string(issuer.xNome)
   const valueProducts = number(total.vProd)
   const valueTotal = number(total.vNF)
-  if (!supplierName || supplierDocument.length < 11) throw new Error('Emitente da NF-e invalido.')
+  if (!supplierName || supplierDocument.length < 11) throw new Error('Emitente da NF-e inválido.')
   if (valueTotal <= 0) throw new Error('Valor total da NF-e precisa ser maior que zero.')
 
   const items = array(info.det).map((rawDetail, index) => {
@@ -142,7 +142,7 @@ export function parseNfeXml(xmlValue: unknown): ParsedNfe {
     const unitValue = number(product.vUnCom)
     const itemTotal = number(product.vProd)
     if (!string(product.xProd) || quantity <= 0 || unitValue < 0 || itemTotal < 0) {
-      throw new Error('A NF-e possui item com dados invalidos.')
+      throw new Error('A NF-e possui item com dados inválidos.')
     }
     return {
       numero_item: Number(detail['@_nItem']) || index + 1,
@@ -158,15 +158,15 @@ export function parseNfeXml(xmlValue: unknown): ParsedNfe {
       tributos: object(detail.imposto),
     }
   })
-  if (items.length === 0) throw new Error('A NF-e nao possui itens.')
+  if (items.length === 0) throw new Error('A NF-e não possui itens.')
 
   const itemSum = Number(items.reduce((sum, item) => sum + item.valor_total, 0).toFixed(2))
   if (Math.abs(itemSum - Number(valueProducts.toFixed(2))) > 0.02) {
-    throw new Error('A soma dos itens nao confere com o total de produtos da NF-e.')
+    throw new Error('A soma dos itens não confere com o total de produtos da NF-e.')
   }
 
   const issueDate = dateOf(ide.dhEmi || ide.dEmi)
-  if (!issueDate) throw new Error('Data de emissao da NF-e invalida.')
+  if (!issueDate) throw new Error('Data de emissão da NF-e inválida.')
 
   return {
     chave_acesso: accessKey,

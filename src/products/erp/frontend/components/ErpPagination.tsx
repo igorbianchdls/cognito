@@ -14,9 +14,9 @@ export function ErpPagination({ page, pageSize, total, onPageChange }: { page: n
   return <div className="flex items-center justify-between border-t px-3 py-2 text-sm text-gray-500">
     <span>{first}-{last} de {total}</span>
     <div className="flex items-center gap-1">
-      <Button variant="ghost" size="icon" title="Pagina anterior" disabled={page <= 1} onClick={() => onPageChange(page - 1)}><ChevronLeft className="size-4" /></Button>
+      <Button variant="ghost" size="icon" title="Página anterior" disabled={page <= 1} onClick={() => onPageChange(page - 1)}><ChevronLeft className="size-4" /></Button>
       <span className="min-w-20 text-center">Pagina {page} de {pageCount}</span>
-      <Button variant="ghost" size="icon" title="Proxima pagina" disabled={page >= pageCount} onClick={() => onPageChange(page + 1)}><ChevronRight className="size-4" /></Button>
+      <Button variant="ghost" size="icon" title="Próxima página" disabled={page >= pageCount} onClick={() => onPageChange(page + 1)}><ChevronRight className="size-4" /></Button>
     </div>
   </div>
 }

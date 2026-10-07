@@ -9,7 +9,7 @@ function tag(block: string, name: string) {
 
 function parseDate(value: string) {
   const digits = value.replace(/\D/g, '').slice(0, 8)
-  if (digits.length !== 8) throw new Error(`Data OFX invalida: ${value}`)
+  if (digits.length !== 8) throw new Error(`Data OFX inválida: ${value}`)
   return `${digits.slice(0, 4)}-${digits.slice(4, 6)}-${digits.slice(6, 8)}`
 }
 
@@ -18,7 +18,7 @@ export function parseOfxTransactions(content: string) {
     || content.split(/<STMTTRN>/i).slice(1).map((part) => part.split(/<\/BANKTRANLIST>/i)[0])
   return blocks.map((block, index) => {
     const rawAmount = Number(tag(block, 'TRNAMT').replace(',', '.'))
-    if (!Number.isFinite(rawAmount) || rawAmount === 0) throw new Error(`Valor invalido na transacao ${index + 1}.`)
+    if (!Number.isFinite(rawAmount) || rawAmount === 0) throw new Error(`Valor inválido na transacao ${index + 1}.`)
     return {
       externalId: tag(block, 'FITID') || createHash('sha256').update(block).digest('hex'),
       date: parseDate(tag(block, 'DTPOSTED')),
@@ -38,7 +38,7 @@ export async function importErpBankStatement(input: {
   fileName: string
   content: string
 }) {
-  if (!Number.isInteger(input.accountId) || input.accountId <= 0) throw new Error('Conta financeira invalida.')
+  if (!Number.isInteger(input.accountId) || input.accountId <= 0) throw new Error('Conta financeira inválida.')
   if (!input.content.trim()) throw new Error('Arquivo OFX vazio.')
   const transactions = parseOfxTransactions(input.content)
   if (!transactions.length) throw new Error('Nenhuma transacao foi encontrada no OFX.')
@@ -51,7 +51,7 @@ export async function importErpBankStatement(input: {
        WHERE empresa_id = $1 AND id = $2 AND ativo AND excluido_em IS NULL FOR UPDATE`,
       [input.tenantId, input.accountId],
     )
-    if (!account.rows[0]) throw new Error('Conta financeira nao encontrada ou inativa.')
+    if (!account.rows[0]) throw new Error('Conta financeira não encontrada ou inativa.')
     const existing = await client.query(
       `SELECT id::text, total_importadas, total_ignoradas, status
        FROM erp.importacoes_bancarias

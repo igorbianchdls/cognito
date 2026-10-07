@@ -5,22 +5,22 @@ export const categoriesConfig: ErpEntityConfig<ErpEntityRecord> = {
   sectionId: 'cadastros',
   label: 'Categorias',
   singularLabel: 'categoria',
-  description: 'Padronize classificacoes para produtos, compras e relatorios.',
+  description: 'Padronize classificacoes para produtos, compras e relatórios.',
   route: '/erp/cadastros/categorias',
-  searchPlaceholder: 'Buscar por nome ou descricao',
+  searchPlaceholder: 'Buscar por nome ou descrição',
   primaryActionLabel: 'Nova categoria',
   columns: [
     { key: 'nome', label: 'Categoria', width: 'min-w-[180px]' },
-    { key: 'descricao', label: 'Descricao', width: 'min-w-[280px]' },
+    { key: 'descricao', label: 'Descrição', width: 'min-w-[280px]' },
     { key: 'tipo', label: 'Tipo' },
     { key: 'itens', label: 'Itens', kind: 'number' },
     { key: 'status', label: 'Status', kind: 'status' },
   ],
   fields: [
     { key: 'nome', label: 'Nome da categoria', type: 'text', required: true },
-    { key: 'descricao', label: 'Descricao', type: 'textarea', placeholder: 'Como esta categoria deve ser usada' },
+    { key: 'descricao', label: 'Descrição', type: 'textarea', placeholder: 'Como esta categoria deve ser usada' },
     { key: 'tipo', label: 'Finalidade', type: 'select', required: true, options: [
-      { value: 'produto', label: 'Produto' }, { value: 'servico', label: 'Servico' },
+      { value: 'produto', label: 'Produto' }, { value: 'servico', label: 'Serviço' },
       { value: 'receita', label: 'Receita' }, { value: 'despesa', label: 'Despesa' },
       { value: 'cliente', label: 'Cliente' }, { value: 'fornecedor', label: 'Fornecedor' },
       { value: 'geral', label: 'Geral' },
@@ -32,12 +32,12 @@ export const categoriesConfig: ErpEntityConfig<ErpEntityRecord> = {
   ],
   metrics: [
     { label: 'Categorias ativas', value: '0', detail: 'em uso no ERP' },
-    { label: 'Sem itens', value: '0', detail: 'avaliar classificacao', tone: 'warning' },
+    { label: 'Sem itens', value: '0', detail: 'avaliar classificação', tone: 'warning' },
     { label: 'Tipos em uso', value: '0', detail: 'finalidades distintas' },
   ],
   emptyState: {
     title: 'Nenhuma categoria encontrada',
-    description: 'Cadastre categorias para organizar o catalogo.',
+    description: 'Cadastre categorias para organizar o catálogo.',
   },
   statusMap: {
     ativo: { label: 'Ativo', tone: 'success' },

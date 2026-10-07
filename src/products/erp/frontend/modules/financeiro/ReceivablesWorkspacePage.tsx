@@ -23,13 +23,14 @@ import {
   ErpBulkActionBar, ErpFilterButton, ErpFinanceTabs, ErpPeriodControl,
   ErpSearchToolbar, ErpPeriodSummary, ErpStatusBadge, ErpWorkspaceHeader,
 } from '@/products/erp/frontend/components/ErpWorkspaceChrome'
+import { erpClientToday, erpClientMonthStart } from '@/products/erp/frontend/services/erpTimeZone'
 
 type Option = { id: string; nome: string; padrao?: boolean }
 type Catalogs = { financialAccounts: Option[]; paymentMethods: Option[]; categories?: Option[]; costCenters?: Option[] }
 type Receivable = { id: string; conta_id: string; parcela_id: string; entidade_id: string; descricao: string; categoria: string; documento: string; cliente: string; parcela: number; vencimento: string; valor: number; valor_pago: number; credito: number; renegociado: number; saldo: number; status: string }
 type Payment = { id: string; data_pagamento: string; valor: number; juros: number; multa: number; desconto: number; taxa: number; valor_liquido: number; estornado_em: string; estorno_de_pagamento_id: string; numero_parcela: number; conta_financeira: string; metodo_pagamento: string }
 
-const today = () => new Date().toISOString().slice(0, 10)
+const today = () => erpClientToday()
 const currency = (value: number) => new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value)
 const dateLabel = (value: string) => value ? new Intl.DateTimeFormat('pt-BR', { timeZone: 'UTC' }).format(new Date(value + 'T12:00:00Z')) : '—'
 const monthRange = (value: Date) => {
@@ -64,7 +65,7 @@ export function ReceivablesWorkspacePage() {
   const [query, setQuery] = useState('')
   const deferredQuery = useDeferredValue(query)
   const [status, setStatus] = useState('')
-  const [period, setPeriod] = useState(() => new Date())
+  const [period, setPeriod] = useState(() => erpClientMonthStart())
   const [filtersOpen, setFiltersOpen] = useState(false)
   const [selectedIds, setSelectedIds] = useState<Set<string>>(() => new Set())
   const [periodSummary, setPeriodSummary] = useState({ overdue: 0, dueToday: 0, upcoming: 0, paid: 0, total: 0 })
@@ -103,7 +104,7 @@ export function ReceivablesWorkspacePage() {
       setRecords(recordsPage.records); setTotalRecords(recordsPage.total)
       setPeriodSummary(recordsPage.summary ?? { overdue: 0, dueToday: 0, upcoming: 0, paid: 0, total: 0 })
       setCatalogs(await parseResponse<Catalogs>(catalogsResponse))
-    } catch (loadError) { setError(loadError instanceof Error ? loadError.message : 'Nao foi possivel carregar contas a receber.') }
+    } catch (loadError) { setError(loadError instanceof Error ? loadError.message : 'Não foi possível carregar contas a receber.') }
     finally { setLoading(false) }
   }, [deferredQuery, page, period, status])
 
@@ -130,7 +131,7 @@ export function ReceivablesWorkspacePage() {
     try {
       await paymentOperation.submit(`/api/erp/contas-receber-parcelas/${selected.parcela_id}/baixar`, { values: { valor: paymentAmount, data_pagamento: paymentDate, conta_financeira_id: financialAccountId, metodo_pagamento_id: paymentMethodId, juros: interest, multa: fine, desconto: discount, taxa: fee } })
       setPaymentOpen(false); await loadData()
-    } catch (paymentError) { setError(paymentError instanceof Error ? paymentError.message : 'Nao foi possivel registrar o recebimento.') }
+    } catch (paymentError) { setError(paymentError instanceof Error ? paymentError.message : 'Não foi possível registrar o recebimento.') }
     finally { setSaving(false) }
   }
 
@@ -139,7 +140,7 @@ export function ReceivablesWorkspacePage() {
     try {
       const body = await parseResponse<{ records: Payment[] }>(await fetch(`/api/erp/pagamentos?tipo=receber&conta_id=${record.id}`, { cache: 'no-store' }))
       setPayments(body.records); setHistoryOpen(true)
-    } catch (historyError) { setError(historyError instanceof Error ? historyError.message : 'Nao foi possivel carregar o historico.') }
+    } catch (historyError) { setError(historyError instanceof Error ? historyError.message : 'Não foi possível carregar o histórico.') }
   }
 
   async function reversePayment(payment: Payment) {
@@ -150,7 +151,7 @@ export function ReceivablesWorkspacePage() {
       await parseResponse(await fetch(`/api/erp/pagamentos/${payment.id}/estornar`, { method: 'POST', headers: { 'Content-Type': 'application/json', 'Idempotency-Key': crypto.randomUUID() }, body: JSON.stringify({ motivo: 'Estorno solicitado no ERP' }) }))
       if (selected) await openHistory(selected)
       await loadData()
-    } catch (reverseError) { setError(reverseError instanceof Error ? reverseError.message : 'Nao foi possivel estornar.') }
+    } catch (reverseError) { setError(reverseError instanceof Error ? reverseError.message : 'Não foi possível estornar.') }
     finally { setSaving(false) }
   }
 
@@ -198,7 +199,7 @@ export function ReceivablesWorkspacePage() {
 
     <Dialog open={paymentOpen} onOpenChange={setPaymentOpen}><DialogContent className="max-w-xl"><DialogHeader><DialogTitle>Registrar recebimento</DialogTitle></DialogHeader><div className="grid gap-4 py-2 md:grid-cols-2"><FormInput label="Valor principal" value={paymentAmount} onChange={setPaymentAmount} type="number" /><FormInput label="Data do recebimento" value={paymentDate} onChange={setPaymentDate} type="date" /><FormSelect label="Conta de recebimento" value={financialAccountId} onChange={setFinancialAccountId} options={catalogs.financialAccounts} /><FormSelect label="Forma de recebimento" value={paymentMethodId} onChange={setPaymentMethodId} options={catalogs.paymentMethods} /><FormInput label="Juros" value={interest} onChange={setInterest} type="number" /><FormInput label="Multa" value={fine} onChange={setFine} type="number" /><FormInput label="Desconto" value={discount} onChange={setDiscount} type="number" /><FormInput label="Tarifa" value={fee} onChange={setFee} type="number" /><div className="md:col-span-2 rounded-md bg-gray-50 p-4"><p className="text-xs text-gray-500">Entrada liquida na conta</p><p className="mt-1 text-xl font-semibold">{currency(cashIn)}</p></div></div><div className="flex justify-end gap-2"><Button variant="outline" onClick={() => setPaymentOpen(false)}>Cancelar</Button><Button disabled={saving || !canSettle} onClick={() => void savePayment()}>{saving ? <Loader2 className="size-4 animate-spin" /> : null}Confirmar recebimento</Button></div></DialogContent></Dialog>
 
-    <Dialog open={historyOpen} onOpenChange={setHistoryOpen}><DialogContent className="max-w-5xl"><DialogHeader><DialogTitle>Historico de recebimentos</DialogTitle></DialogHeader><div className="max-h-[60vh] overflow-auto rounded-md border"><Table><TableHeader><TableRow><TableHead>Data</TableHead><TableHead>Parcela</TableHead><TableHead>Conta / metodo</TableHead><TableHead className="text-right">Principal</TableHead><TableHead className="text-right">Encargos</TableHead><TableHead className="text-right">Desconto</TableHead><TableHead className="text-right">Taxa</TableHead><TableHead className="text-right">Dinheiro</TableHead><TableHead>Situacao</TableHead><TableHead className="w-12" /></TableRow></TableHeader><TableBody>{payments.length === 0 ? <TableRow><TableCell colSpan={10} className="h-24 text-center text-gray-500">Nenhum recebimento registrado.</TableCell></TableRow> : payments.map((payment) => { const reversed = Boolean(payment.estornado_em || payment.estorno_de_pagamento_id); return <TableRow key={payment.id}><TableCell>{payment.data_pagamento}</TableCell><TableCell>{payment.numero_parcela}</TableCell><TableCell><p>{payment.conta_financeira || '-'}</p><p className="text-xs text-gray-500">{payment.metodo_pagamento || '-'}</p></TableCell><TableCell className="text-right">{currency(payment.valor)}</TableCell><TableCell className="text-right">{currency(payment.juros + payment.multa)}</TableCell><TableCell className="text-right">{currency(payment.desconto)}</TableCell><TableCell className="text-right">{currency(payment.taxa)}</TableCell><TableCell className="text-right font-medium">{currency(payment.valor_liquido)}</TableCell><TableCell><Badge variant="outline">{payment.estorno_de_pagamento_id ? 'Estorno' : payment.estornado_em ? 'Estornado' : 'Confirmado'}</Badge></TableCell><TableCell>{canReverse && !reversed ? <Button variant="ghost" size="icon" title="Estornar" disabled={saving} onClick={() => void reversePayment(payment)}><RotateCcw className="size-4" /></Button> : null}</TableCell></TableRow> })}</TableBody></Table></div></DialogContent></Dialog>
+    <Dialog open={historyOpen} onOpenChange={setHistoryOpen}><DialogContent className="max-w-5xl"><DialogHeader><DialogTitle>Histórico de recebimentos</DialogTitle></DialogHeader><div className="max-h-[60vh] overflow-auto rounded-md border"><Table><TableHeader><TableRow><TableHead>Data</TableHead><TableHead>Parcela</TableHead><TableHead>Conta / metodo</TableHead><TableHead className="text-right">Principal</TableHead><TableHead className="text-right">Encargos</TableHead><TableHead className="text-right">Desconto</TableHead><TableHead className="text-right">Taxa</TableHead><TableHead className="text-right">Dinheiro</TableHead><TableHead>Situacao</TableHead><TableHead className="w-12" /></TableRow></TableHeader><TableBody>{payments.length === 0 ? <TableRow><TableCell colSpan={10} className="h-24 text-center text-gray-500">Nenhum recebimento registrado.</TableCell></TableRow> : payments.map((payment) => { const reversed = Boolean(payment.estornado_em || payment.estorno_de_pagamento_id); return <TableRow key={payment.id}><TableCell>{payment.data_pagamento}</TableCell><TableCell>{payment.numero_parcela}</TableCell><TableCell><p>{payment.conta_financeira || '-'}</p><p className="text-xs text-gray-500">{payment.metodo_pagamento || '-'}</p></TableCell><TableCell className="text-right">{currency(payment.valor)}</TableCell><TableCell className="text-right">{currency(payment.juros + payment.multa)}</TableCell><TableCell className="text-right">{currency(payment.desconto)}</TableCell><TableCell className="text-right">{currency(payment.taxa)}</TableCell><TableCell className="text-right font-medium">{currency(payment.valor_liquido)}</TableCell><TableCell><Badge variant="outline">{payment.estorno_de_pagamento_id ? 'Estorno' : payment.estornado_em ? 'Estornado' : 'Confirmado'}</Badge></TableCell><TableCell>{canReverse && !reversed ? <Button variant="ghost" size="icon" title="Estornar" disabled={saving} onClick={() => void reversePayment(payment)}><RotateCcw className="size-4" /></Button> : null}</TableCell></TableRow> })}</TableBody></Table></div></DialogContent></Dialog>
   </div>
 }
 

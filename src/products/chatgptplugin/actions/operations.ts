@@ -29,6 +29,11 @@ export async function operationSnapshot(tenantId:number,proposal:Proposal,client
   const row=rows[0]
   if(!row || (proposal.tipo==='editar_cliente' && !row.eh_cliente))throw new PluginError('INVALID_REFERENCE','Registro não disponível nesta empresa.')
   const related:unknown[]=[]
+  if(table==='entidades'&&('email' in proposal.dados||'telefone' in proposal.dados)){
+    // O contato principal entra no estado conferido: mudá-lo depois da prévia exige nova prévia.
+    const contact=(await query(`SELECT email,telefone FROM erp.entidades_contatos WHERE empresa_id=$1 AND entidade_id=$2 AND ativo ORDER BY ('comercial'=ANY(principais)) DESC,id LIMIT 1`,[tenantId,proposal.dados.registro_id]))[0]
+    related.push(contact||null);Object.assign(row,{email:contact?.email??null,telefone:contact?.telefone??null})
+  }
   if(table==='notas_fiscais'){
     if(row.modo_operacao!=='simulacao'||row.tipo!=='nfse'||row.direcao!=='saida')throw new PluginError('INVALID_REFERENCE','Escolha uma nota de serviço simulada desta empresa.')
     related.push(await query('SELECT * FROM erp.notas_fiscais_itens WHERE empresa_id=$1 AND nota_fiscal_id=$2 AND excluido_em IS NULL ORDER BY id',[tenantId,proposal.dados.registro_id]))
@@ -71,6 +76,20 @@ export async function operationSnapshot(tenantId:number,proposal:Proposal,client
   }
   return {hash,registro_id:Number(proposal.dados.registro_id),nome:String(row.nome||row.numero||row.descricao||`Registro ${row.id}`),parcelas,conta_financeira:contaFinanceira,campos,
     status:row.status ? String(row.status):null,valor:row.total!==undefined?String(row.total):row.valor_total!==undefined?String(row.valor_total):row.valor!==undefined?String(row.valor):row.preco_venda!==undefined?String(row.preco_venda):null}
+}
+type Contact={id?:string;nome:string;cargo?:string;email?:string;telefone?:string;whatsapp?:boolean;finalidades:string[];principais:string[]}
+/** Aplica e-mail/telefone ao contato comercial principal (ou cria um), preservando os demais contatos. */
+function withContactChanges(current:Record<string,unknown>,changes:Record<string,unknown>):Record<string,unknown> {
+  const {email,telefone,...rest}=changes
+  if(email===undefined&&telefone===undefined)return {...current,...rest}
+  // O registro traz os contatos como texto JSON em contatos_json.
+  const raw=current.contatos_json??current.contatos
+  const stored=(typeof raw==='string'?JSON.parse(raw):raw||[]) as Contact[]
+  const contacts=stored.map(c=>({id:c.id,nome:c.nome,cargo:c.cargo||'',email:c.email||'',telefone:c.telefone||'',whatsapp:Boolean(c.whatsapp),finalidades:c.finalidades,principais:c.principais||[]}))
+  const target=contacts.find(c=>c.principais.includes('comercial'))||contacts[0]
+  if(target)Object.assign(target,email!==undefined?{email}:{},telefone!==undefined?{telefone}:{})
+  else contacts.push({id:undefined,nome:String(rest.nome||current.nome),cargo:'',email:String(email||''),telefone:String(telefone||''),whatsapp:false,finalidades:['comercial'],principais:['comercial']})
+  return {...current,...rest,...(email!==undefined?{email}:{}),...(telefone!==undefined?{telefone}:{}),contatos:contacts}
 }
 export async function executeOperation(tenantId:number,actorId:number,proposal:Proposal,key:string):Promise<string> {
   if(!('registro_id' in proposal.dados))throw new PluginError('INVALID_INPUT','Operação inválida.')
@@ -118,7 +137,7 @@ export async function executeOperation(tenantId:number,actorId:number,proposal:P
   const registrationEdit={editar_fornecedor:'fornecedores',editar_vendedor:'vendedores',editar_servico:'servicos',editar_categoria:'categorias',editar_conta_financeira:'contas-financeiras'} as const
   if(proposal.tipo in registrationEdit){
     const entityId=registrationEdit[proposal.tipo as keyof typeof registrationEdit],current=await getErpEntityRecord({tenantId,entityId,id}),{registro_id:_id,...changes}=data
-    await updateErpEntityRecord({...input,entityId,expectedVersion:Number(current.versao),values:{...current,...changes}});return String(id)
+    await updateErpEntityRecord({...input,entityId,expectedVersion:Number(current.versao),values:withContactChanges(current,changes)});return String(id)
   }
   switch(proposal.tipo) {
     case 'editar_cliente': case 'editar_produto': {
@@ -126,7 +145,7 @@ export async function executeOperation(tenantId:number,actorId:number,proposal:P
       const current=await getErpEntityRecord({tenantId,entityId,id})
       if(!current)throw new PluginError('NOT_FOUND','Registro indisponível.',404)
       const {registro_id,...changes}=proposal.dados
-      await updateErpEntityRecord({...input,entityId,expectedVersion:Number(current.versao),values:{...current,...changes}})
+      await updateErpEntityRecord({...input,entityId,expectedVersion:Number(current.versao),values:withContactChanges(current,changes)})
       break
     }
     case 'confirmar_venda': await confirmErpSale({tenantId,actorId,saleId:id});break

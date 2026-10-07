@@ -17,7 +17,7 @@ type ImportRecord = { id: string; arquivo: string; tipo: string; data: string; t
 
 const types: Array<{ value: ImportType; label: string }> = [
   { value: 'clientes', label: 'Clientes' }, { value: 'fornecedores', label: 'Fornecedores' },
-  { value: 'produtos', label: 'Produtos' }, { value: 'servicos', label: 'Servicos' },
+  { value: 'produtos', label: 'Produtos' }, { value: 'servicos', label: 'Serviços' },
 ]
 
 export function ErpImportExportPage() {
@@ -65,7 +65,7 @@ export function ErpImportExportPage() {
       setFile(null)
       await loadHistory()
     } catch (importError) {
-      setError(importError instanceof Error ? importError.message : 'Nao foi possivel importar o arquivo.')
+      setError(importError instanceof Error ? importError.message : 'Não foi possível importar o arquivo.')
     } finally {
       setLoading(false)
     }
@@ -74,8 +74,8 @@ export function ErpImportExportPage() {
   return (
     <div className="space-y-7">
       <header className="border-b border-gray-200 pb-5">
-        <h1 className="text-2xl font-semibold tracking-normal text-gray-950">Importacao e exportacao</h1>
-        <p className="mt-1 max-w-3xl text-sm leading-6 text-gray-600">Mova cadastros por CSV com validacao individual, historico e relatorio de erros.</p>
+        <h1 className="text-2xl font-semibold tracking-normal text-gray-950">Importação e exportação</h1>
+        <p className="mt-1 max-w-3xl text-sm leading-6 text-gray-600">Mova cadastros por CSV com validação individual, histórico e relatório de erros.</p>
       </header>
 
       <section className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(320px,0.7fr)]">
@@ -89,7 +89,7 @@ export function ErpImportExportPage() {
         <div className="border-l-0 border-gray-200 lg:border-l lg:pl-6">
           <FileSpreadsheet className="size-5 text-gray-500" />
           <h2 className="mt-3 text-sm font-semibold text-gray-950">Colunas reconhecidas</h2>
-          <p className="mt-2 text-sm leading-6 text-gray-600">Clientes e fornecedores: nome, documento, email, telefone e cidade. Produtos: nome, SKU, preco e categoria. Servicos: nome, codigo, descricao, preco e custo.</p>
+          <p className="mt-2 text-sm leading-6 text-gray-600">Clientes e fornecedores: nome, documento, email, telefone e cidade. Produtos: nome, SKU, preço e categoria. Serviços: nome, código, descrição, preço e custo.</p>
         </div>
       </section>
 
@@ -99,7 +99,7 @@ export function ErpImportExportPage() {
         <div className="flex flex-wrap gap-2">{history.map(record=><Button key={record.id} variant="outline" onClick={()=>setDetailId(record.id)}>Detalhes: {record.arquivo}</Button>)}</div>
         <div className="overflow-x-auto rounded-md border border-gray-200">
           <Table><TableHeader><TableRow className="hover:bg-white"><TableHead className="bg-gray-50">Arquivo</TableHead><TableHead className="bg-gray-50">Tipo</TableHead><TableHead className="bg-gray-50">Linhas</TableHead><TableHead className="bg-gray-50">Importadas</TableHead><TableHead className="bg-gray-50">Erros</TableHead><TableHead className="bg-gray-50">Status</TableHead></TableRow></TableHeader>
-            <TableBody>{history.length ? history.map((record) => <TableRow key={record.id}><TableCell>{record.arquivo}</TableCell><TableCell>{record.tipo}</TableCell><TableCell>{record.total_linhas}</TableCell><TableCell>{record.importadas}</TableCell><TableCell>{record.erros}</TableCell><TableCell><ErpStatusBadge label={record.status} tone={record.status === 'concluida' ? 'success' : record.status === 'falha' ? 'danger' : 'warning'} /></TableCell></TableRow>) : <TableRow><TableCell colSpan={6} className="h-24 text-center text-sm text-gray-500">Nenhuma importacao realizada.</TableCell></TableRow>}</TableBody>
+            <TableBody>{history.length ? history.map((record) => <TableRow key={record.id}><TableCell>{record.arquivo}</TableCell><TableCell>{record.tipo}</TableCell><TableCell>{record.total_linhas}</TableCell><TableCell>{record.importadas}</TableCell><TableCell>{record.erros}</TableCell><TableCell><ErpStatusBadge label={record.status} tone={record.status === 'concluida' ? 'success' : record.status === 'falha' ? 'danger' : 'warning'} /></TableCell></TableRow>) : <TableRow><TableCell colSpan={6} className="h-24 text-center text-sm text-gray-500">Nenhuma importação realizada.</TableCell></TableRow>}</TableBody>
           </Table>
         </div>
       </section>

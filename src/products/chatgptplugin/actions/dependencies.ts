@@ -17,7 +17,8 @@ export const actionDependencies = {
     return {...view,referencias}
   },
   execute:async(principal:PluginPrincipal,tenantId:number,id:string,kinds:readonly Proposal['tipo'][],tool:string,config:PluginConfig)=>{
-    await decideDraft(id,{tenantId,userId:principal.userId,clerkUserId:principal.clerkUserId,oauthClientId:principal.clientId,kinds,tool},'save')
+    const timeZone=principal.companies.find(company=>company.id===tenantId)?.timeZone
+    await decideDraft(id,{tenantId,userId:principal.userId,clerkUserId:principal.clerkUserId,timeZone,oauthClientId:principal.clientId,kinds,tool},'save')
     return chatView(await getDraft(principal,tenantId,id,config))
   },
 }

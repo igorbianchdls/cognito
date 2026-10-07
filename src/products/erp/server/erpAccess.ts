@@ -4,18 +4,23 @@ import { resolveAuthTenant } from '@/products/auth/server/authTenantResolver'
 import type { AuthTenantContext } from '@/products/auth/shared/authContracts'
 import { type ErpAccessProfile, type ErpCapability } from '@/products/erp/shared/professionalContracts'
 import { effectiveCapabilities } from '@/products/auth/server/accessPolicy'
+import { normalizeTimeZone } from '@/products/erp/shared/businessDate'
 
 export type ErpAccessContext = AuthTenantContext & {
   erpProfile: ErpAccessProfile
   capabilities: ErpCapability[]
+  /** Fuso IANA da empresa (padrão America/Sao_Paulo). */
+  timeZone?: string
 }
 
 export async function resolveErpSession(): Promise<ErpAccessContext | null> {
   const tenant = await resolveAuthTenant({ access: 'read' })
   if (!tenant) return null
 
-  const rows = await runQuery<{ perfil_acesso_id: ErpAccessProfile; capabilities: ErpCapability[] | null }>(
+  const rows = await runQuery<{ perfil_acesso_id: ErpAccessProfile; fuso_horario: string | null; capabilities: ErpCapability[] | null }>(
     `SELECT memberships.perfil_acesso_id,
+       -- Leitura tolerante: ate a migração do fuso ser aplicada, a coluna ausente vira nulo.
+       (SELECT to_jsonb(tenants)->>'fuso_horario' FROM shared.empresas AS tenants WHERE tenants.id = $1) AS fuso_horario,
        COALESCE(array_agg(permissions.capability) FILTER (WHERE permissions.capability IS NOT NULL), ARRAY[]::text[]) AS capabilities
      FROM shared.usuarios_empresas AS memberships
      LEFT JOIN shared.permissoes_perfil AS permissions
@@ -27,8 +32,9 @@ export async function resolveErpSession(): Promise<ErpAccessContext | null> {
   const profile = rows[0]?.perfil_acesso_id || (tenant.role === 'owner' || tenant.role === 'admin' ? 'administrador' : 'consulta')
   if (!rows[0]) return null
   const capabilities = effectiveCapabilities(tenant.role, rows[0].capabilities || [])
-  setErpDatabaseContext({ tenantId: tenant.tenantId, userId: tenant.sharedUserId })
-  return { ...tenant, erpProfile: profile, capabilities }
+  const timeZone = normalizeTimeZone(rows[0].fuso_horario)
+  setErpDatabaseContext({ tenantId: tenant.tenantId, userId: tenant.sharedUserId, timeZone })
+  return { ...tenant, erpProfile: profile, capabilities, timeZone }
 }
 
 export async function resolveErpAccess(capability: ErpCapability): Promise<ErpAccessContext | null> {

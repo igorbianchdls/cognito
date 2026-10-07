@@ -24,9 +24,9 @@ try {
     const rows = (await remote.query(`SELECT ${columns.map(column => `${ident(column)}::text AS ${ident(column)}`).join(',')} FROM ${tableName(table)}`)).rows
     tables.push({ schema: table.schema, name: table.relname, columns, rows, digest: digest(canonicalRows(rows)) })
   }
-  const referencedAuthUsers = (await remote.query('SELECT id::text FROM auth.users WHERE id IN (SELECT auth_user_id FROM shared.users WHERE auth_user_id IS NOT NULL)')).rows
+  const referencedAuthUsers = (await remote.query('SELECT id::text FROM auth.users WHERE id IN (SELECT auth_user_id FROM shared.usuarios WHERE auth_user_id IS NOT NULL)')).rows
   const sequences = []
-  const sequenceMetadata = (await remote.query("SELECT schemaname,sequencename,start_value::text,increment_by::text,min_value::text,max_value::text,cache_size::text,cycle FROM pg_sequences WHERE schemaname IN ('erp','shared') ORDER BY schemaname,sequencename")).rows
+  const sequenceMetadata = (await remote.query("SELECT schemaname,sequencename,start_value::text,increment_by::text,min_value::text,max_value::text,cache_size::text,cycle FROM pg_sequences WHERE schemaname IN ('erp','shared','plugin') ORDER BY schemaname,sequencename")).rows
   for (const sequence of sequenceMetadata) {
     const state = (await remote.query(`SELECT last_value::text,is_called FROM ${ident(sequence.schemaname)}.${ident(sequence.sequencename)}`)).rows[0]
     sequences.push({ ...sequence, ...state })

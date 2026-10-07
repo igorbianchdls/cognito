@@ -13,7 +13,7 @@ type RouteContext = {
   const { id } = await context.params
   const purchaseId = Number(id)
   if (!Number.isInteger(purchaseId) || purchaseId <= 0) {
-    return erpFailure('Compra invalida.', 400)
+    return erpFailure('Compra inválida.', 400)
   }
 
   const tenant = await resolveErpAccess('erp.compras.gerenciar')

@@ -16,7 +16,7 @@ const deleteSchema = z.object({ expectedVersion: erpVersionSchema }).strict()
 
  async function handleGET(_request: Request, context: RouteContext) {
   const { entityId, id } = await context.params
-  if (!isErpConnectedModuleId(entityId)) return erpFailure('Modulo ERP nao encontrado.', 404)
+  if (!isErpConnectedModuleId(entityId)) return erpFailure('Módulo ERP não encontrado.', 404)
   const tenant = await resolveErpAccess(getErpModuleCapability(entityId, 'read'))
   if (!tenant) return erpFailure('Acesso negado.', 403)
   try {
@@ -26,7 +26,7 @@ const deleteSchema = z.object({ expectedVersion: erpVersionSchema }).strict()
 
  async function handlePATCH(request: Request, context: RouteContext) {
   const { entityId, id } = await context.params
-  if (!isErpConnectedModuleId(entityId)) return erpFailure('Modulo ERP nao encontrado.', 404)
+  if (!isErpConnectedModuleId(entityId)) return erpFailure('Módulo ERP não encontrado.', 404)
   const tenant = await resolveErpAccess(getErpModuleCapability(entityId, 'manage'))
   if (!tenant) return erpFailure('Acesso negado.', 403)
   try {
@@ -39,7 +39,7 @@ const deleteSchema = z.object({ expectedVersion: erpVersionSchema }).strict()
 
  async function handleDELETE(request: Request, context: RouteContext) {
   const { entityId, id } = await context.params
-  if (!isErpConnectedModuleId(entityId)) return erpFailure('Modulo ERP nao encontrado.', 404)
+  if (!isErpConnectedModuleId(entityId)) return erpFailure('Módulo ERP não encontrado.', 404)
   const tenant = await resolveErpAccess(getErpModuleCapability(entityId, 'manage'))
   if (!tenant) return erpFailure('Acesso negado.', 403)
   try {

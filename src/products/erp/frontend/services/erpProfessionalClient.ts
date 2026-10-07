@@ -7,7 +7,7 @@ export class ErpRequestError extends Error {
     public readonly recovery: ErpRecovery = 'none') { super(message); this.name = 'ErpRequestError' }
 }
 
-export function getErpErrorMessage(body: unknown, fallback = 'Nao foi possivel concluir a operacao.') {
+export function getErpErrorMessage(body: unknown, fallback = 'Não foi possível concluir a operação.') {
   if (!body || typeof body !== 'object') return fallback
   const value = body as { error?: string | { message?: string }; message?: string }
   if (typeof value.error === 'string') return value.error

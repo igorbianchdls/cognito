@@ -42,7 +42,7 @@ export function missingFields(kind:Proposal['tipo'],dados:unknown) {
 async function options(module:ErpConnectedModuleId,company:PluginCompany,principal:PluginPrincipal,deps:ExecutionDependencies) {
   const needed=module==='contas-financeiras'?['erp.cadastros.visualizar','erp.financeiro.visualizar']:['erp.cadastros.visualizar']
   if(!needed.every(capability=>company.capabilities.includes(capability as never)))return null
-  const page=await runWithErpDatabaseContext({tenantId:company.id,userId:principal.userId,readOnly:true,statementTimeoutMs:10000},
+  const page=await runWithErpDatabaseContext({tenantId:company.id,userId:principal.userId,readOnly:true,statementTimeoutMs:10000,timeZone:company.timeZone},
     ()=>deps.queries.page(company.id,module,{page:1,pageSize:MAX_OPTIONS,filters:{status:'ativo'}})) as {records:{id:unknown;nome?:unknown}[];total?:unknown}
   // Acima do limite a lista ficaria incompleta; o campo vira ID e o modelo busca pelo nome.
   if(Number(page.total??0)>MAX_OPTIONS||!page.records.length)return null

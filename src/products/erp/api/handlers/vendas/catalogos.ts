@@ -7,7 +7,7 @@ import { listErpSalesCatalogs } from '@/products/erp/server/erpRepository'
 
  async function handleGET() {
   const tenant = await resolveErpAccess('erp.vendas.visualizar')
-  if (!tenant) return erpFailure('Nao autenticado.', 401)
+  if (!tenant) return erpFailure('Não autenticado.', 401)
 
   try {
     return NextResponse.json(await listErpSalesCatalogs(tenant.tenantId))

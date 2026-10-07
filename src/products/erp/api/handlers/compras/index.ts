@@ -16,7 +16,7 @@ function parseFilters(searchParams: URLSearchParams) {
 
  async function handleGET(request: Request) {
   const tenant = await resolveErpAccess('erp.compras.visualizar')
-  if (!tenant) return erpFailure('Nao autenticado.', 401)
+  if (!tenant) return erpFailure('Não autenticado.', 401)
 
   try {
     const url = new URL(request.url)

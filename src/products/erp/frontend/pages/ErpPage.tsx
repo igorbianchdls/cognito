@@ -50,8 +50,8 @@ function ErpPlaceholderPage({
           {selectedModule?.label ?? section.label}
         </h1>
         <p className="mt-3 text-sm leading-6 text-gray-600">
-          Este modulo ainda nao faz parte da versao operacional. Quando for ativado, usara os mesmos
-          contratos, controles de acesso e componentes reutilizaveis dos demais modulos do ERP.
+          Este módulo ainda não faz parte da versão operacional. Quando for ativado, usara os mesmos
+          contratos, controles de acesso e componentes reutilizaveis dos demais módulos do ERP.
         </p>
       </div>
     </div>

@@ -1,10 +1,13 @@
 import { AsyncLocalStorage } from 'node:async_hooks'
+import { normalizeTimeZone } from '@/products/erp/shared/businessDate'
 
 export type ErpDatabaseContext = {
   tenantId: number
   userId: number
   statementTimeoutMs?: number
   readOnly?: boolean
+  /** Fuso IANA da empresa; define o "hoje" do ERP e o app.erp_time_zone das consultas. */
+  timeZone?: string
 }
 
 const storage = new AsyncLocalStorage<ErpDatabaseContext>()
@@ -20,7 +23,8 @@ function normalizeContext(context: ErpDatabaseContext): ErpDatabaseContext {
     throw new Error('Tempo limite de banco ERP invalido.')
   }
   return { tenantId, userId, ...(context.statementTimeoutMs !== undefined ? { statementTimeoutMs: context.statementTimeoutMs } : {}),
-    ...(context.readOnly !== undefined ? { readOnly: context.readOnly } : {}) }
+    ...(context.readOnly !== undefined ? { readOnly: context.readOnly } : {}),
+    ...(context.timeZone !== undefined ? { timeZone: normalizeTimeZone(context.timeZone) } : {}) }
 }
 
 export function setErpDatabaseContext(context: ErpDatabaseContext) {

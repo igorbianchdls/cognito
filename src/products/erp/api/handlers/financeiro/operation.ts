@@ -33,7 +33,7 @@ const numberId = (value: unknown, label: string) => {
     const params = new URL(request.url).searchParams
     if (operation === 'composicao') {
       const lado = params.get('lado')
-      if (lado !== 'receber' && lado !== 'pagar') throw new ErpDomainError('VALIDATION_ERROR', 'Lado financeiro invalido.')
+      if (lado !== 'receber' && lado !== 'pagar') throw new ErpDomainError('VALIDATION_ERROR', 'Lado financeiro inválido.')
       return NextResponse.json(await getInstallmentComposition(tenant.tenantId, lado, numberId(params.get('parcela_id'), 'Parcela')))
     }
     if (operation === 'adiantamentos') {
@@ -44,15 +44,15 @@ const numberId = (value: unknown, label: string) => {
     }
     if (operation === 'aplicacoes') {
       const lado = params.get('lado')
-      if (lado !== 'receber' && lado !== 'pagar') throw new ErpDomainError('VALIDATION_ERROR', 'Lado financeiro invalido.')
+      if (lado !== 'receber' && lado !== 'pagar') throw new ErpDomainError('VALIDATION_ERROR', 'Lado financeiro inválido.')
       return NextResponse.json({ records: await listInstallmentApplications(tenant.tenantId, lado, numberId(params.get('parcela_id'), 'Parcela')) })
     }
     if (operation === 'renegociacoes') {
       const lado = params.get('lado')
-      if (lado !== 'receber' && lado !== 'pagar') throw new ErpDomainError('VALIDATION_ERROR', 'Lado financeiro invalido.')
+      if (lado !== 'receber' && lado !== 'pagar') throw new ErpDomainError('VALIDATION_ERROR', 'Lado financeiro inválido.')
       return NextResponse.json({ records: await listInstallmentRenegotiations(tenant.tenantId, lado, numberId(params.get('parcela_id'), 'Parcela')) })
     }
-    throw new ErpDomainError('NOT_FOUND', 'Operacao financeira nao encontrada.', 404)
+    throw new ErpDomainError('NOT_FOUND', 'Operação financeira não encontrada.', 404)
   } catch (error) {
     return erpErrorResponse(error)
   }
@@ -73,12 +73,12 @@ const numberId = (value: unknown, label: string) => {
     if (operation === 'efetivar-previsao') return NextResponse.json(await makePayableEffective({ tenantId: tenant.tenantId, actorId: tenant.sharedUserId, payableId: numberId(values.conta_id, 'Conta') }))
     if (operation === 'rateios') {
       const lado = values.lado
-      if (lado !== 'receber' && lado !== 'pagar') throw new ErpDomainError('VALIDATION_ERROR', 'Lado financeiro invalido.')
+      if (lado !== 'receber' && lado !== 'pagar') throw new ErpDomainError('VALIDATION_ERROR', 'Lado financeiro inválido.')
       return NextResponse.json(await replaceFinancialAllocations({ ...base, financialSide: lado, titleId: numberId(values.conta_id, 'Conta') }))
     }
     if (operation === 'renegociar') return NextResponse.json(await createRenegotiation({ ...base, idempotencyKey: readErpIdempotencyKey(request.headers, true) }), { status: 201 })
     if (operation === 'reverter-renegociacao') return NextResponse.json(await reverseRenegotiation({ ...base, agreementId: numberId(values.renegociacao_id, 'Renegociacao') }))
-    throw new ErpDomainError('NOT_FOUND', 'Operacao financeira nao encontrada.', 404)
+    throw new ErpDomainError('NOT_FOUND', 'Operação financeira não encontrada.', 404)
   } catch (error) {
     return erpErrorResponse(error)
   }
