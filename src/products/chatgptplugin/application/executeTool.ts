@@ -1,4 +1,5 @@
 import type { CallToolResult } from '@modelcontextprotocol/sdk/types.js'
+import type { z } from 'zod'
 import { runWithErpDatabaseContext } from '@/lib/erpDatabaseContext'
 import { ErpDomainError } from '@/products/erp/shared/erpErrors'
 import { PluginError, selectCompany, type PluginPrincipal } from '../shared/contracts'
@@ -7,9 +8,8 @@ import { reserveExecution, finishExecution } from '../audit/executionRepository'
 import { erpQueries, type ErpQueries } from './erpQueries'
 import { accessSchema, tools } from '../tools/catalog'
 import { actionTools } from '../actions/catalog'
-import { actionDependencies, type ActionDependencies } from '../actions/draftRepository'
+import { actionDependencies, type ActionDependencies } from '../actions/dependencies'
 import { preferencesDependencies } from '../extensions/settings'
-import { cardSchema,cardSources } from '../ui/contracts/cards'
 
 export type ExecutionDependencies = {
   queries: ErpQueries
@@ -19,80 +19,80 @@ export type ExecutionDependencies = {
   preferences?: typeof preferencesDependencies
 }
 export const executionDependencies: ExecutionDependencies = { queries: erpQueries, reserve: reserveExecution, finish: finishExecution, actions:actionDependencies }
-function publicError(error: unknown): PluginError {
+export const accessTools = ['meu_acesso','abrir_painel'] as const
+function publicError(error: unknown, write: boolean): PluginError {
   if (error instanceof PluginError) return error
   if (error instanceof ErpDomainError && error.code === 'NOT_FOUND') return new PluginError('NOT_FOUND', error.message, 404)
   if(error instanceof ErpDomainError&&['INVALID_STATE','STALE_VERSION','IDEMPOTENCY_CONFLICT'].includes(error.code))return new PluginError(error.code,error.message,409)
   if (error instanceof ErpDomainError && error.code === 'VALIDATION_ERROR') {
-    return new PluginError('NOT_FOUND', 'Registro nao disponivel nesta empresa.', 404)
+    // Em escritas a regra do ERP explica o que corrigir; em consultas não revela registros de outras empresas.
+    return write ? new PluginError('VALIDATION_ERROR', error.message, 422) : new PluginError('NOT_FOUND', 'Registro não disponível nesta empresa.', 404)
   }
   if ((error as { code?: string })?.code === '57014') return new PluginError('TIMEOUT', 'A consulta excedeu o tempo limite.', 504)
-  return new PluginError('ERP_UNAVAILABLE', 'Nao foi possivel concluir a consulta ao ERP.', 503)
+  return new PluginError('ERP_UNAVAILABLE', 'Não foi possível concluir a consulta ao ERP.', 503)
+}
+// Perfil da conexão (openai/profile): o ID do Clerk é estável e não deriva de e-mail ou nome.
+function profile(principal: PluginPrincipal) {
+  const name = principal.name?.trim() || principal.email || 'Usuário do Cognito ERP'
+  const nickname = principal.companies.length === 1 ? `${name} · ${principal.companies[0].name}` : name
+  return { id: principal.clerkUserId, name, nickname, ...(principal.email ? { email: principal.email } : {}) }
+}
+function invalidInput(error: z.ZodError): PluginError {
+  const fields = error.issues.slice(0, 8).map(issue => ({ campo: issue.path.join('.') || '(argumentos)', motivo: issue.message }))
+  return new PluginError('INVALID_INPUT', 'Parâmetros inválidos: ' + fields.map(f => `${f.campo} (${f.motivo})`).join('; '), 400, undefined, fields)
 }
 export async function executeTool(principal: PluginPrincipal, name: string, raw: unknown, config: PluginConfig,
   deps: ExecutionDependencies = executionDependencies): Promise<CallToolResult> {
   const started = Date.now()
   let executionId: string | undefined
+  const tool = tools.find(item => item.name === name)
+  const action = actionTools.find(item => item.name === name)
   try {
-    const tool = tools.find(item => item.name === name)
-    const action = actionTools.find(item => item.name === name)
-    const presentation=name==='renderizar_card'
-    const access = name === 'meu_acesso' || name === 'abrir_painel' || name === 'abrir_formulario'
-    if (!tool && !action && !access && !presentation) throw new PluginError('UNKNOWN_TOOL', 'Ferramenta desconhecida.')
-    const parsed = (presentation?cardSchema:tool?.schema || action?.schema || accessSchema).safeParse(raw)
-    if (!parsed.success) throw new PluginError('INVALID_INPUT', 'Parametros invalidos. Consulte o esquema da ferramenta.')
+    const access = (accessTools as readonly string[]).includes(name)
+    if (!tool && !action && !access) throw new PluginError('UNKNOWN_TOOL', 'Ferramenta desconhecida.')
+    const parsed = (tool?.schema || action?.schema || accessSchema).safeParse(raw)
+    if (!parsed.success) throw invalidInput(parsed.error)
     const input = parsed.data as Record<string, unknown>
     if (input.vencimento_inicio && input.vencimento_fim && String(input.vencimento_inicio) > String(input.vencimento_fim)) {
-      throw new PluginError('INVALID_INPUT', 'O inicio do periodo deve ser anterior ao fim.')
+      throw new PluginError('INVALID_INPUT', 'O início do período deve ser anterior ao fim.')
     }
     if (input.inicio && input.fim && (String(input.inicio) > String(input.fim) || Date.parse(String(input.fim)) - Date.parse(String(input.inicio)) > 366 * 86400000)) {
-      throw new PluginError('INVALID_INPUT','Informe um periodo de ate 366 dias, com inicio anterior ao fim.')
+      throw new PluginError('INVALID_INPUT','Informe um período de até 366 dias, com início anterior ao fim.')
     }
-    const companyChoice=presentation&&input.card==='selecao'&&input.consulta==='meu_acesso'
-    const company = (access||companyChoice) && input.empresa_id === undefined ? null : selectCompany(principal,input.empresa_id as number | undefined)
+    const company = access && input.empresa_id === undefined ? null : selectCompany(principal,input.empresa_id as number | undefined)
     const capabilities = tool?.requiredCapabilities?.(input) || tool?.capabilities || action?.requiredCapabilities(input) || []
     const allowed = capabilities.every(capability => company?.capabilities.includes(capability))
     // Registre apenas metadados, nunca argumentos ou resultados com dados pessoais.
     executionId = await deps.reserve(principal,name,company?.id || null)
-    if (!allowed) throw new PluginError('ACCESS_DENIED', 'Seu perfil nao permite esta consulta.', 403)
-    if (action?.write && !principal.scopes.includes('erp:write')) throw new PluginError('INSUFFICIENT_SCOPE','A conexao precisa da permissao erp:write para preparar rascunhos.',403)
+    if (!allowed) throw new PluginError('ACCESS_DENIED', 'Seu perfil não permite esta operação.', 403)
+    if (action && !principal.scopes.includes('erp:write')) throw new PluginError('INSUFFICIENT_SCOPE','A conexão precisa da permissão erp:write para alterar dados.',403)
     let timer: ReturnType<typeof setTimeout> | undefined
     let data: unknown
     try {
       data = await Promise.race([
-        presentation ? (async()=>{
-          const card=input.card as keyof typeof cardSources,source=String(input.consulta)
-          if(!(cardSources[card] as readonly string[]).includes(source))throw new PluginError('INVALID_INPUT','Consulta incompatível com este card.')
-          const parameters=input.parametros as Record<string,unknown>
-          const result=await executeTool(principal,source,{...parameters,...(company?{empresa_id:company.id}:{})},config,deps)
-          if(result.isError){
-            const failure=JSON.parse((result.content[0] as {text:string}).text)
-            throw new PluginError(failure.code,failure.message)
-          }
-          return {card,consulta:source,parametros:parameters,empresa:company?{id:company.id,nome:company.name}:null,dados:result.structuredContent!.data}
-        })() : access ? Promise.resolve({ usuario_id: principal.userId,
-          empresas: principal.companies, empresa_selecionada: company?.id || null })
+        access ? Promise.resolve({ usuario_id: principal.userId, empresas: principal.companies, empresa_selecionada: company?.id || null })
+          // Escritas definem o próprio contexto: prévia somente leitura, execução em transação.
+          : action ? action.execute(deps.actions || actionDependencies,principal,company!.id,input,config)
           : runWithErpDatabaseContext({ tenantId: company!.id, userId: principal.userId, readOnly: true, statementTimeoutMs: 10000 },
-            () => action ? action.execute(deps.actions || actionDependencies,principal,company!.id,input,config) : tool!.execute(deps.queries,company!.id,input)),
+            () => tool!.execute(deps.queries,company!.id,input)),
         new Promise<never>((_, reject) => { timer = setTimeout(() => reject(new PluginError('TIMEOUT','A consulta excedeu o tempo limite.',504)),config.toolTimeoutMs) }),
       ])
     } finally { if (timer) clearTimeout(timer) }
-    // Impedir respostas enormes e normalizar datas/decimais para transporte JSON.
-    if(name==='obter_pdf_nota_servico'&&data&&typeof data==='object'&&'pdf_path' in data)data={...data,url:new URL(String(data.pdf_path),config.resource).href}
-    const payload = { ok: true, execution_id: executionId, empresa_id: company?.id || null, data }
+    const payload = { ...(name === 'meu_acesso' ? profile(principal) : {}), ok: true, execution_id: executionId, empresa_id: company?.id || null, data }
     const serialized = JSON.stringify(payload)
     if (Buffer.byteLength(serialized) > 128 * 1024) throw new PluginError('RESULT_TOO_LARGE', 'Refine os filtros para reduzir o resultado.')
     await deps.finish(executionId,'succeeded',null,Date.now()-started)
     return { content: [{ type:'text', text: serialized }], structuredContent: JSON.parse(serialized) }
   } catch (error) {
-    const failure = publicError(error)
+    const failure = publicError(error, Boolean(action))
     if (!executionId) {
       executionId = await deps.reserve(principal,name.slice(0,100),null).catch(() => undefined)
     }
     if (executionId) await deps.finish(executionId,'failed',failure.code,Date.now()-started).catch(() => {
       console.error(JSON.stringify({ scope:'chatgptplugin', code:'AUDIT_UNAVAILABLE', executionId }))
     })
-    return { isError: true, content: [{ type:'text', text: JSON.stringify({ ok:false,code:failure.code,message:failure.message,execution_id:executionId || null }) }],
-      ...(failure.code === 'INSUFFICIENT_SCOPE' ? {_meta:{'mcp/www_authenticate':[`Bearer resource_metadata="${config.metadataUrl}", scope="erp:read erp:write", error="insufficient_scope"`]}} : {}) }
+    return { isError: true, content: [{ type:'text', text: JSON.stringify({ ok:false,code:failure.code,message:failure.message,
+      ...(failure.fields ? { campos: failure.fields } : {}), execution_id:executionId || null }) }],
+      ...(failure.code === 'INSUFFICIENT_SCOPE' ? {_meta:{'mcp/www_authenticate':[`Bearer resource_metadata="${config.metadataUrl}", scope="erp:read erp:write", error="insufficient_scope", error_description="Reconecte com permissao de escrita"`]}} : {}) }
   }
 }

@@ -30,7 +30,7 @@ const execution: ExecutionDependencies = {
   finish:async (id,status,code) => {events.push({id,status,code})},
   queries:{...serviceInvoiceQueryStubs,
     financialTitle:async()=>({record:{id:"1"},installments:[],installmentsTruncated:false,history:[],historyTruncated:false}),
-    registration:async(id,recordId)=>{context(id);return {record:{id:String(recordId),nome:"Cadastro"}}},
+    registration:async(id,_type,recordId)=>{context(id);return {record:{id:String(recordId),nome:"Cadastro"}}},
     installment:async(id,side,recordId)=>{context(id);return {record:{id:String(recordId),saldo:12},history:[],historyTruncated:false}},
     analysis:async(id,type,from,to)=>{context(id);return {tipo:type,inicio:from,fim:to,criterio:"Teste",summary:{quantidade:0,valor_total:0,valor_medio:0},records:[]}},
     customer:async(id,customerId)=>{context(id);return {record:{id:String(customerId),nome:'Cliente'}}},
@@ -80,38 +80,96 @@ async function main() {
   })
   await check('Catalogo contratos OAuth e anotacoes',async () => {
     const {body}=await rpc('tools/list')
-    assert.equal(body.result.tools.length,33)
-    for(const name of ['listar_notas_servico','obter_nota_servico','validar_nota_servico','obter_pdf_nota_servico'])assert(body.result.tools.some((tool:{name:string})=>tool.name===name))
-    for (const tool of body.result.tools) {assert.equal(tool.annotations.readOnlyHint,!['preparar_rascunho','preparar_formulario_nativo','atualizar_configuracoes'].includes(tool.name));assert.equal(tool.securitySchemes[0].type,'oauth2');assert(tool.outputSchema)}
-    assert.deepEqual(body.result.tools.find((t:{name:string})=>t.name==='preparar_rascunho').securitySchemes[0].scopes,['erp:read','erp:write'])
+    type Listed={name:string;annotations:{readOnlyHint:boolean;destructiveHint:boolean};securitySchemes:{type:string;scopes:string[]}[];outputSchema?:object;inputSchema:{properties:Record<string,unknown>}}
+    const listed=body.result.tools as Listed[],byName=(name:string)=>listed.find(t=>t.name===name)!
+    // 15 consultas (com meu_acesso), 19 escritas, painel, configuracoes e a tool de mencoes do SDK.
+    assert.equal(listed.length,38)
+    const writes=['criar_cadastro','editar_cadastro','excluir_cadastro','criar_venda','editar_venda','excluir_venda','confirmar_venda','cancelar_venda','atender_venda',
+      'criar_compra','editar_compra','excluir_compra','confirmar_compra','cancelar_compra','criar_titulo','editar_titulo','excluir_titulo','registrar_baixa','estornar_pagamento']
+    const destructive=['excluir_cadastro','excluir_venda','cancelar_venda','excluir_compra','cancelar_compra','excluir_titulo','estornar_pagamento']
+    for(const removed of ['preparar_rascunho','preparar_formulario_nativo','renderizar_card','abrir_formulario','obter_rascunho','listar_rascunhos','obter_cliente','listar_orcamentos','listar_contas_financeiras','listar_notas_servico','verificar_fiscal_venda'])
+      assert(!listed.some(t=>t.name===removed),removed)
+    for (const tool of listed) {
+      const write=writes.includes(tool.name)
+      assert.equal(tool.annotations.readOnlyHint,!write&&tool.name!=='atualizar_configuracoes',tool.name)
+      assert.equal(tool.annotations.destructiveHint,destructive.includes(tool.name),tool.name)
+      assert.equal(tool.securitySchemes[0].type,'oauth2');assert(tool.outputSchema,tool.name)
+      if(write){assert.deepEqual(tool.securitySchemes[0].scopes,['erp:read','erp:write']);assert(tool.inputSchema.properties.rascunho_id&&tool.inputSchema.properties.dados,tool.name)}
+    }
+    assert(byName('criar_cadastro').inputSchema.properties.tipo);assert(!byName('confirmar_venda').inputSchema.properties.tipo)
+    const profileTool=(listed as unknown as {name:string;_meta:Record<string,unknown>}[]).find(t=>t.name==='meu_acesso')!;assert.equal(profileTool._meta['openai/profile'],true)
+    const access=(await rpc('tools/call',{name:'meu_acesso',arguments:{}})).body.result.structuredContent
+    assert.equal(access.id,'user_1');assert.equal(access.nickname,'Usuário do Cognito ERP · Empresa um');assert.equal(access.data.empresas[0].id,1)
     assert.deepEqual(body.result.tools.find((t:{name:string})=>t.name==='abrir_painel')._meta['openai/ui'].entrypoints,[{type:'global'},{type:'thread'},{type:'settings',searchTerms:['empresa','preferencias']}])
   })
   for (const [name,args] of [['meu_acesso',{}],['resumo_erp',{}],['buscar_cadastros',{tipo:'produtos'}],['listar_vendas',{}],['obter_venda',{venda_id:1}],['consultar_financeiro',{tipo:'pagar'}],['consultar_estoque',{}]] as const) {
     await check(name,async () => {const {body}=await rpc('tools/call',{name,arguments:args});assert(!body.result?.isError,JSON.stringify(body));assert.equal(body.result.structuredContent.ok,true)})
   }
-  for (const [name,args] of [['listar_compras',{}],['obter_compra',{compra_id:1}],['listar_orcamentos',{}],['consultar_relatorio',{tipo:'vendas-clientes',inicio:'2026-01-01',fim:'2026-10-03'}],['abrir_painel',{}]] as const) {
+  for (const [name,args] of [['listar_compras',{}],['obter_compra',{compra_id:1}],['listar_vendas',{tipo_documento:'orcamento'}],['obter_cadastro',{tipo:'clientes',registro_id:1}],['consultar_relatorio',{tipo:'vendas-clientes',inicio:'2026-01-01',fim:'2026-10-03'}],['abrir_painel',{}]] as const) {
     await check(name,async()=>{const {body}=await rpc('tools/call',{name,arguments:args});assert(!body.result?.isError,JSON.stringify(body))})
   }
   await check('Recurso UI registrado e sem dados privados',async()=>{
-    const resources=await rpc('resources/list');assert.equal(resources.body.result.resources.length,3)
+    const resources=await rpc('resources/list');assert.equal(resources.body.result.resources.length,2)
+    const cards=await rpc('resources/read',{uri:'ui://chatgptplugin/cards/v2.html'});assert.deepEqual(cards.body.result.contents[0]._meta.ui.csp,{connectDomains:[],resourceDomains:[]});assert(!cards.body.result.contents[0].text.includes(principal.clerkUserId))
+    const listed=(await rpc('tools/list')).body.result.tools as {name:string;_meta?:{ui?:{resourceUri?:string}}}[]
+    assert(listed.filter(t=>t._meta?.ui?.resourceUri==='ui://chatgptplugin/cards/v2.html').length===34,'cards em 15 consultas e 19 escritas')
     const resource=await rpc('resources/read',{uri:'ui://chatgptplugin/panel/v1.html'})
     assert.equal(resource.body.result.contents[0].mimeType,'text/html;profile=mcp-app')
     assert(resource.body.result.contents[0].text.includes('ui/initialize'))
     assert(!resource.body.result.contents[0].text.includes(principal.clerkUserId))
   })
-  await check('Propostas exigem scope escrita e permissao ERP',async()=>{
-    const args={chave_operacao:randomUUID(),proposta:{tipo:'cliente',dados:{nome:'Cliente'}}}
-    const denied=await executeTool(principal,'preparar_rascunho',args,settings,execution)
+  const p={...principal,scopes:['erp:read','erp:write']}
+  const draft={rascunho_id:randomUUID(),empresa_id:1,status:'pending' as const,registro_id:null,alvo:null,criado_em:new Date().toISOString(),expira_em:new Date().toISOString(),proposta:{tipo:'cliente',dados:{nome:'Cliente',tipo:'fisica'}}}
+  const writeCalls={prepared:[] as {tipo:string;dados:Record<string,unknown>}[],executed:[] as {id:string;kinds:readonly string[];tool:string}[]}
+  const writeDeps:ExecutionDependencies={...execution,actions:{
+    prepare:async(_p,_c,_k,proposal)=>{writeCalls.prepared.push(proposal as never);return draft as never},
+    execute:async(_p,_c,id,kinds,tool)=>{writeCalls.executed.push({id,kinds,tool});return {...draft,status:'saved',registro_id:'7'} as never}}}
+  const parsedResult=(result:Awaited<ReturnType<typeof executeTool>>)=>result.isError?JSON.parse((result.content[0] as {text:string}).text):result.structuredContent
+  await check('Escritas exigem scope escrita e permissao ERP',async()=>{
+    const args={chave_operacao:randomUUID(),tipo:'cliente',dados:{nome:'Cliente'}}
+    const denied=await executeTool(principal,'criar_cadastro',args,settings,writeDeps)
     assert.equal(denied.isError,true);assert(denied._meta?.['mcp/www_authenticate'])
-    const p={...principal,scopes:['erp:read','erp:write']}
-    let prepared=0
-    const draft={rascunho_id:randomUUID(),empresa_id:1,status:'pending' as const,registro_id:null,alvo:null,criado_em:new Date().toISOString(),expira_em:new Date().toISOString(),proposta:{tipo:'cliente' as const,dados:{nome:'Cliente',tipo:'fisica' as const}},revisao_url:settings.resource}
-    const deps:ExecutionDependencies={...execution,actions:{prepare:async()=>{prepared++;return draft},get:async()=>draft,list:async()=>({records:[],page:1,pageSize:20,hasMore:false})}}
     const readonly={...p,companies:[{...p.companies[0],capabilities:['erp.cadastros.visualizar'] as typeof p.companies[0]['capabilities']}]}
-    assert.equal((await executeTool(readonly,'preparar_rascunho',args,settings,deps)).isError,true);assert.equal(prepared,0)
-    assert(!(await executeTool(p,'preparar_rascunho',args,settings,deps)).isError);assert.equal(prepared,1)
-    const invalid={...args,proposta:{tipo:'cliente',dados:{nome:'Cliente',empresa_id:999}}}
-    assert.equal((await executeTool(p,'preparar_rascunho',invalid,settings,deps)).isError,true);assert.equal(prepared,1)
+    assert.equal(parsedResult(await executeTool(readonly,'criar_cadastro',args,settings,writeDeps)).code,'ACCESS_DENIED')
+    // Conta financeira exige tambem a gestao financeira.
+    const registrationOnly={...p,companies:[{...p.companies[0],capabilities:['erp.cadastros.gerenciar'] as typeof p.companies[0]['capabilities']}]}
+    assert.equal(parsedResult(await executeTool(registrationOnly,'criar_cadastro',{chave_operacao:randomUUID(),tipo:'conta_financeira',dados:{nome:'Banco',tipo:'banco',data_saldo_inicial:'2026-01-01'}},settings,writeDeps)).code,'ACCESS_DENIED')
+    assert.equal(writeCalls.prepared.length,0)
+  })
+  await check('Previa mapeia tipo para a proposta e devolve como confirmar',async()=>{
+    const result=parsedResult(await executeTool(p,'criar_cadastro',{chave_operacao:randomUUID(),tipo:'fornecedor',dados:{nome:'Fornecedor',documento:'123'}},settings,writeDeps))
+    assert.equal(result.ok,true,JSON.stringify(result));assert.equal(result.data.etapa,'previa')
+    assert.deepEqual(result.data.confirmar,{tool:'criar_cadastro',argumentos:{empresa_id:1,rascunho_id:draft.rascunho_id}})
+    assert.deepEqual(writeCalls.prepared.at(-1),{tipo:'fornecedor',dados:{nome:'Fornecedor',documento:'123',tipo:'fisica'}})
+    // Dados validos para produto, mas a tool exige o esquema exato do tipo escolhido.
+    const wrong=parsedResult(await executeTool(p,'criar_cadastro',{chave_operacao:randomUUID(),tipo:'servico',dados:{nome:'Item',preco:10,controla_estoque:'sim'}},settings,writeDeps))
+    assert.equal(wrong.code,'INVALID_INPUT');assert(wrong.campos.length>0,JSON.stringify(wrong))
+    for(const [tool,args] of [['criar_venda',{chave_operacao:randomUUID(),tipo:'orcamento',dados:{cliente_id:1,data_venda:'2026-10-01',data_vencimento:'2026-10-31',itens:[{tipo:'produto',item_id:2,quantidade:1,valor_unitario:10}]}}],
+      ['registrar_baixa',{chave_operacao:randomUUID(),tipo:'receber',dados:{registro_id:3,valor:10,data_pagamento:'2026-10-01',conta_financeira_id:4}}],
+      ['cancelar_venda',{chave_operacao:randomUUID(),dados:{registro_id:5,motivo:'Cliente desistiu'}}]] as const) {
+      const ok=parsedResult(await executeTool(p,tool,args,settings,writeDeps));assert.equal(ok.ok,true,JSON.stringify(ok))
+    }
+    assert.deepEqual(writeCalls.prepared.slice(-3).map(item=>item.tipo),['orcamento','receber_parcela','cancelar_venda'])
+  })
+  await check('Erros informam campo e motivo',async()=>{
+    const missingType=parsedResult(await executeTool(p,'criar_cadastro',{chave_operacao:randomUUID(),dados:{nome:'Sem tipo'}},settings,writeDeps))
+    assert.equal(missingType.code,'INVALID_INPUT');assert.equal(missingType.campos[0].campo,'tipo')
+    const missingKey=parsedResult(await executeTool(p,'confirmar_venda',{dados:{registro_id:1}},settings,writeDeps))
+    assert.deepEqual(missingKey.campos,[{campo:'chave_operacao',motivo:'Obrigatório'}])
+    const badDate=parsedResult(await executeTool(p,'registrar_baixa',{chave_operacao:randomUUID(),tipo:'pagar',dados:{registro_id:3,valor:10,data_pagamento:'2026-02-31',conta_financeira_id:4}},settings,writeDeps))
+    assert(badDate.campos.some((f:{campo:string})=>f.campo==='dados.data_pagamento'),JSON.stringify(badDate))
+    const extra=parsedResult(await executeTool(p,'listar_vendas',{por_pagina:100},settings,writeDeps))
+    assert.equal(extra.campos[0].campo,'por_pagina')
+  })
+  await check('Execucao usa somente rascunho_id e a tool da operacao',async()=>{
+    const id=randomUUID()
+    const mixed=parsedResult(await executeTool(p,'excluir_venda',{rascunho_id:id,dados:{registro_id:1,motivo:'xxx'}},settings,writeDeps))
+    assert.equal(mixed.code,'INVALID_INPUT');assert.equal(writeCalls.executed.length,0)
+    const done=parsedResult(await executeTool(p,'excluir_venda',{rascunho_id:id},settings,writeDeps))
+    assert.equal(done.data.etapa,'executado');assert.equal(done.data.status,'saved')
+    assert.deepEqual(writeCalls.executed,[{id,kinds:['excluir_venda','excluir_orcamento'],tool:'excluir_venda'}])
+    const noScope=await executeTool({...p,scopes:['erp:read']},'excluir_venda',{rascunho_id:id},settings,writeDeps)
+    assert.equal(noScope.isError,true);assert.equal(writeCalls.executed.length,1)
   })
   await check('Relatorio respeita periodo e acesso a area',async()=>{
     const args={tipo:'vendas-clientes',inicio:'2024-01-01',fim:'2026-01-01'}
@@ -207,9 +265,12 @@ async function main() {
     const noSelection=await rpc('tools/call',{name:'search_mentions',arguments:{query:'Cliente'}},multi);assert.equal(noSelection.body.result.structuredContent.items.length,0)
     const selection=await rpc('tools/call',{name:'search_mentions',arguments:{query:'2: Cliente'}},multi);assert.equal(selection.body.result.structuredContent.items[0].resourceUri,'erp://empresa/2/clientes/1')
   })
-  await check('Formulario e entrada de arquivo registrados',async()=>{
-    const form=await rpc('tools/call',{name:'abrir_formulario',arguments:{file:{name:'proposta.erp-proposta',resourceUri:'file:///proposta'}}});assert(!form.body.result?.isError)
-    const resource=await rpc('resources/read',{uri:'ui://chatgptplugin/form/v1.html'});assert(resource.body.result.contents[0].text.includes('openai/resources/write'))
+  await check('Escrita pelo protocolo valida a saida declarada',async()=>{
+    const writer={...dependencies,execution:writeDeps,resolve:async()=>p}
+    const {body}=await rpc('tools/call',{name:'criar_venda',arguments:{chave_operacao:randomUUID(),tipo:'venda',dados:{cliente_id:1,data_venda:'2026-10-01',data_vencimento:'2026-10-31',itens:[{tipo:'servico',item_id:2,quantidade:2,valor_unitario:50}]}}},writer)
+    assert(!body.result?.isError,JSON.stringify(body));assert.equal(body.result.structuredContent.data.etapa,'previa')
+    const instructions=(await rpc('initialize',{protocolVersion:'2025-06-18',capabilities:{},clientInfo:{name:'smoke',version:'1'}})).body.result.instructions as string
+    assert(instructions.slice(0,512).includes('rascunho_id')&&instructions.slice(0,512).includes('meu_acesso'))
   })
   await check('Transacao composta nao troca empresa usuario ou modo de leitura',async()=>{
     const client={release(){},query:async()=>({rows:[]})}

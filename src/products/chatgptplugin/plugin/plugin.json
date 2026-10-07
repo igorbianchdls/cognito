@@ -1,16 +1,17 @@
 {
   "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
   "name": "chatgptplugin",
-  "version": "1.7.0",
+  "version": "2.0.0",
   "author": {
     "name": "Cognito ERP"
   },
-  "description": "Consulte o Cognito ERP e prepare criação, edição e exclusão de cadastros, títulos financeiros e documentos comerciais para revisão humana.",
+  "description": "Use o Cognito ERP pelo chat: consulte vendas, compras, financeiro, estoque e relatórios, e crie, edite, confirme ou exclua registros com prévia e confirmação na própria conversa.",
   "keywords": [
     "erp",
     "vendas",
     "compras",
-    "financeiro"
+    "financeiro",
+    "estoque"
   ],
   "extensions": {
     "com.openai": {
@@ -19,17 +20,18 @@
         "logo": "./assets/icon.svg",
         "composerIcon": "./assets/icon.svg",
         "displayName": "Cognito ERP",
-        "shortDescription": "Consultas e propostas do ERP",
+        "shortDescription": "Seu ERP dentro do chat",
         "developerName": "Cognito ERP",
-        "longDescription": "Consulte clientes, produtos, vendas, compras, estoque e relatórios com cards de tabela, detalhes, indicadores e seleção. Crie, edite e exclua contas a pagar e receber, vendas, orçamentos, compras e cadastros por propostas revisáveis. Acompanhe o resultado. Aprovação no ERP, formulários e preferências pessoais.",
-        "category": "Productivity",
+        "longDescription": "Consulte clientes, produtos, vendas, orçamentos, compras, contas a pagar e a receber, estoque e relatórios, com cards de tabela, detalhes e indicadores. Crie, edite, confirme, cancele e exclua cadastros, vendas, compras e títulos financeiros, registre pagamentos e estornos. Toda alteração mostra uma prévia com os valores calculados pelo ERP e só é salva depois que você confirma na conversa. Respeita as empresas e as permissões do seu perfil no ERP.",
+        "category": "Business & Operations",
         "capabilities": [
           "Read",
           "Write"
         ],
         "defaultPrompt": [
-          "Consulte minhas vendas e compras.",
-          "Prepare um orcamento para eu revisar no ERP."
+          "Quais contas a pagar vencem esta semana?",
+          "Crie um orçamento para o cliente Padaria Central.",
+          "Como foram minhas vendas nos últimos 3 meses?"
         ],
         "brandColor": "#345CE6"
       }

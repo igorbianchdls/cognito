@@ -13,7 +13,7 @@ export async function readPreferences(principal:PluginPrincipal):Promise<Prefere
 }
 export async function updatePreferences(principal:PluginPrincipal,input:unknown):Promise<Preferences> {
   const patch=preferencesSchema.partial().refine(v=>Object.keys(v).length>0).parse(input)
-  if(patch.empresa_preferida&&!principal.companies.some(c=>String(c.id)===patch.empresa_preferida))throw new PluginError('ACCESS_DENIED','Empresa nao autorizada.',403)
+  if(patch.empresa_preferida&&!principal.companies.some(c=>String(c.id)===patch.empresa_preferida))throw new PluginError('ACCESS_DENIED','Empresa não autorizada.',403)
   await pluginQuery(`INSERT INTO plugin.settings(user_id,oauth_client_id,values,integration) VALUES($1,$2,$3::jsonb,'chatgpt')
     ON CONFLICT(integration,user_id,oauth_client_id) DO UPDATE SET values=plugin.settings.values||EXCLUDED.values,updated_at=now()`,
     [principal.userId,principal.clientId,JSON.stringify(patch)])

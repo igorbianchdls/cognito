@@ -5,8 +5,9 @@ import { PluginError, type PluginPrincipal } from '../shared/contracts'
 import { resolvePluginPrincipal } from '../auth/resolvePrincipal'
 import { consumeRequestLimit } from '../audit/executionRepository'
 import { executionDependencies, type ExecutionDependencies } from '../application/executeTool'
-import { handleNativeForm } from '../extensions/nativeForm'
-import { isModern,validateModern,requireNativeFormCapability,ProtocolFailure,MODERN_VERSION,SUPPORTED_VERSIONS,SERVER_INFO } from './modernProtocol'
+import { nativeFormStep } from '../extensions/nativeForm'
+import { actionTools } from '../actions/catalog'
+import { isModern,validateModern,requireNativeFormCapability,supportsNativeForms,ProtocolFailure,MODERN_VERSION,SUPPORTED_VERSIONS,SERVER_INFO } from './modernProtocol'
 
 export type HttpDependencies = {
   config: () => PluginConfig
@@ -17,9 +18,9 @@ export type HttpDependencies = {
 const production: HttpDependencies = { config:getPluginConfig, resolve:resolvePluginPrincipal, limit:consumeRequestLimit, execution:executionDependencies }
 function cors(request: Request, config: PluginConfig) {
   const origin = request.headers.get('origin')
-  if (origin && !config.origins.includes(origin)) throw new PluginError('ORIGIN_DENIED','Origem nao autorizada.',403)
+  if (origin && !config.origins.includes(origin)) throw new PluginError('ORIGIN_DENIED','Origem não autorizada.',403)
   const url = new URL(request.url)
-  if (url.host !== new URL(config.resource).host) throw new PluginError('HOST_DENIED','Host nao autorizado.',403)
+  if (url.host !== new URL(config.resource).host) throw new PluginError('HOST_DENIED','Host não autorizado.',403)
   return { 'Cache-Control':'no-store', Vary:'Origin',
     ...(origin ? { 'Access-Control-Allow-Origin':origin } : {}),
     'Access-Control-Allow-Methods':'POST, GET, DELETE, OPTIONS',
@@ -31,7 +32,7 @@ async function readBody(request: Request): Promise<unknown> {
   if (!request.headers.get('content-type')?.toLowerCase().startsWith('application/json')) {
     throw new PluginError('INVALID_CONTENT_TYPE','Use application/json.',415)
   }
-  if (!request.body) throw new PluginError('INVALID_INPUT','Corpo JSON obrigatorio.')
+  if (!request.body) throw new PluginError('INVALID_INPUT','Corpo JSON obrigatório.')
   const reader = request.body.getReader()
   const chunks: Uint8Array[] = []
   let size = 0
@@ -39,7 +40,7 @@ async function readBody(request: Request): Promise<unknown> {
   const deadline = new Promise<never>((_resolve,reject) => {
     timeout = setTimeout(() => {
       // Reject before cancellation can make an unfinished body look complete.
-      reject(new PluginError('TIMEOUT','Corpo da requisicao incompleto.',408))
+      reject(new PluginError('TIMEOUT','Corpo da requisição incompleto.',408))
       void reader.cancel().catch(() => undefined)
     },5000)
   })
@@ -53,12 +54,12 @@ async function readBody(request: Request): Promise<unknown> {
     }
     let parsed:unknown
     try {parsed=JSON.parse(new TextDecoder('utf-8',{fatal:true}).decode(Buffer.concat(chunks)))}
-    catch {throw new PluginError('INVALID_JSON','JSON UTF-8 invalido.')}
-    if (Array.isArray(parsed)) throw new PluginError('INVALID_INPUT','Envie uma chamada por requisicao.')
+    catch {throw new PluginError('INVALID_JSON','JSON UTF-8 inválido.')}
+    if (Array.isArray(parsed)) throw new PluginError('INVALID_INPUT','Envie uma chamada por requisição.')
     return parsed
   } catch (error) {
     if (error instanceof PluginError) throw error
-    throw new PluginError('INVALID_INPUT','JSON invalido.')
+    throw new PluginError('INVALID_INPUT','JSON inválido.')
   } finally { clearTimeout(timeout); reader.releaseLock() }
 }
 export async function handlePluginRequest(request: Request, deps: HttpDependencies = production): Promise<Response> {
@@ -73,7 +74,7 @@ export async function handlePluginRequest(request: Request, deps: HttpDependenci
     if (request.method === 'OPTIONS') return new Response(null,{ status:204,headers })
     const principal = await deps.resolve(request,config)
     await deps.limit(principal,config.requestsPerMinute)
-    if (request.method !== 'POST') return Response.json({error:'Use POST; este servidor nao mantem sessoes SSE.'},{ status:405,headers:{ ...headers,Allow:'POST, OPTIONS' } })
+    if (request.method !== 'POST') return Response.json({error:'Use POST; este servidor não mantém sessões SSE.'},{ status:405,headers:{ ...headers,Allow:'POST, OPTIONS' } })
     let body:unknown
     try {body=await readBody(request)}
     catch(error) {
@@ -87,13 +88,16 @@ export async function handlePluginRequest(request: Request, deps: HttpDependenci
     if(modernRequest) {
       headers['MCP-Protocol-Version']=MODERN_VERSION
       const {rpc,capabilities}=modernRequest
-      if(rpc.method==='tools/call'&&rpc.params.name==='preparar_formulario_nativo') {
-        oauthScope=config.scope+' erp:write'
-        requireNativeFormCapability(capabilities)
-        let result:Awaited<ReturnType<typeof handleNativeForm>>
-        try {result=await handleNativeForm(rpc.params,rpc.id,principal,config,deps.execution)}
-        catch(error){if(error instanceof PluginError&&error.status===400)throw new ProtocolFailure(-32602,error.message);throw error}
-        return Response.json({jsonrpc:'2.0',id:rpc.id,result:{...result,_meta:{...('_meta' in result?result._meta:{}),'io.modelcontextprotocol/serverInfo':SERVER_INFO}}},{headers})
+      if(rpc.method==='tools/call') {
+        const continuing=rpc.params.requestState!==undefined||rpc.params.inputResponses!==undefined
+        if(actionTools.some(tool=>tool.name===rpc.params.name))oauthScope=config.scope+' erp:write'
+        if(continuing)requireNativeFormCapability(capabilities)
+        if(supportsNativeForms(capabilities)) {
+          let step:Awaited<ReturnType<typeof nativeFormStep>>
+          try {step=await nativeFormStep(rpc.params,rpc.id,principal,config,deps.execution)}
+          catch(error){if(error instanceof PluginError&&error.status===400)throw new ProtocolFailure(-32602,error.message);throw error}
+          if(step)return Response.json({jsonrpc:'2.0',id:rpc.id,result:{...step,_meta:{...('_meta' in step?step._meta:{}),'io.modelcontextprotocol/serverInfo':SERVER_INFO}}},{headers})
+        }
       }
       if(rpc.params.requestState!==undefined||rpc.params.inputResponses!==undefined)throw new ProtocolFailure(-32602,'Esta chamada não aceita continuidade de formulário.')
       // Discovery uses the SDK's actual registrations. The translation is local;
@@ -137,8 +141,8 @@ export async function handlePluginRequest(request: Request, deps: HttpDependenci
     } finally { await server.close() }
   } catch (error) {
     if(error instanceof ProtocolFailure)return Response.json({jsonrpc:'2.0',id:rpcId,error:{code:error.code,message:error.message,...(error.data?{data:error.data}:{})}},{status:error.status,headers})
-    const failure = error instanceof PluginError ? error : new PluginError('SERVICE_UNAVAILABLE','Servico temporariamente indisponivel.',503)
-    console.error(JSON.stringify({ scope:'chatgptplugin',code:failure.code,status:failure.status }))
+    const failure = error instanceof PluginError ? error : new PluginError('SERVICE_UNAVAILABLE','Serviço temporariamente indisponível.',503)
+    console.error(JSON.stringify({ scope:'chatgptplugin',code:failure.code,status:failure.status,...(failure.reason?{reason:failure.reason}:{}) }))
     if (config && ['UNAUTHENTICATED','INSUFFICIENT_SCOPE'].includes(failure.code)) {
       const oauthError = failure.code === 'INSUFFICIENT_SCOPE' ? 'insufficient_scope' : 'invalid_token'
       headers['WWW-Authenticate'] = `Bearer resource_metadata="${config.metadataUrl}", scope="${oauthScope||config.scope}", error="${oauthError}"`

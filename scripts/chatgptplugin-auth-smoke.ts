@@ -2,7 +2,7 @@ import {serviceInvoiceQueryStubs} from './erp/service-invoice-query-stubs'
 import assert from 'node:assert/strict'
 import { generateKeyPairSync, randomUUID, sign } from 'node:crypto'
 import { verifyToken } from '@clerk/nextjs/server'
-import { verifyClerkOAuthToken, type OAuthVerificationDependencies } from '../src/products/chatgptplugin/auth/resolvePrincipal'
+import { cachedVerification, verifyClerkOAuthToken, type OAuthVerificationDependencies } from '../src/products/chatgptplugin/auth/resolvePrincipal'
 import { handlePluginRequest, type HttpDependencies } from '../src/products/chatgptplugin/mcp/handleRequest'
 import { PluginError, type PluginPrincipal } from '../src/products/chatgptplugin/shared/contracts'
 import type { PluginConfig } from '../src/products/chatgptplugin/shared/config'
@@ -146,6 +146,29 @@ async function main() {
       assert(response.headers.get('www-authenticate')?.includes(config.metadataUrl))
     }
     assert.equal(effects, 0)
+  })
+  await check('Recusas registram motivo diagnostico sem expor o token', async () => {
+    const reasonOf = async (token: string) => {
+      try { await verifyClerkOAuthToken(token, config, dependencies) } catch (error) { return (error as PluginError).reason || '' }
+      throw new Error('Token deveria ser recusado')
+    }
+    assert.equal(await reasonOf(jwt({ aud: undefined })), 'audience-missing')
+    assert.equal(await reasonOf(jwt({ aud: 'https://other.example/api/mcp' })), 'jwt:token-verification-failed typ=at+jwt iss=https://test.clerk.accounts.dev aud=https://other.example/api/mcp')
+    assert.equal(await reasonOf(jwt({ client_id: 'another' })), 'client-not-allowed:another')
+    assert.equal(await reasonOf('oat_local_test'), 'opaque-token:oat_')
+    const sessionLike = jwt({}, { typ: 'JWT' }), typed = await reasonOf(sessionLike)
+    assert(typed.startsWith('jwt:') && typed.includes('typ=JWT'), typed)
+    assert(!typed.includes(sessionLike.split('.')[2]))
+  })
+  await check('Cache evita nova introspeccao e revalida a configuracao atual', async () => {
+    let calls = 0
+    const verify: typeof verifyClerkOAuthToken = (token, settings) => { calls++; return verifyClerkOAuthToken(token, settings, dependencies) }
+    const token = jwt({ jti: randomUUID() })
+    await cachedVerification(token, config, verify)
+    await cachedVerification(token, config, verify)
+    assert.equal(calls, 1)
+    await assert.rejects(cachedVerification(token, { ...config, clientIds: ['client_other'] }, verify), errorWith(401))
+    assert.equal(calls, 1)
   })
   console.log(JSON.stringify({ passed: checks, signedTokens: true, externalOAuthVerified: false }))
 }

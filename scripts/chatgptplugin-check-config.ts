@@ -26,7 +26,11 @@ async function main() {
   // Metadados e tabelas nao comprovam audiencia, consentimento ou emissao de um token real.
   console.log(JSON.stringify({ready,configurationOnly:true,tokenAudienceVerified:false,
     oauthReady:Boolean(validOAuth),databaseReady,writeScopeReady,nativeFormsReady,readReady:Boolean(validOAuth && databaseReady),
-    requiredTokenAudience:settings.resource,pending:['Verificar um OAuth access token real destinado ao MCP.']}))
+    requiredTokenAudience:settings.resource,
+    chatgptClient:{cimd:oauth.client_id_metadata_document_supported===true,dcr:Boolean(oauth.registration_endpoint),
+      issParameter:oauth.authorization_response_iss_parameter_supported===true,
+      cimdClientAllowed:settings.clientIds.includes('https://chatgpt.com/oauth/client.json')},
+    pending:['Verificar um OAuth access token real destinado ao MCP.']}))
   if (!ready) process.exitCode=1
 }
 void main().catch(() => {console.error('Verificacao indisponivel. Revise OAuth e conexao do banco.');process.exitCode=1})

@@ -1,1 +1,1 @@
-export const CHATGPTPLUGIN_VERSION = '1.7.0'
+export const CHATGPTPLUGIN_VERSION = '2.0.0'

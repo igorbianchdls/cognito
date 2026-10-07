@@ -23,7 +23,7 @@ export async function prepareDraft(principal: PluginPrincipal, tenantId:number, 
     "SELECT *,proposal=$5::jsonb AS matches FROM plugin.drafts WHERE empresa_id=$1 AND user_id=$2 AND oauth_client_id=$3 AND operation_key=$4 AND integration='chatgpt'",
     [tenantId,principal.userId,principal.clientId,key,JSON.stringify(proposal)])
   if(existing[0]) {
-    if(!existing[0].matches)throw new PluginError('IDEMPOTENCY_CONFLICT','Esta chave ja foi usada para outro rascunho.',409)
+    if(!existing[0].matches)throw new PluginError('IDEMPOTENCY_CONFLICT','Esta chave já foi usada para outro rascunho.',409)
     return draftView(existing[0],config)
   }
   await proposalReferences(tenantId,proposal)
@@ -33,17 +33,11 @@ export async function prepareDraft(principal: PluginPrincipal, tenantId:number, 
      VALUES ($1,$2,$3,$4,$5,$6::jsonb,$7::jsonb,'chatgpt')
      ON CONFLICT (integration,empresa_id,user_id,oauth_client_id,operation_key) DO UPDATE SET operation_key=EXCLUDED.operation_key
      RETURNING *,proposal=$6::jsonb AS matches`, [randomUUID(),tenantId,principal.userId,principal.clientId,key,JSON.stringify(proposal),JSON.stringify(snapshot)])
-  if (!rows[0].matches) throw new PluginError('IDEMPOTENCY_CONFLICT','Esta chave ja foi usada para outro rascunho.',409)
+  if (!rows[0].matches) throw new PluginError('IDEMPOTENCY_CONFLICT','Esta chave já foi usada para outro rascunho.',409)
   return draftView(rows[0],config)
 }
 export async function getDraft(principal:PluginPrincipal,tenantId:number,id:string,config:PluginConfig) {
   const rows=await pluginQuery<DraftRow>("SELECT * FROM plugin.drafts WHERE empresa_id=$1 AND user_id=$2 AND oauth_client_id=$3 AND id=$4 AND integration='chatgpt'",[tenantId,principal.userId,principal.clientId,id])
-  if (!rows[0]) throw new PluginError('NOT_FOUND','Rascunho nao disponivel.',404)
+  if (!rows[0]) throw new PluginError('NOT_FOUND','Rascunho não disponível.',404)
   return draftView(rows[0],config)
 }
-export async function listDrafts(principal:PluginPrincipal,tenantId:number,page:number,size:number,config:PluginConfig) {
-  const rows=await pluginQuery<DraftRow>("SELECT * FROM plugin.drafts WHERE empresa_id=$1 AND user_id=$2 AND oauth_client_id=$3 AND integration='chatgpt' ORDER BY created_at DESC,id DESC LIMIT $4 OFFSET $5",[tenantId,principal.userId,principal.clientId,size+1,(page-1)*size])
-  return {records:rows.slice(0,size).map(row => draftView(row,config)),page,pageSize:size,hasMore:rows.length>size}
-}
-export const actionDependencies = {prepare:prepareDraft,get:getDraft,list:listDrafts}
-export type ActionDependencies = typeof actionDependencies

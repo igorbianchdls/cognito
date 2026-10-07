@@ -31,10 +31,10 @@ export const proposalSchema = z.discriminatedUnion('tipo', [
   z.object({tipo:z.literal('venda'),dados:commercial}).strict(),
   z.object({tipo:z.literal('editar_cliente'),dados:z.object({registro_id:z.number().int().positive(),nome:name.optional(),
     tipo:z.enum(['fisica','juridica']).optional(),documento:z.string().trim().max(30).optional(),status:z.enum(['ativo','inativo']).optional()}).strict()
-    .refine(d=>Object.keys(d).length>1,'Informe ao menos uma alteracao.')}).strict(),
+    .refine(d=>Object.keys(d).length>1,'Informe ao menos uma alteração.')}).strict(),
   z.object({tipo:z.literal('editar_produto'),dados:z.object({registro_id:z.number().int().positive(),nome:name.optional(),
     sku:z.string().trim().max(60).optional(),preco:money.optional(),controla_estoque:z.enum(['sim','nao']).optional(),status:z.enum(['ativo','pausado']).optional()}).strict()
-    .refine(d=>Object.keys(d).length>1,'Informe ao menos uma alteracao.')}).strict(),
+    .refine(d=>Object.keys(d).length>1,'Informe ao menos uma alteração.')}).strict(),
   ...(['confirmar_venda','confirmar_compra','cancelar_compra','atender_venda'] as const).map(tipo=>z.object({tipo:z.literal(tipo),dados:z.object({registro_id:z.number().int().positive()}).strict()}).strict()),
   z.object({tipo:z.literal('cancelar_venda'),dados:z.object({registro_id:z.number().int().positive(),motivo:z.string().trim().min(3).max(1000)}).strict()}).strict(),
   ...(['receber_parcela','pagar_parcela'] as const).map(tipo=>z.object({tipo:z.literal(tipo),dados:z.object({registro_id:z.number().int().positive(),
@@ -81,7 +81,7 @@ export function proposalPreview(proposal: Proposal) {
     const total = sumMoney(itens.map(item => item.total))
     if (total <= 0) throw new Error('Invalid total')
     return {tipo:proposal.tipo,dados:{...proposal.dados,itens},total}
-  } catch { throw new PluginError('INVALID_INPUT','Confira quantidades, precos e descontos dos itens.') }
+  } catch { throw new PluginError('INVALID_INPUT','Confira quantidades, preços e descontos dos itens.') }
 }
 export function purchaseValues(values:Record<string,unknown>):Record<string,unknown>{
   return {...values,itens:(values.itens as {tipo:string;item_id:number;desconto:number}[]).map(item=>({...item,[item.tipo==='produto'?'produto_id':'servico_id']:item.item_id,valor_desconto:item.desconto}))}

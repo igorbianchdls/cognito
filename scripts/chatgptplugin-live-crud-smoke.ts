@@ -10,6 +10,7 @@ import {
   type HttpDependencies,
 } from "../src/products/chatgptplugin/mcp/handleRequest";
 import { executionDependencies } from "../src/products/chatgptplugin/application/executeTool";
+import { toolCallForProposal } from "../src/products/chatgptplugin/actions/catalog";
 import { closePluginDatabase } from "../src/products/chatgptplugin/shared/database";
 import { loadPluginPrincipal } from "../src/products/chatgptplugin/auth/resolvePrincipal";
 import { consumeRequestLimit } from "../src/products/chatgptplugin/audit/executionRepository";
@@ -288,10 +289,11 @@ async function prepare(
       String(data.nome || data.descricao || data.observacoes).includes(marker),
       "All created records must carry test marker",
     );
-  const draft = await call("preparar_rascunho", {
+  const tool = toolCallForProposal({ tipo: kind, dados: data });
+  const draft = await call(tool.name, {
     empresa_id: companyId,
     chave_operacao: key,
-    proposta: { tipo: kind, dados: data },
+    ...tool.arguments,
   });
   assert.equal(draft.status, "pending");
   assert.equal(draft.empresa_id, companyId);
@@ -304,7 +306,11 @@ async function save(draft: DraftResult) {
   assert.equal(review.status, "pending");
   const result = await approval(draft.rascunho_id, "POST");
   assert.equal(result.status, "saved");
-  const state = await call("obter_rascunho", {
+  // Repetir a execução pela tool da operação apenas consulta o resultado já salvo.
+  const tool = toolCallForProposal(
+    (draft as unknown as { proposta: { tipo: string; dados: unknown } }).proposta,
+  );
+  const state = await call(tool.name, {
     empresa_id: companyId,
     rascunho_id: draft.rascunho_id,
   });

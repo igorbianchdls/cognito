@@ -1,17 +1,27 @@
 import { cardStyles } from './styles/cards'
 import { commonScript } from './components/common'
 import { bridgeScript } from './bridge/mcpApps'
-import { tableCardScript } from './cards/tabela'
+import { viewsScript } from './cards/views'
+import { listCardScript } from './cards/lista'
 import { detailsCardScript } from './cards/detalhes'
 import { analysisCardScript } from './cards/analise'
-import { selectionCardScript } from './cards/selecao'
 import { reviewCardScript } from './cards/revisao'
 import { resultCardScript } from './cards/resultado'
+import { operationLabels } from '../actions/labels'
+import { fieldLabels } from '../extensions/fieldLabels'
+import { actionTools,toolCallForProposal } from '../actions/catalog'
 
-export const CARDS_URI='ui://chatgptplugin/cards/v1.html'
-export function renderCardsHtml(resource:string) {
-  // Único valor embutido: origem validada da configuração. Dados do ERP chegam
-  // pela ponte e são renderizados com textContent, nunca innerHTML.
-  const origin=JSON.stringify(new URL(resource).origin).replaceAll('<','\\u003c')
-  return `<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><style>${cardStyles}</style></head><body><main><section id="card" aria-label="Resultado do ERP"></section><p id="status" role="status">Conectando…</p><button id="retry" hidden>Tentar novamente</button></main><script>(function(){const resourceOrigin=${origin};${commonScript}\n${tableCardScript}\n${detailsCardScript}\n${analysisCardScript}\n${selectionCardScript}\n${reviewCardScript}\n${resultCardScript}\n${bridgeScript}})();</script></body></html>`
+export const CARDS_URI='ui://chatgptplugin/cards/v2.html'
+// Tool e tipo usados para gerar uma nova prévia quando o usuário ajusta itens no card.
+function toolsByProposal() {
+  return Object.fromEntries(actionTools.flatMap(tool=>tool.kinds).map(kind=>{
+    const call=toolCallForProposal({tipo:kind,dados:{}});return [kind,{tool:call.name,...(call.arguments.tipo?{tipo:call.arguments.tipo}:{})}]
+  }))
+}
+const json=(value:unknown)=>JSON.stringify(value).replaceAll('<','\u003c')
+export function renderCardsHtml() {
+  // Sem dados privados no HTML: rótulos e o mapa de tools são públicos; dados do ERP chegam pela
+  // ponte e são inseridos com textContent, nunca innerHTML.
+  const constants=`const operationLabels=${json(operationLabels)},fieldLabels=${json(fieldLabels)},toolFor=${json(toolsByProposal())};`
+  return `<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><style>${cardStyles}</style></head><body><main><section id="app" aria-live="polite" aria-label="Resultado do ERP"></section><p id="status" class="muted" role="status">Conectando…</p></main><script>(function(){${constants}\n${commonScript}\n${viewsScript}\n${listCardScript}\n${detailsCardScript}\n${analysisCardScript}\n${reviewCardScript}\n${resultCardScript}\n${bridgeScript}})();</script></body></html>`
 }

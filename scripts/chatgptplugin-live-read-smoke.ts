@@ -9,6 +9,7 @@ import { closePool } from '../src/lib/postgres'
 import { ERP_CAPABILITIES, type ErpAccessProfile } from '../src/products/erp/shared/professionalContracts'
 import { handlePluginRequest, type HttpDependencies } from '../src/products/chatgptplugin/mcp/handleRequest'
 import { executionDependencies } from '../src/products/chatgptplugin/application/executeTool'
+import { actionTools } from '../src/products/chatgptplugin/actions/catalog'
 import { closePluginDatabase } from '../src/products/chatgptplugin/shared/database'
 import { loadPluginPrincipal } from '../src/products/chatgptplugin/auth/resolvePrincipal'
 import { consumeRequestLimit } from '../src/products/chatgptplugin/audit/executionRepository'
@@ -69,7 +70,7 @@ const server = createServer(async (request, response) => {
 })
 async function rpc(method: string, params: Record<string, unknown> = {}, options: { modern?: boolean; authorization?: string } = {}) {
   if (method === 'tools/call') {
-    assert(!['preparar_rascunho','preparar_formulario_nativo','atualizar_configuracoes'].includes(String(params.name)), 'WRITE_TOOL_FORBIDDEN')
+    assert(!actionTools.some(tool => tool.name === params.name) && params.name !== 'atualizar_configuracoes', 'WRITE_TOOL_FORBIDDEN')
     calledTools.add(String(params.name))
   }
   let minute = Math.floor(Date.now() / 60000)

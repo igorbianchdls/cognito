@@ -7,8 +7,6 @@ import {runWithErpTransactionClient,type SQLClient} from '../../src/lib/postgres
 import {createServiceInvoice,editServiceInvoice,actOnServiceInvoice,getServiceInvoice,getServiceInvoicePdf,validateServiceInvoice,listServiceInvoices,generateServiceInvoicePdf} from '../../src/products/erp/server/fiscal/serviceInvoiceRepository'
 import {renderServiceInvoicePdf} from '../../src/products/erp/server/fiscal/serviceInvoicePdf'
 import {serviceInvoiceInputSchema} from '../../src/products/erp/shared/serviceInvoiceContracts'
-import {executeTool} from '../../src/products/chatgptplugin/application/executeTool'
-import {erpQueries} from '../../src/products/chatgptplugin/application/erpQueries'
 import {proposalSchema,proposalPreview} from '../../src/products/chatgptplugin/actions/contracts'
 import {operationSnapshot,executeOperation} from '../../src/products/chatgptplugin/actions/operations'
 import {ERP_CAPABILITIES} from '../../src/products/erp/shared/professionalContracts'
@@ -76,19 +74,7 @@ async function main(){try{
   const config:PluginConfig={resource:'https://cognito-seven.vercel.app/api/mcp',metadataUrl:'https://cognito-seven.vercel.app/.well-known/oauth-protected-resource/api/mcp',issuer:'https://fixture.clerk.accounts.dev',scope:'erp:read',clientIds:['simulation_test'],origins:[],toolTimeoutMs:15000,requestsPerMinute:60}
   // The production transaction guard rejects inheriting a write transaction as read-only.
   // Keep transport's read-only assertion, then use this rollback fixture's existing transaction.
-  const readInFixture=<T,>(fn:()=>Promise<T>)=>{assert.equal(getErpDatabaseContext()?.readOnly,true);return runWithErpDatabaseContext({tenantId:2,userId:3},fn)}
-  const deps={queries:{...erpQueries,
-   serviceInvoices:(...args:Parameters<typeof erpQueries.serviceInvoices>)=>readInFixture(()=>erpQueries.serviceInvoices(...args)),
-   serviceInvoice:(...args:Parameters<typeof erpQueries.serviceInvoice>)=>readInFixture(()=>erpQueries.serviceInvoice(...args)),
-   serviceInvoiceValidation:(...args:Parameters<typeof erpQueries.serviceInvoiceValidation>)=>readInFixture(()=>erpQueries.serviceInvoiceValidation(...args)),
-   serviceInvoicePdf:(...args:Parameters<typeof erpQueries.serviceInvoicePdf>)=>readInFixture(()=>erpQueries.serviceInvoicePdf(...args)),
-  },reserve:async()=>randomUUID(),finish:async()=>{}}
-  for(const name of ['listar_notas_servico','obter_nota_servico','validar_nota_servico','obter_pdf_nota_servico']){
-   current=name
-   const result=await executeTool(owner,name,name==='listar_notas_servico'?{}:{nota_id:id},config,deps);assert.equal(result.isError,undefined,JSON.stringify(result));checks.push('MCP '+name)
-  }
-  const card=await executeTool(owner,'renderizar_card',{card:'detalhes',consulta:'obter_nota_servico',parametros:{nota_id:id}},config,deps);assert.equal(card.isError,undefined);checks.push('MCP service invoice details card')
-  const denied=await executeTool({...owner,companies:[{...owner.companies[0],capabilities:[]}]},'obter_nota_servico',{nota_id:id},config,deps);assert.equal(denied.isError,true);checks.push('MCP capability gate')
+  // As tools de NFS-e saíram do chat até a fase fiscal; a aprovação das propostas continua coberta abaixo.
   const proposal=proposalSchema.parse({tipo:'nota_servico',dados:input});assert.equal(proposalPreview(proposal).total,300)
   const draft=randomUUID()
   await db.query('RESET ROLE')

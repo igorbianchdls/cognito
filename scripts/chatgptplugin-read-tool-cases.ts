@@ -43,11 +43,12 @@ export async function runReadToolCases(ctx: Context) {
     assert.equal(result.body.result.isError, true)
     assert.equal(JSON.parse(result.body.result.content[0].text).code, code)
   }
-  await check('Todas leituras: catálogo distingue 30 consultas e 3 escritas', async () => {
+  await check('Todas leituras: catálogo distingue 18 consultas e 20 escritas', async () => {
     const result = await rpc('tools/list')
     const tools = result.body.result.tools
-    assert.equal(tools.filter((t: Row) => t.annotations?.readOnlyHint).length, 30)
-    assert.deepEqual(tools.filter((t: Row) => !t.annotations?.readOnlyHint).map((t: Row) => t.name).sort(), ['atualizar_configuracoes','preparar_formulario_nativo','preparar_rascunho'])
+    assert.equal(tools.filter((t: Row) => t.annotations?.readOnlyHint).length, 18)
+    assert.deepEqual(tools.filter((t: Row) => !t.annotations?.readOnlyHint).map((t: Row) => t.name).sort(), ['atender_venda','atualizar_configuracoes','cancelar_compra','cancelar_venda','confirmar_compra','confirmar_venda',
+      'criar_cadastro','criar_compra','criar_titulo','criar_venda','editar_cadastro','editar_compra','editar_titulo','editar_venda','estornar_pagamento','excluir_cadastro','excluir_compra','excluir_titulo','excluir_venda','registrar_baixa'])
     for (const tool of tools.filter((t: Row) => t.annotations?.readOnlyHint)) assert.deepEqual(tool.securitySchemes, [{ type: 'oauth2', scopes: ['erp:read'] }])
   })
   await check('GET HTTP autenticado retorna 405 e anuncia POST/OPTIONS', async () => {
@@ -72,22 +73,16 @@ export async function runReadToolCases(ctx: Context) {
       assert.equal(empty.total, 0); assert.deepEqual(empty.records, [])
     })
   }
-  await check('obter_cliente: registro corresponde ao Supabase', async () => {
-    const result = (await call('obter_cliente', { empresa_id: companyId, cliente_id: Number(customer.id) })).data.record
+  await check('obter_cadastro: cliente corresponde ao Supabase', async () => {
+    const result = (await call('obter_cadastro', { empresa_id: companyId, tipo: 'clientes', registro_id: Number(customer.id) })).data.record
     assert.equal(result.id, String(customer.id)); assert.equal(result.nome, customer.nome)
   })
-  for (const [name, args] of [['obter_cliente',{ cliente_id: missingId }], ['obter_venda',{ venda_id: missingId }], ['obter_compra',{ compra_id: missingId }]] as const)
+  for (const [name, args] of [['obter_cadastro',{ tipo: 'clientes', registro_id: missingId }], ['obter_venda',{ venda_id: missingId }], ['obter_compra',{ compra_id: missingId }]] as const)
     await check(name + ': identificador inexistente', () => rejected(name, { empresa_id: companyId, ...args }, 'NOT_FOUND'))
-  await check('verificar_fiscal_venda: pendências esperadas dos dados demonstrativos', async () => {
-    const data = (await call('verificar_fiscal_venda', { empresa_id: companyId, venda_id: Number(sale.id) })).data
-    assert(Array.isArray(data.issues)); assert(data.issues.length > 0)
-    assert(data.issues.some((i: Row) => i.code === 'CUSTOMER_DOCUMENT_MISSING' || i.field === 'cliente.documento'))
-  })
-  await check('listar_contas_financeiras: contas reais e tipos', async () => {
-    const result = (await call('listar_contas_financeiras', { empresa_id: companyId })).data
+  await check('buscar_cadastros: contas financeiras ativas reais', async () => {
+    const result = (await call('buscar_cadastros', { empresa_id: companyId, tipo: 'contas-financeiras', status: 'ativo', por_pagina: 50 })).data
     const expected = db.contas_financeiras.filter(r => r.ativo && !r.excluido_em)
-    assert.equal(result.records.length, expected.length)
-    for (const row of result.records) { const original = expected.find(r => String(r.id) === row.id)!; assert(original); assert.equal(row.nome, original.nome); assert.equal(row.tipo, original.tipo) }
+    for (const row of result.records) { const original = expected.find(r => String(r.id) === String(row.id))!; assert(original); assert.equal(row.nome, original.nome) }
   })
   for (const side of ['receber','pagar']) await check('listar_pagamentos: ' + side + ', duas páginas', async () => {
     const expected = db.pagamentos.filter(r => r.tipo === side && !r.excluido_em).sort((a,b) => Number(b.id)-Number(a.id))
@@ -97,8 +92,8 @@ export async function runReadToolCases(ctx: Context) {
       for (const row of result.records) { const original = expected.find(r => String(r.id) === row.id)!; assert.equal(cents(row.valor), cents(original.valor)); assert.equal(cents(row.valor_liquido), cents(original.valor_liquido)) }
     }
   })
-  await check('listar_orcamentos: somente documentos de orçamento', async () => {
-    const result = (await call('listar_orcamentos', { empresa_id: companyId })).data
+  await check('listar_vendas: orçamentos com tipo_documento', async () => {
+    const result = (await call('listar_vendas', { empresa_id: companyId, tipo_documento: 'orcamento' })).data
     assert.equal(result.total, db.vendas.filter(r => r.tipo_documento === 'orcamento' && !r.excluido_em).length)
     assert(result.records.every((r: Row) => r.tipo_documento === 'orcamento'))
   })
@@ -108,7 +103,7 @@ export async function runReadToolCases(ctx: Context) {
       assert.equal(result.total, db[table].filter(r => r.status === status && !r.excluido_em && (table!=='vendas'||r.tipo_documento!=='orcamento')).length)
       assert(result.records.every((r: Row) => r.status === status))
     })
-  for (const [name, uri] of [['abrir_painel','ui://chatgptplugin/panel.html'],['abrir_formulario','ui://chatgptplugin/form.html']]) await check(name + ': resposta e recurso HTML', async () => {
+  for (const [name, uri] of [['abrir_painel','ui://chatgptplugin/panel.html']]) await check(name + ': resposta e recurso HTML', async () => {
     const data = await call(name, { empresa_id: companyId })
     assert.equal(data.data.empresa_selecionada, companyId)
     const resources = await rpc('resources/list')
@@ -136,15 +131,6 @@ export async function runReadToolCases(ctx: Context) {
   await check('search_mentions: consulta sem correspondência', async () => {
     const data = await extensions('search_mentions', { query: 'inexistente-' + randomUUID() })
     assert.deepEqual(data.items, [])
-  })
-  await check('listar_rascunhos: consulta isolada por usuário e conexão', async () => {
-    const data = (await call('listar_rascunhos', { empresa_id: companyId })).data
-    assert.equal(data.records.length, Math.min(20, pluginSnapshot.filter(r => r.kind === 'draft' && Number(r.value.empresa_id) === companyId).length))
-  })
-  const existingDraft = pluginSnapshot.find(r => r.kind === 'draft' && Number(r.value.empresa_id) === companyId)?.value
-  await check('obter_rascunho: ' + (existingDraft ? 'consulta de registro existente' : 'ausência retorna NOT_FOUND'), async () => {
-    if (existingDraft) { const data = (await call('obter_rascunho', { empresa_id: companyId, rascunho_id: existingDraft.id })).data; assert.equal(data.rascunho_id, existingDraft.id) }
-    else await rejected('obter_rascunho', { empresa_id: companyId, rascunho_id: randomUUID() }, 'NOT_FOUND')
   })
   const from = '2026-07-01', to = '2026-12-31'
   const confirmedSales = db.vendas.filter(r => ['confirmada','faturada'].includes(r.status) && r.tipo_documento === 'venda' && !r.excluido_em && day(r.data_venda) >= from && day(r.data_venda) <= to)
@@ -237,65 +223,14 @@ export async function runReadToolCases(ctx: Context) {
     const result=(await call(type==='vendas'?'listar_vendas':'listar_compras',{empresa_id:companyId,inicio:'2026-09-01',fim:'2026-09-30'})).data
     assert.equal(result.total,expected.length);assert.equal(cents(result.summary.valor_total),expected.reduce((s,r)=>s+cents(r.total),0))
   })
-  for(const [card,consulta,parametros] of [
-    ['tabela','consultar_financeiro',{tipo:'pagar'}],['detalhes','obter_venda',{venda_id:Number(sale.id)}],['analise','analisar_periodo',{tipo:'vendas',inicio:'2026-07-01',fim:'2026-09-30'}],['selecao','buscar_cadastros',{tipo:'clientes'}],
-  ] as const)await check('renderizar_card: dados reais em '+card,async()=>{
-    const result=(await call('renderizar_card',{empresa_id:companyId,card,consulta,parametros})).data
-    assert.equal(result.card,card);assert.equal(result.empresa.id,companyId)
-    const source=(await call(consulta,{empresa_id:companyId,...parametros})).data
-    assert.deepEqual(result.dados,source)
-  })
-  await check('renderizar_card: tabela filtra compras parcialmente recebidas',async()=>{
+  await check('listar_compras: filtra compras parcialmente recebidas',async()=>{
     const expected=db.compras.filter(row=>row.status==='parcialmente_recebida'&&!row.excluido_em)
-    const result=(await call('renderizar_card',{empresa_id:companyId,card:'tabela',consulta:'listar_compras',parametros:{status:'parcialmente_recebida'}})).data
-    assert.equal(result.dados.total,expected.length)
-    assert(result.dados.records.every((row:Row)=>row.status==='parcialmente_recebida'))
-  })
-  for(const card of ['revisao','resultado'])await check('renderizar_card: rascunho '+card+' isolado',async()=>{
-    if(existingDraft){const result=(await call('renderizar_card',{empresa_id:companyId,card,consulta:'obter_rascunho',parametros:{rascunho_id:existingDraft.id}})).data;assert.equal(result.dados.rascunho_id,existingDraft.id)}
-    else await rejected('renderizar_card',{empresa_id:companyId,card,consulta:'obter_rascunho',parametros:{rascunho_id:randomUUID()}},'NOT_FOUND')
+    const result=(await call('listar_compras',{empresa_id:companyId,status:'parcialmente_recebida'})).data
+    assert.equal(result.total,expected.length)
+    assert(result.records.every((row:Row)=>row.status==='parcialmente_recebida'))
   })
   for(const type of ['vendedores','categorias','contas-financeiras'])await check('Cadastros adicionais: '+type,async()=>{const rows=(await call('buscar_cadastros',{empresa_id:companyId,tipo:type,por_pagina:50})).data.records;assert(Array.isArray(rows));if(rows[0]){const detail=(await call('obter_cadastro',{empresa_id:companyId,tipo:type,registro_id:Number(rows[0].id)})).data;assert.equal(String(detail.record.id),String(rows[0].id))}})
   await check('obter_titulo_financeiro: título e parcelas reais',async()=>{const title=db.contas_pagar.find(t=>!t.excluido_em)!;const data=(await call('obter_titulo_financeiro',{empresa_id:companyId,tipo:'pagar',conta_id:Number(title.id)})).data;assert.equal(String(data.record.id),String(title.id));assert.equal(data.installments.length,db.contas_pagar_parcelas.filter(p=>String(p.conta_pagar_id)===String(title.id)&&!p.excluido_em).length)});
-  await check('Cards: recurso HTML e políticas sem destinos externos',async()=>{
-    const result=await rpc('resources/read',{uri:'ui://chatgptplugin/cards/v1.html'})
-    const resource=result.body.result.contents[0];assert.equal(resource.mimeType,'text/html;profile=mcp-app');assert.deepEqual(resource._meta.ui.csp,{connectDomains:[],resourceDomains:[]})
-  })
-  const notes=db.notas_fiscais.filter(row=>row.tipo==='nfse'&&row.direcao==='saida'&&row.modo_operacao==='simulacao'&&!row.excluido_em)
-  assert(notes.length>0,'Notas simuladas necessárias para validar as quatro ferramentas fiscais')
-  const note=notes[0],noteArgs={empresa_id:companyId,nota_id:Number(note.id)}
-  await check('listar_notas_servico: registros correspondem ao Supabase',async()=>{
-    const data=(await call('listar_notas_servico',{empresa_id:companyId,por_pagina:50})).data
-    assert.equal(data.total,notes.length)
-    assert.deepEqual(data.records.map((r:Row)=>String(r.id)).sort(),notes.map(r=>String(r.id)).sort())
-    assert(data.records.every((r:Row)=>r.modo_operacao==='simulacao'&&r.aviso.includes('SEM VALIDADE FISCAL')))
-  })
-  await check('listar_notas_servico: página vazia preserva o total filtrado',async()=>{
-    const data=(await call('listar_notas_servico',{empresa_id:companyId,pagina:10000})).data
-    assert.deepEqual(data.records,[]);assert.equal(data.total,notes.length);assert.equal(data.hasMore,false)
-  })
-  await check('obter_nota_servico: valores, itens e totais reais',async()=>{
-    const data=(await call('obter_nota_servico',noteArgs)).data
-    assert.equal(data.record.id,String(note.id));assert.equal(cents(data.record.valor_total),cents(note.valor_total))
-    const items=db.notas_fiscais_itens.filter(r=>String(r.nota_fiscal_id)===String(note.id)&&!r.excluido_em)
-    assert.equal(data.items.length,items.length)
-    for(const item of data.items)assert.equal(cents(item.valor_total),cents(items.find(r=>String(r.id)===String(item.id))!.valor_total))
-    const totals=db.notas_fiscais_totais.find(r=>String(r.nota_fiscal_id)===String(note.id))!
-    assert.equal(cents(data.totals.valor_liquido),cents(totals.valor_liquido))
-  })
-  await check('validar_nota_servico: validação somente em simulação',async()=>{
-    const data=(await call('validar_nota_servico',noteArgs)).data
-    assert.equal(typeof data.ready,'boolean');assert.equal(data.modo_operacao,'simulacao')
-  })
-  await check('obter_pdf_nota_servico: URL privada e versão do PDF',async()=>{
-    const data=(await call('obter_pdf_nota_servico',noteArgs)).data
-    assert.equal(new URL(data.url).origin,new URL(ctx.resource).origin)
-    assert.equal(new URL(data.url).pathname,`/api/erp/notas-servico/${note.id}/pdf`)
-    assert(!('bytes' in data)&&!('conteudo' in data))
-    assert(db.notas_fiscais_pdfs.some(r=>String(r.nota_fiscal_id)===String(note.id)))
-  })
-  for(const name of ['obter_nota_servico','validar_nota_servico','obter_pdf_nota_servico'])
-    await check(name+': nota inexistente recusada',()=>rejected(name,{empresa_id:companyId,nota_id:missingId},'NOT_FOUND'))
   await check('Dados comerciais, fiscais, rascunhos e preferências permanecem iguais', async () => {
     await client.query('BEGIN READ ONLY')
     try {
@@ -307,5 +242,5 @@ export async function runReadToolCases(ctx: Context) {
       assert.equal(fingerprint(after), fingerprint(pluginSnapshot))
     } finally { await client.query('ROLLBACK') }
   })
-  return { draftExistingRecordVerified: Boolean(existingDraft), quotationExistingRecordVerified: db.vendas.some(r => r.tipo_documento === 'orcamento'), reportTypesTested: 8, unchangedBusinessTables: names.length }
+  return { quotationExistingRecordVerified: db.vendas.some(r => r.tipo_documento === 'orcamento'), reportTypesTested: 8, unchangedBusinessTables: names.length }
 }

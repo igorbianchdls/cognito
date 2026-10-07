@@ -40,7 +40,8 @@ export function validateModern(request:Request,body:unknown) {
   if(!accept.includes('application/json')||!accept.includes('text/event-stream'))throw new ProtocolFailure(-32600,'Accept deve incluir JSON e SSE.',406)
   return {rpc,capabilities:capabilities as Record<string,unknown>}
 }
+const nativeFormCapability=z.object({extensions:z.object({'openai/elicitation':z.object({form:z.object({})})})})
+export function supportsNativeForms(capabilities:Record<string,unknown>) { return nativeFormCapability.safeParse(capabilities).success }
 export function requireNativeFormCapability(capabilities:Record<string,unknown>) {
-  const schema=z.object({extensions:z.object({'openai/elicitation':z.object({form:z.object({})})})})
-  if(!schema.safeParse(capabilities).success)throw new ProtocolFailure(-32021,'O cliente precisa suportar formulários OpenAI.',400,{requiredCapabilities:{extensions:{'openai/elicitation':{form:{}}}}})
+  if(!supportsNativeForms(capabilities))throw new ProtocolFailure(-32021,'O cliente precisa suportar formulários OpenAI.',400,{requiredCapabilities:{extensions:{'openai/elicitation':{form:{}}}}})
 }

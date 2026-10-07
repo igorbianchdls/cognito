@@ -23,11 +23,11 @@ export type OperationSnapshot = {hash:string;registro_id:number;nome:string;stat
 export async function operationSnapshot(tenantId:number,proposal:Proposal,client?:SQLClient):Promise<OperationSnapshot|null> {
   if (!('registro_id' in proposal.dados)) return null
   const table=tables[proposal.tipo as keyof typeof tables]
-  if(!table)throw new PluginError('INVALID_INPUT','Operacao desconhecida.')
+  if(!table)throw new PluginError('INVALID_INPUT','Operação desconhecida.')
   const query=async(sql:string,params:unknown[])=>client ? (await client.query(sql,params)).rows : runQuery<Record<string,unknown>>(sql,params)
   const rows=await query(`SELECT * FROM erp.${table} WHERE empresa_id=$1 AND id=$2 AND excluido_em IS NULL${client?' FOR UPDATE':''}`,[tenantId,proposal.dados.registro_id])
   const row=rows[0]
-  if(!row || (proposal.tipo==='editar_cliente' && !row.eh_cliente))throw new PluginError('INVALID_REFERENCE','Registro nao disponivel nesta empresa.')
+  if(!row || (proposal.tipo==='editar_cliente' && !row.eh_cliente))throw new PluginError('INVALID_REFERENCE','Registro não disponível nesta empresa.')
   const related:unknown[]=[]
   if(table==='notas_fiscais'){
     if(row.modo_operacao!=='simulacao'||row.tipo!=='nfse'||row.direcao!=='saida')throw new PluginError('INVALID_REFERENCE','Escolha uma nota de serviço simulada desta empresa.')
@@ -73,7 +73,7 @@ export async function operationSnapshot(tenantId:number,proposal:Proposal,client
     status:row.status ? String(row.status):null,valor:row.total!==undefined?String(row.total):row.valor_total!==undefined?String(row.valor_total):row.valor!==undefined?String(row.valor):row.preco_venda!==undefined?String(row.preco_venda):null}
 }
 export async function executeOperation(tenantId:number,actorId:number,proposal:Proposal,key:string):Promise<string> {
-  if(!('registro_id' in proposal.dados))throw new PluginError('INVALID_INPUT','Operacao invalida.')
+  if(!('registro_id' in proposal.dados))throw new PluginError('INVALID_INPUT','Operação inválida.')
   const id=Number(proposal.dados.registro_id),input={tenantId,actorId,id,idempotencyKey:key}
   const client=getErpTransactionClient()
   const data=proposal.dados as Record<string,unknown>
@@ -124,7 +124,7 @@ export async function executeOperation(tenantId:number,actorId:number,proposal:P
     case 'editar_cliente': case 'editar_produto': {
       const entityId=proposal.tipo==='editar_cliente'?'clientes':'produtos'
       const current=await getErpEntityRecord({tenantId,entityId,id})
-      if(!current)throw new PluginError('NOT_FOUND','Registro indisponivel.',404)
+      if(!current)throw new PluginError('NOT_FOUND','Registro indisponível.',404)
       const {registro_id,...changes}=proposal.dados
       await updateErpEntityRecord({...input,entityId,expectedVersion:Number(current.versao),values:{...current,...changes}})
       break
@@ -137,7 +137,7 @@ export async function executeOperation(tenantId:number,actorId:number,proposal:P
     case 'receber_parcela': await settleReceivableInstallment({...input,values:proposal.dados});break
     case 'pagar_parcela': await settlePayableInstallment({...input,values:proposal.dados});break
     case 'estornar_pagamento': await reverseErpPayment({...input,reason:proposal.dados.motivo});break
-    default:throw new PluginError('INVALID_INPUT','Operacao invalida.')
+    default:throw new PluginError('INVALID_INPUT','Operação inválida.')
   }
   return String(id)
 }
