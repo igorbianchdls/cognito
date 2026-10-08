@@ -80,7 +80,7 @@ export async function executeTool(principal: PluginPrincipal, name: string, raw:
           // Escritas definem o próprio contexto: prévia somente leitura, execução em transação.
           : action ? action.execute(deps.actions || actionDependencies,principal,company!.id,input,config)
           : runWithErpDatabaseContext({ tenantId: company!.id, userId: principal.userId, readOnly: true, statementTimeoutMs: 10000, timeZone: company!.timeZone },
-            () => tool!.execute(deps.queries,company!.id,input)),
+            () => tool!.execute(deps.queries,company!.id,input,{ origin: new URL(config.resource).origin })),
         new Promise<never>((_, reject) => { timer = setTimeout(() => reject(new PluginError('TIMEOUT','A consulta excedeu o tempo limite.',504)),config.toolTimeoutMs) }),
       ])
     } finally { if (timer) clearTimeout(timer) }

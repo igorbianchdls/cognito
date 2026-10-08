@@ -5,13 +5,16 @@ const detailFields={
   obter_parcela_financeira:r=>['descricao',r.lado==='receber'?'cliente':'fornecedor','numero_documento','parcela','vencimento','valor','valor_pago','credito','renegociado','saldo'],
   obter_venda:()=>['cliente_nome','data_venda','data_vencimento','subtotal','total','observacoes'],
   obter_compra:()=>['fornecedor_nome','data_compra','data_vencimento','subtotal','total','observacoes'],
+  obter_nota_servico:()=>['cliente','data_competencia','valor_total','autorizada_em','codigo_verificacao','chave_acesso','erro_mensagem','observacoes','aviso'],
 };
-const itemColumns={obter_venda:['descricao','quantidade','valor_unitario','desconto','total','quantidade_atendida'],obter_compra:['descricao','quantidade','quantidade_recebida','valor_unitario','total']};
+const itemColumns={obter_venda:['descricao','quantidade','valor_unitario','desconto','total','quantidade_atendida'],obter_compra:['descricao','quantidade','quantidade_recebida','valor_unitario','total'],obter_nota_servico:['descricao','quantidade','valor_unitario','desconto','valor_total']};
 const openStatuses=['aberto','pendente','vencido','parcial'];
 // Prévia direta: a tool de escrita valida e devolve o card de revisão com Confirmar/Ajustar.
 // Chamadas a partir de botões: button() já serializa o clique em run().
 function preview(tool,extra){return open(tool,withCompany({chave_operacao:crypto.randomUUID(),...extra}))}
 function ask(text){return say(text)}
+// Links do ERP (PDF/XML) abrem pelo host; sem suporte a ui/open-link, o link vai para a conversa.
+function openLink(url,caption){return request('ui/open-link',{url}).catch(()=>say(caption+': '+url))}
 function detailActions(tool,args,data,record){
   const name=record.nome||record.numero||record.descricao||('#'+record.id);
   if(tool==='obter_parcela_financeira'){const side=record.lado||args.tipo||'pagar',verb=side==='receber'?'recebimento':'pagamento',account=record.conta_financeira_sugerida;
@@ -30,6 +33,11 @@ function detailActions(tool,args,data,record){
   if(tool==='obter_compra'){const id=Number(record.id);
     if(record.status==='rascunho')return [{label:'Confirmar compra',primary:true,run:()=>preview('confirmar_compra',{dados:{registro_id:id}})},{label:'Editar',run:()=>ask('Quero editar a compra '+name+' (ID '+id+').')}];
     if(['confirmada','parcialmente_recebida'].includes(record.status))return [{label:'Cancelar compra',run:()=>preview('cancelar_compra',{dados:{registro_id:id}})}];return []}
+  if(tool==='obter_nota_servico'){const id=Number(record.id),pdf=record.pdf_url&&{label:'Abrir PDF',run:()=>openLink(record.pdf_url,'DANFSe da nota '+name)};
+    if(record.status==='rascunho')return [{label:'Emitir',primary:true,run:()=>preview('emitir_nota_servico',{dados:{registro_id:id}})},{label:'Editar',run:()=>ask('Quero editar a nota de serviço '+name+' (ID '+id+').')}];
+    if(record.status==='aguardando_retorno')return [{label:'Consultar retorno',primary:true,run:()=>preview('consultar_nota_servico',{dados:{registro_id:id}})},pdf];
+    if(record.status==='emitida')return [pdf&&{...pdf,primary:true},{label:'Cancelar nota',run:()=>ask('Quero cancelar a nota de serviço '+name+' (ID '+id+').')}];
+    return [pdf]}
   if(tool==='obter_cadastro'){const kind=args.tipo,id=record.id;
     const primary=kind==='clientes'?{label:'Nova venda',primary:true,run:()=>ask('Criar uma venda para o cliente '+name+' (ID '+id+').')}
       :kind==='fornecedores'?{label:'Nova compra',primary:true,run:()=>ask('Criar uma compra do fornecedor '+name+' (ID '+id+').')}

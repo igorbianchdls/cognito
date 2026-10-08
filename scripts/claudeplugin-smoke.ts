@@ -50,7 +50,8 @@ const checks: string[] = []
 async function check(name: string, fn: () => unknown) { await fn(); checks.push(name); console.log('Passed:',name) }
 
 const writeNames = ['criar_cadastro','editar_cadastro','excluir_cadastro','criar_venda','editar_venda','excluir_venda','converter_orcamento','registrar_devolucao','confirmar_venda','cancelar_venda','atender_venda',
-  'criar_compra','editar_compra','excluir_compra','confirmar_compra','cancelar_compra','criar_titulo','editar_titulo','excluir_titulo','efetivar_previsao','registrar_baixa','estornar_pagamento']
+  'criar_compra','editar_compra','excluir_compra','confirmar_compra','cancelar_compra','criar_titulo','editar_titulo','excluir_titulo','efetivar_previsao','registrar_baixa','estornar_pagamento',
+  'criar_nota_servico','editar_nota_servico','emitir_nota_servico','consultar_nota_servico','cancelar_nota_servico','excluir_nota_servico']
 
 async function main() {
   await check('Inicializacao com nome e instrucoes do Claude',async()=>{
@@ -58,11 +59,11 @@ async function main() {
     assert.equal(response.status,200);assert.equal(body.result.serverInfo.name,'cognito-claudeplugin')
     assert.match(body.result.instructions,/meu_acesso/);assert.match(body.result.instructions,/rascunho_id/)
   })
-  await check('Catalogo: 15 consultas e 21 escritas com anotacoes do Claude',async()=>{
+  await check('Catalogo: 17 consultas e 28 escritas com anotacoes do Claude',async()=>{
     const {body}=await rpc('tools/list')
     type Listed={name:string;title?:string;description:string;annotations:Record<string,boolean>;outputSchema?:object;_meta?:{ui?:{resourceUri?:string}}}
     const listed=body.result.tools as Listed[]
-    assert.equal(listed.length,38)
+    assert.equal(listed.length,46)
     for (const absent of ['abrir_painel','ler_configuracoes','atualizar_configuracoes','search_mentions']) assert(!listed.some(t=>t.name===absent),absent)
     for (const tool of listed) {
       const write=writeNames.includes(tool.name)
@@ -75,7 +76,7 @@ async function main() {
       assert.equal(tool.annotations.openWorldHint,false,tool.name)
       assert.equal(tool._meta?.ui?.resourceUri,CARDS_URI,tool.name)
     }
-    assert.equal(listed.filter(t=>writeNames.includes(t.name)).length,22)
+    assert.equal(listed.filter(t=>writeNames.includes(t.name)).length,28)
     const text=JSON.stringify(body)
     assert(!text.includes('openai/'),'sem chaves da OpenAI');assert(!text.includes('securitySchemes'),'sem securitySchemes')
     assert.match(listed.find(t=>t.name==='registrar_baixa')!.description,/não movimenta dinheiro/)
@@ -156,7 +157,7 @@ async function main() {
     await client.connect(new StreamableHTTPClientTransport(new URL(settings.resource),{ fetch:fetchClaude }))
     assert.equal(client.getServerVersion()?.name,'cognito-claudeplugin');assert.match(client.getInstructions()||'',/meu_acesso/)
     const listed = await client.listTools()
-    assert.equal(listed.tools.length,38)
+    assert.equal(listed.tools.length,46)
     const access = await client.callTool({ name:'meu_acesso',arguments:{} })
     assert.equal(access.isError,undefined);assert.equal((access.structuredContent as {ok:boolean}).ok,true)
     const card = await client.readResource({ uri:CARDS_URI })
@@ -165,6 +166,6 @@ async function main() {
     assert.equal(denied.isError,true)
     await client.close()
   })
-  console.log(JSON.stringify({status:'passed',checks:checks.length,tools:38,realClaude:false,realDatabaseAccess:false}))
+  console.log(JSON.stringify({status:'passed',checks:checks.length,tools:46,realClaude:false,realDatabaseAccess:false}))
 }
 void main().catch(error=>{console.error(error);process.exitCode=1})

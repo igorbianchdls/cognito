@@ -16,7 +16,8 @@ export type ToolDefinition = {
   name: string; title: string; description: string; schema: z.AnyZodObject; output: z.ZodTypeAny
   capabilities: ErpCapability[]
   requiredCapabilities?: (input: Record<string, unknown>) => ErpCapability[]
-  execute: (queries: ErpQueries, companyId: number, input: Record<string, unknown>) => Promise<unknown>
+  // context.origin: domínio do plugin, para links absolutos (ex.: PDF da nota) que exigem login no ERP.
+  execute: (queries: ErpQueries, companyId: number, input: Record<string, unknown>, context: { origin: string }) => Promise<unknown>
 }
 function page(input: Record<string, unknown>) {
   return { query: input.busca as string | undefined, page: input.pagina as number, pageSize: input.por_pagina as number, sort: input.ordenar as string | undefined }
@@ -55,6 +56,14 @@ export const tools: ToolDefinition[] = [
   { name:'obter_compra', title:'Detalhes da compra', output: outputs.purchase, description:'Use para ver itens, valores e vencimentos de uma compra pelo ID retornado por listar_compras. Retorna até 100 itens.',
     schema:z.object({empresa_id:company,compra_id:z.number().int().positive()}).strict(),capabilities:['erp.compras.visualizar'],
     execute:(q,id,input) => q.purchase(id,input.compra_id as number) },
+  {name:'listar_notas_servico',title:'Listar notas de serviço',output:outputs.page,description:'Use quando o usuário perguntar sobre notas fiscais de serviço (NFS-e) simuladas: por número, cliente, situação ou competência, ou para obter o ID usado nas demais tools de nota. Simulação sem validade fiscal.',
+    schema:z.object({...paging,status:z.enum(['rascunho','aguardando_retorno','emitida','falha','cancelada']).optional(),inicio:isoDate,fim:isoDate}).strict(),capabilities:['erp.vendas.visualizar'],
+    execute:(q,id,input)=>q.serviceInvoices(id,{busca:input.busca as string|undefined,status:input.status as string|undefined,inicio:input.inicio as string|undefined,fim:input.fim as string|undefined,pagina:Number(input.pagina),por_pagina:Number(input.por_pagina)})},
+  {name:'obter_nota_servico',title:'Detalhes da nota de serviço',output:outputs.serviceInvoice,description:'Use para ver itens, impostos, retenções, histórico e situação de uma nota de serviço simulada pelo ID de listar_notas_servico. Devolve pdf_url (DANFSe) e, se autorizada, xml_url: links que abrem no navegador com o usuário logado no ERP.',
+    schema:z.object({empresa_id:company,nota_id:z.number().int().positive()}).strict(),capabilities:['erp.vendas.visualizar'],
+    execute:async(q,id,input,context)=>{const detail=await q.serviceInvoice(id,Number(input.nota_id)),link=(path:unknown)=>path?new URL(String(path),context.origin).toString():null
+      const {input:editable,...rest}=detail
+      return {...rest,dados_editaveis:editable,record:{...detail.record,pdf_url:link(detail.record.pdf_url),xml_url:link(detail.record.xml_url)}}}},
   { name: 'consultar_financeiro', title: 'Contas a pagar e receber', output: outputs.page, description: 'Use quando o usuário perguntar sobre contas a pagar ou a receber, vencimentos, atrasos ou saldos em aberto. Retorna parcelas; summary considera todas as filtradas. Não efetua pagamentos (registrar_baixa).',
     schema: z.object({ ...paging, tipo: z.enum(['pagar','receber']), status: z.enum(['aberto','pendente','pago','parcial','vencido','cancelado','renegociado']).optional(),
       vencimento_inicio: isoDate, vencimento_fim: isoDate, ordenar: z.enum(['vencimento','-vencimento','-saldo','saldo','-valor']).optional().describe('Ordenação de todas as páginas; padrão: vencimento mais próximo.') }).strict(), capabilities: ['erp.financeiro.visualizar'],

@@ -8,6 +8,8 @@ function nextSteps(tipo,id,dados){
   if(tipo==='converter_orcamento')return [{label:'Confirmar venda',primary:true,run:()=>preview('confirmar_venda',{dados:{registro_id:id}})},{label:'Ver venda',run:()=>(open('obter_venda',withCompany({venda_id:id})))}];
   if(tipo==='confirmar_venda')return [{label:'Atender venda',primary:true,run:()=>preview('atender_venda',{dados:{registro_id:id}})},view('obter_venda',{venda_id:id})];
   if(tipo==='atender_venda'||tipo==='cancelar_venda')return [view('obter_venda',{venda_id:id})];
+  if(/nota_servico$/.test(tipo)&&tipo!=='excluir_nota_servico'){const note=tipo==='nota_servico'?id:Number(dados.registro_id)||id;
+    return [tipo==='nota_servico'||tipo==='editar_nota_servico'?{label:'Emitir',primary:true,run:()=>preview('emitir_nota_servico',{dados:{registro_id:note}})}:null,view('obter_nota_servico',{nota_id:note})].filter(Boolean)}
   if(tipo==='compra')return [{label:'Confirmar compra',primary:true,run:()=>preview('confirmar_compra',{dados:{registro_id:id}})},view('obter_compra',{compra_id:id})];
   if(/_compra$/.test(tipo))return [view('obter_compra',{compra_id:id})];
   if(/conta_(pagar|receber)$/.test(tipo)&&!/^excluir_/.test(tipo))return [view('obter_titulo_financeiro',{tipo:tipo.endsWith('pagar')?'pagar':'receber',conta_id:id})];

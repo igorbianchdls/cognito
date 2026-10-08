@@ -17,13 +17,13 @@ Consultas, escritas, auditoria, verificação do token e cards ficam no núcleo 
 | `shared` | `getPluginConfig()` (`integration: 'chatgpt'`) e versão |
 | `plugin` | Manifesto, ícone e skills `usar-erp` / `get-started` |
 
-## Tools (38)
+## Tools (46)
 
-Todas exigem `erp:read`; as de escrita exigem também `erp:write` e as permissões do perfil no ERP. O servidor lista 42 descritores porque a extensão oficial de menções registra `search_mentions`.
+Todas exigem `erp:read`; as de escrita exigem também `erp:write` e as permissões do perfil no ERP. O servidor lista 50 descritores porque a extensão oficial de menções registra `search_mentions`.
 
-**Consultas (15, somente leitura):** `meu_acesso` (também perfil da conexão, `openai/profile`), `resumo_erp`, `buscar_cadastros`, `obter_cadastro`, `listar_vendas` (com `tipo_documento: venda|orcamento`), `obter_venda`, `listar_compras`, `obter_compra`, `consultar_financeiro`, `obter_titulo_financeiro`, `obter_parcela_financeira`, `listar_pagamentos`, `consultar_estoque`, `analisar_periodo`, `consultar_relatorio`.
+**Consultas (17, somente leitura):** `meu_acesso` (também perfil da conexão, `openai/profile`), `resumo_erp`, `buscar_cadastros`, `obter_cadastro`, `listar_vendas` (com `tipo_documento: venda|orcamento`), `obter_venda`, `listar_compras`, `obter_compra`, `listar_notas_servico`, `obter_nota_servico`, `consultar_financeiro`, `obter_titulo_financeiro`, `obter_parcela_financeira`, `listar_pagamentos`, `consultar_estoque`, `analisar_periodo`, `consultar_relatorio`.
 
-**Escritas (20):** uma tool por ação; o parâmetro `tipo` escolhe o objeto.
+**Escritas (28):** uma tool por ação; o parâmetro `tipo` escolhe o objeto.
 
 | Área | Tools | `tipo` | Destrutivas |
 | --- | --- | --- | --- |
@@ -31,6 +31,7 @@ Todas exigem `erp:read`; as de escrita exigem também `erp:write` e as permissõ
 | Vendas e orçamentos | `criar_venda`, `editar_venda`, `excluir_venda`, `converter_orcamento`, `confirmar_venda`, `cancelar_venda`, `atender_venda` | `venda`, `orcamento` | `excluir_venda`, `cancelar_venda` |
 | Compras | `criar_compra`, `editar_compra`, `excluir_compra`, `confirmar_compra`, `cancelar_compra` | — | `excluir_compra`, `cancelar_compra` |
 | Financeiro | `criar_titulo`, `editar_titulo`, `excluir_titulo`, `registrar_baixa`, `estornar_pagamento` | `pagar`, `receber` | `excluir_titulo`, `estornar_pagamento` |
+| NFS-e simulada | `criar_nota_servico`, `editar_nota_servico`, `emitir_nota_servico`, `consultar_nota_servico`, `cancelar_nota_servico`, `excluir_nota_servico` | — | `cancelar_nota_servico`, `excluir_nota_servico` |
 
 **Interface e configurações (3):** `abrir_painel` (tela cheia e barra lateral), `ler_configuracoes`, `atualizar_configuracoes`.
 

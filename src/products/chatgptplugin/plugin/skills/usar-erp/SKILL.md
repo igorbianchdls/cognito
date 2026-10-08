@@ -15,6 +15,7 @@ Chame `meu_acesso` no início. Com mais de uma empresa, peça ao usuário para e
 | Encontrar cliente, fornecedor, vendedor, produto, serviço, categoria ou conta financeira | `buscar_cadastros` (`tipo`) e depois `obter_cadastro` |
 | Vendas ou orçamentos | `listar_vendas` (`tipo_documento: orcamento` para orçamentos) e `obter_venda` |
 | Compras | `listar_compras` e `obter_compra` |
+| Notas fiscais de serviço (NFS-e simulada) | `listar_notas_servico` e `obter_nota_servico` (traz `pdf_url` do DANFSe e, se autorizada, `xml_url`) |
 | Contas a pagar ou receber, vencimentos, atrasos | `consultar_financeiro` (retorna parcelas); `obter_titulo_financeiro` (título, pelo `conta_id`); `obter_parcela_financeira` |
 | Pagamentos já registrados | `listar_pagamentos` |
 | Estoque | `consultar_estoque` |
@@ -25,7 +26,7 @@ Os resultados aparecem em cards. Responda em poucas linhas, sem repetir a tabela
 
 ## Alterações: sempre prévia e confirmação
 
-As 20 tools de escrita funcionam em duas etapas:
+As 28 tools de escrita funcionam em duas etapas:
 
 1. **Prévia.** Chame a tool sem `rascunho_id`, com `chave_operacao` (um UUID novo), `dados` e, quando houver, `tipo`. Nada muda no ERP. O card mostra os valores calculados pelo ERP, o antes e depois e os botões Confirmar e Ajustar.
 2. **Execução.** Somente depois que o usuário confirmar explicitamente, chame a mesma tool apenas com `empresa_id` e `rascunho_id` (o campo `confirmar` da prévia traz a chamada pronta). Se o usuário clicar em Confirmar no card, a execução já aconteceu: não chame de novo.
@@ -42,6 +43,7 @@ Só `status: saved` com `registro_id` confirma a operação. Ao repetir a mesma 
 | Título a pagar ou receber | `criar_titulo`, `editar_titulo`, `excluir_titulo` | `pagar`, `receber` |
 | Pagou ou recebeu uma parcela | `registrar_baixa` | `pagar`, `receber` |
 | Desfazer um pagamento | `estornar_pagamento` | — |
+| Nota fiscal de serviço (simulação) | `criar_nota_servico`, `editar_nota_servico`, `emitir_nota_servico`, `consultar_nota_servico`, `cancelar_nota_servico`, `excluir_nota_servico` | — |
 
 Regras:
 
@@ -68,6 +70,14 @@ Regras:
 - **Margem, orçamento e metas:** `consultar_relatorio` com `margem-vendas`, `margem-itens`, `margem-clientes`, `orcado-realizado` (ano de `inicio`, até o mês de `fim`) e `metas`.
 - **Anexos:** `listar_anexos` devolve os arquivos (inclusive comprovantes de baixa) com link válido por 60 segundos.
 - **Cartão:** recebimento com forma de pagamento da maquininha quita o título na conta da maquininha, lança a taxa e prevê o repasse ao banco; não informe `taxa` nesses casos.
+
+## Nota fiscal de serviço (simulação)
+
+- É uma **simulação sem validade fiscal**: nada é enviado à prefeitura nem à Receita. Diga isso ao usuário ao criar ou emitir.
+- Fluxo: `criar_nota_servico` (rascunho) → `emitir_nota_servico` → `consultar_nota_servico` se ficar aguardando retorno → `cancelar_nota_servico` se preciso. Rascunho se corrige com `editar_nota_servico` (dados completos; `obter_nota_servico` traz `dados_editaveis`) ou se exclui com `excluir_nota_servico`.
+- Para criar: cliente com CPF/CNPJ válido, serviços com código de tributação nacional, `data_competencia`, `codigo_municipio_prestacao` (IBGE, 7 dígitos; o da empresa em `meu_acesso`/configuração fiscal), `aliquota_iss` entre 2 e 5. ISS retido e retenções federais só para cliente com CNPJ. Se faltar algo, a emissão devolve a lista do que o provedor recusaria: repasse ao usuário.
+- Cancelamento exige `codigo_motivo` (1 erro na emissão, 2 serviço não prestado, 9 outros) e justificativa com 15+ caracteres.
+- PDF e XML: entregue o `pdf_url`/`xml_url` de `obter_nota_servico`. Os links abrem no navegador em que o usuário está logado no ERP; não são públicos.
 
 ## Erros
 

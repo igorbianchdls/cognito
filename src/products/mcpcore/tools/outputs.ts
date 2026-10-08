@@ -30,6 +30,8 @@ export const outputs = {
   purchase: z.object({ purchase: row, items: rows, totalItems: z.number(), itemsTruncated: z.boolean(), installments: rows.optional() }).passthrough(),
   financialTitle: z.object({ record: row.optional(), installments: rows.optional(), history: rows.optional() }).passthrough(),
   installment: z.object({ record: row.optional(), history: rows.optional() }).passthrough(),
+  serviceInvoice: z.object({ record: row, items: rows, totals: row, events: rows.optional(),
+    dados_editaveis: row.optional().describe('Dados atuais no formato de editar_nota_servico.') }).passthrough(),
   analysis: z.object({ tipo: z.string(), inicio: z.string(), fim: z.string(), summary: row.optional(), records: rows }).passthrough(),
   report: z.object({ report: z.string(), records: rows, hasMore: z.boolean().optional() }).passthrough(),
   overview: row,
