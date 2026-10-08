@@ -800,6 +800,24 @@ export const ERP_API_ROUTES = [
     "transportOnlyFiscal": false
   },
   {
+    "path": "/api/erp/notas-servico/configuracao",
+    "route": "src/app/api/erp/notas-servico/configuracao/route.ts",
+    "handler": "src/products/erp/api/handlers/notas-servico/configuracao.ts",
+    "methods": [
+      "GET",
+      "PUT"
+    ],
+    "authentication": "session",
+    "maxBodyBytes": 1048576,
+    "capabilities": [
+      "erp.configuracoes.gerenciar",
+      "erp.vendas.visualizar"
+    ],
+    "permissionRule": "Capabilities vary by method; see handler.",
+    "idempotency": "Business-operation rules; see handler.",
+    "transportOnlyFiscal": false
+  },
+  {
     "path": "/api/erp/notas-servico",
     "route": "src/app/api/erp/notas-servico/route.ts",
     "handler": "src/products/erp/api/handlers/notas-servico/index.ts",

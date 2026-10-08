@@ -15,5 +15,5 @@ export const serviceInvoiceSimulator={
   return {status:'emitida',protocolo,codigo:'100',mensagem:'NFS-e autorizada (simulação). Nenhuma nota fiscal real foi emitida.'}
  },
  consult():SimulationResult{return {status:'emitida',codigo:'100',mensagem:'Retorno do provedor processado: NFS-e autorizada (simulação).'}},
- cancel(codigoMotivo:string){return {status:'cancelada' as const,codigo:'101',mensagem:`Cancelamento homologado (simulação). Motivo ${codigoMotivo}.`}},
+ cancel(codigoMotivo:string):{status:'cancelada';codigo:string;mensagem:string;erros?:SimulationResult['erros']}{return {status:'cancelada',codigo:'101',mensagem:`Cancelamento homologado (simulação). Motivo ${codigoMotivo}.`}},
 }

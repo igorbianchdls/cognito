@@ -5,7 +5,7 @@ import type { ErpConnectedModuleId } from '@/products/erp/shared/moduleAccess'
 import { companySchema, requiredDate } from '../tools/catalog'
 import { PluginError } from '../shared/contracts'
 import { expandedSchemas, saleData } from './expandedContracts'
-import {serviceInvoiceInputSchema,simulationScenarioSchema,serviceInvoiceTotals} from '@/products/erp/shared/serviceInvoiceContracts'
+import {serviceInvoiceInputSchema,simulationScenarioSchema,serviceInvoiceTotals,cancellationReasonSchema} from '@/products/erp/shared/serviceInvoiceContracts'
 
 const name = z.string().trim().min(1).max(200)
 const money = z.number().finite().min(0).max(100000000).multipleOf(0.01)
@@ -16,7 +16,9 @@ export const proposalSchema = z.discriminatedUnion('tipo', [
   z.object({tipo:z.literal('editar_nota_servico'),dados:serviceInvoiceInputSchema.extend({registro_id:z.number().int().positive()}).strict()}).strict(),
   z.object({tipo:z.literal('simular_nota_servico'),dados:z.object({registro_id:z.number().int().positive(),cenario:simulationScenarioSchema.default('sucesso')}).strict()}).strict(),
   z.object({tipo:z.literal('consultar_resultado_nota_servico'),dados:z.object({registro_id:z.number().int().positive()}).strict()}).strict(),
-  ...(['cancelar_nota_servico','excluir_nota_servico'] as const).map(tipo=>z.object({tipo:z.literal(tipo),dados:z.object({registro_id:z.number().int().positive(),motivo:z.string().trim().min(3).max(1000)}).strict()}).strict()),
+  // Cancelamento no leiaute nacional: código do motivo (1 erro na emissão, 2 serviço não prestado, 9 outros) e justificativa de 15+ caracteres.
+  z.object({tipo:z.literal('cancelar_nota_servico'),dados:z.object({registro_id:z.number().int().positive(),codigo_motivo:cancellationReasonSchema.default('9'),motivo:z.string().trim().min(15).max(1000)}).strict()}).strict(),
+  z.object({tipo:z.literal('excluir_nota_servico'),dados:z.object({registro_id:z.number().int().positive(),motivo:z.string().trim().min(3).max(1000)}).strict()}).strict(),
   ...expandedSchemas,
   z.object({tipo:z.literal('cliente'),dados:z.object({nome:name,tipo:z.enum(['fisica','juridica']).default('fisica'),
     email:z.string().email().max(254).optional(),telefone:z.string().trim().max(30).optional(),cidade:z.string().trim().max(100).optional()}).strict()}).strict(),

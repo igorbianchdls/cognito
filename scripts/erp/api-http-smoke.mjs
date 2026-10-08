@@ -70,6 +70,8 @@ try {
   for(const file of ['01-integridade-historicos.sql','02-periodos-fechados.sql','03-cadastros-documentos-contratos.sql','04-adiantamentos-renegociacoes.sql']) await db.exec(readFileSync('scripts/erp/sql/'+file,'utf8'))
   for(const file of ['20260909033000_drop_erp_financial_views.sql','20260909040000_harden_erp_service_integrity.sql','20261003170000_harden_erp_read_access.sql','20261005020000_harden_erp_stock_operations.sql','20261005021000_anchor_contract_cycles.sql']) await db.exec(readFileSync('supabase/migrations/'+file,'utf8'))
   await applySharedMigration(db)
+  // Simulação de NFS-e (já aplicada em produção antes das migrações recentes).
+  for(const file of ['20261006010000_prepare_erp_fiscal_integration.sql','20261006020000_service_invoice_simulation.sql']) await db.exec(readFileSync('supabase/migrations/'+file,'utf8'))
   await applyRecentMigrations(db)
   await db.exec(`BEGIN;
     INSERT INTO shared.perfis_acesso(id,nome) VALUES('api-reader','API Reader');
@@ -626,6 +628,74 @@ try {
     const sold=Number((await db.query("SELECT coalesce(sum(total),0) v FROM erp.vendas WHERE empresa_id=1 AND excluido_em IS NULL AND tipo_documento<>'orcamento' AND status NOT IN ('rascunho','cancelada','cancelado') AND date_trunc('month',data_venda)='2026-10-01'")).rows[0].v)
     assert.equal(Number(october.realizado),sold)
     return {cmv,metaOutubro:2000}
+  })
+  await check('NFS-e simulada: DPS nacional validado, numeração, rejeição por campo, chave, XML, retenções e cancelamento',async()=>{
+    await db.exec(`INSERT INTO erp.entidades(id,empresa_id,nome,documento,email,eh_cliente) VALUES(401,1,'Cliente PJ Serviços','11.444.777/0001-61','pj@example.invalid',true),(402,1,'Cliente PF','529.982.247-25',null,true)`)
+    // Serviço com o código de tributação nacional (pontuado entra só com dígitos).
+    const service=await call('/api/erp/servicos',{method:'POST',body:{values:{nome:'Consultoria em TI',preco:1000,codigo_tributacao_nacional:'01.07.01',codigo_nbs:'115013000'}}})
+    assert.equal(service.status,201,JSON.stringify(service.data));const serviceId=Number(service.data.record?.id||service.data.id)
+    assert.deepEqual((await db.query('SELECT codigo_tributacao_nacional,codigo_nbs FROM erp.servicos WHERE id=$1',[serviceId])).rows[0],{codigo_tributacao_nacional:'010701',codigo_nbs:'115013000'})
+    assert.equal((await call('/api/erp/servicos',{method:'POST',body:{values:{nome:'Código ruim',preco:1,codigo_tributacao_nacional:'0107'}}})).status,422)
+    // Venda confirmada gera o título a receber que a retenção vai abater.
+    const sale=await call('/api/erp/vendas',{method:'POST',body:{values:{cliente_id:401,data_venda:'2026-10-06',data_vencimento:'2026-10-30',categoria_id:102,conta_financeira_id:101,
+      itens:[{tipo:'servico',item_id:serviceId,quantidade:1,valor_unitario:1000}]}},headers:{'Idempotency-Key':'nfse-venda'}})
+    assert.equal(sale.status,201,JSON.stringify(sale.data));const saleId=Number(sale.data.record.id)
+    const saleVersion=Number((await db.query('SELECT versao FROM erp.vendas WHERE id=$1',[saleId])).rows[0].versao)
+    assert.equal((await call('/api/erp/vendas/'+saleId+'/confirmar',{method:'POST',body:{values:{expectedVersion:saleVersion}}})).status,200)
+    const balance=async()=>Number((await db.query(`SELECT coalesce(sum(p.valor-coalesce((SELECT sum(g.valor) FROM erp.pagamentos g WHERE g.conta_receber_parcela_id=p.id AND g.estornado_em IS NULL AND g.estorno_de_pagamento_id IS NULL),0)),0) v
+      FROM erp.contas_receber_parcelas p JOIN erp.contas_receber c ON c.empresa_id=p.empresa_id AND c.id=p.conta_receber_id WHERE c.venda_id=$1`,[saleId])).rows[0].v)
+    assert.equal(await balance(),1000)
+    const note=(key,values)=>call('/api/erp/notas-servico',{method:'POST',body:{chave_operacao:key,dados:{cliente_id:401,data_competencia:'2026-10-06',codigo_municipio_prestacao:'2304400',
+      itens:[{item_id:serviceId,descricao:'Consultoria em TI - outubro',quantidade:1,valor_unitario:1000}],...values}}})
+    const created=await note('nfse-nota-1',{venda_id:saleId,aliquota_iss:5,iss_retido:true,retencoes_federais:{irrf:1.5}})
+    assert.equal(created.status,201,JSON.stringify(created.data));const id=created.data.record.id
+    const act=async(name,body,key)=>{const versao=Number((await db.query('SELECT versao FROM erp.notas_fiscais WHERE id=$1',[id])).rows[0].versao)
+      return call('/api/erp/notas-servico/'+id+'/'+name,{method:'POST',body:{chave_operacao:key,versao,...body}})}
+    // Sem dados fiscais da empresa: o provedor recusaria o prestador.
+    const noIssuer=await act('simular',{cenario:'sucesso'},'nfse-emitir-0')
+    assert.equal(noIssuer.status,422,JSON.stringify(noIssuer.data));assert(noIssuer.data.error.details.campos.some(c=>c.campo==='prest'))
+    assert.equal((await call('/api/erp/notas-servico/configuracao')).data.record,null)
+    assert.equal((await call('/api/erp/notas-servico/configuracao',{method:'PUT',body:{cnpj:'11.222.333/0001-00',razao_social:'X',inscricao_municipal:'1',regime_tributario:'mei',endereco_codigo_municipio:'2304400',endereco_municipio:'Fortaleza',endereco_uf:'CE',endereco_cep:''}})).status,422)
+    const config=await call('/api/erp/notas-servico/configuracao',{method:'PUT',body:{cnpj:'11.222.333/0001-81',razao_social:'Empresa Fictícia Serviços LTDA',inscricao_municipal:'123.456-7',regime_tributario:'simples_nacional',
+      endereco_logradouro:'Rua Teste',endereco_numero:'100',endereco_bairro:'Centro',endereco_codigo_municipio:'2304400',endereco_municipio:'Fortaleza',endereco_uf:'ce',endereco_cep:'60000-000',serie_dps:'1',aliquota_iss_padrao:5}})
+    assert.equal(config.status,200,JSON.stringify(config.data));assert.equal(config.data.record.cnpj,'11222333000181');assert.equal(config.data.record.endereco_uf,'CE')
+    // Rejeição no formato do provedor: código e campo do leiaute; o DPS já recebe o número 1.
+    const rejected=await act('simular',{cenario:'rejeicao'},'nfse-emitir-1')
+    assert.equal(rejected.status,200,JSON.stringify(rejected.data));assert.equal(rejected.data.record.status,'falha')
+    assert.equal(rejected.data.record.numero_dps,'1');assert.equal(rejected.data.record.resposta_provedor.erros[0].campo,'serv.cServ.cTribNac')
+    // Reenvio autorizado reaproveita o número do DPS e gera chave de homologação (50 dígitos, ambiente 2).
+    const issued=await act('simular',{cenario:'sucesso'},'nfse-emitir-2')
+    assert.equal(issued.status,200,JSON.stringify(issued.data));const record=issued.data.record
+    assert.equal(record.status,'emitida');assert.equal(record.numero,'1');assert.equal(record.numero_dps,'1');assert.match(record.chave_acesso,/^\d{50}$/);assert.equal(record.chave_acesso[7],'2')
+    assert.match(record.codigo_verificacao,/^[0-9A-F]{8}$/);assert.match(record.protocolo,/^SIM/)
+    // Retenções: ISS 5% (50) + IRRF 1,5% (15) abatidas do título, sem entrada de dinheiro.
+    assert.deepEqual(record.retencoes,{iss:50,federais:15,total:65})
+    assert.equal(await balance(),935)
+    assert.deepEqual((await db.query("SELECT valor::text,desconto::text,valor_liquido::text FROM erp.pagamentos WHERE nota_fiscal_id=$1 AND origem='retencao'",[id])).rows,[{valor:'65.00',desconto:'65.00',valor_liquido:'0.00'}])
+    const dps=(await db.query('SELECT payload_enviado FROM erp.notas_fiscais WHERE id=$1',[id])).rows[0].payload_enviado.infDPS
+    assert.equal(dps.prest.CNPJ,'11222333000181');assert.equal(dps.toma.CNPJ,'11444777000161');assert.equal(dps.serv.cServ.cTribNac,'010701');assert.equal(dps.valores.trib.tribMun.tpRetISSQN,2);assert.equal(dps.tpAmb,2)
+    // XML e DANFSe da nota autorizada.
+    const xml=await fetch(base+'/api/erp/notas-servico/'+id+'/xml',{headers:{'x-test-identity':'owner-a'}})
+    assert.equal(xml.status,200);const content=await xml.text()
+    assert.match(content,/SIMULAÇÃO - SEM VALIDADE FISCAL/);assert.match(content,/<nDPS>1<\/nDPS>/);assert.match(content,/<cTribNac>010701<\/cTribNac>/);assert(content.includes('NFS'+record.chave_acesso))
+    assert.equal((await fetch(base+'/api/erp/notas-servico/'+id+'/pdf',{headers:{'x-test-identity':'owner-a'}})).status,200)
+    // Tomador pessoa física não pode ter ISS retido; próxima nota usa o DPS 2.
+    const pf=await note('nfse-nota-pf',{cliente_id:402,aliquota_iss:5,iss_retido:true})
+    assert.equal(pf.status,201,JSON.stringify(pf.data))
+    const pfVersion=Number((await db.query('SELECT versao FROM erp.notas_fiscais WHERE id=$1',[pf.data.record.id])).rows[0].versao)
+    const pfIssue=await call('/api/erp/notas-servico/'+pf.data.record.id+'/simular',{method:'POST',body:{chave_operacao:'nfse-emitir-pf',versao:pfVersion,cenario:'sucesso'}})
+    assert.equal(pfIssue.status,422,JSON.stringify(pfIssue.data));assert(pfIssue.data.error.details.campos.some(c=>c.campo==='valores.trib.tribMun.tpRetISSQN'))
+    const second=await note('nfse-nota-2',{cliente_id:402,aliquota_iss:3})
+    const secondVersion=Number((await db.query('SELECT versao FROM erp.notas_fiscais WHERE id=$1',[second.data.record.id])).rows[0].versao)
+    const secondIssued=await call('/api/erp/notas-servico/'+second.data.record.id+'/simular',{method:'POST',body:{chave_operacao:'nfse-emitir-3',versao:secondVersion,cenario:'demora'}})
+    assert.equal(secondIssued.data.record.status,'aguardando_retorno',JSON.stringify(secondIssued.data));assert.equal(secondIssued.data.record.numero_dps,'2')
+    // Cancelamento exige código do motivo e justificativa; estorna o abatimento da retenção.
+    assert.equal((await act('cancelar',{motivo:'Serviço não prestado no período'},'nfse-cancelar-0')).status,422)
+    assert.equal((await act('cancelar',{motivo:'curto demais',codigo_motivo:'2'},'nfse-cancelar-1')).status,422)
+    const cancelled=await act('cancelar',{motivo:'Serviço não prestado no período',codigo_motivo:'2'},'nfse-cancelar-2')
+    assert.equal(cancelled.status,200,JSON.stringify(cancelled.data));assert.equal(cancelled.data.record.status,'cancelada')
+    assert.equal(await balance(),1000)
+    return {dps:[record.numero_dps,secondIssued.data.record.numero_dps],chave:record.chave_acesso,retido:65}
   })
   await check('Logs contain correlation and status without submitted data',async()=>{
     assert(logs.some(line=>line.includes('"scope":"erp-api"')&&line.includes('"status":201')))

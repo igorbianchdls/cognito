@@ -44,7 +44,7 @@ export default function ApprovalPage({id}:{id:string}) {
     {message && <p role="status" className="my-5 rounded-xl border p-4">{message}</p>}
     {!review && !message && <p className="mt-6">Carregando revisão…</p>}
     {review && <>
-      {review.proposta.tipo.includes('nota_servico') && <p className="my-4 rounded-lg border border-amber-200 bg-amber-50 p-4">SIMULAÇÃO - SEM VALIDADE FISCAL. Nenhuma transmissão externa, título financeiro ou movimentação de estoque será gerado.</p>}
+      {review.proposta.tipo.includes('nota_servico') && <p className="my-4 rounded-lg border border-amber-200 bg-amber-50 p-4">SIMULAÇÃO - SEM VALIDADE FISCAL. Nenhuma transmissão externa nem movimentação de estoque. Se houver retenção de impostos, o título da venda vinculada é abatido (sem entrada de dinheiro).</p>}
       <p className="my-6">{review.empresa_nome || `Empresa ${review.empresa_id}`} · {states[review.status] || review.status}</p>
       {review.alvo && <p className="my-4 rounded-xl border p-4">Registro: {review.alvo.nome} · ID {review.alvo.registro_id}{review.alvo.status ? ` · ${review.alvo.status}`:''}{review.alvo.valor ? ` · ${currency(review.alvo.valor)}`:''}</p>}
       {review.alvo?.conta_financeira && <p>Conta financeira: {review.alvo.conta_financeira.nome} · ID {review.alvo.conta_financeira.id}</p>}

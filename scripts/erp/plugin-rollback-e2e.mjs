@@ -16,7 +16,7 @@ if (prod && !email) throw new Error('Informe --email=')
 const PENDING = ['20261007120000_empresa_fuso_horario.sql', '20261007130000_erp_anexos_bucket.sql', '20261008100000_erp_rls_contexto.sql',
   '20261008110000_erp_validacao_escopo.sql', '20261008120000_erp_estabilidade_fase0.sql', '20261008130000_erp_comercial_fase1.sql',
   '20261008140000_erp_devolucoes.sql', '20261008150000_erp_permissoes_vendedor.sql', '20261009100000_erp_dre_categorias.sql',
-  '20261009110000_erp_anexos.sql', '20261009120000_erp_conciliacao_cartao.sql', '20261009130000_erp_orcamento_metas.sql']
+  '20261009110000_erp_anexos.sql', '20261009120000_erp_conciliacao_cartao.sql', '20261009130000_erp_orcamento_metas.sql', '20261009140000_erp_nfse_dps.sql']
 
 const root = resolve('.'), require = createRequire(import.meta.url), cache = new Map(), stubs = {}
 function load(name, parent = resolve(root, 'entry.ts')) {

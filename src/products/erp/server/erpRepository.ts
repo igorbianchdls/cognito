@@ -2219,6 +2219,8 @@ export async function getErpEntityRecord(input: {
   } else if (input.entityId === 'servicos') {
     sql = `SELECT servicos.id::text, servicos.nome, servicos.codigo, servicos.descricao, servicos.categoria_id::text,
       COALESCE(categorias.nome, '') AS categoria, servicos.preco, servicos.custo,
+      COALESCE(servicos.codigo_tributacao_nacional, '') AS codigo_tributacao_nacional,
+      COALESCE(servicos.codigo_servico_municipal, '') AS codigo_servico_municipal, COALESCE(servicos.codigo_nbs, '') AS codigo_nbs,
       CASE WHEN servicos.ativo THEN 'ativo' ELSE 'pausado' END AS status, servicos.versao
       FROM erp.servicos LEFT JOIN erp.categorias_cadastro AS categorias
         ON categorias.empresa_id = servicos.empresa_id AND categorias.id = servicos.categoria_id
@@ -2312,13 +2314,15 @@ export async function updateErpEntityRecord(input: UpdateInput): Promise<ErpEnti
     } else if (input.entityId === 'servicos') {
       assertRequired(input.values.nome, 'Nome do serviço')
       const categoryId = await resolveServiceCategory(client, input)
+      const fiscal = serviceFiscalCodes({ codigo_tributacao_nacional: current.codigo_tributacao_nacional, codigo_servico_municipal: current.codigo_servico_municipal, codigo_nbs: current.codigo_nbs, ...input.values })
       result = await client.query(
         `UPDATE erp.servicos SET nome = $3, codigo = $4, descricao = $5, preco = $6, custo = $7,
-           categoria_id = $8, ativo = $9, versao = versao + 1, atualizado_por = $10
+           categoria_id = $8, ativo = $9, versao = versao + 1, atualizado_por = $10,
+           codigo_tributacao_nacional = $12, codigo_servico_municipal = $13, codigo_nbs = $14
          WHERE empresa_id = $1 AND id = $2 AND versao = $11 RETURNING *`,
         [input.tenantId, id, text(input.values.nome), optionalText(input.values.codigo), optionalText(input.values.descricao),
           money(input.values.preco), money(input.values.custo), categoryId, activeFromStatus(input.values.status),
-          input.actorId, input.expectedVersion],
+          input.actorId, input.expectedVersion, fiscal.national, fiscal.municipal, fiscal.nbs],
       )
     } else if (input.entityId === 'categorias-cadastro') {
       assertRequired(input.values.nome, 'Nome da categoria')
@@ -3830,9 +3834,19 @@ async function resolveServiceCategory(client: Pick<SQLClient, 'query'>, input: C
   return id
 }
 
+// Códigos fiscais do serviço para a NFS-e: aceita com ou sem pontuação (ex.: 01.07.01 vira 010701).
+function serviceFiscalCodes(values: Record<string, unknown>) {
+  const digitsOf = (value: unknown) => String(value ?? '').replace(/\D/g, '')
+  const national = digitsOf(values.codigo_tributacao_nacional), nbs = digitsOf(values.codigo_nbs)
+  if (national && national.length !== 6) throw new ErpDomainError('VALIDATION_ERROR', 'O código de tributação nacional tem 6 dígitos (item da LC 116 + desdobro, ex.: 01.07.01).', 422, { field: 'codigo_tributacao_nacional' })
+  if (nbs && nbs.length !== 9) throw new ErpDomainError('VALIDATION_ERROR', 'O código NBS tem 9 dígitos.', 422, { field: 'codigo_nbs' })
+  return { national: national || null, municipal: optionalText(values.codigo_servico_municipal), nbs: nbs || null }
+}
+
 async function createServiceRecord(client: SQLClient, input: CreateInput) {
   assertRequired(input.values.nome, 'Nome do serviço')
   const categoryId = await resolveServiceCategory(client, input)
+  const fiscal = serviceFiscalCodes(input.values)
   const result = await client.query(
     `INSERT INTO erp.servicos (
        empresa_id,
@@ -3844,9 +3858,12 @@ async function createServiceRecord(client: SQLClient, input: CreateInput) {
        categoria_id,
        ativo,
        criado_por,
-       atualizado_por
+       atualizado_por,
+       codigo_tributacao_nacional,
+       codigo_servico_municipal,
+       codigo_nbs
      )
-     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $9)
+     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $9, $10, $11, $12)
      RETURNING id`,
     [
       input.tenantId,
@@ -3858,6 +3875,9 @@ async function createServiceRecord(client: SQLClient, input: CreateInput) {
       categoryId,
       activeFromStatus(input.values.status),
       input.actorId,
+      fiscal.national,
+      fiscal.municipal,
+      fiscal.nbs,
     ],
   )
   return { id: String(result.rows[0]?.id) }

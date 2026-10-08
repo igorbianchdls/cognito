@@ -37,6 +37,7 @@ Na ordem, cada arquivo em uma transação (já têm `BEGIN/COMMIT`), pelo SQL Ed
 10. `20261009110000_erp_anexos.sql` (Fase 2B: anexos e comprovante da baixa)
 11. `20261009120000_erp_conciliacao_cartao.sql` (Fase 2C: regras de lançamento do extrato, conta da maquininha, cartão na forma de pagamento)
 12. `20261009130000_erp_orcamento_metas.sql` (Fase 2E: orçamento anual e metas de venda)
+13. `20261009140000_erp_nfse_dps.sql` (NFS-e simulada no padrão nacional: códigos do serviço, série do DPS, chave de homologação e baixa de retenções)
 
 Depois, registrar as versões em `supabase_migrations.schema_migrations` (ou aplicar pelo `supabase db push`, que registra sozinho).
 

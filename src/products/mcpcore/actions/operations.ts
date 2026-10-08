@@ -108,7 +108,7 @@ export async function executeOperation(tenantId:number,actorId:number,proposal:P
     }else{
       const actions:Record<string,'emitir'|'consultar'|'cancelar'|'excluir'>={simular_nota_servico:'emitir',consultar_resultado_nota_servico:'consultar',cancelar_nota_servico:'cancelar',excluir_nota_servico:'excluir'}
       const action=actions[proposal.tipo]
-      await actOnServiceInvoice(tenantId,actorId,id,{acao:action,chave_operacao:key,versao:Number(current.versao),cenario:data.cenario as 'sucesso',motivo:data.motivo as string|undefined})
+      await actOnServiceInvoice(tenantId,actorId,id,{acao:action,chave_operacao:key,versao:Number(current.versao),cenario:data.cenario as 'sucesso',motivo:data.motivo as string|undefined,codigo_motivo:data.codigo_motivo as '1'|'2'|'9'|undefined})
     }
     return String(id)
   }

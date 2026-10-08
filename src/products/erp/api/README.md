@@ -210,6 +210,7 @@ Para adicionar uma operação: crie/estenda a regra em `server`, reutilize contr
 | `/api/erp/notas-compra` | GET, POST | session | 1 MiB | `erp.compras.gerenciar`, `erp.compras.visualizar` |
 | `/api/erp/notas-servico/[id]/[operation]` | GET, POST | session | 0.0625 MiB | `erp.vendas.gerenciar`, `erp.vendas.visualizar` |
 | `/api/erp/notas-servico/[id]` | GET, PATCH | session | 0.0625 MiB | `erp.vendas.gerenciar`, `erp.vendas.visualizar` |
+| `/api/erp/notas-servico/configuracao` | GET, PUT | session | 1 MiB | `erp.configuracoes.gerenciar`, `erp.vendas.visualizar` |
 | `/api/erp/notas-servico` | GET, POST | session | 0.0625 MiB | `erp.vendas.gerenciar`, `erp.vendas.visualizar` |
 | `/api/erp/operacoes/[resource]` | GET, POST | session | 1 MiB | `erp.estoque.ajustar` |
 | `/api/erp/operacoes/catalogos` | GET | session | 1 MiB | Sessão / regra dinâmica |

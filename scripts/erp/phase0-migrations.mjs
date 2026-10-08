@@ -8,7 +8,7 @@ export const PHASE0_MIGRATIONS = [
   '20261008120000_erp_estabilidade_fase0.sql',
 ]
 export const PHASE1_MIGRATIONS = ['20261008130000_erp_comercial_fase1.sql', '20261008140000_erp_devolucoes.sql', '20261008150000_erp_permissoes_vendedor.sql']
-export const PHASE2_MIGRATIONS = ['20261009100000_erp_dre_categorias.sql', '20261009110000_erp_anexos.sql', '20261009120000_erp_conciliacao_cartao.sql', '20261009130000_erp_orcamento_metas.sql']
+export const PHASE2_MIGRATIONS = ['20261009100000_erp_dre_categorias.sql', '20261009110000_erp_anexos.sql', '20261009120000_erp_conciliacao_cartao.sql', '20261009130000_erp_orcamento_metas.sql', '20261009140000_erp_nfse_dps.sql']
 export async function applyMigrations(db, files) {
   for (const file of files) await db.exec(readFileSync(`supabase/migrations/${file}`, 'utf8'))
 }

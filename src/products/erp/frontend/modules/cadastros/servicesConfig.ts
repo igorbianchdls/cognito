@@ -25,6 +25,9 @@ export const servicesConfig: ErpEntityConfig<ErpEntityRecord> = {
     { key: 'categoria_id', label: 'Categoria', type: 'select' },
     { key: 'preco', label: 'Preço', type: 'number', required: true },
     { key: 'custo', label: 'Custo', type: 'number' },
+    { key: 'codigo_tributacao_nacional', label: 'Código de tributação nacional (NFS-e)', type: 'text', placeholder: 'Ex: 01.07.01 (item da LC 116 + desdobro)' },
+    { key: 'codigo_servico_municipal', label: 'Código de serviço municipal', type: 'text', placeholder: 'Se a prefeitura exigir' },
+    { key: 'codigo_nbs', label: 'Código NBS', type: 'text', placeholder: '9 dígitos, se exigido' },
   ],
   filters: [
     { key: 'status', label: 'Status', allLabel: 'Todos os status', options: [{ value: 'ativo', label: 'Ativo' }, { value: 'pausado', label: 'Pausado' }] },

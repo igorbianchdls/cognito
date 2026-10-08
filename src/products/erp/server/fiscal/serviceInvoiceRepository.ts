@@ -9,6 +9,7 @@ import {renderServiceInvoicePdf} from './serviceInvoicePdf'
 import {serviceInvoiceSimulator} from './serviceInvoiceSimulator'
 import {buildDps,nfseAccessKey,simulatedNfseXml} from './nfseDps'
 import {financialCompositionSql,reverseErpPayment} from '../erpRepository'
+import {assertErpPeriodOpen} from '../erpPeriodRepository'
 
 type Row=Record<string,unknown>
 const PROVIDER='simulador_local'
@@ -31,7 +32,7 @@ function publicRecord(row:Row):Row & {id:string}{
  return {...record,id:String(row.id),cliente_id:Number(row.entidade_id),modo_operacao:'simulacao',aviso:SIMULATION_NOTICE,
   cliente:String((row.destinatario_snapshot as Row)?.nome||''),observacoes:String((row.metadata as Row)?.observacoes||''),
   pdf_url:`/api/erp/notas-servico/${row.id}/pdf`,xml_url:row.status==='emitida'||row.status==='cancelada'?`/api/erp/notas-servico/${row.id}/xml`:null,
-  retencoes:(row.metadata as Row)?.retencoes||null}
+  retencoes:(row.integracao_snapshot as Row)?.retencoes||null,resposta_provedor:{erros:row.status==='falha'?((row.resposta_provedor as Row)?.erros||[]):[]}}
 }
 async function history(client:SQLClient,company:number,actor:number,id:number,event:string,previous:unknown,next:unknown,payload:Row={}){
  await client.query(`INSERT INTO erp.notas_fiscais_eventos(empresa_id,nota_fiscal_id,provedor,evento,status_anterior,status_novo,payload,metadata,criado_por,atualizado_por,processado_em)
@@ -41,9 +42,10 @@ async function pdf(client:SQLClient,company:number,actor:number,row:Row){
  const items=await query(client,'SELECT * FROM erp.notas_fiscais_itens WHERE empresa_id=$1 AND nota_fiscal_id=$2 AND excluido_em IS NULL ORDER BY numero_item,id',[company,row.id])
  const totals=(await query(client,'SELECT * FROM erp.notas_fiscais_totais WHERE empresa_id=$1 AND nota_fiscal_id=$2',[company,row.id]))[0]
  const content=renderServiceInvoicePdf({numero:row.numero,status:row.status,data_competencia:row.data_competencia instanceof Date?row.data_competencia.toISOString():row.data_competencia,
-  emitente_snapshot:row.emitente_snapshot,destinatario_snapshot:row.destinatario_snapshot,valor_total:row.valor_total,items,totals:totals||{},observacoes:(row.metadata as Row)?.observacoes})
+  emitente_snapshot:row.emitente_snapshot,destinatario_snapshot:row.destinatario_snapshot,valor_total:row.valor_total,items,totals:totals||{},observacoes:(row.metadata as Row)?.observacoes,
+  numero_dps:row.numero_dps,serie_dps:row.serie_dps,chave_acesso:row.chave_acesso,codigo_verificacao:row.codigo_verificacao,autorizada_em:row.autorizada_em,dps:((row.integracao_snapshot as Row)?.dps||null) as Row|null})
  await client.query(`INSERT INTO erp.notas_fiscais_pdfs(empresa_id,nota_fiscal_id,versao,conteudo,hash_sha256,nome,criado_por)
- VALUES($1,$2,$3,$4,$5,$6,$7) ON CONFLICT(empresa_id,nota_fiscal_id,versao) DO NOTHING`,[company,row.id,row.versao,content,createHash('sha256').update(content).digest('hex'),String(row.numero)+'-v'+row.versao+'.pdf',actor])
+ VALUES($1,$2,$3,$4,$5,$6,$7) ON CONFLICT(empresa_id,nota_fiscal_id,versao) DO NOTHING`,[company,row.id,row.versao,content,createHash('sha256').update(content).digest('hex'),(String(row.numero).startsWith('DEMO-')?String(row.numero):'DEMO-NFSe-'+row.numero)+'-v'+row.versao+'.pdf',actor])
 }
 async function recordOperation(client:SQLClient,company:number,actor:number,row:Row,action:string,key:string,payload:Row){
  await client.query(`INSERT INTO erp.notas_fiscais_tentativas(empresa_id,nota_fiscal_id,acao,chave_idempotencia,request_hash,provedor,ambiente,referencia_externa,payload_enviado,status,resposta_provedor,concluida_em,criado_por,atualizado_por)
@@ -106,11 +108,11 @@ export async function createServiceInvoice(company:number,actor:number,input:Ser
   await client.query('SELECT pg_advisory_xact_lock(hashtextextended($1,0))',[external])
   const existing=(await query(client,'SELECT * FROM erp.notas_fiscais WHERE empresa_id=$1 AND referencia_externa=$2 FOR UPDATE',[company,external]))[0]
   if(existing){if(!await replay(client,company,actor,existing,'criar',key,data))throw new ErpDomainError('IDEMPOTENCY_CONFLICT','Referência de operação já existente.',409);return {record:publicRecord(existing),reused:true}}
-  const refs=await references(client,company,data)
+  const refs=await references(client,company,data),config=await fiscalConfig(client,company)
   const created=(await query(client,`INSERT INTO erp.notas_fiscais(empresa_id,entidade_id,venda_id,tipo,direcao,status,numero,serie,referencia_externa,provedor,ambiente,modelo_emissao,data_competencia,codigo_municipio_emissao,codigo_municipio_prestacao,numero_dps,serie_dps,numero_rps,serie_rps,valor_servicos,valor_total,emitente_snapshot,destinatario_snapshot,integracao_snapshot,metadata,criado_por,atualizado_por)
-  VALUES($1,$2,$3,'nfse','saida','rascunho',$4,'DEMO',$5,$6,'homologacao',$7,$8,'2304400',$9,$10,'1',$10,'DEMO',$11,$11,$12::jsonb,$13::jsonb,$14::jsonb,$15::jsonb,$16,$16) RETURNING *`,
+  VALUES($1,$2,$3,'nfse','saida','rascunho',$4,'DEMO',$5,$6,'homologacao',$7,$8,COALESCE($17,'2304400'),$9,$10,'1',$10,'DEMO',$11,$11,$12::jsonb,$13::jsonb,$14::jsonb,$15::jsonb,$16,$16) RETURNING *`,
   [company,data.cliente_id,data.venda_id||null,'DEMO-'+external.slice(-12).toUpperCase(),external,PROVIDER,data.modelo_emissao,data.data_competencia,data.codigo_municipio_prestacao,external.slice(-12),total.total,
-   JSON.stringify(issuerSnapshot(await fiscalConfig(client,company),company)),JSON.stringify({...refs.customer,...markers}),JSON.stringify({...markers,sem_envio_externo:true}),JSON.stringify({...markers,observacoes:data.observacoes,retencoes_federais:data.retencoes_federais}),actor]))[0]
+   JSON.stringify(issuerSnapshot(config,company)),JSON.stringify({...refs.customer,...markers}),JSON.stringify({...markers,sem_envio_externo:true}),JSON.stringify({...markers,observacoes:data.observacoes,retencoes_federais:data.retencoes_federais}),actor,config?.endereco_codigo_municipio||null]))[0]
   await children(client,company,actor,created,refs);await history(client,company,actor,Number(created.id),'criada',null,'rascunho')
   await recordOperation(client,company,actor,created,'criar',key,data);await pdf(client,company,actor,created)
   return {record:publicRecord(created),reused:false}
@@ -151,41 +153,39 @@ async function prepareDps(client:SQLClient,company:number,row:Row,detail:Awaited
   await client.query('SELECT pg_advisory_xact_lock(hashtextextended($1,0))',[`erp:dps:${company}:${serie}`])
   numero=Number((await query(client,`SELECT coalesce(max(numero_dps::bigint),0)+1 AS n FROM erp.notas_fiscais WHERE empresa_id=$1 AND tipo='nfse' AND serie_dps=$2 AND numero_dps ~ '^[0-9]+$'`,[company,serie]))[0].n)
  }
- const built=buildDps({ambiente:config?.ambiente==='producao'?'producao':'homologacao',serie,numero,competencia:data.data_competencia,emitidaEm:new Date().toISOString(),
+ const built=buildDps({ambiente:'homologacao',serie,numero,competencia:data.data_competencia,emitidaEm:new Date().toISOString(),
   municipioPrestacao:data.codigo_municipio_prestacao,config,customer,items:totals.items.map(item=>({...item,servico:services.find(s=>Number(s.id)===item.item_id)||{}})),
   totals,aliquotaIss:data.aliquota_iss,issRetido:data.iss_retido,retencoesFederais:totals.retencoes_federais,observacoes:data.observacoes})
  if(built.issues.length)throw new ErpDomainError('VALIDATION_ERROR',`A nota tem ${built.issues.length} campo(s) que o provedor recusaria: ${built.issues.map(i=>i.mensagem).join(' ')}`,422,{campos:built.issues})
  return {...built,config,serie,numero}
 }
 
-// Autorização: número da NFS-e, código de verificação e chave de acesso (50 posições); retenções abatidas na venda.
-async function authorize(client:SQLClient,company:number,actor:number,row:Row){
+// Autorização: número da NFS-e, código de verificação e chave de acesso (50 posições, ambiente de homologação).
+function authorization(row:Row){
  const snapshot=(row.integracao_snapshot||{}) as Row,dps=(snapshot.dps||{}) as {infDPS?:Row},inf=dps.infDPS||{},prest=(inf.prest||{}) as Row
  const competence=String(inf.dCompet||row.data_competencia||'').slice(0,10)
  const key=nfseAccessKey({municipio:String(inf.cLocEmi||row.codigo_municipio_emissao||'0'),ambiente:Number(inf.tpAmb)===1?'producao':'homologacao',
   cnpj:String(prest.CNPJ||''),numero:Number(row.numero_dps||0),competencia:competence||new Date().toISOString().slice(0,10),semente:String(row.referencia_externa)})
- const verification=createHash('sha256').update(key).digest('hex').slice(0,8).toUpperCase()
- const updated=(await query(client,`UPDATE erp.notas_fiscais SET numero=$3,chave_acesso=$4,codigo_verificacao=$5,atualizado_por=$6 WHERE empresa_id=$1 AND id=$2 RETURNING *`,
-  [company,row.id,String(row.numero_dps),key,verification,actor]))[0]
- const retained=Number(((snapshot.retencoes||{}) as Row).total||0)
- if(retained>0&&row.venda_id)await applyRetention(client,company,actor,updated,retained)
- return updated
+ return {numero:String(row.numero_dps),chave:key,codigo:createHash('sha256').update(key).digest('hex').slice(0,8).toUpperCase(),
+  retido:Number(((snapshot.retencoes||{}) as Row).total||0)}
 }
 
 // O tomador retém os impostos e paga o líquido: o título da venda é abatido sem entrada de dinheiro.
 async function applyRetention(client:SQLClient,company:number,actor:number,row:Row,retained:number){
- const open=await query(client,`SELECT parcelas.id,composicao.saldo,contas.conta_financeira_id FROM erp.contas_receber contas
+ const open=await query(client,`SELECT parcelas.id,composicao.saldo,parcelas.conta_financeira_id FROM erp.contas_receber contas
   JOIN erp.contas_receber_parcelas parcelas ON parcelas.empresa_id=contas.empresa_id AND parcelas.conta_receber_id=contas.id AND parcelas.excluido_em IS NULL
   ${financialCompositionSql('receber')}
   WHERE contas.empresa_id=$1 AND contas.venda_id=$2 AND contas.excluido_em IS NULL AND contas.status<>'cancelado'
    AND parcelas.status IN ('aberto','parcial','vencido') AND composicao.saldo>0 ORDER BY parcelas.data_vencimento,parcelas.id`,[company,row.venda_id])
  const account=(await query(client,'SELECT id FROM erp.contas_financeiras WHERE empresa_id=$1 AND ativo AND excluido_em IS NULL ORDER BY padrao DESC,id LIMIT 1',[company]))[0]?.id
  let remaining=Math.round(retained*100)
+ const date=new Date().toISOString().slice(0,10)
+ if(open.length)await assertErpPeriodOpen(client,{tenantId:company,module:'financeiro',date})
  for(const parcel of open){
   if(remaining<=0||!account)break
   const part=Math.min(remaining,Math.round(Number(parcel.saldo)*100))
   await client.query(`INSERT INTO erp.pagamentos(empresa_id,tipo,conta_receber_parcela_id,conta_financeira_id,data_pagamento,valor,desconto,valor_liquido,origem,nota_fiscal_id,observacoes,chave_idempotencia,criado_por,atualizado_por)
-   VALUES($1,'receber',$2,$3,$4,$5,$5,0,'retencao',$6,$7,$8,$9,$9)`,[company,parcel.id,parcel.conta_financeira_id||account,new Date().toISOString().slice(0,10),part/100,row.id,
+   VALUES($1,'receber',$2,$3,$4,$5,$5,0,'retencao',$6,$7,$8,$9,$9)`,[company,parcel.id,parcel.conta_financeira_id||account,date,part/100,row.id,
    `Retenção de impostos na NFS-e ${row.numero} (simulação)`,`retencao:${row.id}:${parcel.id}`,actor])
   remaining-=part
  }
@@ -224,17 +224,19 @@ export async function actOnServiceInvoice(company:number,actor:number,id:number,
    let result
    if(data.acao==='emitir'){
     if(!['rascunho','falha'].includes(String(row.status)))throw new ErpDomainError('INVALID_STATE','A nota já foi enviada ou finalizada.',409)
-    const detail=await getServiceInvoice(company,id)
+    // Leitura dentro da mesma transação (a nota está travada para atualização).
+    const detail=await runWithErpTransactionClient(client,()=>getServiceInvoice(company,id))
     await references(client,company,serviceInvoiceInputSchema.parse(detail.input))
     if(Number(row.valor_total)<=0)throw new ErpDomainError('VALIDATION_ERROR','O total da nota deve ser maior que zero.')
     const prepared=await prepareDps(client,company,row,detail)
     result=serviceInvoiceSimulator.emit(data.cenario,prepared.dps as {infDPS:{nDPS:number;serie:string}})
     // A tentativa exige o estado preparado; só o provedor simulado chega aqui.
     await client.query(`UPDATE erp.notas_fiscais SET status='aguardando_retorno',simulacao_cenario=$3,numero_dps=$4,serie_dps=$5,emitente_snapshot=$6::jsonb,
-      integracao_snapshot=integracao_snapshot||$7::jsonb,payload_enviado=$8::jsonb,protocolo=$9 WHERE empresa_id=$1 AND id=$2`,
+      integracao_snapshot=integracao_snapshot||$7::jsonb,payload_enviado=$8::jsonb,protocolo=$9,codigo_municipio_emissao=COALESCE($10,codigo_municipio_emissao) WHERE empresa_id=$1 AND id=$2`,
      [company,id,data.cenario,String(prepared.numero),prepared.serie,JSON.stringify(issuerSnapshot(prepared.config,company)),
-      JSON.stringify({dps:prepared.dps,retencoes:prepared.retencoes,valor_liquido:prepared.valorLiquido}),JSON.stringify(prepared.dps),result.protocolo||null])
-    row={...row,numero_dps:String(prepared.numero),serie_dps:prepared.serie}
+      JSON.stringify({dps:prepared.dps,retencoes:prepared.retencoes,valor_liquido:prepared.valorLiquido}),JSON.stringify(prepared.dps),result.protocolo||null,prepared.config?.endereco_codigo_municipio||null])
+    row={...row,numero_dps:String(prepared.numero),serie_dps:prepared.serie,
+     integracao_snapshot:{...(row.integracao_snapshot as Row||{}),dps:prepared.dps,retencoes:prepared.retencoes,valor_liquido:prepared.valorLiquido}}
    }else if(data.acao==='consultar'){
     if(row.status!=='aguardando_retorno')throw new ErpDomainError('INVALID_STATE','A nota não está aguardando resultado. Use a consulta de detalhes.',409)
     result=serviceInvoiceSimulator.consult()
@@ -247,6 +249,7 @@ export async function actOnServiceInvoice(company:number,actor:number,id:number,
     await reverseRetention(client,company,actor,row,data.motivo)
    }
    const before=row.status
+   const auth=result.status==='emitida'&&before!=='emitida'?authorization(row):null
    await recordOperation(client,company,actor,{...row,status:result.status},data.acao,data.chave_operacao,data)
    const returned={...markers,status:result.status,codigo:result.codigo,mensagem:result.mensagem,motivo:data.motivo||null}
    await client.query(`INSERT INTO erp.notas_fiscais_retornos(empresa_id,nota_fiscal_id,provedor,ambiente,referencia_externa,evento_externo_id,chave_deduplicacao,payload,status,tentativas_processamento,processado_em)
@@ -254,10 +257,11 @@ export async function actOnServiceInvoice(company:number,actor:number,id:number,
    row=(await query(client,`UPDATE erp.notas_fiscais SET status=$3,resposta_provedor=$4::jsonb,erro_codigo=$5,erro_mensagem=$6,
     emitida_em=CASE WHEN $3='emitida' THEN COALESCE(emitida_em,now()) ELSE emitida_em END,
     autorizada_em=CASE WHEN $3='emitida' THEN COALESCE(autorizada_em,now()) ELSE autorizada_em END,
-    cancelada_em=CASE WHEN $3='cancelada' THEN now() ELSE cancelada_em END,versao=versao+1,atualizado_por=$7
-    WHERE empresa_id=$1 AND id=$2 RETURNING *`,[company,id,result.status,JSON.stringify({...returned,...(result.erros?{erros:result.erros}:{})}),result.status==='falha'||result.codigo==='SIMULADO_TIMEOUT'?result.codigo:null,result.status==='falha'||result.codigo==='SIMULADO_TIMEOUT'?result.mensagem:null,actor]))[0]
+    cancelada_em=CASE WHEN $3='cancelada' THEN now() ELSE cancelada_em END,versao=versao+1,atualizado_por=$7,
+    numero=COALESCE($8,numero),chave_acesso=COALESCE($9,chave_acesso),codigo_verificacao=COALESCE($10,codigo_verificacao)
+    WHERE empresa_id=$1 AND id=$2 RETURNING *`,[company,id,result.status,JSON.stringify({...returned,...(result.erros?{erros:result.erros}:{})}),result.status==='falha'||result.codigo==='SIMULADO_TIMEOUT'?result.codigo:null,result.status==='falha'||result.codigo==='SIMULADO_TIMEOUT'?result.mensagem:null,actor,auth?.numero||null,auth?.chave||null,auth?.codigo||null]))[0]
    // Autorizada: número da NFS-e, código de verificação e chave de acesso; retenções abatidas no contas a receber.
-   if(result.status==='emitida'&&before!=='emitida')row=await authorize(client,company,actor,row)
+   if(auth&&auth.retido>0&&row.venda_id)await applyRetention(client,company,actor,row,auth.retido)
    await history(client,company,actor,id,data.acao,before,result.status,returned);await pdf(client,company,actor,row)
    return {record:publicRecord(row),reused:false}
   }

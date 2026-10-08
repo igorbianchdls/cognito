@@ -15,6 +15,21 @@ ALTER TABLE erp.configuracoes_fiscais
   ADD COLUMN serie_dps text NOT NULL DEFAULT '1' CHECK (serie_dps ~ '^\d{1,5}$'),
   ADD COLUMN aliquota_iss_padrao numeric(7,4) CHECK (aliquota_iss_padrao IS NULL OR aliquota_iss_padrao BETWEEN 0 AND 100);
 
+-- Nota simulada passa a ter número sequencial e chave de acesso de homologação (8ª posição = 2), como no
+-- ambiente de testes do provedor; continua presa a homologação e às marcas de simulação.
+DO $do$
+BEGIN
+  -- Só onde a simulação de NFS-e (20261006020000) existe.
+  IF EXISTS (SELECT 1 FROM pg_constraint WHERE conname='notas_fiscais_simulacao_chk' AND conrelid='erp.notas_fiscais'::regclass) THEN
+    ALTER TABLE erp.notas_fiscais DROP CONSTRAINT notas_fiscais_simulacao_chk;
+    ALTER TABLE erp.notas_fiscais ADD CONSTRAINT notas_fiscais_simulacao_chk CHECK(
+     modo_operacao<>'simulacao' OR (ambiente='homologacao' AND (numero LIKE 'DEMO-%' OR numero ~ '^[0-9]{1,13}$')
+     AND (chave_acesso IS NULL OR (chave_acesso ~ '^[0-9]{50}$' AND substr(chave_acesso,8,1)='2'))
+     AND metadata @> '{"simulado":true,"sem_validade_fiscal":true}'::jsonb));
+  END IF;
+END
+$do$;
+
 -- Baixa de retenção: o tomador retém o imposto e paga o líquido; o título é abatido sem dinheiro.
 ALTER TABLE erp.pagamentos ADD COLUMN nota_fiscal_id bigint;
 ALTER TABLE erp.pagamentos ADD CONSTRAINT pagamentos_nota_fiscal_fk FOREIGN KEY (empresa_id, nota_fiscal_id) REFERENCES erp.notas_fiscais(empresa_id, id) ON DELETE RESTRICT;
