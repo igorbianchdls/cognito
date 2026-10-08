@@ -29,6 +29,13 @@ async function main(){try{
  assert.deepEqual((await db.query('SELECT id,numero,status,metadata,conteudo_bloqueado_em FROM erp.notas_fiscais ORDER BY id')).rows,before)
  const customer=(await db.query('SELECT id FROM erp.entidades WHERE empresa_id=2 AND eh_cliente AND ativo AND excluido_em IS NULL ORDER BY id LIMIT 1')).rows[0]
  const service=(await db.query('SELECT id,nome FROM erp.servicos WHERE empresa_id=2 AND ativo AND excluido_em IS NULL ORDER BY id LIMIT 1')).rows[0]
+ // Dados que o DPS exige (prestador, tomador PJ por causa do ISS retido e cTribNac do serviço); desfeitos no ROLLBACK final.
+ const fiscal=(await db.query(`UPDATE erp.configuracoes_fiscais SET ativo=true,excluido_em=NULL,cnpj='11222333000181',razao_social='Empresa de teste Ltda',inscricao_municipal='123456',
+  regime_tributario='simples_nacional',endereco_codigo_municipio='2304400',endereco_municipio='Fortaleza',endereco_uf='CE' WHERE empresa_id=2`)).rowCount
+ if(!fiscal)await db.query(`INSERT INTO erp.configuracoes_fiscais(empresa_id,cnpj,razao_social,inscricao_municipal,regime_tributario,endereco_codigo_municipio,endereco_municipio,endereco_uf,ambiente,provedor,padrao)
+  VALUES(2,'11222333000181','Empresa de teste Ltda','123456','simples_nacional','2304400','Fortaleza','CE','homologacao','simulador_local',true)`)
+ await db.query(`UPDATE erp.entidades SET documento='11444777000161' WHERE empresa_id=2 AND id=$1`,[customer.id])
+ await db.query(`UPDATE erp.servicos SET codigo_tributacao_nacional='010701' WHERE empresa_id=2 AND id=$1`,[service.id])
  const client:SQLClient={release:()=>{},query:async(statement,params)=>{
    const ctx=getErpDatabaseContext()
    if(/\berp\./.test(statement)&&ctx){await db.query('SET LOCAL ROLE erp_runtime');await db.query("SELECT set_config('app.erp_tenant_id',$1,true),set_config('app.erp_empresa_id',$1,true),set_config('app.erp_user_id',$2,true)",[String(ctx.tenantId),String(ctx.userId)])}else await db.query('RESET ROLE')
@@ -61,7 +68,7 @@ async function main(){try{
   await reject('Finalized content protected',()=>editServiceInvoice(2,3,id,changed,randomUUID(),4))
   await reject('Simulation cannot become real',()=>db.query("UPDATE erp.notas_fiscais SET provedor='focus_nfe' WHERE empresa_id=2 AND id=$1",[id]))
   await reject('Finalized note cannot be archived',()=>actOnServiceInvoice(2,3,id,{acao:'excluir',chave_operacao:randomUUID(),versao:4,motivo:'Test'}))
-  const cancel={acao:'cancelar' as const,chave_operacao:randomUUID(),versao:4,motivo:'Cancelamento demonstrativo'}
+  const cancel={acao:'cancelar' as const,chave_operacao:randomUUID(),versao:4,codigo_motivo:'1' as const,motivo:'Cancelamento demonstrativo'}
   assert.equal((await actOnServiceInvoice(2,3,id,cancel)).record.status,'cancelada');assert.equal((await actOnServiceInvoice(2,3,id,cancel)).reused,true);checks.push('Cancellation and repeated response preserve document')
   assert.equal((await getServiceInvoicePdf(2,id,1)).hash,initialPdf.hash);assert.equal((await getServiceInvoicePdf(2,id)).version,5);checks.push('Cancellation PDF version retained alongside original')
   for(const scenario of ['sucesso','rejeicao','demora'] as const){
