@@ -8,12 +8,12 @@ import { connection } from './erp/evolution-db.mjs'
 import { closePool } from '../src/lib/postgres'
 import { ERP_CAPABILITIES, type ErpAccessProfile } from '../src/products/erp/shared/professionalContracts'
 import { handlePluginRequest, type HttpDependencies } from '../src/products/chatgptplugin/mcp/handleRequest'
-import { executionDependencies } from '../src/products/chatgptplugin/application/executeTool'
-import { actionTools } from '../src/products/chatgptplugin/actions/catalog'
-import { closePluginDatabase } from '../src/products/chatgptplugin/shared/database'
-import { loadPluginPrincipal } from '../src/products/chatgptplugin/auth/resolvePrincipal'
-import { consumeRequestLimit } from '../src/products/chatgptplugin/audit/executionRepository'
-import { PluginError, type PluginPrincipal } from '../src/products/chatgptplugin/shared/contracts'
+import { executionDependencies } from '../src/products/mcpcore/application/executeTool'
+import { actionTools } from '../src/products/mcpcore/actions/catalog'
+import { closePluginDatabase } from '../src/products/mcpcore/shared/database'
+import { loadPluginPrincipal } from '../src/products/mcpcore/auth/resolvePrincipal'
+import { consumeRequestLimit } from '../src/products/mcpcore/audit/executionRepository'
+import { PluginError, type PluginPrincipal } from '../src/products/mcpcore/shared/contracts'
 import { MODERN_VERSION } from '../src/products/chatgptplugin/mcp/modernProtocol'
 import type { PluginConfig } from '../src/products/chatgptplugin/shared/config'
 import { runReadToolCases } from './chatgptplugin-read-tool-cases'
@@ -215,7 +215,7 @@ async function main() {
   const address = server.address()
   assert(address && typeof address === 'object')
   const origin = 'http://127.0.0.1:' + address.port
-  settings = { resource: origin + '/api/mcp', metadataUrl: origin + '/.well-known/oauth-protected-resource/api/mcp', issuer: 'https://oauth-test.invalid',
+  settings = { integration:'chatgpt',resource: origin + '/api/mcp', metadataUrl: origin + '/.well-known/oauth-protected-resource/api/mcp', issuer: 'https://oauth-test.invalid',
     scope: 'erp:read', clientIds: [principal.clientId], origins: [origin], requestsPerMinute: 60, toolTimeoutMs: 15000 }
   dependencies = { config: () => settings, execution: executionDependencies, limit: consumeRequestLimit,
     resolve: async request => {

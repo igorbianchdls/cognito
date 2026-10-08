@@ -87,7 +87,7 @@ const navigation: NavigationItem[] = [
       { title: "Rotinas e recorrências", url: "/erp/cadastros/automacoes" },
     ],
   },
-  { title: "Relatórios", url: "/erp/relatorios/posicao-financeira", icon: IconReportAnalytics, activePrefix: "/erp/relatorios", capability: "erp.relatorios.visualizar" },
+  { title: "Relatórios", url: "/erp/relatorios/dre", icon: IconReportAnalytics, activePrefix: "/erp/relatorios", capability: "erp.relatorios.visualizar" },
 ]
 
 function activeItem(item: NavigationItem, pathname: string): SimpleNavigationItem {

@@ -9,15 +9,15 @@ import {
   handlePluginRequest,
   type HttpDependencies,
 } from "../src/products/chatgptplugin/mcp/handleRequest";
-import { executionDependencies } from "../src/products/chatgptplugin/application/executeTool";
-import { toolCallForProposal } from "../src/products/chatgptplugin/actions/catalog";
-import { closePluginDatabase } from "../src/products/chatgptplugin/shared/database";
-import { loadPluginPrincipal } from "../src/products/chatgptplugin/auth/resolvePrincipal";
-import { consumeRequestLimit } from "../src/products/chatgptplugin/audit/executionRepository";
+import { executionDependencies } from "../src/products/mcpcore/application/executeTool";
+import { toolCallForProposal } from "../src/products/mcpcore/actions/catalog";
+import { closePluginDatabase } from "../src/products/mcpcore/shared/database";
+import { loadPluginPrincipal } from "../src/products/mcpcore/auth/resolvePrincipal";
+import { consumeRequestLimit } from "../src/products/mcpcore/audit/executionRepository";
 import {
   PluginError,
   type PluginPrincipal,
-} from "../src/products/chatgptplugin/shared/contracts";
+} from "../src/products/mcpcore/shared/contracts";
 import {
   approvalRequest,
   approvalDependencies,
@@ -592,6 +592,7 @@ async function main() {
   assert(address && typeof address === "object");
   const origin = "http://127.0.0.1:" + address.port;
   settings = {
+    integration: "chatgpt",
     resource: origin + "/api/mcp",
     metadataUrl: origin + "/.well-known/oauth-protected-resource/api/mcp",
     issuer: "https://oauth-test.invalid",
@@ -605,7 +606,7 @@ async function main() {
     config: () => settings,
     execution: executionDependencies,
     limit: async (identity, maximum) => {
-      try { await consumeRequestLimit(identity, maximum); }
+      try { await consumeRequestLimit(identity, maximum, "chatgpt"); }
       catch (error) {
         console.error("Request-limit database failure: " + ((error as {code?:string}).code || (error as Error).name));
         throw error;

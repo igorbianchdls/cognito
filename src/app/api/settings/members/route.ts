@@ -28,6 +28,9 @@ export async function PATCH(request: Request) {
       userId?: unknown
       profileId?: unknown
       reason?: unknown
+      sellerId?: unknown
+      salesScope?: unknown
+      maxDiscountPercent?: unknown
     }
     const userId = Number(body.userId || 0)
     const role = typeof body.role === 'string' && roles.has(body.role as AuthTenantRole)
@@ -40,6 +43,10 @@ export async function PATCH(request: Request) {
       return NextResponse.json({error:'Papel ou estado invalido.'},{status:400})
     }
 
+    if (body.salesScope!==undefined && body.salesScope!=='todas' && body.salesScope!=='proprias') {
+      return NextResponse.json({error:'Escopo de vendas invalido.'},{status:400})
+    }
+
     if (!Number.isSafeInteger(userId) || userId <= 0) {
       return NextResponse.json({ error: 'Membro invalido.' }, { status: 400 })
     }
@@ -49,7 +56,10 @@ export async function PATCH(request: Request) {
       tenantId: tenant.tenantId,
       values: { role, status, userId,
         profileId: typeof body.profileId==='string' ? body.profileId as ErpAccessProfile : undefined,
-        reason: typeof body.reason==='string' ? body.reason : undefined },
+        reason: typeof body.reason==='string' ? body.reason : undefined,
+        sellerId: body.sellerId===undefined ? undefined : body.sellerId===null ? null : Number(body.sellerId),
+        salesScope: body.salesScope==='todas'||body.salesScope==='proprias' ? body.salesScope : undefined,
+        maxDiscountPercent: body.maxDiscountPercent===undefined ? undefined : body.maxDiscountPercent===null||body.maxDiscountPercent==='' ? null : Number(body.maxDiscountPercent) },
     })
     return NextResponse.json(member)
   } catch (error) {

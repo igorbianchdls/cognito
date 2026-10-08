@@ -77,6 +77,22 @@ export function ErpEntityPage({ config }: { config: ErpEntityConfig }) {
 
   useEffect(() => {
     const categoryType = config.id === 'produtos' ? 'produto' : config.id === 'servicos' ? 'servico' : ''
+    if (config.id === 'categorias') {
+      // Categorias financeiras: grupo da DRE e categoria-pai.
+      void fetch('/api/erp/catalogos/categorias?estrutura=1', { cache: 'no-store' })
+        .then((response) => response.ok ? response.json() : Promise.reject())
+        .then((body: { grupos?: Array<{ value: string; label: string }>; raizes?: Array<{ value: string; label: string }> }) =>
+          setFieldOptions({ dre_grupo_id: body.grupos || [], categoria_pai_id: body.raizes || [] }))
+        .catch(() => setFieldOptions({}))
+      return
+    }
+    if (config.id === 'categorias-cadastro') {
+      void fetch('/api/erp/catalogos/categorias?estrutura=cadastro', { cache: 'no-store' })
+        .then((response) => response.ok ? response.json() : Promise.reject())
+        .then((body: { raizes?: Array<{ value: string; label: string }> }) => setFieldOptions({ categoria_pai_id: body.raizes || [] }))
+        .catch(() => setFieldOptions({}))
+      return
+    }
     void Promise.all([
       categoryType
         ? fetch(`/api/erp/catalogos/categorias?tipo=${categoryType}${config.id === 'servicos' ? '&identificador=id' : ''}`, { cache: 'no-store' })
@@ -160,7 +176,7 @@ export function ErpEntityPage({ config }: { config: ErpEntityConfig }) {
   return (
     <div className="flex min-h-full min-w-0 flex-col bg-white">
       <ErpWorkspaceHeader
-        section={['produtos', 'servicos', 'categorias'].includes(config.id) ? 'Produtos e serviços' : getErpSection(config.sectionId).label}
+        section={['produtos', 'servicos'].includes(config.id) ? 'Produtos e serviços' : ['categorias', 'categorias-cadastro'].includes(config.id) ? 'Categorias' : getErpSection(config.sectionId).label}
         title={config.id === 'servicos' ? 'Serviços' : config.label}
         menuItems={[{ label: 'Atualizar dados', onSelect: () => void loadRecords() }]}
         primaryAction={canManage && config.fields.length > 0 ? <Button aria-label={`Adicionar ${config.singularLabel}`} className="h-11 rounded-md bg-[#c9f20a] px-5 font-medium text-[#142000] shadow-none hover:bg-[#b9df09]" onClick={() => { setEditingRecord(null); setDrawerOpen(true) }}><Plus className="size-4" />Adicionar</Button> : undefined}

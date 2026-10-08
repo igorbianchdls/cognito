@@ -27,10 +27,13 @@ import {
   parseErpResponse,
 } from "@/products/erp/frontend/services/erpProfessionalClient";
 import { ERP_OPERATION_CONFIGS } from "@/products/erp/shared/operations";
+import { BankStatementTools } from "./BankStatementTools";
 
 type Suggestion = {
   transacao_id: string;
-  pagamento_id: string;
+  pagamento_id: string | null;
+  // Repasse previsto do cartão (maquininha → banco).
+  transferencia_id?: string | null;
   data: string;
   descricao: string;
   valor: number;
@@ -100,6 +103,7 @@ export function BankReconciliationPage() {
   }, [load]);
 
   async function reconcile(suggestion: Suggestion) {
+    if (suggestion.tipo === "repasse_divergente" && !window.confirm(`O banco creditou ${formatErpCurrency(suggestion.valor)}, diferente do repasse previsto (diferença de ${formatErpCurrency(suggestion.diferenca_valor)}). Conciliar assim mesmo? A diferença fica no saldo da maquininha para conferência.`)) return;
     setBusy(suggestion.transacao_id);
     setError(null);
     try {
@@ -113,7 +117,7 @@ export function BankReconciliationPage() {
           body: JSON.stringify({
             values: {
               transacao_bancaria_id: suggestion.transacao_id,
-              pagamento_id: suggestion.pagamento_id,
+              ...(suggestion.transferencia_id ? { transferencia_financeira_id: suggestion.transferencia_id } : { pagamento_id: suggestion.pagamento_id }),
               origem_conciliacao: "sugerida",
             },
           }),
@@ -215,6 +219,7 @@ export function BankReconciliationPage() {
       <ErpOperationsWorkspacePage
         config={ERP_OPERATION_CONFIGS["conciliacao-bancaria"]}
       />
+      <BankStatementTools onChanged={() => void load()} />
       <section className="border-t pt-6">
         <div className="mb-4 flex items-center justify-between">
           <div>
@@ -267,15 +272,15 @@ export function BankReconciliationPage() {
                     <TableCell className="text-right">
                       {formatErpCurrency(suggestion.valor)}
                     </TableCell>
-                    <TableCell>{suggestion.tipo}</TableCell>
+                    <TableCell>{suggestion.tipo === "repasse" ? "Repasse do cartão" : suggestion.tipo === "repasse_divergente" ? "Repasse do cartão (valor diferente)" : suggestion.tipo}</TableCell>
                     <TableCell>
                       {formatErpCurrency(suggestion.diferenca_valor)} /{" "}
                       {suggestion.diferenca_dias} dia(s)
                     </TableCell>
                     <TableCell>
                       <div className="flex justify-end gap-1">
-                        {suggestion.segura &&
-                        Number(suggestion.diferenca_valor) <= 0.01 ? (
+                        {(suggestion.segura &&
+                        Number(suggestion.diferenca_valor) <= 0.01) || suggestion.tipo.startsWith("repasse") ? (
                           <Button
                             size="icon"
                             variant="ghost"

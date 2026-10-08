@@ -41,6 +41,11 @@
     "chatgptplugin:package-smoke": "node scripts/chatgptplugin-package-smoke.mjs",
     "chatgptplugin:mrtr-smoke": "tsx scripts/chatgptplugin-mrtr-smoke.ts",
     "chatgptplugin:validate-package": "node scripts/chatgptplugin-validate-package.mjs",
+    "claudeplugin:typecheck": "tsc -p tsconfig.claudeplugin.json --pretty false",
+    "claudeplugin:smoke": "tsx scripts/claudeplugin-smoke.ts",
+    "claudeplugin:cards-smoke": "tsx scripts/claudeplugin-cards-smoke.ts",
+    "claudeplugin:package": "node scripts/claudeplugin-package.mjs",
+    "claudeplugin:package-smoke": "node scripts/claudeplugin-package-smoke.mjs",
     "security:smoke": "tsx scripts/erp-security-smoke.ts",
     "erp:runtime-smoke": "tsx scripts/erp-runtime-isolation-smoke.ts",
     "service:hello": "node services/hello-service.mjs",
@@ -55,7 +60,9 @@
     "shared:check-database": "node scripts/shared/apply.mjs --check",
     "erp:dashboards-smoke": "tsx scripts/erp/dashboards-smoke.ts",
     "erp:dashboards-http-smoke": "node scripts/erp/dashboards-http-smoke.mjs",
-    "erp:dashboards-ui-smoke": "node scripts/erp/dashboards-ui-smoke.mjs"
+    "erp:dashboards-ui-smoke": "node scripts/erp/dashboards-ui-smoke.mjs",
+    "erp:phase0-scale-smoke": "node scripts/erp/phase0-scale-smoke.mjs",
+    "erp:slow-queries": "node scripts/erp/slow-queries.mjs"
   },
   "dependencies": {
     "@openai/mcp-extensions": "0.1.0",

@@ -197,6 +197,38 @@ export async function createManagementOperation(input: ActorInput & {
       )
       return transaction.rows[0]
     }
+    if (input.resource === 'conciliar-transacao' && input.values.transferencia_financeira_id) {
+      // Repasse da maquininha: o crédito no banco confirma a transferência pendente (data e valor do extrato).
+      const transactionId = requiredId(input.values.transacao_bancaria_id, 'Transacao bancária')
+      const transferId = requiredId(input.values.transferencia_financeira_id, 'Repasse')
+      const transaction = (await client.query(
+        `SELECT * FROM erp.transacoes_bancarias WHERE empresa_id = $1 AND id = $2 AND status = 'pendente' AND excluido_em IS NULL FOR UPDATE`,
+        [input.tenantId, transactionId])).rows[0]
+      if (!transaction) throw new Error('Transacao bancária pendente não encontrada.')
+      if (transaction.tipo !== 'credito') throw new Error('Repasse do cartão concilia com crédito no banco.')
+      const transfer = (await client.query(
+        `SELECT * FROM erp.transferencias_financeiras WHERE empresa_id = $1 AND id = $2 AND status = 'pendente' AND excluido_em IS NULL FOR UPDATE`,
+        [input.tenantId, transferId])).rows[0]
+      if (!transfer) throw new Error('Repasse pendente não encontrado.')
+      if (Number(transfer.conta_destino_id) !== Number(transaction.conta_financeira_id)) throw new Error('O repasse é para outra conta.')
+      const credited = Number(transaction.valor), expected = Number(transfer.valor)
+      await assertErpPeriodOpen(client, { tenantId: input.tenantId, module: 'financeiro', date: databaseDateText(transaction.data_transacao) })
+      // Valor diferente do previsto fica registrado; a diferença permanece no saldo da maquininha para conferência.
+      await client.query(
+        `UPDATE erp.transferencias_financeiras SET status = 'concluida', data_transferencia = $3, valor = $4, atualizado_por = $5,
+           metadata = metadata || jsonb_build_object('valor_previsto', $6::numeric, 'diferenca', $4::numeric - $6::numeric, 'data_prevista', data_transferencia)
+         WHERE empresa_id = $1 AND id = $2`,
+        [input.tenantId, transferId, databaseDateText(transaction.data_transacao), credited, input.actorId, expected])
+      const reconciliation = await client.query(
+        `INSERT INTO erp.conciliacoes_bancarias (empresa_id, conta_financeira_id, periodo_inicio, periodo_fim, status, conciliado_em, criado_por, atualizado_por)
+         VALUES ($1, $2, $3, $3, 'concluida', now(), $4, $4) RETURNING id`,
+        [input.tenantId, transaction.conta_financeira_id, databaseDateText(transaction.data_transacao), input.actorId])
+      await client.query(
+        `INSERT INTO erp.conciliacoes_bancarias_itens (empresa_id, conciliacao_id, transacao_bancaria_id, transferencia_financeira_id, valor_conciliado, origem_conciliacao, criado_por)
+         VALUES ($1, $2, $3, $4, $5, $6, $7)`,
+        [input.tenantId, reconciliation.rows[0].id, transactionId, transferId, credited, input.values.origem_conciliacao === 'sugerida' ? 'sugerida' : 'manual', input.actorId])
+      return { id: String(reconciliation.rows[0].id), status: 'concluida', valor_conciliado: credited, diferenca: Math.round((credited - expected) * 100) / 100 }
+    }
     if (input.resource === 'conciliar-transacao') {
       const transactionId = requiredId(input.values.transacao_bancaria_id, 'Transacao bancária')
       const paymentId = requiredId(input.values.pagamento_id, 'Pagamento')

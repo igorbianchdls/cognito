@@ -166,10 +166,17 @@ Para adicionar uma operação: crie/estenda a regra em `server`, reutilize contr
 | `/api/erp/[entityId]/resumo` | GET | session | 1 MiB | Sessão / regra dinâmica |
 | `/api/erp/[entityId]` | GET, POST | session | 1 MiB | Sessão / regra dinâmica |
 | `/api/erp/acesso` | GET | session | 1 MiB | Sessão / regra dinâmica |
+| `/api/erp/anexos/[id]/confirmar` | POST | session | 1 MiB | Sessão / regra dinâmica |
+| `/api/erp/anexos/[id]` | GET, DELETE | session | 1 MiB | Sessão / regra dinâmica |
+| `/api/erp/anexos` | GET, POST | session | 1 MiB | `erp.compras.gerenciar`, `erp.compras.visualizar`, `erp.financeiro.baixar`, `erp.financeiro.gerenciar`, `erp.financeiro.visualizar`, `erp.vendas.gerenciar`, `erp.vendas.visualizar` |
 | `/api/erp/automacoes` | GET, POST | session | 1 MiB | `erp.configuracoes.gerenciar` |
 | `/api/erp/bancos/importar-ofx` | POST | session | 4 MiB | `erp.financeiro.gerenciar` |
 | `/api/erp/catalogos/busca` | GET | session | 1 MiB | `erp.cadastros.visualizar` |
 | `/api/erp/catalogos/categorias` | GET | session | 1 MiB | `erp.cadastros.visualizar` |
+| `/api/erp/comissoes/pagar` | POST | session | 1 MiB | `erp.financeiro.gerenciar` |
+| `/api/erp/comissoes/regras/[id]` | PATCH, DELETE | session | 1 MiB | `erp.vendas.gerenciar` |
+| `/api/erp/comissoes/regras` | GET, POST | session | 1 MiB | `erp.vendas.gerenciar`, `erp.vendas.visualizar` |
+| `/api/erp/comissoes` | GET | session | 1 MiB | `erp.vendas.visualizar` |
 | `/api/erp/compras/[id]/cancelar` | POST | session | 1 MiB | `erp.compras.gerenciar` |
 | `/api/erp/compras/[id]/confirmar` | POST | session | 1 MiB | `erp.compras.gerenciar` |
 | `/api/erp/compras/[id]/receber` | POST | session | 1 MiB | `erp.compras.gerenciar` |
@@ -177,6 +184,7 @@ Para adicionar uma operação: crie/estenda a regra em `server`, reutilize contr
 | `/api/erp/compras/catalogos` | GET | session | 1 MiB | `erp.compras.visualizar` |
 | `/api/erp/compras` | GET, POST | session | 1 MiB | `erp.compras.gerenciar`, `erp.compras.visualizar` |
 | `/api/erp/conciliacao/concluidas` | GET | session | 1 MiB | `erp.financeiro.visualizar` |
+| `/api/erp/conciliacao/lancamentos` | GET, POST, DELETE | session | 1 MiB | `erp.financeiro.gerenciar`, `erp.financeiro.visualizar` |
 | `/api/erp/conciliacao/regras` | GET, POST | session | 1 MiB | `erp.financeiro.gerenciar`, `erp.financeiro.visualizar` |
 | `/api/erp/conciliacao/sugestoes` | GET | session | 1 MiB | `erp.financeiro.visualizar` |
 | `/api/erp/conciliacao/transacoes/[id]/desfazer` | POST | session | 1 MiB | `erp.financeiro.gerenciar` |
@@ -187,19 +195,25 @@ Para adicionar uma operação: crie/estenda a regra em `server`, reutilize contr
 | `/api/erp/contratos/processar` | POST | session | 1 MiB | `erp.vendas.gerenciar` |
 | `/api/erp/dashboards/[dashboardId]/registros` | GET | session | 1 MiB | Sessão / regra dinâmica |
 | `/api/erp/dashboards/[dashboardId]` | GET | session | 1 MiB | Sessão / regra dinâmica |
+| `/api/erp/devolucoes/[id]` | GET | session | 1 MiB | `erp.vendas.visualizar` |
+| `/api/erp/devolucoes/[id]/usar-credito` | POST | session | 1 MiB | `erp.financeiro.baixar` |
+| `/api/erp/devolucoes` | GET | session | 1 MiB | `erp.vendas.visualizar` |
 | `/api/erp/estoque/contagem` | GET | session | 1 MiB | `erp.estoque.ajustar` |
 | `/api/erp/fechamentos` | GET, POST, PATCH | session | 1 MiB | `erp.configuracoes.gerenciar`, `erp.financeiro.visualizar` |
 | `/api/erp/financeiro/[operation]` | GET, POST | session | 1 MiB | `erp.financeiro.estornar`, `erp.financeiro.gerenciar`, `erp.financeiro.visualizar` |
+| `/api/erp/financeiro/formas-pagamento` | GET, POST | session | 1 MiB | `erp.financeiro.gerenciar`, `erp.financeiro.visualizar` |
 | `/api/erp/historicos/[kind]/[id]` | GET | session | 1 MiB | `erp.compras.visualizar`, `erp.financeiro.visualizar`, `erp.vendas.visualizar` |
 | `/api/erp/importacoes/[type]` | GET, POST | session | 4 MiB | `erp.cadastros.gerenciar`, `erp.cadastros.visualizar` |
 | `/api/erp/importacoes/lotes/[id]` | GET | session | 4 MiB | `erp.cadastros.visualizar` |
 | `/api/erp/internal/automacoes` | GET | cron | 1 MiB | Sessão / regra dinâmica |
+| `/api/erp/metas-vendas` | GET, POST | session | 1 MiB | `erp.vendas.gerenciar`, `erp.vendas.visualizar` |
 | `/api/erp/notas-compra` | GET, POST | session | 1 MiB | `erp.compras.gerenciar`, `erp.compras.visualizar` |
 | `/api/erp/notas-servico/[id]/[operation]` | GET, POST | session | 0.0625 MiB | `erp.vendas.gerenciar`, `erp.vendas.visualizar` |
 | `/api/erp/notas-servico/[id]` | GET, PATCH | session | 0.0625 MiB | `erp.vendas.gerenciar`, `erp.vendas.visualizar` |
 | `/api/erp/notas-servico` | GET, POST | session | 0.0625 MiB | `erp.vendas.gerenciar`, `erp.vendas.visualizar` |
 | `/api/erp/operacoes/[resource]` | GET, POST | session | 1 MiB | `erp.estoque.ajustar` |
 | `/api/erp/operacoes/catalogos` | GET | session | 1 MiB | Sessão / regra dinâmica |
+| `/api/erp/orcamentos-financeiros` | GET, POST | session | 1 MiB | `erp.financeiro.gerenciar`, `erp.financeiro.visualizar` |
 | `/api/erp/orcamentos/[id]/acao` | POST | session | 1 MiB | `erp.vendas.gerenciar` |
 | `/api/erp/orcamentos/[id]/converter` | POST | session | 1 MiB | `erp.vendas.gerenciar` |
 | `/api/erp/ordens-servico/[id]/acao` | POST | session | 1 MiB | `erp.vendas.gerenciar` |
@@ -210,14 +224,18 @@ Para adicionar uma operação: crie/estenda a regra em `server`, reutilize contr
 | `/api/erp/recorrencias/processar` | POST | session | 1 MiB | `erp.financeiro.gerenciar` |
 | `/api/erp/recorrencias` | GET, PATCH | session | 1 MiB | `erp.configuracoes.gerenciar`, `erp.financeiro.gerenciar` |
 | `/api/erp/relatorios/[report]` | GET | session | 1 MiB | `erp.relatorios.visualizar` |
+| `/api/erp/relatorios/dre` | GET | session | 1 MiB | `erp.relatorios.visualizar` |
 | `/api/erp/resumo/profissional` | GET | session | 1 MiB | `erp.relatorios.visualizar` |
 | `/api/erp/resumo` | GET | session | 1 MiB | `erp.relatorios.visualizar` |
+| `/api/erp/tabelas-preco/[id]` | GET, PATCH, DELETE | session | 1 MiB | `erp.cadastros.gerenciar`, `erp.cadastros.visualizar` |
+| `/api/erp/tabelas-preco` | GET, POST | session | 1 MiB | `erp.cadastros.gerenciar`, `erp.cadastros.visualizar` |
 | `/api/erp/titulos/[side]/[id]` | GET, PATCH, DELETE | session | 1 MiB | `erp.financeiro.gerenciar`, `erp.financeiro.visualizar` |
 | `/api/erp/titulos/[side]` | GET, POST | session | 1 MiB | `erp.financeiro.gerenciar`, `erp.financeiro.visualizar` |
 | `/api/erp/vendas/[id]/atender-parcial` | POST | session | 1 MiB | `erp.vendas.gerenciar` |
 | `/api/erp/vendas/[id]/atender` | POST | session | 1 MiB | `erp.vendas.gerenciar` |
 | `/api/erp/vendas/[id]/cancelar` | POST | session | 1 MiB | `erp.vendas.gerenciar` |
 | `/api/erp/vendas/[id]/confirmar` | POST | session | 1 MiB | `erp.vendas.gerenciar` |
+| `/api/erp/vendas/[id]/devolucoes` | GET, POST | session | 1 MiB | `erp.vendas.gerenciar`, `erp.vendas.visualizar` |
 | `/api/erp/vendas/[id]/faturar-parcial` | POST | none | 1 MiB | Sessão / regra dinâmica |
 | `/api/erp/vendas/[id]/faturar` | POST | none | 1 MiB | Sessão / regra dinâmica |
 | `/api/erp/vendas/[id]/pre-validacao-fiscal` | GET | session | 1 MiB | `erp.vendas.visualizar` |

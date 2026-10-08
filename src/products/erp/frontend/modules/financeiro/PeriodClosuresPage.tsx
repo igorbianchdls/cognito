@@ -54,6 +54,8 @@ export function PeriodClosuresPage() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  // Aviso do fechamento (ex.: transações do extrato não conciliadas no período).
+  const [notice, setNotice] = useState<string | null>(null);
   const load = useCallback(async () => {
     setLoading(true);
     try {
@@ -80,8 +82,9 @@ export function PeriodClosuresPage() {
   async function closePeriod() {
     setSaving(true);
     setError(null);
+    setNotice(null);
     try {
-      await parseErpResponse(
+      const closed = await parseErpResponse<{ record?: { aviso?: string } }>(
         await fetch("/api/erp/fechamentos", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -93,6 +96,7 @@ export function PeriodClosuresPage() {
           }),
         }),
       );
+      setNotice(closed?.record?.aviso || null);
       setOpen(false);
       await load();
     } catch (closeError) {
@@ -149,6 +153,11 @@ export function PeriodClosuresPage() {
       {error ? (
         <div className="rounded-md border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
           {error}
+        </div>
+      ) : null}
+      {notice ? (
+        <div role="status" className="rounded-md border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
+          Período fechado. {notice} Concilie em Financeiro → Conciliação bancária.
         </div>
       ) : null}
       <div className="overflow-hidden rounded-md border">

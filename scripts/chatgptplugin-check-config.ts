@@ -1,6 +1,6 @@
 import { config } from 'dotenv'
 import { getPluginConfig } from '../src/products/chatgptplugin/shared/config'
-import { closePluginDatabase, pluginQuery } from '../src/products/chatgptplugin/shared/database'
+import { closePluginDatabase, pluginQuery } from '../src/products/mcpcore/shared/database'
 import { nativeFormKeyReady } from '../src/products/chatgptplugin/extensions/nativeForm'
 config({path:'.env.local',quiet:true})
 async function main() {

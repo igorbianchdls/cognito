@@ -1,3 +1,8 @@
+import { erpListOrder } from '@/products/erp/shared/readQueries'
+import { nextDocumentNumber } from '@/products/erp/server/erpDocumentNumbers'
+import { applyCardReceipt, cancelCardReceipt, cardMethodConfig } from '@/products/erp/server/erpCardReceipts'
+import { assertCustomerCredit, assertDiscountLimit, assertTablePriceRules, saleSeller, sellerRules, cancelSaleCommissions, generateSaleCommissions, resolvePriceTable, saveCustomerCommercialTerms, saleTransport, tablePrice, type TablePrice } from '@/products/erp/server/erpCommercialRules'
+import { ERP_TODAY_SQL } from '@/products/erp/server/erpBusinessDate'
 import { assertCommercialReplay } from '@/products/erp/shared/commercialContracts'
 import { saveRegistrationRelations } from './erpRegistrationRelations'
 import { nonNegativeDecimal, paymentTotal, sumMoney, lineTotal, discountAmount } from '@/products/erp/shared/erpMoney'
@@ -23,6 +28,7 @@ type ListInput = {
   filters?: Record<string, string>
   page?: number
   pageSize?: number
+  sort?: string
 }
 
 type CreateInput = {
@@ -44,6 +50,8 @@ type ConfirmSaleInput = {
   actorId: number
   saleId: string | number
   expectedVersion?: number
+  /** Motivo para confirmar acima do limite de crédito (exige erp.financeiro.gerenciar). */
+  creditOverrideReason?: string | null
 }
 
 type IdActionInput = {
@@ -340,31 +348,28 @@ async function ensureFinancialAccountId(
   throw new ErpDomainError('VALIDATION_ERROR', 'Selecione uma conta financeira para registrar a baixa.')
 }
 
+// Composição do saldo de uma parcela: pagamentos válidos, créditos aplicados e valor levado para renegociação.
+// As três somas são calculadas uma única vez por parcela: OFFSET 0 impede o planejador de desdobrar a subconsulta
+// e repetir os agregados a cada referência a composicao.* (antes, ~13 vezes por linha nas listas financeiras).
 export function financialCompositionSql(financialSide: 'receber' | 'pagar', installmentAlias = 'parcelas') {
   const installmentColumn = `conta_${financialSide}_parcela_id`
   return `CROSS JOIN LATERAL (
-    SELECT ${installmentAlias}.valor,
-      COALESCE((SELECT sum(valor) FROM erp.pagamentos pagamento
-        WHERE pagamento.empresa_id=${installmentAlias}.empresa_id AND pagamento.${installmentColumn}=${installmentAlias}.id
-          AND pagamento.estorno_de_pagamento_id IS NULL AND pagamento.estornado_em IS NULL AND pagamento.excluido_em IS NULL),0) AS dinheiro,
-      COALESCE((SELECT sum(CASE WHEN aplicacao.reversao_de_id IS NULL THEN aplicacao.valor ELSE -aplicacao.valor END)
-        FROM erp.adiantamentos_aplicacoes aplicacao WHERE aplicacao.empresa_id=${installmentAlias}.empresa_id
-          AND aplicacao.${installmentColumn}=${installmentAlias}.id),0) AS credito,
-      COALESCE((SELECT sum(link.valor) FROM erp.renegociacoes_parcelas link
-        JOIN erp.renegociacoes acordo ON acordo.empresa_id=link.empresa_id AND acordo.id=link.renegociacao_id
-        WHERE link.empresa_id=${installmentAlias}.empresa_id AND link.${installmentColumn}=${installmentAlias}.id
-          AND link.papel='origem' AND acordo.status='efetivada'),0) AS transferido,
-      ${installmentAlias}.valor
-        - COALESCE((SELECT sum(valor) FROM erp.pagamentos pagamento WHERE pagamento.empresa_id=${installmentAlias}.empresa_id
-          AND pagamento.${installmentColumn}=${installmentAlias}.id AND pagamento.estorno_de_pagamento_id IS NULL
-          AND pagamento.estornado_em IS NULL AND pagamento.excluido_em IS NULL),0)
-        - COALESCE((SELECT sum(CASE WHEN aplicacao.reversao_de_id IS NULL THEN aplicacao.valor ELSE -aplicacao.valor END)
+    SELECT somas.valor, somas.dinheiro, somas.credito, somas.transferido,
+      somas.valor - somas.dinheiro - somas.credito - somas.transferido AS saldo
+    FROM (
+      SELECT ${installmentAlias}.valor,
+        COALESCE((SELECT sum(valor) FROM erp.pagamentos pagamento
+          WHERE pagamento.empresa_id=${installmentAlias}.empresa_id AND pagamento.${installmentColumn}=${installmentAlias}.id
+            AND pagamento.estorno_de_pagamento_id IS NULL AND pagamento.estornado_em IS NULL AND pagamento.excluido_em IS NULL),0) AS dinheiro,
+        COALESCE((SELECT sum(CASE WHEN aplicacao.reversao_de_id IS NULL THEN aplicacao.valor ELSE -aplicacao.valor END)
           FROM erp.adiantamentos_aplicacoes aplicacao WHERE aplicacao.empresa_id=${installmentAlias}.empresa_id
-            AND aplicacao.${installmentColumn}=${installmentAlias}.id),0)
-        - COALESCE((SELECT sum(link.valor) FROM erp.renegociacoes_parcelas link
+            AND aplicacao.${installmentColumn}=${installmentAlias}.id),0) AS credito,
+        COALESCE((SELECT sum(link.valor) FROM erp.renegociacoes_parcelas link
           JOIN erp.renegociacoes acordo ON acordo.empresa_id=link.empresa_id AND acordo.id=link.renegociacao_id
           WHERE link.empresa_id=${installmentAlias}.empresa_id AND link.${installmentColumn}=${installmentAlias}.id
-            AND link.papel='origem' AND acordo.status='efetivada'),0) AS saldo
+            AND link.papel='origem' AND acordo.status='efetivada'),0) AS transferido
+      OFFSET 0
+    ) somas
   ) composicao`
 }
 
@@ -397,7 +402,7 @@ async function updateReceivableStatus(
            AND vencidas.excluido_em IS NULL
            AND vencidas.status <> 'cancelado'
            AND vencidas.status NOT IN ('pago','renegociado')
-           AND vencidas.data_vencimento < CURRENT_DATE
+           AND vencidas.data_vencimento < ${ERP_TODAY_SQL}
        ) THEN 'vencido'
        WHEN totals.liquidado > 0 THEN 'parcial'
        ELSE 'aberto'
@@ -439,7 +444,7 @@ async function updatePayableStatus(
            AND vencidas.excluido_em IS NULL
            AND vencidas.status <> 'cancelado'
            AND vencidas.status NOT IN ('pago','renegociado')
-           AND vencidas.data_vencimento < CURRENT_DATE
+           AND vencidas.data_vencimento < ${ERP_TODAY_SQL}
        ) THEN 'vencido'
        WHEN totals.liquidado > 0 THEN 'parcial'
        ELSE 'aberto'
@@ -476,7 +481,7 @@ function booleanValue(value: unknown) {
 
 function financialAccountType(value: unknown) {
   const normalized = text(value).toLowerCase()
-  if (['caixa', 'banco', 'carteira', 'cartao', 'outro'].includes(normalized)) return normalized
+  if (['caixa', 'banco', 'carteira', 'cartao', 'maquininha', 'outro'].includes(normalized)) return normalized
   return 'banco'
 }
 
@@ -530,23 +535,27 @@ function assertRequired(value: unknown, label: string) {
   if (!text(value)) throw new ErpDomainError('VALIDATION_ERROR', `${label} é obrigatório.`)
 }
 
+// Categoria de cadastro (agrupamento de produtos, serviços, clientes ou fornecedores) pelo nome: usa a
+// existente do mesmo tipo ou cria. Categorias financeiras (receita/despesa) ficam em erp.categorias.
+export type RegistrationCategoryType = 'produto' | 'servico' | 'cliente' | 'fornecedor'
 async function resolveCategoryId(
   client: Pick<SQLClient, 'query'>,
   tenantId: number,
   actorId: number,
   name: unknown,
-  type: 'produto' | 'servico' | 'geral' = 'geral',
+  type: RegistrationCategoryType,
 ) {
   const normalized = text(name)
   if (!normalized) return null
 
   const existing = await client.query(
     `SELECT id
-     FROM erp.categorias
+     FROM erp.categorias_cadastro
      WHERE empresa_id = $1
-       AND lower(nome) = lower($2)
-       AND tipo IN ($3, 'geral')
+       AND lower(btrim(nome)) = lower(btrim($2))
+       AND tipo = $3
        AND excluido_em IS NULL
+     ORDER BY categoria_pai_id NULLS FIRST, id
      LIMIT 1`,
     [tenantId, normalized, type],
   )
@@ -554,12 +563,21 @@ async function resolveCategoryId(
   if (existingId) return Number(existingId)
 
   const created = await client.query(
-    `INSERT INTO erp.categorias (empresa_id, nome, tipo, criado_por, atualizado_por)
+    `INSERT INTO erp.categorias_cadastro (empresa_id, nome, tipo, criado_por, atualizado_por)
      VALUES ($1, $2, $3, $4, $4)
      RETURNING id`,
     [tenantId, normalized, type, actorId],
   )
   return Number(created.rows[0]?.id)
+}
+
+// Clientes e fornecedores: categoria de cadastro do papel do cadastro (vendedor não tem categoria).
+async function saveEntityCategory(client: Pick<SQLClient, 'query'>, tenantId: number, actorId: number, entityId: ErpConnectedModuleId, id: number, name: unknown) {
+  const type = entityId === 'clientes' ? 'cliente' : entityId === 'fornecedores' ? 'fornecedor' : null
+  if (!type) return
+  const categoryId = await resolveCategoryId(client, tenantId, actorId, name, type)
+  await client.query('UPDATE erp.entidades SET categoria_id = $3, categoria_tipo = $4 WHERE empresa_id = $1 AND id = $2',
+    [tenantId, id, categoryId, categoryId ? type : null])
 }
 
 function validateSaleInstallments(sale: SaleRow, installments: NormalizedInstallment[]) {
@@ -955,7 +973,7 @@ export async function listErpPurchaseCatalogs(tenantId: number) {
     runQuery(`SELECT id::text, nome, documento FROM erp.entidades WHERE empresa_id = $1 AND eh_fornecedor = true AND ativo = true AND excluido_em IS NULL ORDER BY nome LIMIT 50`, [tenantId]),
     runQuery(`SELECT id::text, nome, COALESCE(sku, codigo, '') AS codigo, COALESCE(unidade_medida, 'UN') AS unidade, custo AS valor_padrao FROM erp.produtos WHERE empresa_id = $1 AND ativo = true AND excluido_em IS NULL ORDER BY nome LIMIT 50`, [tenantId]),
     runQuery(`SELECT id::text, nome, COALESCE(codigo, '') AS codigo, 'UN'::text AS unidade, custo AS valor_padrao FROM erp.servicos WHERE empresa_id = $1 AND ativo = true AND excluido_em IS NULL ORDER BY nome LIMIT 50`, [tenantId]),
-    runQuery(`SELECT id::text, nome FROM erp.categorias WHERE empresa_id = $1 AND tipo IN ('despesa', 'geral') AND ativo = true AND excluido_em IS NULL ORDER BY nome`, [tenantId]),
+    runQuery(`SELECT categorias.id::text, COALESCE(pai.nome || ' › ', '') || categorias.nome AS nome FROM erp.categorias categorias LEFT JOIN erp.categorias pai ON pai.empresa_id = categorias.empresa_id AND pai.id = categorias.categoria_pai_id WHERE categorias.empresa_id = $1 AND categorias.tipo = 'despesa' AND categorias.ativo = true AND categorias.excluido_em IS NULL AND ${FINANCIAL_CATEGORY_LEAF_SQL} ORDER BY 2`, [tenantId]),
     runQuery(`SELECT id::text, nome FROM erp.centros_custo WHERE empresa_id = $1 AND ativo = true AND excluido_em IS NULL ORDER BY nome`, [tenantId]),
     runQuery(`SELECT id::text, nome, tipo, padrao FROM erp.contas_financeiras WHERE empresa_id = $1 AND ativo = true AND excluido_em IS NULL ORDER BY padrao DESC, nome`, [tenantId]),
     runQuery(`SELECT id::text, nome, tipo FROM erp.metodos_pagamento WHERE empresa_id = $1 AND ativo = true AND excluido_em IS NULL ORDER BY nome`, [tenantId]),
@@ -985,7 +1003,7 @@ export async function listErpSalesCatalogs(tenantId: number) {
       FROM erp.produtos WHERE empresa_id = $1 AND ativo = true AND excluido_em IS NULL ORDER BY nome LIMIT 50`, [tenantId]),
     runQuery(`SELECT id::text, nome, COALESCE(codigo, '') AS codigo, 'UN'::text AS unidade, preco AS valor_padrao
       FROM erp.servicos WHERE empresa_id = $1 AND ativo = true AND excluido_em IS NULL ORDER BY nome LIMIT 50`, [tenantId]),
-    runQuery(`SELECT id::text, nome FROM erp.categorias WHERE empresa_id = $1 AND tipo IN ('receita', 'geral') AND ativo = true AND excluido_em IS NULL ORDER BY nome`, [tenantId]),
+    runQuery(`SELECT categorias.id::text, COALESCE(pai.nome || ' › ', '') || categorias.nome AS nome FROM erp.categorias categorias LEFT JOIN erp.categorias pai ON pai.empresa_id = categorias.empresa_id AND pai.id = categorias.categoria_pai_id WHERE categorias.empresa_id = $1 AND categorias.tipo = 'receita' AND categorias.ativo = true AND categorias.excluido_em IS NULL AND ${FINANCIAL_CATEGORY_LEAF_SQL} ORDER BY 2`, [tenantId]),
     runQuery(`SELECT id::text, nome FROM erp.centros_custo WHERE empresa_id = $1 AND ativo = true AND excluido_em IS NULL ORDER BY nome`, [tenantId]),
     runQuery(`SELECT id::text, nome, tipo, padrao FROM erp.contas_financeiras WHERE empresa_id = $1 AND ativo = true AND excluido_em IS NULL ORDER BY padrao DESC, nome`, [tenantId]),
     runQuery(`SELECT id::text, nome, tipo FROM erp.metodos_pagamento WHERE empresa_id = $1 AND ativo = true AND excluido_em IS NULL ORDER BY nome`, [tenantId]),
@@ -1010,7 +1028,7 @@ export async function getErpOverview(tenantId: number) {
          AND parcelas.excluido_em IS NULL AND contas.excluido_em IS NULL) AS saldo_pagar,
       (SELECT COALESCE(sum(composicao.saldo), 0) FROM erp.contas_receber_parcelas parcelas
        ${financialCompositionSql('receber')}
-       WHERE parcelas.empresa_id = $1 AND parcelas.data_vencimento < CURRENT_DATE AND parcelas.status NOT IN ('pago', 'cancelado', 'renegociado') AND parcelas.excluido_em IS NULL) AS receber_vencido,
+       WHERE parcelas.empresa_id = $1 AND parcelas.data_vencimento < ${ERP_TODAY_SQL} AND parcelas.status NOT IN ('pago', 'cancelado', 'renegociado') AND parcelas.excluido_em IS NULL) AS receber_vencido,
       (SELECT count(*)::int FROM erp.vendas WHERE empresa_id = $1 AND status = 'rascunho' AND excluido_em IS NULL) AS vendas_rascunho,
       (SELECT count(*)::int FROM erp.compras WHERE empresa_id = $1 AND tipo_movimento IN ('cotacao', 'pedido_compra', 'pedido_recorrente') AND excluido_em IS NULL) AS compras_abertas,
       (SELECT count(*)::int FROM erp.entidades WHERE empresa_id = $1 AND eh_cliente = true AND ativo = true AND excluido_em IS NULL) AS clientes_ativos`,
@@ -1437,6 +1455,10 @@ export async function listErpEntityRecords(input: ListInput): Promise<ErpEntityR
     return listCategoryRecords(input)
   }
 
+  if (input.entityId === 'categorias-cadastro') {
+    return listRegistrationCategoryRecords(input)
+  }
+
   if (input.entityId === 'pedidos') {
     return listSaleRecords(input)
   }
@@ -1513,8 +1535,8 @@ async function listEntityRoleRecords(input: ListInput): Promise<ErpEntityRecord[
          tipo_pessoa,
          versao,
          ativo,
-         COALESCE(metadata ->> 'categoria', '') AS categoria,
-         concat_ws(' ', nome, documento, email, cidade, COALESCE(metadata ->> 'categoria', ''),
+         COALESCE((SELECT c.nome FROM erp.categorias_cadastro c WHERE c.empresa_id = entidades.empresa_id AND c.id = entidades.categoria_id), '') AS categoria,
+         concat_ws(' ', nome, documento, email, cidade, (SELECT c.nome FROM erp.categorias_cadastro c WHERE c.empresa_id = entidades.empresa_id AND c.id = entidades.categoria_id),
            (SELECT string_agg(concat_ws(' ',c.nome,c.email,c.telefone),' ') FROM erp.entidades_contatos c WHERE c.empresa_id=entidades.empresa_id AND c.entidade_id=entidades.id AND c.ativo),
            (SELECT string_agg(concat_ws(' ',e.cidade,e.logradouro),' ') FROM erp.entidades_enderecos e WHERE e.empresa_id=entidades.empresa_id AND e.entidade_id=entidades.id AND e.ativo)) AS searchable
        FROM erp.entidades
@@ -1568,7 +1590,7 @@ async function listProductRecords(input: ListInput): Promise<ErpEntityRecord[]> 
          COALESCE(categorias.nome, '') AS categoria,
          concat_ws(' ', produtos.nome, produtos.sku, produtos.codigo, categorias.nome) AS searchable
        FROM erp.produtos AS produtos
-       LEFT JOIN erp.categorias AS categorias
+       LEFT JOIN erp.categorias_cadastro AS categorias
          ON categorias.empresa_id = produtos.empresa_id
         AND categorias.id = produtos.categoria_id
        WHERE produtos.empresa_id = $1
@@ -1611,7 +1633,7 @@ async function listServiceRecords(input: ListInput): Promise<ErpEntityRecord[]> 
          COALESCE(categorias.nome, '') AS categoria,
          concat_ws(' ', servicos.nome, servicos.codigo, servicos.descricao, servicos.categoria_id::text, categorias.nome) AS searchable
        FROM erp.servicos AS servicos
-       LEFT JOIN erp.categorias AS categorias
+       LEFT JOIN erp.categorias_cadastro AS categorias
          ON categorias.empresa_id = servicos.empresa_id
         AND categorias.id = servicos.categoria_id
        WHERE servicos.empresa_id = $1
@@ -1638,6 +1660,67 @@ async function listServiceRecords(input: ListInput): Promise<ErpEntityRecord[]> 
   }))
 }
 
+const REGISTRATION_CATEGORY_LABELS: Record<string, string> = { produto: 'Produto', servico: 'Serviço', cliente: 'Cliente', fornecedor: 'Fornecedor' }
+
+// Categorias de cadastro: agrupamentos de produtos, serviços, clientes e fornecedores, com quantos cadastros usam.
+async function listRegistrationCategoryRecords(input: ListInput): Promise<ErpEntityRecord[]> {
+  const params: unknown[] = [input.tenantId]
+  const rows = await runQuery<Record<string, unknown>>(
+    `WITH rows AS (
+       SELECT categorias.id::text, categorias.nome, categorias.tipo, categorias.ativo, categorias.versao,
+         COALESCE(categorias.descricao, '') AS descricao, pai.nome AS categoria_pai,
+         CASE categorias.tipo
+           WHEN 'produto' THEN (SELECT count(*)::int FROM erp.produtos x WHERE x.empresa_id = categorias.empresa_id AND x.categoria_id = categorias.id AND x.excluido_em IS NULL)
+           WHEN 'servico' THEN (SELECT count(*)::int FROM erp.servicos x WHERE x.empresa_id = categorias.empresa_id AND x.categoria_id = categorias.id AND x.excluido_em IS NULL)
+           ELSE (SELECT count(*)::int FROM erp.entidades x WHERE x.empresa_id = categorias.empresa_id AND x.categoria_id = categorias.id AND x.excluido_em IS NULL)
+         END AS itens,
+         concat_ws(' ', categorias.nome, categorias.descricao, pai.nome) AS searchable,
+         COALESCE(pai.nome || ' › ', '') || categorias.nome AS ordem_arvore
+       FROM erp.categorias_cadastro categorias
+       LEFT JOIN erp.categorias_cadastro pai ON pai.empresa_id = categorias.empresa_id AND pai.id = categorias.categoria_pai_id
+       WHERE categorias.empresa_id = $1 AND categorias.excluido_em IS NULL
+     )
+     SELECT id, nome, tipo, ativo, versao, descricao, categoria_pai, itens, ordem_arvore, count(*) OVER ()::int AS __total
+     FROM rows
+     WHERE true${appendSearch(params, input.query)}${appendStatusFilter(input.filters)}${appendTipoFilter(params, input.filters)}
+     ORDER BY tipo, ordem_arvore${appendPagination(params, input)}`,
+    params,
+  )
+  return rows.map((row) => ({
+    id: String(row.id),
+    nome: row.categoria_pai ? `${row.categoria_pai} › ${row.nome}` : String(row.nome ?? ''),
+    tipo: String(row.tipo ?? ''),
+    descricao: String(row.descricao ?? ''),
+    itens: Number(row.itens ?? 0),
+    versao: Number(row.versao ?? 1),
+    status: row.ativo ? 'ativo' : 'inativo',
+    __total: Number(row.__total ?? 0),
+  }))
+}
+
+async function createRegistrationCategoryRecord(client: SQLClient, input: CreateInput) {
+  assertRequired(input.values.nome, 'Nome da categoria')
+  const values = await registrationCategoryValues(client, input.tenantId, input.values)
+  const result = await client.query(
+    `INSERT INTO erp.categorias_cadastro (empresa_id, tipo, nome, descricao, categoria_pai_id, ativo, criado_por, atualizado_por)
+     VALUES ($1, $2, $3, $4, $5, $6, $7, $7) RETURNING id`,
+    [input.tenantId, values.tipo, text(input.values.nome), optionalText(input.values.descricao), values.parentId, activeFromStatus(input.values.status), input.actorId],
+  )
+  return { id: String(result.rows[0]?.id) }
+}
+
+async function registrationCategoryValues(client: Pick<SQLClient, 'query'>, tenantId: number, values: Record<string, unknown>, id?: number) {
+  const tipo = text(values.tipo)
+  if (!REGISTRATION_CATEGORY_TYPES.includes(tipo)) throw new ErpDomainError('VALIDATION_ERROR', 'Categoria de cadastro é de produto, serviço, cliente ou fornecedor.')
+  const parentId = optionalNumericId(values.categoria_pai_id)
+  if (parentId) {
+    const parent = await client.query('SELECT tipo, categoria_pai_id FROM erp.categorias_cadastro WHERE empresa_id = $1 AND id = $2 AND excluido_em IS NULL', [tenantId, parentId])
+    if (!parent.rows[0] || parent.rows[0].tipo !== tipo) throw new ErpDomainError('VALIDATION_ERROR', 'A categoria-pai precisa ser do mesmo tipo.')
+    if (parent.rows[0].categoria_pai_id || parentId === id) throw new ErpDomainError('VALIDATION_ERROR', 'Categorias têm no máximo 2 níveis.')
+  }
+  return { tipo, parentId }
+}
+
 async function listCategoryRecords(input: ListInput): Promise<ErpEntityRecord[]> {
   const params: unknown[] = [input.tenantId]
   const rows = await runQuery<Record<string, unknown>>(
@@ -1649,44 +1732,33 @@ async function listCategoryRecords(input: ListInput): Promise<ErpEntityRecord[]>
          categorias.ativo,
          categorias.tipo,
          categorias.versao,
-         (
-           SELECT count(*)::int
-           FROM erp.produtos AS produtos
-           WHERE produtos.empresa_id = categorias.empresa_id
-             AND produtos.categoria_id = categorias.id
-             AND produtos.excluido_em IS NULL
-         ) + (
-           SELECT count(*)::int
-           FROM erp.servicos AS servicos
-           WHERE servicos.empresa_id = categorias.empresa_id
-             AND servicos.categoria_id = categorias.id
-             AND servicos.excluido_em IS NULL
-         ) + (
-           SELECT count(*)::int FROM erp.entidades AS entidades
-           WHERE entidades.empresa_id = categorias.empresa_id
-             AND entidades.excluido_em IS NULL
-             AND entidades.metadata ->> 'categoria' = categorias.nome
-             AND ((categorias.tipo = 'cliente' AND entidades.eh_cliente)
-               OR (categorias.tipo = 'fornecedor' AND entidades.eh_fornecedor))
-         ) AS itens,
-         concat_ws(' ', categorias.nome, categorias.metadata ->> 'descricao') AS searchable
+         pai.nome AS categoria_pai,
+         CASE WHEN categorias.fora_dre THEN 'Não entra na DRE' ELSE COALESCE(grupos.nome, 'Não classificado') END AS grupo_dre,
+         (SELECT count(*)::int FROM erp.contas_receber t WHERE t.empresa_id = categorias.empresa_id AND t.categoria_id = categorias.id AND t.excluido_em IS NULL)
+         + (SELECT count(*)::int FROM erp.contas_pagar t WHERE t.empresa_id = categorias.empresa_id AND t.categoria_id = categorias.id AND t.excluido_em IS NULL)
+         + (SELECT count(*)::int FROM erp.rateios_financeiros t WHERE t.empresa_id = categorias.empresa_id AND t.categoria_id = categorias.id AND t.excluido_em IS NULL) AS itens,
+         concat_ws(' ', categorias.nome, categorias.metadata ->> 'descricao', pai.nome, grupos.nome) AS searchable,
+         COALESCE(pai.nome || ' › ', '') || categorias.nome AS ordem_arvore
        FROM erp.categorias AS categorias
+       LEFT JOIN erp.categorias AS pai ON pai.empresa_id = categorias.empresa_id AND pai.id = categorias.categoria_pai_id
+       LEFT JOIN erp.dre_grupos AS grupos ON grupos.empresa_id = categorias.empresa_id AND grupos.id = categorias.dre_grupo_id
        WHERE categorias.empresa_id = $1
          AND categorias.excluido_em IS NULL
      )
-     SELECT id, nome, descricao, tipo, versao, itens, ativo,
+     SELECT id, nome, descricao, tipo, versao, itens, ativo, categoria_pai, grupo_dre, ordem_arvore,
        count(*) OVER ()::int AS __total
      FROM rows
-     WHERE true${appendSearch(params, input.query)}${appendStatusFilter(input.filters)}
-     ORDER BY nome ASC${appendPagination(params, input)}`,
+     WHERE true${appendSearch(params, input.query)}${appendStatusFilter(input.filters)}${appendTipoFilter(params, input.filters)}
+     ORDER BY tipo DESC, ordem_arvore ASC${appendPagination(params, input)}`,
     params,
   )
 
   return rows.map((row) => ({
     id: String(row.id),
-    nome: String(row.nome ?? ''),
+    nome: row.categoria_pai ? `${row.categoria_pai} › ${row.nome}` : String(row.nome ?? ''),
     descricao: String(row.descricao ?? ''),
-    tipo: String(row.tipo ?? 'geral'),
+    tipo: String(row.tipo ?? ''),
+    grupo_dre: String(row.grupo_dre ?? ''),
     versao: Number(row.versao ?? 1),
     itens: Number(row.itens ?? 0),
     status: row.ativo ? 'ativo' : 'inativo',
@@ -1828,6 +1900,8 @@ async function listReceivables(input: ListInput): Promise<ErpEntityRecord[]> {
   const dueEnd = dateText(input.filters?.vencimento_fim)
   const dueStartClause = dueStart ? ` AND parcelas.data_vencimento >= $${params.push(dueStart)}` : ''
   const dueEndClause = dueEnd ? ` AND parcelas.data_vencimento <= $${params.push(dueEnd)}` : ''
+  const launchType = ['previsao', 'efetivo'].includes(text(input.filters?.tipo_lancamento)) ? text(input.filters?.tipo_lancamento) : ''
+  const launchTypeClause = launchType ? ` AND contas.tipo_lancamento = $${params.push(launchType)}` : ''
   const rows = await runQuery<Record<string, unknown>>(
     `WITH rows AS (
        SELECT
@@ -1836,6 +1910,7 @@ async function listReceivables(input: ListInput): Promise<ErpEntityRecord[]> {
          contas.descricao,
          contas.numero_documento,
          contas.origem,
+         contas.tipo_lancamento,
          parcelas.numero_parcela,
          parcelas.data_vencimento,
          composicao.valor,
@@ -1854,7 +1929,7 @@ async function listReceivables(input: ListInput): Promise<ErpEntityRecord[]> {
            WHEN contas.status = 'cancelado' OR parcelas.status = 'cancelado' THEN 'cancelado'
            WHEN composicao.transferido > 0 THEN 'renegociado'
            WHEN composicao.saldo = 0 THEN 'pago'
-           WHEN parcelas.data_vencimento < CURRENT_DATE THEN 'vencido'
+           WHEN parcelas.data_vencimento < ${ERP_TODAY_SQL} THEN 'vencido'
            WHEN composicao.dinheiro + composicao.credito > 0 THEN 'parcial'
            ELSE parcelas.status
          END AS status,
@@ -1875,17 +1950,18 @@ async function listReceivables(input: ListInput): Promise<ErpEntityRecord[]> {
          AND contas.excluido_em IS NULL
          ${dueStartClause}
          ${dueEndClause}
+         ${launchTypeClause}
      )
      SELECT *,
        count(*) OVER ()::int AS __total,
        sum(CASE WHEN status = 'vencido' THEN saldo ELSE 0 END) OVER () AS __summary_overdue,
-       sum(CASE WHEN data_vencimento = CURRENT_DATE AND status NOT IN ('pago', 'cancelado', 'renegociado') THEN saldo ELSE 0 END) OVER () AS __summary_due_today,
-       sum(CASE WHEN data_vencimento > CURRENT_DATE AND status NOT IN ('pago', 'cancelado', 'renegociado') THEN saldo ELSE 0 END) OVER () AS __summary_upcoming,
+       sum(CASE WHEN data_vencimento = ${ERP_TODAY_SQL} AND status NOT IN ('pago', 'cancelado', 'renegociado') THEN saldo ELSE 0 END) OVER () AS __summary_due_today,
+       sum(CASE WHEN data_vencimento > ${ERP_TODAY_SQL} AND status NOT IN ('pago', 'cancelado', 'renegociado') THEN saldo ELSE 0 END) OVER () AS __summary_upcoming,
        sum(valor_pago) OVER () AS __summary_paid,
        sum(valor) OVER () AS __summary_total
      FROM rows
      WHERE true${appendSearch(params, input.query)}${appendRecordStatusFilter(params, input.filters)}
-     ORDER BY data_vencimento ASC NULLS LAST, parcela_id DESC${appendPagination(params, input)}`,
+     ORDER BY ${erpListOrder('financeiro', input.sort, 'data_vencimento ASC NULLS LAST')}, parcela_id DESC${appendPagination(params, input)}`,
     params,
   )
 
@@ -1905,6 +1981,7 @@ async function listReceivables(input: ListInput): Promise<ErpEntityRecord[]> {
     renegociado: Number(row.renegociado ?? 0),
     saldo: Number(row.saldo ?? 0),
     origem: String(row.origem ?? ''),
+    tipo_lancamento: String(row.tipo_lancamento ?? 'efetivo'),
     recebimento_previsto_id: String(row.recebimento_previsto_id ?? ''),
     valor_bruto: Number(row.valor_bruto ?? 0),
     valor_liquido_previsto: Number(row.valor_liquido_previsto ?? 0),
@@ -1959,7 +2036,7 @@ async function listPayables(input: ListInput): Promise<ErpEntityRecord[]> {
            WHEN contas.status = 'cancelado' OR parcelas.status = 'cancelado' THEN 'cancelado'
            WHEN composicao.transferido > 0 THEN 'renegociado'
            WHEN composicao.saldo = 0 THEN 'pago'
-           WHEN parcelas.data_vencimento < CURRENT_DATE THEN 'vencido'
+           WHEN parcelas.data_vencimento < ${ERP_TODAY_SQL} THEN 'vencido'
            WHEN composicao.dinheiro + composicao.credito > 0 THEN 'parcial'
            ELSE parcelas.status
          END AS status,
@@ -1997,13 +2074,13 @@ async function listPayables(input: ListInput): Promise<ErpEntityRecord[]> {
        taxa_prevista, parcela_prevista_id, status, fornecedor, entidade_id,
        categoria, centro_custo, conta_financeira, count(*) OVER ()::int AS __total,
        sum(CASE WHEN status = 'vencido' THEN saldo ELSE 0 END) OVER () AS __summary_overdue,
-       sum(CASE WHEN data_vencimento = CURRENT_DATE AND status NOT IN ('pago', 'cancelado', 'renegociado') THEN saldo ELSE 0 END) OVER () AS __summary_due_today,
-       sum(CASE WHEN data_vencimento > CURRENT_DATE AND status NOT IN ('pago', 'cancelado', 'renegociado') THEN saldo ELSE 0 END) OVER () AS __summary_upcoming,
+       sum(CASE WHEN data_vencimento = ${ERP_TODAY_SQL} AND status NOT IN ('pago', 'cancelado', 'renegociado') THEN saldo ELSE 0 END) OVER () AS __summary_due_today,
+       sum(CASE WHEN data_vencimento > ${ERP_TODAY_SQL} AND status NOT IN ('pago', 'cancelado', 'renegociado') THEN saldo ELSE 0 END) OVER () AS __summary_upcoming,
        sum(valor_pago) OVER () AS __summary_paid,
        sum(valor) OVER () AS __summary_total
      FROM rows
      WHERE true${appendSearch(params, input.query)}${appendRecordStatusFilter(params, input.filters)}
-     ORDER BY data_vencimento ASC, parcela_id DESC${appendPagination(params, input)}`,
+     ORDER BY ${erpListOrder('financeiro', input.sort, 'data_vencimento ASC NULLS LAST')}, parcela_id DESC${appendPagination(params, input)}`,
     params,
   )
 
@@ -2101,6 +2178,7 @@ const editableModuleTables = {
   produtos: { table: 'produtos', eventType: 'produto' },
   servicos: { table: 'servicos', eventType: 'servico' },
   categorias: { table: 'categorias', eventType: 'categoria' },
+  'categorias-cadastro': { table: 'categorias_cadastro', eventType: 'categoria_cadastro' },
   'contas-financeiras': { table: 'contas_financeiras', eventType: 'conta_financeira' },
 } as const
 
@@ -2122,7 +2200,8 @@ export async function getErpEntityRecord(input: {
     const role = entityRoleColumn(input.entityId)
     sql = `SELECT id::text, nome, documento, email, telefone, cidade,
       CASE tipo_pessoa WHEN 'fisica' THEN 'PF' WHEN 'juridica' THEN 'PJ' ELSE 'Estrangeira' END AS tipo,
-      COALESCE(metadata ->> 'categoria', '') AS categoria,
+      COALESCE((SELECT c.nome FROM erp.categorias_cadastro c WHERE c.empresa_id = entidades.empresa_id AND c.id = entidades.categoria_id), '') AS categoria,
+      limite_credito, CASE WHEN bloqueio_comercial THEN 'sim' ELSE 'nao' END AS bloqueio_comercial, bloqueio_motivo, tabela_preco_id::text,
       CASE WHEN ativo THEN 'ativo' ELSE 'inativo' END AS status, versao,
       (SELECT COALESCE(jsonb_agg((to_jsonb(c) - 'empresa_id' - 'entidade_id' - 'ativo' - 'criado_em' - 'criado_por' - 'atualizado_em') || jsonb_build_object('id',c.id::text) ORDER BY c.id), '[]'::jsonb)::text FROM erp.entidades_contatos c WHERE c.empresa_id=entidades.empresa_id AND c.entidade_id=entidades.id AND c.ativo) AS contatos_json,
       (SELECT COALESCE(jsonb_agg((to_jsonb(e) - 'empresa_id' - 'entidade_id' - 'ativo' - 'criado_em' - 'criado_por' - 'atualizado_em') || jsonb_build_object('id',e.id::text) ORDER BY e.id), '[]'::jsonb)::text FROM erp.entidades_enderecos e WHERE e.empresa_id=entidades.empresa_id AND e.entidade_id=entidades.id AND e.ativo) AS enderecos_json
@@ -2134,18 +2213,23 @@ export async function getErpEntityRecord(input: {
       CASE WHEN produtos.permite_estoque_negativo THEN 'sim' ELSE 'nao' END AS permite_estoque_negativo,
       produtos.estoque_minimo, produtos.ponto_reposicao,
       CASE WHEN produtos.ativo THEN 'ativo' ELSE 'pausado' END AS status, produtos.versao
-      FROM erp.produtos LEFT JOIN erp.categorias
+      FROM erp.produtos LEFT JOIN erp.categorias_cadastro AS categorias
         ON categorias.empresa_id = produtos.empresa_id AND categorias.id = produtos.categoria_id
       WHERE produtos.empresa_id = $1 AND produtos.id = $2 AND produtos.excluido_em IS NULL`
   } else if (input.entityId === 'servicos') {
     sql = `SELECT servicos.id::text, servicos.nome, servicos.codigo, servicos.descricao, servicos.categoria_id::text,
       COALESCE(categorias.nome, '') AS categoria, servicos.preco, servicos.custo,
       CASE WHEN servicos.ativo THEN 'ativo' ELSE 'pausado' END AS status, servicos.versao
-      FROM erp.servicos LEFT JOIN erp.categorias
+      FROM erp.servicos LEFT JOIN erp.categorias_cadastro AS categorias
         ON categorias.empresa_id = servicos.empresa_id AND categorias.id = servicos.categoria_id
       WHERE servicos.empresa_id = $1 AND servicos.id = $2 AND servicos.excluido_em IS NULL`
+  } else if (input.entityId === 'categorias-cadastro') {
+    sql = `SELECT id::text, nome, tipo, COALESCE(descricao, '') AS descricao, COALESCE(categoria_pai_id::text, 'nenhuma') AS categoria_pai_id,
+      CASE WHEN ativo THEN 'ativo' ELSE 'inativo' END AS status, versao
+      FROM erp.categorias_cadastro WHERE empresa_id = $1 AND id = $2 AND excluido_em IS NULL`
   } else if (input.entityId === 'categorias') {
     sql = `SELECT id::text, nome, tipo, COALESCE(metadata ->> 'descricao', '') AS descricao,
+      COALESCE(categoria_pai_id::text, 'nenhuma') AS categoria_pai_id, CASE WHEN fora_dre THEN 'fora' ELSE COALESCE(dre_grupo_id::text, 'nao_classificado') END AS dre_grupo_id,
       CASE WHEN ativo THEN 'ativo' ELSE 'inativo' END AS status, versao
       FROM erp.categorias WHERE empresa_id = $1 AND id = $2 AND excluido_em IS NULL`
   } else {
@@ -2204,7 +2288,8 @@ export async function updateErpEntityRecord(input: UpdateInput): Promise<ErpEnti
       result = await client.query(
         `UPDATE erp.entidades SET tipo_pessoa = $3, nome = $4, documento = $5, email = $6,
            telefone = $7, cidade = $8, ativo = $9,
-           metadata = metadata || jsonb_build_object('categoria', $10::text),
+           metadata = metadata - 'categoria', categoria_id = CASE WHEN $10::text = '' THEN NULL ELSE categoria_id END,
+           categoria_tipo = CASE WHEN $10::text = '' THEN NULL ELSE categoria_tipo END,
            versao = versao + 1, atualizado_por = $11
          WHERE empresa_id = $1 AND id = $2 AND ${entityRoleColumn(input.entityId)} = true AND versao = $12 RETURNING *`,
         [input.tenantId, id, normalizePersonType(input.values.tipo), text(input.values.nome),
@@ -2235,17 +2320,29 @@ export async function updateErpEntityRecord(input: UpdateInput): Promise<ErpEnti
           money(input.values.preco), money(input.values.custo), categoryId, activeFromStatus(input.values.status),
           input.actorId, input.expectedVersion],
       )
+    } else if (input.entityId === 'categorias-cadastro') {
+      assertRequired(input.values.nome, 'Nome da categoria')
+      const values = await registrationCategoryValues(client, input.tenantId, input.values, id)
+      if (values.tipo !== current.tipo) throw new ErpDomainError('VALIDATION_ERROR', 'O tipo da categoria de cadastro não muda; crie outra categoria.')
+      result = await client.query(
+        `UPDATE erp.categorias_cadastro SET nome = $3, descricao = $4, categoria_pai_id = $5, ativo = $6,
+           versao = versao + 1, atualizado_por = $7
+         WHERE empresa_id = $1 AND id = $2 AND versao = $8 RETURNING *`,
+        [input.tenantId, id, text(input.values.nome), optionalText(input.values.descricao), values.parentId,
+          activeFromStatus(input.values.status), input.actorId, input.expectedVersion],
+      )
     } else if (input.entityId === 'categorias') {
       assertRequired(input.values.nome, 'Nome da categoria')
-      const categoryType = ['receita', 'despesa', 'produto', 'servico', 'geral', 'cliente', 'fornecedor'].includes(text(input.values.tipo))
-        ? text(input.values.tipo) : 'geral'
+      const classification = await financialCategoryClassification(client, input.tenantId, input.values, id)
       result = await client.query(
         `UPDATE erp.categorias SET nome = $3, tipo = $4, ativo = $5,
            metadata = metadata || jsonb_build_object('descricao', $6::text),
+           categoria_pai_id = $9, dre_grupo_id = $10, fora_dre = $11,
            versao = versao + 1, atualizado_por = $7
          WHERE empresa_id = $1 AND id = $2 AND versao = $8 RETURNING *`,
-        [input.tenantId, id, text(input.values.nome), categoryType, activeFromStatus(input.values.status),
-          optionalText(input.values.descricao) || '', input.actorId, input.expectedVersion],
+        [input.tenantId, id, text(input.values.nome), classification.tipo, activeFromStatus(input.values.status),
+          optionalText(input.values.descricao) || '', input.actorId, input.expectedVersion,
+          classification.parentId, classification.groupId, classification.outsideDre],
       )
     } else {
       assertRequired(input.values.nome, 'Nome da conta financeira')
@@ -2273,6 +2370,8 @@ export async function updateErpEntityRecord(input: UpdateInput): Promise<ErpEnti
     if (!updated) throw new ErpDomainError('VALIDATION_ERROR', 'CONFLITO_VERSAO: este registro foi alterado por outra pessoa. Recarregue a página.')
     const relations = isEntityRoleModule(input.entityId)
       ? await saveRegistrationRelations(client, input.tenantId, id, input.actorId, input.values) : undefined
+    if (isEntityRoleModule(input.entityId) && optionalText(input.values.categoria)) await saveEntityCategory(client, input.tenantId, input.actorId, input.entityId, id, input.values.categoria)
+    if (input.entityId === 'clientes') await saveCustomerCommercialTerms(client, input.tenantId, id, input.actorId, input.values)
     await appendRegistrationEvent(client, { ...input, entityId, id }, 'atualizado', Number(updated.versao), current, { ...updated, relations })
   })
   return getErpEntityRecord({ tenantId: input.tenantId, entityId, id })
@@ -2311,7 +2410,7 @@ export async function getErpEntitySummary(tenantId: number, entityId: ErpConnect
     const role = entityRoleColumn(entityId)
     sql = `SELECT count(*) FILTER (WHERE ativo)::int AS ativos,
       count(*) FILTER (WHERE NOT ativo)::int AS inativos,
-      count(DISTINCT NULLIF(metadata ->> 'categoria', ''))::int AS categorias
+      count(DISTINCT categoria_id)::int AS categorias
       FROM erp.entidades WHERE empresa_id = $1 AND ${role} = true AND excluido_em IS NULL`
   } else if (entityId === 'produtos') {
     sql = `SELECT count(*) FILTER (WHERE ativo)::int AS ativos, count(DISTINCT categoria_id)::int AS categorias,
@@ -2321,9 +2420,15 @@ export async function getErpEntitySummary(tenantId: number, entityId: ErpConnect
     sql = `SELECT count(*) FILTER (WHERE ativo)::int AS ativos, count(DISTINCT categoria_id)::int AS categorias,
       COALESCE(avg(preco) FILTER (WHERE ativo), 0)::numeric(18,2) AS media
       FROM erp.servicos WHERE empresa_id = $1 AND excluido_em IS NULL`
+  } else if (entityId === 'categorias-cadastro') {
+    sql = `SELECT count(*) FILTER (WHERE ativo)::int AS ativos,
+      count(*) FILTER (WHERE ativo AND tipo IN ('produto', 'servico'))::int AS itens,
+      count(*) FILTER (WHERE ativo AND tipo IN ('cliente', 'fornecedor'))::int AS pessoas
+      FROM erp.categorias_cadastro WHERE empresa_id = $1 AND excluido_em IS NULL`
   } else if (entityId === 'categorias') {
     sql = `SELECT count(*) FILTER (WHERE ativo)::int AS ativos,
-      count(*) FILTER (WHERE ativo AND NOT EXISTS (SELECT 1 FROM erp.produtos p WHERE p.empresa_id = categorias.empresa_id AND p.categoria_id = categorias.id AND p.excluido_em IS NULL) AND NOT EXISTS (SELECT 1 FROM erp.servicos s WHERE s.empresa_id = categorias.empresa_id AND s.categoria_id = categorias.id AND s.excluido_em IS NULL) AND NOT EXISTS (SELECT 1 FROM erp.entidades e WHERE e.empresa_id=categorias.empresa_id AND e.excluido_em IS NULL AND e.metadata->>'categoria'=categorias.nome AND ((categorias.tipo='cliente' AND e.eh_cliente) OR (categorias.tipo='fornecedor' AND e.eh_fornecedor))))::int AS sem_itens,
+      count(*) FILTER (WHERE ativo AND dre_grupo_id IS NULL AND NOT fora_dre)::int AS nao_classificadas,
+      count(*) FILTER (WHERE ativo AND NOT EXISTS (SELECT 1 FROM erp.contas_receber t WHERE t.empresa_id = categorias.empresa_id AND t.categoria_id = categorias.id) AND NOT EXISTS (SELECT 1 FROM erp.contas_pagar t WHERE t.empresa_id = categorias.empresa_id AND t.categoria_id = categorias.id) AND NOT EXISTS (SELECT 1 FROM erp.rateios_financeiros t WHERE t.empresa_id = categorias.empresa_id AND t.categoria_id = categorias.id))::int AS sem_itens,
       count(DISTINCT tipo)::int AS tipos FROM erp.categorias WHERE empresa_id = $1 AND excluido_em IS NULL`
   } else {
     sql = `SELECT count(*) FILTER (WHERE ativo)::int AS ativos, count(*) FILTER (WHERE padrao AND ativo)::int AS padrao,
@@ -2337,10 +2442,15 @@ export async function getErpEntitySummary(tenantId: number, entityId: ErpConnect
     { label: 'Categorias', value: String(row.categorias || 0), detail: 'classificação em uso' },
     { label: 'Preço médio', value: currency(row.media), detail: 'itens ativos' },
   ] }
+  if (entityId === 'categorias-cadastro') return { metrics: [
+    { label: 'Categorias ativas', value: String(row.ativos || 0), detail: 'todos os tipos' },
+    { label: 'Produtos e serviços', value: String(row.itens || 0), detail: 'categorias de catálogo' },
+    { label: 'Clientes e fornecedores', value: String(row.pessoas || 0), detail: 'categorias de pessoas' },
+  ] }
   if (entityId === 'categorias') return { metrics: [
-    { label: 'Categorias ativas', value: String(row.ativos || 0), detail: 'em uso no ERP' },
-    { label: 'Sem itens', value: String(row.sem_itens || 0), detail: 'avaliar classificação', tone: 'warning' },
-    { label: 'Tipos em uso', value: String(row.tipos || 0), detail: 'finalidades distintas' },
+    { label: 'Categorias ativas', value: String(row.ativos || 0), detail: 'receitas e despesas' },
+    { label: 'Não classificadas', value: String(row.nao_classificadas || 0), detail: 'sem grupo da DRE', tone: 'warning' },
+    { label: 'Sem lançamentos', value: String(row.sem_itens || 0), detail: 'ainda não usadas' },
   ] }
   if (entityId === 'contas-financeiras') return { metrics: [
     { label: 'Contas ativas', value: String(row.ativos || 0), detail: 'disponíveis para baixas' },
@@ -2355,16 +2465,90 @@ export async function getErpEntitySummary(tenantId: number, entityId: ErpConnect
   ] }
 }
 
+const REGISTRATION_CATEGORY_TYPES = ['produto', 'servico', 'cliente', 'fornecedor']
+// Categoria financeira que aceita lançamento: ativa e sem subcategorias (lançamento só no nível mais detalhado).
+export const FINANCIAL_CATEGORY_LEAF_SQL = `NOT EXISTS (SELECT 1 FROM erp.categorias filhas WHERE filhas.empresa_id = categorias.empresa_id
+  AND filhas.categoria_pai_id = categorias.id AND filhas.excluido_em IS NULL AND filhas.ativo)`
+
 export async function listErpCategoryOptions(tenantId: number, type?: string, useId = false) {
-  const allowedType = ['receita', 'despesa', 'produto', 'servico', 'geral', 'cliente', 'fornecedor'].includes(text(type)) ? text(type) : null
+  const requested = text(type)
+  if (REGISTRATION_CATEGORY_TYPES.includes(requested)) {
+    const rows = await runQuery<{ id: string; nome: string; tipo: string }>(
+      `SELECT categorias.id::text, COALESCE(pai.nome || ' › ', '') || categorias.nome AS nome, categorias.tipo
+       FROM erp.categorias_cadastro categorias
+       LEFT JOIN erp.categorias_cadastro pai ON pai.empresa_id = categorias.empresa_id AND pai.id = categorias.categoria_pai_id
+       WHERE categorias.empresa_id = $1 AND categorias.tipo = $2 AND categorias.ativo AND categorias.excluido_em IS NULL
+       ORDER BY 2 LIMIT 200`, [tenantId, requested],
+    )
+    // Clientes e fornecedores guardam o nome; produtos e serviços podem pedir o id.
+    return rows.map((row) => ({ value: useId ? row.id : row.nome.split(' › ').pop() || row.nome, label: row.nome, tipo: row.tipo }))
+  }
   const params: unknown[] = [tenantId]
-  const typeClause = allowedType ? ` AND tipo IN ($${params.push(allowedType)}, 'geral')` : ''
+  const typeClause = ['receita', 'despesa'].includes(requested) ? ` AND categorias.tipo = $${params.push(requested)}` : ''
   const rows = await runQuery<{ id: string; nome: string; tipo: string }>(
-    `SELECT id::text, nome, tipo FROM erp.categorias
-     WHERE empresa_id = $1 AND ativo = true AND excluido_em IS NULL${typeClause}
-     ORDER BY nome ASC LIMIT 100`, params,
+    `SELECT categorias.id::text, COALESCE(pai.nome || ' › ', '') || categorias.nome AS nome, categorias.tipo
+     FROM erp.categorias categorias
+     LEFT JOIN erp.categorias pai ON pai.empresa_id = categorias.empresa_id AND pai.id = categorias.categoria_pai_id
+     WHERE categorias.empresa_id = $1 AND categorias.ativo = true AND categorias.excluido_em IS NULL
+       AND ${FINANCIAL_CATEGORY_LEAF_SQL}${typeClause}
+     ORDER BY 2 ASC LIMIT 200`, params,
   )
   return rows.map((row) => ({ value: useId ? row.id : row.nome, label: row.nome, tipo: row.tipo }))
+}
+
+// Categorias principais de cadastro (possíveis categorias-pai), de todos os tipos.
+export async function listRegistrationCategoryRoots(tenantId: number) {
+  const rows = await runQuery<{ id: string; nome: string; tipo: string }>(
+    'SELECT id::text, nome, tipo FROM erp.categorias_cadastro WHERE empresa_id = $1 AND categoria_pai_id IS NULL AND ativo AND excluido_em IS NULL ORDER BY tipo, nome', [tenantId])
+  return [{ value: 'nenhuma', label: 'Nenhuma: é uma categoria principal' },
+    ...rows.map(row => ({ value: row.id, label: `${REGISTRATION_CATEGORY_LABELS[row.tipo] || row.tipo} · ${row.nome}` }))]
+}
+
+// Estrutura para a tela de categorias financeiras: grupos da DRE (na ordem da empresa) e categorias principais
+// (possíveis categorias-pai).
+export async function listFinancialCategoryStructure(tenantId: number) {
+  const [groups, roots] = await Promise.all([
+    runQuery<{ id: string; codigo: number; nome: string }>('SELECT id::text, codigo, nome FROM erp.dre_grupos WHERE empresa_id = $1 ORDER BY ordem, codigo', [tenantId]),
+    runQuery<{ id: string; nome: string; tipo: string }>(
+      `SELECT id::text, nome, tipo FROM erp.categorias WHERE empresa_id = $1 AND categoria_pai_id IS NULL AND ativo AND excluido_em IS NULL ORDER BY tipo DESC, nome`, [tenantId]),
+  ])
+  return {
+    grupos: [...groups.map(group => ({ value: group.id, label: `${group.codigo}. ${group.nome}`, codigo: group.codigo })),
+      { value: 'fora', label: 'Não entra na DRE (empréstimo, aporte, lucros, equipamento)' },
+      { value: 'nao_classificado', label: 'Não classificado (definir depois)' }],
+    raizes: [{ value: 'nenhuma', label: 'Nenhuma: é uma categoria principal' },
+      ...roots.map(root => ({ value: root.id, label: `${root.tipo === 'receita' ? 'Receita' : 'Despesa'} · ${root.nome}`, tipo: root.tipo }))],
+  }
+}
+
+// Classificação de uma categoria financeira recebida da tela ou do chat: tipo, categoria-pai, grupo da DRE
+// (ou "fora" = não entra na DRE). A subcategoria herda o grupo da pai (o banco garante).
+async function financialCategoryClassification(client: Pick<SQLClient, 'query'>, tenantId: number, values: Record<string, unknown>, id?: number) {
+  const tipo = text(values.tipo)
+  if (tipo !== 'receita' && tipo !== 'despesa') throw new ErpDomainError('VALIDATION_ERROR', 'Categoria financeira é de receita ou de despesa.')
+  const parentId = optionalNumericId(values.categoria_pai_id)
+  if (parentId) {
+    const parent = await client.query('SELECT tipo, categoria_pai_id FROM erp.categorias WHERE empresa_id = $1 AND id = $2 AND excluido_em IS NULL', [tenantId, parentId])
+    if (!parent.rows[0]) throw new ErpDomainError('INVALID_REFERENCE', 'Categoria-pai não encontrada.', 422)
+    if (parent.rows[0].tipo !== tipo) throw new ErpDomainError('VALIDATION_ERROR', 'A subcategoria precisa ser do mesmo tipo da categoria-pai.')
+    if (parent.rows[0].categoria_pai_id) throw new ErpDomainError('VALIDATION_ERROR', 'Categorias têm no máximo 2 níveis: escolha uma categoria principal como pai.')
+    if (id && parentId === id) throw new ErpDomainError('VALIDATION_ERROR', 'Categoria não pode ser pai dela mesma.')
+  }
+  // Prioridade: fora da DRE explícito > código do grupo (chat) > grupo escolhido na tela ('fora' = não entra na DRE).
+  const code = Number(values.dre_grupo_codigo)
+  const hasCode = Number.isInteger(code) && code >= 1 && code <= 9
+  const group = values.fora_dre === true ? 'fora' : hasCode || values.fora_dre === false && text(values.dre_grupo_id) === 'fora' ? '' : text(values.dre_grupo_id)
+  const outsideDre = group === 'fora'
+  let groupId: number | null = null
+  if (!outsideDre && hasCode) {
+    const found = await client.query('SELECT id FROM erp.dre_grupos WHERE empresa_id = $1 AND codigo = $2', [tenantId, code])
+    groupId = Number(found.rows[0]?.id) || null
+  } else if (!outsideDre && group && group !== 'nao_classificado') {
+    groupId = numericId(group, 'Grupo da DRE')
+    const found = await client.query('SELECT id FROM erp.dre_grupos WHERE empresa_id = $1 AND id = $2', [tenantId, groupId])
+    if (!found.rows[0]) throw new ErpDomainError('INVALID_REFERENCE', 'Grupo da DRE não encontrado.', 422)
+  }
+  return { tipo, parentId, groupId: parentId ? null : groupId, outsideDre: parentId ? false : outsideDre }
 }
 
 export async function searchErpCatalog(input: {
@@ -2403,14 +2587,23 @@ export async function searchErpCatalog(input: {
        ORDER BY nome LIMIT $3`, [input.tenantId, query, limit],
     )
   }
-  const categoryType = ['receita', 'despesa', 'produto', 'servico', 'geral', 'cliente', 'fornecedor'].includes(text(input.categoryType))
-    ? text(input.categoryType) : null
+  const categoryType = text(input.categoryType)
+  if (REGISTRATION_CATEGORY_TYPES.includes(categoryType)) {
+    return runQuery(
+      `SELECT id::text, nome, tipo FROM erp.categorias_cadastro
+       WHERE empresa_id = $1 AND tipo = $4 AND ativo = true AND excluido_em IS NULL AND nome ILIKE $2
+       ORDER BY nome LIMIT $3`, [input.tenantId, query, limit, categoryType],
+    )
+  }
   const params: unknown[] = [input.tenantId, query, limit]
-  const typeClause = categoryType ? ` AND tipo IN ($${params.push(categoryType)}, 'geral')` : ''
+  const typeClause = ['receita', 'despesa'].includes(categoryType) ? ` AND categorias.tipo = $${params.push(categoryType)}` : ''
   return runQuery(
-    `SELECT id::text, nome, tipo FROM erp.categorias
-     WHERE empresa_id = $1 AND ativo = true AND excluido_em IS NULL AND nome ILIKE $2${typeClause}
-     ORDER BY nome LIMIT $3`, params,
+    `SELECT categorias.id::text, COALESCE(pai.nome || ' › ', '') || categorias.nome AS nome, categorias.tipo
+     FROM erp.categorias categorias
+     LEFT JOIN erp.categorias pai ON pai.empresa_id = categorias.empresa_id AND pai.id = categorias.categoria_pai_id
+     WHERE categorias.empresa_id = $1 AND categorias.ativo = true AND categorias.excluido_em IS NULL
+       AND concat_ws(' ', pai.nome, categorias.nome) ILIKE $2 AND ${FINANCIAL_CATEGORY_LEAF_SQL}${typeClause}
+     ORDER BY 2 LIMIT $3`, params,
   )
 }
 
@@ -2451,6 +2644,10 @@ export async function createErpEntityWithClient(client: SQLClient, input: Create
 
     if (input.entityId === 'contas-financeiras') {
       return createFinancialAccountRecord(client, input)
+    }
+
+    if (input.entityId === 'categorias-cadastro') {
+      return createRegistrationCategoryRecord(client, input)
     }
 
     return createCategoryRecord(client, input)
@@ -2555,6 +2752,9 @@ export async function confirmErpSale(input: ConfirmSaleInput): Promise<ConfirmEr
     if (Number(itemsResult.rows[0]?.total || 0) <= 0) {
       throw new ErpDomainError('VALIDATION_ERROR', 'Venda precisa ter pelo menos um item para ser confirmada.')
     }
+    // Bloqueio comercial e limite de crédito do cliente (saldo em aberto + esta venda).
+    await assertCustomerCredit(client, { tenantId: input.tenantId, actorId: input.actorId, saleId: Number(sale.id), customerId: Number(sale.cliente_id),
+      saleTotal: money(sale.total), override: input.creditOverrideReason ? { motivo: input.creditOverrideReason } : null })
 
     const updatedSaleResult = await client.query(
       `UPDATE erp.vendas
@@ -2694,6 +2894,8 @@ export async function confirmErpSale(input: ConfirmSaleInput): Promise<ConfirmEr
       createdInstallments.push(installmentResult.rows[0] as InstallmentRow)
     }
 
+    // Comissões por item, pela regra mais específica do vendedor da venda.
+    await generateSaleCommissions(client, input.tenantId, Number(sale.id), input.actorId)
     return mapConfirmSaleResult(updatedSale, receivable, createdInstallments)
   })
 }
@@ -2808,6 +3010,7 @@ export async function cancelErpSale(input: IdActionInput & { reason?: string | n
       [input.tenantId, sale.id, sale.status, Number(updated.rows[0]?.versao || 1),
         JSON.stringify({ motivo: optionalText(input.reason) }), input.actorId],
     )
+    await cancelSaleCommissions(client, input.tenantId, Number(sale.id), input.actorId)
     return updated.rows[0]
   })
 }
@@ -3067,13 +3270,13 @@ async function recalculateReceivableInstallment(
      SET
        valor_pago = totals.dinheiro,
        data_pagamento = CASE
-         WHEN totals.saldo = 0 THEN COALESCE($4::date, parcelas.data_pagamento, CURRENT_DATE)
+         WHEN totals.saldo = 0 THEN COALESCE($4::date, parcelas.data_pagamento, ${ERP_TODAY_SQL})
          ELSE NULL
        END,
        status = CASE
          WHEN totals.transferido > 0 THEN 'renegociado'
          WHEN totals.saldo = 0 THEN 'pago'
-         WHEN parcelas.data_vencimento < CURRENT_DATE THEN 'vencido'
+         WHEN parcelas.data_vencimento < ${ERP_TODAY_SQL} THEN 'vencido'
          WHEN totals.dinheiro + totals.credito > 0 THEN 'parcial'
          ELSE 'aberto'
        END,
@@ -3104,13 +3307,13 @@ async function recalculatePayableInstallment(
      SET
        valor_pago = totals.dinheiro,
        data_pagamento = CASE
-         WHEN totals.saldo = 0 THEN COALESCE($4::date, parcelas.data_pagamento, CURRENT_DATE)
+         WHEN totals.saldo = 0 THEN COALESCE($4::date, parcelas.data_pagamento, ${ERP_TODAY_SQL})
          ELSE NULL
        END,
        status = CASE
          WHEN totals.transferido > 0 THEN 'renegociado'
          WHEN totals.saldo = 0 THEN 'pago'
-         WHEN parcelas.data_vencimento < CURRENT_DATE THEN 'vencido'
+         WHEN parcelas.data_vencimento < ${ERP_TODAY_SQL} THEN 'vencido'
          WHEN totals.dinheiro + totals.credito > 0 THEN 'parcial'
          ELSE 'aberto'
        END,
@@ -3176,13 +3379,16 @@ export async function settleReceivableInstallment(input: SettleInstallmentInput)
     const amount = requestIdentity.amount === 'remaining' ? remaining : paymentAdjustment(input.values.valor)
     if (amount <= 0 || amount > remaining) throw new ErpDomainError('VALIDATION_ERROR', 'Valor da baixa inválido.')
 
-    const financialAccountId = await ensureFinancialAccountId(
+    const methodId = paymentMethodId(input.values.metodo_pagamento_id || installment.metodo_pagamento_id)
+    // Cartão pela maquininha: o recebimento entra na conta da maquininha (a taxa e os repasses vêm depois).
+    const card = await cardMethodConfig(client, input.tenantId, methodId)
+    if (card && (paymentAdjustment(input.values.taxa) || 0) > 0) throw new ErpDomainError('VALIDATION_ERROR', 'Com esta forma de pagamento a taxa do cartão é calculada pelo ERP; não informe a taxa.')
+    const financialAccountId = card ? card.conta_maquininha_id : await ensureFinancialAccountId(
       client,
       input.tenantId,
       input.actorId,
       input.values.conta_financeira_id || installment.conta_financeira_id,
     )
-    const methodId = paymentMethodId(input.values.metodo_pagamento_id || installment.metodo_pagamento_id)
     const paymentDate = dateText(input.values.data_pagamento) || erpToday()
     await assertErpPeriodOpen(client, { tenantId: input.tenantId, module: 'financeiro', date: paymentDate })
     const netValue = paymentNetValue(amount, input.values)
@@ -3248,10 +3454,15 @@ export async function settleReceivableInstallment(input: SettleInstallmentInput)
       paymentDate,
     )
     await updateReceivableStatus(client, input.tenantId, String(updatedInstallment.conta_receber_id), input.actorId)
+    const cardResult = card ? await applyCardReceipt(client, {
+      tenantId: input.tenantId, actorId: input.actorId, paymentId: Number(paymentResult.rows[0].id), gross: netValue, date: paymentDate,
+      installments: input.values.parcelas_cartao, config: card, settlePayable: settlePayableInstallment,
+    }) : null
 
     return {
       payment: paymentResult.rows[0],
       installment: updatedInstallment,
+      ...(cardResult ? { cartao: cardResult } : {}),
     }
   })
 }
@@ -3518,6 +3729,9 @@ export async function reverseErpPayment(input: ReversePaymentInput) {
       await updatePayableStatus(client, input.tenantId, String(installment.conta_pagar_id), input.actorId)
     }
 
+    // Recebimento no cartão: cancela os repasses pendentes e estorna a taxa.
+    if (payment.tipo === 'receber') await cancelCardReceipt(client, { tenantId: input.tenantId, actorId: input.actorId, paymentId: Number(payment.id), reversePayment: reverseErpPayment })
+
     return { payment: { ...payment, estornado_em: new Date().toISOString() }, reversal: reversalResult.rows[0] }
   })
 }
@@ -3557,12 +3771,14 @@ async function createEntityRoleRecord(client: SQLClient, input: CreateInput) {
       input.entityId === 'fornecedores',
       input.entityId === 'vendedores',
       activeFromStatus(input.values.status),
-      JSON.stringify(category ? { categoria: category } : {}),
+      JSON.stringify({}),
       input.actorId,
     ],
   )
   const id = Number(result.rows[0]?.id)
+  await saveEntityCategory(client, input.tenantId, input.actorId, input.entityId, id, category)
   const relations = await saveRegistrationRelations(client, input.tenantId, id, input.actorId, input.values)
+  if (input.entityId === 'clientes') await saveCustomerCommercialTerms(client, input.tenantId, id, input.actorId, input.values)
   await appendRegistrationEvent(client, { ...input, entityId: input.entityId, id }, 'criado', 1, {}, { ...input.values, relations })
   return { id: String(id) }
 }
@@ -3609,7 +3825,7 @@ async function resolveServiceCategory(client: Pick<SQLClient, 'query'>, input: C
   if (input.values.categoria_id === '' || input.values.categoria_id === null) return null
   if (input.values.categoria_id === undefined) return resolveCategoryId(client, input.tenantId, input.actorId, input.values.categoria, 'servico')
   const id = numericId(input.values.categoria_id, 'Categoria')
-  const result = await client.query("SELECT id FROM erp.categorias WHERE empresa_id=$1 AND id=$2 AND ativo AND excluido_em IS NULL AND tipo IN ('servico','geral')", [input.tenantId,id])
+  const result = await client.query("SELECT id FROM erp.categorias_cadastro WHERE empresa_id=$1 AND id=$2 AND ativo AND excluido_em IS NULL AND tipo='servico'", [input.tenantId,id])
   if (!result.rows[0]) throw new ErpDomainError('INVALID_REFERENCE', 'Selecione uma categoria ativa de serviços da empresa.', 422)
   return id
 }
@@ -3713,8 +3929,7 @@ export async function createSaleRecord(client: SQLClient, input: CreateInput) {
     ? text(input.values.tipo_documento)
     : 'venda'
   const saleDate = dateText(input.values.data_venda) || erpToday()
-  const numberPrefix = documentType === 'orcamento' ? 'ORC' : documentType === 'pedido' ? 'PED' : 'VEN'
-  const number = optionalText(input.values.numero) || `${numberPrefix}-${Date.now()}`
+  const number = optionalText(input.values.numero) || await nextDocumentNumber(client, input.tenantId, documentType as 'orcamento' | 'pedido' | 'venda', saleDate)
 
   const customerResult = await client.query(
     `SELECT id
@@ -3727,6 +3942,9 @@ export async function createSaleRecord(client: SQLClient, input: CreateInput) {
     [input.tenantId, customerId],
   )
   if (!customerResult.rows[0]) throw new ErpDomainError('VALIDATION_ERROR', 'Cliente não encontrado.')
+  // Tabela de preço (informada, do cliente ou padrão) e dados de transporte para a NF-e.
+  const priceTableId = await resolvePriceTable(client, input.tenantId, customerId, input.values.tabela_preco_id, saleDate)
+  const transport = await saleTransport(client, input.tenantId, input.values)
 
   const rawItems = Array.isArray(input.values.itens) && input.values.itens.length > 0
     ? input.values.itens as Record<string, unknown>[]
@@ -3748,24 +3966,28 @@ export async function createSaleRecord(client: SQLClient, input: CreateInput) {
     desconto: number
     total: number
     custo: number
+    precoTabela: number | null
   }> = []
   for (const [index, raw] of rawItems.entries()) {
     const tipo = text(raw.tipo || raw.kind) === 'servico' ? 'servico' : 'produto'
     const itemId = numericId(raw.item_id || raw.produto_id || raw.servico_id, `Item ${index + 1}`)
     const quantity = Number(raw.quantidade || 1)
-    const unitValue = positiveMoney(raw.valor_unitario)
     const discount = money(raw.desconto)
     if (!Number.isFinite(quantity) || quantity <= 0) throw new ErpDomainError('VALIDATION_ERROR', `Quantidade do item ${index + 1} invalida.`)
-    if (!unitValue) throw new ErpDomainError('VALIDATION_ERROR', `Valor unitário do item ${index + 1} precisa ser maior que zero.`)
     const catalog = await client.query(
       tipo === 'servico'
-        ? `SELECT nome, custo FROM erp.servicos WHERE empresa_id = $1 AND id = $2 AND ativo = true AND excluido_em IS NULL`
-        : `SELECT nome, custo FROM erp.produtos WHERE empresa_id = $1 AND id = $2 AND ativo = true AND excluido_em IS NULL`,
+        ? `SELECT nome, custo, preco AS preco_catalogo FROM erp.servicos WHERE empresa_id = $1 AND id = $2 AND ativo = true AND excluido_em IS NULL`
+        : `SELECT nome, custo, preco_venda AS preco_catalogo FROM erp.produtos WHERE empresa_id = $1 AND id = $2 AND ativo = true AND excluido_em IS NULL`,
       [input.tenantId, itemId],
     )
     if (!catalog.rows[0]) throw new ErpDomainError('VALIDATION_ERROR', `Item ${index + 1} não encontrado.`)
+    // Sem valor informado, vale o preço da tabela (faixa de quantidade) ou o do cadastro.
+    const listed: TablePrice | null = await tablePrice(client, input.tenantId, priceTableId, tipo, itemId, quantity)
+    const unitValue = positiveMoney(raw.valor_unitario) || (listed ? listed.preco : 0) || positiveMoney(catalog.rows[0].preco_catalogo)
+    if (!unitValue) throw new ErpDomainError('VALIDATION_ERROR', `Valor unitário do item ${index + 1} precisa ser maior que zero.`)
     const gross = lineTotal(quantity, unitValue)
     if (discount > gross) throw new ErpDomainError('VALIDATION_ERROR', `Desconto do item ${index + 1} supera o valor bruto.`)
+    assertTablePriceRules(index + 1, listed, quantity, gross, discount)
     items.push({
       tipo,
       itemId,
@@ -3775,6 +3997,7 @@ export async function createSaleRecord(client: SQLClient, input: CreateInput) {
       desconto: discount,
       total: sumMoney([gross, -discount]),
       custo: money(catalog.rows[0].custo),
+      precoTabela: listed ? listed.preco : null,
     })
   }
 
@@ -3786,6 +4009,11 @@ export async function createSaleRecord(client: SQLClient, input: CreateInput) {
   const appliedDiscount = discountAmount(subtotal, discount, discountType)
   const total = sumMoney([subtotal, -appliedDiscount, freight])
   if (total <= 0) throw new ErpDomainError('VALIDATION_ERROR', 'Total da venda precisa ser maior que zero.')
+  // Permissões do usuário (1.7): vendedor da venda e desconto máximo (itens + venda sobre o bruto).
+  const seller = await sellerRules(client)
+  const sellerId = saleSeller(seller, input.values.vendedor_id)
+  assertDiscountLimit(seller, sumMoney(items.map(item => item.total + item.desconto)),
+    sumMoney([...items.map(item => item.desconto), appliedDiscount]))
 
   const rawInstallments = Array.isArray(input.values.parcelas) && input.values.parcelas.length > 0
     ? input.values.parcelas as Record<string, unknown>[]
@@ -3845,7 +4073,7 @@ export async function createSaleRecord(client: SQLClient, input: CreateInput) {
     [
       input.tenantId,
       customerId,
-      optionalNumericId(input.values.vendedor_id),
+      sellerId,
       number,
       saleDate,
       dateText(input.values.data_competencia) || saleDate,
@@ -3880,6 +4108,12 @@ export async function createSaleRecord(client: SQLClient, input: CreateInput) {
     ],
   )
   const saleId = Number(saleResult.rows[0]?.id)
+  await client.query(
+    `UPDATE erp.vendas SET tabela_preco_id = $3, transportadora_id = $4, modalidade_frete = $5, volumes = $6, especie_volumes = $7,
+       peso_bruto = $8, peso_liquido = $9 WHERE empresa_id = $1 AND id = $2`,
+    [input.tenantId, saleId, priceTableId, transport.transportadoraId, transport.modalidadeFrete, transport.volumes,
+      transport.especieVolumes, transport.pesoBruto, transport.pesoLiquido],
+  )
   await client.query("UPDATE erp.vendas SET metadata=metadata || jsonb_build_object('commercialRequest',$3::jsonb) WHERE empresa_id=$1 AND id=$2",[input.tenantId,saleId,JSON.stringify(input.values)])
 
   for (const installment of installments) {
@@ -3897,11 +4131,11 @@ export async function createSaleRecord(client: SQLClient, input: CreateInput) {
     await client.query(
       `INSERT INTO erp.vendas_itens (
          empresa_id, venda_id, produto_id, servico_id, descricao, quantidade,
-         valor_unitario, custo_unitario, desconto, total, criado_por, atualizado_por
-       ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $11)`,
+         valor_unitario, custo_unitario, desconto, total, preco_tabela, criado_por, atualizado_por
+       ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $12, $11, $11)`,
       [input.tenantId, saleId, item.tipo === 'produto' ? item.itemId : null,
         item.tipo === 'servico' ? item.itemId : null, item.descricao, item.quantidade,
-        item.valorUnitario, item.custo, item.desconto, item.total, input.actorId],
+        item.valorUnitario, item.custo, item.desconto, item.total, input.actorId, item.precoTabela],
     )
   }
 
@@ -3939,7 +4173,7 @@ async function createPurchaseRecord(client: SQLClient, input: CreateInput) {
   if (total < 0) throw new ErpDomainError('VALIDATION_ERROR', 'Descontos e retencoes não podem superar o valor da compra.')
   const purchaseDate = dateText(input.values.data_compra) || erpToday()
   const dueDate = dateText(input.values.data_vencimento) || purchaseDate
-  const number = optionalText(input.values.numero) || `COM-${Date.now()}`
+  const number = optionalText(input.values.numero) || await nextDocumentNumber(client, input.tenantId, 'compra', purchaseDate)
   const generateFinancial = booleanValue(input.values.gera_financeiro ?? true)
   const movement = purchaseMovement(input.values.tipo_movimento)
   const type = purchaseType(input.values.tipo_compra)
@@ -4152,7 +4386,10 @@ export async function updateErpSaleDraft(input: {
          tipo_desconto = source.tipo_desconto, desconto = source.desconto, frete = source.frete, total = source.total,
          condicao_pagamento = source.condicao_pagamento, observacoes = source.observacoes,
          observacoes_pagamento = source.observacoes_pagamento, cobranca_emails = source.cobranca_emails,
-         cobranca_whatsapp = source.cobranca_whatsapp, versao = target.versao + 1, atualizado_por = $5
+         cobranca_whatsapp = source.cobranca_whatsapp, tabela_preco_id = source.tabela_preco_id,
+         transportadora_id = source.transportadora_id, modalidade_frete = source.modalidade_frete, volumes = source.volumes,
+         especie_volumes = source.especie_volumes, peso_bruto = source.peso_bruto, peso_liquido = source.peso_liquido,
+         versao = target.versao + 1, atualizado_por = $5
        FROM erp.vendas AS source
        WHERE target.empresa_id = $1 AND target.id = $2 AND source.empresa_id = target.empresa_id
          AND source.id = $3 AND target.versao = $6
@@ -4548,9 +4785,7 @@ async function createRecurringReceivable(client:SQLClient,input:{tenantId:number
 
 async function createCategoryRecord(client: SQLClient, input: CreateInput) {
   assertRequired(input.values.nome, 'Nome da categoria')
-  const categoryType = ['receita', 'despesa', 'produto', 'servico', 'geral', 'cliente', 'fornecedor'].includes(text(input.values.tipo))
-    ? text(input.values.tipo)
-    : 'geral'
+  const classification = await financialCategoryClassification(client, input.tenantId, input.values)
   const result = await client.query(
     `INSERT INTO erp.categorias (
        empresa_id,
@@ -4558,18 +4793,24 @@ async function createCategoryRecord(client: SQLClient, input: CreateInput) {
        tipo,
        ativo,
        metadata,
+       categoria_pai_id,
+       dre_grupo_id,
+       fora_dre,
        criado_por,
        atualizado_por
      )
-     VALUES ($1, $2, $3, $4, $5::jsonb, $6, $6)
+     VALUES ($1, $2, $3, $4, $5::jsonb, $7, $8, $9, $6, $6)
      RETURNING id`,
     [
       input.tenantId,
       text(input.values.nome),
-      categoryType,
+      classification.tipo,
       activeFromStatus(input.values.status),
       JSON.stringify({ descricao: optionalText(input.values.descricao) }),
       input.actorId,
+      classification.parentId,
+      classification.groupId,
+      classification.outsideDre,
     ],
   )
   return { id: String(result.rows[0]?.id) }

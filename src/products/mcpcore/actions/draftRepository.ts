@@ -1,0 +1,43 @@
+import { randomUUID } from 'node:crypto'
+import { pluginQuery } from '../shared/database'
+import { PluginError, type PluginPrincipal } from '../shared/contracts'
+import { proposalSchema, proposalPreview, type Proposal } from './contracts'
+import type { PluginConfig } from '../shared/config'
+import { proposalReferences } from './references'
+import { operationSnapshot,type OperationSnapshot } from './operations'
+
+export type DraftRow = { id:string;empresa_id:number;user_id:number;oauth_client_id:string;proposal:Proposal;
+  status:'pending'|'saved'|'cancelled'|'expired';record_id:string|null;created_at:string;expires_at:string;decided_at:string|null;target_snapshot?:OperationSnapshot|null }
+export function draftView(row: DraftRow, config: Pick<PluginConfig,'resource'|'integration'>) {
+  const status = row.status === 'pending' && new Date(row.expires_at).getTime() <= Date.now() ? 'expired' : row.status
+  return {rascunho_id:row.id,empresa_id:Number(row.empresa_id),status,registro_id:row.record_id,
+    criado_em:row.created_at,expira_em:row.expires_at,proposta:proposalPreview(proposalSchema.parse(row.proposal)),
+    alvo:row.target_snapshot ? {registro_id:row.target_snapshot.registro_id,nome:row.target_snapshot.nome,status:row.target_snapshot.status,valor:row.target_snapshot.valor,
+      parcelas:row.target_snapshot.parcelas||[],conta_financeira:row.target_snapshot.conta_financeira||null,campos:row.target_snapshot.campos||{}}:null,
+    revisao_url:new URL(`/${config.integration}plugin/approvals/${row.id}`,config.resource).href}
+}
+export async function prepareDraft(principal: PluginPrincipal, tenantId:number, key:string, proposal:Proposal, config:PluginConfig) {
+  proposalPreview(proposal)
+  if (Buffer.byteLength(JSON.stringify(proposal)) > 24000) throw new PluginError('INVALID_INPUT','O rascunho excede o tamanho permitido.')
+  const existing=await pluginQuery<DraftRow & {matches:boolean}>(
+    "SELECT *,proposal=$5::jsonb AS matches FROM plugin.drafts WHERE empresa_id=$1 AND user_id=$2 AND oauth_client_id=$3 AND operation_key=$4 AND integration=$6",
+    [tenantId,principal.userId,principal.clientId,key,JSON.stringify(proposal),config.integration])
+  if(existing[0]) {
+    if(!existing[0].matches)throw new PluginError('IDEMPOTENCY_CONFLICT','Esta chave já foi usada para outro rascunho.',409)
+    return draftView(existing[0],config)
+  }
+  await proposalReferences(tenantId,proposal)
+  const snapshot=await operationSnapshot(tenantId,proposal)
+  const rows = await pluginQuery<DraftRow & {matches:boolean}>(
+    `INSERT INTO plugin.drafts(id,empresa_id,user_id,oauth_client_id,operation_key,proposal,target_snapshot,integration)
+     VALUES ($1,$2,$3,$4,$5,$6::jsonb,$7::jsonb,$8)
+     ON CONFLICT (integration,empresa_id,user_id,oauth_client_id,operation_key) DO UPDATE SET operation_key=EXCLUDED.operation_key
+     RETURNING *,proposal=$6::jsonb AS matches`, [randomUUID(),tenantId,principal.userId,principal.clientId,key,JSON.stringify(proposal),JSON.stringify(snapshot),config.integration])
+  if (!rows[0].matches) throw new PluginError('IDEMPOTENCY_CONFLICT','Esta chave já foi usada para outro rascunho.',409)
+  return draftView(rows[0],config)
+}
+export async function getDraft(principal:PluginPrincipal,tenantId:number,id:string,config:PluginConfig) {
+  const rows=await pluginQuery<DraftRow>("SELECT * FROM plugin.drafts WHERE empresa_id=$1 AND user_id=$2 AND oauth_client_id=$3 AND id=$4 AND integration=$5",[tenantId,principal.userId,principal.clientId,id,config.integration])
+  if (!rows[0]) throw new PluginError('NOT_FOUND','Rascunho não disponível.',404)
+  return draftView(rows[0],config)
+}

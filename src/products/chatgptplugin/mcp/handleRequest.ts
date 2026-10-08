@@ -1,67 +1,17 @@
 import { WebStandardStreamableHTTPServerTransport } from '@modelcontextprotocol/sdk/server/webStandardStreamableHttp.js'
 import { createPluginServer } from './createServer'
 import { getPluginConfig, type PluginConfig } from '../shared/config'
-import { PluginError, type PluginPrincipal } from '../shared/contracts'
-import { resolvePluginPrincipal } from '../auth/resolvePrincipal'
-import { consumeRequestLimit } from '../audit/executionRepository'
-import { executionDependencies, type ExecutionDependencies } from '../application/executeTool'
+import { PluginError } from '@/products/mcpcore/shared/contracts'
+import { resolvePluginPrincipal } from '@/products/mcpcore/auth/resolvePrincipal'
+import { consumeRequestLimit } from '@/products/mcpcore/audit/executionRepository'
+import { executionDependencies } from '@/products/mcpcore/application/executeTool'
+import { corsHeaders, readJsonBody, oauthChallenge, type HttpDependencies } from '@/products/mcpcore/mcp/http'
 import { nativeFormStep } from '../extensions/nativeForm'
-import { actionTools } from '../actions/catalog'
+import { actionTools } from '@/products/mcpcore/actions/catalog'
 import { isModern,validateModern,requireNativeFormCapability,supportsNativeForms,ProtocolFailure,MODERN_VERSION,SUPPORTED_VERSIONS,SERVER_INFO } from './modernProtocol'
 
-export type HttpDependencies = {
-  config: () => PluginConfig
-  resolve: (request: Request, config: PluginConfig) => Promise<PluginPrincipal>
-  limit: typeof consumeRequestLimit
-  execution: ExecutionDependencies
-}
+export type { HttpDependencies } from '@/products/mcpcore/mcp/http'
 const production: HttpDependencies = { config:getPluginConfig, resolve:resolvePluginPrincipal, limit:consumeRequestLimit, execution:executionDependencies }
-function cors(request: Request, config: PluginConfig) {
-  const origin = request.headers.get('origin')
-  if (origin && !config.origins.includes(origin)) throw new PluginError('ORIGIN_DENIED','Origem não autorizada.',403)
-  const url = new URL(request.url)
-  if (url.host !== new URL(config.resource).host) throw new PluginError('HOST_DENIED','Host não autorizado.',403)
-  return { 'Cache-Control':'no-store', Vary:'Origin',
-    ...(origin ? { 'Access-Control-Allow-Origin':origin } : {}),
-    'Access-Control-Allow-Methods':'POST, GET, DELETE, OPTIONS',
-    'Access-Control-Allow-Headers':'Authorization, Content-Type, Accept, MCP-Protocol-Version, MCP-Session-Id, Mcp-Method, Mcp-Name',
-    'Access-Control-Expose-Headers':'WWW-Authenticate, MCP-Protocol-Version, Retry-After',
-  }
-}
-async function readBody(request: Request): Promise<unknown> {
-  if (!request.headers.get('content-type')?.toLowerCase().startsWith('application/json')) {
-    throw new PluginError('INVALID_CONTENT_TYPE','Use application/json.',415)
-  }
-  if (!request.body) throw new PluginError('INVALID_INPUT','Corpo JSON obrigatório.')
-  const reader = request.body.getReader()
-  const chunks: Uint8Array[] = []
-  let size = 0
-  let timeout: ReturnType<typeof setTimeout> | undefined
-  const deadline = new Promise<never>((_resolve,reject) => {
-    timeout = setTimeout(() => {
-      // Reject before cancellation can make an unfinished body look complete.
-      reject(new PluginError('TIMEOUT','Corpo da requisição incompleto.',408))
-      void reader.cancel().catch(() => undefined)
-    },5000)
-  })
-  try {
-    for (;;) {
-      const { done,value } = await Promise.race([reader.read(),deadline])
-      if (done) break
-      size += value.byteLength
-      if (size > 64*1024) { void reader.cancel().catch(() => undefined); throw new PluginError('REQUEST_TOO_LARGE','Corpo excede 64 KB.',413) }
-      chunks.push(value)
-    }
-    let parsed:unknown
-    try {parsed=JSON.parse(new TextDecoder('utf-8',{fatal:true}).decode(Buffer.concat(chunks)))}
-    catch {throw new PluginError('INVALID_JSON','JSON UTF-8 inválido.')}
-    if (Array.isArray(parsed)) throw new PluginError('INVALID_INPUT','Envie uma chamada por requisição.')
-    return parsed
-  } catch (error) {
-    if (error instanceof PluginError) throw error
-    throw new PluginError('INVALID_INPUT','JSON inválido.')
-  } finally { clearTimeout(timeout); reader.releaseLock() }
-}
 export async function handlePluginRequest(request: Request, deps: HttpDependencies = production): Promise<Response> {
   let config: PluginConfig | undefined
   let headers: Record<string,string> = { 'Cache-Control':'no-store' }
@@ -70,13 +20,13 @@ export async function handlePluginRequest(request: Request, deps: HttpDependenci
   try {
     config = deps.config()
     oauthScope=config.scope
-    headers = cors(request,config)
+    headers = corsHeaders(request,config)
     if (request.method === 'OPTIONS') return new Response(null,{ status:204,headers })
     const principal = await deps.resolve(request,config)
-    await deps.limit(principal,config.requestsPerMinute)
+    await deps.limit(principal,config.requestsPerMinute,config.integration)
     if (request.method !== 'POST') return Response.json({error:'Use POST; este servidor não mantém sessões SSE.'},{ status:405,headers:{ ...headers,Allow:'POST, OPTIONS' } })
     let body:unknown
-    try {body=await readBody(request)}
+    try {body=await readJsonBody(request)}
     catch(error) {
       if(isModern(request,null)&&error instanceof PluginError&&['INVALID_JSON','INVALID_INPUT'].includes(error.code))
         throw new ProtocolFailure(error.code==='INVALID_JSON'?-32700:-32600,error.message)
@@ -143,10 +93,8 @@ export async function handlePluginRequest(request: Request, deps: HttpDependenci
     if(error instanceof ProtocolFailure)return Response.json({jsonrpc:'2.0',id:rpcId,error:{code:error.code,message:error.message,...(error.data?{data:error.data}:{})}},{status:error.status,headers})
     const failure = error instanceof PluginError ? error : new PluginError('SERVICE_UNAVAILABLE','Serviço temporariamente indisponível.',503)
     console.error(JSON.stringify({ scope:'chatgptplugin',code:failure.code,status:failure.status,...(failure.reason?{reason:failure.reason}:{}) }))
-    if (config && ['UNAUTHENTICATED','INSUFFICIENT_SCOPE'].includes(failure.code)) {
-      const oauthError = failure.code === 'INSUFFICIENT_SCOPE' ? 'insufficient_scope' : 'invalid_token'
-      headers['WWW-Authenticate'] = `Bearer resource_metadata="${config.metadataUrl}", scope="${oauthScope||config.scope}", error="${oauthError}"`
-    }
+    const challenge = config && oauthChallenge(failure,config,oauthScope||config.scope)
+    if (challenge) headers['WWW-Authenticate'] = challenge
     if (failure.status === 429) headers['Retry-After'] = '60'
     return Response.json({ error:failure.code,message:failure.message },{ status:failure.status,headers })
   }

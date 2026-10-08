@@ -5,10 +5,10 @@ import {connection} from './evolution-db.mjs'
 import {runWithErpDatabaseContext} from '../../src/lib/erpDatabaseContext'
 import {closePool} from '../../src/lib/postgres'
 import {listErpEntityPage,listErpCategoryOptions,getErpEntitySummary} from '../../src/products/erp/server/erpRepository'
-import {loadPluginPrincipal} from '../../src/products/chatgptplugin/auth/resolvePrincipal'
-import {executeTool} from '../../src/products/chatgptplugin/application/executeTool'
+import {loadPluginPrincipal} from '../../src/products/mcpcore/auth/resolvePrincipal'
+import {executeTool} from '../../src/products/mcpcore/application/executeTool'
 import type {PluginConfig} from '../../src/products/chatgptplugin/shared/config'
-import {closePluginDatabase} from '../../src/products/chatgptplugin/shared/database'
+import {closePluginDatabase} from '../../src/products/mcpcore/shared/database'
 config({path:'.env.local',quiet:true})
 const db=connection(),proof=JSON.parse(readFileSync('.cache/entity-categories/application.json','utf8'))
 assert.equal(proof.status,'passed')
@@ -17,7 +17,7 @@ try{
  await db.connect();const identity=(await db.query('SELECT clerk_user_id FROM shared.usuarios WHERE id=3')).rows[0]
  const principal=await loadPluginPrincipal(identity.clerk_user_id,'entity-category-read-check',['erp:read'])
  // Direct tool execution uses an already resolved principal; this test does not verify OAuth.
- const settings:PluginConfig={resource:'https://cognito-seven.vercel.app/api/mcp',metadataUrl:'https://cognito-seven.vercel.app/.well-known/oauth-protected-resource/api/mcp',issuer:'https://oauth-test.invalid',scope:'erp:read',clientIds:[principal.clientId],origins:[],toolTimeoutMs:15000,requestsPerMinute:60}
+ const settings:PluginConfig={integration:'chatgpt',resource:'https://cognito-seven.vercel.app/api/mcp',metadataUrl:'https://cognito-seven.vercel.app/.well-known/oauth-protected-resource/api/mcp',issuer:'https://oauth-test.invalid',scope:'erp:read',clientIds:[principal.clientId],origins:[],toolTimeoutMs:15000,requestsPerMinute:60}
  const checks:string[]=[]
  await runWithErpDatabaseContext({tenantId:2,userId:3,readOnly:true},async()=>{
   for(const [module,type,total,categories] of [['clientes','cliente',30,9],['fornecedores','fornecedor',15,8]] as const){

@@ -1,3 +1,5 @@
+import { erpListOrder } from '@/products/erp/shared/readQueries'
+import { ERP_TODAY_SQL } from '@/products/erp/server/erpBusinessDate'
 import { runQuery, type SQLClient } from '@/lib/postgres'
 import { financialCompositionSql, getErpEntityRecord } from '@/products/erp/server/erpRepository'
 import { ErpDomainError } from '../shared/erpErrors'
@@ -11,7 +13,7 @@ export function financialRows(side: 'pagar'|'receber') {
     composicao.valor, composicao.dinheiro AS valor_pago, composicao.credito, composicao.transferido AS renegociado, composicao.saldo,
     CASE WHEN contas.status='cancelado' OR parcelas.status='cancelado' THEN 'cancelado'
       WHEN composicao.transferido>0 THEN 'renegociado' WHEN composicao.saldo=0 THEN 'pago'
-      WHEN parcelas.data_vencimento<CURRENT_DATE THEN 'vencido'
+      WHEN parcelas.data_vencimento<${ERP_TODAY_SQL} THEN 'vencido'
       WHEN composicao.dinheiro+composicao.credito>0 THEN 'parcial' ELSE parcelas.status END AS status,
     concat_ws(' ',contas.descricao,contas.numero_documento,entidades.nome,contas.status${side==='pagar'?',contas.origem':''}) AS searchable
     FROM erp.contas_${side} contas JOIN erp.contas_${side}_parcelas parcelas
@@ -32,10 +34,10 @@ function filtered(params:unknown[], input:PageQuery, dateColumn:string) {
 export async function financialSummary(tenantId:number, side:'pagar'|'receber', input:PageQuery) {
   const params:unknown[]=[tenantId], where=filtered(params,input,'vencimento')
   const [row]=await runQuery(`WITH rows AS (${financialRows(side)}), filtered AS (SELECT * FROM rows ${where})
-    SELECT CURRENT_DATE::text AS referencia, count(*)::int AS quantidade,
+    SELECT ${ERP_TODAY_SQL}::text AS referencia, count(*)::int AS quantidade,
       COALESCE(sum(saldo) FILTER (WHERE status NOT IN ('cancelado','renegociado','pago')),0) AS em_aberto,
       COALESCE(sum(saldo) FILTER (WHERE status='vencido'),0) AS vencidas,
-      COALESCE(sum(saldo) FILTER (WHERE vencimento>CURRENT_DATE AND vencimento<=CURRENT_DATE+7 AND status NOT IN ('cancelado','renegociado','pago')),0) AS vence_em_7_dias,
+      COALESCE(sum(saldo) FILTER (WHERE vencimento>${ERP_TODAY_SQL} AND vencimento<=${ERP_TODAY_SQL}+7 AND status NOT IN ('cancelado','renegociado','pago')),0) AS vence_em_7_dias,
       COALESCE(sum(valor),0) AS valor_total FROM filtered`,params)
   return row
 }
@@ -43,6 +45,9 @@ export async function installmentDetails(tenantId:number, side:'pagar'|'receber'
   const [raw]=await runQuery(`WITH rows AS (${financialRows(side)}) SELECT * FROM rows WHERE id=$2`,[tenantId,id])
   if(!raw)throw new ErpDomainError('NOT_FOUND','Parcela não disponível nesta empresa.',404)
   const record={...raw}; delete record.searchable
+  // Conta sugerida para registrar a baixa: a da parcela ou a padrão da empresa.
+  const [account]=await runQuery(`SELECT f.id::text,f.nome FROM erp.contas_financeiras f WHERE f.empresa_id=$1 AND f.ativo AND f.excluido_em IS NULL AND (f.id=(SELECT p.conta_financeira_id FROM erp.contas_${side}_parcelas p WHERE p.empresa_id=$1 AND p.id=$2) OR f.padrao) ORDER BY (f.id=(SELECT p.conta_financeira_id FROM erp.contas_${side}_parcelas p WHERE p.empresa_id=$1 AND p.id=$2)) DESC NULLS LAST,f.padrao DESC LIMIT 1`,[tenantId,id])
+  Object.assign(record,{lado:side,conta_financeira_sugerida:account||null})
   const history=await runQuery(`SELECT pagamentos.id::text, pagamentos.data_pagamento, pagamentos.valor,
     pagamentos.valor_liquido, pagamentos.estornado_em, pagamentos.estorno_de_pagamento_id::text, financeiras.nome AS conta_financeira
     FROM erp.pagamentos pagamentos LEFT JOIN erp.contas_financeiras financeiras
@@ -78,7 +83,7 @@ export async function commercialPage(tenantId:number,type:'vendas'|'compras',inp
   const params:unknown[]=[tenantId],where=filtered(params,input,'data'),cte=`WITH rows AS (${commercialRows(type,input.filters?.tipo_documento)}), filtered AS (SELECT * FROM rows ${where})`
   const [summary]=await runQuery(`${cte} SELECT count(*)::int AS quantidade,COALESCE(sum(total),0) AS valor_total,
     COALESCE(sum(total) FILTER (WHERE status NOT IN ('rascunho','cancelada')),0) AS valor_confirmado FROM filtered`,params)
-  const rows=await runQuery(`${cte} SELECT * FROM filtered ORDER BY data DESC,id DESC LIMIT $${params.length+1} OFFSET $${params.length+2}`,
+  const rows=await runQuery(`${cte} SELECT * FROM filtered ORDER BY ${erpListOrder('comercial',input.sort,'data DESC')},id DESC LIMIT $${params.length+1} OFFSET $${params.length+2}`,
     [...params,input.pageSize||20,((input.page||1)-1)*(input.pageSize||20)])
   return {records:rows.map(row=>{const r={...row};delete r.searchable;delete r.tipo_movimento;return {...r,id:String(r.id),data:r.data instanceof Date?r.data.toISOString().slice(0,10):r.data}}),total:Number(summary.quantidade),page:input.page||1,pageSize:input.pageSize||20,summary}
 }

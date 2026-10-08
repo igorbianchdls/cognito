@@ -6,31 +6,29 @@ Nota fiscal, cobrança e integração bancária ficam para fases futuras e não 
 
 ## Estrutura
 
+Consultas, escritas, auditoria, verificação do token e cards ficam no núcleo compartilhado [`mcpcore`](../mcpcore/README.md). Este produto contém só o que é do ChatGPT:
+
 | Pasta | Responsabilidade |
 | --- | --- |
-| `mcp` | SDK MCP, transporte sem sessão, protocolo 2026-07-28 (discovery, MRTR) e registro das tools |
-| `auth` | Verificação do token OAuth do Clerk, identidade, empresas e metadados do recurso protegido |
-| `tools` | Consultas (`catalog.ts`) e contratos de saída (`outputs.ts`) |
-| `actions` | Tools de escrita em duas etapas, contratos das propostas, referências e operações do ERP |
-| `approvals` | Núcleo transacional da confirmação (`decideDraft`), usado pelo chat e pela página de revisão do ERP |
-| `application` | Execução auditada: validação, empresa, permissões, prazo e erros com `campos` |
-| `extensions` | Formulário nativo, painel, configurações e rótulos |
-| `ui` | Cards MCP Apps: ponte, estilos, componentes e visualizações |
-| `audit` / `shared` | Auditoria, limites, configuração e banco |
+| `mcp` | SDK MCP, transporte sem sessão, protocolo 2026-07-28 (discovery, MRTR), registro das tools e recurso dos cards (`ui://chatgptplugin/cards/v2.html`) |
+| `auth` | Metadados do recurso protegido |
+| `approvals` | Página e API de revisão no ERP (`/chatgptplugin/approvals/[id]`) |
+| `extensions` | Formulário nativo da OpenAI e painel |
+| `shared` | `getPluginConfig()` (`integration: 'chatgpt'`) e versão |
 | `plugin` | Manifesto, ícone e skills `usar-erp` / `get-started` |
 
-## Tools (37)
+## Tools (38)
 
-Todas exigem `erp:read`; as de escrita exigem também `erp:write` e as permissões do perfil no ERP. O servidor lista 38 descritores porque a extensão oficial de menções registra `search_mentions`.
+Todas exigem `erp:read`; as de escrita exigem também `erp:write` e as permissões do perfil no ERP. O servidor lista 42 descritores porque a extensão oficial de menções registra `search_mentions`.
 
 **Consultas (15, somente leitura):** `meu_acesso` (também perfil da conexão, `openai/profile`), `resumo_erp`, `buscar_cadastros`, `obter_cadastro`, `listar_vendas` (com `tipo_documento: venda|orcamento`), `obter_venda`, `listar_compras`, `obter_compra`, `consultar_financeiro`, `obter_titulo_financeiro`, `obter_parcela_financeira`, `listar_pagamentos`, `consultar_estoque`, `analisar_periodo`, `consultar_relatorio`.
 
-**Escritas (19):** uma tool por ação; o parâmetro `tipo` escolhe o objeto.
+**Escritas (20):** uma tool por ação; o parâmetro `tipo` escolhe o objeto.
 
 | Área | Tools | `tipo` | Destrutivas |
 | --- | --- | --- | --- |
 | Cadastros | `criar_cadastro`, `editar_cadastro`, `excluir_cadastro` | 7 tipos de cadastro | `excluir_cadastro` |
-| Vendas e orçamentos | `criar_venda`, `editar_venda`, `excluir_venda`, `confirmar_venda`, `cancelar_venda`, `atender_venda` | `venda`, `orcamento` | `excluir_venda`, `cancelar_venda` |
+| Vendas e orçamentos | `criar_venda`, `editar_venda`, `excluir_venda`, `converter_orcamento`, `confirmar_venda`, `cancelar_venda`, `atender_venda` | `venda`, `orcamento` | `excluir_venda`, `cancelar_venda` |
 | Compras | `criar_compra`, `editar_compra`, `excluir_compra`, `confirmar_compra`, `cancelar_compra` | — | `excluir_compra`, `cancelar_compra` |
 | Financeiro | `criar_titulo`, `editar_titulo`, `excluir_titulo`, `registrar_baixa`, `estornar_pagamento` | `pagar`, `receber` | `excluir_titulo`, `estornar_pagamento` |
 
@@ -49,7 +47,7 @@ Erros devolvem `code`, `message` e, quando aplicável, `campos: [{campo, motivo}
 
 ## Cards
 
-Recurso `ui://chatgptplugin/cards/v2.html`, ligado por `_meta.ui.resourceUri` às 15 consultas e às 19 escritas. O card identifica a tool por `hostContext.toolInfo` (ou `_meta["cognito/tool"]` no resultado).
+Recurso `ui://chatgptplugin/cards/v2.html`, ligado por `_meta.ui.resourceUri` às 16 consultas e às 22 escritas. O card identifica a tool por `hostContext.toolInfo` (ou `_meta["cognito/tool"]` no resultado).
 
 - **Lista:** inline com resumo e até 5 linhas, uma ação ("Ver tudo"); em tela cheia, tabela completa, busca e paginação.
 - **Detalhes, análise (barras por mês), resumo, empresas** ("Usar esta" envia a escolha à conversa).

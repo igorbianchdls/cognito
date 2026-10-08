@@ -1,4 +1,5 @@
 import { erpToday } from '@/products/erp/server/erpBusinessDate'
+import { nextDocumentNumber } from '@/products/erp/server/erpDocumentNumbers'
 import { runQuery, withTransaction, type SQLClient } from "@/lib/postgres";
 import { assertErpPeriodOpen } from './erpPeriodRepository';
 import {
@@ -74,7 +75,7 @@ export async function createSalesContract(
     [
       input.tenantId,
       v.cliente_id,
-      v.numero || `CTR-${crypto.randomUUID()}`,
+      v.numero || await nextDocumentNumber(client, input.tenantId, "contrato", v.data_inicio),
       v.descricao,
       v.data_inicio,
       v.data_fim || null,

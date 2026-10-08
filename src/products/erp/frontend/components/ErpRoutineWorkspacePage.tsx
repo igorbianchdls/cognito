@@ -5,12 +5,13 @@ import { Input } from '@/components/ui/input'
 import { HistoryRows, historyValue } from './ErpHistoryPanel'
 import { parseErpResponse } from '@/products/erp/frontend/services/erpProfessionalClient'
 import { useErpAccess } from '@/products/erp/frontend/hooks/useErpAccess'
+import { erpClientToday } from '@/products/erp/frontend/services/erpTimeZone'
 
 type Row = Record<string, unknown>
 const routines = [
   ['contratos', 'Gerar vendas dos contratos'],
   ['recorrencias_financeiras', 'Gerar recorrências financeiras e compras'],
-  ['titulos_vencidos', 'Atualizar parcelas vencidas'],
+  ['titulos_vencidos', 'Contar parcelas vencidas'],
   ['indicadores', 'Conferir indicadores'],
   ['estoque_minimo', 'Conferir reposição de estoque'],
 ]
@@ -31,9 +32,8 @@ export function AutomationWorkspacePage() {
     [error, setError] = useState(''),
     [page, setPage] = useState(1),
     [hasMore, setHasMore] = useState(false),
-    [date, setDate] = useState(() =>
-      new Date().toLocaleDateString('en-CA', { timeZone: 'America/Fortaleza' }),
-    ),
+    [date, setDate] = useState(() => erpClientToday()),
+    [late, setLate] = useState<string[]>([]),
     [message, setMessage] = useState('')
   const load = useCallback(async () => {
     setLoading(true)
@@ -41,13 +41,14 @@ export function AutomationWorkspacePage() {
     try {
       const [runs, cycles] = await Promise.all([
         fetch(`/api/erp/automacoes?page=${page}`, { cache: 'no-store' }).then((r) =>
-          parseErpResponse<{ records: Row[]; hasMore: boolean }>(r),
+          parseErpResponse<{ records: Row[]; hasMore: boolean; saude?: { atrasadas: string[] } }>(r),
         ),
         fetch(`/api/erp/recorrencias?page=${page}`, { cache: 'no-store' }).then((r) =>
           parseErpResponse<Recurrences>(r),
         ),
       ])
       setRecords(runs.records)
+      setLate(runs.saude?.atrasadas || [])
       setRecurrences(cycles)
       setHasMore(runs.hasMore || cycles.hasMore)
     } catch (e) {
@@ -142,6 +143,13 @@ export function AutomationWorkspacePage() {
           </Button>
         ))}
       </div>
+      {!loading && late.length ? (
+        <p role="alert" className="rounded border border-amber-300 bg-amber-50 p-3 text-sm text-amber-900">
+          Rotinas sem execução automática nas últimas 26 horas:{' '}
+          {late.map((tipo) => routines.find(([id]) => id === tipo)?.[1] || tipo).join(', ')}. Confira o agendamento
+          (CRON_SECRET na Vercel) ou execute manualmente.
+        </p>
+      ) : null}
       {message ? <p role="status">{message}</p> : null}
       {error ? (
         <p role="alert" className="text-red-700">

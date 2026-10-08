@@ -39,10 +39,14 @@ type ReportId =
   | "posicao-financeira"
   | "vendas-clientes"
   | "vendas-vendedores"
+  | "comissoes"
   | "vendas-produtos"
   | "compras-fornecedores"
   | "compras-categorias"
-  | "valor-estoque";
+  | "valor-estoque"
+  | "margem-vendas"
+  | "margem-itens"
+  | "margem-clientes";
 type ReportDefinition = {
   title: string;
   description: string;
@@ -124,6 +128,14 @@ const reports: Record<ReportId, ReportDefinition> = {
     chartLabel: "vendedor",
     chartValue: "total",
   },
+  comissoes: {
+    title: "Comissões",
+    description: "Comissão por vendedor no período: total, liberado (faturado ou recebido), pago e a pagar.",
+    currency: ["comissao", "liberado", "pago", "a_pagar"],
+    numeric: ["itens"],
+    chartLabel: "vendedor",
+    chartValue: "a_pagar",
+  },
   "vendas-produtos": {
     title: "Vendas por produto",
     description: "Quantidade e receita por produto ou serviço.",
@@ -147,6 +159,30 @@ const reports: Record<ReportId, ReportDefinition> = {
     numeric: ["compras"],
     chartLabel: "categoria",
     chartValue: "total",
+  },
+  "margem-vendas": {
+    title: "Margem por venda",
+    description: "Receita líquida (desconto rateado, menos devoluções) menos o custo: real das saídas de estoque ou, antes da entrega, o custo do cadastro (estimado).",
+    currency: ["receita_liquida", "custo", "margem"],
+    numeric: ["itens", "margem_percentual"],
+    chartLabel: "venda",
+    chartValue: "margem",
+  },
+  "margem-itens": {
+    title: "Margem por produto ou serviço",
+    description: "Receita líquida (desconto rateado, menos devoluções) menos o custo: real das saídas de estoque ou, antes da entrega, o custo do cadastro (estimado).",
+    currency: ["receita_liquida", "custo", "margem"],
+    numeric: ["itens", "margem_percentual"],
+    chartLabel: "item",
+    chartValue: "margem",
+  },
+  "margem-clientes": {
+    title: "Margem por cliente",
+    description: "Receita líquida (desconto rateado, menos devoluções) menos o custo: real das saídas de estoque ou, antes da entrega, o custo do cadastro (estimado).",
+    currency: ["receita_liquida", "custo", "margem"],
+    numeric: ["itens", "margem_percentual"],
+    chartLabel: "cliente",
+    chartValue: "margem",
   },
   "valor-estoque": {
     title: "Valor do estoque",

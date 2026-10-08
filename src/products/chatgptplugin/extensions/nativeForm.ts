@@ -4,13 +4,13 @@ import type { CallToolResult } from '@modelcontextprotocol/sdk/types.js'
 import type { OpenAIForm,OpenAIFormField } from '@openai/mcp-extensions/server'
 import { runWithErpDatabaseContext } from '@/lib/erpDatabaseContext'
 import type { ErpConnectedModuleId } from '@/products/erp/shared/moduleAccess'
-import { proposalSchema,type Proposal } from '../actions/contracts'
-import { actionTools,type ActionDefinition } from '../actions/catalog'
-import { operationLabels } from '../actions/labels'
-import { fieldLabels } from './fieldLabels'
-import { PluginError,selectCompany,type PluginCompany,type PluginPrincipal } from '../shared/contracts'
+import { proposalSchema,type Proposal } from '@/products/mcpcore/actions/contracts'
+import { actionTools,type ActionDefinition } from '@/products/mcpcore/actions/catalog'
+import { operationLabels } from '@/products/mcpcore/actions/labels'
+import { fieldLabels } from '@/products/mcpcore/actions/fieldLabels'
+import { PluginError,selectCompany,type PluginCompany,type PluginPrincipal } from '@/products/mcpcore/shared/contracts'
 import type { PluginConfig } from '../shared/config'
-import { executeTool,type ExecutionDependencies } from '../application/executeTool'
+import { executeTool,type ExecutionDependencies } from '@/products/mcpcore/application/executeTool'
 
 // Formulário nativo dentro das tools de escrita (MCP 2026-07-28 / MRTR): quando faltam campos
 // obrigatórios na prévia, a própria tool pede os dados ao usuário, com listas no lugar de IDs.
@@ -138,8 +138,8 @@ export async function nativeFormStep(params:Record<string,unknown>,id:string|num
   const answer=(responses as Record<string,unknown>|undefined)?.dados
   if(answer===undefined){
     // Pedir o formulário também fica registrado na auditoria, sem dados do usuário.
-    const audit=await deps.reserve(principal,action.name,company.id)
-    await deps.finish(audit,'succeeded',null,0)
+    const audit=await deps.reserve(principal,action.name,company.id,config.integration)
+    await deps.finish(audit,'succeeded',null,0,config.integration)
     const requestState=state?String(params.requestState):seal({digest:hash,expires:Date.now()+FORM_TTL_MS,originId:id},config)
     return {resultType:'input_required',requestState,inputRequests:{dados:{method:'openai/elicitation/create',params:{mode:'form',
       message:`${operationLabels[kind]||action.title} · ${company.name}. Enviar gera uma prévia; nada muda no ERP até você confirmar.`,requestedSchema:form}}}}

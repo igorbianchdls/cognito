@@ -2,8 +2,8 @@ import { z } from 'zod'
 import { resolveErpSession } from '@/products/erp/server/erpAccess'
 import { ErpDomainError } from '@/products/erp/shared/erpErrors'
 import { getPluginConfig } from '../shared/config'
-import { PluginError } from '../shared/contracts'
-import { loadApproval,decideApproval } from './approvalRepository'
+import { PluginError } from '@/products/mcpcore/shared/contracts'
+import { loadApproval,decideApproval } from '@/products/mcpcore/approvals/approvalRepository'
 
 const idSchema=z.string().uuid()
 const decisionSchema=z.object({decision:z.enum(['save','cancel'])}).strict()
@@ -35,14 +35,14 @@ export async function approvalRequest(request:Request,id:string,deps=approvalDep
     if (request.method === 'POST') assertApprovalOrigin(request,config.resource)
     const session=await deps.session()
     if (!session) throw new PluginError('UNAUTHENTICATED','Entre no ERP para revisar.',401)
-    if (request.method === 'GET') return Response.json(await deps.load(id,session,config.resource),{headers})
+    if (request.method === 'GET') return Response.json(await deps.load(id,session,config),{headers})
     if (request.method !== 'POST') return new Response(null,{status:405,headers})
     const body=await readDecision(request)
     let value:unknown
     try {value=JSON.parse(body)} catch {throw new PluginError('INVALID_INPUT','Decisão inválida.')}
     const parsed=decisionSchema.safeParse(value)
     if (!parsed.success) throw new PluginError('INVALID_INPUT','Decisão inválida.')
-    return Response.json(await deps.decide(id,session,parsed.data.decision),{headers})
+    return Response.json(await deps.decide(id,session,parsed.data.decision,config.integration),{headers})
   } catch(error) {
     const failure=error instanceof PluginError ? error : error instanceof ErpDomainError
       ? new PluginError(error.code,error.message,422) : new PluginError('ERP_UNAVAILABLE','Não foi possível concluir a revisão.',503)

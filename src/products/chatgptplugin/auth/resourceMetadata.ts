@@ -1,5 +1,5 @@
 import { getPluginConfig } from '../shared/config'
-import { PluginError } from '../shared/contracts'
+import { PluginError } from '@/products/mcpcore/shared/contracts'
 
 export function resourceMetadata() {
   const headers = { 'Access-Control-Allow-Origin':'*','Cache-Control':'no-store' }

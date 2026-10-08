@@ -58,10 +58,15 @@ credentials/
 !package*.json
 !tsconfig*.json
 !src/products/chatgptplugin/plugin/plugin.json
+!src/products/claudeplugin/plugin/.claude-plugin/plugin.json
 /dist/chatgptplugin/
 /dist/chatgptplugin-package-test/
 /dist/chatgptplugin.zip
 /dist/chatgptplugin-package-test.zip
+/dist/claudeplugin/
+/dist/claudeplugin.zip
+/dist/claudeplugin-package-test/
+/dist/claudeplugin-package-test.zip
 
 # vercel
 .vercel

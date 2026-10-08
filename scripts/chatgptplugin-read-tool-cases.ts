@@ -43,11 +43,11 @@ export async function runReadToolCases(ctx: Context) {
     assert.equal(result.body.result.isError, true)
     assert.equal(JSON.parse(result.body.result.content[0].text).code, code)
   }
-  await check('Todas leituras: catálogo distingue 18 consultas e 20 escritas', async () => {
+  await check('Todas leituras: catálogo distingue 18 consultas e 21 escritas', async () => {
     const result = await rpc('tools/list')
     const tools = result.body.result.tools
     assert.equal(tools.filter((t: Row) => t.annotations?.readOnlyHint).length, 18)
-    assert.deepEqual(tools.filter((t: Row) => !t.annotations?.readOnlyHint).map((t: Row) => t.name).sort(), ['atender_venda','atualizar_configuracoes','cancelar_compra','cancelar_venda','confirmar_compra','confirmar_venda',
+    assert.deepEqual(tools.filter((t: Row) => !t.annotations?.readOnlyHint).map((t: Row) => t.name).sort(), ['atender_venda','atualizar_configuracoes','cancelar_compra','cancelar_venda','confirmar_compra','confirmar_venda','converter_orcamento',
       'criar_cadastro','criar_compra','criar_titulo','criar_venda','editar_cadastro','editar_compra','editar_titulo','editar_venda','estornar_pagamento','excluir_cadastro','excluir_compra','excluir_titulo','excluir_venda','registrar_baixa'])
     for (const tool of tools.filter((t: Row) => t.annotations?.readOnlyHint)) assert.deepEqual(tool.securitySchemes, [{ type: 'oauth2', scopes: ['erp:read'] }])
   })

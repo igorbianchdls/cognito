@@ -25,6 +25,8 @@ const today = new Intl.DateTimeFormat('sv-SE',{timeZone:'America/Fortaleza'}).fo
     await db.exec(fs.readFileSync(path.join(root, 'supabase/migrations/20261005020000_harden_erp_stock_operations.sql'), 'utf8'));
     await db.exec(fs.readFileSync(path.join(root, 'supabase/migrations/20261005021000_anchor_contract_cycles.sql'), 'utf8'));
     await applySharedMigration(db);
+    const {applyRecentMigrations}=await import('./phase0-migrations.mjs');
+    await applyRecentMigrations(db);
     const client = { query: (sql, params) => db.query(sql, params), release() {} };
     let transactionSequence=0;
     const pg = { runQuery: async (sql, params) => (await db.query(sql, params)).rows,

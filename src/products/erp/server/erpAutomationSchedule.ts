@@ -72,5 +72,11 @@ export async function runScheduledErpAutomations() {
 
 export async function listAutomationExecutions(tenantId:number,page=1) {
   const records = await runQuery(`SELECT id::text, tipo, competencia, status, tentativas, resultado, erro, iniciado_em, finalizado_em,historico_estados,evento_cobranca_id::text FROM erp.execucoes_automacao WHERE empresa_id = $1 ORDER BY criado_em DESC,id DESC LIMIT 31 OFFSET $2`, [tenantId,(page-1)*30])
-  return { records:records.slice(0,30),hasMore:records.length>30 }
+  // Saúde: rotina sem execução concluída nas últimas 26 h indica agendamento parado (cron, segredo ou falha).
+  const latest = await runQuery<{ tipo: string; ultima: string | null }>(`SELECT tipo, max(finalizado_em)::text AS ultima FROM erp.execucoes_automacao
+    WHERE empresa_id = $1 AND status = 'concluida' GROUP BY tipo`, [tenantId])
+  const lastRun = new Map(latest.map(row => [row.tipo, row.ultima]))
+  const limit = Date.now() - 26 * 60 * 60 * 1000
+  const atrasadas = routineTypes.filter(tipo => { const last = lastRun.get(tipo); return !last || new Date(last).getTime() < limit })
+  return { records:records.slice(0,30),hasMore:records.length>30,saude:{ atrasadas, ultimaExecucao:Object.fromEntries(routineTypes.map(tipo => [tipo, lastRun.get(tipo) ?? null])) } }
 }

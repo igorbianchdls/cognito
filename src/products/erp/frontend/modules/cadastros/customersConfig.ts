@@ -23,6 +23,9 @@ export const customersConfig: ErpEntityConfig<ErpEntityRecord> = {
     { key: 'tipo', label: 'Tipo de pessoa', type: 'select', required: true, options: [{ value: 'PF', label: 'Pessoa física' }, { value: 'PJ', label: 'Pessoa jurídica' }] },
     { key: 'documento', label: 'CPF/CNPJ', type: 'text', placeholder: 'Documento fiscal', required: true },
     { key: 'categoria', label: 'Categoria do cliente', type: 'text', placeholder: 'Ex: Varejo, atacado ou corporativo' },
+    { key: 'limite_credito', label: 'Limite de crédito (R$)', type: 'number', placeholder: 'Vazio = sem limite' },
+    { key: 'bloqueio_comercial', label: 'Bloqueado para vendas', type: 'select', options: [{ value: 'nao', label: 'Não' }, { value: 'sim', label: 'Sim' }] },
+    { key: 'bloqueio_motivo', label: 'Motivo do bloqueio', type: 'text', placeholder: 'Obrigatório quando bloqueado' },
   ],
   filters: [
     { key: 'status', label: 'Status', allLabel: 'Todos os status', options: [{ value: 'ativo', label: 'Ativo' }, { value: 'inativo', label: 'Inativo' }] },

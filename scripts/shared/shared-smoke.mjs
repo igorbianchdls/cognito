@@ -7,6 +7,7 @@ import ts from 'typescript'
 import {createHash} from 'node:crypto'
 import {db,restoreCatalog} from '../erp/evolution-fixture.mjs'
 import {applySharedMigration,migrationFile} from './schema-contract.mjs'
+import {applyRecentMigrations} from '../erp/phase0-migrations.mjs'
 
 const root=resolve('.'),require=createRequire(import.meta.url),modules=new Map(),checks=[]
 let tail=Promise.resolve(),externalFailure=false,externalCalls=0,insideTransaction=false
@@ -55,6 +56,8 @@ try{
  INSERT INTO shared.tenant_memberships(tenant_id,user_id,role,status,erp_profile_id,clerk_organization_id) VALUES(1,1,'owner','active','consulta','org_a'),(1,2,'admin','active','consulta','org_a'),(1,3,'member','active','financeiro','org_a'),(2,1,'owner','active','consulta','org_b'),(3,4,'admin','active','administrador',NULL);`)
  await db.exec("SELECT setval('shared.users_id_seq',(SELECT max(id) FROM shared.users),true);SELECT setval('shared.tenants_id_seq',(SELECT max(id) FROM shared.tenants),true)")
  await applySharedMigration(db)
+ // Migrações recentes (inclui as regras comerciais do vínculo lidas pela tela de membros).
+ await applyRecentMigrations(db)
  const postgres=load('@/lib/postgres'),bootstrap=load('@/products/auth/server/clerkTenantBootstrap'),sync=load('@/products/auth/server/clerkOrganizationSync')
  const settings=load('@/products/auth/server/settingsRepository'),processor=load('@/products/auth/server/clerkWebhookProcessor'),outbox=load('@/products/auth/server/clerkOutbox')
  const policy=load('@/products/auth/server/accessPolicy')

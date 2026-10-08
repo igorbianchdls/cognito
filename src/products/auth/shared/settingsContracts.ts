@@ -32,11 +32,18 @@ export type SettingsMember = {
   userId: number
   profileId: ErpAccessProfile
   syncPending?: boolean
+  /** Permissões comerciais: vendedor que representa o usuário, escopo das vendas e desconto máximo (%). */
+  sellerId?: number | null
+  salesScope?: SalesScope
+  maxDiscountPercent?: number | null
 }
+
+export type SalesScope = 'todas' | 'proprias'
 
 export type SettingsState = {
   currentUserRole: AuthTenantRole
   members: SettingsMember[]
+  sellers: Array<{ id: number; name: string }>
   profile: SettingsProfile
   workspace: SettingsWorkspace
 }
@@ -56,4 +63,7 @@ export type UpdateMemberInput = {
   role?: AuthTenantRole
   status?: WorkspaceMemberStatus
   userId: number
+  sellerId?: number | null
+  salesScope?: SalesScope
+  maxDiscountPercent?: number | null
 }

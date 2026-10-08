@@ -21,6 +21,7 @@ import {
   Send,
   ShieldCheck,
   Trash2,
+  Undo2,
   X,
 } from "lucide-react";
 
@@ -799,6 +800,7 @@ export function SalesWorkspacePage({
                         <Eye className="size-4" />
                       </Button>
                       {!isQuote ? <Button size="icon" variant="ghost" title="Pre-validação fiscal" onClick={() => void openFiscalPreflight(record)}><ShieldCheck className="size-4" /></Button> : null}
+                      {!isQuote && canManage && !["rascunho", "cancelada", "cancelado"].includes(record.status) ? <Button size="icon" variant="ghost" title="Registrar devolução" aria-label="Registrar devolução" onClick={() => { window.location.href = `/erp/vendas/devolucoes?venda=${record.id}` }}><Undo2 className="size-4" /></Button> : null}
                       {canManage ? (
                         <>
                           {record.status === "rascunho" ? (

@@ -223,7 +223,8 @@ export async function reverseAdvanceApplication(input: ActorInput & { applicatio
   })
 }
 
-export async function makePayableEffective(input: ActorInput & { payableId: number }) {
+export async function makePayableEffective(input: ActorInput & { payableId: number; side?: 'pagar' | 'receber' }) {
+  if (input.side === 'receber') return makeReceivableEffective({ ...input, receivableId: input.payableId })
   return withTransaction(async (client) => {
     const current = await client.query(`SELECT id, tipo_lancamento, data_competencia FROM erp.contas_pagar WHERE empresa_id=$1 AND id=$2 AND excluido_em IS NULL FOR UPDATE`, [input.tenantId, input.payableId])
     const payable = current.rows[0]
@@ -232,6 +233,20 @@ export async function makePayableEffective(input: ActorInput & { payableId: numb
     await assertErpPeriodOpen(client, { tenantId: input.tenantId, module: 'financeiro', date: databaseDate(payable.data_competencia) })
     const result = await client.query(`UPDATE erp.contas_pagar SET tipo_lancamento='efetivo', efetivado_em=now(), atualizado_por=$3 WHERE empresa_id=$1 AND id=$2 AND tipo_lancamento='previsao' RETURNING id::text,tipo_lancamento,efetivado_em`, [input.tenantId, input.payableId, input.actorId])
     await client.query(`INSERT INTO erp.contas_pagar_eventos(empresa_id,conta_pagar_id,evento,dados,criado_por) VALUES($1,$2,'efetivada','{}'::jsonb,$3)`, [input.tenantId, input.payableId, input.actorId])
+    return result.rows[0]
+  })
+}
+
+// Receita prevista vira efetiva (a partir daí entra no resultado e pode ser recebida).
+export async function makeReceivableEffective(input: ActorInput & { receivableId: number }) {
+  return withTransaction(async (client) => {
+    const current = await client.query(`SELECT id, tipo_lancamento, data_competencia FROM erp.contas_receber WHERE empresa_id=$1 AND id=$2 AND excluido_em IS NULL FOR UPDATE`, [input.tenantId, input.receivableId])
+    const receivable = current.rows[0]
+    if (!receivable) throw new ErpDomainError('NOT_FOUND', 'Conta a receber não encontrada.', 404)
+    if (receivable.tipo_lancamento === 'efetivo') return { id: String(receivable.id), tipo_lancamento: 'efetivo' }
+    await assertErpPeriodOpen(client, { tenantId: input.tenantId, module: 'financeiro', date: databaseDate(receivable.data_competencia) })
+    const result = await client.query(`UPDATE erp.contas_receber SET tipo_lancamento='efetivo', atualizado_por=$3 WHERE empresa_id=$1 AND id=$2 AND tipo_lancamento='previsao' RETURNING id::text,tipo_lancamento,efetivado_em`, [input.tenantId, input.receivableId, input.actorId])
+    await client.query(`INSERT INTO erp.contas_receber_eventos(empresa_id,conta_receber_id,evento,dados,criado_por) VALUES($1,$2,'efetivada','{}'::jsonb,$3)`, [input.tenantId, input.receivableId, input.actorId])
     return result.rows[0]
   })
 }

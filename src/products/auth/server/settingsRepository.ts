@@ -1,4 +1,5 @@
 import { runQuery, withTransaction } from '@/lib/postgres'
+import { runWithErpDatabaseContext } from '@/lib/erpDatabaseContext'
 import {enqueueClerkOperation,processClerkOperation} from './clerkOutbox'
 import type {ErpAccessProfile} from '@/products/erp/shared/professionalContracts'
 import type {
@@ -29,6 +30,9 @@ type SettingsRow = {
   usuario_id: string | number
   perfil_acesso_id: ErpAccessProfile
   sync_pending: boolean
+  vendedor_id: string | null
+  escopo_vendas: string | null
+  desconto_maximo_percentual: string | null
 }
 
 function normalizeRole(value: unknown): AuthTenantRole {
@@ -83,6 +87,9 @@ function toMember(row: SettingsRow): SettingsMember {
     userId: Number(row.usuario_id),
     profileId: row.perfil_acesso_id,
     syncPending: row.sync_pending,
+    sellerId: row.vendedor_id ? Number(row.vendedor_id) : null,
+    salesScope: row.escopo_vendas === 'proprias' ? 'proprias' : 'todas',
+    maxDiscountPercent: row.desconto_maximo_percentual == null ? null : Number(row.desconto_maximo_percentual),
   }
 }
 
@@ -107,6 +114,9 @@ export async function getSettingsState(input: {
        memberships.role::text AS role,
        memberships.status::text AS status,
        memberships.perfil_acesso_id,
+       memberships.vendedor_id::text AS vendedor_id,
+       memberships.escopo_vendas,
+       memberships.desconto_maximo_percentual::text AS desconto_maximo_percentual,
        EXISTS(SELECT 1 FROM shared.eventos_webhook w WHERE w.provedor='clerk_outbox' AND w.entidade_id=tenants.clerk_organization_id||':'||users.clerk_user_id AND w.status IN ('pending','failed','processing')) AS sync_pending
      FROM shared.usuarios_empresas AS memberships
      JOIN shared.usuarios AS users
@@ -147,9 +157,17 @@ export async function getSettingsState(input: {
     status: current.tenant_status,
   }
 
+  // Vendedores cadastrados, para vincular usuários às vendas (permissões comerciais); lidos com as
+  // permissões do próprio usuário.
+  const sellers = await runWithErpDatabaseContext({ tenantId: input.tenantId, userId: input.sharedUserId, readOnly: true, statementTimeoutMs: 5000 },
+    () => runQuery<{ id: string; nome: string }>(
+      'SELECT id::text, nome FROM erp.entidades WHERE empresa_id = $1 AND eh_vendedor AND ativo AND excluido_em IS NULL ORDER BY nome',
+      [input.tenantId],
+    ))
   return {
     currentUserRole: normalizeRole(current.role),
     members: rows.map(toMember),
+    sellers: sellers.map(row => ({ id: Number(row.id), name: row.nome })),
     profile,
     workspace,
   }
@@ -224,7 +242,11 @@ export async function updateWorkspaceMember(input: {
   if(values.role && !allowedRoles.includes(values.role)) throw new Error('Papel invalido.')
   if(values.status && !allowedStatuses.includes(values.status)) throw new Error('Estado invalido. Convites sao gerenciados separadamente.')
   if(values.profileId && !profiles.includes(values.profileId)) throw new Error('Perfil invalido.')
-  if(!values.role && !values.status && !values.profileId) throw new Error('Nada para atualizar.')
+  const commercial=values.sellerId!==undefined||values.salesScope!==undefined||values.maxDiscountPercent!==undefined
+  if(values.salesScope && !['todas','proprias'].includes(values.salesScope)) throw new Error('Escopo de vendas invalido.')
+  if(values.maxDiscountPercent!=null && !(values.maxDiscountPercent>=0 && values.maxDiscountPercent<=100)) throw new Error('Desconto maximo deve estar entre 0 e 100%.')
+  if(values.sellerId!=null && !(Number.isSafeInteger(values.sellerId) && values.sellerId>0)) throw new Error('Vendedor invalido.')
+  if(!values.role && !values.status && !values.profileId && !commercial) throw new Error('Nada para atualizar.')
   const reason=String(values.reason || '').trim()
   if(reason.length>1000)throw new Error('Motivo muito longo.')
   const result=await withTransaction(async client=>{
@@ -244,6 +266,9 @@ export async function updateWorkspaceMember(input: {
     await client.query("SELECT set_config('app.shared_actor_id',$1,true),set_config('app.shared_source','settings_members',true),set_config('app.shared_reason',$2,true)",[String(input.actorUserId),reason])
     const updated=await client.query("UPDATE shared.usuarios_empresas SET role=$3,perfil_acesso_id=$4,status=COALESCE($5,status),suspenso_localmente=CASE WHEN $5 IS NULL THEN suspenso_localmente ELSE $5='suspended' END, metadata=metadata||jsonb_build_object('accessRoleManaged',true,'updatedBy','settings_members'),updated_at=now() WHERE empresa_id=$1 AND usuario_id=$2 RETURNING usuario_id",[input.tenantId,values.userId,role,profile,values.status || null])
     if(!updated.rows.length)throw new Error('Membro nao encontrado.')
+    // Permissões comerciais (vendedor, escopo de vendas, desconto maximo); o banco valida o vendedor.
+    if(commercial)await client.query("UPDATE shared.usuarios_empresas SET vendedor_id=CASE WHEN $3 THEN $4::bigint ELSE vendedor_id END,escopo_vendas=COALESCE($5,escopo_vendas),desconto_maximo_percentual=CASE WHEN $6 THEN $7::numeric ELSE desconto_maximo_percentual END,updated_at=now() WHERE empresa_id=$1 AND usuario_id=$2",
+      [input.tenantId,values.userId,values.sellerId!==undefined,values.sellerId??null,values.salesScope??null,values.maxDiscountPercent!==undefined,values.maxDiscountPercent??null])
     const ids=await client.query('SELECT e.clerk_organization_id,u.clerk_user_id FROM shared.empresas e JOIN shared.usuarios u ON u.id=$2 WHERE e.id=$1',[input.tenantId,values.userId])
     const row=ids.rows[0];let operationId:number|null=null
     if(values.role && row?.clerk_organization_id && row?.clerk_user_id)operationId=await enqueueClerkOperation(client,{type:'membership',organizationId:String(row.clerk_organization_id),clerkUserId:String(row.clerk_user_id),appRole:role as AuthTenantRole})

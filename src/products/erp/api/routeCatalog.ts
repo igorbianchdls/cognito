@@ -60,6 +60,58 @@ export const ERP_API_ROUTES = [
     "transportOnlyFiscal": false
   },
   {
+    "path": "/api/erp/anexos/[id]/confirmar",
+    "route": "src/app/api/erp/anexos/[id]/confirmar/route.ts",
+    "handler": "src/products/erp/api/handlers/anexos/confirmar.ts",
+    "methods": [
+      "POST"
+    ],
+    "authentication": "session",
+    "maxBodyBytes": 1048576,
+    "capabilities": [],
+    "permissionRule": "Session or dynamic module/operation capability; see handler.",
+    "idempotency": "Business-operation rules; see handler.",
+    "transportOnlyFiscal": false
+  },
+  {
+    "path": "/api/erp/anexos/[id]",
+    "route": "src/app/api/erp/anexos/[id]/route.ts",
+    "handler": "src/products/erp/api/handlers/anexos/registro.ts",
+    "methods": [
+      "GET",
+      "DELETE"
+    ],
+    "authentication": "session",
+    "maxBodyBytes": 1048576,
+    "capabilities": [],
+    "permissionRule": "Session or dynamic module/operation capability; see handler.",
+    "idempotency": "Business-operation rules; see handler.",
+    "transportOnlyFiscal": false
+  },
+  {
+    "path": "/api/erp/anexos",
+    "route": "src/app/api/erp/anexos/route.ts",
+    "handler": "src/products/erp/api/handlers/anexos/index.ts",
+    "methods": [
+      "GET",
+      "POST"
+    ],
+    "authentication": "session",
+    "maxBodyBytes": 1048576,
+    "capabilities": [
+      "erp.compras.gerenciar",
+      "erp.compras.visualizar",
+      "erp.financeiro.baixar",
+      "erp.financeiro.gerenciar",
+      "erp.financeiro.visualizar",
+      "erp.vendas.gerenciar",
+      "erp.vendas.visualizar"
+    ],
+    "permissionRule": "Capabilities vary by method; see handler.",
+    "idempotency": "Business-operation rules; see handler.",
+    "transportOnlyFiscal": false
+  },
+  {
     "path": "/api/erp/automacoes",
     "route": "src/app/api/erp/automacoes/route.ts",
     "handler": "src/products/erp/api/handlers/automacoes/index.ts",
@@ -119,6 +171,73 @@ export const ERP_API_ROUTES = [
     "maxBodyBytes": 1048576,
     "capabilities": [
       "erp.cadastros.visualizar"
+    ],
+    "permissionRule": "Capabilities vary by method; see handler.",
+    "idempotency": "Business-operation rules; see handler.",
+    "transportOnlyFiscal": false
+  },
+  {
+    "path": "/api/erp/comissoes/pagar",
+    "route": "src/app/api/erp/comissoes/pagar/route.ts",
+    "handler": "src/products/erp/api/handlers/comissoes/pagar.ts",
+    "methods": [
+      "POST"
+    ],
+    "authentication": "session",
+    "maxBodyBytes": 1048576,
+    "capabilities": [
+      "erp.financeiro.gerenciar"
+    ],
+    "permissionRule": "Capabilities vary by method; see handler.",
+    "idempotency": "Required for one or more writes; see handler.",
+    "transportOnlyFiscal": false
+  },
+  {
+    "path": "/api/erp/comissoes/regras/[id]",
+    "route": "src/app/api/erp/comissoes/regras/[id]/route.ts",
+    "handler": "src/products/erp/api/handlers/comissoes/regra.ts",
+    "methods": [
+      "PATCH",
+      "DELETE"
+    ],
+    "authentication": "session",
+    "maxBodyBytes": 1048576,
+    "capabilities": [
+      "erp.vendas.gerenciar"
+    ],
+    "permissionRule": "Capabilities vary by method; see handler.",
+    "idempotency": "Business-operation rules; see handler.",
+    "transportOnlyFiscal": false
+  },
+  {
+    "path": "/api/erp/comissoes/regras",
+    "route": "src/app/api/erp/comissoes/regras/route.ts",
+    "handler": "src/products/erp/api/handlers/comissoes/regras.ts",
+    "methods": [
+      "GET",
+      "POST"
+    ],
+    "authentication": "session",
+    "maxBodyBytes": 1048576,
+    "capabilities": [
+      "erp.vendas.gerenciar",
+      "erp.vendas.visualizar"
+    ],
+    "permissionRule": "Capabilities vary by method; see handler.",
+    "idempotency": "Business-operation rules; see handler.",
+    "transportOnlyFiscal": false
+  },
+  {
+    "path": "/api/erp/comissoes",
+    "route": "src/app/api/erp/comissoes/route.ts",
+    "handler": "src/products/erp/api/handlers/comissoes/index.ts",
+    "methods": [
+      "GET"
+    ],
+    "authentication": "session",
+    "maxBodyBytes": 1048576,
+    "capabilities": [
+      "erp.vendas.visualizar"
     ],
     "permissionRule": "Capabilities vary by method; see handler.",
     "idempotency": "Business-operation rules; see handler.",
@@ -237,6 +356,25 @@ export const ERP_API_ROUTES = [
     "authentication": "session",
     "maxBodyBytes": 1048576,
     "capabilities": [
+      "erp.financeiro.visualizar"
+    ],
+    "permissionRule": "Capabilities vary by method; see handler.",
+    "idempotency": "Business-operation rules; see handler.",
+    "transportOnlyFiscal": false
+  },
+  {
+    "path": "/api/erp/conciliacao/lancamentos",
+    "route": "src/app/api/erp/conciliacao/lancamentos/route.ts",
+    "handler": "src/products/erp/api/handlers/conciliacao/lancamentos.ts",
+    "methods": [
+      "GET",
+      "POST",
+      "DELETE"
+    ],
+    "authentication": "session",
+    "maxBodyBytes": 1048576,
+    "capabilities": [
+      "erp.financeiro.gerenciar",
       "erp.financeiro.visualizar"
     ],
     "permissionRule": "Capabilities vary by method; see handler.",
@@ -404,6 +542,54 @@ export const ERP_API_ROUTES = [
     "transportOnlyFiscal": false
   },
   {
+    "path": "/api/erp/devolucoes/[id]",
+    "route": "src/app/api/erp/devolucoes/[id]/route.ts",
+    "handler": "src/products/erp/api/handlers/devolucoes/registro.ts",
+    "methods": [
+      "GET"
+    ],
+    "authentication": "session",
+    "maxBodyBytes": 1048576,
+    "capabilities": [
+      "erp.vendas.visualizar"
+    ],
+    "permissionRule": "Capabilities vary by method; see handler.",
+    "idempotency": "Business-operation rules; see handler.",
+    "transportOnlyFiscal": false
+  },
+  {
+    "path": "/api/erp/devolucoes/[id]/usar-credito",
+    "route": "src/app/api/erp/devolucoes/[id]/usar-credito/route.ts",
+    "handler": "src/products/erp/api/handlers/devolucoes/usar-credito.ts",
+    "methods": [
+      "POST"
+    ],
+    "authentication": "session",
+    "maxBodyBytes": 1048576,
+    "capabilities": [
+      "erp.financeiro.baixar"
+    ],
+    "permissionRule": "Capabilities vary by method; see handler.",
+    "idempotency": "Required for one or more writes; see handler.",
+    "transportOnlyFiscal": false
+  },
+  {
+    "path": "/api/erp/devolucoes",
+    "route": "src/app/api/erp/devolucoes/route.ts",
+    "handler": "src/products/erp/api/handlers/devolucoes/index.ts",
+    "methods": [
+      "GET"
+    ],
+    "authentication": "session",
+    "maxBodyBytes": 1048576,
+    "capabilities": [
+      "erp.vendas.visualizar"
+    ],
+    "permissionRule": "Capabilities vary by method; see handler.",
+    "idempotency": "Business-operation rules; see handler.",
+    "transportOnlyFiscal": false
+  },
+  {
     "path": "/api/erp/estoque/contagem",
     "route": "src/app/api/erp/estoque/contagem/route.ts",
     "handler": "src/products/erp/api/handlers/estoque/contagem.ts",
@@ -455,6 +641,24 @@ export const ERP_API_ROUTES = [
     ],
     "permissionRule": "Capabilities vary by method; see handler.",
     "idempotency": "Required for one or more writes; see handler.",
+    "transportOnlyFiscal": false
+  },
+  {
+    "path": "/api/erp/financeiro/formas-pagamento",
+    "route": "src/app/api/erp/financeiro/formas-pagamento/route.ts",
+    "handler": "src/products/erp/api/handlers/financeiro/formas-pagamento.ts",
+    "methods": [
+      "GET",
+      "POST"
+    ],
+    "authentication": "session",
+    "maxBodyBytes": 1048576,
+    "capabilities": [
+      "erp.financeiro.gerenciar",
+      "erp.financeiro.visualizar"
+    ],
+    "permissionRule": "Capabilities vary by method; see handler.",
+    "idempotency": "Business-operation rules; see handler.",
     "transportOnlyFiscal": false
   },
   {
@@ -520,6 +724,24 @@ export const ERP_API_ROUTES = [
     "maxBodyBytes": 1048576,
     "capabilities": [],
     "permissionRule": "Session or dynamic module/operation capability; see handler.",
+    "idempotency": "Business-operation rules; see handler.",
+    "transportOnlyFiscal": false
+  },
+  {
+    "path": "/api/erp/metas-vendas",
+    "route": "src/app/api/erp/metas-vendas/route.ts",
+    "handler": "src/products/erp/api/handlers/metas-vendas/index.ts",
+    "methods": [
+      "GET",
+      "POST"
+    ],
+    "authentication": "session",
+    "maxBodyBytes": 1048576,
+    "capabilities": [
+      "erp.vendas.gerenciar",
+      "erp.vendas.visualizar"
+    ],
+    "permissionRule": "Capabilities vary by method; see handler.",
     "idempotency": "Business-operation rules; see handler.",
     "transportOnlyFiscal": false
   },
@@ -623,6 +845,24 @@ export const ERP_API_ROUTES = [
     "maxBodyBytes": 1048576,
     "capabilities": [],
     "permissionRule": "Session or dynamic module/operation capability; see handler.",
+    "idempotency": "Business-operation rules; see handler.",
+    "transportOnlyFiscal": false
+  },
+  {
+    "path": "/api/erp/orcamentos-financeiros",
+    "route": "src/app/api/erp/orcamentos-financeiros/route.ts",
+    "handler": "src/products/erp/api/handlers/orcamentos-financeiros/index.ts",
+    "methods": [
+      "GET",
+      "POST"
+    ],
+    "authentication": "session",
+    "maxBodyBytes": 1048576,
+    "capabilities": [
+      "erp.financeiro.gerenciar",
+      "erp.financeiro.visualizar"
+    ],
+    "permissionRule": "Capabilities vary by method; see handler.",
     "idempotency": "Business-operation rules; see handler.",
     "transportOnlyFiscal": false
   },
@@ -793,6 +1033,22 @@ export const ERP_API_ROUTES = [
     "transportOnlyFiscal": false
   },
   {
+    "path": "/api/erp/relatorios/dre",
+    "route": "src/app/api/erp/relatorios/dre/route.ts",
+    "handler": "src/products/erp/api/handlers/relatorios/dre.ts",
+    "methods": [
+      "GET"
+    ],
+    "authentication": "session",
+    "maxBodyBytes": 1048576,
+    "capabilities": [
+      "erp.relatorios.visualizar"
+    ],
+    "permissionRule": "Capabilities vary by method; see handler.",
+    "idempotency": "Business-operation rules; see handler.",
+    "transportOnlyFiscal": false
+  },
+  {
     "path": "/api/erp/resumo/profissional",
     "route": "src/app/api/erp/resumo/profissional/route.ts",
     "handler": "src/products/erp/api/handlers/resumo/profissional.ts",
@@ -819,6 +1075,43 @@ export const ERP_API_ROUTES = [
     "maxBodyBytes": 1048576,
     "capabilities": [
       "erp.relatorios.visualizar"
+    ],
+    "permissionRule": "Capabilities vary by method; see handler.",
+    "idempotency": "Business-operation rules; see handler.",
+    "transportOnlyFiscal": false
+  },
+  {
+    "path": "/api/erp/tabelas-preco/[id]",
+    "route": "src/app/api/erp/tabelas-preco/[id]/route.ts",
+    "handler": "src/products/erp/api/handlers/tabelas-preco/registro.ts",
+    "methods": [
+      "GET",
+      "PATCH",
+      "DELETE"
+    ],
+    "authentication": "session",
+    "maxBodyBytes": 1048576,
+    "capabilities": [
+      "erp.cadastros.gerenciar",
+      "erp.cadastros.visualizar"
+    ],
+    "permissionRule": "Capabilities vary by method; see handler.",
+    "idempotency": "Business-operation rules; see handler.",
+    "transportOnlyFiscal": false
+  },
+  {
+    "path": "/api/erp/tabelas-preco",
+    "route": "src/app/api/erp/tabelas-preco/route.ts",
+    "handler": "src/products/erp/api/handlers/tabelas-preco/index.ts",
+    "methods": [
+      "GET",
+      "POST"
+    ],
+    "authentication": "session",
+    "maxBodyBytes": 1048576,
+    "capabilities": [
+      "erp.cadastros.gerenciar",
+      "erp.cadastros.visualizar"
     ],
     "permissionRule": "Capabilities vary by method; see handler.",
     "idempotency": "Business-operation rules; see handler.",
@@ -923,6 +1216,24 @@ export const ERP_API_ROUTES = [
     ],
     "permissionRule": "Capabilities vary by method; see handler.",
     "idempotency": "Business-operation rules; see handler.",
+    "transportOnlyFiscal": false
+  },
+  {
+    "path": "/api/erp/vendas/[id]/devolucoes",
+    "route": "src/app/api/erp/vendas/[id]/devolucoes/route.ts",
+    "handler": "src/products/erp/api/handlers/devolucoes/venda.ts",
+    "methods": [
+      "GET",
+      "POST"
+    ],
+    "authentication": "session",
+    "maxBodyBytes": 1048576,
+    "capabilities": [
+      "erp.vendas.gerenciar",
+      "erp.vendas.visualizar"
+    ],
+    "permissionRule": "Capabilities vary by method; see handler.",
+    "idempotency": "Required for one or more writes; see handler.",
     "transportOnlyFiscal": false
   },
   {

@@ -72,14 +72,19 @@ export function ErpSalesTabs({ activeHref }: { activeHref: string }) {
     { label: 'Ordens de serviço', href: '/erp/vendas/ordens-servico' },
     { label: 'Contratos', href: '/erp/vendas/contratos' },
     {label:'Notas de serviço',href:'/erp/vendas/notas-fiscais'},
+    { label: 'Devoluções', href: '/erp/vendas/devolucoes' },
+    { label: 'Tabelas de preço', href: '/erp/vendas/tabelas-preco' },
+    { label: 'Comissões', href: '/erp/vendas/gestao-comissoes' },
+    { label: 'Metas', href: '/erp/vendas/metas-vendas' },
   ]} />
 }
 
 export function ErpModuleWorkspaceTabs({ sectionId, moduleId }: { sectionId: ErpSectionId; moduleId: string }) {
   const section = getErpSection(sectionId)
-  const itemGroup = ['produtos', 'servicos', 'categorias']
+  const itemGroup = ['produtos', 'servicos']
+  const categoryGroup = ['categorias', 'categorias-cadastro']
   const peopleGroup = ['clientes', 'fornecedores', 'vendedores']
-  const group = sectionId === 'cadastros' ? (itemGroup.includes(moduleId) ? itemGroup : peopleGroup) : undefined
+  const group = sectionId === 'cadastros' ? (itemGroup.includes(moduleId) ? itemGroup : categoryGroup.includes(moduleId) ? categoryGroup : peopleGroup) : undefined
   const labels: Record<string, string> = {
     servicos: 'Serviços', 'posicao-estoque': 'Situação', movimentacoes: 'Movimentações', inventarios: 'Inventários',
     transferencias: 'Transferências', 'conversoes-unidades': 'Conversões',

@@ -16,8 +16,8 @@ function repository(file){
   if(id==='@/products/erp/server/erpApi'||id==='@/products/erp/shared/erpErrors')return {ErpDomainError:DomainError};
   if(id==='@/products/erp/shared/erpTransport')return {erpDateSchema:{safeParse:value=>/^\d{4}-\d{2}-\d{2}$/.test(value||'')?{success:true,data:value}:{success:false}}};
   if(id==='./erpCashReport')return {cashResultSql:()=>''};
-  if(id==='./erpFinancialReports')return {cashFlowSql:()=>'SELECT 1',accrualResultSql:()=>'SELECT 1',agingSql:()=>'SELECT 1'};
-  if(id==='@/products/erp/server/erpBusinessDate')return {erpToday:()=>'2026-10-07'};
+  if(id==='./erpFinancialReports')return {cashFlowSql:()=>'SELECT 1',accrualResultSql:()=>'SELECT 1',agingSql:()=>'SELECT 1',commissionSummarySql:()=>'SELECT 1',commissionReleasedSql:()=>'SELECT 1',marginSql:()=>'SELECT 1',cmvSql:()=>'SELECT 1',accrualAllocationSql:()=>'SELECT 1'};
+  if(id==='@/products/erp/server/erpBusinessDate'||id==='./erpBusinessDate')return {erpToday:()=>'2026-10-07',ERP_TODAY_SQL:'CURRENT_DATE'};
   if(id==='@/products/erp/server/erpRepository')return {financialCompositionSql:()=>''};
   if(id==='@/products/erp/shared/reportCatalog')return {
    isRetiredErpReport:value=>['dre','fluxo-diario','fluxo-mensal'].includes(value),

@@ -70,7 +70,7 @@ const numberId = (value: unknown, label: string) => {
     if (operation === 'adiantamentos') return NextResponse.json(await createAdvance({ ...base, idempotencyKey: readErpIdempotencyKey(request.headers, true) }), { status: 201 })
     if (operation === 'aplicar-adiantamento') return NextResponse.json(await applyAdvance({ ...base, idempotencyKey: readErpIdempotencyKey(request.headers, true) }), { status: 201 })
     if (operation === 'reverter-aplicacao') return NextResponse.json(await reverseAdvanceApplication({ ...base, applicationId: numberId(values.aplicacao_id, 'Aplicacao'), idempotencyKey: readErpIdempotencyKey(request.headers, true) }), { status: 201 })
-    if (operation === 'efetivar-previsao') return NextResponse.json(await makePayableEffective({ tenantId: tenant.tenantId, actorId: tenant.sharedUserId, payableId: numberId(values.conta_id, 'Conta') }))
+    if (operation === 'efetivar-previsao') return NextResponse.json(await makePayableEffective({ tenantId: tenant.tenantId, actorId: tenant.sharedUserId, payableId: numberId(values.conta_id, 'Conta'), side: values.lado === 'receber' ? 'receber' : 'pagar' }))
     if (operation === 'rateios') {
       const lado = values.lado
       if (lado !== 'receber' && lado !== 'pagar') throw new ErpDomainError('VALIDATION_ERROR', 'Lado financeiro inválido.')

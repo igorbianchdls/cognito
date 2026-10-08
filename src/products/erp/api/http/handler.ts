@@ -60,7 +60,10 @@ export function withErpHttp<H extends HttpHandler>(handler: H, options: HttpOpti
       }
       const headers = new Headers(response.headers)
       headers.set('Cache-Control', 'no-store'); headers.set('x-correlation-id', correlationId)
-      console.info(JSON.stringify({ scope: 'erp-api', operation: options.operation, correlationId, status: response.status, durationMs: Date.now() - started }))
+      const durationMs = Date.now() - started
+      console.info(JSON.stringify({ scope: 'erp-api', operation: options.operation, correlationId, status: response.status, durationMs }))
+      // Acima de 1 s vira alerta nos logs (meta da Fase 0: telas do ERP abaixo de 1 s).
+      if (durationMs > 1000) console.warn(JSON.stringify({ scope: 'erp-api', code: 'LENTO', operation: options.operation, correlationId, durationMs }))
       return new Response(response.body, { status: response.status, statusText: response.statusText, headers })
     })
   }

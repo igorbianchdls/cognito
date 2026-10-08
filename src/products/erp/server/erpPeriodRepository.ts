@@ -71,7 +71,14 @@ export async function closeErpPeriod(input: {
         input.actorId,
       ],
     );
-    return result.rows[0];
+    // Aviso (não bloqueia): transações do extrato ainda não conciliadas no período fechado.
+    const pending = input.modulo === 'financeiro' || input.modulo === 'todos'
+      ? Number((await client.query(
+        `SELECT count(*)::int AS n FROM erp.transacoes_bancarias
+         WHERE empresa_id = $1 AND status = 'pendente' AND excluido_em IS NULL AND data_transacao BETWEEN $2::date AND $3::date`,
+        [input.tenantId, input.periodo_inicio, input.periodo_fim])).rows[0].n)
+      : 0;
+    return { ...result.rows[0], ...(pending ? { aviso: `${pending} transação(ões) do extrato bancário deste período ainda não foram conciliadas.`, transacoes_pendentes: pending } : {}) };
   });
 }
 

@@ -25,12 +25,13 @@ type RouteContext = {
   }
 
   try {
-    const action = await parseErpBody(request,z.object({values:z.object({expectedVersion:erpVersionSchema,motivo:z.string().max(1000).optional()}).strict()}).strict())
+    const action = await parseErpBody(request,z.object({values:z.object({expectedVersion:erpVersionSchema,motivo:z.string().max(1000).optional(),liberarCreditoMotivo:z.string().trim().min(3).max(500).optional()}).strict()}).strict())
     const result = await confirmErpSale({
       actorId: tenant.sharedUserId,
       expectedVersion: action.values.expectedVersion,
       saleId,
       tenantId: tenant.tenantId,
+      creditOverrideReason: action.values.liberarCreditoMotivo,
     })
 
     return NextResponse.json(result)

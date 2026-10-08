@@ -1,5 +1,7 @@
 'use client'
 
+import { ErpAttachments, type ErpAttachmentDocument } from '@/products/erp/frontend/components/ErpAttachments'
+import { useErpAccess } from '@/products/erp/frontend/hooks/useErpAccess'
 import { Printer } from 'lucide-react'
 import { useState } from 'react'
 import { ErpHistoryPanel } from './ErpHistoryPanel'
@@ -39,6 +41,9 @@ export function ErpDocumentDetailsDialog({ open, onOpenChange, title, loading, d
   invoices?: DetailRecord[]
 }) {
   const [fiscalId,setFiscalId]=useState<string|null>(null)
+  // Anexos do documento (venda, compra, contrato, ordem de serviço).
+  const access=useErpAccess()
+  const attachment:{documento:ErpAttachmentDocument;manage:boolean}|null=documentKind==='vendas'?{documento:'venda',manage:access.can('erp.vendas.gerenciar')}:documentKind==='compras'?{documento:'compra',manage:access.can('erp.compras.gerenciar')}:documentKind==='contratos'?{documento:'contrato',manage:access.can('erp.vendas.gerenciar')}:documentKind==='ordens-servico'?{documento:'ordem_servico',manage:access.can('erp.vendas.gerenciar')}:null
   return <Dialog open={open} onOpenChange={onOpenChange}>
     <DialogContent className="h-[88vh] max-w-[min(980px,96vw)] overflow-hidden p-0">
       <DialogHeader className="flex-row items-center justify-between border-b px-6 py-4"><DialogTitle>{title}</DialogTitle><Button variant="outline" size="sm" onClick={() => window.print()}><Printer className="size-4" />Imprimir / PDF</Button></DialogHeader>
@@ -53,6 +58,7 @@ export function ErpDocumentDetailsDialog({ open, onOpenChange, title, loading, d
           {invoices.length ? <DetailTable title="Notas fiscais vinculadas" rows={invoices} columns={['numero', 'serie', 'chave_acesso', 'status', 'valor_total']} /> : null}
           {invoices.filter(invoice=>invoice.id).map(invoice=><Button key={String(invoice.id)} variant="outline" onClick={()=>setFiscalId(fiscalId===String(invoice.id)?null:String(invoice.id))}>Histórico da nota {String(invoice.numero)}</Button>)}
           {fiscalId && invoices.some(invoice=>String(invoice.id)===fiscalId)?<ErpHistoryPanel kind={documentKind==='compras'?'notas-compra':'notas-fiscais'} id={fiscalId}/>:null}
+          {attachment && document.id ? <ErpAttachments documento={attachment.documento} registroId={String(document.id)} canManage={attachment.manage} /> : null}
           {documentKind && document.id ? <ErpHistoryPanel kind={documentKind} id={String(document.id)}/> : <DetailTable title="Histórico" rows={events || []} columns={['evento', 'status_anterior', 'status_novo', 'versao', 'criado_em']} />}
         </div> : <div className="py-20 text-center text-sm text-gray-500">Documento não encontrado.</div>}
       </div>

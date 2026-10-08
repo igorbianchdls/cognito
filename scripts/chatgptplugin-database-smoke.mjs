@@ -1,4 +1,5 @@
 import {applySharedMigration} from './shared/schema-contract.mjs'
+import {applyRecentMigrations} from './erp/phase0-migrations.mjs'
 import assert from 'node:assert/strict';
 import { readFileSync, existsSync } from 'node:fs';
 import { resolve, dirname } from 'node:path';
@@ -68,6 +69,7 @@ async function main(){
   for(const file of ['20261006010000_prepare_erp_fiscal_integration.sql','20261006020000_service_invoice_simulation.sql','20261007120000_empresa_fuso_horario.sql']) {
     await db.exec(readFileSync(`supabase/migrations/${file}`,'utf8'));
   }
+  await applyRecentMigrations(db);
   await db.exec(`
     INSERT INTO shared.perfis_acesso(id,nome) VALUES('consulta','Consulta') ON CONFLICT(id) DO NOTHING;
     INSERT INTO shared.permissoes_perfil(perfil_acesso_id,capability) VALUES('consulta','erp.cadastros.visualizar');
@@ -84,10 +86,10 @@ async function main(){
     INSERT INTO erp.compras(id,empresa_id,fornecedor_id,numero,status,subtotal,total) VALUES(101,1,101,'CA-1','rascunho',10,10),(201,2,201,'CB-1','rascunho',20,20);
     INSERT INTO erp.vendas(id,empresa_id,cliente_id,numero,status,tipo_documento,subtotal,total) VALUES(102,1,101,'OA-1','rascunho','orcamento',10,10),(202,2,201,'OB-1','rascunho','orcamento',20,20);
   `);
-  const {loadPluginPrincipal}=load('@/products/chatgptplugin/auth/resolvePrincipal');
-  const {executeTool}=load('@/products/chatgptplugin/application/executeTool');
-  const audit=load('@/products/chatgptplugin/audit/executionRepository');
-  const settings={toolTimeoutMs:15000,resource:'https://erp.example.invalid/api/mcp',metadataUrl:'https://erp.example.invalid/.well-known/oauth-protected-resource/api/mcp'};
+  const {loadPluginPrincipal}=load('@/products/mcpcore/auth/resolvePrincipal');
+  const {executeTool}=load('@/products/mcpcore/application/executeTool');
+  const audit=load('@/products/mcpcore/audit/executionRepository');
+  const settings={integration:'chatgpt',toolTimeoutMs:15000,resource:'https://erp.example.invalid/api/mcp',metadataUrl:'https://erp.example.invalid/.well-known/oauth-protected-resource/api/mcp'};
   const owner=await loadPluginPrincipal('user_1','client',['erp:read','erp:write']);
   const viewer=await loadPluginPrincipal('user_2','client',['erp:read']);
   async function call(p,name,args){const result=await executeTool(p,name,args,settings);assert(!result.isError,JSON.stringify(result));return result.structuredContent.data;}
@@ -128,7 +130,7 @@ async function main(){
     assert(rows.some(r=>r.status==='succeeded'));assert(rows.some(r=>r.error_code==='ACCESS_DENIED'));assert(rows.every(r=>r.duration_ms>=0));
   });
   await check('Limite atomico entre chamadas concorrentes',async()=>{
-    const outcomes=await Promise.allSettled(Array.from({length:4},()=>audit.consumeRequestLimit(owner,2)));
+    const outcomes=await Promise.allSettled(Array.from({length:4},()=>audit.consumeRequestLimit(owner,2,'chatgpt')));
     assert.equal(outcomes.filter(x=>x.status==='fulfilled').length,2);
     assert.equal((await db.query('SELECT requests FROM plugin.rate_windows')).rows[0].requests,4);
   });
@@ -136,10 +138,10 @@ async function main(){
     for(const role of ['anon','authenticated'])for(const table of ['executions','rate_windows','drafts','settings']){await db.exec(`BEGIN; SET LOCAL ROLE ${role}`);try{await assert.rejects(db.query(`SELECT * FROM plugin.${table}`),e=>e.code==='42501');}finally{await db.exec('ROLLBACK');}}
   });
   const {randomUUID}=require('node:crypto');
-  const {decideApproval}=load('@/products/chatgptplugin/approvals/approvalRepository');
+  const {decideApproval}=load('@/products/mcpcore/approvals/approvalRepository');
   const session={tenantId:1,sharedUserId:1,clerkUserId:'user_1',capabilities:owner.companies[0].capabilities};
-  const {toolCallForProposal}=load('@/products/chatgptplugin/actions/catalog');
-  const {getDraft}=load('@/products/chatgptplugin/actions/draftRepository');
+  const {toolCallForProposal}=load('@/products/mcpcore/actions/catalog');
+  const {getDraft}=load('@/products/mcpcore/actions/draftRepository');
   // Prepara pela tool de escrita correspondente ao tipo da proposta.
   const prepareTool=(p,args)=>{const c=toolCallForProposal(args.proposta);return executeTool(p,c.name,{empresa_id:args.empresa_id,chave_operacao:args.chave_operacao,...c.arguments},settings)};
   const prepare=async(proposta,key=randomUUID())=>{const result=await prepareTool(owner,{empresa_id:1,chave_operacao:key,proposta});assert(!result.isError,JSON.stringify(result));return result.structuredContent.data};
@@ -153,9 +155,9 @@ async function main(){
     assert.equal((await prepareTool({...owner,scopes:['erp:read']},{empresa_id:1,chave_operacao:randomUUID(),proposta},settings)).isError,true);
     const status=await draftOf(first.rascunho_id);assert.equal(status.status,'pending');
     assert.equal((await db.query("SELECT count(*)::int AS n FROM plugin.drafts WHERE integration='chatgpt'")).rows[0].n,1);
-    await assert.rejects(decideApproval(first.rascunho_id,{...session,tenantId:2},'save'));
-    await assert.rejects(decideApproval(first.rascunho_id,{...session,sharedUserId:2,clerkUserId:'user_2'},'save'));
-    const results=await Promise.all([decideApproval(first.rascunho_id,session,'save'),decideApproval(first.rascunho_id,session,'save')]);
+    await assert.rejects(decideApproval(first.rascunho_id,{...session,tenantId:2},'save','chatgpt'));
+    await assert.rejects(decideApproval(first.rascunho_id,{...session,sharedUserId:2,clerkUserId:'user_2'},'save','chatgpt'));
+    const results=await Promise.all([decideApproval(first.rascunho_id,session,'save','chatgpt'),decideApproval(first.rascunho_id,session,'save','chatgpt')]);
     assert.equal(results[0].registro_id,results[1].registro_id);assert.equal((await db.query('SELECT count(*)::int AS n FROM erp.entidades')).rows[0].n,before+1);
     assert.equal((await draftOf(first.rascunho_id)).status,'saved');
   });
@@ -184,9 +186,21 @@ async function main(){
     try {assert.equal((await executeTool(owner,'criar_cadastro',{empresa_id:1,rascunho_id:draft.rascunho_id},settings)).isError,true);assert.equal((await draftOf(draft.rascunho_id)).status,'pending')}
     finally {await db.query('UPDATE shared.usuarios_empresas SET role=$1,perfil_acesso_id=$2 WHERE empresa_id=1 AND usuario_id=1',[original.role,original.perfil_acesso_id])}
   });
+  await check('Converter orcamento em venda pelo chat cria a venda uma unica vez',async()=>{
+    const created=await call(owner,'criar_venda',{empresa_id:1,chave_operacao:randomUUID(),tipo:'orcamento',dados:{cliente_id:101,data_venda:'2026-10-03',data_vencimento:'2026-10-20',itens:[{tipo:'produto',item_id:101,quantidade:2,valor_unitario:10}]}});
+    const quote=Number((await call(owner,'criar_venda',{empresa_id:1,rascunho_id:created.rascunho_id})).registro_id);
+    const preview=await call(owner,'converter_orcamento',{empresa_id:1,chave_operacao:randomUUID(),dados:{registro_id:quote}});
+    assert.equal(preview.etapa,'previa');assert.equal((await db.query('SELECT count(*)::int n FROM erp.vendas WHERE empresa_id=1 AND venda_origem_id=$1',[quote])).rows[0].n,0);
+    const wrong=await executeTool(owner,'converter_orcamento',{empresa_id:1,chave_operacao:randomUUID(),dados:{registro_id:101}},settings);assert.equal(wrong.isError,true);
+    const done=await call(owner,'converter_orcamento',{empresa_id:1,rascunho_id:preview.rascunho_id});assert.equal(done.status,'saved');
+    const sale=(await db.query('SELECT id::text,tipo_documento,status,venda_origem_id::text FROM erp.vendas WHERE empresa_id=1 AND id=$1',[done.registro_id])).rows[0];
+    assert.deepEqual(sale,{id:done.registro_id,tipo_documento:'venda',status:'rascunho',venda_origem_id:String(quote)});
+    const again=await call(owner,'converter_orcamento',{empresa_id:1,rascunho_id:preview.rascunho_id});assert.equal(again.registro_id,done.registro_id);
+    assert.equal((await db.query('SELECT count(*)::int n FROM erp.vendas WHERE empresa_id=1 AND venda_origem_id=$1',[quote])).rows[0].n,1);
+  });
   await check('Produtos orcamentos e vendas criados pelos repositorios reais',async()=>{
     const proposals=[{tipo:'produto',dados:{nome:'Produto novo',preco:15}},...['orcamento','venda'].map(tipo=>({tipo,dados:{cliente_id:101,data_venda:'2026-10-03',data_vencimento:'2026-10-10',itens:[{tipo:'produto',item_id:101,quantidade:2,valor_unitario:10,desconto:1}]}}))];
-    for(const proposta of proposals){const draft=await prepare(proposta);const result=await decideApproval(draft.rascunho_id,session,'save');assert.equal(result.status,'saved');if(proposta.tipo!=='produto'){const sale=(await db.query('SELECT status,tipo_documento,total FROM erp.vendas WHERE empresa_id=$1 AND id=$2',[1,result.registro_id])).rows[0];assert.equal(sale.status,'rascunho');assert.equal(sale.tipo_documento,proposta.tipo);assert.equal(Number(sale.total),19);}}
+    for(const proposta of proposals){const draft=await prepare(proposta);const result=await decideApproval(draft.rascunho_id,session,'save','chatgpt');assert.equal(result.status,'saved');if(proposta.tipo!=='produto'){const sale=(await db.query('SELECT status,tipo_documento,total FROM erp.vendas WHERE empresa_id=$1 AND id=$2',[1,result.registro_id])).rows[0];assert.equal(sale.status,'rascunho');assert.equal(sale.tipo_documento,proposta.tipo);assert.equal(Number(sale.total),19);}}
   });
   await check('Referencias de outra empresa rejeitadas antes da proposta',async()=>{
     const args={empresa_id:1,chave_operacao:randomUUID(),proposta:{tipo:'venda',dados:{cliente_id:201,data_venda:'2026-10-03',data_vencimento:'2026-10-10',itens:[{tipo:'produto',item_id:101,quantidade:1,valor_unitario:10}]}}};
@@ -195,19 +209,19 @@ async function main(){
     args.proposta.dados.itens[0].item_id=101;args.proposta.dados.itens[0].desconto=100;assert.equal((await prepareTool(owner,args,settings)).isError,true);
   });
   await check('Cancelamento prazo e revogacao bloqueiam salvamento',async()=>{
-    const cancelled=await prepare({tipo:'cliente',dados:{nome:'Cancelado'}});await decideApproval(cancelled.rascunho_id,session,'cancel');await assert.rejects(decideApproval(cancelled.rascunho_id,session,'save'));
-    const expired=await prepare({tipo:'cliente',dados:{nome:'Expirado'}});await db.query("UPDATE plugin.drafts SET expires_at=now()-interval '1 second' WHERE id=$1",[expired.rascunho_id]);await assert.rejects(decideApproval(expired.rascunho_id,session,'save'));
-    const restricted=await prepare({tipo:'cliente',dados:{nome:'Sem permissao'}});await db.exec("UPDATE shared.usuarios_empresas SET role='member',perfil_acesso_id='consulta' WHERE empresa_id=1 AND usuario_id=1");await assert.rejects(decideApproval(restricted.rascunho_id,session,'save'));await db.exec("UPDATE shared.usuarios_empresas SET role='owner' WHERE empresa_id=1 AND usuario_id=1");
-    const revoked=await prepare({tipo:'cliente',dados:{nome:'Revogado'}});await db.exec("UPDATE shared.usuarios_empresas SET status='suspended' WHERE empresa_id=1 AND usuario_id=1");await assert.rejects(decideApproval(revoked.rascunho_id,session,'save'));await db.exec("UPDATE shared.usuarios_empresas SET status='active' WHERE empresa_id=1 AND usuario_id=1");
+    const cancelled=await prepare({tipo:'cliente',dados:{nome:'Cancelado'}});await decideApproval(cancelled.rascunho_id,session,'cancel','chatgpt');await assert.rejects(decideApproval(cancelled.rascunho_id,session,'save','chatgpt'));
+    const expired=await prepare({tipo:'cliente',dados:{nome:'Expirado'}});await db.query("UPDATE plugin.drafts SET expires_at=now()-interval '1 second' WHERE id=$1",[expired.rascunho_id]);await assert.rejects(decideApproval(expired.rascunho_id,session,'save','chatgpt'));
+    const restricted=await prepare({tipo:'cliente',dados:{nome:'Sem permissao'}});await db.exec("UPDATE shared.usuarios_empresas SET role='member',perfil_acesso_id='consulta' WHERE empresa_id=1 AND usuario_id=1");await assert.rejects(decideApproval(restricted.rascunho_id,session,'save','chatgpt'));await db.exec("UPDATE shared.usuarios_empresas SET role='owner' WHERE empresa_id=1 AND usuario_id=1");
+    const revoked=await prepare({tipo:'cliente',dados:{nome:'Revogado'}});await db.exec("UPDATE shared.usuarios_empresas SET status='suspended' WHERE empresa_id=1 AND usuario_id=1");await assert.rejects(decideApproval(revoked.rascunho_id,session,'save','chatgpt'));await db.exec("UPDATE shared.usuarios_empresas SET status='active' WHERE empresa_id=1 AND usuario_id=1");
   });
   await check('Falha na auditoria desfaz criacao e preserva proposta',async()=>{
     const draft=await prepare({tipo:'produto',dados:{nome:'Rollback',preco:12}});
     await db.exec("CREATE FUNCTION shared.reject_plugin_approval() RETURNS trigger LANGUAGE plpgsql AS $$ BEGIN IF NEW.tool_name='aprovar_rascunho' THEN RAISE EXCEPTION 'audit failure'; END IF; RETURN NEW; END $$; CREATE TRIGGER reject_approval BEFORE INSERT ON plugin.executions FOR EACH ROW EXECUTE FUNCTION shared.reject_plugin_approval()");
-    await assert.rejects(decideApproval(draft.rascunho_id,session,'save'));
+    await assert.rejects(decideApproval(draft.rascunho_id,session,'save','chatgpt'));
     assert.equal((await db.query("SELECT count(*)::int AS n FROM erp.produtos WHERE nome='Rollback'")).rows[0].n,0);
     assert.equal((await db.query('SELECT status FROM plugin.drafts WHERE id=$1',[draft.rascunho_id])).rows[0].status,'pending');
     const edit=await prepare({tipo:'editar_produto',dados:{registro_id:101,preco:999}});
-    await assert.rejects(decideApproval(edit.rascunho_id,session,'save'));
+    await assert.rejects(decideApproval(edit.rascunho_id,session,'save','chatgpt'));
     assert.equal(Number((await db.query('SELECT preco_venda FROM erp.produtos WHERE id=101')).rows[0].preco_venda),10);
     assert.equal((await db.query('SELECT status FROM plugin.drafts WHERE id=$1',[edit.rascunho_id])).rows[0].status,'pending');
     await db.exec('DROP TRIGGER reject_approval ON plugin.executions; DROP FUNCTION shared.reject_plugin_approval()');
@@ -215,28 +229,28 @@ async function main(){
   await check('Edicao preserva campos e rejeita proposta desatualizada',async()=>{
     const draft=await prepare({tipo:'editar_produto',dados:{registro_id:101,preco:12}});
     assert.equal(draft.alvo.registro_id,101);assert(!('hash' in draft.alvo));
-    await decideApproval(draft.rascunho_id,session,'save');
+    await decideApproval(draft.rascunho_id,session,'save','chatgpt');
     const row=(await db.query('SELECT nome,sku,preco_venda,versao FROM erp.produtos WHERE empresa_id=1 AND id=101')).rows[0];
     assert.equal(row.nome,'Produto A');assert.equal(row.sku,'A');assert.equal(Number(row.preco_venda),12);
     const stale=await prepare({tipo:'editar_produto',dados:{registro_id:101,nome:'Desatualizado'}});
     await db.exec('UPDATE erp.produtos SET versao=versao+1 WHERE empresa_id=1 AND id=101');
-    await assert.rejects(decideApproval(stale.rascunho_id,session,'save'),e=>e.code==='STALE_PROPOSAL');
+    await assert.rejects(decideApproval(stale.rascunho_id,session,'save','chatgpt'),e=>e.code==='STALE_PROPOSAL');
     assert.equal((await db.query('SELECT nome FROM erp.produtos WHERE id=101')).rows[0].nome,'Produto A');
     const customer=await prepare({tipo:'editar_cliente',dados:{registro_id:101,nome:'Cliente revisado'}});
-    await decideApproval(customer.rascunho_id,session,'save');
+    await decideApproval(customer.rascunho_id,session,'save','chatgpt');
     assert.equal((await db.query('SELECT nome FROM erp.entidades WHERE id=101')).rows[0].nome,'Cliente revisado');
     assert.equal((await prepareTool(owner,{empresa_id:1,chave_operacao:randomUUID(),proposta:{tipo:'editar_produto',dados:{registro_id:201,nome:'Outra empresa'}}},settings)).isError,true);
   });
   let saleId;
   await check('Confirmacao e atendimento usam a transacao auditada do ERP',async()=>{
     const sale=await prepare({tipo:'venda',dados:{cliente_id:101,data_venda:'2026-10-03',data_vencimento:'2026-10-10',itens:[{tipo:'produto',item_id:101,quantidade:1,valor_unitario:12}]}});
-    saleId=Number((await decideApproval(sale.rascunho_id,session,'save')).registro_id);
+    saleId=Number((await decideApproval(sale.rascunho_id,session,'save','chatgpt')).registro_id);
     const confirmation=await prepare({tipo:'confirmar_venda',dados:{registro_id:saleId}});
-    const results=await Promise.all([decideApproval(confirmation.rascunho_id,session,'save'),decideApproval(confirmation.rascunho_id,session,'save')]);assert.equal(results[0].registro_id,results[1].registro_id);
+    const results=await Promise.all([decideApproval(confirmation.rascunho_id,session,'save','chatgpt'),decideApproval(confirmation.rascunho_id,session,'save','chatgpt')]);assert.equal(results[0].registro_id,results[1].registro_id);
     assert.equal((await db.query('SELECT status FROM erp.vendas WHERE id=$1',[saleId])).rows[0].status,'confirmada');
     assert.equal((await db.query('SELECT count(*)::int AS n FROM erp.contas_receber WHERE venda_id=$1',[saleId])).rows[0].n,1);
     const attendance=await prepare({tipo:'atender_venda',dados:{registro_id:saleId}});
-    await decideApproval(attendance.rascunho_id,session,'save');
+    await decideApproval(attendance.rascunho_id,session,'save','chatgpt');
     assert.equal((await db.query('SELECT atendimento_status FROM erp.vendas WHERE id=$1',[saleId])).rows[0].atendimento_status,'atendido');
     const financial=await call(owner,'consultar_financeiro',{empresa_id:1,tipo:'receber'});assert(financial.records.length>0);
   });
@@ -244,34 +258,34 @@ async function main(){
     await db.exec("INSERT INTO erp.contas_financeiras(id,empresa_id,nome,tipo) VALUES(901,1,'Caixa A','caixa'),(902,2,'Caixa B','caixa')");
     const installment=(await db.query('SELECT p.id FROM erp.contas_receber_parcelas p JOIN erp.contas_receber c ON c.id=p.conta_receber_id AND c.empresa_id=p.empresa_id WHERE c.venda_id=$1',[saleId])).rows[0];
     const receive=await prepare({tipo:'receber_parcela',dados:{registro_id:Number(installment.id),valor:12,data_pagamento:'2026-10-03',conta_financeira_id:901}});
-    await decideApproval(receive.rascunho_id,session,'save');await decideApproval(receive.rascunho_id,session,'save');
+    await decideApproval(receive.rascunho_id,session,'save','chatgpt');await decideApproval(receive.rascunho_id,session,'save','chatgpt');
     const payments=await call(owner,'listar_pagamentos',{empresa_id:1});assert.equal(payments.records.length,1);
     const reverse=await prepare({tipo:'estornar_pagamento',dados:{registro_id:Number(payments.records[0].id),motivo:'Recebimento lançado por engano'}});
-    await decideApproval(reverse.rascunho_id,session,'save');
+    await decideApproval(reverse.rascunho_id,session,'save','chatgpt');
     assert.equal((await db.query('SELECT status FROM erp.contas_receber_parcelas WHERE id=$1',[installment.id])).rows[0].status,'aberto');
     await db.query("UPDATE erp.compras SET data_compra='2026-10-03',condicao_pagamento=$1::jsonb WHERE id=101",[JSON.stringify({parcelas:[{numero_parcela:1,data_vencimento:'2026-10-10',valor:10}]})]);
     await db.exec("INSERT INTO erp.compras_itens(empresa_id,compra_id,produto_id,descricao,quantidade,valor_unitario,total) VALUES(1,101,101,'Produto A',1,10,10)");
     await db.exec("INSERT INTO erp.compras_parcelas_previstas(empresa_id,compra_id,numero_parcela,data_vencimento,valor) VALUES(1,101,1,'2026-10-10',10)");
-    const purchase=await prepare({tipo:'confirmar_compra',dados:{registro_id:101}});await decideApproval(purchase.rascunho_id,session,'save');
+    const purchase=await prepare({tipo:'confirmar_compra',dados:{registro_id:101}});await decideApproval(purchase.rascunho_id,session,'save','chatgpt');
     const payable=(await db.query('SELECT p.id FROM erp.contas_pagar_parcelas p JOIN erp.contas_pagar c ON c.id=p.conta_pagar_id AND c.empresa_id=p.empresa_id WHERE c.compra_id=101')).rows[0];assert(payable);
-    const pay=await prepare({tipo:'pagar_parcela',dados:{registro_id:Number(payable.id),valor:10,data_pagamento:'2026-10-03',conta_financeira_id:901}});await decideApproval(pay.rascunho_id,session,'save');
+    const pay=await prepare({tipo:'pagar_parcela',dados:{registro_id:Number(payable.id),valor:10,data_pagamento:'2026-10-03',conta_financeira_id:901}});await decideApproval(pay.rascunho_id,session,'save','chatgpt');
     const paid=(await db.query("SELECT id FROM erp.pagamentos WHERE empresa_id=1 AND tipo='pagar' AND estorno_de_pagamento_id IS NULL")).rows[0];
-    const undo=await prepare({tipo:'estornar_pagamento',dados:{registro_id:Number(paid.id),motivo:'Pagamento indevido'}});await decideApproval(undo.rascunho_id,session,'save');
-    const cancel=await prepare({tipo:'cancelar_compra',dados:{registro_id:101}});await decideApproval(cancel.rascunho_id,session,'save');
+    const undo=await prepare({tipo:'estornar_pagamento',dados:{registro_id:Number(paid.id),motivo:'Pagamento indevido'}});await decideApproval(undo.rascunho_id,session,'save','chatgpt');
+    const cancel=await prepare({tipo:'cancelar_compra',dados:{registro_id:101}});await decideApproval(cancel.rascunho_id,session,'save','chatgpt');
     assert.equal((await db.query('SELECT status FROM erp.compras WHERE id=101')).rows[0].status,'cancelada');
     await call(owner,'buscar_cadastros',{empresa_id:1,tipo:'contas-financeiras',status:'ativo'});
-    const cancelSale=await prepare({tipo:'cancelar_venda',dados:{registro_id:101,motivo:'Venda desistida pelo cliente'}});await decideApproval(cancelSale.rascunho_id,session,'save');
+    const cancelSale=await prepare({tipo:'cancelar_venda',dados:{registro_id:101,motivo:'Venda desistida pelo cliente'}});await decideApproval(cancelSale.rascunho_id,session,'save','chatgpt');
     assert.equal((await db.query('SELECT status FROM erp.vendas WHERE id=101')).rows[0].status,'cancelada');
   });
   await check('Preferencias ficam isoladas por usuario e conexao OAuth',async()=>{
-    const prefs=load('@/products/chatgptplugin/extensions/settings');
-    assert.equal((await prefs.readPreferences(owner)).por_pagina,20);
-    await prefs.updatePreferences(owner,{empresa_preferida:'1',por_pagina:30});
-    assert.equal((await prefs.readPreferences({...owner,clientId:'outro-client'})).por_pagina,20);
-    assert.equal((await prefs.readPreferences({...owner,userId:2})).empresa_preferida,'');
-    await assert.rejects(prefs.updatePreferences(owner,{empresa_preferida:'999'}));
-    await assert.rejects(prefs.updatePreferences(owner,{empresa_id:2}));
-    await prefs.updatePreferences(owner,{por_pagina:40});assert.equal((await prefs.readPreferences(owner)).empresa_preferida,'1');
+    const prefs=load('@/products/mcpcore/application/preferences');
+    assert.equal((await prefs.readPreferences(owner,'chatgpt')).por_pagina,20);
+    await prefs.updatePreferences(owner,{empresa_preferida:'1',por_pagina:30},'chatgpt');
+    assert.equal((await prefs.readPreferences({...owner,clientId:'outro-client'},'chatgpt')).por_pagina,20);
+    assert.equal((await prefs.readPreferences({...owner,userId:2},'chatgpt')).empresa_preferida,'');
+    await assert.rejects(prefs.updatePreferences(owner,{empresa_preferida:'999'},'chatgpt'));
+    await assert.rejects(prefs.updatePreferences(owner,{empresa_id:2},'chatgpt'));
+    await prefs.updatePreferences(owner,{por_pagina:40},'chatgpt');assert.equal((await prefs.readPreferences(owner,'chatgpt')).empresa_preferida,'1');
   });
   await check('ChatGPT e Claude isolam propostas limites preferencias e auditoria',async()=>{
     const key=randomUUID(),claudeDraft=randomUUID(),claudeExecution=randomUUID();
@@ -281,19 +295,19 @@ async function main(){
     assert.notEqual(chatgptDraft.rascunho_id,claudeDraft);
     await assert.rejects(draftOf(claudeDraft),e=>e.code==='NOT_FOUND');
     assert.equal((await executeTool(owner,'criar_cadastro',{empresa_id:1,rascunho_id:claudeDraft},settings)).isError,true);
-    await assert.rejects(decideApproval(claudeDraft,session,'save'),e=>e.code==='NOT_FOUND');
-    await assert.rejects(decideApproval(claudeDraft,session,'cancel'),e=>e.code==='NOT_FOUND');
+    await assert.rejects(decideApproval(claudeDraft,session,'save','chatgpt'),e=>e.code==='NOT_FOUND');
+    await assert.rejects(decideApproval(claudeDraft,session,'cancel','chatgpt'),e=>e.code==='NOT_FOUND');
     await db.exec("INSERT INTO plugin.rate_windows(user_id,window_start,requests,integration) VALUES(1,date_trunc('minute',now()),99,'claude'); DELETE FROM plugin.rate_windows WHERE user_id=1 AND integration='chatgpt'");
-    await audit.consumeRequestLimit(owner,1);
+    await audit.consumeRequestLimit(owner,1,'chatgpt');
     assert.equal((await db.query("SELECT requests FROM plugin.rate_windows WHERE integration='claude'")).rows[0].requests,99);
-    await assert.rejects(audit.consumeRequestLimit(owner,1),e=>e.code==='RATE_LIMITED');
-    const prefs=load('@/products/chatgptplugin/extensions/settings');
+    await assert.rejects(audit.consumeRequestLimit(owner,1,'chatgpt'),e=>e.code==='RATE_LIMITED');
+    const prefs=load('@/products/mcpcore/application/preferences');
     await db.exec("INSERT INTO plugin.settings(user_id,oauth_client_id,values,integration) VALUES(1,'client','{\"por_pagina\":50}','claude')");
-    assert.equal((await prefs.readPreferences(owner)).por_pagina,40);
-    await prefs.updatePreferences(owner,{por_pagina:30});
+    assert.equal((await prefs.readPreferences(owner,'chatgpt')).por_pagina,40);
+    await prefs.updatePreferences(owner,{por_pagina:30},'chatgpt');
     assert.equal((await db.query("SELECT values FROM plugin.settings WHERE integration='claude'")).rows[0].values.por_pagina,50);
     await db.query("INSERT INTO plugin.executions(id,user_id,oauth_client_id,tool_name,status,integration) VALUES($1,1,'client','claude-test','running','claude')",[claudeExecution]);
-    await audit.finishExecution(claudeExecution,'failed','TEST',1);
+    await audit.finishExecution(claudeExecution,'failed','TEST',1,'chatgpt');
     assert.equal((await db.query('SELECT status FROM plugin.executions WHERE id=$1',[claudeExecution])).rows[0].status,'running');
     await assert.rejects(db.query("INSERT INTO plugin.settings(user_id,oauth_client_id,integration) VALUES(1,'client','unknown')"),e=>e.code==='23514');
     for(const name of ['executions','rate_windows','drafts','settings'])assert.equal((await db.query('SELECT to_regclass($1) AS relation',[`shared.chatgptplugin_${name}`])).rows[0].relation,null);
@@ -303,7 +317,7 @@ async function main(){
     await db.exec("INSERT INTO shared.permissoes_perfil(perfil_acesso_id,capability) VALUES('consulta','erp.vendas.visualizar'); INSERT INTO erp.configuracoes_fiscais(empresa_id,cnpj,razao_social,token_secret_ref,provedor,ambiente) VALUES(1,'12345678000199','Empresa A','secret-local','fixture_local','producao')");
     const salesReader=await loadPluginPrincipal('user_2','client',['erp:read']);
     // A verificacao fiscal saiu do chat; a regra do ERP continua coberta pela consulta direta.
-    const {runWithErpDatabaseContext}=load('@/lib/erpDatabaseContext');const {erpQueries}=load('@/products/chatgptplugin/application/erpQueries');
+    const {runWithErpDatabaseContext}=load('@/lib/erpDatabaseContext');const {erpQueries}=load('@/products/mcpcore/application/erpQueries');
     const fiscal=await runWithErpDatabaseContext({tenantId:1,userId:salesReader.userId,readOnly:true,statementTimeoutMs:10000},()=>erpQueries.fiscal(1,101));
     assert(!fiscal.issues.some(issue=>['FISCAL_CONFIG_MISSING','ISSUER_DOCUMENT_MISSING'].includes(issue.code)));
     const result=await executeTool(salesReader,'buscar_cadastros',{empresa_id:1,tipo:'contas-financeiras'},settings);assert.equal(result.isError,true);
@@ -322,17 +336,17 @@ async function main(){
       const none=await listErpEntityPage({...input,page:100,query:'registro_ausente_'+randomUUID()});assert.equal(none.total,0);assert.deepEqual(none.records,[]);
     });
   });
-  const apply=async(proposta)=>{const draft=await prepare(proposta),result=await decideApproval(draft.rascunho_id,session,'save');assert.equal(result.status,'saved');assert.equal((await decideApproval(draft.rascunho_id,session,'save')).registro_id,result.registro_id);return Number(result.registro_id);};
+  const apply=async(proposta)=>{const draft=await prepare(proposta),result=await decideApproval(draft.rascunho_id,session,'save','chatgpt');assert.equal(result.status,'saved');assert.equal((await decideApproval(draft.rascunho_id,session,'save','chatgpt')).registro_id,result.registro_id);return Number(result.registro_id);};
   const newIds={};
   await check('CRUD dos sete cadastros com exclusao logica e auditoria',async()=>{
-    const entries=[['cliente','clientes',{nome:'Cliente CRUD'}],['fornecedor','fornecedores',{nome:'Fornecedor CRUD',email:'fornecedor@example.invalid',telefone:'85999990000'}],['vendedor','vendedores',{nome:'Vendedor CRUD'}],['produto','produtos',{nome:'Produto CRUD',preco:9}],['servico','servicos',{nome:'Servico CRUD',preco:15}],['categoria','categorias',{nome:'Categoria CRUD',tipo:'geral'}],['conta_financeira','contas-financeiras',{nome:'Conta CRUD',tipo:'caixa',data_saldo_inicial:'2026-10-04'}]];
+    const entries=[['cliente','clientes',{nome:'Cliente CRUD'}],['fornecedor','fornecedores',{nome:'Fornecedor CRUD',email:'fornecedor@example.invalid',telefone:'85999990000'}],['vendedor','vendedores',{nome:'Vendedor CRUD'}],['produto','produtos',{nome:'Produto CRUD',preco:9}],['servico','servicos',{nome:'Servico CRUD',preco:15}],['categoria','categorias',{nome:'Categoria CRUD',tipo:'despesa',dre_grupo_codigo:5}],['conta_financeira','contas-financeiras',{nome:'Conta CRUD',tipo:'caixa',data_saldo_inicial:'2026-10-04'}]];
     for(const [kind,module,dados] of entries){const id=await apply({tipo:kind,dados});newIds[kind]=id;
       await apply({tipo:'editar_'+kind,dados:{registro_id:id,nome:kind+' revisado'}});
       const found=await call(owner,'obter_cadastro',{empresa_id:1,tipo:module,registro_id:id});assert.equal(found.record.nome,kind+' revisado');if(kind==='fornecedor'){assert.equal(found.record.email,'fornecedor@example.invalid');assert.equal(found.record.telefone,'85999990000')}
       const listing=await call(owner,'buscar_cadastros',{empresa_id:1,tipo:module,busca:kind+' revisado'});assert(listing.records.some(r=>Number(r.id)===id));
       const deletion=await prepare({tipo:'excluir_'+kind,dados:{registro_id:id,motivo:'Cadastro criado apenas para teste'}});
       assert.equal((await prepareTool({...owner,companies:[{...owner.companies[0],capabilities:['erp.cadastros.gerenciar']}]},{empresa_id:1,chave_operacao:randomUUID(),proposta:{tipo:'excluir_'+kind,dados:{registro_id:id,motivo:'Sem acesso ao historico'}}},settings)).isError,true);
-      await decideApproval(deletion.rascunho_id,session,'save');
+      await decideApproval(deletion.rascunho_id,session,'save','chatgpt');
       const table=['cliente','fornecedor','vendedor'].includes(kind)?'entidades':kind==='conta_financeira'?'contas_financeiras':module;
       const row=(await db.query('SELECT ativo,excluido_em FROM erp.'+table+' WHERE empresa_id=1 AND id=$1',[id])).rows[0];assert(row.excluido_em);assert.equal(row.ativo,false);
       assert.equal((await executeTool(owner,'obter_cadastro',{empresa_id:1,tipo:module,registro_id:id},settings)).isError,true);
@@ -371,19 +385,19 @@ async function main(){
       await apply({tipo:side==='pagar'?'pagar_parcela':'receber_parcela',dados:{registro_id:Number(part.id),valor:60,data_pagamento:'2026-10-04',conta_financeira_id:901}});
       const payment=(await db.query('SELECT id FROM erp.pagamentos WHERE empresa_id=1 AND conta_'+side+'_parcela_id=$1 AND estorno_de_pagamento_id IS NULL',[part.id])).rows[0];
       await apply({tipo:'estornar_pagamento',dados:{registro_id:Number(payment.id),motivo:'Estorno para testar preservacao'}});
-      for(const proposal of [{tipo:'editar_conta_'+side,dados:{...moneyData(side),registro_id:id}},{tipo:'excluir_conta_'+side,dados:{registro_id:id,motivo:'Deve bloquear exclusao'}}]){const draft=await prepare(proposal);await assert.rejects(decideApproval(draft.rascunho_id,session,'save'),/histórico/);assert.equal((await draftOf(draft.rascunho_id)).status,'pending');}
+      for(const proposal of [{tipo:'editar_conta_'+side,dados:{...moneyData(side),registro_id:id}},{tipo:'excluir_conta_'+side,dados:{registro_id:id,motivo:'Deve bloquear exclusao'}}]){const draft=await prepare(proposal);await assert.rejects(decideApproval(draft.rascunho_id,session,'save','chatgpt'),/histórico/);assert.equal((await draftOf(draft.rascunho_id)).status,'pending');}
     }
-    const title=(await db.query('SELECT id FROM erp.contas_receber WHERE empresa_id=1 AND venda_id=$1',[saleId])).rows[0];const draft=await prepare({tipo:'excluir_conta_receber',dados:{registro_id:Number(title.id),motivo:'Titulo de venda'}});await assert.rejects(decideApproval(draft.rascunho_id,session,'save'),/origem/);
-    const deletion=await prepare({tipo:'excluir_venda',dados:{registro_id:saleId,motivo:'Venda confirmada'}});await assert.rejects(decideApproval(deletion.rascunho_id,session,'save'),/rascunho/);
-    const cad=await prepare({tipo:'excluir_produto',dados:{registro_id:101,motivo:'Produto com historico'}});await assert.rejects(decideApproval(cad.rascunho_id,session,'save'),/vínculos/);
+    const title=(await db.query('SELECT id FROM erp.contas_receber WHERE empresa_id=1 AND venda_id=$1',[saleId])).rows[0];const draft=await prepare({tipo:'excluir_conta_receber',dados:{registro_id:Number(title.id),motivo:'Titulo de venda'}});await assert.rejects(decideApproval(draft.rascunho_id,session,'save','chatgpt'),/origem/);
+    const deletion=await prepare({tipo:'excluir_venda',dados:{registro_id:saleId,motivo:'Venda confirmada'}});await assert.rejects(decideApproval(deletion.rascunho_id,session,'save','chatgpt'),/rascunho/);
+    const cad=await prepare({tipo:'excluir_produto',dados:{registro_id:101,motivo:'Produto com historico'}});await assert.rejects(decideApproval(cad.rascunho_id,session,'save','chatgpt'),/vínculos/);
   });
   await check('Cobrancas existentes e falha de auditoria impedem alteracao parcial',async()=>{
     const id=await apply({tipo:'conta_receber',dados:moneyData('receber')}),part=(await db.query('SELECT id FROM erp.contas_receber_parcelas WHERE empresa_id=1 AND conta_receber_id=$1 ORDER BY id',[id])).rows[0];
     await db.query("INSERT INTO erp.cobrancas(empresa_id,conta_receber_parcela_id,provedor,tipo,status,valor,data_vencimento,chave_idempotencia) VALUES(1,$1,'teste','pix','pendente',60,'2026-10-20',$2)",[part.id,randomUUID()]);
-    const d=await prepare({tipo:'excluir_conta_receber',dados:{registro_id:id,motivo:'Titulo com cobranca'}});await assert.rejects(decideApproval(d.rascunho_id,session,'save'),/cobrança/);
+    const d=await prepare({tipo:'excluir_conta_receber',dados:{registro_id:id,motivo:'Titulo com cobranca'}});await assert.rejects(decideApproval(d.rascunho_id,session,'save','chatgpt'),/cobrança/);
     const draft=await prepare({tipo:'conta_pagar',dados:moneyData('pagar')}),before=(await db.query('SELECT count(*)::int AS n FROM erp.contas_pagar')).rows[0].n;
     await db.exec("CREATE FUNCTION shared.reject_crud_audit() RETURNS trigger LANGUAGE plpgsql AS $$ BEGIN RAISE EXCEPTION 'audit failure'; END $$; CREATE TRIGGER reject_crud BEFORE INSERT ON plugin.executions FOR EACH ROW EXECUTE FUNCTION shared.reject_crud_audit()");
-    await assert.rejects(decideApproval(draft.rascunho_id,session,'save'));assert.equal((await db.query('SELECT count(*)::int AS n FROM erp.contas_pagar')).rows[0].n,before);
+    await assert.rejects(decideApproval(draft.rascunho_id,session,'save','chatgpt'));assert.equal((await db.query('SELECT count(*)::int AS n FROM erp.contas_pagar')).rows[0].n,before);
     await db.exec('DROP TRIGGER reject_crud ON plugin.executions; DROP FUNCTION shared.reject_crud_audit()');
     assert.equal((await draftOf(draft.rascunho_id)).status,'pending');
   });
@@ -400,7 +414,7 @@ async function main(){
       assert.equal(parts.length,2);assert(parts.every(part=>Number(part.conta_financeira_id)===901));
       await db.query('UPDATE erp.contas_'+side+'_parcelas SET conta_financeira_id=903 WHERE empresa_id=1 AND id=$1',[parts[1].id]);
       const draft=await prepare({tipo:'editar_conta_'+side,dados:omitted});
-      await assert.rejects(decideApproval(draft.rascunho_id,session,'save'),/contas financeiras diferentes/);
+      await assert.rejects(decideApproval(draft.rascunho_id,session,'save','chatgpt'),/contas financeiras diferentes/);
       assert.deepEqual((await db.query('SELECT id,conta_financeira_id FROM erp.contas_'+side+'_parcelas WHERE empresa_id=1 AND conta_'+side+'_id=$1 AND excluido_em IS NULL ORDER BY id',[id])).rows.map(part=>Number(part.conta_financeira_id)),[901,903]);
       await apply({tipo:'editar_conta_'+side,dados:{...omitted,numero_documento:null,centro_custo_id:null,observacoes:null,conta_financeira_id:null}});
       const cleared=(await db.query('SELECT numero_documento,centro_custo_id,observacoes FROM erp.contas_'+side+' WHERE empresa_id=1 AND id=$1',[id])).rows[0];
@@ -411,10 +425,10 @@ async function main(){
   });
   await check('Periodos fechados e propostas desatualizadas protegem edicao financeira',async()=>{
     const id=await apply({tipo:'conta_pagar',dados:moneyData('pagar')});
-    const stale=await prepare({tipo:'editar_conta_pagar',dados:{...moneyData('pagar'),registro_id:id}});await db.query("UPDATE erp.contas_pagar SET observacoes='Mudou' WHERE empresa_id=1 AND id=$1",[id]);await assert.rejects(decideApproval(stale.rascunho_id,session,'save'),e=>e.code==='STALE_PROPOSAL');
+    const stale=await prepare({tipo:'editar_conta_pagar',dados:{...moneyData('pagar'),registro_id:id}});await db.query("UPDATE erp.contas_pagar SET observacoes='Mudou' WHERE empresa_id=1 AND id=$1",[id]);await assert.rejects(decideApproval(stale.rascunho_id,session,'save','chatgpt'),e=>e.code==='STALE_PROPOSAL');
     await db.exec("INSERT INTO erp.fechamentos_periodos(empresa_id,modulo,periodo_inicio,periodo_fim,criado_por) VALUES(1,'financeiro','2026-10-01','2026-10-31',1)");
-    const deletion=await prepare({tipo:'excluir_conta_pagar',dados:{registro_id:id,motivo:'Periodo fechado'}});await assert.rejects(decideApproval(deletion.rascunho_id,session,'save'),e=>e.code==='PERIOD_CLOSED');
-    const creation=await prepare({tipo:'conta_pagar',dados:moneyData('pagar')});await assert.rejects(decideApproval(creation.rascunho_id,session,'save'),e=>e.code==='PERIOD_CLOSED');
+    const deletion=await prepare({tipo:'excluir_conta_pagar',dados:{registro_id:id,motivo:'Periodo fechado'}});await assert.rejects(decideApproval(deletion.rascunho_id,session,'save','chatgpt'),e=>e.code==='PERIOD_CLOSED');
+    const creation=await prepare({tipo:'conta_pagar',dados:moneyData('pagar')});await assert.rejects(decideApproval(creation.rascunho_id,session,'save','chatgpt'),e=>e.code==='PERIOD_CLOSED');
   });
   await check('Fluxo de caixa, aging e DRE por competencia batem com somas independentes',async()=>{
     const {runWithErpDatabaseContext}=load('@/lib/erpDatabaseContext');
@@ -478,6 +492,63 @@ async function main(){
     assert.deepEqual(await contactOf(supplierId),{email:'antes@fornecedor.example.invalid',telefone:'(11) 3333-4444'});
     assert.equal((await db.query('SELECT count(*)::int n FROM erp.entidades_contatos WHERE empresa_id=1 AND entidade_id=$1 AND ativo',[supplierId])).rows[0].n,1);
   });
-  console.log(JSON.stringify({status:'passed',checks,proposalTypes:44,realDatabaseAccess:false,localPostgres:true}));
+  await check('Claude prepara e confirma pelo chat com integracao propria',async()=>{
+    const claude={...settings,integration:'claude',resource:'https://erp.example.invalid/api/claude/mcp',metadataUrl:'https://erp.example.invalid/.well-known/oauth-protected-resource/api/claude/mcp'};
+    const viaClaude=async(name,args)=>{const result=await executeTool(owner,name,args,claude);assert(!result.isError,JSON.stringify(result));return result.structuredContent.data};
+    const key=randomUUID();
+    const preview=await viaClaude('criar_venda',{empresa_id:1,chave_operacao:key,tipo:'venda',dados:{cliente_id:101,data_venda:'2026-11-05',data_vencimento:'2026-11-30',itens:[{tipo:'produto',item_id:101,quantidade:2,valor_unitario:15}]}});
+    assert.equal(preview.etapa,'previa');assert.equal(preview.revisao_url,undefined);
+    assert.equal((await db.query('SELECT integration FROM plugin.drafts WHERE id=$1',[preview.rascunho_id])).rows[0].integration,'claude');
+    // Outubro está fechado no financeiro desde o teste de períodos; a venda usa novembro.
+    // A mesma chave no ChatGPT é outra proposta; o rascunho do Claude não executa pelo ChatGPT nem pela página de revisão.
+    const other=await call(owner,'criar_venda',{empresa_id:1,chave_operacao:key,tipo:'venda',dados:{cliente_id:101,data_venda:'2026-11-05',data_vencimento:'2026-11-30',itens:[{tipo:'produto',item_id:101,quantidade:1,valor_unitario:15}]}});
+    assert.notEqual(other.rascunho_id,preview.rascunho_id);
+    assert.equal((await executeTool(owner,'criar_venda',{empresa_id:1,rascunho_id:preview.rascunho_id},settings)).isError,true);
+    await assert.rejects(decideApproval(preview.rascunho_id,session,'save','chatgpt'),e=>e.code==='NOT_FOUND');
+    const saved=await viaClaude('criar_venda',{empresa_id:1,rascunho_id:preview.rascunho_id});assert.equal(saved.status,'saved');
+    assert.equal((await viaClaude('criar_venda',{empresa_id:1,rascunho_id:preview.rascunho_id})).registro_id,saved.registro_id);
+    const sale=(await db.query('SELECT total,chave_idempotencia FROM erp.vendas WHERE empresa_id=1 AND id=$1',[saved.registro_id])).rows[0];
+    assert.equal(Number(sale.total),30);assert.equal(sale.chave_idempotencia,'claudeplugin:'+preview.rascunho_id);
+    const audited=(await db.query("SELECT tool_name,status FROM plugin.executions WHERE integration='claude' AND tool_name IN ('criar_venda','aprovar_rascunho_chat') ORDER BY started_at")).rows;
+    assert.equal(audited.filter(r=>r.tool_name==='aprovar_rascunho_chat').length,1);assert(audited.filter(r=>r.tool_name==='criar_venda'&&r.status==='succeeded').length>=3);
+    // Manutenção de uma integração não encerra rascunhos da outra.
+    const pending=await viaClaude('criar_cadastro',{empresa_id:1,chave_operacao:randomUUID(),tipo:'cliente',dados:{nome:'Pendente no Claude'}});
+    await db.query("UPDATE plugin.drafts SET expires_at=now()-interval '1 second' WHERE id=$1",[pending.rascunho_id]);
+    const {maintainPluginStorage}=load('@/products/mcpcore/application/maintenance');
+    await maintainPluginStorage('chatgpt');assert.equal((await db.query('SELECT status FROM plugin.drafts WHERE id=$1',[pending.rascunho_id])).rows[0].status,'pending');
+    await maintainPluginStorage('claude');assert.equal((await db.query('SELECT status FROM plugin.drafts WHERE id=$1',[pending.rascunho_id])).rows[0].status,'expired');
+  });
+  await check('Fase 1 pelo chat: preço da tabela na prévia, limite de crédito e comissões',async()=>{
+    await db.exec(`INSERT INTO erp.tabelas_preco(id,empresa_id,nome,padrao) VALUES(9101,1,'Padrão chat',true);
+      INSERT INTO erp.tabelas_preco_itens(empresa_id,tabela_preco_id,produto_id,preco,quantidade_minima) VALUES(1,9101,101,12.5,1);
+      INSERT INTO erp.entidades(id,empresa_id,nome,eh_vendedor,eh_fornecedor) VALUES(9102,1,'Vendedor chat',true,true);
+      INSERT INTO erp.comissoes_regras(empresa_id,nome,percentual) VALUES(1,'Geral chat',4);`)
+    // Sem valor_unitario: a prévia já traz o preço da tabela padrão e o total calculado.
+    const preview=await call(owner,'criar_venda',{empresa_id:1,chave_operacao:randomUUID(),tipo:'venda',dados:{cliente_id:101,vendedor_id:9102,data_venda:'2026-11-06',data_vencimento:'2026-11-30',
+      modalidade_frete:'sem_frete',itens:[{tipo:'produto',item_id:101,quantidade:2}]}});
+    assert.equal(preview.proposta.dados.itens[0].valor_unitario,12.5);assert.equal(preview.proposta.total,25);
+    const saved=await call(owner,'criar_venda',{empresa_id:1,rascunho_id:preview.rascunho_id});assert.equal(saved.status,'saved');
+    assert.deepEqual((await db.query('SELECT total::text,tabela_preco_id::text,modalidade_frete FROM erp.vendas WHERE id=$1',[saved.registro_id])).rows[0],{total:'25.00',tabela_preco_id:'9101',modalidade_frete:'sem_frete'});
+    const confirm=await call(owner,'confirmar_venda',{empresa_id:1,chave_operacao:randomUUID(),dados:{registro_id:Number(saved.registro_id)}});
+    assert.equal((await call(owner,'confirmar_venda',{empresa_id:1,rascunho_id:confirm.rascunho_id})).status,'saved');
+    assert.equal((await db.query('SELECT valor::text FROM erp.comissoes_lancamentos WHERE venda_id=$1',[saved.registro_id])).rows[0].valor,'1.00');
+    // Limite de crédito e tabela do cliente pelo chat (editar_cadastro).
+    const terms=await prepare({tipo:'editar_cliente',dados:{registro_id:101,limite_credito:50,tabela_preco_id:9101}});
+    await call(owner,'editar_cadastro',{empresa_id:1,rascunho_id:terms.rascunho_id});
+    assert.deepEqual((await db.query('SELECT limite_credito::text,tabela_preco_id::text FROM erp.entidades WHERE id=101')).rows[0],{limite_credito:'50.00',tabela_preco_id:'9101'});
+    // Relatório de comissões no consultar_relatorio.
+    const report=await call(owner,'consultar_relatorio',{empresa_id:1,tipo:'comissoes',inicio:'2026-11-01',fim:'2026-11-30'});
+    assert.equal(report.records.length,1);assert.equal(Number(report.summary.vendedores[0].valor),1);
+    // Devolução pelo chat: prévia com valor estimado; produto entregue volta e vira crédito.
+    const attend=await call(owner,'atender_venda',{empresa_id:1,chave_operacao:randomUUID(),dados:{registro_id:Number(saved.registro_id)}});
+    assert.equal((await call(owner,'atender_venda',{empresa_id:1,rascunho_id:attend.rascunho_id})).status,'saved');
+    const item=(await db.query('SELECT id FROM erp.vendas_itens WHERE venda_id=$1',[saved.registro_id])).rows[0].id;
+    const ret=await call(owner,'registrar_devolucao',{empresa_id:1,chave_operacao:randomUUID(),dados:{registro_id:Number(saved.registro_id),tratamento:'credito',motivo:'Cliente devolveu uma unidade',data_devolucao:'2026-11-10',itens:[{venda_item_id:Number(item),quantidade:1}]}});
+    assert.equal(ret.proposta.total,12.5);
+    const done=await call(owner,'registrar_devolucao',{empresa_id:1,rascunho_id:ret.rascunho_id});assert.equal(done.status,'saved');
+    assert.deepEqual((await db.query('SELECT tratamento,valor_credito::text FROM erp.devolucoes WHERE id=$1',[done.registro_id])).rows[0],{tratamento:'credito',valor_credito:'12.50'});
+    assert.equal((await db.query('SELECT valor::text FROM erp.comissoes_lancamentos WHERE venda_id=$1',[saved.registro_id])).rows[0].valor,'0.50');
+  });
+  console.log(JSON.stringify({status:'passed',checks,proposalTypes:45,realDatabaseAccess:false,localPostgres:true}));
 }
 try{await main();}catch(error){console.error(error.message);process.exitCode=1;}finally{await db.close();}

@@ -5,6 +5,7 @@ import { NextResponse } from 'next/server'
 
 import { resolveErpApiAccess as resolveErpAccess } from '@/products/erp/api/http/access'
 import { importErpBankStatement } from '@/products/erp/server/erpBankImportRepository'
+import { applyLaunchRules } from '@/products/erp/server/erpBankRules'
 
  async function handlePOST(request: Request) {
   const tenant = await resolveErpAccess('erp.financeiro.gerenciar')
@@ -17,8 +18,12 @@ import { importErpBankStatement } from '@/products/erp/server/erpBankImportRepos
       accountId: Number(body.accountId),
       fileName: String(body.fileName || 'extrato.ofx'),
       content: String(body.content || ''),
+      format: body.format,
+      mapping: body.mapping,
     })
-    return NextResponse.json(result, { status: result.reused ? 200 : 201 })
+    // Regras de lançamento: tarifas, IOF, rendimentos etc. viram títulos pagos e conciliados.
+    const rules = result.reused || body.applyRules === false ? { lancadas: 0, falhas: [] } : await applyLaunchRules({ tenantId: tenant.tenantId, actorId: tenant.sharedUserId, importId: Number(result.id) })
+    return NextResponse.json({ ...result, regras: rules }, { status: result.reused ? 200 : 201 })
   } catch (error) {
     return erpFailureResponse(error)
   }

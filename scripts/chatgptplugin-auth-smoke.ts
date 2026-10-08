@@ -2,9 +2,9 @@ import {serviceInvoiceQueryStubs} from './erp/service-invoice-query-stubs'
 import assert from 'node:assert/strict'
 import { generateKeyPairSync, randomUUID, sign } from 'node:crypto'
 import { verifyToken } from '@clerk/nextjs/server'
-import { cachedVerification, verifyClerkOAuthToken, type OAuthVerificationDependencies } from '../src/products/chatgptplugin/auth/resolvePrincipal'
+import { cachedVerification, verifyClerkOAuthToken, type OAuthVerificationDependencies } from '../src/products/mcpcore/auth/resolvePrincipal'
 import { handlePluginRequest, type HttpDependencies } from '../src/products/chatgptplugin/mcp/handleRequest'
-import { PluginError, type PluginPrincipal } from '../src/products/chatgptplugin/shared/contracts'
+import { PluginError, type PluginPrincipal } from '../src/products/mcpcore/shared/contracts'
 import type { PluginConfig } from '../src/products/chatgptplugin/shared/config'
 
 // Chaves temporarias e SDK Clerk real; sem .env, rede, banco ou credenciais reais.
@@ -12,7 +12,7 @@ const keys = generateKeyPairSync('rsa', { modulusLength: 2048 })
 const otherKeys = generateKeyPairSync('rsa', { modulusLength: 2048 })
 const publicKey = keys.publicKey.export({ type: 'spki', format: 'pem' }).toString()
 const kid = randomUUID()
-const config: PluginConfig = {
+const config: PluginConfig = {integration:'chatgpt',
   resource: 'https://erp.example/api/mcp', issuer: 'https://test.clerk.accounts.dev',
   metadataUrl: 'https://erp.example/.well-known/oauth-protected-resource/api/mcp',
   scope: 'erp:read', clientIds: ['client_test'], origins: ['https://erp.example'],
@@ -132,7 +132,7 @@ async function main() {
       execution: {
         queries: {...serviceInvoiceQueryStubs, financialTitle:unexpectedQuery,registration:unexpectedQuery,installment:unexpectedQuery,analysis:unexpectedQuery,customer: unexpectedQuery, fiscal: unexpectedQuery, financialAccounts: unexpectedQuery,
           payments: unexpectedQuery, overview: unexpectedQuery, page: unexpectedQuery, sale: unexpectedQuery,
-          stock: unexpectedQuery, purchase: unexpectedQuery, report: unexpectedQuery },
+          stock: unexpectedQuery, purchase: unexpectedQuery, report: unexpectedQuery, attachments: unexpectedQuery },
         reserve: async () => { effects++; return randomUUID() }, finish: async () => { effects++ },
       },
     }

@@ -1,4 +1,8 @@
 import { getErpOverview, getErpSaleDetails, getErpPurchaseDetails, getErpEntityRecord,listErpEntityPage } from '@/products/erp/server/erpRepository'
+import { dreReportRecords } from './erpDreReport'
+import { attachmentDownload, listAttachments, type AttachmentDocument } from './erpAttachments'
+import { budgetVsActual, salesGoalsReport } from './erpBudget'
+import { commissionReport } from '@/products/erp/server/erpCommercialRepository'
 import { listProfessionalReport,preflightSaleFiscal } from '@/products/erp/server/erpProfessionalRepository'
 import { runQuery } from '@/lib/postgres'
 import {listServiceInvoices,getServiceInvoice,validateServiceInvoice,getServiceInvoicePdf} from './fiscal/serviceInvoiceRepository'
@@ -55,7 +59,7 @@ export const erpReadService = {
   async sale(tenantId: number, id: number) {
     const result = await getErpSaleDetails(tenantId, id)
     return {
-      sale: {...pickFields(result.sale, ['id','numero','cliente_id','cliente_nome','data_venda','status','subtotal','total','versao','observacoes']),data_vencimento:result.installments[0]?.data_vencimento},
+      sale: {...pickFields(result.sale, ['id','numero','cliente_id','cliente_nome','data_venda','status','tipo_documento','atendimento_status','subtotal','total','versao','observacoes']),data_vencimento:result.installments[0]?.data_vencimento},
       items: result.items.slice(0, 100).map(item => pickFields(item, ['id','tipo','item_id','descricao','quantidade','valor_unitario','desconto','total','quantidade_atendida'])),
       totalItems: result.items.length, itemsTruncated: result.items.length > 100,
       installments: result.installments.slice(0,48).map(item=>pickFields(item,['data_vencimento','valor'])), installmentsTruncated:result.installments.length>48,
@@ -69,8 +73,39 @@ export const erpReadService = {
       installments: result.installments.slice(0,48).map(item=>pickFields(item,['data_vencimento','valor'])), installmentsTruncated:result.installments.length>48,
       totalItems: result.items.length, itemsTruncated: result.items.length > 100 }
   },
+  // Anexos de um documento com link de download de 60 segundos (até 10 por consulta).
+  async attachments(tenantId: number, documento: AttachmentDocument, registroId: number) {
+    const rows = await listAttachments(tenantId, documento, registroId)
+    const records = []
+    for (const row of rows.slice(0, 10)) {
+      let link: string | null = null
+      try { link = (await attachmentDownload(tenantId, Number(row.id))).url } catch { link = null }
+      records.push({ ...row, link_download: link, link_expira_em_segundos: link ? 60 : null })
+    }
+    return { records, total: rows.length, hasMore: rows.length > 10 }
+  },
   async report(tenantId: number, report: string, from: string, to: string, input: PageQuery) {
     const size = input.pageSize || 20
+    if (report === 'orcado-realizado') {
+      const [budget] = await runQuery<{ id: string }>("SELECT id::text FROM erp.orcamentos_financeiros WHERE empresa_id = $1 AND ano = $2 AND excluido_em IS NULL ORDER BY (status = 'aprovado') DESC, atualizado_em DESC LIMIT 1", [tenantId, Number(from.slice(0, 4))])
+      if (!budget) return { report, from, to, records: [], summary: { aviso: 'Nenhum orçamento cadastrado para este ano.' }, page: 1, pageSize: 0, hasMore: false }
+      const result = await budgetVsActual(tenantId, Number(budget.id), Number(to.slice(5, 7)))
+      return { report, from, to, records: result.linhas, summary: { orcamento: result.orcamento.nome, ate_mes: result.ate_mes, ...result.resultado }, page: 1, pageSize: result.linhas.length, hasMore: false }
+    }
+    if (report === 'metas') {
+      const records = await salesGoalsReport(tenantId, from, to)
+      return { report, from, to, records, page: 1, pageSize: records.length, hasMore: false }
+    }
+    if (report === 'dre') {
+      // DRE: uma linha por grupo e subtotal, com % sobre a receita líquida e as principais categorias.
+      const { report: dre, records } = await dreReportRecords(tenantId, { inicio: from, fim: to })
+      return { report, from, to, records, summary: { receita_liquida: dre.subtotais.receita_liquida, lucro_liquido: dre.subtotais.lucro_liquido, nao_classificado: dre.nao_classificado, fora_da_dre: dre.fora_dre }, page: 1, pageSize: records.length, hasMore: false }
+    }
+    if (report === 'comissoes') {
+      // Comissões: resumo por vendedor (valor, liberado, pago, a pagar) e lançamentos por item de venda.
+      const result = await commissionReport(tenantId, { inicio: from, fim: to, pagina: input.page || 1, por_pagina: Math.max(10, size) })
+      return { report, from, to, records: result.records, summary: { vendedores: result.summary }, page: result.page, pageSize: result.pageSize, hasMore: result.page * result.pageSize < result.total }
+    }
     const records = await listProfessionalReport({tenantId, report, from, to, page:input.page, pageSize:size})
     return { report, from, to, records:records.slice(0,size), page:input.page || 1, pageSize:size, hasMore:records.length > size }
   },

@@ -1,8 +1,8 @@
 'use client'
 import { useEffect,useState } from 'react'
 import Link from 'next/link'
-import { operationLabels } from '../actions/labels'
-import { fieldLabels } from '../extensions/fieldLabels'
+import { operationLabels } from '@/products/mcpcore/actions/labels'
+import { fieldLabels } from '@/products/mcpcore/actions/fieldLabels'
 import { ReviewValue } from './ReviewValue'
 
 type Review={rascunho_id:string;empresa_id:number;empresa_nome?:string;status:string;registro_id:string|null;expira_em:string;

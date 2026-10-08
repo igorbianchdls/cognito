@@ -2,15 +2,15 @@ import {serviceInvoiceQueryStubs} from './erp/service-invoice-query-stubs'
 import assert from 'node:assert/strict'
 import { randomUUID } from 'node:crypto'
 import { handlePluginRequest, type HttpDependencies } from '../src/products/chatgptplugin/mcp/handleRequest'
-import { resolvePluginPrincipal, validateOAuthToken } from '../src/products/chatgptplugin/auth/resolvePrincipal'
-import { PluginError, selectCompany, type PluginPrincipal } from '../src/products/chatgptplugin/shared/contracts'
+import { resolvePluginPrincipal, validateOAuthToken } from '../src/products/mcpcore/auth/resolvePrincipal'
+import { PluginError, selectCompany, type PluginPrincipal } from '../src/products/mcpcore/shared/contracts'
 import { getErpDatabaseContext,runWithErpDatabaseContext } from '../src/lib/erpDatabaseContext'
 import { assertErpTenantScopedQuery,runWithErpTransactionClient,getErpTransactionClient } from '../src/lib/postgres'
 import { ERP_CAPABILITIES } from '../src/products/erp/shared/professionalContracts'
-import { executeTool, type ExecutionDependencies } from '../src/products/chatgptplugin/application/executeTool'
+import { executeTool, type ExecutionDependencies } from '../src/products/mcpcore/application/executeTool'
 import type { PluginConfig } from '../src/products/chatgptplugin/shared/config'
 
-const settings: PluginConfig = {resource:'http://localhost:3187/api/mcp',metadataUrl:'http://localhost:3187/.well-known/oauth-protected-resource/api/mcp',
+const settings: PluginConfig = {integration:'chatgpt',resource:'http://localhost:3187/api/mcp',metadataUrl:'http://localhost:3187/.well-known/oauth-protected-resource/api/mcp',
   issuer:'https://test.clerk.accounts.dev',scope:'erp:read',clientIds:['client_test'],origins:['http://localhost:3187','https://chatgpt.com'],toolTimeoutMs:100,requestsPerMinute:60}
 const principal: PluginPrincipal = {userId:1,clerkUserId:'user_1',clientId:'client_test',scopes:['erp:read'],
   companies:[{id:1,name:'Empresa um',profile:'administrador',capabilities:[...ERP_CAPABILITIES]}]}
@@ -30,6 +30,7 @@ const execution: ExecutionDependencies = {
   finish:async (id,status,code) => {events.push({id,status,code})},
   queries:{...serviceInvoiceQueryStubs,
     financialTitle:async()=>({record:{id:"1"},installments:[],installmentsTruncated:false,history:[],historyTruncated:false}),
+    attachments:async(id)=>{context(id);return {records:[],total:0,hasMore:false}},
     registration:async(id,_type,recordId)=>{context(id);return {record:{id:String(recordId),nome:"Cadastro"}}},
     installment:async(id,side,recordId)=>{context(id);return {record:{id:String(recordId),saldo:12},history:[],historyTruncated:false}},
     analysis:async(id,type,from,to)=>{context(id);return {tipo:type,inicio:from,fim:to,criterio:"Teste",summary:{quantidade:0,valor_total:0,valor_medio:0},records:[]}},
@@ -82,11 +83,11 @@ async function main() {
     const {body}=await rpc('tools/list')
     type Listed={name:string;annotations:{readOnlyHint:boolean;destructiveHint:boolean};securitySchemes:{type:string;scopes:string[]}[];outputSchema?:object;inputSchema:{properties:Record<string,unknown>}}
     const listed=body.result.tools as Listed[],byName=(name:string)=>listed.find(t=>t.name===name)!
-    // 15 consultas (com meu_acesso), 19 escritas, painel, configuracoes e a tool de mencoes do SDK.
-    assert.equal(listed.length,38)
-    const writes=['criar_cadastro','editar_cadastro','excluir_cadastro','criar_venda','editar_venda','excluir_venda','confirmar_venda','cancelar_venda','atender_venda',
-      'criar_compra','editar_compra','excluir_compra','confirmar_compra','cancelar_compra','criar_titulo','editar_titulo','excluir_titulo','registrar_baixa','estornar_pagamento']
-    const destructive=['excluir_cadastro','excluir_venda','cancelar_venda','excluir_compra','cancelar_compra','excluir_titulo','estornar_pagamento']
+    // 15 consultas (com meu_acesso), 20 escritas, painel, configuracoes e a tool de mencoes do SDK.
+    assert.equal(listed.length,42)
+    const writes=['criar_cadastro','editar_cadastro','excluir_cadastro','criar_venda','editar_venda','excluir_venda','converter_orcamento','registrar_devolucao','confirmar_venda','cancelar_venda','atender_venda',
+      'criar_compra','editar_compra','excluir_compra','confirmar_compra','cancelar_compra','criar_titulo','editar_titulo','excluir_titulo','efetivar_previsao','registrar_baixa','estornar_pagamento']
+    const destructive=['excluir_cadastro','excluir_venda','cancelar_venda','excluir_compra','cancelar_compra','excluir_titulo','estornar_pagamento','registrar_devolucao']
     for(const removed of ['preparar_rascunho','preparar_formulario_nativo','renderizar_card','abrir_formulario','obter_rascunho','listar_rascunhos','obter_cliente','listar_orcamentos','listar_contas_financeiras','listar_notas_servico','verificar_fiscal_venda'])
       assert(!listed.some(t=>t.name===removed),removed)
     for (const tool of listed) {
@@ -112,7 +113,7 @@ async function main() {
     const resources=await rpc('resources/list');assert.equal(resources.body.result.resources.length,2)
     const cards=await rpc('resources/read',{uri:'ui://chatgptplugin/cards/v2.html'});assert.deepEqual(cards.body.result.contents[0]._meta.ui.csp,{connectDomains:[],resourceDomains:[]});assert(!cards.body.result.contents[0].text.includes(principal.clerkUserId))
     const listed=(await rpc('tools/list')).body.result.tools as {name:string;_meta?:{ui?:{resourceUri?:string}}}[]
-    assert(listed.filter(t=>t._meta?.ui?.resourceUri==='ui://chatgptplugin/cards/v2.html').length===34,'cards em 15 consultas e 19 escritas')
+    assert(listed.filter(t=>t._meta?.ui?.resourceUri==='ui://chatgptplugin/cards/v2.html').length===38,'cards em 16 consultas e 22 escritas')
     const resource=await rpc('resources/read',{uri:'ui://chatgptplugin/panel/v1.html'})
     assert.equal(resource.body.result.contents[0].mimeType,'text/html;profile=mcp-app')
     assert(resource.body.result.contents[0].text.includes('ui/initialize'))

@@ -24,6 +24,7 @@ import {
 import type { AuthTenantRole } from '@/products/auth/shared/authContracts'
 import type { ErpAccessProfile } from '@/products/erp/shared/professionalContracts'
 import type {
+  UpdateMemberInput,
   SettingsMember,
   SettingsState,
   WorkspaceMemberStatus,
@@ -106,6 +107,45 @@ function SettingsRow({ action, children, label }: { action?: ReactNode; children
   )
 }
 
+// Permissões comerciais do membro: vendedor que o representa, se vê só as próprias vendas e o desconto máximo.
+function MemberCommercialRules({ disabled, member, onSave, sellers }: {
+  disabled: boolean
+  member: SettingsMember
+  onSave: (patch: Omit<UpdateMemberInput, 'userId'>) => void
+  sellers: SettingsState['sellers']
+}) {
+  const [discount, setDiscount] = useState(member.maxDiscountPercent == null ? '' : String(member.maxDiscountPercent))
+  function saveDiscount() {
+    const value = discount.trim() === '' ? null : Number(discount.replace(',', '.'))
+    if (value === (member.maxDiscountPercent ?? null)) return
+    onSave({ maxDiscountPercent: value })
+  }
+  return (
+    <div className="grid gap-2 md:col-span-4 md:grid-cols-[minmax(0,1fr)_180px_150px] md:pl-11">
+      <Select disabled={disabled} value={member.sellerId ? String(member.sellerId) : 'none'}
+        onValueChange={value => onSave({ sellerId: value === 'none' ? null : Number(value) })}>
+        <SelectTrigger aria-label="Vendedor" className="w-full border border-slate-200 bg-white"><SelectValue /></SelectTrigger>
+        <SelectContent>
+          <SelectItem value="none">Sem vendedor vinculado</SelectItem>
+          {sellers.map(seller => <SelectItem key={seller.id} value={String(seller.id)}>Vendedor: {seller.name}</SelectItem>)}
+        </SelectContent>
+      </Select>
+      <Select disabled={disabled || !member.sellerId} value={member.salesScope || 'todas'}
+        onValueChange={value => onSave({ salesScope: value as 'todas' | 'proprias' })}>
+        <SelectTrigger aria-label="Escopo de vendas" className="w-full border border-slate-200 bg-white"><SelectValue /></SelectTrigger>
+        <SelectContent>
+          <SelectItem value="todas">Vê todas as vendas</SelectItem>
+          <SelectItem value="proprias">Só as próprias vendas</SelectItem>
+        </SelectContent>
+      </Select>
+      <Input aria-label="Desconto máximo (%)" className="border border-slate-200 bg-white" disabled={disabled} inputMode="decimal"
+        onBlur={saveDiscount} onChange={event => setDiscount(event.target.value)}
+        onKeyDown={event => { if (event.key === 'Enter') saveDiscount() }}
+        placeholder="Desconto máx. %" value={discount} />
+    </div>
+  )
+}
+
 export default function SettingsPanel({ initialState, variant = 'modal' }: SettingsPanelProps) {
   const [activeSection, setActiveSection] = useState<SettingsSection>('profile')
   const [state, setState] = useState(initialState)
@@ -156,7 +196,7 @@ export default function SettingsPanel({ initialState, variant = 'modal' }: Setti
     }
   }
 
-  async function saveMember(userId: number, patch: { role?: AuthTenantRole; status?: WorkspaceMemberStatus; profileId?: ErpAccessProfile }) {
+  async function saveMember(userId: number, patch: Omit<UpdateMemberInput, 'userId'>) {
     setError(null)
     setMembersSave((current) => ({ ...current, [userId]: 'saving' }))
     try {
@@ -375,6 +415,14 @@ export default function SettingsPanel({ initialState, variant = 'modal' }: Setti
                         ))}
                       </SelectContent>
                     </Select>
+                    {['owner', 'admin'].includes(member.role) ? null : (
+                      <MemberCommercialRules
+                        disabled={!canManageWorkspace || memberSave === 'saving'}
+                        member={member}
+                        onSave={(patch) => { void saveMember(member.userId, patch) }}
+                        sellers={state.sellers}
+                      />
+                    )}
                   </div>
                 )
               })}

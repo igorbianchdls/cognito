@@ -57,6 +57,10 @@ try{
     COMMIT;
     REVOKE USAGE ON SCHEMA shared FROM erp_runtime;
   `);
+  // ERP_RLS_CONTEXT=1: repete a matriz com as políticas reescritas pela migração 20261008100000 (nomenclatura
+  // antiga desta fixture), provando que a permissão calculada uma vez por consulta dá o mesmo resultado.
+  if(process.env.ERP_RLS_CONTEXT==='1')await db.exec(readFileSync('supabase/migrations/20261008100000_erp_rls_contexto.sql','utf8').replaceAll('empresa_id','tenant_id'));
+  if(process.env.ERP_RLS_CONTEXT==='1'){const n=Number((await db.query("SELECT count(*) n FROM pg_policy p JOIN pg_class c ON c.oid=p.polrelid WHERE c.relnamespace='erp'::regnamespace AND (pg_get_expr(p.polqual,p.polrelid) LIKE '%erp_empresa_contexto%' OR pg_get_expr(p.polwithcheck,p.polrelid) LIKE '%erp_empresa_contexto%')")).rows[0].n);assert(n>200,'políticas reescritas: '+n);console.error('politicas_reescritas='+n);}
   const cases=[
     [null,[]],['erp.cadastros.visualizar',['reference']],['erp.cadastros.gerenciar',['reference']],
     ['erp.vendas.visualizar',['reference','sales']],['erp.vendas.gerenciar',['reference','sales']],

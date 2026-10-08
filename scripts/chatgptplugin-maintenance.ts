@@ -1,10 +1,11 @@
 import { config } from 'dotenv'
-import { closePluginDatabase } from '../src/products/chatgptplugin/shared/database'
-import { maintainChatgptPlugin } from '../src/products/chatgptplugin/application/maintenance'
+import { closePluginDatabase } from '../src/products/mcpcore/shared/database'
+import { maintainPluginStorage } from '../src/products/mcpcore/application/maintenance'
 config({path:'.env.local',quiet:true})
 async function main() {
   try {
-    await maintainChatgptPlugin()
+    await maintainPluginStorage('chatgpt')
+    await maintainPluginStorage('claude')
     console.log('Manutencao do ChatGPT Plugin concluida.')
   } finally { await closePluginDatabase() }
 }

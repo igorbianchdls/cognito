@@ -5,6 +5,7 @@ import { createHash } from 'node:crypto'
 import { ErpDomainError } from '@/products/erp/shared/erpErrors'
 import { readOperationPage } from './erpOperationPagination'
 import { erpToday } from '@/products/erp/server/erpBusinessDate'
+import { nextDocumentNumber } from '@/products/erp/server/erpDocumentNumbers'
 
 const businessDay = () => erpToday()
 
@@ -530,7 +531,7 @@ export async function listStockOperation(tenantId: number, resource: string, inp
          COALESCE(categorias.nome, '') AS categoria
        FROM erp.vw_posicao_estoque AS posicao
        JOIN erp.produtos AS produtos ON produtos.empresa_id = posicao.empresa_id AND produtos.id = posicao.produto_id
-       LEFT JOIN erp.categorias AS categorias ON categorias.empresa_id = produtos.empresa_id AND categorias.id = produtos.categoria_id
+       LEFT JOIN erp.categorias_cadastro AS categorias ON categorias.empresa_id = produtos.empresa_id AND categorias.id = produtos.categoria_id
        WHERE posicao.empresa_id = $1`,
       'produto, local_estoque', input,
     )
@@ -542,7 +543,7 @@ export async function listStockOperation(tenantId: number, resource: string, inp
          movimentos.saldo_apos, movimentos.origem_tipo AS origem
        FROM erp.movimentacoes_estoque AS movimentos
        JOIN erp.produtos AS produtos ON produtos.empresa_id = movimentos.empresa_id AND produtos.id = movimentos.produto_id
-       LEFT JOIN erp.categorias AS categorias ON categorias.empresa_id = produtos.empresa_id AND categorias.id = produtos.categoria_id
+       LEFT JOIN erp.categorias_cadastro AS categorias ON categorias.empresa_id = produtos.empresa_id AND categorias.id = produtos.categoria_id
        JOIN erp.locais_estoque AS locais ON locais.empresa_id = movimentos.empresa_id AND locais.id = movimentos.local_estoque_id
        WHERE movimentos.empresa_id = $1`,
       'data DESC, id DESC', input,
@@ -589,7 +590,7 @@ export async function listStockOperation(tenantId: number, resource: string, inp
          count(itens.id)::int AS componentes, CASE WHEN kits.ativo THEN 'ativo' ELSE 'inativo' END AS status
        FROM erp.kits_produtos AS kits
        JOIN erp.produtos ON produtos.empresa_id = kits.empresa_id AND produtos.id = kits.produto_id
-       LEFT JOIN erp.categorias AS categorias ON categorias.empresa_id = produtos.empresa_id AND categorias.id = produtos.categoria_id
+       LEFT JOIN erp.categorias_cadastro AS categorias ON categorias.empresa_id = produtos.empresa_id AND categorias.id = produtos.categoria_id
        LEFT JOIN erp.kits_produtos_itens AS itens ON itens.empresa_id = kits.empresa_id AND itens.kit_id = kits.id
        WHERE kits.empresa_id = $1 AND kits.excluido_em IS NULL
        GROUP BY kits.id, produtos.nome, produtos.codigo, categorias.nome`,
@@ -603,7 +604,7 @@ export async function listStockOperation(tenantId: number, resource: string, inp
          CASE WHEN conversoes.ativo THEN 'ativo' ELSE 'inativo' END AS status
        FROM erp.conversoes_unidades_produto AS conversoes
        JOIN erp.produtos ON produtos.empresa_id = conversoes.empresa_id AND produtos.id = conversoes.produto_id
-       LEFT JOIN erp.categorias AS categorias ON categorias.empresa_id = produtos.empresa_id AND categorias.id = produtos.categoria_id
+       LEFT JOIN erp.categorias_cadastro AS categorias ON categorias.empresa_id = produtos.empresa_id AND categorias.id = produtos.categoria_id
        WHERE conversoes.empresa_id = $1 AND conversoes.excluido_em IS NULL`,
       'produto, unidade_origem', input,
     )
@@ -685,7 +686,7 @@ async function createStockOperationWithClient(client: Pick<SQLClient, 'query'>, 
       if (!items.length || items.length > 200) throw new ErpDomainError('STOCK_OPERATION_INVALID', 'Informe entre 1 e 200 itens de contagem.')
       const productIds = items.map(item => requiredId(item.produto_id, 'Produto'))
       if (new Set(productIds).size !== productIds.length) throw new ErpDomainError('STOCK_OPERATION_INVALID', 'Produto repetido na contagem.')
-      const number = optionalText(input.values.numero) || `INV-${Date.now()}`
+      const number = optionalText(input.values.numero) || await nextDocumentNumber(client, input.tenantId, 'inventario', operationDate)
       const inventory = await client.query(
         `INSERT INTO erp.inventarios
            (empresa_id, numero, local_estoque_id, data_inventario, tipo, status, iniciado_em, finalizado_em, criado_por, atualizado_por, chave_idempotencia, metadata)
@@ -736,7 +737,7 @@ async function createStockOperationWithClient(client: Pick<SQLClient, 'query'>, 
       const origin = await lockStockBalance(client, input.tenantId, produtoId, originId)
       await lockStockBalance(client, input.tenantId, produtoId, destinationId)
       const cost = Number(origin.balance.custo_medio)
-      const number = optionalText(input.values.numero) || `TRF-${Date.now()}`
+      const number = optionalText(input.values.numero) || await nextDocumentNumber(client, input.tenantId, 'transferencia_estoque')
       const transfer = await client.query(
         `INSERT INTO erp.transferencias_estoque
            (empresa_id, numero, local_origem_id, local_destino_id, data_transferencia, status,

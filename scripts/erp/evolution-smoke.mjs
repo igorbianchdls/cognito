@@ -39,6 +39,9 @@ try{
  INSERT INTO erp.contratos_vendas_itens(id,tenant_id,contrato_id,servico_id,descricao,quantidade,valor_unitario,total) VALUES(101,1,101,101,'Servico',1,100,100);
  `);
  for(const sql of evolutionSql) await db.exec(sql);
+ // ERP_SCOPED_VALIDATION=1: aplica as validações financeiras limitadas ao escopo (migração 20261008110000) na
+ // nomenclatura antiga desta fixture e repete os mesmos cenários.
+ if(process.env.ERP_SCOPED_VALIDATION==='1') await db.exec(readFileSync('supabase/migrations/20261008110000_erp_validacao_escopo.sql','utf8').replaceAll('empresa_id','tenant_id'));
  await db.exec('BEGIN');
  for(const side of ['receber','pagar']){
   await db.exec(`INSERT INTO erp.contas_${side}(id,tenant_id,${side==='receber'?'cliente':'fornecedor'}_id,descricao,data_emissao,valor_total) VALUES(101,1,101,'Titulo A','2026-01-01',1000),(102,1,102,'Titulo C','2026-01-01',1000);
@@ -125,5 +128,5 @@ try{
  await test('contato novo reflete no cadastro sem mudar documento antigo',`UPDATE erp.entidades_contatos SET email='novo@example.invalid' WHERE entidade_id=101;`,null,async()=>{assert.equal(await scalar('SELECT email FROM erp.entidades WHERE id=101'),'novo@example.invalid');assert.equal(await scalar("SELECT cliente_snapshot->>'email' FROM erp.vendas WHERE id=101"),'a@example.invalid');});
  const body=evolutionSql.map(sql=>sql.replace(/^BEGIN;\s*$/m,'').replace(/COMMIT;\s*$/,'')).join('\n');
  const result={status:'passed',passed:checks.length,digest:createHash('sha256').update(body).digest('hex'),checks};console.log(JSON.stringify(result,null,2));
- writeFileSync('docs/avaliacao-erp/testes-novas-tabelas.json',JSON.stringify(result,null,2));
+ if(process.env.ERP_SCOPED_VALIDATION!=='1')writeFileSync('docs/avaliacao-erp/testes-novas-tabelas.json',JSON.stringify(result,null,2));
 }catch(e){console.error(JSON.stringify({passed:checks.length,last:checks.at(-1),code:e.code,message:e.message,where:e.where},null,2));process.exitCode=1;}finally{await db.close();}

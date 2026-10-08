@@ -2,16 +2,19 @@ import { McpServer,ResourceTemplate } from '@modelcontextprotocol/sdk/server/mcp
 import { z } from 'zod'
 import { z as z4 } from 'zod-openai'
 import { McpError,ErrorCode } from '@modelcontextprotocol/sdk/types.js'
-import type { PluginPrincipal } from '../shared/contracts'
+import type { PluginPrincipal } from '@/products/mcpcore/shared/contracts'
 import type { PluginConfig } from '../shared/config'
-import { executeTool, executionDependencies, type ExecutionDependencies } from '../application/executeTool'
-import { accessSchema, tools } from '../tools/catalog'
-import { envelope, outputs, profileFields } from '../tools/outputs'
-import { actionTools } from '../actions/catalog'
+import { executeTool, executionDependencies, type ExecutionDependencies } from '@/products/mcpcore/application/executeTool'
+import { accessSchema, tools } from '@/products/mcpcore/tools/catalog'
+import { envelope, outputs, profileFields } from '@/products/mcpcore/tools/outputs'
+import { actionTools } from '@/products/mcpcore/actions/catalog'
 import { PANEL_URI,renderPanelHtml } from '../extensions/panel'
-import { preferencesDependencies } from '../extensions/settings'
+import { preferencesDependencies } from '@/products/mcpcore/application/preferences'
 import { SERVER_INFO } from './modernProtocol'
-import { CARDS_URI,renderCardsHtml } from '../ui/resource'
+import { renderCardsHtml } from '@/products/mcpcore/ui/resource'
+import { CHATGPTPLUGIN_VERSION } from '../shared/version'
+
+export const CARDS_URI='ui://chatgptplugin/cards/v2.html'
 
 // Os primeiros 512 caracteres concentram as regras que valem para todas as tools.
 export const SERVER_INSTRUCTIONS = 'Chame meu_acesso antes de tudo; com várias empresas, peça ao usuário para escolher e envie empresa_id em todas as tools. '
@@ -38,16 +41,16 @@ export async function createPluginServer(principal: PluginPrincipal, config: Plu
   const extensions=new OpenAIExtensions(extensionServer)
   const prefs=dependencies.preferences||preferencesDependencies
   async function audited<T>(name:string,fn:()=>Promise<T>):Promise<T> {
-    const started=Date.now(),id=await dependencies.reserve(principal,name,null)
-    try {const data=await fn();await dependencies.finish(id,'succeeded',null,Date.now()-started);return data}
-    catch {await dependencies.finish(id,'failed','EXTENSION_UNAVAILABLE',Date.now()-started).catch(()=>undefined);throw new McpError(ErrorCode.InvalidParams,'Não foi possível concluir. Confira seus dados e permissões.')}
+    const started=Date.now(),id=await dependencies.reserve(principal,name,null,config.integration)
+    try {const data=await fn();await dependencies.finish(id,'succeeded',null,Date.now()-started,config.integration);return data}
+    catch {await dependencies.finish(id,'failed','EXTENSION_UNAVAILABLE',Date.now()-started,config.integration).catch(()=>undefined);throw new McpError(ErrorCode.InvalidParams,'Não foi possível concluir. Confira seus dados e permissões.')}
   }
   extensions.settings.register({readTool:'ler_configuracoes',updateTool:'atualizar_configuracoes',
     fields:{empresa_preferida:{schema:z4.string().regex(/^$|^[1-9]\d*$/).max(16),title:'Empresa preferida (ID)',description:'Deixe vazio para escolher no painel. Use um ID de meu_acesso.'},
       por_pagina:{schema:z4.number().int().min(10).max(50),title:'Registros por pagina'}},
     layout:[{kind:'group',title:'Preferencias',items:[{kind:'property',property:'empresa_preferida'},{kind:'property',property:'por_pagina'},
       {kind:'tool',tool:'abrir_painel',title:'Abrir painel'}]}],
-    read:()=>audited('ler_configuracoes',()=>prefs.read(principal)),update:set=>audited('atualizar_configuracoes',()=>prefs.update(principal,set))})
+    read:()=>audited('ler_configuracoes',()=>prefs.read(principal,config.integration)),update:set=>audited('atualizar_configuracoes',()=>prefs.update(principal,set,config.integration))})
   extensions.mentions.setHandler(async({query})=>{
     if(query.length>200)return {items:[]}
     const match=/^(\d+):\s*(.*)$/.exec(query)
@@ -69,7 +72,7 @@ export async function createPluginServer(principal: PluginPrincipal, config: Plu
   })
   server.registerResource('erp-panel',PANEL_URI,{mimeType:'text/html;profile=mcp-app'},async()=>({contents:[{uri:PANEL_URI,mimeType:'text/html;profile=mcp-app',text:renderPanelHtml(config.resource),
     _meta:{ui:{prefersBorder:true,csp:{connectDomains:[],resourceDomains:[]}},'openai/ui':{availableDisplayModes:['fullscreen']}}}]}))
-  server.registerResource('erp-cards',CARDS_URI,{mimeType:'text/html;profile=mcp-app'},async()=>({contents:[{uri:CARDS_URI,mimeType:'text/html;profile=mcp-app',text:renderCardsHtml(),
+  server.registerResource('erp-cards',CARDS_URI,{mimeType:'text/html;profile=mcp-app'},async()=>({contents:[{uri:CARDS_URI,mimeType:'text/html;profile=mcp-app',text:renderCardsHtml({name:'chatgptplugin-cards',version:CHATGPTPLUGIN_VERSION,host:'chatgpt'}),
     _meta:{ui:{prefersBorder:true,csp:{connectDomains:[],resourceDomains:[]}},'openai/ui':{availableDisplayModes:['inline','fullscreen']},
       'openai/widgetDescription':'Card do ERP com o resultado da consulta ou a prévia da operação. A prévia tem os botões Confirmar e Ajustar; nada muda no ERP antes da confirmação.'}}]}))
   // Cada tool abre o card correspondente; _meta indica ao card qual tool produziu o resultado.

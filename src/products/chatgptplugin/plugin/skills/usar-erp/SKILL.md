@@ -25,7 +25,7 @@ Os resultados aparecem em cards. Responda em poucas linhas, sem repetir a tabela
 
 ## Alterações: sempre prévia e confirmação
 
-As 19 tools de escrita funcionam em duas etapas:
+As 20 tools de escrita funcionam em duas etapas:
 
 1. **Prévia.** Chame a tool sem `rascunho_id`, com `chave_operacao` (um UUID novo), `dados` e, quando houver, `tipo`. Nada muda no ERP. O card mostra os valores calculados pelo ERP, o antes e depois e os botões Confirmar e Ajustar.
 2. **Execução.** Somente depois que o usuário confirmar explicitamente, chame a mesma tool apenas com `empresa_id` e `rascunho_id` (o campo `confirmar` da prévia traz a chamada pronta). Se o usuário clicar em Confirmar no card, a execução já aconteceu: não chame de novo.
@@ -36,6 +36,7 @@ Só `status: saved` com `registro_id` confirma a operação. Ao repetir a mesma 
 | --- | --- | --- |
 | Cadastrar, alterar ou excluir cadastro | `criar_cadastro`, `editar_cadastro`, `excluir_cadastro` | `cliente`, `fornecedor`, `vendedor`, `produto`, `servico`, `categoria`, `conta_financeira` |
 | Venda ou orçamento | `criar_venda`, `editar_venda`, `excluir_venda` | `venda`, `orcamento` |
+| Orçamento aprovado pelo cliente | `converter_orcamento` (mesmos itens e condições; a venda nasce em rascunho) | — |
 | Andamento da venda | `confirmar_venda`, `cancelar_venda`, `atender_venda` | — |
 | Compra (criada como cotação em rascunho) | `criar_compra`, `editar_compra`, `excluir_compra`, `confirmar_compra`, `cancelar_compra` | — |
 | Título a pagar ou receber | `criar_titulo`, `editar_titulo`, `excluir_titulo` | `pagar`, `receber` |
@@ -51,11 +52,30 @@ Regras:
 - `editar_titulo` e `excluir_titulo` usam o ID do título (`conta_id`); `registrar_baixa` usa o ID da parcela.
 - Se faltarem campos, o ChatGPT pode abrir um formulário com listas de opções; se não abrir, pergunte ao usuário o que falta.
 
+## Comercial: preços, vendedor, transporte, crédito e comissões
+
+- **Preço:** em `criar_venda`/`editar_venda` o `valor_unitario` é opcional. Sem ele, o ERP usa a tabela de preço do cliente (ou a padrão, ou `tabela_preco_id` informado) na faixa de quantidade, ou o preço do cadastro; a prévia mostra o preço aplicado. Preço abaixo do mínimo ou desconto acima do máximo da tabela é recusado: repasse a mensagem.
+- **Vendedor:** informe `vendedor_id` (de `buscar_cadastros` tipo vendedores) quando o usuário disser quem vendeu; a comissão é gerada na confirmação pela regra do vendedor, do item ou da categoria.
+- **Transporte:** `transportadora_id` (cadastro marcado como transportadora), `modalidade_frete` (emitente, destinatario, terceiros, proprio_remetente, proprio_destinatario, sem_frete), `volumes`, `peso_bruto`, `peso_liquido`.
+- **Crédito:** `confirmar_venda` pode falhar com `CREDIT_LIMIT_EXCEEDED` (mostre limite, em aberto e excedente) ou `CUSTOMER_BLOCKED`. Só se o usuário, do financeiro, pedir para liberar, gere nova prévia com `liberar_credito_motivo`. Limite, bloqueio (com motivo) e tabela do cliente mudam por `editar_cadastro` (tipo cliente: `limite_credito`, `bloqueio_comercial`, `bloqueio_motivo`, `tabela_preco_id`).
+- **Comissões:** `consultar_relatorio` com `tipo: comissoes` mostra, por vendedor, comissão, liberado (faturado ou recebido, conforme a regra), pago e a pagar.
+
+## Financeiro gerencial
+
+- **DRE:** `consultar_relatorio` com `dre` traz os 9 grupos (receita bruta … impostos sobre o lucro) e os subtotais (receita líquida, lucro bruto, resultado operacional, lucro líquido), com % sobre a receita líquida. Se houver "Não classificado", avise que há categorias sem grupo da DRE.
+- **Categorias:** ao criar categoria, use `tipo` receita ou despesa e `dre_grupo_codigo` (1 receita bruta, 2 deduções, 3 custos, 4 pessoal, 5 administrativas, 6 comerciais, 7 financeiro, 8 não operacional, 9 impostos sobre o lucro) ou `fora_dre` para empréstimo, aporte, distribuição de lucros e compra de equipamento.
+- **Previsões:** `criar_titulo` com `tipo_lancamento` "previsao" para receita ou despesa ainda incerta; quando se confirmar, `efetivar_previsao`.
+- **Margem, orçamento e metas:** `consultar_relatorio` com `margem-vendas`, `margem-itens`, `margem-clientes`, `orcado-realizado` (ano de `inicio`, até o mês de `fim`) e `metas`.
+- **Anexos:** `listar_anexos` devolve os arquivos (inclusive comprovantes de baixa) com link válido por 60 segundos.
+- **Cartão:** recebimento com forma de pagamento da maquininha quita o título na conta da maquininha, lança a taxa e prevê o repasse ao banco; não informe `taxa` nesses casos.
+
 ## Erros
 
 - `campos` diz qual campo corrigir e por quê: corrija e gere uma nova prévia.
 - `STALE_PROPOSAL`: o registro mudou depois da prévia; consulte de novo e gere outra prévia.
 - `ACCESS_DENIED`: o perfil do usuário no ERP não permite; explique, sem tentar contornar.
+- `CREDIT_LIMIT_EXCEEDED` / `CUSTOMER_BLOCKED`: veja a seção Comercial.
+- `DISCOUNT_LIMIT_EXCEEDED`: o desconto total passa do máximo permitido ao usuário. Mostre o percentual e o máximo; reduza o desconto ou peça a um administrador. Usuários com escopo "só as próprias vendas" vendem sempre como o próprio vendedor e só enxergam as vendas dele.
 - `INSUFFICIENT_SCOPE`: oriente reconectar o plugin com permissão de escrita.
 
 ## Limites

@@ -11,6 +11,8 @@ export function financialTitleCreateSchema(side: 'pagar' | 'receber') {
     valor_total: money.refine(value => value > 0), data_competencia: erpDateSchema, data_emissao: erpDateSchema,
     categoria_id: id, centro_custo_id: id.optional(), conta_financeira_id: id.optional(),
     observacoes: z.string().trim().max(2000).optional(), parcelas: installments,
+    // Previsão: entra no fluxo de caixa projetado, não no resultado, e só recebe baixa depois de efetivada.
+    tipo_lancamento: z.enum(['previsao', 'efetivo']).optional(),
   }).strict().superRefine((value, context) => {
     const total = value.parcelas.reduce((sum, part) => sum + Math.round(part.valor * 100), 0)
     if (total !== Math.round(value.valor_total * 100)) context.addIssue({ code: 'custom', path: ['parcelas'], message: 'A soma das parcelas deve corresponder ao valor total.' })

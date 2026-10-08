@@ -2,12 +2,12 @@ import assert from 'node:assert/strict'
 import { randomUUID,randomBytes } from 'node:crypto'
 import { handlePluginRequest,type HttpDependencies } from '../src/products/chatgptplugin/mcp/handleRequest'
 import { ERP_CAPABILITIES } from '../src/products/erp/shared/professionalContracts'
-import { PluginError,type PluginPrincipal } from '../src/products/chatgptplugin/shared/contracts'
+import { PluginError,type PluginPrincipal } from '../src/products/mcpcore/shared/contracts'
 import type { PluginConfig } from '../src/products/chatgptplugin/shared/config'
-import type { ExecutionDependencies } from '../src/products/chatgptplugin/application/executeTool'
+import type { ExecutionDependencies } from '../src/products/mcpcore/application/executeTool'
 import { MODERN_VERSION,versionKey,capabilitiesKey } from '../src/products/chatgptplugin/mcp/modernProtocol'
 
-const config:PluginConfig={resource:'https://erp.example.invalid/api/mcp',metadataUrl:'https://erp.example.invalid/.well-known/oauth-protected-resource/api/mcp',issuer:'https://test.clerk.accounts.dev',scope:'erp:read',clientIds:['client_test'],origins:['https://chatgpt.com'],toolTimeoutMs:1000,requestsPerMinute:60,nativeFormKey:randomBytes(32).toString('base64')}
+const config:PluginConfig={integration:'chatgpt',resource:'https://erp.example.invalid/api/mcp',metadataUrl:'https://erp.example.invalid/.well-known/oauth-protected-resource/api/mcp',issuer:'https://test.clerk.accounts.dev',scope:'erp:read',clientIds:['client_test'],origins:['https://chatgpt.com'],toolTimeoutMs:1000,requestsPerMinute:60,nativeFormKey:randomBytes(32).toString('base64')}
 const principal:PluginPrincipal={userId:1,clerkUserId:'user_1',clientId:'client_test',scopes:['erp:read','erp:write'],companies:[{id:1,name:'Empresa 1',profile:'administrador',capabilities:[...ERP_CAPABILITIES]}]}
 const saved=new Map<string,{input:string;draft:object}>(),events:{status:string;code:string|null}[]=[]
 let calls=0,resolved=0,limited=0,checked=0,sequence=0
@@ -33,7 +33,7 @@ async function main(){
   await check('Discovery e consultas modernas sem initialize',async()=>{
     const discovery=await rpc('server/discover');assert.equal(discovery.body.result.resultType,'complete');assert(discovery.body.result.supportedVersions.includes(MODERN_VERSION));assert(discovery.body.result.capabilities.extensions['openai/settings']);assert.deepEqual(discovery.body.result.capabilities.tools,{})
     assert(String(discovery.body.result.instructions).includes('rascunho_id'))
-    const tools=await rpc('tools/list');assert.equal(tools.body.result.tools.length,38);assert.equal(tools.body.result.resultType,'complete')
+    const tools=await rpc('tools/list');assert.equal(tools.body.result.tools.length,42);assert.equal(tools.body.result.resultType,'complete')
     assert.deepEqual(tools.body.result.tools.find((t:{name:string})=>t.name==='criar_cadastro').securitySchemes[0].scopes,['erp:read','erp:write'])
     const access=await rpc('tools/call',{name:'meu_acesso',arguments:{}});assert.equal(access.body.result.structuredContent.data.empresas[0].id,1)
     const resource=await rpc('resources/read',{uri:'ui://chatgptplugin/panel/v1.html'});assert.equal(resource.body.result.resultType,'complete');assert(resource.body.result.contents[0].text.includes('ui/initialize'))

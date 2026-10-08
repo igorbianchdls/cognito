@@ -27,6 +27,7 @@ const handleClerkMiddleware = clerkMiddleware(async (auth, request) => {
 export default function proxy(request: NextRequest, event: NextFetchEvent) {
   // MCP verifies OAuth; internal jobs verify CRON_SECRET in their own handlers.
   if (['/api/mcp', '/.well-known/oauth-protected-resource', '/.well-known/oauth-protected-resource/api/mcp',
+    '/api/claude/mcp', '/.well-known/oauth-protected-resource/api/claude/mcp',
     '/api/clerk/reconcile', '/api/chatgptplugin/internal/maintenance', '/api/erp/internal/automacoes']
     .includes(request.nextUrl.pathname)) return NextResponse.next()
   if (!process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY && isPublicRoute(request)) {

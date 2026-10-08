@@ -14,11 +14,17 @@ import { ErpOperationsWorkspacePage } from '@/products/erp/frontend/components/E
 import { ErpShell } from '@/products/erp/frontend/layout/ErpShell'
 import { PurchaseWorkspacePage } from '@/products/erp/frontend/modules/compras/PurchaseWorkspacePage'
 import { PurchaseInvoicesPage } from '@/products/erp/frontend/modules/compras/PurchaseInvoicesPage'
+import { CommissionsPage } from '@/products/erp/frontend/modules/vendas/CommissionsPage'
+import { PriceTablesPage } from '@/products/erp/frontend/modules/vendas/PriceTablesPage'
+import { SaleReturnsPage } from '@/products/erp/frontend/modules/vendas/SaleReturnsPage'
 import {ServiceInvoicesPage} from '@/products/erp/frontend/modules/vendas/ServiceInvoicesPage'
 import { PayablesWorkspacePage } from '@/products/erp/frontend/modules/financeiro/PayablesWorkspacePage'
 import { ReceivablesWorkspacePage } from '@/products/erp/frontend/modules/financeiro/ReceivablesWorkspacePage'
 import { BankReconciliationPage } from '@/products/erp/frontend/modules/financeiro/BankReconciliationPage'
 import { PeriodClosuresPage } from '@/products/erp/frontend/modules/financeiro/PeriodClosuresPage'
+import { PaymentMethodsPage } from '@/products/erp/frontend/modules/financeiro/PaymentMethodsPage'
+import { BudgetPage } from '@/products/erp/frontend/modules/financeiro/BudgetPage'
+import { SalesGoalsPage } from '@/products/erp/frontend/modules/vendas/SalesGoalsPage'
 import { SalesWorkspacePage } from '@/products/erp/frontend/modules/vendas/SalesWorkspacePage'
 import { ServiceOrdersWorkspacePage } from '@/products/erp/frontend/modules/vendas/ServiceOrdersWorkspacePage'
 import { AutomationWorkspacePage } from '@/products/erp/frontend/components/ErpRoutineWorkspacePage'
@@ -26,6 +32,8 @@ import {
   isProfessionalReport,
   ProfessionalReportPage,
 } from '@/products/erp/frontend/modules/relatorios/ProfessionalReportPage'
+import { DreReportPage } from '@/products/erp/frontend/modules/relatorios/DreReportPage'
+import { GroupedReportPage, isGroupedReport } from '@/products/erp/frontend/modules/relatorios/GroupedReportPage'
 import { getErpEntityConfig } from '@/products/erp/frontend/modules/entityRegistry'
 import { OverviewPage } from '@/products/erp/frontend/modules/overview/OverviewPage'
 import { getErpModule, getErpSection } from '@/products/erp/shared/navigation'
@@ -72,8 +80,8 @@ function ErpPageContent({
   const moduleConfig = getErpModule(section, module)
   const operationConfig = moduleConfig ? ERP_OPERATION_CONFIGS[moduleConfig.id] : undefined
   const usesWorkspaceChrome =
-    (sectionConfig.id === 'financeiro' && ['contas-a-pagar', 'contas-a-receber'].includes(moduleConfig?.id ?? '')) ||
-    (sectionConfig.id === 'vendas' && ['orcamentos', 'pedidos', 'ordens-servico', 'contratos','notas-fiscais'].includes(moduleConfig?.id ?? '')) ||
+    (sectionConfig.id === 'financeiro' && ['contas-a-pagar', 'contas-a-receber', 'formas-pagamento', 'orcamento'].includes(moduleConfig?.id ?? '')) ||
+    (sectionConfig.id === 'vendas' && ['orcamentos', 'pedidos', 'ordens-servico', 'contratos','notas-fiscais', 'devolucoes', 'tabelas-preco', 'gestao-comissoes', 'metas-vendas'].includes(moduleConfig?.id ?? '')) ||
     ['compras', 'estoque'].includes(sectionConfig.id) || Boolean(entityConfig)
 
   return (
@@ -97,6 +105,12 @@ function ErpPageContent({
               )
             ) : sectionConfig.id === 'vendas' && moduleConfig?.id === 'notas-fiscais' ? (
               <ServiceInvoicesPage />
+            ) : sectionConfig.id === 'vendas' && moduleConfig?.id === 'devolucoes' ? (
+              <SaleReturnsPage />
+            ) : sectionConfig.id === 'vendas' && moduleConfig?.id === 'tabelas-preco' ? (
+              <PriceTablesPage />
+            ) : sectionConfig.id === 'vendas' && moduleConfig?.id === 'gestao-comissoes' ? (
+              <CommissionsPage />
             ) : sectionConfig.id === 'vendas' && moduleConfig?.id === 'pedidos' ? (
               <SalesWorkspacePage />
             ) : sectionConfig.id === 'vendas' && moduleConfig?.id === 'orcamentos' ? (
@@ -115,12 +129,24 @@ function ErpPageContent({
               <ReceivablesWorkspacePage />
             ) : sectionConfig.id === 'financeiro' && moduleConfig?.id === 'conciliacao-bancaria' ? (
               <BankReconciliationPage />
+            ) : sectionConfig.id === 'financeiro' && moduleConfig?.id === 'orcamento' ? (
+              <BudgetPage />
+            ) : sectionConfig.id === 'relatorios' && moduleConfig?.id === 'orcado-realizado' ? (
+              <BudgetPage comparisonOnly />
+            ) : sectionConfig.id === 'vendas' && moduleConfig?.id === 'metas-vendas' ? (
+              <SalesGoalsPage />
+            ) : sectionConfig.id === 'financeiro' && moduleConfig?.id === 'formas-pagamento' ? (
+              <PaymentMethodsPage />
             ) : sectionConfig.id === 'financeiro' && moduleConfig?.id === 'fechamentos' ? (
               <PeriodClosuresPage />
             ) : sectionConfig.id === 'cadastros' && moduleConfig?.id === 'importacoes' ? (
               <ErpImportExportPage />
             ) : sectionConfig.id === 'cadastros' && moduleConfig?.id === 'automacoes' ? (
               <AutomationWorkspacePage />
+            ) : sectionConfig.id === 'relatorios' && moduleConfig?.id === 'dre' ? (
+              <DreReportPage />
+            ) : sectionConfig.id === 'relatorios' && isGroupedReport(moduleConfig?.id) ? (
+              <GroupedReportPage id={moduleConfig.id} />
             ) : sectionConfig.id === 'relatorios' && isProfessionalReport(moduleConfig?.id) ? (
               <ProfessionalReportPage reportId={moduleConfig.id} />
             ) : operationConfig ? (

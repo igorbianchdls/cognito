@@ -1,8 +1,10 @@
+import { ERP_TODAY_SQL } from '@/products/erp/server/erpBusinessDate'
 import { erpToday } from '@/products/erp/server/erpBusinessDate'
+import { nextDocumentNumber } from '@/products/erp/server/erpDocumentNumbers'
 import { runRecoverableErpAutomation } from './erpAutomationRunner'
 import { isRetiredErpReport } from '@/products/erp/shared/reportCatalog'
 import { cashResultSql } from './erpCashReport'
-import { accrualResultSql, agingSql, cashFlowSql } from './erpFinancialReports'
+import { accrualResultSql, agingSql, cashFlowSql, commissionSummarySql, marginSql } from './erpFinancialReports'
 import { processPurchaseRecurrences } from './erpRoutineRepository'
 import { erpDateSchema } from '@/products/erp/shared/erpTransport'
 import { lineTotal, sumMoney } from '@/products/erp/shared/erpMoney'
@@ -178,7 +180,7 @@ export async function createServiceOrder(
         422,
       );
     const total = sumMoney([subtotal,-input.values.desconto]);
-    const number = stringValue(input.values.numero) || String(current?.numero || `OS-${Date.now()}`);
+    const number = stringValue(input.values.numero) || (current?.numero ? String(current.numero) : await nextDocumentNumber(client, input.tenantId, "ordem_servico"));
     const created = await client.query(
       input.orderId ? `UPDATE erp.ordens_servico SET cliente_id=$2,responsavel_id=$3,numero=$4,status=$5,data_inicio=$6,previsao_entrega=$7,equipamento=$8,marca=$9,modelo=$10,numero_serie=$11,problema_informado=$12,diagnostico=$13,observacoes_publicas=$14,observacoes_internas=$15,subtotal=$16,desconto=$17,total=$18,atualizado_por=$20,versao=versao+1 WHERE empresa_id=$1 AND id=$19 RETURNING id::text,numero,status,versao` :
       `INSERT INTO erp.ordens_servico
@@ -1060,7 +1062,24 @@ export async function suggestBankReconciliations(tenantId: number) {
          AND abs(transacoes.valor - abs(pagamentos.valor_liquido)) <= COALESCE(regras.tolerancia_valor, 0)
          AND abs(transacoes.data_transacao - pagamentos.data_pagamento) <= COALESCE(regras.tolerancia_dias, 5)
      )
-     SELECT candidates.transacao_id::text, candidates.pagamento_id::text,
+     , repasses AS (
+       -- Repasses previstos da maquininha (cartão): crédito no banco de destino perto da data e do valor previstos.
+       -- A diferença de valor aceita é de até 5% (taxa cobrada diferente da contratada); ela aparece para conferência.
+       SELECT transacoes.id AS transacao_id, transferencias.id AS transferencia_id,
+         abs(transacoes.valor - transferencias.valor) AS diferenca_valor,
+         abs(transacoes.data_transacao - transferencias.data_transferencia) AS diferenca_dias,
+         row_number() OVER (PARTITION BY transacoes.id ORDER BY abs(transacoes.valor - transferencias.valor),
+           abs(transacoes.data_transacao - transferencias.data_transferencia), transferencias.id) AS posicao
+       FROM erp.transacoes_bancarias transacoes
+       JOIN erp.transferencias_financeiras transferencias ON transferencias.empresa_id = transacoes.empresa_id
+         AND transferencias.conta_destino_id = transacoes.conta_financeira_id AND transferencias.status = 'pendente' AND transferencias.excluido_em IS NULL
+         AND transferencias.pagamento_origem_id IS NOT NULL
+       WHERE transacoes.empresa_id = $1 AND transacoes.status = 'pendente' AND transacoes.excluido_em IS NULL AND transacoes.tipo = 'credito'
+         AND NOT EXISTS (SELECT 1 FROM candidates c WHERE c.transacao_id = transacoes.id AND c.posicao = 1 AND c.diferenca_valor = 0)
+         AND abs(transacoes.valor - transferencias.valor) <= transferencias.valor * 0.05
+         AND abs(transacoes.data_transacao - transferencias.data_transferencia) <= 5
+     )
+     SELECT candidates.transacao_id::text, candidates.pagamento_id::text, NULL::text AS transferencia_id,
        transacoes.data_transacao AS data, transacoes.descricao, transacoes.valor,
        pagamentos.data_pagamento, pagamentos.valor_liquido,
        candidates.diferenca_valor, candidates.diferenca_dias,
@@ -1069,7 +1088,19 @@ export async function suggestBankReconciliations(tenantId: number) {
      FROM candidates
      JOIN erp.transacoes_bancarias transacoes ON transacoes.empresa_id = $1 AND transacoes.id = candidates.transacao_id
      JOIN erp.pagamentos pagamentos ON pagamentos.empresa_id = $1 AND pagamentos.id = candidates.pagamento_id
-     WHERE candidates.posicao = 1 ORDER BY candidates.transacao_id`,
+     WHERE candidates.posicao = 1
+     UNION ALL
+     SELECT repasses.transacao_id::text, NULL::text, repasses.transferencia_id::text,
+       transacoes.data_transacao, transacoes.descricao, transacoes.valor,
+       transferencias.data_transferencia, transferencias.valor,
+       repasses.diferenca_valor, repasses.diferenca_dias,
+       CASE WHEN repasses.diferenca_valor = 0 THEN 'repasse' ELSE 'repasse_divergente' END,
+       repasses.diferenca_valor = 0
+     FROM repasses
+     JOIN erp.transacoes_bancarias transacoes ON transacoes.empresa_id = $1 AND transacoes.id = repasses.transacao_id
+     JOIN erp.transferencias_financeiras transferencias ON transferencias.empresa_id = $1 AND transferencias.id = repasses.transferencia_id
+     WHERE repasses.posicao = 1
+     ORDER BY 1`,
     [tenantId],
   );
 }
@@ -1116,7 +1147,7 @@ export async function undoBankReconciliation(
 ) {
   return withTransaction(async (client) => {
     const current = await client.query(
-      `SELECT itens.id, itens.conciliacao_id, transacoes.data_transacao
+      `SELECT itens.id, itens.conciliacao_id, itens.transferencia_financeira_id, transacoes.data_transacao
        FROM erp.conciliacoes_bancarias_itens itens
        JOIN erp.transacoes_bancarias transacoes ON transacoes.empresa_id = itens.empresa_id AND transacoes.id = itens.transacao_bancaria_id
        WHERE itens.empresa_id = $1 AND itens.transacao_bancaria_id = $2 AND itens.desfeito_em IS NULL FOR UPDATE`,
@@ -1137,6 +1168,14 @@ export async function undoBankReconciliation(
       `UPDATE erp.conciliacoes_bancarias_itens SET desfeito_em = now(), desfeito_por = $3
        WHERE empresa_id = $1 AND transacao_bancaria_id = $2 AND desfeito_em IS NULL`,
       [input.tenantId, input.transactionId, input.actorId],
+    );
+    // Repasse do cartão conciliado volta a ser previsto, com a data e o valor originais.
+    const transfers = items.map((item) => item.transferencia_financeira_id).filter(Boolean).map(Number)
+    if (transfers.length) await client.query(
+      `UPDATE erp.transferencias_financeiras SET status = 'pendente', atualizado_por = $3,
+         valor = coalesce((metadata ->> 'valor_previsto')::numeric, valor), data_transferencia = coalesce((metadata ->> 'data_prevista')::date, data_transferencia)
+       WHERE empresa_id = $1 AND id = ANY($2::bigint[]) AND status = 'concluida'`,
+      [input.tenantId, transfers, input.actorId],
     );
     await client.query(
       `UPDATE erp.conciliacoes_bancarias SET status = 'cancelada', atualizado_por = $3
@@ -1164,18 +1203,15 @@ export async function runErpAutomation(input: ActorInput & { tipo: string; compe
       result = {financial,purchases};
     }
     else if (input.tipo === "titulos_vencidos") {
-      const updates = await withTransaction(async client => {
-        await assertErpPeriodOpen(client,{tenantId:input.tenantId,module:'financeiro',date:competence});
-        const updated = await client.query(`WITH receber AS (
-           UPDATE erp.contas_receber_parcelas p SET status='vencido' WHERE p.empresa_id=$1 AND p.status IN ('aberto','parcial') AND p.data_vencimento<$2 AND p.excluido_em IS NULL
-             AND p.id IN (SELECT parcelas.id FROM erp.contas_receber_parcelas parcelas ${financialCompositionSql('receber')} WHERE parcelas.empresa_id=$1 AND composicao.saldo>0) RETURNING 1
-         ), pagar AS (
-           UPDATE erp.contas_pagar_parcelas p SET status='vencido' WHERE p.empresa_id=$1 AND p.status IN ('aberto','parcial') AND p.data_vencimento<$2 AND p.excluido_em IS NULL
-             AND p.id IN (SELECT parcelas.id FROM erp.contas_pagar_parcelas parcelas JOIN erp.contas_pagar c ON c.empresa_id=parcelas.empresa_id AND c.id=parcelas.conta_pagar_id ${financialCompositionSql('pagar')} WHERE parcelas.empresa_id=$1 AND composicao.saldo>0 AND c.tipo_lancamento='efetivo') RETURNING 1
-         ) SELECT ((SELECT count(*) FROM receber)+(SELECT count(*) FROM pagar))::int AS total`,[input.tenantId,competence]);
-        return updated.rows;
-      });
-      result = updates[0];
+      // Vencido é estado calculado (data < hoje e saldo > 0): a rotina só conta, sem gravar status, para não
+      // apagar o "parcial" nem deixar o valor gravado desatualizado entre execuções.
+      const rows = await runQuery(`SELECT
+           (SELECT count(*) FROM erp.contas_receber_parcelas parcelas ${financialCompositionSql('receber')}
+             WHERE parcelas.empresa_id=$1 AND parcelas.excluido_em IS NULL AND parcelas.status IN ('aberto','parcial','vencido') AND parcelas.data_vencimento<$2 AND composicao.saldo>0)::int AS receber,
+           (SELECT count(*) FROM erp.contas_pagar_parcelas parcelas ${financialCompositionSql('pagar')}
+             WHERE parcelas.empresa_id=$1 AND parcelas.excluido_em IS NULL AND parcelas.status IN ('aberto','parcial','vencido') AND parcelas.data_vencimento<$2 AND composicao.saldo>0)::int AS pagar`,
+        [input.tenantId, competence]);
+      result = { total: Number(rows[0].receber) + Number(rows[0].pagar), receber: Number(rows[0].receber), pagar: Number(rows[0].pagar) };
     } else if (input.tipo === "estoque_minimo") {
       const rows = await runQuery(
         `SELECT count(*)::int AS total FROM erp.vw_posicao_estoque WHERE empresa_id = $1 AND situacao = 'repor'`,
@@ -1196,20 +1232,20 @@ export async function getProfessionalOverview(tenantId: number) {
     `SELECT
        COALESCE((SELECT sum(composicao.saldo) FROM erp.contas_receber_parcelas parcelas ${financialCompositionSql('receber')} WHERE parcelas.empresa_id = $1 AND parcelas.status IN ('aberto','parcial','vencido') AND parcelas.excluido_em IS NULL),0) AS saldo_receber,
        COALESCE((SELECT sum(composicao.saldo) FROM erp.contas_pagar_parcelas parcelas JOIN erp.contas_pagar contas ON contas.empresa_id=parcelas.empresa_id AND contas.id=parcelas.conta_pagar_id ${financialCompositionSql('pagar')} WHERE parcelas.empresa_id = $1 AND contas.tipo_lancamento='efetivo' AND parcelas.status IN ('aberto','parcial','vencido') AND parcelas.excluido_em IS NULL),0) AS saldo_pagar,
-       COALESCE((SELECT sum(composicao.saldo) FROM erp.contas_receber_parcelas parcelas ${financialCompositionSql('receber')} WHERE parcelas.empresa_id = $1 AND parcelas.status IN ('aberto','parcial','vencido') AND parcelas.data_vencimento < CURRENT_DATE AND parcelas.excluido_em IS NULL),0) AS receber_vencido,
-       COALESCE((SELECT sum(composicao.saldo) FROM erp.contas_pagar_parcelas parcelas JOIN erp.contas_pagar contas ON contas.empresa_id=parcelas.empresa_id AND contas.id=parcelas.conta_pagar_id ${financialCompositionSql('pagar')} WHERE parcelas.empresa_id = $1 AND contas.tipo_lancamento='efetivo' AND parcelas.data_vencimento BETWEEN CURRENT_DATE AND CURRENT_DATE + 7 AND parcelas.status IN ('aberto','parcial','vencido') AND parcelas.excluido_em IS NULL),0) AS pagar_proximos_7_dias,
-       COALESCE((SELECT sum(total) FROM erp.vendas WHERE empresa_id = $1 AND data_venda >= date_trunc('month', CURRENT_DATE) AND data_venda < date_trunc('month', CURRENT_DATE) + interval '1 month' AND status IN ('confirmada','faturada') AND tipo_documento = 'venda' AND excluido_em IS NULL),0) AS vendas_mes,
-       COALESCE((SELECT sum(total) FROM erp.compras WHERE empresa_id = $1 AND data_compra >= date_trunc('month', CURRENT_DATE) AND data_compra < date_trunc('month', CURRENT_DATE) + interval '1 month' AND status IN ('confirmada','parcialmente_recebida','recebida') AND tipo_movimento='compra' AND excluido_em IS NULL),0) AS compras_mes,
-       COALESCE((SELECT sum(total) FROM erp.vendas WHERE empresa_id = $1 AND data_venda >= date_trunc('month', CURRENT_DATE) - interval '1 month' AND data_venda < date_trunc('month', CURRENT_DATE) AND status IN ('confirmada','faturada') AND tipo_documento = 'venda' AND excluido_em IS NULL),0) AS vendas_mes_anterior,
-       COALESCE((SELECT sum(total) FROM erp.compras WHERE empresa_id = $1 AND data_compra >= date_trunc('month', CURRENT_DATE) - interval '1 month' AND data_compra < date_trunc('month', CURRENT_DATE) AND status IN ('confirmada','parcialmente_recebida','recebida') AND tipo_movimento='compra' AND excluido_em IS NULL),0) AS compras_mes_anterior,
+       COALESCE((SELECT sum(composicao.saldo) FROM erp.contas_receber_parcelas parcelas ${financialCompositionSql('receber')} WHERE parcelas.empresa_id = $1 AND parcelas.status IN ('aberto','parcial','vencido') AND parcelas.data_vencimento < ${ERP_TODAY_SQL} AND parcelas.excluido_em IS NULL),0) AS receber_vencido,
+       COALESCE((SELECT sum(composicao.saldo) FROM erp.contas_pagar_parcelas parcelas JOIN erp.contas_pagar contas ON contas.empresa_id=parcelas.empresa_id AND contas.id=parcelas.conta_pagar_id ${financialCompositionSql('pagar')} WHERE parcelas.empresa_id = $1 AND contas.tipo_lancamento='efetivo' AND parcelas.data_vencimento BETWEEN ${ERP_TODAY_SQL} AND ${ERP_TODAY_SQL} + 7 AND parcelas.status IN ('aberto','parcial','vencido') AND parcelas.excluido_em IS NULL),0) AS pagar_proximos_7_dias,
+       COALESCE((SELECT sum(total) FROM erp.vendas WHERE empresa_id = $1 AND data_venda >= date_trunc('month', ${ERP_TODAY_SQL}) AND data_venda < date_trunc('month', ${ERP_TODAY_SQL}) + interval '1 month' AND status IN ('confirmada','faturada') AND tipo_documento = 'venda' AND excluido_em IS NULL),0) AS vendas_mes,
+       COALESCE((SELECT sum(total) FROM erp.compras WHERE empresa_id = $1 AND data_compra >= date_trunc('month', ${ERP_TODAY_SQL}) AND data_compra < date_trunc('month', ${ERP_TODAY_SQL}) + interval '1 month' AND status IN ('confirmada','parcialmente_recebida','recebida') AND tipo_movimento='compra' AND excluido_em IS NULL),0) AS compras_mes,
+       COALESCE((SELECT sum(total) FROM erp.vendas WHERE empresa_id = $1 AND data_venda >= date_trunc('month', ${ERP_TODAY_SQL}) - interval '1 month' AND data_venda < date_trunc('month', ${ERP_TODAY_SQL}) AND status IN ('confirmada','faturada') AND tipo_documento = 'venda' AND excluido_em IS NULL),0) AS vendas_mes_anterior,
+       COALESCE((SELECT sum(total) FROM erp.compras WHERE empresa_id = $1 AND data_compra >= date_trunc('month', ${ERP_TODAY_SQL}) - interval '1 month' AND data_compra < date_trunc('month', ${ERP_TODAY_SQL}) AND status IN ('confirmada','parcialmente_recebida','recebida') AND tipo_movimento='compra' AND excluido_em IS NULL),0) AS compras_mes_anterior,
        (COALESCE((SELECT sum(saldo_inicial) FROM erp.contas_financeiras WHERE empresa_id = $1 AND excluido_em IS NULL),0)
-         + COALESCE((SELECT sum(CASE WHEN estorno_de_pagamento_id IS NULL THEN valor_liquido ELSE -valor_liquido END) FROM erp.pagamentos WHERE empresa_id = $1 AND tipo = 'receber' AND data_pagamento <= CURRENT_DATE AND excluido_em IS NULL),0)
-         - COALESCE((SELECT sum(CASE WHEN estorno_de_pagamento_id IS NULL THEN valor_liquido ELSE -valor_liquido END) FROM erp.pagamentos WHERE empresa_id = $1 AND tipo = 'pagar' AND data_pagamento <= CURRENT_DATE AND excluido_em IS NULL),0)
+         + COALESCE((SELECT sum(CASE WHEN estorno_de_pagamento_id IS NULL THEN valor_liquido ELSE -valor_liquido END) FROM erp.pagamentos WHERE empresa_id = $1 AND tipo = 'receber' AND data_pagamento <= ${ERP_TODAY_SQL} AND excluido_em IS NULL),0)
+         - COALESCE((SELECT sum(CASE WHEN estorno_de_pagamento_id IS NULL THEN valor_liquido ELSE -valor_liquido END) FROM erp.pagamentos WHERE empresa_id = $1 AND tipo = 'pagar' AND data_pagamento <= ${ERP_TODAY_SQL} AND excluido_em IS NULL),0)
          + COALESCE((SELECT sum(CASE
              WHEN a.tipo='reversao' THEN CASE WHEN (original.lado='receber')=(original.tipo='constituicao') THEN -a.valor ELSE a.valor END
              WHEN (a.lado='receber')=(a.tipo='constituicao') THEN a.valor ELSE -a.valor END)
            FROM erp.adiantamentos a LEFT JOIN erp.adiantamentos original ON original.empresa_id=a.empresa_id AND original.id=a.reversao_de_id
-           WHERE a.empresa_id=$1 AND a.data_movimento<=CURRENT_DATE),0)) AS saldo_atual,
+           WHERE a.empresa_id=$1 AND a.data_movimento<=${ERP_TODAY_SQL}),0)) AS saldo_atual,
        NULL::numeric AS margem_bruta_mes,
        (SELECT count(*) FROM erp.vw_posicao_estoque WHERE empresa_id = $1 AND situacao = 'repor')::int AS produtos_repor,
        (SELECT count(*) FROM erp.transacoes_bancarias WHERE empresa_id = $1 AND status IN ('pendente','parcial') AND excluido_em IS NULL)::int AS conciliacoes_pendentes,
@@ -1241,6 +1277,10 @@ export async function listProfessionalReport(input: {
     "fluxo-de-caixa": cashFlowSql(),
     "aging-receber": agingSql("receber"),
     "aging-pagar": agingSql("pagar"),
+    comissoes: commissionSummarySql(),
+    "margem-vendas": marginSql('venda'),
+    "margem-itens": marginSql('item'),
+    "margem-clientes": marginSql('cliente'),
     "posicao-financeira": `SELECT tipo, status, count(*)::int AS parcelas, sum(saldo)::numeric(18,2) AS saldo FROM (
       SELECT 'receber'::text AS tipo, parcelas.status, composicao.saldo FROM erp.contas_receber_parcelas parcelas JOIN erp.contas_receber contas ON contas.empresa_id=parcelas.empresa_id AND contas.id=parcelas.conta_receber_id ${financialCompositionSql('receber')} WHERE parcelas.empresa_id = $1 AND contas.status<>'cancelado' AND contas.excluido_em IS NULL AND parcelas.status<>'cancelado' AND parcelas.data_vencimento BETWEEN $2 AND $3 AND parcelas.excluido_em IS NULL
       UNION ALL SELECT 'pagar'::text, parcelas.status, composicao.saldo FROM erp.contas_pagar_parcelas parcelas JOIN erp.contas_pagar contas ON contas.empresa_id=parcelas.empresa_id AND contas.id=parcelas.conta_pagar_id ${financialCompositionSql('pagar')} WHERE parcelas.empresa_id = $1 AND contas.tipo_lancamento='efetivo' AND contas.status<>'cancelado' AND contas.excluido_em IS NULL AND parcelas.status<>'cancelado' AND parcelas.data_vencimento BETWEEN $2 AND $3 AND parcelas.excluido_em IS NULL

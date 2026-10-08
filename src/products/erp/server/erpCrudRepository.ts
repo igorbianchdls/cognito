@@ -9,8 +9,8 @@ export async function validateFinancialReferences(client:Pick<SQLClient,'query'>
   const party=side==='pagar'?'fornecedor':'cliente'
   const r=await client.query(`SELECT id FROM erp.entidades WHERE empresa_id=$1 AND id=$2 AND eh_${party} AND ativo AND excluido_em IS NULL${lock?' FOR SHARE':''}`,[tenantId,values[party+'_id']])
   if(!r.rows[0])fail('Escolha um '+party+' ativo desta empresa.')
-  const cat=await client.query(`SELECT id FROM erp.categorias WHERE empresa_id=$1 AND id=$2 AND ativo AND excluido_em IS NULL AND tipo IN ($3,'geral')${lock?' FOR SHARE':''}`,[tenantId,values.categoria_id,side==='pagar'?'despesa':'receita'])
-  if(!cat.rows[0])fail('Escolha uma categoria financeira compatível desta empresa.')
+  const cat=await client.query(`SELECT id FROM erp.categorias WHERE empresa_id=$1 AND id=$2 AND ativo AND excluido_em IS NULL AND tipo=$3 AND NOT EXISTS(SELECT 1 FROM erp.categorias f WHERE f.empresa_id=$1 AND f.categoria_pai_id=$2 AND f.excluido_em IS NULL AND f.ativo)${lock?' FOR SHARE':''}`,[tenantId,values.categoria_id,side==='pagar'?'despesa':'receita'])
+  if(!cat.rows[0])fail('Escolha uma categoria financeira compatível desta empresa (sem subcategorias).')
   for(const [field,table] of [['centro_custo_id','centros_custo'],['conta_financeira_id','contas_financeiras']] as const)if(values[field]){
     const ref=await client.query(`SELECT id FROM erp.${table} WHERE empresa_id=$1 AND id=$2 AND ativo AND excluido_em IS NULL${lock?' FOR SHARE':''}`,[tenantId,values[field]])
     if(!ref.rows[0])fail('Referência financeira não disponível nesta empresa.')
@@ -34,9 +34,9 @@ async function titleEvent(client:SQLClient,tenantId:number,actorId:number,side:F
 export async function createManualFinancialTitle(client:SQLClient,tenantId:number,actorId:number,side:FinancialSide,values:Record<string,unknown>,key:string,source:'plugin'|'api'='plugin'){
   await validateFinancialReferences(client,tenantId,side,values);await financialPeriod(client,tenantId,values)
   const party=side==='pagar'?'fornecedor':'cliente'
-  const result=await client.query(`INSERT INTO erp.contas_${side}(empresa_id,${party}_id,descricao,numero_documento,valor_total,data_competencia,data_emissao,categoria_id,centro_custo_id,observacoes,origem,status,chave_idempotencia,criado_por,atualizado_por${side==='pagar'?',tipo_lancamento,efetivado_em':''})
-    VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,'manual','aberto',$11,$12,$12${side==='pagar'?",'efetivo',now()":''}) RETURNING id`,
-    [tenantId,values[party+'_id'],values.descricao,values.numero_documento||null,values.valor_total,values.data_competencia,values.data_emissao,values.categoria_id,values.centro_custo_id||null,values.observacoes||null,key,actorId])
+  const result=await client.query(`INSERT INTO erp.contas_${side}(empresa_id,${party}_id,descricao,numero_documento,valor_total,data_competencia,data_emissao,categoria_id,centro_custo_id,observacoes,origem,status,chave_idempotencia,criado_por,atualizado_por,tipo_lancamento,efetivado_em)
+    VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,'manual','aberto',$11,$12,$12,$13::text,CASE WHEN $13::text='efetivo' THEN now() END) RETURNING id`,
+    [tenantId,values[party+'_id'],values.descricao,values.numero_documento||null,values.valor_total,values.data_competencia,values.data_emissao,values.categoria_id,values.centro_custo_id||null,values.observacoes||null,key,actorId,values.tipo_lancamento==='previsao'?'previsao':'efetivo'])
   const id=Number(result.rows[0].id);await addInstallments(client,tenantId,actorId,side,id,values);await titleEvent(client,tenantId,actorId,side,id,'criada_'+source,values);return String(id)
 }
 export async function changeManualFinancialTitle(client:SQLClient,tenantId:number,actorId:number,side:FinancialSide,id:number,values:Record<string,unknown>,remove=false,source:'plugin'|'api'='plugin'){
@@ -78,7 +78,7 @@ export async function changeManualFinancialTitle(client:SQLClient,tenantId:numbe
   return String(id)
 }
 
-const registrationTables={clientes:'entidades',fornecedores:'entidades',vendedores:'entidades',produtos:'produtos',servicos:'servicos',categorias:'categorias','contas-financeiras':'contas_financeiras'} as const
+const registrationTables={clientes:'entidades',fornecedores:'entidades',vendedores:'entidades',produtos:'produtos',servicos:'servicos',categorias:'categorias','categorias-cadastro':'categorias_cadastro','contas-financeiras':'contas_financeiras'} as const
 export async function archiveRegistration(client:SQLClient,tenantId:number,actorId:number,entity:keyof typeof registrationTables,id:number,reason:string){
   // Sem leitura das áreas, RLS poderia esconder vínculos históricos.
   for(const capability of ['erp.vendas.visualizar','erp.compras.visualizar','erp.financeiro.visualizar','erp.estoque.visualizar']){
