@@ -124,7 +124,8 @@ export function renderServiceInvoicePdf(data:InvoicePdf):Buffer{
    code.cTribMun?`Municipal ${code.cTribMun}`:'',code.cNBS?`NBS ${code.cNBS}`:''].filter(Boolean).join('   |   ')
   rect(LEFT,y-30,WIDTH,30);line(400,y,400,y-30)
   text(32,y-9,'Código do Serviço',7,false,MUTED);text(32,y-23,fit(service,8.5,360,true),8.5,true)
-  text(404,y-9,'Local da Prestação',7,false,MUTED);text(404,y-23,fit(String(serv.locPrest?.cLocPrestacao||issuer.municipio||'-'),8.5,159,true),8.5,true);y-=30}
+  const place=String(serv.locPrest?.cLocPrestacao||''),placeName=place&&place===String(issuer.codigo_municipio||'')&&issuer.municipio?`${issuer.municipio} (${place})`:place
+  text(404,y-9,'Local da Prestação',7,false,MUTED);text(404,y-23,fit(placeName||String(issuer.municipio||'-'),8.5,159,true),8.5,true);y-=30}
  const taxRow=(cells:[string,string][])=>{const width=WIDTH/cells.length;rect(LEFT,y-28,WIDTH,28)
   cells.forEach(([label,value],i)=>{const x=LEFT+i*width;if(i)line(x,y,x,y-28);center(x,width,y-9,label,6.8,false,MUTED);right(x+width-5,y-22,value,9,true)});y-=28}
  const deductions=data.items.reduce((sum,item)=>sum+Number(item.desconto||0),0),rate=Number(data.items[0]?.aliquota_iss||0)
