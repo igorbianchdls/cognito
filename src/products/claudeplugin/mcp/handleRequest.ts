@@ -18,7 +18,9 @@ export async function handleClaudeRequest(request: Request, deps: HttpDependenci
   let scope: string | undefined
   try {
     config = deps.config()
-    scope = config.scope
+    // O Claude pede no login exatamente o escopo do desafio: anuncie leitura e escrita para que as
+    // tools de escrita funcionem (cada chamada continua exigindo aprovação do usuário e prévia).
+    scope = `${config.scope} erp:write`
     headers = corsHeaders(request,config)
     if (request.method === 'OPTIONS') return new Response(null,{ status:204,headers })
     // 401 antes do SDK: é o que inicia o login no Claude.
@@ -27,7 +29,10 @@ export async function handleClaudeRequest(request: Request, deps: HttpDependenci
     if (request.method !== 'POST') return Response.json({error:'Use POST; este servidor não mantém sessões SSE.'},{ status:405,headers:{ ...headers,Allow:'POST, OPTIONS' } })
     const body = await readJsonBody(request)
     const call = body as { method?: string; params?: { name?: unknown } }
-    if (call?.method === 'tools/call' && actionTools.some(tool => tool.name === call.params?.name)) scope = `${config.scope} erp:write`
+    // Token antigo só com leitura: 403 com desafio em HTTP (step-up), que é o que faz o Claude reautenticar;
+    // o erro dentro do resultado da tool não dispara um novo login.
+    if (call?.method === 'tools/call' && actionTools.some(tool => tool.name === call.params?.name) && !principal.scopes.includes('erp:write'))
+      throw new PluginError('INSUFFICIENT_SCOPE','Reconecte o Cognito ERP com permissão de escrita.',403)
     const server = await createClaudeServer(principal,config,deps.execution)
     const transport = new WebStandardStreamableHTTPServerTransport({ sessionIdGenerator:undefined,enableJsonResponse:true })
     try {

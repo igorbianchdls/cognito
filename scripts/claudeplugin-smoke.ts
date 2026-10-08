@@ -93,7 +93,17 @@ async function main() {
   await check('Sem token: 401 com metadados do recurso do Claude',async()=>{
     const {response}=await rpc('tools/list',{},{},'')
     assert.equal(response.status,401)
-    assert.equal(response.headers.get('www-authenticate'),`Bearer resource_metadata="${settings.metadataUrl}", scope="erp:read", error="invalid_token"`)
+    assert.equal(response.headers.get('www-authenticate'),`Bearer resource_metadata="${settings.metadataUrl}", scope="erp:read erp:write", error="invalid_token"`)
+  })
+  await check('Token só de leitura: escrita recebe 403 com desafio de escopo (step-up)',async()=>{
+    const reader={...principal,scopes:['erp:read']}
+    const response=await handleClaudeRequest(new Request(settings.resource,{method:'POST',headers:{authorization:'Bearer test','content-type':'application/json',accept:'application/json, text/event-stream'},
+      body:JSON.stringify({jsonrpc:'2.0',id:1,method:'tools/call',params:{name:'criar_nota_servico',arguments:{chave_operacao:randomUUID(),dados:{}}}})}),{...deps,resolve:async()=>reader})
+    assert.equal(response.status,403)
+    assert.equal(response.headers.get('www-authenticate'),`Bearer resource_metadata="${settings.metadataUrl}", scope="erp:read erp:write", error="insufficient_scope"`)
+    const read=await handleClaudeRequest(new Request(settings.resource,{method:'POST',headers:{authorization:'Bearer test','content-type':'application/json',accept:'application/json, text/event-stream'},
+      body:JSON.stringify({jsonrpc:'2.0',id:1,method:'tools/call',params:{name:'meu_acesso',arguments:{}}})}),{...deps,resolve:async()=>reader})
+    assert.equal(read.status,200)
   })
   await check('Origem e host',async()=>{
     assert.equal((await rpc('tools/list',{},{origin:'https://claude.ai'})).response.status,200)
