@@ -5,7 +5,7 @@ const detailFields={
   obter_parcela_financeira:r=>['descricao',r.lado==='receber'?'cliente':'fornecedor','numero_documento','parcela','vencimento','valor','valor_pago','credito','renegociado','saldo'],
   obter_venda:()=>['cliente_nome','data_venda','data_vencimento','subtotal','total','observacoes'],
   obter_compra:()=>['fornecedor_nome','data_compra','data_vencimento','subtotal','total','observacoes'],
-  obter_nota_servico:()=>['cliente','data_competencia','valor_total','autorizada_em','codigo_verificacao','chave_acesso','erro_mensagem','observacoes','aviso'],
+  obter_nota_servico:()=>['cliente','data_competencia','valor_total','autorizada_em','codigo_verificacao','chave_acesso','erro_mensagem','observacoes'],
 };
 const itemColumns={obter_venda:['descricao','quantidade','valor_unitario','desconto','total','quantidade_atendida'],obter_compra:['descricao','quantidade','quantidade_recebida','valor_unitario','total'],obter_nota_servico:['descricao','quantidade','valor_unitario','desconto','valor_total']};
 const openStatuses=['aberto','pendente','vencido','parcial'];
@@ -49,8 +49,10 @@ function renderDetails(target,data){const full=state.displayMode==='fullscreen',
   const title=state.tool==='obter_cadastro'&&registrationNouns[args.tipo]?registrationNouns[args.tipo][0][0].toUpperCase()+registrationNouns[args.tipo][0].slice(1):(titles[state.tool]||'Registro');
   target.append(element('h1',title+' '+name));
   const sub=element('p',undefined,'sub');if(record.status)sub.append(chip(record.status));const due=dueText(record.vencimento,record.status);if(due)sub.append(element('span',' '+due,due.startsWith('venceu')?'due':'soon'));if(sub.childNodes.length)target.append(sub);
+  // Nota de serviço simulada: o aviso de simulação aparece como aviso, não como campo.
+  if(record.aviso)target.append(notice(record.aviso));
   const preferred=(detailFields[state.tool]||(()=>[]))(record);
-  const keys=[...preferred.filter(k=>record[k]!==undefined&&record[k]!==null&&record[k]!==''),...Object.keys(record).filter(k=>!preferred.includes(k)&&record[k]!==null&&typeof record[k]!=='object'&&!/(_id|versao|lado)$/.test(k)&&!['id','status','nome','numero','tipo_documento','atendimento_status'].includes(k))];
+  const keys=[...preferred.filter(k=>record[k]!==undefined&&record[k]!==null&&record[k]!==''),...Object.keys(record).filter(k=>!preferred.includes(k)&&record[k]!==null&&typeof record[k]!=='object'&&!/(_id|versao|lado)$/.test(k)&&!['id','status','nome','numero','tipo_documento','atendimento_status','aviso','modo_operacao','pdf_url','xml_url'].includes(k))];
   const inlineFields=strict?5:8;
   target.append(fields(record,full?keys:keys.slice(0,inlineFields)));
   const account=record.conta_financeira_sugerida;if(account&&full)target.append(element('p','Conta sugerida para a baixa: '+account.nome,'muted'));

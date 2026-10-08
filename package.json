@@ -44,6 +44,7 @@
     "claudeplugin:typecheck": "tsc -p tsconfig.claudeplugin.json --pretty false",
     "claudeplugin:smoke": "tsx scripts/claudeplugin-smoke.ts",
     "claudeplugin:cards-smoke": "tsx scripts/claudeplugin-cards-smoke.ts",
+    "claudeplugin:nfse-smoke": "node scripts/claudeplugin-nfse-smoke.mjs",
     "claudeplugin:package": "node scripts/claudeplugin-package.mjs",
     "claudeplugin:package-smoke": "node scripts/claudeplugin-package-smoke.mjs",
     "security:smoke": "tsx scripts/erp-security-smoke.ts",
