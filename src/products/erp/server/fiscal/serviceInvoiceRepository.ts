@@ -71,7 +71,14 @@ function issuerSnapshot(config:Row|null,company:number){
 }
 async function references(client:SQLClient,company:number,input:ServiceInvoiceInput){
  const data=serviceInvoiceInputSchema.parse(input)
- const customer=(await query(client,'SELECT id,nome,documento,email,cidade,uf FROM erp.entidades WHERE empresa_id=$1 AND id=$2 AND eh_cliente AND ativo AND excluido_em IS NULL FOR SHARE',[company,data.cliente_id]))[0]
+ // Endereço e e-mail vêm das estruturas normalizadas (principal comercial primeiro); colunas legadas só como reserva.
+ const customer=(await query(client,`SELECT c.id,c.nome,c.documento,coalesce(nullif(ct.email,''),c.email) AS email,c.inscricao_municipal,
+  coalesce(a.cep,c.cep) AS cep,coalesce(a.logradouro,c.logradouro) AS logradouro,coalesce(a.numero,c.numero) AS numero,coalesce(a.complemento,c.complemento) AS complemento,
+  coalesce(a.bairro,c.bairro) AS bairro,coalesce(a.cidade,c.cidade) AS cidade,coalesce(a.uf,c.uf) AS uf
+  FROM erp.entidades c
+  LEFT JOIN LATERAL (SELECT * FROM erp.entidades_enderecos e WHERE e.empresa_id=c.empresa_id AND e.entidade_id=c.id AND e.ativo ORDER BY ('comercial'=ANY(e.principais)) DESC,e.id LIMIT 1) a ON true
+  LEFT JOIN LATERAL (SELECT email FROM erp.entidades_contatos k WHERE k.empresa_id=c.empresa_id AND k.entidade_id=c.id AND k.ativo AND nullif(k.email,'') IS NOT NULL ORDER BY ('comercial'=ANY(k.principais)) DESC,k.id LIMIT 1) ct ON true
+  WHERE c.empresa_id=$1 AND c.id=$2 AND c.eh_cliente AND c.ativo AND c.excluido_em IS NULL FOR SHARE OF c`,[company,data.cliente_id]))[0]
  if(!customer)throw new ErpDomainError('VALIDATION_ERROR','Escolha um cliente ativo desta empresa.')
  const ids=[...new Set(data.itens.map(i=>i.item_id))]
  const services=await query(client,'SELECT id,nome,codigo,codigo_servico_municipal,codigo_tributacao_nacional,codigo_nbs FROM erp.servicos WHERE empresa_id=$1 AND id=ANY($2::bigint[]) AND ativo AND excluido_em IS NULL FOR SHARE',[company,ids])

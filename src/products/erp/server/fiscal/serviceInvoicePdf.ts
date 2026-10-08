@@ -89,11 +89,14 @@ export function renderServiceInvoicePdf(data:InvoicePdf):Buffer{
   field(96,y-42,'Município:',String(issuer.municipio||'-'),300);field(400,y-42,'UF:',String(issuer.uf||'-'),163)
   y-=h}
  section('TOMADOR DE SERVIÇOS')
- {const address=typeof customer.endereco==='string'?customer.endereco:'',rows=address?4:3,h=rows*14+8;rect(LEFT,y-h,WIDTH,h);let row=y-14
+ {const cep=String(customer.cep||'').replace(/\D/g,'').replace(/^(\d{5})(\d{3})$/,'$1-$2')
+  const street=[customer.logradouro,customer.numero].filter(Boolean).join(', ')
+  const address=typeof customer.endereco==='string'?customer.endereco:[[street,customer.complemento].filter(Boolean).join(' - '),customer.bairro,cep&&'CEP: '+cep].filter(Boolean).join(' - ')
+  const rows=address?4:3,h=rows*14+8;rect(LEFT,y-h,WIDTH,h);let row=y-14
   field(36,row,'Nome/Razão Social:',String(customer.nome||'Cliente'),527);row-=14
   field(36,row,'CPF/CNPJ:',documentNumber(customer.documento),320);field(360,row,'Inscrição Municipal:',String(customer.inscricao_municipal||'----'),203);row-=14
   if(address){field(36,row,'Endereço:',address,527);row-=14}
-  field(36,row,'Município:',String(customer.municipio||'-'),210);field(250,row,'UF:',String(customer.uf||'-'),66);field(320,row,'E-mail:',String(customer.email||'-'),243)
+  field(36,row,'Município:',String(customer.municipio||customer.cidade||'-'),210);field(250,row,'UF:',String(customer.uf||'-'),66);field(320,row,'E-mail:',String(customer.email||'-'),243)
   y-=h}
  // Rodapé de valores: calculado antes para que a discriminação ocupe o espaço restante, como no modelo.
  const notes=[`- ${SIMULATION_NOTICE}: nenhuma autorização fiscal foi solicitada e os valores tributários são demonstrativos.`]
