@@ -12,7 +12,11 @@ async function callTool(name,args){state.lastCall={name,args};const result=await
 function fullscreen(){return request('ui/request-display-mode',{mode:'fullscreen'}).then(r=>{if(r&&r.mode)state.displayMode=r.mode;render()})}
 // MCP Apps: content é uma lista de blocos (o Claude recusa um objeto único).
 function say(text){return request('ui/message',{role:'user',content:[{type:'text',text}]})}
-function tellModel(text,structured){return request('ui/update-model-context',{content:[{type:'text',text}],...(structured?{structuredContent:structured}:{})}).catch(()=>undefined)}
+// Contexto para o modelo (entra na próxima mensagem do usuário). O resultado fica registrado no console
+// com o prefixo [cognito] para diagnóstico; a falha nunca interrompe o card.
+function tellModel(text,structured){return request('ui/update-model-context',{content:[{type:'text',text}],...(structured?{structuredContent:structured}:{})})
+  .then(result=>{state.modelContext='aceito';console.info('[cognito] ui/update-model-context aceito',JSON.stringify(result||{}));return true})
+  .catch(error=>{state.modelContext='recusado';console.warn('[cognito] ui/update-model-context recusado: '+(error&&error.message));return false})}
 function applyHost(context){if(!context)return;if(context.theme==='light'||context.theme==='dark')document.documentElement.style.colorScheme=context.theme;
   const vars=context.styles&&context.styles.variables;if(vars)for(const [key,value] of Object.entries(vars))if(/^--[a-z0-9-]+$/.test(key)&&typeof value==='string')document.documentElement.style.setProperty(key,value);
   if(context.timeZone)state.timeZone=context.timeZone;
@@ -49,7 +53,7 @@ window.addEventListener('message',event=>{if(event.source!==window.parent)return
   if(m.method==='ui/notifications/host-context-changed'){const before=state.displayMode;applyHost(m.params);if(state.displayMode!==before&&state.data)render()}
   if(m.method==='ui/resource-teardown'&&m.id!==undefined)window.parent.postMessage({jsonrpc:'2.0',id:m.id,result:{}},'*')});
 request('ui/initialize',{protocolVersion:'2026-01-26',appInfo:{name:${JSON.stringify(app.name)},version:${JSON.stringify(app.version)}},appCapabilities:{availableDisplayModes:['inline','fullscreen']}})
-  .then(result=>{connected=true;applyHost(result&&result.hostContext);notify('ui/notifications/initialized',{});if(queued)receive(queued);else{status.textContent='';if(!root.childElementCount)root.append(skeleton())}})
+  .then(result=>{connected=true;state.hostCapabilities=(result&&result.hostCapabilities)||{};console.info('[cognito] host',JSON.stringify((result&&result.hostInfo)||{}),'capacidades',JSON.stringify(state.hostCapabilities));applyHost(result&&result.hostContext);notify('ui/notifications/initialized',{});if(queued)receive(queued);else{status.textContent='';if(!root.childElementCount)root.append(skeleton())}})
   .catch(error=>{root.replaceChildren(notice(error.message,'danger'))});
 new ResizeObserver(()=>notify('ui/notifications/size-changed',{height:contentHeight()})).observe(document.body);
 `

@@ -9,4 +9,4 @@ description: Primeiro uso do Cognito ERP no Claude. Use quando o usuário acabou
 
 Se a conexão falhar, peça para reconectar o conector Cognito ERP na aba Connectors do plugin, com a conta correta do ERP. Consultas exigem a permissão `erp:read`; alterações exigem também `erp:write` e as permissões do perfil no ERP. Não peça senhas, tokens ou chaves na conversa.
 
-Nota fiscal, cobrança e integração bancária ainda não estão disponíveis.
+Nota fiscal de serviço está disponível como simulação, sem validade fiscal. Cobrança e integração bancária ainda não estão disponíveis.

@@ -10,4 +10,4 @@ description: Orientar a primeira conexão e o primeiro uso do Cognito ERP no cha
 
 Se a conexão falhar, peça para reconectar o plugin com a conta correta do ERP. Consultas exigem a permissão `erp:read`; alterações exigem também `erp:write` e as permissões do perfil no ERP. Nunca peça senhas, tokens ou chaves no chat.
 
-Nota fiscal, cobrança e integração bancária ainda não estão disponíveis no chat.
+Nota fiscal de serviço está disponível como simulação, sem validade fiscal. Cobrança e integração bancária ainda não estão disponíveis no chat.

@@ -73,7 +73,9 @@ function itemsTable(data,items){const t=element('table');t.append(element('capti
     tr.append(element('td',item.total!==undefined?money(item.total):'—','num'));body.append(tr)});
   t.append(thead,body);return t}
 async function confirmDraft(data){const result=await callTool(data.confirmar.tool,data.confirmar.argumentos);state.error=null;state.edit=false;state.stack=[];state.tool=data.confirmar.tool;state.data=result.data;render();
-  tellModel('O usuário confirmou no card. Resultado: status '+result.data.status+(result.data.registro_id?', registro_id '+result.data.registro_id:'')+'.',{rascunho_id:result.data.rascunho_id,status:result.data.status,registro_id:result.data.registro_id})}
+  const tipo=(data.proposta||{}).tipo,op=operationLabels[tipo]||tipo;
+  tellModel('O usuário confirmou no card: '+op+'. Situação: '+(states[result.data.status]||result.data.status)+(result.data.registro_id?' (registro_id '+result.data.registro_id+')':'')+'. A operação já foi executada; não a repita nem diga que ela ainda não foi feita.',
+    {confirmado_no_card:true,tipo,rascunho_id:result.data.rascunho_id,status:result.data.status,registro_id:result.data.registro_id})}
 async function updatePreview(data){const proposal=data.proposta,dados=JSON.parse(JSON.stringify(proposal.dados));
   for(const input of root.querySelectorAll('input.cell')){const value=Number(input.value);if(!Number.isFinite(value)||value<0)throw new Error('Informe números válidos nos itens.');dados.itens[Number(input.dataset.index)][input.dataset.key]=value}
   for(const item of dados.itens)delete item.total;

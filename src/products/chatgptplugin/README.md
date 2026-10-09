@@ -2,7 +2,7 @@
 
 Produto `chatgptplugin`, versão **2.0.0**. Servidor MCP que leva o Cognito ERP para dentro do ChatGPT: consultas com cards, alterações com prévia e confirmação na própria conversa, formulário nativo com listas de opções e configurações pessoais.
 
-Nota fiscal, cobrança e integração bancária ficam para fases futuras e não estão expostas no chat. O plano e o andamento estão em [`docs/chatgptplugin/plano-reestruturacao-20261006.md`](../../../docs/chatgptplugin/plano-reestruturacao-20261006.md).
+A NFS-e está disponível como simulação, sem validade fiscal. Cobrança e integração bancária ficam para fases futuras e não estão expostas no chat. O plano e o andamento estão em [`docs/chatgptplugin/plano-reestruturacao-20261006.md`](../../../docs/chatgptplugin/plano-reestruturacao-20261006.md).
 
 ## Estrutura
 

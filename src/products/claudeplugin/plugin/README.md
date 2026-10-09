@@ -17,4 +17,4 @@ As consultas aparecem em cards com tabelas e indicadores. Toda alteração mostr
 
 O plugin envia os pedidos e os dados das operações à sua conta do Cognito ERP pelo servidor MCP do Cognito, autenticado com OAuth. Ele respeita as empresas e as permissões do seu perfil no ERP; consultas exigem `erp:read` e alterações também `erp:write`. O plugin não guarda dados próprios: prévias de alteração ficam no ERP por até 24 horas e a auditoria registra só metadados das chamadas. Registrar um pagamento apenas anota no ERP um pagamento já feito; nada movimenta dinheiro ou contas bancárias.
 
-Nota fiscal, cobrança e integração bancária ainda não estão disponíveis.
+Nota fiscal de serviço está disponível como simulação, sem validade fiscal. Cobrança e integração bancária ainda não estão disponíveis.
