@@ -28,7 +28,9 @@ export const outputs = {
   record: z.object({ record: row.optional() }).passthrough(),
   sale: z.object({ sale: row, items: rows, totalItems: z.number(), itemsTruncated: z.boolean(), installments: rows.optional() }).passthrough(),
   purchase: z.object({ purchase: row, items: rows, totalItems: z.number(), itemsTruncated: z.boolean(), installments: rows.optional() }).passthrough(),
-  financialTitle: z.object({ record: row.optional(), installments: rows.optional(), history: rows.optional() }).passthrough(),
+  financialTitle: z.object({ record: z.object({
+    tipo_lancamento: z.enum(['previsao','efetivo']).describe('previsao: lançamento ainda previsto; efetivo: lançamento efetivado, elegível para baixa conforme as regras do ERP.'),
+  }).passthrough(), installments: rows.optional(), history: rows.optional() }).passthrough(),
   installment: z.object({ record: row.optional(), history: rows.optional() }).passthrough(),
   serviceInvoice: z.object({ record: row, items: rows, totals: row, events: rows.optional(),
     dados_editaveis: row.optional().describe('Dados atuais no formato de editar_nota_servico.') }).passthrough(),

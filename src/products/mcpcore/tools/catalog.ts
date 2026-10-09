@@ -83,7 +83,7 @@ export const tools: ToolDefinition[] = [
       vencimento_inicio: isoDate, vencimento_fim: isoDate, ordenar: z.enum(['vencimento','-vencimento','-saldo','saldo','-valor']).optional().describe('Ordenação de todas as páginas; padrão: vencimento mais próximo.') }).strict(), capabilities: ['erp.financeiro.visualizar'],
     execute: (q,id,input) => q.page(id,input.tipo === 'pagar' ? 'contas-a-pagar' : 'contas-a-receber', {
       ...page(input), filters: Object.fromEntries(['status','vencimento_inicio','vencimento_fim'].filter(k => input[k]).map(k => [k,String(input[k])])) }) },
-  {name:'obter_titulo_financeiro',title:'Detalhes do título financeiro',output:outputs.financialTitle,description:'Use para ver um título a pagar ou receber com todas as parcelas e o histórico, pelo conta_id da listagem. Use este ID para editar_titulo e excluir_titulo, nunca o ID da parcela.',
+  {name:'obter_titulo_financeiro',title:'Detalhes do título financeiro',output:outputs.financialTitle,description:'Use para ver um título a pagar ou receber com todas as parcelas e o histórico, pelo conta_id da listagem. record.tipo_lancamento distingue previsao de efetivo; previsão precisa de efetivar_previsao antes da baixa. Use o conta_id para editar_titulo e excluir_titulo, nunca o ID da parcela.',
     schema:z.object({empresa_id:company,tipo:z.enum(['pagar','receber']),conta_id:z.number().int().positive()}).strict(),capabilities:['erp.financeiro.visualizar'],
     execute:(q,id,input)=>q.financialTitle(id,input.tipo as 'pagar',Number(input.conta_id))},
   {name:'obter_parcela_financeira',title:'Detalhes da parcela',output:outputs.installment,description:'Use para ver uma parcela a pagar ou receber, a composição do saldo e o histórico de pagamentos, antes de registrar_baixa.',

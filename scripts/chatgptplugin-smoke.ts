@@ -29,7 +29,7 @@ const execution: ExecutionDependencies = {
   reserve:async () => {const id=randomUUID();events.push({id,status:'running'});return id},
   finish:async (id,status,code) => {events.push({id,status,code})},
   queries:{...serviceInvoiceQueryStubs,
-    financialTitle:async()=>({record:{id:"1"},installments:[],installmentsTruncated:false,history:[],historyTruncated:false}),
+    financialTitle:async()=>({record:{id:"1",tipo_lancamento:"efetivo"},installments:[],installmentsTruncated:false,history:[],historyTruncated:false}),
     attachments:async(id)=>{context(id);return {records:[],total:0,hasMore:false}},
     registration:async(id,_type,recordId)=>{context(id);return {record:{id:String(recordId),nome:"Cadastro"}}},
     installment:async(id,side,recordId)=>{context(id);return {record:{id:String(recordId),saldo:12},history:[],historyTruncated:false}},

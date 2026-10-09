@@ -125,3 +125,19 @@ O script `scripts/erp/person-type-smoke.ts` exige empresa/usuário explícitos e
 O build da Vercel concluiu em `READY`. Publicado no domínio `cognito-seven.vercel.app` pelo deploy `dpl_8fpmeNLKWQfEybJFraKow92egjK7`, com `sourceDigest` `c0a8c7b78c028171a3fc1d2f4fb27bd6121d8abe621acfa7390ee1b8c56527d0`. Os hashes dos arquivos locais foram comparados ao manifesto publicado. Em produção, os metadados OAuth responderam 200; MCP e acesso ERP sem credenciais responderam 401, mantendo a proteção. Evidências da publicação em `.cache/person-type/`.
 
 Os problemas dos cards e da ausência de `tipo_lancamento` nos detalhes financeiros permanecem fora desta correção.
+
+## Correção do tipo de lançamento financeiro — 09/10/2026
+
+`obter_titulo_financeiro` agora retorna `record.tipo_lancamento` para contas a pagar e a receber. A consulta compartilhada inclui o campo do banco e o contrato MCP exige `previsao` ou `efetivo`. A descrição da ferramenta explica que uma previsão precisa ser efetivada antes da baixa. Nenhuma alteração de schema foi necessária.
+
+Regressão reproduzível:
+
+```text
+pnpm erp:financial-title-type-smoke --company=2 --user=3
+```
+
+Passaram **9 verificações** com Supabase real: leitura de previsão/efetivo nos dois tipos de conta, leitura após efetivação, retorno de `tools/call` pelo handler HTTP e SDK MCP, e rejeição de campo ausente ou inválido pelo contrato. Os quatro títulos fictícios foram criados numa transação revertida, com zero registros remanescentes. O teste HTTP usa uma autenticação controlada com o usuário real resolvido; não verifica token OAuth, conversa ou UI do ChatGPT.
+
+O build concluiu em `READY` e foi publicado às 13:22 UTC no domínio `cognito-seven.vercel.app`, pelo deploy `dpl_4cZZ5XVqm6GnApZzMN5obmtbi4aw`, com `sourceDigest` `f7353fb0bd2e404f0df0103d78f940ded01413ed5005237ca2a7ccd42a5dddc3`. Os arquivos locais foram conferidos com o manifesto. A verificação em produção confirmou metadados OAuth com HTTP 200 e os endpoints MCP/acesso ERP sem credenciais com HTTP 401. Evidências em `.cache/financial-title-type/`.
+
+A omissão de `tipo_lancamento` está corrigida. A falha de abertura dos cards continua pendente de diagnóstico.
