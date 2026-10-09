@@ -1,92 +1,113 @@
-'use client'
+"use client";
 
-import { type FormEvent, type ReactNode, useMemo, useState } from 'react'
-import { UserProfile } from '@clerk/nextjs'
-import { Building2, Loader2, Save, Shield, User, Users, type LucideIcon } from 'lucide-react'
+import { type FormEvent, type ReactNode, useMemo, useState } from "react";
+import { PortalInvitations } from "@/products/portaldocontador/frontend/PortalInvitations";
+import { UserProfile } from "@clerk/nextjs";
+import {
+  Building2,
+  Loader2,
+  Save,
+  Shield,
+  User,
+  Users,
+  type LucideIcon,
+} from "lucide-react";
 
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
-import { Badge } from '@/components/ui/badge'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select'
-import { clerkUserProfileAppearance } from '@/products/auth/frontend/components/ClerkAuthShell'
+} from "@/components/ui/select";
+import { clerkUserProfileAppearance } from "@/products/auth/frontend/components/ClerkAuthShell";
 import {
   updateSettingsMember,
   updateSettingsProfile,
   updateSettingsWorkspace,
-} from '@/products/auth/frontend/services/settingsApi'
-import type { AuthTenantRole } from '@/products/auth/shared/authContracts'
-import type { ErpAccessProfile } from '@/products/erp/shared/professionalContracts'
+} from "@/products/auth/frontend/services/settingsApi";
+import type { AuthTenantRole } from "@/products/auth/shared/authContracts";
+import type { ErpAccessProfile } from "@/products/erp/shared/professionalContracts";
 import type {
   UpdateMemberInput,
   SettingsMember,
   SettingsState,
   WorkspaceMemberStatus,
-} from '@/products/auth/shared/settingsContracts'
+} from "@/products/auth/shared/settingsContracts";
 
 type SettingsPanelProps = {
-  initialState: SettingsState
-  variant?: 'modal' | 'page'
-}
+  initialState: SettingsState;
+  variant?: "modal" | "page";
+};
 
-type SaveState = 'idle' | 'saving' | 'saved' | 'error'
-type SettingsSection = 'profile' | 'security' | 'workspace' | 'members'
+type SaveState = "idle" | "saving" | "saved" | "error";
+type SettingsSection = "profile" | "security" | "workspace" | "members";
 
 const ROLE_LABELS: Record<AuthTenantRole, string> = {
-  admin: 'Administrador',
-  member: 'Membro',
-  owner: 'Proprietário',
-  viewer: 'Visualizador',
-}
+  admin: "Administrador",
+  member: "Membro",
+  owner: "Proprietário",
+  viewer: "Visualizador",
+};
 
 const STATUS_LABELS: Record<WorkspaceMemberStatus, string> = {
-  active: 'Ativo',
-  invited: 'Convidado',
-  suspended: 'Suspenso',
-}
+  active: "Ativo",
+  invited: "Convidado",
+  suspended: "Suspenso",
+};
 
-const NAV_ITEMS: Array<{ icon: LucideIcon; label: string; value: SettingsSection }> = [
-  { icon: User, label: 'Profile', value: 'profile' },
-  { icon: Shield, label: 'Security', value: 'security' },
-  { icon: Building2, label: 'Workspace', value: 'workspace' },
-  { icon: Users, label: 'Members', value: 'members' },
-]
+const NAV_ITEMS: Array<{
+  icon: LucideIcon;
+  label: string;
+  value: SettingsSection;
+}> = [
+  { icon: User, label: "Profile", value: "profile" },
+  { icon: Shield, label: "Security", value: "security" },
+  { icon: Building2, label: "Workspace", value: "workspace" },
+  { icon: Users, label: "Members", value: "members" },
+];
 
 function getInitials(name: string | null | undefined, email: string) {
-  const source = name || email
+  const source = name || email;
   const parts = source
-    .replace(/@.*/, '')
+    .replace(/@.*/, "")
     .split(/\s|[._-]/)
-    .filter(Boolean)
-  return (parts[0]?.[0] || 'C').concat(parts[1]?.[0] || '').toUpperCase()
+    .filter(Boolean);
+  return (parts[0]?.[0] || "C").concat(parts[1]?.[0] || "").toUpperCase();
 }
 
 function getUsername(email: string) {
-  return email.split('@')[0] || email
+  return email.split("@")[0] || email;
 }
 
-function StatusMessage({ error, state }: { error: string | null; state: SaveState }) {
-  if (state === 'saved') return <span className="text-xs font-medium text-emerald-700">Salvo.</span>
-  if (state === 'error') return <span className="text-xs font-medium text-red-600">{error}</span>
-  return null
+function StatusMessage({
+  error,
+  state,
+}: {
+  error: string | null;
+  state: SaveState;
+}) {
+  if (state === "saved")
+    return <span className="text-xs font-medium text-emerald-700">Salvo.</span>;
+  if (state === "error")
+    return <span className="text-xs font-medium text-red-600">{error}</span>;
+  return null;
 }
 
 function MemberAvatar({ member }: { member: SettingsMember }) {
-  const label = member.fullName || member.email
+  const label = member.fullName || member.email;
   return (
     <Avatar className="size-9 rounded-md">
-      <AvatarImage alt={label} src={member.avatarUrl || ''} />
+      <AvatarImage alt={label} src={member.avatarUrl || ""} />
       <AvatarFallback className="rounded-md bg-slate-100 text-xs font-semibold text-slate-700">
         {getInitials(member.fullName, member.email)}
       </AvatarFallback>
     </Avatar>
-  )
+  );
 }
 
 function SectionHeader({ children }: { children: ReactNode }) {
@@ -94,146 +115,227 @@ function SectionHeader({ children }: { children: ReactNode }) {
     <div className="border-b border-slate-200 pb-5">
       <h2 className="text-base font-semibold text-slate-950">{children}</h2>
     </div>
-  )
+  );
 }
 
-function SettingsRow({ action, children, label }: { action?: ReactNode; children: ReactNode; label: string }) {
+function SettingsRow({
+  action,
+  children,
+  label,
+}: {
+  action?: ReactNode;
+  children: ReactNode;
+  label: string;
+}) {
   return (
     <div className="grid gap-3 border-b border-slate-200 py-6 last:border-b-0 md:grid-cols-[180px_minmax(0,1fr)_150px] md:items-start">
       <div className="text-sm font-medium text-slate-900">{label}</div>
       <div className="min-w-0">{children}</div>
       <div className="flex justify-start md:justify-end">{action}</div>
     </div>
-  )
+  );
 }
 
 // Permissões comerciais do membro: vendedor que o representa, se vê só as próprias vendas e o desconto máximo.
-function MemberCommercialRules({ disabled, member, onSave, sellers }: {
-  disabled: boolean
-  member: SettingsMember
-  onSave: (patch: Omit<UpdateMemberInput, 'userId'>) => void
-  sellers: SettingsState['sellers']
+function MemberCommercialRules({
+  disabled,
+  member,
+  onSave,
+  sellers,
+}: {
+  disabled: boolean;
+  member: SettingsMember;
+  onSave: (patch: Omit<UpdateMemberInput, "userId">) => void;
+  sellers: SettingsState["sellers"];
 }) {
-  const [discount, setDiscount] = useState(member.maxDiscountPercent == null ? '' : String(member.maxDiscountPercent))
+  const [discount, setDiscount] = useState(
+    member.maxDiscountPercent == null ? "" : String(member.maxDiscountPercent),
+  );
   function saveDiscount() {
-    const value = discount.trim() === '' ? null : Number(discount.replace(',', '.'))
-    if (value === (member.maxDiscountPercent ?? null)) return
-    onSave({ maxDiscountPercent: value })
+    const value =
+      discount.trim() === "" ? null : Number(discount.replace(",", "."));
+    if (value === (member.maxDiscountPercent ?? null)) return;
+    onSave({ maxDiscountPercent: value });
   }
   return (
     <div className="grid gap-2 md:col-span-4 md:grid-cols-[minmax(0,1fr)_180px_150px] md:pl-11">
-      <Select disabled={disabled} value={member.sellerId ? String(member.sellerId) : 'none'}
-        onValueChange={value => onSave({ sellerId: value === 'none' ? null : Number(value) })}>
-        <SelectTrigger aria-label="Vendedor" className="w-full border border-slate-200 bg-white"><SelectValue /></SelectTrigger>
+      <Select
+        disabled={disabled}
+        value={member.sellerId ? String(member.sellerId) : "none"}
+        onValueChange={(value) =>
+          onSave({ sellerId: value === "none" ? null : Number(value) })
+        }
+      >
+        <SelectTrigger
+          aria-label="Vendedor"
+          className="w-full border border-slate-200 bg-white"
+        >
+          <SelectValue />
+        </SelectTrigger>
         <SelectContent>
           <SelectItem value="none">Sem vendedor vinculado</SelectItem>
-          {sellers.map(seller => <SelectItem key={seller.id} value={String(seller.id)}>Vendedor: {seller.name}</SelectItem>)}
+          {sellers.map((seller) => (
+            <SelectItem key={seller.id} value={String(seller.id)}>
+              Vendedor: {seller.name}
+            </SelectItem>
+          ))}
         </SelectContent>
       </Select>
-      <Select disabled={disabled || !member.sellerId} value={member.salesScope || 'todas'}
-        onValueChange={value => onSave({ salesScope: value as 'todas' | 'proprias' })}>
-        <SelectTrigger aria-label="Escopo de vendas" className="w-full border border-slate-200 bg-white"><SelectValue /></SelectTrigger>
+      <Select
+        disabled={disabled || !member.sellerId}
+        value={member.salesScope || "todas"}
+        onValueChange={(value) =>
+          onSave({ salesScope: value as "todas" | "proprias" })
+        }
+      >
+        <SelectTrigger
+          aria-label="Escopo de vendas"
+          className="w-full border border-slate-200 bg-white"
+        >
+          <SelectValue />
+        </SelectTrigger>
         <SelectContent>
           <SelectItem value="todas">Vê todas as vendas</SelectItem>
           <SelectItem value="proprias">Só as próprias vendas</SelectItem>
         </SelectContent>
       </Select>
-      <Input aria-label="Desconto máximo (%)" className="border border-slate-200 bg-white" disabled={disabled} inputMode="decimal"
-        onBlur={saveDiscount} onChange={event => setDiscount(event.target.value)}
-        onKeyDown={event => { if (event.key === 'Enter') saveDiscount() }}
-        placeholder="Desconto máx. %" value={discount} />
+      <Input
+        aria-label="Desconto máximo (%)"
+        className="border border-slate-200 bg-white"
+        disabled={disabled}
+        inputMode="decimal"
+        onBlur={saveDiscount}
+        onChange={(event) => setDiscount(event.target.value)}
+        onKeyDown={(event) => {
+          if (event.key === "Enter") saveDiscount();
+        }}
+        placeholder="Desconto máx. %"
+        value={discount}
+      />
     </div>
-  )
+  );
 }
 
-export default function SettingsPanel({ initialState, variant = 'modal' }: SettingsPanelProps) {
-  const [activeSection, setActiveSection] = useState<SettingsSection>('profile')
-  const [state, setState] = useState(initialState)
-  const [profileName, setProfileName] = useState(initialState.profile.fullName || '')
-  const [workspaceName, setWorkspaceName] = useState(initialState.workspace.name)
-  const [workspaceSlug, setWorkspaceSlug] = useState(initialState.workspace.slug || '')
-  const [profileSave, setProfileSave] = useState<SaveState>('idle')
-  const [workspaceSave, setWorkspaceSave] = useState<SaveState>('idle')
-  const [membersSave, setMembersSave] = useState<Record<number, SaveState>>({})
-  const [error, setError] = useState<string | null>(null)
+export default function SettingsPanel({
+  initialState,
+  variant = "modal",
+}: SettingsPanelProps) {
+  const [activeSection, setActiveSection] =
+    useState<SettingsSection>("profile");
+  const [state, setState] = useState(initialState);
+  const [profileName, setProfileName] = useState(
+    initialState.profile.fullName || "",
+  );
+  const [workspaceName, setWorkspaceName] = useState(
+    initialState.workspace.name,
+  );
+  const [workspaceSlug, setWorkspaceSlug] = useState(
+    initialState.workspace.slug || "",
+  );
+  const [profileSave, setProfileSave] = useState<SaveState>("idle");
+  const [workspaceSave, setWorkspaceSave] = useState<SaveState>("idle");
+  const [membersSave, setMembersSave] = useState<Record<number, SaveState>>({});
+  const [error, setError] = useState<string | null>(null);
 
   const canManageWorkspace = useMemo(
-    () => ['owner', 'admin'].includes(state.currentUserRole),
+    () => ["owner", "admin"].includes(state.currentUserRole),
     [state.currentUserRole],
-  )
+  );
 
   async function submitProfile(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault()
-    setError(null)
-    setProfileSave('saving')
+    event.preventDefault();
+    setError(null);
+    setProfileSave("saving");
     try {
-      const profile = await updateSettingsProfile({ fullName: profileName })
-      setState((current) => ({ ...current, profile }))
-      setProfileName(profile.fullName || '')
-      setProfileSave('saved')
+      const profile = await updateSettingsProfile({ fullName: profileName });
+      setState((current) => ({ ...current, profile }));
+      setProfileName(profile.fullName || "");
+      setProfileSave("saved");
     } catch (saveError) {
-      setError(saveError instanceof Error ? saveError.message : 'Nao foi possivel salvar.')
-      setProfileSave('error')
+      setError(
+        saveError instanceof Error
+          ? saveError.message
+          : "Nao foi possivel salvar.",
+      );
+      setProfileSave("error");
     }
   }
 
   async function submitWorkspace(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault()
-    setError(null)
-    setWorkspaceSave('saving')
+    event.preventDefault();
+    setError(null);
+    setWorkspaceSave("saving");
     try {
       const workspace = await updateSettingsWorkspace({
         name: workspaceName,
         slug: workspaceSlug,
-      })
-      setState((current) => ({ ...current, workspace }))
-      setWorkspaceName(workspace.name)
-      setWorkspaceSlug(workspace.slug || '')
-      setWorkspaceSave('saved')
+      });
+      setState((current) => ({ ...current, workspace }));
+      setWorkspaceName(workspace.name);
+      setWorkspaceSlug(workspace.slug || "");
+      setWorkspaceSave("saved");
     } catch (saveError) {
-      setError(saveError instanceof Error ? saveError.message : 'Nao foi possivel salvar.')
-      setWorkspaceSave('error')
+      setError(
+        saveError instanceof Error
+          ? saveError.message
+          : "Nao foi possivel salvar.",
+      );
+      setWorkspaceSave("error");
     }
   }
 
-  async function saveMember(userId: number, patch: Omit<UpdateMemberInput, 'userId'>) {
-    setError(null)
-    setMembersSave((current) => ({ ...current, [userId]: 'saving' }))
+  async function saveMember(
+    userId: number,
+    patch: Omit<UpdateMemberInput, "userId">,
+  ) {
+    setError(null);
+    setMembersSave((current) => ({ ...current, [userId]: "saving" }));
     try {
-      const member = await updateSettingsMember({ userId, ...patch })
+      const member = await updateSettingsMember({ userId, ...patch });
       setState((current) => ({
         ...current,
-        members: current.members.map((item) => (item.userId === member.userId ? member : item)),
-      }))
-      setMembersSave((current) => ({ ...current, [userId]: 'saved' }))
+        members: current.members.map((item) =>
+          item.userId === member.userId ? member : item,
+        ),
+      }));
+      setMembersSave((current) => ({ ...current, [userId]: "saved" }));
     } catch (saveError) {
-      setError(saveError instanceof Error ? saveError.message : 'Nao foi possivel salvar.')
-      setMembersSave((current) => ({ ...current, [userId]: 'error' }))
+      setError(
+        saveError instanceof Error
+          ? saveError.message
+          : "Nao foi possivel salvar.",
+      );
+      setMembersSave((current) => ({ ...current, [userId]: "error" }));
     }
   }
 
-  const shellClass = variant === 'modal'
-    ? 'grid h-[min(704px,88vh)] overflow-hidden rounded-lg bg-white text-slate-950 md:grid-cols-[220px_minmax(0,1fr)]'
-    : 'grid min-h-[680px] overflow-hidden rounded-lg border border-slate-200 bg-white text-slate-950 md:grid-cols-[240px_minmax(0,1fr)]'
+  const shellClass =
+    variant === "modal"
+      ? "grid h-[min(704px,88vh)] overflow-hidden rounded-lg bg-white text-slate-950 md:grid-cols-[220px_minmax(0,1fr)]"
+      : "grid min-h-[680px] overflow-hidden rounded-lg border border-slate-200 bg-white text-slate-950 md:grid-cols-[240px_minmax(0,1fr)]";
 
   return (
     <div className={shellClass}>
       <aside className="flex min-h-0 flex-col border-r border-slate-200 bg-slate-50 px-3 py-7">
         <div className="px-3">
-          <h1 className="text-2xl font-semibold tracking-tight text-slate-950">Account</h1>
-          <p className="mt-1 text-sm text-slate-600">Manage your account info.</p>
+          <h1 className="text-2xl font-semibold tracking-tight text-slate-950">
+            Account
+          </h1>
+          <p className="mt-1 text-sm text-slate-600">
+            Manage your account info.
+          </p>
         </div>
 
         <nav className="mt-7 grid gap-1">
           {NAV_ITEMS.map((item) => {
-            const Icon = item.icon
-            const isActive = activeSection === item.value
+            const Icon = item.icon;
+            const isActive = activeSection === item.value;
             return (
               <button
                 className={`flex h-9 items-center gap-3 rounded-md px-3 text-left text-sm font-medium transition ${
                   isActive
-                    ? 'bg-slate-200 text-slate-950'
-                    : 'text-slate-600 hover:bg-slate-100 hover:text-slate-950'
+                    ? "bg-slate-200 text-slate-950"
+                    : "text-slate-600 hover:bg-slate-100 hover:text-slate-950"
                 }`}
                 key={item.value}
                 onClick={() => setActiveSection(item.value)}
@@ -242,7 +344,7 @@ export default function SettingsPanel({ initialState, variant = 'modal' }: Setti
                 <Icon className="size-4" />
                 <span>{item.label}</span>
               </button>
-            )
+            );
           })}
         </nav>
 
@@ -252,14 +354,23 @@ export default function SettingsPanel({ initialState, variant = 'modal' }: Setti
       </aside>
 
       <section className="min-h-0 overflow-y-auto px-8 py-7">
-        {activeSection === 'profile' ? (
+        {activeSection === "profile" ? (
           <div>
             <SectionHeader>Profile details</SectionHeader>
             <form onSubmit={submitProfile}>
               <SettingsRow
                 action={
-                  <Button disabled={profileSave === 'saving'} size="sm" type="submit" variant="ghost">
-                    {profileSave === 'saving' ? <Loader2 className="size-4 animate-spin" /> : <Save className="size-4" />}
+                  <Button
+                    disabled={profileSave === "saving"}
+                    size="sm"
+                    type="submit"
+                    variant="ghost"
+                  >
+                    {profileSave === "saving" ? (
+                      <Loader2 className="size-4 animate-spin" />
+                    ) : (
+                      <Save className="size-4" />
+                    )}
                     Update profile
                   </Button>
                 }
@@ -267,7 +378,10 @@ export default function SettingsPanel({ initialState, variant = 'modal' }: Setti
               >
                 <div className="flex items-center gap-4">
                   <Avatar className="size-12 rounded-full">
-                    <AvatarImage alt={state.profile.fullName || state.profile.email} src={state.profile.avatarUrl || ''} />
+                    <AvatarImage
+                      alt={state.profile.fullName || state.profile.email}
+                      src={state.profile.avatarUrl || ""}
+                    />
                     <AvatarFallback className="rounded-full bg-slate-100 text-sm font-semibold text-slate-700">
                       {getInitials(state.profile.fullName, state.profile.email)}
                     </AvatarFallback>
@@ -276,19 +390,25 @@ export default function SettingsPanel({ initialState, variant = 'modal' }: Setti
                     className="max-w-xs bg-white"
                     value={profileName}
                     onChange={(event) => {
-                      setProfileName(event.target.value)
-                      setProfileSave('idle')
+                      setProfileName(event.target.value);
+                      setProfileSave("idle");
                     }}
                   />
                 </div>
               </SettingsRow>
               <SettingsRow label="Username">
-                <p className="text-sm text-slate-800">{getUsername(state.profile.email)}</p>
+                <p className="text-sm text-slate-800">
+                  {getUsername(state.profile.email)}
+                </p>
               </SettingsRow>
               <SettingsRow label="Email addresses">
                 <div className="flex flex-wrap items-center gap-2">
-                  <span className="text-sm text-slate-800">{state.profile.email}</span>
-                  <Badge variant="secondary" className="rounded-md text-[11px]">Primary</Badge>
+                  <span className="text-sm text-slate-800">
+                    {state.profile.email}
+                  </span>
+                  <Badge variant="secondary" className="rounded-md text-[11px]">
+                    Primary
+                  </Badge>
                 </div>
               </SettingsRow>
               <div className="pt-2">
@@ -298,23 +418,35 @@ export default function SettingsPanel({ initialState, variant = 'modal' }: Setti
           </div>
         ) : null}
 
-        {activeSection === 'security' ? (
+        {activeSection === "security" ? (
           <div>
             <SectionHeader>Security</SectionHeader>
             <div className="max-w-2xl pt-6 [&_.cl-footer]:hidden [&_.cl-profileSection__danger]:rounded-md [&_.cl-profileSection__danger]:border [&_.cl-profileSection__danger]:border-red-200 [&_.cl-profileSection__danger]:bg-red-50/60 [&_.cl-profileSection__danger]:px-4">
-              <UserProfile appearance={clerkUserProfileAppearance} routing="hash" />
+              <UserProfile
+                appearance={clerkUserProfileAppearance}
+                routing="hash"
+              />
             </div>
           </div>
         ) : null}
 
-        {activeSection === 'workspace' ? (
+        {activeSection === "workspace" ? (
           <div>
             <SectionHeader>Workspace details</SectionHeader>
             <form onSubmit={submitWorkspace}>
               <SettingsRow
                 action={
-                  <Button disabled={!canManageWorkspace || workspaceSave === 'saving'} size="sm" type="submit" variant="ghost">
-                    {workspaceSave === 'saving' ? <Loader2 className="size-4 animate-spin" /> : <Save className="size-4" />}
+                  <Button
+                    disabled={!canManageWorkspace || workspaceSave === "saving"}
+                    size="sm"
+                    type="submit"
+                    variant="ghost"
+                  >
+                    {workspaceSave === "saving" ? (
+                      <Loader2 className="size-4 animate-spin" />
+                    ) : (
+                      <Save className="size-4" />
+                    )}
                     Update workspace
                   </Button>
                 }
@@ -325,8 +457,8 @@ export default function SettingsPanel({ initialState, variant = 'modal' }: Setti
                   disabled={!canManageWorkspace}
                   value={workspaceName}
                   onChange={(event) => {
-                    setWorkspaceName(event.target.value)
-                    setWorkspaceSave('idle')
+                    setWorkspaceName(event.target.value);
+                    setWorkspaceSave("idle");
                   }}
                 />
               </SettingsRow>
@@ -336,13 +468,15 @@ export default function SettingsPanel({ initialState, variant = 'modal' }: Setti
                   disabled={!canManageWorkspace}
                   value={workspaceSlug}
                   onChange={(event) => {
-                    setWorkspaceSlug(event.target.value)
-                    setWorkspaceSave('idle')
+                    setWorkspaceSlug(event.target.value);
+                    setWorkspaceSave("idle");
                   }}
                 />
               </SettingsRow>
               <SettingsRow label="Role">
-                <Badge variant="secondary" className="rounded-md">{ROLE_LABELS[state.currentUserRole]}</Badge>
+                <Badge variant="secondary" className="rounded-md">
+                  {ROLE_LABELS[state.currentUserRole]}
+                </Badge>
               </SettingsRow>
               <div className="pt-2">
                 <StatusMessage error={error} state={workspaceSave} />
@@ -351,12 +485,12 @@ export default function SettingsPanel({ initialState, variant = 'modal' }: Setti
           </div>
         ) : null}
 
-        {activeSection === 'members' ? (
+        {activeSection === "members" ? (
           <div>
             <SectionHeader>Members</SectionHeader>
             <div className="divide-y divide-slate-200">
               {state.members.map((member) => {
-                const memberSave = membersSave[member.userId] || 'idle'
+                const memberSave = membersSave[member.userId] || "idle";
                 return (
                   <div
                     className="grid gap-3 py-5 md:grid-cols-[minmax(0,1fr)_120px_130px_110px]"
@@ -368,15 +502,28 @@ export default function SettingsPanel({ initialState, variant = 'modal' }: Setti
                         <p className="truncate text-sm font-medium text-slate-950">
                           {member.fullName || member.email}
                         </p>
-                        <p className="truncate text-xs text-slate-500">{member.email}</p>
-                        {member.syncPending ? <p className="text-xs text-amber-700">Sincronização de acesso pendente.</p> : null}
+                        <p className="truncate text-xs text-slate-500">
+                          {member.email}
+                        </p>
+                        {member.syncPending ? (
+                          <p className="text-xs text-amber-700">
+                            Sincronização de acesso pendente.
+                          </p>
+                        ) : null}
                       </div>
                     </div>
                     <Select
-                      disabled={!canManageWorkspace || memberSave === 'saving' || (state.currentUserRole!=='owner' && member.role==='owner')}
+                      disabled={
+                        !canManageWorkspace ||
+                        memberSave === "saving" ||
+                        (state.currentUserRole !== "owner" &&
+                          member.role === "owner")
+                      }
                       value={member.role}
                       onValueChange={(value) => {
-                        void saveMember(member.userId, { role: value as AuthTenantRole })
+                        void saveMember(member.userId, {
+                          role: value as AuthTenantRole,
+                        });
                       }}
                     >
                       <SelectTrigger className="w-full border border-slate-200 bg-white">
@@ -384,53 +531,137 @@ export default function SettingsPanel({ initialState, variant = 'modal' }: Setti
                       </SelectTrigger>
                       <SelectContent>
                         {Object.entries(ROLE_LABELS).map(([value, label]) => (
-                          <SelectItem key={value} value={value} disabled={value==='owner'&&state.currentUserRole!=='owner'}>
+                          <SelectItem
+                            key={value}
+                            value={value}
+                            disabled={
+                              value === "owner" &&
+                              state.currentUserRole !== "owner"
+                            }
+                          >
                             {label}
                           </SelectItem>
                         ))}
                       </SelectContent>
                     </Select>
-                    <Select disabled={!canManageWorkspace || memberSave==='saving' || ['owner','admin'].includes(member.role)}
-                      value={member.profileId} onValueChange={value=>{void saveMember(member.userId,{profileId:value as ErpAccessProfile})}}>
-                      <SelectTrigger aria-label="Perfil de acesso" className="w-full border border-slate-200 bg-white"><SelectValue /></SelectTrigger>
-                      <SelectContent>{['administrador','consulta','financeiro','vendas','compras','estoque'].map(profile=>(
-                        <SelectItem key={profile} value={profile} disabled={profile==='administrador'&&!['owner','admin'].includes(member.role)}>{profile.charAt(0).toUpperCase()+profile.slice(1)}</SelectItem>
-                      ))}</SelectContent>
+                    <Select
+                      disabled={
+                        !canManageWorkspace ||
+                        memberSave === "saving" ||
+                        ["owner", "admin"].includes(member.role)
+                      }
+                      value={member.profileId}
+                      onValueChange={(value) => {
+                        void saveMember(member.userId, {
+                          profileId: value as ErpAccessProfile,
+                        });
+                      }}
+                    >
+                      <SelectTrigger
+                        aria-label="Perfil de acesso"
+                        className="w-full border border-slate-200 bg-white"
+                      >
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {[
+                          "administrador",
+                          "consulta",
+                          "financeiro",
+                          "vendas",
+                          "compras",
+                          "estoque",
+                          "contador",
+                        ].map((profile) => (
+                          <SelectItem
+                            key={profile}
+                            value={profile}
+                            disabled={
+                              profile === "administrador" &&
+                              !["owner", "admin"].includes(member.role)
+                            }
+                          >
+                            {profile.charAt(0).toUpperCase() + profile.slice(1)}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
                     </Select>
                     <Select
-                      disabled={!canManageWorkspace || memberSave === 'saving' || (state.currentUserRole!=='owner' && member.role==='owner')}
+                      disabled={
+                        !canManageWorkspace ||
+                        memberSave === "saving" ||
+                        (state.currentUserRole !== "owner" &&
+                          member.role === "owner")
+                      }
                       value={member.status}
                       onValueChange={(value) => {
-                        void saveMember(member.userId, { status: value as WorkspaceMemberStatus })
+                        void saveMember(member.userId, {
+                          status: value as WorkspaceMemberStatus,
+                        });
                       }}
                     >
                       <SelectTrigger className="w-full border border-slate-200 bg-white">
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
-                        {Object.entries(STATUS_LABELS).filter(([value])=>value!=='invited').map(([value, label]) => (
-                          <SelectItem key={value} value={value}>
-                            {label}
-                          </SelectItem>
-                        ))}
+                        {Object.entries(STATUS_LABELS)
+                          .filter(([value]) => value !== "invited")
+                          .map(([value, label]) => (
+                            <SelectItem key={value} value={value}>
+                              {label}
+                            </SelectItem>
+                          ))}
                       </SelectContent>
                     </Select>
-                    {['owner', 'admin'].includes(member.role) ? null : (
+                    <label className="flex items-center gap-2 text-sm text-slate-600 md:col-span-4 md:pl-11">
+                      <input
+                        type="checkbox"
+                        checked={member.portalAccess === true}
+                        disabled={
+                          !canManageWorkspace ||
+                          memberSave === "saving" ||
+                          (state.currentUserRole !== "owner" &&
+                            member.role === "owner")
+                        }
+                        onChange={(e) => {
+                          void saveMember(member.userId, {
+                            portalAccess: e.target.checked,
+                          });
+                        }}
+                      />{" "}
+                      Acesso ao Portal do Contador{" "}
+                      <span className="text-xs text-slate-400">
+                        Somente consultas no portal
+                      </span>
+                    </label>
+                    {["owner", "admin"].includes(member.role) ? null : (
                       <MemberCommercialRules
-                        disabled={!canManageWorkspace || memberSave === 'saving'}
+                        disabled={
+                          !canManageWorkspace || memberSave === "saving"
+                        }
                         member={member}
-                        onSave={(patch) => { void saveMember(member.userId, patch) }}
+                        onSave={(patch) => {
+                          void saveMember(member.userId, patch);
+                        }}
                         sellers={state.sellers}
                       />
                     )}
                   </div>
-                )
+                );
               })}
             </div>
-            <StatusMessage error={error} state={Object.values(membersSave).includes('error') ? 'error' : 'idle'} />
+            <StatusMessage
+              error={error}
+              state={
+                Object.values(membersSave).includes("error") ? "error" : "idle"
+              }
+            />
+            {canManageWorkspace ? (
+              <PortalInvitations companyId={state.workspace.id} />
+            ) : null}
           </div>
         ) : null}
       </section>
     </div>
-  )
+  );
 }

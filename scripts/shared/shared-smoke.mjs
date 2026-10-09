@@ -37,7 +37,7 @@ process.env.CLERK_SECRET_KEY='local_fictitious_test_key'
 globalThis.fetch=async(url,options)=>{
  assert.equal(new URL(url).hostname,'api.clerk.com');assert.equal(insideTransaction,false,'External mutations cannot occur within a DB transaction')
  externalCalls++;if(externalFailure)throw new Error('Simulated network failure')
- const payload=JSON.parse(options.body)
+ const payload=JSON.parse(options.body||'{}')
  if(String(url).endsWith('/metadata'))assert(['owner','admin','member','viewer'].includes(payload.public_metadata.appRole))
  return Response.json({id:'local_membership'})
 }
@@ -152,6 +152,60 @@ try{
   const row=(await db.query("SELECT * FROM shared.historico_acessos WHERE origem='settings_members' AND usuario_id=3 ORDER BY id DESC LIMIT 1")).rows[0]
   assert.equal(Number(row.autor_usuario_id),1);assert(!JSON.stringify(row.antes).includes('@'))
   await rejectedSQL('DELETE FROM shared.historico_acessos');await rejectedSQL('TRUNCATE shared.historico_acessos')
+ })
+ await check('Portal toggle preserves ERP profile and survives membership webhook replay',async()=>{
+  const before=(await db.query('SELECT role,perfil_acesso_id FROM shared.usuarios_empresas WHERE empresa_id=1 AND usuario_id=3')).rows[0]
+  const grant=await settings.updateWorkspaceMember({actorUserId:1,tenantId:1,values:{userId:3,portalAccess:true}})
+  assert.equal(grant.portalAccess,true);assert.equal(grant.profileId,before.perfil_acesso_id);assert.equal(grant.role,before.role)
+  await settings.updateWorkspaceMember({actorUserId:1,tenantId:1,values:{userId:3,portalAccess:false}})
+  await postgres.withTransaction(client=>sync.syncClerkOrganizationMembership(client,membership))
+  assert.equal((await db.query('SELECT acesso_portal_contador FROM shared.usuarios_empresas WHERE empresa_id=1 AND usuario_id=3')).rows[0].acesso_portal_contador,false)
+ })
+ await check('Portal requires local grant even for owner; ERP membership remains intact',async()=>{
+  await db.exec('BEGIN')
+  try{await db.query("SELECT set_config('app.erp_user_id','1',true),set_config('app.erp_empresa_id','1',true),set_config('app.portal_contador','true',true)");assert.equal((await db.query('SELECT shared.is_tenant_member(1) access')).rows[0].access,false);await db.query("SELECT set_config('app.portal_contador','false',true)");assert.equal((await db.query('SELECT shared.is_tenant_member(1) access')).rows[0].access,true)}finally{await db.exec('ROLLBACK')}
+ })
+ await check('Accountant invitation supports both webhook orders and never reapplies a revoked grant',async()=>{
+  const apply=load('@/products/auth/server/portalInvitationAccess').applyPortalInvitations
+  for(const [id,email,acceptedFirst] of [[500,'accountant1@example.invalid',true],[501,'accountant2@example.invalid',false]]){
+    await db.query("INSERT INTO shared.usuarios(id,email,clerk_user_id,metadata) VALUES($1,$2,$3,'{\"emailVerified\":true}')",[id,email,'user_'+id])
+    await db.query("INSERT INTO shared.convites_empresa(empresa_id,email,role,perfil_acesso_id,status,clerk_organization_id,clerk_invitation_id,convidado_por,acesso_portal_contador,metadata,created_at) VALUES(1,$1,'viewer','contador','pending','org_a',$2,1,true,'{\"portalInvitationManaged\":true}',now()-interval '1 second')",[email,'portal_'+id])
+    const invite={id:'portal_'+id,organization_id:'org_a',email_address:email,role:'org:member',status:'accepted'}
+    const member={id:'om_'+id,organization:{id:'org_a'},public_user_data:{user_id:'user_'+id,identifier:email},role:'org:member'}
+    if(acceptedFirst)await postgres.withTransaction(client=>sync.syncClerkOrganizationInvitation(client,invite))
+    await postgres.withTransaction(client=>sync.syncClerkOrganizationMembership(client,member))
+    if(!acceptedFirst)await postgres.withTransaction(client=>sync.syncClerkOrganizationInvitation(client,invite))
+    assert.deepEqual((await db.query('SELECT role,perfil_acesso_id,acesso_portal_contador FROM shared.usuarios_empresas WHERE empresa_id=1 AND usuario_id=$1',[id])).rows[0],{role:'viewer',perfil_acesso_id:'contador',acesso_portal_contador:true})
+    await settings.updateWorkspaceMember({actorUserId:1,tenantId:1,values:{userId:id,portalAccess:false}})
+    await postgres.withTransaction(async client=>{await sync.syncClerkOrganizationInvitation(client,invite);await sync.syncClerkOrganizationMembership(client,member);await apply(client,1)})
+    assert.equal((await db.query('SELECT acesso_portal_contador FROM shared.usuarios_empresas WHERE empresa_id=1 AND usuario_id=$1',[id])).rows[0].acesso_portal_contador,false)
+  }
+ })
+ await check('Unverified email and locally revoked invitation never grant portal access',async()=>{
+  await db.query("INSERT INTO shared.convites_empresa(empresa_id,email,status,perfil_acesso_id,clerk_organization_id,clerk_invitation_id,acesso_portal_contador,metadata) VALUES(1,'member@example.invalid','accepted','contador','org_a','unverified',true,'{\"portalInvitationManaged\":true}'),(1,'accountant1@example.invalid','revoked','contador','org_a','local_revoked',false,'{\"portalInvitationManaged\":true,\"portalRevokedLocally\":true}')")
+  await postgres.withTransaction(client=>sync.syncClerkOrganizationInvitation(client,{id:'local_revoked',organization_id:'org_a',email_address:'accountant1@example.invalid',status:'accepted',role:'org:member'}))
+  assert.equal((await db.query("SELECT status FROM shared.convites_empresa WHERE clerk_invitation_id='local_revoked'")).rows[0].status,'revoked')
+  assert.equal((await db.query('SELECT acesso_portal_contador FROM shared.usuarios_empresas WHERE empresa_id=1 AND usuario_id=3')).rows[0].acesso_portal_contador,false)
+ })
+ await check('Unverified accountant email waits for verification before applying access',async()=>{
+  await db.query("INSERT INTO shared.usuarios(id,email,clerk_user_id,metadata) VALUES(502,'waiting@example.invalid','user_502','{\"emailVerified\":false}')")
+  await db.query("INSERT INTO shared.convites_empresa(empresa_id,email,role,perfil_acesso_id,status,clerk_organization_id,clerk_invitation_id,convidado_por,acesso_portal_contador,metadata,created_at) VALUES(1,'waiting@example.invalid','viewer','contador','accepted','org_a','portal_502',1,true,'{\"portalInvitationManaged\":true}',now()-interval '1 second')")
+  await postgres.withTransaction(client=>sync.syncClerkOrganizationMembership(client,{id:'om_502',organization:{id:'org_a'},public_user_data:{user_id:'user_502',identifier:'waiting@example.invalid'},role:'org:member'}))
+  assert.equal((await db.query('SELECT acesso_portal_contador FROM shared.usuarios_empresas WHERE empresa_id=1 AND usuario_id=502')).rows[0].acesso_portal_contador,false)
+  await bootstrap.syncClerkProfile({clerkUserId:'user_502',clerkOrganizationId:'org_a',email:'waiting@example.invalid',emailVerified:true,fullName:'Fictitious Accountant',avatarUrl:null})
+  // A entrada autenticada no portal reavalia convites após sincronizar o e-mail.
+  await postgres.withTransaction(client=>load('@/products/auth/server/portalInvitationAccess').applyPortalInvitations(client,1))
+  assert.equal((await db.query('SELECT acesso_portal_contador FROM shared.usuarios_empresas WHERE empresa_id=1 AND usuario_id=502')).rows[0].acesso_portal_contador,true)
+ })
+ await check('Portal invitation sends outside transaction; revocation retries without restoring local grant',async()=>{
+  const manager=load('@/products/portaldocontador/server/invitations'),actor={tenantId:1,sharedUserId:1,role:'owner',clerkOrganizationId:'org_a',clerkUserId:'user_owner'}
+  await manager.inviteAccountant(actor,'newaccountant@example.invalid')
+  const row=(await db.query("SELECT id,acesso_portal_contador FROM shared.convites_empresa WHERE clerk_invitation_id='local_membership'")).rows[0];assert.equal(row.acesso_portal_contador,true)
+  externalFailure=true;await manager.revokeAccountantInvitation(actor,Number(row.id));externalFailure=false
+  assert.equal((await db.query('SELECT acesso_portal_contador FROM shared.convites_empresa WHERE id=$1',[row.id])).rows[0].acesso_portal_contador,false)
+  const operation=(await db.query("SELECT id FROM shared.eventos_webhook WHERE provedor='clerk_outbox' AND tipo='invitation_revoke' ORDER BY id DESC LIMIT 1")).rows[0];assert.equal(await outbox.processClerkOperation(Number(operation.id)),true)
+  await postgres.withTransaction(client=>sync.syncClerkOrganizationInvitation(client,{id:'local_membership',organization_id:'org_a',email_address:'newaccountant@example.invalid',status:'pending',role:'org:member'}))
+  assert.equal((await db.query('SELECT status FROM shared.convites_empresa WHERE id=$1',[row.id])).rows[0].status,'revoked')
  })
  await check('All shared tables remain inaccessible to client and ERP runtime roles',async()=>{
   const tables=(await db.query("SELECT tablename FROM pg_tables WHERE schemaname='shared'")).rows

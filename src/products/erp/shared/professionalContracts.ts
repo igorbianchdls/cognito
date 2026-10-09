@@ -20,7 +20,7 @@ export const ERP_CAPABILITIES = [
 ] as const
 
 export type ErpCapability = (typeof ERP_CAPABILITIES)[number]
-export type ErpAccessProfile = 'administrador' | 'financeiro' | 'vendas' | 'compras' | 'estoque' | 'consulta'
+export type ErpAccessProfile = 'administrador' | 'financeiro' | 'vendas' | 'compras' | 'estoque' | 'consulta' | 'contador'
 
 const id = z.coerce.number().int().positive()
 const optionalId = z.union([id, z.literal(''), z.null()]).optional().transform((value) => value || null)

@@ -14,7 +14,7 @@ const isPublicRoute = createRouteMatcher([
 
 // These read endpoints authenticate through withErpHttp and return its JSON
 // 401/403 envelope. Keep Clerk middleware active so auth() has its context.
-const isErpJsonReadRoute = createRouteMatcher(['/api/erp/dashboards(.*)', '/api/erp/acesso'])
+const isErpJsonReadRoute = createRouteMatcher(['/api/erp/dashboards(.*)', '/api/erp/acesso', '/api/contador(.*)'])
 
 const handleClerkMiddleware = clerkMiddleware(async (auth, request) => {
   if (!isPublicRoute(request) && !isErpJsonReadRoute(request)) {

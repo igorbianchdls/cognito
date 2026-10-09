@@ -1,0 +1,347 @@
+.contador-shell {
+  display: flex;
+  min-height: 100dvh;
+  background: #fff;
+  color: #292b25;
+  font-size: 14px;
+}
+.contador-sidebar {
+  width: 235px;
+  flex-shrink: 0;
+  background: #f5f4f1;
+  border-right: 1px solid #e5e5df;
+  padding: 28px 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+.contador-brand {
+  font-size: 25px;
+  font-weight: 600;
+  letter-spacing: -0.8px;
+}
+.contador-brand span {
+  display: block;
+  font-size: 12px;
+  font-weight: 400;
+  letter-spacing: 0;
+  color: #767970;
+  margin-top: 4px;
+}
+.contador-company-back,
+.contador-sidebar nav a,
+.contador-sidebar-footer a {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px;
+  border-radius: 3px;
+  color: #686b62;
+}
+.contador-sidebar nav a[aria-current="page"] {
+  background: #e8e7e2;
+  color: #292b25;
+  font-weight: 500;
+}
+.contador-company-name {
+  font-size: 12px;
+  color: #75796e;
+  padding: 0 10px;
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+.contador-sidebar nav {
+  display: grid;
+  gap: 4px;
+}
+.contador-sidebar-footer {
+  margin-top: auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.contador-main {
+  min-width: 0;
+  flex: 1;
+  --erp-gutter: 40px;
+  background: #fff;
+}
+.contador-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  gap: 24px;
+  padding: 34px 40px 32px;
+  border-bottom: 1px solid #e8e9e3;
+}
+.contador-header p {
+  font-size: 13px;
+  color: #818477;
+  margin: 0 0 10px;
+}
+.contador-header h1 {
+  font-size: 36px;
+  font-weight: 500;
+  letter-spacing: -1.2px;
+  line-height: 1.15;
+  margin: 0;
+}
+.contador-controls {
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+  align-items: flex-end;
+}
+.contador-shell label {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  font-size: 11px;
+  color: #818477;
+}
+.contador-shell select,
+.contador-shell input {
+  color: #404338;
+  font-size: 13px;
+  background: #fff;
+  min-height: 36px;
+  max-width: 100%;
+  border: 0;
+  border-bottom: 1px solid #d9dbd0;
+  padding: 5px 0;
+}
+.contador-controls select {
+  max-width: 200px;
+}
+.contador-shell button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  border: 1px solid #dedfd8;
+  border-radius: 2px;
+  padding: 8px 12px;
+  min-height: 36px;
+  font-size: 12px;
+  background: #fff;
+  color: #42453b;
+  cursor: pointer;
+}
+.contador-shell button:hover {
+  background: #f5f5f0;
+}
+.contador-shell button:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+.contador-shell :is(button, input, select, a):focus-visible {
+  outline: 2px solid #697443;
+  outline-offset: 3px;
+}
+.contador-companies {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 24px;
+  padding: 40px;
+}
+.contador-companies > a {
+  border: 1px solid #e0e1d9;
+  padding: 28px;
+}
+.contador-companies h2 {
+  font-size: 20px;
+  font-weight: 500;
+  margin: 18px 0 12px;
+}
+.contador-companies p {
+  color: #777b70;
+}
+.contador-toolbar {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 22px;
+  padding: 24px 40px;
+  border-bottom: 1px solid #ecece7;
+}
+.contador-toolbar form {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-left: auto;
+}
+.contador-tabs {
+  display: flex;
+  gap: 18px;
+}
+.contador-tabs button {
+  border: 0;
+  border-bottom: 2px solid transparent;
+  border-radius: 0;
+  padding: 8px 0;
+  color: #777b70;
+}
+.contador-tabs button[aria-pressed="true"] {
+  border-bottom-color: #292b25;
+  color: #292b25;
+}
+.contador-table-scroll {
+  overflow-x: auto;
+}
+.contador-table-scroll table {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: left;
+}
+.contador-table-scroll th {
+  font-size: 12px;
+  font-weight: 600;
+  color: #777b70;
+  padding: 14px 24px;
+  background: #fbfbf9;
+  border-bottom: 1px solid #ecece7;
+  white-space: nowrap;
+}
+.contador-table-scroll td {
+  padding: 18px 24px;
+  border-bottom: 1px solid #f0f0ed;
+  font-size: 13px;
+  max-width: 380px;
+  overflow-wrap: anywhere;
+}
+.contador-table-scroll :is(td, th):first-child {
+  padding-left: 40px;
+}
+.contador-table-scroll td.contador-positive {
+  color: #278244;
+  font-variant-numeric: tabular-nums;
+}
+.contador-table-scroll td.contador-negative {
+  color: #c03935;
+  font-variant-numeric: tabular-nums;
+}
+.contador-pagination {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  padding: 20px 40px;
+  color: #777b70;
+  font-size: 12px;
+}
+.contador-pagination > div {
+  display: flex;
+  gap: 8px;
+}
+.contador-note {
+  padding: 0 40px 28px;
+  color: #818477;
+  font-size: 12px;
+}
+.contador-empty {
+  padding: 40px;
+  color: #777b70;
+  line-height: 1.7;
+}
+.contador-error {
+  margin: 24px 40px;
+  padding: 14px 18px;
+  border: 1px solid #f0ccc7;
+  background: #fff7f6;
+  color: #a8372c;
+}
+.contador-invitations {
+  margin-top: 28px;
+  border-top: 1px solid #e2e4df;
+  padding-top: 22px;
+}
+.contador-invitations form {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin: 16px 0;
+}
+.contador-invitations input {
+  flex: 1;
+  min-width: 180px;
+}
+.contador-invitations ul {
+  list-style: none;
+  padding: 0;
+}
+.contador-invitations li {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 0;
+  border-bottom: 1px solid #ecece7;
+}
+.contador-invitations li small {
+  display: block;
+  color: #767970;
+  margin-top: 4px;
+}
+@media (max-width: 1200px) {
+  .contador-header {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+  .contador-main {
+    --erp-gutter: 28px;
+  }
+  .contador-header,
+  .contador-toolbar {
+    padding-inline: 28px;
+  }
+}
+@media (max-width: 760px) {
+  .contador-shell {
+    flex-direction: column;
+  }
+  .contador-sidebar {
+    width: 100%;
+    padding: 18px;
+    gap: 12px;
+    border-right: 0;
+    border-bottom: 1px solid #e5e5df;
+  }
+  .contador-sidebar nav {
+    display: flex;
+    flex-wrap: wrap;
+  }
+  .contador-sidebar-footer {
+    margin-top: 0;
+  }
+  .contador-main {
+    --erp-gutter: 20px;
+  }
+  .contador-header,
+  .contador-toolbar {
+    padding: 24px 20px;
+  }
+  .contador-header h1 {
+    font-size: 30px;
+  }
+  .contador-toolbar form {
+    margin-left: 0;
+    max-width: 100%;
+  }
+  .contador-controls {
+    gap: 12px;
+  }
+  .contador-table-scroll :is(td, th):first-child {
+    padding-left: 20px;
+  }
+  .contador-companies,
+  .contador-empty {
+    padding: 24px 20px;
+  }
+  .contador-pagination,
+  .contador-note {
+    padding-inline: 20px;
+  }
+  .contador-error {
+    margin: 20px;
+  }
+}

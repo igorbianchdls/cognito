@@ -1,95 +1,106 @@
-import { auth, clerkClient } from '@clerk/nextjs/server'
+import { auth, clerkClient } from "@clerk/nextjs/server";
 
-import { withTransaction, type SQLClient } from '@/lib/postgres'
+import { withTransaction, type SQLClient } from "@/lib/postgres";
 import {
   createClerkOrganization,
   updateClerkOrganizationMetadata,
   type ClerkOrganizationPayload,
-} from '@/products/auth/server/clerkOrganizationClient'
+} from "@/products/auth/server/clerkOrganizationClient";
 import type {
   AuthTenantMembership,
   ClerkTenantBootstrapResult,
-} from '@/products/auth/shared/authContracts'
+} from "@/products/auth/shared/authContracts";
 
 type SharedUserRow = {
-  id: string | number
-  email: string
-  full_name: string | null
-  avatar_url: string | null
-  clerk_user_id: string | null
-  status: string
-}
+  id: string | number;
+  email: string;
+  full_name: string | null;
+  avatar_url: string | null;
+  clerk_user_id: string | null;
+  status: string;
+};
 
 type TenantMembershipRow = {
-  clerk_membership_id: string | null
-  clerk_organization_id: string | null
-  clerk_organization_slug: string | null
-  empresa_id: string | number
-  tenant_name: string
-  tenant_slug: string | null
-  role: string
-}
+  clerk_membership_id: string | null;
+  clerk_organization_id: string | null;
+  clerk_organization_slug: string | null;
+  empresa_id: string | number;
+  tenant_name: string;
+  tenant_slug: string | null;
+  role: string;
+};
 
 type TenantRow = {
-  clerk_organization_id?: string | null
-  clerk_organization_slug?: string | null
-  id: string | number
-  name: string
-  slug: string | null
-}
+  clerk_organization_id?: string | null;
+  clerk_organization_slug?: string | null;
+  id: string | number;
+  name: string;
+  slug: string | null;
+};
+
+import { applyPortalInvitations } from "./portalInvitationAccess";
 
 type ClerkProfile = {
-  clerkUserId: string
-  clerkOrganizationId: string | null
-  email: string
-  fullName: string | null
-  avatarUrl: string | null
-  emailVerified?: boolean
-}
+  clerkUserId: string;
+  clerkOrganizationId: string | null;
+  email: string;
+  fullName: string | null;
+  avatarUrl: string | null;
+  emailVerified?: boolean;
+};
 
-export type ClerkProfileInput = ClerkProfile
+export type ClerkProfileInput = ClerkProfile;
 
 function toText(value: unknown) {
-  return typeof value === 'string' ? value.trim() : ''
+  return typeof value === "string" ? value.trim() : "";
 }
 
 function slugify(value: string) {
   const slug = value
     .trim()
     .toLowerCase()
-    .normalize('NFD')
-    .replace(/[\u0300-\u036f]/g, '')
-    .replace(/[^a-z0-9]+/g, '-')
-    .replace(/^-+|-+$/g, '')
-  return slug || 'tenant'
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "");
+  return slug || "tenant";
 }
 
 function getEmailDomain(email: string) {
-  const domain = email.split('@')[1]?.trim().toLowerCase()
-  return domain && domain !== 'gmail.com' && domain !== 'hotmail.com' && domain !== 'outlook.com'
-    ? domain.split('.')[0]
-    : ''
+  const domain = email.split("@")[1]?.trim().toLowerCase();
+  return domain &&
+    domain !== "gmail.com" &&
+    domain !== "hotmail.com" &&
+    domain !== "outlook.com"
+    ? domain.split(".")[0]
+    : "";
 }
 
 function getTenantName(profile: ClerkProfile) {
-  const domain = getEmailDomain(profile.email)
-  if (domain) return domain.replace(/(^|-)([a-z])/g, (_, prefix: string, letter: string) => `${prefix}${letter.toUpperCase()}`)
-  return profile.fullName ? `${profile.fullName} Workspace` : `${profile.email} Workspace`
+  const domain = getEmailDomain(profile.email);
+  if (domain)
+    return domain.replace(
+      /(^|-)([a-z])/g,
+      (_, prefix: string, letter: string) => `${prefix}${letter.toUpperCase()}`,
+    );
+  return profile.fullName
+    ? `${profile.fullName} Workspace`
+    : `${profile.email} Workspace`;
 }
 
 function normalizeCompanyName(value: unknown) {
-  const name = toText(value).replace(/\s+/g, ' ')
+  const name = toText(value).replace(/\s+/g, " ");
   if (name.length < 2) {
-    throw new Error('Nome da empresa deve ter pelo menos 2 caracteres.')
+    throw new Error("Nome da empresa deve ter pelo menos 2 caracteres.");
   }
   if (name.length > 120) {
-    throw new Error('Nome da empresa deve ter no maximo 120 caracteres.')
+    throw new Error("Nome da empresa deve ter no maximo 120 caracteres.");
   }
-  return name
+  return name;
 }
 
 function normalizeMembership(row: TenantMembershipRow): AuthTenantMembership {
-  const role = toText(row.role)
+  const role = toText(row.role);
   return {
     clerkMembershipId: row.clerk_membership_id,
     clerkOrganizationId: row.clerk_organization_id,
@@ -97,35 +108,41 @@ function normalizeMembership(row: TenantMembershipRow): AuthTenantMembership {
     tenantId: Number(row.empresa_id),
     tenantName: row.tenant_name,
     tenantSlug: row.tenant_slug,
-    role: role === 'owner' || role === 'admin' || role === 'viewer' ? role : 'member',
-  }
+    role:
+      role === "owner" || role === "admin" || role === "viewer"
+        ? role
+        : "member",
+  };
 }
 
 async function getCurrentClerkProfile(): Promise<ClerkProfile | null> {
-  const authState = await auth()
-  if (!authState.userId) return null
+  const authState = await auth();
+  if (!authState.userId) return null;
 
-  const client = await clerkClient()
-  const user = await client.users.getUser(authState.userId)
-  const primaryEmail = user.primaryEmailAddress || user.emailAddresses[0]
-  const email = primaryEmail?.emailAddress || ''
+  const client = await clerkClient();
+  const user = await client.users.getUser(authState.userId);
+  const primaryEmail = user.primaryEmailAddress || user.emailAddresses[0];
+  const email = primaryEmail?.emailAddress || "";
   if (!email) {
-    throw new Error('Usuario Clerk sem email principal.')
+    throw new Error("Usuario Clerk sem email principal.");
   }
 
-  const fullName = user.fullName || [user.firstName, user.lastName].filter(Boolean).join(' ') || null
+  const fullName =
+    user.fullName ||
+    [user.firstName, user.lastName].filter(Boolean).join(" ") ||
+    null;
   return {
     clerkUserId: authState.userId,
     clerkOrganizationId: authState.orgId || null,
     email,
-    emailVerified: primaryEmail?.verification?.status === 'verified',
+    emailVerified: primaryEmail?.verification?.status === "verified",
     fullName,
     avatarUrl: user.imageUrl || null,
-  }
+  };
 }
 
 async function findUserByClerkId(
-  client: Pick<SQLClient, 'query'>,
+  client: Pick<SQLClient, "query">,
   clerkUserId: string,
 ): Promise<SharedUserRow | null> {
   const result = await client.query(
@@ -134,15 +151,15 @@ async function findUserByClerkId(
      WHERE clerk_user_id = $1
      LIMIT 1`,
     [clerkUserId],
-  )
-  return (result.rows[0] as SharedUserRow | undefined) || null
+  );
+  return (result.rows[0] as SharedUserRow | undefined) || null;
 }
 
 async function linkUserByEmail(
-  client: Pick<SQLClient, 'query'>,
+  client: Pick<SQLClient, "query">,
   profile: ClerkProfile,
 ): Promise<SharedUserRow | null> {
-  if (!profile.emailVerified) return null
+  if (!profile.emailVerified) return null;
   const result = await client.query(
     `UPDATE shared.usuarios
      SET
@@ -156,13 +173,18 @@ async function linkUserByEmail(
        AND auth_user_id IS NULL AND password_hash='' AND status='active'
        AND lower(email::text) = lower($2::text)
      RETURNING id, email, full_name, avatar_url, clerk_user_id, status`,
-    [profile.clerkUserId, profile.email, profile.fullName || '', profile.avatarUrl || ''],
-  )
-  return (result.rows[0] as SharedUserRow | undefined) || null
+    [
+      profile.clerkUserId,
+      profile.email,
+      profile.fullName || "",
+      profile.avatarUrl || "",
+    ],
+  );
+  return (result.rows[0] as SharedUserRow | undefined) || null;
 }
 
 async function createSharedUser(
-  client: Pick<SQLClient, 'query'>,
+  client: Pick<SQLClient, "query">,
   profile: ClerkProfile,
 ): Promise<SharedUserRow> {
   const result = await client.query(
@@ -176,14 +198,18 @@ async function createSharedUser(
       profile.fullName,
       profile.avatarUrl,
       profile.clerkUserId,
-      JSON.stringify({ createdBy: 'clerk_bootstrap', source: 'clerk' }),
+      JSON.stringify({
+        createdBy: "clerk_bootstrap",
+        source: "clerk",
+        emailVerified: profile.emailVerified === true,
+      }),
     ],
-  )
-  return result.rows[0] as SharedUserRow
+  );
+  return result.rows[0] as SharedUserRow;
 }
 
 async function touchSharedUser(
-  client: Pick<SQLClient, 'query'>,
+  client: Pick<SQLClient, "query">,
   user: SharedUserRow,
   profile: ClerkProfile,
 ) {
@@ -193,32 +219,45 @@ async function touchSharedUser(
        email = $2,
        full_name = COALESCE(NULLIF($3, ''), full_name),
        avatar_url = COALESCE(NULLIF($4, ''), avatar_url),
-       metadata = (metadata - 'clerkDeletedAt' - 'clerkDeleted') || jsonb_build_object('source', 'clerk'),
+       metadata = (metadata - 'clerkDeletedAt' - 'clerkDeleted') || jsonb_build_object('source', 'clerk','emailVerified',$5::boolean),
        updated_at = now()
      WHERE id = $1`,
-    [user.id, profile.email, profile.fullName || '', profile.avatarUrl || ''],
-  )
+    [
+      user.id,
+      profile.email,
+      profile.fullName || "",
+      profile.avatarUrl || "",
+      profile.emailVerified === true,
+    ],
+  );
 }
 
 export async function syncSharedUser(
-  client: Pick<SQLClient, 'query'>,
+  client: Pick<SQLClient, "query">,
   profile: ClerkProfile,
 ): Promise<SharedUserRow> {
-  profile = { ...profile, email: profile.email.trim().toLowerCase() }
-  if (!profile.email.includes('@') || !profile.clerkUserId.startsWith('user_')) throw new Error('Identidade Clerk invalida.')
+  profile = { ...profile, email: profile.email.trim().toLowerCase() };
+  if (!profile.email.includes("@") || !profile.clerkUserId.startsWith("user_"))
+    throw new Error("Identidade Clerk invalida.");
   // Consistent ordering serializes both same-identity and same-email bootstrap races.
-  for (const key of [`email:${profile.email}`, `user:${profile.clerkUserId}`].sort())
-    await client.query('SELECT pg_advisory_xact_lock(73006,hashtext($1))', [key])
-  let user = await findUserByClerkId(client, profile.clerkUserId)
-  if (!user) user = await linkUserByEmail(client, profile)
-  if (!user) return createSharedUser(client, profile)
-  if (user.status !== 'active') throw new Error('Usuario suspenso ou desativado.')
-  await touchSharedUser(client, user, profile)
-  return user
+  for (const key of [
+    `email:${profile.email}`,
+    `user:${profile.clerkUserId}`,
+  ].sort())
+    await client.query("SELECT pg_advisory_xact_lock(73006,hashtext($1))", [
+      key,
+    ]);
+  let user = await findUserByClerkId(client, profile.clerkUserId);
+  if (!user) user = await linkUserByEmail(client, profile);
+  if (!user) return createSharedUser(client, profile);
+  if (user.status !== "active")
+    throw new Error("Usuario suspenso ou desativado.");
+  await touchSharedUser(client, user, profile);
+  return user;
 }
 
 async function listMemberships(
-  client: Pick<SQLClient, 'query'>,
+  client: Pick<SQLClient, "query">,
   sharedUserId: number,
 ): Promise<AuthTenantMembership[]> {
   const result = await client.query(
@@ -248,35 +287,43 @@ async function listMemberships(
        END,
        tenants.id ASC`,
     [sharedUserId],
-  )
-  return (result.rows as TenantMembershipRow[]).map(normalizeMembership)
+  );
+  return (result.rows as TenantMembershipRow[]).map(normalizeMembership);
 }
 
 async function createInitialTenant(
-  client: Pick<SQLClient, 'query'>,
+  client: Pick<SQLClient, "query">,
   sharedUserId: number,
   profile: ClerkProfile,
   options: {
-    clerkOrganization?: ClerkOrganizationPayload | null
-    companyName?: string
-    tenantName?: string
+    clerkOrganization?: ClerkOrganizationPayload | null;
+    companyName?: string;
+    tenantName?: string;
   } = {},
 ): Promise<AuthTenantMembership> {
-  const tenantName = options.tenantName || (options.companyName ? normalizeCompanyName(options.companyName) : getTenantName(profile))
-  const baseSlug = slugify(tenantName)
-  const suffix = profile.clerkUserId.slice(-8).toLowerCase().replace(/[^a-z0-9]+/g, '')
-  const slug = options.clerkOrganization?.slug || `${baseSlug}-${suffix || sharedUserId}`
+  const tenantName =
+    options.tenantName ||
+    (options.companyName
+      ? normalizeCompanyName(options.companyName)
+      : getTenantName(profile));
+  const baseSlug = slugify(tenantName);
+  const suffix = profile.clerkUserId
+    .slice(-8)
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "");
+  const slug =
+    options.clerkOrganization?.slug || `${baseSlug}-${suffix || sharedUserId}`;
   const metadata = {
     clerkOrganizationId: options.clerkOrganization?.id || null,
-    createdBy: 'clerk_bootstrap',
-    source: options.clerkOrganization ? 'clerk_organization' : 'clerk',
+    createdBy: "clerk_bootstrap",
+    source: options.clerkOrganization ? "clerk_organization" : "clerk",
     ownerClerkUserId: profile.clerkUserId,
     onboardingCompletedAt: new Date().toISOString(),
-  }
+  };
 
   const tenantResult = options.clerkOrganization
     ? await client.query(
-      `INSERT INTO shared.empresas
+        `INSERT INTO shared.empresas
          (name, slug, status, clerk_organization_id, clerk_organization_slug, metadata, updated_at)
        VALUES
          ($1, $2, 'active', $3, $4, $5::jsonb, now())
@@ -289,24 +336,24 @@ async function createInitialTenant(
          metadata = COALESCE(shared.empresas.metadata, '{}'::jsonb) || EXCLUDED.metadata,
          updated_at = now()
        RETURNING id, name, slug, clerk_organization_id, clerk_organization_slug`,
-      [
-        tenantName,
-        slug,
-        options.clerkOrganization.id,
-        options.clerkOrganization.slug || null,
-        JSON.stringify(metadata),
-      ],
-    )
+        [
+          tenantName,
+          slug,
+          options.clerkOrganization.id,
+          options.clerkOrganization.slug || null,
+          JSON.stringify(metadata),
+        ],
+      )
     : await client.query(
-      `INSERT INTO shared.empresas (name, slug, status, metadata, updated_at)
+        `INSERT INTO shared.empresas (name, slug, status, metadata, updated_at)
        VALUES ($1, $2, 'active', $3::jsonb, now())
        ON CONFLICT (slug)
        DO UPDATE SET
          updated_at = now()
        RETURNING id, name, slug`,
-      [tenantName, slug, JSON.stringify(metadata)],
-    )
-  const tenant = tenantResult.rows[0] as TenantRow
+        [tenantName, slug, JSON.stringify(metadata)],
+      );
+  const tenant = tenantResult.rows[0] as TenantRow;
 
   await client.query(
     `INSERT INTO shared.usuarios_empresas
@@ -328,25 +375,27 @@ async function createInitialTenant(
       tenant.id,
       sharedUserId,
       options.clerkOrganization?.id || null,
-      options.clerkOrganization ? 'org:admin' : null,
+      options.clerkOrganization ? "org:admin" : null,
       JSON.stringify({
         clerkOrganizationId: options.clerkOrganization?.id || null,
-        createdBy: 'clerk_bootstrap',
-        source: options.clerkOrganization ? 'clerk_organization' : 'clerk',
-        onboardingRole: 'owner',
+        createdBy: "clerk_bootstrap",
+        source: options.clerkOrganization ? "clerk_organization" : "clerk",
+        onboardingRole: "owner",
       }),
     ],
-  )
+  );
 
   return {
     clerkMembershipId: null,
-    clerkOrganizationId: tenant.clerk_organization_id || options.clerkOrganization?.id || null,
-    clerkOrganizationSlug: tenant.clerk_organization_slug || options.clerkOrganization?.slug || null,
+    clerkOrganizationId:
+      tenant.clerk_organization_id || options.clerkOrganization?.id || null,
+    clerkOrganizationSlug:
+      tenant.clerk_organization_slug || options.clerkOrganization?.slug || null,
     tenantId: Number(tenant.id),
     tenantName: tenant.name,
     tenantSlug: tenant.slug,
-    role: 'owner',
-  }
+    role: "owner",
+  };
 }
 
 function buildBootstrapResult(
@@ -355,8 +404,11 @@ function buildBootstrapResult(
   memberships: AuthTenantMembership[],
 ): ClerkTenantBootstrapResult {
   const activeTenant = profile.clerkOrganizationId
-    ? memberships.find((membership) => membership.clerkOrganizationId === profile.clerkOrganizationId) || null
-    : memberships[0] || null
+    ? memberships.find(
+        (membership) =>
+          membership.clerkOrganizationId === profile.clerkOrganizationId,
+      ) || null
+    : memberships[0] || null;
   return {
     clerkUserId: profile.clerkUserId,
     sharedUserId,
@@ -366,110 +418,149 @@ function buildBootstrapResult(
     memberships,
     needsOnboarding: memberships.length === 0,
     activeTenant,
-  }
+  };
 }
 
 export async function ensureClerkTenantBootstrap(): Promise<ClerkTenantBootstrapResult | null> {
-  const profile = await getCurrentClerkProfile()
-  if (!profile) return null
+  const profile = await getCurrentClerkProfile();
+  if (!profile) return null;
 
   return withTransaction(async (client) => {
-    const user = await syncSharedUser(client, profile)
-    const sharedUserId = Number(user.id)
-    const memberships = await listMemberships(client, sharedUserId)
+    const user = await syncSharedUser(client, profile);
+    const sharedUserId = Number(user.id);
+    for (const company of (
+      await client.query(
+        "SELECT m.empresa_id FROM shared.usuarios_empresas m WHERE m.usuario_id=$1 AND m.status='active' AND EXISTS(SELECT 1 FROM shared.convites_empresa i WHERE i.empresa_id=m.empresa_id AND i.status='accepted' AND i.acesso_portal_contador AND i.metadata->>'portalAccessApplied' IS DISTINCT FROM 'true') ORDER BY m.empresa_id",
+        [sharedUserId],
+      )
+    ).rows)
+      await applyPortalInvitations(client, Number(company.empresa_id));
+    const memberships = await listMemberships(client, sharedUserId);
 
-    return buildBootstrapResult(profile, sharedUserId, memberships)
-  })
+    return buildBootstrapResult(profile, sharedUserId, memberships);
+  });
 }
 
-export async function createClerkOnboardingTenant(companyName: string): Promise<ClerkTenantBootstrapResult | null> {
-  const profile = await getCurrentClerkProfile()
-  if (!profile) return null
+export async function createClerkOnboardingTenant(
+  companyName: string,
+): Promise<ClerkTenantBootstrapResult | null> {
+  const profile = await getCurrentClerkProfile();
+  if (!profile) return null;
 
   const initialState = await withTransaction(async (client) => {
-    const user = await syncSharedUser(client, profile)
-    const sharedUserId = Number(user.id)
-    const memberships = await listMemberships(client, sharedUserId)
-    return buildBootstrapResult(profile, sharedUserId, memberships)
-  })
+    const user = await syncSharedUser(client, profile);
+    const sharedUserId = Number(user.id);
+    const memberships = await listMemberships(client, sharedUserId);
+    return buildBootstrapResult(profile, sharedUserId, memberships);
+  });
 
-  if (!initialState.needsOnboarding) return initialState
+  if (!initialState.needsOnboarding) return initialState;
 
-  const tenantName = companyName ? normalizeCompanyName(companyName) : getTenantName(profile)
-  const baseSlug = slugify(tenantName)
-  const suffix = profile.clerkUserId.slice(-8).toLowerCase().replace(/[^a-z0-9]+/g, '')
-  const slug = `${baseSlug}-${suffix || initialState.sharedUserId}`
+  const tenantName = companyName
+    ? normalizeCompanyName(companyName)
+    : getTenantName(profile);
+  const baseSlug = slugify(tenantName);
+  const suffix = profile.clerkUserId
+    .slice(-8)
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "");
+  const slug = `${baseSlug}-${suffix || initialState.sharedUserId}`;
   const organization = await createClerkOrganization({
     createdByClerkUserId: profile.clerkUserId,
     name: tenantName,
     privateMetadata: {
       ownerClerkUserId: profile.clerkUserId,
-      source: 'cognito_onboarding',
+      source: "cognito_onboarding",
     },
     publicMetadata: {
-      app: 'cognito',
+      app: "cognito",
     },
     slug,
-  })
+  });
 
   const state = await withTransaction(async (client) => {
-    const user = await syncSharedUser(client, profile)
-    const sharedUserId = Number(user.id)
-    let memberships = await listMemberships(client, sharedUserId)
+    const user = await syncSharedUser(client, profile);
+    const sharedUserId = Number(user.id);
+    let memberships = await listMemberships(client, sharedUserId);
 
     if (!memberships.length) {
-      memberships = [await createInitialTenant(client, sharedUserId, profile, {
-        clerkOrganization: organization,
-        tenantName,
-      })]
+      memberships = [
+        await createInitialTenant(client, sharedUserId, profile, {
+          clerkOrganization: organization,
+          tenantName,
+        }),
+      ];
     }
 
-    return buildBootstrapResult(profile, sharedUserId, memberships)
-  })
+    return buildBootstrapResult(profile, sharedUserId, memberships);
+  });
 
-  const tenantId = state.activeTenant?.tenantId
+  const tenantId = state.activeTenant?.tenantId;
   if (tenantId) {
     await updateClerkOrganizationMetadata({
       organizationId: organization.id,
       privateMetadata: {
         ownerClerkUserId: profile.clerkUserId,
-        source: 'cognito_onboarding',
+        source: "cognito_onboarding",
         tenantId,
       },
       publicMetadata: {
-        app: 'cognito',
+        app: "cognito",
       },
-    }).catch(() => undefined)
+    }).catch(() => undefined);
   }
 
-  return state
+  return state;
 }
 
-export async function syncClerkProfile(profile: ClerkProfileInput): Promise<ClerkTenantBootstrapResult> {
-  return withTransaction(client => syncClerkProfileWithClient(client,profile))
+export async function syncClerkProfile(
+  profile: ClerkProfileInput,
+): Promise<ClerkTenantBootstrapResult> {
+  return withTransaction((client) =>
+    syncClerkProfileWithClient(client, profile),
+  );
 }
 
-export async function syncClerkProfileWithClient(client: Pick<SQLClient,'query'>,profile: ClerkProfileInput): Promise<ClerkTenantBootstrapResult> {
-    const user = await syncSharedUser(client, profile)
-    const sharedUserId = Number(user.id)
-    const memberships = await listMemberships(client, sharedUserId)
-    return buildBootstrapResult(profile, sharedUserId, memberships)
+export async function syncClerkProfileWithClient(
+  client: Pick<SQLClient, "query">,
+  profile: ClerkProfileInput,
+): Promise<ClerkTenantBootstrapResult> {
+  const user = await syncSharedUser(client, profile);
+  const sharedUserId = Number(user.id);
+  const memberships = await listMemberships(client, sharedUserId);
+  return buildBootstrapResult(profile, sharedUserId, memberships);
 }
 
-export async function markClerkUserDeleted(clerkUserId: string): Promise<boolean> {
-  return withTransaction(client=>markClerkUserDeletedWithClient(client,clerkUserId))
+export async function markClerkUserDeleted(
+  clerkUserId: string,
+): Promise<boolean> {
+  return withTransaction((client) =>
+    markClerkUserDeletedWithClient(client, clerkUserId),
+  );
 }
 
-export async function markClerkUserDeletedWithClient(client: Pick<SQLClient,'query'>,clerkUserId: string): Promise<boolean> {
-  const id = toText(clerkUserId)
-  if (!id) return false
+export async function markClerkUserDeletedWithClient(
+  client: Pick<SQLClient, "query">,
+  clerkUserId: string,
+): Promise<boolean> {
+  const id = toText(clerkUserId);
+  if (!id) return false;
 
   {
-    const existing=await client.query('SELECT id FROM shared.usuarios WHERE clerk_user_id=$1',[id])
-    const userId=existing.rows[0]?.id
-    if(!userId)return false
-    await client.query("UPDATE shared.empresas e SET status='suspended',updated_at=now() WHERE e.status='active' AND EXISTS(SELECT 1 FROM shared.usuarios_empresas m WHERE m.empresa_id=e.id AND m.usuario_id=$1 AND m.role='owner' AND m.status='active') AND NOT EXISTS(SELECT 1 FROM shared.usuarios_empresas m JOIN shared.usuarios u ON u.id=m.usuario_id WHERE m.empresa_id=e.id AND m.usuario_id<>$1 AND m.role='owner' AND m.status='active' AND u.status='active')",[userId])
-    await client.query("UPDATE shared.usuarios SET status='disabled',metadata=metadata||jsonb_build_object('clerkDeleted',true,'clerkDeletedAt',now()),updated_at=now() WHERE id=$1",[userId])
+    const existing = await client.query(
+      "SELECT id FROM shared.usuarios WHERE clerk_user_id=$1",
+      [id],
+    );
+    const userId = existing.rows[0]?.id;
+    if (!userId) return false;
+    await client.query(
+      "UPDATE shared.empresas e SET status='suspended',updated_at=now() WHERE e.status='active' AND EXISTS(SELECT 1 FROM shared.usuarios_empresas m WHERE m.empresa_id=e.id AND m.usuario_id=$1 AND m.role='owner' AND m.status='active') AND NOT EXISTS(SELECT 1 FROM shared.usuarios_empresas m JOIN shared.usuarios u ON u.id=m.usuario_id WHERE m.empresa_id=e.id AND m.usuario_id<>$1 AND m.role='owner' AND m.status='active' AND u.status='active')",
+      [userId],
+    );
+    await client.query(
+      "UPDATE shared.usuarios SET status='disabled',metadata=metadata||jsonb_build_object('clerkDeleted',true,'clerkDeletedAt',now()),updated_at=now() WHERE id=$1",
+      [userId],
+    );
 
     await client.query(
       `UPDATE shared.usuarios_empresas
@@ -480,7 +571,7 @@ export async function markClerkUserDeletedWithClient(client: Pick<SQLClient,'que
        WHERE usuario_id = $1
          AND status = 'active'`,
       [userId],
-    )
-    return true
+    );
+    return true;
   }
 }
