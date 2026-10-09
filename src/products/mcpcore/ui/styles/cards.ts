@@ -53,7 +53,7 @@ details.tech .kv{margin-top:10px}
 .fields dt{color:var(--muted)}.fields dd{margin:0;font-weight:var(--w-med);overflow-wrap:anywhere}
 
 .metrics{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:8px;margin:12px 0}
-.metric{padding:10px 12px;border:1px solid var(--line);border-radius:var(--radius);background:var(--surface)}
+.metric{padding:10px 12px;border:1px solid color-mix(in srgb,var(--line) 55%,transparent);border-radius:var(--radius);background:var(--surface)}
 .metric span{display:block;color:var(--muted);font-size:var(--fs-xs)}
 .metric strong{display:block;font-size:var(--fs-md);font-weight:var(--w-semi);margin-top:2px}
 .metric.emphasis{border-color:var(--ink)}
@@ -84,7 +84,7 @@ tr.total td{font-weight:var(--w-semi);border-top:1px solid var(--line)}
 .notice.slim{padding:5px 10px;font-size:var(--fs-xs);margin:10px 0}
 
 .actions,.toolbar,.pager{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin:14px 0 2px}
-button,input,select{font:inherit;color:var(--ink);border:1px solid var(--line);border-radius:var(--radius-sm);padding:7px 14px;background:var(--surface)}
+button,input,select{font:inherit;color:var(--ink);border:1px solid color-mix(in srgb,var(--line) 70%,transparent);border-radius:var(--radius-sm);padding:7px 14px;background:var(--surface)}
 button{cursor:pointer;font-weight:var(--w-med);transition:background .12s,border-color .12s}
 button:hover{background:var(--soft)}
 button.primary{background:var(--action);border-color:var(--action);color:var(--on-action)}
