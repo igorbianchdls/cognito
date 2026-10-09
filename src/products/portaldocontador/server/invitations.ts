@@ -14,8 +14,11 @@ import type { AuthTenantContext } from "@/products/auth/shared/authContracts";
 import type { PortalInvitation } from "../shared/contracts";
 import { clerkClient } from "@clerk/nextjs/server";
 
-export async function portalManager() {
-  const actor = await resolveAuthTenant({ access: "manage" });
+export async function portalManager(companyId: number) {
+  const actor = await resolveAuthTenant({
+    access: "manage",
+    requestedTenantId: companyId,
+  });
   if (!actor?.clerkOrganizationId)
     throw new ErpDomainError(
       "ACCESS_DENIED",
@@ -91,7 +94,7 @@ export async function inviteAccountant(
   actor: AuthTenantContext,
   email: string,
 ) {
-  await withTransaction(async (client) => {
+  const requestedAt = await withTransaction(async (client) => {
     await lockManager(client, actor);
     const existing = await client.query(
       `SELECT u.id FROM shared.usuarios u JOIN shared.usuarios_empresas m ON m.usuario_id=u.id WHERE m.empresa_id=$1 AND lower(u.email::text)=lower($2)`,
@@ -113,6 +116,15 @@ export async function inviteAccountant(
         "Já existe um convite pendente para este e-mail.",
         409,
       );
+    // Horário do banco, anterior à chamada externa. O vínculo pode chegar pelo
+    // webhook antes que a resposta do Clerk e o convite sejam persistidos aqui.
+    const result = await client.query(
+      "SELECT clock_timestamp() AS requested_at",
+    );
+    const value = result.rows[0].requested_at;
+    return (
+      value instanceof Date ? value : new Date(String(value))
+    ).toISOString();
   });
   const origin = new URL(
     process.env.NEXT_PUBLIC_APP_URL ||
@@ -130,10 +142,10 @@ export async function inviteAccountant(
       await lockManager(client, actor);
       await client.query(
         `INSERT INTO shared.convites_empresa(empresa_id,email,role,perfil_acesso_id,status,convidado_por,clerk_organization_id,clerk_invitation_id,expira_em,acesso_portal_contador,metadata)
-        VALUES($1,$2,'viewer','contador','pending',$3,$4,$5,$6,true,'{"portalInvitationManaged":true}'::jsonb)
+        VALUES($1,$2,'viewer','contador','pending',$3,$4,$5,$6,true,jsonb_build_object('portalInvitationManaged',true,'portalRequestedAt',$7::text))
         ON CONFLICT(clerk_invitation_id) DO UPDATE SET role='viewer',perfil_acesso_id='contador',convidado_por=$3,
         acesso_portal_contador=CASE WHEN shared.convites_empresa.metadata->>'portalRevokedLocally'='true' THEN false ELSE true END,
-        metadata=shared.convites_empresa.metadata||'{"portalInvitationManaged":true}'::jsonb,updated_at=now()`,
+        metadata=shared.convites_empresa.metadata||jsonb_build_object('portalInvitationManaged',true,'portalRequestedAt',$7::text),updated_at=now()`,
         [
           actor.tenantId,
           email,
@@ -143,6 +155,7 @@ export async function inviteAccountant(
           invitation.expires_at
             ? new Date(invitation.expires_at).toISOString()
             : null,
+          requestedAt,
         ],
       );
       await applyPortalInvitations(client, actor.tenantId);

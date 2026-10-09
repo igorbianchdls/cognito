@@ -42,6 +42,7 @@ export const portalQuerySchema = z
 export type PortalQuery = z.infer<typeof portalQuerySchema>;
 export const portalInvitationSchema = z
   .object({
+    companyId: z.number().int().positive().max(Number.MAX_SAFE_INTEGER),
     email: z
       .string()
       .trim()
@@ -52,6 +53,7 @@ export const portalInvitationSchema = z
   .strict();
 export const portalRevokeSchema = z
   .object({
+    companyId: z.number().int().positive().max(Number.MAX_SAFE_INTEGER),
     invitationId: z.coerce
       .number()
       .int()

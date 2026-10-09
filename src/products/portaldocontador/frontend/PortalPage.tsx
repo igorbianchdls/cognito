@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { UserButton } from "@clerk/nextjs";
@@ -22,6 +22,9 @@ import type {
   PortalColumn,
 } from "../shared/contracts";
 
+import { portalFetch } from "./portalHttp";
+import { usePortalResource } from "./usePortalResource";
+
 const sections = [
   { id: "resumo", name: "Visão geral", icon: ChartNoAxesCombined },
   { id: "financeiro", name: "Financeiro", icon: Wallet },
@@ -29,18 +32,6 @@ const sections = [
   { id: "relatorios", name: "Relatórios", icon: ChartNoAxesCombined },
   { id: "pendencias", name: "Pendências", icon: ListChecks },
 ] as const;
-export async function portalFetch(url: string, init: RequestInit = {}) {
-  const response = await fetch(url, { cache: "no-store", ...init });
-  if (!response.ok) {
-    const body = await response.json().catch(() => ({}));
-    throw new Error(
-      body.error?.message ||
-        body.error ||
-        "Não foi possível concluir a consulta.",
-    );
-  }
-  return response;
-}
 function cell(value: unknown, column: PortalColumn) {
   if (value == null) return "—";
   if (column.format === "currency")
@@ -72,16 +63,36 @@ export function PortalPage({
   const router = useRouter(),
     search = useSearchParams(),
     searchKey = search.toString();
-  const [companies, setCompanies] = useState<PortalCompany[] | null>(null),
-    [error, setError] = useState(""),
-    [busy, setBusy] = useState(false),
-    [revision, setRevision] = useState(0);
-  const [data, setData] = useState<{
-      table?: PortalTable;
-      dashboard?: DashboardResponse;
-    } | null>(null),
+  const [revision, setRevision] = useState(0),
     [downloading, setDownloading] = useState(false);
+  const [downloadError, setDownloadError] = useState<{
+    key: string;
+    message: string;
+  } | null>(null);
+  const companiesResource = usePortalResource<{ companies: PortalCompany[] }>(
+    "/api/contador/empresas",
+    revision,
+  );
+  const companies = companiesResource.data?.companies ?? null;
   const company = companies?.find((c) => c.id === companyId);
+  const resource = usePortalResource<{
+    table?: PortalTable;
+    dashboard?: DashboardResponse;
+  }>(
+    companyId && company
+      ? `/api/contador/empresas/${companyId}/${section}?${searchKey}`
+      : null,
+    revision,
+  );
+  const data = resource.data;
+  const busy = companiesResource.loading || resource.loading;
+  const error =
+    companiesResource.error ||
+    resource.error ||
+    (downloadError?.key === resource.key ? downloadError.message : "");
+  function setError(message: string) {
+    setDownloadError({ key: resource.key, message });
+  }
   const today = company
     ? new Intl.DateTimeFormat("en-CA", {
         timeZone: company.timeZone,
@@ -95,36 +106,6 @@ export function PortalPage({
   const side = search.get("side") || "pagar",
     report = search.get("report") || "fluxo-de-caixa",
     query = search.get("query") || "";
-  useEffect(() => {
-    const abort = new AbortController();
-    setError("");
-    portalFetch("/api/contador/empresas", { signal: abort.signal })
-      .then((r) => r.json())
-      .then((r) => setCompanies(r.companies))
-      .catch((e) => {
-        if (!abort.signal.aborted) setError(e.message);
-      });
-    return () => abort.abort();
-  }, [revision]);
-  useEffect(() => {
-    if (!companyId || !company) return;
-    const abort = new AbortController();
-    setData(null);
-    setError("");
-    setBusy(true);
-    portalFetch(`/api/contador/empresas/${companyId}/${section}?${searchKey}`, {
-      signal: abort.signal,
-    })
-      .then((r) => r.json())
-      .then(setData)
-      .catch((e) => {
-        if (!abort.signal.aborted) setError(e.message);
-      })
-      .finally(() => {
-        if (!abort.signal.aborted) setBusy(false);
-      });
-    return () => abort.abort();
-  }, [companyId, company, section, searchKey, revision]);
   function change(values: Record<string, string>) {
     const params = new URLSearchParams(searchKey);
     params.delete("page");

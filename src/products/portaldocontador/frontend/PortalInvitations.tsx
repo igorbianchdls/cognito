@@ -1,7 +1,7 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { portalFetch } from "./PortalPage";
+import { portalFetch } from "./portalHttp";
 import type { PortalInvitation } from "../shared/contracts";
 import "./portal.css";
 
@@ -12,43 +12,57 @@ const labels: Record<string, string> = {
   expired: "Expirado",
 };
 export function PortalInvitations({ companyId }: { companyId: number }) {
+  return <CompanyInvitations key={companyId} companyId={companyId} />;
+}
+function CompanyInvitations({ companyId }: { companyId: number }) {
   const [rows, setRows] = useState<PortalInvitation[]>([]),
     [email, setEmail] = useState(""),
     [busy, setBusy] = useState(false),
     [error, setError] = useState(""),
     [loaded, setLoaded] = useState(false);
+  const active = useRef(true);
   useEffect(() => {
+    active.current = true;
     const abort = new AbortController();
-    portalFetch("/api/contador/convites", { signal: abort.signal })
+    portalFetch(`/api/contador/convites?companyId=${companyId}`, {
+      signal: abort.signal,
+    })
       .then((r) => r.json())
       .then((r) => {
+        if (abort.signal.aborted) return;
         setRows(r.invitations);
         setLoaded(true);
       })
       .catch((e) => {
         if (!abort.signal.aborted) setError(e.message);
       });
-    return () => abort.abort();
+    return () => {
+      active.current = false;
+      abort.abort();
+    };
   }, [companyId]);
-  async function update(method: string, body: unknown) {
+  async function update(method: string, body: Record<string, unknown>) {
     setBusy(true);
     setError("");
     try {
       const response = await portalFetch("/api/contador/convites", {
         method,
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(body),
+        body: JSON.stringify({ ...body, companyId }),
       });
-      setRows((await response.json()).invitations);
+      const result = await response.json();
+      if (!active.current) return;
+      setRows(result.invitations);
       setEmail("");
     } catch (e) {
+      if (!active.current) return;
       setError(
         e instanceof Error
           ? e.message
           : "Não foi possível atualizar os convites.",
       );
     } finally {
-      setBusy(false);
+      if (active.current) setBusy(false);
     }
   }
   return (

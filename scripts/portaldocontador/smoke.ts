@@ -139,6 +139,42 @@ async function main() {
         },
       );
       await check(
+        "Financial pagination respects small sizes without gaps or duplicates",
+        async () => {
+          for (const side of ["pagar", "receber"] as const) {
+            const reference = await portalFinancial(session, {
+              ...q,
+              side,
+              page: 1,
+              pageSize: 20,
+            });
+            const records = [];
+            for (let page = 1; page <= 5; page++) {
+              const result = await portalFinancial(session, {
+                ...q,
+                side,
+                page,
+                pageSize: 3,
+              });
+              assert.equal(result.page, page);
+              assert.equal(result.pageSize, 3);
+              assert.equal(result.records.length, 3);
+              assert.equal(result.total, reference.total);
+              records.push(...result.records);
+            }
+            assert.deepEqual(records, reference.records.slice(0, 15));
+            const one = await portalFinancial(session, {
+              ...q,
+              side,
+              page: 2,
+              pageSize: 1,
+            });
+            assert.equal(one.records.length, 1);
+            assert.deepEqual(one.records[0], reference.records[1]);
+          }
+        },
+      );
+      await check(
         "Payments, documents, DRE, cash flow and pending rows execute with RLS",
         async () => {
           for (const result of [

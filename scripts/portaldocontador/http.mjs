@@ -125,7 +125,8 @@ try {
         assert.equal(result.company.id, 2);
         assert(result.table.columns.length);
         assert(Number.isInteger(result.table.total));
-        assert(result.table.records.length <= result.table.pageSize);
+        assert.equal(result.table.pageSize, 2);
+        assert(result.table.records.length <= 2);
       }
     },
   );
@@ -230,12 +231,27 @@ try {
   await check(
     "Invitation management validates input and origin without sending real emails",
     async () => {
-      const invites = await (await request("/api/contador/convites")).json();
+      const invites = await (
+        await request("/api/contador/convites?companyId=2")
+      ).json();
       assert(Array.isArray(invites.invitations));
+      await request("/api/contador/convites", 422);
+      await request("/api/contador/convites?companyId=1", 403);
+      for (const method of ["POST", "DELETE"]) {
+        await request("/api/contador/convites", 403, {
+          method,
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(
+            method === "POST"
+              ? { companyId: 1, email: "review@example.invalid" }
+              : { companyId: 1, invitationId: 9007199254740991 },
+          ),
+        });
+      }
       await request("/api/contador/convites", 422, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email: "invalid" }),
+        body: JSON.stringify({ companyId: 2, email: "invalid" }),
       });
       await request("/api/contador/convites", 403, {
         method: "POST",
@@ -248,7 +264,7 @@ try {
       await request("/api/contador/convites", 409, {
         method: "DELETE",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ invitationId: 9007199254740991 }),
+        body: JSON.stringify({ companyId: 2, invitationId: 9007199254740991 }),
       });
     },
   );

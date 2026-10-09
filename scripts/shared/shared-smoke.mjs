@@ -11,6 +11,7 @@ import {applyRecentMigrations} from '../erp/phase0-migrations.mjs'
 
 const root=resolve('.'),require=createRequire(import.meta.url),modules=new Map(),checks=[]
 let tail=Promise.resolve(),externalFailure=false,externalCalls=0,insideTransaction=false
+let onInvitationCreate=null,invitationResponseId="local_membership"
 class LocalPool{
  async connect(){const previous=tail;let unlock;tail=new Promise(r=>{unlock=r});await previous
   return {async query(sql,params){if(sql==='BEGIN')insideTransaction=true;if(['COMMIT','ROLLBACK'].includes(sql))insideTransaction=false;try{return await db.query(sql,params)}catch(error){console.error('Local DB diagnostic:',error.code,error.message);throw error}},release(){unlock()}}
@@ -39,7 +40,8 @@ globalThis.fetch=async(url,options)=>{
  externalCalls++;if(externalFailure)throw new Error('Simulated network failure')
  const payload=JSON.parse(options.body||'{}')
  if(String(url).endsWith('/metadata'))assert(['owner','admin','member','viewer'].includes(payload.public_metadata.appRole))
- return Response.json({id:'local_membership'})
+ if(String(url).endsWith("/invitations")&&onInvitationCreate)await onInvitationCreate()
+ return Response.json({id:invitationResponseId})
 }
 async function check(name,test){await test();checks.push(name);console.log('Passed: '+name)}
 async function rejectedSQL(sql,code='23514'){
@@ -207,6 +209,68 @@ try{
   await postgres.withTransaction(client=>sync.syncClerkOrganizationInvitation(client,{id:'local_membership',organization_id:'org_a',email_address:'newaccountant@example.invalid',status:'pending',role:'org:member'}))
   assert.equal((await db.query('SELECT status FROM shared.convites_empresa WHERE id=$1',[row.id])).rows[0].status,'revoked')
  })
+  await check(
+    "Fast invitation acceptance before the API response still assigns accountant profile",
+    async () => {
+      const manager = load("@/products/portaldocontador/server/invitations"),
+        actor = {
+          tenantId: 1,
+          sharedUserId: 1,
+          role: "owner",
+          clerkOrganizationId: "org_a",
+          clerkUserId: "user_owner",
+        };
+      await db.query(
+        "INSERT INTO shared.usuarios(id,email,clerk_user_id,metadata) VALUES(600,'fast@example.invalid','user_600','{\"emailVerified\":true}')",
+      );
+      invitationResponseId = "fast_invitation";
+      onInvitationCreate = () =>
+        postgres.withTransaction(async (client) => {
+          await sync.syncClerkOrganizationMembership(client, {
+            id: "om_600",
+            organization: { id: "org_a" },
+            public_user_data: {
+              user_id: "user_600",
+              identifier: "fast@example.invalid",
+            },
+            role: "org:member",
+          });
+          await sync.syncClerkOrganizationInvitation(client, {
+            id: "fast_invitation",
+            organization_id: "org_a",
+            email_address: "fast@example.invalid",
+            status: "accepted",
+            role: "org:member",
+          });
+        });
+      try {
+        await manager.inviteAccountant(actor, "fast@example.invalid");
+      } finally {
+        onInvitationCreate = null;
+        invitationResponseId = "local_membership";
+      }
+      assert.deepEqual(
+        (
+          await db.query(
+            "SELECT role,perfil_acesso_id,acesso_portal_contador FROM shared.usuarios_empresas WHERE empresa_id=1 AND usuario_id=600",
+          )
+        ).rows[0],
+        {
+          role: "viewer",
+          perfil_acesso_id: "contador",
+          acesso_portal_contador: true,
+        },
+      );
+      assert.equal(
+        (
+          await db.query(
+            "SELECT metadata->>'portalAccessApplied' applied FROM shared.convites_empresa WHERE clerk_invitation_id='fast_invitation'",
+          )
+        ).rows[0].applied,
+        "true",
+      );
+    },
+  );
  await check('All shared tables remain inaccessible to client and ERP runtime roles',async()=>{
   const tables=(await db.query("SELECT tablename FROM pg_tables WHERE schemaname='shared'")).rows
   for(const role of ['anon','authenticated','erp_runtime'])for(const {tablename} of tables){await db.exec('BEGIN;SET LOCAL ROLE '+role);try{await assert.rejects(db.query('SELECT * FROM shared.'+tablename),e=>e.code==='42501')}finally{await db.exec('ROLLBACK')}}

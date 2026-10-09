@@ -82,12 +82,16 @@ export async function portalFinancial(
       "data DESC,id DESC",
     );
   }
-  const data = await erpReadService.page(
-    s.tenantId,
-    q.side === "pagar" ? "contas-a-pagar" : "contas-a-receber",
-    {
-      page: q.page,
-      pageSize: q.pageSize,
+  const data = await runWithErpReadSnapshot(async () => {
+    // O serviço ERP usa páginas mínimas de 10. Adapte o recorte para cumprir
+    // também os tamanhos menores aceitos pelo contrato público do portal.
+    const size = Math.max(10, q.pageSize),
+      offset = (q.page - 1) * q.pageSize;
+    const firstPage = Math.floor(offset / size) + 1,
+      within = offset % size;
+    const input = {
+      page: firstPage,
+      pageSize: size,
       query: q.query,
       filters: {
         vencimento_inicio: q.from,
@@ -95,8 +99,22 @@ export async function portalFinancial(
         tipo_lancamento: "efetivo",
       },
       sort: "vencimento",
-    },
-  );
+    };
+    const entity = q.side === "pagar" ? "contas-a-pagar" : "contas-a-receber";
+    const first = await erpReadService.page(s.tenantId, entity, input);
+    const records: Record<string, unknown>[] = first.records.slice(
+      within,
+      within + q.pageSize,
+    );
+    if (records.length < q.pageSize && offset + records.length < first.total) {
+      const next = await erpReadService.page(s.tenantId, entity, {
+        ...input,
+        page: firstPage + 1,
+      });
+      records.push(...next.records.slice(0, q.pageSize - records.length));
+    }
+    return { ...first, records, page: q.page, pageSize: q.pageSize };
+  });
   return {
     ...data,
     columns: [

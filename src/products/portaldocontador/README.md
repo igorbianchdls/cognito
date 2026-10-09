@@ -25,6 +25,8 @@ Configurações → Membros oferece liberação de usuários existentes e convit
 
 A liberação exige convite aceito, e-mail verificado e vínculo ativo na mesma organização. A aplicação ocorre uma vez, independentemente da ordem dos eventos de aceitação e vínculo. Atualizações do Clerk preservam perfil e concessões locais. Revogar um convite pendente impede a liberação local imediatamente; a operação externa usa a fila durável existente e suas retentativas. Para revogar um convite já aceito, remova o acesso do membro nas configurações.
 
+O início do pedido é registrado pelo relógio do banco em `metadata.portalRequestedAt`, antes da chamada ao Clerk. Isso permite reconhecer um novo vínculo mesmo quando os eventos de aceitação chegam antes da resposta de criação do convite, preservando as escolhas locais de membros que já existiam.
+
 Chamadas externas de criação e revogação ocorrem fora da transação do banco. Os testes locais usam identidades fictícias e não enviam convites reais.
 
 ## Consultas e documentos
@@ -42,9 +44,11 @@ Os PDFs simulados são identificados como **SIMULAÇÃO SEM VALIDADE FISCAL**. D
 
 `GET /api/contador/empresas` lista empresas liberadas. `GET /api/contador/empresas/:id/:recurso` aceita `resumo`, `financeiro`, `documentos`, `relatorios`, `pendencias` e `exportar`. Filtros: `from`, `to`, `query`, `page`, `pageSize`, `side`, `report`, `source`. Datas válidas, intervalo máximo de 366 dias e paginação de até 100 itens. Exportações usam `source` e todos os filtros, até 5.000 linhas, em um snapshot consistente. CSV UTF-8 com BOM, separador `;` e proteção contra fórmulas em células textuais.
 
-`GET /api/contador/empresas/:id/documentos/arquivo::id` ou `nfse::id` baixa documentos. `GET/POST/DELETE /api/contador/convites` gerencia convites da empresa ativa, exclusivamente por administradores.
+`GET /api/contador/empresas/:id/documentos/arquivo::id` ou `nfse::id` baixa documentos. `GET/POST/DELETE /api/contador/convites` gerencia convites, exclusivamente por administradores. A empresa exibida é obrigatória e validada no servidor: `companyId` na query do GET e no corpo JSON do POST/DELETE. A organização ativa da sessão não substitui essa escolha.
 
 Respostas não ficam em cache e incluem identificador de correlação. Não expõem detalhes internos de falhas.
+
+A interface associa cada resposta à empresa, aos filtros e à atualização que a originou. Trocar de empresa ou atualizar o acesso remove os dados anteriores imediatamente; respostas canceladas não reaparecem na tela. A paginação financeira respeita qualquer tamanho entre 1 e 100, adaptando o mínimo interno do ERP sem repetir ou pular registros.
 
 ## Banco e validação
 

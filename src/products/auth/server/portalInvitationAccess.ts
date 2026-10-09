@@ -1,4 +1,6 @@
 import type { SQLClient } from "@/lib/postgres";
+const timestamp = (value: unknown) =>
+  value instanceof Date ? value.getTime() : Date.parse(String(value));
 
 /** Aplicação única do convite local; aceitação e vínculo podem chegar em qualquer ordem. */
 export async function applyPortalInvitations(
@@ -9,7 +11,7 @@ export async function applyPortalInvitations(
     companyId,
   ]);
   const candidates = await client.query(
-    `SELECT i.id,i.created_at,i.convidado_por,m.usuario_id,m.created_at AS member_created,m.role,m.perfil_acesso_id,m.metadata
+    `SELECT i.id,i.created_at,i.metadata->>'portalRequestedAt' AS portal_requested_at,i.convidado_por,m.usuario_id,m.created_at AS member_created,m.role,m.perfil_acesso_id,m.metadata
     FROM shared.convites_empresa i JOIN shared.usuarios u ON lower(u.email::text)=lower(i.email::text)
     JOIN shared.usuarios_empresas m ON m.empresa_id=i.empresa_id AND m.usuario_id=u.id
     WHERE i.empresa_id=$1 AND i.acesso_portal_contador AND i.status='accepted'
@@ -28,8 +30,8 @@ export async function applyPortalInvitations(
     // Uma escolha local posterior tem prioridade, inclusive a escolha de negar acesso.
     if (metadata.portalAccessManaged !== true) {
       const newMember =
-        new Date(String(row.member_created)) >=
-          new Date(String(row.created_at)) &&
+        timestamp(row.member_created) >=
+          timestamp(row.portal_requested_at || row.created_at) &&
         !metadata.accessRoleManaged &&
         !["owner", "admin"].includes(String(row.role));
       await client.query(

@@ -6,11 +6,7 @@ import {
   portalPending,
 } from "../server/queries";
 import { portalCsv, PORTAL_EXPORT_LIMIT } from "../server/csv";
-import {
-  portalQuerySchema,
-  type PortalQuery,
-  type PortalTable,
-} from "../shared/contracts";
+import { portalQuerySchema, type PortalTable } from "../shared/contracts";
 import { loadDashboard } from "@/products/erp/server/dashboards/dashboardService";
 import { dashboardToday } from "@/products/erp/shared/dashboardContracts";
 import { attachmentDownload } from "@/products/erp/server/erpAttachments";

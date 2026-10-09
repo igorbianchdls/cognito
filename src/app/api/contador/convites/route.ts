@@ -1,6 +1,7 @@
 import {
   portalResponse,
   portalBody,
+  portalId,
 } from "@/products/portaldocontador/api/http";
 import {
   portalManager,
@@ -15,10 +16,14 @@ import {
 import { ErpDomainError } from "@/products/erp/shared/erpErrors";
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
-export const GET = () =>
+export const GET = (request: Request) =>
   portalResponse(async () =>
     Response.json({
-      invitations: await listPortalInvitations(await portalManager()),
+      invitations: await listPortalInvitations(
+        await portalManager(
+          portalId(new URL(request.url).searchParams.get("companyId") || ""),
+        ),
+      ),
     }),
   );
 function checkOrigin(request: Request) {
@@ -29,8 +34,10 @@ function checkOrigin(request: Request) {
 export const POST = (request: Request) =>
   portalResponse(async () => {
     checkOrigin(request);
-    const actor = await portalManager();
-    const { email } = portalInvitationSchema.parse(await portalBody(request));
+    const { email, companyId } = portalInvitationSchema.parse(
+      await portalBody(request),
+    );
+    const actor = await portalManager(companyId);
     return Response.json(
       { invitations: await inviteAccountant(actor, email) },
       { status: 201 },
@@ -39,10 +46,10 @@ export const POST = (request: Request) =>
 export const DELETE = (request: Request) =>
   portalResponse(async () => {
     checkOrigin(request);
-    const actor = await portalManager();
-    const { invitationId } = portalRevokeSchema.parse(
+    const { invitationId, companyId } = portalRevokeSchema.parse(
       await portalBody(request),
     );
+    const actor = await portalManager(companyId);
     return Response.json({
       invitations: await revokeAccountantInvitation(actor, invitationId),
     });
