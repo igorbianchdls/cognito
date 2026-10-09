@@ -459,9 +459,13 @@ async function updatePayableStatus(
 
 function normalizePersonType(value: unknown) {
   const normalized = text(value).toUpperCase()
-  if (normalized === 'PF') return 'fisica'
-  if (normalized === 'PJ') return 'juridica'
-  return 'juridica'
+  // O site usa PF/PJ; MCP e banco usam os nomes completos.
+  if (normalized === 'PF' || normalized === 'FISICA') return 'fisica'
+  if (normalized === 'PJ' || normalized === 'JURIDICA') return 'juridica'
+  if (normalized === 'ESTRANGEIRA') return 'estrangeira'
+  // Preserve o padrão dos cadastros opcionais, mas não substitua um tipo inválido.
+  if (!normalized) return 'juridica'
+  throw new ErpDomainError('VALIDATION_ERROR', 'Tipo de pessoa inválido. Informe PF/fisica ou PJ/juridica.')
 }
 
 function displayPersonType(value: unknown) {
