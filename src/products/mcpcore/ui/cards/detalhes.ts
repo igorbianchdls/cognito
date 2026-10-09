@@ -15,6 +15,8 @@ function preview(tool,extra){return open(tool,withCompany({chave_operacao:crypto
 function ask(text){return say(text)}
 // Links do ERP (PDF/XML) abrem pelo host; sem suporte a ui/open-link, o link vai para a conversa.
 function openLink(url,caption){return request('ui/open-link',{url}).catch(()=>say(caption+': '+url))}
+// O link do PDF/XML expira em minutos: busca um novo na hora do clique (cai no atual se a consulta falhar).
+function openNoteFile(id,kind,fallback,caption){return callTool('obter_nota_servico',withCompany({nota_id:Number(id)})).then(c=>((c.data||{}).record||{})[kind+'_url']||fallback,()=>fallback).then(url=>openLink(url,caption))}
 function detailActions(tool,args,data,record){
   const name=record.nome||record.numero||record.descricao||('#'+record.id);
   if(tool==='obter_parcela_financeira'){const side=record.lado||args.tipo||'pagar',verb=side==='receber'?'recebimento':'pagamento',account=record.conta_financeira_sugerida;
@@ -33,7 +35,7 @@ function detailActions(tool,args,data,record){
   if(tool==='obter_compra'){const id=Number(record.id);
     if(record.status==='rascunho')return [{label:'Confirmar compra',primary:true,run:()=>preview('confirmar_compra',{dados:{registro_id:id}})},{label:'Editar',run:()=>ask('Quero editar a compra '+name+' (ID '+id+').')}];
     if(['confirmada','parcialmente_recebida'].includes(record.status))return [{label:'Cancelar compra',run:()=>preview('cancelar_compra',{dados:{registro_id:id}})}];return []}
-  if(tool==='obter_nota_servico'){const id=Number(record.id),note=noteTitle(record),pdf=record.pdf_url&&{label:'Abrir PDF',run:()=>openLink(record.pdf_url,'DANFSe da '+note)};
+  if(tool==='obter_nota_servico'){const id=Number(record.id),note=noteTitle(record),pdf=record.pdf_url&&{label:'Abrir PDF',run:()=>openNoteFile(id,'pdf',record.pdf_url,'DANFSe da '+note)};
     if(record.status==='rascunho')return [{label:'Emitir',primary:true,run:()=>preview('emitir_nota_servico',{dados:{registro_id:id}})},{label:'Editar',run:()=>ask('Quero editar o '+note.toLowerCase()+' (ID '+id+').')}];
     if(record.status==='falha')return [{label:'Corrigir dados',primary:true,run:()=>ask('Quero corrigir a '+note+' (ID '+id+'): '+(record.erro_mensagem||'veja o motivo da falha')+'.')}];
     if(record.status==='aguardando_retorno')return [{label:'Consultar retorno',primary:true,run:()=>preview('consultar_nota_servico',{dados:{registro_id:id}})},pdf];

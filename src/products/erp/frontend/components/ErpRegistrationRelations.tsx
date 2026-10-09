@@ -9,8 +9,8 @@ export function ErpRegistrationRelations({ value, onChange, disabled }: { value:
     const rows = value[key] || []
     const contact = key === 'contatos'
     const purposes = contact ? ['comercial','financeiro','operacional'] : ['comercial','cobranca','prestacao']
-    const fields = contact ? ['nome','cargo','email','telefone'] : ['identificacao','logradouro','numero','complemento','bairro','cidade','uf','cep','pais']
-    const labels: Record<string,string> = { nome:'Nome',cargo:'Cargo',email:'E-mail',telefone:'Telefone',identificacao:'Identificação',logradouro:'Logradouro',numero:'Número',complemento:'Complemento',bairro:'Bairro',cidade:'Cidade',uf:'UF',cep:'CEP',pais:'País',comercial:'Comercial',financeiro:'Financeiro',operacional:'Operacional',cobranca:'Cobrança',prestacao:'Prestação do serviço' }
+    const fields = contact ? ['nome','cargo','email','telefone'] : ['identificacao','logradouro','numero','complemento','bairro','cidade','uf','cep','codigo_municipio','pais']
+    const labels: Record<string,string> = { nome:'Nome',cargo:'Cargo',email:'E-mail',telefone:'Telefone',identificacao:'Identificação',logradouro:'Logradouro',numero:'Número',complemento:'Complemento',bairro:'Bairro',cidade:'Cidade',uf:'UF',cep:'CEP',codigo_municipio:'Código IBGE do município',pais:'País',comercial:'Comercial',financeiro:'Financeiro',operacional:'Operacional',cobranca:'Cobrança',prestacao:'Prestação do serviço' }
     const update = (index: number, changes: Record<string,unknown>) => onChange({ ...value, [key]: rows.map((row,i) => i === index ? { ...row,...changes } : row) })
     return <section key={key} className="grid gap-3 border-t pt-4"><h3 className="font-semibold">{contact ? 'Contatos' : 'Endereços'}</h3>
       {rows.length === 0 && <p className="text-sm text-gray-500">Nenhum {contact ? 'contato' : 'endereço'} adicional.</p>}

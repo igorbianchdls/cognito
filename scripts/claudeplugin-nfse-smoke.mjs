@@ -81,7 +81,9 @@ async function main(){
     INSERT INTO erp.entidades(id,empresa_id,nome,tipo_pessoa,documento,email,eh_cliente,cidade,uf,logradouro,numero,bairro)
       VALUES(201,2,'Aurora Clínica Integrada','juridica','11444777000161','financeiro@example.invalid',true,'Fortaleza','CE','Rua Demonstrativa 1','100','Centro');
     INSERT INTO erp.servicos(id,empresa_id,nome,codigo,codigo_tributacao_nacional) VALUES(301,2,'Suporte técnico mensal','SRV-001','010701');
+    UPDATE erp.entidades_enderecos SET cep='60000629',codigo_municipio='2304400' WHERE empresa_id=2 AND entidade_id=201;
   `);
+  process.env.CLERK_SECRET_KEY=process.env.CLERK_SECRET_KEY||'sk_test_local_only';
   const {loadPluginPrincipal}=load('@/products/mcpcore/auth/resolvePrincipal');
   const {handleClaudeRequest}=load('@/products/claudeplugin/mcp/handleRequest');
   const {executionDependencies}=load('@/products/mcpcore/application/executeTool');
@@ -115,7 +117,7 @@ async function main(){
   await check('criar_nota_servico: prévia com totais do ERP e execução salva o rascunho',async()=>{
     const {preview,done}=await write('criar_nota_servico',dados,'criada');assert.equal(preview.proposta.total,1300);assert.equal(preview.proposta.valor_iss,65);id=Number(done.registro_id);
     const n=await note(id);assert.equal(n.record.status,'rascunho');assert.equal(n.items.length,1);assert.equal(Number(n.totals.valor_iss),65);assert.equal(Number(n.totals.retencao_iss),65);
-    assert.equal(n.record.pdf_url,`https://erp.example.invalid/api/erp/notas-servico/${id}/pdf`);assert.equal(n.record.xml_url,null);assert.equal(n.dados_editaveis.cliente_id,201);
+    assert.match(n.record.pdf_url,/^https:\/\/erp\.example\.invalid\/api\/public\/nfse\/[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+$/);assert(Date.parse(n.links_expiram_em)>Date.now());assert.equal(n.record.xml_url,null);assert.equal(n.dados_editaveis.cliente_id,201);
     assert.equal(Number(n.record.retencoes_federais),19.5);assert.equal(Number(n.record.valor_liquido),1215.5);assert.equal(n.record.local_prestacao,'Fortaleza (2304400)');
   });
   await check('editar_nota_servico: rascunho corrigido com dados_editaveis',async()=>{
@@ -125,10 +127,27 @@ async function main(){
   await check('emitir_nota_servico (timeout) e consultar_nota_servico autorizam a nota',async()=>{
     await write('emitir_nota_servico',{registro_id:id,cenario:'timeout'});assert.equal((await note(id)).record.status,'aguardando_retorno');
     await write('consultar_nota_servico',{registro_id:id});const n=await note(id);assert.equal(n.record.status,'emitida');
-    assert.match(String(n.record.chave_acesso),/^\d{50}$/);assert(n.record.codigo_verificacao);assert.equal(n.record.xml_url,`https://erp.example.invalid/api/erp/notas-servico/${id}/xml`);
+    assert.match(String(n.record.chave_acesso),/^\d{50}$/);assert(n.record.codigo_verificacao);assert.match(String(n.record.xml_url),/\/api\/public\/nfse\//);
     const byNumber=await tool('obter_nota_servico',{numero:String(n.record.numero)});assert.equal(Number(byNumber.record.id),id);
     await assert.rejects(tool('obter_nota_servico',{numero:'999999'}),/NOT_FOUND/);
     const listed=await tool('listar_notas_servico',{status:'emitida'});assert(listed.records.some(r=>Number(r.id)===id));
+  });
+  await check('Link temporário abre PDF e XML sem sessão e recusa token adulterado ou expirado',async()=>{
+    const {GET}=load('@/products/erp/api/handlers/notas-servico/publicLink'),links=load('@/products/erp/server/fiscal/serviceInvoiceLinks');
+    const fetchLink=async url=>{const token=new URL(url).pathname.split('/').pop();return GET(new Request(url),{params:Promise.resolve({token})})};
+    const n=await note(id),pdf=await fetchLink(n.record.pdf_url);assert.equal(pdf.status,200);assert.equal(pdf.headers.get('content-type'),'application/pdf');
+    assert.equal(Buffer.from(await pdf.arrayBuffer()).subarray(0,5).toString(),'%PDF-');assert.match(pdf.headers.get('cache-control'),/no-store/);
+    const xml=await fetchLink(n.record.xml_url);assert.equal(xml.status,200);const xmlText=await xml.text();assert.match(xmlText,/<NFSe/);
+    // Endereço do tomador no DPS (código IBGE, CEP e logradouro do endereço principal do cliente).
+    const end=(xmlText.match(/<toma>.*?<end>(.*?)<\/end>/s)||[])[1]||'';
+    for(const tag of ['<cMun>2304400</cMun>','<CEP>60000629</CEP>','<xLgr>Rua Demonstrativa 1</xLgr>','<nro>100</nro>','<xBairro>Centro</xBairro>'])assert(end.includes(tag),tag);
+    const token=new URL(n.record.pdf_url).pathname.split('/').pop(),[payload,sig]=token.split('.');
+    const forged=Buffer.from(JSON.stringify({...JSON.parse(Buffer.from(payload,'base64url').toString()),nota:999})).toString('base64url')+'.'+sig;
+    assert.equal((await GET(new Request('https://x/api/public/nfse/'+forged),{params:Promise.resolve({token:forged})})).status,404);
+    const old=links.createServiceInvoiceLinkToken({empresa:2,usuario:1,nota:id,tipo:'pdf'},Date.now()-16*60*1000).token;
+    assert.equal((await GET(new Request('https://x/api/public/nfse/'+old),{params:Promise.resolve({token:old})})).status,404);
+    const otherCompany=links.createServiceInvoiceLinkToken({empresa:1,usuario:1,nota:id,tipo:'pdf'}).token;
+    assert.equal((await GET(new Request('https://x/api/public/nfse/'+otherCompany),{params:Promise.resolve({token:otherCompany})})).status,404);
   });
   await check('Nota emitida não aceita edição nem segunda emissão',async()=>{
     const current=await note(id);
@@ -191,7 +210,7 @@ addEventListener('message',async e=>{if(e.source!==frame.contentWindow)return;co
     await check('Card da nota emitida: Abrir PDF pede ao host para abrir o link',async()=>{await tool('obter_nota_servico',{nota_id:draft},'emitida');const page=await open(raw.emitida),f=frame(page);
       await f.locator('.eyebrow',{hasText:/^NFS-e nº /}).waitFor();await inline(page);await frame(page).locator('main').screenshot({path:`${OUT}/nfse-detalhe-emitida.png`});
       await f.getByRole('button',{name:'Abrir PDF'}).click();await page.waitForFunction(()=>window.links.length===1);
-      assert.deepEqual((await win(page)).links,[`https://erp.example.invalid/api/erp/notas-servico/${draft}/pdf`]);await done(page,'nfse-abrir-pdf')});
+      assert.match((await win(page)).links[0],/^https:\/\/erp\.example\.invalid\/api\/public\/nfse\//);await done(page,'nfse-abrir-pdf')});
     await check('Card da nota emitida: Cancelar nota pede pela conversa no formato do MCP Apps',async()=>{const page=await open(raw.emitida),f=frame(page);
       await f.locator('.eyebrow',{hasText:/^NFS-e nº /}).waitFor();await f.getByRole('button',{name:'Ver detalhes'}).click();await f.getByText('Identificação fiscal').waitFor();await frame(page).locator('main').screenshot({path:`${OUT}/nfse-detalhe-completo.png`});await f.getByRole('button',{name:'Cancelar nota'}).click();
       await page.waitForFunction(()=>window.messages.length===1);const [message]=(await win(page)).messages;assert.match(message,new RegExp('^Quero cancelar a NFS-e nº .*\(ID '+draft+'\)'));await done(page,'nfse-cancelar-pela-conversa')});

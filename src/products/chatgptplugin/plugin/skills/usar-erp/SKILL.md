@@ -79,7 +79,7 @@ Regras:
 - Fluxo: `criar_nota_servico` (rascunho) → `emitir_nota_servico` → `consultar_nota_servico` se ficar aguardando retorno → `cancelar_nota_servico` se preciso. Rascunho se corrige com `editar_nota_servico` (dados completos; `obter_nota_servico` traz `dados_editaveis`) ou se exclui com `excluir_nota_servico`.
 - Para criar: cliente com CPF/CNPJ válido, serviços com código de tributação nacional, `data_competencia`, `codigo_municipio_prestacao` (IBGE, 7 dígitos; o da empresa em `meu_acesso`/configuração fiscal), `aliquota_iss` entre 2 e 5. ISS retido e retenções federais só para cliente com CNPJ. Se faltar algo, a emissão devolve a lista do que o provedor recusaria: repasse ao usuário.
 - Cancelamento exige `codigo_motivo` (1 erro na emissão, 2 serviço não prestado, 9 outros) e justificativa com 15+ caracteres.
-- PDF e XML: entregue o `pdf_url`/`xml_url` de `obter_nota_servico`. Os links abrem no navegador em que o usuário está logado no ERP; não são públicos.
+- PDF e XML: entregue o `pdf_url`/`xml_url` de `obter_nota_servico`. Os links abrem sem login por 15 minutos (`links_expiram_em`) e são pessoais: não os repita depois de vencidos nem os publique; chame `obter_nota_servico` de novo para gerar outros.
 
 ## Erros
 

@@ -12,7 +12,9 @@ const contact = z.object({
 const address = z.object({
   id: identity, identificacao: z.string().trim().min(1).max(200), logradouro: z.string().trim().min(1).max(500),
   numero: optionalText, complemento: optionalText, bairro: optionalText, cidade: z.string().trim().min(1).max(200),
-  uf: z.string().trim().max(2).default(''), cep: optionalText, pais: z.string().trim().min(1).default('Brasil'),
+  uf: z.string().trim().max(2).default(''), cep: optionalText,
+  // Código IBGE (7 dígitos); vazio grava nulo.
+  codigo_municipio: z.union([z.literal(''), z.string().trim().regex(/^\d{7}$/, 'Código IBGE do município tem 7 dígitos.')]).default('').transform(value => value || null), pais: z.string().trim().min(1).default('Brasil'),
   finalidades: z.array(z.enum(['comercial','cobranca','prestacao'])).min(1),
   principais: z.array(z.enum(['comercial','cobranca','prestacao'])).default([]),
 }).strict()

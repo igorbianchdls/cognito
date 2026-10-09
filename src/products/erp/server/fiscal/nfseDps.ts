@@ -35,6 +35,14 @@ export function validCpf(value: unknown) {
   return check(9) === Number(cpf[9]) && check(10) === Number(cpf[10])
 }
 
+// Endereço nacional do tomador (opcional no leiaute): só vai quando há código IBGE, CEP e logradouro.
+function tomadorAddress(customer: Row) {
+  const cMun = String(customer.codigo_municipio || ''), cep = digits(customer.cep), xLgr = String(customer.logradouro || '').trim()
+  if (!/^\d{7}$/.test(cMun) || cep.length !== 8 || !xLgr) return null
+  return { endNac: { cMun, CEP: cep }, xLgr: xLgr.slice(0, 255), nro: String(customer.numero || 'S/N').trim().slice(0, 60) || 'S/N',
+    ...(customer.complemento ? { xCpl: String(customer.complemento).trim().slice(0, 156) } : {}), xBairro: String(customer.bairro || '-').trim().slice(0, 60) || '-' }
+}
+
 const SIMPLES = ['simples_nacional', 'simples_nacional_excesso', 'mei']
 // opSimpNac do leiaute: 1 não optante, 2 MEI, 3 ME/EPP optante.
 const simplesOption = (regime: unknown) => regime === 'mei' ? 2 : SIMPLES.includes(String(regime)) ? 3 : 1
@@ -98,6 +106,7 @@ export function buildDps(input: DpsInput) {
       },
       toma: {
         ...(isCompany ? { CNPJ: document } : { CPF: document }), xNome: input.customer.nome,
+        ...(tomadorAddress(input.customer) ? { end: tomadorAddress(input.customer) } : {}),
         ...(input.customer.email ? { email: input.customer.email } : {}),
       },
       serv: {

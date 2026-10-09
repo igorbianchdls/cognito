@@ -4,6 +4,7 @@ import type { ErpQueries } from '../application/erpQueries'
 import { outputs } from './outputs'
 import { ErpDomainError } from '@/products/erp/shared/erpErrors'
 import { PluginError } from '../shared/contracts'
+import { createServiceInvoiceLinkToken, SERVICE_INVOICE_LINK_TTL_SECONDS, SERVICE_INVOICE_PUBLIC_PATH } from '@/products/erp/server/fiscal/serviceInvoiceLinks'
 
 export const companySchema = z.number().int().positive().optional().describe('Empresa autorizada retornada por meu_acesso. Obrigatória se houver mais de uma empresa.')
 const company = companySchema
@@ -18,8 +19,8 @@ export type ToolDefinition = {
   name: string; title: string; description: string; schema: z.AnyZodObject; output: z.ZodTypeAny
   capabilities: ErpCapability[]
   requiredCapabilities?: (input: Record<string, unknown>) => ErpCapability[]
-  // context.origin: domínio do plugin, para links absolutos (ex.: PDF da nota) que exigem login no ERP.
-  execute: (queries: ErpQueries, companyId: number, input: Record<string, unknown>, context: { origin: string }) => Promise<unknown>
+  // context: domínio do plugin e usuário da conexão, para links absolutos e links temporários assinados.
+  execute: (queries: ErpQueries, companyId: number, input: Record<string, unknown>, context: { origin: string; userId: number }) => Promise<unknown>
 }
 function page(input: Record<string, unknown>) {
   return { query: input.busca as string | undefined, page: input.pagina as number, pageSize: input.por_pagina as number, sort: input.ordenar as string | undefined }
@@ -67,14 +68,14 @@ export const tools: ToolDefinition[] = [
   {name:'listar_notas_servico',title:'Listar notas de serviço',output:outputs.page,description:'Use quando o usuário perguntar sobre notas fiscais de serviço (NFS-e) simuladas: por número, cliente, situação ou competência, ou para obter o ID usado nas demais tools de nota. busca procura no número da nota e no nome do cliente (tomador), nunca no nome da sua empresa: para listar todas, omita busca. Simulação sem validade fiscal.',
     schema:z.object({...paging,status:z.enum(['rascunho','aguardando_retorno','emitida','falha','cancelada']).optional(),inicio:isoDate,fim:isoDate}).strict(),capabilities:['erp.vendas.visualizar'],
     execute:(q,id,input)=>q.serviceInvoices(id,{busca:input.busca as string|undefined,status:input.status as string|undefined,inicio:input.inicio as string|undefined,fim:input.fim as string|undefined,pagina:Number(input.pagina),por_pagina:Number(input.por_pagina)})},
-  {name:'obter_nota_servico',title:'Detalhes da nota de serviço',output:outputs.serviceInvoice,description:'Use para ver itens, impostos, retenções, histórico e situação de uma nota de serviço simulada: informe nota_id (ID de listar_notas_servico) ou numero (o número da NFS-e, ex.: 13). Devolve pdf_url (DANFSe) e, se autorizada, xml_url: links que abrem no navegador com o usuário logado no ERP.',
+  {name:'obter_nota_servico',title:'Detalhes da nota de serviço',output:outputs.serviceInvoice,description:'Use para ver itens, impostos, retenções, histórico e situação de uma nota de serviço simulada: informe nota_id (ID de listar_notas_servico) ou numero (o número da NFS-e, ex.: 13). Devolve pdf_url (DANFSe) e, se autorizada, xml_url: links temporários que abrem sem login por 15 minutos (links_expiram_em); depois disso, chame de novo para gerar outros.',
     schema:z.object({empresa_id:company,nota_id:z.number().int().positive().optional(),numero:z.string().trim().min(1).max(30).optional().describe('Número da NFS-e, quando não tiver o ID.')}).strict(),capabilities:['erp.vendas.visualizar'],
     execute:async(q,id,input,context)=>{if(input.nota_id===undefined&&input.numero===undefined)throw new PluginError('INVALID_INPUT','Informe nota_id ou numero.',400,undefined,[{campo:'nota_id',motivo:'Obrigatório (ou numero)'}])
-      const noteId=input.nota_id!==undefined?Number(input.nota_id):await noteIdByNumber(q,id,String(input.numero)),detail=await q.serviceInvoice(id,noteId),link=(path:unknown)=>path?new URL(String(path),context.origin).toString():null
+      const noteId=input.nota_id!==undefined?Number(input.nota_id):await noteIdByNumber(q,id,String(input.numero)),detail=await q.serviceInvoice(id,noteId),link=(kind:'pdf'|'xml',path:unknown)=>path?new URL(SERVICE_INVOICE_PUBLIC_PATH+createServiceInvoiceLinkToken({empresa:id,usuario:context.userId,nota:noteId,tipo:kind}).token,context.origin).toString():null
       const {input:editable,...rest}=detail
       const totals=detail.totals as Record<string,unknown>,issuer=(detail.record.emitente_snapshot||{}) as Record<string,unknown>,place=String(detail.record.codigo_municipio_prestacao||'')
       const federal=['irrf','inss','pis','cofins','csll'].reduce((sum,key)=>sum+Number(totals['retencao_'+key]||0),0)
-      return {...rest,dados_editaveis:editable,record:{...detail.record,pdf_url:link(detail.record.pdf_url),xml_url:link(detail.record.xml_url),
+      return {...rest,dados_editaveis:editable,links_expiram_em:new Date(Date.now()+SERVICE_INVOICE_LINK_TTL_SECONDS*1000).toISOString(),record:{...detail.record,pdf_url:link('pdf',detail.record.pdf_url),xml_url:link('xml',detail.record.xml_url),
         valor_iss:totals.valor_iss,retencao_iss:totals.retencao_iss,retencoes_federais:federal,valor_liquido:totals.valor_liquido,
         local_prestacao:place&&place===String(issuer.codigo_municipio||'')&&issuer.municipio?`${issuer.municipio} (${place})`:place||null}}}},
   { name: 'consultar_financeiro', title: 'Contas a pagar e receber', output: outputs.page, description: 'Use quando o usuário perguntar sobre contas a pagar ou a receber, vencimentos, atrasos ou saldos em aberto. Retorna parcelas; summary considera todas as filtradas. Não efetua pagamentos (registrar_baixa).',

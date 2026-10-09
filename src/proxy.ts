@@ -30,6 +30,8 @@ export default function proxy(request: NextRequest, event: NextFetchEvent) {
     '/api/claude/mcp', '/.well-known/oauth-protected-resource/api/claude/mcp',
     '/api/clerk/reconcile', '/api/chatgptplugin/internal/maintenance', '/api/erp/internal/automacoes']
     .includes(request.nextUrl.pathname)) return NextResponse.next()
+  // Link temporário do DANFSe/XML: o token assinado é a credencial (validado no handler).
+  if (request.nextUrl.pathname.startsWith('/api/public/nfse/')) return NextResponse.next()
   if (!process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY && isPublicRoute(request)) {
     return NextResponse.next()
   }

@@ -27,7 +27,7 @@ function renderNoteResult(target,data){const proposal=data.proposta||{},tipo=pro
   callTool('obter_nota_servico',withCompany({nota_id:id})).then(content=>{const r=(content.data||{}).record||{};if(!slot.isConnected)return;slot.replaceChildren();
     const box=element('div',undefined,'section');box.append(kv([['nota',noteTitle(r),{label:'Nota',raw:true}],['cliente',r.cliente,{raw:true}],['valor_total',r.valor_total],['status',chip(r.status),{label:'Situação'}]]));slot.append(box);
     const view={label:'Ver nota',run:()=>open('obter_nota_servico',withCompany({nota_id:id}))};
-    const pdf=r.pdf_url&&{label:'Abrir PDF',run:()=>openLink(r.pdf_url,'DANFSe da '+noteTitle(r))};
+    const pdf=r.pdf_url&&{label:'Abrir PDF',run:()=>openNoteFile(id,'pdf',r.pdf_url,'DANFSe da '+noteTitle(r))};
     const next=r.status==='rascunho'?[{label:'Emitir',primary:true,run:()=>preview('emitir_nota_servico',{dados:{registro_id:id}})},view]
       :r.status==='aguardando_retorno'?[{label:'Consultar retorno',primary:true,run:()=>preview('consultar_nota_servico',{dados:{registro_id:id}})},view]
       :r.status==='emitida'?[pdf&&{...pdf,primary:true},view]:[view];

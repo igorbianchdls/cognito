@@ -69,16 +69,21 @@ function issuerSnapshot(config:Row|null,company:number){
   regime_tributario:config.regime_tributario,municipio:config.endereco_municipio,uf:config.endereco_uf,codigo_municipio:config.endereco_codigo_municipio,...markers}
   :{nome:'Empresa '+company+' - dados fiscais não cadastrados',cnpj:null,pendente:true,...markers}
 }
-async function references(client:SQLClient,company:number,input:ServiceInvoiceInput){
- const data=serviceInvoiceInputSchema.parse(input)
- // Endereço e e-mail vêm das estruturas normalizadas (principal comercial primeiro); colunas legadas só como reserva.
- const customer=(await query(client,`SELECT c.id,c.nome,c.documento,coalesce(nullif(ct.email,''),c.email) AS email,c.inscricao_municipal,
+// Cliente com endereço e e-mail principais das estruturas normalizadas (principal comercial primeiro);
+// colunas legadas só como reserva. O código IBGE vem só do endereço normalizado. Na criação (lock) exige
+// cliente ativo e trava a linha; no DPS lê o cadastro como está.
+async function fiscalCustomer(client:SQLClient,company:number,id:number,lock:boolean){
+ return (await query(client,`SELECT c.id,c.nome,c.documento,coalesce(nullif(ct.email,''),c.email) AS email,c.inscricao_municipal,
   coalesce(a.cep,c.cep) AS cep,coalesce(a.logradouro,c.logradouro) AS logradouro,coalesce(a.numero,c.numero) AS numero,coalesce(a.complemento,c.complemento) AS complemento,
-  coalesce(a.bairro,c.bairro) AS bairro,coalesce(a.cidade,c.cidade) AS cidade,coalesce(a.uf,c.uf) AS uf
+  coalesce(a.bairro,c.bairro) AS bairro,coalesce(a.cidade,c.cidade) AS cidade,coalesce(a.uf,c.uf) AS uf,a.codigo_municipio
   FROM erp.entidades c
   LEFT JOIN LATERAL (SELECT * FROM erp.entidades_enderecos e WHERE e.empresa_id=c.empresa_id AND e.entidade_id=c.id AND e.ativo ORDER BY ('comercial'=ANY(e.principais)) DESC,e.id LIMIT 1) a ON true
   LEFT JOIN LATERAL (SELECT email FROM erp.entidades_contatos k WHERE k.empresa_id=c.empresa_id AND k.entidade_id=c.id AND k.ativo AND nullif(k.email,'') IS NOT NULL ORDER BY ('comercial'=ANY(k.principais)) DESC,k.id LIMIT 1) ct ON true
-  WHERE c.empresa_id=$1 AND c.id=$2 AND c.eh_cliente AND c.ativo AND c.excluido_em IS NULL FOR SHARE OF c`,[company,data.cliente_id]))[0]
+  WHERE c.empresa_id=$1 AND c.id=$2${lock?' AND c.eh_cliente AND c.ativo AND c.excluido_em IS NULL FOR SHARE OF c':''}`,[company,id]))[0]
+}
+async function references(client:SQLClient,company:number,input:ServiceInvoiceInput){
+ const data=serviceInvoiceInputSchema.parse(input)
+ const customer=await fiscalCustomer(client,company,data.cliente_id,true)
  if(!customer)throw new ErpDomainError('VALIDATION_ERROR','Escolha um cliente ativo desta empresa.')
  const ids=[...new Set(data.itens.map(i=>i.item_id))]
  const services=await query(client,'SELECT id,nome,codigo,codigo_servico_municipal,codigo_tributacao_nacional,codigo_nbs FROM erp.servicos WHERE empresa_id=$1 AND id=ANY($2::bigint[]) AND ativo AND excluido_em IS NULL FOR SHARE',[company,ids])
@@ -153,7 +158,7 @@ async function prepareDps(client:SQLClient,company:number,row:Row,detail:Awaited
  const config=await fiscalConfig(client,company)
  const data=serviceInvoiceInputSchema.parse(detail.input),totals=serviceInvoiceTotals(data)
  const services=await query(client,'SELECT id,nome,codigo,codigo_servico_municipal,codigo_tributacao_nacional,codigo_nbs FROM erp.servicos WHERE empresa_id=$1 AND id=ANY($2::bigint[])',[company,data.itens.map(i=>i.item_id)])
- const customer=(await query(client,'SELECT id,nome,documento,email FROM erp.entidades WHERE empresa_id=$1 AND id=$2',[company,data.cliente_id]))[0]||{}
+ const customer=(await fiscalCustomer(client,company,data.cliente_id,false))||{}
  const serie=String(config?.serie_dps||'1')
  let numero=/^\d+$/.test(String(row.numero_dps||''))&&row.serie_dps===serie?Number(row.numero_dps):0
  if(!numero){
