@@ -19,8 +19,9 @@ function nextSteps(tipo,id,dados){
 const noteDone={nota_servico:'Rascunho de NFS-e criado.',editar_nota_servico:'Rascunho de NFS-e atualizado.',simular_nota_servico:'Emissão processada pelo simulador.',
   consultar_resultado_nota_servico:'Retorno da emissão consultado.',cancelar_nota_servico:'NFS-e cancelada.',excluir_nota_servico:'Rascunho de NFS-e excluído.'};
 // Resultado de NFS-e: confirma o que aconteceu e busca a nota atualizada (número, situação e PDF).
+function contextNotice(target){if(state.contextWarning)target.append(element('p','O '+(HOST==='claude'?'Claude':'ChatGPT')+' pode não ter sido avisado desta confirmação; mencione-a na conversa se for continuar.','notice slim'))}
 function renderNoteResult(target,data){const proposal=data.proposta||{},tipo=proposal.tipo,saved=data.status==='saved',id=tipo==='nota_servico'?Number(data.registro_id):Number((proposal.dados||{}).registro_id||data.registro_id);
-  hero(target,{eyebrow:operationLabels[tipo]||'Nota de serviço',title:saved?noteDone[tipo]:'Situação: '+(states[data.status]||data.status)});
+  hero(target,{eyebrow:operationLabels[tipo]||'Nota de serviço',title:saved?noteDone[tipo]:'Situação: '+(states[data.status]||data.status)});contextNotice(target);
   if(!saved||!id||tipo==='excluir_nota_servico')return;
   const slot=element('div');slot.append(skeleton());target.append(slot);
   callTool('obter_nota_servico',withCompany({nota_id:id})).then(content=>{const r=(content.data||{}).record||{};if(!slot.isConnected)return;slot.replaceChildren();
@@ -35,7 +36,7 @@ function renderNoteResult(target,data){const proposal=data.proposta||{},tipo=pro
 function renderResult(target,data){if(/nota_servico$/.test((data.proposta||{}).tipo||''))return renderNoteResult(target,data);const proposal=data.proposta||{},dados=proposal.dados||{},saved=data.status==='saved',alvo=data.alvo;
   const subject=alvo&&alvo.nome||((data.referencias||{}).cliente||(data.referencias||{}).fornecedor||{}).nome||dados.nome||dados.descricao||'';
   hero(target,{eyebrow:saved?'Concluído':'Situação',title:(operationLabels[proposal.tipo]||'Operação')+(subject?' · '+subject:''),amount:proposal.total});
-  target.append(notice(saved?(/^excluir_/.test(proposal.tipo||'')?'Excluído no ERP.':'Salvo no ERP.'):'Situação: '+(states[data.status]||data.status),saved?'success':'info'));
+  target.append(notice(saved?(/^excluir_/.test(proposal.tipo||'')?'Excluído no ERP.':'Salvo no ERP.'):'Situação: '+(states[data.status]||data.status),saved?'success':'info'));contextNotice(target);
   target.append(section(null,kv(['valor','data_pagamento','data_venda','data_compra','data_vencimento'].filter(key=>dados[key]!==undefined).map(key=>[key,dados[key]]))));
   const id=Number(data.registro_id);if(saved&&id)target.append(actionsBar(nextSteps(proposal.tipo||'',id,dados)))}
 `
