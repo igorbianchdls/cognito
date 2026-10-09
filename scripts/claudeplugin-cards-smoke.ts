@@ -41,7 +41,7 @@ addEventListener('message',async e=>{if(e.source!==frame.contentWindow)return;co
  if(m.method==='ui/initialize')result={protocolVersion:'2026-01-26',hostInfo:{name:'claude-test',version:'1'},hostCapabilities:{},hostContext:{theme:'light',displayMode:'inline',timeZone:'America/Sao_Paulo',safeAreaInsets:{top:0,right:0,bottom:34,left:0},toolInfo:{tool:{name:'${tool}'}}}};
  if(m.method==='tools/call'){calls.push(m.params);result=await(await fetch('/call',{method:'POST',body:JSON.stringify(m.params)})).json()}
  if(m.method==='ui/request-display-mode'){modes.push(m.params.mode);result={mode:m.params.mode}}
- if(m.method==='ui/message')messages.push(m.params.content.text);
+ if(m.method==='ui/message')messages.push(Array.isArray(m.params.content)?m.params.content.map(c=>c.text).join(''):'CONTENT_NAO_E_LISTA');
  frame.contentWindow.postMessage({jsonrpc:'2.0',id:m.id,result},'*')});</script></body></html>`}
 type Call={name:string;arguments:Record<string,unknown>}
 type Win={calls:Call[];messages:string[];modes:string[];ready:boolean;deliver:(i:unknown,r:unknown)=>void}

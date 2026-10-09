@@ -63,7 +63,11 @@ export const tools: ToolDefinition[] = [
     schema:z.object({empresa_id:company,nota_id:z.number().int().positive()}).strict(),capabilities:['erp.vendas.visualizar'],
     execute:async(q,id,input,context)=>{const detail=await q.serviceInvoice(id,Number(input.nota_id)),link=(path:unknown)=>path?new URL(String(path),context.origin).toString():null
       const {input:editable,...rest}=detail
-      return {...rest,dados_editaveis:editable,record:{...detail.record,pdf_url:link(detail.record.pdf_url),xml_url:link(detail.record.xml_url)}}}},
+      const totals=detail.totals as Record<string,unknown>,issuer=(detail.record.emitente_snapshot||{}) as Record<string,unknown>,place=String(detail.record.codigo_municipio_prestacao||'')
+      const federal=['irrf','inss','pis','cofins','csll'].reduce((sum,key)=>sum+Number(totals['retencao_'+key]||0),0)
+      return {...rest,dados_editaveis:editable,record:{...detail.record,pdf_url:link(detail.record.pdf_url),xml_url:link(detail.record.xml_url),
+        valor_iss:totals.valor_iss,retencao_iss:totals.retencao_iss,retencoes_federais:federal,valor_liquido:totals.valor_liquido,
+        local_prestacao:place&&place===String(issuer.codigo_municipio||'')&&issuer.municipio?`${issuer.municipio} (${place})`:place||null}}}},
   { name: 'consultar_financeiro', title: 'Contas a pagar e receber', output: outputs.page, description: 'Use quando o usuário perguntar sobre contas a pagar ou a receber, vencimentos, atrasos ou saldos em aberto. Retorna parcelas; summary considera todas as filtradas. Não efetua pagamentos (registrar_baixa).',
     schema: z.object({ ...paging, tipo: z.enum(['pagar','receber']), status: z.enum(['aberto','pendente','pago','parcial','vencido','cancelado','renegociado']).optional(),
       vencimento_inicio: isoDate, vencimento_fim: isoDate, ordenar: z.enum(['vencimento','-vencimento','-saldo','saldo','-valor']).optional().describe('Ordenação de todas as páginas; padrão: vencimento mais próximo.') }).strict(), capabilities: ['erp.financeiro.visualizar'],

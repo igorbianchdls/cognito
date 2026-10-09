@@ -10,7 +10,8 @@ function notify(method,params){window.parent.postMessage({jsonrpc:'2.0',method,p
 function failure(result){let error;try{error=JSON.parse(result.content.find(c=>c.type==='text').text)}catch{}const e=new Error(error&&error.message||'Não foi possível concluir.');e.fields=error&&error.campos||[];e.code=error&&error.code;return e}
 async function callTool(name,args){state.lastCall={name,args};const result=await request('tools/call',{name,arguments:args});if(!result||result.isError)throw failure(result||{});if(!result.structuredContent||!result.structuredContent.ok)throw new Error('Resposta indisponível.');return result.structuredContent}
 function fullscreen(){return request('ui/request-display-mode',{mode:'fullscreen'}).then(r=>{if(r&&r.mode)state.displayMode=r.mode;render()})}
-function say(text){return request('ui/message',{role:'user',content:{type:'text',text}})}
+// MCP Apps: content é uma lista de blocos (o Claude recusa um objeto único).
+function say(text){return request('ui/message',{role:'user',content:[{type:'text',text}]})}
 function tellModel(text,structured){return request('ui/update-model-context',{content:[{type:'text',text}],...(structured?{structuredContent:structured}:{})}).catch(()=>undefined)}
 function applyHost(context){if(!context)return;if(context.theme==='light'||context.theme==='dark')document.documentElement.style.colorScheme=context.theme;
   const vars=context.styles&&context.styles.variables;if(vars)for(const [key,value] of Object.entries(vars))if(/^--[a-z0-9-]+$/.test(key)&&typeof value==='string')document.documentElement.style.setProperty(key,value);
@@ -30,11 +31,13 @@ function withCompany(args){return {...(state.empresaId?{empresa_id:state.empresa
 function skeleton(){const box=element('div',undefined,'skeleton');for(let i=0;i<4;i++)box.append(element('div',undefined,'skeleton-line'));return box}
 async function run(fn){if(state.busy)return;state.busy=true;const ticket=++state.generation;root.setAttribute('aria-busy','true');status.textContent='Consultando…';for(const c of root.querySelectorAll('button,input,select'))c.disabled=true;root.classList.add('loading')
   try{await fn()}catch(error){if(ticket===state.generation){state.error=error;render()}}finally{state.busy=false;root.classList.remove('loading');root.setAttribute('aria-busy','false');if(status.textContent==='Consultando…')status.textContent='';for(const c of root.querySelectorAll('button,input,select'))c.disabled=false}}
+// Altura do conteúdo (o body não tem altura mínima); o <html> acompanha o iframe e não encolhe.
+function contentHeight(){return Math.ceil(document.body.getBoundingClientRect().height)}
 function render(){root.replaceChildren();status.textContent='';
   try{if(state.stack.length){const nav=element('div',undefined,'nav');nav.append(button('← Voltar',back));root.append(nav)}
     if(state.error&&!state.data)renderError(root,state.error);else if(state.data)(viewFor(state.tool,state.data))(root,state.data);if(state.error&&state.data)root.append(errorNotice(state.error))}
   catch(error){root.replaceChildren(notice('Não foi possível exibir este resultado.','danger'))}
-  notify('ui/notifications/size-changed',{height:document.documentElement.scrollHeight})}
+  notify('ui/notifications/size-changed',{height:contentHeight()})}
 function errorNotice(error){const box=element('div'),hasFields=error.fields&&error.fields.length;box.append(notice(hasFields?'Confira os campos abaixo.':error.message,'danger'));if(hasFields){const list=element('ul');for(const f of error.fields)list.append(element('li',label(String(f.campo).replace(/^dados\./,''))+': '+f.motivo));box.append(list)}
   if(!hasFields&&state.lastCall&&!error.code){const call=state.lastCall;box.append(actionsBar([{label:'Tentar novamente',run:async()=>{const content=await callTool(call.name,call.args);absorb(content);state.data=content.data;state.error=null;render()}}]))}return box}
 function renderError(target,error){target.append(element('h1','Não foi possível concluir'),errorNotice(error))}
@@ -48,5 +51,5 @@ window.addEventListener('message',event=>{if(event.source!==window.parent)return
 request('ui/initialize',{protocolVersion:'2026-01-26',appInfo:{name:${JSON.stringify(app.name)},version:${JSON.stringify(app.version)}},appCapabilities:{availableDisplayModes:['inline','fullscreen']}})
   .then(result=>{connected=true;applyHost(result&&result.hostContext);notify('ui/notifications/initialized',{});if(queued)receive(queued);else{status.textContent='';if(!root.childElementCount)root.append(skeleton())}})
   .catch(error=>{root.replaceChildren(notice(error.message,'danger'))});
-new ResizeObserver(()=>notify('ui/notifications/size-changed',{height:document.documentElement.scrollHeight})).observe(document.body);
+new ResizeObserver(()=>notify('ui/notifications/size-changed',{height:contentHeight()})).observe(document.body);
 `

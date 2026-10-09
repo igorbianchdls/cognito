@@ -116,6 +116,7 @@ async function main(){
     const {preview,done}=await write('criar_nota_servico',dados,'criada');assert.equal(preview.proposta.total,1300);assert.equal(preview.proposta.valor_iss,65);id=Number(done.registro_id);
     const n=await note(id);assert.equal(n.record.status,'rascunho');assert.equal(n.items.length,1);assert.equal(Number(n.totals.valor_iss),65);assert.equal(Number(n.totals.retencao_iss),65);
     assert.equal(n.record.pdf_url,`https://erp.example.invalid/api/erp/notas-servico/${id}/pdf`);assert.equal(n.record.xml_url,null);assert.equal(n.dados_editaveis.cliente_id,201);
+    assert.equal(Number(n.record.retencoes_federais),19.5);assert.equal(Number(n.record.valor_liquido),1215.5);assert.equal(n.record.local_prestacao,'Fortaleza (2304400)');
   });
   await check('editar_nota_servico: rascunho corrigido com dados_editaveis',async()=>{
     const current=await note(id);await write('editar_nota_servico',{...current.dados_editaveis,registro_id:id,observacoes:'Revisado pelo Claude'});
@@ -154,13 +155,14 @@ async function main(){
   await tool('listar_notas_servico',{},'lista');await tool('obter_nota_servico',{nota_id:draft},'rascunho');
   const encoded=JSON.stringify(renderCardsHtml({name:'claudeplugin-cards',version:CLAUDEPLUGIN_VERSION,host:'claude'})).replaceAll('<','\\u003c');
   const host=toolName=>`<!doctype html><html><body style="margin:0"><iframe id="app" title="ERP" style="width:100%;height:1400px;border:0"></iframe><script>
-window.calls=[];window.links=[];window.modes=[];window.ready=false;const frame=document.getElementById('app');frame.srcdoc=${encoded};
+window.calls=[];window.links=[];window.messages=[];window.modes=[];window.ready=false;const frame=document.getElementById('app');frame.srcdoc=${encoded};
 window.deliver=(input,result)=>{frame.contentWindow.postMessage({jsonrpc:'2.0',method:'ui/notifications/tool-input',params:{arguments:input}},'*');frame.contentWindow.postMessage({jsonrpc:'2.0',method:'ui/notifications/tool-result',params:result},'*')};
 addEventListener('message',async e=>{if(e.source!==frame.contentWindow)return;const m=e.data;if(m.method==='ui/notifications/initialized'){window.ready=true;return}if(m.id===undefined)return;let result={};
  if(m.method==='ui/initialize')result={protocolVersion:'2026-01-26',hostInfo:{name:'claude-test',version:'1'},hostCapabilities:{},hostContext:{theme:'light',displayMode:'inline',timeZone:'America/Sao_Paulo',safeAreaInsets:{top:0,right:0,bottom:34,left:0},toolInfo:{tool:{name:'${toolName}'}}}};
  if(m.method==='tools/call'){calls.push(m.params);result=await(await fetch('/call',{method:'POST',body:JSON.stringify(m.params)})).json()}
  if(m.method==='ui/request-display-mode'){modes.push(m.params.mode);result={mode:m.params.mode}}
  if(m.method==='ui/open-link')links.push(m.params.url);
+ if(m.method==='ui/message')messages.push(Array.isArray(m.params.content)?m.params.content.map(c=>c.text).join(''):'CONTENT_NAO_E_LISTA');
  frame.contentWindow.postMessage({jsonrpc:'2.0',id:m.id,result},'*')});</script></body></html>`;
   let current='';
   const server=createServer(async(req,res)=>{
@@ -173,7 +175,7 @@ addEventListener('message',async e=>{if(e.source!==frame.contentWindow)return;co
   const browser=await chromium.launch({executablePath:executable,headless:true});
   async function open({name,args,result}){current=host(name);const page=await browser.newPage({viewport:{width:900,height:1100}});page.errors=[];page.on('pageerror',e=>page.errors.push(e.message));
     await page.goto(url);await page.waitForFunction(()=>window.ready);await page.evaluate(([a,r])=>window.deliver(a,r),[args,result]);return page}
-  const frame=page=>page.frameLocator('#app');const win=page=>page.evaluate(()=>({calls:window.calls,links:window.links,modes:window.modes}));
+  const frame=page=>page.frameLocator('#app');const win=page=>page.evaluate(()=>({calls:window.calls,links:window.links,modes:window.modes,messages:window.messages}));
   async function inline(page){const f=frame(page);assert.equal(await f.locator('select').count(),0);assert(await f.locator('.actions button').count()<=2,'no máximo 2 ações')}
   async function done(page,name){assert.deepEqual(page.errors,[],name);await frame(page).locator('main').screenshot({path:`${OUT}/${name}.png`});await page.close()}
   try{
@@ -188,6 +190,9 @@ addEventListener('message',async e=>{if(e.source!==frame.contentWindow)return;co
       await f.getByRole('heading',{name:/Nota de serviço/}).waitFor();await inline(page);await frame(page).locator('main').screenshot({path:`${OUT}/nfse-detalhe-emitida.png`});
       await f.getByRole('button',{name:'Abrir PDF'}).click();await page.waitForFunction(()=>window.links.length===1);
       assert.deepEqual((await win(page)).links,[`https://erp.example.invalid/api/erp/notas-servico/${draft}/pdf`]);await done(page,'nfse-abrir-pdf')});
+    await check('Card da nota emitida: Cancelar nota pede pela conversa no formato do MCP Apps',async()=>{const page=await open(raw.emitida),f=frame(page);
+      await f.getByRole('heading',{name:/Nota de serviço/}).waitFor();await f.getByRole('button',{name:'Ver detalhes'}).click();await f.getByRole('button',{name:'Cancelar nota'}).click();
+      await page.waitForFunction(()=>window.messages.length===1);const [message]=(await win(page)).messages;assert.match(message,new RegExp('^Quero cancelar a nota de serviço .*\(ID '+draft+'\)'));await done(page,'nfse-cancelar-pela-conversa')});
     await check('Card de resultado após criar sugere Emitir',async()=>{const page=await open(raw.resultado),f=frame(page);await f.getByText('Salvo no ERP.').waitFor();await inline(page);
       assert(await f.getByRole('button',{name:'Emitir'}).count(),'botão Emitir');await done(page,'nfse-resultado-criar')});
   }finally{await browser.close();await new Promise(r=>server.close(()=>r()));await client.close()}

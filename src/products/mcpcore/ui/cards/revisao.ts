@@ -27,7 +27,8 @@ function renderReview(target,data){const proposal=data.proposta||{},dados=propos
   if(items.length)target.append(itemsTable(data,compact?items.slice(0,3):items));
   if(installments.length&&!compact)target.append(table(installments,['data_vencimento','valor'],'Parcelas'));
   if(partial)target.append(element('p',[allKeys.length>4&&(allKeys.length-4)+' campos',items.length>3&&(items.length-3)+' itens',installments.length&&installments.length+' parcelas'].filter(Boolean).join(', ')+' na prévia completa.','muted'));
-  if(proposal.total!==undefined)target.append(metrics([{label:'Total calculado pelo ERP',value:money(proposal.total)}]));
+  if(proposal.total!==undefined)target.append(metrics([{label:'Total calculado pelo ERP',value:money(proposal.total)},
+    ...(proposal.valor_iss!==undefined?[{label:'ISS',value:money(proposal.valor_iss)}]:[]),...(proposal.valor_liquido!==undefined?[{label:'Valor líquido',value:money(proposal.valor_liquido)}]:[])]));
   if(!pendingDraft||!data.confirmar)return;
   const actions=element('div',undefined,'actions');
   if(state.edit)actions.append(button('Atualizar prévia',()=>updatePreview(data),true),button('Cancelar',()=>{state.edit=false;render()}));
