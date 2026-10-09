@@ -20,7 +20,7 @@ const listSpecs={
     statuses:[['rascunho','Rascunho'],['confirmada','Confirmadas'],['parcialmente_recebida','Parcialmente recebidas'],['recebida','Recebidas'],['cancelada','Canceladas']],
     sorts:[['-data','Mais recentes'],['data','Mais antigas'],['-total','Maior valor']],
     detail:row=>({tool:'obter_compra',args:{compra_id:Number(row.id)}})},
-  listar_notas_servico:{columns:()=>['numero','cliente','data_competencia','valor_total','status'],primary:'numero',secondary:()=>'cliente',amount:'valor_total',date:'data_competencia',
+  listar_notas_servico:{columns:()=>['nota','cliente','data_competencia','valor_total','status'],primary:'nota',title:row=>noteTitle(row),secondary:()=>'cliente',amount:'valor_total',date:'data_competencia',
     noun:['nota','notas'],period:['inicio','fim'],
     statuses:[['rascunho','Rascunho'],['aguardando_retorno','Aguardando retorno'],['emitida','Emitidas'],['falha','Com falha'],['cancelada','Canceladas']],
     detail:row=>({tool:'obter_nota_servico',args:{nota_id:Number(row.id)}})},
@@ -39,7 +39,7 @@ function subtitle(spec,args,data,count){
   const sort=(spec.sorts||[]).find(([v])=>v===args.ordenar)||(spec.sorts||[])[0];if(sort)parts.push(sort[1].toLowerCase());
   if(args.busca)parts.push('busca "'+args.busca+'"');return parts.join(' · ')}
 function rowTone(spec,row){return row.status==='vencido'||(spec.due&&row.status!=='pago'&&Number(row.saldo||0)>0&&row.vencimento&&daysBetween(today(),String(row.vencimento).slice(0,10))<0)?'overdue':''}
-function cell(key,row){const td=element('td');if(key==='status'){td.append(chip(row.status))}else{td.textContent=formatted(key,row[key]);if(moneyKeys.has(key)||/quantidade/.test(key))td.className='num'}
+function cell(key,row){const td=element('td');if(key==='status'){td.append(chip(row.status))}else if(key==='nota'){td.textContent=noteTitle(row);td.className='strong-cell'}else{td.textContent=formatted(key,row[key]);if(moneyKeys.has(key)||/quantidade/.test(key))td.className='num'}
   if(key==='vencimento'){const due=dueText(row.vencimento,row.status);if(due)td.append(element('small',' · '+due,due.startsWith('venceu')?'due':'soon'))}return td}
 function listView(spec,args,rows,clickable){
   // No Claude o card inline usa sempre a lista de duas linhas (nome, valor, data e situação).
@@ -49,7 +49,7 @@ function listView(spec,args,rows,clickable){
   const stack=element('ul',undefined,'narrow');
   for(const row of rows){const tone=rowTone(spec,row),tr=element('tr',undefined,tone);for(const key of keys)tr.append(cell(key,row));
     const li=element('li',undefined,'item '+tone),top=element('div',undefined,'item-top'),bottom=element('div',undefined,'item-bottom');
-    const title=spec.primary?formatted(spec.primary,row[spec.primary]):formatted(keys[0],row[keys[0]]);
+    const title=spec.title?spec.title(row):spec.primary?formatted(spec.primary,row[spec.primary]):formatted(keys[0],row[keys[0]]);
     top.append(element('span',title,'item-title'));if(spec.amount&&row[spec.amount]!==undefined)top.append(element('strong',formatted(spec.amount,row[spec.amount]),'item-amount'));
     const meta=[];const second=spec.secondary&&spec.secondary(args,row);if(second&&row[second])meta.push(formatted(second,row[second]));
     if(spec.date&&row[spec.date])meta.push((spec.due?'vence ':'')+formatted('data',row[spec.date]));const due=spec.due?dueText(row.vencimento,row.status):'';if(due)meta.push(due);

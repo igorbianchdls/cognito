@@ -9,7 +9,7 @@ function consequence(tipo){if(/^excluir_/.test(tipo))return 'Atenção: o regist
   if(tipo==='estornar_pagamento')return 'Atenção: o pagamento é desfeito e o saldo da parcela volta a ficar em aberto.';return 'Atenção: esta operação desfaz dados no ERP.'}
 function referenceName(data,key,value){const refs=data.referencias||{};if(key==='cliente_id'&&refs.cliente)return refs.cliente.nome;if(key==='fornecedor_id'&&refs.fornecedor)return refs.fornecedor.nome;return null}
 function itemName(data,item){const refs=(data.referencias&&data.referencias.itens)||[];const found=refs.find(r=>String(r.id)===String(item.item_id)&&r.tipo===item.tipo);return found?found.nome:(item.descricao||label(item.tipo)+' #'+item.item_id)}
-function renderReview(target,data){const proposal=data.proposta||{},dados=proposal.dados||{},alvo=data.alvo,pendingDraft=data.status==='pending';
+function renderReview(target,data){if(/nota_servico$/.test((data.proposta||{}).tipo||''))return renderNoteReview(target,data);const proposal=data.proposta||{},dados=proposal.dados||{},alvo=data.alvo,pendingDraft=data.status==='pending';
   const subject=alvo&&alvo.nome||(data.referencias&&(data.referencias.cliente||data.referencias.fornecedor)||{}).nome||dados.nome||dados.descricao||'';
   heading(target,(operationLabels[proposal.tipo]||'Operação')+(subject?' · '+subject:''),pendingDraft?'Prévia — nada foi salvo ainda.':'');
   if(!pendingDraft)target.append(element('p','Situação: '+(states[data.status]||data.status)));
@@ -29,13 +29,38 @@ function renderReview(target,data){const proposal=data.proposta||{},dados=propos
   if(partial)target.append(element('p',[allKeys.length>4&&(allKeys.length-4)+' campos',items.length>3&&(items.length-3)+' itens',installments.length&&installments.length+' parcelas'].filter(Boolean).join(', ')+' na prévia completa.','muted'));
   if(proposal.total!==undefined)target.append(metrics([{label:'Total calculado pelo ERP',value:money(proposal.total)},
     ...(proposal.valor_iss!==undefined?[{label:'ISS',value:money(proposal.valor_iss)}]:[]),...(proposal.valor_liquido!==undefined?[{label:'Valor líquido',value:money(proposal.valor_liquido)}]:[])]));
-  if(!pendingDraft||!data.confirmar)return;
+  reviewActions(target,data,{items,partial,compact})}
+// Confirmar e Ajustar (ou Ver prévia completa); em edição, Atualizar prévia e Cancelar.
+function reviewActions(target,data,{items,partial,compact}){const proposal=data.proposta||{};if(data.status!=='pending'||!data.confirmar)return;
   const actions=element('div',undefined,'actions');
   if(state.edit)actions.append(button('Atualizar prévia',()=>updatePreview(data),true),button('Cancelar',()=>{state.edit=false;render()}));
   else actions.append(button(risky.test(proposal.tipo||'')?'Confirmar mesmo assim':'Confirmar',()=>confirmDraft(data),true),
     partial?button('Ver prévia completa',fullscreen)
     :button('Ajustar',()=>items.length?(state.edit=true,compact?fullscreen():render()):say('Quero ajustar esta proposta antes de confirmar.')));
   target.append(actions)}
+const scenarios={sucesso:'Autorização imediata',rejeicao:'Rejeição pelo provedor',demora:'Retorno demorado',timeout:'Sem resposta (timeout)'};
+// Prévia de NFS-e: resumo do que vai acontecer, com valores do ERP, em vez de uma tabela de campos.
+function renderNoteReview(target,data){const proposal=data.proposta||{},dados=proposal.dados||{},alvo=data.alvo,tipo=proposal.tipo,pendingDraft=data.status==='pending';
+  const compact=strict&&state.displayMode!=='fullscreen',items=Array.isArray(dados.itens)?dados.itens:[],client=((data.referencias||{}).cliente||{}).nome;
+  const current=alvo?noteTitle({numero:alvo.nome,status:alvo.status,chave_acesso:alvo.campos&&alvo.campos.chave_acesso}):null;
+  hero(target,{eyebrow:(pendingDraft?'Prévia · ':'')+(operationLabels[tipo]||'Nota de serviço'),title:client||current||'Nota de serviço',amount:proposal.total!==undefined?proposal.total:alvo&&alvo.valor!=null?Number(alvo.valor):undefined,
+    status:alvo&&alvo.status,meta:tipo==='nota_servico'||tipo==='editar_nota_servico'?['Competência '+formatted('data_competencia',dados.data_competencia),dados.codigo_municipio_prestacao&&'Local da prestação '+dados.codigo_municipio_prestacao].filter(Boolean).join(' · '):current&&client?current:''});
+  const banner=notice(pendingDraft?'Prévia — nada foi salvo ainda.':'Situação: '+(states[data.status]||data.status),pendingDraft?'info':'warning');banner.classList.add('slim');target.append(banner);
+  if(tipo==='nota_servico'||tipo==='editar_nota_servico'){
+    const rate=Number(dados.aliquota_iss||0).toLocaleString('pt-BR',{maximumFractionDigits:4})+'%';
+    target.append(section('Valores',kv([['valor_iss',proposal.valor_iss,{label:'ISS ('+rate+')'}],['retencao_iss',dados.iss_retido?proposal.valor_iss:undefined,{label:'ISS retido pelo tomador'}],
+      ['valor_liquido',proposal.valor_liquido,{strong:true,label:'Valor líquido a receber'}]])));
+    if(items.length)target.append(itemsTable(data,compact?items.slice(0,3):items));
+    if(compact&&items.length>3)target.append(element('p',(items.length-3)+' itens na prévia completa.','muted'));
+    if(dados.observacoes&&!compact)target.append(section('Observações',element('p',dados.observacoes)));
+    return reviewActions(target,data,{items,partial:compact&&items.length>3,compact})}
+  if(tipo==='simular_nota_servico')target.append(section('O que acontece',element('p','O simulador valida os dados como o provedor real e, se aprovar, gera número, chave de acesso e código de verificação de homologação. Nada é enviado à prefeitura.'),
+    kv([['cenario',scenarios[dados.cenario||'sucesso']||dados.cenario,{label:'Cenário',raw:true}]])));
+  if(tipo==='consultar_resultado_nota_servico')target.append(section('O que acontece',element('p','Consulta no simulador o resultado da emissão que ficou aguardando retorno.')));
+  if(tipo==='cancelar_nota_servico'){target.append(notice('A nota será cancelada na simulação e deixa de produzir efeitos. O PDF original continua guardado.','danger'));
+    target.append(section('Cancelamento',kv([['codigo_motivo',cancelReasons[dados.codigo_motivo]||dados.codigo_motivo,{label:'Motivo',raw:true}],['motivo',dados.motivo,{label:'Justificativa',raw:true,wide:true}]])))}
+  if(tipo==='excluir_nota_servico'){target.append(notice('O rascunho sai das consultas. O histórico é preservado.','danger'));target.append(section('Exclusão',kv([['motivo',dados.motivo,{label:'Justificativa',raw:true,wide:true}]])))}
+  reviewActions(target,data,{items:[],partial:false,compact})}
 function itemsTable(data,items){const t=element('table');t.append(element('caption','Itens'));const head=element('tr');
   for(const [text,num] of [['Item'],['Qtd.',1],['Preço',1],['Desconto',1],['Total',1]]){const th=element('th',text);if(num)th.className='num';head.append(th)}
   const thead=element('thead');thead.append(head);const body=element('tbody');

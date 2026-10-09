@@ -33,10 +33,11 @@ function detailActions(tool,args,data,record){
   if(tool==='obter_compra'){const id=Number(record.id);
     if(record.status==='rascunho')return [{label:'Confirmar compra',primary:true,run:()=>preview('confirmar_compra',{dados:{registro_id:id}})},{label:'Editar',run:()=>ask('Quero editar a compra '+name+' (ID '+id+').')}];
     if(['confirmada','parcialmente_recebida'].includes(record.status))return [{label:'Cancelar compra',run:()=>preview('cancelar_compra',{dados:{registro_id:id}})}];return []}
-  if(tool==='obter_nota_servico'){const id=Number(record.id),pdf=record.pdf_url&&{label:'Abrir PDF',run:()=>openLink(record.pdf_url,'DANFSe da nota '+name)};
-    if(record.status==='rascunho')return [{label:'Emitir',primary:true,run:()=>preview('emitir_nota_servico',{dados:{registro_id:id}})},{label:'Editar',run:()=>ask('Quero editar a nota de serviço '+name+' (ID '+id+').')}];
+  if(tool==='obter_nota_servico'){const id=Number(record.id),note=noteTitle(record),pdf=record.pdf_url&&{label:'Abrir PDF',run:()=>openLink(record.pdf_url,'DANFSe da '+note)};
+    if(record.status==='rascunho')return [{label:'Emitir',primary:true,run:()=>preview('emitir_nota_servico',{dados:{registro_id:id}})},{label:'Editar',run:()=>ask('Quero editar o '+note.toLowerCase()+' (ID '+id+').')}];
+    if(record.status==='falha')return [{label:'Corrigir dados',primary:true,run:()=>ask('Quero corrigir a '+note+' (ID '+id+'): '+(record.erro_mensagem||'veja o motivo da falha')+'.')}];
     if(record.status==='aguardando_retorno')return [{label:'Consultar retorno',primary:true,run:()=>preview('consultar_nota_servico',{dados:{registro_id:id}})},pdf];
-    if(record.status==='emitida')return [pdf&&{...pdf,primary:true},{label:'Cancelar nota',run:()=>ask('Quero cancelar a nota de serviço '+name+' (ID '+id+').')}];
+    if(record.status==='emitida')return [pdf&&{...pdf,primary:true},{label:'Cancelar nota',run:()=>ask('Quero cancelar a '+note+' (ID '+id+').')}];
     return [pdf]}
   if(tool==='obter_cadastro'){const kind=args.tipo,id=record.id;
     const primary=kind==='clientes'?{label:'Nova venda',primary:true,run:()=>ask('Criar uma venda para o cliente '+name+' (ID '+id+').')}
@@ -44,7 +45,35 @@ function detailActions(tool,args,data,record){
       :kind==='produtos'?{label:'Ver estoque',primary:true,run:()=>(open('consultar_estoque',withCompany({busca:String(record.nome||'')})))}:null;
     return [primary,{label:'Editar',run:()=>ask('Quero editar o cadastro '+name+' (ID '+id+').')}]}
   return []}
-function renderDetails(target,data){const full=state.displayMode==='fullscreen',args=state.args||{};
+// NFS-e simulada: "NFS-e nº 13" depois de autorizada; antes disso o número é interno e não aparece.
+function noteTitle(r){const authorized=['emitida','cancelada'].includes(r.status)||Boolean(r.chave_acesso);
+  return authorized&&r.numero?'NFS-e nº '+r.numero:r.status==='aguardando_retorno'?'NFS-e aguardando retorno':r.status==='falha'?'NFS-e com falha':'Rascunho de NFS-e'}
+const cancelReasons={'1':'Erro na emissão','2':'Serviço não prestado','9':'Outros'};
+function renderNote(target,data){const full=state.displayMode==='fullscreen',r=data.record||{},args=state.args||{},snap=r.destinatario_snapshot||{};
+  hero(target,{eyebrow:noteTitle(r),title:r.cliente||snap.nome||'Cliente',status:r.status,amount:r.valor_total,
+    meta:['Competência '+formatted('data_competencia',r.data_competencia),r.local_prestacao].filter(Boolean).join(' · ')});
+  if(r.status==='falha'&&r.erro_mensagem)target.append(notice(r.erro_mensagem,'danger'));
+  else target.append(element('p',r.aviso||'Simulação — sem validade fiscal.','notice notice-warning slim'));
+  const values=kv([['valor_iss',r.valor_iss],['retencao_iss',Number(r.retencao_iss)>0?r.retencao_iss:undefined],['retencoes_federais',Number(r.retencoes_federais)>0?r.retencoes_federais:undefined],['valor_liquido',r.valor_liquido,{strong:true}]]);
+  const actions=detailActions(state.tool,args,data,r).filter(Boolean);
+  // Inline: só o essencial (até 5 dados) e no máximo duas ações; o resto em tela cheia.
+  if(!full){target.append(section('Valores',values));
+    if(strict){target.append(actionsBar([actions.find(a=>a.primary)||actions[0],{label:'Ver detalhes',run:fullscreen}]));return}
+    target.append(actionsBar(actions));const more=element('p',undefined,'more');more.append(button('Ver todos os dados',fullscreen));target.append(more);return}
+  target.append(section('Valores',values));
+  target.append(section('Tomador',kv([['cliente',snap.nome||r.cliente,{label:'Nome'}],['documento',formatDocument(snap.documento),{label:'CPF/CNPJ',raw:true}],['email',snap.email,{raw:true}],
+    ['cidade',[snap.cidade||snap.municipio,snap.uf].filter(Boolean).join('/'),{raw:true}]])));
+  if(r.chave_acesso)target.append(section('Identificação fiscal',kv([['codigo_verificacao',r.codigo_verificacao,{mono:true,raw:true}],['autorizada_em',r.autorizada_em],
+    ['protocolo',r.protocolo,{mono:true,raw:true}],['numero_dps',r.numero_dps?r.numero_dps+' / série '+(r.serie_dps||'—'):undefined,{label:'DPS',raw:true}],
+    ['chave_acesso',copyable(String(r.chave_acesso)),{wide:true}]])));
+  const items=data.items||[];if(items.length)target.append(section('Itens',table(items,['descricao','quantidade','valor_unitario','desconto','valor_total'])));
+  if(r.observacoes)target.append(section('Observações',element('p',r.observacoes)));
+  const tech=element('details',undefined,'tech');tech.append(element('summary','Detalhes técnicos'));
+  const techFields=kv([['modelo_emissao',r.modelo_emissao],['emitida_em',r.emitida_em],['cancelada_em',r.cancelada_em],['codigo_municipio_prestacao',r.codigo_municipio_prestacao,{label:'Município (IBGE)',raw:true}],
+    ['simulacao_cenario',r.simulacao_cenario,{label:'Cenário da simulação',raw:true}],['versao',r.versao,{label:'Versão',raw:true}],['id',r.id,{label:'ID',raw:true}]]);
+  if(techFields){tech.append(techFields);target.append(tech)}
+  if(actions.length)target.append(actionsBar(actions))}
+function renderDetails(target,data){if(state.tool==='obter_nota_servico')return renderNote(target,data);const full=state.displayMode==='fullscreen',args=state.args||{};
   const record=data.record||data.sale||data.purchase||{},name=record.nome||record.numero||record.descricao||('#'+(record.id||''));
   const title=state.tool==='obter_cadastro'&&registrationNouns[args.tipo]?registrationNouns[args.tipo][0][0].toUpperCase()+registrationNouns[args.tipo][0].slice(1):(titles[state.tool]||'Registro');
   target.append(element('h1',title+' '+name));

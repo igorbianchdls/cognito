@@ -16,7 +16,23 @@ function nextSteps(tipo,id,dados){
   if(tipo==='pagar_parcela'||tipo==='receber_parcela')return [view('obter_parcela_financeira',{tipo:tipo==='pagar_parcela'?'pagar':'receber',parcela_id:Number(dados.registro_id)})];
   const kind=tipo.replace(/^(editar)_/,'');if(registrationModules[kind]&&!/^excluir_/.test(tipo))return [view('obter_cadastro',{tipo:registrationModules[kind],registro_id:id})];
   return []}
-function renderResult(target,data){const proposal=data.proposta||{},dados=proposal.dados||{},saved=data.status==='saved',alvo=data.alvo;
+const noteDone={nota_servico:'Rascunho de NFS-e criado.',editar_nota_servico:'Rascunho de NFS-e atualizado.',simular_nota_servico:'Emissão processada pelo simulador.',
+  consultar_resultado_nota_servico:'Retorno da emissão consultado.',cancelar_nota_servico:'NFS-e cancelada.',excluir_nota_servico:'Rascunho de NFS-e excluído.'};
+// Resultado de NFS-e: confirma o que aconteceu e busca a nota atualizada (número, situação e PDF).
+function renderNoteResult(target,data){const proposal=data.proposta||{},tipo=proposal.tipo,saved=data.status==='saved',id=tipo==='nota_servico'?Number(data.registro_id):Number((proposal.dados||{}).registro_id||data.registro_id);
+  hero(target,{eyebrow:operationLabels[tipo]||'Nota de serviço',title:saved?noteDone[tipo]:'Situação: '+(states[data.status]||data.status)});
+  if(!saved||!id||tipo==='excluir_nota_servico')return;
+  const slot=element('div');slot.append(skeleton());target.append(slot);
+  callTool('obter_nota_servico',withCompany({nota_id:id})).then(content=>{const r=(content.data||{}).record||{};if(!slot.isConnected)return;slot.replaceChildren();
+    const box=element('div',undefined,'section');box.append(kv([['nota',noteTitle(r),{label:'Nota',raw:true}],['cliente',r.cliente,{raw:true}],['valor_total',r.valor_total],['status',chip(r.status),{label:'Situação'}]]));slot.append(box);
+    const view={label:'Ver nota',run:()=>open('obter_nota_servico',withCompany({nota_id:id}))};
+    const pdf=r.pdf_url&&{label:'Abrir PDF',run:()=>openLink(r.pdf_url,'DANFSe da '+noteTitle(r))};
+    const next=r.status==='rascunho'?[{label:'Emitir',primary:true,run:()=>preview('emitir_nota_servico',{dados:{registro_id:id}})},view]
+      :r.status==='aguardando_retorno'?[{label:'Consultar retorno',primary:true,run:()=>preview('consultar_nota_servico',{dados:{registro_id:id}})},view]
+      :r.status==='emitida'?[pdf&&{...pdf,primary:true},view]:[view];
+    slot.append(actionsBar(next));notify('ui/notifications/size-changed',{height:contentHeight()})})
+  .catch(()=>{if(slot.isConnected)slot.replaceChildren(actionsBar(nextSteps(tipo,id,proposal.dados||{})))})}
+function renderResult(target,data){if(/nota_servico$/.test((data.proposta||{}).tipo||''))return renderNoteResult(target,data);const proposal=data.proposta||{},dados=proposal.dados||{},saved=data.status==='saved',alvo=data.alvo;
   const subject=alvo&&alvo.nome||dados.nome||dados.descricao||'';
   heading(target,(operationLabels[proposal.tipo]||'Operação')+(subject?' · '+subject:''));
   target.append(notice(saved?(/^excluir_/.test(proposal.tipo||'')?'Excluído no ERP.':'Salvo no ERP.'):'Situação: '+(states[data.status]||data.status),saved?'success':'info'));

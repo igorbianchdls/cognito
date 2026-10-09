@@ -181,20 +181,25 @@ addEventListener('message',async e=>{if(e.source!==frame.contentWindow)return;co
   try{
     await check('Card da lista de notas',async()=>{const page=await open(raw.lista),f=frame(page);await f.getByRole('heading',{name:/Notas de serviço/}).waitFor();await inline(page);
       await f.locator('.narrow').getByText('Aurora Clínica Integrada').first().waitFor();await done(page,'nfse-lista')});
-    await check('Card do rascunho: Emitir gera prévia, Confirmar emite de verdade',async()=>{const page=await open(raw.rascunho),f=frame(page);await f.getByRole('heading',{name:/Nota de serviço/}).waitFor();await inline(page);
+    await check('Card do rascunho: Emitir gera prévia, Confirmar emite de verdade',async()=>{const page=await open(raw.rascunho),f=frame(page);await f.locator('.eyebrow',{hasText:'Rascunho de NFS-e'}).waitFor();await f.getByRole('heading',{name:'Aurora Clínica Integrada'}).waitFor();await inline(page);
       assert.equal(await f.locator('.actions button').first().innerText(),'Emitir');await frame(page).locator('main').screenshot({path:`${OUT}/nfse-detalhe-rascunho.png`});
-      await f.getByRole('button',{name:'Emitir'}).click();await f.getByText('Prévia — nada foi salvo ainda.').waitFor();assert.equal((await win(page)).calls.at(-1).name,'emitir_nota_servico');
-      await f.getByRole('button',{name:'Confirmar',exact:true}).click();await f.getByText('Salvo no ERP.').waitFor();
-      assert.equal((await note(draft)).record.status,'emitida');await done(page,'nfse-emitida-pelo-card')});
+      await f.getByRole('button',{name:'Emitir'}).click();await f.getByText('Prévia — nada foi salvo ainda.').waitFor();await frame(page).locator('main').screenshot({path:`${OUT}/nfse-previa-emitir.png`});assert.equal((await win(page)).calls.at(-1).name,'emitir_nota_servico');
+      await f.getByRole('button',{name:'Confirmar',exact:true}).click();await f.getByText('Emissão processada pelo simulador.').waitFor();
+      await f.getByRole('button',{name:'Abrir PDF'}).waitFor();assert.equal((await note(draft)).record.status,'emitida');await done(page,'nfse-emitida-pelo-card')});
     await check('Card da nota emitida: Abrir PDF pede ao host para abrir o link',async()=>{await tool('obter_nota_servico',{nota_id:draft},'emitida');const page=await open(raw.emitida),f=frame(page);
-      await f.getByRole('heading',{name:/Nota de serviço/}).waitFor();await inline(page);await frame(page).locator('main').screenshot({path:`${OUT}/nfse-detalhe-emitida.png`});
+      await f.locator('.eyebrow',{hasText:/^NFS-e nº /}).waitFor();await inline(page);await frame(page).locator('main').screenshot({path:`${OUT}/nfse-detalhe-emitida.png`});
       await f.getByRole('button',{name:'Abrir PDF'}).click();await page.waitForFunction(()=>window.links.length===1);
       assert.deepEqual((await win(page)).links,[`https://erp.example.invalid/api/erp/notas-servico/${draft}/pdf`]);await done(page,'nfse-abrir-pdf')});
     await check('Card da nota emitida: Cancelar nota pede pela conversa no formato do MCP Apps',async()=>{const page=await open(raw.emitida),f=frame(page);
-      await f.getByRole('heading',{name:/Nota de serviço/}).waitFor();await f.getByRole('button',{name:'Ver detalhes'}).click();await f.getByRole('button',{name:'Cancelar nota'}).click();
-      await page.waitForFunction(()=>window.messages.length===1);const [message]=(await win(page)).messages;assert.match(message,new RegExp('^Quero cancelar a nota de serviço .*\(ID '+draft+'\)'));await done(page,'nfse-cancelar-pela-conversa')});
-    await check('Card de resultado após criar sugere Emitir',async()=>{const page=await open(raw.resultado),f=frame(page);await f.getByText('Salvo no ERP.').waitFor();await inline(page);
-      assert(await f.getByRole('button',{name:'Emitir'}).count(),'botão Emitir');await done(page,'nfse-resultado-criar')});
+      await f.locator('.eyebrow',{hasText:/^NFS-e nº /}).waitFor();await f.getByRole('button',{name:'Ver detalhes'}).click();await f.getByText('Identificação fiscal').waitFor();await frame(page).locator('main').screenshot({path:`${OUT}/nfse-detalhe-completo.png`});await f.getByRole('button',{name:'Cancelar nota'}).click();
+      await page.waitForFunction(()=>window.messages.length===1);const [message]=(await win(page)).messages;assert.match(message,new RegExp('^Quero cancelar a NFS-e nº .*\(ID '+draft+'\)'));await done(page,'nfse-cancelar-pela-conversa')});
+    await check('Card de resultado busca a nota atualizada (já emitida: Abrir PDF)',async()=>{const page=await open(raw.resultado),f=frame(page);await f.getByText('Rascunho de NFS-e criado.').waitFor();await f.getByRole('button',{name:'Abrir PDF'}).waitFor();await inline(page);
+      await done(page,'nfse-resultado-criar')});
+    await check('Prévias de criar e cancelar com resumo e valores',async()=>{
+      await tool('criar_nota_servico',{chave_operacao:randomUUID(),dados:{...dados,observacoes:'Prévia para o card'}},'previaCriar');
+      let page=await open(raw.previaCriar),f=frame(page);await f.getByText('Prévia — nada foi salvo ainda.').waitFor();await f.getByText('Valor líquido a receber').waitFor();await inline(page);await done(page,'nfse-previa-criar');
+      await tool('cancelar_nota_servico',{chave_operacao:randomUUID(),dados:{registro_id:draft,codigo_motivo:'2',motivo:'Serviço não foi prestado ao cliente'}},'previaCancelar');
+      page=await open(raw.previaCancelar);f=frame(page);await f.getByText('Serviço não prestado').waitFor();await f.getByRole('button',{name:'Confirmar mesmo assim'}).waitFor();await done(page,'nfse-previa-cancelar')});
   }finally{await browser.close();await new Promise(r=>server.close(()=>r()));await client.close()}
   console.log(JSON.stringify({status:'passed',checks,tools:NOTE_TOOLS.length,artifacts:OUT,realClaude:false,realOAuth:false,localPostgres:true}));
 }
