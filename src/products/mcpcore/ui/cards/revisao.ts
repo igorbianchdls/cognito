@@ -11,15 +11,19 @@ function referenceName(data,key,value){const refs=data.referencias||{};if(key===
 function itemName(data,item){const refs=(data.referencias&&data.referencias.itens)||[];const found=refs.find(r=>String(r.id)===String(item.item_id)&&r.tipo===item.tipo);return found?found.nome:(item.descricao||label(item.tipo)+' #'+item.item_id)}
 function renderReview(target,data){if(/nota_servico$/.test((data.proposta||{}).tipo||''))return renderNoteReview(target,data);const proposal=data.proposta||{},dados=proposal.dados||{},alvo=data.alvo,pendingDraft=data.status==='pending';
   const subject=alvo&&alvo.nome||(data.referencias&&(data.referencias.cliente||data.referencias.fornecedor)||{}).nome||dados.nome||dados.descricao||'';
-  heading(target,(operationLabels[proposal.tipo]||'Operação')+(subject?' · '+subject:''),pendingDraft?'Prévia — nada foi salvo ainda.':'');
-  if(!pendingDraft)target.append(element('p','Situação: '+(states[data.status]||data.status)));
-  if(alvo&&alvo.nome)target.append(element('p','Registro: '+alvo.nome+(alvo.status?' · '+(states[alvo.status]||alvo.status):''),'muted'));
+  const amount=proposal.total!==undefined?proposal.total:alvo&&alvo.valor!=null&&alvo.valor!==''?Number(alvo.valor):undefined;
+  hero(target,{title:(operationLabels[proposal.tipo]||'Operação')+(subject?' · '+subject:''),amount,amountLabel:proposal.total!==undefined?'Total calculado pelo ERP':amount!==undefined?'Valor':undefined,
+    status:alvo&&alvo.status,meta:alvo&&alvo.nome&&alvo.nome!==subject?'Registro: '+alvo.nome:''});
+  const banner=notice(pendingDraft?'Prévia — nada foi salvo ainda.':'Situação: '+(states[data.status]||data.status),pendingDraft?'info':'warning');banner.classList.add('slim');target.append(banner);
   if(risky.test(proposal.tipo||''))target.append(notice(consequence(proposal.tipo),'danger'));
   const allKeys=Object.keys(dados).filter(k=>!['itens','parcelas','registro_id'].includes(k)&&(dados[k]===null||typeof dados[k]!=='object'));
   // No Claude a prévia inline mostra o essencial; a prévia completa (e o ajuste) ficam em tela cheia.
   const compact=strict&&state.displayMode!=='fullscreen',items=Array.isArray(dados.itens)?dados.itens:[],installments=Array.isArray(dados.parcelas)?dados.parcelas:[];
   const keys=compact?allKeys.slice(0,4):allKeys,partial=compact&&(allKeys.length>4||items.length>3||installments.length>0);
-  if(keys.length){const before=alvo&&alvo.campos||null,t=element('table'),head=element('tr');head.append(element('th','Campo'));if(before)head.append(element('th','Atual'));head.append(element('th',before?'Novo':'Valor'));
+  const before=alvo&&alvo.campos&&Object.keys(alvo.campos).length?alvo.campos:null;
+  // Criação: campos em grade. Edição: tabela Atual → Novo, onde a comparação importa.
+  if(keys.length&&!before)target.append(section(null,kv(keys.map(key=>{const name=referenceName(data,key,dados[key]);return [key,name||dados[key],{label:name?label(key).replace(/ \(ID\)$/,''):label(key),raw:Boolean(name)}]}))));
+  if(keys.length&&before){const t=element('table'),head=element('tr');head.append(element('th','Campo'));if(before)head.append(element('th','Atual'));head.append(element('th',before?'Novo':'Valor'));
     const thead=element('thead');thead.append(head);const body=element('tbody');
     for(const key of keys){const tr=element('tr'),name=referenceName(data,key,dados[key]),value=name||formatted(key,dados[key]);tr.append(element('td',name?label(key).replace(/ \(ID\)$/,''):label(key)));
       if(before){const old=before[key]===undefined?'—':formatted(key,before[key]);tr.append(element('td',old,'muted'));tr.append(element('td',value,old!==value?'changed':''))}else tr.append(element('td',value));body.append(tr)}
@@ -27,8 +31,6 @@ function renderReview(target,data){if(/nota_servico$/.test((data.proposta||{}).t
   if(items.length)target.append(itemsTable(data,compact?items.slice(0,3):items));
   if(installments.length&&!compact)target.append(table(installments,['data_vencimento','valor'],'Parcelas'));
   if(partial)target.append(element('p',[allKeys.length>4&&(allKeys.length-4)+' campos',items.length>3&&(items.length-3)+' itens',installments.length&&installments.length+' parcelas'].filter(Boolean).join(', ')+' na prévia completa.','muted'));
-  if(proposal.total!==undefined)target.append(metrics([{label:'Total calculado pelo ERP',value:money(proposal.total)},
-    ...(proposal.valor_iss!==undefined?[{label:'ISS',value:money(proposal.valor_iss)}]:[]),...(proposal.valor_liquido!==undefined?[{label:'Valor líquido',value:money(proposal.valor_liquido)}]:[])]));
   reviewActions(target,data,{items,partial,compact})}
 // Confirmar e Ajustar (ou Ver prévia completa); em edição, Atualizar prévia e Cancelar.
 function reviewActions(target,data,{items,partial,compact}){const proposal=data.proposta||{};if(data.status!=='pending'||!data.confirmar)return;

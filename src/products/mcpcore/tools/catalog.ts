@@ -2,6 +2,8 @@ import { z } from 'zod'
 import type { ErpCapability } from '@/products/erp/shared/professionalContracts'
 import type { ErpQueries } from '../application/erpQueries'
 import { outputs } from './outputs'
+import { ErpDomainError } from '@/products/erp/shared/erpErrors'
+import { PluginError } from '../shared/contracts'
 
 export const companySchema = z.number().int().positive().optional().describe('Empresa autorizada retornada por meu_acesso. Obrigatória se houver mais de uma empresa.')
 const company = companySchema
@@ -28,6 +30,12 @@ function commercialFilters(input:Record<string,unknown>) {
 const registrationTypes = z.enum(['clientes','fornecedores','vendedores','produtos','servicos','categorias','categorias-cadastro','contas-financeiras'])
 const registrationCapabilities = (input:Record<string,unknown>):ErpCapability[] =>
   input.tipo==='contas-financeiras'?['erp.financeiro.visualizar','erp.cadastros.visualizar']:['erp.cadastros.visualizar']
+// Número exato da NFS-e (a busca da lista também casa por cliente e por parte do número).
+async function noteIdByNumber(q:ErpQueries,companyId:number,numero:string){
+  const page=await q.serviceInvoices(companyId,{busca:numero,por_pagina:50}),match=page.records.find(row=>String(row.numero)===numero)
+  if(!match)throw new ErpDomainError('NOT_FOUND','Nota de serviço não encontrada.',404)
+  return Number(match.id)
+}
 export const tools: ToolDefinition[] = [
   { name: 'resumo_erp', title: 'Resumo do ERP', output: outputs.overview, description: 'Use quando o usuário pedir uma visão geral da empresa: saldos a pagar e receber, vencidos, vendas em rascunho, compras abertas e clientes ativos. Não use para listas detalhadas. Requer permissão de todas essas áreas.',
     schema: z.object({ empresa_id: company }).strict(),
@@ -59,9 +67,10 @@ export const tools: ToolDefinition[] = [
   {name:'listar_notas_servico',title:'Listar notas de serviço',output:outputs.page,description:'Use quando o usuário perguntar sobre notas fiscais de serviço (NFS-e) simuladas: por número, cliente, situação ou competência, ou para obter o ID usado nas demais tools de nota. busca procura no número da nota e no nome do cliente (tomador), nunca no nome da sua empresa: para listar todas, omita busca. Simulação sem validade fiscal.',
     schema:z.object({...paging,status:z.enum(['rascunho','aguardando_retorno','emitida','falha','cancelada']).optional(),inicio:isoDate,fim:isoDate}).strict(),capabilities:['erp.vendas.visualizar'],
     execute:(q,id,input)=>q.serviceInvoices(id,{busca:input.busca as string|undefined,status:input.status as string|undefined,inicio:input.inicio as string|undefined,fim:input.fim as string|undefined,pagina:Number(input.pagina),por_pagina:Number(input.por_pagina)})},
-  {name:'obter_nota_servico',title:'Detalhes da nota de serviço',output:outputs.serviceInvoice,description:'Use para ver itens, impostos, retenções, histórico e situação de uma nota de serviço simulada pelo ID de listar_notas_servico. Devolve pdf_url (DANFSe) e, se autorizada, xml_url: links que abrem no navegador com o usuário logado no ERP.',
-    schema:z.object({empresa_id:company,nota_id:z.number().int().positive()}).strict(),capabilities:['erp.vendas.visualizar'],
-    execute:async(q,id,input,context)=>{const detail=await q.serviceInvoice(id,Number(input.nota_id)),link=(path:unknown)=>path?new URL(String(path),context.origin).toString():null
+  {name:'obter_nota_servico',title:'Detalhes da nota de serviço',output:outputs.serviceInvoice,description:'Use para ver itens, impostos, retenções, histórico e situação de uma nota de serviço simulada: informe nota_id (ID de listar_notas_servico) ou numero (o número da NFS-e, ex.: 13). Devolve pdf_url (DANFSe) e, se autorizada, xml_url: links que abrem no navegador com o usuário logado no ERP.',
+    schema:z.object({empresa_id:company,nota_id:z.number().int().positive().optional(),numero:z.string().trim().min(1).max(30).optional().describe('Número da NFS-e, quando não tiver o ID.')}).strict(),capabilities:['erp.vendas.visualizar'],
+    execute:async(q,id,input,context)=>{if(input.nota_id===undefined&&input.numero===undefined)throw new PluginError('INVALID_INPUT','Informe nota_id ou numero.',400,undefined,[{campo:'nota_id',motivo:'Obrigatório (ou numero)'}])
+      const noteId=input.nota_id!==undefined?Number(input.nota_id):await noteIdByNumber(q,id,String(input.numero)),detail=await q.serviceInvoice(id,noteId),link=(path:unknown)=>path?new URL(String(path),context.origin).toString():null
       const {input:editable,...rest}=detail
       const totals=detail.totals as Record<string,unknown>,issuer=(detail.record.emitente_snapshot||{}) as Record<string,unknown>,place=String(detail.record.codigo_municipio_prestacao||'')
       const federal=['irrf','inss','pis','cofins','csll'].reduce((sum,key)=>sum+Number(totals['retencao_'+key]||0),0)

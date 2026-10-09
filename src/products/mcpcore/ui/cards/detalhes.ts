@@ -73,23 +73,35 @@ function renderNote(target,data){const full=state.displayMode==='fullscreen',r=d
     ['simulacao_cenario',r.simulacao_cenario,{label:'Cenário da simulação',raw:true}],['versao',r.versao,{label:'Versão',raw:true}],['id',r.id,{label:'ID',raw:true}]]);
   if(techFields){tech.append(techFields);target.append(tech)}
   if(actions.length)target.append(actionsBar(actions))}
+// Cabeçalho de cada tipo de registro e os campos que ele já mostra (não se repetem na grade).
+function heroFor(tool,record,args){const date=k=>record[k]?formatted('data',record[k]):null,side=record.lado||args.tipo||'pagar',party=side==='receber'?'cliente':'fornecedor';
+  const due=dueText(record.vencimento,record.status);
+  if(tool==='obter_venda')return {keys:['numero','cliente_nome','total','status','data_venda','data_vencimento','tipo_documento'],eyebrow:(record.tipo_documento==='orcamento'?'Orçamento ':'Venda ')+(record.numero||''),
+    title:record.cliente_nome||'Cliente',amount:record.total,status:record.status,meta:[date('data_venda')&&'Data '+date('data_venda'),date('data_vencimento')&&'Vencimento '+date('data_vencimento')].filter(Boolean).join(' · ')};
+  if(tool==='obter_compra')return {keys:['numero','fornecedor_nome','total','status','data_compra','data_vencimento'],eyebrow:'Compra '+(record.numero||''),title:record.fornecedor_nome||'Fornecedor',
+    amount:record.total,status:record.status,meta:[date('data_compra')&&'Data '+date('data_compra'),date('data_vencimento')&&'Vencimento '+date('data_vencimento')].filter(Boolean).join(' · ')};
+  if(tool==='obter_titulo_financeiro')return {keys:['descricao','status',party,'valor_total'],eyebrow:side==='receber'?'Conta a receber':'Conta a pagar',title:record.descricao||'Título',
+    amount:record.valor_total!==undefined?record.valor_total:record.valor,status:record.status,meta:record[party]||''};
+  if(tool==='obter_parcela_financeira')return {keys:['descricao','status',party,'saldo','vencimento','parcela'],eyebrow:'Parcela '+(record.parcela||'')+' · '+(side==='receber'?'Conta a receber':'Conta a pagar'),
+    title:record.descricao||'Parcela',amount:record.saldo,amountLabel:'Saldo',status:record.status,meta:[record[party],record.vencimento&&'Vence '+formatted('vencimento',record.vencimento),due].filter(Boolean).join(' · ')};
+  if(tool==='obter_cadastro'){const noun=(registrationNouns[args.tipo]||['cadastro'])[0];return {keys:['nome','status','documento','cidade'],eyebrow:noun[0].toUpperCase()+noun.slice(1),title:record.nome||'Cadastro',
+    status:record.status,meta:[record.documento&&formatDocument(record.documento),record.cidade].filter(Boolean).join(' · ')}}
+  return {keys:['nome','numero','status'],eyebrow:titles[tool]||'Registro',title:record.nome||record.numero||record.descricao||('#'+(record.id||'')),status:record.status}}
 function renderDetails(target,data){if(state.tool==='obter_nota_servico')return renderNote(target,data);const full=state.displayMode==='fullscreen',args=state.args||{};
-  const record=data.record||data.sale||data.purchase||{},name=record.nome||record.numero||record.descricao||('#'+(record.id||''));
-  const title=state.tool==='obter_cadastro'&&registrationNouns[args.tipo]?registrationNouns[args.tipo][0][0].toUpperCase()+registrationNouns[args.tipo][0].slice(1):(titles[state.tool]||'Registro');
-  target.append(element('h1',title+' '+name));
-  const sub=element('p',undefined,'sub');if(record.status)sub.append(chip(record.status));const due=dueText(record.vencimento,record.status);if(due)sub.append(element('span',' '+due,due.startsWith('venceu')?'due':'soon'));if(sub.childNodes.length)target.append(sub);
-  // Nota de serviço simulada: o aviso de simulação aparece como aviso, não como campo.
-  if(record.aviso)target.append(notice(record.aviso));
-  const preferred=(detailFields[state.tool]||(()=>[]))(record);
-  const keys=[...preferred.filter(k=>record[k]!==undefined&&record[k]!==null&&record[k]!==''),...Object.keys(record).filter(k=>!preferred.includes(k)&&record[k]!==null&&typeof record[k]!=='object'&&!/(_id|versao|lado)$/.test(k)&&!['id','status','nome','numero','tipo_documento','atendimento_status','aviso','modo_operacao','pdf_url','xml_url','simulacao_cenario','codigo_municipio_prestacao'].includes(k))];
-  const inlineFields=strict?5:8;
-  target.append(fields(record,full?keys:keys.slice(0,inlineFields)));
+  const record=data.record||data.sale||data.purchase||{},head=heroFor(state.tool,record,args);
+  hero(target,head);if(record.aviso)target.append(element('p',record.aviso,'notice notice-warning slim'));
+  const preferred=(detailFields[state.tool]||(()=>[]))(record).filter(k=>!head.keys.includes(k));
+  const hiddenKeys=['id','status','nome','numero','tipo_documento','atendimento_status','aviso','modo_operacao','pdf_url','xml_url','lado',...head.keys];
+  const keys=[...preferred.filter(k=>record[k]!==undefined&&record[k]!==null&&record[k]!==''),...Object.keys(record).filter(k=>!preferred.includes(k)&&record[k]!==null&&record[k]!==''&&typeof record[k]!=='object'&&!/(_id|versao)$/.test(k)&&!hiddenKeys.includes(k))];
+  const inlineFields=strict?4:6,shown=full?keys:keys.slice(0,inlineFields);
+  if(record.atendimento_status&&state.tool==='obter_venda')shown.unshift('atendimento_status');
+  target.append(section(full?'Resumo':null,kv(shown.map(k=>[k,record[k]]))));
   const account=record.conta_financeira_sugerida;if(account&&full)target.append(element('p','Conta sugerida para a baixa: '+account.nome,'muted'));
   const lists=[['items','Itens'],['installments','Parcelas'],['history','Histórico']].filter(([k])=>Array.isArray(data[k])&&data[k].length);
-  for(const [key,caption] of full?lists:lists.slice(0,strict?0:1)){const rows=data[key],keysFor=key==='items'?(itemColumns[state.tool]||columns(rows,5)).filter(k=>rows.some(r=>r[k]!==undefined)):key==='installments'?['parcela','vencimento','valor','saldo','status'].filter(k=>rows.some(r=>r[k]!==undefined)):columns(rows,full?6:4);
-    const t=element('table'),head=element('tr');t.append(element('caption',caption));for(const k of keysFor){const th=element('th',label(k));if(moneyKeys.has(k)||/quantidade/.test(k))th.className='num';head.append(th)}
-    const thead=element('thead');thead.append(head);const body=element('tbody');for(const row of full?rows:rows.slice(0,5)){const tr=element('tr',undefined,row.status==='vencido'?'overdue':'');for(const k of keysFor)tr.append(cell(k==='vencimento'?'vencimento':k,row));body.append(tr)}
-    t.append(thead,body);target.append(t)}
+  for(const [key,caption] of full?lists:lists.slice(0,strict?0:1)){const rows=data[key],keysFor=key==='items'?(itemColumns[state.tool]||columns(rows,5)).filter(k=>rows.some(r=>r[k]!==undefined)):key==='installments'?['parcela','vencimento','data_vencimento','valor','saldo','status'].filter(k=>rows.some(r=>r[k]!==undefined)):columns(rows,full?6:4);
+    const t=element('table'),headRow=element('tr');for(const k of keysFor){const th=element('th',label(k));if(moneyKeys.has(k)||/quantidade/.test(k))th.className='num';headRow.append(th)}
+    const thead=element('thead');thead.append(headRow);const body=element('tbody');for(const row of full?rows:rows.slice(0,5)){const tr=element('tr',undefined,row.status==='vencido'?'overdue':'');for(const k of keysFor)tr.append(cell(k==='vencimento'?'vencimento':k,row));body.append(tr)}
+    t.append(thead,body);target.append(section(caption,t))}
   if(data.itemsTruncated||data.installmentsTruncated||data.historyTruncated)target.append(notice('A lista foi limitada; consulte o ERP para ver todos os registros.'));
   const actions=detailActions(state.tool,args,data,record).filter(Boolean);
   const hidden=!full&&(keys.length>inlineFields||lists.length>(strict?0:1)||lists.some(([k])=>data[k].length>5));

@@ -89,11 +89,11 @@ async function main(){
     await f.getByRole('button',{name:'Aplicar'}).click()
     await page.waitForFunction(()=>(window as unknown as Win).calls.at(-1)?.arguments.ordenar==='-saldo')
     assert.deepEqual((await lastCall(page)).arguments,{empresa_id:2,tipo:'pagar',status:'vencido',ordenar:'-saldo',pagina:1})
-    await f.locator('table.wide tbody tr').first().click();await f.getByRole('heading',{name:'Parcela Aluguel'}).waitFor()
+    await f.locator('table.wide tbody tr').first().click();await f.getByRole('heading',{name:'Aluguel'}).waitFor()
     await done(page,'lista-filtros')
     // Detalhes inline: até 5 campos, sem tabelas, ação principal + "Ver detalhes".
     page=await open('obter_venda',{empresa_id:2,venda_id:1});f=frame(page);await f.getByText('Venda VEN-001').waitFor()
-    assert(await f.locator('.fields dt').count()<=5);assert.equal(await f.locator('table').count(),0)
+    assert(await f.locator('.kv dt').count()<=5);assert.equal(await f.locator('table').count(),0)
     assert.deepEqual(await f.locator('.actions button').allInnerTexts(),['Confirmar venda','Ver detalhes']);await inlineRules(page)
     // Ação inline abre a prévia em tela cheia (sem navegação dentro do card inline).
     await f.getByRole('button',{name:'Confirmar venda'}).click();await f.getByText('Prévia — nada foi salvo ainda.').waitFor()

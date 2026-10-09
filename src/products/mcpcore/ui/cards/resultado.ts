@@ -33,11 +33,9 @@ function renderNoteResult(target,data){const proposal=data.proposta||{},tipo=pro
     slot.append(actionsBar(next));notify('ui/notifications/size-changed',{height:contentHeight()})})
   .catch(()=>{if(slot.isConnected)slot.replaceChildren(actionsBar(nextSteps(tipo,id,proposal.dados||{})))})}
 function renderResult(target,data){if(/nota_servico$/.test((data.proposta||{}).tipo||''))return renderNoteResult(target,data);const proposal=data.proposta||{},dados=proposal.dados||{},saved=data.status==='saved',alvo=data.alvo;
-  const subject=alvo&&alvo.nome||dados.nome||dados.descricao||'';
-  heading(target,(operationLabels[proposal.tipo]||'Operação')+(subject?' · '+subject:''));
+  const subject=alvo&&alvo.nome||((data.referencias||{}).cliente||(data.referencias||{}).fornecedor||{}).nome||dados.nome||dados.descricao||'';
+  hero(target,{eyebrow:saved?'Concluído':'Situação',title:(operationLabels[proposal.tipo]||'Operação')+(subject?' · '+subject:''),amount:proposal.total});
   target.append(notice(saved?(/^excluir_/.test(proposal.tipo||'')?'Excluído no ERP.':'Salvo no ERP.'):'Situação: '+(states[data.status]||data.status),saved?'success':'info'));
-  const summary={};if(proposal.total!==undefined)summary.total=proposal.total;
-  for(const key of ['valor','data_pagamento','data_venda','data_compra','data_vencimento'])if(dados[key]!==undefined)summary[key]=dados[key];
-  if(Object.keys(summary).length)target.append(fields(summary));
+  target.append(section(null,kv(['valor','data_pagamento','data_venda','data_compra','data_vencimento'].filter(key=>dados[key]!==undefined).map(key=>[key,dados[key]]))));
   const id=Number(data.registro_id);if(saved&&id)target.append(actionsBar(nextSteps(proposal.tipo||'',id,dados)))}
 `

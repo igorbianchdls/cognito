@@ -96,7 +96,7 @@ async function main(){
     await page.waitForFunction(()=>(window as unknown as Win).calls.at(-1)?.arguments.ordenar==='-saldo')
     assert.equal((await lastCall(page)).arguments.status,'vencido');await f.getByText(/maior saldo/).first().waitFor();await shot(page,'lista-tela-cheia')
     // C: detalhes da parcela → Registrar pagamento (prévia já preenchida) → Confirmar → próximo passo.
-    await f.locator('table.wide tbody tr').nth(1).click();await f.getByRole('heading',{name:'Parcela Aluguel'}).waitFor()
+    await f.locator('table.wide tbody tr').nth(1).click();await f.getByRole('heading',{name:'Aluguel'}).waitFor()
     assert.deepEqual((await lastCall(page)),{name:'obter_parcela_financeira',arguments:{empresa_id:2,tipo:'pagar',parcela_id:2}})
     await f.getByText('venceu há 6 dias').first().waitFor();await f.getByRole('button',{name:'← Voltar'}).waitFor();await shot(page,'detalhes-parcela')
     await f.getByRole('button',{name:'Registrar pagamento'}).click();await f.getByText('Prévia — nada foi salvo ainda.').waitFor()
@@ -104,7 +104,7 @@ async function main(){
     assert.deepEqual(baixa.arguments.dados,{registro_id:2,valor:1200,data_pagamento:'2026-10-07',conta_financeira_id:9})
     await f.getByRole('button',{name:'Confirmar'}).click();await f.getByText('Salvo no ERP.').waitFor()
     assert.deepEqual(Object.keys((await lastCall(page)).arguments).sort(),['empresa_id','rascunho_id']);assert.equal(await f.getByRole('button',{name:'← Voltar'}).count(),0)
-    await shot(page,'resultado-baixa');await f.getByRole('button',{name:'Ver registro'}).click();await f.getByRole('heading',{name:'Parcela Aluguel'}).waitFor()
+    await shot(page,'resultado-baixa');await f.getByRole('button',{name:'Ver registro'}).click();await f.getByRole('heading',{name:'Aluguel'}).waitFor()
     assert.deepEqual((await lastCall(page)).arguments,{empresa_id:2,tipo:'pagar',parcela_id:2});await done(page,'fluxo-pagamento')
     // A2 no celular: lista em duas linhas, valor sempre visível.
     page=await open('consultar_financeiro',{empresa_id:2,tipo:'pagar'},{width:375});f=frame(page)
@@ -115,7 +115,7 @@ async function main(){
     assert.deepEqual(await f.locator('table thead th').allInnerTexts(),['Descrição','Quantidade','Valor unitário','Total'])
     await f.getByRole('button',{name:'Confirmar venda'}).click();await f.getByText('Prévia — nada foi salvo ainda.').waitFor()
     assert.equal((await lastCall(page)).name,'confirmar_venda');assert.deepEqual((await lastCall(page)).arguments.dados,{registro_id:1});await done(page,'detalhes-venda')
-    page=await open('obter_venda',{empresa_id:2,venda_id:2});f=frame(page);await f.getByText('Venda ORC-002').waitFor()
+    page=await open('obter_venda',{empresa_id:2,venda_id:2});f=frame(page);await f.getByText('Orçamento ORC-002').waitFor()
     await f.getByRole('button',{name:'Converter em venda'}).click();await f.getByRole('heading',{name:/Converter orçamento em venda/}).waitFor()
     assert.equal((await lastCall(page)).name,'converter_orcamento');await f.getByRole('button',{name:'Confirmar',exact:true}).click()
     await f.getByText('Salvo no ERP.').waitFor();await f.getByRole('button',{name:'Confirmar venda'}).waitFor();await done(page,'converter-orcamento')

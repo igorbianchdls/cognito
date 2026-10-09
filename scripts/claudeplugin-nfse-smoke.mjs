@@ -126,6 +126,8 @@ async function main(){
     await write('emitir_nota_servico',{registro_id:id,cenario:'timeout'});assert.equal((await note(id)).record.status,'aguardando_retorno');
     await write('consultar_nota_servico',{registro_id:id});const n=await note(id);assert.equal(n.record.status,'emitida');
     assert.match(String(n.record.chave_acesso),/^\d{50}$/);assert(n.record.codigo_verificacao);assert.equal(n.record.xml_url,`https://erp.example.invalid/api/erp/notas-servico/${id}/xml`);
+    const byNumber=await tool('obter_nota_servico',{numero:String(n.record.numero)});assert.equal(Number(byNumber.record.id),id);
+    await assert.rejects(tool('obter_nota_servico',{numero:'999999'}),/NOT_FOUND/);
     const listed=await tool('listar_notas_servico',{status:'emitida'});assert(listed.records.some(r=>Number(r.id)===id));
   });
   await check('Nota emitida não aceita edição nem segunda emissão',async()=>{
