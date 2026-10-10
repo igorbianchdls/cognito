@@ -15,6 +15,6 @@ export const GET = withErpHttp(async (_request: Request, route: RouteContext) =>
       return new Response(file.content, { headers: { ...privateHeaders, 'Content-Type': 'application/xml; charset=utf-8', 'Content-Disposition': `attachment; filename="${file.name}"` } })
     }
     const file = await getServiceInvoicePdf(link.empresa, link.nota)
-    return new Response(new Uint8Array(file.bytes), { headers: { ...privateHeaders, 'Content-Type': 'application/pdf', 'Content-Disposition': `inline; filename="${file.name}"` } })
+    return new Response(new Uint8Array(file.bytes), { headers: { ...privateHeaders, 'Content-Type': 'application/pdf', 'X-PDF-Layout-Version':String(file.layoutVersion), 'X-PDF-Storage':file.source, 'Content-Disposition': `inline; filename="${file.name}"` } })
   })
 }, { operation: 'GET /api/public/nfse/[token]', authentication: 'none' })

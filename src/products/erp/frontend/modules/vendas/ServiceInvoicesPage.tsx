@@ -57,6 +57,13 @@ export function ServiceInvoicesPage(){
   }catch(e){setError(e instanceof Error?e.message:'Não foi possível carregar as notas.')}finally{setLoading(false)}
  },[page,query,status,from,to])
  useEffect(()=>{const timer=setTimeout(()=>void load(),200);return()=>clearTimeout(timer)},[load])
+ // O QR do PDF abre a nota específica; a API mantém o isolamento da empresa selecionada.
+ useEffect(()=>{
+  const id=new URLSearchParams(window.location.search).get('nota_id');if(!id||!/^[1-9]\d*$/.test(id))return
+  let active=true
+  void json<Details>('/api/erp/notas-servico/'+id).then(data=>{if(active)setDetail(data)}).catch(()=>{if(active)setError('Não foi possível abrir a nota. Confira se a empresa correta está selecionada e se você tem acesso.')})
+  return()=>{active=false}
+ },[])
  async function catalogs(){
   const [clients,items]=await Promise.all([json<{records:Option[]}>('/api/erp/clientes?pageSize=100'),json<{records:Option[]}>('/api/erp/servicos?pageSize=100')]);setCustomers(clients.records);setServices(items.records)
  }

@@ -5,11 +5,12 @@ import {ErpDomainError} from '../../shared/erpErrors'
 import {canonicalRequest} from '../../shared/commercialContracts'
 import {serviceInvoiceInputSchema,serviceInvoiceTotals,invoiceKeySchema,serviceInvoiceActionSchema,SIMULATION_NOTICE,
  type ServiceInvoiceInput,type ServiceInvoiceAction} from '../../shared/serviceInvoiceContracts'
-import {renderServiceInvoicePdf} from './serviceInvoicePdf'
+import {renderServiceInvoicePdf,SERVICE_INVOICE_PDF_LAYOUT_VERSION} from './serviceInvoicePdf'
 import {serviceInvoiceSimulator} from './serviceInvoiceSimulator'
 import {buildDps,nfseAccessKey,simulatedNfseXml} from './nfseDps'
 import {financialCompositionSql,reverseErpPayment} from '../erpRepository'
 import {assertErpPeriodOpen} from '../erpPeriodRepository'
+import {fiscalPdfPath,uploadFiscalPdf,readFiscalPdf} from './fiscalPdfStorage'
 
 type Row=Record<string,unknown>
 const PROVIDER='simulador_local'
@@ -39,13 +40,20 @@ async function history(client:SQLClient,company:number,actor:number,id:number,ev
  VALUES($1,$2,$3,$4,$5,$6,$7::jsonb,$8::jsonb,$9,$9,now())`,[company,id,PROVIDER,'simulacao_'+event,previous,next,JSON.stringify({...markers,...payload}),JSON.stringify(markers),actor])
 }
 async function pdf(client:SQLClient,company:number,actor:number,row:Row){
+ context(company,actor)
+ const existing=await query(client,'SELECT id FROM erp.notas_fiscais_pdfs WHERE empresa_id=$1 AND nota_fiscal_id=$2 AND versao=$3 AND layout_versao=$4',[company,row.id,row.versao,SERVICE_INVOICE_PDF_LAYOUT_VERSION])
+ if(existing.length)return
  const items=await query(client,'SELECT * FROM erp.notas_fiscais_itens WHERE empresa_id=$1 AND nota_fiscal_id=$2 AND excluido_em IS NULL ORDER BY numero_item,id',[company,row.id])
  const totals=(await query(client,'SELECT * FROM erp.notas_fiscais_totais WHERE empresa_id=$1 AND nota_fiscal_id=$2',[company,row.id]))[0]
  const content=renderServiceInvoicePdf({numero:row.numero,status:row.status,data_competencia:row.data_competencia instanceof Date?row.data_competencia.toISOString():row.data_competencia,
   emitente_snapshot:row.emitente_snapshot,destinatario_snapshot:row.destinatario_snapshot,valor_total:row.valor_total,items,totals:totals||{},observacoes:(row.metadata as Row)?.observacoes,
-  numero_dps:row.numero_dps,serie_dps:row.serie_dps,chave_acesso:row.chave_acesso,codigo_verificacao:row.codigo_verificacao,autorizada_em:row.autorizada_em,dps:((row.integracao_snapshot as Row)?.dps||null) as Row|null})
- await client.query(`INSERT INTO erp.notas_fiscais_pdfs(empresa_id,nota_fiscal_id,versao,conteudo,hash_sha256,nome,criado_por)
- VALUES($1,$2,$3,$4,$5,$6,$7) ON CONFLICT(empresa_id,nota_fiscal_id,versao) DO NOTHING`,[company,row.id,row.versao,content,createHash('sha256').update(content).digest('hex'),(String(row.numero).startsWith('DEMO-')?String(row.numero):'DEMO-NFSe-'+row.numero)+'-v'+row.versao+'.pdf',actor])
+  numero_dps:row.numero_dps,serie_dps:row.serie_dps,chave_acesso:row.chave_acesso,codigo_verificacao:row.codigo_verificacao,autorizada_em:row.autorizada_em,emitida_em:row.emitida_em,
+  codigo_municipio_prestacao:row.codigo_municipio_prestacao,dps:((row.integracao_snapshot as Row)?.dps||null) as Row|null,
+  consulta_url:new URL(`/erp/vendas/notas-fiscais?nota_id=${row.id}`,process.env.NEXT_PUBLIC_SITE_URL||process.env.CHATGPT_PLUGIN_RESOURCE||'https://cognito-seven.vercel.app').toString()})
+ const hash=createHash('sha256').update(content).digest('hex'),layout=SERVICE_INVOICE_PDF_LAYOUT_VERSION,version=Number(row.versao),id=Number(row.id)
+ const path=fiscalPdfPath(company,id,version,layout,hash),name=(String(row.numero).startsWith('DEMO-')?String(row.numero):'DEMO-NFSe-'+row.numero)+'-v'+version+'-layout'+layout+'.pdf'
+ await uploadFiscalPdf({empresaId:company,notaId:id,versao:version,layoutVersao:layout,caminho:path,tamanho:content.length,hash},content)
+ await client.query('SELECT erp.registrar_pdf_armazenado(empresa_id,$2,$3,$4,$5,$6,$7,$8) FROM (SELECT $1::bigint AS empresa_id) contexto',[company,id,version,layout,path,name,content.length,hash])
 }
 async function recordOperation(client:SQLClient,company:number,actor:number,row:Row,action:string,key:string,payload:Row){
  await client.query(`INSERT INTO erp.notas_fiscais_tentativas(empresa_id,nota_fiscal_id,acao,chave_idempotencia,request_hash,provedor,ambiente,referencia_externa,payload_enviado,status,resposta_provedor,concluida_em,criado_por,atualizado_por)
@@ -66,19 +74,20 @@ async function fiscalConfig(client:SQLClient,company:number){
 }
 function issuerSnapshot(config:Row|null,company:number){
  return config?{nome:config.razao_social,razao_social:config.razao_social,nome_fantasia:config.nome_fantasia,cnpj:config.cnpj,inscricao_municipal:config.inscricao_municipal,
-  regime_tributario:config.regime_tributario,municipio:config.endereco_municipio,uf:config.endereco_uf,codigo_municipio:config.endereco_codigo_municipio,...markers}
+  regime_tributario:config.regime_tributario,municipio:config.endereco_municipio,uf:config.endereco_uf,codigo_municipio:config.endereco_codigo_municipio,
+  logradouro:config.endereco_logradouro,numero:config.endereco_numero,bairro:config.endereco_bairro,cep:config.endereco_cep,...markers}
   :{nome:'Empresa '+company+' - dados fiscais não cadastrados',cnpj:null,pendente:true,...markers}
 }
 // Cliente com endereço e e-mail principais das estruturas normalizadas (principal comercial primeiro);
 // colunas legadas só como reserva. O código IBGE vem só do endereço normalizado. Na criação (lock) exige
 // cliente ativo e trava a linha; no DPS lê o cadastro como está.
 async function fiscalCustomer(client:SQLClient,company:number,id:number,lock:boolean){
- return (await query(client,`SELECT c.id,c.nome,c.documento,coalesce(nullif(ct.email,''),c.email) AS email,c.inscricao_municipal,
+ return (await query(client,`SELECT c.id,c.nome,c.documento,coalesce(nullif(ct.email,''),c.email) AS email,coalesce(nullif(ct.telefone,''),c.telefone) AS telefone,c.inscricao_municipal,
   coalesce(a.cep,c.cep) AS cep,coalesce(a.logradouro,c.logradouro) AS logradouro,coalesce(a.numero,c.numero) AS numero,coalesce(a.complemento,c.complemento) AS complemento,
   coalesce(a.bairro,c.bairro) AS bairro,coalesce(a.cidade,c.cidade) AS cidade,coalesce(a.uf,c.uf) AS uf,a.codigo_municipio
   FROM erp.entidades c
   LEFT JOIN LATERAL (SELECT * FROM erp.entidades_enderecos e WHERE e.empresa_id=c.empresa_id AND e.entidade_id=c.id AND e.ativo ORDER BY ('comercial'=ANY(e.principais)) DESC,e.id LIMIT 1) a ON true
-  LEFT JOIN LATERAL (SELECT email FROM erp.entidades_contatos k WHERE k.empresa_id=c.empresa_id AND k.entidade_id=c.id AND k.ativo AND nullif(k.email,'') IS NOT NULL ORDER BY ('comercial'=ANY(k.principais)) DESC,k.id LIMIT 1) ct ON true
+  LEFT JOIN LATERAL (SELECT email,telefone FROM erp.entidades_contatos k WHERE k.empresa_id=c.empresa_id AND k.entidade_id=c.id AND k.ativo AND (nullif(k.email,'') IS NOT NULL OR nullif(k.telefone,'') IS NOT NULL) ORDER BY ('comercial'=ANY(k.principais)) DESC,k.id LIMIT 1) ct ON true
   WHERE c.empresa_id=$1 AND c.id=$2${lock?' AND c.eh_cliente AND c.ativo AND c.excluido_em IS NULL FOR SHARE OF c':''}`,[company,id]))[0]
 }
 async function references(client:SQLClient,company:number,input:ServiceInvoiceInput){
@@ -301,11 +310,18 @@ export async function getServiceInvoice(company:number,id:number){
  const events=await runQuery<Row>('SELECT evento,status_anterior,status_novo,criado_em FROM erp.notas_fiscais_eventos WHERE empresa_id=$1 AND nota_fiscal_id=$2 ORDER BY id DESC LIMIT 100',[company,id])
  return {record:publicRecord(row),items,totals,events,input:{cliente_id:Number(row.entidade_id),venda_id:row.venda_id?Number(row.venda_id):undefined,data_competencia:row.data_competencia instanceof Date?row.data_competencia.toISOString().slice(0,10):String(row.data_competencia),codigo_municipio_prestacao:row.codigo_municipio_prestacao,modelo_emissao:row.modelo_emissao,aliquota_iss:Number(items[0]?.aliquota_iss||0),iss_retido:Boolean(totals.iss_retido),observacoes:String((row.metadata as Row)?.observacoes||''),retencoes_federais:((row.metadata as Row)?.retencoes_federais||{}) as Record<string,number>,itens:items.map(i=>({tipo:'servico',item_id:Number(i.servico_id),descricao:i.descricao,quantidade:Number(i.quantidade),valor_unitario:Number(i.valor_unitario),desconto:Number(i.desconto)}))}}
 }
-export async function getServiceInvoicePdf(company:number,id:number,requestedVersion?:number){
+export async function getServiceInvoicePdf(company:number,id:number,requestedVersion?:number,requestedLayout?:number){
  await getServiceInvoice(company,id)
- const rows=await runQuery<Row>(`SELECT nome,conteudo,hash_sha256,versao FROM erp.notas_fiscais_pdfs WHERE empresa_id=$1 AND nota_fiscal_id=$2 AND ($3::integer IS NULL OR versao=$3) ORDER BY versao DESC LIMIT 1`,[company,id,requestedVersion||null])
+ const rows=await runQuery<Row>(`SELECT p.*,a.bucket,a.caminho,a.tamanho_bytes,a.hash_sha256 AS arquivo_hash FROM erp.notas_fiscais_pdfs p
+ LEFT JOIN erp.arquivos a ON a.empresa_id=p.empresa_id AND a.id=p.arquivo_id AND a.excluido_em IS NULL
+ WHERE p.empresa_id=$1 AND p.nota_fiscal_id=$2 AND ($3::integer IS NULL OR p.versao=$3) AND ($4::integer IS NULL OR p.layout_versao=$4)
+ ORDER BY p.versao DESC,p.layout_versao DESC LIMIT 1`,[company,id,requestedVersion||null,requestedLayout||null])
  if(!rows[0])throw new ErpDomainError('NOT_FOUND','PDF ainda não disponível para esta nota demonstrativa.',404)
- return {name:String(rows[0].nome),bytes:rows[0].conteudo as Buffer,hash:String(rows[0].hash_sha256),version:Number(rows[0].versao)}
+ const row=rows[0],hash=String(row.hash_sha256),version=Number(row.versao),layoutVersion=Number(row.layout_versao)
+ if(row.arquivo_id&&(row.bucket!=='erp-fiscal'||row.arquivo_hash!==hash))throw new ErpDomainError('FILE_UNAVAILABLE','Metadados do PDF fiscal inconsistentes.',503)
+ const bytes=row.arquivo_id?await readFiscalPdf({empresaId:company,notaId:id,versao:version,layoutVersao:layoutVersion,caminho:String(row.caminho),tamanho:Number(row.tamanho_bytes),hash}):row.conteudo as Buffer
+ if(!Buffer.isBuffer(bytes)||createHash('sha256').update(bytes).digest('hex')!==hash)throw new ErpDomainError('FILE_UNAVAILABLE','PDF fiscal indisponível ou inconsistente.',503)
+ return {name:String(row.nome),bytes,hash,version,layoutVersion,source:row.arquivo_id?'storage' as const:'database' as const}
 }
 export async function generateServiceInvoicePdf(company:number,actor:number,id:number){
  context(company,actor)

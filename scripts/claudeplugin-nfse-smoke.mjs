@@ -25,6 +25,8 @@ function load(name,parent=resolve(root,'entry.ts')) {
   return record.exports;
 }
 const postgres=load('@/lib/postgres'); const context=load('@/lib/erpDatabaseContext');let queue=Promise.resolve();
+const storageObjects=new Map(),fiscalStorage=load('@/products/erp/server/fiscal/fiscalPdfStorage');
+stubs['./fiscalPdfStorage']={...fiscalStorage,uploadFiscalPdf:async(file,bytes)=>{assert.equal(bytes.length,file.tamanho);if(storageObjects.has(file.caminho))assert.deepEqual(storageObjects.get(file.caminho),bytes);else storageObjects.set(file.caminho,Buffer.from(bytes));},readFiscalPdf:async file=>{assert(storageObjects.has(file.caminho));return Buffer.from(storageObjects.get(file.caminho));}};
 stubs['@/lib/postgres']={...postgres,runQuery(sql,params){
   const ambient=postgres.getErpTransactionClient();if(ambient)return ambient.query(sql,params).then(r=>r.rows);
   const saved=context.getErpDatabaseContext();
@@ -71,6 +73,7 @@ async function main(){
   await applySharedMigration(db);
   for(const file of ['20261006010000_prepare_erp_fiscal_integration.sql','20261006020000_service_invoice_simulation.sql','20261007120000_empresa_fuso_horario.sql'])await db.exec(readFileSync(`supabase/migrations/${file}`,'utf8'));
   await applyRecentMigrations(db);
+  for(const file of ['20261009150000_service_invoice_pdf_layout.sql','20261009150100_service_invoice_pdf_layout_activate.sql','20261010110000_fiscal_pdf_storage_prepare.sql','20261010110100_fiscal_pdf_storage_finalize.sql'])await db.exec(readFileSync(`supabase/migrations/${file}`,'utf8'));
   // Dados fictícios completos para o DPS: prestador, tomador com CNPJ (ISS retido) e serviço com cTribNac.
   await db.exec(`
     INSERT INTO shared.empresas(id,name,slug) VALUES(1,'Empresa A','a'),(2,'Empresa B','b');
@@ -157,10 +160,12 @@ async function main(){
   await check('cancelar_nota_servico exige motivo e mantém o PDF original',async()=>{
     await assert.rejects(tool('cancelar_nota_servico',{chave_operacao:randomUUID(),dados:{registro_id:id,codigo_motivo:'2',motivo:'curto'}}));
     await write('cancelar_nota_servico',{registro_id:id,codigo_motivo:'2',motivo:'Serviço não foi prestado ao cliente'});assert.equal((await note(id)).record.status,'cancelada');
-    const pdfs=(await db.query('SELECT versao,conteudo FROM erp.notas_fiscais_pdfs WHERE empresa_id=2 AND nota_fiscal_id=$1 ORDER BY versao',[id])).rows;
+    const pdfs=(await db.query('SELECT versao,layout_versao FROM erp.notas_fiscais_pdfs WHERE empresa_id=2 AND nota_fiscal_id=$1 ORDER BY versao,layout_versao',[id])).rows;
     assert(pdfs.length>=3,'versões de PDF: '+pdfs.length);mkdirSync(OUT,{recursive:true});
-    writeFileSync(`${OUT}/nota-rascunho.pdf`,Buffer.from(pdfs[0].conteudo));writeFileSync(`${OUT}/nota-cancelada.pdf`,Buffer.from(pdfs.at(-1).conteudo));
-    assert.equal(Buffer.from(pdfs.at(-1).conteudo).subarray(0,5).toString(),'%PDF-');
+    const files=await context.runWithErpDatabaseContext({tenantId:2,userId:1,readOnly:true},async()=>{
+      const repository=load('@/products/erp/server/fiscal/serviceInvoiceRepository');return [await repository.getServiceInvoicePdf(2,id,pdfs[0].versao,pdfs[0].layout_versao),await repository.getServiceInvoicePdf(2,id,pdfs.at(-1).versao,pdfs.at(-1).layout_versao)];});
+    writeFileSync(`${OUT}/nota-rascunho.pdf`,files[0].bytes);writeFileSync(`${OUT}/nota-cancelada.pdf`,files[1].bytes);
+    assert.equal(files[1].bytes.subarray(0,5).toString(),'%PDF-');
   });
   await check('excluir_nota_servico remove rascunho e a nota some das consultas',async()=>{
     const {done}=await write('criar_nota_servico',{...dados,observacoes:'Rascunho para excluir'});const other=Number(done.registro_id);

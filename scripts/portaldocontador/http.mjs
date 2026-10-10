@@ -207,10 +207,10 @@ try {
       const id = Number(String(document.id).split(":")[1]),
         expected = (
           await c.query(
-            "SELECT conteudo FROM erp.notas_fiscais_pdfs WHERE empresa_id=2 AND nota_fiscal_id=$1 ORDER BY versao DESC LIMIT 1",
+            "SELECT hash_sha256 FROM erp.notas_fiscais_pdfs WHERE empresa_id=2 AND nota_fiscal_id=$1 ORDER BY versao DESC,layout_versao DESC LIMIT 1",
             [id],
           )
-        ).rows[0].conteudo,
+        ).rows[0].hash_sha256,
         response = await request(
           `/api/contador/empresas/2/documentos/${document.id}`,
         ),
@@ -218,7 +218,7 @@ try {
       assert.equal(response.headers.get("content-type"), "application/pdf");
       assert.equal(
         createHash("sha256").update(bytes).digest("hex"),
-        createHash("sha256").update(expected).digest("hex"),
+        expected,
       );
       assert(bytes.subarray(0, 5).toString().startsWith("%PDF-"));
       await request(`/api/contador/empresas/1/documentos/${document.id}`, 403);

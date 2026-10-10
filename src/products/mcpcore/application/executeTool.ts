@@ -23,6 +23,7 @@ export const accessTools = ['meu_acesso','abrir_painel'] as const
 function publicError(error: unknown, write: boolean): PluginError {
   if (error instanceof PluginError) return error
   if (error instanceof ErpDomainError && error.code === 'NOT_FOUND') return new PluginError('NOT_FOUND', error.message, 404)
+  if (error instanceof ErpDomainError && ['STORAGE_UNAVAILABLE','FILE_UNAVAILABLE'].includes(error.code)) return new PluginError(error.code, error.message, 503)
   if(error instanceof ErpDomainError&&['INVALID_STATE','STALE_VERSION','IDEMPOTENCY_CONFLICT'].includes(error.code))return new PluginError(error.code,error.message,409)
   // Regras comerciais (bloqueio, limite de crédito) explicam ao usuário o que fazer; só em escritas.
   if(write&&error instanceof ErpDomainError&&['CUSTOMER_BLOCKED','CREDIT_LIMIT_EXCEEDED','DISCOUNT_LIMIT_EXCEEDED','ACCESS_DENIED','PERIOD_CLOSED'].includes(error.code))return new PluginError(error.code,error.message,error.code==='ACCESS_DENIED'?403:409)

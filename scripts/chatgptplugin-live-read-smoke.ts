@@ -148,7 +148,10 @@ async function main() {
   report.companyId = companyId
   if (identity.clerk_user_id) await check('Usuario Clerk resolve a empresa real e suas permissoes', async () => {
     const resolved = await loadPluginPrincipal(String(identity.clerk_user_id), principal.clientId, principal.scopes)
-    assert.deepEqual(resolved, principal)
+    assert.equal(resolved.userId, principal.userId)
+    assert.equal(resolved.clerkUserId, principal.clerkUserId)
+    assert.deepEqual(resolved.companies.map(({timeZone: _timeZone,...company})=>company), principal.companies)
+    assert.deepEqual(resolved.scopes, principal.scopes)
     principal = resolved
   })
   const otherCompany = (await client.query('SELECT empresa_id,count(*)::int records FROM erp.vendas WHERE empresa_id<>$1 GROUP BY empresa_id ORDER BY empresa_id LIMIT 1', [companyId])).rows[0]
@@ -321,7 +324,7 @@ async function main() {
     phase = 'all_read_tools'
     const facts = await runReadToolCases({ client, companyId, userId: principal.userId, clientId: principal.clientId,
       resource: settings.resource, token: testToken, rpc, call, check })
-    await check('Cobertura: todas as 30 tools de leitura foram chamadas', async () => {
+    await check('Cobertura: todas as tools de leitura atuais foram chamadas', async () => {
       const result = await rpc('tools/list')
       const names = result.body.result.tools.filter((tool: any) => tool.annotations?.readOnlyHint).map((tool: any) => tool.name).sort()
       assert.deepEqual([...calledTools].sort(), names)

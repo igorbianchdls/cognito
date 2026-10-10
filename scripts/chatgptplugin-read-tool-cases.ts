@@ -1,5 +1,7 @@
 import assert from 'node:assert/strict'
 import { createHash, randomUUID } from 'node:crypto'
+import { tools as queryTools } from '../src/products/mcpcore/tools/catalog'
+import { actionTools } from '../src/products/mcpcore/actions/catalog'
 
 type Row = Record<string, any>
 type Context = {
@@ -43,12 +45,11 @@ export async function runReadToolCases(ctx: Context) {
     assert.equal(result.body.result.isError, true)
     assert.equal(JSON.parse(result.body.result.content[0].text).code, code)
   }
-  await check('Todas leituras: catálogo distingue 18 consultas e 21 escritas', async () => {
+  await check('Catálogo corresponde às consultas, ações e extensões atuais', async () => {
     const result = await rpc('tools/list')
     const tools = result.body.result.tools
-    assert.equal(tools.filter((t: Row) => t.annotations?.readOnlyHint).length, 18)
-    assert.deepEqual(tools.filter((t: Row) => !t.annotations?.readOnlyHint).map((t: Row) => t.name).sort(), ['atender_venda','atualizar_configuracoes','cancelar_compra','cancelar_venda','confirmar_compra','confirmar_venda','converter_orcamento',
-      'criar_cadastro','criar_compra','criar_titulo','criar_venda','editar_cadastro','editar_compra','editar_titulo','editar_venda','estornar_pagamento','excluir_cadastro','excluir_compra','excluir_titulo','excluir_venda','registrar_baixa'])
+    assert.deepEqual(tools.filter((t: Row) => t.annotations?.readOnlyHint).map((t: Row) => t.name).sort(), [...queryTools.map(t => t.name),'meu_acesso','abrir_painel','ler_configuracoes','search_mentions'].sort())
+    assert.deepEqual(tools.filter((t: Row) => !t.annotations?.readOnlyHint).map((t: Row) => t.name).sort(), [...actionTools.map(t => t.name),'atualizar_configuracoes'].sort())
     for (const tool of tools.filter((t: Row) => t.annotations?.readOnlyHint)) assert.deepEqual(tool.securitySchemes, [{ type: 'oauth2', scopes: ['erp:read'] }])
   })
   await check('GET HTTP autenticado retorna 405 e anuncia POST/OPTIONS', async () => {
@@ -229,8 +230,33 @@ export async function runReadToolCases(ctx: Context) {
     assert.equal(result.total,expected.length)
     assert(result.records.every((row:Row)=>row.status==='parcialmente_recebida'))
   })
-  for(const type of ['vendedores','categorias','contas-financeiras'])await check('Cadastros adicionais: '+type,async()=>{const rows=(await call('buscar_cadastros',{empresa_id:companyId,tipo:type,por_pagina:50})).data.records;assert(Array.isArray(rows));if(rows[0]){const detail=(await call('obter_cadastro',{empresa_id:companyId,tipo:type,registro_id:Number(rows[0].id)})).data;assert.equal(String(detail.record.id),String(rows[0].id))}})
+  for(const type of ['vendedores','categorias','categorias-cadastro','contas-financeiras'])await check('Cadastros adicionais: '+type,async()=>{const rows=(await call('buscar_cadastros',{empresa_id:companyId,tipo:type,por_pagina:50})).data.records;assert(Array.isArray(rows));if(rows[0]){const detail=(await call('obter_cadastro',{empresa_id:companyId,tipo:type,registro_id:Number(rows[0].id)})).data;assert.equal(String(detail.record.id),String(rows[0].id))}})
+  for(const status of [undefined,'rascunho','aguardando_retorno','emitida','falha','cancelada'])await check('NFS-e: listagem e filtro '+String(status||'todos'),async()=>{
+    const expected=db.notas_fiscais.filter(r=>r.tipo==='nfse'&&r.direcao==='saida'&&r.modo_operacao==='simulacao'&&!r.excluido_em&&(!status||r.status===status))
+    const result=(await call('listar_notas_servico',{empresa_id:companyId,por_pagina:50,...(status?{status}:{})})).data
+    assert.equal(result.total,expected.length)
+    assert.deepEqual(result.records.map((r:Row)=>String(r.id)).sort(),expected.map(r=>String(r.id)).sort())
+  })
+  await check('NFS-e: detalhes, itens, total e links temporários',async()=>{
+    const note=db.notas_fiscais.find(r=>r.tipo==='nfse'&&r.direcao==='saida'&&r.modo_operacao==='simulacao'&&r.status==='emitida'&&!r.excluido_em)!
+    assert(note)
+    const result=(await call('obter_nota_servico',{empresa_id:companyId,nota_id:Number(note.id)})).data
+    assert.equal(String(result.record.id),String(note.id));assert.equal(result.record.status,note.status)
+    assert.equal(result.items.length,db.notas_fiscais_itens.filter(r=>String(r.nota_fiscal_id)===String(note.id)&&!r.excluido_em).length)
+    assert.equal(cents(result.record.valor_total),cents(note.valor_total));assert(result.record.pdf_url&&result.record.xml_url)
+    assert(new Date(result.links_expiram_em).getTime()>Date.now())
+    const byNumber=(await call('obter_nota_servico',{empresa_id:companyId,numero:String(note.numero)})).data
+    assert.equal(String(byNumber.record.id),String(note.id))
+    await rejected('obter_nota_servico',{empresa_id:companyId,nota_id:missingId},'NOT_FOUND')
+    await rejected('obter_nota_servico',{empresa_id:companyId},'INVALID_INPUT')
+  })
   await check('obter_titulo_financeiro: título e parcelas reais',async()=>{const title=db.contas_pagar.find(t=>!t.excluido_em)!;const data=(await call('obter_titulo_financeiro',{empresa_id:companyId,tipo:'pagar',conta_id:Number(title.id)})).data;assert.equal(String(data.record.id),String(title.id));assert.equal(data.installments.length,db.contas_pagar_parcelas.filter(p=>String(p.conta_pagar_id)===String(title.id)&&!p.excluido_em).length)});
+  for(const [documento,table] of [['conta_pagar','contas_pagar'],['conta_receber','contas_receber'],['venda','vendas'],['compra','compras'],['pagamento','pagamentos']] as const)await check('Anexos: '+documento,async()=>{
+    const target=db[table].find(r=>!r.excluido_em);assert(target)
+    const result=(await call('listar_anexos',{empresa_id:companyId,documento,registro_id:Number(target.id)})).data
+    assert(Array.isArray(result.records))
+    for(const attachment of result.records){assert.equal(typeof attachment.link_download,'string');assert.equal(attachment.link_expira_em_segundos,60)}
+  })
   await check('Dados comerciais, fiscais, rascunhos e preferências permanecem iguais', async () => {
     await client.query('BEGIN READ ONLY')
     try {

@@ -139,10 +139,11 @@ export async function portalDocuments(
     WHERE (criado_em AT TIME ZONE current_setting('app.erp_time_zone'))::date BETWEEN $2::date AND $3::date`;
   if (s.capabilities.includes("erp.vendas.visualizar"))
     sql += ` UNION ALL SELECT id,nome,mime_type,tamanho,data,origem FROM (
-    SELECT DISTINCT ON(n.id) 'nfse:'||n.id AS id,p.nome,'application/pdf'::text AS mime_type,octet_length(p.conteudo)::float8 AS tamanho,n.data_competencia AS data,
+    SELECT DISTINCT ON(n.id) 'nfse:'||n.id AS id,p.nome,'application/pdf'::text AS mime_type,a.tamanho_bytes::float8 AS tamanho,n.data_competencia AS data,
       CASE WHEN n.modo_operacao='simulacao' THEN 'NFS-e · SIMULAÇÃO SEM VALIDADE FISCAL' ELSE 'NFS-e' END AS origem
       FROM erp.notas_fiscais n JOIN erp.notas_fiscais_pdfs p ON p.empresa_id=n.empresa_id AND p.nota_fiscal_id=n.id
-      WHERE n.empresa_id=$1 AND n.tipo='nfse' AND n.excluido_em IS NULL AND n.data_competencia BETWEEN $2::date AND $3::date ORDER BY n.id,p.versao DESC) pdfs`;
+      LEFT JOIN erp.arquivos a ON a.empresa_id=p.empresa_id AND a.id=p.arquivo_id
+      WHERE n.empresa_id=$1 AND n.tipo='nfse' AND n.excluido_em IS NULL AND n.data_competencia BETWEEN $2::date AND $3::date ORDER BY n.id,p.versao DESC,p.layout_versao DESC) pdfs`;
   return {
     ...(await sqlTable(
       s,

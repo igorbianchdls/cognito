@@ -25,6 +25,7 @@ const db = connection(),
     checks: [] as string[],
     dashboards: {} as Record<string, DashboardResponse>,
     drilldownQueries: 0,
+    failures: [] as {href:string;message:string}[],
     unchangedTables: 0,
   }
 const near = (a: number, b: number, label: string) =>
@@ -160,7 +161,8 @@ async function main() {
           records.set(href, data)
           report.drilldownQueries++
         } catch (e) {
-          throw new Error(href + ': ' + (e as Error).message)
+          report.failures.push({href,message:(e as Error).message})
+          console.log(JSON.stringify({status:'failed_drilldown',href,message:(e as Error).message}))
         }
       }),
     )
@@ -193,6 +195,7 @@ async function main() {
       for (const m of panel.metrics) {
         if (!m.href || ['conversao', 'ticket'].includes(m.key)) continue
         const result = records.get(m.href)!
+        if (!result) continue
         if (countKeys.includes(m.key)) assert.equal(m.value, result.total, id + '.' + m.key)
         else
           near(
@@ -203,7 +206,7 @@ async function main() {
       }
     for (const l of panel.lists)
       for (const row of l.rows)
-        if (row.href)
+        if (row.href && records.has(row.href))
           near(
             Number(row.value),
             records.get(row.href)!.totalValue,
@@ -211,8 +214,8 @@ async function main() {
           )
   }
   report.checks.push(
-    'every_indicator_drilldown_reconciles',
-    'every_ranking_drilldown_reconciles',
+    'successful_indicator_drilldowns_reconcile',
+    'successful_ranking_drilldowns_reconcile',
     'drilldown_pagination',
   )
   const reader = {
@@ -296,13 +299,14 @@ async function main() {
   report.checks.push('business_data_unchanged_both_companies')
   console.log(
     JSON.stringify({
-      status: 'passed',
+      status: report.failures.length ? 'failed' : 'passed',
       checks: report.checks.length,
       drilldownQueries: report.drilldownQueries,
       unchangedTables: report.unchangedTables,
     }),
   )
-  report.status = 'passed'
+  report.status = report.failures.length ? 'failed' : 'passed'
+  if (report.failures.length) process.exitCode = 1
 }
 main()
   .catch((e) => {

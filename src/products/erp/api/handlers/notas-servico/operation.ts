@@ -13,9 +13,9 @@ export const GET=withErpHttp(async(request:Request,route:RouteContext)=>{
  const {id,operation}=await route.params
  if(operation==='validar')return NextResponse.json(await validateServiceInvoice(ctx.tenantId,Number(id)))
  if(operation==='pdf'){
-  const requested=new URL(request.url).searchParams.get('versao'),version=requested?z.coerce.number().int().positive().parse(requested):undefined
-  const file=await getServiceInvoicePdf(ctx.tenantId,Number(id),version)
-  return new Response(new Uint8Array(file.bytes),{headers:{'Content-Type':'application/pdf','Content-Disposition':`inline; filename="${file.name}"`,'X-Content-Type-Options':'nosniff','X-Fiscal-Mode':'simulacao'}})
+  const params=new URL(request.url).searchParams,requested=params.get('versao'),layout=params.get('layout'),version=requested?z.coerce.number().int().positive().parse(requested):undefined
+  const file=await getServiceInvoicePdf(ctx.tenantId,Number(id),version,layout?z.coerce.number().int().positive().parse(layout):undefined)
+  return new Response(new Uint8Array(file.bytes),{headers:{'Content-Type':'application/pdf','Content-Disposition':`inline; filename="${file.name}"`,'X-Content-Type-Options':'nosniff','X-Fiscal-Mode':'simulacao','X-PDF-Layout-Version':String(file.layoutVersion),'X-PDF-Storage':file.source,'Cache-Control':'private, no-store'}})
  }
  if(operation==='xml'){
   const file=await getServiceInvoiceXml(ctx.tenantId,Number(id))

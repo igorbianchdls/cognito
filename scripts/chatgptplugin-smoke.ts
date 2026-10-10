@@ -8,6 +8,7 @@ import { getErpDatabaseContext,runWithErpDatabaseContext } from '../src/lib/erpD
 import { assertErpTenantScopedQuery,runWithErpTransactionClient,getErpTransactionClient } from '../src/lib/postgres'
 import { ERP_CAPABILITIES } from '../src/products/erp/shared/professionalContracts'
 import { executeTool, type ExecutionDependencies } from '../src/products/mcpcore/application/executeTool'
+import { ErpDomainError } from '../src/products/erp/shared/erpErrors'
 import type { PluginConfig } from '../src/products/chatgptplugin/shared/config'
 
 const settings: PluginConfig = {integration:'chatgpt',resource:'http://localhost:3187/api/mcp',metadataUrl:'http://localhost:3187/.well-known/oauth-protected-resource/api/mcp',
@@ -285,6 +286,10 @@ async function main() {
     }))
     assert.equal(getErpTransactionClient(),undefined)
     assert.throws(()=>runWithErpDatabaseContext({tenantId:1,userId:1,readOnly:true},()=>runWithErpTransactionClient(client,async()=>undefined)))
+  })
+  for(const code of ['STORAGE_UNAVAILABLE','FILE_UNAVAILABLE'])await check('Falha de documento fiscal preserva mensagem '+code,async()=>{
+    const result=await executeTool(principal,'obter_nota_servico',{empresa_id:1,nota_id:1},settings,{...execution,queries:{...execution.queries,serviceInvoice:async()=>{throw new ErpDomainError(code,'PDF fiscal temporariamente indisponível.',503)}}})
+    assert.equal(result.isError,true);const content=result.content[0];assert.equal(content.type,'text');if(content.type==='text'){const error=JSON.parse(content.text);assert.equal(error.code,code);assert.equal(error.message,'PDF fiscal temporariamente indisponível.')}
   })
   assert(events.some(event => event.status==='succeeded'));assert(events.some(event => event.code==='ACCESS_DENIED'))
   console.log(JSON.stringify({status:'passed',checks:checked,realDatabaseAccess:false}))
