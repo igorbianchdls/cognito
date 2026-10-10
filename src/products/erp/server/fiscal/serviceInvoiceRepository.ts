@@ -80,7 +80,7 @@ function issuerSnapshot(config:Row|null,company:number){
 }
 // Cliente com endereço e e-mail principais das estruturas normalizadas (principal comercial primeiro);
 // colunas legadas só como reserva. O código IBGE vem só do endereço normalizado. Na criação (lock) exige
-// cliente ativo e trava a linha; no DPS lê o cadastro como está.
+// cliente ativo e trava a linha. A DPS usa a fotografia revisada no rascunho.
 async function fiscalCustomer(client:SQLClient,company:number,id:number,lock:boolean){
  return (await query(client,`SELECT c.id,c.nome,c.documento,coalesce(nullif(ct.email,''),c.email) AS email,coalesce(nullif(ct.telefone,''),c.telefone) AS telefone,c.inscricao_municipal,
   coalesce(a.cep,c.cep) AS cep,coalesce(a.logradouro,c.logradouro) AS logradouro,coalesce(a.numero,c.numero) AS numero,coalesce(a.complemento,c.complemento) AS complemento,
@@ -167,7 +167,9 @@ async function prepareDps(client:SQLClient,company:number,row:Row,detail:Awaited
  const config=await fiscalConfig(client,company)
  const data=serviceInvoiceInputSchema.parse(detail.input),totals=serviceInvoiceTotals(data)
  const services=await query(client,'SELECT id,nome,codigo,codigo_servico_municipal,codigo_tributacao_nacional,codigo_nbs FROM erp.servicos WHERE empresa_id=$1 AND id=ANY($2::bigint[])',[company,data.itens.map(i=>i.item_id)])
- const customer=(await fiscalCustomer(client,company,data.cliente_id,false))||{}
+ // Cadastro posterior não pode alterar silenciosamente o tomador já revisado.
+ // Editar o rascunho atualiza essa mesma fotografia usada no PDF e no XML.
+ const customer=(row.destinatario_snapshot||{}) as Row
  const serie=String(config?.serie_dps||'1')
  let numero=/^\d+$/.test(String(row.numero_dps||''))&&row.serie_dps===serie?Number(row.numero_dps):0
  if(!numero){

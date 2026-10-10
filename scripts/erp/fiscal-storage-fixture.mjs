@@ -12,6 +12,11 @@ export function installFiscalStorageFixture(options={}){
   if(!url.pathname.startsWith('/storage/v1/object/')||!(options.buckets||['erp-fiscal']).some(bucket=>url.pathname.includes('/'+bucket+'/')))return originalFetch(input,init)
   assert.equal(url.origin,origin,'Storage request outside the ERP project');calls++
   assert.equal(new Headers(init?.headers).get('Authorization'),'Bearer sb_secret_fiscal_test_fixture')
+  if(url.pathname.startsWith('/storage/v1/object/sign/')&&init?.method==='POST'){
+   const objectPath=url.pathname.slice('/storage/v1/object/sign/'.length)
+   if(!objects.has(objectPath))return Response.json({error:'not found'},{status:404})
+   return Response.json({signedURL:'/object/sign/'+objectPath+'?token=fixture'})
+  }
   const path=url.pathname.replace(/^\/storage\/v1\/object\/(?:authenticated\/)?/,'')
   if(init?.method==='POST'){assert.equal(new Headers(init.headers).get('x-upsert'),'false');if(objects.has(path))return Response.json({error:'exists'},{status:400});objects.set(path,Buffer.from(init.body));return Response.json({Key:path})}
   const bytes=objects.get(path);return bytes?new Response(new Uint8Array(bytes),{headers:{'Content-Length':String(bytes.length),'Content-Type':'application/pdf'}}):new Response(null,{status:404})

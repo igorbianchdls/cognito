@@ -9,9 +9,12 @@ export function commercialPdfPath(company:number,kind:CommercialDocumentKind,id:
  if(![company,id,revision,layout].every(v=>Number.isSafeInteger(v)&&v>0)||!['orcamento','ordem_servico'].includes(kind)||!/^[a-f0-9]{64}$/.test(hash))throw new ErpDomainError('VALIDATION_ERROR','Referência do PDF comercial inválida.',422)
  return `${company}/${kind}/${id}/r${revision}/layout-${layout}/${hash}.pdf`
 }
+export function commercialStorageConfiguration(configuration:Parameters<typeof fiscalStorageConfiguration>[0]={}){
+ return fiscalStorageConfiguration({...configuration,base:configuration.base??process.env.ERP_DOCUMENTS_SUPABASE_URL??process.env.ERP_FISCAL_SUPABASE_URL,key:configuration.key??process.env.ERP_DOCUMENTS_SUPABASE_SERVICE_ROLE_KEY??process.env.ERP_FISCAL_SUPABASE_SERVICE_ROLE_KEY})
+}
 function target(file:CommercialFile){
  if(file.path!==commercialPdfPath(file.company,file.kind,file.id,file.revision,file.layout,file.hash)||!Number.isSafeInteger(file.size)||file.size<100||file.size>MAX)throw new ErpDomainError('FILE_UNAVAILABLE','Metadados do PDF comercial inválidos.',422)
- try {const config=fiscalStorageConfiguration({base:process.env.ERP_DOCUMENTS_SUPABASE_URL??process.env.ERP_FISCAL_SUPABASE_URL,key:process.env.ERP_DOCUMENTS_SUPABASE_SERVICE_ROLE_KEY??process.env.ERP_FISCAL_SUPABASE_SERVICE_ROLE_KEY});return {...config,path:[COMMERCIAL_PDF_BUCKET,...file.path.split('/')].map(encodeURIComponent).join('/')}}
+ try {const config=commercialStorageConfiguration();return {...config,path:[COMMERCIAL_PDF_BUCKET,...file.path.split('/')].map(encodeURIComponent).join('/')}}
  catch{throw new ErpDomainError('STORAGE_UNAVAILABLE','Configure o Storage privado do projeto do ERP para arquivar documentos comerciais. O PDF atual pode ser baixado sem arquivamento.',503)}
 }
 export async function readCommercialPdf(file:CommercialFile){const config=target(file);

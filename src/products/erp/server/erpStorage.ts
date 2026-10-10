@@ -1,23 +1,13 @@
 import { ErpDomainError } from '../shared/erpErrors'
+import { commercialStorageConfiguration } from './documents/commercialPdfStorage'
+import { fiscalStorageConfiguration } from './fiscal/fiscalPdfStorage'
 
 type DocumentFile = { bucket: string; caminho: string; nome: string }
 type Configuration = { base?: string; key?: string; send?: typeof fetch }
 
 /** Call only after resolving a document and its linked file in the current tenant. */
 export async function signErpDocumentFile(file: DocumentFile, configuration: Configuration = {}) {
-  const base = configuration.base ?? process.env.NEXT_PUBLIC_SUPABASE_URL
-  const key = configuration.key ?? process.env.SUPABASE_SERVICE_ROLE_KEY
-  if (!base || !key) throw new ErpDomainError('STORAGE_UNAVAILABLE', 'O armazenamento de anexos não está configurado.', 503)
-  let origin: URL
-  try { origin = new URL(base) } catch { throw new ErpDomainError('STORAGE_UNAVAILABLE', 'Confira a configuração de armazenamento.', 503) }
-  if (origin.protocol !== 'https:' || !/^[a-z0-9]{20}\.supabase\.co$/.test(origin.hostname) || origin.username || origin.password || origin.search || origin.hash || !['', '/'].includes(origin.pathname)) {
-    throw new ErpDomainError('STORAGE_UNAVAILABLE', 'Confira a configuração de armazenamento.', 503)
-  }
-  const segments = file.caminho.split('/')
-  if (!/^[a-z0-9][a-z0-9_-]{0,62}$/.test(file.bucket) || !segments.length || segments.some(segment => !segment || ['.', '..'].includes(segment) || /[\u0000-\u001f\\]/.test(segment))) {
-    throw new ErpDomainError('FILE_UNAVAILABLE', 'O caminho deste anexo é inválido.', 422)
-  }
-  const path = [file.bucket, ...segments].map(encodeURIComponent).join('/')
+  const { origin, key, path } = storageTarget(file, configuration)
   try {
     const response = await (configuration.send || fetch)(`${origin.origin}/storage/v1/object/sign/${path}`, {
       method: 'POST', headers: { apikey: key, Authorization: `Bearer ${key}`, 'Content-Type': 'application/json' },
@@ -34,8 +24,11 @@ export async function signErpDocumentFile(file: DocumentFile, configuration: Con
 
 // Upload e verificação de anexos (Fase 2B). Mesmas validações de origem e caminho dos links de download.
 function storageTarget(file: DocumentFile, configuration: Configuration) {
-  const base = configuration.base ?? process.env.NEXT_PUBLIC_SUPABASE_URL
-  const key = configuration.key ?? process.env.SUPABASE_SERVICE_ROLE_KEY
+  // Documentos gerados usam a mesma configuração para arquivar e baixar.
+  const documentConfig = file.bucket === 'erp-comercial' ? commercialStorageConfiguration(configuration)
+    : file.bucket === 'erp-fiscal' ? fiscalStorageConfiguration(configuration) : null
+  const base = documentConfig?.origin ?? configuration.base ?? process.env.NEXT_PUBLIC_SUPABASE_URL
+  const key = documentConfig?.key ?? configuration.key ?? process.env.SUPABASE_SERVICE_ROLE_KEY
   if (!base || !key) throw new ErpDomainError('STORAGE_UNAVAILABLE', 'O armazenamento de anexos não está configurado.', 503)
   let origin: URL
   try { origin = new URL(base) } catch { throw new ErpDomainError('STORAGE_UNAVAILABLE', 'Confira a configuração de armazenamento.', 503) }
