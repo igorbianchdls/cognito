@@ -26,6 +26,8 @@ export const outputs = {
     summary: row.optional().describe('Totais de todos os registros filtrados, inclusive de outras páginas.'),
   }).passthrough(),
   record: z.object({ record: row.optional() }).passthrough(),
+  serviceOrder:z.object({record:row,items:rows,history:rows,totalItems:z.number(),itemsTruncated:z.boolean()}).passthrough(),
+  commercialDocument:z.object({record:z.object({pdf_url:z.string().url(),link_expira_em:z.string(),arquivado:z.boolean()}).passthrough(),revisions:rows,hasMore:z.boolean()}).passthrough(),
   sale: z.object({ sale: row, items: rows, totalItems: z.number(), itemsTruncated: z.boolean(), installments: rows.optional() }).passthrough(),
   purchase: z.object({ purchase: row, items: rows, totalItems: z.number(), itemsTruncated: z.boolean(), installments: rows.optional() }).passthrough(),
   financialTitle: z.object({ record: z.object({

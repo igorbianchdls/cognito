@@ -4,6 +4,7 @@ import { applyCardReceipt, cancelCardReceipt, cardMethodConfig } from '@/product
 import { assertCustomerCredit, assertDiscountLimit, assertTablePriceRules, saleSeller, sellerRules, cancelSaleCommissions, generateSaleCommissions, resolvePriceTable, saveCustomerCommercialTerms, saleTransport, tablePrice, type TablePrice } from '@/products/erp/server/erpCommercialRules'
 import { ERP_TODAY_SQL } from '@/products/erp/server/erpBusinessDate'
 import { assertCommercialReplay } from '@/products/erp/shared/commercialContracts'
+import { quoteIsClosed } from '@/products/erp/shared/quoteLifecycle'
 import { saveRegistrationRelations } from './erpRegistrationRelations'
 import { nonNegativeDecimal, paymentTotal, sumMoney, lineTotal, discountAmount } from '@/products/erp/shared/erpMoney'
 import { ErpDomainError } from '@/products/erp/shared/erpErrors'
@@ -4123,7 +4124,7 @@ export async function createSaleRecord(client: SQLClient, input: CreateInput) {
       stringArray(input.values.cobranca_emails),
       optionalText(input.values.cobranca_whatsapp),
       dateText(input.values.validade_em),
-      optionalText(input.values.previsao_entrega),
+      dateText(input.values.previsao_entrega),
       optionalNumericId(input.values.local_estoque_id),
       optionalNumericId(input.values.venda_origem_id),
       idempotencyKey,
@@ -4381,12 +4382,13 @@ export async function updateErpSaleDraft(input: {
   const id = numericId(input.id, 'Venda')
   await withTransaction(async (client) => {
     const currentResult = await client.query(
-      `SELECT id, numero, status, versao FROM erp.vendas
+      `SELECT id, numero, status, situacao, tipo_documento, versao, aprovada_em, aprovada_por FROM erp.vendas
        WHERE empresa_id = $1 AND id = $2 AND excluido_em IS NULL FOR UPDATE`, [input.tenantId, id],
     )
     const current = currentResult.rows[0]
     if (!current) throw new ErpDomainError('VALIDATION_ERROR', 'Venda não encontrada.')
     if (current.status !== 'rascunho') throw new ErpDomainError('VALIDATION_ERROR', 'Somente vendas em rascunho podem ser editadas.')
+    if (current.tipo_documento === 'orcamento' && quoteIsClosed(current.situacao)) throw new ErpDomainError('INVALID_STATE', 'Orçamento encerrado não pode ser editado.', 409)
     if (Number(current.versao) !== input.expectedVersion) throw new ErpDomainError('VALIDATION_ERROR', 'CONFLITO_VERSAO: esta venda foi alterada por outra pessoa.')
 
     const staged = await createSaleRecord(client, {
@@ -4403,6 +4405,10 @@ export async function updateErpSaleDraft(input: {
          cliente_id = source.cliente_id, numero = $4, data_venda = source.data_venda,
          data_competencia = source.data_competencia, vendedor_id = source.vendedor_id,
          tipo_documento = source.tipo_documento, validade_em = source.validade_em,
+         situacao = CASE WHEN target.tipo_documento='orcamento' THEN 'em_andamento' ELSE target.situacao END,
+         aprovada_em = CASE WHEN target.tipo_documento='orcamento' THEN NULL ELSE target.aprovada_em END,
+         aprovada_por = CASE WHEN target.tipo_documento='orcamento' THEN NULL ELSE target.aprovada_por END,
+         enviada_em = CASE WHEN target.tipo_documento='orcamento' THEN NULL ELSE target.enviada_em END,
          previsao_entrega = source.previsao_entrega, local_estoque_id = source.local_estoque_id,
          categoria_id = source.categoria_id,
          centro_custo_id = source.centro_custo_id, conta_financeira_id = source.conta_financeira_id,
@@ -4425,7 +4431,7 @@ export async function updateErpSaleDraft(input: {
     await client.query(
       `INSERT INTO erp.vendas_eventos (empresa_id, venda_id, evento, status_anterior, status_novo, versao, dados, criado_por)
        VALUES ($1, $2, 'atualizada', 'rascunho', 'rascunho', $3, $4::jsonb, $5)`,
-      [input.tenantId, id, updated.rows[0].versao, JSON.stringify({ numero: updated.rows[0].numero, total: updated.rows[0].total }), input.actorId],
+      [input.tenantId, id, updated.rows[0].versao, JSON.stringify({ numero: updated.rows[0].numero, total: updated.rows[0].total, situacao_anterior:current.situacao, aprovacao_anterior:current.aprovada_em?{em:current.aprovada_em,por:current.aprovada_por}:null }), input.actorId],
     )
   })
   return getErpSaleDetails(input.tenantId, id)

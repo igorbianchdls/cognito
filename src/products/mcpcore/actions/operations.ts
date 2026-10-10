@@ -5,7 +5,9 @@ import { updateErpEntityRecord,getErpEntityRecord,confirmErpSale,confirmErpPurch
 import { getErpTransactionClient } from '@/lib/postgres'
 import { archiveRegistration,archiveCommercialDraft,changeManualFinancialTitle } from '@/products/erp/server/erpCrudRepository'
 import { attendStockForSale } from '@/products/erp/server/erpStockRepository'
-import { convertQuoteToSale } from '@/products/erp/server/erpProfessionalRepository'
+import { convertQuoteToSale,runQuoteAction,runServiceOrderAction,createServiceOrder,lockCommercialConversion } from '@/products/erp/server/erpProfessionalRepository'
+import {serviceOrderCreateSchema} from '@/products/erp/shared/professionalContracts'
+import {archiveCommercialDocument} from '@/products/erp/server/documents/commercialDocumentRepository'
 import { createSaleReturn } from '@/products/erp/server/erpReturnsRepository'
 import { makePayableEffective } from '@/products/erp/server/erpFinanceRepository'
 import { PluginError } from '../shared/contracts'
@@ -14,6 +16,8 @@ import {editServiceInvoice,actOnServiceInvoice} from '@/products/erp/server/fisc
 import {serviceInvoiceInputSchema} from '@/products/erp/shared/serviceInvoiceContracts'
 
 const tables = {editar_fornecedor:'entidades',editar_vendedor:'entidades',editar_servico:'servicos',editar_categoria:'categorias',editar_conta_financeira:'contas_financeiras',
+  editar_ordem_servico:'ordens_servico',aprovar_ordem_servico:'ordens_servico',iniciar_ordem_servico:'ordens_servico',concluir_ordem_servico:'ordens_servico',cancelar_ordem_servico:'ordens_servico',gerar_orcamento_os:'ordens_servico',gerar_venda_os:'ordens_servico',arquivar_pdf_ordem_servico:'ordens_servico',
+  enviar_orcamento:'vendas',aprovar_orcamento:'vendas',recusar_orcamento:'vendas',cancelar_orcamento:'vendas',arquivar_pdf_orcamento:'vendas',
   editar_nota_servico:'notas_fiscais',simular_nota_servico:'notas_fiscais',consultar_resultado_nota_servico:'notas_fiscais',cancelar_nota_servico:'notas_fiscais',excluir_nota_servico:'notas_fiscais',
   excluir_cliente:'entidades',excluir_fornecedor:'entidades',excluir_vendedor:'entidades',excluir_produto:'produtos',excluir_servico:'servicos',excluir_categoria:'categorias',excluir_conta_financeira:'contas_financeiras',
   editar_venda:'vendas',editar_orcamento:'vendas',excluir_venda:'vendas',excluir_orcamento:'vendas',editar_compra:'compras',excluir_compra:'compras',
@@ -27,11 +31,20 @@ export async function operationSnapshot(tenantId:number,proposal:Proposal,client
   if (!('registro_id' in proposal.dados)) return null
   const table=tables[proposal.tipo as keyof typeof tables]
   if(!table)throw new PluginError('INVALID_INPUT','Operação desconhecida.')
+  if(client&&['converter_orcamento','gerar_orcamento_os','gerar_venda_os'].includes(proposal.tipo))await lockCommercialConversion(client,tenantId)
   const query=async(sql:string,params:unknown[])=>client ? (await client.query(sql,params)).rows : runQuery<Record<string,unknown>>(sql,params)
   const rows=await query(`SELECT * FROM erp.${table} WHERE empresa_id=$1 AND id=$2 AND excluido_em IS NULL${client?' FOR UPDATE':''}`,[tenantId,proposal.dados.registro_id])
   const row=rows[0]
   if(!row || (proposal.tipo==='editar_cliente' && !row.eh_cliente))throw new PluginError('INVALID_REFERENCE','Registro não disponível nesta empresa.')
   const related:unknown[]=[]
+  if(table==='ordens_servico'){
+    related.push(await query(`SELECT * FROM erp.ordens_servico_itens WHERE empresa_id=$1 AND ordem_servico_id=$2 ORDER BY id${client?' FOR SHARE':''}`,[tenantId,proposal.dados.registro_id]))
+    if(row.orcamento_id){
+      related.push(await query('SELECT * FROM erp.vendas WHERE empresa_id=$1 AND id=$2',[tenantId,row.orcamento_id]))
+      related.push(await query('SELECT * FROM erp.vendas_itens WHERE empresa_id=$1 AND venda_id=$2 ORDER BY id',[tenantId,row.orcamento_id]))
+      related.push(await query('SELECT * FROM erp.vendas_recebimentos_previstos WHERE empresa_id=$1 AND venda_id=$2 ORDER BY id',[tenantId,row.orcamento_id]))
+    }
+  }
   if(table==='entidades'&&('email' in proposal.dados||'telefone' in proposal.dados)){
     // O contato principal entra no estado conferido: mudá-lo depois da prévia exige nova prévia.
     const contact=(await query(`SELECT email,telefone FROM erp.entidades_contatos WHERE empresa_id=$1 AND entidade_id=$2 AND ativo ORDER BY ('comercial'=ANY(principais)) DESC,id LIMIT 1`,[tenantId,proposal.dados.registro_id]))[0]
@@ -44,7 +57,7 @@ export async function operationSnapshot(tenantId:number,proposal:Proposal,client
   }
   const role=proposal.tipo.endsWith('_fornecedor')?'eh_fornecedor':proposal.tipo.endsWith('_vendedor')?'eh_vendedor':proposal.tipo.endsWith('_cliente')?'eh_cliente':null
   if(table==='entidades'&&role&&!row[role])throw new PluginError('INVALID_REFERENCE','Cadastro não possui o papel solicitado.')
-  if(table==='vendas'&&proposal.tipo.endsWith('_orcamento')&&row.tipo_documento!=='orcamento')throw new PluginError('INVALID_REFERENCE','O registro não é um orçamento.')
+  if(table==='vendas'&&proposal.tipo.includes('orcamento')&&row.tipo_documento!=='orcamento')throw new PluginError('INVALID_REFERENCE','O registro não é um orçamento.')
   if(table==='vendas'&&(proposal.tipo==='editar_venda'||proposal.tipo==='excluir_venda')&&row.tipo_documento==='orcamento')throw new PluginError('INVALID_REFERENCE','Use a operação de orçamento para este registro.')
   let parcelas:OperationSnapshot['parcelas']=[],contaFinanceira:OperationSnapshot['conta_financeira']=null
   if(table==='vendas'||table==='compras') {
@@ -99,6 +112,27 @@ export async function executeOperation(tenantId:number,actorId:number,proposal:P
   const id=Number(proposal.dados.registro_id),input={tenantId,actorId,id,idempotencyKey:key}
   const client=getErpTransactionClient()
   const data=proposal.dados as Record<string,unknown>
+  if(tables[proposal.tipo as keyof typeof tables]==='ordens_servico'){
+    const [current]=await runQuery('SELECT versao FROM erp.ordens_servico WHERE empresa_id=$1 AND id=$2 AND excluido_em IS NULL',[tenantId,id]);
+    if(!current)throw new PluginError('NOT_FOUND','Ordem não encontrada.',404)
+    if(proposal.tipo==='editar_ordem_servico'){
+      const {registro_id:_id,...values}=data
+      await createServiceOrder({tenantId,actorId,orderId:id,expectedVersion:Number(current.versao),values:serviceOrderCreateSchema.parse(values)})
+    }else if(proposal.tipo==='arquivar_pdf_ordem_servico')await archiveCommercialDocument(tenantId,actorId,'ordem_servico',id,Number(current.versao))
+    else{
+      const actions:Record<string,string>={aprovar_ordem_servico:'aprovar',iniciar_ordem_servico:'iniciar',concluir_ordem_servico:'concluir',cancelar_ordem_servico:'cancelar',gerar_orcamento_os:'gerar_orcamento',gerar_venda_os:'gerar_venda'}
+      const result=await runServiceOrderAction({tenantId,actorId,orderId:id,expectedVersion:Number(current.versao),action:actions[proposal.tipo],motivo:data.motivo as string|undefined})
+      if(proposal.tipo==='gerar_orcamento_os'||proposal.tipo==='gerar_venda_os')return String(result.id)
+    }
+    return String(id)
+  }
+  if(['enviar_orcamento','aprovar_orcamento','recusar_orcamento','cancelar_orcamento','arquivar_pdf_orcamento'].includes(proposal.tipo)){
+    const [current]=await runQuery('SELECT versao FROM erp.vendas WHERE empresa_id=$1 AND id=$2 AND excluido_em IS NULL',[tenantId,id]);
+    if(!current)throw new PluginError('NOT_FOUND','Orçamento não encontrado.',404)
+    if(proposal.tipo==='arquivar_pdf_orcamento')await archiveCommercialDocument(tenantId,actorId,'orcamento',id,Number(current.versao))
+    else await runQuoteAction({tenantId,actorId,quoteId:id,expectedVersion:Number(current.versao),action:proposal.tipo.split('_')[0] as 'enviar'|'aprovar'|'recusar'|'cancelar',motivo:data.motivo as string|undefined})
+    return String(id)
+  }
   if(proposal.tipo.endsWith('_nota_servico')){
     const current=(await runQuery('SELECT versao FROM erp.notas_fiscais WHERE empresa_id=$1 AND id=$2',[tenantId,id]))[0]
     if(!current)throw new PluginError('NOT_FOUND','Nota não encontrada.',404)
@@ -130,9 +164,9 @@ export async function executeOperation(tenantId:number,actorId:number,proposal:P
   if(['editar_venda','editar_orcamento','editar_compra'].includes(proposal.tipo)){
     const sale=proposal.tipo!=='editar_compra',table=sale?'vendas':'compras'
     const schedule=await runQuery(`SELECT id FROM erp.${sale?'vendas_recebimentos_previstos':'compras_parcelas_previstas'} WHERE empresa_id=$1 AND ${sale?'venda_id':'compra_id'}=$2 AND excluido_em IS NULL LIMIT 2`,[tenantId,id])
-    if(schedule.length>1)throw new PluginError('INVALID_STATE','Documento com várias parcelas exige edição no ERP para preservar a condição de pagamento.');
+    if(!sale&&schedule.length>1)throw new PluginError('INVALID_STATE','Compra com várias parcelas exige edição no ERP para preservar a condição de pagamento.');
     const [current]=await runQuery(`SELECT * FROM erp.${table} WHERE empresa_id=$1 AND id=$2`,[tenantId,id])
-    if(['desconto','frete','seguro','outras_despesas','impostos_retidos'].some(field=>Number(current[field]||0)!==0))throw new PluginError('INVALID_STATE','Documento com descontos ou despesas no cabeçalho exige edição no ERP.');
+    if(!sale&&['desconto','frete','seguro','outras_despesas','impostos_retidos'].some(field=>Number(current[field]||0)!==0))throw new PluginError('INVALID_STATE','Compra com descontos ou despesas no cabeçalho exige edição no ERP.');
     const {registro_id:_id,...changes}=data
     const preserved=Object.fromEntries(Object.entries(current).map(([key,value])=>[key,value instanceof Date?value.toISOString().slice(0,10):value]))
     delete preserved.chave_idempotencia

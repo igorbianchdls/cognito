@@ -12,7 +12,15 @@ const client = { query: async (sql: string, params?: unknown[]) => ({ rows: awai
 
 export async function fillSalePrices(tenantId: number, proposal: Proposal): Promise<Proposal> {
   if (!priced.has(proposal.tipo)) return proposal
-  const dados = proposal.dados as Record<string, unknown> & { itens?: Array<Record<string, unknown>> }
+  let dados = proposal.dados as Record<string, unknown> & { itens?: Array<Record<string, unknown>> }
+  if(proposal.tipo==='editar_venda'||proposal.tipo==='editar_orcamento'){
+    const [current]=await runQuery('SELECT desconto,tipo_desconto,frete,validade_em,previsao_entrega,observacoes_pagamento FROM erp.vendas WHERE empresa_id=$1 AND id=$2 AND excluido_em IS NULL',[tenantId,dados.registro_id]);
+    if(!current)throw new PluginError('NOT_FOUND','Documento não encontrado.',404)
+    const [schedule]=await runQuery('SELECT count(*)::int AS quantidade FROM erp.vendas_recebimentos_previstos WHERE empresa_id=$1 AND venda_id=$2 AND excluido_em IS NULL',[tenantId,dados.registro_id]);
+    if(Number(schedule.quantidade)>1&&!dados.parcelas)throw new PluginError('INVALID_INPUT','Este documento tem várias parcelas. Envie parcelas com a condição completa; obter_venda retorna os vencimentos e valores.',400,undefined,[{campo:'dados.parcelas',motivo:'Preserve ou revise todas as parcelas.'}]);
+    const preserved:Record<string,unknown>={desconto:Number(current.desconto),tipo_desconto:current.tipo_desconto,frete:Number(current.frete),validade_em:current.validade_em instanceof Date?current.validade_em.toISOString().slice(0,10):current.validade_em,previsao_entrega:current.previsao_entrega instanceof Date?current.previsao_entrega.toISOString().slice(0,10):current.previsao_entrega,observacoes_pagamento:current.observacoes_pagamento||''};
+    dados={...preserved,...dados};proposal={...proposal,dados} as Proposal;
+  }
   if (!Array.isArray(dados.itens) || dados.itens.every(item => Number(item.valor_unitario) > 0)) return proposal
   const date = typeof dados.data_venda === 'string' ? dados.data_venda : erpToday()
   const tableId = await resolvePriceTable(client, tenantId, Number(dados.cliente_id), dados.tabela_preco_id, date)

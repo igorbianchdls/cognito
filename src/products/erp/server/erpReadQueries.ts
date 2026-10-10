@@ -25,6 +25,7 @@ function filtered(params:unknown[], input:PageQuery, dateColumn:string) {
   let sql=' WHERE true'
   if(input.query?.trim()) sql+=` AND searchable ILIKE $${params.push('%'+input.query.trim()+'%')}`
   if(input.filters?.status) sql+=` AND status=$${params.push(input.filters.status)}`
+  if(input.filters?.situacao) sql+=` AND situacao=$${params.push(input.filters.situacao)}`
   const start=input.filters?.vencimento_inicio || input.filters?.inicio
   const end=input.filters?.vencimento_fim || input.filters?.fim
   if(start) sql+=` AND ${dateColumn}>=$${params.push(start)}::date`
@@ -74,7 +75,7 @@ export async function financialTitle(tenantId:number,side:'pagar'|'receber',id:n
 function commercialRows(type:'vendas'|'compras', document?:string) {
   const sale=type==='vendas',date=sale?'data_venda':'data_compra',party=sale?'cliente':'fornecedor'
   return `SELECT documentos.id, documentos.numero, documentos.${date} AS data, documentos.total, documentos.status,
-    entidades.nome AS ${party}${sale?', documentos.tipo_documento, documentos.atendimento_status, documentos.fiscal_status':', documentos.tipo_movimento'},
+    entidades.nome AS ${party}${sale?', documentos.tipo_documento, documentos.situacao, documentos.validade_em, documentos.atendimento_status, documentos.fiscal_status':', documentos.tipo_movimento'},
     concat_ws(' ',documentos.numero,entidades.nome,documentos.status${sale?'':',documentos.tipo_movimento'}) AS searchable
     FROM erp.${type} documentos JOIN erp.entidades entidades ON entidades.empresa_id=documentos.empresa_id AND entidades.id=documentos.${party}_id
     WHERE documentos.empresa_id=$1 AND documentos.excluido_em IS NULL${sale?(document==='orcamento'?" AND documentos.tipo_documento='orcamento'":" AND documentos.tipo_documento IN ('venda','pedido')"):''}`

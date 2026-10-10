@@ -590,6 +590,24 @@ export const ERP_API_ROUTES = [
     "transportOnlyFiscal": false
   },
   {
+    "path": "/api/erp/documentos-comerciais/[tipo]/[id]/pdf",
+    "route": "src/app/api/erp/documentos-comerciais/[tipo]/[id]/pdf/route.ts",
+    "handler": "src/products/erp/api/handlers/documentos-comerciais/pdf.ts",
+    "methods": [
+      "GET",
+      "POST"
+    ],
+    "authentication": "session",
+    "maxBodyBytes": 1048576,
+    "capabilities": [
+      "erp.vendas.gerenciar",
+      "erp.vendas.visualizar"
+    ],
+    "permissionRule": "Capabilities vary by method; see handler.",
+    "idempotency": "Business-operation rules; see handler.",
+    "transportOnlyFiscal": false
+  },
+  {
     "path": "/api/erp/estoque/contagem",
     "route": "src/app/api/erp/estoque/contagem/route.ts",
     "handler": "src/products/erp/api/handlers/estoque/contagem.ts",

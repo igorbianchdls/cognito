@@ -206,7 +206,7 @@ export function ErpStatusBadge({ status, label: customLabel, tone }: { status: s
     pago: 'Pago', cancelado: 'Cancelado', renegociado: 'Renegociado',
     previsao: 'Previsão',
     rascunho: 'Rascunho', confirmada: 'Confirmada', cancelada: 'Cancelada',
-    em_andamento: 'Em andamento', aprovado: 'Aprovado', recusado: 'Recusado', convertido: 'Convertido',
+    em_andamento: 'Em andamento', enviada: 'Enviada', aprovado: 'Aprovado', recusado: 'Recusado', convertido: 'Convertido',
     pendente: 'Pendente', atendido: 'Atendido', emitida: 'Emitida', nao_aplicavel: 'Não aplicável',
     orcamento_pendente: 'Orçamento pendente', aprovada: 'Aprovada', em_execucao: 'Em execução', concluida: 'Concluída',
     ativo: 'Ativo', inativo: 'Inativo', pausado: 'Pausado', encerrado: 'Encerrado', bloqueada: 'Bloqueada',

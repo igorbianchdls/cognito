@@ -5,6 +5,8 @@ import { outputs } from './outputs'
 import { ErpDomainError } from '@/products/erp/shared/erpErrors'
 import { PluginError } from '../shared/contracts'
 import { createServiceInvoiceLinkToken, SERVICE_INVOICE_LINK_TTL_SECONDS, SERVICE_INVOICE_PUBLIC_PATH } from '@/products/erp/server/fiscal/serviceInvoiceLinks'
+import { createCommercialLink,COMMERCIAL_LINK_PATH } from '@/products/erp/server/documents/commercialDocumentLinks'
+import { QUOTE_SITUATIONS } from '@/products/erp/shared/quoteLifecycle'
 
 export const companySchema = z.number().int().positive().optional().describe('Empresa autorizada retornada por meu_acesso. Obrigatória se houver mais de uma empresa.')
 const company = companySchema
@@ -26,7 +28,7 @@ function page(input: Record<string, unknown>) {
   return { query: input.busca as string | undefined, page: input.pagina as number, pageSize: input.por_pagina as number, sort: input.ordenar as string | undefined }
 }
 function commercialFilters(input:Record<string,unknown>) {
-  return Object.fromEntries(['status','inicio','fim'].filter(k=>input[k]).map(k=>[k,String(input[k])]))
+  return Object.fromEntries(['status','situacao','inicio','fim'].filter(k=>input[k]).map(k=>[k,String(input[k])]))
 }
 const registrationTypes = z.enum(['clientes','fornecedores','vendedores','produtos','servicos','categorias','categorias-cadastro','contas-financeiras'])
 const registrationCapabilities = (input:Record<string,unknown>):ErpCapability[] =>
@@ -38,6 +40,13 @@ async function noteIdByNumber(q:ErpQueries,companyId:number,numero:string){
   return Number(match.id)
 }
 export const tools: ToolDefinition[] = [
+  {name:'listar_ordens_servico',title:'Listar ordens de serviço',output:outputs.page,description:'Consulta ordens de serviço por cliente, número, equipamento ou situação, com paginação e resumo de todos os registros filtrados.',schema:z.object({...paging,status:z.enum(['rascunho','orcamento_pendente','aprovada','em_execucao','concluida','cancelada']).optional()}).strict(),capabilities:['erp.vendas.visualizar'],execute:(q,id,input)=>q.serviceOrders({tenantId:id,query:input.busca as string|undefined,status:input.status as string|undefined,page:Number(input.pagina),pageSize:Number(input.por_pagina)})},
+  {name:'obter_ordem_servico',title:'Detalhes da ordem de serviço',output:outputs.serviceOrder,description:'Consulta cliente, equipamento, itens ativos, valores, prazo, documentos vinculados e histórico da OS. registro_id vem de listar_ordens_servico.',schema:z.object({empresa_id:company,registro_id:z.number().int().positive()}).strict(),capabilities:['erp.vendas.visualizar'],execute:(q,id,input)=>q.serviceOrder(id,Number(input.registro_id))},
+  {name:'obter_documento_comercial',title:'PDF de proposta ou ordem de serviço',output:outputs.commercialDocument,description:'Retorna o link temporário do PDF de orçamento ou OS. Sem revisao, o PDF é gerado com os dados atuais e não fica arquivado. Com revisao, baixa o original imutável do Storage privado. Não é nota fiscal. O link expira em 15 minutos; se os dados atuais mudarem, solicite outro link.',schema:z.object({empresa_id:company,tipo:z.enum(['orcamento','ordem_servico']),registro_id:z.number().int().positive(),revisao:z.number().int().positive().optional()}).strict(),capabilities:['erp.vendas.visualizar'],execute:async(q,id,input,ctx)=>{
+    const tipo=input.tipo as 'orcamento'|'ordem_servico',result=await q.commercialDocument(id,tipo,Number(input.registro_id),input.revisao as number|undefined);
+    const link=createCommercialLink({empresa:id,usuario:ctx.userId,tipo,registro:Number(input.registro_id),versao:result.record.versao,...(input.revisao?{revisao:Number(input.revisao)}:{})});
+    return {...result,record:{...result.record,pdf_url:new URL(COMMERCIAL_LINK_PATH+link.token,ctx.origin).href,link_expira_em:link.expiresAt}};
+  }},
   { name: 'resumo_erp', title: 'Resumo do ERP', output: outputs.overview, description: 'Use quando o usuário pedir uma visão geral da empresa: saldos a pagar e receber, vencidos, vendas em rascunho, compras abertas e clientes ativos. Não use para listas detalhadas. Requer permissão de todas essas áreas.',
     schema: z.object({ empresa_id: company }).strict(),
     capabilities: ['erp.relatorios.visualizar','erp.financeiro.visualizar','erp.vendas.visualizar','erp.compras.visualizar','erp.cadastros.visualizar'],
@@ -52,7 +61,7 @@ export const tools: ToolDefinition[] = [
     execute:(q,id,input)=>q.registration(id,input.tipo as 'clientes',Number(input.registro_id))},
   { name: 'listar_vendas', title: 'Listar vendas e orçamentos', output: outputs.page, description: 'Use quando o usuário perguntar sobre vendas ou orçamentos: por número, cliente, status ou período do documento. summary.valor_total inclui todos os filtrados. Use tipo_documento orcamento para orçamentos.',
     schema: z.object({ ...paging, tipo_documento: z.enum(['venda','orcamento']).default('venda'), ordenar: z.enum(['-data','data','-total','total']).optional().describe('Ordenação de todas as páginas; padrão: mais recentes.'),
-      status: z.enum(['rascunho','confirmada','cancelada','faturada']).optional(),inicio:isoDate,fim:isoDate }).strict(),
+      status: z.enum(['rascunho','confirmada','cancelada','faturada']).optional(),situacao:z.enum(QUOTE_SITUATIONS).optional().describe('Situação comercial do orçamento; use junto com tipo_documento orcamento.'),inicio:isoDate,fim:isoDate }).strict(),
     capabilities: ['erp.vendas.visualizar'],
     execute: (q,id,input) => q.page(id,'pedidos', { ...page(input),
       filters: {...commercialFilters(input),...(input.tipo_documento==='orcamento'?{tipo_documento:'orcamento'}:{})} }) },

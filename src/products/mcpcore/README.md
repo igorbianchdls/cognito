@@ -7,7 +7,7 @@ Código comum aos produtos de chat do Cognito ERP (`chatgptplugin` e, a seguir, 
 | `shared` | `PluginConfig` / `PluginIntegration`, contratos (`PluginPrincipal`, `PluginError`), pool do schema `plugin` |
 | `auth` | Verificação do token OAuth do Clerk e carga do usuário e empresas (`resolvePrincipal`) |
 | `tools` | Consultas (`catalog.ts`) e contratos de saída (`outputs.ts`) |
-| `actions` | 20 tools de escrita em duas etapas, contratos das propostas, rascunhos, referências, operações e rótulos |
+| `actions` | 34 tools de escrita em duas etapas, contratos das propostas, rascunhos, referências, operações e rótulos |
 | `approvals` | `decideDraft`: confirmação transacional (usada pelo chat e pela página de revisão do ERP) |
 | `application` | `executeTool` (validação, empresa, permissões, prazo, auditoria), preferências e manutenção |
 | `audit` | Execuções e limite de pedidos por minuto |

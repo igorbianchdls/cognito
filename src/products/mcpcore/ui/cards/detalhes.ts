@@ -2,12 +2,14 @@
 // todos os dados geram a prévia direto (o usuário confirma no card); as demais pedem na conversa.
 export const detailsCardScript=String.raw`
 const detailFields={
+  obter_ordem_servico:()=>['cliente_nome','equipamento','marca','modelo','numero_serie','data_inicio','previsao_entrega','subtotal','desconto','total','observacoes_publicas'],
+  obter_documento_comercial:()=>['tipo','numero','revisao','arquivado','link_expira_em'],
   obter_parcela_financeira:r=>['descricao',r.lado==='receber'?'cliente':'fornecedor','numero_documento','parcela','vencimento','valor','valor_pago','credito','renegociado','saldo'],
   obter_venda:()=>['cliente_nome','data_venda','data_vencimento','subtotal','total','observacoes'],
   obter_compra:()=>['fornecedor_nome','data_compra','data_vencimento','subtotal','total','observacoes'],
   obter_nota_servico:()=>['cliente','data_competencia','valor_total','valor_iss','retencao_iss','retencoes_federais','valor_liquido','local_prestacao','autorizada_em','codigo_verificacao','chave_acesso','erro_mensagem','observacoes'],
 };
-const itemColumns={obter_venda:['descricao','quantidade','valor_unitario','desconto','total','quantidade_atendida'],obter_compra:['descricao','quantidade','quantidade_recebida','valor_unitario','total'],obter_nota_servico:['descricao','quantidade','valor_unitario','desconto','valor_total']};
+const itemColumns={obter_ordem_servico:['descricao','quantidade','valor_unitario','desconto','total'],obter_venda:['descricao','quantidade','valor_unitario','desconto','total','quantidade_atendida'],obter_compra:['descricao','quantidade','quantidade_recebida','valor_unitario','total'],obter_nota_servico:['descricao','quantidade','valor_unitario','desconto','valor_total']};
 const openStatuses=['aberto','pendente','vencido','parcial'];
 // Prévia direta: a tool de escrita valida e devolve o card de revisão com Confirmar/Ajustar.
 // Chamadas a partir de botões: button() já serializa o clique em run().
@@ -17,7 +19,10 @@ function ask(text){return say(text)}
 function openLink(url,caption){return request('ui/open-link',{url}).catch(()=>say(caption+': '+url))}
 // O link do PDF/XML expira em minutos: busca um novo na hora do clique (cai no atual se a consulta falhar).
 function openNoteFile(id,kind,fallback,caption){return callTool('obter_nota_servico',withCompany({nota_id:Number(id)})).then(c=>((c.data||{}).record||{})[kind+'_url']||fallback,()=>fallback).then(url=>openLink(url,caption))}
+function openCommercialFile(args,record){return callTool('obter_documento_comercial',withCompany({tipo:record.tipo||args.tipo,registro_id:Number(record.id||args.registro_id),...(record.revisao?{revisao:Number(record.revisao)}:{})})).then(c=>((c.data||{}).record||{}).pdf_url||record.pdf_url,()=>record.pdf_url).then(url=>openLink(url,'PDF comercial'))}
 function detailActions(tool,args,data,record){
+  if(tool==='obter_documento_comercial')return record.pdf_url?[{label:'Abrir PDF',primary:true,run:()=>openCommercialFile(args,record)}]:[];
+  if(tool==='obter_ordem_servico'){const id=Number(record.id),action={rascunho:'aprovar',orcamento_pendente:'aprovar',aprovada:'iniciar',em_execucao:'concluir'}[record.status];return [action&&{label:{aprovar:'Aprovar',iniciar:'Iniciar execução',concluir:'Concluir'}[action],primary:true,run:()=>preview('alterar_ordem_servico',{tipo:action,dados:{registro_id:id}})},{label:'Ver PDF',run:()=>open('obter_documento_comercial',withCompany({tipo:'ordem_servico',registro_id:id}))}].filter(Boolean)}
   const name=record.nome||record.numero||record.descricao||('#'+record.id);
   if(tool==='obter_parcela_financeira'){const side=record.lado||args.tipo||'pagar',verb=side==='receber'?'recebimento':'pagamento',account=record.conta_financeira_sugerida;
     const open_=openStatuses.includes(record.status)&&Number(record.saldo)>0;
@@ -28,7 +33,7 @@ function detailActions(tool,args,data,record){
     return [next&&{label:'Próxima parcela',primary:true,run:()=>(open('obter_parcela_financeira',withCompany({tipo:side,parcela_id:Number(next.id)})))},
       {label:'Editar título',run:()=>ask('Quero editar o título '+name+' (ID '+record.id+').')}]}
   if(tool==='obter_venda'){const id=Number(record.id),quote=record.tipo_documento==='orcamento';
-    if(quote)return record.status==='cancelada'?[]:[{label:'Converter em venda',primary:true,run:()=>preview('converter_orcamento',{dados:{registro_id:id}})},{label:'Editar orçamento',run:()=>ask('Quero editar o orçamento '+name+' (ID '+id+').')}];
+    if(quote)return [!['recusado','convertido','cancelado'].includes(record.situacao)&&record.status!=='cancelada'&&(!record.validade_em||String(record.validade_em).slice(0,10)>=today())&&{label:'Converter em venda',primary:true,run:()=>preview('converter_orcamento',{dados:{registro_id:id}})},{label:'Ver PDF',run:()=>open('obter_documento_comercial',withCompany({tipo:'orcamento',registro_id:id}))}].filter(Boolean);
     if(record.status==='rascunho')return [{label:'Confirmar venda',primary:true,run:()=>preview('confirmar_venda',{dados:{registro_id:id}})},{label:'Editar',run:()=>ask('Quero editar a venda '+name+' (ID '+id+').')}];
     if(record.status==='confirmada')return [record.atendimento_status==='pendente'&&{label:'Atender venda',primary:true,run:()=>preview('atender_venda',{dados:{registro_id:id}})},
       {label:'Cancelar venda',run:()=>ask('Quero cancelar a venda '+name+' (ID '+id+').')}];return []}
@@ -78,8 +83,9 @@ function renderNote(target,data){const full=state.displayMode==='fullscreen',r=d
 // Cabeçalho de cada tipo de registro e os campos que ele já mostra (não se repetem na grade).
 function heroFor(tool,record,args){const date=k=>record[k]?formatted('data',record[k]):null,side=record.lado||args.tipo||'pagar',party=side==='receber'?'cliente':'fornecedor';
   const due=dueText(record.vencimento,record.status);
-  if(tool==='obter_venda')return {keys:['numero','cliente_nome','total','status','data_venda','data_vencimento','tipo_documento'],eyebrow:(record.tipo_documento==='orcamento'?'Orçamento ':'Venda ')+(record.numero||''),
-    title:record.cliente_nome||'Cliente',amount:record.total,status:record.status,meta:[date('data_venda')&&'Data '+date('data_venda'),date('data_vencimento')&&'Vencimento '+date('data_vencimento')].filter(Boolean).join(' · ')};
+  if(tool==='obter_ordem_servico')return {keys:['numero','cliente_nome','total','status'],eyebrow:'Ordem de serviço '+(record.numero||''),title:record.cliente_nome||'Cliente',amount:record.total,status:record.status};
+  if(tool==='obter_venda')return {keys:['numero','cliente_nome','total','status','situacao','data_venda','data_vencimento','tipo_documento'],eyebrow:(record.tipo_documento==='orcamento'?'Orçamento ':'Venda ')+(record.numero||''),
+    title:record.cliente_nome||'Cliente',amount:record.total,status:record.tipo_documento==='orcamento'?(record.situacao||record.status):record.status,meta:[date('data_venda')&&'Data '+date('data_venda'),date('data_vencimento')&&'Vencimento '+date('data_vencimento')].filter(Boolean).join(' · ')};
   if(tool==='obter_compra')return {keys:['numero','fornecedor_nome','total','status','data_compra','data_vencimento'],eyebrow:'Compra '+(record.numero||''),title:record.fornecedor_nome||'Fornecedor',
     amount:record.total,status:record.status,meta:[date('data_compra')&&'Data '+date('data_compra'),date('data_vencimento')&&'Vencimento '+date('data_vencimento')].filter(Boolean).join(' · ')};
   if(tool==='obter_titulo_financeiro')return {keys:['descricao','status',party,'valor_total'],eyebrow:side==='receber'?'Conta a receber':'Conta a pagar',title:record.descricao||'Título',

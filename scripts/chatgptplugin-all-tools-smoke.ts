@@ -20,13 +20,14 @@ import {getServiceInvoicePdf,getServiceInvoice} from '../src/products/erp/server
 import {createServiceInvoiceLinkToken,verifyServiceInvoiceLinkToken} from '../src/products/erp/server/fiscal/serviceInvoiceLinks'
 import {GET as downloadInvoice} from '../src/products/erp/api/handlers/notas-servico/publicLink'
 import {closeErpPeriod} from '../src/products/erp/server/erpPeriodRepository'
+import {GET as downloadCommercial} from '../src/products/erp/api/handlers/documentos-comerciais/publicLink'
 
 // Real MCP SDK, repositories, approvals and RLS. Authentication is a fixture.
 // Test-only pool adapter shares a single outer transaction: nested COMMITs
 // release savepoints, never commit data. Native read-only/rate limiting have
 // their own real-connection checks in chatgptplugin-live-read-smoke.ts.
 config({path:'.env.local',quiet:true})
-const fiscalStorageFixture=installFiscalStorageFixture()
+const fiscalStorageFixture=installFiscalStorageFixture({buckets:['erp-fiscal','erp-comercial']})
 const opt=(name:string)=>Number(process.argv.find(a=>a.startsWith(`--${name}=`))?.split('=')[1])
 const company=opt('company'),user=opt('user')
 assert(company>0&&user>0,'Informe --company=<empresa> --user=<usuario>')
@@ -59,6 +60,7 @@ const fakeClient={release:()=>{},query:async(statement:string,params?:unknown[])
  if(context?.readOnly&&/\berp\./i.test(text)&&/^\s*(INSERT|UPDATE|DELETE|TRUNCATE)\b/i.test(text))throw new Error('Read-only ERP mutation refused')
  // Can't turn an outer transaction containing writes into a native read-only
  // transaction. Keep real tenant/user/RLS, enforce read-only statements above.
+ if(/^SET TRANSACTION ISOLATION LEVEL REPEATABLE READ READ ONLY\s*;?$/i.test(text)){assert(context?.readOnly);return {rows:[]}}
  const normalized=statement.replace(/set_config\('transaction_read_only', 'on', true\),?\s*/g,'')
  try{return await db.query(normalized,params)}catch(error){
   const e=error as {code?:string;message:string};report.sqlErrors.push({code:e.code||'',message:e.message.slice(0,250),statement:text.slice(0,160)});throw error
@@ -190,6 +192,24 @@ async function main(){let before='';try{
   await reject('obter_titulo_financeiro',{tipo:side,conta_id:unused},'NOT_FOUND')
  })
  const commercial=(sale:boolean,item=refs.servico,kind='servico',quantity=1)=>({[sale?'cliente_id':'fornecedor_id']:refs[sale?'cliente':'fornecedor'],[sale?'data_venda':'data_compra']:today,data_vencimento:due,itens:[{tipo:kind,item_id:item,quantidade:quantity,valor_unitario:100,desconto:0}],observacoes:marker})
+ await check('Comercial ampliado: OS, proposta, parcelas e PDF privado',async()=>{
+  const data={cliente_id:refs.cliente,data_inicio:today,previsao_entrega:due,equipamento:'Equipamento de teste MCP',observacoes_internas:'SEGREDO_INTERNO_MCP',desconto:10,itens:[{tipo:'servico',item_id:refs.servico,descricao:'Serviço do teste MCP',quantidade:2,valor_unitario:100,desconto:0}]};
+  const os=await mutate('criar_ordem_servico',{dados:data});await mutate('editar_ordem_servico',{dados:{...data,registro_id:os,diagnostico:'Diagnóstico revisado'}});
+  const listed=(await call('listar_ordens_servico',{busca:'Equipamento de teste MCP'})).data;assert(listed.records.some((r:{id:string})=>Number(r.id)===os));
+  let detail=(await call('obter_ordem_servico',{registro_id:os})).data;assert.equal(Number(detail.record.total),190);
+  for(const tipo of ['aprovar','iniciar','concluir'])await mutate('alterar_ordem_servico',{tipo,dados:{registro_id:os}});
+  const q=await mutate('converter_ordem_servico',{tipo:'orcamento',dados:{registro_id:os}});
+  await mutate('alterar_orcamento',{tipo:'enviar',dados:{registro_id:q}});await mutate('alterar_orcamento',{tipo:'aprovar',dados:{registro_id:q}});
+  await mutate('arquivar_documento_comercial',{tipo:'ordem_servico',dados:{registro_id:os}});
+  await mutate('arquivar_documento_comercial',{tipo:'orcamento',dados:{registro_id:q}});
+  const pdf=(await call('obter_documento_comercial',{tipo:'orcamento',registro_id:q,revisao:1})).data.record;
+  const response=await downloadCommercial(new Request(String(pdf.pdf_url)),{params:Promise.resolve({token:new URL(String(pdf.pdf_url)).pathname.split('/').at(-1)!})});assert.equal(response.status,200);assert.equal(response.headers.get('content-type'),'application/pdf');assert(Buffer.from(await response.arrayBuffer()).subarray(0,5).toString()==='%PDF-');
+  const sale=await mutate('converter_orcamento',{dados:{registro_id:q}}),fromOS=await mutate('converter_ordem_servico',{tipo:'venda',dados:{registro_id:os}});assert.equal(sale,fromOS);detail=(await call('obter_ordem_servico',{registro_id:os})).data;assert.equal(Number(detail.record.venda_id),sale);
+  const complex={...commercial(true),validade_em:due,desconto:10,frete:5,parcelas:[{data_vencimento:due,valor:40},{data_vencimento:due,valor:55}]},draft=await mutate('criar_venda',{tipo:'orcamento',dados:complex});await mutate('editar_venda',{tipo:'orcamento',dados:{...complex,registro_id:draft,observacoes:'Condição comercial revisada'}});assert.equal((await call('obter_venda',{venda_id:draft})).data.installments.length,2);
+  await mutate('alterar_orcamento',{tipo:'recusar',dados:{registro_id:draft,motivo:reason}});const denied=await prepare('converter_orcamento',{dados:{registro_id:draft}});await reject('converter_orcamento',{rascunho_id:denied.rascunho_id},'INVALID_STATE');
+  const cancelled=await mutate('criar_ordem_servico',{dados:data});await mutate('alterar_ordem_servico',{tipo:'cancelar',dados:{registro_id:cancelled,motivo:reason}});
+  const quoteCancelled=await mutate('criar_venda',{tipo:'orcamento',dados:commercial(true)});await mutate('alterar_orcamento',{tipo:'cancelar',dados:{registro_id:quoteCancelled,motivo:reason}});
+ });
  await check('Orçamento: criar, editar, converter e excluir rascunhos',async()=>{
   const data=commercial(true),id=await mutate('criar_venda',{tipo:'orcamento',dados:data})
   await mutate('editar_venda',{tipo:'orcamento',dados:{...data,registro_id:id,observacoes:marker+' orçamento alterado'}})

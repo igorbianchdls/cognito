@@ -68,6 +68,7 @@ export const quoteConvertSchema = z.object({
 export const quoteActionSchema = z.object({
   action: z.enum(['enviar', 'aprovar', 'recusar', 'cancelar']),
   expectedVersion: z.coerce.number().int().positive(),
+  motivo: z.string().trim().min(3).max(1000).optional(),
 })
 
 export const partialStockItemSchema = z.object({

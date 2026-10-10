@@ -9,7 +9,8 @@ import { processPurchaseRecurrences } from './erpRoutineRepository'
 import { erpDateSchema } from '@/products/erp/shared/erpTransport'
 import { lineTotal, sumMoney } from '@/products/erp/shared/erpMoney'
 import { assertCommercialReplay } from '@/products/erp/shared/commercialContracts'
-import { runQuery, withTransaction } from "@/lib/postgres";
+import { runQuery, withTransaction, type SQLClient } from "@/lib/postgres";
+import { quoteSituation, quoteIsClosed } from '../shared/quoteLifecycle';
 import { processDueSalesContracts } from "@/products/erp/server/erpManagementRepository";
 import {
   createSaleRecord,
@@ -57,34 +58,28 @@ function json(value: unknown) {
   return JSON.stringify(value ?? {});
 }
 
-export async function listServiceOrders(input: {
-  tenantId: number;
-  query?: string;
-  status?: string;
-}) {
-  const query = `%${String(input.query || "").trim()}%`;
-  const status = stringValue(input.status);
-  return runQuery<Record<string, unknown>>(
-    `SELECT ordens.id::text, ordens.numero, ordens.status, ordens.data_inicio,
-       ordens.previsao_entrega, ordens.equipamento, ordens.marca, ordens.modelo,
-       ordens.total, ordens.versao, clientes.nome AS cliente,
-       responsaveis.nome AS responsavel,
-       count(itens.id) FILTER (WHERE itens.excluido_em IS NULL)::int AS itens
-     FROM erp.ordens_servico AS ordens
-     JOIN erp.entidades AS clientes
-       ON clientes.empresa_id = ordens.empresa_id AND clientes.id = ordens.cliente_id
-     LEFT JOIN erp.entidades AS responsaveis
-       ON responsaveis.empresa_id = ordens.empresa_id AND responsaveis.id = ordens.responsavel_id
-     LEFT JOIN erp.ordens_servico_itens AS itens
-       ON itens.empresa_id = ordens.empresa_id AND itens.ordem_servico_id = ordens.id
-     WHERE ordens.empresa_id = $1 AND ordens.excluido_em IS NULL
-       AND ($2 = '%%' OR concat_ws(' ', ordens.numero, clientes.nome, ordens.equipamento, ordens.numero_serie) ILIKE $2)
-       AND ($3::text IS NULL OR ordens.status = $3)
-     GROUP BY ordens.id, clientes.nome, responsaveis.nome
-     ORDER BY ordens.data_inicio DESC, ordens.id DESC
-     LIMIT 300`,
-    [input.tenantId, query, status],
-  );
+export async function serviceOrderPage(input:{tenantId:number;query?:string;status?:string;page?:number;pageSize?:number}) {
+  const page=Math.max(1,Math.min(10000,Math.trunc(input.page||1))),pageSize=Math.max(1,Math.min(100,Math.trunc(input.pageSize||20)));
+  const params=[input.tenantId,`%${String(input.query||'').trim()}%`,stringValue(input.status)];
+  const from=`FROM erp.ordens_servico ordens JOIN erp.entidades clientes ON clientes.empresa_id=ordens.empresa_id AND clientes.id=ordens.cliente_id
+    LEFT JOIN erp.entidades responsaveis ON responsaveis.empresa_id=ordens.empresa_id AND responsaveis.id=ordens.responsavel_id
+    WHERE ordens.empresa_id=$1 AND ordens.excluido_em IS NULL
+    AND ($2='%%' OR concat_ws(' ',ordens.numero,clientes.nome,ordens.equipamento,ordens.numero_serie) ILIKE $2)
+    AND ($3::text IS NULL OR ordens.status=$3)`;
+  const [records,summary]=await Promise.all([
+    runQuery<Record<string,unknown>>(`SELECT ordens.id::text,ordens.numero,ordens.status,ordens.data_inicio,ordens.previsao_entrega,
+      ordens.equipamento,ordens.marca,ordens.modelo,ordens.total,ordens.versao,clientes.nome AS cliente,responsaveis.nome AS responsavel,
+      (SELECT count(*)::int FROM erp.ordens_servico_itens i WHERE i.empresa_id=ordens.empresa_id AND i.ordem_servico_id=ordens.id AND i.excluido_em IS NULL) AS itens
+      ${from} ORDER BY ordens.data_inicio DESC,ordens.id DESC LIMIT $4 OFFSET $5`,[...params,pageSize,(page-1)*pageSize]),
+    runQuery<Record<string,unknown>>(`SELECT count(*)::int AS quantidade,coalesce(sum(ordens.total),0) AS valor_total,
+      count(*) FILTER(WHERE ordens.status IN ('rascunho','orcamento_pendente'))::int AS pendentes,
+      count(*) FILTER(WHERE ordens.status='em_execucao')::int AS em_execucao,count(*) FILTER(WHERE ordens.status='concluida')::int AS concluidas ${from}`,params)
+  ]);
+  const total=Number(summary[0].quantidade);
+  return {records,total,page,pageSize,hasMore:page*pageSize<total,summary:summary[0]};
+}
+export async function listServiceOrders(input:{tenantId:number;query?:string;status?:string}) {
+  return (await serviceOrderPage({...input,pageSize:100})).records;
 }
 
 export async function getServiceOrder(tenantId: number, orderId: number) {
@@ -264,95 +259,45 @@ const serviceOrderTransitions: Record<string, Record<string, string>> = {
   },
 };
 
-async function convertServiceOrder(
-  input: ActorInput & {
-    orderId: number;
-    documentType: "orcamento" | "venda";
-    expectedVersion: number;
-  },
-) {
-  return withTransaction(async client=>{
-  const order=(await client.query('SELECT * FROM erp.ordens_servico WHERE empresa_id=$1 AND id=$2 AND excluido_em IS NULL FOR UPDATE',[input.tenantId,input.orderId])).rows[0];
-  if(!order)throw new ErpDomainError('NOT_FOUND','Ordem não encontrada.',404);
-  const details={items:(await client.query('SELECT * FROM erp.ordens_servico_itens WHERE empresa_id=$1 AND ordem_servico_id=$2 ORDER BY id',[input.tenantId,input.orderId])).rows};
-  if (Number(order.versao) !== input.expectedVersion)
-    throw new ErpDomainError(
-      "VERSION_CONFLICT",
-      "A ordem foi alterada por outra pessoa.",
-      409,
-    );
-  if (order.status === "cancelada")
-    throw new ErpDomainError(
-      "INVALID_STATE",
-      "Ordem cancelada não pode ser convertida.",
-      409,
-    );
-  const existingId =
-    input.documentType === "orcamento" ? order.orcamento_id : order.venda_id;
-  if (existingId) return { id: String(existingId), reused: true };
-  const record = await createSaleRecord(client,{
-    tenantId: input.tenantId,
-    actorId: input.actorId,
-    entityId: "pedidos",
-    idempotencyKey: `os:${input.orderId}:${input.documentType}`,
-    values: {
-      cliente_id: order.cliente_id,
-      vendedor_id: order.responsavel_id,
-      tipo_documento: input.documentType,
-      data_venda: date(order.data_inicio),
-      validade_em: order.previsao_entrega
-        ? date(order.previsao_entrega)
-        : undefined,
-      previsao_entrega: order.previsao_entrega,
-      observacoes: order.observacoes_publicas,
-      desconto: order.desconto,
-      itens: details.items.map((item) => ({
-        tipo: item.produto_id ? "produto" : "servico",
-        item_id: item.produto_id || item.servico_id,
-        descricao: item.descricao,
-        quantidade: item.quantidade,
-        valor_unitario: item.valor_unitario,
-        desconto: item.desconto,
-      })),
-      parcelas: [
-        {
-          numero_parcela: 1,
-          data_vencimento: date(order.previsao_entrega || order.data_inicio),
-          valor: order.total,
-        },
-      ],
-    },
-  });
-  const linked = await (async () => {
-    const column =
-      input.documentType === "orcamento" ? "orcamento_id" : "venda_id";
-    const updated = await client.query(
-      `UPDATE erp.ordens_servico SET ${column} = $3, versao = versao + 1, atualizado_por = $4
-       WHERE empresa_id = $1 AND id = $2 AND versao = $5
-       RETURNING id`,
-      [
-        input.tenantId,
-        input.orderId,
-        id(record.id, "Documento"),
-        input.actorId,
-        input.expectedVersion,
-      ],
-    );
-    if (!updated.rows[0]) throw new ErpDomainError('VERSION_CONFLICT','A ordem foi alterada.',409);
-    await client.query(
-      `INSERT INTO erp.ordens_servico_eventos (empresa_id, ordem_servico_id, evento, dados, criado_por)
-       VALUES ($1,$2,$3,$4::jsonb,$5)`,
-      [
-        input.tenantId,
-        input.orderId,
-        `gerou_${input.documentType}`,
-        json({ documento_id: record.id }),
-        input.actorId,
-      ],
-    );
-    return true;
-  })();
-  return { id: String(record.id), reused: !linked };
+/** All entry points lock conversions before locking either source document. */
+export async function lockCommercialConversion(client: SQLClient, tenantId: number) {
+  await client.query("SELECT pg_advisory_xact_lock(hashtextextended($1, 0))", [`erp:commercial-conversion:${tenantId}`]);
+}
+function assertQuoteValid(quote: Record<string,unknown>) {
+  if (quote.validade_em && date(quote.validade_em) < erpToday())
+    throw new ErpDomainError('QUOTE_EXPIRED', 'Orçamento vencido. Renove a validade no orçamento antes de enviar, aprovar ou converter.', 409);
+}
+async function convertServiceOrder(input: ActorInput & {orderId:number;documentType:'orcamento'|'venda';expectedVersion:number}) {
+  return withTransaction(async client => {
+    await lockCommercialConversion(client,input.tenantId);
+    const order=(await client.query('SELECT * FROM erp.ordens_servico WHERE empresa_id=$1 AND id=$2 AND excluido_em IS NULL FOR UPDATE',[input.tenantId,input.orderId])).rows[0];
+    if(!order)throw new ErpDomainError('SERVICE_ORDER_NOT_FOUND','Ordem não encontrada.',404);
+    if(Number(order.versao)!==input.expectedVersion)throw new ErpDomainError('VERSION_CONFLICT','A ordem foi alterada por outra pessoa.',409);
+    if(order.status==='cancelada')throw new ErpDomainError('INVALID_STATE','Ordem cancelada não pode ser convertida.',409);
+    const existingId=input.documentType==='orcamento'?order.orcamento_id:order.venda_id;
+    if(existingId)return {id:String(existingId),reused:true};
+    if(input.documentType==='orcamento'&&order.venda_id)throw new ErpDomainError('INVALID_STATE','Esta ordem já originou uma venda.',409);
+    // A venda de uma OS que já tem proposta deve ter a proposta como origem.
+    if(input.documentType==='venda'&&order.orcamento_id){
+      const quote=(await client.query('SELECT versao FROM erp.vendas WHERE empresa_id=$1 AND id=$2 AND excluido_em IS NULL',[input.tenantId,order.orcamento_id])).rows[0];
+      if(!quote)throw new ErpDomainError('INVALID_STATE','Orçamento vinculado indisponível.',409);
+      const converted=await convertQuoteWithClient(client,{...input,quoteId:Number(order.orcamento_id),expectedVersion:Number(quote.versao)});
+      return {id:String(converted.sale.id),reused:converted.reused};
+    }
+    const items=(await client.query('SELECT * FROM erp.ordens_servico_itens WHERE empresa_id=$1 AND ordem_servico_id=$2 AND excluido_em IS NULL ORDER BY id',[input.tenantId,input.orderId])).rows;
+    if(!items.length)throw new ErpDomainError('INVALID_STATE','A ordem precisa de pelo menos um item ativo.',409);
+    const record=await createSaleRecord(client,{tenantId:input.tenantId,actorId:input.actorId,entityId:'pedidos',idempotencyKey:`os:${input.orderId}:${input.documentType}`,values:{
+      cliente_id:order.cliente_id,tipo_documento:input.documentType,data_venda:erpToday(),
+      // Prazo de entrega e validade comercial são conceitos independentes.
+      previsao_entrega:order.previsao_entrega?date(order.previsao_entrega):null,
+      observacoes:order.observacoes_publicas,desconto:order.desconto,
+      itens:items.map(item=>({tipo:item.produto_id?'produto':'servico',item_id:item.produto_id||item.servico_id,descricao:item.descricao,quantidade:item.quantidade,valor_unitario:item.valor_unitario,desconto:item.desconto})),
+      parcelas:[{numero_parcela:1,data_vencimento:date(order.previsao_entrega||order.data_inicio),valor:order.total}]
+    }});
+    const column=input.documentType==='orcamento'?'orcamento_id':'venda_id';
+    await client.query(`UPDATE erp.ordens_servico SET ${column}=$3,versao=versao+1,atualizado_por=$4 WHERE empresa_id=$1 AND id=$2`,[input.tenantId,input.orderId,Number(record.id),input.actorId]);
+    await client.query(`INSERT INTO erp.ordens_servico_eventos (empresa_id,ordem_servico_id,evento,dados,criado_por) VALUES ($1,$2,$3,$4::jsonb,$5)`,[input.tenantId,input.orderId,`gerou_${input.documentType}`,json({documento_id:record.id}),input.actorId]);
+    return {id:String(record.id),reused:false};
   });
 }
 
@@ -361,6 +306,7 @@ export async function runServiceOrderAction(
     orderId: number;
     action: string;
     expectedVersion: number;
+    motivo?: string;
   },
 ) {
   if (input.action === "gerar_orcamento" || input.action === "gerar_venda") {
@@ -404,7 +350,7 @@ export async function runServiceOrderAction(
     await client.query(
       `INSERT INTO erp.ordens_servico_eventos
          (empresa_id, ordem_servico_id, evento, status_anterior, status_novo, dados, criado_por)
-       VALUES ($1,$2,$3,$4,$5,'{}'::jsonb,$6)`,
+       VALUES ($1,$2,$3,$4,$5,$7::jsonb,$6)`,
       [
         input.tenantId,
         input.orderId,
@@ -412,88 +358,48 @@ export async function runServiceOrderAction(
         order.status,
         next,
         input.actorId,
+        json({motivo: stringValue(input.motivo)}),
       ],
     );
     return updated.rows[0];
   });
 }
 
-export async function convertQuoteToSale(
-  input: ActorInput & { quoteId: number; expectedVersion: number },
-) {
-  return withTransaction(async client=>{
+async function convertQuoteWithClient(client:SQLClient,input:ActorInput&{quoteId:number;expectedVersion:number}) {
+  // Lock OS before quote, also when conversion starts from the quote/API.
+  const orders=(await client.query('SELECT * FROM erp.ordens_servico WHERE empresa_id=$1 AND orcamento_id=$2 AND excluido_em IS NULL ORDER BY id FOR UPDATE',[input.tenantId,input.quoteId])).rows;
   const quote=(await client.query('SELECT * FROM erp.vendas WHERE empresa_id=$1 AND id=$2 AND excluido_em IS NULL FOR UPDATE',[input.tenantId,input.quoteId])).rows[0];
-  if(!quote)throw new ErpDomainError('NOT_FOUND','Orçamento não encontrado.',404);
-  const details={items:(await client.query('SELECT * FROM erp.vendas_itens WHERE empresa_id=$1 AND venda_id=$2 ORDER BY id',[input.tenantId,input.quoteId])).rows,installments:(await client.query('SELECT * FROM erp.vendas_recebimentos_previstos WHERE empresa_id=$1 AND venda_id=$2 ORDER BY numero_parcela',[input.tenantId,input.quoteId])).rows};
-  if (quote.tipo_documento !== "orcamento")
-    throw new ErpDomainError(
-      "NOT_A_QUOTE",
-      "Documento informado não e um orçamento.",
-      409,
-    );
-  if (Number(quote.versao) !== input.expectedVersion)
-    throw new ErpDomainError(
-      "VERSION_CONFLICT",
-      "O orçamento foi alterado por outra pessoa.",
-      409,
-    );
-  if (quote.situacao === "recusado" || quote.status === "cancelada")
-    throw new ErpDomainError(
-      "INVALID_STATE",
-      "Orçamento recusado ou cancelado não pode ser convertido.",
-      409,
-    );
-  const existing = await client.query(
-    `SELECT id::text FROM erp.vendas WHERE empresa_id = $1 AND venda_origem_id = $2 AND excluido_em IS NULL LIMIT 1`,
-    [input.tenantId, input.quoteId],
-  );
-  if (existing.rows[0]) return { sale: existing.rows[0], reused: true };
-  const record = await createSaleRecord(client,{
-    tenantId: input.tenantId,
-    actorId: input.actorId,
-    entityId: "pedidos",
-    idempotencyKey: `orcamento:${input.quoteId}:venda`,
-    values: {
-      ...quote,
-      tipo_documento: "venda",
-      venda_origem_id: input.quoteId,
-      numero: undefined,
-      chave_idempotencia: undefined,
-      data_venda: date(quote.data_venda), data_competencia: date(quote.data_competencia),
-      itens: details.items.map(item=>({tipo:item.produto_id?'produto':'servico',item_id:item.produto_id||item.servico_id,descricao:item.descricao,quantidade:item.quantidade,valor_unitario:item.valor_unitario,desconto:item.desconto})),
-      parcelas: details.installments.map((row) => ({
-        numero_parcela: row.numero_parcela,
-        descricao: row.descricao,
-        data_vencimento: date(row.data_vencimento),
-        valor: row.valor,
-        conta_financeira_id: row.conta_financeira_id,
-        metodo_pagamento_id: row.metodo_pagamento_id,
-      })),
-    },
-  });
-  const linked = await (async () => {
-    const updated = await client.query(
-      `UPDATE erp.vendas SET situacao = 'aprovado', versao = versao + 1, atualizado_por = $3
-       WHERE empresa_id = $1 AND id = $2 AND versao = $4
-       RETURNING id`,
-      [input.tenantId, input.quoteId, input.actorId, input.expectedVersion],
-    );
-    if (!updated.rows[0]) throw new ErpDomainError('VERSION_CONFLICT','Orçamento alterado.',409);
-    await client.query(
-      `INSERT INTO erp.vendas_eventos (empresa_id, venda_id, evento, status_anterior, status_novo, versao, dados, criado_por)
-       VALUES ($1,$2,'convertido_em_venda','rascunho','rascunho',$3,$4::jsonb,$5)`,
-      [
-        input.tenantId,
-        input.quoteId,
-        input.expectedVersion + 1,
-        json({ venda_id: record.id }),
-        input.actorId,
-      ],
-    );
-    return true;
-  })();
-  return { sale: { id: String(record.id) }, reused: !linked };
-  });
+  if(!quote||quote.tipo_documento!=='orcamento')throw new ErpDomainError('QUOTE_NOT_FOUND','Orçamento não encontrado.',404);
+  if(Number(quote.versao)!==input.expectedVersion)throw new ErpDomainError('VERSION_CONFLICT','O orçamento foi alterado por outra pessoa.',409);
+  const existing=(await client.query("SELECT id::text FROM erp.vendas WHERE empresa_id=$1 AND venda_origem_id=$2 AND tipo_documento='venda' AND excluido_em IS NULL",[input.tenantId,input.quoteId])).rows[0];
+  if(existing){await linkOrdersToSale(client,input,orders,String(existing.id));return {sale:existing,reused:true};}
+  if(quote.status==='cancelada'||quoteIsClosed(quote.situacao))throw new ErpDomainError('INVALID_STATE','Orçamento encerrado não pode ser convertido.',409);
+  if(orders.some(order=>order.status==='cancelada'))throw new ErpDomainError('INVALID_STATE','A ordem de serviço de origem está cancelada.',409);
+  assertQuoteValid(quote);
+  const items=(await client.query('SELECT * FROM erp.vendas_itens WHERE empresa_id=$1 AND venda_id=$2 AND excluido_em IS NULL ORDER BY id',[input.tenantId,input.quoteId])).rows;
+  const installments=(await client.query('SELECT * FROM erp.vendas_recebimentos_previstos WHERE empresa_id=$1 AND venda_id=$2 AND excluido_em IS NULL ORDER BY numero_parcela',[input.tenantId,input.quoteId])).rows;
+  if(!items.length)throw new ErpDomainError('INVALID_STATE','O orçamento precisa de pelo menos um item ativo.',409);
+  const record=await createSaleRecord(client,{tenantId:input.tenantId,actorId:input.actorId,entityId:'pedidos',idempotencyKey:`orcamento:${input.quoteId}:venda`,values:{
+    ...quote,tipo_documento:'venda',venda_origem_id:input.quoteId,numero:undefined,chave_idempotencia:undefined,
+    data_venda:erpToday(),data_competencia:erpToday(),previsao_entrega:quote.previsao_entrega?date(quote.previsao_entrega):null,
+    itens:items.map(item=>({tipo:item.produto_id?'produto':'servico',item_id:item.produto_id||item.servico_id,descricao:item.descricao,quantidade:item.quantidade,valor_unitario:item.valor_unitario,desconto:item.desconto})),
+    parcelas:installments.map(row=>({numero_parcela:row.numero_parcela,descricao:row.descricao,data_vencimento:date(row.data_vencimento),valor:row.valor,conta_financeira_id:row.conta_financeira_id,metodo_pagamento_id:row.metodo_pagamento_id}))
+  }});
+  await client.query("UPDATE erp.vendas SET situacao='convertido',aprovada_em=coalesce(aprovada_em,now()),aprovada_por=coalesce(aprovada_por,$3),versao=versao+1,atualizado_por=$3 WHERE empresa_id=$1 AND id=$2",[input.tenantId,input.quoteId,input.actorId]);
+  await client.query(`INSERT INTO erp.vendas_eventos (empresa_id,venda_id,evento,status_anterior,status_novo,versao,dados,criado_por) VALUES ($1,$2,'convertido_em_venda',$3,'convertido',$4,$5::jsonb,$6)`,[input.tenantId,input.quoteId,quote.situacao,input.expectedVersion+1,json({venda_id:record.id}),input.actorId]);
+  await linkOrdersToSale(client,input,orders,String(record.id));
+  return {sale:{id:String(record.id)},reused:false};
+}
+async function linkOrdersToSale(client:SQLClient,input:ActorInput,orders:Record<string,unknown>[],saleId:string){
+  for(const order of orders){
+    if(order.venda_id&&String(order.venda_id)!==saleId)throw new ErpDomainError('INVALID_STATE','A ordem já está vinculada a outra venda.',409);
+    if(order.venda_id)continue;
+    await client.query('UPDATE erp.ordens_servico SET venda_id=$3,versao=versao+1,atualizado_por=$4 WHERE empresa_id=$1 AND id=$2',[input.tenantId,order.id,Number(saleId),input.actorId]);
+    await client.query(`INSERT INTO erp.ordens_servico_eventos (empresa_id,ordem_servico_id,evento,dados,criado_por) VALUES ($1,$2,'gerou_venda',$3::jsonb,$4)`,[input.tenantId,order.id,json({documento_id:saleId,orcamento_id:order.orcamento_id}),input.actorId]);
+  }
+}
+export async function convertQuoteToSale(input:ActorInput&{quoteId:number;expectedVersion:number}){
+  return withTransaction(async client=>{await lockCommercialConversion(client,input.tenantId);return convertQuoteWithClient(client,input);});
 }
 
 export async function runQuoteAction(
@@ -501,11 +407,12 @@ export async function runQuoteAction(
     quoteId: number;
     action: "enviar" | "aprovar" | "recusar" | "cancelar";
     expectedVersion: number;
+    motivo?: string;
   },
 ) {
   return withTransaction(async (client) => {
     const current = await client.query(
-      `SELECT id, status, situacao, versao FROM erp.vendas
+      `SELECT id, status, situacao, versao, validade_em FROM erp.vendas
        WHERE empresa_id = $1 AND id = $2 AND tipo_documento = 'orcamento' AND excluido_em IS NULL FOR UPDATE`,
       [input.tenantId, input.quoteId],
     );
@@ -522,24 +429,30 @@ export async function runQuoteAction(
         "O orçamento foi alterado por outra pessoa.",
         409,
       );
-    if (quote.status === "cancelada" || quote.situacao === "recusado")
+    if (quote.status === "cancelada" || quoteIsClosed(quote.situacao))
       throw new ErpDomainError(
         "INVALID_STATE",
         "Orçamento encerrado não pode ser alterado.",
         409,
       );
 
+    if (['enviar','aprovar'].includes(input.action)) assertQuoteValid(quote);
+    if (input.action === 'enviar' && !['em_andamento','enviada'].includes(quoteSituation(quote.situacao))) throw new ErpDomainError('INVALID_STATE','Orçamento aprovado não pode voltar para enviado.',409);
     const nextSituation =
       input.action === "aprovar"
         ? "aprovado"
         : input.action === "recusar"
           ? "recusado"
-          : quote.situacao || "em_andamento";
+          : input.action === "enviar" ? "enviada" : "cancelado";
     const nextStatus = input.action === "cancelar" ? "cancelada" : quote.status;
     const updated = await client.query(
       `UPDATE erp.vendas SET status = $3, situacao = $4,
          enviada_em = CASE WHEN $5 = 'enviar' THEN now() ELSE enviada_em END,
          recusada_em = CASE WHEN $5 = 'recusar' THEN now() ELSE recusada_em END,
+         recusada_por = CASE WHEN $5 = 'recusar' THEN $6 ELSE recusada_por END,
+         motivo_recusa = CASE WHEN $5 = 'recusar' THEN $7 ELSE motivo_recusa END,
+         aprovada_em = CASE WHEN $5 = 'aprovar' THEN now() ELSE aprovada_em END,
+         aprovada_por = CASE WHEN $5 = 'aprovar' THEN $6 ELSE aprovada_por END,
          cancelada_em = CASE WHEN $5 = 'cancelar' THEN now() ELSE cancelada_em END,
          versao = versao + 1, atualizado_por = $6
        WHERE empresa_id = $1 AND id = $2
@@ -551,6 +464,7 @@ export async function runQuoteAction(
         nextSituation,
         input.action,
         input.actorId,
+        stringValue(input.motivo),
       ],
     );
     await client.query(
@@ -564,7 +478,7 @@ export async function runQuoteAction(
         quote.situacao,
         nextSituation,
         input.expectedVersion + 1,
-        json({ status: nextStatus }),
+        json({ status: nextStatus, motivo: stringValue(input.motivo) }),
         input.actorId,
       ],
     );

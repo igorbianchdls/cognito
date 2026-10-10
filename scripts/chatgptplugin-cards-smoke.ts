@@ -15,6 +15,7 @@ import { CHATGPTPLUGIN_VERSION } from '../src/products/chatgptplugin/shared/vers
 // Cards em navegador real com host MCP Apps simulado; sem ChatGPT, banco ou rede externa.
 const settings:PluginConfig={integration:'chatgpt',resource:'https://erp.example.invalid/api/mcp',metadataUrl:'https://erp.example.invalid/.well-known/oauth-protected-resource/api/mcp',
   issuer:'https://test.clerk.accounts.dev',scope:'erp:read',clientIds:['test'],origins:['https://erp.example.invalid'],toolTimeoutMs:5000,requestsPerMinute:60}
+process.env.CLERK_SECRET_KEY='sk_test_cards_fixture_only'
 const company={id:2,name:'Empresa Teste',profile:'administrador' as const,capabilities:[...ERP_CAPABILITIES]}
 const principal:PluginPrincipal={userId:1,clerkUserId:'user_1',clientId:'test',scopes:['erp:read','erp:write'],companies:[company,{...company,id:3,name:'Filial Norte'}]}
 const evil='<img src=x onerror="window.hacked=true">'
@@ -31,11 +32,15 @@ function draft(tipo:string,dados:Record<string,unknown>){const id=randomUUID();d
     proposta:{tipo,dados,...(Array.isArray(dados.itens)?{total:(dados.itens as {quantidade:number;valor_unitario:number;desconto?:number}[]).reduce((s,i)=>s+i.quantidade*i.valor_unitario-(i.desconto||0),0)}:{})}}}
 const clients=[{id:'5',nome:'Padaria Central',documento:'12.345.678/0001-90',cidade:'Fortaleza',status:'ativo'},{id:'6',nome:'Padaria Sol',documento:'98.765.432/0001-10',cidade:'Recife',status:'ativo'},{id:'7',nome:'Padaria Nova',cidade:'Natal',status:'ativo'}]
 const deps:ExecutionDependencies={reserve:async()=>randomUUID(),finish:async()=>{},queries:{...serviceInvoiceQueryStubs,
+  serviceOrders:async(input:{page?:number;pageSize?:number})=>({records:[{id:'41',numero:'OS-041',cliente:'Padaria Central',equipamento:'Forno industrial',total:150,status:'rascunho'}],total:1,page:input.page||1,pageSize:input.pageSize||20,summary:{quantidade:1,valor_total:150}}),
+  serviceOrder:async(_c:number,id:number)=>({record:{id:String(id),numero:'OS-041',cliente_nome:'Padaria Central',equipamento:'Forno industrial',total:150,status:id===42?'em_execucao':'rascunho'},items:[{descricao:'Manutenção do forno',quantidade:1,valor_unitario:150,total:150}],history:[],totalItems:1,itemsTruncated:false}),
+  commercialDocument:async(_c:number,tipo:string,id:number)=>({record:{id:String(id),tipo,numero:tipo==='orcamento'?'ORC-002':'OS-041',versao:1,revisao:null,arquivado:false,aviso:'PDF dos dados atuais, gerado para download. Ainda não é uma revisão arquivada.'},revisions:[],hasMore:false}),
   page:async(_c:number,type:string,input:{page?:number;pageSize?:number;query?:string})=>type==='clientes'?{records:input.query==='Padaria'?clients:[clients[0]],total:input.query==='Padaria'?3:1,page:1,pageSize:20}
+    :type==='pedidos'?{records:[{id:'2',numero:'ORC-002',cliente:'Padaria Central',total:150,status:'rascunho',situacao:'enviada',tipo_documento:'orcamento'}],total:1,page:1,pageSize:20}
     :{records:input.page===2?rows.slice(5):rows,total:7,page:input.page||1,pageSize:input.pageSize||20,summary},
   installment:async(_c:number,_side:string,id:number)=>({record:{id:String(id),conta_id:'100',descricao:'Aluguel',fornecedor:'Imobiliária Centro',parcela:1,vencimento:'2026-10-01',valor:1200,valor_pago:0,saldo:1200,status:'vencido',lado:'pagar',conta_financeira_sugerida:{id:'9',nome:'Itaú'}},history:[],historyTruncated:false}),
   financialTitle:async()=>({record:{id:'100',descricao:'Aluguel',valor_total:1200},installments:[{id:'1',parcela:1,vencimento:'2026-10-01',valor:1200,saldo:1200,status:'vencido'}],installmentsTruncated:false,history:[],historyTruncated:false}),
-  sale:async(_c:number,id:number)=>({sale:{id:String(id),numero:id===2?'ORC-002':'VEN-001',cliente_nome:evil,status:'rascunho',tipo_documento:id===2?'orcamento':'venda',total:150,data_venda:'2026-10-01'},items:[{descricao:'Farinha',quantidade:2,valor_unitario:75,total:150}],totalItems:1,itemsTruncated:false,installments:[{data_vencimento:'2026-10-31',valor:150}],installmentsTruncated:false}),
+  sale:async(_c:number,id:number)=>({sale:{id:String(id),numero:id===2?'ORC-002':'VEN-001',cliente_nome:evil,status:'rascunho',situacao:id===2?'enviada':null,tipo_documento:id===2?'orcamento':'venda',total:150,data_venda:'2026-10-01'},items:[{descricao:'Farinha',quantidade:2,valor_unitario:75,total:150}],totalItems:1,itemsTruncated:false,installments:[{data_vencimento:'2026-10-31',valor:150}],installmentsTruncated:false}),
   registration:async(_c:number,_t:string,id:number)=>({record:{id:String(id),nome:'Padaria Central',documento:'12.345.678/0001-90'}}),
   analysis:async(_c:number,tipo:string,inicio:string,fim:string)=>({tipo,inicio,fim,criterio:'Confirmadas',summary:{quantidade:3,valor_total:900,valor_medio:300},records:[{periodo:'2026-08',quantidade:1,valor:200},{periodo:'2026-09',quantidade:2,valor:700}]}),
   overview:async()=>({saldoReceber:1200,saldoPagar:800,receberVencido:100,vendasRascunho:2,comprasAbertas:1,clientesAtivos:40}),
@@ -47,16 +52,17 @@ const deps:ExecutionDependencies={reserve:async()=>randomUUID(),finish:async()=>
   execute:async(_p,_c,id)=>{executed.push(id);const d=drafts.get(id)!;return {...draft(d.tipo,d.dados),rascunho_id:id,status:'saved',registro_id:'321',referencias:undefined} as never}}}
 const html=renderCardsHtml({name:'chatgptplugin-cards',version:CHATGPTPLUGIN_VERSION,host:'chatgpt'}),encoded=JSON.stringify(html).replaceAll('<','\\u003c')
 function host(tool:string,theme='light'){return `<!doctype html><html><body style="margin:0"><iframe id="app" title="ERP" style="width:100%;height:1400px;border:0"></iframe><script>
-window.calls=[];window.messages=[];window.context=[];window.modes=[];window.ready=false;const frame=document.getElementById('app');frame.srcdoc=${encoded};
+window.calls=[];window.messages=[];window.context=[];window.modes=[];window.links=[];window.ready=false;const frame=document.getElementById('app');frame.srcdoc=${encoded};
 window.deliver=(input,result)=>{frame.contentWindow.postMessage({jsonrpc:'2.0',method:'ui/notifications/tool-input',params:{arguments:input}},'*');frame.contentWindow.postMessage({jsonrpc:'2.0',method:'ui/notifications/tool-result',params:result},'*')};
 addEventListener('message',async e=>{if(e.source!==frame.contentWindow)return;const m=e.data;if(m.method==='ui/notifications/initialized'){window.ready=true;return}if(m.id===undefined)return;let result={};
  if(m.method==='ui/initialize')result={protocolVersion:'2026-01-26',hostInfo:{name:'test',version:'1'},hostCapabilities:{},hostContext:{theme:'${theme}',displayMode:'inline',timeZone:'America/Sao_Paulo',toolInfo:{tool:{name:'${tool}'}},styles:{variables:{'--color-text-primary':'${theme==='dark'?'#f5f5f5':'#111111'}'}}}};
  if(m.method==='tools/call'){calls.push(m.params);result=await(await fetch('/call',{method:'POST',body:JSON.stringify(m.params)})).json()}
  if(m.method==='ui/request-display-mode'){modes.push(m.params.mode);result={mode:m.params.mode}}
+ if(m.method==='ui/open-link')links.push(m.params.url);
  if(m.method==='ui/message')messages.push(Array.isArray(m.params.content)?m.params.content.map(c=>c.text).join(''):'CONTENT_NAO_E_LISTA');if(m.method==='ui/update-model-context')context.push(m.params);
  frame.contentWindow.postMessage({jsonrpc:'2.0',id:m.id,result},'*')});</script></body></html>`}
 type Call={name:string;arguments:Record<string,unknown>}
-type Win={calls:Call[];messages:string[];context:unknown[];modes:string[];hacked?:boolean;ready:boolean;deliver:(i:unknown,r:unknown)=>void}
+type Win={calls:Call[];messages:string[];context:unknown[];modes:string[];links:string[];hacked?:boolean;ready:boolean;deliver:(i:unknown,r:unknown)=>void}
 async function main(){
   let currentHost=''
   const server=createServer(async(req,res)=>{
@@ -75,7 +81,7 @@ async function main(){
     await page.goto(url);await page.waitForFunction(()=>(window as unknown as Win).ready)
     const result=await executeTool(principal,tool,args,settings,deps)
     await page.evaluate(([a,r])=>(window as unknown as Win).deliver(a,r),[args,{...result,_meta:{'cognito/tool':tool}}] as const);return page}
-  const win=(page:Page)=>page.evaluate(()=>{const w=window as unknown as Win;return {calls:w.calls,messages:w.messages,context:w.context,modes:w.modes,hacked:Boolean(w.hacked)}})
+  const win=(page:Page)=>page.evaluate(()=>{const w=window as unknown as Win;return {calls:w.calls,messages:w.messages,context:w.context,modes:w.modes,links:w.links,hacked:Boolean(w.hacked)}})
   const frame=(page:Page)=>page.frameLocator('#app')
   const shot=(page:Page,name:string)=>frame(page).locator('main').screenshot({path:resolve('.cache/chatgptplugin-cards/'+name+'.png')})
   const lastCall=async(page:Page)=>(await win(page)).calls.at(-1)!
@@ -116,9 +122,31 @@ async function main(){
     await f.getByRole('button',{name:'Confirmar venda'}).click();await f.getByText('Prévia — nada foi salvo ainda.').waitFor()
     assert.equal((await lastCall(page)).name,'confirmar_venda');assert.deepEqual((await lastCall(page)).arguments.dados,{registro_id:1});await done(page,'detalhes-venda')
     page=await open('obter_venda',{empresa_id:2,venda_id:2});f=frame(page);await f.getByText('Orçamento ORC-002').waitFor()
+    await f.locator('.hero .chip').getByText('Enviada',{exact:true}).waitFor()
     await f.getByRole('button',{name:'Converter em venda'}).click();await f.getByRole('heading',{name:/Converter orçamento em venda/}).waitFor()
     assert.equal((await lastCall(page)).name,'converter_orcamento');await f.getByRole('button',{name:'Confirmar',exact:true}).click()
     await f.getByText('Salvo no ERP.').waitFor();await f.getByRole('button',{name:'Confirmar venda'}).waitFor();await done(page,'converter-orcamento')
+    page=await open('listar_vendas',{empresa_id:2,tipo_documento:'orcamento'});f=frame(page);await f.getByRole('heading',{name:'Orçamentos',exact:true}).waitFor()
+    await f.locator('table.wide .chip').getByText('Enviada',{exact:true}).waitFor();await f.getByRole('button',{name:'Ver tudo',exact:true}).click()
+    await f.getByLabel('Situação').selectOption('aprovado');await f.getByRole('button',{name:'Aplicar',exact:true}).click()
+    await page.waitForFunction(()=>(window as unknown as Win).calls.at(-1)?.arguments.situacao==='aprovado');assert.equal((await lastCall(page)).name,'listar_vendas');await done(page,'orcamentos-situacao')
+    // OS: lista navegável, ação com revisão e abertura do PDF pelo host.
+    page=await open('listar_ordens_servico',{empresa_id:2});f=frame(page);await f.getByRole('heading',{name:'Ordens de serviço'}).waitFor()
+    await f.getByRole('button',{name:'Ver tudo',exact:true}).click();await f.getByLabel('Situação').waitFor()
+    await f.locator('table.wide tbody tr').first().click();await f.getByText('Ordem de serviço OS-041').waitFor()
+    assert.deepEqual(await lastCall(page),{name:'obter_ordem_servico',arguments:{empresa_id:2,registro_id:41}})
+    await f.getByRole('button',{name:'Ver PDF',exact:true}).click();await f.getByRole('button',{name:'Abrir PDF',exact:true}).waitFor()
+    await f.getByText('PDF dos dados atuais, gerado para download. Ainda não é uma revisão arquivada.').waitFor()
+    assert.deepEqual((await lastCall(page)).arguments,{empresa_id:2,tipo:'ordem_servico',registro_id:41})
+    await f.getByRole('button',{name:'Abrir PDF',exact:true}).click();await page.waitForFunction(()=>(window as unknown as Win).links.length===1)
+    const pdfUrl=new URL((await win(page)).links[0]);assert.equal(pdfUrl.origin,'https://erp.example.invalid');assert(pdfUrl.pathname.startsWith('/api/public/documentos-comerciais/'));assert.equal((await win(page)).calls.filter(c=>c.name==='obter_documento_comercial').length,2);await done(page,'os-pdf')
+    page=await open('obter_ordem_servico',{empresa_id:2,registro_id:41});f=frame(page)
+    await f.getByRole('button',{name:'Aprovar',exact:true}).click();await f.getByText('Prévia — nada foi salvo ainda.').waitFor()
+    assert.equal((await lastCall(page)).name,'alterar_ordem_servico');assert.equal((await lastCall(page)).arguments.tipo,'aprovar')
+    assert.deepEqual((await lastCall(page)).arguments.dados,{registro_id:41});await f.getByRole('button',{name:'Confirmar',exact:true}).waitFor();await done(page,'os-aprovacao')
+    page=await open('obter_ordem_servico',{empresa_id:2,registro_id:42});f=frame(page);await f.locator('.hero .chip').getByText('Em execução',{exact:true}).waitFor()
+    await f.getByRole('button',{name:'Concluir',exact:true}).click();await f.getByText('Prévia — nada foi salvo ainda.').waitFor()
+    assert.equal((await lastCall(page)).arguments.tipo,'concluir');await done(page,'os-conclusao')
     // B: escolha entre clientes parecidos.
     page=await open('buscar_cadastros',{empresa_id:2,tipo:'clientes',busca:'Padaria'});f=frame(page);await f.getByText('Padaria Sol').waitFor()
     assert.equal(await f.getByRole('button',{name:'Usar este'}).count(),3);await f.getByRole('button',{name:'Usar este'}).first().click()

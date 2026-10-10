@@ -3,6 +3,9 @@ export const resultCardScript=String.raw`
 const registrationModules={cliente:'clientes',fornecedor:'fornecedores',vendedor:'vendedores',produto:'produtos',servico:'servicos',categoria:'categorias',conta_financeira:'contas-financeiras'};
 function nextSteps(tipo,id,dados){
   const view=(tool,args)=>({label:'Ver registro',run:()=>(open(tool,withCompany(args)))});
+  if(tipo==='gerar_orcamento_os'||tipo==='gerar_venda_os')return [view('obter_venda',{venda_id:id})];
+  if(tipo.includes('ordem_servico'))return [view('obter_ordem_servico',{registro_id:id})];
+  if(['enviar_orcamento','aprovar_orcamento','recusar_orcamento','cancelar_orcamento','arquivar_pdf_orcamento'].includes(tipo))return [view('obter_venda',{venda_id:id})];
   if(tipo==='venda')return [{label:'Confirmar venda',primary:true,run:()=>preview('confirmar_venda',{dados:{registro_id:id}})},view('obter_venda',{venda_id:id})];
   if(tipo==='orcamento'||tipo==='editar_venda'||tipo==='editar_orcamento')return [view('obter_venda',{venda_id:id})];
   if(tipo==='converter_orcamento')return [{label:'Confirmar venda',primary:true,run:()=>preview('confirmar_venda',{dados:{registro_id:id}})},{label:'Ver venda',run:()=>(open('obter_venda',withCompany({venda_id:id})))}];

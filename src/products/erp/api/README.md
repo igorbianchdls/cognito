@@ -198,6 +198,7 @@ Para adicionar uma operação: crie/estenda a regra em `server`, reutilize contr
 | `/api/erp/devolucoes/[id]` | GET | session | 1 MiB | `erp.vendas.visualizar` |
 | `/api/erp/devolucoes/[id]/usar-credito` | POST | session | 1 MiB | `erp.financeiro.baixar` |
 | `/api/erp/devolucoes` | GET | session | 1 MiB | `erp.vendas.visualizar` |
+| `/api/erp/documentos-comerciais/[tipo]/[id]/pdf` | GET, POST | session | 1 MiB | `erp.vendas.gerenciar`, `erp.vendas.visualizar` |
 | `/api/erp/estoque/contagem` | GET | session | 1 MiB | `erp.estoque.ajustar` |
 | `/api/erp/fechamentos` | GET, POST, PATCH | session | 1 MiB | `erp.configuracoes.gerenciar`, `erp.financeiro.visualizar` |
 | `/api/erp/financeiro/[operation]` | GET, POST | session | 1 MiB | `erp.financeiro.estornar`, `erp.financeiro.gerenciar`, `erp.financeiro.visualizar` |

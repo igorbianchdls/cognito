@@ -113,7 +113,7 @@ async function main(){
     aliquota_iss:5,iss_retido:true,retencoes_federais:{irrf:1.5}};
   let id,draft;
   await check('Cliente MCP oficial conecta ao endpoint do Claude e lista as 8 tools de nota',async()=>{
-    assert.equal(client.getServerVersion()?.name,'cognito-claudeplugin');const {tools}=await client.listTools();assert.equal(tools.length,46);
+    assert.equal(client.getServerVersion()?.name,'cognito-claudeplugin');const {tools}=await client.listTools();assert.equal(tools.length,55);
     for(const name of NOTE_TOOLS)assert(tools.some(t=>t.name===name),name);
     for(const t of tools.filter(t=>NOTE_TOOLS.includes(t.name)&&!/^(listar|obter)_/.test(t.name)))assert.equal(t.annotations.destructiveHint,true,t.name);
   });

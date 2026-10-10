@@ -1,5 +1,5 @@
 import { z } from 'zod'
-import { lineTotal, sumMoney } from '@/products/erp/shared/erpMoney'
+import { lineTotal, sumMoney, discountAmount } from '@/products/erp/shared/erpMoney'
 import type { ErpCapability } from '@/products/erp/shared/professionalContracts'
 import type { ErpConnectedModuleId } from '@/products/erp/shared/moduleAccess'
 import { companySchema, requiredDate } from '../tools/catalog'
@@ -84,14 +84,17 @@ export function proposalPreview(proposal: Proposal) {
   }
   if(proposal.tipo==='devolucao_venda')return {tipo:proposal.tipo,dados:proposal.dados,...(proposal.dados.valor_estimado!==undefined?{total:proposal.dados.valor_estimado}:{})}
   const raw=proposal.dados as Record<string,unknown>
-  if('parcelas' in raw){try{const parts=raw.parcelas as {valor:number}[];if(sumMoney(parts.map(p=>p.valor))!==raw.valor_total)throw new Error();return {tipo:proposal.tipo,dados:proposal.dados,total:Number(raw.valor_total)}}catch{throw new PluginError('INVALID_INPUT','A soma das parcelas deve ser igual ao valor total.')}}
+  if('valor_total' in raw && 'parcelas' in raw){try{const parts=raw.parcelas as {valor:number}[];if(sumMoney(parts.map(p=>p.valor))!==raw.valor_total)throw new Error();return {tipo:proposal.tipo,dados:proposal.dados,total:Number(raw.valor_total)}}catch{throw new PluginError('INVALID_INPUT','A soma das parcelas deve ser igual ao valor total.')}}
   if (!('itens' in raw)) return {tipo:proposal.tipo,dados:proposal.dados}
   try {
     const itens = (raw.itens as {quantidade:number;valor_unitario:number;desconto:number}[]).map(item => ({...item,total:lineTotal(item.quantidade,item.valor_unitario,item.desconto)}))
-    const total = sumMoney(itens.map(item => item.total))
-    if (total <= 0) throw new Error('Invalid total')
+    const subtotal = sumMoney(itens.map(item => item.total))
+    const discount = discountAmount(subtotal, Number(raw.desconto || 0), raw.tipo_desconto === 'percentual' ? 'percentual' : 'valor')
+    const total = sumMoney([subtotal, -discount, Number(raw.frete || 0)])
+    if (total < 0 || (total === 0 && !proposal.tipo.includes('ordem_servico'))) throw new Error('Invalid total')
+    if(Array.isArray(raw.parcelas) && sumMoney(raw.parcelas.map(p=>Number(p.valor)))!==total) throw new Error('Installments mismatch')
     return {tipo:proposal.tipo,dados:{...proposal.dados,itens},total}
-  } catch { throw new PluginError('INVALID_INPUT','Confira quantidades, preços e descontos dos itens.') }
+  } catch { throw new PluginError('INVALID_INPUT','Confira quantidades, preços, descontos, frete e a soma das parcelas.') }
 }
 export function purchaseValues(values:Record<string,unknown>):Record<string,unknown>{
   return {...values,itens:(values.itens as {tipo:string;item_id:number;desconto:number}[]).map(item=>({...item,[item.tipo==='produto'?'produto_id':'servico_id']:item.item_id,valor_desconto:item.desconto}))}

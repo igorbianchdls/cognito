@@ -3,8 +3,11 @@ import { dreReportRecords } from './erpDreReport'
 import { attachmentDownload, listAttachments, type AttachmentDocument } from './erpAttachments'
 import { budgetVsActual, salesGoalsReport } from './erpBudget'
 import { commissionReport } from '@/products/erp/server/erpCommercialRepository'
-import { listProfessionalReport,preflightSaleFiscal } from '@/products/erp/server/erpProfessionalRepository'
+import { listProfessionalReport,preflightSaleFiscal,serviceOrderPage,getServiceOrder } from '@/products/erp/server/erpProfessionalRepository'
+import {currentCommercialDocument} from './documents/commercialDocumentRepository'
+import type {CommercialDocumentKind} from './documents/commercialPdf'
 import { runQuery } from '@/lib/postgres'
+import { ErpDomainError } from '../shared/erpErrors'
 import {listServiceInvoices,getServiceInvoice,validateServiceInvoice,getServiceInvoicePdf} from './fiscal/serviceInvoiceRepository'
 import { listStockOperation } from '@/products/erp/server/erpStockRepository'
 import type { ErpConnectedModuleId } from '@/products/erp/shared/moduleAccess'
@@ -24,6 +27,14 @@ export function pickFields(record: Record<string, unknown>, keys: string[]) {
   return Object.fromEntries(keys.filter(key => record[key] !== undefined).map(key => [key, record[key]]))
 }
 export const erpReadService = {
+  serviceOrders:serviceOrderPage,
+  async serviceOrder(company:number,id:number){const result=await getServiceOrder(company,id);return {record:result.order,items:result.items,history:result.events,totalItems:result.items.length,itemsTruncated:false}},
+  async commercialDocument(company:number,kind:CommercialDocumentKind,id:number,revision?:number){
+    const current=await currentCommercialDocument(company,kind,id),column=kind==='orcamento'?'orcamento_id':'ordem_servico_id';
+    const revisions=await runQuery(`SELECT revisao,origem_versao,layout_versao,criado_em FROM erp.documentos_comerciais_pdfs WHERE empresa_id=$1 AND ${column}=$2 ORDER BY revisao DESC LIMIT 101`,[company,id]);
+    if(revision&&!(await runQuery(`SELECT id FROM erp.documentos_comerciais_pdfs WHERE empresa_id=$1 AND ${column}=$2 AND revisao=$3`,[company,id,revision])).length)throw new ErpDomainError('NOT_FOUND','Revisão não encontrada.',404);
+    return {record:{id:String(id),tipo:kind,numero:String(current.row.numero),versao:Number(current.row.versao),revisao:revision||null,arquivado:Boolean(revision),aviso:revision?'Revisão arquivada no Storage privado.':'PDF dos dados atuais, gerado para download. Ainda não é uma revisão arquivada.'},revisions:revisions.slice(0,100),hasMore:revisions.length>100};
+  },
   serviceInvoices:listServiceInvoices,
   serviceInvoice:getServiceInvoice,
   serviceInvoiceValidation:validateServiceInvoice,
@@ -59,7 +70,7 @@ export const erpReadService = {
   async sale(tenantId: number, id: number) {
     const result = await getErpSaleDetails(tenantId, id)
     return {
-      sale: {...pickFields(result.sale, ['id','numero','cliente_id','cliente_nome','data_venda','status','tipo_documento','atendimento_status','subtotal','total','versao','observacoes']),data_vencimento:result.installments[0]?.data_vencimento},
+      sale: {...pickFields(result.sale, ['id','numero','cliente_id','cliente_nome','data_venda','status','situacao','validade_em','previsao_entrega','tipo_documento','atendimento_status','subtotal','tipo_desconto','desconto','frete','total','versao','observacoes','observacoes_pagamento']),data_vencimento:result.installments[0]?.data_vencimento},
       items: result.items.slice(0, 100).map(item => pickFields(item, ['id','tipo','item_id','descricao','quantidade','valor_unitario','desconto','total','quantidade_atendida'])),
       totalItems: result.items.length, itemsTruncated: result.items.length > 100,
       installments: result.installments.slice(0,48).map(item=>pickFields(item,['data_vencimento','valor'])), installmentsTruncated:result.installments.length>48,

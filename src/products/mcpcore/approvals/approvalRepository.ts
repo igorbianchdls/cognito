@@ -12,6 +12,8 @@ import { proposalReferences } from '../actions/references'
 import type { PluginConfig,PluginIntegration } from '../shared/config'
 import { createManualFinancialTitle } from '@/products/erp/server/erpCrudRepository'
 import {createServiceInvoice} from '@/products/erp/server/fiscal/serviceInvoiceRepository'
+import {createServiceOrder} from '@/products/erp/server/erpProfessionalRepository'
+import {serviceOrderCreateSchema} from '@/products/erp/shared/professionalContracts'
 
 export async function loadApproval(id:string,session:ErpAccessContext,config:Pick<PluginConfig,'resource'|'integration'>) {
   const rows = await pluginQuery<DraftRow>("SELECT * FROM plugin.drafts WHERE id=$1 AND user_id=$2 AND empresa_id=$3 AND integration=$4",[id,session.sharedUserId,session.tenantId,config.integration])
@@ -67,6 +69,8 @@ export async function decideDraft(id:string,actor:DecisionActor,decision:'save'|
         const snapshot=await operationSnapshot(session.tenantId,proposal,client)
         if(!snapshot||!row.target_snapshot||snapshot.hash!==row.target_snapshot.hash)throw new PluginError('STALE_PROPOSAL','O registro mudou. Prepare uma nova proposta para revisar os dados atuais.',409)
         recordId=await runWithErpTransactionClient(client,()=>executeOperation(session.tenantId,session.sharedUserId,proposal,key(row.id)))
+      } else if(proposal.tipo==='ordem_servico'){
+        recordId=String((await runWithErpTransactionClient(client,()=>createServiceOrder({tenantId:session.tenantId,actorId:session.sharedUserId,values:serviceOrderCreateSchema.parse(proposal.dados),idempotencyKey:key(row.id)}))).id)
       } else if(proposal.tipo==='nota_servico'){
         recordId=(await runWithErpTransactionClient(client,()=>createServiceInvoice(session.tenantId,session.sharedUserId,proposal.dados,key(row.id)))).record.id
       } else if(proposal.tipo==='conta_pagar'||proposal.tipo==='conta_receber'){

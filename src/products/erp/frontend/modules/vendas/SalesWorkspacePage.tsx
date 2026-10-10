@@ -705,7 +705,7 @@ export function SalesWorkspacePage({
       <ErpSalesTabs activeHref={isQuote ? "/erp/vendas/orcamentos" : "/erp/vendas/pedidos"} />
       <ErpPeriodSummary title="Resumo desta página" description="Considera os registros carregados com os filtros atuais." metrics={[
         { label: isQuote ? 'Orçamentos' : 'Pedidos', value: String(records.length) },
-        { label: isQuote ? 'Em andamento' : 'Rascunhos', value: String(records.filter(record => record.status !== 'cancelada' && (isQuote ? record.situacao === 'em_andamento' : record.status === 'rascunho')).length) },
+        { label: isQuote ? 'Em andamento' : 'Rascunhos', value: String(records.filter(record => record.status !== 'cancelada' && (isQuote ? ['em_andamento','enviada'].includes(record.situacao) : record.status === 'rascunho')).length) },
         { label: isQuote ? 'Aprovados' : 'Confirmados', value: String(records.filter(record => record.status !== 'cancelada' && (isQuote ? record.situacao === 'aprovado' : record.status === 'confirmada')).length), tone: 'success' },
         { label: isQuote ? 'Recusados' : 'Cancelados', value: String(records.filter(record => isQuote ? record.situacao === 'recusado' : record.status === 'cancelada').length), tone: 'danger' },
         { label: 'Valor listado', value: currency(sumMoney(records.map(record => record.total))) },
@@ -803,7 +803,7 @@ export function SalesWorkspacePage({
                       {!isQuote && canManage && !["rascunho", "cancelada", "cancelado"].includes(record.status) ? <Button size="icon" variant="ghost" title="Registrar devolução" aria-label="Registrar devolução" onClick={() => { window.location.href = `/erp/vendas/devolucoes?venda=${record.id}` }}><Undo2 className="size-4" /></Button> : null}
                       {canManage ? (
                         <>
-                          {record.status === "rascunho" ? (
+                          {record.status === "rascunho" && (!isQuote || !["recusado","cancelado","convertido"].includes(record.situacao)) ? (
                             <Button
                               size="icon"
                               variant="ghost"
@@ -817,7 +817,7 @@ export function SalesWorkspacePage({
                           ) : null}
                           {isQuote ? (
                             <>
-                              {record.situacao === "em_andamento" ? (
+                              {["em_andamento","enviada"].includes(record.situacao) ? (
                                 <Button
                                   size="icon"
                                   variant="ghost"
@@ -829,7 +829,7 @@ export function SalesWorkspacePage({
                                   <Send className="size-4" />
                                 </Button>
                               ) : null}
-                              {record.situacao === "em_andamento" ? (
+                              {["em_andamento","enviada"].includes(record.situacao) ? (
                                 <Button
                                   size="icon"
                                   variant="ghost"
@@ -853,7 +853,7 @@ export function SalesWorkspacePage({
                                   <FileCheck2 className="size-4" />
                                 </Button>
                               ) : null}
-                              {!["recusado"].includes(record.situacao) &&
+                              {!["recusado","cancelado","convertido"].includes(record.situacao) &&
                               record.status !== "cancelada" ? (
                                 <Button
                                   size="icon"
@@ -869,7 +869,7 @@ export function SalesWorkspacePage({
                             </>
                           ) : (
                             <>
-                              {record.status === "rascunho" ? (
+                              {record.status === "rascunho" && (!isQuote || !["recusado","cancelado","convertido"].includes(record.situacao)) ? (
                                 <Button
                                   size="icon"
                                   variant="ghost"

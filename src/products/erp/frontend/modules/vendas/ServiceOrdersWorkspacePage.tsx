@@ -1,4 +1,6 @@
 "use client";
+import { ErpCommercialDocumentButtons } from '../../components/ErpCommercialDocumentButtons';
+import { ErpPagination } from '../../components/ErpPagination';
 import { ErpHistoryPanel } from '@/products/erp/frontend/components/ErpHistoryPanel';
 
 import { lineTotal, sumMoney } from '@/products/erp/shared/erpMoney';
@@ -110,6 +112,9 @@ const statusLabels: Record<string, string> = {
 
 export function ServiceOrdersWorkspacePage() {
   const canManage = useErpAccess().can("erp.vendas.gerenciar");
+  const [page,setPage]=useState(1);
+  const [recordCount,setRecordCount]=useState(0);
+  const [summary,setSummary]=useState<Record<string,number>>({});
   const [records, setRecords] = useState<ServiceOrder[]>([]);
   const [catalogs, setCatalogs] = useState<Catalogs>(emptyCatalogs);
   const [query, setQuery] = useState("");
@@ -146,17 +151,15 @@ export function ServiceOrdersWorkspacePage() {
     setLoading(true);
     setError(null);
     try {
-      const params = new URLSearchParams();
+      const params = new URLSearchParams({pagina:String(page),por_pagina:'50'});
       if (query.trim()) params.set("query", query.trim());
       if (status) params.set("status", status);
       const [ordersResponse, catalogsResponse] = await Promise.all([
         fetch(`/api/erp/ordens-servico?${params}`, { cache: "no-store" }),
         fetch("/api/erp/vendas/catalogos", { cache: "no-store" }),
       ]);
-      setRecords(
-        (await parseErpResponse<{ records: ServiceOrder[] }>(ordersResponse))
-          .records,
-      );
+      const payload=await parseErpResponse<{records:ServiceOrder[];total:number;summary:Record<string,number>}>(ordersResponse);
+      setRecords(payload.records);setRecordCount(payload.total);setSummary(payload.summary);
       setCatalogs(await parseErpResponse<Catalogs>(catalogsResponse));
     } catch (loadError) {
       setError(
@@ -167,7 +170,7 @@ export function ServiceOrdersWorkspacePage() {
     } finally {
       setLoading(false);
     }
-  }, [query, status]);
+  }, [query, status,page]);
 
   useEffect(() => {
     const timer = setTimeout(() => void load(), 250);
@@ -332,14 +335,14 @@ export function ServiceOrdersWorkspacePage() {
         ><Plus className="size-4" />Adicionar</Button> : undefined}
       />
       <ErpSalesTabs activeHref="/erp/vendas/ordens-servico" />
-      <ErpPeriodSummary title="Resumo dos registros carregados" description="Considera os registros carregados com os filtros atuais." metrics={[
-        { label: 'Ordens de serviço', value: String(records.length) },
-        { label: 'Em execução', value: String(records.filter(record => record.status === 'em_execucao').length) },
-        { label: 'Concluídas', value: String(records.filter(record => record.status === 'concluida').length), tone: 'success' },
-        { label: 'Canceladas', value: String(records.filter(record => record.status === 'cancelada').length), tone: 'danger' },
-        { label: 'Valor listado', value: formatErpCurrency(sumMoney(records.map(record => record.total))) },
+      <ErpPeriodSummary title="Resumo das ordens" description="Considera todas as ordens com os filtros atuais." metrics={[
+        { label: 'Ordens de serviço', value: String(recordCount) },
+        { label: 'Em execução', value: String(summary.em_execucao||0) },
+        { label: 'Concluídas', value: String(summary.concluidas||0), tone: 'success' },
+        { label: 'Pendentes', value: String(summary.pendentes||0) },
+        { label: 'Valor total', value: formatErpCurrency(summary.valor_total||0) },
       ]} />
-      <ErpSearchToolbar query={query} onQueryChange={setQuery} placeholder="Pesquisar por número, cliente ou equipamento…" resultLabel={`${records.length} registro${records.length === 1 ? '' : 's'} carregado${records.length === 1 ? '' : 's'}`}>
+      <ErpSearchToolbar query={query} onQueryChange={value=>{setQuery(value);setPage(1)}} placeholder="Pesquisar por número, cliente ou equipamento…" resultLabel={`${records.length} registro${records.length === 1 ? '' : 's'} carregado${records.length === 1 ? '' : 's'}`}>
         <ErpFilterButton active={Boolean(status)} onClick={() => setFiltersOpen(current => !current)} />
       </ErpSearchToolbar>
       {filtersOpen ? <div className="flex flex-wrap gap-2 border-b border-[#e7e7e4] bg-[#fafaf8] px-5 py-3 md:px-8 lg:px-10">
@@ -347,7 +350,7 @@ export function ServiceOrdersWorkspacePage() {
           aria-label="Situação"
           className="h-10 rounded-md border border-[#dfdfdc] bg-white px-3 text-sm"
           value={status}
-          onChange={(event) => setStatus(event.target.value)}
+          onChange={(event) => {setStatus(event.target.value);setPage(1)}}
         >
           <option value="">Todas as situações</option>
           {Object.entries(statusLabels).map(([value, label]) => (
@@ -505,6 +508,8 @@ export function ServiceOrdersWorkspacePage() {
           </TableBody>
         </Table>
       </div>
+
+      <div className="px-5 py-3 md:px-8 lg:px-10"><ErpPagination page={page} pageSize={50} total={recordCount} onPageChange={setPage}/></div>
 
       <Dialog open={editorOpen} onOpenChange={setEditorOpen}>
         <DialogContent className="h-[92vh] max-w-[min(1060px,96vw)] overflow-hidden p-0">
@@ -707,6 +712,7 @@ export function ServiceOrdersWorkspacePage() {
         <DialogContent className="max-w-[min(900px,96vw)]">
           <DialogHeader>
             <DialogTitle>Detalhes da ordem</DialogTitle>
+            {details?<ErpCommercialDocumentButtons key={String(details.order.id)} kind="ordem_servico" id={String(details.order.id)} version={Number(details.order.versao)} canArchive={canManage}/>:null}
           </DialogHeader>
           {details ? (
             <div className="grid max-h-[75vh] gap-5 overflow-y-auto">
@@ -828,13 +834,7 @@ function SimpleTable({
   title: string;
   rows: Record<string, unknown>[];
 }) {
-  const columns = rows.length
-    ? Object.keys(rows[0])
-        .filter(
-          (key) => !["empresa_id", "metadata", "excluido_em"].includes(key),
-        )
-        .slice(0, 7)
-    : [];
+  const columns=['descricao','quantidade','valor_unitario','desconto','total'].filter(key=>rows.some(row=>row[key]!==undefined));
   return rows.length ? (
     <section>
       <h3 className="mb-2 text-sm font-semibold">{title}</h3>

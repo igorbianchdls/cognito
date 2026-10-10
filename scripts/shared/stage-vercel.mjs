@@ -15,10 +15,11 @@ assert(included.includes('package.json'));assert(included.includes('pnpm-lock.ya
 const files=included.map(file=>{const bytes=readFileSync(file);return {file,sha:createHash('sha1').update(bytes).digest('hex'),size:bytes.length}})
 const sourceDigest=createHash('sha256').update(JSON.stringify(files)).digest('hex')
 const fiscalStorage=process.argv.includes('--fiscal-storage')
-const selectedMigration=fiscalStorage?'20261010110000_fiscal_pdf_storage_prepare.sql':migrationFile
+const commercialDocuments=process.argv.includes('--commercial-documents')
+const selectedMigration=commercialDocuments?'20261010120000_propostas_ordens_documentos.sql':fiscalStorage?'20261010110000_fiscal_pdf_storage_prepare.sql':migrationFile
 const migrationDigest=createHash('sha256').update(readFileSync('supabase/migrations/'+selectedMigration)).digest('hex')
 const production=process.argv.includes('--production')
-const request={name:'cognito',project,files,...(production?{target:'production',autoAssignCustomDomains:false}:{}),meta:{sharedMigrationDigest:migrationDigest,sharedMigrationVersion:selectedMigration.slice(0,14),sharedSourceDigest:sourceDigest,...(fiscalStorage?{fiscalPdfStorageVersion:'1'}:{})}}
+const request={name:'cognito',project,files,...(production?{target:'production',autoAssignCustomDomains:false}:{}),meta:{sharedMigrationDigest:migrationDigest,sharedMigrationVersion:selectedMigration.slice(0,14),sharedSourceDigest:sourceDigest,...(fiscalStorage?{fiscalPdfStorageVersion:'1'}:{}),...(commercialDocuments?{commercialDocumentsVersion:'1'}:{})}}
 mkdirSync('.cache/shared',{recursive:true})
 writeFileSync('.cache/shared/deploy-manifest.json',JSON.stringify({project,migrationDigest,sourceDigest,files},null,2))
 async function create(){const response=await fetch('https://api.vercel.com/v13/deployments',{method:'POST',headers:{...headers,'content-type':'application/json'},body:JSON.stringify(request),signal:AbortSignal.timeout(60000)});return {status:response.status,data:await response.json()}}

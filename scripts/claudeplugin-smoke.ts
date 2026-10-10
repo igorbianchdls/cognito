@@ -63,7 +63,7 @@ async function main() {
     const {body}=await rpc('tools/list')
     type Listed={name:string;title?:string;description:string;annotations:Record<string,boolean>;outputSchema?:object;_meta?:{ui?:{resourceUri?:string}}}
     const listed=body.result.tools as Listed[]
-    assert.equal(listed.length,46)
+    assert.equal(listed.length,55)
     for (const absent of ['abrir_painel','ler_configuracoes','atualizar_configuracoes','search_mentions']) assert(!listed.some(t=>t.name===absent),absent)
     for (const tool of listed) {
       const write=writeNames.includes(tool.name)
@@ -167,7 +167,7 @@ async function main() {
     await client.connect(new StreamableHTTPClientTransport(new URL(settings.resource),{ fetch:fetchClaude }))
     assert.equal(client.getServerVersion()?.name,'cognito-claudeplugin');assert.match(client.getInstructions()||'',/meu_acesso/)
     const listed = await client.listTools()
-    assert.equal(listed.tools.length,46)
+    assert.equal(listed.tools.length,55)
     const access = await client.callTool({ name:'meu_acesso',arguments:{} })
     assert.equal(access.isError,undefined);assert.equal((access.structuredContent as {ok:boolean}).ok,true)
     const card = await client.readResource({ uri:CARDS_URI })

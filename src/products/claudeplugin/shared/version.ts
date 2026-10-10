@@ -1,1 +1,1 @@
-export const CLAUDEPLUGIN_VERSION = '1.0.0'
+export const CLAUDEPLUGIN_VERSION = '1.1.0'

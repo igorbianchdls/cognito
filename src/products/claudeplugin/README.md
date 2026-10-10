@@ -1,6 +1,6 @@
 # Claude Plugin — Cognito ERP
 
-Produto `claudeplugin`, versão **1.0.0**. Servidor MCP remoto que leva o Cognito ERP para o Claude (claude.ai, desktop, celular, Cowork e Claude Code) como **conector**. Consultas, escritas em duas etapas, auditoria e cards vêm do núcleo [`mcpcore`](../mcpcore/README.md); aqui fica só o que é do Claude. Plano e andamento: [`docs/claudeplugin/plano-claudeplugin-20261007.md`](../../../docs/claudeplugin/plano-claudeplugin-20261007.md).
+Produto `claudeplugin`, versão **1.1.0**. Servidor MCP remoto que leva o Cognito ERP para o Claude (claude.ai, desktop, celular, Cowork e Claude Code) como **conector**. Consultas, escritas em duas etapas, auditoria e cards vêm do núcleo [`mcpcore`](../mcpcore/README.md); aqui fica só o que é do Claude. Plano e andamento: [`docs/claudeplugin/plano-claudeplugin-20261007.md`](../../../docs/claudeplugin/plano-claudeplugin-20261007.md).
 
 | Pasta | Responsabilidade |
 | --- | --- |
@@ -14,16 +14,16 @@ Produto `claudeplugin`, versão **1.0.0**. Servidor MCP remoto que leva o Cognit
 - Metadados: `/.well-known/oauth-protected-resource/api/claude/mcp`.
 - Sem token: `401` com `WWW-Authenticate: Bearer resource_metadata=…, scope="erp:read"` antes de o SDK rodar (é o que inicia o login no Claude).
 
-## Tools (35)
+## Tools (55)
 
-As 16 consultas e as 22 escritas do núcleo, com os mesmos nomes do ChatGPT. Diferenças:
+São 20 consultas, 34 escritas e `meu_acesso`, com os mesmos nomes do núcleo usado pelo ChatGPT. Incluem o ciclo de ordens de serviço, envio/aprovação/recusa de propostas e PDFs comerciais. Diferenças:
 
 - **Anotações:** consultas com `readOnlyHint: true`; **todas** as escritas com `destructiveHint: true` (exigência do Claude para qualquer tool que altera dados — o Claude pede permissão a cada chamada), `idempotentHint: true`, `openWorldHint: false`.
 - **Sem** `abrir_painel`, `ler_configuracoes`, `atualizar_configuracoes`, `search_mentions`, `openai/profile`, `securitySchemes` e formulário nativo MRTR. Quando faltam dados, a tool devolve `campos` e o Claude pergunta na conversa.
 
 ## Cards
 
-Recurso `ui://claudeplugin/cards/v1.html` (mesmo HTML do núcleo), ligado por `_meta.ui.resourceUri` às 38 tools, com `_meta.ui.domain = sha256(URL do servidor)[0..32].claudemcpcontent.com`, `prefersBorder` e CSP sem destinos externos. O card recebe `host: 'claude'` e segue as regras de UI do Claude: inline com poucos dados (lista de 3 itens em duas linhas, detalhes com até 5 campos, prévia com o essencial), no máximo 2 ações, sem listas suspensas e sem navegação; filtros (botões de escolha), detalhes completos, ajuste de itens e "Voltar" ficam em tela cheia. Botões com 44 px e margens de `safeAreaInsets`.
+Recurso `ui://claudeplugin/cards/v1.html` (mesmo HTML do núcleo), ligado por `_meta.ui.resourceUri` às 54 tools de consulta e escrita, com `_meta.ui.domain = sha256(URL do servidor)[0..32].claudemcpcontent.com`, `prefersBorder` e CSP sem destinos externos. O card recebe `host: 'claude'` e segue as regras de UI do Claude: inline com poucos dados (lista de 3 itens em duas linhas, detalhes com até 5 campos, prévia com o essencial), no máximo 2 ações, sem listas suspensas e sem navegação; filtros (botões de escolha), detalhes completos, ajuste de itens e "Voltar" ficam em tela cheia. Botões com 44 px e margens de `safeAreaInsets`.
 
 ## Autenticação
 

@@ -1,4 +1,5 @@
 'use client'
+import { ErpCommercialDocumentButtons } from './ErpCommercialDocumentButtons'
 
 import { ErpAttachments, type ErpAttachmentDocument } from '@/products/erp/frontend/components/ErpAttachments'
 import { useErpAccess } from '@/products/erp/frontend/hooks/useErpAccess'
@@ -46,7 +47,7 @@ export function ErpDocumentDetailsDialog({ open, onOpenChange, title, loading, d
   const attachment:{documento:ErpAttachmentDocument;manage:boolean}|null=documentKind==='vendas'?{documento:'venda',manage:access.can('erp.vendas.gerenciar')}:documentKind==='compras'?{documento:'compra',manage:access.can('erp.compras.gerenciar')}:documentKind==='contratos'?{documento:'contrato',manage:access.can('erp.vendas.gerenciar')}:documentKind==='ordens-servico'?{documento:'ordem_servico',manage:access.can('erp.vendas.gerenciar')}:null
   return <Dialog open={open} onOpenChange={onOpenChange}>
     <DialogContent className="h-[88vh] max-w-[min(980px,96vw)] overflow-hidden p-0">
-      <DialogHeader className="flex-row items-center justify-between border-b px-6 py-4"><DialogTitle>{title}</DialogTitle><Button variant="outline" size="sm" onClick={() => window.print()}><Printer className="size-4" />Imprimir / PDF</Button></DialogHeader>
+      <DialogHeader className="flex-row items-center justify-between border-b px-6 py-4"><DialogTitle>{title}</DialogTitle>{documentKind==='vendas'&&document?.tipo_documento==='orcamento' ? <ErpCommercialDocumentButtons key={String(document.id)} kind="orcamento" id={String(document.id)} version={Number(document.versao)} canArchive={access.can('erp.vendas.gerenciar')}/> : <Button variant="outline" size="sm" onClick={() => window.print()}><Printer className="size-4" />Imprimir / PDF</Button>}</DialogHeader>
       <div className="overflow-y-auto px-6 py-5">
         {loading ? <div className="py-20 text-center text-sm text-gray-500">Carregando detalhes...</div> : document ? <div className="grid gap-6">
           <section className="grid gap-3"><h3 className="text-sm font-semibold">Informacoes</h3><dl className="grid gap-3 rounded-md border bg-gray-50 p-4 sm:grid-cols-2 lg:grid-cols-4">

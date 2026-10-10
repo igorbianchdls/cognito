@@ -1,6 +1,6 @@
 # ChatGPT Plugin — Cognito ERP
 
-Produto `chatgptplugin`, versão **2.0.0**. Servidor MCP que leva o Cognito ERP para dentro do ChatGPT: consultas com cards, alterações com prévia e confirmação na própria conversa, formulário nativo com listas de opções e configurações pessoais.
+Produto `chatgptplugin`, versão **2.1.0**. Servidor MCP que leva o Cognito ERP para dentro do ChatGPT: consultas com cards, alterações com prévia e confirmação na própria conversa, formulário nativo com listas de opções e configurações pessoais.
 
 A NFS-e está disponível como simulação, sem validade fiscal. Cobrança e integração bancária ficam para fases futuras e não estão expostas no chat. O plano e o andamento estão em [`docs/chatgptplugin/plano-reestruturacao-20261006.md`](../../../docs/chatgptplugin/plano-reestruturacao-20261006.md).
 
@@ -17,18 +17,21 @@ Consultas, escritas, auditoria, verificação do token e cards ficam no núcleo 
 | `shared` | `getPluginConfig()` (`integration: 'chatgpt'`) e versão |
 | `plugin` | Manifesto, ícone e skills `usar-erp` / `get-started` |
 
-## Tools (46)
+## Tools
 
-Todas exigem `erp:read`; as de escrita exigem também `erp:write` e as permissões do perfil no ERP. O servidor lista 50 descritores porque a extensão oficial de menções registra `search_mentions`.
+Todas exigem `erp:read`; as de escrita exigem também `erp:write` e as permissões do perfil no ERP. O servidor lista 59 descritores porque a extensão oficial de menções registra `search_mentions`.
 
-**Consultas (17, somente leitura):** `meu_acesso` (também perfil da conexão, `openai/profile`), `resumo_erp`, `buscar_cadastros`, `obter_cadastro`, `listar_vendas` (com `tipo_documento: venda|orcamento`), `obter_venda`, `listar_compras`, `obter_compra`, `listar_notas_servico`, `obter_nota_servico`, `consultar_financeiro`, `obter_titulo_financeiro`, `obter_parcela_financeira`, `listar_pagamentos`, `consultar_estoque`, `analisar_periodo`, `consultar_relatorio`.
+**Consultas (incluindo acesso, somente leitura):** `meu_acesso` (também perfil da conexão, `openai/profile`), `resumo_erp`, `buscar_cadastros`, `obter_cadastro`, `listar_vendas` (com `tipo_documento: venda|orcamento`), `obter_venda`, `listar_compras`, `obter_compra`, `listar_notas_servico`, `obter_nota_servico`, `consultar_financeiro`, `obter_titulo_financeiro`, `obter_parcela_financeira`, `listar_pagamentos`, `consultar_estoque`, `analisar_periodo`, `consultar_relatorio`.
 
-**Escritas (28):** uma tool por ação; o parâmetro `tipo` escolhe o objeto.
+**Escritas (34):** uma tool por ação; o parâmetro `tipo` escolhe o objeto.
 
 | Área | Tools | `tipo` | Destrutivas |
 | --- | --- | --- | --- |
 | Cadastros | `criar_cadastro`, `editar_cadastro`, `excluir_cadastro` | 7 tipos de cadastro | `excluir_cadastro` |
 | Vendas e orçamentos | `criar_venda`, `editar_venda`, `excluir_venda`, `converter_orcamento`, `confirmar_venda`, `cancelar_venda`, `atender_venda` | `venda`, `orcamento` | `excluir_venda`, `cancelar_venda` |
+| Situação das propostas | `alterar_orcamento` | `enviar`, `aprovar`, `recusar`, `cancelar` | recusa e cancelamento |
+| Ordens de serviço | `criar_ordem_servico`, `editar_ordem_servico`, `alterar_ordem_servico`, `converter_ordem_servico` | ciclo da OS; conversão em orçamento ou venda | cancelamento |
+| Documentos comerciais | `arquivar_documento_comercial` | `orcamento`, `ordem_servico` | — |
 | Compras | `criar_compra`, `editar_compra`, `excluir_compra`, `confirmar_compra`, `cancelar_compra` | — | `excluir_compra`, `cancelar_compra` |
 | Financeiro | `criar_titulo`, `editar_titulo`, `excluir_titulo`, `registrar_baixa`, `estornar_pagamento` | `pagar`, `receber` | `excluir_titulo`, `estornar_pagamento` |
 | NFS-e simulada | `criar_nota_servico`, `editar_nota_servico`, `emitir_nota_servico`, `consultar_nota_servico`, `cancelar_nota_servico`, `excluir_nota_servico` | — | `cancelar_nota_servico`, `excluir_nota_servico` |
@@ -36,6 +39,14 @@ Todas exigem `erp:read`; as de escrita exigem também `erp:write` e as permissõ
 **Interface e configurações (3):** `abrir_painel` (tela cheia e barra lateral), `ler_configuracoes`, `atualizar_configuracoes`.
 
 Anotações: consultas com `readOnlyHint: true`; escritas com `readOnlyHint: false`, `destructiveHint` conforme a tabela, `idempotentHint: true` (garantido pela `chave_operacao`) e `openWorldHint: false`. Cada tool declara `outputSchema`.
+
+## Propostas e ordens de serviço
+
+Ferramentas novas: `listar_ordens_servico`, `obter_ordem_servico`, `criar_ordem_servico`, `editar_ordem_servico`, `alterar_ordem_servico`, `converter_ordem_servico`, `alterar_orcamento`, `obter_documento_comercial` e `arquivar_documento_comercial`.
+
+`criar_venda` / `editar_venda` aceitam validade, entrega, descrição por item, desconto geral (valor ou percentual), frete e até 48 parcelas. Alterar um orçamento enviado/aprovado reinicia sua situação comercial; as decisões anteriores permanecem no histórico. Orçamentos vencidos precisam de validade renovada. Marcar como enviado não envia e-mail.
+
+PDF atual: gerado sob demanda, link protegido de 15 minutos, sem gravar binário no banco. PDF arquivado: revisões imutáveis no bucket privado `erp-comercial`, apenas metadados nas tabelas. Ver [documentação comercial](../erp/server/documents/README.md).
 
 ## Escrita em duas etapas
 
@@ -48,7 +59,7 @@ Erros devolvem `code`, `message` e, quando aplicável, `campos: [{campo, motivo}
 
 ## Cards
 
-Recurso `ui://chatgptplugin/cards/v2.html`, ligado por `_meta.ui.resourceUri` às 16 consultas e às 22 escritas. O card identifica a tool por `hostContext.toolInfo` (ou `_meta["cognito/tool"]` no resultado).
+Recurso `ui://chatgptplugin/cards/v2.html`, ligado por `_meta.ui.resourceUri` às consultas e escritas do catálogo. O card identifica a tool por `hostContext.toolInfo` (ou `_meta["cognito/tool"]` no resultado).
 
 - **Lista:** inline com resumo e até 5 linhas, uma ação ("Ver tudo"); em tela cheia, tabela completa, busca e paginação.
 - **Detalhes, análise (barras por mês), resumo, empresas** ("Usar esta" envia a escolha à conversa).

@@ -1,0 +1,86 @@
+%PDF-1.4
+%âãÏÓ
+1 0 obj
+<< /Type /Catalog /Pages 2 0 R >>
+endobj
+2 0 obj
+<< /Type /Pages /Kids [5 0 R] /Count 1 >>
+endobj
+3 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica /Encoding /WinAnsiEncoding >>
+endobj
+4 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold /Encoding /WinAnsiEncoding >>
+endobj
+5 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 3 0 R /F2 4 0 R >> >> /Contents 6 0 R >>
+endobj
+6 0 obj
+<< /Length 3652 >>
+stream
+BT /F2 11 Tf 0.12 0.14 0.13 rg 36.00 802.00 Td (OTTO ERP) Tj ET
+BT /F2 10 Tf 0.12 0.14 0.13 rg 379.86 802.00 Td (ORDEM DE SERVIÇO OS-DEMO-001) Tj ET
+0.6 w 0.86 0.87 0.86 RG 36 787 m 559 787 l S
+BT /F2 24 Tf 0.12 0.14 0.13 rg 36.00 765.00 Td (Ordem de serviço) Tj ET
+BT /F1 10 Tf 0.12 0.14 0.13 rg 36.00 737.00 Td (Nº OS-DEMO-001  |  Aprovada  |  Documento atual) Tj ET
+BT /F1 9 Tf 0.12 0.14 0.13 rg 36.00 716.00 Td (Data: 10/10/2026   |   Entrega prevista: 20/10/2026) Tj ET
+0.6 w 0.86 0.87 0.86 RG 36 689 m 559 689 l S
+BT /F2 8 Tf 0.4 0.42 0.4 rg 36.00 665.00 Td (EMPRESA) Tj ET
+BT /F2 9 Tf 0.12 0.14 0.13 rg 36.00 646.00 Td (Creatto Tecnologia - Demonstração) Tj ET
+BT /F1 9 Tf 0.12 0.14 0.13 rg 36.00 633.00 Td (39.562.381/0001-38) Tj ET
+BT /F1 9 Tf 0.12 0.14 0.13 rg 36.00 620.00 Td (Rua de Aracati, 1450, Meireles) Tj ET
+BT /F1 9 Tf 0.12 0.14 0.13 rg 36.00 607.00 Td (Fortaleza - CE - 60115081) Tj ET
+BT /F2 8 Tf 0.4 0.42 0.4 rg 306.00 665.00 Td (CLIENTE) Tj ET
+BT /F2 9 Tf 0.12 0.14 0.13 rg 306.00 646.00 Td (Clínica Aurora - Cliente de demonstração) Tj ET
+BT /F1 9 Tf 0.12 0.14 0.13 rg 306.00 633.00 Td (42.631.314/0001-32) Tj ET
+BT /F1 9 Tf 0.12 0.14 0.13 rg 306.00 620.00 Td (Rua Demonstrativa, 100) Tj ET
+BT /F1 9 Tf 0.12 0.14 0.13 rg 306.00 607.00 Td (Fortaleza - CE) Tj ET
+BT /F1 9 Tf 0.12 0.14 0.13 rg 306.00 594.00 Td (cliente@example.invalid) Tj ET
+BT /F2 8 Tf 0.4 0.42 0.4 rg 36.00 562.00 Td (EQUIPAMENTO) Tj ET
+BT /F1 9 Tf 0.12 0.14 0.13 rg 36.00 544.00 Td (Notebook profissional - Dell Latitude - Série DEMO-001) Tj ET
+BT /F2 8 Tf 0.4 0.42 0.4 rg 36.00 516.00 Td (SOLICITAÇÃO DO CLIENTE) Tj ET
+BT /F1 9 Tf 0.12 0.14 0.13 rg 36.00 498.00 Td (Equipamento com lentidão durante o uso.) Tj ET
+BT /F2 8 Tf 0.4 0.42 0.4 rg 36.00 470.00 Td (DIAGNÓSTICO / ESCOPO) Tj ET
+BT /F1 9 Tf 0.12 0.14 0.13 rg 36.00 452.00 Td (Limpeza, revisão dos componentes e configuração do sistema.) Tj ET
+0.95 0.96 0.95 rg 36 401 523 23 re f
+BT /F2 7.5 Tf 0.12 0.14 0.13 rg 41.00 409.00 Td (DESCRIÇÃO) Tj ET
+BT /F2 7.5 Tf 0.12 0.14 0.13 rg 296.00 409.00 Td (QTD.) Tj ET
+BT /F2 7.5 Tf 0.12 0.14 0.13 rg 333.00 409.00 Td (UNITÁRIO) Tj ET
+BT /F2 7.5 Tf 0.12 0.14 0.13 rg 408.00 409.00 Td (DESC.) Tj ET
+BT /F2 7.5 Tf 0.12 0.14 0.13 rg 473.00 409.00 Td (TOTAL) Tj ET
+BT /F1 9 Tf 0.12 0.14 0.13 rg 41.00 386.00 Td (Manutenção preventiva e configuração do equipamento) Tj ET
+BT /F1 8 Tf 0.12 0.14 0.13 rg 318.55 385.00 Td (2) Tj ET
+BT /F1 8 Tf 0.12 0.14 0.13 rg 361.09 385.00 Td (R$ 100,00) Tj ET
+BT /F1 8 Tf 0.12 0.14 0.13 rg 434.98 385.00 Td (R$ 0,00) Tj ET
+BT /F2 8 Tf 0.12 0.14 0.13 rg 515.61 385.00 Td (R$ 200,00) Tj ET
+0.6 w 0.86 0.87 0.86 RG 36 367 m 559 367 l S
+BT /F1 9 Tf 0.12 0.14 0.13 rg 335.00 343.00 Td (Subtotal) Tj ET
+BT /F1 9 Tf 0.12 0.14 0.13 rg 517.47 343.00 Td (R$ 200,00) Tj ET
+BT /F1 9 Tf 0.12 0.14 0.13 rg 335.00 326.00 Td (Desconto geral) Tj ET
+BT /F1 9 Tf 0.12 0.14 0.13 rg 522.48 326.00 Td (R$ 25,00) Tj ET
+BT /F2 10 Tf 0.12 0.14 0.13 rg 335.00 302.00 Td (TOTAL) Tj ET
+BT /F2 16 Tf 0.12 0.14 0.13 rg 482.22 302.00 Td (R$ 175,00) Tj ET
+BT /F2 8 Tf 0.4 0.42 0.4 rg 36.00 267.00 Td (OBSERVAÇÕES) Tj ET
+BT /F1 9 Tf 0.12 0.14 0.13 rg 36.00 249.00 Td (Prazo estimado de dez dias. Garantia dos serviços: 90 dias.) Tj ET
+0.6 w 0.86 0.87 0.86 RG 36 191 m 559 191 l S
+BT /F1 8 Tf 0.12 0.14 0.13 rg 36.00 176.00 Td (Nome / assinatura do cliente) Tj ET
+BT /F1 8 Tf 0.12 0.14 0.13 rg 462.04 176.00 Td (Data: ____ / ____ / ______) Tj ET
+0.6 w 0.86 0.87 0.86 RG 36 41 m 559 41 l S
+BT /F1 7 Tf 0.4 0.42 0.4 rg 36.00 28.00 Td (Documento comercial. Não é nota fiscal nem comprovante de pagamento.) Tj ET
+BT /F1 7 Tf 0.12 0.14 0.13 rg 545.38 28.00 Td (1 / 1) Tj ET
+endstream
+endobj
+xref
+0 7
+0000000000 65535 f 
+0000000015 00000 n 
+0000000064 00000 n 
+0000000121 00000 n 
+0000000218 00000 n 
+0000000320 00000 n 
+0000000456 00000 n 
+trailer
+<< /Size 7 /Root 1 0 R >>
+startxref
+4160
+%%EOF

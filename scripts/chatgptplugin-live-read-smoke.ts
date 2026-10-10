@@ -236,7 +236,7 @@ async function main() {
     assert.equal(result.status, 200); assert.equal(result.body.result.serverInfo.name, 'cognito-chatgptplugin')
   })
   await check('Catalogo anuncia 50 tools', async () => {
-    const result = await rpc('tools/list'); assert.equal(result.status, 200); assert.equal(result.body.result.tools.length,50)
+    const result = await rpc('tools/list'); assert.equal(result.status, 200); assert.equal(result.body.result.tools.length,59)
     assert(result.body.result.tools.some((tool: { name: string }) => tool.name === 'consultar_financeiro'))
   })
   await check('meu_acesso corresponde aos vinculos do Supabase', async () => {

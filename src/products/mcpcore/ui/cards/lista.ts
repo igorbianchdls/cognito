@@ -6,11 +6,12 @@ const registrationNouns={clientes:['cliente','clientes'],fornecedores:['forneced
 const financialStatuses=[['aberto','Em aberto'],['vencido','Vencidas'],['parcial','Parciais'],['pago','Pagas'],['cancelado','Canceladas']];
 function party(args){return args.tipo==='receber'?'cliente':'fornecedor'}
 const listSpecs={
+  listar_ordens_servico:{columns:()=>['numero','cliente','equipamento','previsao_entrega','total','status'],primary:'numero',secondary:()=>'cliente',amount:'total',date:'previsao_entrega',noun:['ordem de serviço','ordens de serviço'],metrics:['valor_total'],statuses:[['rascunho','Rascunho'],['orcamento_pendente','Orçamento pendente'],['aprovada','Aprovadas'],['em_execucao','Em execução'],['concluida','Concluídas'],['cancelada','Canceladas']],detail:row=>({tool:'obter_ordem_servico',args:{registro_id:Number(row.id)}})},
   consultar_financeiro:{columns:args=>['vencimento','descricao',party(args),'saldo','status'],primary:'descricao',secondary:args=>party(args),amount:'saldo',date:'vencimento',due:true,metrics:['em_aberto','vencidas','vence_em_7_dias'],
     noun:['conta','contas'],period:['vencimento_inicio','vencimento_fim'],statuses:financialStatuses,
     sorts:[['vencimento','Vencimento mais próximo'],['-vencimento','Vencimento mais distante'],['-saldo','Maior saldo']],
     detail:(row,args)=>({tool:'obter_parcela_financeira',args:{tipo:args.tipo||'pagar',parcela_id:Number(row.id)}})},
-  listar_vendas:{columns:()=>['numero','cliente','data','total','status'],primary:'numero',secondary:()=>'cliente',amount:'total',date:'data',metrics:['valor_total','valor_confirmado'],
+  listar_vendas:{columns:args=>['numero','cliente','data','total',args.tipo_documento==='orcamento'?'situacao':'status'],primary:'numero',secondary:()=>'cliente',amount:'total',date:'data',metrics:['valor_total','valor_confirmado'],
     noun:args=>args.tipo_documento==='orcamento'?['orçamento','orçamentos']:['venda','vendas'],period:['inicio','fim'],
     statuses:[['rascunho','Rascunho'],['confirmada','Confirmadas'],['faturada','Faturadas'],['cancelada','Canceladas']],
     sorts:[['-data','Mais recentes'],['data','Mais antigas'],['-total','Maior valor']],
@@ -39,7 +40,7 @@ function subtitle(spec,args,data,count){
   const sort=(spec.sorts||[]).find(([v])=>v===args.ordenar)||(spec.sorts||[])[0];if(sort)parts.push(sort[1].toLowerCase());
   if(args.busca)parts.push('busca "'+args.busca+'"');return parts.join(' · ')}
 function rowTone(spec,row){return row.status==='vencido'||(spec.due&&row.status!=='pago'&&Number(row.saldo||0)>0&&row.vencimento&&daysBetween(today(),String(row.vencimento).slice(0,10))<0)?'overdue':''}
-function cell(key,row){const td=element('td');if(key==='status'){td.append(chip(row.status))}else if(key==='nota'){td.textContent=noteTitle(row);td.className='strong-cell'}else{td.textContent=formatted(key,row[key]);if(moneyKeys.has(key)||/quantidade/.test(key))td.className='num'}
+function cell(key,row){const td=element('td');if(key==='status'||key==='situacao'){td.append(chip(row[key]))}else if(key==='nota'){td.textContent=noteTitle(row);td.className='strong-cell'}else{td.textContent=formatted(key,row[key]);if(moneyKeys.has(key)||/quantidade/.test(key))td.className='num'}
   if(key==='vencimento'){const due=dueText(row.vencimento,row.status);if(due)td.append(element('small',' · '+due,due.startsWith('venceu')?'due':'soon'))}return td}
 function listView(spec,args,rows,clickable){
   // No Claude o card inline usa sempre a lista de duas linhas (nome, valor, data e situação).
@@ -53,7 +54,8 @@ function listView(spec,args,rows,clickable){
     top.append(element('span',title,'item-title'));if(spec.amount&&row[spec.amount]!==undefined)top.append(element('strong',formatted(spec.amount,row[spec.amount]),'item-amount'));
     const meta=[];const second=spec.secondary&&spec.secondary(args,row);if(second&&row[second])meta.push(formatted(second,row[second]));
     if(spec.date&&row[spec.date])meta.push((spec.due?'vence ':'')+formatted('data',row[spec.date]));const due=spec.due?dueText(row.vencimento,row.status):'';if(due)meta.push(due);
-    bottom.append(element('span',meta.join(' · '),'muted'));if(row.status)bottom.append(chip(row.status));li.append(top,bottom);
+    const status=state.tool==='listar_vendas'&&args.tipo_documento==='orcamento'?(row.situacao||row.status):row.status;
+    bottom.append(element('span',meta.join(' · '),'muted'));if(status)bottom.append(chip(status));li.append(top,bottom);
     if(clickable&&spec.detail){const go=()=>run(()=>{const d=spec.detail(row,args);return open(d.tool,withCompany(d.args))});
       for(const node of [tr,li]){node.classList.add('clickable');node.tabIndex=0;node.setAttribute('role','button');node.setAttribute('aria-label','Abrir '+title);node.onclick=go;node.onkeydown=e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();go()}}}}
     body.append(tr);stack.append(li)}
@@ -68,8 +70,8 @@ function renderList(target,data){const full=state.displayMode==='fullscreen',row
   if(data.summary){const keys=(spec.metrics||Object.keys(data.summary)).filter(k=>!['referencia','quantidade'].includes(k)&&data.summary[k]!==undefined&&data.summary[k]!==null&&typeof data.summary[k]!=='object');
     const items=keys.slice(0,full?8:strict?2:3).map(k=>({label:label(k),value:formatted(k,data.summary[k])}));if(items.length)target.append(metrics(items))}
   if(full)target.append(filtersView(spec,args));
-  if(!rows.length){target.append(notice(args.status?'Nada encontrado com esse filtro.':'Nenhum registro encontrado.'));
-    if(args.status||args.busca)target.append(actionsBar([{label:'Limpar filtros',run:()=>load({...args,status:undefined,busca:undefined,pagina:1})}]));return}
+  if(!rows.length){target.append(notice(args.status||args.situacao?'Nada encontrado com esse filtro.':'Nenhum registro encontrado.'));
+    if(args.status||args.situacao||args.busca)target.append(actionsBar([{label:'Limpar filtros',run:()=>load({...args,status:undefined,situacao:undefined,busca:undefined,pagina:1})}]));return}
   if(!full&&state.tool==='buscar_cadastros'&&args.busca&&rows.length>=2&&rows.length<=8&&!data.hasMore){target.append(choiceView(args,rows));return}
   const inlineRows=strict?3:5;
   target.append(listView(spec,args,full?rows:rows.slice(0,inlineRows),full));
@@ -83,7 +85,9 @@ function filtersView(spec,args){const bar=element('div',undefined,'toolbar');con
   const field=(text,node)=>{const wrap=element('label',text);wrap.append(node);bar.append(wrap);return node};
   if(state.tool!=='listar_pagamentos'){const search=field('Buscar',element('input'));search.type='search';search.value=args.busca||'';search.onkeydown=e=>{if(e.key==='Enter'){e.preventDefault();apply.click()}};values.busca=()=>search.value.trim()||undefined}
   // No Claude não há listas suspensas: situação e ordem viram botões de escolha.
-  if(spec.statuses){if(strict)values.status=segmented(field,'Situação',[['','Todas'],...spec.statuses],args.status||'');else{const select=field('Situação',element('select'));select.append(new Option('Todas',''));for(const [value,text] of spec.statuses)select.append(new Option(text,value));select.value=args.status||'';values.status=()=>select.value||undefined}}
+  const quote=state.tool==='listar_vendas'&&args.tipo_documento==='orcamento',statusKey=quote?'situacao':'status';
+  const statuses=quote?[['em_andamento','Em andamento'],['enviada','Enviada'],['aprovado','Aprovada'],['recusado','Recusada'],['convertido','Convertida em venda'],['cancelado','Cancelada']]:spec.statuses;
+  if(statuses){if(strict)values[statusKey]=segmented(field,'Situação',[['','Todas'],...statuses],args[statusKey]||'');else{const select=field('Situação',element('select'));select.append(new Option('Todas',''));for(const [value,text] of statuses)select.append(new Option(text,value));select.value=args[statusKey]||'';values[statusKey]=()=>select.value||undefined}}
   if(spec.period){for(const [index,text] of [[0,'De'],[1,'Até']]){const input=field(text,element('input'));input.type='date';input.value=args[spec.period[index]]||'';values[spec.period[index]]=()=>input.value||undefined}}
   if(spec.sorts){if(strict)values.ordenar=segmented(field,'Ordenar por',spec.sorts,args.ordenar||spec.sorts[0][0]);else{const select=field('Ordenar por',element('select'));for(const [value,text] of spec.sorts)select.append(new Option(text,value));select.value=args.ordenar||spec.sorts[0][0];values.ordenar=()=>select.value}}
   apply=button('Aplicar',()=>load({...args,...Object.fromEntries(Object.entries(values).map(([k,f])=>[k,f()])),pagina:1}),true);bar.append(apply);return bar}

@@ -5,7 +5,7 @@ import { NextResponse } from 'next/server'
 
 import { erpErrorResponse, parseErpBody } from '@/products/erp/api/http/responses'
 import { resolveErpApiAccess as resolveErpAccess } from '@/products/erp/api/http/access'
-import { createServiceOrder, listServiceOrders } from '@/products/erp/server/erpProfessionalRepository'
+import { createServiceOrder, serviceOrderPage } from '@/products/erp/server/erpProfessionalRepository'
 import { serviceOrderCreateSchema } from '@/products/erp/shared/professionalContracts'
 
  async function handleGET(request: Request) {
@@ -13,7 +13,7 @@ import { serviceOrderCreateSchema } from '@/products/erp/shared/professionalCont
   if (!tenant) return erpFailure('Acesso negado.', 403)
   try {
     const url = new URL(request.url)
-    return NextResponse.json({ records: await listServiceOrders({ tenantId: tenant.tenantId, query: url.searchParams.get('query') || '', status: url.searchParams.get('status') || '' }) })
+    return NextResponse.json(await serviceOrderPage({ tenantId: tenant.tenantId, query: url.searchParams.get('query') || '', status: url.searchParams.get('status') || '', page: Number(url.searchParams.get('pagina')||1), pageSize: Number(url.searchParams.get('por_pagina')||20) }))
   } catch (error) { return erpErrorResponse(error) }
 }
 
