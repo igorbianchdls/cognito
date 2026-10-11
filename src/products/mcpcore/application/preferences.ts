@@ -3,7 +3,10 @@ import { pluginQuery } from '../shared/database'
 import { PluginError,type PluginPrincipal } from '../shared/contracts'
 import type { PluginIntegration } from '../shared/config'
 
-export const preferencesSchema=z.object({empresa_preferida:z.string().regex(/^$|^[1-9]\d*$/).max(16),por_pagina:z.number().int().min(10).max(50)}).strict()
+export const preferencesSchema=z.object({
+  empresa_preferida:z.string().regex(/^$|^[1-9]\d*$/).max(16).describe('ID textual de empresa autorizada em meu_acesso; vazio remove a preferência. Não substitui empresa_id nas consultas.'),
+  por_pagina:z.number().int().min(10).max(50).describe('Preferência de 10 a 50 registros por página; não substitui por_pagina explícito nas consultas.'),
+}).strict()
 export type Preferences=z.infer<typeof preferencesSchema>
 const defaults:Preferences={empresa_preferida:'',por_pagina:20}
 export async function readPreferences(principal:PluginPrincipal,integration:PluginIntegration):Promise<Preferences> {

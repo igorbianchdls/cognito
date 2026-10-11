@@ -4,6 +4,8 @@ import { runWithErpDatabaseContext } from '@/lib/erpDatabaseContext'
 import { proposalSchema,proposalCapabilities,type Proposal } from './contracts'
 import type { ActionDependencies } from './dependencies'
 import { companySchema } from '../tools/catalog'
+import {toolDescription} from '../tools/descriptions'
+import {documentInputSchema} from '../tools/inputDocumentation'
 import { PluginError,type PluginPrincipal } from '../shared/contracts'
 import type { PluginConfig } from '../shared/config'
 
@@ -14,78 +16,45 @@ export type ActionDefinition = {name:string;title:string;description:string;sche
   execute:(deps:ActionDependencies,principal:PluginPrincipal,id:number,input:Record<string,unknown>,config:PluginConfig) => Promise<unknown>}
 
 // Cada tool cobre uma ação; o parâmetro tipo escolhe apenas o objeto (ex.: venda ou orçamento).
-type Spec = {name:string;title:string;destructive:boolean;use:string;avoid:string;types?:Record<string,Proposal['tipo']>;kind?:Proposal['tipo']}
+type Spec = {name:string;title:string;destructive:boolean;types?:Record<string,Proposal['tipo']>;kind?:Proposal['tipo']}
 const registrations = ['cliente','fornecedor','vendedor','produto','servico','categoria','conta_financeira'] as const
 const byRegistration = (prefix:string) => Object.fromEntries(registrations.map(t => [t,`${prefix}${t}`])) as Record<string,Proposal['tipo']>
 const specs: Spec[] = [
-  {name:'criar_ordem_servico',title:'Criar ordem de serviço',destructive:false,kind:'ordem_servico',use:'Cria uma ordem de serviço em rascunho com cliente, equipamento, serviços/produtos, prazos e observações.',avoid:'Não inicia a execução nem gera venda.'},
-  {name:'editar_ordem_servico',title:'Editar ordem de serviço',destructive:false,kind:'editar_ordem_servico',use:'Edita ordem em rascunho sem orçamento ou venda gerado. Envie registro_id e todos os dados com a lista nova de itens.',avoid:'Não altera ordens aprovadas ou em execução.'},
-  {name:'alterar_ordem_servico',title:'Alterar situação da ordem de serviço',destructive:true,types:{aprovar:'aprovar_ordem_servico',iniciar:'iniciar_ordem_servico',concluir:'concluir_ordem_servico',cancelar:'cancelar_ordem_servico'},use:'Aprova, inicia, conclui ou cancela uma ordem seguindo a sequência do ERP. Cancelamento exige motivo.',avoid:'Não altera os itens. Não movimenta estoque nem emite nota.'},
-  {name:'converter_ordem_servico',title:'Gerar orçamento ou venda da ordem',destructive:false,types:{orcamento:'gerar_orcamento_os',venda:'gerar_venda_os'},use:'Gera um orçamento ou uma venda em rascunho a partir dos itens ativos de uma OS. Reaproveita o documento já gerado; se houver orçamento, a venda será gerada a partir dele.',avoid:'Não confirma a venda nem gera títulos financeiros.'},
-  {name:'alterar_orcamento',title:'Alterar situação do orçamento',destructive:true,types:{enviar:'enviar_orcamento',aprovar:'aprovar_orcamento',recusar:'recusar_orcamento',cancelar:'cancelar_orcamento'},use:'Marca o orçamento como enviado, aprovado, recusado ou cancelado. Recusa e cancelamento exigem motivo. Enviar registra o envio informado pelo usuário; não envia email. Orçamento vencido precisa de validade renovada.',avoid:'Não converte em venda nem envia mensagens ao cliente.'},
-  {name:'arquivar_documento_comercial',title:'Arquivar PDF comercial',destructive:false,types:{orcamento:'arquivar_pdf_orcamento',ordem_servico:'arquivar_pdf_ordem_servico'},use:'Gera e arquiva uma revisão imutável do PDF de orçamento ou OS no Storage privado. Exige armazenamento configurado. Para baixar o PDF atual, use obter_documento_comercial.',avoid:'Não envia documento por email nem emite nota fiscal.'},
-  {name:'criar_cadastro',title:'Criar cadastro',destructive:false,types:byRegistration(''),
-    use:'Use quando o usuário quiser cadastrar cliente, fornecedor, vendedor, produto, serviço, categoria ou conta financeira.',avoid:'Não use para alterar um cadastro existente (editar_cadastro).'},
-  {name:'editar_cadastro',title:'Editar cadastro',destructive:false,types:byRegistration('editar_'),
-    use:'Use quando o usuário quiser alterar campos de um cadastro existente. Envie registro_id e somente os campos alterados.',avoid:'Não use para criar (criar_cadastro) nem para excluir (excluir_cadastro).'},
-  {name:'excluir_cadastro',title:'Excluir cadastro',destructive:true,types:byRegistration('excluir_'),
-    use:'Use quando o usuário pedir para excluir um cadastro sem vínculos ou histórico. Exige motivo.',avoid:'Não use para inativar um cadastro com histórico (editar_cadastro com status inativo).'},
-  {name:'criar_venda',title:'Criar venda ou orçamento',destructive:false,types:{venda:'venda',orcamento:'orcamento'},
-    use:'Use quando o usuário quiser registrar uma venda ou um orçamento. O documento é criado em rascunho comercial.',avoid:'Não use para confirmar a venda (confirmar_venda).'},
-  {name:'editar_venda',title:'Editar venda ou orçamento',destructive:false,types:{venda:'editar_venda',orcamento:'editar_orcamento'},
-    use:'Use para alterar uma venda ou orçamento em rascunho. Envie os dados completos e a lista nova de itens; parcelas permite até 48 vencimentos, desconto e frete são do cabeçalho.',avoid:'Não use em documento confirmado nem em orçamento encerrado.'},
-  {name:'excluir_venda',title:'Excluir venda ou orçamento',destructive:true,types:{venda:'excluir_venda',orcamento:'excluir_orcamento'},
-    use:'Use para excluir uma venda ou orçamento em rascunho, sem efeitos financeiros, fiscais ou de estoque. Exige motivo.',avoid:'Não use para documento confirmado (cancelar_venda).'},
-  {name:'converter_orcamento',title:'Converter orçamento em venda',destructive:false,kind:'converter_orcamento',
-    use:'Use quando o cliente aprovar um orçamento e o usuário quiser transformá-lo em venda, com os mesmos itens e condições. A venda nasce em rascunho.',avoid:'Não use para criar uma venda nova sem orçamento (criar_venda).'},
-  {name:'registrar_devolucao',title:'Registrar devolução de venda',destructive:true,kind:'devolucao_venda',
-    use:'Use quando o cliente devolver produtos entregues ou um serviço for desfeito numa venda confirmada. Informe os itens (venda_item_id de obter_venda), as quantidades e o tratamento: abater (desconta das parcelas em aberto da venda), credito (vira crédito do cliente) ou reembolso (conta a pagar ao cliente; exige categoria_id de despesa e data_vencimento). Os produtos voltam ao estoque.',
-    avoid:'Não use para venda ainda não entregue ou desistência total antes da entrega (cancelar_venda).'},
-  {name:'confirmar_venda',title:'Confirmar venda',destructive:false,kind:'confirmar_venda',
-    use:'Use quando o usuário quiser confirmar uma venda em rascunho, gerando os efeitos financeiros e de estoque previstos no ERP.',avoid:'Não use para orçamentos nem para dar saída no estoque (atender_venda).'},
-  {name:'cancelar_venda',title:'Cancelar venda',destructive:true,kind:'cancelar_venda',
-    use:'Use quando o usuário quiser cancelar uma venda confirmada. Exige motivo.',avoid:'Não use para rascunhos (excluir_venda).'},
-  {name:'atender_venda',title:'Atender venda',destructive:false,kind:'atender_venda',
-    use:'Use quando o usuário quiser registrar a saída de estoque de uma venda confirmada.',avoid:'Não emite nota fiscal (criar_nota_servico).'},
-  {name:'criar_compra',title:'Criar compra',destructive:false,kind:'compra',
-    use:'Use quando o usuário quiser registrar uma compra de fornecedor. É criada como cotação em rascunho.',avoid:'Não use para confirmar a compra (confirmar_compra).'},
-  {name:'editar_compra',title:'Editar compra',destructive:false,kind:'editar_compra',
-    use:'Use para alterar uma compra em rascunho. Envie os dados completos e a lista nova de itens.',avoid:'Não use em compra confirmada ou com várias parcelas.'},
-  {name:'excluir_compra',title:'Excluir compra',destructive:true,kind:'excluir_compra',
-    use:'Use para excluir uma compra em rascunho, sem efeitos financeiros ou de estoque. Exige motivo.',avoid:'Não use para compra confirmada (cancelar_compra).'},
-  {name:'confirmar_compra',title:'Confirmar compra',destructive:false,kind:'confirmar_compra',
-    use:'Use quando o usuário quiser confirmar uma compra em rascunho, gerando títulos a pagar e recebimento de estoque conforme o ERP.',avoid:'Não use para criar a compra (criar_compra).'},
-  {name:'cancelar_compra',title:'Cancelar compra',destructive:true,kind:'cancelar_compra',
-    use:'Use quando o usuário quiser cancelar uma compra confirmada.',avoid:'Não use para rascunhos (excluir_compra).'},
-  {name:'criar_titulo',title:'Criar conta a pagar ou receber',destructive:false,types:{pagar:'conta_pagar',receber:'conta_receber'},
-    use:'Use quando o usuário quiser lançar uma conta a pagar ou a receber manual, com até 48 parcelas cuja soma é igual ao valor total. Para algo ainda incerto (receita esperada, despesa prevista) envie tipo_lancamento "previsao": entra no fluxo de caixa projetado, não na DRE, e só recebe baixa depois de efetivar_previsao.',avoid:'Não use para registrar um pagamento (registrar_baixa).'},
-  {name:'efetivar_previsao',title:'Efetivar previsão',destructive:false,types:{pagar:'efetivar_conta_pagar',receber:'efetivar_conta_receber'},
-    use:'Use quando uma conta a pagar ou a receber prevista (tipo_lancamento previsao) se confirmar: ela passa a contar na DRE e pode receber baixa. Informe o ID do título (obter_titulo_financeiro).',avoid:'Não use para registrar o pagamento (registrar_baixa) nem em título já efetivo.'},
-  {name:'editar_titulo',title:'Editar conta a pagar ou receber',destructive:false,types:{pagar:'editar_conta_pagar',receber:'editar_conta_receber'},
-    use:'Use para alterar um título manual sem movimentações. Envie os dados completos do título (ID de obter_titulo_financeiro) e a lista nova de parcelas.',avoid:'Não use com ID de parcela nem em títulos gerados por venda, compra ou recorrência.'},
-  {name:'excluir_titulo',title:'Excluir conta a pagar ou receber',destructive:true,types:{pagar:'excluir_conta_pagar',receber:'excluir_conta_receber'},
-    use:'Use para excluir um título manual sem pagamentos, cobranças ou rateios. Exige motivo.',avoid:'Não use em títulos gerados por venda, compra ou recorrência.'},
-  {name:'registrar_baixa',title:'Registrar pagamento ou recebimento',destructive:false,types:{pagar:'pagar_parcela',receber:'receber_parcela'},
-    use:'Use quando o usuário informar que já pagou ou recebeu uma parcela, para registrar a baixa no ERP; não movimenta dinheiro nem conta bancária. Informe a parcela (consultar_financeiro), o valor, a data e a conta financeira (buscar_cadastros tipo contas-financeiras).',avoid:'Não use para desfazer um pagamento (estornar_pagamento).'},
-  {name:'estornar_pagamento',title:'Estornar pagamento',destructive:true,kind:'estornar_pagamento',
-    use:'Use quando o usuário quiser desfazer no ERP o registro de um pagamento ou recebimento (ID de listar_pagamentos); não devolve dinheiro. Exige motivo.',avoid:'Não use para cancelar vendas ou compras.'},
+  {name:'criar_ordem_servico',title:'Criar ordem de serviço',destructive:false,kind:'ordem_servico'},
+  {name:'editar_ordem_servico',title:'Editar ordem de serviço',destructive:false,kind:'editar_ordem_servico'},
+  {name:'alterar_ordem_servico',title:'Alterar situação da ordem de serviço',destructive:true,types:{aprovar:'aprovar_ordem_servico',iniciar:'iniciar_ordem_servico',concluir:'concluir_ordem_servico',cancelar:'cancelar_ordem_servico'}},
+  {name:'converter_ordem_servico',title:'Gerar orçamento ou venda da ordem',destructive:false,types:{orcamento:'gerar_orcamento_os',venda:'gerar_venda_os'}},
+  {name:'alterar_orcamento',title:'Alterar situação do orçamento',destructive:true,types:{enviar:'enviar_orcamento',aprovar:'aprovar_orcamento',recusar:'recusar_orcamento',cancelar:'cancelar_orcamento'}},
+  {name:'arquivar_documento_comercial',title:'Arquivar PDF comercial',destructive:false,types:{orcamento:'arquivar_pdf_orcamento',ordem_servico:'arquivar_pdf_ordem_servico'}},
+  {name:'criar_cadastro',title:'Criar cadastro',destructive:false,types:byRegistration('')},
+  {name:'editar_cadastro',title:'Editar cadastro',destructive:false,types:byRegistration('editar_')},
+  {name:'excluir_cadastro',title:'Excluir cadastro',destructive:true,types:byRegistration('excluir_')},
+  {name:'criar_venda',title:'Criar venda ou orçamento',destructive:false,types:{venda:'venda',orcamento:'orcamento'}},
+  {name:'editar_venda',title:'Editar venda ou orçamento',destructive:false,types:{venda:'editar_venda',orcamento:'editar_orcamento'}},
+  {name:'excluir_venda',title:'Excluir venda ou orçamento',destructive:true,types:{venda:'excluir_venda',orcamento:'excluir_orcamento'}},
+  {name:'converter_orcamento',title:'Converter orçamento em venda',destructive:false,kind:'converter_orcamento'},
+  {name:'registrar_devolucao',title:'Registrar devolução de venda',destructive:true,kind:'devolucao_venda'},
+  {name:'confirmar_venda',title:'Confirmar venda',destructive:false,kind:'confirmar_venda'},
+  {name:'cancelar_venda',title:'Cancelar venda',destructive:true,kind:'cancelar_venda'},
+  {name:'atender_venda',title:'Atender venda',destructive:false,kind:'atender_venda'},
+  {name:'criar_compra',title:'Criar compra',destructive:false,kind:'compra'},
+  {name:'editar_compra',title:'Editar compra',destructive:false,kind:'editar_compra'},
+  {name:'excluir_compra',title:'Excluir compra',destructive:true,kind:'excluir_compra'},
+  {name:'confirmar_compra',title:'Confirmar compra',destructive:false,kind:'confirmar_compra'},
+  {name:'cancelar_compra',title:'Cancelar compra',destructive:true,kind:'cancelar_compra'},
+  {name:'criar_titulo',title:'Criar conta a pagar ou receber',destructive:false,types:{pagar:'conta_pagar',receber:'conta_receber'}},
+  {name:'efetivar_previsao',title:'Efetivar previsão',destructive:false,types:{pagar:'efetivar_conta_pagar',receber:'efetivar_conta_receber'}},
+  {name:'editar_titulo',title:'Editar conta a pagar ou receber',destructive:false,types:{pagar:'editar_conta_pagar',receber:'editar_conta_receber'}},
+  {name:'excluir_titulo',title:'Excluir conta a pagar ou receber',destructive:true,types:{pagar:'excluir_conta_pagar',receber:'excluir_conta_receber'}},
+  {name:'registrar_baixa',title:'Registrar pagamento ou recebimento',destructive:false,types:{pagar:'pagar_parcela',receber:'receber_parcela'}},
+  {name:'estornar_pagamento',title:'Estornar pagamento',destructive:true,kind:'estornar_pagamento'},
   // NFS-e simulada (sem validade fiscal): rascunho → emitir → (consultar) → cancelar; rascunho pode ser editado ou excluído.
-  {name:'criar_nota_servico',title:'Criar nota de serviço',destructive:false,kind:'nota_servico',
-    use:'Use quando o usuário quiser gerar uma nota fiscal de serviço (NFS-e) simulada, sem validade fiscal. Cria o rascunho com cliente, serviços (IDs de buscar_cadastros), competência, código IBGE de 7 dígitos do local da prestação, alíquota de ISS (2% a 5%), ISS retido e retenções federais (só para cliente com CNPJ). venda_id é opcional.',
-    avoid:'Não emite a nota (emitir_nota_servico) nem altera um rascunho existente (editar_nota_servico).'},
-  {name:'editar_nota_servico',title:'Editar nota de serviço',destructive:false,kind:'editar_nota_servico',
-    use:'Use para corrigir uma nota de serviço em rascunho. Envie registro_id e os dados completos com a lista nova de itens; obter_nota_servico devolve os dados atuais em dados_editaveis.',
-    avoid:'Não use em nota emitida ou cancelada: o conteúdo fica travado (cancele e crie outra).'},
-  {name:'emitir_nota_servico',title:'Emitir nota de serviço (simulação)',destructive:false,kind:'simular_nota_servico',
-    use:'Use quando o usuário quiser emitir uma nota de serviço em rascunho no simulador: valida os dados como o provedor real e gera número, chave de acesso e código de verificação de homologação. cenario: sucesso (padrão), rejeicao, demora ou timeout, para demonstrar cada retorno.',
-    avoid:'Não envia nada à prefeitura nem à Receita. Não use para nota já emitida.'},
-  {name:'consultar_nota_servico',title:'Consultar retorno da nota de serviço',destructive:false,kind:'consultar_resultado_nota_servico',
-    use:'Use quando uma nota de serviço estiver aguardando retorno (após demora ou timeout na emissão) para buscar o resultado da autorização simulada.',avoid:'Não use para ver os dados da nota (obter_nota_servico).'},
-  {name:'cancelar_nota_servico',title:'Cancelar nota de serviço',destructive:true,kind:'cancelar_nota_servico',
-    use:'Use quando o usuário quiser cancelar uma nota de serviço emitida. Exige codigo_motivo (1 erro na emissão, 2 serviço não prestado, 9 outros) e justificativa com pelo menos 15 caracteres. O PDF original é mantido.',
-    avoid:'Não use para rascunho (excluir_nota_servico).'},
-  {name:'excluir_nota_servico',title:'Excluir nota de serviço',destructive:true,kind:'excluir_nota_servico',
-    use:'Use para excluir uma nota de serviço ainda em rascunho. Exige motivo.',avoid:'Não use para nota emitida (cancelar_nota_servico).'},
+  {name:'criar_nota_servico',title:'Criar nota de serviço',destructive:false,kind:'nota_servico'},
+  {name:'editar_nota_servico',title:'Editar nota de serviço',destructive:false,kind:'editar_nota_servico'},
+  {name:'emitir_nota_servico',title:'Emitir nota de serviço (simulação)',destructive:false,kind:'simular_nota_servico'},
+  {name:'consultar_nota_servico',title:'Consultar retorno da nota de serviço',destructive:false,kind:'consultar_resultado_nota_servico'},
+  {name:'cancelar_nota_servico',title:'Cancelar nota de serviço',destructive:true,kind:'cancelar_nota_servico'},
+  {name:'excluir_nota_servico',title:'Excluir nota de serviço',destructive:true,kind:'excluir_nota_servico'},
 ]
 
 // O SDK valida os argumentos antes do handler. Variantes diferentes são afrouxadas (sem defaults,
@@ -133,16 +102,16 @@ function previewOnly(input:Record<string,unknown>) {
 function definition(spec:Spec):ActionDefinition {
   const kinds=spec.kind?[spec.kind]:Object.values(spec.types!)
   const typeNames=Object.keys(spec.types||{}) as [string,...string[]]
-  const schema=z.object({
+  const schema=documentInputSchema(z.object({
     empresa_id:companySchema,
     ...(spec.types?{tipo:z.enum(typeNames).optional().describe('Objeto da operação. Obrigatório na prévia.')}:{}),
     chave_operacao:z.string().uuid().optional().describe('UUID gerado por você para a prévia. Repita o mesmo valor ao reenviar os mesmos dados; dados diferentes exigem nova chave.'),
     dados:dadosSchema(kinds).optional().describe('Dados da operação. Use IDs retornados pelas consultas desta empresa; não invente IDs, preços ou datas.'),
     rascunho_id:z.string().uuid().optional().describe('Somente para executar: ID da prévia aprovada pelo usuário. Envie sozinho, sem tipo, chave_operacao ou dados.'),
-  }).strict()
+  }).strict(),spec.name)
   return {name:spec.name,title:spec.title,write:true,destructive:spec.destructive,kinds,schema,
     kindFor:input=>spec.kind || spec.types?.[String(input.tipo)],
-    description:`${spec.use} ${spec.avoid} Funciona em duas etapas: 1) chame sem rascunho_id para gerar a prévia com os valores calculados pelo ERP e mostre-a ao usuário; 2) somente após confirmação explícita do usuário, chame de novo apenas com rascunho_id para executar.`,
+    description:`${toolDescription(spec.name)} Funciona em duas etapas: 1) envie empresa_id, chave_operacao UUID, dados e tipo quando aplicável, sem rascunho_id, para gerar a prévia com os valores calculados pelo ERP e mostre-a ao usuário; 2) somente após confirmação explícita do usuário, use confirmar.argumentos (empresa_id e rascunho_id) na mesma tool para executar. Somente status saved com registro_id confirma a execução; verifique a situação do registro de negócio na consulta correspondente.`,
     requiredCapabilities:input=>{
       // A execução revalida as permissões da proposta salva dentro da transação.
       if(!previewOnly(input))return []

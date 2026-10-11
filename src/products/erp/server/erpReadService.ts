@@ -70,16 +70,16 @@ export const erpReadService = {
   async sale(tenantId: number, id: number) {
     const result = await getErpSaleDetails(tenantId, id)
     return {
-      sale: {...pickFields(result.sale, ['id','numero','cliente_id','cliente_nome','data_venda','status','situacao','validade_em','previsao_entrega','tipo_documento','atendimento_status','subtotal','tipo_desconto','desconto','frete','total','versao','observacoes','observacoes_pagamento']),data_vencimento:result.installments[0]?.data_vencimento},
+      sale: {...pickFields(result.sale, ['id','numero','cliente_id','cliente_nome','data_venda','status','situacao','validade_em','previsao_entrega','tipo_documento','atendimento_status','fiscal_status','venda_origem_id','vendedor_id','tabela_preco_id','transportadora_id','modalidade_frete','volumes','peso_bruto','peso_liquido','subtotal','tipo_desconto','desconto','frete','total','versao','observacoes','observacoes_pagamento']),data_vencimento:result.installments[0]?.data_vencimento},
       items: result.items.slice(0, 100).map(item => pickFields(item, ['id','tipo','item_id','descricao','quantidade','valor_unitario','desconto','total','quantidade_atendida'])),
       totalItems: result.items.length, itemsTruncated: result.items.length > 100,
-      installments: result.installments.slice(0,48).map(item=>pickFields(item,['data_vencimento','valor'])), installmentsTruncated:result.installments.length>48,
+      installments: result.installments.slice(0,48).map(item=>pickFields(item,['numero_parcela','descricao','data_vencimento','valor','conta_financeira_id','metodo_pagamento_id'])), installmentsTruncated:result.installments.length>48,
     }
   },
   stock(tenantId: number, input: PageQuery) { return listStockOperation(tenantId, 'posicao-estoque', input) },
   async purchase(tenantId: number, id: number) {
     const result = await getErpPurchaseDetails(tenantId, id)
-    return { purchase: {...pickFields(result.purchase, ['id','numero','fornecedor_id','fornecedor_nome','data_compra','status','subtotal','total','observacoes']),data_vencimento:result.installments[0]?.data_vencimento},
+    return { purchase: {...pickFields(result.purchase, ['id','numero','fornecedor_id','fornecedor_nome','data_compra','status','subtotal','tipo_desconto','desconto','frete','seguro','outras_despesas','impostos_retidos','gera_financeiro','total','observacoes']),data_vencimento:result.installments[0]?.data_vencimento},
       items: result.items.slice(0,100).map(item => ({...pickFields(item, ['id','tipo','item_id','descricao','quantidade','quantidade_recebida','valor_unitario','total']),desconto:item.valor_desconto})),
       installments: result.installments.slice(0,48).map(item=>pickFields(item,['data_vencimento','valor'])), installmentsTruncated:result.installments.length>48,
       totalItems: result.items.length, itemsTruncated: result.items.length > 100 }

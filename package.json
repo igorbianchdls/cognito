@@ -41,6 +41,7 @@
     "chatgptplugin:database-smoke": "node scripts/chatgptplugin-database-smoke.mjs",
     "chatgptplugin:live-read-smoke": "tsx scripts/chatgptplugin-live-read-smoke.ts",
     "chatgptplugin:all-tools-smoke": "tsx scripts/chatgptplugin-all-tools-smoke.ts",
+    "chatgptplugin:tool-documentation-smoke": "tsx scripts/chatgptplugin-tool-documentation-smoke.ts",
     "chatgptplugin:apply-database": "tsx scripts/chatgptplugin-apply-database.ts",
     "chatgptplugin:check-config": "tsx scripts/chatgptplugin-check-config.ts",
     "chatgptplugin:maintenance": "tsx scripts/chatgptplugin-maintenance.ts",

@@ -43,6 +43,9 @@ db.on('error',(error:Error)=>{console.error('Test connection lost: '+error.messa
 const nested:string[]=[],originalConnect=pg.Pool.prototype.connect,originalQuery=pg.Pool.prototype.query
 const settings=getPluginConfig()
 const selectedCase=process.argv.find(a=>a.startsWith('--case='))?.slice(7)
+const exportPdfs=process.argv.includes('--export-pdfs')
+const exportPdfName=process.argv.find(a=>a.startsWith('--export-pdf='))?.slice('--export-pdf='.length)
+function exportPdf(name:string,bytes:Buffer){if(exportPdfs||exportPdfName===name){mkdirSync('output/pdf',{recursive:true});writeFileSync('output/pdf/'+name,bytes)}}
 const erpRead=<T>(fn:()=>Promise<T>)=>runWithErpDatabaseContext({tenantId:company,userId:user,readOnly:true},fn)
 const fakeClient={release:()=>{},query:async(statement:string,params?:unknown[])=>{
  assert(active&&outer,'Adapter requires outer rollback transaction')
@@ -142,6 +145,20 @@ async function main(){let before='';try{
  (SELECT c.id FROM erp.categorias c WHERE empresa_id=$1 AND tipo='receita' AND ativo AND excluido_em IS NULL AND NOT EXISTS(SELECT 1 FROM erp.categorias f WHERE f.empresa_id=$1 AND f.categoria_pai_id=c.id AND ativo AND excluido_em IS NULL) ORDER BY id LIMIT 1) receita,
  (SELECT c.id FROM erp.categorias c WHERE empresa_id=$1 AND tipo='despesa' AND ativo AND excluido_em IS NULL AND NOT EXISTS(SELECT 1 FROM erp.categorias f WHERE f.empresa_id=$1 AND f.categoria_pai_id=c.id AND ativo AND excluido_em IS NULL) ORDER BY id LIMIT 1) despesa`,[company]))[0]
  const refs=Object.fromEntries(Object.entries(baseRefs).map(([k,v])=>[k,Number(v)]));assert(Object.values(refs).every(v=>v>0))
+ await check('Contexto para agentes: campos fiscais, comerciais e classificação DRE',async()=>{
+  const service=(await call('obter_cadastro',{tipo:'servicos',registro_id:refs.servico})).data.record;
+  const expectedService=(await sql('SELECT codigo_tributacao_nacional,codigo_servico_municipal,codigo_nbs FROM erp.servicos WHERE empresa_id=$1 AND id=$2',[company,refs.servico]))[0];
+  for(const field of ['codigo_tributacao_nacional','codigo_servico_municipal','codigo_nbs'])assert.equal(service[field],String(expectedService[field]||''));
+  const customer=(await call('obter_cadastro',{tipo:'clientes',registro_id:refs.cliente})).data.record;
+  const expectedCustomer=(await sql('SELECT limite_credito,bloqueio_comercial,tabela_preco_id FROM erp.entidades WHERE empresa_id=$1 AND id=$2',[company,refs.cliente]))[0];
+  assert.equal(customer.limite_credito,expectedCustomer.limite_credito);assert.equal(customer.bloqueio_comercial,expectedCustomer.bloqueio_comercial?'sim':'nao');assert.equal(customer.tabela_preco_id,expectedCustomer.tabela_preco_id==null?null:String(expectedCustomer.tabela_preco_id));
+  const category=(await call('obter_cadastro',{tipo:'categorias',registro_id:refs.receita})).data.record;
+  const expectedCategory=(await sql('SELECT c.fora_dre,g.codigo FROM erp.categorias c LEFT JOIN erp.dre_grupos g ON g.empresa_id=c.empresa_id AND g.id=c.dre_grupo_id WHERE c.empresa_id=$1 AND c.id=$2',[company,refs.receita]))[0];
+  assert.equal(category.fora_dre,expectedCategory.fora_dre);assert.equal(category.dre_grupo_codigo,expectedCategory.codigo);
+  const existing=(await sql("SELECT id,vendedor_id,tabela_preco_id,transportadora_id,modalidade_frete,volumes,peso_bruto,peso_liquido,fiscal_status,venda_origem_id FROM erp.vendas WHERE empresa_id=$1 AND excluido_em IS NULL ORDER BY id LIMIT 1",[company]))[0];assert(existing);
+  const sale=(await call('obter_venda',{venda_id:Number(existing.id)})).data.sale;
+  for(const field of ['vendedor_id','tabela_preco_id','transportadora_id','modalidade_frete','volumes','peso_bruto','peso_liquido','fiscal_status','venda_origem_id'])assert.equal(sale[field],existing[field]);
+ })
  const registrations:Record<string,Record<string,unknown>>={cliente:{nome:marker+' cliente',tipo:'fisica',email:'mcp@example.invalid',telefone:'11999990000'},fornecedor:{nome:marker+' fornecedor',tipo:'juridica'},vendedor:{nome:marker+' vendedor',tipo:'fisica'},produto:{nome:marker+' produto',preco:100,controla_estoque:'nao'},servico:{nome:marker+' serviço',preco:100},categoria:{nome:marker+' categoria',tipo:'receita',dre_grupo_codigo:1},conta_financeira:{nome:marker+' conta',tipo:'caixa',saldo_inicial:0,data_saldo_inicial:today}}
  const moduleNames:Record<string,string>={cliente:'clientes',fornecedor:'fornecedores',vendedor:'vendedores',produto:'produtos',servico:'servicos',categoria:'categorias',conta_financeira:'contas-financeiras'}
  for(const [kind,data] of Object.entries(registrations))await check('CRUD e idempotência: '+kind,async()=>{
@@ -202,8 +219,22 @@ async function main(){let before='';try{
   await mutate('alterar_orcamento',{tipo:'enviar',dados:{registro_id:q}});await mutate('alterar_orcamento',{tipo:'aprovar',dados:{registro_id:q}});
   await mutate('arquivar_documento_comercial',{tipo:'ordem_servico',dados:{registro_id:os}});
   await mutate('arquivar_documento_comercial',{tipo:'orcamento',dados:{registro_id:q}});
-  const pdf=(await call('obter_documento_comercial',{tipo:'orcamento',registro_id:q,revisao:1})).data.record;
-  const response=await downloadCommercial(new Request(String(pdf.pdf_url)),{params:Promise.resolve({token:new URL(String(pdf.pdf_url)).pathname.split('/').at(-1)!})});assert.equal(response.status,200);assert.equal(response.headers.get('content-type'),'application/pdf');assert(Buffer.from(await response.arrayBuffer()).subarray(0,5).toString()==='%PDF-');
+  for(const revisao of [undefined,1]){
+   const document=(await call('obter_documento_comercial',{tipo:'ordem_servico',registro_id:os,...(revisao?{revisao}:{})})).data.record;
+   const response=await downloadCommercial(new Request(String(document.pdf_url)),{params:Promise.resolve({token:new URL(String(document.pdf_url)).pathname.split('/').at(-1)!})});assert.equal(response.status,200);assert.equal(response.headers.get('content-type'),'application/pdf');
+   const bytes=Buffer.from(await response.arrayBuffer());assert.equal(bytes.subarray(0,5).toString(),'%PDF-');assert(!bytes.includes(Buffer.from('SEGREDO_INTERNO_MCP')));
+   if(revisao)exportPdf('ordem-servico-tool-teste.pdf',bytes);
+  }
+  const attachments=(await call('listar_anexos',{documento:'ordem_servico',registro_id:os})).data.records;assert(attachments.some((a:{link_download?:string})=>a.link_download));
+  for(const revisao of [undefined,1]){
+   const pdf=(await call('obter_documento_comercial',{tipo:'orcamento',registro_id:q,...(revisao?{revisao}:{})})).data.record;
+   const token=new URL(String(pdf.pdf_url)).pathname.split('/').at(-1)!;
+   const response=await downloadCommercial(new Request(String(pdf.pdf_url)),{params:Promise.resolve({token})});assert.equal(response.status,200);assert.equal(response.headers.get('content-type'),'application/pdf');
+   const bytes=Buffer.from(await response.arrayBuffer());assert.equal(bytes.subarray(0,5).toString(),'%PDF-');assert(!bytes.includes(Buffer.from('SEGREDO_INTERNO_MCP')));
+   if(revisao)exportPdf('proposta-comercial-tool-teste.pdf',bytes);
+   const invalid=await downloadCommercial(new Request(String(pdf.pdf_url)+'x'),{params:Promise.resolve({token:token+'x'})});assert.equal(invalid.status,404);
+  }
+  const proposalAttachments=(await call('listar_anexos',{documento:'venda',registro_id:q})).data.records;assert(proposalAttachments.some((a:{link_download?:string})=>a.link_download));
   const sale=await mutate('converter_orcamento',{dados:{registro_id:q}}),fromOS=await mutate('converter_ordem_servico',{tipo:'venda',dados:{registro_id:os}});assert.equal(sale,fromOS);detail=(await call('obter_ordem_servico',{registro_id:os})).data;assert.equal(Number(detail.record.venda_id),sale);
   const complex={...commercial(true),validade_em:due,desconto:10,frete:5,parcelas:[{data_vencimento:due,valor:40},{data_vencimento:due,valor:55}]},draft=await mutate('criar_venda',{tipo:'orcamento',dados:complex});await mutate('editar_venda',{tipo:'orcamento',dados:{...complex,registro_id:draft,observacoes:'Condição comercial revisada'}});assert.equal((await call('obter_venda',{venda_id:draft})).data.installments.length,2);
   await mutate('alterar_orcamento',{tipo:'recusar',dados:{registro_id:draft,motivo:reason}});const denied=await prepare('converter_orcamento',{dados:{registro_id:draft}});await reject('converter_orcamento',{rascunho_id:denied.rascunho_id},'INVALID_STATE');
@@ -282,6 +313,7 @@ async function main(){let before='';try{
   const source=await erpRead(()=>getServiceInvoice(company,123)),{venda_id:_sale,...base}=source.input
   const data={...base,observacoes:marker,data_competencia:today,iss_retido:false,retencoes_federais:{},itens:[{...base.itens[0],quantidade:2,valor_unitario:150,desconto:0}]}
   const draftOnly=await mutate('criar_nota_servico',{dados:data})
+  const listed=(await call('listar_notas_servico',{status:'rascunho'})).data;assert(listed.records.some((r:{id:string})=>Number(r.id)===draftOnly));
   await mutate('editar_nota_servico',{dados:{...data,registro_id:draftOnly,observacoes:marker+' editada'}})
   await mutate('excluir_nota_servico',{dados:{registro_id:draftOnly,motivo:reason}})
   for(const scenario of ['sucesso','rejeicao','demora','timeout']){
@@ -293,7 +325,8 @@ async function main(){let before='';try{
    assert.equal(detail.record.status,'emitida');assert.equal(Number(detail.record.valor_total),300)
    const pdf=await erpRead(()=>getServiceInvoicePdf(company,id));assert.equal(pdf.layoutVersion,2);assert.equal(pdf.hash,createHash('sha256').update(pdf.bytes).digest('hex'));assert(pdf.bytes.subarray(0,8).toString().startsWith('%PDF-'))
    const link=detail.record.pdf_url as string,token=link.split('/').pop()!
-   const download=await downloadInvoice(new Request(link),{params:Promise.resolve({token})});assert.equal(download.status,200);assert.equal(download.headers.get('content-type'),'application/pdf');assert.equal(download.headers.get('X-PDF-Layout-Version'),'2');assert.equal(createHash('sha256').update(Buffer.from(await download.arrayBuffer())).digest('hex'),pdf.hash)
+   const download=await downloadInvoice(new Request(link),{params:Promise.resolve({token})});assert.equal(download.status,200);assert.equal(download.headers.get('content-type'),'application/pdf');assert.equal(download.headers.get('X-PDF-Layout-Version'),'2');const bytes=Buffer.from(await download.arrayBuffer());assert.equal(createHash('sha256').update(bytes).digest('hex'),pdf.hash)
+   if(scenario==='sucesso'){exportPdf('nota-servico-tool-simulada.pdf',bytes);assert.equal(Number((await call('obter_nota_servico',{numero:String(detail.record.numero)})).data.record.id),id)}
    const xmlLink=detail.record.xml_url as string,xml=await downloadInvoice(new Request(xmlLink),{params:Promise.resolve({token:xmlLink.split('/').pop()!})});assert.equal(xml.status,200);assert((await xml.text()).includes('<'))
    await mutate('cancelar_nota_servico',{dados:{registro_id:id,codigo_motivo:'9',motivo:reason}})
    assert.equal((await call('obter_nota_servico',{nota_id:id})).data.record.status,'cancelada');assert.equal((await erpRead(()=>getServiceInvoicePdf(company,id,pdf.version,2))).hash,pdf.hash)

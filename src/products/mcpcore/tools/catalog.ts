@@ -2,6 +2,8 @@ import { z } from 'zod'
 import type { ErpCapability } from '@/products/erp/shared/professionalContracts'
 import type { ErpQueries } from '../application/erpQueries'
 import { outputs } from './outputs'
+import {toolDescription} from './descriptions'
+import {documentInputSchema} from './inputDocumentation'
 import { ErpDomainError } from '@/products/erp/shared/erpErrors'
 import { PluginError } from '../shared/contracts'
 import { createServiceInvoiceLinkToken, SERVICE_INVOICE_LINK_TTL_SECONDS, SERVICE_INVOICE_PUBLIC_PATH } from '@/products/erp/server/fiscal/serviceInvoiceLinks'
@@ -39,45 +41,45 @@ async function noteIdByNumber(q:ErpQueries,companyId:number,numero:string){
   if(!match)throw new ErpDomainError('NOT_FOUND','Nota de serviço não encontrada.',404)
   return Number(match.id)
 }
-export const tools: ToolDefinition[] = [
-  {name:'listar_ordens_servico',title:'Listar ordens de serviço',output:outputs.page,description:'Consulta ordens de serviço por cliente, número, equipamento ou situação, com paginação e resumo de todos os registros filtrados.',schema:z.object({...paging,status:z.enum(['rascunho','orcamento_pendente','aprovada','em_execucao','concluida','cancelada']).optional()}).strict(),capabilities:['erp.vendas.visualizar'],execute:(q,id,input)=>q.serviceOrders({tenantId:id,query:input.busca as string|undefined,status:input.status as string|undefined,page:Number(input.pagina),pageSize:Number(input.por_pagina)})},
-  {name:'obter_ordem_servico',title:'Detalhes da ordem de serviço',output:outputs.serviceOrder,description:'Consulta cliente, equipamento, itens ativos, valores, prazo, documentos vinculados e histórico da OS. registro_id vem de listar_ordens_servico.',schema:z.object({empresa_id:company,registro_id:z.number().int().positive()}).strict(),capabilities:['erp.vendas.visualizar'],execute:(q,id,input)=>q.serviceOrder(id,Number(input.registro_id))},
-  {name:'obter_documento_comercial',title:'PDF de proposta ou ordem de serviço',output:outputs.commercialDocument,description:'Retorna o link temporário do PDF de orçamento ou OS. Sem revisao, o PDF é gerado com os dados atuais e não fica arquivado. Com revisao, baixa o original imutável do Storage privado. Não é nota fiscal. O link expira em 15 minutos; se os dados atuais mudarem, solicite outro link.',schema:z.object({empresa_id:company,tipo:z.enum(['orcamento','ordem_servico']),registro_id:z.number().int().positive(),revisao:z.number().int().positive().optional()}).strict(),capabilities:['erp.vendas.visualizar'],execute:async(q,id,input,ctx)=>{
+const readTools: ToolDefinition[] = [
+  {name:'listar_ordens_servico',title:'Listar ordens de serviço',output:outputs.page,description:toolDescription('listar_ordens_servico'),schema:z.object({...paging,status:z.enum(['rascunho','orcamento_pendente','aprovada','em_execucao','concluida','cancelada']).optional()}).strict(),capabilities:['erp.vendas.visualizar'],execute:(q,id,input)=>q.serviceOrders({tenantId:id,query:input.busca as string|undefined,status:input.status as string|undefined,page:Number(input.pagina),pageSize:Number(input.por_pagina)})},
+  {name:'obter_ordem_servico',title:'Detalhes da ordem de serviço',output:outputs.serviceOrder,description:toolDescription('obter_ordem_servico'),schema:z.object({empresa_id:company,registro_id:z.number().int().positive()}).strict(),capabilities:['erp.vendas.visualizar'],execute:(q,id,input)=>q.serviceOrder(id,Number(input.registro_id))},
+  {name:'obter_documento_comercial',title:'PDF de proposta ou ordem de serviço',output:outputs.commercialDocument,description:toolDescription('obter_documento_comercial'),schema:z.object({empresa_id:company,tipo:z.enum(['orcamento','ordem_servico']),registro_id:z.number().int().positive(),revisao:z.number().int().positive().optional()}).strict(),capabilities:['erp.vendas.visualizar'],execute:async(q,id,input,ctx)=>{
     const tipo=input.tipo as 'orcamento'|'ordem_servico',result=await q.commercialDocument(id,tipo,Number(input.registro_id),input.revisao as number|undefined);
     const link=createCommercialLink({empresa:id,usuario:ctx.userId,tipo,registro:Number(input.registro_id),versao:result.record.versao,...(input.revisao?{revisao:Number(input.revisao)}:{})});
     return {...result,record:{...result.record,pdf_url:new URL(COMMERCIAL_LINK_PATH+link.token,ctx.origin).href,link_expira_em:link.expiresAt}};
   }},
-  { name: 'resumo_erp', title: 'Resumo do ERP', output: outputs.overview, description: 'Use quando o usuário pedir uma visão geral da empresa: saldos a pagar e receber, vencidos, vendas em rascunho, compras abertas e clientes ativos. Não use para listas detalhadas. Requer permissão de todas essas áreas.',
+  { name: 'resumo_erp', title: 'Resumo do ERP', output: outputs.overview, description: toolDescription('resumo_erp'),
     schema: z.object({ empresa_id: company }).strict(),
     capabilities: ['erp.relatorios.visualizar','erp.financeiro.visualizar','erp.vendas.visualizar','erp.compras.visualizar','erp.cadastros.visualizar'],
     execute: (q, id) => q.overview(id) },
-  { name: 'buscar_cadastros', title: 'Buscar cadastros', output: outputs.page, description: 'Use quando precisar encontrar clientes, fornecedores, vendedores, produtos, serviços, categorias ou contas financeiras por nome, e para obter os IDs usados nas demais tools. Para registrar baixas, busque contas-financeiras com status ativo.',
+  { name: 'buscar_cadastros', title: 'Buscar cadastros', output: outputs.page, description: toolDescription('buscar_cadastros'),
     schema: z.object({ ...paging, tipo: registrationTypes, status: z.enum(['ativo','inativo']).optional() }).strict(),
     capabilities: ['erp.cadastros.visualizar'], requiredCapabilities: registrationCapabilities,
     execute: (q,id,input) => q.page(id,input.tipo as 'clientes', { ...page(input), filters: input.status ? { status: String(input.status) } : {} }) },
-  {name:'obter_cadastro',title:'Detalhes do cadastro',output:outputs.record,description:'Use quando o usuário pedir os dados completos de um cadastro já localizado (ID de buscar_cadastros).',
+  {name:'obter_cadastro',title:'Detalhes do cadastro',output:outputs.record,description:toolDescription('obter_cadastro'),
     schema:z.object({empresa_id:company,tipo:registrationTypes,registro_id:z.number().int().positive()}).strict(),
     capabilities:['erp.cadastros.visualizar'],requiredCapabilities:registrationCapabilities,
     execute:(q,id,input)=>q.registration(id,input.tipo as 'clientes',Number(input.registro_id))},
-  { name: 'listar_vendas', title: 'Listar vendas e orçamentos', output: outputs.page, description: 'Use quando o usuário perguntar sobre vendas ou orçamentos: por número, cliente, status ou período do documento. summary.valor_total inclui todos os filtrados. Use tipo_documento orcamento para orçamentos.',
+  { name: 'listar_vendas', title: 'Listar vendas e orçamentos', output: outputs.page, description: toolDescription('listar_vendas'),
     schema: z.object({ ...paging, tipo_documento: z.enum(['venda','orcamento']).default('venda'), ordenar: z.enum(['-data','data','-total','total']).optional().describe('Ordenação de todas as páginas; padrão: mais recentes.'),
       status: z.enum(['rascunho','confirmada','cancelada','faturada']).optional(),situacao:z.enum(QUOTE_SITUATIONS).optional().describe('Situação comercial do orçamento; use junto com tipo_documento orcamento.'),inicio:isoDate,fim:isoDate }).strict(),
     capabilities: ['erp.vendas.visualizar'],
     execute: (q,id,input) => q.page(id,'pedidos', { ...page(input),
       filters: {...commercialFilters(input),...(input.tipo_documento==='orcamento'?{tipo_documento:'orcamento'}:{})} }) },
-  { name: 'obter_venda', title: 'Detalhes da venda', output: outputs.sale, description: 'Use para ver itens, valores e vencimentos de uma venda ou orçamento pelo ID retornado por listar_vendas. Retorna até 100 itens.',
+  { name: 'obter_venda', title: 'Detalhes da venda', output: outputs.sale, description: toolDescription('obter_venda'),
     schema: z.object({ empresa_id: company, venda_id: z.number().int().positive() }).strict(), capabilities: ['erp.vendas.visualizar'],
     execute: (q,id,input) => q.sale(id, input.venda_id as number) },
-  { name:'listar_compras', title:'Listar compras', output: outputs.page, description:'Use quando o usuário perguntar sobre compras de fornecedores: por número, fornecedor, status ou período do documento.',
+  { name:'listar_compras', title:'Listar compras', output: outputs.page, description:toolDescription('listar_compras'),
     schema:z.object({...paging,status:z.enum(['rascunho','confirmada','parcialmente_recebida','recebida','cancelada']).optional(),inicio:isoDate,fim:isoDate,ordenar:z.enum(['-data','data','-total','total']).optional()}).strict(), capabilities:['erp.compras.visualizar'],
     execute:(q,id,input) => q.page(id,'pedidos-compra',{...page(input),filters:commercialFilters(input)}) },
-  { name:'obter_compra', title:'Detalhes da compra', output: outputs.purchase, description:'Use para ver itens, valores e vencimentos de uma compra pelo ID retornado por listar_compras. Retorna até 100 itens.',
+  { name:'obter_compra', title:'Detalhes da compra', output: outputs.purchase, description:toolDescription('obter_compra'),
     schema:z.object({empresa_id:company,compra_id:z.number().int().positive()}).strict(),capabilities:['erp.compras.visualizar'],
     execute:(q,id,input) => q.purchase(id,input.compra_id as number) },
-  {name:'listar_notas_servico',title:'Listar notas de serviço',output:outputs.page,description:'Use quando o usuário perguntar sobre notas fiscais de serviço (NFS-e) simuladas: por número, cliente, situação ou competência, ou para obter o ID usado nas demais tools de nota. busca procura no número da nota e no nome do cliente (tomador), nunca no nome da sua empresa: para listar todas, omita busca. Simulação sem validade fiscal.',
+  {name:'listar_notas_servico',title:'Listar notas de serviço',output:outputs.page,description:toolDescription('listar_notas_servico'),
     schema:z.object({...paging,status:z.enum(['rascunho','aguardando_retorno','emitida','falha','cancelada']).optional(),inicio:isoDate,fim:isoDate}).strict(),capabilities:['erp.vendas.visualizar'],
     execute:(q,id,input)=>q.serviceInvoices(id,{busca:input.busca as string|undefined,status:input.status as string|undefined,inicio:input.inicio as string|undefined,fim:input.fim as string|undefined,pagina:Number(input.pagina),por_pagina:Number(input.por_pagina)})},
-  {name:'obter_nota_servico',title:'Detalhes da nota de serviço',output:outputs.serviceInvoice,description:'Use para ver itens, impostos, retenções, histórico e situação de uma nota de serviço simulada: informe nota_id (ID de listar_notas_servico) ou numero (o número da NFS-e, ex.: 13). Devolve pdf_url (DANFSe) e, se autorizada, xml_url: links temporários que abrem sem login por 15 minutos (links_expiram_em); depois disso, chame de novo para gerar outros.',
+  {name:'obter_nota_servico',title:'Detalhes da nota de serviço',output:outputs.serviceInvoice,description:toolDescription('obter_nota_servico'),
     schema:z.object({empresa_id:company,nota_id:z.number().int().positive().optional(),numero:z.string().trim().min(1).max(30).optional().describe('Número da NFS-e, quando não tiver o ID.')}).strict(),capabilities:['erp.vendas.visualizar'],
     execute:async(q,id,input,context)=>{if(input.nota_id===undefined&&input.numero===undefined)throw new PluginError('INVALID_INPUT','Informe nota_id ou numero.',400,undefined,[{campo:'nota_id',motivo:'Obrigatório (ou numero)'}])
       const noteId=input.nota_id!==undefined?Number(input.nota_id):await noteIdByNumber(q,id,String(input.numero)),detail=await q.serviceInvoice(id,noteId),link=(kind:'pdf'|'xml',path:unknown)=>path?new URL(SERVICE_INVOICE_PUBLIC_PATH+createServiceInvoiceLinkToken({empresa:id,usuario:context.userId,nota:noteId,tipo:kind}).token,context.origin).toString():null
@@ -87,35 +89,36 @@ export const tools: ToolDefinition[] = [
       return {...rest,dados_editaveis:editable,links_expiram_em:new Date(Date.now()+SERVICE_INVOICE_LINK_TTL_SECONDS*1000).toISOString(),record:{...detail.record,pdf_url:link('pdf',detail.record.pdf_url),xml_url:link('xml',detail.record.xml_url),
         valor_iss:totals.valor_iss,retencao_iss:totals.retencao_iss,retencoes_federais:federal,valor_liquido:totals.valor_liquido,
         local_prestacao:place&&place===String(issuer.codigo_municipio||'')&&issuer.municipio?`${issuer.municipio} (${place})`:place||null}}}},
-  { name: 'consultar_financeiro', title: 'Contas a pagar e receber', output: outputs.page, description: 'Use quando o usuário perguntar sobre contas a pagar ou a receber, vencimentos, atrasos ou saldos em aberto. Retorna parcelas; summary considera todas as filtradas. Não efetua pagamentos (registrar_baixa).',
+  { name: 'consultar_financeiro', title: 'Contas a pagar e receber', output: outputs.page, description: toolDescription('consultar_financeiro'),
     schema: z.object({ ...paging, tipo: z.enum(['pagar','receber']), status: z.enum(['aberto','pendente','pago','parcial','vencido','cancelado','renegociado']).optional(),
       vencimento_inicio: isoDate, vencimento_fim: isoDate, ordenar: z.enum(['vencimento','-vencimento','-saldo','saldo','-valor']).optional().describe('Ordenação de todas as páginas; padrão: vencimento mais próximo.') }).strict(), capabilities: ['erp.financeiro.visualizar'],
     execute: (q,id,input) => q.page(id,input.tipo === 'pagar' ? 'contas-a-pagar' : 'contas-a-receber', {
       ...page(input), filters: Object.fromEntries(['status','vencimento_inicio','vencimento_fim'].filter(k => input[k]).map(k => [k,String(input[k])])) }) },
-  {name:'obter_titulo_financeiro',title:'Detalhes do título financeiro',output:outputs.financialTitle,description:'Use para ver um título a pagar ou receber com todas as parcelas e o histórico, pelo conta_id da listagem. record.tipo_lancamento distingue previsao de efetivo; previsão precisa de efetivar_previsao antes da baixa. Use o conta_id para editar_titulo e excluir_titulo, nunca o ID da parcela.',
+  {name:'obter_titulo_financeiro',title:'Detalhes do título financeiro',output:outputs.financialTitle,description:toolDescription('obter_titulo_financeiro'),
     schema:z.object({empresa_id:company,tipo:z.enum(['pagar','receber']),conta_id:z.number().int().positive()}).strict(),capabilities:['erp.financeiro.visualizar'],
     execute:(q,id,input)=>q.financialTitle(id,input.tipo as 'pagar',Number(input.conta_id))},
-  {name:'obter_parcela_financeira',title:'Detalhes da parcela',output:outputs.installment,description:'Use para ver uma parcela a pagar ou receber, a composição do saldo e o histórico de pagamentos, antes de registrar_baixa.',
+  {name:'obter_parcela_financeira',title:'Detalhes da parcela',output:outputs.installment,description:toolDescription('obter_parcela_financeira'),
     schema:z.object({empresa_id:company,tipo:z.enum(['pagar','receber']),parcela_id:z.number().int().positive()}).strict(),capabilities:['erp.financeiro.visualizar'],
     execute:(q,id,input)=>q.installment(id,input.tipo as 'pagar',Number(input.parcela_id))},
-  {name:'listar_anexos',title:'Listar anexos',output:outputs.page,description:'Use quando o usuário pedir os arquivos anexados (PDF, imagem, XML, comprovante de pagamento) de uma conta a pagar ou receber, pagamento, venda, compra, contrato ou ordem de serviço. Devolve um link de download válido por 60 segundos; não guarde nem repita links vencidos.',
+  {name:'listar_anexos',title:'Listar anexos',output:outputs.page,description:toolDescription('listar_anexos'),
     schema:z.object({empresa_id:company,documento:z.enum(['conta_pagar','conta_receber','pagamento','venda','compra','contrato','ordem_servico']),registro_id:z.number().int().positive()}).strict(),
     capabilities:['erp.financeiro.visualizar','erp.vendas.visualizar','erp.compras.visualizar'],
     requiredCapabilities:input=>[['conta_pagar','conta_receber','pagamento'].includes(String(input.documento))?'erp.financeiro.visualizar':input.documento==='compra'?'erp.compras.visualizar':'erp.vendas.visualizar'],
     execute:(q,id,input)=>q.attachments(id,input.documento as 'venda',Number(input.registro_id))},
-  {name:'listar_pagamentos',title:'Listar pagamentos',output:outputs.page,description:'Use quando o usuário perguntar sobre pagamentos ou recebimentos já registrados, ou para obter o ID usado em estornar_pagamento.',
+  {name:'listar_pagamentos',title:'Listar pagamentos',output:outputs.page,description:toolDescription('listar_pagamentos'),
     schema:z.object({empresa_id:company,pagina:paging.pagina,por_pagina:paging.por_pagina,tipo:z.enum(['receber','pagar']).optional()}).strict(),capabilities:['erp.financeiro.visualizar'],
     execute:(q,id,input)=>q.payments(id,{page:Number(input.pagina),pageSize:Number(input.por_pagina),type:input.tipo as string|undefined})},
-  { name: 'consultar_estoque', title: 'Consultar estoque', output: outputs.page, description: 'Use quando o usuário perguntar quanto há de um produto, reservas ou disponibilidade por local.',
+  { name: 'consultar_estoque', title: 'Consultar estoque', output: outputs.page, description: toolDescription('consultar_estoque'),
     schema: z.object(paging).strict(), capabilities: ['erp.estoque.visualizar'], execute: (q,id,input) => q.stock(id,page(input)) },
-  {name:'analisar_periodo',title:'Indicadores por mês',output:outputs.analysis,description:'Use quando o usuário pedir evolução ou totais mensais de vendas, compras, contas a pagar ou a receber num período de até 366 dias. Vendas e compras consideram documentos confirmados; financeiro considera saldo pendente por vencimento.',
+  {name:'analisar_periodo',title:'Indicadores por mês',output:outputs.analysis,description:toolDescription('analisar_periodo'),
     schema:z.object({empresa_id:company,tipo:z.enum(['vendas','compras','pagar','receber']),inicio:requiredDate,fim:requiredDate}).strict(),capabilities:['erp.relatorios.visualizar'],
     requiredCapabilities:input=>['erp.relatorios.visualizar',input.tipo==='vendas'?'erp.vendas.visualizar':input.tipo==='compras'?'erp.compras.visualizar':'erp.financeiro.visualizar'],
     execute:(q,id,input)=>q.analysis(id,input.tipo as 'vendas',String(input.inicio),String(input.fim))},
-  { name:'consultar_relatorio',title:'Consultar relatório',output:outputs.report,description:'Use quando o usuário pedir margem (margem-vendas, margem-itens, margem-clientes: receita líquida menos custo), orçado × realizado do ano (orcado-realizado), metas de venda e atingimento (metas), a DRE (dre: "tive lucro?", receita líquida, lucro bruto, resultado operacional e lucro líquido pelos 9 grupos, por competência), fluxo de caixa (realizado e previsto, com saldo acumulado: "vou ter caixa?"), contas em atraso por cliente ou fornecedor (aging-receber/aging-pagar: "quem está me devendo?"), resultado por competência ou por caixa, posição financeira, vendas por cliente/vendedor/produto, comissões a pagar por vendedor (comissoes), compras por fornecedor/categoria ou valor do estoque, num período de até 366 dias. No aging, a data final é a data de referência do atraso.',
+  { name:'consultar_relatorio',title:'Consultar relatório',output:outputs.report,description:toolDescription('consultar_relatorio'),
     schema:z.object({empresa_id:company,tipo:z.enum(['dre','margem-vendas','margem-itens','margem-clientes','orcado-realizado','metas','fluxo-de-caixa','aging-receber','aging-pagar','dre-competencia','dre-caixa','posicao-financeira','vendas-clientes','vendas-vendedores','vendas-produtos','compras-fornecedores','compras-categorias','valor-estoque','comissoes']),
       inicio:requiredDate,fim:requiredDate,pagina:paging.pagina,por_pagina:paging.por_pagina}).strict(),capabilities:['erp.relatorios.visualizar'],
     requiredCapabilities:input => ['erp.relatorios.visualizar', String(input.tipo).startsWith('vendas-') || String(input.tipo).startsWith('margem-') || input.tipo === 'metas' || input.tipo === 'comissoes' ? 'erp.vendas.visualizar' : String(input.tipo).startsWith('compras-') ? 'erp.compras.visualizar' : input.tipo === 'valor-estoque' ? 'erp.estoque.visualizar' : 'erp.financeiro.visualizar'],
     execute:(q,id,input) => q.report(id,String(input.tipo),String(input.inicio),String(input.fim),page(input)) },
 ]
+export const tools:ToolDefinition[]=readTools.map(tool=>({...tool,schema:documentInputSchema(tool.schema,tool.name)}))
 export const accessSchema = z.object({ empresa_id: company }).strict()

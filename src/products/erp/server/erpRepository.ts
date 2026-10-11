@@ -2237,6 +2237,7 @@ export async function getErpEntityRecord(input: {
   } else if (input.entityId === 'categorias') {
     sql = `SELECT id::text, nome, tipo, COALESCE(metadata ->> 'descricao', '') AS descricao,
       COALESCE(categoria_pai_id::text, 'nenhuma') AS categoria_pai_id, CASE WHEN fora_dre THEN 'fora' ELSE COALESCE(dre_grupo_id::text, 'nao_classificado') END AS dre_grupo_id,
+      fora_dre, (SELECT g.codigo FROM erp.dre_grupos g WHERE g.empresa_id=categorias.empresa_id AND g.id=categorias.dre_grupo_id) AS dre_grupo_codigo,
       CASE WHEN ativo THEN 'ativo' ELSE 'inativo' END AS status, versao
       FROM erp.categorias WHERE empresa_id = $1 AND id = $2 AND excluido_em IS NULL`
   } else {
