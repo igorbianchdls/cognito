@@ -21,7 +21,7 @@ const fixture=installFiscalStorageFixture({buckets:['erp-fiscal','erp-comercial'
 let tables:string[]=[]
 async function fingerprint(){await db.query('RESET ROLE');const rows=[];for(const table of tables)rows.push([table,(await db.query(`SELECT count(*)::int n,md5(coalesce(string_agg(to_jsonb(t)::text,'|' ORDER BY to_jsonb(t)::text),'')) hash FROM erp."${table}" t`)).rows[0]]);return createHash('sha256').update(JSON.stringify(rows)).digest('hex')}
 async function main(){try{
- await db.connect();tables=(await db.query("SELECT tablename FROM pg_tables WHERE schemaname='erp' ORDER BY tablename")).rows.map(r=>r.tablename);const before=await fingerprint();await db.query('BEGIN');
+ await db.connect();tables=(await db.query("SELECT tablename FROM pg_tables WHERE schemaname='erp' ORDER BY tablename")).rows.map((r:{tablename:string})=>r.tablename);const before=await fingerprint();await db.query('BEGIN');
  await db.query(readFileSync('supabase/migrations/20261010130000_documentos_anexos_orcamento.sql','utf8').replace(/^BEGIN;\s*/,'').replace(/COMMIT;\s*$/,''));
  await db.query("SELECT set_config('app.erp_tenant_id',$1,true),set_config('app.erp_empresa_id',$1,true),set_config('app.erp_user_id',$2,true),set_config('app.erp_time_zone','America/Fortaleza',true)",['2','3']);
  const client:SQLClient={release(){},async query(sql,params){assertErpTenantScopedQuery(sql,params);await db.query(/\berp\.[a-z_][a-z0-9_]*/i.test(sql)?'SET LOCAL ROLE erp_runtime':'RESET ROLE');return db.query(sql,params) as never}};

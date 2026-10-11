@@ -7,7 +7,7 @@ import {installFiscalStorageFixture} from './fiscal-storage-fixture.mjs'
 import {runWithErpDatabaseContext,getErpDatabaseContext} from '../../src/lib/erpDatabaseContext'
 import {runWithErpTransactionClient,closePool,type SQLClient} from '../../src/lib/postgres'
 import {createServiceInvoice,getServiceInvoice,getServiceInvoicePdf,generateServiceInvoicePdf,actOnServiceInvoice} from '../../src/products/erp/server/fiscal/serviceInvoiceRepository'
-import {renderServiceInvoicePdf,SERVICE_INVOICE_PDF_LAYOUT_VERSION} from '../../src/products/erp/server/fiscal/serviceInvoicePdf'
+import {renderServiceInvoicePdf,SERVICE_INVOICE_PDF_LAYOUT_VERSION,type InvoicePdf} from '../../src/products/erp/server/fiscal/serviceInvoicePdf'
 import {serviceInvoiceInputSchema} from '../../src/products/erp/shared/serviceInvoiceContracts'
 
 config({path:'.env.local',quiet:true})
@@ -50,9 +50,11 @@ async function main(){try{
   await actOnServiceInvoice(company,user,id,{acao:'cancelar',chave_operacao:randomUUID(),versao:2,codigo_motivo:'9',motivo:'Encerramento do teste de apresentação do PDF'})
   file=await getServiceInvoicePdf(company,id);assert.equal(file.version,3);assert.equal((await getServiceInvoice(company,id)).record.status,'cancelada');writeFileSync(folder+'/cancelada.pdf',file.bytes);checks.push('Cancelamento preserva versões anteriores e gera marca específica')
   const detail=await getServiceInvoice(company,id)
-  const sample={...detail.record,items:detail.items,totals:detail.totals,consulta_url:`https://cognito-seven.vercel.app/erp/vendas/notas-fiscais?nota_id=${id}`,status:'rascunho'} as Parameters<typeof renderServiceInvoicePdf>[0]
+  const sample:InvoicePdf={...detail.record,numero:detail.record.numero,data_competencia:detail.record.data_competencia,
+   emitente_snapshot:detail.record.emitente_snapshot,destinatario_snapshot:detail.record.destinatario_snapshot,valor_total:detail.record.valor_total,
+   items:detail.items,totals:detail.totals,consulta_url:`https://cognito-seven.vercel.app/erp/vendas/notas-fiscais?nota_id=${id}`,status:'rascunho'}
   writeFileSync(folder+'/dados-ausentes.pdf',renderServiceInvoicePdf({...sample,emitente_snapshot:{},destinatario_snapshot:{},chave_acesso:null}))
-  writeFileSync(folder+'/descricao-longa.pdf',renderServiceInvoicePdf({...sample,itens:undefined,items:Array.from({length:50},(_,i)=>({...detail.items[0],descricao:'ITEM '+(i+1)+' '+('Serviço de manutenção técnica com acentuação, integração e configuração. '.repeat(10))})),observacoes:'Observações completas: '+('Informação complementar. '.repeat(65))} as Parameters<typeof renderServiceInvoicePdf>[0]))
+  writeFileSync(folder+'/descricao-longa.pdf',renderServiceInvoicePdf({...sample,items:Array.from({length:50},(_,i)=>({...detail.items[0],descricao:'ITEM '+(i+1)+' '+('Serviço de manutenção técnica com acentuação, integração e configuração. '.repeat(10))})),observacoes:'Observações completas: '+('Informação complementar. '.repeat(65))}))
   checks.push('Fixtures de campos ausentes e 50 descrições longas geradas sem corte de conteúdo')
   await db.query('SAVEPOINT pdf_immutable')
   await assert.rejects(()=>client.query('UPDATE erp.notas_fiscais_pdfs SET nome=$3 WHERE empresa_id=$1 AND nota_fiscal_id=$2',[company,oldId,'DEMO-alterado.pdf']))

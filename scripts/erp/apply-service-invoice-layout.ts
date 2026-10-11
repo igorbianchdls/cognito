@@ -22,7 +22,7 @@ async function main(){let committed=false;try{
  await db.connect();await db.query('BEGIN ISOLATION LEVEL REPEATABLE READ');await db.query("SET LOCAL lock_timeout='5s'")
  assert.equal((await db.query('SELECT pg_try_advisory_xact_lock(73008,20261009) ok')).rows[0].ok,true)
  const notesBefore=(await db.query("SELECT md5(coalesce(string_agg(to_jsonb(n)::text,'|' ORDER BY id),'')) hash FROM erp.notas_fiscais n")).rows[0].hash
- const oldPdfs=(await db.query('SELECT id,versao,nome,hash_sha256,md5(conteudo) bytes_hash FROM erp.notas_fiscais_pdfs ORDER BY id')).rows
+ const oldPdfs:{id:string;versao:number;nome:string;hash_sha256:string;bytes_hash:string|null}[]=(await db.query('SELECT id,versao,nome,hash_sha256,md5(conteudo) bytes_hash FROM erp.notas_fiscais_pdfs ORDER BY id')).rows
  const prior=(await db.query('SELECT name,statements FROM supabase_migrations.schema_migrations WHERE version=$1',[version])).rows[0]
  if(!prepare)assert((await db.query("SELECT 1 FROM supabase_migrations.schema_migrations WHERE version='20261009150000'")).rows.length,'Prepare o schema primeiro')
  if(prior){assert.equal(prior.name,name);assert.deepEqual(prior.statements,[sql])}else await db.query(sql)
