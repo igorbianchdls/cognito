@@ -6,6 +6,7 @@ import { createManualFinancialTitle } from '@/products/erp/server/erpCrudReposit
 import { createFinalStockDocument } from '@/products/erp/server/erpStockRepository'
 import { assertErpPeriodOpen } from '@/products/erp/server/erpPeriodRepository'
 import { nextDocumentNumber } from '@/products/erp/server/erpDocumentNumbers'
+import { commercialRequest, assertCommercialReplay } from './erpCommercialIdempotency'
 import type { CreditUseValues, SaleReturnValues } from '@/products/erp/shared/commercialPolicyContracts'
 
 // Fase 1.5 — devolução de venda e crédito do cliente.
@@ -25,19 +26,23 @@ async function defaultAccount(client: Query, tenantId: number, preferred: unknow
   return Number(rows[0].id)
 }
 // Baixa sem dinheiro: valor e desconto iguais, líquido zero. Liquida a parcela sem mexer no caixa.
-async function settleWithoutCash(client: Query, input: Actor & { parcelaId: number; valor: number; data: string; contaId: number; origem: 'devolucao' | 'credito_cliente'; devolucaoId: number; key: string; observacao: string }) {
+async function settleWithoutCash(client: Query, input: Actor & { parcelaId: number; valor: number; data: string; contaId: number; origem: 'devolucao' | 'credito_cliente'; devolucaoId: number; key: string; observacao: string; requestHash?: string }) {
   await client.query(
     `INSERT INTO erp.pagamentos (empresa_id, tipo, conta_receber_parcela_id, conta_financeira_id, data_pagamento, valor, desconto, valor_liquido,
-       origem, devolucao_id, observacoes, chave_idempotencia, criado_por, atualizado_por)
-     VALUES ($1, 'receber', $2, $3, $4, $5, $5, 0, $6, $7, $8, $9, $10, $10)`,
-    [input.tenantId, input.parcelaId, input.contaId, input.data, input.valor, input.origem, input.devolucaoId, input.observacao, input.key, input.actorId])
+       origem, devolucao_id, observacoes, chave_idempotencia, criado_por, atualizado_por, request_hash)
+     VALUES ($1, 'receber', $2, $3, $4, $5, $5, 0, $6, $7, $8, $9, $10, $10, $11)`,
+    [input.tenantId, input.parcelaId, input.contaId, input.data, input.valor, input.origem, input.devolucaoId, input.observacao, input.key, input.actorId, input.requestHash ?? null])
 }
 
 export async function createSaleReturn(input: Actor & { saleId: number; idempotencyKey: string; values: SaleReturnValues }) {
   const v = input.values
   return withTransaction(async (client) => {
-    const replay = await client.query('SELECT id::text, numero FROM erp.devolucoes WHERE empresa_id = $1 AND chave_idempotencia = $2', [input.tenantId, input.idempotencyKey])
-    if (replay.rows[0]) return { ...(await readReturn(client, input.tenantId, Number(replay.rows[0].id))), repetido: true }
+    const requestHash = await commercialRequest(client, input.tenantId, 'devolucao', input.idempotencyKey, { saleId: input.saleId, values: v })
+    const replay = await client.query('SELECT id::text, numero, request_hash FROM erp.devolucoes WHERE empresa_id = $1 AND chave_idempotencia = $2', [input.tenantId, input.idempotencyKey])
+    if (replay.rows[0]) {
+      assertCommercialReplay(replay.rows[0].request_hash, requestHash)
+      return { ...(await readReturn(client, input.tenantId, Number(replay.rows[0].id))), repetido: true }
+    }
     const sale = (await client.query(
       `SELECT id, cliente_id, status, tipo_documento, atendimento_status, subtotal, total, frete, local_estoque_id, conta_financeira_id FROM erp.vendas
        WHERE empresa_id = $1 AND id = $2 AND excluido_em IS NULL FOR UPDATE`, [input.tenantId, input.saleId])).rows[0]
@@ -106,10 +111,10 @@ export async function createSaleReturn(input: Actor & { saleId: number; idempote
     }
     const created = await client.query(
       `INSERT INTO erp.devolucoes (empresa_id, venda_id, cliente_id, numero, data_devolucao, motivo, tratamento, valor_total, valor_credito,
-         conta_pagar_id, documento_estoque_id, chave_idempotencia, criado_por, atualizado_por)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $13) RETURNING id`,
+         conta_pagar_id, documento_estoque_id, chave_idempotencia, criado_por, atualizado_por, request_hash)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $13, $14) RETURNING id`,
       [input.tenantId, input.saleId, sale.cliente_id, numero, date, v.motivo, v.tratamento, total, v.tratamento === 'credito' ? total : 0,
-        payableId, stockDocumentId, input.idempotencyKey, input.actorId])
+        payableId, stockDocumentId, input.idempotencyKey, input.actorId, requestHash])
     const returnId = Number(created.rows[0].id)
     for (const item of items) await client.query(
       'INSERT INTO erp.devolucoes_itens (empresa_id, devolucao_id, venda_item_id, quantidade, valor) VALUES ($1, $2, $3, $4, $5)',
@@ -170,7 +175,7 @@ async function readReturn(client: Query, tenantId: number, id: number) {
 const reader = { query: async (sql: string, params?: unknown[]) => ({ rows: await runQuery<Record<string, unknown>>(sql, params ?? []) }) }
 export const getSaleReturn = (tenantId: number, id: number) => readReturn(reader, tenantId, id)
 
-export async function listSaleReturns(tenantId: number, input: { vendaId?: number; clienteId?: number; comCredito?: boolean; page?: number; pageSize?: number } = {}) {
+export async function listSaleReturns(tenantId: number, input: { query?: string; vendaId?: number; clienteId?: number; comCredito?: boolean; page?: number; pageSize?: number } = {}) {
   const limit = Math.min(100, Math.max(1, Number(input.pageSize) || 20)), offset = (Math.max(1, Number(input.page) || 1) - 1) * limit
   const rows = await runQuery(
     `SELECT * FROM (
@@ -181,9 +186,9 @@ export async function listSaleReturns(tenantId: number, input: { vendaId?: numbe
        JOIN erp.vendas v ON v.empresa_id = d.empresa_id AND v.id = d.venda_id
        JOIN erp.entidades c ON c.empresa_id = d.empresa_id AND c.id = d.cliente_id
        WHERE d.empresa_id = $1 AND ($2::bigint IS NULL OR d.venda_id = $2) AND ($3::bigint IS NULL OR d.cliente_id = $3)
-     ) x WHERE NOT $4::boolean OR credito_disponivel > 0
+     ) x WHERE (NOT $4::boolean OR credito_disponivel > 0) AND ($7::text IS NULL OR numero ILIKE $7 OR venda ILIKE $7 OR cliente ILIKE $7)
      ORDER BY data_devolucao DESC, id DESC LIMIT $5 OFFSET $6`,
-    [tenantId, input.vendaId ?? null, input.clienteId ?? null, Boolean(input.comCredito), limit + 1, offset])
+    [tenantId, input.vendaId ?? null, input.clienteId ?? null, Boolean(input.comCredito), limit + 1, offset, input.query?.trim() ? `%${input.query.trim()}%` : null])
   return { records: rows.slice(0, limit), hasMore: rows.length > limit, page: Math.max(1, Number(input.page) || 1), pageSize: limit }
 }
 
@@ -191,8 +196,12 @@ export async function listSaleReturns(tenantId: number, input: { vendaId?: numbe
 export async function useCustomerCredit(input: Actor & { returnId: number; idempotencyKey: string; values: CreditUseValues }) {
   const v = input.values
   return withTransaction(async (client) => {
-    const replay = await client.query('SELECT id::text FROM erp.pagamentos WHERE empresa_id = $1 AND chave_idempotencia = $2', [input.tenantId, `credito:${input.idempotencyKey}`])
-    if (replay.rows[0]) return { pagamento_id: replay.rows[0].id, repetido: true, ...(await readReturn(client, input.tenantId, input.returnId)) }
+    const requestHash = await commercialRequest(client, input.tenantId, 'credito_devolucao', input.idempotencyKey, { returnId: input.returnId, values: v })
+    const replay = await client.query('SELECT id::text, request_hash FROM erp.pagamentos WHERE empresa_id = $1 AND chave_idempotencia = $2', [input.tenantId, `credito:${input.idempotencyKey}`])
+    if (replay.rows[0]) {
+      assertCommercialReplay(replay.rows[0].request_hash, requestHash)
+      return { pagamento_id: replay.rows[0].id, repetido: true, ...(await readReturn(client, input.tenantId, input.returnId)) }
+    }
     if (!(await hasCapability(client, input.tenantId, 'erp.financeiro.baixar')) && !(await hasCapability(client, input.tenantId, 'erp.financeiro.gerenciar')))
       throw new ErpDomainError('ACCESS_DENIED', 'Seu perfil não permite registrar baixas.', 403)
     const credit = (await client.query(
@@ -213,7 +222,7 @@ export async function useCustomerCredit(input: Actor & { returnId: number; idemp
     await assertErpPeriodOpen(client, { tenantId: input.tenantId, module: 'financeiro', date })
     const account = await defaultAccount(client, input.tenantId, null)
     await settleWithoutCash(client, { ...input, parcelaId: Number(parcel.id), valor: v.valor, data: date, contaId: account, origem: 'credito_cliente',
-      devolucaoId: input.returnId, key: `credito:${input.idempotencyKey}`, observacao: `Crédito da devolução ${credit.numero}` })
+      devolucaoId: input.returnId, key: `credito:${input.idempotencyKey}`, requestHash, observacao: `Crédito da devolução ${credit.numero}` })
     return readReturn(client, input.tenantId, input.returnId)
   })
 }

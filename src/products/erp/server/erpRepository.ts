@@ -1553,7 +1553,7 @@ async function listEntityRoleRecords(input: ListInput): Promise<ErpEntityRecord[
        count(*) OVER ()::int AS __total
      FROM rows
      WHERE true${appendSearch(params, input.query)}${appendStatusFilter(input.filters)}${appendTipoFilter(params, input.filters)}
-     ORDER BY nome ASC${appendPagination(params, input)}`,
+     ORDER BY nome ASC, id ASC${appendPagination(params, input)}`,
     params,
   )
 
@@ -1605,7 +1605,7 @@ async function listProductRecords(input: ListInput): Promise<ErpEntityRecord[]> 
        count(*) OVER ()::int AS __total
      FROM rows
      WHERE true${appendSearch(params, input.query)}${appendStatusFilter(input.filters)}${categorySql}
-     ORDER BY nome ASC${appendPagination(params, input)}`,
+     ORDER BY nome ASC, id ASC${appendPagination(params, input)}`,
     params,
   )
 
@@ -1648,7 +1648,7 @@ async function listServiceRecords(input: ListInput): Promise<ErpEntityRecord[]> 
        count(*) OVER ()::int AS __total
      FROM rows
      WHERE true${appendSearch(params, input.query)}${appendStatusFilter(input.filters)}
-     ORDER BY nome ASC${appendPagination(params, input)}`,
+     ORDER BY nome ASC, id ASC${appendPagination(params, input)}`,
     params,
   )
 
@@ -2157,7 +2157,7 @@ async function listFinancialAccountRecords(input: ListInput): Promise<ErpEntityR
        count(*) OVER ()::int AS __total
      FROM rows
      WHERE true${appendSearch(params, input.query)}${appendStatusFilter(input.filters)}${typeSql}
-     ORDER BY nome ASC${appendPagination(params, input)}`,
+     ORDER BY nome ASC, id ASC${appendPagination(params, input)}`,
     params,
   )
 

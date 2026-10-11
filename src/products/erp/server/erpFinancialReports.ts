@@ -144,6 +144,8 @@ export const accrualAllocationSql = () => `WITH titulos AS (
   SELECT 'despesa', 'pagar', c.id, c.data_competencia, c.valor_total, c.categoria_id
   FROM erp.contas_pagar c
   WHERE c.empresa_id = $1 AND c.excluido_em IS NULL AND c.status <> 'cancelado' AND c.renegociacao_origem_id IS NULL
+    -- The return already deducts revenue; its reimbursement is a liability settlement.
+    AND NOT EXISTS (SELECT 1 FROM erp.devolucoes d WHERE d.empresa_id = c.empresa_id AND d.conta_pagar_id = c.id AND d.tratamento = 'reembolso')
     AND c.tipo_lancamento IS DISTINCT FROM 'previsao' AND c.data_competencia BETWEEN $2::date AND $3::date
 ),
 alocado AS (
@@ -186,9 +188,17 @@ export function marginSql(groupBy: 'venda' | 'item' | 'cliente') {
     SELECT i.*, v.numero, v.cliente_id,
       round(i.total * CASE WHEN v.subtotal > 0 THEN greatest(v.total - coalesce(v.frete, 0), 0) / v.subtotal ELSE 0 END, 2) AS receita,
       coalesce((SELECT sum(di.valor) FROM erp.devolucoes_itens di WHERE di.empresa_id = i.empresa_id AND di.venda_item_id = i.id), 0) AS devolvido,
-      (SELECT -sum(m.quantidade * m.custo_unitario) FROM erp.movimentacoes_estoque m
+      (SELECT -sum(m.quantidade * m.custo_unitario * coalesce(vinculo.parte,
+          i.quantidade / nullif((SELECT sum(irm.quantidade) FROM erp.vendas_itens irm
+            WHERE irm.empresa_id = i.empresa_id AND irm.venda_id = i.venda_id AND irm.produto_id = i.produto_id AND irm.excluido_em IS NULL), 0)))
+        FROM erp.movimentacoes_estoque m
         LEFT JOIN erp.documentos_estoque d ON d.empresa_id = m.empresa_id AND d.id = m.documento_estoque_id
-        WHERE m.empresa_id = i.empresa_id AND m.produto_id = i.produto_id AND (d.venda_id = i.venda_id OR (m.origem_tipo = 'venda' AND m.origem_id = i.venda_id))) AS custo_real
+        CROSS JOIN LATERAL (SELECT coalesce(sum(di.quantidade) FILTER (WHERE di.venda_item_id = i.id), 0)
+            / nullif(sum(di.quantidade), 0) AS parte
+          FROM erp.documentos_estoque_itens di WHERE di.empresa_id = m.empresa_id AND di.documento_estoque_id = m.documento_estoque_id
+            AND di.produto_id = m.produto_id AND di.venda_item_id IS NOT NULL) vinculo
+        WHERE m.empresa_id = i.empresa_id AND m.produto_id = i.produto_id AND (d.venda_id = i.venda_id OR (m.origem_tipo = 'venda' AND m.origem_id = i.venda_id))
+          AND (vinculo.parte IS NULL OR vinculo.parte > 0)) AS custo_real
     FROM erp.vendas_itens i JOIN erp.vendas v ON v.empresa_id = i.empresa_id AND v.id = i.venda_id
     WHERE i.empresa_id = $1 AND i.excluido_em IS NULL AND v.excluido_em IS NULL AND v.tipo_documento <> 'orcamento'
       AND v.status NOT IN ('rascunho', 'cancelada', 'cancelado') AND v.data_venda BETWEEN $2::date AND $3::date

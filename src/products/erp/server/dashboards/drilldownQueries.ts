@@ -150,7 +150,7 @@ function definition(input: DashboardRecordsFilters): Definition {
     const base = `SELECT s.id,s.produto_id,s.local_estoque_id,p.nome,p.estoque_minimo,l.nome local,s.quantidade_fisica,s.quantidade_reservada,s.quantidade_fisica-s.quantidade_reservada disponivel,s.quantidade_fisica*s.custo_medio valor FROM erp.saldos_estoque s JOIN erp.produtos p ON p.empresa_id=$1 AND p.id=s.produto_id AND p.excluido_em IS NULL JOIN erp.locais_estoque l ON l.empresa_id=$1 AND l.id=s.local_estoque_id WHERE s.empresa_id=$1`
     if (input.status === 'reposicao' || input.status === 'produtos')
       return {
-        sql: `SELECT produto_id::text id,min(nome) label,'Mínimo: '||max(estoque_minimo)||' · físico: '||sum(quantidade_fisica)||' · reservado: '||sum(quantidade_reservada) detail,NULL::date date,'${input.status}'::text status,${input.status === 'reposicao' ? 'sum(disponivel)' : 'sum(valor)'} value,produto_id FROM (${base}) s GROUP BY produto_id ${input.status === 'reposicao' ? 'HAVING sum(disponível)<max(estoque_minimo)' : ''}`,
+        sql: `SELECT produto_id::text id,min(nome) label,'Mínimo: '||max(estoque_minimo)||' · físico: '||sum(quantidade_fisica)||' · reservado: '||sum(quantidade_reservada) detail,NULL::date date,'${input.status}'::text status,${input.status === 'reposicao' ? 'sum(disponivel)' : 'sum(valor)'} value,produto_id FROM (${base}) s GROUP BY produto_id ${input.status === 'reposicao' ? 'HAVING sum(disponivel)<max(estoque_minimo)' : ''}`,
         dimensions: { produto: 'produto_id' },
         statuses: ['reposicao', 'produtos'],
         format: input.status === 'reposicao' ? 'number' : 'currency',

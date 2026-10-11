@@ -6,15 +6,24 @@ import { Loader2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Label } from '@/components/ui/label'
 import { parseErpResponse } from '@/products/erp/frontend/services/erpProfessionalClient'
+import { ErpMutation } from '@/products/erp/frontend/services/erpMutation'
 
 // Peças comuns às telas comerciais da Fase 1 (tabelas de preço, comissões e devoluções).
 
 export type Option = { id: string; nome: string }
 
-export async function erpJson<T>(url: string, init?: { method?: string; body?: unknown; idempotent?: boolean }): Promise<T> {
+export function useCommercialMutation() {
+  const [mutation] = useState(() => new ErpMutation(undefined, true))
+  return mutation
+}
+
+export async function erpJson<T>(url: string, init?: { method?: string; body?: unknown; idempotent?: boolean; mutation?: ErpMutation }): Promise<T> {
+  if (init?.idempotent) {
+    if (!init.mutation || init.method !== 'POST') throw new Error('A operação exige uma tentativa persistente do formulário.')
+    return init.mutation.submit<T>(url, init.body)
+  }
   const headers: Record<string, string> = {}
   if (init?.body !== undefined) headers['Content-Type'] = 'application/json'
-  if (init?.idempotent) headers['Idempotency-Key'] = crypto.randomUUID()
   return parseErpResponse<T>(await fetch(url, {
     method: init?.method || 'GET', cache: 'no-store', headers,
     body: init?.body === undefined ? undefined : JSON.stringify(init.body),

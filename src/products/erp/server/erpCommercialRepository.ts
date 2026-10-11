@@ -3,6 +3,7 @@ import { ErpDomainError } from '@/products/erp/shared/erpErrors'
 import { erpToday } from '@/products/erp/server/erpBusinessDate'
 import { commissionReleasedSql } from '@/products/erp/server/erpFinancialReports'
 import { createManualFinancialTitle } from '@/products/erp/server/erpCrudRepository'
+import { commercialRequest, assertCommercialReplay } from './erpCommercialIdempotency'
 import type { CommissionPaymentValues, CommissionRuleValues, PriceTableValues } from '@/products/erp/shared/commercialPolicyContracts'
 
 // Fase 1 — cadastro de tabelas de preço e regras de comissão, relatório e pagamento de comissões.
@@ -22,7 +23,7 @@ export async function listPriceTables(tenantId: number, input: { page?: number; 
        count(*) OVER ()::int AS total
      FROM erp.tabelas_preco t
      WHERE t.empresa_id = $1 AND t.excluido_em IS NULL AND ($2::text = '' OR t.nome ILIKE '%' || $2 || '%')
-     ORDER BY t.padrao DESC, t.nome LIMIT $3 OFFSET $4`,
+     ORDER BY t.padrao DESC, t.nome, t.id LIMIT $3 OFFSET $4`,
     [tenantId, (input.query || '').trim(), limit, offset],
   )
   return { records: rows.map(({ total: _total, ...row }) => row), total: Number(rows[0]?.total || 0), page: page(input.page), pageSize: limit }
@@ -183,8 +184,13 @@ export async function payCommissions(input: Actor & { idempotencyKey: string; va
   const v = input.values
   return withTransaction(async (client) => {
     await client.query('SELECT pg_advisory_xact_lock(hashtextextended($1, 0))', [`erp:comissao:${input.tenantId}:${v.vendedor_id}`])
-    const existing = await client.query('SELECT id::text, conta_pagar_id::text, valor FROM erp.comissoes_pagamentos WHERE empresa_id = $1 AND chave_idempotencia = $2', [input.tenantId, input.idempotencyKey])
-    if (existing.rows[0]) return { ...existing.rows[0], repetido: true }
+    const requestHash = await commercialRequest(client, input.tenantId, 'comissao', input.idempotencyKey, v)
+    const existing = await client.query('SELECT id::text, conta_pagar_id::text, valor, request_hash FROM erp.comissoes_pagamentos WHERE empresa_id = $1 AND chave_idempotencia = $2', [input.tenantId, input.idempotencyKey])
+    if (existing.rows[0]) {
+      assertCommercialReplay(existing.rows[0].request_hash, requestHash)
+      const { request_hash: _hash, ...record } = existing.rows[0]
+      return { ...record, repetido: true }
+    }
     const seller = (await client.query('SELECT nome, eh_fornecedor FROM erp.entidades WHERE empresa_id = $1 AND id = $2 AND eh_vendedor AND excluido_em IS NULL', [input.tenantId, v.vendedor_id])).rows[0]
     if (!seller) throw new ErpDomainError('VALIDATION_ERROR', 'Vendedor não encontrado nesta empresa.')
     if (!seller.eh_fornecedor) throw new ErpDomainError('VALIDATION_ERROR', 'Marque o vendedor também como fornecedor para gerar a conta a pagar das comissões.')
@@ -201,8 +207,8 @@ export async function payCommissions(input: Actor & { idempotencyKey: string; va
       conta_financeira_id: v.conta_financeira_id ?? null, parcelas: [{ data_vencimento: v.data_vencimento, valor: total }],
     }, `comissao:${input.idempotencyKey}`, 'api')
     const payment = await client.query(
-      `INSERT INTO erp.comissoes_pagamentos (empresa_id, vendedor_id, conta_pagar_id, valor, competencia_fim, chave_idempotencia, criado_por, atualizado_por)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $7) RETURNING id`, [input.tenantId, v.vendedor_id, titleId, total, v.ate, input.idempotencyKey, input.actorId])
+      `INSERT INTO erp.comissoes_pagamentos (empresa_id, vendedor_id, conta_pagar_id, valor, competencia_fim, chave_idempotencia, criado_por, atualizado_por, request_hash)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $7, $8) RETURNING id`, [input.tenantId, v.vendedor_id, titleId, total, v.ate, input.idempotencyKey, input.actorId, requestHash])
     const paymentId = Number(payment.rows[0].id)
     for (const row of rows) {
       await client.query('INSERT INTO erp.comissoes_pagamentos_itens (empresa_id, pagamento_id, lancamento_id, valor) VALUES ($1, $2, $3, $4)',
@@ -213,4 +219,3 @@ export async function payCommissions(input: Actor & { idempotencyKey: string; va
     return { id: String(paymentId), conta_pagar_id: titleId, valor: total, lancamentos: rows.length }
   })
 }
-

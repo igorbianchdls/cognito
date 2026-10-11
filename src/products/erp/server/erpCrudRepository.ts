@@ -43,6 +43,9 @@ export async function changeManualFinancialTitle(client:SQLClient,tenantId:numbe
   const title=(await client.query(`SELECT * FROM erp.contas_${side} WHERE empresa_id=$1 AND id=$2 AND excluido_em IS NULL FOR UPDATE`,[tenantId,id])).rows[0]
   if(!title)fail('Título não disponível nesta empresa.')
   if(title.origem!=='manual'||title[side==='pagar'?'compra_id':'venda_id']||title.contrato_id||title.recorrencia_financeira_id)fail('Altere ou cancele o documento de origem deste título.')
+  if(side==='pagar'&&(await client.query(`SELECT 1 FROM erp.comissoes_pagamentos WHERE empresa_id=$1 AND conta_pagar_id=$2
+    UNION ALL SELECT 1 FROM erp.devolucoes WHERE empresa_id=$1 AND conta_pagar_id=$2 LIMIT 1`,[tenantId,id])).rows.length)
+    fail('Este título foi gerado por comissão ou reembolso. Preserve o vínculo e trate a operação de origem.')
   if(['pago','cancelado','renegociado'].includes(String(title.status)))fail('Este título não permite alteração ou exclusão.')
   const parts=(await client.query(`SELECT * FROM erp.contas_${side}_parcelas WHERE empresa_id=$1 AND conta_${side}_id=$2 ORDER BY id FOR UPDATE`,[tenantId,id])).rows
   for(const table of ['pagamentos','adiantamentos_aplicacoes','renegociacoes_parcelas']){

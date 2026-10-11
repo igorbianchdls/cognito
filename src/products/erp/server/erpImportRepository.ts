@@ -1,6 +1,6 @@
 import { createHash } from 'node:crypto'
 
-import { runQuery, withTransaction } from '@/lib/postgres'
+import { runQuery, withTransaction, runWithErpReadSnapshot } from '@/lib/postgres'
 import { createErpEntityWithClient, listErpEntityRecords } from '@/products/erp/server/erpRepository'
 import { ErpDomainError } from '../shared/erpErrors'
 import type { ErpConnectedModuleId } from '@/products/erp/server/erpModuleRegistry'
@@ -150,7 +150,14 @@ export async function getImportDetails(tenantId:number,id:string,page=1) {
 }
 
 export async function exportErpRecords(tenantId: number, type: ImportType) {
-  return listErpEntityRecords({ tenantId, entityId: type as ErpConnectedModuleId, query: '', filters: {} })
+  return runWithErpReadSnapshot(async () => {
+    const records: Awaited<ReturnType<typeof listErpEntityRecords>> = []
+    for (let page = 1; ; page++) {
+      const rows = await listErpEntityRecords({ tenantId, entityId: type as ErpConnectedModuleId, query: '', filters: {}, page, pageSize: 100 })
+      records.push(...rows.map(({ __total: _total, ...row }) => row))
+      if (rows.length < 100) return records
+    }
+  })
 }
 
 export function listImportErrorLines(tenantId:number,id:string) {

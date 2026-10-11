@@ -1,5 +1,7 @@
 'use client'
 
+import { useCommercialMutation } from './commercialUi'
+
 import { useCallback, useEffect, useState } from 'react'
 import { Loader2, Plus, Trash2 } from 'lucide-react'
 
@@ -176,6 +178,7 @@ function RuleDialog({ draft: initial, sellers, onClose, onSaved }: { draft: Rule
 }
 
 function PayDialog({ row, until, accounts, onClose, onPaid }: { row: Summary; until: string; accounts: Option[]; onClose: () => void; onPaid: () => void }) {
+  const mutation = useCommercialMutation()
   const [ate, setAte] = useState(until)
   const [category, setCategory] = useState<Option | null>(null)
   const [due, setDue] = useState(erpClientToday())
@@ -188,7 +191,7 @@ function PayDialog({ row, until, accounts, onClose, onPaid }: { row: Summary; un
     if (!category) return
     setSaving(true); setError(null)
     try {
-      const result = await erpJson<{ valor: number; lancamentos: number }>('/api/erp/comissoes/pagar', { method: 'POST', idempotent: true, body: { values: {
+      const result = await erpJson<{ valor: number; lancamentos: number }>('/api/erp/comissoes/pagar', { method: 'POST', idempotent: true, mutation, body: { values: {
         vendedor_id: Number(row.vendedor_id), ate, categoria_id: Number(category.id), data_vencimento: due, conta_financeira_id: account ? Number(account) : null,
       } } })
       setDone(result)

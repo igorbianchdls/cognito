@@ -8,7 +8,7 @@ async function handleGET(request: Request) {
   const access = await resolveErpApiAccess('erp.vendas.visualizar'), params = new URL(request.url).searchParams
   const optional = (key: string) => { const n = Number(params.get(key)); return Number.isInteger(n) && n > 0 ? n : undefined }
   return NextResponse.json(await listSaleReturns(access.tenantId, {
-    clienteId: optional('cliente_id'), vendaId: optional('venda_id'), comCredito: params.get('com_credito') === '1',
+    query: params.get('query') || undefined, clienteId: optional('cliente_id'), vendaId: optional('venda_id'), comCredito: params.get('com_credito') === '1',
     page: Number(params.get('page') || 1), pageSize: Number(params.get('pageSize') || 20),
   }))
 }

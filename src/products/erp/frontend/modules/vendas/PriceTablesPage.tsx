@@ -1,6 +1,7 @@
 'use client'
 
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
+import { ErpListPagination } from '@/products/erp/frontend/components/ErpListPagination'
 import { Loader2, Plus, Trash2 } from 'lucide-react'
 
 import { Button } from '@/components/ui/button'
@@ -24,17 +25,27 @@ const emptyDraft = (): Draft => ({ nome: '', descricao: '', padrao: false, ativo
 export function PriceTablesPage() {
   const [records, setRecords] = useState<PriceTable[]>([])
   const [query, setQuery] = useState('')
+  const [page, setPage] = useState(1)
+  const [total, setTotal] = useState(0)
+  const request = useRef(0)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [draft, setDraft] = useState<Draft | null>(null)
 
   const load = useCallback(async () => {
+    const sequence = ++request.current
     setLoading(true); setError(null)
-    try { setRecords((await erpJson<{ records: PriceTable[] }>('/api/erp/tabelas-preco?pageSize=100')).records) }
-    catch (loadError) { setError(errorMessage(loadError, 'Não foi possível carregar as tabelas de preço.')) }
-    finally { setLoading(false) }
-  }, [])
-  useEffect(() => { void load() }, [load])
+    try {
+      const result = await erpJson<{ records: PriceTable[]; total: number }>(`/api/erp/tabelas-preco?pageSize=50&page=${page}&query=${encodeURIComponent(query)}`)
+      if (sequence === request.current) {
+        setRecords(result.records); setTotal(result.total)
+        if (!result.records.length && page > 1) setPage(page - 1)
+      }
+    }
+    catch (loadError) { if (sequence === request.current) setError(errorMessage(loadError, 'Não foi possível carregar as tabelas de preço.')) }
+    finally { if (sequence === request.current) setLoading(false) }
+  }, [page, query])
+  useEffect(() => { void load(); return () => { request.current++ } }, [load])
 
   async function open(record: PriceTable) {
     setError(null)
@@ -49,16 +60,13 @@ export function PriceTablesPage() {
     } catch (openError) { setError(errorMessage(openError, 'Não foi possível abrir a tabela.')) }
   }
 
-  const visible = useMemo(() => {
-    const search = query.trim().toLocaleLowerCase('pt-BR')
-    return records.filter(record => !search || record.nome.toLocaleLowerCase('pt-BR').includes(search))
-  }, [records, query])
+  const visible = records
 
   return <div className="flex min-h-full min-w-0 flex-col bg-white">
     <ErpWorkspaceHeader section="Vendas" title="Tabelas de preço" menuItems={[{ label: 'Atualizar dados', onSelect: () => void load() }]}
       primaryAction={<Button className={primaryButtonClass} onClick={() => setDraft(emptyDraft())}><Plus className="size-4" />Nova tabela</Button>} />
     <ErpModuleWorkspaceTabs sectionId="vendas" moduleId="tabelas-preco" />
-    <ErpSearchToolbar query={query} onQueryChange={setQuery} placeholder="Pesquisar tabelas…" resultLabel={`${visible.length} de ${records.length} tabelas`} />
+    <ErpSearchToolbar query={query} onQueryChange={value => { setQuery(value); setPage(1) }} placeholder="Pesquisar tabelas…" resultLabel={`${visible.length} de ${total} tabelas`} />
     <ErrorBanner error={error} />
     <div className="min-h-[300px] min-w-0 flex-1 overflow-x-auto"><Table className="erp-workspace-table min-w-[860px] border-b border-[#e7e7e4]">
       <TableHeader><TableRow className="bg-[#fbfbfa] hover:bg-[#fbfbfa]"><TableHead className="erp-table-identity-heading">Tabela</TableHead><TableHead>Vigência</TableHead><TableHead className="text-right">Itens</TableHead><TableHead className="text-right">Clientes</TableHead><TableHead>Situação</TableHead></TableRow></TableHeader>
@@ -73,6 +81,7 @@ export function PriceTablesPage() {
             <TableCell><ErpStatusBadge status={record.ativo ? 'ativo' : 'inativo'} /></TableCell>
           </TableRow>)}
       </TableBody></Table></div>
+    <ErpListPagination page={page} count={records.length} total={total} hasMore={page * 50 < total} loading={loading || Boolean(error)} onPage={setPage} />
     {draft ? <PriceTableDialog draft={draft} onClose={() => setDraft(null)} onSaved={() => { setDraft(null); void load() }} /> : null}
   </div>
 }

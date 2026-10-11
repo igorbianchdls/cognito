@@ -1,18 +1,19 @@
 'use client'
 
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { Loader2, Undo2 } from 'lucide-react'
 
 import { Button } from '@/components/ui/button'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Switch } from '@/components/ui/switch'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
-import { ErpModuleWorkspaceTabs, ErpPeriodSummary, ErpWorkspaceHeader } from '@/products/erp/frontend/components/ErpWorkspaceChrome'
+import { ErpModuleWorkspaceTabs, ErpPeriodSummary, ErpSearchToolbar, ErpWorkspaceHeader } from '@/products/erp/frontend/components/ErpWorkspaceChrome'
+import { ErpListPagination } from '@/products/erp/frontend/components/ErpListPagination'
 import { erpClientToday } from '@/products/erp/frontend/services/erpTimeZone'
 import { sumMoney } from '@/products/erp/shared/erpMoney'
 import {
   CatalogPicker, DialogActions, DialogError, ErrorBanner, Field, currency, dateLabel, erpJson, errorMessage, inputClass,
-  primaryButtonClass, toNumber, type Option,
+  primaryButtonClass, toNumber, useCommercialMutation, type Option,
 } from './commercialUi'
 
 type SaleReturn = { id: string; numero: string; venda_id: string; venda: string; cliente_id: string; cliente: string; data_devolucao: string; tratamento: Treatment; valor_total: string; credito_disponivel: string; motivo?: string }
@@ -32,18 +33,26 @@ const treatments: Record<Treatment, { label: string; help: string }> = {
 export function SaleReturnsPage() {
   const [records, setRecords] = useState<SaleReturn[]>([])
   const [onlyCredit, setOnlyCredit] = useState(false)
+  const [page, setPage] = useState(1)
+  const [query, setQuery] = useState('')
+  const [hasMore, setHasMore] = useState(false)
+  const request = useRef(0)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [creating, setCreating] = useState<{ saleId?: string } | null>(null)
   const [usingCredit, setUsingCredit] = useState<SaleReturn | null>(null)
 
   const load = useCallback(async () => {
+    const sequence = ++request.current
     setLoading(true); setError(null)
-    try { setRecords((await erpJson<{ records: SaleReturn[] }>(`/api/erp/devolucoes?pageSize=100${onlyCredit ? '&com_credito=1' : ''}`)).records) }
-    catch (loadError) { setError(errorMessage(loadError, 'Não foi possível carregar as devoluções.')) }
-    finally { setLoading(false) }
-  }, [onlyCredit])
-  useEffect(() => { void load() }, [load])
+    try {
+      const result = await erpJson<{ records: SaleReturn[]; hasMore: boolean }>(`/api/erp/devolucoes?pageSize=50&page=${page}&query=${encodeURIComponent(query)}${onlyCredit ? '&com_credito=1' : ''}`)
+      if (sequence === request.current) { setRecords(result.records); setHasMore(result.hasMore) }
+    }
+    catch (loadError) { if (sequence === request.current) setError(errorMessage(loadError, 'Não foi possível carregar as devoluções.')) }
+    finally { if (sequence === request.current) setLoading(false) }
+  }, [onlyCredit, page, query])
+  useEffect(() => { void load(); return () => { request.current++ } }, [load])
   // Atalho a partir da venda: /erp/vendas/devolucoes?venda=<id> abre o registro já com a venda.
   useEffect(() => { const sale = new URLSearchParams(window.location.search).get('venda'); if (sale) setCreating({ saleId: sale }) }, [])
 
@@ -51,12 +60,13 @@ export function SaleReturnsPage() {
     <ErpWorkspaceHeader section="Vendas" title="Devoluções" menuItems={[{ label: 'Atualizar dados', onSelect: () => void load() }]}
       primaryAction={<Button className={primaryButtonClass} onClick={() => setCreating({})}><Undo2 className="size-4" />Registrar devolução</Button>} />
     <ErpModuleWorkspaceTabs sectionId="vendas" moduleId="devolucoes" />
-    <ErpPeriodSummary title="Resumo das devoluções listadas" description="Crédito disponível pode ser usado em parcelas a receber do mesmo cliente." metrics={[
+    <ErpPeriodSummary title="Resumo da página atual" description="Crédito disponível pode ser usado em parcelas a receber do mesmo cliente." metrics={[
       { label: 'Devoluções', value: String(records.length) },
       { label: 'Valor devolvido', value: currency(sumMoney(records.map(record => Number(record.valor_total)))) },
       { label: 'Crédito disponível', value: currency(sumMoney(records.map(record => Number(record.credito_disponivel || 0)))), tone: 'success' },
     ]} />
-    <div className="flex items-center gap-2 border-b border-[#e7e7e4] px-5 py-3 text-sm md:px-8 lg:px-10"><Switch checked={onlyCredit} onCheckedChange={setOnlyCredit} />Somente com crédito disponível</div>
+    <div className="flex items-center gap-2 border-b border-[#e7e7e4] px-5 py-3 text-sm md:px-8 lg:px-10"><Switch checked={onlyCredit} onCheckedChange={value => { setOnlyCredit(value); setPage(1) }} />Somente com crédito disponível</div>
+    <ErpSearchToolbar query={query} onQueryChange={value => { setQuery(value); setPage(1) }} placeholder="Pesquisar devolução, venda ou cliente…" resultLabel={`${records.length} devoluções nesta página`} />
     <ErrorBanner error={error} />
     <div className="min-h-[300px] min-w-0 flex-1 overflow-x-auto"><Table className="erp-workspace-table min-w-[960px] border-b border-[#e7e7e4]">
       <TableHeader><TableRow className="bg-[#fbfbfa] hover:bg-[#fbfbfa]"><TableHead>Data</TableHead><TableHead>Devolução</TableHead><TableHead>Venda</TableHead><TableHead className="erp-table-identity-heading">Cliente</TableHead><TableHead>Tratamento</TableHead><TableHead className="text-right">Valor</TableHead><TableHead className="text-right">Crédito disponível</TableHead><TableHead className="w-32" /></TableRow></TableHeader>
@@ -71,6 +81,7 @@ export function SaleReturnsPage() {
             <TableCell className="text-right">{Number(record.credito_disponivel) > 0 ? <Button size="sm" variant="outline" onClick={() => setUsingCredit(record)}>Usar crédito</Button> : null}</TableCell>
           </TableRow>)}
       </TableBody></Table></div>
+    <ErpListPagination page={page} count={records.length} hasMore={hasMore} loading={loading || Boolean(error)} onPage={setPage} />
     {creating ? <ReturnDialog initialSaleId={creating.saleId} onClose={() => setCreating(null)} onSaved={() => { setCreating(null); void load() }} /> : null}
     {usingCredit ? <CreditDialog record={usingCredit} onClose={() => setUsingCredit(null)} onSaved={() => { setUsingCredit(null); void load() }} /> : null}
   </div>
@@ -88,6 +99,7 @@ function ReturnDialog({ initialSaleId, onClose, onSaved }: { initialSaleId?: str
   const [date, setDate] = useState(erpClientToday())
   const [category, setCategory] = useState<Option | null>(null)
   const [due, setDue] = useState(erpClientToday())
+  const mutation = useCommercialMutation()
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
@@ -119,7 +131,7 @@ function ReturnDialog({ initialSaleId, onClose, onSaved }: { initialSaleId?: str
   async function save() {
     setSaving(true); setError(null)
     try {
-      await erpJson(`/api/erp/vendas/${saleId}/devolucoes`, { method: 'POST', idempotent: true, body: { values: {
+      await erpJson(`/api/erp/vendas/${saleId}/devolucoes`, { method: 'POST', idempotent: true, mutation, body: { values: {
         tratamento: treatment, motivo: reason, data_devolucao: date,
         itens: selected.map(({ item, quantidade }) => ({ venda_item_id: Number(item.id), quantidade })),
         ...(treatment === 'reembolso' ? { categoria_id: category ? Number(category.id) : undefined, data_vencimento: due } : {}),
@@ -174,6 +186,7 @@ function CreditDialog({ record, onClose, onSaved }: { record: SaleReturn; onClos
   const [parcelId, setParcelId] = useState('')
   const [value, setValue] = useState(String(Number(record.credito_disponivel)))
   const [date, setDate] = useState(erpClientToday())
+  const mutation = useCommercialMutation()
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
@@ -189,7 +202,7 @@ function CreditDialog({ record, onClose, onSaved }: { record: SaleReturn; onClos
   async function save() {
     setSaving(true); setError(null)
     try {
-      await erpJson(`/api/erp/devolucoes/${record.id}/usar-credito`, { method: 'POST', idempotent: true, body: { values: { parcela_id: Number(parcelId), valor: toNumber(value), data: date } } })
+      await erpJson(`/api/erp/devolucoes/${record.id}/usar-credito`, { method: 'POST', idempotent: true, mutation, body: { values: { parcela_id: Number(parcelId), valor: toNumber(value), data: date } } })
       onSaved()
     } catch (saveError) { setError(errorMessage(saveError, 'Não foi possível usar o crédito.')) }
     finally { setSaving(false) }

@@ -98,6 +98,8 @@ export type CreditOverride = { motivo: string }
 export async function assertCustomerCredit(client: Query, input: {
   tenantId: number; actorId: number; saleId: number; customerId: number; saleTotal: number; override?: CreditOverride | null
 }) {
+  // Serialize confirmations for this customer until their financial titles commit.
+  await client.query('SELECT pg_advisory_xact_lock(hashtextextended($1, 0))', [`erp:credito:${input.tenantId}:${input.customerId}`])
   const customer = (await client.query(
     `SELECT nome, limite_credito, bloqueio_comercial, bloqueio_motivo FROM erp.entidades WHERE empresa_id = $1 AND id = $2`,
     [input.tenantId, input.customerId],
@@ -108,9 +110,10 @@ export async function assertCustomerCredit(client: Query, input: {
   }
   if (customer.limite_credito === null || customer.limite_credito === undefined) return
   const open = (await client.query(
-    `SELECT coalesce(sum(p.valor - p.valor_pago), 0) AS aberto
+    `SELECT coalesce(sum(greatest(composicao.saldo, 0)), 0) AS aberto
      FROM erp.contas_receber_parcelas p
      JOIN erp.contas_receber c ON c.empresa_id = p.empresa_id AND c.id = p.conta_receber_id
+     CROSS JOIN LATERAL erp.composicao_parcela(p.empresa_id, 'receber', p.id) composicao
      WHERE p.empresa_id = $1 AND c.cliente_id = $2 AND p.excluido_em IS NULL AND c.excluido_em IS NULL
        AND p.status IN ('aberto', 'parcial', 'vencido') AND c.status <> 'cancelado'`,
     [input.tenantId, input.customerId],
