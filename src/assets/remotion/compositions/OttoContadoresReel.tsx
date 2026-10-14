@@ -1,4 +1,4 @@
-import { SiMercadopago, SiNubank } from '@icons-pack/react-simple-icons'
+import { SiGoogle, SiMercadopago, SiMeta, SiNotion, SiNubank, SiShell, SiVivo } from '@icons-pack/react-simple-icons'
 import { ArrowLeftRight, BatteryFull, Camera, CheckCheck, ChevronLeft, Copy, FileText, Landmark, MessageCircle, Mic, Phone, Plus, ReceiptText, Signal, Sticker, Tags, Video, Wifi } from 'lucide-react'
 import type { CSSProperties, ReactNode } from 'react'
 import { useEffect, useState } from 'react'
@@ -311,12 +311,12 @@ function NameScene({ duration }: { duration: number }) {
 
 // ─── 3. Promessa: hub do Otto ────────────────────────────────────────────────
 
-const HUB_TASKS: { icon: ReactNode; label: string; suffix: string; value: number }[] = [
-  { icon: <Landmark size={34} strokeWidth={2} />, label: 'Contas bancárias', suffix: 'sincronizadas', value: 6 },
-  { icon: <Tags size={34} strokeWidth={2} />, label: 'Despesas', suffix: 'categorizadas', value: 248 },
-  { icon: <ReceiptText size={34} strokeWidth={2} />, label: 'Notas fiscais', suffix: 'emitidas', value: 142 },
-  { icon: <ArrowLeftRight size={34} strokeWidth={2} />, label: 'Conciliação', suffix: 'lançamentos', value: 1204 },
-  { icon: <MessageCircle size={34} strokeWidth={2} />, label: 'Cobranças', suffix: 'no WhatsApp', value: 38 },
+const HUB_TASKS: { bg: string; color: string; icon: ReactNode; label: string; suffix: string; value: number }[] = [
+  { bg: '#e3ecfb', color: '#2f6bd8', icon: <Landmark size={34} strokeWidth={2} />, label: 'Contas bancárias', suffix: 'sincronizadas', value: 6 },
+  { bg: '#fcf0d6', color: '#c98a0c', icon: <Tags size={34} strokeWidth={2} />, label: 'Despesas', suffix: 'categorizadas', value: 248 },
+  { bg: '#eee7fb', color: '#7b4fd6', icon: <ReceiptText size={34} strokeWidth={2} />, label: 'Notas fiscais', suffix: 'emitidas', value: 142 },
+  { bg: '#ddf2ec', color: '#14946b', icon: <ArrowLeftRight size={34} strokeWidth={2} />, label: 'Conciliação', suffix: 'lançamentos', value: 1204 },
+  { bg: TERRA_SOFT, color: TERRA, icon: <MessageCircle size={34} strokeWidth={2} />, label: 'Cobranças', suffix: 'no WhatsApp', value: 38 },
 ]
 
 function PromiseScene({ duration }: { duration: number }) {
@@ -359,7 +359,7 @@ function PromiseScene({ duration }: { duration: number }) {
         return (
           <div key={node.label} style={{ background: WHITE, border: `2px solid ${frame >= 76 + i * 3 ? TERRA : `${GRAY}88`}`, borderRadius: 30, boxShadow: '0 22px 50px rgba(20,20,19,0.08)', left: node.x - 135, padding: '22px 22px 20px', position: 'absolute', top: node.y - 82, transform: `scale(${pop})`, width: 270 }}>
             <div style={{ alignItems: 'center', display: 'flex', gap: 14 }}>
-              <span style={{ alignItems: 'center', background: TERRA_SOFT, borderRadius: 16, color: TERRA, display: 'flex', flex: 'none', height: 56, justifyContent: 'center', width: 56 }}>{node.icon}</span>
+              <span style={{ alignItems: 'center', background: node.bg, borderRadius: 16, color: node.color, display: 'flex', flex: 'none', height: 56, justifyContent: 'center', width: 56 }}>{node.icon}</span>
               <span style={{ fontSize: 25, fontWeight: 650, lineHeight: 1.15 }}>{node.label}</span>
             </div>
             <div style={{ alignItems: 'baseline', display: 'flex', gap: 10, marginTop: 14 }}>
@@ -457,14 +457,14 @@ function BankSyncScene({ duration }: { duration: number }) {
 
 // ─── 5. Despesas ─────────────────────────────────────────────────────────────
 
-const CATEGORY_COLORS: Record<string, string> = { Energia: INK, Fornecedores: GRAY, Marketing: '#ecbfa9', Software: TERRA }
+const CATEGORY_COLORS: Record<string, string> = { Combustível: GRAY, Marketing: '#ecbfa9', Software: TERRA, Telefonia: INK }
 
-const EXPENSES = [
-  { category: 'Software', date: '03 out', name: 'Google Workspace', value: 389 },
-  { category: 'Energia', date: '04 out', name: 'Enel Energia', value: 1460 },
-  { category: 'Fornecedores', date: '05 out', name: 'Distribuidora Delta', value: 2640 },
-  { category: 'Marketing', date: '06 out', name: 'Meta Ads', value: 1200 },
-  { category: 'Software', date: '07 out', name: 'Amazon Web Services', value: 920 },
+const EXPENSES: { category: string; date: string; logo: ReactNode; name: string; value: number }[] = [
+  { category: 'Software', date: '03 out', logo: <SiGoogle color="#4285f4" size={40} />, name: 'Google Workspace', value: 389 },
+  { category: 'Telefonia', date: '04 out', logo: <SiVivo color="#660099" size={40} />, name: 'Vivo Empresas', value: 459 },
+  { category: 'Combustível', date: '05 out', logo: <SiShell color="#dd1d21" size={40} />, name: 'Posto Shell', value: 640 },
+  { category: 'Marketing', date: '06 out', logo: <SiMeta color="#0467df" size={40} />, name: 'Meta Ads', value: 1200 },
+  { category: 'Software', date: '07 out', logo: <SiNotion color="#000000" size={38} />, name: 'Notion', value: 920 },
 ]
 
 function ExpensesScene({ duration }: { duration: number }) {
@@ -484,8 +484,8 @@ function ExpensesScene({ duration }: { duration: number }) {
           const stamped = frame >= 24 + i * 10
           return (
             <div key={expense.name} style={{ alignItems: 'center', borderTop: i === 0 ? 'none' : `2px solid ${GRAY}44`, display: 'flex', gap: 24, opacity: o, padding: '26px 0' }}>
-              <span style={{ alignItems: 'center', background: BG, borderRadius: 18, color: INK_MUTED, display: 'flex', fontSize: 24, fontWeight: 700, height: 72, justifyContent: 'center', width: 72 }}>
-                {expense.name.split(' ').map((w) => w[0]).slice(0, 2).join('')}
+              <span style={{ alignItems: 'center', background: WHITE, border: `2px solid ${GRAY}66`, borderRadius: 18, display: 'flex', flex: 'none', height: 72, justifyContent: 'center', width: 72 }}>
+                {expense.logo}
               </span>
               <div style={{ flex: 1 }}>
                 <span style={{ display: 'block', fontSize: 34, fontWeight: 600 }}>{expense.name}</span>
@@ -494,7 +494,7 @@ function ExpensesScene({ duration }: { duration: number }) {
               <div style={{ position: 'relative', width: 230 }}>
                 <span style={{ border: `2px dashed ${GRAY}`, borderRadius: 99, color: GRAY, display: 'block', fontSize: 24, fontWeight: 600, opacity: stamped ? 0 : 1, padding: '10px 0', textAlign: 'center' }}>Classificando…</span>
                 {stamped ? (
-                  <span style={{ background: CATEGORY_COLORS[expense.category], borderRadius: 99, color: expense.category === 'Fornecedores' || expense.category === 'Marketing' ? INK : WHITE, fontSize: 25, fontWeight: 700, inset: 0, padding: '11px 0', position: 'absolute', textAlign: 'center', transform: `scale(${2 - stamp}) rotate(${(1 - stamp) * -10}deg)` }}>
+                  <span style={{ background: CATEGORY_COLORS[expense.category], borderRadius: 99, color: expense.category === 'Combustível' || expense.category === 'Marketing' ? INK : WHITE, fontSize: 25, fontWeight: 700, inset: 0, padding: '11px 0', position: 'absolute', textAlign: 'center', transform: `scale(${2 - stamp}) rotate(${(1 - stamp) * -10}deg)` }}>
                     {expense.category}
                   </span>
                 ) : null}
@@ -795,60 +795,129 @@ function WhatsAppScene({ duration }: { duration: number }) {
   )
 }
 
-// ─── 9. Sem planilhas ────────────────────────────────────────────────────────
+// ─── 9. Sem planilhas: planilha → Otto ───────────────────────────────────────
+
+const SHEET_COLS = 6
+const SHEET_ROWS = 8
+const CELL_W = 140
+const CELL_H = 58
+const SHEET_LEFT = (1080 - SHEET_COLS * CELL_W) / 2
+const SHEET_TOP = 540
+const SHEET_CX = 540
+const SHEET_CY = SHEET_TOP + (SHEET_ROWS * CELL_H) / 2
+
+const SHEET_SPECIAL: Record<string, string> = {
+  '1-3': '=SOMA(B2:B9)',
+  '2-5': '#REF!',
+  '3-2': '=PROCV(A3;…)',
+  '4-4': '#N/D',
+  '5-1': '=B4*1,02',
+  '6-5': '#VALOR!',
+  '7-3': '=SE(C7>0;…)',
+}
+
+function cellText(r: number, c: number, index: number) {
+  if (r === 0) return c === 0 ? '' : String.fromCharCode(64 + c)
+  if (c === 0) return `${r}`
+  return SHEET_SPECIAL[`${r}-${c}`] ?? (random(`v${index}`) * 9000).toFixed(0)
+}
 
 function NoSpreadsheetScene({ duration }: { duration: number }) {
   const frame = useCurrentFrame()
-  const cols = 6
-  const rows = 8
-  const cellW = 140
-  const cellH = 58
-  const gridLeft = (1080 - cols * cellW) / 2
-  const gridTop = 560
+  const ottoPop = useSpring(20, { damping: 12, stiffness: 150 })
+  const absorbed = p(frame, 30, 64, [0, 1], Easing.linear)
+  const card = useSpring(64, { damping: 14, stiffness: 140 })
+  const maxDist = Math.hypot(SHEET_COLS * CELL_W, SHEET_ROWS * CELL_H) / 2
 
   return (
     <Scene duration={duration}>
-      <Headline size={100} start={0} text="Tudo no automático." style={{ top: 330 }} />
-      {Array.from({ length: rows * cols }, (_, index) => {
-        const r = Math.floor(index / cols)
-        const c = index % cols
-        const delay = 26 + random(`cell${index}`) * 30
-        const fall = p(frame, delay, delay + 22, [0, 1], Easing.in(Easing.quad))
-        const appear = p(frame, 4 + r * 1.5, 14 + r * 1.5)
+      <Headline size={100} start={0} text="Tudo no automático." style={{ top: 300 }} />
+
+      {Array.from({ length: SHEET_ROWS * SHEET_COLS }, (_, index) => {
+        const r = Math.floor(index / SHEET_COLS)
+        const c = index % SHEET_COLS
+        const text = cellText(r, c, index)
+        const isError = text.startsWith('#')
+        const isFormula = text.startsWith('=')
+        const x0 = SHEET_LEFT + c * CELL_W + CELL_W / 2
+        const y0 = SHEET_TOP + r * CELL_H + CELL_H / 2
+        const dx = x0 - SHEET_CX
+        const dy = y0 - SHEET_CY
+        const delay = 28 + (Math.hypot(dx, dy) / maxDist) * 22 + random(`d${index}`) * 6
+        const t = p(frame, delay, delay + 16, [0, 1], Easing.in(Easing.cubic))
+        const angle = t * (Math.PI / 2)
+        const x = SHEET_CX + (dx * Math.cos(angle) - dy * Math.sin(angle)) * (1 - t)
+        const y = SHEET_CY + (dx * Math.sin(angle) + dy * Math.cos(angle)) * (1 - t)
+        const appear = p(frame, 2 + r * 1.5, 12 + r * 1.5)
+        const shake = isError && frame > 12 && frame < delay ? Math.sin(frame * 2.2 + index) * 3 : 0
+        if (t >= 1) return null
+
         return (
           <div
             key={index}
             style={{
               alignItems: 'center',
-              background: r === 0 ? `${GRAY}55` : WHITE,
+              background: r === 0 || c === 0 ? '#ebeae4' : isError ? '#fbe9e4' : WHITE,
               border: `1.5px solid ${GRAY}88`,
-              color: r === 0 ? INK : INK_MUTED,
+              color: isError ? '#c4452b' : isFormula ? INK : r === 0 || c === 0 ? INK : INK_MUTED,
               display: 'flex',
-              fontSize: 20,
-              fontWeight: r === 0 ? 700 : 500,
-              height: cellH,
+              fontFamily: isFormula ? 'Consolas, "SF Mono", monospace' : SANS,
+              fontSize: isFormula ? 16 : 20,
+              fontWeight: r === 0 || c === 0 || isError ? 700 : 500,
+              height: CELL_H,
               justifyContent: 'center',
-              left: gridLeft + c * cellW,
-              opacity: appear * (1 - fall),
+              left: x - CELL_W / 2 + shake,
+              opacity: appear * (1 - p(t, 0.7, 1)),
+              overflow: 'hidden',
               position: 'absolute',
-              top: gridTop + r * cellH + fall * (380 + random(`fy${index}`) * 300),
-              transform: `rotate(${fall * (random(`fr${index}`) - 0.5) * 70}deg)`,
-              width: cellW,
+              top: y - CELL_H / 2,
+              transform: `rotate(${t * 120}deg) scale(${1 - t * 0.85})`,
+              whiteSpace: 'nowrap',
+              width: CELL_W,
             }}
           >
-            {r === 0 ? String.fromCharCode(65 + c) : c === 0 ? `${r}` : (random(`v${index}`) * 9000).toFixed(0)}
+            {text}
           </div>
         )
       })}
+
+      <svg height={1920} style={{ left: 0, pointerEvents: 'none', position: 'absolute', top: 0 }} width={1080}>
+        {frame >= 30 && frame < 70
+          ? [0, 1].map((k) => {
+              const phase = ((frame - 30 + k * 10) % 20) / 20
+              return <circle cx={SHEET_CX} cy={SHEET_CY} fill="none" key={k} opacity={phase * 0.5} r={260 - phase * 160} stroke={TERRA} strokeWidth={3} />
+            })
+          : null}
+        {frame >= 64 ? <circle cx={SHEET_CX} cy={SHEET_CY} fill="none" opacity={1 - p(frame, 64, 84)} r={100 + p(frame, 64, 84) * 220} stroke={TERRA} strokeWidth={4} /> : null}
+      </svg>
+
+      <div style={{ alignItems: 'center', background: WHITE, border: `3px solid ${INK}`, borderRadius: 99, boxShadow: '0 26px 60px rgba(20,20,19,0.14)', display: 'flex', height: 190, justifyContent: 'center', left: SHEET_CX - 95, position: 'absolute', top: SHEET_CY - 95, transform: `scale(${ottoPop * (1 + absorbed * 0.12 - p(frame, 64, 74) * 0.12)})`, width: 190, zIndex: 2 }}>
+        <OttoIcon size={108} />
+      </div>
+
+      {frame >= 64 ? (
+        <Card style={{ alignItems: 'center', display: 'flex', gap: 26, left: 150, opacity: Math.min(1, card * 1.3), padding: '30px 36px', right: 150, top: SHEET_CY + 140 - (1 - card) * 140, transform: `scale(${0.85 + card * 0.15})`, zIndex: 1 }}>
+          <span style={{ alignItems: 'center', background: TERRA, borderRadius: 99, display: 'flex', flex: 'none', height: 76, justifyContent: 'center', width: 76 }}>
+            <svg height={40} viewBox="0 0 24 24" width={40}>
+              <path d="M5 12.5l4.5 4.5L19 7.5" fill="none" pathLength={1} stroke={WHITE} strokeDasharray={1} strokeDashoffset={1 - p(frame, 70, 82)} strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} />
+            </svg>
+          </span>
+          <div>
+            <span style={{ display: 'block', fontFamily: SERIF, fontSize: 50, fontWeight: 600, lineHeight: 1.05 }}>Financeiro em dia</span>
+            <span style={{ color: INK_MUTED, display: 'block', fontSize: 25, fontWeight: 600, marginTop: 6 }}>Atualizado agora · 0 planilhas</span>
+          </div>
+        </Card>
+      ) : null}
+
       <Headline
         marks={[
-          { at: 66, kind: 'strike', word: 'planilhas' },
-          { at: 74, kind: 'strike', word: 'estresse' },
+          { at: 84, kind: 'strike', word: 'planilhas' },
+          { at: 92, kind: 'strike', word: 'estresse' },
         ]}
         size={92}
-        start={48}
+        start={70}
         text="Sem planilhas, sem estresse."
-        style={{ top: 1180 }}
+        style={{ top: 1330 }}
       />
     </Scene>
   )
@@ -950,7 +1019,7 @@ const SCENES: { Component: (props: { duration: number }) => ReactNode; duration:
   { Component: InvoiceScene, duration: 100 },
   { Component: ReconciliationScene, duration: 100 },
   { Component: WhatsAppScene, duration: 105 },
-  { Component: NoSpreadsheetScene, duration: 100 },
+  { Component: NoSpreadsheetScene, duration: 120 },
   { Component: IntegrationScene, duration: 90 },
   { Component: CtaScene, duration: 120 },
 ]
