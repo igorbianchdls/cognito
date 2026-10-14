@@ -98,9 +98,27 @@ function Scene({ children, duration }: { children: ReactNode; duration: number }
   const y = p(frame, 0, 14, [18, 0])
 
   return (
-    <AbsoluteFill style={{ background: BG, color: INK, fontFamily: SANS, opacity, overflow: 'hidden', transform: `translateY(${y}px)` }}>
+    <AbsoluteFill style={{ color: INK, fontFamily: SANS, opacity, overflow: 'hidden', transform: `translateY(${y}px)` }}>
       {children}
     </AbsoluteFill>
+  )
+}
+
+const GRID_SIZE = 60
+const GRID_LINE = `${GRAY}66`
+const GRID_FADE = 'radial-gradient(ellipse 75% 60% at 50% 50%, #000 35%, transparent 100%)'
+
+function GridBackground() {
+  return (
+    <AbsoluteFill
+      style={{
+        backgroundImage: `linear-gradient(to right, ${GRID_LINE} 1.5px, transparent 1.5px), linear-gradient(to bottom, ${GRID_LINE} 1.5px, transparent 1.5px)`,
+        backgroundPosition: `${(1080 % GRID_SIZE) / 2}px ${(1920 % GRID_SIZE) / 2}px`,
+        backgroundSize: `${GRID_SIZE}px ${GRID_SIZE}px`,
+        maskImage: GRID_FADE,
+        WebkitMaskImage: GRID_FADE,
+      }}
+    />
   )
 }
 
@@ -833,6 +851,7 @@ export function OttoContadoresReel() {
 
   return (
     <AbsoluteFill style={{ background: BG }}>
+      <GridBackground />
       <Series>
         {SCENES.map(({ Component, duration }, index) => (
           <Series.Sequence durationInFrames={duration} key={index}>
