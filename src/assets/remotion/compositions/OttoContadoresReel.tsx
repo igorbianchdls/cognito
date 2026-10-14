@@ -29,43 +29,24 @@ const GRAY = '#b8bab2'
 const TERRA_SOFT = '#f6e4da'
 const INK_MUTED = '#6b6c66'
 
-const SERIF = '"Source Serif 4", Georgia, "Times New Roman", serif'
+const SERIF = '"Newsreader", Georgia, "Times New Roman", serif'
 const SANS = IOS_REMOTION_FONT_STACK
-
-const SERIF_FONT_ID = 'otto-contadores-serif-font'
-const SERIF_FONT_URL = 'https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,400..700&display=swap'
 
 let serifFontPromise: Promise<void> | null = null
 
 function loadSerifFont() {
-  if (serifFontPromise || typeof document === 'undefined') {
+  if (serifFontPromise || typeof document === 'undefined' || typeof FontFace === 'undefined') {
     return serifFontPromise
   }
 
-  serifFontPromise = new Promise<void>((resolve) => {
-    const timeout = window.setTimeout(resolve, 4000)
-    const done = () => {
-      document.fonts
-        .load(`600 80px "Source Serif 4"`)
-        .catch(() => undefined)
-        .finally(() => {
-          window.clearTimeout(timeout)
-          resolve()
-        })
-    }
-    const existing = document.getElementById(SERIF_FONT_ID)
-    if (existing) {
-      done()
-      return
-    }
-    const link = document.createElement('link')
-    link.id = SERIF_FONT_ID
-    link.rel = 'stylesheet'
-    link.href = SERIF_FONT_URL
-    link.onload = done
-    link.onerror = done
-    document.head.appendChild(link)
+  const font = new FontFace('Newsreader', `url("${staticFile('remotion/fonts/newsreader/Newsreader-Variable.ttf')}") format("truetype")`, {
+    style: 'normal',
+    weight: '200 800',
   })
+  document.fonts.add(font)
+  serifFontPromise = Promise.race([font.load(), new Promise((resolve) => window.setTimeout(resolve, 4000))])
+    .then(() => undefined)
+    .catch(() => undefined)
 
   return serifFontPromise
 }
@@ -1027,7 +1008,7 @@ const SCENES: { Component: (props: { duration: number }) => ReactNode; duration:
 export const OTTO_CONTADORES_REEL_DURATION = SCENES.reduce((sum, scene) => sum + scene.duration, 0)
 
 export function OttoContadoresReel() {
-  const [handle] = useState(() => delayRender('Loading Source Serif 4'))
+  const [handle] = useState(() => delayRender('Loading Newsreader'))
 
   useEffect(() => {
     const promise = loadSerifFont() ?? Promise.resolve()
