@@ -206,18 +206,18 @@ export function OttoIcon({ size }: { size: number }) {
 
 const TASKS = ['Contas bancárias', 'Despesas', 'Notas fiscais', 'Conciliação bancária', 'Cobrança no WhatsApp']
 
-function ProgressTracker({ duration, index }: { duration: number; index: number }) {
+function ProgressTracker({ duration, index, tasks = TASKS }: { duration: number; index: number; tasks?: string[] }) {
   const frame = useCurrentFrame()
   const fill = p(frame, 12, duration - 22, [0, 1], Easing.inOut(Easing.quad))
 
   return (
     <div style={{ alignItems: 'center', display: 'flex', flexDirection: 'column', gap: 18, left: 0, position: 'absolute', right: 0, top: 150 }}>
       <span style={{ color: INK_MUTED, fontSize: 28, fontWeight: 600, letterSpacing: '0.08em', textTransform: 'uppercase' }}>
-        {String(index + 1).padStart(2, '0')} / 05 · {TASKS[index]}
+        {String(index + 1).padStart(2, '0')} / {String(tasks.length).padStart(2, '0')} · {tasks[index]}
       </span>
       <div style={{ display: 'flex', gap: 12 }}>
-        {TASKS.map((task, i) => (
-          <div key={task} style={{ background: `${GRAY}88`, borderRadius: 99, height: 8, overflow: 'hidden', width: 128 }}>
+        {tasks.map((task, i) => (
+          <div key={task} style={{ background: `${GRAY}88`, borderRadius: 99, height: 8, overflow: 'hidden', width: (TASKS.length * 140 - 12) / tasks.length - 12 }}>
             <div style={{ background: TERRA, height: '100%', width: `${(i < index ? 1 : i === index ? fill : 0) * 100}%` }} />
           </div>
         ))}
@@ -226,10 +226,12 @@ function ProgressTracker({ duration, index }: { duration: number; index: number 
   )
 }
 
-function FeatureScene({ children, duration, index, title }: { children: ReactNode; duration: number; index: number; title: string }) {
+export type FeatureSceneProps = { duration: number; index?: number; tasks?: string[]; title?: string }
+
+function FeatureScene({ children, duration, index, tasks, title }: { children: ReactNode; duration: number; index: number; tasks?: string[]; title: string }) {
   return (
     <Scene duration={duration}>
-      <ProgressTracker duration={duration} index={index} />
+      <ProgressTracker duration={duration} index={index} tasks={tasks} />
       <Headline size={84} start={4} text={title} style={{ top: 270 }} />
       {children}
     </Scene>
@@ -454,7 +456,7 @@ export const EXPENSES: { category: string; date: string; logo: ReactNode; name: 
   { category: 'Software', date: '07 out', logo: <SiNotion color="#000000" size={38} />, name: 'Notion', value: 920 },
 ]
 
-function ExpensesScene({ duration }: { duration: number }) {
+export function ExpensesScene({ duration, index = 1, tasks, title = 'Categoriza suas despesas.' }: FeatureSceneProps) {
   const frame = useCurrentFrame()
   const totals = Object.keys(CATEGORY_COLORS).map((category) => ({
     category,
@@ -463,7 +465,7 @@ function ExpensesScene({ duration }: { duration: number }) {
   const sum = Math.max(1, totals.reduce((acc, item) => acc + item.value, 0))
 
   return (
-    <FeatureScene duration={duration} index={1} title="Categoriza suas despesas.">
+    <FeatureScene duration={duration} index={index} tasks={tasks} title={title}>
       <Card style={{ left: 80, opacity: p(frame, 6, 18), padding: '14px 40px', right: 80, top: 520 }}>
         {EXPENSES.map((expense, i) => {
           const o = p(frame, 8 + i * 4, 20 + i * 4)
@@ -578,7 +580,7 @@ const LEDGER = [
 ]
 const MATCHES = [1, 3, 0, 2]
 
-function ReconciliationScene({ duration }: { duration: number }) {
+export function ReconciliationScene({ duration, index = 3, tasks, title = 'Faz a conciliação bancária.' }: FeatureSceneProps) {
   const frame = useCurrentFrame()
   const rowTop = (i: number) => 640 + i * 170
   const rowH = 140
@@ -603,7 +605,7 @@ function ReconciliationScene({ duration }: { duration: number }) {
   )
 
   return (
-    <FeatureScene duration={duration} index={3} title="Faz a conciliação bancária.">
+    <FeatureScene duration={duration} index={index} tasks={tasks} title={title}>
       {column('Extrato bancário', STATEMENT, 55, (i) => 40 + i * 11 + 12)}
       {column('Lançamentos Otto', LEDGER, rightLeft, (j) => {
         const i = MATCHES.indexOf(j)
@@ -766,13 +768,13 @@ export function OttoNotification({ at, text }: { at: number; text: string }) {
   )
 }
 
-function WhatsAppScene({ duration }: { duration: number }) {
+export function WhatsAppScene({ duration, index = 4, tasks, title = 'Cobra seus clientes no WhatsApp.' }: FeatureSceneProps) {
   const frame = useCurrentFrame()
   const read = frame >= 44
   const typing = frame >= 48 && frame < 62
 
   return (
-    <FeatureScene duration={duration} index={4} title="Cobra seus clientes no WhatsApp.">
+    <FeatureScene duration={duration} index={index} tasks={tasks} title={title}>
       <PhoneFrame style={{ opacity: p(frame, 4, 16), transform: `translateY(${p(frame, 4, 20, [60, 0])}px)` }}>
         <WaChatHeader initials="LC" name="Lume Comércio" status={typing ? 'digitando…' : 'online'} />
         <div style={{ display: 'flex', flex: 1, flexDirection: 'column', gap: 8, justifyContent: 'flex-end', padding: '18px 30px 18px' }}>

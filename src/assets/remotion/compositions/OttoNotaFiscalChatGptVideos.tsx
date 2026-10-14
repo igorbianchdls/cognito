@@ -1,13 +1,11 @@
-import { ArrowUp, CheckCheck, ChevronDown, Copy, Plus, Search, SquarePen, X } from 'lucide-react'
-import type { ReactNode } from 'react'
-import { Easing, Img, random, Sequence, spring, staticFile, useCurrentFrame } from 'remotion'
+import { ArrowUp, CheckCheck, ChevronDown, Plus, Search, SquarePen, X } from 'lucide-react'
+import { Easing, Img, random, spring, staticFile, useCurrentFrame } from 'remotion'
 
 import {
-  CATEGORY_COLORS,
   Card,
   CtaScene,
   DISPLAY,
-  EXPENSES,
+  ExpensesScene,
   GRAY,
   Headline,
   INK,
@@ -16,6 +14,7 @@ import {
   OttoNotification,
   p,
   PhoneFrame,
+  ReconciliationScene,
   ReelRoot,
   type ReelScene,
   Scene,
@@ -24,11 +23,11 @@ import {
   typed,
   useSpring,
   WA,
-  WA_DOODLE,
   WaBubble,
   WaChatHeader,
   WaInputBar,
   WaTyping,
+  WhatsAppScene,
   WHITE,
 } from './OttoContadoresReel'
 
@@ -430,106 +429,24 @@ function WhatsAppChatListScene({ duration }: { duration: number }) {
   )
 }
 
-// ─── E não para na nota ──────────────────────────────────────────────────────
+// ─── E não para na nota (cenas completas do reel dos contadores) ────────────
 
-const FLASH = 38
+const MORE_TASKS = ['Conciliação bancária', 'Despesas', 'Cobrança no WhatsApp']
 
-function Flash({ children, label, number }: { children: ReactNode; label: string; number: number }) {
-  const frame = useCurrentFrame()
-  const enter = p(frame, 0, 8)
-  const exit = p(frame, FLASH - 7, FLASH, [0, 1], Easing.in(Easing.cubic))
-
-  return (
-    <div style={{ inset: 0, opacity: enter * (1 - exit), position: 'absolute', transform: `translateX(${(1 - enter) * 90 - exit * 90}px)` }}>
-      <div style={{ alignItems: 'center', display: 'flex', gap: 16, justifyContent: 'center', left: 0, position: 'absolute', right: 0, top: 560 }}>
-        <span style={{ alignItems: 'center', background: TERRA, borderRadius: 99, color: WHITE, display: 'flex', fontSize: 26, fontWeight: 800, height: 52, justifyContent: 'center', width: 52 }}>{number}</span>
-        <span style={{ fontSize: 44, fontWeight: 700 }}>{label}</span>
-      </div>
-      {children}
-    </div>
-  )
-}
-
-function ReconcileFlash() {
-  const frame = useCurrentFrame()
-  const draw = p(frame, 8, 20, [0, 1], Easing.inOut(Easing.cubic))
-  const check = spring({ config: { damping: 11, stiffness: 200 }, fps: 30, frame: frame - 20 })
-  const rows = [
-    { left: 60, sub: 'Itaú · PIX recebido', value: 'R$ 4.800' },
-    { left: 620, sub: 'Otto · Venda #1842', value: 'R$ 4.800' },
-  ]
-
-  return (
-    <>
-      {rows.map((row) => (
-        <Card key={row.left} style={{ border: `2px solid ${frame >= 20 ? TERRA : `${GRAY}66`}`, height: 170, left: row.left, padding: '30px 32px', top: 820, width: 400 }}>
-          <span style={{ color: INK_MUTED, display: 'block', fontSize: 25, fontWeight: 600 }}>{row.sub}</span>
-          <span style={{ display: 'block', fontSize: 50, fontVariantNumeric: 'tabular-nums', fontWeight: 700, marginTop: 10 }}>{row.value}</span>
-        </Card>
-      ))}
-      <svg height={1920} style={{ left: 0, position: 'absolute', top: 0 }} width={1080}>
-        <path d="M460 905 C 540 860, 540 950, 620 905" fill="none" pathLength={1} stroke={draw >= 1 ? TERRA : GRAY} strokeDasharray={1} strokeDashoffset={1 - draw} strokeLinecap="round" strokeWidth={6} />
-        {frame >= 20 ? (
-          <g transform={`translate(540 905) scale(${check})`}>
-            <circle fill={TERRA} r={30} />
-            <path d="M-12 1l8 8 16-17" fill="none" stroke={WHITE} strokeLinecap="round" strokeLinejoin="round" strokeWidth={5.5} />
-          </g>
-        ) : null}
-      </svg>
-    </>
-  )
-}
-
-function ExpenseFlash() {
-  const frame = useCurrentFrame()
-  return (
-    <Card style={{ left: 80, padding: '10px 36px', right: 80, top: 700 }}>
-      {EXPENSES.slice(0, 3).map((expense, i) => {
-        const stamp = spring({ config: { damping: 11, stiffness: 200 }, fps: 30, frame: frame - 8 - i * 6 })
-        const stamped = frame >= 8 + i * 6
-        return (
-          <div key={expense.name} style={{ alignItems: 'center', borderTop: i === 0 ? 'none' : `2px solid ${GRAY}44`, display: 'flex', gap: 22, padding: '24px 0' }}>
-            <span style={{ alignItems: 'center', background: WHITE, border: `2px solid ${GRAY}66`, borderRadius: 18, display: 'flex', flex: 'none', height: 72, justifyContent: 'center', width: 72 }}>{expense.logo}</span>
-            <span style={{ flex: 1, fontSize: 32, fontWeight: 600 }}>{expense.name}</span>
-            <span style={{ background: stamped ? CATEGORY_COLORS[expense.category] : 'transparent', border: stamped ? 'none' : `2px dashed ${GRAY}`, borderRadius: 99, color: stamped ? (expense.category === 'Combustível' ? INK : WHITE) : GRAY, fontSize: 24, fontWeight: 700, padding: '11px 0', textAlign: 'center', transform: stamped ? `scale(${2 - stamp}) rotate(${(1 - stamp) * -10}deg)` : undefined, width: 200 }}>
-              {stamped ? expense.category : '…'}
-            </span>
-          </div>
-        )
-      })}
-    </Card>
-  )
-}
-
-function CollectFlash() {
-  return (
-    <div style={{ background: WA.bg, backgroundImage: WA_DOODLE, border: `2px solid ${GRAY}66`, borderRadius: 40, display: 'flex', flexDirection: 'column', gap: 10, height: 560, justifyContent: 'flex-end', left: 90, padding: '30px 34px', position: 'absolute', right: 90, top: 680 }}>
-      <WaBubble at={4} buttons={[{ icon: <Copy size={26} strokeWidth={2.2} />, label: 'Copiar código Pix' }]} out read tail time="09:00">
-        Oi, Lume! Sua fatura de <strong>R$ 2.480,00</strong> venceu ontem. Segue o Pix pra facilitar:
-      </WaBubble>
-      <WaBubble at={18} tail time="09:03">
-        Pago agora, obrigado!
-      </WaBubble>
-    </div>
-  )
-}
-
-function MoreScene({ duration }: { duration: number }) {
+function MoreIntroScene({ duration }: { duration: number }) {
   return (
     <Scene duration={duration}>
-      <Headline highlight={['nota']} size={92} start={0} text="E não para na nota." style={{ top: 240 }} />
-      <Sequence durationInFrames={FLASH} from={14} layout="none">
-        <Flash label="Concilia seu banco" number={1}><ReconcileFlash /></Flash>
-      </Sequence>
-      <Sequence durationInFrames={FLASH} from={14 + FLASH} layout="none">
-        <Flash label="Classifica despesas" number={2}><ExpenseFlash /></Flash>
-      </Sequence>
-      <Sequence durationInFrames={FLASH} from={14 + FLASH * 2} layout="none">
-        <Flash label="Cobra quem tá te devendo" number={3}><CollectFlash /></Flash>
-      </Sequence>
+      <Headline highlight={['nota']} size={110} start={0} text="E não para na nota." style={{ top: 780 }} />
     </Scene>
   )
 }
+
+const MORE_SCENES: ReelScene[] = [
+  { Component: MoreIntroScene, duration: 50 },
+  { Component: ({ duration }) => <ReconciliationScene duration={duration} index={0} tasks={MORE_TASKS} title="Concilia seu banco." />, duration: 100 },
+  { Component: ({ duration }) => <ExpensesScene duration={duration} index={1} tasks={MORE_TASKS} title="Classifica suas despesas." />, duration: 95 },
+  { Component: ({ duration }) => <WhatsAppScene duration={duration} index={2} tasks={MORE_TASKS} title="Cobra quem tá te devendo." />, duration: 105 },
+]
 
 // ─── Revelação do Otto ───────────────────────────────────────────────────────
 
@@ -598,7 +515,7 @@ const SINGLE_SCENES: ReelScene[] = [
   { Component: InvoiceConfirmScene, duration: 130 },
   { Component: WhatsAppDeliveryScene, duration: 100 },
   { Component: makeBatchScene('Trinta vendas? Uma mensagem só e ele emite todas.', ['todas']), duration: 110 },
-  { Component: MoreScene, duration: 14 + FLASH * 3 + 4 },
+  ...MORE_SCENES,
   { Component: makeRevealScene(['Sem entrar no site da prefeitura', 'Sem sistema complicado', 'Sem perder tempo']), duration: 140 },
   { Component: ClaudeAlsoScene, duration: 75 },
   { Component: makeCta('Quer emitir sua próxima nota assim?'), duration: 120 },
@@ -610,7 +527,7 @@ const BATCH_SCENES: ReelScene[] = [
   { Component: ReviewListScene, duration: 120 },
   { Component: makeBatchScene('Trinta notas emitidas em menos de um minuto.', ['minuto']), duration: 140 },
   { Component: WhatsAppChatListScene, duration: 105 },
-  { Component: MoreScene, duration: 14 + FLASH * 3 + 4 },
+  ...MORE_SCENES,
   { Component: makeRevealScene(['Sem emitir nota por nota', 'Sem entrar no site da prefeitura', 'Sem perder o dia']), duration: 140 },
   { Component: ClaudeAlsoScene, duration: 75 },
   { Component: makeCta('Quer emitir as notas do mês assim?'), duration: 120 },
