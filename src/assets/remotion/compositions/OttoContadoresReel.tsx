@@ -209,6 +209,7 @@ const TASKS = ['Contas bancárias', 'Despesas', 'Notas fiscais', 'Conciliação 
 function ProgressTracker({ duration, index, tasks = TASKS }: { duration: number; index: number; tasks?: string[] }) {
   const frame = useCurrentFrame()
   const fill = p(frame, 12, duration - 22, [0, 1], Easing.inOut(Easing.quad))
+  if (tasks.length === 0) return null
 
   return (
     <div style={{ alignItems: 'center', display: 'flex', flexDirection: 'column', gap: 18, left: 0, position: 'absolute', right: 0, top: 150 }}>
@@ -523,12 +524,12 @@ const INVOICE_FIELDS = [
 
 const INVOICE_STEPS = ['Validando', 'Enviando', 'Autorizada']
 
-function InvoiceScene({ duration }: { duration: number }) {
+export function InvoiceScene({ duration, index = 2, tasks, title = 'Emite notas fiscais.' }: FeatureSceneProps) {
   const frame = useCurrentFrame()
   const stamp = spring({ config: { damping: 10, stiffness: 170 }, fps: 30, frame: frame - 70 })
 
   return (
-    <FeatureScene duration={duration} index={2} title="Emite notas fiscais.">
+    <FeatureScene duration={duration} index={index} tasks={tasks} title={title}>
       <Card style={{ left: 120, opacity: p(frame, 6, 18), padding: '46px 50px', right: 120, top: 520, transform: `translateY(${p(frame, 6, 22, [50, 0])}px) rotate(-1deg)` }}>
         <div style={{ alignItems: 'baseline', borderBottom: `2px solid ${GRAY}55`, display: 'flex', justifyContent: 'space-between', paddingBottom: 26 }}>
           <span style={{ fontFamily: DISPLAY, fontSize: 62, fontWeight: 400 }}>NFS-e</span>

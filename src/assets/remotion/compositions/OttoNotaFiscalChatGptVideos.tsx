@@ -1,4 +1,5 @@
-import { ArrowUp, CheckCheck, ChevronDown, Plus, Search, SquarePen, X } from 'lucide-react'
+import { ArrowUp, CheckCheck, ChevronDown, FileText, Plus, Search, SquarePen, X } from 'lucide-react'
+import type { ReactNode } from 'react'
 import { Easing, Img, random, spring, staticFile, useCurrentFrame } from 'remotion'
 
 import {
@@ -53,11 +54,11 @@ const INVOICES = CLIENTS.map((name, i) => ({
 }))
 const BATCH_TOTAL = INVOICES.reduce((sum, invoice) => sum + invoice.value, 0)
 
-const money = (value: number) => value.toLocaleString('pt-BR', { currency: 'BRL', maximumFractionDigits: 0, style: 'currency' })
+export const money = (value: number) => value.toLocaleString('pt-BR', { currency: 'BRL', maximumFractionDigits: 0, style: 'currency' })
 
 // ─── Shared bits ─────────────────────────────────────────────────────────────
 
-function Cursor({ click, from, to, travel }: { click: number; from: [number, number]; to: [number, number]; travel: [number, number] }) {
+export function Cursor({ click, from, to, travel }: { click: number; from: [number, number]; to: [number, number]; travel: [number, number] }) {
   const frame = useCurrentFrame()
   const t = p(frame, travel[0], travel[1], [0, 1], Easing.inOut(Easing.cubic))
   const x = from[0] + (to[0] - from[0]) * t
@@ -77,7 +78,7 @@ function Cursor({ click, from, to, travel }: { click: number; from: [number, num
   )
 }
 
-function CheckBadge({ size = 44 }: { size?: number }) {
+export function CheckBadge({ size = 44 }: { size?: number }) {
   return (
     <span style={{ alignItems: 'center', background: TERRA, borderRadius: 99, display: 'flex', flex: 'none', height: size, justifyContent: 'center', width: size }}>
       <svg height={size * 0.55} viewBox="0 0 24 24" width={size * 0.55}>
@@ -97,11 +98,11 @@ function StatusPill({ status }: { status: keyof typeof STATUS }) {
   )
 }
 
-const ChatGptLogo = ({ height = 64 }: { height?: number }) => <Img src={staticFile('gptLogo.svg')} style={{ filter: 'brightness(0)', height }} />
+export const ChatGptLogo = ({ height = 64 }: { height?: number }) => <Img src={staticFile('gptLogo.svg')} style={{ filter: 'brightness(0)', height }} />
 
 // ─── 1. Hook ─────────────────────────────────────────────────────────────────
 
-function makeHookScene(title: string, highlight: string[], size: number) {
+export function makeHookScene(title: string, highlight: string[], size: number, subline = 'E quase ninguém sabe disso.') {
   return function HookScene({ duration }: { duration: number }) {
     const frame = useCurrentFrame()
     const logo = useSpring(2, { damping: 12, stiffness: 150 })
@@ -113,7 +114,7 @@ function makeHookScene(title: string, highlight: string[], size: number) {
         </Card>
         <Headline highlight={highlight} size={size} start={8} text={title} style={{ top: 760 }} />
         <span style={{ color: INK_MUTED, fontFamily: DISPLAY, fontSize: 70, fontStyle: 'italic', left: 0, opacity: p(frame, 52, 66), position: 'absolute', right: 0, textAlign: 'center', top: 1360, transform: `translateY(${p(frame, 52, 68, [18, 0])}px)` }}>
-          E quase ninguém sabe disso.
+          {subline}
         </span>
       </Scene>
     )
@@ -122,55 +123,68 @@ function makeHookScene(title: string, highlight: string[], size: number) {
 
 // ─── 2. Pedido no ChatGPT ────────────────────────────────────────────────────
 
-function makePromptScene(title: string, prompt: string) {
-  return function PromptScene({ duration }: { duration: number }) {
-    const frame = useCurrentFrame()
-    const typeEnd = 12 + Math.min(44, prompt.length * 0.9)
-    const sendAt = typeEnd + 6
-    const sent = frame >= sendAt
-    const bubble = spring({ config: { damping: 15, stiffness: 170 }, fps: 30, frame: frame - sendAt })
-    const found = frame >= sendAt + 34
-    const text = sent ? '' : typed(prompt, p(frame, 12, typeEnd, [0, 1], Easing.linear))
+/** ChatGPT window: the prompt is typed in the composer, sent as a bubble, then `response` renders below it. */
+export function ChatGptWindow({ prompt, response }: { prompt: string; response: (sendAt: number) => ReactNode }) {
+  const frame = useCurrentFrame()
+  const typeEnd = 12 + Math.min(44, prompt.length * 0.9)
+  const sendAt = typeEnd + 6
+  const sent = frame >= sendAt
+  const bubble = spring({ config: { damping: 15, stiffness: 170 }, fps: 30, frame: frame - sendAt })
+  const text = sent ? '' : typed(prompt, p(frame, 12, typeEnd, [0, 1], Easing.linear))
 
+  return (
+    <Card style={{ borderRadius: 44, display: 'flex', flexDirection: 'column', height: 860, left: 70, opacity: p(frame, 4, 14), overflow: 'hidden', right: 70, top: 560 }}>
+      <div style={{ alignItems: 'center', borderBottom: '1px solid #ececec', display: 'flex', justifyContent: 'space-between', padding: '30px 36px' }}>
+        <span style={{ alignItems: 'center', display: 'flex', fontSize: 32, fontWeight: 600, gap: 8 }}>
+          ChatGPT <ChevronDown color={INK_MUTED} size={28} strokeWidth={2.2} />
+        </span>
+        <SquarePen color={INK} size={32} strokeWidth={1.9} />
+      </div>
+      <div style={{ display: 'flex', flex: 1, flexDirection: 'column', gap: 26, justifyContent: 'flex-end', padding: '30px 36px' }}>
+        {sent ? (
+          <div style={{ alignSelf: 'flex-end', background: '#f4f4f4', borderRadius: 32, fontSize: 32, lineHeight: 1.3, maxWidth: '82%', opacity: bubble, padding: '22px 28px', transform: `translateY(${(1 - bubble) * 30}px)` }}>{prompt}</div>
+        ) : null}
+        {frame >= sendAt + 8 ? response(sendAt) : null}
+      </div>
+      <div style={{ padding: '0 28px 28px' }}>
+        <div style={{ alignItems: 'center', border: '2px solid #e3e3e3', borderRadius: 44, boxShadow: '0 6px 20px rgba(0,0,0,0.05)', display: 'flex', gap: 16, minHeight: 96, padding: '14px 16px 14px 24px' }}>
+          <Plus color={INK} size={34} strokeWidth={1.9} />
+          <span style={{ color: text ? INK : '#9b9b9b', flex: 1, fontSize: 30, lineHeight: 1.3 }}>
+            {text || 'Pergunte alguma coisa'}
+            {!sent && frame >= 12 && frame % 16 < 9 ? <span style={{ background: INK, display: 'inline-block', height: 32, marginLeft: 2, verticalAlign: 'middle', width: 3 }} /> : null}
+          </span>
+          <span style={{ alignItems: 'center', background: text || frame >= typeEnd ? INK : '#d9d9d9', borderRadius: 99, display: 'flex', flex: 'none', height: 64, justifyContent: 'center', transform: `scale(${frame >= sendAt - 2 && frame < sendAt + 2 ? 0.88 : 1})`, width: 64 }}>
+            <ArrowUp color={WHITE} size={34} strokeWidth={2.4} />
+          </span>
+        </div>
+      </div>
+    </Card>
+  )
+}
+
+export function OttoWorking({ doneText, sendAt }: { doneText: string; sendAt: number }) {
+  const frame = useCurrentFrame()
+  const found = frame >= sendAt + 34
+
+  return (
+    <div style={{ alignItems: 'center', display: 'flex', gap: 16, opacity: p(frame, sendAt + 8, sendAt + 16) }}>
+      <span style={{ alignItems: 'center', background: WHITE, border: `2px solid ${GRAY}88`, borderRadius: 99, display: 'flex', flex: 'none', height: 58, justifyContent: 'center', width: 58 }}>
+        <OttoIcon size={34} />
+      </span>
+      <span style={{ color: found ? INK : INK_MUTED, fontSize: 28, fontWeight: 600, opacity: found ? 1 : 0.55 + 0.45 * Math.abs(Math.sin(frame / 6)) }}>
+        {found ? doneText : 'Otto · buscando dados…'}
+      </span>
+      {found ? <CheckBadge size={40} /> : null}
+    </div>
+  )
+}
+
+export function makePromptScene(title: string, prompt: string, doneText = 'Cliente, serviço e impostos encontrados') {
+  return function PromptScene({ duration }: { duration: number }) {
     return (
       <Scene duration={duration}>
         <Headline size={80} start={0} text={title} style={{ top: 200 }} />
-        <Card style={{ borderRadius: 44, display: 'flex', flexDirection: 'column', height: 860, left: 70, opacity: p(frame, 4, 14), overflow: 'hidden', right: 70, top: 560 }}>
-          <div style={{ alignItems: 'center', borderBottom: '1px solid #ececec', display: 'flex', justifyContent: 'space-between', padding: '30px 36px' }}>
-            <span style={{ alignItems: 'center', display: 'flex', fontSize: 32, fontWeight: 600, gap: 8 }}>
-              ChatGPT <ChevronDown color={INK_MUTED} size={28} strokeWidth={2.2} />
-            </span>
-            <SquarePen color={INK} size={32} strokeWidth={1.9} />
-          </div>
-          <div style={{ display: 'flex', flex: 1, flexDirection: 'column', gap: 26, justifyContent: 'flex-end', padding: '30px 36px' }}>
-            {sent ? (
-              <div style={{ alignSelf: 'flex-end', background: '#f4f4f4', borderRadius: 32, fontSize: 32, lineHeight: 1.3, maxWidth: '82%', opacity: bubble, padding: '22px 28px', transform: `translateY(${(1 - bubble) * 30}px)` }}>{prompt}</div>
-            ) : null}
-            {frame >= sendAt + 8 ? (
-              <div style={{ alignItems: 'center', display: 'flex', gap: 16, opacity: p(frame, sendAt + 8, sendAt + 16) }}>
-                <span style={{ alignItems: 'center', background: WHITE, border: `2px solid ${GRAY}88`, borderRadius: 99, display: 'flex', flex: 'none', height: 58, justifyContent: 'center', width: 58 }}>
-                  <OttoIcon size={34} />
-                </span>
-                <span style={{ color: found ? INK : INK_MUTED, fontSize: 28, fontWeight: 600, opacity: found ? 1 : 0.55 + 0.45 * Math.abs(Math.sin(frame / 6)) }}>
-                  {found ? 'Cliente, serviço e impostos encontrados' : 'Otto · buscando dados…'}
-                </span>
-                {found ? <CheckBadge size={40} /> : null}
-              </div>
-            ) : null}
-          </div>
-          <div style={{ padding: '0 28px 28px' }}>
-            <div style={{ alignItems: 'center', border: '2px solid #e3e3e3', borderRadius: 44, boxShadow: '0 6px 20px rgba(0,0,0,0.05)', display: 'flex', gap: 16, minHeight: 96, padding: '14px 16px 14px 24px' }}>
-              <Plus color={INK} size={34} strokeWidth={1.9} />
-              <span style={{ color: text ? INK : '#9b9b9b', flex: 1, fontSize: 30, lineHeight: 1.3 }}>
-                {text || 'Pergunte alguma coisa'}
-                {!sent && frame >= 12 && frame % 16 < 9 ? <span style={{ background: INK, display: 'inline-block', height: 32, marginLeft: 2, verticalAlign: 'middle', width: 3 }} /> : null}
-              </span>
-              <span style={{ alignItems: 'center', background: text || frame >= typeEnd ? INK : '#d9d9d9', borderRadius: 99, display: 'flex', flex: 'none', height: 64, justifyContent: 'center', transform: `scale(${frame >= sendAt - 2 && frame < sendAt + 2 ? 0.88 : 1})`, width: 64 }}>
-                <ArrowUp color={WHITE} size={34} strokeWidth={2.4} />
-              </span>
-            </div>
-          </div>
-        </Card>
+        <ChatGptWindow prompt={prompt} response={(sendAt) => <OttoWorking doneText={doneText} sendAt={sendAt} />} />
       </Scene>
     )
   }
@@ -244,7 +258,7 @@ function PdfAttachment({ name }: { name: string }) {
   )
 }
 
-function WhatsAppDeliveryScene({ duration }: { duration: number }) {
+export function WhatsAppDeliveryScene({ duration }: { duration: number }) {
   const frame = useCurrentFrame()
   const read = frame >= 40
   const typing = frame >= 44 && frame < 56
@@ -367,101 +381,110 @@ function ReviewListScene({ duration }: { duration: number }) {
   )
 }
 
-// ─── 5B. Lista de conversas do WhatsApp ──────────────────────────────────────
+// ─── Lista de conversas do WhatsApp (envio em massa) ─────────────────────────
 
 const CHAT_ROW_H = 112
 
-function WhatsAppChatListScene({ duration }: { duration: number }) {
-  const frame = useCurrentFrame()
-  const every = 2.2
-  const arrived = Math.max(0, Math.min(INVOICES.length, Math.floor((frame - 14) / every) + 1))
-  const slide = spring({ config: { damping: 18, stiffness: 220 }, fps: 30, frame: frame - (14 + (arrived - 1) * every) })
-  const rows = Array.from({ length: Math.min(arrived, 8) }, (_, j) => INVOICES[arrived - 1 - j])
+export type ChatListRow = { initials: string; line: string; name: string }
 
-  return (
-    <Scene duration={duration}>
-      <Headline highlight={['whatsapp']} size={80} start={0} text="E cada cliente já recebe a sua no WhatsApp." style={{ top: 170 }} />
-      <PhoneFrame background={WHITE} style={{ opacity: p(frame, 4, 14), top: 470, transform: `translateY(${p(frame, 4, 20, [60, 0])}px)` }}>
-        <div style={{ background: WA.bar, flex: 'none', padding: '6px 30px 18px' }}>
-          <div style={{ alignItems: 'baseline', display: 'flex', justifyContent: 'space-between' }}>
-            <span style={{ color: WA.text, fontSize: 54, fontWeight: 750, letterSpacing: '-0.01em' }}>Conversas</span>
-            <span style={{ background: '#d9fdd3', borderRadius: 99, color: '#14946b', fontSize: 22, fontWeight: 700, padding: '6px 16px' }}>{arrived} enviadas</span>
-          </div>
-          <div style={{ alignItems: 'center', background: '#ececec', borderRadius: 18, color: WA.meta, display: 'flex', fontSize: 25, gap: 10, marginTop: 14, padding: '14px 18px' }}>
-            <Search size={26} strokeWidth={2} /> Pesquisar
-          </div>
-        </div>
-        <div style={{ flex: 1, overflow: 'hidden', position: 'relative' }}>
-          {rows.map((invoice, j) => (
-            <div
-              key={invoice.number}
-              style={{
-                alignItems: 'center',
-                background: j === 0 ? `rgba(217, 253, 211, ${0.6 * (1 - slide)})` : WHITE,
-                display: 'flex',
-                gap: 18,
-                height: CHAT_ROW_H,
-                left: 0,
-                opacity: j === 0 ? slide : 1,
-                padding: '0 26px',
-                position: 'absolute',
-                right: 0,
-                top: (j - (1 - slide)) * CHAT_ROW_H,
-              }}
-            >
-              <span style={{ alignItems: 'center', background: '#dfe5e7', borderRadius: 99, color: '#54656f', display: 'flex', flex: 'none', fontSize: 23, fontWeight: 700, height: 72, justifyContent: 'center', width: 72 }}>{invoice.initials}</span>
-              <div style={{ borderBottom: `1px solid ${WA.divider}`, flex: 1, minWidth: 0, padding: '22px 0' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                  <span style={{ color: WA.text, fontSize: 27, fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{invoice.name}</span>
-                  <span style={{ color: WA.meta, flex: 'none', fontSize: 20 }}>10:4{Math.min(9, Math.floor((INVOICES.indexOf(invoice) * every) / 8))}</span>
-                </div>
-                <span style={{ alignItems: 'center', color: WA.meta, display: 'flex', fontSize: 23, gap: 6, marginTop: 4 }}>
-                  <CheckCheck color={WA.tickRead} size={22} strokeWidth={2.4} />
-                  NFS-e {invoice.number}.pdf
-                </span>
-              </div>
-            </div>
-          ))}
-        </div>
-        <OttoNotification at={84} text={`${INVOICES.length} notas enviadas no WhatsApp. Contas a receber atualizado.`} />
-      </PhoneFrame>
-    </Scene>
-  )
-}
-
-// ─── E não para na nota (cenas completas do reel dos contadores) ────────────
-
-const MORE_TASKS = ['Conciliação bancária', 'Despesas', 'Cobrança no WhatsApp']
-
-function MoreIntroScene({ duration }: { duration: number }) {
-  return (
-    <Scene duration={duration}>
-      <Headline highlight={['nota']} size={110} start={0} text="E não para na nota." style={{ top: 780 }} />
-    </Scene>
-  )
-}
-
-const MORE_SCENES: ReelScene[] = [
-  { Component: MoreIntroScene, duration: 50 },
-  { Component: ({ duration }) => <ReconciliationScene duration={duration} index={0} tasks={MORE_TASKS} title="Concilia seu banco." />, duration: 100 },
-  { Component: ({ duration }) => <ExpensesScene duration={duration} index={1} tasks={MORE_TASKS} title="Classifica suas despesas." />, duration: 95 },
-  { Component: ({ duration }) => <WhatsAppScene duration={duration} index={2} tasks={MORE_TASKS} title="Cobra quem tá te devendo." />, duration: 105 },
-]
-
-// ─── Revelação do Otto ───────────────────────────────────────────────────────
-
-function makeRevealScene(chips: string[]) {
-  return function RevealScene({ duration }: { duration: number }) {
+export function makeChatListScene({ badge, highlight, icon, notification, rows: allRows, title }: { badge: (count: number) => string; highlight: string[]; icon: ReactNode; notification: string; rows: ChatListRow[]; title: string }) {
+  return function ChatListScene({ duration }: { duration: number }) {
     const frame = useCurrentFrame()
-    const reveal = p(frame, 10, 32, [0, 1], Easing.inOut(Easing.cubic))
+    const every = Math.max(2.2, 60 / allRows.length)
+    const arrived = Math.max(0, Math.min(allRows.length, Math.floor((frame - 14) / every) + 1))
+    const slide = spring({ config: { damping: 18, stiffness: 220 }, fps: 30, frame: frame - (14 + (arrived - 1) * every) })
+    const rows = Array.from({ length: Math.min(arrived, 8) }, (_, j) => ({ ...allRows[arrived - 1 - j], index: arrived - 1 - j }))
 
     return (
       <Scene duration={duration}>
-        <span style={{ color: INK_MUTED, fontFamily: DISPLAY, fontSize: 84, left: 0, opacity: p(frame, 0, 10), position: 'absolute', right: 0, textAlign: 'center', top: 360 }}>Isso é o</span>
-        <div style={{ display: 'flex', justifyContent: 'center', left: 0, position: 'absolute', right: 0, top: 470 }}>
+        <Headline highlight={highlight} size={80} start={0} text={title} style={{ top: 170 }} />
+        <PhoneFrame background={WHITE} style={{ opacity: p(frame, 4, 14), top: 470, transform: `translateY(${p(frame, 4, 20, [60, 0])}px)` }}>
+          <div style={{ background: WA.bar, flex: 'none', padding: '6px 30px 18px' }}>
+            <div style={{ alignItems: 'baseline', display: 'flex', justifyContent: 'space-between' }}>
+              <span style={{ color: WA.text, fontSize: 54, fontWeight: 750, letterSpacing: '-0.01em' }}>Conversas</span>
+              <span style={{ background: '#d9fdd3', borderRadius: 99, color: '#14946b', fontSize: 22, fontWeight: 700, padding: '6px 16px' }}>{badge(arrived)}</span>
+            </div>
+            <div style={{ alignItems: 'center', background: '#ececec', borderRadius: 18, color: WA.meta, display: 'flex', fontSize: 25, gap: 10, marginTop: 14, padding: '14px 18px' }}>
+              <Search size={26} strokeWidth={2} /> Pesquisar
+            </div>
+          </div>
+          <div style={{ flex: 1, overflow: 'hidden', position: 'relative' }}>
+            {rows.map((row, j) => (
+              <div
+                key={row.index}
+                style={{
+                  alignItems: 'center',
+                  background: j === 0 ? `rgba(217, 253, 211, ${0.6 * (1 - slide)})` : WHITE,
+                  display: 'flex',
+                  gap: 18,
+                  height: CHAT_ROW_H,
+                  left: 0,
+                  opacity: j === 0 ? slide : 1,
+                  padding: '0 26px',
+                  position: 'absolute',
+                  right: 0,
+                  top: (j - (1 - slide)) * CHAT_ROW_H,
+                }}
+              >
+                <span style={{ alignItems: 'center', background: '#dfe5e7', borderRadius: 99, color: '#54656f', display: 'flex', flex: 'none', fontSize: 23, fontWeight: 700, height: 72, justifyContent: 'center', width: 72 }}>{row.initials}</span>
+                <div style={{ borderBottom: `1px solid ${WA.divider}`, flex: 1, minWidth: 0, padding: '22px 0' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                    <span style={{ color: WA.text, fontSize: 27, fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{row.name}</span>
+                    <span style={{ color: WA.meta, flex: 'none', fontSize: 20 }}>10:4{Math.min(9, Math.floor((row.index * every) / 8))}</span>
+                  </div>
+                  <span style={{ alignItems: 'center', color: WA.meta, display: 'flex', fontSize: 23, gap: 6, marginTop: 4, overflow: 'hidden', whiteSpace: 'nowrap' }}>
+                    <CheckCheck color={WA.tickRead} size={22} strokeWidth={2.4} style={{ flex: 'none' }} />
+                    {icon}
+                    {row.line}
+                  </span>
+                </div>
+              </div>
+            ))}
+          </div>
+          <OttoNotification at={84} text={notification} />
+        </PhoneFrame>
+      </Scene>
+    )
+  }
+}
+
+// ─── "E não para…" (cenas completas do reel dos contadores) ──────────────────
+
+/** A big statement ("E não para na nota.") followed by full-length feature scenes. */
+export function makeMoreScenes(intro: string, highlight: string[], scenes: ReelScene[]): ReelScene[] {
+  function MoreIntroScene({ duration }: { duration: number }) {
+    return (
+      <Scene duration={duration}>
+        <Headline highlight={highlight} size={110} start={0} text={intro} style={{ top: 780 }} />
+      </Scene>
+    )
+  }
+  return [{ Component: MoreIntroScene, duration: 50 }, ...scenes]
+}
+
+const MORE_TASKS = ['Conciliação bancária', 'Despesas', 'Cobrança no WhatsApp']
+
+const MORE_SCENES = makeMoreScenes('E não para na nota.', ['nota'], [
+  { Component: ({ duration }) => <ReconciliationScene duration={duration} index={0} tasks={MORE_TASKS} title="Concilia seu banco." />, duration: 100 },
+  { Component: ({ duration }) => <ExpensesScene duration={duration} index={1} tasks={MORE_TASKS} title="Classifica suas despesas." />, duration: 95 },
+  { Component: ({ duration }) => <WhatsAppScene duration={duration} index={2} tasks={MORE_TASKS} title="Cobra quem tá te devendo." />, duration: 105 },
+])
+
+// ─── Revelação do Otto ───────────────────────────────────────────────────────
+
+export function makeRevealScene(chips: string[], prefix = 'Isso é o') {
+  return function RevealScene({ duration }: { duration: number }) {
+    const frame = useCurrentFrame()
+    const reveal = p(frame, 10, 32, [0, 1], Easing.inOut(Easing.cubic))
+    const top = chips.length ? 0 : 140
+
+    return (
+      <Scene duration={duration}>
+        <span style={{ color: INK_MUTED, fontFamily: DISPLAY, fontSize: 84, left: 0, opacity: p(frame, 0, 10), position: 'absolute', right: 0, textAlign: 'center', top: 360 + top }}>{prefix}</span>
+        <div style={{ display: 'flex', justifyContent: 'center', left: 0, position: 'absolute', right: 0, top: 470 + top }}>
           <Img src={staticFile('logoOtto.svg')} style={{ clipPath: `inset(0 ${(1 - reveal) * 100}% 0 0)`, height: 250, width: 590 }} />
         </div>
-        <Headline highlight={['chatgpt']} size={70} start={30} stagger={2} text="Um sistema de gestão que funciona dentro do seu ChatGPT." style={{ top: 800 }} />
+        <Headline highlight={['chatgpt']} size={70} start={30} stagger={2} text="Um sistema de gestão que funciona dentro do seu ChatGPT." style={{ top: 800 + top }} />
         <div style={{ alignItems: 'center', display: 'flex', flexDirection: 'column', gap: 18, left: 0, position: 'absolute', right: 0, top: 1170 }}>
           {chips.map((chip, i) => {
             const s = spring({ config: { damping: 14, stiffness: 170 }, fps: 30, frame: frame - 66 - i * 8 })
@@ -482,28 +505,32 @@ function makeRevealScene(chips: string[]) {
 
 // ─── Também no Claude ────────────────────────────────────────────────────────
 
-function ClaudeAlsoScene({ duration }: { duration: number }) {
-  const frame = useCurrentFrame()
-  const claude = spring({ config: { damping: 11, stiffness: 150 }, fps: 30, frame: frame - 22 })
+export function makeClaudeAlsoScene(title = 'E funciona no Claude também.') {
+  return function ClaudeAlsoScene({ duration }: { duration: number }) {
+    const frame = useCurrentFrame()
+    const claude = spring({ config: { damping: 11, stiffness: 150 }, fps: 30, frame: frame - 22 })
 
-  return (
-    <Scene duration={duration}>
-      <Headline highlight={['claude']} size={96} start={0} text="E funciona no Claude também." style={{ top: 520 }} />
-      <Card style={{ alignItems: 'center', display: 'flex', height: 170, justifyContent: 'center', left: 90, opacity: p(frame, 6, 16), top: 980, width: 420 }}>
-        <ChatGptLogo height={60} />
-      </Card>
-      <Card style={{ alignItems: 'center', border: `3px solid ${TERRA}`, display: 'flex', height: 170, justifyContent: 'center', left: 570, top: 980, transform: `scale(${claude}) rotate(${(1 - claude) * 8}deg)`, width: 420 }}>
-        <Img src={staticFile('claudeLogo.svg')} style={{ height: 56 }} />
-      </Card>
-    </Scene>
-  )
+    return (
+      <Scene duration={duration}>
+        <Headline highlight={['claude']} size={96} start={0} text={title} style={{ top: 520 }} />
+        <Card style={{ alignItems: 'center', display: 'flex', height: 170, justifyContent: 'center', left: 90, opacity: p(frame, 6, 16), top: 980, width: 420 }}>
+          <ChatGptLogo height={60} />
+        </Card>
+        <Card style={{ alignItems: 'center', border: `3px solid ${TERRA}`, display: 'flex', height: 170, justifyContent: 'center', left: 570, top: 980, transform: `scale(${claude}) rotate(${(1 - claude) * 8}deg)`, width: 420 }}>
+          <Img src={staticFile('claudeLogo.svg')} style={{ height: 56 }} />
+        </Card>
+      </Scene>
+    )
+  }
 }
+
+const ClaudeAlsoScene = makeClaudeAlsoScene()
 
 // ─── CTA ─────────────────────────────────────────────────────────────────────
 
-function makeCta(title: string) {
-  return function NotaCta({ duration }: { duration: number }) {
-    return <CtaScene comment="Nota" duration={duration} highlight={['assim']} keyword="NOTA" title={title} titleSize={84} />
+export function makeCta(title: string, { comment = 'Nota', highlight = ['assim'], keyword = 'NOTA' }: { comment?: string; highlight?: string[]; keyword?: string } = {}) {
+  return function ReelCta({ duration }: { duration: number }) {
+    return <CtaScene comment={comment} duration={duration} highlight={highlight} keyword={keyword} title={title} titleSize={84} />
   }
 }
 
@@ -526,7 +553,17 @@ const BATCH_SCENES: ReelScene[] = [
   { Component: makePromptScene('Trinta vendas pra faturar? Você só escreve:', 'Emite as notas de todas as vendas de outubro'), duration: 110 },
   { Component: ReviewListScene, duration: 120 },
   { Component: makeBatchScene('Trinta notas emitidas em menos de um minuto.', ['minuto']), duration: 140 },
-  { Component: WhatsAppChatListScene, duration: 105 },
+  {
+    Component: makeChatListScene({
+      badge: (count) => `${count} enviadas`,
+      highlight: ['whatsapp'],
+      icon: <FileText size={22} strokeWidth={2.2} style={{ flex: 'none' }} />,
+      notification: `${INVOICES.length} notas enviadas no WhatsApp. Contas a receber atualizado.`,
+      rows: INVOICES.map((invoice) => ({ initials: invoice.initials, line: `NFS-e ${invoice.number}.pdf`, name: invoice.name })),
+      title: 'E cada cliente já recebe a sua no WhatsApp.',
+    }),
+    duration: 105,
+  },
   ...MORE_SCENES,
   { Component: makeRevealScene(['Sem emitir nota por nota', 'Sem entrar no site da prefeitura', 'Sem perder o dia']), duration: 140 },
   { Component: ClaudeAlsoScene, duration: 75 },

@@ -175,6 +175,7 @@ import { OTTO_BATCH_INVOICE_SCRIPT_DURATION, OTTO_SINGLE_INVOICE_SCRIPT_DURATION
 import { OTTO_HOOK_1_DURATION, OTTO_HOOK_2_DURATION, OTTO_HOOK_3_DURATION, OTTO_HOOK_4_DURATION, OTTO_HOOK_5_DURATION, OttoHookAutomatedFinanceVideo, OttoHookBatchInvoicesVideo, OttoHookBoletoPixVideo, OttoHookManageByChatVideo, OttoHookSingleInvoiceVideo } from '@/assets/remotion/compositions/OttoFiveHooksIllustrativeVideos'
 import { OTTO_BODY_1_DURATION, OTTO_BODY_2_DURATION, OttoBodyManageByConversationVideo, OttoBodySystemBehindVideo } from '@/assets/remotion/compositions/OttoTwoBodiesIllustrativeVideos'
 import { OTTO_CONTADORES_REEL_DURATION, OttoContadoresReel } from '@/assets/remotion/compositions/OttoContadoresReel'
+import { OTTO_COBRANCA_REEL_DURATION, OTTO_FUNCIONARIO_REEL_DURATION, OttoCobrancaReel, OttoFuncionarioReel } from '@/assets/remotion/compositions/OttoCobrancaFuncionarioVideos'
 import { OTTO_NOTA_CHATGPT_BATCH_DURATION, OTTO_NOTA_CHATGPT_SINGLE_DURATION, OttoNotaChatGptBatchReel, OttoNotaChatGptSingleReel } from '@/assets/remotion/compositions/OttoNotaFiscalChatGptVideos'
 import { OTTO_INVOICE_CHATGPT_MONITOR_CONTENT_DURATION, OttoInvoiceChatGptMonitorContent } from '@/assets/remotion/compositions/OttoInvoiceChatGptMonitorContent'
 import { OTTO_SYNC_ONLY_SCENE_DURATION, OttoSyncOnlyScene } from '@/assets/remotion/compositions/OttoSyncOnlyScene'
@@ -2355,6 +2356,32 @@ const catalog: CatalogItem[] = [
     label: 'Reel → ChatGPT emite várias notas (B)',
     tags: ['Reel', 'Otto', 'ChatGPT', 'Nota fiscal', 'Lote'],
     value: 'reel-otto-nota-chatgpt-batch',
+    width: 1080,
+  },
+  {
+    code: '<OttoCobrancaReel />',
+    component: OttoCobrancaReel,
+    description: 'Reel vertical: o ChatGPT cobra os clientes que te devem. Inadimplentes, cobrança em massa no WhatsApp, baixa automática, lembrete e CTA COBRANÇA.',
+    duration: OTTO_COBRANCA_REEL_DURATION,
+    fps: 30,
+    height: 1920,
+    kind: 'Vídeos criados',
+    label: 'Reel → ChatGPT cobra seus clientes',
+    tags: ['Reel', 'Otto', 'ChatGPT', 'Cobrança', 'WhatsApp'],
+    value: 'reel-otto-cobranca',
+    width: 1080,
+  },
+  {
+    code: '<OttoFuncionarioReel />',
+    component: OttoFuncionarioReel,
+    description: 'Reel vertical: contratei uma IA pro financeiro, 24h e sem salário. Crachá, rotina da manhã, nota, cobrança, lucro no ChatGPT e CTA IA.',
+    duration: OTTO_FUNCIONARIO_REEL_DURATION,
+    fps: 30,
+    height: 1920,
+    kind: 'Vídeos criados',
+    label: 'Reel → Funcionária de R$ 0',
+    tags: ['Reel', 'Otto', 'ChatGPT', 'IA', 'Financeiro'],
+    value: 'reel-otto-funcionario',
     width: 1080,
   },
   {
