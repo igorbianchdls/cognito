@@ -347,7 +347,7 @@ function PromiseScene({ duration }: { duration: number }) {
               <span style={{ fontSize: 25, fontWeight: 650, lineHeight: 1.15 }}>{node.label}</span>
             </div>
             <div style={{ alignItems: 'baseline', display: 'flex', gap: 10, marginTop: 14 }}>
-              <span style={{ fontFamily: SERIF, fontSize: 46, fontVariantNumeric: 'tabular-nums', fontWeight: 600, lineHeight: 1 }}>{count.toLocaleString('pt-BR')}</span>
+              <span style={{ fontFamily: SANS, fontSize: 44, fontVariantNumeric: 'tabular-nums', fontWeight: 700, letterSpacing: '-0.01em', lineHeight: 1 }}>{count.toLocaleString('pt-BR')}</span>
               <span style={{ color: INK_MUTED, fontSize: 21, fontWeight: 600 }}>{node.suffix}</span>
             </div>
             {frame >= 76 + i * 3 ? (
@@ -431,7 +431,7 @@ function BankSyncScene({ duration }: { duration: number }) {
       <Card style={{ alignItems: 'center', display: 'flex', justifyContent: 'space-between', left: 110, opacity: p(frame, 44, 56), padding: '30px 44px', right: 110, top: 1420 }}>
         <div>
           <span style={{ color: INK_MUTED, display: 'block', fontSize: 26, fontWeight: 600 }}>Saldo consolidado</span>
-          <span style={{ display: 'block', fontFamily: SERIF, fontSize: 58, fontWeight: 600, fontVariantNumeric: 'tabular-nums', marginTop: 4 }}>{brl(counted)}</span>
+          <span style={{ display: 'block', fontFamily: SANS, fontSize: 54, fontWeight: 700, fontVariantNumeric: 'tabular-nums', letterSpacing: '-0.01em', marginTop: 4 }}>{brl(counted)}</span>
         </div>
         <span style={{ background: TERRA_SOFT, borderRadius: 99, color: TERRA, fontSize: 26, fontWeight: 700, padding: '12px 22px' }}>{connected} contas</span>
       </Card>
@@ -592,7 +592,7 @@ function ReconciliationScene({ duration }: { duration: number }) {
         return (
           <Card key={row.detail} style={{ border: `2px solid ${matched ? TERRA : `${GRAY}66`}`, borderRadius: 26, height: rowH, left, opacity: o, padding: '24px 28px', top: rowTop(i) + (1 - o) * 30, width: 400 }}>
             <span style={{ color: INK_MUTED, display: 'block', fontSize: 24, fontWeight: 600 }}>{row.name} · {row.detail}</span>
-            <span style={{ display: 'block', fontFamily: SERIF, fontSize: 44, fontWeight: 600, marginTop: 8 }}>{row.value}</span>
+            <span style={{ display: 'block', fontFamily: SANS, fontSize: 42, fontVariantNumeric: 'tabular-nums', fontWeight: 700, letterSpacing: '-0.01em', marginTop: 8 }}>{row.value}</span>
           </Card>
         )
       })}
