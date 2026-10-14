@@ -1007,6 +1007,14 @@ const SCENES: { Component: (props: { duration: number }) => ReactNode; duration:
 
 export const OTTO_CONTADORES_REEL_DURATION = SCENES.reduce((sum, scene) => sum + scene.duration, 0)
 
+// The app's globals.css forces `body * { font-family: ... !important }`, which beats inline styles
+// when the reel is previewed inside Next. Re-assert the reel's own fonts with higher specificity.
+const REEL_FONT_CSS = `
+.otto-reel, .otto-reel * { font-family: ${SANS} !important; }
+.otto-reel [style*="Newsreader"], .otto-reel [style*="Newsreader"] * { font-family: ${SERIF} !important; }
+.otto-reel [style*="Consolas"] { font-family: Consolas, "SF Mono", monospace !important; }
+`
+
 export function OttoContadoresReel() {
   const [handle] = useState(() => delayRender('Loading Newsreader'))
 
@@ -1016,7 +1024,8 @@ export function OttoContadoresReel() {
   }, [handle])
 
   return (
-    <AbsoluteFill style={{ background: BG }}>
+    <AbsoluteFill className="otto-reel" style={{ background: BG }}>
+      <style>{REEL_FONT_CSS}</style>
       <GridBackground />
       <Series>
         {SCENES.map(({ Component, duration }, index) => (
