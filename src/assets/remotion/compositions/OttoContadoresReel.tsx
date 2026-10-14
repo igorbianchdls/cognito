@@ -289,6 +289,9 @@ function NameScene({ duration }: { duration: number }) {
         />
       </div>
       <div style={{ background: TERRA, borderRadius: 99, height: 8, left: 540 - 90, position: 'absolute', top: 1190, transform: `scaleX(${p(frame, 34, 50)})`, width: 180 }} />
+      <span style={{ color: INK_MUTED, fontSize: 40, fontWeight: 600, left: 0, letterSpacing: '0.01em', opacity: p(frame, 46, 60), position: 'absolute', right: 0, textAlign: 'center', top: 1240, transform: `translateY(${p(frame, 46, 62, [16, 0])}px)` }}>
+        Sistema de gestão com IA
+      </span>
     </Scene>
   )
 }
@@ -996,7 +999,7 @@ function CtaScene({ duration }: { duration: number }) {
 
 const SCENES: { Component: (props: { duration: number }) => ReactNode; duration: number }[] = [
   { Component: HookScene, duration: 105 },
-  { Component: NameScene, duration: 66 },
+  { Component: NameScene, duration: 88 },
   { Component: PromiseScene, duration: 100 },
   { Component: BankSyncScene, duration: 100 },
   { Component: ExpensesScene, duration: 95 },
