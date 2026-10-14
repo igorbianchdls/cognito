@@ -1,6 +1,6 @@
 import { ArrowLeftRight, Copy, FileText, Landmark, QrCode, Tags } from 'lucide-react'
 import type { ReactNode } from 'react'
-import { Easing, Img, spring, staticFile, useCurrentFrame } from 'remotion'
+import { Easing, Img, spring, staticFile } from 'remotion'
 
 import {
   brl,
@@ -22,6 +22,7 @@ import {
   Scene,
   sceneDuration,
   TERRA,
+  useFrame,
   useSpring,
   WA,
   WaBubble,
@@ -78,7 +79,7 @@ const DEBTORS = [
 const OVERDUE_TOTAL = DEBTORS.reduce((sum, debtor) => sum + debtor.value, 0)
 
 function OverdueScene({ duration }: { duration: number }) {
-  const frame = useCurrentFrame()
+  const frame = useFrame()
   const total = OVERDUE_TOTAL * p(frame, 30, 70, [0, 1], Easing.out(Easing.quad))
 
   return (
@@ -118,7 +119,7 @@ const BulkCollectScene = makeChatListScene({
 })
 
 function PaidScene({ duration }: { duration: number }) {
-  const frame = useCurrentFrame()
+  const frame = useFrame()
   const bank = useSpring(8, { damping: 15, stiffness: 150 })
   const draw = p(frame, 24, 40, [0, 1], Easing.inOut(Easing.cubic))
   const paid = frame >= 44
@@ -166,7 +167,7 @@ function PaidScene({ duration }: { duration: number }) {
 }
 
 function ReminderScene({ duration }: { duration: number }) {
-  const frame = useCurrentFrame()
+  const frame = useFrame()
   const read = frame >= 56
   const typing = frame >= 60 && frame < 74
 
@@ -231,7 +232,7 @@ const COBRANCA_SCENES: ReelScene[] = [
 // ═══ Vídeo: Funcionário de R$ 0 ══════════════════════════════════════════════
 
 function BadgeHookScene({ duration }: { duration: number }) {
-  const frame = useCurrentFrame()
+  const frame = useFrame()
   const drop = useSpring(14, { damping: 12, stiffness: 110 })
   const swing = frame > 14 ? Math.sin((frame - 14) / 6) * 7 * Math.exp(-(frame - 14) / 30) : 0
   const salary = spring({ config: { damping: 10, stiffness: 180 }, fps: 30, frame: frame - 62 })
@@ -281,7 +282,7 @@ const MORNING_TASKS = [
 ]
 
 function MorningScene({ duration }: { duration: number }) {
-  const frame = useCurrentFrame()
+  const frame = useFrame()
   const minutes = Math.round(57 + 3 * p(frame, 0, 18, [0, 1], Easing.linear))
   const clock = minutes >= 60 ? '07:00' : `06:${String(minutes).padStart(2, '0')}`
 
@@ -320,7 +321,7 @@ function MorningScene({ duration }: { duration: number }) {
 const PROFIT = { expenses: 61230, revenue: 96480 }
 
 function ProfitAnswer({ sendAt }: { sendAt: number }) {
-  const frame = useCurrentFrame()
+  const frame = useFrame()
   const t = p(frame, sendAt + 14, sendAt + 44, [0, 1], Easing.out(Easing.quad))
   const profit = PROFIT.revenue - PROFIT.expenses
   const rows = [

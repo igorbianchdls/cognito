@@ -22,6 +22,7 @@ import { searchErpOperationsCatalog, type ErpOperationCatalogSource } from '@/pr
       source,
       query: params.get('q') || '',
       limit: Number(params.get('limit') || 20),
+      transactionId: params.has('transactionId') ? Number(params.get('transactionId')) : undefined,
     }) })
   } catch (error) {
     return erpFailureResponse(error)

@@ -1,6 +1,6 @@
 import { ArrowUp, CheckCheck, ChevronDown, FileText, Plus, Search, SquarePen, X } from 'lucide-react'
 import type { ReactNode } from 'react'
-import { Easing, Img, random, spring, staticFile, useCurrentFrame } from 'remotion'
+import { Easing, Img, random, spring, staticFile } from 'remotion'
 
 import {
   Card,
@@ -22,6 +22,7 @@ import {
   sceneDuration,
   TERRA,
   typed,
+  useFrame,
   useSpring,
   WA,
   WaBubble,
@@ -59,7 +60,7 @@ export const money = (value: number) => value.toLocaleString('pt-BR', { currency
 // ─── Shared bits ─────────────────────────────────────────────────────────────
 
 export function Cursor({ click, from, to, travel }: { click: number; from: [number, number]; to: [number, number]; travel: [number, number] }) {
-  const frame = useCurrentFrame()
+  const frame = useFrame()
   const t = p(frame, travel[0], travel[1], [0, 1], Easing.inOut(Easing.cubic))
   const x = from[0] + (to[0] - from[0]) * t
   const y = from[1] + (to[1] - from[1]) * t
@@ -104,7 +105,7 @@ export const ChatGptLogo = ({ height = 64 }: { height?: number }) => <Img src={s
 
 export function makeHookScene(title: string, highlight: string[], size: number, subline = 'E quase ninguém sabe disso.') {
   return function HookScene({ duration }: { duration: number }) {
-    const frame = useCurrentFrame()
+    const frame = useFrame()
     const logo = useSpring(2, { damping: 12, stiffness: 150 })
 
     return (
@@ -125,7 +126,7 @@ export function makeHookScene(title: string, highlight: string[], size: number, 
 
 /** ChatGPT window: the prompt is typed in the composer, sent as a bubble, then `response` renders below it. */
 export function ChatGptWindow({ prompt, response }: { prompt: string; response: (sendAt: number) => ReactNode }) {
-  const frame = useCurrentFrame()
+  const frame = useFrame()
   const typeEnd = 12 + Math.min(44, prompt.length * 0.9)
   const sendAt = typeEnd + 6
   const sent = frame >= sendAt
@@ -163,7 +164,7 @@ export function ChatGptWindow({ prompt, response }: { prompt: string; response: 
 }
 
 export function OttoWorking({ doneText, sendAt }: { doneText: string; sendAt: number }) {
-  const frame = useCurrentFrame()
+  const frame = useFrame()
   const found = frame >= sendAt + 34
 
   return (
@@ -200,7 +201,7 @@ const NOTE_FIELDS = [
 ]
 
 function InvoiceConfirmScene({ duration }: { duration: number }) {
-  const frame = useCurrentFrame()
+  const frame = useFrame()
   const confirmed = frame >= 70
   const stamp = spring({ config: { damping: 10, stiffness: 170 }, fps: 30, frame: frame - 100 })
 
@@ -259,7 +260,7 @@ function PdfAttachment({ name }: { name: string }) {
 }
 
 export function WhatsAppDeliveryScene({ duration }: { duration: number }) {
-  const frame = useCurrentFrame()
+  const frame = useFrame()
   const read = frame >= 40
   const typing = frame >= 44 && frame < 56
 
@@ -295,7 +296,7 @@ const ROW_H = 98
 
 function makeBatchScene(title: string, highlight: string[]) {
   return function BatchScene({ duration }: { duration: number }) {
-    const frame = useCurrentFrame()
+    const frame = useFrame()
     const start = 26
     const step = (duration - 56) / INVOICES.length
     const progress = Math.max(0, Math.min(INVOICES.length, (frame - start) / step))
@@ -340,7 +341,7 @@ function makeBatchScene(title: string, highlight: string[]) {
 // ─── 3B. Revisão em lista + confirmar ────────────────────────────────────────
 
 function ReviewListScene({ duration }: { duration: number }) {
-  const frame = useCurrentFrame()
+  const frame = useFrame()
   const confirmed = frame >= 88
 
   return (
@@ -389,7 +390,7 @@ export type ChatListRow = { initials: string; line: string; name: string }
 
 export function makeChatListScene({ badge, highlight, icon, notification, rows: allRows, title }: { badge: (count: number) => string; highlight: string[]; icon: ReactNode; notification: string; rows: ChatListRow[]; title: string }) {
   return function ChatListScene({ duration }: { duration: number }) {
-    const frame = useCurrentFrame()
+    const frame = useFrame()
     const every = Math.max(2.2, 60 / allRows.length)
     const arrived = Math.max(0, Math.min(allRows.length, Math.floor((frame - 14) / every) + 1))
     const slide = spring({ config: { damping: 18, stiffness: 220 }, fps: 30, frame: frame - (14 + (arrived - 1) * every) })
@@ -474,7 +475,7 @@ const MORE_SCENES = makeMoreScenes('E não para na nota.', ['nota'], [
 
 export function makeRevealScene(chips: string[], prefix = 'Isso é o') {
   return function RevealScene({ duration }: { duration: number }) {
-    const frame = useCurrentFrame()
+    const frame = useFrame()
     const reveal = p(frame, 10, 32, [0, 1], Easing.inOut(Easing.cubic))
     const top = chips.length ? 0 : 140
 
@@ -507,7 +508,7 @@ export function makeRevealScene(chips: string[], prefix = 'Isso é o') {
 
 export function makeClaudeAlsoScene(title = 'E funciona no Claude também.') {
   return function ClaudeAlsoScene({ duration }: { duration: number }) {
-    const frame = useCurrentFrame()
+    const frame = useFrame()
     const claude = spring({ config: { damping: 11, stiffness: 150 }, fps: 30, frame: frame - 22 })
 
     return (

@@ -18,7 +18,7 @@ type Balance = { conta: string; data_extrato: string | null; saldo_extrato: numb
 type Rule = { id: string; nome: string; conta: string | null; descricao_contem: string; tipo_transacao: 'credito' | 'debito'; categoria: string; entidade: string; ativo: boolean }
 type ImportResult = { imported?: number; ignored?: number; reused?: boolean; regras?: { lancadas: number; falhas: Array<{ motivo: string }> } }
 
-export function BankStatementTools({ onChanged }: { onChanged: () => void }) {
+export function BankStatementTools({ onChanged, refreshRevision = 0 }: { onChanged: () => Promise<void>; refreshRevision?: number }) {
   const confirmAction = useErpConfirmation()
 
   const [accounts, setAccounts] = useState<Option[]>([])
@@ -45,14 +45,14 @@ export function BankStatementTools({ onChanged }: { onChanged: () => void }) {
     let active = true
     erpJson<Balance>(`/api/erp/conciliacao/lancamentos?saldo_conta=${account}`).then(body => { if (active) setBalance(body) }).catch(() => { if (active) setBalance(null) })
     return () => { active = false }
-  }, [account, message])
+  }, [account, message, refreshRevision])
 
   async function applyRules() {
     setBusy(true); setError(null)
     try {
       const result = await erpJson<{ lancadas: number; falhas: Array<{ motivo: string }> }>(`/api/erp/conciliacao/lancamentos?aplicar=1${account ? `&conta=${account}` : ''}`, { method: 'POST', body: {} })
       setMessage(`${result.lancadas} transação(ões) lançada(s) pelas regras.${result.falhas.length ? ` ${result.falhas.length} não puderam ser lançadas: ${result.falhas[0].motivo}` : ''}`)
-      onChanged()
+      await onChanged()
     } catch (applyError) { setError(errorMessage(applyError, 'Não foi possível aplicar as regras.')) }
     finally { setBusy(false) }
   }

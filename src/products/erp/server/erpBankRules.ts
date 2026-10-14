@@ -71,7 +71,15 @@ export async function applyLaunchRules(input: Actor & { importId?: number; accou
       && description.includes(item.descricao_contem.toLowerCase()))
     if (!rule) continue
     try {
-      await withTransaction(client => runWithErpTransactionClient(client, async () => {
+      const didLaunch = await withTransaction(client => runWithErpTransactionClient(client, async () => {
+        // Recheck after acquiring the lock: another worker may have completed the
+        // transaction since the pending list was read. Keep real key conflicts visible.
+        const pending = await client.query(`SELECT id FROM erp.transacoes_bancarias
+          WHERE empresa_id=$1 AND id=$2 AND status='pendente' AND excluido_em IS NULL
+          AND NOT EXISTS (SELECT 1 FROM erp.conciliacoes_bancarias_itens i
+            WHERE i.empresa_id=$1 AND i.transacao_bancaria_id=$2 AND i.desfeito_em IS NULL)
+          FOR UPDATE SKIP LOCKED`, [input.tenantId, transaction.id])
+        if (!pending.rows.length) return false
         const side = transaction.tipo === 'debito' ? 'pagar' : 'receber', value = Number(transaction.valor)
         const key = `extrato:${transaction.id}`
         const titleId = Number(await createManualFinancialTitle(client, input.tenantId, input.actorId, side, {
@@ -86,8 +94,9 @@ export async function applyLaunchRules(input: Actor & { importId?: number; accou
           values: { valor: value, data_pagamento: transaction.data, conta_financeira_id: Number(transaction.conta_financeira_id) } }) as unknown as { payment: { id: string } }
         await createManagementOperation({ tenantId: input.tenantId, actorId: input.actorId, resource: 'conciliar-transacao', idempotencyKey: `${key}:conciliacao`,
           values: { transacao_bancaria_id: Number(transaction.id), pagamento_id: Number(settled.payment.id), origem_conciliacao: 'sugerida' } })
+        return true
       }))
-      launched += 1
+      if (didLaunch) launched += 1
     } catch (error) {
       failures.push({ transacao_id: transaction.id, motivo: error instanceof Error ? error.message : 'Falha ao lançar.' })
     }

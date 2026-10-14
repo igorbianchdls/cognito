@@ -64,6 +64,7 @@ export async function searchErpOperationsCatalog(input: {
   source: ErpOperationCatalogSource
   query?: string
   limit?: number
+  transactionId?: number
 }) {
   const limit = Math.min(50, Math.max(10, Math.floor(Number(input.limit) || 20)))
   const params: unknown[] = [input.tenantId, input.query?.trim() || '', limit]
@@ -83,18 +84,41 @@ export async function searchErpOperationsCatalog(input: {
   if (input.source === 'locations') {
     return runQuery(`SELECT id::text AS value, concat_ws(' - ', nome, NULLIF(codigo, '')) AS label FROM erp.locais_estoque WHERE empresa_id = $1 AND ativo AND excluido_em IS NULL AND ${commonSearch} ORDER BY padrao DESC, nome LIMIT $3`, params)
   }
-  return runQuery(
+  if (input.transactionId !== undefined && (!Number.isSafeInteger(input.transactionId) || input.transactionId <= 0))
+    throw new ErpDomainError('VALIDATION_ERROR', 'Transação inválida.', 422)
+  const payments = await runQuery<{
+    value: string; tipo: string; data: string; valor: string; documento: string; entidade: string; conta: string
+  }>(
     `SELECT pagamentos.id::text AS value,
-       concat(CASE WHEN pagamentos.tipo = 'receber' THEN 'Recebimento' ELSE 'Pagamento' END,
-         ' - ', to_char(pagamentos.data_pagamento, 'DD/MM/YYYY'), ' - R$ ', to_char(pagamentos.valor_liquido, 'FM999G999G990D00')) AS label
+       pagamentos.tipo, to_char(pagamentos.data_pagamento,'DD/MM/YYYY') AS data,
+       pagamentos.valor_liquido::text AS valor, contas.nome AS conta,
+       coalesce(receber.descricao,pagar.descricao,'') AS documento,
+       coalesce(cliente.nome,fornecedor.nome,'') AS entidade
      FROM erp.pagamentos
+     JOIN erp.contas_financeiras contas ON contas.empresa_id=pagamentos.empresa_id AND contas.id=pagamentos.conta_financeira_id
+     LEFT JOIN erp.contas_receber_parcelas rp ON rp.empresa_id=pagamentos.empresa_id AND rp.id=pagamentos.conta_receber_parcela_id
+     LEFT JOIN erp.contas_receber receber ON receber.empresa_id=rp.empresa_id AND receber.id=rp.conta_receber_id
+     LEFT JOIN erp.entidades cliente ON cliente.empresa_id=receber.empresa_id AND cliente.id=receber.cliente_id
+     LEFT JOIN erp.contas_pagar_parcelas pp ON pp.empresa_id=pagamentos.empresa_id AND pp.id=pagamentos.conta_pagar_parcela_id
+     LEFT JOIN erp.contas_pagar pagar ON pagar.empresa_id=pp.empresa_id AND pagar.id=pp.conta_pagar_id
+     LEFT JOIN erp.entidades fornecedor ON fornecedor.empresa_id=pagar.empresa_id AND fornecedor.id=pagar.fornecedor_id
      WHERE pagamentos.empresa_id = $1 AND pagamentos.excluido_em IS NULL
        AND pagamentos.estornado_em IS NULL AND pagamentos.estorno_de_pagamento_id IS NULL
-       AND NOT pagamentos.conciliado
-       AND ($2 = '' OR concat_ws(' ', pagamentos.tipo, pagamentos.origem, pagamentos.valor_liquido::text) ILIKE '%' || $2 || '%')
-     ORDER BY pagamentos.data_pagamento DESC LIMIT $3`,
-    params,
+       AND NOT pagamentos.conciliado AND pagamentos.valor_liquido > 0
+       AND NOT EXISTS (SELECT 1 FROM erp.conciliacoes_bancarias_itens i WHERE i.empresa_id=pagamentos.empresa_id AND i.pagamento_id=pagamentos.id AND i.desfeito_em IS NULL)
+       AND ($4::bigint IS NULL OR EXISTS (SELECT 1 FROM erp.transacoes_bancarias t
+         WHERE t.empresa_id=pagamentos.empresa_id AND t.id=$4 AND t.status='pendente' AND t.excluido_em IS NULL
+         AND t.conta_financeira_id=pagamentos.conta_financeira_id
+         AND (t.tipo='credito')=(pagamentos.tipo='receber')))
+       AND ($2 = '' OR concat_ws(' ', pagamentos.id::text,pagamentos.tipo, pagamentos.origem, pagamentos.valor_liquido::text,receber.descricao,pagar.descricao,cliente.nome,fornecedor.nome,contas.nome) ILIKE '%' || $2 || '%')
+     ORDER BY pagamentos.data_pagamento DESC,pagamentos.id DESC LIMIT $3`,
+    [...params,input.transactionId ?? null],
   )
+  return payments.map(p => ({ value: p.value, label: [
+    `#${p.value} ${p.tipo === 'receber' ? 'Recebimento' : 'Pagamento'}`,p.data,
+    new Intl.NumberFormat('pt-BR',{style:'currency',currency:'BRL'}).format(Number(p.valor)),
+    p.documento,p.entidade,p.conta,
+  ].filter(Boolean).join(' · ') }))
 }
 
 async function listOperationPage(

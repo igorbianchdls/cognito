@@ -25,6 +25,7 @@ import { ErpPagination } from '@/products/erp/frontend/components/ErpPagination'
 import { ErpAsyncCatalogSelect } from '@/products/erp/frontend/components/ErpAsyncCatalogSelect'
 import { parseErpResponse } from '@/products/erp/frontend/services/erpProfessionalClient'
 import { FinancialInstallmentActions } from './FinancialInstallmentActions'
+import { FinancialRecurrences } from './FinancialRecurrences'
 import {
   ErpBulkActionBar,
   ErpFilterButton,
@@ -288,6 +289,7 @@ export function PayablesWorkspacePage({ purchaseOnly = false }: { purchaseOnly?:
     <ErpSearchToolbar query={query} onQueryChange={value => { setQuery(value); setPage(1) }} placeholder="Pesquisar lançamentos…" resultLabel={<>{totalRecords ? (page - 1) * 50 + 1 : 0}–{Math.min(page * 50, totalRecords)} de {totalRecords}</>} endActions={<ErpColumnSelector {...tableColumns} />}>
       <ErpPeriodControl month={period} onPrevious={() => changeMonth(-1)} onNext={() => changeMonth(1)} />
       <ErpFilterButton active={Boolean(status || origin || launchType)} onClick={() => setFiltersOpen(current => !current)} />
+      {!purchaseOnly && canManage && <FinancialRecurrences onChanged={loadData} />}
     </ErpSearchToolbar>
     {filtersOpen ? <div className="flex flex-wrap gap-2 border-b border-[#e7e7e4] bg-[#fafaf8] px-5 py-3 md:px-8 lg:px-10"><Filter value={status} onChange={(value) => { setStatus(value); setPage(1) }} label="Todas as situações" options={[['aberto','Em aberto'],['parcial','Pago parcial'],['vencido','Vencido'],['pago','Pago'],['cancelado','Cancelado']]} />{!purchaseOnly ? <Filter value={origin} onChange={(value) => { setOrigin(value); setPage(1) }} label="Todas as origens" options={[['manual','Manual'],['compra','Compra'],['recorrencia','Recorrência'],['xml','XML'],['integracao','Integração']]} /> : null}<Filter value={launchType} onChange={(value) => { setLaunchType(value); setPage(1) }} label="Previsão e efetivo" options={[['previsao','Previsão'],['efetivo','Obrigação efetiva']]} /></div> : null}
     {error ? <div role="alert" className="mx-5 mt-4 rounded-md border border-rose-200 bg-rose-50 px-4 py-3 text-[14px] text-rose-700 md:mx-8 lg:mx-10">{error}</div> : null}

@@ -1,9 +1,10 @@
 import { SiGoogle, SiMercadopago, SiMeta, SiNotion, SiNubank, SiShell, SiVivo } from '@icons-pack/react-simple-icons'
 import { ArrowLeftRight, BatteryFull, Camera, CheckCheck, ChevronLeft, Copy, FileText, Landmark, MessageCircle, Mic, Phone, Plus, ReceiptText, Signal, Sticker, Tags, Video, Wifi } from 'lucide-react'
 import type { CSSProperties, ReactNode } from 'react'
-import { useEffect, useState } from 'react'
+import { createContext, useContext, useEffect, useState } from 'react'
 import {
   AbsoluteFill,
+  Audio,
   continueRender,
   delayRender,
   Easing,
@@ -53,6 +54,17 @@ function loadSerifFont() {
   return serifFontPromise
 }
 
+/**
+ * Scenes are authored on a nominal timeline (`duration` frames). When a scene is synced to narration
+ * it plays for `actual` frames instead, and this context stretches its clock so the authored animation
+ * fits the spoken segment exactly.
+ */
+const SceneSpeedContext = createContext(1)
+
+export function useFrame() {
+  return useCurrentFrame() * useContext(SceneSpeedContext)
+}
+
 export function p(frame: number, from: number, to: number, output: [number, number] = [0, 1], easing = Easing.out(Easing.cubic)) {
   return interpolate(frame, [from, to], output, { easing, extrapolateLeft: 'clamp', extrapolateRight: 'clamp' })
 }
@@ -66,7 +78,7 @@ export function brl(value: number) {
 }
 
 export function useSpring(delay: number, config = { damping: 14, stiffness: 150 }) {
-  const frame = useCurrentFrame()
+  const frame = useFrame()
   const { fps } = useVideoConfig()
   return spring({ config, fps, frame: frame - delay })
 }
@@ -76,7 +88,7 @@ const normalize = (word: string) => word.toLowerCase().replace(/[.,!?]/g, '')
 // ─── Primitives ──────────────────────────────────────────────────────────────
 
 export function Scene({ children, duration }: { children: ReactNode; duration: number }) {
-  const frame = useCurrentFrame()
+  const frame = useFrame()
   const opacity = p(frame, 0, 10) * p(frame, duration - 10, duration, [1, 0])
   const y = p(frame, 0, 14, [18, 0])
 
@@ -116,7 +128,7 @@ type HeadlineProps = {
 }
 
 export function Headline({ highlight = [], marks = [], size = 88, start = 0, stagger = 3, style, text }: HeadlineProps) {
-  const frame = useCurrentFrame()
+  const frame = useFrame()
   const words = text.split(' ')
 
   return (
@@ -207,7 +219,7 @@ export function OttoIcon({ size }: { size: number }) {
 const TASKS = ['Contas bancárias', 'Despesas', 'Notas fiscais', 'Conciliação bancária', 'Cobrança no WhatsApp']
 
 function ProgressTracker({ duration, index, tasks = TASKS }: { duration: number; index: number; tasks?: string[] }) {
-  const frame = useCurrentFrame()
+  const frame = useFrame()
   const fill = p(frame, 12, duration - 22, [0, 1], Easing.inOut(Easing.quad))
   if (tasks.length === 0) return null
 
@@ -242,7 +254,7 @@ function FeatureScene({ children, duration, index, tasks, title }: { children: R
 // ─── 1. Hook ─────────────────────────────────────────────────────────────────
 
 function Receipt({ seed, duration }: { duration: number; seed: number }) {
-  const frame = useCurrentFrame()
+  const frame = useFrame()
   const x = random(`x${seed}`) * 1000 - 60
   const speed = 4 + random(`s${seed}`) * 5
   const y = -260 + random(`y${seed}`) * 900 + frame * speed - 300
@@ -278,7 +290,7 @@ function HookScene({ duration }: { duration: number }) {
 // ─── 2. Nome ─────────────────────────────────────────────────────────────────
 
 function NameScene({ duration }: { duration: number }) {
-  const frame = useCurrentFrame()
+  const frame = useFrame()
   const reveal = p(frame, 16, 40, [0, 1], Easing.inOut(Easing.cubic))
   const scale = p(frame, 16, duration, [0.94, 1.02], Easing.linear)
 
@@ -310,7 +322,7 @@ const HUB_TASKS: { bg: string; color: string; icon: ReactNode; label: string; su
 ]
 
 function PromiseScene({ duration }: { duration: number }) {
-  const frame = useCurrentFrame()
+  const frame = useFrame()
   const cx = 540
   const cy = 1090
   const radius = 340
@@ -394,7 +406,7 @@ const BANKS: { balance: number; logo: ReactNode; name: string }[] = [
 ]
 
 function BankSyncScene({ duration }: { duration: number }) {
-  const frame = useCurrentFrame()
+  const frame = useFrame()
   const cx = 540
   const cy = 1000
   const radius = 300
@@ -458,7 +470,7 @@ export const EXPENSES: { category: string; date: string; logo: ReactNode; name: 
 ]
 
 export function ExpensesScene({ duration, index = 1, tasks, title = 'Categoriza suas despesas.' }: FeatureSceneProps) {
-  const frame = useCurrentFrame()
+  const frame = useFrame()
   const totals = Object.keys(CATEGORY_COLORS).map((category) => ({
     category,
     value: EXPENSES.filter((e, i) => e.category === category && frame >= 24 + i * 10).reduce((sum, e) => sum + e.value, 0),
@@ -525,7 +537,7 @@ const INVOICE_FIELDS = [
 const INVOICE_STEPS = ['Validando', 'Enviando', 'Autorizada']
 
 export function InvoiceScene({ duration, index = 2, tasks, title = 'Emite notas fiscais.' }: FeatureSceneProps) {
-  const frame = useCurrentFrame()
+  const frame = useFrame()
   const stamp = spring({ config: { damping: 10, stiffness: 170 }, fps: 30, frame: frame - 70 })
 
   return (
@@ -582,7 +594,7 @@ const LEDGER = [
 const MATCHES = [1, 3, 0, 2]
 
 export function ReconciliationScene({ duration, index = 3, tasks, title = 'Faz a conciliação bancária.' }: FeatureSceneProps) {
-  const frame = useCurrentFrame()
+  const frame = useFrame()
   const rowTop = (i: number) => 640 + i * 170
   const rowH = 140
   const leftRight = 455
@@ -659,7 +671,7 @@ export const WA_DOODLE = `url("data:image/svg+xml,${encodeURIComponent(
 )}")`
 
 export function WaBubble({ at, buttons, children, out, read, tail, time }: { at: number; buttons?: { icon: ReactNode; label: string }[]; children: ReactNode; out?: boolean; read?: boolean; tail?: boolean; time: string }) {
-  const frame = useCurrentFrame()
+  const frame = useFrame()
   const s = spring({ config: { damping: 16, stiffness: 180 }, fps: 30, frame: frame - at })
   if (frame < at) return null
   const background = out ? WA.outgoing : WA.incoming
@@ -739,7 +751,7 @@ export function WaInputBar() {
 }
 
 export function WaTyping() {
-  const frame = useCurrentFrame()
+  const frame = useFrame()
   return (
     <div style={{ alignSelf: 'flex-start', background: WA.incoming, borderRadius: 20, borderTopLeftRadius: 0, boxShadow: '0 1px 1.5px rgba(11,20,26,0.14)', display: 'flex', gap: 9, marginTop: 8, padding: '22px 24px' }}>
       {[0, 1, 2].map((d) => (
@@ -750,7 +762,7 @@ export function WaTyping() {
 }
 
 export function OttoNotification({ at, text }: { at: number; text: string }) {
-  const frame = useCurrentFrame()
+  const frame = useFrame()
   const notify = spring({ config: { damping: 16, stiffness: 140 }, fps: 30, frame: frame - at })
   if (frame < at) return null
   return (
@@ -770,7 +782,7 @@ export function OttoNotification({ at, text }: { at: number; text: string }) {
 }
 
 export function WhatsAppScene({ duration, index = 4, tasks, title = 'Cobra seus clientes no WhatsApp.' }: FeatureSceneProps) {
-  const frame = useCurrentFrame()
+  const frame = useFrame()
   const read = frame >= 44
   const typing = frame >= 48 && frame < 62
 
@@ -836,7 +848,7 @@ function cellText(r: number, c: number, index: number) {
 }
 
 function NoSpreadsheetScene({ duration }: { duration: number }) {
-  const frame = useCurrentFrame()
+  const frame = useFrame()
   const ottoPop = useSpring(20, { damping: 12, stiffness: 150 })
   const absorbed = p(frame, 30, 64, [0, 1], Easing.linear)
   const card = useSpring(64, { damping: 14, stiffness: 140 })
@@ -939,7 +951,7 @@ function NoSpreadsheetScene({ duration }: { duration: number }) {
 // ─── 10. ChatGPT ou Claude ───────────────────────────────────────────────────
 
 function IntegrationScene({ duration }: { duration: number }) {
-  const frame = useCurrentFrame()
+  const frame = useFrame()
   const percent = Math.round(100 * p(frame, 4, 30, [0, 1], Easing.out(Easing.quad)))
   const ottoPop = useSpring(30)
   const nodes = [
@@ -989,7 +1001,7 @@ function IntegrationScene({ duration }: { duration: number }) {
 type CtaProps = { comment?: string; duration: number; highlight?: string[]; keyword?: string; title?: string; titleSize?: number }
 
 export function CtaScene({ comment: commentText = 'Financeiro', duration, highlight = ['funciona'], keyword = 'FINANCEIRO', title = 'Quer ver como funciona?', titleSize = 100 }: CtaProps) {
-  const frame = useCurrentFrame()
+  const frame = useFrame()
   const pill = useSpring(18, { damping: 11, stiffness: 140 })
   const pulse = frame > 40 ? 1 + Math.sin((frame - 40) / 5) * 0.025 : 1
   const comment = typed(commentText, p(frame, 44, 62, [0, 1], Easing.linear))
@@ -1025,23 +1037,30 @@ export function CtaScene({ comment: commentText = 'Financeiro', duration, highli
 
 // ─── Timeline ────────────────────────────────────────────────────────────────
 
-export type ReelScene = { Component: (props: { duration: number }) => ReactNode; duration: number }
+/** `duration`: nominal (authored) length. `actual`: real length on screen, e.g. derived from narration timestamps. */
+export type ReelScene = { actual?: number; Component: (props: { duration: number }) => ReactNode; duration: number }
 
-const SCENES: ReelScene[] = [
-  { Component: HookScene, duration: 105 },
-  { Component: NameScene, duration: 88 },
-  { Component: PromiseScene, duration: 100 },
-  { Component: BankSyncScene, duration: 100 },
-  { Component: ExpensesScene, duration: 95 },
-  { Component: InvoiceScene, duration: 100 },
-  { Component: ReconciliationScene, duration: 100 },
-  { Component: WhatsAppScene, duration: 105 },
-  { Component: NoSpreadsheetScene, duration: 120 },
-  { Component: IntegrationScene, duration: 90 },
-  { Component: CtaScene, duration: 120 },
-]
+const CONTADORES_AUDIO = 'remotion/otto-reels/contadores-narracao.mp3'
 
-export const OTTO_CONTADORES_REEL_DURATION = SCENES.reduce((sum, scene) => sum + scene.duration, 0)
+// Cue = second the scene's sentence starts in the narration (minus a short lead-in).
+const SCENES: ReelScene[] = narratedScenes(
+  [
+    { at: 0, scene: { Component: HookScene, duration: 105 } }, // "Essa I.A. tá deixando os contadores…"
+    { at: 3.85, scene: { Component: NameScene, duration: 88 } }, // "O nome dela é Otto, um sistema de gestão"
+    { at: 6.5, scene: { Component: PromiseScene, duration: 100 } }, // "que automatiza todo o financeiro…"
+    { at: 9.2, scene: { Component: BankSyncScene, duration: 100 } }, // "Ela sincroniza todas as suas contas bancárias"
+    { at: 11.75, scene: { Component: ExpensesScene, duration: 95 } }, // "categoriza despesas"
+    { at: 13.15, scene: { Component: InvoiceScene, duration: 100 } }, // "emite notas fiscais"
+    { at: 14.6, scene: { Component: ReconciliationScene, duration: 100 } }, // "faz a conciliação bancária"
+    { at: 16.1, scene: { Component: WhatsAppScene, duration: 105 } }, // "e cobra os seus clientes no WhatsApp"
+    { at: 18.4, scene: { Component: NoSpreadsheetScene, duration: 120 } }, // "Tudo no automático. Sem planilhas, sem estresse."
+    { at: 21.78, scene: { Component: IntegrationScene, duration: 90 } }, // "E o melhor de tudo: cem por cento integrado…"
+    { at: 26.25, scene: { Component: CtaScene, duration: 120 } }, // "Quer ver como funciona? Comenta Financeiro…"
+  ],
+  30.6,
+)
+
+export const OTTO_CONTADORES_REEL_DURATION = sceneDuration(SCENES)
 
 // The app's globals.css forces `body * { font-family: ... !important }`, which beats inline styles
 // when the reel is previewed inside Next. Re-assert the reel's own fonts with higher specificity.
@@ -1052,10 +1071,17 @@ const REEL_FONT_CSS = `
 .otto-reel [style*="Consolas"] { font-family: Consolas, "SF Mono", monospace !important; }
 `
 
-export const sceneDuration = (scenes: ReelScene[]) => scenes.reduce((sum, scene) => sum + scene.duration, 0)
+export function sceneDuration(scenes: ReelScene[]) {
+  return scenes.reduce((sum, scene) => sum + (scene.actual ?? scene.duration), 0)
+}
+
+/** Builds a narrated timeline: each scene starts at its cue (seconds into the voiceover) and lasts until the next cue. */
+export function narratedScenes(cues: { at: number; scene: ReelScene }[], end: number, fps = 30): ReelScene[] {
+  return cues.map(({ at, scene }, i) => ({ ...scene, actual: Math.round(((cues[i + 1]?.at ?? end) - at) * fps) }))
+}
 
 /** Shared shell for the Otto editorial reels: fonts, font-override CSS, grid background and scene sequencing. */
-export function ReelRoot({ scenes }: { scenes: ReelScene[] }) {
+export function ReelRoot({ audio, scenes }: { audio?: string; scenes: ReelScene[] }) {
   const [handle] = useState(() => delayRender('Loading reel fonts'))
 
   useEffect(() => {
@@ -1067,10 +1093,13 @@ export function ReelRoot({ scenes }: { scenes: ReelScene[] }) {
     <AbsoluteFill className="otto-reel" style={{ background: BG }}>
       <style>{REEL_FONT_CSS}</style>
       <GridBackground />
+      {audio ? <Audio src={staticFile(audio)} /> : null}
       <Series>
-        {scenes.map(({ Component, duration }, index) => (
-          <Series.Sequence durationInFrames={duration} key={index}>
-            <Component duration={duration} />
+        {scenes.map(({ actual, Component, duration }, index) => (
+          <Series.Sequence durationInFrames={actual ?? duration} key={index}>
+            <SceneSpeedContext.Provider value={duration / (actual ?? duration)}>
+              <Component duration={duration} />
+            </SceneSpeedContext.Provider>
           </Series.Sequence>
         ))}
       </Series>
@@ -1079,5 +1108,5 @@ export function ReelRoot({ scenes }: { scenes: ReelScene[] }) {
 }
 
 export function OttoContadoresReel() {
-  return <ReelRoot scenes={SCENES} />
+  return <ReelRoot audio={CONTADORES_AUDIO} scenes={SCENES} />
 }

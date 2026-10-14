@@ -123,12 +123,18 @@ export async function processPurchaseRecurrences(input: {
   })
 }
 
-export async function listRecurrenceHistory(tenantId: number, page = 1) {
+export async function listFinancialRecurrences(tenantId: number, page = 1) {
   const offset = (Math.max(1, Math.min(10000, Math.floor(page) || 1)) - 1) * 30
   const financial = await runQuery(
     `SELECT id::text,tipo,metadata->>'descricao' AS descricao,inicio_em,termino_tipo,termino_em,quantidade_ocorrencias,frequencia,intervalo,proxima_competencia,gerado_ate,ativa,pausada_em,encerrada_em,atualizado_em FROM erp.recorrencias_financeiras WHERE empresa_id=$1 AND excluido_em IS NULL ORDER BY id DESC LIMIT 31 OFFSET $2`,
     [tenantId, offset],
   )
+  return { financial: financial.slice(0,30), hasMore: financial.length > 30 }
+}
+
+export async function listRecurrenceHistory(tenantId: number, page = 1) {
+  const offset = (Math.max(1, Math.min(10000, Math.floor(page) || 1)) - 1) * 30
+  const financialPage = await listFinancialRecurrences(tenantId, page)
   const purchases = await runQuery(
     `SELECT id::text,compra_modelo_id::text,inicio_em,termino_tipo,termino_em,quantidade_ocorrencias,frequencia,intervalo,proxima_competencia,ativa FROM erp.compras_recorrencias WHERE empresa_id=$1 AND excluido_em IS NULL ORDER BY id DESC LIMIT 31 OFFSET $2`,
     [tenantId, offset],
@@ -147,12 +153,12 @@ export async function listRecurrenceHistory(tenantId: number, page = 1) {
     [tenantId, offset],
   )
   return {
-    financial: financial.slice(0, 30),
+    financial: financialPage.financial,
     purchases: purchases.slice(0, 30),
     occurrences: occurrences.slice(0, 30),
     purchaseOccurrences: purchaseOccurrences.slice(0, 30),
     contracts: contracts.slice(0, 30),
-    hasMore: [financial, purchases, occurrences, purchaseOccurrences, contracts].some(
+    hasMore: financialPage.hasMore || [purchases, occurrences, purchaseOccurrences, contracts].some(
       (r) => r.length > 30,
     ),
   }
@@ -164,8 +170,9 @@ export async function changeFinancialRecurrence(input: {
   id: string
   action: string
   expectedUpdatedAt: string
+  values?: { descricao: string; termino_tipo: 'data' | 'ocorrencias' | 'indeterminado'; termino_em?: string; quantidade_ocorrencias?: number }
 }) {
-  if (!/^[1-9]\d*$/.test(input.id) || !['pausar', 'retomar', 'encerrar'].includes(input.action))
+  if (!/^[1-9]\d*$/.test(input.id) || !['editar', 'pausar', 'retomar', 'encerrar'].includes(input.action))
     throw new ErpDomainError('VALIDATION_ERROR', 'Ação de recorrência inválida.', 422)
   return withTransaction(async (client) => {
     const rows = await client.query(
@@ -190,6 +197,23 @@ export async function changeFinancialRecurrence(input: {
         'Recorrência encerrada não pode ser alterada.',
         422,
       )
+    if (input.action === 'editar') {
+      const v = input.values
+      if (!v || !v.descricao.trim() || v.descricao.trim().length > 200 || !['data', 'ocorrencias', 'indeterminado'].includes(v.termino_tipo))
+        throw new ErpDomainError('VALIDATION_ERROR', 'Confira a descrição e o término da recorrência.', 422)
+      const next = row.proxima_competencia ? day(row.proxima_competencia) : null
+      const end = v.termino_tipo === 'data' ? erpDateSchema.parse(v.termino_em) : null
+      const count = v.termino_tipo === 'ocorrencias' ? Number(v.quantidade_ocorrencias) : null
+      const nextIndex = next ? recurrenceOccurrenceIndex(day(row.inicio_em), next, String(row.frequencia), Number(row.intervalo)) : 0
+      if (!next || (end && end < next) || (count !== null && (!Number.isInteger(count) || count < 1 || count > 366 || count <= nextIndex)))
+        throw new ErpDomainError('VALIDATION_ERROR', 'O término deve incluir a próxima ocorrência. Para impedir novos lançamentos, encerre a recorrência.', 422)
+      const result = await client.query(`UPDATE erp.recorrencias_financeiras SET
+        metadata=jsonb_set(jsonb_set(metadata,'{descricao}',to_jsonb($3::text)), '{modelo,descricao}',to_jsonb($3::text)),
+        termino_tipo=$4,termino_em=$5,quantidade_ocorrencias=$6,atualizado_por=$7
+        WHERE empresa_id=$1 AND id=$2 RETURNING id::text,atualizado_em`,
+        [input.tenantId, input.id, v.descricao.trim(), v.termino_tipo, end, count, input.actorId])
+      return result.rows[0]
+    }
     if (input.action === 'retomar' && (!row.pausada_em || !row.proxima_competencia))
       throw new ErpDomainError('VALIDATION_ERROR', 'Não há ocorrência pausada para retomar.', 422)
     if (input.action === 'pausar' && !row.ativa)

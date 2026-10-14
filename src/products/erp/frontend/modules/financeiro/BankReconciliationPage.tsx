@@ -65,6 +65,7 @@ export function BankReconciliationPage() {
   const [days, setDays] = useState("5");
   const [amount, setAmount] = useState("0");
   const [error, setError] = useState<string | null>(null);
+  const [refreshRevision, setRefreshRevision] = useState(0);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -106,6 +107,11 @@ export function BankReconciliationPage() {
     void load();
   }, [load]);
 
+  const refreshAll = useCallback(async () => {
+    setRefreshRevision(value => value + 1);
+    await load();
+  }, [load]);
+
   async function reconcile(suggestion: Suggestion) {
     if (suggestion.tipo === "repasse_divergente" && !(await confirmAction(`O banco creditou ${formatErpCurrency(suggestion.valor)}, diferente do repasse previsto (diferença de ${formatErpCurrency(suggestion.diferenca_valor)}). Conciliar assim mesmo? A diferença fica no saldo da maquininha para conferência.`))) return;
     setBusy(suggestion.transacao_id);
@@ -127,7 +133,7 @@ export function BankReconciliationPage() {
           }),
         }),
       );
-      await load();
+      await refreshAll();
     } catch (actionError) {
       setError(
         actionError instanceof Error
@@ -149,7 +155,7 @@ export function BankReconciliationPage() {
           { method: "POST" },
         ),
       );
-      await load();
+      await refreshAll();
     } catch (actionError) {
       setError(
         actionError instanceof Error
@@ -175,7 +181,7 @@ export function BankReconciliationPage() {
           },
         ),
       );
-      await load();
+      await refreshAll();
     } catch (actionError) {
       setError(
         actionError instanceof Error
@@ -206,7 +212,7 @@ export function BankReconciliationPage() {
         }),
       );
       setSettingsOpen(false);
-      await load();
+      await refreshAll();
     } catch (ruleError) {
       setError(
         ruleError instanceof Error
@@ -221,9 +227,9 @@ export function BankReconciliationPage() {
   return (
     <div className="grid gap-7">
       <ErpOperationsWorkspacePage
-        config={ERP_OPERATION_CONFIGS["conciliacao-bancaria"]}
+        config={ERP_OPERATION_CONFIGS["conciliacao-bancaria"]} refreshRevision={refreshRevision} onChanged={refreshAll}
       />
-      <BankStatementTools onChanged={() => void load()} />
+      <BankStatementTools refreshRevision={refreshRevision} onChanged={refreshAll} />
       <section className="border-t pt-6">
         <div className="mb-4 flex items-center justify-between">
           <div>

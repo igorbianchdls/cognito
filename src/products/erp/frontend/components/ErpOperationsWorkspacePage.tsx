@@ -51,12 +51,13 @@ function toneForStatus(value: unknown) {
   return 'default' as const
 }
 
-function AsyncCatalogSelect({ resource, source, value, onChange, required }: {
+function AsyncCatalogSelect({ resource, source, value, onChange, required, transactionId }: {
   resource: string
   source: NonNullable<ErpOperationField['optionSource']>
   value: string
   onChange: (value: string) => void
   required?: boolean
+  transactionId?: string
 }) {
   const [query, setQuery] = useState('')
   const deferredQuery = useDeferredValue(query)
@@ -71,13 +72,14 @@ function AsyncCatalogSelect({ resource, source, value, onChange, required }: {
     const controller = new AbortController()
     queueMicrotask(() => { if (!controller.signal.aborted) setLoading(true) })
     const params = new URLSearchParams({ resource, source, q: deferredQuery, limit: '20' })
+    if (source === 'payments' && transactionId) params.set('transactionId', transactionId)
     fetch(`/api/erp/operacoes/catalogos?${params}`, { cache: 'no-store', signal: controller.signal })
       .then((response) => parseResponse<{ records: CatalogOption[] }>(response))
       .then((body) => { if (!controller.signal.aborted) setOptions(body.records) })
       .catch((error) => { if (error instanceof Error && error.name !== 'AbortError') setOptions([]) })
       .finally(() => { if (!controller.signal.aborted) setLoading(false) })
     return () => controller.abort()
-  }, [deferredQuery, open, resource, source])
+  }, [deferredQuery, open, resource, source, transactionId])
 
   return (
     <div className="relative">
@@ -112,14 +114,15 @@ function AsyncCatalogSelect({ resource, source, value, onChange, required }: {
   )
 }
 
-function FieldControl({ field, value, resource, onChange }: {
+function FieldControl({ field, value, resource, onChange, transactionId }: {
   field: ErpOperationField
   value: string
   resource: string
+  transactionId?: string
   onChange: (value: string) => void
 }) {
   if (field.type === 'select' && field.optionSource) {
-    return <AsyncCatalogSelect resource={resource} source={field.optionSource} value={value} onChange={onChange} required={field.required} />
+    return <AsyncCatalogSelect resource={resource} source={field.optionSource} value={value} onChange={onChange} required={field.required} transactionId={transactionId} />
   }
   if (field.type === 'select') {
     const options = field.options || []
@@ -150,7 +153,7 @@ function FieldControl({ field, value, resource, onChange }: {
   )
 }
 
-export function ErpOperationsWorkspacePage({ config }: { config: ErpOperationConfig }) {
+export function ErpOperationsWorkspacePage({ config, refreshRevision = 0, onChanged }: { config: ErpOperationConfig; refreshRevision?: number; onChanged?: () => Promise<void> }) {
   const isSalesWorkspace = config.resource === 'contratos'
   const isStockWorkspace = getErpSection('estoque').modules.some(module => module.id === config.moduleId)
   const isWorkspace = isSalesWorkspace || isStockWorkspace
@@ -198,7 +201,7 @@ export function ErpOperationsWorkspacePage({ config }: { config: ErpOperationCon
     }
   }, [config.resource, deferredQuery, page])
 
-  useEffect(() => { void load(); return()=>{++loadRevision.current} }, [load])
+  useEffect(() => { void load(); return()=>{++loadRevision.current} }, [load, refreshRevision])
 
   const currencyColumn = config.resource === 'posicao-estoque' ? config.columns.find(column => column.key === 'valor_estoque') : config.columns.find((column) => column.kind === 'currency')
   const monetaryTotal = currencyColumn
@@ -240,6 +243,7 @@ export function ErpOperationsWorkspacePage({ config }: { config: ErpOperationCon
       setDialogOpen(false)
       setSuccess(dialogMode === 'row' ? 'Operação concluída.' : 'Registro salvo.')
       await load()
+      await onChanged?.()
     } catch (submitError) {
       setError(submitError instanceof Error ? submitError.message : 'Não foi possível salvar.')
     } finally {
@@ -277,6 +281,7 @@ export function ErpOperationsWorkspacePage({ config }: { config: ErpOperationCon
       setOfxOpen(false)
       setOfxFile(null)
       await load()
+      await onChanged?.()
     } catch (importError) {
       setError(importError instanceof Error ? importError.message : 'Não foi possível importar o OFX.')
     } finally { setSaving(false) }
@@ -361,7 +366,7 @@ export function ErpOperationsWorkspacePage({ config }: { config: ErpOperationCon
             {activeFields.filter(field => activeResource !== 'inventarios' || !['produto_id', 'quantidade_contada'].includes(field.key)).map((field) => (
               <div key={field.key} className="space-y-2">
                 <Label htmlFor={field.key}>{field.label}{field.required ? ' *' : ''}</Label>
-                <FieldControl field={activeResource === 'movimentacoes' && field.key === 'tipo' ? { ...field, options: field.options?.filter(option => access.can(option.value.startsWith('ajuste') ? 'erp.estoque.ajustar' : 'erp.estoque.movimentar')) } : field} value={values[field.key] || ''} resource={activeResource} onChange={(value) => setValues((current) => ({ ...current, [field.key]: value }))} />
+                <FieldControl field={activeResource === 'movimentacoes' && field.key === 'tipo' ? { ...field, options: field.options?.filter(option => access.can(option.value.startsWith('ajuste') ? 'erp.estoque.ajustar' : 'erp.estoque.movimentar')) } : field} value={values[field.key] || ''} resource={activeResource} transactionId={dialogMode === 'row' ? selectedRecord?.id : undefined} onChange={(value) => setValues((current) => ({ ...current, [field.key]: value }))} />
               </div>
             ))}
           </div>
