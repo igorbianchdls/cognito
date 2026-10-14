@@ -34,6 +34,7 @@ const navigation: ErpNavigationItem[] = [
       { id: 'produtos', label: 'Produtos', href: '/erp/cadastros/produtos', description: 'SKUs, preços e categorias.' },
       { id: 'servicos', label: 'Serviços', href: '/erp/cadastros/servicos', description: 'Serviços vendidos, preços e classificação.' },
       { id: 'categorias', label: 'Categorias financeiras', href: '/erp/cadastros/categorias', description: 'Receitas e despesas e o grupo da DRE de cada uma.' },
+      { id: 'contas-contabeis', label: 'Contas contábeis', href: '/erp/cadastros/contas-contabeis', description: 'Grupos, contas específicas e vínculos contábeis da empresa.' },
       { id: 'categorias-cadastro', label: 'Categorias de cadastro', href: '/erp/cadastros/categorias-cadastro', description: 'Agrupamentos de produtos, serviços, clientes e fornecedores.' },
       { id: 'importacoes', label: 'Importar e exportar', href: '/erp/cadastros/importacoes', description: 'Movimentação de cadastros por CSV.' },
     ],

@@ -1,5 +1,7 @@
 'use client'
 
+import { useErpConfirmation } from '@/products/erp/frontend/components/ErpConfirmation'
+
 import { useCommercialMutation } from './commercialUi'
 
 import { useCallback, useEffect, useState } from 'react'
@@ -123,6 +125,8 @@ export function CommissionsPage() {
 }
 
 function RuleDialog({ draft: initial, sellers, onClose, onSaved }: { draft: RuleDraft; sellers: Option[]; onClose: () => void; onSaved: () => void }) {
+  const confirmAction = useErpConfirmation()
+
   const [draft, setDraft] = useState(initial)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -144,7 +148,7 @@ function RuleDialog({ draft: initial, sellers, onClose, onSaved }: { draft: Rule
     finally { setSaving(false) }
   }
   async function remove() {
-    if (!draft.id || !window.confirm(`Excluir a regra "${draft.nome}"? Comissões já geradas não mudam.`)) return
+    if (!draft.id || !(await confirmAction(`Excluir a regra "${draft.nome}"? Comissões já geradas não mudam.`))) return
     setSaving(true); setError(null)
     try { await erpJson(`/api/erp/comissoes/regras/${draft.id}`, { method: 'DELETE', body: { expectedVersion: draft.versao } }); onSaved() }
     catch (removeError) { setError(errorMessage(removeError, 'Não foi possível excluir a regra.')) }

@@ -38,24 +38,46 @@ function rowsSql(view: DreView) {
       CASE WHEN l.grupo_fixo IS NOT NULL THEN l.grupo_fixo WHEN c.fora_dre THEN -1 ELSE coalesce(g.codigo, 0) END AS grupo,
       coalesce(pai.id, c.id)::text AS categoria_id, coalesce(pai.nome, c.nome, l.rotulo, 'Sem categoria') AS categoria,
       CASE WHEN pai.id IS NOT NULL THEN c.id::text END AS subcategoria_id, CASE WHEN pai.id IS NOT NULL THEN c.nome END AS subcategoria,
+      l.tipo,
       sum(l.valor)::numeric(18,2) AS valor
     FROM linhas l ${join}
-    GROUP BY 1, 2, 3, 4, 5, 6`
+    GROUP BY 1, 2, 3, 4, 5, 6, 7`
   if (view === 'caixa') return `${cashAllocationSql},
     linhas AS (SELECT date_trunc('month', a.data_pagamento)::date AS mes, a.categoria_id, NULL::text AS rotulo, NULL::int AS grupo_fixo,
-      a.amount * a.signal * CASE WHEN a.tipo = 'receber' THEN 1 ELSE -1 END AS valor FROM allocated a)
+      a.amount * a.signal * CASE WHEN a.tipo = 'receber' THEN 1 ELSE -1 END AS valor,
+      CASE WHEN a.tipo='receber' THEN 'receita' ELSE 'despesa' END AS tipo FROM allocated a)
     ${select}`
   return `${accrualAllocationSql()},
     linhas AS (SELECT date_trunc('month', alocado.data)::date AS mes, alocado.categoria_id, alocado.rotulo,
       CASE WHEN alocado.rotulo IS NOT NULL THEN 2 END AS grupo_fixo,
-      CASE WHEN alocado.tipo = 'receita' THEN alocado.valor ELSE -alocado.valor END AS valor FROM alocado
+      CASE WHEN alocado.tipo = 'receita' THEN alocado.valor ELSE -alocado.valor END AS valor, alocado.tipo FROM alocado
       UNION ALL
       -- CMV: custo das saídas de estoque das vendas (Fase 2D), no grupo de custos.
-      SELECT date_trunc('month', cmv.data)::date, NULL::bigint, 'CMV (custo das mercadorias vendidas)', 3, cmv.valor FROM (${cmvSql()}) cmv)
+      SELECT date_trunc('month', cmv.data)::date, NULL::bigint, 'CMV (custo das mercadorias vendidas)', 3, cmv.valor, 'despesa' FROM (${cmvSql()}) cmv)
     ${select}`
 }
 
 type Row = { mes: string; grupo: number; categoria_id: string | null; categoria: string; subcategoria_id: string | null; subcategoria: string | null; valor: string }
+
+// Legacy API/tool aliases retain their flat columns while sharing the structured DRE calculation.
+export async function dreCategoryRecords(company: number, input: { inicio: string; fim: string; visao: DreView; page?: number; pageSize?: number }) {
+  if (!erpDateSchema.safeParse(input.inicio).success || !erpDateSchema.safeParse(input.fim).success || input.inicio > input.fim)
+    throw new ErpDomainError('VALIDATION_ERROR','Informe um período válido para a DRE.',422)
+  if ((new Date(input.fim).getTime()-new Date(input.inicio).getTime())/86400000 > 731)
+    throw new ErpDomainError('VALIDATION_ERROR','A DRE aceita até 24 meses por consulta.',422)
+  const params: unknown[] = [company,input.inicio,input.fim]
+  let pagination = ''
+  if (input.page || input.pageSize) {
+    const size = Math.min(100,Math.max(1,Math.floor(input.pageSize || 20)))
+    params.push(size+1,(Math.max(1,Math.floor(input.page || 1))-1)*size)
+    pagination = ' LIMIT $4 OFFSET $5'
+  }
+  return runQuery<Record<string, unknown>>(`SELECT (r.mes||'-01')::date AS competencia,
+    coalesce(r.subcategoria,r.categoria) AS categoria,
+    ${input.visao === 'caixa' ? "CASE WHEN r.tipo='receita' THEN 'recebimento' ELSE 'pagamento' END" : 'r.tipo'} AS tipo,
+    sum(r.valor)::numeric(18,2) AS valor FROM (${rowsSql(input.visao)}) r
+    WHERE r.grupo <> -1 GROUP BY 1,2,3 ORDER BY 1,3,2${pagination}`,params)
+}
 const add = (target: Monthly, mes: string, value: number) => { target[mes] = Math.round(((target[mes] || 0) + value) * 100) / 100 }
 const round = (value: number) => Math.round(value * 100) / 100
 

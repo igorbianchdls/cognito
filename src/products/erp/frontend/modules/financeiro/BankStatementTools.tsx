@@ -1,5 +1,7 @@
 'use client'
 
+import { useErpConfirmation } from '@/products/erp/frontend/components/ErpConfirmation'
+
 import { useCallback, useEffect, useState } from 'react'
 import { FileUp, Loader2, Plus, Scale, Trash2, Wand2 } from 'lucide-react'
 
@@ -17,6 +19,8 @@ type Rule = { id: string; nome: string; conta: string | null; descricao_contem: 
 type ImportResult = { imported?: number; ignored?: number; reused?: boolean; regras?: { lancadas: number; falhas: Array<{ motivo: string }> } }
 
 export function BankStatementTools({ onChanged }: { onChanged: () => void }) {
+  const confirmAction = useErpConfirmation()
+
   const [accounts, setAccounts] = useState<Option[]>([])
   const [account, setAccount] = useState('')
   const [balance, setBalance] = useState<Balance | null>(null)
@@ -53,7 +57,7 @@ export function BankStatementTools({ onChanged }: { onChanged: () => void }) {
     finally { setBusy(false) }
   }
   async function removeRule(rule: Rule) {
-    if (!window.confirm(`Excluir a regra "${rule.nome}"?`)) return
+    if (!(await confirmAction(`Excluir a regra "${rule.nome}"?`))) return
     try { await erpJson(`/api/erp/conciliacao/lancamentos?id=${rule.id}`, { method: 'DELETE' }); await loadRules() }
     catch (removeError) { setError(errorMessage(removeError, 'Não foi possível excluir a regra.')) }
   }

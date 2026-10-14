@@ -10,7 +10,7 @@ import { cn } from '@/lib/utils'
 
 export function AuthHeading({ title, description }: { title: string; description: string }) {
   return (
-    <div className="mb-8">
+    <div className="mb-8" data-auth-heading>
       <h2 className="text-[28px] font-medium leading-tight tracking-normal text-[#181818]">{title}</h2>
       <p className="mt-2 text-sm leading-6 text-[#6c6c6c]">{description}</p>
     </div>
@@ -36,7 +36,7 @@ type AuthFieldProps = InputHTMLAttributes<HTMLInputElement> & {
 export function AuthField({ className, error, id, label, labelAction, ...props }: AuthFieldProps) {
   const errorId = error && id ? `${id}-error` : undefined
   return (
-    <div className="grid gap-2">
+    <div className="grid gap-2" data-auth-field>
       <div className="flex min-h-5 items-center justify-between gap-3">
         <Label htmlFor={id} className="text-[13px] font-medium text-[#353535]">{label}</Label>
         {labelAction}
@@ -60,10 +60,11 @@ type PasswordFieldProps = Omit<AuthFieldProps, 'type'> & {
 
 export function PasswordField({ visible, onToggleVisibility, className, ...props }: PasswordFieldProps) {
   return (
-    <div className="relative">
+    <div className="relative" data-auth-password>
       <AuthField type={visible ? 'text' : 'password'} className={cn('pr-11', className)} {...props} />
       <button
         type="button"
+        data-auth-password-toggle
         onClick={onToggleVisibility}
         className="absolute right-1.5 top-[29px] flex h-8 w-8 items-center justify-center rounded-md text-[#777] transition-colors hover:bg-[#f1f1f1] hover:text-[#181818] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-black/20"
         aria-label={visible ? 'Ocultar senha' : 'Mostrar senha'}
@@ -74,9 +75,9 @@ export function PasswordField({ visible, onToggleVisibility, className, ...props
   )
 }
 
-export function AuthSubmitButton({ children, loading }: { children: ReactNode; loading: boolean }) {
+export function AuthSubmitButton({ children, loading, className }: { children: ReactNode; loading: boolean; className?: string }) {
   return (
-    <Button type="submit" disabled={loading} className="h-11 w-full rounded-md bg-[#181818] text-sm font-medium text-white shadow-none hover:bg-[#303030] focus-visible:ring-black/20">
+    <Button type="submit" disabled={loading} className={cn('h-11 w-full rounded-md bg-[#181818] text-sm font-medium text-white shadow-none hover:bg-[#303030] focus-visible:ring-black/20', className)}>
       {loading ? <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" /> : null}
       <span>{children}</span>
     </Button>
@@ -94,7 +95,7 @@ export function AuthBackButton({ children, onClick }: { children: ReactNode; onC
 
 export function AuthDivider() {
   return (
-    <div className="my-6 flex items-center gap-3" aria-hidden="true">
+    <div className="my-6 flex items-center gap-3" aria-hidden="true" data-auth-divider>
       <span className="h-px flex-1 bg-[#e6e6e6]" />
       <span className="text-[11px] font-medium uppercase text-[#969696]">ou</span>
       <span className="h-px flex-1 bg-[#e6e6e6]" />

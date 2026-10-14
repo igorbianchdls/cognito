@@ -1,5 +1,7 @@
 'use client'
 
+import { useErpConfirmation } from '@/products/erp/frontend/components/ErpConfirmation'
+
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { Download, FileText, Loader2, Paperclip, Trash2 } from 'lucide-react'
 
@@ -41,6 +43,8 @@ export async function uploadErpAttachment(documento: ErpAttachmentDocument, regi
 export function ErpAttachments({ documento, registroId, canManage, title = 'Anexos' }: {
   documento: ErpAttachmentDocument; registroId: string | number; canManage: boolean; title?: string
 }) {
+  const confirmAction = useErpConfirmation()
+
   const [items, setItems] = useState<Attachment[] | null>(null)
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -71,7 +75,7 @@ export function ErpAttachments({ documento, registroId, canManage, title = 'Anex
     } catch (downloadError) { setError(downloadError instanceof Error ? downloadError.message : 'Não foi possível abrir o anexo.') }
   }
   async function remove(item: Attachment) {
-    if (!window.confirm(`Remover o anexo "${item.nome}"?`)) return
+    if (!(await confirmAction({ title: 'Remover anexo', description: 'O anexo será removido deste registro.', details: item.nome, confirmLabel: 'Remover anexo', destructive: true }))) return
     setBusy(true); setError(null)
     try { await parseErpResponse(await fetch(`/api/erp/anexos/${item.id}`, { method: 'DELETE' })); await load() }
     catch (removeError) { setError(removeError instanceof Error ? removeError.message : 'Não foi possível remover o anexo.') }

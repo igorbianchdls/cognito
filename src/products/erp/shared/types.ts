@@ -17,6 +17,7 @@ export type ErpModuleId =
   | 'servicos'
   | 'categorias'
   | 'categorias-cadastro'
+  | 'contas-contabeis'
   | 'pedidos'
   | 'orcamentos'
   | 'notas-fiscais'

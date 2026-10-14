@@ -3,12 +3,13 @@ import { erpToday } from '@/products/erp/server/erpBusinessDate'
 import { nextDocumentNumber } from '@/products/erp/server/erpDocumentNumbers'
 import { runRecoverableErpAutomation } from './erpAutomationRunner'
 import { isRetiredErpReport } from '@/products/erp/shared/reportCatalog'
-import { cashResultSql } from './erpCashReport'
-import { accrualResultSql, agingSql, cashFlowSql, commissionSummarySql, marginSql } from './erpFinancialReports'
+import { agingSql, cashFlowSql, commissionSummarySql, marginSql } from './erpFinancialReports'
+import { dreCategoryRecords } from './erpDreReport'
 import { processPurchaseRecurrences } from './erpRoutineRepository'
 import { erpDateSchema } from '@/products/erp/shared/erpTransport'
 import { lineTotal, sumMoney } from '@/products/erp/shared/erpMoney'
 import { assertCommercialReplay } from '@/products/erp/shared/commercialContracts'
+import { commercialRequest, assertCommercialReplay as assertDeliveryReplay } from './erpCommercialIdempotency'
 import { runQuery, withTransaction, type SQLClient } from "@/lib/postgres";
 import { quoteSituation, quoteIsClosed } from '../shared/quoteLifecycle';
 import { processDueSalesContracts } from "@/products/erp/server/erpManagementRepository";
@@ -68,7 +69,7 @@ export async function serviceOrderPage(input:{tenantId:number;query?:string;stat
     AND ($3::text IS NULL OR ordens.status=$3)`;
   const [records,summary]=await Promise.all([
     runQuery<Record<string,unknown>>(`SELECT ordens.id::text,ordens.numero,ordens.status,ordens.data_inicio,ordens.previsao_entrega,
-      ordens.equipamento,ordens.marca,ordens.modelo,ordens.total,ordens.versao,clientes.nome AS cliente,responsaveis.nome AS responsavel,
+      ordens.equipamento,ordens.marca,ordens.modelo,ordens.total,ordens.versao,ordens.venda_id::text,ordens.orcamento_id::text,clientes.nome AS cliente,responsaveis.nome AS responsavel,
       (SELECT count(*)::int FROM erp.ordens_servico_itens i WHERE i.empresa_id=ordens.empresa_id AND i.ordem_servico_id=ordens.id AND i.excluido_em IS NULL) AS itens
       ${from} ORDER BY ordens.data_inicio DESC,ordens.id DESC LIMIT $4 OFFSET $5`,[...params,pageSize,(page-1)*pageSize]),
     runQuery<Record<string,unknown>>(`SELECT count(*)::int AS quantidade,coalesce(sum(ordens.total),0) AS valor_total,
@@ -536,7 +537,7 @@ export async function receivePurchaseItems(
         `SELECT itens.*, produtos.controla_estoque
          FROM erp.compras_itens itens
          LEFT JOIN erp.produtos produtos ON produtos.empresa_id = itens.empresa_id AND produtos.id = itens.produto_id
-         WHERE itens.empresa_id = $1 AND itens.compra_id = $2 AND itens.id = $3 AND itens.excluido_em IS NULL FOR UPDATE`,
+         WHERE itens.empresa_id = $1 AND itens.compra_id = $2 AND itens.id = $3 AND itens.excluido_em IS NULL FOR UPDATE OF itens`,
         [input.tenantId, input.purchaseId, requested.item_id],
       );
       const item = itemResult.rows[0];
@@ -566,7 +567,12 @@ export async function receivePurchaseItems(
       group.push({
         produtoId: Number(item.produto_id),
         quantidade: requested.quantidade,
-        custoUnitario: Number(item.valor_unitario || 0),
+        custoUnitario: Number(item.total || 0) / Number(item.quantidade) *
+          (Number(purchase.subtotal) > 0
+            ? (Number(purchase.subtotal) - Number(purchase.desconto_calculado ?? purchase.desconto ?? 0)
+              + Number(purchase.frete || 0) + Number(purchase.seguro || 0)
+              + Number(purchase.outras_despesas || 0) + Number(purchase.impostos_adicionais || 0)) / Number(purchase.subtotal)
+            : 1),
         compraItemId: Number(item.id),
       });
       groups.set(locationId, group);
@@ -599,7 +605,7 @@ export async function receivePurchaseItems(
           motivo: input.values.observacoes || "Recebimento parcial de compra",
           chaveIdempotencia: `${input.idempotencyKey}:local:${locationId}:${groupIndex++}`,
           items,
-          movementType: "entrada_compra",
+          movementType: "entrada",
           originType: "compra",
         }),
       );
@@ -628,12 +634,20 @@ export async function receivePurchaseItems(
       ],
     );
     if (complete && purchase.gera_financeiro) {
-      await createOrUpdatePurchasePayable(
-        client,
-        updatedPurchase.rows[0] as never,
-        input.actorId,
-        "efetivo",
+      // Confirmation already creates the obligation; receiving must preserve its installments and payments.
+      const existingPayable = await client.query(
+        `SELECT id FROM erp.contas_pagar WHERE empresa_id=$1 AND compra_id=$2
+         AND tipo_lancamento='efetivo' AND excluido_em IS NULL LIMIT 1`,
+        [input.tenantId, input.purchaseId],
       );
+      if (!existingPayable.rows.length) {
+        await createOrUpdatePurchasePayable(
+          client,
+          updatedPurchase.rows[0] as never,
+          input.actorId,
+          "efetivo",
+        );
+      }
     }
     await client.query(
       `INSERT INTO erp.compras_eventos (empresa_id, compra_id, evento, dados, criado_por)
@@ -658,10 +672,23 @@ export async function attendSaleItems(
   },
 ) {
   return withTransaction(async (client) => {
-    await client.query(
-      `SELECT pg_advisory_xact_lock(hashtextextended($1, 0))`,
-      [`erp:atendimento:${input.tenantId}:${input.idempotencyKey}`],
-    );
+    const requestHash = await commercialRequest(client, input.tenantId, 'atendimento_venda', input.idempotencyKey, { saleId: input.saleId, values: input.values });
+    // O evento guarda o resultado na mesma transação que itens, reservas e documentos.
+    const previous = (await client.query(
+      `SELECT dados FROM erp.vendas_eventos WHERE empresa_id=$1
+       AND evento IN ('atendimento_parcial','atendimento_concluido') AND dados->>'atendimento_chave'=$2
+       ORDER BY id DESC LIMIT 1`, [input.tenantId, input.idempotencyKey])).rows[0];
+    if (previous) {
+      const stored = previous.dados as Record<string, unknown>;
+      assertDeliveryReplay(stored.atendimento_hash, requestHash);
+      return { ...(stored.atendimento_resultado as { documents: Record<string, unknown>[]; status: string; atendimento_status: string }), reused: true };
+    }
+    const legacy = await client.query(
+      `SELECT id FROM erp.documentos_estoque WHERE empresa_id=$1
+       AND strpos(chave_idempotencia, $2 || ':local:')=1 LIMIT 1`, [input.tenantId, input.idempotencyKey]);
+    if (legacy.rows.length) throw new ErpDomainError('IDEMPOTENCY_CONFLICT', 'Esta entrega já possui documento de estoque anterior. Confira o atendimento antes de iniciar outra operação.', 409, undefined, 'verify');
+    if (new Set(input.values.items.map(item => item.item_id)).size !== input.values.items.length)
+      throw new ErpDomainError('VALIDATION_ERROR', 'Informe cada item apenas uma vez no atendimento.', 422);
     const saleResult = await client.query(
       `SELECT * FROM erp.vendas WHERE empresa_id = $1 AND id = $2 AND excluido_em IS NULL FOR UPDATE`,
       [input.tenantId, input.saleId],
@@ -708,6 +735,13 @@ export async function attendSaleItems(
         `SELECT * FROM erp.reservas_estoque WHERE empresa_id = $1 AND venda_id = $2 AND venda_item_id = $3 AND status = 'ativa' FOR UPDATE`,
         [input.tenantId, input.saleId, item.id],
       );
+      if (requested.local_estoque_id && reservations.rows.some(reservation => Number(reservation.local_estoque_id) !== Number(requested.local_estoque_id))) {
+        throw new ErpDomainError('SALE_STOCK_LOCATION_MISMATCH', 'O local informado é diferente do local reservado nesta venda. Utilize o local da reserva para registrar a entrega.', 409);
+      }
+      if (reservations.rows.length) {
+        for (const localId of new Set(reservations.rows.map(reservation => Number(reservation.local_estoque_id))))
+          await resolveStockLocation(client, { ...input, localEstoqueId: localId, use: 'venda' });
+      }
       for (const reservation of reservations.rows) {
         const movementQuantity = Number(
           (
@@ -770,7 +804,7 @@ export async function attendSaleItems(
           motivo: input.values.observacoes || "Atendimento parcial de venda",
           chaveIdempotencia: `${input.idempotencyKey}:local:${locationId}:${groupIndex++}`,
           items,
-          movementType: "saida_venda",
+          movementType: "saida",
           originType: "venda",
         }),
       );
@@ -788,6 +822,7 @@ export async function attendSaleItems(
          versao = versao + 1, atualizado_por = $4 WHERE empresa_id = $1 AND id = $2`,
       [input.tenantId, input.saleId, nextAttendanceStatus, input.actorId],
     );
+    const result = { documents, status: "confirmada", atendimento_status: nextAttendanceStatus };
     await client.query(
       `INSERT INTO erp.vendas_eventos (empresa_id, venda_id, evento, status_anterior, status_novo, versao, dados, criado_por)
        SELECT $1,$2,$3,$4,$5,versao,$6::jsonb,$7 FROM erp.vendas WHERE empresa_id = $1 AND id = $2`,
@@ -797,11 +832,11 @@ export async function attendSaleItems(
         complete ? "atendimento_concluido" : "atendimento_parcial",
         sale.status,
         sale.status,
-        json({ documents, atendimento_status: nextAttendanceStatus }),
+        json({ documents, atendimento_status: nextAttendanceStatus, atendimento_chave: input.idempotencyKey, atendimento_hash: requestHash, atendimento_resultado: result }),
         input.actorId,
       ],
     );
-    return { documents, status: "confirmada", atendimento_status: nextAttendanceStatus };
+    return result;
   });
 }
 
@@ -1185,9 +1220,10 @@ export async function listProfessionalReport(input: {
     erpToday().slice(0, 4) + '-01-01';
   const to = input.to || erpToday();
   if (!erpDateSchema.safeParse(from).success || !erpDateSchema.safeParse(to).success || from > to) throw new ErpDomainError('VALIDATION_ERROR','Informe um período válido para o relatório.',422);
+  if (input.report === 'dre-caixa' || input.report === 'dre-competencia') return dreCategoryRecords(input.tenantId,{
+    inicio:from,fim:to,visao:input.report === 'dre-caixa' ? 'caixa' : 'competencia',page:input.page,pageSize:input.pageSize,
+  })
   const reports: Record<string, string> = {
-    "dre-caixa": cashResultSql,
-    "dre-competencia": accrualResultSql(),
     "fluxo-de-caixa": cashFlowSql(),
     "aging-receber": agingSql("receber"),
     "aging-pagar": agingSql("pagar"),

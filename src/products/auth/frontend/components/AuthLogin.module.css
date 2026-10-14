@@ -1,0 +1,285 @@
+.layout {
+  display: grid;
+  grid-template-columns: minmax(0, 58%) minmax(0, 42%);
+  min-height: 100dvh;
+  background: #fff;
+}
+
+.brandPanel {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  min-width: 0;
+  padding: clamp(64px, 8vw, 128px) clamp(48px, 8.5vw, 136px) 48px;
+  color: #fff;
+  background: linear-gradient(145deg, #3c51f4 0%, #253ce8 46%, #111b90 100%);
+}
+
+.pattern {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+
+.brand,
+.brandCopy,
+.brandFooter {
+  position: relative;
+  z-index: 1;
+}
+
+.brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 14px;
+  align-self: flex-start;
+  color: inherit;
+  font-size: clamp(40px, 3.6vw, 56px);
+  font-weight: 700;
+  line-height: 1;
+}
+
+.brand img {
+  width: 46px;
+  height: 46px;
+  filter: invert(1);
+}
+
+.brandCopy {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  justify-content: center;
+  padding-block: 72px;
+}
+
+.brandCopy h1 {
+  margin: 0;
+  color: #fff;
+  font-size: clamp(48px, 5.1vw, 80px);
+  font-weight: 650;
+  line-height: 1.17;
+  letter-spacing: -0.025em;
+}
+
+.brandCopy h1 span {
+  display: block;
+}
+
+.brandCopy p {
+  margin: 36px 0 0;
+  max-width: 600px;
+  color: rgb(255 255 255 / 94%);
+  font-size: clamp(16px, 1.6vw, 24px);
+  line-height: 1.5;
+}
+
+.brandFooter {
+  margin: 0;
+  color: rgb(255 255 255 / 68%);
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+.formPanel {
+  --primary: #111832;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  min-width: 0;
+  padding: 64px clamp(32px, 6vw, 96px);
+  color: #111832;
+}
+
+.formContent {
+  width: 100%;
+  max-width: 444px;
+}
+
+.formBrand {
+  display: inline-flex;
+  margin-bottom: 30px;
+  color: #090f35;
+  font-size: 52px;
+  font-weight: 750;
+  line-height: 1;
+  letter-spacing: -0.04em;
+}
+
+.formContent [data-auth-heading] {
+  margin-bottom: 34px;
+}
+
+.formContent [data-auth-heading] h2 {
+  font-size: clamp(27px, 2.15vw, 34px);
+  font-weight: 650;
+  line-height: 1.2;
+}
+
+.formContent [data-auth-heading] p {
+  margin-top: 9px;
+  color: #858ca1;
+  font-size: 16px;
+  line-height: 1.6;
+}
+
+.formContent [data-auth-field] {
+  gap: 10px;
+}
+
+.formContent [data-auth-field] label {
+  color: #151c35;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.formContent [data-auth-field] input {
+  height: 54px;
+  padding-inline: 16px;
+  border-color: #d3d8e5;
+  font-size: 16px;
+}
+
+.formContent [data-auth-field] input::placeholder {
+  color: #8d95a9;
+}
+
+.formContent [data-auth-field] input:focus-visible {
+  border-color: #164dff;
+  outline-color: #164dff;
+  box-shadow: 0 0 0 3px rgb(22 77 255 / 12%);
+}
+
+.formContent [data-auth-field] input[aria-invalid="true"] {
+  border-color: #b42318;
+}
+
+.formContent [data-auth-password] input {
+  padding-right: 48px;
+}
+
+.formContent [data-auth-password-toggle] {
+  top: 37px;
+  right: 8px;
+  width: 36px;
+  height: 36px;
+  color: #818aa0;
+}
+
+.formContent button[data-slot="button"] {
+  font-size: 16px;
+}
+
+.form {
+  display: grid;
+  gap: 26px;
+}
+
+.recovery {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: -16px;
+}
+
+.recovery button,
+.signup a {
+  color: #104dff;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.recovery button:hover,
+.signup a:hover {
+  color: #0b3ee0;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.formContent [data-auth-divider] {
+  margin-block: 25px;
+}
+
+.formContent [data-auth-divider] span:nth-child(2) {
+  font-size: 13px;
+  font-weight: 400;
+  text-transform: none;
+}
+
+.signup {
+  margin: 26px 0 0;
+  color: #858ca1;
+  font-size: 14px;
+  line-height: 1.6;
+  text-align: center;
+}
+
+.signup a {
+  margin-left: 6px;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.mobileFooter {
+  display: none;
+}
+
+.loading {
+  display: grid;
+  gap: 26px;
+  min-height: 480px;
+}
+
+.loading > span {
+  height: 54px;
+  border-radius: 8px;
+  background: #f0f2f7;
+  animation: pulse 1.8s ease-in-out infinite;
+}
+
+.loading > span:first-child {
+  width: 80%;
+  height: 72px;
+}
+
+@keyframes pulse {
+  50% { opacity: 0.45; }
+}
+
+@media (max-width: 1279px) and (min-width: 1024px) {
+  .brandPanel { padding-inline: 56px; }
+  .formPanel { padding-inline: 40px; }
+}
+
+@media (max-height: 800px) and (min-width: 1024px) {
+  .brandPanel { padding-top: 64px; padding-bottom: 32px; }
+  .brandCopy { padding-block: 40px; }
+  .formPanel { padding-block: 32px; }
+  .formBrand { margin-bottom: 24px; font-size: 44px; }
+  .formContent [data-auth-heading] { margin-bottom: 26px; }
+  .form { gap: 22px; }
+  .formContent [data-auth-divider] { margin-block: 20px; }
+  .signup { margin-top: 22px; }
+}
+
+@media (max-width: 1023px) {
+  .layout { grid-template-columns: minmax(0, 1fr); }
+  .brandPanel { display: none; }
+  .formPanel { padding: 48px 24px 28px; }
+  .formBrand { margin-bottom: 32px; font-size: 44px; }
+  .formContent [data-auth-heading] h2 { font-size: 30px; }
+  .mobileFooter {
+    display: block;
+    margin: 48px 0 0;
+    color: #858ca1;
+    font-size: 11px;
+    text-align: center;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .loading > span { animation: none; }
+}

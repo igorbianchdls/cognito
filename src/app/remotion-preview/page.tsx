@@ -174,6 +174,7 @@ import { PATY_BODY_2_DURATION, PATY_BODY_GIO_DURATION, PatyBody2IllustrativeVide
 import { OTTO_BATCH_INVOICE_SCRIPT_DURATION, OTTO_SINGLE_INVOICE_SCRIPT_DURATION, OttoBatchInvoiceScriptIllustrativeVideo, OttoSingleInvoiceScriptIllustrativeVideo } from '@/assets/remotion/compositions/OttoInvoiceScriptsIllustrativeVideos'
 import { OTTO_HOOK_1_DURATION, OTTO_HOOK_2_DURATION, OTTO_HOOK_3_DURATION, OTTO_HOOK_4_DURATION, OTTO_HOOK_5_DURATION, OttoHookAutomatedFinanceVideo, OttoHookBatchInvoicesVideo, OttoHookBoletoPixVideo, OttoHookManageByChatVideo, OttoHookSingleInvoiceVideo } from '@/assets/remotion/compositions/OttoFiveHooksIllustrativeVideos'
 import { OTTO_BODY_1_DURATION, OTTO_BODY_2_DURATION, OttoBodyManageByConversationVideo, OttoBodySystemBehindVideo } from '@/assets/remotion/compositions/OttoTwoBodiesIllustrativeVideos'
+import { OTTO_CONTADORES_REEL_DURATION, OttoContadoresReel } from '@/assets/remotion/compositions/OttoContadoresReel'
 import { OTTO_INVOICE_CHATGPT_MONITOR_CONTENT_DURATION, OttoInvoiceChatGptMonitorContent } from '@/assets/remotion/compositions/OttoInvoiceChatGptMonitorContent'
 import { OTTO_SYNC_ONLY_SCENE_DURATION, OttoSyncOnlyScene } from '@/assets/remotion/compositions/OttoSyncOnlyScene'
 import {
@@ -2315,6 +2316,19 @@ const catalog: CatalogItem[] = [
     tags: ['ChatGPT', 'Mobile', 'SF Pro', 'iPhone', 'Custom Icons'],
     value: 'component-chatgpt-mobile-exact-replica',
     width: 828,
+  },
+  {
+    code: '<OttoContadoresReel />',
+    component: OttoContadoresReel,
+    description: 'Reel vertical: a IA que preocupa os contadores. Contas, despesas, notas, conciliação e cobrança no WhatsApp, integrada ao ChatGPT ou Claude.',
+    duration: OTTO_CONTADORES_REEL_DURATION,
+    fps: 30,
+    height: 1920,
+    kind: 'Vídeos criados',
+    label: 'Reel → Otto preocupa os contadores',
+    tags: ['Reel', 'Otto', 'Financeiro', 'WhatsApp', 'ChatGPT', 'Claude'],
+    value: 'reel-otto-contadores',
+    width: 1080,
   },
   {
     code: '<ChatGptMobileFinancialOperationsVideo />',

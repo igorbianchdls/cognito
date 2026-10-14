@@ -1,3 +1,4 @@
+import { adjustSaleCommissions } from './erpCommissionAdjustments'
 import { runQuery, withTransaction, type SQLClient } from '@/lib/postgres'
 import { ErpDomainError } from '@/products/erp/shared/erpErrors'
 import { erpToday } from '@/products/erp/server/erpBusinessDate'
@@ -59,11 +60,21 @@ export async function createSaleReturn(input: Actor & { saleId: number; idempote
     // Valor unitário líquido do item, proporcional ao desconto do cabeçalho (o frete não é devolvido).
     const factor = Number(sale.subtotal) > 0 ? Math.max(Number(sale.total) - Number(sale.frete), 0) / Number(sale.subtotal) : 0
     const items: Array<{ vendaItemId: number; quantidade: number; valor: number; produtoId: number | null; custo: number }> = []
+    const stockLines: Array<{ produtoId: number; localId: number; quantidade: number; custoUnitario: number; vendaItemId: number }> = []
     for (const [index, requested] of v.itens.entries()) {
       const item = (await client.query(
-        `SELECT i.id, i.produto_id, i.servico_id, i.quantidade, i.total, i.custo_unitario, coalesce(pr.controla_estoque, false) AS controla_estoque,
+        `SELECT i.id, i.produto_id, i.servico_id, i.quantidade, i.total, coalesce((
+           SELECT sum(-m.quantidade * m.custo_unitario) / nullif(sum(-m.quantidade), 0)
+           FROM erp.movimentacoes_estoque m
+           JOIN erp.documentos_estoque_itens di ON di.empresa_id=m.empresa_id
+             AND di.documento_estoque_id=m.documento_estoque_id AND di.produto_id=m.produto_id
+             AND di.venda_item_id=i.id
+           WHERE m.empresa_id=i.empresa_id AND m.origem_tipo='venda' AND m.origem_id=i.venda_id AND m.quantidade<0
+         ), (SELECT sum(-m.quantidade*m.custo_unitario)/nullif(sum(-m.quantidade),0)
+           FROM erp.movimentacoes_estoque m WHERE m.empresa_id=i.empresa_id AND m.origem_tipo='venda'
+             AND m.origem_id=i.venda_id AND m.produto_id=i.produto_id AND m.quantidade<0), i.custo_unitario) AS custo_unitario, coalesce(pr.controla_estoque, false) AS controla_estoque,
            -- Entregue: venda atendida por inteiro, ou o que as reservas/itens registram como atendido.
-           CASE WHEN $4 = 'atendido' THEN i.quantidade ELSE greatest(i.quantidade_atendida, coalesce((SELECT sum(r.quantidade_atendida) FROM erp.reservas_estoque r
+           CASE WHEN $4 = 'atendido' THEN i.quantidade ELSE greatest(i.quantidade_atendida, coalesce((SELECT min(r.quantidade_atendida / nullif(r.quantidade, 0)) * i.quantidade FROM erp.reservas_estoque r
              WHERE r.empresa_id = i.empresa_id AND r.venda_item_id = i.id), 0)) END AS entregue,
            coalesce((SELECT sum(d.quantidade) FROM erp.devolucoes_itens d WHERE d.empresa_id = i.empresa_id AND d.venda_item_id = i.id), 0) AS devolvido
          FROM erp.vendas_itens i LEFT JOIN erp.produtos pr ON pr.empresa_id = i.empresa_id AND pr.id = i.produto_id
@@ -80,6 +91,53 @@ export async function createSaleReturn(input: Actor & { saleId: number; idempote
       const unit = Number(item.total) / Number(item.quantidade) * factor
       items.push({ vendaItemId: Number(item.id), quantidade: requested.quantidade, valor: fromCents(cents(unit * requested.quantidade)),
         produtoId: item.produto_id && item.controla_estoque ? Number(item.produto_id) : null, custo: Number(item.custo_unitario || 0) })
+      if (item.produto_id && item.controla_estoque) {
+        // Reconstitui os componentes e locais efetivamente entregues, mesmo que o kit tenha mudado.
+        // O rateio evita multiplicar movimentos quando vários itens usam o mesmo componente.
+        const delivered = (await client.query(
+          `WITH delivered AS (
+             SELECT m.produto_id, m.local_estoque_id, -m.quantidade * allocation.share AS quantidade,
+               -m.quantidade * allocation.share * m.custo_unitario AS valor
+             FROM erp.movimentacoes_estoque m
+             JOIN LATERAL (
+               SELECT sum(di.quantidade) FILTER (WHERE di.venda_item_id=$3) / nullif(sum(di.quantidade),0) AS share
+               FROM erp.documentos_estoque_itens di
+               WHERE di.empresa_id=m.empresa_id AND di.documento_estoque_id=m.documento_estoque_id AND di.produto_id=m.produto_id
+             ) allocation ON allocation.share > 0
+             WHERE m.empresa_id=$1 AND m.origem_tipo='venda' AND m.origem_id=$2 AND m.quantidade<0
+             UNION ALL
+             SELECT m.produto_id, m.local_estoque_id, -m.quantidade * allocation.share,
+               -m.quantidade * allocation.share * m.custo_unitario
+             FROM erp.movimentacoes_estoque m
+             JOIN LATERAL (
+               SELECT sum(r.quantidade_atendida) FILTER (WHERE r.venda_item_id=$3) / nullif(sum(r.quantidade_atendida),0) AS share
+               FROM erp.reservas_estoque r WHERE r.empresa_id=m.empresa_id AND r.venda_id=m.origem_id
+                 AND r.produto_id=m.produto_id AND r.local_estoque_id=m.local_estoque_id
+             ) allocation ON allocation.share > 0
+             WHERE m.empresa_id=$1 AND m.origem_tipo='venda' AND m.origem_id=$2 AND m.quantidade<0 AND m.documento_estoque_id IS NULL
+
+             UNION ALL
+             -- Retornos anteriores consomem quantidade e custo das saídas disponíveis.
+             SELECT m.produto_id, m.local_estoque_id, -m.quantidade * allocation.share,
+               -m.quantidade * allocation.share * m.custo_unitario
+             FROM erp.movimentacoes_estoque m
+             JOIN erp.documentos_estoque d ON d.empresa_id=m.empresa_id AND d.id=m.documento_estoque_id
+               AND d.tipo='devolucao_cliente' AND d.venda_id=$2
+             JOIN LATERAL (
+               SELECT sum(di.quantidade) FILTER (WHERE di.venda_item_id=$3) / nullif(sum(di.quantidade),0) AS share
+               FROM erp.documentos_estoque_itens di
+               WHERE di.empresa_id=m.empresa_id AND di.documento_estoque_id=m.documento_estoque_id AND di.produto_id=m.produto_id
+             ) allocation ON allocation.share > 0
+             WHERE m.empresa_id=$1 AND m.quantidade>0
+           ) SELECT produto_id, local_estoque_id, sum(quantidade) AS quantidade, sum(valor)/nullif(sum(quantidade),0) AS custo
+             FROM delivered GROUP BY produto_id, local_estoque_id`,
+          [input.tenantId, input.saleId, Number(item.id)])).rows
+        if (delivered.some(line => Number(line.quantidade) < -0.00001)) throw new ErpDomainError('STOCK_RETURN_HISTORY_INVALID', 'O histórico de devoluções deste item não corresponde às saídas. Confira o estoque antes de devolver.', 409)
+        const remainingLines = delivered.filter(line => Number(line.quantidade) > 0.00001)
+        if (!remainingLines.length) throw new ErpDomainError('VALIDATION_ERROR', 'Não foi possível identificar a saída original deste item. Confira o histórico de estoque antes de devolver.', 409)
+        for (const line of remainingLines) stockLines.push({ produtoId: Number(line.produto_id), localId: Number(line.local_estoque_id),
+          quantidade: Number(line.quantidade) * requested.quantidade / (Number(item.entregue) - Number(item.devolvido)), custoUnitario: Number(line.custo), vendaItemId: Number(item.id) })
+      }
     }
     const total = fromCents(items.reduce((sum, item) => sum + cents(item.valor), 0))
     if (total <= 0) throw new ErpDomainError('VALIDATION_ERROR', 'A devolução precisa ter valor maior que zero.')
@@ -98,16 +156,13 @@ export async function createSaleReturn(input: Actor & { saleId: number; idempote
     }
     // Estoque: produtos devolvidos voltam pelo documento de devolução do cliente.
     let stockDocumentId: number | null = null
-    const stockItems = items.filter(item => item.produtoId)
-    if (stockItems.length) {
-      const reservation = (await client.query('SELECT local_estoque_id FROM erp.reservas_estoque WHERE empresa_id = $1 AND venda_id = $2 ORDER BY id LIMIT 1', [input.tenantId, input.saleId])).rows[0]
-      const localId = Number(reservation?.local_estoque_id || sale.local_estoque_id || 0) || Number((await client.query(
-        'SELECT id FROM erp.locais_estoque WHERE empresa_id = $1 AND ativo AND excluido_em IS NULL ORDER BY padrao DESC, id LIMIT 1', [input.tenantId])).rows[0]?.id || 0)
-      if (!localId) throw new ErpDomainError('VALIDATION_ERROR', 'Cadastre um local de estoque para receber a devolução.')
+    const stockDocumentIds: number[] = []
+    for (const localId of new Set(stockLines.map(line => line.localId))) {
       const document = await createFinalStockDocument(client, { tenantId: input.tenantId, actorId: input.actorId, tipo: 'devolucao_cliente', localEstoqueId: localId,
-        entidadeId: Number(sale.cliente_id), vendaId: input.saleId, motivo: v.motivo, chaveIdempotencia: `devolucao:${input.idempotencyKey}`,
-        items: stockItems.map(item => ({ produtoId: item.produtoId!, quantidade: item.quantidade, custoUnitario: item.custo, vendaItemId: item.vendaItemId })) })
-      stockDocumentId = Number(document.id)
+        entidadeId: Number(sale.cliente_id), vendaId: input.saleId, motivo: v.motivo, chaveIdempotencia: `devolucao:${input.idempotencyKey}:local:${localId}`,
+        items: stockLines.filter(line => line.localId === localId).map(line => ({ produtoId: line.produtoId, quantidade: line.quantidade, custoUnitario: line.custoUnitario, vendaItemId: line.vendaItemId })) })
+      stockDocumentIds.push(Number(document.id))
+      stockDocumentId ??= Number(document.id)
     }
     const created = await client.query(
       `INSERT INTO erp.devolucoes (empresa_id, venda_id, cliente_id, numero, data_devolucao, motivo, tratamento, valor_total, valor_credito,
@@ -142,15 +197,12 @@ export async function createSaleReturn(input: Actor & { saleId: number; idempote
         remaining -= part
       }
     }
-    // Comissão do item devolvido é reduzida (sem ficar abaixo do que já foi pago).
-    for (const item of items) await client.query(
-      `UPDATE erp.comissoes_lancamentos SET valor_base = greatest(valor_base - $3, 0),
-         valor = greatest(round(greatest(valor_base - $3, 0) * percentual / 100, 2), valor_pago), atualizado_por = $4
-       WHERE empresa_id = $1 AND venda_item_id = $2 AND status = 'ativa'`, [input.tenantId, item.vendaItemId, item.valor, input.actorId])
+    await adjustSaleCommissions(client, { ...input, motivo: `Devolução ${numero}`,
+      reductions: items.map(item => ({ itemId: item.vendaItemId, valor: item.valor })) })
     await client.query(
       `INSERT INTO erp.vendas_eventos (empresa_id, venda_id, evento, status_anterior, status_novo, versao, dados, criado_por)
        SELECT $1, $2, 'devolucao_registrada', status, status, versao, $3::jsonb, $4 FROM erp.vendas WHERE empresa_id = $1 AND id = $2`,
-      [input.tenantId, input.saleId, JSON.stringify({ devolucao_id: returnId, numero, tratamento: v.tratamento, valor: total }), input.actorId])
+      [input.tenantId, input.saleId, JSON.stringify({ devolucao_id: returnId, numero, tratamento: v.tratamento, valor: total, documentos_estoque_ids: stockDocumentIds }), input.actorId])
     return readReturn(client, input.tenantId, returnId)
   })
 }
@@ -205,10 +257,11 @@ export async function useCustomerCredit(input: Actor & { returnId: number; idemp
     if (!(await hasCapability(client, input.tenantId, 'erp.financeiro.baixar')) && !(await hasCapability(client, input.tenantId, 'erp.financeiro.gerenciar')))
       throw new ErpDomainError('ACCESS_DENIED', 'Seu perfil não permite registrar baixas.', 403)
     const credit = (await client.query(
-      `SELECT d.id, d.numero, d.cliente_id, d.valor_credito - coalesce((SELECT sum(p.valor) FROM erp.pagamentos p WHERE p.empresa_id = d.empresa_id AND p.devolucao_id = d.id
+      `SELECT d.id, d.numero, d.cliente_id, v.status AS venda_status, d.valor_credito - coalesce((SELECT sum(p.valor) FROM erp.pagamentos p WHERE p.empresa_id = d.empresa_id AND p.devolucao_id = d.id
          AND p.origem = 'credito_cliente' AND p.estornado_em IS NULL AND p.estorno_de_pagamento_id IS NULL), 0) AS disponivel
-       FROM erp.devolucoes d WHERE d.empresa_id = $1 AND d.id = $2 AND d.tratamento = 'credito' FOR UPDATE`, [input.tenantId, input.returnId])).rows[0]
+       FROM erp.devolucoes d JOIN erp.vendas v ON v.empresa_id=d.empresa_id AND v.id=d.venda_id WHERE d.empresa_id = $1 AND d.id = $2 AND d.tratamento = 'credito' FOR UPDATE OF d`, [input.tenantId, input.returnId])).rows[0]
     if (!credit) throw new ErpDomainError('NOT_FOUND', 'Crédito de devolução não encontrado.', 404)
+    if (credit.venda_status !== 'confirmada') throw new ErpDomainError('CREDIT_SOURCE_SALE_INVALID', 'O crédito pertence a uma venda cancelada ou não confirmada. Confira a devolução antes de utilizar o crédito.', 409)
     if (cents(v.valor) > cents(Number(credit.disponivel))) throw new ErpDomainError('VALIDATION_ERROR', `Crédito disponível: ${Number(credit.disponivel).toFixed(2)}.`, 409)
     const parcel = (await client.query(
       `SELECT parcelas.id, composicao.saldo, contas.cliente_id FROM erp.contas_receber_parcelas parcelas

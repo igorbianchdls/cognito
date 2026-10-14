@@ -1,3 +1,4 @@
+import { commercialRequest, assertCommercialReplay } from './erpCommercialIdempotency'
 import { isRetiredErpOperationReport } from '@/products/erp/shared/reportCatalog'
 import { createSalesContract, generateContractSales } from './erpSalesContracts'
 import { runQuery, withTransaction } from '@/lib/postgres'
@@ -177,6 +178,24 @@ export async function createManagementOperation(input: ActorInput & {
   idempotencyKey: string
 }) {
   return withTransaction(async (client) => {
+    let reconciliationHash: string | undefined
+    if (input.resource === 'conciliar-transacao') {
+      reconciliationHash = await commercialRequest(client, input.tenantId, input.resource, input.idempotencyKey, input.values)
+      const stored = (await client.query(`SELECT metadata->'reconciliationRequests'->$2::text AS request
+        FROM erp.transacoes_bancarias WHERE empresa_id=$1 AND (metadata->'reconciliationRequests') ? $2::text LIMIT 1`,
+        [input.tenantId, input.idempotencyKey])).rows[0]
+      const replay = stored?.request as { hash: string; result: Record<string, unknown> } | undefined
+      if (replay) { assertCommercialReplay(replay.hash, reconciliationHash); return replay.result }
+      await client.query(`SELECT id FROM erp.transacoes_bancarias WHERE empresa_id=$1 AND id=$2 FOR UPDATE`,
+        [input.tenantId, requiredId(input.values.transacao_bancaria_id, 'Transação bancária')])
+    }
+    const rememberReconciliation = async (result: Record<string, unknown>) => {
+      await client.query(`UPDATE erp.transacoes_bancarias SET metadata=jsonb_set(metadata, '{reconciliationRequests}',
+        coalesce(metadata->'reconciliationRequests','{}'::jsonb) || jsonb_build_object($3::text,$4::jsonb))
+        WHERE empresa_id=$1 AND id=$2`, [input.tenantId, Number(input.values.transacao_bancaria_id), input.idempotencyKey,
+        JSON.stringify({ hash: reconciliationHash, result })])
+      return result
+    }
     if (input.resource === 'contratos') return createSalesContract(client,input)
     if (input.resource === 'conciliacao-bancaria') {
       const accountId = requiredId(input.values.conta_financeira_id, 'Conta financeira')
@@ -227,7 +246,7 @@ export async function createManagementOperation(input: ActorInput & {
         `INSERT INTO erp.conciliacoes_bancarias_itens (empresa_id, conciliacao_id, transacao_bancaria_id, transferencia_financeira_id, valor_conciliado, origem_conciliacao, criado_por)
          VALUES ($1, $2, $3, $4, $5, $6, $7)`,
         [input.tenantId, reconciliation.rows[0].id, transactionId, transferId, credited, input.values.origem_conciliacao === 'sugerida' ? 'sugerida' : 'manual', input.actorId])
-      return { id: String(reconciliation.rows[0].id), status: 'concluida', valor_conciliado: credited, diferenca: Math.round((credited - expected) * 100) / 100 }
+      return rememberReconciliation({ id: String(reconciliation.rows[0].id), status: 'concluida', valor_conciliado: credited, diferenca: Math.round((credited - expected) * 100) / 100 })
     }
     if (input.resource === 'conciliar-transacao') {
       const transactionId = requiredId(input.values.transacao_bancaria_id, 'Transacao bancária')
@@ -280,7 +299,7 @@ export async function createManagementOperation(input: ActorInput & {
         [input.tenantId, reconciliation.rows[0].id, transactionId, paymentId, requested,
           input.values.origem_conciliacao === 'sugerida' ? 'sugerida' : 'manual', input.actorId],
       )
-      return { id: String(reconciliation.rows[0].id), status: 'concluida', valor_conciliado: requested }
+      return rememberReconciliation({ id: String(reconciliation.rows[0].id), status: 'concluida', valor_conciliado: requested })
     }
     if (input.resource === 'transferencias-financeiras') {
       const originId = requiredId(input.values.conta_origem_id, 'Conta de origem')

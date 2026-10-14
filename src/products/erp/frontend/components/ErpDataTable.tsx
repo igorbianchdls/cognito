@@ -18,6 +18,9 @@ function formatCellValue(record: ErpEntityRecord, column: ErpTableColumn, config
   const value = record[column.key]
 
   if (column.key === 'nome') {
+    if (config.id === 'contas-contabeis') return <div style={{paddingLeft:Math.min(Number(record.nivel || 0),10)*16}}>
+      <ErpRecordIdentity name={String(value ?? '')} category={`${record.codigo} · ${record.classificacao_label}`} identityKey={`${config.id}:${record.id}`} />
+    </div>
     const typeLabel = config.fields.find(field => field.key === 'tipo')?.options?.find(option => option.value === record.tipo)?.label
     const category = record.categoria || (['categorias', 'contas-financeiras'].includes(config.id) ? typeLabel || record.tipo : '')
     return <ErpRecordIdentity name={String(value ?? '')} category={String(category || '')} identityKey={`${config.id}:${record.id}`} />

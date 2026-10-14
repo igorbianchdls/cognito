@@ -173,6 +173,7 @@ Para adicionar uma operação: crie/estenda a regra em `server`, reutilize contr
 | `/api/erp/bancos/importar-ofx` | POST | session | 4 MiB | `erp.financeiro.gerenciar` |
 | `/api/erp/catalogos/busca` | GET | session | 1 MiB | `erp.cadastros.visualizar` |
 | `/api/erp/catalogos/categorias` | GET | session | 1 MiB | `erp.cadastros.visualizar` |
+| `/api/erp/catalogos/contas-contabeis` | GET | session | 1 MiB | `erp.cadastros.visualizar` |
 | `/api/erp/comissoes/pagar` | POST | session | 1 MiB | `erp.financeiro.gerenciar` |
 | `/api/erp/comissoes/regras/[id]` | PATCH, DELETE | session | 1 MiB | `erp.vendas.gerenciar` |
 | `/api/erp/comissoes/regras` | GET, POST | session | 1 MiB | `erp.vendas.gerenciar`, `erp.vendas.visualizar` |
@@ -245,3 +246,7 @@ Para adicionar uma operação: crie/estenda a regra em `server`, reutilize contr
 | `/api/erp/vendas/catalogos` | GET | session | 1 MiB | `erp.vendas.visualizar` |
 | `/api/erp/vendas` | GET, POST | session | 1 MiB | `erp.vendas.gerenciar`, `erp.vendas.visualizar` |
 <!-- API-CATALOG:END -->
+
+## Contas contabeis e DRE
+
+O cadastro `/api/erp/contas-contabeis` usa o CRUD de cadastros, hierarquia por empresa e desativacao com historico. O catalogo pesquisavel e paginado fica em `/api/erp/catalogos/contas-contabeis`. Categorias financeiras e contas financeiras aceitam `conta_contabil_id`; omitir esse campo na edicao preserva o vinculo. Consulte [estrutura, regras, DRE e verificacoes](../../../../docs/avaliacao-erp/20261012-contas-contabeis-dre.md).

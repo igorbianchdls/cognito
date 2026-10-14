@@ -10,6 +10,7 @@ export type ErpConnectedModuleId = Extract<
   | 'servicos'
   | 'categorias'
   | 'categorias-cadastro'
+  | 'contas-contabeis'
   | 'pedidos'
   | 'pedidos-compra'
   | 'contas-a-receber'
@@ -26,6 +27,7 @@ export function isErpConnectedModuleId(value: string): value is ErpConnectedModu
     || value === 'servicos'
     || value === 'categorias'
     || value === 'categorias-cadastro'
+    || value === 'contas-contabeis'
     || value === 'pedidos'
     || value === 'pedidos-compra'
     || value === 'contas-a-receber'
@@ -43,6 +45,7 @@ const ERP_MODULE_CAPABILITIES: Record<
   vendedores: { read: 'erp.cadastros.visualizar', manage: 'erp.cadastros.gerenciar' },
   produtos: { read: 'erp.cadastros.visualizar', manage: 'erp.cadastros.gerenciar' },
   servicos: { read: 'erp.cadastros.visualizar', manage: 'erp.cadastros.gerenciar' },
+  'contas-contabeis': { read: 'erp.cadastros.visualizar', manage: 'erp.cadastros.gerenciar' },
   categorias: { read: 'erp.cadastros.visualizar', manage: 'erp.cadastros.gerenciar' },
   'categorias-cadastro': { read: 'erp.cadastros.visualizar', manage: 'erp.cadastros.gerenciar' },
   pedidos: { read: 'erp.vendas.visualizar', manage: 'erp.vendas.gerenciar' },

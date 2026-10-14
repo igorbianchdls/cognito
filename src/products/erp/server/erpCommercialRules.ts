@@ -1,3 +1,5 @@
+import { financialCompositionSql } from './erpFinancialComposition'
+import { adjustSaleCommissions } from './erpCommissionAdjustments'
 import type { SQLClient } from '@/lib/postgres'
 import { ErpDomainError } from '@/products/erp/shared/erpErrors'
 
@@ -113,7 +115,7 @@ export async function assertCustomerCredit(client: Query, input: {
     `SELECT coalesce(sum(greatest(composicao.saldo, 0)), 0) AS aberto
      FROM erp.contas_receber_parcelas p
      JOIN erp.contas_receber c ON c.empresa_id = p.empresa_id AND c.id = p.conta_receber_id
-     CROSS JOIN LATERAL erp.composicao_parcela(p.empresa_id, 'receber', p.id) composicao
+     ${financialCompositionSql('receber', 'p')}
      WHERE p.empresa_id = $1 AND c.cliente_id = $2 AND p.excluido_em IS NULL AND c.excluido_em IS NULL
        AND p.status IN ('aberto', 'parcial', 'vencido') AND c.status <> 'cancelado'`,
     [input.tenantId, input.customerId],
@@ -171,11 +173,7 @@ export async function generateSaleCommissions(client: Query, tenantId: number, s
 }
 
 export async function cancelSaleCommissions(client: Query, tenantId: number, saleId: number, actorId: number) {
-  await client.query(
-    `UPDATE erp.comissoes_lancamentos SET status = 'cancelada', cancelado_em = now(), atualizado_por = $3
-     WHERE empresa_id = $1 AND venda_id = $2 AND status = 'ativa'`,
-    [tenantId, saleId, actorId],
-  )
+  await adjustSaleCommissions(client, { tenantId, saleId, actorId, cancel: true, motivo: 'Cancelamento da venda' })
 }
 
 // ---------------------------------------------------------------- condições comerciais do cliente

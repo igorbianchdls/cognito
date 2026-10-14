@@ -1,4 +1,5 @@
 "use client";
+import { ErpDocumentDetailsDialog } from '../../components/ErpDocumentDetailsDialog';
 import { ErpCommercialDocumentButtons } from '../../components/ErpCommercialDocumentButtons';
 import { ErpPagination } from '../../components/ErpPagination';
 import { ErpHistoryPanel } from '@/products/erp/frontend/components/ErpHistoryPanel';
@@ -73,6 +74,8 @@ type ServiceOrder = {
   total: number;
   itens: number;
   versao: number;
+  venda_id?: string | null;
+  orcamento_id?: string | null;
 };
 type OrderItem = {
   rowId: string;
@@ -132,6 +135,16 @@ export function ServiceOrdersWorkspacePage() {
     items: Record<string, unknown>[];
     events: Record<string, unknown>[];
   } | null>(null);
+
+  const [linkedOpen, setLinkedOpen] = useState(false);
+  const [linkedLoading, setLinkedLoading] = useState(false);
+  const [linkedDetails, setLinkedDetails] = useState<{ sale: Record<string, unknown>; items: Record<string, unknown>[]; installments: Record<string, unknown>[]; events: Record<string, unknown>[] } | null>(null);
+  async function openLinkedDocument(id: string) {
+    setDetailOpen(false); setLinkedOpen(true); setLinkedLoading(true); setLinkedDetails(null); setError(null);
+    try { setLinkedDetails(await parseErpResponse(await fetch(`/api/erp/vendas/${id}`, { cache: 'no-store' }))); }
+    catch (e) { setLinkedOpen(false); setError(e instanceof Error ? e.message : 'Não foi possível abrir o documento vinculado.'); }
+    finally { setLinkedLoading(false); }
+  }
 
   const [clienteId, setClienteId] = useState("");
   const [responsavelId, setResponsavelId] = useState("");
@@ -462,7 +475,7 @@ export function ServiceOrdersWorkspacePage() {
                               <Wrench className="size-4" />
                             </Button>
                           ) : null}
-                          {record.status !== "cancelada" ? (
+                          {record.orcamento_id ? <Button size="icon" variant="ghost" title="Abrir orçamento" onClick={() => void openLinkedDocument(record.orcamento_id!)}><RotateCcw className="size-4" /></Button> : record.status !== "cancelada" && !record.venda_id ? (
                             <Button
                               size="icon"
                               variant="ghost"
@@ -474,7 +487,7 @@ export function ServiceOrdersWorkspacePage() {
                               <RotateCcw className="size-4" />
                             </Button>
                           ) : null}
-                          {record.status === "concluida" ? (
+                          {record.venda_id ? <Button size="icon" variant="ghost" title="Abrir venda" onClick={() => void openLinkedDocument(record.venda_id!)}><ShoppingBag className="size-4" /></Button> : record.status === "concluida" ? (
                             <Button
                               size="icon"
                               variant="ghost"
@@ -728,6 +741,8 @@ export function ServiceOrdersWorkspacePage() {
                   "numero_serie",
                   "problema_informado",
                   "diagnostico",
+                  "subtotal",
+                  "desconto",
                   "total",
                 ].map((key) =>
                   details.order[key] ? (
@@ -736,12 +751,16 @@ export function ServiceOrdersWorkspacePage() {
                         {key.replaceAll("_", " ")}
                       </dt>
                       <dd className="mt-1 text-sm font-medium">
-                        {formatErpValue(details.order[key])}
+                        {['subtotal', 'desconto', 'total'].includes(key) ? formatErpCurrency(Number(details.order[key])) : key === 'status' ? statusLabels[String(details.order[key])] || formatErpValue(details.order[key]) : formatErpValue(details.order[key])}
                       </dd>
                     </div>
                   ) : null,
                 )}
               </dl>
+              {details.order.venda_id || details.order.orcamento_id ? <div className="flex flex-wrap gap-2">
+                {details.order.venda_id ? <Button variant="outline" onClick={() => void openLinkedDocument(String(details.order.venda_id))}>Abrir venda vinculada</Button> : null}
+                {details.order.orcamento_id ? <Button variant="outline" onClick={() => void openLinkedDocument(String(details.order.orcamento_id))}>Abrir orçamento vinculado</Button> : null}
+              </div> : null}
               <SimpleTable title="Itens" rows={details.items} />
               <ErpHistoryPanel kind="ordens-servico" id={String(details.order.id)}/>
             </div>
@@ -752,6 +771,9 @@ export function ServiceOrdersWorkspacePage() {
           )}
         </DialogContent>
       </Dialog>
+      <ErpDocumentDetailsDialog documentKind="vendas" open={linkedOpen} onOpenChange={setLinkedOpen}
+        title={linkedDetails?.sale.tipo_documento === 'orcamento' ? 'Orçamento vinculado' : 'Venda vinculada'} loading={linkedLoading}
+        document={linkedDetails?.sale} items={linkedDetails?.items} installments={linkedDetails?.installments} events={linkedDetails?.events} />
     </div>
   );
 }

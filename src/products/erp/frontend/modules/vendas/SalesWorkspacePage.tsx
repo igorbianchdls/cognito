@@ -1,5 +1,7 @@
 "use client";
 
+import { useErpConfirmation } from '@/products/erp/frontend/components/ErpConfirmation'
+
 import { ErpMutation } from '@/products/erp/frontend/services/erpMutation';
 import { lineTotal, sumMoney, discountAmount } from '@/products/erp/shared/erpMoney';
 import {
@@ -176,6 +178,8 @@ export function SalesWorkspacePage({
 }: {
   documentType?: "venda" | "orcamento";
 }) {
+  const confirmAction = useErpConfirmation()
+
   const isQuote = documentType === "orcamento";
   const canManage = useErpAccess().can("erp.vendas.gerenciar");
   const [records, setRecords] = useState<SaleRecord[]>([]);
@@ -452,7 +456,14 @@ export function SalesWorkspacePage({
       action === "confirmar"
         ? "Confirmar"
         : "Cancelar";
-    if (!window.confirm(`${actionLabel} a venda ${record.numero}?`)) return;
+    if (!(await confirmAction({
+      title: actionLabel + ' venda',
+      description: action === 'confirmar'
+        ? 'A confirmação gera as parcelas a receber e reserva os produtos de estoque. A entrega é registrada no atendimento da venda.'
+        : 'O cancelamento encerra os valores a receber e libera as reservas ainda não entregues. Vendas com entregas ou devoluções registradas não podem ser canceladas diretamente. Recebimentos precisam ser estornados antes.',
+      details: [record.numero, record.cliente, currency(record.total)].join(' · '),
+      confirmLabel: actionLabel + ' venda', destructive: action === 'cancelar',
+    }))) return;
     setLoading(true);
     setError(null);
     try {

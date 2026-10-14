@@ -1,6 +1,7 @@
 'use client'
 
 import { useRouter } from 'next/navigation'
+import Link from 'next/link'
 import { useEffect, useMemo, useState, type FormEvent } from 'react'
 import { useAuth, useSignIn } from '@clerk/nextjs'
 import { SiGoogle } from '@icons-pack/react-simple-icons'
@@ -16,6 +17,9 @@ import {
   PasswordField,
 } from '@/products/auth/frontend/components/AuthFormParts'
 import { getAuthErrorMessage } from '@/products/auth/frontend/components/authErrors'
+import styles from './AuthLogin.module.css'
+
+const submitClassName = 'h-[54px] bg-[#104dff] text-base font-semibold hover:bg-[#0b3ee0] focus-visible:ring-[#104dff]/25'
 
 type SignInStep = 'start' | 'recovery-code' | 'new-password' | 'mfa'
 type MfaStrategy = 'email_code' | 'phone_code' | 'totp' | 'backup_code'
@@ -224,7 +228,7 @@ export function SignInFlow() {
         <AuthAlert message={generalError} />
         <form onSubmit={handleVerifyRecoveryCode} className="grid gap-5">
           <AuthField id="recovery-code" label="Código de recuperação" value={code} onChange={(event) => setCode(event.target.value)} inputMode="numeric" autoComplete="one-time-code" maxLength={8} required error={fieldErrors.code} className="text-center text-base" />
-          <AuthSubmitButton loading={loading}>Validar código</AuthSubmitButton>
+          <AuthSubmitButton loading={loading} className={submitClassName}>Validar código</AuthSubmitButton>
         </form>
         <CodeResend countdown={resendIn} onResend={handleResendCode} />
       </div>
@@ -240,7 +244,7 @@ export function SignInFlow() {
         <form onSubmit={handleNewPassword} className="grid gap-5">
           <PasswordField id="new-password" label="Nova senha" value={newPassword} onChange={(event) => setNewPassword(event.target.value)} autoComplete="new-password" minLength={8} required visible={newPasswordVisible} onToggleVisibility={() => setNewPasswordVisible((value) => !value)} error={fieldErrors.password} />
           <p className="-mt-2 text-xs leading-5 text-[#777]">Use pelo menos 8 caracteres.</p>
-          <AuthSubmitButton loading={loading}>Salvar nova senha</AuthSubmitButton>
+          <AuthSubmitButton loading={loading} className={submitClassName}>Salvar nova senha</AuthSubmitButton>
         </form>
       </div>
     )
@@ -259,7 +263,7 @@ export function SignInFlow() {
         <AuthAlert message={generalError} />
         <form onSubmit={handleVerifyMfa} className="grid gap-5">
           <AuthField id="mfa-code" label={mfaStrategy === 'backup_code' ? 'Código de recuperação' : 'Código de segurança'} value={code} onChange={(event) => setCode(event.target.value)} inputMode={mfaStrategy === 'backup_code' ? 'text' : 'numeric'} autoComplete="one-time-code" required error={fieldErrors.code} className="text-center text-base" />
-          <AuthSubmitButton loading={loading}>Confirmar e entrar</AuthSubmitButton>
+          <AuthSubmitButton loading={loading} className={submitClassName}>Confirmar e entrar</AuthSubmitButton>
         </form>
         {mfaStrategy === 'email_code' || mfaStrategy === 'phone_code' ? <CodeResend countdown={resendIn} onResend={handleResendCode} /> : null}
       </div>
@@ -268,15 +272,14 @@ export function SignInFlow() {
 
   return (
     <div>
-      <AuthHeading title="Bem-vindo de volta" description="Entre para acessar a gestão da sua empresa." />
+      <AuthHeading title="Bem-vindo de volta" description="Acesse sua conta para continuar." />
       <AuthAlert message={generalError} />
 
-      <form onSubmit={handlePasswordSignIn} className="grid gap-5">
-        <AuthField id="email" label="Email" type="email" value={email} onChange={(event) => setEmail(event.target.value)} autoComplete="email" placeholder="voce@empresa.com.br" required autoFocus error={fieldErrors.email} />
+      <form onSubmit={handlePasswordSignIn} className={styles.form}>
+        <AuthField id="email" label="E-mail" type="email" value={email} onChange={(event) => setEmail(event.target.value)} autoComplete="email" placeholder="voce@empresa.com.br" required autoFocus error={fieldErrors.email} />
         <PasswordField
           id="password"
           label="Senha"
-          labelAction={<button type="button" onClick={() => void handleStartRecovery()} className="text-xs font-medium text-[#555] underline decoration-[#c7c7c7] underline-offset-4 hover:text-[#181818] hover:decoration-[#181818] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-black/20">Esqueci minha senha</button>}
           value={password}
           onChange={(event) => setPassword(event.target.value)}
           autoComplete="current-password"
@@ -285,14 +288,18 @@ export function SignInFlow() {
           onToggleVisibility={() => setPasswordVisible((value) => !value)}
           error={fieldErrors.password}
         />
-        <AuthSubmitButton loading={loading}>Entrar</AuthSubmitButton>
+        <div className={styles.recovery}>
+          <button type="button" onClick={() => void handleStartRecovery()} disabled={loading}>Esqueceu sua senha?</button>
+        </div>
+        <AuthSubmitButton loading={loading} className={submitClassName}>Entrar</AuthSubmitButton>
       </form>
 
       <AuthDivider />
-      <Button type="button" variant="outline" onClick={() => void handleGoogleSignIn()} disabled={loading} className="h-11 w-full rounded-md border-[#d9d9d9] bg-white text-sm font-medium text-[#292929] shadow-none hover:bg-[#f7f7f7]">
+      <Button type="button" variant="outline" onClick={() => void handleGoogleSignIn()} disabled={loading} className="h-[54px] w-full rounded-md border-[#d3d8e5] bg-white text-base font-semibold text-[#151c35] shadow-none hover:bg-[#f7f8fc]">
         <SiGoogle size={16} color="default" title="Google" />
         Continuar com Google
       </Button>
+      <p className={styles.signup}>Não tem uma conta? <Link href="/sign-up">Criar conta</Link></p>
     </div>
   )
 }

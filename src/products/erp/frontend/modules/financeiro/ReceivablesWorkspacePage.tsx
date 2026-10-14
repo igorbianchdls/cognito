@@ -1,5 +1,7 @@
 'use client'
 
+import { useErpConfirmation } from '@/products/erp/frontend/components/ErpConfirmation'
+
 import { ErpAttachments, ErpPaymentReceipts, uploadErpAttachment } from '@/products/erp/frontend/components/ErpAttachments'
 import { useErpAccess } from '@/products/erp/frontend/hooks/useErpAccess'
 
@@ -28,7 +30,7 @@ import { erpClientToday, erpClientMonthStart } from '@/products/erp/frontend/ser
 
 type Option = { id: string; nome: string; padrao?: boolean }
 type Catalogs = { financialAccounts: Option[]; paymentMethods: Array<Option & { tipo?: string }>; categories?: Option[]; costCenters?: Option[] }
-type Receivable = { id: string; conta_id: string; tipo_lancamento?: string; parcela_id: string; entidade_id: string; descricao: string; categoria: string; documento: string; cliente: string; parcela: number; vencimento: string; valor: number; valor_pago: number; credito: number; renegociado: number; saldo: number; status: string }
+type Receivable = { id: string; conta_id: string; tipo_lancamento?: string; parcela_id: string; conta_financeira_id?: string; metodo_pagamento_id?: string; entidade_id: string; descricao: string; categoria: string; documento: string; cliente: string; parcela: number; vencimento: string; valor: number; valor_pago: number; credito: number; renegociado: number; saldo: number; status: string }
 type Payment = { id: string; data_pagamento: string; valor: number; juros: number; multa: number; desconto: number; taxa: number; valor_liquido: number; estornado_em: string; estorno_de_pagamento_id: string; numero_parcela: number; conta_financeira: string; metodo_pagamento: string }
 
 const today = () => erpClientToday()
@@ -45,6 +47,8 @@ async function parseResponse<T>(response: Response): Promise<T> {
 }
 
 export function ReceivablesWorkspacePage() {
+  const confirmAction = useErpConfirmation()
+
   const access = useErpAccess()
   const canSettle = access.can('erp.financeiro.baixar')
   const canReverse = access.can('erp.financeiro.estornar')
@@ -125,7 +129,7 @@ export function ReceivablesWorkspacePage() {
 
   function openPayment(record: Receivable) {
     setSelected(record); setPaymentAmount(String(record.saldo)); setPaymentDate(today())
-    setFinancialAccountId(catalogs.financialAccounts.find((item) => item.padrao)?.id || ''); setPaymentMethodId('')
+    setFinancialAccountId(catalogs.financialAccounts.find(item => item.id === record.conta_financeira_id)?.id || catalogs.financialAccounts.find(item => item.padrao)?.id || ''); setPaymentMethodId(catalogs.paymentMethods.find(item => item.id === record.metodo_pagamento_id)?.id || ''); setReceiptFile(null); setCardInstallments('1')
     setInterest('0'); setFine('0'); setDiscount('0'); setFee('0'); setError(null); setPaymentOpen(true)
   }
 
@@ -161,14 +165,14 @@ export function ReceivablesWorkspacePage() {
   async function openHistory(record: Receivable) {
     setSelected(record); setError(null)
     try {
-      const body = await parseResponse<{ records: Payment[] }>(await fetch(`/api/erp/pagamentos?tipo=receber&conta_id=${record.id}`, { cache: 'no-store' }))
+      const body = await parseResponse<{ records: Payment[] }>(await fetch(`/api/erp/pagamentos?tipo=receber&conta_id=${record.conta_id}`, { cache: 'no-store' }))
       setPayments(body.records); setHistoryOpen(true)
     } catch (historyError) { setError(historyError instanceof Error ? historyError.message : 'Não foi possível carregar o histórico.') }
   }
 
   async function reversePayment(payment: Payment) {
     if (!canReverse) return
-    if (!window.confirm('Estornar este recebimento?')) return
+    if (!(await confirmAction({ title: 'Estornar recebimento', description: 'O recebimento será revertido, o saldo da parcela será reaberto e a conta financeira será ajustada. O histórico será preservado.', details: [selected?.descricao, currency(payment.valor_liquido)].filter(Boolean).join(' · '), confirmLabel: 'Estornar recebimento', destructive: true }))) return
     setSaving(true); setError(null)
     try {
       await parseResponse(await fetch(`/api/erp/pagamentos/${payment.id}/estornar`, { method: 'POST', headers: { 'Content-Type': 'application/json', 'Idempotency-Key': crypto.randomUUID() }, body: JSON.stringify({ motivo: 'Estorno solicitado no ERP' }) }))

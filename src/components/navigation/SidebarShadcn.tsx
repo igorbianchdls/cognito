@@ -77,6 +77,7 @@ const navigation: NavigationItem[] = [
   { title: "Notas fiscais", url: "/erp/compras/notas-compra", icon: IconFileInvoice, capability: "erp.compras.visualizar" },
   { title: "Clientes", url: "/erp/cadastros/clientes", icon: IconUsers, capability: "erp.cadastros.visualizar" },
   { title: "Fornecedores", url: "/erp/cadastros/fornecedores", icon: IconTruckDelivery, capability: "erp.cadastros.visualizar" },
+  { title: "Contas contábeis", url: "/erp/cadastros/contas-contabeis", icon: IconReportAnalytics, capability: "erp.cadastros.visualizar" },
   {
     title: "Produtos e serviços", url: "/erp/cadastros/produtos", icon: IconPackage, capability: "erp.cadastros.visualizar",
     children: [

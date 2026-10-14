@@ -1,5 +1,7 @@
 'use client'
 
+import { useErpConfirmation } from '@/products/erp/frontend/components/ErpConfirmation'
+
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { ErpListPagination } from '@/products/erp/frontend/components/ErpListPagination'
 import { Loader2, Plus, Trash2 } from 'lucide-react'
@@ -87,6 +89,8 @@ export function PriceTablesPage() {
 }
 
 function PriceTableDialog({ draft: initial, onClose, onSaved }: { draft: Draft; onClose: () => void; onSaved: () => void }) {
+  const confirmAction = useErpConfirmation()
+
   const [draft, setDraft] = useState(initial)
   const [kind, setKind] = useState<'produto' | 'servico'>('produto')
   const [picked, setPicked] = useState<Option | null>(null)
@@ -119,7 +123,7 @@ function PriceTableDialog({ draft: initial, onClose, onSaved }: { draft: Draft; 
   }
 
   async function remove() {
-    if (!draft.id || !window.confirm(`Excluir a tabela "${draft.nome}"? Clientes vinculados voltam a usar a tabela padrão.`)) return
+    if (!draft.id || !(await confirmAction(`Excluir a tabela "${draft.nome}"? Clientes vinculados voltam a usar a tabela padrão.`))) return
     setSaving(true); setError(null)
     try { await erpJson(`/api/erp/tabelas-preco/${draft.id}`, { method: 'DELETE', body: { expectedVersion: draft.versao } }); onSaved() }
     catch (removeError) { setError(errorMessage(removeError, 'Não foi possível excluir a tabela.')) }

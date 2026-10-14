@@ -1,5 +1,7 @@
 'use client'
 
+import { useErpConfirmation, useErpPrompt } from '@/products/erp/frontend/components/ErpConfirmation'
+
 import { useErpAccess } from '@/products/erp/frontend/hooks/useErpAccess'
 import { ErpMutation } from '@/products/erp/frontend/services/erpMutation'
 import { getErpModuleCapability, isErpConnectedModuleId } from '@/products/erp/shared/moduleAccess'
@@ -20,6 +22,9 @@ import { erpClient } from '@/products/erp/frontend/services/erpClient'
 import type { ErpEntityAction, ErpEntityConfig, ErpEntityRecord } from '@/products/erp/shared/types'
 
 export function ErpEntityPage({ config }: { config: ErpEntityConfig }) {
+  const confirmAction = useErpConfirmation()
+  const promptAction = useErpPrompt()
+
   const access = useErpAccess()
   const canManage = isErpConnectedModuleId(config.id) && access.can(getErpModuleCapability(config.id, 'manage'))
   const canAct = (action: ErpEntityAction) => action.id === 'baixar' ? access.can('erp.financeiro.baixar') : canManage
@@ -129,7 +134,7 @@ export function ErpEntityPage({ config }: { config: ErpEntityConfig }) {
   }
 
   async function deactivateRecord(record: ErpEntityRecord) {
-    if (!window.confirm(`Desativar este ${config.singularLabel}?`)) return
+    if (!(await confirmAction({ title: 'Desativar cadastro', description: 'O cadastro ficará inativo. Os registros e vínculos históricos serão preservados.', details: String(record.nome || record.codigo || record.id), confirmLabel: 'Desativar', destructive: true }))) return
     setLoading(true)
     setError(null)
     try {
@@ -143,7 +148,7 @@ export function ErpEntityPage({ config }: { config: ErpEntityConfig }) {
   async function runAction(action: ErpEntityAction, record: ErpEntityRecord) {
     if (!canAct(action)) return
     const message = action.confirmMessage || `${action.label} este registro?`
-    if (!window.confirm(message)) return
+    if (action.id !== 'baixar' && !(await confirmAction({ title: action.label, description: message, details: String(record.nome || record.descricao || record.numero || record.id), confirmLabel: action.label }))) return
 
     const actionRecordId = action.id === 'baixar' ? String(record.parcela_id || '') : record.id
     if (!actionRecordId) {
@@ -153,8 +158,8 @@ export function ErpEntityPage({ config }: { config: ErpEntityConfig }) {
 
     const values: Record<string, unknown> = config.id === 'pedidos' ? {expectedVersion:Number(record.versao)} : {}
     if (action.id === 'baixar') {
-      const defaultValue = Math.max(0, Number(record.valor || 0) - Number(record.valor_pago || 0))
-      const typedValue = window.prompt('Valor da baixa', defaultValue ? String(defaultValue) : '')
+      const defaultValue = Math.max(0, Number(record.saldo ?? (Number(record.valor || 0) - Number(record.valor_pago || 0))))
+      const typedValue = await promptAction({ title: action.label, description: 'Informe o valor a registrar nesta parcela.', details: String(record.descricao || record.id), inputLabel: 'Valor da baixa', defaultValue: String(defaultValue), maximum: defaultValue, confirmLabel: 'Registrar baixa' })
       if (typedValue === null) return
       values.valor = typedValue
     }

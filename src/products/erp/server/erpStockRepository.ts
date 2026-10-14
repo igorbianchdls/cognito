@@ -62,7 +62,7 @@ export async function readStockCountSnapshot(tenantId: number, localId: number, 
     throw new ErpDomainError('VALIDATION_ERROR', 'Selecione entre 1 e 200 produtos diferentes.', 422)
   }
   const result = await runQuery(
-    `SELECT p.id::text AS produto_id, p.nome AS produto, p.unidade_medida AS unidade,
+    `SELECT p.id::text AS produto_id, p.nome AS produto, coalesce(nullif(trim(p.unidade_medida), ''), 'UN') AS unidade,
        coalesce(s.quantidade_fisica,0) AS quantidade_sistema,
        coalesce(s.quantidade_reservada,0) AS quantidade_reservada
      FROM erp.produtos p
@@ -199,7 +199,7 @@ export async function applyStockMovement(
   if (!movementQuantity) throw new ErpDomainError('STOCK_OPERATION_INVALID', 'Quantidade abaixo da precisão de estoque.')
   const nextQuantity = Number((currentQuantity + movementQuantity).toFixed(4))
   if (nextQuantity < Number(balance.quantidade_reservada || 0) && !product.permite_estoque_negativo) {
-    throw new ErpDomainError('STOCK_OPERATION_INVALID', `Saldo insuficiente para ${String(product.nome)}. Disponível físico: ${currentQuantity}.`)
+    throw new ErpDomainError('STOCK_OPERATION_INVALID', `Saldo insuficiente para ${String(product.nome)}. Disponível para saída: ${Number((currentQuantity - Number(balance.quantidade_reservada || 0)).toFixed(4))}. Saldo físico: ${currentQuantity}; reservado: ${Number(balance.quantidade_reservada || 0)}.`)
   }
 
   const inputCost = movementQuantity < 0 && !input.reverseReceipt ? currentAverage : Number(input.custoUnitario ?? currentAverage)
@@ -525,7 +525,7 @@ export async function listStockOperation(tenantId: number, resource: string, inp
   if (resource === 'posicao-estoque') {
     return listStockOperationPage(tenantId,
       `SELECT posicao.produto_id::text AS id, posicao.codigo, posicao.sku, posicao.produto,
-         posicao.unidade_medida, posicao.local_estoque, posicao.quantidade_fisica,
+         coalesce(nullif(trim(posicao.unidade_medida), ''), 'UN') AS unidade_medida, posicao.local_estoque, posicao.quantidade_fisica,
          posicao.quantidade_reservada, posicao.quantidade_disponivel, posicao.custo_medio,
          posicao.valor_estoque, posicao.estoque_minimo, posicao.situacao,
          COALESCE(categorias.nome, '') AS categoria
@@ -651,7 +651,7 @@ async function createStockOperationWithClient(client: Pick<SQLClient, 'query'>, 
       let quantidade = decimal(input.values.quantidade, 'Quantidade')
       let custoUnitario = input.values.custo_unitario === undefined || input.values.custo_unitario === '' ? undefined : decimal(input.values.custo_unitario, 'Custo unitário', true)
       if (input.values.unidade) {
-        const conversion = await client.query(`SELECT p.unidade_medida, c.fator FROM erp.produtos p LEFT JOIN erp.conversoes_unidades_produto c ON c.empresa_id=p.empresa_id AND c.produto_id=p.id AND lower(c.unidade_origem)=lower($3) AND lower(c.unidade_destino)=lower(p.unidade_medida) AND c.ativo AND c.excluido_em IS NULL WHERE p.empresa_id=$1 AND p.id=$2`, [input.tenantId, produtoId, String(input.values.unidade)])
+        const conversion = await client.query(`SELECT coalesce(nullif(trim(p.unidade_medida), ''), 'UN') AS unidade_medida, c.fator FROM erp.produtos p LEFT JOIN erp.conversoes_unidades_produto c ON c.empresa_id=p.empresa_id AND c.produto_id=p.id AND lower(c.unidade_origem)=lower($3) AND lower(c.unidade_destino)=lower(coalesce(nullif(trim(p.unidade_medida), ''), 'UN')) AND c.ativo AND c.excluido_em IS NULL WHERE p.empresa_id=$1 AND p.id=$2`, [input.tenantId, produtoId, String(input.values.unidade)])
         const unit = conversion.rows[0]
         if (!unit) throw new ErpDomainError('STOCK_OPERATION_INVALID', 'Produto não encontrado.')
         if (String(input.values.unidade).toLowerCase() !== String(unit.unidade_medida).toLowerCase()) {
@@ -794,6 +794,10 @@ async function createStockOperationWithClient(client: Pick<SQLClient, 'query'>, 
       const destination = optionalText(input.values.unidade_destino)?.toUpperCase()
       if (!origin || !destination) throw new ErpDomainError('STOCK_OPERATION_INVALID', 'As unidades de origem e destino são obrigatorias.')
       if (origin === destination) throw new ErpDomainError('STOCK_OPERATION_INVALID', 'As unidades precisam ser diferentes.')
+      const product = (await client.query("SELECT coalesce(nullif(trim(unidade_medida), ''), 'UN') AS unidade FROM erp.produtos WHERE empresa_id=$1 AND id=$2 AND ativo AND excluido_em IS NULL FOR UPDATE", [input.tenantId, produtoId])).rows[0]
+      if (!product) throw new ErpDomainError('STOCK_OPERATION_INVALID', 'Selecione um produto ativo da empresa.')
+      if (destination !== String(product.unidade).toUpperCase()) throw new ErpDomainError('STOCK_OPERATION_INVALID', `A unidade de destino deve ser a unidade de estoque do produto: ${String(product.unidade)}.`)
+
       const created = await client.query(
         `INSERT INTO erp.conversoes_unidades_produto
            (empresa_id, produto_id, unidade_origem, unidade_destino, fator, criado_por, atualizado_por)

@@ -1,5 +1,7 @@
 "use client";
 
+import { useErpConfirmation } from '@/products/erp/frontend/components/ErpConfirmation'
+
 import { useCallback, useEffect, useMemo, useState } from "react";
 import {
   CalendarDays,
@@ -183,6 +185,8 @@ async function parseResponse<T>(response: Response): Promise<T> {
 }
 
 export function PurchaseWorkspacePage() {
+  const confirmAction = useErpConfirmation()
+
   const canManage = useErpAccess().can("erp.compras.gerenciar");
   const [records, setRecords] = useState<PurchaseRecord[]>([]);
   const [page, setPage] = useState(1);
@@ -456,7 +460,15 @@ export function PurchaseWorkspacePage() {
   ) {
     const verb = action === "confirmar" ? "efetivar" : "cancelar";
     if (
-      !window.confirm(`Deseja ${verb} a compra ${record.numero || record.id}?`)
+      !(await confirmAction({
+        title: action === 'confirmar' ? 'Efetivar compra' : 'Cancelar compra',
+        description: action === 'confirmar'
+          ? 'A compra será efetivada e as parcelas a pagar serão geradas, se o financeiro estiver habilitado. Produtos de estoque precisam ter o recebimento registrado separadamente.'
+          : 'A compra será cancelada e seus efeitos financeiros e de estoque serão revertidos. Pagamentos existentes precisam ser estornados antes.',
+        details: [record.numero || record.id, record.fornecedor, formatCurrency(record.total)].join(' · '),
+        confirmLabel: action === 'confirmar' ? 'Efetivar compra' : 'Cancelar compra',
+        destructive: action === 'cancelar',
+      }))
     )
       return;
     setLoading(true);

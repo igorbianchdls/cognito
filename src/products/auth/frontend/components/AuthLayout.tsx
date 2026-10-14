@@ -2,6 +2,7 @@ import Image from 'next/image'
 import Link from 'next/link'
 import type { ReactNode } from 'react'
 import { ArrowDownRight, ArrowUpRight, CircleCheck, Landmark, ReceiptText, ShoppingBag } from 'lucide-react'
+import loginStyles from './AuthLogin.module.css'
 
 type AuthLayoutProps = {
   children: ReactNode
@@ -86,6 +87,45 @@ function OperationsPreview() {
 export function AuthLayout({ children, mode }: AuthLayoutProps) {
   const isSignUp = mode === 'sign-up'
   const isOnboarding = mode === 'onboarding'
+
+  if (mode === 'sign-in') {
+    return (
+      <main className={loginStyles.layout}>
+        <aside className={loginStyles.brandPanel}>
+          <svg className={loginStyles.pattern} viewBox="0 0 900 1000" preserveAspectRatio="xMidYMid slice" aria-hidden="true" focusable="false">
+            <defs>
+              <filter id="otto-login-grain">
+                <feTurbulence type="fractalNoise" baseFrequency="0.8" numOctaves="3" stitchTiles="stitch" />
+                <feColorMatrix type="saturate" values="0" />
+              </filter>
+            </defs>
+            <g fill="none" stroke="#10176c" strokeWidth="1.5" opacity="0.32">
+              {[0, 1, 2, 3, 4, 5].map((line) => (
+                <path key={line} d={`M -160 ${470 + line * 108} Q 150 ${235 + line * 85} ${510 + line * 56} ${70 + line * 65} Q ${740 + line * 55} ${650 + line * 85} ${40 + line * 78} 1120`} />
+              ))}
+            </g>
+            <rect width="900" height="1000" filter="url(#otto-login-grain)" opacity="0.055" />
+          </svg>
+          <Link href="/lp" aria-label="Otto, página inicial" className={loginStyles.brand}>
+            <Image src="/logoOttoIcon.svg" alt="" width={46} height={46} priority />
+            <span>otto</span>
+          </Link>
+          <div className={loginStyles.brandCopy}>
+            <h1><span>Sua empresa.</span><span>Mais simples.</span><span>Com Otto.</span></h1>
+            <p>Vendas, estoque e financeiro em um só lugar.<br />Mais controle para você. Mais tempo para crescer.</p>
+          </div>
+          <p className={loginStyles.brandFooter}>© {new Date().getFullYear()} Otto. Todos os direitos reservados.</p>
+        </aside>
+        <section className={loginStyles.formPanel} aria-label="Acesse sua conta Otto">
+          <div className={loginStyles.formContent}>
+            <Link href="/lp" aria-label="Otto, página inicial" className={loginStyles.formBrand}>otto</Link>
+            {children}
+          </div>
+          <p className={loginStyles.mobileFooter}>© {new Date().getFullYear()} Otto. Todos os direitos reservados.</p>
+        </section>
+      </main>
+    )
+  }
 
   if (isSignUp) {
     return (

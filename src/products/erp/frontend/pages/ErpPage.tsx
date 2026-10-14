@@ -1,6 +1,7 @@
 'use client'
 
 import { Suspense } from 'react'
+import { ErpConfirmationProvider } from '@/products/erp/frontend/components/ErpConfirmation'
 import { DashboardRouter } from '@/products/erp/frontend/modules/dashboards/DashboardRouter'
 import { DashboardRecordsPage } from '@/products/erp/frontend/modules/dashboards/components/DashboardRecordsPage'
 import { DASHBOARD_IDS, type DashboardId } from '@/products/erp/shared/dashboardContracts'
@@ -85,7 +86,7 @@ function ErpPageContent({
     ['compras', 'estoque'].includes(sectionConfig.id) || Boolean(entityConfig)
 
   return (
-    <SidebarProvider>
+    <ErpConfirmationProvider><SidebarProvider>
       <SidebarShadcn />
       <SidebarInset className="h-screen overflow-hidden">
         <PageContainer className="bg-white">
@@ -159,7 +160,7 @@ function ErpPageContent({
           </ErpShell>
         </PageContainer>
       </SidebarInset>
-    </SidebarProvider>
+    </SidebarProvider></ErpConfirmationProvider>
   )
 }
 

@@ -1,4 +1,5 @@
 import { categoriesConfig } from '@/products/erp/frontend/modules/cadastros/categoriesConfig'
+import { accountingAccountsConfig } from './accountingAccountsConfig'
 import { registrationCategoriesConfig } from '@/products/erp/frontend/modules/cadastros/registrationCategoriesConfig'
 import { customersConfig } from '@/products/erp/frontend/modules/cadastros/customersConfig'
 import { productsConfig } from '@/products/erp/frontend/modules/cadastros/productsConfig'
@@ -13,5 +14,6 @@ export const cadastrosEntityConfigs = [
   productsConfig,
   servicesConfig,
   categoriesConfig,
+  accountingAccountsConfig,
   registrationCategoriesConfig,
 ]

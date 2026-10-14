@@ -12,6 +12,7 @@ export const productsConfig: ErpEntityConfig<ErpEntityRecord> = {
   columns: [
     { key: 'nome', label: 'Produto', width: 'min-w-[220px]' },
     { key: 'sku', label: 'SKU' },
+    { key: 'unidade_medida', label: 'Unidade' },
     { key: 'categoria', label: 'Categoria' },
     { key: 'preco', label: 'Preço', kind: 'currency' },
     { key: 'controla_estoque', label: 'Estoque' },
@@ -21,6 +22,7 @@ export const productsConfig: ErpEntityConfig<ErpEntityRecord> = {
   fields: [
     { key: 'nome', label: 'Nome do produto', type: 'text', required: true },
     { key: 'sku', label: 'SKU', type: 'text', required: true },
+    { key: 'unidade_medida', label: 'Unidade de estoque', type: 'text', required: true, placeholder: 'UN, KG, L ou M2' },
     { key: 'categoria', label: 'Categoria', type: 'select' },
     { key: 'preco', label: 'Preço', type: 'number', required: true },
     { key: 'controla_estoque', label: 'Controlar estoque', type: 'select', options: [{ value: 'sim', label: 'Sim' }, { value: 'nao', label: 'Não' }] },

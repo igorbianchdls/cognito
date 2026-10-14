@@ -1,5 +1,7 @@
 "use client";
 
+import { useErpConfirmation } from '@/products/erp/frontend/components/ErpConfirmation'
+
 import { useCallback, useEffect, useState } from "react";
 import { Check, Loader2, Settings2, X } from "lucide-react";
 
@@ -53,6 +55,8 @@ type Completed = {
 };
 
 export function BankReconciliationPage() {
+  const confirmAction = useErpConfirmation()
+
   const [suggestions, setSuggestions] = useState<Suggestion[]>([]);
   const [completed, setCompleted] = useState<Completed[]>([]);
   const [loading, setLoading] = useState(true);
@@ -103,7 +107,7 @@ export function BankReconciliationPage() {
   }, [load]);
 
   async function reconcile(suggestion: Suggestion) {
-    if (suggestion.tipo === "repasse_divergente" && !window.confirm(`O banco creditou ${formatErpCurrency(suggestion.valor)}, diferente do repasse previsto (diferença de ${formatErpCurrency(suggestion.diferenca_valor)}). Conciliar assim mesmo? A diferença fica no saldo da maquininha para conferência.`)) return;
+    if (suggestion.tipo === "repasse_divergente" && !(await confirmAction(`O banco creditou ${formatErpCurrency(suggestion.valor)}, diferente do repasse previsto (diferença de ${formatErpCurrency(suggestion.diferenca_valor)}). Conciliar assim mesmo? A diferença fica no saldo da maquininha para conferência.`))) return;
     setBusy(suggestion.transacao_id);
     setError(null);
     try {

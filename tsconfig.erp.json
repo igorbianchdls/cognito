@@ -5,6 +5,7 @@
   },
   "include": [
     "next-env.d.ts",
+    "src/types/**/*.d.ts",
     "src/app/api/erp/**/*.ts",
     "src/app/erp/**/*.ts",
     "src/app/erp/**/*.tsx",

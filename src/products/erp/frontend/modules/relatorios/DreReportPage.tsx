@@ -1,6 +1,6 @@
 'use client'
 
-import { Fragment, useCallback, useEffect, useMemo, useState } from 'react'
+import { Fragment, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import Link from 'next/link'
 import { AlertTriangle, ChevronDown, ChevronRight, Download, Loader2, Printer, RefreshCw } from 'lucide-react'
 
@@ -46,21 +46,29 @@ export function DreReportPage() {
   useEffect(() => { if (new URLSearchParams(window.location.search).get('visao') === 'caixa') setView('caixa') }, [])
   const [period, setPeriod] = useState({ preset: 'ano', from: options[2].from, to: options[2].to })
   const [monthly, setMonthly] = useState(false)
-  const [data, setData] = useState<Dre | null>(null)
+  const [loadedData, setData] = useState<Dre | null>(null)
+  const data = loadedData?.visao === view && loadedData.inicio === period.from && loadedData.fim === period.to ? loadedData : null
+  const request = useRef<AbortController | null>(null)
+  const revision = useRef(0)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [open, setOpen] = useState<Record<string, boolean>>({})
   const [detail, setDetail] = useState<{ title: string; query: string } | null>(null)
 
   const load = useCallback(async () => {
+    request.current?.abort()
+    const controller = new AbortController(), current = ++revision.current
+    request.current = controller
+    setData(null); setDetail(null)
     setLoading(true); setError(null)
     try {
       const params = new URLSearchParams({ inicio: period.from, fim: period.to, visao: view })
-      setData(await parseErpResponse<Dre>(await fetch(`/api/erp/relatorios/dre?${params}`, { cache: 'no-store' })))
-    } catch (loadError) { setError(loadError instanceof Error ? loadError.message : 'Não foi possível carregar a DRE.') }
-    finally { setLoading(false) }
+      const result = await parseErpResponse<Dre>(await fetch(`/api/erp/relatorios/dre?${params}`, { cache: 'no-store', signal: controller.signal }))
+      if (!controller.signal.aborted && current === revision.current) setData(result)
+    } catch (loadError) { if (!controller.signal.aborted && current === revision.current) setError(loadError instanceof Error ? loadError.message : 'Não foi possível carregar a DRE.') }
+    finally { if (!controller.signal.aborted && current === revision.current) setLoading(false) }
   }, [period.from, period.to, view])
-  useEffect(() => { void load() }, [load])
+  useEffect(() => { void load(); return () => { request.current?.abort(); ++revision.current } }, [load])
 
   const groups = useMemo(() => new Map((data?.grupos || []).map(group => [group.codigo, group])), [data])
   const months = monthly && data && data.meses.length > 1 ? data.meses.slice(-12) : []
@@ -181,8 +189,9 @@ export function DreReportPage() {
         </TableBody>
       </Table>
     </div>
-    {data && data.fora_dre !== 0 ? <p className="text-xs text-gray-500">Fora da DRE no período (empréstimos, aportes, distribuição de lucros, equipamentos): {money(data.fora_dre)}. Esses valores aparecem no fluxo de caixa.</p> : null}
-    {detail ? <EntriesDialog title={detail.title} query={detail.query} onClose={() => setDetail(null)} /> : null}
+    <p className="text-xs text-gray-500">DRE gerencial · {view === 'competencia' ? 'Receitas e despesas pela data de competência; inclui o custo das mercadorias vendidas.' : 'Recebimentos e pagamentos pela data da baixa, líquidos de estornos. Títulos não pagos ficam fora desta visão.'}</p>
+    {data && data.fora_dre !== 0 ? <p className="text-xs text-gray-500">Fora da DRE no período (estoque, empréstimos, aportes, distribuição de lucros, equipamentos): {money(data.fora_dre)}. Esses valores aparecem no fluxo de caixa.</p> : null}
+    {detail ? <EntriesDialog key={detail.query} title={detail.title} query={detail.query} onClose={() => setDetail(null)} /> : null}
   </div>
 }
 
@@ -191,10 +200,12 @@ function EntriesDialog({ title, query, onClose }: { title: string; query: string
   const [error, setError] = useState<string | null>(null)
   useEffect(() => {
     let active = true
-    void fetch(`/api/erp/relatorios/dre?${query}`, { cache: 'no-store' }).then(response => parseErpResponse<{ records: Entry[] }>(response))
+    const controller = new AbortController()
+    setEntries(null); setError(null)
+    void fetch(`/api/erp/relatorios/dre?${query}`, { cache: 'no-store', signal: controller.signal }).then(response => parseErpResponse<{ records: Entry[] }>(response))
       .then(body => { if (active) setEntries(body.records) })
       .catch(loadError => { if (active) { setEntries([]); setError(loadError instanceof Error ? loadError.message : 'Não foi possível carregar os lançamentos.') } })
-    return () => { active = false }
+    return () => { active = false; controller.abort() }
   }, [query])
   const total = (entries || []).reduce((sum, entry) => sum + Number(entry.valor), 0)
   return <Dialog open onOpenChange={value => { if (!value) onClose() }}><DialogContent className="max-h-[88vh] max-w-3xl overflow-y-auto">

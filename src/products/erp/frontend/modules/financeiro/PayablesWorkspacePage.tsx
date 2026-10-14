@@ -1,5 +1,7 @@
 'use client'
 
+import { useErpConfirmation } from '@/products/erp/frontend/components/ErpConfirmation'
+
 import { ErpAttachments, ErpPaymentReceipts, uploadErpAttachment } from '@/products/erp/frontend/components/ErpAttachments'
 import { useErpAccess } from '@/products/erp/frontend/hooks/useErpAccess'
 
@@ -38,7 +40,7 @@ import { erpClientToday, erpClientMonthStart } from '@/products/erp/frontend/ser
 type Option = { id: string; nome: string; documento?: string; padrao?: boolean }
 type Catalogs = { suppliers: Option[]; categories: Option[]; costCenters: Option[]; financialAccounts: Option[]; paymentMethods: Option[] }
 type Payable = {
-  id: string; conta_id: string; parcela_id: string; entidade_id: string; descricao: string; fornecedor: string;
+  id: string; conta_id: string; parcela_id: string; conta_financeira_id?: string; metodo_pagamento_id?: string; entidade_id: string; descricao: string; fornecedor: string;
   parcela: number; vencimento: string; valor: number; valor_pago: number; credito: number; renegociado: number; saldo: number;
   origem: string; tipo_lancamento: string; categoria: string; conta_financeira: string; status: string;
 }
@@ -61,6 +63,8 @@ async function parseResponse<T>(response: Response): Promise<T> {
 }
 
 export function PayablesWorkspacePage({ purchaseOnly = false }: { purchaseOnly?: boolean }) {
+  const confirmAction = useErpConfirmation()
+
   const access = useErpAccess()
   const canSettle = access.can('erp.financeiro.baixar')
   const canReverse = access.can('erp.financeiro.estornar')
@@ -205,7 +209,7 @@ export function PayablesWorkspacePage({ purchaseOnly = false }: { purchaseOnly?:
 
   function openPayment(record: Payable) {
     setSelected(record); setPaymentAmount(String(record.saldo)); setPaymentDate(today()); setInterest('0'); setFine('0'); setDiscount('0'); setFee('0')
-    setFinancialAccountId(catalogs.financialAccounts.find((item) => item.padrao)?.id || ''); setPaymentMethodId(''); setError(null); setPaymentOpen(true)
+    setFinancialAccountId(catalogs.financialAccounts.find(item => item.id === record.conta_financeira_id)?.id || catalogs.financialAccounts.find((item) => item.padrao)?.id || ''); setPaymentMethodId(catalogs.paymentMethods.find(item => item.id === record.metodo_pagamento_id)?.id || ''); setReceiptFile(null); setError(null); setPaymentOpen(true)
   }
 
   async function savePayment() {
@@ -249,7 +253,7 @@ export function PayablesWorkspacePage({ purchaseOnly = false }: { purchaseOnly?:
 
   async function reversePayment(payment: Payment) {
     if (!canReverse) return
-    if (!window.confirm('Estornar este pagamento?')) return
+    if (!(await confirmAction({ title: 'Estornar pagamento', description: 'O pagamento será revertido, o saldo da parcela será reaberto e a conta financeira será ajustada. O histórico será preservado.', details: [selected?.descricao, currency(payment.valor_liquido)].filter(Boolean).join(' · '), confirmLabel: 'Estornar pagamento', destructive: true }))) return
     setSaving(true); setError(null)
     try {
       await parseResponse(await fetch(`/api/erp/pagamentos/${payment.id}/estornar`, { method: 'POST', headers: { 'Content-Type': 'application/json', 'Idempotency-Key': crypto.randomUUID() }, body: JSON.stringify({ motivo: 'Estorno solicitado no ERP' }) }))

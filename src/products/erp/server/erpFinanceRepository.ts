@@ -278,9 +278,21 @@ export async function createRenegotiation(input: ActorInput & { idempotencyKey?:
   const discount = money(input.values.desconto || 0, 'Desconto', false)
   const charges = money(input.values.encargos || 0, 'Encargos', false)
   return withTransaction(async (client) => {
+    await client.query('SELECT pg_advisory_xact_lock(hashtextextended($1,0))', [`erp:renegociacao:${input.tenantId}:${key}`])
+    const replay = (await client.query(`SELECT * FROM erp.renegociacoes WHERE empresa_id=$1 AND chave_idempotencia=$2`, [input.tenantId,key])).rows[0]
+    if (replay) {
+      const requested = stable({ origens: originIds, destinos: destinations, desconto: discount, encargos: charges })
+      if (JSON.stringify(stable(typeof replay.condicoes === 'string' ? JSON.parse(replay.condicoes) : replay.condicoes)) !== JSON.stringify(stable(requested)) || Number(replay.entidade_id) !== Number(input.values.entidade_id)
+        || replay.lado !== financialSide || replay.numero !== String(input.values.numero)
+        || databaseDate(replay.data_acordo) !== agreementDate || replay.motivo !== String(input.values.motivo)
+        || Number(replay.categoria_ajuste_id || 0) !== Number(input.values.categoria_ajuste_id || 0))
+        throw new ErpDomainError('IDEMPOTENCY_CONFLICT', 'Esta identificação já foi usada em outro acordo.', 409)
+      const title = (await client.query(`SELECT id::text FROM erp.contas_${financialSide} WHERE empresa_id=$1 AND renegociacao_origem_id=$2`, [input.tenantId,replay.id])).rows[0]
+      return { id: String(replay.id), status: replay.status, titulo_id: title?.id, reused: true }
+    }
     await assertErpPeriodOpen(client, { tenantId: input.tenantId, module: 'financeiro', date: agreementDate })
     const table = financialSide === 'receber' ? 'receber' : 'pagar'
-    const origin = await client.query(`SELECT p.id, c.${financialSide === 'receber' ? 'cliente_id' : 'fornecedor_id'} entidade_id, composicao.saldo FROM erp.contas_${table}_parcelas p JOIN erp.contas_${table} c ON c.empresa_id=p.empresa_id AND c.id=p.conta_${table}_id ${compositionSql(financialSide, 'p')} WHERE p.empresa_id=$1 AND $2='${financialSide}' AND p.id=ANY($3::bigint[]) AND p.excluido_em IS NULL AND c.excluido_em IS NULL FOR UPDATE OF p,c`, [input.tenantId, financialSide, originIds])
+    const origin = await client.query(`SELECT p.id, c.categoria_id, c.centro_custo_id, p.conta_financeira_id, p.metodo_pagamento_id, c.${financialSide === 'receber' ? 'cliente_id' : 'fornecedor_id'} entidade_id, composicao.saldo FROM erp.contas_${table}_parcelas p JOIN erp.contas_${table} c ON c.empresa_id=p.empresa_id AND c.id=p.conta_${table}_id ${compositionSql(financialSide, 'p')} WHERE p.empresa_id=$1 AND $2='${financialSide}' AND p.id=ANY($3::bigint[]) AND p.excluido_em IS NULL AND c.excluido_em IS NULL FOR UPDATE OF p,c`, [input.tenantId, financialSide, originIds])
     if (origin.rows.length !== originIds.length) throw new ErpDomainError('NOT_FOUND', 'Uma parcela de origem não foi encontrada.', 404)
     const entityId = id(input.values.entidade_id, 'Entidade')
     if (origin.rows.some((row) => Number(row.entidade_id) !== entityId || scaledDecimal(row.saldo, 2) <= BigInt(0))) throw new ErpDomainError('VALIDATION_ERROR', 'As origens devem ter saldo e pertencer a mesma entidade.')
@@ -300,12 +312,17 @@ export async function createRenegotiation(input: ActorInput & { idempotencyKey?:
     for (const [index, row] of origin.rows.entries()) await client.query(`INSERT INTO erp.renegociacoes_parcelas(empresa_id,renegociacao_id,papel,conta_${table}_parcela_id,valor,ordem) VALUES($1,$2,'origem',$3,$4,$5)`, [input.tenantId, agreementId, row.id, row.saldo, index + 1])
     const titleResult = await client.query(`INSERT INTO erp.contas_${table}(empresa_id,${financialSide === 'receber' ? 'cliente_id' : 'fornecedor_id'},descricao,numero_documento,data_competencia,data_emissao,valor_total,status,origem${financialSide === 'pagar' ? ',tipo_lancamento,efetivado_em' : ''},renegociacao_origem_id,criado_por,atualizado_por) VALUES($1,$2,$3,$4,$5,$5,$6,'aberto','api'${financialSide === 'pagar' ? ",'efetivo',now()" : ''},$7,$8,$8) RETURNING id`, [input.tenantId, entityId, `Renegociacao ${text(input.values.numero, 'Número do acordo')}`, String(input.values.numero), agreementDate, decimalNumber(decimalText(destinationTotal)), agreementId, input.actorId])
     const titleId = titleResult.rows[0].id
+    const common = (field: string) => origin.rows.every(row => String(row[field] ?? '') === String(origin.rows[0][field] ?? '')) ? origin.rows[0][field] : null
+    await client.query(`UPDATE erp.contas_${table} SET categoria_id=$3, centro_custo_id=$4 WHERE empresa_id=$1 AND id=$2`,
+      [input.tenantId, titleId, common('categoria_id'), common('centro_custo_id')])
     for (const [index, destination] of destinations.entries()) {
       const value = money(destination.valor)
       const dueDate = date(destination.data_vencimento, 'Vencimento')
       const installment = await client.query(`INSERT INTO erp.contas_${table}_parcelas(empresa_id,conta_${table}_id,numero_parcela,descricao,data_vencimento,data_pagamento_previsto,valor,valor_bruto,valor_liquido,valor_pago,status,criado_por,atualizado_por) VALUES($1,$2,$3,$4,$5,$5,$6,$6,$6,0,'aberto',$7,$7) RETURNING id`, [input.tenantId, titleId, index + 1, String(destination.descricao || `Parcela ${index + 1}`), dueDate, value, input.actorId])
       await client.query(`INSERT INTO erp.renegociacoes_parcelas(empresa_id,renegociacao_id,papel,conta_${table}_parcela_id,valor,ordem) VALUES($1,$2,'destino',$3,$4,$5)`, [input.tenantId, agreementId, installment.rows[0].id, value, index + 1])
     }
+    await client.query(`UPDATE erp.contas_${table}_parcelas SET conta_financeira_id=$3, metodo_pagamento_id=$4 WHERE empresa_id=$1 AND conta_${table}_id=$2`,
+      [input.tenantId, titleId, common('conta_financeira_id'), common('metodo_pagamento_id')])
     await client.query(`UPDATE erp.renegociacoes SET status='efetivada',efetivada_em=now(),efetivada_por=$3 WHERE empresa_id=$1 AND id=$2 AND status='rascunho'`, [input.tenantId, agreementId, input.actorId])
     return { id: agreementId, status: 'efetivada', titulo_id: String(titleId) }
   })

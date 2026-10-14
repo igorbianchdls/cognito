@@ -3,6 +3,7 @@
 import { useEffect, useState, type FormEvent } from 'react'
 
 import { ErpRegistrationRelations } from './ErpRegistrationRelations'
+import { ErpAccountingSelect } from './ErpAccountingSelect'
 import { parseRegistrationRelations, type RegistrationRelations } from '@/products/erp/shared/registrationContracts'
 
 import { Button } from '@/components/ui/button'
@@ -103,7 +104,7 @@ export function ErpFormDrawer({
       } catch { setError('Não foi possível ler os contatos e endereços. Reabra o cadastro.'); return }
     }
     setValues(Object.fromEntries(
-      Object.entries(initialValues || {}).map(([key, value]) => [key, value == null ? '' : String(value)]),
+      Object.entries({ ...(config.id === 'produtos' ? { unidade_medida: 'UN' } : {}), ...initialValues }).map(([key, value]) => [key, value == null ? '' : String(value)]),
     ))
     setSaving(false)
   }, [config.id, hasRelations, initialValues, open])
@@ -135,7 +136,7 @@ export function ErpFormDrawer({
       <SheetContent className="w-full gap-0 overflow-hidden p-0 sm:max-w-xl">
         <form className="flex h-full flex-col" onSubmit={submit}>
           <SheetHeader className="border-b border-gray-200 px-6 py-5">
-            <SheetTitle className="text-lg">{initialValues ? 'Editar' : 'Novo'} {config.singularLabel}</SheetTitle>
+            <SheetTitle className="text-lg">{initialValues ? `Editar ${config.singularLabel}` : config.primaryActionLabel}</SheetTitle>
             <p className="text-sm leading-6 text-gray-600">
               Preencha os dados principais para salvar no ERP.
             </p>
@@ -148,11 +149,18 @@ export function ErpFormDrawer({
                     {field.label}
                     {field.required ? <span className="ml-1 text-rose-600">*</span> : null}
                   </Label>
-                  <FieldControl
+                  {field.key === 'conta_contabil_id' || (config.id === 'contas-contabeis' && field.key === 'conta_pai_id') ? <ErpAccountingSelect
+                    value={values[field.key] || ''}
+                    selectedLabel={String(initialValues?.[field.key === 'conta_pai_id' ? 'conta_pai_label' : 'conta_contabil_label'] || '')}
+                    kind={field.key === 'conta_pai_id' ? 'sintetica' : 'analitica'}
+                    exclude={field.key === 'conta_pai_id' && initialValues?.id ? String(initialValues.id) : undefined}
+                    classification={field.key === 'conta_pai_id' ? values.classificacao || undefined : undefined}
+                    onChange={value=>setValues(current=>({...current,[field.key]:value}))}
+                  /> : <FieldControl
                     field={{ ...field, options: fieldOptions?.[field.key] || field.options }}
                     value={values[field.key] || ''}
                     onChange={(value) => setValues((current) => ({ ...current, [field.key]: value }))}
-                  />
+                  />}
                 </div>
               ))}
               {hasRelations && <ErpRegistrationRelations value={relations} onChange={setRelations} disabled={saving} />}
