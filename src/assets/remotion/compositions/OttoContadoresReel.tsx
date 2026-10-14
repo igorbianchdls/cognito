@@ -21,17 +21,17 @@ import { IOS_REMOTION_FONT_STACK, loadSfProFonts } from '@/assets/remotion/fonts
 
 loadSfProFonts()
 
-const BG = '#f5f4ef'
-const INK = '#141413'
-const WHITE = '#ffffff'
-const TERRA = '#d97757'
-const GRAY = '#b8bab2'
-const TERRA_SOFT = '#f6e4da'
-const INK_MUTED = '#6b6c66'
+export const BG = '#f5f4ef'
+export const INK = '#141413'
+export const WHITE = '#ffffff'
+export const TERRA = '#d97757'
+export const GRAY = '#b8bab2'
+export const TERRA_SOFT = '#f6e4da'
+export const INK_MUTED = '#6b6c66'
 
-const DISPLAY = '"Instrument Serif", Georgia, "Times New Roman", serif'
-const SERIF = '"Newsreader", Georgia, "Times New Roman", serif'
-const SANS = IOS_REMOTION_FONT_STACK
+export const DISPLAY = '"Instrument Serif", Georgia, "Times New Roman", serif'
+export const SERIF = '"Newsreader", Georgia, "Times New Roman", serif'
+export const SANS = IOS_REMOTION_FONT_STACK
 
 let serifFontPromise: Promise<void> | null = null
 
@@ -53,19 +53,19 @@ function loadSerifFont() {
   return serifFontPromise
 }
 
-function p(frame: number, from: number, to: number, output: [number, number] = [0, 1], easing = Easing.out(Easing.cubic)) {
+export function p(frame: number, from: number, to: number, output: [number, number] = [0, 1], easing = Easing.out(Easing.cubic)) {
   return interpolate(frame, [from, to], output, { easing, extrapolateLeft: 'clamp', extrapolateRight: 'clamp' })
 }
 
-function typed(text: string, progress: number) {
+export function typed(text: string, progress: number) {
   return text.slice(0, Math.floor(text.length * progress))
 }
 
-function brl(value: number) {
+export function brl(value: number) {
   return value.toLocaleString('pt-BR', { currency: 'BRL', style: 'currency' })
 }
 
-function useSpring(delay: number, config = { damping: 14, stiffness: 150 }) {
+export function useSpring(delay: number, config = { damping: 14, stiffness: 150 }) {
   const frame = useCurrentFrame()
   const { fps } = useVideoConfig()
   return spring({ config, fps, frame: frame - delay })
@@ -75,7 +75,7 @@ const normalize = (word: string) => word.toLowerCase().replace(/[.,!?]/g, '')
 
 // ─── Primitives ──────────────────────────────────────────────────────────────
 
-function Scene({ children, duration }: { children: ReactNode; duration: number }) {
+export function Scene({ children, duration }: { children: ReactNode; duration: number }) {
   const frame = useCurrentFrame()
   const opacity = p(frame, 0, 10) * p(frame, duration - 10, duration, [1, 0])
   const y = p(frame, 0, 14, [18, 0])
@@ -115,7 +115,7 @@ type HeadlineProps = {
   text: string
 }
 
-function Headline({ highlight = [], marks = [], size = 88, start = 0, stagger = 3, style, text }: HeadlineProps) {
+export function Headline({ highlight = [], marks = [], size = 88, start = 0, stagger = 3, style, text }: HeadlineProps) {
   const frame = useCurrentFrame()
   const words = text.split(' ')
 
@@ -183,7 +183,7 @@ function Headline({ highlight = [], marks = [], size = 88, start = 0, stagger = 
   )
 }
 
-function Card({ children, style }: { children: ReactNode; style?: CSSProperties }) {
+export function Card({ children, style }: { children: ReactNode; style?: CSSProperties }) {
   return (
     <div
       style={{
@@ -200,7 +200,7 @@ function Card({ children, style }: { children: ReactNode; style?: CSSProperties 
   )
 }
 
-function OttoIcon({ size }: { size: number }) {
+export function OttoIcon({ size }: { size: number }) {
   return <Img src={staticFile('logoOttoIcon.svg')} style={{ display: 'block', height: size, width: size }} />
 }
 
@@ -444,9 +444,9 @@ function BankSyncScene({ duration }: { duration: number }) {
 
 // ─── 5. Despesas ─────────────────────────────────────────────────────────────
 
-const CATEGORY_COLORS: Record<string, string> = { Combustível: GRAY, Marketing: '#ecbfa9', Software: TERRA, Telefonia: INK }
+export const CATEGORY_COLORS: Record<string, string> = { Combustível: GRAY, Marketing: '#ecbfa9', Software: TERRA, Telefonia: INK }
 
-const EXPENSES: { category: string; date: string; logo: ReactNode; name: string; value: number }[] = [
+export const EXPENSES: { category: string; date: string; logo: ReactNode; name: string; value: number }[] = [
   { category: 'Software', date: '03 out', logo: <SiGoogle color="#4285f4" size={40} />, name: 'Google Workspace', value: 389 },
   { category: 'Telefonia', date: '04 out', logo: <SiVivo color="#660099" size={40} />, name: 'Vivo Empresas', value: 459 },
   { category: 'Combustível', date: '05 out', logo: <SiShell color="#dd1d21" size={40} />, name: 'Posto Shell', value: 640 },
@@ -638,7 +638,7 @@ function ReconciliationScene({ duration }: { duration: number }) {
 
 // ─── 8. Cobrança no WhatsApp ─────────────────────────────────────────────────
 
-const WA = {
+export const WA = {
   bar: '#f6f5f3',
   bg: '#efeae2',
   button: '#027eb5',
@@ -651,11 +651,11 @@ const WA = {
   tickRead: '#53bdeb',
 }
 
-const WA_DOODLE = `url("data:image/svg+xml,${encodeURIComponent(
+export const WA_DOODLE = `url("data:image/svg+xml,${encodeURIComponent(
   `<svg xmlns='http://www.w3.org/2000/svg' width='200' height='200' fill='none' stroke='#5b5346' stroke-opacity='0.09' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'><circle cx='30' cy='32' r='12'/><rect x='82' y='20' width='22' height='16' rx='4'/><path d='M140 30 q10 -14 20 0 t20 0'/><path d='M24 104 l12 -18 l12 18 z'/><path d='M92 92 l4 9 l10 1 l-7 7 l2 10 l-9 -5 l-9 5 l2 -10 l-7 -7 l10 -1 z'/><circle cx='156' cy='104' r='6'/><circle cx='172' cy='90' r='3'/><path d='M20 170 q14 -12 28 0'/><path d='M100 156 v22 M89 167 h22'/><path d='M146 156 l18 18 M164 156 l-18 18'/></svg>`,
 )}")`
 
-function WaBubble({ at, buttons, children, out, read, tail, time }: { at: number; buttons?: { icon: ReactNode; label: string }[]; children: ReactNode; out?: boolean; read?: boolean; tail?: boolean; time: string }) {
+export function WaBubble({ at, buttons, children, out, read, tail, time }: { at: number; buttons?: { icon: ReactNode; label: string }[]; children: ReactNode; out?: boolean; read?: boolean; tail?: boolean; time: string }) {
   const frame = useCurrentFrame()
   const s = spring({ config: { damping: 16, stiffness: 180 }, fps: 30, frame: frame - at })
   if (frame < at) return null
@@ -685,99 +685,122 @@ function WaBubble({ at, buttons, children, out, read, tail, time }: { at: number
   )
 }
 
+const WA_ICON = { color: WA.text, strokeWidth: 1.9 }
+
+export function PhoneFrame({ background = WA.bg, children, style }: { background?: string; children: ReactNode; style?: CSSProperties }) {
+  return (
+    <div style={{ background: '#1c1c1e', border: '2px solid #3a3a3c', borderRadius: 86, boxShadow: '0 40px 90px rgba(20,20,19,0.22)', height: 1070, left: 210, padding: 14, position: 'absolute', top: 510, width: 660, ...style }}>
+      <div style={{ background, backgroundImage: background === WA.bg ? WA_DOODLE : undefined, borderRadius: 72, display: 'flex', flexDirection: 'column', fontFamily: SANS, height: '100%', overflow: 'hidden', position: 'relative' }}>
+        <div style={{ alignItems: 'center', background: WA.bar, color: WA.text, display: 'flex', flex: 'none', fontSize: 27, fontWeight: 600, height: 94, justifyContent: 'space-between', padding: '20px 46px 0 66px' }}>
+          <span>9:41</span>
+          <span style={{ alignItems: 'center', display: 'flex', gap: 8 }}>
+            <Signal size={26} strokeWidth={2.6} />
+            <Wifi size={26} strokeWidth={2.6} />
+            <BatteryFull size={34} strokeWidth={2} />
+          </span>
+        </div>
+        <div style={{ background: '#000', borderRadius: 99, height: 56, left: '50%', position: 'absolute', top: 20, transform: 'translateX(-50%)', width: 196 }} />
+        {children}
+        <div style={{ background: '#000', borderRadius: 99, bottom: 14, height: 8, left: '50%', position: 'absolute', transform: 'translateX(-50%)', width: 220 }} />
+      </div>
+    </div>
+  )
+}
+
+export function WaChatHeader({ initials, name, status }: { initials: string; name: string; status: string }) {
+  return (
+    <div style={{ alignItems: 'center', background: WA.bar, borderBottom: `1px solid ${WA.divider}`, display: 'flex', flex: 'none', gap: 12, padding: '4px 30px 16px 10px' }}>
+      <ChevronLeft size={46} {...WA_ICON} />
+      <span style={{ alignItems: 'center', background: '#dfe5e7', borderRadius: 99, color: '#54656f', display: 'flex', fontSize: 23, fontWeight: 700, height: 62, justifyContent: 'center', width: 62 }}>{initials}</span>
+      <div style={{ flex: 1, marginLeft: 6 }}>
+        <span style={{ color: WA.text, display: 'block', fontSize: 28, fontWeight: 600 }}>{name}</span>
+        <span style={{ color: WA.meta, display: 'block', fontSize: 21 }}>{status}</span>
+      </div>
+      <Video size={36} {...WA_ICON} style={{ marginRight: 20 }} />
+      <Phone size={30} {...WA_ICON} />
+    </div>
+  )
+}
+
+export function WaInputBar() {
+  return (
+    <div style={{ alignItems: 'center', background: WA.bar, display: 'flex', flex: 'none', gap: 18, padding: '14px 24px 48px' }}>
+      <Plus size={40} {...WA_ICON} />
+      <div style={{ alignItems: 'center', background: WA.incoming, border: `1px solid ${WA.divider}`, borderRadius: 99, display: 'flex', flex: 1, height: 62, justifyContent: 'flex-end', padding: '0 18px' }}>
+        <Sticker size={28} color={WA.meta} strokeWidth={1.9} />
+      </div>
+      <Camera size={36} {...WA_ICON} />
+      <Mic size={34} {...WA_ICON} />
+    </div>
+  )
+}
+
+export function WaTyping() {
+  const frame = useCurrentFrame()
+  return (
+    <div style={{ alignSelf: 'flex-start', background: WA.incoming, borderRadius: 20, borderTopLeftRadius: 0, boxShadow: '0 1px 1.5px rgba(11,20,26,0.14)', display: 'flex', gap: 9, marginTop: 8, padding: '22px 24px' }}>
+      {[0, 1, 2].map((d) => (
+        <span key={d} style={{ background: WA.tick, borderRadius: 99, height: 13, opacity: 0.35 + 0.65 * Math.abs(Math.sin((frame + d * 4) / 4)), width: 13 }} />
+      ))}
+    </div>
+  )
+}
+
+export function OttoNotification({ at, text }: { at: number; text: string }) {
+  const frame = useCurrentFrame()
+  const notify = spring({ config: { damping: 16, stiffness: 140 }, fps: 30, frame: frame - at })
+  if (frame < at) return null
+  return (
+    <div style={{ alignItems: 'center', background: 'rgba(250,250,250,0.96)', borderRadius: 40, boxShadow: '0 18px 50px rgba(0,0,0,0.2)', display: 'flex', gap: 18, left: 16, padding: '22px 26px', position: 'absolute', right: 16, top: 16 + (1 - notify) * -200 }}>
+      <span style={{ alignItems: 'center', background: WHITE, border: `1px solid ${GRAY}88`, borderRadius: 18, display: 'flex', flex: 'none', height: 68, justifyContent: 'center', width: 68 }}>
+        <OttoIcon size={44} />
+      </span>
+      <div style={{ flex: 1 }}>
+        <div style={{ alignItems: 'baseline', display: 'flex', justifyContent: 'space-between' }}>
+          <span style={{ color: '#000', fontSize: 25, fontWeight: 650 }}>Otto</span>
+          <span style={{ color: '#8a8a8e', fontSize: 20 }}>agora</span>
+        </div>
+        <span style={{ color: '#000', display: 'block', fontSize: 23, lineHeight: 1.25, marginTop: 2 }}>{text}</span>
+      </div>
+    </div>
+  )
+}
+
 function WhatsAppScene({ duration }: { duration: number }) {
   const frame = useCurrentFrame()
   const read = frame >= 44
   const typing = frame >= 48 && frame < 62
-  const notify = spring({ config: { damping: 16, stiffness: 140 }, fps: 30, frame: frame - 72 })
-  const iconProps = { color: WA.text, strokeWidth: 1.9 }
 
   return (
     <FeatureScene duration={duration} index={4} title="Cobra seus clientes no WhatsApp.">
-      <div style={{ background: '#1c1c1e', border: '2px solid #3a3a3c', borderRadius: 86, boxShadow: '0 40px 90px rgba(20,20,19,0.22)', height: 1070, left: 210, opacity: p(frame, 4, 16), padding: 14, position: 'absolute', top: 510, transform: `translateY(${p(frame, 4, 20, [60, 0])}px)`, width: 660 }}>
-        <div style={{ background: WA.bg, backgroundImage: WA_DOODLE, borderRadius: 72, display: 'flex', flexDirection: 'column', fontFamily: SANS, height: '100%', overflow: 'hidden', position: 'relative' }}>
-          {/* Status bar */}
-          <div style={{ alignItems: 'center', background: WA.bar, color: WA.text, display: 'flex', fontSize: 27, fontWeight: 600, height: 94, justifyContent: 'space-between', padding: '20px 46px 0 66px' }}>
-            <span>9:41</span>
-            <span style={{ alignItems: 'center', display: 'flex', gap: 8 }}>
-              <Signal size={26} strokeWidth={2.6} />
-              <Wifi size={26} strokeWidth={2.6} />
-              <BatteryFull size={34} strokeWidth={2} />
-            </span>
-          </div>
-          <div style={{ background: '#000', borderRadius: 99, height: 56, left: '50%', position: 'absolute', top: 20, transform: 'translateX(-50%)', width: 196 }} />
-
-          {/* Header */}
-          <div style={{ alignItems: 'center', background: WA.bar, borderBottom: `1px solid ${WA.divider}`, display: 'flex', gap: 12, padding: '4px 30px 16px 10px' }}>
-            <ChevronLeft size={46} {...iconProps} />
-            <span style={{ alignItems: 'center', background: '#dfe5e7', borderRadius: 99, color: '#54656f', display: 'flex', fontSize: 23, fontWeight: 700, height: 62, justifyContent: 'center', width: 62 }}>LC</span>
-            <div style={{ flex: 1, marginLeft: 6 }}>
-              <span style={{ color: WA.text, display: 'block', fontSize: 28, fontWeight: 600 }}>Lume Comércio</span>
-              <span style={{ color: WA.meta, display: 'block', fontSize: 21 }}>{typing ? 'digitando…' : 'online'}</span>
-            </div>
-            <Video size={36} {...iconProps} style={{ marginRight: 20 }} />
-            <Phone size={30} {...iconProps} />
-          </div>
-
-          {/* Chat */}
-          <div style={{ display: 'flex', flex: 1, flexDirection: 'column', gap: 8, justifyContent: 'flex-end', padding: '18px 30px 18px' }}>
-            <span style={{ alignSelf: 'center', background: WA.incoming, borderRadius: 12, boxShadow: '0 1px 1px rgba(11,20,26,0.1)', color: WA.meta, fontSize: 19, fontWeight: 500, marginBottom: 'auto', padding: '7px 16px' }}>Hoje</span>
-            <WaBubble at={10} out read={read} tail time="10:42">
-              Olá, Lume! Tudo bem? Sua fatura de <strong>R$ 2.480,00</strong> vence hoje.
-            </WaBubble>
-            <WaBubble
-              at={22}
-              buttons={[
-                { icon: <Copy size={26} strokeWidth={2.2} />, label: 'Copiar código Pix' },
-                { icon: <FileText size={26} strokeWidth={2.2} />, label: 'Ver boleto' },
-              ]}
-              out
-              read={read}
-              time="10:42"
-            >
-              Escolha como prefere pagar:
-            </WaBubble>
-            {typing ? (
-              <div style={{ alignSelf: 'flex-start', background: WA.incoming, borderRadius: 20, borderTopLeftRadius: 0, boxShadow: '0 1px 1.5px rgba(11,20,26,0.14)', display: 'flex', gap: 9, marginTop: 8, padding: '22px 24px' }}>
-                {[0, 1, 2].map((d) => (
-                  <span key={d} style={{ background: WA.tick, borderRadius: 99, height: 13, opacity: 0.35 + 0.65 * Math.abs(Math.sin((frame + d * 4) / 4)), width: 13 }} />
-                ))}
-              </div>
-            ) : null}
-            {frame >= 62 ? <div style={{ height: 8 }} /> : null}
-            <WaBubble at={62} tail time="10:44">
-              Pago! Obrigado pelo lembrete.
-            </WaBubble>
-          </div>
-
-          {/* Input bar */}
-          <div style={{ alignItems: 'center', background: WA.bar, display: 'flex', gap: 18, padding: '14px 24px 48px' }}>
-            <Plus size={40} {...iconProps} />
-            <div style={{ alignItems: 'center', background: WA.incoming, border: `1px solid ${WA.divider}`, borderRadius: 99, display: 'flex', flex: 1, height: 62, justifyContent: 'flex-end', padding: '0 18px' }}>
-              <Sticker size={28} color={WA.meta} strokeWidth={1.9} />
-            </div>
-            <Camera size={36} {...iconProps} />
-            <Mic size={34} {...iconProps} />
-          </div>
-          <div style={{ background: '#000', borderRadius: 99, bottom: 14, height: 8, left: '50%', position: 'absolute', transform: 'translateX(-50%)', width: 220 }} />
-
-          {/* iOS notification */}
-          {frame >= 72 ? (
-            <div style={{ alignItems: 'center', background: 'rgba(250,250,250,0.96)', borderRadius: 40, boxShadow: '0 18px 50px rgba(0,0,0,0.2)', display: 'flex', gap: 18, left: 16, padding: '22px 26px', position: 'absolute', right: 16, top: 16 + (1 - notify) * -200 }}>
-              <span style={{ alignItems: 'center', background: WHITE, border: `1px solid ${GRAY}88`, borderRadius: 18, display: 'flex', flex: 'none', height: 68, justifyContent: 'center', width: 68 }}>
-                <OttoIcon size={44} />
-              </span>
-              <div style={{ flex: 1 }}>
-                <div style={{ alignItems: 'baseline', display: 'flex', justifyContent: 'space-between' }}>
-                  <span style={{ color: '#000', fontSize: 25, fontWeight: 650 }}>Otto</span>
-                  <span style={{ color: '#8a8a8e', fontSize: 20 }}>agora</span>
-                </div>
-                <span style={{ color: '#000', display: 'block', fontSize: 23, lineHeight: 1.25, marginTop: 2 }}>Pagamento recebido: R$ 2.480,00 de Lume Comércio. Já conciliado.</span>
-              </div>
-            </div>
-          ) : null}
+      <PhoneFrame style={{ opacity: p(frame, 4, 16), transform: `translateY(${p(frame, 4, 20, [60, 0])}px)` }}>
+        <WaChatHeader initials="LC" name="Lume Comércio" status={typing ? 'digitando…' : 'online'} />
+        <div style={{ display: 'flex', flex: 1, flexDirection: 'column', gap: 8, justifyContent: 'flex-end', padding: '18px 30px 18px' }}>
+          <span style={{ alignSelf: 'center', background: WA.incoming, borderRadius: 12, boxShadow: '0 1px 1px rgba(11,20,26,0.1)', color: WA.meta, fontSize: 19, fontWeight: 500, marginBottom: 'auto', padding: '7px 16px' }}>Hoje</span>
+          <WaBubble at={10} out read={read} tail time="10:42">
+            Olá, Lume! Tudo bem? Sua fatura de <strong>R$ 2.480,00</strong> vence hoje.
+          </WaBubble>
+          <WaBubble
+            at={22}
+            buttons={[
+              { icon: <Copy size={26} strokeWidth={2.2} />, label: 'Copiar código Pix' },
+              { icon: <FileText size={26} strokeWidth={2.2} />, label: 'Ver boleto' },
+            ]}
+            out
+            read={read}
+            time="10:42"
+          >
+            Escolha como prefere pagar:
+          </WaBubble>
+          {typing ? <WaTyping /> : null}
+          {frame >= 62 ? <div style={{ height: 8 }} /> : null}
+          <WaBubble at={62} tail time="10:44">
+            Pago! Obrigado pelo lembrete.
+          </WaBubble>
         </div>
-      </div>
+        <WaInputBar />
+        <OttoNotification at={72} text="Pagamento recebido: R$ 2.480,00 de Lume Comércio. Já conciliado." />
+      </PhoneFrame>
     </FeatureScene>
   )
 }
@@ -960,20 +983,22 @@ function IntegrationScene({ duration }: { duration: number }) {
 
 // ─── 11. CTA ─────────────────────────────────────────────────────────────────
 
-function CtaScene({ duration }: { duration: number }) {
+type CtaProps = { comment?: string; duration: number; highlight?: string[]; keyword?: string; title?: string; titleSize?: number }
+
+export function CtaScene({ comment: commentText = 'Financeiro', duration, highlight = ['funciona'], keyword = 'FINANCEIRO', title = 'Quer ver como funciona?', titleSize = 100 }: CtaProps) {
   const frame = useCurrentFrame()
   const pill = useSpring(18, { damping: 11, stiffness: 140 })
   const pulse = frame > 40 ? 1 + Math.sin((frame - 40) / 5) * 0.025 : 1
-  const comment = typed('Financeiro', p(frame, 44, 62, [0, 1], Easing.linear))
+  const comment = typed(commentText, p(frame, 44, 62, [0, 1], Easing.linear))
   const sent = frame >= 68
 
   return (
     <Scene duration={duration}>
-      <Headline highlight={['funciona']} size={100} start={0} text="Quer ver como funciona?" style={{ top: 400 }} />
+      <Headline highlight={highlight} size={titleSize} start={0} text={title} style={{ top: 400 }} />
       <span style={{ color: INK_MUTED, fontSize: 44, fontWeight: 600, left: 0, opacity: p(frame, 14, 24), position: 'absolute', right: 0, textAlign: 'center', top: 720 }}>Comenta</span>
       <div style={{ display: 'flex', justifyContent: 'center', left: 0, position: 'absolute', right: 0, top: 800 }}>
         <span style={{ background: TERRA, borderRadius: 28, boxShadow: '0 24px 60px rgba(217,119,87,0.35)', color: WHITE, fontFamily: SANS, fontSize: 96, fontWeight: 800, letterSpacing: '0.02em', padding: '22px 56px', transform: `scale(${pill * pulse})` }}>
-          FINANCEIRO
+          {keyword}
         </span>
       </div>
       <Card style={{ alignItems: 'center', borderRadius: 99, display: 'flex', gap: 22, left: 120, opacity: p(frame, 36, 46), padding: '20px 24px 20px 20px', right: 120, top: 1110 }}>
@@ -997,7 +1022,9 @@ function CtaScene({ duration }: { duration: number }) {
 
 // ─── Timeline ────────────────────────────────────────────────────────────────
 
-const SCENES: { Component: (props: { duration: number }) => ReactNode; duration: number }[] = [
+export type ReelScene = { Component: (props: { duration: number }) => ReactNode; duration: number }
+
+const SCENES: ReelScene[] = [
   { Component: HookScene, duration: 105 },
   { Component: NameScene, duration: 88 },
   { Component: PromiseScene, duration: 100 },
@@ -1022,7 +1049,10 @@ const REEL_FONT_CSS = `
 .otto-reel [style*="Consolas"] { font-family: Consolas, "SF Mono", monospace !important; }
 `
 
-export function OttoContadoresReel() {
+export const sceneDuration = (scenes: ReelScene[]) => scenes.reduce((sum, scene) => sum + scene.duration, 0)
+
+/** Shared shell for the Otto editorial reels: fonts, font-override CSS, grid background and scene sequencing. */
+export function ReelRoot({ scenes }: { scenes: ReelScene[] }) {
   const [handle] = useState(() => delayRender('Loading reel fonts'))
 
   useEffect(() => {
@@ -1035,7 +1065,7 @@ export function OttoContadoresReel() {
       <style>{REEL_FONT_CSS}</style>
       <GridBackground />
       <Series>
-        {SCENES.map(({ Component, duration }, index) => (
+        {scenes.map(({ Component, duration }, index) => (
           <Series.Sequence durationInFrames={duration} key={index}>
             <Component duration={duration} />
           </Series.Sequence>
@@ -1043,4 +1073,8 @@ export function OttoContadoresReel() {
       </Series>
     </AbsoluteFill>
   )
+}
+
+export function OttoContadoresReel() {
+  return <ReelRoot scenes={SCENES} />
 }

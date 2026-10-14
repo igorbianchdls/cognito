@@ -175,6 +175,7 @@ import { OTTO_BATCH_INVOICE_SCRIPT_DURATION, OTTO_SINGLE_INVOICE_SCRIPT_DURATION
 import { OTTO_HOOK_1_DURATION, OTTO_HOOK_2_DURATION, OTTO_HOOK_3_DURATION, OTTO_HOOK_4_DURATION, OTTO_HOOK_5_DURATION, OttoHookAutomatedFinanceVideo, OttoHookBatchInvoicesVideo, OttoHookBoletoPixVideo, OttoHookManageByChatVideo, OttoHookSingleInvoiceVideo } from '@/assets/remotion/compositions/OttoFiveHooksIllustrativeVideos'
 import { OTTO_BODY_1_DURATION, OTTO_BODY_2_DURATION, OttoBodyManageByConversationVideo, OttoBodySystemBehindVideo } from '@/assets/remotion/compositions/OttoTwoBodiesIllustrativeVideos'
 import { OTTO_CONTADORES_REEL_DURATION, OttoContadoresReel } from '@/assets/remotion/compositions/OttoContadoresReel'
+import { OTTO_NOTA_CHATGPT_BATCH_DURATION, OTTO_NOTA_CHATGPT_SINGLE_DURATION, OttoNotaChatGptBatchReel, OttoNotaChatGptSingleReel } from '@/assets/remotion/compositions/OttoNotaFiscalChatGptVideos'
 import { OTTO_INVOICE_CHATGPT_MONITOR_CONTENT_DURATION, OttoInvoiceChatGptMonitorContent } from '@/assets/remotion/compositions/OttoInvoiceChatGptMonitorContent'
 import { OTTO_SYNC_ONLY_SCENE_DURATION, OttoSyncOnlyScene } from '@/assets/remotion/compositions/OttoSyncOnlyScene'
 import {
@@ -2328,6 +2329,32 @@ const catalog: CatalogItem[] = [
     label: 'Reel → Otto preocupa os contadores',
     tags: ['Reel', 'Otto', 'Financeiro', 'WhatsApp', 'ChatGPT', 'Claude'],
     value: 'reel-otto-contadores',
+    width: 1080,
+  },
+  {
+    code: '<OttoNotaChatGptSingleReel />',
+    component: OttoNotaChatGptSingleReel,
+    description: 'Reel vertical: o ChatGPT agora emite nota fiscal. Pedido no chat, nota preenchida, confirmação, envio no WhatsApp e CTA NOTA.',
+    duration: OTTO_NOTA_CHATGPT_SINGLE_DURATION,
+    fps: 30,
+    height: 1920,
+    kind: 'Vídeos criados',
+    label: 'Reel → ChatGPT emite nota fiscal (A)',
+    tags: ['Reel', 'Otto', 'ChatGPT', 'Nota fiscal', 'WhatsApp'],
+    value: 'reel-otto-nota-chatgpt-single',
+    width: 1080,
+  },
+  {
+    code: '<OttoNotaChatGptBatchReel />',
+    component: OttoNotaChatGptBatchReel,
+    description: 'Reel vertical: o ChatGPT emite todas as notas de uma vez. Revisão em lista, 30 notas em cascata, envio em massa no WhatsApp e CTA NOTA.',
+    duration: OTTO_NOTA_CHATGPT_BATCH_DURATION,
+    fps: 30,
+    height: 1920,
+    kind: 'Vídeos criados',
+    label: 'Reel → ChatGPT emite várias notas (B)',
+    tags: ['Reel', 'Otto', 'ChatGPT', 'Nota fiscal', 'Lote'],
+    value: 'reel-otto-nota-chatgpt-batch',
     width: 1080,
   },
   {
