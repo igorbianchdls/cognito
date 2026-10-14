@@ -10,7 +10,9 @@ import {
   Easing,
   Img,
   interpolate,
+  OffthreadVideo,
   random,
+  Sequence,
   Series,
   spring,
   staticFile,
@@ -1062,6 +1064,16 @@ const SCENES: ReelScene[] = narratedScenes(
 
 export const OTTO_CONTADORES_REEL_DURATION = sceneDuration(SCENES)
 
+// X01 (16:9, muted) sits under the animation while the hook, the name and the hub play; it leaves when
+// "Ela sincroniza…" starts (9.2s). Offsets lift each scene so its content fits the upper area.
+const CONTADORES_SPLIT: SplitVideo = {
+  endAt: 9.2,
+  offsets: [244, 340, 130],
+  // X01 runs 9.96s; a slight speed-up lands its last word with the narration's "…da sua empresa."
+  playbackRate: 1.04,
+  src: 'remotion/otto-reels/x01.mp4',
+}
+
 // The app's globals.css forces `body * { font-family: ... !important }`, which beats inline styles
 // when the reel is previewed inside Next. Re-assert the reel's own fonts with higher specificity.
 const REEL_FONT_CSS = `
@@ -1086,33 +1098,58 @@ export function narratedScenes(cues: { at: number; scene: ReelScene }[], end: nu
   return cues.map(({ at, scene }, i) => ({ ...scene, actual: Math.round(((cues[i + 1]?.at ?? end) - at) * fps) }))
 }
 
+/**
+ * Optional 16:9 clip shown full-width at the bottom of the reel until `endAt` (seconds). While it is on screen
+ * the animation is clipped to the area above it and scene `i` is lifted by `offsets[i]` px so its content fits;
+ * at `endAt` the clip slides down and the animation grows back to full height.
+ */
+export type SplitVideo = { endAt: number; offsets: number[]; playbackRate?: number; src: string }
+
+const SPLIT_VIDEO_H = Math.round((1080 * 9) / 16)
+const SPLIT_OUT_FRAMES = 12
+
 /** Shared shell for the Otto editorial reels: fonts, font-override CSS, grid background and scene sequencing. */
-export function ReelRoot({ audio, scenes }: { audio?: string; scenes: ReelScene[] }) {
+export function ReelRoot({ audio, scenes, split }: { audio?: string; scenes: ReelScene[]; split?: SplitVideo }) {
   const [handle] = useState(() => delayRender('Loading reel fonts'))
+  const frame = useCurrentFrame()
 
   useEffect(() => {
     const promise = loadSerifFont() ?? Promise.resolve()
     promise.then(() => continueRender(handle))
   }, [handle])
 
+  const splitEnd = split ? Math.round(split.endAt * 30) : 0
+  const s = split ? 1 - p(frame, splitEnd, splitEnd + SPLIT_OUT_FRAMES, [0, 1], Easing.inOut(Easing.cubic)) : 0
+
   return (
     <AbsoluteFill className="otto-reel" style={{ background: BG }}>
       <style>{REEL_FONT_CSS}</style>
       <GridBackground />
       {audio ? <Audio src={staticFile(audio)} /> : null}
-      <Series>
-        {scenes.map(({ actual, Component, duration }, index) => (
-          <Series.Sequence durationInFrames={actual ?? duration} key={index}>
-            <SceneSpeedContext.Provider value={duration / (actual ?? duration)}>
-              <Component duration={duration} />
-            </SceneSpeedContext.Provider>
-          </Series.Sequence>
-        ))}
-      </Series>
+      <div style={{ height: 1920 - SPLIT_VIDEO_H * s, left: 0, overflow: 'hidden', position: 'absolute', right: 0, top: 0 }}>
+        <Series>
+          {scenes.map(({ actual, Component, duration }, index) => (
+            <Series.Sequence durationInFrames={actual ?? duration} key={index}>
+              <SceneSpeedContext.Provider value={duration / (actual ?? duration)}>
+                <AbsoluteFill style={{ height: 1920, transform: `translateY(${-(split?.offsets[index] ?? 0) * s}px)` }}>
+                  <Component duration={duration} />
+                </AbsoluteFill>
+              </SceneSpeedContext.Provider>
+            </Series.Sequence>
+          ))}
+        </Series>
+      </div>
+      {split ? (
+        <Sequence durationInFrames={splitEnd + SPLIT_OUT_FRAMES} layout="none">
+          <div style={{ boxShadow: '0 -24px 60px rgba(20,20,19,0.14)', height: SPLIT_VIDEO_H, left: 0, overflow: 'hidden', position: 'absolute', right: 0, top: 1920 - SPLIT_VIDEO_H * s }}>
+            <OffthreadVideo muted playbackRate={split.playbackRate ?? 1} src={staticFile(split.src)} style={{ height: '100%', objectFit: 'cover', width: '100%' }} />
+          </div>
+        </Sequence>
+      ) : null}
     </AbsoluteFill>
   )
 }
 
 export function OttoContadoresReel() {
-  return <ReelRoot audio={CONTADORES_AUDIO} scenes={SCENES} />
+  return <ReelRoot audio={CONTADORES_AUDIO} scenes={SCENES} split={CONTADORES_SPLIT} />
 }
