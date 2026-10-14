@@ -20,6 +20,7 @@ import {
   type ReelScene,
   Scene,
   sceneDuration,
+  syncToNarration,
   TERRA,
   typed,
   useFrame,
@@ -466,9 +467,9 @@ export function makeMoreScenes(intro: string, highlight: string[], scenes: ReelS
 const MORE_TASKS = ['Conciliação bancária', 'Despesas', 'Cobrança no WhatsApp']
 
 const MORE_SCENES = makeMoreScenes('E não para na nota.', ['nota'], [
-  { Component: ({ duration }) => <ReconciliationScene duration={duration} index={0} tasks={MORE_TASKS} title="Concilia seu banco." />, duration: 100 },
+  { Component: ({ duration }) => <ReconciliationScene duration={duration} index={0} tasks={MORE_TASKS} title="Faz a conciliação bancária." />, duration: 100 },
   { Component: ({ duration }) => <ExpensesScene duration={duration} index={1} tasks={MORE_TASKS} title="Classifica suas despesas." />, duration: 95 },
-  { Component: ({ duration }) => <WhatsAppScene duration={duration} index={2} tasks={MORE_TASKS} title="Cobra quem tá te devendo." />, duration: 105 },
+  { Component: ({ duration }) => <WhatsAppScene duration={duration} index={2} tasks={MORE_TASKS} title="Cobra quem tá te devendo no WhatsApp." />, duration: 105 },
 ])
 
 // ─── Revelação do Otto ───────────────────────────────────────────────────────
@@ -537,7 +538,7 @@ export function makeCta(title: string, { comment = 'Nota', highlight = ['assim']
 
 // ─── Timelines ───────────────────────────────────────────────────────────────
 
-const SINGLE_SCENES: ReelScene[] = [
+const SINGLE_SCENES: ReelScene[] = syncToNarration([
   { Component: makeHookScene('O ChatGPT agora emite nota fiscal.', ['nota', 'fiscal'], 104), duration: 105 },
   { Component: makePromptScene('Você só escreve:', 'Emite uma nota de R$ 4.000 pra Aurora Tecnologia'), duration: 110 },
   { Component: InvoiceConfirmScene, duration: 130 },
@@ -547,9 +548,9 @@ const SINGLE_SCENES: ReelScene[] = [
   { Component: makeRevealScene(['Sem entrar no site da prefeitura', 'Sem sistema complicado', 'Sem perder tempo']), duration: 140 },
   { Component: ClaudeAlsoScene, duration: 75 },
   { Component: makeCta('Quer emitir sua próxima nota assim?'), duration: 120 },
-]
+], [0, 5.2, 9.75, 17.9, 20.85, 25.6, 26.95, 28.85, 30.1, 33.2, 42.5, 44.25], 49)
 
-const BATCH_SCENES: ReelScene[] = [
+const BATCH_SCENES: ReelScene[] = syncToNarration([
   { Component: makeHookScene('O ChatGPT agora emite todas as suas notas fiscais de uma vez.', ['todas'], 88), duration: 115 },
   { Component: makePromptScene('Trinta vendas pra faturar? Você só escreve:', 'Emite as notas de todas as vendas de outubro'), duration: 110 },
   { Component: ReviewListScene, duration: 120 },
@@ -569,15 +570,15 @@ const BATCH_SCENES: ReelScene[] = [
   { Component: makeRevealScene(['Sem emitir nota por nota', 'Sem entrar no site da prefeitura', 'Sem perder o dia']), duration: 140 },
   { Component: ClaudeAlsoScene, duration: 75 },
   { Component: makeCta('Quer emitir as notas do mês assim?'), duration: 120 },
-]
+], [0, 6.45, 12.65, 20.3, 23.8, 26.4, 27.7, 29.8, 31, 34, 43.3, 45], 49.5)
 
 export const OTTO_NOTA_CHATGPT_SINGLE_DURATION = sceneDuration(SINGLE_SCENES)
 export const OTTO_NOTA_CHATGPT_BATCH_DURATION = sceneDuration(BATCH_SCENES)
 
 export function OttoNotaChatGptSingleReel() {
-  return <ReelRoot scenes={SINGLE_SCENES} />
+  return <ReelRoot audio="remotion/otto-reels/nota-single-narracao.mp3" scenes={SINGLE_SCENES} />
 }
 
 export function OttoNotaChatGptBatchReel() {
-  return <ReelRoot scenes={BATCH_SCENES} />
+  return <ReelRoot audio="remotion/otto-reels/nota-batch-narracao.mp3" scenes={BATCH_SCENES} />
 }

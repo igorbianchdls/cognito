@@ -21,6 +21,7 @@ import {
   type ReelScene,
   Scene,
   sceneDuration,
+  syncToNarration,
   TERRA,
   useFrame,
   useSpring,
@@ -58,10 +59,10 @@ function Pill({ children, tone }: { children: ReactNode; tone: { background: str
   return <span style={{ alignItems: 'center', background: tone.background, borderRadius: 99, color: tone.color, display: 'inline-flex', flex: 'none', fontSize: 22, fontWeight: 700, gap: 6, padding: '8px 16px' }}>{children}</span>
 }
 
-function StatementScene({ duration, marks, text }: { duration: number; marks: { at: number; kind: 'strike' | 'underline'; word: string }[]; text: string }) {
+function StatementScene({ duration, highlight, marks, text }: { duration: number; highlight?: string[]; marks: { at: number; kind: 'strike' | 'underline'; word: string }[]; text: string }) {
   return (
     <Scene duration={duration}>
-      <Headline marks={marks} size={104} start={0} text={text} style={{ top: 760 }} />
+      <Headline highlight={highlight} marks={marks} size={92} start={0} stagger={2} text={text} style={{ top: 700 }} />
     </Scene>
   )
 }
@@ -211,7 +212,7 @@ function ReminderScene({ duration }: { duration: number }) {
 
 const COLLECT_MORE_TASKS = ['Notas fiscais', 'Conciliação bancária', 'Despesas']
 
-const COBRANCA_SCENES: ReelScene[] = [
+const COBRANCA_SCENES: ReelScene[] = syncToNarration([
   { Component: makeHookScene('O ChatGPT agora cobra os clientes que te devem.', ['devem'], 96, 'Direto no WhatsApp.'), duration: 105 },
   { Component: makePromptScene('Você pergunta:', 'Quem tá me devendo?', `Encontrei ${DEBTORS.length} clientes em atraso`), duration: 95 },
   { Component: OverdueScene, duration: 115 },
@@ -221,13 +222,13 @@ const COBRANCA_SCENES: ReelScene[] = [
   { Component: ReminderScene, duration: 120 },
   ...makeMoreScenes('E não para na cobrança.', ['cobrança'], [
     { Component: ({ duration }) => <InvoiceScene duration={duration} index={0} tasks={COLLECT_MORE_TASKS} title="Emite suas notas fiscais." />, duration: 100 },
-    { Component: ({ duration }) => <ReconciliationScene duration={duration} index={1} tasks={COLLECT_MORE_TASKS} title="Concilia seu banco." />, duration: 100 },
+    { Component: ({ duration }) => <ReconciliationScene duration={duration} index={1} tasks={COLLECT_MORE_TASKS} title="Faz a conciliação bancária." />, duration: 100 },
     { Component: ({ duration }) => <ExpensesScene duration={duration} index={2} tasks={COLLECT_MORE_TASKS} title="Classifica suas despesas." />, duration: 95 },
   ]),
   { Component: makeRevealScene(['Sem planilha', 'Sem constrangimento', 'Sem dinheiro parado']), duration: 140 },
   { Component: makeClaudeAlsoScene(), duration: 75 },
   { Component: makeCta('Quer parar de correr atrás de cliente?', { comment: 'Cobrança', highlight: ['cliente'], keyword: 'COBRANÇA' }), duration: 120 },
-]
+], [0, 4.55, 6.75, 11.45, 14, 18.9, 23.2, 27.2, 28.6, 30.6, 32, 34.05, 42.15, 43.75], 48.5)
 
 // ═══ Vídeo: Funcionário de R$ 0 ══════════════════════════════════════════════
 
@@ -367,26 +368,26 @@ function ProfitScene({ duration }: { duration: number }) {
   )
 }
 
-const FUNCIONARIO_SCENES: ReelScene[] = [
+const FUNCIONARIO_SCENES: ReelScene[] = syncToNarration([
   { Component: BadgeHookScene, duration: 135 },
   { Component: MorningScene, duration: 115 },
   { Component: ({ duration }) => <InvoiceScene duration={duration} tasks={[]} title="Vendeu? Ela emite a nota fiscal." />, duration: 100 },
   { Component: WhatsAppDeliveryScene, duration: 100 },
   { Component: ({ duration }) => <WhatsAppScene duration={duration} tasks={[]} title="Cliente atrasou? Ela cobra e te avisa." />, duration: 105 },
   { Component: ProfitScene, duration: 130 },
-  { Component: ({ duration }) => <StatementScene duration={duration} marks={[{ at: 26, kind: 'strike', word: 'planilha' }]} text="Sem planilha e sem esquecer nada." />, duration: 80 },
+  { Component: ({ duration }) => <StatementScene duration={duration} highlight={['nada']} marks={[{ at: 30, kind: 'strike', word: 'planilha' }]} text="Tudo isso sem eu abrir uma planilha. E sem ela esquecer nada." />, duration: 100 },
   { Component: makeRevealScene([], 'O nome dela é'), duration: 110 },
   { Component: makeClaudeAlsoScene('E no Claude também.'), duration: 70 },
   { Component: makeCta('Quer uma dessas trabalhando pra você?', { comment: 'IA', highlight: ['você'], keyword: 'IA' }), duration: 120 },
-]
+], [0, 5.65, 11.7, 13.8, 15.6, 20.5, 24.9, 29, 33.9, 35.2], 40)
 
 export const OTTO_COBRANCA_REEL_DURATION = sceneDuration(COBRANCA_SCENES)
 export const OTTO_FUNCIONARIO_REEL_DURATION = sceneDuration(FUNCIONARIO_SCENES)
 
 export function OttoCobrancaReel() {
-  return <ReelRoot scenes={COBRANCA_SCENES} />
+  return <ReelRoot audio="remotion/otto-reels/cobranca-narracao.mp3" scenes={COBRANCA_SCENES} />
 }
 
 export function OttoFuncionarioReel() {
-  return <ReelRoot scenes={FUNCIONARIO_SCENES} />
+  return <ReelRoot audio="remotion/otto-reels/funcionario-narracao.mp3" scenes={FUNCIONARIO_SCENES} />
 }

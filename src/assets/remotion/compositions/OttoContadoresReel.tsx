@@ -1075,6 +1075,12 @@ export function sceneDuration(scenes: ReelScene[]) {
   return scenes.reduce((sum, scene) => sum + (scene.actual ?? scene.duration), 0)
 }
 
+/** Same as narratedScenes, for an already-ordered scene list: `cues[i]` is when `scenes[i]` starts in the voiceover. */
+export function syncToNarration(scenes: ReelScene[], cues: number[], end: number, fps = 30): ReelScene[] {
+  if (cues.length !== scenes.length) throw new Error(`syncToNarration: ${cues.length} cues for ${scenes.length} scenes`)
+  return narratedScenes(cues.map((at, i) => ({ at, scene: scenes[i] })), end, fps)
+}
+
 /** Builds a narrated timeline: each scene starts at its cue (seconds into the voiceover) and lasts until the next cue. */
 export function narratedScenes(cues: { at: number; scene: ReelScene }[], end: number, fps = 30): ReelScene[] {
   return cues.map(({ at, scene }, i) => ({ ...scene, actual: Math.round(((cues[i + 1]?.at ?? end) - at) * fps) }))

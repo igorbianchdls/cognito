@@ -258,7 +258,7 @@ import {
   RotatingWords,
 } from '@/assets/remotion/saas/index'
 
-type CatalogKind = 'Componentes' | 'Mockups' | 'Motion' | 'Tipografia Animada' | 'Marketing' | 'Vídeos criados' | 'Body Animado' | 'Galerias' | 'Animações' | 'Actions' | 'Logo' | 'Templates'
+type CatalogKind = 'Componentes' | 'Mockups' | 'Motion' | 'Tipografia Animada' | 'Marketing' | 'Vídeos criados' | 'Claude Videos' | 'Body Animado' | 'Galerias' | 'Animações' | 'Actions' | 'Logo' | 'Templates'
 
 type CatalogItem = {
   code: string
@@ -2326,7 +2326,7 @@ const catalog: CatalogItem[] = [
     duration: OTTO_CONTADORES_REEL_DURATION,
     fps: 30,
     height: 1920,
-    kind: 'Vídeos criados',
+    kind: 'Claude Videos',
     label: 'Reel → Otto preocupa os contadores',
     tags: ['Reel', 'Otto', 'Financeiro', 'WhatsApp', 'ChatGPT', 'Claude'],
     value: 'reel-otto-contadores',
@@ -2339,7 +2339,7 @@ const catalog: CatalogItem[] = [
     duration: OTTO_NOTA_CHATGPT_SINGLE_DURATION,
     fps: 30,
     height: 1920,
-    kind: 'Vídeos criados',
+    kind: 'Claude Videos',
     label: 'Reel → ChatGPT emite nota fiscal (A)',
     tags: ['Reel', 'Otto', 'ChatGPT', 'Nota fiscal', 'WhatsApp'],
     value: 'reel-otto-nota-chatgpt-single',
@@ -2352,7 +2352,7 @@ const catalog: CatalogItem[] = [
     duration: OTTO_NOTA_CHATGPT_BATCH_DURATION,
     fps: 30,
     height: 1920,
-    kind: 'Vídeos criados',
+    kind: 'Claude Videos',
     label: 'Reel → ChatGPT emite várias notas (B)',
     tags: ['Reel', 'Otto', 'ChatGPT', 'Nota fiscal', 'Lote'],
     value: 'reel-otto-nota-chatgpt-batch',
@@ -2365,7 +2365,7 @@ const catalog: CatalogItem[] = [
     duration: OTTO_COBRANCA_REEL_DURATION,
     fps: 30,
     height: 1920,
-    kind: 'Vídeos criados',
+    kind: 'Claude Videos',
     label: 'Reel → ChatGPT cobra seus clientes',
     tags: ['Reel', 'Otto', 'ChatGPT', 'Cobrança', 'WhatsApp'],
     value: 'reel-otto-cobranca',
@@ -2378,7 +2378,7 @@ const catalog: CatalogItem[] = [
     duration: OTTO_FUNCIONARIO_REEL_DURATION,
     fps: 30,
     height: 1920,
-    kind: 'Vídeos criados',
+    kind: 'Claude Videos',
     label: 'Reel → Funcionária de R$ 0',
     tags: ['Reel', 'Otto', 'ChatGPT', 'IA', 'Financeiro'],
     value: 'reel-otto-funcionario',
@@ -4522,10 +4522,10 @@ const catalog: CatalogItem[] = [
   },
 ]
 
-const kinds: Array<'Todos' | CatalogKind> = ['Todos', 'Logo', 'Componentes', 'Mockups', 'Motion', 'Tipografia Animada', 'Marketing', 'Vídeos criados', 'Body Animado', 'Galerias', 'Animações', 'Actions', 'Templates']
+const kinds: Array<'Todos' | CatalogKind> = ['Todos', 'Logo', 'Componentes', 'Mockups', 'Motion', 'Tipografia Animada', 'Marketing', 'Vídeos criados', 'Claude Videos', 'Body Animado', 'Galerias', 'Animações', 'Actions', 'Templates']
 
 function Thumbnail({ item }: { item: CatalogItem }) {
-  const color = item.kind === 'Motion' ? '#245BDB' : item.kind === 'Tipografia Animada' ? '#DB2777' : item.kind === 'Marketing' ? '#C28F2C' : item.kind === 'Vídeos criados' ? '#0F766E' : item.kind === 'Body Animado' ? '#C2410C' : item.kind === 'Galerias' ? '#7C3AED' : item.kind === 'Animações' ? '#0EA5E9' : item.kind === 'Actions' ? '#1677F2' : item.kind === 'Logo' ? '#111827' : item.kind === 'Templates' ? '#9333EA' : item.kind === 'Mockups' ? '#22A06B' : '#101828'
+  const color = item.kind === 'Motion' ? '#245BDB' : item.kind === 'Tipografia Animada' ? '#DB2777' : item.kind === 'Marketing' ? '#C28F2C' : item.kind === 'Vídeos criados' ? '#0F766E' : item.kind === 'Claude Videos' ? '#D97757' : item.kind === 'Body Animado' ? '#C2410C' : item.kind === 'Galerias' ? '#7C3AED' : item.kind === 'Animações' ? '#0EA5E9' : item.kind === 'Actions' ? '#1677F2' : item.kind === 'Logo' ? '#111827' : item.kind === 'Templates' ? '#9333EA' : item.kind === 'Mockups' ? '#22A06B' : '#101828'
   return (
     <div style={{ background: '#F8FBF9', border: '1px solid #E3E8EF', borderRadius: 12, display: 'grid', gap: 10, height: 96, padding: 12 }}>
       <div style={{ alignItems: 'center', display: 'flex', justifyContent: 'space-between' }}>
