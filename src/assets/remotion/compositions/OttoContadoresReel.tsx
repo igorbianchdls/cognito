@@ -29,6 +29,7 @@ const GRAY = '#b8bab2'
 const TERRA_SOFT = '#f6e4da'
 const INK_MUTED = '#6b6c66'
 
+const DISPLAY = '"Instrument Serif", Georgia, "Times New Roman", serif'
 const SERIF = '"Newsreader", Georgia, "Times New Roman", serif'
 const SANS = IOS_REMOTION_FONT_STACK
 
@@ -39,12 +40,13 @@ function loadSerifFont() {
     return serifFontPromise
   }
 
-  const font = new FontFace('Newsreader', `url("${staticFile('remotion/fonts/newsreader/Newsreader-Variable.ttf')}") format("truetype")`, {
-    style: 'normal',
-    weight: '200 800',
-  })
-  document.fonts.add(font)
-  serifFontPromise = Promise.race([font.load(), new Promise((resolve) => window.setTimeout(resolve, 4000))])
+  const fonts = [
+    new FontFace('Newsreader', `url("${staticFile('remotion/fonts/newsreader/Newsreader-Variable.ttf')}") format("truetype")`, { style: 'normal', weight: '200 800' }),
+    new FontFace('Instrument Serif', `url("${staticFile('remotion/fonts/instrument-serif/InstrumentSerif-Regular.ttf')}") format("truetype")`, { style: 'normal', weight: '400' }),
+    new FontFace('Instrument Serif', `url("${staticFile('remotion/fonts/instrument-serif/InstrumentSerif-Italic.ttf')}") format("truetype")`, { style: 'italic', weight: '400' }),
+  ]
+  fonts.forEach((font) => document.fonts.add(font))
+  serifFontPromise = Promise.race([Promise.all(fonts.map((font) => font.load())), new Promise((resolve) => window.setTimeout(resolve, 4000))])
     .then(() => undefined)
     .catch(() => undefined)
 
@@ -121,12 +123,12 @@ function Headline({ highlight = [], marks = [], size = 88, start = 0, stagger = 
     <div
       style={{
         color: INK,
-        fontFamily: SERIF,
-        fontSize: size,
-        fontWeight: 560,
+        fontFamily: DISPLAY,
+        fontSize: size * 1.18,
+        fontWeight: 400,
         left: 70,
-        letterSpacing: '-0.02em',
-        lineHeight: 1.08,
+        letterSpacing: '-0.015em',
+        lineHeight: 1.02,
         position: 'absolute',
         right: 70,
         textAlign: 'center',
@@ -146,6 +148,7 @@ function Headline({ highlight = [], marks = [], size = 88, start = 0, stagger = 
             style={{
               color: highlight.includes(key) ? TERRA : INK,
               display: 'inline-block',
+              fontStyle: highlight.includes(key) ? 'italic' : 'normal',
               filter: `blur(${(1 - o) * 8}px)`,
               marginRight: index === words.length - 1 ? 0 : '0.24em',
               opacity: o,
@@ -523,7 +526,7 @@ function InvoiceScene({ duration }: { duration: number }) {
     <FeatureScene duration={duration} index={2} title="Emite notas fiscais.">
       <Card style={{ left: 120, opacity: p(frame, 6, 18), padding: '46px 50px', right: 120, top: 520, transform: `translateY(${p(frame, 6, 22, [50, 0])}px) rotate(-1deg)` }}>
         <div style={{ alignItems: 'baseline', borderBottom: `2px solid ${GRAY}55`, display: 'flex', justifyContent: 'space-between', paddingBottom: 26 }}>
-          <span style={{ fontFamily: SERIF, fontSize: 50, fontWeight: 600 }}>NFS-e</span>
+          <span style={{ fontFamily: DISPLAY, fontSize: 62, fontWeight: 400 }}>NFS-e</span>
           <span style={{ color: INK_MUTED, fontSize: 26, fontWeight: 600 }}>Nº 000.482</span>
         </div>
         {INVOICE_FIELDS.map(([label, value], i) => {
@@ -623,8 +626,8 @@ function ReconciliationScene({ duration }: { duration: number }) {
           )
         })}
       </svg>
-      <div style={{ fontFamily: SERIF, fontSize: 52, fontWeight: 600, left: 0, opacity: p(frame, 36, 46), position: 'absolute', right: 0, textAlign: 'center', top: 1370 }}>
-        <span style={{ color: TERRA }}>{done}</span> de 4 conciliados
+      <div style={{ fontFamily: DISPLAY, fontSize: 64, fontWeight: 400, left: 0, opacity: p(frame, 36, 46), position: 'absolute', right: 0, textAlign: 'center', top: 1370 }}>
+        <span style={{ color: TERRA, fontStyle: 'italic' }}>{done}</span> de 4 conciliados
       </div>
     </FeatureScene>
   )
@@ -812,7 +815,7 @@ function NoSpreadsheetScene({ duration }: { duration: number }) {
 
   return (
     <Scene duration={duration}>
-      <Headline size={100} start={0} text="Tudo no automático." style={{ top: 300 }} />
+      <Headline highlight={['automático']} size={100} start={0} text="Tudo no automático." style={{ top: 300 }} />
 
       {Array.from({ length: SHEET_ROWS * SHEET_COLS }, (_, index) => {
         const r = Math.floor(index / SHEET_COLS)
@@ -884,7 +887,7 @@ function NoSpreadsheetScene({ duration }: { duration: number }) {
             </svg>
           </span>
           <div>
-            <span style={{ display: 'block', fontFamily: SERIF, fontSize: 50, fontWeight: 600, lineHeight: 1.05 }}>Financeiro em dia</span>
+            <span style={{ display: 'block', fontFamily: DISPLAY, fontSize: 60, fontWeight: 400, lineHeight: 1 }}>Financeiro em dia</span>
             <span style={{ color: INK_MUTED, display: 'block', fontSize: 25, fontWeight: 600, marginTop: 6 }}>Atualizado agora · 0 planilhas</span>
           </div>
         </Card>
@@ -917,7 +920,7 @@ function IntegrationScene({ duration }: { duration: number }) {
 
   return (
     <Scene duration={duration}>
-      <div style={{ color: TERRA, fontFamily: SERIF, fontSize: 230, fontVariantNumeric: 'tabular-nums', fontWeight: 600, left: 0, letterSpacing: '-0.04em', lineHeight: 1, opacity: p(frame, 0, 8), position: 'absolute', right: 0, textAlign: 'center', top: 300 }}>
+      <div style={{ color: TERRA, fontFamily: DISPLAY, fontSize: 280, fontStyle: 'italic', fontVariantNumeric: 'tabular-nums', fontWeight: 400, left: 0, letterSpacing: '-0.03em', lineHeight: 1, opacity: p(frame, 0, 8), position: 'absolute', right: 0, textAlign: 'center', top: 300 }}>
         {percent}%
       </div>
       <Headline size={82} start={10} text="integrado ao seu ChatGPT ou Claude." style={{ top: 570 }} />
@@ -963,7 +966,7 @@ function CtaScene({ duration }: { duration: number }) {
 
   return (
     <Scene duration={duration}>
-      <Headline size={100} start={0} text="Quer ver como funciona?" style={{ top: 400 }} />
+      <Headline highlight={['funciona']} size={100} start={0} text="Quer ver como funciona?" style={{ top: 400 }} />
       <span style={{ color: INK_MUTED, fontSize: 44, fontWeight: 600, left: 0, opacity: p(frame, 14, 24), position: 'absolute', right: 0, textAlign: 'center', top: 720 }}>Comenta</span>
       <div style={{ display: 'flex', justifyContent: 'center', left: 0, position: 'absolute', right: 0, top: 800 }}>
         <span style={{ background: TERRA, borderRadius: 28, boxShadow: '0 24px 60px rgba(217,119,87,0.35)', color: WHITE, fontFamily: SANS, fontSize: 96, fontWeight: 800, letterSpacing: '0.02em', padding: '22px 56px', transform: `scale(${pill * pulse})` }}>
@@ -979,7 +982,7 @@ function CtaScene({ duration }: { duration: number }) {
         </span>
         <span style={{ color: frame >= 62 ? TERRA : GRAY, fontSize: 32, fontWeight: 700 }}>Publicar</span>
       </Card>
-      <span style={{ fontFamily: SERIF, fontSize: 60, fontWeight: 500, left: 0, opacity: p(frame, 70, 82), position: 'absolute', right: 0, textAlign: 'center', top: 1310, transform: `translateY(${p(frame, 70, 84, [20, 0])}px)` }}>
+      <span style={{ fontFamily: DISPLAY, fontSize: 72, fontStyle: 'italic', fontWeight: 400, left: 0, opacity: p(frame, 70, 82), position: 'absolute', right: 0, textAlign: 'center', top: 1310, transform: `translateY(${p(frame, 70, 84, [20, 0])}px)` }}>
         que te mando o link.
       </span>
       <div style={{ display: 'flex', justifyContent: 'center', left: 0, opacity: p(frame, 80, 92), position: 'absolute', right: 0, top: 1490 }}>
@@ -1012,11 +1015,12 @@ export const OTTO_CONTADORES_REEL_DURATION = SCENES.reduce((sum, scene) => sum +
 const REEL_FONT_CSS = `
 .otto-reel, .otto-reel * { font-family: ${SANS} !important; }
 .otto-reel [style*="Newsreader"], .otto-reel [style*="Newsreader"] * { font-family: ${SERIF} !important; }
+.otto-reel [style*="Instrument Serif"], .otto-reel [style*="Instrument Serif"] * { font-family: ${DISPLAY} !important; }
 .otto-reel [style*="Consolas"] { font-family: Consolas, "SF Mono", monospace !important; }
 `
 
 export function OttoContadoresReel() {
-  const [handle] = useState(() => delayRender('Loading Newsreader'))
+  const [handle] = useState(() => delayRender('Loading reel fonts'))
 
   useEffect(() => {
     const promise = loadSerifFont() ?? Promise.resolve()
