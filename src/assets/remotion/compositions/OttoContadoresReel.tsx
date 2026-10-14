@@ -1,5 +1,5 @@
 import { SiMercadopago, SiNubank } from '@icons-pack/react-simple-icons'
-import { Barcode, CheckCheck, QrCode } from 'lucide-react'
+import { ArrowLeftRight, BatteryFull, Camera, CheckCheck, ChevronLeft, Copy, FileText, Landmark, MessageCircle, Mic, Phone, Plus, ReceiptText, Signal, Sticker, Tags, Video, Wifi } from 'lucide-react'
 import type { CSSProperties, ReactNode } from 'react'
 import { useEffect, useState } from 'react'
 import {
@@ -105,7 +105,7 @@ function Scene({ children, duration }: { children: ReactNode; duration: number }
 }
 
 const GRID_SIZE = 60
-const GRID_LINE = `${GRAY}66`
+const GRID_LINE = `${GRAY}3d`
 const GRID_FADE = 'radial-gradient(ellipse 75% 60% at 50% 50%, #000 35%, transparent 100%)'
 
 function GridBackground() {
@@ -309,31 +309,77 @@ function NameScene({ duration }: { duration: number }) {
   )
 }
 
-// ─── 3. Promessa ─────────────────────────────────────────────────────────────
+// ─── 3. Promessa: hub do Otto ────────────────────────────────────────────────
+
+const HUB_TASKS: { icon: ReactNode; label: string; suffix: string; value: number }[] = [
+  { icon: <Landmark size={34} strokeWidth={2} />, label: 'Contas bancárias', suffix: 'sincronizadas', value: 6 },
+  { icon: <Tags size={34} strokeWidth={2} />, label: 'Despesas', suffix: 'categorizadas', value: 248 },
+  { icon: <ReceiptText size={34} strokeWidth={2} />, label: 'Notas fiscais', suffix: 'emitidas', value: 142 },
+  { icon: <ArrowLeftRight size={34} strokeWidth={2} />, label: 'Conciliação', suffix: 'lançamentos', value: 1204 },
+  { icon: <MessageCircle size={34} strokeWidth={2} />, label: 'Cobranças', suffix: 'no WhatsApp', value: 38 },
+]
 
 function PromiseScene({ duration }: { duration: number }) {
   const frame = useCurrentFrame()
+  const cx = 540
+  const cy = 1090
+  const radius = 340
+  const hubPop = useSpring(12, { damping: 12, stiffness: 140 })
+  const nodes = HUB_TASKS.map((task, i) => {
+    const angle = (-90 + i * 72) * (Math.PI / 180)
+    return { ...task, x: cx + Math.cos(angle) * radius, y: cy + Math.sin(angle) * radius }
+  })
 
   return (
     <Scene duration={duration}>
-      <Headline highlight={['financeiro']} size={92} start={2} text="Ela automatiza todo o financeiro de uma empresa." style={{ top: 300 }} />
-      <Card style={{ left: 110, opacity: p(frame, 18, 30), padding: '40px 48px', right: 110, top: 760, transform: `translateY(${p(frame, 18, 34, [40, 0])}px)` }}>
-        <span style={{ color: INK_MUTED, display: 'block', fontSize: 28, fontWeight: 600, letterSpacing: '0.08em', marginBottom: 18, textTransform: 'uppercase' }}>No automático</span>
-        {TASKS.map((task, i) => {
-          const o = p(frame, 28 + i * 7, 42 + i * 7)
-          const check = p(frame, 62 + i * 5, 72 + i * 5)
+      <Headline highlight={['financeiro']} size={92} start={2} text="Ela automatiza todo o financeiro de uma empresa." style={{ top: 270 }} />
+
+      <svg height={1920} style={{ left: 0, position: 'absolute', top: 0 }} width={1080}>
+        {[0, 1, 2].map((k) => {
+          if (frame < 22) return null
+          const phase = ((frame - 22 + k * 14) % 42) / 42
+          return <circle cx={cx} cy={cy} fill="none" key={k} opacity={(1 - phase) * 0.45} r={105 + phase * 150} stroke={TERRA} strokeWidth={2.5} />
+        })}
+        {nodes.map((node, i) => {
+          const draw = p(frame, 24 + i * 5, 40 + i * 5, [0, 1], Easing.inOut(Easing.cubic))
+          const t = frame > 42 + i * 5 ? ((frame - 42 - i * 5) % 24) / 24 : -1
           return (
-            <div key={task} style={{ alignItems: 'center', borderTop: i === 0 ? 'none' : `2px solid ${GRAY}44`, display: 'flex', gap: 28, opacity: o, padding: '24px 0', transform: `translateX(${(1 - o) * 30}px)` }}>
-              <span style={{ alignItems: 'center', background: check > 0 ? TERRA : 'transparent', border: `3px solid ${check > 0 ? TERRA : GRAY}`, borderRadius: 99, display: 'flex', height: 46, justifyContent: 'center', width: 46 }}>
-                <svg height={26} style={{ opacity: check }} viewBox="0 0 24 24" width={26}>
-                  <path d="M5 12.5l4.5 4.5L19 7.5" fill="none" pathLength={1} stroke={WHITE} strokeDasharray={1} strokeDashoffset={1 - check} strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} />
-                </svg>
-              </span>
-              <span style={{ fontSize: 40, fontWeight: 600 }}>{task}</span>
-            </div>
+            <g key={node.label}>
+              <line pathLength={1} stroke={draw >= 1 ? TERRA : GRAY} strokeDasharray={1} strokeDashoffset={1 - draw} strokeLinecap="round" strokeWidth={4} x1={cx} x2={cx + (node.x - cx) * 0.999} y1={cy} y2={node.y} />
+              {t >= 0 ? <circle cx={cx + (node.x - cx) * t} cy={cy + (node.y - cy) * t} fill={TERRA} opacity={1 - t * 0.5} r={9} /> : null}
+            </g>
           )
         })}
-      </Card>
+      </svg>
+
+      {nodes.map((node, i) => {
+        const pop = spring({ config: { damping: 13, stiffness: 160 }, fps: 30, frame: frame - 30 - i * 5 })
+        const count = Math.round(node.value * p(frame, 38 + i * 5, 74 + i * 5, [0, 1], Easing.out(Easing.quad)))
+        const check = spring({ config: { damping: 11, stiffness: 200 }, fps: 30, frame: frame - 76 - i * 3 })
+        return (
+          <div key={node.label} style={{ background: WHITE, border: `2px solid ${frame >= 76 + i * 3 ? TERRA : `${GRAY}88`}`, borderRadius: 30, boxShadow: '0 22px 50px rgba(20,20,19,0.08)', left: node.x - 135, padding: '22px 22px 20px', position: 'absolute', top: node.y - 82, transform: `scale(${pop})`, width: 270 }}>
+            <div style={{ alignItems: 'center', display: 'flex', gap: 14 }}>
+              <span style={{ alignItems: 'center', background: TERRA_SOFT, borderRadius: 16, color: TERRA, display: 'flex', flex: 'none', height: 56, justifyContent: 'center', width: 56 }}>{node.icon}</span>
+              <span style={{ fontSize: 25, fontWeight: 650, lineHeight: 1.15 }}>{node.label}</span>
+            </div>
+            <div style={{ alignItems: 'baseline', display: 'flex', gap: 10, marginTop: 14 }}>
+              <span style={{ fontFamily: SERIF, fontSize: 46, fontVariantNumeric: 'tabular-nums', fontWeight: 600, lineHeight: 1 }}>{count.toLocaleString('pt-BR')}</span>
+              <span style={{ color: INK_MUTED, fontSize: 21, fontWeight: 600 }}>{node.suffix}</span>
+            </div>
+            {frame >= 76 + i * 3 ? (
+              <span style={{ alignItems: 'center', background: TERRA, borderRadius: 99, display: 'flex', height: 44, justifyContent: 'center', position: 'absolute', right: -14, top: -14, transform: `scale(${check})`, width: 44 }}>
+                <svg height={24} viewBox="0 0 24 24" width={24}>
+                  <path d="M5 12.5l4.5 4.5L19 7.5" fill="none" stroke={WHITE} strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} />
+                </svg>
+              </span>
+            ) : null}
+          </div>
+        )
+      })}
+
+      <div style={{ alignItems: 'center', background: WHITE, border: `3px solid ${INK}`, borderRadius: 99, boxShadow: '0 26px 60px rgba(20,20,19,0.12)', display: 'flex', height: 210, justifyContent: 'center', left: cx - 105, position: 'absolute', top: cy - 105, transform: `scale(${hubPop * (frame > 44 ? 1 + Math.sin(frame / 5) * 0.012 : 1)})`, width: 210 }}>
+        <OttoIcon size={120} />
+      </div>
     </Scene>
   )
 }
@@ -605,71 +651,141 @@ function ReconciliationScene({ duration }: { duration: number }) {
 
 // ─── 8. Cobrança no WhatsApp ─────────────────────────────────────────────────
 
-function Bubble({ at, children, out }: { at: number; children: ReactNode; out?: boolean }) {
+const WA = {
+  bar: '#f6f5f3',
+  bg: '#efeae2',
+  button: '#027eb5',
+  divider: '#d1d7db',
+  incoming: '#ffffff',
+  meta: '#667781',
+  outgoing: '#d9fdd3',
+  text: '#111b21',
+  tick: '#8696a0',
+  tickRead: '#53bdeb',
+}
+
+const WA_DOODLE = `url("data:image/svg+xml,${encodeURIComponent(
+  `<svg xmlns='http://www.w3.org/2000/svg' width='200' height='200' fill='none' stroke='#5b5346' stroke-opacity='0.09' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'><circle cx='30' cy='32' r='12'/><rect x='82' y='20' width='22' height='16' rx='4'/><path d='M140 30 q10 -14 20 0 t20 0'/><path d='M24 104 l12 -18 l12 18 z'/><path d='M92 92 l4 9 l10 1 l-7 7 l2 10 l-9 -5 l-9 5 l2 -10 l-7 -7 l10 -1 z'/><circle cx='156' cy='104' r='6'/><circle cx='172' cy='90' r='3'/><path d='M20 170 q14 -12 28 0'/><path d='M100 156 v22 M89 167 h22'/><path d='M146 156 l18 18 M164 156 l-18 18'/></svg>`,
+)}")`
+
+function WaBubble({ at, buttons, children, out, read, tail, time }: { at: number; buttons?: { icon: ReactNode; label: string }[]; children: ReactNode; out?: boolean; read?: boolean; tail?: boolean; time: string }) {
   const frame = useCurrentFrame()
-  const s = spring({ config: { damping: 15, stiffness: 170 }, fps: 30, frame: frame - at })
+  const s = spring({ config: { damping: 16, stiffness: 180 }, fps: 30, frame: frame - at })
   if (frame < at) return null
+  const background = out ? WA.outgoing : WA.incoming
+
   return (
-    <div style={{ alignSelf: out ? 'flex-end' : 'flex-start', background: out ? TERRA_SOFT : WHITE, borderRadius: out ? '28px 28px 8px 28px' : '28px 28px 28px 8px', boxShadow: '0 4px 12px rgba(20,20,19,0.05)', fontSize: 30, lineHeight: 1.3, maxWidth: '84%', opacity: s, padding: '20px 24px', transform: `translateY(${(1 - s) * 24}px) scale(${0.92 + s * 0.08})`, transformOrigin: out ? 'right bottom' : 'left bottom' }}>
-      {children}
+    <div style={{ alignSelf: out ? 'flex-end' : 'flex-start', maxWidth: '80%', opacity: s, position: 'relative', transform: `translateY(${(1 - s) * 20}px) scale(${0.94 + s * 0.06})`, transformOrigin: out ? 'right bottom' : 'left bottom' }}>
+      {tail ? (
+        <svg height={22} style={{ position: 'absolute', top: 0, [out ? 'right' : 'left']: -13 }} viewBox="0 0 8 13" width={14}>
+          <path d={out ? 'M0 0 H8 L0 12 Z' : 'M8 0 H0 L8 12 Z'} fill={background} />
+        </svg>
+      ) : null}
+      <div style={{ background, borderRadius: 20, borderTopLeftRadius: !out && tail ? 0 : 20, borderTopRightRadius: out && tail ? 0 : 20, boxShadow: '0 1px 1.5px rgba(11,20,26,0.14)', color: WA.text, fontSize: 28, lineHeight: 1.3, padding: '12px 18px 10px' }}>
+        {children}
+        <span style={{ alignItems: 'center', color: WA.meta, display: 'inline-flex', float: 'right', fontSize: 19, gap: 5, margin: '12px 0 -4px 16px' }}>
+          {time}
+          {out ? <CheckCheck color={read ? WA.tickRead : WA.tick} size={22} strokeWidth={2.4} /> : null}
+        </span>
+      </div>
+      {buttons?.map((button) => (
+        <div key={button.label} style={{ alignItems: 'center', background, borderRadius: 18, boxShadow: '0 1px 1.5px rgba(11,20,26,0.14)', color: WA.button, display: 'flex', fontSize: 27, fontWeight: 500, gap: 12, justifyContent: 'center', marginTop: 4, padding: '16px 0' }}>
+          {button.icon}
+          {button.label}
+        </div>
+      ))}
     </div>
   )
 }
 
 function WhatsAppScene({ duration }: { duration: number }) {
   const frame = useCurrentFrame()
-  const read = frame >= 46
-  const typing = frame >= 50 && frame < 62
-  const notify = spring({ config: { damping: 16, stiffness: 150 }, fps: 30, frame: frame - 70 })
-  const ticks = <CheckCheck color={read ? TERRA : GRAY} size={26} strokeWidth={2.4} style={{ marginLeft: 8, verticalAlign: 'middle' }} />
+  const read = frame >= 44
+  const typing = frame >= 48 && frame < 62
+  const notify = spring({ config: { damping: 16, stiffness: 140 }, fps: 30, frame: frame - 72 })
+  const iconProps = { color: WA.text, strokeWidth: 1.9 }
 
   return (
     <FeatureScene duration={duration} index={4} title="Cobra seus clientes no WhatsApp.">
-      <div style={{ background: INK, borderRadius: 72, height: 990, left: 220, opacity: p(frame, 4, 16), padding: 14, position: 'absolute', top: 540, transform: `translateY(${p(frame, 4, 20, [60, 0])}px)`, width: 640 }}>
-        <div style={{ background: '#ece9e1', borderRadius: 60, display: 'flex', flexDirection: 'column', height: '100%', overflow: 'hidden', position: 'relative' }}>
-          <div style={{ alignItems: 'center', background: WHITE, display: 'flex', gap: 18, padding: '64px 30px 24px' }}>
-            <span style={{ alignItems: 'center', background: BG, border: `2px solid ${GRAY}88`, borderRadius: 99, color: INK_MUTED, display: 'flex', fontSize: 24, fontWeight: 700, height: 68, justifyContent: 'center', width: 68 }}>LC</span>
-            <div>
-              <span style={{ display: 'block', fontSize: 30, fontWeight: 650 }}>Lume Comércio</span>
-              <span style={{ color: INK_MUTED, display: 'block', fontSize: 22 }}>{typing ? 'digitando…' : 'online'}</span>
-            </div>
+      <div style={{ background: '#1c1c1e', border: '2px solid #3a3a3c', borderRadius: 86, boxShadow: '0 40px 90px rgba(20,20,19,0.22)', height: 1070, left: 210, opacity: p(frame, 4, 16), padding: 14, position: 'absolute', top: 510, transform: `translateY(${p(frame, 4, 20, [60, 0])}px)`, width: 660 }}>
+        <div style={{ background: WA.bg, backgroundImage: WA_DOODLE, borderRadius: 72, display: 'flex', flexDirection: 'column', fontFamily: SANS, height: '100%', overflow: 'hidden', position: 'relative' }}>
+          {/* Status bar */}
+          <div style={{ alignItems: 'center', background: WA.bar, color: WA.text, display: 'flex', fontSize: 27, fontWeight: 600, height: 94, justifyContent: 'space-between', padding: '20px 46px 0 66px' }}>
+            <span>9:41</span>
+            <span style={{ alignItems: 'center', display: 'flex', gap: 8 }}>
+              <Signal size={26} strokeWidth={2.6} />
+              <Wifi size={26} strokeWidth={2.6} />
+              <BatteryFull size={34} strokeWidth={2} />
+            </span>
           </div>
-          <div style={{ display: 'flex', flex: 1, flexDirection: 'column', gap: 18, justifyContent: 'flex-end', padding: '24px 24px 40px' }}>
-            <Bubble at={12} out>
-              Olá, Lume! A fatura de <strong>R$ 2.480,00</strong> vence hoje.
-              {ticks}
-            </Bubble>
-            <Bubble at={26} out>
-              <div style={{ display: 'grid', gap: 12 }}>
-                {[
-                  { icon: <QrCode size={34} />, label: 'Pix copia e cola' },
-                  { icon: <Barcode size={34} />, label: 'Boleto bancário' },
-                ].map((item) => (
-                  <div key={item.label} style={{ alignItems: 'center', background: WHITE, borderRadius: 18, display: 'flex', fontSize: 28, fontWeight: 600, gap: 16, padding: '16px 20px' }}>
-                    <span style={{ color: TERRA, display: 'flex' }}>{item.icon}</span>
-                    {item.label}
-                  </div>
-                ))}
-              </div>
-              <div style={{ textAlign: 'right' }}>{ticks}</div>
-            </Bubble>
+          <div style={{ background: '#000', borderRadius: 99, height: 56, left: '50%', position: 'absolute', top: 20, transform: 'translateX(-50%)', width: 196 }} />
+
+          {/* Header */}
+          <div style={{ alignItems: 'center', background: WA.bar, borderBottom: `1px solid ${WA.divider}`, display: 'flex', gap: 12, padding: '4px 30px 16px 10px' }}>
+            <ChevronLeft size={46} {...iconProps} />
+            <span style={{ alignItems: 'center', background: '#dfe5e7', borderRadius: 99, color: '#54656f', display: 'flex', fontSize: 23, fontWeight: 700, height: 62, justifyContent: 'center', width: 62 }}>LC</span>
+            <div style={{ flex: 1, marginLeft: 6 }}>
+              <span style={{ color: WA.text, display: 'block', fontSize: 28, fontWeight: 600 }}>Lume Comércio</span>
+              <span style={{ color: WA.meta, display: 'block', fontSize: 21 }}>{typing ? 'digitando…' : 'online'}</span>
+            </div>
+            <Video size={36} {...iconProps} style={{ marginRight: 20 }} />
+            <Phone size={30} {...iconProps} />
+          </div>
+
+          {/* Chat */}
+          <div style={{ display: 'flex', flex: 1, flexDirection: 'column', gap: 8, justifyContent: 'flex-end', padding: '18px 30px 18px' }}>
+            <span style={{ alignSelf: 'center', background: WA.incoming, borderRadius: 12, boxShadow: '0 1px 1px rgba(11,20,26,0.1)', color: WA.meta, fontSize: 19, fontWeight: 500, marginBottom: 'auto', padding: '7px 16px' }}>Hoje</span>
+            <WaBubble at={10} out read={read} tail time="10:42">
+              Olá, Lume! Tudo bem? Sua fatura de <strong>R$ 2.480,00</strong> vence hoje.
+            </WaBubble>
+            <WaBubble
+              at={22}
+              buttons={[
+                { icon: <Copy size={26} strokeWidth={2.2} />, label: 'Copiar código Pix' },
+                { icon: <FileText size={26} strokeWidth={2.2} />, label: 'Ver boleto' },
+              ]}
+              out
+              read={read}
+              time="10:42"
+            >
+              Escolha como prefere pagar:
+            </WaBubble>
             {typing ? (
-              <div style={{ alignSelf: 'flex-start', background: WHITE, borderRadius: 28, display: 'flex', gap: 10, padding: '24px 26px' }}>
+              <div style={{ alignSelf: 'flex-start', background: WA.incoming, borderRadius: 20, borderTopLeftRadius: 0, boxShadow: '0 1px 1.5px rgba(11,20,26,0.14)', display: 'flex', gap: 9, marginTop: 8, padding: '22px 24px' }}>
                 {[0, 1, 2].map((d) => (
-                  <span key={d} style={{ background: GRAY, borderRadius: 99, height: 14, opacity: 0.4 + 0.6 * Math.abs(Math.sin((frame + d * 4) / 4)), width: 14 }} />
+                  <span key={d} style={{ background: WA.tick, borderRadius: 99, height: 13, opacity: 0.35 + 0.65 * Math.abs(Math.sin((frame + d * 4) / 4)), width: 13 }} />
                 ))}
               </div>
             ) : null}
-            <Bubble at={62}>Pago! Obrigado pelo lembrete.</Bubble>
+            {frame >= 62 ? <div style={{ height: 8 }} /> : null}
+            <WaBubble at={62} tail time="10:44">
+              Pago! Obrigado pelo lembrete.
+            </WaBubble>
           </div>
-          {frame >= 70 ? (
-            <div style={{ alignItems: 'center', background: WHITE, borderRadius: 30, boxShadow: '0 20px 50px rgba(20,20,19,0.18)', display: 'flex', gap: 20, left: 18, padding: '22px 24px', position: 'absolute', right: 18, top: 18 + (1 - notify) * -180 }}>
-              <span style={{ alignItems: 'center', background: BG, borderRadius: 18, display: 'flex', height: 70, justifyContent: 'center', width: 70 }}>
+
+          {/* Input bar */}
+          <div style={{ alignItems: 'center', background: WA.bar, display: 'flex', gap: 18, padding: '14px 24px 48px' }}>
+            <Plus size={40} {...iconProps} />
+            <div style={{ alignItems: 'center', background: WA.incoming, border: `1px solid ${WA.divider}`, borderRadius: 99, display: 'flex', flex: 1, height: 62, justifyContent: 'flex-end', padding: '0 18px' }}>
+              <Sticker size={28} color={WA.meta} strokeWidth={1.9} />
+            </div>
+            <Camera size={36} {...iconProps} />
+            <Mic size={34} {...iconProps} />
+          </div>
+          <div style={{ background: '#000', borderRadius: 99, bottom: 14, height: 8, left: '50%', position: 'absolute', transform: 'translateX(-50%)', width: 220 }} />
+
+          {/* iOS notification */}
+          {frame >= 72 ? (
+            <div style={{ alignItems: 'center', background: 'rgba(250,250,250,0.96)', borderRadius: 40, boxShadow: '0 18px 50px rgba(0,0,0,0.2)', display: 'flex', gap: 18, left: 16, padding: '22px 26px', position: 'absolute', right: 16, top: 16 + (1 - notify) * -200 }}>
+              <span style={{ alignItems: 'center', background: WHITE, border: `1px solid ${GRAY}88`, borderRadius: 18, display: 'flex', flex: 'none', height: 68, justifyContent: 'center', width: 68 }}>
                 <OttoIcon size={44} />
               </span>
-              <div>
-                <span style={{ display: 'block', fontSize: 26, fontWeight: 700 }}>Pagamento recebido</span>
-                <span style={{ color: INK_MUTED, display: 'block', fontSize: 23 }}>Lume Comércio · R$ 2.480,00 · conciliado</span>
+              <div style={{ flex: 1 }}>
+                <div style={{ alignItems: 'baseline', display: 'flex', justifyContent: 'space-between' }}>
+                  <span style={{ color: '#000', fontSize: 25, fontWeight: 650 }}>Otto</span>
+                  <span style={{ color: '#8a8a8e', fontSize: 20 }}>agora</span>
+                </div>
+                <span style={{ color: '#000', display: 'block', fontSize: 23, lineHeight: 1.25, marginTop: 2 }}>Pagamento recebido: R$ 2.480,00 de Lume Comércio. Já conciliado.</span>
               </div>
             </div>
           ) : null}
