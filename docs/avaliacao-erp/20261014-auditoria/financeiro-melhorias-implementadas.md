@@ -27,3 +27,7 @@ Os testes locais não substituem o reteste da próxima publicação com autentic
 - `financeiro-melhorias-regressao.json` e `financeiro-melhorias-concorrencia.json`: resultados locais.
 - `scripts/erp/financial-improvements-ui-fixture.mjs`: componentes reais com HTTP fictício, sem acesso ao banco; servir em 127.0.0.1:3197.
 - Capturas em `output/audit-20261014/financeiro-melhorias-*-local.png`. A aparência do ambiente de teste usa CSS simplificado; os componentes e interações são os do ERP.
+
+## Atualização do fechamento
+
+A gestão de recorrências foi retestada no domínio publicado, com edição, pausa, retomada, encerramento e preservação do título anterior. Crédito/devolução exibem data brasileira e sugerem R$ 20 disponíveis; catálogo contextual mostra referência #1150, data, moeda, contraparte e conta. Conciliação manual, desfazimento e sugestão exata atualizaram a linha, histórico, sugestões e pendências sem recarga e preservaram conta/filtro. Evidências em `fechamento-financeiro-ui.json` e `fechamento-financeiro-complementar.json`. Fixtures encerradas e efeito líquido financeiro zero, conferido no banco. Perfis reais distintos continuam dependentes da disponibilidade dessas sessões.
