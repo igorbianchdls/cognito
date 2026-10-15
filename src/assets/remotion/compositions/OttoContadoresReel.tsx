@@ -1042,35 +1042,37 @@ export function CtaScene({ comment: commentText = 'Financeiro', duration, highli
 /** `duration`: nominal (authored) length. `actual`: real length on screen, e.g. derived from narration timestamps. */
 export type ReelScene = { actual?: number; Component: (props: { duration: number }) => ReactNode; duration: number }
 
-const CONTADORES_AUDIO = 'remotion/otto-reels/contadores-narracao.mp3'
+// 0–9.75s: X01's own take converted to the Lucas Marçal voice (ElevenLabs Voice Changer, lip-synced to X01);
+// from 9.75s: the Lucas Marçal TTS narration from "Ela sincroniza…" on (its timestamps shifted +0.55s).
+const CONTADORES_AUDIO = 'remotion/otto-reels/contadores-narracao-x01.mp3'
 
 // Cue = second the scene's sentence starts in the narration (minus a short lead-in).
 const SCENES: ReelScene[] = narratedScenes(
   [
     { at: 0, scene: { Component: HookScene, duration: 105 } }, // "Essa I.A. tá deixando os contadores…"
-    { at: 3.85, scene: { Component: NameScene, duration: 88 } }, // "O nome dela é Otto, um sistema de gestão"
-    { at: 6.5, scene: { Component: PromiseScene, duration: 100 } }, // "que automatiza todo o financeiro…"
-    { at: 9.2, scene: { Component: BankSyncScene, duration: 100 } }, // "Ela sincroniza todas as suas contas bancárias"
-    { at: 11.75, scene: { Component: ExpensesScene, duration: 95 } }, // "categoriza despesas"
-    { at: 13.15, scene: { Component: InvoiceScene, duration: 100 } }, // "emite notas fiscais"
-    { at: 14.6, scene: { Component: ReconciliationScene, duration: 100 } }, // "faz a conciliação bancária"
-    { at: 16.1, scene: { Component: WhatsAppScene, duration: 105 } }, // "e cobra os seus clientes no WhatsApp"
-    { at: 18.4, scene: { Component: NoSpreadsheetScene, duration: 120 } }, // "Tudo no automático. Sem planilhas, sem estresse."
-    { at: 21.78, scene: { Component: IntegrationScene, duration: 90 } }, // "E o melhor de tudo: cem por cento integrado…"
-    { at: 26.25, scene: { Component: CtaScene, duration: 120 } }, // "Quer ver como funciona? Comenta Financeiro…"
+    { at: 4.05, scene: { Component: NameScene, duration: 88 } }, // "O nome dela é Otto, um sistema de gestão"
+    { at: 6.75, scene: { Component: PromiseScene, duration: 100 } }, // "que automatiza todo o financeiro…"
+    { at: 9.6, scene: { Component: BankSyncScene, duration: 100 } }, // "Ela sincroniza todas as suas contas bancárias"
+    { at: 12.3, scene: { Component: ExpensesScene, duration: 95 } }, // "categoriza despesas"
+    { at: 13.7, scene: { Component: InvoiceScene, duration: 100 } }, // "emite notas fiscais"
+    { at: 15.15, scene: { Component: ReconciliationScene, duration: 100 } }, // "faz a conciliação bancária"
+    { at: 16.65, scene: { Component: WhatsAppScene, duration: 105 } }, // "e cobra os seus clientes no WhatsApp"
+    { at: 18.95, scene: { Component: NoSpreadsheetScene, duration: 120 } }, // "Tudo no automático. Sem planilhas, sem estresse."
+    { at: 22.33, scene: { Component: IntegrationScene, duration: 90 } }, // "E o melhor de tudo: cem por cento integrado…"
+    { at: 26.8, scene: { Component: CtaScene, duration: 120 } }, // "Quer ver como funciona? Comenta Financeiro…"
   ],
-  30.6,
+  31.15,
 )
 
 export const OTTO_CONTADORES_REEL_DURATION = sceneDuration(SCENES)
 
-// X01 (16:9, muted) sits under the animation while the hook, the name and the hub play; it leaves when
-// "Ela sincroniza…" starts (9.2s). Offsets lift each scene so its content fits the upper area.
+// X01 (16:9, muted: its voice is already in the narration track) sits under the animation while the hook, the
+// name and the hub play, and slides out right before "Ela sincroniza…". Offsets lift each scene so it fits above.
 const CONTADORES_SPLIT: SplitVideo = {
-  endAt: 9.2,
+  endAt: 9.55,
   offsets: [244, 340, 130],
-  // X01 runs 9.96s; a slight speed-up lands its last word with the narration's "…da sua empresa."
-  playbackRate: 1.04,
+  // Real speed: the converted voice keeps X01's timing, so lips stay in sync. X01 ends (9.96s) as the slide-out finishes.
+  playbackRate: 1,
   src: 'remotion/otto-reels/x01.mp4',
 }
 
