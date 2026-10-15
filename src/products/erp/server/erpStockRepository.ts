@@ -447,7 +447,7 @@ export async function attendStockForSale(input: ActorInput & { saleId: number })
 
 export async function receiveStockForPurchase(client: Pick<SQLClient, 'query'>, input: ActorInput & { purchaseId: number }) {
   const purchaseResult = await client.query(
-    `SELECT id, fornecedor_id, local_estoque_id, atualiza_estoque
+    `SELECT id, fornecedor_id, local_estoque_id, atualiza_estoque, subtotal, total
      FROM erp.compras WHERE empresa_id = $1 AND id = $2 AND excluido_em IS NULL`,
     [input.tenantId, input.purchaseId],
   )
@@ -464,15 +464,16 @@ export async function receiveStockForPurchase(client: Pick<SQLClient, 'query'>, 
     [input.tenantId, input.purchaseId, localEstoqueId, input.actorId],
   )
   const itemsResult = await client.query(
-    `SELECT itens.produto_id, itens.quantidade, itens.valor_unitario AS custo_unitario
+    `SELECT itens.id, itens.produto_id, itens.quantidade - itens.quantidade_recebida AS quantidade,
+       itens.total / NULLIF(itens.quantidade,0) AS custo_unitario
      FROM erp.compras_itens AS itens
      JOIN erp.produtos AS produtos ON produtos.empresa_id = itens.empresa_id AND produtos.id = itens.produto_id
      WHERE itens.empresa_id = $1 AND itens.compra_id = $2 AND itens.excluido_em IS NULL
-       AND produtos.controla_estoque`,
+       AND produtos.controla_estoque AND itens.quantidade > itens.quantidade_recebida`,
     [input.tenantId, input.purchaseId],
   )
   if (itemsResult.rows.length === 0) return null
-  return createFinalStockDocument(client, {
+  const document = await createFinalStockDocument(client, {
     ...input,
     tipo: 'entrada',
     localEstoqueId,
@@ -484,9 +485,14 @@ export async function receiveStockForPurchase(client: Pick<SQLClient, 'query'>, 
     items: itemsResult.rows.map((item) => ({
       produtoId: Number(item.produto_id),
       quantidade: Number(item.quantidade),
-      custoUnitario: Number(item.custo_unitario || 0),
+      custoUnitario: Number(item.custo_unitario || 0) * (Number(purchase.subtotal) > 0 ? Number(purchase.total) / Number(purchase.subtotal) : 1),
+      compraItemId: Number(item.id),
     })),
   })
+  await client.query(`UPDATE erp.compras_itens SET quantidade_recebida=quantidade,local_estoque_id=$3,atualizado_por=$4
+    WHERE empresa_id=$1 AND compra_id=$2 AND id=ANY($5::bigint[])`,
+    [input.tenantId,input.purchaseId,localEstoqueId,input.actorId,itemsResult.rows.map(item=>item.id)])
+  return document
 }
 
 export async function reverseStockForPurchase(client: Pick<SQLClient, 'query'>, input: ActorInput & { purchaseId: number }) {

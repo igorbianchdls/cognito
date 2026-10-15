@@ -56,6 +56,7 @@ function mapImportValues(type: ImportType, original: Record<string, unknown>) {
       nome: first(row, ['nome', 'razao_social', 'fornecedor']),
       documento: String(first(row, ['documento', 'cpf_cnpj', 'cnpj', 'cpf'])).replace(/\D/g, ''),
       categoria: first(row, ['categoria']),
+      telefone: first(row, ['telefone', 'celular']),
       email: first(row, ['email', 'e_mail']),
       cidade: first(row, ['cidade', 'municipio']),
     }

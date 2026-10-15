@@ -1,6 +1,6 @@
 'use client'
 
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { Download, FileSpreadsheet, Loader2, Upload } from 'lucide-react'
 import Papa from 'papaparse'
 import { ErpImportDetails } from './ErpImportDetails'
@@ -25,6 +25,7 @@ export function ErpImportExportPage() {
   const [historyError,setHistoryError]=useState('')
   const [type, setType] = useState<ImportType>('clientes')
   const [file, setFile] = useState<File | null>(null)
+  const fileInput = useRef<HTMLInputElement>(null)
   const [history, setHistory] = useState<ImportRecord[]>([])
   const [loading, setLoading] = useState(false)
   const [message, setMessage] = useState('')
@@ -63,6 +64,7 @@ export function ErpImportExportPage() {
       setDetailId(result.id)
       setMessage(`${result.imported || 0} registro(s) importado(s); ${result.errors || 0} erro(s).`)
       setFile(null)
+      if (fileInput.current) fileInput.current.value = ''
       await loadHistory()
     } catch (importError) {
       setError(importError instanceof Error ? importError.message : 'Não foi possível importar o arquivo.')
@@ -81,7 +83,7 @@ export function ErpImportExportPage() {
       <section className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(320px,0.7fr)]">
         <div className="space-y-4">
           <div className="space-y-2"><Label htmlFor="import-type">Tipo de cadastro</Label><select id="import-type" value={type} onChange={(event) => setType(event.target.value as ImportType)} className="h-10 w-full rounded-md border border-gray-200 bg-white px-3 text-sm outline-none focus:border-gray-400">{types.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}</select></div>
-          <div className="space-y-2"><Label htmlFor="import-file">Arquivo CSV</Label><Input id="import-file" type="file" accept=".csv,text/csv" onChange={(event) => setFile(event.target.files?.[0] || null)} /></div>
+          <div className="space-y-2"><Label htmlFor="import-file">Arquivo CSV</Label><Input ref={fileInput} id="import-file" type="file" accept=".csv,text/csv" onChange={(event) => setFile(event.target.files?.[0] || null)} /></div>
           <div className="flex flex-wrap gap-2"><Button onClick={() => void importFile()} disabled={loading}>{loading ? <Loader2 className="size-4 animate-spin" /> : <Upload className="size-4" />}Importar</Button><Button variant="outline" asChild><a href={`/api/erp/importacoes/${type}`}><Download className="size-4" />Exportar {types.find((item) => item.value === type)?.label}</a></Button></div>
           {message ? <div className="rounded-md border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700">{message}</div> : null}
           {error ? <div className="rounded-md border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">{error}</div> : null}

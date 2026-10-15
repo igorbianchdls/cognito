@@ -10,14 +10,14 @@ const contact = z.object({
   principais: z.array(z.enum(['comercial','financeiro','operacional'])).default([]),
 }).strict().refine(v => Boolean(v.email || v.telefone), 'Informe e-mail ou telefone do contato.')
 const address = z.object({
-  id: identity, identificacao: z.string().trim().min(1).max(200), logradouro: z.string().trim().min(1).max(500),
-  numero: optionalText, complemento: optionalText, bairro: optionalText, cidade: z.string().trim().min(1).max(200),
+  id: identity, identificacao: z.string().trim().min(1).max(200), logradouro: z.string().trim().max(500).default(''),
+  numero: optionalText, complemento: optionalText, bairro: optionalText, cidade: z.string().trim().max(200).default(''),
   uf: z.string().trim().max(2).default(''), cep: optionalText,
   // Código IBGE (7 dígitos); vazio grava nulo.
-  codigo_municipio: z.union([z.literal(''), z.string().trim().regex(/^\d{7}$/, 'Código IBGE do município tem 7 dígitos.')]).default('').transform(value => value || null), pais: z.string().trim().min(1).default('Brasil'),
+  codigo_municipio: z.string().trim().regex(/^(?:\d{7})?$/, 'Código IBGE do município tem 7 dígitos.').nullable().default(null).transform(value => value || null), pais: z.string().trim().min(1).default('Brasil'),
   finalidades: z.array(z.enum(['comercial','cobranca','prestacao'])).min(1),
   principais: z.array(z.enum(['comercial','cobranca','prestacao'])).default([]),
-}).strict()
+}).strict().refine(v => Boolean(v.logradouro || v.numero || v.complemento || v.bairro || v.cidade || v.uf || v.cep), 'Informe ao menos um dado do endereço, como cidade ou logradouro.')
 export const registrationRelationsSchema = z.object({ contatos: z.array(contact).max(100).optional(), enderecos: z.array(address).max(100).optional() }).superRefine((value, ctx) => {
   for (const key of ['contatos','enderecos'] as const) {
     const ids = new Set<string>(), primary = new Set<string>()

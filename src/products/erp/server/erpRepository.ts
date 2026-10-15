@@ -1366,6 +1366,13 @@ export async function importErpPurchaseInvoice(input: {
         purchase = updatedPurchase.rows[0] as PurchaseRow
       }
 
+      if (purchase) {
+        await client.query(`UPDATE erp.compras SET local_estoque_id=COALESCE(local_estoque_id,$3),
+          atualiza_estoque=COALESCE((SELECT n.atualiza_estoque FROM erp.naturezas_operacao_compra n
+            WHERE n.empresa_id=$1 AND n.id=compras.natureza_operacao_id),atualiza_estoque)
+          WHERE empresa_id=$1 AND id=$2`, [input.tenantId,purchase.id,optionalNumericId(input.values.local_estoque_id)])
+        await receiveStockForPurchase(client, {tenantId:input.tenantId,actorId:input.actorId,purchaseId:Number(purchase.id)})
+      }
       if (generateFinancial && purchase) await createOrUpdatePurchasePayable(client, purchase, input.actorId, 'efetivo')
     }
 
@@ -2312,7 +2319,8 @@ export async function updateErpEntityRecord(input: UpdateInput): Promise<ErpEnti
            versao = versao + 1, atualizado_por = $11
          WHERE empresa_id = $1 AND id = $2 AND ${entityRoleColumn(input.entityId)} = true AND versao = $12 RETURNING *`,
         [input.tenantId, id, normalizePersonType(input.values.tipo), text(input.values.nome),
-          optionalText(input.values.documento), current.email, current.telefone,
+          input.values.documento === undefined ? current.documento : optionalText(input.values.documento),
+          current.email, current.telefone,
           current.cidade, activeFromStatus(input.values.status), category || '', input.actorId, input.expectedVersion],
       )
     } else if (input.entityId === 'produtos') {

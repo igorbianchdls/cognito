@@ -4,7 +4,21 @@ import { ErpDomainError } from '@/products/erp/shared/erpErrors'
 
 // Parent version and lock protect the entire registration, including its children.
 export async function saveRegistrationRelations(client: SQLClient, tenantId: number, entityId: number, actorId: number, values: Record<string, unknown>) {
-  const parsed = parseRegistrationRelations(values)
+  const normalized = { ...values }
+  // Older API/tool clients send a single contact. Translate it without discarding
+  // other contacts or bypassing the same validation/version lock used by the UI.
+  if (values.contatos === undefined && (values.email !== undefined || values.telefone !== undefined)) {
+    const existing = await client.query(`SELECT id::text,nome,coalesce(cargo,'') cargo,coalesce(email,'') email,
+      coalesce(telefone,'') telefone,whatsapp,finalidades,principais FROM erp.entidades_contatos
+      WHERE empresa_id=$1 AND entidade_id=$2 AND ativo ORDER BY ('comercial'=ANY(principais)) DESC,id FOR UPDATE`, [tenantId,entityId])
+    const rows = existing.rows
+    const selected = { nome: String(values.nome || 'Contato principal'), cargo:'', email:'', telefone:'', whatsapp:false,
+      finalidades:['comercial'], principais:['comercial'], ...rows[0],
+      ...(values.email !== undefined ? {email:String(values.email ?? '').trim()} : {}),
+      ...(values.telefone !== undefined ? {telefone:String(values.telefone ?? '').trim()} : {}) }
+    normalized.contatos = selected.email || selected.telefone ? [selected,...rows.slice(1)] : rows.slice(1)
+  }
+  const parsed = parseRegistrationRelations(normalized)
   const snapshots: Record<string, unknown> = {}
   for (const key of ['contatos','enderecos'] as const) {
     const rows = parsed[key]
@@ -18,7 +32,8 @@ export async function saveRegistrationRelations(client: SQLClient, tenantId: num
     for (const row of rows) {
       const { id, ...fields } = row
       const names = Object.keys(fields)
-      const parameters: unknown[] = [tenantId,entityId,...Object.values(fields)]
+      const parameters: unknown[] = [tenantId,entityId,...Object.entries(fields).map(([name,value]) =>
+        key === 'enderecos' && (name === 'logradouro' || name === 'cidade') && value === '' ? null : value)]
       if (id) {
         parameters.push(id)
         await client.query(`UPDATE erp.${table} SET ${names.map((name,i)=>`${name}=$${i+3}`).join(',')}, ativo=true WHERE empresa_id=$1 AND entidade_id=$2 AND id=$${parameters.length}`,parameters)

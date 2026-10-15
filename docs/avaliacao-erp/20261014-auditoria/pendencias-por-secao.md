@@ -87,3 +87,19 @@ Este é um roteiro de fechamento, não uma contagem de todas as combinações po
 - `financeiro-fechamento-final.md`, `financeiro-melhorias-implementadas.md`, `financeiro-reconciliacao-final-evidencia.json`.
 - `../propostas-ordens-servico-implementacao-20261010.md`, `../correcoes-pdf-xml-anexos-20261010.md`, `../pdfs-fiscais-storage-20261010.md` (evidências históricas; estado de publicação/configuração requer reconferência).
 - Menu atual: `src/products/erp/shared/navigation.ts`.
+
+
+## Atualização após testes de compras e cadastros
+
+Rodada de 14/10: 36 grupos automatizados, 32 aprovados e 4 falhas; ensaios visuais adicionais. P01 e P03 passaram; P04 passou nos cenários observados com frete, desconto e duas parcelas. P02 bloqueado por RLS ao gravar vínculo fornecedor/produto no XML válido. C01 persistência visual aprovada. C02 CRUD nos serviços aprovado, matriz visual parcial e erro ao editar endereço incompleto importado. C03 importações/reenvio/exportações testados; telefone de fornecedor descartado e reescolha do mesmo arquivo exigindo recarga são defeitos. C04 orquestração dos cinco tipos e recorrências aprovadas em escopo restrito; disparo cron não testado. Plano e limites completos: [compras-cadastros-resultados.md](compras-cadastros-resultados.md).
+
+### Continuação dos cadastros pela interface
+
+Cliente, fornecedor e vendedor criados com contatos, pesquisados, reabertos, editados e desativados na versão publicada. Cliente com endereço completo passou com IBGE preenchido. Encontrado defeito adicional: IBGE opcional vazio vira null na primeira validação e é recusado na validação seguinte ("Invalid input"). Ajuste no contrato compartilhado é necessário antes de encerrar a regressão de endereços. Isolamento de leitura conferido em 105 tabelas reais; identidade sem vínculo não leu registros. Não há usuários ativos de consulta/operador para login visual. Endpoint do agendador sem credencial recusa com 401; histórico de execução concluída da empresa estava vazio, então disparo automático segue sem comprovação.
+C02: ciclos básicos visuais de cliente/fornecedor/vendedor/categoria de cadastro concluídos nesta continuação; registros 354/355/356 e categoria 122 inativos, com alterações conferidas diretamente no banco. Regressão de endereços e variantes continua dependente das correções registradas.
+
+## Fechamento das seis correções
+
+As seis falhas de compras/cadastros listadas no relatório foram corrigidas e publicadas em `dpl_Fmz6Jgfx4m9pjYckBDvdSrLHroQg`. Migração 20261015010000 aplicada; 17 grupos de regressão geral e 7 específicos aprovados. HTTP autenticado no candidato e no domínio principal aprovado. Cadastro importado com endereço parcial reabre; IBGE pode permanecer vazio; CSV de fornecedor mantém telefone; contrato legado de contatos atualiza sem perder outros contatos/documento; mesmo arquivo pode ser escolhido de novo sem recarga; XML válido importa com estoque e financeiro coerentes e sem duplicação na repetição. Detalhes em [correcoes-compras-cadastros.md](correcoes-compras-cadastros.md).
+
+Permanecem como pendências externas/funcionais: perfis reais distintos disponíveis para login, disparo por horário em ambiente isolado, emissão fiscal externa e fluxo de devolução ao fornecedor. Esses itens não são as seis falhas corrigidas.
