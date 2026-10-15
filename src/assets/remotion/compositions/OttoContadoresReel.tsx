@@ -1070,7 +1070,10 @@ export const OTTO_CONTADORES_REEL_DURATION = sceneDuration(SCENES)
 // name and the hub play, and slides out right before "Ela sincroniza…". Offsets lift each scene so it fits above.
 const CONTADORES_SPLIT: SplitVideo = {
   endAt: 9.55,
-  offsets: [244, 340, 130],
+  // 860px tall: X01 zoomed ~1.43x with ~29% of its width cropped (centred); 1060px left for the animation.
+  height: 860,
+  offsets: [370, 465, 190],
+  scales: [1, 1, 0.85],
   // Real speed: the converted voice keeps X01's timing, so lips stay in sync. X01 ends (9.96s) as the slide-out finishes.
   playbackRate: 1,
   src: 'remotion/otto-reels/x01.mp4',
@@ -1105,9 +1108,19 @@ export function narratedScenes(cues: { at: number; scene: ReelScene }[], end: nu
  * the animation is clipped to the area above it and scene `i` is lifted by `offsets[i]` px so its content fits;
  * at `endAt` the clip slides down and the animation grows back to full height.
  */
-export type SplitVideo = { endAt: number; offsets: number[]; playbackRate?: number; src: string }
+// `height` taller than 16:9 (608px) zooms the clip and crops its sides (`objectPosition` picks the framing);
+// `scales[i]` shrinks scene `i` (from its top centre) when its content needs more room than is left above.
+export type SplitVideo = {
+  endAt: number
+  height?: number
+  objectPosition?: string
+  offsets: number[]
+  playbackRate?: number
+  scales?: number[]
+  src: string
+}
 
-const SPLIT_VIDEO_H = Math.round((1080 * 9) / 16)
+const SPLIT_VIDEO_H_16_9 = Math.round((1080 * 9) / 16)
 const SPLIT_OUT_FRAMES = 12
 
 /** Shared shell for the Otto editorial reels: fonts, font-override CSS, grid background and scene sequencing. */
@@ -1122,6 +1135,7 @@ export function ReelRoot({ audio, scenes, split }: { audio?: string; scenes: Ree
 
   const splitEnd = split ? Math.round(split.endAt * 30) : 0
   const s = split ? 1 - p(frame, splitEnd, splitEnd + SPLIT_OUT_FRAMES, [0, 1], Easing.inOut(Easing.cubic)) : 0
+  const SPLIT_VIDEO_H = split?.height ?? SPLIT_VIDEO_H_16_9
 
   return (
     <AbsoluteFill className="otto-reel" style={{ background: BG }}>
@@ -1133,7 +1147,7 @@ export function ReelRoot({ audio, scenes, split }: { audio?: string; scenes: Ree
           {scenes.map(({ actual, Component, duration }, index) => (
             <Series.Sequence durationInFrames={actual ?? duration} key={index}>
               <SceneSpeedContext.Provider value={duration / (actual ?? duration)}>
-                <AbsoluteFill style={{ height: 1920, transform: `translateY(${-(split?.offsets[index] ?? 0) * s}px)` }}>
+                <AbsoluteFill style={{ height: 1920, transform: `translateY(${-(split?.offsets[index] ?? 0) * s}px) scale(${1 - (1 - (split?.scales?.[index] ?? 1)) * s})`, transformOrigin: '50% 0' }}>
                   <Component duration={duration} />
                 </AbsoluteFill>
               </SceneSpeedContext.Provider>
@@ -1144,7 +1158,7 @@ export function ReelRoot({ audio, scenes, split }: { audio?: string; scenes: Ree
       {split ? (
         <Sequence durationInFrames={splitEnd + SPLIT_OUT_FRAMES} layout="none">
           <div style={{ boxShadow: '0 -24px 60px rgba(20,20,19,0.14)', height: SPLIT_VIDEO_H, left: 0, overflow: 'hidden', position: 'absolute', right: 0, top: 1920 - SPLIT_VIDEO_H * s }}>
-            <OffthreadVideo muted playbackRate={split.playbackRate ?? 1} src={staticFile(split.src)} style={{ height: '100%', objectFit: 'cover', width: '100%' }} />
+            <OffthreadVideo muted playbackRate={split.playbackRate ?? 1} src={staticFile(split.src)} style={{ height: '100%', objectFit: 'cover', objectPosition: split.objectPosition ?? 'center', width: '100%' }} />
           </div>
         </Sequence>
       ) : null}
