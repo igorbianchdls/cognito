@@ -6,7 +6,8 @@ const { mkdirSync, writeFileSync } = require('node:fs')
 async function main() {
   const bundle = await build({ entryPoints: ['src/products/erp/server/erpStorage.ts'], bundle: true, platform: 'node', format: 'cjs', write: false })
   const module = { exports: {} }
-  vm.runInNewContext(bundle.outputFiles[0].text, { module, exports: module.exports, URL, AbortSignal, process: { env: {} } })
+  const environment = {}
+  vm.runInNewContext(bundle.outputFiles[0].text, { module, exports: module.exports, URL, AbortSignal, Buffer, fetch, process: { env: environment } })
   const { signErpDocumentFile } = module.exports
   const base = 'https://abcdefghijklmnopqrst.supabase.co'
   const file = { bucket: 'erp-anexos', caminho: 'empresa-1/nota ç.pdf', nome: 'nota.pdf' }
@@ -47,7 +48,16 @@ async function main() {
     await assert.rejects(signErpDocumentFile(file, { ...config, send }), error => error.status === 503 && !error.message.includes('synthetic-key'))
     ++checks
   }
-  const proof = { status: 'passed', checks, externalRequests: 0, realStorageVerified: false }
+  Object.assign(environment, { ERP_FISCAL_SUPABASE_URL: base, ERP_FISCAL_SUPABASE_SERVICE_ROLE_KEY: 'sb_secret_fixture', NEXT_PUBLIC_SUPABASE_URL: 'https://wrongprojectexamplex.supabase.co', SUPABASE_DB_URL: 'postgresql://postgres.abcdefghijklmnopqrst:fixture@localhost/postgres' })
+  let sent = 0
+  const fallback = await signErpDocumentFile(file, { send: async (url, input) => {
+    ++sent; assert(url.startsWith(base+'/storage/v1/object/sign/')); assert.equal(input.headers.Authorization, 'Bearer sb_secret_fixture')
+    return {ok:true,json:async()=>({signedURL:'/object/sign/erp-anexos/empresa-1/nota%20%C3%A7.pdf?token=fixture'})}
+  } })
+  assert.equal(fallback.origin,base); assert.equal(sent,1); ++checks
+  environment.ERP_ATTACHMENTS_SUPABASE_URL = 'https://zzzzzzzzzzzzzzzzzzzz.supabase.co'
+  await assert.rejects(signErpDocumentFile(file, {send}), error=>error.code==='STORAGE_UNAVAILABLE'); ++checks
+  const proof = { status: 'passed', checks, externalRequests: 0, realStorageVerified: false, attachmentsUseErpProject:true }
   mkdirSync('.cache/erp-audit', { recursive: true })
   writeFileSync('.cache/erp-audit/storage-regression.json', JSON.stringify(proof, null, 2))
   console.log(JSON.stringify(proof))

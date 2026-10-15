@@ -15,6 +15,7 @@ function nextSteps(tipo,id,dados){
     return [tipo==='nota_servico'||tipo==='editar_nota_servico'?{label:'Emitir',primary:true,run:()=>preview('emitir_nota_servico',{dados:{registro_id:note}})}:null,view('obter_nota_servico',{nota_id:note})].filter(Boolean)}
   if(tipo==='compra')return [{label:'Confirmar compra',primary:true,run:()=>preview('confirmar_compra',{dados:{registro_id:id}})},view('obter_compra',{compra_id:id})];
   if(/_compra$/.test(tipo))return [view('obter_compra',{compra_id:id})];
+  if(/_contrato$/.test(tipo))return [view('obter_contrato',{registro_id:id})];
   if(/conta_(pagar|receber)$/.test(tipo)&&!/^excluir_/.test(tipo))return [view('obter_titulo_financeiro',{tipo:tipo.endsWith('pagar')?'pagar':'receber',conta_id:id})];
   if(tipo==='pagar_parcela'||tipo==='receber_parcela')return [view('obter_parcela_financeira',{tipo:tipo==='pagar_parcela'?'pagar':'receber',parcela_id:Number(dados.registro_id)})];
   const kind=tipo.replace(/^(editar)_/,'');if(registrationModules[kind]&&!/^excluir_/.test(tipo))return [view('obter_cadastro',{tipo:registrationModules[kind],registro_id:id})];

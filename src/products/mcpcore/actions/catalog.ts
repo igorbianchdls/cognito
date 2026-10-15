@@ -20,6 +20,8 @@ type Spec = {name:string;title:string;destructive:boolean;types?:Record<string,P
 const registrations = ['cliente','fornecedor','vendedor','produto','servico','categoria','conta_financeira'] as const
 const byRegistration = (prefix:string) => Object.fromEntries(registrations.map(t => [t,`${prefix}${t}`])) as Record<string,Proposal['tipo']>
 const specs: Spec[] = [
+  {name:'alterar_contrato',title:'Suspender, retomar ou encerrar contrato',destructive:true,types:{suspender:'suspender_contrato',retomar:'retomar_contrato',encerrar:'encerrar_contrato'}},
+  {name:'devolver_compra',title:'Devolver compra integral ao fornecedor',destructive:true,kind:'devolver_compra'},
   {name:'criar_ordem_servico',title:'Criar ordem de serviço',destructive:false,kind:'ordem_servico'},
   {name:'editar_ordem_servico',title:'Editar ordem de serviço',destructive:false,kind:'editar_ordem_servico'},
   {name:'alterar_ordem_servico',title:'Alterar situação da ordem de serviço',destructive:true,types:{aprovar:'aprovar_ordem_servico',iniciar:'iniciar_ordem_servico',concluir:'concluir_ordem_servico',cancelar:'cancelar_ordem_servico'}},

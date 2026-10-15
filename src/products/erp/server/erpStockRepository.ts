@@ -495,7 +495,7 @@ export async function receiveStockForPurchase(client: Pick<SQLClient, 'query'>, 
   return document
 }
 
-export async function reverseStockForPurchase(client: Pick<SQLClient, 'query'>, input: ActorInput & { purchaseId: number }) {
+export async function reverseStockForPurchase(client: Pick<SQLClient, 'query'>, input: ActorInput & { purchaseId: number; originType?: 'devolucao_fornecedor' }) {
   const movements = await client.query(
     `SELECT * FROM erp.movimentacoes_estoque
      WHERE empresa_id = $1 AND origem_tipo = 'compra' AND origem_id = $2 ORDER BY id FOR UPDATE`,
@@ -509,7 +509,7 @@ export async function reverseStockForPurchase(client: Pick<SQLClient, 'query'>, 
       quantidade: -Number(movement.quantidade),
       custoUnitario: Number(movement.custo_unitario || 0),
       tipo: 'estorno',
-      origemTipo: 'cancelamento_compra',
+      origemTipo: input.originType || 'cancelamento_compra',
       origemId: input.purchaseId,
       historical: true,
       reverseReceipt: true,

@@ -26,7 +26,11 @@ export async function signErpDocumentFile(file: DocumentFile, configuration: Con
 function storageTarget(file: DocumentFile, configuration: Configuration) {
   // Documentos gerados usam a mesma configuração para arquivar e baixar.
   const documentConfig = file.bucket === 'erp-comercial' ? commercialStorageConfiguration(configuration)
-    : file.bucket === 'erp-fiscal' ? fiscalStorageConfiguration(configuration) : null
+    : file.bucket === 'erp-fiscal' ? fiscalStorageConfiguration(configuration)
+    : file.bucket === 'erp-anexos' && !configuration.base && !configuration.key ? fiscalStorageConfiguration({
+      base: process.env.ERP_ATTACHMENTS_SUPABASE_URL ?? process.env.ERP_DOCUMENTS_SUPABASE_URL ?? process.env.ERP_FISCAL_SUPABASE_URL,
+      key: process.env.ERP_ATTACHMENTS_SUPABASE_SERVICE_ROLE_KEY ?? process.env.ERP_DOCUMENTS_SUPABASE_SERVICE_ROLE_KEY ?? process.env.ERP_FISCAL_SUPABASE_SERVICE_ROLE_KEY,
+    }) : null
   const base = documentConfig?.origin ?? configuration.base ?? process.env.NEXT_PUBLIC_SUPABASE_URL
   const key = documentConfig?.key ?? configuration.key ?? process.env.SUPABASE_SERVICE_ROLE_KEY
   if (!base || !key) throw new ErpDomainError('STORAGE_UNAVAILABLE', 'O armazenamento de anexos não está configurado.', 503)

@@ -8,9 +8,11 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
+  DialogDescription,
 } from "@/components/ui/dialog";
 import { parseErpResponse } from "@/products/erp/frontend/services/erpProfessionalClient";
 import { useErpAccess } from "@/products/erp/frontend/hooks/useErpAccess";
+import { useErpPrompt } from './ErpConfirmation';
 type Item = {
   id: string | number;
   descricao: string;
@@ -18,7 +20,7 @@ type Item = {
   valor_unitario: number;
 };
 type Detail = {
-  record: { numero: string; versao: number; proxima_geracao_em: string };
+  record: { numero: string; versao: number; status: string; proxima_geracao_em: string | null; alteracoes_situacao?: Array<{acao:string;motivo:string}> };
   versions: Array<{
     numero: number;
     vigencia_inicio: string;
@@ -49,6 +51,20 @@ export function ErpContractDetails({
     [reason, setReason] = useState(""),
     [error, setError] = useState(""),
     [saving, setSaving] = useState(false);
+  const prompt = useErpPrompt();
+  async function changeState(action: 'suspender' | 'retomar' | 'encerrar') {
+    if (!detail || saving) return;
+    const label = action === 'suspender' ? 'Suspender contrato' : action === 'retomar' ? 'Retomar contrato' : 'Encerrar contrato';
+    const motivo = await prompt({ title: label, description: action === 'retomar' ? 'Ciclos já vencidos serão ignorados. A próxima geração segue o calendário original, a partir de hoje.' : action === 'suspender' ? 'Novas gerações serão suspensas até a retomada. Os ciclos e títulos existentes serão preservados.' : 'O encerramento impede novas gerações e não permite retomada. Os ciclos e títulos existentes serão preservados.', inputLabel: 'Motivo (mínimo de 3 caracteres)', type: 'text', minimumLength: 3, defaultValue: '', maximum: 1000, confirmLabel: label });
+    if (motivo === null) return;
+    setSaving(true); setError('');
+    try {
+      await parseErpResponse(await fetch(`/api/erp/contratos/${id}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action, expectedVersion: detail.record.versao, motivo }) }));
+      const current = await parseErpResponse<Detail>(await fetch(`/api/erp/contratos/${id}`, { cache: 'no-store' }));
+      setDetail(current); onSaved();
+    } catch (cause) { setError(cause instanceof Error ? cause.message : 'Não foi possível alterar o contrato.'); }
+    finally { setSaving(false); }
+  }
   useEffect(() => {
     let active = true;
     void fetch(`/api/erp/contratos/${id}`)
@@ -77,7 +93,7 @@ export function ErpContractDetails({
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             expectedVersion: detail.record.versao,
-            inicio: detail.record.proxima_geracao_em.slice(0, 10),
+            inicio: detail.record.proxima_geracao_em?.slice(0, 10),
             motivo: reason,
             itens: items.map((i) => ({
               id: String(i.id),
@@ -105,6 +121,7 @@ export function ErpContractDetails({
       <DialogContent className="max-h-[85vh] overflow-y-auto sm:max-w-2xl">
         <DialogHeader>
           <DialogTitle>Contrato {detail?.record.numero}</DialogTitle>
+          <DialogDescription>Consulte o histórico, revise as próximas condições e gerencie a situação do contrato.</DialogDescription>
         </DialogHeader>
         {error && (
           <p role="alert" className="text-sm text-red-700">
@@ -115,7 +132,14 @@ export function ErpContractDetails({
           <p>Carregando contrato…</p>
         ) : (
           <>
+            <p className="text-sm">Situação: {({ativo:'Ativo',pausado:'Suspenso',encerrado:'Encerrado'} as Record<string,string>)[detail.record.status] || detail.record.status}</p>
+            {access.can('erp.vendas.gerenciar') && <div className="flex flex-wrap gap-2">
+              {detail.record.status === 'ativo' && <Button disabled={saving} variant="outline" onClick={() => void changeState('suspender')}>Suspender contrato</Button>}
+              {detail.record.status === 'pausado' && <Button disabled={saving} variant="outline" onClick={() => void changeState('retomar')}>Retomar contrato</Button>}
+              {['ativo','pausado'].includes(detail.record.status) && <Button disabled={saving} variant="outline" onClick={() => void changeState('encerrar')}>Encerrar contrato</Button>}
+            </div>}
             <ErpHistoryPanel kind="contratos" id={id}/>
+            {!!detail.record.alteracoes_situacao?.length && <section className="grid gap-2"><h3 className="font-semibold">Alterações de situação</h3>{detail.record.alteracoes_situacao.map((event,index)=><p key={index} className="text-sm">{({suspender:'Suspensão',retomar:'Retomada',encerrar:'Encerramento'} as Record<string,string>)[event.acao] || event.acao}: {event.motivo}</p>)}</section>}
             <h3 className="font-semibold">Versões comerciais</h3>
             {detail.versions.map((v) => (
               <div key={v.numero} className="rounded border p-3 text-sm">
@@ -147,7 +171,7 @@ export function ErpContractDetails({
             ) : (
               <p className="text-sm">Nenhum ciclo gerado.</p>
             )}
-            {access.can("erp.vendas.gerenciar") && (
+            {access.can("erp.vendas.gerenciar") && detail.record.status === 'ativo' && (
               <fieldset disabled={saving} className="grid gap-3 border-t pt-4">
                 <legend className="font-semibold">
                   Novas condições na próxima geração

@@ -2,11 +2,12 @@
 // todos os dados geram a prévia direto (o usuário confirma no card); as demais pedem na conversa.
 export const detailsCardScript=String.raw`
 const detailFields={
+  obter_contrato:()=>['numero','descricao','status','proxima_geracao_em'],
   obter_ordem_servico:()=>['cliente_nome','equipamento','marca','modelo','numero_serie','data_inicio','previsao_entrega','subtotal','desconto','total','observacoes_publicas'],
   obter_documento_comercial:()=>['tipo','numero','revisao','arquivado','link_expira_em'],
   obter_parcela_financeira:r=>['descricao',r.lado==='receber'?'cliente':'fornecedor','numero_documento','parcela','vencimento','valor','valor_pago','credito','renegociado','saldo'],
   obter_venda:()=>['cliente_nome','data_venda','data_vencimento','subtotal','total','observacoes'],
-  obter_compra:()=>['fornecedor_nome','data_compra','data_vencimento','subtotal','total','observacoes'],
+  obter_compra:()=>['fornecedor_nome','data_compra','data_vencimento','subtotal','total','devolvida','observacoes'],
   obter_nota_servico:()=>['cliente','data_competencia','valor_total','valor_iss','retencao_iss','retencoes_federais','valor_liquido','local_prestacao','autorizada_em','codigo_verificacao','chave_acesso','erro_mensagem','observacoes'],
 };
 const itemColumns={obter_ordem_servico:['descricao','quantidade','valor_unitario','desconto','total'],obter_venda:['descricao','quantidade','valor_unitario','desconto','total','quantidade_atendida'],obter_compra:['descricao','quantidade','quantidade_recebida','valor_unitario','total'],obter_nota_servico:['descricao','quantidade','valor_unitario','desconto','valor_total']};

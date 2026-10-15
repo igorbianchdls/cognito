@@ -13,7 +13,7 @@ import { saveRegistrationRelations } from './erpRegistrationRelations'
 import { nonNegativeDecimal, paymentTotal, sumMoney, lineTotal, discountAmount } from '@/products/erp/shared/erpMoney'
 import { ErpDomainError } from '@/products/erp/shared/erpErrors'
 import { assertSettlementReplay, requireOperationKey, settlementIdentity } from './erpSettlementIdentity'
-import { runQuery, withTransaction, type SQLClient } from '@/lib/postgres'
+import { runQuery, withTransaction, runWithErpTransactionClient, type SQLClient } from '@/lib/postgres'
 import { parseNfeXml } from '@/products/erp/server/fiscal/nfeParser'
 import { assertErpPeriodOpen } from '@/products/erp/server/erpPeriodRepository'
 import {
@@ -1833,7 +1833,7 @@ async function listSaleRecords(input: ListInput): Promise<ErpEntityRecord[]> {
 async function listPurchaseRecords(input: ListInput): Promise<ErpEntityRecord[]> {
   const params: unknown[] = [input.tenantId]
   const movement = optionalText(input.filters?.tipo_movimento)
-  const movementClause = movement ? ` AND compras.tipo_movimento = $${params.push(movement)}` : ''
+  const movementClause = movement === 'devolucao_fornecedor' ? " AND compras.metadata ? 'devolucao_fornecedor'" : movement ? ` AND compras.tipo_movimento = $${params.push(movement)}` : ''
   const rows = await runQuery<Record<string, unknown>>(
     `WITH rows AS (
        SELECT
@@ -1842,6 +1842,8 @@ async function listPurchaseRecords(input: ListInput): Promise<ErpEntityRecord[]>
          compras.data_compra,
          compras.data_prevista_entrega,
          compras.status,
+         compras.versao,
+         (compras.metadata ? 'devolucao_fornecedor') AS devolvida,
          compras.tipo_compra,
          compras.tipo_movimento,
          compras.total,
@@ -1851,7 +1853,7 @@ async function listPurchaseRecords(input: ListInput): Promise<ErpEntityRecord[]>
          contas.tipo_lancamento,
          COALESCE(resumo.primeiro_item, 'Sem itens') || CASE WHEN resumo.quantidade_itens > 1 THEN ' + ' || (resumo.quantidade_itens - 1)::text || CASE WHEN resumo.quantidade_itens = 2 THEN ' item' ELSE ' itens' END ELSE '' END AS descricao,
          COALESCE(categorias.nome, '') AS categoria,
-         concat_ws(' ', compras.numero, entidades.nome, compras.status, compras.tipo_movimento, resumo.primeiro_item, categorias.nome) AS searchable
+         concat_ws(' ', compras.numero, entidades.nome, compras.status, compras.tipo_movimento, resumo.primeiro_item, categorias.nome, CASE WHEN compras.metadata ? 'devolucao_fornecedor' THEN 'Devolvida ao fornecedor' END) AS searchable
        FROM erp.compras AS compras
        JOIN erp.entidades AS entidades
          ON entidades.empresa_id = compras.empresa_id
@@ -1870,7 +1872,7 @@ async function listPurchaseRecords(input: ListInput): Promise<ErpEntityRecord[]>
          ${movementClause}
      )
      SELECT id, numero, data_compra, data_prevista_entrega, status, tipo_compra, tipo_movimento,
-       total, gera_financeiro, fornecedor, entidade_id, descricao, categoria, tipo_lancamento, count(*) OVER ()::int AS __total
+       total, gera_financeiro, fornecedor, entidade_id, descricao, categoria, tipo_lancamento, versao, devolvida, count(*) OVER ()::int AS __total
      FROM rows
      WHERE true${appendSearch(params, input.query)}${appendRecordStatusFilter(params, input.filters)}
      ORDER BY data_compra DESC, id DESC${appendPagination(params, input)}`,
@@ -1887,6 +1889,8 @@ async function listPurchaseRecords(input: ListInput): Promise<ErpEntityRecord[]>
     entrega: dateText(row.data_prevista_entrega) || '',
     total: Number(row.total ?? 0),
     tipo_compra: String(row.tipo_compra ?? ''),
+    versao: Number(row.versao),
+    devolvida: Boolean(row.devolvida),
     tipo_movimento: String(row.tipo_movimento ?? ''),
     financeiro: row.gera_financeiro ? (row.tipo_lancamento === 'previsao' ? 'Previsao' : row.tipo_lancamento === 'efetivo' ? 'Efetivo' : 'Ao efetivar') : 'Não gera',
     status: String(row.status ?? ''),
@@ -3185,6 +3189,46 @@ export async function confirmErpPurchase(input: IdActionInput): Promise<ConfirmE
 }
 
 export async function cancelErpPurchase(input: IdActionInput) {
+  return reversePurchase(input)
+}
+
+/** Integral operational return. Paid or credited purchases require financial reversal first. */
+export async function returnErpPurchase(input: IdActionInput & { expectedVersion: number; motivo: string; idempotencyKey: string }) {
+  const motivo = String(input.motivo ?? '').trim()
+  if (motivo.length < 3 || motivo.length > 1000 || !Number.isSafeInteger(input.expectedVersion) || input.expectedVersion < 1)
+    throw new ErpDomainError('VALIDATION_ERROR', 'Informe a versão atual e um motivo de 3 a 1000 caracteres.', 422)
+  const key = requireOperationKey(input.idempotencyKey)
+  return withTransaction(async client => {
+    const hash = await commercialRequest(client, input.tenantId, 'devolucao_fornecedor', key, { id: String(input.id), expectedVersion: input.expectedVersion, motivo })
+    const purchase = (await client.query('SELECT id,status,tipo_compra,versao,metadata,data_compra,data_competencia FROM erp.compras WHERE empresa_id=$1 AND id=$2 AND excluido_em IS NULL FOR UPDATE', [input.tenantId, input.id])).rows[0]
+    for (const capability of ['erp.compras.gerenciar', 'erp.financeiro.gerenciar', 'erp.estoque.movimentar']) {
+      if (!(await client.query('SELECT shared.has_erp_capability($1::bigint,$2::text) AS ok', [input.tenantId, capability])).rows[0]?.ok)
+        throw new ErpDomainError('ACCESS_DENIED', 'A devolução exige permissão de compras, financeiro e movimentação de estoque.', 403)
+    }
+    if (!purchase) throw new ErpDomainError('NOT_FOUND', 'Compra não encontrada.', 404)
+    const previous = ((purchase.metadata || {}) as Record<string, unknown>).devolucao_fornecedor as { chave?: string; hash?: string } | undefined
+    if (previous) {
+      if (previous.chave !== key) throw new ErpDomainError('INVALID_STATE', 'Esta compra já foi devolvida integralmente.', 409)
+      assertOperationReplay(previous.hash, hash)
+      return { id: String(input.id), status: 'devolvida', repetido: true }
+    }
+    if (Number(purchase.versao) !== input.expectedVersion) throw new ErpDomainError('VERSION_CONFLICT', 'A compra mudou. Atualize antes de devolver.', 409)
+    if (purchase.status !== 'recebida' || purchase.tipo_compra !== 'produto') throw new ErpDomainError('INVALID_STATE', 'A devolução integral exige uma compra de produtos totalmente recebida.', 409)
+    for (const businessModule of ['compras', 'financeiro'] as const) {
+      await assertErpPeriodOpen(client, { tenantId: input.tenantId, module: businessModule, date: erpToday() })
+      await assertErpPeriodOpen(client, { tenantId: input.tenantId, module: businessModule, date: dateText(purchase.data_competencia || purchase.data_compra)! })
+    }
+    const adjusted = await client.query(`SELECT parcelas.id FROM erp.contas_pagar_parcelas parcelas JOIN erp.contas_pagar contas ON contas.empresa_id=parcelas.empresa_id AND contas.id=parcelas.conta_pagar_id ${financialCompositionSql('pagar')} WHERE contas.empresa_id=$1 AND contas.compra_id=$2 AND parcelas.excluido_em IS NULL AND (composicao.credito<>0 OR composicao.transferido<>0) LIMIT 1`, [input.tenantId, input.id])
+    if (adjusted.rows.length) throw new ErpDomainError('INVALID_STATE', 'Reverta créditos e renegociações vinculados antes de devolver a compra.', 409)
+    await runWithErpTransactionClient(client, () => reversePurchase(input, true))
+    const event = { motivo, chave: key, hash, data: erpToday(), usuario_id: input.actorId, integral: true }
+    await client.query("UPDATE erp.compras SET metadata=metadata || jsonb_build_object('devolucao_fornecedor',$3::jsonb),atualizado_por=$4 WHERE empresa_id=$1 AND id=$2", [input.tenantId, input.id, JSON.stringify(event), input.actorId])
+    await client.query("INSERT INTO erp.compras_eventos(empresa_id,compra_id,evento,dados,criado_por) VALUES($1,$2,'devolvida_fornecedor',$3::jsonb,$4)", [input.tenantId, input.id, JSON.stringify(event), input.actorId])
+    return { id: String(input.id), status: 'devolvida', repetido: false }
+  })
+}
+
+async function reversePurchase(input: IdActionInput, supplierReturn = false) {
   return withTransaction(async (client) => {
     const purchaseResult = await client.query(
       `SELECT id, empresa_id, status
@@ -3209,7 +3253,7 @@ export async function cancelErpPurchase(input: IdActionInput) {
        LIMIT 1`,
       [input.tenantId, purchase.id],
     )
-    if (invoiceResult.rows[0]) throw new ErpDomainError('VALIDATION_ERROR', 'Desvincule ou cancele a nota fiscal antes de cancelar a compra.')
+    if (invoiceResult.rows[0] && !supplierReturn) throw new ErpDomainError('VALIDATION_ERROR', 'Desvincule ou cancele a nota fiscal antes de cancelar a compra.')
 
     const paymentResult = await client.query(
       `SELECT pagamentos.id
@@ -3234,6 +3278,7 @@ export async function cancelErpPurchase(input: IdActionInput) {
       tenantId: input.tenantId,
       actorId: input.actorId,
       purchaseId: Number(purchase.id),
+      originType: supplierReturn ? 'devolucao_fornecedor' : undefined,
     })
 
     await client.query(

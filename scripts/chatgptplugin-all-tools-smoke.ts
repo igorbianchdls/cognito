@@ -6,7 +6,10 @@ import {config} from 'dotenv'
 import {connection} from './erp/evolution-db.mjs'
 import {installFiscalStorageFixture} from './erp/fiscal-storage-fixture.mjs'
 import {getErpDatabaseContext,runWithErpDatabaseContext} from '../src/lib/erpDatabaseContext'
-import {closePool} from '../src/lib/postgres'
+import {closePool,withTransaction} from '../src/lib/postgres'
+import {createSalesContract} from '../src/products/erp/server/erpSalesContracts'
+import {createErpEntityRecord,getErpPurchaseDetails} from '../src/products/erp/server/erpRepository'
+import {receivePurchaseItems} from '../src/products/erp/server/erpProfessionalRepository'
 import {closePluginDatabase} from '../src/products/mcpcore/shared/database'
 import {loadPluginPrincipal} from '../src/products/mcpcore/auth/resolvePrincipal'
 import {executionDependencies} from '../src/products/mcpcore/application/executeTool'
@@ -31,7 +34,7 @@ const fiscalStorageFixture=installFiscalStorageFixture({buckets:['erp-fiscal','e
 const opt=(name:string)=>Number(process.argv.find(a=>a.startsWith(`--${name}=`))?.split('=')[1])
 const company=opt('company'),user=opt('user')
 assert(company>0&&user>0,'Informe --company=<empresa> --user=<usuario>')
-const db=connection(),marker='TESTE-ALL-MCP-'+randomUUID(),called=new Set<string>(),successful=new Set<string>()
+const db=connection(),marker='QA-OTTO-ALL-MCP-'+randomUUID(),called=new Set<string>(),successful=new Set<string>()
 const checks:{name:string;status:string;error?:string}[]=[]
 const report={date:new Date().toISOString(),company,user,marker,status:'running',realSupabase:true,oauthVerified:false,
  transport:'Real HTTP Request/Response handler and SDK; authentication fixture',
@@ -145,6 +148,24 @@ async function main(){let before='';try{
  (SELECT c.id FROM erp.categorias c WHERE empresa_id=$1 AND tipo='receita' AND ativo AND excluido_em IS NULL AND NOT EXISTS(SELECT 1 FROM erp.categorias f WHERE f.empresa_id=$1 AND f.categoria_pai_id=c.id AND ativo AND excluido_em IS NULL) ORDER BY id LIMIT 1) receita,
  (SELECT c.id FROM erp.categorias c WHERE empresa_id=$1 AND tipo='despesa' AND ativo AND excluido_em IS NULL AND NOT EXISTS(SELECT 1 FROM erp.categorias f WHERE f.empresa_id=$1 AND f.categoria_pai_id=c.id AND ativo AND excluido_em IS NULL) ORDER BY id LIMIT 1) despesa`,[company]))[0]
  const refs=Object.fromEntries(Object.entries(baseRefs).map(([k,v])=>[k,Number(v)]));assert(Object.values(refs).every(v=>v>0))
+ await check('Evolução: contratos e devolução integral com prévia, confirmação e repetição MCP',async()=>{
+  const write=<T>(fn:()=>Promise<T>)=>runWithErpDatabaseContext({tenantId:company,userId:user},fn)
+  const actor={tenantId:company,actorId:user}
+  const contract=await write(()=>withTransaction(c=>createSalesContract(c,{...actor,idempotencyKey:randomUUID(),values:{cliente_id:refs.cliente,numero:marker+'-CON',descricao:marker,servico_id:refs.servico,quantidade:1,valor_unitario:100,data_inicio:today,periodicidade:'mensal',dia_vencimento:15}})))
+  for(const [action,status] of [['suspender','pausado'],['retomar','ativo'],['encerrar','encerrado']]){
+   await mutate('alterar_contrato',{tipo:action,dados:{registro_id:Number(contract.id),motivo:reason}})
+   assert.equal((await call('obter_contrato',{registro_id:Number(contract.id)})).data.record.status,status)
+  }
+  const rejected=await prepare('alterar_contrato',{tipo:'retomar',dados:{registro_id:Number(contract.id),motivo:reason}})
+  await reject('alterar_contrato',{rascunho_id:rejected.rascunho_id})
+  const product=await write(()=>createErpEntityRecord({...actor,entityId:'produtos',idempotencyKey:randomUUID(),values:{nome:marker,sku:randomUUID(),preco:100,unidade_medida:'UN',controla_estoque:'sim',status:'ativo'}}))
+  const nature=(await sql('SELECT id FROM erp.naturezas_operacao_compra WHERE empresa_id=$1 AND ativo AND atualiza_estoque ORDER BY id LIMIT 1',[company]))[0];assert(nature)
+  const purchase=await write(()=>createErpEntityRecord({...actor,entityId:'pedidos-compra',idempotencyKey:randomUUID(),values:{numero:marker+'-COM',fornecedor_id:refs.fornecedor,tipo_compra:'produto',tipo_movimento:'compra',natureza_operacao_id:Number(nature.id),categoria_id:refs.despesa,gera_financeiro:true,data_compra:today,data_competencia:today,itens:[{produto_id:Number(product.id),quantidade:1,valor_unitario:100}],parcelas:[{numero_parcela:1,data_vencimento:today,valor:100,conta_financeira_id:refs.conta}]}}))
+  const detail=await erpRead(()=>getErpPurchaseDetails(company,purchase.id));
+  await write(()=>receivePurchaseItems({...actor,purchaseId:Number(purchase.id),idempotencyKey:randomUUID(),values:{items:detail.items.map(i=>({item_id:Number(i.id),quantidade:1,local_estoque_id:null}))}}))
+  await mutate('devolver_compra',{dados:{registro_id:Number(purchase.id),motivo:reason}})
+  assert.equal((await call('obter_compra',{compra_id:Number(purchase.id)})).data.purchase.devolvida,true)
+ })
  await check('Contexto para agentes: campos fiscais, comerciais e classificação DRE',async()=>{
   const service=(await call('obter_cadastro',{tipo:'servicos',registro_id:refs.servico})).data.record;
   const expectedService=(await sql('SELECT codigo_tributacao_nacional,codigo_servico_municipal,codigo_nbs FROM erp.servicos WHERE empresa_id=$1 AND id=$2',[company,refs.servico]))[0];

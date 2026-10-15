@@ -180,6 +180,7 @@ Para adicionar uma operação: crie/estenda a regra em `server`, reutilize contr
 | `/api/erp/comissoes` | GET | session | 1 MiB | `erp.vendas.visualizar` |
 | `/api/erp/compras/[id]/cancelar` | POST | session | 1 MiB | `erp.compras.gerenciar` |
 | `/api/erp/compras/[id]/confirmar` | POST | session | 1 MiB | `erp.compras.gerenciar` |
+| `/api/erp/compras/[id]/devolver` | POST | session | 1 MiB | `erp.compras.gerenciar`, `erp.estoque.movimentar`, `erp.financeiro.gerenciar` |
 | `/api/erp/compras/[id]/receber` | POST | session | 1 MiB | `erp.compras.gerenciar` |
 | `/api/erp/compras/[id]` | GET, PATCH, DELETE | session | 1 MiB | `erp.compras.gerenciar`, `erp.compras.visualizar`, `erp.estoque.visualizar`, `erp.financeiro.visualizar` |
 | `/api/erp/compras/catalogos` | GET | session | 1 MiB | `erp.compras.visualizar` |

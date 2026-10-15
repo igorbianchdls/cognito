@@ -1,5 +1,6 @@
 import { getErpOverview, getErpSaleDetails, getErpPurchaseDetails, getErpEntityRecord,listErpEntityPage } from '@/products/erp/server/erpRepository'
 import { dreReportRecords } from './erpDreReport'
+import { getSalesContract } from './erpSalesContracts'
 import { attachmentDownload, listAttachments, type AttachmentDocument } from './erpAttachments'
 import { budgetVsActual, salesGoalsReport } from './erpBudget'
 import { commissionReport } from '@/products/erp/server/erpCommercialRepository'
@@ -27,6 +28,7 @@ export function pickFields(record: Record<string, unknown>, keys: string[]) {
   return Object.fromEntries(keys.filter(key => record[key] !== undefined).map(key => [key, record[key]]))
 }
 export const erpReadService = {
+  contract:getSalesContract,
   serviceOrders:serviceOrderPage,
   async serviceOrder(company:number,id:number){const result=await getServiceOrder(company,id);return {record:result.order,items:result.items,history:result.events,totalItems:result.items.length,itemsTruncated:false}},
   async commercialDocument(company:number,kind:CommercialDocumentKind,id:number,revision?:number){
@@ -79,7 +81,7 @@ export const erpReadService = {
   stock(tenantId: number, input: PageQuery) { return listStockOperation(tenantId, 'posicao-estoque', input) },
   async purchase(tenantId: number, id: number) {
     const result = await getErpPurchaseDetails(tenantId, id)
-    return { purchase: {...pickFields(result.purchase, ['id','numero','fornecedor_id','fornecedor_nome','data_compra','status','subtotal','tipo_desconto','desconto','frete','seguro','outras_despesas','impostos_retidos','gera_financeiro','total','observacoes']),data_vencimento:result.installments[0]?.data_vencimento},
+    return { purchase: {...pickFields(result.purchase, ['id','numero','fornecedor_id','fornecedor_nome','data_compra','status','subtotal','tipo_desconto','desconto','frete','seguro','outras_despesas','impostos_retidos','gera_financeiro','total','observacoes']),devolvida:Boolean((result.purchase.metadata as Record<string,unknown> | undefined)?.devolucao_fornecedor),data_vencimento:result.installments[0]?.data_vencimento},
       items: result.items.slice(0,100).map(item => ({...pickFields(item, ['id','tipo','item_id','descricao','quantidade','quantidade_recebida','valor_unitario','total']),desconto:item.valor_desconto})),
       installments: result.installments.slice(0,48).map(item=>pickFields(item,['data_vencimento','valor'])), installmentsTruncated:result.installments.length>48,
       totalItems: result.items.length, itemsTruncated: result.items.length > 100 }

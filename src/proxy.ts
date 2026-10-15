@@ -31,7 +31,7 @@ export default function proxy(request: NextRequest, event: NextFetchEvent) {
     '/api/clerk/reconcile', '/api/chatgptplugin/internal/maintenance', '/api/erp/internal/automacoes']
     .includes(request.nextUrl.pathname)) return NextResponse.next()
   // Link temporário do DANFSe/XML: o token assinado é a credencial (validado no handler).
-  if (request.nextUrl.pathname.startsWith('/api/public/nfse/')) return NextResponse.next()
+  if (request.nextUrl.pathname.startsWith('/api/public/nfse/') || request.nextUrl.pathname.startsWith('/api/public/documentos-comerciais/')) return NextResponse.next()
   if (!process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY && isPublicRoute(request)) {
     return NextResponse.next()
   }

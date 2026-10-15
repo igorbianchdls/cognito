@@ -1,6 +1,6 @@
 "use client";
 
-import { useErpConfirmation } from '@/products/erp/frontend/components/ErpConfirmation'
+import { useErpConfirmation, useErpPrompt } from '@/products/erp/frontend/components/ErpConfirmation'
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import {
@@ -21,6 +21,7 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
+  DialogDescription,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -78,6 +79,8 @@ type PurchaseRecord = {
   tipo_movimento: string;
   financeiro: string;
   status: string;
+  versao: number;
+  devolvida: boolean;
 };
 
 type PurchaseItem = {
@@ -186,8 +189,11 @@ async function parseResponse<T>(response: Response): Promise<T> {
 
 export function PurchaseWorkspacePage() {
   const confirmAction = useErpConfirmation()
+  const prompt = useErpPrompt()
 
   const canManage = useErpAccess().can("erp.compras.gerenciar");
+  const access = useErpAccess()
+  const canReturn = canManage && access.can('erp.financeiro.gerenciar') && access.can('erp.estoque.movimentar')
   const [records, setRecords] = useState<PurchaseRecord[]>([]);
   const [page, setPage] = useState(1);
   const [totalRecords, setTotalRecords] = useState(0);
@@ -454,6 +460,17 @@ export function PurchaseWorkspacePage() {
     }
   }
 
+  async function returnPurchase(record: PurchaseRecord) {
+    const motivo = await prompt({ title: 'Devolver compra integral ao fornecedor', description: 'Todos os produtos recebidos serão retirados do estoque e as contas a pagar serão canceladas. Pagamentos, créditos e renegociações precisam ser revertidos antes. A nota de entrada e o histórico serão preservados. Esta operação não emite nota fiscal de devolução.', inputLabel: 'Motivo (mínimo de 3 caracteres)', type: 'text', minimumLength: 3, defaultValue: '', maximum: 1000, details: `${record.numero} · ${record.fornecedor} · ${formatCurrency(record.total)}`, confirmLabel: 'Registrar devolução integral', destructive: true })
+    if (motivo === null) return
+    if (motivo.trim().length < 3) { setError('Informe um motivo com pelo menos 3 caracteres.'); return }
+    setLoading(true); setError(null)
+    try {
+      await parseResponse(await fetch(`/api/erp/compras/${record.id}/devolver`, { method: 'POST', headers: { 'Content-Type': 'application/json', 'Idempotency-Key': crypto.randomUUID() }, body: JSON.stringify({ expectedVersion: record.versao, motivo }) }))
+      await loadData()
+    } catch (cause) { setError(cause instanceof Error ? cause.message : 'Não foi possível devolver a compra.'); setLoading(false) }
+  }
+
   async function runAction(
     record: PurchaseRecord,
     action: "confirmar" | "cancelar",
@@ -717,6 +734,7 @@ export function PurchaseWorkspacePage() {
           <option value="pedido_compra">Pedidos de compra</option>
           <option value="compra">Compras</option>
           <option value="cancelada">Canceladas</option>
+          <option value="devolucao_fornecedor">Devolvidas ao fornecedor</option>
         </select>
       </div> : null}
 
@@ -767,7 +785,7 @@ export function PurchaseWorkspacePage() {
                   <TableCell><ErpRecordIdentity name={record.descricao} category={record.categoria} identityKey={'compra:' + record.id} icon={<PackageCheck className="size-5" />} /></TableCell>
                   <TableCell>{record.fornecedor}</TableCell>
                   <TableCell>
-                    <ErpStatusBadge status={record.tipo_movimento} label={movementLabel(record.tipo_movimento)} />
+                    <ErpStatusBadge status={record.tipo_movimento} label={record.devolvida ? 'Devolvida ao fornecedor' : movementLabel(record.tipo_movimento)} />
                   </TableCell>
                   <TableCell>{formatErpValue(record.data)}</TableCell>
                   <TableCell>{record.entrega || "-"}</TableCell>
@@ -824,6 +842,7 @@ export function PurchaseWorkspacePage() {
                               <PackageCheck className="size-4" />
                             </Button>
                           ) : null}
+                          {canReturn && record.tipo_movimento === 'compra' && record.status === 'recebida' && record.tipo_compra === 'produto' && <Button size="sm" variant="outline" onClick={() => void returnPurchase(record)}>Devolver ao fornecedor</Button>}
                           {record.tipo_movimento !== "cancelada" ? (
                             <Button
                               size="icon"
@@ -857,6 +876,7 @@ export function PurchaseWorkspacePage() {
             <DialogTitle>
               {editingPurchase ? "Editar cotacao" : "Nova compra"}
             </DialogTitle>
+            <DialogDescription>Informe fornecedor, itens e condições de pagamento desta compra.</DialogDescription>
           </DialogHeader>
           <div className="overflow-y-auto">
             <section className="grid gap-4 border-b px-6 py-5">
@@ -1260,6 +1280,7 @@ export function PurchaseWorkspacePage() {
             <DialogTitle>
               Receber produtos de {receivePurchase?.numero}
             </DialogTitle>
+            <DialogDescription>Registre as quantidades recebidas e o local de entrada dos produtos.</DialogDescription>
           </DialogHeader>
           <p className="text-sm text-gray-600">
             Informe somente as quantidades recebidas agora. O saldo restante

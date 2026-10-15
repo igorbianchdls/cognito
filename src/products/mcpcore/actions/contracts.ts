@@ -13,6 +13,7 @@ const money = z.number().finite().min(0).max(100000000).multipleOf(0.01)
 const commercial = saleData
 export const proposalSchema = z.discriminatedUnion('tipo', [
   z.object({tipo:z.literal('nota_servico'),dados:serviceInvoiceInputSchema}).strict(),
+  ...(['suspender_contrato','retomar_contrato','encerrar_contrato','devolver_compra'] as const).map(tipo=>z.object({tipo:z.literal(tipo),dados:z.object({registro_id:z.number().int().positive(),motivo:z.string().trim().min(3).max(1000)}).strict()}).strict()),
   z.object({tipo:z.literal('editar_nota_servico'),dados:serviceInvoiceInputSchema.extend({registro_id:z.number().int().positive()}).strict()}).strict(),
   z.object({tipo:z.literal('simular_nota_servico'),dados:z.object({registro_id:z.number().int().positive(),cenario:simulationScenarioSchema.default('sucesso')}).strict()}).strict(),
   z.object({tipo:z.literal('consultar_resultado_nota_servico'),dados:z.object({registro_id:z.number().int().positive()}).strict()}).strict(),
@@ -65,6 +66,7 @@ export function proposalCapability(proposal: Proposal): ErpCapability {
   return 'erp.vendas.gerenciar'
 }
 export function proposalCapabilities(proposal:Proposal):ErpCapability[] {
+  if(proposal.tipo==='devolver_compra')return ['erp.compras.gerenciar','erp.financeiro.gerenciar','erp.estoque.movimentar']
   if(['excluir_venda','excluir_orcamento','excluir_compra'].includes(proposal.tipo))return [proposalCapability(proposal),'erp.financeiro.visualizar','erp.estoque.visualizar']
   if(/^excluir_(cliente|fornecedor|vendedor|produto|servico|categoria|conta_financeira)$/.test(proposal.tipo))return [proposalCapability(proposal),'erp.cadastros.gerenciar','erp.vendas.visualizar','erp.compras.visualizar','erp.financeiro.visualizar','erp.estoque.visualizar']
   if(proposal.tipo.includes('conta_financeira'))return ['erp.financeiro.gerenciar','erp.cadastros.gerenciar']

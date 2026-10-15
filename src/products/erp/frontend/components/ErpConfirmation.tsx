@@ -14,7 +14,7 @@ type Confirmation = {
   details?: string
 }
 type ConfirmAction = (request: Confirmation | string) => Promise<boolean>
-type PromptRequest = Confirmation & { inputLabel: string; defaultValue: string; maximum?: number }
+type PromptRequest = Confirmation & { inputLabel: string; defaultValue: string; maximum?: number; type?: 'number' | 'text'; minimumLength?: number }
 type PromptAction = (request: PromptRequest) => Promise<string | null>
 const ConfirmationContext = createContext<{ confirm: ConfirmAction; prompt: PromptAction } | null>(null)
 
@@ -25,6 +25,10 @@ export function ErpConfirmationProvider({ children }: { children: ReactNode }) {
   const input = useRef<HTMLInputElement>(null)
   const inputId = useId()
   const finish = useCallback((confirmed: boolean) => {
+    if (confirmed && request?.input?.type === 'text' && input.current) {
+      const minimum = request.input.minimumLength ?? 1
+      input.current.setCustomValidity(input.current.value.trim().length < minimum ? `Informe pelo menos ${minimum} caracteres.` : '')
+    }
     if (confirmed && request?.input && !input.current?.reportValidity()) return
     const resolve = pending.current
     const result = request?.input ? (confirmed ? input.current?.value ?? request.input.defaultValue : null) : confirmed
@@ -67,7 +71,11 @@ export function ErpConfirmationProvider({ children }: { children: ReactNode }) {
         {request?.details && <p className="rounded-lg border bg-muted/40 p-3 text-sm font-medium">{request.details}</p>}
         {request?.input && <div className="grid gap-2">
           <Label htmlFor={inputId}>{request.input.inputLabel}</Label>
-          <Input ref={input} id={inputId} type="number" min="0.01" step="0.01" max={request.input.maximum}
+          <Input ref={input} id={inputId} type={request.input.type ?? 'number'}
+            min={request.input.type === 'text' ? undefined : '0.01'} step={request.input.type === 'text' ? undefined : '0.01'}
+            max={request.input.type === 'text' ? undefined : request.input.maximum}
+            minLength={request.input.type === 'text' ? request.input.minimumLength : undefined}
+            maxLength={request.input.type === 'text' ? request.input.maximum : undefined}
             defaultValue={request.input.defaultValue} required onKeyDown={(event) => {
               if (event.key === 'Enter') { event.preventDefault(); finish(true) }
             }} />

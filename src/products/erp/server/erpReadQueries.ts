@@ -75,7 +75,7 @@ export async function financialTitle(tenantId:number,side:'pagar'|'receber',id:n
 function commercialRows(type:'vendas'|'compras', document?:string) {
   const sale=type==='vendas',date=sale?'data_venda':'data_compra',party=sale?'cliente':'fornecedor'
   return `SELECT documentos.id, documentos.numero, documentos.${date} AS data, documentos.total, documentos.status,
-    entidades.nome AS ${party}${sale?', documentos.tipo_documento, documentos.situacao, documentos.validade_em, documentos.atendimento_status, documentos.fiscal_status':', documentos.tipo_movimento'},
+    entidades.nome AS ${party}${sale?', documentos.tipo_documento, documentos.situacao, documentos.validade_em, documentos.atendimento_status, documentos.fiscal_status':", documentos.tipo_movimento, (documentos.metadata ? 'devolucao_fornecedor') AS devolvida"},
     concat_ws(' ',documentos.numero,entidades.nome,documentos.status${sale?'':',documentos.tipo_movimento'}) AS searchable
     FROM erp.${type} documentos JOIN erp.entidades entidades ON entidades.empresa_id=documentos.empresa_id AND entidades.id=documentos.${party}_id
     WHERE documentos.empresa_id=$1 AND documentos.excluido_em IS NULL${sale?(document==='orcamento'?" AND documentos.tipo_documento='orcamento'":" AND documentos.tipo_documento IN ('venda','pedido')"):''}`

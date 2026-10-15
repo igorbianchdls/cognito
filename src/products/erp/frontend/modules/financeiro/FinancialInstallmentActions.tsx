@@ -4,7 +4,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react'
 import { CreditCard, Loader2, Plus, RotateCcw, WalletCards } from 'lucide-react'
 
 import { Button } from '@/components/ui/button'
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { ErpMutation } from '@/products/erp/frontend/services/erpMutation'
@@ -112,7 +112,7 @@ export function FinancialInstallmentActions({ record, side, entityName, accounts
 
   return <>
     <Button variant="ghost" size="icon" title="Composicao e operações financeiras" onClick={() => { setOpen(true); setMode('composicao'); setError(null) }}><WalletCards className="size-4" /></Button>
-    <Dialog open={open} onOpenChange={setOpen}><DialogContent className="max-h-[92vh] max-w-3xl overflow-y-auto"><DialogHeader><DialogTitle>Composicao financeira — {entityName}</DialogTitle></DialogHeader>
+    <Dialog open={open} onOpenChange={setOpen}><DialogContent className="max-h-[92vh] max-w-3xl overflow-y-auto"><DialogHeader><DialogTitle>Composicao financeira — {entityName}</DialogTitle><DialogDescription>Consulte os valores, créditos e histórico das operações deste lançamento.</DialogDescription></DialogHeader>
 
       {error ? <div className="rounded-md border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">{error}</div> : null}
       {mode === 'composicao' ? <>

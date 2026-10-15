@@ -17,6 +17,39 @@ import {
 } from "@/products/erp/shared/erpTransport";
 
 type Actor = { tenantId: number; actorId: number };
+export async function changeSalesContractState(input: Actor & { id: number; expectedVersion: number; action: 'suspender' | 'retomar' | 'encerrar'; motivo: string }) {
+  const motivo = String(input.motivo ?? '').trim();
+  if (motivo.length < 3 || motivo.length > 1000 || !Number.isSafeInteger(input.expectedVersion) || input.expectedVersion < 1)
+    throw new ErpDomainError('VALIDATION_ERROR', 'Informe a versão atual e um motivo de 3 a 1000 caracteres.', 422);
+  return withTransaction(async client => {
+    const row = (await client.query('SELECT * FROM erp.contratos_vendas WHERE empresa_id=$1 AND id=$2 AND excluido_em IS NULL FOR UPDATE', [input.tenantId, input.id])).rows[0];
+    const allowed = (await client.query('SELECT shared.has_erp_capability($1::bigint, $2::text) AS ok', [input.tenantId, 'erp.vendas.gerenciar'])).rows[0]?.ok;
+    if (!allowed) throw new ErpDomainError('ACCESS_DENIED', 'Seu perfil não permite alterar contratos.', 403);
+    if (!row) throw new ErpDomainError('NOT_FOUND', 'Contrato não encontrado.', 404);
+    if (Number(row.versao) !== input.expectedVersion) throw new ErpDomainError('VERSION_CONFLICT', 'O contrato mudou. Atualize antes de continuar.', 409);
+    const valid = input.action === 'suspender' ? row.status === 'ativo' : input.action === 'retomar' ? row.status === 'pausado' : input.action === 'encerrar' && ['ativo', 'pausado'].includes(String(row.status));
+    if (!valid) throw new ErpDomainError('INVALID_STATE', 'Esta ação não está disponível na situação atual do contrato.', 409);
+    let next = row.proxima_geracao_em ? day(row.proxima_geracao_em) : null;
+    let skipped = 0;
+    if (input.action === 'retomar') {
+      if (!next) throw new ErpDomainError('INVALID_STATE', 'O contrato não tem próximo ciclo para retomar.', 409);
+      const today = erpToday();
+      // Preserve the original cadence; suspended, overdue cycles are not billed on resumption.
+      while (next < today) {
+        const version = (await client.query("SELECT periodicidade,vigencia_inicio FROM erp.contratos_vendas_versoes WHERE empresa_id=$1 AND contrato_id=$2 AND status='efetivada' AND vigencia_inicio<=$3::date AND (vigencia_fim IS NULL OR vigencia_fim>=$3::date) ORDER BY numero DESC LIMIT 1", [input.tenantId, input.id, next])).rows[0];
+        if (!version || ++skipped > 10000) throw new ErpDomainError('INVALID_STATE', 'Confira a vigência do contrato antes de retomar.', 409);
+        next = nextCommercialCycle(next, String(version.periodicidade), day(version.vigencia_inicio));
+      }
+      if (row.data_fim && next > day(row.data_fim)) throw new ErpDomainError('INVALID_STATE', 'A vigência terminou. Encerre este contrato.', 409);
+    }
+    const status = input.action === 'suspender' ? 'pausado' : input.action === 'retomar' ? 'ativo' : 'encerrado';
+    const event = { acao: input.action, motivo, usuario_id: input.actorId, registrado_em: new Date().toISOString(), ciclos_ignorados: skipped, proxima_geracao_anterior: row.proxima_geracao_em };
+    const metadata = (row.metadata || {}) as Record<string, unknown>;
+    const history = Array.isArray(metadata.alteracoes_situacao) ? metadata.alteracoes_situacao : [];
+    const updated = (await client.query("UPDATE erp.contratos_vendas SET status=$3,proxima_geracao_em=$4,metadata=metadata || jsonb_build_object('alteracoes_situacao',$5::jsonb),versao=versao+1,atualizado_por=$6 WHERE empresa_id=$1 AND id=$2 RETURNING id::text,status,versao,proxima_geracao_em", [input.tenantId, input.id, status, status === 'encerrado' ? null : next, JSON.stringify([...history, event]), input.actorId])).rows[0];
+    return { ...updated, ciclos_ignorados: skipped };
+  });
+}
 const day = (value: unknown) =>
   value instanceof Date
     ? value.toISOString().slice(0, 10)
@@ -130,7 +163,7 @@ export async function createSalesContract(
 
 export async function getSalesContract(tenantId: number, id: number) {
   const records = await runQuery(
-    "SELECT id::text,numero,descricao,status,versao,proxima_geracao_em,cliente_snapshot FROM erp.contratos_vendas WHERE empresa_id=$1 AND id=$2 AND excluido_em IS NULL",
+    "SELECT id::text,numero,descricao,status,versao,proxima_geracao_em,cliente_snapshot,metadata->'alteracoes_situacao' AS alteracoes_situacao FROM erp.contratos_vendas WHERE empresa_id=$1 AND id=$2 AND excluido_em IS NULL",
     [tenantId, id],
   );
   if (!records[0])

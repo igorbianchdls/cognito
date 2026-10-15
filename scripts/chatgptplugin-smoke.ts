@@ -43,7 +43,7 @@ const execution: ExecutionDependencies = {
     page:async (id,_type,input) => {context(id);return {records:[{id:'1',nome:'Produto'}],total:1,page:input.page || 1,pageSize:input.pageSize || 20}},
     sale:async (id,saleId) => {context(id);return {sale:{id:saleId,data_vencimento:null},items:[],totalItems:0,itemsTruncated:false,installments:[],installmentsTruncated:false}},
     stock:async (id,input) => {context(id);return {records:[],total:0,page:input.page || 1,pageSize:input.pageSize || 20}},
-    purchase:async(id,purchaseId) => {context(id);return {purchase:{id:purchaseId,data_vencimento:null},items:[],totalItems:0,itemsTruncated:false,installments:[],installmentsTruncated:false}},
+    purchase:async(id,purchaseId) => {context(id);return {purchase:{id:purchaseId,data_vencimento:null,devolvida:false},items:[],totalItems:0,itemsTruncated:false,installments:[],installmentsTruncated:false}},
     report:async(id,report,from,to,input) => {context(id);return {report,from,to,records:[],page:input.page || 1,pageSize:input.pageSize || 20,hasMore:false}},
   },
 }

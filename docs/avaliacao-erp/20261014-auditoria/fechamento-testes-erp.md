@@ -68,3 +68,7 @@ O teste local de Storage fiscal indicou configuração local ausente; isso **nã
 - Preparação do anexo falhou antes do upload e deixou zero registros ativos com o nome QA dessa tentativa.
 
 Nenhuma correção de aplicação foi feita nesta continuação: o resultado é evidência de testes e plano para as duas falhas reproduzidas. Não foi efetuada nova publicação.
+
+## Atualização em 15/10/2026
+
+A01 e A02 corrigidas e publicadas; devolução integral ao fornecedor e gestão dos estados do contrato implementadas e testadas. O estado posterior está em [Correções e evolução funcional](../20261015-evolucao.md). Este fechamento preserva os achados e limites da rodada anterior.

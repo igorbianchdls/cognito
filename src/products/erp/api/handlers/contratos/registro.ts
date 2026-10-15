@@ -10,6 +10,7 @@ import {
 import {
   getSalesContract,
   reviseSalesContract,
+  changeSalesContractState,
 } from "@/products/erp/server/erpSalesContracts";
 import {
   erpDateSchema,
@@ -59,7 +60,8 @@ type Context = { params: Promise<{ id: string }> };
         .int()
         .positive()
         .parse((await context.params).id),
-      values = await parseErpBody(request, changeSchema);
+      values = await parseErpBody(request, z.union([changeSchema, z.object({ action: z.enum(['suspender', 'retomar', 'encerrar']), expectedVersion: erpVersionSchema, motivo: z.string().trim().min(3).max(1000) }).strict()]));
+    if ('action' in values) return NextResponse.json(await changeSalesContractState({ tenantId: tenant.tenantId, actorId: tenant.sharedUserId, id, ...values }));
     return NextResponse.json(
       await reviseSalesContract({
         tenantId: tenant.tenantId,

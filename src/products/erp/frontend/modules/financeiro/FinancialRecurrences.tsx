@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useState } from 'react'
 import { Button } from '@/components/ui/button'
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
 import { useErpConfirmation } from '@/products/erp/frontend/components/ErpConfirmation'
 import { ErpRequestError, parseErpResponse } from '@/products/erp/frontend/services/erpProfessionalClient'
@@ -63,7 +63,7 @@ export function FinancialRecurrences({ onChanged }: { onChanged: () => Promise<v
     <Button variant="outline" onClick={() => { setError(''); setEditing(null); setPage(1); setOpen(true) }}>Recorrências</Button>
     <Dialog open={open} onOpenChange={(value) => { if (!busy) setOpen(value) }}>
       <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-3xl">
-        <DialogHeader><DialogTitle>Recorrências financeiras</DialogTitle></DialogHeader>
+        <DialogHeader><DialogTitle>Recorrências financeiras</DialogTitle><DialogDescription>Gerencie os próximos lançamentos. Alterações preservam os títulos e o histórico existentes.</DialogDescription></DialogHeader>
         <p className="text-sm text-gray-600">As alterações valem para os próximos lançamentos. Os títulos já gerados são preservados. A frequência e o calendário original permanecem os mesmos.</p>
         {error && <p role="alert" className="text-sm text-rose-700">{error}</p>}
         {editing ? <form className="grid gap-4" onSubmit={(event) => { event.preventDefault(); void change(editing, 'editar') }}>

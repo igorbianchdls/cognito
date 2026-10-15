@@ -5,20 +5,20 @@ Atualização: fechamento de 14/10/2026 (últimas evidências em 15/10 UTC). Est
 | Seção | Evidência disponível | Situação restante |
 |---|---|---|
 | Cadastros | CRUD e persistência dos cadastros auditados; cliente/fornecedor/vendedor/categorias pela interface; importação/exportação; seis correções publicadas e retestadas | Perfis visuais distintos; disparo automático por horário |
-| Compras | Pedido/compra direta, recebimentos parciais, excesso, repetição, concorrência, custo com frete/desconto, parcelas, pagamento/estorno/cancelamento e XML válido/inválido/duplicado | Devolução ao fornecedor sem fluxo dedicado identificado |
-| Vendas | Orçamento/venda, reservas/entregas/cancelamentos, devoluções/créditos, preço/desconto, comissões e recorrências; revisão de contrato com dois itens aprovada no serviço | Link comercial público válido falha sem sessão; anexos falham 503; suspensão/encerramento manual de contrato sem fluxo dedicado identificado |
-| Serviços | Etapas de OS, conversão para orçamento/venda, PDFs atuais e arquivamento privado comercial real | Anexos 503; homologação fiscal externa; novo PDF fiscal em Storage real não comprovado |
+| Compras | Pedido/compra direta, recebimentos parciais, excesso, repetição, concorrência, custo com frete/desconto, parcelas, pagamento/estorno/cancelamento e XML válido/inválido/duplicado | Devolução integral ao fornecedor publicada; parcial e tratamento de crédito/reembolso sem estorno prévio ainda não disponíveis |
+| Vendas | Orçamento/venda, reservas/entregas/cancelamentos, devoluções/créditos, preço/desconto, comissões e recorrências; revisão de contrato com dois itens aprovada no serviço | Links e anexos corrigidos; suspensão, retomada e encerramento de contrato publicados e testados |
+| Serviços | Etapas de OS, conversão para orçamento/venda, PDFs atuais e arquivamento privado comercial real | Anexos corrigidos; homologação fiscal externa e novo PDF fiscal em Storage real ainda não comprovados |
 | Estoque | Saldos/custos, conversões, kits, transferências, inventários e concorrência no servidor; inventário de dois itens e fator válido/inválido na publicação concluídos | Sem nova falha funcional de estoque nesta continuação; histórico antigo de QA preservado |
 | Financeiro | Fluxos principais e concorrência/recorrências/crédito/cartões/importação/reconciliação já registrados; recorrência editada/pausada/retomada/encerrada, sugestões de crédito, seleção contextual de baixa e atualização de conciliação manual/sugerida/desfazer na publicação | Perfis reais distintos |
 | Relatórios/painéis | Sete painéis, 49 comparações independentes; oito relatórios em três períodos de virada de ano; receita/custo/margem conferidos; paginação do serviço | Captura do CSV gerado pelo navegador integrado não concluída; não confundir com falha confirmada de exportação |
 | Segurança/MCP/rotinas | RLS de leitura em 105 tabelas; links fiscais válidos e negativos; cron anônimo recusado; orquestração isolada em seis empresas/fusos | OAuth dentro de ChatGPT/Claude reais, usuários de consulta/operador e disparo por horário isolado |
 
-## Falhas abertas confirmadas
+## Correções publicadas em 15/10/2026
 
-- **A01:** PDF comercial por link temporário retorna 404 sem login; o mesmo token com sessão retorna 200. Causa no middleware identificada.
-- **A02:** preparação de anexo real retorna 503 antes do upload. Bucket existe e é privado; causa remota exata ainda não isolada.
+- **A01 encerrada:** link comercial válido abre sem sessão; assinatura, expiração e empresa verificadas.
+- **A02 encerrada:** configuração de anexos alinhada ao projeto do ERP; envio e download privados reais aprovados.
 
-Não há certificação de 100% enquanto essas falhas e os bloqueios explicitados no fechamento permanecerem.
+Entrega, limites da devolução integral e evidências em [Correções e evolução funcional](../20261015-evolucao.md). Os bloqueios externos do fechamento continuam separados; Clerk foi adiado pelo usuário.
 
 ## Histórico de evidências
 

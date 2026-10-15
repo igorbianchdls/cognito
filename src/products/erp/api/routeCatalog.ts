@@ -292,6 +292,24 @@ export const ERP_API_ROUTES = [
     "transportOnlyFiscal": false
   },
   {
+    "path": "/api/erp/compras/[id]/devolver",
+    "route": "src/app/api/erp/compras/[id]/devolver/route.ts",
+    "handler": "src/products/erp/api/handlers/compras/devolver.ts",
+    "methods": [
+      "POST"
+    ],
+    "authentication": "session",
+    "maxBodyBytes": 1048576,
+    "capabilities": [
+      "erp.compras.gerenciar",
+      "erp.estoque.movimentar",
+      "erp.financeiro.gerenciar"
+    ],
+    "permissionRule": "Capabilities vary by method; see handler.",
+    "idempotency": "Business-operation rules; see handler.",
+    "transportOnlyFiscal": false
+  },
+  {
     "path": "/api/erp/compras/[id]/receber",
     "route": "src/app/api/erp/compras/[id]/receber/route.ts",
     "handler": "src/products/erp/api/handlers/compras/receber.ts",

@@ -1,6 +1,6 @@
 import { createHash } from 'node:crypto'
 import { runQuery, type SQLClient } from '@/lib/postgres'
-import { updateErpEntityRecord,getErpEntityRecord,confirmErpSale,confirmErpPurchase,cancelErpSale,cancelErpPurchase,
+import { updateErpEntityRecord,getErpEntityRecord,confirmErpSale,confirmErpPurchase,cancelErpSale,cancelErpPurchase,returnErpPurchase,
   settleReceivableInstallment,settlePayableInstallment,reverseErpPayment,updateErpSaleDraft,updateErpPurchaseDraft } from '@/products/erp/server/erpRepository'
 import { getErpTransactionClient } from '@/lib/postgres'
 import { archiveRegistration,archiveCommercialDraft,changeManualFinancialTitle } from '@/products/erp/server/erpCrudRepository'
@@ -14,8 +14,9 @@ import { PluginError } from '../shared/contracts'
 import { purchaseValues,type Proposal } from './contracts'
 import {editServiceInvoice,actOnServiceInvoice} from '@/products/erp/server/fiscal/serviceInvoiceRepository'
 import {serviceInvoiceInputSchema} from '@/products/erp/shared/serviceInvoiceContracts'
+import {changeSalesContractState} from '@/products/erp/server/erpSalesContracts'
 
-const tables = {editar_fornecedor:'entidades',editar_vendedor:'entidades',editar_servico:'servicos',editar_categoria:'categorias',editar_conta_financeira:'contas_financeiras',
+const tables = {suspender_contrato:'contratos_vendas',retomar_contrato:'contratos_vendas',encerrar_contrato:'contratos_vendas',devolver_compra:'compras',editar_fornecedor:'entidades',editar_vendedor:'entidades',editar_servico:'servicos',editar_categoria:'categorias',editar_conta_financeira:'contas_financeiras',
   editar_ordem_servico:'ordens_servico',aprovar_ordem_servico:'ordens_servico',iniciar_ordem_servico:'ordens_servico',concluir_ordem_servico:'ordens_servico',cancelar_ordem_servico:'ordens_servico',gerar_orcamento_os:'ordens_servico',gerar_venda_os:'ordens_servico',arquivar_pdf_ordem_servico:'ordens_servico',
   enviar_orcamento:'vendas',aprovar_orcamento:'vendas',recusar_orcamento:'vendas',cancelar_orcamento:'vendas',arquivar_pdf_orcamento:'vendas',
   editar_nota_servico:'notas_fiscais',simular_nota_servico:'notas_fiscais',consultar_resultado_nota_servico:'notas_fiscais',cancelar_nota_servico:'notas_fiscais',excluir_nota_servico:'notas_fiscais',
@@ -181,6 +182,16 @@ export async function executeOperation(tenantId:number,actorId:number,proposal:P
     await updateErpEntityRecord({...input,entityId,expectedVersion:Number(current.versao),values:withContactChanges(current,changes)});return String(id)
   }
   switch(proposal.tipo) {
+    case 'suspender_contrato': case 'retomar_contrato': case 'encerrar_contrato': {
+      const [current]=await runQuery('SELECT versao FROM erp.contratos_vendas WHERE empresa_id=$1 AND id=$2 AND excluido_em IS NULL',[tenantId,id]);
+      if(!current)throw new PluginError('NOT_FOUND','Contrato não encontrado.',404)
+      await changeSalesContractState({tenantId,actorId,id,expectedVersion:Number(current.versao),action:proposal.tipo==='suspender_contrato'?'suspender':proposal.tipo==='retomar_contrato'?'retomar':'encerrar',motivo:proposal.dados.motivo});break
+    }
+    case 'devolver_compra': {
+      const [current]=await runQuery('SELECT versao FROM erp.compras WHERE empresa_id=$1 AND id=$2 AND excluido_em IS NULL',[tenantId,id]);
+      if(!current)throw new PluginError('NOT_FOUND','Compra não encontrada.',404)
+      await returnErpPurchase({...input,expectedVersion:Number(current.versao),motivo:proposal.dados.motivo});break
+    }
     case 'editar_cliente': case 'editar_produto': {
       const entityId=proposal.tipo==='editar_cliente'?'clientes':'produtos'
       const current=await getErpEntityRecord({tenantId,entityId,id})

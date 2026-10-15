@@ -1,9 +1,13 @@
 // Prévia de uma escrita: antes/depois, itens com nomes, total do ERP e no máximo duas ações
 // (Confirmar e Ajustar). Ajustar edita quantidade, preço e desconto e gera uma nova prévia.
 export const reviewCardScript=String.raw`
-const risky=/^(excluir|cancelar|estornar)_/;
+const risky=/^(excluir|cancelar|estornar|devolver|suspender|retomar|encerrar)_/;
 // Consequência em linguagem simples para operações que removem ou desfazem dados.
 function consequence(tipo){if(/^excluir_/.test(tipo))return 'Atenção: o registro sai das consultas. O histórico é preservado, mas a exclusão não pode ser desfeita pelo chat.';
+  if(tipo==='devolver_compra')return 'Devolução integral: retira todos os produtos recebidos e cancela as contas a pagar. Exige reversão prévia de pagamentos e créditos. Preserva a nota de entrada; não emite nota fiscal de devolução nem transfere dinheiro.';
+  if(tipo==='suspender_contrato')return 'Suspende novas gerações. Vendas, títulos e ciclos anteriores são preservados.';
+  if(tipo==='retomar_contrato')return 'Retoma o calendário original a partir de hoje, ignorando ciclos vencidos durante a suspensão.';
+  if(tipo==='encerrar_contrato')return 'Encerra definitivamente novas gerações. Vendas, títulos e ciclos anteriores são preservados.';
   if(tipo==='cancelar_venda')return 'Atenção: a venda é cancelada, liberando reservas de estoque e cancelando contas a receber conforme as regras do ERP.';
   if(tipo==='cancelar_compra')return 'Atenção: a compra é cancelada, revertendo estoque e contas a pagar conforme as regras do ERP.';
   if(tipo==='estornar_pagamento')return 'Atenção: o pagamento é desfeito e o saldo da parcela volta a ficar em aberto.';return 'Atenção: esta operação desfaz dados no ERP.'}
