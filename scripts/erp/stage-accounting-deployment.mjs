@@ -1,3 +1,4 @@
+import { deploymentSchedules } from './deployment-schedules.mjs';
 import assert from 'node:assert/strict'
 import {execFileSync} from 'node:child_process'
 import {readFileSync,writeFileSync,mkdirSync,existsSync} from 'node:fs'
@@ -12,6 +13,7 @@ const config=dotenv.parse(readFileSync('.env.local')),headers={Authorization:'Be
 const paths=execFileSync('git',['ls-files','--cached','--others','--exclude-standard','-z'],{encoding:'utf8'}).split('\0').filter(Boolean)
 const included=paths.filter(path=>existsSync(path)&&(path.startsWith('scripts/')||path.startsWith('src/')||path.startsWith('public/')||path.startsWith('certificates/')||(!path.includes('/')&&!path.startsWith('.env'))))
 assert(included.includes('package.json'));assert(included.includes('pnpm-lock.yaml'))
+assert(included.includes('vercel.json'), 'Deployment must include the schedule configuration')
 const files=included.map(file=>{const bytes=readFileSync(file);return {file,sha:createHash('sha1').update(bytes).digest('hex'),size:bytes.length}})
 const sourceDigest=createHash('sha256').update(JSON.stringify(files)).digest('hex')
 const fiscalStorage=process.argv.includes('--fiscal-storage')
@@ -19,7 +21,7 @@ const commercialDocuments=process.argv.includes('--commercial-documents')
 const selectedMigration=migrationFile
 const migrationDigest=createHash('sha256').update(readFileSync('supabase/migrations/'+selectedMigration)).digest('hex')
 const production=process.argv.includes('--production')
-const request={name:'cognito',project,files,...(production?{target:'production',autoAssignCustomDomains:false}:{}),meta:{accountingVersion:'1',accountingDataDigest:createHash('sha256').update(readFileSync('supabase/migrations/20261012111000_erp_classificacao_contabil_demo.sql')).digest('hex'),sharedMigrationDigest:migrationDigest,sharedMigrationVersion:selectedMigration.slice(0,14),sharedSourceDigest:sourceDigest,...(fiscalStorage?{fiscalPdfStorageVersion:'1'}:{}),...(commercialDocuments?{commercialDocumentsVersion:'1'}:{})}}
+const request={name:'cognito',project,files,...deploymentSchedules(),...(production?{target:'production',autoAssignCustomDomains:false}:{}),meta:{accountingVersion:'1',accountingDataDigest:createHash('sha256').update(readFileSync('supabase/migrations/20261012111000_erp_classificacao_contabil_demo.sql')).digest('hex'),sharedMigrationDigest:migrationDigest,sharedMigrationVersion:selectedMigration.slice(0,14),sharedSourceDigest:sourceDigest,...(fiscalStorage?{fiscalPdfStorageVersion:'1'}:{}),...(commercialDocuments?{commercialDocumentsVersion:'1'}:{})}}
 mkdirSync('.cache/accounting/deployment',{recursive:true})
 writeFileSync('.cache/accounting/deployment/deploy-manifest.json',JSON.stringify({project,migrationDigest,sourceDigest,files},null,2))
 async function create(){const response=await fetch('https://api.vercel.com/v13/deployments',{method:'POST',headers:{...headers,'content-type':'application/json'},body:JSON.stringify(request),signal:AbortSignal.timeout(60000)});return {status:response.status,data:await response.json()}}

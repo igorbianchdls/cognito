@@ -1,0 +1,15 @@
+{
+  "regions": [
+    "gru1"
+  ],
+  "crons": [
+    {
+      "path": "/api/chatgptplugin/internal/maintenance",
+      "schedule": "45 5 * * *"
+    },
+    {
+      "path": "/api/erp/internal/automacoes",
+      "schedule": "15 5 * * *"
+    }
+  ]
+}

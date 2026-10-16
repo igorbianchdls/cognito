@@ -1,0 +1,6 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": { "incremental": false },
+  "include": ["src/products/tables/**/*.ts", "src/products/tables/**/*.tsx", "src/app/tables/**/*.tsx", "src/app/api/tables/**/*.ts"],
+  "exclude": ["node_modules", ".next"]
+}

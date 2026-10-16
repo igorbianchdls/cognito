@@ -1,0 +1,26 @@
+import { Pool, type PoolClient } from 'pg'
+import { buildPostgresPoolConfig } from '@/lib/postgres'
+import type { AuthTenantContext } from '@/products/auth/shared/authContracts'
+import { TablesError } from '../shared/contracts'
+
+export type TablesSession = Pick<AuthTenantContext, 'tenantId' | 'sharedUserId' | 'role'>
+export type Database = Pick<PoolClient, 'query'>
+let pool: Pool | undefined
+
+export async function withTablesTransaction<T>(session: TablesSession, write: boolean, invoke: (db: Database) => Promise<T>): Promise<T> {
+  if (!Number.isSafeInteger(session.tenantId) || !Number.isSafeInteger(session.sharedUserId) || session.tenantId <= 0 || session.sharedUserId <= 0) throw new TablesError('UNAUTHENTICATED', 'Entre novamente para continuar.', 401)
+  if (write && session.role === 'viewer') throw new TablesError('READ_ONLY', 'Seu acesso permite apenas consultas.', 403)
+  if (!process.env.SUPABASE_DB_URL) throw new TablesError('UNAVAILABLE', 'O banco não está configurado.', 503)
+  pool ??= new Pool(buildPostgresPoolConfig(process.env.SUPABASE_DB_URL))
+  const client = await pool.connect()
+  try {
+    await client.query(write ? 'BEGIN' : 'BEGIN ISOLATION LEVEL REPEATABLE READ READ ONLY')
+    await client.query("SELECT set_config('app.tables_empresa_id',$1,true), set_config('app.tables_usuario_id',$2,true), set_config('app.tables_operacao_id',gen_random_uuid()::text,true), set_config('statement_timeout','15000',true), set_config('lock_timeout','5000',true), set_config('role','tables_runtime',true)", [String(session.tenantId), String(session.sharedUserId)])
+    const result = await invoke(client)
+    await client.query('COMMIT')
+    return result
+  } catch (error) {
+    await client.query('ROLLBACK').catch(() => undefined)
+    throw error
+  } finally { client.release() }
+}
