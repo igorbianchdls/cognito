@@ -214,7 +214,7 @@ export async function recordDetail(db: Database, session: TablesSession, id: str
   const registro = await readRecord(db, session, id)
   await requireTable(db, session, registro.tabela_id)
   const comentarios = (await db.query("SELECT c.id,c.texto,c.criado_em,coalesce(m.nome,'Usuário removido') autor FROM tables.comentarios c LEFT JOIN tables.membros() m ON m.id=c.autor_id::text WHERE c.empresa_id=$1 AND c.registro_id=$2 AND c.excluido_em IS NULL ORDER BY c.criado_em,c.id", [session.tenantId, id])).rows
-  const historico = (await db.query("SELECT DISTINCT ON(h.operacao_id) h.id,h.acao,h.entidade,h.criado_em,h.operacao_id,coalesce(m.nome,'Usuário removido') autor FROM tables.historico h LEFT JOIN tables.membros() m ON m.id=h.autor_id::text WHERE h.empresa_id=$1 AND h.registro_id=$2 ORDER BY h.operacao_id,h.criado_em DESC,h.id LIMIT 100", [session.tenantId, id])).rows.sort((a, b) => new Date(b.criado_em).getTime() - new Date(a.criado_em).getTime())
+  const historico = (await db.query("SELECT * FROM (SELECT DISTINCT ON(h.operacao_id) h.id,h.acao,h.entidade,h.criado_em,h.operacao_id,coalesce(m.nome,'Usuário removido') autor FROM tables.historico h LEFT JOIN tables.membros() m ON m.id=h.autor_id::text WHERE h.empresa_id=$1 AND h.registro_id=$2 ORDER BY h.operacao_id,h.criado_em DESC,h.id) operacoes ORDER BY criado_em DESC,id LIMIT 100", [session.tenantId, id])).rows
   const anexos = (await db.query("SELECT id,campo_id,nome,mime_type,tamanho::float8,estado FROM tables.anexos WHERE empresa_id=$1 AND registro_id=$2 AND estado='confirmado' ORDER BY criado_em,id", [session.tenantId, id])).rows
   return { registro, comentarios, historico, anexos } as RecordDetail
 }
@@ -238,10 +238,22 @@ export async function trash(db: Database, session: TablesSession, kind: keyof ty
 export async function listTrash(db: Database, session: TablesSession) {
   return (await db.query(`SELECT b.id,b.nome,'bases' tipo,b.excluido_em,NULL::uuid pai_id FROM tables.bases b WHERE b.empresa_id=$1 AND b.excluido_em IS NOT NULL
     UNION ALL SELECT t.id,t.nome,'tabelas',t.excluido_em,t.base_id FROM tables.tabelas t JOIN tables.bases b ON b.empresa_id=t.empresa_id AND b.id=t.base_id WHERE t.empresa_id=$1 AND t.excluido_em IS NOT NULL AND b.excluido_em IS NULL
-    UNION ALL SELECT r.id,coalesce(nullif(r.valores->>t.campo_principal_id::text,''),'Sem nome'),'registros',r.excluido_em,r.tabela_id FROM tables.registros r JOIN tables.tabelas t ON t.empresa_id=r.empresa_id AND t.id=r.tabela_id JOIN tables.bases b ON b.empresa_id=t.empresa_id AND b.id=t.base_id WHERE r.empresa_id=$1 AND r.excluido_em IS NOT NULL AND t.excluido_em IS NULL AND b.excluido_em IS NULL ORDER BY excluido_em DESC LIMIT 100`, [session.tenantId])).rows
+    UNION ALL SELECT r.id,coalesce(nullif(r.valores->>t.campo_principal_id::text,''),'Sem nome'),'registros',r.excluido_em,r.tabela_id FROM tables.registros r JOIN tables.tabelas t ON t.empresa_id=r.empresa_id AND t.id=r.tabela_id JOIN tables.bases b ON b.empresa_id=t.empresa_id AND b.id=t.base_id WHERE r.empresa_id=$1 AND r.excluido_em IS NOT NULL AND t.excluido_em IS NULL AND b.excluido_em IS NULL
+    UNION ALL SELECT c.id,c.nome,'campos',c.excluido_em,c.tabela_id FROM tables.campos c JOIN tables.tabelas t ON t.empresa_id=c.empresa_id AND t.id=c.tabela_id JOIN tables.bases b ON b.empresa_id=t.empresa_id AND b.id=t.base_id WHERE c.empresa_id=$1 AND c.excluido_em IS NOT NULL AND t.excluido_em IS NULL AND b.excluido_em IS NULL ORDER BY excluido_em DESC LIMIT 100`, [session.tenantId])).rows
 }
 
-export async function restore(db: Database, session: TablesSession, kind: keyof typeof removable, id: string) {
+export async function restore(db: Database, session: TablesSession, kind: keyof typeof removable | 'campos', id: string) {
+  if (kind === 'campos') {
+    const field = (await db.query('SELECT * FROM tables.campos WHERE empresa_id=$1 AND id=$2 AND excluido_em IS NOT NULL', [session.tenantId, id])).rows[0]
+    if (!field) throw new TablesError('NOT_FOUND', 'Campo não encontrado na lixeira.', 404)
+    await requireTable(db, session, field.tabela_id, 'structure')
+    if (field.tabela_destino_id) await requireTable(db, session, field.tabela_destino_id)
+    // New records may have been created while the column was absent.
+    const restored = await db.query('UPDATE tables.campos SET excluido_em=NULL,obrigatorio=false WHERE empresa_id=$1 AND id=$2 AND excluido_em IS NOT NULL RETURNING id', [session.tenantId, id])
+    if (!restored.rows[0]) throw new TablesError('VERSION_CONFLICT', 'Este campo já foi restaurado. Atualize a tela.', 409)
+    await db.query('UPDATE tables.tabelas SET versao_estrutura=versao_estrutura+1,atualizado_em=now(),atualizado_por=$3 WHERE empresa_id=$1 AND id=$2', [session.tenantId, field.tabela_id, session.sharedUserId])
+    return
+  }
   const row = (await db.query(`SELECT * FROM tables.${removable[kind]} WHERE empresa_id=$1 AND id=$2 AND excluido_em IS NOT NULL`, [session.tenantId, id])).rows[0]
   if (!row) throw new TablesError('NOT_FOUND', 'Item não encontrado na lixeira.', 404)
   if (kind === 'registros') await requireTable(db, session, row.tabela_id, 'record')

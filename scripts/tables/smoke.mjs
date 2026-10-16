@@ -93,6 +93,21 @@ try {
     await run(owner, db => service.saveField(db, owner, table.id, contracts.fieldInputSchema.parse({ nome: 'Descrição', tipo: 'texto_longo', expectedStructureVersion: 1 })))
     await assert.rejects(run(owner, db => service.saveRecord(db, owner, table.id, { valores: {}, expectedVersion: record.versao, expectedStructureVersion: 1 }, record.id)), e => e.code === 'VERSION_CONFLICT')
   })
+  await check('Restore field preserves stored values and invalidates stale editors', async () => {
+    let current = await run(owner, db => repo.getBundle(db, owner, table.id), false)
+    const status = field('Status')
+    await run(owner, db => service.deleteField(db, owner, table.id, status.id, current.tabela.versao_estrutura))
+    assert((await run(owner, db => service.listTrash(db, owner), false)).some(item => item.id === status.id && item.tipo === 'campos'))
+    await assert.rejects(run(other, db => service.restore(db, other, 'campos', status.id)), e => e.code === 'NOT_FOUND')
+    current = await run(owner, db => repo.getBundle(db, owner, table.id), false)
+    assert(!current.campos.some(f => f.id === status.id))
+    const before = current.tabela.versao_estrutura
+    await run(owner, db => service.restore(db, owner, 'campos', status.id))
+    current = await run(owner, db => repo.getBundle(db, owner, table.id), false)
+    assert(current.campos.some(f => f.id === status.id)); assert.equal(current.tabela.versao_estrutura, before + 1)
+    assert.deepEqual((await run(owner, db => repo.readRecord(db, owner, record.id), false)).valores[status.id], [status.opcoes[1].id])
+    await assert.rejects(run(owner, db => service.saveRecord(db, owner, table.id, { valores: {}, expectedVersion: record.versao, expectedStructureVersion: before }, record.id)), e => e.code === 'VERSION_CONFLICT')
+  })
   await check('Restore base preserves an earlier record deletion', async () => {
     await run(owner, db => service.trash(db, owner, 'registros', record.id, record.versao))
     await run(owner, db => service.trash(db, owner, 'bases', base.id, base.versao))

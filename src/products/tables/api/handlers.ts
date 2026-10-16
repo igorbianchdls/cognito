@@ -128,7 +128,7 @@ export async function tablesHandler(request: Request, context: { params: Promise
       if (resource === 'lixeira') {
         if (method === 'GET' && !entityId) return json({ itens: await service.listTrash(db, session) })
         if (method === 'POST' && entityId && action) {
-          const kind = z.enum(['bases', 'tabelas', 'registros']).parse(entityId)
+          const kind = z.enum(['bases', 'tabelas', 'registros', 'campos']).parse(entityId)
           await service.restore(db, session, kind, id(action))
           return json({ ok: true })
         }

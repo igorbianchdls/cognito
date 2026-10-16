@@ -9,21 +9,33 @@ export const attachmentInputSchema = z.object({ nome: z.string().trim().min(1).m
 function configuration() {
   const db = new URL(process.env.SUPABASE_DB_URL ?? 'postgresql://localhost')
   const ref = decodeURIComponent(db.username).match(/^postgres\.([a-z0-9]{20})$/)?.[1]
-  const base = process.env.TABLES_SUPABASE_URL ?? process.env.NEXT_PUBLIC_SUPABASE_URL ?? (ref ? `https://${ref}.supabase.co` : undefined)
-  const key = process.env.TABLES_SUPABASE_SERVICE_ROLE_KEY ?? process.env.SUPABASE_SERVICE_ROLE_KEY
+  const base = process.env.TABLES_SUPABASE_URL ?? (ref ? `https://${ref}.supabase.co` : undefined)
+  const key = process.env.TABLES_SUPABASE_SERVICE_ROLE_KEY ?? process.env.ERP_FISCAL_SUPABASE_SERVICE_ROLE_KEY ?? process.env.SUPABASE_SERVICE_ROLE_KEY
   if (!base || !key || !ref) throw new TablesError('STORAGE_UNAVAILABLE', 'O envio de arquivos ainda não está disponível neste ambiente.', 503)
+  if (key.startsWith('eyJ')) {
+    try {
+      const claims = JSON.parse(Buffer.from(key.split('.')[1], 'base64url').toString('utf8')) as { ref?: string; role?: string }
+      if (claims.ref !== ref || claims.role !== 'service_role') throw new Error('Storage project mismatch')
+    } catch { throw new TablesError('STORAGE_UNAVAILABLE', 'O armazenamento não está disponível.', 503) }
+  }
   const origin = new URL(base)
   if (origin.origin !== `https://${ref}.supabase.co` || origin.pathname !== '/' || origin.username || origin.password || origin.search || origin.hash) throw new TablesError('STORAGE_UNAVAILABLE', 'O armazenamento não está disponível.', 503)
   return { base: origin.origin, key }
 }
 
-async function storageRequest(path: string, init: RequestInit = {}) {
+async function storageRequest(path: string, init: RequestInit = {}, missingAllowed = false) {
   const { base, key } = configuration()
   let response: Response
   try { response = await fetch(`${base}/storage/v1/${path}`, { ...init, headers: { apikey: key, Authorization: `Bearer ${key}`, 'Content-Type': 'application/json', ...init.headers }, cache: 'no-store', redirect: 'error', signal: AbortSignal.timeout(10000) }) }
   catch { throw new TablesError('STORAGE_UNAVAILABLE', 'Não foi possível acessar o arquivo. Tente novamente.', 503) }
-  if (!response.ok) throw new TablesError('STORAGE_UNAVAILABLE', 'Não foi possível acessar o arquivo. Tente novamente.', 503)
+  if (!response.ok && !(missingAllowed && response.status === 404)) throw new TablesError('STORAGE_UNAVAILABLE', 'Não foi possível acessar o arquivo. Tente novamente.', 503)
   return { response, base }
+}
+
+export async function removeStoredAttachment(path: string) {
+  // Signed upload URLs last two hours. Maintenance waits at least 24 hours.
+  pathFor(path)
+  await storageRequest('object/tables-anexos', { method: 'DELETE', body: JSON.stringify({ prefixes: [path] }) }, true)
 }
 
 function pathFor(path: string) {
@@ -57,10 +69,15 @@ export async function attachmentAction(db: Database, session: TablesSession, id:
     const result = await response.json() as { signedURL?: string }
     const url = new URL('/storage/v1' + result.signedURL, base)
     if (!result.signedURL?.startsWith('/object/sign/') || url.pathname !== `/storage/v1/object/sign/${path}` || !url.searchParams.get('token')) throw new TablesError('INVALID_FILE', 'Não foi possível preparar o download.', 503)
+    url.searchParams.set('download', file.nome)
     return { url: url.toString() }
   }
   await lockRecord(db, session, file.registro_id)
+  const current = (await db.query("SELECT estado,criado_em < now()-interval '24 hours' expirado FROM tables.anexos WHERE empresa_id=$1 AND id=$2 AND estado<>'excluido' FOR UPDATE", [session.tenantId, id])).rows[0]
+  if (!current) throw new TablesError('NOT_FOUND', 'Arquivo não encontrado.', 404)
   if (action === 'confirmar') {
+    if (current.estado === 'confirmado') return { ok: true }
+    if (current.expirado) throw new TablesError('EXPIRED_UPLOAD', 'O prazo deste envio terminou. Envie o arquivo novamente.', 409)
     const { response } = await storageRequest(`object/authenticated/${path}`, { method: 'HEAD' })
     if (Number(response.headers.get('content-length')) !== Number(file.tamanho)) throw new TablesError('INVALID_FILE', 'O arquivo enviado não corresponde ao tamanho informado.')
     await db.query("UPDATE tables.anexos SET estado='confirmado' WHERE empresa_id=$1 AND id=$2 AND estado='pendente'", [session.tenantId, id])

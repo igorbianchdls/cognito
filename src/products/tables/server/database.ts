@@ -1,11 +1,14 @@
-import { Pool, type PoolClient } from 'pg'
+import { Pool } from 'pg'
 import { buildPostgresPoolConfig } from '@/lib/postgres'
 import type { AuthTenantContext } from '@/products/auth/shared/authContracts'
 import { TablesError } from '../shared/contracts'
 
 export type TablesSession = Pick<AuthTenantContext, 'tenantId' | 'sharedUserId' | 'role'>
-export type Database = Pick<PoolClient, 'query'>
-let pool: Pool | undefined
+// Query rows are mapped and validated by each repository method. Keep this
+// structural contract compatible with the project's ambient pg declaration.
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export type Database = { query: (sql: string, values?: unknown[]) => Promise<{ rows: Record<string, any>[] }> }
+let pool: InstanceType<typeof Pool> | undefined
 
 export async function withTablesTransaction<T>(session: TablesSession, write: boolean, invoke: (db: Database) => Promise<T>): Promise<T> {
   if (!Number.isSafeInteger(session.tenantId) || !Number.isSafeInteger(session.sharedUserId) || session.tenantId <= 0 || session.sharedUserId <= 0) throw new TablesError('UNAUTHENTICATED', 'Entre novamente para continuar.', 401)
