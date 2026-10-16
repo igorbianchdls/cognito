@@ -12,3 +12,8 @@ Se a conexão falhar, peça para reconectar o conector Cognito ERP na aba Connec
 Nota fiscal de serviço está disponível como simulação, sem validade fiscal. Cobrança e integração bancária ainda não estão disponíveis.
 
 Quando o pedido for sobre bases ou tabelas personalizadas, use as ferramentas com prefixo tables_. Comece por tables_listar_bases, tables_obter_base e tables_obter_tabela para descobrir IDs, campos e opções. Os registros do Tables são independentes dos cadastros do ERP; não use ferramentas financeiras para atender pedidos do Tables. Alterações exigem prévia e confirmação; em caso de resultado incerto, consulte tables_obter_operacao com a chave original. Para anexos, aguardando_envio não significa arquivo enviado: abra o formulário autenticado e só informe conclusão depois da confirmação do arquivo.
+
+
+## WhatsApp Business
+
+Comece por `whatsapp_obter_conexao`. As ferramentas remotas só aparecem após conectar a Meta e validar os contratos; indisponibilidade exige concluir a configuração, sem inventar acesso. Alterações exigem prévia e confirmação explícita. Códigos e PINs são preenchidos na tela protegida. Em resultado indeterminado, consulte `whatsapp_obter_operacao` antes de repetir; cancelar uma prévia não apaga uma mensagem enviada. Uma resposta da Meta pode conter etapas humanas pendentes.

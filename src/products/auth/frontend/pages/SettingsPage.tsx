@@ -17,6 +17,7 @@ export default function SettingsPage({ initialState }: SettingsPageProps) {
       <SidebarInset className="bg-slate-100">
         <PageContainer className="overflow-y-auto bg-slate-100">
           <main className="mx-auto w-full max-w-6xl px-4 py-6 sm:px-6 lg:px-8">
+            <div className="mb-4 rounded-lg border border-slate-200 bg-white px-4 py-3"><a href="/whatsapp" className="text-sm font-medium text-emerald-700 underline">Conectar WhatsApp Business</a></div>
             <SettingsPanel initialState={initialState} variant="page" />
           </main>
         </PageContainer>

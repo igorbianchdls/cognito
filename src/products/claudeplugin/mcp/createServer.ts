@@ -1,3 +1,4 @@
+import { registerWhatsApp, WHATSAPP_INSTRUCTIONS } from '@/products/mcpcore/mcp/registerWhatsApp'
 import { registerTables, TABLES_INSTRUCTIONS } from '@/products/mcpcore/mcp/registerTables'
 import { createHash } from 'node:crypto'
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js'
@@ -29,7 +30,7 @@ export function claudeUiDomain(serverUrl: string) {
 
 export async function createClaudeServer(principal: PluginPrincipal, config: PluginConfig,
   dependencies: ExecutionDependencies = executionDependencies) {
-  const server = new McpServer(SERVER_INFO, { instructions:SERVER_INSTRUCTIONS+TABLES_INSTRUCTIONS })
+  const server = new McpServer(SERVER_INFO, { instructions:SERVER_INSTRUCTIONS+TABLES_INSTRUCTIONS+WHATSAPP_INSTRUCTIONS })
   server.registerResource('erp-cards',CARDS_URI,{mimeType:'text/html;profile=mcp-app'},async()=>({contents:[{uri:CARDS_URI,mimeType:'text/html;profile=mcp-app',
     text:renderCardsHtml({name:'claudeplugin-cards',version:CLAUDEPLUGIN_VERSION,host:'claude'}),
     _meta:{ui:{prefersBorder:true,domain:claudeUiDomain(config.resource),csp:{connectDomains:[],resourceDomains:[]}}}}]}))
@@ -51,5 +52,6 @@ export async function createClaudeServer(principal: PluginPrincipal, config: Plu
       annotations:{readOnlyHint:false,destructiveHint:true,idempotentHint:true,openWorldHint:false},_meta:card},run(action.name))
   }
   registerTables(server,principal,config,dependencies,'claude')
+  await registerWhatsApp(server,principal,config,dependencies,'claude')
   return server
 }

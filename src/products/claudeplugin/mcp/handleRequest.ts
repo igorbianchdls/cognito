@@ -1,3 +1,4 @@
+import { whatsappWrites } from '@/products/mcpcore/mcp/registerWhatsApp'
 import { tablesTools } from '@/products/mcpcore/domains/tables/tools/catalog'
 import { WebStandardStreamableHTTPServerTransport } from '@modelcontextprotocol/sdk/server/webStandardStreamableHttp.js'
 import { PluginError } from '@/products/mcpcore/shared/contracts'
@@ -32,7 +33,7 @@ export async function handleClaudeRequest(request: Request, deps: HttpDependenci
     const call = body as { method?: string; params?: { name?: unknown } }
     // Token antigo só com leitura: 403 com desafio em HTTP (step-up), que é o que faz o Claude reautenticar;
     // o erro dentro do resultado da tool não dispara um novo login.
-    if (call?.method === 'tools/call' && [...actionTools,...tablesTools.filter(t=>t.write)].some(tool => tool.name === call.params?.name) && !principal.scopes.includes('erp:write'))
+    if (call?.method === 'tools/call' && (whatsappWrites(call.params?.name)||[...actionTools,...tablesTools.filter(t=>t.write)].some(tool => tool.name === call.params?.name)) && !principal.scopes.includes('erp:write'))
       throw new PluginError('INSUFFICIENT_SCOPE','Reconecte o Cognito ERP com permissão de escrita.',403)
     const server = await createClaudeServer(principal,config,deps.execution)
     const transport = new WebStandardStreamableHTTPServerTransport({ sessionIdGenerator:undefined,enableJsonResponse:true })

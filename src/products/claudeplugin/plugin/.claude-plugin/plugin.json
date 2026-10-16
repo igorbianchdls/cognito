@@ -1,7 +1,7 @@
 {
   "name": "cognito-erp",
   "displayName": "Cognito ERP",
-  "version": "1.2.0",
+  "version": "1.3.0",
   "description": "Use o Cognito ERP pelo Claude: consulte vendas, orçamentos, compras, contas a pagar e a receber, estoque e relatórios, e crie, edite, confirme ou exclua registros com prévia e confirmação na própria conversa. Também gerencia bases, tabelas personalizadas, campos, registros e anexos do Tables.",
   "author": {
     "name": "Cognito ERP"

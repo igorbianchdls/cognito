@@ -1,3 +1,5 @@
+import { executeWhatsApp } from '../domains/whatsapp/executeTool'
+import type { Dependencies as WhatsAppDependencies } from '../domains/whatsapp/actions/coordinator'
 import { randomUUID } from 'node:crypto'
 import { z } from 'zod'
 import type { CallToolResult } from '@modelcontextprotocol/sdk/types.js'
@@ -10,11 +12,12 @@ import { TablesError } from '@/products/tables/shared/contracts'
 import { PluginError, selectCompany, type PluginPrincipal } from '../shared/contracts'
 import type { PluginConfig } from '../shared/config'
 
-export type ExecutionDependencies=ErpDependencies & {tables?:TablesDependencies}
+export type ExecutionDependencies=ErpDependencies & {tables?:TablesDependencies;whatsapp?:WhatsAppDependencies}
 export const executionDependencies:ExecutionDependencies={...erpDependencies,tables:tablesDependencies}
 export {accessTools} from '../domains/erp/executeTool'
 
 export async function executeTool(principal:PluginPrincipal,name:string,raw:unknown,config:PluginConfig,deps:ExecutionDependencies=executionDependencies):Promise<CallToolResult> {
+ if(domainForTool(name)==='whatsapp')return executeWhatsApp(principal,name,raw,config,deps.whatsapp,{reserve:deps.reserve,finish:deps.finish})
  if(domainForTool(name)==='erp')return executeErpTool(principal,name,raw,config,deps)
  let executionId:string|undefined, timer:ReturnType<typeof setTimeout>|undefined
  const start=Date.now(),tool=tablesDefinition(name)
