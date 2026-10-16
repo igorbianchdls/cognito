@@ -43,6 +43,10 @@ export async function tablesHandler(request: Request, context: { params: Promise
     const method = request.method
     const body = write ? await readBody(request) : undefined
     if (path.length > 4) throw new TablesError('NOT_FOUND', 'Recurso não encontrado.', 404)
+    if (resource === 'mcp-envios' && entityId && !action && !childId && ['GET','POST'].includes(method)) {
+      const { mcpUpload } = await import('../server/mcpUploads')
+      return json(await mcpUpload(session, id(entityId), method === 'POST' ? body : undefined))
+    }
     return await withTablesTransaction(session, write, async db => {
       if (method === 'GET' && (!resource || resource === 'sessao') && path.length <= 1) return json({ empresa: session.tenantName, usuario: session.fullName || session.email, podeEditar: session.role !== 'viewer', bases: await service.listBases(db, session) })
       if (resource === 'bases') {

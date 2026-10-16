@@ -1,17 +1,18 @@
 {
   "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
   "name": "chatgptplugin",
-  "version": "2.0.0",
+  "version": "2.2.0",
   "author": {
     "name": "Cognito ERP"
   },
-  "description": "Use o Cognito ERP pelo chat: consulte vendas, compras, financeiro, estoque e relatórios, e crie, edite, confirme ou exclua registros com prévia e confirmação na própria conversa.",
+  "description": "Use o Cognito ERP pelo chat: consulte vendas, compras, financeiro, estoque e relatórios, e crie, edite, confirme ou exclua registros com prévia e confirmação na própria conversa. Também gerencia bases, tabelas personalizadas, campos, registros e anexos do Tables.",
   "keywords": [
     "erp",
     "vendas",
     "compras",
     "financeiro",
-    "estoque"
+    "estoque",
+    "tables"
   ],
   "extensions": {
     "com.openai": {

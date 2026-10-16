@@ -1,3 +1,7 @@
+import {preferencesSchema} from '../src/products/mcpcore/application/preferences'
+import {tools as erpTools} from '../src/products/mcpcore/tools/catalog'
+import {actionTools as erpActions} from '../src/products/mcpcore/actions/catalog'
+import {tablesTools} from '../src/products/mcpcore/domains/tables/tools/catalog'
 import {serviceInvoiceQueryStubs} from './erp/service-invoice-query-stubs'
 import assert from 'node:assert/strict'
 import { randomUUID } from 'node:crypto'
@@ -26,7 +30,7 @@ function context(company: number) {
   calls.push({company,user:current!.userId})
 }
 const execution: ExecutionDependencies = {
-  preferences:{read:async()=>({empresa_preferida:'',por_pagina:20}),update:async(_p,set)=>({empresa_preferida:'',por_pagina:20,...set as object})},
+  preferences:{read:async()=>({empresa_preferida:'',por_pagina:20}),update:async(_p,set)=>({empresa_preferida:'',por_pagina:20,...preferencesSchema.partial().refine(v=>Object.keys(v).length>0).parse(set)})},
   reserve:async () => {const id=randomUUID();events.push({id,status:'running'});return id},
   finish:async (id,status,code) => {events.push({id,status,code})},
   queries:{...serviceInvoiceQueryStubs,
@@ -85,17 +89,17 @@ async function main() {
     type Listed={name:string;annotations:{readOnlyHint:boolean;destructiveHint:boolean};securitySchemes:{type:string;scopes:string[]}[];outputSchema?:object;inputSchema:{properties:Record<string,unknown>}}
     const listed=body.result.tools as Listed[],byName=(name:string)=>listed.find(t=>t.name===name)!
     // 17 consultas (com meu_acesso), 28 escritas, painel, configuracoes e a tool de mencoes do SDK.
-    assert.equal(listed.length,59)
+    assert.equal(listed.length,erpTools.length+erpActions.length+5+tablesTools.length)
     const writes=['criar_cadastro','editar_cadastro','excluir_cadastro','criar_venda','editar_venda','excluir_venda','converter_orcamento','registrar_devolucao','confirmar_venda','cancelar_venda','atender_venda',
       'criar_compra','editar_compra','excluir_compra','confirmar_compra','cancelar_compra','criar_titulo','editar_titulo','excluir_titulo','efetivar_previsao','registrar_baixa','estornar_pagamento',
       'criar_nota_servico','editar_nota_servico','emitir_nota_servico','consultar_nota_servico','cancelar_nota_servico','excluir_nota_servico']
     const destructive=['excluir_cadastro','excluir_venda','cancelar_venda','excluir_compra','cancelar_compra','excluir_titulo','estornar_pagamento','registrar_devolucao','cancelar_nota_servico','excluir_nota_servico']
     for(const removed of ['preparar_rascunho','preparar_formulario_nativo','renderizar_card','abrir_formulario','obter_rascunho','listar_rascunhos','obter_cliente','listar_orcamentos','listar_contas_financeiras','verificar_fiscal_venda'])
       assert(!listed.some(t=>t.name===removed),removed)
-    for (const tool of listed) {
-      const write=writes.includes(tool.name)
+    for (const tool of listed.filter(t=>!t.name.startsWith('tables_'))) {
+      const write=erpActions.some(a=>a.name===tool.name)
       assert.equal(tool.annotations.readOnlyHint,!write&&tool.name!=='atualizar_configuracoes',tool.name)
-      assert.equal(tool.annotations.destructiveHint,destructive.includes(tool.name),tool.name)
+      assert.equal(tool.annotations.destructiveHint,Boolean(erpActions.find(a=>a.name===tool.name)?.destructive),tool.name)
       assert.equal(tool.securitySchemes[0].type,'oauth2');assert(tool.outputSchema,tool.name)
       if(write){assert.deepEqual(tool.securitySchemes[0].scopes,['erp:read','erp:write']);assert(tool.inputSchema.properties.rascunho_id&&tool.inputSchema.properties.dados,tool.name)}
     }
@@ -112,10 +116,10 @@ async function main() {
     await check(name,async()=>{const {body}=await rpc('tools/call',{name,arguments:args});assert(!body.result?.isError,JSON.stringify(body))})
   }
   await check('Recurso UI registrado e sem dados privados',async()=>{
-    const resources=await rpc('resources/list');assert.equal(resources.body.result.resources.length,2)
+    const resources=await rpc('resources/list');assert.equal(resources.body.result.resources.length,3)
     const cards=await rpc('resources/read',{uri:'ui://chatgptplugin/cards/v2.html'});assert.deepEqual(cards.body.result.contents[0]._meta.ui.csp,{connectDomains:[],resourceDomains:[]});assert(!cards.body.result.contents[0].text.includes(principal.clerkUserId))
     const listed=(await rpc('tools/list')).body.result.tools as {name:string;_meta?:{ui?:{resourceUri?:string}}}[]
-    assert(listed.filter(t=>t._meta?.ui?.resourceUri==='ui://chatgptplugin/cards/v2.html').length===55,'cards em 21 consultas/interface e 34 escritas')
+    assert(listed.filter(t=>t._meta?.ui?.resourceUri==='ui://chatgptplugin/cards/v2.html').length===erpTools.length+erpActions.length+1,'cards de todas as consultas e ações ERP')
     const resource=await rpc('resources/read',{uri:'ui://chatgptplugin/panel/v1.html'})
     assert.equal(resource.body.result.contents[0].mimeType,'text/html;profile=mcp-app')
     assert(resource.body.result.contents[0].text.includes('ui/initialize'))

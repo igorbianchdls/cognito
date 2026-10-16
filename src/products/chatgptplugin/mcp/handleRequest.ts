@@ -1,3 +1,4 @@
+import { tablesTools } from '@/products/mcpcore/domains/tables/tools/catalog'
 import { WebStandardStreamableHTTPServerTransport } from '@modelcontextprotocol/sdk/server/webStandardStreamableHttp.js'
 import { createPluginServer } from './createServer'
 import { getPluginConfig, type PluginConfig } from '../shared/config'
@@ -40,7 +41,7 @@ export async function handlePluginRequest(request: Request, deps: HttpDependenci
       const {rpc,capabilities}=modernRequest
       if(rpc.method==='tools/call') {
         const continuing=rpc.params.requestState!==undefined||rpc.params.inputResponses!==undefined
-        if(actionTools.some(tool=>tool.name===rpc.params.name))oauthScope=config.scope+' erp:write'
+        if([...actionTools,...tablesTools.filter(t=>t.write)].some(tool=>tool.name===rpc.params.name))oauthScope=config.scope+' erp:write'
         if(continuing)requireNativeFormCapability(capabilities)
         if(supportsNativeForms(capabilities)) {
           let step:Awaited<ReturnType<typeof nativeFormStep>>
