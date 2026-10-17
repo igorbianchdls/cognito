@@ -1,0 +1,49 @@
+import assert from 'node:assert/strict'
+import {execFileSync} from 'node:child_process'
+import {readFileSync,writeFileSync,mkdirSync,existsSync} from 'node:fs'
+import {createHash} from 'node:crypto'
+import dotenv from 'dotenv'
+import { deploymentSchedules } from '../erp/deployment-schedules.mjs'
+const migrationFile='20261017100000_apps_product.sql'
+
+// Build with production configuration, keeping domain assignment disabled until
+// the exact deployment passes authenticated HTTP and Storage checks.
+const project='prj_mXGm0J5InfGNAR2lO4cHGLCrgoex'
+const config=dotenv.parse(readFileSync('.env.local')),headers={Authorization:'Bearer '+config.VERCEL_TOKEN}
+const paths=execFileSync('git',['ls-files','--cached','--others','--exclude-standard','-z'],{encoding:'utf8'}).split('\0').filter(Boolean)
+const included=paths.filter(path=>existsSync(path)&&(path.startsWith('scripts/')||path.startsWith('src/')||path.startsWith('public/')||path.startsWith('certificates/')||(!path.includes('/')&&!path.startsWith('.env'))))
+assert(included.includes('package.json'));assert(included.includes('pnpm-lock.yaml'))
+assert(included.includes('vercel.json'), 'Deployment must include the schedule configuration')
+const files=included.map(file=>{const bytes=readFileSync(file);return {file,sha:createHash('sha1').update(bytes).digest('hex'),size:bytes.length}})
+const sourceDigest=createHash('sha256').update(JSON.stringify(files)).digest('hex')
+const selectedMigration=migrationFile
+const migrationDigest=createHash('sha256').update(readFileSync('supabase/migrations/'+selectedMigration)).digest('hex')
+const production=process.argv.includes('--production')
+const request={name:'cognito',project,files,...deploymentSchedules(),...(production?{target:'production',autoAssignCustomDomains:false}:{}),meta:{appsMigrationDigest:migrationDigest,appsMigrationVersion:selectedMigration.slice(0,14),appsSourceDigest:sourceDigest}}
+mkdirSync('.cache/apps/deployment',{recursive:true})
+writeFileSync('.cache/apps/deployment/deploy-manifest.json',JSON.stringify({project,migrationDigest,sourceDigest,files},null,2))
+async function create(){const response=await fetch('https://api.vercel.com/v13/deployments',{method:'POST',headers:{...headers,'content-type':'application/json'},body:JSON.stringify(request),signal:AbortSignal.timeout(60000)});return {status:response.status,data:await response.json()}}
+try{
+ for (const file of ['.cache/apps/smoke.json','.cache/apps/regression.json','.cache/apps/ui.json']) assert.equal(JSON.parse(readFileSync(file)).status,'passed',file)
+ const liveResponse=await fetch('https://api.vercel.com/v13/deployments/cognito-seven.vercel.app',{headers,signal:AbortSignal.timeout(25000)})
+ assert(liveResponse.ok); const live=await liveResponse.json(); assert.equal(live.projectId,project)
+ writeFileSync('.cache/apps/deployment/previous-production.json',JSON.stringify({id:live.id,url:live.url}))
+ let result=await create()
+ if(result.data.error?.code==='missing_files'){
+  const missing=new Set(result.data.error.missing || result.data.error.missingFiles || [])
+  assert(missing.size,'Missing files response requires an explicit digest list')
+  const queue=files.filter(file=>missing.has(file.sha))
+  console.log(JSON.stringify({stage:'upload',files:queue.length,bytes:queue.reduce((sum,file)=>sum+file.size,0)}))
+  let next=0,complete=0
+  await Promise.all(Array.from({length:3},async()=>{while(next<queue.length){
+   const file=queue[next++],response=await fetch('https://api.vercel.com/v2/files',{method:'POST',headers:{...headers,'content-type':'application/octet-stream','x-vercel-digest':file.sha,'x-vercel-size':String(file.size)},body:readFileSync(file.file),signal:AbortSignal.timeout(120000)})
+   if(!response.ok)throw new Error('FILE_UPLOAD_HTTP_'+response.status)
+   complete++;if(complete%100===0)console.log(JSON.stringify({uploaded:complete,total:queue.length}))
+  }}))
+  result=await create()
+ }
+ if(result.status>=400){writeFileSync('.cache/apps/deployment/deployment-error.json',JSON.stringify(result.data));throw new Error('DEPLOYMENT_HTTP_'+result.status+'_'+String(result.data.error?.code))}
+ const deployment={id:result.data.id,url:result.data.url,project,state:result.data.readyState,migrationDigest,sourceDigest}
+ assert(deployment.id && deployment.url)
+ writeFileSync('.cache/apps/deployment/deployment.json',JSON.stringify(deployment,null,2));console.log(JSON.stringify(deployment))
+}catch(error){console.error(JSON.stringify({stage:'failed',message:error.message}));process.exitCode=1}

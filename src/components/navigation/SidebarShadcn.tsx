@@ -23,6 +23,7 @@ import { cn } from "@/lib/utils"
 import { useErpAccess } from "@/products/erp/frontend/hooks/useErpAccess"
 import type { ErpCapability } from "@/products/erp/shared/professionalContracts"
 import { TablesNavigation } from "@/products/tables/frontend/TablesNavigation"
+import { AppsNavigation } from "@/products/apps/frontend/AppsNavigation"
 
 type IconComponent = React.ComponentType<{ className?: string; style?: React.CSSProperties }>
 type NavigationItem = {
@@ -184,6 +185,7 @@ export function SidebarShadcn({ className, style, ...props }: React.ComponentPro
             <p role="status" className="px-5 py-3 text-sm text-[#626262]">Seu perfil não possui acesso aos módulos do ERP. Solicite acesso ao administrador da empresa.</p>
           )}
           <TablesNavigation />
+          <AppsNavigation />
         </SidebarContent>
         <SidebarFooter className="gap-1 border-t border-[#e6e6e2] p-2">
           <SidebarMenu className="gap-0.5">

@@ -1,0 +1,1 @@
+{"extends":"./tsconfig.json","compilerOptions":{"incremental":false},"include":["src/types.d.ts","src/types/**/*.d.ts","src/products/apps/**/*.ts","src/products/apps/**/*.tsx","src/app/apps/**/*.tsx","src/app/api/apps/**/*.ts","scripts/apps/**/*.ts"],"exclude":["node_modules",".next"]}
