@@ -42,7 +42,7 @@ export async function handlePluginRequest(request: Request, deps: HttpDependenci
       const {rpc,capabilities}=modernRequest
       if(rpc.method==='tools/call') {
         const continuing=rpc.params.requestState!==undefined||rpc.params.inputResponses!==undefined
-        if(whatsappWrites(rpc.params.name)||[...actionTools,...tablesTools.filter(t=>t.write)].some(tool=>tool.name===rpc.params.name))oauthScope=config.scope+' erp:write'
+        if(whatsappWrites(rpc.params.name)||[...actionTools,...tablesTools.filter(t=>t.write||t.control)].some(tool=>tool.name===rpc.params.name))oauthScope=config.scope+' erp:write'
         if(continuing)requireNativeFormCapability(capabilities)
         if(supportsNativeForms(capabilities)) {
           let step:Awaited<ReturnType<typeof nativeFormStep>>

@@ -7,7 +7,7 @@ import { executeTool as executeErpTool, executionDependencies as erpDependencies
 import { domainForTool, tablesDefinition } from './domainRegistry'
 import { tablesDependencies, currentSession, getOperation, runAction, cancelOperation, type TablesDependencies } from '../domains/tables/actions/coordinator'
 import { withTablesClient } from '@/products/tables/server/database'
-import { readMcp } from '@/products/tables/server/mcp'
+import { readTables } from '@/products/tables/server/mcpInput'
 import { TablesError } from '@/products/tables/shared/contracts'
 import { PluginError, selectCompany, type PluginPrincipal } from '../shared/contracts'
 import type { PluginConfig } from '../shared/config'
@@ -25,15 +25,15 @@ export async function executeTool(principal:PluginPrincipal,name:string,raw:unkn
   if(!tool)throw new PluginError('UNKNOWN_TOOL','Ferramenta desconhecida.')
   if(!principal.scopes.includes(config.scope))throw new PluginError('INSUFFICIENT_SCOPE','Reconecte com permissão de leitura.',403)
   const input=tool.schema.parse(raw), company=selectCompany(principal,input.empresa_id)
-  if(tool.write&&!principal.scopes.includes('erp:write'))throw new PluginError('INSUFFICIENT_SCOPE','Reconecte com permissão de escrita.',403)
+  if((tool.write||tool.control)&&!principal.scopes.includes('erp:write'))throw new PluginError('INSUFFICIENT_SCOPE','Reconecte com permissão de escrita.',403)
   executionId=await deps.reserve(principal,name,company.id,config.integration)
   const task=(deps.tables||tablesDependencies).transaction(async db=>{
-   const session=await currentSession(db,principal,company.id,tool.write)
+   const session=await currentSession(db,principal,company.id,tool.write||tool.control)
    if(tool.key==='obter_operacao')return getOperation(db,principal,company.id,input,config)
    if(tool.control)return cancelOperation(db,principal,company.id,input.operacao_id,config)
    if(tool.write)return runAction(db,principal,session,tool.key,input,config)
    const clean=Object.fromEntries(Object.entries(input).filter(([key])=>key!=='empresa_id'))
-   return withTablesClient(db,session,randomUUID(),client=>readMcp(client,session,tool.key,clean))
+   return withTablesClient(db,session,randomUUID(),client=>readTables(client,session,tool.key,clean))
   })
   const data=await Promise.race([task,new Promise<never>((_,reject)=>{timer=setTimeout(()=>reject(new PluginError('TIMEOUT','A chamada demorou. Consulte tables_obter_operacao com a mesma chave antes de repetir.',504)),config.toolTimeoutMs)})])
   const payload={ok:true,execution_id:executionId,empresa_id:company.id,data:{...data,produto_url:new URL('/tables',config.resource).href}},text=JSON.stringify(payload)

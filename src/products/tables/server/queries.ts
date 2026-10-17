@@ -1,5 +1,5 @@
 import type { Database, TablesSession } from './database'
-import { listQuerySchema, TablesError, type Field, type ListQuery, type RecordPage, type ViewConfig } from '../shared/contracts'
+import { listQuerySchema, TablesError, type Field, type Filter, type ListQuery, type RecordPage, type ViewConfig } from '../shared/contracts'
 import { readFields, recordSelect, requireTable } from './repository'
 
 const relations = { selecao: ['registro_opcoes', 'opcao_id'], selecao_multipla: ['registro_opcoes', 'opcao_id'], usuario: ['registro_usuarios', 'usuario_id'], usuarios: ['registro_usuarios', 'usuario_id'], vinculo: ['registro_vinculos', 'registro_destino_id'], anexo: ['anexos', 'id'] } as const
@@ -93,4 +93,66 @@ export async function listRecords(db: Database, session: TablesSession, tableId:
   const dataParams = [...compiled.params, query.tamanho, (query.pagina - 1) * query.tamanho]
   const records = await db.query(`${recordSelect} WHERE ${compiled.where} ORDER BY ${compiled.order} LIMIT $${dataParams.length - 1} OFFSET $${dataParams.length}`, dataParams)
   return { registros: records.rows, total, pagina: query.pagina, tamanho: query.tamanho, somas } as RecordPage
+}
+
+export type SummaryInput = { busca: string; filtros: Filter[]; visualizacao?: string; agrupar_por?: string; periodo: 'dia' | 'mes' | 'ano'; metricas: { campo: string; operacao: 'soma' | 'media' | 'minimo' | 'maximo' }[] }
+const GROUP_LIMIT = 50
+
+/** Counts and aggregates the whole filtered set in the database, optionally grouped by one field. */
+export async function summarizeRecords(db: Database, session: TablesSession, tableId: string, input: SummaryInput) {
+  await requireTable(db, session, tableId)
+  const fields = await readFields(db, session, tableId), byId = new Map(fields.map(f => [f.id, f]))
+  let filtros = input.filtros
+  if (input.visualizacao) {
+    const found = await db.query('SELECT configuracao FROM tables.visualizacoes WHERE empresa_id=$1 AND tabela_id=$2 AND id=$3', [session.tenantId, tableId, input.visualizacao])
+    if (!found.rows[0]) throw new TablesError('NOT_FOUND', 'Visualização não encontrada.', 404)
+    filtros = [...(found.rows[0].configuracao as ViewConfig).filtros, ...filtros]
+  }
+  const compiled = buildRecordQuery(session.tenantId, tableId, fields, listQuerySchema.parse({ busca: input.busca, filtros }))
+  const params = [...compiled.whereParams]
+  const bind = (list: unknown[], value: unknown) => { list.push(value); return `$${list.length}` }
+  const labels: string[] = []
+  const metrics = input.metricas.map((metric, index) => {
+    const field = byId.get(metric.campo)
+    if (!field) throw new TablesError('INVALID_FIELD', 'Um campo da métrica não está disponível.')
+    const numeric = ['numero', 'moeda'].includes(field.tipo), date = ['data', 'data_hora'].includes(field.tipo)
+    if (!numeric && !(date && ['minimo', 'maximo'].includes(metric.operacao))) throw new TablesError('INVALID_METRIC', `${field.nome}: soma e média valem para número ou moeda; mínimo e máximo também para datas.`)
+    const key = bind(params, field.id)
+    const expr = numeric ? `nullif(r.valores->>${key},'')::numeric` : field.tipo === 'data' ? `nullif(r.valores->>${key},'')::date` : `nullif(r.valores->>${key},'')::timestamptz`
+    labels.push(`${{ soma: 'soma', media: 'média', minimo: 'mínimo', maximo: 'máximo' }[metric.operacao]} de ${field.nome}`)
+    return `(${metric.operacao === 'media' ? `round(avg(${expr}),2)` : `${{ soma: 'sum', minimo: 'min', maximo: 'max' }[metric.operacao]}(${expr})`})::text m${index}`
+  })
+  const metricColumns = metrics.length ? ',' + metrics.join(',') : ''
+  const read = (row: Record<string, unknown>) => Object.fromEntries(labels.map((label, i) => [label, row[`m${i}`] ?? null]))
+  const totals = (await db.query(`SELECT count(*)::int total${metricColumns} FROM tables.registros r WHERE ${compiled.where}`, params)).rows[0]
+  const result: Record<string, unknown> = { total: totals.total, metricas: read(totals) }
+  if (!input.agrupar_por) return result
+
+  const group = byId.get(input.agrupar_por)
+  if (!group) throw new TablesError('INVALID_FIELD', 'O campo de agrupamento não está disponível.')
+  const groupParams = [...params], key = bind(groupParams, group.id)
+  const joined = { selecao: ['registro_opcoes', 'opcao_id'], selecao_multipla: ['registro_opcoes', 'opcao_id'], usuario: ['registro_usuarios', 'usuario_id'], usuarios: ['registro_usuarios', 'usuario_id'], vinculo: ['registro_vinculos', 'registro_destino_id'] }[group.tipo as string]
+  let join = '', expression: string
+  if (joined) { join = `LEFT JOIN tables.${joined[0]} g ON g.empresa_id=r.empresa_id AND g.registro_id=r.id AND g.campo_id=${key}`; expression = `g.${joined[1]}::text` }
+  else if (group.tipo === 'checkbox') expression = `coalesce(nullif(r.valores->>${key},''),'false')`
+  else if (['texto', 'texto_longo', 'email', 'url'].includes(group.tipo)) expression = `nullif(r.valores->>${key},'')`
+  else if (['data', 'data_hora'].includes(group.tipo)) {
+    const unit = { dia: 'day', mes: 'month', ano: 'year' }[input.periodo], format = { dia: 'YYYY-MM-DD', mes: 'YYYY-MM', ano: 'YYYY' }[input.periodo]
+    const value = group.tipo === 'data' ? `nullif(r.valores->>${key},'')::date` : `(nullif(r.valores->>${key},'')::timestamptz AT TIME ZONE 'America/Sao_Paulo')`
+    expression = `to_char(date_trunc('${unit}',${value}),'${format}')`
+  } else throw new TablesError('INVALID_GROUP', 'Agrupe por seleção, pessoas, vínculo, checkbox, texto ou data.')
+  const rows = (await db.query(`SELECT ${expression} chave, count(*)::int quantidade${metricColumns} FROM tables.registros r ${join} WHERE ${compiled.where} GROUP BY 1 ORDER BY quantidade DESC, chave ASC NULLS LAST LIMIT ${GROUP_LIMIT + 1}`, groupParams)).rows
+
+  const keys = rows.map(r => r.chave).filter((k): k is string => typeof k === 'string')
+  const names = new Map<string, string>(group.opcoes.map(o => [o.id, o.nome]))
+  if (['usuario', 'usuarios'].includes(group.tipo) && keys.length) for (const m of (await db.query('SELECT id,nome FROM tables.membros() WHERE id=ANY($1::text[])', [keys])).rows) names.set(String(m.id), String(m.nome))
+  if (group.tipo === 'vinculo' && keys.length) for (const m of (await db.query("SELECT r.id,coalesce(r.valores->>t.campo_principal_id::text,'Sem nome') nome FROM tables.registros r JOIN tables.tabelas t ON t.empresa_id=r.empresa_id AND t.id=r.tabela_id WHERE r.empresa_id=$1 AND r.id=ANY($2::uuid[])", [session.tenantId, keys])).rows) names.set(String(m.id), String(m.nome))
+  const label = (k: unknown) => k === null || k === undefined ? 'Sem valor' : group.tipo === 'checkbox' ? (k === 'true' ? 'Sim' : 'Não') : names.get(String(k)) ?? String(k)
+  return {
+    ...result,
+    agrupado_por: { id: group.id, nome: group.nome, tipo: group.tipo, ...(['data', 'data_hora'].includes(group.tipo) ? { periodo: input.periodo } : {}) },
+    grupos: rows.slice(0, GROUP_LIMIT).map(r => ({ valor: r.chave ?? null, rotulo: label(r.chave), quantidade: r.quantidade, metricas: read(r) })),
+    grupos_omitidos: rows.length > GROUP_LIMIT,
+    ...(['selecao_multipla', 'usuarios', 'vinculo'].includes(group.tipo) ? { observacao: 'Registros com várias escolhas contam em cada grupo.' } : {}),
+  }
 }

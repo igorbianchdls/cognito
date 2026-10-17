@@ -1,6 +1,6 @@
 # Tables no MCP
 
-31 ferramentas com prefixo `tables_`, registradas por `mcpcore/mcp/registerTables.ts` no ChatGPT e no Claude. Identidade e escolha de empresa continuam em `meu_acesso`. O executor comum encaminha ao domínio; as operações do Tables usam seus serviços e o papel restrito `tables_runtime`.
+Ferramentas com prefixo `tables_`, registradas por `mcpcore/mcp/registerTables.ts` no ChatGPT e no Claude. Identidade e escolha de empresa continuam em `meu_acesso`. O executor comum encaminha ao domínio; as operações do Tables usam seus serviços e o papel restrito `tables_runtime`.
 
 ## Organização
 
@@ -15,29 +15,36 @@ O código antigo do ERP foi transferido para `domains/erp`; os caminhos anterior
 
 ## Ferramentas
 
+18 ferramentas com prefixo `tables_` (antes 31; as definições caíram de ~17 mil para ~7,8 mil tokens).
+
 | Área | Nomes após o prefixo `tables_` |
 | --- | --- |
-| Bases | listar_bases, obter_base, criar_base, editar_base |
-| Tabelas | obter_tabela, criar_tabela, editar_tabela |
-| Campos | criar_campo, editar_campo |
-| Registros | consultar_registros, obter_registro, criar_registro, editar_registro, criar_registros_em_lote, editar_registros_em_lote, mover_registros_para_lixeira |
-| Visualizações | criar_visualizacao, editar_visualizacao, excluir_visualizacao |
-| Comentários e histórico | listar_comentarios, adicionar_comentario, consultar_historico |
-| Lixeira | listar_lixeira, mover_para_lixeira, restaurar_item |
-| Anexos | obter_link_anexo, remover_anexo, preparar_upload, confirmar_upload |
+| Consulta | listar_bases (com base_id traz a base e suas tabelas), obter_tabela, consultar_registros, obter_registro, resumir, listar_atividade, listar_lixeira, obter_link_anexo |
+| Alteração | salvar_base, salvar_tabela, salvar_campo, salvar_registros, salvar_visualizacao, comentar, lixeira, anexos |
 | Controle | obter_operacao, cancelar_operacao |
+
+## Nomes e IDs
+
+Campos, opções, pessoas (nome ou e-mail), registros vinculados (pelo campo principal) e visualizações aceitam nome ou ID. `products/tables/server/mcpInput.ts` resolve os nomes uma única vez, na entrada; prévia, snapshot e execução continuam só com IDs. Nome inexistente devolve `UNKNOWN_REFERENCE` com as opções disponíveis; nome repetido devolve `AMBIGUOUS_REFERENCE` e pede o ID. Bases, tabelas, registros e anexos usam IDs. `exibicao` traz os valores legíveis por nome do campo.
 
 ## Operação
 
-As alterações recebem `empresa_id`, `chave_operacao` UUID e `dados`. O retorno pendente contém a prévia e `confirmar.argumentos`. Após aprovação explícita, a mesma tool recebe apenas `empresa_id` e `rascunho_id`. A confirmação repetida devolve o resultado já salvo. A chave identifica o mesmo pedido; reutilizá-la com dados diferentes gera conflito.
+As alterações recebem `empresa_id`, `chave_operacao` UUID e `dados`.
 
-`tables_obter_operacao` aceita ID ou chave, sempre vinculados a usuário, empresa, cliente OAuth, chat e domínio. `tables_cancelar_operacao` cancela somente propostas pendentes. Uma operação finalizada não é desfeita por essa tool.
+- **Executam direto** (só acrescentam dados): criar base, tabela, campo, visualização ou um registro; comentar; preparar e confirmar upload. O retorno já vem com `status: saved` e o resultado.
+- **Geram prévia** (alteram ou removem): edições, lotes de registros, excluir visualização, lixeira (mover e restaurar) e remover anexo. O retorno pendente contém a prévia e `confirmar.argumentos`; após aprovação explícita, a mesma tool recebe apenas `empresa_id` e `rascunho_id`.
 
-O contexto carrega o papel atual diretamente do vínculo organizacional. Leitor consulta; os papéis de escrita seguem o Tables existente. Os escopos de transporte atuais `erp:read`/`erp:write` são preservados nesta entrega; não representam novos planos ou permissões comerciais do Tables.
+Nos dois casos a chave fica registrada: repetir a chamada com os mesmos dados devolve o mesmo resultado, e reutilizá-la com dados diferentes gera conflito. Os rascunhos guardam a operação interna (`criar_base`, `editar_campo`…) e a entrada original.
 
-Edição omite o que deve ser preservado. Relações usam `definir`, `adicionar` ou `remover`; os dois últimos modos exigem campos múltiplos. Lotes pertencem a uma tabela e são atômicos. IDs repetidos, versões divergentes ou valores inválidos cancelam o lote.
+`tables_resumir` conta e agrega no banco todo o conjunto filtrado: agrupa por seleção, pessoas, vínculo, checkbox, texto ou data (dia, mês ou ano) e calcula soma, média, mínimo e máximo. Até 50 grupos.
 
-`obter_base` pagina suas tabelas. `obter_tabela` usa `secao`, `pagina`, `campo_id`, `opcoes_pagina` e `visualizacao_id` para descobrir a estrutura sem respostas ilimitadas. Consultas de registros projetam colunas e informam truncamentos; `obter_registro.trecho` recupera partes de textos e relações extensas. Totais e somas correspondem ao filtro completo. Filtros se combinam por E.
+`tables_obter_operacao` aceita ID ou chave, sempre vinculados a usuário, empresa, cliente OAuth, chat e domínio. `tables_cancelar_operacao` exige escopo de escrita e cancela somente prévias pendentes.
+
+O contexto carrega o papel atual diretamente do vínculo organizacional. Leitor consulta; os papéis de escrita seguem o Tables existente. Edição omite o que deve ser preservado. Relações usam `definir`, `adicionar` ou `remover`; os dois últimos exigem campos múltiplos. Lotes pertencem a uma tabela e são atômicos.
+
+## Card
+
+`tools/card.ts` usa o sistema de cards do ERP (`mcpcore/ui`: estilos, componentes e ponte MCP Apps) com telas próprias: prévia e resultado da operação, registros com totais, registro, resumo por grupos, listas e link de anexo.
 
 ## Arquivos
 
@@ -68,6 +75,6 @@ node --import tsx scripts/tables/mcp-live.ts --production
 node scripts/tables/mcp-database.mjs --finalize
 ```
 
-Relatórios em `.cache/tables-mcp`. A suíte isolada executa as 31 tools e os handlers HTTP dos dois chats com PostgreSQL em memória, identidade fictícia e Storage simulado. A suíte de navegador testa os cards e o formulário real com respostas de teste. A validação ao vivo usa sessão Clerk real na aplicação, transações reais do MCP invocadas diretamente no backend e Storage real. Ela não representa uma sessão interativa dentro dos aplicativos ChatGPT/Claude nem uma emissão real de token OAuth de teste.
+Relatórios em `.cache/tables-mcp`. A suíte isolada executa as 18 tools e os handlers HTTP dos dois chats com PostgreSQL em memória, identidade fictícia e Storage simulado. A suíte de navegador testa os cards e o formulário real com respostas de teste. A validação ao vivo usa sessão Clerk real na aplicação, transações reais do MCP invocadas diretamente no backend e Storage real. Ela não representa uma sessão interativa dentro dos aplicativos ChatGPT/Claude nem uma emissão real de token OAuth de teste.
 
 Fórmulas, automações, importação/exportação, filtros OU, novos planos e permissões comerciais não fazem parte desta entrega.

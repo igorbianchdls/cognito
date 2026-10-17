@@ -1,28 +1,86 @@
+import { cardStyles } from '../../../ui/styles/cards'
+import { commonScript } from '../../../ui/components/common'
+import { bridgeScript } from '../../../ui/bridge/mcpApps'
+
+// Card do Tables sobre o mesmo sistema dos cards do ERP (estilos, componentes e ponte MCP Apps).
+// Dados chegam pela ponte e entram com textContent; o HTML não contém dados da empresa.
+const tablesScript=String.raw`
+Object.assign(states,{saved:'Salvo',pending:'Aguardando confirmação',aguardando_envio:'Aguardando arquivo',confirmado:'Confirmado'});
+Object.assign(labels,{base:'Base',tabela:'Tabela',campo:'Campo',visualizacao:'Visualização',grupo:'Grupo',texto:'Comentário',autor:'Autor',acao:'Ação',entidade:'Item',excluido_em:'Excluído em',tabelas:'Tabelas',campos:'Campos',registros:'Registros',obrigatorio:'Obrigatório'});
+const fieldTypes={texto:'Texto',texto_longo:'Texto longo',numero:'Número',moeda:'Moeda',data:'Data',data_hora:'Data e hora',checkbox:'Checkbox',selecao:'Seleção',selecao_multipla:'Seleção múltipla',usuario:'Responsável',usuarios:'Pessoas',email:'E-mail',url:'URL',vinculo:'Vínculo',anexo:'Anexo',grade:'Grade',kanban:'Kanban',calendario:'Calendário',bases:'Base',tabelas:'Tabela',campos:'Campo',registros:'Registro'};
+const titlesByTool={listar_bases:'Bases',obter_tabela:'Estrutura da tabela',consultar_registros:'Registros',obter_registro:'Registro',resumir:'Resumo',listar_atividade:'Atividade',listar_lixeira:'Lixeira',obter_link_anexo:'Anexo',obter_operacao:'Operação'};
+const short=tool=>String(tool||'').replace(/^tables_/,'');
+function heading(target,title,subtitle){target.append(element('h1',title));if(subtitle)target.append(element('p',subtitle,'sub'))}
+function openLink(url){return request('ui/open-link',{url})}
+async function reload(args){const content=await callTool(state.tool,withCompany(args));state.args=args;state.data=content.data;state.error=null;render()}
+function viewFor(tool,data){if(data&&data.operacao_id&&data.status)return renderOperation;if(Array.isArray(data.grupos)||short(tool)==='resumir')return renderSummary;
+  if(Array.isArray(data.registros))return renderRecords;if(data.registro)return renderRecord;if(data.url&&short(tool)==='obter_link_anexo')return renderLink;return renderItems}
+function cellText(record,field){const shown=record.exibicao||{};const value=shown[field.nome]!==undefined?shown[field.nome]:shown[field.nome+' ('+String(field.id).slice(0,8)+')'];if(value===undefined||value==='')return '—';const n=Number(value);if(field.tipo==='moeda'&&Number.isFinite(n))return money(n);if(field.tipo==='numero'&&Number.isFinite(n))return n.toLocaleString('pt-BR',{maximumFractionDigits:6});return value}
+const amount=value=>{const text=String(value);return Number(value).toLocaleString('pt-BR',{minimumFractionDigits:text.includes('.')?2:0,maximumFractionDigits:2})}
+function pager(data){const page=Number(data.pagina||1),box=element('div',undefined,'pager'),prev=button('Anterior',()=>reload({...state.args,pagina:page-1})),next=button('Próxima',()=>reload({...state.args,pagina:page+1}));
+  prev.disabled=page<=1;next.disabled=!data.tem_mais;box.append(prev,element('span','Página '+page,'muted'),next);return box}
+
+// Prévia, resultado e situação de uma alteração.
+function describeChanges(op,changes){if(!changes||typeof changes!=='object')return null;
+  if(Array.isArray(changes.registros)){const count=changes.registros.length,editing=changes.registros.filter(r=>r.registro_id).length;return kv([['registros',count+(count===1?' registro':' registros')+(editing?' ('+editing+' em edição)':'')]])}
+  const flat=Object.entries(changes.alteracoes||changes.campo||changes.visualizacao||changes).filter(([k,v])=>v!==null&&typeof v!=='object'&&!/_id$|^expected/.test(k));
+  return kv(flat.slice(0,6).map(([k,v])=>[k,k==='tipo'?(fieldTypes[v]||v):v]))}
+function renderOperation(target,data){const done=data.status==='saved',preview=data.previa||{},result=data.resultado||{};
+  hero(target,{eyebrow:'Tables',title:data.titulo||'Operação',status:data.status});
+  const refs=(preview.referencias||[]).filter(r=>r.nome).slice(0,5);if(refs.length)target.append(kv(refs.map(r=>[r.tipo,r.nome,{label:(fieldTypes[r.tipo]||label(r.tipo)).replace(/^./,c=>c.toUpperCase()),raw:true}])));
+  if(data.status==='pending'){target.append(section('O que vai mudar',describeChanges(data.operacao,preview.alteracoes)));if(preview.aviso)target.append(notice(preview.aviso,'warning'));
+    target.append(notice('Revise a alteração antes de confirmar.'));
+    if(data.confirmar)target.append(actionsBar([{label:'Confirmar',primary:true,run:async()=>{const content=await callTool(data.confirmar.tool,data.confirmar.argumentos);state.data=content.data;state.error=null;render();
+      tellModel('Confirmado no card do Tables: '+JSON.stringify({tool:data.confirmar.tool,operacao_id:data.operacao_id,status:content.data.status}))}},
+      {label:'Cancelar',run:async()=>{const content=await callTool('tables_cancelar_operacao',withCompany({operacao_id:data.operacao_id}));state.data=content.data;render();tellModel('Prévia do Tables cancelada no card: '+data.operacao_id)}}]));return}
+  target.append(notice({saved:'Operação executada.',cancelled:'Prévia cancelada.',expired:'Prévia expirada.'}[data.status]||label(data.status),done?'success':'info'));
+  if(done){const saved=[];if(Array.isArray(result.registros))saved.push(['registros',result.quantidade||result.registros.length]);
+    for(const key of ['base','tabela','campo','visualizacao'])if(result[key]&&result[key].nome)saved.push([key,result[key].nome,{label:label(key),raw:true}]);
+    const box=kv(saved);if(box)target.append(box);
+    const actions=[];if(result.upload_form_url)actions.push({label:result.status==='confirmado'?'Abrir envio':'Enviar arquivo',primary:result.status!=='confirmado',run:()=>openLink(result.upload_form_url)});
+    if(data.produto_url)actions.push({label:'Abrir no Tables',run:()=>openLink(data.produto_url)});if(actions.length)target.append(actionsBar(actions))}}
+
+// Registros com colunas escolhidas e totais do filtro completo.
+function renderRecords(target,data){const full=state.displayMode==='fullscreen',rows=data.registros||[],fields=data.campos||[];
+  heading(target,titlesByTool.consultar_registros,data.total+(data.total===1?' registro':' registros'));
+  const sums=Object.entries(data.somas||{}).map(([id,value])=>{const f=fields.find(x=>x.id===id);return f?{label:'Soma · '+f.nome,value:f.tipo==='moeda'?money(value):Number(value).toLocaleString('pt-BR')}:null}).filter(Boolean);
+  if(sums.length)target.append(metrics(sums.slice(0,full?6:strict?2:3)));
+  if(!rows.length){target.append(notice('Nenhum registro encontrado.'));return}
+  const visible=fields.slice(0,full?fields.length:strict?3:4),shown=full?rows:rows.slice(0,strict?3:5);
+  const t=element('table'),head=element('tr');for(const f of visible){const th=element('th',f.nome);if(['moeda','numero'].includes(f.tipo))th.className='num';head.append(th)}const thead=element('thead');thead.append(head);const body=element('tbody');
+  for(const r of shown){const line=element('tr');for(const f of visible){const cell=element('td',cellText(r,f));if(['moeda','numero'].includes(f.tipo))cell.className='num';line.append(cell)}line.className='clickable';line.tabIndex=0;line.onclick=()=>run(()=>open('tables_obter_registro',withCompany({registro_id:r.id})));body.append(line)}
+  t.append(thead,body);target.append(t);
+  if(full){if(data.tem_mais||Number(data.pagina||1)>1)target.append(pager(data))}else if(rows.length>shown.length||data.tem_mais||fields.length>visible.length)target.append(actionsBar([{label:'Ver tudo',run:fullscreen}]))}
+function renderRecord(target,data){const record=data.registro||{},shown=record.exibicao||{},entries=Object.entries(shown);
+  hero(target,{eyebrow:'Registro',title:entries.length?String(entries[0][1]||'Sem nome'):'Registro',meta:record.atualizado_em?'Atualizado em '+formatted('criado_em',record.atualizado_em):''});
+  const box=kv(entries.slice(1).map(([k,v])=>[k,v,{label:k,raw:true}]));if(box)target.append(box);
+  if((data.anexos||[]).length)target.append(section('Anexos',kv(data.anexos.map(a=>[a.id,a.nome,{label:'Arquivo',raw:true}]))));
+  if((data.colunas_omitidas||[]).length)target.append(element('p','Outros campos: '+data.colunas_omitidas.join(', '),'sub'))}
+
+// Contagem e métricas por grupo, com barras proporcionais.
+function renderSummary(target,data){const groups=data.grupos||[],metricNames=Object.keys(data.metricas||{});
+  heading(target,titlesByTool.resumir,data.agrupado_por?'Por '+data.agrupado_por.nome:'Todos os registros do filtro');
+  target.append(metrics([{label:'Registros',value:Number(data.total||0).toLocaleString('pt-BR')},...metricNames.slice(0,strict?1:3).map(n=>({label:n[0].toUpperCase()+n.slice(1),value:data.metricas[n]===null?'—':amount(data.metricas[n])}))]));
+  if(!groups.length)return;
+  const max=Math.max(...groups.map(g=>g.quantidade),1),list=element('div',undefined,'bars'),limit=state.displayMode==='fullscreen'?groups.length:strict?4:6;
+  for(const g of groups.slice(0,limit)){const row=element('div',undefined,'bar'),track=element('div',undefined,'track'),fill=element('span');fill.style.width=Math.max(2,Math.round(g.quantidade/max*100))+'%';fill.style.background='var(--accent, #6b5bd2)';track.append(fill);
+    const extra=metricNames[0]&&g.metricas[metricNames[0]]!==null?' · '+amount(g.metricas[metricNames[0]]):'';row.style.gridTemplateColumns='minmax(96px,32%) 1fr auto';
+    row.append(element('span',g.rotulo,'item-title'),track,element('span',g.quantidade+extra,'num'));list.append(row)}
+  target.append(list);if(data.observacao)target.append(element('p',data.observacao,'sub'));
+  if(groups.length>limit||data.grupos_omitidos)target.append(actionsBar([{label:'Ver tudo',run:fullscreen}]))}
+
+// Listas: bases, estrutura da tabela, atividade e lixeira.
+function renderItems(target,data){const full=state.displayMode==='fullscreen',tool=short(state.tool);
+  if(data.base){hero(target,{eyebrow:'Base',title:data.base.nome,meta:data.base.descricao||''})}else heading(target,titlesByTool[tool]||'Tables',data.tabela?data.tabela.nome:(data.total!==undefined?data.total+' itens':''));
+  const source=data.itens||(data.tabelas&&data.tabelas.itens)||[];const rows=source.map(item=>{const row={...item};if(row.tipo)row.tipo=fieldTypes[row.tipo]||row.tipo;if(row.opcoes&&row.opcoes.itens)row.opcoes=row.opcoes.itens.map(o=>o.nome).join(', ');return row});
+  if(!rows.length){target.append(notice(tool==='listar_lixeira'?'A lixeira está vazia.':'Nada encontrado.'));return}
+  const keys=columns(rows,full?6:strict?2:3).filter(k=>!['posicao','cor','icone'].includes(k));const shown=full?rows:rows.slice(0,strict?3:5);
+  target.append(table(shown,keys.length?keys:['nome']));
+  if(full){if(data.tem_mais||Number(data.pagina||1)>1)target.append(pager(data.itens?data:data.tabelas))}else if(rows.length>shown.length||data.tem_mais||(data.tabelas&&data.tabelas.tem_mais))target.append(actionsBar([{label:'Ver tudo',run:fullscreen}]))}
+function renderLink(target,data){hero(target,{eyebrow:'Anexo',title:'Link de download pronto',meta:'O link expira em instantes; gere outro se precisar.'});target.append(actionsBar([{label:'Baixar arquivo',primary:true,run:()=>openLink(data.url)}]))}
+`
+
 export function renderTablesCard(host:'chatgpt'|'claude') {
- return `<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><style>body{margin:0;padding:18px;font:14px system-ui;color:light-dark(#172033,#e5e7eb);background:light-dark(#fff,#171923);color-scheme:light dark}h1{font-size:20px;margin:0 0 14px}p{line-height:1.5}button{border:1px solid #aaa8;border-radius:7px;padding:9px 14px;cursor:pointer;margin:5px}button.primary{background:#7154db;color:white;border:0}button:disabled{opacity:.5}table{border-collapse:collapse;width:100%;font-size:13px}td,th{text-align:left;padding:9px;border-bottom:1px solid #aaa5;vertical-align:top}.scroll{overflow:auto}pre{white-space:pre-wrap;overflow-wrap:anywhere;font:12px system-ui;padding:12px;background:#8881;border-radius:8px}a{color:light-dark(#6341c5,#b8a4ff)}.muted{opacity:.7}#status{min-height:20px}.danger{color:light-dark(#a42121,#ffabab)}</style></head><body><main id="app"><p role="status">Carregando Tables…</p></main><p id="status" role="status"></p><script>(function(){
-const host=${JSON.stringify(host)},root=document.getElementById('app'),status=document.getElementById('status'),pending=new Map();let seq=1,company=null,data=null,tool=null,busy=false,displayMode='inline';
-function el(tag,text){const n=document.createElement(tag);if(text!==undefined)n.textContent=String(text);return n}
-function rpc(method,params){return new Promise((resolve,reject)=>{const id=seq++,timer=setTimeout(()=>{pending.delete(id);reject(Error('A chamada demorou. Consulte a operação antes de repetir.'))},30000);pending.set(id,{resolve,reject,timer});parent.postMessage({jsonrpc:'2.0',id,method,params},'*')})}
-function notify(method,params){parent.postMessage({jsonrpc:'2.0',method,params},'*')}
-function stringify(v){if(v===null)return '—';if(typeof v==='boolean')return v?'Sim':'Não';if(Array.isArray(v))return v.map(stringify).join(', ');if(v&&typeof v==='object')return JSON.stringify(v,null,2);return String(v??'')}
-const labels={nome:'Nome',descricao:'Descrição',cor:'Cor',tipo:'Tipo',modelo:'Modelo',alteracoes:'Alterações',valores:'Valores',registros:'Registros',campo:'Campo',relacoes:'Relações',modo:'Operação',obrigatorio:'Obrigatório',configuracao:'Configuração',opcoes:'Opções',texto:'Comentário',status:'Situação',quantidade:'Quantidade',filtros:'Filtros',ordenacao:'Ordenação',agrupamento:'Agrupamento',campo_data:'Campo de data',campos:'Colunas',tamanho:'Tamanho do arquivo',moeda:'Moeda',mime_type:'Formato do arquivo',largura:'Largura',visivel:'Visível',posicao:'Posição',pagina:'Página',tem_mais:'Há mais resultados',total:'Total',versao:'Versão',selecao:'Seleção única',selecao_multipla:'Seleção múltipla',usuarios:'Pessoas',usuario:'Responsável',vinculo:'Vínculo',anexo:'Anexo',grade:'Grade',kanban:'Kanban',calendario:'Calendário',definir:'Definir',adicionar:'Adicionar',remover:'Remover',confirmado:'Confirmado',aguardando_envio:'Aguardando o envio do arquivo',na_lixeira:'Na lixeira',restaurado:'Restaurado'};
-function nameOf(key){return labels[key]||(data?.previa?.referencias||[]).find(r=>r.id===key)?.nome||key.replaceAll('_',' ')}
-function describe(value,key=''){if(value===null)return 'Limpar';if(Array.isArray(value))return value.map(v=>describe(v,key)).join(', ');if(value&&typeof value==='object'){if(value.nome)return value.nome;if(value.itens)return describe(value.itens,key);return Object.entries(value).filter(([k])=>!/(^id$|_id$|expected|upload_url|versao)/.test(k)).map(([k,v])=>nameOf(k)+': '+describe(v,k)).join(' · ')}if(typeof value==='boolean')return value?'Sim':'Não';return labels[value]||(data?.previa?.referencias||[]).find(r=>r.id===value)?.nome||String(value??'')}
-function details(value,target=root){const list=el('dl');for(const [key,v] of Object.entries(value||{})){if(/(^id$|_id$|expected|versao|upload_url|upload_form_url|produto_url|criado_|atualizado_|empresa_id)/.test(key))continue;list.append(el('dt',nameOf(key)),el('dd',describe(v,key)))}target.append(list)}
-function result(r){if(!r||r.isError){let e;try{e=JSON.parse(r.content.find(x=>x.type==='text').text)}catch{}throw Error(e?.message||'Não foi possível concluir.')}const p=r.structuredContent;if(!p?.ok)throw Error('Resposta indisponível.');company=p.empresa_id;data=p.data;tool=r._meta?.['cognito/tool']||tool;render()}
-async function call(name,args){if(busy)return;busy=true;status.textContent='Processando…';render();try{result(await rpc('tools/call',{name,arguments:{empresa_id:company,...args}}));rpc('ui/update-model-context',{content:[{type:'text',text:'Resultado confirmado no card do Tables: '+JSON.stringify({tool:name,status:data.status,operacao_id:data.operacao_id,resultado:data.resultado})}]}).catch(()=>{})}catch(e){status.textContent=e.message;status.className='danger'}finally{busy=false;render()}}
-function button(text,fn,primary=false){const b=el('button',text);b.disabled=busy;b.className=primary?'primary':'';b.onclick=fn;return b}
-function table(rows,fields){if(!rows.length){root.append(el('p','Nenhum item nesta página.'));return}const wrap=el('div'),t=el('table'),h=el('tr'),body=el('tbody');wrap.className='scroll';const compact=host==='claude'&&displayMode!=='fullscreen';let keys=fields||Object.keys(rows[0]).filter(k=>!['valores','campos_truncados','exibicao'].includes(k)&&!/(^id$|_id$|versao)/.test(k)).slice(0,8);if(compact){keys=keys.slice(0,5);rows=rows.slice(0,5)}for(const key of keys)h.append(el('th',typeof key==='object'?key.nome:nameOf(key)));t.append(h);for(const r of rows){const line=el('tr');for(const key of keys)line.append(el('td',describe(typeof key==='object'?(r.exibicao?.[key.id]??r.valores?.[key.id]):r[key])));body.append(line)}t.append(body);wrap.append(t);root.append(wrap)}
-function link(url,text){try{const u=new URL(url);if(u.protocol!=='https:')return;const a=el('a',text);a.href=u.href;a.rel='noopener noreferrer';a.target='_blank';root.append(a)}catch{}}
-function render(){if(!data)return;root.replaceChildren(el('h1','Tables'));if(!busy&&status.textContent==='Processando…')status.textContent='';
- if(host==='claude'&&displayMode!=='fullscreen')root.append(button('Ver em tela cheia',async()=>{try{const r=await rpc('ui/request-display-mode',{mode:'fullscreen'});displayMode=r.mode||'fullscreen';render()}catch{status.textContent='Abra a visualização completa no Tables.'}}));
- if(data.operacao_id){root.append(el('p',{pending:'Revise a alteração antes de confirmar.',saved:'Operação executada.',cancelled:'Prévia cancelada.',expired:'Prévia expirada.'}[data.status]||data.status));if(data.previa){for(const ref of data.previa.referencias||[])root.append(el('p',ref.tipo+': '+ref.nome));root.append(el('pre',describe(data.previa.alteracoes)));if(data.previa.aviso)root.append(el('p',data.previa.aviso))}if(data.confirmar){root.append(button('Confirmar',()=>call(data.confirmar.tool,data.confirmar.argumentos),true),button('Cancelar',()=>call('tables_cancelar_operacao',{operacao_id:data.operacao_id})))}if(data.resultado){details(data.resultado);if(data.resultado.upload_form_url)link(data.resultado.upload_form_url,data.resultado.status==='confirmado'?'Arquivo confirmado · abrir envio':'Selecionar e enviar arquivo')}root.append(button('Atualizar situação',()=>call('tables_obter_operacao',{operacao_id:data.operacao_id})));}
- else if(data.registros){table(data.registros,data.campos);root.append(el('p','Total: '+data.total+' · Página '+data.pagina));if(data.somas)root.append(el('pre','Somas do resultado: '+Object.entries(data.somas).map(([id,v])=>(data.campos||[]).find(f=>f.id===id)?.nome+': '+v).join(' · ')));if(data.tem_mais&&tool)root.append(button('Próxima página',()=>call(tool,{...lastArgs,pagina:(data.pagina||1)+1})))}
- else if(data.itens){table(data.itens);if(data.tem_mais&&tool)root.append(button('Próxima página',()=>call(tool,{...lastArgs,pagina:(data.pagina||1)+1})))}
- else if(data.registro){table([data.registro],data.campos);if(data.colunas_omitidas?.length)root.append(el('p','Há outros campos; consulte seus IDs na estrutura da tabela.'))}
- else {details(data);if(data.url)link(data.url,'Baixar arquivo')}
- if(data.produto_url)link(data.produto_url,'Abrir no Tables');
- notify('ui/notifications/size-changed',{height:Math.ceil(document.body.getBoundingClientRect().height)});
-}let lastArgs={};window.addEventListener('message',event=>{if(event.source!==parent)return;const m=event.data;if(!m||m.jsonrpc!=='2.0')return;const p=pending.get(m.id);if(p&&m.method===undefined){clearTimeout(p.timer);pending.delete(m.id);m.error?p.reject(Error(m.error.message)):p.resolve(m.result);return}if(m.method==='ui/notifications/tool-input'){lastArgs=m.params?.arguments||{};tool=m.params?.name||tool}if(m.method==='ui/notifications/tool-result'){try{result(m.params)}catch(e){status.textContent=e.message}}if(m.method==='ui/resource-teardown'&&m.id!==undefined)parent.postMessage({jsonrpc:'2.0',id:m.id,result:{}},'*')});rpc('ui/initialize',{protocolVersion:'2026-01-26',appInfo:{name:'cognito-tables',version:'1.0.0'},appCapabilities:{availableDisplayModes:['inline','fullscreen']}}).then(()=>notify('ui/notifications/initialized',{})).catch(e=>{status.textContent=e.message});new ResizeObserver(()=>notify('ui/notifications/size-changed',{height:Math.ceil(document.body.getBoundingClientRect().height)})).observe(document.body);
-})();</script></body></html>`
+ const constants=`const fieldLabels={},HOST=${JSON.stringify(host)},strict=HOST==='claude';document.documentElement.classList.add('host-'+HOST);`
+ return `<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><style>${cardStyles}</style></head><body><main><section id="app" aria-live="polite" aria-label="Resultado do Tables"></section><p id="status" class="muted" role="status">Conectando…</p></main><script>(function(){${constants}\n${commonScript}\n${tablesScript}\n${bridgeScript({name:'tables-cards',version:'2.0.0',host})}})();</script></body></html>`
 }

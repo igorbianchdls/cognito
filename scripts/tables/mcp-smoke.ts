@@ -33,7 +33,8 @@ const config:PluginConfig={integration:'chatgpt',resource:'https://example.inval
 const deps:ExecutionDependencies={...executionDependencies,reserve:async()=>randomUUID(),finish:async()=>undefined,tables:{transaction:async fn=>{await db.exec('BEGIN');try{const result=await fn(db as unknown as Database);await db.exec('COMMIT');return result}catch(e){await db.exec('ROLLBACK');throw e}}}}
 async function call(name:string,args:object={},actor=principal,settings=config) {called.add('tables_'+name);const result=await executeTool(actor,'tables_'+name,{empresa_id:1,...args},settings,deps);const payload=JSON.parse((result.content[0] as {text:string}).text);return {...payload,isError:result.isError}}
 async function ok(name:string,args:object={}){const r=await call(name,args);assert(!r.isError,JSON.stringify(r));return r.data}
-async function change(name:string,data:object,key=randomUUID()){const preview=await ok(name,{chave_operacao:key,dados:data});assert(preview.confirmar);const result=await ok(name,{rascunho_id:preview.rascunho_id});assert.equal(result.status,'saved');return {preview,result,key}}
+// Writes that only add data run at once (status saved); the others return a preview to confirm.
+async function change(name:string,data:object,key=randomUUID()){const preview=await ok(name,{chave_operacao:key,dados:data});if(preview.status==='saved')return {preview,result:preview,key,direct:true};assert(preview.confirmar,JSON.stringify(preview));const result=await ok(name,{rascunho_id:preview.rascunho_id});assert.equal(result.status,'saved');return {preview,result,key,direct:false}}
 async function check(name:string,fn:()=>Promise<void>){await fn();checks.push(name);console.log('Passed: '+name)}
 let base:string,table:string,record:string,statusField:string,peopleField:string
 async function main(){try {
@@ -47,96 +48,118 @@ async function main(){try {
  CONSTRAINT drafts_integration_operation_key UNIQUE(integration,empresa_id,user_id,oauth_client_id,operation_key),CONSTRAINT legacy_result CHECK((status='saved')=(record_id IS NOT NULL)));
  CREATE TABLE plugin.executions(id uuid PRIMARY KEY,user_id bigint,empresa_id bigint,oauth_client_id text,tool_name text,status text,duration_ms int,finished_at timestamptz,integration text);`)
  for(const file of ['20261016120000_create_tables.sql','20261016193000_mcp_product_domains.sql','20261016200000_mcp_domain_uniqueness.sql'])await db.exec(readFileSync('supabase/migrations/'+file,'utf8'))
- await check('31 unique tools and two host registrations',async()=>{
-  assert.equal(tablesTools.length,31);assert.equal(new Set(tablesTools.map(t=>t.name)).size,31);assert.equal(Object.keys(readSchemas).length,10)
-  for(const make of [createPluginServer,createClaudeServer]){const server=await make(principal,config,deps);const registry=(server as unknown as {_registeredTools:Record<string,unknown>})._registeredTools;assert.equal(Object.keys(registry).filter(n=>n.startsWith('tables_')).length,31);await server.close()}
+ await check('18 unique tools, compact definitions and two host registrations',async()=>{
+  assert.equal(tablesTools.length,18);assert.equal(new Set(tablesTools.map(t=>t.name)).size,18);assert.equal(Object.keys(readSchemas).length,9)
+  assert(tablesTools.find(t=>t.key==='comentar')!.destructive===false&&tablesTools.find(t=>t.key==='lixeira')!.destructive===true&&tablesTools.find(t=>t.key==='resumir')!.write===false)
+  for(const make of [createPluginServer,createClaudeServer]){const server=await make(principal,config,deps);const registry=(server as unknown as {_registeredTools:Record<string,unknown>})._registeredTools;assert.equal(Object.keys(registry).filter(n=>n.startsWith('tables_')).length,18);await server.close()}
  })
- await check('Preview writes nothing and confirmation is idempotent',async()=>{
-  const key=randomUUID(),p=await ok('criar_base',{chave_operacao:key,dados:{nome:'Projetos MCP',modelo:'projetos'}})
-  assert.equal((await db.query<{n:number}>('SELECT count(*)::int n FROM tables.bases')).rows[0].n,0)
-  const r=await ok('criar_base',{rascunho_id:p.rascunho_id});base=r.resultado.base.id;table=r.resultado.tabela.id
-  assert.deepEqual((await ok('criar_base',{rascunho_id:p.rascunho_id})).resultado,r.resultado)
+ await check('Creation runs at once, is idempotent by key and edits keep a preview',async()=>{
+  const key=randomUUID(),created=await change('salvar_base',{nome:'Projetos MCP',modelo:'projetos'},key)
+  assert(created.direct);base=created.result.resultado.base.id;table=created.result.resultado.tabela.id
+  assert.deepEqual((await ok('salvar_base',{chave_operacao:key,dados:{nome:'Projetos MCP',modelo:'projetos'}})).resultado,created.result.resultado)
   assert.equal((await ok('obter_operacao',{chave_operacao:key})).status,'saved')
-  assert.equal((await call('criar_base',{chave_operacao:key,dados:{nome:'Outro'}})).code,'IDEMPOTENCY_CONFLICT')
+  assert.equal((await call('salvar_base',{chave_operacao:key,dados:{nome:'Outro'}})).code,'IDEMPOTENCY_CONFLICT')
+  const p=await ok('salvar_base',{chave_operacao:randomUUID(),dados:{base_id:base,nome:'Renomeada'}});assert.equal(p.status,'pending')
+  assert.equal((await ok('listar_bases',{base_id:base})).base.nome,'Projetos MCP','A prévia não grava')
+  const r=await ok('salvar_base',{rascunho_id:p.rascunho_id});assert.equal(r.status,'saved');assert.deepEqual((await ok('salvar_base',{rascunho_id:p.rascunho_id})).resultado,r.resultado)
+  assert.equal((await ok('listar_bases',{base_id:base})).base.nome,'Renomeada')
  })
  await check('Scope, real membership role and domain isolation',async()=>{
-  assert.equal((await call('criar_base',{chave_operacao:randomUUID(),dados:{nome:'Negado'}},{...principal,scopes:['erp:read']})).code,'INSUFFICIENT_SCOPE')
+  const reader={...principal,scopes:['erp:read']}
+  assert.equal((await call('salvar_base',{chave_operacao:randomUUID(),dados:{nome:'Negado'}},reader)).code,'INSUFFICIENT_SCOPE')
+  assert.equal((await call('cancelar_operacao',{operacao_id:randomUUID()},reader)).code,'INSUFFICIENT_SCOPE')
   const viewer={...principal,userId:2,clerkUserId:'user_viewer'}
-  assert.equal((await call('criar_base',{chave_operacao:randomUUID(),dados:{nome:'Negado'}},viewer)).code,'ACCESS_DENIED')
+  assert.equal((await call('salvar_base',{chave_operacao:randomUUID(),dados:{nome:'Negado'}},viewer)).code,'ACCESS_DENIED')
   assert(!(await call('listar_bases',{},viewer)).isError)
   const id=randomUUID();await db.query("INSERT INTO plugin.drafts(id,empresa_id,user_id,oauth_client_id,operation_key,proposal,integration) VALUES($1,1,1,'test-client',$2,'{}','chatgpt')",[id,randomUUID()])
   assert.equal((await call('obter_operacao',{operacao_id:id})).code,'NOT_FOUND')
  })
- await check('Read metadata, create record and filter exact sums',async()=>{
+ await check('Names resolve fields, options and people; readable values and exact sums',async()=>{
   const fields=(await ok('obter_tabela',{tabela_id:table,tamanho:10})).itens;statusField=fields.find((f:{nome:string})=>f.nome==='Status').id
-  const name=fields.find((f:{tipo:string})=>f.tipo==='texto').id,money=fields.find((f:{tipo:string})=>f.tipo==='moeda').id
-  const created=await change('criar_registro',{tabela_id:table,valores:{[name]:'Portal',[money]:'1000.15'}});record=created.result.resultado.registros[0].id
-  const rows=await ok('consultar_registros',{tabela_id:table,filtros:[{campo:name,operador:'contains',valor:'Portal'}]});assert.equal(rows.total,1);assert.equal(rows.somas[money],'1000.15')
+  const money=fields.find((f:{tipo:string})=>f.tipo==='moeda').id
+  const created=await change('salvar_registros',{tabela_id:table,registros:[{valores:{'Nome do projeto':'Portal','orçamento':'1000.15','STATUS':'em andamento','Responsável':'ana@example.invalid'}}]})
+  assert(created.direct);record=created.result.resultado.registros[0].id
+  const rows=await ok('consultar_registros',{tabela_id:table,filtros:[{campo:'Nome do projeto',operador:'contains',valor:'Portal'},{campo:'Status',operador:'eq',valor:'Em andamento'}],campos:['Nome do projeto','Status','Responsável','Orçamento']})
+  assert.equal(rows.total,1);assert.equal(rows.somas[money],'1000.15')
+  assert.equal(rows.registros[0].exibicao['Status'],'Em andamento');assert.equal(rows.registros[0].exibicao['Responsável'],'Ana');assert(rows.colunas_omitidas.includes('Prazo'))
+  const unknown=await call('salvar_registros',{chave_operacao:randomUUID(),dados:{tabela_id:table,registros:[{valores:{'Status':'Arquivado'}}]}})
+  assert.equal(unknown.code,'UNKNOWN_REFERENCE');assert.match(unknown.message,/Em andamento/)
  })
- await check('Partial field and view rename preserve configuration',async()=>{
-  const before=await ok('obter_tabela',{tabela_id:table,campo_id:statusField});const options=before.itens[0].opcoes
-  await change('editar_campo',{tabela_id:table,campo_id:statusField,alteracoes:{nome:'Etapa'}})
-  assert.deepEqual((await ok('obter_tabela',{tabela_id:table,campo_id:statusField})).itens[0].opcoes,options)
-  const views=await ok('obter_tabela',{tabela_id:table,secao:'visualizacoes'}),kanban=views.itens.find((v:{tipo:string})=>v.tipo==='kanban')
-  const old=await ok('obter_tabela',{tabela_id:table,secao:'visualizacoes',visualizacao_id:kanban.id})
-  await change('editar_visualizacao',{tabela_id:table,visualizacao_id:kanban.id,alteracoes:{nome:'Painel'}})
-  const next=await ok('obter_tabela',{tabela_id:table,secao:'visualizacoes',visualizacao_id:kanban.id});assert.deepEqual(next.itens[0].configuracao,old.itens[0].configuracao)
+ await check('Summaries group, count and aggregate the whole filtered set',async()=>{
+  await change('salvar_registros',{tabela_id:table,registros:[{valores:{'Nome do projeto':'Site','Status':'A fazer','Orçamento':'200'}},{valores:{'Nome do projeto':'App','Status':'A fazer','Orçamento':'300.50'}}]})
+  const s=await ok('resumir',{tabela_id:table,agrupar_por:'Status',metricas:[{campo:'Orçamento',operacao:'soma'},{campo:'Orçamento',operacao:'media'}]})
+  assert.equal(s.total,3);assert.equal(s.metricas['soma de Orçamento'],'1500.65')
+  const todo=s.grupos.find((g:{rotulo:string})=>g.rotulo==='A fazer');assert.equal(todo.quantidade,2);assert.equal(todo.metricas['soma de Orçamento'],'500.50');assert.equal(todo.metricas['média de Orçamento'],'250.25')
+  const filtered=await ok('resumir',{tabela_id:table,filtros:[{campo:'Status',operador:'eq',valor:'A fazer'}],agrupar_por:'Responsável'});assert.equal(filtered.total,2);assert.equal(filtered.grupos[0].rotulo,'Sem valor')
+  assert.equal((await call('resumir',{tabela_id:table,agrupar_por:'Orçamento'})).code,'INVALID_GROUP')
  })
- await check('Multiple relation add/remove preserve previous people',async()=>{
-  const field=await change('criar_campo',{tabela_id:table,campo:{nome:'Equipe',tipo:'usuarios'}});peopleField=field.result.resultado.campo.id
-  await change('editar_registro',{tabela_id:table,registro_id:record,relacoes:[{campo_id:peopleField,modo:'definir',valores:['1']}]})
-  await change('editar_registro',{tabela_id:table,registro_id:record,relacoes:[{campo_id:peopleField,modo:'adicionar',valores:['3']}]})
+ await check('Partial field and view edits preserve configuration',async()=>{
+  const before=await ok('obter_tabela',{tabela_id:table,campo:'Status'});const options=before.itens[0].opcoes
+  await change('salvar_campo',{tabela_id:table,campo:'Status',nome:'Etapa'})
+  assert.deepEqual((await ok('obter_tabela',{tabela_id:table,campo:statusField})).itens[0].opcoes,options)
+  const old=await ok('obter_tabela',{tabela_id:table,visualizacao:'Kanban'})
+  const edited=await change('salvar_visualizacao',{tabela_id:table,acao:'editar',visualizacao:'kanban',nome:'Painel'});assert(!edited.direct)
+  const next=await ok('obter_tabela',{tabela_id:table,visualizacao:'Painel'});assert.deepEqual(next.itens[0].configuracao,old.itens[0].configuracao)
+ })
+ await check('Multiple relations add by name and email, preserving previous people',async()=>{
+  const field=await change('salvar_campo',{tabela_id:table,nome:'Equipe',tipo:'usuarios'});assert(field.direct);peopleField=field.result.resultado.campo.id
+  await change('salvar_registros',{tabela_id:table,registros:[{registro_id:record,relacoes:[{campo:'Equipe',modo:'definir',valores:['Ana']}]}]})
+  await change('salvar_registros',{tabela_id:table,registros:[{registro_id:record,relacoes:[{campo:'Equipe',modo:'adicionar',valores:['bruno@example.invalid']}]}]})
   assert.deepEqual((await ok('obter_registro',{registro_id:record})).registro.valores[peopleField],['1','3'])
+  await change('salvar_campo',{tabela_id:table,nome:'Duplicado',tipo:'texto'});await change('salvar_campo',{tabela_id:table,nome:'Duplicado',tipo:'texto'})
+  assert.equal((await call('salvar_registros',{chave_operacao:randomUUID(),dados:{tabela_id:table,registros:[{valores:{'Duplicado':'x'}}]}})).code,'AMBIGUOUS_REFERENCE')
  })
  await check('Batch rollback, duplicate IDs and stale previews',async()=>{
   const count=(await ok('consultar_registros',{tabela_id:table})).total
-  const bad=await call('criar_registros_em_lote',{chave_operacao:randomUUID(),dados:{tabela_id:table,registros:[{valores:{}},{valores:{[randomUUID()]:'Inválido'}}]}});assert(bad.isError);assert.equal((await ok('consultar_registros',{tabela_id:table})).total,count)
-  const created=await change('criar_registros_em_lote',{tabela_id:table,registros:[{valores:{}},{valores:{}}]});assert.equal(created.result.resultado.quantidade,2)
-  const p=await ok('editar_registro',{chave_operacao:randomUUID(),dados:{tabela_id:table,registro_id:record,valores:{}}})
-  await change('editar_registro',{tabela_id:table,registro_id:record,valores:{}})
-  assert.equal((await call('editar_registro',{rascunho_id:p.rascunho_id})).code,'STALE_PROPOSAL')
+  const bad=await call('salvar_registros',{chave_operacao:randomUUID(),dados:{tabela_id:table,registros:[{valores:{}},{valores:{[randomUUID()]:'Inválido'}}]}});assert(bad.isError);assert.equal((await ok('consultar_registros',{tabela_id:table})).total,count)
+  const created=await change('salvar_registros',{tabela_id:table,registros:[{valores:{}},{valores:{}}]});assert(!created.direct);assert.equal(created.result.resultado.quantidade,2)
+  const duplicated=await call('salvar_registros',{chave_operacao:randomUUID(),dados:{tabela_id:table,registros:[{registro_id:record,valores:{}},{registro_id:record,valores:{}}]}});assert(duplicated.isError)
+  const p=await ok('salvar_registros',{chave_operacao:randomUUID(),dados:{tabela_id:table,registros:[{registro_id:record,valores:{}}]}})
+  await change('salvar_registros',{tabela_id:table,registros:[{registro_id:record,valores:{}}]})
+  assert.equal((await call('salvar_registros',{rascunho_id:p.rascunho_id})).code,'STALE_PROPOSAL')
  })
- await check('Paginated comments/history, cancellation and cross-host binding',async()=>{
-  await change('adicionar_comentario',{registro_id:record,texto:'Revisado'});assert.equal((await ok('listar_comentarios',{registro_id:record,tamanho:1})).itens[0].texto,'Revisado')
-  const h=await ok('consultar_historico',{registro_id:record,tamanho:1});assert(h.tem_mais)
-  const p=await ok('editar_base',{chave_operacao:randomUUID(),dados:{base_id:base,alteracoes:{nome:'Novo nome'}}})
+ await check('Comments run at once; activity pages, cancellation and cross-host binding',async()=>{
+  const comment=await change('comentar',{registro_id:record,texto:'Revisado'});assert(comment.direct)
+  assert.equal((await ok('listar_atividade',{registro_id:record,tamanho:1})).itens[0].texto,'Revisado')
+  assert((await ok('listar_atividade',{registro_id:record,tipo:'historico',tamanho:1})).tem_mais)
+  const p=await ok('salvar_base',{chave_operacao:randomUUID(),dados:{base_id:base,nome:'Novo nome'}})
   assert.equal((await call('obter_operacao',{operacao_id:p.rascunho_id},principal,{...config,integration:'claude'})).code,'NOT_FOUND')
   assert.equal((await ok('cancelar_operacao',{operacao_id:p.rascunho_id})).status,'cancelled')
-  assert.equal((await call('editar_base',{rascunho_id:p.rascunho_id})).code,'INVALID_STATE')
+  assert.equal((await call('salvar_base',{rascunho_id:p.rascunho_id})).code,'INVALID_STATE')
  })
- await check('Soft delete and field restore preserve record values',async()=>{
-  await change('mover_para_lixeira',{tipo:'campos',item_id:peopleField});assert((await ok('listar_lixeira')).itens.some((i:{id:string})=>i.id===peopleField))
-  await change('restaurar_item',{tipo:'campos',item_id:peopleField});assert.deepEqual((await ok('obter_registro',{registro_id:record})).registro.valores[peopleField],['1','3'])
+ await check('Trash and restore preserve record values',async()=>{
+  const moved=await change('lixeira',{acao:'mover',tipo:'campos',ids:[peopleField]});assert(!moved.direct);assert((await ok('listar_lixeira')).itens.some((i:{id:string})=>i.id===peopleField))
+  await change('lixeira',{acao:'restaurar',tipo:'campos',ids:[peopleField]});assert.deepEqual((await ok('obter_registro',{registro_id:record})).registro.valores[peopleField],['1','3'])
  })
  await check('Tables, views, batch editing and reversible record deletion',async()=>{
-  assert.equal((await ok('obter_base',{base_id:base})).base.id,base)
-  const other=await change('criar_tabela',{base_id:base,nome:'Outra tabela'}),otherId=other.result.resultado.tabela.id
-  await change('editar_tabela',{tabela_id:otherId,nome:'Tabela renomeada'})
-  await change('editar_base',{base_id:base,alteracoes:{descricao:'Equipe MCP'}})
-  const view=await change('criar_visualizacao',{tabela_id:table,visualizacao:{nome:'Grade extra',tipo:'grade',configuracao:{}}})
-  await change('excluir_visualizacao',{tabela_id:table,visualizacao_id:view.result.resultado.visualizacao.id})
-  const batch=await change('criar_registros_em_lote',{tabela_id:table,registros:[{valores:{}},{valores:{}}]}),ids=batch.result.resultado.registros.map((r:{id:string})=>r.id)
-  await change('editar_registros_em_lote',{tabela_id:table,registros:ids.map((registro_id:string)=>({registro_id,valores:{}}))})
-  await change('mover_registros_para_lixeira',{tabela_id:table,registros:ids.map((registro_id:string)=>({registro_id}))})
-  await change('restaurar_item',{tipo:'registros',item_id:ids[0]})
+  assert.equal((await ok('listar_bases',{base_id:base})).base.id,base)
+  const other=await change('salvar_tabela',{base_id:base,nome:'Outra tabela'});assert(other.direct);const otherId=other.result.resultado.tabela.id
+  await change('salvar_tabela',{tabela_id:otherId,nome:'Tabela renomeada'})
+  await change('salvar_base',{base_id:base,descricao:'Equipe MCP'})
+  const view=await change('salvar_visualizacao',{tabela_id:table,acao:'criar',nome:'Grade extra',campos_visiveis:['Nome do projeto','Etapa']});assert(view.direct)
+  const visible=(await ok('obter_tabela',{tabela_id:table,visualizacao:'Grade extra'})).itens[0].campos.filter((c:{visivel:boolean})=>c.visivel);assert.equal(visible.length,2)
+  await change('salvar_visualizacao',{tabela_id:table,acao:'excluir',visualizacao:'Grade extra'})
+  const batch=await change('salvar_registros',{tabela_id:table,registros:[{valores:{}},{valores:{}}]}),ids=batch.result.resultado.registros.map((r:{id:string})=>r.id)
+  await change('salvar_registros',{tabela_id:table,registros:ids.map((registro_id:string)=>({registro_id,valores:{'Cliente':'ACME'}}))})
+  await change('lixeira',{acao:'mover',tipo:'registros',ids})
+  await change('lixeira',{acao:'restaurar',tipo:'registros',ids:[ids[0]]})
  })
  await check('Upload form transfers bytes and confirms both tool and browser paths',async()=>{
-  const field=await change('criar_campo',{tabela_id:table,campo:{nome:'Arquivos',tipo:'anexo'}})
-  const prepared=await change('preparar_upload',{registro_id:record,campo_id:field.result.resultado.campo.id})
+  await change('salvar_campo',{tabela_id:table,nome:'Arquivos',tipo:'anexo'})
+  const prepared=await change('anexos',{acao:'preparar',registro_id:record,campo:'Arquivos'});assert(prepared.direct)
   assert.equal(prepared.result.resultado.status,'aguardando_envio');assert(prepared.result.resultado.upload_form_url)
   const actor={tenantId:1,sharedUserId:1,clerkUserId:'user_owner',role:'owner'} as AuthTenantContext
   const bytes=Buffer.from('Arquivo de teste MCP.\n'),meta={acao:'iniciar',nome:'teste.txt',mime_type:'text/plain',tamanho:bytes.length}
   const opened=await mcpUpload(actor,prepared.result.operacao_id,undefined,deps.tables!.transaction);assert.equal(opened.status,'aguardando_envio')
   const upload=await mcpUpload(actor,prepared.result.operacao_id,meta,deps.tables!.transaction);assert(upload.upload_url)
   const again=await mcpUpload(actor,prepared.result.operacao_id,meta,deps.tables!.transaction);assert.equal(again.anexo_id,upload.anexo_id)
-  const failed=await call('confirmar_upload',{chave_operacao:randomUUID(),dados:{anexo_id:upload.anexo_id}});assert(!failed.isError)
-  assert((await call('confirmar_upload',{rascunho_id:failed.data.rascunho_id})).isError,'A URL sem bytes enviados não confirma o arquivo')
+  assert((await call('anexos',{chave_operacao:randomUUID(),dados:{acao:'confirmar',anexo_id:upload.anexo_id}})).isError,'A URL sem bytes enviados não confirma o arquivo')
   await fetch(upload.upload_url,{method:'PUT',body:bytes})
-  await change('confirmar_upload',{anexo_id:upload.anexo_id})
+  assert((await change('anexos',{acao:'confirmar',anexo_id:upload.anexo_id})).direct)
   assert.equal((await mcpUpload(actor,prepared.result.operacao_id,{acao:'confirmar'},deps.tables!.transaction)).status,'confirmado')
   assert.equal((await ok('obter_operacao',{operacao_id:prepared.result.operacao_id})).resultado.status,'confirmado')
   const link=await ok('obter_link_anexo',{anexo_id:upload.anexo_id});assert.deepEqual(Buffer.from(await (await fetch(link.url)).arrayBuffer()),bytes)
-  await change('remover_anexo',{anexo_id:upload.anexo_id})
+  assert(!(await change('anexos',{acao:'remover',anexo_id:upload.anexo_id})).direct)
   await assert.rejects(mcpUpload({...actor,sharedUserId:2,clerkUserId:'user_viewer'} as AuthTenantContext,prepared.result.operacao_id,undefined,deps.tables!.transaction))
  })
  await check('Actual HTTP handlers expose and execute Tables in both protocols',async()=>{

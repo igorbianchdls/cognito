@@ -27,13 +27,16 @@ export function clipped(record:DataRecord, selected?:string[],limit=1000) {
   return {...record,valores:values,campos_truncados:truncados}
 }
 
+/** Readable values are keyed by field name; repeated names get a short ID suffix. */
+function fieldLabels(fields:{id:string;nome:string}[]) { const seen=new Map<string,number>();for(const f of fields)seen.set(f.nome,(seen.get(f.nome)||0)+1);return new Map(fields.map(f=>[f.id,seen.get(f.nome)!>1?`${f.nome} (${f.id.slice(0,8)})`:f.nome])) }
+
 async function displayRecords(db:Database,session:TablesSession,records:DataRecord[],fields:Awaited<ReturnType<typeof readFields>>,limit:number) {
  const userIds=new Set<string>(),linkIds=new Set<string>()
  for(const r of records)for(const f of fields){const value=r.valores[f.id];if(!Array.isArray(value))continue;for(const id of value){if(['usuario','usuarios'].includes(f.tipo))userIds.add(id);if(f.tipo==='vinculo')linkIds.add(id)}}
  const users=userIds.size?(await db.query('SELECT id,nome FROM tables.membros() WHERE id=ANY($1::text[])',[[...userIds]])).rows:[]
  const links=linkIds.size?(await db.query("SELECT r.id,coalesce(r.valores->>t.campo_principal_id::text,'Sem nome') nome FROM tables.registros r JOIN tables.tabelas t ON t.empresa_id=r.empresa_id AND t.id=r.tabela_id JOIN tables.bases b ON b.empresa_id=t.empresa_id AND b.id=t.base_id WHERE r.empresa_id=$1 AND r.id=ANY($2::uuid[]) AND r.excluido_em IS NULL AND t.excluido_em IS NULL AND b.excluido_em IS NULL",[session.tenantId,[...linkIds]])).rows:[]
- const names=new Map([...users,...links].map(r=>[String(r.id),String(r.nome)]))
- return records.map(r=>({...r,exibicao:Object.fromEntries(fields.filter(f=>r.valores[f.id]!==undefined).map(f=>{const value=r.valores[f.id];let text:string;if(Array.isArray(value))text=value.map(id=>f.opcoes.find(o=>o.id===id)?.nome||names.get(id)||'Item indisponível').join(', ');else text=value===null?'':typeof value==='boolean'?(value?'Sim':'Não'):String(value);return [f.id,text.length>limit?text.slice(0,limit)+'…':text]}))}))
+ const names=new Map([...users,...links].map(r=>[String(r.id),String(r.nome)])),label=fieldLabels(fields)
+ return records.map(r=>({...r,exibicao:Object.fromEntries(fields.filter(f=>r.valores[f.id]!==undefined).map(f=>{const value=r.valores[f.id];let text:string;if(Array.isArray(value))text=value.map(id=>f.opcoes.find(o=>o.id===id)?.nome||names.get(id)||'Item indisponível').join(', ');else text=value===null?'':typeof value==='boolean'?(value?'Sim':'Não'):String(value);return [label.get(f.id)!,text.length>limit?text.slice(0,limit)+'…':text]}))}))
 }
 
 export async function readMcp(db:Database, session:TablesSession, name:string, input:Input) {
@@ -52,7 +55,7 @@ export async function readMcp(db:Database, session:TablesSession, name:string, i
     if(selected.some(id=>!fields.some(f=>f.id===id)))throw new TablesError('INVALID_FIELD','Um campo não pertence à tabela.')
     const page=await listRecords(db,session,input.tabela_id,listQuerySchema.parse(inputWithout(input,['campos','tabela_id'])))
     const limit=Math.max(10,Math.min(1000,Math.floor(35000/(Math.max(1,page.registros.length)*Math.max(1,selected.length)*4)))),visible=fields.filter(f=>selected.includes(f.id))
-    return {...page,registros:await displayRecords(db,session,page.registros.map(r=>clipped(r,selected,limit)),visible,limit),campos:visible.map(f=>({id:f.id,nome:f.nome,tipo:f.tipo})),tem_mais:pagina*tamanho<page.total,colunas_omitidas:fields.filter(f=>!selected.includes(f.id)).map(f=>f.id)}
+    return {...page,registros:await displayRecords(db,session,page.registros.map(r=>clipped(r,selected,limit)),visible,limit),campos:visible.map(f=>({id:f.id,nome:f.nome,tipo:f.tipo})),tem_mais:pagina*tamanho<page.total,colunas_omitidas:fields.filter(f=>!selected.includes(f.id)).map(f=>f.nome)}
   }
   if(name==='obter_registro') {
     const record=await readRecord(db,session,input.registro_id);await requireTable(db,session,record.tabela_id)
@@ -61,7 +64,7 @@ export async function readMcp(db:Database, session:TablesSession, name:string, i
     if(input.trecho){const value=record.valores[input.trecho.campo_id];if(!fields.some(f=>f.id===input.trecho.campo_id)||typeof value!=='string'&&!Array.isArray(value))throw new TablesError('INVALID_FIELD','Selecione um campo ativo textual ou de múltiplas escolhas.');const size=Array.isArray(value)?Math.min(input.trecho.tamanho,100):input.trecho.tamanho;return {registro_id:record.id,versao:record.versao,trecho:{...input.trecho,tamanho:size,...(typeof value==='string'?{texto:value.slice(input.trecho.inicio,input.trecho.inicio+size)}:{valores:value.slice(input.trecho.inicio,input.trecho.inicio+size)}),total:value.length,tem_mais:input.trecho.inicio+size<value.length}}}
     const attachments=await db.query("SELECT id,campo_id,nome,mime_type,tamanho::text FROM tables.anexos WHERE empresa_id=$1 AND registro_id=$2 AND estado='confirmado' ORDER BY criado_em,id LIMIT 21",[session.tenantId,record.id])
     const visible=fields.filter(f=>selected.includes(f.id)),limit=Math.min(1000,Math.floor(35000/(Math.max(1,selected.length)*4)))
-    return {registro:(await displayRecords(db,session,[clipped(record,selected,limit)],visible,limit))[0],campos:visible.map(f=>({id:f.id,nome:f.nome,tipo:f.tipo})),colunas_omitidas:fields.filter(f=>!selected.includes(f.id)).map(f=>f.id),anexos:attachments.rows.slice(0,20),anexos_truncados:attachments.rows.length>20}
+    return {registro:(await displayRecords(db,session,[clipped(record,selected,limit)],visible,limit))[0],campos:visible.map(f=>({id:f.id,nome:f.nome,tipo:f.tipo})),colunas_omitidas:fields.filter(f=>!selected.includes(f.id)).map(f=>f.nome),anexos:attachments.rows.slice(0,20),anexos_truncados:attachments.rows.length>20}
   }
   if(name==='listar_comentarios'||name==='consultar_historico') {
     const r=await readRecord(db,session,input.registro_id);await requireTable(db,session,r.tabela_id)
@@ -150,7 +153,7 @@ export async function applyMcp(db:Database,session:TablesSession,name:string,dat
     const patch=name==='criar_campo'?data.campo:data.alteracoes
     return service.saveField(db,session,b.tabela.id,fieldInputSchema.parse({...previous,...patch,configuracao:{...previous.configuracao,...patch.configuracao},expectedStructureVersion:b.tabela.versao_estrutura}),data.campo_id)
   }
-  if(['criar_registro','editar_registro','criar_registros_em_lote','editar_registros_em_lote','mover_registros_para_lixeira'].includes(name)) {
+  if(['salvar_registros','criar_registro','editar_registro','criar_registros_em_lote','editar_registros_em_lote','mover_registros_para_lixeira'].includes(name)) {
     const items:Input[]=data.registros||[data], ids=items.filter(i=>i.registro_id).map(i=>i.registro_id as string)
     if(new Set(ids).size!==ids.length)throw new TablesError('INVALID_INPUT','Um registro aparece mais de uma vez no lote.')
     const table=await requireTable(db,session,data.tabela_id,'record'), result=[]
