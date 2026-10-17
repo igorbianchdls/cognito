@@ -85,8 +85,12 @@ export async function readMcp(db:Database, session:TablesSession, name:string, i
 }
 function inputWithout(input:Input,keys:string[]) { return Object.fromEntries(Object.entries(input).filter(([key])=>!keys.includes(key))) }
 
+// Only versions the operation depends on go into the hash: edits elsewhere in the same table or base must not stale a preview.
+const STRUCTURE_OPERATIONS=new Set(['salvar_registros','criar_campo','editar_campo','editar_tabela','mover_para_lixeira','restaurar_item'])
+const RECORD_OPERATIONS=new Set(['salvar_registros','mover_registros_para_lixeira'])
 export async function operationSnapshot(db:Database,session:TablesSession,name:string,data:Input) {
   const snapshot:Input={bases:[],tabelas:[],registros:[],itens:[]}, refs:Input[]=[]
+  const structural=STRUCTURE_OPERATIONS.has(name)&&data.tipo!=='registros'
   const baseIds=new Set<string>(), tableIds=new Set<string>(), recordIds=new Set<string>()
   if(data.base_id)baseIds.add(data.base_id)
   if(data.tabela_id)tableIds.add(data.tabela_id)
@@ -99,11 +103,13 @@ export async function operationSnapshot(db:Database,session:TablesSession,name:s
     if(!item|| (name==='restaurar_item')!==Boolean(item.excluido_em))throw missing()
     snapshot.itens.push({tipo:kind,id:item.id,versao:item.versao||item.versao_estrutura||null,excluido_em:item.excluido_em})
     if(kind!=='bases') {if(kind==='tabelas'){if(name!=='restaurar_item')tableIds.add(item.id);baseIds.add(item.base_id)}else tableIds.add(item.tabela_id)}
-    refs.push({id:item.id,nome:item.nome||'Registro',tipo:kind})
+    // Records have no "nome" column: their name is the value of the table's primary field.
+    const label=kind!=='registros'?item.nome:(await db.query("SELECT coalesce(nullif($2::jsonb->>campo_principal_id::text,''),'Sem nome') nome FROM tables.tabelas WHERE empresa_id=$1 AND id=$3",[session.tenantId,JSON.stringify(item.valores||{}),item.tabela_id])).rows[0]?.nome
+    refs.push({id:item.id,nome:String(label||'Sem nome').slice(0,120),tipo:kind})
     if(data.expectedVersion!==undefined&&kind!=='campos')assertVersion(item.versao||item.versao_estrutura,data.expectedVersion)
   }
   for(const id of recordIds) {
-    const record=await readRecord(db,session,id);tableIds.add(record.tabela_id);snapshot.registros.push({id,versao:record.versao})
+    const record=await readRecord(db,session,id);tableIds.add(record.tabela_id);snapshot.registros.push({id,versao:RECORD_OPERATIONS.has(name)?record.versao:null})
     const requested=data.registro_id===id?data.expectedVersion:((data.registros||[]) as Input[]).find(r=>r.registro_id===id)?.expectedVersion
     if(requested!==undefined)assertVersion(record.versao,requested)
     if(data.tabela_id&&data.tabela_id!==record.tabela_id)throw missing()
@@ -112,7 +118,7 @@ export async function operationSnapshot(db:Database,session:TablesSession,name:s
     const table=await requireTable(db,session,id);baseIds.add(table.base_id)
     if(data.tipo==='campos'&&data.expectedVersion!==undefined)assertVersion(table.versao_estrutura,data.expectedVersion)
     if(id===data.tabela_id&&data.expectedStructureVersion!==undefined)assertVersion(table.versao_estrutura,data.expectedStructureVersion)
-    snapshot.tabelas.push({id,versao:table.versao_estrutura});refs.push({id,nome:table.nome,tipo:'tabela'})
+    snapshot.tabelas.push({id,versao:structural?table.versao_estrutura:null});refs.push({id,nome:table.nome,tipo:'tabela'})
     const fields=await readFields(db,session,id),items:Input[]=data.registros||[data]
     const changed=new Set<string>([...(data.campo_id?[data.campo_id]:[]),...items.flatMap(i=>[...Object.keys(i.valores||{}),...(i.relacoes||[]).map((r:Input)=>r.campo_id)])])
     const mentioned=new Set<string>(items.flatMap(i=>[...Object.values(i.valores||{}).filter(Array.isArray).flat(),...(i.relacoes||[]).flatMap((r:Input)=>r.valores)]) as string[])
@@ -120,7 +126,7 @@ export async function operationSnapshot(db:Database,session:TablesSession,name:s
     if(mentioned.size){const members=await db.query('SELECT id,nome FROM tables.membros() WHERE id=ANY($1::text[])',[[...mentioned]]);for(const member of members.rows)refs.push({id:member.id,nome:String(member.nome).slice(0,120),tipo:'pessoa'})}
     if(data.visualizacao_id){const v=(await getBundle(db,session,id)).visualizacoes.find(v=>v.id===data.visualizacao_id);if(!v)throw missing();if(data.expectedVersion!==undefined)assertVersion(v.versao,data.expectedVersion);snapshot.itens.push({tipo:'visualizacoes',id:v.id,versao:v.versao});refs.push({id:v.id,nome:v.nome,tipo:'visualização'})}
   }
-  for(const id of baseIds){const base=await requireBase(db,session,id);snapshot.bases.push({id,versao:base.versao});refs.push({id,nome:base.nome,tipo:'base'});if(data.base_id===id&&data.expectedVersion!==undefined)assertVersion(base.versao,data.expectedVersion)}
+  for(const id of baseIds){const base=await requireBase(db,session,id);snapshot.bases.push({id,versao:name==='editar_base'?base.versao:null});refs.push({id,nome:base.nome,tipo:'base'});if(data.base_id===id&&data.expectedVersion!==undefined)assertVersion(base.versao,data.expectedVersion)}
   const recordRefs=[...new Set<string>([...recordIds,...[...JSON.stringify(data).matchAll(/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/gi)].map(m=>m[0])])].filter(id=>!refs.some(r=>r.id===id))
   if(recordRefs.length)for(const r of (await db.query("SELECT r.id,coalesce(nullif(r.valores->>t.campo_principal_id::text,''),'Sem nome') nome FROM tables.registros r JOIN tables.tabelas t ON t.empresa_id=r.empresa_id AND t.id=r.tabela_id WHERE r.empresa_id=$1 AND r.id=ANY($2::uuid[])",[session.tenantId,recordRefs])).rows)refs.push({id:String(r.id),nome:String(r.nome).slice(0,120),tipo:'registro'})
   if(name==='criar_base')refs.push({nome:data.nome,tipo:'base nova'})

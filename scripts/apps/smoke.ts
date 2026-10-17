@@ -16,7 +16,7 @@ import { TablesError } from '../../src/products/tables/shared/contracts'
 process.env.APPS_RUNTIME_SECRET = 'isolated-runtime-secret-with-at-least-32-characters'
 const db = new PGlite(), objects = new Map<string, string>(), checks: string[] = []
 const s = { tenantId: 1, sharedUserId: 1, role: 'owner', browserSession: 'browser-fixture' } as const
-const migrations = ['20261016120000_create_tables.sql', '20261017100000_apps_product.sql', '20261017150000_apps_files_in_database.sql', '20261017170000_apps_react_build.sql'].map(f => 'supabase/migrations/' + f)
+const migrations = ['20261016120000_create_tables.sql', '20261017100000_apps_product.sql', '20261017150000_apps_files_in_database.sql', '20261017170000_apps_react_build.sql', '20261018100000_apps_public_access.sql'].map(f => 'supabase/migrations/' + f)
 // Legacy packages (before files moved to the database) are still read from Storage.
 const store: PackageStore = { async put(path, p) { const text = JSON.stringify(validatePackage(p)); objects.set(path, text); return { tamanho: Buffer.byteLength(text), hash: hash(text) } }, async get(path, digest) { const text = objects.get(path); assert(text); assert.equal(hash(text), digest); return JSON.parse(text) as AppPackage } }
 async function run<T>(session: Session, fn: (db: Database) => Promise<T>): Promise<T> {
@@ -44,9 +44,9 @@ async function main() {
   for (const file of migrations) await db.exec(readFileSync(file, 'utf8'))
   const app = await run(s, db => create(db, s, metadataSchema.parse({ nome: 'Ideias' }), true))
   let runtime: Awaited<ReturnType<typeof openRuntime>>
-  await check('Private schema, 11 RLS tables, cross-company reads/writes and foreign keys', async () => {
-    assert.equal(await count("SELECT count(*)::int n FROM pg_tables WHERE schemaname='apps'"), 11)
-    assert.equal(await count("SELECT count(*)::int n FROM pg_class c JOIN pg_namespace n ON n.oid=c.relnamespace WHERE n.nspname='apps' AND c.relkind='r' AND c.relrowsecurity AND c.relforcerowsecurity"), 11)
+  await check('Private schema, 13 RLS tables, cross-company reads/writes and foreign keys', async () => {
+    assert.equal(await count("SELECT count(*)::int n FROM pg_tables WHERE schemaname='apps'"), 13)
+    assert.equal(await count("SELECT count(*)::int n FROM pg_class c JOIN pg_namespace n ON n.oid=c.relnamespace WHERE n.nspname='apps' AND c.relkind='r' AND c.relrowsecurity AND c.relforcerowsecurity"), 13)
     assert.equal((await db.query<{ ok: boolean }>("SELECT has_schema_privilege('authenticated','apps','USAGE') ok")).rows[0].ok, false)
     await assert.rejects(() => run({ tenantId: 2, sharedUserId: 4, role: 'owner' }, db => getApp(db, { tenantId: 2, sharedUserId: 4, role: 'owner' }, app.id)))
     await assert.rejects(() => run(s, db => db.query("INSERT INTO apps.versoes(empresa_id,app_id,numero,manifesto,criado_por)VALUES(2,$1,2,'{}',1)", [app.id])))

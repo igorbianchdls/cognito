@@ -9,8 +9,15 @@ export const expectedSchema = z.object({ expectedVersion: z.number().int().posit
 export const fieldSchema = z.object({ id: z.string().regex(/^[a-z][a-z0-9_]{0,49}$/), nome: z.string().trim().min(1).max(100), tipo: z.enum(['texto', 'numero', 'booleano', 'data']), obrigatorio: z.boolean().default(false) }).strict()
 export const collectionSchema = z.object({ id: uuid, chave: z.string().regex(/^[a-z][a-z0-9_]{0,49}$/), nome: z.string().trim().min(1).max(100), campos: z.array(fieldSchema).min(1).max(40) }).strict()
 // Tabelas do Tables usadas pelo app: a chave é o nome usado no código, como otto.tables.listar('chamados').
-export const tableSourceSchema = z.object({ chave: z.string().regex(/^[a-z][a-z0-9_]{0,49}$/), tabela_id: uuid, operacoes: z.array(z.enum(['ler', 'criar', 'editar'])).min(1).max(3) }).strict()
+// visitantes: what people without login may do through the public link, with the fields by name.
+// Visitors never edit; people, links and attachments stay out because they expose company data.
+export const VISITOR_FIELD_TYPES = ['texto', 'texto_longo', 'numero', 'moeda', 'data', 'data_hora', 'checkbox', 'selecao', 'selecao_multipla', 'email', 'url']
+const visitorFields = z.array(z.string().trim().min(1).max(200)).min(1).max(60)
+export const visitorRulesSchema = z.object({ ler: visitorFields.optional().describe('Campos que visitantes podem ver.'), criar: visitorFields.optional().describe('Campos que visitantes podem preencher ao criar.') }).strict()
+export const tableSourceSchema = z.object({ chave: z.string().regex(/^[a-z][a-z0-9_]{0,49}$/), tabela_id: uuid, operacoes: z.array(z.enum(['ler', 'criar', 'editar'])).min(1).max(3), visitantes: visitorRulesSchema.optional() }).strict()
 export type TableSource = z.infer<typeof tableSourceSchema>
+export const SLUG_PATTERN = /^[a-z0-9][a-z0-9-]{1,58}[a-z0-9]$/
+export type Access = { modo: 'privado' | 'publico'; endereco: string; definido_por: number; definido_em: string }
 // Caminhos de arquivo: até 5 pastas (src/components/Header.jsx), sem "." nem "..".
 export const PATH_PATTERN = /^(?:[a-zA-Z0-9][a-zA-Z0-9_.-]{0,99}\/){0,5}[a-zA-Z0-9][a-zA-Z0-9_.-]{0,99}\.(html|css|js|jsx|ts|tsx|json|svg|png|jpg|jpeg|webp)$/
 export const SOURCE_PATTERN = /\.(js|jsx|ts|tsx)$/
@@ -19,13 +26,18 @@ export const manifestSchema = z.object({ formato: z.literal(1), entrada: z.liter
   const ids = v.colecoes.map(c => c.id), keys = v.colecoes.map(c => c.chave)
   if (new Set(ids).size !== ids.length || new Set(keys).size !== keys.length || v.colecoes.some(c => new Set(c.campos.map(f => f.id)).size !== c.campos.length)) ctx.addIssue({ code: 'custom', message: 'Coleções e campos precisam ter identificadores únicos.' })
   if (new Set(v.tabelas.map(t => t.chave)).size !== v.tabelas.length || v.tabelas.some(t => new Set(t.operacoes).size !== t.operacoes.length)) ctx.addIssue({ code: 'custom', message: 'Cada tabela do manifesto precisa de uma chave única e operações sem repetição.' })
+  for (const t of v.tabelas) {
+    if (!t.visitantes) continue
+    if (!t.visitantes.ler && !t.visitantes.criar) ctx.addIssue({ code: 'custom', message: `"${t.chave}": em visitantes, informe ler, criar ou os dois.` })
+    for (const op of ['ler', 'criar'] as const) if (t.visitantes[op] && !t.operacoes.includes(op)) ctx.addIssue({ code: 'custom', message: `"${t.chave}": visitantes só podem ${op} se operacoes incluir ${op}.` })
+  }
 })
 export type Manifest = z.infer<typeof manifestSchema>
 export const fileSchema = z.object({ caminho: z.string().max(200).regex(PATH_PATTERN), conteudo: z.string().max(400_000), codificacao: z.enum(['utf8', 'base64']).default('utf8') }).strict()
 export type AppFile = z.infer<typeof fileSchema>
 export const draftSchema = expectedSchema.extend({ manifesto: manifestSchema, arquivos: z.array(fileSchema).min(1).max(100) }).strict()
 export type AppPackage = { manifesto: Manifest; arquivos: AppFile[] }
-export type App = { id: string; nome: string; descricao: string; cor: string; icone: string; versao_concorrencia: number; atualizado_em: string; arquivado_em: string | null; excluido_em: string | null; favorito: boolean; publicacao_id: string | null; versao_publicada_id: string | null; tem_rascunho: boolean }
+export type App = { id: string; nome: string; descricao: string; cor: string; icone: string; versao_concorrencia: number; atualizado_em: string; arquivado_em: string | null; excluido_em: string | null; favorito: boolean; publicacao_id: string | null; versao_publicada_id: string | null; tem_rascunho: boolean; acesso: 'privado' | 'publico' | null; endereco: string | null }
 export type Version = { id: string; numero: number; estado: 'rascunho' | 'pronta'; manifesto: Manifest; hash_conteudo: string | null; versao_formato: number; build_estado: 'ok' | 'erro' | null; build_erro: string | null; criado_em: string; selado_em: string | null }
 export type Bundle = { app: App; versoes: Version[]; podeEditar: boolean; podePublicar: boolean }
 export type Catalog = { apps: App[]; total: number; pagina: number; contadores: Record<string, number>; podeEditar: boolean; podePublicar: boolean }

@@ -51,7 +51,7 @@ export default function RuntimeFrame({ bundle, api }: { bundle: RuntimeBundle; a
             if (disposed) return
             try {
               // Preview reads and writes real Tables data with the editor's permissions.
-              const result = await api(`/${bundle.app.id}/tabelas`, send('POST', { ...request, ...(registroId ? { id: registroId } : {}), ...(bundle.modo === 'previa' ? { versao: bundle.versaoId } : { token: bundle.token }) }))
+              const result = await api(bundle.modo === 'publico' ? '/tabelas' : `/${bundle.app.id}/tabelas`, send('POST', { ...request, ...(registroId ? { id: registroId } : {}), ...(bundle.modo === 'previa' ? { versao: bundle.versaoId } : { token: bundle.token }) }))
               if (!disposed) channel?.port1.postMessage({ id, result })
             } catch (e) { if (!disposed) channel?.port1.postMessage({ id, error: e instanceof Error ? e.message : 'Falha na operação.' }) }
           })
@@ -61,6 +61,7 @@ export default function RuntimeFrame({ bundle, api }: { bundle: RuntimeBundle; a
         queue = queue.then(async () => {
           if (disposed) return
           try {
+            if (bundle.modo === 'publico') throw Error('Os dados internos do app (otto.data) não ficam disponíveis no link público.')
             const result = bundle.modo === 'previa' ? await preview(data) : await api(`/${bundle.app.id}/dados`, send('POST', { token: bundle.token, colecao: data.colecao, operacao: data.operacao, pagina: data.pagina ?? 1, ...(data.registro ? { registro: data.registro } : {}), ...(data.registroId ? { id: data.registroId } : {}), ...(data.expectedVersion ? { expectedVersion: data.expectedVersion } : {}) }))
             if (!disposed) channel?.port1.postMessage({ id: data.id, result })
           } catch (e) { if (!disposed) channel?.port1.postMessage({ id: data.id, error: e instanceof Error ? e.message : 'Falha na operação.' }) }
@@ -74,5 +75,7 @@ export default function RuntimeFrame({ bundle, api }: { bundle: RuntimeBundle; a
     else frame.srcdoc = buildDocument(bundle.pacote, session, nonce)
     return () => { disposed = true; clearTimeout(timeout); window.removeEventListener('message', connect); channel?.port1.close(); channel?.port2.close(); frame.srcdoc = '' }
   }, [bundle, api])
+  // Visitors see only the app; errors appear above it.
+  if (bundle.modo === 'publico') return <div className="apps-runtime apps-runtime-public">{error && <div className="apps-public-notice" role="alert">{error}</div>}<iframe ref={ref} title={bundle.app.nome} sandbox="allow-scripts allow-forms" referrerPolicy="no-referrer" className="apps-frame" /></div>
   return <div className="apps-runtime"><div className="apps-runtime-status">{bundle.modo === 'previa' ? (bundle.pacote.manifesto.tabelas?.length ? 'Prévia · coleções do app são temporárias; as tabelas do Tables usam dados reais' : 'Prévia · os dados são temporários e serão descartados ao sair') : 'Versão publicada · dados da empresa'}<span role="status">{error || (ready ? 'Conectado' : 'Iniciando…')}</span></div><iframe ref={ref} title={bundle.app.nome} sandbox="allow-scripts allow-forms" referrerPolicy="no-referrer" className="apps-frame" /></div>
 }

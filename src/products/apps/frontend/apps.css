@@ -31,3 +31,5 @@
 
 .apps-build-error{display:block}
 .apps-build-error pre{margin:8px 0 0;white-space:pre-wrap;font:11px/1.6 ui-monospace,SFMono-Regular,Consolas,monospace}
+.apps-public{min-height:100vh;background:#fff;color:#272727;font-size:14px}.apps-public .apps-runtime-public{border:0;border-radius:0;display:flex;flex-direction:column;min-height:100vh}.apps-public .apps-frame{flex:1;height:100vh;min-height:100vh}
+.apps-public-notice{display:flex;align-items:center;justify-content:center;gap:9px;margin:48px auto;max-width:480px;padding:14px 18px;border-radius:9px;background:#f4f3f6;color:#5d566a;text-align:center}.apps-runtime-public .apps-public-notice{margin:12px auto}

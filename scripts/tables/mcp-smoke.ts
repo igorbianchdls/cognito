@@ -98,7 +98,9 @@ async function main(){try {
   const renamed=await change('salvar_campo',{tabela_id:table,campo:'Status',nome:'Etapa'});assert.equal(renamed.preview.previa.alteracoes.campo_id,'Status','Previews show names instead of IDs')
   assert.deepEqual((await ok('obter_tabela',{tabela_id:table,campo:statusField})).itens[0].opcoes,options)
   const old=await ok('obter_tabela',{tabela_id:table,visualizacao:'Kanban'})
-  const edited=await change('salvar_visualizacao',{tabela_id:table,acao:'editar',visualizacao:'kanban',nome:'Painel'});assert(!edited.direct)
+  const pending=await ok('salvar_visualizacao',{chave_operacao:randomUUID(),dados:{tabela_id:table,acao:'editar',visualizacao:'kanban',nome:'Painel'}});assert(pending.confirmar)
+  await change('salvar_campo',{tabela_id:table,nome:'Observação',tipo:'texto'})
+  assert.equal((await ok('salvar_visualizacao',{rascunho_id:pending.rascunho_id})).status,'saved','Unrelated structure edits keep view previews valid')
   const next=await ok('obter_tabela',{tabela_id:table,visualizacao:'Painel'});assert.deepEqual(next.itens[0].configuracao,old.itens[0].configuracao)
  })
  await check('Multiple relations add by name and email, preserving previous people',async()=>{
@@ -142,9 +144,9 @@ async function main(){try {
   const visible=(await ok('obter_tabela',{tabela_id:table,visualizacao:'Grade extra'})).itens[0].campos.filter((c:{visivel:boolean})=>c.visivel);assert.equal(visible.length,2)
   await change('salvar_visualizacao',{tabela_id:table,acao:'excluir',visualizacao:'Grade extra'})
   const batch=await change('salvar_registros',{tabela_id:table,registros:[{valores:{}},{valores:{}}]}),ids=batch.result.resultado.registros.map((r:{id:string})=>r.id)
-  await change('salvar_registros',{tabela_id:table,registros:ids.map((registro_id:string)=>({registro_id,valores:{'Cliente':'ACME'}}))})
+  await change('salvar_registros',{tabela_id:table,registros:ids.map((registro_id:string)=>({registro_id,valores:{'Cliente':'ACME','Nome do projeto':'Lote A'}}))})
   await change('lixeira',{acao:'mover',tipo:'registros',ids})
-  await change('lixeira',{acao:'restaurar',tipo:'registros',ids:[ids[0]]})
+  const restore=await change('lixeira',{acao:'restaurar',tipo:'registros',ids:[ids[0]]});assert(JSON.stringify(restore.preview.previa).includes('Lote A'),'Restore previews name the record: '+JSON.stringify(restore.preview.previa))
  })
  await check('Upload form transfers bytes and confirms both tool and browser paths',async()=>{
   await change('salvar_campo',{tabela_id:table,nome:'Arquivos',tipo:'anexo'})

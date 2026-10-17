@@ -9,7 +9,7 @@ import { validateStatic } from './publishing'
 
 export type BrowserSession = Session & { browserSession: string }
 const claimsSchema = z.object({ empresa: z.number(), usuario: z.number(), sessao: z.string(), app: uuid, versao: uuid, publicacao: uuid, exp: z.number() }).strict()
-function secret() { const key = process.env.APPS_RUNTIME_SECRET ?? process.env.CLERK_SECRET_KEY; if (!key || key.length < 24) throw new AppsError('UNAVAILABLE', 'A execução de Apps não está configurada.', 503); return key }
+export function secret() { const key = process.env.APPS_RUNTIME_SECRET ?? process.env.CLERK_SECRET_KEY; if (!key || key.length < 24) throw new AppsError('UNAVAILABLE', 'A execução de Apps não está configurada.', 503); return key }
 function mac(value: string) { return createHmac('sha256', secret()).update('apps-runtime-v1:' + value).digest('base64url') }
 function same(a: string, b: string) { const aa = Buffer.from(a), bb = Buffer.from(b); return aa.length === bb.length && timingSafeEqual(aa, bb) }
 function readToken(token: string, s: BrowserSession, id: string) {

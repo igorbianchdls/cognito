@@ -1,5 +1,5 @@
 import { z } from 'zod'
-import { fieldSchema, PATH_PATTERN, tableSourceSchema } from '@/products/apps/shared/contracts'
+import { fieldSchema, PATH_PATTERN, SLUG_PATTERN, tableSourceSchema } from '@/products/apps/shared/contracts'
 
 const uuid = z.string().uuid()
 const key = z.string().regex(/^[a-z][a-z0-9_]{0,49}$/)
@@ -34,6 +34,7 @@ export const actionSchemas = {
   }),
   publicar: z.object({ app_id: uuid, versao: z.number().int().positive().optional().describe('Número da versão; omita para o rascunho atual.') }),
   ciclo: z.object({ app_id: uuid, acao: z.enum(['arquivar', 'excluir', 'restaurar', 'despublicar']) }),
+  acesso: z.object({ app_id: uuid, modo: z.enum(['privado', 'publico']).describe('privado: só membros da empresa; publico: qualquer pessoa com o link, sem login.'), endereco: z.string().regex(SLUG_PATTERN).optional().describe('Endereço do link público (/p/endereco), de 3 a 60 letras minúsculas, números ou hífens; omita para manter o atual ou gerar pelo nome.') }),
 } satisfies Record<string, z.AnyZodObject>
 
 export const cancelSchema = z.object({ empresa_id: company, operacao_id: uuid }).strict()

@@ -4,6 +4,7 @@ import { withAppsClient, withAppsControlTransaction } from '@/products/apps/serv
 import { available, editable, getApp, publisher, versions } from '@/products/apps/server/repository'
 import * as service from '@/products/apps/server/service'
 import { publish, unpublish } from '@/products/apps/server/publishing'
+import { chooseAddress, readAccess, setAccess, visitorSummary } from '@/products/apps/server/access'
 import { storage } from '@/products/apps/server/storage'
 import { checkSources, type TablesTransaction } from '@/products/apps/server/tablesSource'
 import { withTablesTransaction } from '@/products/tables/server/database'
@@ -18,13 +19,13 @@ export type Input = Record<string, any>
 export type AppsDependencies = { transaction: typeof withAppsControlTransaction; tables: TablesTransaction }
 export const appsDependencies: AppsDependencies = { transaction: withAppsControlTransaction, tables: withTablesTransaction }
 
-const TITLES: Record<string, string> = { criar: 'Criar app', salvar_codigo: 'Salvar código do app', publicar: 'Publicar app', arquivar: 'Arquivar app', excluir: 'Mover app para a lixeira', restaurar: 'Restaurar app', despublicar: 'Tirar app do ar' }
+const TITLES: Record<string, string> = { criar: 'Criar app', salvar_codigo: 'Salvar código do app', publicar: 'Publicar app', arquivar: 'Arquivar app', excluir: 'Mover app para a lixeira', restaurar: 'Restaurar app', despublicar: 'Tirar app do ar', acesso: 'Alterar acesso do app' }
 const scoped = "domain='apps' AND integration=$1 AND empresa_id=$2 AND user_id=$3 AND oauth_client_id=$4"
 const scope = (p: PluginPrincipal, company: number, c: PluginConfig) => [c.integration, company, p.userId, p.clientId]
 const statusOf = (app: App) => app.excluido_em ? 'na_lixeira' : app.arquivado_em ? 'arquivado' : app.publicacao_id ? 'no_ar' : 'em_construcao'
-export function links(app: Pick<App, 'id'> & Partial<Pick<App, 'publicacao_id'>>, config: PluginConfig) {
+export function links(app: Pick<App, 'id'> & Partial<Pick<App, 'publicacao_id' | 'acesso' | 'endereco'>>, config: PluginConfig) {
   const origin = new URL(config.resource).origin
-  return { editor: `${origin}/apps/${app.id}/editar`, previa: `${origin}/apps/${app.id}/preview`, ...(app.publicacao_id ? { app: `${origin}/apps/${app.id}/abrir` } : {}) }
+  return { editor: `${origin}/apps/${app.id}/editar`, previa: `${origin}/apps/${app.id}/preview`, ...(app.publicacao_id ? { app: `${origin}/apps/${app.id}/abrir` } : {}), ...(app.publicacao_id && app.acesso === 'publico' ? { publico: `${origin}/p/${app.endereco}` } : {}) }
 }
 const versionSummary = (v: Version) => ({ numero: v.numero, estado: v.estado, compilacao: v.build_estado, erro_compilacao: v.build_erro, criado_em: v.criado_em })
 
@@ -33,6 +34,13 @@ export async function currentSession(db: Database, principal: PluginPrincipal, c
   if (!member || !['owner', 'admin', 'member', 'viewer'].includes(member.role)) throw new PluginError('ACCESS_DENIED', 'Vínculo com a empresa indisponível.', 403)
   if (write && member.role === 'viewer') throw new PluginError('ACCESS_DENIED', 'Seu acesso permite apenas consultas.', 403)
   return { tenantId: companyId, sharedUserId: principal.userId, role: member.role }
+}
+
+/** Who can open the app and what visitors may do with the published version. */
+async function accessSummary(db: Database, s: Session, app: App, all: Version[], config: PluginConfig) {
+  const access = await readAccess(db, s, app.id), published = all.find(v => v.id === app.versao_publicada_id)
+  if (access?.modo !== 'publico') return { modo: 'privado', descricao: 'Só membros da empresa, com login.' }
+  return { modo: 'publico', endereco: access.endereco, link: published ? links(app, config).publico : undefined, aviso: published ? undefined : 'O link funciona depois que o app for publicado.', visitantes: published ? visitorSummary(published.manifesto) : [], executa_como: 'permissões do administrador que tornou o app público', definido_em: access.definido_em }
 }
 
 // ---- Reads ---------------------------------------------------------------------------------
@@ -48,6 +56,7 @@ export async function readApps(db: Database, s: Session, key: string, input: Inp
     return {
       app: { id: app.id, nome: app.nome, descricao: app.descricao, situacao: statusOf(app), revisao: app.versao_concorrencia, atualizado_em: app.atualizado_em },
       modelo: manifest?.modelo ?? 'html', principal: manifest?.modelo === 'react' ? manifest.principal : undefined, tabelas: manifest?.tabelas ?? [], colecoes: manifest?.colecoes.map(c => ({ id: c.id, chave: c.chave, nome: c.nome, campos: c.campos })) ?? [],
+      acesso: await accessSummary(db, s, app, all, config),
       versao_publicada: all.find(v => v.id === app.versao_publicada_id)?.numero ?? null, versoes: all.slice(0, 10).map(versionSummary), arquivos: files, links: links(app, config),
     }
   }
@@ -125,6 +134,7 @@ async function execute(db: Database, s: Session, op: string, dados: Input, confi
   const app = await getApp(db, s, dados.app_id, true, true)
   if (op === 'publicar') { await publish(db, s, app.id, app.versao_concorrencia, dados.versao_id, operationKey, storage); const now = await getApp(db, s, app.id); return { app_id: app.id, versao: dados.versao, situacao: statusOf(now), links: links(now, config) } }
   if (op === 'despublicar') { await unpublish(db, s, app.id, app.versao_concorrencia); return { app_id: app.id, situacao: 'em_construcao' } }
+  if (op === 'acesso') { await setAccess(db, s, app.id, dados.modo, dados.endereco); const now = await getApp(db, s, app.id); return { app_id: app.id, acesso: dados.modo === 'publico' ? 'Público' : 'Privado', endereco: dados.modo === 'publico' ? dados.endereco : undefined, links: links(now, config) } }
   await service.lifecycle(db, s, app.id, app.versao_concorrencia, op)
   return { app_id: app.id, situacao: op === 'restaurar' ? 'em_construcao' : op === 'arquivar' ? 'arquivado' : 'na_lixeira' }
 }
@@ -141,14 +151,37 @@ async function prepare(db: Database, s: Session, key: string, dados: Input): Pro
     const manifest = manifestSchema.parse(target.manifesto)
     if (manifest.modelo === 'react' && target.build_estado !== 'ok') throw new AppsError('BUILD_REQUIRED', `A versão ${target.numero} não compilou${target.build_erro ? ':\n' + target.build_erro : '.'}`, 409)
     const current = all.find(v => v.id === app.versao_publicada_id)
+    // An app taken offline keeps its publication history: say so instead of "first publication".
+    const last = current ? undefined : (await db.query('SELECT v.numero FROM apps.publicacoes p JOIN apps.versoes v ON (v.empresa_id,v.app_id,v.id)=(p.empresa_id,p.app_id,p.versao_id) WHERE p.empresa_id=$1 AND p.app_id=$2 ORDER BY p.publicado_em DESC LIMIT 1', [s.tenantId, app.id])).rows[0]
+    const replaces = current ? `versão ${current.numero}` : last ? `nenhuma: o app está fora do ar (última versão no ar: ${last.numero})` : 'primeira publicação'
     return { op: 'publicar', dados: { app_id: app.id, versao_id: target.id, versao: target.numero }, revision: app.versao_concorrencia,
-      preview: { app: app.nome, versao: target.numero, substitui: current ? `versão ${current.numero}` : 'primeira publicação', modelo: manifest.modelo, tabelas: manifest.tabelas.map(t => `${t.chave} (${t.operacoes.join(', ')})`), colecoes: manifest.colecoes.map(c => c.nome), aviso: 'Todos os membros da empresa passam a ver esta versão.' } }
+      preview: { app: app.nome, versao: target.numero, substitui: replaces, modelo: manifest.modelo, tabelas: manifest.tabelas.map(t => `${t.chave} (${t.operacoes.join(', ')})`), colecoes: manifest.colecoes.map(c => c.nome), aviso: 'Todos os membros da empresa passam a ver esta versão.' } }
   }
+  if (key === 'acesso') return prepareAccess(db, s, app, dados)
   const op = dados.acao as string
   if (op === 'restaurar') { if (!app.excluido_em && !app.arquivado_em) throw new AppsError('INVALID_STATE', 'O app não está arquivado nem na lixeira.', 409) }
   else { available(app); if (op === 'despublicar' && !app.publicacao_id) throw new AppsError('INVALID_STATE', 'O app não está no ar.', 409) }
   if (op === 'despublicar' || app.publicacao_id && (op === 'arquivar' || op === 'excluir')) publisher(s)
   return { op, dados: { app_id: app.id }, revision: app.versao_concorrencia, preview: { app: app.nome, acao: TITLES[op], ...(app.publicacao_id && op !== 'restaurar' ? { aviso: 'O app sai do ar para todos os membros.' } : {}) } }
+}
+
+async function prepareAccess(db: Database, s: Session, app: App, dados: Input) {
+  publisher(s); available(app)
+  const current = await readAccess(db, s, app.id)
+  if (dados.modo === 'privado') {
+    if (current?.modo !== 'publico') throw new AppsError('INVALID_STATE', 'O app já é privado.', 409)
+    return { op: 'acesso', dados: { app_id: app.id, modo: 'privado', endereco: current.endereco }, revision: app.versao_concorrencia, preview: { app: app.nome, acesso: 'Privado: só membros da empresa', aviso: `O link /p/${current.endereco} para de funcionar na hora. O endereço fica reservado para este app.` } }
+  }
+  const endereco = await chooseAddress(db, s, app, dados.endereco)
+  if (current?.modo === 'publico' && current.endereco === endereco) throw new AppsError('INVALID_STATE', `O app já é público em /p/${endereco}.`, 409)
+  const published = app.versao_publicada_id ? (await versions(db, s, app.id)).find(v => v.id === app.versao_publicada_id) : undefined
+  const rules = published ? visitorSummary(published.manifesto) : [], manifest = published ? manifestSchema.parse(published.manifesto) : undefined
+  return { op: 'acesso', dados: { app_id: app.id, modo: 'publico', endereco }, revision: app.versao_concorrencia, preview: {
+    app: app.nome, acesso: 'Público: qualquer pessoa com o link, sem login', endereco: `/p/${endereco}`,
+    visitantes: rules.length ? rules : ['nenhum dado do Tables: só a interface do app'],
+    sem_acesso: ['edição e exclusão de registros', 'pessoas, vínculos e anexos', ...(manifest?.colecoes.length ? ['coleções internas (otto.data)'] : []), ...(manifest?.tabelas.some(t => !t.visitantes) ? [`tabelas sem regras de visitantes: ${manifest.tabelas.filter(t => !t.visitantes).map(t => t.chave).join(', ')}`] : [])].join('; '),
+    executa_como: 'as permissões de quem confirmar; se essa pessoa deixar de ser administradora, o link para de funcionar',
+    aviso: published ? 'Regras de visitantes vêm da versão publicada; mudanças no rascunho só valem depois de publicar.' : 'O app ainda não está publicado: o link funciona depois da publicação.' } }
 }
 
 function view(row: Input, config: PluginConfig) {

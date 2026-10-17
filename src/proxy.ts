@@ -8,6 +8,7 @@ const isPublicRoute = createRouteMatcher([
   '/lp(.*)',
   '/lp-a(.*)',
   '/emissor-nota-fiscal(.*)',
+  '/p/(.*)',
   '/__clerk/:path*',
   '/api/clerk/webhooks(.*)',
 ])
@@ -32,6 +33,8 @@ export default function proxy(request: NextRequest, event: NextFetchEvent) {
     .includes(request.nextUrl.pathname)) return NextResponse.next()
   // Link temporário do DANFSe/XML: o token assinado é a credencial (validado no handler).
   if (request.nextUrl.pathname.startsWith('/api/public/nfse/') || request.nextUrl.pathname.startsWith('/api/public/documentos-comerciais/')) return NextResponse.next()
+  // Apps públicos: a página /p/<endereço> e sua API não exigem login; o token assinado do runtime é a credencial.
+  if (request.nextUrl.pathname.startsWith('/api/public/apps/')) return NextResponse.next()
   if (!process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY && isPublicRoute(request)) {
     return NextResponse.next()
   }

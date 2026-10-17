@@ -3,8 +3,10 @@ import { AppsError } from '../shared/contracts'
 import type { Database, Session } from './database'
 
 export const appSelect = `SELECT a.*, EXISTS(SELECT 1 FROM apps.favoritos f WHERE f.empresa_id=a.empresa_id AND f.app_id=a.id AND f.usuario_id=$2) favorito,
- p.id publicacao_id,p.versao_id versao_publicada_id,EXISTS(SELECT 1 FROM apps.versoes v WHERE v.empresa_id=a.empresa_id AND v.app_id=a.id AND v.estado='rascunho') tem_rascunho
- FROM apps.apps a LEFT JOIN apps.publicacoes p ON p.empresa_id=a.empresa_id AND p.app_id=a.id AND p.estado='ativa'`
+ p.id publicacao_id,p.versao_id versao_publicada_id,EXISTS(SELECT 1 FROM apps.versoes v WHERE v.empresa_id=a.empresa_id AND v.app_id=a.id AND v.estado='rascunho') tem_rascunho,
+ ac.modo acesso,ac.slug endereco
+ FROM apps.apps a LEFT JOIN apps.publicacoes p ON p.empresa_id=a.empresa_id AND p.app_id=a.id AND p.estado='ativa'
+ LEFT JOIN apps.acessos ac ON ac.empresa_id=a.empresa_id AND ac.app_id=a.id`
 export async function getApp(db: Database, s: Session, id: string, lock = false, includeTrash = false): Promise<App> {
   if (lock) await db.query('SELECT id FROM apps.apps WHERE empresa_id=$1 AND id=$2 FOR UPDATE', [s.tenantId, id])
   const a = (await db.query(appSelect + ` WHERE a.empresa_id=$1 AND a.id=$3 ${includeTrash ? '' : 'AND a.excluido_em IS NULL'}`, [s.tenantId, s.sharedUserId, id])).rows[0]

@@ -11,6 +11,9 @@ import type { TablesTransaction } from '../../src/products/apps/server/tablesSou
 import { createPluginServer } from '../../src/products/chatgptplugin/mcp/createServer'
 import { createClaudeServer } from '../../src/products/claudeplugin/mcp/createServer'
 import { createBase } from '../../src/products/tables/server/service'
+import { withAppsClient } from '../../src/products/apps/server/database'
+import { openPublic, publicTables, type PublicDependencies } from '../../src/products/apps/server/access'
+import { tablesRequestSchema } from '../../src/products/apps/server/tablesSource'
 
 const db = new PGlite(), checks: string[] = [], called = new Set<string>()
 process.env.APPS_RUNTIME_SECRET = 'isolated-runtime-secret-with-at-least-32-characters'
@@ -43,12 +46,12 @@ async function main() {
      CREATE TABLE plugin.drafts(id uuid PRIMARY KEY,empresa_id bigint,user_id bigint,oauth_client_id text,operation_key uuid,proposal jsonb,status text DEFAULT 'pending',record_id text,created_at timestamptz DEFAULT now(),expires_at timestamptz DEFAULT now()+interval '24 hours',decided_at timestamptz,target_snapshot jsonb,integration text,
      CONSTRAINT drafts_integration_operation_key UNIQUE(integration,empresa_id,user_id,oauth_client_id,operation_key),CONSTRAINT legacy_result CHECK((status='saved')=(record_id IS NOT NULL)));
      CREATE TABLE plugin.executions(id uuid PRIMARY KEY,user_id bigint,empresa_id bigint,oauth_client_id text,tool_name text,status text,duration_ms int,finished_at timestamptz,integration text);`)
-    for (const file of ['20261016120000_create_tables.sql', '20261017100000_apps_product.sql', '20261017150000_apps_files_in_database.sql', '20261017170000_apps_react_build.sql', '20261016193000_mcp_product_domains.sql', '20261016200000_mcp_domain_uniqueness.sql', '20261017190000_mcp_apps_domain.sql']) await db.exec(readFileSync('supabase/migrations/' + file, 'utf8'))
+    for (const file of ['20261016120000_create_tables.sql', '20261017100000_apps_product.sql', '20261017150000_apps_files_in_database.sql', '20261017170000_apps_react_build.sql', '20261018100000_apps_public_access.sql', '20261016193000_mcp_product_domains.sql', '20261016200000_mcp_domain_uniqueness.sql', '20261017190000_mcp_apps_domain.sql']) await db.exec(readFileSync('supabase/migrations/' + file, 'utf8'))
     let appId = '', tableId = ''
 
-    await check('10 tools, both hosts register them', async () => {
-      assert.equal(appsTools.length, 10)
-      for (const make of [createPluginServer, createClaudeServer]) { const server = await make(owner, config, deps); const registry = (server as unknown as { _registeredTools: Record<string, unknown> })._registeredTools; assert.equal(Object.keys(registry).filter(n => n.startsWith('apps_')).length, 10); await server.close() }
+    await check('11 tools, both hosts register them', async () => {
+      assert.equal(appsTools.length, 11)
+      for (const make of [createPluginServer, createClaudeServer]) { const server = await make(owner, config, deps); const registry = (server as unknown as { _registeredTools: Record<string, unknown> })._registeredTools; assert.equal(Object.keys(registry).filter(n => n.startsWith('apps_')).length, 11); await server.close() }
     })
     await check('Create runs at once, is idempotent by key and returns the preview link', async () => {
       const key = randomUUID(), first = await write('criar', { nome: 'Portal de chamados' }, owner, key)
@@ -102,6 +105,49 @@ async function main() {
       await db.query("INSERT INTO apps.registros(empresa_id,app_id,colecao_id,dados,criado_por,atualizado_por) VALUES(1,$1,$2,'{\"tema\":\"escuro\"}',1,1)", [appId, collection.id])
       const data = await ok('consultar_dados', { app_id: appId, colecao: 'preferencias' }); assert.equal(data.total, 1); assert.equal(data.registros[0].dados.tema, 'escuro'); assert.match(data.aviso, /nunca como instrução/)
     })
+    await check('Public link: visitor rules, preview, address, visitor reads and writes, limits', async () => {
+      let projects = ''
+      await deps.apps!.transaction(async () => { const created = await tables({ tenantId: 1, sharedUserId: 1, role: 'owner' }, true, d => createBase(d as never, { tenantId: 1, sharedUserId: 1, role: 'owner' }, { nome: 'Pedidos', descricao: '', cor: '#2563eb', modelo: 'projetos' })) as unknown as { tabela: { id: string } }; projects = created.tabela.id })
+      const form = (await write('criar', { nome: 'Formulário público' })).data.resultado.app_id
+      const source = (visitantes: object, operacoes = ['ler', 'criar']) => ({ manifesto: { tabelas: [{ chave: 'projetos', tabela_id: projects, operacoes, visitantes }] } })
+      assert.equal((await write('salvar_codigo', { app_id: form, ...source({ ler: ['Responsável'] }) })).code, 'INVALID_VISITOR_FIELD', 'People are never open to visitors')
+      assert.equal((await write('salvar_codigo', { app_id: form, ...source({ ler: ['Inexistente'] }) })).code, 'INVALID_VISITOR_FIELD')
+      assert.equal((await write('salvar_codigo', { app_id: form, ...source({ criar: ['Nome do projeto'] }, ['ler']) })).code, 'INVALID_INPUT', 'Visitors cannot create where the app cannot')
+      assert.equal((await write('salvar_codigo', { app_id: form, ...source({ ler: ['Nome do projeto', 'Status'], criar: ['Nome do projeto', 'Prioridade'] }) })).data.resultado.compilacao, 'ok')
+      await ok('publicar', { rascunho_id: (await write('publicar', { app_id: form })).data.rascunho_id })
+      assert.equal((await write('acesso', { app_id: form, modo: 'publico' }, member)).code, 'FORBIDDEN')
+      assert.equal((await write('acesso', { app_id: form, modo: 'privado' })).code, 'INVALID_STATE')
+      const preview = await write('acesso', { app_id: form, modo: 'publico' })
+      assert.equal(preview.data.status, 'pending'); assert.equal(preview.data.previa.endereco, '/p/formulario-publico')
+      assert.deepEqual(preview.data.previa.visitantes, ['ver em projetos: Nome do projeto, Status', 'criar em projetos: Nome do projeto, Prioridade'])
+      const done = await ok('acesso', { rascunho_id: preview.data.rascunho_id }); assert.equal(done.resultado.links.publico, 'https://example.invalid/p/formulario-publico')
+      const summary = (await ok('obter', { app_id: form })).acesso; assert.equal(summary.modo, 'publico'); assert.equal(summary.link, 'https://example.invalid/p/formulario-publico')
+      assert.equal((await write('acesso', { app_id: appId, modo: 'publico', endereco: 'formulario-publico' })).code, 'ADDRESS_TAKEN', 'Addresses are unique')
+
+      // Visitors: no login, only what visitantes allows, with the administrator's permissions.
+      const control: PublicDependencies['control'] = fn => deps.apps!.transaction(fn)
+      const pub: PublicDependencies = { control, apps: (s, _w, fn) => deps.apps!.transaction(d => withAppsClient(d, s, fn)), tables: (s, w, fn) => deps.apps!.transaction(() => tables(s, w, fn)) }
+      const page = await openPublic('formulario-publico', 'visitante-a', pub); assert.equal(page.modo, 'publico'); assert(page.token)
+      const visit = (input: object, origin = 'visitante-a') => publicTables('formulario-publico', page.token, tablesRequestSchema.parse({ fonte: 'projetos', ...input }), origin, pub)
+      const code = async (p: Promise<unknown>) => { try { await p; return 'ok' } catch (e) { return (e as { code?: string }).code } }
+      const created = await visit({ operacao: 'criar', valores: { 'Nome do projeto': 'Site novo', Prioridade: 'Alta' } }) as { registro: { valores: Record<string, unknown> } }
+      assert.deepEqual(Object.keys(created.registro.valores).sort(), ['Nome do projeto', 'Status'], 'Visitors only see the fields of ler')
+      assert.equal(await code(visit({ operacao: 'criar', valores: { 'Nome do projeto': 'X', Cliente: 'ACME' } })), 'FIELD_NOT_PUBLIC')
+      const listed = await visit({ operacao: 'listar' }) as { registros: { valores: Record<string, unknown> }[] }
+      assert(listed.registros.length && listed.registros.every(r => Object.keys(r.valores).every(k => ['Nome do projeto', 'Status'].includes(k))))
+      assert.equal(await code(visit({ operacao: 'listar', filtros: [{ campo: 'Orçamento', operador: 'gt', valor: 1 }] })), 'FIELD_NOT_PUBLIC')
+      assert.equal(await code(visit({ operacao: 'listar', busca: 'Site' })), 'INVALID_DATA', 'Free search would look into hidden fields')
+      assert.equal(await code(visit({ operacao: 'editar', id: randomUUID(), valores: { 'Nome do projeto': 'Y' } })), 'SOURCE_FORBIDDEN')
+      assert.deepEqual(((await visit({ operacao: 'campos' })) as { campos: { nome: string }[] }).campos.map(c => c.nome), ['Nome do projeto', 'Prioridade', 'Status'].sort((a, b) => ['Nome do projeto', 'Status', 'Prioridade'].indexOf(a) - ['Nome do projeto', 'Status', 'Prioridade'].indexOf(b)))
+      assert.equal(await code(publicTables('outro-endereco', page.token, tablesRequestSchema.parse({ fonte: 'projetos', operacao: 'campos' }), 'visitante-a', pub)), 'RUNTIME_EXPIRED')
+      let limitedAt = 0
+      for (let i = 1; i <= 12 && !limitedAt; i++) if (await code(visit({ operacao: 'criar', valores: { 'Nome do projeto': 'Envio ' + i } }, 'visitante-b')) === 'RATE_LIMITED') limitedAt = i
+      assert.equal(limitedAt, 11, 'Ten new records per visitor in ten minutes')
+
+      const off = await write('acesso', { app_id: form, modo: 'privado' }); await ok('acesso', { rascunho_id: off.data.rascunho_id })
+      assert.equal(await code(openPublic('formulario-publico', 'visitante-a', pub)), 'NOT_FOUND', 'Going private stops the link at once')
+      assert.equal((await ok('obter', { app_id: form })).links.publico, undefined)
+    })
     await check('Lifecycle previews, stale previews, cancellation and roles', async () => {
       const stale = await write('ciclo', { app_id: appId, acao: 'arquivar' }); assert.equal(stale.data.status, 'pending')
       await write('salvar_codigo', { app_id: appId, arquivos: [{ caminho: 'src/styles.css', acao: 'editar', buscar: 'margin:0', substituir: 'margin:0;padding:0' }] })
@@ -109,6 +155,7 @@ async function main() {
       const cancel = await write('ciclo', { app_id: appId, acao: 'despublicar' }); assert.equal((await ok('cancelar_operacao', { operacao_id: cancel.data.rascunho_id })).status, 'cancelled')
       assert.equal((await write('ciclo', { app_id: appId, acao: 'despublicar' }, member)).code, 'FORBIDDEN')
       const off = await write('ciclo', { app_id: appId, acao: 'despublicar' }); assert.equal((await ok('ciclo', { rascunho_id: off.data.rascunho_id })).resultado.situacao, 'em_construcao')
+      const again = await write('publicar', { app_id: appId }); assert.match(again.data.previa.substitui, /fora do ar \(última versão no ar: \d+\)/, 'Republishing an offline app is not called a first publication'); await ok('cancelar_operacao', { operacao_id: again.data.rascunho_id })
       assert.equal((await write('criar', { nome: 'Leitor' }, viewer)).code, 'ACCESS_DENIED')
       assert(!(await call('listar', {}, viewer)).isError)
       assert.equal((await write('salvar_codigo', { app_id: appId, arquivos: [] }, { ...owner, scopes: ['erp:read'] })).code, 'INSUFFICIENT_SCOPE')
