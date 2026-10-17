@@ -1,9 +1,9 @@
 import { randomUUID } from 'node:crypto'
 import type { z } from 'zod'
-import { AppsError, manifestSchema, metadataSchema, validatePackage, type AppPackage, type Bundle, type Catalog } from '../shared/contracts'
+import { AppsError, manifestSchema, metadataSchema, validatePackage, type AppFile, type AppPackage, type Bundle, type Catalog } from '../shared/contracts'
 import { starter } from '../shared/starter'
 import type { Database, Session } from './database'
-import { storage, type PackageStore } from './storage'
+import { hash, storage, type PackageStore } from './storage'
 import { appSelect, available, bump, editable, event, expected, getApp, publisher, versions } from './repository'
 
 export async function catalog(db: Database, s: Session, search: string, filter: string, page: number, sort: string): Promise<Catalog> {
@@ -22,42 +22,53 @@ export async function catalog(db: Database, s: Session, search: string, filter: 
 }
 export async function bundle(db: Database, s: Session, id: string): Promise<Bundle> { return { app: await getApp(db, s, id), versoes: await versions(db, s, id), podeEditar: s.role !== 'viewer', podePublicar: ['owner', 'admin'].includes(s.role) } }
 
-export async function savePackage(db: Database, s: Session, appId: string, versionId: string, p: AppPackage, store: PackageStore) {
-  const objectId = randomUUID(), path = `${s.tenantId}/${appId}/${versionId}/${objectId}.json`
-  const old = (await db.query("SELECT id FROM apps.arquivos WHERE empresa_id=$1 AND app_id=$2 AND versao_id=$3 AND estado_upload='confirmado'", [s.tenantId, appId, versionId])).rows
-  const serialized = JSON.stringify(validatePackage(p))
-  const { hash } = await import('./storage')
-  await db.query("INSERT INTO apps.arquivos(id,empresa_id,app_id,versao_id,caminho_logico,caminho_storage,finalidade,mime_type,tamanho,hash_conteudo,criado_por) VALUES($1,$2,$3,$4,$5,$6,'pacote','application/json',$7,$8,$9)", [objectId, s.tenantId, appId, versionId, objectId + '.json', path, Buffer.byteLength(serialized), hash(serialized), s.sharedUserId])
-  const result = await store.put(path, p)
-  if (result.hash !== hash(serialized) || result.tamanho !== Buffer.byteLength(serialized)) throw new AppsError('INVALID_FILE', 'O arquivo enviado não passou pela verificação.', 409)
-  for (const row of old) await db.query("UPDATE apps.arquivos SET estado_upload='descartado' WHERE empresa_id=$1 AND id=$2", [s.tenantId, row.id])
-  await db.query("UPDATE apps.arquivos SET estado_upload='confirmado' WHERE empresa_id=$1 AND id=$2", [s.tenantId, objectId])
-  return result.hash
+// Each file is stored once per company by content hash; a version lists its files. Saving a
+// draft only writes contents that changed, inside the same database transaction.
+export const fileHash = (f: AppFile) => hash(f.codificacao + '\n' + f.conteudo)
+export const packageHash = (p: AppPackage) => hash(JSON.stringify(p.arquivos.map(f => [f.caminho, fileHash(f)])))
+export async function saveFiles(db: Database, s: Session, appId: string, versionId: string, input: AppPackage) {
+  const p = validatePackage(input)
+  await db.query("UPDATE apps.versoes SET versao_formato=2 WHERE empresa_id=$1 AND app_id=$2 AND id=$3 AND estado='rascunho' AND versao_formato<>2", [s.tenantId, appId, versionId])
+  await db.query('DELETE FROM apps.versao_arquivos WHERE empresa_id=$1 AND versao_id=$2', [s.tenantId, versionId])
+  for (const [position, file] of p.arquivos.entries()) {
+    const digest = fileHash(file)
+    await db.query('INSERT INTO apps.conteudos(empresa_id,hash,codificacao,conteudo,tamanho) VALUES($1,$2,$3,$4,$5) ON CONFLICT DO NOTHING', [s.tenantId, digest, file.codificacao, file.conteudo, Buffer.byteLength(file.conteudo)])
+    await db.query('INSERT INTO apps.versao_arquivos(empresa_id,app_id,versao_id,caminho,posicao,hash) VALUES($1,$2,$3,$4,$5,$6)', [s.tenantId, appId, versionId, file.caminho, position, digest])
+  }
+  return packageHash(p)
 }
 export async function loadPackage(db: Database, s: Session, appId: string, versionId: string, store: PackageStore = storage) {
+  const version = (await db.query('SELECT manifesto,versao_formato FROM apps.versoes WHERE empresa_id=$1 AND app_id=$2 AND id=$3', [s.tenantId, appId, versionId])).rows[0]
+  if (!version) throw new AppsError('NOT_FOUND', 'Versão não encontrada.', 404)
+  if (version.versao_formato === 2) {
+    const files = (await db.query('SELECT f.caminho,c.codificacao,c.conteudo FROM apps.versao_arquivos f JOIN apps.conteudos c ON c.empresa_id=f.empresa_id AND c.hash=f.hash WHERE f.empresa_id=$1 AND f.app_id=$2 AND f.versao_id=$3 ORDER BY f.posicao', [s.tenantId, appId, versionId])).rows
+    if (!files.length) throw new AppsError('NO_CONTENT', 'O app ainda não tem arquivos.', 409)
+    return validatePackage({ manifesto: manifestSchema.parse(version.manifesto), arquivos: files.map(f => ({ caminho: f.caminho, codificacao: f.codificacao, conteudo: f.conteudo })) })
+  }
+  // Versions saved before files moved to the database keep a single package in Storage.
   const file = (await db.query("SELECT caminho_storage,hash_conteudo FROM apps.arquivos WHERE empresa_id=$1 AND app_id=$2 AND versao_id=$3 AND finalidade='pacote' AND estado_upload='confirmado' ORDER BY criado_em DESC LIMIT 1", [s.tenantId, appId, versionId])).rows[0]
   if (!file) throw new AppsError('NO_CONTENT', 'O app ainda não tem arquivos.', 409)
   return store.get(file.caminho_storage, file.hash_conteudo)
 }
-export async function create(db: Database, s: Session, data: z.infer<typeof metadataSchema>, example: boolean, store: PackageStore = storage, source?: AppPackage) {
+export async function create(db: Database, s: Session, data: z.infer<typeof metadataSchema>, example: boolean, source?: AppPackage) {
   editable(s)
   const appId = randomUUID(), versionId = randomUUID(), p = source ?? starter(randomUUID(), example)
   const slug = (data.nome.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/[^a-z0-9]+/g, '-').slice(0, 60) || 'app') + '-' + appId.slice(0, 8)
   await db.query('INSERT INTO apps.apps(id,empresa_id,nome,slug,descricao,icone,cor,criado_por,atualizado_por) VALUES($1,$2,$3,$4,$5,$6,$7,$8,$8)', [appId, s.tenantId, data.nome, slug, data.descricao, data.icone, data.cor, s.sharedUserId])
-  await db.query('INSERT INTO apps.versoes(id,empresa_id,app_id,numero,manifesto,criado_por) VALUES($1,$2,$3,1,$4::jsonb,$5)', [versionId, s.tenantId, appId, JSON.stringify(p.manifesto), s.sharedUserId])
-  await savePackage(db, s, appId, versionId, p, store)
+  await db.query('INSERT INTO apps.versoes(id,empresa_id,app_id,numero,manifesto,versao_formato,criado_por) VALUES($1,$2,$3,1,$4::jsonb,2,$5)', [versionId, s.tenantId, appId, JSON.stringify(p.manifesto), s.sharedUserId])
+  await saveFiles(db, s, appId, versionId, p)
   await event(db, s, appId, 'criado'); return getApp(db, s, appId)
 }
-export async function saveDraft(db: Database, s: Session, id: string, revision: number, input: AppPackage, store: PackageStore = storage) {
+export async function saveDraft(db: Database, s: Session, id: string, revision: number, input: AppPackage) {
   editable(s); const app = await getApp(db, s, id, true); available(app); expected(app, revision)
   const p = validatePackage(input)
   let version = (await versions(db, s, id)).find(v => v.estado === 'rascunho')
   if (!version) {
     const previous = (await versions(db, s, id))[0], versionId = randomUUID()
-    await db.query('INSERT INTO apps.versoes(id,empresa_id,app_id,numero,manifesto,versao_origem_id,criado_por) VALUES($1,$2,$3,$4,$5::jsonb,$6,$7)', [versionId, s.tenantId, id, (previous?.numero ?? 0) + 1, JSON.stringify(p.manifesto), previous?.id ?? null, s.sharedUserId])
+    await db.query('INSERT INTO apps.versoes(id,empresa_id,app_id,numero,manifesto,versao_origem_id,versao_formato,criado_por) VALUES($1,$2,$3,$4,$5::jsonb,$6,2,$7)', [versionId, s.tenantId, id, (previous?.numero ?? 0) + 1, JSON.stringify(p.manifesto), previous?.id ?? null, s.sharedUserId])
     version = (await versions(db, s, id)).find(v => v.id === versionId)!
   } else await db.query('UPDATE apps.versoes SET manifesto=$4::jsonb WHERE empresa_id=$1 AND app_id=$2 AND id=$3', [s.tenantId, id, version.id, JSON.stringify(p.manifesto)])
-  await savePackage(db, s, id, version.id, p, store)
+  await saveFiles(db, s, id, version.id, p)
   await bump(db, s, id); await event(db, s, id, 'rascunho_salvo'); return bundle(db, s, id)
 }
 export async function metadata(db: Database, s: Session, id: string, revision: number, data: z.infer<typeof metadataSchema>) {
@@ -80,5 +91,5 @@ export async function duplicate(db: Database, s: Session, id: string, store: Pac
   const p = await loadPackage(db, s, id, vs[0].id, store)
   const ids = new Map(p.manifesto.colecoes.map(c => [c.id, randomUUID()]))
   p.manifesto = manifestSchema.parse({ ...p.manifesto, colecoes: p.manifesto.colecoes.map(c => ({ ...c, id: ids.get(c.id) })) })
-  return create(db, s, metadataSchema.parse({ ...Object.fromEntries(['nome', 'descricao', 'cor', 'icone'].map(k => [k, app[k as keyof typeof app]])), nome: app.nome.slice(0, 90) + ' (cópia)' }), false, store, p)
+  return create(db, s, metadataSchema.parse({ ...Object.fromEntries(['nome', 'descricao', 'cor', 'icone'].map(k => [k, app[k as keyof typeof app]])), nome: app.nome.slice(0, 90) + ' (cópia)' }), false, p)
 }

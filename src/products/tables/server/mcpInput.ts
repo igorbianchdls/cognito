@@ -34,7 +34,7 @@ function pick<T extends Named>(items: T[], ref: string, kind: string): T {
   throw new TablesError('UNKNOWN_REFERENCE', `Não encontrei ${kind} "${ref}".${sample ? ` Disponíveis: ${sample}${items.length > 20 ? '…' : ''}.` : ''}`)
 }
 
-class Resolver {
+export class Resolver {
   private fields = new Map<string, Field[]>()
   private people?: Named[]
   constructor(private db: Database, private session: TablesSession) {}

@@ -1,6 +1,6 @@
 import { createHmac, timingSafeEqual } from 'node:crypto'
 import { z } from 'zod'
-import { AppsError, recordSchema, uuid, validateData } from '../shared/contracts'
+import { AppsError, manifestSchema, recordSchema, uuid, validateData } from '../shared/contracts'
 import type { Database, Session } from './database'
 import { available, editable, event, getApp, versions } from './repository'
 import { loadPackage } from './service'
@@ -61,4 +61,18 @@ export async function dataOperation(db: Database, s: BrowserSession, appId: stri
   } else result = await db.query('INSERT INTO apps.registros(empresa_id,app_id,colecao_id,dados,criado_por,atualizado_por) VALUES($1,$2,$3,$4::jsonb,$5,$5) RETURNING id,dados,versao_concorrencia', [s.tenantId, appId, collection.id, JSON.stringify(data), s.sharedUserId])
   if (!result.rows[0]) throw new AppsError('VERSION_CONFLICT', 'O registro mudou. Recarregue os dados.', 409)
   await event(db, s, appId, 'registro_salvo'); return { registro: result.rows[0] }
+}
+
+/** Manifest that authorizes Tables access: the published version (token) or, in preview, the version being edited. */
+export async function runtimeManifest(db: Database, s: BrowserSession, appId: string, input: { token?: string; versao?: string }) {
+  const app = await getApp(db, s, appId); available(app)
+  if (input.token) {
+    const c = readToken(input.token, s, appId)
+    if (app.publicacao_id !== c.publicacao || app.versao_publicada_id !== c.versao) throw new AppsError('RUNTIME_CHANGED', 'O app foi atualizado ou retirado de publicação. Abra-o novamente.', 409)
+    return manifestSchema.parse((await versions(db, s, appId)).find(v => v.id === c.versao)!.manifesto)
+  }
+  editable(s)
+  const version = (await versions(db, s, appId)).find(v => v.id === input.versao)
+  if (!version) throw new AppsError('NOT_FOUND', 'Versão não encontrada.', 404)
+  return manifestSchema.parse(version.manifesto)
 }

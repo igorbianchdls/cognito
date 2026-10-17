@@ -1,9 +1,9 @@
 import { randomUUID } from 'node:crypto'
 import { Script } from 'node:vm'
-import { AppsError, type AppPackage, type Manifest } from '../shared/contracts'
+import { AppsError, manifestSchema, type AppPackage, type Manifest } from '../shared/contracts'
 import type { Database, Session } from './database'
 import { available, bump, event, expected, getApp, publisher, versions } from './repository'
-import { loadPackage } from './service'
+import { loadPackage, packageHash } from './service'
 import { storage, type PackageStore } from './storage'
 
 export function validateStatic(p: AppPackage) {
@@ -38,17 +38,15 @@ export async function publish(db: Database, s: Session, appId: string, revision:
   const version = (await versions(db, s, appId)).find(v => v.id === versionId)
   if (!version) throw new AppsError('NOT_FOUND', 'Versão não encontrada.', 404)
   const p = await loadPackage(db, s, appId, versionId, store); validateStatic(p)
-  if (JSON.stringify(p.manifesto) !== JSON.stringify(version.manifesto)) {
-    // jsonb reorders keys; compare normalized values instead of serialization order.
-    const { isDeepStrictEqual } = await import('node:util')
-    if (!isDeepStrictEqual(p.manifesto, version.manifesto)) throw new AppsError('INVALID_CONTENT', 'O manifesto não corresponde aos arquivos salvos.', 409)
-  }
+  // jsonb reorders keys and older manifests omit defaults: compare the parsed values.
+  const { isDeepStrictEqual } = await import('node:util')
+  if (!isDeepStrictEqual(manifestSchema.parse(p.manifesto), manifestSchema.parse(version.manifesto))) throw new AppsError('INVALID_CONTENT', 'O manifesto não corresponde aos arquivos salvos.', 409)
   const history = (await db.query('SELECT DISTINCT v.manifesto FROM apps.publicacoes p JOIN apps.versoes v ON (v.empresa_id,v.app_id,v.id)=(p.empresa_id,p.app_id,p.versao_id) WHERE p.empresa_id=$1 AND p.app_id=$2', [s.tenantId, appId])).rows
   for (const old of history) compatible(old.manifesto, p.manifesto)
   for (const c of p.manifesto.colecoes) await db.query('INSERT INTO apps.colecoes(id,empresa_id,app_id,chave,nome) VALUES($1,$2,$3,$4,$5) ON CONFLICT(empresa_id,app_id,id) DO UPDATE SET nome=excluded.nome', [c.id, s.tenantId, appId, c.chave, c.nome])
   if (version.estado === 'rascunho') {
-    const file = (await db.query("SELECT hash_conteudo FROM apps.arquivos WHERE empresa_id=$1 AND app_id=$2 AND versao_id=$3 AND estado_upload='confirmado' AND finalidade='pacote'", [s.tenantId, appId, versionId])).rows[0]
-    await db.query("UPDATE apps.versoes SET estado='pronta',hash_conteudo=$4,selado_em=now() WHERE empresa_id=$1 AND app_id=$2 AND id=$3", [s.tenantId, appId, versionId, file.hash_conteudo])
+    const digest = version.versao_formato === 2 ? packageHash(p) : (await db.query("SELECT hash_conteudo FROM apps.arquivos WHERE empresa_id=$1 AND app_id=$2 AND versao_id=$3 AND estado_upload='confirmado' AND finalidade='pacote'", [s.tenantId, appId, versionId])).rows[0].hash_conteudo
+    await db.query("UPDATE apps.versoes SET estado='pronta',hash_conteudo=$4,selado_em=now() WHERE empresa_id=$1 AND app_id=$2 AND id=$3", [s.tenantId, appId, versionId, digest])
   }
   await db.query("UPDATE apps.publicacoes SET estado='encerrada',encerrado_em=now() WHERE empresa_id=$1 AND app_id=$2 AND estado='ativa'", [s.tenantId, appId])
   await db.query('INSERT INTO apps.publicacoes(id,empresa_id,app_id,versao_id,publicado_por) VALUES($1,$2,$3,$4,$5)', [randomUUID(), s.tenantId, appId, versionId, s.sharedUserId])
