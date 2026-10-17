@@ -152,6 +152,7 @@
     "@ariakit/react": "^0.4.18",
     "@electric-sql/pglite": "0.3.14",
     "@eslint/eslintrc": "^3",
+    "@tailwindcss/node": "4.1.16",
     "@tailwindcss/postcss": "^4",
     "@types/lodash.throttle": "^4.1.9",
     "@types/node": "20.19.19",
