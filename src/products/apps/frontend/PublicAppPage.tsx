@@ -17,7 +17,7 @@ export default function PublicAppPage({ slug }: { slug: string }) {
   }, [slug])
   useEffect(() => {
     const controller = new AbortController()
-    api<RuntimeBundle>('/runtime', { signal: controller.signal }).then(b => { setBundle(b); document.title = b.app.nome }).catch(e => { if (!controller.signal.aborted) setError(e instanceof Error ? e.message : 'Não foi possível carregar.') })
+    api<RuntimeBundle>('/runtime', { signal: controller.signal }).then(b => setBundle(b)).catch(e => { if (!controller.signal.aborted) setError(e instanceof Error ? e.message : 'Não foi possível carregar.') })
     return () => controller.abort()
   }, [api])
   return <main className="apps-public">{error ? <div className="apps-public-notice" role="alert">{error}</div> : bundle ? <RuntimeFrame bundle={bundle} api={api} /> : <div className="apps-public-notice" role="status"><LoaderCircle size={18} className="animate-spin" />Carregando…</div>}</main>

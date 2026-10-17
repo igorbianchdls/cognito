@@ -6,7 +6,7 @@ import { bridgeScript } from '../../../ui/bridge/mcpApps'
 const appsScript = String.raw`
 Object.assign(states,{saved:'Salvo',pending:'Aguardando confirmação',no_ar:'No ar',em_construcao:'Em construção',arquivado:'Arquivado',na_lixeira:'Na lixeira',ok:'Compila',erro:'Com erro'});
 Object.assign(toneOf,{no_ar:'success',em_construcao:'info',arquivado:'muted',na_lixeira:'muted',ok:'success',erro:'danger'});
-Object.assign(labels,{app:'App',versao:'Versão',substitui:'Substitui',modelo:'Modelo',tabelas:'Tabelas do Tables',colecoes:'Coleções',acao:'Ação',situacao:'Situação',compilacao:'Compilação',acesso:'Acesso',endereco:'Link',visitantes:'Visitantes podem',sem_acesso:'Fica de fora',executa_como:'Funciona com'});
+Object.assign(labels,{app:'App',versao:'Versão',substitui:'Substitui',modelo:'Modelo',tabelas:'Tabelas do Tables',colecoes:'Coleções',acao:'Ação',situacao:'Situação',compilacao:'Compilação',acesso:'Acesso',erros:'Erros',endereco:'Link',visitantes:'Visitantes podem',sem_acesso:'Fica de fora',executa_como:'Funciona com'});
 const short=tool=>String(tool||'').replace(/^apps_/,'');
 function openLink(url){return request('ui/open-link',{url})}
 function heading(target,title,subtitle){target.append(element('h1',title));if(subtitle)target.append(element('p',subtitle,'sub'))}
@@ -29,7 +29,7 @@ function renderOperation(target,data){const preview=data.previa||{},result=data.
 function renderApp(target,data){const app=data.app||{};
   hero(target,{eyebrow:'App',title:app.nome,meta:[data.modelo==='react'?'React':'HTML',data.versao_publicada?'versão '+data.versao_publicada+' no ar':null].filter(Boolean).join(' · '),status:app.situacao});
   const draft=(data.versoes||[]).find(v=>v.estado==='rascunho');if(draft&&draft.compilacao==='erro')buildError(target,draft.erro_compilacao);
-  const box=kv([['tabelas',(data.tabelas||[]).map(t=>t.chave+' ('+t.operacoes.join(', ')+')').join(', ')||undefined],['colecoes',(data.colecoes||[]).map(c=>c.nome).join(', ')||undefined],['versao',draft?'rascunho '+draft.numero:undefined],['acesso',data.acesso&&(data.acesso.modo==='publico'?'Público':'Privado')]]);if(box)target.append(box);
+  const box=kv([['tabelas',(data.tabelas||[]).map(t=>t.chave+' ('+t.operacoes.join(', ')+')').join(', ')||undefined],['colecoes',(data.colecoes||[]).map(c=>c.nome).join(', ')||undefined],['versao',draft?'rascunho '+draft.numero:undefined],['acesso',data.acesso&&(data.acesso.modo==='publico'?'Público':'Privado')],['erros',(data.erros_execucao||[]).length?(data.erros_execucao.length+' no navegador'):undefined]]);if(box)target.append(box);
   if((data.arquivos||[]).length&&state.displayMode==='fullscreen')target.append(section('Arquivos',table(data.arquivos.map(f=>({nome:f.caminho,tamanho:f.tamanho+' caracteres'})),['nome','tamanho'])));
   target.append(linkActions(data.links))}
 

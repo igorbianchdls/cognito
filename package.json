@@ -73,7 +73,18 @@
     "erp:dashboards-http-smoke": "node scripts/erp/dashboards-http-smoke.mjs",
     "erp:dashboards-ui-smoke": "node scripts/erp/dashboards-ui-smoke.mjs",
     "erp:phase0-scale-smoke": "node scripts/erp/phase0-scale-smoke.mjs",
-    "erp:slow-queries": "node scripts/erp/slow-queries.mjs"
+    "erp:slow-queries": "node scripts/erp/slow-queries.mjs",
+    "typecheck": "tsc --noEmit -p . --pretty false",
+    "lint:produtos": "eslint src/products/tables src/products/apps src/products/mcpcore",
+    "tables:smoke": "node scripts/tables/smoke.mjs",
+    "tables:mcp-smoke": "tsx scripts/tables/mcp-smoke.ts",
+    "tables:ui-smoke": "node scripts/tables/ui-smoke.mjs",
+    "apps:smoke": "tsx scripts/apps/smoke.ts",
+    "apps:mcp-smoke": "tsx scripts/apps/mcp-smoke.ts",
+    "apps:ui-smoke": "tsx scripts/apps/ui-smoke.mjs",
+    "test:produtos": "npm run tables:smoke && npm run tables:mcp-smoke && npm run apps:smoke && npm run apps:mcp-smoke && npm run chatgptplugin:smoke && npm run claudeplugin:smoke && npm run chatgptplugin:mrtr-smoke && npm run chatgptplugin:tool-documentation-smoke",
+    "test:produtos-ui": "npm run tables:ui-smoke && npm run apps:ui-smoke",
+    "tables:perf": "node scripts/tables/perf.mjs"
   },
   "dependencies": {
     "@clerk/nextjs": "^7.4.3",

@@ -8,6 +8,8 @@ import { secret } from './runtime'
 import { loadBuild, loadPackage } from './service'
 import { validateStatic } from './publishing'
 import { tablesOperation, type TablesRequest, type TablesTransaction } from './tablesSource'
+import { recordErrors, type RuntimeError } from './errors'
+import { countUse } from './usage'
 
 // Public apps: anyone with /p/<endereco> opens the published version, without login. Requests run
 // with the permissions of the administrator who made the app public, limited to what the
@@ -75,6 +77,17 @@ async function limit(db: Database, s: Session, appId: string, origin: string, ki
 }
 export const visitorOrigin = (ip: string, slug: string) => mac('origem:' + slug + ':' + ip).slice(0, 32)
 
+/** Name, description and color of a public app for the page title and link previews; null when unavailable. */
+export async function publicInfo(slug: string, deps: PublicDependencies = publicDependencies) {
+  try {
+    return await deps.control(async db => {
+      const { session, appId } = await resolve(db, slug)
+      const row = (await db.query("SELECT a.nome,a.descricao,a.cor FROM apps.apps a JOIN apps.publicacoes p ON p.empresa_id=a.empresa_id AND p.app_id=a.id AND p.estado='ativa' WHERE a.empresa_id=$1 AND a.id=$2 AND a.excluido_em IS NULL AND a.arquivado_em IS NULL", [session.tenantId, appId])).rows[0]
+      return row ? { nome: String(row.nome), descricao: String(row.descricao ?? ''), cor: String(row.cor) } : null
+    })
+  } catch { return null }
+}
+
 export async function openPublic(slug: string, origin: string, deps: PublicDependencies = publicDependencies) {
   const { session, appId } = await deps.control(async db => { const r = await resolve(db, slug); await limit(db, r.session, r.appId, origin, 'leitura'); return r })
   return deps.apps(session, false, async db => {
@@ -83,19 +96,30 @@ export async function openPublic(slug: string, origin: string, deps: PublicDepen
     if (!app.publicacao_id || !app.versao_publicada_id) throw UNAVAILABLE()
     const pacote = await loadPackage(db, session, appId, app.versao_publicada_id); validateStatic(pacote)
     const compilado = await loadBuild(db, session, appId, app.versao_publicada_id)
+    await countUse(db, session, appId, 'publico', 'aberturas')
     const body = Buffer.from(JSON.stringify({ empresa: session.tenantId, app: appId, versao: app.versao_publicada_id, publicacao: app.publicacao_id, endereco: slug, visitante: randomUUID(), exp: Date.now() + 2 * 3600_000 })).toString('base64url')
     return { app: { id: app.id, nome: app.nome }, pacote, compilado, versaoId: app.versao_publicada_id, modo: 'publico', token: body + '.' + mac(body) }
   })
 }
 
-export async function publicTables(slug: string, token: string, input: TablesRequest, origin: string, deps: PublicDependencies = publicDependencies) {
-  let claims: z.infer<typeof claimsSchema>
+/** Errors from the public page, counted in the same visitor limits. */
+export async function publicErrors(slug: string, token: string, errors: RuntimeError[], origin: string, deps: PublicDependencies = publicDependencies) {
+  const claims = readClaims(slug, token)
+  const { session, appId } = await deps.control(async db => { const r = await resolve(db, slug); if (r.session.tenantId !== claims.empresa || r.appId !== claims.app) throw UNAVAILABLE(); await limit(db, r.session, r.appId, origin, 'leitura'); return r })
+  return deps.apps(session, false, db => recordErrors(db, session, appId, claims.versao, 'publico', errors))
+}
+function readClaims(slug: string, token: string) {
   try {
     const [body, signature, rest] = token.split('.')
     if (rest || !same(signature ?? '', mac(body))) throw Error()
-    claims = claimsSchema.parse(JSON.parse(Buffer.from(body, 'base64url').toString()))
+    const claims = claimsSchema.parse(JSON.parse(Buffer.from(body, 'base64url').toString()))
     if (claims.endereco !== slug || claims.exp < Date.now()) throw Error()
+    return claims
   } catch { throw new AppsError('RUNTIME_EXPIRED', 'Esta página expirou. Recarregue para continuar.', 409) }
+}
+
+export async function publicTables(slug: string, token: string, input: TablesRequest, origin: string, deps: PublicDependencies = publicDependencies) {
+  const claims = readClaims(slug, token)
   const { session, appId } = await deps.control(async db => {
     const r = await resolve(db, slug)
     if (r.session.tenantId !== claims.empresa || r.appId !== claims.app) throw UNAVAILABLE()
@@ -106,5 +130,7 @@ export async function publicTables(slug: string, token: string, input: TablesReq
     if (app.excluido_em || app.arquivado_em || app.publicacao_id !== claims.publicacao || app.versao_publicada_id !== claims.versao) throw new AppsError('RUNTIME_CHANGED', 'O app foi atualizado. Recarregue a página.', 409)
     return manifestSchema.parse((await versions(db, session, appId)).find(v => v.id === claims.versao)!.manifesto)
   })
-  return tablesOperation(session, manifest, input, deps.tables, true)
+  const result = await tablesOperation(session, manifest, input, deps.tables, true)
+  if (input.operacao === 'criar') await deps.apps(session, false, db => countUse(db, session, appId, 'publico', 'criacoes'))
+  return result
 }

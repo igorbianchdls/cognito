@@ -4,7 +4,7 @@ import type { Database, Session } from './database'
 
 export const appSelect = `SELECT a.*, EXISTS(SELECT 1 FROM apps.favoritos f WHERE f.empresa_id=a.empresa_id AND f.app_id=a.id AND f.usuario_id=$2) favorito,
  p.id publicacao_id,p.versao_id versao_publicada_id,EXISTS(SELECT 1 FROM apps.versoes v WHERE v.empresa_id=a.empresa_id AND v.app_id=a.id AND v.estado='rascunho') tem_rascunho,
- ac.modo acesso,ac.slug endereco
+ ac.modo acesso,ac.slug endereco,ac.dominio
  FROM apps.apps a LEFT JOIN apps.publicacoes p ON p.empresa_id=a.empresa_id AND p.app_id=a.id AND p.estado='ativa'
  LEFT JOIN apps.acessos ac ON ac.empresa_id=a.empresa_id AND ac.app_id=a.id`
 export async function getApp(db: Database, s: Session, id: string, lock = false, includeTrash = false): Promise<App> {

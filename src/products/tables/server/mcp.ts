@@ -30,13 +30,14 @@ export function clipped(record:DataRecord, selected?:string[],limit=1000) {
 /** Readable values are keyed by field name; repeated names get a short ID suffix. */
 function fieldLabels(fields:{id:string;nome:string}[]) { const seen=new Map<string,number>();for(const f of fields)seen.set(f.nome,(seen.get(f.nome)||0)+1);return new Map(fields.map(f=>[f.id,seen.get(f.nome)!>1?`${f.nome} (${f.id.slice(0,8)})`:f.nome])) }
 
-async function displayRecords(db:Database,session:TablesSession,records:DataRecord[],fields:Awaited<ReturnType<typeof readFields>>,limit:number) {
+export async function displayRecords(db:Database,session:TablesSession,records:DataRecord[],fields:Awaited<ReturnType<typeof readFields>>,limit:number) {
  const userIds=new Set<string>(),linkIds=new Set<string>()
- for(const r of records)for(const f of fields){const value=r.valores[f.id];if(!Array.isArray(value))continue;for(const id of value){if(['usuario','usuarios'].includes(f.tipo))userIds.add(id);if(f.tipo==='vinculo')linkIds.add(id)}}
+ for(const r of records)for(const f of fields){const value=r.valores[f.id];if(!Array.isArray(value))continue;for(const id of value){if(['usuario','usuarios','criado_por','alterado_por'].includes(f.tipo))userIds.add(id);if(f.tipo==='vinculo')linkIds.add(id)}}
  const users=userIds.size?(await db.query('SELECT id,nome FROM tables.membros() WHERE id=ANY($1::text[])',[[...userIds]])).rows:[]
  const links=linkIds.size?(await db.query("SELECT r.id,coalesce(r.valores->>t.campo_principal_id::text,'Sem nome') nome FROM tables.registros r JOIN tables.tabelas t ON t.empresa_id=r.empresa_id AND t.id=r.tabela_id JOIN tables.bases b ON b.empresa_id=t.empresa_id AND b.id=t.base_id WHERE r.empresa_id=$1 AND r.id=ANY($2::uuid[]) AND r.excluido_em IS NULL AND t.excluido_em IS NULL AND b.excluido_em IS NULL",[session.tenantId,[...linkIds]])).rows:[]
  const names=new Map([...users,...links].map(r=>[String(r.id),String(r.nome)])),label=fieldLabels(fields)
- return records.map(r=>({...r,exibicao:Object.fromEntries(fields.filter(f=>r.valores[f.id]!==undefined).map(f=>{const value=r.valores[f.id];let text:string;if(Array.isArray(value))text=value.map(id=>f.opcoes.find(o=>o.id===id)?.nome||names.get(id)||'Item indisponível').join(', ');else text=value===null?'':typeof value==='boolean'?(value?'Sim':'Não'):String(value);return [label.get(f.id)!,text.length>limit?text.slice(0,limit)+'…':text]}))}))
+ // System columns are shown through their fields (Nº, Criado por...), not as raw columns.
+ return records.map(({numero:_n,criado_por:_c,atualizado_por:_a,...r}:DataRecord&Input)=>({...r,exibicao:Object.fromEntries(fields.filter(f=>r.valores[f.id]!==undefined).map(f=>{const value=r.valores[f.id];let text:string;if(f.tipo==='busca'&&Array.isArray(value))text=value.join(', ');else if(f.tipo==='porcentagem'&&typeof value==='number')text=String(value).replace('.',',')+'%';else if(Array.isArray(value))text=value.map(id=>f.opcoes.find(o=>o.id===id)?.nome||names.get(id)||'Item indisponível').join(', ');else text=value===null?'':typeof value==='boolean'?(value?'Sim':'Não'):String(value);return [label.get(f.id)!,text.length>limit?text.slice(0,limit)+'…':text]}))}))
 }
 
 export async function readMcp(db:Database, session:TablesSession, name:string, input:Input) {
@@ -126,10 +127,11 @@ export async function operationSnapshot(db:Database,session:TablesSession,name:s
     if(mentioned.size){const members=await db.query('SELECT id,nome FROM tables.membros() WHERE id=ANY($1::text[])',[[...mentioned]]);for(const member of members.rows)refs.push({id:member.id,nome:String(member.nome).slice(0,120),tipo:'pessoa'})}
     if(data.visualizacao_id){const v=(await getBundle(db,session,id)).visualizacoes.find(v=>v.id===data.visualizacao_id);if(!v)throw missing();if(data.expectedVersion!==undefined)assertVersion(v.versao,data.expectedVersion);snapshot.itens.push({tipo:'visualizacoes',id:v.id,versao:v.versao});refs.push({id:v.id,nome:v.nome,tipo:'visualização'})}
   }
-  for(const id of baseIds){const base=await requireBase(db,session,id);snapshot.bases.push({id,versao:name==='editar_base'?base.versao:null});refs.push({id,nome:base.nome,tipo:'base'});if(data.base_id===id&&data.expectedVersion!==undefined)assertVersion(base.versao,data.expectedVersion)}
+  for(const id of baseIds){const base=await requireBase(db,session,id);snapshot.bases.push({id,versao:['editar_base','compartilhar_base'].includes(name)?base.versao:null});refs.push({id,nome:base.nome,tipo:'base'});if(data.base_id===id&&data.expectedVersion!==undefined)assertVersion(base.versao,data.expectedVersion)}
   const recordRefs=[...new Set<string>([...recordIds,...[...JSON.stringify(data).matchAll(/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/gi)].map(m=>m[0])])].filter(id=>!refs.some(r=>r.id===id))
   if(recordRefs.length)for(const r of (await db.query("SELECT r.id,coalesce(nullif(r.valores->>t.campo_principal_id::text,''),'Sem nome') nome FROM tables.registros r JOIN tables.tabelas t ON t.empresa_id=r.empresa_id AND t.id=r.tabela_id WHERE r.empresa_id=$1 AND r.id=ANY($2::uuid[])",[session.tenantId,recordRefs])).rows)refs.push({id:String(r.id),nome:String(r.nome).slice(0,120),tipo:'registro'})
   if(name==='criar_base')refs.push({nome:data.nome,tipo:'base nova'})
+  if(name==='compartilhar_base'&&data.membros?.length){const people=await db.query('SELECT id,nome FROM tables.membros() WHERE id=ANY($1::text[])',[data.membros.map((m:Input)=>m.usuario_id)]);for(const p of people.rows)refs.push({id:String(p.id),nome:String(p.nome).slice(0,120),tipo:'pessoa'})}
   return {hash:digest(snapshot),referencias:refs,snapshot}
 }
 
@@ -151,6 +153,7 @@ async function recordValues(db:Database,session:TablesSession,tableId:string,ite
 export async function applyMcp(db:Database,session:TablesSession,name:string,data:Input,dryRun=false):Promise<Input> {
   if(name==='criar_base')return service.createBase(db,session,baseInputSchema.parse(data))
   if(name==='editar_base'){const b=await requireBase(db,session,data.base_id);if(!Object.keys(data.alteracoes).length)throw new TablesError('INVALID_INPUT','Informe uma alteração.');return {base:await service.changeBase(db,session,b.id,{nome:b.nome,descricao:b.descricao,cor:b.cor,...data.alteracoes,expectedVersion:b.versao})}}
+  if(name==='compartilhar_base'){const current=await service.getSharing(db,session,data.base_id);const sharing=await service.saveSharing(db,session,data.base_id,{acesso:data.acesso??current.acesso,membros:data.membros??current.membros.filter(m=>!m.administrador_empresa).map(m=>({usuario_id:m.id,papel:m.papel})),expectedVersion:current.versao});return {acesso:sharing.acesso,membros:sharing.membros.map(m=>({nome:m.nome,papel:m.papel,...(m.administrador_empresa?{administrador_empresa:true}:{})}))}}
   if(name==='criar_tabela')return {tabela:await service.createTable(db,session,data.base_id,data.nome)}
   if(name==='editar_tabela'){const t=await requireTable(db,session,data.tabela_id);return {tabela:await service.changeTable(db,session,t.id,{nome:data.nome,expectedStructureVersion:t.versao_estrutura})}}
   if(name==='criar_campo'||name==='editar_campo') {

@@ -47,7 +47,7 @@ async function main(){try {
  CREATE TABLE plugin.drafts(id uuid PRIMARY KEY,empresa_id bigint,user_id bigint,oauth_client_id text,operation_key uuid,proposal jsonb,status text DEFAULT 'pending',record_id text,created_at timestamptz DEFAULT now(),expires_at timestamptz DEFAULT now()+interval '24 hours',decided_at timestamptz,target_snapshot jsonb,integration text,
  CONSTRAINT drafts_integration_operation_key UNIQUE(integration,empresa_id,user_id,oauth_client_id,operation_key),CONSTRAINT legacy_result CHECK((status='saved')=(record_id IS NOT NULL)));
  CREATE TABLE plugin.executions(id uuid PRIMARY KEY,user_id bigint,empresa_id bigint,oauth_client_id text,tool_name text,status text,duration_ms int,finished_at timestamptz,integration text);`)
- for(const file of ['20261016120000_create_tables.sql','20261016193000_mcp_product_domains.sql','20261016200000_mcp_domain_uniqueness.sql'])await db.exec(readFileSync('supabase/migrations/'+file,'utf8'))
+ for(const file of ['20261016120000_create_tables.sql','20261018120000_tables_base_permissions.sql','20261018150000_tables_search_index.sql','20261018160000_tables_field_types.sql','20261018170000_tables_views.sql','20261018180000_tables_automations.sql','20261018190000_tables_api_keys.sql','20261018200000_tables_change_index.sql','20261016193000_mcp_product_domains.sql','20261016200000_mcp_domain_uniqueness.sql'])await db.exec(readFileSync('supabase/migrations/'+file,'utf8'))
  await check('18 unique tools, compact definitions and two host registrations',async()=>{
   assert.equal(tablesTools.length,18);assert.equal(new Set(tablesTools.map(t=>t.name)).size,18);assert.equal(Object.keys(readSchemas).length,9)
   assert(tablesTools.find(t=>t.key==='comentar')!.destructive===false&&tablesTools.find(t=>t.key==='lixeira')!.destructive===true&&tablesTools.find(t=>t.key==='resumir')!.write===false)
@@ -121,6 +121,24 @@ async function main(){try {
   await change('salvar_registros',{tabela_id:table,registros:[{registro_id:record,valores:{}}]})
   assert.equal((await call('salvar_registros',{rascunho_id:p.rascunho_id})).code,'STALE_PROPOSAL')
  })
+ await check('Formulas and aggregations are created by field names and read as values',async()=>{
+  const formula=await change('salvar_campo',{tabela_id:table,nome:'Orçamento em dobro',tipo:'formula',formula:'{Orçamento} * 2'});assert(formula.direct)
+  assert.equal((await call('salvar_campo',{chave_operacao:randomUUID(),dados:{tabela_id:table,nome:'Ruim',tipo:'formula',formula:'{Não existe} + 1'}})).code,'INVALID_FIELD')
+  await change('salvar_campo',{tabela_id:table,nome:'Nº',tipo:'autonumero'})
+  const rows=await ok('consultar_registros',{tabela_id:table,filtros:[{campo:'Nome do projeto',operador:'eq',valor:'Site'}],campos:['Nome do projeto','Orçamento em dobro','Nº']})
+  assert.equal(rows.registros[0].exibicao['Orçamento em dobro'],'400',JSON.stringify(rows.registros[0]))
+  assert.equal(rows.registros[0].criado_por,undefined,'Internal columns stay out of the output')
+  assert.match(String(rows.registros[0].exibicao['Nº']),/^\d+$/)
+  assert.equal((await call('salvar_registros',{chave_operacao:randomUUID(),dados:{tabela_id:table,registros:[{valores:{'Nº':5}}]}})).code,'INVALID_VALUE','System fields are never written')
+ })
+ await check('Sharing a base by name: preview names people, the base becomes restricted and opens again',async()=>{
+  const shared=await change('salvar_base',{base_id:base,acesso:'restrito',membros:[{pessoa:'bruno@example.invalid',papel:'leitor'}]})
+  assert(!shared.direct);assert(JSON.stringify(shared.preview.previa).includes('Bruno'),'The preview names the person')
+  assert.deepEqual(shared.result.resultado.membros.find((m:{nome:string})=>m.nome==='Bruno'),{nome:'Bruno',papel:'leitor'})
+  const listed=(await ok('listar_bases',{})).itens.find((b:{id:string})=>b.id===base);assert.equal(listed.acesso,'restrito');assert.equal(listed.papel,'administrador')
+  assert.equal((await call('salvar_base',{chave_operacao:randomUUID(),dados:{base_id:base,acesso:'empresa',nome:'X'}})).code,'INVALID_INPUT')
+  await change('salvar_base',{base_id:base,acesso:'empresa',membros:[]})
+ })
  await check('Comments run at once; activity pages, cancellation and cross-host binding',async()=>{
   const comment=await change('comentar',{registro_id:record,texto:'Revisado'});assert(comment.direct)
   assert.equal((await ok('listar_atividade',{registro_id:record,tamanho:1})).itens[0].texto,'Revisado')
@@ -165,6 +183,20 @@ async function main(){try {
   const link=await ok('obter_link_anexo',{anexo_id:upload.anexo_id});assert.deepEqual(Buffer.from(await (await fetch(link.url)).arrayBuffer()),bytes)
   assert(!(await change('anexos',{acao:'remover',anexo_id:upload.anexo_id})).direct)
   await assert.rejects(mcpUpload({...actor,sharedUserId:2,clerkUserId:'user_viewer'} as AuthTenantContext,prepared.result.operacao_id,undefined,deps.tables!.transaction))
+ })
+ await check('New views and OU conditions through the chat',async()=>{
+  const gallery=await change('salvar_visualizacao',{tabela_id:table,acao:'criar',nome:'Cartões',tipo:'galeria',combinacao:'ou',filtros:[{campo:'Nome do projeto',operador:'eq',valor:'Site'},{campo:'Nome do projeto',operador:'eq',valor:'App'}]})
+  assert(gallery.direct)
+  assert.equal((await ok('consultar_registros',{tabela_id:table,visualizacao:'Cartões'})).total,2)
+  assert.equal((await ok('consultar_registros',{tabela_id:table,combinacao:'ou',filtros:[{campo:'Nome do projeto',operador:'eq',valor:'Site'},{campo:'Nome do projeto',operador:'eq',valor:'App'}]})).total,2)
+  const timeline=await change('salvar_visualizacao',{tabela_id:table,acao:'criar',nome:'Cronograma',tipo:'linha_do_tempo',campo_data:'Prazo'});assert(timeline.direct)
+ })
+ await check('REST API with keys: read-only keys cannot write, keys never manage keys',async()=>{
+  const { tablesHandler } = await import('../../src/products/tables/api/handlers')
+  const session = { authMode: 'clerk' as const, clerkUserId: 'user_owner', sharedUserId: 1, email: 'ana@example.invalid', tenantId: 1, tenantName: 'Equipe', role: 'owner' as const }
+  const call = (path: string[], method: string, escopo: 'leitura' | 'escrita') => tablesHandler(new Request('https://x.invalid/api/v1/tables/' + path.join('/'), { method, headers: { 'content-type': 'application/json' }, ...(method === 'GET' ? {} : { body: '{}' }) }), { params: Promise.resolve({ path }) }, async () => ({ session, escopo }))
+  const read = await (await call(['bases'], 'POST', 'leitura')).json(); assert.equal(read.error.code, 'FORBIDDEN')
+  for (const path of [['chaves'], ['sessao']]) assert.equal((await (await call(path, 'GET', 'escrita')).json()).error.code, 'NOT_FOUND')
  })
  await check('Actual HTTP handlers expose and execute Tables in both protocols',async()=>{
   for(const [integration,handler] of [['chatgpt',handlePluginRequest],['claude',handleClaudeRequest]] as const){

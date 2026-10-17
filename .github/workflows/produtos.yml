@@ -1,0 +1,42 @@
+# Tables, Apps e os servidores MCP: tipos, lint e smokes em bancos isolados (PGlite).
+# Nenhum teste acessa o banco de produção nem precisa de segredos.
+name: Produtos
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+
+concurrency:
+  group: produtos-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  verificar:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Tipos
+        run: pnpm typecheck
+      - name: Lint dos produtos
+        run: pnpm lint:produtos
+      - name: Smokes (Tables, Apps, ChatGPT e Claude)
+        run: pnpm test:produtos
+      - name: Interface (Tables e Apps)
+        env:
+          CHROME_PATH: /usr/bin/google-chrome
+        run: pnpm test:produtos-ui
+      - name: Capturas da interface
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: capturas-interface
+          path: .cache/**/ui/**
+          if-no-files-found: ignore

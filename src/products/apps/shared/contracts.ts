@@ -11,7 +11,9 @@ export const collectionSchema = z.object({ id: uuid, chave: z.string().regex(/^[
 // Tabelas do Tables usadas pelo app: a chave é o nome usado no código, como otto.tables.listar('chamados').
 // visitantes: what people without login may do through the public link, with the fields by name.
 // Visitors never edit; people, links and attachments stay out because they expose company data.
-export const VISITOR_FIELD_TYPES = ['texto', 'texto_longo', 'numero', 'moeda', 'data', 'data_hora', 'checkbox', 'selecao', 'selecao_multipla', 'email', 'url']
+// Calculated fields (formula, busca, agregacao) are left out: they can carry values of hidden fields.
+export const VISITOR_FIELD_TYPES = ['texto', 'texto_longo', 'numero', 'moeda', 'porcentagem', 'avaliacao', 'data', 'data_hora', 'checkbox', 'selecao', 'selecao_multipla', 'email', 'url', 'telefone', 'autonumero', 'criado_em', 'alterado_em']
+export const VISITOR_READ_ONLY_TYPES = ['autonumero', 'criado_em', 'alterado_em']
 const visitorFields = z.array(z.string().trim().min(1).max(200)).min(1).max(60)
 export const visitorRulesSchema = z.object({ ler: visitorFields.optional().describe('Campos que visitantes podem ver.'), criar: visitorFields.optional().describe('Campos que visitantes podem preencher ao criar.') }).strict()
 export const tableSourceSchema = z.object({ chave: z.string().regex(/^[a-z][a-z0-9_]{0,49}$/), tabela_id: uuid, operacoes: z.array(z.enum(['ler', 'criar', 'editar'])).min(1).max(3), visitantes: visitorRulesSchema.optional() }).strict()
@@ -37,9 +39,10 @@ export const fileSchema = z.object({ caminho: z.string().max(200).regex(PATH_PAT
 export type AppFile = z.infer<typeof fileSchema>
 export const draftSchema = expectedSchema.extend({ manifesto: manifestSchema, arquivos: z.array(fileSchema).min(1).max(100) }).strict()
 export type AppPackage = { manifesto: Manifest; arquivos: AppFile[] }
-export type App = { id: string; nome: string; descricao: string; cor: string; icone: string; versao_concorrencia: number; atualizado_em: string; arquivado_em: string | null; excluido_em: string | null; favorito: boolean; publicacao_id: string | null; versao_publicada_id: string | null; tem_rascunho: boolean; acesso: 'privado' | 'publico' | null; endereco: string | null }
+export type App = { id: string; nome: string; descricao: string; cor: string; icone: string; versao_concorrencia: number; atualizado_em: string; arquivado_em: string | null; excluido_em: string | null; favorito: boolean; publicacao_id: string | null; versao_publicada_id: string | null; tem_rascunho: boolean; acesso: 'privado' | 'publico' | null; endereco: string | null; dominio?: string | null }
 export type Version = { id: string; numero: number; estado: 'rascunho' | 'pronta'; manifesto: Manifest; hash_conteudo: string | null; versao_formato: number; build_estado: 'ok' | 'erro' | null; build_erro: string | null; criado_em: string; selado_em: string | null }
-export type Bundle = { app: App; versoes: Version[]; podeEditar: boolean; podePublicar: boolean }
+export type Usage = { periodo_dias: number; aberturas_app: number; aberturas_link_publico: number; registros_criados_por_visitantes: number; dias: { dia: string; modo: string; aberturas: number; criacoes: number }[] }
+export type Bundle = { app: App; versoes: Version[]; podeEditar: boolean; podePublicar: boolean; uso?: Usage }
 export type Catalog = { apps: App[]; total: number; pagina: number; contadores: Record<string, number>; podeEditar: boolean; podePublicar: boolean }
 export type DataRecord = { id: string; dados: Record<string, unknown>; versao_concorrencia: number }
 export const recordSchema = z.object({ id: uuid.optional(), expectedVersion: z.number().int().positive().optional(), dados: z.record(z.unknown()) }).strict()

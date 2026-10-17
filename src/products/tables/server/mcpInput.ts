@@ -10,7 +10,7 @@ import { TablesError, type Field } from '../shared/contracts'
 
 /** Public tool that owns each internal operation, used in previews and confirmations. */
 export const PUBLIC_TOOL: Record<string, string> = {
-  criar_base: 'salvar_base', editar_base: 'salvar_base', criar_tabela: 'salvar_tabela', editar_tabela: 'salvar_tabela',
+  criar_base: 'salvar_base', editar_base: 'salvar_base', compartilhar_base: 'salvar_base', criar_tabela: 'salvar_tabela', editar_tabela: 'salvar_tabela',
   criar_campo: 'salvar_campo', editar_campo: 'salvar_campo', salvar_registros: 'salvar_registros',
   criar_registro: 'salvar_registros', editar_registro: 'salvar_registros', criar_registros_em_lote: 'salvar_registros', editar_registros_em_lote: 'salvar_registros',
   criar_visualizacao: 'salvar_visualizacao', editar_visualizacao: 'salvar_visualizacao', excluir_visualizacao: 'salvar_visualizacao',
@@ -104,7 +104,7 @@ export async function readTables(db: Database, session: TablesSession, key: stri
   if (key === 'consultar_registros') {
     const fields = input.campos ? await Promise.all(input.campos.map((c: string) => r.field(input.tabela_id, c))) : undefined
     return readMcp(db, session, 'consultar_registros', defined({
-      tabela_id: input.tabela_id, busca: input.busca, ...page, filtros: await r.filters(input.tabela_id, input.filtros), ordenacao: await r.sorts(input.tabela_id, input.ordenacao),
+      tabela_id: input.tabela_id, busca: input.busca, ...page, filtros: await r.filters(input.tabela_id, input.filtros), combinacao: input.combinacao, ordenacao: await r.sorts(input.tabela_id, input.ordenacao),
       campos: fields?.map(f => f.id), visualizacao: input.visualizacao ? (await r.view(input.tabela_id, input.visualizacao)).id : undefined,
     }))
   }
@@ -137,6 +137,12 @@ export async function resolveWrite(db: Database, session: TablesSession, key: st
   if (key === 'salvar_base') {
     if (!d.base_id) { if (!d.nome) throw invalid('Informe o nome da nova base.'); return { op: 'criar_base', dados: defined({ nome: d.nome, descricao: d.descricao, cor: d.cor, modelo: d.modelo }), direct: true } }
     if (d.modelo) throw invalid('O modelo só pode ser escolhido ao criar a base.')
+    if (d.acesso || d.membros) {
+      if (d.nome || d.descricao !== undefined || d.cor) throw invalid('Mude o compartilhamento separado do nome, descrição e cor.')
+      const people = await r.members()
+      const membros = d.membros?.map((m: Input) => ({ usuario_id: pick(people, m.pessoa, 'uma pessoa').id, papel: m.papel }))
+      return { op: 'compartilhar_base', dados: defined({ base_id: d.base_id, acesso: d.acesso, membros, ...version }), direct: false }
+    }
     const alteracoes = defined({ nome: d.nome, descricao: d.descricao, cor: d.cor })
     if (!Object.keys(alteracoes).length) throw invalid('Informe o que deve mudar na base.')
     return { op: 'editar_base', dados: { base_id: d.base_id, alteracoes, ...version }, direct: false }
@@ -154,7 +160,11 @@ export async function resolveWrite(db: Database, session: TablesSession, key: st
       const same = !o.id && existing?.opcoes.find(e => normalize(e.nome) === normalize(o.nome))
       return defined(same ? { id: same.id, nome: o.nome, cor: o.cor ?? same.cor } : o)
     })
-    const attrs = defined({ nome: d.nome, tipo: d.tipo, obrigatorio: d.obrigatorio, configuracao: d.moeda ? { moeda: d.moeda } : undefined, tabela_destino_id: destination, opcoes })
+    // Lookups and aggregations name the link of this table and the field of the linked table.
+    const link = d.vinculo ? pick(fields, d.vinculo, 'um campo de vínculo') : undefined
+    const remote = d.campo_vinculado ? (link?.tabela_destino_id ? pick(await r.fieldsOf(link.tabela_destino_id), d.campo_vinculado, 'um campo da tabela vinculada') : (() => { throw invalid('Informe vinculo junto com campo_vinculado.') })()) : undefined
+    const config = defined({ moeda: d.moeda, formula: d.formula, maximo: d.maximo, vinculo: link?.id, campo: remote?.id, operacao: d.operacao })
+    const attrs = defined({ nome: d.nome, tipo: d.tipo, obrigatorio: d.obrigatorio, configuracao: Object.keys(config).length ? { ...(existing?.configuracao ?? {}), ...config } : undefined, tabela_destino_id: destination, opcoes })
     if (existing) {
       if (!Object.keys(attrs).length) throw invalid('Informe o que deve mudar no campo.')
       return { op: 'editar_campo', dados: { tabela_id: d.tabela_id, campo_id: existing.id, alteracoes: attrs, ...structure }, direct: false }
@@ -177,7 +187,8 @@ export async function resolveWrite(db: Database, session: TablesSession, key: st
     const configuracao = defined({
       filtros: d.filtros && await r.filters(d.tabela_id, d.filtros), ordenacao: d.ordenacao && await r.sorts(d.tabela_id, d.ordenacao),
       agrupamento: fieldId(d.agrupar_por) ?? (d.acao === 'criar' && tipo === 'kanban' ? fields.find(f => f.tipo === 'selecao')?.id : undefined),
-      campo_data: fieldId(d.campo_data) ?? (d.acao === 'criar' && tipo === 'calendario' ? fields.find(f => ['data', 'data_hora'].includes(f.tipo))?.id : undefined),
+      campo_data: fieldId(d.campo_data) ?? (d.acao === 'criar' && ['calendario', 'linha_do_tempo'].includes(tipo) ? fields.find(f => ['data', 'data_hora'].includes(f.tipo))?.id : undefined),
+      campo_fim: fieldId(d.campo_fim), combinacao: d.combinacao, mensagem: d.mensagem,
     })
     // Listed fields are shown in that order; the others stay hidden.
     const visible = d.campos_visiveis?.map((ref: string) => pick(fields, ref, 'um campo').id) as string[] | undefined

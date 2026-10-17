@@ -8,7 +8,8 @@ import { transaction } from '../server/database'
 import { getApp, versions } from '../server/repository'
 import * as service from '../server/service'
 import { publish, unpublish } from '../server/publishing'
-import { dataOperation, openRuntime, runtimeDataSchema, runtimeManifest } from '../server/runtime'
+import { dataOperation, openRuntime, reportRuntimeErrors, runtimeDataSchema, runtimeManifest } from '../server/runtime'
+import { runtimeErrorsSchema } from '../server/errors'
 import { checkSources, tablesOperation, tablesRequestSchema } from '../server/tablesSource'
 
 async function bodyOf(request: Request) {
@@ -37,6 +38,11 @@ export async function appsHandler(request: Request, context: { params: Promise<{
       const { token, versao, ...input } = tablesRequestSchema.extend({ token: z.string().max(4000).optional(), versao: uuid.optional() }).strict().parse(body)
       const manifest = await transaction(s, false, db => runtimeManifest(db, s, id, { token, versao }))
       return json(await tablesOperation(s, manifest, input))
+    }
+    // Everyone who opens an app reports its errors, read-only members included.
+    if (id && action === 'erros' && request.method === 'POST') {
+      const input = z.object({ token: z.string().max(4000).optional(), versao: uuid.optional(), erros: runtimeErrorsSchema }).strict().parse(body)
+      return json(await transaction(s, false, db => reportRuntimeErrors(db, s, id, input)))
     }
     return await transaction(s, write && action !== 'favorito' && !(action === 'dados' && (body as { operacao?: string })?.operacao === 'listar'), async db => {
       if (!id && request.method === 'GET') {

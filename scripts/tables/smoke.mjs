@@ -40,10 +40,17 @@ try {
     INSERT INTO shared.empresas(id) VALUES(1),(2);
     INSERT INTO shared.usuarios(id,full_name,email) VALUES(1,'Ana Silva','ana@example.invalid'),(2,'Leitor','leitor@example.invalid'),(3,'Outra empresa','outro@example.invalid');
     INSERT INTO shared.usuarios_empresas(empresa_id,usuario_id,role) VALUES(1,1,'owner'),(1,2,'viewer'),(2,3,'owner');`)
-  await check('Migration creates 14 tables and tenant policies', async () => {
+  await check('Migration creates 19 tables and tenant policies', async () => {
     await db.exec(readFileSync('supabase/migrations/20261016120000_create_tables.sql', 'utf8'))
-    assert.equal((await db.query("SELECT count(*)::int n FROM pg_tables WHERE schemaname='tables'")).rows[0].n, 14)
-    assert.equal((await db.query("SELECT count(*)::int n FROM pg_class c JOIN pg_namespace n ON n.oid=c.relnamespace WHERE n.nspname='tables' AND c.relkind='r' AND c.relrowsecurity")).rows[0].n, 14)
+    await db.exec(readFileSync('supabase/migrations/20261018120000_tables_base_permissions.sql', 'utf8'))
+    await db.exec(readFileSync('supabase/migrations/20261018150000_tables_search_index.sql', 'utf8'))
+    await db.exec(readFileSync('supabase/migrations/20261018160000_tables_field_types.sql', 'utf8'))
+    await db.exec(readFileSync('supabase/migrations/20261018170000_tables_views.sql', 'utf8'))
+    await db.exec(readFileSync('supabase/migrations/20261018180000_tables_automations.sql', 'utf8'))
+    await db.exec(readFileSync('supabase/migrations/20261018190000_tables_api_keys.sql', 'utf8'))
+    await db.exec(readFileSync('supabase/migrations/20261018200000_tables_change_index.sql', 'utf8'))
+    assert.equal((await db.query("SELECT count(*)::int n FROM pg_tables WHERE schemaname='tables'")).rows[0].n, 19)
+    assert.equal((await db.query("SELECT count(*)::int n FROM pg_class c JOIN pg_namespace n ON n.oid=c.relnamespace WHERE n.nspname='tables' AND c.relkind='r' AND c.relrowsecurity")).rows[0].n, 19)
   })
   await check('Create base, project fields and three persisted views', async () => {
     const result = await run(owner, db => service.createBase(db, owner, contracts.baseInputSchema.parse({ nome: 'Projetos', modelo: 'projetos' })))
@@ -116,6 +123,162 @@ try {
     assert.equal((await run(owner, db => queries.listRecords(db, owner, table.id, contracts.listQuerySchema.parse({})), false)).total, 0)
     await run(owner, db => service.restore(db, owner, 'registros', record.id))
     assert.equal((await run(owner, db => queries.listRecords(db, owner, table.id, contracts.listQuerySchema.parse({})), false)).total, 1)
+  })
+  await check('Base roles: editors edit records, administrators the structure; restricted bases are invisible', async () => {
+    await db.exec("INSERT INTO shared.usuarios(id,full_name,email) VALUES(4,'Bruno','bruno@example.invalid'),(5,'Carla','carla@example.invalid'); INSERT INTO shared.usuarios_empresas(empresa_id,usuario_id,role) VALUES(1,4,'member'),(1,5,'member')")
+    const bruno = { tenantId: 1, sharedUserId: 4, role: 'member' }, carla = { tenantId: 1, sharedUserId: 5, role: 'member' }
+    const current = await run(owner, db => repo.getBundle(db, owner, table.id), false), name = current.campos.find(f => f.nome === 'Nome do projeto').id
+    // Open to the company: members edit records but not the structure.
+    assert.equal((await run(bruno, db => service.listBases(db, bruno), false)).find(b => b.id === base.id).papel, 'editor')
+    await run(bruno, db => service.saveRecord(db, bruno, table.id, { valores: { [name]: 'Pelo editor' }, expectedStructureVersion: current.tabela.versao_estrutura }))
+    await assert.rejects(run(bruno, db => service.saveField(db, bruno, table.id, contracts.fieldInputSchema.parse({ nome: 'Extra', tipo: 'texto', expectedStructureVersion: current.tabela.versao_estrutura }))), e => e.code === 'FORBIDDEN')
+    await assert.rejects(run(bruno, db => service.createTable(db, bruno, base.id, 'Outra')), e => e.code === 'FORBIDDEN')
+    assert.equal((await run(bruno, db => db.query('UPDATE tables.campos SET nome=$2 WHERE empresa_id=1 AND id=$1 RETURNING id', [name, 'Direto']))).rows.length, 0, 'The database refuses structure writes too')
+    // Whoever creates a base administers it.
+    const own = await run(bruno, db => service.createBase(db, bruno, contracts.baseInputSchema.parse({ nome: 'Do Bruno' })))
+    assert.equal((await run(bruno, db => service.listBases(db, bruno), false)).find(b => b.id === own.base.id).papel, 'administrador')
+    await assert.rejects(run(bruno, db => service.saveSharing(db, bruno, own.base.id, { acesso: 'restrito', membros: [], expectedVersion: own.base.versao })), e => e.code === 'INVALID_INPUT', 'Keeps the creator as administrator')
+    // Restricted: only listed people (and company admins) see it.
+    const shared = await run(owner, db => service.getSharing(db, owner, base.id), false)
+    assert(shared.membros.some(m => m.id === '1' && m.administrador_empresa))
+    await run(owner, db => service.saveSharing(db, owner, base.id, { acesso: 'restrito', membros: [{ usuario_id: '5', papel: 'leitor' }], expectedVersion: shared.versao }))
+    assert(!(await run(bruno, db => service.listBases(db, bruno), false)).some(b => b.id === base.id))
+    await assert.rejects(run(bruno, db => repo.getBundle(db, bruno, table.id), false), e => e.code === 'NOT_FOUND')
+    assert.equal((await run(bruno, db => db.query('SELECT count(*)::int n FROM tables.registros WHERE empresa_id=1 AND tabela_id=$1', [table.id]), false)).rows[0].n, 0, 'Records of a restricted base stay hidden in SQL')
+    assert.equal((await run(carla, db => queries.listRecords(db, carla, table.id, contracts.listQuerySchema.parse({})), false)).total > 0, true)
+    await assert.rejects(run(carla, db => service.saveRecord(db, carla, table.id, { valores: { [name]: 'X' }, expectedStructureVersion: current.tabela.versao_estrutura })), e => e.code === 'FORBIDDEN')
+    await assert.rejects(run(carla, db => service.saveSharing(db, carla, base.id, { acesso: 'empresa', membros: [], expectedVersion: shared.versao + 1 })), e => e.code === 'FORBIDDEN')
+    await run(owner, db => service.saveSharing(db, owner, base.id, { acesso: 'empresa', membros: [], expectedVersion: shared.versao + 1 }))
+  })
+  await check('CSV: export in Excel format; import converts Brazilian formats and reports bad lines', async () => {
+    const csv = load('@/products/tables/server/csv')
+    const current = await run(owner, db => repo.getBundle(db, owner, table.id), false), f = name => current.campos.find(c => c.nome === name)
+    const result = await run(owner, db => csv.importRows(db, owner, table.id, { colunas: [f('Nome do projeto').id, f('Status').id, f('Prazo').id, f('Orçamento').id, f('Responsável').id], expectedStructureVersion: current.tabela.versao_estrutura, linhas: [
+      ['Importado A', 'A fazer', '23/10/2026', 'R$ 1.234,56', 'Ana Silva'],
+      ['Importado B', 'Status que não existe', '2026-10-24', '10', ''],
+      ['Importado C', '', '31/02/2026', '5', ''],
+      ['', '', '', '', ''],
+    ] }))
+    assert.equal(result.criados, 1); assert.deepEqual(result.erros.map(e => e.linha), [3, 4]); assert.match(result.erros[0].mensagem, /Status/); assert.match(result.erros[1].mensagem, /Prazo.*data/)
+    const exported = await run(owner, db => csv.exportCsv(db, owner, table.id, contracts.listQuerySchema.parse({ busca: 'Importado' })), false)
+    const lines = exported.csv.replace(/^﻿/, '').trim().split('\r\n')
+    assert.equal(exported.registros, 1); assert(lines[0].startsWith('Nome do projeto;Status;'))
+    assert(lines[1].includes('Importado A;A fazer;Ana Silva;2026-10-23;') && lines[1].includes(';1234,56'), lines[1])
+  })
+  await check('Retention: trash older than 30 days is deleted with relations and comments; recent trash stays', async () => {
+    const retention = load('@/products/tables/server/retention')
+    const current = await run(owner, db => repo.getBundle(db, owner, table.id), false), f = name => current.campos.find(c => c.nome === name)
+    const save = name => run(owner, db => service.saveRecord(db, owner, table.id, { valores: { [f('Nome do projeto').id]: name, [f('Status').id]: [f('Status').opcoes[0].id] }, expectedStructureVersion: current.tabela.versao_estrutura }))
+    const old = await save('Antigo na lixeira'), recent = await save('Recente na lixeira')
+    await run(owner, db => service.addComment(db, owner, old.id, 'Comentário do antigo'))
+    const oldNow = await run(owner, db => repo.readRecord(db, owner, old.id), false)
+    await run(owner, db => service.trash(db, owner, 'registros', old.id, oldNow.versao)); await run(owner, db => service.trash(db, owner, 'registros', recent.id, recent.versao))
+    await db.exec("BEGIN; SELECT set_config('app.tables_usuario_id','1',true),set_config('app.tables_empresa_id','1',true); UPDATE tables.registros SET excluido_em=now()-interval '31 days' WHERE id='" + old.id + "'; COMMIT")
+    const result = await retention.maintainTablesRetention(async () => ({ query: (sql, values) => db.query(sql, values) }))
+    assert.equal(result.registros_excluidos, 1)
+    assert.equal((await db.query('SELECT count(*)::int n FROM tables.registros WHERE id=$1', [old.id])).rows[0].n, 0)
+    assert.equal((await db.query('SELECT count(*)::int n FROM tables.registros WHERE id=$1', [recent.id])).rows[0].n, 1, 'Recent trash stays restorable')
+    assert.equal((await db.query('SELECT count(*)::int n FROM tables.comentarios WHERE registro_id=$1', [old.id])).rows[0].n, 0)
+    assert.equal((await db.query('SELECT count(*)::int n FROM tables.registro_opcoes WHERE registro_id=$1', [old.id])).rows[0].n, 0)
+    assert.equal((await db.query("SELECT count(*)::int n FROM tables.historico WHERE registro_id=$1 AND acao='DELETE' AND entidade='registros' AND autor_id=1", [old.id])).rows[0].n, 1, 'The permanent deletion is audited')
+  })
+  await check('New field types: stored, system, formula, lookup and aggregation of linked records', async () => {
+    const created = await run(owner, db => service.createBase(db, owner, contracts.baseInputSchema.parse({ nome: 'Vendas' })))
+    const pedidos = created.tabela.id, itens = (await run(owner, db => service.createTable(db, owner, created.base.id, 'Itens'))).id
+    const version = async id => (await run(owner, db => repo.requireTable(db, owner, id), false)).versao_estrutura
+    const field = async (table, input) => (await run(owner, async db => service.saveField(db, owner, table, contracts.fieldInputSchema.parse({ ...input, expectedStructureVersion: (await repo.requireTable(db, owner, table)).versao_estrutura })))).campo
+    const preco = await field(itens, { nome: 'Preço', tipo: 'moeda' })
+    const fone = await field(pedidos, { nome: 'Telefone', tipo: 'telefone' }), desconto = await field(pedidos, { nome: 'Desconto', tipo: 'porcentagem' }), nota = await field(pedidos, { nome: 'Nota', tipo: 'avaliacao', configuracao: { maximo: 5 } })
+    const numero = await field(pedidos, { nome: 'Nº', tipo: 'autonumero' }), autor = await field(pedidos, { nome: 'Criado por', tipo: 'criado_por' })
+    const link = await field(pedidos, { nome: 'Itens', tipo: 'vinculo', tabela_destino_id: itens })
+    const total = await field(pedidos, { nome: 'Total', tipo: 'agregacao', configuracao: { vinculo: link.id, campo: preco.id, operacao: 'soma' } })
+    const quantos = await field(pedidos, { nome: 'Quantidade de itens', tipo: 'agregacao', configuracao: { vinculo: link.id, operacao: 'contagem' } })
+    const nomes = await field(pedidos, { nome: 'Nomes dos itens', tipo: 'busca', configuracao: { vinculo: link.id, campo: (await run(owner, db => repo.readFields(db, owner, itens), false))[0].id } })
+    const formula = await field(pedidos, { nome: 'Com desconto', tipo: 'formula', configuracao: { formula: 'ARRED({Total} * (1 - {Desconto} / 100), 2)' } })
+    await assert.rejects(version(pedidos).then(v => run(owner, db => service.saveField(db, owner, pedidos, contracts.fieldInputSchema.parse({ nome: 'Quebrada', tipo: 'formula', configuracao: { formula: '{Inexistente} + 1' }, expectedStructureVersion: v })))), e => e.code === 'INVALID_FIELD' && /Inexistente/.test(e.message))
+    await assert.rejects(version(pedidos).then(v => run(owner, db => service.saveField(db, owner, pedidos, contracts.fieldInputSchema.parse({ nome: 'Circular', tipo: 'formula', configuracao: { formula: '{Com desconto} * 2' }, expectedStructureVersion: v })))), e => e.code === 'INVALID_FIELD', 'Formulas use stored values only')
+    const itemName = (await run(owner, db => repo.readFields(db, owner, itens), false))[0].id
+    const save = (table, valores) => version(table).then(v => run(owner, db => service.saveRecord(db, owner, table, { valores, expectedStructureVersion: v })))
+    const a = await save(itens, { [itemName]: 'Cadeira', [preco.id]: '100.00' }), b = await save(itens, { [itemName]: 'Mesa', [preco.id]: '250.50' })
+    const name = (await run(owner, db => repo.readFields(db, owner, pedidos), false))[0].id
+    const pedido = await save(pedidos, { [name]: 'Pedido 1', [fone.id]: '(11) 98765-4321', [desconto.id]: 10, [nota.id]: 4, [link.id]: [a.id, b.id] })
+    assert.equal(pedido.valores[numero.id], 1); assert.deepEqual(pedido.valores[autor.id], ['1'])
+    assert.equal(pedido.valores[total.id], 350.5); assert.equal(pedido.valores[quantos.id], 2); assert.deepEqual(pedido.valores[nomes.id], ['Cadeira', 'Mesa'])
+    assert.equal(pedido.valores[formula.id], 315.45, 'ARRED(350.5 * 0.9, 2)')
+    const second = await save(pedidos, { [name]: 'Pedido 2' }); assert.equal(second.valores[numero.id], 2); assert.equal(second.valores[total.id], 0)
+    await assert.rejects(save(pedidos, { [numero.id]: 99 }), e => e.code === 'INVALID_VALUE', 'System fields are never written')
+    await assert.rejects(save(pedidos, { [nota.id]: 6 }), e => e.code === 'INVALID_VALUE')
+    await assert.rejects(save(pedidos, { [fone.id]: 'abc' }), e => e.code === 'INVALID_VALUE')
+    const filtered = await run(owner, db => queries.listRecords(db, owner, pedidos, contracts.listQuerySchema.parse({ filtros: [{ campo: numero.id, operador: 'gt', valor: 1 }], ordenacao: [{ campo: numero.id, direcao: 'desc' }] })), false)
+    assert.deepEqual(filtered.registros.map(r => r.valores[numero.id]), [2])
+    await assert.rejects(run(owner, db => queries.listRecords(db, owner, pedidos, contracts.listQuerySchema.parse({ ordenacao: [{ campo: total.id, direcao: 'desc' }] })), false), e => e.code === 'INVALID_FILTER')
+    const grouped = await run(owner, db => queries.summarizeRecords(db, owner, pedidos, { busca: '', filtros: [], periodo: 'mes', agrupar_por: autor.id, metricas: [{ campo: desconto.id, operacao: 'soma' }] }), false)
+    assert.equal(grouped.grupos[0].rotulo, 'Ana Silva')
+  })
+  await check('Filters with OU, in queries and saved in views, and the new view types', async () => {
+    const current = await run(owner, db => repo.getBundle(db, owner, table.id), false), f = name => current.campos.find(c => c.nome === name)
+    const save = name => run(owner, db => service.saveRecord(db, owner, table.id, { valores: { [f('Nome do projeto').id]: name }, expectedStructureVersion: current.tabela.versao_estrutura }))
+    await save('Ou alfa'); await save('Ou beta'); await save('Ou gama')
+    const either = [{ campo: f('Nome do projeto').id, operador: 'eq', valor: 'Ou alfa' }, { campo: f('Nome do projeto').id, operador: 'eq', valor: 'Ou beta' }]
+    const list = input => run(owner, db => queries.listRecords(db, owner, table.id, contracts.listQuerySchema.parse(input)), false)
+    assert.equal((await list({ filtros: either, combinacao: 'ou' })).total, 2)
+    assert.equal((await list({ filtros: either })).total, 0, 'E stays the default')
+    const view = await run(owner, db => service.saveView(db, owner, table.id, contracts.viewInputSchema.parse({ nome: 'Alfa ou beta', tipo: 'galeria', configuracao: { filtros: either, combinacao: 'ou' } })))
+    assert.equal((await list({ visualizacao: view.id })).total, 2)
+    // Conditions added on screen add with E to the OU of the view.
+    assert.equal((await list({ visualizacao: view.id, filtros: [{ campo: f('Nome do projeto').id, operador: 'contains', valor: 'beta' }] })).total, 1)
+    const sum = await run(owner, db => queries.summarizeRecords(db, owner, table.id, { busca: '', filtros: [], periodo: 'mes', visualizacao: view.id, metricas: [] }), false)
+    assert.equal(sum.total, 2)
+    const timeline = contracts.viewInputSchema.parse({ nome: 'Prazos', tipo: 'linha_do_tempo', configuracao: { campo_data: f('Prazo').id } })
+    assert.equal((await run(owner, db => service.saveView(db, owner, table.id, timeline))).tipo, 'linha_do_tempo')
+    await assert.rejects(run(owner, db => service.saveView(db, owner, table.id, contracts.viewInputSchema.parse({ nome: 'Sem data', tipo: 'linha_do_tempo', configuracao: {} }))), e => e.code === 'INVALID_VIEW')
+  })
+  await check('Automations: the database queues events, deliveries are signed, filtered and retried; internal URLs are refused', async () => {
+    const auto = load('@/products/tables/server/automations'), { createHmac } = await import('node:crypto')
+    const current = await run(owner, db => repo.getBundle(db, owner, table.id), false), f = name => current.campos.find(c => c.nome === name)
+    const created = await run(owner, db => auto.createAutomation(db, owner, table.id, { nome: 'Avisar CRM', gatilho: 'registro_criado', url: 'https://93.184.216.34/webhook' }))
+    assert.equal(created.segredo.length >= 32, true)
+    const bruno = { tenantId: 1, sharedUserId: 4, role: 'member' }
+    await assert.rejects(run(bruno, db => auto.listAutomations(db, bruno, table.id), false), e => e.code === 'FORBIDDEN', 'Only base administrators see automations and their secret')
+    const save = (valores, id, version) => run(owner, db => service.saveRecord(db, owner, table.id, { valores, expectedStructureVersion: current.tabela.versao_estrutura, ...(id ? { expectedVersion: version } : {}) }, id))
+    const rec = await save({ [f('Nome do projeto').id]: 'Webhook novo', [f('Status').id]: [f('Status').opcoes[0].id] })
+    assert.equal((await db.query("SELECT count(*)::int n FROM tables.entregas WHERE registro_id=$1 AND evento='registro_criado'", [rec.id])).rows[0].n, 1, 'One delivery per edit, even with relation writes')
+    const sent = []
+    const deps = { connect: async () => ({ query: (sql, values) => db.query(sql, values) }), tables: (s, _w, fn) => run(s, fn, false), checkUrl: async () => undefined,
+      send: async (url, init) => { sent.push({ url, init }); return new Response('ok', { status: sent.length === 1 ? 200 : 500 }) } }
+    assert.deepEqual(await auto.deliverPending(20, deps), { entregues: 1, falhas: 0 })
+    const body = JSON.parse(sent[0].init.body)
+    assert.equal(body.evento, 'registro_criado'); assert.equal(body.registro.valores['Nome do projeto'], 'Webhook novo'); assert.equal(body.registro.valores['Status'], f('Status').opcoes[0].nome)
+    assert.equal(sent[0].init.headers['X-Cognito-Assinatura'], 'sha256=' + createHmac('sha256', created.segredo).update(sent[0].init.body).digest('hex'), 'Receivers can verify the signature')
+    // Changes only when the condition holds; a failing receiver is retried later.
+    await run(owner, db => auto.createAutomation(db, owner, table.id, { nome: 'Só concluídos', gatilho: 'registro_alterado', url: 'https://93.184.216.34/done', filtros: [{ campo: f('Status').id, operador: 'eq', valor: f('Status').opcoes[3].id }] }))
+    const changed = await save({ [f('Nome do projeto').id]: 'Webhook editado' }, rec.id, rec.versao)
+    await auto.deliverPending(20, deps)
+    assert.equal((await db.query("SELECT estado FROM tables.entregas WHERE registro_id=$1 AND evento='registro_alterado'", [rec.id])).rows[0].estado, 'ignorada')
+    await save({ [f('Status').id]: [f('Status').opcoes[3].id] }, rec.id, changed.versao)
+    await auto.deliverPending(20, deps)
+    const retry = (await db.query("SELECT estado,tentativas,resposta,proximo_em>now() futuro FROM tables.entregas WHERE registro_id=$1 AND evento='registro_alterado' ORDER BY criado_em DESC LIMIT 1", [rec.id])).rows[0]
+    assert.deepEqual(retry, { estado: 'pendente', tentativas: 1, resposta: 500, futuro: true })
+    for (const url of ['https://127.0.0.1/x', 'https://10.0.0.5/x', 'https://169.254.169.254/latest', 'https://localhost/x', 'https://[::1]/x']) await assert.rejects(auto.assertPublicUrl(url), e => e.code === 'INVALID_URL', url)
+    await assert.rejects(run(owner, db => auto.createAutomation(db, owner, table.id, { nome: 'HTTP', gatilho: 'registro_criado', url: 'http://93.184.216.34/x' })))
+  })
+  await check('API keys: shown once, stored as hash, act as their creator, revoked at once and rate limited', async () => {
+    await db.exec("ALTER TABLE shared.empresas ADD COLUMN IF NOT EXISTS name text; UPDATE shared.empresas SET name='Equipe' WHERE id=1; ALTER TABLE shared.usuarios ADD COLUMN IF NOT EXISTS clerk_user_id text")
+    const keys = load('@/products/tables/server/apiKeys')
+    const created = await run(owner, db => keys.createKey(db, owner, { nome: 'Integração ERP', escopo: 'escrita' }))
+    assert.match(created.segredo, /^ctk_[A-Za-z0-9_-]{32}$/); assert.equal(created.chave.prefixo, created.segredo.slice(0, 10))
+    assert.equal((await db.query('SELECT count(*)::int n FROM tables.chaves_api WHERE hash=$1', [created.segredo])).rows[0].n, 0, 'The key itself is never stored')
+    const bruno = { tenantId: 1, sharedUserId: 4, role: 'member' }
+    assert.equal((await run(bruno, db => keys.listKeys(db, bruno), false)).chaves.length, 0, 'People see only their own keys')
+    assert.equal((await run(owner, db => keys.listKeys(db, owner), false)).chaves.length, 1)
+    const deps = { connect: async () => ({ query: (sql, values) => db.query(sql, values) }) }, request = key => new Request('https://x.invalid/api/v1/tables/bases', { headers: { authorization: 'Bearer ' + key } })
+    const auth = await keys.authenticateKey(request(created.segredo), deps)
+    assert.deepEqual([auth.session.tenantId, auth.session.sharedUserId, auth.session.role, auth.escopo, auth.session.tenantName], [1, 1, 'owner', 'escrita', 'Equipe'])
+    await assert.rejects(keys.authenticateKey(request('ctk_' + 'x'.repeat(32)), deps), e => e.code === 'UNAUTHENTICATED')
+    await db.query("UPDATE tables.uso_api SET contagem=600")
+    await assert.rejects(keys.authenticateKey(request(created.segredo), deps), e => e.code === 'RATE_LIMITED')
+    await run(owner, db => keys.revokeKey(db, owner, created.chave.id))
+    await assert.rejects(keys.authenticateKey(request(created.segredo), deps), e => e.code === 'UNAUTHENTICATED', 'Revoked keys stop at once')
   })
   await check('Suspended organization member immediately loses access', async () => {
     await db.query("UPDATE shared.usuarios_empresas SET status='suspended' WHERE empresa_id=1 AND usuario_id=1")

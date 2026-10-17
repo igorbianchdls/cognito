@@ -1,13 +1,13 @@
 'use client'
 
 import { useEffect, useId, useState, type KeyboardEvent, type ReactNode } from 'react'
-import { Check, CheckSquare, CalendarDays, Hash, Link2, ListFilter, Type, Users, Paperclip, AtSign, Globe, X } from 'lucide-react'
+import { Check, CheckSquare, CalendarDays, Clock, Hash, Link2, ListFilter, Percent, Phone, Search, Sigma, Star, Type, UserCheck, Users, Paperclip, AtSign, Globe, Variable, X } from 'lucide-react'
 import type { CellValue, DataRecord, Field, Member, RecordPage, TableBundle } from '../shared/contracts'
-import { recordTitle } from '../shared/contracts'
+import { isComputed, recordTitle } from '../shared/contracts'
 import { useResource, type TablesApi } from './client'
 
 export function FieldIcon({ type }: { type: Field['tipo'] }) {
-  const Icon = type === 'checkbox' ? CheckSquare : ['data', 'data_hora'].includes(type) ? CalendarDays : ['numero', 'moeda'].includes(type) ? Hash : ['selecao', 'selecao_multipla'].includes(type) ? ListFilter : ['usuario', 'usuarios'].includes(type) ? Users : type === 'vinculo' ? Link2 : type === 'anexo' ? Paperclip : type === 'email' ? AtSign : type === 'url' ? Globe : Type
+  const Icon = type === 'telefone' ? Phone : type === 'porcentagem' ? Percent : type === 'avaliacao' ? Star : type === 'formula' ? Variable : type === 'agregacao' ? Sigma : type === 'busca' ? Search : ['criado_em', 'alterado_em'].includes(type) ? Clock : ['criado_por', 'alterado_por'].includes(type) ? UserCheck : type === 'autonumero' ? Hash : type === 'checkbox' ? CheckSquare : ['data', 'data_hora'].includes(type) ? CalendarDays : ['numero', 'moeda'].includes(type) ? Hash : ['selecao', 'selecao_multipla'].includes(type) ? ListFilter : ['usuario', 'usuarios'].includes(type) ? Users : type === 'vinculo' ? Link2 : type === 'anexo' ? Paperclip : type === 'email' ? AtSign : type === 'url' ? Globe : Type
   return <Icon size={15} strokeWidth={1.6} aria-hidden="true" />
 }
 
@@ -20,6 +20,9 @@ export function FieldControl({ field, value, onChange, members, api, disabled, a
   const links = useResource<RecordPage>(api, field.tipo === 'vinculo' && field.tabela_destino_id ? `/tabelas/${field.tabela_destino_id}/registros?tamanho=100&busca=${encodeURIComponent(query)}` : null)
   const label = field.nome
   if (field.tipo === 'anexo') return <span className="tables-muted">Envie arquivos na seção de anexos do registro.</span>
+  // Filled by the system or calculated: shown, never edited.
+  if (isComputed(field.tipo)) return <span className="tables-computed"><CellValueView field={field} value={value} members={members} /></span>
+  if (field.tipo === 'avaliacao') { const max = Number(field.configuracao.maximo ?? 5), current = Number(value ?? 0); return <span className="tables-rating" role="radiogroup" aria-label={label}>{Array.from({ length: max }, (_, i) => <button key={i} type="button" role="radio" aria-checked={current === i + 1} aria-label={`${i + 1} de ${max}`} disabled={disabled} autoFocus={autoFocus && i === 0} className={i < current ? 'is-on' : ''} onClick={() => onChange(current === i + 1 ? null : i + 1)}><Star size={16} /></button>)}</span> }
   if (field.tipo === 'checkbox') return <input aria-label={label} type="checkbox" checked={value === true} disabled={disabled} onChange={e => onChange(e.target.checked)} autoFocus={autoFocus} />
   if (['selecao', 'selecao_multipla', 'usuario', 'usuarios', 'vinculo'].includes(field.tipo)) {
     const multiple = ['selecao_multipla', 'usuarios', 'vinculo'].includes(field.tipo)
@@ -35,11 +38,11 @@ export function FieldControl({ field, value, onChange, members, api, disabled, a
     </select>
   }
   if (field.tipo === 'texto_longo') return <textarea aria-label={label} value={String(value ?? '')} disabled={disabled} autoFocus={autoFocus} rows={3} onChange={e => onChange(e.target.value || null)} />
-  const type = field.tipo === 'data' ? 'date' : field.tipo === 'data_hora' ? 'datetime-local' : field.tipo === 'numero' ? 'number' : field.tipo === 'email' ? 'email' : field.tipo === 'url' ? 'url' : 'text'
+  const type = field.tipo === 'data' ? 'date' : field.tipo === 'data_hora' ? 'datetime-local' : ['numero', 'porcentagem'].includes(field.tipo) ? 'number' : field.tipo === 'telefone' ? 'tel' : field.tipo === 'email' ? 'email' : field.tipo === 'url' ? 'url' : 'text'
   const text = field.tipo === 'data_hora' && value ? toLocalDateTime(String(value)) : String(value ?? '')
-  return <input aria-label={label} type={type} inputMode={field.tipo === 'moeda' ? 'decimal' : undefined} step={field.tipo === 'numero' ? 'any' : undefined} value={text} disabled={disabled} autoFocus={autoFocus} onChange={e => {
+  return <input aria-label={label} type={type} inputMode={field.tipo === 'moeda' ? 'decimal' : undefined} step={['numero', 'porcentagem'].includes(field.tipo) ? 'any' : undefined} value={text} disabled={disabled} autoFocus={autoFocus} onChange={e => {
     const next = e.target.value
-    onChange(!next ? null : field.tipo === 'numero' ? Number(next) : field.tipo === 'data_hora' ? new Date(next).toISOString() : field.tipo === 'moeda' ? next.replace(',', '.') : next)
+    onChange(!next ? null : ['numero', 'porcentagem'].includes(field.tipo) ? Number(next) : field.tipo === 'data_hora' ? new Date(next).toISOString() : field.tipo === 'moeda' ? next.replace(',', '.') : next)
   }} />
 }
 
@@ -51,9 +54,16 @@ function toLocalDateTime(iso: string) {
 
 export function CellValueView({ field, value, members }: { field: Field; value?: CellValue; members: Member[] }) {
   if (value == null || value === '' || Array.isArray(value) && !value.length) return <span className="tables-empty-cell">—</span>
+  if (field.tipo === 'porcentagem') return <span>{new Intl.NumberFormat('pt-BR', { maximumFractionDigits: 2 }).format(Number(value))}%</span>
+  if (field.tipo === 'avaliacao') { const max = Number(field.configuracao.maximo ?? 5), n = Number(value); return <span className="tables-stars" aria-label={`${n} de ${max}`}>{'★'.repeat(n)}<span>{'★'.repeat(Math.max(0, max - n))}</span></span> }
+  if (field.tipo === 'autonumero') return <span className="tables-autonumber">{String(value)}</span>
+  if (['criado_em', 'alterado_em'].includes(field.tipo)) return <span>{new Date(String(value)).toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short' })}</span>
+  if (field.tipo === 'agregacao') return <span>{new Intl.NumberFormat('pt-BR', { maximumFractionDigits: 2 }).format(Number(value))}</span>
+  if (field.tipo === 'busca') return <span className="tables-pills">{idsOf(value).map((text, i) => <span key={i} className="tables-pill tables-pill-plain">{text}</span>)}</span>
+  if (field.tipo === 'formula') return value === '#ERRO' ? <span className="tables-formula-error" title="Confira a fórmula e os valores usados">#ERRO</span> : typeof value === 'boolean' ? <span>{value ? 'Sim' : 'Não'}</span> : typeof value === 'number' ? <span>{new Intl.NumberFormat('pt-BR', { maximumFractionDigits: 6 }).format(value)}</span> : <span className="tables-truncate">{String(value)}</span>
   if (field.tipo === 'checkbox') return <span aria-label={value ? 'Marcado' : 'Desmarcado'} className={value ? 'tables-checked' : 'tables-unchecked'}>{value ? '✓' : ''}</span>
   if (['selecao', 'selecao_multipla'].includes(field.tipo)) return <span className="tables-pills">{idsOf(value).map(id => { const option = field.opcoes.find(o => o.id === id); return <span key={id} className="tables-pill" style={{ background: (option?.cor ?? '#94a3b8') + '22', color: option?.cor ?? '#666' }}>{option?.nome ?? 'Opção arquivada'}</span> })}</span>
-  if (['usuario', 'usuarios'].includes(field.tipo)) return <span className="tables-pills">{idsOf(value).map(id => { const name = members.find(m => m.id === id)?.nome ?? 'Usuário removido'; return <span key={id} className="tables-person"><span className="tables-avatar">{name.split(' ').slice(0, 2).map(s => s[0]).join('')}</span>{name}</span> })}</span>
+  if (['usuario', 'usuarios', 'criado_por', 'alterado_por'].includes(field.tipo)) return <span className="tables-pills">{idsOf(value).map(id => { const name = members.find(m => m.id === id)?.nome ?? 'Usuário removido'; return <span key={id} className="tables-person"><span className="tables-avatar">{name.split(' ').slice(0, 2).map(s => s[0]).join('')}</span>{name}</span> })}</span>
   if (field.tipo === 'moeda') return <span>{new Intl.NumberFormat('pt-BR', { style: 'currency', currency: String(field.configuracao.moeda ?? 'BRL') }).format(Number(value))}</span>
   if (field.tipo === 'numero') return <span>{new Intl.NumberFormat('pt-BR', { maximumFractionDigits: 6 }).format(Number(value))}</span>
   if (field.tipo === 'data') { const [y, m, d] = String(value).split('-'); return <span>{d}/{m}/{y}</span> }

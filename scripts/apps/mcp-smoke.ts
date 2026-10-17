@@ -12,7 +12,8 @@ import { createPluginServer } from '../../src/products/chatgptplugin/mcp/createS
 import { createClaudeServer } from '../../src/products/claudeplugin/mcp/createServer'
 import { createBase } from '../../src/products/tables/server/service'
 import { withAppsClient } from '../../src/products/apps/server/database'
-import { openPublic, publicTables, type PublicDependencies } from '../../src/products/apps/server/access'
+import { openPublic, publicErrors, publicInfo, publicTables, type PublicDependencies } from '../../src/products/apps/server/access'
+import { reportRuntimeErrors } from '../../src/products/apps/server/runtime'
 import { tablesRequestSchema } from '../../src/products/apps/server/tablesSource'
 
 const db = new PGlite(), checks: string[] = [], called = new Set<string>()
@@ -46,7 +47,7 @@ async function main() {
      CREATE TABLE plugin.drafts(id uuid PRIMARY KEY,empresa_id bigint,user_id bigint,oauth_client_id text,operation_key uuid,proposal jsonb,status text DEFAULT 'pending',record_id text,created_at timestamptz DEFAULT now(),expires_at timestamptz DEFAULT now()+interval '24 hours',decided_at timestamptz,target_snapshot jsonb,integration text,
      CONSTRAINT drafts_integration_operation_key UNIQUE(integration,empresa_id,user_id,oauth_client_id,operation_key),CONSTRAINT legacy_result CHECK((status='saved')=(record_id IS NOT NULL)));
      CREATE TABLE plugin.executions(id uuid PRIMARY KEY,user_id bigint,empresa_id bigint,oauth_client_id text,tool_name text,status text,duration_ms int,finished_at timestamptz,integration text);`)
-    for (const file of ['20261016120000_create_tables.sql', '20261017100000_apps_product.sql', '20261017150000_apps_files_in_database.sql', '20261017170000_apps_react_build.sql', '20261018100000_apps_public_access.sql', '20261016193000_mcp_product_domains.sql', '20261016200000_mcp_domain_uniqueness.sql', '20261017190000_mcp_apps_domain.sql']) await db.exec(readFileSync('supabase/migrations/' + file, 'utf8'))
+    for (const file of ['20261016120000_create_tables.sql', '20261018120000_tables_base_permissions.sql', '20261018150000_tables_search_index.sql', '20261018160000_tables_field_types.sql', '20261018170000_tables_views.sql', '20261018180000_tables_automations.sql', '20261018190000_tables_api_keys.sql', '20261018200000_tables_change_index.sql', '20261017100000_apps_product.sql', '20261017150000_apps_files_in_database.sql', '20261017170000_apps_react_build.sql', '20261018100000_apps_public_access.sql', '20261018130000_apps_runtime_errors.sql', '20261018140000_apps_legacy_conversion.sql', '20261018210000_apps_usage.sql', '20261018220000_apps_domains.sql', '20261016193000_mcp_product_domains.sql', '20261016200000_mcp_domain_uniqueness.sql', '20261017190000_mcp_apps_domain.sql']) await db.exec(readFileSync('supabase/migrations/' + file, 'utf8'))
     let appId = '', tableId = ''
 
     await check('11 tools, both hosts register them', async () => {
@@ -80,6 +81,11 @@ async function main() {
       assert.equal((await write('salvar_codigo', { app_id: appId, arquivos: [{ caminho: 'src/App.jsx', acao: 'editar', buscar: '<h1>Chamados</h2>', substituir: '<h1>Chamados</h1>' }] })).data.resultado.compilacao, 'ok')
       assert.match((await write('salvar_codigo', { app_id: appId, arquivos: [{ caminho: 'src/main.jsx', acao: 'editar', buscar: "import App from './App'", substituir: "import App from './App'\nimport dayjs from 'dayjs'" }] })).data.resultado.erro_compilacao, /dayjs.*não está disponível/)
       await write('salvar_codigo', { app_id: appId, arquivos: [{ caminho: 'src/main.jsx', acao: 'editar', buscar: "\nimport dayjs from 'dayjs'", substituir: '' }] })
+      // Charts and icons come from the library snapshot; the app keeps only what it imports.
+      const chart = await write('salvar_codigo', { app_id: appId, arquivos: [{ caminho: 'src/components/Grafico.jsx', conteudo: "import { LineChart, Line, XAxis } from 'recharts'\nimport { Check } from 'lucide-react'\nimport clsx from 'clsx'\nexport default function Grafico() { return <div className={clsx('g', { on: true })}><Check size={14} /><LineChart width={300} height={120} data={[{ x: 1, y: 2 }]}><XAxis dataKey='x' /><Line dataKey='y' /></LineChart></div> }" }, { caminho: 'src/App.jsx', acao: 'editar', buscar: "import Lista from './components/Lista'", substituir: "import Lista from './components/Lista'\nimport Grafico from './components/Grafico'" }] })
+      assert.equal(chart.data.resultado.compilacao, 'ok', JSON.stringify(chart.data.resultado.erro_compilacao))
+      const size = (await db.query<{ n: number }>("SELECT octet_length(c.conteudo)::int n FROM apps.versoes v JOIN apps.conteudos c ON c.empresa_id=v.empresa_id AND c.hash=v.build_js WHERE v.app_id=$1 ORDER BY v.numero DESC LIMIT 1", [appId])).rows[0].n
+      assert(size < 600_000, 'Unused library modules are dropped: ' + size)
     })
     await check('Manifest declares Tables sources and collections; unknown tables are refused', async () => {
       await deps.apps!.transaction(async () => { const created = await tables({ tenantId: 1, sharedUserId: 1, role: 'owner' }, true, d => createBase(d as never, { tenantId: 1, sharedUserId: 1, role: 'owner' }, { nome: 'Suporte', descricao: '', cor: '#2563eb', modelo: 'vazia' })) as unknown as { tabela: { id: string } }; tableId = created.tabela.id })
@@ -139,14 +145,49 @@ async function main() {
       assert.equal(await code(visit({ operacao: 'listar', busca: 'Site' })), 'INVALID_DATA', 'Free search would look into hidden fields')
       assert.equal(await code(visit({ operacao: 'editar', id: randomUUID(), valores: { 'Nome do projeto': 'Y' } })), 'SOURCE_FORBIDDEN')
       assert.deepEqual(((await visit({ operacao: 'campos' })) as { campos: { nome: string }[] }).campos.map(c => c.nome), ['Nome do projeto', 'Prioridade', 'Status'].sort((a, b) => ['Nome do projeto', 'Status', 'Prioridade'].indexOf(a) - ['Nome do projeto', 'Status', 'Prioridade'].indexOf(b)))
+      const grouped = await visit({ operacao: 'resumir', agrupar_por: 'Status' })
+      assert(!/[0-9a-f]{8}-[0-9a-f]{4}-/.test(JSON.stringify(grouped)), 'Public summaries carry names, not internal IDs: ' + JSON.stringify(grouped))
+      assert.equal((await publicInfo('formulario-publico', pub))?.nome, 'Formulário público'); assert.equal(await publicInfo('nao-existe', pub), null)
       assert.equal(await code(publicTables('outro-endereco', page.token, tablesRequestSchema.parse({ fonte: 'projetos', operacao: 'campos' }), 'visitante-a', pub)), 'RUNTIME_EXPIRED')
       let limitedAt = 0
       for (let i = 1; i <= 12 && !limitedAt; i++) if (await code(visit({ operacao: 'criar', valores: { 'Nome do projeto': 'Envio ' + i } }, 'visitante-b')) === 'RATE_LIMITED') limitedAt = i
       assert.equal(limitedAt, 11, 'Ten new records per visitor in ten minutes')
+      await publicErrors('formulario-publico', page.token, [{ mensagem: 'Erro do visitante', origem: '', pilha: '' }], 'visitante-c', pub)
+      assert.equal((await ok('obter', { app_id: form })).erros_execucao[0].modo, 'publico')
 
+      // Own domain: Vercel is replaced by a fake that accepts the domain.
+      process.env.APPS_VERCEL_TOKEN = 'fixture'; process.env.APPS_VERCEL_PROJECT_ID = 'prj_fixture'
+      const realFetch = globalThis.fetch, vercel: string[] = []
+      globalThis.fetch = (async (url: string | URL, init?: RequestInit) => { vercel.push((init?.method ?? 'GET') + ' ' + String(url)); return new Response(JSON.stringify({ verified: false, verification: [] }), { status: 200 }) }) as typeof fetch
+      try {
+        assert.equal((await write('acesso', { app_id: form, dominio: 'formulario.vercel.app' })).code, 'INVALID_DOMAIN', 'Platform hosts are not own domains')
+        const domainPreview = await write('acesso', { app_id: form, dominio: 'Apps.Exemplo.com.br' })
+        assert.equal(domainPreview.data.previa.endereco, 'https://apps.exemplo.com.br'); assert.deepEqual(domainPreview.data.previa.dns, ['CNAME apps → cname.vercel-dns.com'])
+        const linked = await ok('acesso', { rascunho_id: domainPreview.data.rascunho_id })
+        assert.equal(linked.resultado.links.publico, 'https://apps.exemplo.com.br'); assert(vercel.some(v => v.startsWith('POST https://api.vercel.com/v10/projects/prj_fixture/domains')))
+        const { slugForHost } = await import('../../src/products/apps/server/domains')
+        assert.equal(await slugForHost('apps.exemplo.com.br', async d => (await db.query<{ slug: string | null }>('SELECT apps.endereco_do_dominio($1) slug', [d])).rows[0].slug), 'formulario-publico')
+        assert.equal(await slugForHost('cognito-seven.vercel.app', async () => 'x'), null, 'The platform host never routes to an app')
+        const unlink = await write('acesso', { app_id: form, dominio: null }); await ok('acesso', { rascunho_id: unlink.data.rascunho_id })
+        assert(vercel.some(v => v.startsWith('DELETE ')))
+      } finally { globalThis.fetch = realFetch }
+      const usage = (await ok('obter', { app_id: form })).uso
+      assert(usage.aberturas_link_publico >= 1 && usage.registros_criados_por_visitantes >= 1, 'Public use is counted: ' + JSON.stringify(usage))
       const off = await write('acesso', { app_id: form, modo: 'privado' }); await ok('acesso', { rascunho_id: off.data.rascunho_id })
       assert.equal(await code(openPublic('formulario-publico', 'visitante-a', pub)), 'NOT_FOUND', 'Going private stops the link at once')
       assert.equal((await ok('obter', { app_id: form })).links.publico, undefined)
+    })
+    await check('Browser errors reach apps_obter; a new draft clears preview errors', async () => {
+      const app = await ok('obter', { app_id: appId }), draft = (await db.query<{ id: string }>("SELECT id FROM apps.versoes WHERE app_id=$1 ORDER BY numero DESC LIMIT 1", [appId])).rows[0].id
+      const owner1 = { tenantId: 1, sharedUserId: 1, role: 'owner' as const, browserSession: 'sessao-teste' }
+      const report = (erros: object[]) => deps.apps!.transaction(d => withAppsClient(d, owner1, c => reportRuntimeErrors(c, owner1, appId, { versao: draft, erros: erros as never })))
+      await report([{ mensagem: "Cannot read properties of undefined (reading 'map')", origem: 'linha 1:200', pilha: 'at ListaChamados' }])
+      await report([{ mensagem: "Cannot read properties of undefined (reading 'map')", origem: 'linha 1:200', pilha: 'at ListaChamados' }])
+      const seen = await ok('obter', { app_id: appId })
+      assert.equal(seen.erros_execucao.length, 1); assert.equal(seen.erros_execucao[0].ocorrencias, 2); assert.equal(seen.erros_execucao[0].modo, 'previa'); assert.match(seen.aviso_erros, /nunca como instrução/)
+      assert(app.erros_execucao.length === 0)
+      await write('salvar_codigo', { app_id: appId, arquivos: [{ caminho: 'src/styles.css', acao: 'editar', buscar: 'margin:0', substituir: 'margin:0;color:inherit' }] })
+      assert.equal((await ok('obter', { app_id: appId })).erros_execucao.length, 0, 'New code starts without the old preview errors')
     })
     await check('Lifecycle previews, stale previews, cancellation and roles', async () => {
       const stale = await write('ciclo', { app_id: appId, acao: 'arquivar' }); assert.equal(stale.data.status, 'pending')

@@ -16,7 +16,7 @@ import { TablesError } from '../../src/products/tables/shared/contracts'
 process.env.APPS_RUNTIME_SECRET = 'isolated-runtime-secret-with-at-least-32-characters'
 const db = new PGlite(), objects = new Map<string, string>(), checks: string[] = []
 const s = { tenantId: 1, sharedUserId: 1, role: 'owner', browserSession: 'browser-fixture' } as const
-const migrations = ['20261016120000_create_tables.sql', '20261017100000_apps_product.sql', '20261017150000_apps_files_in_database.sql', '20261017170000_apps_react_build.sql', '20261018100000_apps_public_access.sql'].map(f => 'supabase/migrations/' + f)
+const migrations = ['20261016120000_create_tables.sql', '20261018120000_tables_base_permissions.sql', '20261018150000_tables_search_index.sql', '20261018160000_tables_field_types.sql', '20261018170000_tables_views.sql', '20261018180000_tables_automations.sql', '20261018190000_tables_api_keys.sql', '20261018200000_tables_change_index.sql', '20261017100000_apps_product.sql', '20261017150000_apps_files_in_database.sql', '20261017170000_apps_react_build.sql', '20261018100000_apps_public_access.sql', '20261018130000_apps_runtime_errors.sql', '20261018140000_apps_legacy_conversion.sql', '20261018210000_apps_usage.sql', '20261018220000_apps_domains.sql'].map(f => 'supabase/migrations/' + f)
 // Legacy packages (before files moved to the database) are still read from Storage.
 const store: PackageStore = { async put(path, p) { const text = JSON.stringify(validatePackage(p)); objects.set(path, text); return { tamanho: Buffer.byteLength(text), hash: hash(text) } }, async get(path, digest) { const text = objects.get(path); assert(text); assert.equal(hash(text), digest); return JSON.parse(text) as AppPackage } }
 async function run<T>(session: Session, fn: (db: Database) => Promise<T>): Promise<T> {
@@ -44,9 +44,9 @@ async function main() {
   for (const file of migrations) await db.exec(readFileSync(file, 'utf8'))
   const app = await run(s, db => create(db, s, metadataSchema.parse({ nome: 'Ideias' }), true))
   let runtime: Awaited<ReturnType<typeof openRuntime>>
-  await check('Private schema, 13 RLS tables, cross-company reads/writes and foreign keys', async () => {
-    assert.equal(await count("SELECT count(*)::int n FROM pg_tables WHERE schemaname='apps'"), 13)
-    assert.equal(await count("SELECT count(*)::int n FROM pg_class c JOIN pg_namespace n ON n.oid=c.relnamespace WHERE n.nspname='apps' AND c.relkind='r' AND c.relrowsecurity AND c.relforcerowsecurity"), 13)
+  await check('Private schema, 15 RLS tables, cross-company reads/writes and foreign keys', async () => {
+    assert.equal(await count("SELECT count(*)::int n FROM pg_tables WHERE schemaname='apps'"), 15)
+    assert.equal(await count("SELECT count(*)::int n FROM pg_class c JOIN pg_namespace n ON n.oid=c.relnamespace WHERE n.nspname='apps' AND c.relkind='r' AND c.relrowsecurity AND c.relforcerowsecurity"), 15)
     assert.equal((await db.query<{ ok: boolean }>("SELECT has_schema_privilege('authenticated','apps','USAGE') ok")).rows[0].ok, false)
     await assert.rejects(() => run({ tenantId: 2, sharedUserId: 4, role: 'owner' }, db => getApp(db, { tenantId: 2, sharedUserId: 4, role: 'owner' }, app.id)))
     await assert.rejects(() => run(s, db => db.query("INSERT INTO apps.versoes(empresa_id,app_id,numero,manifesto,criado_por)VALUES(2,$1,2,'{}',1)", [app.id])))
@@ -192,6 +192,25 @@ async function main() {
     a = await run(s, db => getApp(db, s, app.id, false, true)); await run(s, db => lifecycle(db, s, app.id, a.versao_concorrencia, 'restaurar'))
     a = await run(s, db => getApp(db, s, app.id)); assert.equal(a.publicacao_id, null)
     const vs = await run(s, db => versions(db, s, app.id)); await run(s, db => publish(db, s, app.id, a.versao_concorrencia, vs[1].id, randomUUID(), store)); a = await run(s, db => getApp(db, s, app.id)); await run(s, db => unpublish(db, s, app.id, a.versao_concorrencia))
+  })
+  await check('Daily cleanup removes unused contents, old errors and visitor counters; kept versions stay intact', async () => {
+    const { maintainApps } = await import('../../src/products/apps/server/maintenance')
+    const used = (await db.query<{ n: number }>('SELECT count(*)::int n FROM apps.conteudos')).rows[0].n
+    await db.query("INSERT INTO apps.conteudos(empresa_id,hash,codificacao,conteudo,tamanho,criado_em) VALUES(1,repeat('a',64),'utf8','sem uso',7,now()-interval '2 days'),(1,repeat('b',64),'utf8','recente',7,now())")
+    // A sealed version still in the old format: its Storage package becomes database files.
+    const legacy = randomUUID(), version = randomUUID(), file = randomUUID(), p = await run(s, async d => loadPackage(d, s, app.id, (await versions(d, s, app.id))[0].id))
+    const path = `1/${legacy}/${version}/${file}.json`, saved = await store.put(path, p)
+    await db.query("INSERT INTO apps.apps(id,empresa_id,nome,slug,criado_por,atualizado_por) VALUES($1,1,'Legado selado','legado-selado',1,1)", [legacy])
+    await db.query("INSERT INTO apps.versoes(id,empresa_id,app_id,numero,manifesto,versao_formato,criado_por) VALUES($1,1,$2,1,$3::jsonb,1,1)", [version, legacy, JSON.stringify({ formato: 1, entrada: 'index.html', colecoes: p.manifesto.colecoes })])
+    await db.query("INSERT INTO apps.arquivos(id,empresa_id,app_id,versao_id,caminho_logico,caminho_storage,finalidade,mime_type,tamanho,hash_conteudo,criado_por,estado_upload) VALUES($1,1,$2,$3,$4,$5,'pacote','application/json',$6,$7,1,'confirmado')", [randomUUID(), legacy, version, 'pacote.json', path, saved.tamanho, saved.hash])
+    await db.query("UPDATE apps.versoes SET estado='pronta',hash_conteudo=$2,selado_em=now() WHERE id=$1", [version, saved.hash])
+    const result = await maintainApps(async () => ({ query: (sql: string, values?: unknown[]) => db.query(sql, values) as never }), store)
+    assert.equal(result.conteudos_sem_uso, 1, 'Only the old unreferenced content goes')
+    assert(result.versoes_convertidas >= 1)
+    assert.equal((await db.query<{ f: number; e: string }>('SELECT versao_formato f,estado e FROM apps.versoes WHERE id=$1', [version])).rows[0].f, 2)
+    assert.equal((await run(s, d => loadPackage(d, s, legacy, version))).arquivos.length, p.arquivos.length, 'Loads from the database, without Storage')
+    await assert.rejects(run(s, d => d.query("UPDATE apps.versoes SET versao_formato=1 WHERE id=$1", [version])), 'The app role still cannot touch sealed versions')
+    assert.equal((await db.query<{ n: number }>('SELECT count(*)::int n FROM apps.conteudos')).rows[0].n, used + 1)
   })
   const report = { status: 'passed', checks, migrationDigests: Object.fromEntries(migrations.map(f => [f, createHash('sha256').update(readFileSync(f)).digest('hex')])), generatedAt: new Date().toISOString() }
   mkdirSync('.cache/apps', { recursive: true }); writeFileSync('.cache/apps/smoke.json', JSON.stringify(report, null, 2)); console.log(JSON.stringify(report))

@@ -4,5 +4,5 @@ import nextTypescript from 'eslint-config-next/typescript'
 export default [
   ...nextVitals,
   ...nextTypescript,
-  { ignores: ['**/dist/**', '.next/**', 'out/**', 'build/**', 'next-env.d.ts'] },
+  { ignores: ['**/dist/**', '.next/**', 'out/**', 'build/**', 'next-env.d.ts', '**/*.generated.ts'] },
 ]

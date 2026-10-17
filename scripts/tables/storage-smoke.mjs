@@ -69,6 +69,13 @@ try {
     CREATE TABLE shared.usuarios_empresas(empresa_id bigint,usuario_id bigint,role text,status text DEFAULT 'active',suspenso_localmente boolean DEFAULT false,PRIMARY KEY(empresa_id,usuario_id));
     INSERT INTO shared.empresas(id) VALUES(1);INSERT INTO shared.usuarios(id,full_name,email) VALUES(1,'Teste Tables','tables@example.invalid');INSERT INTO shared.usuarios_empresas(empresa_id,usuario_id,role) VALUES(1,1,'owner');`)
   await db.exec(readFileSync('supabase/migrations/20261016120000_create_tables.sql', 'utf8'))
+  await db.exec(readFileSync('supabase/migrations/20261018120000_tables_base_permissions.sql', 'utf8'))
+    await db.exec(readFileSync('supabase/migrations/20261018150000_tables_search_index.sql', 'utf8'))
+    await db.exec(readFileSync('supabase/migrations/20261018160000_tables_field_types.sql', 'utf8'))
+    await db.exec(readFileSync('supabase/migrations/20261018170000_tables_views.sql', 'utf8'))
+    await db.exec(readFileSync('supabase/migrations/20261018180000_tables_automations.sql', 'utf8'))
+    await db.exec(readFileSync('supabase/migrations/20261018190000_tables_api_keys.sql', 'utf8'))
+    await db.exec(readFileSync('supabase/migrations/20261018200000_tables_change_index.sql', 'utf8'))
   const { tabela } = await run(db => service.createBase(db, actor, contracts.baseInputSchema.parse({ nome: 'Teste isolado de anexos' })))
   const { campo } = await run(db => service.saveField(db, actor, tabela.id, contracts.fieldInputSchema.parse({ nome: 'Documentos', tipo: 'anexo', expectedStructureVersion: 1 })))
   let record = await run(db => service.saveRecord(db, actor, tabela.id, { valores: {}, expectedStructureVersion: 2 }))

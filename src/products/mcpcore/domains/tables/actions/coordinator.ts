@@ -11,7 +11,7 @@ import type { PluginConfig } from '../../../shared/config'
 export type TablesDependencies={transaction:typeof withTablesControlTransaction}
 export const tablesDependencies:TablesDependencies={transaction:withTablesControlTransaction}
 
-const OPERATION_TITLES:Record<string,string>={criar_base:'Criar base',editar_base:'Editar base',criar_tabela:'Criar tabela',editar_tabela:'Renomear tabela',criar_campo:'Criar campo',editar_campo:'Editar campo',
+const OPERATION_TITLES:Record<string,string>={criar_base:'Criar base',editar_base:'Editar base',compartilhar_base:'Compartilhar base',criar_tabela:'Criar tabela',editar_tabela:'Renomear tabela',criar_campo:'Criar campo',editar_campo:'Editar campo',
  salvar_registros:'Salvar registros',criar_visualizacao:'Criar visualização',editar_visualizacao:'Editar visualização',excluir_visualizacao:'Excluir visualização',adicionar_comentario:'Comentar',
  mover_para_lixeira:'Mover para a lixeira',mover_registros_para_lixeira:'Mover registros para a lixeira',restaurar_item:'Restaurar da lixeira',preparar_upload:'Preparar envio de arquivo',confirmar_upload:'Confirmar arquivo',remover_anexo:'Remover anexo'}
 // Previews show names, not IDs: field keys, options, people, tables and records known by the snapshot.

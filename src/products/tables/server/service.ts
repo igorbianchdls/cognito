@@ -1,9 +1,10 @@
 import { randomUUID } from 'node:crypto'
 import { z } from 'zod'
 import type { Database, TablesSession } from './database'
-import { assertVersion, getBundle, lockRecord, readFields, readRecord, requireBase, requireTable } from './repository'
+import { assertVersion, getBundle, lockRecord, readFields, readRecord, requireBase, requireRole, requireTable } from './repository'
 import { validateView } from './queries'
-import { baseInputSchema, fieldInputSchema, nameSchema, recordInputSchema, TablesError, viewConfigSchema, viewInputSchema, type Base, type CellValue, type DataRecord, type Field, type RecordDetail, type Values } from '../shared/contracts'
+import { validateComputed } from './derived'
+import { DERIVED_TYPES, FIELD_LABELS, isComputed, baseInputSchema, fieldInputSchema, nameSchema, recordInputSchema, sharingInputSchema, TablesError, viewConfigSchema, viewInputSchema, type Base, type Sharing, type CellValue, type DataRecord, type Field, type RecordDetail, type Values } from '../shared/contracts'
 
 type BaseInput = z.infer<typeof baseInputSchema>
 type FieldInput = z.infer<typeof fieldInputSchema>
@@ -11,7 +12,7 @@ type RecordInput = z.infer<typeof recordInputSchema>
 type ViewInput = z.infer<typeof viewInputSchema>
 
 export async function listBases(db: Database, session: TablesSession): Promise<Base[]> {
-  return (await db.query('SELECT * FROM tables.bases WHERE empresa_id=$1 AND excluido_em IS NULL ORDER BY posicao,id', [session.tenantId])).rows as Base[]
+  return (await db.query('SELECT *,tables.papel_base(id) papel FROM tables.bases WHERE empresa_id=$1 AND excluido_em IS NULL ORDER BY posicao,id', [session.tenantId])).rows as Base[]
 }
 
 async function insertField(db: Database, session: TablesSession, table: { id: string; base_id: string }, input: Omit<FieldInput, 'expectedStructureVersion'>, position: number) {
@@ -22,7 +23,7 @@ async function insertField(db: Database, session: TablesSession, table: { id: st
 }
 
 export async function createTable(db: Database, session: TablesSession, baseId: string, name: string, projects = false) {
-  await requireBase(db, session, baseId)
+  await requireBase(db, session, baseId); await requireRole(db, session, baseId, 'administrador')
   // Serialize append positions on the parent instead of relying on a racing max().
   await db.query('SELECT id FROM tables.bases WHERE empresa_id=$1 AND id=$2 FOR UPDATE', [session.tenantId, baseId])
   const id = randomUUID()
@@ -58,7 +59,7 @@ export async function getBase(db: Database, session: TablesSession, id: string) 
 }
 
 export async function changeBase(db: Database, session: TablesSession, id: string, input: { nome: string; descricao: string; cor: string; expectedVersion: number }) {
-  const base = await requireBase(db, session, id)
+  const base = await requireBase(db, session, id); await requireRole(db, session, id, 'administrador')
   assertVersion(base.versao, input.expectedVersion)
   const result = await db.query('UPDATE tables.bases SET nome=$3,descricao=$4,cor=$5,versao=versao+1,atualizado_por=$6,atualizado_em=now() WHERE empresa_id=$1 AND id=$2 AND versao=$7 RETURNING *', [session.tenantId, id, input.nome, input.descricao, input.cor, session.sharedUserId, input.expectedVersion])
   if (!result.rows[0]) throw new TablesError('VERSION_CONFLICT', 'A base foi alterada. Atualize a tela.', 409)
@@ -66,25 +67,30 @@ export async function changeBase(db: Database, session: TablesSession, id: strin
 }
 
 export async function changeTable(db: Database, session: TablesSession, id: string, input: { nome: string; expectedStructureVersion: number }) {
-  const table = await requireTable(db, session, id, 'structure')
+  const table = await requireTable(db, session, id, 'structure'); await requireRole(db, session, table.base_id, 'administrador')
   assertVersion(table.versao_estrutura, input.expectedStructureVersion)
   return (await db.query('UPDATE tables.tabelas SET nome=$3,versao_estrutura=versao_estrutura+1,atualizado_por=$4,atualizado_em=now() WHERE empresa_id=$1 AND id=$2 RETURNING *', [session.tenantId, id, input.nome, session.sharedUserId])).rows[0]
 }
 
 function validateFieldInput(input: FieldInput) {
+  if (isComputed(input.tipo) && (input.obrigatorio || input.opcoes.length || input.tabela_destino_id)) throw new TablesError('INVALID_FIELD', `${FIELD_LABELS[input.tipo]} é preenchido pelo sistema: não pode ser obrigatório nem ter opções.`)
   if ((input.tipo === 'vinculo') !== Boolean(input.tabela_destino_id)) throw new TablesError('INVALID_FIELD', 'Selecione a tabela de destino do vínculo.')
   if (!['selecao', 'selecao_multipla'].includes(input.tipo) && input.opcoes.length) throw new TablesError('INVALID_FIELD', 'Opções são permitidas apenas em campos de seleção.')
 }
 
 export async function saveField(db: Database, session: TablesSession, tableId: string, input: FieldInput, fieldId?: string) {
   validateFieldInput(input)
-  const table = await requireTable(db, session, tableId, 'structure')
+  const table = await requireTable(db, session, tableId, 'structure'); await requireRole(db, session, table.base_id, 'administrador')
   assertVersion(table.versao_estrutura, input.expectedStructureVersion)
   if (input.tabela_destino_id) {
     const target = await requireTable(db, session, input.tabela_destino_id)
     if (target.base_id !== table.base_id) throw new TablesError('INVALID_FIELD', 'Escolha uma tabela desta base.')
   }
   const fields = await readFields(db, session, tableId)
+  if (DERIVED_TYPES.includes(input.tipo)) {
+    const link = fields.find(f => f.id === input.configuracao.vinculo)
+    validateComputed(input, fields.filter(f => f.id !== fieldId), link?.tabela_destino_id ? await readFields(db, session, link.tabela_destino_id) : undefined)
+  }
   let field = fields.find(f => f.id === fieldId)
   if (fieldId && !field) throw new TablesError('NOT_FOUND', 'Campo não encontrado.', 404)
   if (fieldId === table.campo_principal_id && input.tipo !== 'texto') throw new TablesError('PRIMARY_FIELD', 'O campo principal deve continuar sendo texto.')
@@ -108,7 +114,7 @@ export async function saveField(db: Database, session: TablesSession, tableId: s
 }
 
 export async function deleteField(db: Database, session: TablesSession, tableId: string, fieldId: string, version: number) {
-  const table = await requireTable(db, session, tableId, 'structure')
+  const table = await requireTable(db, session, tableId, 'structure'); await requireRole(db, session, table.base_id, 'administrador')
   assertVersion(table.versao_estrutura, version)
   if (table.campo_principal_id === fieldId) throw new TablesError('PRIMARY_FIELD', 'O campo principal não pode ser excluído.')
   const found = await db.query('UPDATE tables.campos SET excluido_em=now() WHERE empresa_id=$1 AND tabela_id=$2 AND id=$3 AND excluido_em IS NULL RETURNING id', [session.tenantId, tableId, fieldId])
@@ -135,7 +141,10 @@ function normalizeValue(field: Field, value: CellValue): CellValue {
     return values
   }
   if (field.tipo === 'anexo') throw new TablesError('INVALID_VALUE', 'Use o envio de arquivo para alterar anexos.')
-  if (field.tipo === 'numero') return z.number().finite().parse(value)
+  if (isComputed(field.tipo)) throw new TablesError('INVALID_VALUE', `${field.nome} é preenchido pelo sistema.`)
+  if (field.tipo === 'numero' || field.tipo === 'porcentagem') return z.number().finite().parse(value)
+  if (field.tipo === 'avaliacao') { const max = Number(field.configuracao.maximo ?? 5), n = z.number().int().parse(value); if (n < 1 || n > max) throw new TablesError('INVALID_VALUE', `${field.nome}: escolha de 1 a ${max}.`); return n }
+  if (field.tipo === 'telefone') { const t = z.string().trim().parse(value); if (!/^\+?[0-9 ().-]{8,25}$/.test(t)) throw new TablesError('INVALID_VALUE', `${field.nome}: informe um telefone com DDD.`); return t }
   if (field.tipo === 'moeda') return z.string().regex(/^-?\d+(\.\d{1,6})?$/, 'Informe um valor decimal válido.').parse(String(value))
   if (field.tipo === 'checkbox') return z.boolean().parse(value)
   const text = z.string().parse(value)
@@ -151,6 +160,7 @@ function normalizeValue(field: Field, value: CellValue): CellValue {
 export async function saveRecord(db: Database, session: TablesSession, tableId: string, input: RecordInput, recordId?: string): Promise<DataRecord> {
   const table = recordId ? await lockRecord(db, session, recordId, z.number().int().positive().parse(input.expectedVersion)) : await requireTable(db, session, tableId, 'record')
   if (table.id !== tableId) throw new TablesError('NOT_FOUND', 'Registro não encontrado nesta tabela.', 404)
+  await requireRole(db, session, table.base_id, 'editor')
   assertVersion(table.versao_estrutura, input.expectedStructureVersion)
   const fields = await readFields(db, session, tableId)
   const fieldMap = new Map(fields.map(f => [f.id, f]))
@@ -183,10 +193,11 @@ export async function saveRecord(db: Database, session: TablesSession, tableId: 
     } else if (field.tipo === 'vinculo') {
       await requireTable(db, session, field.tabela_destino_id!)
       await db.query('DELETE FROM tables.registro_vinculos WHERE empresa_id=$1 AND registro_id=$2 AND campo_id=$3', [session.tenantId, id, fieldId])
-      for (const target of values) {
+      // The order chosen by the person is kept (posicao), so lookups list linked records the same way.
+      for (const [index, target] of values.entries()) {
         const found = await db.query('SELECT id FROM tables.registros WHERE empresa_id=$1 AND tabela_id=$2 AND id=$3 AND excluido_em IS NULL', [session.tenantId, field.tabela_destino_id, target])
         if (!found.rows[0]) throw new TablesError('INVALID_LINK', 'Um dos registros vinculados não está disponível.')
-        await db.query('INSERT INTO tables.registro_vinculos(empresa_id,base_id,tabela_id,registro_id,campo_id,tabela_destino_id,registro_destino_id) VALUES($1,$2,$3,$4,$5,$6,$7)', [session.tenantId, table.base_id, tableId, id, fieldId, field.tabela_destino_id, target])
+        await db.query('INSERT INTO tables.registro_vinculos(empresa_id,base_id,tabela_id,registro_id,campo_id,tabela_destino_id,registro_destino_id,posicao) VALUES($1,$2,$3,$4,$5,$6,$7,$8)', [session.tenantId, table.base_id, tableId, id, fieldId, field.tabela_destino_id, target, index])
       }
     }
   }
@@ -194,7 +205,7 @@ export async function saveRecord(db: Database, session: TablesSession, tableId: 
 }
 
 export async function saveView(db: Database, session: TablesSession, tableId: string, input: ViewInput, id?: string) {
-  const table = await requireTable(db, session, tableId, 'record')
+  const table = await requireTable(db, session, tableId, 'record'); await requireRole(db, session, table.base_id, 'editor')
   const fields = await readFields(db, session, tableId)
   validateView(input.configuracao, fields, input.tipo)
   if (input.campos.some(c => !fields.some(f => f.id === c.campo_id))) throw new TablesError('INVALID_FIELD', 'Um dos campos não pertence à tabela.')
@@ -221,15 +232,15 @@ export async function recordDetail(db: Database, session: TablesSession, id: str
 
 export async function addComment(db: Database, session: TablesSession, id: string, text: string) {
   const record = await readRecord(db, session, id)
-  await requireTable(db, session, record.tabela_id)
+  await requireRole(db, session, (await requireTable(db, session, record.tabela_id)).base_id, 'editor')
   return (await db.query('INSERT INTO tables.comentarios(empresa_id,registro_id,autor_id,texto) VALUES($1,$2,$3,$4) RETURNING id', [session.tenantId, id, session.sharedUserId, text])).rows[0]
 }
 
 const removable = { bases: 'bases', tabelas: 'tabelas', registros: 'registros' } as const
 export async function trash(db: Database, session: TablesSession, kind: keyof typeof removable, id: string, version: number) {
-  if (kind === 'registros') await lockRecord(db, session, id, version)
-  else if (kind === 'tabelas') assertVersion((await requireTable(db, session, id, 'structure')).versao_estrutura, version)
-  else assertVersion((await requireBase(db, session, id)).versao, version)
+  if (kind === 'registros') await requireRole(db, session, (await lockRecord(db, session, id, version)).base_id, 'editor')
+  else if (kind === 'tabelas') { const t = await requireTable(db, session, id, 'structure'); await requireRole(db, session, t.base_id, 'administrador'); assertVersion(t.versao_estrutura, version) }
+  else { await requireRole(db, session, id, 'administrador'); assertVersion((await requireBase(db, session, id)).versao, version) }
   const versionColumn = kind === 'tabelas' ? 'versao_estrutura' : 'versao'
   const result = await db.query(`UPDATE tables.${removable[kind]} SET excluido_em=now(),${versionColumn}=${versionColumn}+1,atualizado_em=now(),atualizado_por=$4 WHERE empresa_id=$1 AND id=$2 AND ${versionColumn}=$3 AND excluido_em IS NULL RETURNING id`, [session.tenantId, id, version, session.sharedUserId])
   if (!result.rows[0]) throw new TablesError('VERSION_CONFLICT', 'Os dados mudaram. Atualize a tela.', 409)
@@ -246,7 +257,7 @@ export async function restore(db: Database, session: TablesSession, kind: keyof 
   if (kind === 'campos') {
     const field = (await db.query('SELECT * FROM tables.campos WHERE empresa_id=$1 AND id=$2 AND excluido_em IS NOT NULL', [session.tenantId, id])).rows[0]
     if (!field) throw new TablesError('NOT_FOUND', 'Campo não encontrado na lixeira.', 404)
-    await requireTable(db, session, field.tabela_id, 'structure')
+    await requireRole(db, session, (await requireTable(db, session, field.tabela_id, 'structure')).base_id, 'administrador')
     if (field.tabela_destino_id) await requireTable(db, session, field.tabela_destino_id)
     // New records may have been created while the column was absent.
     const restored = await db.query('UPDATE tables.campos SET excluido_em=NULL,obrigatorio=false WHERE empresa_id=$1 AND id=$2 AND excluido_em IS NOT NULL RETURNING id', [session.tenantId, id])
@@ -256,8 +267,35 @@ export async function restore(db: Database, session: TablesSession, kind: keyof 
   }
   const row = (await db.query(`SELECT * FROM tables.${removable[kind]} WHERE empresa_id=$1 AND id=$2 AND excluido_em IS NOT NULL`, [session.tenantId, id])).rows[0]
   if (!row) throw new TablesError('NOT_FOUND', 'Item não encontrado na lixeira.', 404)
-  if (kind === 'registros') await requireTable(db, session, row.tabela_id, 'record')
-  if (kind === 'tabelas') await requireBase(db, session, row.base_id)
+  if (kind === 'registros') await requireRole(db, session, (await requireTable(db, session, row.tabela_id, 'record')).base_id, 'editor')
+  if (kind === 'tabelas') { await requireBase(db, session, row.base_id); await requireRole(db, session, row.base_id, 'administrador') }
+  if (kind === 'bases') await requireRole(db, session, id, 'administrador')
   const versionColumn = kind === 'tabelas' ? 'versao_estrutura' : 'versao'
   await db.query(`UPDATE tables.${removable[kind]} SET excluido_em=NULL,${versionColumn}=${versionColumn}+1,atualizado_em=now(),atualizado_por=$3 WHERE empresa_id=$1 AND id=$2 AND excluido_em IS NOT NULL`, [session.tenantId, id, session.sharedUserId])
+}
+
+/** Who can open a base and with which role. Visible to everyone with access; changed by its administrators. */
+export async function getSharing(db: Database, session: TablesSession, baseId: string): Promise<Sharing> {
+  const base = await requireBase(db, session, baseId)
+  const pessoas = (await db.query('SELECT * FROM tables.membros()')).rows as Sharing['pessoas']
+  const admins = new Set((await db.query('SELECT id FROM tables.administradores_empresa()')).rows.map(r => String(r.id)))
+  const rows = (await db.query('SELECT usuario_id::text id,papel FROM tables.base_membros WHERE empresa_id=$1 AND base_id=$2', [session.tenantId, baseId])).rows
+  const membros = [...pessoas.filter(p => admins.has(p.id)).map(p => ({ ...p, papel: 'administrador' as const, administrador_empresa: true })),
+    ...rows.filter(r => !admins.has(r.id)).flatMap(r => { const p = pessoas.find(p => p.id === r.id); return p ? [{ ...p, papel: r.papel, administrador_empresa: false }] : [] })]
+  return { acesso: base.acesso, versao: base.versao, papel: base.papel!, membros, pessoas }
+}
+export async function saveSharing(db: Database, session: TablesSession, baseId: string, raw: unknown) {
+  const input = sharingInputSchema.parse(raw)
+  const base = await requireBase(db, session, baseId); await requireRole(db, session, baseId, 'administrador')
+  assertVersion(base.versao, input.expectedVersion)
+  const people = new Set((await db.query('SELECT id FROM tables.membros()')).rows.map(r => String(r.id)))
+  const admins = new Set((await db.query('SELECT id FROM tables.administradores_empresa()')).rows.map(r => String(r.id)))
+  if (new Set(input.membros.map(m => m.usuario_id)).size !== input.membros.length) throw new TablesError('INVALID_INPUT', 'Informe cada pessoa uma única vez.')
+  if (input.membros.some(m => !people.has(m.usuario_id))) throw new TablesError('INVALID_INPUT', 'Uma das pessoas não faz parte da empresa.')
+  // Without company admin rights, you cannot remove your own administration of the base.
+  if (!admins.has(String(session.sharedUserId)) && !input.membros.some(m => m.usuario_id === String(session.sharedUserId) && m.papel === 'administrador')) throw new TablesError('INVALID_INPUT', 'Mantenha você mesmo como administrador da base, ou peça a um administrador da empresa.')
+  await db.query('UPDATE tables.bases SET acesso=$3,versao=versao+1,atualizado_por=$4,atualizado_em=now() WHERE empresa_id=$1 AND id=$2', [session.tenantId, baseId, input.acesso, session.sharedUserId])
+  await db.query('DELETE FROM tables.base_membros WHERE empresa_id=$1 AND base_id=$2 AND NOT (usuario_id::text=ANY($3::text[]))', [session.tenantId, baseId, input.membros.map(m => m.usuario_id)])
+  for (const m of input.membros.filter(m => !admins.has(m.usuario_id))) await db.query('INSERT INTO tables.base_membros(empresa_id,base_id,usuario_id,papel) VALUES($1,$2,$3,$4) ON CONFLICT(empresa_id,base_id,usuario_id) DO UPDATE SET papel=excluded.papel', [session.tenantId, baseId, m.usuario_id, m.papel])
+  return getSharing(db, session, baseId)
 }

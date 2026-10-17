@@ -1,15 +1,29 @@
 import type { Database, TablesSession } from './database'
-import { TablesError, viewConfigSchema, type Base, type DataTable, type Field, type DataRecord, type TableBundle, type View } from '../shared/contracts'
+import { TablesError, viewConfigSchema, type Base, type BaseRole, type DataTable, type Field, type DataRecord, type TableBundle, type View } from '../shared/contracts'
+
+const LEVEL: Record<BaseRole, number> = { leitor: 1, editor: 2, administrador: 3 }
+const NEEDS: Record<BaseRole, string> = { leitor: 'ver esta base', editor: 'editar registros e visualizações desta base', administrador: 'mudar a estrutura ou o compartilhamento desta base' }
+/** Friendly check of the person's role in a base; the database policies enforce the same rule. */
+export async function requireRole(db: Database, session: TablesSession, baseId: string, needed: BaseRole) {
+  const papel = (await db.query('SELECT tables.papel_base($1) papel', [baseId])).rows[0]?.papel as BaseRole | null
+  if (!papel) throw new TablesError('NOT_FOUND', 'Base não encontrada.', 404)
+  if (LEVEL[papel] < LEVEL[needed]) throw new TablesError('FORBIDDEN', `Seu papel nesta base (${papel}) não permite ${NEEDS[needed]}.`, 403)
+  return papel
+}
 
 export async function requireBase(db: Database, session: TablesSession, id: string): Promise<Base> {
-  const result = await db.query('SELECT * FROM tables.bases WHERE empresa_id=$1 AND id=$2 AND excluido_em IS NULL', [session.tenantId, id])
+  const result = await db.query('SELECT *,tables.papel_base(id) papel FROM tables.bases WHERE empresa_id=$1 AND id=$2 AND excluido_em IS NULL', [session.tenantId, id])
   if (!result.rows[0]) throw new TablesError('NOT_FOUND', 'Base não encontrada.', 404)
   return result.rows[0] as Base
 }
 
 export async function requireTable(db: Database, session: TablesSession, id: string, lock: 'read' | 'record' | 'structure' = 'read'): Promise<DataTable> {
   const result = await db.query(`SELECT t.* FROM tables.tabelas t JOIN tables.bases b ON b.empresa_id=t.empresa_id AND b.id=t.base_id WHERE t.empresa_id=$1 AND t.id=$2 AND t.excluido_em IS NULL AND b.excluido_em IS NULL ${lock === 'structure' ? 'FOR UPDATE OF t' : lock === 'record' ? 'FOR SHARE OF t' : ''}`, [session.tenantId, id])
-  if (!result.rows[0]) throw new TablesError('NOT_FOUND', 'Tabela não encontrada.', 404)
+  if (!result.rows[0]) {
+    // Locks need write rights in the base: a table people can read but not change is reported as such.
+    if (lock !== 'read' && (await db.query('SELECT 1 FROM tables.tabelas t JOIN tables.bases b ON b.empresa_id=t.empresa_id AND b.id=t.base_id WHERE t.empresa_id=$1 AND t.id=$2 AND t.excluido_em IS NULL AND b.excluido_em IS NULL', [session.tenantId, id])).rows[0]) throw new TablesError('FORBIDDEN', 'Seu papel nesta base permite apenas consultar.', 403)
+    throw new TablesError('NOT_FOUND', 'Tabela não encontrada.', 404)
+  }
   return result.rows[0] as DataTable
 }
 
@@ -18,7 +32,7 @@ export async function readFields(db: Database, session: TablesSession, tableId: 
   return result.rows as Field[]
 }
 
-export const recordSelect = `SELECT r.id,r.tabela_id,r.versao,r.posicao,r.criado_em,r.atualizado_em,
+export const recordSelect = `SELECT r.id,r.tabela_id,r.versao,r.posicao,r.criado_em,r.atualizado_em,r.numero,r.criado_por,r.atualizado_por,
   r.valores
   || coalesce((SELECT jsonb_object_agg(s.campo_id,s.valores) FROM (SELECT o.campo_id,jsonb_agg(o.opcao_id::text ORDER BY o.opcao_id) valores FROM tables.registro_opcoes o WHERE o.empresa_id=r.empresa_id AND o.registro_id=r.id GROUP BY o.campo_id) s),'{}')
   || coalesce((SELECT jsonb_object_agg(s.campo_id,s.valores) FROM (SELECT u.campo_id,jsonb_agg(u.usuario_id::text ORDER BY u.usuario_id) valores FROM tables.registro_usuarios u WHERE u.empresa_id=r.empresa_id AND u.registro_id=r.id GROUP BY u.campo_id) s),'{}')
@@ -29,7 +43,10 @@ export const recordSelect = `SELECT r.id,r.tabela_id,r.versao,r.posicao,r.criado
 export async function readRecord(db: Database, session: TablesSession, id: string): Promise<DataRecord> {
   const result = await db.query(`${recordSelect} WHERE r.empresa_id=$1 AND r.id=$2 AND r.excluido_em IS NULL`, [session.tenantId, id])
   if (!result.rows[0]) throw new TablesError('NOT_FOUND', 'Registro não encontrado.', 404)
-  return result.rows[0] as DataRecord
+  const record = result.rows[0] as DataRecord
+  // Number, dates, authors, formulas and linked values are filled in on every read.
+  const { withComputed } = await import('./derived')
+  return (await withComputed(db, session, await readFields(db, session, record.tabela_id), [record]))[0]
 }
 
 export async function lockRecord(db: Database, session: TablesSession, id: string, expectedVersion?: number) {

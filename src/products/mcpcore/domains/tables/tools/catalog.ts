@@ -11,7 +11,7 @@ const descriptions:Record<string,string>={
  listar_lixeira:'Itens excluídos que podem ser restaurados.',
  obter_link_anexo:'Link temporário de download de um anexo confirmado.',
  obter_operacao:'Situação de uma operação por operacao_id ou chave_operacao. Use após timeout ou confirmação feita no card, antes de repetir.',
- salvar_base:'Cria (sem base_id) ou edita uma base. Criar executa direto; editar gera prévia.',
+ salvar_base:'Cria (sem base_id) ou edita uma base. Com acesso e/ou membros, muda quem abre a base e o papel de cada pessoa (exige administrador da base). Criar executa direto; editar e compartilhar geram prévia.',
  salvar_tabela:'Cria (base_id) ou renomeia (tabela_id) uma tabela. Criar executa direto; renomear gera prévia.',
  salvar_campo:'Cria (sem campo) ou edita um campo. Criar executa direto; editar gera prévia e preserva o que for omitido.',
  salvar_registros:'Cria ou edita de 1 a 100 registros da mesma tabela, de forma atômica. Um registro novo é criado direto; lotes e edições geram prévia. Em relacoes, definir substitui e adicionar/remover preservam as demais escolhas.',

@@ -5,7 +5,7 @@ import { listRecords, summarizeRecords } from '@/products/tables/server/queries'
 import { readFields, readRecord, requireTable } from '@/products/tables/server/repository'
 import { saveRecord } from '@/products/tables/server/service'
 import { cellSchema, listQuerySchema, TablesError, type DataRecord, type Field, type Values } from '@/products/tables/shared/contracts'
-import { AppsError, VISITOR_FIELD_TYPES, type Manifest, type TableSource } from '../shared/contracts'
+import { AppsError, VISITOR_FIELD_TYPES, VISITOR_READ_ONLY_TYPES, type Manifest, type TableSource } from '../shared/contracts'
 
 // Apps read and write Tables data through the declared sources of their manifest, always with
 // the permissions of the person using the app. Fields, options and people are used by name.
@@ -41,7 +41,7 @@ async function present(db: TablesDatabase, session: TablesSession, fields: Field
   for (const r of records) for (const f of fields) {
     const v = r.valores[f.id]
     if (!Array.isArray(v)) continue
-    if (['usuario', 'usuarios'].includes(f.tipo)) v.forEach(id => people.add(id))
+    if (['usuario', 'usuarios', 'criado_por', 'alterado_por'].includes(f.tipo)) v.forEach(id => people.add(id))
     if (f.tipo === 'vinculo') v.forEach(id => links.add(id))
   }
   const names = new Map<string, string>()
@@ -56,6 +56,8 @@ async function present(db: TablesDatabase, session: TablesSession, fields: Field
     if (f.tipo === 'selecao_multipla') return v.map(option).filter(Boolean)
     if (f.tipo === 'usuario') return names.get(v[0]) ?? null
     if (f.tipo === 'usuarios') return v.map(id => names.get(id) ?? 'Pessoa removida')
+    if (f.tipo === 'criado_por' || f.tipo === 'alterado_por') return names.get(v[0]) ?? null
+    if (f.tipo === 'busca') return v
     if (f.tipo === 'vinculo') return v.map(id => ({ id, titulo: names.get(id) ?? 'Registro indisponível' }))
     return v
   }
@@ -105,7 +107,11 @@ export async function tablesOperation(session: TablesSession, manifest: Manifest
       const metricas: TablesRequest['metricas'] = []
       for (const m of input.metricas) metricas.push({ campo: (await resolver.field(tableId, readable(m.campo))).id, operacao: m.operacao })
       const filtros = input.filtros.map(f => ({ ...f, campo: readable(f.campo) }))
-      return summarizeRecords(db, session, tableId, { busca: input.busca, periodo: input.periodo, metricas, filtros: await resolver.filters(tableId, filtros) as never, agrupar_por: input.agrupar_por ? (await resolver.field(tableId, readable(input.agrupar_por))).id : undefined })
+      const summary = await summarizeRecords(db, session, tableId, { busca: input.busca, periodo: input.periodo, metricas, filtros: await resolver.filters(tableId, filtros) as never, agrupar_por: input.agrupar_por ? (await resolver.field(tableId, readable(input.agrupar_por))).id : undefined })
+      if (!rules) return summary
+      // Visitors get names and counts, never internal IDs of fields, options, people or records.
+      const { agrupado_por, grupos, ...rest } = summary as { agrupado_por?: { nome: string; tipo: string; periodo?: string }; grupos?: { rotulo: string; quantidade: number; metricas: unknown }[] }
+      return { ...rest, ...(agrupado_por ? { agrupado_por: { nome: agrupado_por.nome, tipo: agrupado_por.tipo, ...(agrupado_por.periodo ? { periodo: agrupado_por.periodo } : {}) } } : {}), ...(grupos ? { grupos: grupos.map(g => ({ rotulo: g.rotulo, quantidade: g.quantidade, metricas: g.metricas })) } : {}) }
     }
     if (!input.valores) throw new AppsError('INVALID_DATA', 'Informe os valores do registro.')
     const valores = await resolver.values(tableId, rules ? Object.fromEntries(Object.entries(input.valores).map(([k, v]) => [allowed(rules.criar, k), v])) : input.valores) as Values
@@ -140,6 +146,8 @@ export async function checkSources(session: TablesSession, manifest: Manifest, t
         const field = fields.find(f => normalize(keys.get(f.id)!) === normalize(name))
         throw new AppsError('INVALID_VISITOR_FIELD', field ? `"${source.chave}": o campo "${name}" é do tipo ${field.tipo} e não pode ser aberto a visitantes (pessoas, vínculos e anexos ficam de fora).` : `"${source.chave}": o campo "${name}" não existe na tabela. Campos: ${[...keys.values()].slice(0, 30).join(', ')}.`, 422)
       }
+      const computed = rules.criar.find(f => VISITOR_READ_ONLY_TYPES.includes(f.tipo))
+      if (computed) throw new AppsError('INVALID_VISITOR_FIELD', `"${source.chave}": ${keys.get(computed.id)} é preenchido pelo sistema; deixe-o só em visitantes.ler.`, 422)
       const missing = source.visitantes.criar ? fields.filter(f => f.obrigatorio && !rules.criar.includes(f)) : []
       if (missing.length) throw new AppsError('INVALID_VISITOR_FIELD', `"${source.chave}": inclua em visitantes.criar os campos obrigatórios ${missing.map(f => keys.get(f.id)).join(', ')}.`, 422)
     }

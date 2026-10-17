@@ -6,6 +6,8 @@ import { available, editable, event, getApp, versions } from './repository'
 import { loadBuild, loadPackage } from './service'
 import { storage, type PackageStore } from './storage'
 import { validateStatic } from './publishing'
+import { recordErrors, type RuntimeError } from './errors'
+import { countUse } from './usage'
 
 export type BrowserSession = Session & { browserSession: string }
 const claimsSchema = z.object({ empresa: z.number(), usuario: z.number(), sessao: z.string(), app: uuid, versao: uuid, publicacao: uuid, exp: z.number() }).strict()
@@ -31,6 +33,7 @@ export async function openRuntime(db: Database, s: BrowserSession, appId: string
   const compilado = await loadBuild(db, s, appId, v.id)
   const body = JSON.stringify({ empresa: s.tenantId, usuario: s.sharedUserId, sessao: mac(s.browserSession), app: appId, versao: v.id, publicacao: app.publicacao_id, exp: Date.now() + 30 * 60_000 })
   const encoded = Buffer.from(body).toString('base64url')
+  if (!preview) await countUse(db, s, appId, 'publicado', 'aberturas')
   return { app, pacote, compilado, versaoId: v.id, modo: preview ? 'previa' : 'publicado', token: preview ? null : encoded + '.' + mac(encoded) }
 }
 export const runtimeDataSchema = z.object({ token: z.string().max(4000), colecao: z.string().regex(/^[a-z][a-z0-9_]{0,49}$/), operacao: z.enum(['listar', 'salvar', 'excluir']), pagina: z.number().int().min(1).max(10000).default(1), registro: recordSchema.optional(), id: uuid.optional(), expectedVersion: z.number().int().positive().optional() }).strict()
@@ -62,6 +65,15 @@ export async function dataOperation(db: Database, s: BrowserSession, appId: stri
   } else result = await db.query('INSERT INTO apps.registros(empresa_id,app_id,colecao_id,dados,criado_por,atualizado_por) VALUES($1,$2,$3,$4::jsonb,$5,$5) RETURNING id,dados,versao_concorrencia', [s.tenantId, appId, collection.id, JSON.stringify(data), s.sharedUserId])
   if (!result.rows[0]) throw new AppsError('VERSION_CONFLICT', 'O registro mudou. Recarregue os dados.', 409)
   await event(db, s, appId, 'registro_salvo'); return { registro: result.rows[0] }
+}
+
+/** Errors seen in the browser: in preview for the version being edited, in the published app for the version of the token. */
+export async function reportRuntimeErrors(db: Database, s: BrowserSession, appId: string, input: { token?: string; versao?: string; erros: RuntimeError[] }) {
+  await getApp(db, s, appId)
+  if (input.token) { const c = readToken(input.token, s, appId); return recordErrors(db, s, appId, c.versao, 'publicado', input.erros) }
+  const version = (await versions(db, s, appId)).find(v => v.id === input.versao)
+  if (!version) throw new AppsError('NOT_FOUND', 'Versão não encontrada.', 404)
+  return recordErrors(db, s, appId, version.id, 'previa', input.erros)
 }
 
 /** Manifest that authorizes Tables access: the published version (token) or, in preview, the version being edited. */

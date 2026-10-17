@@ -1,7 +1,7 @@
 import { randomUUID } from 'node:crypto'
 import { z } from 'zod'
 import type { Database, TablesSession } from './database'
-import { lockRecord, readRecord, requireTable } from './repository'
+import { lockRecord, readRecord, requireRole, requireTable } from './repository'
 import { TablesError } from '../shared/contracts'
 
 export const attachmentInputSchema = z.object({ nome: z.string().trim().min(1).max(200), tamanho: z.number().int().positive().max(50 * 1024 * 1024), mime_type: z.string().min(1).max(150), campo_id: z.string().uuid(), expectedVersion: z.number().int().positive() }).strict()
@@ -47,7 +47,7 @@ function pathFor(path: string) {
 export async function prepareAttachment(db: Database, session: TablesSession, recordId: string, input: z.infer<typeof attachmentInputSchema>) {
   configuration()
   const record = await readRecord(db, session, recordId)
-  const table = await requireTable(db, session, record.tabela_id)
+  const table = await requireTable(db, session, record.tabela_id); await requireRole(db, session, table.base_id, 'editor')
   const id = randomUUID(), path = `${session.tenantId}/${table.base_id}/${recordId}/${id}`
   await db.query('INSERT INTO tables.anexos(id,empresa_id,tabela_id,registro_id,campo_id,caminho,nome,mime_type,tamanho,criado_por) VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10)', [id, session.tenantId, table.id, recordId, input.campo_id, path, input.nome, input.mime_type, input.tamanho, session.sharedUserId])
   const { response, base } = await storageRequest(`object/upload/sign/${pathFor(path)}`, { method: 'POST', body: '{}' })
@@ -61,7 +61,8 @@ export async function attachmentAction(db: Database, session: TablesSession, id:
   const file = (await db.query("SELECT * FROM tables.anexos WHERE empresa_id=$1 AND id=$2 AND estado<>'excluido'", [session.tenantId, id])).rows[0]
   if (!file) throw new TablesError('NOT_FOUND', 'Arquivo não encontrado.', 404)
   const record = await readRecord(db, session, file.registro_id)
-  await requireTable(db, session, record.tabela_id)
+  const fileTable = await requireTable(db, session, record.tabela_id)
+  if (action !== 'download') await requireRole(db, session, fileTable.base_id, 'editor')
   const path = pathFor(file.caminho)
   if (action === 'download') {
     if (file.estado !== 'confirmado') throw new TablesError('PENDING_FILE', 'O envio deste arquivo ainda não terminou.')

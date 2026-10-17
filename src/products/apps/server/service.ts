@@ -6,6 +6,8 @@ import type { Database, Session } from './database'
 import { hash, storage, type PackageStore } from './storage'
 import { buildReactApp } from './build'
 import { appSelect, available, bump, editable, event, expected, getApp, publisher, versions } from './repository'
+import { clearPreviewErrors } from './errors'
+import { usageOf } from './usage'
 
 export async function catalog(db: Database, s: Session, search: string, filter: string, page: number, sort: string): Promise<Catalog> {
   const where = `a.empresa_id=$1 AND a.nome ILIKE $3 ESCAPE '\\'`
@@ -21,7 +23,7 @@ export async function catalog(db: Database, s: Session, search: string, filter: 
   const apps = (await db.query(`WITH catalogo AS (${appSelect} WHERE ${where}) SELECT * FROM catalogo WHERE ${condition} ORDER BY ${sort === 'nome' ? 'nome ASC' : 'atualizado_em DESC'},id LIMIT 12 OFFSET $4`, [...args, (page - 1) * 12])).rows
   return { apps, total: rows[filter] ?? rows.todos, pagina: page, contadores: rows, podeEditar: s.role !== 'viewer', podePublicar: ['owner', 'admin'].includes(s.role) } as Catalog
 }
-export async function bundle(db: Database, s: Session, id: string): Promise<Bundle> { return { app: await getApp(db, s, id), versoes: await versions(db, s, id), podeEditar: s.role !== 'viewer', podePublicar: ['owner', 'admin'].includes(s.role) } }
+export async function bundle(db: Database, s: Session, id: string): Promise<Bundle> { return { app: await getApp(db, s, id), versoes: await versions(db, s, id), podeEditar: s.role !== 'viewer', podePublicar: ['owner', 'admin'].includes(s.role), uso: await usageOf(db, s, id) } }
 
 // Each file is stored once per company by content hash; a version lists its files. Saving a
 // draft only writes contents that changed, inside the same database transaction.
@@ -44,6 +46,7 @@ export async function saveFiles(db: Database, s: Session, appId: string, version
     catch (error) { if (!(error instanceof AppsError) || error.code !== 'BUILD_FAILED') throw error; build = { estado: 'erro', erro: error.message, js: null, css: null } }
   }
   await db.query('UPDATE apps.versoes SET build_estado=$4,build_erro=$5,build_js=$6,build_css=$7 WHERE empresa_id=$1 AND app_id=$2 AND id=$3', [s.tenantId, appId, versionId, build.estado, build.erro, build.js, build.css])
+  await clearPreviewErrors(db, s, versionId)
   return packageHash(p)
 }
 /** Compiled JS and CSS of a React version, or null for HTML apps. */
