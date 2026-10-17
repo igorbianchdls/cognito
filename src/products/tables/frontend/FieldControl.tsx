@@ -1,7 +1,7 @@
 'use client'
 
-import { useState } from 'react'
-import { CheckSquare, CalendarDays, Hash, Link2, ListFilter, Type, Users, Paperclip, AtSign, Globe } from 'lucide-react'
+import { useEffect, useId, useState, type KeyboardEvent, type ReactNode } from 'react'
+import { Check, CheckSquare, CalendarDays, Hash, Link2, ListFilter, Type, Users, Paperclip, AtSign, Globe, X } from 'lucide-react'
 import type { CellValue, DataRecord, Field, Member, RecordPage, TableBundle } from '../shared/contracts'
 import { recordTitle } from '../shared/contracts'
 import { useResource, type TablesApi } from './client'
@@ -14,9 +14,10 @@ export function FieldIcon({ type }: { type: Field['tipo'] }) {
 const idsOf = (value: CellValue | undefined) => Array.isArray(value) ? value : value ? [String(value)] : []
 
 export function FieldControl({ field, value, onChange, members, api, disabled, autoFocus }: { field: Field; value: CellValue | undefined; onChange: (v: CellValue) => void; members: Member[]; api: TablesApi; disabled?: boolean; autoFocus?: boolean }) {
-  const [search, setSearch] = useState('')
+  const [search, setSearch] = useState(''), [query, setQuery] = useState('')
+  useEffect(() => { const timer = setTimeout(() => setQuery(search), 250); return () => clearTimeout(timer) }, [search])
   const target = useResource<TableBundle>(api, field.tipo === 'vinculo' && field.tabela_destino_id ? `/tabelas/${field.tabela_destino_id}` : null)
-  const links = useResource<RecordPage>(api, field.tipo === 'vinculo' && field.tabela_destino_id ? `/tabelas/${field.tabela_destino_id}/registros?tamanho=100&busca=${encodeURIComponent(search)}` : null)
+  const links = useResource<RecordPage>(api, field.tipo === 'vinculo' && field.tabela_destino_id ? `/tabelas/${field.tabela_destino_id}/registros?tamanho=100&busca=${encodeURIComponent(query)}` : null)
   const label = field.nome
   if (field.tipo === 'anexo') return <span className="tables-muted">Envie arquivos na seção de anexos do registro.</span>
   if (field.tipo === 'checkbox') return <input aria-label={label} type="checkbox" checked={value === true} disabled={disabled} onChange={e => onChange(e.target.checked)} autoFocus={autoFocus} />
@@ -24,12 +25,14 @@ export function FieldControl({ field, value, onChange, members, api, disabled, a
     const multiple = ['selecao_multipla', 'usuarios', 'vinculo'].includes(field.tipo)
     const options = ['selecao', 'selecao_multipla'].includes(field.tipo) ? field.opcoes.map(o => ({ id: o.id, nome: o.nome, disabled: o.arquivado })) : ['usuario', 'usuarios'].includes(field.tipo) ? members : (links.data?.registros ?? []).map(r => ({ id: r.id, nome: recordTitle(r, target.data?.campos ?? [], target.data?.tabela.campo_principal_id) }))
     const selected = idsOf(value)
+    if (multiple) {
+      const remote = field.tipo === 'vinculo' ? { value: search, onChange: setSearch, loading: links.loading, error: links.error, truncated: (links.data?.total ?? 0) > (links.data?.registros.length ?? 0) } : undefined
+      return <ChoicePicker label={label} options={options} selected={selected} disabled={disabled} autoFocus={autoFocus} unknownLabel={field.tipo === 'vinculo' ? 'Registro vinculado' : 'Item indisponível'} remote={remote} onChange={onChange} />
+    }
     const missing = selected.filter(id => !options.some(o => o.id === id))
-    return <div className="tables-control-stack">{field.tipo === 'vinculo' && <input aria-label={`Buscar em ${field.nome}`} placeholder="Buscar registros…" value={search} onChange={e => setSearch(e.target.value)} />}
-      <select aria-label={label} multiple={multiple} size={multiple ? Math.min(5, Math.max(2, options.length + missing.length)) : undefined} value={multiple ? selected : selected[0] ?? ''} disabled={disabled} autoFocus={autoFocus} onChange={e => onChange(multiple ? [...e.target.selectedOptions].map(o => o.value) : e.target.value ? [e.target.value] : [])}>
-        {!multiple && <option value="">Sem seleção</option>}{missing.map(id => <option key={id} value={id}>Item indisponível ({id.slice(0, 6)})</option>)}{options.map(o => <option key={o.id} value={o.id} disabled={'disabled' in o && Boolean(o.disabled)}>{o.nome}</option>)}
-      </select>{multiple && <small className="tables-muted">Use Ctrl ou ⌘ para selecionar vários.</small>}{links.error && <small role="alert">{links.error}</small>}
-    </div>
+    return <select aria-label={label} value={selected[0] ?? ''} disabled={disabled} autoFocus={autoFocus} onChange={e => onChange(e.target.value ? [e.target.value] : [])}>
+      <option value="">Sem seleção</option>{missing.map(id => <option key={id} value={id}>Item indisponível ({id.slice(0, 6)})</option>)}{options.map(o => <option key={o.id} value={o.id} disabled={'disabled' in o && Boolean(o.disabled)}>{o.nome}</option>)}
+    </select>
   }
   if (field.tipo === 'texto_longo') return <textarea aria-label={label} value={String(value ?? '')} disabled={disabled} autoFocus={autoFocus} rows={3} onChange={e => onChange(e.target.value || null)} />
   const type = field.tipo === 'data' ? 'date' : field.tipo === 'data_hora' ? 'datetime-local' : field.tipo === 'numero' ? 'number' : field.tipo === 'email' ? 'email' : field.tipo === 'url' ? 'url' : 'text'
@@ -62,4 +65,54 @@ export function CellValueView({ field, value, members }: { field: Field; value?:
 export function RecordCard({ record, bundle, onOpen }: { record: DataRecord; bundle: TableBundle; onOpen: () => void }) {
   const secondary = bundle.campos.filter(f => f.id !== bundle.tabela.campo_principal_id && record.valores[f.id] != null).slice(0, 3)
   return <button type="button" className="tables-record-card" onClick={onOpen}><strong>{recordTitle(record, bundle.campos, bundle.tabela.campo_principal_id)}</strong>{secondary.map(field => <span key={field.id} className="tables-card-line"><FieldIcon type={field.tipo} /><CellValueView field={field} value={record.valores[field.id]} members={bundle.usuarios} /></span>)}</button>
+}
+
+type Choice = { id: string; nome: string; disabled?: boolean }
+type RemoteSearch = { value: string; onChange: (value: string) => void; loading: boolean; error?: string; truncated: boolean }
+
+/** Multiple choice with chips and a searchable list: works with mouse, touch and keyboard (↑ ↓ Enter). */
+export function ChoicePicker({ label, options, selected, onChange, disabled, autoFocus, remote, unknownLabel }: { label: string; options: Choice[]; selected: string[]; onChange: (ids: string[]) => void; disabled?: boolean; autoFocus?: boolean; remote?: RemoteSearch; unknownLabel: string }) {
+  const [filter, setFilter] = useState(''), [active, setActive] = useState(0)
+  const listId = useId()
+  // Linked records chosen from an earlier search keep their names after the search changes.
+  const [picked, setPicked] = useState<Record<string, string>>({})
+  const names = new Map([...Object.entries(picked), ...options.map(o => [o.id, o.nome] as [string, string])])
+  const term = remote ? remote.value : filter
+  const normalized = term.trim().toLocaleLowerCase('pt-BR')
+  const visible = remote || !normalized ? options : options.filter(o => o.nome.toLocaleLowerCase('pt-BR').includes(normalized))
+  const current = Math.min(active, Math.max(0, visible.length - 1))
+  const toggle = (option: Choice) => {
+    if (disabled || option.disabled && !selected.includes(option.id)) return
+    setPicked(p => ({ ...p, [option.id]: option.nome }))
+    onChange(selected.includes(option.id) ? selected.filter(id => id !== option.id) : [...selected, option.id])
+  }
+  function onKeyDown(event: KeyboardEvent<HTMLInputElement>) {
+    if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
+      event.preventDefault()
+      setActive(Math.max(0, Math.min(visible.length - 1, current + (event.key === 'ArrowDown' ? 1 : -1))))
+    } else if (event.key === 'Enter' && !event.ctrlKey && !event.metaKey) {
+      event.preventDefault()
+      if (visible[current]) toggle(visible[current])
+    } else if (event.key === 'Backspace' && !term && selected.length) onChange(selected.slice(0, -1))
+  }
+  return <div className="tables-picker">
+    <div className="tables-picker-chips" aria-live="polite">
+      {selected.map(id => { const name = names.get(id) ?? unknownLabel; return <span key={id} className="tables-chip">{name}<button type="button" aria-label={`Remover ${name}`} disabled={disabled} onClick={() => onChange(selected.filter(x => x !== id))}><X size={12} /></button></span> })}
+      {!selected.length && <span className="tables-muted">Nada selecionado</span>}
+    </div>
+    <input type="search" role="combobox" aria-label={label} aria-expanded="true" aria-controls={listId} aria-autocomplete="list" aria-activedescendant={visible[current] ? `${listId}-${current}` : undefined} placeholder={remote ? 'Buscar registros…' : 'Buscar opções…'} value={term} disabled={disabled} autoFocus={autoFocus} onKeyDown={onKeyDown} onChange={e => { setActive(0); if (remote) remote.onChange(e.target.value); else setFilter(e.target.value) }} />
+    <ul id={listId} role="listbox" aria-multiselectable="true" aria-label={`Opções de ${label}`} className="tables-picker-list">
+      {visible.map((option, index) => { const checked = selected.includes(option.id); return <li key={option.id} id={`${listId}-${index}`} role="option" aria-selected={checked} aria-disabled={Boolean(disabled || option.disabled && !checked)} className={index === current ? 'is-active' : ''} onMouseDown={e => e.preventDefault()} onMouseEnter={() => setActive(index)} onClick={() => toggle(option)}><span className="tables-picker-check" aria-hidden="true">{checked && <Check size={12} />}</span>{option.nome}</li> })}
+      {!visible.length && <li role="presentation" className="tables-muted">{remote?.loading ? 'Buscando…' : 'Nenhum resultado'}</li>}
+    </ul>
+    {remote?.truncated && <small className="tables-muted">Mostrando os primeiros resultados. Refine a busca para encontrar outros.</small>}
+    {remote?.error && <small role="alert">{remote.error}</small>}
+  </div>
+}
+
+/** Destructive actions ask for a second click instead of a blocking browser dialog. */
+export function ConfirmButton({ children, confirmLabel, onConfirm, disabled, className = 'tables-danger' }: { children: ReactNode; confirmLabel: string; onConfirm: () => void; disabled?: boolean; className?: string }) {
+  const [armed, setArmed] = useState(false)
+  useEffect(() => { if (!armed) return; const timer = setTimeout(() => setArmed(false), 5000); return () => clearTimeout(timer) }, [armed])
+  return <button type="button" className={`${className} ${armed ? 'is-armed' : ''}`} disabled={disabled} onClick={() => { if (!armed) return setArmed(true); setArmed(false); onConfirm() }}>{armed ? confirmLabel : children}</button>
 }

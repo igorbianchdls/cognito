@@ -4,7 +4,7 @@ import { AppsError, manifestSchema, metadataSchema, validatePackage, type AppPac
 import { starter } from '../shared/starter'
 import type { Database, Session } from './database'
 import { storage, type PackageStore } from './storage'
-import { appSelect, available, bump, editable, event, expected, getApp, versions } from './repository'
+import { appSelect, available, bump, editable, event, expected, getApp, publisher, versions } from './repository'
 
 export async function catalog(db: Database, s: Session, search: string, filter: string, page: number, sort: string): Promise<Catalog> {
   const where = `a.empresa_id=$1 AND a.nome ILIKE $3 ESCAPE '\\'`
@@ -18,7 +18,7 @@ export async function catalog(db: Database, s: Session, search: string, filter: 
    count(*) FILTER(WHERE excluido_em IS NULL AND arquivado_em IS NULL AND favorito)::int favoritos FROM catalogo`, args)).rows[0]
   const condition = filter === 'lixeira' ? 'excluido_em IS NOT NULL' : `excluido_em IS NULL AND ${filter === 'arquivados' ? 'arquivado_em IS NOT NULL' : 'arquivado_em IS NULL'}${filter === 'publicados' ? ' AND publicacao_id IS NOT NULL' : filter === 'construcao' ? ' AND publicacao_id IS NULL' : filter === 'favoritos' ? ' AND favorito' : ''}`
   const apps = (await db.query(`WITH catalogo AS (${appSelect} WHERE ${where}) SELECT * FROM catalogo WHERE ${condition} ORDER BY ${sort === 'nome' ? 'nome ASC' : 'atualizado_em DESC'},id LIMIT 12 OFFSET $4`, [...args, (page - 1) * 12])).rows
-  return { apps, total: rows[filter] ?? rows.todos, pagina: page, contadores: rows, podeEditar: s.role !== 'viewer' } as Catalog
+  return { apps, total: rows[filter] ?? rows.todos, pagina: page, contadores: rows, podeEditar: s.role !== 'viewer', podePublicar: ['owner', 'admin'].includes(s.role) } as Catalog
 }
 export async function bundle(db: Database, s: Session, id: string): Promise<Bundle> { return { app: await getApp(db, s, id), versoes: await versions(db, s, id), podeEditar: s.role !== 'viewer', podePublicar: ['owner', 'admin'].includes(s.role) } }
 
@@ -66,6 +66,8 @@ export async function metadata(db: Database, s: Session, id: string, revision: n
 }
 export async function lifecycle(db: Database, s: Session, id: string, revision: number, action: string) {
   editable(s); const app = await getApp(db, s, id, true, true); expected(app, revision)
+  // Arquivar ou excluir um app no ar também o retira de publicação: exige a permissão de publicar.
+  if ((action === 'arquivar' || action === 'excluir') && app.publicacao_id) publisher(s)
   if (action === 'arquivar' || action === 'excluir') await db.query("UPDATE apps.publicacoes SET estado='encerrada',encerrado_em=now() WHERE empresa_id=$1 AND app_id=$2 AND estado='ativa'", [s.tenantId, id])
   if (action === 'arquivar') await db.query('UPDATE apps.apps SET arquivado_em=now() WHERE empresa_id=$1 AND id=$2', [s.tenantId, id])
   else if (action === 'excluir') await db.query('UPDATE apps.apps SET excluido_em=now() WHERE empresa_id=$1 AND id=$2', [s.tenantId, id])

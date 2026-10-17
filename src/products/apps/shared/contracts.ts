@@ -20,7 +20,7 @@ export type AppPackage = { manifesto: Manifest; arquivos: AppFile[] }
 export type App = { id: string; nome: string; descricao: string; cor: string; icone: string; versao_concorrencia: number; atualizado_em: string; arquivado_em: string | null; excluido_em: string | null; favorito: boolean; publicacao_id: string | null; versao_publicada_id: string | null; tem_rascunho: boolean }
 export type Version = { id: string; numero: number; estado: 'rascunho' | 'pronta'; manifesto: Manifest; hash_conteudo: string | null; criado_em: string; selado_em: string | null }
 export type Bundle = { app: App; versoes: Version[]; podeEditar: boolean; podePublicar: boolean }
-export type Catalog = { apps: App[]; total: number; pagina: number; contadores: Record<string, number>; podeEditar: boolean }
+export type Catalog = { apps: App[]; total: number; pagina: number; contadores: Record<string, number>; podeEditar: boolean; podePublicar: boolean }
 export type DataRecord = { id: string; dados: Record<string, unknown>; versao_concorrencia: number }
 export const recordSchema = z.object({ id: uuid.optional(), expectedVersion: z.number().int().positive().optional(), dados: z.record(z.unknown()) }).strict()
 

@@ -79,7 +79,13 @@ async function main() {
   await check('Duplication excludes runtime records; archive/trash/recover revoke old sessions', async () => {
     const copy = await run(s, db => duplicate(db, s, app.id, store)); assert(copy.id !== app.id)
     assert.equal((await db.query<{ n: number }>('SELECT count(*)::int n FROM apps.registros WHERE app_id=$1', [copy.id])).rows[0].n, 0)
-    let a = await run(s, db => getApp(db, s, app.id)); await run(s, db => lifecycle(db, s, app.id, a.versao_concorrencia, 'arquivar'))
+    const member = { ...s, sharedUserId: 3, role: 'member' as const }
+    let a = await run(s, db => getApp(db, s, app.id))
+    await assert.rejects(() => run(member, db => lifecycle(db, member, app.id, a.versao_concorrencia, 'arquivar')), /administradores/)
+    await assert.rejects(() => run(member, db => lifecycle(db, member, app.id, a.versao_concorrencia, 'excluir')), /administradores/)
+    let c = await run(s, db => getApp(db, s, copy.id)); await run(member, db => lifecycle(db, member, copy.id, c.versao_concorrencia, 'arquivar'))
+    c = await run(s, db => getApp(db, s, copy.id, true, true)); await run(member, db => lifecycle(db, member, copy.id, c.versao_concorrencia, 'restaurar'))
+    await run(s, db => lifecycle(db, s, app.id, a.versao_concorrencia, 'arquivar'))
     await assert.rejects(() => run(s, db => dataOperation(db, s, app.id, { token: runtime.token!, colecao: 'itens', operacao: 'listar', pagina: 1 })))
     a = await run(s, db => getApp(db, s, app.id)); await run(s, db => lifecycle(db, s, app.id, a.versao_concorrencia, 'excluir'))
     await assert.rejects(() => run(s, db => getApp(db, s, app.id)))
