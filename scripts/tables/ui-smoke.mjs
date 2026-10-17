@@ -84,7 +84,7 @@ try {
   const base = `http://127.0.0.1:${server.address().port}`
   const executable = [process.env.CHROME_PATH, 'C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe', 'C:/Program Files/Google/Chrome/Application/chrome.exe', '/usr/bin/google-chrome', '/usr/bin/chromium-browser', '/usr/bin/chromium'].find(p => p && existsSync(p))
   assert(executable)
-  browser = await chromium.launch({ executablePath: executable, headless: true, args: ['--disable-gpu', '--no-first-run'] })
+  browser = await chromium.launch({ executablePath: executable, headless: true, args: ['--disable-gpu', '--no-first-run', ...(process.platform === 'linux' ? ['--no-sandbox'] : [])] })
   const page = await browser.newPage({ viewport: { width: 1440, height: 960 } })
   page.setDefaultTimeout(20000)
   page.on('pageerror', error => errors.push(error.message))

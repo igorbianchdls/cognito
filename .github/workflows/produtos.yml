@@ -32,7 +32,16 @@ jobs:
       - name: Interface (Tables e Apps)
         env:
           CHROME_PATH: /usr/bin/google-chrome
-        run: pnpm test:produtos-ui
+        shell: bash
+        run: |
+          set -o pipefail
+          pnpm test:produtos-ui 2>&1 | tee interface.log
+      # The reason of a failure becomes an annotation, readable on the run page without opening the log.
+      - name: Motivo da falha
+        if: failure()
+        shell: bash
+        run: |
+          for f in interface.log; do [ -f "$f" ] && echo "::error title=Interface::$(grep -E 'Error|Assertion|Timeout|expected|actual|Passed' "$f" | tail -12 | tr '\n' ' ' | cut -c1-1500)"; done; true
       - name: Capturas da interface
         if: failure()
         uses: actions/upload-artifact@v4
