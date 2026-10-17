@@ -11,7 +11,8 @@ const nextConfig: NextConfig = {
   serverExternalPackages: ['playwright-core', '@sparticuz/chromium', 'esbuild-wasm'],
   outputFileTracingIncludes: {
     '/*': ['./certificates/supabase-prod-ca-2021.crt'],
-    '/api/apps/\\[\\[\\.\\.\\.path\\]\\]': ['./node_modules/esbuild-wasm/**/*', './node_modules/.pnpm/esbuild-wasm@*/node_modules/esbuild-wasm/**/*'],
+    // Real pnpm folder only: Vercel rejects files included through the node_modules symlink.
+    '/api/apps/\\[\\[\\.\\.\\.path\\]\\]': ['./node_modules/.pnpm/esbuild-wasm@*/node_modules/esbuild-wasm/**/*'],
   },
   async redirects() {
     return [
