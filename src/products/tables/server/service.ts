@@ -214,7 +214,7 @@ export async function recordDetail(db: Database, session: TablesSession, id: str
   const registro = await readRecord(db, session, id)
   await requireTable(db, session, registro.tabela_id)
   const comentarios = (await db.query("SELECT c.id,c.texto,c.criado_em,coalesce(m.nome,'Usuário removido') autor FROM tables.comentarios c LEFT JOIN tables.membros() m ON m.id=c.autor_id::text WHERE c.empresa_id=$1 AND c.registro_id=$2 AND c.excluido_em IS NULL ORDER BY c.criado_em,c.id", [session.tenantId, id])).rows
-  const historico = (await db.query("SELECT * FROM (SELECT DISTINCT ON(h.operacao_id) h.id,h.acao,h.entidade,h.criado_em,h.operacao_id,coalesce(m.nome,'Usuário removido') autor FROM tables.historico h LEFT JOIN tables.membros() m ON m.id=h.autor_id::text WHERE h.empresa_id=$1 AND h.registro_id=$2 ORDER BY h.operacao_id,h.criado_em DESC,h.id) operacoes ORDER BY criado_em DESC,id LIMIT 100", [session.tenantId, id])).rows
+  const historico = (await db.query("SELECT * FROM (SELECT DISTINCT ON(h.operacao_id) h.id,h.acao,h.entidade,h.criado_em,h.operacao_id,coalesce(m.nome,'Usuário removido') autor FROM tables.historico h LEFT JOIN tables.membros() m ON m.id=h.autor_id::text WHERE h.empresa_id=$1 AND h.registro_id=$2 ORDER BY h.operacao_id,(h.acao='INSERT') DESC,h.criado_em DESC,h.id) operacoes ORDER BY criado_em DESC,id LIMIT 100", [session.tenantId, id])).rows
   const anexos = (await db.query("SELECT id,campo_id,nome,mime_type,tamanho::float8,estado FROM tables.anexos WHERE empresa_id=$1 AND registro_id=$2 AND estado='confirmado' ORDER BY criado_em,id", [session.tenantId, id])).rows
   return { registro, comentarios, historico, anexos } as RecordDetail
 }

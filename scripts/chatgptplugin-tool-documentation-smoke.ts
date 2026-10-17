@@ -1,5 +1,6 @@
 import { localTools as whatsappLocalTools } from '../src/products/mcpcore/domains/whatsapp/tools/catalog'
 import {tablesTools} from '../src/products/mcpcore/domains/tables/tools/catalog'
+import {appsTools} from '../src/products/mcpcore/domains/apps/tools/catalog'
 import assert from 'node:assert/strict'
 import {z} from 'zod'
 import {handlePluginRequest} from '../src/products/chatgptplugin/mcp/handleRequest'
@@ -53,8 +54,8 @@ function sameValidation(schema:z.ZodTypeAny,name:string,cases:unknown[]) {
 }
 async function main() {
  const legacy=await catalog(false),modern=await catalog(true)
- const expected=[...whatsappLocalTools.map(t=>t.name),...tablesTools.map(t=>t.name),...tools.map(t=>t.name),...actionTools.map(t=>t.name),'meu_acesso','abrir_painel','ler_configuracoes','atualizar_configuracoes','search_mentions'].sort()
- assert.equal(expected.length,62+tablesTools.length+whatsappLocalTools.length);assert.equal(new Set(expected).size,62+tablesTools.length+whatsappLocalTools.length)
+ const expected=[...whatsappLocalTools.map(t=>t.name),...tablesTools.map(t=>t.name),...appsTools.map(t=>t.name),...tools.map(t=>t.name),...actionTools.map(t=>t.name),'meu_acesso','abrir_painel','ler_configuracoes','atualizar_configuracoes','search_mentions'].sort()
+ assert.equal(expected.length,62+tablesTools.length+appsTools.length+whatsappLocalTools.length);assert.equal(new Set(expected).size,62+tablesTools.length+appsTools.length+whatsappLocalTools.length)
  let documentedParameters=0
  for(const entries of [legacy,modern]) {
   assert.deepEqual(entries.map(t=>t.name).sort(),expected)

@@ -4,6 +4,7 @@ const commands = [
  ['types', ['node_modules/typescript/bin/tsc', '-p', 'tsconfig.apps.json', '--pretty', 'false']],
  ['lint', ['node_modules/eslint/bin/eslint.js', 'src/products/apps', 'src/app/apps', 'src/app/api/apps', 'scripts/apps', 'src/proxy.ts', 'src/components/navigation/SidebarShadcn.tsx']],
  ['apps-domain', ['--import', 'tsx', 'scripts/apps/smoke.ts']],
+ ['apps-mcp', ['--import', 'tsx', 'scripts/apps/mcp-smoke.ts']],
  ['browser', ['--import', 'tsx', 'scripts/apps/ui-smoke.mjs']],
  ['tables', ['scripts/tables/smoke.mjs']],
  ['whatsapp', ['--import', 'tsx', 'scripts/whatsapp/smoke.ts']],

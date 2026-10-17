@@ -81,7 +81,7 @@ async function main(){try {
   assert(created.direct);record=created.result.resultado.registros[0].id
   const rows=await ok('consultar_registros',{tabela_id:table,filtros:[{campo:'Nome do projeto',operador:'contains',valor:'Portal'},{campo:'Status',operador:'eq',valor:'Em andamento'}],campos:['Nome do projeto','Status','Responsável','Orçamento']})
   assert.equal(rows.total,1);assert.equal(rows.somas[money],'1000.15')
-  assert.equal(rows.registros[0].exibicao['Status'],'Em andamento');assert.equal(rows.registros[0].exibicao['Responsável'],'Ana');assert(rows.colunas_omitidas.includes('Prazo'))
+  assert.equal(rows.registros[0].exibicao['Status'],'Em andamento');assert(!('valores' in rows.registros[0]),'Queries return readable values only');assert.equal(rows.registros[0].exibicao['Responsável'],'Ana');assert(rows.colunas_omitidas.includes('Prazo'))
   const unknown=await call('salvar_registros',{chave_operacao:randomUUID(),dados:{tabela_id:table,registros:[{valores:{'Status':'Arquivado'}}]}})
   assert.equal(unknown.code,'UNKNOWN_REFERENCE');assert.match(unknown.message,/Em andamento/)
  })
@@ -95,7 +95,7 @@ async function main(){try {
  })
  await check('Partial field and view edits preserve configuration',async()=>{
   const before=await ok('obter_tabela',{tabela_id:table,campo:'Status'});const options=before.itens[0].opcoes
-  await change('salvar_campo',{tabela_id:table,campo:'Status',nome:'Etapa'})
+  const renamed=await change('salvar_campo',{tabela_id:table,campo:'Status',nome:'Etapa'});assert.equal(renamed.preview.previa.alteracoes.campo_id,'Status','Previews show names instead of IDs')
   assert.deepEqual((await ok('obter_tabela',{tabela_id:table,campo:statusField})).itens[0].opcoes,options)
   const old=await ok('obter_tabela',{tabela_id:table,visualizacao:'Kanban'})
   const edited=await change('salvar_visualizacao',{tabela_id:table,acao:'editar',visualizacao:'kanban',nome:'Painel'});assert(!edited.direct)
@@ -115,6 +115,7 @@ async function main(){try {
   const created=await change('salvar_registros',{tabela_id:table,registros:[{valores:{}},{valores:{}}]});assert(!created.direct);assert.equal(created.result.resultado.quantidade,2)
   const duplicated=await call('salvar_registros',{chave_operacao:randomUUID(),dados:{tabela_id:table,registros:[{registro_id:record,valores:{}},{registro_id:record,valores:{}}]}});assert(duplicated.isError)
   const p=await ok('salvar_registros',{chave_operacao:randomUUID(),dados:{tabela_id:table,registros:[{registro_id:record,valores:{}}]}})
+  assert(p.previa.referencias.some((r:{tipo:string;nome:string})=>r.tipo==='registro'&&r.nome==='Portal'),'Edit previews name the record')
   await change('salvar_registros',{tabela_id:table,registros:[{registro_id:record,valores:{}}]})
   assert.equal((await call('salvar_registros',{rascunho_id:p.rascunho_id})).code,'STALE_PROPOSAL')
  })
@@ -122,6 +123,7 @@ async function main(){try {
   const comment=await change('comentar',{registro_id:record,texto:'Revisado'});assert(comment.direct)
   assert.equal((await ok('listar_atividade',{registro_id:record,tamanho:1})).itens[0].texto,'Revisado')
   assert((await ok('listar_atividade',{registro_id:record,tipo:'historico',tamanho:1})).tem_mais)
+  assert.equal((await ok('listar_atividade',{registro_id:record,tipo:'historico',tamanho:20})).itens.at(-1).acao,'INSERT','Creation stays INSERT in the history')
   const p=await ok('salvar_base',{chave_operacao:randomUUID(),dados:{base_id:base,nome:'Novo nome'}})
   assert.equal((await call('obter_operacao',{operacao_id:p.rascunho_id},principal,{...config,integration:'claude'})).code,'NOT_FOUND')
   assert.equal((await ok('cancelar_operacao',{operacao_id:p.rascunho_id})).status,'cancelled')

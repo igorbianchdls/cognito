@@ -2,6 +2,7 @@ import { localTools as whatsappLocalTools } from '../src/products/mcpcore/domain
 import {tools as erpTools} from '../src/products/mcpcore/tools/catalog'
 import {actionTools as erpActions} from '../src/products/mcpcore/actions/catalog'
 import {tablesTools} from '../src/products/mcpcore/domains/tables/tools/catalog'
+import {appsTools} from '../src/products/mcpcore/domains/apps/tools/catalog'
 import assert from 'node:assert/strict'
 import { randomUUID } from 'node:crypto'
 import { handleClaudeRequest } from '../src/products/claudeplugin/mcp/handleRequest'
@@ -67,9 +68,13 @@ async function main() {
     const {body}=await rpc('tools/list')
     type Listed={name:string;title?:string;description:string;annotations:Record<string,boolean>;outputSchema?:object;_meta?:{ui?:{resourceUri?:string}}}
     const listed=body.result.tools as Listed[]
-    assert.equal(listed.length,erpTools.length+erpActions.length+1+tablesTools.length+whatsappLocalTools.length)
+    assert.equal(listed.length,erpTools.length+erpActions.length+1+tablesTools.length+appsTools.length+whatsappLocalTools.length)
     for (const absent of ['abrir_painel','ler_configuracoes','atualizar_configuracoes','search_mentions']) assert(!listed.some(t=>t.name===absent),absent)
-    for (const tool of listed.filter(t=>!t.name.startsWith('tables_')&&!t.name.startsWith('whatsapp_'))) {
+    for (const tool of listed.filter(t=>t.name.startsWith('apps_'))) {
+      const definition=appsTools.find(t=>t.name===tool.name)!
+      assert.equal(tool.annotations.readOnlyHint,!definition.write&&!definition.control,tool.name);assert.equal(tool._meta?.ui?.resourceUri,'ui://claudeplugin/apps/v1.html',tool.name)
+    }
+    for (const tool of listed.filter(t=>!t.name.startsWith('tables_')&&!t.name.startsWith('whatsapp_')&&!t.name.startsWith('apps_'))) {
       const write=erpActions.some(a=>a.name===tool.name)
       assert(tool.name.length<=64&&/^[a-z_]+$/.test(tool.name),tool.name)
       assert(tool.title&&tool.title.length>0,`title ${tool.name}`)
@@ -88,7 +93,7 @@ async function main() {
   await check('Recurso dos cards com ui.domain do Claude',async()=>{
     assert.equal(claudeUiDomain('https://example.com/mcp'),'c3d80a4ed901ee05b21755a88273b4a4.claudemcpcontent.com')
     const resources=(await rpc('resources/list')).body.result.resources as {uri:string}[]
-    assert.deepEqual(resources.map(r=>r.uri),[CARDS_URI,'ui://claudeplugin/tables/v1.html','ui://claudeplugin/whatsapp/v1.html'])
+    assert.deepEqual(resources.map(r=>r.uri),[CARDS_URI,'ui://claudeplugin/tables/v1.html','ui://claudeplugin/apps/v1.html','ui://claudeplugin/whatsapp/v1.html'])
     const content=(await rpc('resources/read',{uri:CARDS_URI})).body.result.contents[0]
     assert.equal(content.mimeType,'text/html;profile=mcp-app')
     assert.deepEqual(content._meta.ui,{prefersBorder:true,domain:claudeUiDomain(settings.resource),csp:{connectDomains:[],resourceDomains:[]}})
@@ -171,7 +176,7 @@ async function main() {
     await client.connect(new StreamableHTTPClientTransport(new URL(settings.resource),{ fetch:fetchClaude }))
     assert.equal(client.getServerVersion()?.name,'cognito-claudeplugin');assert.match(client.getInstructions()||'',/meu_acesso/)
     const listed = await client.listTools()
-    assert.equal(listed.tools.length,erpTools.length+erpActions.length+1+tablesTools.length+whatsappLocalTools.length)
+    assert.equal(listed.tools.length,erpTools.length+erpActions.length+1+tablesTools.length+appsTools.length+whatsappLocalTools.length)
     const access = await client.callTool({ name:'meu_acesso',arguments:{} })
     assert.equal(access.isError,undefined);assert.equal((access.structuredContent as {ok:boolean}).ok,true)
     const card = await client.readResource({ uri:CARDS_URI })

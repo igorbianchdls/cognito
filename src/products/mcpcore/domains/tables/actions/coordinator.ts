@@ -14,6 +14,12 @@ export const tablesDependencies:TablesDependencies={transaction:withTablesContro
 const OPERATION_TITLES:Record<string,string>={criar_base:'Criar base',editar_base:'Editar base',criar_tabela:'Criar tabela',editar_tabela:'Renomear tabela',criar_campo:'Criar campo',editar_campo:'Editar campo',
  salvar_registros:'Salvar registros',criar_visualizacao:'Criar visualização',editar_visualizacao:'Editar visualização',excluir_visualizacao:'Excluir visualização',adicionar_comentario:'Comentar',
  mover_para_lixeira:'Mover para a lixeira',mover_registros_para_lixeira:'Mover registros para a lixeira',restaurar_item:'Restaurar da lixeira',preparar_upload:'Preparar envio de arquivo',confirmar_upload:'Confirmar arquivo',remover_anexo:'Remover anexo'}
+// Previews show names, not IDs: field keys, options, people, tables and records known by the snapshot.
+function readable(value:unknown,names:Map<string,string>):unknown{
+ if(Array.isArray(value))return value.map(v=>readable(v,names))
+ if(value&&typeof value==='object')return Object.fromEntries(Object.entries(value).map(([k,v])=>[names.get(k)??k,readable(v,names)]))
+ return typeof value==='string'?names.get(value)??value:value
+}
 const publicTool=(operation:string)=>'tables_'+(PUBLIC_TOOL[operation]??operation)
 
 export async function currentSession(db:Database,principal:PluginPrincipal,companyId:number,write=false):Promise<TablesSession> {
@@ -82,7 +88,8 @@ export async function runAction(db:Database,principal:PluginPrincipal,session:Ta
  const resolved=await withTablesClient(db,session,randomUUID(),client=>resolveWrite(client,session,key,input.dados))
  const snapshot=await withTablesClient(db,session,randomUUID(),client=>operationSnapshot(client,session,resolved.op,resolved.dados))
  const proposal={tipo:resolved.op,ferramenta:key,entrada:input.dados,dados:resolved.dados}
- const preview={titulo:OPERATION_TITLES[resolved.op]||resolved.op,referencias:snapshot.referencias,alteracoes:resolved.dados,...(resolved.op==='excluir_visualizacao'?{aviso:'Exclusão definitiva da visualização. Os registros são preservados.'}:{})}
+ const names=new Map<string,string>(snapshot.referencias.filter((r:Input)=>r.id&&r.nome).map((r:Input)=>[String(r.id),String(r.nome)]))
+ const preview={titulo:OPERATION_TITLES[resolved.op]||resolved.op,referencias:snapshot.referencias,alteracoes:readable(resolved.dados,names),...(resolved.op==='excluir_visualizacao'?{aviso:'Exclusão definitiva da visualização. Os registros são preservados.'}:{})}
  const id=randomUUID(),insert=(status:string,result:unknown)=>db.query(`INSERT INTO plugin.drafts(id,empresa_id,user_id,oauth_client_id,operation_key,proposal,target_snapshot,integration,domain,operation_type,status,result,decided_at) VALUES($1,$2,$3,$4,$5,$6::jsonb,$7::jsonb,$8,'tables',$9,$10,$11::jsonb,${status==='saved'?'now()':'NULL'}) RETURNING *`,[id,session.tenantId,principal.userId,principal.clientId,input.chave_operacao,JSON.stringify(proposal),JSON.stringify({...snapshot,preview}),config.integration,resolved.op,status,result===null?null:JSON.stringify(result)])
  // Operations that only add data run at once; the draft row still records the
  // key and the result, so a repeated call or obter_operacao returns the same outcome.

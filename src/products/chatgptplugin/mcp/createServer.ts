@@ -1,5 +1,6 @@
 import { registerWhatsApp, WHATSAPP_INSTRUCTIONS } from '@/products/mcpcore/mcp/registerWhatsApp'
 import { registerTables, TABLES_INSTRUCTIONS } from '@/products/mcpcore/mcp/registerTables'
+import { registerApps, APPS_INSTRUCTIONS } from '@/products/mcpcore/mcp/registerApps'
 import { McpServer,ResourceTemplate } from '@modelcontextprotocol/sdk/server/mcp.js'
 import { z } from 'zod'
 import { z as z4 } from 'zod-openai'
@@ -33,7 +34,7 @@ export const SERVER_INSTRUCTIONS = 'Chame meu_acesso antes de tudo; com várias 
 export async function createPluginServer(principal: PluginPrincipal, config: PluginConfig,
   dependencies: ExecutionDependencies = executionDependencies) {
   const {OpenAIExtensions}=await import('@openai/mcp-extensions/server')
-  const server = new McpServer(SERVER_INFO, { instructions:SERVER_INSTRUCTIONS+TABLES_INSTRUCTIONS+WHATSAPP_INSTRUCTIONS })
+  const server = new McpServer(SERVER_INFO, { instructions:SERVER_INSTRUCTIONS+TABLES_INSTRUCTIONS+APPS_INSTRUCTIONS+WHATSAPP_INSTRUCTIONS })
   // As tools das extensões oficiais (configurações e menções) são registradas pelo SDK;
   // este proxy acrescenta anotações e o contrato OAuth aos seus descritores.
   const extensionServer=new Proxy(server,{get(target,property,receiver){
@@ -110,6 +111,7 @@ export async function createPluginServer(principal: PluginPrincipal, config: Plu
       _meta:{securitySchemes:[{type:'oauth2',scopes:[config.scope,'erp:write']}],...card}},run(action.name))
   }
   registerTables(server,principal,config,dependencies,'chatgpt')
+  registerApps(server,principal,config,dependencies,'chatgpt')
   await registerWhatsApp(server,principal,config,dependencies,'chatgpt')
   return server
 }

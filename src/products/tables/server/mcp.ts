@@ -55,7 +55,7 @@ export async function readMcp(db:Database, session:TablesSession, name:string, i
     if(selected.some(id=>!fields.some(f=>f.id===id)))throw new TablesError('INVALID_FIELD','Um campo não pertence à tabela.')
     const page=await listRecords(db,session,input.tabela_id,listQuerySchema.parse(inputWithout(input,['campos','tabela_id'])))
     const limit=Math.max(10,Math.min(1000,Math.floor(35000/(Math.max(1,page.registros.length)*Math.max(1,selected.length)*4)))),visible=fields.filter(f=>selected.includes(f.id))
-    return {...page,registros:await displayRecords(db,session,page.registros.map(r=>clipped(r,selected,limit)),visible,limit),campos:visible.map(f=>({id:f.id,nome:f.nome,tipo:f.tipo})),tem_mais:pagina*tamanho<page.total,colunas_omitidas:fields.filter(f=>!selected.includes(f.id)).map(f=>f.nome)}
+    return {...page,registros:(await displayRecords(db,session,page.registros.map(r=>clipped(r,selected,limit)),visible,limit)).map(r=>Object.fromEntries(Object.entries(r).filter(([key])=>!['valores','tabela_id','posicao'].includes(key)))),campos:visible.map(f=>({id:f.id,nome:f.nome,tipo:f.tipo})),tem_mais:pagina*tamanho<page.total,colunas_omitidas:fields.filter(f=>!selected.includes(f.id)).map(f=>f.nome)}
   }
   if(name==='obter_registro') {
     const record=await readRecord(db,session,input.registro_id);await requireTable(db,session,record.tabela_id)
@@ -68,7 +68,7 @@ export async function readMcp(db:Database, session:TablesSession, name:string, i
   }
   if(name==='listar_comentarios'||name==='consultar_historico') {
     const r=await readRecord(db,session,input.registro_id);await requireTable(db,session,r.tabela_id)
-    const source=name==='listar_comentarios'?"SELECT c.id,c.texto,c.criado_em,coalesce(m.nome,'Usuário removido') autor FROM tables.comentarios c LEFT JOIN tables.membros() m ON m.id=c.autor_id::text WHERE c.empresa_id=$1 AND c.registro_id=$2 AND c.excluido_em IS NULL":"SELECT DISTINCT ON(h.operacao_id) h.id,h.acao,h.entidade,h.criado_em,h.operacao_id,coalesce(m.nome,'Usuário removido') autor FROM tables.historico h LEFT JOIN tables.membros() m ON m.id=h.autor_id::text WHERE h.empresa_id=$1 AND h.registro_id=$2 ORDER BY h.operacao_id,h.criado_em DESC,h.id"
+    const source=name==='listar_comentarios'?"SELECT c.id,c.texto,c.criado_em,coalesce(m.nome,'Usuário removido') autor FROM tables.comentarios c LEFT JOIN tables.membros() m ON m.id=c.autor_id::text WHERE c.empresa_id=$1 AND c.registro_id=$2 AND c.excluido_em IS NULL":"SELECT DISTINCT ON(h.operacao_id) h.id,h.acao,h.entidade,h.criado_em,h.operacao_id,coalesce(m.nome,'Usuário removido') autor FROM tables.historico h LEFT JOIN tables.membros() m ON m.id=h.autor_id::text WHERE h.empresa_id=$1 AND h.registro_id=$2 ORDER BY h.operacao_id,(h.acao='INSERT') DESC,h.criado_em DESC,h.id"
     const rows=await db.query(`SELECT * FROM (${source}) itens ORDER BY criado_em DESC,id LIMIT $3 OFFSET $4`,[session.tenantId,r.id,tamanho+1,(pagina-1)*tamanho])
     const count=await db.query(`SELECT count(*)::int n FROM (${source}) itens`,[session.tenantId,r.id])
     return {itens:rows.rows.slice(0,tamanho),pagina,tamanho,total:count.rows[0].n,tem_mais:rows.rows.length>tamanho}
@@ -121,6 +121,8 @@ export async function operationSnapshot(db:Database,session:TablesSession,name:s
     if(data.visualizacao_id){const v=(await getBundle(db,session,id)).visualizacoes.find(v=>v.id===data.visualizacao_id);if(!v)throw missing();if(data.expectedVersion!==undefined)assertVersion(v.versao,data.expectedVersion);snapshot.itens.push({tipo:'visualizacoes',id:v.id,versao:v.versao});refs.push({id:v.id,nome:v.nome,tipo:'visualização'})}
   }
   for(const id of baseIds){const base=await requireBase(db,session,id);snapshot.bases.push({id,versao:base.versao});refs.push({id,nome:base.nome,tipo:'base'});if(data.base_id===id&&data.expectedVersion!==undefined)assertVersion(base.versao,data.expectedVersion)}
+  const recordRefs=[...new Set<string>([...recordIds,...[...JSON.stringify(data).matchAll(/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/gi)].map(m=>m[0])])].filter(id=>!refs.some(r=>r.id===id))
+  if(recordRefs.length)for(const r of (await db.query("SELECT r.id,coalesce(nullif(r.valores->>t.campo_principal_id::text,''),'Sem nome') nome FROM tables.registros r JOIN tables.tabelas t ON t.empresa_id=r.empresa_id AND t.id=r.tabela_id WHERE r.empresa_id=$1 AND r.id=ANY($2::uuid[])",[session.tenantId,recordRefs])).rows)refs.push({id:String(r.id),nome:String(r.nome).slice(0,120),tipo:'registro'})
   if(name==='criar_base')refs.push({nome:data.nome,tipo:'base nova'})
   return {hash:digest(snapshot),referencias:refs,snapshot}
 }
