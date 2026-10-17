@@ -44,9 +44,9 @@ export async function appsHandler(request: Request, context: { params: Promise<{
         return json(await service.catalog(db, s, q.busca, q.filtro, q.pagina, q.ordem))
       }
       if (!id && request.method === 'POST') {
-        const input = metadataSchema.extend({ exemplo: z.boolean().default(true) }).strict().parse(body)
-        const { exemplo, ...data } = input
-        return json({ app: await service.create(db, s, data, exemplo) }, 201)
+        const input = metadataSchema.extend({ exemplo: z.boolean().default(true), modelo: z.enum(['html', 'react']).default('html') }).strict().parse(body)
+        const { exemplo, modelo, ...data } = input
+        return json({ app: await service.create(db, s, data, exemplo, undefined, modelo) }, 201)
       }
       if (id && !action) {
         if (request.method === 'GET') return json(await service.bundle(db, s, id))

@@ -7,15 +7,16 @@ import { loadPackage, packageHash } from './service'
 import { storage, type PackageStore } from './storage'
 
 export function validateStatic(p: AppPackage) {
-  const paths = new Set(p.arquivos.map(f => f.caminho))
+  // React projects are validated by the build; their index.html only hosts the root element.
+  const paths = new Set(p.arquivos.map(f => f.caminho)), react = p.manifesto.modelo === 'react'
   for (const file of p.arquivos) {
-    if (file.caminho.endsWith('.js')) { try { new Script(file.conteudo) } catch { throw new AppsError('INVALID_SCRIPT', `Confira a sintaxe de ${file.caminho}.`) } }
+    if (!react && file.caminho.endsWith('.js')) { try { new Script(file.conteudo) } catch { throw new AppsError('INVALID_SCRIPT', `Confira a sintaxe de ${file.caminho}.`) } }
     if (file.caminho.endsWith('.html')) {
       for (const match of file.conteudo.matchAll(/\b(?:src|href)\s*=\s*["']([^"']+)["']/gi)) {
         const ref = match[1].replace(/^\.\//, '')
         if (!ref.startsWith('#') && !ref.startsWith('data:image/') && !paths.has(ref)) throw new AppsError('INVALID_REFERENCE', `O recurso ${ref.slice(0, 100)} precisa estar no pacote. Links externos não são suportados.`)
       }
-      if (/<script\b[^>]*\btype\s*=\s*["']module["']/i.test(file.conteudo)) throw new AppsError('UNSUPPORTED_MODULE', 'Envie JavaScript preparado sem módulos externos.')
+      if (!react && /<script\b[^>]*\btype\s*=\s*["']module["']/i.test(file.conteudo)) throw new AppsError('UNSUPPORTED_MODULE', 'Envie JavaScript preparado sem módulos externos.')
     }
   }
 }
@@ -37,6 +38,7 @@ export async function publish(db: Database, s: Session, appId: string, revision:
   expected(app, revision)
   const version = (await versions(db, s, appId)).find(v => v.id === versionId)
   if (!version) throw new AppsError('NOT_FOUND', 'Versão não encontrada.', 404)
+  if (manifestSchema.parse(version.manifesto).modelo === 'react' && version.build_estado !== 'ok') throw new AppsError('BUILD_REQUIRED', 'Corrija os erros de compilação antes de publicar.', 409)
   const p = await loadPackage(db, s, appId, versionId, store); validateStatic(p)
   // jsonb reorders keys and older manifests omit defaults: compare the parsed values.
   const { isDeepStrictEqual } = await import('node:util')

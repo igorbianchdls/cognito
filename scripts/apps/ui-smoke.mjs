@@ -6,6 +6,7 @@ import { randomUUID } from 'node:crypto'
 import { build } from 'esbuild'
 import { chromium } from 'playwright-core'
 import { starter } from '../../src/products/apps/shared/starter.ts'
+import { buildReactApp } from '../../src/products/apps/server/build.ts'
 
 const out = resolve('.cache/apps/ui'); mkdirSync(out, { recursive: true })
 const appId = '10000000-0000-4000-8000-000000000001', versionId = '20000000-0000-4000-8000-000000000001', colId = '30000000-0000-4000-8000-000000000001'
@@ -30,13 +31,13 @@ try {
    if (url.pathname.startsWith('/api/apps')) {
     calls.push({ method: req.method, path, body })
     if (req.method === 'GET' && !path) { const search = url.searchParams.get('busca')?.toLowerCase() ?? '', match = app.nome.toLowerCase().includes(search); json({ apps: match ? [app] : [], total: match ? 1 : 0, pagina: 1, contadores: { todos: 1, publicados: app.publicacao_id ? 1 : 0, construcao: app.publicacao_id ? 0 : 1, favoritos: app.favorito ? 1 : 0, arquivados: 0, lixeira: 0 }, podeEditar: true }); return }
-    if (req.method === 'POST' && !path) { Object.assign(app, body); json({ app }); return }
+    if (req.method === 'POST' && !path) { const { exemplo, modelo, ...data } = body; Object.assign(app, data); pkg = starter(colId, exemplo !== false, modelo ?? 'html'); json({ app }); return }
     if (action === 'favorito') { app.favorito = body.favorito; json({ ok: true }); return }
     if (action === 'conteudo') { json({ pacote: pkg, versaoId: versionId }); return }
     if (action === 'rascunho') { pkg = { manifesto: body.manifesto, arquivos: body.arquivos }; app.versao_concorrencia++; app.tem_rascunho = true; json({ app, versoes: [{ id: versionId, numero: 1, estado: 'rascunho', manifesto: pkg.manifesto, criado_em: new Date().toISOString() }], podeEditar: true, podePublicar: true }); return }
     if (action === 'publicar') { published = structuredClone(pkg); app.publicacao_id = randomUUID(); app.versao_publicada_id = versionId; app.tem_rascunho = false; app.versao_concorrencia++; json({ ok: true }); return }
     if (action === 'tabelas') { json({ registros: [], total: 2, pagina: 1, tem_mais: false }); return }
-    if (action === 'runtime') { const preview = url.searchParams.get('modo') === 'previa'; json({ app, pacote: preview ? pkg : published, versaoId: versionId, modo: preview ? 'previa' : 'publicado', token: preview ? null : 'fixture' }); return }
+    if (action === 'runtime') { const preview = url.searchParams.get('modo') === 'previa'; const shown = preview ? pkg : published; json({ app, pacote: shown, compilado: shown.manifesto.modelo === 'react' ? await buildReactApp(shown) : null, versaoId: versionId, modo: preview ? 'previa' : 'publicado', token: preview ? null : 'fixture' }); return }
     json({ app, versoes: [{ id: versionId, numero: 1, estado: app.tem_rascunho ? 'rascunho' : 'pronta', manifesto: pkg.manifesto, criado_em: new Date().toISOString() }], podeEditar: true, podePublicar: true }); return
    }
    if (url.pathname === '/bundle.js' || url.pathname === '/bundle.css') { res.writeHead(200, { 'content-type': url.pathname.endsWith('.js') ? 'text/javascript' : 'text/css' }); res.end(readFileSync(resolve(out, url.pathname.slice(1)))); return }
@@ -65,6 +66,12 @@ try {
  const network = await frame.locator('body').evaluate(async () => { try { await fetch('/api/tables'); return 'allowed' } catch { return 'blocked' } }); assert.equal(network, 'blocked')
  await page.screenshot({ path: resolve(out, 'previa-desktop.png'), fullPage: true }); checks.push('Real sandbox frame, SDK handshake, ephemeral data CRUD and blocked host/network access')
  await page.getByRole('link', { name: 'Visão geral', exact: true }).click(); await page.getByRole('button', { name: 'Publicar versão 1' }).click(); await page.getByText('Versão publicada.', { exact: true }).waitFor(); await page.getByRole('link', { name: 'Abrir app', exact: true }).click(); await frame.getByRole('heading', { name: 'Ideias compartilhadas' }).waitFor(); checks.push('Publish saved version and open published package')
+ await page.goto(origin + '/apps/novo'); await page.getByRole('textbox', { name: 'Nome do app' }).fill('App em React'); await page.getByRole('combobox', { name: 'Começar com' }).selectOption('exemplo-react'); await page.getByRole('button', { name: 'Criar app', exact: true }).click(); await page.getByRole('button', { name: 'src/App.jsx', exact: true }).waitFor()
+ assert.equal(calls.findLast(c => c.method === 'POST' && !c.path).body.modelo, 'react')
+ await page.getByRole('link', { name: 'Prévia', exact: true }).click(); const reactFrame = page.frameLocator('iframe[title="App em React"]'); await reactFrame.getByRole('heading', { name: 'Organize suas ideias' }).waitFor()
+ await reactFrame.getByPlaceholder('Escreva uma ideia').fill('Ideia em React'); await reactFrame.getByRole('button', { name: 'Adicionar' }).click(); await reactFrame.getByText('Ideia em React', { exact: true }).waitFor()
+ const reactNetwork = await reactFrame.locator('body').evaluate(async () => { try { await fetch('/api/tables'); return 'allowed' } catch { return 'blocked' } }); assert.equal(reactNetwork, 'blocked')
+ await page.screenshot({ path: resolve(out, 'react-previa-desktop.png'), fullPage: true }); checks.push('React project compiled on the server runs in the sandbox with otto.data and no network')
  await page.setViewportSize({ width: 390, height: 844 }); await page.goto(origin + '/apps'); await page.addStyleTag({ content: 'aside{display:none!important}' }); await page.getByRole('link', { name: app.nome, exact: true }).waitFor(); await page.screenshot({ path: resolve(out, 'catalogo-mobile.png'), fullPage: true }); assert(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)); checks.push('Mobile catalog has no horizontal overflow')
  assert.deepEqual(errors, []); const report = { status: 'passed', checks, api: 'isolated fixtures', runtime: 'real browser sandbox', generatedAt: new Date().toISOString() }; writeFileSync('.cache/apps/ui.json', JSON.stringify(report, null, 2)); console.log(JSON.stringify(report))
 } finally { await browser?.close(); if (server) await new Promise(done => server.close(done)) }

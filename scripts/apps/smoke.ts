@@ -16,7 +16,7 @@ import { TablesError } from '../../src/products/tables/shared/contracts'
 process.env.APPS_RUNTIME_SECRET = 'isolated-runtime-secret-with-at-least-32-characters'
 const db = new PGlite(), objects = new Map<string, string>(), checks: string[] = []
 const s = { tenantId: 1, sharedUserId: 1, role: 'owner', browserSession: 'browser-fixture' } as const
-const migrations = ['20261016120000_create_tables.sql', '20261017100000_apps_product.sql', '20261017150000_apps_files_in_database.sql'].map(f => 'supabase/migrations/' + f)
+const migrations = ['20261016120000_create_tables.sql', '20261017100000_apps_product.sql', '20261017150000_apps_files_in_database.sql', '20261017170000_apps_react_build.sql'].map(f => 'supabase/migrations/' + f)
 // Legacy packages (before files moved to the database) are still read from Storage.
 const store: PackageStore = { async put(path, p) { const text = JSON.stringify(validatePackage(p)); objects.set(path, text); return { tamanho: Buffer.byteLength(text), hash: hash(text) } }, async get(path, digest) { const text = objects.get(path); assert(text); assert.equal(hash(text), digest); return JSON.parse(text) as AppPackage } }
 async function run<T>(session: Session, fn: (db: Database) => Promise<T>): Promise<T> {
@@ -134,6 +134,36 @@ async function main() {
     withFile('extra.js', 'const aviso = "import concluído"; console.log(aviso)')
     assert.throws(() => withFile('extra.js', "import x from 'y'"), /imports/)
     assert.throws(() => withFile('extra.css', "@import url('https://example.invalid/a.css');"), /@import/)
+  })
+  await check('React projects: folders, imports between files, server build, clear errors and blocked libraries', async () => {
+    const react = await run(s, db => create(db, s, metadataSchema.parse({ nome: 'Ideias em React' }), true, undefined, 'react'))
+    let v = (await run(s, db => versions(db, s, react.id)))[0]
+    assert.equal(v.build_estado, 'ok')
+    const first = await run(s, db => openRuntime(db, s, react.id, true, undefined, store))
+    assert(first.compilado && first.compilado.js.includes('__ottoModules') && first.compilado.css.includes('#7259d6'), 'Compiled JS uses the sandbox React and keeps the imported CSS')
+    const p = await run(s, db => loadPackage(db, s, react.id, v.id))
+    p.arquivos.push({ caminho: 'src/components/Titulo.jsx', codificacao: 'utf8', conteudo: 'export default function Titulo({ texto }) { return <h2>{texto}</h2> }\n' })
+    p.arquivos = p.arquivos.map(f => f.caminho === 'src/App.jsx' ? { ...f, conteudo: f.conteudo.replace("import { useEffect, useState } from 'react'", "import { useEffect, useState } from 'react'\nimport Titulo from './components/Titulo'").replace('<h1>Organize suas ideias</h1>', '<Titulo texto="Componente em pasta" />') } : f)
+    const save = async (pkg: AppPackage) => { const a = await run(s, db => getApp(db, s, react.id)); await run(s, db => saveDraft(db, s, react.id, a.versao_concorrencia, pkg)); return (await run(s, db => versions(db, s, react.id)))[0] }
+    v = await save(p)
+    assert.equal(v.build_estado, 'ok'); assert((await run(s, db => openRuntime(db, s, react.id, true, undefined, store))).compilado!.js.includes('Componente em pasta'))
+
+    const broken = structuredClone(p); broken.arquivos = broken.arquivos.map(f => f.caminho === 'src/App.jsx' ? { ...f, conteudo: f.conteudo.replace('</main>', '</mai>') } : f)
+    v = await save(broken)
+    assert.equal(v.build_estado, 'erro', 'A draft that does not compile is still saved'); assert.match(v.build_erro!, /src\/App\.jsx:\d+/)
+    await assert.rejects(() => run(s, db => openRuntime(db, s, react.id, true, undefined, store)), /não compilou/)
+    const a = await run(s, db => getApp(db, s, react.id))
+    await assert.rejects(() => run(s, db => publish(db, s, react.id, a.versao_concorrencia, v.id, randomUUID(), store)), /compilação/)
+    await assert.rejects(() => run(s, db => db.query("UPDATE apps.versoes SET estado='pronta',hash_conteudo=$2,selado_em=now() WHERE id=$1", [v.id, 'x'.repeat(64)])), /build/, 'The database also refuses to seal it')
+
+    const library = structuredClone(p); library.arquivos = library.arquivos.map(f => f.caminho === 'src/main.jsx' ? { ...f, conteudo: "import _ from 'lodash'\n" + f.conteudo } : f)
+    assert.match((await save(library)).build_erro!, /lodash.*não está disponível/)
+
+    v = await save(p)
+    const b = await run(s, db => getApp(db, s, react.id)); await run(s, db => publish(db, s, react.id, b.versao_concorrencia, v.id, randomUUID(), store))
+    assert((await run(s, db => openRuntime(db, s, react.id, false, undefined, store))).compilado!.js.includes('Componente em pasta'))
+    const html = await run(s, async db => loadPackage(db, s, app.id, (await versions(db, s, app.id))[0].id))
+    assert.throws(() => validatePackage({ ...html, arquivos: [...html.arquivos, { caminho: 'src/App.jsx', codificacao: 'utf8', conteudo: '' }] }), /React/)
   })
   await check('New draft preserves live package and data; compatibility rejects destructive changes', async () => {
     let a = await run(s, db => getApp(db, s, app.id)); const p = structuredClone(runtime.pacote); p.arquivos[0].conteudo = p.arquivos[0].conteudo.replace('Organize suas ideias', 'Nova versão')

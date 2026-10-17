@@ -3,7 +3,7 @@ import { z } from 'zod'
 import { AppsError, manifestSchema, recordSchema, uuid, validateData } from '../shared/contracts'
 import type { Database, Session } from './database'
 import { available, editable, event, getApp, versions } from './repository'
-import { loadPackage } from './service'
+import { loadBuild, loadPackage } from './service'
 import { storage, type PackageStore } from './storage'
 import { validateStatic } from './publishing'
 
@@ -28,9 +28,10 @@ export async function openRuntime(db: Database, s: BrowserSession, appId: string
   const v = preview ? (requestedVersion ? vs.find(v => v.id === requestedVersion) : vs[0]) : vs.find(v => v.id === app.versao_publicada_id)
   if (!v || !preview && !app.publicacao_id) throw new AppsError('NOT_PUBLISHED', 'Este app ainda não está publicado.', 409)
   const pacote = await loadPackage(db, s, appId, v.id, store); validateStatic(pacote)
+  const compilado = await loadBuild(db, s, appId, v.id)
   const body = JSON.stringify({ empresa: s.tenantId, usuario: s.sharedUserId, sessao: mac(s.browserSession), app: appId, versao: v.id, publicacao: app.publicacao_id, exp: Date.now() + 30 * 60_000 })
   const encoded = Buffer.from(body).toString('base64url')
-  return { app, pacote, versaoId: v.id, modo: preview ? 'previa' : 'publicado', token: preview ? null : encoded + '.' + mac(encoded) }
+  return { app, pacote, compilado, versaoId: v.id, modo: preview ? 'previa' : 'publicado', token: preview ? null : encoded + '.' + mac(encoded) }
 }
 export const runtimeDataSchema = z.object({ token: z.string().max(4000), colecao: z.string().regex(/^[a-z][a-z0-9_]{0,49}$/), operacao: z.enum(['listar', 'salvar', 'excluir']), pagina: z.number().int().min(1).max(10000).default(1), registro: recordSchema.optional(), id: uuid.optional(), expectedVersion: z.number().int().positive().optional() }).strict()
 export async function dataOperation(db: Database, s: BrowserSession, appId: string, input: z.infer<typeof runtimeDataSchema>) {

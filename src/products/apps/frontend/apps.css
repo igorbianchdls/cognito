@@ -28,3 +28,6 @@
 .apps-armed{background:#b42335!important;color:#fff!important}
 
 .apps-menu-note{display:block;max-width:210px;padding:6px 9px;font-size:10px;line-height:1.4;color:#999;white-space:normal}
+
+.apps-build-error{display:block}
+.apps-build-error pre{margin:8px 0 0;white-space:pre-wrap;font:11px/1.6 ui-monospace,SFMono-Regular,Consolas,monospace}

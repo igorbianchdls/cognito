@@ -1,7 +1,8 @@
 import type { AppPackage } from '../../shared/contracts'
 
 const quote = (s: string) => JSON.stringify(s).replace(/</g, '\\u003c')
-export function buildDocument(p: AppPackage, session: string, nonce: string) {
+export type CompiledApp = { js: string; css: string; vendor: string }
+export function buildDocument(p: AppPackage, session: string, nonce: string, compiled?: CompiledApp) {
   const doc = new DOMParser().parseFromString(p.arquivos.find(f => f.caminho === 'index.html')!.conteudo, 'text/html')
   const files = new Map(p.arquivos.map(f => [f.caminho, f]))
   for (const n of doc.querySelectorAll('base,meta[http-equiv],iframe,object,embed,portal')) n.remove()
@@ -17,7 +18,15 @@ export function buildDocument(p: AppPackage, session: string, nonce: string) {
     if (f?.codificacao === 'base64') image.src = `data:image/${f.caminho.endsWith('.jpg') ? 'jpeg' : f.caminho.split('.').pop()};base64,${f.conteudo}`
     else if (!image.getAttribute('src')?.startsWith('data:image/')) image.removeAttribute('src')
   }
-  for (const script of doc.querySelectorAll('script')) {
+  // Keep user code out of HTML parser raw-text delimiters: each script creates the real one.
+  const inject = (code: string) => { const s = doc.createElement('script'); s.nonce = nonce; s.textContent = `{const s=document.createElement('script');s.nonce=${quote(nonce)};s.textContent=${quote(code)};document.currentScript.after(s);}`; return s }
+  if (compiled) {
+    // React apps: index.html only hosts the root; the compiled bundle replaces its scripts.
+    for (const script of doc.querySelectorAll('script')) script.remove()
+    if (compiled.css) { const style = doc.createElement('style'); style.textContent = compiled.css; doc.head.append(style) }
+    doc.body.append(inject(compiled.vendor), inject(compiled.js))
+  }
+  else for (const script of doc.querySelectorAll('script')) {
     const src = script.getAttribute('src'), f = src ? files.get(src.replace(/^\.\//, '')) : undefined
     if (src && !f?.caminho.endsWith('.js')) { script.remove(); continue }
     const code = f?.conteudo ?? script.textContent ?? ''

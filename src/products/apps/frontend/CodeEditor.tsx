@@ -2,9 +2,10 @@
 
 import { useEffect, useId, useMemo, useRef, useState, type KeyboardEvent } from 'react'
 
-export type CodeLanguage = 'html' | 'css' | 'js' | 'json'
-export const languageOf = (path: string): CodeLanguage => path.endsWith('.css') ? 'css' : path.endsWith('.js') ? 'js' : path.endsWith('.json') ? 'json' : 'html'
-const LANGUAGE_NAMES: Record<CodeLanguage, string> = { html: 'HTML', css: 'CSS', js: 'JavaScript', json: 'JSON' }
+// jsx: React sources (.jsx, .tsx, .ts, and .js in React apps). The browser cannot check JSX syntax, so the server build does.
+export type CodeLanguage = 'html' | 'css' | 'js' | 'jsx' | 'json'
+export const languageOf = (path: string, react = false): CodeLanguage => path.endsWith('.css') ? 'css' : /\.(jsx|tsx|ts)$/.test(path) || react && path.endsWith('.js') ? 'jsx' : path.endsWith('.js') ? 'js' : path.endsWith('.json') ? 'json' : 'html'
+const LANGUAGE_NAMES: Record<CodeLanguage, string> = { html: 'HTML', css: 'CSS', js: 'JavaScript', jsx: 'React (JSX)', json: 'JSON' }
 const INDENT = '  '
 // Highlighting very large files on every keystroke would make typing slow.
 const HIGHLIGHT_LIMIT = 200_000
@@ -87,7 +88,7 @@ function highlightHtml(code: string): string {
   return html + escape(code.slice(index))
 }
 
-const HIGHLIGHTERS: Record<CodeLanguage, (code: string) => string> = { html: highlightHtml, css: highlightCss, js: highlightJs, json: highlightJson }
+const HIGHLIGHTERS: Record<CodeLanguage, (code: string) => string> = { html: highlightHtml, css: highlightCss, js: highlightJs, jsx: highlightJs, json: highlightJson }
 
 const AsyncFunction = Object.getPrototypeOf(async function () { /* constructor only */ }).constructor as new (code: string) => unknown
 

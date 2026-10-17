@@ -4,6 +4,7 @@ import { AppsError, manifestSchema, metadataSchema, validatePackage, type AppFil
 import { starter } from '../shared/starter'
 import type { Database, Session } from './database'
 import { hash, storage, type PackageStore } from './storage'
+import { buildReactApp } from './build'
 import { appSelect, available, bump, editable, event, expected, getApp, publisher, versions } from './repository'
 
 export async function catalog(db: Database, s: Session, search: string, filter: string, page: number, sort: string): Promise<Catalog> {
@@ -30,12 +31,29 @@ export async function saveFiles(db: Database, s: Session, appId: string, version
   const p = validatePackage(input)
   await db.query("UPDATE apps.versoes SET versao_formato=2 WHERE empresa_id=$1 AND app_id=$2 AND id=$3 AND estado='rascunho' AND versao_formato<>2", [s.tenantId, appId, versionId])
   await db.query('DELETE FROM apps.versao_arquivos WHERE empresa_id=$1 AND versao_id=$2', [s.tenantId, versionId])
-  for (const [position, file] of p.arquivos.entries()) {
-    const digest = fileHash(file)
+  const store = async (file: Pick<AppFile, 'codificacao' | 'conteudo'>) => {
+    const digest = fileHash(file as AppFile)
     await db.query('INSERT INTO apps.conteudos(empresa_id,hash,codificacao,conteudo,tamanho) VALUES($1,$2,$3,$4,$5) ON CONFLICT DO NOTHING', [s.tenantId, digest, file.codificacao, file.conteudo, Buffer.byteLength(file.conteudo)])
-    await db.query('INSERT INTO apps.versao_arquivos(empresa_id,app_id,versao_id,caminho,posicao,hash) VALUES($1,$2,$3,$4,$5,$6)', [s.tenantId, appId, versionId, file.caminho, position, digest])
+    return digest
   }
+  for (const [position, file] of p.arquivos.entries()) await db.query('INSERT INTO apps.versao_arquivos(empresa_id,app_id,versao_id,caminho,posicao,hash) VALUES($1,$2,$3,$4,$5,$6)', [s.tenantId, appId, versionId, file.caminho, position, await store(file)])
+  // React drafts are saved even when they do not compile, so they can be fixed; the error stays on the version.
+  let build: { estado: 'ok' | 'erro' | null; erro: string | null; js: string | null; css: string | null } = { estado: null, erro: null, js: null, css: null }
+  if (p.manifesto.modelo === 'react') {
+    try { const out = await buildReactApp(p); build = { estado: 'ok', erro: null, js: await store({ codificacao: 'utf8', conteudo: out.js }), css: out.css ? await store({ codificacao: 'utf8', conteudo: out.css }) : null } }
+    catch (error) { if (!(error instanceof AppsError) || error.code !== 'BUILD_FAILED') throw error; build = { estado: 'erro', erro: error.message, js: null, css: null } }
+  }
+  await db.query('UPDATE apps.versoes SET build_estado=$4,build_erro=$5,build_js=$6,build_css=$7 WHERE empresa_id=$1 AND app_id=$2 AND id=$3', [s.tenantId, appId, versionId, build.estado, build.erro, build.js, build.css])
   return packageHash(p)
+}
+/** Compiled JS and CSS of a React version, or null for HTML apps. */
+export async function loadBuild(db: Database, s: Session, appId: string, versionId: string) {
+  const v = (await db.query('SELECT manifesto,build_estado,build_erro,build_js,build_css FROM apps.versoes WHERE empresa_id=$1 AND app_id=$2 AND id=$3', [s.tenantId, appId, versionId])).rows[0]
+  if (!v || v.manifesto?.modelo !== 'react') return null
+  if (v.build_estado !== 'ok') throw new AppsError('BUILD_FAILED', v.build_erro ? `O app não compilou:\n${v.build_erro}` : 'Salve o app para compilá-lo.', 422)
+  const rows = (await db.query('SELECT hash,conteudo FROM apps.conteudos WHERE empresa_id=$1 AND hash=ANY($2::text[])', [s.tenantId, [v.build_js, v.build_css].filter(Boolean)])).rows
+  const content = (hash: string | null) => rows.find(r => r.hash === hash)?.conteudo ?? ''
+  return { js: content(v.build_js), css: content(v.build_css) }
 }
 export async function loadPackage(db: Database, s: Session, appId: string, versionId: string, store: PackageStore = storage) {
   const version = (await db.query('SELECT manifesto,versao_formato FROM apps.versoes WHERE empresa_id=$1 AND app_id=$2 AND id=$3', [s.tenantId, appId, versionId])).rows[0]
@@ -50,9 +68,9 @@ export async function loadPackage(db: Database, s: Session, appId: string, versi
   if (!file) throw new AppsError('NO_CONTENT', 'O app ainda não tem arquivos.', 409)
   return store.get(file.caminho_storage, file.hash_conteudo)
 }
-export async function create(db: Database, s: Session, data: z.infer<typeof metadataSchema>, example: boolean, source?: AppPackage) {
+export async function create(db: Database, s: Session, data: z.infer<typeof metadataSchema>, example: boolean, source?: AppPackage, modelo: 'html' | 'react' = 'html') {
   editable(s)
-  const appId = randomUUID(), versionId = randomUUID(), p = source ?? starter(randomUUID(), example)
+  const appId = randomUUID(), versionId = randomUUID(), p = source ?? starter(randomUUID(), example, modelo)
   const slug = (data.nome.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/[^a-z0-9]+/g, '-').slice(0, 60) || 'app') + '-' + appId.slice(0, 8)
   await db.query('INSERT INTO apps.apps(id,empresa_id,nome,slug,descricao,icone,cor,criado_por,atualizado_por) VALUES($1,$2,$3,$4,$5,$6,$7,$8,$8)', [appId, s.tenantId, data.nome, slug, data.descricao, data.icone, data.cor, s.sharedUserId])
   await db.query('INSERT INTO apps.versoes(id,empresa_id,app_id,numero,manifesto,versao_formato,criado_por) VALUES($1,$2,$3,1,$4::jsonb,2,$5)', [versionId, s.tenantId, appId, JSON.stringify(p.manifesto), s.sharedUserId])

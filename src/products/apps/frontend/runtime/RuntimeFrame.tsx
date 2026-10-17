@@ -5,7 +5,7 @@ import { AppsError, recordSchema, uuid, validateData, type App, type AppPackage,
 import { send, type AppsApi } from '../client'
 import { buildDocument } from './document'
 
-export type RuntimeBundle = { app: App; pacote: AppPackage; versaoId: string; modo: string; token: string | null }
+export type RuntimeBundle = { app: App; pacote: AppPackage; compilado?: { js: string; css: string } | null; versaoId: string; modo: string; token: string | null }
 const messageSchema = z.object({ id: z.number().int().positive(), operacao: z.enum(['listar', 'salvar', 'excluir']), colecao: z.string().max(50), pagina: z.number().int().min(1).max(10000).optional(), registro: recordSchema.optional(), registroId: uuid.optional(), expectedVersion: z.number().int().positive().optional() }).strict()
 // Tables requests are validated again on the server; here only the shape and size are checked.
 const tablesMessageSchema = z.object({ id: z.number().int().positive(), canal: z.literal('tabelas'), fonte: z.string().max(50), operacao: z.enum(['campos', 'listar', 'obter', 'criar', 'editar', 'resumir']), registroId: uuid.optional(), valores: z.record(z.unknown()).optional(), expectedVersion: z.number().int().positive().optional(), busca: z.string().max(500).optional(), filtros: z.array(z.unknown()).max(30).optional(), ordenacao: z.array(z.unknown()).max(5).optional(), pagina: z.number().int().min(1).max(100000).optional(), tamanho: z.number().int().min(1).max(100).optional(), agrupar_por: z.string().max(200).optional(), periodo: z.enum(['dia', 'mes', 'ano']).optional(), metricas: z.array(z.unknown()).max(10).optional() }).strict()
@@ -69,7 +69,9 @@ export default function RuntimeFrame({ bundle, api }: { bundle: RuntimeBundle; a
       channel.port1.start(); frame!.contentWindow?.postMessage({ type: 'otto:connect', session }, '*', [channel.port2])
     }
     window.addEventListener('message', connect)
-    frame.srcdoc = buildDocument(bundle.pacote, session, nonce)
+    // React apps load the shared React build only when needed, keeping other pages light.
+    if (bundle.compilado) { const compiled = bundle.compilado; void import('../../shared/reactVendor.generated').then(m => { if (!disposed) frame.srcdoc = buildDocument(bundle.pacote, session, nonce, { ...compiled, vendor: m.REACT_VENDOR }) }).catch(() => setError('Não foi possível carregar o React do app.')) }
+    else frame.srcdoc = buildDocument(bundle.pacote, session, nonce)
     return () => { disposed = true; clearTimeout(timeout); window.removeEventListener('message', connect); channel?.port1.close(); channel?.port2.close(); frame.srcdoc = '' }
   }, [bundle, api])
   return <div className="apps-runtime"><div className="apps-runtime-status">{bundle.modo === 'previa' ? (bundle.pacote.manifesto.tabelas?.length ? 'Prévia · coleções do app são temporárias; as tabelas do Tables usam dados reais' : 'Prévia · os dados são temporários e serão descartados ao sair') : 'Versão publicada · dados da empresa'}<span role="status">{error || (ready ? 'Conectado' : 'Iniciando…')}</span></div><iframe ref={ref} title={bundle.app.nome} sandbox="allow-scripts allow-forms" referrerPolicy="no-referrer" className="apps-frame" /></div>
