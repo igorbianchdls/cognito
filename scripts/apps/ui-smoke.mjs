@@ -68,6 +68,12 @@ try {
  await page.locator('.apps-runtime-status', { hasText: 'Erro no app: Error: Falha proposital do teste' }).waitFor(); for (let i = 0; i < 40 && !calls.some(c => c.path.endsWith('/erros')); i++) await page.waitForTimeout(100)
  const reported = calls.find(c => c.path.endsWith('/erros')); assert(reported, 'The preview reports browser errors'); assert.equal(reported.body.versao, versionId); assert.match(reported.body.erros[0].mensagem, /Falha proposital do teste/); checks.push('Browser errors of the app appear in the preview and are sent to the server')
  await page.getByRole('link', { name: 'Visão geral', exact: true }).click(); await page.getByRole('button', { name: 'Publicar versão 1' }).click(); await page.getByText('Versão publicada.', { exact: true }).waitFor(); await page.getByRole('link', { name: 'Abrir app', exact: true }).click(); await frame.getByRole('heading', { name: 'Ideias compartilhadas' }).waitFor(); checks.push('Publish saved version and open published package')
+ // Opening fills the window; "Mostrar no Otto" brings back the sidebar and header, and "Tela cheia" returns.
+ if (await page.locator('.apps-topbar').count()) throw Error('Abrir app deve ocupar a tela cheia')
+ await page.getByRole('link', { name: 'Mostrar no Otto' }).click(); await page.locator('.apps-topbar').waitFor(); await frame.getByRole('heading', { name: 'Ideias compartilhadas' }).waitFor()
+ await page.getByRole('link', { name: 'Tela cheia' }).click(); await page.locator('.apps-float').waitFor(); await frame.getByRole('heading', { name: 'Ideias compartilhadas' }).waitFor()
+ if (await page.locator('.apps-topbar').count()) throw Error('Tela cheia deve esconder o Otto'); await page.screenshot({ path: resolve(out, 'tela-cheia-desktop.png') })
+ checks.push('Open app full screen and switch to the view inside Otto and back')
  await page.goto(origin + '/apps/novo'); await page.getByRole('textbox', { name: 'Nome do app' }).fill('App em React'); await page.getByRole('combobox', { name: 'Começar com' }).selectOption('exemplo-react'); await page.getByRole('button', { name: 'Criar app', exact: true }).click(); await page.getByRole('button', { name: 'src/App.jsx', exact: true }).waitFor()
  assert.equal(calls.findLast(c => c.method === 'POST' && !c.path).body.modelo, 'react')
  await page.getByRole('link', { name: 'Prévia', exact: true }).click(); const reactFrame = page.frameLocator('iframe[title="App em React"]'); await reactFrame.getByRole('heading', { name: 'Organize suas ideias' }).waitFor()

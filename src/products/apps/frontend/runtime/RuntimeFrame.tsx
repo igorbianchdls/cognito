@@ -10,7 +10,8 @@ const errorSchema = z.object({ type: z.literal('erro'), mensagem: z.string().min
 const messageSchema = z.object({ id: z.number().int().positive(), operacao: z.enum(['listar', 'salvar', 'excluir']), colecao: z.string().max(50), pagina: z.number().int().min(1).max(10000).optional(), registro: recordSchema.optional(), registroId: uuid.optional(), expectedVersion: z.number().int().positive().optional() }).strict()
 // Tables requests are validated again on the server; here only the shape and size are checked.
 const tablesMessageSchema = z.object({ id: z.number().int().positive(), canal: z.literal('tabelas'), fonte: z.string().max(50), operacao: z.enum(['campos', 'listar', 'obter', 'criar', 'editar', 'resumir']), registroId: uuid.optional(), valores: z.record(z.unknown()).optional(), expectedVersion: z.number().int().positive().optional(), busca: z.string().max(500).optional(), filtros: z.array(z.unknown()).max(30).optional(), ordenacao: z.array(z.unknown()).max(5).optional(), pagina: z.number().int().min(1).max(100000).optional(), tamanho: z.number().int().min(1).max(100).optional(), agrupar_por: z.string().max(200).optional(), periodo: z.enum(['dia', 'mes', 'ano']).optional(), metricas: z.array(z.unknown()).max(10).optional() }).strict()
-export default function RuntimeFrame({ bundle, api }: { bundle: RuntimeBundle; api: AppsApi }) {
+/** fullscreen shows only the app, as the public link does; otherwise a status bar sits above it. */
+export default function RuntimeFrame({ bundle, api, fullscreen = false }: { bundle: RuntimeBundle; api: AppsApi; fullscreen?: boolean }) {
   const ref = useRef<HTMLIFrameElement>(null), [error, setError] = useState(''), [ready, setReady] = useState(false), [lastError, setLastError] = useState('')
   useEffect(() => {
     const frame = ref.current; if (!frame) return
@@ -89,6 +90,6 @@ export default function RuntimeFrame({ bundle, api }: { bundle: RuntimeBundle; a
     return () => { disposed = true; clearTimeout(timeout); clearTimeout(flush); window.removeEventListener('message', connect); channel?.port1.close(); channel?.port2.close(); frame.srcdoc = '' }
   }, [bundle, api])
   // Visitors see only the app; errors appear above it.
-  if (bundle.modo === 'publico') return <div className="apps-runtime apps-runtime-public">{error && <div className="apps-public-notice" role="alert">{error}</div>}<iframe ref={ref} title={bundle.app.nome} sandbox="allow-scripts allow-forms" referrerPolicy="no-referrer" className="apps-frame" /></div>
+  if (bundle.modo === 'publico' || fullscreen) return <div className="apps-runtime apps-runtime-public">{error && <div className="apps-public-notice" role="alert">{error}</div>}<iframe ref={ref} title={bundle.app.nome} sandbox="allow-scripts allow-forms" referrerPolicy="no-referrer" className="apps-frame" /></div>
   return <div className="apps-runtime"><div className="apps-runtime-status">{bundle.modo === 'previa' ? (bundle.pacote.manifesto.tabelas?.length ? 'Prévia · coleções do app são temporárias; as tabelas do Tables usam dados reais' : 'Prévia · os dados são temporários e serão descartados ao sair') : 'Versão publicada · dados da empresa'}<span role="status">{error || (lastError ? `Erro no app: ${lastError.slice(0, 140)}` : ready ? 'Conectado' : 'Iniciando…')}</span></div><iframe ref={ref} title={bundle.app.nome} sandbox="allow-scripts allow-forms" referrerPolicy="no-referrer" className="apps-frame" /></div>
 }
