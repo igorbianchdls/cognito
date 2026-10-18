@@ -9,7 +9,7 @@ import { ERP_CAPABILITIES } from '../src/products/erp/shared/professionalContrac
 import type { PluginPrincipal } from '../src/products/mcpcore/shared/contracts'
 import type { PluginConfig } from '../src/products/mcpcore/shared/config'
 import { renderCardsHtml } from '../src/products/mcpcore/ui/resource'
-import { CLAUDEPLUGIN_VERSION } from '../src/products/claudeplugin/shared/version'
+import { CLAUDEPLUGIN_VERSION } from '../src/products/mcpcore/hosts/claude/version'
 
 // Cards com as regras de UI do Claude, em navegador real com host MCP Apps simulado (sem Claude, banco ou rede).
 const settings:PluginConfig={integration:'claude',resource:'https://erp.example.invalid/api/claude/mcp',metadataUrl:'https://erp.example.invalid/.well-known/oauth-protected-resource/api/claude/mcp',

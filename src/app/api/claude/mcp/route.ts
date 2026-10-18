@@ -1,4 +1,4 @@
-import { handleClaudeRequest } from '@/products/claudeplugin/mcp/handleRequest'
+import { handleClaudeRequest } from '@/products/mcpcore/hosts/claude/handleRequest'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'

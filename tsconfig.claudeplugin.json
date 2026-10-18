@@ -2,7 +2,7 @@
   "extends": "./tsconfig.json",
   "compilerOptions": { "incremental": false },
   "include": [
-    "next-env.d.ts", "src/types.d.ts", "src/types/**/*.d.ts", "src/products/claudeplugin/**/*.ts", "src/products/mcpcore/**/*.ts",
+    "next-env.d.ts", "src/types.d.ts", "src/types/**/*.d.ts", "src/products/mcpcore/hosts/**/*.ts", "src/products/mcpcore/**/*.ts",
     "src/app/api/claude/**/*.ts", "src/app/.well-known/oauth-protected-resource/api/claude/**/*.ts",
     "scripts/claudeplugin-*.ts"
   ],

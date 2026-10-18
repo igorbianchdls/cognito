@@ -8,12 +8,12 @@ import { readSchemas } from '../../src/products/mcpcore/domains/tables/schemas/c
 import type { PluginPrincipal } from '../../src/products/mcpcore/shared/contracts'
 import type { PluginConfig } from '../../src/products/mcpcore/shared/config'
 import type { Database } from '../../src/products/tables/server/database'
-import { createPluginServer } from '../../src/products/chatgptplugin/mcp/createServer'
-import { createClaudeServer } from '../../src/products/claudeplugin/mcp/createServer'
+import { createPluginServer } from '../../src/products/mcpcore/hosts/chatgpt/server'
+import { createClaudeServer } from '../../src/products/mcpcore/hosts/claude/server'
 import { mcpUpload } from '../../src/products/tables/server/mcpUploads'
 import type { AuthTenantContext } from '../../src/products/auth/shared/authContracts'
-import { handlePluginRequest } from '../../src/products/chatgptplugin/mcp/handleRequest'
-import { handleClaudeRequest } from '../../src/products/claudeplugin/mcp/handleRequest'
+import { handlePluginRequest } from '../../src/products/mcpcore/hosts/chatgpt/handleRequest'
+import { handleClaudeRequest } from '../../src/products/mcpcore/hosts/claude/handleRequest'
 
 const db=new PGlite(), checks:string[]=[]
 const called=new Set<string>(), objects=new Map<string,Buffer>(),originalFetch=globalThis.fetch

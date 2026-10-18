@@ -1,4 +1,4 @@
-import { handlePluginRequest } from '@/products/chatgptplugin/mcp/handleRequest'
+import { handlePluginRequest } from '@/products/mcpcore/hosts/chatgpt/handleRequest'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'

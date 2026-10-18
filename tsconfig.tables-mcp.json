@@ -1,6 +1,6 @@
 {
   "extends":"./tsconfig.json",
   "compilerOptions":{"incremental":false},
-  "include":["src/types.d.ts","src/types/**/*.d.ts","src/products/mcpcore/**/*.ts","src/products/tables/**/*.ts","src/products/tables/**/*.tsx","src/products/chatgptplugin/**/*.ts","src/products/claudeplugin/**/*.ts","scripts/tables/mcp-smoke.ts"],
+  "include":["src/types.d.ts","src/types/**/*.d.ts","src/products/mcpcore/**/*.ts","src/products/tables/**/*.ts","src/products/tables/**/*.tsx","src/products/mcpcore/hosts/**/*.ts","src/products/mcpcore/hosts/**/*.ts","scripts/tables/mcp-smoke.ts"],
   "exclude":["node_modules",".next"]
 }

@@ -7,7 +7,7 @@ import {closePool} from '../../src/lib/postgres'
 import {listErpEntityPage,listErpCategoryOptions,getErpEntitySummary} from '../../src/products/erp/server/erpRepository'
 import {loadPluginPrincipal} from '../../src/products/mcpcore/auth/resolvePrincipal'
 import {executeTool} from '../../src/products/mcpcore/application/executeTool'
-import type {PluginConfig} from '../../src/products/chatgptplugin/shared/config'
+import type {PluginConfig} from '../../src/products/mcpcore/hosts/chatgpt/config'
 import {closePluginDatabase} from '../../src/products/mcpcore/shared/database'
 config({path:'.env.local',quiet:true})
 const db=connection(),proof=JSON.parse(readFileSync('.cache/entity-categories/application.json','utf8'))

@@ -8,8 +8,8 @@
     "src/types/**/*.d.ts",
     "src/products/mcpcore/**/*.ts",
     "src/products/mcpcore/**/*.tsx",
-    "src/products/chatgptplugin/**/*.ts",
-    "src/products/claudeplugin/**/*.ts",
+    "src/products/mcpcore/hosts/**/*.ts",
+    "src/products/mcpcore/hosts/**/*.ts",
     "src/app/whatsapp/**/*.tsx",
     "src/app/api/whatsapp/**/*.ts",
     "scripts/whatsapp/**/*.ts"

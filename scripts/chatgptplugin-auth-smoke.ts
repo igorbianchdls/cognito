@@ -3,9 +3,9 @@ import assert from 'node:assert/strict'
 import { generateKeyPairSync, randomUUID, sign } from 'node:crypto'
 import { verifyToken } from '@clerk/nextjs/server'
 import { cachedVerification, verifyClerkOAuthToken, type OAuthVerificationDependencies } from '../src/products/mcpcore/auth/resolvePrincipal'
-import { handlePluginRequest, type HttpDependencies } from '../src/products/chatgptplugin/mcp/handleRequest'
+import { handlePluginRequest, type HttpDependencies } from '../src/products/mcpcore/hosts/chatgpt/handleRequest'
 import { PluginError, type PluginPrincipal } from '../src/products/mcpcore/shared/contracts'
-import type { PluginConfig } from '../src/products/chatgptplugin/shared/config'
+import type { PluginConfig } from '../src/products/mcpcore/hosts/chatgpt/config'
 
 // Chaves temporarias e SDK Clerk real; sem .env, rede, banco ou credenciais reais.
 const keys = generateKeyPairSync('rsa', { modulusLength: 2048 })

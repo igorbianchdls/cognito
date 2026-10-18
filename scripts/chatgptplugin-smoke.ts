@@ -7,7 +7,7 @@ import {appsTools} from '../src/products/mcpcore/domains/apps/tools/catalog'
 import {serviceInvoiceQueryStubs} from './erp/service-invoice-query-stubs'
 import assert from 'node:assert/strict'
 import { randomUUID } from 'node:crypto'
-import { handlePluginRequest, type HttpDependencies } from '../src/products/chatgptplugin/mcp/handleRequest'
+import { handlePluginRequest, type HttpDependencies } from '../src/products/mcpcore/hosts/chatgpt/handleRequest'
 import { resolvePluginPrincipal, validateOAuthToken } from '../src/products/mcpcore/auth/resolvePrincipal'
 import { PluginError, selectCompany, type PluginPrincipal } from '../src/products/mcpcore/shared/contracts'
 import { getErpDatabaseContext,runWithErpDatabaseContext } from '../src/lib/erpDatabaseContext'
@@ -15,7 +15,7 @@ import { assertErpTenantScopedQuery,runWithErpTransactionClient,getErpTransactio
 import { ERP_CAPABILITIES } from '../src/products/erp/shared/professionalContracts'
 import { executeTool, type ExecutionDependencies } from '../src/products/mcpcore/application/executeTool'
 import { ErpDomainError } from '../src/products/erp/shared/erpErrors'
-import type { PluginConfig } from '../src/products/chatgptplugin/shared/config'
+import type { PluginConfig } from '../src/products/mcpcore/hosts/chatgpt/config'
 
 const settings: PluginConfig = {integration:'chatgpt',resource:'http://localhost:3187/api/mcp',metadataUrl:'http://localhost:3187/.well-known/oauth-protected-resource/api/mcp',
   issuer:'https://test.clerk.accounts.dev',scope:'erp:read',clientIds:['client_test'],origins:['http://localhost:3187','https://chatgpt.com'],toolTimeoutMs:100,requestsPerMinute:60}

@@ -56,6 +56,7 @@ stubs['@/lib/postgres']={...postgres,runQuery(sql,params){
   });queue=task.catch(()=>undefined);return task;
 }};
 stubs['../shared/database']={pluginQuery:async(sql,params)=>(await db.query(sql,params)).rows};
+stubs['../../../shared/database']=stubs['../shared/database'];
 stubs['@clerk/nextjs/server']={clerkClient:()=>{throw new Error('Autenticacao externa proibida no teste');}};
 
 import { mkdirSync, writeFileSync } from 'node:fs';
@@ -88,10 +89,10 @@ async function main(){
   `);
   process.env.CLERK_SECRET_KEY=process.env.CLERK_SECRET_KEY||'sk_test_local_only';
   const {loadPluginPrincipal}=load('@/products/mcpcore/auth/resolvePrincipal');
-  const {handleClaudeRequest}=load('@/products/claudeplugin/mcp/handleRequest');
+  const {handleClaudeRequest}=load('@/products/mcpcore/hosts/claude/handleRequest');
   const {executionDependencies}=load('@/products/mcpcore/application/executeTool');
   const {renderCardsHtml}=load('@/products/mcpcore/ui/resource');
-  const {CLAUDEPLUGIN_VERSION}=load('@/products/claudeplugin/shared/version');
+  const {CLAUDEPLUGIN_VERSION}=load('@/products/mcpcore/hosts/claude/version');
   const settings={integration:'claude',resource:'https://erp.example.invalid/api/claude/mcp',metadataUrl:'https://erp.example.invalid/.well-known/oauth-protected-resource/api/claude/mcp',
     issuer:'https://test.clerk.accounts.dev',scope:'erp:read',clientIds:['*'],origins:['https://erp.example.invalid','https://claude.ai'],toolTimeoutMs:15000,requestsPerMinute:600};
   // Login do Claude substituído por um token local; o usuário e as permissões vêm do banco.
@@ -112,8 +113,8 @@ async function main(){
   const dados={cliente_id:201,data_competencia:'2026-10-01',codigo_municipio_prestacao:'2304400',itens:[{item_id:301,descricao:'Suporte técnico mensal',quantidade:2,valor_unitario:650}],
     aliquota_iss:5,iss_retido:true,retencoes_federais:{irrf:1.5}};
   let id,draft;
-  await check('Cliente MCP oficial conecta ao endpoint do Claude e lista as 8 tools de nota',async()=>{
-    assert.equal(client.getServerVersion()?.name,'cognito-claudeplugin');const {tools}=await client.listTools();assert.equal(tools.length,55);
+  await check('Cliente MCP oficial conecta ao endpoint do Claude e lista o catálogo e as 8 tools de nota',async()=>{
+    assert.equal(client.getServerVersion()?.name,'cognito-claudeplugin');const {tools}=await client.listTools();const expected=1+load('@/products/mcpcore/tools/catalog').tools.length+load('@/products/mcpcore/actions/catalog').actionTools.length+load('@/products/mcpcore/domains/tables/tools/catalog').tablesTools.length+load('@/products/mcpcore/domains/apps/tools/catalog').appsTools.length;assert(tools.length>=expected,'ERP, Tables and Apps tools are all listed: '+tools.length+' of '+expected);
     for(const name of NOTE_TOOLS)assert(tools.some(t=>t.name===name),name);
     for(const t of tools.filter(t=>NOTE_TOOLS.includes(t.name)&&!/^(listar|obter)_/.test(t.name)))assert.equal(t.annotations.destructiveHint,true,t.name);
   });

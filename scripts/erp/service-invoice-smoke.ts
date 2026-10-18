@@ -13,7 +13,7 @@ import {ERP_CAPABILITIES} from '../../src/products/erp/shared/professionalContra
 import {decideApproval} from '../../src/products/mcpcore/approvals/approvalRepository'
 import type {ErpAccessContext} from '../../src/products/erp/server/erpAccess'
 import type {PluginPrincipal} from '../../src/products/mcpcore/shared/contracts'
-import type {PluginConfig} from '../../src/products/chatgptplugin/shared/config'
+import type {PluginConfig} from '../../src/products/mcpcore/hosts/chatgpt/config'
 
 const migration='20261006020000_service_invoice_simulation.sql'
 const sql=readFileSync('supabase/migrations/'+migration,'utf8').replace(/^BEGIN;\s*/,'').replace(/COMMIT;\s*$/,'')

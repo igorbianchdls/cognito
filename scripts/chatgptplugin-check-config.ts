@@ -1,7 +1,7 @@
 import { config } from 'dotenv'
-import { getPluginConfig } from '../src/products/chatgptplugin/shared/config'
+import { getPluginConfig } from '../src/products/mcpcore/hosts/chatgpt/config'
 import { closePluginDatabase, pluginQuery } from '../src/products/mcpcore/shared/database'
-import { nativeFormKeyReady } from '../src/products/chatgptplugin/extensions/nativeForm'
+import { nativeFormKeyReady } from '../src/products/mcpcore/hosts/chatgpt/nativeForm'
 config({path:'.env.local',quiet:true})
 async function main() {
   const missing = ['CHATGPTPLUGIN_BASE_URL','CHATGPTPLUGIN_OAUTH_ISSUER','CHATGPTPLUGIN_OAUTH_CLIENT_IDS',

@@ -3,15 +3,15 @@ import { createServer } from 'node:http'
 import { existsSync,mkdirSync } from 'node:fs'
 import { resolve } from 'node:path'
 import { chromium } from 'playwright-core'
-import { renderPanelHtml } from '../src/products/chatgptplugin/extensions/panel'
-import { approvalRequest } from '../src/products/chatgptplugin/approvals/http'
+import { renderPanelHtml } from '../src/products/mcpcore/hosts/chatgpt/panel'
+import { approvalRequest } from '../src/products/mcpcore/hosts/chatgpt/approvals/http'
 import type { ErpAccessContext } from '../src/products/erp/server/erpAccess'
 
 async function main() {
   const resource='https://erp.example.invalid/api/mcp',id='d0000000-0000-4000-8000-000000000001'
   const session:ErpAccessContext={tenantId:1,sharedUserId:1,clerkUserId:'user_1',email:'test@example.invalid',tenantName:'Empresa A',role:'owner',authMode:'clerk',erpProfile:'administrador',capabilities:['erp.cadastros.gerenciar']}
   let decisions=0
-  const deps={session:async()=>session,config:()=>({resource} as ReturnType<typeof import('../src/products/chatgptplugin/shared/config').getPluginConfig>),load:async()=>({}) as ReturnType<typeof import('../src/products/mcpcore/approvals/approvalRepository').loadApproval>,decide:async()=>{decisions++;return {status:'saved',registro_id:'1'}}}
+  const deps={session:async()=>session,config:()=>({resource} as ReturnType<typeof import('../src/products/mcpcore/hosts/chatgpt/config').getPluginConfig>),load:async()=>({}) as ReturnType<typeof import('../src/products/mcpcore/approvals/approvalRepository').loadApproval>,decide:async()=>{decisions++;return {status:'saved',registro_id:'1'}}}
   const post=(origin:string,body:unknown={decision:'save'})=>new Request(resource,{method:'POST',headers:{origin,'content-type':'application/json'},body:JSON.stringify(body)})
   assert.equal((await approvalRequest(post('https://attacker.invalid'),id,deps)).status,403)
   assert.equal((await approvalRequest(post('https://erp.example.invalid'),id,{...deps,session:async()=>null})).status,401)

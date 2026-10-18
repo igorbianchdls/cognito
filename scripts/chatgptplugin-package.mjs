@@ -2,6 +2,7 @@ import { readFileSync,writeFileSync,mkdirSync,copyFileSync,readdirSync,existsSyn
 import { resolve,dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { PACKAGE_FILES,validatePackageEntries,validatePluginPackage } from './chatgptplugin-validate-package.mjs';
+import { skillFor } from './plugin-skills.mjs';
 
 const root=resolve(dirname(fileURLToPath(import.meta.url)),'..');
 export function buildPluginPackage(baseUrl,output=resolve(root,'dist/chatgptplugin')) {
@@ -9,7 +10,7 @@ export function buildPluginPackage(baseUrl,output=resolve(root,'dist/chatgptplug
   if(url.protocol!=='https:'||url.username||url.password||url.search||url.hash||url.pathname!=='/')throw new Error('Informe a origem HTTPS publica do MCP, sem caminho ou credenciais.');
   const target=resolve(output),dist=resolve(root,'dist');
   if(!target.startsWith(dist+'\\')&&!target.startsWith(dist+'/'))throw new Error('O pacote deve ficar dentro de dist.');
-  const source=resolve(root,'src/products/chatgptplugin/plugin');
+  const source=resolve(root,'src/products/mcpcore/hosts/chatgpt/plugin');
   const files=PACKAGE_FILES.filter(file=>!['mcp.json','README.md'].includes(file));
   const allowed=new Set(PACKAGE_FILES);
   function inspect(directory,prefix='') {
@@ -26,6 +27,9 @@ export function buildPluginPackage(baseUrl,output=resolve(root,'dist/chatgptplug
   if(existsSync(target)){if(lstatSync(target).isSymbolicLink())throw new Error('A pasta de saida deve ser local ao projeto.');inspect(target);}
   mkdirSync(target,{recursive:true});
   for(const file of files){
+    // Skills come from the shared source, rendered for ChatGPT.
+    const skill=/^skills\/([^/]+)\/SKILL\.md$/.exec(file);
+    if(skill){const destination=resolve(target,file);mkdirSync(dirname(destination),{recursive:true});writeFileSync(destination,skillFor(skill[1],'chatgpt'));continue;}
     const input=resolve(source,file),destination=resolve(target,file);let part=input;
     while(part!==root&&part!==dirname(part)){if(lstatSync(part).isSymbolicLink())throw new Error('A origem do pacote nao aceita links para outros arquivos.');part=dirname(part);}
     if(!lstatSync(input).isFile())throw new Error('Arquivo de origem invalido.');

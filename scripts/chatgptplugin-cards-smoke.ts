@@ -8,9 +8,9 @@ import { chromium,type Page } from 'playwright-core'
 import { executeTool,type ExecutionDependencies } from '../src/products/mcpcore/application/executeTool'
 import { ERP_CAPABILITIES } from '../src/products/erp/shared/professionalContracts'
 import type { PluginPrincipal } from '../src/products/mcpcore/shared/contracts'
-import type { PluginConfig } from '../src/products/chatgptplugin/shared/config'
+import type { PluginConfig } from '../src/products/mcpcore/hosts/chatgpt/config'
 import { renderCardsHtml } from '../src/products/mcpcore/ui/resource'
-import { CHATGPTPLUGIN_VERSION } from '../src/products/chatgptplugin/shared/version'
+import { CHATGPTPLUGIN_VERSION } from '../src/products/mcpcore/hosts/chatgpt/version'
 
 // Cards em navegador real com host MCP Apps simulado; sem ChatGPT, banco ou rede externa.
 const settings:PluginConfig={integration:'chatgpt',resource:'https://erp.example.invalid/api/mcp',metadataUrl:'https://erp.example.invalid/.well-known/oauth-protected-resource/api/mcp',

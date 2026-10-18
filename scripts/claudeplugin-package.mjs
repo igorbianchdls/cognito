@@ -2,11 +2,12 @@ import { readFileSync,writeFileSync,mkdirSync,readdirSync,existsSync,lstatSync,r
 import { resolve,dirname,relative,sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { encodePackageZip } from './chatgptplugin-package.mjs';
+import { skillFor } from './plugin-skills.mjs';
 
 // Pacote do plugin do Claude: manifesto em .claude-plugin/plugin.json, conector remoto em .mcp.json,
 // skills e README. Gerado por lista explícita: nunca leva .env, credenciais ou código do servidor.
 const root=resolve(dirname(fileURLToPath(import.meta.url)),'..');
-const source=resolve(root,'src/products/claudeplugin/plugin');
+const source=resolve(root,'src/products/mcpcore/hosts/claude/plugin');
 export const SOURCE_FILES=['.claude-plugin/plugin.json','README.md','skills/usar-erp/SKILL.md','skills/get-started/SKILL.md'];
 export const PACKAGE_FILES=[...SOURCE_FILES,'.mcp.json'].sort();
 export const MCP_PATH='/api/claude/mcp';
@@ -80,7 +81,8 @@ export function buildClaudePackage(baseUrl,output=resolve(root,'dist/claudeplugi
   const target=resolve(output),dist=resolve(root,'dist');
   if(!target.startsWith(dist+sep))fail('O pacote deve ficar dentro de dist.');
   if(existsSync(target)){if(lstatSync(target).isSymbolicLink())fail('A pasta de saída deve ser local ao projeto.');rmSync(target,{recursive:true})}
-  const entries=new Map(SOURCE_FILES.map(file=>{const input=resolve(source,file);if(!lstatSync(input).isFile())fail(`Arquivo de origem inválido: ${file}`);return [file,readFileSync(input)]}));
+  // Skills come from the shared source, rendered for Claude.
+  const entries=new Map(SOURCE_FILES.map(file=>{const skill=/^skills\/([^/]+)\/SKILL\.md$/.exec(file);if(skill)return [file,Buffer.from(skillFor(skill[1],'claude'))];const input=resolve(source,file);if(!lstatSync(input).isFile())fail(`Arquivo de origem inválido: ${file}`);return [file,readFileSync(input)]}));
   entries.set('.mcp.json',Buffer.from(JSON.stringify({mcpServers:{'cognito-erp':{type:'http',url:url.origin+MCP_PATH}}},null,2)+'\n'));
   validateEntries(entries);
   for(const [file,data] of entries){const destination=resolve(target,file);mkdirSync(dirname(destination),{recursive:true});writeFileSync(destination,data)}

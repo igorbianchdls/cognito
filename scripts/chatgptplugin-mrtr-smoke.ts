@@ -5,12 +5,12 @@ import {tools as erpTools} from '../src/products/mcpcore/tools/catalog'
 import {actionTools as erpActions} from '../src/products/mcpcore/actions/catalog'
 import assert from 'node:assert/strict'
 import { randomUUID,randomBytes } from 'node:crypto'
-import { handlePluginRequest,type HttpDependencies } from '../src/products/chatgptplugin/mcp/handleRequest'
+import { handlePluginRequest,type HttpDependencies } from '../src/products/mcpcore/hosts/chatgpt/handleRequest'
 import { ERP_CAPABILITIES } from '../src/products/erp/shared/professionalContracts'
 import { PluginError,type PluginPrincipal } from '../src/products/mcpcore/shared/contracts'
-import type { PluginConfig } from '../src/products/chatgptplugin/shared/config'
+import type { PluginConfig } from '../src/products/mcpcore/hosts/chatgpt/config'
 import type { ExecutionDependencies } from '../src/products/mcpcore/application/executeTool'
-import { MODERN_VERSION,versionKey,capabilitiesKey } from '../src/products/chatgptplugin/mcp/modernProtocol'
+import { MODERN_VERSION,versionKey,capabilitiesKey } from '../src/products/mcpcore/hosts/chatgpt/modernProtocol'
 
 const config:PluginConfig={integration:'chatgpt',resource:'https://erp.example.invalid/api/mcp',metadataUrl:'https://erp.example.invalid/.well-known/oauth-protected-resource/api/mcp',issuer:'https://test.clerk.accounts.dev',scope:'erp:read',clientIds:['client_test'],origins:['https://chatgpt.com'],toolTimeoutMs:1000,requestsPerMinute:60,nativeFormKey:randomBytes(32).toString('base64')}
 const principal:PluginPrincipal={userId:1,clerkUserId:'user_1',clientId:'client_test',scopes:['erp:read','erp:write'],companies:[{id:1,name:'Empresa 1',profile:'administrador',capabilities:[...ERP_CAPABILITIES]}]}

@@ -12,8 +12,8 @@ import {outputs} from '../../src/products/mcpcore/tools/outputs'
 import {loadPluginPrincipal} from '../../src/products/mcpcore/auth/resolvePrincipal'
 import {executionDependencies} from '../../src/products/mcpcore/application/executeTool'
 import {closePluginDatabase} from '../../src/products/mcpcore/shared/database'
-import {getPluginConfig} from '../../src/products/chatgptplugin/shared/config'
-import {handlePluginRequest} from '../../src/products/chatgptplugin/mcp/handleRequest'
+import {getPluginConfig} from '../../src/products/mcpcore/hosts/chatgpt/config'
+import {handlePluginRequest} from '../../src/products/mcpcore/hosts/chatgpt/handleRequest'
 
 // Escritas em uma única transação revertida. HTTP MCP local usa identidade resolvida
 // explicitamente para testar o SDK/contrato com Supabase real, sem testar o token OAuth.

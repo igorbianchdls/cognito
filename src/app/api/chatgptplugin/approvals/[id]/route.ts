@@ -1,4 +1,4 @@
-import { approvalRequest } from '@/products/chatgptplugin/approvals/http'
+import { approvalRequest } from '@/products/mcpcore/hosts/chatgpt/approvals/http'
 export const runtime='nodejs'
 export const dynamic='force-dynamic'
 async function handle(request:Request,context:{params:Promise<{id:string}>}) {
