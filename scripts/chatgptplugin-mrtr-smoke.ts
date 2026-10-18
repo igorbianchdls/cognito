@@ -70,7 +70,7 @@ async function main(){
   await check('Falha de auditoria impede escrita e autenticação é renovada',async()=>{
     const before=calls,params=preview(),result=await rpc('tools/call',params,{deps:{...deps,execution:{...execution,reserve:async()=>{throw new Error('secret database')}}}})
     assert.equal(result.body.result.isError,true);assert(!JSON.stringify(result.body).includes('secret'));assert.equal(calls,before)
-    const rBefore=resolved,lBefore=limited;await rpc('tools/list');await rpc('tools/list');assert.equal(resolved-rBefore,2);assert.equal(limited-lBefore,2)
+    const rBefore=resolved,lBefore=limited;await rpc('tools/list');await rpc('tools/list');assert.equal(resolved-rBefore,2);assert.equal(limited-lBefore,0,'Tool lists never count toward the per-minute limit')
   })
   const lastProposal=()=>JSON.parse([...saved.values()].at(-1)!.input)
   await check('Formulário nativo pede campos faltantes dentro da própria tool',async()=>{

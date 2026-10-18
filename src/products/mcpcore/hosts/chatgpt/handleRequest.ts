@@ -5,7 +5,7 @@ import { PluginError } from '@/products/mcpcore/shared/contracts'
 import { resolvePluginPrincipal } from '@/products/mcpcore/auth/resolvePrincipal'
 import { consumeRequestLimit } from '@/products/mcpcore/audit/executionRepository'
 import { executionDependencies } from '@/products/mcpcore/application/executeTool'
-import { corsHeaders, readJsonBody, oauthChallenge, type HttpDependencies } from '@/products/mcpcore/mcp/http'
+import { corsHeaders, countsTowardLimit, readJsonBody, oauthChallenge, type HttpDependencies } from '@/products/mcpcore/mcp/http'
 import { nativeFormStep } from './nativeForm'
 import { isWriteTool } from '../shared/writeTools'
 import { isModern,validateModern,requireNativeFormCapability,supportsNativeForms,ProtocolFailure,MODERN_VERSION,SUPPORTED_VERSIONS,SERVER_INFO } from './modernProtocol'
@@ -23,7 +23,6 @@ export async function handlePluginRequest(request: Request, deps: HttpDependenci
     headers = corsHeaders(request,config)
     if (request.method === 'OPTIONS') return new Response(null,{ status:204,headers })
     const principal = await deps.resolve(request,config)
-    await deps.limit(principal,config.requestsPerMinute,config.integration)
     if (request.method !== 'POST') return Response.json({error:'Use POST; este servidor não mantém sessões SSE.'},{ status:405,headers:{ ...headers,Allow:'POST, OPTIONS' } })
     let body:unknown
     try {body=await readJsonBody(request)}
@@ -33,6 +32,7 @@ export async function handlePluginRequest(request: Request, deps: HttpDependenci
       throw error
     }
     rpcId=(body as {id?:unknown})?.id??null
+    if(countsTowardLimit(body))await deps.limit(principal,config.requestsPerMinute,config.integration)
     const modern=isModern(request,body)
     const modernRequest=modern?validateModern(request,body):undefined
     if(modernRequest) {

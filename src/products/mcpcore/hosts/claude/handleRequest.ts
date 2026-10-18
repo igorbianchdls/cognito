@@ -5,7 +5,7 @@ import { resolvePluginPrincipal } from '@/products/mcpcore/auth/resolvePrincipal
 import { consumeRequestLimit } from '@/products/mcpcore/audit/executionRepository'
 import { executionDependencies } from '@/products/mcpcore/application/executeTool'
 import { isWriteTool } from '../shared/writeTools'
-import { corsHeaders, readJsonBody, oauthChallenge, type HttpDependencies } from '@/products/mcpcore/mcp/http'
+import { corsHeaders, countsTowardLimit, readJsonBody, oauthChallenge, type HttpDependencies } from '@/products/mcpcore/mcp/http'
 import { getClaudePluginConfig } from './config'
 import { createClaudeServer } from './server'
 
@@ -25,9 +25,9 @@ export async function handleClaudeRequest(request: Request, deps: HttpDependenci
     if (request.method === 'OPTIONS') return new Response(null,{ status:204,headers })
     // 401 antes do SDK: é o que inicia o login no Claude.
     const principal = await deps.resolve(request,config)
-    await deps.limit(principal,config.requestsPerMinute,config.integration)
     if (request.method !== 'POST') return Response.json({error:'Use POST; este servidor não mantém sessões SSE.'},{ status:405,headers:{ ...headers,Allow:'POST, OPTIONS' } })
     const body = await readJsonBody(request)
+    if (countsTowardLimit(body)) await deps.limit(principal,config.requestsPerMinute,config.integration)
     const call = body as { method?: string; params?: { name?: unknown } }
     // Token antigo só com leitura: 403 com desafio em HTTP (step-up), que é o que faz o Claude reautenticar;
     // o erro dentro do resultado da tool não dispara um novo login.

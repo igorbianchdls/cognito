@@ -22,6 +22,14 @@ export function corsHeaders(request: Request, config: PluginConfig): Record<stri
     'Access-Control-Expose-Headers':'WWW-Authenticate, MCP-Protocol-Version, Retry-After',
   }
 }
+/** Only tool calls count toward the per-minute limit. Discovery, tool lists and card reads come in bursts
+ *  when a host refreshes the connector (dozens per second) and are cheap; limiting them makes the host
+ *  keep a connector without cards. Anything that is not a single JSON-RPC message counts, to be safe. */
+export function countsTowardLimit(body: unknown) {
+  const method = body && typeof body === 'object' && !Array.isArray(body) ? (body as { method?: unknown }).method : undefined
+  return typeof method !== 'string' || method === 'tools/call'
+}
+
 export async function readJsonBody(request: Request): Promise<unknown> {
   if (!request.headers.get('content-type')?.toLowerCase().startsWith('application/json')) {
     throw new PluginError('INVALID_CONTENT_TYPE','Use application/json.',415)

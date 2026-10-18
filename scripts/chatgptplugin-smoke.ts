@@ -222,8 +222,12 @@ async function main() {
   })
   await check('401 com descoberta e 429',async () => {
     const unauth=await rpc('tools/list',{},dependencies,{authorization:''});assert.equal(unauth.response.status,401);assert(unauth.response.headers.get('www-authenticate')?.includes(settings.metadataUrl))
-    const limited=await rpc('tools/list',{}, {...dependencies,limit:async () => {throw new PluginError('RATE_LIMITED','Limite',429)}})
+    const exhausted={...dependencies,limit:async () => {throw new PluginError('RATE_LIMITED','Limite',429)}}
+    const limited=await rpc('tools/call',{name:'meu_acesso',arguments:{}},exhausted)
     assert.equal(limited.response.status,429);assert.equal(limited.response.headers.get('retry-after'),'60')
+    // A connector refresh reads the list and every card in a burst: those never count toward the limit.
+    assert.equal((await rpc('tools/list',{},exhausted)).response.status,200)
+    for(const uri of ['ui://chatgptplugin/cards/v2.html','ui://chatgptplugin/tables/v1.html','ui://chatgptplugin/apps/v1.html'])assert.equal((await rpc('resources/read',{uri},exhausted)).response.status,200,uri)
   })
   await check('Origem externa batch corpo excessivo e GET stateless',async () => {
     assert.equal((await rpc('tools/list',{},dependencies,{origin:'https://evil.test'})).response.status,403)
