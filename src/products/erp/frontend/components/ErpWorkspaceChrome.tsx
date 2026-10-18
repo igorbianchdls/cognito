@@ -83,14 +83,14 @@ export function ErpModuleWorkspaceTabs({ sectionId, moduleId }: { sectionId: Erp
   const section = getErpSection(sectionId)
   const itemGroup = ['produtos', 'servicos']
   const categoryGroup = ['categorias', 'categorias-cadastro']
-  const peopleGroup = ['clientes', 'fornecedores', 'vendedores']
+  const peopleGroup = ['clientes', 'fornecedores', 'vendedores', 'contas-contabeis']
   const group = sectionId === 'cadastros' ? (itemGroup.includes(moduleId) ? itemGroup : categoryGroup.includes(moduleId) ? categoryGroup : peopleGroup) : undefined
   const labels: Record<string, string> = {
     servicos: 'Serviços', 'posicao-estoque': 'Situação', movimentacoes: 'Movimentações', inventarios: 'Inventários',
     transferencias: 'Transferências', 'conversoes-unidades': 'Conversões',
   }
   const modules = section.modules.filter(module => !group || group.includes(module.id))
-  return <ErpWorkspaceTabs label={sectionId === 'cadastros' && itemGroup.includes(moduleId) ? 'Produtos e serviços' : section.label} activeHref={section.modules.find(module => module.id === moduleId)?.href ?? ''} tabs={modules.map(module => ({ label: labels[module.id] ?? module.label, href: module.href }))} />
+  return <ErpWorkspaceTabs label={sectionId === 'cadastros' ? itemGroup.includes(moduleId) ? 'Produtos e serviços' : categoryGroup.includes(moduleId) ? 'Categorias' : 'Cadastros' : section.label} activeHref={section.modules.find(module => module.id === moduleId)?.href ?? ''} tabs={modules.map(module => ({ label: labels[module.id] ?? module.label, href: module.href }))} />
 }
 
 function ErpWorkspaceTabs({ label, tabs, activeHref }: {

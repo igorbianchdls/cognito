@@ -113,6 +113,9 @@ ERP_NAVIGATION.find(section => section.id === 'cadastros')!.modules.push({
   id: 'automacoes', label: 'Rotinas e recorrências', href: '/erp/cadastros/automacoes', description: 'Execuções, resultados e próximas ocorrências.',
 })
 
+/** First tab of the overview, before the reports. */
+export const ERP_SUMMARY_TAB = { id: 'resumo', label: 'Resumo', href: '/erp', description: 'Resumo operacional do ERP.' }
+
 export function getErpSection(sectionId?: string) {
   return ERP_NAVIGATION.find((section) => section.id === sectionId) ?? ERP_NAVIGATION[0]
 }

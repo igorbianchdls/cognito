@@ -6,8 +6,7 @@ import { usePathname, useRouter } from "next/navigation"
 import {
   IconAddressBook, IconBuildingWarehouse, IconCashBanknote,
   IconChartBar, IconClipboardList, IconFileInvoice,
-  IconPackage, IconReportAnalytics, IconSearch, IconSettings, IconShoppingBag,
-  IconTruckDelivery, IconUsers,
+  IconPackage, IconSearch, IconSettings, IconShoppingBag,
 } from "@tabler/icons-react"
 import { CircleHelp } from "lucide-react"
 
@@ -31,13 +30,25 @@ type NavigationItem = {
   url?: string
   icon?: IconComponent
   activePrefix?: string
+  /** Other pages that belong to this item and keep it highlighted. */
+  activePaths?: string[]
+  /** Pages shown as tabs inside the item: found by the search, not listed in the sidebar. */
+  tabs?: { title: string; url: string }[]
   exactActive?: boolean
   capability?: ErpCapability
   children?: NavigationItem[]
 }
 
 const navigation: NavigationItem[] = [
-  { title: "Visão geral", url: "/erp", icon: IconChartBar, exactActive: true, capability: "erp.relatorios.visualizar" },
+  {
+    title: "Visão geral", url: "/erp", icon: IconChartBar, exactActive: true, activePaths: ["/erp/relatorios"], capability: "erp.relatorios.visualizar",
+    tabs: [
+      { title: "DRE", url: "/erp/relatorios/dre" }, { title: "Fluxo de caixa", url: "/erp/relatorios/fluxo-de-caixa" },
+      { title: "Contas em atraso", url: "/erp/relatorios/contas-em-atraso" }, { title: "Margem", url: "/erp/relatorios/margem" },
+      { title: "Orçado × realizado", url: "/erp/relatorios/orcado-realizado" }, { title: "Relatório de vendas", url: "/erp/relatorios/vendas" },
+      { title: "Relatório de compras", url: "/erp/relatorios/compras" },
+    ],
+  },
   {
     title: "Vendas", url: "/erp/vendas/pedidos", icon: IconShoppingBag, activePrefix: "/erp/vendas", capability: "erp.vendas.visualizar",
     children: [
@@ -77,9 +88,14 @@ const navigation: NavigationItem[] = [
     ],
   },
   { title: "Notas fiscais", url: "/erp/compras/notas-compra", icon: IconFileInvoice, capability: "erp.compras.visualizar" },
-  { title: "Clientes", url: "/erp/cadastros/clientes", icon: IconUsers, capability: "erp.cadastros.visualizar" },
-  { title: "Fornecedores", url: "/erp/cadastros/fornecedores", icon: IconTruckDelivery, capability: "erp.cadastros.visualizar" },
-  { title: "Contas contábeis", url: "/erp/cadastros/contas-contabeis", icon: IconReportAnalytics, capability: "erp.cadastros.visualizar" },
+  {
+    title: "Cadastros", url: "/erp/cadastros/clientes", icon: IconAddressBook, capability: "erp.cadastros.visualizar",
+    activePaths: ["/erp/cadastros/clientes", "/erp/cadastros/fornecedores", "/erp/cadastros/vendedores", "/erp/cadastros/contas-contabeis"],
+    tabs: [
+      { title: "Clientes", url: "/erp/cadastros/clientes" }, { title: "Fornecedores", url: "/erp/cadastros/fornecedores" },
+      { title: "Vendedores", url: "/erp/cadastros/vendedores" }, { title: "Contas contábeis", url: "/erp/cadastros/contas-contabeis" },
+    ],
+  },
   {
     title: "Produtos e serviços", url: "/erp/cadastros/produtos", icon: IconPackage, capability: "erp.cadastros.visualizar",
     children: [
@@ -90,7 +106,6 @@ const navigation: NavigationItem[] = [
       { title: "Rotinas e recorrências", url: "/erp/cadastros/automacoes" },
     ],
   },
-  { title: "Relatórios", url: "/erp/relatorios/dre", icon: IconReportAnalytics, activePrefix: "/erp/relatorios", capability: "erp.relatorios.visualizar" },
 ]
 
 function activeItem(item: NavigationItem, pathname: string): SimpleNavigationItem {
@@ -100,13 +115,15 @@ function activeItem(item: NavigationItem, pathname: string): SimpleNavigationIte
       ? pathname === item.url
       : pathname === item.url || pathname.startsWith(item.activePrefix ?? item.url + "/")
     : false
-  return { ...item, children, isActive: ownActive || Boolean(children?.some((child) => child.isActive)) }
+  const pathActive = Boolean(item.activePaths?.some((path) => pathname === path || pathname.startsWith(path + "/")))
+  return { ...item, children, isActive: ownActive || pathActive || Boolean(children?.some((child) => child.isActive)) }
 }
 
 function flatten(items: SimpleNavigationItem[], parent?: string): Array<SimpleNavigationItem & { context?: string }> {
   return items.flatMap((item) => [
     ...(item.url ? [{ ...item, context: parent }] : []),
     ...flatten(item.children ?? [], item.title),
+    ...((item as { tabs?: SimpleNavigationItem[] }).tabs ?? []).map((tab) => ({ ...tab, context: item.title })),
   ])
 }
 

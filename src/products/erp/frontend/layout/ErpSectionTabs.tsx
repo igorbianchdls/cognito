@@ -4,7 +4,7 @@ import { useRouter } from 'next/navigation'
 
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import type { ErpModuleId, ErpSectionId } from '@/products/erp/shared/types'
-import { getErpSection } from '@/products/erp/shared/navigation'
+import { ERP_SUMMARY_TAB, getErpSection } from '@/products/erp/shared/navigation'
 
 export function ErpSectionTabs({
   sectionId,
@@ -15,16 +15,19 @@ export function ErpSectionTabs({
 }) {
   const router = useRouter()
   const section = getErpSection(sectionId)
+  // The overview and the reports share one tab bar: Resumo first, then each report.
+  const reports = sectionId === 'overview' || sectionId === 'relatorios'
+  const modules = reports ? [ERP_SUMMARY_TAB, ...getErpSection('relatorios').modules] : section.modules
 
-  if (section.modules.length === 0) return null
+  if (modules.length === 0) return null
 
   return (
-    <Tabs value={moduleId ?? section.modules[0]?.id ?? ''} onValueChange={(value) => {
-      const nextModule = section.modules.find((module) => module.id === value)
+    <Tabs value={sectionId === 'overview' ? ERP_SUMMARY_TAB.id : moduleId ?? modules[0]?.id ?? ''} onValueChange={(value) => {
+      const nextModule = modules.find((module) => module.id === value)
       if (nextModule) router.push(nextModule.href)
     }}>
       <TabsList variant="underline" className="h-11 gap-6">
-        {section.modules.map((module) => (
+        {modules.map((module) => (
           <TabsTrigger
             key={module.id}
             value={module.id}

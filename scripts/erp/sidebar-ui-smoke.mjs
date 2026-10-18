@@ -53,10 +53,13 @@ try {
   assert.match(await menu.innerText(), /Carregando menu/)
   assert.equal(accessRequests, 0, 'Access must wait for Clerk readiness')
   await setAuth(ready); await waitOwner()
-  for (const name of ['Visão geral', 'Vendas', 'Compras', 'Financeiro', 'Estoque', 'Notas fiscais', 'Clientes', 'Fornecedores', 'Produtos e serviços', 'Relatórios']) assert(await menu.getByRole('button', { name, exact: true }).isVisible(), name)
+  for (const name of ['Visão geral', 'Vendas', 'Compras', 'Financeiro', 'Estoque', 'Notas fiscais', 'Cadastros', 'Produtos e serviços']) assert(await menu.getByRole('button', { name, exact: true }).isVisible(), name)
+  // Clients, suppliers and accounts are tabs of Cadastros; reports are tabs of Visão geral.
+  for (const name of ['Clientes', 'Fornecedores', 'Contas contábeis', 'Relatórios']) assert.equal(await menu.getByRole('button', { name, exact: true }).count(), 0, name)
   checks.push('waits_for_session_then_renders_all_owner_navigation')
   await page.getByRole('region', { name: 'Indicadores' }).waitFor()
-  assert.equal(await page.locator('[data-dashboard]').evaluate(el => getComputedStyle(el).backgroundColor), 'rgb(255, 255, 255)')
+  // The color seen behind the dashboard: its own or the first painted ancestor's.
+  assert.equal(await page.locator('[data-dashboard]').evaluate(el => { for (let node = el; node; node = node.parentElement) { const color = getComputedStyle(node).backgroundColor; if (color !== 'rgba(0, 0, 0, 0)') return color } return '' }), 'rgb(255, 255, 255)')
   const sidebarBox = await page.locator('[data-slot="sidebar-container"]').boundingBox()
   const dashboardBox = await page.locator('[data-dashboard]').boundingBox()
   assert(sidebarBox && dashboardBox && dashboardBox.x >= sidebarBox.x + sidebarBox.width, 'Sidebar must not cover dashboard content')
@@ -91,7 +94,7 @@ try {
   assert.equal(await menu.getByRole('button', { name: 'Financeiro', exact: true }).count(), 0)
   release(); await menu.getByRole('button', { name: 'Vendas', exact: true }).waitFor(); await page.unroute(route)
   assert.equal(await menu.getByRole('button', { name: 'Financeiro', exact: true }).count(), 0)
-  assert.equal(await menu.getByRole('button', { name: 'Clientes', exact: true }).count(), 0)
+  assert.equal(await menu.getByRole('button', { name: 'Cadastros', exact: true }).count(), 0)
   checks.push('company_and_user_switch_clears_old_permissions_and_filters_navigation')
 
   await page.route(route, r => r.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ capabilities: [] }) }))
@@ -110,6 +113,13 @@ try {
   await page.getByPlaceholder('Pesquisar páginas e recursos…').fill('contas a pagar')
   await page.getByRole('dialog').getByRole('button', { name: /Contas a pagar/ }).click()
   assert.match(page.url(), /\/erp\/financeiro\/contas-a-pagar$/)
+  for (const [query, url] of [['contas contábeis', /\/erp\/cadastros\/contas-contabeis$/], ['dre', /\/erp\/relatorios\/dre$/]]) {
+    await page.getByRole('button', { name: /Pesquisar/ }).click(); await page.getByPlaceholder('Pesquisar páginas e recursos…').fill(query)
+    await page.getByRole('dialog').getByRole('button').filter({ hasText: query === 'dre' ? 'DRE' : 'Contas contábeis' }).first().click(); assert.match(page.url(), url)
+  }
+  // A report keeps Visão geral highlighted.
+  assert.equal(await menu.getByRole('button', { name: 'Visão geral', exact: true }).getAttribute('data-active'), 'true')
+  assert.equal(await menu.getByRole('button', { name: 'Cadastros', exact: true }).getAttribute('data-active'), 'false')
   checks.push('menu_search_finds_authorized_destination')
   await page.setViewportSize({ width: 375, height: 900 })
   await page.getByRole('button', { name: 'Toggle Sidebar' }).click()
