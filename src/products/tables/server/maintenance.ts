@@ -1,6 +1,6 @@
 import { Pool } from 'pg'
 import { buildPostgresPoolConfig } from '@/lib/postgres'
-import { removeStoredAttachment } from './storage'
+import { removeOldExports, removeStoredAttachment } from './storage'
 
 let pool: InstanceType<typeof Pool> | undefined
 
@@ -33,5 +33,6 @@ export async function maintainTablesStorage() {
       failed++
     } finally { client.release() }
   }
-  return { status: failed ? 'partial' : 'completed', removed, failed }
+  const exports = await removeOldExports().catch(() => { failed++; return 0 })
+  return { status: failed ? 'partial' : 'completed', removed, failed, exportacoes_removidas: exports }
 }

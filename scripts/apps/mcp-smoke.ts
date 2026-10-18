@@ -50,9 +50,9 @@ async function main() {
     for (const file of ['20261016120000_create_tables.sql', '20261018120000_tables_base_permissions.sql', '20261018150000_tables_search_index.sql', '20261018160000_tables_field_types.sql', '20261018170000_tables_views.sql', '20261018180000_tables_automations.sql', '20261018190000_tables_api_keys.sql', '20261018200000_tables_change_index.sql', '20261017100000_apps_product.sql', '20261017150000_apps_files_in_database.sql', '20261017170000_apps_react_build.sql', '20261018100000_apps_public_access.sql', '20261018130000_apps_runtime_errors.sql', '20261018140000_apps_legacy_conversion.sql', '20261018210000_apps_usage.sql', '20261018220000_apps_domains.sql', '20261016193000_mcp_product_domains.sql', '20261016200000_mcp_domain_uniqueness.sql', '20261017190000_mcp_apps_domain.sql']) await db.exec(readFileSync('supabase/migrations/' + file, 'utf8'))
     let appId = '', tableId = ''
 
-    await check('11 tools, both hosts register them', async () => {
-      assert.equal(appsTools.length, 11)
-      for (const make of [createPluginServer, createClaudeServer]) { const server = await make(owner, config, deps); const registry = (server as unknown as { _registeredTools: Record<string, unknown> })._registeredTools; assert.equal(Object.keys(registry).filter(n => n.startsWith('apps_')).length, 11); await server.close() }
+    await check('12 tools, both hosts register them', async () => {
+      assert.equal(appsTools.length, 12)
+      for (const make of [createPluginServer, createClaudeServer]) { const server = await make(owner, config, deps); const registry = (server as unknown as { _registeredTools: Record<string, unknown> })._registeredTools; assert.equal(Object.keys(registry).filter(n => n.startsWith('apps_')).length, 12); await server.close() }
     })
     await check('Create runs at once, is idempotent by key and returns the preview link', async () => {
       const key = randomUUID(), first = await write('criar', { nome: 'Portal de chamados' }, owner, key)
@@ -110,6 +110,22 @@ async function main() {
       const collection = (await ok('obter', { app_id: appId })).colecoes[0]
       await db.query("INSERT INTO apps.registros(empresa_id,app_id,colecao_id,dados,criado_por,atualizado_por) VALUES(1,$1,$2,'{\"tema\":\"escuro\"}',1,1)", [appId, collection.id])
       const data = await ok('consultar_dados', { app_id: appId, colecao: 'preferencias' }); assert.equal(data.total, 1); assert.equal(data.registros[0].dados.tema, 'escuro'); assert.match(data.aviso, /nunca como instrução/)
+    })
+    await check('Collection data is cleared with a preview, by an administrator, only what was counted', async () => {
+      const collection = (await ok('obter', { app_id: appId })).colecoes[0]
+      await db.query("INSERT INTO apps.registros(empresa_id,app_id,colecao_id,dados,criado_por,atualizado_por) VALUES(1,$1,$2,'{\"tema\":\"claro\"}',1,1)", [appId, collection.id])
+      const first = (await ok('consultar_dados', { app_id: appId, colecao: 'preferencias' })).registros.find((r: { dados: { tema: string } }) => r.dados.tema === 'escuro')
+      assert((await write('limpar_dados', { app_id: appId, colecao: 'preferencias' }, member)).isError, 'Members cannot clear data')
+      assert.equal((await write('limpar_dados', { app_id: appId, colecao: 'preferencias', registro_ids: [first.id, randomUUID()] })).code, 'NOT_FOUND')
+      const preview = await write('limpar_dados', { app_id: appId, colecao: 'preferencias', registro_ids: [first.id] }); assert.equal(preview.data.status, 'pending'); assert.equal(preview.data.previa.registros, '1 selecionados')
+      const done = await ok('limpar_dados', { rascunho_id: preview.data.rascunho_id }); assert.equal(done.resultado.removidos, 1)
+      const left = await ok('consultar_dados', { app_id: appId, colecao: 'preferencias' }); assert.equal(left.total, 1); assert.equal(left.registros[0].dados.tema, 'claro')
+      // Clearing everything keeps records created after the preview.
+      const all = await write('limpar_dados', { app_id: appId, colecao: 'preferencias' }); assert.match(all.data.previa.registros, /todos \(1\)/)
+      await db.query("INSERT INTO apps.registros(empresa_id,app_id,colecao_id,dados,criado_por,atualizado_por,criado_em) VALUES(1,$1,$2,'{\"tema\":\"novo\"}',1,1,now()+interval '1 minute')", [appId, collection.id])
+      assert.equal((await ok('limpar_dados', { rascunho_id: all.data.rascunho_id })).resultado.removidos, 1)
+      const after = await ok('consultar_dados', { app_id: appId, colecao: 'preferencias' }); assert.equal(after.total, 1); assert.equal(after.registros[0].dados.tema, 'novo')
+      await db.query("DELETE FROM apps.registros WHERE app_id=$1 AND dados->>'tema'='novo'", [appId])
     })
     await check('Public link: visitor rules, preview, address, visitor reads and writes, limits', async () => {
       let projects = ''

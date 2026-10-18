@@ -24,11 +24,24 @@ const fields: Record<string, string[]> = {
   'contas-a-pagar': ['id','conta_id','descricao','fornecedor','parcela','vencimento','valor','valor_pago','saldo','status','tipo_lancamento'],
   'contas-a-receber': ['id','conta_id','descricao','cliente','parcela','vencimento','valor','valor_pago','saldo','status'],
 }
+/** Search text for ILIKE, with its wildcards taken literally. */
+const likeText=(text?:string)=>text?.trim()?text.trim().replace(/[\\%_]/g,match=>'\\'+match):null
 export function pickFields(record: Record<string, unknown>, keys: string[]) {
   return Object.fromEntries(keys.filter(key => record[key] !== undefined).map(key => [key, record[key]]))
 }
 export const erpReadService = {
   contract:getSalesContract,
+  async contracts(tenantId:number,input:{busca?:string;status?:string;page:number;pageSize:number}) {
+    const params=[tenantId,input.status||null,likeText(input.busca)]
+    const from=`FROM erp.contratos_vendas c LEFT JOIN erp.entidades e ON e.empresa_id=c.empresa_id AND e.id=c.cliente_id
+      WHERE c.empresa_id=$1 AND c.excluido_em IS NULL AND ($2::text IS NULL OR c.status=$2)
+        AND ($3::text IS NULL OR concat_ws(' ',c.numero,c.descricao,coalesce(e.nome,c.cliente_snapshot->>'nome')) ILIKE '%'||$3||'%')`
+    const [count]=await runQuery<{n:number}>(`SELECT count(*)::int n ${from}`,params)
+    const records=await runQuery(`SELECT c.id::text,c.numero,c.descricao,c.status,c.periodicidade,c.dia_vencimento,c.data_inicio,c.data_fim,c.proxima_geracao_em,
+      c.cliente_id::text,coalesce(e.nome,c.cliente_snapshot->>'nome') AS cliente,c.versao ${from}
+      ORDER BY (c.status='ativo') DESC,c.proxima_geracao_em NULLS LAST,c.id DESC LIMIT $4 OFFSET $5`,[...params,input.pageSize,(input.page-1)*input.pageSize])
+    return {records,total:count.n,page:input.page,pageSize:input.pageSize,hasMore:input.page*input.pageSize<count.n}
+  },
   serviceOrders:serviceOrderPage,
   async serviceOrder(company:number,id:number){const result=await getServiceOrder(company,id);return {record:result.order,items:result.items,history:result.events,totalItems:result.items.length,itemsTruncated:false}},
   async commercialDocument(company:number,kind:CommercialDocumentKind,id:number,revision?:number){
@@ -54,11 +67,23 @@ export const erpReadService = {
     const rows=await runQuery('SELECT id::text,nome,tipo FROM erp.contas_financeiras WHERE empresa_id=$1 AND ativo AND excluido_em IS NULL ORDER BY nome,id LIMIT 101',[tenantId])
     return {records:rows.slice(0,100),hasMore:rows.length>100}
   },
-  async payments(tenantId:number,input:{page:number;pageSize:number;type?:string}) {
-    const rows=await runQuery(`SELECT id::text,tipo,conta_receber_parcela_id::text,conta_pagar_parcela_id::text,conta_financeira_id::text,
-      data_pagamento,valor,valor_liquido,estornado_em,estorno_de_pagamento_id::text FROM erp.pagamentos
-      WHERE empresa_id=$1 AND excluido_em IS NULL AND ($2::text IS NULL OR tipo=$2) ORDER BY erp.pagamentos.id DESC LIMIT $3 OFFSET $4`,
-      [tenantId,input.type||null,input.pageSize+1,(input.page-1)*input.pageSize])
+  async payments(tenantId:number,input:{page:number;pageSize:number;type?:string;query?:string;from?:string;to?:string}) {
+    // Counterparty and title come from the installment paid, so payments can be found by name.
+    const rows=await runQuery(`SELECT p.id::text,p.tipo,p.conta_receber_parcela_id::text,p.conta_pagar_parcela_id::text,p.conta_financeira_id::text,
+      p.data_pagamento,p.valor,p.valor_liquido,p.estornado_em,p.estorno_de_pagamento_id::text,
+      coalesce(cr.descricao,cp.descricao) AS descricao_titulo,coalesce(ec.nome,ef.nome) AS contraparte
+      FROM erp.pagamentos p
+      LEFT JOIN erp.contas_receber_parcelas rp ON rp.empresa_id=p.empresa_id AND rp.id=p.conta_receber_parcela_id
+      LEFT JOIN erp.contas_receber cr ON cr.empresa_id=rp.empresa_id AND cr.id=rp.conta_receber_id
+      LEFT JOIN erp.entidades ec ON ec.empresa_id=cr.empresa_id AND ec.id=cr.cliente_id
+      LEFT JOIN erp.contas_pagar_parcelas pp ON pp.empresa_id=p.empresa_id AND pp.id=p.conta_pagar_parcela_id
+      LEFT JOIN erp.contas_pagar cp ON cp.empresa_id=pp.empresa_id AND cp.id=pp.conta_pagar_id
+      LEFT JOIN erp.entidades ef ON ef.empresa_id=cp.empresa_id AND ef.id=cp.fornecedor_id
+      WHERE p.empresa_id=$1 AND p.excluido_em IS NULL AND ($2::text IS NULL OR p.tipo=$2)
+        AND ($5::date IS NULL OR p.data_pagamento>=$5::date) AND ($6::date IS NULL OR p.data_pagamento<=$6::date)
+        AND ($7::text IS NULL OR concat_ws(' ',ec.nome,ef.nome,cr.descricao,cp.descricao,cr.numero_documento,cp.numero_documento) ILIKE '%'||$7||'%')
+      ORDER BY p.data_pagamento DESC,p.id DESC LIMIT $3 OFFSET $4`,
+      [tenantId,input.type||null,input.pageSize+1,(input.page-1)*input.pageSize,input.from||null,input.to||null,likeText(input.query)])
     return {records:rows.slice(0,input.pageSize),page:input.page,pageSize:input.pageSize,hasMore:rows.length>input.pageSize}
   },
   overview: getErpOverview,

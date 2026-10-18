@@ -8,13 +8,13 @@ const tablesScript=String.raw`
 Object.assign(states,{saved:'Salvo',pending:'Aguardando confirmação',aguardando_envio:'Aguardando arquivo',confirmado:'Confirmado'});
 Object.assign(labels,{base:'Base',tabela:'Tabela',campo:'Campo',visualizacao:'Visualização',grupo:'Grupo',texto:'Comentário',autor:'Autor',acao:'Ação',entidade:'Item',excluido_em:'Excluído em',tabelas:'Tabelas',campos:'Campos',registros:'Registros',obrigatorio:'Obrigatório'});
 const fieldTypes={texto:'Texto',texto_longo:'Texto longo',numero:'Número',moeda:'Moeda',data:'Data',data_hora:'Data e hora',checkbox:'Checkbox',selecao:'Seleção',selecao_multipla:'Seleção múltipla',usuario:'Responsável',usuarios:'Pessoas',email:'E-mail',url:'URL',vinculo:'Vínculo',anexo:'Anexo',telefone:'Telefone',porcentagem:'Porcentagem',avaliacao:'Avaliação',formula:'Fórmula',busca:'Busca em vínculo',agregacao:'Agregação',autonumero:'Numeração automática',criado_em:'Criado em',alterado_em:'Alterado em',criado_por:'Criado por',alterado_por:'Alterado por',grade:'Grade',kanban:'Kanban',calendario:'Calendário',bases:'Base',tabelas:'Tabela',campos:'Campo',registros:'Registro'};
-const titlesByTool={listar_bases:'Bases',obter_tabela:'Estrutura da tabela',consultar_registros:'Registros',obter_registro:'Registro',resumir:'Resumo',listar_atividade:'Atividade',listar_lixeira:'Lixeira',obter_link_anexo:'Anexo',obter_operacao:'Operação'};
+const titlesByTool={listar_bases:'Bases',obter_tabela:'Estrutura da tabela',consultar_registros:'Registros',obter_registro:'Registro',resumir:'Resumo',listar_atividade:'Atividade',listar_lixeira:'Lixeira',obter_link_anexo:'Anexo',obter_operacao:'Operação',exportar:'Exportação',listar_automacoes:'Automações'};
 const short=tool=>String(tool||'').replace(/^tables_/,'');
 function heading(target,title,subtitle){target.append(element('h1',title));if(subtitle)target.append(element('p',subtitle,'sub'))}
 function openLink(url){return request('ui/open-link',{url})}
 async function reload(args){const content=await callTool(state.tool,withCompany(args));state.args=args;state.data=content.data;state.error=null;render()}
 function viewFor(tool,data){if(data&&data.operacao_id&&data.status)return renderOperation;if(Array.isArray(data.grupos)||short(tool)==='resumir')return renderSummary;
-  if(Array.isArray(data.registros))return renderRecords;if(data.registro)return renderRecord;if(data.url&&short(tool)==='obter_link_anexo')return renderLink;return renderItems}
+  if(Array.isArray(data.registros))return renderRecords;if(data.registro)return renderRecord;if(data.url&&short(tool)==='obter_link_anexo')return renderLink;if(data.link_download)return renderExport;return renderItems}
 function cellText(record,field){const shown=record.exibicao||{};const value=shown[field.nome]!==undefined?shown[field.nome]:shown[field.nome+' ('+String(field.id).slice(0,8)+')'];if(value===undefined||value==='')return '—';const n=Number(value);if(field.tipo==='moeda'&&Number.isFinite(n))return money(n);if(field.tipo==='numero'&&Number.isFinite(n))return n.toLocaleString('pt-BR',{maximumFractionDigits:6});return value}
 const amount=value=>{const text=String(value);return Number(value).toLocaleString('pt-BR',{minimumFractionDigits:text.includes('.')?2:0,maximumFractionDigits:2})}
 function pager(data){const page=Number(data.pagina||1),box=element('div',undefined,'pager'),prev=button('Anterior',()=>reload({...state.args,pagina:page-1})),next=button('Próxima',()=>reload({...state.args,pagina:page+1}));
@@ -22,6 +22,7 @@ function pager(data){const page=Number(data.pagina||1),box=element('div',undefin
 
 // Prévia, resultado e situação de uma alteração.
 function describeChanges(op,changes){if(!changes||typeof changes!=='object')return null;
+  if(changes.previsto){const p=changes.previsto,errors=(p.erros||[]).length;return kv([['linhas',changes.linhas,{label:'Linhas',raw:true}],['colunas',(changes.colunas||[]).join(', '),{label:'Colunas',raw:true}],['criados',p.criados,{label:'Registros a criar',raw:true}],...(errors?[['erros',errors+(errors===1?' linha com erro':' linhas com erro'),{label:'Erros',raw:true}]]:[])])}
   if(Array.isArray(changes.registros)){const count=changes.registros.length,editing=changes.registros.filter(r=>r.registro_id).length;return kv([['registros',count+(count===1?' registro':' registros')+(editing?' ('+editing+' em edição)':'')]])}
   const flat=Object.entries(changes.alteracoes||changes.campo||changes.visualizacao||changes).filter(([k,v])=>v!==null&&typeof v!=='object'&&!/_id$|^expected/.test(k));
   return kv(flat.slice(0,6).map(([k,v])=>[k,k==='tipo'?(fieldTypes[v]||v):v]))}
@@ -34,7 +35,7 @@ function renderOperation(target,data){const done=data.status==='saved',preview=d
       tellModel('Confirmado no card do Tables: '+JSON.stringify({tool:data.confirmar.tool,operacao_id:data.operacao_id,status:content.data.status}))}},
       {label:'Cancelar',run:async()=>{const content=await callTool('tables_cancelar_operacao',withCompany({operacao_id:data.operacao_id}));state.data=content.data;render();tellModel('Prévia do Tables cancelada no card: '+data.operacao_id)}}]));return}
   target.append(notice({saved:'Operação executada.',cancelled:'Prévia cancelada.',expired:'Prévia expirada.'}[data.status]||label(data.status),done?'success':'info'));
-  if(done){const saved=[];if(Array.isArray(result.registros))saved.push(['registros',result.quantidade||result.registros.length]);
+  if(done){const saved=[];if(Array.isArray(result.registros))saved.push(['registros',result.quantidade||result.registros.length]);if(result.criados!==undefined)saved.push(['registros',result.criados],...((result.erros||[]).length?[['erros',result.erros.length+' linhas com erro',{label:'Erros',raw:true}]]:[]));
     for(const key of ['base','tabela','campo','visualizacao'])if(result[key]&&result[key].nome)saved.push([key,result[key].nome,{label:label(key),raw:true}]);
     const box=kv(saved);if(box)target.append(box);
     const actions=[];if(result.upload_form_url)actions.push({label:result.status==='confirmado'?'Abrir envio':'Enviar arquivo',primary:result.status!=='confirmado',run:()=>openLink(result.upload_form_url)});
@@ -72,11 +73,12 @@ function renderSummary(target,data){const groups=data.grupos||[],metricNames=Obj
 // Listas: bases, estrutura da tabela, atividade e lixeira.
 function renderItems(target,data){const full=state.displayMode==='fullscreen',tool=short(state.tool);
   if(data.base){hero(target,{eyebrow:'Base',title:data.base.nome,meta:data.base.descricao||''})}else heading(target,titlesByTool[tool]||'Tables',data.tabela?data.tabela.nome:(data.total!==undefined?data.total+' itens':''));
-  const source=data.itens||(data.tabelas&&data.tabelas.itens)||[];const rows=source.map(item=>{const row={...item};if(row.tipo)row.tipo=fieldTypes[row.tipo]||row.tipo;if(row.opcoes&&row.opcoes.itens)row.opcoes=row.opcoes.itens.map(o=>o.nome).join(', ');return row});
+  const source=data.itens||(data.tabelas&&data.tabelas.itens)||(data.automacoes&&data.automacoes.map(a=>({nome:a.nome,gatilho:a.gatilho,ativa:a.ativa?'Sim':'Não',ultima_entrega:a.ultimas_entregas[0]?a.ultimas_entregas[0].estado:'—'})))||[];const rows=source.map(item=>{const row={...item};if(row.tipo)row.tipo=fieldTypes[row.tipo]||row.tipo;if(row.opcoes&&row.opcoes.itens)row.opcoes=row.opcoes.itens.map(o=>o.nome).join(', ');return row});
   if(!rows.length){target.append(notice(tool==='listar_lixeira'?'A lixeira está vazia.':'Nada encontrado.'));return}
   const keys=columns(rows,full?6:strict?2:3).filter(k=>!['posicao','cor','icone'].includes(k));const shown=full?rows:rows.slice(0,strict?3:5);
   target.append(table(shown,keys.length?keys:['nome']));
   if(full){if(data.tem_mais||Number(data.pagina||1)>1)target.append(pager(data.itens?data:data.tabelas))}else if(rows.length>shown.length||data.tem_mais||(data.tabelas&&data.tabelas.tem_mais))target.append(actionsBar([{label:'Ver tudo',run:fullscreen}]))}
+function renderExport(target,data){hero(target,{eyebrow:'Exportação',title:data.tabela||'Tabela',meta:Number(data.registros||0).toLocaleString('pt-BR')+' registros · o link vale 1 hora'});target.append(actionsBar([{label:'Baixar CSV',primary:true,run:()=>openLink(data.link_download)}]))}
 function renderLink(target,data){hero(target,{eyebrow:'Anexo',title:'Link de download pronto',meta:'O link expira em instantes; gere outro se precisar.'});target.append(actionsBar([{label:'Baixar arquivo',primary:true,run:()=>openLink(data.url)}]))}
 `
 

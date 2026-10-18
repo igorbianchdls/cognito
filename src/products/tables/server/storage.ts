@@ -38,6 +38,31 @@ export async function removeStoredAttachment(path: string) {
   await storageRequest('object/tables-anexos', { method: 'DELETE', body: JSON.stringify({ prefixes: [path] }) }, true)
 }
 
+// Exports asked through the assistants are files in the private bucket, under exportacoes/<day>/<random>.
+// The link lasts an hour; the daily maintenance removes the days before yesterday.
+export const EXPORT_LINK_SECONDS = 3600
+export async function storeExport(nome: string, csv: string) {
+  const path = `exportacoes/${new Date().toISOString().slice(0, 10)}/${randomUUID()}.csv`, file = (nome.replace(/[\\/:*?"<>|\u0000-\u001f]+/g, ' ').trim() || 'tabela') + '.csv'
+  await storageRequest(`object/${pathFor(path)}`, { method: 'POST', body: csv, headers: { 'Content-Type': 'text/csv; charset=utf-8', 'x-upsert': 'false' } })
+  const { response, base } = await storageRequest(`object/sign/${pathFor(path)}`, { method: 'POST', body: JSON.stringify({ expiresIn: EXPORT_LINK_SECONDS }) })
+  const result = await response.json() as { signedURL?: string }
+  const url = new URL('/storage/v1' + result.signedURL, base)
+  if (!result.signedURL?.startsWith('/object/sign/') || url.pathname !== `/storage/v1/object/sign/${pathFor(path)}` || !url.searchParams.get('token')) throw new TablesError('STORAGE_UNAVAILABLE', 'Não foi possível preparar o download.', 503)
+  url.searchParams.set('download', file)
+  return { url: url.toString(), arquivo: file, expira_em: new Date(Date.now() + EXPORT_LINK_SECONDS * 1000).toISOString() }
+}
+export async function removeOldExports(today = new Date()) {
+  const list = async (prefix: string) => (await (await storageRequest('object/list/tables-anexos', { method: 'POST', body: JSON.stringify({ prefix, limit: 1000, offset: 0 }) })).response.json()) as { name: string; id: string | null }[]
+  const keep = new Date(today.getTime() - 86_400_000).toISOString().slice(0, 10)
+  let removed = 0
+  for (const day of (await list('exportacoes/')).filter(e => e.id === null && /^\d{4}-\d{2}-\d{2}$/.test(e.name) && e.name < keep)) {
+    const files = (await list(`exportacoes/${day.name}/`)).filter(e => e.id !== null).map(e => `exportacoes/${day.name}/${e.name}`)
+    if (files.length) await storageRequest('object/tables-anexos', { method: 'DELETE', body: JSON.stringify({ prefixes: files }) }, true)
+    removed += files.length
+  }
+  return removed
+}
+
 function pathFor(path: string) {
   const parts = path.split('/')
   if (parts.some(p => !p || p === '.' || p === '..' || /[\\\u0000-\u001f]/.test(p))) throw new TablesError('INVALID_FILE', 'Arquivo inválido.')

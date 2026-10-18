@@ -55,7 +55,7 @@ function sameValidation(schema:z.ZodTypeAny,name:string,cases:unknown[]) {
 async function main() {
  const legacy=await catalog(false),modern=await catalog(true)
  const expected=[...whatsappLocalTools.map(t=>t.name),...tablesTools.map(t=>t.name),...appsTools.map(t=>t.name),...tools.map(t=>t.name),...actionTools.map(t=>t.name),'meu_acesso','abrir_painel','ler_configuracoes','atualizar_configuracoes','search_mentions'].sort()
- assert.equal(expected.length,62+tablesTools.length+appsTools.length+whatsappLocalTools.length);assert.equal(new Set(expected).size,62+tablesTools.length+appsTools.length+whatsappLocalTools.length)
+ assert.equal(expected.length,63+tablesTools.length+appsTools.length+whatsappLocalTools.length);assert.equal(new Set(expected).size,63+tablesTools.length+appsTools.length+whatsappLocalTools.length)
  let documentedParameters=0
  for(const entries of [legacy,modern]) {
   assert.deepEqual(entries.map(t=>t.name).sort(),expected)
@@ -82,7 +82,7 @@ async function main() {
  assert.deepEqual(preferences._meta?.securitySchemes,[{type:'oauth2',scopes:['erp:read']}])
  assert.match(legacy.find(t=>t.name==='confirmar_compra')!.description,/Não recebe mercadoria/)
  assert.match(legacy.find(t=>t.name==='emitir_nota_servico')!.description,/saved só confirma execução/)
- console.log(`PASS MCP legacy/modern: 62 descriptions, ${documentedParameters/2} documented input occurrences; annotations/scopes preserved`)
+ console.log(`PASS MCP legacy/modern: ${expected.length} descriptions, ${documentedParameters/2} documented input occurrences; annotations/scopes preserved`)
 
  const paging=z.object({pagina:z.number().int().positive().default(1),por_pagina:z.number().int().min(10).max(50).default(20)}).strict()
  sameValidation(paging,'buscar_cadastros',[{}, {pagina:2,por_pagina:30}, {pagina:0}, {por_pagina:51}, {pagina:'2'}, {extra:true}])

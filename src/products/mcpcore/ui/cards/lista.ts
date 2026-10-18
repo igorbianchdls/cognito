@@ -26,7 +26,10 @@ const listSpecs={
     statuses:[['rascunho','Rascunho'],['aguardando_retorno','Aguardando retorno'],['emitida','Emitidas'],['falha','Com falha'],['cancelada','Canceladas']],
     detail:row=>({tool:'obter_nota_servico',args:{nota_id:Number(row.id)}})},
   consultar_estoque:{columns:()=>['produto','local','quantidade_disponivel','quantidade_reservada','quantidade_fisica'],primary:'produto',secondary:()=>'local',amount:'quantidade_disponivel',noun:['item','itens']},
-  listar_pagamentos:{columns:()=>['data_pagamento','tipo','valor_liquido','estornado_em'],primary:'tipo',secondary:()=>'data_pagamento',amount:'valor_liquido',noun:['pagamento','pagamentos']},
+  listar_pagamentos:{columns:()=>['data_pagamento','contraparte','descricao_titulo','valor_liquido','estornado_em'],primary:'contraparte',secondary:()=>'descricao_titulo',amount:'valor_liquido',date:'data_pagamento',noun:['pagamento','pagamentos'],period:['inicio','fim']},
+  listar_contratos:{columns:()=>['numero','cliente','periodicidade','proxima_geracao_em','status'],primary:'numero',secondary:()=>'cliente',date:'proxima_geracao_em',noun:['contrato','contratos'],
+    statuses:[['ativo','Ativos'],['pausado','Pausados'],['rascunho','Rascunho'],['encerrado','Encerrados'],['cancelado','Cancelados']],
+    detail:row=>({tool:'obter_contrato',args:{registro_id:Number(row.id)}})},
   buscar_cadastros:{columns:(args,rows)=>['nome','documento','sku','preco','cidade','email','telefone','status'].filter(k=>rows.some(r=>r[k]!==undefined&&r[k]!==null&&r[k]!=='')).slice(0,4),
     primary:'nome',secondary:(args,row)=>['documento','sku','cidade','email'].find(k=>row&&row[k]),amount:'preco',noun:args=>registrationNouns[args.tipo]||['cadastro','cadastros'],
     detail:(row,args)=>({tool:'obter_cadastro',args:{tipo:args.tipo||'clientes',registro_id:Number(row.id)}})},
@@ -83,7 +86,7 @@ function renderList(target,data){const full=state.displayMode==='fullscreen',row
   pager.append(prev,element('span','Página '+page,'muted'),next);target.append(pager)}
 function filtersView(spec,args){const bar=element('div',undefined,'toolbar');const values={};let apply;
   const field=(text,node)=>{const wrap=element('label',text);wrap.append(node);bar.append(wrap);return node};
-  if(state.tool!=='listar_pagamentos'){const search=field('Buscar',element('input'));search.type='search';search.value=args.busca||'';search.onkeydown=e=>{if(e.key==='Enter'){e.preventDefault();apply.click()}};values.busca=()=>search.value.trim()||undefined}
+  {const search=field('Buscar',element('input'));search.type='search';search.value=args.busca||'';search.onkeydown=e=>{if(e.key==='Enter'){e.preventDefault();apply.click()}};values.busca=()=>search.value.trim()||undefined}
   // No Claude não há listas suspensas: situação e ordem viram botões de escolha.
   const quote=state.tool==='listar_vendas'&&args.tipo_documento==='orcamento',statusKey=quote?'situacao':'status';
   const statuses=quote?[['em_andamento','Em andamento'],['enviada','Enviada'],['aprovado','Aprovada'],['recusado','Recusada'],['convertido','Convertida em venda'],['cancelado','Cancelada']]:spec.statuses;

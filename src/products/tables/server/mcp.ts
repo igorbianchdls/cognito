@@ -87,7 +87,7 @@ export async function readMcp(db:Database, session:TablesSession, name:string, i
 function inputWithout(input:Input,keys:string[]) { return Object.fromEntries(Object.entries(input).filter(([key])=>!keys.includes(key))) }
 
 // Only versions the operation depends on go into the hash: edits elsewhere in the same table or base must not stale a preview.
-const STRUCTURE_OPERATIONS=new Set(['salvar_registros','criar_campo','editar_campo','editar_tabela','mover_para_lixeira','restaurar_item'])
+const STRUCTURE_OPERATIONS=new Set(['salvar_registros','importar_csv','criar_campo','editar_campo','editar_tabela','mover_para_lixeira','restaurar_item'])
 const RECORD_OPERATIONS=new Set(['salvar_registros','mover_registros_para_lixeira'])
 export async function operationSnapshot(db:Database,session:TablesSession,name:string,data:Input) {
   const snapshot:Input={bases:[],tabelas:[],registros:[],itens:[]}, refs:Input[]=[]
@@ -189,6 +189,7 @@ export async function applyMcp(db:Database,session:TablesSession,name:string,dat
     const previous=old?{nome:old.nome,tipo:old.tipo,campos:old.campos}:{}
     return {visualizacao:await service.saveView(db,session,data.tabela_id,viewInputSchema.parse({...previous,...patch,configuracao:{...old?.configuracao,...patch.configuracao},expectedVersion:old?.versao}),data.visualizacao_id)}
   }
+  if(name==='importar_csv'){const t=await requireTable(db,session,data.tabela_id,'record');const {importRows}=await import('./csv');return importRows(db,session,t.id,{colunas:data.colunas,linhas:data.linhas,expectedStructureVersion:t.versao_estrutura})}
   if(name==='adicionar_comentario')return service.addComment(db,session,data.registro_id,data.texto)
   if(name==='mover_para_lixeira') {
     if(data.tipo==='campos'){const f=(await db.query('SELECT tabela_id FROM tables.campos WHERE empresa_id=$1 AND id=$2 AND excluido_em IS NULL',[session.tenantId,data.item_id])).rows[0];if(!f)throw missing();const t=await requireTable(db,session,f.tabela_id);await service.deleteField(db,session,t.id,data.item_id,t.versao_estrutura)}

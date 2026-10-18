@@ -13,7 +13,7 @@ export const tablesDependencies:TablesDependencies={transaction:withTablesContro
 
 const OPERATION_TITLES:Record<string,string>={criar_base:'Criar base',editar_base:'Editar base',compartilhar_base:'Compartilhar base',criar_tabela:'Criar tabela',editar_tabela:'Renomear tabela',criar_campo:'Criar campo',editar_campo:'Editar campo',
  salvar_registros:'Salvar registros',criar_visualizacao:'Criar visualização',editar_visualizacao:'Editar visualização',excluir_visualizacao:'Excluir visualização',adicionar_comentario:'Comentar',
- mover_para_lixeira:'Mover para a lixeira',mover_registros_para_lixeira:'Mover registros para a lixeira',restaurar_item:'Restaurar da lixeira',preparar_upload:'Preparar envio de arquivo',confirmar_upload:'Confirmar arquivo',remover_anexo:'Remover anexo'}
+ mover_para_lixeira:'Mover para a lixeira',mover_registros_para_lixeira:'Mover registros para a lixeira',restaurar_item:'Restaurar da lixeira',preparar_upload:'Preparar envio de arquivo',confirmar_upload:'Confirmar arquivo',remover_anexo:'Remover anexo',importar_csv:'Importar CSV'}
 // Previews show names, not IDs: field keys, options, people, tables and records known by the snapshot.
 function readable(value:unknown,names:Map<string,string>):unknown{
  if(Array.isArray(value))return value.map(v=>readable(v,names))
@@ -89,7 +89,7 @@ export async function runAction(db:Database,principal:PluginPrincipal,session:Ta
  const snapshot=await withTablesClient(db,session,randomUUID(),client=>operationSnapshot(client,session,resolved.op,resolved.dados))
  const proposal={tipo:resolved.op,ferramenta:key,entrada:input.dados,dados:resolved.dados}
  const names=new Map<string,string>(snapshot.referencias.filter((r:Input)=>r.id&&r.nome).map((r:Input)=>[String(r.id),String(r.nome)]))
- const preview={titulo:OPERATION_TITLES[resolved.op]||resolved.op,referencias:snapshot.referencias,alteracoes:readable(resolved.dados,names),...(resolved.op==='excluir_visualizacao'?{aviso:'Exclusão definitiva da visualização. Os registros são preservados.'}:{})}
+ const preview:Input={titulo:OPERATION_TITLES[resolved.op]||resolved.op,referencias:snapshot.referencias,alteracoes:readable(resolved.dados,names),...(resolved.op==='excluir_visualizacao'?{aviso:'Exclusão definitiva da visualização. Os registros são preservados.'}:{})}
  const id=randomUUID(),insert=(status:string,result:unknown)=>db.query(`INSERT INTO plugin.drafts(id,empresa_id,user_id,oauth_client_id,operation_key,proposal,target_snapshot,integration,domain,operation_type,status,result,decided_at) VALUES($1,$2,$3,$4,$5,$6::jsonb,$7::jsonb,$8,'tables',$9,$10,$11::jsonb,${status==='saved'?'now()':'NULL'}) RETURNING *`,[id,session.tenantId,principal.userId,principal.clientId,input.chave_operacao,JSON.stringify(proposal),JSON.stringify({...snapshot,preview}),config.integration,resolved.op,status,result===null?null:JSON.stringify(result)])
  // Operations that only add data run at once; the draft row still records the
  // key and the result, so a repeated call or obter_operacao returns the same outcome.
@@ -100,9 +100,12 @@ export async function runAction(db:Database,principal:PluginPrincipal,session:Ta
  // Validate with the real product services and constraints, rolling back every
  // simulated write (including audit and version changes) before saving the draft.
  await db.query('SAVEPOINT tables_preview')
- try {await withTablesClient(db,session,randomUUID(),client=>applyMcp(client,session,resolved.op,resolved.dados,true))}
+ let simulated:Input
+ try {simulated=await withTablesClient(db,session,randomUUID(),client=>applyMcp(client,session,resolved.op,resolved.dados,true))}
  catch(error){await db.query('ROLLBACK TO SAVEPOINT tables_preview');throw error}
  await db.query('ROLLBACK TO SAVEPOINT tables_preview');await db.query('RELEASE SAVEPOINT tables_preview')
+ // An import shows its columns, a sample and the outcome of the simulation instead of every line.
+ if(resolved.op==='importar_csv')preview.alteracoes={colunas:resolved.dados.nomes_colunas,linhas:resolved.dados.linhas.length,amostra:resolved.dados.linhas.slice(0,3),...(resolved.dados.ignoradas.length?{colunas_ignoradas:resolved.dados.ignoradas}:{}),previsto:{criados:simulated.criados,erros:simulated.erros.slice(0,20)}}
  return view((await insert('pending',null)).rows[0],config)
 }
 export async function cancelOperation(db:Database,principal:PluginPrincipal,company:number,id:string,config:PluginConfig) {

@@ -90,7 +90,8 @@ export async function commercialPage(tenantId:number,type:'vendas'|'compras',inp
 }
 export async function analysis(tenantId:number,type:'vendas'|'compras'|'pagar'|'receber',from:string,to:string) {
   const financial=type==='pagar'||type==='receber',date=financial?'vencimento':'data',amount=financial?'saldo':'total'
-  const rows=financial?financialRows(type):commercialRows(type)
+  // The period goes inside the materialized rows: balances are computed only for installments due in it.
+  const rows=financial?`${financialRows(type)} AND parcelas.data_vencimento BETWEEN $2::date AND $3::date`:commercialRows(type)
   const valid=financial?"status NOT IN ('cancelado','renegociado','pago')":type==='vendas'?"status IN ('confirmada','faturada') AND tipo_documento='venda'":"status IN ('confirmada','parcialmente_recebida','recebida') AND tipo_movimento='compra'"
   const params=[tenantId,from,to]
   // Financial balance expressions are evaluated once, and both totals and months

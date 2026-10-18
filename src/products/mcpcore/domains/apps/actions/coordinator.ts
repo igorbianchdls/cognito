@@ -22,7 +22,7 @@ export type Input = Record<string, any>
 export type AppsDependencies = { transaction: typeof withAppsControlTransaction; tables: TablesTransaction }
 export const appsDependencies: AppsDependencies = { transaction: withAppsControlTransaction, tables: withTablesTransaction }
 
-const TITLES: Record<string, string> = { criar: 'Criar app', salvar_codigo: 'Salvar código do app', publicar: 'Publicar app', arquivar: 'Arquivar app', excluir: 'Mover app para a lixeira', restaurar: 'Restaurar app', despublicar: 'Tirar app do ar', acesso: 'Alterar acesso do app', dominio: 'Domínio próprio do app' }
+const TITLES: Record<string, string> = { criar: 'Criar app', salvar_codigo: 'Salvar código do app', publicar: 'Publicar app', arquivar: 'Arquivar app', excluir: 'Mover app para a lixeira', restaurar: 'Restaurar app', despublicar: 'Tirar app do ar', acesso: 'Alterar acesso do app', dominio: 'Domínio próprio do app', limpar_dados: 'Limpar dados do app' }
 const scoped = "domain='apps' AND integration=$1 AND empresa_id=$2 AND user_id=$3 AND oauth_client_id=$4"
 const scope = (p: PluginPrincipal, company: number, c: PluginConfig) => [c.integration, company, p.userId, p.clientId]
 const statusOf = (app: App) => app.excluido_em ? 'na_lixeira' : app.arquivado_em ? 'arquivado' : app.publicacao_id ? 'no_ar' : 'em_construcao'
@@ -146,6 +146,11 @@ async function execute(db: Database, s: Session, op: string, dados: Input, confi
   if (op === 'publicar') { await publish(db, s, app.id, app.versao_concorrencia, dados.versao_id, operationKey, storage); const now = await getApp(db, s, app.id); return { app_id: app.id, versao: dados.versao, situacao: statusOf(now), links: links(now, config) } }
   if (op === 'despublicar') { await unpublish(db, s, app.id, app.versao_concorrencia); return { app_id: app.id, situacao: 'em_construcao' } }
   if (op === 'dominio') { const result = await setDomain(db, s, app.id, dados.dominio); await bump(db, s, app.id); const now = await getApp(db, s, app.id); return { app_id: app.id, ...result, links: links(now, config) } }
+  if (op === 'limpar_dados') {
+    // Only what the preview counted: records created after it stay.
+    const removed = (await db.query('UPDATE apps.registros SET excluido_em=now(),atualizado_em=now(),atualizado_por=$4,versao_concorrencia=versao_concorrencia+1 WHERE empresa_id=$1 AND app_id=$2 AND colecao_id=$3 AND excluido_em IS NULL AND criado_em<=$5::timestamptz AND ($6::uuid[] IS NULL OR id=ANY($6::uuid[])) RETURNING id', [s.tenantId, app.id, dados.colecao_id, s.sharedUserId, dados.ate, dados.registro_ids ?? null])).rows.length
+    return { app_id: app.id, colecao: dados.colecao, removidos: removed }
+  }
   if (op === 'acesso') { await setAccess(db, s, app.id, dados.modo, dados.endereco); const now = await getApp(db, s, app.id); return { app_id: app.id, acesso: dados.modo === 'publico' ? 'Público' : 'Privado', endereco: dados.modo === 'publico' ? dados.endereco : undefined, links: links(now, config) } }
   await service.lifecycle(db, s, app.id, app.versao_concorrencia, op)
   return { app_id: app.id, situacao: op === 'restaurar' ? 'em_construcao' : op === 'arquivar' ? 'arquivado' : 'na_lixeira' }
@@ -169,6 +174,7 @@ async function prepare(db: Database, s: Session, key: string, dados: Input): Pro
     return { op: 'publicar', dados: { app_id: app.id, versao_id: target.id, versao: target.numero }, revision: app.versao_concorrencia,
       preview: { app: app.nome, versao: target.numero, substitui: replaces, modelo: manifest.modelo, tabelas: manifest.tabelas.map(t => `${t.chave} (${t.operacoes.join(', ')})`), colecoes: manifest.colecoes.map(c => c.nome), aviso: 'Todos os membros da empresa passam a ver esta versão.' } }
   }
+  if (key === 'limpar_dados') return prepareCleanup(db, s, app, dados)
   if (key === 'acesso' && dados.dominio !== undefined) return prepareDomain(db, s, app, dados)
   if (key === 'acesso') return prepareAccess(db, s, app, dados)
   const op = dados.acao as string
@@ -176,6 +182,19 @@ async function prepare(db: Database, s: Session, key: string, dados: Input): Pro
   else { available(app); if (op === 'despublicar' && !app.publicacao_id) throw new AppsError('INVALID_STATE', 'O app não está no ar.', 409) }
   if (op === 'despublicar' || app.publicacao_id && (op === 'arquivar' || op === 'excluir')) publisher(s)
   return { op, dados: { app_id: app.id }, revision: app.versao_concorrencia, preview: { app: app.nome, acao: TITLES[op], ...(app.publicacao_id && op !== 'restaurar' ? { aviso: 'O app sai do ar para todos os membros.' } : {}) } }
+}
+
+async function prepareCleanup(db: Database, s: Session, app: App, dados: Input) {
+  publisher(s)
+  const all = await versions(db, s, app.id), source = all.find(v => v.id === app.versao_publicada_id) ?? all[0]
+  const collection = source ? manifestSchema.parse(source.manifesto).colecoes.find(c => c.chave === dados.colecao) : undefined
+  if (!collection) throw new AppsError('NOT_FOUND', 'Coleção não encontrada no app.', 404)
+  const ids: string[] | null = dados.registro_ids ? [...new Set<string>(dados.registro_ids)] : null
+  const row = (await db.query('SELECT count(*)::int n,now() ate FROM apps.registros WHERE empresa_id=$1 AND app_id=$2 AND colecao_id=$3 AND excluido_em IS NULL AND ($4::uuid[] IS NULL OR id=ANY($4::uuid[]))', [s.tenantId, app.id, collection.id, ids])).rows[0]
+  if (!row.n) throw new AppsError('NOT_FOUND', ids ? 'Nenhum dos registros informados está na coleção.' : 'A coleção já está vazia.', 404)
+  if (ids && row.n !== ids.length) throw new AppsError('NOT_FOUND', `Só ${row.n} dos ${ids.length} registros informados estão na coleção. Confira os IDs em apps_consultar_dados.`, 404)
+  return { op: 'limpar_dados', dados: { app_id: app.id, colecao: collection.chave, colecao_id: collection.id, registro_ids: ids, ate: row.ate }, revision: app.versao_concorrencia,
+    preview: { app: app.nome, colecao: collection.nome, registros: ids ? `${row.n} selecionados` : `todos (${row.n})`, aviso: 'Os registros somem do app para todos que o usam e não podem ser restaurados pelo chat. Registros criados depois desta prévia são mantidos.' } }
 }
 
 async function prepareDomain(db: Database, s: Session, app: App, dados: Input) {

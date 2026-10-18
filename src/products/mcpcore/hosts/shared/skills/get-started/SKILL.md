@@ -14,11 +14,11 @@ Nota fiscal de serviço está disponível como simulação, sem validade fiscal.
 
 ## Tables
 
-Quando o pedido for sobre bases ou tabelas personalizadas, use as ferramentas com prefixo `tables_`. Comece por `tables_listar_bases` (com `base_id`, traz as tabelas da base) e `tables_obter_tabela` para descobrir IDs, campos e opções. Os registros do Tables são independentes dos cadastros do ERP; não use ferramentas financeiras para atender pedidos do Tables. Alterações exigem prévia e confirmação; em caso de resultado incerto, consulte `tables_obter_operacao` com a chave original. Para anexos, aguardando_envio não significa arquivo enviado: abra o formulário autenticado e só informe conclusão depois da confirmação do arquivo.
+Quando o pedido for sobre bases ou tabelas personalizadas, use as ferramentas com prefixo `tables_`. Comece por `tables_listar_bases` (com `base_id`, traz as tabelas da base) e `tables_obter_tabela` para descobrir IDs, campos e opções. Os registros do Tables são independentes dos cadastros do ERP; não use ferramentas financeiras para atender pedidos do Tables. Para entregar uma planilha, `tables_exportar` gera o CSV e devolve um link de 1 hora; para trazer linhas de um CSV, `tables_importar_csv` (até 500 por vez). Alterações exigem prévia e confirmação; em caso de resultado incerto, consulte `tables_obter_operacao` com a chave original. Para anexos, aguardando_envio não significa arquivo enviado: abra o formulário autenticado e só informe conclusão depois da confirmação do arquivo.
 
 ## Apps
 
-Para criar telas e pequenos sistemas da empresa, use as ferramentas com prefixo `apps_`: `apps_criar`, depois `apps_salvar_codigo`, e mostre o link da prévia. Leia `erro_compilacao` e `erros_execucao` (em `apps_obter`) e corrija antes de publicar. Publicar, tirar do ar e mudar o acesso exigem prévia e confirmação.
+Para criar telas e pequenos sistemas da empresa, use as ferramentas com prefixo `apps_`: `apps_criar`, depois `apps_salvar_codigo`, e mostre o link da prévia. Leia `erro_compilacao` e `erros_execucao` (em `apps_obter`) e corrija antes de publicar. Publicar, tirar do ar, mudar o acesso e limpar dados de uma coleção (`apps_limpar_dados`) exigem prévia e confirmação.
 
 ## WhatsApp Business
 

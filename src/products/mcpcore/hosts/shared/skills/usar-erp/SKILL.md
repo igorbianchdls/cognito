@@ -15,9 +15,10 @@ Chame `meu_acesso` no início. Com mais de uma empresa, peça ao usuário para e
 | Encontrar cliente, fornecedor, vendedor, produto, serviço, categoria ou conta financeira | `buscar_cadastros` (`tipo`) e depois `obter_cadastro` |
 | Vendas ou orçamentos | `listar_vendas` (`tipo_documento: orcamento` para orçamentos) e `obter_venda` |
 | Compras | `listar_compras` e `obter_compra` |
+| Contratos de venda recorrente | `listar_contratos` e `obter_contrato` |
 | Notas fiscais de serviço (NFS-e simulada) | `listar_notas_servico` e `obter_nota_servico` (traz `pdf_url` do DANFSe e, se autorizada, `xml_url`) |
 | Contas a pagar ou receber, vencimentos, atrasos | `consultar_financeiro` (retorna parcelas); `obter_titulo_financeiro` (título, pelo `conta_id`); `obter_parcela_financeira` |
-| Pagamentos já registrados | `listar_pagamentos` |
+| Pagamentos já registrados (por período, cliente ou fornecedor) | `listar_pagamentos` (`inicio`, `fim`, `busca`) |
 | Estoque | `consultar_estoque` |
 | Evolução mensal | `analisar_periodo` (até 366 dias) |
 | Fluxo de caixa ("vou ter caixa no fim do mês?"), inadimplência por cliente ou fornecedor ("quem está me devendo?"), resultado por competência ou por caixa, posição financeira, vendas ou compras agrupadas, valor do estoque | `consultar_relatorio` (`fluxo-de-caixa`, `aging-receber`, `aging-pagar`, `dre-competencia`, `dre-caixa`, …) |
@@ -26,7 +27,7 @@ Os resultados aparecem em cards: no card da conversa só o essencial; filtros, d
 
 ## Alterações: sempre prévia e confirmação
 
-As 28 tools de escrita funcionam em duas etapas.{claude} O Claude pede permissão ao usuário antes de cada chamada delas; isso é esperado.{/claude}
+As tools de escrita funcionam em duas etapas.{claude} O Claude pede permissão ao usuário antes de cada chamada delas; isso é esperado.{/claude}
 
 1. **Prévia.** Chame a tool sem `rascunho_id`, com `chave_operacao` (um UUID novo), `dados` e, quando houver, `tipo`. Nada muda no ERP. O card mostra os valores calculados pelo ERP, o antes e depois e os botões Confirmar e Ajustar (ou "Ver prévia completa" quando há muitos itens).
 2. **Execução.** Somente depois que o usuário confirmar explicitamente, chame a mesma tool apenas com `empresa_id` e `rascunho_id` (o campo `confirmar` da prévia traz a chamada pronta). Se o usuário clicar em Confirmar no card, a execução já aconteceu: não chame de novo.

@@ -6,7 +6,8 @@ import { FIELD_TYPES, cellSchema } from '@/products/tables/shared/contracts'
 const uuid = z.string().uuid()
 const ref = z.string().trim().min(1).max(200)
 const company = z.number().int().positive().optional().describe('Empresa retornada por meu_acesso; obrigatória quando houver mais de uma.')
-const page = { pagina:z.number().int().min(1).max(100000).default(1), tamanho:z.number().int().min(1).max(20).default(10) }
+// por_pagina is the name used by the ERP tools too; tamanho is the earlier name, still accepted.
+const page = { pagina:z.number().int().min(1).max(100000).default(1), por_pagina:z.number().int().min(1).max(20).optional().describe('Itens por página, de 1 a 20 (padrão 10).'), tamanho:z.number().int().min(1).max(20).optional().describe('Nome antigo de por_pagina; prefira por_pagina.') }
 const version = z.number().int().positive().optional()
 const name = z.string().trim().min(1).max(120)
 const filter = z.object({ campo:ref, operador:z.enum(['eq','neq','contains','empty','not_empty','gt','gte','lt','lte']), valor:z.union([z.string().max(1000),z.number().finite(),z.boolean()]).optional() }).strict()
@@ -25,6 +26,8 @@ export const readSchemas = {
  listar_atividade:z.object({ registro_id:uuid, tipo:z.enum(['comentarios','historico']).default('comentarios'), ...page }),
  listar_lixeira:z.object({ ...page }),
  obter_link_anexo:z.object({ anexo_id:uuid }),
+ exportar:z.object({ tabela_id:uuid, busca:z.string().max(500).default(''), visualizacao:ref.optional(), filtros:z.array(filter).max(30).default([]), combinacao:z.enum(['e','ou']).default('e'), ordenacao:z.array(sort).max(5).default([]) }),
+ listar_automacoes:z.object({ tabela_id:uuid }),
  obter_operacao:z.object({ operacao_id:uuid.optional(), chave_operacao:uuid.optional() }),
 } satisfies Record<string,z.AnyZodObject>
 
@@ -36,6 +39,7 @@ export const actionSchemas = {
  salvar_visualizacao:z.object({ tabela_id:uuid, acao:z.enum(['criar','editar','excluir']), visualizacao:ref.optional().describe('Para editar ou excluir.'), nome:name.optional(), tipo:z.enum(['grade','kanban','calendario','galeria','formulario','linha_do_tempo']).optional(), filtros:z.array(filter).max(30).optional(), combinacao:z.enum(['e','ou']).optional().describe('e: todas as condições; ou: qualquer uma.'), ordenacao:z.array(sort).max(5).optional(), agrupar_por:ref.nullable().optional().describe('Kanban exige seleção única.'), campo_data:ref.nullable().optional().describe('Data do calendário ou início da linha do tempo.'), campo_fim:ref.nullable().optional().describe('Fim da linha do tempo.'), mensagem:z.string().max(500).optional().describe('Formulário: mensagem depois do envio.'), campos_visiveis:z.array(ref).max(200).optional().describe('Colunas visíveis, em ordem.'), expectedVersion:version }),
  comentar:z.object({ registro_id:uuid, texto:z.string().trim().min(1).max(10000) }),
  lixeira:z.object({ acao:z.enum(['mover','restaurar']), tipo:z.enum(['bases','tabelas','campos','registros']), ids:z.array(uuid).min(1).max(100).describe('Vários IDs somente para registros.'), expectedVersion:version }),
+ importar_csv:z.object({ tabela_id:uuid, csv:z.string().min(1).max(20000).describe('Conteúdo do CSV com cabeçalho na primeira linha; separador ; , ou tab. Até 500 linhas e 20 mil caracteres por chamada.'), colunas:z.record(z.string().max(200), ref.nullable()).optional().describe('Cabeçalho do CSV → campo (ID ou nome); null ignora a coluna. Omita para casar cada cabeçalho com o campo de mesmo nome.'), expectedStructureVersion:version }),
  anexos:z.object({ acao:z.enum(['preparar','confirmar','remover']), registro_id:uuid.optional(), campo:ref.optional().describe('Campo de anexo, para preparar.'), anexo_id:uuid.optional(), nome:z.string().trim().min(1).max(200).optional(), mime_type:z.string().min(1).max(150).optional(), tamanho:z.number().int().positive().max(50*1024*1024).optional().describe('Tamanho do arquivo em bytes (até 50 MB), para preparar.') }),
 } satisfies Record<string,z.AnyZodObject>
 

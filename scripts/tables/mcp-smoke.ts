@@ -24,6 +24,7 @@ delete process.env.TABLES_SUPABASE_URL
 globalThis.fetch=async(url,init={})=>{
  const parsed=new URL(String(url));assert.equal(parsed.origin,'https://abcdefghijklmnopqrst.supabase.co');const path=parsed.pathname.replace('/storage/v1/','')
  if(path.startsWith('object/upload/sign/')){const key=path.slice('object/upload/sign/'.length);if(init.method==='POST')return Response.json({url:'/object/upload/sign/'+key+'?token=fixture'});objects.set(key,Buffer.from(init.body as Uint8Array));return Response.json({})}
+ if(path.startsWith('object/tables-anexos/exportacoes/')&&init.method==='POST'){objects.set(path.slice('object/'.length),Buffer.from(String(init.body)));return Response.json({Key:path})}
  if(path.startsWith('object/authenticated/')){const bytes=objects.get(path.slice('object/authenticated/'.length));return new Response(null,{status:bytes?200:404,headers:bytes?{'content-length':String(bytes.length)}:{}})}
  if(path.startsWith('object/sign/')){const key=path.slice('object/sign/'.length);if(init.method==='POST')return Response.json({signedURL:'/object/sign/'+key+'?token=fixture'});const bytes=parsed.searchParams.has('token')&&objects.get(key);return new Response(bytes?new Uint8Array(bytes):null,{status:bytes?200:403})}
  throw Error('Unexpected isolated Storage request')
@@ -48,10 +49,11 @@ async function main(){try {
  CONSTRAINT drafts_integration_operation_key UNIQUE(integration,empresa_id,user_id,oauth_client_id,operation_key),CONSTRAINT legacy_result CHECK((status='saved')=(record_id IS NOT NULL)));
  CREATE TABLE plugin.executions(id uuid PRIMARY KEY,user_id bigint,empresa_id bigint,oauth_client_id text,tool_name text,status text,duration_ms int,finished_at timestamptz,integration text);`)
  for(const file of ['20261016120000_create_tables.sql','20261018120000_tables_base_permissions.sql','20261018150000_tables_search_index.sql','20261018160000_tables_field_types.sql','20261018170000_tables_views.sql','20261018180000_tables_automations.sql','20261018190000_tables_api_keys.sql','20261018200000_tables_change_index.sql','20261016193000_mcp_product_domains.sql','20261016200000_mcp_domain_uniqueness.sql'])await db.exec(readFileSync('supabase/migrations/'+file,'utf8'))
- await check('18 unique tools, compact definitions and two host registrations',async()=>{
-  assert.equal(tablesTools.length,18);assert.equal(new Set(tablesTools.map(t=>t.name)).size,18);assert.equal(Object.keys(readSchemas).length,9)
+ await check('21 unique tools, compact definitions and two host registrations',async()=>{
+  assert.equal(tablesTools.length,21);assert.equal(new Set(tablesTools.map(t=>t.name)).size,21);assert.equal(Object.keys(readSchemas).length,11)
+  assert(tablesTools.every(t=>t.title.length<=40&&t.description.length>=100),'Short titles and documented tools')
   assert(tablesTools.find(t=>t.key==='comentar')!.destructive===false&&tablesTools.find(t=>t.key==='lixeira')!.destructive===true&&tablesTools.find(t=>t.key==='resumir')!.write===false)
-  for(const make of [createPluginServer,createClaudeServer]){const server=await make(principal,config,deps);const registry=(server as unknown as {_registeredTools:Record<string,unknown>})._registeredTools;assert.equal(Object.keys(registry).filter(n=>n.startsWith('tables_')).length,18);await server.close()}
+  for(const make of [createPluginServer,createClaudeServer]){const server=await make(principal,config,deps);const registry=(server as unknown as {_registeredTools:Record<string,unknown>})._registeredTools;assert.equal(Object.keys(registry).filter(n=>n.startsWith('tables_')).length,21);await server.close()}
  })
  await check('Creation runs at once, is idempotent by key and edits keep a preview',async()=>{
   const key=randomUUID(),created=await change('salvar_base',{nome:'Projetos MCP',modelo:'projetos'},key)
@@ -190,6 +192,19 @@ async function main(){try {
   assert.equal((await ok('consultar_registros',{tabela_id:table,visualizacao:'Cartões'})).total,2)
   assert.equal((await ok('consultar_registros',{tabela_id:table,combinacao:'ou',filtros:[{campo:'Nome do projeto',operador:'eq',valor:'Site'},{campo:'Nome do projeto',operador:'eq',valor:'App'}]})).total,2)
   const timeline=await change('salvar_visualizacao',{tabela_id:table,acao:'criar',nome:'Cronograma',tipo:'linha_do_tempo',campo_data:'Prazo'});assert(timeline.direct)
+ })
+ await check('CSV import previews the outcome, export returns a download link and automations are listed',async()=>{
+  const csv='Nome do projeto;Orçamento;Coluna estranha\r\nImportado A;1.234,50;x\r\nImportado B;abc;y\r\n'
+  const imported=await change('importar_csv',{tabela_id:table,csv});assert(!imported.direct)
+  const preview=imported.preview.previa.alteracoes;assert.deepEqual(preview.colunas,['Nome do projeto','Orçamento']);assert.deepEqual(preview.colunas_ignoradas,['Coluna estranha'])
+  assert.equal(preview.previsto.criados,1);assert.equal(preview.previsto.erros[0].linha,3,JSON.stringify(preview))
+  assert.equal(imported.result.resultado.criados,1);assert.equal(imported.result.resultado.erros.length,1)
+  assert.equal((await call('importar_csv',{chave_operacao:randomUUID(),dados:{tabela_id:table,csv,colunas:{'Nome do projeto':'Nome do projeto'}}})).code,'INVALID_INPUT','Every header must be mapped when colunas is given')
+  const exported=await ok('exportar',{tabela_id:table,filtros:[{campo:'Nome do projeto',operador:'eq',valor:'Importado A'}]})
+  assert.equal(exported.registros,1);assert.match(exported.arquivo,/\.csv$/)
+  const text=Buffer.from(await (await fetch(exported.link_download)).arrayBuffer()).toString('utf8');assert(text.includes('Importado A')&&text.includes('1234,5'),text)
+  assert.deepEqual((await ok('listar_automacoes',{tabela_id:table})).automacoes,[])
+  assert.equal((await ok('listar_atividade',{registro_id:record,tipo:'historico',por_pagina:1})).itens.length,1,'por_pagina is accepted like in the ERP tools')
  })
  await check('REST API with keys: read-only keys cannot write, keys never manage keys',async()=>{
   const { tablesHandler } = await import('../../src/products/tables/api/handlers')
