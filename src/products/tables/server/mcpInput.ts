@@ -179,7 +179,7 @@ export async function resolveWrite(db: Database, session: TablesSession, key: st
     const link = d.vinculo ? pick(fields, d.vinculo, 'um campo de vínculo') : undefined
     const remote = d.campo_vinculado ? (link?.tabela_destino_id ? pick(await r.fieldsOf(link.tabela_destino_id), d.campo_vinculado, 'um campo da tabela vinculada') : (() => { throw invalid('Informe vinculo junto com campo_vinculado.') })()) : undefined
     const config = defined({ moeda: d.moeda, formula: d.formula, maximo: d.maximo, vinculo: link?.id, campo: remote?.id, operacao: d.operacao })
-    const attrs = defined({ nome: d.nome, tipo: d.tipo, obrigatorio: d.obrigatorio, configuracao: Object.keys(config).length ? { ...(existing?.configuracao ?? {}), ...config } : undefined, tabela_destino_id: destination, opcoes })
+    const attrs = defined({ nome: d.nome, tipo: d.tipo, obrigatorio: d.obrigatorio, inverso: d.inverso, configuracao: Object.keys(config).length ? { ...(existing?.configuracao ?? {}), ...config } : undefined, tabela_destino_id: destination, opcoes })
     if (existing) {
       if (!Object.keys(attrs).length) throw invalid('Informe o que deve mudar no campo.')
       return { op: 'editar_campo', dados: { tabela_id: d.tabela_id, campo_id: existing.id, alteracoes: attrs, ...structure }, direct: false }

@@ -51,6 +51,13 @@ export function buildRecordQuery(company: number, tableId: string, fields: Field
   function condition(filter: Filter): string {
     const field = getField(filter.campo)
     const rel = relations[field.tipo as keyof typeof relations]
+    if (field.inverso_de) {
+      // Inverse link: the rows that point to this record from the origin field, from records not in the trash.
+      if (!['eq', 'neq', 'empty', 'not_empty'].includes(filter.operador)) throw new TablesError('INVALID_FILTER', 'Esse operador não é compatível com o campo.')
+      const match = ['eq', 'neq'].includes(filter.operador) ? ` AND x.registro_id::text=${bind(String(filter.valor ?? ''))}` : ''
+      const expr = `EXISTS(SELECT 1 FROM tables.registro_vinculos x JOIN tables.registros o ON o.empresa_id=x.empresa_id AND o.id=x.registro_id AND o.excluido_em IS NULL WHERE x.empresa_id=r.empresa_id AND x.registro_destino_id=r.id AND x.campo_id=${bind(field.inverso_de)}${match})`
+      return ['neq', 'empty'].includes(filter.operador) ? `NOT ${expr}` : expr
+    }
     if (rel) {
       if (!['eq', 'neq', 'empty', 'not_empty'].includes(filter.operador)) throw new TablesError('INVALID_FILTER', 'Esse operador não é compatível com o campo.')
       const match = ['eq', 'neq'].includes(filter.operador) ? ` AND x.${rel[1]}::text=${bind(String(filter.valor ?? ''))}` : ''
@@ -156,7 +163,8 @@ export async function summarizeRecords(db: Database, session: TablesSession, tab
   const groupParams = [...params], key = bind(groupParams, group.id)
   const joined = { selecao: ['registro_opcoes', 'opcao_id'], selecao_multipla: ['registro_opcoes', 'opcao_id'], usuario: ['registro_usuarios', 'usuario_id'], usuarios: ['registro_usuarios', 'usuario_id'], vinculo: ['registro_vinculos', 'registro_destino_id'] }[group.tipo as string]
   let join = '', expression: string
-  if (joined) { join = `LEFT JOIN tables.${joined[0]} g ON g.empresa_id=r.empresa_id AND g.registro_id=r.id AND g.campo_id=${key}`; expression = `g.${joined[1]}::text` }
+  if (group.inverso_de) { groupParams[groupParams.length - 1] = group.inverso_de; join = `LEFT JOIN tables.registro_vinculos g ON g.empresa_id=r.empresa_id AND g.registro_destino_id=r.id AND g.campo_id=${key} AND EXISTS(SELECT 1 FROM tables.registros o WHERE o.empresa_id=g.empresa_id AND o.id=g.registro_id AND o.excluido_em IS NULL)`; expression = 'g.registro_id::text' }
+  else if (joined) { join = `LEFT JOIN tables.${joined[0]} g ON g.empresa_id=r.empresa_id AND g.registro_id=r.id AND g.campo_id=${key}`; expression = `g.${joined[1]}::text` }
   else if (group.tipo === 'criado_por' || group.tipo === 'alterado_por') expression = group.tipo === 'criado_por' ? 'r.criado_por::text' : 'r.atualizado_por::text'
   else if (group.tipo === 'criado_em' || group.tipo === 'alterado_em') {
     const unit = { dia: 'day', mes: 'month', ano: 'year' }[input.periodo], format = { dia: 'YYYY-MM-DD', mes: 'YYYY-MM', ano: 'YYYY' }[input.periodo]

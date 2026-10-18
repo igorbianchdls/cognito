@@ -28,7 +28,7 @@ export async function requireTable(db: Database, session: TablesSession, id: str
 }
 
 export async function readFields(db: Database, session: TablesSession, tableId: string): Promise<Field[]> {
-  const result = await db.query(`SELECT c.*,coalesce((SELECT jsonb_agg(jsonb_build_object('id',o.id,'nome',o.nome,'cor',o.cor,'posicao',o.posicao,'arquivado',o.arquivado_em IS NOT NULL) ORDER BY o.posicao,o.id) FROM tables.campo_opcoes o WHERE o.empresa_id=c.empresa_id AND o.campo_id=c.id),'[]') opcoes FROM tables.campos c WHERE c.empresa_id=$1 AND c.tabela_id=$2 AND c.excluido_em IS NULL ORDER BY c.posicao,c.id`, [session.tenantId, tableId])
+  const result = await db.query(`SELECT c.*,coalesce((SELECT jsonb_agg(jsonb_build_object('id',o.id,'nome',o.nome,'cor',o.cor,'posicao',o.posicao,'arquivado',o.arquivado_em IS NOT NULL) ORDER BY o.posicao,o.id) FROM tables.campo_opcoes o WHERE o.empresa_id=c.empresa_id AND o.campo_id=c.id),'[]') opcoes,(SELECT i.id FROM tables.campos i WHERE i.empresa_id=c.empresa_id AND i.inverso_de=c.id AND i.excluido_em IS NULL) inverso_id FROM tables.campos c WHERE c.empresa_id=$1 AND c.tabela_id=$2 AND c.excluido_em IS NULL ORDER BY c.posicao,c.id`, [session.tenantId, tableId])
   return result.rows as Field[]
 }
 
@@ -37,6 +37,7 @@ export const recordSelect = `SELECT r.id,r.tabela_id,r.versao,r.posicao,r.criado
   || coalesce((SELECT jsonb_object_agg(s.campo_id,s.valores) FROM (SELECT o.campo_id,jsonb_agg(o.opcao_id::text ORDER BY o.opcao_id) valores FROM tables.registro_opcoes o WHERE o.empresa_id=r.empresa_id AND o.registro_id=r.id GROUP BY o.campo_id) s),'{}')
   || coalesce((SELECT jsonb_object_agg(s.campo_id,s.valores) FROM (SELECT u.campo_id,jsonb_agg(u.usuario_id::text ORDER BY u.usuario_id) valores FROM tables.registro_usuarios u WHERE u.empresa_id=r.empresa_id AND u.registro_id=r.id GROUP BY u.campo_id) s),'{}')
   || coalesce((SELECT jsonb_object_agg(s.campo_id,s.valores) FROM (SELECT v.campo_id,jsonb_agg(v.registro_destino_id::text ORDER BY v.posicao,v.registro_destino_id) valores FROM tables.registro_vinculos v WHERE v.empresa_id=r.empresa_id AND v.registro_id=r.id GROUP BY v.campo_id) s),'{}')
+  || coalesce((SELECT jsonb_object_agg(s.campo_id,s.valores) FROM (SELECT i.id campo_id,jsonb_agg(v.registro_id::text ORDER BY o.posicao,o.id) valores FROM tables.registro_vinculos v JOIN tables.campos i ON i.empresa_id=v.empresa_id AND i.inverso_de=v.campo_id AND i.excluido_em IS NULL JOIN tables.campos f ON f.empresa_id=v.empresa_id AND f.id=v.campo_id AND f.excluido_em IS NULL JOIN tables.registros o ON o.empresa_id=v.empresa_id AND o.id=v.registro_id AND o.excluido_em IS NULL WHERE v.empresa_id=r.empresa_id AND v.registro_destino_id=r.id GROUP BY i.id) s),'{}')
   || coalesce((SELECT jsonb_object_agg(s.campo_id,s.valores) FROM (SELECT a.campo_id,jsonb_agg(a.id::text ORDER BY a.criado_em,a.id) valores FROM tables.anexos a WHERE a.empresa_id=r.empresa_id AND a.registro_id=r.id AND a.estado='confirmado' GROUP BY a.campo_id) s),'{}') valores
   FROM tables.registros r`
 

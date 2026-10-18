@@ -49,6 +49,7 @@ try {
     await db.exec(readFileSync('supabase/migrations/20261018180000_tables_automations.sql', 'utf8'))
     await db.exec(readFileSync('supabase/migrations/20261018190000_tables_api_keys.sql', 'utf8'))
     await db.exec(readFileSync('supabase/migrations/20261018200000_tables_change_index.sql', 'utf8'))
+    await db.exec(readFileSync('supabase/migrations/20261019100000_tables_inverse_links.sql', 'utf8'))
     assert.equal((await db.query("SELECT count(*)::int n FROM pg_tables WHERE schemaname='tables'")).rows[0].n, 19)
     assert.equal((await db.query("SELECT count(*)::int n FROM pg_class c JOIN pg_namespace n ON n.oid=c.relnamespace WHERE n.nspname='tables' AND c.relkind='r' AND c.relrowsecurity")).rows[0].n, 19)
   })
@@ -214,6 +215,68 @@ try {
     await assert.rejects(run(owner, db => queries.listRecords(db, owner, pedidos, contracts.listQuerySchema.parse({ ordenacao: [{ campo: total.id, direcao: 'desc' }] })), false), e => e.code === 'INVALID_FILTER')
     const grouped = await run(owner, db => queries.summarizeRecords(db, owner, pedidos, { busca: '', filtros: [], periodo: 'mes', agrupar_por: autor.id, metricas: [{ campo: desconto.id, operacao: 'soma' }] }), false)
     assert.equal(grouped.grupos[0].rotulo, 'Ana Silva')
+  })
+  await check('Two-way links: the inverse field reads, writes, filters, aggregates and goes to the trash with its origin', async () => {
+    const created = await run(owner, db => service.createBase(db, owner, contracts.baseInputSchema.parse({ nome: 'Clientes e projetos' })))
+    const projetos = created.tabela.id, clientes = (await run(owner, db => service.createTable(db, owner, created.base.id, 'Clientes'))).id
+    const tableOf = id => run(owner, db => repo.requireTable(db, owner, id), false), fieldsOf = id => run(owner, db => repo.readFields(db, owner, id), false)
+    const field = async (table, input, id) => (await run(owner, async db => service.saveField(db, owner, table, contracts.fieldInputSchema.parse({ ...input, expectedStructureVersion: (await repo.requireTable(db, owner, table)).versao_estrutura }), id))).campo
+    const save = (table, valores, record) => tableOf(table).then(t => run(owner, db => service.saveRecord(db, owner, table, { valores, expectedStructureVersion: t.versao_estrutura, ...(record ? { expectedVersion: record.versao } : {}) }, record?.id)))
+    const read = id => run(owner, db => repo.readRecord(db, owner, id), false)
+    const link = await field(projetos, { nome: 'Cliente', tipo: 'vinculo', tabela_destino_id: clientes })
+    const inverse = (await fieldsOf(clientes)).find(f => f.inverso_de === link.id)
+    assert(inverse && link.inverso_id === inverse.id, 'Creating a link creates its inverse')
+    assert.equal(inverse.nome, (await tableOf(projetos)).nome, 'The inverse is named after the origin table'); assert.equal(inverse.tabela_destino_id, projetos)
+    const clientName = (await fieldsOf(clientes))[0].id, projectName = (await fieldsOf(projetos))[0].id
+    const a = await save(clientes, { [clientName]: 'ACME' }), b = await save(clientes, { [clientName]: 'Beta' })
+    const p1 = await save(projetos, { [projectName]: 'Site', [link.id]: [a.id] }), p2 = await save(projetos, { [projectName]: 'App', [link.id]: [a.id] })
+    let acme = await read(a.id)
+    assert.deepEqual(acme.valores[inverse.id], [p1.id, p2.id], 'The client lists its projects'); assert(acme.versao > a.versao, 'Linking moves the version of the linked record')
+    assert.equal((await read(b.id)).valores[inverse.id], undefined)
+    // Writing through the inverse changes the projects.
+    await save(clientes, { [inverse.id]: [p1.id] }, await read(b.id))
+    assert.deepEqual((await read(p1.id)).valores[link.id], [a.id, b.id])
+    await save(clientes, { [inverse.id]: [p2.id] }, await read(a.id))
+    assert.deepEqual((await read(p1.id)).valores[link.id], [b.id]); assert.deepEqual((await read(p2.id)).valores[link.id], [a.id])
+    await assert.rejects(save(clientes, { [inverse.id]: [a.id] }, await read(b.id)), e => e.code === 'INVALID_LINK', 'Only records of the origin table')
+    // Filters, grouping and aggregation over the inverse.
+    const list = filtros => run(owner, db => queries.listRecords(db, owner, clientes, contracts.listQuerySchema.parse({ filtros })), false)
+    assert.deepEqual((await list([{ campo: inverse.id, operador: 'eq', valor: p2.id }])).registros.map(r => r.id), [a.id])
+    assert.equal((await list([{ campo: inverse.id, operador: 'not_empty' }])).total, 2)
+    const grouped = await run(owner, db => queries.summarizeRecords(db, owner, clientes, { busca: '', filtros: [], periodo: 'mes', agrupar_por: inverse.id, metricas: [] }), false)
+    assert.deepEqual(grouped.grupos.map(g => g.rotulo).sort(), ['App', 'Site'])
+    const count = await field(clientes, { nome: 'Nº de projetos', tipo: 'agregacao', configuracao: { vinculo: inverse.id, operacao: 'contagem' } })
+    assert.equal((await read(a.id)).valores[count.id], 1)
+    // A trashed project leaves the client's list.
+    await run(owner, async db => service.trash(db, owner, 'registros', p2.id, (await repo.readRecord(db, owner, p2.id)).versao))
+    assert.deepEqual((await read(a.id)).valores[inverse.id], undefined)
+    await run(owner, db => service.restore(db, owner, 'registros', p2.id))
+    // The inverse cannot change type or destination; its name can change.
+    await assert.rejects(field(clientes, { nome: inverse.nome, tipo: 'texto' }, inverse.id), e => e.code === 'INVERSE_FIELD')
+    await field(clientes, { nome: 'Projetos do cliente', tipo: 'vinculo', tabela_destino_id: projetos }, inverse.id)
+    // Trash: the inverse goes and comes back with its origin; alone, it needs the origin.
+    await run(owner, async db => service.deleteField(db, owner, projetos, link.id, (await repo.requireTable(db, owner, projetos)).versao_estrutura))
+    assert(!(await fieldsOf(clientes)).some(f => f.id === inverse.id))
+    await assert.rejects(run(owner, db => service.restore(db, owner, 'campos', inverse.id)), e => e.code === 'INVERSE_FIELD')
+    await run(owner, db => service.restore(db, owner, 'campos', link.id))
+    assert.equal((await fieldsOf(clientes)).find(f => f.id === inverse.id)?.nome, 'Projetos do cliente')
+    assert.deepEqual((await read(a.id)).valores[inverse.id], [p2.id])
+    // Removing only the inverse keeps the links; asking for it again brings the same field back.
+    await run(owner, async db => service.deleteField(db, owner, clientes, inverse.id, (await repo.requireTable(db, owner, clientes)).versao_estrutura))
+    assert.deepEqual((await read(p2.id)).valores[link.id], [a.id])
+    await field(projetos, { nome: 'Cliente', tipo: 'vinculo', tabela_destino_id: clientes, inverso: true }, link.id)
+    assert.equal((await fieldsOf(clientes)).find(f => f.inverso_de === link.id)?.id, inverse.id)
+    await field(projetos, { nome: 'Cliente', tipo: 'vinculo', tabela_destino_id: clientes, inverso: false }, link.id)
+    assert(!(await fieldsOf(clientes)).some(f => f.inverso_de === link.id))
+    // Self links and inverso false have no inverse; a taken name gets a number.
+    const self = await field(clientes, { nome: 'Indicado por', tipo: 'vinculo', tabela_destino_id: clientes })
+    assert.equal(self.inverso_id, null)
+    assert.equal((await field(projetos, { nome: 'Parceiro', tipo: 'vinculo', tabela_destino_id: clientes, inverso: false })).inverso_id, null)
+    await field(projetos, { nome: 'Cliente', tipo: 'vinculo', tabela_destino_id: clientes, inverso: true }, link.id)
+    // The first inverse was renamed, so the table name is free once, then taken.
+    const second = await field(projetos, { nome: 'Cliente final', tipo: 'vinculo', tabela_destino_id: clientes }), third = await field(projetos, { nome: 'Cliente indicado', tipo: 'vinculo', tabela_destino_id: clientes })
+    const projectsName = (await tableOf(projetos)).nome, inverses = await fieldsOf(clientes)
+    assert.equal(inverses.find(f => f.inverso_de === second.id)?.nome, projectsName); assert.equal(inverses.find(f => f.inverso_de === third.id)?.nome, projectsName + ' 2')
   })
   await check('Filters with OU, in queries and saved in views, and the new view types', async () => {
     const current = await run(owner, db => repo.getBundle(db, owner, table.id), false), f = name => current.campos.find(c => c.nome === name)

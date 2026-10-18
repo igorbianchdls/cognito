@@ -33,6 +33,7 @@ export async function maintainTablesStorage() {
       failed++
     } finally { client.release() }
   }
-  const exports = await removeOldExports().catch(() => { failed++; return 0 })
-  return { status: failed ? 'partial' : 'completed', removed, failed, exportacoes_removidas: exports }
+  // Old exports are cleaned apart: a failure there is reported on its own and never counts as a file failure.
+  const exports = await removeOldExports().catch(() => null)
+  return { status: failed || exports === null ? 'partial' : 'completed', removed, failed, exportacoes_removidas: exports ?? 'indisponivel' }
 }

@@ -76,6 +76,7 @@ try {
     await db.exec(readFileSync('supabase/migrations/20261018180000_tables_automations.sql', 'utf8'))
     await db.exec(readFileSync('supabase/migrations/20261018190000_tables_api_keys.sql', 'utf8'))
     await db.exec(readFileSync('supabase/migrations/20261018200000_tables_change_index.sql', 'utf8'))
+    await db.exec(readFileSync('supabase/migrations/20261019100000_tables_inverse_links.sql', 'utf8'))
   const { tabela } = await run(db => service.createBase(db, actor, contracts.baseInputSchema.parse({ nome: 'Teste isolado de anexos' })))
   const { campo } = await run(db => service.saveField(db, actor, tabela.id, contracts.fieldInputSchema.parse({ nome: 'Documentos', tipo: 'anexo', expectedStructureVersion: 1 })))
   let record = await run(db => service.saveRecord(db, actor, tabela.id, { valores: {}, expectedStructureVersion: 2 }))

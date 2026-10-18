@@ -93,6 +93,7 @@ export async function saveField(db: Database, session: TablesSession, tableId: s
   }
   let field = fields.find(f => f.id === fieldId)
   if (fieldId && !field) throw new TablesError('NOT_FOUND', 'Campo não encontrado.', 404)
+  if (field?.inverso_de && (input.tipo !== 'vinculo' || input.tabela_destino_id !== field.tabela_destino_id || input.obrigatorio)) throw new TablesError('INVERSE_FIELD', `${field.nome} mostra os vínculos feitos na outra tabela: mude o tipo ou o destino no campo de origem. O nome pode ser mudado aqui.`)
   if (fieldId === table.campo_principal_id && input.tipo !== 'texto') throw new TablesError('PRIMARY_FIELD', 'O campo principal deve continuar sendo texto.')
   const hasRecords = (await db.query('SELECT EXISTS(SELECT 1 FROM tables.registros WHERE empresa_id=$1 AND tabela_id=$2) existe', [session.tenantId, tableId])).rows[0].existe
   if (hasRecords && field && (field.tipo !== input.tipo || field.tabela_destino_id !== input.tabela_destino_id)) throw new TablesError('FIELD_CONVERSION', 'A tabela já possui registros. Preserve o tipo e o destino deste campo.')
@@ -108,6 +109,7 @@ export async function saveField(db: Database, session: TablesSession, tableId: s
       else await db.query('INSERT INTO tables.campo_opcoes(id,empresa_id,tabela_id,campo_id,nome,cor,posicao) VALUES($1,$2,$3,$4,$5,$6,$7)', [option.id ?? randomUUID(), session.tenantId, tableId, id, option.nome, option.cor, index])
     }
   }
+  if (!field?.inverso_de) await syncInverse(db, session, table, id, field, input)
   await db.query('UPDATE tables.tabelas SET versao_estrutura=versao_estrutura+1,atualizado_em=now(),atualizado_por=$3 WHERE empresa_id=$1 AND id=$2', [session.tenantId, tableId, session.sharedUserId])
   field = (await readFields(db, session, tableId)).find(f => f.id === id)
   return { campo: field, versao_estrutura: table.versao_estrutura + 1 }
@@ -117,8 +119,15 @@ export async function deleteField(db: Database, session: TablesSession, tableId:
   const table = await requireTable(db, session, tableId, 'structure'); await requireRole(db, session, table.base_id, 'administrador')
   assertVersion(table.versao_estrutura, version)
   if (table.campo_principal_id === fieldId) throw new TablesError('PRIMARY_FIELD', 'O campo principal não pode ser excluído.')
-  const found = await db.query('UPDATE tables.campos SET excluido_em=now() WHERE empresa_id=$1 AND tabela_id=$2 AND id=$3 AND excluido_em IS NULL RETURNING id', [session.tenantId, tableId, fieldId])
+  const found = await db.query('SELECT i.id inverso,i.tabela_id inversa FROM tables.campos c LEFT JOIN tables.campos i ON i.empresa_id=c.empresa_id AND i.inverso_de=c.id AND i.excluido_em IS NULL WHERE c.empresa_id=$1 AND c.tabela_id=$2 AND c.id=$3 AND c.excluido_em IS NULL', [session.tenantId, tableId, fieldId])
   if (!found.rows[0]) throw new TablesError('NOT_FOUND', 'Campo não encontrado.', 404)
+  await trashField(db, session, tableId, fieldId)
+  // The inverse goes to the trash with its origin, at the same moment, and comes back with it.
+  if (found.rows[0].inverso) await trashField(db, session, String(found.rows[0].inversa), String(found.rows[0].inverso))
+}
+
+async function trashField(db: Database, session: TablesSession, tableId: string, fieldId: string) {
+  await db.query('UPDATE tables.campos SET excluido_em=now() WHERE empresa_id=$1 AND tabela_id=$2 AND id=$3 AND excluido_em IS NULL', [session.tenantId, tableId, fieldId])
   const views = await db.query('SELECT id,configuracao FROM tables.visualizacoes WHERE empresa_id=$1 AND tabela_id=$2', [session.tenantId, tableId])
   for (const view of views.rows) {
     const config = viewConfigSchema.parse(view.configuracao)
@@ -190,6 +199,8 @@ export async function saveRecord(db: Database, session: TablesSession, tableId: 
     } else if (['usuario', 'usuarios'].includes(field.tipo)) {
       await db.query('DELETE FROM tables.registro_usuarios WHERE empresa_id=$1 AND registro_id=$2 AND campo_id=$3', [session.tenantId, id, fieldId])
       for (const user of values) await db.query('INSERT INTO tables.registro_usuarios(empresa_id,tabela_id,registro_id,campo_id,usuario_id) VALUES($1,$2,$3,$4,$5)', [session.tenantId, tableId, id, fieldId, user])
+    } else if (field.tipo === 'vinculo' && field.inverso_de) {
+      await writeInverse(db, session, tableId, id, field, values)
     } else if (field.tipo === 'vinculo') {
       await requireTable(db, session, field.tabela_destino_id!)
       await db.query('DELETE FROM tables.registro_vinculos WHERE empresa_id=$1 AND registro_id=$2 AND campo_id=$3', [session.tenantId, id, fieldId])
@@ -202,6 +213,46 @@ export async function saveRecord(db: Database, session: TablesSession, tableId: 
     }
   }
   return readRecord(db, session, id)
+}
+
+/** Writes through an inverse field: links are kept under the origin field, in the linked records. */
+async function writeInverse(db: Database, session: TablesSession, tableId: string, recordId: string, field: Field, values: string[]) {
+  const originTable = await requireTable(db, session, field.tabela_destino_id!, 'record')
+  const current = (await db.query('SELECT registro_id::text id FROM tables.registro_vinculos WHERE empresa_id=$1 AND registro_destino_id=$2 AND campo_id=$3', [session.tenantId, recordId, field.inverso_de])).rows.map(r => String(r.id))
+  const removed = current.filter(id => !values.includes(id)), added = values.filter(id => !current.includes(id))
+  if (removed.length) await db.query('DELETE FROM tables.registro_vinculos WHERE empresa_id=$1 AND registro_destino_id=$2 AND campo_id=$3 AND registro_id=ANY($4::uuid[])', [session.tenantId, recordId, field.inverso_de, removed])
+  for (const origin of added) {
+    const found = await db.query('SELECT id FROM tables.registros WHERE empresa_id=$1 AND tabela_id=$2 AND id=$3 AND excluido_em IS NULL', [session.tenantId, originTable.id, origin])
+    if (!found.rows[0]) throw new TablesError('INVALID_LINK', 'Um dos registros vinculados não está disponível.')
+    // Added at the end of the origin record's list, keeping the order chosen there.
+    await db.query('INSERT INTO tables.registro_vinculos(empresa_id,base_id,tabela_id,registro_id,campo_id,tabela_destino_id,registro_destino_id,posicao) SELECT $1,$2,$3,$4,$5,$6,$7,coalesce(max(posicao)+1,0) FROM tables.registro_vinculos WHERE empresa_id=$1 AND registro_id=$4 AND campo_id=$5', [session.tenantId, originTable.base_id, originTable.id, origin, field.inverso_de, tableId, recordId])
+  }
+}
+
+/** Keeps the inverse of a link field: created with new links (unless inverso is false), moved when the
+ *  destination changes, added or removed when inverso is set. Self links have no inverse. */
+async function syncInverse(db: Database, session: TablesSession, table: { id: string; base_id: string; nome: string }, fieldId: string, before: Field | undefined, input: FieldInput) {
+  const current = before?.inverso_id ?? null
+  const link = input.tipo === 'vinculo' && input.tabela_destino_id !== table.id
+  const moved = Boolean(current && (!link || before?.tabela_destino_id !== input.tabela_destino_id))
+  const wanted = link && (input.inverso ?? (before ? Boolean(current) : true))
+  if (current && (moved || !wanted)) {
+    const target = (await db.query('SELECT tabela_id FROM tables.campos WHERE empresa_id=$1 AND id=$2', [session.tenantId, current])).rows[0]
+    await trashField(db, session, String(target.tabela_id), current)
+  }
+  if (!wanted || current && !moved) return
+  const target = await requireTable(db, session, input.tabela_destino_id!, 'structure')
+  // An inverse removed before comes back with its name and position.
+  const old = (await db.query('SELECT id FROM tables.campos WHERE empresa_id=$1 AND inverso_de=$2 AND tabela_id=$3 AND excluido_em IS NOT NULL ORDER BY excluido_em DESC LIMIT 1', [session.tenantId, fieldId, target.id])).rows[0]
+  if (old) await db.query('UPDATE tables.campos SET excluido_em=NULL WHERE empresa_id=$1 AND id=$2', [session.tenantId, old.id])
+  else {
+    const fields = await readFields(db, session, target.id), taken = new Set(fields.map(f => f.nome.toLocaleLowerCase('pt-BR')))
+    let nome = table.nome
+    for (let n = 2; taken.has(nome.toLocaleLowerCase('pt-BR')); n++) nome = `${table.nome.slice(0, 112)} ${n}`
+    const id = await insertField(db, session, target, { nome, tipo: 'vinculo', obrigatorio: false, configuracao: { moeda: 'BRL' }, tabela_destino_id: table.id, opcoes: [] }, fields.length ? Number(fields[fields.length - 1].posicao) + 1 : 0)
+    await db.query('UPDATE tables.campos SET inverso_de=$3 WHERE empresa_id=$1 AND id=$2', [session.tenantId, id, fieldId])
+  }
+  await db.query('UPDATE tables.tabelas SET versao_estrutura=versao_estrutura+1,atualizado_em=now(),atualizado_por=$3 WHERE empresa_id=$1 AND id=$2', [session.tenantId, target.id, session.sharedUserId])
 }
 
 export async function saveView(db: Database, session: TablesSession, tableId: string, input: ViewInput, id?: string) {
@@ -259,10 +310,19 @@ export async function restore(db: Database, session: TablesSession, kind: keyof 
     if (!field) throw new TablesError('NOT_FOUND', 'Campo não encontrado na lixeira.', 404)
     await requireRole(db, session, (await requireTable(db, session, field.tabela_id, 'structure')).base_id, 'administrador')
     if (field.tabela_destino_id) await requireTable(db, session, field.tabela_destino_id)
+    if (field.inverso_de) {
+      const origin = (await db.query('SELECT nome,excluido_em FROM tables.campos WHERE empresa_id=$1 AND id=$2', [session.tenantId, field.inverso_de])).rows[0]
+      if (!origin || origin.excluido_em) throw new TablesError('INVERSE_FIELD', `Restaure antes o campo de origem${origin ? ` (${origin.nome})` : ''}.`, 409)
+      if ((await db.query('SELECT 1 FROM tables.campos WHERE empresa_id=$1 AND inverso_de=$2 AND excluido_em IS NULL', [session.tenantId, field.inverso_de])).rows[0]) throw new TablesError('INVERSE_FIELD', 'O vínculo já aparece nesta tabela por outro campo.', 409)
+    }
+    // Inverses trashed at the same moment as this field come back with it.
+    const paired = (await db.query('SELECT i.id FROM tables.campos i JOIN tables.campos c ON c.empresa_id=i.empresa_id AND c.id=i.inverso_de WHERE i.empresa_id=$1 AND c.id=$2 AND i.excluido_em=c.excluido_em', [session.tenantId, id])).rows.map(r => String(r.id))
     // New records may have been created while the column was absent.
     const restored = await db.query('UPDATE tables.campos SET excluido_em=NULL,obrigatorio=false WHERE empresa_id=$1 AND id=$2 AND excluido_em IS NOT NULL RETURNING id', [session.tenantId, id])
     if (!restored.rows[0]) throw new TablesError('VERSION_CONFLICT', 'Este campo já foi restaurado. Atualize a tela.', 409)
     await db.query('UPDATE tables.tabelas SET versao_estrutura=versao_estrutura+1,atualizado_em=now(),atualizado_por=$3 WHERE empresa_id=$1 AND id=$2', [session.tenantId, field.tabela_id, session.sharedUserId])
+    const inverses = paired.length ? await db.query('UPDATE tables.campos SET excluido_em=NULL WHERE empresa_id=$1 AND inverso_de=$2 AND id=ANY($3::uuid[]) AND NOT EXISTS(SELECT 1 FROM tables.campos a WHERE a.empresa_id=$1 AND a.inverso_de=$2 AND a.excluido_em IS NULL) RETURNING tabela_id', [session.tenantId, id, paired.slice(0, 1)]) : { rows: [] }
+    for (const row of inverses.rows) await db.query('UPDATE tables.tabelas SET versao_estrutura=versao_estrutura+1,atualizado_em=now(),atualizado_por=$3 WHERE empresa_id=$1 AND id=$2', [session.tenantId, row.tabela_id, session.sharedUserId])
     return
   }
   const row = (await db.query(`SELECT * FROM tables.${removable[kind]} WHERE empresa_id=$1 AND id=$2 AND excluido_em IS NOT NULL`, [session.tenantId, id])).rows[0]

@@ -48,7 +48,7 @@ async function main(){try {
  CREATE TABLE plugin.drafts(id uuid PRIMARY KEY,empresa_id bigint,user_id bigint,oauth_client_id text,operation_key uuid,proposal jsonb,status text DEFAULT 'pending',record_id text,created_at timestamptz DEFAULT now(),expires_at timestamptz DEFAULT now()+interval '24 hours',decided_at timestamptz,target_snapshot jsonb,integration text,
  CONSTRAINT drafts_integration_operation_key UNIQUE(integration,empresa_id,user_id,oauth_client_id,operation_key),CONSTRAINT legacy_result CHECK((status='saved')=(record_id IS NOT NULL)));
  CREATE TABLE plugin.executions(id uuid PRIMARY KEY,user_id bigint,empresa_id bigint,oauth_client_id text,tool_name text,status text,duration_ms int,finished_at timestamptz,integration text);`)
- for(const file of ['20261016120000_create_tables.sql','20261018120000_tables_base_permissions.sql','20261018150000_tables_search_index.sql','20261018160000_tables_field_types.sql','20261018170000_tables_views.sql','20261018180000_tables_automations.sql','20261018190000_tables_api_keys.sql','20261018200000_tables_change_index.sql','20261016193000_mcp_product_domains.sql','20261016200000_mcp_domain_uniqueness.sql'])await db.exec(readFileSync('supabase/migrations/'+file,'utf8'))
+ for(const file of ['20261016120000_create_tables.sql','20261018120000_tables_base_permissions.sql','20261018150000_tables_search_index.sql','20261018160000_tables_field_types.sql','20261018170000_tables_views.sql','20261018180000_tables_automations.sql','20261018190000_tables_api_keys.sql','20261018200000_tables_change_index.sql','20261019100000_tables_inverse_links.sql','20261016193000_mcp_product_domains.sql','20261016200000_mcp_domain_uniqueness.sql'])await db.exec(readFileSync('supabase/migrations/'+file,'utf8'))
  await check('21 unique tools, compact definitions and two host registrations',async()=>{
   assert.equal(tablesTools.length,21);assert.equal(new Set(tablesTools.map(t=>t.name)).size,21);assert.equal(Object.keys(readSchemas).length,11)
   assert(tablesTools.every(t=>t.title.length<=40&&t.description.length>=100),'Short titles and documented tools')
@@ -132,6 +132,20 @@ async function main(){try {
   assert.equal(rows.registros[0].criado_por,undefined,'Internal columns stay out of the output')
   assert.match(String(rows.registros[0].exibicao['Nº']),/^\d+$/)
   assert.equal((await call('salvar_registros',{chave_operacao:randomUUID(),dados:{tabela_id:table,registros:[{valores:{'Nº':5}}]}})).code,'INVALID_VALUE','System fields are never written')
+ })
+ await check('Two-way link by names: the linked table gets the inverse field, readable and writable by name',async()=>{
+  const clients=(await change('salvar_tabela',{base_id:base,nome:'Clientes MCP'})).result.resultado.tabela.id
+  const link=await change('salvar_campo',{tabela_id:table,nome:'Conta cliente',tipo:'vinculo',tabela_destino:'Clientes MCP'});assert(link.direct)
+  const fields=(await ok('obter_tabela',{tabela_id:clients,por_pagina:10})).itens,inverse=fields.find((f:{inverso_de?:string})=>f.inverso_de===link.result.resultado.campo.id)
+  assert(inverse,'The inverse appears in the linked table: '+JSON.stringify(fields.map((f:{nome:string})=>f.nome)))
+  const name=fields[0].nome,client=await change('salvar_registros',{tabela_id:clients,registros:[{valores:{[name]:'ACME MCP'}}]})
+  const clientId=client.result.resultado.registros[0].id
+  await change('salvar_registros',{tabela_id:clients,registros:[{registro_id:clientId,valores:{[inverse.nome]:['Site']}}]})
+  const site=(await ok('consultar_registros',{tabela_id:table,filtros:[{campo:'Nome do projeto',operador:'eq',valor:'Site'}]})).registros[0].id
+  assert.equal((await ok('obter_registro',{registro_id:site,campos:['Conta cliente']})).registro.exibicao['Conta cliente'],'ACME MCP','Writing on the client links the project')
+  assert.equal((await ok('obter_registro',{registro_id:clientId,campos:[inverse.nome]})).registro.exibicao[inverse.nome],'Site')
+  await change('salvar_campo',{tabela_id:table,campo:'Conta cliente',inverso:false})
+  assert(!(await ok('obter_tabela',{tabela_id:clients})).itens.some((f:{id:string})=>f.id===inverse.id),'inverso false removes the inverse')
  })
  await check('Sharing a base by name: preview names people, the base becomes restricted and opens again',async()=>{
   const shared=await change('salvar_base',{base_id:base,acesso:'restrito',membros:[{pessoa:'bruno@example.invalid',papel:'leitor'}]})

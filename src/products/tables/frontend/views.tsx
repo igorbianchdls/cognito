@@ -1,7 +1,7 @@
 'use client'
 
 import { Fragment, useEffect, useRef, useState, type KeyboardEvent } from 'react'
-import { CalendarDays, Check, ChevronLeft, ChevronRight, Expand, Plus, X } from 'lucide-react'
+import { ArrowLeftRight, CalendarDays, Check, ChevronLeft, ChevronRight, Expand, Plus, X } from 'lucide-react'
 import { CellValueView, FieldControl, FieldIcon, RecordCard } from './FieldControl'
 import { isComputed } from '../shared/contracts'
 import { recordTitle, type CellValue, type DataRecord, type Field, type RecordPage, type TableBundle, type Values, type View } from '../shared/contracts'
@@ -64,7 +64,7 @@ export function DataGrid({ bundle, page, view, api, editable, structure = editab
   function closeEditor(r: number, c: number) { setEditing(null); focusCell(r, c) }
 
   return <div className="tables-grid-scroll"><table ref={gridRef} className="tables-grid" role="grid" aria-label={`${bundle.tabela.nome}: ${view.nome}`} aria-rowcount={page.total + 1}><colgroup><col style={{ width: 42 }} /><col style={{ width: 52 }} />{fields.map(field => <col key={field.id} style={{ width: columnOf(field.id)?.largura ?? (field.id === bundle.tabela.campo_principal_id ? 260 : 180) }} />)}<col style={{ width: 48 }} /></colgroup>
-    <thead><tr><th>{editable && <input type="checkbox" aria-label="Selecionar registros desta página" checked={rows.length > 0 && rows.every(r => selected.has(r.id))} onChange={e => onSelect(e.target.checked ? rows.map(r => r.id) : [])} />}</th><th>#</th>{fields.map(field => <th key={field.id}><button type="button" aria-label={`Editar campo ${field.nome}`} disabled={!structure} onClick={() => onEditField(field)}><FieldIcon type={field.tipo} /><span>{field.nome}</span><span className="tables-header-chevron">⌄</span></button></th>)}<th>{structure && <button type="button" aria-label="Adicionar campo" onClick={onCreateField}><Plus size={17} /></button>}</th></tr></thead>
+    <thead><tr><th>{editable && <input type="checkbox" aria-label="Selecionar registros desta página" checked={rows.length > 0 && rows.every(r => selected.has(r.id))} onChange={e => onSelect(e.target.checked ? rows.map(r => r.id) : [])} />}</th><th>#</th>{fields.map(field => <th key={field.id}><button type="button" aria-label={`Editar campo ${field.nome}`} disabled={!structure} onClick={() => onEditField(field)}><FieldIcon type={field.tipo} /><span>{field.nome}</span>{(field.inverso_id || field.inverso_de) && <ArrowLeftRight size={12} className="tables-two-way" aria-label="Vínculo de mão dupla"><title>Vínculo de mão dupla: aparece também na tabela vinculada</title></ArrowLeftRight>}<span className="tables-header-chevron">⌄</span></button></th>)}<th>{structure && <button type="button" aria-label="Adicionar campo" onClick={onCreateField}><Plus size={17} /></button>}</th></tr></thead>
     <tbody>
       {rows.map((record, index) => {
         const groupValue = group ? String(record.valores[group.id] ?? '') : undefined
