@@ -226,7 +226,10 @@ async function main() {
     const limited=await rpc('tools/call',{name:'meu_acesso',arguments:{}},exhausted)
     assert.equal(limited.response.status,429);assert.equal(limited.response.headers.get('retry-after'),'60')
     // A connector refresh reads the list and every card in a burst: those never count toward the limit.
-    assert.equal((await rpc('tools/list',{},exhausted)).response.status,200)
+    const listed=await rpc('tools/list',{},exhausted);assert.equal(listed.response.status,200)
+    // Every tool with a card names it in the OpenAI key too, so ChatGPT stores the HTML on refresh.
+    const carded=listed.body.result.tools.filter((t:{_meta?:{ui?:{resourceUri?:string}}})=>t._meta?.ui?.resourceUri)
+    assert(carded.length>50&&carded.every((t:{_meta:Record<string,unknown>&{ui:{resourceUri:string}}})=>t._meta['openai/outputTemplate']===t._meta.ui.resourceUri),'openai/outputTemplate')
     for(const uri of ['ui://chatgptplugin/cards/v2.html','ui://chatgptplugin/tables/v1.html','ui://chatgptplugin/apps/v1.html'])assert.equal((await rpc('resources/read',{uri},exhausted)).response.status,200,uri)
   })
   await check('Origem externa batch corpo excessivo e GET stateless',async () => {

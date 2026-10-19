@@ -82,6 +82,10 @@ export async function handlePluginRequest(request: Request, deps: HttpDependenci
         // SDK preserva securitySchemes em _meta; anuncie tambem no descritor publico.
         if (parsed.result?.tools) for (const tool of parsed.result.tools) {
           tool.securitySchemes = tool._meta?.securitySchemes || [{ type:'oauth2',scopes:[config.scope] }]
+          // ChatGPT stores a card's HTML when the connector is refreshed only for tools that name it in its
+          // own key; the MCP Apps key alone renders a pointer to an asset it never downloaded.
+          const card = tool._meta?.ui?.resourceUri
+          if (typeof card === 'string' && !tool._meta['openai/outputTemplate']) tool._meta['openai/outputTemplate'] = card
         }
         result = JSON.stringify(parsed)
       }
