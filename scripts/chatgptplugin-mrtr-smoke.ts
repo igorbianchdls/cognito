@@ -4,6 +4,7 @@ import {appsTools} from '../src/products/mcpcore/domains/apps/tools/catalog'
 import {tools as erpTools} from '../src/products/mcpcore/tools/catalog'
 import {actionTools as erpActions} from '../src/products/mcpcore/actions/catalog'
 import assert from 'node:assert/strict'
+import { z } from 'zod'
 import { randomUUID,randomBytes } from 'node:crypto'
 import { handlePluginRequest,type HttpDependencies } from '../src/products/mcpcore/hosts/chatgpt/handleRequest'
 import { ERP_CAPABILITIES } from '../src/products/erp/shared/professionalContracts'
@@ -35,6 +36,24 @@ async function rpc(method:string,params:Record<string,unknown>={},options:{deps?
 const preview=()=>({name:'criar_cadastro',arguments:{empresa_id:1,tipo:'cliente',chave_operacao:randomUUID(),dados:{nome:'Cliente teste'}}})
 async function check(name:string,fn:()=>Promise<void>){await fn();checked++;console.log('PASS '+name)}
 async function main(){
+  await check('Respostas modernas incluem o contrato obrigatório de cache dos recursos',async()=>{
+    const cacheResult=z.object({resultType:z.literal('complete'),ttlMs:z.number().int().nonnegative(),cacheScope:z.enum(['public','private'])}).passthrough()
+    const resourceResult=cacheResult.extend({contents:z.array(z.object({uri:z.string(),mimeType:z.string(),text:z.string()})).min(1)})
+    for(const uri of ['ui://chatgptplugin/cards/v2.html','ui://chatgptplugin/panel/v1.html','ui://chatgptplugin/tables/v1.html','ui://chatgptplugin/apps/v1.html','ui://chatgptplugin/whatsapp/v1.html']) {
+      const response=await rpc('resources/read',{uri},{headers:{authorization:'',accept:'application/json'}})
+      assert.equal(response.response.status,200)
+      const result=resourceResult.parse(response.body.result)
+      assert.equal(result.contents[0].uri,uri);assert.match(result.contents[0].text,/<!doctype html>/i)
+      assert.equal(result.ttlMs,0);assert.equal(result.cacheScope,'private')
+    }
+    for(const method of ['server/discover','tools/list','resources/list','resources/templates/list']) {
+      const response=await rpc(method);assert.equal(response.response.status,200)
+      const result=cacheResult.parse(response.body.result);assert.equal(result.ttlMs,0);assert.equal(result.cacheScope,'private')
+    }
+    const legacy=await handlePluginRequest(new Request(config.resource,{method:'POST',headers:{'content-type':'application/json',accept:'application/json','mcp-protocol-version':'2025-11-25'},body:JSON.stringify({jsonrpc:'2.0',id:++sequence,method:'resources/read',params:{uri:'ui://chatgptplugin/cards/v2.html'}})}),deps)
+    assert.equal(legacy.status,200);const result=(await legacy.json()).result
+    assert.equal(result.resultType,undefined);assert.equal(result.ttlMs,undefined);assert.equal(result.cacheScope,undefined)
+  })
   await check('Leitura de card tolerante: sem Mcp-Name ou sem metadados, nunca com nome diferente',async()=>{
     const uri='ui://chatgptplugin/tables/v1.html',read=(headers:Record<string,string>,params:Record<string,unknown>)=>handlePluginRequest(new Request(config.resource,{method:'POST',headers:{authorization:'Bearer test','content-type':'application/json',accept:'application/json, text/event-stream','mcp-protocol-version':MODERN_VERSION,'mcp-method':'resources/read',...headers},body:JSON.stringify({jsonrpc:'2.0',id:++sequence,method:'resources/read',params})}),deps)
     const meta={[versionKey]:MODERN_VERSION,[capabilitiesKey]:capabilities}

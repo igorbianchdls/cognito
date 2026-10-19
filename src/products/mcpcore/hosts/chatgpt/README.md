@@ -61,6 +61,8 @@ Erros devolvem `code`, `message` e, quando aplicável, `campos: [{campo, motivo}
 
 Recurso `ui://chatgptplugin/cards/v2.html`, ligado por `_meta.ui.resourceUri` às consultas e escritas do catálogo. O card identifica a tool por `hostContext.toolInfo` (ou `_meta["cognito/tool"]` no resultado).
 
+No protocolo MCP 2026-07-28, discovery, listagens e leitura de recursos incluem `ttlMs: 0` e `cacheScope: private`, além de `resultType: complete`. Esses campos são obrigatórios: sem eles o cliente rejeita o recurso antes de carregar o HTML, mesmo com HTTP 200. A política mantém as respostas imediatamente desatualizadas e impede compartilhamento entre usuários; respostas MCP legadas preservam seu formato.
+
 - **Lista:** inline com resumo e até 5 linhas, uma ação ("Ver tudo"); em tela cheia, tabela completa, busca e paginação.
 - **Detalhes, análise (barras por mês), resumo, empresas** ("Usar esta" envia a escolha à conversa).
 - **Revisão:** antes/depois, nomes no lugar de IDs, itens, parcelas e total do ERP; botões Confirmar e Ajustar. Ajustar edita quantidade, preço e desconto e gera nova prévia, informando o modelo por `ui/update-model-context`. Exclusões, cancelamentos e estornos mostram aviso.

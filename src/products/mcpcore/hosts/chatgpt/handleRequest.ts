@@ -103,6 +103,10 @@ export async function handlePluginRequest(request: Request, deps: HttpDependenci
             if(capabilities.resources)capabilities.resources={}
             parsed.result={supportedVersions:SUPPORTED_VERSIONS,capabilities,instructions}
           }
+          if(['server/discover','tools/list','prompts/list','resources/list','resources/templates/list','resources/read'].includes(modernRequest.rpc.method)) {
+            parsed.result.ttlMs=0
+            parsed.result.cacheScope='private'
+          }
           parsed.result.resultType='complete'
           parsed.result._meta={...parsed.result._meta,'io.modelcontextprotocol/serverInfo':SERVER_INFO}
         }
