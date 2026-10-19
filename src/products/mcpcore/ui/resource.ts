@@ -7,6 +7,7 @@ import { detailsCardScript } from './cards/detalhes'
 import { analysisCardScript } from './cards/analise'
 import { reviewCardScript } from './cards/revisao'
 import { resultCardScript } from './cards/resultado'
+import { creationCardScript } from './cards/criacao'
 import { operationLabels } from '../actions/labels'
 import { fieldLabels } from '../actions/fieldLabels'
 import { actionTools,toolCallForProposal } from '../actions/catalog'
@@ -25,5 +26,5 @@ export function renderCardsHtml(app: CardsApp) {
   // Sem dados privados no HTML: rótulos e o mapa de tools são públicos; dados do ERP chegam pela
   // ponte e são inseridos com textContent, nunca innerHTML.
   const constants=`const operationLabels=${json(operationLabels)},fieldLabels=${json(fieldLabels)},toolFor=${json(toolsByProposal())},HOST=${json(app.host)},strict=HOST==='claude';document.documentElement.classList.add('host-'+HOST);`
-  return `<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><style>${cardStyles}</style></head><body><main><section id="app" aria-live="polite" aria-label="Resultado do ERP"></section><p id="status" class="muted" role="status">Conectando…</p></main><script>(function(){${constants}\n${commonScript}\n${viewsScript}\n${listCardScript}\n${detailsCardScript}\n${analysisCardScript}\n${reviewCardScript}\n${resultCardScript}\n${bridgeScript(app)}})();</script></body></html>`
+  return `<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><style>${cardStyles}</style></head><body><main><section id="app" aria-live="polite" aria-label="Resultado do ERP"></section><p id="status" class="muted" role="status">Conectando…</p></main><script>(function(){${constants}\n${commonScript}\n${viewsScript}\n${listCardScript}\n${detailsCardScript}\n${analysisCardScript}\n${creationCardScript}\n${reviewCardScript}\n${resultCardScript}\n${bridgeScript(app)}})();</script></body></html>`
 }

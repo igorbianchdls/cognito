@@ -26,7 +26,7 @@ const summary={referencia:'2026-10-07',quantidade:7,em_aberto:2800,vencidas:300,
 const executed:string[]=[]
 const drafts=new Map<string,{tipo:string;dados:Record<string,unknown>}>()
 function draft(tipo:string,dados:Record<string,unknown>){const id=randomUUID();drafts.set(id,{tipo,dados})
-  return {rascunho_id:id,empresa_id:2,status:'pending',registro_id:null,criado_em:'2026-10-07T10:00:00Z',expira_em:'2026-10-08T10:00:00Z',
+  return {rascunho_id:id,empresa_id:2,status:'pending',registro_id:null,criado_em:'2026-10-07T10:00:00Z',expira_em:new Date(Date.now()+86400000).toISOString(),
     alvo:dados.registro_id?{registro_id:dados.registro_id,nome:'Padaria Central',status:'ativo',campos:{}}:null,
     referencias:{cliente:{id:'5',nome:'Padaria Central'},fornecedor:null,itens:[{tipo:'produto',id:'9',nome:'Farinha 25kg'}]},
     proposta:{tipo,dados,...(Array.isArray(dados.itens)?{total:(dados.itens as {quantidade:number;valor_unitario:number;desconto?:number}[]).reduce((s,i)=>s+i.quantidade*i.valor_unitario-(i.desconto||0),0)}:{})}}}
@@ -73,7 +73,7 @@ async function main(){
   const url='http://127.0.0.1:'+(server.address() as {port:number}).port
   const executable=process.env.CHATGPTPLUGIN_TEST_BROWSER||['C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe','C:/Program Files/Google/Chrome/Application/chrome.exe'].find(existsSync)
   assert(executable,'Navegador necessário para verificar os cards')
-  const browser=await chromium.launch({executablePath:executable,headless:true}),checks:string[]=[]
+  const browser=await chromium.launch({executablePath:executable,headless:true,args:['--disable-features=BackForwardCache','--disable-extensions','--disable-background-networking']}),checks:string[]=[]
   mkdirSync('.cache/chatgptplugin-cards',{recursive:true})
   async function open(tool:string,args:Record<string,unknown>,options:{theme?:string;width?:number}={}):Promise<Page>{
     currentHost=host(tool,options.theme);const page=await browser.newPage({viewport:{width:options.width||900,height:1100}}),errors:string[]=[]
@@ -163,10 +163,10 @@ async function main(){
     page=await open('excluir_cadastro',{empresa_id:2,tipo:'cliente',chave_operacao:randomUUID(),dados:{registro_id:5,motivo:'Cadastro duplicado'}});f=frame(page)
     await f.getByRole('heading',{name:'Excluir cliente · Padaria Central'}).waitFor();await f.getByRole('button',{name:'Confirmar mesmo assim'}).waitFor();await done(page,'risco')
     const sale={empresa_id:2,tipo:'venda',chave_operacao:randomUUID(),dados:{cliente_id:5,data_venda:'2026-10-07',data_vencimento:'2026-10-31',itens:[{tipo:'produto',item_id:9,quantidade:2,valor_unitario:75}]}}
-    page=await open('criar_venda',sale);f=frame(page);await f.getByRole('heading',{name:'Criar venda · Padaria Central'}).waitFor();assert.equal(await f.getByText('Cliente (ID)').count(),0)
+    page=await open('criar_venda',sale);f=frame(page);await f.getByRole('heading',{name:'Nova venda'}).waitFor();assert.equal(await f.getByText('Cliente (ID)').count(),0)
     await f.getByRole('button',{name:'Ajustar'}).click();await f.getByLabel('Quantidade de Farinha 25kg').fill('3');await f.getByRole('button',{name:'Atualizar prévia'}).click()
     await page.waitForFunction(()=>(window as unknown as Win).context.length===1);await f.getByText('R$ 225,00').waitFor()
-    await f.getByRole('button',{name:'Confirmar',exact:true}).click();await f.getByText('Salvo no ERP.').waitFor();await f.getByRole('button',{name:'Confirmar venda'}).waitFor();await done(page,'resultado-venda')
+    await f.getByRole('button',{name:'Confirmar registro',exact:true}).click();await f.getByRole('heading',{name:'Venda registrada!'}).waitFor();await f.getByRole('button',{name:'Ver registro'}).waitFor();assert.equal(await f.getByRole('button',{name:'Confirmar venda',exact:true}).count(),0);await done(page,'resultado-venda')
     // F: erro com campos, tema escuro e celular.
     page=await open('registrar_baixa',{empresa_id:2,tipo:'pagar',chave_operacao:randomUUID(),dados:{registro_id:1,valor:10,data_pagamento:'2026-02-31',conta_financeira_id:1}},{theme:'dark',width:375})
     await frame(page).getByText('Não foi possível concluir').waitFor();await frame(page).getByText(/Data de pagamento/).first().waitFor();await done(page,'erro-escuro-celular')

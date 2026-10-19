@@ -109,6 +109,14 @@ pnpm chatgptplugin:package-smoke
 
 Todos rodam localmente, sem Clerk, Supabase ou ChatGPT reais: o banco usa PGlite com os repositórios e o SQL reais; cards e painel rodam em navegador com host MCP Apps simulado. `chatgptplugin:live-read-smoke` e `chatgptplugin:live-crud-smoke` usam o Supabase de `.env.local` e só devem ser executados com autorização.
 
+## Cards de criação e confirmação
+
+Vendas, compras, orçamentos, ordens de serviço, contas a pagar/receber e cadastros usam a prévia móvel compartilhada: identificação, participante validado, itens compactos, condições e total calculado pelo ERP. Itens e parcelas têm navegação local de até 5 por página. Ajustes de quantidade, preço e desconto são preservados entre páginas e só produzem uma nova prévia; o registro exige outra confirmação explícita. Edições, exclusões, cancelamentos e NFS-e mantêm as apresentações e advertências específicas.
+
+O botão “Confirmar registro” muda para “Registrando…” durante a execução. Apenas `status=saved` com `registro_id` válido mostra sucesso. O resumo consulta o registro salvo e não confunde uma venda registrada em rascunho com uma venda comercialmente confirmada. Após salvar, “Ver registro” substitui qualquer retorno à prévia executável. Falha de leitura ou de comunicação com o modelo não repete a escrita. Resultados incertos bloqueiam o reenvio pelo card e orientam verificar o ERP; prévias expiradas ou desatualizadas exigem atualização e nova confirmação.
+
+`pnpm chatgptplugin:creation-smoke` verifica os dois layouts, clique duplo, dados reais do registro simulado, falhas, expiração, ajustes e paginação em navegador local, sem banco real ou ChatGPT. As capturas ficam em `.cache/chatgptplugin-creation/`.
+
 ## Pacote
 
 ```text

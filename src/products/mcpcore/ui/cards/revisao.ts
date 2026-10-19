@@ -13,7 +13,7 @@ function consequence(tipo){if(/^excluir_/.test(tipo))return 'Atenção: o regist
   if(tipo==='estornar_pagamento')return 'Atenção: o pagamento é desfeito e o saldo da parcela volta a ficar em aberto.';return 'Atenção: esta operação desfaz dados no ERP.'}
 function referenceName(data,key,value){const refs=data.referencias||{};if(key==='cliente_id'&&refs.cliente)return refs.cliente.nome;if(key==='fornecedor_id'&&refs.fornecedor)return refs.fornecedor.nome;return null}
 function itemName(data,item){const refs=(data.referencias&&data.referencias.itens)||[];const found=refs.find(r=>String(r.id)===String(item.item_id)&&r.tipo===item.tipo);return found?found.nome:(item.descricao||label(item.tipo)+' #'+item.item_id)}
-function renderReview(target,data){if(/nota_servico$/.test((data.proposta||{}).tipo||''))return renderNoteReview(target,data);const proposal=data.proposta||{},dados=proposal.dados||{},alvo=data.alvo,pendingDraft=data.status==='pending';
+function renderReview(target,data){if(creationSpec(data))return data.status==='saved'?renderCreationResult(target,data):renderCreationReview(target,data);if(/nota_servico$/.test((data.proposta||{}).tipo||''))return renderNoteReview(target,data);const proposal=data.proposta||{},dados=proposal.dados||{},alvo=data.alvo,pendingDraft=data.status==='pending';
   const subject=alvo&&alvo.nome||(data.referencias&&(data.referencias.cliente||data.referencias.fornecedor)||{}).nome||dados.nome||dados.descricao||'';
   const amount=proposal.total!==undefined?proposal.total:alvo&&alvo.valor!=null&&alvo.valor!==''?Number(alvo.valor):undefined;
   hero(target,{title:(operationLabels[proposal.tipo]||'Operação')+(subject?' · '+subject:''),amount,amountLabel:proposal.total!==undefined?'Total calculado pelo ERP':amount!==undefined?'Valor':undefined,
@@ -76,15 +76,19 @@ function itemsTable(data,items){const t=element('table');t.append(element('capti
       else td.textContent=formatted(key,item[key]??0);tr.append(td)}
     tr.append(element('td',item.total!==undefined?money(item.total):'—','num'));body.append(tr)});
   t.append(thead,body);return t}
-async function confirmDraft(data){const result=await callTool(data.confirmar.tool,data.confirmar.argumentos);state.error=null;state.edit=false;state.stack=[];state.tool=data.confirmar.tool;state.data=result.data;state.contextWarning=false;render();
+async function confirmDraft(data){if(creationSpec(data)&&(creationExpired(data)||creationIssues.get(data)?.kind==='uncertain')){render();return}
+  let result;try{result=await callTool(data.confirmar.tool,data.confirmar.argumentos);if(!result.data||typeof result.data!=='object')throw new Error('O ERP não retornou a confirmação do registro.')}catch(error){if(creationSpec(data)){const refresh=['DRAFT_EXPIRED','STALE_PROPOSAL','STALE_VERSION','VERSION_CONFLICT'].includes(error.code),rejected=['INVALID_INPUT','VALIDATION_ERROR','INVALID_REFERENCE','INVALID_STATE','INVALID_VALUE','ACCESS_DENIED','INSUFFICIENT_SCOPE','PERIOD_CLOSED'].includes(error.code);creationIssues.set(data,{kind:refresh?'refresh':rejected?'adjust':'uncertain'})}throw error}
+  state.error=null;state.edit=false;state.stack=[];state.tool=data.confirmar.tool;state.data=result.data;state.contextWarning=false;absorb(result);render();
   const tipo=(data.proposta||{}).tipo,op=operationLabels[tipo]||tipo;
-  tellModel('O usuário confirmou no card: '+op+'. Situação: '+(states[result.data.status]||result.data.status)+(result.data.registro_id?' (registro_id '+result.data.registro_id+')':'')+'. A operação já foi executada; não a repita nem diga que ela ainda não foi feita.',
-    {confirmado_no_card:true,tipo,rascunho_id:result.data.rascunho_id,status:result.data.status,registro_id:result.data.registro_id})
+  const saved=registered(result.data);
+  tellModel('O usuário confirmou no card: '+op+'. Situação: '+(states[result.data.status]||result.data.status)+(result.data.registro_id?' (registro_id '+result.data.registro_id+')':'')+(saved?'. O registro já foi salvo no ERP; não repita a operação. Consulte a situação do documento antes de afirmar que foi confirmado ou finalizado.':'. A execução ainda não tem confirmação válida. Verifique o ERP antes de repetir qualquer operação.'),
+    {confirmado_no_card:true,execucao_confirmada:saved,tipo,rascunho_id:result.data.rascunho_id,status:result.data.status,registro_id:result.data.registro_id})
     // Se o host recusar o aviso, o usuário sabe que precisa mencionar a confirmação na conversa.
     .then(ok=>{if(!ok&&state.data===result.data){state.contextWarning=true;render()}})}
 async function updatePreview(data){const proposal=data.proposta,dados=JSON.parse(JSON.stringify(proposal.dados));
-  for(const input of root.querySelectorAll('input.cell')){const value=Number(input.value);if(!Number.isFinite(value)||value<0)throw new Error('Informe números válidos nos itens.');dados.itens[Number(input.dataset.index)][input.dataset.key]=value}
-  for(const item of dados.itens)delete item.total;
+  if(creationSpec(data)&&creationView(data).edits)dados.itens=JSON.parse(JSON.stringify(creationView(data).edits));
+  for(const input of root.querySelectorAll('input.cell')){const value=Number(input.value);if(input.value===''||!Number.isFinite(value)||value<0)throw new Error('Informe números válidos nos itens.');dados.itens[Number(input.dataset.index)][input.dataset.key]=value}
+  if(Array.isArray(dados.itens))for(const item of dados.itens){for(const key of ['quantidade','valor_unitario','desconto'])if(item[key]!==undefined){if(item[key]===''||!Number.isFinite(Number(item[key]))||Number(item[key])<0||key==='quantidade'&&Number(item[key])===0)throw new Error('Informe números válidos nos itens.');item[key]=Number(item[key])}delete item.total}
   const call=toolFor[proposal.tipo];if(!call)throw new Error('Esta operação não pode ser ajustada aqui.');
   const result=await callTool(call.tool,{empresa_id:data.empresa_id,...(call.tipo?{tipo:call.tipo}:{}),chave_operacao:crypto.randomUUID(),dados});
   state.edit=false;state.error=null;state.data=result.data;render();

@@ -48,6 +48,7 @@
     "chatgptplugin:package": "node scripts/chatgptplugin-package.mjs",
     "chatgptplugin:interface-smoke": "tsx scripts/chatgptplugin-interface-smoke.ts",
     "chatgptplugin:cards-smoke": "tsx scripts/chatgptplugin-cards-smoke.ts",
+    "chatgptplugin:creation-smoke": "tsx scripts/chatgptplugin-creation-smoke.ts",
     "chatgptplugin:selection-smoke": "tsx scripts/chatgptplugin-selection-smoke.ts",
     "chatgptplugin:package-smoke": "node scripts/chatgptplugin-package-smoke.mjs",
     "chatgptplugin:mrtr-smoke": "tsx scripts/chatgptplugin-mrtr-smoke.ts",
