@@ -39,6 +39,10 @@ async function main(){
     const uri='ui://chatgptplugin/tables/v1.html',read=(headers:Record<string,string>,params:Record<string,unknown>)=>handlePluginRequest(new Request(config.resource,{method:'POST',headers:{authorization:'Bearer test','content-type':'application/json',accept:'application/json, text/event-stream','mcp-protocol-version':MODERN_VERSION,'mcp-method':'resources/read',...headers},body:JSON.stringify({jsonrpc:'2.0',id:++sequence,method:'resources/read',params})}),deps)
     const meta={[versionKey]:MODERN_VERSION,[capabilitiesKey]:capabilities}
     for(const [label,response] of [['sem Mcp-Name',await read({},{uri,_meta:meta})],['sem metadados',await read({},{uri})]] as const){const body=await response.json();assert.equal(response.status,200,label+': '+JSON.stringify(body));assert.match(body.result.contents[0].text,/<!doctype html>/i,label)}
+    for(const accept of ['application/json','*/*','']) {
+      const response=await read({accept,authorization:''},{uri,_meta:meta}),body=await response.json()
+      assert.equal(response.status,200,accept);assert.equal(body.result.resultType,'complete');assert.match(body.result.contents[0].text,/<!doctype html>/i)
+    }
     assert.equal((await read({'mcp-name':'ui://outro.html'},{uri,_meta:meta})).status,400,'A different Mcp-Name is still refused')
   })
   await check('Discovery e consultas modernas sem initialize',async()=>{

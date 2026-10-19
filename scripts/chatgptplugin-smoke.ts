@@ -220,6 +220,18 @@ async function main() {
     const result=await executeTool(principal,'resumo_erp',{}, {...settings,toolTimeoutMs:5},{...execution,queries:{...execution.queries,overview:async () => new Promise(() => {})}})
     assert.equal(result.isError,true);assert(JSON.stringify(result).includes('TIMEOUT'))
   })
+  await check('Cards públicos aceitam leitores JSON sem SSE',async () => {
+    for(const accept of ['application/json','*/*',''])for(const version of ['2025-11-25','2026-07-28']) {
+      const headers={authorization:'',accept,'mcp-protocol-version':version}
+      const card=await rpc('resources/read',{uri:'ui://chatgptplugin/cards/v2.html'},dependencies,headers)
+      assert.equal(card.response.status,200,JSON.stringify(headers));assert.match(card.body.result.contents[0].text,/<!doctype html>/i)
+      assert.equal((await rpc('resources/list',{},dependencies,headers)).response.status,200)
+      assert.equal((await rpc('resources/read',{uri:'erp://empresa/1/clientes/5'},dependencies,headers)).response.status,401)
+      assert.equal((await rpc('tools/call',{name:'meu_acesso',arguments:{}},dependencies,headers)).response.status,401)
+    }
+    assert.equal((await rpc('resources/read',{uri:'ui://chatgptplugin/cards/v2.html'},dependencies,{authorization:'',accept:'text/html'})).response.status,406)
+    assert.equal((await rpc('tools/call',{name:'meu_acesso',arguments:{}},dependencies,{accept:'application/json'})).response.status,406)
+  })
   await check('401 com descoberta e 429',async () => {
     const unauth=await rpc('tools/list',{},dependencies,{authorization:''});assert.equal(unauth.response.status,401);assert(unauth.response.headers.get('www-authenticate')?.includes(settings.metadataUrl))
     // The widget fetcher reads card templates without a token: those (and only those) open without login.

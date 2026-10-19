@@ -49,7 +49,13 @@ export async function handlePluginRequest(request: Request, deps: HttpDependenci
     let modern=isModern(request,body)
     // A read of the tool list or of a card sent with the new version header but without its metadata is
     // answered the classic way instead of refused: hosts fetch cards with simpler clients than the chat.
-    const plain=body as {method?:string;params?:{_meta?:unknown}}|null
+    const plain=body as {method?:string;params?:{_meta?:unknown;uri?:unknown}}|null
+    const cardRead=plain?.method==='resources/list'||(plain?.method==='resources/read'&&typeof plain.params?.uri==='string'&&plain.params.uri.startsWith('ui://chatgptplugin/'))
+    if(cardRead&&['application/json','*/*',''].includes((request.headers.get('accept')||'').trim().toLowerCase())) {
+      const cardHeaders=new Headers(request.headers)
+      cardHeaders.set('accept','application/json, text/event-stream')
+      request=new Request(request.url,{method:'POST',headers:cardHeaders,body:JSON.stringify(body)})
+    }
     if(modern&&!plain?.params?._meta&&['tools/list','resources/list','resources/read','resources/templates/list'].includes(String(plain?.method))) {
       modern=false
       const legacyHeaders=new Headers(request.headers);legacyHeaders.set('mcp-protocol-version','2025-11-25')
