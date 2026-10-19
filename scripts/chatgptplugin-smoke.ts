@@ -222,6 +222,11 @@ async function main() {
   })
   await check('401 com descoberta e 429',async () => {
     const unauth=await rpc('tools/list',{},dependencies,{authorization:''});assert.equal(unauth.response.status,401);assert(unauth.response.headers.get('www-authenticate')?.includes(settings.metadataUrl))
+    // The widget fetcher reads card templates without a token: those (and only those) open without login.
+    for(const uri of ['ui://chatgptplugin/cards/v2.html','ui://chatgptplugin/tables/v1.html']){const card=await rpc('resources/read',{uri},dependencies,{authorization:''});assert.equal(card.response.status,200,uri);assert.match(card.body.result.contents[0].text,/<!doctype html>/i)}
+    assert.equal((await rpc('resources/list',{},dependencies,{authorization:''})).response.status,200)
+    assert.equal((await rpc('resources/read',{uri:'erp://empresa/1/clientes/5'},dependencies,{authorization:''})).response.status,401,'ERP data still needs login')
+    assert.equal((await rpc('tools/call',{name:'meu_acesso',arguments:{}},dependencies,{authorization:''})).response.status,401,'Tools still need login')
     const exhausted={...dependencies,limit:async () => {throw new PluginError('RATE_LIMITED','Limite',429)}}
     const limited=await rpc('tools/call',{name:'meu_acesso',arguments:{}},exhausted)
     assert.equal(limited.response.status,429);assert.equal(limited.response.headers.get('retry-after'),'60')

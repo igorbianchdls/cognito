@@ -1,7 +1,7 @@
 import { WebStandardStreamableHTTPServerTransport } from '@modelcontextprotocol/sdk/server/webStandardStreamableHttp.js'
 import { createPluginServer } from './server'
 import { getPluginConfig, type PluginConfig } from './config'
-import { PluginError } from '@/products/mcpcore/shared/contracts'
+import { PluginError, type PluginPrincipal } from '@/products/mcpcore/shared/contracts'
 import { resolvePluginPrincipal } from '@/products/mcpcore/auth/resolvePrincipal'
 import { consumeRequestLimit } from '@/products/mcpcore/audit/executionRepository'
 import { executionDependencies } from '@/products/mcpcore/application/executeTool'
@@ -11,6 +11,14 @@ import { isWriteTool } from '../shared/writeTools'
 import { isModern,validateModern,requireNativeFormCapability,supportsNativeForms,ProtocolFailure,MODERN_VERSION,SUPPORTED_VERSIONS,SERVER_INFO } from './modernProtocol'
 
 export type { HttpDependencies } from '@/products/mcpcore/mcp/http'
+const ANONYMOUS: PluginPrincipal = { userId:0, clerkUserId:'', clientId:'', scopes:[], companies:[] }
+/** A resources/list or a resources/read of one of this server's ui:// card templates. */
+async function isCardRead(request: Request): Promise<false | { method: string; uri?: string }> {
+  const body = await request.json().catch(() => null) as { method?: unknown; params?: { uri?: unknown } } | null
+  if (body?.method === 'resources/list') return { method: 'resources/list' }
+  const uri = body?.params?.uri
+  return body?.method === 'resources/read' && typeof uri === 'string' && uri.startsWith('ui://chatgptplugin/') ? { method: 'resources/read', uri } : false
+}
 const production: HttpDependencies = { config:getPluginConfig, resolve:resolvePluginPrincipal, limit:consumeRequestLimit, execution:executionDependencies }
 export async function handlePluginRequest(request: Request, deps: HttpDependencies = production): Promise<Response> {
   let config: PluginConfig | undefined
@@ -22,7 +30,11 @@ export async function handlePluginRequest(request: Request, deps: HttpDependenci
     oauthScope=config.scope
     headers = corsHeaders(request,config)
     if (request.method === 'OPTIONS') return new Response(null,{ status:204,headers })
-    const principal = await deps.resolve(request,config)
+    // Card templates are the same empty HTML for everyone (data arrives later through the tool), and the
+    // ChatGPT widget fetcher reads them without the user's token. Those reads, and only those, need no login.
+    const anonymousRead = !request.headers.get('authorization') && request.method === 'POST' && await isCardRead(request.clone())
+    if (anonymousRead) console.log(JSON.stringify({ scope:'chatgptplugin',code:'CARD_READ',auth:false,...anonymousRead }))
+    const principal = anonymousRead ? ANONYMOUS : await deps.resolve(request,config)
     if (request.method !== 'POST') return Response.json({error:'Use POST; este servidor não mantém sessões SSE.'},{ status:405,headers:{ ...headers,Allow:'POST, OPTIONS' } })
     let body:unknown
     try {body=await readJsonBody(request)}
