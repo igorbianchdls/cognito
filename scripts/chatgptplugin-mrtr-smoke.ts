@@ -35,6 +35,12 @@ async function rpc(method:string,params:Record<string,unknown>={},options:{deps?
 const preview=()=>({name:'criar_cadastro',arguments:{empresa_id:1,tipo:'cliente',chave_operacao:randomUUID(),dados:{nome:'Cliente teste'}}})
 async function check(name:string,fn:()=>Promise<void>){await fn();checked++;console.log('PASS '+name)}
 async function main(){
+  await check('Leitura de card tolerante: sem Mcp-Name ou sem metadados, nunca com nome diferente',async()=>{
+    const uri='ui://chatgptplugin/tables/v1.html',read=(headers:Record<string,string>,params:Record<string,unknown>)=>handlePluginRequest(new Request(config.resource,{method:'POST',headers:{authorization:'Bearer test','content-type':'application/json',accept:'application/json, text/event-stream','mcp-protocol-version':MODERN_VERSION,'mcp-method':'resources/read',...headers},body:JSON.stringify({jsonrpc:'2.0',id:++sequence,method:'resources/read',params})}),deps)
+    const meta={[versionKey]:MODERN_VERSION,[capabilitiesKey]:capabilities}
+    for(const [label,response] of [['sem Mcp-Name',await read({},{uri,_meta:meta})],['sem metadados',await read({},{uri})]] as const){const body=await response.json();assert.equal(response.status,200,label+': '+JSON.stringify(body));assert.match(body.result.contents[0].text,/<!doctype html>/i,label)}
+    assert.equal((await read({'mcp-name':'ui://outro.html'},{uri,_meta:meta})).status,400,'A different Mcp-Name is still refused')
+  })
   await check('Discovery e consultas modernas sem initialize',async()=>{
     const discovery=await rpc('server/discover');assert.equal(discovery.body.result.resultType,'complete');assert(discovery.body.result.supportedVersions.includes(MODERN_VERSION));assert(discovery.body.result.capabilities.extensions['openai/settings']);assert.deepEqual(discovery.body.result.capabilities.tools,{})
     assert(String(discovery.body.result.instructions).includes('rascunho_id'))

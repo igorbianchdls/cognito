@@ -34,7 +34,9 @@ export function validateModern(request:Request,body:unknown) {
   if(request.headers.get('mcp-protocol-version')!==version||request.headers.get('mcp-method')!==rpc.method)
     throw new ProtocolFailure(-32020,'Cabeçalhos MCP ausentes ou diferentes do corpo.')
   const name=rpc.method==='resources/read'?rpc.params.uri:['tools/call','prompts/get'].includes(rpc.method)?rpc.params.name:undefined
-  if(name!==undefined&&decoded(request.headers.get('mcp-name'))!==name)throw new ProtocolFailure(-32020,'Cabeçalho Mcp-Name ausente ou diferente do corpo.')
+  // Card reads come from the host's own fetcher, which may omit Mcp-Name: absent is accepted there, different never is.
+  const header=request.headers.get('mcp-name')
+  if(name!==undefined&&!(header===null&&rpc.method==='resources/read')&&decoded(header)!==name)throw new ProtocolFailure(-32020,'Cabeçalho Mcp-Name ausente ou diferente do corpo.')
   if(version!==MODERN_VERSION)throw new ProtocolFailure(-32022,'Versão MCP não suportada.',400,{supported:SUPPORTED_VERSIONS,requested:version})
   const accept=request.headers.get('accept')||''
   if(!accept.includes('application/json')||!accept.includes('text/event-stream'))throw new ProtocolFailure(-32600,'Accept deve incluir JSON e SSE.',406)

@@ -15,7 +15,7 @@ const production: HttpDependencies = { config:getPluginConfig, resolve:resolvePl
 export async function handlePluginRequest(request: Request, deps: HttpDependencies = production): Promise<Response> {
   let config: PluginConfig | undefined
   let headers: Record<string,string> = { 'Cache-Control':'no-store' }
-  let rpcId:unknown=null
+  let rpcId:unknown=null,rpcMethod:unknown
   let oauthScope:string|undefined
   try {
     config = deps.config()
@@ -32,8 +32,17 @@ export async function handlePluginRequest(request: Request, deps: HttpDependenci
       throw error
     }
     rpcId=(body as {id?:unknown})?.id??null
+    rpcMethod=(body as {method?:unknown})?.method
     if(countsTowardLimit(body))await deps.limit(principal,config.requestsPerMinute,config.integration)
-    const modern=isModern(request,body)
+    let modern=isModern(request,body)
+    // A read of the tool list or of a card sent with the new version header but without its metadata is
+    // answered the classic way instead of refused: hosts fetch cards with simpler clients than the chat.
+    const plain=body as {method?:string;params?:{_meta?:unknown}}|null
+    if(modern&&!plain?.params?._meta&&['tools/list','resources/list','resources/read','resources/templates/list'].includes(String(plain?.method))) {
+      modern=false
+      const legacyHeaders=new Headers(request.headers);legacyHeaders.set('mcp-protocol-version','2025-11-25')
+      request=new Request(request.url,{method:'POST',headers:legacyHeaders,body:JSON.stringify(body)})
+    }
     const modernRequest=modern?validateModern(request,body):undefined
     if(modernRequest) {
       headers['MCP-Protocol-Version']=MODERN_VERSION
@@ -94,7 +103,11 @@ export async function handlePluginRequest(request: Request, deps: HttpDependenci
       return new Response(response.status === 204 ? null : String(result),{ status,headers:finalHeaders })
     } finally { await server.close() }
   } catch (error) {
-    if(error instanceof ProtocolFailure)return Response.json({jsonrpc:'2.0',id:rpcId,error:{code:error.code,message:error.message,...(error.data?{data:error.data}:{})}},{status:error.status,headers})
+    if(error instanceof ProtocolFailure){
+      // Protocol refusals are logged too: they are invisible otherwise and look like a host bug.
+      console.error(JSON.stringify({scope:'chatgptplugin',code:'PROTOCOL',rpc:error.code,status:error.status,method:typeof rpcMethod==='string'?rpcMethod:undefined,message:error.message}))
+      return Response.json({jsonrpc:'2.0',id:rpcId,error:{code:error.code,message:error.message,...(error.data?{data:error.data}:{})}},{status:error.status,headers})
+    }
     const failure = error instanceof PluginError ? error : new PluginError('SERVICE_UNAVAILABLE','Serviço temporariamente indisponível.',503)
     console.error(JSON.stringify({ scope:'chatgptplugin',code:failure.code,status:failure.status,...(failure.reason?{reason:failure.reason}:{}) }))
     const challenge = config && oauthChallenge(failure,config,oauthScope||config.scope)
