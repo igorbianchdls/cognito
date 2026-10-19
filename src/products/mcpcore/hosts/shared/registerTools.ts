@@ -24,6 +24,9 @@ export type ToolStyle = {
 
 /** The same catalog in every host: access, ERP reads and writes, Tables, Apps and WhatsApp. */
 export async function registerCommonTools(server: McpServer, principal: PluginPrincipal, config: PluginConfig, dependencies: ExecutionDependencies, host: Host, style: ToolStyle) {
+  // MCP Apps is negotiated as a capability extension: hosts that follow the spec only treat the ui://
+  // resources as cards when the server declares it. Merged with the extensions already registered.
+  server.server.registerCapabilities({ extensions: { 'io.modelcontextprotocol/ui': { mimeTypes: ['text/html;profile=mcp-app'] } } })
   // _meta tells the card which tool produced the result.
   const run = (name: string) => async (input: unknown) => {
     const result = await executeTool(principal, name, input, config, dependencies)

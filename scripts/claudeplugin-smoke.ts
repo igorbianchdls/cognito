@@ -175,6 +175,7 @@ async function main() {
     const client = new Client({ name:'claude-ai', version:'1.0.0' })
     await client.connect(new StreamableHTTPClientTransport(new URL(settings.resource),{ fetch:fetchClaude }))
     assert.equal(client.getServerVersion()?.name,'cognito-claudeplugin');assert.match(client.getInstructions()||'',/meu_acesso/)
+    assert.deepEqual((client.getServerCapabilities() as {extensions?:Record<string,unknown>})?.extensions?.['io.modelcontextprotocol/ui'],{mimeTypes:['text/html;profile=mcp-app']},'MCP Apps extension declared')
     const listed = await client.listTools()
     assert.equal(listed.tools.length,erpTools.length+erpActions.length+1+tablesTools.length+appsTools.length+whatsappLocalTools.length)
     const access = await client.callTool({ name:'meu_acesso',arguments:{} })

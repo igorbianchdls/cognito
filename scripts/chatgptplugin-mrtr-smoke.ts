@@ -42,7 +42,7 @@ async function main(){
     assert.equal((await read({'mcp-name':'ui://outro.html'},{uri,_meta:meta})).status,400,'A different Mcp-Name is still refused')
   })
   await check('Discovery e consultas modernas sem initialize',async()=>{
-    const discovery=await rpc('server/discover');assert.equal(discovery.body.result.resultType,'complete');assert(discovery.body.result.supportedVersions.includes(MODERN_VERSION));assert(discovery.body.result.capabilities.extensions['openai/settings']);assert.deepEqual(discovery.body.result.capabilities.tools,{})
+    const discovery=await rpc('server/discover');assert.equal(discovery.body.result.resultType,'complete');assert(discovery.body.result.supportedVersions.includes(MODERN_VERSION));assert(discovery.body.result.capabilities.extensions['openai/settings']);assert.deepEqual(discovery.body.result.capabilities.extensions['io.modelcontextprotocol/ui'],{mimeTypes:['text/html;profile=mcp-app']},'MCP Apps extension declared');assert.deepEqual(discovery.body.result.capabilities.tools,{})
     assert(String(discovery.body.result.instructions).includes('rascunho_id'))
     const tools=await rpc('tools/list');assert.equal(tools.body.result.tools.length,erpTools.length+erpActions.length+5+tablesTools.length+appsTools.length+whatsappLocalTools.length);assert.equal(tools.body.result.resultType,'complete')
     assert.deepEqual(tools.body.result.tools.find((t:{name:string})=>t.name==='criar_cadastro').securitySchemes[0].scopes,['erp:read','erp:write'])
