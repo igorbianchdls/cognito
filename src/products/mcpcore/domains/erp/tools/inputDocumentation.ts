@@ -6,6 +6,7 @@ const fields:Record<string,string>={
  busca:'Texto de busca no domínio desta consulta. Omita para listar todos; respeite paginação e filtros.',
  pagina:'Página a partir de 1. Avance enquanto hasMore for true; quando houver total, compare page * pageSize com total.',
  por_pagina:'Registros por página: 10 a 50, padrão 20. Não some só esta página para afirmar o total geral.',
+ limite:'Quantidade total solicitada, de 1 a 50. Para últimas 3 vendas envie limite: 3 e ordenar: -data. Seleciona os primeiros N após filtros e ordenação; total e summary abrangem só essa seleção, sem paginação. Omita para consultar a listagem completa. Com limite, pagina e por_pagina não se aplicam.',
  inicio:'Data inicial inclusiva em YYYY-MM-DD. Critério depende da consulta; período máximo de 366 dias.',
  fim:'Data final inclusiva em YYYY-MM-DD, igual ou posterior a inicio. Em aging é a data de referência do atraso.',
  vencimento_inicio:'Vencimento inicial inclusivo em YYYY-MM-DD.',vencimento_fim:'Vencimento final inclusivo em YYYY-MM-DD.',

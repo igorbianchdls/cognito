@@ -58,9 +58,10 @@ export const outputs = {
   page: z.object({
     records: businessRows.describe('Registros da página atual. Em financeiro id é parcela e conta_id é título; em outras listas id é registro de negócio.'),
     page: info('Página atual, iniciando em 1.'), pageSize: info('Tamanho da página. Havendo total, page * pageSize < total indica continuação mesmo sem hasMore.'),
-    total: z.unknown().optional().describe('Total de registros filtrados, quando disponível.'),
+    total: z.unknown().optional().describe('Total de registros consultados: com selecao, somente os selecionados; sem selecao, todos os filtrados, quando disponível.'),
     hasMore: z.boolean().optional().describe('Há mais páginas; não afirme totais somando apenas esta página.'),
-    summary: row.optional().describe('Totais de todos os registros filtrados, inclusive de outras páginas.'),
+    summary: row.optional().describe('Totais dos registros consultados: com selecao, apenas os selecionados; sem selecao, todos os filtrados, inclusive de outras páginas.'),
+    selecao:z.object({limite:z.number().int().min(1).max(50),total_disponivel:z.number().int().nonnegative()}).optional().describe('Seleção limitada ao N solicitado: records, total e summary referem-se somente à seleção; total_disponivel indica quantos registros correspondem aos filtros antes do limite.'),
   }).passthrough(),
   record: z.object({ record: businessRecord.optional().describe('Seleção de campos do cadastro; ausência de campo não deve ser tratada como valor zero.') }).passthrough(),
   serviceOrder:z.object({record:businessRecord,items:rows.describe('Itens ativos da OS com descrição, quantidade, preço e total.'),history:rows.describe('Eventos de mudança da OS.'),totalItems:z.number(),itemsTruncated:z.boolean().describe('Se true, não reconstruir edição com itens incompletos.')}).passthrough(),

@@ -67,17 +67,23 @@ function listView(spec,args,rows,clickable){
 function choiceView(args,rows){const box=element('div',undefined,'choices');for(const row of rows){const item=element('div',undefined,'choice'),text=element('div');
   text.append(element('strong',row.nome||('#'+row.id)),element('div',[row.documento,row.cidade,row.email,row.sku].filter(Boolean).join(' · ')||'—','muted'));
   item.append(text,button('Usar este',()=>say('Usar '+(registrationNouns[args.tipo]||['cadastro'])[0]+': '+(row.nome||'')+' (ID '+row.id+').')));box.append(item)}return box}
-function renderList(target,data){const full=state.displayMode==='fullscreen',rows=data.records||[],args=state.args||{},spec=specFor(state.tool);
+function renderList(target,data){const full=state.displayMode==='fullscreen',rows=data.records||[],args=state.args||{},spec=specFor(state.tool),selected=Boolean(data.selecao);
   const subject=(state.tool==='buscar_cadastros'||state.tool==='consultar_financeiro')&&registrationTitles[args.tipo]?registrationTitles[args.tipo]:state.tool==='listar_vendas'&&args.tipo_documento==='orcamento'?'Orçamentos':titles[state.tool]||'Resultados';
   heading(target,subject,subtitle(spec,args,data,rows.length));
   if(data.summary){const keys=(spec.metrics||Object.keys(data.summary)).filter(k=>!['referencia','quantidade'].includes(k)&&data.summary[k]!==undefined&&data.summary[k]!==null&&typeof data.summary[k]!=='object');
     const items=keys.slice(0,full?8:strict?2:3).map(k=>({label:label(k),value:formatted(k,data.summary[k])}));if(items.length)target.append(metrics(items))}
-  if(full)target.append(filtersView(spec,args));
+  if(full&&!selected)target.append(filtersView(spec,args));
   if(!rows.length){target.append(notice(args.status||args.situacao?'Nada encontrado com esse filtro.':'Nenhum registro encontrado.'));
     if(args.status||args.situacao||args.busca)target.append(actionsBar([{label:'Limpar filtros',run:()=>load({...args,status:undefined,situacao:undefined,busca:undefined,pagina:1})}]));return}
   if(!full&&state.tool==='buscar_cadastros'&&args.busca&&rows.length>=2&&rows.length<=8&&!data.hasMore){target.append(choiceView(args,rows));return}
-  const inlineRows=strict?3:5;
+  const inlineRows=selected&&!strict?rows.length:strict?3:5;
   target.append(listView(spec,args,full?rows:rows.slice(0,inlineRows),full));
+  if(selected){
+    const allLabel=state.tool==='listar_vendas'?(args.tipo_documento==='orcamento'?'Ver todos os orçamentos':'Ver todas as vendas'):'Ver todas as compras';
+    target.append(actionsBar([!full&&rows.length>inlineRows&&{label:'Ver seleção',run:fullscreen},Number(data.selecao.total_disponivel)>rows.length&&{label:allLabel,run:async()=>{
+      await load({...args,limite:undefined,pagina:1});if(state.displayMode!=='fullscreen')await fullscreen()
+    }}]));return
+  }
   if(!full){const more=rows.length>inlineRows||data.hasMore===true||Number(data.total||0)>rows.length;
     const overdue=state.tool==='consultar_financeiro'&&args.status!=='vencido'&&Number(data.summary&&data.summary.vencidas||0)>0;
     target.append(actionsBar([overdue&&{label:'Ver vencidas',primary:true,run:async()=>{await load({...args,status:'vencido',pagina:1});await fullscreen()}},(more||rows.length)&&{label:'Ver tudo',run:fullscreen}]));return}

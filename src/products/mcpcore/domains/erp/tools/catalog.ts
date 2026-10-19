@@ -14,6 +14,7 @@ export const companySchema = z.number().int().positive().optional().describe('Em
 const company = companySchema
 const paging = { empresa_id: company, busca: z.string().trim().max(200).optional(),
   pagina: z.number().int().min(1).max(10000).default(1), por_pagina: z.number().int().min(10).max(50).default(20) }
+const selectionLimit=z.number().int().min(1).max(50).optional()
 export const requiredDate = z.string().regex(/^\d{4}-\d{2}-\d{2}$/).refine(value => {
   const date = new Date(`${value}T00:00:00Z`)
   return !Number.isNaN(date.getTime()) && date.toISOString().slice(0,10) === value
@@ -27,7 +28,7 @@ export type ToolDefinition = {
   execute: (queries: ErpQueries, companyId: number, input: Record<string, unknown>, context: { origin: string; userId: number }) => Promise<unknown>
 }
 function page(input: Record<string, unknown>) {
-  return { query: input.busca as string | undefined, page: input.pagina as number, pageSize: input.por_pagina as number, sort: input.ordenar as string | undefined }
+  return { query: input.busca as string | undefined, page: input.pagina as number, pageSize: input.por_pagina as number, sort: input.ordenar as string | undefined, ...(input.limite!==undefined?{limit:input.limite as number}:{}) }
 }
 function commercialFilters(input:Record<string,unknown>) {
   return Object.fromEntries(['status','situacao','inicio','fim'].filter(k=>input[k]).map(k=>[k,String(input[k])]))
@@ -64,7 +65,7 @@ const readTools: ToolDefinition[] = [
     capabilities:['erp.cadastros.visualizar'],requiredCapabilities:registrationCapabilities,
     execute:(q,id,input)=>q.registration(id,input.tipo as 'clientes',Number(input.registro_id))},
   { name: 'listar_vendas', title: 'Listar vendas e orçamentos', output: outputs.page, description: toolDescription('listar_vendas'),
-    schema: z.object({ ...paging, tipo_documento: z.enum(['venda','orcamento']).default('venda'), ordenar: z.enum(['-data','data','-total','total']).optional().describe('Ordenação de todas as páginas; padrão: mais recentes.'),
+    schema: z.object({ ...paging, limite:selectionLimit, tipo_documento: z.enum(['venda','orcamento']).default('venda'), ordenar: z.enum(['-data','data','-total','total']).optional().describe('Ordenação de todas as páginas; padrão: mais recentes.'),
       status: z.enum(['rascunho','confirmada','cancelada','faturada']).optional(),situacao:z.enum(QUOTE_SITUATIONS).optional().describe('Situação comercial do orçamento; use junto com tipo_documento orcamento.'),inicio:isoDate,fim:isoDate }).strict(),
     capabilities: ['erp.vendas.visualizar'],
     execute: (q,id,input) => q.page(id,'pedidos', { ...page(input),
@@ -73,7 +74,7 @@ const readTools: ToolDefinition[] = [
     schema: z.object({ empresa_id: company, venda_id: z.number().int().positive() }).strict(), capabilities: ['erp.vendas.visualizar'],
     execute: (q,id,input) => q.sale(id, input.venda_id as number) },
   { name:'listar_compras', title:'Listar compras', output: outputs.page, description:toolDescription('listar_compras'),
-    schema:z.object({...paging,status:z.enum(['rascunho','confirmada','parcialmente_recebida','recebida','cancelada']).optional(),inicio:isoDate,fim:isoDate,ordenar:z.enum(['-data','data','-total','total']).optional()}).strict(), capabilities:['erp.compras.visualizar'],
+    schema:z.object({...paging,limite:selectionLimit,status:z.enum(['rascunho','confirmada','parcialmente_recebida','recebida','cancelada']).optional(),inicio:isoDate,fim:isoDate,ordenar:z.enum(['-data','data','-total','total']).optional()}).strict(), capabilities:['erp.compras.visualizar'],
     execute:(q,id,input) => q.page(id,'pedidos-compra',{...page(input),filters:commercialFilters(input)}) },
   { name:'obter_compra', title:'Detalhes da compra', output: outputs.purchase, description:toolDescription('obter_compra'),
     schema:z.object({empresa_id:company,compra_id:z.number().int().positive()}).strict(),capabilities:['erp.compras.visualizar'],

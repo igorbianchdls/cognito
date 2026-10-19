@@ -81,12 +81,22 @@ function commercialRows(type:'vendas'|'compras', document?:string) {
     WHERE documentos.empresa_id=$1 AND documentos.excluido_em IS NULL${sale?(document==='orcamento'?" AND documentos.tipo_documento='orcamento'":" AND documentos.tipo_documento IN ('venda','pedido')"):''}`
 }
 export async function commercialPage(tenantId:number,type:'vendas'|'compras',input:PageQuery) {
-  const params:unknown[]=[tenantId],where=filtered(params,input,'data'),cte=`WITH rows AS (${commercialRows(type,input.filters?.tipo_documento)}), filtered AS (SELECT * FROM rows ${where})`
-  const [summary]=await runQuery(`${cte} SELECT count(*)::int AS quantidade,COALESCE(sum(total),0) AS valor_total,
-    COALESCE(sum(total) FILTER (WHERE status NOT IN ('rascunho','cancelada')),0) AS valor_confirmado FROM filtered`,params)
-  const rows=await runQuery(`${cte} SELECT * FROM filtered ORDER BY ${erpListOrder('comercial',input.sort,'data DESC')},id DESC LIMIT $${params.length+1} OFFSET $${params.length+2}`,
-    [...params,input.pageSize||20,((input.page||1)-1)*(input.pageSize||20)])
-  return {records:rows.map(row=>{const r={...row};delete r.searchable;delete r.tipo_movimento;return {...r,id:String(r.id),data:r.data instanceof Date?r.data.toISOString().slice(0,10):r.data}}),total:Number(summary.quantidade),page:input.page||1,pageSize:input.pageSize||20,summary}
+  const params:unknown[]=[tenantId],where=filtered(params,input,'data'),order=`${erpListOrder('comercial',input.sort,'data DESC')},id DESC`
+  const limit=input.limit,limited=limit!==undefined
+  let cte=`WITH rows AS (${commercialRows(type,input.filters?.tipo_documento)}), filtered AS (SELECT * FROM rows ${where})`
+  if(limited) {
+    if(!Number.isInteger(limit)||limit<1||limit>50)throw new ErpDomainError('VALIDATION_ERROR','O limite deve ser um inteiro de 1 a 50.',400)
+    params.push(limit)
+    cte+=`, selected AS (SELECT * FROM filtered ORDER BY ${order} LIMIT $${params.length})`
+  }
+  const source=limited?'selected':'filtered',page=limited?1:input.page||1,pageSize=limited?limit:input.pageSize||20
+  const [aggregate]=await runQuery(`${cte} SELECT count(*)::int AS quantidade,COALESCE(sum(total),0) AS valor_total,
+    COALESCE(sum(total) FILTER (WHERE status NOT IN ('rascunho','cancelada')),0) AS valor_confirmado${limited?',(SELECT count(*)::int FROM filtered) AS total_disponivel':''} FROM ${source}`,params)
+  const {total_disponivel,...summary}=aggregate
+  const rows=await runQuery(`${cte} SELECT * FROM ${source} ORDER BY ${order} LIMIT $${params.length+1} OFFSET $${params.length+2}`,
+    [...params,pageSize,(page-1)*pageSize])
+  return {records:rows.map(row=>{const r={...row};delete r.searchable;delete r.tipo_movimento;return {...r,id:String(r.id),data:r.data instanceof Date?r.data.toISOString().slice(0,10):r.data}}),total:Number(summary.quantidade),page,pageSize,summary,
+    ...(limited?{hasMore:false,selecao:{limite:limit,total_disponivel:Number(total_disponivel)}}:{})}
 }
 export async function analysis(tenantId:number,type:'vendas'|'compras'|'pagar'|'receber',from:string,to:string) {
   const financial=type==='pagar'||type==='receber',date=financial?'vencimento':'data',amount=financial?'saldo':'total'

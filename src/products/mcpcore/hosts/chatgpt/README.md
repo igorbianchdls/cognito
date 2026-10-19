@@ -63,6 +63,8 @@ Recurso `ui://chatgptplugin/cards/v2.html`, ligado por `_meta.ui.resourceUri` à
 
 No protocolo MCP 2026-07-28, discovery, listagens e leitura de recursos incluem `ttlMs: 0` e `cacheScope: private`, além de `resultType: complete`. Esses campos são obrigatórios: sem eles o cliente rejeita o recurso antes de carregar o HTML, mesmo com HTTP 200. A política mantém as respostas imediatamente desatualizadas e impede compartilhamento entre usuários; respostas MCP legadas preservam seu formato.
 
+Vendas, orçamentos e compras aceitam `limite` de 1 a 50 para pedidos como “últimas 3 vendas”: filtros e ordenação são aplicados antes do limite, e `records`, `total` e `summary` referem-se somente à seleção. O card mantém essa seleção inclusive em tela cheia; abrir a lista completa exige o botão separado “Ver todas as vendas/compras”. Sem `limite`, a paginação e os totais gerais continuam disponíveis. `pnpm chatgptplugin:selection-smoke` verifica a consulta PostgreSQL local e o card em navegador, sem dados reais.
+
 - **Lista:** inline com resumo e até 5 linhas, uma ação ("Ver tudo"); em tela cheia, tabela completa, busca e paginação.
 - **Detalhes, análise (barras por mês), resumo, empresas** ("Usar esta" envia a escolha à conversa).
 - **Revisão:** antes/depois, nomes no lugar de IDs, itens, parcelas e total do ERP; botões Confirmar e Ajustar. Ajustar edita quantidade, preço e desconto e gera nova prévia, informando o modelo por `ui/update-model-context`. Exclusões, cancelamentos e estornos mostram aviso.
