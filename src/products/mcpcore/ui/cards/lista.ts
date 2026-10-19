@@ -2,6 +2,7 @@
 // estreito (troca por CSS conforme a largura). Inline: resumo, até 5 itens e no máximo 2 ações.
 // Tela cheia: filtros, ordenação no servidor, paginação e clique na linha para abrir os detalhes.
 export const listCardScript=String.raw`
+const commercialPages=new WeakMap();
 const registrationNouns={clientes:['cliente','clientes'],fornecedores:['fornecedor','fornecedores'],vendedores:['vendedor','vendedores'],produtos:['produto','produtos'],servicos:['serviço','serviços'],categorias:['categoria','categorias'],'contas-financeiras':['conta financeira','contas financeiras']};
 const financialStatuses=[['aberto','Em aberto'],['vencido','Vencidas'],['parcial','Parciais'],['pago','Pagas'],['cancelado','Canceladas']];
 function party(args){return args.tipo==='receber'?'cliente':'fornecedor'}
@@ -69,6 +70,7 @@ function choiceView(args,rows){const box=element('div',undefined,'choices');for(
   item.append(text,button('Usar este',()=>say('Usar '+(registrationNouns[args.tipo]||['cadastro'])[0]+': '+(row.nome||'')+' (ID '+row.id+').')));box.append(item)}return box}
 function renderList(target,data){const full=state.displayMode==='fullscreen',rows=data.records||[],args=state.args||{},spec=specFor(state.tool),selected=Boolean(data.selecao);
   const subject=(state.tool==='buscar_cadastros'||state.tool==='consultar_financeiro')&&registrationTitles[args.tipo]?registrationTitles[args.tipo]:state.tool==='listar_vendas'&&args.tipo_documento==='orcamento'?'Orçamentos':titles[state.tool]||'Resultados';
+  if(data.paginacao){if(full&&!selected)target.append(filtersView(spec,args));return renderCommercialPage(target,data,spec,args,subject)}
   heading(target,subject,subtitle(spec,args,data,rows.length));
   if(data.summary){const keys=(spec.metrics||Object.keys(data.summary)).filter(k=>!['referencia','quantidade'].includes(k)&&data.summary[k]!==undefined&&data.summary[k]!==null&&typeof data.summary[k]!=='object');
     const items=keys.slice(0,full?8:strict?2:3).map(k=>({label:label(k),value:formatted(k,data.summary[k])}));if(items.length)target.append(metrics(items))}
@@ -76,7 +78,7 @@ function renderList(target,data){const full=state.displayMode==='fullscreen',row
   if(!rows.length){target.append(notice(args.status||args.situacao?'Nada encontrado com esse filtro.':'Nenhum registro encontrado.'));
     if(args.status||args.situacao||args.busca)target.append(actionsBar([{label:'Limpar filtros',run:()=>load({...args,status:undefined,situacao:undefined,busca:undefined,pagina:1})}]));return}
   if(!full&&state.tool==='buscar_cadastros'&&args.busca&&rows.length>=2&&rows.length<=8&&!data.hasMore){target.append(choiceView(args,rows));return}
-  const inlineRows=selected&&!strict?rows.length:strict?3:5;
+  const inlineRows=strict?3:5;
   target.append(listView(spec,args,full?rows:rows.slice(0,inlineRows),full));
   if(selected){
     const allLabel=state.tool==='listar_vendas'?(args.tipo_documento==='orcamento'?'Ver todos os orçamentos':'Ver todas as vendas'):'Ver todas as compras';
@@ -90,6 +92,31 @@ function renderList(target,data){const full=state.displayMode==='fullscreen',row
   const page=Number(args.pagina||data.page||1),pager=element('div',undefined,'pager'),prev=button('Anterior',()=>load({...args,pagina:page-1})),next=button('Próxima',()=>load({...args,pagina:page+1}));
   prev.disabled=page<=1;next.disabled=!(data.hasMore===true||page*Number(data.pageSize||args.por_pagina||20)<Number(data.total||0));
   pager.append(prev,element('span','Página '+page,'muted'),next);target.append(pager)}
+function commercialIcon(kind){const svg=document.createElementNS('http://www.w3.org/2000/svg','svg'),path=document.createElementNS(svg.namespaceURI,'path');
+  for(const [key,value] of Object.entries({viewBox:'0 0 24 24',fill:'none',stroke:'currentColor','stroke-width':'1.7','stroke-linecap':'round','stroke-linejoin':'round','aria-hidden':'true',focusable:'false'}))svg.setAttribute(key,value);
+  path.setAttribute('d',kind==='previous'?'m14 6-6 6 6 6':kind==='next'?'m10 6 6 6-6 6':'M6 3h12a2 2 0 0 1 2 2v16l-4-2-4 2-4-2-4 2V5a2 2 0 0 1 2-2Z M9 8h6 M9 12h4');svg.append(path);return svg}
+function renderCommercialPage(target,data,spec,args,subject){
+  const rows=data.records||[],total=Number(data.total||0),remote=data.paginacao.modo==='servidor',pages=Math.max(1,Math.ceil(total/5));
+  const page=remote?Number(data.page||1):Math.max(1,Math.min(commercialPages.get(data)||1,pages));
+  const visible=remote?rows.slice(0,5):rows.slice((page-1)*5,page*5),start=visible.length?(page-1)*5+1:0,end=visible.length?start+visible.length-1:0;
+  const card=element('section',undefined,'commercial-card'),header=element('header',undefined,'commercial-header'),intro=element('div'),noun=nounOf(spec,args,1),title=noun[0].toUpperCase()+noun.slice(1);
+  intro.append(element('h1',subject),element('p',total.toLocaleString('pt-BR')+' '+nounOf(spec,args,total)+' '+(noun==='orçamento'?(total===1?'encontrado':'encontrados'):(total===1?'encontrada':'encontradas'))));
+  header.append(intro,commercialIcon());card.append(header);
+  const list=element('ul',undefined,'commercial-list');
+  for(const row of visible){const name=title+' #'+row.id,item=element('li'),control=button('',()=>{const detail=spec.detail(row,args);return open(detail.tool,withCompany(detail.args))}),icon=element('span',undefined,'commercial-icon'),identity=element('span',undefined,'commercial-identity'),amount=element('span',undefined,'commercial-amount');
+    const status=state.tool==='listar_vendas'&&args.tipo_documento==='orcamento'?(row.situacao||row.status):row.status,tone=['cancelada','cancelado'].includes(status)?'danger':toneOf[status]||'muted';
+    control.className='commercial-row';control.setAttribute('aria-label','Abrir '+name);control.title=[row.numero,row.cliente||row.fornecedor].filter(Boolean).join(' · ');
+    icon.append(commercialIcon());identity.append(element('strong',name),element('span',formatted('data',row.data),'commercial-date'));
+    amount.append(element('strong',formatted('total',row.total)),element('span',formatted('status',status),'commercial-status commercial-status-'+tone));
+    control.append(icon,identity,amount);item.append(control);list.append(item)}
+  card.append(visible.length?list:notice('Nenhum registro encontrado.'));
+  const queryArgs={...withCompany(args),...(data.selecao?{limite:data.selecao.limite}:{})};
+  const change=nextPage=>remote?load({...queryArgs,pagina:nextPage,por_pagina:5}):(commercialPages.set(data,nextPage),render());
+  const footer=element('footer',undefined,'commercial-footer'),pager=element('nav',undefined,'commercial-pager'),prev=button('',()=>change(page-1)),next=button('',()=>change(page+1)),position=element('span',page+' / '+pages,'commercial-position');
+  pager.setAttribute('aria-label','Paginação de '+subject.toLowerCase());position.setAttribute('aria-label','Página '+page+' de '+pages);
+  prev.setAttribute('aria-label','Anterior');next.setAttribute('aria-label','Próxima');prev.append(commercialIcon('previous'));next.append(commercialIcon('next'));
+  prev.disabled=page<=1;next.disabled=page>=pages;pager.append(prev,position,next);
+  footer.append(element('span',start+'–'+end+' de '+total.toLocaleString('pt-BR')+' '+nounOf(spec,args,total),'commercial-range'),pager);card.append(footer);target.append(card)}
 function filtersView(spec,args){const bar=element('div',undefined,'toolbar');const values={};let apply;
   const field=(text,node)=>{const wrap=element('label',text);wrap.append(node);bar.append(wrap);return node};
   {const search=field('Buscar',element('input'));search.type='search';search.value=args.busca||'';search.onkeydown=e=>{if(e.key==='Enter'){e.preventDefault();apply.click()}};values.busca=()=>search.value.trim()||undefined}

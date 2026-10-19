@@ -89,14 +89,18 @@ export async function commercialPage(tenantId:number,type:'vendas'|'compras',inp
     params.push(limit)
     cte+=`, selected AS (SELECT * FROM filtered ORDER BY ${order} LIMIT $${params.length})`
   }
-  const source=limited?'selected':'filtered',page=limited?1:input.page||1,pageSize=limited?limit:input.pageSize||20
+  const source=limited?'selected':'filtered'
   const [aggregate]=await runQuery(`${cte} SELECT count(*)::int AS quantidade,COALESCE(sum(total),0) AS valor_total,
     COALESCE(sum(total) FILTER (WHERE status NOT IN ('rascunho','cancelada')),0) AS valor_confirmado${limited?',(SELECT count(*)::int FROM filtered) AS total_disponivel':''} FROM ${source}`,params)
   const {total_disponivel,...summary}=aggregate
+  const total=Number(summary.quantidade),local=input.cardPagination&&total<40
+  const page=input.cardPagination?(local?1:input.page||1):limited?1:input.page||1
+  const pageSize=input.cardPagination?(local?Math.max(total,1):5):limited?limit:input.pageSize||20
   const rows=await runQuery(`${cte} SELECT * FROM ${source} ORDER BY ${order} LIMIT $${params.length+1} OFFSET $${params.length+2}`,
     [...params,pageSize,(page-1)*pageSize])
-  return {records:rows.map(row=>{const r={...row};delete r.searchable;delete r.tipo_movimento;return {...r,id:String(r.id),data:r.data instanceof Date?r.data.toISOString().slice(0,10):r.data}}),total:Number(summary.quantidade),page,pageSize,summary,
-    ...(limited?{hasMore:false,selecao:{limite:limit,total_disponivel:Number(total_disponivel)}}:{})}
+  return {records:rows.map(row=>{const r={...row};delete r.searchable;delete r.tipo_movimento;return {...r,id:String(r.id),data:r.data instanceof Date?r.data.toISOString().slice(0,10):r.data}}),total,page,pageSize,summary,
+    ...(limited?{hasMore:false,selecao:{limite:limit,total_disponivel:Number(total_disponivel)}}:{}),
+    ...(input.cardPagination?{hasMore:page*pageSize<total,paginacao:{modo:local?'local':'servidor',por_pagina:5}}:{})}
 }
 export async function analysis(tenantId:number,type:'vendas'|'compras'|'pagar'|'receber',from:string,to:string) {
   const financial=type==='pagar'||type==='receber',date=financial?'vencimento':'data',amount=financial?'saldo':'total'

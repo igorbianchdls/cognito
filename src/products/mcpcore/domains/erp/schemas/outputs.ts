@@ -62,6 +62,7 @@ export const outputs = {
     hasMore: z.boolean().optional().describe('Há mais páginas; não afirme totais somando apenas esta página.'),
     summary: row.optional().describe('Totais dos registros consultados: com selecao, apenas os selecionados; sem selecao, todos os filtrados, inclusive de outras páginas.'),
     selecao:z.object({limite:z.number().int().min(1).max(50),total_disponivel:z.number().int().nonnegative()}).optional().describe('Seleção limitada ao N solicitado: records, total e summary referem-se somente à seleção; total_disponivel indica quantos registros correspondem aos filtros antes do limite.'),
+    paginacao:z.object({modo:z.enum(['local','servidor']),por_pagina:z.literal(5)}).optional().describe('Listas comerciais: local retorna todos os resultados quando total < 40, mas o card mostra 5 por página. Com total >= 40, servidor retorna somente 5 por consulta; preserve filtros, limite e ordenação ao avançar pagina.'),
   }).passthrough(),
   record: z.object({ record: businessRecord.optional().describe('Seleção de campos do cadastro; ausência de campo não deve ser tratada como valor zero.') }).passthrough(),
   serviceOrder:z.object({record:businessRecord,items:rows.describe('Itens ativos da OS com descrição, quantidade, preço e total.'),history:rows.describe('Eventos de mudança da OS.'),totalItems:z.number(),itemsTruncated:z.boolean().describe('Se true, não reconstruir edição com itens incompletos.')}).passthrough(),

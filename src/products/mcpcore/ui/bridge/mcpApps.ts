@@ -33,8 +33,8 @@ async function open(tool,args){const content=await callTool(tool,args);state.sta
 function back(){const previous=state.stack.pop();if(!previous)return;Object.assign(state,previous,{error:null,edit:false});render()}
 function withCompany(args){return {...(state.empresaId?{empresa_id:state.empresaId}:{}),...args}}
 function skeleton(){const box=element('div',undefined,'skeleton');for(let i=0;i<4;i++)box.append(element('div',undefined,'skeleton-line'));return box}
-async function run(fn){if(state.busy)return;state.busy=true;const ticket=++state.generation;root.setAttribute('aria-busy','true');status.textContent='Consultando…';for(const c of root.querySelectorAll('button,input,select'))c.disabled=true;root.classList.add('loading')
-  try{await fn()}catch(error){if(ticket===state.generation){state.error=error;render()}}finally{state.busy=false;root.classList.remove('loading');root.setAttribute('aria-busy','false');if(status.textContent==='Consultando…')status.textContent='';for(const c of root.querySelectorAll('button,input,select'))c.disabled=false}}
+async function run(fn){if(state.busy)return;state.busy=true;const ticket=++state.generation,controls=Array.from(root.querySelectorAll('button,input,select'),control=>[control,control.disabled]);root.setAttribute('aria-busy','true');status.textContent='Consultando…';for(const [control] of controls)control.disabled=true;root.classList.add('loading')
+  try{await fn()}catch(error){if(ticket===state.generation){state.error=error;render()}}finally{state.busy=false;root.classList.remove('loading');root.setAttribute('aria-busy','false');if(status.textContent==='Consultando…')status.textContent='';for(const [control,disabled] of controls)if(control.isConnected)control.disabled=disabled}}
 // Altura do conteúdo (o body não tem altura mínima); o <html> acompanha o iframe e não encolhe.
 function contentHeight(){return Math.ceil(document.body.getBoundingClientRect().height)}
 function render(){root.replaceChildren();status.textContent='';

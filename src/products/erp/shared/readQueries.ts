@@ -1,4 +1,4 @@
-export type ErpReadPageQuery = { query?: string; page?: number; pageSize?: number; filters?: Record<string, string>; sort?: string; limit?: number }
+export type ErpReadPageQuery = { query?: string; page?: number; pageSize?: number; filters?: Record<string, string>; sort?: string; limit?: number; cardPagination?: boolean }
 
 /** Ordenações aceitas por lista; o valor recebido só escolhe uma entrada, nunca entra no SQL. */
 export const ERP_LIST_SORTS = {

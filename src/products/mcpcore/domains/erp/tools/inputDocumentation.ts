@@ -6,7 +6,7 @@ const fields:Record<string,string>={
  busca:'Texto de busca no domínio desta consulta. Omita para listar todos; respeite paginação e filtros.',
  pagina:'Página a partir de 1. Avance enquanto hasMore for true; quando houver total, compare page * pageSize com total.',
  por_pagina:'Registros por página: 10 a 50, padrão 20. Não some só esta página para afirmar o total geral.',
- limite:'Quantidade total solicitada, de 1 a 50. Para últimas 3 vendas envie limite: 3 e ordenar: -data. Seleciona os primeiros N após filtros e ordenação; total e summary abrangem só essa seleção, sem paginação. Omita para consultar a listagem completa. Com limite, pagina e por_pagina não se aplicam.',
+ limite:'Quantidade total solicitada, de 1 a 50. Para últimas 3 vendas envie limite: 3 e ordenar: -data. Seleciona os primeiros N após filtros e ordenação; total e summary abrangem só essa seleção em todas as páginas. Omita para consultar a listagem completa. A paginação nunca remove o limite.',
  inicio:'Data inicial inclusiva em YYYY-MM-DD. Critério depende da consulta; período máximo de 366 dias.',
  fim:'Data final inclusiva em YYYY-MM-DD, igual ou posterior a inicio. Em aging é a data de referência do atraso.',
  vencimento_inicio:'Vencimento inicial inclusivo em YYYY-MM-DD.',vencimento_fim:'Vencimento final inclusivo em YYYY-MM-DD.',
@@ -99,6 +99,8 @@ export function documentInputSchema<T extends z.ZodTypeAny>(schema:T,tool:string
   else if(node instanceof z.ZodUnion)result=new z.ZodUnion({...node._def,options:node.options.map((option:z.ZodTypeAny)=>visit(option,path))})
   const field=path.split('.').at(-1)?.replace(/\[\]$/,'')||''
   let description=fields[field]
+  if((tool==='listar_vendas'||tool==='listar_compras')&&field==='pagina')description='Página do servidor a partir de 1. Com 40 ou mais resultados, cada página retorna 5 registros. Abaixo de 40, retorna a seleção completa para paginação local de 5 em 5 no card.'
+  if((tool==='listar_vendas'||tool==='listar_compras')&&field==='por_pagina')description='Use 5. O card mostra no máximo 5 registros por página; abaixo de 40 resultados a navegação é local, a partir de 40 consulta o servidor a cada página. Valores antigos de até 50 são aceitos por compatibilidade, sem alterar essa regra.'
   if(field==='tipo')description=path.includes('itens')?'Tipo do item conforme enum; define a origem de item_id.':path==='tipo'?'Variante da ferramenta conforme enum. Obrigatória na prévia de ações com variantes; use o schema específico de dados.':'Tipo do cadastro conforme enum deste objeto.'
   if(field==='categoria_id'&&tool.includes('cadastro'))description='ID de categorias-cadastro para produto/serviço, distinto da categoria financeira de um título. Use somente quando a variante aceita este campo.'
   if(field==='registro_id'&&tool==='registrar_baixa')description='ID da parcela (id de consultar_financeiro), não conta_id nem ID de pagamento.'
