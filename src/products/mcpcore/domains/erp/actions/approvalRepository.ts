@@ -69,6 +69,12 @@ export async function decideDraft(id:string,actor:DecisionActor,decision:'save'|
         const snapshot=await operationSnapshot(session.tenantId,proposal,client)
         if(!snapshot||!row.target_snapshot||snapshot.hash!==row.target_snapshot.hash)throw new PluginError('STALE_PROPOSAL','O registro mudou. Prepare uma nova proposta para revisar os dados atuais.',409)
         recordId=await runWithErpTransactionClient(client,()=>executeOperation(session.tenantId,session.sharedUserId,proposal,key(row.id)))
+        if(proposal.tipo.startsWith('editar_')){
+          const after=await operationSnapshot(session.tenantId,proposal,client)
+          if(!snapshot.edicao||!after?.edicao||Number(recordId)!==snapshot.registro_id)throw new PluginError('INVALID_STATE','Não foi possível conferir o resultado da edição.')
+          const {campos,conhecidos,referencias,participante}=after.edicao
+          await client.query('UPDATE plugin.drafts SET target_snapshot=$2::jsonb WHERE id=$1 AND integration=$3',[row.id,JSON.stringify({...row.target_snapshot,edicao:{...snapshot.edicao,resultado:{campos,conhecidos,referencias,participante}}}),actor.integration])
+        }
       } else if(proposal.tipo==='ordem_servico'){
         recordId=String((await runWithErpTransactionClient(client,()=>createServiceOrder({tenantId:session.tenantId,actorId:session.sharedUserId,values:serviceOrderCreateSchema.parse(proposal.dados),idempotencyKey:key(row.id)}))).id)
       } else if(proposal.tipo==='nota_servico'){

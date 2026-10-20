@@ -15,6 +15,7 @@ import { purchaseValues,type Proposal } from '../schemas/actionContracts'
 import {editServiceInvoice,actOnServiceInvoice} from '@/products/erp/server/fiscal/serviceInvoiceRepository'
 import {serviceInvoiceInputSchema} from '@/products/erp/shared/serviceInvoiceContracts'
 import {changeSalesContractState} from '@/products/erp/server/erpSalesContracts'
+import {editSnapshot,type EditSnapshot} from './editSnapshot'
 
 const tables = {suspender_contrato:'contratos_vendas',retomar_contrato:'contratos_vendas',encerrar_contrato:'contratos_vendas',devolver_compra:'compras',editar_fornecedor:'entidades',editar_vendedor:'entidades',editar_servico:'servicos',editar_categoria:'categorias',editar_conta_financeira:'contas_financeiras',
   editar_ordem_servico:'ordens_servico',aprovar_ordem_servico:'ordens_servico',iniciar_ordem_servico:'ordens_servico',concluir_ordem_servico:'ordens_servico',cancelar_ordem_servico:'ordens_servico',gerar_orcamento_os:'ordens_servico',gerar_venda_os:'ordens_servico',arquivar_pdf_ordem_servico:'ordens_servico',
@@ -27,7 +28,8 @@ const tables = {suspender_contrato:'contratos_vendas',retomar_contrato:'contrato
   atender_venda:'vendas',converter_orcamento:'vendas',devolucao_venda:'vendas',confirmar_compra:'compras',cancelar_compra:'compras',receber_parcela:'contas_receber_parcelas',
   pagar_parcela:'contas_pagar_parcelas',estornar_pagamento:'pagamentos'} as const
 export type OperationSnapshot = {hash:string;registro_id:number;nome:string;status:string|null;valor:string|null;
-  parcelas:{numero:unknown;vencimento:unknown;valor:unknown}[];conta_financeira:{id:string;nome:string}|null;campos?:Record<string,unknown>}
+  parcelas:{numero:unknown;vencimento:unknown;valor:unknown}[];conta_financeira:{id:string;nome:string}|null;campos?:Record<string,unknown>;
+  resumo_exclusao?:{data:string|null;data_label:string;participante:{tipo:string;id:string;nome:string|null}|null};edicao?:EditSnapshot}
 export async function operationSnapshot(tenantId:number,proposal:Proposal,client?:SQLClient):Promise<OperationSnapshot|null> {
   if (!('registro_id' in proposal.dados)) return null
   const table=tables[proposal.tipo as keyof typeof tables]
@@ -82,6 +84,21 @@ export async function operationSnapshot(tenantId:number,proposal:Proposal,client
     related.push(accounts[0])
     contaFinanceira={id:String(accounts[0].id),nome:String(accounts[0].nome)}
   }
+  let resumoExclusao:OperationSnapshot['resumo_exclusao']
+  if(proposal.tipo.startsWith('excluir_')){
+    const dateKey=table==='vendas'?'data_venda':table==='compras'?'data_compra':table==='notas_fiscais'?'data_competencia':'data_emissao'
+    const date=row[dateKey],partyType=table==='compras'||table==='contas_pagar'?'fornecedor':'cliente'
+    const partyId=table==='notas_fiscais'?row.entidade_id:['vendas','compras','contas_pagar','contas_receber'].includes(table)?row[partyType+'_id']:null
+    const party=partyId?(await query(`SELECT nome FROM erp.entidades WHERE empresa_id=$1 AND id=$2${client?' FOR SHARE':''}`,[tenantId,partyId]))[0]:null
+    resumoExclusao={data:date instanceof Date?date.toISOString().slice(0,10):date?String(date).slice(0,10):null,
+      data_label:table==='vendas'?'Data da venda':table==='compras'?'Data da compra':table==='notas_fiscais'?'Competência':'Emissão',
+      participante:partyId?{tipo:partyType,id:String(partyId),nome:party?.nome?String(party.nome):null}:null}
+    related.push(resumoExclusao)
+  }
+  const edicao=proposal.tipo.startsWith('editar_')?await editSnapshot({tenantId,kind:proposal.tipo,table,row,values:proposal.dados as Record<string,unknown>,
+    items:Array.isArray(related[0])?related[0]:[],parts:table==='vendas'||table==='compras'?Array.isArray(related[1])?related[1]:[]:table==='contas_pagar'||table==='contas_receber'?Array.isArray(related[0])?related[0]:[]:[],
+    totals:table==='notas_fiscais'&&Array.isArray(related[1])?related[1][0]||{}:{},query,lock:Boolean(client)}):undefined
+  if(edicao)related.push({campos:edicao.campos,referencias:edicao.referencias})
   // O modelo nunca fornece a versao: o servidor captura o estado a ser aprovado.
   const hash=createHash('sha256').update(JSON.stringify([row,...related])).digest('hex')
   const mapping:Record<string,string>={preco:'preco_venda',custo:'custo_medio'}
@@ -91,10 +108,21 @@ export async function operationSnapshot(tenantId:number,proposal:Proposal,client
     Object.assign(campos,{cliente_id:Number(row.entidade_id),observacoes:(row.metadata as Record<string,unknown>)?.observacoes||'',aliquota_iss:Number((related[0] as Record<string,unknown>[])[0]?.aliquota_iss||0),iss_retido:Boolean(totals.iss_retido)})
     if('itens' in campos)campos.itens=(related[0] as Record<string,unknown>[]).map(i=>({tipo:'servico',item_id:Number(i.servico_id),descricao:i.descricao,quantidade:Number(i.quantidade),valor_unitario:Number(i.valor_unitario),desconto:Number(i.desconto||0)}))
   }
+  if(edicao)Object.assign(campos,edicao.campos)
   return {hash,registro_id:Number(proposal.dados.registro_id),nome:String(row.nome||row.numero||row.descricao||`Registro ${row.id}`),parcelas,conta_financeira:contaFinanceira,campos,
-    status:row.status ? String(row.status):null,valor:row.total!==undefined?String(row.total):row.valor_total!==undefined?String(row.valor_total):row.valor!==undefined?String(row.valor):row.preco_venda!==undefined?String(row.preco_venda):null}
+    ...(resumoExclusao?{resumo_exclusao:resumoExclusao}:{}),
+    ...(edicao?{edicao}:{}),
+    status:row.status ? String(row.status):resumoExclusao&&typeof row.ativo==='boolean'?(row.ativo?'ativo':'inativo'):null,valor:row.total!==undefined?String(row.total):row.valor_total!==undefined?String(row.valor_total):row.valor!==undefined?String(row.valor):row.preco_venda!==undefined?String(row.preco_venda):resumoExclusao&&row.saldo_inicial!==undefined?String(row.saldo_inicial):null}
 }
 type Contact={id?:string;nome:string;cargo?:string;email?:string;telefone?:string;whatsapp?:boolean;finalidades:string[];principais:string[]}
+async function registrationValues(tenantId:number,kind:Proposal['tipo'],current:Record<string,unknown>){
+  const table=tables[kind as keyof typeof tables]
+  if(!table)throw new PluginError('INVALID_INPUT','Cadastro desconhecido.')
+  const [stored]=await runQuery(`SELECT * FROM erp.${table} WHERE empresa_id=$1 AND id=$2 AND excluido_em IS NULL`,[tenantId,current.id])
+  if(!stored)throw new PluginError('NOT_FOUND','Cadastro indisponível.')
+  return {...Object.fromEntries(Object.entries(stored).map(([key,value])=>[key,value instanceof Date?value.toISOString().slice(0,10):value])),...current,
+    ...(typeof stored.permite_estoque_negativo==='boolean'?{permite_estoque_negativo:stored.permite_estoque_negativo?'sim':'nao'}:{})}
+}
 /** Aplica e-mail/telefone ao contato comercial principal (ou cria um), preservando os demais contatos. */
 function withContactChanges(current:Record<string,unknown>,changes:Record<string,unknown>):Record<string,unknown> {
   const {email,telefone,...rest}=changes
@@ -179,7 +207,7 @@ export async function executeOperation(tenantId:number,actorId:number,proposal:P
   const registrationEdit={editar_fornecedor:'fornecedores',editar_vendedor:'vendedores',editar_servico:'servicos',editar_categoria:'categorias',editar_conta_financeira:'contas-financeiras'} as const
   if(proposal.tipo in registrationEdit){
     const entityId=registrationEdit[proposal.tipo as keyof typeof registrationEdit],current=await getErpEntityRecord({tenantId,entityId,id}),{registro_id:_id,...changes}=data
-    await updateErpEntityRecord({...input,entityId,expectedVersion:Number(current.versao),values:withContactChanges(current,changes)});return String(id)
+    await updateErpEntityRecord({...input,entityId,expectedVersion:Number(current.versao),values:withContactChanges(await registrationValues(tenantId,proposal.tipo,current),changes)});return String(id)
   }
   switch(proposal.tipo) {
     case 'suspender_contrato': case 'retomar_contrato': case 'encerrar_contrato': {
@@ -197,7 +225,7 @@ export async function executeOperation(tenantId:number,actorId:number,proposal:P
       const current=await getErpEntityRecord({tenantId,entityId,id})
       if(!current)throw new PluginError('NOT_FOUND','Registro indisponível.',404)
       const {registro_id,...changes}=proposal.dados
-      await updateErpEntityRecord({...input,entityId,expectedVersion:Number(current.versao),values:withContactChanges(current,changes)})
+      await updateErpEntityRecord({...input,entityId,expectedVersion:Number(current.versao),values:withContactChanges(await registrationValues(tenantId,proposal.tipo,current),changes)})
       break
     }
     case 'confirmar_venda': await confirmErpSale({tenantId,actorId,saleId:id,creditOverrideReason:proposal.dados.liberar_credito_motivo});break

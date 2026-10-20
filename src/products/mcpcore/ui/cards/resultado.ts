@@ -37,7 +37,7 @@ function renderNoteResult(target,data){const proposal=data.proposta||{},tipo=pro
       :r.status==='emitida'?[pdf&&{...pdf,primary:true},view]:[view];
     slot.append(actionsBar(next));notify('ui/notifications/size-changed',{height:contentHeight()})})
   .catch(()=>{if(slot.isConnected)slot.replaceChildren(actionsBar(nextSteps(tipo,id,proposal.dados||{})))})}
-function renderResult(target,data){if(creationSpec(data))return renderCreationResult(target,data);if(/nota_servico$/.test((data.proposta||{}).tipo||''))return renderNoteResult(target,data);const proposal=data.proposta||{},dados=proposal.dados||{},saved=data.status==='saved',alvo=data.alvo;
+function renderResult(target,data){if(editSpec(data))return renderEditResult(target,data);if(deletionSpec(data))return renderDeletionResult(target,data);if(creationSpec(data))return renderCreationResult(target,data);if(/nota_servico$/.test((data.proposta||{}).tipo||''))return renderNoteResult(target,data);const proposal=data.proposta||{},dados=proposal.dados||{},saved=data.status==='saved',alvo=data.alvo;
   const subject=alvo&&alvo.nome||((data.referencias||{}).cliente||(data.referencias||{}).fornecedor||{}).nome||dados.nome||dados.descricao||'';
   hero(target,{eyebrow:saved?'Concluído':'Situação',title:(operationLabels[proposal.tipo]||'Operação')+(subject?' · '+subject:''),amount:proposal.total});
   target.append(notice(saved?(/^excluir_/.test(proposal.tipo||'')?'Excluído no ERP.':'Salvo no ERP.'):'Situação: '+(states[data.status]||data.status),saved?'success':'info'));contextNotice(target);

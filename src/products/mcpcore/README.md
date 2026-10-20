@@ -25,6 +25,22 @@ Código comum aos produtos de chat do Cognito ERP (`chatgptplugin` e, a seguir, 
 
 Verificação local, sem acesso ao banco: `node --import tsx scripts/chatgptplugin-tool-documentation-smoke.ts`. Confere descrições/parâmetros nos dois protocolos, permissões publicadas e preservação das validações. As consultas e ações reais são verificadas por `scripts/chatgptplugin-all-tools-smoke.ts`, que exige empresa/usuário e reverte a transação de teste. Revisão e resultados: `docs/avaliacao-erp/descricoes-tools-20261011.md`.
 
+## Cards de exclusão
+
+As operações `excluir_*` usam revisão com identificação do registro, situação, resumo e motivo obrigatório. O resumo é capturado pelo servidor no rascunho; data e participante fazem parte do estado conferido na confirmação. Alterar o motivo exige atualizar a prévia e confirmar novamente. As regras do ERP (permissões, vínculos, período e documento em rascunho) continuam sendo revalidadas na transação.
+
+“Manter registro” encerra somente a revisão local, sem solicitar exclusão nem cancelar o rascunho no servidor. “Excluir” bloqueia cliques repetidos e mostra sucesso apenas com execução `saved`, ID do alvo e identificação da proposta correspondentes. O resultado usa o resumo da operação confirmada, sem tentar consultar o registro já excluído. A exclusão é lógica e preserva o histórico; NFS-e mantém o aviso de simulação e não representa cancelamento na prefeitura. Resposta incerta bloqueia nova tentativa automática; prévia expirada ou alterada exige nova revisão.
+
+`pnpm chatgptplugin:deletion-smoke` verifica resumo, troca de motivo, confirmação, recusa, expiração, respostas incertas, navegação e temas em navegador local, sem excluir dados reais. Capturas em `.cache/chatgptplugin-deletion/`.
+
+## Cards de edição
+
+As 14 operações `editar_*` compartilham revisão antes/depois, campos adequados a cada tipo e navegação local de até 5 alterações por página. A comparação usa valores canônicos capturados pelo servidor, incluindo contatos, preços, parcelas e referências da mesma empresa. Campos sem valor anterior conhecido são identificados como indisponíveis, não como vazios. Alterar um campo exige atualizar a prévia e confirmar novamente; nenhum ajuste é aplicado com o rascunho anterior. Cancelar encerra somente a revisão local.
+
+A confirmação mantém permissões, versão, período e regras do ERP. Na mesma transação, o servidor lê novamente os campos salvos e guarda o resultado junto à prévia original. O card de sucesso compara o antes com esse resultado, nunca apresenta a proposta como se já estivesse salva, nem repete a escrita para carregar o resumo. Divergência ou falta de conferência recebe aviso, sem sucesso verde indevido. Documentos completos mostram os efeitos de recálculo/reorganização; orçamentos explicam a reabertura da aprovação e NFS-e conserva o aviso de simulação.
+
+`pnpm chatgptplugin:update-smoke` verifica tipos de registro, comparação, confirmação, ausência de mudanças, ajustes entre páginas, erros, resultados divergentes, temas e Claude, sem alterações em um ERP real. Capturas em `.cache/chatgptplugin-update/`; `CHATGPTPLUGIN_SKIP_SCREENSHOTS=1` permite validar sem gravar imagens.
+
 ## O que fica fora
 
 Protocolo e registro do servidor MCP, extensões de um chat (formulário nativo, configurações e menções da OpenAI), metadados do recurso protegido, URI e `_meta` dos cards, manifesto e skills: tudo isso pertence ao produto.

@@ -161,7 +161,7 @@ async function main(){
     page=await open('analisar_periodo',{empresa_id:2,tipo:'vendas',inicio:'2026-08-01',fim:'2026-09-30'});f=frame(page);await f.getByText('set/2026').waitFor();await f.getByText(/\(\+250%\)/).waitFor();await done(page,'analise')
     // D: risco com o nome do alvo; ajuste de itens; resultado com próximo passo.
     page=await open('excluir_cadastro',{empresa_id:2,tipo:'cliente',chave_operacao:randomUUID(),dados:{registro_id:5,motivo:'Cadastro duplicado'}});f=frame(page)
-    await f.getByRole('heading',{name:'Excluir cliente · Padaria Central'}).waitFor();await f.getByRole('button',{name:'Confirmar mesmo assim'}).waitFor();await done(page,'risco')
+    await f.getByRole('heading',{name:'Excluir cliente?',exact:true}).waitFor();await f.getByText('Padaria Central',{exact:true}).waitFor();await f.getByRole('button',{name:'Excluir cliente',exact:true}).waitFor();await f.getByRole('button',{name:'Manter registro',exact:true}).waitFor();await done(page,'risco')
     const sale={empresa_id:2,tipo:'venda',chave_operacao:randomUUID(),dados:{cliente_id:5,data_venda:'2026-10-07',data_vencimento:'2026-10-31',itens:[{tipo:'produto',item_id:9,quantidade:2,valor_unitario:75}]}}
     page=await open('criar_venda',sale);f=frame(page);await f.getByRole('heading',{name:'Nova venda'}).waitFor();assert.equal(await f.getByText('Cliente (ID)').count(),0)
     await f.getByRole('button',{name:'Ajustar'}).click();await f.getByLabel('Quantidade de Farinha 25kg').fill('3');await f.getByRole('button',{name:'Atualizar prévia'}).click()

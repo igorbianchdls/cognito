@@ -33,7 +33,7 @@ async function open(tool,args){const content=await callTool(tool,args);state.sta
 function back(){const previous=state.stack.pop();if(!previous)return;Object.assign(state,previous,{error:null,edit:false});render()}
 function withCompany(args){return {...(state.empresaId?{empresa_id:state.empresaId}:{}),...args}}
 function skeleton(){const box=element('div',undefined,'skeleton');for(let i=0;i<4;i++)box.append(element('div',undefined,'skeleton-line'));return box}
-async function run(fn){if(state.busy)return;state.busy=true;const ticket=++state.generation,controls=Array.from(root.querySelectorAll('button,input,select'),control=>[control,control.disabled]);root.setAttribute('aria-busy','true');status.textContent='Consultando…';for(const [control] of controls)control.disabled=true;root.classList.add('loading')
+async function run(fn){if(state.busy)return;state.busy=true;const ticket=++state.generation,controls=Array.from(root.querySelectorAll('button,input,select,textarea'),control=>[control,control.disabled]);root.setAttribute('aria-busy','true');status.textContent='Consultando…';for(const [control] of controls)control.disabled=true;root.classList.add('loading')
   try{await fn()}catch(error){if(ticket===state.generation){state.error=error;render()}}finally{state.busy=false;root.classList.remove('loading');root.setAttribute('aria-busy','false');if(status.textContent==='Consultando…')status.textContent='';for(const [control,disabled] of controls)if(control.isConnected)control.disabled=disabled}}
 // Altura do conteúdo (o body não tem altura mínima); o <html> acompanha o iframe e não encolhe.
 function contentHeight(){return Math.ceil(document.body.getBoundingClientRect().height)}
@@ -43,7 +43,7 @@ function render(){root.replaceChildren();status.textContent='';
   catch(error){root.replaceChildren(notice('Não foi possível exibir este resultado.','danger'))}
   notify('ui/notifications/size-changed',{height:contentHeight()})}
 function errorNotice(error){const box=element('div'),hasFields=error.fields&&error.fields.length;box.append(notice(hasFields?'Confira os campos abaixo.':error.message,'danger'));if(hasFields){const list=element('ul');for(const f of error.fields)list.append(element('li',label(String(f.campo).replace(/^dados\./,''))+': '+f.motivo));box.append(list)}
-  if(!hasFields&&state.lastCall&&!error.code&&!state.lastCall.args.rascunho_id){const call=state.lastCall;box.append(actionsBar([{label:'Tentar novamente',run:async()=>{const content=await callTool(call.name,call.args);absorb(content);state.data=content.data;state.error=null;render()}}]))}return box}
+    if(!hasFields&&state.lastCall&&!error.code&&!state.lastCall.args.rascunho_id&&!deletionSpec(state.data||{})&&!editSpec(state.data||{})){const call=state.lastCall;box.append(actionsBar([{label:'Tentar novamente',run:async()=>{const content=await callTool(call.name,call.args);absorb(content);state.data=content.data;state.error=null;render()}}]))}return box}
 function renderError(target,error){target.append(element('h1','Não foi possível concluir'),errorNotice(error))}
 window.addEventListener('message',event=>{if(event.source!==window.parent)return;const m=event.data;if(!m||m.jsonrpc!=='2.0')return;
   const waiting=pending.get(m.id);if(waiting&&m.method===undefined){clearTimeout(waiting.timer);pending.delete(m.id);m.error?waiting.reject(new Error(m.error.message||'Falha na conexão')):waiting.resolve(m.result);return}
