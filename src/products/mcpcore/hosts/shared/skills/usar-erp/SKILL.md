@@ -13,6 +13,8 @@ Use `meu_acesso` também quando o usuário pedir informações sobre a conta, em
 
 ## Consultas
 
+Conciliação: `consultar_conciliacoes` mostra correspondências de extrato com pagamento/repasse; `conciliar_movimentacao` exige prévia e confirmação e não cria baixa. Classificação: `consultar_classificacao_despesas` retorna títulos e categorias/DRE; pode receber `sugestoes` do modelo para revisão, sem salvar. `classificar_despesas` confirma uma ou até 50 escolhas e não altera a categoria global. Para notas em lote, `consultar_operacao_fluxo` sem ID lista vendas elegíveis; `emitir_notas_lote` prepara e confirma NFS-e apenas simulada. Com `operacao_id` ou `chave_operacao`, a consulta recupera os resultados persistidos dos três fluxos, inclusive após timeout. Nunca repita itens concluídos/aguardando/incertos. `continuar` executa só os pendentes já aprovados; falhas exigem nova revisão, nunca reenvio do lote inteiro. Sucesso parcial deve ser comunicado como parcial, com motivo por documento.
+
 | Pedido do usuário | Tool |
 | --- | --- |
 | Dashboard ou Visão geral interativa da empresa | `consultar_dashboard` (período padrão: últimos 30 dias; abas locais) |

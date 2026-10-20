@@ -35,7 +35,7 @@ export async function registerCommonTools(server: McpServer, principal: PluginPr
   const readOnly = { readOnlyHint: true, destructiveHint: false, idempotentHint: true, openWorldHint: false }
   server.registerTool('meu_acesso', { title: 'Meu acesso', description: toolDescription('meu_acesso'), inputSchema: accessSchema, outputSchema: envelope(outputs.access).extend(profileFields), annotations: readOnly, _meta: { ...style.readMeta, ...style.card, ...style.accessMeta } }, run('meu_acesso'))
   style.afterAccess?.()
-  for (const tool of tools) server.registerTool(tool.name, { title: tool.title, description: tool.description, inputSchema: tool.schema, outputSchema: envelope(tool.output), annotations: readOnly, _meta: { ...style.readMeta, ...style.card } }, run(tool.name))
+  for (const tool of tools) server.registerTool(tool.name, { title: tool.title, description: tool.description, inputSchema: tool.schema, outputSchema: envelope(tool.output), annotations: { ...readOnly, readOnlyHint: !tool.write, destructiveHint: Boolean(tool.write && host === 'claude') }, _meta: { ...(tool.write ? style.writeMeta : style.readMeta), ...style.card } }, run(tool.name))
   for (const action of actionTools) server.registerTool(action.name, { title: action.title, description: action.description, inputSchema: action.schema, outputSchema: envelope(outputs.draft),
     annotations: { readOnlyHint: false, destructiveHint: style.destructive(action), idempotentHint: true, openWorldHint: false }, _meta: { ...style.writeMeta, ...style.card } }, run(action.name))
   registerTables(server, principal, config, dependencies, host)

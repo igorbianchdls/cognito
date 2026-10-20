@@ -4,6 +4,20 @@ import { ErpDomainError } from '../shared/erpErrors'
 import { sumMoney } from '../shared/erpMoney'
 
 export type FinancialSide='pagar'|'receber'
+export async function classifyExpenseWithClient(client:SQLClient,tenantId:number,actorId:number,id:number,categoryId:number){
+  const title=(await client.query('SELECT * FROM erp.contas_pagar WHERE empresa_id=$1 AND id=$2 AND excluido_em IS NULL FOR UPDATE',[tenantId,id])).rows[0]
+  if(!title||title.origem!=='manual'||['cancelado','renegociado'].includes(String(title.status)))throw new ErpDomainError('INVALID_STATE','Título manual não disponível para classificação.',409)
+  const category=(await client.query("SELECT id FROM erp.categorias WHERE empresa_id=$1 AND id=$2 AND tipo='despesa' AND ativo AND excluido_em IS NULL AND NOT EXISTS(SELECT 1 FROM erp.categorias child WHERE child.empresa_id=$1 AND child.categoria_pai_id=$2 AND child.ativo AND child.excluido_em IS NULL) FOR SHARE",[tenantId,categoryId])).rows[0]
+  if(!category)throw new ErpDomainError('VALIDATION_ERROR','Categoria de despesa indisponível.',422)
+  if((await client.query('SELECT id FROM erp.rateios_financeiros WHERE empresa_id=$1 AND conta_pagar_id=$2 LIMIT 1',[tenantId,id])).rows[0])throw new ErpDomainError('INVALID_STATE','Título com rateio exige revisão no ERP.',409)
+  const parts=(await client.query('SELECT data_vencimento,id FROM erp.contas_pagar_parcelas WHERE empresa_id=$1 AND conta_pagar_id=$2 ORDER BY id FOR UPDATE',[tenantId,id])).rows
+  const payments=(await client.query('SELECT data_pagamento FROM erp.pagamentos WHERE empresa_id=$1 AND conta_pagar_parcela_id=ANY($2::bigint[]) ORDER BY id FOR SHARE',[tenantId,parts.map(part=>part.id)])).rows
+  const iso=(value:unknown)=>value instanceof Date?value.toISOString().slice(0,10):String(value).slice(0,10)
+  const dates=[title.data_competencia,title.data_emissao,...parts.map(part=>part.data_vencimento),...payments.map(payment=>payment.data_pagamento)].filter(Boolean).map(iso)
+  for(const date of new Set(dates))await assertErpPeriodOpen(client,{tenantId,module:'financeiro',date})
+  await client.query('UPDATE erp.contas_pagar SET categoria_id=$3,atualizado_por=$4 WHERE empresa_id=$1 AND id=$2',[tenantId,id,categoryId,actorId])
+  await titleEvent(client,tenantId,actorId,'pagar',id,'classificada_chat',{categoria_anterior:title.categoria_id,categoria_id:categoryId})
+}
 const fail=(message:string):never=>{throw new ErpDomainError('VALIDATION_ERROR',message,409)}
 export async function validateFinancialReferences(client:Pick<SQLClient,'query'>,tenantId:number,side:FinancialSide,values:Record<string,unknown>,lock=true) {
   const party=side==='pagar'?'fornecedor':'cliente'

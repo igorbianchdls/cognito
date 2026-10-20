@@ -76,7 +76,7 @@ async function main() {
       assert.equal(tool.annotations.readOnlyHint,!definition.write&&!definition.control,tool.name);assert.equal(tool._meta?.ui?.resourceUri,'ui://claudeplugin/apps/v1.html',tool.name)
     }
     for (const tool of listed.filter(t=>!t.name.startsWith('tables_')&&!t.name.startsWith('whatsapp_')&&!t.name.startsWith('apps_'))) {
-      const write=erpActions.some(a=>a.name===tool.name)
+      const write=erpActions.some(a=>a.name===tool.name)||Boolean(erpTools.find(candidate=>candidate.name===tool.name)?.write)
       assert(tool.name.length<=64&&/^[a-z_]+$/.test(tool.name),tool.name)
       assert(tool.title&&tool.title.length>0,`title ${tool.name}`)
       assert(tool.outputSchema,`output ${tool.name}`)

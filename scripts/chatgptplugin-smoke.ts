@@ -120,7 +120,7 @@ async function main() {
       if(definition.write){assert.deepEqual(tool.securitySchemes[0].scopes,['erp:read','erp:write']);assert(tool.inputSchema.properties.rascunho_id&&tool.inputSchema.properties.dados,tool.name)}
     }
     for (const tool of listed.filter(t=>!t.name.startsWith('tables_')&&!t.name.startsWith('whatsapp_')&&!t.name.startsWith('apps_'))) {
-      const write=erpActions.some(a=>a.name===tool.name)
+      const write=erpActions.some(a=>a.name===tool.name)||Boolean(erpTools.find(candidate=>candidate.name===tool.name)?.write)
       assert.equal(tool.annotations.readOnlyHint,!write&&tool.name!=='atualizar_configuracoes',tool.name)
       assert.equal(tool.annotations.destructiveHint,Boolean(erpActions.find(a=>a.name===tool.name)?.destructive),tool.name)
       assert.equal(tool.securitySchemes[0].type,'oauth2');assert(tool.outputSchema,tool.name)

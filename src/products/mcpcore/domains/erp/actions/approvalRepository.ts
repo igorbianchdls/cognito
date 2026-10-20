@@ -25,7 +25,7 @@ export async function loadApproval(id:string,session:ErpAccessContext,config:Pic
   return {...draftView(rows[0],config),empresa_nome:session.tenantName,referencias:references}
 }
 
-async function assertCurrentAccess(client:SQLClient,session:Pick<ErpAccessContext,'tenantId'|'sharedUserId'|'clerkUserId'>,capability:string) {
+export async function assertCurrentAccess(client:SQLClient,session:Pick<ErpAccessContext,'tenantId'|'sharedUserId'|'clerkUserId'>,capability:string) {
   // Compartilhar os locks com alteracoes de vinculo impede aprovacoes usando permissoes revogadas.
   const members = await client.query(`SELECT m.role,m.perfil_acesso_id FROM shared.usuarios_empresas m
     JOIN shared.empresas t ON t.id=m.empresa_id JOIN shared.usuarios u ON u.id=m.usuario_id

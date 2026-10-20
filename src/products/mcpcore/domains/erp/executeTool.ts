@@ -10,8 +10,10 @@ import { accessSchema, tools } from './tools/catalog'
 import { actionTools } from './actions/catalog'
 import { actionDependencies, type ActionDependencies } from './actions/dependencies'
 import { preferencesDependencies } from '../../application/preferences'
+import type { executeWorkflow } from './workflows/coordinator'
 
 export type ExecutionDependencies = {
+  workflows?: { execute: typeof executeWorkflow }
   queries: ErpQueries
   reserve: typeof reserveExecution
   finish: typeof finishExecution
@@ -72,7 +74,7 @@ export async function executeTool(principal: PluginPrincipal, name: string, raw:
     // Registre apenas metadados, nunca argumentos ou resultados com dados pessoais.
     executionId = await deps.reserve(principal,name,company?.id || null,config.integration)
     if (!allowed) throw new PluginError('ACCESS_DENIED', 'Seu perfil não permite esta operação.', 403)
-    if (action && !principal.scopes.includes('erp:write')) throw new PluginError('INSUFFICIENT_SCOPE','A conexão precisa da permissão erp:write para alterar dados.',403)
+    if ((action || tool?.write) && !principal.scopes.includes('erp:write')) throw new PluginError('INSUFFICIENT_SCOPE','A conexão precisa da permissão erp:write para alterar dados.',403)
     let timer: ReturnType<typeof setTimeout> | undefined
     let data: unknown
     try {
@@ -80,8 +82,8 @@ export async function executeTool(principal: PluginPrincipal, name: string, raw:
         access ? Promise.resolve({ usuario_id: principal.userId, empresas: principal.companies, empresa_selecionada: company?.id || null })
           // Escritas definem o próprio contexto: prévia somente leitura, execução em transação.
           : action ? action.execute(deps.actions || actionDependencies,principal,company!.id,input,config)
-          : runWithErpDatabaseContext({ tenantId: company!.id, userId: principal.userId, readOnly: true, statementTimeoutMs: 10000, timeZone: company!.timeZone },
-            () => tool!.execute(deps.queries,company!.id,input,{ origin: new URL(config.resource).origin, userId: principal.userId, company: company! })),
+          : runWithErpDatabaseContext({ tenantId: company!.id, userId: principal.userId, readOnly: !tool!.write, statementTimeoutMs: 10000, timeZone: company!.timeZone },
+            () => tool!.execute(deps.queries,company!.id,input,{ origin: new URL(config.resource).origin, userId: principal.userId, company: company!, principal, config, workflows: deps.workflows })),
         new Promise<never>((_, reject) => { timer = setTimeout(() => reject(new PluginError('TIMEOUT','A consulta excedeu o tempo limite.',504)),config.toolTimeoutMs) }),
       ])
     } finally { if (timer) clearTimeout(timer) }
@@ -91,7 +93,7 @@ export async function executeTool(principal: PluginPrincipal, name: string, raw:
     await deps.finish(executionId,'succeeded',null,Date.now()-started,config.integration)
     return { content: [{ type:'text', text: serialized }], structuredContent: JSON.parse(serialized) }
   } catch (error) {
-    const failure = publicError(error, Boolean(action))
+    const failure = publicError(error, Boolean(action || tool?.write))
     if (!executionId) {
       executionId = await deps.reserve(principal,name.slice(0,100),null,config.integration).catch(() => undefined)
     }

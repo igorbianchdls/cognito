@@ -1,5 +1,17 @@
 # mcpcore — núcleo compartilhado dos chats
 
+## Conciliação, classificação e NFS-e em lote
+
+Antes de publicar esta versão, aplique `supabase/migrations/20261020150000_erp_chat_workflows.sql` pelo processo de migrações do projeto. A migração cria apenas o controle privado em `plugin.erp_workflows`; não altera documentos existentes nem executa emissões. Sem ela, as tools explicam que falta provisionamento. Atualize o catálogo da conexão após o deploy.
+
+As seis tools `consultar_conciliacoes`, `conciliar_movimentacao`, `consultar_classificacao_despesas`, `classificar_despesas`, `consultar_operacao_fluxo` e `emitir_notas_lote` compartilham os cards do ChatGPT/Claude. Conciliação usa os pagamentos/repasses existentes e o serviço gerencial do ERP; rejeitar a sugestão é local. Classificação altera somente a categoria de títulos manuais sem rateios, preservando parcelas e pagamentos e verificando os períodos destes movimentos. O grupo DRE vem da categoria, nunca é alterado globalmente. A consulta inicialmente mostra a classificação cadastral; sugestões do modelo são opcionais e validadas contra as categorias autorizadas, sem atribuir dados cadastrais à IA.
+
+Notas: vendas confirmadas/faturadas exclusivamente de serviços, sem nota enviada/finalizada, até 50 vendas selecionadas. Rascunho/falha existente é reutilizado quando único. Novos rascunhos usam itens e total exatos da venda, município e alíquota cadastrados, com revisão explícita; ajustes não representáveis e dados fiscais ausentes exigem revisão individual. Toda emissão permanece simulada, sem validade fiscal, reutilizando validações, estornos, retenções e auditoria do ERP. Não há conexão com prefeitura/provedor real nova.
+
+Cada operação tem prévia de 30 minutos, escopo de usuário/empresa/cliente OAuth/host e chave idempotente. A confirmação grava a autorização do snapshot; cada item revalida estado e permissões atuais sob locks. A alteração ERP e o resultado desse item são confirmados na mesma transação, independentes dos outros itens. Até 5 itens são executados por chamada; o card continua somente itens já aprovados. Não depende de processo em memória ou tarefa em background: interromper fecha a UI, não perde resultados persistidos; a consulta recupera o estado e a continuação autorizada. Itens concluídos, falhos, aguardando retorno ou incertos não são reenviados automaticamente. Nova tentativa de falha exige revisão e nova prévia; incerteza exige investigação/consulta. Erros de infraestrutura não são apresentados como falha comercial definitiva.
+
+Listas mostram 5 por página, localmente abaixo de 40 resultados e por novas consultas a partir de 40. Seleção/categorias são preservadas entre páginas e limitadas a 50 itens. Resultado parcial tem aviso, quantidade concluída, totais separados, motivo e revisão individual, sem sucesso verde global. Claude inline é compacto e os controles completos ficam em tela cheia. `pnpm chatgptplugin:workflows-smoke` usa banco em memória e navegador local; não altera dados reais.
+
 ## Dashboard interativo
 
 `consultar_dashboard` é uma consulta somente leitura da Visão geral do ERP, compartilhada por ChatGPT e Claude. Sem `detalhes`, retorna um snapshot em transação `REPEATABLE READ READ ONLY`: os mesmos indicadores do ERP mais as seções financeiro/resultados já consultadas nessa composição, sem repetir consultas por aba. Não altera `resumo_erp`. Áreas sem permissão são omitidas; não são convertidas em zero.

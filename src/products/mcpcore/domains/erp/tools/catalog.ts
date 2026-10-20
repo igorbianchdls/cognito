@@ -5,7 +5,10 @@ import { outputs } from '../schemas/outputs'
 import {toolDescription} from './descriptions'
 import {documentInputSchema} from './inputDocumentation'
 import { ErpDomainError } from '@/products/erp/shared/erpErrors'
-import { PluginError, type PluginCompany } from '../../../shared/contracts'
+import { PluginError, type PluginCompany, type PluginPrincipal } from '../../../shared/contracts'
+import type { PluginConfig } from '../../../shared/config'
+import type { executeWorkflow } from '../workflows/coordinator'
+import { workflowTools } from '../workflows/catalog'
 import { chatDashboardFields, chatDashboardSchema } from '@/products/erp/shared/chatDashboard'
 import { createServiceInvoiceLinkToken, SERVICE_INVOICE_LINK_TTL_SECONDS, SERVICE_INVOICE_PUBLIC_PATH } from '@/products/erp/server/fiscal/serviceInvoiceLinks'
 import { createCommercialLink,COMMERCIAL_LINK_PATH } from '@/products/erp/server/documents/commercialDocumentLinks'
@@ -23,11 +26,12 @@ export const requiredDate = z.string().regex(/^\d{4}-\d{2}-\d{2}$/).refine(value
 }, 'Data inválida.')
 const isoDate = requiredDate.optional()
 export type ToolDefinition = {
+  write?: boolean
   name: string; title: string; description: string; schema: z.AnyZodObject; output: z.ZodTypeAny
   capabilities: ErpCapability[]
   requiredCapabilities?: (input: Record<string, unknown>) => ErpCapability[]
   // context: domínio do plugin e usuário da conexão, para links absolutos e links temporários assinados.
-  execute: (queries: ErpQueries, companyId: number, input: Record<string, unknown>, context: { origin: string; userId: number; company?: PluginCompany }) => Promise<unknown>
+  execute: (queries: ErpQueries, companyId: number, input: Record<string, unknown>, context: { origin: string; userId: number; company?: PluginCompany; principal?: PluginPrincipal; config?: PluginConfig; workflows?: { execute: typeof executeWorkflow } }) => Promise<unknown>
 }
 function page(input: Record<string, unknown>, cardPagination=false) {
   return { query: input.busca as string | undefined, page: input.pagina as number, pageSize: input.por_pagina as number, sort: input.ordenar as string | undefined, ...(input.limite!==undefined?{limit:input.limite as number}:{}),...(cardPagination?{cardPagination:true}:{}) }
@@ -138,5 +142,5 @@ const readTools: ToolDefinition[] = [
     requiredCapabilities:input => ['erp.relatorios.visualizar', String(input.tipo).startsWith('vendas-') || String(input.tipo).startsWith('margem-') || input.tipo === 'metas' || input.tipo === 'comissoes' ? 'erp.vendas.visualizar' : String(input.tipo).startsWith('compras-') ? 'erp.compras.visualizar' : input.tipo === 'valor-estoque' ? 'erp.estoque.visualizar' : 'erp.financeiro.visualizar'],
     execute:(q,id,input) => q.report(id,String(input.tipo),String(input.inicio),String(input.fim),page(input)) },
 ]
-export const tools:ToolDefinition[]=readTools.map(tool=>({...tool,schema:documentInputSchema(tool.schema,tool.name)}))
+export const tools:ToolDefinition[]=[...readTools,...workflowTools].map(tool=>({...tool,schema:documentInputSchema(tool.schema,tool.name)}))
 export const accessSchema = z.object({ empresa_id: company }).strict()
