@@ -84,7 +84,7 @@ async function main(){
     await frame.getByRole('button',{name:'Excluindo…',exact:true}).waitFor();assert.equal(await frame.getByRole('button',{name:'Excluindo…',exact:true}).isEnabled(),false)
     releaseWrite();writeGate=null
     await frame.getByRole('heading',{name:'Venda excluída',exact:true}).waitFor();await frame.locator('.deletion-status').getByText('Excluída',{exact:true}).waitFor();await screenshot('venda-excluida')
-    assert.equal(writeCount,1);assert.deepEqual(calls,[{name:'excluir_venda',arguments:{empresa_id:2,rascunho_id:original}}])
+    assert.equal(writeCount,1);assert.deepEqual([...calls],[{name:'excluir_venda',arguments:{empresa_id:2,rascunho_id:original}}])
     assert.equal(await frame.getByRole('button',{name:'Excluir venda',exact:true}).count(),0);assert.equal(await frame.getByRole('button',{name:/Voltar.*prévia/}).count(),0)
     const listing=page.waitForResponse(reply=>reply.url().endsWith('/call'));await frame.getByRole('button',{name:'Consultar vendas',exact:true}).click();await listing;assert.deepEqual(calls.at(-1),{name:'listar_vendas',arguments:{empresa_id:2,por_pagina:5}})
     releaseContext();contextGate=null;await confirmedContext;assert.equal(contexts.at(-1)?.structuredContent.execucao_confirmada,true)
@@ -110,7 +110,7 @@ async function main(){
     await frame.getByRole('button',{name:'Atualizar prévia',exact:true}).click();await frame.getByRole('button',{name:'Excluir venda',exact:true}).waitFor();assert.equal(writeCount,0)
     checks.push('uncertain_results_do_not_retry_and_rejections_or_expired_previews_require_review')
     for(const change of [{status:'pending',registro_id:null},{status:'saved',registro_id:null},{status:'saved',registro_id:'999'},{status:'saved',empresa_id:3},{status:'saved',rascunho_id:randomUUID()}]){
-      await open();savedOverride={...input,etapa:'executado',status:'saved',registro_id:'1068',...change};await frame.getByRole('button',{name:'Excluir venda',exact:true}).click();await frame.getByText(/O resultado da exclusão ainda não foi confirmado/).waitFor();assert.equal(await frame.locator('.creation-success-icon').count(),0);assert.equal(contexts.length,0);assert.equal(writeCount,1)
+      await open();savedOverride={...input,etapa:'executado',registro_id:'1068',...change};await frame.getByRole('button',{name:'Excluir venda',exact:true}).click();await frame.getByText(/O resultado da exclusão ainda não foi confirmado/).waitFor();assert.equal(await frame.locator('.creation-success-icon').count(),0);assert.equal(contexts.length,0);assert.equal(writeCount,1)
     }
     const invalid=draft();invalid.etapa='executado';invalid.status='saved';invalid.registro_id='999';await open(invalid);await frame.getByRole('heading',{name:'Exclusão não confirmada',exact:true}).waitFor();assert.equal(calls.length,0)
     const saved=draft();saved.status='saved';saved.registro_id='1068';await open(saved);await frame.getByRole('heading',{name:'Venda excluída',exact:true}).waitFor();assert.equal(calls.length,0)
