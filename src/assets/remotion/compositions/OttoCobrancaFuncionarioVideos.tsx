@@ -359,7 +359,7 @@ function ProfitAnswer({ sendAt }: { sendAt: number }) {
   )
 }
 
-function ProfitScene({ duration }: { duration: number }) {
+export function ProfitScene({ duration }: { duration: number }) {
   return (
     <Scene duration={duration}>
       <Headline highlight={['perguntar']} size={76} stagger={2} start={0} text="Quer saber como tá a empresa? É só perguntar." style={{ top: 180 }} />

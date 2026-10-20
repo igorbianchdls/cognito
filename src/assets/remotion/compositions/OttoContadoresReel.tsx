@@ -407,7 +407,7 @@ const BANKS: { balance: number; logo: ReactNode; name: string }[] = [
   { balance: 27604.0, logo: <SiMercadopago color="#00b1ea" size={64} />, name: 'Mercado Pago' },
 ]
 
-function BankSyncScene({ duration }: { duration: number }) {
+export function BankSyncScene({ duration, index = 0, tasks, title = 'Sincroniza todas as suas contas bancárias.' }: FeatureSceneProps) {
   const frame = useFrame()
   const cx = 540
   const cy = 1000
@@ -418,7 +418,7 @@ function BankSyncScene({ duration }: { duration: number }) {
   const connected = BANKS.filter((_, i) => frame >= 40 + i * 6).length
 
   return (
-    <FeatureScene duration={duration} index={0} title="Sincroniza todas as suas contas bancárias.">
+    <FeatureScene duration={duration} index={index} tasks={tasks} title={title}>
       <svg height={1920} style={{ left: 0, position: 'absolute', top: 0 }} width={1080}>
         {BANKS.map((bank, i) => {
           const angle = (-90 + i * 60) * (Math.PI / 180)
@@ -849,7 +849,7 @@ function cellText(r: number, c: number, index: number) {
   return SHEET_SPECIAL[`${r}-${c}`] ?? (random(`v${index}`) * 9000).toFixed(0)
 }
 
-function NoSpreadsheetScene({ duration }: { duration: number }) {
+export function NoSpreadsheetScene({ duration }: { duration: number }) {
   const frame = useFrame()
   const ottoPop = useSpring(20, { damping: 12, stiffness: 150 })
   const absorbed = p(frame, 30, 64, [0, 1], Easing.linear)
@@ -952,7 +952,7 @@ function NoSpreadsheetScene({ duration }: { duration: number }) {
 
 // ─── 10. ChatGPT ou Claude ───────────────────────────────────────────────────
 
-function IntegrationScene({ duration }: { duration: number }) {
+export function IntegrationScene({ duration }: { duration: number }) {
   const frame = useFrame()
   const percent = Math.round(100 * p(frame, 4, 30, [0, 1], Easing.out(Easing.quad)))
   const ottoPop = useSpring(30)
