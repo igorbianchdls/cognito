@@ -175,7 +175,7 @@ import { OTTO_BATCH_INVOICE_SCRIPT_DURATION, OTTO_SINGLE_INVOICE_SCRIPT_DURATION
 import { OTTO_HOOK_1_DURATION, OTTO_HOOK_2_DURATION, OTTO_HOOK_3_DURATION, OTTO_HOOK_4_DURATION, OTTO_HOOK_5_DURATION, OttoHookAutomatedFinanceVideo, OttoHookBatchInvoicesVideo, OttoHookBoletoPixVideo, OttoHookManageByChatVideo, OttoHookSingleInvoiceVideo } from '@/assets/remotion/compositions/OttoFiveHooksIllustrativeVideos'
 import { OTTO_BODY_1_DURATION, OTTO_BODY_2_DURATION, OttoBodyManageByConversationVideo, OttoBodySystemBehindVideo } from '@/assets/remotion/compositions/OttoTwoBodiesIllustrativeVideos'
 import { OTTO_CONTADORES_REEL_DURATION, OttoContadoresReel } from '@/assets/remotion/compositions/OttoContadoresReel'
-import { OTTO_CONTA_AZUL_REEL_DURATION, OttoContaAzulReel } from '@/assets/remotion/compositions/OttoContaAzulReel'
+import { OTTO_CONTA_AZUL_REEL_DURATION, OTTO_OMIE_REEL_DURATION, OttoContaAzulReel, OttoOmieReel } from '@/assets/remotion/compositions/OttoContaAzulReel'
 import { OTTO_COBRANCA_REEL_DURATION, OTTO_FUNCIONARIO_REEL_DURATION, OttoCobrancaReel, OttoFuncionarioReel } from '@/assets/remotion/compositions/OttoCobrancaFuncionarioVideos'
 import { OTTO_NOTA_CHATGPT_BATCH_DURATION, OTTO_NOTA_CHATGPT_SINGLE_DURATION, OttoNotaChatGptBatchReel, OttoNotaChatGptSingleReel } from '@/assets/remotion/compositions/OttoNotaFiscalChatGptVideos'
 import { OTTO_INVOICE_CHATGPT_MONITOR_CONTENT_DURATION, OttoInvoiceChatGptMonitorContent } from '@/assets/remotion/compositions/OttoInvoiceChatGptMonitorContent'
@@ -2396,6 +2396,19 @@ const catalog: CatalogItem[] = [
     label: 'Reel → ChatGPT matou o Conta Azul',
     tags: ['Reel', 'Otto', 'ChatGPT', 'Orgânico', 'Gratuito'],
     value: 'reel-otto-conta-azul',
+    width: 1080,
+  },
+  {
+    code: '<OttoOmieReel />',
+    component: OttoOmieReel,
+    description: 'Reel vertical (orgânico): o ChatGPT acabou de matar o Omie. Mesmo vídeo do Conta Azul, só o gancho muda.',
+    duration: OTTO_OMIE_REEL_DURATION,
+    fps: 30,
+    height: 1920,
+    kind: 'Claude Videos',
+    label: 'Reel → ChatGPT matou o Omie',
+    tags: ['Reel', 'Otto', 'ChatGPT', 'Orgânico', 'Gratuito'],
+    value: 'reel-otto-omie',
     width: 1080,
   },
   {

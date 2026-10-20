@@ -1,9 +1,11 @@
 import { ArrowLeftRight, MessageCircle, Plus, ReceiptText, Tags, TrendingUp } from 'lucide-react'
 import type { ReactNode } from 'react'
-import { Easing, random, spring } from 'remotion'
+import { useEffect, useState } from 'react'
+import { continueRender, delayRender, Easing, Img, random, spring, staticFile } from 'remotion'
 
 import {
   Card,
+  DISPLAY,
   GRAY,
   Headline,
   INK,
@@ -25,7 +27,7 @@ import { ChatGptLogo, CheckBadge, makeClaudeAlsoScene, makeCta, makeRevealScene 
 
 type Piece = { h: number; key: string; render: ReactNode; w: number; x: number; y: number }
 
-const WIN = { h: 720, w: 900, x: 90, y: 640 }
+const WIN = { h: 720, w: 900, x: 90, y: 680 }
 
 function bar(width: number | string, color = `${GRAY}aa`, height = 14) {
   return <div style={{ background: color, borderRadius: 6, height, width }} />
@@ -100,15 +102,67 @@ const LEGACY_PIECES: Piece[] = [
   },
 ]
 
-function HookScene({ duration }: { duration: number }) {
-  const frame = useFrame()
-  const appear = p(frame, 6, 18)
-  const windowFall = p(frame, 66, 84, [0, 1], Easing.in(Easing.quad))
-  const composer = useSpring(70, { damping: 13, stiffness: 150 })
+/** Resolves to true/false once we know whether a /public asset exists, holding the render until then. */
+function useAssetExists(path: string) {
+  const [exists, setExists] = useState<boolean | null>(null)
+  const [handle] = useState(() => delayRender(`Checking ${path}`))
 
+  useEffect(() => {
+    let alive = true
+    fetch(staticFile(path), { method: 'HEAD' })
+      .then((response) => alive && setExists(response.ok && !(response.headers.get('content-type') ?? '').includes('text/html')))
+      .catch(() => alive && setExists(false))
+      .finally(() => continueRender(handle))
+    return () => {
+      alive = false
+    }
+  }, [handle, path])
+
+  return exists
+}
+
+function LogoLine({ at, children, top }: { at: number; children: ReactNode; top: number }) {
+  const frame = useFrame()
+  const o = p(frame, at, at + 14)
   return (
-    <Scene duration={duration}>
-      <Headline highlight={['matar']} marks={[{ at: 34, kind: 'underline', word: 'azul' }]} size={100} start={0} text="O ChatGPT acabou de matar o Conta Azul." style={{ top: 250 }} />
+    <div style={{ alignItems: 'center', display: 'flex', filter: `blur(${(1 - o) * 8}px)`, justifyContent: 'center', left: 0, opacity: o, position: 'absolute', right: 0, top, transform: `translateY(${(1 - o) * 28}px)` }}>
+      {children}
+    </div>
+  )
+}
+
+/** Hook with brand logos instead of names: [ChatGPT] acabou de matar o [ERP]. Falls back to the ERP name while its logo file is missing. */
+function makeHookScene(erpName: string, erpLogo: string) {
+  return function HookScene({ duration }: { duration: number }) {
+    const frame = useFrame()
+    const appear = p(frame, 6, 18)
+    const windowFall = p(frame, 66, 84, [0, 1], Easing.in(Easing.quad))
+    const composer = useSpring(70, { damping: 13, stiffness: 150 })
+    const strike = p(frame, 34, 50, [0, 1], Easing.inOut(Easing.cubic))
+    const hasLogo = useAssetExists(erpLogo)
+
+    return (
+      <Scene duration={duration}>
+        <LogoLine at={0} top={190}>
+          <Img src={staticFile('gptLogo.svg')} style={{ filter: 'brightness(0)', height: 104 }} />
+        </LogoLine>
+        <LogoLine at={8} top={320}>
+          <span style={{ fontFamily: DISPLAY, fontSize: 118, letterSpacing: '-0.015em', lineHeight: 1 }}>
+            acabou de <span style={{ color: TERRA, fontStyle: 'italic' }}>matar</span> o
+          </span>
+        </LogoLine>
+        <LogoLine at={18} top={480}>
+          <span style={{ display: 'inline-block', position: 'relative' }}>
+            {hasLogo ? (
+              <Img src={staticFile(erpLogo)} style={{ display: 'block', height: 110, maxWidth: 760, objectFit: 'contain' }} />
+            ) : (
+              <span style={{ display: 'block', fontFamily: DISPLAY, fontSize: 118, lineHeight: 1 }}>{erpName}</span>
+            )}
+            <svg preserveAspectRatio="none" style={{ height: 40, left: '-6%', overflow: 'visible', position: 'absolute', top: 'calc(50% - 20px)', width: '112%' }} viewBox="0 0 100 10">
+              <path d="M1 7 C 30 3, 70 8, 99 3" fill="none" pathLength={1} stroke={TERRA} strokeDasharray={1} strokeDashoffset={1 - strike} strokeLinecap="round" strokeWidth={9} vectorEffect="non-scaling-stroke" />
+            </svg>
+          </span>
+        </LogoLine>
 
       {/* legacy window frame */}
       <div style={{ background: WHITE, border: `2px solid ${GRAY}88`, borderRadius: 24, boxShadow: '0 30px 70px rgba(20,20,19,0.10)', height: WIN.h, left: WIN.x, opacity: appear * (1 - windowFall), position: 'absolute', top: WIN.y + windowFall * 700, transform: `rotate(${windowFall * 8}deg) scale(${0.96 + appear * 0.04})`, width: WIN.w }} />
@@ -155,6 +209,7 @@ function HookScene({ duration }: { duration: number }) {
       ) : null}
     </Scene>
   )
+  }
 }
 
 // ─── 2. "Agora você pode…" ────────────────────────────────────────────────────
@@ -202,19 +257,31 @@ function CanDoScene({ duration }: { duration: number }) {
 
 // ─── Timeline ─────────────────────────────────────────────────────────────────
 
-const SCENES: ReelScene[] = [
-  { Component: HookScene, duration: 105 },
-  { Component: CanDoScene, duration: 14 + CAN_DO.length * ROW_EVERY + 70 },
-  {
-    Component: makeRevealScene(['Sem tela', 'Sem menu', 'Sem treinamento', 'Sem pagar nada'], 'Isso é o', 'Um sistema de gestão gratuito que funciona dentro do seu ChatGPT.', ['gratuito', 'chatgpt']),
-    duration: 160,
-  },
-  { Component: makeClaudeAlsoScene(), duration: 75 },
-  { Component: makeCta('Quer ver como funciona?', { comment: 'Sistema', highlight: ['funciona'], keyword: 'SISTEMA' }), duration: 120 },
-]
+/** Same reel for every competitor: only the hook changes. */
+function competitorScenes(erpName: string, erpLogo: string): ReelScene[] {
+  return [
+    { Component: makeHookScene(erpName, erpLogo), duration: 105 },
+    { Component: CanDoScene, duration: 14 + CAN_DO.length * ROW_EVERY + 70 },
+    {
+      Component: makeRevealScene(['Sem tela', 'Sem menu', 'Sem treinamento', 'Sem pagar nada'], 'Isso é o', 'Um sistema de gestão gratuito que funciona dentro do seu ChatGPT.', ['gratuito', 'chatgpt']),
+      duration: 160,
+    },
+    { Component: makeClaudeAlsoScene(), duration: 75 },
+    { Component: makeCta('Quer ver como funciona?', { comment: 'Sistema', highlight: ['funciona'], keyword: 'SISTEMA' }), duration: 120 },
+  ]
+}
 
-export const OTTO_CONTA_AZUL_REEL_DURATION = sceneDuration(SCENES)
+// Drop the logo files at these paths (SVG or transparent PNG renamed accordingly); until then the name is shown as text.
+const CONTA_AZUL_SCENES = competitorScenes('Conta Azul', 'brand-logos/erp/conta-azul.svg')
+const OMIE_SCENES = competitorScenes('Omie', 'brand-logos/erp/omie.png')
+
+export const OTTO_CONTA_AZUL_REEL_DURATION = sceneDuration(CONTA_AZUL_SCENES)
+export const OTTO_OMIE_REEL_DURATION = sceneDuration(OMIE_SCENES)
 
 export function OttoContaAzulReel() {
-  return <ReelRoot scenes={SCENES} />
+  return <ReelRoot scenes={CONTA_AZUL_SCENES} />
+}
+
+export function OttoOmieReel() {
+  return <ReelRoot scenes={OMIE_SCENES} />
 }
