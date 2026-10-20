@@ -22,7 +22,7 @@ const summary={referencia:'2026-10-07',quantidade:7,em_aberto:2800,vencidas:300,
 const items=Array.from({length:5},(_,i)=>({tipo:'produto',item_id:9,quantidade:i+1,valor_unitario:10}))
 const drafts=new Map<string,{tipo:string;dados:Record<string,unknown>}>()
 function draft(tipo:string,dados:Record<string,unknown>){const id=randomUUID();drafts.set(id,{tipo,dados})
-  return {rascunho_id:id,empresa_id:2,status:'pending',registro_id:null,criado_em:'2026-10-07T10:00:00Z',expira_em:'2026-10-08T10:00:00Z',alvo:null,
+  return {rascunho_id:id,empresa_id:2,status:'pending',registro_id:null,criado_em:new Date().toISOString(),expira_em:new Date(Date.now()+86400000).toISOString(),alvo:null,
     referencias:{cliente:{id:'5',nome:'Padaria Central'},fornecedor:null,itens:[{tipo:'produto',id:'9',nome:'Farinha 25kg'}]},
     proposta:{tipo,dados,...(Array.isArray(dados.itens)?{total:(dados.itens as {quantidade:number;valor_unitario:number}[]).reduce((s,i)=>s+i.quantidade*i.valor_unitario,0)}:{})}}}
 const deps:ExecutionDependencies={reserve:async()=>randomUUID(),finish:async()=>{},queries:({
@@ -69,7 +69,7 @@ async function main(){
   // Regras inline do Claude: no máximo 2 ações, nenhuma lista suspensa, alvos de toque de 44 px.
   async function inlineRules(page:Page){const f=frame(page)
     assert.equal(await f.locator('select').count(),0,'sem listas suspensas')
-    assert(await f.locator('.actions button').count()<=2,'no máximo 2 ações')
+    assert(await f.locator('.actions button,.creation-actions button').count()<=2,'no máximo 2 ações')
     for(const box of await f.locator('button').evaluateAll(nodes=>nodes.map(n=>n.getBoundingClientRect().height)))assert(box>=44,'alvo de toque '+box)}
   const done=async(page:Page,name:string)=>{assert.deepEqual((page as Page&{errors:string[]}).errors,[],name);await frame(page).locator('main').screenshot({path:resolve('.cache/claudeplugin-cards/'+name+'.png')});await page.close();checks.push(name)}
   try{
@@ -92,25 +92,24 @@ async function main(){
     await f.locator('table.wide tbody tr').first().click();await f.getByRole('heading',{name:'Aluguel'}).waitFor()
     await done(page,'lista-filtros')
     // Detalhes inline: até 5 campos, sem tabelas, ação principal + "Ver detalhes".
-    page=await open('obter_venda',{empresa_id:2,venda_id:1});f=frame(page);await f.getByText('Venda VEN-001').waitFor()
+    page=await open('obter_venda',{empresa_id:2,venda_id:1});f=frame(page);await f.getByRole('heading',{name:'Venda #1',exact:true}).waitFor()
     assert(await f.locator('.kv dt').count()<=5);assert.equal(await f.locator('table').count(),0)
     assert.deepEqual(await f.locator('.actions button').allInnerTexts(),['Confirmar venda','Ver detalhes']);await inlineRules(page)
     // Ação inline abre a prévia em tela cheia (sem navegação dentro do card inline).
     await f.getByRole('button',{name:'Confirmar venda'}).click();await f.getByText('Prévia — nada foi salvo ainda.').waitFor()
     assert.equal((await lastCall(page)).name,'confirmar_venda');assert.deepEqual((await win(page)).modes,['fullscreen'])
     await done(page,'detalhes-acao')
-    // Prévia inline com muitos itens: essencial + "Ver prévia completa"; em tela cheia, Confirmar e Ajustar.
     const sale={empresa_id:2,tipo:'venda',chave_operacao:randomUUID(),dados:{cliente_id:5,data_venda:'2026-10-07',data_vencimento:'2026-10-31',itens:items}}
-    page=await open('criar_venda',sale);f=frame(page);await f.getByRole('heading',{name:'Criar venda · Padaria Central'}).waitFor()
-    assert.equal(await f.locator('table:has(caption) tbody tr').count(),3);await f.getByText('2 itens na prévia completa.').waitFor()
-    assert.deepEqual(await f.locator('.actions button').allInnerTexts(),['Confirmar','Ver prévia completa']);await inlineRules(page)
-    await f.getByRole('button',{name:'Ver prévia completa'}).click();await f.getByRole('button',{name:'Ajustar'}).waitFor()
-    assert.equal(await f.locator('table:has(caption) tbody tr').count(),5)
-    await f.getByRole('button',{name:'Confirmar',exact:true}).click();await f.getByText('Salvo no ERP.').waitFor()
-    assert.deepEqual(Object.keys((await lastCall(page)).arguments).sort(),['empresa_id','rascunho_id']);await done(page,'previa-completa')
-    // Prévia curta: Confirmar e Ajustar inline; Ajustar leva à tela cheia para editar.
+    page=await open('criar_venda',sale);f=frame(page);await f.getByRole('heading',{name:'Nova venda',exact:true}).waitFor()
+    assert.equal(await f.locator('.creation-items>li').count(),5);assert.equal(await f.locator('table,input,select').count(),0)
+    assert.deepEqual(await f.locator('.creation-actions button').allInnerTexts(),['Confirmar registro','Ajustar']);await inlineRules(page)
+    await f.getByRole('button',{name:'Ajustar',exact:true}).click();await f.getByLabel('Quantidade de Farinha 25kg',{exact:true}).first().waitFor()
+    assert.equal(await f.locator('.creation-item-editor input').count(),15);assert.deepEqual((await win(page)).modes,['fullscreen']);assert.equal((await win(page)).calls.length,0)
+    await f.getByRole('button',{name:'Cancelar ajuste',exact:true}).click();await f.getByRole('button',{name:'Confirmar registro',exact:true}).click();await f.getByRole('heading',{name:'Venda registrada!',exact:true}).waitFor()
+    await f.locator('.creation-summary').getByText('Padaria Central',{exact:true}).waitFor()
+    const confirmations=(await win(page)).calls.filter(call=>call.arguments.rascunho_id);assert.equal(confirmations.length,1);assert.equal(confirmations[0].name,'criar_venda');assert.deepEqual(Object.keys(confirmations[0].arguments).sort(),['empresa_id','rascunho_id']);await done(page,'previa-completa')
     page=await open('criar_venda',{...sale,chave_operacao:randomUUID(),dados:{...sale.dados,itens:items.slice(0,1)}});f=frame(page)
-    assert.deepEqual(await f.locator('.actions button').allInnerTexts(),['Confirmar','Ajustar'])
+    await f.getByRole('heading',{name:'Nova venda',exact:true}).waitFor();assert.deepEqual(await f.locator('.creation-actions button').allInnerTexts(),['Confirmar registro','Ajustar']);await inlineRules(page)
     await f.getByRole('button',{name:'Ajustar'}).click();await f.getByLabel('Quantidade de Farinha 25kg').waitFor()
     assert.deepEqual((await win(page)).modes,['fullscreen']);await done(page,'ajustar-tela-cheia')
     console.log(JSON.stringify({status:'passed',checks,screenshots:'.cache/claudeplugin-cards',realClaude:false,realDatabase:false}))

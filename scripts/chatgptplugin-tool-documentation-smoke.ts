@@ -55,7 +55,7 @@ function sameValidation(schema:z.ZodTypeAny,name:string,cases:unknown[]) {
 async function main() {
  const legacy=await catalog(false),modern=await catalog(true)
  const expected=[...whatsappLocalTools.map(t=>t.name),...tablesTools.map(t=>t.name),...appsTools.map(t=>t.name),...tools.map(t=>t.name),...actionTools.map(t=>t.name),'meu_acesso','abrir_painel','ler_configuracoes','atualizar_configuracoes','search_mentions'].sort()
- assert.equal(expected.length,63+tablesTools.length+appsTools.length+whatsappLocalTools.length);assert.equal(new Set(expected).size,63+tablesTools.length+appsTools.length+whatsappLocalTools.length)
+ assert.equal(expected.length,64+tablesTools.length+appsTools.length+whatsappLocalTools.length);assert.equal(new Set(expected).size,64+tablesTools.length+appsTools.length+whatsappLocalTools.length)
  let documentedParameters=0
  for(const entries of [legacy,modern]) {
   assert.deepEqual(entries.map(t=>t.name).sort(),expected)

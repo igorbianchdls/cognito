@@ -38,7 +38,7 @@ async function run(fn){if(state.busy)return;state.busy=true;const ticket=++state
 // Altura do conteúdo (o body não tem altura mínima); o <html> acompanha o iframe e não encolhe.
 function contentHeight(){return Math.ceil(document.body.getBoundingClientRect().height)}
 function render(){root.replaceChildren();status.textContent='';
-  try{if(state.stack.length){const nav=element('div',undefined,'nav');nav.append(button('← Voltar',back));root.append(nav)}
+  try{if(state.stack.length&&(!isCommercialDetail(state.tool)||!state.data)){const nav=element('div',undefined,'nav');nav.append(button('← Voltar',back));root.append(nav)}
     if(state.error&&!state.data)renderError(root,state.error);else if(state.data)(viewFor(state.tool,state.data))(root,state.data);if(state.error&&state.data)root.append(errorNotice(state.error))}
   catch(error){root.replaceChildren(notice('Não foi possível exibir este resultado.','danger'))}
   notify('ui/notifications/size-changed',{height:contentHeight()})}

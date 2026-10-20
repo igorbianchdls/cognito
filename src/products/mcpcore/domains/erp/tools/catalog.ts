@@ -5,12 +5,13 @@ import { outputs } from '../schemas/outputs'
 import {toolDescription} from './descriptions'
 import {documentInputSchema} from './inputDocumentation'
 import { ErpDomainError } from '@/products/erp/shared/erpErrors'
-import { PluginError } from '../../../shared/contracts'
+import { PluginError, type PluginCompany } from '../../../shared/contracts'
+import { chatDashboardFields, chatDashboardSchema } from '@/products/erp/shared/chatDashboard'
 import { createServiceInvoiceLinkToken, SERVICE_INVOICE_LINK_TTL_SECONDS, SERVICE_INVOICE_PUBLIC_PATH } from '@/products/erp/server/fiscal/serviceInvoiceLinks'
 import { createCommercialLink,COMMERCIAL_LINK_PATH } from '@/products/erp/server/documents/commercialDocumentLinks'
 import { QUOTE_SITUATIONS } from '@/products/erp/shared/quoteLifecycle'
 
-export const companySchema = z.number().int().positive().optional().describe('Empresa autorizada retornada por meu_acesso. Obrigatória se houver mais de uma empresa.')
+export const companySchema = z.number().int().positive().optional().describe('ID autorizado da empresa já escolhida. Se desconhecido, omita: a única empresa autorizada é selecionada pelo servidor. Em COMPANY_REQUIRED, consulte meu_acesso e peça a escolha; com várias empresas, envie o ID escolhido. Nunca invente o ID.')
 const company = companySchema
 const paging = { empresa_id: company, busca: z.string().trim().max(200).optional(),
   pagina: z.number().int().min(1).max(10000).default(1), por_pagina: z.number().int().min(10).max(50).default(20) }
@@ -26,7 +27,7 @@ export type ToolDefinition = {
   capabilities: ErpCapability[]
   requiredCapabilities?: (input: Record<string, unknown>) => ErpCapability[]
   // context: domínio do plugin e usuário da conexão, para links absolutos e links temporários assinados.
-  execute: (queries: ErpQueries, companyId: number, input: Record<string, unknown>, context: { origin: string; userId: number }) => Promise<unknown>
+  execute: (queries: ErpQueries, companyId: number, input: Record<string, unknown>, context: { origin: string; userId: number; company?: PluginCompany }) => Promise<unknown>
 }
 function page(input: Record<string, unknown>, cardPagination=false) {
   return { query: input.busca as string | undefined, page: input.pagina as number, pageSize: input.por_pagina as number, sort: input.ordenar as string | undefined, ...(input.limite!==undefined?{limit:input.limite as number}:{}),...(cardPagination?{cardPagination:true}:{}) }
@@ -44,6 +45,19 @@ async function noteIdByNumber(q:ErpQueries,companyId:number,numero:string){
   return Number(match.id)
 }
 const readTools: ToolDefinition[] = [
+  { name: 'consultar_dashboard', title: 'Visão geral da empresa', output: outputs.dashboard, description: toolDescription('consultar_dashboard'),
+    schema: z.object({ empresa_id: company, ...chatDashboardFields }).strict(), capabilities: [],
+    execute: async (q, id, input, ctx) => {
+      if (ctx.company?.id !== id) throw new PluginError('ACCESS_DENIED', 'Contexto de empresa inválido.', 403)
+      const parsed = chatDashboardSchema.safeParse(Object.fromEntries(Object.entries(input).filter(([key]) => key !== 'empresa_id')))
+      if (!parsed.success) throw new PluginError('INVALID_INPUT', parsed.error.issues.map(issue => issue.message).join(' '))
+      try {
+        return { ...await q.dashboard({ tenantId: id, sharedUserId: ctx.userId, capabilities: ctx.company.capabilities, timeZone: ctx.company.timeZone }, parsed.data), empresa: ctx.company.name }
+      } catch (error) {
+        if (error instanceof ErpDomainError && error.code === 'ACCESS_DENIED') throw new PluginError('ACCESS_DENIED', error.message, 403)
+        throw error
+      }
+    } },
   {name:'obter_contrato',title:'Detalhes do contrato',output:outputs.record,description:toolDescription('obter_contrato'),schema:z.object({empresa_id:company,registro_id:z.number().int().positive()}).strict(),capabilities:['erp.vendas.visualizar'],execute:(q,id,input)=>q.contract(id,Number(input.registro_id))},
   {name:'listar_contratos',title:'Listar contratos',output:outputs.page,description:toolDescription('listar_contratos'),schema:z.object({...paging,status:z.enum(['rascunho','ativo','pausado','encerrado','cancelado']).optional()}).strict(),capabilities:['erp.vendas.visualizar'],execute:(q,id,input)=>q.contracts(id,{busca:input.busca as string|undefined,status:input.status as string|undefined,page:Number(input.pagina),pageSize:Number(input.por_pagina)})},
   {name:'listar_ordens_servico',title:'Listar ordens de serviço',output:outputs.page,description:toolDescription('listar_ordens_servico'),schema:z.object({...paging,status:z.enum(['rascunho','orcamento_pendente','aprovada','em_execucao','concluida','cancelada']).optional()}).strict(),capabilities:['erp.vendas.visualizar'],execute:(q,id,input)=>q.serviceOrders({tenantId:id,query:input.busca as string|undefined,status:input.status as string|undefined,page:Number(input.pagina),pageSize:Number(input.por_pagina)})},

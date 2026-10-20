@@ -41,6 +41,10 @@ const businessRecord=z.object({
 const businessRows=z.array(businessRecord)
 const historyTruncated=z.boolean().optional().describe('true: histórico limitado aos registros retornados; não afirmar que foi examinado todo o histórico.')
 const installmentsTruncated=z.boolean().optional().describe('true: condição de pagamento incompleta; edição exige dados completos no ERP.')
+const dashboardMetric = z.object({ key:z.string(),label:z.string(),value:z.number().finite(),format:z.enum(['currency','number','percent']),description:z.string(),scope:z.enum(['periodo','atual']),previous:z.number().finite().optional(),variation:z.number().finite().nullable().optional(),href:z.string().optional(),tone:z.enum(['neutral','success','warning','danger']).optional() })
+const dashboardChart = z.object({ key:z.string(),title:z.string(),description:z.string(),kind:z.enum(['line','bar']),format:z.enum(['currency','number','percent']),series:z.array(z.object({key:z.string(),label:z.string(),color:z.string()})),records:z.array(z.record(z.union([z.string(),z.number().finite()]))) })
+const dashboardList = z.object({key:z.string(),title:z.string(),description:z.string(),href:z.string().optional(),rows:z.array(z.object({id:z.string(),label:z.string(),detail:z.string(),value:z.number().finite(),format:z.enum(['currency','number','percent']).optional(),href:z.string().optional(),date:z.string().optional(),status:z.string().optional()}).passthrough())})
+const dashboardContent = z.object({metrics:z.array(dashboardMetric),charts:z.array(dashboardChart),lists:z.array(dashboardList),notes:z.array(z.string())})
 export function envelope(data: z.ZodTypeAny) {
   return z.object({ ok: z.literal(true), execution_id: z.string().uuid(), empresa_id: z.number().nullable(), data })
 }
@@ -49,6 +53,10 @@ export const profileFields = {
   nickname: z.string().optional(), email: z.string().optional(),
 }
 export const outputs = {
+  dashboard:z.union([
+    dashboardContent.extend({kind:z.literal('dashboard'),empresa:z.string(),id:z.literal('visao-geral'),title:z.string(),description:z.string(),period:z.object({from:z.string(),to:z.string()}),previousPeriod:z.object({from:z.string(),to:z.string()}).nullable(),reference:z.string(),timezone:z.string(),generatedAt:z.string(),availableDashboards:z.array(z.string()),sections:z.object({financeiro:dashboardContent.optional(),resultados:dashboardContent.optional()}).optional(),query:z.object({periodo:z.string(),comparar:z.boolean(),incluir_previsoes:z.boolean(),inicio:z.string().optional(),fim:z.string().optional()})}),
+    z.object({kind:z.literal('registros'),empresa:z.string(),panel:z.string(),title:z.string(),criterion:z.string(),reference:z.string(),records:z.array(z.object({id:z.string(),label:z.string(),detail:z.string(),date:z.string().nullable(),status:z.string(),value:z.number().finite()})).max(5),total:z.number().int().nonnegative(),totalValue:z.number().finite(),format:z.enum(['currency','number','percent']),filters:row}),
+  ]).describe('Snapshot somente leitura da Visão geral do ERP. sections contém apenas áreas autorizadas; ausência não é zero. Datas inclusivas e referência no fuso da empresa. Registros são o detalhamento exato, 5 por página; totalValue abrange todos os filtrados.'),
   access: z.object({
     usuario_id: z.number(),
     empresas: z.array(z.object({ id: z.number(), name: z.string(), profile: z.string(), capabilities: z.array(z.string()) }).passthrough())

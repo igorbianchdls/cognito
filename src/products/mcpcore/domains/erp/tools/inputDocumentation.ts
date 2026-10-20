@@ -2,7 +2,22 @@ import {z} from 'zod'
 
 // Metadata only: keep defaults, refinements, strictness and validators intact.
 const fields:Record<string,string>={
- empresa_id:'ID de uma empresa autorizada de meu_acesso. Com várias empresas, peça a escolha e mantenha o mesmo ID em todo o fluxo.',
+ id:'Identificador exato de registro retornado no link de detalhamento do dashboard; não inventar nem substituir pelo número comercial.',
+ periodo:'Dashboard: ultimos_7_dias, ultimos_30_dias (padrão), este_mes, mes_passado ou personalizado. Datas explícitas exigem personalizado. Relativo ao fuso da empresa.',
+ comparar:'Inclui comparação com o período anterior equivalente do ERP. Base anterior zero não possui percentual de comparação.',
+ incluir_previsoes:'Inclui previsões identificadas no saldo a pagar/projeção, nunca nos pagamentos realizados. Padrão false.',
+ detalhes:'Opcional, para navegação do dashboard: copie painel e filtros do link do indicador sem remover critérios. Omita para consultar o dashboard.',
+ painel:'Dashboard de origem autorizado do link. Não substitui a permissão da source.',
+ filtros:'Critérios exatos do link de detalhamento: source, datas, status, dimensões e includeForecast. Cada página retorna no máximo 5 registros.',
+ source:'Origem dos registros conforme link do dashboard; não trocar por outra consulta com critérios diferentes.',
+ from:'Data inicial inclusiva do detalhamento em YYYY-MM-DD; envie também to quando houver from.',
+ to:'Data final inclusiva do detalhamento em YYYY-MM-DD; envie também from quando houver to.',
+ includeForecast:'Preserve o valor do link: false exclui previsões financeiras; true as inclui onde aplicável.',
+ dimension:'Dimensão do link do dashboard: cliente, vendedor, produto, servico, fornecedor, categoria, centro ou local.',
+ dimensionId:'Identificador da dimensão, retornado pelo dashboard; sem representa ausência de classificação.',
+ page:'Página do detalhamento a partir de 1; cada consulta do card retorna no máximo 5 registros.',
+ pageSize:'Tamanho solicitado do detalhamento; o dashboard limita a 5 registros por página no servidor.',
+ empresa_id:'ID autorizado da empresa já escolhida. Se desconhecido, omita: o servidor seleciona a única empresa autorizada. Em COMPANY_REQUIRED, consulte meu_acesso e peça a escolha. Reutilize o mesmo empresa_id no fluxo; não repita a descoberta a cada pedido nem invente IDs.',
  busca:'Texto de busca no domínio desta consulta. Omita para listar todos; respeite paginação e filtros.',
  pagina:'Página a partir de 1. Avance enquanto hasMore for true; quando houver total, compare page * pageSize com total.',
  por_pagina:'Registros por página: 10 a 50, padrão 20. Não some só esta página para afirmar o total geral.',

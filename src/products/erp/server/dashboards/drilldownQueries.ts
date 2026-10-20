@@ -11,7 +11,7 @@ import {
   type DashboardRecordsFilters,
   type DashboardRecordsResponse,
 } from '../../shared/dashboardContracts'
-import type { ErpAccessContext } from '../erpAccess'
+import type { DashboardAccess } from './dashboardService'
 import type { ErpCapability } from '../../shared/professionalContracts'
 import { financialRows } from '../erpReadQueries'
 import { cashAllocationSql } from '../erpCashReport'
@@ -185,7 +185,7 @@ function definition(input: DashboardRecordsFilters): Definition {
   }
 }
 export async function loadDashboardRecords(
-  session: ErpAccessContext,
+  session: DashboardAccess,
   id: DashboardId,
   raw: DashboardRecordsFilters,
 ): Promise<DashboardRecordsResponse> {

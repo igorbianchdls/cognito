@@ -15,6 +15,7 @@ import type { ErpConnectedModuleId } from '@/products/erp/shared/moduleAccess'
 import { financialSummary, installmentDetails, registrationDetails, commercialPage, analysis,financialTitle } from './erpReadQueries'
 
 import type { ErpReadPageQuery as PageQuery } from '../shared/readQueries'
+import { loadChatDashboard } from './dashboards/chatDashboardService'
 const fields: Record<string, string[]> = {
   clientes: ['id','nome','status','tipo'], fornecedores: ['id','nome','status','tipo'],
   vendedores:['id','nome','status','tipo'],categorias:['id','nome','tipo','status'], 'contas-financeiras':['id','nome','tipo','status','padrao'],
@@ -30,6 +31,7 @@ export function pickFields(record: Record<string, unknown>, keys: string[]) {
   return Object.fromEntries(keys.filter(key => record[key] !== undefined).map(key => [key, record[key]]))
 }
 export const erpReadService = {
+  dashboard: loadChatDashboard,
   contract:getSalesContract,
   async contracts(tenantId:number,input:{busca?:string;status?:string;page:number;pageSize:number}) {
     const params=[tenantId,input.status||null,likeText(input.busca)]

@@ -10,6 +10,7 @@ import {
   type DashboardFilters,
   type DashboardId,
   type DashboardResponse,
+  type DashboardContent,
 } from '../../shared/dashboardContracts'
 import type { ErpAccessContext } from '../erpAccess'
 import { financeiroQueries } from './financeiroQueries'
@@ -30,11 +31,13 @@ const queries = {
   resultados: resultadosQueries,
   servicos: servicosQueries,
 }
+export type DashboardAccess = Pick<ErpAccessContext, 'tenantId' | 'sharedUserId' | 'capabilities' | 'timeZone'>
 export async function loadDashboard(
-  session: ErpAccessContext,
+  session: DashboardAccess,
   id: DashboardId,
   raw: DashboardFilters,
-): Promise<DashboardResponse> {
+  includeSections = false,
+): Promise<DashboardResponse & { sections?: Partial<Record<DashboardId, DashboardContent>> }> {
   if (!DASHBOARD_IDS.includes(id))
     throw new ErpDomainError('NOT_FOUND', 'Dashboard não encontrado.', 404)
   const context = getErpDatabaseContext()
@@ -51,19 +54,23 @@ export async function loadDashboard(
     previous = previousDashboardPeriod(filters)
   return withTransaction(async (client) => {
     await client.query('SET TRANSACTION ISOLATION LEVEL REPEATABLE READ READ ONLY')
+    const sections: Partial<Record<DashboardId, DashboardContent>> = {}
+    const queryContext = {
+      tenantId: session.tenantId,
+      capabilities: session.capabilities,
+      client,
+      filters,
+      previous,
+      reference,
+    }
     const content = attachDrilldownLinks(
-      await queries[id]({
-        tenantId: session.tenantId,
-        capabilities: session.capabilities,
-        client,
-        filters,
-        previous,
-        reference,
-      }),
+      id === 'visao-geral' && includeSections ? await visaoGeralQueries(queryContext, sections) : await queries[id](queryContext),
       filters,
     )
+    for (const section of Object.values(sections)) attachDrilldownLinks(section, filters)
     return {
       ...content,
+      ...(includeSections ? { sections } : {}),
       id,
       title: DASHBOARDS[id].title,
       description: DASHBOARDS[id].description,

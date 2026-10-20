@@ -7,6 +7,7 @@ import {appsTools} from '../src/products/mcpcore/domains/apps/tools/catalog'
 import {serviceInvoiceQueryStubs} from './erp/service-invoice-query-stubs'
 import assert from 'node:assert/strict'
 import { randomUUID } from 'node:crypto'
+import { readFileSync } from 'node:fs'
 import { handlePluginRequest, type HttpDependencies } from '../src/products/mcpcore/hosts/chatgpt/handleRequest'
 import { resolvePluginPrincipal, validateOAuthToken } from '../src/products/mcpcore/auth/resolvePrincipal'
 import { PluginError, selectCompany, type PluginPrincipal } from '../src/products/mcpcore/shared/contracts'
@@ -16,6 +17,7 @@ import { ERP_CAPABILITIES } from '../src/products/erp/shared/professionalContrac
 import { executeTool, type ExecutionDependencies } from '../src/products/mcpcore/application/executeTool'
 import { ErpDomainError } from '../src/products/erp/shared/erpErrors'
 import type { PluginConfig } from '../src/products/mcpcore/hosts/chatgpt/config'
+import { serverInstructions } from '../src/products/mcpcore/hosts/shared/instructions'
 
 const settings: PluginConfig = {integration:'chatgpt',resource:'http://localhost:3187/api/mcp',metadataUrl:'http://localhost:3187/.well-known/oauth-protected-resource/api/mcp',
   issuer:'https://test.clerk.accounts.dev',scope:'erp:read',clientIds:['client_test'],origins:['http://localhost:3187','https://chatgpt.com'],toolTimeoutMs:100,requestsPerMinute:60}
@@ -36,6 +38,7 @@ const execution: ExecutionDependencies = {
   reserve:async () => {const id=randomUUID();events.push({id,status:'running'});return id},
   finish:async (id,status,code) => {events.push({id,status,code})},
   queries:{...serviceInvoiceQueryStubs,
+    dashboard:async()=>{throw new Error('Dashboard possui suíte própria.')},
     financialTitle:async()=>({record:{id:"1",tipo_lancamento:"efetivo"},installments:[],installmentsTruncated:false,history:[],historyTruncated:false}),
     attachments:async(id)=>{context(id);return {records:[],total:0,hasMore:false}},
     registration:async(id,_type,recordId)=>{context(id);return {record:{id:String(recordId),nome:"Cadastro"}}},
@@ -67,6 +70,17 @@ async function rpc(method: string,params: unknown = {},deps=dependencies,extra: 
   return {response,body:await response.json()}
 }
 async function main() {
+  await check('Instrucoes e skills dispensam descoberta previa sem remover escolha de empresa',()=>{
+    for(const host of ['chatgpt','claude'] as const){const instructions=serverInstructions(host),head=instructions.slice(0,512);assert.match(instructions,/Consulte direto, sem meu_acesso prévio/);assert.match(head,/COMPANY_REQUIRED/);assert(!instructions.includes('Chame meu_acesso antes de tudo'));assert(head.includes('rascunho_id'));assert(head.includes('confirmação explícita'));assert(head.includes('status saved com registro_id'))}
+    for(const skill of ['get-started','usar-erp']){const instructions=readFileSync('src/products/mcpcore/hosts/shared/skills/'+skill+'/SKILL.md','utf8');assert.match(instructions,/sem chamar `meu_acesso` antes/);assert.match(instructions,/COMPANY_REQUIRED/);assert.match(instructions,/omita-o/);assert(!instructions.includes('Chame `meu_acesso` no início'));assert(!instructions.includes('Chame `meu_acesso` para confirmar a conexão'))}
+  })
+  await check('Consulta direta de empresa unica autentica cada chamada sem descoberta previa',async()=>{
+    const before=calls.length;let authenticated=0
+    const direct={...dependencies,resolve:async(request:Request,config:PluginConfig)=>{authenticated++;return dependencies.resolve(request,config)}}
+    for(const args of [{},{empresa_id:1}]){const {body}=await rpc('tools/call',{name:'listar_vendas',arguments:args},direct);assert(!body.result.isError,JSON.stringify(body));assert.equal(body.result.structuredContent.empresa_id,1)}
+    assert.deepEqual(calls.slice(before),[{company:1,user:1},{company:1,user:1}]);assert.equal(authenticated,2)
+    const denied=await rpc('tools/call',{name:'listar_vendas',arguments:{}},direct,{authorization:''});assert.equal(denied.response.status,401);assert.equal(authenticated,3);assert.equal(calls.length,before+2)
+  })
   await check('OAuth valido em segundos e milissegundos',() => {
     for (const expiration of [Math.floor(Date.now()/1000)+3600,Date.now()+3600000]) {
       validateOAuthToken({subject:'user_1',clientId:'client_test',scopes:['erp:read'],revoked:false,expired:false,expiration,issuer:settings.issuer,audience:settings.resource},settings)
@@ -88,8 +102,10 @@ async function main() {
   })
   await check('Catalogo contratos OAuth e anotacoes',async () => {
     const {body}=await rpc('tools/list')
-    type Listed={name:string;annotations:{readOnlyHint:boolean;destructiveHint:boolean};securitySchemes:{type:string;scopes:string[]}[];outputSchema?:object;inputSchema:{properties:Record<string,unknown>}}
+    type Listed={name:string;description:string;annotations:{readOnlyHint:boolean;destructiveHint:boolean};securitySchemes:{type:string;scopes:string[]}[];outputSchema?:object;inputSchema:{properties:Record<string,unknown>}}
     const listed=body.result.tools as Listed[],byName=(name:string)=>listed.find(t=>t.name===name)!
+    assert.match(byName('meu_acesso').description,/Não é pré-requisito/);assert.match(byName('meu_acesso').description,/COMPANY_REQUIRED/)
+    assert.match((byName('listar_vendas').inputSchema.properties.empresa_id as {description:string}).description,/Se desconhecido, omita/)
     // 17 consultas (com meu_acesso), 28 escritas, painel, configuracoes e a tool de mencoes do SDK.
     assert.equal(listed.length,erpTools.length+erpActions.length+5+tablesTools.length+appsTools.length+whatsappLocalTools.length)
     const writes=['criar_cadastro','editar_cadastro','excluir_cadastro','criar_venda','editar_venda','excluir_venda','converter_orcamento','registrar_devolucao','confirmar_venda','cancelar_venda','atender_venda',
@@ -202,6 +218,9 @@ async function main() {
   await check('Multiplas empresas exigem escolha e contexto concorrente isolado',async () => {
     const multi={...principal,companies:[...principal.companies,{...principal.companies[0],id:2}]}
     assert.throws(() => selectCompany(multi))
+    const before=calls.length,scoped={...dependencies,resolve:async()=>multi}
+    const missing=await rpc('tools/call',{name:'listar_vendas',arguments:{}},scoped);assert.equal(missing.body.result.isError,true);assert.equal(JSON.parse(missing.body.result.content[0].text).code,'COMPANY_REQUIRED');assert.equal(calls.length,before)
+    const selected=await rpc('tools/call',{name:'listar_vendas',arguments:{empresa_id:2}},scoped);assert(!selected.body.result.isError,JSON.stringify(selected.body));assert.equal(selected.body.result.structuredContent.empresa_id,2);assert.deepEqual(calls.slice(before),[{company:2,user:1}])
     const results=await Promise.all([1,2].map(empresa_id => executeTool(multi,'listar_vendas',{empresa_id},settings,execution)))
     assert(results.every(r => !r.isError));assert.equal(getErpDatabaseContext(),null)
   })

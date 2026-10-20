@@ -9,9 +9,9 @@ import {
   rows,
   type DashboardContext,
 } from './common'
-export async function resultadosQueries(ctx: DashboardContext): Promise<DashboardContent> {
+export async function resultadosQueries(ctx: DashboardContext, includeExpenses = false): Promise<DashboardContent> {
   const sql = `${cashAllocationSql},signed AS (SELECT *,amount*signal*CASE WHEN tipo='receber' THEN 1 ELSE -1 END valor FROM allocated)
-    SELECT coalesce(sum(valor) FILTER(WHERE tipo='receber'),0) entradas,-coalesce(sum(valor) FILTER(WHERE tipo='pagar'),0) saidas,
+    SELECT ${includeExpenses ? `(SELECT coalesce(jsonb_agg(x),'[]') FROM (SELECT coalesce(c.id::text,'sem-categoria') id,coalesce(c.nome,'Sem categoria') label,'Pagamentos líquidos de estornos' detail,-sum(a.valor) value FROM signed a LEFT JOIN erp.categorias c ON c.empresa_id=$1 AND c.id=a.categoria_id WHERE a.tipo='pagar' GROUP BY c.id,c.nome ORDER BY abs(sum(a.valor)) DESC,c.id LIMIT 8) x) despesas,` : ''} coalesce(sum(valor) FILTER(WHERE tipo='receber'),0) entradas,-coalesce(sum(valor) FILTER(WHERE tipo='pagar'),0) saidas,
       (SELECT coalesce(jsonb_agg(x),'[]') FROM (SELECT data_pagamento::text label,coalesce(sum(valor) FILTER(WHERE tipo='receber'),0) entradas,-coalesce(sum(valor) FILTER(WHERE tipo='pagar'),0) saidas,sum(valor) resultado FROM signed GROUP BY data_pagamento ORDER BY data_pagamento) x) evolucao,
       (SELECT coalesce(jsonb_agg(x),'[]') FROM (SELECT coalesce(c.id::text,'sem-categoria') id,coalesce(c.nome,'Sem categoria') label,CASE WHEN a.tipo='receber' THEN 'Recebimentos líquidos de estornos' ELSE 'Pagamentos líquidos de estornos' END detail,sum(a.valor) value FROM signed a LEFT JOIN erp.categorias c ON c.empresa_id=$1 AND c.id=a.categoria_id GROUP BY c.id,c.nome,a.tipo ORDER BY abs(sum(a.valor)) DESC,c.id LIMIT 8) x) categorias,
       (SELECT coalesce(jsonb_agg(x),'[]') FROM (SELECT coalesce(c.id::text,'sem-centro') id,coalesce(c.nome,'Sem centro de custo') label,'Resultado pelo caixa' detail,sum(a.valor) value FROM signed a LEFT JOIN erp.centros_custo c ON c.empresa_id=$1 AND c.id=a.centro_custo_id GROUP BY c.id,c.nome ORDER BY abs(sum(a.valor)) DESC,c.id LIMIT 8) x) centros
@@ -96,5 +96,11 @@ export async function resultadosQueries(ctx: DashboardContext): Promise<Dashboar
   result.notes = [
     'Critério de caixa: os movimentos são reconhecidos na data do pagamento ou estorno. Os rateios distribuem os valores por categoria e centro de custo.',
   ]
+  if (includeExpenses) result.lists.push({
+    key: 'despesas', title: 'Principais categorias de despesas',
+    description: 'Até 8 categorias de pagamentos realizados, líquidos de estornos. Não inclui adiantamentos ou transferências; a lista não representa o total de despesas.',
+    rows: ranking(data.despesas as Record<string, unknown>[], periodLink(ctx, '/erp/relatorios/dre-caixa', { status: 'pagar' })),
+    href: periodLink(ctx, '/erp/relatorios/dre-caixa', { status: 'pagar' }),
+  })
   return result
 }

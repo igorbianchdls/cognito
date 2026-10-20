@@ -63,6 +63,7 @@ async function main() {
     const {response,body}=await rpc('initialize',{protocolVersion:'2025-06-18',capabilities:{},clientInfo:{name:'claude-ai',version:'1'}})
     assert.equal(response.status,200);assert.equal(body.result.serverInfo.name,'cognito-claudeplugin')
     assert.match(body.result.instructions,/meu_acesso/);assert.match(body.result.instructions,/rascunho_id/)
+    assert.match(body.result.instructions,/Consulte direto, sem meu_acesso prévio/);assert.match(body.result.instructions,/COMPANY_REQUIRED/);assert(!body.result.instructions.includes('Chame meu_acesso antes de tudo'))
   })
   await check('Catalogo: 17 consultas e 28 escritas com anotacoes do Claude',async()=>{
     const {body}=await rpc('tools/list')

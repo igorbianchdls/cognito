@@ -48,6 +48,8 @@
     "chatgptplugin:package": "node scripts/chatgptplugin-package.mjs",
     "chatgptplugin:interface-smoke": "tsx scripts/chatgptplugin-interface-smoke.ts",
     "chatgptplugin:cards-smoke": "tsx scripts/chatgptplugin-cards-smoke.ts",
+    "chatgptplugin:commercial-ui-smoke": "tsx scripts/chatgptplugin-commercial-ui-smoke.ts",
+    "chatgptplugin:dashboard-smoke": "tsx scripts/chatgptplugin-dashboard-smoke.ts",
     "chatgptplugin:creation-smoke": "tsx scripts/chatgptplugin-creation-smoke.ts",
     "chatgptplugin:deletion-smoke": "tsx scripts/chatgptplugin-deletion-smoke.ts",
     "chatgptplugin:update-smoke": "tsx scripts/chatgptplugin-update-smoke.ts",

@@ -5,13 +5,18 @@ description: Consultar e operar o Cognito ERP. Use quando o usuário perguntar s
 
 ## Empresa
 
-Chame `meu_acesso` no início. Com mais de uma empresa, peça ao usuário para escolher{chatgpt} (o card tem o botão "Usar esta"){/chatgpt} e envie `empresa_id` em todas as tools. IDs de uma empresa não valem em outra.
+Vá direto à consulta solicitada, sem chamar `meu_acesso` antes. Se `empresa_id` ainda não for conhecido, omita-o: o servidor seleciona a única empresa autorizada. Nunca invente IDs.
+
+Se a resposta for `COMPANY_REQUIRED`, consulte `meu_acesso` e peça ao usuário para escolher{chatgpt} (o card tem o botão "Usar esta"){/chatgpt}. Com várias empresas, nunca escolha uma pelo usuário. Depois da escolha, mantenha `empresa_id` explícito em todo o fluxo e reutilize-o nos próximos pedidos, sem repetir a descoberta. IDs de uma empresa não valem em outra.
+
+Use `meu_acesso` também quando o usuário pedir informações sobre a conta, empresas ou permissões, ou precisar escolher/trocar de empresa sem um ID autorizado conhecido. Não o use como verificação obrigatória antes de cada consulta: autenticação e autorização são validadas pelo servidor em cada chamada. Se houver `ACCESS_DENIED`, não troque de empresa para contornar a recusa.
 
 ## Consultas
 
 | Pedido do usuário | Tool |
 | --- | --- |
-| Visão geral da empresa | `resumo_erp` |
+| Dashboard ou Visão geral interativa da empresa | `consultar_dashboard` (período padrão: últimos 30 dias; abas locais) |
+| Resumo rápido da posição atual, sem período | `resumo_erp` |
 | Encontrar cliente, fornecedor, vendedor, produto, serviço, categoria ou conta financeira | `buscar_cadastros` (`tipo`) e depois `obter_cadastro` |
 | Vendas ou orçamentos | `listar_vendas` (`tipo_documento: orcamento` para orçamentos) e `obter_venda` |
 | Compras | `listar_compras` e `obter_compra` |

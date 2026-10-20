@@ -225,7 +225,7 @@ async function main() {
       await page.setViewportSize({width:390,height:1000})
       await page.locator('#card').screenshot({path:resolve('.cache/chatgptplugin-selection/reference-'+variant+'-mobile.png')})
       await frame.getByRole('button',{name:'Abrir Venda #145',exact:true}).click()
-      await frame.getByRole('button',{name:'← Voltar',exact:true}).click()
+      await frame.getByRole('button',{name:'Voltar às vendas',exact:true}).click()
       await frame.getByText('6–10 de 30 vendas',{exact:true}).waitFor()
       assert.deepEqual(calls,[{name:'obter_venda',arguments:{empresa_id:2,venda_id:145}}])
     }

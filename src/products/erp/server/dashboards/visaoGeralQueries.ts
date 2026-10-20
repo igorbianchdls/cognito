@@ -1,4 +1,4 @@
-import type { DashboardContent } from '../../shared/dashboardContracts'
+import type { DashboardContent, DashboardId } from '../../shared/dashboardContracts'
 import { emptyContent, link, rows, type DashboardContext } from './common'
 import { financialRows } from '../erpReadQueries'
 import { financeiroQueries } from './financeiroQueries'
@@ -7,7 +7,7 @@ import { comprasQueries } from './comprasQueries'
 import { estoqueQueries } from './estoqueQueries'
 import { servicosQueries } from './servicosQueries'
 import { resultadosQueries } from './resultadosQueries'
-export async function visaoGeralQueries(ctx: DashboardContext): Promise<DashboardContent> {
+export async function visaoGeralQueries(ctx: DashboardContext, sections?: Partial<Record<DashboardId, DashboardContent>>): Promise<DashboardContent> {
   const result = emptyContent()
   const areas = [
     [
@@ -23,7 +23,9 @@ export async function visaoGeralQueries(ctx: DashboardContext): Promise<Dashboar
   ] as const
   for (const [capabilities, query, keys] of areas) {
     if (!capabilities.every((capability) => ctx.capabilities.includes(capability))) continue
-    const content = await query(ctx)
+    const content = query === resultadosQueries ? await resultadosQueries(ctx, Boolean(sections)) : await query(ctx)
+    if (sections && query === financeiroQueries) sections.financeiro = structuredClone(content)
+    if (sections && query === resultadosQueries) sections.resultados = structuredClone(content)
     result.metrics.push(
       ...content.metrics
         .filter((m) => (keys as readonly string[]).includes(m.key))

@@ -1,5 +1,15 @@
 # mcpcore — núcleo compartilhado dos chats
 
+## Dashboard interativo
+
+`consultar_dashboard` é uma consulta somente leitura da Visão geral do ERP, compartilhada por ChatGPT e Claude. Sem `detalhes`, retorna um snapshot em transação `REPEATABLE READ READ ONLY`: os mesmos indicadores do ERP mais as seções financeiro/resultados já consultadas nessa composição, sem repetir consultas por aba. Não altera `resumo_erp`. Áreas sem permissão são omitidas; não são convertidas em zero.
+
+O período padrão são os últimos 30 dias inclusivos, no fuso da empresa. Também há últimos 7 dias, mês atual até hoje, mês passado e personalizado (ambas as datas, até 366 dias). Comparação e inclusão de previsões são explícitas. Posição atual, compromissos por vencimento, caixa realizado com adiantamentos e resultado sem adiantamentos/transferências permanecem distintos, com notas do ERP. Despesas mostram os pagamentos líquidos de estornos e até 8 categorias; o total vem do agregado completo, nunca da soma do ranking.
+
+O card oferece indicadores, alertas, gráficos semanais (mensais em intervalos longos), projeção e abas locais. Alterar período/opções ou atualizar consulta novamente o servidor; trocar abas e navegar rankings não. Alertas e linhas preservam o link exato de detalhamento do ERP em `detalhes: { painel, filtros }`, revalidado pelo servidor a cada chamada, com 5 registros por página. No Claude inline, há até 4 indicadores e acesso à versão completa em tela cheia. Interface com tema claro/escuro, teclado e layout móvel.
+
+`pnpm chatgptplugin:dashboard-smoke` testa períodos, composição, permissões, isolamento, despesas com rateios/estornos em PostgreSQL local em memória e navegação visual em navegador local. Não usa dados nem executa escritas no ERP real.
+
 Código comum aos produtos de chat do Cognito ERP (`chatgptplugin` e, a seguir, `claudeplugin`). Não é um produto: não tem rota, manifesto nem extensões de um chat específico. Cada produto monta a sua `PluginConfig` e registra as tools no seu servidor MCP.
 
 | Pasta | Responsabilidade |
@@ -24,6 +34,12 @@ Código comum aos produtos de chat do Cognito ERP (`chatgptplugin` e, a seguir, 
 `tools/inputDocumentation.ts` acrescenta explicações aos esquemas existentes, preservando validações, defaults e refinamentos. Novos parâmetros precisam de descrição específica ou entrada no mapa; os campos de preferências ficam em `application/preferences.ts`. `tools/outputs.ts` explica os campos retornados, paginação, truncamento, IDs e links temporários. Texto deve refletir a implementação: não anunciar recebimento de compra, transferência bancária ou emissão fiscal real quando não disponíveis.
 
 Verificação local, sem acesso ao banco: `node --import tsx scripts/chatgptplugin-tool-documentation-smoke.ts`. Confere descrições/parâmetros nos dois protocolos, permissões publicadas e preservação das validações. As consultas e ações reais são verificadas por `scripts/chatgptplugin-all-tools-smoke.ts`, que exige empresa/usuário e reverte a transação de teste. Revisão e resultados: `docs/avaliacao-erp/descricoes-tools-20261011.md`.
+
+## Listas e detalhes comerciais
+
+Vendas, orçamentos e compras compartilham listas com identificação curta, cliente/fornecedor, data, valor, seta de detalhes e badges com texto e fundo coloridos conforme o tema. A seleção e a paginação existentes são preservadas: cinco registros por página, navegação local abaixo de 40 e novas consultas a partir de 40.
+
+Os detalhes usam seções de informações gerais, participante, itens, financeiro e observações. Itens e parcelas previstas são paginados localmente de cinco em cinco, respeitando os indicadores de truncamento: a UI não apresenta o conjunto carregado como completo. Parcelas previstas e situação comercial não comprovam pagamento. O nome da empresa só é aproveitado quando já disponível no contexto; não há chamada extra de descoberta para preencher o card. Retornar à lista preserva página e filtros, e ações de negócio continuam gerando prévia antes de executar. `chatgptplugin:commercial-ui-smoke` verifica o layout e as interações em navegador com dados simulados.
 
 ## Cards de exclusão
 

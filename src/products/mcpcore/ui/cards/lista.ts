@@ -94,7 +94,8 @@ function renderList(target,data){const full=state.displayMode==='fullscreen',row
   pager.append(prev,element('span','Página '+page,'muted'),next);target.append(pager)}
 function commercialIcon(kind){const svg=document.createElementNS('http://www.w3.org/2000/svg','svg'),path=document.createElementNS(svg.namespaceURI,'path');
   for(const [key,value] of Object.entries({viewBox:'0 0 24 24',fill:'none',stroke:'currentColor','stroke-width':'1.7','stroke-linecap':'round','stroke-linejoin':'round','aria-hidden':'true',focusable:'false'}))svg.setAttribute(key,value);
-  path.setAttribute('d',kind==='previous'?'m14 6-6 6 6 6':kind==='next'?'m10 6 6 6-6 6':'M6 3h12a2 2 0 0 1 2 2v16l-4-2-4 2-4-2-4 2V5a2 2 0 0 1 2-2Z M9 8h6 M9 12h4');svg.append(path);return svg}
+  path.setAttribute('d',kind==='previous'?'m14 6-6 6 6 6':kind==='next'?'m10 6 6 6-6 6':kind==='back'?'M19 12H5 m6-6-6 6 6 6':kind==='calendar'?'M8 2v4 M16 2v4 M3 10h18 M5 4h14a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2 M7 14h2 M13 14h2 M7 18h2 M13 18h2':kind==='person'?'M20 21v-2a7 7 0 0 0-14 0v2 M16 7a4 4 0 1 1-8 0 4 4 0 0 1 8 0':kind==='box'?'m12 3 9 5v9l-9 5-9-5V8l9-5Z M3 8l9 5 9-5 M12 13v9 M7 6l9 5':'M6 3h12a2 2 0 0 1 2 2v16l-4-2-4 2-4-2-4 2V5a2 2 0 0 1 2-2Z M9 8h6 M9 12h4');svg.append(path);return svg}
+function commercialBadge(status){const tone=['cancelada','cancelado','cancelled'].includes(status)?'danger':toneOf[status]||'muted';return element('span',status?formatted('status',status):'Não informada','commercial-status commercial-status-'+tone)}
 function renderCommercialPage(target,data,spec,args,subject){
   const rows=data.records||[],total=Number(data.total||0),remote=data.paginacao.modo==='servidor',pages=Math.max(1,Math.ceil(total/5));
   const page=remote?Number(data.page||1):Math.max(1,Math.min(commercialPages.get(data)||1,pages));
@@ -104,11 +105,11 @@ function renderCommercialPage(target,data,spec,args,subject){
   header.append(intro,commercialIcon());card.append(header);
   const list=element('ul',undefined,'commercial-list');
   for(const row of visible){const name=title+' #'+row.id,item=element('li'),control=button('',()=>{const detail=spec.detail(row,args);return open(detail.tool,withCompany(detail.args))}),icon=element('span',undefined,'commercial-icon'),identity=element('span',undefined,'commercial-identity'),amount=element('span',undefined,'commercial-amount');
-    const status=state.tool==='listar_vendas'&&args.tipo_documento==='orcamento'?(row.situacao||row.status):row.status,tone=['cancelada','cancelado'].includes(status)?'danger':toneOf[status]||'muted';
-    control.className='commercial-row';control.setAttribute('aria-label','Abrir '+name);control.title=[row.numero,row.cliente||row.fornecedor].filter(Boolean).join(' · ');
-    icon.append(commercialIcon());identity.append(element('strong',name),element('span',formatted('data',row.data),'commercial-date'));
-    amount.append(element('strong',formatted('total',row.total)),element('span',formatted('status',status),'commercial-status commercial-status-'+tone));
-    control.append(icon,identity,amount);item.append(control);list.append(item)}
+    const status=state.tool==='listar_vendas'&&args.tipo_documento==='orcamento'?(row.situacao||row.status):row.status,person=row.cliente||row.cliente_nome||row.fornecedor||row.fornecedor_nome;
+    control.className='commercial-row';control.setAttribute('aria-label','Abrir '+name);control.title=[row.numero,person].filter(Boolean).join(' · ');
+    icon.append(commercialIcon());identity.append(element('strong',name));if(person){const customer=element('span',person,'commercial-party');customer.title=String(person);identity.append(customer)}identity.append(element('span',formatted('data',row.data),'commercial-date'));
+    amount.append(element('strong',formatted('total',row.total)),commercialBadge(status));
+    const arrow=element('span',undefined,'commercial-chevron');arrow.append(commercialIcon('next'));control.append(icon,identity,amount,arrow);item.append(control);list.append(item)}
   card.append(visible.length?list:notice('Nenhum registro encontrado.'));
   const queryArgs={...withCompany(args),...(data.selecao?{limite:data.selecao.limite}:{})};
   const change=nextPage=>remote?load({...queryArgs,pagina:nextPage,por_pagina:5}):(commercialPages.set(data,nextPage),render());

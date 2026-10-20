@@ -129,7 +129,7 @@ export async function financeiroQueries(ctx: DashboardContext): Promise<Dashboar
         { key: 'entradas', label: 'Recebimentos e adiantamentos', color: '#059669' },
         { key: 'saidas', label: 'Pagamentos e adiantamentos', color: '#d97706' },
       ],
-      records: data.realizado as { label: string; entradas: number; saidas: number }[],
+      records: (data.realizado as { label: string; entradas: number | null; saidas: number | null }[]).map(record => ({ ...record, entradas: numeric(record.entradas), saidas: numeric(record.saidas) })),
     },
     {
       key: 'projecao',

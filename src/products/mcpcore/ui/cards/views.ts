@@ -6,6 +6,7 @@ const titles={listar_contratos:'Contratos',obter_contrato:'Contrato',listar_orde
 const registrationTitles={clientes:'Clientes',fornecedores:'Fornecedores',vendedores:'Vendedores',produtos:'Produtos',servicos:'Serviços',categorias:'Categorias','contas-financeiras':'Contas financeiras',pagar:'Contas a pagar',receber:'Contas a receber'};
 function heading(target,title,subtitle){target.append(element('h1',title));if(subtitle)target.append(element('p',subtitle,'sub'))}
 function viewFor(tool,data){if(data&&typeof data.etapa==='string')return data.etapa==='executado'?renderResult:renderReview;
+  if(tool==='consultar_dashboard')return renderDashboard;
   if(tool==='meu_acesso'||Array.isArray(data.empresas))return renderAccess;if(tool==='resumo_erp')return renderOverview;
   if(tool==='analisar_periodo'||tool==='consultar_relatorio')return renderAnalysis;if(Array.isArray(data.records))return renderList;return renderDetails}
 `

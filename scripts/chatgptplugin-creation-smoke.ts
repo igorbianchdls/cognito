@@ -5,6 +5,7 @@ import {createServer} from 'node:http'
 import {resolve} from 'node:path'
 import {chromium} from 'playwright-core'
 import {renderCardsHtml} from '../src/products/mcpcore/ui/resource'
+import {toolCallForProposal} from '../src/products/mcpcore/actions/catalog'
 
 type Item={tipo:string;item_id:number;descricao:string;quantidade:number;valor_unitario:number;desconto?:number;total?:number}
 type Values={itens?:Item[];parcelas?:{data_vencimento:string;valor:number}[];[key:string]:unknown}
@@ -21,7 +22,7 @@ function host(){const html=renderCardsHtml({name:'creation-test',version:'1',hos
   const frame=document.getElementById('card');frame.srcdoc=${encode(html)};
   addEventListener('message',async event=>{if(event.source!==frame.contentWindow)return;const message=event.data;
     if(message.method==='ui/notifications/size-changed'){frame.style.height=Math.ceil(message.params.height)+2+'px';return}
-    if(message.method==='ui/notifications/initialized'){frame.contentWindow.postMessage({jsonrpc:'2.0',method:'ui/notifications/tool-input',params:{arguments:{empresa_id:2}}},'*');frame.contentWindow.postMessage({jsonrpc:'2.0',method:'ui/notifications/tool-result',params:{structuredContent:{ok:true,empresa_id:2,data:${encode(input)}},_meta:{'cognito/tool':'criar_venda'}}},'*');return}
+    if(message.method==='ui/notifications/initialized'){frame.contentWindow.postMessage({jsonrpc:'2.0',method:'ui/notifications/tool-input',params:{arguments:{empresa_id:2}}},'*');frame.contentWindow.postMessage({jsonrpc:'2.0',method:'ui/notifications/tool-result',params:{structuredContent:{ok:true,empresa_id:2,data:${encode(input)}},_meta:{'cognito/tool':${encode(toolCallForProposal(input.proposta).name)}}}},'*');return}
     if(message.id===undefined)return;let result={};
     if(message.method==='ui/initialize')result={protocolVersion:'2026-01-26',hostContext:{theme:${encode(theme)},displayMode:'inline'},hostCapabilities:{}};
     if(message.method==='tools/call')result=await(await fetch('/call',{method:'POST',body:JSON.stringify(message.params)})).json();
@@ -36,7 +37,7 @@ async function main(){
       const call:Call=JSON.parse(Buffer.concat(chunks).toString());calls.push(call)
       if(call.arguments.rascunho_id){writeCount++;await new Promise(done=>setTimeout(done,160));if(failure){res.end(JSON.stringify({isError:true,content:[{type:'text',text:JSON.stringify({code:failure,message:'Falha de teste: '+failure})}]}));return}
         res.end(JSON.stringify(response(savedOverride||{...input,referencias:undefined,confirmar:undefined,status:'saved',registro_id:'1068',etapa:'executado'})));return}
-      if(call.arguments.chave_operacao){const values=structuredClone(call.arguments.dados!);if(Array.isArray(values.itens))values.itens=values.itens.map(item=>({...item,total:item.quantidade*item.valor_unitario-(item.desconto||0)}));input={...draft(input.proposta.tipo,values),proposta:{tipo:input.proposta.tipo,dados:values,...(Array.isArray(values.itens)?{total:values.itens.reduce((sum,item)=>sum+Number(item.total),0)}:{})}};input.confirmar={tool:'criar_venda',argumentos:{empresa_id:2,rascunho_id:input.rascunho_id}};res.end(JSON.stringify(response(input)));return}
+      if(call.arguments.chave_operacao){const values=structuredClone(call.arguments.dados!);if(Array.isArray(values.itens))values.itens=values.itens.map(item=>({...item,total:item.quantidade*item.valor_unitario-(item.desconto||0)}));input={...draft(input.proposta.tipo,values),proposta:{tipo:input.proposta.tipo,dados:values,...(Array.isArray(values.itens)?{total:values.itens.reduce((sum,item)=>sum+Number(item.total),0)}:{})}};input.confirmar={tool:toolCallForProposal(input.proposta).name,argumentos:{empresa_id:2,rascunho_id:input.rascunho_id}};res.end(JSON.stringify(response(input)));return}
       if(detailFailure){res.end(JSON.stringify({isError:true,content:[{type:'text',text:JSON.stringify({code:'ERP_UNAVAILABLE',message:'Consulta indisponível.'})}]}));return}
       const kind=input.proposta.tipo,record={id:'1068',nome:kind==='produto'?'Produto salvo':'Ana Martins',cliente:freshName,fornecedor:'Fornecedor Norte',total:350,valor_total:350,status:'rascunho',data_venda:'2026-10-19',preco:20,saldo_inicial:50};
       res.end(JSON.stringify(response({...(call.name==='obter_venda'?{sale:record}:call.name==='obter_compra'?{purchase:record}:{record}),items:[],totalItems:0,itemsTruncated:false,installments:[{data_vencimento:'2026-10-25',valor:350}]})));return
@@ -51,7 +52,7 @@ async function main(){
   const page=await browser.newPage({viewport:{width:390,height:1000}}),errors:string[]=[]
   page.on('pageerror',error=>errors.push(error.message))
   const frame=page.frameLocator('#card'),url='http://127.0.0.1:'+(server.address() as {port:number}).port
-  const open=async(data=draft())=>{input=data;if(data.etapa==='previa'&&data.status==='pending')input.confirmar={tool:'criar_venda',argumentos:{empresa_id:2,rascunho_id:input.rascunho_id}};calls.length=0;messages.length=0;contexts.length=0;writeCount=0;failure='';detailFailure=false;savedOverride=null;rejectContext=false;freshName='Ana Martins';await page.goto(url);await frame.locator('.creation-card').waitFor()}
+  const open=async(data=draft())=>{input=data;if(data.etapa==='previa'&&data.status==='pending')input.confirmar={tool:toolCallForProposal(input.proposta).name,argumentos:{empresa_id:2,rascunho_id:input.rascunho_id}};calls.length=0;messages.length=0;contexts.length=0;writeCount=0;failure='';detailFailure=false;savedOverride=null;rejectContext=false;freshName='Ana Martins';await page.goto(url);await frame.locator('.creation-card').waitFor()}
   const screenshot=async(name:string)=>page.locator('#card').screenshot({path:resolve('.cache/chatgptplugin-creation/'+name+'.png')})
   try{
     await open();await frame.getByRole('heading',{name:'Nova venda',exact:true}).waitFor();await frame.getByText('Ana Martins',{exact:true}).waitFor()
@@ -99,7 +100,22 @@ async function main(){
     await open();detailFailure=true;await frame.getByRole('button',{name:'Confirmar registro',exact:true}).click();await frame.getByText('O registro foi salvo, mas não foi possível carregar todo o resumo atualizado.',{exact:true}).waitFor();assert.equal(writeCount,1)
     await open();rejectContext=true;await frame.getByRole('button',{name:'Confirmar registro',exact:true}).click();await frame.getByText(/pode não ter sido avisado/).waitFor();assert.equal(writeCount,1)
     checks.push('no_false_success_without_saved_id_and_read_or_context_failures_do_not_repeat_writes')
-    for(const [kind,title,tool,expectedArgs] of [['cliente','Novo cliente','obter_cadastro',{empresa_id:2,tipo:'clientes',registro_id:1068}],['produto','Novo produto','obter_cadastro',{empresa_id:2,tipo:'produtos',registro_id:1068}],['compra','Nova compra','obter_compra',{empresa_id:2,compra_id:1068}],['conta_pagar','Nova conta a pagar','obter_titulo_financeiro',{empresa_id:2,tipo:'pagar',conta_id:1068}],['orcamento','Novo orçamento','obter_venda',{empresa_id:2,venda_id:1068}]] as const){await open(draft(kind,{nome:'Nome de teste',fornecedor_id:6,cliente_id:5,preco:20,descricao:'Descrição de teste',parcelas:[{data_vencimento:'2026-10-25',valor:350}]}));await frame.getByRole('heading',{name:title,exact:true}).waitFor();assert.equal(await frame.locator('html').evaluate(root=>root.scrollWidth<=root.clientWidth),true);await frame.getByRole('button',{name:'Confirmar registro',exact:true}).click();await frame.locator('.creation-summary').waitFor();assert.deepEqual(calls.at(-1),{name:tool,arguments:expectedArgs});assert.equal(writeCount,1)}
+    for(const [kind,title,tool,expectedArgs] of [
+      ['venda','Nova venda','obter_venda',{empresa_id:2,venda_id:1068}],
+      ['orcamento','Novo orçamento','obter_venda',{empresa_id:2,venda_id:1068}],
+      ['compra','Nova compra','obter_compra',{empresa_id:2,compra_id:1068}],
+      ['ordem_servico','Nova ordem de serviço','obter_ordem_servico',{empresa_id:2,registro_id:1068}],
+      ['conta_pagar','Nova conta a pagar','obter_titulo_financeiro',{empresa_id:2,tipo:'pagar',conta_id:1068}],
+      ['conta_receber','Nova conta a receber','obter_titulo_financeiro',{empresa_id:2,tipo:'receber',conta_id:1068}],
+      ['cliente','Novo cliente','obter_cadastro',{empresa_id:2,tipo:'clientes',registro_id:1068}],
+      ['fornecedor','Novo fornecedor','obter_cadastro',{empresa_id:2,tipo:'fornecedores',registro_id:1068}],
+      ['vendedor','Novo vendedor','obter_cadastro',{empresa_id:2,tipo:'vendedores',registro_id:1068}],
+      ['produto','Novo produto','obter_cadastro',{empresa_id:2,tipo:'produtos',registro_id:1068}],
+      ['servico','Novo serviço','obter_cadastro',{empresa_id:2,tipo:'servicos',registro_id:1068}],
+      ['categoria','Nova categoria','obter_cadastro',{empresa_id:2,tipo:'categorias',registro_id:1068}],
+      ['conta_financeira','Nova conta financeira','obter_cadastro',{empresa_id:2,tipo:'contas-financeiras',registro_id:1068}]
+    ] as const){await open(draft(kind,{nome:'Nome de teste',fornecedor_id:6,cliente_id:5,preco:20,descricao:'Descrição de teste',parcelas:[{data_vencimento:'2026-10-25',valor:350}]}));await frame.getByRole('heading',{name:title,exact:true}).waitFor();assert.equal(await frame.locator('html').evaluate(root=>root.scrollWidth<=root.clientWidth),true);assert.equal(calls.length,0);await frame.getByRole('button',{name:'Confirmar registro',exact:true}).click();await frame.locator('.creation-summary').waitFor();assert.deepEqual({...calls[0]},{name:toolCallForProposal(input.proposta).name,arguments:{empresa_id:2,rascunho_id:input.rascunho_id}});assert.deepEqual(calls.at(-1),{name:tool,arguments:expectedArgs});assert.equal(writeCount,1)}
+    checks.push('all_thirteen_creation_types_confirm_once_with_correct_tool_company_draft_and_saved_record_query')
     const saved=draft();saved.status='saved';saved.registro_id='1068';await open(saved);await frame.getByRole('heading',{name:'Venda registrada!',exact:true}).waitFor();assert.equal(await frame.getByRole('button',{name:'Confirmar registro',exact:true}).count(),0);assert.equal(writeCount,0)
     const long=draft('cliente',{nome:'<img src=x onerror="window.hacked=true">'+'Nome longo '.repeat(30)});await open(long);assert.equal(await frame.locator('img').count(),0);assert.equal(await frame.locator('html').evaluate(root=>root.scrollWidth<=root.clientWidth),true)
     variant='claude';theme='dark';await open();await screenshot('nova-venda-escuro');await frame.getByRole('button',{name:'Confirmar registro',exact:true}).click();await frame.locator('.creation-summary').getByText('Ana Martins',{exact:true}).waitFor();await screenshot('venda-registrada-escuro')

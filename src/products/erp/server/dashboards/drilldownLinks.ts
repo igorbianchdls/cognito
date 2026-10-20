@@ -78,6 +78,7 @@ export function attachDrilldownLinks(content: DashboardContent, filters: Dashboa
         vendedores: 'vendedor',
         fornecedores: 'fornecedor',
         categorias: 'categoria',
+        despesas: 'categoria',
         centros: 'centro',
         locais: 'local',
       }
@@ -108,6 +109,7 @@ export function attachDrilldownLinks(content: DashboardContent, filters: Dashboa
         scope.id = id
       if (original?.includes('dre-caixa') && list.key === 'categorias')
         scope.status = row.detail.startsWith('Recebimentos') ? 'receber' : 'pagar'
+      if (original?.includes('dre-caixa') && list.key === 'despesas') scope.status = 'pagar'
       row.href = convert(original, scope)
     }
   }
