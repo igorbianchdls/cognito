@@ -474,7 +474,7 @@ const MORE_SCENES = makeMoreScenes('E não para na nota.', ['nota'], [
 
 // ─── Revelação do Otto ───────────────────────────────────────────────────────
 
-export function makeRevealScene(chips: string[], prefix = 'Isso é o') {
+export function makeRevealScene(chips: string[], prefix = 'Isso é o', text = 'Um sistema de gestão que funciona dentro do seu ChatGPT.', highlight = ['chatgpt']) {
   return function RevealScene({ duration }: { duration: number }) {
     const frame = useFrame()
     const reveal = p(frame, 10, 32, [0, 1], Easing.inOut(Easing.cubic))
@@ -486,7 +486,7 @@ export function makeRevealScene(chips: string[], prefix = 'Isso é o') {
         <div style={{ display: 'flex', justifyContent: 'center', left: 0, position: 'absolute', right: 0, top: 470 + top }}>
           <Img src={staticFile('logoOtto.svg')} style={{ clipPath: `inset(0 ${(1 - reveal) * 100}% 0 0)`, height: 250, width: 590 }} />
         </div>
-        <Headline highlight={['chatgpt']} size={70} start={30} stagger={2} text="Um sistema de gestão que funciona dentro do seu ChatGPT." style={{ top: 800 + top }} />
+        <Headline highlight={highlight} size={70} start={30} stagger={2} text={text} style={{ top: 800 + top }} />
         <div style={{ alignItems: 'center', display: 'flex', flexDirection: 'column', gap: 18, left: 0, position: 'absolute', right: 0, top: 1170 }}>
           {chips.map((chip, i) => {
             const s = spring({ config: { damping: 14, stiffness: 170 }, fps: 30, frame: frame - 66 - i * 8 })
