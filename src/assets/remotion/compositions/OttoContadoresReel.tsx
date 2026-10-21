@@ -55,6 +55,11 @@ const DARK_THEME_VARS = {
   '--otto-terra-soft': '#3b251d',
 } as const
 
+export type ReelFormat = 'reel' | 'square'
+/** Vertical band of the 1920px layout that a square (1080×1080) version shows. */
+const SQUARE_CROP = { height: 1560, top: 120 }
+const SQUARE_SCALE = 1080 / SQUARE_CROP.height
+
 export type ReelTheme = 'light' | 'dark'
 const ReelThemeContext = createContext<ReelTheme>('light')
 export const useReelTheme = () => useContext(ReelThemeContext)
@@ -1155,7 +1160,11 @@ const SPLIT_VIDEO_H_16_9 = Math.round((1080 * 9) / 16)
 const SPLIT_OUT_FRAMES = 12
 
 /** Shared shell for the Otto editorial reels: fonts, font-override CSS, grid background and scene sequencing. */
-export function ReelRoot({ audio, scenes, split, theme = 'light' }: { audio?: string; scenes: ReelScene[]; split?: SplitVideo; theme?: ReelTheme }) {
+/**
+ * `format="square"`: the scenes are authored for 1080×1920; for a 1080×1080 composition the band that holds
+ * the content (y ${SQUARE_CROP.top}–${SQUARE_CROP.top + SQUARE_CROP.height}) is scaled to fit and centred, over a full-bleed grid.
+ */
+export function ReelRoot({ audio, format = 'reel', scenes, split, theme = 'light' }: { audio?: string; format?: ReelFormat; scenes: ReelScene[]; split?: SplitVideo; theme?: ReelTheme }) {
   const [handle] = useState(() => delayRender('Loading reel fonts'))
   const frame = useCurrentFrame()
 
@@ -1174,6 +1183,7 @@ export function ReelRoot({ audio, scenes, split, theme = 'light' }: { audio?: st
       <style>{REEL_FONT_CSS}</style>
       <GridBackground />
       {audio ? <Audio src={staticFile(audio)} /> : null}
+      <div style={format === 'square' ? { height: 1920, left: (1080 - 1080 * SQUARE_SCALE) / 2, position: 'absolute', top: -SQUARE_CROP.top * SQUARE_SCALE, transform: `scale(${SQUARE_SCALE})`, transformOrigin: '0 0', width: 1080 } : { display: 'contents' }}>
       <div style={{ height: 1920 - SPLIT_VIDEO_H * s, left: 0, overflow: 'hidden', position: 'absolute', right: 0, top: 0 }}>
         <Series>
           {scenes.map(({ actual, Component, duration }, index) => (
@@ -1186,6 +1196,7 @@ export function ReelRoot({ audio, scenes, split, theme = 'light' }: { audio?: st
             </Series.Sequence>
           ))}
         </Series>
+      </div>
       </div>
       {split ? (
         <Sequence durationInFrames={splitEnd + SPLIT_OUT_FRAMES} layout="none">

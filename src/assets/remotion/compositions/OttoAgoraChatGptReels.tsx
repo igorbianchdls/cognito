@@ -168,3 +168,6 @@ export const OttoAgoraLucroReel = () => <ReelRoot audio={LUCRO_SCENES.audio} sce
 // Dark versions: same scenes, audio and timing; dark palette + sans titles.
 export const OttoAgoraFinanceiroDarkReel = () => <ReelRoot audio={FINANCEIRO_SCENES.audio} scenes={FINANCEIRO_SCENES.scenes} theme="dark" />
 export const OttoAgoraLucroDarkReel = () => <ReelRoot audio={LUCRO_SCENES.audio} scenes={LUCRO_SCENES.scenes} theme="dark" />
+// Square (1080×1080) dark versions for feed posts.
+export const OttoAgoraSistemaDarkSquareReel = () => <ReelRoot audio={SISTEMA_SCENES.audio} format="square" scenes={SISTEMA_SCENES.scenes} theme="dark" />
+export const OttoAgoraChatDarkSquareReel = () => <ReelRoot audio={CHAT_SCENES.audio} format="square" scenes={CHAT_SCENES.scenes} theme="dark" />

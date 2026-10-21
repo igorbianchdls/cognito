@@ -176,7 +176,7 @@ import { OTTO_HOOK_1_DURATION, OTTO_HOOK_2_DURATION, OTTO_HOOK_3_DURATION, OTTO_
 import { OTTO_BODY_1_DURATION, OTTO_BODY_2_DURATION, OttoBodyManageByConversationVideo, OttoBodySystemBehindVideo } from '@/assets/remotion/compositions/OttoTwoBodiesIllustrativeVideos'
 import { OTTO_CONTADORES_REEL_DURATION, OttoContadoresReel } from '@/assets/remotion/compositions/OttoContadoresReel'
 import { OTTO_CONTA_AZUL_REEL_DURATION, OTTO_OMIE_REEL_DURATION, OttoContaAzulReel, OttoOmieReel } from '@/assets/remotion/compositions/OttoContaAzulReel'
-import { OTTO_AGORA_CHAT_DURATION, OTTO_AGORA_FACIL_DURATION, OTTO_AGORA_FINANCEIRO_DURATION, OTTO_AGORA_LUCRO_DURATION, OTTO_AGORA_SISTEMA_DURATION, OttoAgoraChatReel, OttoAgoraFacilReel, OttoAgoraFinanceiroDarkReel, OttoAgoraFinanceiroReel, OttoAgoraLucroDarkReel, OttoAgoraLucroReel, OttoAgoraSistemaReel } from '@/assets/remotion/compositions/OttoAgoraChatGptReels'
+import { OTTO_AGORA_CHAT_DURATION, OTTO_AGORA_FACIL_DURATION, OTTO_AGORA_FINANCEIRO_DURATION, OTTO_AGORA_LUCRO_DURATION, OTTO_AGORA_SISTEMA_DURATION, OttoAgoraChatDarkSquareReel, OttoAgoraChatReel, OttoAgoraFacilReel, OttoAgoraFinanceiroDarkReel, OttoAgoraFinanceiroReel, OttoAgoraLucroDarkReel, OttoAgoraLucroReel, OttoAgoraSistemaDarkSquareReel, OttoAgoraSistemaReel } from '@/assets/remotion/compositions/OttoAgoraChatGptReels'
 import { OTTO_COBRANCA_REEL_DURATION, OTTO_FUNCIONARIO_REEL_DURATION, OttoCobrancaReel, OttoFuncionarioReel } from '@/assets/remotion/compositions/OttoCobrancaFuncionarioVideos'
 import { OTTO_NOTA_CHATGPT_BATCH_DURATION, OTTO_NOTA_CHATGPT_SINGLE_DURATION, OttoNotaChatGptBatchReel, OttoNotaChatGptSingleReel } from '@/assets/remotion/compositions/OttoNotaFiscalChatGptVideos'
 import { OTTO_INVOICE_CHATGPT_MONITOR_CONTENT_DURATION, OttoInvoiceChatGptMonitorContent } from '@/assets/remotion/compositions/OttoInvoiceChatGptMonitorContent'
@@ -2501,6 +2501,32 @@ const catalog: CatalogItem[] = [
     label: 'Agora o ChatGPT pode → dizer quanto você lucrou (dark)',
     tags: ['Reel', 'Otto', 'ChatGPT', 'Dark'],
     value: 'reel-otto-agora-lucro-dark',
+    width: 1080,
+  },
+  {
+    code: '<OttoAgoraSistemaDarkSquareReel />',
+    component: OttoAgoraSistemaDarkSquareReel,
+    description: 'Versão dark em formato quadrado (1080×1080) para feed. Mesma narração e tempos.',
+    duration: OTTO_AGORA_SISTEMA_DURATION,
+    fps: 30,
+    height: 1080,
+    kind: 'Claude Videos',
+    label: 'Agora o ChatGPT pode → ser seu sistema de gestão (dark, quadrado)',
+    tags: ['Otto', 'ChatGPT', 'Dark', 'Quadrado', 'Feed'],
+    value: 'post-otto-agora-sistema-dark-square',
+    width: 1080,
+  },
+  {
+    code: '<OttoAgoraChatDarkSquareReel />',
+    component: OttoAgoraChatDarkSquareReel,
+    description: 'Versão dark em formato quadrado (1080×1080) para feed. Mesma narração e tempos.',
+    duration: OTTO_AGORA_CHAT_DURATION,
+    fps: 30,
+    height: 1080,
+    kind: 'Claude Videos',
+    label: 'Agora o ChatGPT pode → fazer tudo conversando (dark, quadrado)',
+    tags: ['Otto', 'ChatGPT', 'Dark', 'Quadrado', 'Feed'],
+    value: 'post-otto-agora-chat-dark-square',
     width: 1080,
   },
   {
