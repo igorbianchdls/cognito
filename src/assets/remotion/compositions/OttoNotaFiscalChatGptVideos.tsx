@@ -32,6 +32,9 @@ import {
   WaTyping,
   WhatsAppScene,
   WHITE,
+  alpha,
+  DANGER_SOFT,
+  SURFACE,
 } from './OttoContadoresReel'
 
 const STATUS = {
@@ -144,7 +147,7 @@ export function ChatGptWindow({ prompt, response }: { prompt: string; response: 
       </div>
       <div style={{ display: 'flex', flex: 1, flexDirection: 'column', gap: 26, justifyContent: 'flex-end', padding: '30px 36px' }}>
         {sent ? (
-          <div style={{ alignSelf: 'flex-end', background: '#f4f4f4', borderRadius: 32, fontSize: 32, lineHeight: 1.3, maxWidth: '82%', opacity: bubble, padding: '22px 28px', transform: `translateY(${(1 - bubble) * 30}px)` }}>{prompt}</div>
+          <div style={{ alignSelf: 'flex-end', background: SURFACE, borderRadius: 32, fontSize: 32, lineHeight: 1.3, maxWidth: '82%', opacity: bubble, padding: '22px 28px', transform: `translateY(${(1 - bubble) * 30}px)` }}>{prompt}</div>
         ) : null}
         {frame >= sendAt + 8 ? response(sendAt) : null}
       </div>
@@ -170,7 +173,7 @@ export function OttoWorking({ doneText, sendAt }: { doneText: string; sendAt: nu
 
   return (
     <div style={{ alignItems: 'center', display: 'flex', gap: 16, opacity: p(frame, sendAt + 8, sendAt + 16) }}>
-      <span style={{ alignItems: 'center', background: WHITE, border: `2px solid ${GRAY}88`, borderRadius: 99, display: 'flex', flex: 'none', height: 58, justifyContent: 'center', width: 58 }}>
+      <span style={{ alignItems: 'center', background: WHITE, border: `2px solid ${alpha(GRAY, 0x88)}`, borderRadius: 99, display: 'flex', flex: 'none', height: 58, justifyContent: 'center', width: 58 }}>
         <OttoIcon size={34} />
       </span>
       <span style={{ color: found ? INK : INK_MUTED, fontSize: 28, fontWeight: 600, opacity: found ? 1 : 0.55 + 0.45 * Math.abs(Math.sin(frame / 6)) }}>
@@ -210,12 +213,12 @@ function InvoiceConfirmScene({ duration }: { duration: number }) {
     <Scene duration={duration}>
       <Headline highlight={['confirma']} size={84} start={0} text="Ele preenche tudo. Você só confirma." style={{ top: 190 }} />
       <Card style={{ left: 110, opacity: p(frame, 4, 16), padding: '40px 48px', right: 110, top: 480, transform: `translateY(${p(frame, 4, 20, [40, 0])}px)` }}>
-        <div style={{ alignItems: 'baseline', borderBottom: `2px solid ${GRAY}55`, display: 'flex', justifyContent: 'space-between', paddingBottom: 22 }}>
+        <div style={{ alignItems: 'baseline', borderBottom: `2px solid ${alpha(GRAY, 0x55)}`, display: 'flex', justifyContent: 'space-between', paddingBottom: 22 }}>
           <span style={{ fontFamily: DISPLAY, fontSize: 62 }}>NFS-e</span>
           <span style={{ color: INK_MUTED, fontSize: 26, fontWeight: 600 }}>Nº 000.482</span>
         </div>
         {NOTE_FIELDS.map(([label, value], i) => (
-          <div key={label} style={{ borderBottom: `2px dashed ${GRAY}55`, padding: '20px 0' }}>
+          <div key={label} style={{ borderBottom: `2px dashed ${alpha(GRAY, 0x55)}`, padding: '20px 0' }}>
             <span style={{ color: INK_MUTED, display: 'block', fontSize: 23, fontWeight: 600, letterSpacing: '0.06em', textTransform: 'uppercase' }}>{label}</span>
             <span style={{ display: 'block', fontSize: 36, fontWeight: i === 2 ? 700 : 560, marginTop: 6, minHeight: 44 }}>{typed(value, p(frame, 12 + i * 8, 24 + i * 8, [0, 1], Easing.linear))}</span>
           </div>
@@ -322,8 +325,8 @@ function makeBatchScene(title: string, highlight: string[]) {
               const at = start + i * step
               const status = frame >= at + 6 ? 'authorized' : frame >= at ? 'sending' : 'queued'
               return (
-                <div key={invoice.number} style={{ alignItems: 'center', borderTop: i === 0 ? 'none' : `2px solid ${GRAY}33`, display: 'flex', gap: 20, height: ROW_H }}>
-                  <span style={{ alignItems: 'center', background: '#efeee8', borderRadius: 16, color: INK_MUTED, display: 'flex', flex: 'none', fontSize: 21, fontWeight: 700, height: 60, justifyContent: 'center', width: 60 }}>{invoice.initials}</span>
+                <div key={invoice.number} style={{ alignItems: 'center', borderTop: i === 0 ? 'none' : `2px solid ${alpha(GRAY, 0x33)}`, display: 'flex', gap: 20, height: ROW_H }}>
+                  <span style={{ alignItems: 'center', background: SURFACE, borderRadius: 16, color: INK_MUTED, display: 'flex', flex: 'none', fontSize: 21, fontWeight: 700, height: 60, justifyContent: 'center', width: 60 }}>{invoice.initials}</span>
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <span style={{ display: 'block', fontSize: 28, fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{invoice.name}</span>
                     <span style={{ color: INK_MUTED, display: 'block', fontSize: 21 }}>NFS-e {invoice.number} · {money(invoice.value)}</span>
@@ -349,15 +352,15 @@ function ReviewListScene({ duration }: { duration: number }) {
     <Scene duration={duration}>
       <Headline highlight={['lista']} size={76} start={0} stagger={2} text="Ele encontra cada cliente e te mostra tudo numa lista." style={{ top: 180 }} />
       <Card style={{ height: 760, left: 70, opacity: p(frame, 6, 16), overflow: 'hidden', padding: '0 34px', right: 70, top: 520 }}>
-        <div style={{ alignItems: 'center', borderBottom: `2px solid ${GRAY}55`, display: 'flex', justifyContent: 'space-between', padding: '28px 0 22px' }}>
+        <div style={{ alignItems: 'center', borderBottom: `2px solid ${alpha(GRAY, 0x55)}`, display: 'flex', justifyContent: 'space-between', padding: '28px 0 22px' }}>
           <span style={{ fontFamily: DISPLAY, fontSize: 52 }}>Vendas de outubro</span>
           <span style={{ color: INK_MUTED, fontSize: 26, fontWeight: 600 }}>{INVOICES.length} vendas</span>
         </div>
         {INVOICES.slice(0, 7).map((invoice, i) => {
           const o = p(frame, 14 + i * 4, 24 + i * 4)
           return (
-            <div key={invoice.number} style={{ alignItems: 'center', borderTop: i === 0 ? 'none' : `2px solid ${GRAY}33`, display: 'flex', gap: 20, height: 88, opacity: o, transform: `translateX(${(1 - o) * 30}px)` }}>
-              <span style={{ alignItems: 'center', background: '#efeee8', borderRadius: 16, color: INK_MUTED, display: 'flex', flex: 'none', fontSize: 21, fontWeight: 700, height: 56, justifyContent: 'center', width: 56 }}>{invoice.initials}</span>
+            <div key={invoice.number} style={{ alignItems: 'center', borderTop: i === 0 ? 'none' : `2px solid ${alpha(GRAY, 0x33)}`, display: 'flex', gap: 20, height: 88, opacity: o, transform: `translateX(${(1 - o) * 30}px)` }}>
+              <span style={{ alignItems: 'center', background: SURFACE, borderRadius: 16, color: INK_MUTED, display: 'flex', flex: 'none', fontSize: 21, fontWeight: 700, height: 56, justifyContent: 'center', width: 56 }}>{invoice.initials}</span>
               <div style={{ flex: 1 }}>
                 <span style={{ display: 'block', fontSize: 28, fontWeight: 600 }}>{invoice.name}</span>
                 <span style={{ color: INK_MUTED, display: 'block', fontSize: 21 }}>Serviço identificado · ISS calculado</span>
@@ -491,8 +494,8 @@ export function makeRevealScene(chips: string[], prefix = 'Isso é o', text = 'U
           {chips.map((chip, i) => {
             const s = spring({ config: { damping: 14, stiffness: 170 }, fps: 30, frame: frame - 66 - i * 8 })
             return (
-              <span key={chip} style={{ alignItems: 'center', background: WHITE, border: `2px solid ${GRAY}66`, borderRadius: 99, display: 'flex', fontSize: 34, fontWeight: 600, gap: 16, opacity: s, padding: '18px 34px 18px 18px', transform: `translateY(${(1 - s) * 30}px)` }}>
-                <span style={{ alignItems: 'center', background: '#fbe9e4', borderRadius: 99, color: TERRA, display: 'flex', height: 50, justifyContent: 'center', width: 50 }}>
+              <span key={chip} style={{ alignItems: 'center', background: WHITE, border: `2px solid ${alpha(GRAY, 0x66)}`, borderRadius: 99, display: 'flex', fontSize: 34, fontWeight: 600, gap: 16, opacity: s, padding: '18px 34px 18px 18px', transform: `translateY(${(1 - s) * 30}px)` }}>
+                <span style={{ alignItems: 'center', background: DANGER_SOFT, borderRadius: 99, color: TERRA, display: 'flex', height: 50, justifyContent: 'center', width: 50 }}>
                   <X size={30} strokeWidth={2.8} />
                 </span>
                 {chip}

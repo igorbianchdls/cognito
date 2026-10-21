@@ -21,6 +21,8 @@ import {
   useFrame,
   useSpring,
   WHITE,
+  alpha,
+  SURFACE,
 } from './OttoContadoresReel'
 import { ChatGptLogo, CheckBadge, makeClaudeAlsoScene, makeCta, makeRevealScene } from './OttoNotaFiscalChatGptVideos'
 
@@ -30,7 +32,7 @@ type Piece = { h: number; key: string; render: ReactNode; w: number; x: number; 
 
 const WIN = { h: 720, w: 900, x: 90, y: 680 }
 
-function bar(width: number | string, color = `${GRAY}aa`, height = 14) {
+function bar(width: number | string, color = `${alpha(GRAY, 0xaa)}`, height = 14) {
   return <div style={{ background: color, borderRadius: 6, height, width }} />
 }
 
@@ -43,7 +45,7 @@ const LEGACY_PIECES: Piece[] = [
         {['#e5675c', '#e9b949', '#5cb85c'].map((c) => <span key={c} style={{ background: c, borderRadius: 99, height: 16, width: 16 }} />)}
         <div style={{ display: 'flex', gap: 10, marginLeft: 24 }}>
           {['Vendas', 'Financeiro', 'Fiscal', 'Relatórios'].map((t, i) => (
-            <span key={t} style={{ background: i === 1 ? '#e8eefc' : '#f1f1ee', borderRadius: 8, color: i === 1 ? '#2f6bd8' : INK_MUTED, fontSize: 19, fontWeight: 600, padding: '8px 14px' }}>{t}</span>
+            <span key={t} style={{ background: i === 1 ? '#e8eefc' : SURFACE, borderRadius: 8, color: i === 1 ? '#2f6bd8' : INK_MUTED, fontSize: 19, fontWeight: 600, padding: '8px 14px' }}>{t}</span>
           ))}
         </div>
       </div>
@@ -55,7 +57,7 @@ const LEGACY_PIECES: Piece[] = [
   ...Array.from({ length: 8 }, (_, i): Piece => ({
     h: 56,
     key: `menu${i}`,
-    render: <div style={{ alignItems: 'center', display: 'flex', gap: 12, height: '100%', padding: '0 20px' }}><span style={{ background: `${GRAY}88`, borderRadius: 6, height: 22, width: 22 }} />{bar(80 + ((i * 37) % 60))}</div>,
+    render: <div style={{ alignItems: 'center', display: 'flex', gap: 12, height: '100%', padding: '0 20px' }}><span style={{ background: `${alpha(GRAY, 0x88)}`, borderRadius: 6, height: 22, width: 22 }} />{bar(80 + ((i * 37) % 60))}</div>,
     w: 200,
     x: 0,
     y: 90 + i * 64,
@@ -66,7 +68,7 @@ const LEGACY_PIECES: Piece[] = [
     render: (
       <div style={{ alignItems: 'center', display: 'flex', gap: 12, height: '100%', padding: '0 20px' }}>
         {['Novo lançamento', 'Filtrar', 'Exportar .xlsx'].map((t) => (
-          <span key={t} style={{ border: `2px solid ${GRAY}88`, borderRadius: 10, color: INK_MUTED, fontSize: 18, fontWeight: 600, padding: '8px 14px' }}>{t}</span>
+          <span key={t} style={{ border: `2px solid ${alpha(GRAY, 0x88)}`, borderRadius: 10, color: INK_MUTED, fontSize: 18, fontWeight: 600, padding: '8px 14px' }}>{t}</span>
         ))}
       </div>
     ),
@@ -78,10 +80,10 @@ const LEGACY_PIECES: Piece[] = [
     h: 58,
     key: `row${i}`,
     render: (
-      <div style={{ alignItems: 'center', background: i === 0 ? '#f1f1ee' : WHITE, borderBottom: `1.5px solid ${GRAY}55`, display: 'flex', gap: 24, height: '100%', padding: '0 18px' }}>
-        {bar(110, i === 0 ? `${GRAY}` : `${GRAY}99`)}
-        {bar(160, i === 0 ? `${GRAY}` : `${GRAY}77`)}
-        {bar(90, i === 0 ? `${GRAY}` : `${GRAY}77`)}
+      <div style={{ alignItems: 'center', background: i === 0 ? SURFACE : WHITE, borderBottom: `1.5px solid ${alpha(GRAY, 0x55)}`, display: 'flex', gap: 24, height: '100%', padding: '0 18px' }}>
+        {bar(110, i === 0 ? `${GRAY}` : `${alpha(GRAY, 0x99)}`)}
+        {bar(160, i === 0 ? `${GRAY}` : `${alpha(GRAY, 0x77)}`)}
+        {bar(90, i === 0 ? `${GRAY}` : `${alpha(GRAY, 0x77)}`)}
         <span style={{ marginLeft: 'auto' }}>{bar(70, i === 0 ? `${GRAY}` : '#9ec5a8')}</span>
       </div>
     ),
@@ -94,7 +96,7 @@ const LEGACY_PIECES: Piece[] = [
     key: 'chart',
     render: (
       <div style={{ alignItems: 'flex-end', display: 'flex', gap: 14, height: '100%', padding: '14px 20px' }}>
-        {[40, 70, 55, 85, 60, 95, 75].map((v, i) => <div key={i} style={{ background: `${GRAY}99`, borderRadius: 4, height: `${v}%`, width: 46 }} />)}
+        {[40, 70, 55, 85, 60, 95, 75].map((v, i) => <div key={i} style={{ background: `${alpha(GRAY, 0x99)}`, borderRadius: 4, height: `${v}%`, width: 46 }} />)}
       </div>
     ),
     w: 680,
@@ -166,7 +168,7 @@ function makeHookScene(erpName: string, erpLogo: string) {
         </LogoLine>
 
       {/* legacy window frame */}
-      <div style={{ background: WHITE, border: `2px solid ${GRAY}88`, borderRadius: 24, boxShadow: '0 30px 70px rgba(20,20,19,0.10)', height: WIN.h, left: WIN.x, opacity: appear * (1 - windowFall), position: 'absolute', top: WIN.y + windowFall * 700, transform: `rotate(${windowFall * 8}deg) scale(${0.96 + appear * 0.04})`, width: WIN.w }} />
+      <div style={{ background: WHITE, border: `2px solid ${alpha(GRAY, 0x88)}`, borderRadius: 24, boxShadow: '0 30px 70px rgba(20,20,19,0.10)', height: WIN.h, left: WIN.x, opacity: appear * (1 - windowFall), position: 'absolute', top: WIN.y + windowFall * 700, transform: `rotate(${windowFall * 8}deg) scale(${0.96 + appear * 0.04})`, width: WIN.w }} />
       {LEGACY_PIECES.map((piece, index) => {
         const delay = 36 + random(`fall${index}`) * 26
         const t = p(frame, delay, delay + 22, [0, 1], Easing.in(Easing.quad))
@@ -239,7 +241,7 @@ function CanDoScene({ duration }: { duration: number }) {
         const check = spring({ config: { damping: 11, stiffness: 200 }, fps: 30, frame: frame - at - 18 })
         if (frame < at) return null
         return (
-          <Card key={item.title} style={{ alignItems: 'center', border: `2px solid ${done ? `${item.color}66` : `${GRAY}66`}`, borderRadius: 30, display: 'flex', gap: 24, height: 150, left: 80, opacity: s, padding: '0 30px', right: 80, top: 420 + i * 172, transform: `translateX(${(1 - s) * 80}px)` }}>
+          <Card key={item.title} style={{ alignItems: 'center', border: `2px solid ${done ? `${item.color}66` : `${alpha(GRAY, 0x66)}`}`, borderRadius: 30, display: 'flex', gap: 24, height: 150, left: 80, opacity: s, padding: '0 30px', right: 80, top: 420 + i * 172, transform: `translateX(${(1 - s) * 80}px)` }}>
             <span style={{ alignItems: 'center', background: item.bg, borderRadius: 22, color: item.color, display: 'flex', flex: 'none', height: 88, justifyContent: 'center', width: 88 }}>{item.icon}</span>
             <div style={{ flex: 1, minWidth: 0 }}>
               <span style={{ display: 'block', fontSize: 36, fontWeight: 650 }}>{item.title}</span>

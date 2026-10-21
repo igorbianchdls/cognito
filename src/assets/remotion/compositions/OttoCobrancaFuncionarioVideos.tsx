@@ -32,6 +32,10 @@ import {
   WaTyping,
   WhatsAppScene,
   WHITE,
+  alpha,
+  BG,
+  DANGER_SOFT,
+  SURFACE,
 } from './OttoContadoresReel'
 import {
   ChatGptWindow,
@@ -47,7 +51,7 @@ import {
   WhatsAppDeliveryScene,
 } from './OttoNotaFiscalChatGptVideos'
 
-const OVERDUE_RED = { background: '#fbe9e4', color: '#c4452b' }
+const OVERDUE_RED = { background: DANGER_SOFT, color: '#c4452b' }
 const OPEN_AMBER = { background: '#fcf0d6', color: '#c98a0c' }
 const PAID_GREEN = { background: '#ddf2ec', color: '#14946b' }
 
@@ -95,8 +99,8 @@ function OverdueScene({ duration }: { duration: number }) {
           const o = p(frame, 10 + i * 5, 22 + i * 5)
           const days = Math.round(debtor.days * p(frame, 14 + i * 5, 34 + i * 5))
           return (
-            <div key={debtor.invoice} style={{ alignItems: 'center', borderTop: i === 0 ? 'none' : `2px solid ${GRAY}33`, display: 'flex', gap: 20, height: 104, opacity: o, transform: `translateX(${(1 - o) * 30}px)` }}>
-              <span style={{ alignItems: 'center', background: '#efeee8', borderRadius: 16, color: INK_MUTED, display: 'flex', flex: 'none', fontSize: 21, fontWeight: 700, height: 60, justifyContent: 'center', width: 60 }}>{debtor.initials}</span>
+            <div key={debtor.invoice} style={{ alignItems: 'center', borderTop: i === 0 ? 'none' : `2px solid ${alpha(GRAY, 0x33)}`, display: 'flex', gap: 20, height: 104, opacity: o, transform: `translateX(${(1 - o) * 30}px)` }}>
+              <span style={{ alignItems: 'center', background: SURFACE, borderRadius: 16, color: INK_MUTED, display: 'flex', flex: 'none', fontSize: 21, fontWeight: 700, height: 60, justifyContent: 'center', width: 60 }}>{debtor.initials}</span>
               <div style={{ flex: 1, minWidth: 0 }}>
                 <span style={{ display: 'block', fontSize: 29, fontWeight: 600 }}>{debtor.name}</span>
                 <span style={{ color: INK_MUTED, display: 'block', fontSize: 21 }}>Fatura #{debtor.invoice} · {money(debtor.value)}</span>
@@ -143,7 +147,7 @@ function PaidScene({ duration }: { duration: number }) {
         <line pathLength={1} stroke={draw >= 1 ? TERRA : GRAY} strokeDasharray={1} strokeDashoffset={1 - draw} strokeLinecap="round" strokeWidth={5} x1={540} x2={540} y1={720} y2={860} />
         {frame > 40 && frame < 60 ? <circle cx={540} cy={720 + 140 * (((frame - 40) % 12) / 12)} fill={TERRA} r={10} /> : null}
       </svg>
-      <Card style={{ border: `2px solid ${paid ? TERRA : `${GRAY}66`}`, left: 90, opacity: p(frame, 16, 26), padding: '30px 34px', right: 90, top: 860 }}>
+      <Card style={{ border: `2px solid ${paid ? TERRA : `${alpha(GRAY, 0x66)}`}`, left: 90, opacity: p(frame, 16, 26), padding: '30px 34px', right: 90, top: 860 }}>
         <div style={{ alignItems: 'center', display: 'flex', justifyContent: 'space-between' }}>
           <span style={{ color: INK_MUTED, fontSize: 23, fontWeight: 700, letterSpacing: '0.06em', textTransform: 'uppercase' }}>Contas a receber</span>
           <Pill tone={paid ? PAID_GREEN : OPEN_AMBER}>{paid ? 'Paga' : 'Em aberto'}</Pill>
@@ -243,21 +247,21 @@ function BadgeHookScene({ duration }: { duration: number }) {
       <Headline highlight={['ia']} size={84} start={0} text="Contratei uma IA pra cuidar do meu financeiro." style={{ top: 190 }} />
       <div style={{ height: 760, left: 230, position: 'absolute', top: 580, transform: `translateY(${(1 - drop) * -700}px) rotate(${swing}deg)`, transformOrigin: '50% -40px', width: 620 }}>
         <div style={{ background: GRAY, borderRadius: 10, height: 50, left: 250, position: 'absolute', top: -40, width: 120 }} />
-        <div style={{ background: WHITE, border: `2px solid ${GRAY}66`, borderRadius: 40, boxShadow: '0 40px 80px rgba(20,20,19,0.14)', height: '100%', overflow: 'hidden', position: 'relative' }}>
+        <div style={{ background: WHITE, border: `2px solid ${alpha(GRAY, 0x66)}`, borderRadius: 40, boxShadow: '0 40px 80px rgba(20,20,19,0.14)', height: '100%', overflow: 'hidden', position: 'relative' }}>
           <div style={{ alignItems: 'flex-end', background: TERRA, color: WHITE, display: 'flex', fontSize: 26, fontWeight: 700, height: 150, justifyContent: 'center', letterSpacing: '0.2em', paddingBottom: 22 }}>
             OTTO · FINANCEIRO
           </div>
           <div style={{ background: TERRA, borderRadius: 99, height: 26, left: 250, position: 'absolute', top: 26, width: 120 }}>
-            <div style={{ background: '#f5f4ef', borderRadius: 99, inset: 4, position: 'absolute' }} />
+            <div style={{ background: BG, borderRadius: 99, inset: 4, position: 'absolute' }} />
           </div>
-          <div style={{ alignItems: 'center', background: '#f5f4ef', border: `6px solid ${WHITE}`, borderRadius: 99, display: 'flex', height: 170, justifyContent: 'center', left: 225, position: 'absolute', top: 100, width: 170 }}>
+          <div style={{ alignItems: 'center', background: BG, border: `6px solid ${WHITE}`, borderRadius: 99, display: 'flex', height: 170, justifyContent: 'center', left: 225, position: 'absolute', top: 100, width: 170 }}>
             <OttoIcon size={96} />
           </div>
           <div style={{ marginTop: 130, textAlign: 'center' }}>
             <span style={{ display: 'block', fontFamily: DISPLAY, fontSize: 96, lineHeight: 1 }}>Otto</span>
             <span style={{ color: INK_MUTED, display: 'block', fontSize: 28, fontWeight: 600, marginTop: 8 }}>Analista financeira · IA</span>
           </div>
-          <div style={{ borderTop: `2px dashed ${GRAY}66`, margin: '34px 50px 0', paddingTop: 26 }}>
+          <div style={{ borderTop: `2px dashed ${alpha(GRAY, 0x66)}`, margin: '34px 50px 0', paddingTop: 26 }}>
             <div style={{ alignItems: 'baseline', display: 'flex', justifyContent: 'space-between', opacity: p(frame, 40, 50) }}>
               <span style={{ color: INK_MUTED, fontSize: 24, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase' }}>Horário</span>
               <span style={{ fontSize: 34, fontWeight: 700 }}>24h, todos os dias</span>
@@ -299,7 +303,7 @@ function MorningScene({ duration }: { duration: number }) {
           const o = p(frame, 22 + i * 12, 34 + i * 12)
           const check = spring({ config: { damping: 11, stiffness: 200 }, fps: 30, frame: frame - 36 - i * 12 })
           return (
-            <div key={task.title} style={{ alignItems: 'center', borderTop: i === 0 ? 'none' : `2px solid ${GRAY}44`, display: 'flex', gap: 24, opacity: o, padding: '30px 0', transform: `translateX(${(1 - o) * 30}px)` }}>
+            <div key={task.title} style={{ alignItems: 'center', borderTop: i === 0 ? 'none' : `2px solid ${alpha(GRAY, 0x44)}`, display: 'flex', gap: 24, opacity: o, padding: '30px 0', transform: `translateX(${(1 - o) * 30}px)` }}>
               <span style={{ alignItems: 'center', background: task.bg, borderRadius: 20, color: task.color, display: 'flex', flex: 'none', height: 80, justifyContent: 'center', width: 80 }}>{task.icon}</span>
               <div style={{ flex: 1 }}>
                 <span style={{ display: 'block', fontSize: 34, fontWeight: 650 }}>{task.title}</span>
@@ -334,24 +338,24 @@ function ProfitAnswer({ sendAt }: { sendAt: number }) {
   return (
     <div style={{ opacity: p(frame, sendAt + 8, sendAt + 16) }}>
       <div style={{ alignItems: 'center', display: 'flex', gap: 14, marginBottom: 18 }}>
-        <span style={{ alignItems: 'center', background: WHITE, border: `2px solid ${GRAY}88`, borderRadius: 99, display: 'flex', height: 54, justifyContent: 'center', width: 54 }}>
+        <span style={{ alignItems: 'center', background: WHITE, border: `2px solid ${alpha(GRAY, 0x88)}`, borderRadius: 99, display: 'flex', height: 54, justifyContent: 'center', width: 54 }}>
           <OttoIcon size={32} />
         </span>
         <span style={{ fontSize: 28, fontWeight: 600 }}>Resumo de outubro</span>
       </div>
-      <div style={{ background: '#fafaf7', border: `2px solid ${GRAY}55`, borderRadius: 28, padding: '26px 30px' }}>
+      <div style={{ background: SURFACE, border: `2px solid ${alpha(GRAY, 0x55)}`, borderRadius: 28, padding: '26px 30px' }}>
         {rows.map((row) => (
           <div key={row.label} style={{ marginBottom: 18 }}>
             <div style={{ alignItems: 'baseline', display: 'flex', justifyContent: 'space-between' }}>
               <span style={{ color: INK_MUTED, fontSize: 25, fontWeight: 600 }}>{row.label}</span>
               <span style={{ color: row.label === 'Lucro' ? TERRA : INK, fontSize: row.label === 'Lucro' ? 44 : 32, fontVariantNumeric: 'tabular-nums', fontWeight: 700 }}>{brl(row.value * t)}</span>
             </div>
-            <div style={{ background: `${GRAY}33`, borderRadius: 99, height: 12, marginTop: 8, overflow: 'hidden' }}>
+            <div style={{ background: `${alpha(GRAY, 0x33)}`, borderRadius: 99, height: 12, marginTop: 8, overflow: 'hidden' }}>
               <div style={{ background: row.color, borderRadius: 99, height: '100%', width: `${(row.value / PROFIT.revenue) * 100 * t}%` }} />
             </div>
           </div>
         ))}
-        <span style={{ background: '#fbe9e4', borderRadius: 99, color: TERRA, display: 'inline-block', fontSize: 24, fontWeight: 700, opacity: p(frame, sendAt + 40, sendAt + 50), padding: '8px 18px' }}>
+        <span style={{ background: DANGER_SOFT, borderRadius: 99, color: TERRA, display: 'inline-block', fontSize: 24, fontWeight: 700, opacity: p(frame, sendAt + 40, sendAt + 50), padding: '8px 18px' }}>
           Margem de {((profit / PROFIT.revenue) * 100).toFixed(1).replace('.', ',')}%
         </span>
       </div>

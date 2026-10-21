@@ -24,15 +24,42 @@ import { IOS_REMOTION_FONT_STACK, loadSfProFonts } from '@/assets/remotion/fonts
 
 loadSfProFonts()
 
-export const BG = '#f5f4ef'
-export const INK = '#141413'
-export const WHITE = '#ffffff'
-export const TERRA = '#d97757'
-export const GRAY = '#b8bab2'
-export const TERRA_SOFT = '#f6e4da'
-export const INK_MUTED = '#6b6c66'
+// Palette as CSS variables: the fallbacks are the light theme, ReelRoot's `theme="dark"` overrides them.
+export const BG = 'var(--otto-bg, #f5f4ef)'
+export const INK = 'var(--otto-ink, #141413)'
+/** Card / surface colour (white in light, near-black in dark). */
+export const WHITE = 'var(--otto-card, #ffffff)'
+export const TERRA = 'var(--otto-terra, #d97757)'
+export const GRAY = 'var(--otto-gray, #b8bab2)'
+export const TERRA_SOFT = 'var(--otto-terra-soft, #f6e4da)'
+export const INK_MUTED = 'var(--otto-ink-muted, #6b6c66)'
+/** Secondary surface (chips, avatars, table headers). */
+export const SURFACE = 'var(--otto-surface, #efeee8)'
+export const DANGER_SOFT = 'var(--otto-danger-soft, #fbe9e4)'
 
-export const DISPLAY = '"Instrument Serif", Georgia, "Times New Roman", serif'
+/** Translucent version of a palette colour (`alpha(GRAY, 0x66)` ≈ the old `#b8bab266`). */
+export function alpha(color: string, amount: number) {
+  return `color-mix(in srgb, ${color} ${Math.round((amount / 255) * 100)}%, transparent)`
+}
+
+const DARK_THEME_VARS = {
+  '--otto-bg': '#0e0e0d',
+  '--otto-card': '#1a1a18',
+  '--otto-danger-soft': '#3a221c',
+  '--otto-display': 'var(--otto-sans)',
+  '--otto-gray': '#55554f',
+  '--otto-ink': '#f2f1ec',
+  '--otto-ink-muted': '#a6a59e',
+  '--otto-surface': '#262624',
+  '--otto-terra': '#e4886b',
+  '--otto-terra-soft': '#3b251d',
+} as const
+
+export type ReelTheme = 'light' | 'dark'
+const ReelThemeContext = createContext<ReelTheme>('light')
+export const useReelTheme = () => useContext(ReelThemeContext)
+
+export const DISPLAY = 'var(--otto-display, "Instrument Serif", Georgia, "Times New Roman", serif)'
 export const SERIF = '"Newsreader", Georgia, "Times New Roman", serif'
 export const SANS = IOS_REMOTION_FONT_STACK
 
@@ -102,7 +129,7 @@ export function Scene({ children, duration }: { children: ReactNode; duration: n
 }
 
 const GRID_SIZE = 60
-const GRID_LINE = `${GRAY}3d`
+const GRID_LINE = `${alpha(GRAY, 0x3d)}`
 const GRID_FADE = 'radial-gradient(ellipse 75% 60% at 50% 50%, #000 35%, transparent 100%)'
 
 function GridBackground() {
@@ -131,6 +158,7 @@ type HeadlineProps = {
 
 export function Headline({ highlight = [], marks = [], size = 88, start = 0, stagger = 3, style, text }: HeadlineProps) {
   const frame = useFrame()
+  const sans = useReelTheme() === 'dark'
   const words = text.split(' ')
 
   return (
@@ -138,11 +166,11 @@ export function Headline({ highlight = [], marks = [], size = 88, start = 0, sta
       style={{
         color: INK,
         fontFamily: DISPLAY,
-        fontSize: size * 1.18,
-        fontWeight: 400,
+        fontSize: size * (sans ? 0.86 : 1.18),
+        fontWeight: sans ? 750 : 400,
         left: 70,
-        letterSpacing: '-0.015em',
-        lineHeight: 1.02,
+        letterSpacing: sans ? '-0.03em' : '-0.015em',
+        lineHeight: sans ? 1.08 : 1.02,
         position: 'absolute',
         right: 70,
         textAlign: 'center',
@@ -162,7 +190,7 @@ export function Headline({ highlight = [], marks = [], size = 88, start = 0, sta
             style={{
               color: highlight.includes(key) ? TERRA : INK,
               display: 'inline-block',
-              fontStyle: highlight.includes(key) ? 'italic' : 'normal',
+              fontStyle: highlight.includes(key) && !sans ? 'italic' : 'normal',
               filter: `blur(${(1 - o) * 8}px)`,
               marginRight: index === words.length - 1 ? 0 : '0.24em',
               opacity: o,
@@ -202,7 +230,7 @@ export function Card({ children, style }: { children: ReactNode; style?: CSSProp
     <div
       style={{
         background: WHITE,
-        border: `2px solid ${GRAY}66`,
+        border: `2px solid ${alpha(GRAY, 0x66)}`,
         borderRadius: 36,
         boxShadow: '0 30px 70px rgba(20, 20, 19, 0.07)',
         position: 'absolute',
@@ -232,7 +260,7 @@ function ProgressTracker({ duration, index, tasks = TASKS }: { duration: number;
       </span>
       <div style={{ display: 'flex', gap: 12 }}>
         {tasks.map((task, i) => (
-          <div key={task} style={{ background: `${GRAY}88`, borderRadius: 99, height: 8, overflow: 'hidden', width: (TASKS.length * 140 - 12) / tasks.length - 12 }}>
+          <div key={task} style={{ background: `${alpha(GRAY, 0x88)}`, borderRadius: 99, height: 8, overflow: 'hidden', width: (TASKS.length * 140 - 12) / tasks.length - 12 }}>
             <div style={{ background: TERRA, height: '100%', width: `${(i < index ? 1 : i === index ? fill : 0) * 100}%` }} />
           </div>
         ))}
@@ -361,7 +389,7 @@ function PromiseScene({ duration }: { duration: number }) {
         const count = Math.round(node.value * p(frame, 38 + i * 5, 74 + i * 5, [0, 1], Easing.out(Easing.quad)))
         const check = spring({ config: { damping: 11, stiffness: 200 }, fps: 30, frame: frame - 76 - i * 3 })
         return (
-          <div key={node.label} style={{ background: WHITE, border: `2px solid ${frame >= 76 + i * 3 ? TERRA : `${GRAY}88`}`, borderRadius: 30, boxShadow: '0 22px 50px rgba(20,20,19,0.08)', left: node.x - 135, padding: '22px 22px 20px', position: 'absolute', top: node.y - 82, transform: `scale(${pop})`, width: 270 }}>
+          <div key={node.label} style={{ background: WHITE, border: `2px solid ${frame >= 76 + i * 3 ? TERRA : `${alpha(GRAY, 0x88)}`}`, borderRadius: 30, boxShadow: '0 22px 50px rgba(20,20,19,0.08)', left: node.x - 135, padding: '22px 22px 20px', position: 'absolute', top: node.y - 82, transform: `scale(${pop})`, width: 270 }}>
             <div style={{ alignItems: 'center', display: 'flex', gap: 14 }}>
               <span style={{ alignItems: 'center', background: node.bg, borderRadius: 16, color: node.color, display: 'flex', flex: 'none', height: 56, justifyContent: 'center', width: 56 }}>{node.icon}</span>
               <span style={{ fontSize: 25, fontWeight: 650, lineHeight: 1.15 }}>{node.label}</span>
@@ -440,7 +468,7 @@ export function BankSyncScene({ duration, index = 0, tasks, title = 'Sincroniza 
         const y = cy + Math.sin(angle) * radius
         const s = spring({ config: { damping: 13, stiffness: 160 }, fps: 30, frame: frame - 14 - i * 5 })
         return (
-          <div key={bank.name} style={{ alignItems: 'center', background: WHITE, border: `2px solid ${frame >= 40 + i * 6 ? TERRA : `${GRAY}88`}`, borderRadius: 99, boxShadow: '0 18px 40px rgba(20,20,19,0.08)', display: 'flex', height: 132, justifyContent: 'center', left: x - 66, position: 'absolute', top: y - 66, transform: `scale(${s})`, width: 132 }}>
+          <div key={bank.name} style={{ alignItems: 'center', background: WHITE, border: `2px solid ${frame >= 40 + i * 6 ? TERRA : `${alpha(GRAY, 0x88)}`}`, borderRadius: 99, boxShadow: '0 18px 40px rgba(20,20,19,0.08)', display: 'flex', height: 132, justifyContent: 'center', left: x - 66, position: 'absolute', top: y - 66, transform: `scale(${s})`, width: 132 }}>
             {bank.logo}
           </div>
         )
@@ -487,8 +515,8 @@ export function ExpensesScene({ duration, index = 1, tasks, title = 'Categoriza 
           const stamp = spring({ config: { damping: 11, stiffness: 190 }, fps: 30, frame: frame - 24 - i * 10 })
           const stamped = frame >= 24 + i * 10
           return (
-            <div key={expense.name} style={{ alignItems: 'center', borderTop: i === 0 ? 'none' : `2px solid ${GRAY}44`, display: 'flex', gap: 24, opacity: o, padding: '26px 0' }}>
-              <span style={{ alignItems: 'center', background: WHITE, border: `2px solid ${GRAY}66`, borderRadius: 18, display: 'flex', flex: 'none', height: 72, justifyContent: 'center', width: 72 }}>
+            <div key={expense.name} style={{ alignItems: 'center', borderTop: i === 0 ? 'none' : `2px solid ${alpha(GRAY, 0x44)}`, display: 'flex', gap: 24, opacity: o, padding: '26px 0' }}>
+              <span style={{ alignItems: 'center', background: WHITE, border: `2px solid ${alpha(GRAY, 0x66)}`, borderRadius: 18, display: 'flex', flex: 'none', height: 72, justifyContent: 'center', width: 72 }}>
                 {expense.logo}
               </span>
               <div style={{ flex: 1 }}>
@@ -508,7 +536,7 @@ export function ExpensesScene({ duration, index = 1, tasks, title = 'Categoriza 
         })}
       </Card>
       <div style={{ left: 80, opacity: p(frame, 26, 38), position: 'absolute', right: 80, top: 1370 }}>
-        <div style={{ background: `${GRAY}55`, borderRadius: 99, display: 'flex', height: 34, overflow: 'hidden' }}>
+        <div style={{ background: `${alpha(GRAY, 0x55)}`, borderRadius: 99, display: 'flex', height: 34, overflow: 'hidden' }}>
           {totals.map((item) => (
             <div key={item.category} style={{ background: CATEGORY_COLORS[item.category], height: '100%', width: `${(item.value / sum) * 100}%` }} />
           ))}
@@ -545,14 +573,14 @@ export function InvoiceScene({ duration, index = 2, tasks, title = 'Emite notas 
   return (
     <FeatureScene duration={duration} index={index} tasks={tasks} title={title}>
       <Card style={{ left: 120, opacity: p(frame, 6, 18), padding: '46px 50px', right: 120, top: 520, transform: `translateY(${p(frame, 6, 22, [50, 0])}px) rotate(-1deg)` }}>
-        <div style={{ alignItems: 'baseline', borderBottom: `2px solid ${GRAY}55`, display: 'flex', justifyContent: 'space-between', paddingBottom: 26 }}>
+        <div style={{ alignItems: 'baseline', borderBottom: `2px solid ${alpha(GRAY, 0x55)}`, display: 'flex', justifyContent: 'space-between', paddingBottom: 26 }}>
           <span style={{ fontFamily: DISPLAY, fontSize: 62, fontWeight: 400 }}>NFS-e</span>
           <span style={{ color: INK_MUTED, fontSize: 26, fontWeight: 600 }}>Nº 000.482</span>
         </div>
         {INVOICE_FIELDS.map(([label, value], i) => {
           const progress = p(frame, 14 + i * 7, 26 + i * 7, [0, 1], Easing.linear)
           return (
-            <div key={label} style={{ borderBottom: `2px dashed ${GRAY}55`, padding: '22px 0' }}>
+            <div key={label} style={{ borderBottom: `2px dashed ${alpha(GRAY, 0x55)}`, padding: '22px 0' }}>
               <span style={{ color: INK_MUTED, display: 'block', fontSize: 23, fontWeight: 600, letterSpacing: '0.06em', textTransform: 'uppercase' }}>{label}</span>
               <span style={{ display: 'block', fontSize: 36, fontWeight: i === 3 ? 700 : 560, marginTop: 6, minHeight: 44 }}>{typed(value, progress)}</span>
             </div>
@@ -610,7 +638,7 @@ export function ReconciliationScene({ duration, index = 3, tasks, title = 'Faz a
         const o = p(frame, 6 + i * 4, 18 + i * 4)
         const matched = frame >= matchedAt(i)
         return (
-          <Card key={row.detail} style={{ border: `2px solid ${matched ? TERRA : `${GRAY}66`}`, borderRadius: 26, height: rowH, left, opacity: o, padding: '24px 28px', top: rowTop(i) + (1 - o) * 30, width: 400 }}>
+          <Card key={row.detail} style={{ border: `2px solid ${matched ? TERRA : `${alpha(GRAY, 0x66)}`}`, borderRadius: 26, height: rowH, left, opacity: o, padding: '24px 28px', top: rowTop(i) + (1 - o) * 30, width: 400 }}>
             <span style={{ color: INK_MUTED, display: 'block', fontSize: 24, fontWeight: 600 }}>{row.name} · {row.detail}</span>
             <span style={{ display: 'block', fontFamily: SANS, fontSize: 42, fontVariantNumeric: 'tabular-nums', fontWeight: 700, letterSpacing: '-0.01em', marginTop: 8 }}>{row.value}</span>
           </Card>
@@ -769,7 +797,7 @@ export function OttoNotification({ at, text }: { at: number; text: string }) {
   if (frame < at) return null
   return (
     <div style={{ alignItems: 'center', background: 'rgba(250,250,250,0.96)', borderRadius: 40, boxShadow: '0 18px 50px rgba(0,0,0,0.2)', display: 'flex', gap: 18, left: 16, padding: '22px 26px', position: 'absolute', right: 16, top: 16 + (1 - notify) * -200 }}>
-      <span style={{ alignItems: 'center', background: WHITE, border: `1px solid ${GRAY}88`, borderRadius: 18, display: 'flex', flex: 'none', height: 68, justifyContent: 'center', width: 68 }}>
+      <span style={{ alignItems: 'center', background: WHITE, border: `1px solid ${alpha(GRAY, 0x88)}`, borderRadius: 18, display: 'flex', flex: 'none', height: 68, justifyContent: 'center', width: 68 }}>
         <OttoIcon size={44} />
       </span>
       <div style={{ flex: 1 }}>
@@ -884,8 +912,8 @@ export function NoSpreadsheetScene({ duration }: { duration: number }) {
             key={index}
             style={{
               alignItems: 'center',
-              background: r === 0 || c === 0 ? '#ebeae4' : isError ? '#fbe9e4' : WHITE,
-              border: `1.5px solid ${GRAY}88`,
+              background: r === 0 || c === 0 ? SURFACE : isError ? DANGER_SOFT : WHITE,
+              border: `1.5px solid ${alpha(GRAY, 0x88)}`,
               color: isError ? '#c4452b' : isFormula ? INK : r === 0 || c === 0 ? INK : INK_MUTED,
               display: 'flex',
               fontFamily: isFormula ? 'Consolas, "SF Mono", monospace' : SANS,
@@ -1019,7 +1047,7 @@ export function CtaScene({ comment: commentText = 'Financeiro', duration, highli
         </span>
       </div>
       <Card style={{ alignItems: 'center', borderRadius: 99, display: 'flex', gap: 22, left: 120, opacity: p(frame, 36, 46), padding: '20px 24px 20px 20px', right: 120, top: 1110 }}>
-        <span style={{ background: `${GRAY}88`, borderRadius: 99, flex: 'none', height: 72, width: 72 }} />
+        <span style={{ background: `${alpha(GRAY, 0x88)}`, borderRadius: 99, flex: 'none', height: 72, width: 72 }} />
         <span style={{ color: comment ? INK : GRAY, flex: 1, fontSize: 36, fontWeight: 500 }}>
           {sent ? '' : comment || 'Adicione um comentário…'}
           {!sent && frame % 16 < 9 && frame >= 44 ? <span style={{ background: INK, display: 'inline-block', height: 38, marginLeft: 3, verticalAlign: 'middle', width: 3 }} /> : null}
@@ -1086,6 +1114,9 @@ const REEL_FONT_CSS = `
 .otto-reel [style*="Newsreader"], .otto-reel [style*="Newsreader"] * { font-family: ${SERIF} !important; }
 .otto-reel [style*="Instrument Serif"], .otto-reel [style*="Instrument Serif"] * { font-family: ${DISPLAY} !important; }
 .otto-reel [style*="Consolas"] { font-family: Consolas, "SF Mono", monospace !important; }
+.otto-dark [style*="Instrument Serif"], .otto-dark [style*="Instrument Serif"] * { font-style: normal !important; font-weight: 750 !important; letter-spacing: -0.03em; }
+.otto-dark img[src*="logoOtto"] { filter: invert(1); }
+.otto-dark img[src*="gptLogo"] { filter: brightness(0) invert(1) !important; }
 `
 
 export function sceneDuration(scenes: ReelScene[]) {
@@ -1124,7 +1155,7 @@ const SPLIT_VIDEO_H_16_9 = Math.round((1080 * 9) / 16)
 const SPLIT_OUT_FRAMES = 12
 
 /** Shared shell for the Otto editorial reels: fonts, font-override CSS, grid background and scene sequencing. */
-export function ReelRoot({ audio, scenes, split }: { audio?: string; scenes: ReelScene[]; split?: SplitVideo }) {
+export function ReelRoot({ audio, scenes, split, theme = 'light' }: { audio?: string; scenes: ReelScene[]; split?: SplitVideo; theme?: ReelTheme }) {
   const [handle] = useState(() => delayRender('Loading reel fonts'))
   const frame = useCurrentFrame()
 
@@ -1138,7 +1169,8 @@ export function ReelRoot({ audio, scenes, split }: { audio?: string; scenes: Ree
   const SPLIT_VIDEO_H = split?.height ?? SPLIT_VIDEO_H_16_9
 
   return (
-    <AbsoluteFill className="otto-reel" style={{ background: BG }}>
+    <AbsoluteFill className={theme === 'dark' ? 'otto-reel otto-dark' : 'otto-reel'} style={{ ...(theme === 'dark' ? DARK_THEME_VARS : {}), '--otto-sans': SANS, background: BG } as CSSProperties}>
+      <ReelThemeContext.Provider value={theme}>
       <style>{REEL_FONT_CSS}</style>
       <GridBackground />
       {audio ? <Audio src={staticFile(audio)} /> : null}
@@ -1162,6 +1194,7 @@ export function ReelRoot({ audio, scenes, split }: { audio?: string; scenes: Ree
           </div>
         </Sequence>
       ) : null}
+      </ReelThemeContext.Provider>
     </AbsoluteFill>
   )
 }

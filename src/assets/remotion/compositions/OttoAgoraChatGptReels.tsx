@@ -164,3 +164,7 @@ export const OttoAgoraFinanceiroReel = () => <ReelRoot audio={FINANCEIRO_SCENES.
 export const OttoAgoraChatReel = () => <ReelRoot audio={CHAT_SCENES.audio} scenes={CHAT_SCENES.scenes} />
 export const OttoAgoraFacilReel = () => <ReelRoot audio={FACIL_SCENES.audio} scenes={FACIL_SCENES.scenes} />
 export const OttoAgoraLucroReel = () => <ReelRoot audio={LUCRO_SCENES.audio} scenes={LUCRO_SCENES.scenes} />
+
+// Dark versions: same scenes, audio and timing; dark palette + sans titles.
+export const OttoAgoraFinanceiroDarkReel = () => <ReelRoot audio={FINANCEIRO_SCENES.audio} scenes={FINANCEIRO_SCENES.scenes} theme="dark" />
+export const OttoAgoraLucroDarkReel = () => <ReelRoot audio={LUCRO_SCENES.audio} scenes={LUCRO_SCENES.scenes} theme="dark" />
