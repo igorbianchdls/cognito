@@ -14,6 +14,7 @@ import {
   type ReelScene,
   Scene,
   sceneDuration,
+  syncToNarration,
   WhatsAppScene,
 } from './OttoContadoresReel'
 import { makeClaudeAlsoScene, makeCta, makeHookScene, makeRevealScene } from './OttoNotaFiscalChatGptVideos'
@@ -54,16 +55,20 @@ function makeStatementScene(text: string, strikes: string[], highlight: string[]
 }
 
 type ReelConfig = {
+  /** Narration file in /public and the second each scene starts in it (hook, intro, features…, benefit, integration, CTA). */
+  audio: string
   benefit: ReelScene
+  cues: number[]
   cta: { comment: string; keyword: string }
+  end: number
   features: Feature[]
   hook: { highlight: string[]; size: number; subline?: string; title: string }
   integration: ReelScene
   intro: { highlight: string[]; prefix: string; text: string }
 }
 
-function buildReel(config: ReelConfig): ReelScene[] {
-  return [
+function buildReel(config: ReelConfig): { audio: string; scenes: ReelScene[] } {
+  const scenes: ReelScene[] = [
     { Component: makeHookScene(config.hook.title, config.hook.highlight, config.hook.size, config.hook.subline ?? ''), duration: 100 },
     { Component: makeRevealScene([], config.intro.prefix, config.intro.text, config.intro.highlight), duration: 110 },
     ...featureScenes(config.features),
@@ -71,12 +76,18 @@ function buildReel(config: ReelConfig): ReelScene[] {
     config.integration,
     { Component: makeCta('Quer ver como funciona?', { comment: config.cta.comment, highlight: ['funciona'], keyword: config.cta.keyword }), duration: 120 },
   ]
+  return { audio: config.audio, scenes: syncToNarration(scenes, config.cues, config.end) }
 }
+
+const VO = (name: string) => `remotion/otto-reels/agora-${name}-narracao.mp3`
 
 const FREE_ON_BOTH = { Component: makeClaudeAlsoScene('É gratuito e funciona no ChatGPT ou no Claude.'), duration: 85 }
 
 // 1 · Sistema completo — CTA SISTEMA
 const SISTEMA_SCENES = buildReel({
+  audio: VO('sistema'),
+  cues: [0, 4.0, 9.1, 11.7, 14.6, 16.55, 18.85, 22.7, 27.1],
+  end: 31.5,
   benefit: { Component: makeStatementScene('Tudo pelo chat. Sem tela, sem menu, sem planilha.', ['tela', 'menu', 'planilha'], ['chat']), duration: 100 },
   cta: { comment: 'Sistema', keyword: 'SISTEMA' },
   features: [
@@ -92,16 +103,22 @@ const SISTEMA_SCENES = buildReel({
 
 // 2 · Financeiro inteiro, sozinho — CTA FINANCEIRO
 const FINANCEIRO_SCENES = buildReel({
+  audio: VO('financeiro'),
+  cues: [0, 4.95, 9.95, 11.9, 13.65, 15.2, 16.7, 19.0, 24.2, 27.8],
+  end: 32.2,
   benefit: { Component: NoSpreadsheetScene, duration: 120 },
   cta: { comment: 'Financeiro', keyword: 'FINANCEIRO' },
   features: [F.bank(), F.expenses(), F.invoice(), F.reconciliation(), F.whatsapp('Cobra quem tá te devendo no WhatsApp.')],
   hook: { highlight: ['financeiro'], size: 88, subline: 'Sozinho.', title: 'Agora o ChatGPT pode cuidar de todo o financeiro da sua empresa.' },
-  integration: { Component: IntegrationScene, duration: 90 },
+  integration: { Component: makeClaudeAlsoScene('Funciona no seu ChatGPT ou no Claude.'), duration: 80 },
   intro: { highlight: ['chatgpt'], prefix: 'O nome disso é', text: 'Um sistema de gestão que roda dentro do ChatGPT.' },
 })
 
 // 4 · Conversa é o sistema — CTA CHAT
 const CHAT_SCENES = buildReel({
+  audio: VO('chat'),
+  cues: [0, 5.6, 9.75, 12.6, 14.3, 15.75, 17.2, 19.25, 23.0, 27.5],
+  end: 31.65,
   benefit: { Component: makeStatementScene('Nada de procurar botão ou aprender tela nova. É só conversar.', ['botão', 'tela'], ['conversar']), duration: 110 },
   cta: { comment: 'Chat', keyword: 'CHAT' },
   features: [F.bank(), F.invoice(), F.expenses('Classifica as despesas.'), F.reconciliation(), F.whatsapp()],
@@ -112,6 +129,9 @@ const CHAT_SCENES = buildReel({
 
 // 5 · Sem treinamento — CTA FÁCIL
 const FACIL_SCENES = buildReel({
+  audio: VO('facil'),
+  cues: [0, 5.45, 10.0, 12.0, 13.35, 14.8, 16.35, 18.65, 24.1, 28.7],
+  end: 32.85,
   benefit: { Component: makeStatementScene('Sem curso, sem manual, sem treinamento. Você usa o ChatGPT do jeito que já usa.', ['curso', 'manual', 'treinamento'], ['já']), duration: 120 },
   cta: { comment: 'Fácil', keyword: 'FÁCIL' },
   features: [F.bank(), F.invoice(), F.expenses('Classifica as despesas.'), F.reconciliation(), F.whatsapp()],
@@ -122,6 +142,9 @@ const FACIL_SCENES = buildReel({
 
 // 6 · Pergunte sobre sua empresa — CTA LUCRO
 const LUCRO_SCENES = buildReel({
+  audio: VO('lucro'),
+  cues: [0, 6.25, 12.1, 14.05, 15.4, 16.9, 18.35, 20.4, 25.95, 29.95],
+  end: 34.3,
   benefit: { Component: ProfitScene, duration: 130 },
   cta: { comment: 'Lucro', keyword: 'LUCRO' },
   features: [F.bank(), F.expenses('Classifica as despesas.'), F.invoice(), F.reconciliation(), F.whatsapp()],
@@ -130,14 +153,14 @@ const LUCRO_SCENES = buildReel({
   intro: { highlight: ['financeiro'], prefix: 'Isso é o', text: 'Um sistema de gestão que conecta o ChatGPT ao financeiro da sua empresa.' },
 })
 
-export const OTTO_AGORA_SISTEMA_DURATION = sceneDuration(SISTEMA_SCENES)
-export const OTTO_AGORA_FINANCEIRO_DURATION = sceneDuration(FINANCEIRO_SCENES)
-export const OTTO_AGORA_CHAT_DURATION = sceneDuration(CHAT_SCENES)
-export const OTTO_AGORA_FACIL_DURATION = sceneDuration(FACIL_SCENES)
-export const OTTO_AGORA_LUCRO_DURATION = sceneDuration(LUCRO_SCENES)
+export const OTTO_AGORA_SISTEMA_DURATION = sceneDuration(SISTEMA_SCENES.scenes)
+export const OTTO_AGORA_FINANCEIRO_DURATION = sceneDuration(FINANCEIRO_SCENES.scenes)
+export const OTTO_AGORA_CHAT_DURATION = sceneDuration(CHAT_SCENES.scenes)
+export const OTTO_AGORA_FACIL_DURATION = sceneDuration(FACIL_SCENES.scenes)
+export const OTTO_AGORA_LUCRO_DURATION = sceneDuration(LUCRO_SCENES.scenes)
 
-export const OttoAgoraSistemaReel = () => <ReelRoot scenes={SISTEMA_SCENES} />
-export const OttoAgoraFinanceiroReel = () => <ReelRoot scenes={FINANCEIRO_SCENES} />
-export const OttoAgoraChatReel = () => <ReelRoot scenes={CHAT_SCENES} />
-export const OttoAgoraFacilReel = () => <ReelRoot scenes={FACIL_SCENES} />
-export const OttoAgoraLucroReel = () => <ReelRoot scenes={LUCRO_SCENES} />
+export const OttoAgoraSistemaReel = () => <ReelRoot audio={SISTEMA_SCENES.audio} scenes={SISTEMA_SCENES.scenes} />
+export const OttoAgoraFinanceiroReel = () => <ReelRoot audio={FINANCEIRO_SCENES.audio} scenes={FINANCEIRO_SCENES.scenes} />
+export const OttoAgoraChatReel = () => <ReelRoot audio={CHAT_SCENES.audio} scenes={CHAT_SCENES.scenes} />
+export const OttoAgoraFacilReel = () => <ReelRoot audio={FACIL_SCENES.audio} scenes={FACIL_SCENES.scenes} />
+export const OttoAgoraLucroReel = () => <ReelRoot audio={LUCRO_SCENES.audio} scenes={LUCRO_SCENES.scenes} />

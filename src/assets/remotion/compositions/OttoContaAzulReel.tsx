@@ -15,6 +15,7 @@ import {
   type ReelScene,
   Scene,
   sceneDuration,
+  syncToNarration,
   TERRA,
   TERRA_SOFT,
   useFrame,
@@ -258,8 +259,12 @@ function CanDoScene({ duration }: { duration: number }) {
 // ─── Timeline ─────────────────────────────────────────────────────────────────
 
 /** Same reel for every competitor: only the hook changes. */
-function competitorScenes(erpName: string, erpLogo: string): ReelScene[] {
-  return [
+/**
+ * Narration = the brand hook (`hookSecs` long) + the shared body (`concorrente-corpo.mp3`). Body cues come from its
+ * word timestamps: "Agora você pode" 0s, "Isso é o Otto" 11.45s, "E funciona no Claude" 20.7s, "Quer ver" 22.45s, end 25.7s.
+ */
+function competitorScenes(erpName: string, erpLogo: string, hookSecs: number): ReelScene[] {
+  const scenes: ReelScene[] = [
     { Component: makeHookScene(erpName, erpLogo), duration: 105 },
     { Component: CanDoScene, duration: 14 + CAN_DO.length * ROW_EVERY + 70 },
     {
@@ -269,19 +274,21 @@ function competitorScenes(erpName: string, erpLogo: string): ReelScene[] {
     { Component: makeClaudeAlsoScene(), duration: 75 },
     { Component: makeCta('Quer ver como funciona?', { comment: 'Sistema', highlight: ['funciona'], keyword: 'SISTEMA' }), duration: 120 },
   ]
+  const h = hookSecs
+  return syncToNarration(scenes, [0, h, h + 11.45, h + 20.7, h + 22.45], h + 26.7)
 }
 
 // Drop the logo files at these paths (SVG or transparent PNG renamed accordingly); until then the name is shown as text.
-const CONTA_AZUL_SCENES = competitorScenes('Conta Azul', 'brand-logos/erp/conta-azul.svg')
-const OMIE_SCENES = competitorScenes('Omie', 'brand-logos/erp/omie.png')
+const CONTA_AZUL_SCENES = competitorScenes('Conta Azul', 'brand-logos/erp/conta-azul.svg', 3.24)
+const OMIE_SCENES = competitorScenes('Omie', 'brand-logos/erp/omie.png', 3.08)
 
 export const OTTO_CONTA_AZUL_REEL_DURATION = sceneDuration(CONTA_AZUL_SCENES)
 export const OTTO_OMIE_REEL_DURATION = sceneDuration(OMIE_SCENES)
 
 export function OttoContaAzulReel() {
-  return <ReelRoot scenes={CONTA_AZUL_SCENES} />
+  return <ReelRoot audio="remotion/otto-reels/conta-azul-narracao.mp3" scenes={CONTA_AZUL_SCENES} />
 }
 
 export function OttoOmieReel() {
-  return <ReelRoot scenes={OMIE_SCENES} />
+  return <ReelRoot audio="remotion/otto-reels/omie-narracao.mp3" scenes={OMIE_SCENES} />
 }
