@@ -1,6 +1,7 @@
 import type { ComponentType } from 'react'
 
 import { ProfitScene } from './OttoCobrancaFuncionarioVideos'
+import { BlueprintSistemaHook, CinematicChatHook, GlassLucroHook, NightDeskHook } from './OttoDarkHookScenes'
 import {
   BankSyncScene,
   ExpensesScene,
@@ -165,9 +166,15 @@ export const OttoAgoraChatReel = () => <ReelRoot audio={CHAT_SCENES.audio} scene
 export const OttoAgoraFacilReel = () => <ReelRoot audio={FACIL_SCENES.audio} scenes={FACIL_SCENES.scenes} />
 export const OttoAgoraLucroReel = () => <ReelRoot audio={LUCRO_SCENES.audio} scenes={LUCRO_SCENES.scenes} />
 
-// Dark versions: same scenes, audio and timing; dark palette + sans titles.
-export const OttoAgoraFinanceiroDarkReel = () => <ReelRoot audio={FINANCEIRO_SCENES.audio} scenes={FINANCEIRO_SCENES.scenes} theme="dark" />
-export const OttoAgoraLucroDarkReel = () => <ReelRoot audio={LUCRO_SCENES.audio} scenes={LUCRO_SCENES.scenes} theme="dark" />
+/** Swap the typed hook for an illustrated one (same slot, same narration timing). */
+function withHook(scenes: ReelScene[], Hook: ReelScene['Component']): ReelScene[] {
+  return [{ ...scenes[0], Component: Hook }, ...scenes.slice(1)]
+}
+
+// Dark versions: same scenes, audio and timing; dark palette + sans titles; each with an illustrated hook in a
+// different style (flat, glass/3D, line-art, cinematic) to compare.
+export const OttoAgoraFinanceiroDarkReel = () => <ReelRoot audio={FINANCEIRO_SCENES.audio} scenes={withHook(FINANCEIRO_SCENES.scenes, NightDeskHook)} theme="dark" />
+export const OttoAgoraLucroDarkReel = () => <ReelRoot audio={LUCRO_SCENES.audio} scenes={withHook(LUCRO_SCENES.scenes, GlassLucroHook)} theme="dark" />
 // Square (1080×1080) dark versions for feed posts.
-export const OttoAgoraSistemaDarkSquareReel = () => <ReelRoot audio={SISTEMA_SCENES.audio} format="square" scenes={SISTEMA_SCENES.scenes} theme="dark" />
-export const OttoAgoraChatDarkSquareReel = () => <ReelRoot audio={CHAT_SCENES.audio} format="square" scenes={CHAT_SCENES.scenes} theme="dark" />
+export const OttoAgoraSistemaDarkSquareReel = () => <ReelRoot audio={SISTEMA_SCENES.audio} format="square" scenes={withHook(SISTEMA_SCENES.scenes, BlueprintSistemaHook)} theme="dark" />
+export const OttoAgoraChatDarkSquareReel = () => <ReelRoot audio={CHAT_SCENES.audio} format="square" scenes={withHook(CHAT_SCENES.scenes, CinematicChatHook)} theme="dark" />
