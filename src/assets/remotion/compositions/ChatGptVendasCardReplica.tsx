@@ -158,16 +158,16 @@ function SalesCard({ frame }: { frame: number }) {
   }
 
   return (
-    <div style={{ background: '#fff', border: `2px solid ${LINE}`, borderRadius: 40, height: 712, left: 33, opacity: card, padding: '0 31px', position: 'absolute', right: 33, top: 660, transform: `translateY(${(1 - card) * 30}px) scale(${0.98 + card * 0.02})` }}>
-      <div style={{ alignItems: 'flex-start', display: 'flex', justifyContent: 'space-between', paddingTop: 36 }}>
+    <div style={{ background: '#fff', border: `2px solid ${LINE}`, borderRadius: 40, left: 33, opacity: card, padding: '0 31px 30px', position: 'absolute', right: 33, top: 660, transform: `translateY(${(1 - card) * 30}px) scale(${0.98 + card * 0.02})` }}>
+      <div style={{ alignItems: 'flex-start', display: 'flex', justifyContent: 'space-between', paddingTop: 32 }}>
         <div>
-          <span style={{ color: TEXT, display: 'block', fontSize: 41, fontWeight: 650, letterSpacing: '-0.01em' }}>Vendas</span>
-          <span style={{ color: MUTED, display: 'block', fontSize: 28, marginTop: 8 }}>2 vendas encontradas</span>
+          <span style={{ color: TEXT, display: 'block', fontSize: 41, fontWeight: 650, letterSpacing: '-0.01em', lineHeight: '48px' }}>Vendas</span>
+          <span style={{ color: MUTED, display: 'block', fontSize: 28, lineHeight: '34px', marginTop: 8 }}>2 vendas encontradas</span>
         </div>
         <ReceiptText color="#5b5b5b" size={32} strokeWidth={2} style={{ marginTop: 32, '--icon-size': '32px', '--icon-stroke': 2 } as CSSProperties} />
       </div>
 
-      <div style={{ marginTop: 40 }}>
+      <div style={{ marginTop: 24 }}>
         {SALES.map((sale, i) => (
           <div key={sale.id} style={{ alignItems: 'center', borderBottom: `2px solid ${LINE}`, display: 'flex', gap: 26, height: 216, ...fade(T.rows[i]) }}>
             <IconTile />
@@ -184,7 +184,7 @@ function SalesCard({ frame }: { frame: number }) {
         ))}
       </div>
 
-      <div style={{ alignItems: 'center', display: 'flex', justifyContent: 'space-between', marginTop: 42, ...fade(T.footer) }}>
+      <div style={{ alignItems: 'center', display: 'flex', justifyContent: 'space-between', height: 60, marginTop: 40, ...fade(T.footer) }}>
         <span style={{ color: MUTED, fontSize: 28 }}>1–2 de 2 vendas</span>
         <span style={{ alignItems: 'center', display: 'flex', gap: 16 }}>
           <span style={{ alignItems: 'center', border: `2px solid ${LINE}`, borderRadius: 99, display: 'flex', height: 60, justifyContent: 'center', width: 98 }}>
