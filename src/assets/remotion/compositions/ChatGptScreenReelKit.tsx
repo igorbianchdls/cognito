@@ -1,5 +1,5 @@
-import type { CSSProperties, ReactNode } from 'react'
-import { AbsoluteFill, Audio, Easing, interpolate, Sequence, staticFile, useCurrentFrame } from 'remotion'
+import type { ReactNode } from 'react'
+import { AbsoluteFill, Audio, Easing, Img, interpolate, Sequence, staticFile, useCurrentFrame } from 'remotion'
 
 import {
   AdCopy,
@@ -30,10 +30,10 @@ import {
   UpdateClientCard,
   UserMessage,
   p,
-  pop,
 } from './ChatGptVendasCardReplica'
-import { ReelRoot } from './OttoContadoresReel'
+import { CtaScene, Headline, ReelRoot, Scene as EditorialScene, useSpring } from './OttoContadoresReel'
 import type { ReelScene } from './OttoContadoresReel'
+import { ChatGptLogo } from './OttoNotaFiscalChatGptVideos'
 
 /**
  * Reels whose illustration is the ChatGPT screen itself: replica flows replayed through time-warps,
@@ -276,33 +276,62 @@ function scrollAt(sc: Scene, rf: number) {
   return scroll
 }
 
-function Cta({ at, frame, pill }: { at: number; frame: number; pill: string }) {
-  if (frame < at) return null
-  const bg = p(frame, at, at + 12)
-  const enter = (delay: number): CSSProperties => {
-    const sp = pop(frame, at + delay)
-    return { opacity: sp, transform: `translateY(${(1 - sp) * 24}px)` }
-  }
+// ─── Closing: "Isso é o Otto… Comenta OTTO" (shared narration, editorial style like the hook) ───
+
+const OUTRO_AUDIO = 'remotion/otto-reels/chatgpt-tela-outro-narracao.mp3'
+/** Outro narration: "Isso é o Otto." 0 · "Um sistema de gestão como o Conta Azul…" 1.48 · "…que funciona direto dentro do seu ChatGPT." 3.72 · "Quer saber mais? Comenta Otto…" 6.76 · end 10.72 */
+const OUTRO_CTA = 6.7
+export const OUTRO_LENGTH = 11.5
+
+function OttoPitchScene({ duration }: { duration: number }) {
+  const logo = useSpring(s(0.7), { damping: 12, stiffness: 150 })
+  const gpt = useSpring(s(5.4), { damping: 12, stiffness: 150 })
   return (
-    <AbsoluteFill style={{ alignItems: 'center', background: `rgba(255,255,255,${0.97 * bg})`, justifyContent: 'center', padding: '0 70px', textAlign: 'center' }}>
-      <span style={{ color: TEXT, fontSize: 150, fontWeight: 750, letterSpacing: '-0.05em', lineHeight: '150px', ...enter(s(0.7)) }}>Otto</span>
-      <span style={{ color: TEXT, fontSize: 50, fontWeight: 650, letterSpacing: '-0.02em', lineHeight: '60px', marginTop: 34, ...enter(s(1.3)) }}>Seu ERP dentro do ChatGPT</span>
-      <span style={{ alignItems: 'center', background: TEXT, borderRadius: 99, color: '#fff', display: 'flex', fontSize: 32, fontWeight: 600, height: 84, marginTop: 56, padding: '0 46px', ...enter(s(2.9)) }}>{pill}</span>
-    </AbsoluteFill>
+    <EditorialScene duration={duration}>
+      <div style={{ display: 'flex', justifyContent: 'center', left: 0, opacity: logo, position: 'absolute', right: 0, top: 440, transform: `scale(${logo})` }}>
+        <Img src={staticFile('logoOtto.svg')} style={{ height: 130, width: 300 }} />
+      </div>
+      <Headline size={84} start={s(1.45)} text="Um sistema de gestão como o Conta Azul…" style={{ top: 700 }} />
+      <Headline highlight={['dentro', 'do', 'seu', 'chatgpt']} size={84} start={s(3.7)} text="que funciona direto dentro do seu ChatGPT." style={{ top: 1000 }} />
+      <div style={{ display: 'flex', justifyContent: 'center', left: 0, opacity: gpt, position: 'absolute', right: 0, top: 1330, transform: `scale(${gpt})` }}>
+        <ChatGptLogo height={80} />
+      </div>
+    </EditorialScene>
+  )
+}
+
+function OttoCtaScene({ duration }: { duration: number }) {
+  return <CtaScene comment="Otto" duration={duration} footer="que te mando mais informações." highlight={['mais']} keyword="OTTO" title="Quer saber mais?" titleSize={100} />
+}
+
+const OUTRO_SCENES: ReelScene[] = [
+  { Component: OttoPitchScene, duration: s(OUTRO_CTA) },
+  { Component: OttoCtaScene, duration: s(OUTRO_LENGTH - OUTRO_CTA) },
+]
+
+/** Closing narration + scenes, starting at reel second `at`. */
+export function ChatGptOutro({ at }: { at: number }) {
+  const frame = useCurrentFrame()
+  return (
+    <Sequence from={s(at)}>
+      <Audio src={staticFile(OUTRO_AUDIO)} />
+      <AbsoluteFill style={{ opacity: p(frame, s(at), s(at) + 8) }}>
+        <ReelRoot scenes={OUTRO_SCENES} />
+      </AbsoluteFill>
+    </Sequence>
   )
 }
 
 export type ChatGptScreenReelProps = {
   audio: ReactNode
-  /** Reel second the closing card comes in. */
-  ctaAt: number
-  ctaPill: string
   /** Opening scene from the editorial reels, shown over the screen for its first `end` seconds. */
   hook: { Component: ReelScene['Component']; end: number }
+  /** Reel second the closing ("Isso é o Otto… Comenta OTTO") starts; lasts OUTRO_LENGTH. */
+  outroAt: number
   scenes: Scene[]
 }
 
-export function ChatGptScreenReel({ audio, ctaAt, ctaPill, hook, scenes }: ChatGptScreenReelProps) {
+export function ChatGptScreenReel({ audio, hook, outroAt, scenes }: ChatGptScreenReelProps) {
   const frame = useCurrentFrame()
   let index = 0
   scenes.forEach((sc, i) => {
@@ -346,7 +375,7 @@ export function ChatGptScreenReel({ audio, ctaAt, ctaPill, hook, scenes }: ChatG
           <ReelRoot scenes={[{ Component: hook.Component, duration: hookEnd }]} />
         </AbsoluteFill>
       ) : null}
-      <Cta at={s(ctaAt)} frame={frame} pill={ctaPill} />
+      <ChatGptOutro at={outroAt} />
     </AbsoluteFill>
   )
 }

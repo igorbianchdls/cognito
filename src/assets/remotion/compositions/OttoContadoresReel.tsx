@@ -1033,9 +1033,9 @@ export function IntegrationScene({ duration }: { duration: number }) {
 
 // ─── 11. CTA ─────────────────────────────────────────────────────────────────
 
-type CtaProps = { comment?: string; duration: number; highlight?: string[]; keyword?: string; title?: string; titleSize?: number }
+type CtaProps = { comment?: string; duration: number; footer?: string; highlight?: string[]; keyword?: string; title?: string; titleSize?: number }
 
-export function CtaScene({ comment: commentText = 'Financeiro', duration, highlight = ['funciona'], keyword = 'FINANCEIRO', title = 'Quer ver como funciona?', titleSize = 100 }: CtaProps) {
+export function CtaScene({ comment: commentText = 'Financeiro', duration, footer = 'que te mando o link.', highlight = ['funciona'], keyword = 'FINANCEIRO', title = 'Quer ver como funciona?', titleSize = 100 }: CtaProps) {
   const frame = useFrame()
   const pill = useSpring(18, { damping: 11, stiffness: 140 })
   const pulse = frame > 40 ? 1 + Math.sin((frame - 40) / 5) * 0.025 : 1
@@ -1061,7 +1061,7 @@ export function CtaScene({ comment: commentText = 'Financeiro', duration, highli
         <span style={{ color: frame >= 62 ? TERRA : GRAY, fontSize: 32, fontWeight: 700 }}>Publicar</span>
       </Card>
       <span style={{ fontFamily: DISPLAY, fontSize: 72, fontStyle: 'italic', fontWeight: 400, left: 0, opacity: p(frame, 70, 82), position: 'absolute', right: 0, textAlign: 'center', top: 1310, transform: `translateY(${p(frame, 70, 84, [20, 0])}px)` }}>
-        que te mando o link.
+        {footer}
       </span>
       <div style={{ display: 'flex', justifyContent: 'center', left: 0, opacity: p(frame, 80, 92), position: 'absolute', right: 0, top: 1490 }}>
         <Img src={staticFile('logoOtto.svg')} style={{ height: 90, width: 210 }} />

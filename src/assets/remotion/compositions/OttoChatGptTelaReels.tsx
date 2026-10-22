@@ -8,6 +8,7 @@ import {
   invoiceScene,
   layoutClips,
   Narration,
+  OUTRO_LENGTH,
   s,
   updateClientScene,
 } from './ChatGptScreenReelKit'
@@ -30,18 +31,18 @@ const A_CLIPS = layoutClips([
   [20.16, 22.1, 2.5], // "Cliente novo? Ele cadastra."
   [22.1, 24.82, 2.0], // "Mudou o e-mail? É só pedir, que ele atualiza."
   [24.82, 26.74, 3.0], // "Vendeu? Ele emite a nota."
-  [26.74, 33.0, 0], // "E você só confere e confirma. Isso é o Otto…"
+  [26.74, 29.02, 0], // "E você só confere e confirma." (then the shared outro)
 ])
 
-export const OTTO_CHATGPT_FINANCEIRO_TELA_DURATION = s(48.1)
+const A_OUTRO = 43.4
+export const OTTO_CHATGPT_FINANCEIRO_TELA_DURATION = s(A_OUTRO + OUTRO_LENGTH)
 
 export function OttoChatGptFinanceiroTelaReel() {
   return (
     <ChatGptScreenReel
       audio={<Narration clips={A_CLIPS} src={A_AUDIO} />}
-      ctaAt={43.2}
-      ctaPill="Financeiro, notas e clientes no chat"
       hook={{ Component: makeHookScene('Agora o ChatGPT pode cuidar do financeiro da sua empresa.', ['financeiro'], 88, ''), end: 3.7 }}
+      outroAt={A_OUTRO}
       scenes={[
         financeScene({
           start: 0,
@@ -154,7 +155,7 @@ export function OttoChatGptFinanceiroTelaReel() {
             [42.4, 2030],
             [42.6, 2046], // "confirma" → issue
             [42.8, 2058], // done
-            [43.2, 2080],
+            [A_OUTRO, 2090],
           ],
         }),
       ]}
@@ -172,18 +173,18 @@ const B_CLIPS = layoutClips([
   [17.04, 18.68, 2.4], // "Cadastra cliente novo…"
   [18.68, 19.94, 2.4], // "atualiza o de outro…"
   [19.94, 23.4, 1.5], // "e se precisar excluir, ela ainda pede sua confirmação antes."
-  [23.4, 34.8, 0], // "E no fim, te mostra o financeiro inteiro… Isso é o Otto…"
+  [23.4, 30.7, 0], // "E no fim, te mostra o financeiro inteiro… agora é uma conversa." (then the shared outro)
 ])
 
-export const OTTO_CHATGPT_CONTADORES_TELA_DURATION = s(49.5)
+const B_OUTRO = 44.8
+export const OTTO_CHATGPT_CONTADORES_TELA_DURATION = s(B_OUTRO + OUTRO_LENGTH)
 
 export function OttoChatGptContadoresTelaReel() {
   return (
     <ChatGptScreenReel
       audio={<Narration clips={B_CLIPS} src={B_AUDIO} />}
-      ctaAt={44.7}
-      ctaPill="Teste o Otto no seu ChatGPT"
       hook={{ Component: ContadoresHookScene, end: 3.85 }}
+      outroAt={B_OUTRO}
       scenes={[
         expensesScene({
           start: 0,
@@ -307,7 +308,7 @@ export function OttoChatGptContadoresTelaReel() {
             [41.9, 1762],
             [42.0, 1770], // "alertas"
             [42.6, 1800],
-            [44.7, 1812],
+            [B_OUTRO, 1812],
           ],
         }),
       ]}

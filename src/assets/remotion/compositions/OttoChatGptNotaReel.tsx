@@ -1,4 +1,4 @@
-import type { CSSProperties, ReactNode } from 'react'
+import type { ReactNode } from 'react'
 import { AbsoluteFill, Audio, Easing, interpolate, Sequence, staticFile, useCurrentFrame } from 'remotion'
 
 import {
@@ -26,8 +26,8 @@ import {
   TopBar,
   UserMessage,
   p,
-  pop,
 } from './ChatGptVendasCardReplica'
+import { ChatGptOutro, OUTRO_LENGTH } from './ChatGptScreenReelKit'
 import { ReelRoot } from './OttoContadoresReel'
 import { makeHookScene } from './OttoNotaFiscalChatGptVideos'
 
@@ -43,14 +43,15 @@ const s = (sec: number) => Math.round(sec * 30)
 const PART2 = 18.0
 const g = (sec: number) => PART2 + sec
 
-export const OTTO_CHATGPT_NOTA_REEL_DURATION = s(g(33.04) + 0.9)
+/** Part 2 is cut after "Tudo isso dentro do chat."; the shared closing ("Isso é o Otto… Comenta OTTO") follows. */
+const OUTRO_AT = g(29.4)
+export const OTTO_CHATGPT_NOTA_REEL_DURATION = s(OUTRO_AT + OUTRO_LENGTH)
 
 const SCALE = 1080 / 828
 /** Logical screen: replica width, reel aspect ratio. */
 const SCREEN_H = 1920 / SCALE
 /** The replica places the composer for a 1792px screen. */
 const BOTTOM_SHIFT = 1792 - SCREEN_H
-const CTA_AT = s(g(29.25))
 
 /** The expenses request is not one of the replica messages, so the reel adds it to its scene's composer. */
 const EXP_MSG = { lines: ['Classifica as despesas', 'da semana'], send: 372, typing: [340, 370] }
@@ -262,22 +263,6 @@ function EmptyChat({ rf }: { rf: number }) {
   return <span style={{ color: '#8e8e8e', fontSize: 40, fontWeight: 500, left: 0, opacity: 1 - out, position: 'absolute', right: 0, textAlign: 'center', top: 640 }}>Em que posso ajudar?</span>
 }
 
-function Cta({ frame }: { frame: number }) {
-  if (frame < CTA_AT) return null
-  const bg = p(frame, CTA_AT, CTA_AT + 12)
-  const at = (delay: number): CSSProperties => {
-    const sp = pop(frame, CTA_AT + delay)
-    return { opacity: sp, transform: `translateY(${(1 - sp) * 24}px)` }
-  }
-  return (
-    <AbsoluteFill style={{ alignItems: 'center', background: `rgba(255,255,255,${0.97 * bg})`, justifyContent: 'center', padding: '0 70px', textAlign: 'center' }}>
-      <span style={{ color: TEXT, fontSize: 150, fontWeight: 750, letterSpacing: '-0.05em', lineHeight: '150px', ...at(s(0.7)) }}>Otto</span>
-      <span style={{ color: TEXT, fontSize: 50, fontWeight: 650, letterSpacing: '-0.02em', lineHeight: '60px', marginTop: 34, ...at(s(1.3)) }}>Seu ERP dentro do ChatGPT</span>
-      <span style={{ alignItems: 'center', background: TEXT, borderRadius: 99, color: '#fff', display: 'flex', fontSize: 32, fontWeight: 600, height: 84, marginTop: 56, padding: '0 46px', ...at(s(2.9)) }}>Notas, despesas, banco e financeiro no chat</span>
-    </AbsoluteFill>
-  )
-}
-
 export function OttoChatGptNotaReel() {
   const frame = useCurrentFrame()
   const scene = sceneAt(frame)
@@ -291,7 +276,7 @@ export function OttoChatGptNotaReel() {
       <style>{FONT_CSS}</style>
       <Audio src={staticFile('remotion/otto-reels/chatgpt-nota-narracao.mp3')} trimAfter={s(PART2)} />
       <Sequence from={s(PART2)}>
-        <Audio src={staticFile('remotion/otto-reels/chatgpt-nota-narracao-2.mp3')} />
+        <Audio src={staticFile('remotion/otto-reels/chatgpt-nota-narracao-2.mp3')} trimAfter={s(29.26)} />
       </Sequence>
 
       <div style={{ height: SCREEN_H, left: 0, overflow: 'hidden', position: 'absolute', top: 0, transform: `scale(${SCALE})`, transformOrigin: '0 0', width: 828 }}>
@@ -313,7 +298,7 @@ export function OttoChatGptNotaReel() {
       </div>
 
       <HookLayer frame={frame} />
-      <Cta frame={frame} />
+      <ChatGptOutro at={OUTRO_AT} />
     </AbsoluteFill>
   )
 }
