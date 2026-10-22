@@ -1240,7 +1240,7 @@ function InvoiceBatchCard({ frame }: { frame: number }) {
 
 // ─── Bank reconciliation: suggested matches → "Confirmar conciliação" → "Conciliação concluída" ───
 
-const BANK = { a7: 12040, card: 12120, u7: 11830 }
+const BANK = { a7: 12040, card: 12170, u7: 11830 }
 const BANK_H = { confirm: 1092, done: 1342, list: 1858 }
 
 const BANK_MOVES = [
