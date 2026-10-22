@@ -1,4 +1,4 @@
-import { ArrowDown, ArrowUp, AudioLines, ChevronLeft, ChevronRight, Ellipsis, Mic, Plus, ReceiptText, SquarePen } from 'lucide-react'
+import { ArrowDown, ArrowLeft, ArrowUp, AudioLines, CalendarDays, ChevronLeft, ChevronRight, Ellipsis, Mic, Package, Plus, ReceiptText, SquarePen, User } from 'lucide-react'
 import type { CSSProperties, ReactNode } from 'react'
 import { AbsoluteFill, Easing, interpolate, spring, useCurrentFrame } from 'remotion'
 
@@ -9,10 +9,11 @@ loadSfProFonts()
 /**
  * 1:1 animated replica of a ChatGPT iOS screen (828×1792, same as the reference screenshot):
  * the user sends a message, the answer streams in, the OTTO "Vendas" card builds row by row,
- * then the closing paragraph streams and the scroll-to-bottom button appears.
+ * then the closing paragraph streams and the scroll-to-bottom button appears. Finally a tap on "Venda #1094" opens the
+ * sale detail inside the same card and the conversation scrolls so the card sits under the top bar.
  */
 
-export const CHATGPT_VENDAS_CARD_DURATION = 270
+export const CHATGPT_VENDAS_CARD_DURATION = 400
 export const CHATGPT_VENDAS_CARD_WIDTH = 828
 export const CHATGPT_VENDAS_CARD_HEIGHT = 1792
 
@@ -43,10 +44,14 @@ const T = {
   bubble: 48,
   card: 98,
   footer: 132,
+  /** the card turns into the sale detail (second reference screenshot) */
+  open: 250,
   outro: [146, 214],
   rows: [108, 120],
   scrollButton: 220,
   send: 44,
+  /** finger taps "Venda #1094" */
+  tap: 236,
   typing: [10, 40],
 }
 
@@ -137,15 +142,118 @@ function UserBubble({ frame }: { frame: number }) {
   )
 }
 
+/** Inline CSS vars that pin a lucide icon's size/stroke past the app's global 18px rule. */
+const iv = (size: number, stroke: number, extra: CSSProperties = {}) => ({ ...extra, '--icon-size': `${size}px`, '--icon-stroke': stroke }) as CSSProperties
+
 function Badge({ children }: { children: ReactNode }) {
   return <span style={{ background: '#fbe5e5', borderRadius: 99, color: '#a3262c', display: 'inline-block', fontSize: 26, fontWeight: 500, padding: '8px 17px' }}>{children}</span>
 }
 
-function IconTile() {
+function IconTile({ children, size = 88 }: { children: ReactNode; size?: number }) {
   return (
-    <span style={{ alignItems: 'center', background: '#f3f3f3', borderRadius: 22, display: 'flex', flex: 'none', height: 88, justifyContent: 'center', width: 88 }}>
-      <ReceiptText color="#5b5b5b" size={32} strokeWidth={2} style={{ '--icon-size': '32px', '--icon-stroke': 2 } as CSSProperties} />
+    <span style={{ alignItems: 'center', background: '#f3f3f3', borderRadius: 22, display: 'flex', flex: 'none', height: size, justifyContent: 'center', width: size }}>
+      {children}
     </span>
+  )
+}
+
+const LIST_H = 712
+const DETAIL_H = 1560
+/** How far the conversation scrolls so the opened card sits right under the top bar (660 → 198). */
+const OPEN_SCROLL = 462
+const OPEN_FRAMES = 26
+
+function Divider({ mt }: { mt: number }) {
+  return <div style={{ background: LINE, height: 2, marginTop: mt }} />
+}
+
+function SectionTitle({ children, icon, mt }: { children: ReactNode; icon?: ReactNode; mt: number }) {
+  return (
+    <div style={{ alignItems: 'center', display: 'flex', justifyContent: 'space-between', marginTop: mt }}>
+      <span style={{ color: TEXT, fontSize: 33, fontWeight: 650, letterSpacing: '-0.01em', lineHeight: '40px' }}>{children}</span>
+      {icon}
+    </div>
+  )
+}
+
+const INFO_ROWS = [
+  ['Número da venda', '#1094'],
+  ['Empresa', 'Empresa 2'],
+  ['Data da venda', '14/10/2026'],
+]
+
+/** Detail view of sale #1094 (second reference screenshot), shown inside the same card after the tap. */
+function SaleDetail({ frame }: { frame: number }) {
+  const at = (delay: number): CSSProperties => {
+    const s = pop(frame, T.open + delay)
+    return { opacity: frame < T.open + delay ? 0 : s, transform: `translateY(${(1 - s) * 16}px)` }
+  }
+
+  return (
+    <div style={{ inset: 0, padding: '0 31px', position: 'absolute' }}>
+      <div style={{ alignItems: 'center', display: 'flex', height: 126, ...at(4) }}>
+        <ArrowLeft color="#3d3d3d" size={30} strokeWidth={2} style={iv(30, 2, { marginLeft: 30 })} />
+        <span style={{ color: '#4a4a4a', flex: 1, fontSize: 29, fontWeight: 500, marginLeft: 22 }}>Voltar às vendas</span>
+        <ReceiptText color="#5b5b5b" size={32} strokeWidth={2} style={iv(32, 2)} />
+      </div>
+      <div style={{ background: LINE, height: 2 }} />
+
+      <div style={at(10)}>
+        <div style={{ alignItems: 'center', display: 'flex', justifyContent: 'space-between', marginTop: 44 }}>
+          <span style={{ color: TEXT, fontSize: 42, fontWeight: 650, letterSpacing: '-0.015em', lineHeight: '50px' }}>Venda #1094</span>
+          <Badge>Cancelada</Badge>
+        </div>
+        <span style={{ color: MUTED, display: 'block', fontSize: 26, lineHeight: '32px', marginTop: 12 }}>Detalhes da venda</span>
+      </div>
+
+      <div style={{ background: '#f2f2f2', borderRadius: 32, marginTop: 26, padding: '36px 32px 34px', ...at(18) }}>
+        <span style={{ color: MUTED, display: 'block', fontSize: 26, lineHeight: '32px' }}>Valor total da venda</span>
+        <span style={{ color: TEXT, display: 'block', fontSize: 54, fontWeight: 700, letterSpacing: '-0.015em', lineHeight: '64px', marginTop: 8 }}>R$ 100,00</span>
+        <span style={{ alignItems: 'center', color: MUTED, display: 'flex', fontSize: 26, gap: 10, lineHeight: '32px', marginTop: 14 }}>
+          <CalendarDays color={MUTED} size={24} strokeWidth={2} style={iv(24, 2)} /> 14/10/2026
+        </span>
+      </div>
+
+      <div style={at(28)}>
+        <SectionTitle mt={30}>Informações gerais</SectionTitle>
+        <div style={{ marginTop: 16 }}>
+          {INFO_ROWS.map(([label, value]) => (
+            <div key={label} style={{ alignItems: 'center', display: 'flex', height: 64, justifyContent: 'space-between' }}>
+              <span style={{ color: MUTED, fontSize: 29 }}>{label}</span>
+              <span style={{ color: TEXT, fontSize: 29, fontWeight: 500 }}>{value}</span>
+            </div>
+          ))}
+        </div>
+        <Divider mt={28} />
+      </div>
+
+      <div style={at(40)}>
+        <SectionTitle icon={<User color="#5b5b5b" size={32} strokeWidth={2} style={iv(32, 2)} />} mt={44}>Cliente</SectionTitle>
+        <div style={{ alignItems: 'center', display: 'flex', gap: 26, marginTop: 27 }}>
+          <IconTile size={78}>
+            <User color="#5b5b5b" size={30} strokeWidth={2} style={iv(30, 2)} />
+          </IconTile>
+          <div>
+            <span style={{ color: TEXT, display: 'block', fontSize: 29, fontWeight: 500, lineHeight: '36px' }}>QA-OTTO Cliente Cenário</span>
+            <span style={{ color: MUTED, display: 'block', fontSize: 25, lineHeight: '32px', marginTop: 6 }}>Cliente vinculado à venda</span>
+          </div>
+        </div>
+        <Divider mt={43} />
+      </div>
+
+      <div style={at(52)}>
+        <SectionTitle mt={44}>Itens da venda</SectionTitle>
+        <div style={{ alignItems: 'center', background: '#f2f2f2', borderRadius: 26, display: 'flex', gap: 18, height: 87, marginTop: 27, padding: '0 26px' }}>
+          <Package color="#6b6b6b" size={30} strokeWidth={2} style={iv(30, 2)} />
+          <span style={{ color: MUTED, fontSize: 30 }}>Itens não carregados na simulação</span>
+        </div>
+        <Divider mt={42} />
+      </div>
+
+      <div style={at(62)}>
+        <SectionTitle mt={44}>Resumo financeiro</SectionTitle>
+      </div>
+    </div>
   )
 }
 
@@ -156,46 +264,64 @@ function SalesCard({ frame }: { frame: number }) {
     const s = pop(frame, at)
     return { opacity: frame < at ? 0 : s, transform: `translateY(${(1 - s) * 18}px)` }
   }
+  const height = p(frame, T.open, T.open + OPEN_FRAMES, [LIST_H, DETAIL_H], Easing.inOut(Easing.cubic))
+  const listOut = 1 - p(frame, T.open, T.open + 8)
+  const press = frame >= T.tap && frame < T.open + 4
+  const ripple = p(frame, T.tap, T.tap + 14)
 
   return (
-    <div style={{ background: '#fff', border: `2px solid ${LINE}`, borderRadius: 40, left: 33, opacity: card, padding: '0 31px 30px', position: 'absolute', right: 33, top: 660, transform: `translateY(${(1 - card) * 30}px) scale(${0.98 + card * 0.02})` }}>
-      <div style={{ alignItems: 'flex-start', display: 'flex', justifyContent: 'space-between', paddingTop: 32 }}>
-        <div>
-          <span style={{ color: TEXT, display: 'block', fontSize: 41, fontWeight: 650, letterSpacing: '-0.01em', lineHeight: '48px' }}>Vendas</span>
-          <span style={{ color: MUTED, display: 'block', fontSize: 28, lineHeight: '34px', marginTop: 8 }}>2 vendas encontradas</span>
-        </div>
-        <ReceiptText color="#5b5b5b" size={32} strokeWidth={2} style={{ marginTop: 32, '--icon-size': '32px', '--icon-stroke': 2 } as CSSProperties} />
-      </div>
-
-      <div style={{ marginTop: 24 }}>
-        {SALES.map((sale, i) => (
-          <div key={sale.id} style={{ alignItems: 'center', borderBottom: `2px solid ${LINE}`, display: 'flex', gap: 26, height: 216, ...fade(T.rows[i]) }}>
-            <IconTile />
-            <div style={{ flex: 1, minWidth: 0 }}>
-              <span style={{ color: TEXT, display: 'block', fontSize: 34, fontWeight: 650, letterSpacing: '-0.01em' }}>Venda {sale.id}</span>
-              <span style={{ color: MUTED, display: 'block', fontSize: 29, marginTop: 6 }}>{sale.client}</span>
-              <span style={{ color: MUTED, display: 'block', fontSize: 27, marginTop: 6 }}>{sale.date}</span>
+    <div style={{ background: '#fff', border: `2px solid ${LINE}`, borderRadius: 40, height, left: 33, opacity: card, overflow: 'hidden', position: 'absolute', right: 33, top: 660, transform: `translateY(${(1 - card) * 30}px) scale(${0.98 + card * 0.02})` }}>
+      {listOut > 0 ? (
+        <div style={{ opacity: listOut, padding: '0 31px 30px' }}>
+          <div style={{ alignItems: 'flex-start', display: 'flex', justifyContent: 'space-between', paddingTop: 32 }}>
+            <div>
+              <span style={{ color: TEXT, display: 'block', fontSize: 41, fontWeight: 650, letterSpacing: '-0.01em', lineHeight: '48px' }}>Vendas</span>
+              <span style={{ color: MUTED, display: 'block', fontSize: 28, lineHeight: '34px', marginTop: 8 }}>2 vendas encontradas</span>
             </div>
-            <div style={{ alignItems: 'flex-end', display: 'flex', flexDirection: 'column', gap: 12, marginBottom: 26 }}>
-              <span style={{ color: TEXT, fontSize: 34, fontWeight: 650, letterSpacing: '-0.01em' }}>{sale.value}</span>
-              <Badge>Cancelada</Badge>
-            </div>
+            <ReceiptText color="#5b5b5b" size={32} strokeWidth={2} style={iv(32, 2, { marginTop: 32 })} />
           </div>
-        ))}
-      </div>
 
-      <div style={{ alignItems: 'center', display: 'flex', justifyContent: 'space-between', height: 60, marginTop: 40, ...fade(T.footer) }}>
-        <span style={{ color: MUTED, fontSize: 28 }}>1–2 de 2 vendas</span>
-        <span style={{ alignItems: 'center', display: 'flex', gap: 16 }}>
-          <span style={{ alignItems: 'center', border: `2px solid ${LINE}`, borderRadius: 99, display: 'flex', height: 60, justifyContent: 'center', width: 98 }}>
-            <ChevronLeft color="#9a9a9a" size={32} strokeWidth={2} style={{ '--icon-size': '32px', '--icon-stroke': 2 } as CSSProperties} />
-          </span>
-          <span style={{ color: TEXT, fontSize: 30, fontWeight: 600 }}>1 / 1</span>
-          <span style={{ alignItems: 'center', border: `2px solid ${LINE}`, borderRadius: 99, display: 'flex', height: 60, justifyContent: 'center', width: 98 }}>
-            <ChevronRight color="#9a9a9a" size={32} strokeWidth={2} style={{ '--icon-size': '32px', '--icon-stroke': 2 } as CSSProperties} />
-          </span>
-        </span>
-      </div>
+          <div style={{ marginTop: 24 }}>
+            {SALES.map((sale, i) => (
+              <div key={sale.id} style={{ alignItems: 'center', borderBottom: `2px solid ${LINE}`, display: 'flex', gap: 26, height: 216, position: 'relative', ...fade(T.rows[i]) }}>
+                {i === 0 && press ? (
+                  <>
+                    <div style={{ background: 'rgba(0,0,0,0.04)', borderRadius: 20, inset: '8px -14px', position: 'absolute' }} />
+                    <div style={{ background: 'rgba(0,0,0,0.14)', borderRadius: 99, height: 40 + ripple * 120, left: 330 - (40 + ripple * 120) / 2, opacity: 1 - ripple * 0.7, position: 'absolute', top: 108 - (40 + ripple * 120) / 2, width: 40 + ripple * 120 }} />
+                  </>
+                ) : null}
+                <IconTile>
+                  <ReceiptText color="#5b5b5b" size={32} strokeWidth={2} style={iv(32, 2)} />
+                </IconTile>
+                <div style={{ flex: 1, minWidth: 0, position: 'relative' }}>
+                  <span style={{ color: TEXT, display: 'block', fontSize: 34, fontWeight: 650, letterSpacing: '-0.01em' }}>Venda {sale.id}</span>
+                  <span style={{ color: MUTED, display: 'block', fontSize: 29, marginTop: 6 }}>{sale.client}</span>
+                  <span style={{ color: MUTED, display: 'block', fontSize: 27, marginTop: 6 }}>{sale.date}</span>
+                </div>
+                <div style={{ alignItems: 'flex-end', display: 'flex', flexDirection: 'column', gap: 12, marginBottom: 26, position: 'relative' }}>
+                  <span style={{ color: TEXT, fontSize: 34, fontWeight: 650, letterSpacing: '-0.01em' }}>{sale.value}</span>
+                  <Badge>Cancelada</Badge>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          <div style={{ alignItems: 'center', display: 'flex', justifyContent: 'space-between', height: 60, marginTop: 40, ...fade(T.footer) }}>
+            <span style={{ color: MUTED, fontSize: 28 }}>1–2 de 2 vendas</span>
+            <span style={{ alignItems: 'center', display: 'flex', gap: 16 }}>
+              <span style={{ alignItems: 'center', border: `2px solid ${LINE}`, borderRadius: 99, display: 'flex', height: 60, justifyContent: 'center', width: 98 }}>
+                <ChevronLeft color="#9a9a9a" size={32} strokeWidth={2} style={iv(32, 2)} />
+              </span>
+              <span style={{ color: TEXT, fontSize: 30, fontWeight: 600 }}>1 / 1</span>
+              <span style={{ alignItems: 'center', border: `2px solid ${LINE}`, borderRadius: 99, display: 'flex', height: 60, justifyContent: 'center', width: 98 }}>
+                <ChevronRight color="#9a9a9a" size={32} strokeWidth={2} style={iv(32, 2)} />
+              </span>
+            </span>
+          </div>
+        </div>
+      ) : null}
+
+      {frame >= T.open ? <SaleDetail frame={frame} /> : null}
     </div>
   )
 }
@@ -208,37 +334,43 @@ export function ChatGptVendasCardReplica() {
   const bold = outroText.slice(0, ANSWER_OUTRO_BOLD.length)
   const rest = outroText.slice(ANSWER_OUTRO_BOLD.length)
   const scrollBtn = pop(frame, T.scrollButton)
+  const opening = p(frame, T.open, T.open + OPEN_FRAMES, [0, 1], Easing.inOut(Easing.cubic))
+  const scroll = opening * OPEN_SCROLL
 
   return (
     <AbsoluteFill className="chatgpt-replica" style={{ background: '#fff', color: TEXT, fontFamily: FONT }}>
       <style>{FONT_CSS}</style>
+
+      {/* conversation (scrolls up when the sale opens) */}
+      <div style={{ inset: 0, position: 'absolute', transform: `translateY(${-scroll}px)` }}>
+        <UserBubble frame={frame} />
+        {frame >= T.answerIntro[0] ? (
+          <p style={{ color: TEXT, fontSize: 32, left: 33, lineHeight: '48px', margin: 0, position: 'absolute', right: 40, top: 532 }}>{intro}</p>
+        ) : null}
+        <SalesCard frame={frame} />
+        {frame >= T.outro[0] ? (
+          <p style={{ color: TEXT, fontSize: 32, left: 33, lineHeight: '48px', margin: 0, opacity: 1 - opening, position: 'absolute', right: 40, top: 1405 }}>
+            <strong style={{ fontWeight: 700 }}>{bold}</strong>
+            {rest}
+          </p>
+        ) : null}
+      </div>
+
+      {/* top bars stay fixed above the scrolling conversation */}
+      <div style={{ background: 'linear-gradient(#fff 88%, rgba(255,255,255,0))', height: 196, left: 0, position: 'absolute', right: 0, top: 0 }} />
       <StatusBar />
       <TopBar />
-      <UserBubble frame={frame} />
-
-      {frame >= T.answerIntro[0] ? (
-        <p style={{ color: TEXT, fontSize: 32, left: 33, lineHeight: '48px', margin: 0, position: 'absolute', right: 40, top: 532 }}>{intro}</p>
-      ) : null}
-
-      <SalesCard frame={frame} />
-
-      {frame >= T.outro[0] ? (
-        <p style={{ color: TEXT, fontSize: 32, left: 33, lineHeight: '48px', margin: 0, position: 'absolute', right: 40, top: 1405 }}>
-          <strong style={{ fontWeight: 700 }}>{bold}</strong>
-          {rest}
-        </p>
-      ) : null}
 
       {/* fade under the composer, like the app */}
       <div style={{ background: 'linear-gradient(rgba(255,255,255,0), #fff 45%)', height: 230, left: 0, position: 'absolute', right: 0, top: 1580 }} />
       {frame >= T.scrollButton ? (
         <span style={{ alignItems: 'center', background: '#fff', border: '1px solid #ececec', borderRadius: 99, boxShadow: '0 6px 18px rgba(0,0,0,0.12)', display: 'flex', height: 68, justifyContent: 'center', left: 380, opacity: scrollBtn, position: 'absolute', top: 1534, transform: `scale(${0.8 + scrollBtn * 0.2})`, width: 68 }}>
-          <ArrowDown color={TEXT} size={34} strokeWidth={2.4} style={{ '--icon-size': '34px', '--icon-stroke': 2.4 } as CSSProperties} />
+          <ArrowDown color={TEXT} size={34} strokeWidth={2.4} style={iv(34, 2.4)} />
         </span>
       ) : null}
 
       <Composer frame={frame} />
-      <span style={{ background: '#d4d4d4', borderRadius: 99, height: 92, left: 816, position: 'absolute', top: 490, width: 5 }} />
+      <span style={{ background: '#d4d4d4', borderRadius: 99, height: 92 + opening * 226, left: 816, position: 'absolute', top: 490 + opening * 578, width: 5 }} />
       <div style={{ background: TEXT, borderRadius: 99, height: 9, left: 267, position: 'absolute', top: 1764, width: 294 }} />
     </AbsoluteFill>
   )
