@@ -31,7 +31,8 @@ import {
   UserMessage,
   p,
 } from './ChatGptVendasCardReplica'
-import { CtaScene, Headline, ReelRoot, Scene as EditorialScene, useSpring } from './OttoContadoresReel'
+import { OttoDesktopWindow, DESKTOP_W } from './OttoDesktopMock'
+import { CtaScene, Headline, ReelRoot, Scene as EditorialScene, useFrame, useSpring } from './OttoContadoresReel'
 import type { ReelScene } from './OttoContadoresReel'
 import { ChatGptLogo } from './OttoNotaFiscalChatGptVideos'
 
@@ -283,18 +284,30 @@ const OUTRO_AUDIO = 'remotion/otto-reels/chatgpt-tela-outro-narracao.mp3'
 const OUTRO_CTA = 6.7
 export const OUTRO_LENGTH = 11.5
 
+/** The cursor walks the sidebar while the narration says "Um sistema de gestão…"; each item opens its page. */
+const DESKTOP_HOVERS = [
+  { at: s(2.1), item: 0 }, // Visão geral
+  { at: s(2.8), item: 1 }, // Vendas
+  { at: s(3.5), item: 3 }, // Financeiro
+  { at: s(4.2), item: 4 }, // Estoque
+  { at: s(4.9), item: 6 }, // Cadastros
+]
+
 function OttoPitchScene({ duration }: { duration: number }) {
-  const logo = useSpring(s(0.7), { damping: 12, stiffness: 150 })
+  const frame = useFrame()
+  const logo = useSpring(s(0.5), { damping: 12, stiffness: 150 })
+  const win = useSpring(s(1.1), { damping: 16, stiffness: 120 })
   const gpt = useSpring(s(5.4), { damping: 12, stiffness: 150 })
   return (
     <EditorialScene duration={duration}>
-      <div style={{ display: 'flex', justifyContent: 'center', left: 0, opacity: logo, position: 'absolute', right: 0, top: 440, transform: `scale(${logo})` }}>
-        <Img src={staticFile('logoOtto.svg')} style={{ height: 130, width: 300 }} />
+      <div style={{ display: 'flex', justifyContent: 'center', left: 0, opacity: logo, position: 'absolute', right: 0, top: 90, transform: `scale(${logo})` }}>
+        <Img src={staticFile('logoOtto.svg')} style={{ height: 90, width: 210 }} />
       </div>
-      <Headline size={84} start={s(1.45)} text="Um sistema de gestão como o Conta Azul…" style={{ top: 700 }} />
-      <Headline highlight={['dentro', 'do', 'seu', 'chatgpt']} size={84} start={s(3.7)} text="que funciona direto dentro do seu ChatGPT." style={{ top: 1000 }} />
-      <div style={{ display: 'flex', justifyContent: 'center', left: 0, opacity: gpt, position: 'absolute', right: 0, top: 1330, transform: `scale(${gpt})` }}>
-        <ChatGptLogo height={80} />
+      <Headline size={70} start={s(1.45)} text="Um sistema de gestão como o Conta Azul…" style={{ top: 215 }} />
+      <OttoDesktopWindow cursorFrom={s(1.8)} frame={frame} hovers={DESKTOP_HOVERS} style={{ left: (1080 - DESKTOP_W) / 2, opacity: win, top: 440, transform: `translateY(${(1 - win) * 80}px)` }} />
+      <Headline highlight={['dentro', 'do', 'seu', 'chatgpt']} size={70} start={s(3.7)} text="que funciona direto dentro do seu ChatGPT." style={{ top: 1350 }} />
+      <div style={{ display: 'flex', justifyContent: 'center', left: 0, opacity: gpt, position: 'absolute', right: 0, top: 1570, transform: `scale(${gpt})` }}>
+        <ChatGptLogo height={64} />
       </div>
     </EditorialScene>
   )
