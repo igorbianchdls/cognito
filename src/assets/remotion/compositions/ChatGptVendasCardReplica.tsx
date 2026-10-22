@@ -181,7 +181,7 @@ export function TopBar() {
 }
 
 /** Every user message of the conversation: typed in the composer, then sent. */
-const MESSAGES = [
+export const MESSAGES = [
   { lines: USER_MESSAGE, send: T.send, typing: T.typing },
   { lines: ['Agora me mostra meus clientes', 'e atualiza o nome e o e-mail', 'do Cliente Exemplo'], send: T.u2.send, typing: T.u2.typing },
   { lines: ['Cadastra também a Nova', 'Empresa Ltda., de Recife'], send: T.u3.send, typing: T.u3.typing },
@@ -191,12 +191,12 @@ const MESSAGES = [
   { lines: ['Concilia o extrato do banco', 'com os lançamentos'], send: T.u7.send, typing: T.u7.typing },
 ]
 
-export function Composer({ frame }: { frame: number }) {
-  const active = MESSAGES.find((m) => frame >= m.typing[0] && frame < m.send)
+export function Composer({ frame, messages = MESSAGES }: { frame: number; messages?: typeof MESSAGES }) {
+  const active = messages.find((m) => frame >= m.typing[0] && frame < m.send)
   const typedLines = active ? active.lines.join(' ') : ''
   const text = active ? typedLines.slice(0, Math.floor(typedLines.length * p(frame, active.typing[0], active.typing[1], [0, 1], Easing.linear))) : ''
   const hasText = text.length > 0
-  const pressed = MESSAGES.some((m) => frame >= m.send - 2 && frame < m.send + 2)
+  const pressed = messages.some((m) => frame >= m.send - 2 && frame < m.send + 2)
 
   return (
     <div style={{ alignItems: 'center', background: '#f2f2f2', borderRadius: 48, display: 'flex', gap: 22, left: 68, minHeight: 94, padding: '0 16px 0 30px', position: 'absolute', right: 68, top: 1628 }}>
@@ -442,7 +442,7 @@ const EXPENSES = [
 /** Document position (before scrolling) of the classification card and the text above it. */
 export const EXP_TEXT_TOP = 2580
 export const EXP_CARD_TOP = 2710
-const EXP_H = { done: 747, list: 1622, review: 915 }
+export const EXP_H = { done: 747, list: 1622, review: 915 }
 /** Scroll position that shows the total + "Revisar classificação" above the composer. */
 const EXP_FOOTER_SCROLL = EXP_CARD_TOP + 1526 - 1480
 const EXP_BLOCK = 284

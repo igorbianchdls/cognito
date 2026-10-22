@@ -4,9 +4,11 @@ import { AbsoluteFill, Audio, Easing, interpolate, Sequence, staticFile, useCurr
 import {
   AssistantText,
   BANK,
+  BANK_H,
   BankReconciliationCard,
   Composer,
   EXP_CARD_TOP,
+  EXP_H,
   EXP_TEXT_TOP,
   ExpensesCard,
   FIN,
@@ -14,6 +16,7 @@ import {
   FONT,
   FONT_CSS,
   InvoiceBatchCard,
+  MESSAGES,
   NF,
   NF_H,
   StatusBar,
@@ -24,6 +27,8 @@ import {
   p,
   pop,
 } from './ChatGptVendasCardReplica'
+import { ReelRoot } from './OttoContadoresReel'
+import { makeHookScene } from './OttoNotaFiscalChatGptVideos'
 
 /**
  * Reel: "Agora o ChatGPT pode emitir suas notas fiscais" — the illustration is the ChatGPT screen itself.
@@ -37,14 +42,18 @@ const s = (sec: number) => Math.round(sec * 30)
 const PART2 = 18.0
 const g = (sec: number) => PART2 + sec
 
-export const OTTO_CHATGPT_NOTA_REEL_DURATION = s(g(15.76) + 0.9)
+export const OTTO_CHATGPT_NOTA_REEL_DURATION = s(g(33.04) + 0.9)
 
 const SCALE = 1080 / 828
 /** Logical screen: replica width, reel aspect ratio. */
 const SCREEN_H = 1920 / SCALE
 /** The replica places the composer for a 1792px screen. */
 const BOTTOM_SHIFT = 1792 - SCREEN_H
-const CTA_AT = s(g(11.4))
+const CTA_AT = s(g(29.25))
+
+/** The expenses request is not one of the replica messages, so the reel adds it to the composer. */
+const EXP_MSG = { lines: ['Classifica as despesas', 'da semana'], send: 372, typing: [340, 370] }
+const COMPOSER_MESSAGES = [...MESSAGES, EXP_MSG]
 
 type Scene = {
   content: (rf: number) => ReactNode
@@ -92,64 +101,110 @@ const SCENES: Scene[] = [
       [13.9, 2046], // tap
       [14.1, 2058], // "e pronto" → done
       [15.6, 2104],
-      [g(1.3), 2124],
+      [g(1.2), 2124],
     ],
   },
   {
-    // "Ele classifica suas despesas…"
+    // "Pede pra ele classificar as despesas da semana… ele já sugere a categoria… confere, confirma… e pronto"
     content: (rf) => (
       <>
-        <UserMessage at={0} frame={rf} lines={['Classifica as despesas da semana']} top={EXP_TEXT_TOP - 210} />
-        <AssistantText frame={rf} text="Classifiquei as despesas da semana:" top={EXP_TEXT_TOP} window={T.expIntro} />
+        <UserMessage at={EXP_MSG.send + 2} frame={rf} lines={EXP_MSG.lines} top={EXP_TEXT_TOP - 260} />
+        <AssistantText frame={rf} text="Classifiquei as despesas da semana:" top={EXP_TEXT_TOP} window={[384, 404]} />
         <ExpensesCard frame={rf} />
       </>
     ),
-    scroll: [[436, 470, EXP_CARD_TOP - 198]],
-    scroll0: EXP_CARD_TOP - 560,
-    start: s(g(1.3)),
+    scroll: [
+      [418, 450, EXP_CARD_TOP - 198],
+      [494, 520, EXP_CARD_TOP + EXP_H.list - 1130],
+      [T.review, T.review + 22, EXP_CARD_TOP - 198],
+    ],
+    scroll0: EXP_TEXT_TOP - 260 - 230,
+    start: s(g(1.2)),
     warp: [
-      [g(1.3), 412],
-      [g(3.5), 496],
+      [g(1.2), 330],
+      [g(1.4), 340], // "Pede pra ele classificar…" → typing
+      [g(3.4), 370],
+      [g(3.6), 372], // send
+      [g(3.9), 396],
+      [g(4.3), 416], // card
+      [g(4.5), 428], // "ele já sugere a categoria de cada uma" → categories fill in
+      [g(6.5), 494],
+      [g(6.85), 520], // "Você confere" → total + button
+      [g(7.1), 532], // tap review
+      [g(7.3), 544],
+      [g(8.2), 600], // "confirma…"
+      [g(8.4), 622], // tap confirm
+      [g(8.76), 634], // "e pronto" → done
+      [g(10.7), 700],
     ],
   },
   {
-    // "concilia o extrato do banco…"
+    // "Manda conciliar o extrato do banco… ele encontra o lançamento certo… É só revisar e confirmar."
     content: (rf) => (
       <>
-        <UserMessage at={0} frame={rf} lines={['Concilia o extrato do banco', 'com os lançamentos']} top={BANK.u7} />
+        <UserMessage at={T.u7.send + 2} frame={rf} lines={['Concilia o extrato do banco', 'com os lançamentos']} top={BANK.u7} />
         <AssistantText frame={rf} text="Encontrei 3 movimentações com correspondência no OTTO:" top={BANK.a7} window={T.a7} />
         <BankReconciliationCard frame={rf} />
       </>
     ),
-    scroll: [[2210, 2246, BANK.card + 480 - 198]],
-    scroll0: BANK.card - 560,
-    start: s(g(3.5)),
+    scroll: [
+      [2198, 2226, BANK.card - 198],
+      [2240, 2266, BANK.card + 900 - 198],
+      [2280, 2306, BANK.card + BANK_H.list - 1130],
+      [T.bcConfirm, T.bcConfirm + 20, BANK.card + BANK_H.confirm - 1130],
+      [T.bcDone, T.bcDone + 20, BANK.card - 198],
+    ],
+    scroll0: BANK.u7 - 230,
+    start: s(g(10.75)),
     warp: [
-      [g(3.5), 2200],
-      [g(5.3), 2290],
+      [g(10.75), 2100],
+      [g(10.9), 2110], // "Manda conciliar o extrato do banco" → typing
+      [g(12.5), 2138],
+      [g(12.7), 2142], // send
+      [g(13.0), 2172],
+      [g(13.4), 2198], // card
+      [g(13.7), 2226], // "ele encontra o lançamento certo" → matches
+      [g(15.6), 2280],
+      [g(16.0), 2306],
+      [g(16.25), 2318], // "É só revisar" → tap
+      [g(16.4), 2330],
+      [g(17.3), 2396], // "confirmar" → tap
+      [g(17.5), 2408], // done
+      [g(18.0), 2436],
     ],
   },
   {
-    // "e te mostra o seu financeiro inteiro, com gráfico e alertas. Tudo isso dentro do chat."
+    // "E quer saber como tá o financeiro? Ele te mostra tudo: saldo, entradas, saídas, o gráfico… e os alertas"
     content: (rf) => (
       <>
-        <UserMessage at={0} frame={rf} lines={['E como está o financeiro', 'nos últimos 30 dias?']} top={FIN.u5} />
+        <UserMessage at={T.u5.send + 2} frame={rf} lines={['E como está o financeiro', 'nos últimos 30 dias?']} top={FIN.u5} />
         <AssistantText frame={rf} text="Aqui está a visão financeira dos últimos 30 dias:" top={FIN.a5} window={T.a5} />
         <FinanceCard frame={rf} still />
       </>
     ),
     scroll: [
-      [1534, 1560, FIN.card - 140],
+      [1524, 1550, FIN.card - 140],
       [1640, 1690, FIN.card + 1530 - 198],
+      [1770, 1800, FIN.card + 1000 - 198],
     ],
-    scroll0: FIN.card - 560,
-    start: s(g(5.3)),
+    scroll0: FIN.u5 - 230,
+    start: s(g(18.0)),
     warp: [
-      [g(5.3), 1524],
-      [g(7.3), 1600], // "financeiro inteiro" → KPIs count up
-      [g(8.0), 1690], // "gráfico" → chart
-      [g(9.4), 1768],
-      [g(11.4), 1780],
+      [g(18.0), 1430],
+      [g(18.1), 1440], // "E quer saber como tá o financeiro?" → typing
+      [g(19.4), 1466],
+      [g(19.55), 1470], // send
+      [g(19.7), 1500],
+      [g(20.1), 1522],
+      [g(21.1), 1536], // "saldo"
+      [g(21.9), 1542], // "entradas"
+      [g(22.6), 1548], // "saídas"
+      [g(23.1), 1640],
+      [g(23.6), 1690], // "o gráfico do período" → chart
+      [g(24.6), 1762],
+      [g(24.8), 1770], // "e os alertas" → back to the alerts
+      [g(25.4), 1800],
+      [g(29.25), 1812],
     ],
   },
 ]
@@ -187,7 +242,6 @@ const w = (text: string, start: number, end: number): Word => ({ end, start, tex
 /** Words of part 2, shifted to reel time. */
 const w2 = (text: string, start: number, end: number) => w(text, g(start), g(end))
 
-const HOOK: Word[] = [w('Agora', 0, 0.36), w('o', 0.4, 0.48), w('ChatGPT', 0.56, 1.36), w('pode', 1.44, 1.6), w('emitir', 1.72, 1.92), w('suas', 2, 2.24), w('notas', 2.32, 2.56), w('fiscais', 2.64, 3.36)]
 
 /** Narration captions, one phrase at a time, karaoke-style. */
 const CAPTIONS: Word[][] = [
@@ -200,12 +254,20 @@ const CAPTIONS: Word[][] = [
   [w('e', 14.04, 14.08), w('pronto.', 14.16, 14.56)],
   [w('três', 14.88, 15.12), w('notas', 15.2, 15.44), w('emitidas', 15.6, 16.24)],
   [w('sem', 16.32, 16.48), w('abrir', 16.56, 16.72), w('sistema', 16.8, 17.36), w('nenhum', 17.44, 17.76)],
-  [w2('E', 0, 0.08), w2('não', 0.12, 0.24), w2('faz', 0.28, 0.48), w2('só', 0.52, 0.64), w2('isso.', 0.76, 1.2)],
-  [w2('Ele', 1.36, 1.52), w2('classifica', 1.64, 2.08), w2('suas', 2.16, 2.32), w2('despesas…', 2.4, 3.44)],
-  [w2('concilia', 3.56, 3.92), w2('o', 3.96, 4), w2('extrato', 4.12, 4.4), w2('do', 4.44, 4.48), w2('banco…', 4.56, 5.28)],
-  [w2('e', 5.32, 5.36), w2('te', 5.44, 5.52), w2('mostra', 5.6, 5.84), w2('o', 5.88, 5.92), w2('seu', 5.96, 6.08), w2('financeiro', 6.28, 6.56), w2('inteiro,', 6.72, 7.44)],
-  [w2('com', 7.48, 7.52), w2('gráfico', 7.68, 8.16), w2('e', 8.32, 8.36), w2('alertas.', 8.4, 8.96)],
-  [w2('Tudo', 9.36, 9.6), w2('isso', 9.68, 9.92), w2('dentro', 10.16, 10.4), w2('do', 10.48, 10.56), w2('chat.', 10.64, 11.12)],
+  [w2('E', 0, 0.08), w2('não', 0.133, 0.24), w2('faz', 0.293, 0.4), w2('só', 0.44, 0.56), w2('isso.', 0.64, 1.12)],
+  [w2('Pede', 1.28, 1.52), w2('pra', 1.56, 1.6), w2('ele', 1.68, 1.76), w2('classificar', 1.88, 2.32), w2('as', 2.4, 2.48), w2('despesas', 2.56, 2.88), w2('da', 2.96, 3.04), w2('semana…', 3.12, 4.16)],
+  [w2('ele', 4.24, 4.32), w2('já', 4.36, 4.48), w2('sugere', 4.56, 4.88), w2('a', 4.92, 4.96), w2('categoria', 5.24, 5.52), w2('de', 5.6, 5.68), w2('cada', 5.76, 5.92), w2('uma.', 6, 6.56)],
+  [w2('Você', 6.68, 6.8), w2('confere,', 6.92, 7.6), w2('confirma…', 7.76, 8.56)],
+  [w2('e', 8.64, 8.72), w2('pronto,', 8.76, 9.36), w2('tudo', 9.4, 9.6), w2('classificado.', 9.72, 10.72)],
+  [w2('Manda', 10.76, 10.96), w2('conciliar', 11.08, 11.44), w2('o', 11.48, 11.52), w2('extrato', 11.64, 11.92), w2('do', 11.96, 12), w2('banco…', 12.08, 12.8)],
+  [w2('ele', 12.84, 12.88), w2('encontra', 12.96, 13.28), w2('o', 13.32, 13.36), w2('lançamento', 13.44, 13.84), w2('certo', 14, 14.36), w2('pra', 14.4, 14.64), w2('cada', 14.68, 14.88), w2('movimentação.', 14.96, 16)],
+  [w2('É', 16.08, 16.16), w2('só', 16.187, 16.24), w2('revisar', 16.32, 16.72), w2('e', 16.76, 16.8), w2('confirmar.', 16.88, 17.68)],
+  [w2('E', 17.72, 17.76), w2('quer', 17.84, 17.92), w2('saber', 18, 18.16), w2('como', 18.24, 18.4), w2('tá', 18.48, 18.56), w2('o', 18.6, 18.64), w2('financeiro?', 18.72, 19.6)],
+  [w2('Ele', 19.64, 19.68), w2('te', 19.76, 19.84), w2('mostra', 19.92, 20.32), w2('tudo:', 20.4, 21.04)],
+  [w2('saldo,', 21.12, 21.68), w2('entradas,', 21.88, 22.48), w2('saídas,', 22.56, 23.28)],
+  [w2('o', 23.32, 23.36), w2('gráfico', 23.44, 23.84), w2('do', 23.88, 23.92), w2('período…', 24, 24.747)],
+  [w2('e', 24.773, 24.8), w2('os', 24.88, 24.96), w2('alertas', 25.16, 25.44), w2('do', 25.48, 25.52), w2('que', 25.6, 25.68), w2('precisa', 25.8, 26.08), w2('da', 26.12, 26.16), w2('sua', 26.24, 26.32), w2('atenção.', 26.48, 27.2)],
+  [w2('Tudo', 27.24, 27.44), w2('isso', 27.52, 27.92), w2('dentro', 28.04, 28.24), w2('do', 28.28, 28.32), w2('chat.', 28.4, 29.2)],
 ]
 
 function Caption({ frame }: { frame: number }) {
@@ -228,26 +290,24 @@ function Caption({ frame }: { frame: number }) {
   )
 }
 
-/** Empty new chat: the hook is spoken and written where the chat will start. */
-function Hook({ frame, rf }: { frame: number; rf: number }) {
-  const t = frame / 30
-  const out = p(rf, T.u6.send - 4, T.u6.send + 6)
-  if (frame >= SCENES[1].start || out >= 1) return null
+/** Same opening as the other "Agora o ChatGPT pode…" reels; the ChatGPT screen takes over after it. */
+const HOOK_END = s(3.5)
+const HookScene = makeHookScene('Agora o ChatGPT pode emitir suas notas fiscais.', ['notas', 'fiscais'], 88, '')
+
+function HookLayer({ frame }: { frame: number }) {
+  if (frame >= HOOK_END) return null
   return (
-    <div style={{ left: 60, opacity: 1 - out, position: 'absolute', right: 60, textAlign: 'center', top: 470, transform: `translateY(${-out * 40}px)` }}>
-      <span style={{ color: TEXT, display: 'block', fontSize: 70, fontWeight: 700, letterSpacing: '-0.025em', lineHeight: '80px' }}>
-        {HOOK.map((word, i) => {
-          const sp = pop(frame, s(word.start))
-          return (
-            <span key={i} style={{ display: 'inline-block', marginRight: i < HOOK.length - 1 ? 18 : 0, opacity: t >= word.start ? sp : 0.12, transform: `translateY(${t >= word.start ? (1 - sp) * 16 : 0}px)` }}>
-              {word.text}
-            </span>
-          )
-        })}
-      </span>
-      <span style={{ color: '#8e8e8e', display: 'block', fontSize: 31, marginTop: 36, opacity: p(frame, s(3.4), s(3.8)) }}>Em que posso ajudar?</span>
-    </div>
+    <AbsoluteFill style={{ opacity: 1 - p(frame, HOOK_END - 7, HOOK_END) }}>
+      <ReelRoot scenes={[{ Component: HookScene, duration: HOOK_END }]} />
+    </AbsoluteFill>
   )
+}
+
+/** Empty new chat, until the request is sent. */
+function EmptyChat({ rf }: { rf: number }) {
+  const out = p(rf, T.u6.send - 4, T.u6.send + 6)
+  if (rf >= T.nfCard) return null
+  return <span style={{ color: '#8e8e8e', fontSize: 40, fontWeight: 500, left: 0, opacity: 1 - out, position: 'absolute', right: 0, textAlign: 'center', top: 640 }}>Em que posso ajudar?</span>
 }
 
 function Cta({ frame }: { frame: number }) {
@@ -285,7 +345,7 @@ export function OttoChatGptNotaReel() {
       <div style={{ height: SCREEN_H, left: 0, overflow: 'hidden', position: 'absolute', top: 0, transform: `scale(${SCALE})`, transformOrigin: '0 0', width: 828 }}>
         {/* conversation */}
         <div style={{ inset: 0, opacity: enter, position: 'absolute', transform: `translateY(${-scroll + (1 - enter) * 90}px)` }}>{scene.content(rf)}</div>
-        <Hook frame={frame} rf={rf} />
+        {scene.start === 0 ? <EmptyChat rf={rf} /> : null}
 
         {/* fixed chrome */}
         <div style={{ background: 'linear-gradient(#fff 88%, rgba(255,255,255,0))', height: 196, left: 0, position: 'absolute', right: 0, top: 0 }} />
@@ -294,11 +354,12 @@ export function OttoChatGptNotaReel() {
         <Caption frame={frame} />
         <div style={{ inset: 0, position: 'absolute', transform: `translateY(${-BOTTOM_SHIFT}px)` }}>
           <div style={{ background: 'linear-gradient(rgba(255,255,255,0), #fff 45%)', height: 230, left: 0, position: 'absolute', right: 0, top: 1580 }} />
-          <Composer frame={rf} />
+          <Composer frame={rf} messages={COMPOSER_MESSAGES} />
           <div style={{ background: TEXT, borderRadius: 99, height: 9, left: 267, position: 'absolute', top: 1764, width: 294 }} />
         </div>
       </div>
 
+      <HookLayer frame={frame} />
       <Cta frame={frame} />
     </AbsoluteFill>
   )
