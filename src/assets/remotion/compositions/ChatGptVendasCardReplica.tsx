@@ -17,15 +17,15 @@ export const CHATGPT_VENDAS_CARD_DURATION = 2520
 export const CHATGPT_VENDAS_CARD_WIDTH = 828
 export const CHATGPT_VENDAS_CARD_HEIGHT = 1792
 
-const FONT = IOS_REMOTION_FONT_STACK
-const TEXT = '#0d0d0d'
-const MUTED = '#6b6b6b'
+export const FONT = IOS_REMOTION_FONT_STACK
+export const TEXT = '#0d0d0d'
+export const MUTED = '#6b6b6b'
 const LINE = '#e6e6e6'
 const BUBBLE = '#f4f4f4'
 
 // The app's globals.css forces its own font on every element; keep the iOS stack inside the replica.
 // It also forces every lucide icon to 18px (globals.css); give icons back the size/stroke they were rendered with.
-const FONT_CSS = `.chatgpt-replica, .chatgpt-replica * { font-family: ${FONT} !important; }
+export const FONT_CSS = `.chatgpt-replica, .chatgpt-replica * { font-family: ${FONT} !important; }
 .chatgpt-replica .lucide { width: var(--icon-size, 24px) !important; height: var(--icon-size, 24px) !important; stroke-width: var(--icon-stroke, 2) !important; }`
 
 const USER_MESSAGE = ['Me mostra minhas vendas', 'recentes e já classifica as', 'despesas da semana']
@@ -40,7 +40,7 @@ const SALES = [
 ]
 
 // Timeline (frames @30fps)
-const T = {
+export const T = {
   answerIntro: [62, 92],
   bubble: 48,
   card: 98,
@@ -125,21 +125,21 @@ const T = {
   u7: { send: 2142, typing: [2110, 2138] },
 }
 
-function p(frame: number, from: number, to: number, output: [number, number] = [0, 1], easing = Easing.out(Easing.cubic)) {
+export function p(frame: number, from: number, to: number, output: [number, number] = [0, 1], easing = Easing.out(Easing.cubic)) {
   return interpolate(frame, [from, to], output, { easing, extrapolateLeft: 'clamp', extrapolateRight: 'clamp' })
 }
 
 /** Reveals text word by word, like a streamed answer. */
-function stream(text: string, progress: number) {
+export function stream(text: string, progress: number) {
   const words = text.split(' ')
   return words.slice(0, Math.ceil(words.length * progress)).join(' ')
 }
 
-function pop(frame: number, at: number) {
+export function pop(frame: number, at: number) {
   return spring({ config: { damping: 18, stiffness: 190 }, fps: 30, frame: frame - at })
 }
 
-function StatusBar() {
+export function StatusBar() {
   return (
     <div style={{ alignItems: 'center', display: 'flex', height: 100, justifyContent: 'space-between', left: 0, padding: '0 38px 0 62px', position: 'absolute', right: 0, top: 0 }}>
       <span style={{ color: TEXT, fontSize: 32, fontWeight: 600, letterSpacing: '-0.01em' }}>23:31</span>
@@ -166,7 +166,7 @@ function StatusBar() {
   )
 }
 
-function TopBar() {
+export function TopBar() {
   return (
     <div style={{ alignItems: 'center', display: 'flex', height: 80, left: 0, padding: '0 50px 0 56px', position: 'absolute', right: 0, top: 100 }}>
       <svg height={26} viewBox="0 0 38 26" width={38}>
@@ -191,7 +191,7 @@ const MESSAGES = [
   { lines: ['Concilia o extrato do banco', 'com os lançamentos'], send: T.u7.send, typing: T.u7.typing },
 ]
 
-function Composer({ frame }: { frame: number }) {
+export function Composer({ frame }: { frame: number }) {
   const active = MESSAGES.find((m) => frame >= m.typing[0] && frame < m.send)
   const typedLines = active ? active.lines.join(' ') : ''
   const text = active ? typedLines.slice(0, Math.floor(typedLines.length * p(frame, active.typing[0], active.typing[1], [0, 1], Easing.linear))) : ''
@@ -225,7 +225,7 @@ function UserBubble({ frame }: { frame: number }) {
 }
 
 /** Inline CSS vars that pin a lucide icon's size/stroke past the app's global 18px rule. */
-const iv = (size: number, stroke: number, extra: CSSProperties = {}) => ({ ...extra, '--icon-size': `${size}px`, '--icon-stroke': stroke }) as CSSProperties
+export const iv = (size: number, stroke: number, extra: CSSProperties = {}) => ({ ...extra, '--icon-size': `${size}px`, '--icon-stroke': stroke }) as CSSProperties
 
 function Badge({ children }: { children: ReactNode }) {
   return <span style={{ background: '#fbe5e5', borderRadius: 99, color: '#a3262c', display: 'inline-block', fontSize: 26, fontWeight: 500, padding: '8px 17px' }}>{children}</span>
@@ -440,8 +440,8 @@ const EXPENSES = [
 ]
 
 /** Document position (before scrolling) of the classification card and the text above it. */
-const EXP_TEXT_TOP = 2580
-const EXP_CARD_TOP = 2710
+export const EXP_TEXT_TOP = 2580
+export const EXP_CARD_TOP = 2710
 const EXP_H = { done: 747, list: 1622, review: 915 }
 /** Scroll position that shows the total + "Revisar classificação" above the composer. */
 const EXP_FOOTER_SCROLL = EXP_CARD_TOP + 1526 - 1480
@@ -480,7 +480,7 @@ const TagsTile = (
   </IconTile>
 )
 
-function ExpensesCard({ frame }: { frame: number }) {
+export function ExpensesCard({ frame }: { frame: number }) {
   const card = pop(frame, T.expCard)
   if (frame < T.expCard) return null
   const at = (delay: number): CSSProperties => {
@@ -631,7 +631,7 @@ const CLIENTS = [
   { city: 'Olinda', id: 'CLI-003', name: 'Maria Souza', type: 'Pessoa física' },
 ]
 
-function UserMessage({ at, frame, lines, top }: { at: number; frame: number; lines: string[]; top: number }) {
+export function UserMessage({ at, frame, lines, top }: { at: number; frame: number; lines: string[]; top: number }) {
   const s = pop(frame, at)
   if (frame < at) return null
   return (
@@ -643,7 +643,7 @@ function UserMessage({ at, frame, lines, top }: { at: number; frame: number; lin
   )
 }
 
-function AssistantText({ frame, text, top, window: [from, to] }: { frame: number; text: string; top: number; window: number[] }) {
+export function AssistantText({ frame, text, top, window: [from, to] }: { frame: number; text: string; top: number; window: number[] }) {
   if (frame < from) return null
   return <p style={{ color: TEXT, fontSize: 32, left: 33, lineHeight: '48px', margin: 0, position: 'absolute', right: 40, top }}>{stream(text, p(frame, from, to, [0, 1], Easing.linear))}</p>
 }
@@ -943,8 +943,8 @@ function DeleteClientCard({ frame }: { frame: number }) {
 
 // ─── Financial overview ("Visão financeira"): KPIs count up, period switches 30 → 7 days, alerts ───
 
-const FIN = { a5: 8790, card: 8930, u5: 8580 }
-const FIN_H = 2477
+export const FIN = { a5: 8790, card: 8930, u5: 8580 }
+export const FIN_H = 2477
 
 const CHART_IN = '#7aa8f2'
 const CHART_OUT = '#e09868'
@@ -1005,11 +1005,15 @@ const ALERTS = [
   { icon: <CalendarClock color="#5b5b5b" size={32} strokeWidth={2} style={iv(32, 2)} />, sub: 'R$ 8.920 em obrigações abertas', title: 'Contas a pagar pendentes' },
 ]
 
-function FinanceCard({ frame }: { frame: number }) {
-  const period: 0 | 1 = frame >= T.finSwitch ? 1 : 0
-  const switching = p(frame, T.finSwitch, T.finSwitch + 18, [0, 1], Easing.out(Easing.cubic))
-  const menuOpen = frame >= T.finTapSelect + 4 && frame < T.finSwitch
-  const menu = pop(frame, T.finTapSelect + 4)
+export function FinanceCard({ frame, still }: { frame: number; still?: boolean }) {
+  // still: no period switch (used by the reel montage)
+  const sw = still ? 1e9 : T.finSwitch
+  const tapSel = still ? 1e9 : T.finTapSelect
+  const tapOpt = still ? 1e9 : T.finTapOption
+  const period: 0 | 1 = frame >= sw ? 1 : 0
+  const switching = p(frame, sw, sw + 18, [0, 1], Easing.out(Easing.cubic))
+  const menuOpen = frame >= tapSel + 4 && frame < sw
+  const menu = pop(frame, tapSel + 4)
   const at = (delay: number): CSSProperties => {
     const s = pop(frame, delay)
     return { opacity: frame < delay ? 0 : s, transform: `translateY(${(1 - s) * 16}px)` }
@@ -1029,10 +1033,10 @@ function FinanceCard({ frame }: { frame: number }) {
         </div>
 
         {/* period selector */}
-        <div style={{ alignItems: 'center', border: '2px solid #d6d6d6', borderRadius: 36, display: 'flex', height: 70, justifyContent: 'space-between', marginTop: 1, padding: '0 32px', position: 'relative', transform: `scale(${frame >= T.finTapSelect && frame < T.finTapSelect + 6 ? 0.98 : 1})` }}>
+        <div style={{ alignItems: 'center', border: '2px solid #d6d6d6', borderRadius: 36, display: 'flex', height: 70, justifyContent: 'space-between', marginTop: 1, padding: '0 32px', position: 'relative', transform: `scale(${frame >= tapSel && frame < tapSel + 6 ? 0.98 : 1})` }}>
           <span style={{ color: TEXT, fontSize: 29, fontWeight: 500 }}>{PERIODS[period === 0 ? 1 : 0]}</span>
           <ChevronDown color="#6b6b6b" size={30} strokeWidth={2} style={iv(30, 2, { transform: menuOpen ? 'rotate(180deg)' : 'none' })} />
-          <TapRipple at={T.finTapSelect} frame={frame} x={380} y={35} />
+          <TapRipple at={tapSel} frame={frame} x={380} y={35} />
         </div>
 
         {/* KPI grid */}
@@ -1048,7 +1052,7 @@ function FinanceCard({ frame }: { frame: number }) {
                   <span style={{ color: MUTED, fontSize: 27 }}>{kpi.label}</span>
                   {kpi.icon}
                 </div>
-                <span style={{ color: kpi.tone === 'green' ? GREEN : TEXT, display: 'block', fontSize: 42, fontVariantNumeric: 'tabular-nums', fontWeight: 650, letterSpacing: '-0.01em', marginTop: 22, opacity: changes && frame >= T.finSwitch && frame < T.finSwitch + 6 ? 0.55 : 1 }}>{brlInt(value)}</span>
+                <span style={{ color: kpi.tone === 'green' ? GREEN : TEXT, display: 'block', fontSize: 42, fontVariantNumeric: 'tabular-nums', fontWeight: 650, letterSpacing: '-0.01em', marginTop: 22, opacity: changes && frame >= sw && frame < sw + 6 ? 0.55 : 1 }}>{brlInt(value)}</span>
                 <span style={{ color: MUTED, display: 'block', fontSize: 27, marginTop: 20 }}>{kpi.sub(period)}</span>
               </div>
             )
@@ -1134,10 +1138,10 @@ function FinanceCard({ frame }: { frame: number }) {
         {menuOpen ? (
           <div style={{ background: '#fff', border: `1px solid ${LINE}`, borderRadius: 26, boxShadow: '0 16px 40px rgba(0,0,0,0.14)', left: 22, opacity: menu, padding: '8px 0', position: 'absolute', right: 22, top: 230, transform: `translateY(${(1 - menu) * -12}px)`, zIndex: 4 }}>
             {PERIODS.map((label) => (
-              <div key={label} style={{ alignItems: 'center', background: frame >= T.finTapOption && label === PERIODS[0] ? '#f2f2f2' : 'transparent', display: 'flex', height: 74, justifyContent: 'space-between', padding: '0 30px', position: 'relative' }}>
+              <div key={label} style={{ alignItems: 'center', background: frame >= tapOpt && label === PERIODS[0] ? '#f2f2f2' : 'transparent', display: 'flex', height: 74, justifyContent: 'space-between', padding: '0 30px', position: 'relative' }}>
                 <span style={{ color: TEXT, fontSize: 29 }}>{label}</span>
                 {label === PERIODS[1] ? <Check color={TEXT} size={28} strokeWidth={2.4} style={iv(28, 2.4)} /> : null}
-                {label === PERIODS[0] ? <TapRipple at={T.finTapOption} frame={frame} x={300} y={37} /> : null}
+                {label === PERIODS[0] ? <TapRipple at={tapOpt} frame={frame} x={300} y={37} /> : null}
               </div>
             ))}
           </div>
@@ -1149,8 +1153,8 @@ function FinanceCard({ frame }: { frame: number }) {
 
 // ─── Batch NFS-e: list → "Confirmar emissão" → "Emissão concluída" ──────────────────────────────
 
-const NF = { a6: 11687, card: 11767, u6: 11477 }
-const NF_H = { confirm: 1206, done: 960, list: 1180 }
+export const NF = { a6: 11687, card: 11767, u6: 11477 }
+export const NF_H = { confirm: 1206, done: 960, list: 1180 }
 
 const NF_SALES = [
   { client: 'Clínica Horizonte Ltda.', id: '#2031', service: 'Consultoria de marketing', value: 'R$ 1.500,00' },
@@ -1177,7 +1181,14 @@ const nfTile = (
   </IconTile>
 )
 
-function InvoiceBatchCard({ frame }: { frame: number }) {
+/** Demo wording from the prints, or "ad" wording for the reel (real issuance, no demo disclaimers). */
+const NF_COPY = {
+  ad: { button: 'Emitir notas', confirmNote: 'As notas serão enviadas por e-mail para cada cliente assim que forem autorizadas.', doneNote: 'Número da nota, protocolo, PDF e XML já disponíveis para cada cliente.', doneSub: '3 notas emitidas agora.', doneTitle: 'Notas emitidas com sucesso', doneSubtitle: 'Resultado da emissão', result: 'Emitidas', resultLabel: 'Notas emitidas' },
+  demo: { button: 'Simular emissão', confirmNote: 'Prévia demonstrativa. A emissão real exigirá validação fiscal pelo backend e retorno do município ou provedor.', doneNote: 'Em produção, o resultado exibirá o número da nota, protocolo, situação fiscal, PDF e XML quando disponibilizados pelo provedor.', doneSub: '3 notas processadas nesta demonstração.', doneTitle: 'Emissão simulada com sucesso', doneSubtitle: 'Resultado da operação demonstrativa', result: 'Simulado', resultLabel: 'Notas processadas' },
+}
+
+export function InvoiceBatchCard({ ad, frame }: { ad?: boolean; frame: number }) {
+  const copy = NF_COPY[ad ? 'ad' : 'demo']
   const at = (delay: number): CSSProperties => {
     const s = pop(frame, delay)
     return { opacity: frame < delay ? 0 : s, transform: `translateY(${(1 - s) * 16}px)` }
@@ -1251,13 +1262,13 @@ function InvoiceBatchCard({ frame }: { frame: number }) {
             <SummaryBox mt={-2} rows={[['Notas a emitir', '3'], ['Valor total', 'R$ 2.780,00']]} />
             <div style={{ color: MUTED, display: 'flex', fontSize: 24, gap: 14, lineHeight: '36px', marginTop: 40 }}>
               <Info color={MUTED} size={26} strokeWidth={2} style={iv(26, 2, { flex: 'none', marginTop: 5 })} />
-              <span>Prévia demonstrativa. A emissão real exigirá validação fiscal pelo backend e retorno do município ou provedor.</span>
+              <span>{copy.confirmNote}</span>
             </div>
           </div>
           <div style={{ display: 'flex', gap: 18, marginTop: 40, ...at(T.nfConfirm + 38) }}>
             <span style={{ alignItems: 'center', border: '2px solid #d9d9d9', borderRadius: 36, color: '#3d3d3d', display: 'flex', flex: 1, fontSize: 28, fontWeight: 500, height: 72, justifyContent: 'center' }}>Voltar</span>
             <span style={{ alignItems: 'center', background: '#1a1a1a', borderRadius: 36, color: '#fff', display: 'flex', flex: 1, fontSize: 28, fontWeight: 500, gap: 14, height: 72, justifyContent: 'center', transform: `scale(${frame >= T.nfTapSimulate && frame < T.nfTapSimulate + 6 ? 0.96 : 1})` }}>
-              <Check color="#fff" size={30} strokeWidth={2.4} style={iv(30, 2.4)} /> Simular emissão
+              <Check color="#fff" size={30} strokeWidth={2.4} style={iv(30, 2.4)} /> {copy.button}
             </span>
           </div>
           <TapRipple at={T.nfTapSimulate} frame={frame} x={556} y={1136} />
@@ -1273,7 +1284,7 @@ function InvoiceBatchCard({ frame }: { frame: number }) {
                 <FileCheck2 color="#4a4a4a" size={34} strokeWidth={2} style={iv(34, 2)} />
               </IconTile>
             }
-            subtitle="Resultado da operação demonstrativa"
+            subtitle={copy.doneSubtitle}
             title="Emissão concluída"
           />
           <div style={{ background: LINE, height: 2 }} />
@@ -1284,24 +1295,24 @@ function InvoiceBatchCard({ frame }: { frame: number }) {
             </svg>
           </div>
           <div style={{ textAlign: 'center', ...at(T.nfDone + 18) }}>
-            <span style={{ color: TEXT, display: 'block', fontSize: 37, fontWeight: 650, letterSpacing: '-0.01em', marginTop: 26 }}>Emissão simulada com sucesso</span>
-            <span style={{ color: MUTED, display: 'block', fontSize: 26, marginTop: 26 }}>3 notas processadas nesta demonstração.</span>
+            <span style={{ color: TEXT, display: 'block', fontSize: 37, fontWeight: 650, letterSpacing: '-0.01em', marginTop: 26 }}>{copy.doneTitle}</span>
+            <span style={{ color: MUTED, display: 'block', fontSize: 26, marginTop: 26 }}>{copy.doneSub}</span>
           </div>
           <div style={at(T.nfDone + 26)}>
             <SummaryBox
               mt={36}
               rows={[
-                ['Notas processadas', '3'],
+                [copy.resultLabel, '3'],
                 ['Valor total', 'R$ 2.780,00'],
                 [
                   'Resultado',
                   <>
-                    <CircleCheck color={GREEN} size={24} strokeWidth={2.2} style={iv(24, 2.2)} /> Simulado
+                    <CircleCheck color={GREEN} size={24} strokeWidth={2.2} style={iv(24, 2.2)} /> {copy.result}
                   </>,
                 ],
               ]}
             />
-            <span style={{ color: MUTED, display: 'block', fontSize: 24, lineHeight: '36px', marginTop: 20 }}>Em produção, o resultado exibirá o número da nota, protocolo, situação fiscal, PDF e XML quando disponibilizados pelo provedor.</span>
+            <span style={{ color: MUTED, display: 'block', fontSize: 24, lineHeight: '36px', marginTop: 20 }}>{copy.doneNote}</span>
           </div>
           <div style={{ alignItems: 'center', border: '2px solid #d9d9d9', borderRadius: 36, color: '#3d3d3d', display: 'flex', fontSize: 27, fontWeight: 500, gap: 14, height: 70, justifyContent: 'center', marginTop: 40, ...at(T.nfDone + 32) }}>
             <ArrowLeft color="#3d3d3d" size={26} strokeWidth={2} style={iv(26, 2)} /> Nova emissão
@@ -1314,8 +1325,8 @@ function InvoiceBatchCard({ frame }: { frame: number }) {
 
 // ─── Bank reconciliation: suggested matches → "Confirmar conciliação" → "Conciliação concluída" ───
 
-const BANK = { a7: 13017, card: 13147, u7: 12807 }
-const BANK_H = { confirm: 1092, done: 1342, list: 1858 }
+export const BANK = { a7: 13017, card: 13147, u7: 12807 }
+export const BANK_H = { confirm: 1092, done: 1342, list: 1858 }
 
 const BANK_MOVES = [
   { amount: '+ R$ 1.500,00', date: '18/10/2026', in: true, match: 'Venda #2031 · Clínica Horizonte', title: 'PIX recebido · Clínica Horizonte', value: 'R$ 1.500,00' },
@@ -1325,7 +1336,7 @@ const BANK_MOVES = [
 
 const plainIcon = (icon: ReactNode) => <span style={{ display: 'flex', justifyContent: 'flex-end', width: 88 }}>{icon}</span>
 
-function BankReconciliationCard({ frame }: { frame: number }) {
+export function BankReconciliationCard({ frame }: { frame: number }) {
   const at = (delay: number): CSSProperties => {
     const s = pop(frame, delay)
     return { opacity: frame < delay ? 0 : s, transform: `translateY(${(1 - s) * 16}px)` }
