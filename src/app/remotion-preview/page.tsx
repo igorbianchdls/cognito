@@ -175,6 +175,7 @@ import { OTTO_BATCH_INVOICE_SCRIPT_DURATION, OTTO_SINGLE_INVOICE_SCRIPT_DURATION
 import { OTTO_HOOK_1_DURATION, OTTO_HOOK_2_DURATION, OTTO_HOOK_3_DURATION, OTTO_HOOK_4_DURATION, OTTO_HOOK_5_DURATION, OttoHookAutomatedFinanceVideo, OttoHookBatchInvoicesVideo, OttoHookBoletoPixVideo, OttoHookManageByChatVideo, OttoHookSingleInvoiceVideo } from '@/assets/remotion/compositions/OttoFiveHooksIllustrativeVideos'
 import { OTTO_BODY_1_DURATION, OTTO_BODY_2_DURATION, OttoBodyManageByConversationVideo, OttoBodySystemBehindVideo } from '@/assets/remotion/compositions/OttoTwoBodiesIllustrativeVideos'
 import { OTTO_CONTADORES_REEL_DURATION, OttoContadoresReel } from '@/assets/remotion/compositions/OttoContadoresReel'
+import { CHATGPT_VENDAS_CARD_DURATION, CHATGPT_VENDAS_CARD_HEIGHT, CHATGPT_VENDAS_CARD_WIDTH, ChatGptVendasCardReplica } from '@/assets/remotion/compositions/ChatGptVendasCardReplica'
 import { OTTO_CONTA_AZUL_REEL_DURATION, OTTO_OMIE_REEL_DURATION, OttoContaAzulReel, OttoOmieReel } from '@/assets/remotion/compositions/OttoContaAzulReel'
 import { OTTO_AGORA_CHAT_DURATION, OTTO_AGORA_FACIL_DURATION, OTTO_AGORA_FINANCEIRO_DURATION, OTTO_AGORA_LUCRO_DURATION, OTTO_AGORA_SISTEMA_DURATION, OttoAgoraChatDarkSquareReel, OttoAgoraChatReel, OttoAgoraFacilReel, OttoAgoraFinanceiroDarkReel, OttoAgoraFinanceiroReel, OttoAgoraLucroDarkReel, OttoAgoraLucroReel, OttoAgoraSistemaDarkSquareReel, OttoAgoraSistemaReel } from '@/assets/remotion/compositions/OttoAgoraChatGptReels'
 import { OTTO_COBRANCA_REEL_DURATION, OTTO_FUNCIONARIO_REEL_DURATION, OttoCobrancaReel, OttoFuncionarioReel } from '@/assets/remotion/compositions/OttoCobrancaFuncionarioVideos'
@@ -2333,6 +2334,19 @@ const catalog: CatalogItem[] = [
     tags: ['Reel', 'Otto', 'Financeiro', 'WhatsApp', 'ChatGPT', 'Claude'],
     value: 'reel-otto-contadores',
     width: 1080,
+  },
+  {
+    code: '<ChatGptVendasCardReplica />',
+    component: ChatGptVendasCardReplica,
+    description: 'Réplica 1:1 da tela do ChatGPT iOS, animada: mensagem enviada, resposta em streaming, card Vendas do OTTO montando linha a linha e texto final.',
+    duration: CHATGPT_VENDAS_CARD_DURATION,
+    fps: 30,
+    height: CHATGPT_VENDAS_CARD_HEIGHT,
+    kind: 'Claude Videos',
+    label: 'ChatGPT → card Vendas do OTTO (réplica animada)',
+    tags: ['ChatGPT', 'Mobile', 'Otto', 'Vendas', 'Réplica'],
+    value: 'chatgpt-vendas-card-replica',
+    width: CHATGPT_VENDAS_CARD_WIDTH,
   },
   {
     code: '<OttoNotaChatGptSingleReel />',
