@@ -13,7 +13,7 @@ loadSfProFonts()
  * sale detail inside the same card and the conversation scrolls so the card sits under the top bar.
  */
 
-export const CHATGPT_VENDAS_CARD_DURATION = 2440
+export const CHATGPT_VENDAS_CARD_DURATION = 2520
 export const CHATGPT_VENDAS_CARD_WIDTH = 828
 export const CHATGPT_VENDAS_CARD_HEIGHT = 1792
 
@@ -96,6 +96,8 @@ const T = {
   // financial overview
   a5: [1500, 1522],
   finAlerts: 1662,
+  finBars: 1716,
+  finChart: 1690,
   finCard: 1526,
   finSwitch: 1618,
   finTapOption: 1612,
@@ -103,24 +105,24 @@ const T = {
   finTiles: 1536,
   u5: { send: 1470, typing: [1440, 1466] },
   // batch invoices (NFS-e)
-  a6: [1760, 1784],
-  nfCard: 1788,
-  nfConfirm: 1896,
-  nfDone: 1978,
-  nfRows: 1798,
-  nfTapReview: 1884,
-  nfTapSimulate: 1966,
-  u6: { send: 1732, typing: [1700, 1728] },
+  a6: [1840, 1864],
+  nfCard: 1868,
+  nfConfirm: 1976,
+  nfDone: 2058,
+  nfRows: 1878,
+  nfTapReview: 1964,
+  nfTapSimulate: 2046,
+  u6: { send: 1812, typing: [1780, 1808] },
   // bank reconciliation
-  a7: [2092, 2114],
-  bcCard: 2118,
-  bcConfirm: 2250,
-  bcDone: 2328,
-  bcFooter: 2196,
-  bcRows: 2146,
-  bcTapConfirm: 2316,
-  bcTapReview: 2238,
-  u7: { send: 2062, typing: [2030, 2058] },
+  a7: [2172, 2194],
+  bcCard: 2198,
+  bcConfirm: 2330,
+  bcDone: 2408,
+  bcFooter: 2276,
+  bcRows: 2226,
+  bcTapConfirm: 2396,
+  bcTapReview: 2318,
+  u7: { send: 2142, typing: [2110, 2138] },
 }
 
 function p(frame: number, from: number, to: number, output: [number, number] = [0, 1], easing = Easing.out(Easing.cubic)) {
@@ -942,7 +944,29 @@ function DeleteClientCard({ frame }: { frame: number }) {
 // ─── Financial overview ("Visão financeira"): KPIs count up, period switches 30 → 7 days, alerts ───
 
 const FIN = { a5: 8790, card: 8930, u5: 8580 }
-const FIN_H = 1500
+const FIN_H = 2477
+
+const CHART_IN = '#7aa8f2'
+const CHART_OUT = '#e09868'
+/** [30 days → weeks, 7 days → days]; sums match the KPI tiles. */
+const CHART = [
+  [
+    { in: 8900, label: 'Sem 1', out: 4200 },
+    { in: 10400, label: 'Sem 2', out: 5100 },
+    { in: 8300, label: 'Sem 3', out: 5150 },
+    { in: 10820, label: 'Sem 4', out: 5180 },
+  ],
+  [
+    { in: 1200, label: 'Seg', out: 620 },
+    { in: 1650, label: 'Ter', out: 880 },
+    { in: 980, label: 'Qua', out: 540 },
+    { in: 2100, label: 'Qui', out: 1150 },
+    { in: 1450, label: 'Sex', out: 760 },
+    { in: 1760, label: 'Sáb', out: 890 },
+    { in: 700, label: 'Dom', out: 370 },
+  ],
+]
+const CHART_MAX = [10820, 2100]
 const RED = '#a3262c'
 
 type Kpi = {
@@ -1056,6 +1080,56 @@ function FinanceCard({ frame }: { frame: number }) {
           </div>
         </div>
 
+        <div style={{ background: LINE, height: 2, marginTop: 50 }} />
+
+        {/* movement chart: follows the selected period */}
+        <div style={at(T.finChart)}>
+          <div style={{ display: 'flex', marginTop: 52 }}>
+            {['Resumo', 'Fluxo de c...', 'Despesas'].map((tab, i) => (
+              <span key={tab} style={{ alignItems: 'center', background: i === 0 ? '#efefef' : 'transparent', borderRadius: 32, color: i === 0 ? TEXT : '#9a9a9a', display: 'flex', flex: 1, fontSize: 29, fontWeight: 500, height: 64, justifyContent: 'center' }}>{tab}</span>
+            ))}
+          </div>
+          <span style={{ color: TEXT, display: 'block', fontSize: 38, fontWeight: 650, letterSpacing: '-0.01em', lineHeight: '46px', marginTop: 32 }}>Movimentação financeira</span>
+          <span style={{ color: MUTED, display: 'block', fontSize: 29, lineHeight: '36px', marginTop: 12 }}>Entradas e saídas por período</span>
+          <div style={{ alignItems: 'center', display: 'flex', gap: 34, marginTop: 26 }}>
+            {[
+              ['Entradas', CHART_IN],
+              ['Saídas', CHART_OUT],
+            ].map(([label, color]) => (
+              <span key={label} style={{ alignItems: 'center', color: MUTED, display: 'flex', fontSize: 27, gap: 16 }}>
+                <span style={{ background: color, borderRadius: 99, height: 20, width: 20 }} />
+                {label}
+              </span>
+            ))}
+          </div>
+          <div style={{ height: 420, marginLeft: 49, marginRight: 26, position: 'relative' }}>
+            {[96, 224].map((y) => (
+              <div key={y} style={{ borderTop: '2px dashed #e2e2e2', left: 0, position: 'absolute', right: 0, top: y }} />
+            ))}
+            <div style={{ background: '#d9d9d9', bottom: 66, height: 2, left: 0, position: 'absolute', right: 0 }} />
+            <div style={{ bottom: 68, display: 'flex', left: 0, position: 'absolute', right: 0, top: 0 }}>
+              {CHART[period].map((g, i) => {
+                const grow = p(frame, T.finBars + i * 4, T.finBars + i * 4 + 18, [0, 1], Easing.out(Easing.cubic))
+                const barW = period === 0 ? 40 : 26
+                return (
+                  <div key={g.label} style={{ alignItems: 'flex-end', display: 'flex', flex: 1, gap: period === 0 ? 9 : 4, justifyContent: 'center', position: 'relative' }}>
+                    <span style={{ background: CHART_IN, borderRadius: '7px 7px 0 0', height: (g.in / CHART_MAX[period]) * 256 * grow, width: barW }} />
+                    <span style={{ background: CHART_OUT, borderRadius: '7px 7px 0 0', height: (g.out / CHART_MAX[period]) * 256 * grow, width: barW }} />
+                    <span style={{ bottom: -56, color: TEXT, fontSize: 23, left: 0, position: 'absolute', right: 0, textAlign: 'center' }}>{g.label}</span>
+                  </div>
+                )
+              })}
+            </div>
+          </div>
+          <div style={{ background: '#f2f2f2', borderRadius: 26, height: 150, marginTop: 16, padding: '24px 24px 0', ...at(T.finBars + 30) }}>
+            <div style={{ alignItems: 'center', display: 'flex', justifyContent: 'space-between' }}>
+              <span style={{ color: TEXT, fontSize: 30, fontWeight: 500 }}>Resultado da movimentação</span>
+              <span style={{ color: GREEN, fontSize: 40, fontVariantNumeric: 'tabular-nums', fontWeight: 650, letterSpacing: '-0.01em' }}>{brlInt(KPIS[3].values[period] * p(frame, T.finBars + 30, T.finBars + 46, [0, 1], Easing.out(Easing.quad)))}</span>
+            </div>
+            <span style={{ color: MUTED, display: 'block', fontSize: 26, marginTop: 18 }}>Entradas menos saídas efetivas no período.</span>
+          </div>
+        </div>
+
         {/* period menu */}
         {menuOpen ? (
           <div style={{ background: '#fff', border: `1px solid ${LINE}`, borderRadius: 26, boxShadow: '0 16px 40px rgba(0,0,0,0.14)', left: 22, opacity: menu, padding: '8px 0', position: 'absolute', right: 22, top: 230, transform: `translateY(${(1 - menu) * -12}px)`, zIndex: 4 }}>
@@ -1075,7 +1149,7 @@ function FinanceCard({ frame }: { frame: number }) {
 
 // ─── Batch NFS-e: list → "Confirmar emissão" → "Emissão concluída" ──────────────────────────────
 
-const NF = { a6: 10710, card: 10790, u6: 10500 }
+const NF = { a6: 11687, card: 11767, u6: 11477 }
 const NF_H = { confirm: 1206, done: 960, list: 1180 }
 
 const NF_SALES = [
@@ -1240,7 +1314,7 @@ function InvoiceBatchCard({ frame }: { frame: number }) {
 
 // ─── Bank reconciliation: suggested matches → "Confirmar conciliação" → "Conciliação concluída" ───
 
-const BANK = { a7: 12040, card: 12170, u7: 11830 }
+const BANK = { a7: 13017, card: 13147, u7: 12807 }
 const BANK_H = { confirm: 1092, done: 1342, list: 1858 }
 
 const BANK_MOVES = [
@@ -1431,13 +1505,14 @@ const CRUD_SCROLL: [number, number, number][] = [
   [1360, 1380, CRUD.u4 - 110],
   [1474, 1498, FIN.u5 - 230],
   [1648, 1674, FIN.card + 1466 - 1560],
-  [1736, 1760, NF.u6 - 230],
-  [1848, 1872, NF.card + NF_H.list - 1560],
-  [1896, 1920, NF.card - 198],
-  [2066, 2090, BANK.u7 - 230],
-  [2132, 2158, BANK.card - 198],
-  [2200, 2226, BANK.card + BANK_H.list - 1560],
-  [2250, 2274, BANK.card - 198],
+  [1690, 1720, FIN.card + FIN_H - 1560],
+  [1816, 1840, NF.u6 - 230],
+  [1928, 1952, NF.card + NF_H.list - 1560],
+  [1976, 2000, NF.card - 198],
+  [2146, 2170, BANK.u7 - 230],
+  [2212, 2238, BANK.card - 198],
+  [2280, 2306, BANK.card + BANK_H.list - 1560],
+  [2330, 2354, BANK.card - 198],
 ]
 
 function crudScroll(frame: number, base: number) {
