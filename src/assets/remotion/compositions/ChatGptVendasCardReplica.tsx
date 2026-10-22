@@ -1,4 +1,4 @@
-import { ArrowDown, ArrowLeft, ArrowUp, AudioLines, CalendarDays, ChevronLeft, ChevronRight, Ellipsis, Mic, Package, Plus, ReceiptText, SquarePen, User } from 'lucide-react'
+import { ArrowDown, ArrowLeft, ArrowUp, AudioLines, CalendarDays, Check, CheckCheck, ChevronDown, ChevronLeft, ChevronRight, ClipboardCheck, Ellipsis, Mic, Package, Plus, ReceiptText, SquarePen, Tags, User } from 'lucide-react'
 import type { CSSProperties, ReactNode } from 'react'
 import { AbsoluteFill, Easing, interpolate, spring, useCurrentFrame } from 'remotion'
 
@@ -13,7 +13,7 @@ loadSfProFonts()
  * sale detail inside the same card and the conversation scrolls so the card sits under the top bar.
  */
 
-export const CHATGPT_VENDAS_CARD_DURATION = 400
+export const CHATGPT_VENDAS_CARD_DURATION = 690
 export const CHATGPT_VENDAS_CARD_WIDTH = 828
 export const CHATGPT_VENDAS_CARD_HEIGHT = 1792
 
@@ -28,10 +28,11 @@ const BUBBLE = '#f4f4f4'
 const FONT_CSS = `.chatgpt-replica, .chatgpt-replica * { font-family: ${FONT} !important; }
 .chatgpt-replica .lucide { width: var(--icon-size, 24px) !important; height: var(--icon-size, 24px) !important; stroke-width: var(--icon-stroke, 2) !important; }`
 
-const USER_MESSAGE = ['Eu não quero imagem...', '', 'Quero você criar ele aqui no', 'chat, simulado']
-const ANSWER_INTRO = 'Aqui está a versão melhorada do card do OTTO, simulada diretamente no ChatGPT.'
-const ANSWER_OUTRO_BOLD = 'Essa seria a minha versão final:'
-const ANSWER_OUTRO = ' mantém a identidade visual e a paginação do seu card original, mas adiciona o cliente e melhora a hierarquia das informações e do status.'
+const USER_MESSAGE = ['Me mostra minhas vendas', 'recentes e já classifica as', 'despesas da semana']
+const ANSWER_INTRO = 'Aqui estão as suas vendas recentes, direto do OTTO:'
+const ANSWER_OUTRO_BOLD = ''
+const ANSWER_OUTRO = 'Encontrei 2 vendas recentes, as duas canceladas. Toque em uma delas para ver os detalhes.'
+const EXPENSES_INTRO = 'E aqui estão as despesas da semana, já com as categorias sugeridas:'
 
 const SALES = [
   { client: 'QA-OTTO Cliente Cenário', date: '14/10/2026', id: '#1094', value: 'R$ 100,00' },
@@ -53,6 +54,19 @@ const T = {
   /** finger taps "Venda #1094" */
   tap: 236,
   typing: [10, 40],
+  // expense classification
+  confirmButtons: 548,
+  confirmRows: 514,
+  done: 594,
+  expCard: 376,
+  expFooter: 446,
+  expIntro: [338, 370],
+  expRows: [388, 402, 416, 430],
+  review: 504,
+  scrollToExpenses: [334, 364],
+  scrollToFooter: [452, 482],
+  tapConfirm: 582,
+  tapReview: 492,
 }
 
 function p(frame: number, from: number, to: number, output: [number, number] = [0, 1], easing = Easing.out(Easing.cubic)) {
@@ -326,6 +340,180 @@ function SalesCard({ frame }: { frame: number }) {
   )
 }
 
+// ─── Expense classification (prints: list "Em lote" → total → confirm → done) ─────────────────
+
+const EXPENSES = [
+  { category: 'Software e assinaturas', date: '18/10/2026', name: 'Google Workspace', value: 'R$ 129,90' },
+  { category: 'Marketing e publicidade', date: '17/10/2026', name: 'Meta Ads', value: 'R$ 850,00' },
+  { category: 'Infraestrutura de TI', date: '16/10/2026', name: 'AWS Cloud', value: 'R$ 420,00' },
+  { category: 'Aluguel e ocupação', date: '15/10/2026', name: 'Aluguel escritório', value: 'R$ 1.800,00' },
+]
+
+/** Document position (before scrolling) of the classification card and the text above it. */
+const EXP_TEXT_TOP = 2270
+const EXP_CARD_TOP = 2400
+const EXP_H = { done: 747, list: 1668, review: 915 }
+const EXP_BLOCK = 284
+
+function TapRipple({ at, frame, x, y }: { at: number; frame: number; x: number; y: number }) {
+  if (frame < at || frame > at + 16) return null
+  const r = p(frame, at, at + 14)
+  const size = 40 + r * 120
+  return <div style={{ background: 'rgba(0,0,0,0.16)', borderRadius: 99, height: size, left: x - size / 2, opacity: 1 - r * 0.75, pointerEvents: 'none', position: 'absolute', top: y - size / 2, width: size, zIndex: 5 }} />
+}
+
+function CheckDot() {
+  return (
+    <span style={{ alignItems: 'center', background: TEXT, borderRadius: 99, display: 'flex', flex: 'none', height: 42, justifyContent: 'center', width: 42 }}>
+      <Check color="#fff" size={26} strokeWidth={3} style={iv(26, 3)} />
+    </span>
+  )
+}
+
+function CardHeader({ icon, subtitle, title }: { icon: ReactNode; subtitle: string; title: string }) {
+  return (
+    <div style={{ alignItems: 'center', display: 'flex', height: 158, justifyContent: 'space-between' }}>
+      <div>
+        <span style={{ color: TEXT, display: 'block', fontSize: 38, fontWeight: 650, letterSpacing: '-0.01em', lineHeight: '46px' }}>{title}</span>
+        <span style={{ color: MUTED, display: 'block', fontSize: 26, lineHeight: '32px', marginTop: 8 }}>{subtitle}</span>
+      </div>
+      {icon}
+    </div>
+  )
+}
+
+const TagsTile = (
+  <IconTile size={84}>
+    <Tags color="#4a4a4a" size={36} strokeWidth={2} style={iv(36, 2)} />
+  </IconTile>
+)
+
+function ExpensesCard({ frame }: { frame: number }) {
+  const card = pop(frame, T.expCard)
+  if (frame < T.expCard) return null
+  const at = (delay: number): CSSProperties => {
+    const s = pop(frame, delay)
+    return { opacity: frame < delay ? 0 : s, transform: `translateY(${(1 - s) * 16}px)` }
+  }
+  const toReview = p(frame, T.review, T.review + 22, [0, 1], Easing.inOut(Easing.cubic))
+  const toDone = p(frame, T.done, T.done + 22, [0, 1], Easing.inOut(Easing.cubic))
+  const height = EXP_H.list + (EXP_H.review - EXP_H.list) * toReview + (EXP_H.done - EXP_H.review) * toDone
+  const phase = frame < T.review ? 'list' : frame < T.done ? 'review' : 'done'
+  const listOut = 1 - p(frame, T.review, T.review + 8)
+  const reviewOut = 1 - p(frame, T.done, T.done + 8)
+
+  return (
+    <div style={{ background: '#fff', border: `2px solid ${LINE}`, borderRadius: 40, height, left: 33, opacity: card, overflow: 'hidden', position: 'absolute', right: 33, top: EXP_CARD_TOP, transform: `translateY(${(1 - card) * 30}px)` }}>
+      {/* 1 · suggested classifications */}
+      {phase === 'list' || listOut > 0 ? (
+        <div style={{ inset: 0, opacity: phase === 'list' ? 1 : listOut, padding: '0 22px', position: 'absolute' }}>
+          <CardHeader icon={TagsTile} subtitle="Revise as classificações sugeridas" title="Classificar despesas" />
+          <div style={{ background: LINE, height: 2 }} />
+          <div style={{ alignItems: 'center', display: 'flex', justifyContent: 'space-between', marginTop: 46 }}>
+            <span style={{ color: TEXT, fontSize: 33, fontWeight: 650, letterSpacing: '-0.01em', lineHeight: '40px' }}>Movimentações encontradas</span>
+            <span style={{ background: '#efefef', borderRadius: 99, color: '#3d3d3d', fontSize: 23, fontWeight: 500, padding: '6px 15px' }}>4 despesas</span>
+          </div>
+          <div style={{ marginTop: 32 }}>
+            {EXPENSES.map((exp, i) => {
+              const rowAt = T.expRows[i]
+              const checked = pop(frame, rowAt + 8)
+              const filled = p(frame, rowAt + 10, rowAt + 22, [0, 1], Easing.linear)
+              return (
+                <div key={exp.name} style={{ borderBottom: `2px solid ${LINE}`, height: EXP_BLOCK, paddingTop: 0, ...at(rowAt) }}>
+                  <div style={{ alignItems: 'center', display: 'flex', gap: 22, height: 52 }}>
+                    <span style={{ opacity: frame < rowAt + 8 ? 0.15 : 1, transform: `scale(${frame < rowAt + 8 ? 1 : checked})` }}>
+                      <CheckDot />
+                    </span>
+                    <span style={{ color: TEXT, flex: 1, fontSize: 30, fontWeight: 500 }}>{exp.name}</span>
+                    <span style={{ color: TEXT, fontSize: 30, fontWeight: 500 }}>{exp.value}</span>
+                  </div>
+                  <span style={{ color: MUTED, display: 'block', fontSize: 25, lineHeight: '30px', marginLeft: 64, marginTop: 4 }}>{exp.date}</span>
+                  <span style={{ color: MUTED, display: 'block', fontSize: 28, lineHeight: '34px', marginLeft: 56, marginTop: 20 }}>Categoria sugerida</span>
+                  <div style={{ alignItems: 'center', border: '2px solid #d9d9d9', borderRadius: 14, display: 'flex', height: 62, justifyContent: 'space-between', marginLeft: 56, marginTop: 10, padding: '0 22px' }}>
+                    <span style={{ color: TEXT, fontSize: 27, fontWeight: 500 }}>{exp.category.slice(0, Math.ceil(exp.category.length * filled))}</span>
+                    <ChevronDown color="#6b6b6b" size={30} strokeWidth={2} style={iv(30, 2)} />
+                  </div>
+                </div>
+              )
+            })}
+          </div>
+          <div style={at(T.expFooter)}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 50 }}>
+              <span style={{ color: MUTED, fontSize: 24 }}>Despesas selecionadas</span>
+              <span style={{ color: MUTED, fontSize: 24 }}>Valor total</span>
+            </div>
+            <div style={{ alignItems: 'baseline', display: 'flex', justifyContent: 'space-between', marginTop: 8 }}>
+              <span style={{ color: TEXT, fontSize: 28, fontWeight: 500 }}>4 despesas</span>
+              <span style={{ color: TEXT, fontSize: 38, fontWeight: 700, letterSpacing: '-0.01em' }}>R$ 3.199,90</span>
+            </div>
+            <div style={{ alignItems: 'center', background: '#1a1a1a', borderRadius: 36, color: '#fff', display: 'flex', fontSize: 27, fontWeight: 500, gap: 14, height: 72, justifyContent: 'center', marginTop: 24, transform: `scale(${frame >= T.tapReview && frame < T.tapReview + 6 ? 0.97 : 1})` }}>
+              <CheckCheck color="#fff" size={32} strokeWidth={2.2} style={iv(32, 2.2)} /> Revisar classificação
+            </div>
+          </div>
+          <TapRipple at={T.tapReview} frame={frame} x={380} y={1608} />
+        </div>
+      ) : null}
+
+      {/* 2 · confirm */}
+      {phase !== 'list' && (phase === 'review' || reviewOut > 0) ? (
+        <div style={{ inset: 0, opacity: phase === 'review' ? p(frame, T.review + 4, T.review + 14) : reviewOut, padding: '0 22px', position: 'absolute' }}>
+          <CardHeader icon={<ClipboardCheck color="#4a4a4a" size={36} strokeWidth={2} style={iv(36, 2, { marginRight: 18 })} />} subtitle="Confira antes de salvar" title="Confirmar classificação" />
+          <div style={{ background: LINE, height: 2 }} />
+          {EXPENSES.map((exp, i) => (
+            <div key={exp.name} style={{ borderBottom: i < EXPENSES.length - 1 ? `2px solid ${LINE}` : 'none', height: 148, paddingTop: 42, ...at(T.confirmRows + i * 6) }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                <span style={{ color: TEXT, fontSize: 30, fontWeight: 500 }}>{exp.name}</span>
+                <span style={{ color: TEXT, fontSize: 30, fontWeight: 500 }}>{exp.value}</span>
+              </div>
+              <span style={{ color: MUTED, display: 'block', fontSize: 25, marginTop: 10 }}>{exp.category}</span>
+            </div>
+          ))}
+          <div style={{ display: 'flex', gap: 18, marginTop: -6, ...at(T.confirmButtons) }}>
+            <span style={{ alignItems: 'center', border: '2px solid #d9d9d9', borderRadius: 36, color: '#3d3d3d', display: 'flex', flex: 1, fontSize: 27, fontWeight: 500, height: 70, justifyContent: 'center' }}>Voltar</span>
+            <span style={{ alignItems: 'center', background: '#1a1a1a', borderRadius: 36, color: '#fff', display: 'flex', flex: 1, fontSize: 27, fontWeight: 500, gap: 14, height: 70, justifyContent: 'center', transform: `scale(${frame >= T.tapConfirm && frame < T.tapConfirm + 6 ? 0.96 : 1})` }}>
+              <Check color="#fff" size={30} strokeWidth={2.4} style={iv(30, 2.4)} /> Confirmar
+            </span>
+          </div>
+          <span style={{ color: MUTED, display: 'block', fontSize: 24, marginTop: 30, textAlign: 'center', ...at(T.confirmButtons + 6) }}>Protótipo visual · Nenhum lançamento real será alterado</span>
+          <TapRipple at={T.tapConfirm} frame={frame} x={555} y={784} />
+        </div>
+      ) : null}
+
+      {/* 3 · done */}
+      {phase === 'done' ? (
+        <div style={{ inset: 0, opacity: p(frame, T.done + 4, T.done + 14), padding: '0 22px', position: 'absolute' }}>
+          <CardHeader icon={TagsTile} subtitle="Revise as classificações sugeridas" title="Classificar despesas" />
+          <div style={{ background: LINE, height: 2 }} />
+          <div style={{ display: 'flex', justifyContent: 'center', marginTop: 66 }}>
+            <svg height={60} viewBox="0 0 60 60" width={60}>
+              <circle cx={30} cy={30} fill="none" pathLength={1} r={26} stroke="#1a7f37" strokeDasharray={1} strokeDashoffset={1 - p(frame, T.done + 8, T.done + 22)} strokeWidth={4.5} transform="rotate(-90 30 30)" />
+              <path d="M19 31 l7 7 l15 -16" fill="none" pathLength={1} stroke="#1a7f37" strokeDasharray={1} strokeDashoffset={1 - p(frame, T.done + 18, T.done + 28)} strokeLinecap="round" strokeLinejoin="round" strokeWidth={4.5} />
+            </svg>
+          </div>
+          <div style={{ textAlign: 'center', ...at(T.done + 18) }}>
+            <span style={{ color: TEXT, display: 'block', fontSize: 36, fontWeight: 650, letterSpacing: '-0.01em', marginTop: 28 }}>Classificação concluída</span>
+            <span style={{ color: MUTED, display: 'block', fontSize: 26, marginTop: 18 }}>4 despesas classificadas nesta simulação.</span>
+          </div>
+          <div style={{ background: '#f2f2f2', borderRadius: 24, marginTop: 48, padding: '8px 24px', ...at(T.done + 26) }}>
+            {[
+              ['Despesas processadas', '4'],
+              ['Valor classificado', 'R$ 3.199,90'],
+            ].map(([label, value]) => (
+              <div key={label} style={{ alignItems: 'center', display: 'flex', height: 64, justifyContent: 'space-between' }}>
+                <span style={{ color: MUTED, fontSize: 27 }}>{label}</span>
+                <span style={{ color: TEXT, fontSize: 30, fontWeight: 650 }}>{value}</span>
+              </div>
+            ))}
+          </div>
+          <div style={{ alignItems: 'center', border: '2px solid #d9d9d9', borderRadius: 36, color: '#3d3d3d', display: 'flex', fontSize: 26, fontWeight: 500, gap: 14, height: 70, justifyContent: 'center', marginTop: 26, ...at(T.done + 32) }}>
+            <ArrowLeft color="#3d3d3d" size={26} strokeWidth={2} style={iv(26, 2)} /> Voltar às movimentações
+          </div>
+        </div>
+      ) : null}
+    </div>
+  )
+}
+
 export function ChatGptVendasCardReplica() {
   const frame = useCurrentFrame()
   const intro = stream(ANSWER_INTRO, p(frame, T.answerIntro[0], T.answerIntro[1], [0, 1], Easing.linear))
@@ -335,7 +523,11 @@ export function ChatGptVendasCardReplica() {
   const rest = outroText.slice(ANSWER_OUTRO_BOLD.length)
   const scrollBtn = pop(frame, T.scrollButton)
   const opening = p(frame, T.open, T.open + OPEN_FRAMES, [0, 1], Easing.inOut(Easing.cubic))
-  const scroll = opening * OPEN_SCROLL
+  const toExpenses = p(frame, T.scrollToExpenses[0], T.scrollToExpenses[1], [0, 1], Easing.inOut(Easing.cubic))
+  const toFooter = p(frame, T.scrollToFooter[0], T.scrollToFooter[1], [0, 1], Easing.inOut(Easing.cubic))
+  const toReview = p(frame, T.review, T.review + 26, [0, 1], Easing.inOut(Easing.cubic))
+  const scroll = opening * OPEN_SCROLL + toExpenses * (EXP_TEXT_TOP - 230 - OPEN_SCROLL) + toFooter * (2492 - (EXP_TEXT_TOP - 230)) + toReview * (EXP_CARD_TOP - 198 - 2492)
+  const expIntro = stream(EXPENSES_INTRO, p(frame, T.expIntro[0], T.expIntro[1], [0, 1], Easing.linear))
 
   return (
     <AbsoluteFill className="chatgpt-replica" style={{ background: '#fff', color: TEXT, fontFamily: FONT }}>
@@ -348,6 +540,10 @@ export function ChatGptVendasCardReplica() {
           <p style={{ color: TEXT, fontSize: 32, left: 33, lineHeight: '48px', margin: 0, position: 'absolute', right: 40, top: 532 }}>{intro}</p>
         ) : null}
         <SalesCard frame={frame} />
+        {frame >= T.expIntro[0] ? (
+          <p style={{ color: TEXT, fontSize: 32, left: 33, lineHeight: '48px', margin: 0, position: 'absolute', right: 40, top: EXP_TEXT_TOP }}>{expIntro}</p>
+        ) : null}
+        <ExpensesCard frame={frame} />
         {frame >= T.outro[0] ? (
           <p style={{ color: TEXT, fontSize: 32, left: 33, lineHeight: '48px', margin: 0, opacity: 1 - opening, position: 'absolute', right: 40, top: 1405 }}>
             <strong style={{ fontWeight: 700 }}>{bold}</strong>
@@ -370,7 +566,7 @@ export function ChatGptVendasCardReplica() {
       ) : null}
 
       <Composer frame={frame} />
-      <span style={{ background: '#d4d4d4', borderRadius: 99, height: 92 + opening * 226, left: 816, position: 'absolute', top: 490 + opening * 578, width: 5 }} />
+      <span style={{ background: '#d4d4d4', borderRadius: 99, height: 92 + opening * 226 - toExpenses * 170, left: 816, position: 'absolute', top: 490 + opening * 578 + toExpenses * 160 + toFooter * 120 - toReview * 60, width: 5 }} />
       <div style={{ background: TEXT, borderRadius: 99, height: 9, left: 267, position: 'absolute', top: 1764, width: 294 }} />
     </AbsoluteFill>
   )
