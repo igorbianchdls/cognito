@@ -1,4 +1,5 @@
 import { ArrowDown, ArrowDownLeft, ArrowLeft, ArrowUp, ArrowUpRight, AudioLines, CalendarDays, Check, CheckCheck, ChevronDown, ChevronLeft, ChevronRight, ChartNoAxesCombined, CircleAlert, CircleCheck, ClockAlert, CalendarClock, HandCoins, TrendingUp, Wallet, ClipboardCheck, Ellipsis, FileCheck2, FileText, Info, Landmark, Link as LinkIcon, Mic, Package, Plus, ReceiptText, SquarePen, Tags, Trash2, TriangleAlert, User, UserPlus, Users } from 'lucide-react'
+import { createContext, useContext } from 'react'
 import type { CSSProperties, ReactNode } from 'react'
 import { AbsoluteFill, Easing, interpolate, spring, useCurrentFrame } from 'remotion'
 
@@ -12,6 +13,13 @@ loadSfProFonts()
  * then the closing paragraph streams and the scroll-to-bottom button appears. Finally a tap on "Venda #1094" opens the
  * sale detail inside the same card and the conversation scrolls so the card sits under the top bar.
  */
+
+/** Reels wrap the cards in this to swap the demo/simulation wording of the prints for real-use copy. */
+export const AdCopy = createContext(false)
+const useCopy = () => {
+  const ad = useContext(AdCopy)
+  return (demo: string, real: string) => (ad ? real : demo)
+}
 
 export const CHATGPT_VENDAS_CARD_DURATION = 2520
 export const CHATGPT_VENDAS_CARD_WIDTH = 828
@@ -481,6 +489,7 @@ const TagsTile = (
 )
 
 export function ExpensesCard({ frame }: { frame: number }) {
+  const t = useCopy()
   const card = pop(frame, T.expCard)
   if (frame < T.expCard) return null
   const at = (delay: number): CSSProperties => {
@@ -566,7 +575,7 @@ export function ExpensesCard({ frame }: { frame: number }) {
               <Check color="#fff" size={30} strokeWidth={2.4} style={iv(30, 2.4)} /> Confirmar
             </span>
           </div>
-          <span style={{ color: MUTED, display: 'block', fontSize: 24, marginTop: 30, textAlign: 'center', ...at(T.confirmButtons + 6) }}>Protótipo visual · Nenhum lançamento real será alterado</span>
+          <span style={{ color: MUTED, display: 'block', fontSize: 24, marginTop: 30, textAlign: 'center', ...at(T.confirmButtons + 6) }}>{t('Protótipo visual · Nenhum lançamento real será alterado', 'As categorias serão salvas nos lançamentos')}</span>
           <TapRipple at={T.tapConfirm} frame={frame} x={555} y={784} />
         </div>
       ) : null}
@@ -584,7 +593,7 @@ export function ExpensesCard({ frame }: { frame: number }) {
           </div>
           <div style={{ textAlign: 'center', ...at(T.done + 18) }}>
             <span style={{ color: TEXT, display: 'block', fontSize: 36, fontWeight: 650, letterSpacing: '-0.01em', marginTop: 28 }}>Classificação concluída</span>
-            <span style={{ color: MUTED, display: 'block', fontSize: 26, marginTop: 18 }}>4 despesas classificadas nesta simulação.</span>
+            <span style={{ color: MUTED, display: 'block', fontSize: 26, marginTop: 18 }}>{t('4 despesas classificadas nesta simulação.', '4 despesas classificadas agora.')}</span>
           </div>
           <div style={{ background: '#f2f2f2', borderRadius: 24, marginTop: 48, padding: '8px 24px', ...at(T.done + 26) }}>
             {[
@@ -611,7 +620,7 @@ export function ExpensesCard({ frame }: { frame: number }) {
 const GREEN = '#1a7f37'
 
 /** Document positions (before scrolling) of everything that follows the expense card. */
-const CRUD = {
+export const CRUD = {
   a2: 3790,
   a2b: 4850,
   a3: 6090,
@@ -722,7 +731,7 @@ function CardShell({ children, frame, height, start, top }: { children: ReactNod
   )
 }
 
-function ClientsCard({ frame }: { frame: number }) {
+export function ClientsCard({ frame }: { frame: number }) {
   const fade = (at: number): CSSProperties => {
     const s = pop(frame, at)
     return { opacity: frame < at ? 0 : s, transform: `translateY(${(1 - s) * 18}px)` }
@@ -787,7 +796,8 @@ const editTile = (
   </IconTile>
 )
 
-function UpdateClientCard({ frame }: { frame: number }) {
+export function UpdateClientCard({ frame }: { frame: number }) {
+  const t = useCopy()
   const toDone = p(frame, T.updDone, T.updDone + 22, [0, 1], Easing.inOut(Easing.cubic))
   const formOut = 1 - p(frame, T.updDone, T.updDone + 8)
   return (
@@ -796,7 +806,7 @@ function UpdateClientCard({ frame }: { frame: number }) {
         <div style={{ inset: 0, opacity: formOut, padding: '0 31px', position: 'absolute' }}>
           <CardHeader icon={editTile} subtitle="Altere os dados do cliente" title="Atualizar cliente" />
           <div style={{ background: LINE, height: 2 }} />
-          <ClientBox id="ID de demonstração: CLI-001" name="Cliente Exemplo Ltda." />
+          <ClientBox id={t('ID de demonstração: CLI-001', 'CLI-001 · Pessoa jurídica')} name="Cliente Exemplo Ltda." />
           <Field frame={frame} label="Nome / Razão social" mt={30} typeAt={T.updName} value="Cliente Exemplo Brasil Ltda." />
           <Field frame={frame} label="E-mail" mt={28} typeAt={T.updEmail} value="financeiro@cliente.example" />
           <Field frame={frame} label="Cidade" mt={28} value="Recife" />
@@ -816,8 +826,8 @@ function UpdateClientCard({ frame }: { frame: number }) {
             ['Resultado', DONE_OK],
           ]}
           start={T.updDone}
-          sub="As alterações foram aplicadas nesta simulação."
-          subtitle="Operação demonstrativa concluída"
+          sub={t('As alterações foram aplicadas nesta simulação.', 'As alterações já estão salvas no cadastro.')}
+          subtitle={t('Operação demonstrativa concluída', 'Operação concluída')}
           title="Cliente atualizado"
         />
       ) : null}
@@ -842,7 +852,8 @@ function Radio({ checked, label }: { checked: boolean; label: string }) {
   )
 }
 
-function CreateClientCard({ frame }: { frame: number }) {
+export function CreateClientCard({ frame }: { frame: number }) {
+  const t = useCopy()
   const toDone = p(frame, T.createDone, T.createDone + 22, [0, 1], Easing.inOut(Easing.cubic))
   const formOut = 1 - p(frame, T.createDone, T.createDone + 8)
   return (
@@ -875,8 +886,8 @@ function CreateClientCard({ frame }: { frame: number }) {
             ['Resultado', DONE_OK],
           ]}
           start={T.createDone}
-          sub="O cadastro foi registrado nesta simulação."
-          subtitle="Operação demonstrativa concluída"
+          sub={t('O cadastro foi registrado nesta simulação.', 'O cadastro já está disponível no Otto.')}
+          subtitle={t('Operação demonstrativa concluída', 'Operação concluída')}
           title="Cliente criado"
         />
       ) : null}
@@ -884,7 +895,8 @@ function CreateClientCard({ frame }: { frame: number }) {
   )
 }
 
-function DeleteClientCard({ frame }: { frame: number }) {
+export function DeleteClientCard({ frame }: { frame: number }) {
+  const t = useCopy()
   const checked = frame >= T.delCheck
   const typedDone = frame >= T.delType[1]
   const enabled = checked && typedDone
@@ -902,7 +914,7 @@ function DeleteClientCard({ frame }: { frame: number }) {
           <TriangleAlert color="#8b1e1e" size={34} strokeWidth={2.2} style={iv(34, 2.2, { flex: 'none', marginTop: 4 })} />
           <div>
             <span style={{ color: TEXT, display: 'block', fontSize: 31, fontWeight: 650, lineHeight: '40px' }}>Atenção: ação destrutiva</span>
-            <span style={{ color: MUTED, display: 'block', fontSize: 27, lineHeight: '40px', marginTop: 10 }}>A exclusão pode ser irreversível. No sistema real, é necessário verificar se existem registros financeiros ou fiscais vinculados.</span>
+            <span style={{ color: MUTED, display: 'block', fontSize: 27, lineHeight: '40px', marginTop: 10 }}>{t('A exclusão pode ser irreversível. No sistema real, é necessário verificar se existem registros financeiros ou fiscais vinculados.', 'A exclusão pode ser irreversível. O Otto verifica antes se existem registros financeiros ou fiscais vinculados.')}</span>
           </div>
         </div>
         <div style={{ background: '#f2f2f2', borderRadius: 24, marginTop: 30, padding: '24px 24px 12px' }}>
@@ -1337,6 +1349,7 @@ const BANK_MOVES = [
 const plainIcon = (icon: ReactNode) => <span style={{ display: 'flex', justifyContent: 'flex-end', width: 88 }}>{icon}</span>
 
 export function BankReconciliationCard({ frame }: { frame: number }) {
+  const t = useCopy()
   const at = (delay: number): CSSProperties => {
     const s = pop(frame, delay)
     return { opacity: frame < delay ? 0 : s, transform: `translateY(${(1 - s) * 16}px)` }
@@ -1471,7 +1484,7 @@ export function BankReconciliationCard({ frame }: { frame: number }) {
       {/* 3 · done */}
       {frame >= T.bcDone ? (
         <div style={{ inset: 0, opacity: p(frame, T.bcDone + 4, T.bcDone + 14), padding: '0 22px', position: 'absolute' }}>
-          <CardHeader icon={plainIcon(<Landmark color="#3d3d3d" size={40} strokeWidth={2} style={iv(40, 2)} />)} subtitle="Resultado da operação demonstrativa" title="Conciliação concluída" />
+          <CardHeader icon={plainIcon(<Landmark color="#3d3d3d" size={40} strokeWidth={2} style={iv(40, 2)} />)} subtitle={t('Resultado da operação demonstrativa', 'Resultado da conciliação')} title="Conciliação concluída" />
           <div style={{ background: LINE, height: 2 }} />
           <div style={{ display: 'flex', justifyContent: 'center', marginTop: 77 }}>
             <svg height={60} viewBox="0 0 60 60" width={60}>
@@ -1480,8 +1493,8 @@ export function BankReconciliationCard({ frame }: { frame: number }) {
             </svg>
           </div>
           <div style={{ textAlign: 'center', ...at(T.bcDone + 18) }}>
-            <span style={{ color: TEXT, display: 'block', fontSize: 35, fontWeight: 650, letterSpacing: '-0.01em', marginTop: 22 }}>Conciliação simulada com sucesso</span>
-            <span style={{ color: MUTED, display: 'block', fontSize: 25, marginTop: 22 }}>3 movimentações conciliadas nesta demonstração.</span>
+            <span style={{ color: TEXT, display: 'block', fontSize: 35, fontWeight: 650, letterSpacing: '-0.01em', marginTop: 22 }}>{t('Conciliação simulada com sucesso', 'Conciliação feita com sucesso')}</span>
+            <span style={{ color: MUTED, display: 'block', fontSize: 25, marginTop: 22 }}>{t('3 movimentações conciliadas nesta demonstração.', '3 movimentações conciliadas agora.')}</span>
           </div>
           <div style={at(T.bcDone + 26)}>
             <SummaryBox mt={34} rowH={72} rows={[['Processadas agora', '3'], ['Total conciliado', '3 de 3'], ['Ainda pendentes', '0']]} />

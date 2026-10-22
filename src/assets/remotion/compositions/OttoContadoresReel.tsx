@@ -306,7 +306,7 @@ function Receipt({ seed, duration }: { duration: number; seed: number }) {
   )
 }
 
-function HookScene({ duration }: { duration: number }) {
+export function ContadoresHookScene({ duration }: { duration: number }) {
   return (
     <Scene duration={duration}>
       {Array.from({ length: 12 }, (_, i) => <Receipt duration={duration} key={i} seed={i} />)}
@@ -1082,7 +1082,7 @@ const CONTADORES_AUDIO = 'remotion/otto-reels/contadores-narracao-x01.mp3'
 // Cue = second the scene's sentence starts in the narration (minus a short lead-in).
 const SCENES: ReelScene[] = narratedScenes(
   [
-    { at: 0, scene: { Component: HookScene, duration: 105 } }, // "Essa I.A. tá deixando os contadores…"
+    { at: 0, scene: { Component: ContadoresHookScene, duration: 105 } }, // "Essa I.A. tá deixando os contadores…"
     { at: 4.05, scene: { Component: NameScene, duration: 88 } }, // "O nome dela é Otto, um sistema de gestão"
     { at: 6.75, scene: { Component: PromiseScene, duration: 100 } }, // "que automatiza todo o financeiro…"
     { at: 9.6, scene: { Component: BankSyncScene, duration: 100 } }, // "Ela sincroniza todas as suas contas bancárias"

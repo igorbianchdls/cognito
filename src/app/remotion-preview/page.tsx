@@ -177,6 +177,7 @@ import { OTTO_BODY_1_DURATION, OTTO_BODY_2_DURATION, OttoBodyManageByConversatio
 import { OTTO_CONTADORES_REEL_DURATION, OttoContadoresReel } from '@/assets/remotion/compositions/OttoContadoresReel'
 import { CHATGPT_VENDAS_CARD_DURATION, CHATGPT_VENDAS_CARD_HEIGHT, CHATGPT_VENDAS_CARD_WIDTH, ChatGptVendasCardReplica } from '@/assets/remotion/compositions/ChatGptVendasCardReplica'
 import { OTTO_CHATGPT_NOTA_REEL_DURATION, OttoChatGptNotaReel } from '@/assets/remotion/compositions/OttoChatGptNotaReel'
+import { OTTO_CHATGPT_CONTADORES_TELA_DURATION, OTTO_CHATGPT_FINANCEIRO_TELA_DURATION, OttoChatGptContadoresTelaReel, OttoChatGptFinanceiroTelaReel } from '@/assets/remotion/compositions/OttoChatGptTelaReels'
 import { OTTO_CONTA_AZUL_REEL_DURATION, OTTO_OMIE_REEL_DURATION, OttoContaAzulReel, OttoOmieReel } from '@/assets/remotion/compositions/OttoContaAzulReel'
 import { OTTO_AGORA_CHAT_DURATION, OTTO_AGORA_FACIL_DURATION, OTTO_AGORA_FINANCEIRO_DURATION, OTTO_AGORA_LUCRO_DURATION, OTTO_AGORA_SISTEMA_DURATION, OttoAgoraChatDarkSquareReel, OttoAgoraChatReel, OttoAgoraFacilReel, OttoAgoraFinanceiroDarkReel, OttoAgoraFinanceiroReel, OttoAgoraLucroDarkReel, OttoAgoraLucroReel, OttoAgoraSistemaDarkSquareReel, OttoAgoraSistemaReel } from '@/assets/remotion/compositions/OttoAgoraChatGptReels'
 import { OTTO_COBRANCA_REEL_DURATION, OTTO_FUNCIONARIO_REEL_DURATION, OttoCobrancaReel, OttoFuncionarioReel } from '@/assets/remotion/compositions/OttoCobrancaFuncionarioVideos'
@@ -2360,6 +2361,32 @@ const catalog: CatalogItem[] = [
     label: 'Reel · ChatGPT emite notas fiscais (tela real)',
     tags: ['ChatGPT', 'Reel', 'Otto', 'Nota fiscal', 'Narração'],
     value: 'reel-otto-chatgpt-nota-tela',
+    width: 1080,
+  },
+  {
+    code: '<OttoChatGptFinanceiroTelaReel />',
+    component: OttoChatGptFinanceiroTelaReel,
+    description: 'Reel com narração: "Agora o ChatGPT pode cuidar do financeiro da sua empresa." Tela real do ChatGPT: painel financeiro (saldo, gráfico, alertas), despesas, conciliação, cadastro e edição de cliente e nota fiscal.',
+    duration: OTTO_CHATGPT_FINANCEIRO_TELA_DURATION,
+    fps: 30,
+    height: 1920,
+    kind: 'Claude Videos',
+    label: 'Reel · ChatGPT cuida do financeiro (tela real)',
+    tags: ['ChatGPT', 'Reel', 'Otto', 'Financeiro', 'CRUD', 'Narração'],
+    value: 'reel-otto-chatgpt-financeiro-tela',
+    width: 1080,
+  },
+  {
+    code: '<OttoChatGptContadoresTelaReel />',
+    component: OttoChatGptContadoresTelaReel,
+    description: 'Reel com narração: "Essa IA tá deixando os contadores brasileiros preocupados." Tela real do ChatGPT: despesas, conciliação, notas, cadastrar/editar/excluir cliente e painel financeiro.',
+    duration: OTTO_CHATGPT_CONTADORES_TELA_DURATION,
+    fps: 30,
+    height: 1920,
+    kind: 'Claude Videos',
+    label: 'Reel · Contadores preocupados (tela real do ChatGPT)',
+    tags: ['ChatGPT', 'Reel', 'Otto', 'Contadores', 'CRUD', 'Narração'],
+    value: 'reel-otto-chatgpt-contadores-tela',
     width: 1080,
   },
   {

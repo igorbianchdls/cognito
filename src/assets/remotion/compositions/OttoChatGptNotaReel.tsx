@@ -2,6 +2,7 @@ import type { CSSProperties, ReactNode } from 'react'
 import { AbsoluteFill, Audio, Easing, interpolate, Sequence, staticFile, useCurrentFrame } from 'remotion'
 
 import {
+  AdCopy,
   AssistantText,
   BANK,
   BANK_H,
@@ -295,7 +296,9 @@ export function OttoChatGptNotaReel() {
 
       <div style={{ height: SCREEN_H, left: 0, overflow: 'hidden', position: 'absolute', top: 0, transform: `scale(${SCALE})`, transformOrigin: '0 0', width: 828 }}>
         {/* conversation */}
-        <div style={{ inset: 0, opacity: enter, position: 'absolute', transform: `translateY(${-scroll + (1 - enter) * 90}px)` }}>{scene.content(rf)}</div>
+        <AdCopy.Provider value>
+          <div style={{ inset: 0, opacity: enter, position: 'absolute', transform: `translateY(${-scroll + (1 - enter) * 90}px)` }}>{scene.content(rf)}</div>
+        </AdCopy.Provider>
         {scene.start === 0 ? <EmptyChat rf={rf} /> : null}
 
         {/* fixed chrome */}
