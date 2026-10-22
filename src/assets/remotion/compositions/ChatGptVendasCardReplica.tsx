@@ -23,7 +23,9 @@ const LINE = '#e6e6e6'
 const BUBBLE = '#f4f4f4'
 
 // The app's globals.css forces its own font on every element; keep the iOS stack inside the replica.
-const FONT_CSS = `.chatgpt-replica, .chatgpt-replica * { font-family: ${FONT} !important; }`
+// It also forces every lucide icon to 18px (globals.css); give icons back the size/stroke they were rendered with.
+const FONT_CSS = `.chatgpt-replica, .chatgpt-replica * { font-family: ${FONT} !important; }
+.chatgpt-replica .lucide { width: var(--icon-size, 24px) !important; height: var(--icon-size, 24px) !important; stroke-width: var(--icon-stroke, 2) !important; }`
 
 const USER_MESSAGE = ['Eu não quero imagem...', '', 'Quero você criar ele aqui no', 'chat, simulado']
 const ANSWER_INTRO = 'Aqui está a versão melhorada do card do OTTO, simulada diretamente no ChatGPT.'
@@ -97,8 +99,8 @@ function TopBar() {
         <line stroke={TEXT} strokeLinecap="round" strokeWidth={4} x1={2} x2={24} y1={20} y2={20} />
       </svg>
       <span style={{ flex: 1 }} />
-      <SquarePen color={TEXT} size={40} strokeWidth={2.1} style={{ marginRight: 46 }} />
-      <Ellipsis color={TEXT} size={42} strokeWidth={2.6} />
+      <SquarePen color={TEXT} size={40} strokeWidth={2.1} style={{ marginRight: 46, '--icon-size': '40px', '--icon-stroke': 2.1 } as CSSProperties} />
+      <Ellipsis color={TEXT} size={42} strokeWidth={2.6} style={{ '--icon-size': '42px', '--icon-stroke': 2.6 } as CSSProperties} />
     </div>
   )
 }
@@ -111,13 +113,13 @@ function Composer({ frame }: { frame: number }) {
 
   return (
     <div style={{ alignItems: 'center', background: '#f2f2f2', borderRadius: 48, display: 'flex', gap: 22, left: 68, minHeight: 94, padding: '0 16px 0 30px', position: 'absolute', right: 68, top: 1628 }}>
-      <Plus color={TEXT} size={42} strokeWidth={2} />
+      <Plus color={TEXT} size={42} strokeWidth={2} style={{ '--icon-size': '42px', '--icon-stroke': 2 } as CSSProperties} />
       <span style={{ color: hasText ? TEXT : '#8e8e8e', flex: 1, fontSize: 31, overflow: 'hidden', whiteSpace: 'nowrap', direction: hasText ? 'rtl' : 'ltr', textAlign: 'left' }}>
         <bdi>{hasText ? text : 'Perguntar ao ChatGPT'}</bdi>
       </span>
-      {hasText ? null : <Mic color={TEXT} size={38} strokeWidth={2} style={{ marginRight: 12 }} />}
+      {hasText ? null : <Mic color={TEXT} size={38} strokeWidth={2} style={{ marginRight: 12, '--icon-size': '38px', '--icon-stroke': 2 } as CSSProperties} />}
       <span style={{ alignItems: 'center', background: TEXT, borderRadius: 99, display: 'flex', flex: 'none', height: 64, justifyContent: 'center', transform: `scale(${frame >= T.send - 2 && frame < T.send + 2 ? 0.88 : 1})`, width: 64 }}>
-        {hasText ? <ArrowUp color="#fff" size={34} strokeWidth={2.6} /> : <AudioLines color="#fff" size={32} strokeWidth={2.4} />}
+        {hasText ? <ArrowUp color="#fff" size={34} strokeWidth={2.6} style={{ '--icon-size': '34px', '--icon-stroke': 2.6 } as CSSProperties} /> : <AudioLines color="#fff" size={32} strokeWidth={2.4} style={{ '--icon-size': '32px', '--icon-stroke': 2.4 } as CSSProperties} />}
       </span>
     </div>
   )
@@ -142,7 +144,7 @@ function Badge({ children }: { children: ReactNode }) {
 function IconTile() {
   return (
     <span style={{ alignItems: 'center', background: '#f3f3f3', borderRadius: 22, display: 'flex', flex: 'none', height: 88, justifyContent: 'center', width: 88 }}>
-      <ReceiptText color="#5b5b5b" size={32} strokeWidth={2} />
+      <ReceiptText color="#5b5b5b" size={32} strokeWidth={2} style={{ '--icon-size': '32px', '--icon-stroke': 2 } as CSSProperties} />
     </span>
   )
 }
@@ -162,7 +164,7 @@ function SalesCard({ frame }: { frame: number }) {
           <span style={{ color: TEXT, display: 'block', fontSize: 41, fontWeight: 650, letterSpacing: '-0.01em' }}>Vendas</span>
           <span style={{ color: MUTED, display: 'block', fontSize: 28, marginTop: 8 }}>2 vendas encontradas</span>
         </div>
-        <ReceiptText color="#5b5b5b" size={32} strokeWidth={2} style={{ marginTop: 32 }} />
+        <ReceiptText color="#5b5b5b" size={32} strokeWidth={2} style={{ marginTop: 32, '--icon-size': '32px', '--icon-stroke': 2 } as CSSProperties} />
       </div>
 
       <div style={{ marginTop: 40 }}>
@@ -186,11 +188,11 @@ function SalesCard({ frame }: { frame: number }) {
         <span style={{ color: MUTED, fontSize: 28 }}>1–2 de 2 vendas</span>
         <span style={{ alignItems: 'center', display: 'flex', gap: 16 }}>
           <span style={{ alignItems: 'center', border: `2px solid ${LINE}`, borderRadius: 99, display: 'flex', height: 60, justifyContent: 'center', width: 98 }}>
-            <ChevronLeft color="#9a9a9a" size={32} strokeWidth={2} />
+            <ChevronLeft color="#9a9a9a" size={32} strokeWidth={2} style={{ '--icon-size': '32px', '--icon-stroke': 2 } as CSSProperties} />
           </span>
           <span style={{ color: TEXT, fontSize: 30, fontWeight: 600 }}>1 / 1</span>
           <span style={{ alignItems: 'center', border: `2px solid ${LINE}`, borderRadius: 99, display: 'flex', height: 60, justifyContent: 'center', width: 98 }}>
-            <ChevronRight color="#9a9a9a" size={32} strokeWidth={2} />
+            <ChevronRight color="#9a9a9a" size={32} strokeWidth={2} style={{ '--icon-size': '32px', '--icon-stroke': 2 } as CSSProperties} />
           </span>
         </span>
       </div>
@@ -231,7 +233,7 @@ export function ChatGptVendasCardReplica() {
       <div style={{ background: 'linear-gradient(rgba(255,255,255,0), #fff 45%)', height: 230, left: 0, position: 'absolute', right: 0, top: 1580 }} />
       {frame >= T.scrollButton ? (
         <span style={{ alignItems: 'center', background: '#fff', border: '1px solid #ececec', borderRadius: 99, boxShadow: '0 6px 18px rgba(0,0,0,0.12)', display: 'flex', height: 68, justifyContent: 'center', left: 380, opacity: scrollBtn, position: 'absolute', top: 1534, transform: `scale(${0.8 + scrollBtn * 0.2})`, width: 68 }}>
-          <ArrowDown color={TEXT} size={34} strokeWidth={2.4} />
+          <ArrowDown color={TEXT} size={34} strokeWidth={2.4} style={{ '--icon-size': '34px', '--icon-stroke': 2.4 } as CSSProperties} />
         </span>
       ) : null}
 

@@ -1119,6 +1119,7 @@ const REEL_FONT_CSS = `
 .otto-reel [style*="Newsreader"], .otto-reel [style*="Newsreader"] * { font-family: ${SERIF} !important; }
 .otto-reel [style*="Instrument Serif"], .otto-reel [style*="Instrument Serif"] * { font-family: ${DISPLAY} !important; }
 .otto-reel [style*="Consolas"] { font-family: Consolas, "SF Mono", monospace !important; }
+.otto-reel .lucide { width: attr(width px, 24px) !important; height: attr(height px, 24px) !important; stroke-width: attr(stroke-width number, 2) !important; }
 .otto-dark [style*="Instrument Serif"], .otto-dark [style*="Instrument Serif"] * { font-style: normal !important; font-weight: 750 !important; letter-spacing: -0.03em; }
 .otto-dark img[src*="logoOtto"] { filter: invert(1); }
 .otto-dark img[src*="gptLogo"] { filter: brightness(0) invert(1) !important; }
