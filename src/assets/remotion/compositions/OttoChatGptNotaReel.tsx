@@ -1,34 +1,23 @@
-import type { ReactNode } from 'react'
-import { AbsoluteFill, Audio, Easing, interpolate, Sequence, staticFile, useCurrentFrame } from 'remotion'
-
 import {
-  AdCopy,
   AssistantText,
   BANK,
   BANK_H,
   BankReconciliationCard,
-  Composer,
   EXP_CARD_TOP,
   EXP_H,
   EXP_TEXT_TOP,
   ExpensesCard,
   FIN,
   FinanceCard,
-  FONT,
-  FONT_CSS,
   InvoiceBatchCard,
   MESSAGES,
   NF,
   NF_H,
-  StatusBar,
   T,
-  TEXT,
-  TopBar,
   UserMessage,
-  p,
 } from './ChatGptVendasCardReplica'
-import { ChatGptOutro, OUTRO_LENGTH } from './ChatGptScreenReelKit'
-import { ReelRoot } from './OttoContadoresReel'
+import { ChatGptScreenReel, layoutClips, Narration, OUTRO_LENGTH, PLUGIN_FLOW_LENGTH, pluginPhrase } from './ChatGptScreenReelKit'
+import type { Scene } from './ChatGptScreenReelKit'
 import { makeHookScene } from './OttoNotaFiscalChatGptVideos'
 
 /**
@@ -45,28 +34,10 @@ const g = (sec: number) => PART2 + sec
 
 /** Part 2 is cut after "Tudo isso dentro do chat."; the shared closing ("Isso é o Otto… Comenta OTTO") follows. */
 const OUTRO_AT = g(29.4)
-export const OTTO_CHATGPT_NOTA_REEL_DURATION = s(OUTRO_AT + OUTRO_LENGTH)
-
-const SCALE = 1080 / 828
-/** Logical screen: replica width, reel aspect ratio. */
-const SCREEN_H = 1920 / SCALE
-/** The replica places the composer for a 1792px screen. */
-const BOTTOM_SHIFT = 1792 - SCREEN_H
+export const OTTO_CHATGPT_NOTA_REEL_DURATION = s(OUTRO_AT + PLUGIN_FLOW_LENGTH + OUTRO_LENGTH)
 
 /** The expenses request is not one of the replica messages, so the reel adds it to its scene's composer. */
 const EXP_MSG = { lines: ['Classifica as despesas', 'da semana'], send: 372, typing: [340, 370] }
-
-type Scene = {
-  content: (rf: number) => ReactNode
-  /** Only this scene's request is typed in the composer (the warp holds can reach the next replica message). */
-  messages: typeof MESSAGES
-  /** Scroll stops in replica frames: [from, to, target]. */
-  scroll: [number, number, number][]
-  scroll0: number
-  start: number
-  /** [reel second, replica frame] */
-  warp: [number, number][]
-}
 
 const SCENES: Scene[] = [
   {
@@ -216,89 +187,18 @@ const SCENES: Scene[] = [
   },
 ]
 
-function sceneAt(frame: number) {
-  let index = 0
-  SCENES.forEach((scene, i) => {
-    if (frame >= scene.start) index = i
-  })
-  return SCENES[index]
-}
-
-function replicaFrame(scene: Scene, frame: number) {
-  return interpolate(
-    frame,
-    scene.warp.map(([sec]) => s(sec)),
-    scene.warp.map(([, r]) => r),
-    { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' },
-  )
-}
-
-function scrollAt(scene: Scene, rf: number) {
-  let previous = scene.scroll0
-  let scroll = previous
-  for (const [from, to, target] of scene.scroll) {
-    scroll += p(rf, from, to, [0, 1], Easing.inOut(Easing.cubic)) * (target - previous)
-    previous = target
-  }
-  return scroll
-}
+const VO1 = 'remotion/otto-reels/chatgpt-nota-narracao.mp3'
+const VO2 = 'remotion/otto-reels/chatgpt-nota-narracao-2.mp3'
+const CLIPS = layoutClips([
+  [0, 3.5, 0], // hook "Agora o ChatGPT pode emitir suas notas fiscais."
+  pluginPhrase, // "Primeiro, instala o plugin do Otto…"
+  [3.5, PART2, 0], // part 1 up to "…sem abrir sistema nenhum."
+  [0, 29.26, 0, VO2], // part 2 up to "Tudo isso dentro do chat."
+])
 
 /** Same opening as the other "Agora o ChatGPT pode…" reels; the ChatGPT screen takes over after it. */
-const HOOK_END = s(3.5)
 const HookScene = makeHookScene('Agora o ChatGPT pode emitir suas notas fiscais.', ['notas', 'fiscais'], 88, '')
 
-function HookLayer({ frame }: { frame: number }) {
-  if (frame >= HOOK_END) return null
-  return (
-    <AbsoluteFill style={{ opacity: 1 - p(frame, HOOK_END - 7, HOOK_END) }}>
-      <ReelRoot scenes={[{ Component: HookScene, duration: HOOK_END }]} />
-    </AbsoluteFill>
-  )
-}
-
-/** Empty new chat, until the request is sent. */
-function EmptyChat({ rf }: { rf: number }) {
-  const out = p(rf, T.u6.send - 4, T.u6.send + 6)
-  if (rf >= T.nfCard) return null
-  return <span style={{ color: '#8e8e8e', fontSize: 40, fontWeight: 500, left: 0, opacity: 1 - out, position: 'absolute', right: 0, textAlign: 'center', top: 640 }}>Em que posso ajudar?</span>
-}
-
 export function OttoChatGptNotaReel() {
-  const frame = useCurrentFrame()
-  const scene = sceneAt(frame)
-  const rf = replicaFrame(scene, frame)
-  const scroll = scrollAt(scene, rf)
-  /** Each new chat slides in over the previous one. */
-  const enter = scene.start === 0 ? 1 : p(frame, scene.start, scene.start + 10)
-
-  return (
-    <AbsoluteFill className="chatgpt-replica" style={{ background: '#fff', color: TEXT, fontFamily: FONT }}>
-      <style>{FONT_CSS}</style>
-      <Audio src={staticFile('remotion/otto-reels/chatgpt-nota-narracao.mp3')} trimAfter={s(PART2)} />
-      <Sequence from={s(PART2)}>
-        <Audio src={staticFile('remotion/otto-reels/chatgpt-nota-narracao-2.mp3')} trimAfter={s(29.26)} />
-      </Sequence>
-
-      <div style={{ height: SCREEN_H, left: 0, overflow: 'hidden', position: 'absolute', top: 0, transform: `scale(${SCALE})`, transformOrigin: '0 0', width: 828 }}>
-        {/* conversation */}
-        <AdCopy.Provider value>
-          <div style={{ inset: 0, opacity: enter, position: 'absolute', transform: `translateY(${-scroll + (1 - enter) * 90}px)` }}>{scene.content(rf)}</div>
-        </AdCopy.Provider>
-        {scene.start === 0 ? <EmptyChat rf={rf} /> : null}
-
-        {/* fixed chrome */}
-        <div style={{ background: 'linear-gradient(#fff 88%, rgba(255,255,255,0))', height: 196, left: 0, position: 'absolute', right: 0, top: 0 }} />
-        <StatusBar />
-        <TopBar />
-        <div style={{ inset: 0, position: 'absolute', transform: `translateY(${-BOTTOM_SHIFT}px)` }}>
-          <div style={{ background: 'linear-gradient(rgba(255,255,255,0), #fff 45%)', height: 230, left: 0, position: 'absolute', right: 0, top: 1580 }} />
-          <Composer frame={rf} messages={scene.messages} />
-          <div style={{ background: TEXT, borderRadius: 99, height: 9, left: 267, position: 'absolute', top: 1764, width: 294 }} />
-        </div>
-      </div>
-
-      <HookLayer frame={frame} />
-      <ChatGptOutro at={OUTRO_AT} />
-    </AbsoluteFill>
-  )
+  return <ChatGptScreenReel audio={<Narration clips={CLIPS} src={VO1} />} hook={{ Component: HookScene, end: 3.5 }} outroAt={OUTRO_AT} plugin={{ at: 3.5 }} scenes={SCENES} />
 }

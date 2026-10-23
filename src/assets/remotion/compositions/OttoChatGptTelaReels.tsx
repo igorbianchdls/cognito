@@ -8,6 +8,8 @@ import {
   invoiceScene,
   layoutClips,
   Narration,
+  PLUGIN_FLOW_LENGTH,
+  pluginPhrase,
   OUTRO_LENGTH,
   s,
   updateClientScene,
@@ -25,7 +27,9 @@ import { makeHookScene } from './OttoNotaFiscalChatGptVideos'
 const A_AUDIO = 'remotion/otto-reels/chatgpt-financeiro-narracao.mp3'
 /** [from, to, pause after] in the narration take. */
 const A_CLIPS = layoutClips([
-  [0, 14.42, 0.4], // hook · "eu pergunto como tá o financeiro… saldo, entradas, saídas, gráfico… alertas"
+  [0, 3.72, 0], // hook
+  pluginPhrase, // "Primeiro, instala o plugin do Otto…"
+  [3.72, 14.42, 0.4], // "eu pergunto como tá o financeiro… saldo, entradas, saídas, gráfico… alertas"
   [14.42, 17.16, 3.3], // "Tem despesa sem categoria? Ele classifica."
   [17.16, 20.16, 3.0], // "Extrato do banco? Ele concilia com os lançamentos."
   [20.16, 22.1, 2.5], // "Cliente novo? Ele cadastra."
@@ -35,7 +39,7 @@ const A_CLIPS = layoutClips([
 ])
 
 const A_OUTRO = 43.4
-export const OTTO_CHATGPT_FINANCEIRO_TELA_DURATION = s(A_OUTRO + OUTRO_LENGTH)
+export const OTTO_CHATGPT_FINANCEIRO_TELA_DURATION = s(A_OUTRO + PLUGIN_FLOW_LENGTH + OUTRO_LENGTH)
 
 export function OttoChatGptFinanceiroTelaReel() {
   return (
@@ -43,6 +47,7 @@ export function OttoChatGptFinanceiroTelaReel() {
       audio={<Narration clips={A_CLIPS} src={A_AUDIO} />}
       hook={{ Component: makeHookScene('Agora o ChatGPT pode cuidar do financeiro da sua empresa.', ['financeiro'], 88, ''), end: 3.7 }}
       outroAt={A_OUTRO}
+      plugin={{ at: 3.72 }}
       scenes={[
         financeScene({
           start: 0,
@@ -167,7 +172,9 @@ export function OttoChatGptFinanceiroTelaReel() {
 
 const B_AUDIO = 'remotion/otto-reels/chatgpt-contadores-narracao.mp3'
 const B_CLIPS = layoutClips([
-  [0, 12.08, 2.4], // hook · "Olha o que ela faz… classificar as despesas… categoria de cada uma."
+  [0, 6.7, 0], // hook · "Olha o que ela faz… direto no ChatGPT."
+  pluginPhrase, // "Primeiro, instala o plugin do Otto…"
+  [6.7, 12.08, 2.4], // "Eu peço pra classificar as despesas… categoria de cada uma."
   [12.08, 14.56, 2.6], // "Concilia o extrato do banco sozinha."
   [14.56, 17.04, 2.6], // "Emite as notas fiscais das vendas de hoje."
   [17.04, 18.68, 2.4], // "Cadastra cliente novo…"
@@ -177,7 +184,7 @@ const B_CLIPS = layoutClips([
 ])
 
 const B_OUTRO = 44.8
-export const OTTO_CHATGPT_CONTADORES_TELA_DURATION = s(B_OUTRO + OUTRO_LENGTH)
+export const OTTO_CHATGPT_CONTADORES_TELA_DURATION = s(B_OUTRO + PLUGIN_FLOW_LENGTH + OUTRO_LENGTH)
 
 export function OttoChatGptContadoresTelaReel() {
   return (
@@ -185,6 +192,7 @@ export function OttoChatGptContadoresTelaReel() {
       audio={<Narration clips={B_CLIPS} src={B_AUDIO} />}
       hook={{ Component: ContadoresHookScene, end: 3.85 }}
       outroAt={B_OUTRO}
+      plugin={{ at: 6.7 }}
       scenes={[
         expensesScene({
           start: 0,

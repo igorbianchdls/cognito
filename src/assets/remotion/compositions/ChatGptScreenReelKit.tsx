@@ -31,6 +31,7 @@ import {
   UserMessage,
   p,
 } from './ChatGptVendasCardReplica'
+import { ChatGptPluginFlow, PLUGIN_FLOW_LENGTH } from './ChatGptPluginFlow'
 import { OttoDesktopWindow, DESKTOP_W } from './OttoDesktopMock'
 import { CtaScene, Headline, ReelRoot, Scene as EditorialScene, useFrame, useSpring } from './OttoContadoresReel'
 import type { ReelScene } from './OttoContadoresReel'
@@ -230,15 +231,20 @@ export const deleteClientScene = (args: SceneArgs) =>
     DELETE_MSG,
   )
 
+/** "Primeiro, instala o plugin do Otto…" — shared take for the plugin scene; insert it as a phrase with `pluginPhrase`. */
+export const PLUGIN_AUDIO = 'remotion/otto-reels/chatgpt-tela-plugin-narracao.mp3'
+export const pluginPhrase: [number, number, number, string] = [0, 8.4, PLUGIN_FLOW_LENGTH - 8.4, PLUGIN_AUDIO]
+export { PLUGIN_FLOW_LENGTH }
+
 // ─── Narration: one take, cut into phrases with pauses where the screen needs time ───
 
-export type Clip = { at: number; from: number; to: number }
+export type Clip = { at: number; from: number; src?: string; to: number }
 
-/** Lays out [from, to, pause after] phrases of one narration take back to back. */
-export function layoutClips(phrases: [number, number, number][]): Clip[] {
+/** Lays out [from, to, pause after, other take?] phrases back to back (default take: `Narration`'s src). */
+export function layoutClips(phrases: [number, number, number, string?][]): Clip[] {
   let at = 0
-  return phrases.map(([from, to, pause]) => {
-    const clip = { at, from, to }
+  return phrases.map(([from, to, pause, src]) => {
+    const clip = { at, from, src, to }
     at += to - from + pause
     return clip
   })
@@ -248,8 +254,8 @@ export function Narration({ clips, src }: { clips: Clip[]; src: string }) {
   return (
     <>
       {clips.map((clip) => (
-        <Sequence from={s(clip.at)} key={clip.from} layout="none">
-          <Audio src={staticFile(src)} trimAfter={s(clip.to)} trimBefore={s(clip.from)} />
+        <Sequence from={s(clip.at)} key={`${clip.src ?? src}-${clip.from}`} layout="none">
+          <Audio src={staticFile(clip.src ?? src)} trimAfter={s(clip.to)} trimBefore={s(clip.from)} />
         </Sequence>
       ))}
     </>
@@ -341,11 +347,19 @@ export type ChatGptScreenReelProps = {
   hook: { Component: ReelScene['Component']; end: number }
   /** Reel second the closing ("Isso é o Otto… Comenta OTTO") starts; lasts OUTRO_LENGTH. */
   outroAt: number
+  /** Inserts the plugin scene at this second: everything after it (scenes, outro) plays PLUGIN_FLOW_LENGTH later. */
+  plugin?: { at: number }
   scenes: Scene[]
 }
 
-export function ChatGptScreenReel({ audio, hook, outroAt, scenes }: ChatGptScreenReelProps) {
-  const frame = useCurrentFrame()
+export function ChatGptScreenReel({ audio, hook, outroAt, plugin, scenes }: ChatGptScreenReelProps) {
+  const raw = useCurrentFrame()
+  const pluginAt = plugin ? s(plugin.at) : Infinity
+  const pluginLen = s(PLUGIN_FLOW_LENGTH)
+  const inPlugin = raw >= pluginAt && raw < pluginAt + pluginLen
+  /** Frame on the scenes' own timeline (they don't know about the inserted plugin scene). */
+  const frame = raw >= pluginAt + pluginLen ? raw - pluginLen : Math.min(raw, pluginAt)
+  const outro = outroAt + (plugin && outroAt >= plugin.at ? PLUGIN_FLOW_LENGTH : 0)
   let index = 0
   scenes.forEach((sc, i) => {
     if (frame >= sc.start) index = i
@@ -366,29 +380,35 @@ export function ChatGptScreenReel({ audio, hook, outroAt, scenes }: ChatGptScree
       {audio}
 
       <div style={{ height: SCREEN_H, left: 0, overflow: 'hidden', position: 'absolute', top: 0, transform: `scale(${SCALE})`, transformOrigin: '0 0', width: 828 }}>
-        {/* conversation */}
-        <AdCopy.Provider value>
-          <div style={{ inset: 0, opacity: enter, position: 'absolute', transform: `translateY(${-scroll + (1 - enter) * 90}px)` }}>{sc.content(rf)}</div>
-        </AdCopy.Provider>
-        {empty > 0 ? <span style={{ color: '#8e8e8e', fontSize: 40, fontWeight: 500, left: 0, opacity: empty, position: 'absolute', right: 0, textAlign: 'center', top: 640 }}>Em que posso ajudar?</span> : null}
+        {inPlugin ? (
+          <ChatGptPluginFlow screenH={SCREEN_H} t={(raw - pluginAt) / 30} />
+        ) : (
+          <>
+            {/* conversation */}
+            <AdCopy.Provider value>
+              <div style={{ inset: 0, opacity: enter, position: 'absolute', transform: `translateY(${-scroll + (1 - enter) * 90}px)` }}>{sc.content(rf)}</div>
+            </AdCopy.Provider>
+            {empty > 0 ? <span style={{ color: '#8e8e8e', fontSize: 40, fontWeight: 500, left: 0, opacity: empty, position: 'absolute', right: 0, textAlign: 'center', top: 640 }}>Em que posso ajudar?</span> : null}
 
-        {/* fixed chrome */}
-        <div style={{ background: 'linear-gradient(#fff 88%, rgba(255,255,255,0))', height: 196, left: 0, position: 'absolute', right: 0, top: 0 }} />
-        <StatusBar />
-        <TopBar />
-        <div style={{ inset: 0, position: 'absolute', transform: `translateY(${-BOTTOM_SHIFT}px)` }}>
-          <div style={{ background: 'linear-gradient(rgba(255,255,255,0), #fff 45%)', height: 230, left: 0, position: 'absolute', right: 0, top: 1580 }} />
-          <Composer frame={rf} messages={sc.messages} />
-          <div style={{ background: TEXT, borderRadius: 99, height: 9, left: 267, position: 'absolute', top: 1764, width: 294 }} />
-        </div>
+            {/* fixed chrome */}
+            <div style={{ background: 'linear-gradient(#fff 88%, rgba(255,255,255,0))', height: 196, left: 0, position: 'absolute', right: 0, top: 0 }} />
+            <StatusBar />
+            <TopBar />
+            <div style={{ inset: 0, position: 'absolute', transform: `translateY(${-BOTTOM_SHIFT}px)` }}>
+              <div style={{ background: 'linear-gradient(rgba(255,255,255,0), #fff 45%)', height: 230, left: 0, position: 'absolute', right: 0, top: 1580 }} />
+              <Composer frame={rf} messages={sc.messages} />
+              <div style={{ background: TEXT, borderRadius: 99, height: 9, left: 267, position: 'absolute', top: 1764, width: 294 }} />
+            </div>
+          </>
+        )}
       </div>
 
-      {frame < hookEnd ? (
-        <AbsoluteFill style={{ opacity: 1 - p(frame, hookEnd - 7, hookEnd) }}>
+      {raw < hookEnd ? (
+        <AbsoluteFill style={{ opacity: 1 - p(raw, hookEnd - 7, hookEnd) }}>
           <ReelRoot scenes={[{ Component: hook.Component, duration: hookEnd }]} />
         </AbsoluteFill>
       ) : null}
-      <ChatGptOutro at={outroAt} />
+      <ChatGptOutro at={outro} />
     </AbsoluteFill>
   )
 }
