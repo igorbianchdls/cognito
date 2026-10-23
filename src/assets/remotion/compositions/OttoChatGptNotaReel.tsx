@@ -1,4 +1,4 @@
-import { bankScene, ChatGptScreenReel, expensesScene, financeScene, invoiceScene, layoutClips, Narration, OUTRO_LENGTH, PLUGIN_FLOW_LENGTH, pluginPhrase } from './ChatGptScreenReelKit'
+import { bankScene, ChatGptScreenReel, expensesScene, financeScene, invoiceScene, layoutClips, screenReelDuration } from './ChatGptScreenReelKit'
 import type { Scene } from './ChatGptScreenReelKit'
 import { makeHookScene } from './OttoNotaFiscalChatGptVideos'
 
@@ -8,18 +8,16 @@ import { makeHookScene } from './OttoNotaFiscalChatGptVideos'
  * (part 1: invoices; part 2: "E não faz só isso" → expenses, bank reconciliation, dashboard).
  */
 
-const s = (sec: number) => Math.round(sec * 30)
-
 /** Part 2 narration starts where part 1 is cut (right before its own "Isso é o Otto"). */
 const PART2 = 18.0
 const g = (sec: number) => PART2 + sec
 
 /** Part 2 is cut after "Tudo isso dentro do chat."; the shared closing ("Isso é o Otto… Comenta OTTO") follows. */
 const OUTRO_AT = g(29.4)
-export const OTTO_CHATGPT_NOTA_REEL_DURATION = s(OUTRO_AT + PLUGIN_FLOW_LENGTH + OUTRO_LENGTH)
 
 const SCENES: Scene[] = [
   invoiceScene({
+    free: [2058, 2110],
     start: 0,
     warp: [
       [0, 1700],
@@ -42,6 +40,7 @@ const SCENES: Scene[] = [
     ],
   }),
   expensesScene({
+    free: [634, 690],
     start: g(1.2),
     warp: [
       [g(1.2), 330],
@@ -62,6 +61,7 @@ const SCENES: Scene[] = [
     ],
   }),
   bankScene({
+    free: [2408, 2480],
     start: g(10.75),
     warp: [
       [g(10.75), 2100],
@@ -102,12 +102,13 @@ const SCENES: Scene[] = [
   }),
 ]
 
+const PLUGIN = { at: 3.5 }
+export const OTTO_CHATGPT_NOTA_REEL_DURATION = screenReelDuration(SCENES, OUTRO_AT, PLUGIN)
+
 const VO1 = 'remotion/otto-reels/chatgpt-nota-narracao.mp3'
 const VO2 = 'remotion/otto-reels/chatgpt-nota-narracao-2.mp3'
 const CLIPS = layoutClips([
-  [0, 3.5, 0], // hook "Agora o ChatGPT pode emitir suas notas fiscais."
-  pluginPhrase, // "Primeiro, instala o plugin do Otto…"
-  [3.5, PART2, 0], // part 1 up to "…sem abrir sistema nenhum."
+  [0, PART2, 0], // part 1: hook … "sem abrir sistema nenhum."
   [0, 29.26, 0, VO2], // part 2 up to "Tudo isso dentro do chat."
 ])
 
@@ -115,5 +116,5 @@ const CLIPS = layoutClips([
 const HookScene = makeHookScene('Agora o ChatGPT pode emitir suas notas fiscais.', ['notas', 'fiscais'], 88, '')
 
 export function OttoChatGptNotaReel() {
-  return <ChatGptScreenReel audio={<Narration clips={CLIPS} src={VO1} />} hook={{ Component: HookScene, end: 3.5 }} outroAt={OUTRO_AT} plugin={{ at: 3.5 }} scenes={SCENES} />
+  return <ChatGptScreenReel hook={{ Component: HookScene, end: 3.5 }} narration={{ clips: CLIPS, src: VO1 }} outroAt={OUTRO_AT} plugin={PLUGIN} scenes={SCENES} />
 }

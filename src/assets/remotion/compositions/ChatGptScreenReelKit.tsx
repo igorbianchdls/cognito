@@ -62,14 +62,20 @@ export type Scene = {
   scroll: [number, number, number][]
   scroll0: number
   start: number
+  /**
+   * [from, until] replica frames: once the warp reaches `from` the flow plays at its own speed up to `until`
+   * (taps, confirmation, done screen), and the reel waits for it before the next chat — nothing gets cut.
+   */
+  free?: [number, number]
   /** [reel second, replica frame] */
   warp: [number, number][]
 }
 
-type SceneArgs = { start: number; typed?: boolean; warp: [number, number][] }
+type SceneArgs = { free?: [number, number]; start: number; typed?: boolean; warp: [number, number][] }
 
 const scene = (args: SceneArgs, body: Omit<Scene, 'messages' | 'start' | 'warp'>, message: Message): Scene => ({
   ...body,
+  free: args.free,
   messages: args.typed === false ? [] : [message],
   start: s(args.start),
   warp: args.warp,
@@ -231,16 +237,15 @@ export const deleteClientScene = (args: SceneArgs) =>
     DELETE_MSG,
   )
 
-/** "Primeiro, instala o plugin do Otto…" — shared take for the plugin scene; insert it as a phrase with `pluginPhrase`. */
-export const PLUGIN_AUDIO = 'remotion/otto-reels/chatgpt-tela-plugin-narracao.mp3'
-export const pluginPhrase: [number, number, number, string] = [0, 8.4, PLUGIN_FLOW_LENGTH - 8.4, PLUGIN_AUDIO]
-export { PLUGIN_FLOW_LENGTH }
+/** "Primeiro, instala o plugin do Otto…" — shared take, played over the plugin scene. */
+const PLUGIN_AUDIO = 'remotion/otto-reels/chatgpt-tela-plugin-narracao.mp3'
+const PLUGIN_SPEECH = 8.4
 
 // ─── Narration: one take, cut into phrases with pauses where the screen needs time ───
 
 export type Clip = { at: number; from: number; src?: string; to: number }
 
-/** Lays out [from, to, pause after, other take?] phrases back to back (default take: `Narration`'s src). */
+/** Lays out [from, to, pause after, other take?] phrases back to back (default take: the reel's `src`). */
 export function layoutClips(phrases: [number, number, number, string?][]): Clip[] {
   let at = 0
   return phrases.map(([from, to, pause, src]) => {
@@ -250,12 +255,58 @@ export function layoutClips(phrases: [number, number, number, string?][]): Clip[
   })
 }
 
-export function Narration({ clips, src }: { clips: Clip[]; src: string }) {
+// ─── Timeline: scenes are authored on their own clock; the plugin scene and the
+// "let the flow finish" holds are inserted into it (narration and outro move with them) ───
+
+type Insert = { at: number; kind: 'hold' | 'plugin'; length: number; scene: number }
+
+/** Reel second (scene clock) at which a scene's warp reaches replica frame `rf`. */
+function warpTime(sc: Scene, rf: number) {
+  const w = sc.warp
+  for (let i = 1; i < w.length; i++) {
+    const [t0, r0] = w[i - 1]
+    const [t1, r1] = w[i]
+    if (rf <= r1 && r1 > r0) return t0 + ((Math.max(rf, r0) - r0) / (r1 - r0)) * (t1 - t0)
+  }
+  return w[w.length - 1][0]
+}
+
+function inserts(scenes: Scene[], outroAt: number, plugin?: { at: number }): Insert[] {
+  const list: Insert[] = plugin ? [{ at: plugin.at, kind: 'plugin', length: PLUGIN_FLOW_LENGTH, scene: 0 }] : []
+  scenes.forEach((sc, i) => {
+    if (!sc.free) return
+    const boundary = i + 1 < scenes.length ? scenes[i + 1].start / 30 : outroAt
+    const end = warpTime(sc, sc.free[0]) + (sc.free[1] - sc.free[0]) / 30
+    if (end - boundary > 0.05) list.push({ at: boundary, kind: 'hold', length: end - boundary, scene: i })
+  })
+  return list.sort((a, b) => a.at - b.at)
+}
+
+/** Reel second for a second of the scene clock (inserts at or before it push it later). */
+const later = (list: Insert[], t: number) => t + list.filter((i) => i.at <= t).reduce((sum, i) => sum + i.length, 0)
+const startOf = (list: Insert[], ins: Insert) => ins.at + list.filter((i) => i.at < ins.at).reduce((sum, i) => sum + i.length, 0)
+
+export function screenReelDuration(scenes: Scene[], outroAt: number, plugin?: { at: number }) {
+  return s(later(inserts(scenes, outroAt, plugin), outroAt) + OUTRO_LENGTH)
+}
+
+/** Narration clips split around the inserts, plus the plugin take during the plugin scene. */
+function NarrationTrack({ clips, list, src }: { clips: Clip[]; list: Insert[]; src: string }) {
+  const pieces: Clip[] = []
+  for (const clip of clips) {
+    const end = clip.at + clip.to - clip.from
+    const cuts = list.map((i) => i.at).filter((t) => t > clip.at + 0.001 && t < end - 0.001)
+    const bounds = [clip.at, ...cuts, end]
+    for (let k = 0; k < bounds.length - 1; k++) {
+      pieces.push({ at: later(list, bounds[k]), from: clip.from + bounds[k] - clip.at, src: clip.src ?? src, to: clip.from + bounds[k + 1] - clip.at })
+    }
+  }
+  for (const ins of list) if (ins.kind === 'plugin') pieces.push({ at: startOf(list, ins), from: 0, src: PLUGIN_AUDIO, to: PLUGIN_SPEECH })
   return (
     <>
-      {clips.map((clip) => (
-        <Sequence from={s(clip.at)} key={`${clip.src ?? src}-${clip.from}`} layout="none">
-          <Audio src={staticFile(clip.src ?? src)} trimAfter={s(clip.to)} trimBefore={s(clip.from)} />
+      {pieces.map((piece) => (
+        <Sequence from={s(piece.at)} key={`${piece.src}-${piece.from}`} layout="none">
+          <Audio src={staticFile(piece.src ?? src)} trimAfter={s(piece.to)} trimBefore={s(piece.from)} />
         </Sequence>
       ))}
     </>
@@ -265,6 +316,10 @@ export function Narration({ clips, src }: { clips: Clip[]; src: string }) {
 // ─── Player ──────────────────────────────────────────────────────────────────
 
 function replicaFrame(sc: Scene, frame: number) {
+  if (sc.free) {
+    const from = s(warpTime(sc, sc.free[0]))
+    if (frame >= from) return Math.min(sc.free[1], sc.free[0] + frame - from)
+  }
   return interpolate(
     frame,
     sc.warp.map(([sec]) => s(sec)),
@@ -342,7 +397,8 @@ export function ChatGptOutro({ at }: { at: number }) {
 }
 
 export type ChatGptScreenReelProps = {
-  audio: ReactNode
+  /** One narration take laid out with `layoutClips` on the scene clock. */
+  narration: { clips: Clip[]; src: string }
   /** Opening scene from the editorial reels, shown over the screen for its first `end` seconds. */
   hook: { Component: ReelScene['Component']; end: number }
   /** Reel second the closing ("Isso é o Otto… Comenta OTTO") starts; lasts OUTRO_LENGTH. */
@@ -352,23 +408,37 @@ export type ChatGptScreenReelProps = {
   scenes: Scene[]
 }
 
-export function ChatGptScreenReel({ audio, hook, outroAt, plugin, scenes }: ChatGptScreenReelProps) {
+export function ChatGptScreenReel({ hook, narration, outroAt, plugin, scenes }: ChatGptScreenReelProps) {
   const raw = useCurrentFrame()
-  const pluginAt = plugin ? s(plugin.at) : Infinity
-  const pluginLen = s(PLUGIN_FLOW_LENGTH)
-  const inPlugin = raw >= pluginAt && raw < pluginAt + pluginLen
-  /** Frame on the scenes' own timeline (they don't know about the inserted plugin scene). */
-  const frame = raw >= pluginAt + pluginLen ? raw - pluginLen : Math.min(raw, pluginAt)
-  const outro = outroAt + (plugin && outroAt >= plugin.at ? PLUGIN_FLOW_LENGTH : 0)
+  const list = inserts(scenes, outroAt, plugin)
+  // where are we: an insert (plugin scene / hold) or the scenes' own clock
+  let shiftBy = 0
+  let active: Insert | undefined
+  let elapsed = 0
+  for (const ins of list) {
+    const start = ins.at + shiftBy
+    if (raw / 30 < start) break
+    if (raw / 30 < start + ins.length) {
+      active = ins
+      elapsed = raw / 30 - start
+      break
+    }
+    shiftBy += ins.length
+  }
+  const inPlugin = active?.kind === 'plugin'
+  /** Frame on the scenes' clock; during a hold the finishing scene keeps playing past its boundary. */
+  const frame = active ? s(active.at) + (active.kind === 'hold' ? elapsed * 30 : 0) : raw - s(shiftBy)
+  const outro = later(list, outroAt)
   let index = 0
   scenes.forEach((sc, i) => {
     if (frame >= sc.start) index = i
   })
+  if (active?.kind === 'hold') index = active.scene
   const sc = scenes[index]
   const rf = replicaFrame(sc, frame)
   const scroll = scrollAt(sc, rf)
   /** Each new chat slides in over the previous one. */
-  const enter = index === 0 ? 1 : p(frame, sc.start, sc.start + 10)
+  const enter = index === 0 || active?.kind === 'hold' ? 1 : p(frame, sc.start, sc.start + 10)
   /** The first chat is empty until its request is sent. */
   const firstSend = scenes[0].messages[0]?.send
   const empty = index === 0 && firstSend !== undefined ? 1 - p(rf, firstSend - 4, firstSend + 6) : 0
@@ -377,11 +447,11 @@ export function ChatGptScreenReel({ audio, hook, outroAt, plugin, scenes }: Chat
   return (
     <AbsoluteFill className="chatgpt-replica" style={{ background: '#fff', color: TEXT, fontFamily: FONT }}>
       <style>{FONT_CSS}</style>
-      {audio}
+      <NarrationTrack clips={narration.clips} list={list} src={narration.src} />
 
       <div style={{ height: SCREEN_H, left: 0, overflow: 'hidden', position: 'absolute', top: 0, transform: `scale(${SCALE})`, transformOrigin: '0 0', width: 828 }}>
         {inPlugin ? (
-          <ChatGptPluginFlow screenH={SCREEN_H} t={(raw - pluginAt) / 30} />
+          <ChatGptPluginFlow screenH={SCREEN_H} t={elapsed} />
         ) : (
           <>
             {/* conversation */}
