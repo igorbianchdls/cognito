@@ -1,4 +1,4 @@
-import { BrainCircuit, ChartColumnIncreasing, Check, ChevronDown, ChevronLeft, ChevronRight, CircleAlert, CircleCheck, FileCheck2, FileSearch, Landmark, ListChecks, Package, RefreshCw, ShoppingCart, Sparkles, Tag, Tags, Trash2, Undo2, User, Users, Workflow } from 'lucide-react'
+import { ArrowDownLeft, ArrowUpRight, BrainCircuit, ChartColumnIncreasing, Check, ChevronDown, ChevronLeft, ChevronRight, CircleAlert, CircleCheck, FileCheck2, FileSearch, Landmark, Link as LinkIcon, ListChecks, Package, RefreshCw, ShoppingCart, Sparkles, Tag, Tags, Trash2, Undo2, User, Users, Workflow } from 'lucide-react'
 import type { CSSProperties, ReactNode } from 'react'
 
 import { MentionBubble } from './ChatGptMention'
@@ -15,34 +15,38 @@ import { makeHookScene } from './OttoNotaFiscalChatGptVideos'
  */
 
 const MSG: MentionMessage = {
-  lines: ['cadastra a Nova Empresa Ltda.', 'de Recife, cria o produto Cadeira', 'Ergonômica a R$ 890, atualiza o e-mail', 'do Cliente Exemplo, exclui o Cliente', 'Antigo Ltda., emite as notas fiscais', 'de hoje, classifica as despesas da', 'semana e faz o fechamento'],
-  send: 304,
-  typing: [130, 300],
+  lines: ['cadastra a Nova Empresa Ltda.', 'de Recife, cria o produto Cadeira', 'Ergonômica a R$ 890, atualiza o e-mail', 'do Cliente Exemplo, exclui o Cliente', 'Antigo Ltda., emite as notas fiscais', 'de hoje, classifica as despesas,', 'concilia o extrato do banco e faz', 'o fechamento'],
+  send: 324,
+  typing: [130, 320],
 }
 
 /** Heights of the tall automatic cards (they are scrolled through). */
 const NF_H = 2244
 const EXP_H = 2330
 const FECH_H = 1450
+const BK_H = 1910
 
 /** Document positions of the conversation (before scrolling). */
 const Y = (() => {
-  const ops = [690, 1730, 2820, 3910].map((say, i) => ({ card: say + 80, done: say + (i === 3 ? 920 : 940), say }))
-  const nf = { card: 5110, done: 5110 + NF_H + 40, say: 4980 }
+  const ops = [750, 1790, 2880, 3970].map((say, i) => ({ card: say + 80, done: say + (i === 3 ? 920 : 940), say }))
+  const nf = { card: 5170, done: 5170 + NF_H + 40, say: 5040 }
   const exp = { card: nf.done + 230, done: nf.done + 230 + EXP_H + 40, say: nf.done + 100 }
-  const wrap = exp.done + 100
+  const bank = { card: exp.done + 230, done: exp.done + 230 + BK_H + 40, say: exp.done + 100 }
+  const wrap = bank.done + 150
   const fech = { card: wrap + 1126 + 130, say: wrap + 1126 }
-  return { bubble: 230, exp, fech, nf, ops, wrap }
+  return { bank, bubble: 230, exp, fech, nf, ops, wrap }
 })()
 
 /** Frame each operation starts: announce → card (+26) → "done" line (+80). */
-const OPS = [330, 440, 550, 660]
-/** Batch invoices / expense classification: taller cards, more time, scrolled through. */
-const NF_OP = 770
+const OPS = [350, 460, 570, 680]
+/** Batch invoices / expense classification / bank reconciliation: taller cards, more time, scrolled through. */
+const NF_OP = 790
 const NF_CARD = NF_OP + 26
-const EXP_OP = 990
+const EXP_OP = 1010
 const EXP_CARD = EXP_OP + 26
-const WRAP = 1190
+const BK_OP = 1210
+const BK_CARD = BK_OP + 26
+const WRAP = 1410
 /** Updated client list after the wrap-up line, then the financial closing. */
 const LIST = WRAP + 40
 const LIST_Y = { card: Y.wrap + 220, say: Y.wrap + 140 }
@@ -376,6 +380,106 @@ function ClassifiedExpensesCard({ frame }: { frame: number }) {
   )
 }
 
+const MOVES = [
+  { amount: '+ R$ 1.500,00', date: '18/10/2026', in: true, link: 'Recebimento #2031', ok: true, title: 'PIX · Clínica Horizonte' },
+  { amount: '– R$ 129,90', date: '18/10/2026', in: false, link: 'Conta a pagar #883', ok: true, title: 'Google Workspace' },
+  { amount: '+ R$ 850,00', date: '17/10/2026', in: true, link: 'Recebimento #2032', ok: true, title: 'TED · Agência Atlas' },
+  { amount: '+ R$ 980,00', date: '17/10/2026', in: true, link: 'Sem vínculo confirmado', ok: false, title: 'PIX recebido · Não identificado' },
+]
+
+const bankTile = (
+  <IconTile size={88}>
+    <Landmark color="#4a4a4a" size={34} strokeWidth={2} style={iv(34, 2)} />
+  </IconTile>
+)
+
+/** "Conciliação bancária" — automatic reconciliation, 3 of 4 matched and 1 left for review (like the print). */
+function AutoReconciliationCard({ frame }: { frame: number }) {
+  const start = BK_CARD
+  const at = (delay: number): CSSProperties => {
+    const s = pop(frame, start + delay)
+    return { opacity: frame < start + delay ? 0 : s, transform: `translateY(${(1 - s) * 16}px)` }
+  }
+  const progress = p(frame, start + 10, start + 50)
+  return (
+    <CardShell frame={frame} height={BK_H} start={start} top={Y.bank.card}>
+      <div style={{ padding: '0 22px' }}>
+        <CardHeader icon={bankTile} subtitle="OTTO IA · Conta •• 4582" title="Conciliação bancária" />
+        <div style={{ background: LINE, height: 2 }} />
+        <div style={{ alignItems: 'flex-end', display: 'flex', justifyContent: 'space-between', marginTop: 40, ...at(6) }}>
+          <div>
+            <span style={{ alignItems: 'baseline', display: 'flex', gap: 18 }}>
+              <span style={{ color: TEXT, fontSize: 62, fontWeight: 650, letterSpacing: '-0.02em', lineHeight: '70px' }}>{Math.round(3 * progress)}/4</span>
+              <span style={{ color: MUTED, fontSize: 31 }}>conciliadas</span>
+            </span>
+            <span style={{ color: MUTED, display: 'block', fontSize: 27, marginTop: 6 }}>1 movimentação em revisão</span>
+          </div>
+          <span style={{ background: '#fbe3d8', borderRadius: 99, color: ORANGE, fontSize: 24, fontWeight: 500, marginBottom: 34, opacity: p(frame, start + 48, start + 54), padding: '5px 15px' }}>Parcial</span>
+        </div>
+        <div style={{ background: '#ececec', borderRadius: 99, height: 14, marginTop: 26, overflow: 'hidden' }}>
+          <div style={{ background: '#1f8a4c', borderRadius: 99, height: '100%', width: `${75 * progress}%` }} />
+        </div>
+        <div style={{ display: 'grid', gap: 18, gridTemplateColumns: '1fr 1fr', marginTop: 26, ...at(24) }}>
+          {[
+            [<ArrowDownLeft color={GREEN} key="i" size={24} strokeWidth={2.4} style={iv(24, 2.4)} />, 'Entradas conciliadas', 'R$ 2.350,00', GREEN],
+            [<ArrowUpRight color="#5b5b5b" key="o" size={24} strokeWidth={2.4} style={iv(24, 2.4)} />, 'Saídas conciliadas', 'R$ 129,90', TEXT],
+          ].map(([icon, label, value, color]) => (
+            <div key={label as string} style={{ background: '#f2f2f2', borderRadius: 28, height: 150, padding: '26px 24px 0' }}>
+              <span style={{ alignItems: 'center', color: MUTED, display: 'flex', fontSize: 25, gap: 10 }}>
+                {icon} {label}
+              </span>
+              <span style={{ color: color as string, display: 'block', fontSize: 40, fontWeight: 650, letterSpacing: '-0.01em', marginTop: 14 }}>{value}</span>
+            </div>
+          ))}
+        </div>
+        <div style={{ background: LINE, height: 2, marginTop: 40 }} />
+        <div style={{ alignItems: 'center', display: 'flex', justifyContent: 'space-between', marginTop: 40, ...at(32) }}>
+          <span style={{ color: TEXT, fontSize: 33, fontWeight: 650 }}>Movimentações</span>
+          <span style={{ color: MUTED, fontSize: 26 }}>4 encontradas</span>
+        </div>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', marginTop: 24, ...at(36) }}>
+          <span style={{ alignItems: 'center', background: '#efefef', borderRadius: 32, color: TEXT, display: 'flex', fontSize: 29, fontWeight: 500, height: 64, justifyContent: 'center' }}>Todas</span>
+          <span style={{ alignItems: 'center', color: '#9a9a9a', display: 'flex', fontSize: 29, height: 64, justifyContent: 'center' }}>Pendentes (1)</span>
+        </div>
+        {MOVES.map((move, i) => {
+          const rowAt = 44 + i * 14
+          const status = pop(frame, start + rowAt + 10)
+          const tone = move.ok ? GREEN : ORANGE
+          return (
+            <div key={move.title} style={{ borderBottom: `2px solid ${LINE}`, display: 'flex', flexDirection: 'column', height: move.ok ? 250 : 290, justifyContent: 'center', ...at(rowAt) }}>
+              <div style={{ display: 'flex', gap: 22 }}>
+                <span style={{ alignItems: 'center', background: '#f2f2f2', borderRadius: 20, display: 'flex', flex: 'none', height: 76, justifyContent: 'center', width: 76 }}>
+                  {move.in ? <ArrowDownLeft color={GREEN} size={28} strokeWidth={2.4} style={iv(28, 2.4)} /> : <ArrowUpRight color="#5b5b5b" size={28} strokeWidth={2.4} style={iv(28, 2.4)} />}
+                </span>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <span style={{ color: TEXT, display: 'block', fontSize: 31, fontWeight: 500, lineHeight: '40px' }}>{move.title}</span>
+                  <span style={{ color: MUTED, display: 'block', fontSize: 27, marginTop: 6 }}>{move.date}</span>
+                </div>
+                <div style={{ textAlign: 'right' }}>
+                  <span style={{ color: move.in ? GREEN : TEXT, display: 'block', fontSize: 31, fontWeight: 650 }}>{move.amount}</span>
+                  <span style={{ alignItems: 'center', color: move.ok ? GREEN : '#5d5d5d', display: 'flex', fontSize: 27, gap: 8, justifyContent: 'flex-end', marginTop: 10, opacity: frame < start + rowAt + 10 ? 0 : status }}>
+                    {move.ok ? <CircleCheck color={tone} size={24} strokeWidth={2.2} style={iv(24, 2.2)} /> : <CircleAlert color={tone} size={24} strokeWidth={2.2} style={iv(24, 2.2)} />}
+                    {move.ok ? 'Conciliada' : 'Revisar'}
+                    <ChevronDown color="#6b6b6b" size={26} strokeWidth={2} style={iv(26, 2)} />
+                  </span>
+                </div>
+              </div>
+              <span style={{ alignItems: 'center', color: MUTED, display: 'flex', fontSize: 27, gap: 16, marginLeft: 6, marginTop: 18 }}>
+                <LinkIcon color={move.ok ? GREEN : '#8e8e8e'} size={26} strokeWidth={2.2} style={iv(26, 2.2)} /> {move.link}
+              </span>
+            </div>
+          )
+        })}
+        <div style={{ alignItems: 'center', display: 'flex', gap: 18, height: 100, ...at(110) }}>
+          <Sparkles color="#3d3d3d" size={34} strokeWidth={2} style={iv(34, 2)} />
+          <span style={{ color: TEXT, flex: 1, fontSize: 33, fontWeight: 600 }}>O que o OTTO fez</span>
+          <ChevronDown color="#6b6b6b" size={32} strokeWidth={2} style={iv(32, 2)} />
+        </div>
+      </div>
+    </CardShell>
+  )
+}
+
 const ORANGE = '#a3401e'
 
 const STEPS: { icon: ReactNode; ok: boolean; sub: string; title: string }[] = [
@@ -533,10 +637,13 @@ function Conversation({ frame }: { frame: number }) {
       <AssistantText frame={frame} text="Agora vou classificar as despesas da semana." top={Y.exp.say} window={[EXP_OP, EXP_OP + 18]} />
       <ClassifiedExpensesCard frame={frame} />
       <AssistantText frame={frame} text="4 despesas classificadas." top={Y.exp.done} window={[EXP_OP + 170, EXP_OP + 182]} />
-      <AssistantText frame={frame} text="Pronto! Fiz as 6 alterações no Otto." top={Y.wrap} window={[WRAP, WRAP + 14]} />
+      <AssistantText frame={frame} text="Agora vou conciliar o extrato do banco." top={Y.bank.say} window={[BK_OP, BK_OP + 16]} />
+      <AutoReconciliationCard frame={frame} />
+      <AssistantText frame={frame} text="3 de 4 movimentações conciliadas. 1 ficou para revisão." top={Y.bank.done} window={[BK_OP + 170, BK_OP + 186]} />
+      <AssistantText frame={frame} text="Pronto! Fiz as 7 alterações no Otto." top={Y.wrap} window={[WRAP, WRAP + 14]} />
       {frame >= WRAP + 16 ? (
         <span style={{ alignItems: 'center', color: GREEN, display: 'flex', fontSize: 26, gap: 10, left: 33, opacity: pop(frame, WRAP + 16), position: 'absolute', top: Y.wrap + 62 }}>
-          <CircleCheck color={GREEN} size={26} strokeWidth={2.2} style={iv(26, 2.2)} /> 6 alterações concluídas
+          <CircleCheck color={GREEN} size={26} strokeWidth={2.2} style={iv(26, 2.2)} /> 7 alterações concluídas
         </span>
       ) : null}
       <AssistantText frame={frame} text="Aqui está a sua lista de clientes atualizada:" top={LIST_Y.say} window={[LIST, LIST + 16]} />
@@ -563,6 +670,9 @@ const SCENES: Scene[] = [
       [EXP_OP - 6, EXP_OP + 20, Y.exp.say - 200],
       [EXP_CARD + 50, EXP_CARD + 90, Y.exp.card + 700 - 198], // through the categories
       [EXP_CARD + 95, EXP_CARD + 130, Y.exp.card + EXP_H - 1150],
+      [BK_OP - 6, BK_OP + 20, Y.bank.say - 200],
+      [BK_CARD + 50, BK_CARD + 90, Y.bank.card + 700 - 198], // through the movements
+      [BK_CARD + 95, BK_CARD + 130, Y.bank.card + BK_H - 1150],
       [WRAP - 6, WRAP + 20, Y.wrap - 600],
       [LIST - 4, LIST + 24, LIST_Y.say - 200],
       [FECH - 4, FECH + 24, Y.fech.say - 200],
