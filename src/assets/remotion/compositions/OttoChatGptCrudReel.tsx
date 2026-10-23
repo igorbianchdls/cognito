@@ -1,4 +1,4 @@
-import { Check, ChevronDown, ChevronLeft, ChevronRight, CircleCheck, FileCheck2, FileSearch, ListChecks, Package, Sparkles, Trash2, Undo2, User, Users } from 'lucide-react'
+import { BrainCircuit, ChartColumnIncreasing, Check, ChevronDown, ChevronLeft, ChevronRight, CircleAlert, CircleCheck, FileCheck2, FileSearch, Landmark, ListChecks, Package, RefreshCw, ShoppingCart, Sparkles, Tag, Tags, Trash2, Undo2, User, Users, Workflow } from 'lucide-react'
 import type { CSSProperties, ReactNode } from 'react'
 
 import { MentionBubble } from './ChatGptMention'
@@ -15,36 +15,39 @@ import { makeHookScene } from './OttoNotaFiscalChatGptVideos'
  */
 
 const MSG: MentionMessage = {
-  lines: ['cadastra a Nova Empresa Ltda.', 'de Recife, cria o produto Cadeira', 'Ergonômica a R$ 890, atualiza o e-mail', 'do Cliente Exemplo, exclui o Cliente', 'Antigo Ltda. e emite as notas fiscais', 'das vendas de hoje'],
-  send: 284,
-  typing: [130, 280],
+  lines: ['cadastra a Nova Empresa Ltda.', 'de Recife, cria o produto Cadeira', 'Ergonômica a R$ 890, atualiza o e-mail', 'do Cliente Exemplo, exclui o Cliente', 'Antigo Ltda., emite as notas fiscais', 'de hoje, classifica as despesas da', 'semana e faz o fechamento'],
+  send: 304,
+  typing: [130, 300],
 }
+
+/** Heights of the tall automatic cards (they are scrolled through). */
+const NF_H = 2244
+const EXP_H = 2330
+const FECH_H = 1450
 
 /** Document positions of the conversation (before scrolling). */
-/** Height of the batch invoices card. */
-const NF_H = 2244
-
-const Y = {
-  bubble: 230,
-  ops: [
-    { card: 720, done: 1580, say: 640 },
-    { card: 1810, done: 2670, say: 1680 },
-    { card: 2900, done: 3760, say: 2770 },
-    { card: 3990, done: 4830, say: 3860 },
-  ],
-  nf: { card: 5060, done: 5060 + NF_H + 40, say: 4930 },
-  wrap: 5060 + NF_H + 140,
-}
+const Y = (() => {
+  const ops = [690, 1730, 2820, 3910].map((say, i) => ({ card: say + 80, done: say + (i === 3 ? 920 : 940), say }))
+  const nf = { card: 5110, done: 5110 + NF_H + 40, say: 4980 }
+  const exp = { card: nf.done + 230, done: nf.done + 230 + EXP_H + 40, say: nf.done + 100 }
+  const wrap = exp.done + 100
+  const fech = { card: wrap + 1126 + 130, say: wrap + 1126 }
+  return { bubble: 230, exp, fech, nf, ops, wrap }
+})()
 
 /** Frame each operation starts: announce → card (+26) → "done" line (+80). */
-const OPS = [310, 420, 530, 640]
-/** Batch invoices: a taller card, so it gets more time (and scrolls through). */
-const NF_OP = 750
+const OPS = [330, 440, 550, 660]
+/** Batch invoices / expense classification: taller cards, more time, scrolled through. */
+const NF_OP = 770
 const NF_CARD = NF_OP + 26
-const WRAP = 970
-/** Updated client list after the wrap-up line. */
+const EXP_OP = 990
+const EXP_CARD = EXP_OP + 26
+const WRAP = 1190
+/** Updated client list after the wrap-up line, then the financial closing. */
 const LIST = WRAP + 40
 const LIST_Y = { card: Y.wrap + 220, say: Y.wrap + 140 }
+const FECH = LIST + 110
+const FECH_CARD = FECH + 22
 const LIST_H = 846
 
 const CLIENT_ROWS = [
@@ -268,6 +271,179 @@ function IssuedNotesCard({ frame }: { frame: number }) {
   )
 }
 
+const CLASSIFIED = [
+  { category: 'Software e assinaturas', colors: ['#e8f1fe', '#1d5fb8'], date: '18/10/2026', name: 'Google Workspace', value: 'R$ 129,90' },
+  { category: 'Marketing e publicidade', colors: ['#f1eafd', '#6b3fb4'], date: '17/10/2026', name: 'Meta Ads', value: 'R$ 850,00' },
+  { category: 'Infraestrutura de TI', colors: ['#fff1dc', '#a5600b'], date: '16/10/2026', name: 'AWS Cloud', value: 'R$ 420,00' },
+  { category: 'Aluguel e ocupação', colors: ['#e3f6ec', '#1f7a46'], date: '15/10/2026', name: 'Aluguel escritório', value: 'R$ 1.800,00' },
+]
+
+const tagsTile = (
+  <IconTile size={88}>
+    <Tags color="#4a4a4a" size={34} strokeWidth={2} style={iv(34, 2)} />
+  </IconTile>
+)
+
+/** Shared top of the automatic cards: green check, title, line, two summary tiles. */
+function AutoSummary({ frame, start, sub, tiles, title }: { frame: number; start: number; sub: string; tiles: [string, string, string, string][]; title: string }) {
+  const at = (delay: number): CSSProperties => {
+    const s = pop(frame, start + delay)
+    return { opacity: frame < start + delay ? 0 : s, transform: `translateY(${(1 - s) * 16}px)` }
+  }
+  return (
+    <>
+      <div style={{ display: 'flex', justifyContent: 'center', marginTop: 60 }}>
+        <svg height={60} viewBox="0 0 60 60" width={60}>
+          <circle cx={30} cy={30} fill="none" pathLength={1} r={26} stroke={GREEN} strokeDasharray={1} strokeDashoffset={1 - p(frame, start + 8, start + 22)} strokeWidth={4.5} transform="rotate(-90 30 30)" />
+          <path d="M19 31 l7 7 l15 -16" fill="none" pathLength={1} stroke={GREEN} strokeDasharray={1} strokeDashoffset={1 - p(frame, start + 18, start + 28)} strokeLinecap="round" strokeLinejoin="round" strokeWidth={4.5} />
+        </svg>
+      </div>
+      <div style={{ textAlign: 'center', ...at(18) }}>
+        <span style={{ color: TEXT, display: 'block', fontSize: 37, fontWeight: 650, letterSpacing: '-0.01em', marginTop: 24 }}>{title}</span>
+        <span style={{ color: MUTED, display: 'block', fontSize: 27, lineHeight: '40px', marginTop: 14 }}>{sub}</span>
+      </div>
+      <div style={{ display: 'grid', gap: 18, gridTemplateColumns: '1fr 1fr', marginTop: 34, ...at(24) }}>
+        {tiles.map(([label, value, note, color]) => (
+          <div key={label} style={{ background: '#f2f2f2', borderRadius: 28, height: 188, padding: '26px 24px 0' }}>
+            <span style={{ color: MUTED, display: 'block', fontSize: 25 }}>{label}</span>
+            <span style={{ color, display: 'block', fontSize: 40, fontWeight: 650, letterSpacing: '-0.01em', marginTop: 10 }}>{value}</span>
+            <span style={{ color: MUTED, display: 'block', fontSize: 25, marginTop: 10 }}>{note}</span>
+          </div>
+        ))}
+      </div>
+    </>
+  )
+}
+
+/** "Despesas classificadas" — automatic classification, final state (like the print). */
+function ClassifiedExpensesCard({ frame }: { frame: number }) {
+  const start = EXP_CARD
+  const at = (delay: number): CSSProperties => {
+    const s = pop(frame, start + delay)
+    return { opacity: frame < start + delay ? 0 : s, transform: `translateY(${(1 - s) * 16}px)` }
+  }
+  return (
+    <CardShell frame={frame} height={EXP_H} start={start} top={Y.exp.card}>
+      <div style={{ padding: '0 22px' }}>
+        <CardHeader icon={tagsTile} subtitle="OTTO IA · Classificação automática" title="Despesas classificadas" />
+        <div style={{ background: LINE, height: 2 }} />
+        <AutoSummary
+          frame={frame}
+          start={start}
+          sub="A IA classificou automaticamente as 4 despesas, sem necessidade de revisão manual."
+          tiles={[
+            ['Classificadas', '4 de 4', '100% processadas', GREEN],
+            ['Valor classificado', 'R$ 3.199,90', '4 movimentações', TEXT],
+          ]}
+          title="Classificação concluída"
+        />
+        <div style={{ alignItems: 'center', display: 'flex', justifyContent: 'space-between', marginTop: 34, ...at(32) }}>
+          <span style={{ color: TEXT, fontSize: 31, fontWeight: 650 }}>Classificações realizadas</span>
+          <span style={{ background: '#d4eedc', borderRadius: 99, color: GREEN, fontSize: 24, fontWeight: 500, padding: '5px 15px' }}>Concluídas</span>
+        </div>
+        {CLASSIFIED.map((exp, i) => {
+          const rowAt = 40 + i * 14
+          const tag = pop(frame, start + rowAt + 10)
+          return (
+            <div key={exp.name} style={{ borderBottom: `2px solid ${LINE}`, height: 330, paddingTop: 44, ...at(rowAt) }}>
+              <div style={{ alignItems: 'center', display: 'flex', gap: 22 }}>
+                <CircleCheck color={GREEN} size={34} strokeWidth={2.2} style={iv(34, 2.2)} />
+                <span style={{ color: TEXT, flex: 1, fontSize: 33, fontWeight: 500 }}>{exp.name}</span>
+                <span style={{ color: TEXT, fontSize: 32, fontWeight: 650 }}>{exp.value}</span>
+              </div>
+              <div style={{ alignItems: 'center', display: 'flex', justifyContent: 'space-between', marginLeft: 56, marginTop: 6 }}>
+                <span style={{ color: MUTED, fontSize: 27 }}>{exp.date}</span>
+                <ChevronDown color="#6b6b6b" size={30} strokeWidth={2} style={iv(30, 2)} />
+              </div>
+              <span style={{ color: MUTED, display: 'block', fontSize: 26, marginLeft: 60, marginTop: 20 }}>Categoria definida pela IA</span>
+              <span style={{ alignItems: 'center', background: exp.colors[0], borderRadius: 22, color: exp.colors[1], display: 'inline-flex', fontSize: 30, fontWeight: 600, gap: 14, height: 72, marginLeft: 56, marginTop: 14, opacity: frame < start + rowAt + 10 ? 0 : tag, padding: '0 26px', transform: `scale(${0.85 + tag * 0.15})`, transformOrigin: 'left center' }}>
+                <Tag color={exp.colors[1]} size={28} strokeWidth={2.2} style={iv(28, 2.2)} /> {exp.category}
+              </span>
+            </div>
+          )
+        })}
+        <OutlineButton style={{ marginTop: 30, ...at(100) }}>
+          <Sparkles color="#3d3d3d" size={30} strokeWidth={2} style={iv(30, 2)} /> Ver todas as justificativas
+        </OutlineButton>
+        <div style={{ background: LINE, height: 2, marginTop: 40 }} />
+        <div style={{ alignItems: 'center', display: 'flex', gap: 18, height: 100, ...at(108) }}>
+          <BrainCircuit color="#3d3d3d" size={34} strokeWidth={2} style={iv(34, 2)} />
+          <span style={{ color: TEXT, flex: 1, fontSize: 33, fontWeight: 600 }}>O que o OTTO fez</span>
+          <ChevronDown color="#6b6b6b" size={32} strokeWidth={2} style={iv(32, 2)} />
+        </div>
+      </div>
+    </CardShell>
+  )
+}
+
+const ORANGE = '#a3401e'
+
+const STEPS: { icon: ReactNode; ok: boolean; sub: string; title: string }[] = [
+  { icon: <ShoppingCart color="#5b5b5b" size={32} strokeWidth={2} style={iv(32, 2)} />, ok: true, sub: '12 vendas registradas', title: 'Vendas processadas' },
+  { icon: <FileCheck2 color="#5b5b5b" size={32} strokeWidth={2} style={iv(32, 2)} />, ok: false, sub: '11 de 12 NFS-e emitidas', title: 'Notas fiscais' },
+  { icon: <Tags color="#5b5b5b" size={32} strokeWidth={2} style={iv(32, 2)} />, ok: true, sub: '8 despesas categorizadas', title: 'Despesas classificadas' },
+  { icon: <Landmark color="#5b5b5b" size={32} strokeWidth={2} style={iv(32, 2)} />, ok: true, sub: '15 movimentações conciliadas', title: 'Conciliação bancária' },
+  { icon: <ChartColumnIncreasing color="#5b5b5b" size={32} strokeWidth={2} style={iv(32, 2)} />, ok: true, sub: 'Indicadores recalculados', title: 'Financeiro atualizado' },
+]
+
+/** "Fechamento financeiro" — the run of all steps, with one pending item (like the print). */
+function ClosingCard({ frame }: { frame: number }) {
+  const start = FECH_CARD
+  const at = (delay: number): CSSProperties => {
+    const s = pop(frame, start + delay)
+    return { opacity: frame < start + delay ? 0 : s, transform: `translateY(${(1 - s) * 16}px)` }
+  }
+  return (
+    <CardShell frame={frame} height={FECH_H} start={start} top={Y.fech.card}>
+      <div style={{ padding: '0 22px' }}>
+        <CardHeader
+          icon={
+            <IconTile size={88}>
+              <Workflow color="#4a4a4a" size={34} strokeWidth={2} style={iv(34, 2)} />
+            </IconTile>
+          }
+          subtitle="OTTO IA · Execução automática"
+          title="Fechamento financeiro"
+        />
+        <div style={{ background: LINE, height: 2 }} />
+        <div style={{ alignItems: 'center', display: 'flex', height: 50, justifyContent: 'space-between', marginTop: 40, ...at(6) }}>
+          <span style={{ color: TEXT, fontSize: 31, fontWeight: 650 }}>{Math.round(4 * p(frame, start + 10, start + 52))} de 5 etapas concluídas</span>
+          <span style={{ background: '#fbe3d8', borderRadius: 99, color: ORANGE, fontSize: 24, fontWeight: 500, opacity: p(frame, start + 50, start + 56), padding: '5px 15px' }}>Parcial</span>
+        </div>
+        <div style={{ background: '#ececec', borderRadius: 99, height: 14, marginTop: 22, overflow: 'hidden' }}>
+          <div style={{ background: '#3cb36a', borderRadius: 99, height: '100%', width: `${80 * p(frame, start + 10, start + 52)}%` }} />
+        </div>
+        {STEPS.map((step, i) => {
+          const rowAt = 12 + i * 8
+          const status = pop(frame, start + rowAt + 10)
+          return (
+            <div key={step.title} style={{ alignItems: 'center', borderBottom: i < STEPS.length - 1 ? `2px solid ${LINE}` : 'none', display: 'flex', gap: 26, height: 166, ...at(rowAt) }}>
+              <IconTile size={84}>{step.icon}</IconTile>
+              <div style={{ flex: 1 }}>
+                <span style={{ color: TEXT, display: 'block', fontSize: 31, fontWeight: 500 }}>{step.title}</span>
+                <span style={{ color: MUTED, display: 'block', fontSize: 26, marginTop: 8 }}>{step.sub}</span>
+              </div>
+              <span style={{ opacity: frame < start + rowAt + 10 ? 0 : status, transform: `scale(${status})` }}>
+                {step.ok ? <CircleCheck color={GREEN} size={34} strokeWidth={2.2} style={iv(34, 2.2)} /> : <CircleAlert color={ORANGE} size={34} strokeWidth={2.2} style={iv(34, 2.2)} />}
+              </span>
+              <ChevronDown color="#6b6b6b" size={32} strokeWidth={2} style={iv(32, 2)} />
+            </div>
+          )
+        })}
+        <div style={{ background: '#f2f2f2', borderRadius: 30, marginTop: 10, padding: '30px 26px 26px', ...at(70) }}>
+          <span style={{ alignItems: 'center', color: TEXT, display: 'flex', fontSize: 31, fontWeight: 650, gap: 16 }}>
+            <CircleAlert color={ORANGE} size={32} strokeWidth={2.2} style={iv(32, 2.2)} /> 1 pendência identificada
+          </span>
+          <span style={{ color: MUTED, display: 'block', fontSize: 28, lineHeight: '40px', marginTop: 14 }}>A nota fiscal da venda #3012 ainda precisa ser autorizada.</span>
+          <OutlineButton style={{ background: '#fff', marginTop: 22 }}>
+            <RefreshCw color="#3d3d3d" size={28} strokeWidth={2} style={iv(28, 2)} /> Reprocessar
+          </OutlineButton>
+        </div>
+      </div>
+    </CardShell>
+  )
+}
+
 const struck = (text: string) => <span style={{ color: MUTED, textDecoration: 'line-through' }}>{text}</span>
 
 /** "Vou criar…" + card + "Cliente criado." for operation `i`. */
@@ -354,20 +530,25 @@ function Conversation({ frame }: { frame: number }) {
       <AssistantText frame={frame} text="Agora vou emitir as notas fiscais das vendas de hoje." top={Y.nf.say} window={[NF_OP, NF_OP + 20]} />
       <IssuedNotesCard frame={frame} />
       <AssistantText frame={frame} text="3 notas fiscais emitidas." top={Y.nf.done} window={[NF_OP + 190, NF_OP + 202]} />
-      <AssistantText frame={frame} text="Pronto! Fiz as 5 alterações no Otto." top={Y.wrap} window={[WRAP, WRAP + 14]} />
+      <AssistantText frame={frame} text="Agora vou classificar as despesas da semana." top={Y.exp.say} window={[EXP_OP, EXP_OP + 18]} />
+      <ClassifiedExpensesCard frame={frame} />
+      <AssistantText frame={frame} text="4 despesas classificadas." top={Y.exp.done} window={[EXP_OP + 170, EXP_OP + 182]} />
+      <AssistantText frame={frame} text="Pronto! Fiz as 6 alterações no Otto." top={Y.wrap} window={[WRAP, WRAP + 14]} />
       {frame >= WRAP + 16 ? (
         <span style={{ alignItems: 'center', color: GREEN, display: 'flex', fontSize: 26, gap: 10, left: 33, opacity: pop(frame, WRAP + 16), position: 'absolute', top: Y.wrap + 62 }}>
-          <CircleCheck color={GREEN} size={26} strokeWidth={2.2} style={iv(26, 2.2)} /> 5 alterações concluídas
+          <CircleCheck color={GREEN} size={26} strokeWidth={2.2} style={iv(26, 2.2)} /> 6 alterações concluídas
         </span>
       ) : null}
       <AssistantText frame={frame} text="Aqui está a sua lista de clientes atualizada:" top={LIST_Y.say} window={[LIST, LIST + 16]} />
       <ClientListCard frame={frame} />
+      <AssistantText frame={frame} text="E aqui está o fechamento financeiro atualizado:" top={Y.fech.say} window={[FECH, FECH + 16]} />
+      <ClosingCard frame={frame} />
     </>
   )
 }
 
-/** Holds ~2s on the full list. */
-const END = LIST + 66 + 60
+/** Holds ~2s on the closing card. */
+const END = FECH_CARD + 70 + 60
 
 const SCENES: Scene[] = [
   {
@@ -379,8 +560,13 @@ const SCENES: Scene[] = [
       [NF_OP - 6, NF_OP + 20, Y.nf.say - 200],
       [NF_CARD + 24, NF_CARD + 64, Y.nf.card + 560 - 198], // through the issued notes
       [NF_CARD + 74, NF_CARD + 114, Y.nf.card + NF_H - 1150], // "O que o OTTO fez" + buttons
+      [EXP_OP - 6, EXP_OP + 20, Y.exp.say - 200],
+      [EXP_CARD + 50, EXP_CARD + 90, Y.exp.card + 700 - 198], // through the categories
+      [EXP_CARD + 95, EXP_CARD + 130, Y.exp.card + EXP_H - 1150],
       [WRAP - 6, WRAP + 20, Y.wrap - 600],
       [LIST - 4, LIST + 24, LIST_Y.say - 200],
+      [FECH - 4, FECH + 24, Y.fech.say - 200],
+      [FECH_CARD + 60, FECH_CARD + 90, Y.fech.card + FECH_H - 1150], // down to the pending item
     ],
     scroll0: 0,
     start: 0,
