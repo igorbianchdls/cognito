@@ -112,33 +112,35 @@ export function MentionComposer({ frame, message }: { frame: number; message?: M
         </div>
       ) : null}
 
-      <div style={{ background: '#f0f0f0', borderRadius: 46, height: BOX_H, left: 24, position: 'absolute', right: 24, top: BOX_TOP }}>
-        <div style={{ alignItems: 'center', color: TEXT, display: 'flex', fontSize: 31, height: 50, left: 34, overflow: 'hidden', position: 'absolute', right: 34, top: 30, whiteSpace: 'nowrap' }}>
-          {chip && typed.length > 30 ? (
-            // long requests: the line scrolls, showing the end of what is being typed
-            <span>{typed.slice(-40)}</span>
-          ) : chip ? (
+      {/* bottom stays put; the text wraps and the box grows upward, like the app */}
+      <div style={{ background: '#f0f0f0', borderRadius: 46, left: 24, minHeight: BOX_H, position: 'absolute', right: 24, top: BOX_TOP + BOX_H, transform: 'translateY(-100%)' }}>
+        <div style={{ color: TEXT, fontSize: 31, lineHeight: '48px', padding: '31px 34px 0' }}>
+          {chip ? (
             <>
-              <Chip />
-              <span style={{ marginLeft: 10 }}>{typed}</span>
+              <span style={{ alignItems: 'center', display: 'inline-flex', marginRight: 10, verticalAlign: 'top' }}>
+                <Chip />
+              </span>
+              {typed}
             </>
           ) : (
-            <span>{frame < atO ? '@' : '@O'}</span>
+            frame < atO ? '@' : '@O'
           )}
-          {caret ? <span style={{ background: '#2f7cf6', height: 38, marginLeft: 2, width: 3 }} /> : null}
+          {caret ? <span style={{ background: '#2f7cf6', display: 'inline-block', height: 38, marginLeft: 2, verticalAlign: 'middle', width: 3 }} /> : null}
         </div>
-        <span style={{ left: 30, position: 'absolute', top: 112 }}>
-          <Plus color={TEXT} size={46} strokeWidth={2} style={iv(46, 2)} />
-        </span>
-        <span style={{ left: 516, position: 'absolute', top: 110 }}>
-          <SearchCircle />
-        </span>
-        <span style={{ left: 614, position: 'absolute', top: 110 }}>
-          <Mic color={TEXT} size={46} strokeWidth={2} style={iv(46, 2)} />
-        </span>
-        <span style={{ alignItems: 'center', background: TEXT, borderRadius: 99, display: 'flex', height: 64, justifyContent: 'center', left: 700, position: 'absolute', top: 104, transform: `scale(${pressed ? 0.88 : 1})`, width: 64 }}>
-          <ArrowUp color="#fff" size={36} strokeWidth={2.6} style={iv(36, 2.6)} />
-        </span>
+        <div style={{ height: 105, position: 'relative' }}>
+          <span style={{ left: 30, position: 'absolute', top: 31 }}>
+            <Plus color={TEXT} size={46} strokeWidth={2} style={iv(46, 2)} />
+          </span>
+          <span style={{ left: 516, position: 'absolute', top: 29 }}>
+            <SearchCircle />
+          </span>
+          <span style={{ left: 614, position: 'absolute', top: 29 }}>
+            <Mic color={TEXT} size={46} strokeWidth={2} style={iv(46, 2)} />
+          </span>
+          <span style={{ alignItems: 'center', background: TEXT, borderRadius: 99, display: 'flex', height: 64, justifyContent: 'center', left: 700, position: 'absolute', top: 23, transform: `scale(${pressed ? 0.88 : 1})`, width: 64 }}>
+            <ArrowUp color="#fff" size={36} strokeWidth={2.6} style={iv(36, 2.6)} />
+          </span>
+        </div>
       </div>
     </>
   )
