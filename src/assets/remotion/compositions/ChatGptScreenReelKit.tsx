@@ -7,7 +7,6 @@ import {
   BANK,
   BANK_H,
   BankReconciliationCard,
-  Composer,
   CreateClientCard,
   CRUD,
   DeleteClientCard,
@@ -20,7 +19,6 @@ import {
   FONT,
   FONT_CSS,
   InvoiceBatchCard,
-  MESSAGES,
   NF,
   NF_H,
   StatusBar,
@@ -28,9 +26,10 @@ import {
   TEXT,
   TopBar,
   UpdateClientCard,
-  UserMessage,
   p,
 } from './ChatGptVendasCardReplica'
+import { MentionBubble, MentionComposer } from './ChatGptMention'
+import type { MentionMessage } from './ChatGptMention'
 import { ChatGptPluginFlow, PLUGIN_FLOW_LENGTH } from './ChatGptPluginFlow'
 import { OttoDesktopWindow, DESKTOP_W } from './OttoDesktopMock'
 import { CtaScene, Headline, ReelRoot, Scene as EditorialScene, useFrame, useSpring } from './OttoContadoresReel'
@@ -52,7 +51,8 @@ const BOTTOM_SHIFT = 1792 - SCREEN_H
 /** Lowest screen y a card bottom is scrolled to (just above the composer fade). */
 const BOTTOM = 1250
 
-type Message = (typeof MESSAGES)[number]
+/** Text after the "@Otto ERP" chip, and when it is typed / sent (replica frames). */
+type Message = MentionMessage
 
 export type Scene = {
   content: (rf: number) => ReactNode
@@ -77,7 +77,7 @@ const scene = (args: SceneArgs, body: Omit<Scene, 'messages' | 'start' | 'warp'>
 
 // ─── Scenes (one per replica flow) ───────────────────────────────────────────
 
-const FIN_MSG = MESSAGES[4]
+const FIN_MSG: Message = { lines: ['como está o financeiro', 'nos últimos 30 dias?'], send: T.u5.send, typing: T.u5.typing }
 
 export const financeScene = (args: SceneArgs) =>
   scene(
@@ -85,7 +85,7 @@ export const financeScene = (args: SceneArgs) =>
     {
       content: (rf) => (
         <>
-          <UserMessage at={T.u5.send + 2} frame={rf} lines={FIN_MSG.lines} top={FIN.u5} />
+          <MentionBubble at={T.u5.send + 2} frame={rf} lines={FIN_MSG.lines} top={FIN.u5} />
           <AssistantText frame={rf} text="Aqui está a visão financeira dos últimos 30 dias:" top={FIN.a5} window={T.a5} />
           <FinanceCard frame={rf} still />
         </>
@@ -101,7 +101,7 @@ export const financeScene = (args: SceneArgs) =>
     FIN_MSG,
   )
 
-const EXP_MSG: Message = { lines: ['Classifica as despesas', 'da semana'], send: 372, typing: [340, 370] }
+const EXP_MSG: Message = { lines: ['classifica as despesas', 'da semana'], send: 372, typing: [340, 370] }
 
 export const expensesScene = (args: SceneArgs) =>
   scene(
@@ -109,7 +109,7 @@ export const expensesScene = (args: SceneArgs) =>
     {
       content: (rf) => (
         <>
-          <UserMessage at={EXP_MSG.send + 2} frame={rf} lines={EXP_MSG.lines} top={EXP_TEXT_TOP - 260} />
+          <MentionBubble at={EXP_MSG.send + 2} frame={rf} lines={EXP_MSG.lines} top={EXP_TEXT_TOP - 260} />
           <AssistantText frame={rf} text="Classifiquei as despesas da semana:" top={EXP_TEXT_TOP} window={[384, 404]} />
           <ExpensesCard frame={rf} />
         </>
@@ -124,7 +124,7 @@ export const expensesScene = (args: SceneArgs) =>
     EXP_MSG,
   )
 
-const BANK_MSG = MESSAGES[6]
+const BANK_MSG: Message = { lines: ['concilia o extrato do', 'banco com os lançamentos'], send: T.u7.send, typing: T.u7.typing }
 
 export const bankScene = (args: SceneArgs) =>
   scene(
@@ -132,7 +132,7 @@ export const bankScene = (args: SceneArgs) =>
     {
       content: (rf) => (
         <>
-          <UserMessage at={T.u7.send + 2} frame={rf} lines={BANK_MSG.lines} top={BANK.u7} />
+          <MentionBubble at={T.u7.send + 2} frame={rf} lines={BANK_MSG.lines} top={BANK.u7} />
           <AssistantText frame={rf} text="Encontrei 3 movimentações com correspondência no OTTO:" top={BANK.a7} window={T.a7} />
           <BankReconciliationCard frame={rf} />
         </>
@@ -149,7 +149,7 @@ export const bankScene = (args: SceneArgs) =>
     BANK_MSG,
   )
 
-const NF_MSG = MESSAGES[5]
+const NF_MSG: Message = { lines: ['emite as notas fiscais', 'das vendas de hoje'], send: T.u6.send, typing: T.u6.typing }
 
 export const invoiceScene = (args: SceneArgs) =>
   scene(
@@ -157,7 +157,7 @@ export const invoiceScene = (args: SceneArgs) =>
     {
       content: (rf) => (
         <>
-          <UserMessage at={T.u6.send + 2} frame={rf} lines={NF_MSG.lines} top={NF.u6} />
+          <MentionBubble at={T.u6.send + 2} frame={rf} lines={NF_MSG.lines} top={NF.u6} />
           <AssistantText frame={rf} text="Separei as vendas prontas para emissão:" top={NF.a6} window={T.a6} />
           <InvoiceBatchCard ad frame={rf} />
         </>
@@ -173,7 +173,7 @@ export const invoiceScene = (args: SceneArgs) =>
     NF_MSG,
   )
 
-const CREATE_MSG: Message = { lines: ['Cadastra a Nova Empresa', 'Ltda., de Recife'], send: T.u3.send, typing: T.u3.typing }
+const CREATE_MSG: Message = { lines: ['cadastra a Nova Empresa', 'Ltda., de Recife'], send: T.u3.send, typing: T.u3.typing }
 
 export const createClientScene = (args: SceneArgs) =>
   scene(
@@ -181,7 +181,7 @@ export const createClientScene = (args: SceneArgs) =>
     {
       content: (rf) => (
         <>
-          <UserMessage at={T.u3.send + 2} frame={rf} lines={CREATE_MSG.lines} top={CRUD.u3} />
+          <MentionBubble at={T.u3.send + 2} frame={rf} lines={CREATE_MSG.lines} top={CRUD.u3} />
           <AssistantText frame={rf} text="Pronto, cadastro preenchido:" top={CRUD.a3} window={T.a3} />
           <CreateClientCard frame={rf} />
         </>
@@ -193,7 +193,7 @@ export const createClientScene = (args: SceneArgs) =>
   )
 
 /** The replica updates right after listing the clients; the reel asks for the update on its own. */
-const UPDATE_MSG: Message = { lines: ['Atualiza o e-mail do', 'Cliente Exemplo'], send: 840, typing: [812, 838] }
+const UPDATE_MSG: Message = { lines: ['atualiza o e-mail do', 'Cliente Exemplo'], send: 840, typing: [812, 838] }
 
 export const updateClientScene = (args: SceneArgs) =>
   scene(
@@ -201,7 +201,7 @@ export const updateClientScene = (args: SceneArgs) =>
     {
       content: (rf) => (
         <>
-          <UserMessage at={UPDATE_MSG.send + 2} frame={rf} lines={UPDATE_MSG.lines} top={CRUD.a2b - 260} />
+          <MentionBubble at={UPDATE_MSG.send + 2} frame={rf} lines={UPDATE_MSG.lines} top={CRUD.a2b - 260} />
           <AssistantText frame={rf} text="Aqui está a atualização do Cliente Exemplo, pronta para revisar:" top={CRUD.a2b} window={T.a2b} />
           <UpdateClientCard frame={rf} />
         </>
@@ -212,7 +212,7 @@ export const updateClientScene = (args: SceneArgs) =>
     UPDATE_MSG,
   )
 
-const DELETE_MSG: Message = { lines: ['Exclui o Cliente', 'Exemplo Ltda.'], send: T.u4.send, typing: T.u4.typing }
+const DELETE_MSG: Message = { lines: ['exclui o Cliente', 'Exemplo Ltda.'], send: T.u4.send, typing: T.u4.typing }
 
 export const deleteClientScene = (args: SceneArgs) =>
   scene(
@@ -220,7 +220,7 @@ export const deleteClientScene = (args: SceneArgs) =>
     {
       content: (rf) => (
         <>
-          <UserMessage at={T.u4.send + 2} frame={rf} lines={DELETE_MSG.lines} top={CRUD.u4} />
+          <MentionBubble at={T.u4.send + 2} frame={rf} lines={DELETE_MSG.lines} top={CRUD.u4} />
           <AssistantText frame={rf} text="Antes de excluir, preciso da sua confirmação:" top={CRUD.a4} window={T.a4} />
           <DeleteClientCard frame={rf} />
         </>
@@ -396,7 +396,7 @@ export function ChatGptScreenReel({ audio, hook, outroAt, plugin, scenes }: Chat
             <TopBar />
             <div style={{ inset: 0, position: 'absolute', transform: `translateY(${-BOTTOM_SHIFT}px)` }}>
               <div style={{ background: 'linear-gradient(rgba(255,255,255,0), #fff 45%)', height: 230, left: 0, position: 'absolute', right: 0, top: 1580 }} />
-              <Composer frame={rf} messages={sc.messages} />
+              <MentionComposer frame={rf} message={sc.messages[0]} />
               <div style={{ background: TEXT, borderRadius: 99, height: 9, left: 267, position: 'absolute', top: 1764, width: 294 }} />
             </div>
           </>

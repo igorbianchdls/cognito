@@ -1,4 +1,4 @@
-import { AtSign, ChevronDown, ChevronLeft, ChevronRight, Clock, CloudCog, Ellipsis, Folder, Github, LayoutGrid, LibraryBig, MessageCircle, Plus, Search, Settings, SquarePen, SquareTerminal, X } from 'lucide-react'
+import { AtSign, ChevronDown, ChevronLeft, ChevronRight, Clock, CloudCog, Ellipsis, Folder, Github, LibraryBig, MessageCircle, Plus, Search, Settings, SquarePen, X } from 'lucide-react'
 import type { CSSProperties, ReactNode } from 'react'
 import { Easing, Img, interpolate, staticFile } from 'remotion'
 
@@ -15,7 +15,7 @@ export const PLUGIN_FLOW_LENGTH = 8.9
 
 /** Cues in the plugin narration take. */
 const C = {
-  drawer: 0.1, // "Primeiro"
+  drawer: 0.15, // hamburger tapped at 0 · "Primeiro"
   tapPlugins: 4.35, // "Plugins"
   tapSearch: 5.05,
   typing: [5.3, 5.9], // "buscar Otto"
@@ -82,13 +82,33 @@ function Tile({ children, size = 96 }: { children: ReactNode; size?: number }) {
 
 // ─── Screens ─────────────────────────────────────────────────────────────────
 
+function CodexIcon() {
+  return (
+    <svg fill="none" height={42} stroke={TEXT} strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.1} viewBox="0 0 24 24" width={42}>
+      <path d="M12 2.8c1.6 0 2.7.9 3.4 2 1.4-.2 2.9.4 3.6 1.8.8 1.3.6 2.8-.1 3.9.9 1 1.2 2.5.5 3.9-.7 1.4-2.1 2.1-3.6 2-.6 1.3-1.9 2.3-3.5 2.3s-2.9-1-3.5-2.3c-1.5.1-2.9-.6-3.6-2-.7-1.4-.4-2.9.5-3.9-.7-1.1-.9-2.6-.1-3.9.7-1.4 2.2-2 3.6-1.8.7-1.1 1.8-2 3.4-2z" />
+      <path d="M9.3 10.2l2 1.8-2 1.8M12.8 14h2.4" />
+    </svg>
+  )
+}
+
+function ExploreIcon() {
+  return (
+    <svg fill="none" height={42} stroke={TEXT} strokeLinejoin="round" strokeWidth={2.1} viewBox="0 0 24 24" width={42}>
+      <rect height={7.5} rx={2} width={7.5} x={3} y={3} />
+      <rect height={7.5} rx={2} width={7.5} x={3} y={13.5} />
+      <rect height={7.5} rx={2} width={7.5} x={13.5} y={13.5} />
+      <path d="M17.25 2.5l4.25 4.25-4.25 4.25-4.25-4.25z" />
+    </svg>
+  )
+}
+
 const MENU = [
   { icon: <LibraryBig color={TEXT} size={38} strokeWidth={2} style={iv(38, 2)} />, label: 'Biblioteca' },
   { icon: <Folder color={TEXT} size={38} strokeWidth={2} style={iv(38, 2)} />, label: 'Projetos' },
   { icon: <AtSign color={TEXT} size={38} strokeWidth={2} style={iv(38, 2)} />, label: 'Plugins' },
   { icon: <Clock color={TEXT} size={38} strokeWidth={2} style={iv(38, 2)} />, label: 'Agendado' },
-  { icon: <SquareTerminal color={TEXT} size={38} strokeWidth={2} style={iv(38, 2)} />, label: 'Codex' },
-  { icon: <LayoutGrid color={TEXT} size={38} strokeWidth={2} style={iv(38, 2)} />, label: 'Explorar' },
+  { icon: <CodexIcon />, label: 'Codex' },
+  { icon: <ExploreIcon />, label: 'Explorar' },
 ]
 
 const PINNED = ['Fluxo de caixa de outubro', 'Notas fiscais da semana', 'Despesas do mês', 'Clientes em atraso', 'Metas de vendas']
@@ -97,7 +117,6 @@ function Drawer({ screenH, t }: { screenH: number; t: number }) {
   const pressed = t >= C.tapPlugins - 0.05
   return (
     <div style={abs({ background: '#f9f9f9', bottom: 0, left: 0, top: 0, width: 620 })}>
-      <StatusBar />
       <span style={abs({ color: TEXT, fontSize: 42, fontWeight: 700, left: 66, letterSpacing: '-0.02em', top: 112 })}>ChatGPT</span>
       <span style={abs({ left: 506, top: 118 })}>
         <Search color={TEXT} size={42} strokeWidth={2.2} style={iv(42, 2.2)} />
@@ -115,7 +134,6 @@ function Drawer({ screenH, t }: { screenH: number; t: number }) {
           <span style={{ color: TEXT, fontSize: 32 }}>{title}</span>
         </div>
       ))}
-      <div style={abs({ background: 'linear-gradient(rgba(249,249,249,0), #f9f9f9 40%)', bottom: 0, height: 220, left: 0, right: 0 })} />
       <div style={abs({ alignItems: 'center', background: '#0d0d0d', borderRadius: 48, color: '#fff', display: 'flex', fontSize: 33, fontWeight: 600, gap: 18, height: 96, left: 68, padding: '0 40px', top: screenH - 1792 + 1628 })}>
         <SquarePen color="#fff" size={36} strokeWidth={2.2} style={iv(36, 2.2)} /> Chat
       </div>
@@ -131,7 +149,6 @@ function Drawer({ screenH, t }: { screenH: number; t: number }) {
 function EmptyChat({ screenH }: { screenH: number }) {
   return (
     <div style={abs({ background: '#fff', inset: 0, overflow: 'hidden' })}>
-      <StatusBar />
       <TopBar />
       <span style={abs({ color: MUTED, fontSize: 40, fontWeight: 500, left: 0, right: 0, textAlign: 'center', top: 640 })}>Em que posso ajudar?</span>
       <div style={abs({ inset: 0, transform: `translateY(${screenH - 1792}px)` })}>
@@ -164,7 +181,6 @@ function PluginRow({ action, icon, sub, title, top }: { action: 'add' | 'more'; 
 function PluginsHeader() {
   return (
     <>
-      <StatusBar />
       <svg height={26} style={abs({ left: 48, top: 127 })} viewBox="0 0 44 26" width={44}>
         <line stroke={TEXT} strokeLinecap="round" strokeWidth={4} x1={2} x2={42} y1={4} y2={4} />
         <line stroke={TEXT} strokeLinecap="round" strokeWidth={4} x1={2} x2={30} y1={22} y2={22} />
@@ -258,7 +274,6 @@ function OttoPluginPage({ screenH, t }: { screenH: number; t: number }) {
   const pressed = t >= C.tapTest && t < C.tapTest + 0.15
   return (
     <div style={abs({ background: '#fff', inset: 0, overflow: 'hidden' })}>
-      <StatusBar />
       <span style={abs({ left: 30, top: 116 })}>
         <ChevronLeft color={BLUE} size={52} strokeWidth={2.4} style={iv(52, 2.4)} />
       </span>
@@ -331,6 +346,9 @@ export function ChatGptPluginFlow({ screenH, t }: { screenH: number; t: number }
           <EmptyChat screenH={screenH} />
         </div>
       ) : null}
+      {/* system status bar stays put while the screens slide */}
+      <StatusBar />
+      <Tap at={0} t={t} x={68} y={140} />
     </div>
   )
 }

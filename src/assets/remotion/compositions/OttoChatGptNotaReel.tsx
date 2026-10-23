@@ -1,22 +1,4 @@
-import {
-  AssistantText,
-  BANK,
-  BANK_H,
-  BankReconciliationCard,
-  EXP_CARD_TOP,
-  EXP_H,
-  EXP_TEXT_TOP,
-  ExpensesCard,
-  FIN,
-  FinanceCard,
-  InvoiceBatchCard,
-  MESSAGES,
-  NF,
-  NF_H,
-  T,
-  UserMessage,
-} from './ChatGptVendasCardReplica'
-import { ChatGptScreenReel, layoutClips, Narration, OUTRO_LENGTH, PLUGIN_FLOW_LENGTH, pluginPhrase } from './ChatGptScreenReelKit'
+import { bankScene, ChatGptScreenReel, expensesScene, financeScene, invoiceScene, layoutClips, Narration, OUTRO_LENGTH, PLUGIN_FLOW_LENGTH, pluginPhrase } from './ChatGptScreenReelKit'
 import type { Scene } from './ChatGptScreenReelKit'
 import { makeHookScene } from './OttoNotaFiscalChatGptVideos'
 
@@ -36,28 +18,8 @@ const g = (sec: number) => PART2 + sec
 const OUTRO_AT = g(29.4)
 export const OTTO_CHATGPT_NOTA_REEL_DURATION = s(OUTRO_AT + PLUGIN_FLOW_LENGTH + OUTRO_LENGTH)
 
-/** The expenses request is not one of the replica messages, so the reel adds it to its scene's composer. */
-const EXP_MSG = { lines: ['Classifica as despesas', 'da semana'], send: 372, typing: [340, 370] }
-
 const SCENES: Scene[] = [
-  {
-    // invoices
-    content: (rf) => (
-      <>
-        <UserMessage at={T.u6.send + 2} frame={rf} lines={['Agora emite as notas fiscais', 'das vendas de hoje']} top={NF.u6} />
-        <AssistantText frame={rf} text="Separei as vendas prontas para emissão:" top={NF.a6} window={T.a6} />
-        <InvoiceBatchCard ad frame={rf} />
-      </>
-    ),
-    scroll: [
-      [1868, 1892, NF.card - 260],
-      [1912, 1936, NF.card + NF_H.list - 1130],
-      [T.nfConfirm, T.nfConfirm + 20, NF.card - 198],
-      [1998, 2018, NF.card + NF_H.confirm - 1130],
-      [T.nfDone, T.nfDone + 20, NF.card - 198],
-    ],
-    messages: [MESSAGES[5]],
-    scroll0: NF.u6 - 230,
+  invoiceScene({
     start: 0,
     warp: [
       [0, 1700],
@@ -78,24 +40,9 @@ const SCENES: Scene[] = [
       [15.6, 2104],
       [g(1.2), 2124],
     ],
-  },
-  {
-    // "Pede pra ele classificar as despesas da semana… ele já sugere a categoria… confere, confirma… e pronto"
-    content: (rf) => (
-      <>
-        <UserMessage at={EXP_MSG.send + 2} frame={rf} lines={EXP_MSG.lines} top={EXP_TEXT_TOP - 260} />
-        <AssistantText frame={rf} text="Classifiquei as despesas da semana:" top={EXP_TEXT_TOP} window={[384, 404]} />
-        <ExpensesCard frame={rf} />
-      </>
-    ),
-    scroll: [
-      [418, 450, EXP_CARD_TOP - 198],
-      [494, 520, EXP_CARD_TOP + EXP_H.list - 1130],
-      [T.review, T.review + 22, EXP_CARD_TOP - 198],
-    ],
-    messages: [EXP_MSG],
-    scroll0: EXP_TEXT_TOP - 260 - 230,
-    start: s(g(1.2)),
+  }),
+  expensesScene({
+    start: g(1.2),
     warp: [
       [g(1.2), 330],
       [g(1.4), 340], // "Pede pra ele classificar…" → typing
@@ -113,26 +60,9 @@ const SCENES: Scene[] = [
       [g(8.76), 634], // "e pronto" → done
       [g(10.7), 700],
     ],
-  },
-  {
-    // "Manda conciliar o extrato do banco… ele encontra o lançamento certo… É só revisar e confirmar."
-    content: (rf) => (
-      <>
-        <UserMessage at={T.u7.send + 2} frame={rf} lines={['Concilia o extrato do banco', 'com os lançamentos']} top={BANK.u7} />
-        <AssistantText frame={rf} text="Encontrei 3 movimentações com correspondência no OTTO:" top={BANK.a7} window={T.a7} />
-        <BankReconciliationCard frame={rf} />
-      </>
-    ),
-    scroll: [
-      [2198, 2226, BANK.card - 198],
-      [2240, 2266, BANK.card + 900 - 198],
-      [2280, 2306, BANK.card + BANK_H.list - 1130],
-      [T.bcConfirm, T.bcConfirm + 20, BANK.card + BANK_H.confirm - 1130],
-      [T.bcDone, T.bcDone + 20, BANK.card - 198],
-    ],
-    messages: [MESSAGES[6]],
-    scroll0: BANK.u7 - 230,
-    start: s(g(10.75)),
+  }),
+  bankScene({
+    start: g(10.75),
     warp: [
       [g(10.75), 2100],
       [g(10.9), 2110], // "Manda conciliar o extrato do banco" → typing
@@ -149,24 +79,9 @@ const SCENES: Scene[] = [
       [g(17.5), 2408], // done
       [g(18.0), 2436],
     ],
-  },
-  {
-    // "E quer saber como tá o financeiro? Ele te mostra tudo: saldo, entradas, saídas, o gráfico… e os alertas"
-    content: (rf) => (
-      <>
-        <UserMessage at={T.u5.send + 2} frame={rf} lines={['E como está o financeiro', 'nos últimos 30 dias?']} top={FIN.u5} />
-        <AssistantText frame={rf} text="Aqui está a visão financeira dos últimos 30 dias:" top={FIN.a5} window={T.a5} />
-        <FinanceCard frame={rf} still />
-      </>
-    ),
-    scroll: [
-      [1524, 1550, FIN.card - 140],
-      [1640, 1690, FIN.card + 1530 - 198],
-      [1770, 1800, FIN.card + 1000 - 198],
-    ],
-    messages: [MESSAGES[4]],
-    scroll0: FIN.u5 - 230,
-    start: s(g(18.0)),
+  }),
+  financeScene({
+    start: g(18.0),
     warp: [
       [g(18.0), 1430],
       [g(18.1), 1440], // "E quer saber como tá o financeiro?" → typing
@@ -184,7 +99,7 @@ const SCENES: Scene[] = [
       [g(25.4), 1800],
       [g(29.25), 1812],
     ],
-  },
+  }),
 ]
 
 const VO1 = 'remotion/otto-reels/chatgpt-nota-narracao.mp3'
