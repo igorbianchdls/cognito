@@ -28,7 +28,7 @@ export const CHATGPT_VENDAS_CARD_HEIGHT = 1792
 export const FONT = IOS_REMOTION_FONT_STACK
 export const TEXT = '#0d0d0d'
 export const MUTED = '#6b6b6b'
-const LINE = '#e6e6e6'
+export const LINE = '#e6e6e6'
 const BUBBLE = '#f4f4f4'
 
 // The app's globals.css forces its own font on every element; keep the iOS stack inside the replica.
@@ -239,7 +239,7 @@ function Badge({ children }: { children: ReactNode }) {
   return <span style={{ background: '#fbe5e5', borderRadius: 99, color: '#a3262c', display: 'inline-block', fontSize: 26, fontWeight: 500, padding: '8px 17px' }}>{children}</span>
 }
 
-function IconTile({ children, size = 88 }: { children: ReactNode; size?: number }) {
+export function IconTile({ children, size = 88 }: { children: ReactNode; size?: number }) {
   return (
     <span style={{ alignItems: 'center', background: '#f3f3f3', borderRadius: 22, display: 'flex', flex: 'none', height: size, justifyContent: 'center', width: size }}>
       {children}
@@ -470,7 +470,7 @@ function CheckDot() {
   )
 }
 
-function CardHeader({ icon, subtitle, title }: { icon: ReactNode; subtitle: string; title: string }) {
+export function CardHeader({ icon, subtitle, title }: { icon: ReactNode; subtitle: string; title: string }) {
   return (
     <div style={{ alignItems: 'center', display: 'flex', height: 158, justifyContent: 'space-between', paddingBottom: 16 }}>
       <div>
@@ -617,7 +617,7 @@ export function ExpensesCard({ frame }: { frame: number }) {
 
 // ─── Clients CRUD (list → update → done, create → done, delete) ────────────────────────────────
 
-const GREEN = '#1a7f37'
+export const GREEN = '#1a7f37'
 
 /** Document positions (before scrolling) of everything that follows the expense card. */
 export const CRUD = {
@@ -681,7 +681,7 @@ function PrimaryButton({ children, icon, mt, pressedAt, frame, disabled }: { chi
   )
 }
 
-function DoneView({ back, frame, heading, icon, rows, start, subtitle, sub, title }: { back: string; frame: number; heading: string; icon: ReactNode; rows: [string, ReactNode][]; start: number; sub: string; subtitle: string; title: string }) {
+export function DoneView({ back, frame, heading, icon, rows, start, subtitle, sub, title }: { back: string; frame: number; heading: string; icon: ReactNode; rows: [string, ReactNode][]; start: number; sub: string; subtitle: string; title: string }) {
   const at = (delay: number): CSSProperties => {
     const s = pop(frame, start + delay)
     return { opacity: frame < start + delay ? 0 : s, transform: `translateY(${(1 - s) * 16}px)` }
@@ -715,13 +715,13 @@ function DoneView({ back, frame, heading, icon, rows, start, subtitle, sub, titl
   )
 }
 
-const DONE_OK = (
+export const DONE_OK = (
   <>
     <CircleCheck color={GREEN} size={24} strokeWidth={2.2} style={iv(24, 2.2)} /> Concluído
   </>
 )
 
-function CardShell({ children, frame, height, start, top }: { children: ReactNode; frame: number; height: number; start: number; top: number }) {
+export function CardShell({ children, frame, height, start, top }: { children: ReactNode; frame: number; height: number; start: number; top: number }) {
   const card = pop(frame, start)
   if (frame < start) return null
   return (
@@ -790,7 +790,7 @@ function ClientBox({ id, name }: { id: string; name: string }) {
   )
 }
 
-const editTile = (
+export const editTile = (
   <IconTile size={88}>
     <SquarePen color="#4a4a4a" size={34} strokeWidth={2} style={iv(34, 2)} />
   </IconTile>
@@ -835,7 +835,7 @@ export function UpdateClientCard({ frame }: { frame: number }) {
   )
 }
 
-const addTile = (
+export const addTile = (
   <IconTile size={88}>
     <UserPlus color="#4a4a4a" size={34} strokeWidth={2} style={iv(34, 2)} />
   </IconTile>

@@ -114,7 +114,10 @@ export function MentionComposer({ frame, message }: { frame: number; message?: M
 
       <div style={{ background: '#f0f0f0', borderRadius: 46, height: BOX_H, left: 24, position: 'absolute', right: 24, top: BOX_TOP }}>
         <div style={{ alignItems: 'center', color: TEXT, display: 'flex', fontSize: 31, height: 50, left: 34, overflow: 'hidden', position: 'absolute', right: 34, top: 30, whiteSpace: 'nowrap' }}>
-          {chip ? (
+          {chip && typed.length > 30 ? (
+            // long requests: the line scrolls, showing the end of what is being typed
+            <span>{typed.slice(-40)}</span>
+          ) : chip ? (
             <>
               <Chip />
               <span style={{ marginLeft: 10 }}>{typed}</span>

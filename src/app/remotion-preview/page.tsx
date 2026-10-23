@@ -177,6 +177,7 @@ import { OTTO_BODY_1_DURATION, OTTO_BODY_2_DURATION, OttoBodyManageByConversatio
 import { OTTO_CONTADORES_REEL_DURATION, OttoContadoresReel } from '@/assets/remotion/compositions/OttoContadoresReel'
 import { CHATGPT_VENDAS_CARD_DURATION, CHATGPT_VENDAS_CARD_HEIGHT, CHATGPT_VENDAS_CARD_WIDTH, ChatGptVendasCardReplica } from '@/assets/remotion/compositions/ChatGptVendasCardReplica'
 import { OTTO_CHATGPT_NOTA_REEL_DURATION, OttoChatGptNotaReel } from '@/assets/remotion/compositions/OttoChatGptNotaReel'
+import { OTTO_CHATGPT_CRUD_DURATION, OttoChatGptCrudReel } from '@/assets/remotion/compositions/OttoChatGptCrudReel'
 import { OTTO_CHATGPT_CONTADORES_TELA_DURATION, OTTO_CHATGPT_FINANCEIRO_TELA_DURATION, OttoChatGptContadoresTelaReel, OttoChatGptFinanceiroTelaReel } from '@/assets/remotion/compositions/OttoChatGptTelaReels'
 import { OTTO_CONTA_AZUL_REEL_DURATION, OTTO_OMIE_REEL_DURATION, OttoContaAzulReel, OttoOmieReel } from '@/assets/remotion/compositions/OttoContaAzulReel'
 import { OTTO_AGORA_CHAT_DURATION, OTTO_AGORA_FACIL_DURATION, OTTO_AGORA_FINANCEIRO_DURATION, OTTO_AGORA_LUCRO_DURATION, OTTO_AGORA_SISTEMA_DURATION, OttoAgoraChatDarkSquareReel, OttoAgoraChatReel, OttoAgoraFacilReel, OttoAgoraFinanceiroDarkReel, OttoAgoraFinanceiroReel, OttoAgoraLucroDarkReel, OttoAgoraLucroReel, OttoAgoraSistemaDarkSquareReel, OttoAgoraSistemaReel } from '@/assets/remotion/compositions/OttoAgoraChatGptReels'
@@ -2387,6 +2388,19 @@ const catalog: CatalogItem[] = [
     label: 'Reel · Contadores preocupados (tela real do ChatGPT)',
     tags: ['ChatGPT', 'Reel', 'Otto', 'Contadores', 'CRUD', 'Narração'],
     value: 'reel-otto-chatgpt-contadores-tela',
+    width: 1080,
+  },
+  {
+    code: '<OttoChatGptCrudReel />',
+    component: OttoChatGptCrudReel,
+    description: 'Reel (sem narração): um pedido só e a IA faz vários cadastros seguidos, sem confirmação — cria cliente, cria produto, atualiza e-mail e exclui cliente, cada um com o card final.',
+    duration: OTTO_CHATGPT_CRUD_DURATION,
+    fps: 30,
+    height: 1920,
+    kind: 'Claude Videos',
+    label: 'Reel · ChatGPT faz vários cadastros (CRUD, sem áudio)',
+    tags: ['ChatGPT', 'Reel', 'Otto', 'CRUD', 'Cadastros'],
+    value: 'reel-otto-chatgpt-crud-tela',
     width: 1080,
   },
   {

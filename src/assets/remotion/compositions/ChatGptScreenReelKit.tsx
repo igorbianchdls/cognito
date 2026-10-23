@@ -384,11 +384,11 @@ const OUTRO_SCENES: ReelScene[] = [
 ]
 
 /** Closing narration + scenes, starting at reel second `at`. */
-export function ChatGptOutro({ at }: { at: number }) {
+export function ChatGptOutro({ at, silent }: { at: number; silent?: boolean }) {
   const frame = useCurrentFrame()
   return (
     <Sequence from={s(at)}>
-      <Audio src={staticFile(OUTRO_AUDIO)} />
+      {silent ? null : <Audio src={staticFile(OUTRO_AUDIO)} />}
       <AbsoluteFill style={{ opacity: p(frame, s(at), s(at) + 8) }}>
         <ReelRoot scenes={OUTRO_SCENES} />
       </AbsoluteFill>
@@ -398,7 +398,8 @@ export function ChatGptOutro({ at }: { at: number }) {
 
 export type ChatGptScreenReelProps = {
   /** One narration take laid out with `layoutClips` on the scene clock. */
-  narration: { clips: Clip[]; src: string }
+  /** Omit for a silent cut (no narration, closing without its voice). */
+  narration?: { clips: Clip[]; src: string }
   /** Opening scene from the editorial reels, shown over the screen for its first `end` seconds. */
   hook: { Component: ReelScene['Component']; end: number }
   /** Reel second the closing ("Isso é o Otto… Comenta OTTO") starts; lasts OUTRO_LENGTH. */
@@ -447,7 +448,7 @@ export function ChatGptScreenReel({ hook, narration, outroAt, plugin, scenes }: 
   return (
     <AbsoluteFill className="chatgpt-replica" style={{ background: '#fff', color: TEXT, fontFamily: FONT }}>
       <style>{FONT_CSS}</style>
-      <NarrationTrack clips={narration.clips} list={list} src={narration.src} />
+      {narration ? <NarrationTrack clips={narration.clips} list={list} src={narration.src} /> : null}
 
       <div style={{ height: SCREEN_H, left: 0, overflow: 'hidden', position: 'absolute', top: 0, transform: `scale(${SCALE})`, transformOrigin: '0 0', width: 828 }}>
         {inPlugin ? (
@@ -478,7 +479,7 @@ export function ChatGptScreenReel({ hook, narration, outroAt, plugin, scenes }: 
           <ReelRoot scenes={[{ Component: hook.Component, duration: hookEnd }]} />
         </AbsoluteFill>
       ) : null}
-      <ChatGptOutro at={outro} />
+      <ChatGptOutro at={outro} silent={!narration} />
     </AbsoluteFill>
   )
 }
