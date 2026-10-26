@@ -13,7 +13,8 @@ export async function classifyExpenseWithClient(client:SQLClient,tenantId:number
   const parts=(await client.query('SELECT data_vencimento,id FROM erp.contas_pagar_parcelas WHERE empresa_id=$1 AND conta_pagar_id=$2 ORDER BY id FOR UPDATE',[tenantId,id])).rows
   const payments=(await client.query('SELECT data_pagamento FROM erp.pagamentos WHERE empresa_id=$1 AND conta_pagar_parcela_id=ANY($2::bigint[]) ORDER BY id FOR SHARE',[tenantId,parts.map(part=>part.id)])).rows
   const iso=(value:unknown)=>value instanceof Date?value.toISOString().slice(0,10):String(value).slice(0,10)
-  const dates=[title.data_competencia,title.data_emissao,...parts.map(part=>part.data_vencimento),...payments.map(payment=>payment.data_pagamento)].filter(Boolean).map(iso)
+  // Vencimento é previsão: o fechamento protege a competência e as datas de pagamento.
+  const dates=[title.data_competencia||title.data_emissao,...payments.map(payment=>payment.data_pagamento)].filter(Boolean).map(iso)
   for(const date of new Set(dates))await assertErpPeriodOpen(client,{tenantId,module:'financeiro',date})
   await client.query('UPDATE erp.contas_pagar SET categoria_id=$3,atualizado_por=$4 WHERE empresa_id=$1 AND id=$2',[tenantId,id,categoryId,actorId])
   await titleEvent(client,tenantId,actorId,'pagar',id,'classificada_chat',{categoria_anterior:title.categoria_id,categoria_id:categoryId})
@@ -34,8 +35,8 @@ export async function validateFinancialReferences(client:Pick<SQLClient,'query'>
 }
 async function financialPeriod(client:SQLClient,tenantId:number,values:Record<string,unknown>){
   const iso=(value:unknown)=>value instanceof Date?value.toISOString().slice(0,10):String(value).slice(0,10)
-  for(const date of new Set([iso(values.data_competencia||values.data_emissao),iso(values.data_emissao),...(values.parcelas as {data_vencimento:string}[]).map(p=>iso(p.data_vencimento))]))
-    await assertErpPeriodOpen(client,{tenantId,module:'financeiro',date})
+  // Mesma regra do banco e de vendas e compras: só a competência; o vencimento é previsão.
+  await assertErpPeriodOpen(client,{tenantId,module:'financeiro',date:iso(values.data_competencia||values.data_emissao)})
 }
 async function addInstallments(client:SQLClient,tenantId:number,actorId:number,side:FinancialSide,title:number,values:Record<string,unknown>,offset=0){
   for(const [index,p] of (values.parcelas as {valor:number;data_vencimento:string}[]).entries())await client.query(`INSERT INTO erp.contas_${side}_parcelas

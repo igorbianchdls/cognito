@@ -1,5 +1,6 @@
 import { createHmac, randomBytes } from 'node:crypto'
 import { lookup } from 'node:dns/promises'
+import { request as httpsRequest } from 'node:https'
 import { isIP } from 'node:net'
 import { Pool } from 'pg'
 import { z } from 'zod'
@@ -23,8 +24,22 @@ export async function assertPublicUrl(raw: string) {
   if (url.protocol !== 'https:' || url.username || url.password) throw new TablesError('INVALID_URL', 'Use um endereço HTTPS público, sem usuário e senha.')
   const host = url.hostname.replace(/^\[|\]$/g, '')
   if (/^(localhost|.*\.local|.*\.internal|.*\.localhost)$/i.test(host)) throw new TablesError('INVALID_URL', 'Endereços internos não são permitidos.')
-  const addresses = isIP(host) ? [{ address: host }] : await lookup(host, { all: true }).catch(() => { throw new TablesError('INVALID_URL', 'Não foi possível encontrar este endereço.') })
+  const addresses = isIP(host) ? [{ address: host, family: isIP(host) }] : await lookup(host, { all: true }).catch(() => { throw new TablesError('INVALID_URL', 'Não foi possível encontrar este endereço.') })
   for (const { address } of addresses) if (privateAddress(address)) throw new TablesError('INVALID_URL', 'Endereços internos não são permitidos.')
+  return addresses
+}
+
+/** Sends over a connection pinned to the address just checked, so a DNS change cannot point the delivery to an internal host. */
+export async function pinnedSend(raw: string, init: RequestInit = {}): Promise<Response> {
+  const [{ address, family }] = await assertPublicUrl(raw)
+  return new Promise((resolve, reject) => {
+    const req = httpsRequest(new URL(raw), {
+      method: init.method ?? 'POST', headers: init.headers as Record<string, string>, signal: init.signal ?? undefined,
+      lookup: (_host, options, done) => options.all ? done(null, [{ address, family }]) : done(null, address, family),
+    }, res => { res.resume(); res.on('end', () => resolve(new Response(null, { status: res.statusCode && res.statusCode >= 200 ? res.statusCode : 502 }))) })
+    req.on('error', reject)
+    req.end(typeof init.body === 'string' ? init.body : undefined)
+  })
 }
 function privateAddress(ip: string): boolean {
   if (ip.includes(':')) { const v = ip.toLowerCase(); return v === '::1' || v === '::' || v.startsWith('fc') || v.startsWith('fd') || v.startsWith('fe80') || v.startsWith('::ffff:') && privateAddress(v.slice(7)) }
@@ -76,7 +91,7 @@ export type DeliveryDependencies = { connect: () => Promise<Client>; tables: typ
 const defaults = (): DeliveryDependencies => {
   if (!process.env.SUPABASE_DB_URL) throw new Error('Tables database unavailable')
   pool ??= new Pool(buildPostgresPoolConfig(process.env.SUPABASE_DB_URL))
-  return { connect: () => pool!.connect(), tables: withTablesTransaction, send: fetch, checkUrl: assertPublicUrl }
+  return { connect: () => pool!.connect(), tables: withTablesTransaction, send: pinnedSend as typeof fetch, checkUrl: assertPublicUrl }
 }
 
 /** The record as the receiver reads it: values by field name, plus IDs to fetch more. */
@@ -150,5 +165,12 @@ export async function sendTest(automationId: string, recordId: string, deps: Del
 
 /** Sends what is queued after the response, when there is a request; never fails the request. */
 export function deliverSoon() {
+  lastSweep = Date.now()
   void import('next/server').then(({ after }) => { try { after(() => deliverPending().catch(() => undefined)) } catch { /* outside a request: the daily maintenance sends it */ } }).catch(() => undefined)
+}
+
+// Retries are due minutes after a failure; any request, reads included, sends them, at most once a minute per instance.
+let lastSweep = 0
+export function deliverDueSoon() {
+  if (Date.now() - lastSweep >= 60_000) deliverSoon()
 }

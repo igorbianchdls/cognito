@@ -323,6 +323,15 @@ try {
     const retry = (await db.query("SELECT estado,tentativas,resposta,proximo_em>now() futuro FROM tables.entregas WHERE registro_id=$1 AND evento='registro_alterado' ORDER BY criado_em DESC LIMIT 1", [rec.id])).rows[0]
     assert.deepEqual(retry, { estado: 'pendente', tentativas: 1, resposta: 500, futuro: true })
     for (const url of ['https://127.0.0.1/x', 'https://10.0.0.5/x', 'https://169.254.169.254/latest', 'https://localhost/x', 'https://[::1]/x']) await assert.rejects(auto.assertPublicUrl(url), e => e.code === 'INVALID_URL', url)
+    // The real sender checks again and pins the connection to the checked address.
+    await assert.rejects(auto.pinnedSend('https://10.0.0.5/x', { body: '{}' }), e => e.code === 'INVALID_URL')
+    // Finished deliveries older than 90 days go in the daily retention; pending ones stay.
+    await db.query("UPDATE tables.entregas SET concluido_em=now()-interval '91 days' WHERE registro_id=$1 AND estado='entregue'", [rec.id])
+    const kept = (await db.query("SELECT count(*)::int n FROM tables.entregas WHERE estado='pendente'")).rows[0].n
+    const cleaned = await load('@/products/tables/server/retention').maintainTablesRetention(async () => ({ query: (sql, values) => db.query(sql, values) }))
+    assert(cleaned.entregas_removidas >= 1)
+    assert.equal((await db.query("SELECT count(*)::int n FROM tables.entregas WHERE registro_id=$1 AND estado='entregue'", [rec.id])).rows[0].n, 0)
+    assert.equal((await db.query("SELECT count(*)::int n FROM tables.entregas WHERE estado='pendente'")).rows[0].n, kept)
     await assert.rejects(run(owner, db => auto.createAutomation(db, owner, table.id, { nome: 'HTTP', gatilho: 'registro_criado', url: 'http://93.184.216.34/x' })))
   })
   await check('API keys: shown once, stored as hash, act as their creator, revoked at once and rate limited', async () => {

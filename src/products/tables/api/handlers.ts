@@ -69,7 +69,7 @@ export async function tablesHandler(request: Request, context: { params: Promise
       return json(await mcpUpload(session, id(entityId), method === 'POST' ? body : undefined))
     }
     // Webhooks of what this request changes go out right after the response.
-    if (write) { const { deliverSoon } = await import('../server/automations'); deliverSoon() }
+    { const { deliverSoon, deliverDueSoon } = await import('../server/automations'); if (write) deliverSoon(); else deliverDueSoon() }
     return await withTablesTransaction(session, write, async db => {
       if (method === 'GET' && (!resource || resource === 'sessao') && path.length <= 1) return json({ empresa: session.tenantName, usuario: session.fullName || session.email, podeEditar: session.role !== 'viewer', bases: await service.listBases(db, session) })
       if (resource === 'bases') {

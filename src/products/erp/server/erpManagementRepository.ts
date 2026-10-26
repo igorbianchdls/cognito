@@ -27,13 +27,13 @@ export type ErpOperationCatalogSource = 'products' | 'services' | 'customers' | 
 
 function requiredId(value: unknown, label: string) {
   const parsed = Number(value)
-  if (!Number.isInteger(parsed) || parsed <= 0) throw new Error(`${label} invalido.`)
+  if (!Number.isInteger(parsed) || parsed <= 0) throw new ErpDomainError('VALIDATION_ERROR', `${label} invalido.`)
   return parsed
 }
 
 function amount(value: unknown, label: string, allowZero = false) {
   const parsed = Number(String(value ?? '').replace(',', '.'))
-  if (!Number.isFinite(parsed) || (allowZero ? parsed < 0 : parsed <= 0)) throw new Error(`${label} invalido.`)
+  if (!Number.isFinite(parsed) || (allowZero ? parsed < 0 : parsed <= 0)) throw new ErpDomainError('VALIDATION_ERROR', `${label} invalido.`)
   return Number(parsed.toFixed(4))
 }
 
@@ -44,14 +44,14 @@ function optionalText(value: unknown) {
 
 function requiredText(value: unknown, label: string) {
   const normalized = optionalText(value)
-  if (!normalized) throw new Error(`${label} é obrigatório.`)
+  if (!normalized) throw new ErpDomainError('VALIDATION_ERROR', `${label} é obrigatório.`)
   return normalized
 }
 
 function dateText(value: unknown, fallback = true) {
   const normalized = optionalText(value)
   if (!normalized && fallback) return erpToday()
-  if (!normalized || !/^\d{4}-\d{2}-\d{2}$/.test(normalized)) throw new Error('Data inválida.')
+  if (!normalized || !/^\d{4}-\d{2}-\d{2}$/.test(normalized)) throw new ErpDomainError('VALIDATION_ERROR', 'Data inválida.')
   return normalized
 }
 
@@ -193,7 +193,7 @@ export async function listManagementOperation(tenantId: number, resource: string
       'giro_90_dias DESC, produto', input,
     )
   }
-  throw new Error('Módulo gerencial desconhecido.')
+  throw new ErpDomainError('NOT_FOUND', 'Módulo gerencial desconhecido.', 404)
 }
 
 export async function createManagementOperation(input: ActorInput & {
@@ -225,7 +225,7 @@ export async function createManagementOperation(input: ActorInput & {
       const accountId = requiredId(input.values.conta_financeira_id, 'Conta financeira')
       const value = amount(input.values.valor, 'Valor')
       const type = String(input.values.tipo || 'credito')
-      if (!['credito', 'debito'].includes(type)) throw new Error('Tipo de transacao inválido.')
+      if (!['credito', 'debito'].includes(type)) throw new ErpDomainError('VALIDATION_ERROR', 'Tipo de transacao inválido.')
       const transaction = await client.query(
         `INSERT INTO erp.transacoes_bancarias
            (empresa_id, conta_financeira_id, identificador_externo, data_transacao, tipo,
@@ -247,13 +247,13 @@ export async function createManagementOperation(input: ActorInput & {
       const transaction = (await client.query(
         `SELECT * FROM erp.transacoes_bancarias WHERE empresa_id = $1 AND id = $2 AND status = 'pendente' AND excluido_em IS NULL FOR UPDATE`,
         [input.tenantId, transactionId])).rows[0]
-      if (!transaction) throw new Error('Transacao bancária pendente não encontrada.')
-      if (transaction.tipo !== 'credito') throw new Error('Repasse do cartão concilia com crédito no banco.')
+      if (!transaction) throw new ErpDomainError('VALIDATION_ERROR', 'Transacao bancária pendente não encontrada.')
+      if (transaction.tipo !== 'credito') throw new ErpDomainError('VALIDATION_ERROR', 'Repasse do cartão concilia com crédito no banco.')
       const transfer = (await client.query(
         `SELECT * FROM erp.transferencias_financeiras WHERE empresa_id = $1 AND id = $2 AND status = 'pendente' AND excluido_em IS NULL FOR UPDATE`,
         [input.tenantId, transferId])).rows[0]
-      if (!transfer) throw new Error('Repasse pendente não encontrado.')
-      if (Number(transfer.conta_destino_id) !== Number(transaction.conta_financeira_id)) throw new Error('O repasse é para outra conta.')
+      if (!transfer) throw new ErpDomainError('VALIDATION_ERROR', 'Repasse pendente não encontrado.')
+      if (Number(transfer.conta_destino_id) !== Number(transaction.conta_financeira_id)) throw new ErpDomainError('VALIDATION_ERROR', 'O repasse é para outra conta.')
       const credited = Number(transaction.valor), expected = Number(transfer.valor)
       await assertErpPeriodOpen(client, { tenantId: input.tenantId, module: 'financeiro', date: databaseDateText(transaction.data_transacao) })
       // Valor diferente do previsto fica registrado; a diferença permanece no saldo da maquininha para conferência.
@@ -281,7 +281,7 @@ export async function createManagementOperation(input: ActorInput & {
         [input.tenantId, transactionId],
       )
       const transaction = transactionResult.rows[0]
-      if (!transaction) throw new Error('Transacao bancária pendente não encontrada.')
+      if (!transaction) throw new ErpDomainError('VALIDATION_ERROR', 'Transacao bancária pendente não encontrada.')
       const paymentResult = await client.query(
         `SELECT * FROM erp.pagamentos
          WHERE empresa_id = $1 AND id = $2 AND NOT conciliado AND excluido_em IS NULL
@@ -289,9 +289,9 @@ export async function createManagementOperation(input: ActorInput & {
         [input.tenantId, paymentId],
       )
       const payment = paymentResult.rows[0]
-      if (!payment) throw new Error('Pagamento disponível para conciliação não encontrado.')
-      if (Number(payment.conta_financeira_id) !== Number(transaction.conta_financeira_id)) throw new Error('Pagamento e extrato pertencem a contas diferentes.')
-      if ((transaction.tipo === 'credito') !== (payment.tipo === 'receber')) throw new Error('Crédito deve conciliar com recebimento e débito com pagamento.')
+      if (!payment) throw new ErpDomainError('VALIDATION_ERROR', 'Pagamento disponível para conciliação não encontrado.')
+      if (Number(payment.conta_financeira_id) !== Number(transaction.conta_financeira_id)) throw new ErpDomainError('VALIDATION_ERROR', 'Pagamento e extrato pertencem a contas diferentes.')
+      if ((transaction.tipo === 'credito') !== (payment.tipo === 'receber')) throw new ErpDomainError('VALIDATION_ERROR', 'Crédito deve conciliar com recebimento e débito com pagamento.')
       await assertErpPeriodOpen(client, { tenantId: input.tenantId, module: 'financeiro', date: databaseDateText(transaction.data_transacao) })
       const alreadyReconciled = await client.query(
         `SELECT COALESCE(sum(valor_conciliado),0) AS valor
@@ -308,7 +308,7 @@ export async function createManagementOperation(input: ActorInput & {
       const requested = input.values.valor_conciliado == null
         ? Math.min(Number(transaction.valor) - Number(alreadyReconciled.rows[0]?.valor || 0), Number(payment.valor_liquido) - Number(paymentReconciled.rows[0]?.valor || 0))
         : amount(input.values.valor_conciliado, 'Valor conciliado')
-      if (requested <= 0) throw new Error('Não existe saldo conciliavel entre os movimentos.')
+      if (requested <= 0) throw new ErpDomainError('VALIDATION_ERROR', 'Não existe saldo conciliavel entre os movimentos.')
       const reconciliation = await client.query(
         `INSERT INTO erp.conciliacoes_bancarias
            (empresa_id, conta_financeira_id, periodo_inicio, periodo_fim, status,
@@ -328,7 +328,7 @@ export async function createManagementOperation(input: ActorInput & {
     if (input.resource === 'transferencias-financeiras') {
       const originId = requiredId(input.values.conta_origem_id, 'Conta de origem')
       const destinationId = requiredId(input.values.conta_destino_id, 'Conta de destino')
-      if (originId === destinationId) throw new Error('Origem e destino devem ser diferentes.')
+      if (originId === destinationId) throw new ErpDomainError('VALIDATION_ERROR', 'Origem e destino devem ser diferentes.')
       const transferDate = dateText(input.values.data)
       const transferAmount = amount(input.values.valor, 'Valor')
       const description = optionalText(input.values.descricao)
@@ -358,7 +358,7 @@ export async function createManagementOperation(input: ActorInput & {
       )
       return created.rows[0]
     }
-    throw new Error('Operação gerencial desconhecida.')
+    throw new ErpDomainError('NOT_FOUND', 'Operação gerencial desconhecida.', 404)
   })
 }
 

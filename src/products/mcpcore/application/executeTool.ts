@@ -36,6 +36,7 @@ export async function executeTool(principal:PluginPrincipal,name:string,raw:unkn
    if(tool.control)return cancelOperation(db,principal,company.id,input.operacao_id,config)
    // Webhooks of records changed through the chat go out right after the response.
    if(tool.write){const result=await runAction(db,principal,session,tool.key,input,config);void import('@/products/tables/server/automations').then(m=>m.deliverSoon()).catch(()=>undefined);return result}
+   void import('@/products/tables/server/automations').then(m=>m.deliverDueSoon()).catch(()=>undefined)
    const clean=Object.fromEntries(Object.entries(input).filter(([key])=>key!=='empresa_id'))
    return withTablesClient(db,session,randomUUID(),client=>readTables(client,session,tool.key,clean))
   })

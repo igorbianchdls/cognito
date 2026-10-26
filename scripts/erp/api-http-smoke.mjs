@@ -16,8 +16,18 @@ const root=resolve('.'), require=createRequire(import.meta.url), modules=new Map
 const results=[], logs=[], originalInfo=console.info, originalError=console.error
 let tail=Promise.resolve(), server, base, postgres
 const originalUrl=process.env.SUPABASE_DB_URL, originalCron=process.env.CRON_SECRET
-process.env.SUPABASE_DB_URL='postgresql://local:local@127.0.0.1:5432/fictitious_only'
+process.env.SUPABASE_DB_URL='postgresql://postgres.abcdefghijklmnopqrst:local@127.0.0.1:5432/fictitious_only'
 delete process.env.CRON_SECRET
+// Fiscal PDFs go to an in-memory Storage of the same fictitious project; nothing leaves this machine.
+const fiscalEnv={url:process.env.ERP_FISCAL_SUPABASE_URL,key:process.env.ERP_FISCAL_SUPABASE_SERVICE_ROLE_KEY},realFetch=globalThis.fetch,storedObjects=new Map()
+process.env.ERP_FISCAL_SUPABASE_URL='https://abcdefghijklmnopqrst.supabase.co';process.env.ERP_FISCAL_SUPABASE_SERVICE_ROLE_KEY='sb_secret_fixture'
+globalThis.fetch=async(input,init={})=>{
+  const url=new URL(input instanceof Request?input.url:String(input))
+  if(url.hostname!=='abcdefghijklmnopqrst.supabase.co')return realFetch(input,init)
+  const path=url.pathname.replace(/^\/storage\/v1\/object\/(?:authenticated\/|info\/)?/,'')
+  if(init.method==='POST'||init.method==='PUT'){storedObjects.set(path,Buffer.from(init.body instanceof Uint8Array?init.body:String(init.body??'')));return Response.json({Key:path})}
+  const bytes=storedObjects.get(path);return bytes?new Response(init.method==='HEAD'?null:new Uint8Array(bytes),{status:200,headers:{'content-length':String(bytes.length),'content-type':'application/pdf'}}):new Response(null,{status:404})
+}
 class LocalPool {
   constructor(config) { assert.equal(new URL(config.connectionString).hostname,'127.0.0.1') }
   async connect() {
@@ -73,6 +83,10 @@ try {
   // Simulação de NFS-e (já aplicada em produção antes das migrações recentes).
   for(const file of ['20261006010000_prepare_erp_fiscal_integration.sql','20261006020000_service_invoice_simulation.sql']) await db.exec(readFileSync('supabase/migrations/'+file,'utf8'))
   await applyRecentMigrations(db)
+  // Migrations applied in production after the phase lists above: proposals and work orders, document attachments,
+  // audit corrections, accounting accounts and commission adjustments. Without them, editing a sale fails here only.
+  await db.exec("CREATE SCHEMA IF NOT EXISTS storage;CREATE TABLE IF NOT EXISTS storage.buckets(id text PRIMARY KEY,name text,public boolean,file_size_limit bigint,allowed_mime_types text[]);CREATE TABLE IF NOT EXISTS storage.objects(id uuid PRIMARY KEY DEFAULT gen_random_uuid(),bucket_id text,name text,owner uuid,metadata jsonb);ALTER TABLE storage.objects ENABLE ROW LEVEL SECURITY")
+  for(const file of ['20261009150000_service_invoice_pdf_layout.sql','20261009150100_service_invoice_pdf_layout_activate.sql','20261010110000_fiscal_pdf_storage_prepare.sql','20261010110100_fiscal_pdf_storage_finalize.sql','20261010120000_propostas_ordens_documentos.sql','20261010130000_documentos_anexos_orcamento.sql','20261011150000_erp_audit_corrections.sql','20261012110000_erp_contas_contabeis.sql','20261014120000_erp_ajustes_comissoes.sql','20261014123000_erp_protecao_ajuste_comissoes.sql','20261015010000_fix_supplier_product_write_policies.sql','20261025120000_erp_periodo_conta_parcela.sql']) await db.exec(readFileSync('supabase/migrations/'+file,'utf8'))
   await db.exec(`BEGIN;
     INSERT INTO shared.perfis_acesso(id,nome) VALUES('api-reader','API Reader');
     INSERT INTO shared.permissoes_perfil(perfil_acesso_id,capability) VALUES('api-reader','erp.cadastros.visualizar'),('api-reader','erp.financeiro.visualizar');
@@ -697,6 +711,267 @@ try {
     assert.equal(await balance(),1000)
     return {dps:[record.numero_dps,secondIssued.data.record.numero_dps],chave:record.chave_acesso,retido:65}
   })
+  // ---- Complete business flows: each step goes through the HTTP API and checks the resulting values. ----
+  const flow={q:async(sql,p=[])=>(await db.query(sql,p)).rows}
+  await check('Fluxo completo de venda: confirmar gera parcelas e reserva, cancelar desfaz; entrega e pagamento bloqueiam o cancelamento',async()=>{
+    const q=flow.q
+    await db.exec(`INSERT INTO erp.entidades(id,empresa_id,nome,eh_cliente) VALUES(901,1,'Cliente Fluxo',true);
+      INSERT INTO erp.entidades(id,empresa_id,nome,eh_fornecedor) VALUES(902,1,'Fornecedor Fluxo',true);
+      INSERT INTO erp.produtos(id,empresa_id,nome,sku,preco_venda,custo,controla_estoque,permite_estoque_negativo) VALUES(901,1,'Produto Fluxo','FLX',1000,400,true,false);
+      INSERT INTO erp.contas_financeiras(id,empresa_id,nome,tipo,saldo_inicial,data_saldo_inicial) VALUES(901,1,'Caixa Fluxo','caixa',1000,'2026-10-01'),(902,1,'Banco Fluxo','banco',500,'2026-10-01');`)
+    const opening=await call('/api/erp/operacoes/movimentacoes',{method:'POST',body:{values:{local_estoque_id:101,produto_id:901,tipo:'entrada',quantidade:20,custo_unitario:400}},headers:{'Idempotency-Key':'flow-opening'}});assert.equal(opening.status,201,JSON.stringify(opening.data))
+    flow.stock=async()=>{const r=(await q('SELECT quantidade_fisica,quantidade_reservada,custo_medio FROM erp.saldos_estoque WHERE empresa_id=1 AND produto_id=901 AND local_estoque_id=101'))[0];return {fisica:Number(r.quantidade_fisica),reservada:Number(r.quantidade_reservada),custo:Number(r.custo_medio)}}
+    const version=async id=>Number((await q('SELECT versao FROM erp.vendas WHERE id=$1',[id]))[0].versao)
+    const sale=async(key,parcelas,quantidade=1)=>{const r=await call('/api/erp/vendas',{method:'POST',body:{values:{cliente_id:901,data_venda:'2026-10-10',categoria_id:102,conta_financeira_id:101,local_estoque_id:101,itens:[{tipo:'produto',item_id:901,quantidade,valor_unitario:1000}],parcelas}},headers:{'Idempotency-Key':key}});assert.equal(r.status,201,JSON.stringify(r.data));return Number(r.data.record.id)}
+    const run=async(id,action,motivo)=>call('/api/erp/vendas/'+id+'/'+action,{method:'POST',body:{values:{expectedVersion:await version(id),...(motivo?{motivo}:{})}}})
+    const receivables=id=>q("SELECT p.numero_parcela,p.valor::text,p.data_vencimento::text,p.status FROM erp.contas_receber c JOIN erp.contas_receber_parcelas p ON p.empresa_id=c.empresa_id AND p.conta_receber_id=c.id WHERE c.venda_id=$1 ORDER BY p.numero_parcela",[id])
+    // R$ 1.000 em 3 parcelas: centavos ficam na última.
+    const first=await sale('flow-sale-1',[{data_vencimento:'2026-11-10',valor:333.33},{data_vencimento:'2026-12-10',valor:333.33},{data_vencimento:'2027-01-10',valor:333.34}])
+    assert.deepEqual(await flow.stock(),{fisica:20,reservada:0,custo:400})
+    assert.equal((await run(first,'confirmar')).status,200)
+    assert.deepEqual((await receivables(first)).map(r=>[r.numero_parcela,r.valor,r.data_vencimento,r.status]),[[1,'333.33','2026-11-10','aberto'],[2,'333.33','2026-12-10','aberto'],[3,'333.34','2027-01-10','aberto']])
+    assert.deepEqual(await flow.stock(),{fisica:20,reservada:1,custo:400},'Confirming reserves stock without taking it out')
+    assert.equal((await run(first,'cancelar','Cliente desistiu')).status,200)
+    assert.deepEqual((await q("SELECT v.status,(SELECT string_agg(DISTINCT c.status,',') FROM erp.contas_receber c WHERE c.venda_id=v.id) titulos,(SELECT string_agg(DISTINCT p.status,',') FROM erp.contas_receber c JOIN erp.contas_receber_parcelas p ON p.empresa_id=c.empresa_id AND p.conta_receber_id=c.id WHERE c.venda_id=v.id) parcelas FROM erp.vendas v WHERE v.id=$1",[first]))[0],{status:'cancelada',titulos:'cancelado',parcelas:'cancelado'})
+    assert.deepEqual(await flow.stock(),{fisica:20,reservada:0,custo:400},'Cancelling releases the reservation')
+    // Entregue: sai do estoque pelo custo médio e não pode mais ser cancelada (só devolução).
+    const delivered=await sale('flow-sale-2',[{data_vencimento:'2026-11-10',valor:2000}],2)
+    assert.equal((await run(delivered,'confirmar')).status,200);assert.equal((await run(delivered,'atender')).status,200)
+    assert.deepEqual(await flow.stock(),{fisica:18,reservada:0,custo:400})
+    assert.deepEqual((await q("SELECT tipo,quantidade::text,custo_unitario::text FROM erp.movimentacoes_estoque WHERE empresa_id=1 AND produto_id=901 ORDER BY id DESC LIMIT 1"))[0],{tipo:'saida',quantidade:'-2.0000',custo_unitario:'400.000000'})
+    const deliveredCancel=await run(delivered,'cancelar','Tentativa após entrega');assert.equal(deliveredCancel.status,409);assert.equal(deliveredCancel.data.error.code,'SALE_HAS_DELIVERIES')
+    // Com pagamento: exige estornar antes de cancelar.
+    const paid=await sale('flow-sale-3',[{data_vencimento:'2026-11-10',valor:1000}])
+    assert.equal((await run(paid,'confirmar')).status,200)
+    const installment=(await q("SELECT p.id FROM erp.contas_receber c JOIN erp.contas_receber_parcelas p ON p.empresa_id=c.empresa_id AND p.conta_receber_id=c.id WHERE c.venda_id=$1",[paid]))[0].id
+    assert.equal((await call('/api/erp/contas-receber-parcelas/'+installment+'/baixar',{method:'POST',body:{values:{valor:400,conta_financeira_id:901,data_pagamento:'2026-10-12'}},headers:{'Idempotency-Key':'flow-pay-3'}})).status,200)
+    const paidCancel=await run(paid,'cancelar','Tentativa com pagamento');assert.equal(paidCancel.status,422);assert.match(paidCancel.data.error.message,/estorno/)
+  })
+  await check('Fluxo completo de compra: confirmar gera contas a pagar, receber atualiza estoque e custo médio, cancelar estorna; com pagamento não cancela',async()=>{
+    const q=flow.q
+    const purchase=async(key,quantidade,valor_unitario,parcelas)=>{const r=await call('/api/erp/compras',{method:'POST',body:{values:{fornecedor_id:902,data_compra:'2026-10-10',categoria_id:101,conta_financeira_id:101,local_estoque_id:101,tipo_movimento:'compra',gera_financeiro:true,itens:[{produto_id:901,quantidade,valor_unitario}],parcelas}},headers:{'Idempotency-Key':key}});assert.equal(r.status,201,JSON.stringify(r.data));return Number(r.data.record.id)}
+    const payables=id=>q("SELECT p.numero_parcela,p.valor::text,p.status FROM erp.contas_pagar c JOIN erp.contas_pagar_parcelas p ON p.empresa_id=c.empresa_id AND p.conta_pagar_id=c.id WHERE c.compra_id=$1 ORDER BY p.numero_parcela",[id])
+    const receive=async(id,quantidade,key)=>{const item=(await q('SELECT id FROM erp.compras_itens WHERE compra_id=$1',[id]))[0].id;return call('/api/erp/compras/'+id+'/receber',{method:'POST',body:{items:[{item_id:Number(item),quantidade}]},headers:{'Idempotency-Key':key}})}
+    const before=await flow.stock()
+    const received=await purchase('flow-purchase-1',10,520,[{data_vencimento:'2026-11-10',valor:2600},{data_vencimento:'2026-12-10',valor:2600}])
+    assert.equal((await call('/api/erp/compras/'+received+'/confirmar',{method:'POST',body:{values:{}}})).status,200)
+    assert.deepEqual((await payables(received)).map(r=>[r.numero_parcela,r.valor,r.status]),[[1,'2600.00','aberto'],[2,'2600.00','aberto']])
+    assert.deepEqual(await flow.stock(),before,'Confirming does not move stock before receipt')
+    assert.equal((await receive(received,10,'flow-receive-1')).status,200)
+    const after=await flow.stock();assert.equal(after.fisica,before.fisica+10)
+    // Custo médio ponderado: (18 × 400 + 10 × 520) / 28.
+    assert.equal(after.custo.toFixed(4),((before.fisica*400+10*520)/(before.fisica+10)).toFixed(4))
+    assert.equal((await q('SELECT status FROM erp.compras WHERE id=$1',[received]))[0].status,'recebida')
+    // Cancelar sem pagamento estorna a entrada, cancela as contas e devolve o custo anterior.
+    assert.equal((await call('/api/erp/compras/'+received+'/cancelar',{method:'POST',body:{values:{}}})).status,200)
+    assert.deepEqual(await flow.stock(),before)
+    assert.deepEqual((await payables(received)).map(r=>r.status),['cancelado','cancelado'])
+    assert.equal((await q("SELECT tipo FROM erp.movimentacoes_estoque WHERE empresa_id=1 AND produto_id=901 ORDER BY id DESC LIMIT 1"))[0].tipo,'estorno')
+    // Antes do recebimento: cancela só o financeiro.
+    const pending=await purchase('flow-purchase-2',5,500,[{data_vencimento:'2026-11-10',valor:2500}])
+    assert.equal((await call('/api/erp/compras/'+pending+'/confirmar',{method:'POST',body:{values:{}}})).status,200)
+    assert.equal((await call('/api/erp/compras/'+pending+'/cancelar',{method:'POST',body:{values:{}}})).status,200)
+    assert.deepEqual((await payables(pending)).map(r=>r.status),['cancelado'])
+    // Com pagamento registrado não cancela.
+    const paid=await purchase('flow-purchase-3',2,500,[{data_vencimento:'2026-11-10',valor:1000}])
+    assert.equal((await call('/api/erp/compras/'+paid+'/confirmar',{method:'POST',body:{values:{}}})).status,200)
+    const installment=(await q("SELECT p.id FROM erp.contas_pagar c JOIN erp.contas_pagar_parcelas p ON p.empresa_id=c.empresa_id AND p.conta_pagar_id=c.id WHERE c.compra_id=$1",[paid]))[0].id
+    assert.equal((await call('/api/erp/contas-pagar-parcelas/'+installment+'/baixar',{method:'POST',body:{values:{valor:300,conta_financeira_id:902,data_pagamento:'2026-10-12'}},headers:{'Idempotency-Key':'flow-purchase-pay'}})).status,200)
+    const paidCancel=await call('/api/erp/compras/'+paid+'/cancelar',{method:'POST',body:{values:{}}})
+    assert.notEqual(paidCancel.status,200,'A purchase with a payment cannot be cancelled: '+JSON.stringify(paidCancel.data))
+    assert.deepEqual((await payables(paid)).map(r=>r.status),['parcial'])
+    flow.purchasePaid=300
+  })
+  await check('Baixa com juros, multa, desconto e taxa: líquido correto e parcela quitada',async()=>{
+    const q=flow.q
+    const title=await createTitle('receber','flow-title-3',{...financialValues('receber'),numero_documento:'FLX-3',valor_total:1000,conta_financeira_id:901,parcelas:[{data_vencimento:'2026-10-01',valor:1000}]})
+    const part=title.data.installments[0].id
+    const paid=await call('/api/erp/contas-receber-parcelas/'+part+'/baixar',{method:'POST',body:{values:{valor:1000,juros:20,multa:10,desconto:5,taxa:3,conta_financeira_id:901,data_pagamento:'2026-10-12'}},headers:{'Idempotency-Key':'flow-interest'}})
+    assert.equal(paid.status,200,JSON.stringify(paid.data))
+    // 1.000 + 20 de juros + 10 de multa − 5 de desconto − 3 de taxa.
+    assert.deepEqual((await q("SELECT valor::text,juros::text,multa::text,desconto::text,taxa::text,valor_liquido::text FROM erp.pagamentos WHERE chave_idempotencia='flow-interest'"))[0],{valor:'1000.00',juros:'20.00',multa:'10.00',desconto:'5.00',taxa:'3.00',valor_liquido:'1022.00'})
+    assert.deepEqual(paid.data.installment,{id:String(part),conta_receber_id:String(title.data.record.id),valor:'1000.00',valor_pago:'1000.00',status:'pago'})
+  })
+  await check('Renegociação: duas parcelas vencidas viram três com desconto; soma conferida e categoria exigida',async()=>{
+    const q=flow.q
+    const title=await createTitle('receber','flow-title-4',{...financialValues('receber'),numero_documento:'FLX-4',valor_total:600,parcelas:[{data_vencimento:'2026-09-10',valor:300},{data_vencimento:'2026-09-20',valor:300}]})
+    const origens=title.data.installments.map(i=>Number(i.id)),base={lado:'receber',entidade_id:101,data_acordo:'2026-10-12',origens,encargos:0}
+    const renegotiate=(key,values)=>call('/api/erp/financeiro/renegociar',{method:'POST',body:{values:{...base,...values}},headers:{'Idempotency-Key':key}})
+    const noCategory=await renegotiate('flow-reneg-nocat',{numero:'ACORDO-0',motivo:'Sem categoria',desconto:30,destinos:[{data_vencimento:'2026-11-12',valor:570}]})
+    assert.equal(noCategory.status,422);assert.match(noCategory.data.error.message,/categoria de ajuste/)
+    const wrongSum=await renegotiate('flow-reneg-bad',{numero:'ACORDO-2',motivo:'Soma errada',desconto:0,destinos:[{data_vencimento:'2026-11-12',valor:100}]})
+    assert.equal(wrongSum.status,422);assert.match(wrongSum.data.error.message,/não fecha/)
+    // 600 − 30 de desconto = 570 = 3 × 190.
+    const agreement=await renegotiate('flow-reneg',{numero:'ACORDO-1',motivo:'Acordo com cliente',desconto:30,categoria_ajuste_id:101,destinos:[{data_vencimento:'2026-11-12',valor:190},{data_vencimento:'2026-12-12',valor:190},{data_vencimento:'2027-01-12',valor:190}]})
+    assert.equal(agreement.status,201,JSON.stringify(agreement.data));assert.equal(agreement.data.status,'efetivada')
+    assert.deepEqual((await q('SELECT status FROM erp.contas_receber_parcelas WHERE id=ANY($1::bigint[]) ORDER BY id',[origens])).map(r=>r.status),['renegociado','renegociado'])
+    assert.deepEqual((await q('SELECT valor::text,status FROM erp.contas_receber_parcelas WHERE conta_receber_id=$1 ORDER BY numero_parcela',[agreement.data.titulo_id])).map(r=>[r.valor,r.status]),[['190.00','aberto'],['190.00','aberto'],['190.00','aberto']])
+  })
+  await check('Transferência entre contas: saldos por conta no painel financeiro e validações',async()=>{
+    const transfer=(key,values)=>call('/api/erp/operacoes/transferencias-financeiras',{method:'POST',body:{values:{data:'2026-10-13',...values}},headers:{'Idempotency-Key':key}})
+    const done=await transfer('flow-transfer',{conta_origem_id:901,conta_destino_id:902,valor:300,descricao:'Depósito do caixa'});assert.equal(done.status,201,JSON.stringify(done.data));assert.equal(done.data.record.status,'concluida')
+    const same=await transfer('flow-transfer-same',{conta_origem_id:901,conta_destino_id:901,valor:10});assert.equal(same.status,422);assert.match(same.data.error.message,/diferentes/)
+    const negative=await transfer('flow-transfer-negative',{conta_origem_id:901,conta_destino_id:902,valor:-5});assert.equal(negative.status,422)
+    const dashboard=await call('/api/erp/dashboards/financeiro?from=2026-10-01&to=2026-10-31');assert.equal(dashboard.status,200)
+    const balances=JSON.stringify(dashboard.data).match(/\{"id":"90[12]","label":"[^"]+","value":-?[\d.]+/g).map(text=>JSON.parse(text+'}'))
+    // Caixa: 1.000 inicial + 400 (venda) + 1.022 (baixa com juros) − 300 transferidos. Banco: 500 − 300 (compra) + 300 recebidos.
+    assert.deepEqual(balances,[{id:'901',label:'Caixa Fluxo',value:2122},{id:'902',label:'Banco Fluxo',value:500-flow.purchasePaid+300}])
+  })
+  // ---- Stock and finance scenarios ----
+  const sf={q:async(sql,p=[])=>(await db.query(sql,p)).rows,today:new Date().toLocaleDateString('sv-SE',{timeZone:'America/Sao_Paulo'})}
+  sf.move=(key,values)=>call('/api/erp/operacoes/movimentacoes',{method:'POST',body:{values:{local_estoque_id:101,...values}},headers:{'Idempotency-Key':key}})
+  sf.bal=async(prod,local=101)=>{const r=(await sf.q('SELECT quantidade_fisica,quantidade_reservada,custo_medio FROM erp.saldos_estoque WHERE empresa_id=1 AND produto_id=$1 AND local_estoque_id=$2',[prod,local]))[0];return r?{fisica:Number(r.quantidade_fisica),reservada:Number(r.quantidade_reservada),custo:Number(Number(r.custo_medio).toFixed(4))}:null}
+  sf.version=async id=>Number((await sf.q('SELECT versao FROM erp.vendas WHERE id=$1',[id]))[0].versao)
+  sf.sale=async(key,produto,quantidade,local=101)=>{const r=await call('/api/erp/vendas',{method:'POST',body:{values:{cliente_id:101,data_venda:sf.today,categoria_id:102,conta_financeira_id:101,local_estoque_id:local,itens:[{tipo:'produto',item_id:produto,quantidade,valor_unitario:300}]}},headers:{'Idempotency-Key':key}});assert.equal(r.status,201,JSON.stringify(r.data));return Number(r.data.record.id)}
+  sf.run=async(id,action)=>{const r=await call('/api/erp/vendas/'+id+'/'+action,{method:'POST',body:{values:{expectedVersion:await sf.version(id)}}});assert.equal(r.status,200,action+': '+JSON.stringify(r.data))}
+  await check('Estoque: ajuste manual com motivo e custo médio; saída sem saldo recusada; produto que permite negativo',async()=>{
+    await db.exec(`INSERT INTO erp.produtos(id,empresa_id,nome,sku,preco_venda,custo,controla_estoque,permite_estoque_negativo) VALUES
+      (911,1,'Componente A','CA',100,50,true,false),(912,1,'Produto negativo','PN',100,10,true,true),(913,1,'Kit AB','KAB',300,0,false,false),(914,1,'Componente B','CB',80,30,true,false);
+      INSERT INTO erp.locais_estoque(id,empresa_id,nome,codigo,padrao) VALUES(102,1,'Loja 2','L2',false);
+      INSERT INTO erp.centros_custo(id,empresa_id,nome,codigo) VALUES(901,1,'Comercial','COM'),(902,1,'Administrativo','ADM');`)
+    assert.equal((await sf.move('st-e911',{produto_id:911,tipo:'entrada',quantidade:10,custo_unitario:50})).status,201)
+    // Sobra de 2 a R$ 80: (10 × 50 + 2 × 80) / 12 = 55.
+    assert.equal((await sf.move('st-ae911',{produto_id:911,tipo:'ajuste_entrada',quantidade:2,custo_unitario:80,motivo:'Sobra na contagem'})).status,201)
+    assert.deepEqual(await sf.bal(911),{fisica:12,reservada:0,custo:55})
+    assert.equal((await sf.move('st-as911',{produto_id:911,tipo:'ajuste_saida',quantidade:3,motivo:'Quebra'})).status,201)
+    assert.deepEqual(await sf.bal(911),{fisica:9,reservada:0,custo:55},'An output keeps the average cost')
+    const noReason=await sf.move('st-nomot',{produto_id:911,tipo:'ajuste_saida',quantidade:1});assert.equal(noReason.status,422);assert.match(noReason.data.error.message,/motivo/)
+    const over=await sf.move('st-over',{produto_id:911,tipo:'saida',quantidade:100});assert.equal(over.status,422);assert.match(over.data.error.message,/Saldo insuficiente/)
+    assert.deepEqual(await sf.bal(911),{fisica:9,reservada:0,custo:55})
+    assert.equal((await sf.move('st-neg',{produto_id:912,tipo:'saida',quantidade:5})).status,201)
+    assert.equal((await sf.bal(912)).fisica,-5)
+  })
+  await check('Estoque: venda de kit sem estoque próprio reserva e baixa os componentes',async()=>{
+    assert.equal((await sf.move('st-e914',{produto_id:914,tipo:'entrada',quantidade:10,custo_unitario:30})).status,201)
+    for(const [comp,quantidade,key] of [[911,2,'k1'],[914,1,'k2']])assert.equal((await call('/api/erp/operacoes/kits',{method:'POST',body:{values:{produto_id:913,produto_componente_id:comp,quantidade}},headers:{'Idempotency-Key':'kit-'+key}})).status,201)
+    // 3 kits = 6 de A e 3 de B.
+    const sale=await sf.sale('kit-sale-1',913,3)
+    await sf.run(sale,'confirmar')
+    assert.deepEqual([(await sf.bal(911)).reservada,(await sf.bal(914)).reservada],[6,3])
+    await sf.run(sale,'atender')
+    assert.deepEqual([await sf.bal(911),await sf.bal(914)],[{fisica:3,reservada:0,custo:55},{fisica:7,reservada:0,custo:30}])
+    assert.equal(await sf.bal(913),null,'The kit itself has no stock')
+  })
+  await check('Estoque: inventário com diferença gera ajuste pelo custo médio; valor do estoque e reposição',async()=>{
+    const counted=await call('/api/erp/operacoes/inventarios',{method:'POST',body:{values:{data:sf.today,local_estoque_id:101,motivo:'Contagem mensal',itens:[{produto_id:911,quantidade_contada:2}]}},headers:{'Idempotency-Key':'inv-911'}})
+    assert.equal(counted.status,201,JSON.stringify(counted.data))
+    assert.deepEqual(await sf.bal(911),{fisica:2,reservada:0,custo:55})
+    assert.deepEqual((await sf.q("SELECT tipo,quantidade::text,custo_unitario::text,origem_tipo FROM erp.movimentacoes_estoque WHERE empresa_id=1 AND produto_id=911 ORDER BY id DESC LIMIT 1"))[0],{tipo:'ajuste_saida',quantidade:'-1.0000',custo_unitario:'55.000000',origem_tipo:'inventario'})
+    const value=await call('/api/erp/relatorios/valor-estoque?from='+sf.today+'&to='+sf.today);assert.equal(value.status,200)
+    const row=value.data.records.find(r=>r.produto==='Componente A');assert.equal(Number(row.quantidade_fisica),2);assert.equal(Number(row.valor_estoque),110)
+    await db.query('UPDATE erp.produtos SET estoque_minimo=10,ponto_reposicao=8 WHERE id=911')
+    const position=await call('/api/erp/operacoes/posicao-estoque?query=Componente A');assert.equal(position.status,200)
+    assert.equal(position.data.records.find(r=>r.id==='911').situacao,'repor')
+  })
+  await check('Estoque: venda e compra em outro local movimentam o local escolhido',async()=>{
+    assert.equal((await sf.move('st-l2',{produto_id:914,tipo:'entrada',quantidade:5,custo_unitario:30,local_estoque_id:102})).status,201)
+    const main=await sf.bal(914)
+    const sale=await sf.sale('loc-sale',914,2,102)
+    await sf.run(sale,'confirmar');await sf.run(sale,'atender')
+    assert.deepEqual([await sf.bal(914),(await sf.bal(914,102)).fisica],[main,3])
+    const purchase=await call('/api/erp/compras',{method:'POST',body:{values:{fornecedor_id:101,data_compra:sf.today,categoria_id:101,conta_financeira_id:101,local_estoque_id:102,tipo_movimento:'compra',gera_financeiro:false,itens:[{produto_id:914,quantidade:4,valor_unitario:40}]}},headers:{'Idempotency-Key':'loc-purchase'}})
+    assert.equal(purchase.status,201,JSON.stringify(purchase.data));const id=Number(purchase.data.record.id)
+    assert.equal((await sf.q('SELECT local_estoque_id::text FROM erp.compras WHERE id=$1',[id]))[0].local_estoque_id,'102','The purchase keeps the chosen location')
+    assert.equal((await call('/api/erp/compras/'+id+'/confirmar',{method:'POST',body:{values:{}}})).status,200)
+    const item=(await sf.q('SELECT id FROM erp.compras_itens WHERE compra_id=$1',[id]))[0].id
+    assert.equal((await call('/api/erp/compras/'+id+'/receber',{method:'POST',body:{items:[{item_id:Number(item),quantidade:4}]},headers:{'Idempotency-Key':'loc-receive'}})).status,200)
+    // Chega na Loja 2: (3 × 30 + 4 × 40) / 7.
+    assert.deepEqual([await sf.bal(914),await sf.bal(914,102)],[main,{fisica:7,reservada:0,custo:35.7143}])
+  })
+  await check('Financeiro: várias baixas parciais, estorno de uma do meio, baixa maior que o saldo e quitação',async()=>{
+    const title=await createTitle('receber','fin-t1',{...financialValues('receber'),numero_documento:'FIN-1',valor_total:900,conta_financeira_id:901,parcelas:[{data_vencimento:'2026-10-30',valor:900}]});const part=title.data.installments[0].id
+    const pay=(key,valor)=>call('/api/erp/contas-receber-parcelas/'+part+'/baixar',{method:'POST',body:{values:{valor,conta_financeira_id:901,data_pagamento:'2026-10-14'}},headers:{'Idempotency-Key':key}})
+    const state=async()=>(await sf.q('SELECT valor_pago::text,status FROM erp.contas_receber_parcelas WHERE id=$1',[part]))[0]
+    assert.equal((await pay('fin-p200',200)).status,200);assert.equal((await pay('fin-p300',300)).status,200)
+    assert.deepEqual(await state(),{valor_pago:'500.00',status:'parcial'})
+    const over=await pay('fin-over',401);assert.equal(over.status,422,'Above the 400 balance');assert.match(over.data.error.message,/inválido/)
+    const first=(await sf.q("SELECT id FROM erp.pagamentos WHERE chave_idempotencia='fin-p200'"))[0].id
+    assert.equal((await call('/api/erp/pagamentos/'+first+'/estornar',{method:'POST',body:{motivo:'Lançado errado'},headers:{'Idempotency-Key':'fin-rev200'}})).status,200)
+    assert.deepEqual(await state(),{valor_pago:'300.00',status:'parcial'})
+    assert.equal((await pay('fin-rest',600)).status,200)
+    assert.deepEqual(await state(),{valor_pago:'900.00',status:'pago'})
+  })
+  await check('Financeiro: período fechado bloqueia baixa e edição do título existente; reabrir libera',async()=>{
+    const title=await createTitle('pagar','fin-t3',{...financialValues('pagar'),numero_documento:'FIN-3',valor_total:500,data_competencia:'2026-12-05',data_emissao:'2026-12-05',parcelas:[{data_vencimento:'2026-12-20',valor:500}]});const part=title.data.installments[0].id,path='/api/erp/titulos/pagar/'+title.data.record.id
+    const closure=await call('/api/erp/fechamentos',{method:'POST',body:{modulo:'financeiro',periodo_inicio:'2026-12-01',periodo_fim:'2026-12-31',motivo:'Fechamento dezembro'}});assert.equal(closure.status,200,JSON.stringify(closure.data))
+    const pay=key=>call('/api/erp/contas-pagar-parcelas/'+part+'/baixar',{method:'POST',body:{values:{valor:100,conta_financeira_id:902,data_pagamento:'2026-12-10'}},headers:{'Idempotency-Key':key}})
+    const blocked=await pay('fin-closed-pay');assert.equal(blocked.status,409);assert.equal(blocked.data.error.code,'PERIOD_CLOSED')
+    const current=await call(path)
+    const edit=await call(path,{method:'PATCH',body:{values:{...financialValues('pagar'),numero_documento:'FIN-3',valor_total:500,data_competencia:'2026-12-05',data_emissao:'2026-12-05',descricao:'Editado',parcelas:[{data_vencimento:'2026-12-20',valor:500}]}},headers:{'If-Match':current.headers.get('etag')}})
+    assert.equal(edit.status,409);assert.equal(edit.data.error.code,'PERIOD_CLOSED')
+    // O vencimento é previsão: só a competência e a data do pagamento contam.
+    const today=await call('/api/erp/contas-pagar-parcelas/'+part+'/baixar',{method:'POST',body:{values:{valor:100,conta_financeira_id:902,data_pagamento:'2026-10-20'}},headers:{'Idempotency-Key':'fin-closed-today'}})
+    assert.equal(today.status,200,JSON.stringify(today.data))
+    const dueInClosed=await createTitle('pagar','fin-t3b',{...financialValues('pagar'),numero_documento:'FIN-3B',valor_total:300,parcelas:[{data_vencimento:'2026-12-15',valor:300}]})
+    assert.equal(dueInClosed.status,201,JSON.stringify(dueInClosed.data))
+    const competenceInClosed=await call('/api/erp/titulos/pagar',{method:'POST',body:{values:{...financialValues('pagar'),numero_documento:'FIN-3C',valor_total:300,data_competencia:'2026-12-05',data_emissao:'2026-12-05',parcelas:[{data_vencimento:'2027-01-15',valor:300}]}},headers:{'Idempotency-Key':'fin-t3c'}})
+    assert.equal(competenceInClosed.status,409);assert.equal(competenceInClosed.data.error.code,'PERIOD_CLOSED')
+    assert.equal((await call('/api/erp/fechamentos',{method:'PATCH',body:{id:Number(closure.data.record.id),motivo:'Ajuste de lançamento'}})).status,200)
+    assert.equal((await pay('fin-reopen-pay')).status,200)
+  })
+  await check('Financeiro: crédito do cliente abate a parcela e a reversão devolve o saldo',async()=>{
+    const title=await createTitle('receber','fin-t4',{...financialValues('receber'),numero_documento:'FIN-4',valor_total:500,parcelas:[{data_vencimento:'2026-10-30',valor:500}]});const part=Number(title.data.installments[0].id)
+    const composition=async()=>{const c=(await call('/api/erp/financeiro/composicao?lado=receber&parcela_id='+part)).data;return {credito:c.credito,saldo:c.saldo}}
+    const advance=await call('/api/erp/financeiro/adiantamentos',{method:'POST',body:{values:{lado:'receber',entidade_id:101,tipo:'constituicao',valor:150,conta_financeira_id:901,data_movimento:'2026-10-14',motivo:'Sinal do cliente'}},headers:{'Idempotency-Key':'fin-adv'}})
+    assert.equal(advance.status,201,JSON.stringify(advance.data))
+    const applied=await call('/api/erp/financeiro/aplicar-adiantamento',{method:'POST',body:{values:{lado:'receber',adiantamento_id:Number(advance.data.id),parcela_id:part,valor:150,data_aplicacao:'2026-10-15',motivo:'Abater o sinal'}},headers:{'Idempotency-Key':'fin-apply'}})
+    assert.equal(applied.status,201,JSON.stringify(applied.data))
+    assert.deepEqual(await composition(),{credito:150,saldo:350});assert.equal((await sf.q('SELECT status FROM erp.contas_receber_parcelas WHERE id=$1',[part]))[0].status,'parcial')
+    assert.equal((await call('/api/erp/financeiro/reverter-aplicacao',{method:'POST',body:{values:{aplicacao_id:Number(applied.data.id),data_aplicacao:'2026-10-16',motivo:'Parcela errada'}},headers:{'Idempotency-Key':'fin-rev-apply'}})).status,201)
+    assert.deepEqual(await composition(),{credito:0,saldo:500})
+  })
+  await check('Financeiro: reverter renegociação devolve as parcelas antigas e cancela o título novo',async()=>{
+    const title=await createTitle('receber','fin-t5',{...financialValues('receber'),numero_documento:'FIN-5',valor_total:400,parcelas:[{data_vencimento:'2026-09-05',valor:200},{data_vencimento:'2026-09-15',valor:200}]})
+    const origens=title.data.installments.map(i=>Number(i.id))
+    const agreement=await call('/api/erp/financeiro/renegociar',{method:'POST',body:{values:{lado:'receber',entidade_id:101,numero:'ACORDO-5',data_acordo:'2026-10-14',motivo:'Parcelar',origens,desconto:0,encargos:0,destinos:[{data_vencimento:'2026-10-29',valor:400}]}},headers:{'Idempotency-Key':'fin-reneg5'}})
+    assert.equal(agreement.status,201,JSON.stringify(agreement.data))
+    assert.equal((await call('/api/erp/financeiro/reverter-renegociacao',{method:'POST',body:{values:{renegociacao_id:Number(agreement.data.id),motivo:'Cliente não assinou'}}})).status,200)
+    assert.deepEqual((await sf.q('SELECT status,valor_pago::text FROM erp.contas_receber_parcelas WHERE id=ANY($1::bigint[]) ORDER BY id',[origens])),[{status:'aberto',valor_pago:'0.00'},{status:'aberto',valor_pago:'0.00'}])
+    assert.deepEqual((await sf.q("SELECT c.status,(SELECT string_agg(p.status,',') FROM erp.contas_receber_parcelas p WHERE p.conta_receber_id=c.id) parcelas FROM erp.contas_receber c WHERE c.id=$1",[agreement.data.titulo_id]))[0],{status:'cancelado',parcelas:'cancelado'})
+  })
+  await check('Financeiro: despesa recorrente gera uma competência por mês e reprocessar não duplica',async()=>{
+    const count=async()=>(await sf.q("SELECT count(*)::int n FROM erp.contas_pagar WHERE empresa_id=1 AND descricao='Aluguel' AND excluido_em IS NULL"))[0].n
+    const created=await call('/api/erp/contas-a-pagar',{method:'POST',body:{values:{fornecedor_id:101,descricao:'Aluguel',numero_documento:'ALUGUEL',valor_total:1500,data_competencia:'2026-12-05',data_emissao:'2026-12-05',categoria_id:101,conta_financeira_id:101,parcelas:[{data_vencimento:'2026-12-10',valor:1500}],repetir:true,recorrencia:{frequencia:'mes',intervalo:1,termino_tipo:'ocorrencias',quantidade_ocorrencias:3}}},headers:{'Idempotency-Key':'fin-rec'}})
+    assert.equal(created.status,201,JSON.stringify(created.data));assert.equal(await count(),1)
+    const process=()=>call('/api/erp/recorrencias/processar',{method:'POST',body:{ate:'2027-03-31'}})
+    const first=await process();assert.equal(first.status,200);assert.equal(first.data.generated,2);assert.equal(await count(),3)
+    const second=await process();assert.equal(second.data.generated,0);assert.equal(await count(),3)
+    assert.deepEqual((await sf.q("SELECT c.data_competencia::text,p.data_vencimento::text,p.valor::text FROM erp.contas_pagar c JOIN erp.contas_pagar_parcelas p ON p.conta_pagar_id=c.id WHERE c.descricao='Aluguel' ORDER BY c.data_competencia")).map(r=>[r.data_competencia,r.data_vencimento,r.valor]),
+      [['2026-12-05','2026-12-10','1500.00'],['2027-01-05','2027-01-10','1500.00'],['2027-02-05','2027-02-10','1500.00']])
+  })
+  await check('Financeiro: rateio por centro de custo distribui o valor inteiro',async()=>{
+    const title=await createTitle('pagar','fin-t7',{...financialValues('pagar'),numero_documento:'FIN-7',valor_total:1000,parcelas:[{data_vencimento:'2026-10-30',valor:1000}]});const conta_id=Number(title.data.record.id)
+    const allocate=rateios=>call('/api/erp/financeiro/rateios',{method:'POST',body:{values:{lado:'pagar',conta_id,rateios}}})
+    const wrong=await allocate([{categoria_id:101,centro_custo_id:901,valor:600},{categoria_id:101,centro_custo_id:902,valor:300}]);assert.equal(wrong.status,422);assert.match(wrong.data.error.message,/integralmente/)
+    assert.equal((await allocate([{categoria_id:101,centro_custo_id:901,valor:600},{categoria_id:101,centro_custo_id:902,valor:400}])).status,200)
+    assert.deepEqual((await sf.q('SELECT centro_custo_id::text,valor::text FROM erp.rateios_financeiros WHERE conta_pagar_id=$1 AND excluido_em IS NULL ORDER BY centro_custo_id',[conta_id])),[{centro_custo_id:'901',valor:'600.00'},{centro_custo_id:'902',valor:'400.00'}])
+  })
+  await check('Financeiro: contas em atraso e fluxo de caixa refletem os valores exatos',async()=>{
+    await db.exec(`INSERT INTO erp.entidades(id,empresa_id,nome,eh_cliente) VALUES(921,1,'Cliente Aging',true)`)
+    const daysAgo=n=>new Date(new Date(sf.today+'T12:00:00Z').getTime()-n*86400000).toISOString().slice(0,10)
+    // 700 vencidos há 45 dias e 300 a vencer.
+    await createTitle('receber','fin-aging',{...financialValues('receber'),cliente_id:921,numero_documento:'AGING-1',valor_total:1000,data_competencia:daysAgo(60),data_emissao:daysAgo(60),parcelas:[{data_vencimento:daysAgo(45),valor:700},{data_vencimento:'2027-06-30',valor:300}]})
+    const aging=await call('/api/erp/relatorios/aging-receber?from=2026-01-01&to='+sf.today);assert.equal(aging.status,200)
+    const row=aging.data.records.find(r=>r.cliente==='Cliente Aging')
+    assert.deepEqual([row.a_vencer,row.vencido_1_30,row.vencido_31_60,row.vencido,row.total].map(Number),[300,0,700,700,1000])
+    const october=async()=>Number((await call('/api/erp/relatorios/fluxo-de-caixa?from=2026-10-01&to=2026-10-31')).data.records[0].entradas_realizadas)
+    const before=await october()
+    const title=await createTitle('receber','fin-flow',{...financialValues('receber'),numero_documento:'FLOW-1',valor_total:250,parcelas:[{data_vencimento:'2026-10-20',valor:250}]})
+    assert.equal((await call('/api/erp/contas-receber-parcelas/'+title.data.installments[0].id+'/baixar',{method:'POST',body:{values:{valor:250,conta_financeira_id:901,data_pagamento:'2026-10-20'}},headers:{'Idempotency-Key':'fin-flow-pay'}})).status,200)
+    assert.equal(Number((await october()-before).toFixed(2)),250)
+  })
+  await check('Financeiro: desfazer conciliação devolve o lançamento do extrato para pendente',async()=>{
+    const csv=['Data;Histórico;Valor;Saldo','14/10/2026;PIX RECEBIDO CLIENTE A;300,00;3.000,00'].join('\n')
+    const imported=await call('/api/erp/bancos/importar-ofx',{method:'POST',body:{accountId:901,fileName:'extrato-caixa.csv',content:csv,format:'csv',mapping:{coluna_data:'Data',coluna_descricao:'Histórico',coluna_valor:'Valor',coluna_saldo:'Saldo',formato_data:'dd/mm/aaaa',separador:';'}}})
+    assert.equal(imported.status,201,JSON.stringify(imported.data))
+    const transaction=(await sf.q("SELECT id FROM erp.transacoes_bancarias WHERE empresa_id=1 AND descricao='PIX RECEBIDO CLIENTE A'"))[0].id
+    const payment=(await sf.q("SELECT id FROM erp.pagamentos WHERE chave_idempotencia='fin-p300'"))[0].id
+    const state=async()=>(await sf.q("SELECT t.status,(SELECT count(*)::int FROM erp.conciliacoes_bancarias_itens i WHERE i.transacao_bancaria_id=t.id AND i.desfeito_em IS NULL) ativos FROM erp.transacoes_bancarias t WHERE t.id=$1",[transaction]))[0]
+    assert.equal((await call('/api/erp/operacoes/conciliar-transacao',{method:'POST',body:{values:{transacao_bancaria_id:Number(transaction),pagamento_id:Number(payment)}},headers:{'Idempotency-Key':'fin-conc'}})).status,201)
+    assert.deepEqual(await state(),{status:'conciliada',ativos:1})
+    assert.equal((await call('/api/erp/conciliacao/transacoes/'+transaction+'/desfazer',{method:'POST',body:{values:{motivo:'Conciliado errado'}}})).status,200)
+    assert.deepEqual(await state(),{status:'pendente',ativos:0})
+  })
   await check('Logs contain correlation and status without submitted data',async()=>{
     assert(logs.some(line=>line.includes('"scope":"erp-api"')&&line.includes('"status":201')))
     assert(!logs.join('\n').includes('crud@example.invalid'));assert(!logs.join('\n').includes('Observação inicial'));assert(!logs.join('\n').includes('local-test-secret'))
@@ -714,4 +989,6 @@ try {
   await postgres?.closePool();await db.close()
   if(originalUrl===undefined)delete process.env.SUPABASE_DB_URL;else process.env.SUPABASE_DB_URL=originalUrl
   if(originalCron===undefined)delete process.env.CRON_SECRET;else process.env.CRON_SECRET=originalCron
+  globalThis.fetch=realFetch
+  for(const [name,value] of [['ERP_FISCAL_SUPABASE_URL',fiscalEnv.url],['ERP_FISCAL_SUPABASE_SERVICE_ROLE_KEY',fiscalEnv.key]])if(value===undefined)delete process.env[name];else process.env[name]=value
 }

@@ -560,7 +560,8 @@ export async function receivePurchaseItems(
         actorId: input.actorId,
         use: 'compra',
         localEstoqueId:
-          Number(requested.local_estoque_id || item.local_estoque_id || 0) ||
+          // Requested location, then the item's, then the purchase's; the default location only when none is set.
+          Number(requested.local_estoque_id || item.local_estoque_id || purchase.local_estoque_id || 0) ||
           null,
       });
       const group = groups.get(locationId) || [];

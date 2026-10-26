@@ -23,6 +23,10 @@ export async function maintainApps(connect?: () => Promise<Client>, store: Packa
       versoes_convertidas: convertidas,
       envios_publicos: await count("DELETE FROM apps.envios_publicos WHERE criado_em < now()-interval '1 day' RETURNING id"),
       erros_execucao: await count("DELETE FROM apps.erros_execucao WHERE ultima_em < now()-interval '90 days' RETURNING id"),
+      // History of a year, as in Tables; publish keys only protect retries; usage is shown for 30 days.
+      eventos: await count("DELETE FROM apps.eventos WHERE id IN (SELECT id FROM apps.eventos WHERE criado_em < now()-interval '365 days' LIMIT 5000) RETURNING id"),
+      execucoes: await count("DELETE FROM apps.execucoes WHERE finalizado_em < now()-interval '90 days' RETURNING id"),
+      uso_diario: await count("DELETE FROM apps.uso_diario WHERE dia < (now() AT TIME ZONE 'America/Sao_Paulo')::date-400 RETURNING dia"),
       // A day of grace: a draft being saved right now may not reference its new contents yet.
       conteudos_sem_uso: await count(`DELETE FROM apps.conteudos c WHERE c.criado_em < now()-interval '1 day'
         AND NOT EXISTS(SELECT 1 FROM apps.versao_arquivos f WHERE f.empresa_id=c.empresa_id AND f.hash=c.hash)

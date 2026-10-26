@@ -3452,7 +3452,10 @@ export async function settleReceivableInstallment(input: SettleInstallmentInput)
          parcelas.metodo_pagamento_id,
          composicao.credito,
          composicao.transferido,
-         composicao.saldo
+         composicao.saldo,
+         -- The status people see, by the same rule as recalculation and the lists (overdue before partial).
+         CASE WHEN parcelas.status = 'cancelado' THEN 'cancelado' WHEN composicao.transferido > 0 THEN 'renegociado' WHEN composicao.saldo = 0 THEN 'pago'
+           WHEN parcelas.data_vencimento < ${ERP_TODAY_SQL} THEN 'vencido' WHEN composicao.dinheiro + composicao.credito > 0 THEN 'parcial' ELSE 'aberto' END AS status_atual
        FROM erp.contas_receber_parcelas AS parcelas
        JOIN erp.contas_receber AS contas
          ON contas.empresa_id = parcelas.empresa_id
@@ -3469,7 +3472,7 @@ export async function settleReceivableInstallment(input: SettleInstallmentInput)
     if (!installment) throw new ErpDomainError('VALIDATION_ERROR', 'Parcela a receber não encontrada.')
     if (existingPayment) return {
       payment: { id: String(existingPayment.id), valor: existingPayment.valor, valor_liquido: existingPayment.valor_liquido },
-      installment: { id: String(installment.id), conta_receber_id: String(installment.conta_receber_id), valor: installment.valor, valor_pago: installment.valor_pago, status: installment.status },
+      installment: { id: String(installment.id), conta_receber_id: String(installment.conta_receber_id), valor: installment.valor, valor_pago: installment.valor_pago, status: installment.status_atual },
     }
     if (installment.status === 'cancelado') throw new ErpDomainError('VALIDATION_ERROR', 'Parcela cancelada não pode ser baixada.')
     if (installment.status === 'pago') throw new ErpDomainError('VALIDATION_ERROR', 'Parcela já esta paga.')
@@ -3593,7 +3596,10 @@ export async function settlePayableInstallment(input: SettleInstallmentInput) {
          contas.tipo_lancamento,
          composicao.credito,
          composicao.transferido,
-         composicao.saldo
+         composicao.saldo,
+         -- The status people see, by the same rule as recalculation and the lists (overdue before partial).
+         CASE WHEN parcelas.status = 'cancelado' THEN 'cancelado' WHEN composicao.transferido > 0 THEN 'renegociado' WHEN composicao.saldo = 0 THEN 'pago'
+           WHEN parcelas.data_vencimento < ${ERP_TODAY_SQL} THEN 'vencido' WHEN composicao.dinheiro + composicao.credito > 0 THEN 'parcial' ELSE 'aberto' END AS status_atual
        FROM erp.contas_pagar_parcelas AS parcelas
        JOIN erp.contas_pagar AS contas
          ON contas.empresa_id = parcelas.empresa_id
@@ -3610,7 +3616,7 @@ export async function settlePayableInstallment(input: SettleInstallmentInput) {
     if (!installment) throw new ErpDomainError('VALIDATION_ERROR', 'Parcela a pagar não encontrada.')
     if (existingPayment) return {
       payment: { id: String(existingPayment.id), valor: existingPayment.valor, valor_liquido: existingPayment.valor_liquido },
-      installment: { id: String(installment.id), conta_pagar_id: String(installment.conta_pagar_id), valor: installment.valor, valor_pago: installment.valor_pago, status: installment.status },
+      installment: { id: String(installment.id), conta_pagar_id: String(installment.conta_pagar_id), valor: installment.valor, valor_pago: installment.valor_pago, status: installment.status_atual },
     }
     if (installment.status === 'cancelado') throw new ErpDomainError('VALIDATION_ERROR', 'Parcela cancelada não pode ser baixada.')
     if (installment.status === 'pago') throw new ErpDomainError('VALIDATION_ERROR', 'Parcela já esta paga.')
@@ -4418,6 +4424,9 @@ async function createPurchaseRecord(client: SQLClient, input: CreateInput) {
     ],
   )
   const purchaseId = Number(purchaseResult.rows[0]?.id)
+  // The chosen stock location is where the goods arrive on receipt.
+  const purchaseLocation = optionalNumericId(input.values.local_estoque_id)
+  if (purchaseLocation) await client.query('UPDATE erp.compras SET local_estoque_id = $3 WHERE empresa_id = $1 AND id = $2', [input.tenantId, purchaseId, purchaseLocation])
 
   for (const item of items) {
     await client.query(
@@ -4597,7 +4606,8 @@ export async function updateErpPurchaseDraft(input: {
          frete = source.frete, seguro = source.seguro, outras_despesas = source.outras_despesas,
          impostos_retidos = source.impostos_retidos, total = source.total,
          condicao_pagamento = source.condicao_pagamento, gera_financeiro = source.gera_financeiro,
-         observacoes = source.observacoes, versao = target.versao + 1, atualizado_por = $5
+         observacoes = source.observacoes, local_estoque_id = COALESCE(source.local_estoque_id, target.local_estoque_id),
+         versao = target.versao + 1, atualizado_por = $5
        FROM erp.compras AS source
        WHERE target.empresa_id = $1 AND target.id = $2 AND source.empresa_id = target.empresa_id
          AND source.id = $3 AND target.versao = $6

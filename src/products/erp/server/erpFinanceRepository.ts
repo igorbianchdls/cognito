@@ -277,6 +277,8 @@ export async function createRenegotiation(input: ActorInput & { idempotencyKey?:
   const agreementDate = date(input.values.data_acordo, 'Data do acordo')
   const discount = money(input.values.desconto || 0, 'Desconto', false)
   const charges = money(input.values.encargos || 0, 'Encargos', false)
+  // Discount and charges are booked to an adjustment category; the database refuses them without one.
+  if ((discount > 0 || charges > 0) && !input.values.categoria_ajuste_id) throw new ErpDomainError('VALIDATION_ERROR', 'Informe a categoria de ajuste para registrar o desconto ou os encargos do acordo.')
   return withTransaction(async (client) => {
     await client.query('SELECT pg_advisory_xact_lock(hashtextextended($1,0))', [`erp:renegociacao:${input.tenantId}:${key}`])
     const replay = (await client.query(`SELECT * FROM erp.renegociacoes WHERE empresa_id=$1 AND chave_idempotencia=$2`, [input.tenantId,key])).rows[0]

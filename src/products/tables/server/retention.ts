@@ -4,8 +4,8 @@ import { buildPostgresPoolConfig } from '@/lib/postgres'
 // Retention, run by the daily maintenance after the cron bearer check, with the privileged pool:
 //  - records in the trash for more than 30 days are deleted for good, with their relations and comments;
 //    their files are marked for the storage cleanup first, and the record goes once the files are gone;
-//  - history older than one year is removed.
-export const TRASH_DAYS = 30, HISTORY_DAYS = 365
+//  - history older than one year is removed, and finished webhook deliveries after 90 days.
+export const TRASH_DAYS = 30, HISTORY_DAYS = 365, DELIVERY_DAYS = 90
 let pool: InstanceType<typeof Pool> | undefined
 type Client = { query: (sql: string, values?: unknown[]) => Promise<{ rows: Record<string, unknown>[]; rowCount?: number | null }>; release?: () => void }
 
@@ -16,7 +16,7 @@ export async function maintainTablesRetention(connect?: () => Promise<Client>) {
     connect = () => pool!.connect()
   }
   const client = await connect()
-  let removed = 0, files = 0, history = 0
+  let removed = 0, files = 0, history = 0, deliveries = 0, usage = 0
   try {
     // Deletions are audited in the name of whoever moved the records to the trash.
     const groups = (await client.query(`SELECT empresa_id,atualizado_por,array_agg(id) ids FROM (SELECT empresa_id,atualizado_por,id FROM tables.registros WHERE excluido_em < now()-make_interval(days=>$1) ORDER BY excluido_em LIMIT 500) r GROUP BY 1,2`, [TRASH_DAYS])).rows
@@ -36,6 +36,9 @@ export async function maintainTablesRetention(connect?: () => Promise<Client>) {
       } catch (error) { await client.query('ROLLBACK').catch(() => undefined); throw error }
     }
     history = (await client.query(`DELETE FROM tables.historico WHERE id IN (SELECT id FROM tables.historico WHERE criado_em < now()-make_interval(days=>$1) LIMIT 5000) RETURNING id`, [HISTORY_DAYS])).rows.length
+    // Finished webhook deliveries are kept 90 days; per-minute key usage only matters for the current minute.
+    deliveries = (await client.query(`DELETE FROM tables.entregas WHERE id IN (SELECT id FROM tables.entregas WHERE estado<>'pendente' AND coalesce(concluido_em,criado_em) < now()-make_interval(days=>$1) LIMIT 5000) RETURNING id`, [DELIVERY_DAYS])).rows.length
+    usage = (await client.query(`DELETE FROM tables.uso_api WHERE minuto < now()-interval '1 day' RETURNING chave_id`)).rows.length
   } finally { client.release?.() }
-  return { status: 'completed', registros_excluidos: removed, anexos_marcados: files, historico_removido: history }
+  return { status: 'completed', registros_excluidos: removed, anexos_marcados: files, historico_removido: history, entregas_removidas: deliveries, uso_api_removido: usage }
 }

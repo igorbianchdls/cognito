@@ -328,8 +328,11 @@ export async function reserveStockForSale(client: Pick<SQLClient, 'query'>, inpu
       AND kits.ativo AND kits.excluido_em IS NULL
      LEFT JOIN erp.kits_produtos_itens AS componentes
        ON componentes.empresa_id = kits.empresa_id AND componentes.kit_id = kits.id
+     LEFT JOIN erp.produtos AS componente
+       ON componente.empresa_id = componentes.empresa_id AND componente.id = componentes.produto_componente_id
      WHERE itens.empresa_id = $1 AND itens.venda_id = $2 AND itens.excluido_em IS NULL
-       AND produtos.controla_estoque ORDER BY produto_id, itens.id`,
+       -- A kit usually has no stock of its own: what decides is whether the product that moves (the component) controls stock.
+       AND COALESCE(componente.controla_estoque, produtos.controla_estoque) ORDER BY produto_id, itens.id`,
     [input.tenantId, input.saleId],
   )
 
