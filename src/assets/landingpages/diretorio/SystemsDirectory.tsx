@@ -12,8 +12,13 @@ const systems = [
   { category: 'Assistência técnica', brand: 'Nexo', group: 'Serviços', href: '/assistencia', image: '/assistencia-media/hero.jpg', description: 'Cada aparelho, diagnóstico e reparo no lugar certo.', features: ['Ordens de serviço', 'Peças', 'Garantias'], letter: 'N', tone: 'stone' },
   { category: 'Loja de roupas', brand: 'Alma', group: 'Comércio', href: '/roupas', image: '/roupas-media/hero.jpg', description: 'Coleções, vendas e estoque em perfeita sintonia.', features: ['Vendas', 'Tamanhos e cores', 'Trocas'], letter: 'A', tone: 'linen' },
   { category: 'Oficina automotiva', brand: 'Torque', group: 'Serviços', href: '/oficina', image: '/oficina-media/hero.jpg', description: 'Da entrada do veículo à entrega do serviço concluído.', features: ['Veículos', 'Serviços', 'Estoque'], letter: 'T', tone: 'graphite' },
+  { category: 'Salão de beleza', brand: 'Aura', group: 'Serviços', href: '/salao', image: '/salao-media/hero.jpg', description: 'Agenda, profissionais e comissões com cuidado em cada detalhe.', features: ['Agenda', 'Profissionais', 'Comissões'], letter: 'A', tone: 'sand' },
+  { category: 'Pet shop e banho e tosa', brand: 'Pata', group: 'Serviços', href: '/petshop', image: '/petshop-media/hero.jpg', description: 'Pets, tutores, produtos e atendimentos em perfeita sintonia.', features: ['Pets', 'Banho e tosa', 'Produtos'], letter: 'P', tone: 'olive' },
+  { category: 'Imobiliária', brand: 'Habita', group: 'Casa e construção', href: '/imobiliaria', image: '/imobiliaria-media/hero.jpg', description: 'Imóveis, visitas e oportunidades para aproximar bons negócios.', features: ['Imóveis', 'Propostas', 'Comissões'], letter: 'H', tone: 'wood' },
+  { category: 'Escola de cursos e idiomas', brand: 'Forma', group: 'Educação', href: '/cursos', image: '/cursos-media/hero.jpg', description: 'Turmas, matrículas e aprendizado acompanhados de perto.', features: ['Turmas', 'Presença', 'Mensalidades'], letter: 'F', tone: 'stone' },
+  { category: 'Limpeza e manutenção', brand: 'Clara', group: 'Serviços', href: '/limpeza', image: '/limpeza-media/hero.jpg', description: 'Contratos, equipes e materiais organizados em cada execução.', features: ['Contratos', 'Escalas', 'Checklist'], letter: 'C', tone: 'linen' },
 ];
-const groups = ['Todos', 'Serviços', 'Casa e construção', 'Comércio'];
+const groups = ['Todos', 'Serviços', 'Casa e construção', 'Comércio', 'Educação'];
 const normalize = (value: string) => value.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
 
 export default function SystemsDirectory() {

@@ -3,7 +3,7 @@ import SystemsDirectory from '@/assets/landingpages/diretorio/SystemsDirectory';
 
 export const metadata: Metadata = {
   title: 'Cognito | Diretório de sistemas',
-  description: 'Escolha uma categoria para explorar os sistemas de eventos, obras, marcenaria, assistência técnica, moda e oficina.',
+  description: 'Explore onze sistemas para eventos, obras, marcenaria, assistência, moda, oficina, beleza, pets, imóveis, cursos e limpeza.',
   robots: { index: false, follow: false },
 };
 
