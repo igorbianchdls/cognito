@@ -1,204 +1,498 @@
 'use client';
 
-import { useEffect, useRef, useState, type FormEvent, type ReactNode } from 'react';
+import { useEffect, useMemo, useRef, useState, type FormEvent, type ReactNode } from 'react';
 import * as Dialog from '@radix-ui/react-dialog';
-import { ArrowDownLeft, ArrowRight, ArrowUpRight, Bell, CalendarDays, CalendarCheck, ChartNoAxesCombined, Check, CheckCheck, ChevronDown, ChevronLeft, ChevronRight, CircleDollarSign, ClipboardList, Download, FileText, Flower2, Heart, House, Image as ImageIcon, LayoutGrid, List, MapPin, MessageSquare, MoreHorizontal, Package, Plus, Search, Send, Settings2, Sofa, Users, Wallet, X, type LucideIcon } from 'lucide-react';
-import { dateLabel, image, money, seed, stages, type Store, type Wedding } from './data';
+import { ArrowRight, Bell, Briefcase, Cake, Check, ChevronDown, ChevronLeft, ChevronRight, Circle, CircleCheck, CircleDot, Download, Plus, RotateCcw, Search, Sparkles, Star, Trash2, X, type LucideIcon } from 'lucide-react';
+import { BouquetArt, CameraArt, ClipboardArt, GuestsArt, LotusLogo } from './Art';
+import { addDays, brl, categories, costs, dateLabel, dayKey, initials, live, makeSeed, phaseStatus, phases, received, sources, stages, storageKey, types, uid, type Client, type Event, type EventType, type Phase, type PhaseStatus, type Rsvp, type Stage, type Store, type Supplier } from './data';
+import { serif } from './fonts';
 import s from './EventsApp.module.css';
 
-type View = 'Visão geral' | 'Eventos' | 'Calendário' | 'Leads e propostas' | 'Clientes' | 'Fornecedores' | 'Equipe' | 'Orçamento' | 'Tarefas' | 'Documentos' | 'Estoque' | 'Relatórios' | 'Fotos e inspirações' | 'Mensagens';
-type Modal = { kind: 'wedding' | 'appointment' | 'supplier' | 'entry' | 'task' | 'profile'; id?: string } | null;
-const navigation: [View, LucideIcon][] = [['Visão geral', House], ['Eventos', CalendarCheck], ['Calendário', CalendarDays], ['Leads e propostas', Users], ['Clientes', Users], ['Fornecedores', Sofa], ['Equipe', Heart], ['Orçamento', FileText], ['Tarefas', ClipboardList], ['Documentos', FileText], ['Estoque', Package], ['Relatórios', ChartNoAxesCombined], ['Fotos e inspirações', ImageIcon], ['Mensagens', MessageSquare]];
-const team = [{ name: 'Mariana Silva', role: 'Direção e planejamento', initials: 'MS' }, { name: 'Ana Costa', role: 'Fornecedores e produção', initials: 'AC' }, { name: 'Julia Martins', role: 'Cerimonial e operação', initials: 'JM' }];
-const uid = () => globalThis.crypto.randomUUID();
-const today = '2026-10-26';
-const storageKey = 'lumiere-weddings-v1';
-const pad = (v: number) => String(v).padStart(2, '0');
-const monthString = (d: Date) => `${d.getFullYear()}-${pad(d.getMonth() + 1)}`;
-const monthLabel = (d: Date) => d.toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' });
-const shortMonth = (d: Date) => d.toLocaleDateString('pt-BR', { month: 'short', year: 'numeric' }).replace('.', '');
-const matches = (q: string, ...values: (string | number)[]) => values.join(' ').toLocaleLowerCase('pt-BR').normalize('NFD').replace(/[\u0300-\u036f]/g, '').includes(q.toLocaleLowerCase('pt-BR').normalize('NFD').replace(/[\u0300-\u036f]/g, ''));
-const statusClass = (status: string) => status === 'Realizado' || status === 'Contratado' || status === 'Confirmado' || status === 'Pago' ? s.green : status === 'Em produção' ? s.gold : status === 'Proposta enviada' ? s.blue : s.peach;
-
-function Photo({ name, alt, className = '' }: { name: string; alt: string; className?: string }) {
-  // Local images also work in an offline demonstration.
-  // eslint-disable-next-line @next/next/no-img-element
-  return <img src={image(name)} alt={alt} className={className} />;
-}
-function Badge({ children }: { children: string }) { return <span className={`${s.badge} ${statusClass(children)}`}>{children}</span>; }
-function Panel({ title, action, onAction, children, className = '' }: { title: string; action?: string; onAction?: () => void; children: ReactNode; className?: string }) {
-  return <section className={`${s.panel} ${className}`}><div className={s.panelHeader}><h2>{title}</h2>{action && <button className={s.textButton} onClick={onAction}>{action}<ArrowRight size={13} /></button>}</div>{children}</section>;
-}
+type View = 'Visão Geral' | 'Eventos' | 'Clientes' | 'Fornecedores' | 'Financeiro' | 'Relatórios';
+type Tab = 'Resumo' | 'Cronograma' | 'Fornecedores' | 'Convidados' | 'Financeiro' | 'Fotos';
+type Modal = { kind: 'event'; id?: string; preset?: Partial<Event> } | { kind: 'client'; id?: string } | { kind: 'supplier'; id?: string } | null;
+const views: View[] = ['Visão Geral', 'Eventos', 'Clientes', 'Fornecedores', 'Financeiro', 'Relatórios'];
+const typeIcon: Record<EventType, LucideIcon> = { Casamento: Sparkles, Aniversário: Cake, Corporativo: Briefcase, Debutante: Star };
+const stageTone: Record<Stage, string> = { Orçamento: s.tGray, Contratado: s.tBlue, 'Em planejamento': s.tAmber, Realizado: s.tGreen, Cancelado: s.tRed };
+const statusIcon: Record<PhaseStatus, LucideIcon> = { Concluído: CircleCheck, 'Em andamento': CircleDot, Pendente: Circle };
+const normalize = (v: string) => v.toLocaleLowerCase('pt-BR').normalize('NFD').replace(/[̀-ͯ]/g, '');
+const has = (q: string, ...values: (string | number)[]) => normalize(values.join(' ')).includes(normalize(q.trim()));
+const pct = (v: number) => `${v.toLocaleString('pt-BR', { maximumFractionDigits: 0 })}%`;
+const download = (name: string, content: string, type: string) => { const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([content], { type })); a.download = name; a.click(); URL.revokeObjectURL(a.href); };
+const csv = (rows: (string | number)[][]) => '﻿' + rows.map(r => r.map(v => `"${String(v).replace(/"/g, '""')}"`).join(';')).join('\n');
+const longDate = (key: string) => new Date(`${key}T12:00`).toLocaleDateString('pt-BR', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' }).replace(/\./g, '').replace(/^./, c => c.toUpperCase());
+const monthShort = (key: string) => new Date(`${key}T12:00`).toLocaleDateString('pt-BR', { month: 'short' }).replace('.', '').toUpperCase();
+const num = (v: string) => Number(String(v).replace(/\./g, '').replace(',', '.')) || 0;
 
 export default function EventsApp() {
-  const [store, setStore] = useState<Store>(seed);
-  const [ready, setReady] = useState(false);
-  const [storageWarning, setStorageWarning] = useState(false);
-  const [view, setView] = useState<View>('Visão geral');
-  const [selected, setSelected] = useState<string | null>(null);
-  const [query, setQuery] = useState('');
-  const [filter, setFilter] = useState('Todos');
-  const [month, setMonth] = useState(new Date(2026, 9, 1));
-  const [calendarMonth, setCalendarMonth] = useState(new Date(2026, 9, 1));
-  const [selectedDate, setSelectedDate] = useState<string | null>(null);
-  const [heroIndex, setHeroIndex] = useState(0);
+  const [store, setStore] = useState<Store | null>(null);
+  const [view, setView] = useState<View>('Visão Geral');
   const [modal, setModal] = useState<Modal>(null);
-  const [tab, setTab] = useState('Planejamento');
-  const [notice, setNotice] = useState('');
-  const [notifications, setNotifications] = useState(false);
-  const [listMode, setListMode] = useState(false);
-  const noticeTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const notify = (text: string) => { setNotice(text); if (noticeTimer.current) clearTimeout(noticeTimer.current); noticeTimer.current = setTimeout(() => setNotice(''), 4000); };
+  const [drawer, setDrawer] = useState<{ id: string; tab: Tab } | null>(null);
+  const [toast, setToast] = useState('');
+  const [now, setNow] = useState(0);
 
   useEffect(() => {
-    try {
-      const saved = localStorage.getItem(storageKey);
-      if (saved) {
-        const parsed = JSON.parse(saved);
-        if (['weddings', 'tasks', 'appointments', 'suppliers', 'entries', 'messages'].every(key => Array.isArray(parsed[key])) && parsed.notes && typeof parsed.notes === 'object') setStore(parsed);
-      }
-    } catch { setStorageWarning(true); }
-    setReady(true);
-    const onHash = () => {
-      try {
-        const params = new URLSearchParams(location.hash.slice(1));
-        const next = params.get('view') as View;
-        if (navigation.some(([name]) => name === next)) setView(next);
-        setSelected(params.get('wedding'));
-      } catch { /* A malformed fragment should not prevent the demo from opening. */ }
-    };
-    onHash(); window.addEventListener('hashchange', onHash);
-    return () => { window.removeEventListener('hashchange', onHash); if (noticeTimer.current) clearTimeout(noticeTimer.current); };
+    let saved: Store | null = null;
+    try { const raw = localStorage.getItem(storageKey); if (raw) saved = JSON.parse(raw); } catch { /* falls back to the demo data */ }
+    // Clock and storage are read only after mount so server and client markup match.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setNow(Date.now()); setStore(saved?.events ? saved : makeSeed());
   }, []);
-  useEffect(() => { if (ready) { try { localStorage.setItem(storageKey, JSON.stringify(store)); } catch { setStorageWarning(true); } } }, [store, ready]);
-  function go(next: View, wedding: string | null = null) {
-    setView(next); setSelected(wedding); setQuery(''); setFilter('Todos'); setSelectedDate(null); setNotifications(false); setTab('Planejamento');
-    location.hash = new URLSearchParams({ view: next, ...(wedding ? { wedding } : {}) }).toString();
-  }
-  const openWedding = (w: Wedding) => go('Eventos', w.id);
-  const wedding = store.weddings.find(w => w.id === selected);
-  const getWedding = (id: string) => store.weddings.find(w => w.id === id);
-  const searched = store.weddings.filter(w => matches(query, w.couple, w.venue, w.status, w.date));
-  const monthWeddings = store.weddings.filter(w => w.date.startsWith(monthString(month)));
-  const upcoming = store.weddings.filter(w => w.date >= today && w.status !== 'Realizado').sort((a, b) => a.date.localeCompare(b.date));
-  const heroWeddings = upcoming.slice(0, 3);
-  const hero = heroWeddings[heroIndex % Math.max(heroWeddings.length, 1)];
-  const monthEntries = store.entries.filter(e => e.date.startsWith(monthString(month)));
-  const revenue = monthEntries.filter(e => e.type === 'Receita').reduce((sum, e) => sum + e.value, 0);
-  const expenses = monthEntries.filter(e => e.type === 'Despesa').reduce((sum, e) => sum + e.value, 0);
-  const proposalCount = store.weddings.filter(w => w.status === 'Proposta enviada').length;
-  const dueTasks = store.tasks.filter(t => !t.done).sort((a, b) => a.due.localeCompare(b.due));
-  const rangeAppointments = store.appointments.filter(a => a.date >= today && a.date <= '2026-10-30').sort((a, b) => `${a.date}${a.time}`.localeCompare(`${b.date}${b.time}`));
+  useEffect(() => { if (store) try { localStorage.setItem(storageKey, JSON.stringify(store)); } catch { /* storage full or blocked */ } }, [store]);
+  useEffect(() => { if (!toast) return; const t = setTimeout(() => setToast(''), 2600); return () => clearTimeout(t); }, [toast]);
 
-  function weddingCard(w: Wedding) {
-    return <article className={s.eventCard} key={w.id}><button className={s.cardImage} onClick={() => openWedding(w)} aria-label={`Abrir casamento ${w.couple}`}><Photo name={w.image} alt={`Decoração do casamento ${w.couple}`} /></button><div className={s.eventBody}><div className={s.eventTitle}><span className={s.dateTile}><b>{w.date.slice(8)}</b><small>{dateLabel(w.date, { month: 'short' }).replace('.', '')}</small></span><button onClick={() => openWedding(w)}><h3>Casamento<br />{w.couple}</h3></button></div><p><MapPin size={13} />{w.venue}</p><p><Users size={13} />{w.guests} convidados</p><div className={s.cardFooter}><Badge>{w.status}</Badge><button className={s.iconButton} aria-label={`Editar ${w.couple}`} onClick={() => setModal({ kind: 'wedding', id: w.id })}><MoreHorizontal size={17} /></button></div></div></article>;
-  }
+  if (!store) return <div className={`${s.app} ${serif.variable}`}><div className={s.loading}><LotusLogo className={s.logoMark} /></div></div>;
 
-  function pipeline() {
-    const columns = [['Leads', 'Primeiro contato'], ['Propostas', 'Proposta enviada'], ['Contratados', 'Contratado'], ['Realizados', 'Realizado']];
-    return <div className={s.pipeline}>{columns.map(([label, stage], i) => {
-      const items = store.weddings.filter(w => (stage === 'Contratado' ? ['Contratado', 'Em produção'].includes(w.status) : w.status === stage) && matches(query, w.couple, w.venue));
-      return <section className={s.pipelineColumn} key={stage} onDragOver={e => e.preventDefault()} onDrop={e => { e.preventDefault(); const id = e.dataTransfer.getData('text/plain'); if (store.weddings.some(w => w.id === id)) { setStore(p => ({ ...p, weddings: p.weddings.map(w => w.id === id ? { ...w, status: stage } : w) })); notify(`Casamento movido para ${label.toLowerCase()}.`); } }}><header><span><span className={`${s.pipelineDot} ${[s.blueDot, s.yellowDot, s.greenDot, s.grayDot][i]}`} />{label}</span><div><b>{items.length}</b><small>{money(items.reduce((v, w) => v + w.value, 0))}</small></div></header><div className={s.pipelineItems}>{items.map(w => <button draggable onDragStart={e => e.dataTransfer.setData('text/plain', w.id)} onClick={() => openWedding(w)} className={s.pipelineCard} key={w.id}><Photo name={w.image} alt="" /><span><strong>Casamento {w.couple}</strong><small>{money(w.value)} · {dateLabel(w.date)}</small></span></button>)}{!items.length && <span className={s.emptySmall}>Nenhum casamento nesta etapa.</span>}</div></section>;
-    })}</div>;
-  }
+  const today = dayKey(now);
+  const set = (fn: (st: Store) => Partial<Store>, message?: string) => { setStore(prev => prev && { ...prev, ...fn(prev) }); if (message) setToast(message); };
+  const updateEvent = (id: string, fn: (e: Event) => Partial<Event>, message?: string) => set(st => ({ events: st.events.map(e => e.id === id ? { ...e, ...fn(e) } : e) }), message);
+  const go = (v: View) => { setView(v); window.scrollTo({ top: 0 }); };
+  const upcoming = store.events.filter(e => live(e) && e.date >= today).sort((a, b) => a.date.localeCompare(b.date));
+  const ctx: Ctx = { store, today, set, go, setModal, updateEvent, upcoming, openEvent: (id, tab = 'Resumo') => setDrawer({ id, tab }), setToast, client: id => store.clients.find(c => c.id === id), supplier: id => store.suppliers.find(x => x.id === id) };
+  const current = drawer && store.events.find(e => e.id === drawer.id);
+  const overview = view === 'Visão Geral';
 
-  function calendar(large = false) {
-    const year = calendarMonth.getFullYear(), m = calendarMonth.getMonth();
-    const start = new Date(year, m, 1).getDay(), count = new Date(year, m + 1, 0).getDate();
-    const prevCount = new Date(year, m, 0).getDate();
-    const cells = Array.from({ length: Math.ceil((start + count) / 7) * 7 }, (_, i) => { const n = i - start + 1; const d = new Date(year, m, n); return { day: n < 1 ? prevCount + n : n > count ? n - count : n, date: `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`, outside: n < 1 || n > count }; });
-    return <section className={`${s.panel} ${large ? s.bigCalendar : s.calendar}`}><div className={s.panelHeader}><h2>{monthLabel(calendarMonth)}</h2><div className={s.inline}><button className={s.squareButton} onClick={() => { setCalendarMonth(new Date(year, m - 1, 1)); setSelectedDate(null); }} aria-label="Mês anterior"><ChevronLeft size={14} /></button><button className={s.squareButton} onClick={() => { setCalendarMonth(new Date(year, m + 1, 1)); setSelectedDate(null); }} aria-label="Próximo mês"><ChevronRight size={14} /></button></div></div><div className={s.calendarGrid}>{['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'].map(d => <span className={s.weekday} key={d}>{d}</span>)}{cells.map(d => {
-      const events = store.weddings.filter(w => w.date === d.date), agenda = store.appointments.filter(a => a.date === d.date);
-      return <button key={d.date} className={`${s.calendarDay} ${d.outside ? s.outside : ''} ${d.date === (selectedDate || today) ? s.activeDay : ''}`} aria-label={dateLabel(d.date, { dateStyle: 'full' })} aria-pressed={selectedDate === d.date} onClick={() => { setSelectedDate(d.date); if (!large) { setView('Calendário'); location.hash = new URLSearchParams({ view: 'Calendário' }).toString(); } }}><span>{d.day}</span>{large ? <div>{events.map(w => <span key={w.id} className={s.calendarEvent}>{w.couple}</span>)}{agenda.map(a => <span key={a.id} className={s.calendarAppointment}>{a.time} · {a.title}</span>)}</div> : <i className={events.length ? s.greenDot : agenda.length ? s.yellowDot : ''} />}</button>;
-    })}</div></section>;
-  }
+  return <div className={`${s.app} ${serif.variable} ${overview ? s.photoMode : s.dataMode}`}>
+    {overview && <div className={s.backdrop} aria-hidden="true" />}
+    <TopBar ctx={ctx} view={view} />
+    <main className={s.main}>
+      {overview && <Overview ctx={ctx} />}
+      {view === 'Eventos' && <EventsView ctx={ctx} />}
+      {view === 'Clientes' && <ClientsView ctx={ctx} />}
+      {view === 'Fornecedores' && <SuppliersView ctx={ctx} />}
+      {view === 'Financeiro' && <FinanceView ctx={ctx} />}
+      {view === 'Relatórios' && <ReportsView ctx={ctx} />}
+    </main>
+    {modal?.kind === 'event' && <EventForm key={modal.id ?? 'new'} ctx={ctx} id={modal.id} preset={modal.preset} onClose={() => setModal(null)} />}
+    {modal?.kind === 'client' && <ClientForm key={modal.id ?? 'new'} ctx={ctx} id={modal.id} onClose={() => setModal(null)} />}
+    {modal?.kind === 'supplier' && <SupplierForm key={modal.id ?? 'new'} ctx={ctx} id={modal.id} onClose={() => setModal(null)} />}
+    {current && <EventDrawer key={current.id} ctx={ctx} e={current} tab={drawer!.tab} onTab={tab => setDrawer({ id: current.id, tab })} onClose={() => setDrawer(null)} />}
+    {toast && <div className={s.toast} role="status"><Check size={15} />{toast}</div>}
+  </div>;
+}
 
-  function financePanels() {
-    const categories = Array.from(new Set(monthEntries.filter(e => e.type === 'Despesa').map(e => e.category))).map(name => ({ name, total: monthEntries.filter(e => e.type === 'Despesa' && e.category === name).reduce((sum, e) => sum + e.value, 0) }));
-    const palette = ['#56634f', '#b58e68', '#e2ad71', '#d4bbb0', '#a5a9ab', '#e9dfd2'];
-    let accumulated = 0;
-    const stops = categories.map((c, i) => { const from = accumulated; accumulated += expenses ? c.total / expenses * 100 : 0; return `${palette[i % palette.length]} ${from}% ${accumulated}%`; }).join(',');
-    const months = Array.from({ length: 6 }, (_, i) => new Date(month.getFullYear(), month.getMonth() - 5 + i, 1));
-    const values = months.map(m => { const entries = store.entries.filter(e => e.date.startsWith(monthString(m))); return { revenue: entries.filter(e => e.type === 'Receita').reduce((a, e) => a + e.value, 0), costs: entries.filter(e => e.type === 'Despesa').reduce((a, e) => a + e.value, 0) }; });
-    const max = Math.max(...values.map(v => Math.max(v.revenue, v.costs)), 1);
-    return <><Panel title="Financeiro do mês" action="Ver detalhamento" onAction={() => go('Orçamento')}><div className={s.financeContent}><div className={s.financeChart}><strong>{money(revenue)}</strong><small>faturamento previsto</small><div className={s.bars}>{months.map((m, i) => <div key={m.toISOString()}><div className={s.barPair}><i style={{ height: `${Math.max(values[i].revenue / max * 100, 2)}%` }} /><i style={{ height: `${Math.max(values[i].costs / max * 100, 2)}%` }} /></div><span>{m.toLocaleDateString('pt-BR', { month: 'short' }).replace('.', '')}</span></div>)}</div></div><div className={s.legend}>{[['Receitas', revenue], ['Despesas', expenses], ['Resultado', revenue - expenses]].map(([label, v], i) => <div key={label}><i style={{ background: ['#56634f', '#c58f71', '#252923'][i] }} /><span>{label}<b>{money(Number(v))}</b></span></div>)}</div></div></Panel><Panel title="Despesas por categoria" action="Ver relatório" onAction={() => go('Relatórios')}><div className={s.expenseContent}><div className={s.donut} style={{ background: expenses ? `conic-gradient(${stops})` : '#e6e4df' }}><div><b>{money(expenses)}</b><small>em despesas</small></div></div><div className={s.expenseLegend}>{categories.map((c, i) => <div key={c.name}><i style={{ background: palette[i % palette.length] }} /><span>{c.name}</span><small>{expenses ? Math.round(c.total / expenses * 100) : 0}%</small></div>)}{!categories.length && <span className={s.muted}>Sem despesas no mês.</span>}</div></div></Panel></>;
-  }
+type Ctx = { store: Store; today: string; set: (fn: (st: Store) => Partial<Store>, message?: string) => void; go: (v: View) => void; setModal: (m: Modal) => void; updateEvent: (id: string, fn: (e: Event) => Partial<Event>, message?: string) => void; upcoming: Event[]; openEvent: (id: string, tab?: Tab) => void; setToast: (t: string) => void; client: (id: string) => Client | undefined; supplier: (id: string) => Supplier | undefined };
 
-  function dashboard() {
-    return <><div className={s.stats}>{([{ icon: CalendarDays, value: monthWeddings.length, label: 'Casamentos no mês' }, { icon: CircleDollarSign, value: money(revenue), label: 'Faturamento previsto' }, { icon: Users, value: monthWeddings.reduce((v, w) => v + w.guests, 0), label: 'Convidados no mês' }, { icon: FileText, value: proposalCount, label: 'Propostas em aberto' }]).map(({ icon: Icon, value, label }) => <div className={s.stat} key={label}><span className={s.statIcon}><Icon size={23} strokeWidth={1.4} /></span><div><strong>{value}</strong><small>{label}</small></div></div>)}</div><div className={s.overviewGrid}><div className={s.overviewMain}>{hero ? <section className={s.hero}><Photo name={hero.image} alt={`Projeto de decoração para o casamento de ${hero.couple}`} /><div className={s.heroShade} /><span className={s.heroStatus}>{hero.status}</span><div className={s.heroContent}><p>{dateLabel(hero.date, { day: 'numeric', month: 'long', year: 'numeric' })}</p><h2>Casamento<br />{hero.couple}</h2><div className={s.heroMeta}><span><Users size={15} />{hero.guests} convidados</span><span><MapPin size={15} />{hero.venue}</span></div><button onClick={() => openWedding(hero)}>Ver detalhes<ArrowRight size={15} /></button></div><div className={s.heroControls}>{heroWeddings.map((w, i) => <button key={w.id} aria-label={`Destaque ${w.couple}`} className={heroIndex % heroWeddings.length === i ? s.currentDot : s.slideDot} onClick={() => setHeroIndex(i)} />)}<button aria-label="Casamento anterior" className={s.heroArrow} onClick={() => setHeroIndex(i => (i - 1 + heroWeddings.length) % heroWeddings.length)}><ChevronLeft size={14} /></button><button aria-label="Próximo casamento" className={s.heroArrow} onClick={() => setHeroIndex(i => (i + 1) % heroWeddings.length)}><ChevronRight size={14} /></button></div></section> : <div className={s.empty}>Cadastre seu primeiro casamento para começar.</div>}<Panel title="Próximos eventos" action="Ver todos" onAction={() => go('Eventos')}><div className={s.eventGrid}>{upcoming.slice(0, 4).map(weddingCard)}</div></Panel></div><aside className={s.overviewAside}><Panel title="Agenda da semana" action="Ver agenda completa" onAction={() => go('Calendário')}><div className={s.agenda}>{rangeAppointments.slice(0, 5).map((a, i) => <button key={a.id} className={s.agendaItem} onClick={() => setModal({ kind: 'appointment', id: a.id })}><span className={s.agendaDate}><small>{dateLabel(a.date, { weekday: 'short' }).slice(0, 3)}</small><b>{a.date.slice(8)}</b></span><Photo name={getWedding(a.weddingId)?.image || 'flowers'} alt="" /><i style={{ background: ['#d8ab55', '#607b59', '#bc8467', '#c1a365', '#889376'][i % 5] }} /><span className={s.agendaText}><b>{a.title}</b><small>{getWedding(a.weddingId)?.couple}</small><small>{a.time} – {a.end}</small></span></button>)}{!rangeAppointments.length && <p className={s.emptySmall}>A semana está livre.</p>}</div></Panel>{calendar()}</aside></div><Panel title="Pipeline de eventos" action="Ver propostas" onAction={() => go('Leads e propostas')}>{pipeline()}</Panel><div className={s.bottomGrid}>{financePanels()}<Panel title="Inspirações e moodboard" action="Ver galeria" onAction={() => go('Fotos e inspirações')}><div className={s.moodboard}>{['flowers', 'lounge', 'wedding-1', 'cake', 'tables'].map((name, i) => <button key={name} onClick={() => { go('Fotos e inspirações'); setFilter(i === 3 ? 'Bolos' : 'Todos'); }}><Photo name={name} alt={['Arranjo floral', 'Lounge de recepção', 'Cerimônia ao ar livre', 'Bolo de casamento', 'Mesas da recepção'][i]} /></button>)}</div></Panel></div></>;
-  }
+function Pill({ tone, children }: { tone: string; children: ReactNode }) { return <em className={`${s.pill} ${tone}`}>{children}</em>; }
+function Avatar({ name, size = 30 }: { name: string; size?: number }) { return <span className={s.avatar} style={{ width: size, height: size, fontSize: size * .38 }}>{initials(name)}</span>; }
+function Cover({ e, className }: { e: Event; className?: string }) {
+  const Icon = typeIcon[e.type];
+  // eslint-disable-next-line @next/next/no-img-element
+  return e.cover ? <img src={`/eventos-media/${e.cover}.webp`} alt={`${e.type} ${e.title}`} className={`${s.cover} ${className ?? ''}`} loading="lazy" /> : <span className={`${s.cover} ${s.coverArt} ${s[`cv${types.indexOf(e.type)}`]} ${className ?? ''}`} role="img" aria-label={`${e.type} ${e.title}`}><Icon size={28} strokeWidth={1.4} /></span>;
+}
+function useOutside(open: boolean, close: () => void) {
+  const ref = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (!open) return;
+    const handler = (e: MouseEvent) => { if (!ref.current?.contains(e.target as Node)) close(); };
+    document.addEventListener('mousedown', handler); return () => document.removeEventListener('mousedown', handler);
+  }, [open, close]);
+  return ref;
+}
 
-  function table(headers: string[], rows: ReactNode[][]) { return <div className={s.tableWrap}><table className={s.table}><thead><tr>{headers.map(h => <th key={h}>{h}</th>)}</tr></thead><tbody>{rows.map((row, i) => <tr key={i}>{row.map((cell, j) => <td key={j}>{cell}</td>)}</tr>)}</tbody></table>{!rows.length && <div className={s.empty}>Nenhum resultado encontrado. Experimente outro filtro.</div>}</div>; }
-  function taskTable(weddingId?: string) {
-    const tasks = store.tasks.filter(t => (!weddingId || t.weddingId === weddingId) && matches(query, t.title, t.owner) && (filter === 'Todos' || (filter === 'Concluídas' ? t.done : !t.done)));
-    return table(['Tarefa', 'Responsável', 'Casamento', 'Prazo', ''], tasks.map(t => [<label className={`${s.taskLabel} ${t.done ? s.done : ''}`} key={t.id}><input type="checkbox" checked={t.done} onChange={() => setStore(p => ({ ...p, tasks: p.tasks.map(task => task.id === t.id ? { ...task, done: !task.done } : task) }))} />{t.title}</label>, <span className={s.inline} key="owner"><span className={s.avatarSmall}>{t.owner.split(' ').map(n => n[0]).join('')}</span>{t.owner}</span>, getWedding(t.weddingId)?.couple, dateLabel(t.due), <button key="edit" className={s.iconButton} aria-label={`Editar tarefa ${t.title}`} onClick={() => setModal({ kind: 'task', id: t.id })}><MoreHorizontal size={17} /></button>]));
-  }
-  function financeTable(weddingId?: string) {
-    return table(['Descrição', 'Casamento', 'Vencimento', 'Categoria', 'Valor', 'Situação'], monthEntries.filter(e => (!weddingId || e.weddingId === weddingId) && matches(query, e.title, e.category) && (filter === 'Todos' || e.type === filter)).map(e => [<button className={s.rowTitle} onClick={() => setModal({ kind: 'entry', id: e.id })} key={e.id}>{e.title}</button>, getWedding(e.weddingId)?.couple, dateLabel(e.date), e.category, <span className={e.type === 'Receita' ? s.income : s.outcome} key="value">{e.type === 'Receita' ? '+' : '−'} {money(e.value)}</span>, <button key="paid" onClick={() => { setStore(p => ({ ...p, entries: p.entries.map(v => v.id === e.id ? { ...v, paid: !v.paid } : v) })); notify(e.paid ? 'Pagamento marcado como pendente.' : 'Pagamento confirmado.'); }}><Badge>{e.paid ? 'Pago' : 'Pendente'}</Badge></button>]));
-  }
-  function detail(w: Wedding) {
-    const wTasks = store.tasks.filter(t => t.weddingId === w.id), done = wTasks.filter(t => t.done).length;
-    return <><button className={s.backButton} onClick={() => go('Eventos')}><ChevronLeft size={15} />Todos os casamentos</button><div className={s.detailHeader}><div><span className={s.eyebrow}>CASAMENTO · {w.status.toUpperCase()}</span><h1>{w.couple}</h1><p><MapPin size={15} />{w.venue} <span>·</span> {dateLabel(w.date, { dateStyle: 'long' })} <span>·</span> {w.guests} convidados</p></div><button className={s.secondaryButton} onClick={() => setModal({ kind: 'wedding', id: w.id })}>Editar casamento<Settings2 size={15} /></button></div><div className={s.detailHero}><Photo name={w.image} alt={`Ambiente do casamento ${w.couple}`} /><Panel title="Tudo para o grande dia"><strong className={s.progressNumber}>{wTasks.length ? Math.round(done / wTasks.length * 100) : 0}%</strong><div className={s.progress}><span style={{ width: `${wTasks.length ? done / wTasks.length * 100 : 0}%` }} /></div><p className={s.muted}>{done} de {wTasks.length} tarefas concluídas</p><hr /><div className={s.contactDetails}><span><Heart size={16} />{w.couple}</span><span>{w.email}</span><span>{w.phone}</span><Badge>{w.status}</Badge></div></Panel></div><div className={s.stats}>{[['Contrato', money(w.value)], ['Custos previstos', money(w.cost)], ['Margem prevista', `${w.value ? ((w.value - w.cost) / w.value * 100).toFixed(1).replace('.', ',') : '0'}%`], ['Convidados', w.guests]].map(([label, value]) => <div className={s.stat} key={label}><div><small>{label}</small><strong>{value}</strong></div></div>)}</div><div className={s.tabs}>{['Planejamento', 'Fornecedores', 'Convidados', 'Financeiro', 'Roteiro', 'Anotações'].map(t => <button className={tab === t ? s.activeTab : ''} key={t} onClick={() => { setTab(t); setFilter('Todos'); }}>{t}</button>)}</div>{tab === 'Planejamento' && <Panel title="Planejamento do casamento" action="Adicionar tarefa" onAction={() => setModal({ kind: 'task' })}>{taskTable(w.id)}</Panel>}{tab === 'Fornecedores' && <Panel title="Fornecedores parceiros" action="Adicionar fornecedor" onAction={() => setModal({ kind: 'supplier' })}><p className={s.sectionNote}>Catálogo da empresa para consulta e planejamento deste casamento.</p>{supplierTable()}</Panel>}{tab === 'Convidados' && <Panel title="Convidados e mesas"><div className={s.guestSummary}><Users size={36} strokeWidth={1} /><div><h3>{w.guests} convidados previstos</h3><p>Atualize a previsão no cadastro do casamento.</p><button className={s.secondaryButton} onClick={() => setModal({ kind: 'wedding', id: w.id })}>Atualizar previsão</button></div></div><label className={s.notesLabel}>Organização de mesas e observações<textarea placeholder="Ex.: Mesa 1 — família da noiva; Mesa 2 — família do noivo…" value={store.notes[`guests-${w.id}`] || ''} onChange={e => setStore(p => ({ ...p, notes: { ...p.notes, [`guests-${w.id}`]: e.target.value } }))} /></label></Panel>}{tab === 'Financeiro' && <Panel title={`Financeiro · ${monthLabel(month)}`} action="Adicionar lançamento" onAction={() => setModal({ kind: 'entry' })}>{financeTable(w.id)}</Panel>}{tab === 'Roteiro' && <Panel title="Roteiro do grande dia"><div className={s.timeline}>{[['14:00', 'Chegada dos fornecedores'], ['15:30', 'Conferência da montagem'], ['16:30', 'Recepção dos convidados'], ['17:00', 'Cerimônia'], ['18:00', 'Coquetel e recepção'], ['20:00', 'Jantar e celebração']].map(([time, title]) => <div key={time}><time>{time}</time><i /><span>{title}</span></div>)}</div><label className={s.notesLabel}>Ajustes do roteiro<textarea placeholder="Registre os horários e ajustes específicos deste casamento…" value={store.notes[`schedule-${w.id}`] || ''} onChange={e => setStore(p => ({ ...p, notes: { ...p.notes, [`schedule-${w.id}`]: e.target.value } }))} /></label></Panel>}{tab === 'Anotações' && <Panel title="Caderno de planejamento"><label className={s.notesLabel}>Preferências do casal, decisões e próximos passos<textarea placeholder="Escreva aqui. Suas anotações são salvas neste navegador." value={store.notes[w.id] || ''} onChange={e => setStore(p => ({ ...p, notes: { ...p.notes, [w.id]: e.target.value } }))} /></label></Panel>}</>;
-  }
-  function supplierTable() { return table(['Fornecedor', 'Categoria', 'Contato', 'Valor de referência', 'Situação', ''], store.suppliers.filter(v => matches(query, v.name, v.category, v.contact) && (filter === 'Todos' || v.category === filter)).map(v => [<span className={s.rowTitle} key="name">{v.name}</span>, v.category, v.contact, money(v.price), <Badge key="badge">{v.status}</Badge>, <button key="edit" className={s.iconButton} aria-label={`Editar ${v.name}`} onClick={() => setModal({ kind: 'supplier', id: v.id })}><MoreHorizontal size={17} /></button>])); }
+function TopBar({ ctx, view }: { ctx: Ctx; view: View }) {
+  const { store, today } = ctx;
+  const [query, setQuery] = useState('');
+  const [panel, setPanel] = useState<'search' | 'bell' | 'user' | null>(null);
+  const close = useMemo(() => () => setPanel(null), []);
+  const ref = useOutside(!!panel, close);
+  const q = query.trim();
+  const results = q ? [
+    ...store.events.filter(e => has(q, e.title, e.code, e.type, e.venue)).slice(0, 6).map(e => ({ key: e.id, label: `${e.type} · ${e.title}`, meta: `${dateLabel(e.date)} · ${e.venue} · ${e.stage}`, run: () => ctx.openEvent(e.id) })),
+    ...store.clients.filter(c => has(q, c.name, c.email)).slice(0, 3).map(c => ({ key: c.id, label: c.name, meta: `Cliente · ${c.kind}`, run: () => ctx.go('Clientes') })),
+    ...store.suppliers.filter(x => has(q, x.name, x.category)).slice(0, 3).map(x => ({ key: x.id, label: x.name, meta: `Fornecedor · ${x.category}`, run: () => ctx.go('Fornecedores') })),
+  ] : [];
+  const late = store.events.filter(e => live(e) && e.date >= today).flatMap(e => e.tasks.filter(t => !t.done && t.due < today).map(t => ({ e, t })));
+  const dueSoon = store.events.filter(live).flatMap(e => e.installments.filter(i => !i.paid && i.due >= today && i.due <= addDays(today, 15)).map(i => ({ e, i })));
+  const alerts = [
+    ...late.map(({ e, t }) => ({ key: t.id, text: `${e.title}: “${t.title}” atrasada desde ${dateLabel(t.due)}`, run: () => ctx.openEvent(e.id, 'Cronograma') })),
+    ...dueSoon.map(({ e, i }) => ({ key: i.id, text: `${e.title}: ${i.label} de ${brl(i.value)} vence em ${dateLabel(i.due)}`, run: () => ctx.openEvent(e.id, 'Financeiro') })),
+  ];
+  return <header className={s.topbar} ref={ref}>
+    <button className={s.brand} onClick={() => ctx.go('Visão Geral')} aria-label="Vélia Eventos, ir para a visão geral"><LotusLogo className={s.logoMark} /><span>VÉLIA<small>EVENTOS</small></span></button>
+    <nav className={s.tabs} aria-label="Seções">{views.map(v => <button key={v} className={view === v ? s.tabOn : ''} aria-current={view === v ? 'page' : undefined} onClick={() => ctx.go(v)}>{v}</button>)}</nav>
+    <div className={s.tools}>
+      <div className={s.search}>
+        <Search size={19} />
+        <input value={query} onChange={e => { setQuery(e.target.value); setPanel('search'); }} onFocus={() => setPanel('search')} placeholder="Buscar eventos, clientes..." aria-label="Buscar eventos, clientes ou fornecedores" />
+        {panel === 'search' && q && <div className={`${s.popover} ${s.searchPop}`}>{results.map(r => <button key={r.key} onClick={() => { r.run(); setPanel(null); setQuery(''); }}><b>{r.label}</b><small>{r.meta}</small></button>)}{!results.length && <p className={s.empty}>Nada encontrado para “{q}”.</p>}</div>}
+      </div>
+      <div className={s.rel}>
+        <button className={s.iconCircle} onClick={() => setPanel(panel === 'bell' ? null : 'bell')} aria-label={`Notificações, ${alerts.length}`} aria-expanded={panel === 'bell'}><Bell size={20} />{alerts.length > 0 && <i className={s.dot} />}</button>
+        {panel === 'bell' && <div className={s.popover}><p className={s.popTitle}>Notificações</p>{alerts.map(a => <button key={a.key} className={s.alert} onClick={() => { a.run(); setPanel(null); }}><i />{a.text}</button>)}{!alerts.length && <p className={s.empty}>Tudo em dia.</p>}</div>}
+      </div>
+      <div className={s.rel}>
+        <button className={s.user} onClick={() => setPanel(panel === 'user' ? null : 'user')} aria-label="Menu do usuário" aria-expanded={panel === 'user'}><Avatar name={`${store.settings.owner} Vélia`} size={44} /><ChevronDown size={16} /></button>
+        {panel === 'user' && <div className={`${s.popover} ${s.menuPop}`} role="menu"><p className={s.popTitle}>{store.settings.owner}<small>{store.settings.company}</small></p><button role="menuitem" onClick={() => { ctx.setModal({ kind: 'event' }); setPanel(null); }}>Novo evento</button><button role="menuitem" onClick={() => { ctx.setModal({ kind: 'client' }); setPanel(null); }}>Novo cliente</button><button role="menuitem" onClick={() => { ctx.go('Relatórios'); setPanel(null); }}>Configurações</button></div>}
+      </div>
+    </div>
+  </header>;
+}
 
-  function content() {
-    if (wedding) return detail(wedding);
-    if (view === 'Visão geral') return dashboard();
-    if (view === 'Eventos') return <><div className={s.toolbar}><div className={s.tabs}>{['Todos', ...stages].map(f => <button key={f} className={filter === f ? s.activeTab : ''} onClick={() => setFilter(f)}>{f}</button>)}</div><button className={s.secondaryButton} onClick={() => setListMode(!listMode)}>{listMode ? <LayoutGrid size={16} /> : <List size={16} />}{listMode ? 'Cartões' : 'Lista'}</button></div>{listMode ? table(['Casamento', 'Data', 'Local', 'Convidados', 'Contrato', 'Etapa'], searched.filter(w => filter === 'Todos' || w.status === filter).map(w => [<button key={w.id} className={s.rowTitle} onClick={() => openWedding(w)}>{w.couple}</button>, dateLabel(w.date), w.venue, w.guests, money(w.value), <Badge key="status">{w.status}</Badge>])) : <div className={s.allEvents}>{searched.filter(w => filter === 'Todos' || w.status === filter).map(weddingCard)}</div>}{!searched.filter(w => filter === 'Todos' || w.status === filter).length && !listMode && <div className={s.empty}>Nenhum casamento encontrado.</div>}</>;
-    if (view === 'Leads e propostas') return <><p className={s.sectionNote}>Arraste os cartões entre as etapas ou abra um casamento para editar sua situação.</p>{pipeline()}{table(['Casal', 'Data', 'Proposta', 'Etapa', ''], searched.map(w => [<button key={w.id} className={s.rowTitle} onClick={() => openWedding(w)}>{w.couple}</button>, dateLabel(w.date), money(w.value), <select key="stage" className={s.inlineSelect} value={w.status} aria-label={`Etapa de ${w.couple}`} onChange={e => setStore(p => ({ ...p, weddings: p.weddings.map(v => v.id === w.id ? { ...v, status: e.target.value } : v) }))}>{stages.map(st => <option key={st}>{st}</option>)}</select>, <button key="download" className={s.textButton} onClick={() => exportProposal(w)}>Baixar proposta<Download size={14} /></button>]))}</>;
-    if (view === 'Calendário') {
-      const items = store.appointments.filter(a => (!selectedDate ? a.date.startsWith(monthString(calendarMonth)) : a.date === selectedDate) && matches(query, a.title, getWedding(a.weddingId)?.couple || '')).sort((a, b) => `${a.date}${a.time}`.localeCompare(`${b.date}${b.time}`));
-      return <>{calendar(true)}<Panel title={selectedDate ? `Agenda · ${dateLabel(selectedDate, { dateStyle: 'long' })}` : 'Compromissos do mês'} action="Novo compromisso" onAction={() => setModal({ kind: 'appointment' })}>{table(['Compromisso', 'Casamento', 'Data', 'Horário', ''], items.map(a => [a.title, getWedding(a.weddingId)?.couple, dateLabel(a.date), `${a.time} – ${a.end}`, <button className={s.textButton} key="edit" onClick={() => setModal({ kind: 'appointment', id: a.id })}>Editar<ArrowRight size={13} /></button>]))}{selectedDate && store.weddings.filter(w => w.date === selectedDate).map(w => <button key={w.id} className={s.dayWedding} onClick={() => openWedding(w)}><Heart size={17} />Casamento {w.couple}<ArrowRight size={15} /></button>)}</Panel></>;
-    }
-    if (view === 'Clientes') return table(['Casal', 'E-mail', 'Telefone', 'Casamento', ''], searched.map(w => [<span key="name" className={s.inline}><span className={s.avatarSmall}>{w.couple[0]}</span>{w.couple}</span>, w.email, w.phone, dateLabel(w.date), <button key="open" className={s.textButton} onClick={() => openWedding(w)}>Ver cadastro<ArrowRight size={13} /></button>]));
-    if (view === 'Fornecedores') return <><div className={s.toolbar}><select className={s.inlineSelect} value={filter} onChange={e => setFilter(e.target.value)} aria-label="Categoria de fornecedor">{['Todos', ...new Set(store.suppliers.map(v => v.category))].map(v => <option key={v}>{v}</option>)}</select></div>{supplierTable()}</>;
-    if (view === 'Tarefas') return <><div className={s.tabs}>{['Todos', 'Pendentes', 'Concluídas'].map(f => <button key={f} className={filter === f ? s.activeTab : ''} onClick={() => setFilter(f)}>{f}</button>)}</div>{taskTable()}</>;
-    if (view === 'Equipe') return <div className={s.teamGrid}>{team.filter(p => matches(query, p.name, p.role)).map(person => <Panel title={person.name} key={person.name}><div className={s.teamPerson}><span className={s.avatarLarge}>{person.initials}</span><p>{person.role}</p><b>{store.tasks.filter(t => t.owner === person.name && !t.done).length} tarefas em aberto</b></div><div className={s.memberTasks}>{store.tasks.filter(t => t.owner === person.name).map(t => <label key={t.id}><input type="checkbox" checked={t.done} onChange={() => setStore(p => ({ ...p, tasks: p.tasks.map(v => v.id === t.id ? { ...v, done: !v.done } : v) }))} /><span>{t.title}<small>{getWedding(t.weddingId)?.couple} · {dateLabel(t.due)}</small></span></label>)}</div></Panel>)}</div>;
-    if (view === 'Orçamento' || view === 'Relatórios') return <><div className={s.stats}>{[['Receitas previstas', revenue], ['Despesas previstas', expenses], ['Resultado previsto', revenue - expenses], ['A receber', monthEntries.filter(e => e.type === 'Receita' && !e.paid).reduce((v, e) => v + e.value, 0)]].map(([label, value]) => <div className={s.stat} key={label}><div><small>{label}</small><strong>{money(Number(value))}</strong></div></div>)}</div><div className={s.financePanels}>{financePanels()}</div>{view === 'Relatórios' ? <Panel title="Resultado por casamento" action="Exportar CSV" onAction={exportFinance}>{table(['Casamento', 'Contrato', 'Custo previsto', 'Resultado', 'Margem'], searched.map(w => [w.couple, money(w.value), money(w.cost), money(w.value - w.cost), `${w.value ? Math.round((w.value - w.cost) / w.value * 100) : 0}%`]))}</Panel> : <Panel title="Lançamentos do mês" action="Exportar CSV" onAction={exportFinance}><div className={s.tabs}>{['Todos', 'Receita', 'Despesa'].map(f => <button key={f} className={filter === f ? s.activeTab : ''} onClick={() => setFilter(f)}>{f}</button>)}</div>{financeTable()}</Panel>}</>;
-    if (view === 'Fotos e inspirações') return <><div className={s.tabs}>{['Todos', 'Decoração', 'Cerimônia', 'Bolos'].map(f => <button className={filter === f ? s.activeTab : ''} onClick={() => setFilter(f)} key={f}>{f}</button>)}</div><div className={s.gallery}>{[{ name: 'hero', title: 'Recepção à luz de velas', category: 'Decoração' }, { name: 'wedding-1', title: 'Cerimônia ao pôr do sol', category: 'Cerimônia' }, { name: 'flowers', title: 'Flores em tons suaves', category: 'Decoração' }, { name: 'lounge', title: 'Lounge para os convidados', category: 'Decoração' }, { name: 'cake', title: 'Bolo clássico', category: 'Bolos' }, { name: 'tables', title: 'Mesas e iluminação', category: 'Decoração' }].filter(p => (filter === 'Todos' || p.category === filter) && matches(query, p.title, p.category)).map(p => <figure key={p.name}><Photo name={p.name} alt={p.title} /><figcaption><h3>{p.title}</h3><small>{p.category}</small><button className={s.iconButton} aria-label={`Baixar ${p.title}`} onClick={() => downloadPhoto(p.name)}><Download size={16} /></button></figcaption></figure>)}</div></>;
-    if (view === 'Documentos') return <Panel title="Documentos dos casamentos"><p className={s.sectionNote}>Gere propostas demonstrativas com os dados cadastrados.</p>{table(['Documento', 'Casal', 'Valor', ''], searched.map(w => [<span className={s.inline} key="doc"><FileText size={18} />Proposta de produção</span>, w.couple, money(w.value), <button key="download" className={s.secondaryButton} onClick={() => exportProposal(w)}>Baixar<Download size={14} /></button>]))}</Panel>;
-    if (view === 'Estoque') return <Panel title="Inventário de produção"><p className={s.sectionNote}>Controle demonstrativo dos materiais próprios da assessoria.</p>{table(['Item', 'Categoria', 'Quantidade disponível', 'Ajustar'], [{ name: 'Rádios comunicadores', category: 'Operação', initial: 12 }, { name: 'Kits de emergência', category: 'Cerimonial', initial: 4 }, { name: 'Pranchetas', category: 'Operação', initial: 16 }, { name: 'Placas de identificação', category: 'Sinalização', initial: 30 }, { name: 'Extensões elétricas', category: 'Montagem', initial: 10 }].filter(v => matches(query, v.name, v.category)).map(v => [v.name, v.category, store.notes[`stock-${v.name}`] ?? v.initial, <input key="qty" className={s.quantity} aria-label={`Quantidade de ${v.name}`} type="number" min="0" value={store.notes[`stock-${v.name}`] ?? v.initial} onChange={e => setStore(p => ({ ...p, notes: { ...p.notes, [`stock-${v.name}`]: String(Math.max(0, Number(e.target.value))) } }))} />]))}</Panel>;
-    return <Panel title="Caderno da equipe"><p className={s.sectionNote}>Recados internos de demonstração, salvos neste navegador.</p><div className={s.messages}>{store.messages.length ? store.messages.map(m => <article key={m.id}><span className={s.avatarSmall}>MS</span><div><b>Mariana Silva</b><small>{new Date(m.date).toLocaleString('pt-BR')}</small><p>{m.text}</p></div></article>) : <div className={s.empty}>Nenhum recado ainda. Registre o primeiro alinhamento da equipe.</div>}</div><form className={s.messageForm} onSubmit={e => { e.preventDefault(); const f = new FormData(e.currentTarget); const text = String(f.get('message') || '').trim(); if (!text) return; setStore(p => ({ ...p, messages: [...p.messages, { id: uid(), text, date: new Date().toISOString() }] })); e.currentTarget.reset(); }}><input required name="message" placeholder="Escreva um recado para o planejamento…" aria-label="Novo recado" /><button className={s.primaryButton} type="submit"><Send size={16} />Registrar</button></form></Panel>;
-  }
+function Overview({ ctx }: { ctx: Ctx }) {
+  const { store, today, upcoming } = ctx;
+  const featured = upcoming.find(e => e.type === 'Casamento') ?? upcoming[0];
+  const next = upcoming.filter(e => e.id !== featured?.id).slice(0, 3);
+  const weekEnd = addDays(today, 7);
+  const openTasks = upcoming.flatMap(e => e.tasks.filter(t => !t.done && t.due <= weekEnd).map(t => ({ e, t }))).sort((a, b) => a.t.due.localeCompare(b.t.due));
+  const supplierDue = upcoming.flatMap(e => e.bookings.filter(b => !b.paid)).reduce((v, b) => v + b.value, 0);
+  const confirmed = featured?.guests.filter(g => g.rsvp === 'Confirmado').length ?? 0;
+  const pendingGalleries = store.events.filter(e => e.stage === 'Realizado' && !e.galleryDelivered);
+  const receivables = store.events.filter(live).flatMap(e => e.installments.filter(i => !i.paid && i.due <= addDays(today, 30)).map(i => ({ e, i }))).sort((a, b) => a.i.due.localeCompare(b.i.due));
+  const modules: { title: string; subtitle: string; stat: string; art: ReactNode; run: () => void }[] = [
+    { title: 'Planejamento', subtitle: 'Cronograma e tarefas', stat: `${openTasks.length} tarefas até ${dateLabel(weekEnd).slice(0, 5)}`, art: <ClipboardArt />, run: () => featured ? ctx.openEvent(featured.id, 'Cronograma') : ctx.go('Eventos') },
+    { title: 'Fornecedores', subtitle: 'Espaço, buffet, decoração', stat: `${brl(supplierDue)} a pagar`, art: <BouquetArt />, run: () => ctx.go('Fornecedores') },
+    { title: 'Convidados', subtitle: 'RSVP e confirmações', stat: featured ? `${confirmed} de ${featured.guests.length} confirmados` : 'Sem evento próximo', art: <GuestsArt />, run: () => featured && ctx.openEvent(featured.id, 'Convidados') },
+    { title: 'Fotos e vídeos', subtitle: 'Registros do evento', stat: `${pendingGalleries.length} ${pendingGalleries.length === 1 ? 'galeria para entregar' : 'galerias para entregar'}`, art: <CameraArt />, run: () => pendingGalleries[0] ? ctx.openEvent(pendingGalleries[0].id, 'Fotos') : ctx.go('Eventos') },
+  ];
+  return <>
+    <section className={s.hero}>
+      <div className={s.heroText}>
+        <p className={s.welcome}>Bem-vindo de volta, <b>{store.settings.owner}</b>!</p>
+        <h1 className={s.serifTitle}>Momentos<br />que ficam para<br />sempre.</h1>
+        <p className={s.lead}>Organize, planeje e execute eventos<br />inesquecíveis em um só lugar.</p>
+        <button className={s.cta} onClick={() => ctx.setModal({ kind: 'event' })}><Plus size={22} />Novo evento</button>
+      </div>
+      <div className={s.heroSide}>
+        {featured && <section className={`${s.glassLight} ${s.featured}`} aria-label="Próximo evento">
+          <button className={s.featuredHead} onClick={() => ctx.openEvent(featured.id)}><b>{featured.type} · {featured.title}</b><span>{longDate(featured.date)}<ChevronRight size={18} /></span></button>
+          <div className={s.featuredBody}>
+            <button className={s.featuredCover} onClick={() => ctx.openEvent(featured.id)} aria-label={`Abrir ${featured.title}`}><Cover e={featured} /></button>
+            <ul className={s.phaseList}>{[...phases, 'Dia do evento' as const].map(p => { const st = phaseStatus(featured, p, today), Icon = statusIcon[st]; return <li key={p}><button onClick={() => ctx.openEvent(featured.id, p === 'Fornecedores' ? 'Fornecedores' : 'Cronograma')}><Icon size={20} className={st === 'Concluído' ? s.stDone : st === 'Em andamento' ? s.stDoing : s.stTodo} fill={st === 'Concluído' ? 'currentColor' : 'none'} /><b>{p}</b><span>{st}</span></button></li>; })}</ul>
+          </div>
+        </section>}
+        <section className={`${s.glassLight} ${s.nextCard}`} aria-label="Próximos eventos">
+          <header><h2>Próximos eventos</h2><button onClick={() => ctx.go('Eventos')}>Ver todos <ArrowRight size={16} /></button></header>
+          <div className={s.nextGrid}>{next.map(e => <button key={e.id} className={s.nextItem} onClick={() => ctx.openEvent(e.id)}><Cover e={e} /><span><b>{e.date.slice(8)}</b><em>{monthShort(e.date)}</em><small>{e.type}<br />{e.title}</small></span></button>)}</div>
+        </section>
+      </div>
+      <section className={s.modules} aria-label="Módulos">{modules.map(m => <button key={m.title} className={`${s.glassDark} ${s.module}`} onClick={m.run}>
+        <span className={s.moduleArt}>{m.art}</span>
+        <span className={s.moduleText}><b>{m.title}</b><small>{m.subtitle}</small><em>{m.stat}</em></span>
+        <i className={s.arrow}><ArrowRight size={20} /></i>
+      </button>)}</section>
+    </section>
+    <section className={s.below} aria-label="Agenda da semana">
+      <div className={`${s.glassDark} ${s.panel}`}>
+        <header><h2>Tarefas até {dateLabel(weekEnd).slice(0, 5)}</h2><span>{openTasks.length}</span></header>
+        <ul>{openTasks.slice(0, 8).map(({ e, t }) => <li key={t.id}><button className={s.check} onClick={() => ctx.updateEvent(e.id, x => ({ tasks: x.tasks.map(y => y.id === t.id ? { ...y, done: true } : y) }), 'Tarefa concluída.')} aria-label={`Concluir ${t.title}`}><Check size={14} /></button><button className={s.rowBtn} onClick={() => ctx.openEvent(e.id, 'Cronograma')}><b>{t.title}</b><small>{e.title} · {t.due < today ? <span className={s.lateText}>atrasada desde {dateLabel(t.due)}</span> : dateLabel(t.due)}</small></button></li>)}{!openTasks.length && <li className={s.empty}>Nenhuma tarefa para esta semana.</li>}</ul>
+      </div>
+      <div className={`${s.glassDark} ${s.panel}`}>
+        <header><h2>A receber em 30 dias</h2><span>{brl(receivables.reduce((v, r) => v + r.i.value, 0))}</span></header>
+        <ul>{receivables.slice(0, 8).map(({ e, i }) => <li key={i.id}><button className={s.rowBtn} onClick={() => ctx.openEvent(e.id, 'Financeiro')}><b>{e.title} · {i.label}</b><small>{i.due < today ? <span className={s.lateText}>vencida em {dateLabel(i.due)}</span> : `vence em ${dateLabel(i.due)}`}</small></button><strong>{brl(i.value)}</strong></li>)}{!receivables.length && <li className={s.empty}>Nada a receber nos próximos 30 dias.</li>}</ul>
+      </div>
+      <div className={`${s.glassDark} ${s.panel}`}>
+        <header><h2>Funil comercial</h2></header>
+        <ul className={s.funnel}>{stages.map(st => { const list = store.events.filter(e => e.stage === st && (st !== 'Realizado' || e.date >= addDays(today, -90))); return <li key={st}><button className={s.rowBtn} onClick={() => ctx.go('Eventos')}><b>{st}{st === 'Realizado' && <small> · últimos 90 dias</small>}</b><small>{list.length} {list.length === 1 ? 'evento' : 'eventos'}</small></button><strong>{brl(list.reduce((v, e) => v + e.value, 0))}</strong></li>; })}</ul>
+      </div>
+    </section>
+  </>;
+}
 
-  function download(name: string, body: string, type: string) { const url = URL.createObjectURL(new Blob([body], { type })); const anchor = document.createElement('a'); anchor.href = url; anchor.download = name; anchor.click(); setTimeout(() => URL.revokeObjectURL(url), 1000); }
-  function exportProposal(w: Wedding) { download(`proposta-${w.couple.toLowerCase().replaceAll(' ', '-')}.txt`, `LUMIÈRE EVENTOS\nPROPOSTA DEMONSTRATIVA DE PRODUÇÃO DE CASAMENTO\n\nCasal: ${w.couple}\nData: ${dateLabel(w.date, { dateStyle: 'long' })}\nLocal: ${w.venue}\nConvidados previstos: ${w.guests}\nValor da proposta: ${money(w.value)}\nSituação: ${w.status}\n\nEscopo: planejamento, assessoria e coordenação do casamento.\nCondições finais e fornecedores a definir com o casal.\n\nDocumento demonstrativo gerado pelo protótipo frontend.`, 'text/plain;charset=utf-8'); notify('Proposta demonstrativa baixada.'); }
-  function exportFinance() { const csv = [['Descrição', 'Casamento', 'Tipo', 'Categoria', 'Valor', 'Data', 'Pago'], ...monthEntries.map(e => [e.title, getWedding(e.weddingId)?.couple || '', e.type, e.category, e.value.toFixed(2).replace('.', ','), e.date, e.paid ? 'Sim' : 'Não'])].map(row => row.map(v => `"${String(v).replaceAll('"', '""')}"`).join(';')).join('\r\n'); download('financeiro-lumiere.csv', '\uFEFF' + csv, 'text/csv;charset=utf-8'); }
-  function downloadPhoto(name: string) { const a = document.createElement('a'); a.href = image(name); a.download = `${name}.jpg`; a.click(); }
+function PageHead({ title, subtitle, children }: { title: string; subtitle: string; children?: ReactNode }) {
+  return <div className={s.pageHead}><div><h1>{title}</h1><p>{subtitle}</p></div><div className={s.headActions}>{children}</div></div>;
+}
+function Stats({ items }: { items: [string, ReactNode, string?][] }) {
+  return <div className={s.stats}>{items.map(([label, value, hint]) => <div key={label}><span>{label}</span><b>{value}</b>{hint && <small>{hint}</small>}</div>)}</div>;
+}
 
-  function saveForm(e: FormEvent<HTMLFormElement>) {
-    e.preventDefault(); if (!modal) return;
-    const data = new FormData(e.currentTarget), value = (key: string) => String(data.get(key) || '').trim(), number = (key: string) => Math.max(0, Number(value(key)) || 0), id = modal.id || uid();
-    if (modal.kind === 'wedding') {
-      const old = getWedding(id); const next: Wedding = { id, couple: value('couple'), date: value('date'), venue: value('venue'), guests: number('guests'), value: number('value'), cost: number('cost'), status: value('status'), image: value('image') || old?.image || 'wedding-1', email: value('email'), phone: value('phone') };
-      setStore(p => ({ ...p, weddings: old ? p.weddings.map(w => w.id === id ? next : w) : [...p.weddings, next] }));
-    }
-    if (modal.kind === 'task') { const task = { id, title: value('title'), weddingId: value('weddingId'), owner: value('owner'), due: value('due'), done: data.get('done') === 'on' }; setStore(p => ({ ...p, tasks: modal.id ? p.tasks.map(t => t.id === id ? task : t) : [...p.tasks, task] })); }
-    if (modal.kind === 'supplier') { const supplier = { id, name: value('name'), category: value('category'), contact: value('contact'), price: number('price'), status: value('status') }; setStore(p => ({ ...p, suppliers: modal.id ? p.suppliers.map(t => t.id === id ? supplier : t) : [...p.suppliers, supplier] })); }
-    if (modal.kind === 'entry') { const entry = { id, weddingId: value('weddingId'), title: value('title'), type: value('type') as 'Receita' | 'Despesa', category: value('category'), value: number('value'), date: value('date'), paid: data.get('paid') === 'on' }; setStore(p => ({ ...p, entries: modal.id ? p.entries.map(t => t.id === id ? entry : t) : [...p.entries, entry] })); }
-    if (modal.kind === 'appointment') {
-      if (value('end') <= value('time')) { notify('O horário final precisa ser depois do início.'); return; }
-      const appointment = { id, weddingId: value('weddingId'), title: value('title'), date: value('date'), time: value('time'), end: value('end'), type: value('type') }; setStore(p => ({ ...p, appointments: modal.id ? p.appointments.map(t => t.id === id ? appointment : t) : [...p.appointments, appointment] }));
-    }
-    setModal(null); notify('Alterações salvas neste navegador.');
-  }
-  function formFields() {
-    if (!modal) return null;
-    const w = getWedding(modal.id || ''), task = store.tasks.find(t => t.id === modal.id), supplier = store.suppliers.find(t => t.id === modal.id), entry = store.entries.find(t => t.id === modal.id), appointment = store.appointments.find(t => t.id === modal.id);
-    const field = (label: string, name: string, defaultValue: string | number = '', type = 'text', required = true) => <label className={s.field} key={name}>{label}<input name={name} type={type} defaultValue={defaultValue} required={required} min={type === 'number' ? 0 : undefined} step={type === 'number' ? '0.01' : undefined} /></label>;
-    const select = (label: string, name: string, options: { value: string; label: string }[], defaultValue?: string) => <label className={s.field} key={name}>{label}<select name={name} defaultValue={defaultValue || options[0]?.value} required>{options.map(o => <option value={o.value} key={o.value}>{o.label}</option>)}</select></label>;
-    const choices = (values: string[]) => values.map(v => ({ value: v, label: v }));
-    const weddingSelect = (defaultValue?: string) => select('Casamento', 'weddingId', store.weddings.map(w => ({ value: w.id, label: w.couple })), defaultValue || selected || undefined);
-    if (modal.kind === 'wedding') return <>{field('Nome do casal', 'couple', w?.couple)}{field('Data do casamento', 'date', w?.date || '2026-11-28', 'date')}{field('Local', 'venue', w?.venue)}{field('Convidados previstos', 'guests', w?.guests || 180, 'number')}{field('Valor do contrato (R$)', 'value', w?.value || 0, 'number')}{field('Custo previsto (R$)', 'cost', w?.cost || 0, 'number')}{select('Etapa', 'status', choices(stages), w?.status)}{select('Imagem de capa', 'image', [{ value: 'hero', label: 'Recepção à luz de velas' }, { value: 'wedding-1', label: 'Cerimônia ao pôr do sol' }, { value: 'wedding-2', label: 'Festa no jardim' }, { value: 'lounge', label: 'Lounge' }, { value: 'tables', label: 'Mesas da recepção' }], w?.image)}{field('E-mail do casal', 'email', w?.email, 'email', false)}{field('Telefone', 'phone', w?.phone, 'tel', false)}</>;
-    if (modal.kind === 'task') return <>{field('Tarefa', 'title', task?.title)}{weddingSelect(task?.weddingId)}{select('Responsável', 'owner', choices(team.map(p => p.name)), task?.owner)}{field('Prazo', 'due', task?.due || today, 'date')}<label className={s.checkField}><input type="checkbox" name="done" defaultChecked={task?.done} />Tarefa concluída</label></>;
-    if (modal.kind === 'supplier') return <>{field('Fornecedor', 'name', supplier?.name)}{select('Categoria', 'category', choices(['Decoração', 'Buffet', 'Audiovisual', 'Bolo e doces', 'Foto e vídeo', 'Música', 'Estrutura', 'Outros']), supplier?.category)}{field('Contato e telefone', 'contact', supplier?.contact)}{field('Valor de referência (R$)', 'price', supplier?.price || 0, 'number')}{select('Situação', 'status', choices(['Confirmado', 'Em negociação']), supplier?.status)}</>;
-    if (modal.kind === 'entry') return <>{field('Descrição', 'title', entry?.title)}{weddingSelect(entry?.weddingId)}{select('Tipo', 'type', choices(['Receita', 'Despesa']), entry?.type)}{field('Categoria', 'category', entry?.category || 'Contrato')}{field('Valor (R$)', 'value', entry?.value || 0, 'number')}{field('Vencimento', 'date', entry?.date || today, 'date')}<label className={s.checkField}><input type="checkbox" name="paid" defaultChecked={entry?.paid} />Pagamento confirmado</label></>;
-    return <>{field('Compromisso', 'title', appointment?.title)}{weddingSelect(appointment?.weddingId)}{select('Tipo', 'type', choices(['Reunião', 'Visita', 'Degustação', 'Montagem', 'Equipe']), appointment?.type)}{field('Data', 'date', appointment?.date || selectedDate || today, 'date')}{field('Início', 'time', appointment?.time || '10:00', 'time')}{field('Fim', 'end', appointment?.end || '11:00', 'time')}</>;
-  }
-  const descriptions: Record<View, string> = { 'Visão geral': 'Planejamento, execução e momentos inesquecíveis.', Eventos: 'Cada história de amor, cuidadosamente planejada.', Calendário: 'Reuniões, visitas e grandes dias, em perfeita sintonia.', 'Leads e propostas': 'Do primeiro encontro ao próximo sim.', Clientes: 'As pessoas por trás de cada celebração.', Fornecedores: 'Parceiros que transformam ideias em experiências.', Equipe: 'Pessoas que cuidam de cada detalhe.', Orçamento: 'Clareza para planejar e tranquilidade para realizar.', Tarefas: 'Cada detalhe no seu tempo.', Documentos: 'Propostas e informações sempre à mão.', Estoque: 'Tudo pronto para a próxima montagem.', Relatórios: 'Uma visão clara dos resultados da empresa.', 'Fotos e inspirações': 'Referências para celebrar histórias únicas.', Mensagens: 'Alinhamentos que mantêm a equipe em sintonia.' };
-  const action = view === 'Fornecedores' ? { label: 'Novo fornecedor', kind: 'supplier' as const } : view === 'Calendário' ? { label: 'Novo compromisso', kind: 'appointment' as const } : view === 'Tarefas' || view === 'Equipe' ? { label: 'Nova tarefa', kind: 'task' as const } : view === 'Orçamento' ? { label: 'Novo lançamento', kind: 'entry' as const } : { label: 'Novo evento', kind: 'wedding' as const };
-  const modalTitle = modal?.kind === 'profile' ? 'Seu espaço de trabalho' : `${modal?.id ? 'Editar' : 'Novo'} ${modal?.kind === 'wedding' ? 'casamento' : modal?.kind === 'task' ? 'tarefa' : modal?.kind === 'supplier' ? 'fornecedor' : modal?.kind === 'entry' ? 'lançamento' : 'compromisso'}`;
+function EventsView({ ctx }: { ctx: Ctx }) {
+  const { store, today } = ctx;
+  const [mode, setMode] = useState<'Lista' | 'Funil' | 'Calendário'>('Lista');
+  const [type, setType] = useState<EventType | ''>('');
+  const [stage, setStage] = useState<Stage | 'Ativos' | 'Todos'>('Ativos');
+  const [q, setQ] = useState('');
+  const list = store.events.filter(e => (!type || e.type === type) && (stage === 'Todos' || (stage === 'Ativos' ? e.stage !== 'Cancelado' && e.stage !== 'Realizado' : e.stage === stage)) && has(q, e.title, e.code, e.venue, e.city)).sort((a, b) => (stage === 'Realizado' ? b.date.localeCompare(a.date) : a.date.localeCompare(b.date)));
+  const month = today.slice(0, 7);
+  return <div className={s.page}>
+    <PageHead title="Eventos" subtitle="Do orçamento ao grande dia: acompanhe cada celebração."><button className={s.primary} onClick={() => ctx.setModal({ kind: 'event' })}><Plus size={17} />Novo evento</button></PageHead>
+    <Stats items={[['Em planejamento', store.events.filter(e => e.stage === 'Em planejamento').length], ['Eventos neste mês', store.events.filter(e => live(e) && e.date.startsWith(month)).length], ['Orçamentos abertos', store.events.filter(e => e.stage === 'Orçamento').length, brl(store.events.filter(e => e.stage === 'Orçamento').reduce((v, e) => v + e.value, 0))], ['Convidados esperados (90 dias)', ctx.upcoming.filter(e => e.date <= addDays(today, 90)).reduce((v, e) => v + e.expected, 0).toLocaleString('pt-BR')]]} />
+    <section className={s.card}>
+      <div className={s.toolbar}>
+        <div className={s.segment}>{(['Lista', 'Funil', 'Calendário'] as const).map(m => <button key={m} aria-pressed={mode === m} className={mode === m ? s.segOn : ''} onClick={() => setMode(m)}>{m}</button>)}</div>
+        <select className={s.select} value={type} onChange={e => setType(e.target.value as EventType | '')} aria-label="Tipo"><option value="">Todos os tipos</option>{types.map(t => <option key={t}>{t}</option>)}</select>
+        {mode === 'Lista' && <select className={s.select} value={stage} onChange={e => setStage(e.target.value as typeof stage)} aria-label="Etapa"><option>Ativos</option><option>Todos</option>{[...stages, 'Cancelado'].map(x => <option key={x}>{x}</option>)}</select>}
+        <label className={s.inlineSearch}><Search size={15} /><input value={q} onChange={e => setQ(e.target.value)} placeholder="Evento, código ou local" aria-label="Filtrar eventos" /></label>
+      </div>
+      {mode === 'Lista' && <div className={s.tableWrap}><table className={s.table}>
+        <thead><tr><th>Evento</th><th>Data</th><th>Local</th><th>Convidados</th><th>Etapa</th><th>Andamento</th><th className={s.num}>Valor</th></tr></thead>
+        <tbody>{list.map(e => { const done = e.tasks.filter(t => t.done).length; return <tr key={e.id} onClick={() => ctx.openEvent(e.id)} tabIndex={0} onKeyDown={k => k.key === 'Enter' && ctx.openEvent(e.id)}>
+          <td><span className={s.cell}><Cover e={e} className={s.thumb} /><span className={s.stackText}><b>{e.title}</b><small>{e.type} · {e.code}</small></span></span></td>
+          <td>{dateLabel(e.date)}<small className={s.muted}> {e.time}</small></td><td><span className={s.stackText}>{e.venue}<small>{e.city}</small></span></td><td>{e.expected}</td>
+          <td><Pill tone={stageTone[e.stage]}>{e.stage}</Pill></td>
+          <td>{e.tasks.length ? <span className={s.progress}><i><em style={{ width: `${done / e.tasks.length * 100}%` }} /></i>{done}/{e.tasks.length}</span> : <span className={s.muted}>—</span>}</td>
+          <td className={s.num}>{brl(e.value)}</td>
+        </tr>; })}</tbody>
+      </table>{!list.length && <p className={s.empty}>Nenhum evento com esses filtros.</p>}</div>}
+      {mode === 'Funil' && <div className={s.board}>{[...stages, 'Cancelado' as const].map(st => { const items = store.events.filter(e => e.stage === st && (!type || e.type === type) && has(q, e.title, e.venue) && (st !== 'Realizado' || e.date >= addDays(today, -90))).sort((a, b) => a.date.localeCompare(b.date)); return <div key={st} className={s.column}>
+        <header><Pill tone={stageTone[st]}>{st}</Pill><span>{items.length} · {brl(items.reduce((v, e) => v + e.value, 0))}</span></header>
+        {items.map(e => <article key={e.id} className={s.dealCard}><button onClick={() => ctx.openEvent(e.id)}><b>{e.title}</b><small>{e.type} · {dateLabel(e.date)}</small><small>{e.expected} convidados · {brl(e.value)}</small></button>
+          <select value={e.stage} onChange={x => ctx.updateEvent(e.id, () => ({ stage: x.target.value as Stage }), `${e.title}: ${x.target.value}.`)} aria-label={`Etapa de ${e.title}`}>{[...stages, 'Cancelado'].map(o => <option key={o}>{o}</option>)}</select></article>)}
+        {st === 'Realizado' && <p className={s.hint}>Mostrando os últimos 90 dias.</p>}
+      </div>; })}</div>}
+      {mode === 'Calendário' && <MonthCalendar ctx={ctx} filter={e => (!type || e.type === type) && has(q, e.title, e.venue)} />}
+    </section>
+  </div>;
+}
 
-  return <div className={s.app}><a className={s.skipLink} href="#lumiere-content">Pular para o conteúdo</a><aside className={s.sidebar}><button className={s.brand} onClick={() => go('Visão geral')} aria-label="Lumière Eventos, início"><span>L</span><div>LUMIÈRE<small>EVENTOS</small></div></button><nav aria-label="Navegação principal">{navigation.map(([name, Icon]) => <button key={name} className={view === name ? s.navActive : ''} aria-current={view === name ? 'page' : undefined} onClick={() => go(name)}><Icon size={18} strokeWidth={1.55} fill={name === 'Visão geral' && view === name ? 'currentColor' : 'none'} /><span>{name}</span></button>)}</nav><a href="/sistemas" className={s.directoryLink}><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" aria-hidden="true"><path d="M19 12H5m6-6-6 6 6 6" /></svg><span>Todos os sistemas</span></a><button className={s.profile} onClick={() => setModal({ kind: 'profile' })}><Photo name="portrait" alt="Mariana Silva" /><span><b>Mariana Silva</b><small>Diretora</small></span><ChevronRight size={13} /></button></aside><main className={s.main} id="lumiere-content"><header className={s.topbar}><label className={s.search}><Search size={16} strokeWidth={1.5} /><input aria-label="Buscar no sistema" placeholder="Buscar eventos, clientes, fornecedores..." value={query} onChange={e => setQuery(e.target.value)} />{query && <button onClick={() => setQuery('')} aria-label="Limpar busca"><X size={14} /></button>}</label><div className={s.topActions}><div className={s.notificationWrap}><button className={s.notificationButton} aria-label="Notificações" aria-expanded={notifications} onClick={() => setNotifications(!notifications)}><Bell size={20} strokeWidth={1.5} />{dueTasks.length > 0 && <i />}</button>{notifications && <div className={s.notifications}><div className={s.panelHeader}><h2>Próximas entregas</h2><button className={s.iconButton} onClick={() => setNotifications(false)} aria-label="Fechar notificações"><X size={16} /></button></div>{dueTasks.slice(0, 4).map(t => <button key={t.id} onClick={() => { const w = getWedding(t.weddingId); if (w) openWedding(w); }}><CheckCheck size={17} /><span>{t.title}<small>{dateLabel(t.due)} · {getWedding(t.weddingId)?.couple}</small></span></button>)}</div>}</div><label className={s.monthSelect}><span className={s.srOnly}>Mês do painel</span><select value={monthString(month)} onChange={e => { const d = new Date(`${e.target.value}-01T12:00:00`); setMonth(d); setCalendarMonth(d); }}>{Array.from({ length: 18 }, (_, i) => new Date(2026, 4 + i, 1)).map(d => <option value={monthString(d)} key={monthString(d)}>{shortMonth(d)}</option>)}</select><ChevronDown size={14} /></label><button className={s.primaryButton} onClick={() => setModal({ kind: action.kind })}><Plus size={16} />{action.label}</button></div></header>{storageWarning && <p className={s.storageWarning}>O armazenamento do navegador está indisponível. As alterações durarão apenas nesta sessão.</p>}{!wedding && <div className={s.pageHeading}><span className={s.eyebrow}>LUMIÈRE EVENTOS</span><h1>{view}</h1><p>{descriptions[view]}</p></div>}{query && view === 'Visão geral' ? <Panel title={`Resultados para “${query}”`}><div className={s.allEvents}>{searched.map(weddingCard)}</div>{supplierTable()}{!searched.length && <p className={s.sectionNote}>Nenhum casamento encontrado com este termo.</p>}</Panel> : content()}<footer className={s.appFooter}><span>LUMIÈRE EVENTOS</span><small>Feito para os dias que ficam para sempre.</small><small>Demonstração · dados salvos neste navegador</small></footer></main><Dialog.Root open={!!modal} onOpenChange={open => { if (!open) setModal(null); }}><Dialog.Portal><Dialog.Overlay className={s.modalOverlay} /><Dialog.Content className={s.modal}><div className={s.modalHeading}><div><span className={s.eyebrow}>LUMIÈRE EVENTOS</span><Dialog.Title>{modalTitle}</Dialog.Title></div><Dialog.Close className={s.iconButton} aria-label="Fechar"><X size={20} /></Dialog.Close></div><Dialog.Description className={s.modalDescription}>{modal?.kind === 'profile' ? 'Este protótipo funciona localmente, sem conexão com um backend.' : 'Organize os detalhes. As alterações ficam salvas neste navegador.'}</Dialog.Description>{modal?.kind === 'profile' ? <div className={s.profileContent}><Photo name="portrait" alt="Mariana Silva" /><h3>Mariana Silva</h3><p>Diretora · Lumière Eventos</p><button className={s.secondaryButton} onClick={() => download('lumiere-backup.json', JSON.stringify(store, null, 2), 'application/json')}>Exportar dados da demonstração<Download size={16} /></button></div> : <form onSubmit={saveForm}><div className={s.formGrid}>{formFields()}</div><div className={s.modalFooter}><Dialog.Close className={s.secondaryButton}>Cancelar</Dialog.Close><button className={s.primaryButton} type="submit"><Check size={16} />Salvar alterações</button></div></form>}</Dialog.Content></Dialog.Portal></Dialog.Root>{notice && <div className={s.toast} role="status"><Check size={17} />{notice}</div>}</div>;
+function MonthCalendar({ ctx, filter }: { ctx: Ctx; filter: (e: Event) => boolean }) {
+  const [offset, setOffset] = useState(0);
+  const base = new Date(`${ctx.today}T12:00`); base.setDate(1); base.setMonth(base.getMonth() + offset);
+  const first = new Date(base); first.setDate(1 - base.getDay());
+  const days = Array.from({ length: 42 }, (_, i) => dayKey(new Date(first.getFullYear(), first.getMonth(), first.getDate() + i, 12)));
+  const label = base.toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' });
+  return <div>
+    <div className={s.calHead}><button className={s.iconBtn} onClick={() => setOffset(offset - 1)} aria-label="Mês anterior"><ChevronLeft size={18} /></button><b>{label.charAt(0).toUpperCase() + label.slice(1)}</b><button className={s.iconBtn} onClick={() => setOffset(offset + 1)} aria-label="Próximo mês"><ChevronRight size={18} /></button>{offset !== 0 && <button className={s.chip} onClick={() => setOffset(0)}>Hoje</button>}</div>
+    <div className={s.calendar}>{['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'].map(d => <b key={d}>{d}</b>)}
+      {days.map(d => { const items = ctx.store.events.filter(e => e.date === d && e.stage !== 'Cancelado' && filter(e)); return <div key={d} className={`${s.day} ${d.slice(5, 7) !== dayKey(base).slice(5, 7) ? s.dayOut : ''} ${d === ctx.today ? s.dayToday : ''}`}>
+        <span>{Number(d.slice(8))}</span>
+        {items.map(e => <button key={e.id} className={`${s.event} ${stageTone[e.stage]}`} onClick={() => ctx.openEvent(e.id)} title={`${e.type} · ${e.title}`}>{e.time} {e.title}</button>)}
+      </div>; })}
+    </div>
+  </div>;
+}
+
+function ClientsView({ ctx }: { ctx: Ctx }) {
+  const { store, today } = ctx;
+  const [q, setQ] = useState('');
+  const rows = store.clients.filter(c => has(q, c.name, c.email, c.phone)).map(c => { const evs = store.events.filter(e => e.clientId === c.id); return { c, evs, total: evs.filter(live).reduce((v, e) => v + e.value, 0), next: evs.filter(e => live(e) && e.date >= today).sort((a, b) => a.date.localeCompare(b.date))[0] }; }).sort((a, b) => (a.next?.date ?? '9').localeCompare(b.next?.date ?? '9'));
+  return <div className={s.page}>
+    <PageHead title="Clientes" subtitle="Casais, famílias e empresas que confiam na Vélia."><button className={s.primary} onClick={() => ctx.setModal({ kind: 'client' })}><Plus size={17} />Novo cliente</button></PageHead>
+    <Stats items={[['Clientes', store.clients.length], ['Com evento futuro', rows.filter(r => r.next).length], ['Casais', store.clients.filter(c => c.kind === 'Casal').length], ['Empresas', store.clients.filter(c => c.kind === 'Empresa').length]]} />
+    <section className={s.card}>
+      <div className={s.toolbar}><label className={s.inlineSearch}><Search size={15} /><input value={q} onChange={e => setQ(e.target.value)} placeholder="Nome, e-mail ou telefone" aria-label="Filtrar clientes" /></label></div>
+      <div className={s.tableWrap}><table className={s.table}>
+        <thead><tr><th>Cliente</th><th>Tipo</th><th>Contato</th><th>Origem</th><th>Próximo evento</th><th className={s.num}>Total contratado</th></tr></thead>
+        <tbody>{rows.map(({ c, evs, total, next }) => <tr key={c.id} onClick={() => evs[0] ? ctx.openEvent((next ?? evs[0]).id) : ctx.setModal({ kind: 'client', id: c.id })}>
+          <td><span className={s.cell}><Avatar name={c.name} /><b>{c.name}</b></span></td><td>{c.kind}</td><td><span className={s.stackText}>{c.email}<small>{c.phone}</small></span></td><td>{c.source}</td>
+          <td>{next ? <span className={s.stackText}>{next.type}<small>{dateLabel(next.date)}</small></span> : <span className={s.muted}>—</span>}</td><td className={s.num}>{brl(total)}</td>
+        </tr>)}</tbody>
+      </table></div>
+    </section>
+  </div>;
+}
+
+function SuppliersView({ ctx }: { ctx: Ctx }) {
+  const { store, today } = ctx;
+  const [category, setCategory] = useState('');
+  const rows = store.suppliers.filter(x => !category || x.category === category).map(x => {
+    const bookings = store.events.filter(live).flatMap(e => e.bookings.filter(b => b.supplierId === x.id).map(b => ({ e, b })));
+    return { x, count: bookings.length, open: bookings.filter(({ b }) => !b.paid).reduce((v, { b }) => v + b.value, 0), next: bookings.filter(({ e }) => e.date >= today).sort((a, b) => a.e.date.localeCompare(b.e.date))[0]?.e };
+  });
+  return <div className={s.page}>
+    <PageHead title="Fornecedores" subtitle="Parceiros de espaço, buffet, decoração, fotografia e mais."><button className={s.primary} onClick={() => ctx.setModal({ kind: 'supplier' })}><Plus size={17} />Novo fornecedor</button></PageHead>
+    <Stats items={[['Fornecedores', store.suppliers.length], ['A pagar (eventos futuros)', brl(rows.reduce((v, r) => v + r.open, 0))], ['Avaliação média', (store.suppliers.reduce((v, x) => v + x.rating, 0) / Math.max(1, store.suppliers.length)).toLocaleString('pt-BR', { maximumFractionDigits: 1 }) + ' ★']]} />
+    <section className={s.card}>
+      <div className={s.toolbar}><select className={s.select} value={category} onChange={e => setCategory(e.target.value)} aria-label="Categoria"><option value="">Todas as categorias</option>{categories.map(c => <option key={c}>{c}</option>)}</select></div>
+      <div className={s.tableWrap}><table className={s.table}>
+        <thead><tr><th>Fornecedor</th><th>Categoria</th><th>Contato</th><th>Avaliação</th><th>Eventos</th><th>Próximo evento</th><th className={s.num}>A pagar</th></tr></thead>
+        <tbody>{rows.map(({ x, count, open, next }) => <tr key={x.id} onClick={() => ctx.setModal({ kind: 'supplier', id: x.id })}>
+          <td><b>{x.name}</b></td><td>{x.category}</td><td><span className={s.stackText}>{x.contact}<small>{x.phone}</small></span></td><td className={s.stars}>{'★'.repeat(x.rating)}<span>{'★'.repeat(5 - x.rating)}</span></td><td>{count}</td>
+          <td>{next ? <span className={s.stackText}>{next.title}<small>{dateLabel(next.date)}</small></span> : '—'}</td><td className={s.num}>{open ? brl(open) : '—'}</td>
+        </tr>)}</tbody>
+      </table></div>
+    </section>
+  </div>;
+}
+
+function FinanceView({ ctx }: { ctx: Ctx }) {
+  const { store, today } = ctx;
+  const year = Number(today.slice(0, 4));
+  const evs = store.events.filter(live);
+  const all = evs.flatMap(e => e.installments.map(i => ({ e, i })));
+  const receivedTotal = all.filter(x => x.i.paid).reduce((v, x) => v + x.i.value, 0);
+  const open = all.filter(x => !x.i.paid).sort((a, b) => a.i.due.localeCompare(b.i.due));
+  const overdue = open.filter(x => x.i.due < today);
+  const months = Array.from({ length: 12 }, (_, m) => { const key = `${year}-${String(m + 1).padStart(2, '0')}`; const list = evs.filter(e => e.date.startsWith(key)); return { key, label: new Date(year, m, 1).toLocaleDateString('pt-BR', { month: 'short' }).replace('.', ''), revenue: list.reduce((v, e) => v + e.value, 0), cost: list.reduce((v, e) => v + costs(e), 0) }; });
+  const peak = Math.max(...months.map(m => m.revenue), 1);
+  const yearList = evs.filter(e => e.date.startsWith(String(year)));
+  const yearRevenue = yearList.reduce((v, e) => v + e.value, 0), yearCost = yearList.reduce((v, e) => v + costs(e), 0);
+  return <div className={s.page}>
+    <PageHead title="Financeiro" subtitle="Contratos, parcelas, custos com fornecedores e margem.">
+      <button className={s.secondary} onClick={() => download('velia-financeiro.csv', csv([['Evento', 'Data do evento', 'Parcela', 'Vencimento', 'Valor', 'Situação'], ...all.map(({ e, i }) => [e.title, dateLabel(e.date), i.label, dateLabel(i.due), i.value.toFixed(2), i.paid ? 'Recebida' : i.due < today ? 'Vencida' : 'A receber'])]), 'text/csv')}><Download size={16} />CSV</button>
+    </PageHead>
+    <Stats items={[[`Contratado em ${year}`, brl(yearRevenue), `${yearList.length} eventos`], ['Recebido', brl(receivedTotal)], ['A receber', brl(open.reduce((v, x) => v + x.i.value, 0)), `${overdue.length} parcelas vencidas`], [`Margem prevista ${year}`, brl(yearRevenue - yearCost), yearRevenue ? pct((yearRevenue - yearCost) / yearRevenue * 100) : '—']]} />
+    <section className={s.card}>
+      <div className={s.cardHead}><h2>Contratos por mês do evento ({year})</h2><span className={s.legend}><i className={s.lRev} />Contrato<i className={s.lCost} />Custos</span></div>
+      <div className={s.chart}>{months.map(m => <div key={m.key} title={`${m.label}: ${brl(m.revenue)} · custos ${brl(m.cost)}`} className={m.key === today.slice(0, 7) ? s.chartNow : ''}><span><i className={s.lRev} style={{ height: `${m.revenue / peak * 100}%` }}><u className={s.lCost} style={{ height: `${m.revenue ? m.cost / m.revenue * 100 : 0}%` }} /></i></span><small>{m.label}</small></div>)}</div>
+    </section>
+    <section className={s.card}>
+      <div className={s.cardHead}><h2>Parcelas a receber</h2></div>
+      <div className={s.tableWrap}><table className={s.table}>
+        <thead><tr><th>Evento</th><th>Parcela</th><th>Vencimento</th><th>Situação</th><th className={s.num}>Valor</th><th /></tr></thead>
+        <tbody>{open.slice(0, 40).map(({ e, i }) => <tr key={i.id} onClick={() => ctx.openEvent(e.id, 'Financeiro')}>
+          <td><span className={s.stackText}><b>{e.title}</b><small>{e.type} · {dateLabel(e.date)}</small></span></td><td>{i.label}</td><td>{dateLabel(i.due)}</td><td>{i.due < today ? <Pill tone={s.tRed}>Vencida</Pill> : <Pill tone={s.tGray}>A receber</Pill>}</td><td className={s.num}>{brl(i.value)}</td>
+          <td><button className={s.chip} onClick={x => { x.stopPropagation(); ctx.updateEvent(e.id, ev => ({ installments: ev.installments.map(y => y.id === i.id ? { ...y, paid: true } : y) }), `${i.label} de ${e.title} recebida.`); }}>Marcar recebida</button></td>
+        </tr>)}</tbody>
+      </table>{!open.length && <p className={s.empty}>Nenhuma parcela em aberto.</p>}</div>
+    </section>
+  </div>;
+}
+
+function ReportsView({ ctx }: { ctx: Ctx }) {
+  const { store, today } = ctx;
+  const [form, setForm] = useState(store.settings);
+  const done = store.events.filter(e => e.stage === 'Realizado' && e.date >= addDays(today, -365));
+  const byType = types.map(t => ({ t, list: done.filter(e => e.type === t) }));
+  const bySource = sources.map(src => ({ src, n: store.clients.filter(c => c.source === src).length }));
+  const maxType = Math.max(...byType.map(x => x.list.length), 1), maxSource = Math.max(...bySource.map(x => x.n), 1);
+  return <div className={s.page}>
+    <PageHead title="Relatórios" subtitle="Últimos 12 meses, exportações e configurações." />
+    <Stats items={[['Eventos realizados (12 meses)', done.length], ['Ticket médio', brl(done.reduce((v, e) => v + e.value, 0) / Math.max(1, done.length))], ['Convidados atendidos', done.reduce((v, e) => v + e.expected, 0).toLocaleString('pt-BR')], ['Margem média', pct(done.reduce((v, e) => v + (e.value - costs(e)) / e.value, 0) / Math.max(1, done.length) * 100)]]} />
+    <div className={s.twoCol}>
+      <section className={s.card}><div className={s.cardHead}><h2>Eventos por tipo</h2></div><ul className={s.hbars}>{byType.map(({ t, list }) => <li key={t}><span>{t}</span><span className={s.meter}><i style={{ width: `${list.length / maxType * 100}%` }} /></span><b>{list.length}</b></li>)}</ul></section>
+      <section className={s.card}><div className={s.cardHead}><h2>Origem dos clientes</h2></div><ul className={s.hbars}>{bySource.map(({ src, n }) => <li key={src}><span>{src}</span><span className={s.meter}><i style={{ width: `${n / maxSource * 100}%` }} /></span><b>{n}</b></li>)}</ul></section>
+    </div>
+    <section className={s.card}><div className={s.cardHead}><h2>Exportações e dados</h2></div><div className={s.exportList}>
+      <button className={s.secondary} onClick={() => download('velia-eventos.csv', csv([['Código', 'Tipo', 'Evento', 'Data', 'Local', 'Convidados', 'Etapa', 'Valor', 'Recebido', 'Custos'], ...store.events.map(e => [e.code, e.type, e.title, dateLabel(e.date), e.venue, e.expected, e.stage, e.value, received(e), costs(e)])]), 'text/csv')}><Download size={16} />Eventos (CSV)</button>
+      <button className={s.secondary} onClick={() => download('velia-backup.json', JSON.stringify(store, null, 2), 'application/json')}><Download size={16} />Backup completo (JSON)</button>
+      <button className={s.secondary} onClick={() => { if (confirm('Restaurar os dados de exemplo? As alterações feitas neste navegador serão perdidas.')) ctx.set(() => makeSeed(), 'Dados de exemplo restaurados.'); }}><RotateCcw size={16} />Restaurar dados de exemplo</button>
+    </div></section>
+    <section className={s.card}><div className={s.cardHead}><h2>Configurações</h2></div>
+      <form className={s.form} onSubmit={e => { e.preventDefault(); ctx.set(() => ({ settings: form }), 'Configurações salvas.'); }}>
+        <label className={s.field}><span>Nome da empresa</span><input required value={form.company} onChange={e => setForm({ ...form, company: e.target.value })} /></label>
+        <label className={s.field}><span>Responsável</span><input required value={form.owner} onChange={e => setForm({ ...form, owner: e.target.value })} /></label>
+        <div className={s.wide}><button className={s.primary} type="submit">Salvar</button></div>
+      </form>
+    </section>
+  </div>;
+}
+
+function Shell({ title, onClose, children, wide = false }: { title: string; onClose: () => void; children: ReactNode; wide?: boolean }) {
+  return <Dialog.Root open onOpenChange={v => !v && onClose()}><Dialog.Portal><Dialog.Overlay className={s.overlay} />
+    <Dialog.Content className={`${s.modal} ${serif.variable} ${wide ? s.modalWide : ''}`} aria-describedby={undefined}>
+      <header className={s.modalHead}><Dialog.Title>{title}</Dialog.Title><Dialog.Close className={s.iconBtn} aria-label="Fechar"><X size={18} /></Dialog.Close></header>
+      {children}
+    </Dialog.Content>
+  </Dialog.Portal></Dialog.Root>;
+}
+
+function EventForm({ ctx, id, preset, onClose }: { ctx: Ctx; id?: string; preset?: Partial<Event>; onClose: () => void }) {
+  const { store, today } = ctx;
+  const editing = id ? store.events.find(e => e.id === id) : undefined;
+  const [f, setF] = useState(() => ({ type: (editing?.type ?? preset?.type ?? 'Casamento') as EventType, title: editing?.title ?? '', clientId: editing?.clientId ?? '', newClient: '', phone: '', date: editing?.date ?? addDays(today, 180), time: editing?.time ?? '17:00', venue: editing?.venue ?? '', city: editing?.city ?? '', expected: String(editing?.expected ?? 150), value: String(editing?.value ?? ''), stage: (editing?.stage ?? 'Orçamento') as Stage, notes: editing?.notes ?? '' }));
+  function submit(e: FormEvent) {
+    e.preventDefault();
+    let clientId = f.clientId;
+    const newClient: Client | null = !clientId ? { id: uid(), name: f.newClient.trim() || f.title.trim(), kind: f.type === 'Casamento' ? 'Casal' : f.type === 'Corporativo' ? 'Empresa' : 'Pessoa', email: '', phone: f.phone, source: 'Site', createdAt: today } : null;
+    if (newClient) clientId = newClient.id;
+    const data = { type: f.type, title: f.title.trim(), clientId, date: f.date, time: f.time, venue: f.venue, city: f.city, expected: num(f.expected), value: num(f.value), stage: f.stage, notes: f.notes };
+    if (editing) ctx.set(st => ({ events: st.events.map(x => x.id === editing.id ? { ...x, ...data } : x), clients: newClient ? [...st.clients, newClient] : st.clients }), 'Evento atualizado.');
+    else ctx.set(st => ({ next: st.next + 1, clients: newClient ? [...st.clients, newClient] : st.clients, events: [...st.events, { id: uid(), code: `VL-${300 + st.next}`, cover: f.type === 'Casamento' ? 'arch' : '', tasks: [], bookings: [], installments: [], guests: [], galleryDelivered: false, createdAt: today, ...data }] }), `${f.type} ${data.title} criado em ${f.stage}.`);
+    onClose();
+  }
+  return <Shell title={editing ? 'Editar evento' : 'Novo evento'} onClose={onClose} wide>
+    <form className={s.form} onSubmit={submit}>
+      <label className={s.field}><span>Tipo</span><select value={f.type} onChange={e => setF({ ...f, type: e.target.value as EventType })}>{types.map(t => <option key={t}>{t}</option>)}</select></label>
+      <label className={s.field}><span>Nome do evento</span><input required value={f.title} onChange={e => setF({ ...f, title: e.target.value })} placeholder={f.type === 'Casamento' ? 'Ex.: Ana & Pedro' : f.type === 'Corporativo' ? 'Ex.: Convenção anual' : 'Ex.: 15 anos da Laura'} /></label>
+      <label className={s.field}><span>Cliente</span><select value={f.clientId} onChange={e => setF({ ...f, clientId: e.target.value })}><option value="">+ Novo cliente</option>{[...store.clients].sort((a, b) => a.name.localeCompare(b.name)).map(c => <option key={c.id} value={c.id}>{c.name}</option>)}</select></label>
+      {!f.clientId ? <label className={s.field}><span>Telefone do novo cliente</span><input value={f.phone} onChange={e => setF({ ...f, phone: e.target.value })} /></label> : <span />}
+      <label className={s.field}><span>Data</span><input type="date" required value={f.date} onChange={e => setF({ ...f, date: e.target.value })} /></label>
+      <label className={s.field}><span>Horário</span><input type="time" required value={f.time} onChange={e => setF({ ...f, time: e.target.value })} /></label>
+      <label className={s.field}><span>Local</span><input value={f.venue} onChange={e => setF({ ...f, venue: e.target.value })} /></label>
+      <label className={s.field}><span>Cidade</span><input value={f.city} onChange={e => setF({ ...f, city: e.target.value })} /></label>
+      <label className={s.field}><span>Convidados esperados</span><input inputMode="numeric" value={f.expected} onChange={e => setF({ ...f, expected: e.target.value.replace(/\D/g, '') })} /></label>
+      <label className={s.field}><span>Valor do contrato (R$)</span><input inputMode="decimal" required value={f.value} onChange={e => setF({ ...f, value: e.target.value.replace(/[^\d,.]/g, '') })} /></label>
+      <label className={s.field}><span>Etapa</span><select value={f.stage} onChange={e => setF({ ...f, stage: e.target.value as Stage })}>{[...stages, 'Cancelado'].map(x => <option key={x}>{x}</option>)}</select></label>
+      <label className={`${s.field} ${s.wide}`}><span>Observações</span><textarea rows={2} value={f.notes} onChange={e => setF({ ...f, notes: e.target.value })} /></label>
+      <footer className={s.modalFoot}><Dialog.Close className={s.secondary} type="button">Cancelar</Dialog.Close><button className={s.primary} type="submit">{editing ? 'Salvar alterações' : 'Criar evento'}</button></footer>
+    </form>
+  </Shell>;
+}
+
+function ClientForm({ ctx, id, onClose }: { ctx: Ctx; id?: string; onClose: () => void }) {
+  const c = id ? ctx.store.clients.find(x => x.id === id) : undefined;
+  const [f, setF] = useState({ name: c?.name ?? '', kind: c?.kind ?? 'Casal' as Client['kind'], email: c?.email ?? '', phone: c?.phone ?? '', source: c?.source ?? sources[0] });
+  return <Shell title={c ? 'Editar cliente' : 'Novo cliente'} onClose={onClose}>
+    <form className={s.form} onSubmit={e => { e.preventDefault(); if (c) ctx.set(st => ({ clients: st.clients.map(x => x.id === c.id ? { ...x, ...f } : x) }), 'Cliente atualizado.'); else ctx.set(st => ({ clients: [...st.clients, { id: uid(), createdAt: ctx.today, ...f }] }), `${f.name} cadastrado.`); onClose(); }}>
+      <label className={`${s.field} ${s.wide}`}><span>Nome</span><input required value={f.name} onChange={e => setF({ ...f, name: e.target.value })} placeholder="Ex.: Ana & Pedro" /></label>
+      <label className={s.field}><span>Tipo</span><select value={f.kind} onChange={e => setF({ ...f, kind: e.target.value as Client['kind'] })}><option>Casal</option><option>Pessoa</option><option>Empresa</option></select></label>
+      <label className={s.field}><span>Origem</span><select value={f.source} onChange={e => setF({ ...f, source: e.target.value })}>{sources.map(x => <option key={x}>{x}</option>)}</select></label>
+      <label className={s.field}><span>E-mail</span><input type="email" value={f.email} onChange={e => setF({ ...f, email: e.target.value })} /></label>
+      <label className={s.field}><span>Telefone</span><input value={f.phone} onChange={e => setF({ ...f, phone: e.target.value })} /></label>
+      <footer className={s.modalFoot}><Dialog.Close className={s.secondary} type="button">Cancelar</Dialog.Close><button className={s.primary} type="submit">Salvar</button></footer>
+    </form>
+  </Shell>;
+}
+
+function SupplierForm({ ctx, id, onClose }: { ctx: Ctx; id?: string; onClose: () => void }) {
+  const x = id ? ctx.store.suppliers.find(y => y.id === id) : undefined;
+  const [f, setF] = useState({ name: x?.name ?? '', category: x?.category ?? categories[0], contact: x?.contact ?? '', phone: x?.phone ?? '', rating: String(x?.rating ?? 5) });
+  return <Shell title={x ? 'Editar fornecedor' : 'Novo fornecedor'} onClose={onClose}>
+    <form className={s.form} onSubmit={e => { e.preventDefault(); const data = { ...f, rating: Number(f.rating) }; if (x) ctx.set(st => ({ suppliers: st.suppliers.map(y => y.id === x.id ? { ...y, ...data } : y) }), 'Fornecedor atualizado.'); else ctx.set(st => ({ suppliers: [...st.suppliers, { id: uid(), ...data }] }), `${f.name} cadastrado.`); onClose(); }}>
+      <label className={`${s.field} ${s.wide}`}><span>Empresa</span><input required value={f.name} onChange={e => setF({ ...f, name: e.target.value })} /></label>
+      <label className={s.field}><span>Categoria</span><select value={f.category} onChange={e => setF({ ...f, category: e.target.value })}>{categories.map(c => <option key={c}>{c}</option>)}</select></label>
+      <label className={s.field}><span>Avaliação</span><select value={f.rating} onChange={e => setF({ ...f, rating: e.target.value })}>{[5, 4, 3, 2, 1].map(r => <option key={r} value={r}>{'★'.repeat(r)}</option>)}</select></label>
+      <label className={s.field}><span>Contato</span><input value={f.contact} onChange={e => setF({ ...f, contact: e.target.value })} /></label>
+      <label className={s.field}><span>Telefone</span><input value={f.phone} onChange={e => setF({ ...f, phone: e.target.value })} /></label>
+      <footer className={s.modalFoot}><Dialog.Close className={s.secondary} type="button">Cancelar</Dialog.Close><button className={s.primary} type="submit">Salvar</button></footer>
+    </form>
+  </Shell>;
+}
+
+function EventDrawer({ ctx, e, tab, onTab, onClose }: { ctx: Ctx; e: Event; tab: Tab; onTab: (t: Tab) => void; onClose: () => void }) {
+  const { store, today } = ctx;
+  const client = ctx.client(e.clientId);
+  const update = (fn: (x: Event) => Partial<Event>, message?: string) => ctx.updateEvent(e.id, fn, message);
+  const [task, setTask] = useState({ phase: 'Planejamento' as Phase, title: '', due: addDays(today, 7) });
+  const [booking, setBooking] = useState({ supplierId: store.suppliers[0]?.id ?? '', value: '' });
+  const [guest, setGuest] = useState({ name: '', group: 'Amigos' });
+  const [inst, setInst] = useState({ label: '', due: addDays(today, 30), value: '' });
+  const [rsvp, setRsvp] = useState<Rsvp | 'Todos'>('Todos');
+  const confirmed = e.guests.filter(g => g.rsvp === 'Confirmado').length, pending = e.guests.filter(g => g.rsvp === 'Pendente').length;
+  const margin = e.value - costs(e);
+  const daysTo = Math.round((new Date(`${e.date}T12:00`).getTime() - new Date(`${today}T12:00`).getTime()) / 864e5);
+  return <Dialog.Root open onOpenChange={v => !v && onClose()}><Dialog.Portal><Dialog.Overlay className={s.overlay} />
+    <Dialog.Content className={`${s.drawer} ${serif.variable}`} aria-describedby={undefined}>
+      <div className={s.drawerCover}><Cover e={e} /><Dialog.Close className={`${s.iconBtn} ${s.drawerClose}`} aria-label="Fechar"><X size={18} /></Dialog.Close>
+        <div><small>{e.type} · {e.code}</small><Dialog.Title className={s.serifTitle}>{e.title}</Dialog.Title><p>{longDate(e.date)} · {e.time} · {e.venue}</p></div></div>
+      <div className={s.drawerMeta}><Pill tone={stageTone[e.stage]}>{e.stage}</Pill><span>{daysTo > 0 ? `faltam ${daysTo} dias` : daysTo === 0 ? 'é hoje!' : `realizado há ${-daysTo} dias`}</span><span>{client?.name}{client?.phone ? ` · ${client.phone}` : ''}</span></div>
+      <nav className={s.dTabs} role="tablist">{(['Resumo', 'Cronograma', 'Fornecedores', 'Convidados', 'Financeiro', 'Fotos'] as Tab[]).map(t => <button key={t} role="tab" aria-selected={tab === t} className={tab === t ? s.dTabOn : ''} onClick={() => onTab(t)}>{t}</button>)}</nav>
+      <div className={s.drawerBody}>
+        {tab === 'Resumo' && <div className={s.stack}>
+          <div className={s.factGrid}><span>Convidados<b>{e.guests.length ? `${confirmed}/${e.guests.length}` : e.expected}</b></span><span>Contrato<b>{brl(e.value)}</b></span><span>Recebido<b>{brl(received(e))}</b></span><span>Fornecedores<b>{brl(costs(e))}</b></span><span>Margem<b>{brl(margin)}</b></span><span>Tarefas<b>{e.tasks.filter(t => t.done).length}/{e.tasks.length}</b></span></div>
+          <ul className={s.phaseRows}>{[...phases, 'Dia do evento' as const].map(p => { const st = phaseStatus(e, p, today), Icon = statusIcon[st]; return <li key={p}><Icon size={18} className={st === 'Concluído' ? s.stDone : st === 'Em andamento' ? s.stDoing : s.stTodo} fill={st === 'Concluído' ? 'currentColor' : 'none'} /><b>{p}</b><span>{st}</span></li>; })}</ul>
+          <label className={s.field}><span>Etapa comercial</span><select value={e.stage} onChange={x => update(() => ({ stage: x.target.value as Stage }), `Etapa: ${x.target.value}.`)}>{[...stages, 'Cancelado'].map(o => <option key={o}>{o}</option>)}</select></label>
+          {e.notes && <p className={s.notes}>{e.notes}</p>}
+          <button className={s.secondary} onClick={() => ctx.setModal({ kind: 'event', id: e.id })}>Editar dados do evento</button>
+        </div>}
+        {tab === 'Cronograma' && <div className={s.stack}>
+          {phases.map(p => { const list = e.tasks.filter(t => t.phase === p).sort((a, b) => a.due.localeCompare(b.due)); return <section key={p} className={s.block}><h3>{p} <small>{list.filter(t => t.done).length}/{list.length}</small></h3>
+            <ul className={s.taskList}>{list.map(t => <li key={t.id} className={t.done ? s.taskDone : ''}><button className={s.checkBox} onClick={() => update(x => ({ tasks: x.tasks.map(y => y.id === t.id ? { ...y, done: !y.done } : y) }))} role="checkbox" aria-checked={t.done} aria-label={t.title}>{t.done && <Check size={13} strokeWidth={3} />}</button><span>{t.title}<small className={!t.done && t.due < today ? s.lateText : ''}>{dateLabel(t.due)}{!t.done && t.due < today ? ' · atrasada' : ''}</small></span><button className={s.iconBtn} onClick={() => update(x => ({ tasks: x.tasks.filter(y => y.id !== t.id) }))} aria-label={`Remover ${t.title}`}><Trash2 size={15} /></button></li>)}{!list.length && <li className={s.muted}>Nenhuma tarefa.</li>}</ul></section>; })}
+          <form className={s.inlineForm} onSubmit={x => { x.preventDefault(); if (!task.title.trim()) return; update(ev => ({ tasks: [...ev.tasks, { id: uid(), phase: task.phase, title: task.title.trim(), due: task.due, done: false }] }), 'Tarefa adicionada.'); setTask({ ...task, title: '' }); }}>
+            <select value={task.phase} onChange={x => setTask({ ...task, phase: x.target.value as Phase })} aria-label="Etapa">{phases.map(p => <option key={p}>{p}</option>)}</select><input value={task.title} onChange={x => setTask({ ...task, title: x.target.value })} placeholder="Nova tarefa" aria-label="Nova tarefa" /><input type="date" value={task.due} onChange={x => setTask({ ...task, due: x.target.value })} aria-label="Prazo" /><button className={s.secondary} type="submit"><Plus size={15} /></button>
+          </form>
+        </div>}
+        {tab === 'Fornecedores' && <div className={s.stack}>
+          <ul className={s.rowsList}>{e.bookings.map(b => { const x = ctx.supplier(b.supplierId); return <li key={b.id}><span className={s.stackText}><b>{x?.name ?? 'Fornecedor removido'}</b><small>{b.service}</small></span><strong>{brl(b.value)}</strong><button className={`${s.chip} ${b.paid ? s.chipOn : ''}`} onClick={() => update(ev => ({ bookings: ev.bookings.map(y => y.id === b.id ? { ...y, paid: !y.paid } : y) }))}>{b.paid ? 'Pago' : 'A pagar'}</button><button className={s.iconBtn} onClick={() => update(ev => ({ bookings: ev.bookings.filter(y => y.id !== b.id) }))} aria-label="Remover"><Trash2 size={15} /></button></li>; })}{!e.bookings.length && <li className={s.muted}>Nenhum fornecedor contratado.</li>}</ul>
+          <form className={s.inlineForm} onSubmit={x => { x.preventDefault(); const sup = ctx.supplier(booking.supplierId); if (!sup || !num(booking.value)) return; update(ev => ({ bookings: [...ev.bookings, { id: uid(), supplierId: sup.id, service: sup.category, value: num(booking.value), paid: false }] }), `${sup.name} contratado.`); setBooking({ ...booking, value: '' }); }}>
+            <select value={booking.supplierId} onChange={x => setBooking({ ...booking, supplierId: x.target.value })} aria-label="Fornecedor">{store.suppliers.map(x => <option key={x.id} value={x.id}>{x.name} · {x.category}</option>)}</select><input value={booking.value} onChange={x => setBooking({ ...booking, value: x.target.value.replace(/[^\d,.]/g, '') })} placeholder="Valor" inputMode="decimal" aria-label="Valor" /><button className={s.secondary} type="submit"><Plus size={15} />Contratar</button>
+          </form>
+        </div>}
+        {tab === 'Convidados' && <div className={s.stack}>
+          <div className={s.factGrid}><span>Convidados<b>{e.guests.length}</b></span><span>Confirmados<b>{confirmed}</b></span><span>Pendentes<b>{pending}</b></span></div>
+          <div className={s.segment}>{(['Todos', 'Confirmado', 'Pendente', 'Recusado'] as const).map(r => <button key={r} aria-pressed={rsvp === r} className={rsvp === r ? s.segOn : ''} onClick={() => setRsvp(r)}>{r}</button>)}</div>
+          <ul className={s.rowsList}>{e.guests.filter(g => rsvp === 'Todos' || g.rsvp === rsvp).slice(0, 120).map(g => <li key={g.id}><span className={s.stackText}><b>{g.name}</b><small>{g.group} · mesa {g.table}</small></span><select className={s.rsvp} value={g.rsvp} onChange={x => update(ev => ({ guests: ev.guests.map(y => y.id === g.id ? { ...y, rsvp: x.target.value as Rsvp } : y) }))} aria-label={`Presença de ${g.name}`}><option>Confirmado</option><option>Pendente</option><option>Recusado</option></select></li>)}{!e.guests.length && <li className={s.muted}>Lista de convidados ainda não cadastrada.</li>}</ul>
+          <form className={s.inlineForm} onSubmit={x => { x.preventDefault(); if (!guest.name.trim()) return; update(ev => ({ guests: [...ev.guests, { id: uid(), name: guest.name.trim(), group: guest.group, rsvp: 'Pendente', table: 1 + Math.floor(ev.guests.length / 10) }] }), 'Convidado adicionado.'); setGuest({ ...guest, name: '' }); }}>
+            <input value={guest.name} onChange={x => setGuest({ ...guest, name: x.target.value })} placeholder="Nome do convidado" aria-label="Nome do convidado" /><select value={guest.group} onChange={x => setGuest({ ...guest, group: x.target.value })} aria-label="Grupo">{['Família da noiva', 'Família do noivo', 'Amigos', 'Trabalho', 'Família'].map(g => <option key={g}>{g}</option>)}</select><button className={s.secondary} type="submit"><Plus size={15} /></button>
+          </form>
+        </div>}
+        {tab === 'Financeiro' && <div className={s.stack}>
+          <div className={s.factGrid}><span>Contrato<b>{brl(e.value)}</b></span><span>Recebido<b>{brl(received(e))}</b></span><span>A receber<b>{brl(e.value - received(e))}</b></span><span>Fornecedores<b>{brl(costs(e))}</b></span><span>Margem<b>{brl(margin)}</b></span><span>Margem %<b>{e.value ? pct(margin / e.value * 100) : '—'}</b></span></div>
+          <ul className={s.rowsList}>{e.installments.map(i => <li key={i.id}><span className={s.stackText}><b>{i.label}</b><small className={!i.paid && i.due < today ? s.lateText : ''}>{dateLabel(i.due)}{!i.paid && i.due < today ? ' · vencida' : ''}</small></span><strong>{brl(i.value)}</strong><button className={`${s.chip} ${i.paid ? s.chipOn : ''}`} onClick={() => update(ev => ({ installments: ev.installments.map(y => y.id === i.id ? { ...y, paid: !y.paid } : y) }), i.paid ? 'Parcela reaberta.' : 'Parcela recebida.')}>{i.paid ? 'Recebida' : 'Receber'}</button></li>)}{!e.installments.length && <li className={s.muted}>Nenhuma parcela lançada.</li>}</ul>
+          <form className={s.inlineForm} onSubmit={x => { x.preventDefault(); if (!inst.label.trim() || !num(inst.value)) return; update(ev => ({ installments: [...ev.installments, { id: uid(), label: inst.label.trim(), due: inst.due, value: num(inst.value), paid: false }] }), 'Parcela lançada.'); setInst({ ...inst, label: '', value: '' }); }}>
+            <input value={inst.label} onChange={x => setInst({ ...inst, label: x.target.value })} placeholder="Parcela" aria-label="Descrição da parcela" /><input type="date" value={inst.due} onChange={x => setInst({ ...inst, due: x.target.value })} aria-label="Vencimento" /><input value={inst.value} onChange={x => setInst({ ...inst, value: x.target.value.replace(/[^\d,.]/g, '') })} placeholder="Valor" inputMode="decimal" aria-label="Valor da parcela" /><button className={s.secondary} type="submit"><Plus size={15} /></button>
+          </form>
+        </div>}
+        {tab === 'Fotos' && <div className={s.stack}>
+          {e.stage === 'Realizado' ? <>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <div className={s.gallery}>{(e.cover ? ['arch', 'aisle', 'sunset', 'guests'] : []).map(c => <img key={c} src={`/eventos-media/${c}.webp`} alt={`Registro de ${e.title}`} loading="lazy" />)}{!e.cover && <p className={s.muted}>As fotos deste evento ainda não foram enviadas.</p>}</div>
+            <button className={`${s.secondary} ${e.galleryDelivered ? s.chipOn : ''}`} onClick={() => update(x => ({ galleryDelivered: !x.galleryDelivered }), e.galleryDelivered ? 'Galeria marcada como pendente.' : 'Galeria entregue ao cliente.')}><Check size={16} />{e.galleryDelivered ? 'Galeria entregue' : 'Marcar galeria como entregue'}</button>
+          </> : <p className={s.muted}>Fotos e vídeos ficam disponíveis depois do evento. A fotografia contratada é {e.bookings.filter(b => b.service === 'Fotografia e vídeo').map(b => ctx.supplier(b.supplierId)?.name).join(', ') || 'ainda não definida'}.</p>}
+        </div>}
+      </div>
+    </Dialog.Content>
+  </Dialog.Portal></Dialog.Root>;
 }

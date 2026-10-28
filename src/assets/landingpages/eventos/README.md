@@ -1,6 +1,6 @@
-# Lumière Eventos
+# Vélia Eventos
 
-Frontend demonstrativo para gestão de uma empresa de casamentos, baseado na referência fornecida pelo usuário.
+Frontend demonstrativo para uma empresa de casamentos e eventos, baseado na referência fornecida pelo usuário.
 
 ## Acesso
 
@@ -8,16 +8,20 @@ Execute o desenvolvimento normal do projeto e acesse `/eventos`. A página é p�
 
 ## Conteúdo
 
-- `EventsApp.tsx`: interface, navegação, cadastros, calendário, planejamento, pipeline e financeiro.
-- `EventsApp.module.css`: identidade visual isolada, com desktop como prioridade.
-- `data.ts`: tipos e dados iniciais.
-- `public/eventos-media`: fotografias extraídas da referência enviada pelo usuário, para aproximar a composição visual sem dependência de serviços externos.
+- `EventsApp.tsx`: interface, navegação, cadastros, gaveta do evento e páginas de dados.
+- `EventsApp.module.css`: identidade visual isolada (vidro creme e vidro escuro sobre a foto na visão geral; páginas claras nas demais abas).
+- `data.ts`: tipos, regras (etapas do evento, recebimentos, custos) e dados iniciais gerados a partir da data atual.
+- `Art.tsx`: logo e ilustrações dos módulos.
+- `fonts.ts`: fonte serifada dos títulos (Cormorant Garamond); o restante usa Geist.
+- `public/eventos-media`: foto da cerimônia enviada pelo usuário e recortes dela usados como capas de casamentos e galeria.
 - `src/app/eventos/page.tsx`: entrada no App Router.
 
-As alterações são persistidas no `localStorage` sob `lumiere-weddings-v1`. O menu do perfil permite exportar um backup JSON. Para restaurar a demonstração inicial, remova essa chave no armazenamento do navegador.
+As alterações são persistidas no `localStorage` sob `velia-eventos-v1`. Em Relatórios é possível exportar CSV e backup JSON, ou restaurar os dados de exemplo.
 
-## Interações
+## Abas
 
-Busca por casamento e fornecedor; filtros de etapas; cadastro e edição de casamentos, fornecedores, tarefas, compromissos e lançamentos; pipeline com arrastar e soltar e seletor de etapa; calendário navegável; checklist; anotações por casamento; exportação CSV do financeiro e proposta demonstrativa em texto; inventário e recados locais.
+- **Visão Geral**: foto de fundo, próximo casamento com o andamento de cada etapa, próximos eventos, módulos (planejamento, fornecedores, convidados, fotos e vídeos) com indicadores, tarefas da semana, recebimentos dos próximos 30 dias e funil comercial.
+- **Eventos**: lista, funil por etapa comercial e calendário mensal.
+- **Clientes**, **Fornecedores**, **Financeiro** e **Relatórios**: páginas informacionais, sem foto.
 
-Indicadores e gráficos usam os registros da demonstração e respeitam o mês selecionado. O cadastro do casamento contém valores comerciais previstos; os lançamentos financeiros são registros próprios e devem ser cadastrados separadamente. A aba de fornecedores do casamento apresenta o catálogo da empresa. Convidados têm previsão e anotações de mesas, sem RSVP ou cadastro individual. Documentos e mensagens são demonstrativos locais.
+Cada evento abre uma gaveta com resumo, cronograma de tarefas, fornecedores contratados, convidados com RSVP, parcelas e fotos.

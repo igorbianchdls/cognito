@@ -6,7 +6,7 @@ import { ArrowDown, ArrowRight, ArrowUpRight, Grid2X2, Search, X } from 'lucide-
 import s from './SystemsDirectory.module.css';
 
 const systems = [
-  { category: 'Casamentos e eventos', brand: 'Lumière', group: 'Serviços', href: '/eventos', image: '/eventos-media/hero.jpg', description: 'Do primeiro encontro com o casal à realização do grande dia.', features: ['Eventos', 'Fornecedores', 'Planejamento'], letter: 'L', tone: 'sand' },
+  { category: 'Casamentos e eventos', brand: 'Vélia', group: 'Serviços', href: '/eventos', image: '/eventos-media/hero.jpg', description: 'Casamentos e celebrações planejados do orçamento ao grande dia.', features: ['Eventos', 'Convidados', 'Fornecedores'], letter: 'V', tone: 'sand' },
   { category: 'Construtoras e reformas', brand: 'Átio', group: 'Casa e construção', href: '/obras', image: '/obras-media/hero.jpg', description: 'Obras, equipes e entregas acompanhadas em cada etapa.', features: ['Obras', 'Cronograma', 'Compras'], letter: 'A', tone: 'olive' },
   { category: 'Marcenaria e planejados', brand: 'Cerne', group: 'Casa e construção', href: '/marcenaria', image: '/marcenaria-media/hero.jpg', description: 'Do desenho aprovado ao último detalhe da montagem.', features: ['Projetos', 'Produção', 'Materiais'], letter: 'C', tone: 'wood' },
   { category: 'Assistência técnica', brand: 'Nexo', group: 'Serviços', href: '/assistencia', image: '/assistencia-media/hero.jpg', description: 'Cada aparelho, diagnóstico e reparo no lugar certo.', features: ['Ordens de serviço', 'Peças', 'Garantias'], letter: 'N', tone: 'stone' },
