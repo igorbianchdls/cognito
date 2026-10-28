@@ -10,12 +10,11 @@ export function saveBooking(db:Store,booking:Booking,c:Config):Store{
   if(booking.status==='Concluído')throw new Error('Conclua o atendimento pela agenda para registrar o fechamento.');
   if(!Number.isFinite(booking.amount)||booking.amount<0||!Number.isFinite(booking.commission)||booking.commission<0||booking.commission>100)throw new Error('Informe preço e comissão válidos.');
   if(c.kind!=='realty'&&!db.services.some(s=>s.id===booking.serviceId))throw new Error('Selecione um serviço cadastrado.');
-  if(c.kind==='pet'&&!db.pets.some(p=>p.id===booking.petId&&p.ownerId===booking.clientId))throw new Error('O pet selecionado precisa pertencer ao tutor informado.');
   if(c.kind==='realty'&&!db.properties.some(p=>p.id===booking.propertyId))throw new Error('Selecione o imóvel da visita.');
   if(c.kind==='cleaning'&&booking.contractId&&!db.contracts.some(p=>p.id===booking.contractId&&p.status==='Ativo'&&p.clientId===booking.clientId))throw new Error('O contrato precisa estar ativo e pertencer ao cliente.');
   if(c.kind==='cleaning'&&booking.contractId){const contract=db.contracts.find(p=>p.id===booking.contractId)!;if(booking.date<contract.start||booking.date>contract.end)throw new Error('A execução precisa estar dentro da vigência do contrato.');}
   if(booking.status!=='Cancelado'){
-    const conflict=db.bookings.find(b=>b.id!==booking.id&&b.date===booking.date&&!['Cancelado','Concluído'].includes(b.status)&&overlap(b.time,b.end,booking.time,booking.end)&&(b.staffIds.some(id=>booking.staffIds.includes(id))||(c.kind==='pet'&&b.petId===booking.petId)||(c.kind==='salon'&&b.clientId===booking.clientId)||(c.kind==='realty'&&b.propertyId===booking.propertyId)));
+    const conflict=db.bookings.find(b=>b.id!==booking.id&&b.date===booking.date&&!['Cancelado','Concluído'].includes(b.status)&&overlap(b.time,b.end,booking.time,booking.end)&&(b.staffIds.some(id=>booking.staffIds.includes(id))||(c.kind==='salon'&&b.clientId===booking.clientId)||(c.kind==='realty'&&b.propertyId===booking.propertyId)));
     if(conflict)throw new Error('Há conflito de horário para o profissional, cliente ou recurso selecionado.');
   }
   const tasks=c.kind==='cleaning'&&!previous?['Conferir ambiente e materiais','Executar limpeza contratada','Revisar superfícies e banheiros','Concluir vistoria com o cliente'].map((title,i)=>({id:`${booking.id}-task-${i}`,bookingId:booking.id,title,done:false})):[];
@@ -35,12 +34,6 @@ export function payCommission(db:Store,id:string):Store{
   const amount=Math.round(b.amount*b.commission)/100;
   if(amount<=0)throw new Error('Não há comissão prevista neste atendimento.');
   return {...db,entries:[...db.entries,{id:entryId,title:`Repasse · ${db.staff.find(p=>p.id===b.staffIds[0])?.name}`,type:'Despesa',amount,date:b.date,paid:true,category:'Comissões',reference:id}]};
-}
-export function sellProduct(db:Store,input:{id:string;stockId:string;clientId:string;quantity:number;date:string}):Store{
-  if(db.entries.some(e=>e.id===input.id))return db;const p=db.stock.find(p=>p.id===input.stockId);
-  if(!p||!Number.isInteger(input.quantity)||input.quantity<1||input.quantity>p.quantity)throw new Error('Verifique a quantidade disponível do produto.');
-  if(!db.clients.some(p=>p.id===input.clientId))throw new Error('Selecione o tutor.');
-  return {...db,stock:db.stock.map(v=>v.id===p.id?{...v,quantity:v.quantity-input.quantity}:v),entries:[...db.entries,{id:input.id,title:`Venda · ${p.name} · ${db.clients.find(p=>p.id===input.clientId)?.name}`,type:'Receita',amount:p.price*input.quantity,date:input.date,paid:true,category:'Produtos',reference:p.id}]};
 }
 export function consumeStock(db:Store,input:{id:string;bookingId:string;stockId:string;quantity:number}):Store{
   if(db.consumptions.some(c=>c.id===input.id))return db;const p=db.stock.find(p=>p.id===input.stockId),b=db.bookings.find(b=>b.id===input.bookingId);

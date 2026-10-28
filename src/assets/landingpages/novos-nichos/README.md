@@ -1,10 +1,8 @@
-# Aura, Pata, Habita, Forma e Clara
+# Aura, Habita, Forma e Clara
 
-Frontends demonstrativos em `/salao`, `/petshop`, `/imobiliaria`, `/cursos` e `/limpeza`, reunidos em `/sistemas`. Mantêm Geist nos textos e Georgia nos títulos. Cada sistema tem dados próprios no armazenamento local, backup JSON e acesso de volta ao diretório.
+Frontends demonstrativos em `/salao`, `/imobiliaria`, `/cursos` e `/limpeza`, reunidos em `/sistemas`. O pet shop (`/petshop`, Pata) tem agora um app próprio em `src/assets/landingpages/petshop`. Mantêm Geist nos textos e Georgia nos títulos. Cada sistema tem dados próprios no armazenamento local, backup JSON e acesso de volta ao diretório.
 
 Aura: clientes, serviços, agenda com validação de conflito, profissionais, comissões sobre atendimentos concluídos, repasse e financeiro.
-
-Pata: tutores, pets, observações do tutor, serviços de banho e tosa, agenda com validação de profissional/pet, estoque e venda de produtos com baixa de quantidade.
 
 Habita: imóveis, proprietários, corretores, visitas, oportunidades, fechamento de venda/locação e geração da comissão a receber. O valor do imóvel não entra como receita da imobiliária. Fichas de imóveis exportáveis em TXT.
 
@@ -16,6 +14,6 @@ Não há backend, autenticação individual, integração fiscal, mensagens exte
 
 ## Imagens
 
-Fotografias de apoio criadas com a ferramenta de geração de imagens integrada. Arquivos finais: `public/salao-media`, `public/petshop-media`, `public/imobiliaria-media`, `public/cursos-media`, `public/limpeza-media`.
+Fotografias de apoio criadas com a ferramenta de geração de imagens integrada. Arquivos finais: `public/salao-media`, `public/imobiliaria-media`, `public/cursos-media`, `public/limpeza-media`.
 
 Prompt de geração: fotografia editorial realista, luz natural quente e paleta marfim/madeira; grade 2x3 sem texto, com salão de beleza, banho e tosa de um golden retriever, apartamento contemporâneo, sala de cursos para adultos, equipe de limpeza em escritório e retrato de uma gerente brasileira. Cada cena foi extraída como imagem local. A foto secundária de imóvel reaproveita o ativo de arquitetura da demonstração Átio.
