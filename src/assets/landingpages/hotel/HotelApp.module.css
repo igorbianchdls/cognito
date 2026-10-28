@@ -69,7 +69,8 @@
 /* Overview hero */
 .hero { min-height: calc(100vh - 92px); display: grid; grid-template-columns: minmax(0, 1fr) minmax(320px, 430px); grid-template-rows: 1fr auto; gap: 28px 40px; padding: 30px clamp(16px, 3.4vw, 56px) 28px; }
 .heroText { align-self: center; padding: 40px 0 40px clamp(0px, 2.6vw, 48px); max-width: 640px; }
-.welcome { color: var(--sky); font-size: 19px; margin-bottom: 14px; text-shadow: 0 1px 12px rgb(0 0 0 / .3); }
+.welcome { color: var(--sky); font-size: 24px; font-weight: 500; margin-bottom: 16px; text-shadow: 0 1px 12px rgb(0 0 0 / .3); }
+.welcome b { color: #fff; font-weight: 600; }
 .heroText h1 { font-size: clamp(42px, 4.6vw, 66px); font-weight: 600; line-height: 1.04; letter-spacing: -1.8px; text-shadow: 0 2px 24px rgb(0 0 0 / .35); }
 .heroText h1 span { color: var(--sky); }
 .lead { margin-top: 22px; font-size: 18px; line-height: 1.5; color: #eaf3fb; text-shadow: 0 1px 12px rgb(0 0 0 / .4); }
@@ -349,7 +350,7 @@
   .iconCircle { width: 44px; height: 44px; }
   .tabs button { height: 38px; padding: 0 14px; font-size: 13.5px; }
   .hero { padding: 16px; gap: 16px; }
-  .welcome { font-size: 16px; }
+  .welcome { font-size: 19px; }
   .lead { font-size: 15px; }
   .lead br { display: none; }
   .cta { height: 52px; font-size: 15px; }
