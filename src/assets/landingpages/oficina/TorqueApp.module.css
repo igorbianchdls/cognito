@@ -11,6 +11,8 @@
 :where(.app, .drawer, .modal) :where(button) { border: 0; background: none; padding: 0; cursor: pointer; }
 :where(.app) :where(button:disabled) { cursor: default; }
 .app :focus-visible, .drawer :focus-visible, .modal :focus-visible { outline: 2px solid var(--orange); outline-offset: 2px; }
+/* globals.css pins every .lucide icon to 18px; inside this app icons keep the size set in code. */
+.app :global(.lucide), .drawer :global(.lucide), .modal :global(.lucide) { width: auto !important; height: auto !important; flex-shrink: 0; }
 :where(.app, .drawer, .modal) :where(h1, h2, p) { margin: 0; }
 .loading { flex: 1; display: grid; place-items: center; }
 
