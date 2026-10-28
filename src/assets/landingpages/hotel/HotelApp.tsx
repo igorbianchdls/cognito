@@ -180,14 +180,7 @@ function Overview({ ctx }: { ctx: Ctx }) {
         </div>}
         <dl><div><dt>Ocupação hoje</dt><dd>{pct(occupancy(store, today))}</dd></div><div><dt>Check-ins</dt><dd>{arrivals.length}</dd></div><div><dt>Check-outs</dt><dd>{departures.length}</dd></div></dl>
       </aside>
-      <section className={`${s.glass} ${s.types}`} aria-label="Tipos de quartos">
-        <header><h2>Tipos de quartos</h2><button onClick={() => ctx.go('Quartos')}>Ver todos <ArrowRight size={16} /></button></header>
-        <div className={s.typeGrid}>{store.types.map(t => <button key={t.id} className={s.typeCard} onClick={() => ctx.setModal({ kind: 'type', id: t.id })}>
-          <RoomPhoto typeId={t.id} name={t.name} />
-          <span className={s.typeInfo}><b>{t.name}</b><small>A partir de {brl(t.price, 0)}</small></span>
-          <i className={s.arrow}><ArrowRight size={20} /></i>
-        </button>)}</div>
-      </section>
+      <ManagementKpis ctx={ctx} />
     </section>
 
     <section className={s.operation} aria-label="Operação de hoje">
@@ -209,6 +202,47 @@ function Overview({ ctx }: { ctx: Ctx }) {
       </div>
     </section>
   </>;
+}
+
+/** Room and extras revenue, room-nights sold and available room-nights between two days (inclusive). */
+function period(store: Store, from: string, to: string) {
+  let rooms = 0, extras = 0, sold = 0, days = 0;
+  for (let d = from; d <= to; d = addDays(d, 1)) {
+    rooms += nightRevenue(store, d);
+    sold += new Set(store.reservations.filter(r => covers(r, d)).map(r => r.roomId)).size;
+    extras += store.reservations.filter(active).flatMap(r => r.extras).filter(e => e.date === d).reduce((v, e) => v + e.value, 0);
+    days++;
+  }
+  return { revenue: rooms + extras, rooms, sold, available: store.rooms.length * days };
+}
+
+function ManagementKpis({ ctx }: { ctx: Ctx }) {
+  const { store, today } = ctx;
+  const monthStart = `${today.slice(0, 8)}01`;
+  const prevStart = addDays(monthStart, -1).slice(0, 8) + '01', prevEnd = (() => { const d = addDays(prevStart, Number(today.slice(8)) - 1); return d.slice(0, 7) === prevStart.slice(0, 7) ? d : addDays(monthStart, -1); })();
+  const now = period(store, monthStart, today), before = period(store, prevStart, prevEnd);
+  const adr = now.sold ? now.rooms / now.sold : 0, adrBefore = before.sold ? before.rooms / before.sold : 0;
+  const revpar = now.rooms / now.available, revparBefore = before.rooms / Math.max(1, before.available);
+  const change = (a: number, b: number) => b ? (a - b) / b * 100 : 0;
+  const last30 = Array.from({ length: 30 }, (_, i) => addDays(today, i - 29)).map(d => nightRevenue(store, d));
+  const next7 = Array.from({ length: 7 }, (_, i) => addDays(today, i + 1)).map(d => ({ d, o: occupancy(store, d) }));
+  const avg7 = next7.reduce((v, x) => v + x.o, 0) / 7, weak = next7.filter(x => x.o < 60);
+  const kpis: { label: string; value: string; delta?: number; note?: ReactNode; chart: number[]; max?: number; go: View; hint: string }[] = [
+    { label: 'Receita do mês', value: brl(now.revenue, 0), delta: change(now.revenue, before.revenue), chart: last30, go: 'Financeiro', hint: 'Diárias e extras até hoje' },
+    { label: 'Diária média (ADR)', value: brl(adr, 0), delta: change(adr, adrBefore), chart: last30.map((v, i) => v / Math.max(1, new Set(ctx.store.reservations.filter(r => covers(r, addDays(today, i - 29))).map(r => r.roomId)).size)), go: 'Financeiro', hint: 'Receita por quarto vendido' },
+    { label: 'RevPAR', value: brl(revpar, 0), delta: change(revpar, revparBefore), chart: last30.map(v => v / store.rooms.length), go: 'Financeiro', hint: 'Receita por quarto disponível' },
+    { label: 'Ocupação 7 dias', value: pct(avg7), note: weak.length ? <span className={s.kpiWarn}>{weak.length} {weak.length === 1 ? 'noite' : 'noites'} abaixo de 60%</span> : <span className={s.kpiOk}>Todas as noites acima de 60%</span>, chart: next7.map(x => x.o), max: 100, go: 'Reservas', hint: 'Média prevista das próximas 7 noites' },
+  ];
+  return <section className={`${s.glass} ${s.types}`} aria-label="Indicadores de gestão">
+    <header><h2>Indicadores do mês</h2><button onClick={() => ctx.go('Financeiro')}>Ver financeiro <ArrowRight size={16} /></button></header>
+    <div className={s.typeGrid}>{kpis.map(k => { const peak = k.max ?? Math.max(...k.chart, 1); return <button key={k.label} className={s.kpiCard} onClick={() => ctx.go(k.go)} title={k.hint}>
+      <span className={s.kpiLabel}>{k.label}</span>
+      <b className={s.kpiValue}>{k.value}</b>
+      {k.delta !== undefined ? <span className={k.delta >= 0 ? s.kpiUp : s.kpiDown}>{k.delta >= 0 ? '↑' : '↓'} {Math.abs(k.delta).toLocaleString('pt-BR', { maximumFractionDigits: 1 })}% <small>vs. mesmo período do mês passado</small></span> : k.note}
+      <span className={s.spark} aria-hidden="true">{k.chart.map((v, i) => <i key={i} style={{ height: `${Math.max(6, v / peak * 100)}%` }} />)}</span>
+      <i className={s.arrow}><ArrowRight size={20} /></i>
+    </button>; })}</div>
+  </section>;
 }
 
 function PageHead({ title, subtitle, children }: { title: string; subtitle: string; children?: ReactNode }) {
