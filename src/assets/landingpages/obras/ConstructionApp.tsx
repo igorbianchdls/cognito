@@ -1,244 +1,578 @@
 'use client';
 
-import { useEffect, useRef, useState, type FormEvent, type ReactNode } from 'react';
+import { useEffect, useMemo, useRef, useState, type DragEvent, type FormEvent, type ReactNode } from 'react';
 import * as Dialog from '@radix-ui/react-dialog';
-import { ArrowRight, HardHat, Truck, Wallet, Bell, CalendarDays, CalendarCheck, ChartNoAxesCombined, Check, CheckCheck, ChevronDown, ChevronLeft, ChevronRight, CircleDollarSign, ClipboardList, Download, FileText, House, Image as ImageIcon, LayoutGrid, List, MapPin, MessageSquare, MoreHorizontal, Package, Plus, Search, Send, Settings2, Users, X, type LucideIcon } from 'lucide-react';
-import { phases, dateLabel, image, money, seed, stages, type Store, type Project } from './data';
+import { ArrowDownRight, ArrowUpRight, Bell, Boxes, Building2, CalendarDays, Check, ChevronDown, ChevronRight, ClipboardCheck, Download, FileSpreadsheet, FileText, Flag, FolderOpen, HardHat, House, LayoutGrid, List, LocateFixed, Map as MapIcon, MapPin, MoreVertical, Package, Plus, RotateCcw, Search, ShoppingCart, SlidersHorizontal, Trash2, Truck, UserRound, Users, Wallet, X, type LucideIcon } from 'lucide-react';
+import { BlocksArt, Building, CoinsArt, CraneArt, HelmetArt, MaterialIcon, RecifeMap } from './Art';
+import { active, barColor, brl, cities, compact, contracted, dateLabel, dayKey, delivered, initials, makeSeed, stageColor, stages, stockStatus, storageKey, tones, uid, type Activity, type ActivityKind, type Doc, type Member, type Project, type Stage, type Store } from './data';
+import { jakarta } from './fonts';
 import s from './ConstructionApp.module.css';
 
-type View = 'Visão geral' | 'Obras' | 'Calendário' | 'Leads e propostas' | 'Clientes' | 'Fornecedores' | 'Equipe' | 'Orçamentos' | 'Tarefas' | 'Documentos' | 'Materiais' | 'Relatórios' | 'Fotos da obra' | 'Mensagens';
-type Modal = { kind: 'project' | 'purchase' | 'appointment' | 'supplier' | 'entry' | 'task' | 'profile'; id?: string } | null;
-const navigation: [View, LucideIcon][] = [['Visão geral', House], ['Obras', CalendarCheck], ['Calendário', CalendarDays], ['Leads e propostas', Users], ['Clientes', Users], ['Fornecedores', Truck], ['Equipe', HardHat], ['Orçamentos', FileText], ['Tarefas', ClipboardList], ['Documentos', FileText], ['Materiais', Package], ['Relatórios', ChartNoAxesCombined], ['Fotos da obra', ImageIcon], ['Mensagens', MessageSquare]];
-const team = [{ name: 'Mariana Silva', role: 'Direção e planejamento', initials: 'MS' }, { name: 'Ana Costa', role: 'Compras e suprimentos', initials: 'AC' }, { name: 'Rafael Lima', role: 'Engenharia e execução', initials: 'RL' }];
-const uid = () => globalThis.crypto.randomUUID();
-const today = '2026-10-26';
-const storageKey = 'atio-construction-v1';
-const pad = (v: number) => String(v).padStart(2, '0');
-const monthString = (d: Date) => `${d.getFullYear()}-${pad(d.getMonth() + 1)}`;
-const monthLabel = (d: Date) => d.toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' });
-const shortMonth = (d: Date) => d.toLocaleDateString('pt-BR', { month: 'short', year: 'numeric' }).replace('.', '');
-const matches = (q: string, ...values: (string | number)[]) => values.join(' ').toLocaleLowerCase('pt-BR').normalize('NFD').replace(/[\u0300-\u036f]/g, '').includes(q.toLocaleLowerCase('pt-BR').normalize('NFD').replace(/[\u0300-\u036f]/g, ''));
-const statusClass = (status: string) => status === 'Concluída' || status === 'Contratada' || status === 'Confirmado' || status === 'Pago' || status === 'No prazo' || status === 'Entregue' ? s.green : status === 'Em execução' || status === 'Em atenção' || status === 'Em entrega' ? s.gold : status === 'Orçamento enviado' ? s.blue : s.peach;
+type View = 'Início' | 'Obras' | 'Planejamento' | 'Orçamentos' | 'Financeiro' | 'Compras' | 'Estoque' | 'Fornecedores' | 'Clientes' | 'Documentos' | 'Relatórios';
+type Tab = 'Resumo' | 'Cronograma' | 'Equipe' | 'Atividades' | 'Financeiro' | 'Documentos';
+type Filter = 'Todas' | 'Em construção' | 'Lançamento' | 'Entregues' | 'Planejamento';
+type Mode = 'Kanban' | 'Lista' | 'Mapa';
+type FormKind = 'project' | 'activity' | 'entry' | 'purchase' | 'supplier' | 'client' | 'doc';
+type Modal = { kind: FormKind; preset?: Record<string, string> } | { kind: 'team' } | null;
+type Field = { key: string; label: string; type?: 'text' | 'number' | 'date' | 'time' | 'select'; options?: [string, string][]; required?: boolean; wide?: boolean };
 
-function Photo({ name, alt, className = '' }: { name: string; alt: string; className?: string }) {
-  // Local images also work in an offline demonstration.
-  // eslint-disable-next-line @next/next/no-img-element
-  return <img src={image(name)} alt={alt} className={className} />;
-}
-function Badge({ children }: { children: string }) { return <span className={`${s.badge} ${statusClass(children)}`}>{children}</span>; }
-function Panel({ title, action, onAction, children, className = '' }: { title: string; action?: string; onAction?: () => void; children: ReactNode; className?: string }) {
-  return <section className={`${s.panel} ${className}`}><div className={s.panelHeader}><h2>{title}</h2>{action && <button className={s.textButton} onClick={onAction}>{action}<ArrowRight size={13} /></button>}</div>{children}</section>;
-}
+const navigation: [View, LucideIcon][] = [['Início', House], ['Obras', Building2], ['Planejamento', CalendarDays], ['Orçamentos', FileText], ['Financeiro', Wallet], ['Compras', ShoppingCart], ['Estoque', Boxes], ['Fornecedores', Users], ['Clientes', UserRound], ['Documentos', FolderOpen], ['Relatórios', LayoutGrid]];
+const filters: Filter[] = ['Todas', 'Em construção', 'Lançamento', 'Entregues', 'Planejamento'];
+const filterFn: Record<Filter, (p: Project) => boolean> = { Todas: () => true, 'Em construção': p => p.stage !== 'Planejamento' && !delivered(p), Lançamento: p => p.launch, Entregues: delivered, Planejamento: p => p.stage === 'Planejamento' };
+const kindStyle: Record<ActivityKind, [LucideIcon, string]> = { Concretagem: [HardHat, s.kRed], 'Entrega de materiais': [Truck, s.kAmber], Vistoria: [ClipboardCheck, s.kBlue], Reunião: [Users, s.kOrange] };
+const cityCenter: Record<string, [number, number]> = { 'Recife - PE': [50, 50], 'Olinda - PE': [70, 24], 'Jaboatão - PE': [40, 86], 'Paulista - PE': [66, 10], 'Camaragibe - PE': [20, 38] };
+const owner = { first: 'Rafael', name: 'Rafael Souza', role: 'Administrador' };
+const DAY = 864e5;
+const normalize = (v: string) => v.toLocaleLowerCase('pt-BR').normalize('NFD').replace(/[̀-ͯ]/g, '');
+const has = (q: string, ...values: (string | number)[]) => normalize(values.join(' ')).includes(normalize(q.trim()));
+const download = (name: string, content: string, type: string) => { const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([content], { type })); a.download = name; a.click(); URL.revokeObjectURL(a.href); };
+const csv = (rows: (string | number)[][]) => '﻿' + rows.map(r => r.map(v => `"${String(v).replace(/"/g, '""')}"`).join(';')).join('\n');
+const pct = (v: number) => `${Math.abs(v).toLocaleString('pt-BR', { maximumFractionDigits: 0 })}%`;
+const relDay = (iso: string, now: number) => { const d = Math.round((new Date(dayKey(new Date(now))).getTime() - new Date(dayKey(iso)).getTime()) / DAY); return d === 0 ? 'Hoje' : d === 1 ? 'Ontem' : new Date(iso).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' }); };
 
 export default function ConstructionApp() {
-  const [store, setStore] = useState<Store>(seed);
-  const [ready, setReady] = useState(false);
-  const [storageWarning, setStorageWarning] = useState(false);
-  const [view, setView] = useState<View>('Visão geral');
-  const [selected, setSelected] = useState<string | null>(null);
-  const [query, setQuery] = useState('');
-  const [filter, setFilter] = useState('Todos');
-  const [month, setMonth] = useState(new Date(2026, 9, 1));
-  const [calendarMonth, setCalendarMonth] = useState(new Date(2026, 9, 1));
-  const [selectedDate, setSelectedDate] = useState<string | null>(null);
-  const [heroIndex, setHeroIndex] = useState(0);
+  const [store, setStore] = useState<Store | null>(null);
+  const [view, setView] = useState<View>('Início');
+  const [drawer, setDrawer] = useState<{ id: string; tab: Tab } | null>(null);
   const [modal, setModal] = useState<Modal>(null);
-  const [tab, setTab] = useState('Checklist');
-  const [notice, setNotice] = useState('');
-  const [notifications, setNotifications] = useState(false);
-  const [listMode, setListMode] = useState(false);
-  const noticeTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const notify = (text: string) => { setNotice(text); if (noticeTimer.current) clearTimeout(noticeTimer.current); noticeTimer.current = setTimeout(() => setNotice(''), 4000); };
+  const [toast, setToast] = useState('');
+  const [now, setNow] = useState(0);
+  const [mode, setMode] = useState<Mode>('Kanban');
 
   useEffect(() => {
-    try {
-      const saved = localStorage.getItem(storageKey);
-      if (saved) {
-        const parsed = JSON.parse(saved);
-        if (['projects', 'tasks', 'appointments', 'suppliers', 'entries', 'purchases', 'messages'].every(key => Array.isArray(parsed[key])) && parsed.notes && typeof parsed.notes === 'object') setStore(parsed);
-      }
-    } catch { setStorageWarning(true); }
-    setReady(true);
-    const onHash = () => {
-      try {
-        const params = new URLSearchParams(location.hash.slice(1));
-        const next = params.get('view') as View;
-        if (navigation.some(([name]) => name === next)) setView(next);
-        setSelected(params.get('project'));
-      } catch { /* A malformed fragment should not prevent the demo from opening. */ }
-    };
-    onHash(); window.addEventListener('hashchange', onHash);
-    return () => { window.removeEventListener('hashchange', onHash); if (noticeTimer.current) clearTimeout(noticeTimer.current); };
+    let saved: Store | null = null;
+    try { const raw = localStorage.getItem(storageKey); if (raw) saved = JSON.parse(raw); } catch { /* falls back to the demo data */ }
+    // Clock and storage are read only after mount so server and client markup match.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setNow(Date.now()); setStore(saved?.projects ? saved : makeSeed());
   }, []);
-  useEffect(() => { if (ready) { try { localStorage.setItem(storageKey, JSON.stringify(store)); } catch { setStorageWarning(true); } } }, [store, ready]);
-  function go(next: View, project: string | null = null) {
-    setView(next); setSelected(project); setQuery(''); setFilter('Todos'); setSelectedDate(null); setNotifications(false); setTab('Checklist');
-    location.hash = new URLSearchParams({ view: next, ...(project ? { project } : {}) }).toString();
-  }
-  const openProject = (w: Project) => go('Obras', w.id);
-  const project = store.projects.find(w => w.id === selected);
-  const getProject = (id: string) => store.projects.find(w => w.id === id);
-  const searched = store.projects.filter(w => matches(query, w.name, w.venue, w.status, w.date));
-  const monthProjects = store.projects.filter(w => w.date.startsWith(monthString(month)));
-  const upcoming = store.projects.filter(w => w.status === 'Em execução');
-  const heroProjects = upcoming.slice(0, 3);
-  const hero = heroProjects[heroIndex % Math.max(heroProjects.length, 1)];
-  const monthEntries = store.entries.filter(e => e.date.startsWith(monthString(month)));
-  const revenue = monthEntries.filter(e => e.type === 'Receita').reduce((sum, e) => sum + e.value, 0);
-  const expenses = monthEntries.filter(e => e.type === 'Despesa').reduce((sum, e) => sum + e.value, 0);
-  const proposalCount = store.projects.filter(w => w.status === 'Orçamento enviado').length;
-  const dueTasks = store.tasks.filter(t => !t.done).sort((a, b) => a.due.localeCompare(b.due));
-  const rangeAppointments = store.appointments.filter(a => a.date >= today && a.date <= '2026-10-30').sort((a, b) => `${a.date}${a.time}`.localeCompare(`${b.date}${b.time}`));
+  useEffect(() => { if (store) try { localStorage.setItem(storageKey, JSON.stringify(store)); } catch { /* storage full or blocked */ } }, [store]);
+  useEffect(() => { if (!toast) return; const t = setTimeout(() => setToast(''), 2600); return () => clearTimeout(t); }, [toast]);
 
-  function projectCard(w: Project) {
-    return <article className={s.eventCard} key={w.id}>
-      <button className={s.cardImage} onClick={() => openProject(w)} aria-label={`Abrir ${w.name}`}><Photo name={w.image} alt={`Projeto ${w.name}`} /></button>
-      <div className={s.eventBody}><div className={s.projectCardHeading}><button onClick={() => openProject(w)}><h3>{w.name}</h3></button><button className={s.iconButton} aria-label={`Editar ${w.name}`} onClick={() => setModal({ kind: 'project', id: w.id })}><MoreHorizontal size={16} /></button></div>
-      <p><MapPin size={12} />{w.venue}</p><div className={s.cardProgress}><div className={s.progress}><span style={{ width: `${w.progress}%` }} /></div><small>{w.progress}% concluído</small></div>
-      <div className={s.cardFooter}><Badge>{w.status === 'Em execução' ? w.health : w.status}</Badge></div></div>
-    </article>;
-  }
+  if (!store) return <div className={`${s.app} ${jakarta.variable}`}><div className={s.loading}><Logo /></div></div>;
 
-  function pipeline() {
-    const columns = [['Novos contatos', 'Novo contato'], ['Orçamentos', 'Orçamento enviado'], ['Contratadas', 'Contratada'], ['Concluídas', 'Concluída']];
-    return <div className={s.pipeline}>{columns.map(([label, stage], i) => {
-      const items = store.projects.filter(w => (stage === 'Contratada' ? ['Contratada', 'Em execução'].includes(w.status) : w.status === stage) && matches(query, w.name, w.venue));
-      return <section className={s.pipelineColumn} key={stage} onDragOver={e => e.preventDefault()} onDrop={e => { e.preventDefault(); const id = e.dataTransfer.getData('text/plain'); if (store.projects.some(w => w.id === id)) { setStore(p => ({ ...p, projects: p.projects.map(w => w.id === id ? { ...w, status: stage, progress: stage === 'Concluída' ? 100 : w.progress } : w) })); notify(`Obra movido para ${label.toLowerCase()}.`); } }}><header><span><span className={`${s.pipelineDot} ${[s.blueDot, s.yellowDot, s.greenDot, s.grayDot][i]}`} />{label}</span><div><b>{items.length}</b><small>{money(items.reduce((v, w) => v + w.value, 0))}</small></div></header><div className={s.pipelineItems}>{items.slice(0, view === 'Visão geral' ? 2 : items.length).map(w => <button draggable onDragStart={e => e.dataTransfer.setData('text/plain', w.id)} onClick={() => openProject(w)} className={s.pipelineCard} key={w.id}><Photo name={w.image} alt="" /><span><strong>Obra {w.name}</strong><small>{money(w.value)} · {dateLabel(w.date)}</small></span></button>)}{!items.length && <span className={s.emptySmall}>Nenhuma obra nesta etapa.</span>}</div></section>;
-    })}</div>;
+  const set = (change: (st: Store) => Partial<Store>, message?: string) => { setStore(prev => prev && { ...prev, ...change(prev) }); if (message) setToast(message); };
+  const project = (id: string) => store.projects.find(p => p.id === id);
+  const updateProject = (id: string, change: Partial<Project>, message?: string) => set(st => ({ projects: st.projects.map(p => p.id === id ? { ...p, ...change } : p) }), message);
+  function move(id: string, stage: Stage) {
+    const p = project(id); if (!p || p.stage === stage) return;
+    updateProject(id, { stage }, `${p.name} movida para ${stage}.`);
   }
+  function deliver(id: string) { const p = project(id)!; updateProject(id, { stage: 'Entrega', progress: 100, deliveredAt: new Date().toISOString(), phases: p.phases.map(ph => ({ ...ph, progress: 100 })) }, `${p.name} marcada como entregue.`); }
+  function remove(id: string) {
+    const p = project(id); if (!p || !confirm(`Excluir a obra ${p.name}? Atividades, documentos e lançamentos ligados a ela também serão removidos.`)) return;
+    set(st => ({ projects: st.projects.filter(x => x.id !== id), activities: st.activities.filter(a => a.projectId !== id), docs: st.docs.filter(d => d.projectId !== id), entries: st.entries.filter(e => e.projectId !== id), purchases: st.purchases.filter(x => x.projectId !== id) }), `${p.name} excluída.`);
+    setDrawer(null);
+  }
+  const openProject = (id: string, tab: Tab = 'Resumo') => setDrawer({ id, tab });
+  const go = (v: View) => { setView(v); window.scrollTo({ top: 0 }); };
+  const current = drawer && project(drawer.id);
+  const projectOptions: [string, string][] = store.projects.map(p => [p.id, p.name]);
 
-  function calendar(large = false) {
-    const year = calendarMonth.getFullYear(), m = calendarMonth.getMonth();
-    const start = new Date(year, m, 1).getDay(), count = new Date(year, m + 1, 0).getDate();
-    const prevCount = new Date(year, m, 0).getDate();
-    const cells = Array.from({ length: Math.ceil((start + count) / 7) * 7 }, (_, i) => { const n = i - start + 1; const d = new Date(year, m, n); return { day: n < 1 ? prevCount + n : n > count ? n - count : n, date: `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`, outside: n < 1 || n > count }; });
-    return <section className={`${s.panel} ${large ? s.bigCalendar : s.calendar}`}><div className={s.panelHeader}><h2>{monthLabel(calendarMonth)}</h2><div className={s.inline}><button className={s.squareButton} onClick={() => { setCalendarMonth(new Date(year, m - 1, 1)); setSelectedDate(null); }} aria-label="Mês anterior"><ChevronLeft size={14} /></button><button className={s.squareButton} onClick={() => { setCalendarMonth(new Date(year, m + 1, 1)); setSelectedDate(null); }} aria-label="Próximo mês"><ChevronRight size={14} /></button></div></div><div className={s.calendarGrid}>{['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'].map(d => <span className={s.weekday} key={d}>{d}</span>)}{cells.map(d => {
-      const events = store.projects.filter(w => w.date === d.date), agenda = store.appointments.filter(a => a.date === d.date);
-      return <button key={d.date} className={`${s.calendarDay} ${d.outside ? s.outside : ''} ${d.date === (selectedDate || today) ? s.activeDay : ''}`} aria-label={dateLabel(d.date, { dateStyle: 'full' })} aria-pressed={selectedDate === d.date} onClick={() => { setSelectedDate(d.date); if (!large) { setView('Calendário'); location.hash = new URLSearchParams({ view: 'Calendário' }).toString(); } }}><span>{d.day}</span>{large ? <div>{events.map(w => <span key={w.id} className={s.calendarEvent}>{w.name}</span>)}{agenda.map(a => <span key={a.id} className={s.calendarAppointment}>{a.time} · {a.title}</span>)}</div> : <i className={events.length ? s.greenDot : agenda.length ? s.yellowDot : ''} />}</button>;
-    })}</div></section>;
-  }
-
-  function financePanels() {
-    const categories = Array.from(new Set(monthEntries.filter(e => e.type === 'Despesa').map(e => e.category))).map(name => ({ name, total: monthEntries.filter(e => e.type === 'Despesa' && e.category === name).reduce((sum, e) => sum + e.value, 0) }));
-    const palette = ['#56634f', '#b58e68', '#e2ad71', '#d4bbb0', '#a5a9ab', '#e9dfd2'];
-    let accumulated = 0;
-    const stops = categories.map((c, i) => { const from = accumulated; accumulated += expenses ? c.total / expenses * 100 : 0; return `${palette[i % palette.length]} ${from}% ${accumulated}%`; }).join(',');
-    const months = Array.from({ length: 6 }, (_, i) => new Date(month.getFullYear(), month.getMonth() - 5 + i, 1));
-    const values = months.map(m => { const entries = store.entries.filter(e => e.date.startsWith(monthString(m))); return { revenue: entries.filter(e => e.type === 'Receita').reduce((a, e) => a + e.value, 0), costs: entries.filter(e => e.type === 'Despesa').reduce((a, e) => a + e.value, 0) }; });
-    const max = Math.max(...values.map(v => Math.max(v.revenue, v.costs)), 1);
-    return <><Panel title="Financeiro do mês" action="Ver detalhamento" onAction={() => go('Orçamentos')}><div className={s.financeContent}><div className={s.financeChart}><strong>{money(revenue)}</strong><small>faturamento previsto</small><div className={s.bars}>{months.map((m, i) => <div key={m.toISOString()}><div className={s.barPair}><i style={{ height: `${Math.max(values[i].revenue / max * 100, 2)}%` }} /><i style={{ height: `${Math.max(values[i].costs / max * 100, 2)}%` }} /></div><span>{m.toLocaleDateString('pt-BR', { month: 'short' }).replace('.', '')}</span></div>)}</div></div><div className={s.legend}>{[['Receitas', revenue], ['Custos', expenses], ['Resultado', revenue - expenses]].map(([label, v], i) => <div key={label}><i style={{ background: ['#56634f', '#c58f71', '#252923'][i] }} /><span>{label}<b>{money(Number(v))}</b></span></div>)}</div></div></Panel><Panel title="Custos por categoria" action="Ver relatório" onAction={() => go('Relatórios')}><div className={s.expenseContent}><div className={s.donut} style={{ background: expenses ? `conic-gradient(${stops})` : '#e6e4df' }}><div><b>{money(expenses)}</b><small>em custos</small></div></div><div className={s.expenseLegend}>{categories.map((c, i) => <div key={c.name}><i style={{ background: palette[i % palette.length] }} /><span>{c.name}</span><small>{expenses ? Math.round(c.total / expenses * 100) : 0}%</small></div>)}{!categories.length && <span className={s.muted}>Sem custos no mês.</span>}</div></div></Panel></>;
-  }
-
-  function dashboard() {
-    return <>
-      <div className={s.stats}>{([{ icon: HardHat, value: upcoming.length, label: 'Obras em andamento' }, { icon: CircleDollarSign, value: money(revenue), label: 'Receita prevista no mês' }, { icon: Wallet, value: money(expenses), label: 'Custos previstos no mês' }, { icon: FileText, value: proposalCount, label: 'Propostas em aberto' }]).map(({ icon: Icon, value, label }) => <div className={s.stat} key={label}><span className={s.statIcon}><Icon size={24} strokeWidth={1.3} /></span><div><strong>{value}</strong><small>{label}</small></div></div>)}</div>
-      <div className={s.overviewGrid}><div className={s.overviewMain}>
-        {hero ? <section className={s.hero}><Photo name={hero.image} alt={`Obra ${hero.name}`} /><div className={s.heroShade} /><span className={s.heroStatus}>{hero.status}</span><div className={s.heroContent}><p>ENTREGA PREVISTA · {dateLabel(hero.date, { month: 'long', year: 'numeric' })}</p><h2>{hero.name}</h2><div className={s.heroMeta}><span><MapPin size={16} />{hero.venue}</span></div><button onClick={() => openProject(hero)}>Ver obra<ArrowRight size={15} /></button></div><div className={s.heroProgress}><span>{hero.progress}% concluído</span><div><i style={{ width: `${hero.progress}%` }} /></div></div><div className={s.heroControls}>{heroProjects.map((w, i) => <button key={w.id} aria-label={`Destaque ${w.name}`} className={heroIndex % heroProjects.length === i ? s.currentDot : s.slideDot} onClick={() => setHeroIndex(i)} />)}<button aria-label="Obra anterior" className={s.heroArrow} onClick={() => setHeroIndex(i => (i - 1 + heroProjects.length) % heroProjects.length)}><ChevronLeft size={14} /></button><button aria-label="Próxima obra" className={s.heroArrow} onClick={() => setHeroIndex(i => (i + 1) % heroProjects.length)}><ChevronRight size={14} /></button></div></section> : <div className={s.empty}>Cadastre sua primeira obra para começar.</div>}
-        <Panel title="Obras em andamento" action="Ver todas" onAction={() => go('Obras')}><div className={s.eventGrid}>{upcoming.slice(0, 4).map(projectCard)}</div></Panel>
-      </div><aside className={s.overviewAside}><Panel title="Agenda da semana" action="Ver agenda completa" onAction={() => go('Calendário')}><div className={s.agenda}>{rangeAppointments.slice(0, 5).map((a, i) => <button key={a.id} className={s.agendaItem} onClick={() => setModal({ kind: 'appointment', id: a.id })}><span className={s.agendaDate}><small>{dateLabel(a.date, { weekday: 'short' }).slice(0, 3)}</small><b>{a.date.slice(8)}</b></span><Photo name={getProject(a.projectId)?.image || 'hero'} alt="" /><i style={{ background: ['#607b59', '#d8ab55', '#607b59', '#bc8467', '#607b59'][i % 5] }} /><span className={s.agendaText}><b>{a.title}</b><small>{getProject(a.projectId)?.name}</small><small>{a.time} – {a.end}</small></span></button>)}</div></Panel>{calendar()}</aside></div>
-      <Panel title="Pipeline de obras" action="Ver propostas" onAction={() => go('Leads e propostas')}>{pipeline()}</Panel>
-      <div className={s.bottomGrid}>{financePanels()}<Panel title="Compras e entregas" action="Ver todas" onAction={() => go('Materiais')}><div className={s.purchasePreview}>{store.purchases.slice(0, 3).map(p => <button key={p.id} onClick={() => setModal({ kind: 'purchase', id: p.id })}><Photo name={p.image} alt="" /><span><b>{p.title}</b><small>{getProject(p.projectId)?.name}</small></span><Badge>{p.status}</Badge><MoreHorizontal size={13} /></button>)}</div></Panel></div>
-    </>;
-  }
-
-  function table(headers: string[], rows: ReactNode[][]) { return <div className={s.tableWrap}><table className={s.table}><thead><tr>{headers.map(h => <th key={h}>{h}</th>)}</tr></thead><tbody>{rows.map((row, i) => <tr key={i}>{row.map((cell, j) => <td key={j}>{cell}</td>)}</tr>)}</tbody></table>{!rows.length && <div className={s.empty}>Nenhum resultado encontrado. Experimente outro filtro.</div>}</div>; }
-  function taskTable(projectId?: string) {
-    const tasks = store.tasks.filter(t => (!projectId || t.projectId === projectId) && matches(query, t.title, t.owner) && (filter === 'Todos' || (filter === 'Concluídas' ? t.done : !t.done)));
-    return table(['Tarefa', 'Responsável', 'Obra', 'Prazo', ''], tasks.map(t => [<label className={`${s.taskLabel} ${t.done ? s.done : ''}`} key={t.id}><input type="checkbox" checked={t.done} onChange={() => setStore(p => ({ ...p, tasks: p.tasks.map(task => task.id === t.id ? { ...task, done: !task.done } : task) }))} />{t.title}</label>, <span className={s.inline} key="owner"><span className={s.avatarSmall}>{t.owner.split(' ').map(n => n[0]).join('')}</span>{t.owner}</span>, getProject(t.projectId)?.name, dateLabel(t.due), <button key="edit" className={s.iconButton} aria-label={`Editar tarefa ${t.title}`} onClick={() => setModal({ kind: 'task', id: t.id })}><MoreHorizontal size={17} /></button>]));
-  }
-  function financeTable(projectId?: string) {
-    return table(['Descrição', 'Obra', 'Vencimento', 'Categoria', 'Valor', 'Situação'], monthEntries.filter(e => (!projectId || e.projectId === projectId) && matches(query, e.title, e.category) && (filter === 'Todos' || e.type === filter)).map(e => [<button className={s.rowTitle} onClick={() => setModal({ kind: 'entry', id: e.id })} key={e.id}>{e.title}</button>, getProject(e.projectId)?.name, dateLabel(e.date), e.category, <span className={e.type === 'Receita' ? s.income : s.outcome} key="value">{e.type === 'Receita' ? '+' : '−'} {money(e.value)}</span>, <button key="paid" onClick={() => { setStore(p => ({ ...p, entries: p.entries.map(v => v.id === e.id ? { ...v, paid: !v.paid } : v) })); notify(e.paid ? 'Pagamento marcado como pendente.' : 'Pagamento confirmado.'); }}><Badge>{e.paid ? 'Pago' : 'Pendente'}</Badge></button>]));
-  }
-  function purchasesTable(projectId?: string) {
-    return table(['Material', 'Obra', 'Quantidade', 'Fornecedor', 'Previsão', 'Situação', ''], store.purchases.filter(p => (!projectId || p.projectId === projectId) && matches(query, p.title, p.supplier, getProject(p.projectId)?.name || '') && (filter === 'Todos' || p.status === filter)).map(p => [<span className={s.materialName} key="name"><Photo name={p.image} alt="" />{p.title}</span>, getProject(p.projectId)?.name, `${p.quantity} ${p.unit}`, p.supplier, dateLabel(p.date), <select key="status" className={s.inlineSelect} aria-label={`Entrega de ${p.title}`} value={p.status} onChange={e => setStore(prev => ({ ...prev, purchases: prev.purchases.map(item => item.id === p.id ? { ...item, status: e.target.value } : item) }))}>{['A confirmar', 'Pedido realizado', 'Em entrega', 'Entregue'].map(status => <option key={status}>{status}</option>)}</select>, <button className={s.iconButton} key="edit" onClick={() => setModal({ kind: 'purchase', id: p.id })} aria-label={`Editar compra ${p.title}`}><MoreHorizontal size={17} /></button>]));
-  }
-
-  function detail(w: Project) {
-    const wTasks = store.tasks.filter(t => t.projectId === w.id), done = wTasks.filter(t => t.done).length;
-    return <><button className={s.backButton} onClick={() => go('Obras')}><ChevronLeft size={15} />Todas as obras</button><div className={s.detailHeader}><div><span className={s.eyebrow}>OBRA · {w.status.toUpperCase()}</span><h1>{w.name}</h1><p><MapPin size={15} />{w.venue}<span>·</span>{w.area} m²<span>·</span>Entrega: {dateLabel(w.date)}</p></div><button className={s.secondaryButton} onClick={() => setModal({ kind: 'project', id: w.id })}>Editar obra<Settings2 size={15} /></button></div>
-      <div className={s.detailHero}><Photo name={w.image} alt={w.name} /><Panel title="Progresso da obra"><strong className={s.progressNumber}>{w.progress}%</strong><div className={s.progress}><span style={{ width: `${w.progress}%` }} /></div><p className={s.muted}>Entrega prevista · {dateLabel(w.date, { dateStyle: 'long' })}</p><div className={s.contactDetails}><span><Users size={16} />{w.client}</span><span>{w.email}</span><span>{w.phone}</span><Badge>{w.health}</Badge><small>{done} de {wTasks.length} tarefas concluídas · avanço físico informado na obra</small></div></Panel></div>
-      <div className={s.stats}>{[['Valor do contrato', money(w.value)], ['Custos previstos', money(w.cost)], ['Margem prevista', `${w.value ? ((w.value - w.cost) / w.value * 100).toFixed(1).replace('.', ',') : '0'}%`], ['Área da obra', `${w.area} m²`]].map(([label, value]) => <div className={s.stat} key={label}><div><small>{label}</small><strong>{value}</strong></div></div>)}</div>
-      <div className={s.tabs}>{['Checklist', 'Cronograma', 'Compras', 'Financeiro', 'Documentos', 'Anotações'].map(t => <button className={tab === t ? s.activeTab : ''} key={t} onClick={() => { setTab(t); setFilter('Todos'); }}>{t}</button>)}</div>
-      {tab === 'Checklist' && <Panel title="Checklist da obra" action="Adicionar tarefa" onAction={() => setModal({ kind: 'task' })}>{taskTable(w.id)}</Panel>}
-      {tab === 'Cronograma' && <Panel title="Cronograma de execução" action="Adicionar atividade" onAction={() => setModal({ kind: 'task' })}><div className={s.phaseList}>{phases.map(phase => { const tasks = wTasks.filter(t => t.phase === phase), completed = tasks.filter(t => t.done).length; return <section key={phase}><div><h3>{phase}</h3><small>{tasks.length ? `${completed}/${tasks.length} atividades concluídas` : 'Sem atividades cadastradas'}</small></div><div className={s.phaseTasks}>{tasks.map(t => <label key={t.id}><input type="checkbox" checked={t.done} onChange={() => setStore(p => ({ ...p, tasks: p.tasks.map(v => v.id === t.id ? { ...v, done: !v.done } : v) }))} /><span>{t.title}<small>{t.owner} · {dateLabel(t.due)}</small></span><Badge>{t.done ? 'Concluída' : 'Pendente'}</Badge></label>)}</div></section>; })}</div></Panel>}
-      {tab === 'Compras' && <Panel title="Compras e materiais da obra" action="Nova compra" onAction={() => setModal({ kind: 'purchase' })}>{purchasesTable(w.id)}</Panel>}
-      {tab === 'Financeiro' && <Panel title={`Financeiro · ${monthLabel(month)}`} action="Adicionar lançamento" onAction={() => setModal({ kind: 'entry' })}>{financeTable(w.id)}</Panel>}
-      {tab === 'Documentos' && <Panel title="Documentos da obra"><div className={s.documentActions}><FileText size={30} strokeWidth={1} /><div><h3>Proposta de execução</h3><p>Resumo demonstrativo com escopo, cliente e valores.</p></div><button className={s.secondaryButton} onClick={() => exportProposal(w)}>Baixar proposta<Download size={15} /></button></div><div className={s.documentActions}><ClipboardList size={30} strokeWidth={1} /><div><h3>Relatório de acompanhamento</h3><p>Avanço físico, checklist e compras desta obra.</p></div><button className={s.secondaryButton} onClick={() => exportReport(w)}>Baixar relatório<Download size={15} /></button></div></Panel>}
-      {tab === 'Anotações' && <Panel title="Diário da obra"><label className={s.notesLabel}>Ocorrências, decisões e próximos passos<textarea placeholder="Registre as ocorrências e decisões. Suas anotações são salvas neste navegador." value={store.notes[w.id] || ''} onChange={e => setStore(p => ({ ...p, notes: { ...p.notes, [w.id]: e.target.value } }))} /></label></Panel>}
-    </>;
-  }
-
-  function supplierTable() { return table(['Fornecedor', 'Categoria', 'Contato', 'Valor de referência', 'Situação', ''], store.suppliers.filter(v => matches(query, v.name, v.category, v.contact) && (filter === 'Todos' || v.category === filter)).map(v => [<span className={s.rowTitle} key="name">{v.name}</span>, v.category, v.contact, money(v.price), <Badge key="badge">{v.status}</Badge>, <button key="edit" className={s.iconButton} aria-label={`Editar ${v.name}`} onClick={() => setModal({ kind: 'supplier', id: v.id })}><MoreHorizontal size={17} /></button>])); }
-
-  function content() {
-    if (project) return detail(project);
-    if (view === 'Visão geral') return dashboard();
-    if (view === 'Obras') return <><div className={s.toolbar}><div className={s.tabs}>{['Todos', ...stages].map(f => <button key={f} className={filter === f ? s.activeTab : ''} onClick={() => setFilter(f)}>{f}</button>)}</div><button className={s.secondaryButton} onClick={() => setListMode(!listMode)}>{listMode ? <LayoutGrid size={16} /> : <List size={16} />}{listMode ? 'Cartões' : 'Lista'}</button></div>{listMode ? table(['Obra', 'Entrega', 'Local', 'Área (m²)', 'Contrato', 'Etapa'], searched.filter(w => filter === 'Todos' || w.status === filter).map(w => [<button key={w.id} className={s.rowTitle} onClick={() => openProject(w)}>{w.name}</button>, dateLabel(w.date), w.venue, w.area, money(w.value), <Badge key="status">{w.status}</Badge>])) : <div className={s.allEvents}>{searched.filter(w => filter === 'Todos' || w.status === filter).map(projectCard)}</div>}{!searched.filter(w => filter === 'Todos' || w.status === filter).length && !listMode && <div className={s.empty}>Nenhuma obra encontrada.</div>}</>;
-    if (view === 'Leads e propostas') return <><p className={s.sectionNote}>Arraste os cartões entre as etapas ou abra uma obra para editar sua etapa.</p>{pipeline()}{table(['Cliente', 'Data', 'Proposta', 'Etapa', ''], searched.map(w => [<button key={w.id} className={s.rowTitle} onClick={() => openProject(w)}>{w.name}</button>, dateLabel(w.date), money(w.value), <select key="stage" className={s.inlineSelect} value={w.status} aria-label={`Etapa de ${w.name}`} onChange={e => setStore(p => ({ ...p, projects: p.projects.map(v => v.id === w.id ? { ...v, status: e.target.value, progress: e.target.value === 'Concluída' ? 100 : v.progress } : v) }))}>{stages.map(st => <option key={st}>{st}</option>)}</select>, <button key="download" className={s.textButton} onClick={() => exportProposal(w)}>Baixar proposta<Download size={14} /></button>]))}</>;
-    if (view === 'Calendário') {
-      const items = store.appointments.filter(a => (!selectedDate ? a.date.startsWith(monthString(calendarMonth)) : a.date === selectedDate) && matches(query, a.title, getProject(a.projectId)?.name || '')).sort((a, b) => `${a.date}${a.time}`.localeCompare(`${b.date}${b.time}`));
-      return <>{calendar(true)}<Panel title={selectedDate ? `Agenda · ${dateLabel(selectedDate, { dateStyle: 'long' })}` : 'Compromissos do mês'} action="Novo compromisso" onAction={() => setModal({ kind: 'appointment' })}>{table(['Compromisso', 'Obra', 'Data', 'Horário', ''], items.map(a => [a.title, getProject(a.projectId)?.name, dateLabel(a.date), `${a.time} – ${a.end}`, <button className={s.textButton} key="edit" onClick={() => setModal({ kind: 'appointment', id: a.id })}>Editar<ArrowRight size={13} /></button>]))}{selectedDate && store.projects.filter(w => w.date === selectedDate).map(w => <button key={w.id} className={s.dayProject} onClick={() => openProject(w)}><HardHat size={17} />Entrega · {w.name}<ArrowRight size={15} /></button>)}</Panel></>;
+  function submit(kind: FormKind, v: Record<string, string>) {
+    const n = (k: string) => Number(String(v[k]).replace(/\./g, '').replace(',', '.')) || 0;
+    const iso = (k: string) => new Date(`${v[k]}T12:00:00`).toISOString();
+    if (kind === 'project') {
+      const [cx, cy] = cityCenter[v.city] ?? [50, 50], start = iso('start'), end = iso('end'), span = new Date(end).getTime() - new Date(start).getTime();
+      const p: Project = { id: uid(), name: v.name, city: v.city, address: v.address, client: v.client, units: n('units'), stage: v.stage as Stage, launch: v.launch === 'sim', progress: 0, revenue: n('revenue'), cost: n('cost'), start, end, signedAt: new Date().toISOString(), createdAt: new Date().toISOString(), team: [], x: cx + (Math.random() * 10 - 5), y: cy + (Math.random() * 8 - 4), art: { floors: 4 + Math.floor(Math.random() * 6), tone: tones[Math.floor(Math.random() * tones.length)], wing: Math.random() > .5, sky: Math.floor(Math.random() * 3) as 0 | 1 | 2 }, phases: ['Fundação', 'Estrutura', 'Alvenaria', 'Instalações', 'Acabamento', 'Entrega'].map((name, k) => ({ id: uid(), name, start: new Date(new Date(start).getTime() + span * k / 6).toISOString(), end: new Date(new Date(start).getTime() + span * (k + 1) / 6).toISOString(), progress: 0 })) };
+      set(st => ({ projects: [...st.projects, p] }), `${p.name} criada em ${p.stage}.`);
     }
-    if (view === 'Clientes') return table(['Cliente', 'E-mail', 'Telefone', 'Obra', ''], searched.map(w => [<span key="name" className={s.inline}><span className={s.avatarSmall}>{w.client[0]}</span>{w.client}</span>, w.email, w.phone, w.name, <button key="open" className={s.textButton} onClick={() => openProject(w)}>Ver cadastro<ArrowRight size={13} /></button>]));
-    if (view === 'Fornecedores') return <><div className={s.toolbar}><select className={s.inlineSelect} value={filter} onChange={e => setFilter(e.target.value)} aria-label="Categoria de fornecedor">{['Todos', ...new Set(store.suppliers.map(v => v.category))].map(v => <option key={v}>{v}</option>)}</select></div>{supplierTable()}</>;
-    if (view === 'Tarefas') return <><div className={s.tabs}>{['Todos', 'Pendentes', 'Concluídas'].map(f => <button key={f} className={filter === f ? s.activeTab : ''} onClick={() => setFilter(f)}>{f}</button>)}</div>{taskTable()}</>;
-    if (view === 'Equipe') return <div className={s.teamGrid}>{team.filter(p => matches(query, p.name, p.role)).map(person => <Panel title={person.name} key={person.name}><div className={s.teamPerson}><span className={s.avatarLarge}>{person.initials}</span><p>{person.role}</p><b>{store.tasks.filter(t => t.owner === person.name && !t.done).length} tarefas em aberto</b></div><div className={s.memberTasks}>{store.tasks.filter(t => t.owner === person.name).map(t => <label key={t.id}><input type="checkbox" checked={t.done} onChange={() => setStore(p => ({ ...p, tasks: p.tasks.map(v => v.id === t.id ? { ...v, done: !v.done } : v) }))} /><span>{t.title}<small>{getProject(t.projectId)?.name} · {dateLabel(t.due)}</small></span></label>)}</div></Panel>)}</div>;
-    if (view === 'Orçamentos' || view === 'Relatórios') return <><div className={s.stats}>{[['Receitas previstas', revenue], ['Custos previstos', expenses], ['Resultado previsto', revenue - expenses], ['A receber', monthEntries.filter(e => e.type === 'Receita' && !e.paid).reduce((v, e) => v + e.value, 0)]].map(([label, value]) => <div className={s.stat} key={label}><div><small>{label}</small><strong>{money(Number(value))}</strong></div></div>)}</div><div className={s.financePanels}>{financePanels()}</div>{view === 'Relatórios' ? <Panel title="Resultado por obra" action="Exportar CSV" onAction={exportFinance}>{table(['Obra', 'Contrato', 'Custo previsto', 'Resultado', 'Margem'], searched.map(w => [w.name, money(w.value), money(w.cost), money(w.value - w.cost), `${w.value ? Math.round((w.value - w.cost) / w.value * 100) : 0}%`]))}</Panel> : <Panel title="Lançamentos do mês" action="Exportar CSV" onAction={exportFinance}><div className={s.tabs}>{['Todos', 'Receita', 'Despesa'].map(f => <button key={f} className={filter === f ? s.activeTab : ''} onClick={() => setFilter(f)}>{f}</button>)}</div>{financeTable()}</Panel>}</>;
-    if (view === 'Fotos da obra') return <><div className={s.tabs}>{['Todos', 'Residencial', 'Reforma', 'Comercial'].map(f => <button className={filter === f ? s.activeTab : ''} onClick={() => setFilter(f)} key={f}>{f}</button>)}</div><div className={s.gallery}>{[{ name: 'hero', title: 'Casa da Praia · fachada', category: 'Residencial' }, { name: 'apartment', title: 'Apartamento 402 · interiores', category: 'Reforma' }, { name: 'clinic', title: 'Clínica Essencial · acabamentos', category: 'Comercial' }, { name: 'residence', title: 'Residência das Palmeiras', category: 'Residencial' }, { name: 'site', title: 'Casa da Praia · execução', category: 'Residencial' }, { name: 'porcelain', title: 'Detalhes de revestimento', category: 'Reforma' }].filter(p => (filter === 'Todos' || p.category === filter) && matches(query, p.title, p.category)).map(p => <figure key={p.name}><Photo name={p.name} alt={p.title} /><figcaption><h3>{p.title}</h3><small>{p.category}</small><button className={s.iconButton} aria-label={`Baixar ${p.title}`} onClick={() => downloadPhoto(p.name)}><Download size={16} /></button></figcaption></figure>)}</div></>;
-    if (view === 'Documentos') return <Panel title="Documentos das obras"><p className={s.sectionNote}>Gere propostas e relatórios demonstrativos com os dados cadastrados.</p>{table(['Documento', 'Obra', 'Cliente', ''], searched.map(w => [<span className={s.inline} key="doc"><FileText size={18} />Proposta de execução</span>, w.name, w.client, <span className={s.inline} key="download"><button className={s.secondaryButton} onClick={() => exportProposal(w)}>Proposta<Download size={14} /></button><button className={s.secondaryButton} onClick={() => exportReport(w)}>Relatório<Download size={14} /></button></span>]))}</Panel>;
-    if (view === 'Materiais') return <><div className={s.tabs}>{['Todos', 'A confirmar', 'Pedido realizado', 'Em entrega', 'Entregue'].map(f => <button key={f} className={filter === f ? s.activeTab : ''} onClick={() => setFilter(f)}>{f}</button>)}</div><Panel title="Compras e entregas" action="Nova compra" onAction={() => setModal({ kind: 'purchase' })}>{purchasesTable()}</Panel></>;
-    return <Panel title="Caderno da equipe"><p className={s.sectionNote}>Recados internos de demonstração, salvos neste navegador.</p><div className={s.messages}>{store.messages.length ? store.messages.map(m => <article key={m.id}><span className={s.avatarSmall}>MS</span><div><b>Mariana Silva</b><small>{new Date(m.date).toLocaleString('pt-BR')}</small><p>{m.text}</p></div></article>) : <div className={s.empty}>Nenhum recado ainda. Registre o primeiro alinhamento da equipe.</div>}</div><form className={s.messageForm} onSubmit={e => { e.preventDefault(); const f = new FormData(e.currentTarget); const text = String(f.get('message') || '').trim(); if (!text) return; setStore(p => ({ ...p, messages: [...p.messages, { id: uid(), text, date: new Date().toISOString() }] })); e.currentTarget.reset(); }}><input required name="message" placeholder="Escreva um recado para o planejamento…" aria-label="Novo recado" /><button className={s.primaryButton} type="submit"><Send size={16} />Registrar</button></form></Panel>;
+    if (kind === 'activity') set(st => ({ activities: [...st.activities, { id: uid(), projectId: v.projectId, date: v.date, time: v.time, title: v.title, kind: v.kind as ActivityKind, done: false }] }), 'Atividade agendada.');
+    if (kind === 'entry') set(st => ({ entries: [...st.entries, { id: uid(), projectId: v.projectId, date: iso('date'), type: v.type as 'Receita' | 'Custo', category: v.category, description: v.description, value: n('value') }] }), 'Lançamento registrado.');
+    if (kind === 'purchase') set(st => ({ purchases: [...st.purchases, { id: uid(), materialId: v.materialId, projectId: v.projectId, quantity: n('quantity'), value: n('value'), date: iso('date'), status: 'Em trânsito' }], entries: [...st.entries, { id: uid(), projectId: v.projectId, date: iso('date'), type: 'Custo', category: 'Materiais', description: `Compra de ${st.materials.find(m => m.id === v.materialId)?.name}`, value: n('value') }] }), 'Compra registrada como em trânsito.');
+    if (kind === 'supplier') set(st => ({ suppliers: [...st.suppliers, { id: uid(), name: v.name, category: v.category, contact: v.contact, phone: v.phone }] }), 'Fornecedor cadastrado.');
+    if (kind === 'client') set(st => ({ clients: [...st.clients, { id: uid(), name: v.name, email: v.email, phone: v.phone, projectId: v.projectId, unit: v.unit, value: n('value') }] }), 'Cliente cadastrado.');
+    if (kind === 'doc') set(st => ({ docs: [...st.docs, { id: uid(), name: v.name, kind: v.kind as Doc['kind'], size: v.kind === 'PDF' ? '1,2 MB' : '480 KB', date: new Date().toISOString(), projectId: v.projectId }] }), 'Documento adicionado.');
+    setModal(null);
   }
+  const forms: Record<FormKind, { title: string; fields: Field[]; initial: Record<string, string> }> = {
+    project: { title: 'Nova obra', initial: { name: '', city: cities[0], address: '', client: '', units: '', revenue: '', cost: '', stage: 'Planejamento', launch: 'não', start: dayKey(new Date(now)), end: dayKey(new Date(now + 540 * DAY)) }, fields: [{ key: 'name', label: 'Nome do empreendimento', required: true, wide: true }, { key: 'city', label: 'Cidade', type: 'select', options: cities.map(c => [c, c]) }, { key: 'address', label: 'Endereço' }, { key: 'client', label: 'Incorporadora / cliente', required: true }, { key: 'units', label: 'Unidades', type: 'number' }, { key: 'revenue', label: 'Receita contratada (R$)', type: 'number', required: true }, { key: 'cost', label: 'Custo previsto (R$)', type: 'number', required: true }, { key: 'stage', label: 'Etapa', type: 'select', options: stages.map(x => [x, x]) }, { key: 'launch', label: 'Em lançamento (vendas)?', type: 'select', options: [['não', 'Não'], ['sim', 'Sim']] }, { key: 'start', label: 'Início', type: 'date', required: true }, { key: 'end', label: 'Entrega prevista', type: 'date', required: true }] },
+    activity: { title: 'Nova atividade', initial: { title: '', projectId: store.projects[0]?.id ?? '', kind: 'Vistoria', date: dayKey(new Date(now)), time: '09:00' }, fields: [{ key: 'title', label: 'Atividade', required: true, wide: true }, { key: 'projectId', label: 'Obra', type: 'select', options: projectOptions }, { key: 'kind', label: 'Tipo', type: 'select', options: (Object.keys(kindStyle) as ActivityKind[]).map(k => [k, k]) }, { key: 'date', label: 'Data', type: 'date', required: true }, { key: 'time', label: 'Horário', type: 'time', required: true }] },
+    entry: { title: 'Novo lançamento', initial: { type: 'Custo', projectId: store.projects[0]?.id ?? '', category: '', description: '', value: '', date: dayKey(new Date(now)) }, fields: [{ key: 'type', label: 'Tipo', type: 'select', options: [['Receita', 'Receita'], ['Custo', 'Custo']] }, { key: 'projectId', label: 'Obra', type: 'select', options: projectOptions }, { key: 'category', label: 'Categoria', required: true }, { key: 'value', label: 'Valor (R$)', type: 'number', required: true }, { key: 'description', label: 'Descrição', wide: true }, { key: 'date', label: 'Data', type: 'date', required: true }] },
+    purchase: { title: 'Nova compra', initial: { materialId: store.materials[0]?.id ?? '', projectId: store.projects[0]?.id ?? '', quantity: '', value: '', date: dayKey(new Date(now + 3 * DAY)) }, fields: [{ key: 'materialId', label: 'Material', type: 'select', options: store.materials.map(m => [m.id, `${m.name} (${m.unit})`]) }, { key: 'projectId', label: 'Obra', type: 'select', options: projectOptions }, { key: 'quantity', label: 'Quantidade', type: 'number', required: true }, { key: 'value', label: 'Valor total (R$)', type: 'number', required: true }, { key: 'date', label: 'Previsão de entrega', type: 'date', required: true }] },
+    supplier: { title: 'Novo fornecedor', initial: { name: '', category: '', contact: '', phone: '' }, fields: [{ key: 'name', label: 'Empresa', required: true }, { key: 'category', label: 'Categoria', required: true }, { key: 'contact', label: 'Contato' }, { key: 'phone', label: 'Telefone' }] },
+    client: { title: 'Novo cliente', initial: { name: '', email: '', phone: '', projectId: store.projects[0]?.id ?? '', unit: '', value: '' }, fields: [{ key: 'name', label: 'Nome', required: true, wide: true }, { key: 'email', label: 'E-mail' }, { key: 'phone', label: 'Telefone' }, { key: 'projectId', label: 'Empreendimento', type: 'select', options: projectOptions }, { key: 'unit', label: 'Unidade', required: true }, { key: 'value', label: 'Valor do contrato (R$)', type: 'number' }] },
+    doc: { title: 'Novo documento', initial: { name: '', kind: 'PDF', projectId: store.projects[0]?.id ?? '' }, fields: [{ key: 'name', label: 'Nome do documento', required: true, wide: true }, { key: 'kind', label: 'Formato', type: 'select', options: [['PDF', 'PDF'], ['XLSX', 'XLSX']] }, { key: 'projectId', label: 'Obra', type: 'select', options: projectOptions }] },
+  };
+  const docDownload = (d: Doc) => download(`${d.name}.txt`, `${d.name}\nObra: ${project(d.projectId)?.name ?? '—'}\nFormato original: ${d.kind} · ${d.size}\nData: ${dateLabel(d.date)}\n\nArquivo demonstrativo gerado pelo Átio. O documento original não está armazenado nesta demonstração.`, 'text/plain');
+  const toggleMember = (m: Member) => set(st => ({ members: st.members.map(x => x.id === m.id ? { ...x, status: x.status === 'Em obra' ? 'Folga' : 'Em obra' } : x) }), `${m.name}: ${m.status === 'Em obra' ? 'folga' : 'em obra'}.`);
+  const ctx = { store, now, openProject, move, remove, deliver, go, set, setModal, docDownload, toggleMember };
 
-  function download(name: string, body: string, type: string) { const url = URL.createObjectURL(new Blob([body], { type })); const anchor = document.createElement('a'); anchor.href = url; anchor.download = name; anchor.click(); setTimeout(() => URL.revokeObjectURL(url), 1000); }
-  function exportProposal(w: Project) {
-    download(`proposta-${w.name.toLowerCase().replaceAll(' ', '-')}.txt`, `ÁTIO OBRAS & REFORMAS\nPROPOSTA DEMONSTRATIVA DE EXECUÇÃO\n\nObra: ${w.name}\nCliente: ${w.client}\nLocal: ${w.venue}\nÁrea: ${w.area} m²\nInício: ${dateLabel(w.start)}\nEntrega prevista: ${dateLabel(w.date)}\nValor: ${money(w.value)}\nCustos previstos: ${money(w.cost)}\n\nEscopo: planejamento e execução de obra ou reforma.\nCondições finais e escopo executivo a acordar com o cliente.\n\nDocumento demonstrativo.`, 'text/plain;charset=utf-8'); notify('Proposta demonstrativa baixada.');
-  }
-  function exportReport(w: Project) {
-    const tasks = store.tasks.filter(t => t.projectId === w.id).map(t => `${t.done ? '[x]' : '[ ]'} ${t.title} · ${t.owner} · ${dateLabel(t.due)}`).join('\n');
-    const purchases = store.purchases.filter(p => p.projectId === w.id).map(p => `${p.title}: ${p.quantity} ${p.unit} · ${p.status} · ${dateLabel(p.date)}`).join('\n');
-    download(`relatorio-${w.id}.txt`, `ÁTIO OBRAS & REFORMAS\nRELATÓRIO DEMONSTRATIVO\n\n${w.name}\nCliente: ${w.client}\nAvanço físico: ${w.progress}%\nEntrega: ${dateLabel(w.date)}\n\nCHECKLIST\n${tasks || 'Sem tarefas cadastradas.'}\n\nCOMPRAS\n${purchases || 'Sem compras cadastradas.'}\n\nDIÁRIO\n${store.notes[w.id] || 'Sem ocorrências registradas.'}`, 'text/plain;charset=utf-8');
-  }
+  return <div className={`${s.app} ${jakarta.variable}`}>
+    <aside className={s.sidebar} aria-label="Navegação principal">
+      <button className={s.brand} onClick={() => go('Início')} aria-label="Átio Construções, ir para o início"><Logo /><span>ÁTIO<small>CONSTRUÇÕES</small></span></button>
+      <nav>{navigation.map(([name, Icon]) => <button key={name} className={view === name ? s.navActive : ''} onClick={() => go(name)} aria-current={view === name ? 'page' : undefined} title={name}><Icon size={19} strokeWidth={1.6} /><span>{name}</span></button>)}</nav>
+      <div className={s.profile}><span className={s.profilePhoto}>{initials(owner.name)}</span><span><b>{owner.name}</b><small>{owner.role}</small></span></div>
+    </aside>
 
-  function exportFinance() { const csv = [['Descrição', 'Obra', 'Tipo', 'Categoria', 'Valor', 'Data', 'Pago'], ...monthEntries.map(e => [e.title, getProject(e.projectId)?.name || '', e.type, e.category, e.value.toFixed(2).replace('.', ','), e.date, e.paid ? 'Sim' : 'Não'])].map(row => row.map(v => `"${String(v).replaceAll('"', '""')}"`).join(';')).join('\r\n'); download('financeiro-atio.csv', '\uFEFF' + csv, 'text/csv;charset=utf-8'); }
-  function downloadPhoto(name: string) { const a = document.createElement('a'); a.href = image(name); a.download = `${name}.jpg`; a.click(); }
+    <main className={s.main}>
+      <Header ctx={ctx} view={view} />
+      {view === 'Início' && <>
+        <Kpis ctx={ctx} />
+        <div className={s.dashGrid}>
+          <ProjectsSection ctx={ctx} mode={mode} setMode={setMode} compact />
+          <aside className={s.side}><MapCard ctx={ctx} /><TodayCard ctx={ctx} /></aside>
+        </div>
+        <div className={s.bottomGrid}><FinanceChart ctx={ctx} /><StockCard ctx={ctx} /><TeamCard ctx={ctx} /><DocsCard ctx={ctx} /></div>
+      </>}
+      {view === 'Obras' && <ProjectsSection ctx={ctx} mode={mode} setMode={setMode} />}
+      {view === 'Planejamento' && <PlanningView ctx={ctx} />}
+      {view === 'Orçamentos' && <BudgetsView ctx={ctx} />}
+      {view === 'Financeiro' && <FinanceView ctx={ctx} />}
+      {view === 'Compras' && <PurchasesView ctx={ctx} />}
+      {view === 'Estoque' && <StockView ctx={ctx} />}
+      {view === 'Fornecedores' && <Table title="Fornecedores" action={['Novo fornecedor', () => setModal({ kind: 'supplier' })]} head={['Empresa', 'Categoria', 'Contato', 'Telefone', 'Materiais']} rows={store.suppliers.map(x => ({ key: x.id, cells: [<b key="n">{x.name}</b>, x.category, x.contact || '—', x.phone || '—', store.materials.filter(m => m.supplier === x.name).map(m => m.name).join(', ') || '—'] }))} />}
+      {view === 'Clientes' && <Table title="Clientes" action={['Novo cliente', () => setModal({ kind: 'client' })]} head={['Cliente', 'Empreendimento', 'Unidade', 'Contato', 'Contrato']} numeric={[4]} rows={store.clients.map(c => ({ key: c.id, onClick: () => openProject(c.projectId), cells: [<span key="n" className={s.person}><Avatar name={c.name} tone="#c8642a" /><b>{c.name}</b></span>, project(c.projectId)?.name ?? '—', c.unit, <span key="c" className={s.stackText}>{c.email}<small>{c.phone}</small></span>, brl(c.value)] }))} />}
+      {view === 'Documentos' && <Table title="Documentos" action={['Novo documento', () => setModal({ kind: 'doc' })]} head={['Documento', 'Obra', 'Formato', 'Data', '']} rows={[...store.docs].sort((a, b) => b.date.localeCompare(a.date)).map(d => ({ key: d.id, cells: [<span key="n" className={s.person}><DocIcon kind={d.kind} /><b>{d.name}</b></span>, project(d.projectId)?.name ?? '—', `${d.kind} · ${d.size}`, dateLabel(d.date), <button key="d" className={s.iconBtn} onClick={() => docDownload(d)} aria-label={`Baixar ${d.name}`}><Download size={16} /></button>] }))} />}
+      {view === 'Relatórios' && <ReportsView ctx={ctx} />}
+    </main>
 
-  function saveForm(e: FormEvent<HTMLFormElement>) {
-    e.preventDefault(); if (!modal) return;
-    const data = new FormData(e.currentTarget), value = (key: string) => String(data.get(key) || '').trim(), number = (key: string) => Math.max(0, Number(value(key)) || 0), id = modal.id || uid();
-    if (modal.kind === 'project') {
-      if (value('date') < value('start')) { notify('A entrega precisa ser na data de início ou depois.'); return; }
-      const old = getProject(id); const next: Project = { id, name: value('name'), date: value('date'), venue: value('venue'), area: number('area'), value: number('value'), cost: number('cost'), status: value('status'), image: value('image') || old?.image || 'hero', email: value('email'), phone: value('phone'), client: value('client'), start: value('start'), progress: value('status') === 'Concluída' ? 100 : Math.min(100, number('progress')), health: value('health') as Project['health'] };
-      setStore(p => ({ ...p, projects: old ? p.projects.map(w => w.id === id ? next : w) : [...p.projects, next] }));
-    }
-    if (modal.kind === 'task') { const task = { id, title: value('title'), projectId: value('projectId'), owner: value('owner'), due: value('due'), done: data.get('done') === 'on', phase: value('phase') }; setStore(p => ({ ...p, tasks: modal.id ? p.tasks.map(t => t.id === id ? task : t) : [...p.tasks, task] })); }
-    if (modal.kind === 'supplier') { const supplier = { id, name: value('name'), category: value('category'), contact: value('contact'), price: number('price'), status: value('status') }; setStore(p => ({ ...p, suppliers: modal.id ? p.suppliers.map(t => t.id === id ? supplier : t) : [...p.suppliers, supplier] })); }
-    if (modal.kind === 'entry') { const entry = { id, projectId: value('projectId'), title: value('title'), type: value('type') as 'Receita' | 'Despesa', category: value('category'), value: number('value'), date: value('date'), paid: data.get('paid') === 'on' }; setStore(p => ({ ...p, entries: modal.id ? p.entries.map(t => t.id === id ? entry : t) : [...p.entries, entry] })); }
-    if (modal.kind === 'purchase') { const purchase = { id, projectId: value('projectId'), title: value('title'), quantity: number('quantity'), unit: value('unit'), supplier: value('supplier'), date: value('date'), status: value('status'), image: value('image') }; setStore(p => ({ ...p, purchases: modal.id ? p.purchases.map(item => item.id === id ? purchase : item) : [...p.purchases, purchase] })); }
-    if (modal.kind === 'appointment') {
-      if (value('end') <= value('time')) { notify('O horário final precisa ser depois do início.'); return; }
-      const appointment = { id, projectId: value('projectId'), title: value('title'), date: value('date'), time: value('time'), end: value('end'), type: value('type') }; setStore(p => ({ ...p, appointments: modal.id ? p.appointments.map(t => t.id === id ? appointment : t) : [...p.appointments, appointment] }));
-    }
-    setModal(null); notify('Alterações salvas neste navegador.');
-  }
-  function formFields() {
-    if (!modal) return null;
-    const purchase = store.purchases.find(p => p.id === modal.id);
-    const w = getProject(modal.id || ''), task = store.tasks.find(t => t.id === modal.id), supplier = store.suppliers.find(t => t.id === modal.id), entry = store.entries.find(t => t.id === modal.id), appointment = store.appointments.find(t => t.id === modal.id);
-    const field = (label: string, name: string, defaultValue: string | number = '', type = 'text', required = true) => <label className={s.field} key={name}>{label}<input name={name} type={type} defaultValue={defaultValue} required={required} min={type === 'number' ? 0 : undefined} step={type === 'number' ? '0.01' : undefined} max={name === 'progress' ? 100 : undefined} /></label>;
-    const select = (label: string, name: string, options: { value: string; label: string }[], defaultValue?: string) => <label className={s.field} key={name}>{label}<select name={name} defaultValue={defaultValue || options[0]?.value} required>{options.map(o => <option value={o.value} key={o.value}>{o.label}</option>)}</select></label>;
-    const choices = (values: string[]) => values.map(v => ({ value: v, label: v }));
-    const projectSelect = (defaultValue?: string) => select('Obra', 'projectId', store.projects.map(w => ({ value: w.id, label: w.name })), defaultValue || selected || undefined);
-    if (modal.kind === 'project') return <>{field('Nome da obra', 'name', w?.name)}{field('Cliente', 'client', w?.client)}{field('Início previsto', 'start', w?.start || today, 'date')}{field('Entrega prevista', 'date', w?.date || '2026-12-18', 'date')}{field('Local / endereço', 'venue', w?.venue)}{field('Área (m²)', 'area', w?.area || 0, 'number')}{field('Valor do contrato (R$)', 'value', w?.value || 0, 'number')}{field('Custo previsto (R$)', 'cost', w?.cost || 0, 'number')}{select('Etapa comercial', 'status', choices(stages), w?.status)}{select('Situação do prazo', 'health', choices(['No prazo', 'Em atenção']), w?.health)}{field('Avanço físico (%)', 'progress', w?.progress || 0, 'number')}{select('Imagem de capa', 'image', [{ value: 'hero', label: 'Casa da Praia' }, { value: 'apartment', label: 'Apartamento' }, { value: 'clinic', label: 'Clínica' }, { value: 'residence', label: 'Residência' }, { value: 'site', label: 'Obra em execução' }], w?.image)}{field('E-mail do cliente', 'email', w?.email, 'email', false)}{field('Telefone', 'phone', w?.phone, 'tel', false)}</>;
-    if (modal.kind === 'purchase') return <>{field('Material', 'title', purchase?.title)}{projectSelect(purchase?.projectId)}{field('Quantidade', 'quantity', purchase?.quantity || 1, 'number')}{field('Unidade', 'unit', purchase?.unit || 'unidades')}{field('Fornecedor', 'supplier', purchase?.supplier)}{field('Previsão de entrega', 'date', purchase?.date || today, 'date')}{select('Situação', 'status', choices(['A confirmar', 'Pedido realizado', 'Em entrega', 'Entregue']), purchase?.status)}{select('Imagem', 'image', choices(['porcelain', 'cement', 'windows']), purchase?.image)}</>;
-    if (modal.kind === 'task') return <>{field('Tarefa', 'title', task?.title)}{projectSelect(task?.projectId)}{select('Responsável', 'owner', choices(team.map(p => p.name)), task?.owner)}{field('Prazo', 'due', task?.due || today, 'date')}{select('Etapa da obra', 'phase', choices(phases), task?.phase)}<label className={s.checkField}><input type="checkbox" name="done" defaultChecked={task?.done} />Tarefa concluída</label></>;
-    if (modal.kind === 'supplier') return <>{field('Fornecedor', 'name', supplier?.name)}{select('Categoria', 'category', choices(['Materiais básicos', 'Revestimentos', 'Esquadrias', 'Elétrica', 'Hidráulica', 'Marcenaria', 'Mão de obra', 'Outros']), supplier?.category)}{field('Contato e telefone', 'contact', supplier?.contact)}{field('Valor de referência (R$)', 'price', supplier?.price || 0, 'number')}{select('Situação', 'status', choices(['Confirmado', 'Em negociação']), supplier?.status)}</>;
-    if (modal.kind === 'entry') return <>{field('Descrição', 'title', entry?.title)}{projectSelect(entry?.projectId)}{select('Tipo', 'type', choices(['Receita', 'Despesa']), entry?.type)}{field('Categoria', 'category', entry?.category || 'Contrato')}{field('Valor (R$)', 'value', entry?.value || 0, 'number')}{field('Vencimento', 'date', entry?.date || today, 'date')}<label className={s.checkField}><input type="checkbox" name="paid" defaultChecked={entry?.paid} />Pagamento confirmado</label></>;
-    return <>{field('Compromisso', 'title', appointment?.title)}{projectSelect(appointment?.projectId)}{select('Tipo', 'type', choices(['Reunião', 'Visita técnica', 'Medição', 'Entrega', 'Vistoria', 'Equipe']), appointment?.type)}{field('Data', 'date', appointment?.date || selectedDate || today, 'date')}{field('Início', 'time', appointment?.time || '10:00', 'time')}{field('Fim', 'end', appointment?.end || '11:00', 'time')}</>;
-  }
-  const descriptions: Record<View, string> = { 'Visão geral': 'Cada etapa no lugar. Cada obra sob controle.', Obras: 'Projetos, prazos e resultados em uma única visão.', Calendário: 'Visitas, medições e entregas, em perfeita sintonia.', 'Leads e propostas': 'Do primeiro contato à entrega da obra.', Clientes: 'Clientes, contatos e projetos em andamento.', Fornecedores: 'Parceiros que transformam ideias em experiências.', Equipe: 'Pessoas que cuidam de cada detalhe.', Orçamentos: 'Clareza para planejar e tranquilidade para realizar.', Tarefas: 'Cada detalhe no seu tempo.', Documentos: 'Propostas e informações sempre à mão.', Materiais: 'Compras, materiais e entregas por obra.', Relatórios: 'Uma visão clara dos resultados da empresa.', 'Fotos da obra': 'Registros e referências de cada etapa da execução.', Mensagens: 'Alinhamentos que mantêm a equipe em sintonia.' };
-  const action = view === 'Materiais' ? { label: 'Nova compra', kind: 'purchase' as const } : view === 'Fornecedores' ? { label: 'Novo fornecedor', kind: 'supplier' as const } : view === 'Calendário' ? { label: 'Novo compromisso', kind: 'appointment' as const } : view === 'Tarefas' || view === 'Equipe' ? { label: 'Nova tarefa', kind: 'task' as const } : view === 'Orçamentos' ? { label: 'Novo lançamento', kind: 'entry' as const } : { label: 'Nova obra', kind: 'project' as const };
-  const modalTitle = modal?.kind === 'profile' ? 'Seu espaço de trabalho' : `${modal?.id ? 'Editar' : ['project', 'purchase', 'task'].includes(modal?.kind || '') ? 'Nova' : 'Novo'} ${modal?.kind === 'project' ? 'obra' : modal?.kind === 'purchase' ? 'compra' : modal?.kind === 'task' ? 'tarefa' : modal?.kind === 'supplier' ? 'fornecedor' : modal?.kind === 'entry' ? 'lançamento' : 'compromisso'}`;
+    {modal && modal.kind !== 'team' && <FormModal key={modal.kind} {...forms[modal.kind]} preset={modal.preset} onClose={() => setModal(null)} onSubmit={v => submit(modal.kind, v)} />}
+    {modal?.kind === 'team' && <TeamModal ctx={ctx} onClose={() => setModal(null)} />}
+    {current && <ProjectDrawer key={current.id} ctx={ctx} project={current} tab={drawer!.tab} onTab={tab => setDrawer({ id: current.id, tab })} onClose={() => setDrawer(null)} onUpdate={(change, message) => updateProject(current.id, change, message)} />}
+    {toast && <div className={s.toast} role="status"><Check size={15} />{toast}</div>}
+  </div>;
+}
 
-  return <div className={s.app}><a className={s.skipLink} href="#atio-content">Pular para o conteúdo</a><aside className={s.sidebar}><button className={s.brand} onClick={() => go('Visão geral')} aria-label="Átio Obras & Reformas, início"><span>A</span><div>ÁTIO<small>OBRAS & REFORMAS</small></div></button><nav aria-label="Navegação principal">{navigation.map(([name, Icon]) => <button key={name} className={view === name ? s.navActive : ''} aria-current={view === name ? 'page' : undefined} onClick={() => go(name)}><Icon size={18} strokeWidth={1.55} fill={name === 'Visão geral' && view === name ? 'currentColor' : 'none'} /><span>{name}</span></button>)}</nav><a href="/sistemas" className={s.directoryLink}><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" aria-hidden="true"><path d="M19 12H5m6-6-6 6 6 6" /></svg><span>Todos os sistemas</span></a><button className={s.profile} onClick={() => setModal({ kind: 'profile' })}><Photo name="portrait" alt="Mariana Silva" /><span><b>Mariana Silva</b><small>Diretora</small></span><ChevronRight size={13} /></button></aside><main className={s.main} id="atio-content"><header className={s.topbar}><label className={s.search}><Search size={16} strokeWidth={1.5} /><input aria-label="Buscar no sistema" placeholder="Buscar obras, clientes, fornecedores..." value={query} onChange={e => setQuery(e.target.value)} />{query && <button onClick={() => setQuery('')} aria-label="Limpar busca"><X size={14} /></button>}</label><div className={s.topActions}><div className={s.notificationWrap}><button className={s.notificationButton} aria-label="Notificações" aria-expanded={notifications} onClick={() => setNotifications(!notifications)}><Bell size={20} strokeWidth={1.5} />{dueTasks.length > 0 && <i />}</button>{notifications && <div className={s.notifications}><div className={s.panelHeader}><h2>Próximas entregas</h2><button className={s.iconButton} onClick={() => setNotifications(false)} aria-label="Fechar notificações"><X size={16} /></button></div>{dueTasks.slice(0, 4).map(t => <button key={t.id} onClick={() => { const w = getProject(t.projectId); if (w) openProject(w); }}><CheckCheck size={17} /><span>{t.title}<small>{dateLabel(t.due)} · {getProject(t.projectId)?.name}</small></span></button>)}</div>}</div><label className={s.monthSelect}><span className={s.srOnly}>Mês do painel</span><select value={monthString(month)} onChange={e => { const d = new Date(`${e.target.value}-01T12:00:00`); setMonth(d); setCalendarMonth(d); }}>{Array.from({ length: 18 }, (_, i) => new Date(2026, 4 + i, 1)).map(d => <option value={monthString(d)} key={monthString(d)}>{shortMonth(d)}</option>)}</select><ChevronDown size={14} /></label><button className={s.primaryButton} onClick={() => setModal({ kind: action.kind })}><Plus size={16} />{action.label}</button></div></header>{storageWarning && <p className={s.storageWarning}>O armazenamento do navegador está indisponível. As alterações durarão apenas nesta sessão.</p>}{!project && <div className={s.pageHeading}><span className={s.eyebrow}>ÁTIO OBRAS & REFORMAS</span><h1>{view}</h1><p>{descriptions[view]}</p></div>}{query && view === 'Visão geral' ? <Panel title={`Resultados para “${query}”`}><div className={s.allEvents}>{searched.map(projectCard)}</div>{supplierTable()}{!searched.length && <p className={s.sectionNote}>Nenhuma obra encontrada com este termo.</p>}</Panel> : content()}<footer className={s.appFooter}><span>ÁTIO OBRAS & REFORMAS</span><small>Cada etapa no lugar. Cada obra sob controle.</small><small>Demonstração · dados salvos neste navegador</small></footer></main><Dialog.Root open={!!modal} onOpenChange={open => { if (!open) setModal(null); }}><Dialog.Portal><Dialog.Overlay className={s.modalOverlay} /><Dialog.Content className={s.modal}><div className={s.modalHeading}><div><span className={s.eyebrow}>ÁTIO OBRAS & REFORMAS</span><Dialog.Title>{modalTitle}</Dialog.Title></div><Dialog.Close className={s.iconButton} aria-label="Fechar"><X size={20} /></Dialog.Close></div><Dialog.Description className={s.modalDescription}>{modal?.kind === 'profile' ? 'Este protótipo funciona localmente, sem conexão com um backend.' : 'Organize os detalhes. As alterações ficam salvas neste navegador.'}</Dialog.Description>{modal?.kind === 'profile' ? <div className={s.profileContent}><Photo name="portrait" alt="Mariana Silva" /><h3>Mariana Silva</h3><p>Diretora · Átio Obras & Reformas</p><button className={s.secondaryButton} onClick={() => download('atio-backup.json', JSON.stringify(store, null, 2), 'application/json')}>Exportar dados da demonstração<Download size={16} /></button></div> : <form onSubmit={saveForm}><div className={s.formGrid}>{formFields()}</div><div className={s.modalFooter}><Dialog.Close className={s.secondaryButton}>Cancelar</Dialog.Close><button className={s.primaryButton} type="submit"><Check size={16} />Salvar alterações</button></div></form>}</Dialog.Content></Dialog.Portal></Dialog.Root>{notice && <div className={s.toast} role="status"><Check size={17} />{notice}</div>}</div>;
+type Ctx = { store: Store; now: number; openProject: (id: string, tab?: Tab) => void; move: (id: string, stage: Stage) => void; remove: (id: string) => void; deliver: (id: string) => void; go: (v: View) => void; set: (change: (st: Store) => Partial<Store>, message?: string) => void; setModal: (m: Modal) => void; docDownload: (d: Doc) => void; toggleMember: (m: Member) => void };
+
+function Logo() {
+  return <svg viewBox="0 0 40 40" className={s.logo} aria-hidden="true"><path d="M6 36 V16 L12 12 V36 M14 36 V8 L20 4 L26 8 V36 M28 36 V14 L34 18 V36" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinejoin="round" /><path d="M17 14 h6 M17 20 h6 M17 26 h6" stroke="currentColor" strokeWidth="1.6" /><path d="M3 36 H37" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" /></svg>;
+}
+function Avatar({ name, tone, size = 26 }: { name: string; tone: string; size?: number }) {
+  return <span className={s.avatar} style={{ background: tone, width: size, height: size, fontSize: size * .36 }} title={name}>{initials(name)}</span>;
+}
+function Avatars({ ids, members }: { ids: string[]; members: Member[] }) {
+  const list = ids.map(id => members.find(m => m.id === id)).filter(Boolean) as Member[];
+  return <span className={s.avatars}>{list.slice(0, 3).map(m => <Avatar key={m.id} name={m.name} tone={m.tone} />)}{list.length > 3 && <em>+{list.length - 3}</em>}{!list.length && <small>Sem equipe</small>}</span>;
+}
+function DocIcon({ kind }: { kind: Doc['kind'] }) { return <span className={kind === 'PDF' ? s.pdf : s.xlsx}>{kind === 'PDF' ? <FileText size={15} /> : <FileSpreadsheet size={15} />}</span>; }
+function Pill({ tone, children }: { tone: 'green' | 'blue' | 'red' | 'amber' | 'gray' | 'purple'; children: ReactNode }) { return <em className={`${s.pill} ${s[tone]}`}>{children}</em>; }
+function useOutside(open: boolean, close: () => void) {
+  const ref = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (!open) return;
+    const handler = (e: MouseEvent) => { if (!ref.current?.contains(e.target as Node)) close(); };
+    document.addEventListener('mousedown', handler); return () => document.removeEventListener('mousedown', handler);
+  }, [open, close]);
+  return ref;
+}
+
+function Header({ ctx, view }: { ctx: Ctx; view: View }) {
+  const { store, now } = ctx;
+  const [query, setQuery] = useState('');
+  const [panel, setPanel] = useState<'search' | 'bell' | 'new' | null>(null);
+  const input = useRef<HTMLInputElement>(null);
+  const close = useMemo(() => () => setPanel(null), []);
+  const ref = useOutside(!!panel, close);
+  useEffect(() => {
+    const key = (e: KeyboardEvent) => { if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') { e.preventDefault(); input.current?.focus(); setPanel('search'); } };
+    window.addEventListener('keydown', key); return () => window.removeEventListener('keydown', key);
+  }, []);
+  const q = query.trim();
+  const results = q ? [
+    ...store.projects.filter(p => has(q, p.name, p.city, p.client)).map(p => ({ key: p.id, label: p.name, meta: `Obra · ${p.city}`, run: () => ctx.openProject(p.id) })),
+    ...store.clients.filter(c => has(q, c.name, c.unit)).map(c => ({ key: c.id, label: c.name, meta: `Cliente · ${c.unit}`, run: () => ctx.go('Clientes') })),
+    ...store.suppliers.filter(x => has(q, x.name, x.category)).map(x => ({ key: x.id, label: x.name, meta: `Fornecedor · ${x.category}`, run: () => ctx.go('Fornecedores') })),
+    ...store.materials.filter(m => has(q, m.name, m.supplier)).map(m => ({ key: m.id, label: m.name, meta: `Material · ${m.supplier}`, run: () => ctx.go('Estoque') })),
+  ].slice(0, 8) : [];
+  const late = store.projects.filter(p => !delivered(p) && new Date(p.end).getTime() < now);
+  const low = store.materials.filter(m => stockStatus(m, store.purchases) === 'Estoque baixo');
+  const today = store.activities.filter(a => a.date === dayKey(new Date(now)) && !a.done);
+  const alerts = [...late.map(p => ({ key: p.id, text: `${p.name}: entrega prevista para ${dateLabel(p.end)} já passou`, run: () => ctx.openProject(p.id) })), ...low.map(m => ({ key: m.id, text: `${m.name} abaixo do estoque mínimo (${m.quantity} ${m.unit})`, run: () => ctx.go('Estoque') })), ...(today.length ? [{ key: 'today', text: `${today.length} atividades programadas para hoje`, run: () => ctx.go('Planejamento') }] : [])];
+  return <header className={s.header} ref={ref}>
+    <div className={s.greeting}>{view === 'Início' ? <><h1>Olá, {owner.first}! <span aria-hidden="true">👋</span></h1><p>Aqui está o resumo das suas obras e da sua construtora hoje.</p></> : <><h1>{view}</h1><p>Átio Construções</p></>}</div>
+    <div className={s.search}>
+      <Search size={17} />
+      <input ref={input} value={query} onChange={e => { setQuery(e.target.value); setPanel('search'); }} onFocus={() => setPanel('search')} placeholder="Buscar obra, cliente, fornecedor..." aria-label="Buscar obra, cliente ou fornecedor" />
+      <kbd>⌘ K</kbd>
+      {panel === 'search' && q && <div className={`${s.popover} ${s.searchPop}`}>{results.map(r => <button key={r.key} onClick={() => { r.run(); setPanel(null); setQuery(''); }}><b>{r.label}</b><small>{r.meta}</small></button>)}{!results.length && <p className={s.empty}>Nada encontrado para “{q}”.</p>}</div>}
+    </div>
+    <div className={s.bellWrap}>
+      <button className={s.round} onClick={() => setPanel(panel === 'bell' ? null : 'bell')} aria-label={`Notificações, ${alerts.length}`} aria-expanded={panel === 'bell'}><Bell size={19} />{alerts.length > 0 && <i className={s.dot} />}</button>
+      {panel === 'bell' && <div className={s.popover}><p className={s.popTitle}>Notificações</p>{alerts.map(a => <button key={a.key} className={s.alert} onClick={() => { a.run(); setPanel(null); }}><i />{a.text}</button>)}{!alerts.length && <p className={s.empty}>Nenhum alerta no momento.</p>}</div>}
+    </div>
+    <div className={s.split}>
+      <button className={s.primary} onClick={() => ctx.setModal({ kind: 'project' })}><Plus size={18} />Nova obra</button>
+      <button className={s.primary} onClick={() => setPanel(panel === 'new' ? null : 'new')} aria-label="Mais opções de cadastro" aria-expanded={panel === 'new'}><ChevronDown size={17} /></button>
+      {panel === 'new' && <div className={`${s.popover} ${s.menuPop}`} role="menu">{([['project', 'Nova obra'], ['activity', 'Nova atividade'], ['purchase', 'Nova compra'], ['entry', 'Novo lançamento'], ['doc', 'Novo documento']] as [FormKind, string][]).map(([k, l]) => <button role="menuitem" key={k} onClick={() => { ctx.setModal({ kind: k }); setPanel(null); }}>{l}</button>)}</div>}
+    </div>
+  </header>;
+}
+
+function Kpis({ ctx }: { ctx: Ctx }) {
+  const { store, now } = ctx;
+  const k = contracted(store.projects, now);
+  const running = store.projects.filter(active).length;
+  const delta = (v: number, good: boolean) => <p className={good ? s.up : s.down}>{v >= 0 ? <ArrowUpRight size={14} /> : <ArrowDownRight size={14} />}<b>{pct(v)}</b> vs. 30 dias atrás</p>;
+  return <section className={s.kpis} aria-label="Indicadores">
+    <article className={s.kpi}><CoinsArt /><div><h2>Receita contratada</h2><strong><small>R$</small>{Math.round(k.revenue).toLocaleString('pt-BR')}</strong>{delta(k.dRevenue, k.dRevenue >= 0)}</div><KpiMenu ctx={ctx} view="Financeiro" /></article>
+    <article className={s.kpi}><BlocksArt /><div><h2>Custo das obras</h2><strong><small>R$</small>{Math.round(k.cost).toLocaleString('pt-BR')}</strong>{delta(k.dCost, k.dCost <= 0)}</div><KpiMenu ctx={ctx} view="Orçamentos" /></article>
+    <article className={s.kpi}><HelmetArt /><div><h2>Margem projetada</h2><strong><small>R$</small>{Math.round(k.margin).toLocaleString('pt-BR')}</strong>{delta(k.dMargin, k.dMargin >= 0)}</div><span className={s.ring} style={{ background: `conic-gradient(#c8803e ${k.share * 3.6}deg, #f1e3d2 0)` }} role="img" aria-label={`Margem de ${pct(k.share)}`}><b>{pct(k.share)}</b></span></article>
+    <article className={s.kpi}><CraneArt /><div><h2>Obras em andamento</h2><strong>{running}</strong><p className={s.neutral}>de {store.projects.length} empreendimentos</p></div><KpiMenu ctx={ctx} view="Obras" /></article>
+  </section>;
+}
+function KpiMenu({ ctx, view }: { ctx: Ctx; view: View }) { return <button className={s.kpiMore} onClick={() => ctx.go(view)} aria-label={`Ver ${view}`} title={`Ver ${view}`}><MoreVertical size={17} /></button>; }
+
+function ProjectsSection({ ctx, mode, setMode, compact: isCompact = false }: { ctx: Ctx; mode: Mode; setMode: (m: Mode) => void; compact?: boolean }) {
+  const { store } = ctx;
+  const [filter, setFilter] = useState<Filter>('Todas');
+  const [city, setCity] = useState('');
+  const [sort, setSort] = useState<'end' | 'progress' | 'name'>('end');
+  const [showFilters, setShowFilters] = useState(false);
+  const closeFilters = useMemo(() => () => setShowFilters(false), []);
+  const ref = useOutside(showFilters, closeFilters);
+  const list = store.projects.filter(p => filterFn[filter](p) && (!city || p.city === city)).sort((a, b) => sort === 'name' ? a.name.localeCompare(b.name) : sort === 'progress' ? b.progress - a.progress : a.end.localeCompare(b.end));
+  return <section className={s.projects}>
+    <div className={s.projectsHead}>
+      <h2>Obras</h2>
+      <div className={s.tabs} role="tablist">{filters.map(f => <button key={f} role="tab" aria-selected={filter === f} className={filter === f ? s.tabOn : ''} onClick={() => setFilter(f)}>{f}<span>{store.projects.filter(filterFn[f]).length}</span></button>)}</div>
+      <div className={s.tools}><div className={s.modes}>{([['Kanban', LayoutGrid], ['Lista', List], ['Mapa', MapIcon]] as [Mode, LucideIcon][]).map(([m, Icon]) => <button key={m} aria-pressed={mode === m} className={mode === m ? s.modeOn : ''} onClick={() => setMode(m)}><Icon size={15} />{m}</button>)}</div>
+      <div className={s.filterWrap} ref={ref}>
+        <button className={`${s.ghostBtn} ${city ? s.ghostOn : ''}`} onClick={() => setShowFilters(!showFilters)} aria-expanded={showFilters}><SlidersHorizontal size={15} />Filtros{city && <i className={s.countDot}>1</i>}</button>
+        {showFilters && <div className={`${s.popover} ${s.filterPop}`}>
+          <label className={s.field}><span>Cidade</span><select value={city} onChange={e => setCity(e.target.value)}><option value="">Todas as cidades</option>{cities.map(c => <option key={c}>{c}</option>)}</select></label>
+          <label className={s.field}><span>Ordenar por</span><select value={sort} onChange={e => setSort(e.target.value as typeof sort)}><option value="end">Entrega mais próxima</option><option value="progress">Maior avanço</option><option value="name">Nome</option></select></label>
+          {city && <button className={s.link} onClick={() => setCity('')}>Limpar filtros</button>}
+        </div>}
+      </div></div>
+    </div>
+    {mode === 'Kanban' && <Kanban ctx={ctx} list={list} limit={isCompact ? 2 : 0} />}
+    {mode === 'Lista' && <div className={s.card}><ProjectTable ctx={ctx} list={list} /></div>}
+    {mode === 'Mapa' && <div className={`${s.card} ${s.bigMap}`}><MapCanvas ctx={ctx} list={list} callouts={list.length} /></div>}
+  </section>;
+}
+
+function Kanban({ ctx, list, limit }: { ctx: Ctx; list: Project[]; limit: number }) {
+  const [dragging, setDragging] = useState<Project | null>(null);
+  const [over, setOver] = useState<Stage | null>(null);
+  const [menu, setMenu] = useState<string | null>(null);
+  const closeMenu = useMemo(() => () => setMenu(null), []);
+  const ref = useOutside(!!menu, closeMenu);
+  function start(e: DragEvent<HTMLElement>, p: Project) {
+    e.dataTransfer.setData('text/plain', p.id); e.dataTransfer.effectAllowed = 'move';
+    const ghost = e.currentTarget.cloneNode(true) as HTMLElement;
+    ghost.classList.add(s.ghost); ghost.style.width = `${e.currentTarget.offsetWidth}px`;
+    e.currentTarget.parentElement?.appendChild(ghost);
+    const box = e.currentTarget.getBoundingClientRect();
+    e.dataTransfer.setDragImage(ghost, e.clientX - box.left, e.clientY - box.top);
+    setTimeout(() => ghost.remove());
+    setDragging(p); setMenu(null);
+  }
+  return <div className={s.kanban} ref={ref}>{stages.map(stage => {
+    const items = list.filter(p => p.stage === stage), shown = limit ? items.slice(0, limit) : items, target = over === stage && dragging && dragging.stage !== stage;
+    return <div key={stage} className={`${s.column} ${target ? s.columnOver : ''}`} style={{ '--tint': stageColor[stage] } as React.CSSProperties} onDragOver={e => { e.preventDefault(); if (over !== stage) setOver(stage); }} onDragLeave={e => { if (!e.currentTarget.contains(e.relatedTarget as Node)) setOver(null); }} onDrop={e => { e.preventDefault(); const id = e.dataTransfer.getData('text/plain'); if (id) ctx.move(id, stage); setDragging(null); setOver(null); }}>
+      <header><i style={{ background: stageColor[stage] }} /><span><b>{stage}</b><small>{items.length} {items.length === 1 ? 'obra' : 'obras'}</small></span><button className={s.addCol} onClick={() => ctx.setModal({ kind: 'project', preset: { stage } })} aria-label={`Nova obra em ${stage}`}><Plus size={17} /></button></header>
+      <div className={s.colCards}>
+        {target && <div className={s.dropZone} aria-hidden="true" />}
+        {shown.map(p => <ProjectCard key={p.id} ctx={ctx} p={p} dragging={dragging?.id === p.id} menuOpen={menu === p.id} onMenu={() => setMenu(menu === p.id ? null : p.id)} onDragStart={e => start(e, p)} onDragEnd={() => { setDragging(null); setOver(null); }} />)}
+        {limit > 0 && items.length > limit && <button className={s.more} onClick={() => ctx.go('Obras')}>Ver mais {items.length - limit}</button>}
+        {!items.length && !target && <p className={s.emptyCol}>Arraste uma obra para cá</p>}
+      </div>
+    </div>;
+  })}</div>;
+}
+
+function ProjectCard({ ctx, p, dragging, menuOpen, onMenu, onDragStart, onDragEnd }: { ctx: Ctx; p: Project; dragging: boolean; menuOpen: boolean; onMenu: () => void; onDragStart: (e: DragEvent<HTMLElement>) => void; onDragEnd: () => void }) {
+  const done = delivered(p);
+  const late = !done && new Date(p.end).getTime() < ctx.now;
+  const next = stages[stages.indexOf(p.stage) + 1];
+  return <article className={`${s.pcard} ${dragging ? s.pcardDragging : ''}`} draggable onDragStart={onDragStart} onDragEnd={onDragEnd}>
+    <button className={s.cover} onClick={() => ctx.openProject(p.id)} aria-label={`Abrir ${p.name}`}><Building art={p.art} className={s.coverArt} /></button>
+    <div className={s.menu}>
+      <button className={s.coverMore} onClick={onMenu} aria-label={`Ações de ${p.name}`} aria-expanded={menuOpen}><MoreVertical size={15} /></button>
+      {menuOpen && <div className={s.menuList} role="menu">
+        <button role="menuitem" onClick={() => { onMenu(); ctx.openProject(p.id); }}>Abrir obra</button>
+        {next && <button role="menuitem" onClick={() => { onMenu(); ctx.move(p.id, next); }}>Mover para {next}</button>}
+        {p.stage === 'Entrega' && !done && <button role="menuitem" onClick={() => { onMenu(); ctx.deliver(p.id); }}>Marcar como entregue</button>}
+        <button role="menuitem" onClick={() => { onMenu(); ctx.openProject(p.id, 'Equipe'); }}>Gerenciar equipe</button>
+        <button role="menuitem" className={s.danger} onClick={() => { onMenu(); ctx.remove(p.id); }}>Excluir</button>
+      </div>}
+    </div>
+    <button className={s.pbody} onClick={() => ctx.openProject(p.id)}>
+      <b>{p.name}</b><small><MapPin size={13} />{p.city}</small>
+      <span className={s.progress}><i><em style={{ width: `${p.progress}%`, background: done ? '#22b573' : barColor[p.stage] }} /></i><b>{p.progress}%</b></span>
+    </button>
+    {done ? <p className={s.deliveredTag}><CalendarDays size={14} />Entregue em {dateLabel(p.deliveredAt ?? p.end)}</p> : <div className={s.dates}>
+      <span><CalendarDays size={16} /><span>Início<b>{dateLabel(p.start)}</b></span></span>
+      <span className={late ? s.late : ''}><Flag size={16} /><span>Entrega<b>{dateLabel(p.end)}</b></span></span>
+    </div>}
+    <div className={s.pfoot}><Avatars ids={p.team} members={ctx.store.members} /><button className={s.iconBtn} onClick={onMenu} aria-label={`Mais ações de ${p.name}`}><MoreVertical size={16} /></button></div>
+  </article>;
+}
+
+function ProjectTable({ ctx, list }: { ctx: Ctx; list: Project[] }) {
+  return <div className={s.tableWrap}><table className={s.table}>
+    <thead><tr><th>Obra</th><th>Cidade</th><th>Etapa</th><th>Avanço</th><th>Início</th><th>Entrega</th><th className={s.num}>Receita</th><th className={s.num}>Margem</th></tr></thead>
+    <tbody>{list.map(p => <tr key={p.id} onClick={() => ctx.openProject(p.id)} tabIndex={0} onKeyDown={e => e.key === 'Enter' && ctx.openProject(p.id)}>
+      <td><span className={s.person}><Building art={p.art} className={s.thumb} /><b>{p.name}</b></span></td><td>{p.city}</td>
+      <td><span className={s.stage}><i style={{ background: stageColor[p.stage] }} />{delivered(p) ? 'Entregue' : p.stage}</span></td>
+      <td><span className={s.progress}><i><em style={{ width: `${p.progress}%`, background: delivered(p) ? '#22b573' : barColor[p.stage] }} /></i><b>{p.progress}%</b></span></td>
+      <td>{dateLabel(p.start)}</td><td>{dateLabel(p.end)}</td><td className={s.num}>{brl(p.revenue)}</td><td className={s.num}>{pct((p.revenue - p.cost) / p.revenue * 100)}</td>
+    </tr>)}</tbody>
+  </table>{!list.length && <p className={s.empty}>Nenhuma obra com esses filtros.</p>}</div>;
+}
+
+function MapCanvas({ ctx, list, callouts }: { ctx: Ctx; list: Project[]; callouts: number }) {
+  // Callouts go to the first projects in the list whose pins are far enough apart to keep labels readable.
+  const labelled = new Set<string>();
+  for (const p of list) {
+    if (labelled.size >= callouts) break;
+    if (list.every(q => !labelled.has(q.id) || Math.hypot(q.x - p.x, (q.y - p.y) * 1.4) > 22)) labelled.add(p.id);
+  }
+  return <div className={s.mapCanvas}>
+    <RecifeMap className={s.mapArt} />
+    {list.map(p => { const color = delivered(p) ? '#22b573' : stageColor[p.stage]; return <button key={p.id} className={`${s.pin} ${labelled.has(p.id) ? s.pinLabel : ''} ${p.x > 62 ? s.pinLeft : ''}`} style={{ left: `${p.x}%`, top: `${p.y}%` }} onClick={() => ctx.openProject(p.id)} aria-label={`${p.name}, ${p.stage}`}>
+      <MapPin size={26} fill={color} color="#fff" strokeWidth={1.6} />
+      {labelled.has(p.id) && <span><b>{p.name.replace(/^(Residencial|Condomínio|Edifício) /, '')}</b><small style={{ color }}>{delivered(p) ? 'Entregue' : p.stage}</small></span>}
+    </button>; })}
+  </div>;
+}
+
+function MapCard({ ctx }: { ctx: Ctx }) {
+  const [order, setOrder] = useState<'recent' | 'running' | 'all'>('recent');
+  const list = [...ctx.store.projects].filter(p => order !== 'running' || active(p)).sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+  return <section className={s.card}>
+    <div className={s.cardHead}><h2>Mapa das obras</h2><select className={s.chipSelect} value={order} onChange={e => setOrder(e.target.value as typeof order)} aria-label="Obras no mapa"><option value="recent">Mais recentes</option><option value="running">Em andamento</option><option value="all">Todas</option></select></div>
+    <div className={s.mapBox}><MapCanvas ctx={ctx} list={order === 'all' ? list : list.slice(0, 6)} callouts={4} /><button className={s.locate} onClick={() => ctx.go('Obras')} aria-label="Abrir mapa completo"><LocateFixed size={16} /></button></div>
+  </section>;
+}
+
+function TodayCard({ ctx }: { ctx: Ctx }) {
+  const { store, now } = ctx;
+  const today = store.activities.filter(a => a.date === dayKey(new Date(now))).sort((a, b) => a.time.localeCompare(b.time));
+  return <section className={s.card}>
+    <div className={s.cardHead}><h2>Atividades de hoje</h2><button className={s.chipBtn} onClick={() => ctx.go('Planejamento')}>Ver todas</button></div>
+    <ul className={s.activities}>{today.map(a => <ActivityRow key={a.id} ctx={ctx} a={a} />)}{!today.length && <li className={s.empty}>Nenhuma atividade para hoje. <button className={s.link} onClick={() => ctx.setModal({ kind: 'activity' })}>Agendar</button></li>}</ul>
+  </section>;
+}
+function ActivityRow({ ctx, a, showDate = false }: { ctx: Ctx; a: Activity; showDate?: boolean }) {
+  const [Icon, tone] = kindStyle[a.kind];
+  const p = ctx.store.projects.find(x => x.id === a.projectId);
+  return <li className={`${s.activity} ${a.done ? s.activityDone : ''}`}>
+    <button className={`${s.kindIcon} ${tone}`} onClick={() => ctx.set(st => ({ activities: st.activities.map(x => x.id === a.id ? { ...x, done: !x.done } : x) }), a.done ? 'Atividade reaberta.' : 'Atividade concluída.')} aria-label={a.done ? `Reabrir ${a.title}` : `Concluir ${a.title}`} title={a.done ? 'Reabrir' : 'Marcar como concluída'}>{a.done ? <Check size={17} /> : <Icon size={17} />}</button>
+    <time>{showDate && <small>{new Date(`${a.date}T12:00`).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' })}</small>}{a.time}</time>
+    <button className={s.activityText} onClick={() => p && ctx.openProject(p.id, 'Atividades')}><b>{a.title}</b><small>{p?.name ?? '—'}</small><ChevronRight size={17} /></button>
+  </li>;
+}
+
+function FinanceChart({ ctx }: { ctx: Ctx }) {
+  const years = [...new Set(ctx.store.entries.map(e => new Date(e.date).getFullYear()))].sort((a, b) => b - a);
+  const [year, setYear] = useState(years[0] ?? new Date(ctx.now).getFullYear());
+  const [hover, setHover] = useState<number | null>(null);
+  const months = Array.from({ length: 12 }, (_, m) => {
+    const list = ctx.store.entries.filter(e => { const d = new Date(e.date); return d.getFullYear() === year && d.getMonth() === m; });
+    const revenue = list.filter(e => e.type === 'Receita').reduce((v, e) => v + e.value, 0), cost = list.filter(e => e.type === 'Custo').reduce((v, e) => v + e.value, 0);
+    return { label: new Date(year, m, 1).toLocaleDateString('pt-BR', { month: 'short' }).replace('.', ''), revenue, cost, profit: revenue - cost };
+  });
+  const peak = Math.max(...months.map(m => Math.max(m.revenue, m.cost)), 1);
+  return <section className={s.card}>
+    <div className={s.cardHead}><h2>Evolução financeira</h2><select className={s.chipSelect} value={year} onChange={e => setYear(Number(e.target.value))} aria-label="Ano">{years.map(y => <option key={y}>{y}</option>)}</select></div>
+    <div className={s.chart}>{months.map((m, i) => {
+      const profit = Math.max(0, m.profit), cost = Math.min(m.cost, m.revenue || m.cost);
+      return <div key={m.label} className={s.barCol} onMouseEnter={() => setHover(i)} onMouseLeave={() => setHover(null)} onFocus={() => setHover(i)} onBlur={() => setHover(null)} tabIndex={m.revenue || m.cost ? 0 : -1}>
+        {hover === i && (m.revenue || m.cost) > 0 && <span className={s.tip}>Receita<b>{compact(m.revenue)}</b><small>Custo {compact(m.cost)} · Lucro {compact(m.profit)}</small></span>}
+        <div className={s.bar} style={{ height: `${Math.max(m.revenue, m.cost) / peak * 100}%` }}>
+          {m.revenue > 0 && <i className={s.barRevenue} />}
+          <i className={s.barCost} style={{ flexGrow: cost }} /><i className={s.barProfit} style={{ flexGrow: profit }} />
+        </div>
+        <small>{m.label.charAt(0).toUpperCase() + m.label.slice(1)}</small>
+      </div>;
+    })}</div>
+    <div className={s.legend}><span><i className={s.lRevenue} />Receita</span><span><i className={s.lCost} />Custo</span><span><i className={s.lProfit} />Lucro</span></div>
+  </section>;
+}
+
+function StockCard({ ctx }: { ctx: Ctx }) {
+  return <section className={s.card}>
+    <div className={s.cardHead}><h2>Compras e estoque</h2><button className={s.chipBtn} onClick={() => ctx.go('Estoque')}>Ver todas</button></div>
+    <ul className={s.rows}>{ctx.store.materials.slice(0, 4).map(m => { const st = stockStatus(m, ctx.store.purchases); return <li key={m.id}><span className={s.matIcon}><MaterialIcon icon={m.icon} /></span><span className={s.stackText}><b>{m.name}</b><small>{m.supplier}</small></span><small className={s.qty}>{m.quantity.toLocaleString('pt-BR')} {m.unit}</small><Pill tone={st === 'Em estoque' ? 'green' : st === 'Em trânsito' ? 'blue' : 'red'}>{st}</Pill></li>; })}</ul>
+  </section>;
+}
+function TeamCard({ ctx }: { ctx: Ctx }) {
+  return <section className={s.card}>
+    <div className={s.cardHead}><h2>Equipe em campo</h2><button className={s.chipBtn} onClick={() => ctx.setModal({ kind: 'team' })}>Ver todas</button></div>
+    <ul className={s.rows}>{ctx.store.members.slice(0, 4).map(m => <li key={m.id}><Avatar name={m.name} tone={m.tone} size={32} /><span className={s.stackText}><b>{m.name}</b><small>{m.role}</small></span><button className={`${s.status} ${m.status === 'Em obra' ? s.statusOn : ''}`} onClick={() => ctx.toggleMember(m)} title="Alternar status"><i />{m.status}</button></li>)}</ul>
+  </section>;
+}
+function DocsCard({ ctx }: { ctx: Ctx }) {
+  return <section className={s.card}>
+    <div className={s.cardHead}><h2>Documentos recentes</h2><button className={s.chipBtn} onClick={() => ctx.go('Documentos')}>Ver todas</button></div>
+    <ul className={s.rows}>{[...ctx.store.docs].sort((a, b) => b.date.localeCompare(a.date)).slice(0, 4).map(d => <li key={d.id}><DocIcon kind={d.kind} /><span className={s.stackText}><b>{d.name}</b><small>{d.kind} • {d.size}</small></span><small className={s.qty}>{relDay(d.date, ctx.now)}</small><button className={s.iconBtn} onClick={() => ctx.docDownload(d)} aria-label={`Baixar ${d.name}`}><Download size={16} /></button></li>)}</ul>
+  </section>;
+}
+
+function TeamModal({ ctx, onClose }: { ctx: Ctx; onClose: () => void }) {
+  return <Shell title="Equipe em campo" onClose={onClose}>
+    <ul className={s.rows}>{ctx.store.members.map(m => <li key={m.id}><Avatar name={m.name} tone={m.tone} size={32} /><span className={s.stackText}><b>{m.name}</b><small>{m.role}</small></span>
+      <select className={s.inlineSelect} value={m.projectId} onChange={e => ctx.set(st => ({ members: st.members.map(x => x.id === m.id ? { ...x, projectId: e.target.value } : x) }), `${m.name} alocado.`)} aria-label={`Obra de ${m.name}`}>{ctx.store.projects.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}</select>
+      <button className={`${s.status} ${m.status === 'Em obra' ? s.statusOn : ''}`} onClick={() => ctx.toggleMember(m)}><i />{m.status}</button></li>)}</ul>
+  </Shell>;
+}
+
+function Shell({ title, onClose, children }: { title: string; onClose: () => void; children: ReactNode }) {
+  return <Dialog.Root open onOpenChange={v => !v && onClose()}><Dialog.Portal><Dialog.Overlay className={s.overlay} />
+    <Dialog.Content className={`${s.modal} ${jakarta.variable}`} aria-describedby={undefined}>
+      <header className={s.modalHead}><Dialog.Title>{title}</Dialog.Title><Dialog.Close className={s.round} aria-label="Fechar"><X size={17} /></Dialog.Close></header>
+      {children}
+    </Dialog.Content>
+  </Dialog.Portal></Dialog.Root>;
+}
+
+function FormModal({ title, fields, initial, preset, onClose, onSubmit }: { title: string; fields: Field[]; initial: Record<string, string>; preset?: Record<string, string>; onClose: () => void; onSubmit: (v: Record<string, string>) => void }) {
+  const [values, setValues] = useState({ ...initial, ...preset });
+  return <Shell title={title} onClose={onClose}>
+    <form className={s.form} onSubmit={(e: FormEvent) => { e.preventDefault(); onSubmit(values); }}>
+      {fields.map(f => <label key={f.key} className={`${s.field} ${f.wide ? s.wide : ''}`}><span>{f.label}</span>
+        {f.type === 'select' ? <select value={values[f.key]} onChange={e => setValues({ ...values, [f.key]: e.target.value })}>{f.options!.map(([v, l]) => <option key={v} value={v}>{l}</option>)}</select>
+          : <input type={f.type === 'number' ? 'text' : f.type ?? 'text'} inputMode={f.type === 'number' ? 'decimal' : undefined} required={f.required} value={values[f.key]} onChange={e => setValues({ ...values, [f.key]: f.type === 'number' ? e.target.value.replace(/[^\d,.]/g, '') : e.target.value })} />}
+      </label>)}
+      <footer className={s.modalFoot}><Dialog.Close className={s.secondary} type="button">Cancelar</Dialog.Close><button className={s.primary} type="submit">Salvar</button></footer>
+    </form>
+  </Shell>;
+}
+
+function ProjectDrawer({ ctx, project: p, tab, onTab, onClose, onUpdate }: { ctx: Ctx; project: Project; tab: Tab; onTab: (t: Tab) => void; onClose: () => void; onUpdate: (change: Partial<Project>, message?: string) => void }) {
+  const { store } = ctx;
+  const [form, setForm] = useState({ name: p.name, city: p.city, address: p.address, client: p.client, units: String(p.units), revenue: String(p.revenue), cost: String(p.cost), start: dayKey(p.start), end: dayKey(p.end), launch: p.launch });
+  const spent = store.entries.filter(e => e.projectId === p.id && e.type === 'Custo').reduce((v, e) => v + e.value, 0);
+  const received = store.entries.filter(e => e.projectId === p.id && e.type === 'Receita').reduce((v, e) => v + e.value, 0);
+  const done = delivered(p), next = stages[stages.indexOf(p.stage) + 1];
+  const activities = store.activities.filter(a => a.projectId === p.id).sort((a, b) => b.date.localeCompare(a.date) || a.time.localeCompare(b.time));
+  return <Dialog.Root open onOpenChange={v => !v && onClose()}><Dialog.Portal><Dialog.Overlay className={s.overlay} />
+    <Dialog.Content className={`${s.drawer} ${jakarta.variable}`} aria-describedby={undefined}>
+      <div className={s.drawerCover}><Building art={p.art} className={s.coverArt} /><Dialog.Close className={`${s.round} ${s.drawerClose}`} aria-label="Fechar"><X size={17} /></Dialog.Close></div>
+      <header className={s.drawerHead}>
+        <span className={s.stage}><i style={{ background: done ? '#22b573' : stageColor[p.stage] }} />{done ? `Entregue em ${dateLabel(p.deliveredAt ?? p.end)}` : p.stage}{p.launch && <Pill tone="purple">Lançamento</Pill>}</span>
+        <Dialog.Title>{p.name}</Dialog.Title>
+        <p><MapPin size={13} />{p.address} · {p.city}</p>
+        <span className={s.progress}><i><em style={{ width: `${p.progress}%`, background: done ? '#22b573' : barColor[p.stage] }} /></i><b>{p.progress}%</b></span>
+      </header>
+      <nav className={s.dTabs} role="tablist">{(['Resumo', 'Cronograma', 'Equipe', 'Atividades', 'Financeiro', 'Documentos'] as Tab[]).map(t => <button key={t} role="tab" aria-selected={tab === t} className={tab === t ? s.dTabOn : ''} onClick={() => onTab(t)}>{t}</button>)}</nav>
+      <div className={s.drawerBody}>
+        {tab === 'Resumo' && <form className={s.form} onSubmit={e => { e.preventDefault(); const num = (v: string) => Number(v.replace(/\./g, '').replace(',', '.')) || 0; onUpdate({ ...form, units: num(form.units), revenue: num(form.revenue), cost: num(form.cost), start: new Date(`${form.start}T12:00`).toISOString(), end: new Date(`${form.end}T12:00`).toISOString() }, 'Obra atualizada.'); }}>
+          <div className={s.stats}><span>Receita contratada<b>{brl(p.revenue)}</b></span><span>Custo previsto<b>{brl(p.cost)}</b></span><span>Margem<b>{brl(p.revenue - p.cost)}</b><small>{pct((p.revenue - p.cost) / (p.revenue || 1) * 100)}</small></span></div>
+          <label className={`${s.field} ${s.wide}`}><span>Avanço físico: {p.progress}%</span><input type="range" min="0" max="100" step="1" value={p.progress} onChange={e => onUpdate({ progress: Number(e.target.value), deliveredAt: Number(e.target.value) >= 100 ? p.deliveredAt ?? new Date().toISOString() : undefined })} /></label>
+          <label className={`${s.field} ${s.wide}`}><span>Nome</span><input required value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} /></label>
+          <label className={s.field}><span>Cidade</span><select value={form.city} onChange={e => setForm({ ...form, city: e.target.value })}>{cities.map(c => <option key={c}>{c}</option>)}</select></label>
+          <label className={s.field}><span>Endereço</span><input value={form.address} onChange={e => setForm({ ...form, address: e.target.value })} /></label>
+          <label className={s.field}><span>Incorporadora / cliente</span><input value={form.client} onChange={e => setForm({ ...form, client: e.target.value })} /></label>
+          <label className={s.field}><span>Unidades</span><input inputMode="numeric" value={form.units} onChange={e => setForm({ ...form, units: e.target.value.replace(/\D/g, '') })} /></label>
+          <label className={s.field}><span>Receita contratada (R$)</span><input inputMode="decimal" value={form.revenue} onChange={e => setForm({ ...form, revenue: e.target.value.replace(/[^\d,.]/g, '') })} /></label>
+          <label className={s.field}><span>Custo previsto (R$)</span><input inputMode="decimal" value={form.cost} onChange={e => setForm({ ...form, cost: e.target.value.replace(/[^\d,.]/g, '') })} /></label>
+          <label className={s.field}><span>Início</span><input type="date" required value={form.start} onChange={e => setForm({ ...form, start: e.target.value })} /></label>
+          <label className={s.field}><span>Entrega prevista</span><input type="date" required value={form.end} onChange={e => setForm({ ...form, end: e.target.value })} /></label>
+          <label className={`${s.check} ${s.wide}`}><input type="checkbox" checked={form.launch} onChange={e => setForm({ ...form, launch: e.target.checked })} />Empreendimento em lançamento (vendas abertas)</label>
+          <div className={s.wide}><button className={s.secondary} type="submit">Salvar alterações</button></div>
+        </form>}
+        {tab === 'Cronograma' && <div className={s.stack}>
+          <p className={s.hint}>O avanço de cada etapa é informado pela equipe; o avanço físico da obra é ajustado na aba Resumo.</p>
+          {p.phases.map(ph => <div key={ph.id} className={s.phase}>
+            <span><b>{ph.name}</b><small>{dateLabel(ph.start)} – {dateLabel(ph.end)}</small></span>
+            <input type="range" min="0" max="100" value={ph.progress} onChange={e => onUpdate({ phases: p.phases.map(x => x.id === ph.id ? { ...x, progress: Number(e.target.value) } : x) })} aria-label={`Avanço de ${ph.name}`} />
+            <em>{ph.progress}%</em>
+          </div>)}
+        </div>}
+        {tab === 'Equipe' && <ul className={s.rows}>{store.members.map(m => { const on = p.team.includes(m.id); return <li key={m.id}><Avatar name={m.name} tone={m.tone} size={32} /><span className={s.stackText}><b>{m.name}</b><small>{m.role}</small></span><button className={`${s.toggle} ${on ? s.toggleOn : ''}`} onClick={() => onUpdate({ team: on ? p.team.filter(x => x !== m.id) : [...p.team, m.id] }, on ? `${m.name} saiu da equipe.` : `${m.name} adicionado à equipe.`)} aria-pressed={on}>{on ? <><Check size={14} />Na equipe</> : <><Plus size={14} />Adicionar</>}</button></li>; })}</ul>}
+        {tab === 'Atividades' && <div className={s.stack}><button className={s.secondary} onClick={() => ctx.setModal({ kind: 'activity', preset: { projectId: p.id } })}><Plus size={15} />Nova atividade</button><ul className={s.activities}>{activities.map(a => <ActivityRow key={a.id} ctx={ctx} a={a} showDate />)}{!activities.length && <li className={s.empty}>Nenhuma atividade agendada.</li>}</ul></div>}
+        {tab === 'Financeiro' && <div className={s.stack}>
+          <div className={s.stats}><span>Recebido<b>{brl(received)}</b></span><span>Custo realizado<b>{brl(spent)}</b><small>{pct(spent / (p.cost || 1) * 100)} do previsto</small></span><span>Saldo<b>{brl(received - spent)}</b></span></div>
+          <button className={s.secondary} onClick={() => ctx.setModal({ kind: 'entry', preset: { projectId: p.id } })}><Plus size={15} />Novo lançamento</button>
+          <ul className={s.rows}>{store.entries.filter(e => e.projectId === p.id).sort((a, b) => b.date.localeCompare(a.date)).slice(0, 20).map(e => <li key={e.id}><span className={s.stackText}><b>{e.description || e.category}</b><small>{e.category} · {dateLabel(e.date)}</small></span><b className={e.type === 'Receita' ? s.pos : s.neg}>{e.type === 'Receita' ? '+' : '−'} {brl(e.value)}</b></li>)}</ul>
+        </div>}
+        {tab === 'Documentos' && <div className={s.stack}><button className={s.secondary} onClick={() => ctx.setModal({ kind: 'doc', preset: { projectId: p.id } })}><Plus size={15} />Novo documento</button><ul className={s.rows}>{store.docs.filter(d => d.projectId === p.id).map(d => <li key={d.id}><DocIcon kind={d.kind} /><span className={s.stackText}><b>{d.name}</b><small>{d.kind} • {d.size} · {dateLabel(d.date)}</small></span><button className={s.iconBtn} onClick={() => ctx.docDownload(d)} aria-label={`Baixar ${d.name}`}><Download size={16} /></button></li>)}{!store.docs.some(d => d.projectId === p.id) && <li className={s.empty}>Nenhum documento.</li>}</ul></div>}
+      </div>
+      <footer className={s.drawerFoot}>
+        <button className={s.dangerBtn} onClick={() => ctx.remove(p.id)}><Trash2 size={15} />Excluir</button>
+        {done ? <span className={s.closed}><Check size={15} />Obra entregue</span> : next ? <button className={s.primary} onClick={() => ctx.move(p.id, next)}>Mover para {next}<ChevronRight size={16} /></button> : <button className={s.primary} onClick={() => ctx.deliver(p.id)}><Check size={16} />Marcar como entregue</button>}
+      </footer>
+    </Dialog.Content>
+  </Dialog.Portal></Dialog.Root>;
+}
+
+function Table({ title, head, rows, action, numeric = [], extra }: { title: string; head: string[]; rows: { key: string; cells: ReactNode[]; onClick?: () => void }[]; action?: [string, () => void]; numeric?: number[]; extra?: ReactNode }) {
+  return <section className={s.card}>
+    <div className={s.cardHead}><h2>{title}</h2><div className={s.headActions}>{extra}{action && <button className={s.primarySm} onClick={action[1]}><Plus size={15} />{action[0]}</button>}</div></div>
+    <div className={s.tableWrap}><table className={s.table}><thead><tr>{head.map((h, i) => <th key={h + i} className={numeric.includes(i) ? s.num : ''}>{h}</th>)}</tr></thead>
+      <tbody>{rows.map(r => <tr key={r.key} onClick={r.onClick} className={r.onClick ? s.clickable : ''}>{r.cells.map((c, i) => <td key={i} className={numeric.includes(i) ? s.num : ''}>{c}</td>)}</tr>)}</tbody></table>
+      {!rows.length && <p className={s.empty}>Nada por aqui ainda.</p>}</div>
+  </section>;
+}
+
+function PlanningView({ ctx }: { ctx: Ctx }) {
+  const { store, now } = ctx;
+  const list = [...store.projects].sort((a, b) => a.start.localeCompare(b.start));
+  const min = Math.min(...list.map(p => new Date(p.start).getTime()), now), max = Math.max(...list.map(p => new Date(p.end).getTime()), now);
+  const x = (t: number) => (t - min) / (max - min || 1) * 100;
+  const years: number[] = []; for (let y = new Date(min).getFullYear() + 1; y <= new Date(max).getFullYear(); y++) years.push(y);
+  const upcoming = store.activities.filter(a => a.date >= dayKey(new Date(now - 7 * DAY))).sort((a, b) => a.date.localeCompare(b.date) || a.time.localeCompare(b.time));
+  return <div className={s.planning}>
+    <section className={s.card}>
+      <div className={s.cardHead}><h2>Cronograma das obras</h2></div>
+      <div className={s.gantt}>
+        <div className={s.ganttScale}>{years.map(y => <span key={y} style={{ left: `${x(new Date(y, 0, 1).getTime())}%` }}>{y}</span>)}<i style={{ left: `${x(now)}%` }}><b>Hoje</b></i></div>
+        {list.map(p => <button key={p.id} className={s.ganttRow} onClick={() => ctx.openProject(p.id, 'Cronograma')}>
+          <span>{p.name}<small>{p.city}</small></span>
+          <span className={s.ganttTrack}><i className={s.ganttNow} style={{ left: `${x(now)}%` }} /><em style={{ left: `${x(new Date(p.start).getTime())}%`, width: `${x(new Date(p.end).getTime()) - x(new Date(p.start).getTime())}%`, '--c': delivered(p) ? '#22b573' : stageColor[p.stage] } as React.CSSProperties}><u style={{ width: `${p.progress}%` }} /></em></span>
+        </button>)}
+      </div>
+    </section>
+    <section className={s.card}>
+      <div className={s.cardHead}><h2>Agenda de atividades</h2><button className={s.primarySm} onClick={() => ctx.setModal({ kind: 'activity' })}><Plus size={15} />Nova atividade</button></div>
+      <ul className={s.activities}>{upcoming.map(a => <ActivityRow key={a.id} ctx={ctx} a={a} showDate />)}</ul>
+    </section>
+  </div>;
+}
+
+function BudgetsView({ ctx }: { ctx: Ctx }) {
+  const { store } = ctx;
+  return <Table title="Orçamento por obra" head={['Obra', 'Receita contratada', 'Custo previsto', 'Custo realizado', 'Consumo', 'Margem prevista', 'Situação']} numeric={[1, 2, 3, 5]} rows={store.projects.map(p => {
+    const spent = store.entries.filter(e => e.projectId === p.id && e.type === 'Custo').reduce((v, e) => v + e.value, 0), use = spent / (p.cost || 1) * 100;
+    return { key: p.id, onClick: () => ctx.openProject(p.id, 'Financeiro'), cells: [<b key="n">{p.name}</b>, brl(p.revenue), brl(p.cost), brl(spent), <span key="u" className={s.progress}><i><em style={{ width: `${Math.min(100, use)}%`, background: use > 100 ? '#e5484d' : use > 90 ? '#f59e0b' : '#22b573' }} /></i><b>{pct(use)}</b></span>, brl(p.revenue - p.cost), use > 100 ? <Pill key="s" tone="red">Estourado</Pill> : use > 90 ? <Pill key="s" tone="amber">Atenção</Pill> : <Pill key="s" tone="green">Dentro do previsto</Pill>] };
+  })} />;
+}
+
+function FinanceView({ ctx }: { ctx: Ctx }) {
+  const { store } = ctx;
+  const [type, setType] = useState<'Todos' | 'Receita' | 'Custo'>('Todos');
+  const year = new Date(ctx.now).getFullYear();
+  const ofYear = store.entries.filter(e => new Date(e.date).getFullYear() === year);
+  const revenue = ofYear.filter(e => e.type === 'Receita').reduce((v, e) => v + e.value, 0), cost = ofYear.filter(e => e.type === 'Custo').reduce((v, e) => v + e.value, 0);
+  const list = store.entries.filter(e => type === 'Todos' || e.type === type).sort((a, b) => b.date.localeCompare(a.date));
+  return <div className={s.stackBig}>
+    <div className={s.stats}><span>Receitas em {year}<b>{brl(revenue)}</b></span><span>Custos em {year}<b>{brl(cost)}</b></span><span>Lucro em {year}<b className={revenue - cost >= 0 ? s.pos : s.neg}>{brl(revenue - cost)}</b></span></div>
+    <div className={s.twoCol}><FinanceChart ctx={ctx} />
+      <Table title="Lançamentos" action={['Novo lançamento', () => ctx.setModal({ kind: 'entry' })]} extra={<select className={s.chipSelect} value={type} onChange={e => setType(e.target.value as typeof type)} aria-label="Tipo"><option>Todos</option><option>Receita</option><option>Custo</option></select>} head={['Data', 'Descrição', 'Obra', 'Valor']} numeric={[3]} rows={list.slice(0, 60).map(e => ({ key: e.id, cells: [dateLabel(e.date), <span key="d" className={s.stackText}><b>{e.description || e.category}</b><small>{e.category}</small></span>, store.projects.find(p => p.id === e.projectId)?.name ?? '—', <b key="v" className={e.type === 'Receita' ? s.pos : s.neg}>{e.type === 'Receita' ? '+' : '−'} {brl(e.value)}</b>] }))} />
+    </div>
+  </div>;
+}
+
+function PurchasesView({ ctx }: { ctx: Ctx }) {
+  const { store } = ctx;
+  const receive = (id: string) => ctx.set(st => { const pu = st.purchases.find(x => x.id === id)!; return { purchases: st.purchases.map(x => x.id === id ? { ...x, status: 'Recebido' } : x), materials: st.materials.map(m => m.id === pu.materialId ? { ...m, quantity: m.quantity + pu.quantity } : m) }; }, 'Compra recebida e estoque atualizado.');
+  return <Table title="Compras" action={['Nova compra', () => ctx.setModal({ kind: 'purchase' })]} head={['Material', 'Obra', 'Quantidade', 'Entrega', 'Valor', 'Situação']} numeric={[4]} rows={[...store.purchases].sort((a, b) => b.date.localeCompare(a.date)).map(pu => { const m = store.materials.find(x => x.id === pu.materialId); return { key: pu.id, cells: [<span key="m" className={s.person}><span className={s.matIcon}>{m && <MaterialIcon icon={m.icon} />}</span><span className={s.stackText}><b>{m?.name ?? '—'}</b><small>{m?.supplier}</small></span></span>, store.projects.find(p => p.id === pu.projectId)?.name ?? '—', `${pu.quantity.toLocaleString('pt-BR')} ${m?.unit ?? ''}`, dateLabel(pu.date), brl(pu.value), pu.status === 'Recebido' ? <Pill key="s" tone="green">Recebido</Pill> : <button key="s" className={s.chipBtn} onClick={() => receive(pu.id)}><Package size={14} />Receber</button>] }; })} />;
+}
+
+function StockView({ ctx }: { ctx: Ctx }) {
+  const { store } = ctx;
+  const [out, setOut] = useState<Record<string, string>>({});
+  const consume = (id: string) => { const q = Number(out[id]); const m = store.materials.find(x => x.id === id)!; if (!(q > 0) || q > m.quantity) { alert(`Informe uma quantidade entre 1 e ${m.quantity}.`); return; } ctx.set(st => ({ materials: st.materials.map(x => x.id === id ? { ...x, quantity: x.quantity - q } : x) }), `Baixa de ${q} ${m.unit} de ${m.name}.`); setOut({ ...out, [id]: '' }); };
+  return <Table title="Estoque de materiais" action={['Nova compra', () => ctx.setModal({ kind: 'purchase' })]} head={['Material', 'Em estoque', 'Mínimo', 'Valor em estoque', 'Situação', 'Dar baixa']} numeric={[3]} rows={store.materials.map(m => { const st = stockStatus(m, store.purchases); return { key: m.id, cells: [<span key="m" className={s.person}><span className={s.matIcon}><MaterialIcon icon={m.icon} /></span><span className={s.stackText}><b>{m.name}</b><small>{m.supplier}</small></span></span>, `${m.quantity.toLocaleString('pt-BR')} ${m.unit}`, `${m.minimum.toLocaleString('pt-BR')} ${m.unit}`, brl(m.quantity * m.price), <Pill key="s" tone={st === 'Em estoque' ? 'green' : st === 'Em trânsito' ? 'blue' : 'red'}>{st}</Pill>, <span key="b" className={s.consume}><input inputMode="numeric" value={out[m.id] ?? ''} onChange={e => setOut({ ...out, [m.id]: e.target.value.replace(/\D/g, '') })} placeholder="Qtd." aria-label={`Quantidade a baixar de ${m.name}`} /><button className={s.chipBtn} onClick={() => consume(m.id)}>Baixar</button></span>] }; })} />;
+}
+
+function ReportsView({ ctx }: { ctx: Ctx }) {
+  const { store } = ctx;
+  const k = contracted(store.projects, ctx.now);
+  const exportProjects = () => download('atio-obras.csv', csv([['Obra', 'Cidade', 'Etapa', 'Avanço (%)', 'Início', 'Entrega', 'Receita', 'Custo previsto', 'Margem'], ...store.projects.map(p => [p.name, p.city, delivered(p) ? 'Entregue' : p.stage, p.progress, dateLabel(p.start), dateLabel(p.end), p.revenue, p.cost, p.revenue - p.cost])]), 'text/csv');
+  const exportEntries = () => download('atio-financeiro.csv', csv([['Data', 'Tipo', 'Categoria', 'Descrição', 'Obra', 'Valor'], ...store.entries.map(e => [dateLabel(e.date), e.type, e.category, e.description, store.projects.find(p => p.id === e.projectId)?.name ?? '', e.value])]), 'text/csv');
+  return <div className={s.stackBig}>
+    <div className={s.stats}><span>Receita contratada<b>{brl(k.revenue)}</b></span><span>Custo previsto<b>{brl(k.cost)}</b></span><span>Margem projetada<b>{brl(k.margin)}</b><small>{pct(k.share)}</small></span><span>Avanço médio<b>{pct(store.projects.reduce((v, p) => v + p.progress, 0) / (store.projects.length || 1))}</b></span></div>
+    <section className={s.card}><div className={s.cardHead}><h2>Exportações</h2></div><div className={s.exports}>
+      <button className={s.secondary} onClick={exportProjects}><Download size={15} />Obras (CSV)</button>
+      <button className={s.secondary} onClick={exportEntries}><Download size={15} />Financeiro (CSV)</button>
+      <button className={s.secondary} onClick={() => download('atio-backup.json', JSON.stringify(store, null, 2), 'application/json')}><Download size={15} />Backup completo (JSON)</button>
+      <button className={s.secondary} onClick={() => { if (confirm('Restaurar os dados de exemplo? As alterações feitas neste navegador serão perdidas.')) ctx.set(() => makeSeed(), 'Dados de exemplo restaurados.'); }}><RotateCcw size={15} />Restaurar dados de exemplo</button>
+    </div></section>
+    <section className={s.card}><div className={s.cardHead}><h2>Obras por etapa</h2></div><ProjectTable ctx={ctx} list={store.projects} /></section>
+  </div>;
 }

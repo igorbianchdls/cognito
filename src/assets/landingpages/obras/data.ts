@@ -1,79 +1,141 @@
-export type Project = { id: string; name: string; client: string; date: string; start: string; venue: string; area: number; value: number; cost: number; status: string; progress: number; health: 'No prazo' | 'Em atenção'; image: string; email: string; phone: string };
-export type Task = { id: string; projectId: string; title: string; owner: string; due: string; done: boolean; phase: string };
-export type Appointment = { id: string; title: string; projectId: string; date: string; time: string; end: string; type: string };
-export type Supplier = { id: string; name: string; category: string; contact: string; price: number; status: string };
-export type Entry = { id: string; projectId: string; title: string; type: 'Receita' | 'Despesa'; category: string; value: number; date: string; paid: boolean };
-export type Purchase = { id: string; projectId: string; title: string; quantity: number; unit: string; supplier: string; date: string; status: string; image: string };
-export type Store = { projects: Project[]; tasks: Task[]; appointments: Appointment[]; suppliers: Supplier[]; entries: Entry[]; purchases: Purchase[]; notes: Record<string, string>; messages: { id: string; text: string; date: string }[] };
-export const image = (name: string) => `/obras-media/${name}.jpg`;
-export const money = (value: number) => value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL', maximumFractionDigits: 0 });
-export const dateLabel = (date: string, options: Intl.DateTimeFormatOptions = { day: '2-digit', month: 'short' }) => new Date(`${date}T12:00:00`).toLocaleDateString('pt-BR', options);
-export const stages = ['Novo contato', 'Orçamento enviado', 'Contratada', 'Em execução', 'Concluída'];
-export const phases = ['Projeto e aprovações', 'Fundação e estrutura', 'Instalações', 'Revestimentos', 'Acabamentos', 'Vistoria e entrega'];
-const project = (id: string, name: string, client: string, date: string, venue: string, progress: number, imageName: string, value: number, status = 'Em execução', health: Project['health'] = 'No prazo'): Project => ({ id, name, client, date, start: '2026-08-03', venue, area: 320, value, cost: Math.round(value * .68), status, progress, health, image: imageName, email: `${id}@example.com`, phone: '(85) 99912-3456' });
-export const seed: Store = {
-  projects: [
-    project('p1', 'Casa da Praia', 'Mariana e Fernando', '2026-12-18', 'Condomínio Enseada · Fortaleza, CE', 68, 'hero', 950000),
-    project('p2', 'Reforma Apartamento 402', 'Camila Rocha', '2026-12-04', 'Meireles · Fortaleza, CE', 42, 'apartment', 180000, 'Em execução', 'Em atenção'),
-    project('p3', 'Clínica Essencial', 'Clínica Essencial Ltda.', '2026-11-20', 'Aldeota · Fortaleza, CE', 81, 'clinic', 290000),
-    project('p4', 'Residência das Palmeiras', 'Ricardo e Paula', '2027-02-12', 'Eusébio, CE', 24, 'residence', 720000),
-    project('p5', 'Reforma Casa Borges', 'João Borges', '2026-12-11', 'Parquelândia · Fortaleza, CE', 55, 'apartment', 220000),
-    project('p6', 'Apartamento 301', 'Beatriz Alves', '2026-11-27', 'Meireles · Fortaleza, CE', 73, 'apartment', 150000),
-    project('p7', 'Escritório Horizonte', 'Horizonte Consultoria', '2027-01-15', 'Cocó · Fortaleza, CE', 36, 'clinic', 310000),
-    project('p8', 'Casa Jardim do Sol', 'Lucas Martins', '2027-03-05', 'Porto das Dunas, CE', 18, 'residence', 840000),
-    project('p9', 'Casa Jardim das Dunas', 'Ana Lima', '2027-05-20', 'Dunas · Fortaleza, CE', 0, 'residence', 180000, 'Novo contato'),
-    project('p10', 'Reforma Escritório Bravo', 'Bravo Arquitetura', '2027-02-15', 'Aldeota · Fortaleza, CE', 0, 'apartment', 140000, 'Novo contato'),
-    ...['Residência Lagoa', 'Reforma Cobertura 501', 'Casa dos Ipês', 'Clínica Bem Viver', 'Loja Conceito', 'Apartamento Mirante'].map((name, i) => project(`q${i}`, name, ['Fernanda Costa', 'Pedro Melo', 'Julia Andrade', 'Bem Viver Ltda.', 'Luiza Freitas', 'Marcos Nunes'][i], `2027-0${i < 3 ? 3 : 4}-15`, 'Fortaleza, CE', 0, i % 2 ? 'apartment' : 'residence', [220000, 180000, 340000, 160000, 98000, 125000][i], 'Orçamento enviado')),
-    project('p11', 'Residência do Parque', 'Sofia e Daniel', '2027-06-10', 'Eusébio, CE', 0, 'residence', 650000, 'Contratada'),
-    project('p12', 'Reforma Studio 208', 'Gabriela Gomes', '2027-01-29', 'Meireles · Fortaleza, CE', 0, 'apartment', 98000, 'Contratada'),
-    project('c1', 'Casa das Oliveiras', 'Maria Oliveira', '2026-10-15', 'Eusébio, CE', 100, 'residence', 420000, 'Concluída'),
-    project('c2', 'Apartamento 601', 'André Santos', '2026-10-09', 'Meireles · Fortaleza, CE', 100, 'apartment', 180000, 'Concluída'),
-    project('c3', 'Consultório Alameda', 'Dra. Laura Mendes', '2026-09-25', 'Aldeota · Fortaleza, CE', 100, 'clinic', 260000, 'Concluída'),
-    project('c4', 'Casa Varanda', 'Paulo e Helena', '2026-09-11', 'Fortaleza, CE', 100, 'hero', 260000, 'Concluída'),
-  ],
-  tasks: [
-    { id: 't1', projectId: 'p1', title: 'Aprovar projeto executivo', owner: 'Mariana Silva', due: '2026-08-10', done: true, phase: phases[0] },
-    { id: 't2', projectId: 'p1', title: 'Conferir estrutura e impermeabilização', owner: 'Rafael Lima', due: '2026-09-18', done: true, phase: phases[1] },
-    { id: 't3', projectId: 'p1', title: 'Vistoriar instalações elétricas', owner: 'Rafael Lima', due: '2026-10-28', done: false, phase: phases[2] },
-    { id: 't4', projectId: 'p1', title: 'Conferir entrega de porcelanato', owner: 'Ana Costa', due: '2026-10-29', done: false, phase: phases[3] },
-    { id: 't5', projectId: 'p1', title: 'Aprovar pintura e marcenaria', owner: 'Mariana Silva', due: '2026-11-20', done: false, phase: phases[4] },
-    { id: 't6', projectId: 'p1', title: 'Realizar vistoria final com cliente', owner: 'Rafael Lima', due: '2026-12-18', done: false, phase: phases[5] },
-    { id: 't7', projectId: 'p2', title: 'Revisar medição de serviços', owner: 'Rafael Lima', due: '2026-10-27', done: false, phase: phases[2] },
-    { id: 't8', projectId: 'p3', title: 'Conferir esquadrias de alumínio', owner: 'Ana Costa', due: '2026-10-28', done: false, phase: phases[4] },
-    { id: 't9', projectId: 'p4', title: 'Programar concretagem da laje', owner: 'Rafael Lima', due: '2026-10-30', done: false, phase: phases[1] },
-  ],
-  appointments: [
-    { id: 'a1', title: 'Visita técnica', projectId: 'p1', date: '2026-10-26', time: '09:00', end: '10:00', type: 'Visita técnica' },
-    { id: 'a2', title: 'Medição de serviços', projectId: 'p2', date: '2026-10-27', time: '14:00', end: '15:00', type: 'Medição' },
-    { id: 'a3', title: 'Entrega de materiais', projectId: 'p3', date: '2026-10-28', time: '08:00', end: '10:00', type: 'Entrega' },
-    { id: 'a4', title: 'Reunião com cliente', projectId: 'p4', date: '2026-10-29', time: '15:00', end: '16:00', type: 'Reunião' },
-    { id: 'a5', title: 'Vistoria de acabamento', projectId: 'p1', date: '2026-10-30', time: '10:00', end: '11:00', type: 'Vistoria' },
-  ],
-  suppliers: [
-    { id: 's1', name: 'Casa dos Revestimentos', category: 'Revestimentos', contact: 'Paulo · (85) 99888-1200', price: 18500, status: 'Confirmado' },
-    { id: 's2', name: 'Depósito Construir', category: 'Materiais básicos', contact: 'Renato · (85) 99888-1300', price: 9200, status: 'Confirmado' },
-    { id: 's3', name: 'Alumínio Prime', category: 'Esquadrias', contact: 'Lucas · (85) 99888-1400', price: 24000, status: 'Em negociação' },
-    { id: 's4', name: 'Elétrica Fortaleza', category: 'Elétrica', contact: 'Clara · (85) 99888-1500', price: 6800, status: 'Confirmado' },
-    { id: 's5', name: 'Marcenaria Nativa', category: 'Marcenaria', contact: 'Bruno · (85) 99888-1600', price: 32000, status: 'Confirmado' },
-  ],
-  entries: [
-    { id: 'f1', projectId: 'p1', title: 'Medição de outubro · Casa da Praia', type: 'Receita', category: 'Medição', value: 180000, date: '2026-10-10', paid: true },
-    { id: 'f2', projectId: 'p2', title: 'Parcela de execução · Apartamento 402', type: 'Receita', category: 'Contrato', value: 60000, date: '2026-10-15', paid: true },
-    { id: 'f3', projectId: 'p3', title: 'Medição de acabamento · Clínica', type: 'Receita', category: 'Medição', value: 95000, date: '2026-10-28', paid: false },
-    { id: 'f4', projectId: 'p4', title: 'Parcela de estrutura · Palmeiras', type: 'Receita', category: 'Contrato', value: 85000, date: '2026-10-30', paid: false },
-    { id: 'f5', projectId: 'p1', title: 'Materiais de construção', type: 'Despesa', category: 'Materiais', value: 120330, date: '2026-10-26', paid: true },
-    { id: 'f6', projectId: 'p1', title: 'Folha de mão de obra', type: 'Despesa', category: 'Mão de obra', value: 100275, date: '2026-10-30', paid: false },
-    { id: 'f7', projectId: 'p3', title: 'Serviços terceirizados', type: 'Despesa', category: 'Terceirizados', value: 42975, date: '2026-10-28', paid: false },
-    { id: 'f8', projectId: 'p2', title: 'Fretes e despesas de apoio', type: 'Despesa', category: 'Outros', value: 22920, date: '2026-10-20', paid: true },
-    ...[5, 6, 7, 8, 9].flatMap((month, i) => [
-      { id: `h${month}r`, projectId: 'p1', title: 'Medições consolidadas', type: 'Receita' as const, category: 'Medição', value: [160000, 220000, 275000, 340000, 405000][i], date: `2026-0${month}-15`, paid: true },
-      { id: `h${month}d`, projectId: 'p1', title: 'Custos consolidados', type: 'Despesa' as const, category: 'Materiais', value: [106000, 145000, 183000, 227000, 275000][i], date: `2026-0${month}-20`, paid: true },
-    ]),
-  ],
-  purchases: [
-    { id: 'm1', projectId: 'p1', title: 'Porcelanato natural', quantity: 120, unit: 'm²', supplier: 'Casa dos Revestimentos', date: '2026-10-29', status: 'Em entrega', image: 'porcelain' },
-    { id: 'm2', projectId: 'p4', title: 'Cimento CP II', quantity: 80, unit: 'sacos', supplier: 'Depósito Construir', date: '2026-10-26', status: 'Entregue', image: 'cement' },
-    { id: 'm3', projectId: 'p3', title: 'Esquadrias de alumínio', quantity: 12, unit: 'unidades', supplier: 'Alumínio Prime', date: '2026-11-03', status: 'A confirmar', image: 'windows' },
-  ],
-  notes: {}, messages: [],
+export const stages = ['Planejamento', 'Em execução', 'Acabamento', 'Entrega'] as const;
+export type Stage = (typeof stages)[number];
+export type Phase = { id: string; name: string; start: string; end: string; progress: number };
+export type Art = { floors: number; tone: string; wing: boolean; sky: 0 | 1 | 2 };
+export type Project = {
+  id: string; name: string; city: string; address: string; client: string; units: number; stage: Stage; launch: boolean;
+  progress: number; revenue: number; cost: number; start: string; end: string; deliveredAt?: string; signedAt: string;
+  team: string[]; x: number; y: number; art: Art; phases: Phase[]; createdAt: string;
 };
+export type Member = { id: string; name: string; role: string; status: 'Em obra' | 'Folga'; projectId: string; tone: string };
+export type ActivityKind = 'Concretagem' | 'Entrega de materiais' | 'Vistoria' | 'Reunião';
+export type Activity = { id: string; projectId: string; date: string; time: string; title: string; kind: ActivityKind; done: boolean };
+export type Material = { id: string; name: string; supplier: string; quantity: number; unit: string; minimum: number; price: number; icon: 'cement' | 'steel' | 'brick' | 'pipe' | 'sand' | 'tile' };
+export type Purchase = { id: string; materialId: string; projectId: string; quantity: number; date: string; status: 'Em trânsito' | 'Recebido'; value: number };
+export type Entry = { id: string; projectId: string; date: string; type: 'Receita' | 'Custo'; category: string; description: string; value: number };
+export type Supplier = { id: string; name: string; category: string; contact: string; phone: string };
+export type Client = { id: string; name: string; email: string; phone: string; projectId: string; unit: string; value: number };
+export type Doc = { id: string; name: string; kind: 'PDF' | 'XLSX'; size: string; date: string; projectId: string };
+export type Store = { projects: Project[]; members: Member[]; activities: Activity[]; materials: Material[]; purchases: Purchase[]; entries: Entry[]; suppliers: Supplier[]; clients: Client[]; docs: Doc[] };
+
+export const storageKey = 'atio-construtora-v2';
+export const stageColor: Record<Stage, string> = { Planejamento: '#3b82f6', 'Em execução': '#f59e0b', Acabamento: '#22b573', Entrega: '#8b5cf6' };
+export const barColor: Record<Stage, string> = { Planejamento: '#3b82f6', 'Em execução': '#f59e0b', Acabamento: '#22b573', Entrega: '#3b82f6' };
+export const tones = ['#f1e4d3', '#e9d2b8', '#f3ede4', '#dfc9ad', '#efe0cc', '#e6d8c8'];
+export const cities = ['Recife - PE', 'Olinda - PE', 'Jaboatão - PE', 'Paulista - PE', 'Camaragibe - PE'];
+const DAY = 864e5;
+export const uid = () => globalThis.crypto.randomUUID();
+export const brl = (v: number, digits = 0) => `R$ ${v.toLocaleString('pt-BR', { minimumFractionDigits: digits, maximumFractionDigits: digits })}`;
+export const compact = (v: number) => v >= 1e6 ? `R$ ${(v / 1e6).toLocaleString('pt-BR', { maximumFractionDigits: 1 })} mi` : v >= 1e3 ? `R$ ${(v / 1e3).toLocaleString('pt-BR', { maximumFractionDigits: 0 })} mil` : brl(v);
+export const dateLabel = (iso: string) => new Date(iso).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric' });
+export const dayKey = (d: Date | string) => { const x = new Date(d); return `${x.getFullYear()}-${String(x.getMonth() + 1).padStart(2, '0')}-${String(x.getDate()).padStart(2, '0')}`; };
+export const initials = (name: string) => name.split(' ').filter(p => p.length > 2 || p === name.split(' ')[0]).map(p => p[0]).slice(0, 2).join('').toUpperCase();
+export const delivered = (p: Project) => p.progress >= 100;
+export const active = (p: Project) => p.stage !== 'Planejamento' && !delivered(p);
+export const stockStatus = (m: Material, purchases: Purchase[]) => purchases.some(p => p.materialId === m.id && p.status === 'Em trânsito') ? 'Em trânsito' : m.quantity < m.minimum ? 'Estoque baixo' : 'Em estoque';
+
+/** Contract totals today and as they stood 30 days ago, for the KPI comparison. */
+export function contracted(projects: Project[], now = Date.now()) {
+  const before = projects.filter(p => now - new Date(p.signedAt).getTime() > 30 * DAY);
+  const sum = (list: Project[], k: 'revenue' | 'cost') => list.reduce((v, p) => v + p[k], 0);
+  const pct = (a: number, b: number) => b ? (a - b) / b * 100 : 0;
+  const revenue = sum(projects, 'revenue'), cost = sum(projects, 'cost'), margin = revenue - cost;
+  const r0 = sum(before, 'revenue'), c0 = sum(before, 'cost');
+  return { revenue, cost, margin, share: revenue ? margin / revenue * 100 : 0, dRevenue: pct(revenue, r0), dCost: pct(cost, c0), dMargin: pct(margin, r0 - c0) };
+}
+
+const people: [string, string, string][] = [
+  ['Marcos Silva', 'Eng. Civil', '#7c5a3a'], ['Carlos Andrade', 'Mestre de obras', '#4b6584'], ['João Ferreira', 'Encarregado', '#a0522d'], ['Lucas Mendes', 'Técnico de segurança', '#2d6a4f'],
+  ['Ana Beatriz Lima', 'Arquiteta', '#9d4edd'], ['Paulo Rocha', 'Eng. Eletricista', '#386641'], ['Renata Alves', 'Compradora', '#bc6c25'], ['Diego Santos', 'Topógrafo', '#3a5a40'],
+  ['Fernanda Costa', 'Eng. de Planejamento', '#6d597a'], ['Thiago Nunes', 'Encarregado', '#355070'], ['Bruna Melo', 'Almoxarife', '#b56576'], ['Rogério Pires', 'Mestre de obras', '#52796f'],
+];
+type Raw = [name: string, city: string, stage: Stage, progress: number, launch: boolean, revenue: number, cost: number, startMonths: number, endMonths: number, x: number, y: number, art: Art, team: number[], client: string];
+const raws: Raw[] = [
+  ['Residencial Vista Parque', 'Recife - PE', 'Planejamento', 15, true, 6_400_000, 4_380_000, -1, 26, 54, 48, { floors: 6, tone: '#f1e4d3', wing: true, sky: 0 }, [0, 4, 8, 5, 6], 'Vista Parque SPE Ltda.'],
+  ['Condomínio Boa Viagem', 'Recife - PE', 'Planejamento', 8, true, 5_150_000, 3_420_000, 1, 28, 58, 70, { floors: 5, tone: '#efe0cc', wing: false, sky: 2 }, [8, 4, 7, 9], 'Boa Viagem Empreendimentos'],
+  ['Vista Jardins', 'Jaboatão - PE', 'Em execução', 62, false, 4_900_000, 3_310_000, -10, 6, 40, 86, { floors: 7, tone: '#e9d2b8', wing: true, sky: 1 }, [1, 2, 3, 0, 9, 6, 10], 'Jardins Incorporações'],
+  ['Edifício Horizonte', 'Olinda - PE', 'Em execução', 48, false, 3_850_000, 2_640_000, -7, 8, 70, 22, { floors: 8, tone: '#f3ede4', wing: false, sky: 0 }, [11, 3, 2, 7, 10, 5], 'Horizonte SPE'],
+  ['Parque das Águas', 'Recife - PE', 'Em execução', 34, false, 3_400_000, 2_310_000, -5, 12, 44, 40, { floors: 5, tone: '#dfc9ad', wing: true, sky: 2 }, [9, 1, 3, 10], 'Águas Claras Ltda.'],
+  ['Torre Capibaribe', 'Recife - PE', 'Em execução', 21, false, 5_600_000, 3_890_000, -3, 18, 50, 34, { floors: 10, tone: '#efe0cc', wing: false, sky: 1 }, [0, 2, 11, 7, 8], 'Capibaribe Incorporadora'],
+  ['Residencial Mar Azul', 'Paulista - PE', 'Acabamento', 85, false, 4_200_000, 2_870_000, -14, 2, 66, 10, { floors: 6, tone: '#f1e4d3', wing: true, sky: 0 }, [1, 4, 3, 5, 6, 9, 10, 11], 'Mar Azul SPE'],
+  ['Condomínio Villa Verde', 'Camaragibe - PE', 'Acabamento', 76, false, 3_100_000, 2_150_000, -12, 5, 20, 38, { floors: 5, tone: '#e6d8c8', wing: false, sky: 2 }, [11, 2, 7, 10, 3], 'Villa Verde Ltda.'],
+  ['Edifício Atlântico', 'Recife - PE', 'Acabamento', 91, true, 3_950_000, 2_720_000, -16, 1, 62, 56, { floors: 9, tone: '#dfc9ad', wing: true, sky: 1 }, [0, 8, 6, 3], 'Atlântico SPE'],
+  ['Torre Sol', 'Recife - PE', 'Entrega', 95, false, 3_600_000, 2_480_000, -19, 0, 48, 58, { floors: 9, tone: '#f3ede4', wing: false, sky: 0 }, [1, 2, 3, 9, 5, 10, 11], 'Torre Sol Incorporações'],
+  ['Residencial das Acácias', 'Recife - PE', 'Entrega', 100, false, 2_700_000, 1_850_000, -22, -2, 36, 52, { floors: 6, tone: '#efe0cc', wing: true, sky: 2 }, [4, 7, 6, 8, 11], 'Acácias Empreendimentos'],
+  ['Residencial Olinda Alta', 'Olinda - PE', 'Em execução', 55, false, 1_400_000, 1_150_000, -8, 7, 74, 28, { floors: 4, tone: '#e9d2b8', wing: false, sky: 1 }, [9, 2, 10], 'Olinda Alta Ltda.'],
+];
+const phaseNames = ['Fundação', 'Estrutura', 'Alvenaria', 'Instalações', 'Acabamento', 'Entrega'];
+
+export function makeSeed(now = Date.now()): Store {
+  const months = (m: number, day = 10) => { const d = new Date(now); d.setDate(day); d.setMonth(d.getMonth() + m); d.setHours(9, 0, 0, 0); return d.toISOString(); };
+  const days = (n: number) => new Date(now + n * DAY).toISOString();
+  const members: Member[] = people.map(([name, role, tone], i) => ({ id: `m${i}`, name, role, tone, status: i === 2 || i === 7 ? 'Folga' : 'Em obra', projectId: '' }));
+  const projects: Project[] = raws.map(([name, city, stage, progress, launch, revenue, cost, sm, em, x, y, art, team, client], i) => {
+    const start = months(sm, 1 + (i * 7) % 27), end = months(em, 1 + (i * 11) % 27);
+    const span = new Date(end).getTime() - new Date(start).getTime();
+    const phases = phaseNames.map((phase, k) => {
+      const ps = new Date(new Date(start).getTime() + span * k / 6).toISOString(), pe = new Date(new Date(start).getTime() + span * (k + 1) / 6).toISOString();
+      const p = Math.max(0, Math.min(100, Math.round((progress - k * 100 / 6) * 6)));
+      return { id: uid(), name: phase, start: ps, end: pe, progress: p };
+    });
+    return { id: `p${i}`, name, city, address: `Rua ${['das Flores', 'do Sol', 'da Aurora', 'Real da Torre', 'dos Navegantes', 'Amélia'][i % 6]}, ${120 + i * 37}`, client, units: 24 + (i * 13) % 96, stage, launch, progress, revenue, cost, start, end, deliveredAt: progress >= 100 ? months(-1, 12) : undefined, signedAt: i === 0 || i === 1 ? days(-12 - i * 6) : months(sm - 3), team: team.map(t => `m${t}`), x, y, art, phases, createdAt: months(sm - 3) };
+  });
+  members.forEach(m => { m.projectId = projects.find(p => p.team.includes(m.id) && active(p))?.id ?? projects[0].id; });
+
+  const at = (d: number, time: string) => ({ date: dayKey(days(d)), time });
+  const activities: Activity[] = [
+    { id: uid(), projectId: 'p0', ...at(0, '08:00'), title: 'Concretagem - Torre A', kind: 'Concretagem', done: false },
+    { id: uid(), projectId: 'p3', ...at(0, '10:00'), title: 'Entrega de materiais', kind: 'Entrega de materiais', done: false },
+    { id: uid(), projectId: 'p6', ...at(0, '14:00'), title: 'Vistoria da prefeitura', kind: 'Vistoria', done: false },
+    { id: uid(), projectId: 'p2', ...at(0, '16:00'), title: 'Reunião com cliente', kind: 'Reunião', done: false },
+    { id: uid(), projectId: 'p5', ...at(1, '07:30'), title: 'Concretagem da laje 4', kind: 'Concretagem', done: false },
+    { id: uid(), projectId: 'p7', ...at(1, '09:00'), title: 'Entrega de esquadrias', kind: 'Entrega de materiais', done: false },
+    { id: uid(), projectId: 'p9', ...at(2, '11:00'), title: 'Vistoria de entrega das unidades', kind: 'Vistoria', done: false },
+    { id: uid(), projectId: 'p4', ...at(3, '15:00'), title: 'Reunião de medição', kind: 'Reunião', done: false },
+    { id: uid(), projectId: 'p8', ...at(-1, '10:00'), title: 'Vistoria do Corpo de Bombeiros', kind: 'Vistoria', done: true },
+  ];
+  const suppliers: Supplier[] = [['Votorantim', 'Cimento e concreto', 'Juliana Prado'], ['Gerdau', 'Aço', 'Ricardo Lins'], ['Cerâmica União', 'Blocos e cerâmicos', 'Márcia Leal'], ['Tigre', 'Hidráulica', 'Felipe Moura'], ['Areal São João', 'Agregados', 'Sérgio Bezerra'], ['Portobello', 'Revestimentos', 'Clara Ventura']].map(([name, category, contact], i) => ({ id: `s${i}`, name, category, contact, phone: `(81) 3${(2241 + i * 113)}-${(4100 + i * 271)}` }));
+  const materials: Material[] = [
+    { id: 'c0', name: 'Cimento CP-II', supplier: 'Votorantim', quantity: 200, unit: 'sacos', minimum: 120, price: 38, icon: 'cement' },
+    { id: 'c1', name: 'Aço CA-50', supplier: 'Gerdau', quantity: 2, unit: 'toneladas', minimum: 4, price: 6900, icon: 'steel' },
+    { id: 'c2', name: 'Blocos cerâmicos', supplier: 'Cerâmica União', quantity: 3000, unit: 'un', minimum: 8000, price: 1.6, icon: 'brick' },
+    { id: 'c3', name: 'Tubos PVC 100mm', supplier: 'Tigre', quantity: 500, unit: 'un', minimum: 150, price: 42, icon: 'pipe' },
+    { id: 'c4', name: 'Areia média', supplier: 'Areal São João', quantity: 85, unit: 'm³', minimum: 40, price: 140, icon: 'sand' },
+    { id: 'c5', name: 'Porcelanato 60x60', supplier: 'Portobello', quantity: 900, unit: 'm²', minimum: 600, price: 79, icon: 'tile' },
+  ];
+  const purchases: Purchase[] = [
+    { id: uid(), materialId: 'c1', projectId: 'p3', quantity: 5, date: days(2), status: 'Em trânsito', value: 34500 },
+    { id: uid(), materialId: 'c0', projectId: 'p2', quantity: 150, date: days(-6), status: 'Recebido', value: 5700 },
+    { id: uid(), materialId: 'c5', projectId: 'p6', quantity: 400, date: days(-12), status: 'Recebido', value: 31600 },
+  ];
+  // Each project spends and receives in proportion to its progress, spread monthly from its start until today.
+  const entries: Entry[] = [];
+  const spendFactor = [.9, .95, 1.02, .96, .97, .93, 1.1, .98, .94, .97, .99, .95];
+  projects.forEach((p, i) => {
+    const from = new Date(p.start), until = new Date(Math.min(now, new Date(p.end).getTime()));
+    const monthList: Date[] = [];
+    for (let d = new Date(from.getFullYear(), from.getMonth(), 1); d <= until; d = new Date(d.getFullYear(), d.getMonth() + 1, 1)) monthList.push(d);
+    if (!monthList.length) monthList.push(new Date(from.getFullYear(), from.getMonth(), 1));
+    const spent = p.cost * Math.max(.02, p.progress / 100) * spendFactor[i % spendFactor.length];
+    const received = p.revenue * Math.min(1, Math.max(.05, p.progress / 100 * 1.05));
+    const weights = monthList.map((_, k) => 1 + Math.sin(k * 1.7 + i) * .35), sum = weights.reduce((a, b) => a + b, 0);
+    monthList.forEach((m, k) => {
+      const share = weights[k] / sum, at = (day: number) => new Date(m.getFullYear(), m.getMonth(), day, 12).toISOString();
+      entries.push({ id: uid(), projectId: p.id, date: at(5), type: 'Receita', category: 'Venda de unidades', description: 'Parcelas de clientes', value: Math.round(received * share) });
+      entries.push({ id: uid(), projectId: p.id, date: at(18), type: 'Custo', category: 'Materiais', description: 'Compras do mês', value: Math.round(spent * share * .58) });
+      entries.push({ id: uid(), projectId: p.id, date: at(25), type: 'Custo', category: 'Mão de obra', description: 'Folha e empreiteiros', value: Math.round(spent * share * .42) });
+    });
+  });
+  const cutoff = dayKey(new Date(now));
+  for (let k = entries.length - 1; k >= 0; k--) if (dayKey(entries[k].date) > cutoff) entries.splice(k, 1);
+  const clients: Client[] = [['Patrícia Gouveia', 'p9', 'Apto 702'], ['Henrique Bastos', 'p10', 'Apto 301'], ['Larissa Cavalcanti', 'p6', 'Apto 504'], ['Eduardo Maciel', 'p2', 'Apto 1101'], ['Sofia Albuquerque', 'p0', 'Apto 203'], ['Gustavo Arruda', 'p8', 'Cobertura 902'], ['Camila Freire', 'p3', 'Apto 605'], ['Rafael Moraes', 'p7', 'Casa 12'], ['Isabela Torres', 'p1', 'Apto 404'], ['Vinícius Barros', 'p5', 'Apto 1502']].map(([name, projectId, unit], i) => ({ id: uid(), name, projectId, unit, email: `${name.split(' ')[0].toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '')}@email.com`, phone: `(81) 9${8100 + i * 37}-${2200 + i * 131}`, value: 420_000 + i * 38_500 }));
+  const docs: Doc[] = [
+    { id: uid(), name: 'Projeto Executivo - Torre A', kind: 'PDF', size: '12 MB', date: days(0), projectId: 'p0' },
+    { id: uid(), name: 'Alvará de Construção', kind: 'PDF', size: '2,3 MB', date: days(-1), projectId: 'p5' },
+    { id: uid(), name: 'Orçamento Revisado', kind: 'XLSX', size: '1,1 MB', date: days(-5), projectId: 'p2' },
+    { id: uid(), name: 'Cronograma Físico-Financeiro', kind: 'XLSX', size: '850 KB', date: days(-7), projectId: 'p3' },
+    { id: uid(), name: 'Habite-se', kind: 'PDF', size: '640 KB', date: days(-30), projectId: 'p10' },
+    { id: uid(), name: 'Memorial Descritivo', kind: 'PDF', size: '3,8 MB', date: days(-41), projectId: 'p6' },
+  ];
+  return { projects, members, activities, materials, purchases, entries, suppliers, clients, docs };
+}
