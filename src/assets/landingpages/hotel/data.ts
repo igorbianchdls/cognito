@@ -9,7 +9,7 @@ export type Reservation = { id: string; code: string; guestId: string; roomId: s
 export type Settings = { owner: string; hotel: string; city: string; temperature: number; condition: string };
 export type Store = { types: RoomType[]; rooms: Room[]; guests: Guest[]; reservations: Reservation[]; settings: Settings; next: number };
 
-export const storageKey = 'lumen-hotel-v1';
+export const storageKey = 'lumen-hotel-v2';
 export const channels: Channel[] = ['Direto', 'Booking', 'Airbnb', 'Expedia', 'Telefone'];
 export const conditions = ['Ensolarado', 'Parcialmente nublado', 'Nublado', 'Chuva'];
 const DAY = 864e5;
@@ -65,7 +65,9 @@ export function makeSeed(now = Date.now()): Store {
   let n = 1, g = 0;
   const push = (room: Room, checkIn: string, checkOut: string, status: Status, k: number) => {
     const t = types.find(x => x.id === room.typeId)!;
-    const rate = Math.round(t.price * [1, 1, .92, 1.08, .95][k % 5]);
+    // Tarifas acompanham a temporada do litoral nordestino: alta no verão e em julho.
+    const season = [1.18, 1.12, 1.04, .94, .9, .92, 1.06, .96, .9, .98, 1.04, 1.22][new Date(`${checkIn}T12:00`).getMonth()];
+    const rate = Math.round(t.price * season * [1, 1, .92, 1.08, .95][k % 5]);
     const extras: Extra[] = status === 'Cancelada' || k % 3 ? [] : [extrasCatalog[k % extrasCatalog.length], extrasCatalog[(k + 2) % extrasCatalog.length]].slice(0, 1 + (k % 2)).map(([description, value]) => ({ id: uid(), description, value, date: checkIn }));
     reservations.push({ id: uid(), code: `LM-${String(2400 + n++)}`, guestId: `g${(g++ * 7) % 1000 < 870 ? (g * 7) % 1000 : (g * 13) % 120}`, roomId: room.id, checkIn, checkOut, adults: 2, children: k % 4 === 0 ? 1 : 0, status, channel: channels[[0, 1, 1, 0, 2, 3, 4, 1, 0, 2][(k * 7 + room.number.charCodeAt(2)) % 10]], rate, extras, notes: k % 7 === 0 ? 'Comemoração de aniversário de casamento.' : '', createdAt: new Date(new Date(`${checkIn}T12:00`).getTime() - (5 + k % 40) * DAY).toISOString() });
   };
