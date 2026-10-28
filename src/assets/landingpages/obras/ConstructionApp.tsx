@@ -5,7 +5,6 @@ import * as Dialog from '@radix-ui/react-dialog';
 import { ArrowDownRight, ArrowUpRight, Bell, Boxes, Building2, CalendarDays, Check, ChevronDown, ChevronRight, ClipboardCheck, Download, FileSpreadsheet, FileText, Flag, FolderOpen, HardHat, House, LayoutGrid, List, LocateFixed, Map as MapIcon, MapPin, MoreVertical, Package, Plus, RotateCcw, Search, ShoppingCart, SlidersHorizontal, Trash2, Truck, UserRound, Users, Wallet, X, type LucideIcon } from 'lucide-react';
 import { BlocksArt, Building, CoinsArt, CraneArt, HelmetArt, MaterialIcon, RecifeMap } from './Art';
 import { active, barColor, brl, cities, compact, contracted, dateLabel, dayKey, delivered, initials, makeSeed, stageColor, stages, stockStatus, storageKey, tones, uid, type Activity, type ActivityKind, type Doc, type Member, type Project, type Stage, type Store } from './data';
-import { jakarta } from './fonts';
 import s from './ConstructionApp.module.css';
 
 type View = 'Início' | 'Obras' | 'Planejamento' | 'Orçamentos' | 'Financeiro' | 'Compras' | 'Estoque' | 'Fornecedores' | 'Clientes' | 'Documentos' | 'Relatórios';
@@ -49,7 +48,7 @@ export default function ConstructionApp() {
   useEffect(() => { if (store) try { localStorage.setItem(storageKey, JSON.stringify(store)); } catch { /* storage full or blocked */ } }, [store]);
   useEffect(() => { if (!toast) return; const t = setTimeout(() => setToast(''), 2600); return () => clearTimeout(t); }, [toast]);
 
-  if (!store) return <div className={`${s.app} ${jakarta.variable}`}><div className={s.loading}><Logo /></div></div>;
+  if (!store) return <div className={s.app}><div className={s.loading}><Logo /></div></div>;
 
   const set = (change: (st: Store) => Partial<Store>, message?: string) => { setStore(prev => prev && { ...prev, ...change(prev) }); if (message) setToast(message); };
   const project = (id: string) => store.projects.find(p => p.id === id);
@@ -98,7 +97,7 @@ export default function ConstructionApp() {
   const toggleMember = (m: Member) => set(st => ({ members: st.members.map(x => x.id === m.id ? { ...x, status: x.status === 'Em obra' ? 'Folga' : 'Em obra' } : x) }), `${m.name}: ${m.status === 'Em obra' ? 'folga' : 'em obra'}.`);
   const ctx = { store, now, openProject, move, remove, deliver, go, set, setModal, docDownload, toggleMember };
 
-  return <div className={`${s.app} ${jakarta.variable}`}>
+  return <div className={s.app}>
     <aside className={s.sidebar} aria-label="Navegação principal">
       <button className={s.brand} onClick={() => go('Início')} aria-label="Átio Construções, ir para o início"><Logo /><span>ÁTIO<small>CONSTRUÇÕES</small></span></button>
       <nav>{navigation.map(([name, Icon]) => <button key={name} className={view === name ? s.navActive : ''} onClick={() => go(name)} aria-current={view === name ? 'page' : undefined} title={name}><Icon size={19} strokeWidth={1.6} /><span>{name}</span></button>)}</nav>
@@ -412,7 +411,7 @@ function TeamModal({ ctx, onClose }: { ctx: Ctx; onClose: () => void }) {
 
 function Shell({ title, onClose, children }: { title: string; onClose: () => void; children: ReactNode }) {
   return <Dialog.Root open onOpenChange={v => !v && onClose()}><Dialog.Portal><Dialog.Overlay className={s.overlay} />
-    <Dialog.Content className={`${s.modal} ${jakarta.variable}`} aria-describedby={undefined}>
+    <Dialog.Content className={s.modal} aria-describedby={undefined}>
       <header className={s.modalHead}><Dialog.Title>{title}</Dialog.Title><Dialog.Close className={s.round} aria-label="Fechar"><X size={17} /></Dialog.Close></header>
       {children}
     </Dialog.Content>
@@ -440,7 +439,7 @@ function ProjectDrawer({ ctx, project: p, tab, onTab, onClose, onUpdate }: { ctx
   const done = delivered(p), next = stages[stages.indexOf(p.stage) + 1];
   const activities = store.activities.filter(a => a.projectId === p.id).sort((a, b) => b.date.localeCompare(a.date) || a.time.localeCompare(b.time));
   return <Dialog.Root open onOpenChange={v => !v && onClose()}><Dialog.Portal><Dialog.Overlay className={s.overlay} />
-    <Dialog.Content className={`${s.drawer} ${jakarta.variable}`} aria-describedby={undefined}>
+    <Dialog.Content className={s.drawer} aria-describedby={undefined}>
       <div className={s.drawerCover}><Building art={p.art} className={s.coverArt} /><Dialog.Close className={`${s.round} ${s.drawerClose}`} aria-label="Fechar"><X size={17} /></Dialog.Close></div>
       <header className={s.drawerHead}>
         <span className={s.stage}><i style={{ background: done ? '#22b573' : stageColor[p.stage] }} />{done ? `Entregue em ${dateLabel(p.deliveredAt ?? p.end)}` : p.stage}{p.launch && <Pill tone="purple">Lançamento</Pill>}</span>

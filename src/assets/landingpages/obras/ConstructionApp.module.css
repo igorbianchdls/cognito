@@ -2,7 +2,9 @@
   --bg: #fbf4ec; --panel: #fffaf5; --card: #fff; --line: #f0e6da; --line-strong: #e6d8c7; --ink: #241a12; --text: #4a3d31; --muted: #9a8b7b;
   --accent: #c8642a; --accent-dark: #a94f1d; --accent-soft: #fbe6d6; --green: #1f9d5c; --green-soft: #e3f6ea; --blue: #2f6fdf; --blue-soft: #e6efff; --red: #e5484d; --red-soft: #fdecec; --amber: #c27c0e; --amber-soft: #fff1d6; --purple: #7c4ddb; --purple-soft: #efe7ff;
   --shadow: 0 1px 2px rgb(80 50 20 / .04), 0 4px 18px rgb(120 70 30 / .06);
-  font-family: var(--font-atio), system-ui, sans-serif; font-size: 13px; line-height: 1.4; letter-spacing: -.1px; color: var(--ink); color-scheme: light;
+  /* globals.css forces var(--ui-font-family) on every element; defining it here makes that resolve to Geist. */
+  --ui-font-family: var(--font-geist-sans), system-ui, sans-serif;
+  font-family: var(--ui-font-family); font-size: 13px; line-height: 1.4; letter-spacing: -.1px; color: var(--ink); color-scheme: light;
 }
 .app { display: flex; min-height: 100vh; background: var(--bg); }
 /* Resets use :where() so component classes win without !important. */
