@@ -16,4 +16,4 @@ Frontend demonstrativo baseado na imagem aprovada (painel de obras em kanban). A
 
 Sem backend. Dados no navegador em `atio-construtora-v2`, com datas de exemplo geradas a partir do primeiro acesso. O avanço físico e o avanço por etapa são informados manualmente. Uma compra registra o custo no financeiro e fica em trânsito até ser recebida. Documentos são apenas registros: o download gera um arquivo de texto demonstrativo. Prédios, ilustrações e mapa são SVG desenhados em código (`Art.tsx`), sem serviço de mapas externo. Rota pública, apenas com dados fictícios.
 
-Arquivos: `ConstructionApp.tsx`, `ConstructionApp.module.css`, `Art.tsx`, `data.ts`, `fonts.ts`; rota em `src/app/obras/page.tsx`.
+Arquivos: `ConstructionApp.tsx`, `ConstructionApp.module.css`, `Art.tsx`, `data.ts`; tipografia Geist, carregada no layout raiz; rota em `src/app/obras/page.tsx`.
