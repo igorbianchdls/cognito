@@ -165,7 +165,7 @@ function Overview({ ctx }: { ctx: Ctx }) {
   return <>
     <section className={s.hero}>
       <div className={s.heroText}>
-        <p className={s.welcome}>Bem-vindo de volta, {store.settings.owner}!</p>
+        <p className={s.welcome}>Bem-vindo de volta, <b>{store.settings.owner}</b>!</p>
         <h1>Seu hotel,<br /><span>sempre no controle.</span></h1>
         <p className={s.lead}>Acompanhe reservas, hóspedes, quartos<br />e toda a operação em tempo real.</p>
         <button className={s.cta} onClick={() => ctx.setModal({ kind: 'reservation' })}><Plus size={20} />Nova reserva</button>
