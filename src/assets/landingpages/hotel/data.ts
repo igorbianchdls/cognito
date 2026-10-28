@@ -57,9 +57,9 @@ export function makeSeed(now = Date.now()): Store {
     perFloor[floor] = (perFloor[floor] ?? 0) + 1;
     rooms.push({ id: `r${floor}${String(perFloor[floor]).padStart(2, '0')}`, number: `${floor}${String(perFloor[floor]).padStart(2, '0')}`, floor, typeId, housekeeping: 'Limpo' });
   }
-  const guests: Guest[] = Array.from({ length: 90 }, (_, i) => {
-    const name = `${firstNames[i % firstNames.length]} ${lastNames[(i * 7) % lastNames.length]}`;
-    return { id: `g${i}`, name, email: `${name.split(' ')[0].toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '')}.${name.split(' ')[1].toLowerCase()}@email.com`, phone: `(81) 9${String(8100 + i * 37).slice(0, 4)}-${String(1000 + i * 113).slice(-4)}`, city: cities[(i * 3) % cities.length], document: `${String(100 + i * 7).slice(-3)}.${String(400 + i * 13).slice(-3)}.${String(700 + i * 29).slice(-3)}-${String(10 + i % 89).padStart(2, '0')}`, createdAt: new Date(now - (200 - i * 2) * DAY).toISOString() };
+  const guests: Guest[] = Array.from({ length: 1000 }, (_, i) => {
+    const name = `${firstNames[i % firstNames.length]} ${lastNames[Math.floor(i / firstNames.length) % lastNames.length]}${i >= firstNames.length * lastNames.length ? ` ${lastNames[(i * 5) % lastNames.length]}` : ''}`;
+    return { id: `g${i}`, name, email: `${name.split(' ')[0].toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '')}.${name.split(' ')[1].toLowerCase()}@email.com`, phone: `(81) 9${String(8100 + i * 37).slice(0, 4)}-${String(1000 + i * 113).slice(-4)}`, city: cities[(i * 3) % cities.length], document: `${String(100 + i * 7).slice(-3)}.${String(400 + i * 13).slice(-3)}.${String(700 + i * 29).slice(-3)}-${String(10 + i % 89).padStart(2, '0')}`, createdAt: new Date(now - (400 - (i * 0.39)) * DAY).toISOString() };
   });
   const reservations: Reservation[] = [];
   let n = 1, g = 0;
@@ -67,7 +67,7 @@ export function makeSeed(now = Date.now()): Store {
     const t = types.find(x => x.id === room.typeId)!;
     const rate = Math.round(t.price * [1, 1, .92, 1.08, .95][k % 5]);
     const extras: Extra[] = status === 'Cancelada' || k % 3 ? [] : [extrasCatalog[k % extrasCatalog.length], extrasCatalog[(k + 2) % extrasCatalog.length]].slice(0, 1 + (k % 2)).map(([description, value]) => ({ id: uid(), description, value, date: checkIn }));
-    reservations.push({ id: uid(), code: `LM-${String(2400 + n++)}`, guestId: `g${g++ % guests.length}`, roomId: room.id, checkIn, checkOut, adults: 2, children: k % 4 === 0 ? 1 : 0, status, channel: channels[k % 5 === 4 ? 0 : (k * 3) % 5], rate, extras, notes: k % 7 === 0 ? 'Comemoração de aniversário de casamento.' : '', createdAt: new Date(new Date(`${checkIn}T12:00`).getTime() - (5 + k % 40) * DAY).toISOString() });
+    reservations.push({ id: uid(), code: `LM-${String(2400 + n++)}`, guestId: `g${(g++ * 7) % 1000 < 870 ? (g * 7) % 1000 : (g * 13) % 120}`, roomId: room.id, checkIn, checkOut, adults: 2, children: k % 4 === 0 ? 1 : 0, status, channel: channels[[0, 1, 1, 0, 2, 3, 4, 1, 0, 2][(k * 7 + room.number.charCodeAt(2)) % 10]], rate, extras, notes: k % 7 === 0 ? 'Comemoração de aniversário de casamento.' : '', createdAt: new Date(new Date(`${checkIn}T12:00`).getTime() - (5 + k % 40) * DAY).toISOString() });
   };
   // Lay out back-to-back stays per room from 70 days ago to 45 days ahead.
   rooms.forEach((room, ri) => {
@@ -81,7 +81,9 @@ export function makeSeed(now = Date.now()): Store {
       if ((k * 13 + ri) % 23 === 0 && checkIn > today) status = 'Cancelada';
       // A tenth of the rooms stay empty tonight so occupancy looks realistic.
       const skipTonight = ri % 10 === 7 && checkIn <= today && today < checkOut;
-      if (!skipTonight) push(room, checkIn, checkOut, status, k);
+      // Far-off nights are only partly sold, like a real booking curve.
+      const ahead = day - 7, unsold = ahead > 0 && ((k * 37 + ri * 11) % 100) < ahead * 2.2;
+      if (!skipTonight && !unsold) push(room, checkIn, checkOut, status, k);
       day += len + gap; k++;
     }
   });
