@@ -1,19 +1,19 @@
-# Átio — Obras & Reformas
+# Átio — Construtora & Incorporadora
 
-Frontend para gestão de construtoras e empresas de reforma, baseado na imagem aprovada pelo usuário. Acesso em `/obras` com o desenvolvimento normal do projeto.
+Frontend demonstrativo baseado na imagem aprovada (painel de obras em kanban). Acesso em `/obras` pelo servidor de desenvolvimento do projeto.
 
 ## Funcionalidades
 
-- Painel com indicadores mensais, obra em destaque, obras em execução, agenda, calendário, pipeline, financeiro e entregas.
-- Cadastro e edição de obras, clientes, fornecedores, tarefas, compromissos, compras e lançamentos financeiros.
-- Detalhe da obra com avanço físico, checklist por etapa, cronograma, compras, financeiro, documentos demonstrativos e diário.
-- Pipeline com arrastar e soltar e seletor de etapa; filtros; busca; alternância entre lista e cartões.
-- Compras com quantidade, unidade, fornecedor, previsão e situação de entrega.
-- Propostas e relatórios em TXT, financeiro em CSV, backup em JSON.
-- Dados locais no navegador em `atio-construction-v1`, independentes da demonstração de eventos.
+- Início com saudação, busca (atalho ⌘K / Ctrl+K) por obras, clientes, fornecedores e materiais, notificações e o botão "Nova obra" com atalhos para atividade, compra, lançamento e documento.
+- Indicadores: receita contratada, custo das obras, margem projetada (com anel de percentual) e obras em andamento. A comparação é com os contratos assinados até 30 dias atrás.
+- Obras em kanban (Planejamento, Em execução, Acabamento, Entrega) com arrastar e soltar, abas (Todas, Em construção, Lançamento, Entregues, Planejamento), filtros por cidade e ordenação, e visões em lista e em mapa.
+- Card de obra com ilustração, cidade, avanço físico, início, entrega (em vermelho se atrasada), equipe e selo de entrega.
+- Mapa ilustrado da Região Metropolitana do Recife com as obras posicionadas; atividades de hoje; evolução financeira mensal (receita, custo e lucro); compras e estoque; equipe em campo; documentos recentes.
+- Ficha da obra em painel lateral: dados e valores, avanço físico, cronograma por etapa, equipe, atividades, financeiro e documentos; mover de etapa e marcar como entregue.
+- Telas de planejamento (cronograma das obras e agenda), orçamentos (previsto x realizado), financeiro (lançamentos), compras (receber atualiza o estoque), estoque (baixa de material), fornecedores, clientes, documentos e relatórios (CSV, backup JSON e restauração dos dados de exemplo).
 
-Não há backend. Cliente/contato pertence ao cadastro da obra. Os valores contratuais previstos são distintos dos lançamentos mensais; o avanço físico é informado manualmente e não é calculado pelo checklist. Cronograma e tarefas compartilham a mesma base. Fotografias locais extraídas das referências aprovadas para a demonstração visual. Fotos da obra apresenta uma galeria demonstrativa, sem upload.
+## Dados e limitações
 
-## Arquivos
+Sem backend. Dados no navegador em `atio-construtora-v2`, com datas de exemplo geradas a partir do primeiro acesso. O avanço físico e o avanço por etapa são informados manualmente. Uma compra registra o custo no financeiro e fica em trânsito até ser recebida. Documentos são apenas registros: o download gera um arquivo de texto demonstrativo. Prédios, ilustrações e mapa são SVG desenhados em código (`Art.tsx`), sem serviço de mapas externo. Rota pública, apenas com dados fictícios.
 
-`ConstructionApp.tsx`, `ConstructionApp.module.css` e `data.ts` nesta pasta; rota em `src/app/obras/page.tsx`; imagens em `public/obras-media`. A rota `/obras` é pública e contém apenas dados fictícios.
+Arquivos: `ConstructionApp.tsx`, `ConstructionApp.module.css`, `Art.tsx`, `data.ts`, `fonts.ts`; rota em `src/app/obras/page.tsx`.
