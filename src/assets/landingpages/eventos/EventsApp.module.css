@@ -33,27 +33,35 @@
 .topbar { position: relative; z-index: 20; display: flex; align-items: center; gap: 18px; padding: 18px clamp(16px, 3.4vw, 56px); }
 .dataMode .topbar { position: sticky; top: 0; background: var(--espresso); box-shadow: 0 6px 24px rgb(42 25 16 / .2); padding-top: 12px; padding-bottom: 12px; }
 .brand { display: flex; align-items: center; gap: 12px; padding: 8px 12px 8px 4px; color: #fff; text-align: left; }
-.logoMark { width: 46px; height: 42px; color: #f3d6b0; filter: drop-shadow(0 2px 8px rgb(0 0 0 / .3)); }
-.brand > span { display: flex; flex-direction: column; font-size: 27px; font-weight: 500; letter-spacing: 4px; line-height: 1; text-shadow: 0 2px 12px rgb(0 0 0 / .35); }
-.brand small { font-size: 10.5px; letter-spacing: 5.4px; font-weight: 500; margin-top: 5px; color: #f3d6b0; }
-.tabs { display: flex; gap: 2px; padding: 6px; border-radius: 22px; margin: 0 auto; overflow-x: auto; scrollbar-width: none; }
-.photoMode .tabs { background: rgb(250 238 222 / .22); border: 1px solid rgb(255 255 255 / .28); backdrop-filter: blur(18px) saturate(150%); }
-.dataMode .tabs { background: rgb(255 255 255 / .06); }
-.tabs button { min-width: 92px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; padding: 6px 14px 7px; border-radius: 16px; color: #fff; font-size: 13px; font-weight: 500; white-space: nowrap; transition: background .15s, transform .15s; text-shadow: 0 1px 6px rgb(0 0 0 / .2); }
-.tabIcon { width: 38px; height: 38px; display: block; transition: transform .2s; }
+.logoMark { width: 54px; height: 50px; color: #fbeedd; filter: drop-shadow(0 2px 8px rgb(0 0 0 / .3)); }
+.brand > span { display: flex; flex-direction: column; align-items: center; line-height: 1; text-shadow: 0 2px 12px rgb(0 0 0 / .35); }
+.brand b { font-size: 36px; font-weight: 500; letter-spacing: 3px; }
+.brand small { font-size: 11px; letter-spacing: 4.6px; font-weight: 500; margin-top: 3px; color: #fbeedd; padding-left: 4px; }
+.tabs { display: flex; gap: 2px; padding: 6px; border-radius: 24px; margin: 0 auto; overflow-x: auto; scrollbar-width: none; background: rgb(250 241 231 / .8); border: 1px solid rgb(255 255 255 / .65); backdrop-filter: blur(18px) saturate(150%); box-shadow: 0 10px 30px rgb(40 16 4 / .18); }
+.tabs button { position: relative; min-width: 104px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; padding: 8px 16px 9px; border-radius: 18px; color: #3a2a20; font-size: 13.5px; font-weight: 500; white-space: nowrap; transition: background .15s, transform .15s; }
+/* Hairline dividers between tabs, hidden next to the active one. */
+.tabs button:not(:first-child)::before { content: ''; position: absolute; left: -2px; top: 20%; bottom: 20%; width: 1px; background: rgb(120 84 52 / .16); }
+.tabs .tabOn::before, .tabs .tabOn + button::before, .tabs button:hover::before, .tabs button:hover + button::before { opacity: 0; }
+.tabIcon { width: 44px; height: 44px; display: block; transition: transform .2s; }
 .tabIcon svg { width: 100%; height: 100%; display: block; filter: drop-shadow(0 2px 3px rgb(40 16 4 / .18)); }
 .tabs button:hover .tabIcon { transform: translateY(-2px); }
-.tabs button:hover { background: rgb(255 255 255 / .14); }
-.tabs .tabOn, .tabs .tabOn:hover { background: #fffaf3; border-radius: 18px; color: var(--espresso); text-shadow: none; box-shadow: 0 4px 14px rgb(0 0 0 / .15); }
+.tabs button:hover { background: rgb(255 255 255 / .55); }
+.tabs .tabOn, .tabs .tabOn:hover { background: #fff; color: var(--espresso); font-weight: 600; box-shadow: 0 6px 16px rgb(60 30 10 / .16); }
 .tools { display: flex; align-items: center; gap: 12px; }
 .search { position: relative; display: flex; align-items: center; gap: 10px; width: 300px; height: 52px; padding: 0 18px; border-radius: 999px; color: #f6e7d4; }
-.photoMode .search, .photoMode .iconCircle, .photoMode .user { background: rgb(250 238 222 / .2); border: 1px solid rgb(255 255 255 / .28); backdrop-filter: blur(18px) saturate(150%); }
+.photoMode .search, .photoMode .user { background: rgb(250 241 231 / .78); border: 1px solid rgb(255 255 255 / .65); backdrop-filter: blur(18px) saturate(150%); color: #3a2a20; box-shadow: 0 10px 30px rgb(40 16 4 / .14); }
+.photoMode .iconCircle { background: #fff; color: #2a1910; box-shadow: 0 8px 22px rgb(40 16 4 / .2); }
+.photoMode .search input { color: #2a1910; }
+.photoMode .search input::placeholder { color: #8a7768; }
+.userName { display: flex; flex-direction: column; line-height: 1.15; text-align: left; padding: 0 4px; }
+.userName b { font-size: 14px; font-weight: 600; }
+.userName small { font-size: 11px; opacity: .7; }
 .dataMode .search, .dataMode .iconCircle, .dataMode .user { background: rgb(255 255 255 / .08); border: 1px solid rgb(255 255 255 / .1); }
 .search input { flex: 1; min-width: 0; border: 0; outline: none; background: none; color: #fff; font-size: 13.5px; }
 .search input::placeholder { color: #f0dfca; }
 .rel { position: relative; }
 .iconCircle { width: 52px; height: 52px; border-radius: 50%; display: grid; place-items: center; color: #fff; position: relative; }
-.dot { position: absolute; top: 12px; right: 14px; width: 9px; height: 9px; border-radius: 50%; background: #ff7a59; border: 2px solid #fff; }
+.dot { position: absolute; top: 11px; right: 13px; width: 10px; height: 10px; border-radius: 50%; background: #ef3b3b; border: 2px solid #fff; }
 .user { display: flex; align-items: center; gap: 6px; padding: 4px 12px 4px 4px; border-radius: 999px; color: #fff; }
 .avatar { flex-shrink: 0; display: inline-grid; place-items: center; border-radius: 50%; background: linear-gradient(135deg, #e3b98a, #a8733f); color: #fff; font-weight: 600; letter-spacing: 0; }
 .popover { position: absolute; top: calc(100% + 10px); right: 0; width: 360px; max-height: 440px; overflow: auto; background: #fff; color: var(--ink); border-radius: 18px; box-shadow: 0 24px 60px rgb(42 20 8 / .3); border: 1px solid var(--line); padding: 8px; z-index: 40; }
@@ -328,7 +336,7 @@
 
 @media (max-width: 1280px) {
   .topbar { flex-wrap: wrap; }
-  .tabs { order: 3; flex-basis: 100%; margin: 0; justify-content: flex-start; }
+  .tabs { order: 3; flex-basis: 100%; margin: 0; justify-content: safe center; }
   .tools { margin-left: auto; }
   .modules { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .below { grid-template-columns: repeat(2, minmax(0, 1fr)); }
@@ -343,13 +351,14 @@
 }
 @media (max-width: 640px) {
   .topbar { gap: 10px; padding: 12px 16px; }
-  .brand > span { font-size: 21px; letter-spacing: 3px; }
-  .brand small { letter-spacing: 4px; }
+  .brand b { font-size: 24px; }
+  .brand small { font-size: 9px; letter-spacing: 3.4px; }
   .logoMark { width: 36px; height: 33px; }
+  .userName { display: none; }
   .search { display: none; }
   .iconCircle { width: 44px; height: 44px; }
-  .tabs button { min-width: 78px; padding: 5px 10px 6px; font-size: 12px; }
-  .tabIcon { width: 28px; height: 28px; }
+  .tabs button { min-width: 80px; padding: 6px 10px 7px; font-size: 12px; }
+  .tabIcon { width: 32px; height: 32px; }
   .hero { padding: 16px; gap: 16px; }
   .welcome { font-size: 19px; }
   .lead { font-size: 15px; }
