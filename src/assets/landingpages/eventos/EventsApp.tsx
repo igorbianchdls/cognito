@@ -110,7 +110,7 @@ function TopBar({ ctx, view }: { ctx: Ctx; view: View }) {
     ...dueSoon.map(({ e, i }) => ({ key: i.id, text: `${e.title}: ${i.label} de ${brl(i.value)} vence em ${dateLabel(i.due)}`, run: () => ctx.openEvent(e.id, 'Financeiro') })),
   ];
   return <header className={s.topbar} ref={ref}>
-    <button className={s.brand} onClick={() => ctx.go('Visão Geral')} aria-label="Vélia Eventos, ir para a visão geral"><LotusLogo className={s.logoMark} /><span>VÉLIA<small>EVENTOS</small></span></button>
+    <button className={s.brand} onClick={() => ctx.go('Visão Geral')} aria-label="Vélia Eventos, ir para a visão geral"><LotusLogo className={s.logoMark} /><span><b className={s.serifTitle}>VÉLIA</b><small>EVENTOS</small></span></button>
     <nav className={s.tabs} aria-label="Seções">{views.map(v => <button key={v} className={view === v ? s.tabOn : ''} aria-current={view === v ? 'page' : undefined} onClick={() => ctx.go(v)}><span className={s.tabIcon}><TabIcon name={v} /></span>{v}</button>)}</nav>
     <div className={s.tools}>
       <div className={s.search}>
@@ -123,7 +123,7 @@ function TopBar({ ctx, view }: { ctx: Ctx; view: View }) {
         {panel === 'bell' && <div className={s.popover}><p className={s.popTitle}>Notificações</p>{alerts.map(a => <button key={a.key} className={s.alert} onClick={() => { a.run(); setPanel(null); }}><i />{a.text}</button>)}{!alerts.length && <p className={s.empty}>Tudo em dia.</p>}</div>}
       </div>
       <div className={s.rel}>
-        <button className={s.user} onClick={() => setPanel(panel === 'user' ? null : 'user')} aria-label="Menu do usuário" aria-expanded={panel === 'user'}><Avatar name={`${store.settings.owner} Vélia`} size={44} /><ChevronDown size={16} /></button>
+        <button className={s.user} onClick={() => setPanel(panel === 'user' ? null : 'user')} aria-label="Menu do usuário" aria-expanded={panel === 'user'}><Avatar name={`${store.settings.owner} Vélia`} size={44} /><span className={s.userName}><b>{store.settings.owner}</b><small>Administrador</small></span><ChevronDown size={16} /></button>
         {panel === 'user' && <div className={`${s.popover} ${s.menuPop}`} role="menu"><p className={s.popTitle}>{store.settings.owner}<small>{store.settings.company}</small></p><button role="menuitem" onClick={() => { ctx.setModal({ kind: 'event' }); setPanel(null); }}>Novo evento</button><button role="menuitem" onClick={() => { ctx.setModal({ kind: 'client' }); setPanel(null); }}>Novo cliente</button><button role="menuitem" onClick={() => { ctx.go('Relatórios'); setPanel(null); }}>Configurações</button></div>}
       </div>
     </div>
