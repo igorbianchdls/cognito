@@ -1,4 +1,4 @@
-import { useId } from 'react';
+import { useId, type ReactNode } from 'react';
 
 const useSvgId = () => useId().replace(/:/g, '');
 
@@ -63,5 +63,38 @@ export function CameraArt() {
     <rect x="18" y="26" width="16" height="8" rx="3" fill="#3a3a40" />
     <circle cx="62" cy="63" r="27" fill="#1a1a1e" /><circle cx="62" cy="63" r="22" fill="#2f3239" /><circle cx="62" cy="63" r="16" fill={`url(#l${id})`} /><circle cx="56" cy="57" r="4" fill="#fff" opacity=".35" />
     <rect x="92" y="38" width="10" height="5" rx="2" fill="#d4a46a" />
+  </svg>;
+}
+
+/** Small dimensional icons shown above each tab label in the top bar. */
+export function TabIcon({ name }: { name: string }) {
+  const id = useSvgId();
+  const g = (key: string, a: string, b: string) => <linearGradient id={`${key}${id}`} x1="0" y1="0" x2="1" y2="1"><stop offset="0" stopColor={a} /><stop offset="1" stopColor={b} /></linearGradient>;
+  const shadow = <ellipse cx="24" cy="44" rx="15" ry="2.6" fill="#2b1608" opacity=".22" />;
+  const icons: Record<string, ReactNode> = {
+    'Visão Geral': <>{shadow}
+      <path d="M10 22 L24 10 L38 22 V40 H10 Z" fill={`url(#w${id})`} /><path d="M38 22 V40 H34 V24 Z" fill="#e3cdb2" />
+      <path d="M6 23 L24 7 L42 23 L39 26 L24 13 L9 26 Z" fill={`url(#r${id})`} /><rect x="20" y="28" width="8" height="12" rx="1.5" fill="#9a6337" /><rect x="13" y="26" width="5" height="5" rx="1" fill="#ffd38a" /></>,
+    Eventos: <>{shadow}
+      <rect x="8" y="10" width="32" height="31" rx="5" fill={`url(#w${id})`} /><path d="M8 15 C8 12 10 10 13 10 H35 C38 10 40 12 40 15 V19 H8 Z" fill={`url(#r${id})`} />
+      {[16, 32].map(x => <rect key={x} x={x - 1.5} y="6" width="3" height="8" rx="1.5" fill="#8f5a2d" />)}
+      <path d="M24 37 C17 32 15 29 15 26.5 C15 24 17 22.5 19.2 22.5 C21 22.5 22.6 23.5 24 25.2 C25.4 23.5 27 22.5 28.8 22.5 C31 22.5 33 24 33 26.5 C33 29 31 32 24 37 Z" fill="#e2788c" /></>,
+    Clientes: <>{shadow}
+      <circle cx="17" cy="17" r="6" fill={`url(#s${id})`} /><path d="M7 38 C7 29 11 25 17 25 C23 25 27 29 27 38 Z" fill={`url(#s${id})`} />
+      <circle cx="31" cy="15" r="7" fill={`url(#p${id})`} /><path d="M19 40 C19 30 24 25 31 25 C38 25 42 30 42 40 Z" fill={`url(#p${id})`} /></>,
+    Fornecedores: <>{shadow}
+      <path d="M17 30 L20 42 H28 L31 30 Z" fill="#c98f5c" /><path d="M15 29 H33 L32 32 H16 Z" fill="#b07b4a" />
+      <path d="M24 30 V20 M24 26 C20 24 17 22 16 18 M24 26 C28 24 31 22 32 18" stroke="#6f9a5a" strokeWidth="2" fill="none" strokeLinecap="round" />
+      {[[24, 13, 6.5], [15, 18, 5], [33, 18, 5]].map(([x, y, rr], k) => <g key={k}><circle cx={x} cy={y} r={rr} fill={`url(#f${id})`} /><circle cx={x} cy={y} r={rr * .45} fill="none" stroke="#c76a7c" strokeWidth="1.2" /></g>)}</>,
+    Financeiro: <>{shadow}
+      {[[9, 16, 'b'], [19, 24, 'b'], [29, 32, 'o']].map(([x, h, c]) => <g key={x as number}><rect x={x as number} y={42 - (h as number)} width="9" height={h as number} rx="2" fill={`url(#${c}${id})`} /><rect x={(x as number) + 6} y={42 - (h as number)} width="3" height={h as number} rx="1.5" fill="#000" opacity=".12" /></g>)}
+      <path d="M8 22 L18 15 L26 18 L39 7" stroke="#e8a23a" strokeWidth="2.6" fill="none" strokeLinecap="round" strokeLinejoin="round" /><path d="M34 6 H40 V12" stroke="#e8a23a" strokeWidth="2.6" fill="none" strokeLinecap="round" strokeLinejoin="round" /></>,
+    Relatórios: <>{shadow}
+      <path d="M12 6 H30 L38 14 V41 C38 42 37 43 36 43 H12 C11 43 10 42 10 41 V8 C10 7 11 6 12 6 Z" fill={`url(#w${id})`} stroke="#d9c4a8" strokeWidth="1" /><path d="M30 6 V14 H38 Z" fill="#e3cdb2" />
+      {[20, 25, 30].map((y, k) => <rect key={y} x="15" y={y} width={k === 2 ? 12 : 18} height="2.4" rx="1.2" fill="#c9b394" />)}<rect x="15" y="13" width="10" height="3" rx="1.5" fill="#e2788c" /><rect x="15" y="35" width="7" height="3" rx="1.5" fill="#6aa1d8" /></>,
+  };
+  return <svg viewBox="0 0 48 48" aria-hidden="true">
+    <defs>{g('w', '#fffaf3', '#ead9c3')}{g('r', '#e89a6a', '#b85f3a')}{g('s', '#f7c9a8', '#d9926a')}{g('p', '#a9c4f0', '#5b86cf')}{g('f', '#ffe9ef', '#f2a9ba')}{g('b', '#a9c4f0', '#4f7cc8')}{g('o', '#ffd48a', '#e39a3a')}</defs>
+    {icons[name]}
   </svg>;
 }

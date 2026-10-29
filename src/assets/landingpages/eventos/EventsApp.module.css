@@ -36,12 +36,15 @@
 .logoMark { width: 46px; height: 42px; color: #f3d6b0; filter: drop-shadow(0 2px 8px rgb(0 0 0 / .3)); }
 .brand > span { display: flex; flex-direction: column; font-size: 27px; font-weight: 500; letter-spacing: 4px; line-height: 1; text-shadow: 0 2px 12px rgb(0 0 0 / .35); }
 .brand small { font-size: 10.5px; letter-spacing: 5.4px; font-weight: 500; margin-top: 5px; color: #f3d6b0; }
-.tabs { display: flex; gap: 4px; padding: 6px; border-radius: 999px; margin: 0 auto; overflow-x: auto; scrollbar-width: none; }
+.tabs { display: flex; gap: 2px; padding: 6px; border-radius: 22px; margin: 0 auto; overflow-x: auto; scrollbar-width: none; }
 .photoMode .tabs { background: rgb(250 238 222 / .22); border: 1px solid rgb(255 255 255 / .28); backdrop-filter: blur(18px) saturate(150%); }
 .dataMode .tabs { background: rgb(255 255 255 / .06); }
-.tabs button { height: 42px; padding: 0 20px; border-radius: 999px; color: #fff; font-size: 14.5px; font-weight: 500; white-space: nowrap; transition: background .15s; text-shadow: 0 1px 6px rgb(0 0 0 / .2); }
+.tabs button { min-width: 92px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; padding: 6px 14px 7px; border-radius: 16px; color: #fff; font-size: 13px; font-weight: 500; white-space: nowrap; transition: background .15s, transform .15s; text-shadow: 0 1px 6px rgb(0 0 0 / .2); }
+.tabIcon { width: 38px; height: 38px; display: block; transition: transform .2s; }
+.tabIcon svg { width: 100%; height: 100%; display: block; filter: drop-shadow(0 2px 3px rgb(40 16 4 / .18)); }
+.tabs button:hover .tabIcon { transform: translateY(-2px); }
 .tabs button:hover { background: rgb(255 255 255 / .14); }
-.tabs .tabOn, .tabs .tabOn:hover { background: #fffaf3; color: var(--espresso); text-shadow: none; box-shadow: 0 4px 14px rgb(0 0 0 / .15); }
+.tabs .tabOn, .tabs .tabOn:hover { background: #fffaf3; border-radius: 18px; color: var(--espresso); text-shadow: none; box-shadow: 0 4px 14px rgb(0 0 0 / .15); }
 .tools { display: flex; align-items: center; gap: 12px; }
 .search { position: relative; display: flex; align-items: center; gap: 10px; width: 300px; height: 52px; padding: 0 18px; border-radius: 999px; color: #f6e7d4; }
 .photoMode .search, .photoMode .iconCircle, .photoMode .user { background: rgb(250 238 222 / .2); border: 1px solid rgb(255 255 255 / .28); backdrop-filter: blur(18px) saturate(150%); }
@@ -345,7 +348,8 @@
   .logoMark { width: 36px; height: 33px; }
   .search { display: none; }
   .iconCircle { width: 44px; height: 44px; }
-  .tabs button { height: 38px; padding: 0 14px; font-size: 13.5px; }
+  .tabs button { min-width: 78px; padding: 5px 10px 6px; font-size: 12px; }
+  .tabIcon { width: 28px; height: 28px; }
   .hero { padding: 16px; gap: 16px; }
   .welcome { font-size: 19px; }
   .lead { font-size: 15px; }

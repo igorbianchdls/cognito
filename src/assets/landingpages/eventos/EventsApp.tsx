@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useRef, useState, type FormEvent, type ReactNode } from 'react';
 import * as Dialog from '@radix-ui/react-dialog';
 import { ArrowRight, Bell, Briefcase, Cake, Check, ChevronDown, ChevronLeft, ChevronRight, Circle, CircleCheck, CircleDot, Download, Plus, RotateCcw, Search, Sparkles, Star, Trash2, X, type LucideIcon } from 'lucide-react';
-import { BouquetArt, CameraArt, ClipboardArt, GuestsArt, LotusLogo } from './Art';
+import { BouquetArt, CameraArt, ClipboardArt, GuestsArt, LotusLogo, TabIcon } from './Art';
 import { addDays, brl, categories, costs, dateLabel, dayKey, initials, live, makeSeed, phaseStatus, phases, received, sources, stages, storageKey, types, uid, type Client, type Event, type EventType, type Phase, type PhaseStatus, type Rsvp, type Stage, type Store, type Supplier } from './data';
 import { serif } from './fonts';
 import s from './EventsApp.module.css';
@@ -111,7 +111,7 @@ function TopBar({ ctx, view }: { ctx: Ctx; view: View }) {
   ];
   return <header className={s.topbar} ref={ref}>
     <button className={s.brand} onClick={() => ctx.go('Visão Geral')} aria-label="Vélia Eventos, ir para a visão geral"><LotusLogo className={s.logoMark} /><span>VÉLIA<small>EVENTOS</small></span></button>
-    <nav className={s.tabs} aria-label="Seções">{views.map(v => <button key={v} className={view === v ? s.tabOn : ''} aria-current={view === v ? 'page' : undefined} onClick={() => ctx.go(v)}>{v}</button>)}</nav>
+    <nav className={s.tabs} aria-label="Seções">{views.map(v => <button key={v} className={view === v ? s.tabOn : ''} aria-current={view === v ? 'page' : undefined} onClick={() => ctx.go(v)}><span className={s.tabIcon}><TabIcon name={v} /></span>{v}</button>)}</nav>
     <div className={s.tools}>
       <div className={s.search}>
         <Search size={19} />
