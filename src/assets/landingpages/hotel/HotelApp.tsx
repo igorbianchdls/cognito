@@ -4,6 +4,7 @@ import { useEffect, useMemo, useRef, useState, type FormEvent, type ReactNode } 
 import * as Dialog from '@radix-ui/react-dialog';
 import { ArrowRight, BedDouble, Bell, CalendarDays, Check, ChevronDown, ChevronLeft, ChevronRight, Cloud, CloudRain, CloudSun, Download, LogIn, LogOut, Plus, RotateCcw, Search, Sparkles, Trash2, Users, Wrench, X, type LucideIcon } from 'lucide-react';
 import { active, addDays, brl, channels, conditions, covers, dateLabel, dayKey, extrasOf, initials, makeSeed, nightRevenue, nightsOf, occupancy, roomAvailable, shortDate, storageKey, totalOf, uid, type Channel, type Guest, type Housekeeping, type Reservation, type Room, type Status, type Store } from './data';
+import { HotelIcon, SunHorizon } from './Art';
 import s from './HotelApp.module.css';
 
 type View = 'Visão Geral' | 'Reservas' | 'Hóspedes' | 'Quartos' | 'Financeiro' | 'Relatórios';
@@ -18,6 +19,20 @@ const has = (q: string, ...values: (string | number)[]) => normalize(values.join
 const pct = (v: number) => `${v.toLocaleString('pt-BR', { maximumFractionDigits: 0 })}%`;
 const download = (name: string, content: string, type: string) => { const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([content], { type })); a.download = name; a.click(); URL.revokeObjectURL(a.href); };
 const csv = (rows: (string | number)[][]) => '﻿' + rows.map(r => r.map(v => `"${String(v).replace(/"/g, '""')}"`).join(';')).join('\n');
+const tabIcon: Record<View, Parameters<typeof HotelIcon>[0]['name']> = { 'Visão Geral': 'home', Reservas: 'calendar', Hóspedes: 'people', Quartos: 'bed', Financeiro: 'chart', Relatórios: 'report' };
+const compact = (v: number) => v >= 1e6 ? `R$ ${(v / 1e6).toLocaleString('pt-BR', { maximumFractionDigits: 1 })} mi` : v >= 1e4 ? `R$ ${Math.round(v / 1e3).toLocaleString('pt-BR')} mil` : brl(v, 0);
+/** Approximate sunrise and sunset in Porto de Galinhas (UTC−3), from the NOAA simplified solar equations. */
+function sunTimes(key: string) {
+  const lat = -8.5 * Math.PI / 180, lon = -35, tz = -3;
+  const date = new Date(`${key}T12:00Z`), n = Math.floor((date.getTime() - Date.UTC(date.getUTCFullYear(), 0, 0)) / 864e5);
+  const g = 2 * Math.PI / 365 * (n - 1);
+  const eqTime = 229.18 * (0.000075 + 0.001868 * Math.cos(g) - 0.032077 * Math.sin(g) - 0.014615 * Math.cos(2 * g) - 0.040849 * Math.sin(2 * g));
+  const decl = 0.006918 - 0.399912 * Math.cos(g) + 0.070257 * Math.sin(g) - 0.006758 * Math.cos(2 * g) + 0.000907 * Math.sin(2 * g) - 0.002697 * Math.cos(3 * g) + 0.00148 * Math.sin(3 * g);
+  const hourAngle = Math.acos(Math.cos(90.833 * Math.PI / 180) / (Math.cos(lat) * Math.cos(decl)) - Math.tan(lat) * Math.tan(decl)) * 180 / Math.PI;
+  const noon = 720 - 4 * lon - eqTime + tz * 60;
+  const fmt = (m: number) => { const r = Math.round(m); return `${String(Math.floor(r / 60)).padStart(2, '0')}:${String(r % 60).padStart(2, '0')}`; };
+  return { rise: fmt(noon - 4 * hourAngle), set: fmt(noon + 4 * hourAngle) };
+}
 const longDate = (key: string) => new Date(`${key}T12:00`).toLocaleDateString('pt-BR', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' }).replace(/\./g, '').replace(/^./, c => c.toUpperCase());
 
 export default function HotelApp() {
@@ -134,8 +149,8 @@ function TopBar({ ctx, view }: { ctx: Ctx; view: View }) {
     ...store.rooms.filter(r => r.housekeeping === 'Manutenção').map(r => ({ key: r.id, text: `Quarto ${r.number} em manutenção`, run: () => ctx.setModal({ kind: 'room', id: r.id }) })),
   ];
   return <header className={s.topbar} ref={ref}>
-    <button className={s.brand} onClick={() => ctx.go('Visão Geral')} aria-label="Lumen Hotel, ir para a visão geral"><Logo /><span>Lumen<small>HOTEL</small></span></button>
-    <nav className={s.tabs} aria-label="Seções">{views.map(v => <button key={v} className={view === v ? s.tabOn : ''} aria-current={view === v ? 'page' : undefined} onClick={() => ctx.go(v)}>{v}</button>)}</nav>
+    <button className={s.brand} onClick={() => ctx.go('Visão Geral')} aria-label="Lumen Hotel, ir para a visão geral"><Logo /><span><b>Lumen</b><small>HOTEL</small></span></button>
+    <nav className={s.tabs} aria-label="Seções">{views.map(v => <button key={v} className={view === v ? s.tabOn : ''} aria-current={view === v ? 'page' : undefined} onClick={() => ctx.go(v)}><span className={s.tabIcon}><HotelIcon name={tabIcon[v]} /></span>{v}</button>)}</nav>
     <div className={s.tools}>
       <div className={s.search}>
         <Search size={18} />
@@ -147,7 +162,7 @@ function TopBar({ ctx, view }: { ctx: Ctx; view: View }) {
         {panel === 'bell' && <div className={s.popover}><p className={s.popTitle}>Notificações</p>{alerts.map(a => <button key={a.key} className={s.alert} onClick={() => { a.run(); setPanel(null); }}><i />{a.text}</button>)}{!alerts.length && <p className={s.empty}>Tudo em ordem por aqui.</p>}</div>}
       </div>
       <div className={s.rel}>
-        <button className={s.user} onClick={() => setPanel(panel === 'user' ? null : 'user')} aria-label="Menu do usuário" aria-expanded={panel === 'user'}><Avatar name={`${store.settings.owner} Lumen`} size={42} /><ChevronDown size={16} /></button>
+        <button className={s.user} onClick={() => setPanel(panel === 'user' ? null : 'user')} aria-label="Menu do usuário" aria-expanded={panel === 'user'}><Avatar name={`${store.settings.owner} Lumen`} size={42} /><span className={s.userName}><b>{store.settings.owner}</b><small>Administrador</small></span><ChevronDown size={16} /></button>
         {panel === 'user' && <div className={`${s.popover} ${s.menuPop}`} role="menu"><p className={s.popTitle}>{store.settings.owner}<small>{store.settings.hotel}</small></p><button role="menuitem" onClick={() => { ctx.go('Relatórios'); setPanel(null); }}>Configurações</button><button role="menuitem" onClick={() => { ctx.setModal({ kind: 'guest' }); setPanel(null); }}>Novo hóspede</button><button role="menuitem" onClick={() => { ctx.setModal({ kind: 'reservation' }); setPanel(null); }}>Nova reserva</button></div>}
       </div>
     </div>
@@ -162,12 +177,23 @@ function Overview({ ctx }: { ctx: Ctx }) {
   const dirty = store.rooms.filter(r => r.housekeeping !== 'Limpo');
   const WeatherIcon = weatherIcon[store.settings.condition];
   const days = Array.from({ length: 14 }, (_, i) => addDays(today, i));
+  const sun = sunTimes(today);
+  const staying = store.reservations.filter(r => r.status === 'Hospedado' && covers(r, today));
+  const inHouse = staying.reduce((v, r) => v + r.adults + r.children, 0);
+  const monthRevenue = period(store, `${today.slice(0, 8)}01`, today).revenue;
+  const next7 = store.reservations.filter(r => active(r) && r.checkIn > today && r.checkIn <= addDays(today, 7)).length;
+  const modules: { title: string; subtitle: string; stat: string; icon: Parameters<typeof HotelIcon>[0]['name']; go: View }[] = [
+    { title: 'Reservas', subtitle: 'Gestão e disponibilidade', stat: `${next7} chegadas em 7 dias`, icon: 'calendar', go: 'Reservas' },
+    { title: 'Hóspedes', subtitle: 'Check-in e histórico', stat: `${staying.length} quartos ocupados`, icon: 'people', go: 'Hóspedes' },
+    { title: 'Quartos', subtitle: 'Status e manutenção', stat: `${store.rooms.filter(r => r.housekeeping === 'Sujo').length} a limpar · ${store.rooms.filter(r => r.housekeeping === 'Manutenção').length} em manutenção`, icon: 'bed', go: 'Quartos' },
+    { title: 'Financeiro', subtitle: 'Receitas e despesas', stat: `${compact(monthRevenue)} no mês`, icon: 'chart', go: 'Financeiro' },
+  ];
   return <>
     <section className={s.hero}>
       <div className={s.heroText}>
         <p className={s.welcome}>Bem-vindo de volta, <b>{store.settings.owner}</b>!</p>
         <h1>Seu hotel,<br /><span>sempre no controle.</span></h1>
-        <p className={s.lead}>Acompanhe reservas, hóspedes, quartos<br />e toda a operação em tempo real.</p>
+        <p className={s.lead}>Acompanhe reservas, hóspedes, quartos <br />e toda a operação em tempo real.</p>
         <button className={s.cta} onClick={() => ctx.setModal({ kind: 'reservation' })}><Plus size={20} />Nova reserva</button>
       </div>
       <aside className={`${s.glass} ${s.today}`} aria-label="Hoje no hotel">
@@ -178,14 +204,25 @@ function Overview({ ctx }: { ctx: Ctx }) {
           <label>Condição<select value={store.settings.condition} onChange={e => ctx.set(st => ({ settings: { ...st.settings, condition: e.target.value } }))}>{conditions.map(c => <option key={c}>{c}</option>)}</select></label>
           <small>Valor de demonstração, sem serviço de previsão do tempo.</small>
         </div>}
-        <dl><div><dt>Ocupação hoje</dt><dd>{pct(occupancy(store, today))}</dd></div><div><dt>Check-ins</dt><dd>{arrivals.length}</dd></div><div><dt>Check-outs</dt><dd>{departures.length}</dd></div></dl>
+        <div className={s.sunTimes}><span><SunHorizon /><small>Nascer do sol</small><b>{sun.rise}</b></span><span><SunHorizon setting /><small>Pôr do sol</small><b>{sun.set}</b></span></div>
+        <div className={s.todayStats}>
+          <button onClick={() => ctx.go('Reservas')}><HotelIcon name="people" tone="pink" /><b>{pct(occupancy(store, today))}</b><small>Ocupação</small></button>
+          <button onClick={() => ctx.go('Hóspedes')}><HotelIcon name="bed" /><b>{inHouse}</b><small>Hóspedes</small></button>
+          <button onClick={() => document.getElementById('lumen-arrivals')?.scrollIntoView({ behavior: 'smooth' })}><HotelIcon name="calendar" tone="green" /><b>{arrivals.length}</b><small>Check-ins</small></button>
+          <button onClick={() => document.getElementById('lumen-arrivals')?.scrollIntoView({ behavior: 'smooth' })}><HotelIcon name="calendar" tone="orange" /><b>{departures.length}</b><small>Check-outs</small></button>
+        </div>
       </aside>
-      <ManagementKpis ctx={ctx} />
+      <section className={s.modules} aria-label="Módulos">{modules.map(m => <button key={m.title} className={`${s.glass} ${s.module}`} onClick={() => ctx.go(m.go)}>
+        <span className={s.moduleArt}><HotelIcon name={m.icon} /></span>
+        <span className={s.moduleText}><b>{m.title}</b><small>{m.subtitle}</small><em>{m.stat}</em></span>
+        <i className={s.arrow}><ArrowRight size={20} /></i>
+      </button>)}</section>
     </section>
 
+    <div className={s.kpiWrap}><ManagementKpis ctx={ctx} /></div>
     <section className={s.operation} aria-label="Operação de hoje">
       <div className={`${s.glass} ${s.opCard}`}>
-        <header><h2><LogIn size={18} />Chegadas de hoje</h2><span>{arrivals.filter(r => r.status === 'Hospedado').length}/{arrivals.length}</span></header>
+        <header id="lumen-arrivals"><h2><LogIn size={18} />Chegadas de hoje</h2><span>{arrivals.filter(r => r.status === 'Hospedado').length}/{arrivals.length}</span></header>
         <ul>{arrivals.map(r => <li key={r.id}><button className={s.opRow} onClick={() => ctx.openReservation(r.id)}><Avatar name={ctx.guestName(r.guestId)} /><span><b>{ctx.guestName(r.guestId)}</b><small>Quarto {ctx.roomNumber(r.roomId)} · {nightsOf(r)} noites · {r.adults + r.children} hósp.</small></span></button>{r.status === 'Confirmada' ? <button className={s.opAction} onClick={() => ctx.checkIn(r)}>Check-in</button> : <Pill tone={statusTone[r.status]}>{r.status}</Pill>}</li>)}{!arrivals.length && <li className={s.empty}>Nenhuma chegada hoje.</li>}</ul>
       </div>
       <div className={`${s.glass} ${s.opCard}`}>
