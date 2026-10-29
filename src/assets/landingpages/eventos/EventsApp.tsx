@@ -151,7 +151,7 @@ function Overview({ ctx }: { ctx: Ctx }) {
       <div className={s.heroText}>
         <p className={s.welcome}>Bem-vindo de volta, <b>{store.settings.owner}</b>!</p>
         <h1 className={s.serifTitle}>Momentos<br />que ficam para<br />sempre.</h1>
-        <p className={s.lead}>Organize, planeje e execute eventos<br />inesquecíveis em um só lugar.</p>
+        <p className={s.lead}>Organize, planeje e execute eventos <br />inesquecíveis em um só lugar.</p>
         <button className={s.cta} onClick={() => ctx.setModal({ kind: 'event' })}><Plus size={22} />Novo evento</button>
       </div>
       <div className={s.heroSide}>
