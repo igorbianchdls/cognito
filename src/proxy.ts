@@ -14,6 +14,7 @@ const isPublicRoute = createRouteMatcher([
   '/salao',
   '/eventos',
   '/obras',
+  '/construcao',
   '/marcenaria',
   '/oficina',
   '/roupas',
