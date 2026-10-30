@@ -180,6 +180,7 @@ import { OTTO_CHATGPT_NOTA_REEL_DURATION, OttoChatGptNotaReel } from '@/assets/r
 import { OTTO_CHATGPT_CRUD_DURATION, OttoChatGptCrudReel } from '@/assets/remotion/compositions/OttoChatGptCrudReel'
 import { OTTO_CHATGPT_CONTADORES_TELA_DURATION, OTTO_CHATGPT_FINANCEIRO_TELA_DURATION, OttoChatGptContadoresTelaReel, OttoChatGptFinanceiroTelaReel } from '@/assets/remotion/compositions/OttoChatGptTelaReels'
 import { OTTO_CONTA_AZUL_REEL_DURATION, OTTO_OMIE_REEL_DURATION, OttoContaAzulReel, OttoOmieReel } from '@/assets/remotion/compositions/OttoContaAzulReel'
+import { LUMEN_HOTEL_MOBILE_DURATION, LumenHotelMobileReel } from '@/assets/remotion/compositions/LumenHotelMobileReel'
 import { OTTO_AGORA_CHAT_DURATION, OTTO_AGORA_FACIL_DURATION, OTTO_AGORA_FINANCEIRO_DURATION, OTTO_AGORA_LUCRO_DURATION, OTTO_AGORA_SISTEMA_DURATION, OttoAgoraChatDarkSquareReel, OttoAgoraChatReel, OttoAgoraFacilReel, OttoAgoraFinanceiroDarkReel, OttoAgoraFinanceiroReel, OttoAgoraLucroDarkReel, OttoAgoraLucroReel, OttoAgoraSistemaDarkSquareReel, OttoAgoraSistemaReel } from '@/assets/remotion/compositions/OttoAgoraChatGptReels'
 import { OTTO_COBRANCA_REEL_DURATION, OTTO_FUNCIONARIO_REEL_DURATION, OttoCobrancaReel, OttoFuncionarioReel } from '@/assets/remotion/compositions/OttoCobrancaFuncionarioVideos'
 import { OTTO_NOTA_CHATGPT_BATCH_DURATION, OTTO_NOTA_CHATGPT_SINGLE_DURATION, OttoNotaChatGptBatchReel, OttoNotaChatGptSingleReel } from '@/assets/remotion/compositions/OttoNotaFiscalChatGptVideos'
@@ -2324,6 +2325,19 @@ const catalog: CatalogItem[] = [
     tags: ['ChatGPT', 'Mobile', 'SF Pro', 'iPhone', 'Custom Icons'],
     value: 'component-chatgpt-mobile-exact-replica',
     width: 828,
+  },
+  {
+    code: '<LumenHotelMobileReel />',
+    component: LumenHotelMobileReel,
+    description: 'Gravação de tela do app Lumen Hotel no celular: visão geral, check-in em um toque, ocupação por categoria e a tela de reservas pela barra de navegação.',
+    duration: LUMEN_HOTEL_MOBILE_DURATION,
+    fps: 30,
+    height: 1920,
+    kind: 'Claude Videos',
+    label: 'App · Lumen Hotel no celular (gravação de tela)',
+    tags: ['Reel', 'Lumen', 'Hotel', 'Mobile', 'App'],
+    value: 'reel-lumen-hotel-mobile',
+    width: 1080,
   },
   {
     code: '<OttoContadoresReel />',
