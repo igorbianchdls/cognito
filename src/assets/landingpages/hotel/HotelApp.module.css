@@ -354,6 +354,9 @@
 
 
 /* Keep the module row inside the first screen: the hero fills the viewport under the top bar, and short screens get a denser layout. */
+/* Phone layout pieces: hidden on larger screens. */
+.mobileOnly, .mobileNav { display: none; }
+
 @media (min-width: 961px) and (max-height: 900px) {
   .topbar { padding-top: 12px; padding-bottom: 12px; }
   .hero { min-height: calc(100svh - 138px); padding-top: 4px; padding-bottom: 20px; gap: 16px 32px; }
@@ -421,14 +424,71 @@
   .brand b { font-size: 24px; }
   .logoMark { width: 36px; height: 36px; }
   .userName { display: none; }
-  .modules { grid-template-columns: 1fr; gap: 12px; }
-  .module { min-height: 0; }
-  .moduleArt { width: 70px; height: 70px; flex-basis: 70px; }
-  .today { grid-template-columns: 1fr; }
-  .sunTimes { grid-row: auto; grid-column: 1; border-left: 0; padding-left: 0; margin-bottom: 14px; }
-  .todayStats { grid-row: auto; }
-  .todayStats b { font-size: 22px; }
-  .todayStats svg { width: 34px; height: 34px; }
+  .app { padding-bottom: calc(84px + env(safe-area-inset-bottom)); }
+  .tabs { display: none; }
+  .desktopOnly { display: none; }
+  .mobileOnly { display: block; }
+  .modules { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+  .module { min-height: 150px; flex-direction: column; align-items: flex-start; justify-content: flex-end; gap: 8px; padding: 14px 14px 16px; }
+  .moduleArt { width: 64px; height: 64px; flex-basis: auto; }
+  .moduleText b { font-size: 18px; }
+  .moduleText small { font-size: 12.5px; padding-right: 34px; }
+  .moduleText em { display: none; }
+  .module .arrow { top: auto; bottom: 14px; right: 12px; transform: none; width: 36px; height: 36px; }
+  .today { grid-template-columns: auto 1fr; column-gap: 14px; padding: 18px 16px; }
+  .today > header { flex-wrap: wrap; row-gap: 2px; }
+  .today time { font-size: 13px; }
+  .weather { gap: 10px; margin: 12px 0 14px; }
+  .weather b { font-size: 32px; }
+  .weather small { font-size: 13px; }
+  .sunArt { width: 48px; height: 48px; }
+  .weatherIcon { width: 44px; height: 44px; }
+  .sunTimes { grid-template-columns: 1fr; gap: 8px; padding-left: 14px; }
+  .sunTimes span { grid-template-columns: 22px 1fr; column-gap: 6px; }
+  .sunTimes svg { width: 22px; height: 22px; }
+  .sunTimes small { font-size: 11px; }
+  .sunTimes b { font-size: 15px; }
+  .todayStats { padding-top: 14px; }
+  .todayStats button { padding: 2px; }
+  .todayStats b { font-size: 21px; }
+  .todayStats small { font-size: 11.5px; white-space: nowrap; }
+  .todayStats svg { width: 32px; height: 32px; margin-bottom: 4px; }
+  .mobileToday { display: flex; flex-direction: column; gap: 14px; padding: 0 16px 20px; position: relative; z-index: 1; }
+  .mCard { background: rgb(250 252 255 / .9); border: 1px solid rgb(255 255 255 / .7); backdrop-filter: blur(20px) saturate(150%); border-radius: 22px; padding: 16px 14px 8px; color: var(--ink); box-shadow: 0 14px 34px rgb(4 16 32 / .2); }
+  .mCard > header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; padding: 0 2px; }
+  .mCard h2 { font-size: 17px; font-weight: 600; }
+  .mCard > header button { display: inline-flex; align-items: center; gap: 2px; font-size: 13px; color: var(--text); text-decoration: underline; text-underline-offset: 3px; }
+  .mCard li { display: flex; align-items: center; gap: 10px; padding: 9px 8px; margin-bottom: 6px; border-radius: 14px; background: rgb(255 255 255 / .75); }
+  .mCard li.empty { justify-content: center; background: none; }
+  .mCard time { flex: 0 0 42px; font-weight: 600; font-size: 13.5px; color: var(--ink); }
+  .mRow { flex: 1; min-width: 0; display: flex; align-items: center; gap: 10px; text-align: left; }
+  .mRow > span:last-child { min-width: 0; display: flex; flex-direction: column; }
+  .mRow b { font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .mRow small { font-size: 12px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .mIn, .mOut { flex-shrink: 0; height: 32px; padding: 0 12px; border-radius: 999px; font-size: 12.5px; font-weight: 600; }
+  .mIn { background: #dff1ff; color: #1a7cc7; }
+  .mOut { background: #ffe4e8; color: #d63a55; }
+  .mType { width: 100%; display: grid; grid-template-columns: 56px minmax(0, 1fr) 40px 34px 16px; align-items: center; gap: 10px; text-align: left; color: var(--ink); }
+  .mThumb { width: 56px; height: 44px; aspect-ratio: auto; border-radius: 10px; }
+  .mType > span { min-width: 0; display: flex; flex-direction: column; gap: 8px; }
+  .mType b { font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .mBar { display: block; height: 6px; border-radius: 3px; background: #e6edf5; overflow: hidden; }
+  .mBar em { display: block; height: 100%; border-radius: 3px; background: linear-gradient(90deg, #8fd3ff, #3d8be0); }
+  .mType strong { font-weight: 600; font-size: 13.5px; text-align: right; }
+  .mType small { font-size: 12.5px; color: var(--muted); }
+  .mType svg { color: var(--muted); }
+  .mMaint { position: relative; min-height: 150px; display: flex; align-items: flex-end; justify-content: space-between; gap: 12px; padding: 18px; border-radius: 22px; overflow: hidden; color: #fff; text-align: left; background: linear-gradient(180deg, rgb(8 26 48 / .1) 10%, rgb(8 26 48 / .88)), url('/hotel-media/hero.webp') 60% 40% / cover; box-shadow: 0 14px 34px rgb(4 16 32 / .25); }
+  .mMaint > span { display: flex; flex-direction: column; gap: 2px; }
+  .mMaint b { font-size: 19px; font-weight: 600; }
+  .mMaint small { font-size: 13px; color: #e3eef8; }
+  .mMaint > i { flex-shrink: 0; width: 44px; height: 44px; border-radius: 50%; display: grid; place-items: center; background: rgb(255 255 255 / .2); border: 1px solid rgb(255 255 255 / .35); backdrop-filter: blur(10px); }
+  .mobileNav { position: fixed; left: 12px; right: 12px; bottom: calc(10px + env(safe-area-inset-bottom)); z-index: 45; display: grid; grid-template-columns: repeat(4, 1fr); padding: 8px 6px; border-radius: 24px; background: rgb(250 252 255 / .92); border: 1px solid rgb(255 255 255 / .8); backdrop-filter: blur(22px) saturate(160%); box-shadow: 0 12px 34px rgb(4 16 32 / .28); }
+  .mobileNav > button { display: flex; flex-direction: column; align-items: center; gap: 3px; padding: 6px 2px; border-radius: 16px; color: #6a7a8c; font-size: 12px; font-weight: 500; }
+  .mobileNav > .mobileOn { color: #1f6fd1; }
+  .moreSheet { position: absolute; right: 0; bottom: calc(100% + 10px); width: 220px; padding: 6px; border-radius: 18px; background: #fff; box-shadow: 0 18px 44px rgb(4 16 32 / .3); display: flex; flex-direction: column; }
+  .moreSheet button { display: flex; align-items: center; justify-content: space-between; padding: 12px 12px; border-radius: 12px; color: var(--ink); font-weight: 500; }
+  .moreSheet button:hover, .moreSheet .mobileOn { background: var(--sky-soft); color: #1f6fd1; }
+  .toast { bottom: calc(96px + env(safe-area-inset-bottom)); }
   .search { display: none; }
   .iconCircle { width: 44px; height: 44px; }
   .tabs button { min-width: 80px; padding: 6px 10px 7px; font-size: 12px; }
