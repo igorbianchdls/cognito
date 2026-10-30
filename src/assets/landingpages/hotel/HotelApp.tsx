@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState, type FormEvent, type ReactNode } from 'react';
 import * as Dialog from '@radix-ui/react-dialog';
-import { ArrowRight, BedDouble, Bell, CalendarDays, Check, ChevronDown, ChevronLeft, ChevronRight, Cloud, CloudRain, CloudSun, Download, LogIn, LogOut, Plus, RotateCcw, Search, Sparkles, Trash2, Users, Wrench, X, type LucideIcon } from 'lucide-react';
+import { ArrowRight, BedDouble, House, Menu, Bell, CalendarDays, Check, ChevronDown, ChevronLeft, ChevronRight, Cloud, CloudRain, CloudSun, Download, LogIn, LogOut, Plus, RotateCcw, Search, Sparkles, Trash2, Users, Wrench, X, type LucideIcon } from 'lucide-react';
 import { active, addDays, brl, channels, conditions, covers, dateLabel, dayKey, extrasOf, initials, makeSeed, nightRevenue, nightsOf, occupancy, roomAvailable, shortDate, storageKey, totalOf, uid, type Channel, type Guest, type Housekeeping, type Reservation, type Room, type Status, type Store } from './data';
 import { HotelIcon, SunHorizon } from './Art';
 import s from './HotelApp.module.css';
@@ -88,6 +88,7 @@ export default function HotelApp() {
       {view === 'Financeiro' && <FinanceView ctx={ctx} />}
       {view === 'Relatórios' && <ReportsView ctx={ctx} />}
     </main>
+    <MobileNav view={view} go={go} />
     {modal?.kind === 'reservation' && <ReservationForm key={modal.id ?? 'new'} ctx={ctx} id={modal.id} preset={modal.preset} onClose={() => setModal(null)} />}
     {modal?.kind === 'guest' && <GuestForm key={modal.id ?? 'new'} ctx={ctx} id={modal.id} onClose={() => setModal(null)} />}
     {modal?.kind === 'type' && <TypeModal ctx={ctx} id={modal.id} onClose={() => setModal(null)} />}
@@ -219,17 +220,18 @@ function Overview({ ctx }: { ctx: Ctx }) {
       </button>)}</section>
     </section>
 
+    <MobileToday ctx={ctx} />
     <div className={s.kpiWrap}><ManagementKpis ctx={ctx} /></div>
     <section className={s.operation} aria-label="Operação de hoje">
-      <div className={`${s.glass} ${s.opCard}`}>
+      <div className={`${s.glass} ${s.opCard} ${s.desktopOnly}`}>
         <header id="lumen-arrivals"><h2><LogIn size={18} />Chegadas de hoje</h2><span>{arrivals.filter(r => r.status === 'Hospedado').length}/{arrivals.length}</span></header>
         <ul>{arrivals.map(r => <li key={r.id}><button className={s.opRow} onClick={() => ctx.openReservation(r.id)}><Avatar name={ctx.guestName(r.guestId)} /><span><b>{ctx.guestName(r.guestId)}</b><small>Quarto {ctx.roomNumber(r.roomId)} · {nightsOf(r)} noites · {r.adults + r.children} hósp.</small></span></button>{r.status === 'Confirmada' ? <button className={s.opAction} onClick={() => ctx.checkIn(r)}>Check-in</button> : <Pill tone={statusTone[r.status]}>{r.status}</Pill>}</li>)}{!arrivals.length && <li className={s.empty}>Nenhuma chegada hoje.</li>}</ul>
       </div>
-      <div className={`${s.glass} ${s.opCard}`}>
+      <div className={`${s.glass} ${s.opCard} ${s.desktopOnly}`}>
         <header><h2><LogOut size={18} />Saídas de hoje</h2><span>{departures.filter(r => r.status === 'Finalizada').length}/{departures.length}</span></header>
         <ul>{departures.map(r => <li key={r.id}><button className={s.opRow} onClick={() => ctx.openReservation(r.id)}><Avatar name={ctx.guestName(r.guestId)} /><span><b>{ctx.guestName(r.guestId)}</b><small>Quarto {ctx.roomNumber(r.roomId)} · {brl(totalOf(r))}</small></span></button>{r.status === 'Hospedado' ? <button className={s.opAction} onClick={() => ctx.checkOut(r)}>Check-out</button> : <Pill tone={statusTone[r.status]}>{r.status}</Pill>}</li>)}{!departures.length && <li className={s.empty}>Nenhuma saída hoje.</li>}</ul>
       </div>
-      <div className={`${s.glass} ${s.opCard}`}>
+      <div className={`${s.glass} ${s.opCard} ${s.desktopOnly}`}>
         <header><h2><Sparkles size={18} />Governança</h2><span>{dirty.length}</span></header>
         <ul>{dirty.map(r => <li key={r.id}><button className={s.opRow} onClick={() => ctx.setModal({ kind: 'room', id: r.id })}><span className={s.roomBadge}>{r.number}</span><span><b>{store.types.find(t => t.id === r.typeId)?.name}</b><small>{r.housekeeping === 'Sujo' ? 'Aguardando limpeza' : 'Em manutenção'}</small></span></button>{r.housekeeping === 'Sujo' ? <button className={s.opAction} onClick={() => ctx.setHousekeeping(r.id, 'Limpo')}>Marcar limpo</button> : <Pill tone={s.tAmber}><Wrench size={12} />Manutenção</Pill>}</li>)}{!dirty.length && <li className={s.empty}>Todos os quartos limpos.</li>}</ul>
       </div>
@@ -239,6 +241,57 @@ function Overview({ ctx }: { ctx: Ctx }) {
       </div>
     </section>
   </>;
+}
+
+/** Expected arrival or departure time, spread deterministically per reservation (check-in from 14h, check-out until 12h). */
+function expectedTime(r: Reservation, kind: 'in' | 'out') {
+  const n = [...r.id].reduce((v, c) => (Math.imul(v, 31) + c.charCodeAt(0)) >>> 0, 7);
+  const minutes = kind === 'in' ? 14 * 60 + (n % 12) * 30 : 8 * 60 + (n % 9) * 30;
+  return `${String(Math.floor(minutes / 60)).padStart(2, '0')}:${String(minutes % 60).padStart(2, '0')}`;
+}
+
+/** Bottom tab bar shown on phones in place of the top tabs. */
+function MobileNav({ view, go }: { view: View; go: (v: View) => void }) {
+  const [more, setMore] = useState(false);
+  const close = useMemo(() => () => setMore(false), []);
+  const ref = useOutside(more, close);
+  const items: { label: string; view: View; icon: LucideIcon }[] = [{ label: 'Início', view: 'Visão Geral', icon: House }, { label: 'Reservas', view: 'Reservas', icon: CalendarDays }, { label: 'Quartos', view: 'Quartos', icon: BedDouble }];
+  const extra: View[] = ['Hóspedes', 'Financeiro', 'Relatórios'];
+  return <nav className={s.mobileNav} aria-label="Navegação" ref={ref}>
+    {items.map(i => <button key={i.view} className={view === i.view ? s.mobileOn : ''} aria-current={view === i.view ? 'page' : undefined} onClick={() => { setMore(false); go(i.view); }}><i.icon size={22} strokeWidth={view === i.view ? 2.4 : 1.8} /><span>{i.label}</span></button>)}
+    <button className={extra.includes(view) || more ? s.mobileOn : ''} aria-expanded={more} onClick={() => setMore(!more)}><Menu size={22} strokeWidth={1.8} /><span>Mais</span></button>
+    {more && <div className={s.moreSheet} role="menu">{extra.map(v => <button key={v} role="menuitem" className={view === v ? s.mobileOn : ''} onClick={() => { setMore(false); go(v); }}>{v}<ChevronRight size={18} /></button>)}</div>}
+  </nav>;
+}
+
+/** Phone-first operation summary: upcoming arrivals and departures, occupancy by room type and maintenance. */
+function MobileToday({ ctx }: { ctx: Ctx }) {
+  const { store, today } = ctx;
+  const arrivals = store.reservations.filter(r => r.checkIn === today && r.status === 'Confirmada').sort((a, b) => expectedTime(a, 'in').localeCompare(expectedTime(b, 'in')));
+  const departures = store.reservations.filter(r => r.checkOut === today && r.status === 'Hospedado').sort((a, b) => expectedTime(a, 'out').localeCompare(expectedTime(b, 'out')));
+  const typeName = (roomId: string) => store.types.find(t => t.id === store.rooms.find(x => x.id === roomId)?.typeId)?.name ?? '';
+  const byType = store.types.map(t => { const rooms = store.rooms.filter(r => r.typeId === t.id); const busy = rooms.filter(r => store.reservations.some(x => x.roomId === r.id && covers(x, today))).length; return { t, total: rooms.length, busy }; });
+  const maintenance = store.rooms.filter(r => r.housekeeping === 'Manutenção').length, dirty = store.rooms.filter(r => r.housekeeping === 'Sujo').length;
+  const row = (r: Reservation, kind: 'in' | 'out') => <li key={r.id}>
+    <time>{expectedTime(r, kind)}</time>
+    <button className={s.mRow} onClick={() => ctx.openReservation(r.id)}><Avatar name={ctx.guestName(r.guestId)} size={40} /><span><b>{ctx.guestName(r.guestId)}</b><small>Quarto {ctx.roomNumber(r.roomId)} · {typeName(r.roomId)}</small></span></button>
+    <button className={kind === 'in' ? s.mIn : s.mOut} onClick={() => kind === 'in' ? ctx.checkIn(r) : ctx.checkOut(r)}>{kind === 'in' ? 'Check-in' : 'Check-out'}</button>
+  </li>;
+  return <section className={`${s.mobileOnly} ${s.mobileToday}`} aria-label="Operação de hoje">
+    <div className={s.mCard}>
+      <header><h2>Próximas chegadas</h2><button onClick={() => ctx.go('Reservas')}>Ver todas<ChevronRight size={16} /></button></header>
+      <ul>{arrivals.slice(0, 3).map(r => row(r, 'in'))}{!arrivals.length && <li className={s.empty}>Todas as chegadas de hoje já fizeram check-in.</li>}</ul>
+    </div>
+    <div className={s.mCard}>
+      <header><h2>Próximas saídas</h2><button onClick={() => ctx.go('Reservas')}>Ver todas<ChevronRight size={16} /></button></header>
+      <ul>{departures.slice(0, 3).map(r => row(r, 'out'))}{!departures.length && <li className={s.empty}>Nenhuma saída pendente hoje.</li>}</ul>
+    </div>
+    <div className={s.mCard}>
+      <header><h2>Ocupação por categoria</h2><button onClick={() => ctx.go('Relatórios')}>Ver relatório<ChevronRight size={16} /></button></header>
+      <ul>{byType.map(({ t, total, busy }) => { const v = total ? busy / total * 100 : 0; return <li key={t.id}><button className={s.mType} onClick={() => ctx.go('Quartos')}><RoomPhoto typeId={t.id} name={t.name} className={s.mThumb} /><span><b>{t.name}</b><i className={s.mBar}><em style={{ width: `${v}%` }} /></i></span><strong>{pct(v)}</strong><small>{busy}/{total}</small><ChevronRight size={16} /></button></li>; })}</ul>
+    </div>
+    <button className={s.mMaint} onClick={() => ctx.go('Quartos')}><span><b>Manutenção</b><small>{maintenance} {maintenance === 1 ? 'quarto' : 'quartos'} em manutenção · {dirty} aguardando limpeza</small></span><i><ArrowRight size={20} /></i></button>
+  </section>;
 }
 
 /** Room and extras revenue, room-nights sold and available room-nights between two days (inclusive). */
