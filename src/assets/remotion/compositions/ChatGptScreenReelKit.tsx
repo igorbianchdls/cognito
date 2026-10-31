@@ -304,7 +304,8 @@ function NarrationTrack({ clips, list, src }: { clips: Clip[]; list: Insert[]; s
   for (const ins of list) if (ins.kind === 'plugin') pieces.push({ at: startOf(list, ins), from: 0, src: PLUGIN_AUDIO, to: PLUGIN_SPEECH })
   return (
     <>
-      {pieces.map((piece) => (
+      {/* A cut landing within a frame of a clip edge leaves a zero-length piece, which <Audio> rejects. */}
+      {pieces.filter((piece) => s(piece.to) > s(piece.from)).map((piece) => (
         <Sequence from={s(piece.at)} key={`${piece.src}-${piece.from}`} layout="none">
           <Audio src={staticFile(piece.src ?? src)} trimAfter={s(piece.to)} trimBefore={s(piece.from)} />
         </Sequence>
