@@ -5,6 +5,18 @@ import {
   CUTOUT_COLLAGE_DURATION,
   DOCUMENT_ZOOM_DURATION,
   BIG_NUMBER_DURATION,
+  DONUT_CHART_DURATION,
+  EVIDENCE_BOARD_DURATION,
+  ExplainerCaptionsDemo,
+  ExplainerDonutDemo,
+  ExplainerEvidenceDemo,
+  ExplainerIconGridDemo,
+  ExplainerNewspaperDemo,
+  ExplainerScreenshotDemo,
+  ICON_GRID_DURATION,
+  SCREENSHOT_SPOTLIGHT_DURATION,
+  SPINNING_NEWSPAPER_DURATION,
+  WORD_CAPTIONS_DURATION,
   ExplainerBarsDemo,
   ExplainerBigNumberDemo,
   ExplainerCollageDemo,
@@ -689,6 +701,12 @@ function RemotionDownloadRoot() {
       <Composition component={ExplainerLowerThirdDemo} durationInFrames={LOWER_THIRD_DURATION} fps={30} height={1080} id="explainer-rotulo" width={1920} />
       <Composition component={ExplainerBigNumberDemo} durationInFrames={BIG_NUMBER_DURATION} fps={30} height={1080} id="explainer-numero" width={1920} />
       <Composition component={ExplainerPaperTearDemo} durationInFrames={PAPER_TEAR_DEMO_DURATION} fps={30} height={1080} id="explainer-papel-rasgado" width={1920} />
+      <Composition component={ExplainerCaptionsDemo} durationInFrames={WORD_CAPTIONS_DURATION} fps={30} height={1080} id="explainer-legenda" width={1920} />
+      <Composition component={ExplainerScreenshotDemo} durationInFrames={SCREENSHOT_SPOTLIGHT_DURATION} fps={30} height={1080} id="explainer-print" width={1920} />
+      <Composition component={ExplainerDonutDemo} durationInFrames={DONUT_CHART_DURATION} fps={30} height={1080} id="explainer-rosca" width={1920} />
+      <Composition component={ExplainerIconGridDemo} durationInFrames={ICON_GRID_DURATION} fps={30} height={1080} id="explainer-bonecos" width={1920} />
+      <Composition component={ExplainerEvidenceDemo} durationInFrames={EVIDENCE_BOARD_DURATION} fps={30} height={1080} id="explainer-mural" width={1920} />
+      <Composition component={ExplainerNewspaperDemo} durationInFrames={SPINNING_NEWSPAPER_DURATION} fps={30} height={1080} id="explainer-jornal" width={1920} />
     </>
   )
 }
