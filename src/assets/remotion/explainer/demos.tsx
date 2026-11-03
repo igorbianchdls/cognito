@@ -1,7 +1,13 @@
 // The Explainer components with sample content, as shown in /remotion-preview. Figures marked as illustrative are examples, not data.
-import { Sequence } from 'remotion'
+import { AbsoluteFill, Img, Sequence, interpolate, staticFile, useCurrentFrame } from 'remotion'
 import { BarsCount } from './BarsCount'
 import { BigNumber } from './BigNumber'
+import { DonutChart } from './DonutChart'
+import { EvidenceBoard } from './EvidenceBoard'
+import { IconGrid } from './IconGrid'
+import { ScreenshotSpotlight } from './ScreenshotSpotlight'
+import { SpinningNewspaper } from './SpinningNewspaper'
+import { WordCaptions, timeWords } from './WordCaptions'
 import { LowerThird } from './LowerThird'
 import { PaperTear } from './PaperTear'
 import { QuoteCard } from './QuoteCard'
@@ -136,5 +142,60 @@ export const ExplainerPaperTearDemo = () => (
     at={70}
     from={<HighlightHeadline kicker="A pergunta" text="Quanto tempo você [[perde com burocracia]]?" />}
     to={<Sequence from={70}><BigNumber value={12} suffix=" h" label="por semana, em média, numa empresa pequena (número ilustrativo)" colors={{ paper: '#D9C8A5' }} /></Sequence>}
+  />
+)
+
+const captionWords = timeWords('Toda sexta-feira a Carla passava o dia [[conferindo planilha.]] Agora ela pede pro [[ChatGPT]] e o sistema faz o resto. A conciliação sai [[em minutos.]]')
+/** A photo drifting slowly behind the captions. */
+function CaptionBackdrop() {
+  const frame = useCurrentFrame()
+  return <AbsoluteFill style={{ background: '#111', overflow: 'hidden' }}>
+    <Img src={staticFile('limpeza-media/hero.jpg')} style={{ width: '100%', height: '100%', objectFit: 'cover', transform: `scale(${interpolate(frame, [0, 330], [1.05, 1.18])})`, filter: 'brightness(.8) saturate(.9)' }} />
+    <AbsoluteFill style={{ background: 'linear-gradient(0deg, rgba(0,0,0,.6) 0%, transparent 45%)' }} />
+  </AbsoluteFill>
+}
+export const ExplainerCaptionsDemo = () => (
+  <WordCaptions words={captionWords}><CaptionBackdrop /></WordCaptions>
+)
+
+export const ExplainerScreenshotDemo = () => (
+  <ScreenshotSpotlight src="dash1.png" imageWidth={1672} imageHeight={941} focus={{ x: 42.6, y: 10.4, w: 25.6, h: 13.6 }} label="Otto — Forecast" note="R$ 284 mi acima do plano!" />
+)
+
+export const ExplainerDonutDemo = () => (
+  <DonutChart
+    title="Onde vai o tempo do financeiro"
+    subtitle="Horas por semana numa empresa pequena (exemplo ilustrativo)"
+    items={[{ label: 'Conferir pagamentos', value: 38 }, { label: 'Emitir notas', value: 24 }, { label: 'Cobrar clientes', value: 22 }, { label: 'Relatórios', value: 16 }]}
+    highlight={0}
+    note="quase 40% só conferindo!"
+  />
+)
+
+export const ExplainerIconGridDemo = () => (
+  <IconGrid title="Ainda na planilha" value={37} label="de cada 100 pequenas empresas controlam o caixa em planilha (número ilustrativo)" note="e você?" />
+)
+
+export const ExplainerEvidenceDemo = () => (
+  <EvidenceBoard
+    title="Onde o dinheiro some"
+    items={[
+      { src: 'nfse.jpg', title: 'nota esquecida', x: 0.22, y: 0.34 },
+      { title: 'Boleto vencido', caption: 'R$ 1.200 de multa', x: 0.5, y: 0.26 },
+      { src: 'oficina-media/hero.jpg', title: 'cliente que não pagou', x: 0.78, y: 0.38 },
+      { title: 'Planilha com erro', caption: 'fórmula quebrada desde março', x: 0.34, y: 0.72 },
+      { src: 'dashboard.jpeg', title: 'relatório atrasado', x: 0.68, y: 0.74 },
+    ]}
+    links={[[0, 1], [1, 2], [2, 3], [3, 4], [0, 3]]}
+  />
+)
+
+export const ExplainerNewspaperDemo = () => (
+  <SpinningNewspaper
+    masthead="Gazeta do Comércio"
+    date="Terça, 3 de novembro de 2026"
+    headline="ChatGPT agora [[emite nota fiscal]] para pequenas empresas"
+    dek="Sistema de gestão por conversa promete acabar com a planilha (manchete ilustrativa)"
+    photo="oficina-media/hero.jpg"
   />
 )
