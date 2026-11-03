@@ -181,6 +181,21 @@ import { OTTO_CHATGPT_CRUD_DURATION, OttoChatGptCrudReel } from '@/assets/remoti
 import { OTTO_CHATGPT_CONTADORES_TELA_DURATION, OTTO_CHATGPT_FINANCEIRO_TELA_DURATION, OttoChatGptContadoresTelaReel, OttoChatGptFinanceiroTelaReel } from '@/assets/remotion/compositions/OttoChatGptTelaReels'
 import { OTTO_CONTA_AZUL_REEL_DURATION, OTTO_OMIE_REEL_DURATION, OttoContaAzulReel, OttoOmieReel } from '@/assets/remotion/compositions/OttoContaAzulReel'
 import { LUMEN_HOTEL_MOBILE_DURATION, LumenHotelMobileReel } from '@/assets/remotion/compositions/LumenHotelMobileReel'
+import {
+  BARS_COUNT_DURATION,
+  CUTOUT_COLLAGE_DURATION,
+  DOCUMENT_ZOOM_DURATION,
+  ExplainerBarsDemo,
+  ExplainerCollageDemo,
+  ExplainerDocumentDemo,
+  ExplainerHeadlineCircleDemo,
+  ExplainerHeadlineDemo,
+  ExplainerLineChartDemo,
+  ExplainerMapDemo,
+  HIGHLIGHT_HEADLINE_DURATION,
+  LINE_CHART_DRAW_DURATION,
+  MAP_ZOOM_DURATION,
+} from '@/assets/remotion/explainer'
 import { OTTO_AGORA_CHAT_DURATION, OTTO_AGORA_FACIL_DURATION, OTTO_AGORA_FINANCEIRO_DURATION, OTTO_AGORA_LUCRO_DURATION, OTTO_AGORA_SISTEMA_DURATION, OttoAgoraChatDarkSquareReel, OttoAgoraChatReel, OttoAgoraFacilReel, OttoAgoraFinanceiroDarkReel, OttoAgoraFinanceiroReel, OttoAgoraLucroDarkReel, OttoAgoraLucroReel, OttoAgoraSistemaDarkSquareReel, OttoAgoraSistemaReel } from '@/assets/remotion/compositions/OttoAgoraChatGptReels'
 import { OTTO_COBRANCA_REEL_DURATION, OTTO_FUNCIONARIO_REEL_DURATION, OttoCobrancaReel, OttoFuncionarioReel } from '@/assets/remotion/compositions/OttoCobrancaFuncionarioVideos'
 import { OTTO_NOTA_CHATGPT_BATCH_DURATION, OTTO_NOTA_CHATGPT_SINGLE_DURATION, OttoNotaChatGptBatchReel, OttoNotaChatGptSingleReel } from '@/assets/remotion/compositions/OttoNotaFiscalChatGptVideos'
@@ -265,7 +280,7 @@ import {
   RotatingWords,
 } from '@/assets/remotion/saas/index'
 
-type CatalogKind = 'Componentes' | 'Mockups' | 'Motion' | 'Tipografia Animada' | 'Marketing' | 'Vídeos criados' | 'Claude Videos' | 'Body Animado' | 'Galerias' | 'Animações' | 'Actions' | 'Logo' | 'Templates'
+type CatalogKind = 'Componentes' | 'Mockups' | 'Motion' | 'Tipografia Animada' | 'Marketing' | 'Vídeos criados' | 'Claude Videos' | 'Explainer' | 'Body Animado' | 'Galerias' | 'Animações' | 'Actions' | 'Logo' | 'Templates'
 
 type CatalogItem = {
   code: string
@@ -4748,12 +4763,103 @@ const catalog: CatalogItem[] = [
     value: 'saas-intro-video',
     width: 1920,
   },
+  {
+    code: '<HighlightHeadline text="… [[palavras]] …" />',
+    component: ExplainerHeadlineDemo,
+    description: 'Headline que entra palavra por palavra; depois um marca-texto amarelo, feito à mão, passa por trás das palavras marcadas.',
+    duration: HIGHLIGHT_HEADLINE_DURATION,
+    fps: 30,
+    height: 1920,
+    kind: 'Explainer',
+    label: 'Headline · marca-texto',
+    tags: ['Explainer', 'Headline', 'Marca-texto', 'Tipografia'],
+    value: 'explainer-headline-marcador',
+    width: 1080,
+  },
+  {
+    code: '<HighlightHeadline mark="circulo" />',
+    component: ExplainerHeadlineCircleDemo,
+    description: 'A mesma headline com outras marcas à mão: círculo (também sublinhado ou riscado), uma frase depois da outra.',
+    duration: HIGHLIGHT_HEADLINE_DURATION,
+    fps: 30,
+    height: 1920,
+    kind: 'Explainer',
+    label: 'Headline · círculo à mão',
+    tags: ['Explainer', 'Headline', 'Círculo', 'Sublinhado'],
+    value: 'explainer-headline-circulo',
+    width: 1080,
+  },
+  {
+    code: '<DocumentZoom highlight={{ paragraph, text }} />',
+    component: ExplainerDocumentDemo,
+    description: 'Página impressa entra inclinada, a câmera aproxima num parágrafo, o trecho é grifado, o resto escurece e uma nota à mão aponta.',
+    duration: DOCUMENT_ZOOM_DURATION,
+    fps: 30,
+    height: 1920,
+    kind: 'Explainer',
+    label: 'Documento · zoom e destaque',
+    tags: ['Explainer', 'Documento', 'Zoom', 'Notícia'],
+    value: 'explainer-documento',
+    width: 1080,
+  },
+  {
+    code: '<LineChartDraw data={[…]} />',
+    component: ExplainerLineChartDemo,
+    description: 'Gráfico de linha que se desenha ponto a ponto com o valor na ponta; no fim, círculo, seta e anotação à mão no ponto principal.',
+    duration: LINE_CHART_DRAW_DURATION,
+    fps: 30,
+    height: 1920,
+    kind: 'Explainer',
+    label: 'Gráfico de linha · desenhando',
+    tags: ['Explainer', 'Gráfico', 'Linha', 'Dados'],
+    value: 'explainer-grafico-linha',
+    width: 1080,
+  },
+  {
+    code: '<BarsCount items={[…]} highlight={2} />',
+    component: ExplainerBarsDemo,
+    description: 'Barras horizontais crescem uma a uma com os números contando; a barra principal ganha a cor de destaque e o rótulo é grifado.',
+    duration: BARS_COUNT_DURATION,
+    fps: 30,
+    height: 1920,
+    kind: 'Explainer',
+    label: 'Barras · contador',
+    tags: ['Explainer', 'Gráfico', 'Barras', 'Contador'],
+    value: 'explainer-barras',
+    width: 1080,
+  },
+  {
+    code: '<MapZoom to={{ center, zoom }} points={[…]} route />',
+    component: ExplainerMapDemo,
+    description: 'Mapa de jornal: abre no mundo, voa até o Brasil, pinta o país e solta os pinos um a um, ligados por uma rota tracejada.',
+    duration: MAP_ZOOM_DURATION,
+    fps: 30,
+    height: 1920,
+    kind: 'Explainer',
+    label: 'Mapa · zoom e pinos',
+    tags: ['Explainer', 'Mapa', 'Zoom', 'Brasil'],
+    value: 'explainer-mapa',
+    width: 1080,
+  },
+  {
+    code: '<CutoutCollage items={[…]} />',
+    component: ExplainerCollageDemo,
+    description: 'Colagem de recortes: fotos impressas caem na página com fita adesiva, um tremido de stop motion e etiquetas.',
+    duration: CUTOUT_COLLAGE_DURATION,
+    fps: 30,
+    height: 1920,
+    kind: 'Explainer',
+    label: 'Colagem · recortes',
+    tags: ['Explainer', 'Colagem', 'Fotos', 'Stop motion'],
+    value: 'explainer-colagem',
+    width: 1080,
+  },
 ]
 
-const kinds: Array<'Todos' | CatalogKind> = ['Todos', 'Logo', 'Componentes', 'Mockups', 'Motion', 'Tipografia Animada', 'Marketing', 'Vídeos criados', 'Claude Videos', 'Body Animado', 'Galerias', 'Animações', 'Actions', 'Templates']
+const kinds: Array<'Todos' | CatalogKind> = ['Todos', 'Logo', 'Componentes', 'Mockups', 'Motion', 'Tipografia Animada', 'Marketing', 'Vídeos criados', 'Claude Videos', 'Explainer', 'Body Animado', 'Galerias', 'Animações', 'Actions', 'Templates']
 
 function Thumbnail({ item }: { item: CatalogItem }) {
-  const color = item.kind === 'Motion' ? '#245BDB' : item.kind === 'Tipografia Animada' ? '#DB2777' : item.kind === 'Marketing' ? '#C28F2C' : item.kind === 'Vídeos criados' ? '#0F766E' : item.kind === 'Claude Videos' ? '#D97757' : item.kind === 'Body Animado' ? '#C2410C' : item.kind === 'Galerias' ? '#7C3AED' : item.kind === 'Animações' ? '#0EA5E9' : item.kind === 'Actions' ? '#1677F2' : item.kind === 'Logo' ? '#111827' : item.kind === 'Templates' ? '#9333EA' : item.kind === 'Mockups' ? '#22A06B' : '#101828'
+  const color = item.kind === 'Motion' ? '#245BDB' : item.kind === 'Tipografia Animada' ? '#DB2777' : item.kind === 'Marketing' ? '#C28F2C' : item.kind === 'Vídeos criados' ? '#0F766E' : item.kind === 'Claude Videos' ? '#D97757' : item.kind === 'Explainer' ? '#E5463A' : item.kind === 'Body Animado' ? '#C2410C' : item.kind === 'Galerias' ? '#7C3AED' : item.kind === 'Animações' ? '#0EA5E9' : item.kind === 'Actions' ? '#1677F2' : item.kind === 'Logo' ? '#111827' : item.kind === 'Templates' ? '#9333EA' : item.kind === 'Mockups' ? '#22A06B' : '#101828'
   return (
     <div style={{ background: '#F8FBF9', border: '1px solid #E3E8EF', borderRadius: 12, display: 'grid', gap: 10, height: 96, padding: 12 }}>
       <div style={{ alignItems: 'center', display: 'flex', justifyContent: 'space-between' }}>

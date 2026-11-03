@@ -1,6 +1,23 @@
 import { Composition, registerRoot } from 'remotion'
 
 import {
+  BARS_COUNT_DURATION,
+  CUTOUT_COLLAGE_DURATION,
+  DOCUMENT_ZOOM_DURATION,
+  ExplainerBarsDemo,
+  ExplainerCollageDemo,
+  ExplainerDocumentDemo,
+  ExplainerHeadlineCircleDemo,
+  ExplainerHeadlineDemo,
+  ExplainerLineChartDemo,
+  ExplainerMapDemo,
+  HIGHLIGHT_HEADLINE_DURATION,
+  LINE_CHART_DRAW_DURATION,
+  MAP_ZOOM_DURATION,
+} from './explainer'
+import { loadExplainerFonts } from './explainer/fonts'
+
+import {
   ChatGptClaudeOttoAiEmployeesVideo,
   CLAUDE_FINANCIAL_OPERATION_SCENE_DURATION,
   OTTO_AI_EMPLOYEES_CHATGPT_CLAUDE_DURATION,
@@ -203,6 +220,8 @@ import {
   OttoBodyManageByConversationVideo,
   OttoBodySystemBehindVideo,
 } from './compositions/OttoTwoBodiesIllustrativeVideos'
+
+loadExplainerFonts()
 
 function RemotionDownloadRoot() {
   return (
@@ -644,6 +663,14 @@ function RemotionDownloadRoot() {
       <Composition component={OttoHookBoletoPixVideo} durationInFrames={OTTO_HOOK_5_DURATION} fps={30} height={800} id="body-otto-hook-boleto-pix" width={1080} />
       <Composition component={OttoBodySystemBehindVideo} durationInFrames={OTTO_BODY_1_DURATION} fps={30} height={800} id="body-otto-system-behind" width={1080} />
       <Composition component={OttoBodyManageByConversationVideo} durationInFrames={OTTO_BODY_2_DURATION} fps={30} height={800} id="body-otto-manage-by-conversation" width={1080} />
+      {/* Explainer (ids match the catalog values in /remotion-preview, so exports land where the download button looks). */}
+      <Composition component={ExplainerHeadlineDemo} durationInFrames={HIGHLIGHT_HEADLINE_DURATION} fps={30} height={1920} id="explainer-headline-marcador" width={1080} />
+      <Composition component={ExplainerHeadlineCircleDemo} durationInFrames={HIGHLIGHT_HEADLINE_DURATION} fps={30} height={1920} id="explainer-headline-circulo" width={1080} />
+      <Composition component={ExplainerDocumentDemo} durationInFrames={DOCUMENT_ZOOM_DURATION} fps={30} height={1920} id="explainer-documento" width={1080} />
+      <Composition component={ExplainerLineChartDemo} durationInFrames={LINE_CHART_DRAW_DURATION} fps={30} height={1920} id="explainer-grafico-linha" width={1080} />
+      <Composition component={ExplainerBarsDemo} durationInFrames={BARS_COUNT_DURATION} fps={30} height={1920} id="explainer-barras" width={1080} />
+      <Composition component={ExplainerMapDemo} durationInFrames={MAP_ZOOM_DURATION} fps={30} height={1920} id="explainer-mapa" width={1080} />
+      <Composition component={ExplainerCollageDemo} durationInFrames={CUTOUT_COLLAGE_DURATION} fps={30} height={1920} id="explainer-colagem" width={1080} />
     </>
   )
 }
