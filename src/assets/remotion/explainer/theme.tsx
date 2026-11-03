@@ -23,11 +23,11 @@ export const EX = {
 }
 export type ExplainerColors = typeof EX
 
-// The fallback goes inside var(): an undefined variable with no fallback would void the whole font-family.
+// Family names as loaded by the preview page (Google Fonts) and by explainer/fonts.ts for CLI renders.
 export const FONT = {
-  head: 'var(--font-explainer-head, "Barlow Condensed"), "Arial Narrow", sans-serif',
-  serif: 'var(--font-explainer-serif, "Source Serif 4"), "Source Serif Four", Georgia, serif', // Remotion's Google Fonts calls it "Source Serif Four"
-  hand: 'var(--font-explainer-hand, Caveat), "Comic Sans MS", cursive',
+  head: '"Barlow Condensed", "Arial Narrow", sans-serif',
+  serif: '"Source Serif 4", "Source Serif Four", Georgia, serif', // Remotion's Google Fonts calls it "Source Serif Four"
+  hand: 'Caveat, "Comic Sans MS", cursive',
   sans: 'var(--font-geist-sans, Geist), system-ui, sans-serif',
 }
 
