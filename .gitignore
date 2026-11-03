@@ -60,6 +60,8 @@ credentials/
 !tsconfig*.json
 !src/products/mcpcore/hosts/chatgpt/plugin/plugin.json
 !src/products/mcpcore/hosts/claude/plugin/.claude-plugin/plugin.json
+# Public map data (Natural Earth via world-atlas) for the Explainer map; built by scripts/build-explainer-geo.mjs
+!src/assets/remotion/explainer/geo/*.json
 /dist/chatgptplugin/
 /dist/chatgptplugin-package-test/
 /dist/chatgptplugin.zip
