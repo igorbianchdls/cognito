@@ -41,7 +41,7 @@ export function MapZoom({ kicker, title, titleMark, from = { center: [-20, 10], 
   const frame = useCurrentFrame()
   const { width, height } = useVideoConfig()
   const c = palette(colors)
-  const s = width / 1080
+  const s = Math.min(width, height) / 1080 // 1 at 1080p, in landscape or portrait
   const maskId = `route-${useId().replace(/:/g, '')}`
 
   // Camera: zoom eases in log space so the flight feels even.
@@ -49,7 +49,7 @@ export function MapZoom({ kicker, title, titleMark, from = { center: [-20, 10], 
   const zoom = Math.exp(interpolate(fly, [0, 1], [Math.log(from.zoom), Math.log(to.zoom)]))
   const center: [number, number] = [interpolate(fly, [0, 1], [from.center[0], to.center[0]]), interpolate(fly, [0, 1], [from.center[1], to.center[1]])]
   const baseScale = Math.max(width, height) / (2 * Math.PI) * 0.95
-  const projection = geoMercator().center(center).scale(baseScale * zoom).translate([width / 2, height * 0.56])
+  const projection = geoMercator().center(center).scale(baseScale * zoom).translate(width > height ? [width * 0.6, height * 0.52] : [width / 2, height * 0.56]) // landscape: map right of the title card
   const path = geoPath(projection)
 
   const paint = progress(frame, 74, 18)
@@ -87,7 +87,7 @@ export function MapZoom({ kicker, title, titleMark, from = { center: [-20, 10], 
           </div>
         </div>
       })}
-      {(title || kicker) && <div style={{ position: 'absolute', left: 70 * s, right: 70 * s, top: 90 * s, background: c.card, padding: `${30 * s}px ${36 * s}px`, boxShadow: '0 10px 30px rgba(40,30,10,.18)', opacity: titleIn, transform: `translateY(${(1 - titleIn) * -30 * s}px)` }}>
+      {(title || kicker) && <div style={{ position: 'absolute', left: (width > height ? 90 : 70) * s, ...(width > height ? { width: 620 * s } : { right: 70 * s }), top: 90 * s, background: c.card, padding: `${30 * s}px ${36 * s}px`, boxShadow: '0 10px 30px rgba(40,30,10,.18)', opacity: titleIn, transform: `translateY(${(1 - titleIn) * -30 * s}px)` }}>
         {kicker && <div style={{ ...ff(FONT.head), fontWeight: 700, fontSize: 32 * s, letterSpacing: 3 * s, textTransform: 'uppercase', color: c.red }}>{kicker}</div>}
         {title && <div style={{ ...ff(FONT.head), fontWeight: 800, fontSize: 76 * s, lineHeight: 1.04, color: c.ink, marginTop: kicker ? 8 * s : 0 }}>{titleNode}</div>}
       </div>}

@@ -33,7 +33,7 @@ export function HighlightHeadline({ kicker, text, mark = 'marcador', markColor, 
   const frame = useCurrentFrame()
   const { width, height } = useVideoConfig()
   const c = palette(colors)
-  const s = width / 1080
+  const s = Math.min(width, height) / 1080 // 1 at 1080p, in landscape or portrait
   const segments = parse(text)
   const wordCount = segments.reduce((n, seg) => n + seg.words.length, 0)
   const wordsDone = 10 + wordCount * 3
@@ -48,18 +48,20 @@ export function HighlightHeadline({ kicker, text, mark = 'marcador', markColor, 
 
   return (
     <Paper color={c.paper}>
-      <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: align === 'center' ? 'center' : 'flex-start', textAlign: align, padding: `0 ${90 * s}px`, gap: 34 * s }}>
+      <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: align === 'center' ? 'center' : 'flex-start', textAlign: align, padding: `0 ${(width > height ? 160 : 90) * s}px`, gap: 34 * s }}>
         {kicker && <div style={{ display: 'flex', alignItems: 'center', gap: 16 * s, opacity: progress(frame, 0, 10) }}>
           <span style={{ width: 54 * s * progress(frame, 0, 14), height: 6 * s, background: c.red }} />
           <span style={{ ...ff(FONT.head), fontWeight: 700, fontSize: 40 * s, letterSpacing: 4 * s, textTransform: 'uppercase', color: c.red }}>{kicker}</span>
         </div>}
-        <h1 style={{ margin: 0, ...ff(FONT.head), fontWeight: 800, fontSize: (height > width ? 120 : 108) * s, lineHeight: 1.04, letterSpacing: -1 * s, color: c.ink, maxWidth: '100%' }}>
+        <h1 style={{ margin: 0, ...ff(FONT.head), fontWeight: 800, fontSize: (height > width ? 120 : 124) * s, lineHeight: 1.04, letterSpacing: -1 * s, color: c.ink, maxWidth: width > height ? 1400 * s : '100%' }}>
           {segments.map((seg, si) => {
+            // No space before punctuation that follows a marked phrase ("[[burocracia]]?").
+            const tight = /^[?!.,;:)]/.test(segments[si + 1]?.words[0] ?? '')
             if (!seg.marked) return seg.words.map((w, wi) => word(w, `${si}-${wi}`))
             const start = wordsDone + 6 + markIndex++ * 14
             const color = markColor ?? (mark === 'marcador' ? c.marker : c.red)
             // A circle goes around the whole phrase; the other marks sweep word by word, so a long phrase can wrap.
-            if (mark === 'circulo') return <span key={si} style={{ marginRight: '0.24em' }}>
+            if (mark === 'circulo') return <span key={si} style={{ marginRight: tight ? 0 : '0.24em' }}>
               <Mark amount={progress(frame, start, 16)} kind={mark} color={color} seed={`${text}-${si}`}>
                 {seg.words.map((w, wi) => word(w, `${si}-${wi}`, wi < seg.words.length - 1))}
               </Mark>
@@ -67,7 +69,7 @@ export function HighlightHeadline({ kicker, text, mark = 'marcador', markColor, 
             const per = 16 / seg.words.length
             return seg.words.map((w, wi) => {
               const last = wi === seg.words.length - 1
-              return <span key={`${si}-${wi}`} style={{ marginRight: last ? '0.24em' : 0 }}>
+              return <span key={`${si}-${wi}`} style={{ marginRight: last && !tight ? '0.24em' : 0 }}>
                 <Mark amount={progress(frame, start + wi * per, per, (t) => t)} kind={mark} color={color} seed={`${text}-${si}-${wi}`}>
                   <span style={{ paddingRight: last ? 0 : '0.24em' }}>{word(w, 'w', false)}</span>
                 </Mark>
@@ -75,7 +77,7 @@ export function HighlightHeadline({ kicker, text, mark = 'marcador', markColor, 
             })
           })}
         </h1>
-        {dek && <p style={{ margin: 0, ...ff(FONT.serif), fontSize: 46 * s, lineHeight: 1.35, color: c.text, maxWidth: 860 * s, opacity: progress(frame, wordsDone + 20, 14), transform: `translateY(${(1 - progress(frame, wordsDone + 20, 14)) * 16 * s}px)` }}>{dek}</p>}
+        {dek && <p style={{ margin: 0, ...ff(FONT.serif), fontSize: 46 * s, lineHeight: 1.35, color: c.text, maxWidth: (width > height ? 1100 : 860) * s, opacity: progress(frame, wordsDone + 20, 14), transform: `translateY(${(1 - progress(frame, wordsDone + 20, 14)) * 16 * s}px)` }}>{dek}</p>}
       </div>
     </Paper>
   )

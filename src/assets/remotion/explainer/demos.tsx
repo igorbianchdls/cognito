@@ -1,5 +1,12 @@
 // The Explainer components with sample content, as shown in /remotion-preview. Figures marked as illustrative are examples, not data.
+import { Sequence } from 'remotion'
 import { BarsCount } from './BarsCount'
+import { BigNumber } from './BigNumber'
+import { LowerThird } from './LowerThird'
+import { PaperTear } from './PaperTear'
+import { QuoteCard } from './QuoteCard'
+import { SplitCompare } from './SplitCompare'
+import { TimelineRuler } from './TimelineRuler'
 import { CutoutCollage } from './CutoutCollage'
 import { DocumentZoom } from './DocumentZoom'
 import { HighlightHeadline } from './HighlightHeadline'
@@ -83,5 +90,51 @@ export const ExplainerCollageDemo = () => (
       { src: 'marcenaria-media/hero.jpg', caption: 'Marcenaria' },
       { src: 'limpeza-media/portrait.jpg', caption: 'Limpeza' },
     ]}
+  />
+)
+
+export const ExplainerTimelineDemo = () => (
+  <TimelineRuler
+    title="Como a gestão saiu da planilha"
+    events={[
+      { year: '1985', title: 'Planilha no computador', text: 'O financeiro sai do papel e vai para a tela.' },
+      { year: '2005', title: 'ERP para todo mundo', text: 'Sistemas completos, mas difíceis de aprender.' },
+      { year: '2015', title: 'Gestão na nuvem', text: 'Acesso de qualquer lugar, ainda cheio de telas.' },
+      { year: '2026', title: 'Gestão conversando', text: 'Você pede ao ChatGPT e o sistema faz.' },
+    ]}
+  />
+)
+
+export const ExplainerQuoteDemo = () => (
+  <QuoteCard
+    quote="Eu passava a sexta-feira inteira conferindo planilha. Hoje [[peço pro ChatGPT]] e vou pra casa mais cedo."
+    author="Carla Mendes"
+    role="dona de uma empresa de limpeza (personagem ilustrativa)"
+    photo="limpeza-media/portrait.jpg"
+  />
+)
+
+export const ExplainerSplitDemo = () => (
+  <SplitCompare
+    title="Fechar o mês"
+    left={{ label: 'Planilha', items: ['Copiar extrato à mão', 'Fórmulas que quebram', 'Uma pessoa trava tudo'] }}
+    right={{ label: 'Otto + ChatGPT', items: ['Extrato conciliado sozinho', 'Relatório pronto em minutos', 'A equipe toda acompanha'] }}
+    winner="right"
+  />
+)
+
+export const ExplainerLowerThirdDemo = () => (
+  <LowerThird name="Rafael Souza" role="Dono da Oficina Souza, em Campinas (personagem ilustrativo)" src="oficina-media/hero.jpg" place="Campinas, SP" />
+)
+
+export const ExplainerBigNumberDemo = () => (
+  <BigNumber kicker="Em um ano" value={12} suffix=" mil" label="notas fiscais emitidas por conversa no ChatGPT (número ilustrativo)" note="sem abrir nenhum sistema!" />
+)
+
+export const ExplainerPaperTearDemo = () => (
+  <PaperTear
+    at={70}
+    from={<HighlightHeadline kicker="A pergunta" text="Quanto tempo você [[perde com burocracia]]?" />}
+    to={<Sequence from={70}><BigNumber value={12} suffix=" h" label="por semana, em média, numa empresa pequena (número ilustrativo)" colors={{ paper: '#D9C8A5' }} /></Sequence>}
   />
 )

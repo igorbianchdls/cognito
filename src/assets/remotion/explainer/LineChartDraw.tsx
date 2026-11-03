@@ -29,13 +29,13 @@ export function LineChartDraw({ title, titleMark, subtitle, data, format = fmt, 
   const frame = useCurrentFrame()
   const { width, height } = useVideoConfig()
   const c = palette(colors)
-  const s = width / 1080
+  const s = Math.min(width, height) / 1080 // 1 at 1080p, in landscape or portrait
   const color = lineColor ?? c.red
   const vertical = height > width
   const clipId = `line-reveal-${useId().replace(/:/g, '')}`
 
   // Chart box in pixels.
-  const box = { x: 130 * s, y: vertical ? height * 0.34 : height * 0.3, w: width - 210 * s, h: vertical ? height * 0.4 : height * 0.5 }
+  const box = vertical ? { x: 130 * s, y: height * 0.34, w: width - 210 * s, h: height * 0.4 } : { x: 220 * s, y: height * 0.36, w: width - 360 * s, h: height * 0.46 }
   const values = data.map((d) => d.value)
   const max = Math.max(...values), min = Math.min(0, ...values)
   const top = niceCeil(max)
@@ -70,7 +70,7 @@ export function LineChartDraw({ title, titleMark, subtitle, data, format = fmt, 
 
   return (
     <Paper color={c.paper}>
-      <div style={{ position: 'absolute', left: 90 * s, right: 90 * s, top: vertical ? height * 0.1 : height * 0.07, opacity: titleIn, transform: `translateY(${(1 - titleIn) * 20 * s}px)` }}>
+      <div style={{ position: 'absolute', left: (vertical ? 90 : 140) * s, right: (vertical ? 90 : 140) * s, top: vertical ? height * 0.1 : height * 0.08, opacity: titleIn, transform: `translateY(${(1 - titleIn) * 20 * s}px)` }}>
         <h1 style={{ margin: 0, ...ff(FONT.head), fontWeight: 800, fontSize: 104 * s, lineHeight: 1.02, color: c.ink }}>{titleNode}</h1>
         {subtitle && <p style={{ margin: `${18 * s}px 0 0`, ...ff(FONT.serif), fontSize: 40 * s, color: c.text }}>{subtitle}</p>}
       </div>
@@ -103,7 +103,7 @@ export function LineChartDraw({ title, titleMark, subtitle, data, format = fmt, 
         <HandArrow from={[noteX + (noteLeft ? noteW - 10 * s : 10 * s), noteY - 6 * s]} to={[points[hi][0] + (noteLeft ? -46 * s : 46 * s), points[hi][1] + 14 * s]} amount={progress(frame, 140, 20)} color={c.ink} width={6 * s} bend={noteLeft ? 0.3 : -0.3} seed="chart-arrow" />
         <HandNote amount={progress(frame, 150, 24)} color={c.ink} size={66 * s} style={{ position: 'absolute', left: noteX, top: noteY, width: noteW, textAlign: noteLeft ? 'right' : 'left', transform: 'rotate(-4deg)' }}>{note}</HandNote>
       </>}
-      {source && <SourceLine color={c.muted} style={{ position: 'absolute', left: 90 * s, bottom: (vertical ? 120 : 50) * s, opacity: progress(frame, 30, 20) }}>Fonte: {source}</SourceLine>}
+      {source && <SourceLine color={c.muted} style={{ position: 'absolute', bottom: (vertical ? 120 : 44) * s, left: (vertical ? 90 : 140) * s, opacity: progress(frame, 30, 20) }}>Fonte: {source}</SourceLine>}
     </Paper>
   )
 }

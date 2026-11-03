@@ -15,7 +15,6 @@ export type DocumentZoomProps = {
 }
 
 export const DOCUMENT_ZOOM_DURATION = 180
-const HEADER = 0.3 // share of the page taken by the masthead and title
 
 /**
  * A printed page slides in at an angle, the camera pushes into one paragraph,
@@ -25,9 +24,12 @@ export function DocumentZoom({ source, date, title, paragraphs, highlight, note,
   const frame = useCurrentFrame()
   const { width, height } = useVideoConfig()
   const c = palette(colors)
-  const s = width / 1080
-  const pageW = Math.min(width * 0.84, height * 0.62)
-  const pageH = pageW * 1.32
+  const s = Math.min(width, height) / 1080 // 1 at 1080p, in landscape or portrait
+  const wide = width > height
+  // Landscape: a wider clipping, so lines are long and the text fits; portrait: a tall printed page.
+  const pageW = wide ? width * 0.5 : Math.min(width * 0.84, height * 0.62)
+  const pageH = wide ? Math.min(pageW * 0.95, height * 0.86) : pageW * 1.32
+  const HEADER = wide ? 0.26 : 0.3
   const n = Math.max(1, paragraphs.length)
   const target = Math.min(n - 1, Math.max(0, highlight.paragraph))
 
@@ -36,7 +38,9 @@ export function DocumentZoom({ source, date, title, paragraphs, highlight, note,
   const mark = progress(frame, 82, 20)
   const dim = progress(frame, 84, 16)
   const noteIn = progress(frame, 112, 26)
-  const scale = interpolate(zoom, [0, 1], [1, Math.min(1.6, width / pageW)]) // push in until the page fills the width, never past it
+  // Landscape: the page sits left of center and the note gets the right side. Portrait: page centered, note below.
+  const pageX = wide ? width * 0.37 : width / 2
+  const scale = interpolate(zoom, [0, 1], [1, wide ? 1.22 : Math.min(1.6, width / pageW)]) // push in, never past the frame width
   // Center of the target paragraph, from the top of the page (rows share the space below the header).
   const targetY = pageH * (HEADER + ((target + 0.5) * (1 - HEADER)) / n)
   const shiftY = (pageH / 2 - targetY) * zoom
@@ -50,7 +54,7 @@ export function DocumentZoom({ source, date, title, paragraphs, highlight, note,
 
   return (
     <Paper color={c.paper}>
-      <div style={{ position: 'absolute', left: '50%', top: '50%', width: pageW, height: pageH, perspective: 1600 * s,
+      <div style={{ position: 'absolute', left: pageX, top: '50%', width: pageW, height: pageH, perspective: 1600 * s,
         transform: `translate(-50%, -50%) translateY(${(1 - enter) * height * 0.7 + shiftY * scale}px) scale(${scale})` }}>
         <div style={{ width: '100%', height: '100%', background: c.card, boxShadow: `0 ${30 * s}px ${70 * s}px rgba(40,30,10,${0.28 - zoom * 0.1})`, padding: `${46 * s}px ${50 * s}px`, boxSizing: 'border-box',
           display: 'grid', gridTemplateRows: `${HEADER * 100}% repeat(${n}, 1fr)`, transformOrigin: '50% 50%',
@@ -69,8 +73,13 @@ export function DocumentZoom({ source, date, title, paragraphs, highlight, note,
         </div>
       </div>
       {note && <>
-        <HandArrow from={[width * 0.3, height * 0.8]} to={[width * 0.42, height * 0.57]} amount={noteIn} color={c.red} width={7 * s} seed="doc-arrow" />
-        <HandNote amount={progress(frame, 120, 24)} color={c.red} size={74 * s} style={{ position: 'absolute', left: width * 0.1, top: height * 0.8, maxWidth: width * 0.8, transform: 'rotate(-3deg)' }}>{note}</HandNote>
+        {wide ? <>
+          <HandArrow from={[width * 0.73, height * 0.36]} to={[pageX + pageW * scale * 0.24, height * 0.545]} amount={noteIn} color={c.red} width={7 * s} bend={0.25} seed="doc-arrow" />
+          <HandNote amount={progress(frame, 120, 24)} color={c.red} size={80 * s} style={{ position: 'absolute', left: width * 0.71, top: height * 0.14, width: width * 0.26, transform: 'rotate(-4deg)' }}>{note}</HandNote>
+        </> : <>
+          <HandArrow from={[width * 0.3, height * 0.8]} to={[width * 0.42, height * 0.57]} amount={noteIn} color={c.red} width={7 * s} seed="doc-arrow" />
+          <HandNote amount={progress(frame, 120, 24)} color={c.red} size={74 * s} style={{ position: 'absolute', left: width * 0.1, top: height * 0.8, maxWidth: width * 0.8, transform: 'rotate(-3deg)' }}>{note}</HandNote>
+        </>}
       </>}
     </Paper>
   )

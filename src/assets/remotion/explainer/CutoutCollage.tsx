@@ -12,8 +12,16 @@ export type CutoutCollageProps = {
 
 export const CUTOUT_COLLAGE_DURATION = 180
 
-// Where each print lands (fractions of the frame) and its tilt, for 1 to 4 photos.
-const layouts: Record<number, { x: number; y: number; w: number; r: number }[]> = {
+type Slot = { x: number; y: number; w: number; r: number }
+// Landscape: prints spread across the width under the title (w is a fraction of the frame height).
+const wideLayouts: Record<number, Slot[]> = {
+  1: [{ x: 0.5, y: 0.58, w: 0.95, r: -3 }],
+  2: [{ x: 0.36, y: 0.58, w: 0.78, r: -5 }, { x: 0.64, y: 0.62, w: 0.78, r: 4 }],
+  3: [{ x: 0.24, y: 0.6, w: 0.64, r: -6 }, { x: 0.5, y: 0.56, w: 0.64, r: 3 }, { x: 0.76, y: 0.62, w: 0.64, r: -4 }],
+  4: [{ x: 0.18, y: 0.62, w: 0.46, r: -6 }, { x: 0.39, y: 0.57, w: 0.46, r: 4 }, { x: 0.61, y: 0.63, w: 0.46, r: -3 }, { x: 0.82, y: 0.58, w: 0.46, r: 6 }],
+}
+// Portrait: where each print lands (fractions of the frame) and its tilt, for 1 to 4 photos.
+const layouts: Record<number, Slot[]> = {
   1: [{ x: 0.5, y: 0.56, w: 0.74, r: -3 }],
   2: [{ x: 0.36, y: 0.5, w: 0.56, r: -6 }, { x: 0.64, y: 0.7, w: 0.56, r: 5 }],
   3: [{ x: 0.33, y: 0.44, w: 0.5, r: -7 }, { x: 0.68, y: 0.56, w: 0.5, r: 6 }, { x: 0.42, y: 0.76, w: 0.5, r: -2 }],
@@ -28,9 +36,9 @@ export function CutoutCollage({ title, titleMark, items, colors }: CutoutCollage
   const frame = useCurrentFrame()
   const { width, height } = useVideoConfig()
   const c = palette(colors)
-  const s = width / 1080
+  const s = Math.min(width, height) / 1080 // 1 at 1080p, in landscape or portrait
   const list = items.slice(0, 4)
-  const slots = layouts[Math.max(1, list.length)]
+  const slots = (height > width ? layouts : wideLayouts)[Math.max(1, list.length)]
   const vertical = height > width
   const titleIn = progress(frame, 0, 14)
   const allIn = 20 + list.length * 12 + 14
@@ -45,8 +53,8 @@ export function CutoutCollage({ title, titleMark, items, colors }: CutoutCollage
         const slot = slots[i]
         const drop = progress(frame, 20 + i * 12, 12)
         const w = jitter(frame, `cut-${i}`, 2.2 * s, 4)
-        const pw = slot.w * (vertical ? width : height * 0.9)
-        const ph = pw * (vertical ? 1.18 : 0.8)
+        const pw = slot.w * (vertical ? width : height)
+        const ph = pw * (vertical ? 1.18 : 1.2)
         const label = progress(frame, allIn + i * 6, 10)
         return drop > 0 && (
           <div key={i} style={{ position: 'absolute', left: slot.x * width, top: slot.y * height, width: pw, height: ph,
