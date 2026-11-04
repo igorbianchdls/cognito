@@ -2,12 +2,20 @@
 import { AbsoluteFill, Img, Sequence, interpolate, staticFile, useCurrentFrame } from 'remotion'
 import { BarsCount } from './BarsCount'
 import { BigNumber } from './BigNumber'
+import { BrazilStatesMap } from './BrazilStatesMap'
+import { ChatPaper, chatPaperDuration, type ChatMessage } from './ChatPaper'
+import { Checklist } from './Checklist'
+import { ClockCompare } from './ClockCompare'
+import { FlowDiagram } from './FlowDiagram'
+import { GlobeSpin } from './GlobeSpin'
+import { HeadlineStack } from './HeadlineStack'
 import { DonutChart } from './DonutChart'
 import { EvidenceBoard } from './EvidenceBoard'
 import { IconGrid } from './IconGrid'
 import { ScreenshotSpotlight } from './ScreenshotSpotlight'
 import { SpinningNewspaper } from './SpinningNewspaper'
 import { WordCaptions, timeWords } from './WordCaptions'
+import { ExplainerExampleVideo } from './ExampleVideo'
 import { LowerThird } from './LowerThird'
 import { PaperTear } from './PaperTear'
 import { QuoteCard } from './QuoteCard'
@@ -199,3 +207,70 @@ export const ExplainerNewspaperDemo = () => (
     photo="oficina-media/hero.jpg"
   />
 )
+
+export const ExplainerFlowDemo = () => (
+  <FlowDiagram title="Do pedido ao dinheiro na conta" steps={[{ label: 'Pedido', detail: 'você pede no chat' }, { label: 'Nota fiscal', detail: 'emitida na hora' }, { label: 'Cobrança', detail: 'boleto ou Pix' }, { label: 'Conciliado', detail: 'extrato conferido' }]} active={1} />
+)
+
+const chatMessages: ChatMessage[] = [
+  { from: 'pessoa', text: 'Emite a nota do cliente Souza, serviço de R$ 1.200.' },
+  { from: 'assistente', text: 'Pronto: [[nota emitida]] e enviada por e-mail ao cliente.' },
+  { from: 'pessoa', text: 'E cobra em 10 dias, por Pix.' },
+  { from: 'assistente', text: 'Cobrança criada com [[vencimento em 14/11]]. Aviso quando pagar.' },
+]
+export const CHAT_PAPER_DEMO_DURATION = chatPaperDuration(chatMessages)
+export const ExplainerChatDemo = () => (
+  <ChatPaper title="Gestão conversando" messages={chatMessages} assistantName="Otto no ChatGPT" />
+)
+
+export const ExplainerClockDemo = () => (
+  <ClockCompare title="Fechar o mês" before={{ label: 'Planilha', minutes: 180 }} after={{ label: 'Otto', minutes: 5 }} savingsLabel="a menos (exemplo ilustrativo)" />
+)
+
+export const ExplainerChecklistDemo = () => (
+  <Checklist title="Sexta-feira" items={['Nota fiscal emitida', 'Boleto enviado', 'Pagamento recebido', 'Caixa conciliado']} stamp="Resolvido" />
+)
+
+export const ExplainerHeadlinesDemo = () => (
+  <HeadlineStack
+    title="Todo mundo está falando disso"
+    clippings={[
+      { source: 'Folha do Lojista', headline: 'IA chega ao balcão das pequenas empresas', date: 'out. 2026' },
+      { source: 'Revista Negócio', headline: 'Fim da planilha? Gestores testam sistemas por conversa', date: 'out. 2026' },
+      { source: 'Jornal da Indústria', headline: 'Assistentes de IA já emitem notas e cobram clientes', date: 'nov. 2026' },
+      { source: 'Diário do Comércio', headline: 'Contadores se adaptam à gestão por chat', date: 'nov. 2026' },
+      { source: 'Gazeta Empresarial', headline: 'Pequenas empresas [[trocam o ERP pelo ChatGPT]]', date: 'nov. 2026' },
+    ]}
+  />
+)
+
+export const ExplainerStatesDemo = () => (
+  <BrazilStatesMap
+    title="Onde a gestão por conversa mais cresce"
+    titleMark="mais cresce"
+    subtitle="Empresas usando IA no financeiro, por estado (dados ilustrativos)"
+    values={{ sp: 48, rj: 39, mg: 35, pr: 37, sc: 41, rs: 33, df: 44, go: 29, ba: 24, pe: 26, ce: 25, es: 30, mt: 27, ms: 28, am: 18, pa: 17, ma: 14, pi: 13, rn: 19, pb: 18, al: 15, se: 16, to: 15, ro: 16, ac: 11, ap: 12, rr: 10 }}
+    format={(v) => `${v}%`}
+    legend="Empresas com IA (%)"
+    source="exemplo ilustrativo"
+  />
+)
+
+export const ExplainerGlobeDemo = () => (
+  <GlobeSpin
+    kicker="Do Brasil para o mundo"
+    title="Clientes em 4 países"
+    titleMark="4 países"
+    from={[20, 25]}
+    to={[-45, -12]}
+    highlight={['Brazil']}
+    arcs={[
+      { from: [-46.63, -23.55], to: [-9.14, 38.72] },
+      { from: [-46.63, -23.55], to: [-58.38, -34.6] },
+      { from: [-46.63, -23.55], to: [-70.65, -33.45] },
+      { from: [-46.63, -23.55], to: [-99.13, 19.43] },
+    ]}
+  />
+)
+
+export const ExplainerExampleDemo = () => <ExplainerExampleVideo />

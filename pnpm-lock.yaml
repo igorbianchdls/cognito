@@ -230,6 +230,9 @@ importers:
       '@eslint/eslintrc':
         specifier: ^3
         version: 3.3.1
+      '@svg-maps/brazil':
+        specifier: 2.0.0
+        version: 2.0.0
       '@tailwindcss/node':
         specifier: 4.1.16
         version: 4.1.16
@@ -1920,6 +1923,9 @@ packages:
 
   '@supabase/supabase-js@2.78.0':
     resolution: {integrity: sha512-xYMRNBFmKp2m1gMuwcp/gr/HlfZKqjye1Ib8kJe29XJNsgwsfO/f8skxnWiscFKTlkOKLuBexNgl5L8dzGt6vA==}
+
+  '@svg-maps/brazil@2.0.0':
+    resolution: {integrity: sha512-6le594K1tO6c8Y/0KgWyurksyLnSU/8mTSnr48cKH0eaiG153UQP8aadQ/pKoeCBVd8khLVdmV7wKbkfIAbqBA==}
 
   '@swc/helpers@0.5.23':
     resolution: {integrity: sha512-5lSsMOTXURePglDfvuAQUqkGek9Hg2kksOYay2m0+XR++b2NWYL/4sWyuvVBIs8oKnJaxkdi9whaL/sqN13afw==}
@@ -6434,6 +6440,8 @@ snapshots:
     transitivePeerDependencies:
       - bufferutil
       - utf-8-validate
+
+  '@svg-maps/brazil@2.0.0': {}
 
   '@swc/helpers@0.5.23':
     dependencies:

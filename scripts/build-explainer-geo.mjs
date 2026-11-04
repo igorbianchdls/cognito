@@ -32,4 +32,8 @@ const w110 = require('world-atlas/countries-110m.json')
 const world = feature(w110, w110.objects.countries).features
 fs.writeFileSync(path.join(out, 'world-110m.json'), JSON.stringify(round({ type: 'FeatureCollection', features: world.map(slim) })))
 
-console.log(`latam: ${latam.length} countries, world: ${world.length} countries`)
+// Brazilian states (already projected SVG paths), from @svg-maps/brazil by Victor Cazanave, CC BY 4.0.
+const brazil = (await import('@svg-maps/brazil')).default
+fs.writeFileSync(path.join(out, 'brazil-states.json'), JSON.stringify({ source: 'SVG Maps (@svg-maps/brazil), CC BY 4.0', viewBox: brazil.viewBox, states: brazil.locations }))
+
+console.log(`latam: ${latam.length} countries, world: ${world.length} countries, brazil: ${brazil.locations.length} states`)
