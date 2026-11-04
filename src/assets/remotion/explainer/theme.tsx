@@ -29,6 +29,11 @@ export const FONT = {
   serif: '"Source Serif 4", "Source Serif Four", Georgia, serif', // Remotion's Google Fonts calls it "Source Serif Four"
   hand: 'Caveat, "Comic Sans MS", cursive',
   sans: 'var(--font-geist-sans, Geist), system-ui, sans-serif',
+  // Newspaper looks (HeadlineStack): a blackletter masthead, a classic display serif, a tabloid face, a modern grotesque.
+  gothic: '"UnifrakturMaguntia", "Old English Text MT", serif',
+  display: '"Playfair Display", Georgia, serif',
+  tabloid: 'Anton, Impact, "Arial Narrow", sans-serif',
+  grotesk: '"Libre Franklin", "Helvetica Neue", Arial, sans-serif',
 }
 
 /**
