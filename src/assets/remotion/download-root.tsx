@@ -5,6 +5,22 @@ import {
   CUTOUT_COLLAGE_DURATION,
   DOCUMENT_ZOOM_DURATION,
   BIG_NUMBER_DURATION,
+  BRAZIL_STATES_MAP_DURATION,
+  CHAT_PAPER_DEMO_DURATION,
+  CHECKLIST_DURATION,
+  CLOCK_COMPARE_DURATION,
+  EXPLAINER_EXAMPLE_DURATION,
+  ExplainerChatDemo,
+  ExplainerChecklistDemo,
+  ExplainerClockDemo,
+  ExplainerExampleDemo,
+  ExplainerFlowDemo,
+  ExplainerGlobeDemo,
+  ExplainerHeadlinesDemo,
+  ExplainerStatesDemo,
+  FLOW_DIAGRAM_DURATION,
+  GLOBE_SPIN_DURATION,
+  HEADLINE_STACK_DURATION,
   DONUT_CHART_DURATION,
   EVIDENCE_BOARD_DURATION,
   ExplainerCaptionsDemo,
@@ -707,6 +723,14 @@ function RemotionDownloadRoot() {
       <Composition component={ExplainerIconGridDemo} durationInFrames={ICON_GRID_DURATION} fps={30} height={1080} id="explainer-bonecos" width={1920} />
       <Composition component={ExplainerEvidenceDemo} durationInFrames={EVIDENCE_BOARD_DURATION} fps={30} height={1080} id="explainer-mural" width={1920} />
       <Composition component={ExplainerNewspaperDemo} durationInFrames={SPINNING_NEWSPAPER_DURATION} fps={30} height={1080} id="explainer-jornal" width={1920} />
+      <Composition component={ExplainerExampleDemo} durationInFrames={EXPLAINER_EXAMPLE_DURATION} fps={30} height={1080} id="explainer-exemplo" width={1920} />
+      <Composition component={ExplainerFlowDemo} durationInFrames={FLOW_DIAGRAM_DURATION} fps={30} height={1080} id="explainer-fluxo" width={1920} />
+      <Composition component={ExplainerChatDemo} durationInFrames={CHAT_PAPER_DEMO_DURATION} fps={30} height={1080} id="explainer-conversa" width={1920} />
+      <Composition component={ExplainerClockDemo} durationInFrames={CLOCK_COMPARE_DURATION} fps={30} height={1080} id="explainer-relogio" width={1920} />
+      <Composition component={ExplainerChecklistDemo} durationInFrames={CHECKLIST_DURATION} fps={30} height={1080} id="explainer-checklist" width={1920} />
+      <Composition component={ExplainerHeadlinesDemo} durationInFrames={HEADLINE_STACK_DURATION} fps={30} height={1080} id="explainer-manchetes" width={1920} />
+      <Composition component={ExplainerStatesDemo} durationInFrames={BRAZIL_STATES_MAP_DURATION} fps={30} height={1080} id="explainer-mapa-estados" width={1920} />
+      <Composition component={ExplainerGlobeDemo} durationInFrames={GLOBE_SPIN_DURATION} fps={30} height={1080} id="explainer-globo" width={1920} />
     </>
   )
 }

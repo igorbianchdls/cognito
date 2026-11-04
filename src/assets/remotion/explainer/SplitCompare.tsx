@@ -14,7 +14,7 @@ export type SplitCompareProps = {
 export const SPLIT_COMPARE_DURATION = 210
 
 /** Hand-drawn ✗ or ✓ that draws itself. */
-function Tick({ ok, amount, size, color, seed }: { ok: boolean; amount: number; size: number; color: string; seed: string }) {
+export function Tick({ ok, amount, size, color, seed }: { ok: boolean; amount: number; size: number; color: string; seed: string }) {
   const r = (k: string) => random(`${seed}-${k}`) * 6
   const stroke = { fill: 'none', stroke: color, strokeWidth: 11, strokeLinecap: 'round' as const, strokeLinejoin: 'round' as const, pathLength: 1, strokeDasharray: 1 }
   return <svg viewBox="0 0 100 100" width={size} height={size} style={{ flex: 'none', overflow: 'visible' }}>
