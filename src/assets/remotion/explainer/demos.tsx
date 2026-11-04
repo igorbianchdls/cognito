@@ -236,9 +236,9 @@ export const ExplainerHeadlinesDemo = () => (
     title="Todo mundo está falando disso"
     clippings={[
       { source: 'Folha do Lojista', headline: 'IA chega ao balcão das pequenas empresas', date: 'out. 2026' },
-      { source: 'Revista Negócio', headline: 'Fim da planilha? Gestores testam sistemas por conversa', date: 'out. 2026' },
+      { source: 'Notícia Já!', headline: 'Fim da planilha? Gestores testam sistemas por conversa', date: 'out. 2026' },
       { source: 'Jornal da Indústria', headline: 'Assistentes de IA já emitem notas e cobram clientes', date: 'nov. 2026' },
-      { source: 'Diário do Comércio', headline: 'Contadores se adaptam à gestão por chat', date: 'nov. 2026' },
+      { source: 'Revista Negócio', headline: 'Contadores se adaptam à gestão por chat', date: 'nov. 2026' },
       { source: 'Gazeta Empresarial', headline: 'Pequenas empresas [[trocam o ERP pelo ChatGPT]]', date: 'nov. 2026' },
     ]}
   />
