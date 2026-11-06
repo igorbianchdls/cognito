@@ -237,6 +237,7 @@ import {
   MAP_ZOOM_DURATION,
 } from '@/assets/remotion/explainer'
 import { DASHBOARD_BUILD_DURATION, DashboardBuildAgents } from '@/assets/remotion/compositions/DashboardBuildAgents'
+import { DASHBOARD_SEARCH_DURATION, DashboardBuildSearch } from '@/assets/remotion/compositions/DashboardBuildSearch'
 import { OTTO_AGORA_CHAT_DURATION, OTTO_AGORA_FACIL_DURATION, OTTO_AGORA_FINANCEIRO_DURATION, OTTO_AGORA_LUCRO_DURATION, OTTO_AGORA_SISTEMA_DURATION, OttoAgoraChatDarkSquareReel, OttoAgoraChatReel, OttoAgoraFacilReel, OttoAgoraFinanceiroDarkReel, OttoAgoraFinanceiroReel, OttoAgoraLucroDarkReel, OttoAgoraLucroReel, OttoAgoraSistemaDarkSquareReel, OttoAgoraSistemaReel } from '@/assets/remotion/compositions/OttoAgoraChatGptReels'
 import { OTTO_COBRANCA_REEL_DURATION, OTTO_FUNCIONARIO_REEL_DURATION, OttoCobrancaReel, OttoFuncionarioReel } from '@/assets/remotion/compositions/OttoCobrancaFuncionarioVideos'
 import { OTTO_NOTA_CHATGPT_BATCH_DURATION, OTTO_NOTA_CHATGPT_SINGLE_DURATION, OttoNotaChatGptBatchReel, OttoNotaChatGptSingleReel } from '@/assets/remotion/compositions/OttoNotaFiscalChatGptVideos'
@@ -2393,6 +2394,19 @@ const catalog: CatalogItem[] = [
     label: 'Criando um Dashboard (agentes ao vivo)',
     tags: ['Dashboard', 'Agentes', 'IA', 'Horizontal', 'Build'],
     value: 'claude-dashboard-agentes',
+    width: 1920,
+  },
+  {
+    code: '<DashboardBuildSearch />',
+    component: DashboardBuildSearch,
+    description: 'Um painel de campanhas de busca (cliques, conversões por campanha, dispositivos e palavras-chave) montado ao vivo pelos mesmos 5 agentes de IA.',
+    duration: DASHBOARD_SEARCH_DURATION,
+    fps: 30,
+    height: 1080,
+    kind: 'Claude Videos',
+    label: 'Criando um Dashboard de Busca (agentes ao vivo)',
+    tags: ['Dashboard', 'Agentes', 'IA', 'Horizontal', 'Build', 'Busca'],
+    value: 'claude-dashboard-busca',
     width: 1920,
   },
   {
