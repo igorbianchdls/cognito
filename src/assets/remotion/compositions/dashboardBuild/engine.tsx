@@ -43,6 +43,9 @@ export type BuildConfig = {
   /** Where finished agents rest, one below the other. */
   park: { x: number; y: number; gap: number }
   background: string
+  /** Optional class on the frame and CSS for it (e.g. to set fonts the app's global styles would override). */
+  className?: string
+  css?: string
 }
 
 export function createDashboardBuild(cfg: BuildConfig) {
@@ -152,7 +155,8 @@ export function createDashboardBuild(cfg: BuildConfig) {
   return function DashboardBuild() {
     const f = useCurrentFrame() * SPEED
     const fadeIn = prog(f, 0, 18)
-    return <AbsoluteFill style={{ background: cfg.background, overflow: 'hidden' }}>
+    return <AbsoluteFill className={cfg.className} style={{ background: cfg.background, overflow: 'hidden' }}>
+      {cfg.css && <style>{cfg.css}</style>}
       <div style={{ position: 'absolute', inset: 0, opacity: fadeIn }}>
         {plan.map(l => <LayerView key={l.id} l={l} f={f} />)}
         {reviews.map((r, i) => <ReviewMark key={i} r={r} f={f} />)}

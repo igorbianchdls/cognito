@@ -1,5 +1,6 @@
 import { DASHBOARD_BUILD_DURATION, DashboardBuildAgents } from './compositions/DashboardBuildAgents'
 import { DASHBOARD_SEARCH_DURATION, DashboardBuildSearch } from './compositions/DashboardBuildSearch'
+import { DASHBOARD_INSTAGRAM_DURATION, DashboardBuildInstagram } from './compositions/DashboardBuildInstagram'
 import { Composition, registerRoot } from 'remotion'
 
 import {
@@ -727,6 +728,7 @@ function RemotionDownloadRoot() {
       <Composition component={ExplainerNewspaperDemo} durationInFrames={SPINNING_NEWSPAPER_DURATION} fps={30} height={1080} id="explainer-jornal" width={1920} />
       <Composition component={DashboardBuildAgents} durationInFrames={DASHBOARD_BUILD_DURATION} fps={30} height={1080} id="claude-dashboard-agentes" width={1920} />
       <Composition component={DashboardBuildSearch} durationInFrames={DASHBOARD_SEARCH_DURATION} fps={30} height={1080} id="claude-dashboard-busca" width={1920} />
+      <Composition component={DashboardBuildInstagram} durationInFrames={DASHBOARD_INSTAGRAM_DURATION} fps={30} height={1080} id="claude-dashboard-instagram" width={1920} />
       <Composition component={ExplainerExampleDemo} durationInFrames={EXPLAINER_EXAMPLE_DURATION} fps={30} height={1080} id="explainer-exemplo" width={1920} />
       <Composition component={ExplainerFlowDemo} durationInFrames={FLOW_DIAGRAM_DURATION} fps={30} height={1080} id="explainer-fluxo" width={1920} />
       <Composition component={ExplainerChatDemo} durationInFrames={CHAT_PAPER_DEMO_DURATION} fps={30} height={1080} id="explainer-conversa" width={1920} />

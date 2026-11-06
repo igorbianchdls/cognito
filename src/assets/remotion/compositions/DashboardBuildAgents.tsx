@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react'
 import { interpolate } from 'remotion'
 import { clamp, createDashboardBuild, type Box, type Layer, type Role } from './dashboardBuild/engine'
-import { blue, card, cardTitle, green, grid, Icon, type IconName, MetaLogo, ink, muted, num, smooth, text } from './dashboardBuild/kit'
+import { blue, card, cardTitle, green, grid, Icon, type IconName, MetaLogo, type Scene, SceneArt, ink, muted, num, smooth, text } from './dashboardBuild/kit'
 
 // "Criando um Dashboard": an ads dashboard put together live by five AI agents (see dashboardBuild/engine).
 // 1920×1080, 30 fps. Data are made up.
@@ -32,7 +32,6 @@ const funnel: { label: string; value: string; icon: IconName; tint: string; fg: 
   { label: 'Cliques', value: '5.614 (3,50%)', icon: 'cursor', tint: '#efe8ff', fg: '#7c3aed' },
   { label: 'Leads', value: '412 (7,33%)', icon: 'users', tint: '#e1f6e8', fg: green },
 ]
-type Scene = 'chair' | 'kitchen' | 'sofa'
 const campaigns: { name: string; active: boolean; results: number; cost: string; spend: string; roas: string; scene: Scene }[] = [
   { name: 'Geração de Leads – Site', active: true, results: 298, cost: 'R$ 6,28', spend: 'R$ 1.870,06', roas: '5,37', scene: 'chair' },
   { name: 'Remarketing – Leads', active: true, results: 114, cost: 'R$ 6,62', spend: 'R$ 755,38', roas: '4,92', scene: 'kitchen' },
@@ -168,38 +167,6 @@ function CampRow({ c, head, last }: { c?: (typeof campaigns)[number]; head?: boo
     {cell(1, <span style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', lineHeight: 1.2 }}><b style={{ fontWeight: 700 }}>{c.results}</b><span style={{ color: muted, fontSize: 15 }}>Leads</span></span>)}
     {cell(2, c.cost)}{cell(3, c.spend)}{cell(4, c.roas)}{cell(5, <Icon name="dots" size={24} color="#3a4360" width={3} />)}
   </div>
-}
-
-/** Simple made-up product photos: warm interiors drawn with shapes. */
-function SceneArt({ scene }: { scene: Scene }) {
-  return <svg viewBox="0 0 160 140" preserveAspectRatio="xMidYMid slice" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', display: 'block' }}>
-    <defs><linearGradient id={`wall-${scene}`} x1="0" x2="0" y1="0" y2="1"><stop offset="0" stopColor="#f1e4d3" /><stop offset="1" stopColor="#dcc3a3" /></linearGradient></defs>
-    <rect width={160} height={140} fill={`url(#wall-${scene})`} />
-    <rect y={108} width={160} height={32} fill="#c9a47c" />
-    {scene === 'chair' && <g>
-      <rect x={20} y={20} width={2} height={88} fill="#d8c2a6" />
-      <rect x={52} y={44} width={58} height={44} rx={14} fill="#ead9c3" />
-      <rect x={44} y={70} width={74} height={22} rx={10} fill="#f3e6d4" />
-      <rect x={40} y={60} width={12} height={32} rx={6} fill="#e4d0b6" /><rect x={110} y={60} width={12} height={32} rx={6} fill="#e4d0b6" />
-      <path d="M50 92l-4 18M112 92l4 18" stroke="#8a6a48" strokeWidth={3} strokeLinecap="round" />
-      <rect x={124} y={84} width={20} height={24} rx={3} fill="#a37b52" />
-    </g>}
-    {scene === 'kitchen' && <g>
-      <rect x={0} y={78} width={160} height={30} fill="#b88a5c" />
-      <rect x={0} y={74} width={160} height={6} fill="#efe6da" />
-      {[8, 48, 88, 128].map(x => <rect key={x} x={x} y={84} width={32} height={20} rx={2} fill="#c79a6b" />)}
-      <rect x={10} y={22} width={140} height={22} rx={2} fill="#c49468" />
-      <rect x={14} y={46} width={132} height={3} fill="#ffe7b0" opacity={0.9} />
-      <circle cx={40} cy={64} r={6} fill="#e9dccb" /><rect x={100} y={58} width={10} height={16} rx={2} fill="#8fa77e" />
-    </g>}
-    {scene === 'sofa' && <g>
-      <rect x={24} y={58} width={90} height={30} rx={10} fill="#e2d2bd" />
-      <rect x={18} y={78} width={104} height={24} rx={10} fill="#ecdfcd" />
-      <path d="M28 102l-2 8M112 102l2 8" stroke="#8a6a48" strokeWidth={3} strokeLinecap="round" />
-      <rect x={128} y={88} width={18} height={20} rx={3} fill="#efe6da" />
-      {[[-30, 0], [0, -6], [28, 2], [-14, -14], [16, -16]].map(([r, dy], i) => <ellipse key={i} cx={137} cy={70 + dy} rx={6} ry={18} fill={i % 2 ? '#5f8a4b' : '#77a35d'} transform={`rotate(${r} 137 ${88})`} />)}
-    </g>}
-  </svg>
 }
 
 function LeadsChart({ p, w, h }: { p: number; w: number; h: number }) {
