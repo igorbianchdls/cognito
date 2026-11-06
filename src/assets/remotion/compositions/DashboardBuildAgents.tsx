@@ -8,7 +8,9 @@ import { AbsoluteFill, Easing, interpolate, random, useCurrentFrame } from 'remo
 
 export const DASHBOARD_BUILD_WIDTH = 1920
 export const DASHBOARD_BUILD_HEIGHT = 1080
-export const DASHBOARD_BUILD_DURATION = 600
+/** Playback speed: the whole build runs 30% faster than the timings below, which are written at 1×. */
+const SPEED = 1.3
+export const DASHBOARD_BUILD_DURATION = Math.round(600 / SPEED)
 
 type Role = 'layout' | 'metricas' | 'graficos' | 'tabela' | 'revisor'
 const agents: { role: Role; name: string; color: string; first: number; step: number }[] = [
@@ -309,7 +311,7 @@ function AgentBar({ f }: { f: number }) {
 }
 
 export function DashboardBuildAgents() {
-  const f = useCurrentFrame()
+  const f = useCurrentFrame() * SPEED
   const fadeIn = prog(f, 0, 18)
   return <AbsoluteFill style={{ background: '#f6f7f9', overflow: 'hidden' }}>
     {/* The dashboard fills the frame: its layout area (from x 80, y 104, 1760 wide) is scaled to the full width. */}
