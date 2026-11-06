@@ -1,10 +1,10 @@
 import type { ReactNode } from 'react'
 import { interpolate } from 'remotion'
 import { clamp, createDashboardBuild, type Box, type Layer, type Role } from './dashboardBuild/engine'
-import { blue, card, cardTitle, green, grid, Icon, type IconName, ink, muted, num, smooth, text } from './dashboardBuild/kit'
+import { blue, card, cardTitle, green, grid, Icon, type IconName, MetaLogo, ink, muted, num, smooth, text } from './dashboardBuild/kit'
 
 // "Criando um Dashboard": an ads dashboard put together live by five AI agents (see dashboardBuild/engine).
-// 1920×1080, 30 fps. Brand and data are made up.
+// 1920×1080, 30 fps. Data are made up.
 
 export { DASHBOARD_BUILD_DURATION } from './dashboardBuild/engine'
 export const DASHBOARD_BUILD_WIDTH = 1920
@@ -62,7 +62,7 @@ function buildLayers(): Layer[] {
   // Sidebar.
   add('sidebar', { x: 0, y: 0, w: 292, h: 1080 }, 'panel', () => <div style={{ position: 'absolute', inset: 0, background: '#fbfcfe', boxShadow: 'inset -1px 0 0 #e6eaf2' }} />, 0)
   add('logo', { x: 36, y: 30, w: 230, h: 52 }, 'text', () => text({ gap: 12, color: ink, fontSize: 31, fontWeight: 800, letterSpacing: -0.6 }, <>
-    <span style={{ width: 46, height: 46, borderRadius: 13, background: `linear-gradient(135deg, #3b8bff, ${blue})`, display: 'grid', placeItems: 'center', boxShadow: '0 6px 14px rgb(29 111 242 / .35)' }}><Icon name="megaphone" size={26} color="#fff" width={2.2} /></span>Otto Ads</>))
+    <MetaLogo size={34} />Meta Ads</>))
   nav.forEach((n, i) => add(`nav-${i}`, { x: 18, y: 128 + i * 62, w: 256, h: 54 }, 'text', () => text({ gap: 18, paddingLeft: 20, borderRadius: 14, background: i === 0 ? '#e6efff' : 'transparent', color: i === 0 ? blue : '#2a3350', fontSize: 21, fontWeight: i === 0 ? 700 : 500 }, <>
     <Icon name={n.icon} size={26} color={i === 0 ? blue : '#3a4360'} />{n.label}</>), 14))
   add('accounts', { x: 18, y: 900, w: 256, h: 150 }, 'block', () => <div style={{ ...card, borderRadius: 18, padding: '20px 22px', display: 'flex', flexDirection: 'column', gap: 10 }}>
