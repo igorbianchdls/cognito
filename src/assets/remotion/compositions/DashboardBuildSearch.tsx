@@ -1,11 +1,11 @@
 import type { CSSProperties, ReactNode } from 'react'
 import { interpolate } from 'remotion'
 import { clamp, createDashboardBuild, type Box, type Layer, type Role } from './dashboardBuild/engine'
-import { blue, card, cardTitle, Change, green, grid, Icon, type IconName, ink, muted, num, red, smooth, text } from './dashboardBuild/kit'
+import { blue, card, cardTitle, Change, green, grid, Icon, type IconName, GoogleAdsLogo, ink, muted, num, red, smooth, text } from './dashboardBuild/kit'
 
 // "Criando um Dashboard de Busca": a search-ads performance dashboard (clicks, conversions by campaign, devices,
 // keywords) put together live by the same five AI agents (see dashboardBuild/engine). 1920×1080, 30 fps.
-// Brand and data are made up.
+// Data are made up.
 
 export { DASHBOARD_BUILD_DURATION as DASHBOARD_SEARCH_DURATION } from './dashboardBuild/engine'
 
@@ -62,7 +62,7 @@ function buildLayers(): Layer[] {
   add('sidebar', { x: 0, y: 0, w: 292, h: 1080 }, 'panel', () => <div style={{ position: 'absolute', inset: 0, background: '#fbfcfe', boxShadow: 'inset -1px 0 0 #e6eaf2' }} />, 0)
   add('strip', { x: 0, y: 0, w: 1920, h: 8 }, 'block', () => <div style={{ position: 'absolute', inset: 0, display: 'flex' }}>{[search, '#ea4335', yellow, video].map(c => <i key={c} style={{ flex: 1, background: c }} />)}</div>, 0)
   add('logo', { x: 36, y: 38, w: 230, h: 52 }, 'text', () => text({ gap: 12, color: ink, fontSize: 31, fontWeight: 800, letterSpacing: -0.6 }, <>
-    <span style={{ width: 46, height: 46, borderRadius: 13, background: `linear-gradient(135deg, #3b8bff, ${blue})`, display: 'grid', placeItems: 'center', boxShadow: '0 6px 14px rgb(29 111 242 / .35)' }}><Icon name="search" size={26} color="#fff" width={2.6} /></span>Otto Ads</>))
+    <GoogleAdsLogo size={44} />Google Ads</>))
   nav.forEach((n, i) => add(`nav-${i}`, { x: 18, y: 130 + i * 60, w: 256, h: 52 }, 'text', () => text({ gap: 18, paddingLeft: 20, borderRadius: 14, background: i === 0 ? '#e6efff' : 'transparent', color: i === 0 ? blue : '#2a3350', fontSize: 20, fontWeight: i === 0 ? 700 : 500 }, <>
     <Icon name={n.icon} size={25} color={i === 0 ? blue : '#3a4360'} />{n.label}</>), 14))
   add('insights', { x: 18, y: 900, w: 256, h: 140 }, 'block', () => <div style={{ ...card, borderRadius: 18, padding: '22px 22px', display: 'flex', flexDirection: 'column', gap: 10 }}>

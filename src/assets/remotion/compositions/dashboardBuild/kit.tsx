@@ -63,3 +63,21 @@ export function smooth(pts: (readonly [number, number])[]) {
   }
   return d
 }
+
+/** Google Ads mark, drawn with shapes: a yellow and a blue bar meeting at the top, and a green dot. */
+export function GoogleAdsLogo({ size = 46 }: { size?: number }) {
+  return <svg width={size} height={size} viewBox="0 0 48 48" style={{ flexShrink: 0, display: 'block' }}>
+    <path d="M10.5 37 L22 11" stroke="#FBBC04" strokeWidth={11} strokeLinecap="round" />
+    <path d="M26 11 L38 37" stroke="#4285F4" strokeWidth={11} strokeLinecap="round" />
+    <circle cx={10.5} cy={37} r={5.8} fill="#34A853" />
+  </svg>
+}
+
+/** Meta mark, drawn as a stretched infinity loop in Meta blue. */
+export function MetaLogo({ size = 46 }: { size?: number }) {
+  return <svg width={size * 1.5} height={size} viewBox="0 0 72 48" style={{ flexShrink: 0, display: 'block' }}>
+    <defs><linearGradient id="meta-logo" x1="0" x2="1" y1="0" y2="0"><stop offset="0" stopColor="#0064E0" /><stop offset="0.5" stopColor="#0082FB" /><stop offset="1" stopColor="#0064E0" /></linearGradient></defs>
+    <path d="M36 21 C30 12 25 9 19 9 C11 9 6 18 6 27 C6 34 9 39 15 39 C21 39 26 32 36 21 C46 9 51 9 56 9 C63 9 66 18 66 27 C66 34 63 39 57 39 C51 39 46 32 36 21 Z"
+      fill="none" stroke="url(#meta-logo)" strokeWidth={7} strokeLinejoin="round" />
+  </svg>
+}
