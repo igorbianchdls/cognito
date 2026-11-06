@@ -2385,7 +2385,7 @@ const catalog: CatalogItem[] = [
   {
     code: '<DashboardBuildAgents />',
     component: DashboardBuildAgents,
-    description: 'Um dashboard de vendas montado ao vivo por um enxame de agentes de IA: cursores coloridos, contornos com medidas, esqueleto e o conteúdo real aparecendo camada por camada.',
+    description: 'Um dashboard de vendas montado ao vivo por 5 agentes de IA (Layout, Métricas, Gráficos, Tabela e Revisor): cursores com nome, contornos com medidas, esqueleto e o conteúdo real aparecendo camada por camada.',
     duration: DASHBOARD_BUILD_DURATION,
     fps: 30,
     height: 1080,

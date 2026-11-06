@@ -1,20 +1,25 @@
 import type { CSSProperties, ReactNode } from 'react'
 import { AbsoluteFill, Easing, interpolate, random, useCurrentFrame } from 'remotion'
 
-// "Criando um Dashboard": a sales dashboard put together live by a swarm of AI agents. Each agent is a colored
-// cursor; each piece of the screen is a layer that goes outline (with its size) → gray skeleton → real content.
-// A floating bar counts agents and layers. 1920×1080, 30 fps. All data is made up.
+// "Criando um Dashboard": a sales dashboard put together live by five AI agents, each with its own job
+// (layout, metrics, charts, table, review). Each agent is a colored cursor with its name; each piece of the screen
+// is a layer that goes outline (with its size) → gray skeleton → real content. The reviewer closes by checking
+// every block. A floating bar shows the agents and counts layers. 1920×1080, 30 fps. All data is made up.
 
 export const DASHBOARD_BUILD_WIDTH = 1920
 export const DASHBOARD_BUILD_HEIGHT = 1080
 export const DASHBOARD_BUILD_DURATION = 600
 
-const FIRST = 24          // first layer starts
-const LAST = 440          // last layer starts
-const DONE = LAST + 44    // every layer finished
-const MAX_AGENTS = 24
-const agentColors = ['#f43f5e', '#8b5cf6', '#06b6d4', '#22c55e', '#f59e0b', '#3b82f6', '#ec4899', '#14b8a6', '#a855f7', '#ef4444', '#10b981', '#6366f1']
+type Role = 'layout' | 'metricas' | 'graficos' | 'tabela' | 'revisor'
+const agents: { role: Role; name: string; color: string; first: number; step: number }[] = [
+  { role: 'layout', name: 'Agente de Layout', color: '#3b82f6', first: 24, step: 10 },
+  { role: 'metricas', name: 'Agente de Métricas', color: '#22c55e', first: 70, step: 14 },
+  { role: 'graficos', name: 'Agente de Gráficos', color: '#8b5cf6', first: 100, step: 15 },
+  { role: 'tabela', name: 'Agente de Tabela', color: '#f59e0b', first: 120, step: 22 },
+  { role: 'revisor', name: 'Agente Revisor', color: '#ec4899', first: 336, step: 12 },
+]
 const OUTLINE = '#3b82f6'
+const CHECK = '#16a34a'
 
 const ease = Easing.bezier(0.22, 1, 0.36, 1)
 const clamp = { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' } as const
@@ -159,15 +164,46 @@ function Row({ cells, cols, head }: { cells: string[]; cols: number[]; head?: bo
   </div>
 }
 
-// ---------- schedule: when each layer starts and which agent builds it ----------
+// ---------- schedule: which agent builds each layer, and when ----------
 
 const layers = buildLayers()
 const N = layers.length
-const activeAt = (f: number) => Math.max(3, Math.min(MAX_AGENTS, 3 + Math.floor((f - FIRST) / 16)))
-// Starts accelerate as more agents join.
-const startOf = (i: number) => Math.round(FIRST + (LAST - FIRST) * Math.pow(i / (N - 1), 0.78))
-const plan = layers.map((l, i) => ({ ...l, start: startOf(i), agent: i % activeAt(startOf(i)) }))
-const byAgent = Array.from({ length: MAX_AGENTS }, (_, a) => plan.filter(l => l.agent === a))
+const PANELS = ['kpi-0', 'kpi-1', 'kpi-2', 'kpi-3', 'rev', 'pay', 'orders', 'channels']
+const roleOf = (id: string): Role =>
+  /^kpi-\d-/.test(id) ? 'metricas'
+    : /^(rev|pay|channel)s?-/.test(id) ? 'graficos'
+      : id.startsWith('orders-') ? 'tabela'
+        : 'layout'
+// The layout agent lays down the frame and the empty cards first, so the others can start filling them early.
+const layoutOrder = ['sidebar', ...PANELS, 'title', 'subtitle', 'date', 'export', 'logo']
+const orderKey = (id: string) => { const i = layoutOrder.indexOf(id); return i < 0 ? layoutOrder.length : i }
+
+type Stop = { x: number; y: number; w: number; h: number; start: number }
+type Planned = Layer & { start: number; agent: number }
+const plan: Planned[] = []
+agents.forEach((ag, a) => {
+  if (ag.role === 'revisor') return
+  const mine = layers.filter(l => roleOf(l.id) === ag.role)
+  if (ag.role === 'layout') mine.sort((p, q) => orderKey(p.id) - orderKey(q.id))
+  mine.forEach((l, i) => plan.push({ ...l, start: ag.first + i * ag.step, agent: a }))
+})
+
+// The reviewer's pass: header, sidebar and each card, one after the other.
+const REVIEWER = agents.findIndex(ag => ag.role === 'revisor')
+const reviewTargets: Box[] = [
+  { x: 340, y: 122, w: 470, h: 76 },
+  { x: 80, y: 104, w: 240, h: 916 },
+  ...PANELS.map(id => layers.find(l => l.id === id)!),
+]
+const reviews: Stop[] = reviewTargets.map((b, i) => ({ x: b.x, y: b.y, w: b.w, h: b.h, start: agents[REVIEWER].first + i * agents[REVIEWER].step }))
+const DONE = reviews[reviews.length - 1].start + 26
+
+// Where each cursor goes: to a layer's top-left and then drags it to size; the reviewer goes to each card's corner.
+const stopsOf = (a: number) => a === REVIEWER
+  ? reviews.map(r => ({ ax: r.x + r.w - 30, ay: r.y + 22, bx: r.x + r.w - 30, by: r.y + 22, start: r.start }))
+  : plan.filter(l => l.agent === a).map(l => ({ ax: l.x, ay: l.y, bx: l.x + l.w, by: l.y + l.h, start: l.start }))
+const routes = agents.map((_, a) => stopsOf(a))
+const busy = routes.map(r => ({ from: r[0].start - 14, to: r[r.length - 1].start + 34 }))
 
 // ---------- drawing ----------
 
@@ -193,47 +229,74 @@ function LayerView({ l, f }: { l: (typeof plan)[number]; f: number }) {
   </>
 }
 
+/** The reviewer's mark on a block: a green outline that flashes, and a ✓ that stays. */
+function ReviewMark({ r, f }: { r: Stop; f: number }) {
+  const t = f - r.start
+  if (t < 0) return null
+  const ring = interpolate(t, [0, 4, 12, 22], [0, 1, 1, 0], clamp)
+  const pop = interpolate(t, [3, 9], [0, 1], { ...clamp, easing: Easing.out(Easing.back(2.2)) })
+  const fade = interpolate(f, [DONE + 10, DONE + 28], [1, 0], clamp)
+  return <>
+    {ring > 0 && <div style={{ position: 'absolute', left: r.x - 4, top: r.y - 4, width: r.w + 8, height: r.h + 8, borderRadius: 16, boxShadow: `0 0 0 2.5px ${CHECK}, 0 0 24px rgb(22 163 74 / .35)`, opacity: ring, zIndex: 6 }} />}
+    <div style={{ position: 'absolute', left: r.x + r.w - 44, top: r.y + 8, width: 28, height: 28, borderRadius: '50%', background: CHECK, color: '#fff', display: 'grid', placeItems: 'center',
+      fontSize: 16, fontWeight: 800, transform: `scale(${pop})`, opacity: fade, boxShadow: '0 4px 12px rgb(22 163 74 / .4)', zIndex: 7 }}>✓</div>
+  </>
+}
+
 function Cursor({ a, f }: { a: number; f: number }) {
-  const mine = byAgent[a]
-  if (!mine.length) return null
-  const color = agentColors[a % agentColors.length]
-  const spawn = { x: 960, y: 1040 }
-  // The layer it is heading to or working on: the last one whose travel already began.
+  const mine = routes[a]
+  const { color, name } = agents[a]
+  const spawn = { x: 360 + a * 300, y: 1060 }
+  // The stop it is heading to or working on: the last one whose travel already began. Travel takes up to 14 frames,
+  // less when the stops come quickly.
+  const travel = (i: number) => i === 0 ? 14 : Math.max(6, Math.min(14, mine[i].start - mine[i - 1].start - 4))
   let k = -1
-  for (let i = 0; i < mine.length; i++) if (f >= mine[i].start - 14) k = i
+  for (let i = 0; i < mine.length; i++) if (f >= mine[i].start - travel(i)) k = i
   if (k < 0) return null
   const cur = mine[k]
-  const prev = k > 0 ? { x: mine[k - 1].x + mine[k - 1].w, y: mine[k - 1].y + mine[k - 1].h } : spawn
+  const prev = k > 0 ? { x: mine[k - 1].bx, y: mine[k - 1].by } : spawn
   let x: number, y: number
+  // Once its work is done, the cursor rests in the empty lower part of the sidebar, out of the way.
+  const park = { x: 112, y: 640 + a * 64 }
+  const end = busy[a].to - 14
   if (f < cur.start) {
-    const p = interpolate(f, [cur.start - 14, cur.start], [0, 1], { ...clamp, easing: Easing.inOut(Easing.cubic) })
-    x = prev.x + (cur.x - prev.x) * p; y = prev.y + (cur.y - prev.y) * p
+    const p = interpolate(f, [cur.start - travel(k), cur.start], [0, 1], { ...clamp, easing: Easing.inOut(Easing.cubic) })
+    x = prev.x + (cur.ax - prev.x) * p; y = prev.y + (cur.ay - prev.y) * p
+  } else if (k === mine.length - 1 && f >= end && a !== REVIEWER) {
+    const p = interpolate(f, [end, end + 22], [0, 1], { ...clamp, easing: Easing.inOut(Easing.cubic) })
+    x = cur.bx + (park.x - cur.bx) * p; y = cur.by + (park.y - cur.by) * p
+    x += Math.sin((f + a * 13) / 14) * 4; y += Math.cos((f + a * 7) / 16) * 3
   } else {
     const g = prog(f, cur.start, 10)
-    x = cur.x + cur.w * g; y = cur.y + cur.h * g
-    // Small wander while it finishes the layer.
+    x = cur.ax + (cur.bx - cur.ax) * g; y = cur.ay + (cur.by - cur.ay) * g
+    // Small wander while it finishes.
     x += Math.sin((f + a * 13) / 9) * 6; y += Math.cos((f + a * 7) / 11) * 5
   }
   const appear = interpolate(f, [mine[0].start - 14, mine[0].start - 8], [0, 1], clamp)
   const leave = interpolate(f, [DONE, DONE + 18], [1, 0], clamp)
   return <div style={{ position: 'absolute', left: x, top: y, opacity: appear * leave, zIndex: 20, pointerEvents: 'none' }}>
-    <svg width={22} height={24} viewBox="0 0 22 24" style={{ display: 'block', filter: 'drop-shadow(0 2px 3px rgb(0 0 0 / .35))' }}>
+    <svg width={24} height={26} viewBox="0 0 22 24" style={{ display: 'block', filter: 'drop-shadow(0 2px 3px rgb(0 0 0 / .35))' }}>
       <path d="M2 2 L2 20 L7 15 L10.5 22.5 L13.5 21 L10 14 L17 14 Z" fill={color} stroke="#fff" strokeWidth={1.6} strokeLinejoin="round" />
     </svg>
-    <span style={{ position: 'absolute', left: 16, top: 20, padding: '2px 7px', borderRadius: 6, background: color, color: '#fff', fontSize: 11.5, fontWeight: 700, whiteSpace: 'nowrap' }}>Agente {a + 1}</span>
+    <span style={{ position: 'absolute', left: 18, top: 22, padding: '3px 9px', borderRadius: 7, background: color, color: '#fff', fontSize: 13, fontWeight: 700, whiteSpace: 'nowrap', boxShadow: '0 2px 8px rgb(0 0 0 / .25)' }}>{name}</span>
   </div>
 }
 
 function AgentBar({ f }: { f: number }) {
   const built = plan.filter(l => f >= l.start + 34).length
   const done = f >= DONE
-  const agents = f < FIRST ? 0 : done ? MAX_AGENTS : activeAt(f)
   const show = interpolate(f, [4, 16], [0, 1], clamp)
   return <div style={{ position: 'absolute', left: '50%', bottom: 26, transform: `translateX(-50%) translateY(${(1 - show) * 30}px)`, opacity: show, zIndex: 30,
-    display: 'flex', alignItems: 'center', gap: 16, padding: '12px 18px', borderRadius: 14, background: 'rgb(17 19 24 / .92)', boxShadow: '0 12px 40px rgb(0 0 0 / .45)', color: '#e5e7eb', fontSize: 16, fontWeight: 500 }}>
-    <span style={{ display: 'flex' }}>{agentColors.slice(0, 6).map((c, i) => <i key={c} style={{ width: 14, height: 14, borderRadius: '50%', background: c, marginLeft: i ? -4 : 0, boxShadow: '0 0 0 2px #111318' }} />)}</span>
-    {done ? <span><b style={{ color: '#4ade80' }}>✓ Dashboard pronto</b> · {N} camadas · {MAX_AGENTS} agentes</span>
-      : <span style={{ fontVariantNumeric: 'tabular-nums' }}><b style={{ color: '#fff' }}>{agents}</b> agentes · <b style={{ color: '#fff' }}>{built}</b> / {N} camadas</span>}
+    display: 'flex', alignItems: 'center', gap: 16, padding: '12px 18px', borderRadius: 14, background: 'rgb(17 19 24 / .92)', boxShadow: '0 12px 40px rgb(0 0 0 / .45)', color: '#e5e7eb', fontSize: 16, fontWeight: 500, whiteSpace: 'nowrap' }}>
+    <span style={{ display: 'flex', gap: 14 }}>{agents.map((ag, a) => {
+      const on = f >= busy[a].from && f < busy[a].to
+      return <span key={ag.role} style={{ display: 'flex', alignItems: 'center', gap: 7, fontSize: 14, color: on ? '#fff' : '#6b7280' }}>
+        <i style={{ width: 10, height: 10, borderRadius: '50%', background: ag.color, opacity: on ? 1 : done ? 0.7 : 0.3, boxShadow: on ? `0 0 0 3px ${ag.color}44` : 'none' }} />{ag.name}
+      </span>
+    })}</span>
+    <span style={{ width: 1, height: 18, background: '#374151' }} />
+    {done ? <span><b style={{ color: '#4ade80' }}>✓ Dashboard pronto</b> · {N} camadas · {agents.length} agentes</span>
+      : <span style={{ fontVariantNumeric: 'tabular-nums' }}><b style={{ color: '#fff' }}>{agents.length}</b> agentes · <b style={{ color: '#fff' }}>{built}</b> / {N} camadas</span>}
     <span style={{ width: 1, height: 18, background: '#374151' }} />
     <span style={{ color: done ? '#4ade80' : '#f87171', display: 'flex', alignItems: 'center', gap: 6 }}><i style={{ width: 8, height: 8, borderRadius: '50%', background: done ? '#4ade80' : '#f87171', opacity: done ? 1 : 0.5 + 0.5 * Math.abs(Math.sin(f / 8)) }} />{done ? 'Concluído' : 'Ao vivo'}</span>
     <span style={{ color: '#9ca3af' }}>1×</span>
@@ -257,7 +320,8 @@ export function DashboardBuildAgents() {
       {/* Layers are placed in canvas coordinates, on top of the window. */}
       <div style={{ position: 'absolute', inset: 0, opacity: windowIn }}>
         {plan.map(l => <LayerView key={l.id} l={l} f={f} />)}
-        {byAgent.map((_, a) => <Cursor key={a} a={a} f={f} />)}
+        {reviews.map((r, i) => <ReviewMark key={i} r={r} f={f} />)}
+        {agents.map((ag, a) => <Cursor key={ag.role} a={a} f={f} />)}
       </div>
     </div>
     <AgentBar f={f} />
