@@ -6,9 +6,11 @@ import { AbsoluteFill, Easing, interpolate, useCurrentFrame } from 'remotion'
 // outline (with its size) → gray skeleton → real content. The reviewer closes by checking every block. A floating bar
 // shows the agents and counts layers. A video only supplies its layers and which agent builds what.
 
-/** Playback speed: the whole build runs 30% faster than the timings, which are written at 1×. */
-const SPEED = 1.3
-export const DASHBOARD_BUILD_DURATION = Math.round(600 / SPEED)
+/** The build (until the last check mark fades and the cursors leave) takes 8 s; the finished dashboard then holds for 3 s. */
+const FPS = 30
+const BUILD_FRAMES = 8 * FPS
+const HOLD_FRAMES = 3 * FPS
+export const DASHBOARD_BUILD_DURATION = BUILD_FRAMES + HOLD_FRAMES
 
 export type Role = 'layout' | 'metricas' | 'graficos' | 'tabela' | 'revisor'
 export type Box = { x: number; y: number; w: number; h: number }
@@ -65,6 +67,8 @@ export function createDashboardBuild(cfg: BuildConfig) {
   const reviewTargets: Box[] = [...cfg.reviewFirst, ...cfg.panels.map(id => layers.find(l => l.id === id)!)]
   const reviews: Stop[] = reviewTargets.map((b, i) => ({ x: b.x, y: b.y, w: b.w, h: b.h, start: agents[REVIEWER].first + i * agents[REVIEWER].step }))
   const DONE = reviews[reviews.length - 1].start + 26
+  // Timings above are written at 1×; play them fast enough that the build is over (marks faded) at BUILD_FRAMES.
+  const SPEED = (DONE + 28) / BUILD_FRAMES
 
   // Where each cursor goes: to a layer's top-left and then drags it to size; the reviewer goes to each card's corner.
   const routes = agents.map((_, a) => a === REVIEWER
