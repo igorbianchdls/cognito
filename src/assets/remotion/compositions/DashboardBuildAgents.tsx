@@ -18,6 +18,11 @@ const agents: { role: Role; name: string; color: string; first: number; step: nu
   { role: 'tabela', name: 'Agente de Tabela', color: '#f59e0b', first: 120, step: 22 },
   { role: 'revisor', name: 'Agente Revisor', color: '#ec4899', first: 336, step: 12 },
 ]
+// The dashboard is laid out from (80, 104), 1760 wide, and scaled to fill the 1920-wide frame.
+const ORIGIN = { x: 80, y: 104 }
+const SCALE = DASHBOARD_BUILD_WIDTH / 1760
+/** Sidebar runs to the bottom edge of the frame. */
+const SIDEBAR_H = Math.ceil(DASHBOARD_BUILD_HEIGHT / SCALE)
 const OUTLINE = '#3b82f6'
 const CHECK = '#16a34a'
 
@@ -60,7 +65,7 @@ function buildLayers(): Layer[] {
   const add = (id: string, b: Box, kind: Layer['kind'], render: Layer['render'], radius?: number) => L.push({ id, ...b, kind, render, radius })
 
   // Frame: sidebar, header.
-  add('sidebar', { x: 80, y: 104, w: 240, h: 916 }, 'panel', () => <div style={{ position: 'absolute', inset: 0, background: '#0f172a', borderBottomLeftRadius: 14 }} />, 0)
+  add('sidebar', { x: 80, y: 104, w: 240, h: SIDEBAR_H }, 'panel', () => <div style={{ position: 'absolute', inset: 0, background: '#0f172a' }} />, 0)
   add('logo', { x: 104, y: 128, w: 170, h: 36 }, 'text', () => text({ gap: 10, color: '#fff', fontSize: 19, fontWeight: 700 }, <><span style={{ width: 30, height: 30, borderRadius: 8, background: accent, display: 'grid', placeItems: 'center', fontSize: 15 }}>◆</span>Pulso</>))
   add('title', { x: 352, y: 130, w: 300, h: 36 }, 'text', () => text({ color: ink, fontSize: 28, fontWeight: 700, letterSpacing: -0.5 }, 'Visão geral'))
   add('subtitle', { x: 352, y: 168, w: 420, h: 22 }, 'text', () => text({ color: muted, fontSize: 15 }, 'Vendas dos últimos 30 dias · atualizado agora'))
@@ -70,8 +75,8 @@ function buildLayers(): Layer[] {
 
   // KPI cards.
   kpis.forEach((k, i) => {
-    const x = 352 + i * 370, y = 212
-    add(`kpi-${i}`, { x, y, w: 346, h: 136 }, 'panel', () => <div style={card} />, 14)
+    const x = 352 + i * 374, y = 212
+    add(`kpi-${i}`, { x, y, w: 350, h: 136 }, 'panel', () => <div style={card} />, 14)
     add(`kpi-${i}-label`, { x: x + 22, y: y + 20, w: 160, h: 20 }, 'text', () => text({ color: muted, fontSize: 14, fontWeight: 500 }, k.label))
     add(`kpi-${i}-value`, { x: x + 22, y: y + 50, w: 210, h: 42 }, 'text', p => text({ color: ink, fontSize: 34, fontWeight: 700, letterSpacing: -1, fontVariantNumeric: 'tabular-nums' },
       k.money ? brl(k.value * p, k.cents) : Math.round(k.value * p).toLocaleString('pt-BR')))
@@ -192,7 +197,7 @@ agents.forEach((ag, a) => {
 const REVIEWER = agents.findIndex(ag => ag.role === 'revisor')
 const reviewTargets: Box[] = [
   { x: 340, y: 122, w: 470, h: 76 },
-  { x: 80, y: 104, w: 240, h: 916 },
+  { x: 80, y: 104, w: 240, h: SIDEBAR_H },
   ...PANELS.map(id => layers.find(l => l.id === id)!),
 ]
 const reviews: Stop[] = reviewTargets.map((b, i) => ({ x: b.x, y: b.y, w: b.w, h: b.h, start: agents[REVIEWER].first + i * agents[REVIEWER].step }))
@@ -278,7 +283,7 @@ function Cursor({ a, f }: { a: number; f: number }) {
     <svg width={24} height={26} viewBox="0 0 22 24" style={{ display: 'block', filter: 'drop-shadow(0 2px 3px rgb(0 0 0 / .35))' }}>
       <path d="M2 2 L2 20 L7 15 L10.5 22.5 L13.5 21 L10 14 L17 14 Z" fill={color} stroke="#fff" strokeWidth={1.6} strokeLinejoin="round" />
     </svg>
-    <span style={{ position: 'absolute', left: 18, top: 22, padding: '3px 9px', borderRadius: 7, background: color, color: '#fff', fontSize: 13, fontWeight: 700, whiteSpace: 'nowrap', boxShadow: '0 2px 8px rgb(0 0 0 / .25)' }}>{name}</span>
+    <span style={{ position: 'absolute', ...(x > 1640 ? { right: 8 } : { left: 18 }), top: 22, padding: '3px 9px', borderRadius: 7, background: color, color: '#fff', fontSize: 13, fontWeight: 700, whiteSpace: 'nowrap', boxShadow: '0 2px 8px rgb(0 0 0 / .25)' }}>{name}</span>
   </div>
 }
 
@@ -305,24 +310,13 @@ function AgentBar({ f }: { f: number }) {
 
 export function DashboardBuildAgents() {
   const f = useCurrentFrame()
-  const windowIn = prog(f, 0, 18)
-  const zoom = interpolate(f, [DONE, DASHBOARD_BUILD_DURATION], [1, 1.035], { ...clamp, easing: Easing.inOut(Easing.quad) })
-  return <AbsoluteFill style={{ background: 'radial-gradient(circle at 50% 30%, #1d2230, #0b0d12 70%)', overflow: 'hidden' }}>
-    <div style={{ position: 'absolute', inset: 0, transform: `scale(${zoom})` }}>
-      {/* The browser window the dashboard is built in. */}
-      <div style={{ position: 'absolute', left: 80, top: 60, width: 1760, height: 960, borderRadius: 14, overflow: 'hidden', background: '#f6f7f9', opacity: windowIn,
-        transform: `translateY(${(1 - windowIn) * 24}px)`, boxShadow: '0 40px 100px rgb(0 0 0 / .55), 0 0 0 1px rgb(255 255 255 / .06)' }}>
-        <div style={{ height: 44, display: 'flex', alignItems: 'center', gap: 8, padding: '0 16px', background: '#e9ecf1', borderBottom: '1px solid #dde2e9' }}>
-          {['#ff5f57', '#febc2e', '#28c840'].map(c => <i key={c} style={{ width: 12, height: 12, borderRadius: '50%', background: c }} />)}
-          <span style={{ marginLeft: 18, height: 28, padding: '0 14px', display: 'flex', alignItems: 'center', borderRadius: 8, background: '#fff', color: '#475569', fontSize: 14, width: 520 }}>localhost:3000/dashboard</span>
-        </div>
-      </div>
-      {/* Layers are placed in canvas coordinates, on top of the window. */}
-      <div style={{ position: 'absolute', inset: 0, opacity: windowIn }}>
-        {plan.map(l => <LayerView key={l.id} l={l} f={f} />)}
-        {reviews.map((r, i) => <ReviewMark key={i} r={r} f={f} />)}
-        {agents.map((ag, a) => <Cursor key={ag.role} a={a} f={f} />)}
-      </div>
+  const fadeIn = prog(f, 0, 18)
+  return <AbsoluteFill style={{ background: '#f6f7f9', overflow: 'hidden' }}>
+    {/* The dashboard fills the frame: its layout area (from x 80, y 104, 1760 wide) is scaled to the full width. */}
+    <div style={{ position: 'absolute', left: 0, top: 0, width: 1920, height: 1080, opacity: fadeIn, transformOrigin: '0 0', transform: `scale(${SCALE}) translate(${-ORIGIN.x}px, ${-ORIGIN.y}px)` }}>
+      {plan.map(l => <LayerView key={l.id} l={l} f={f} />)}
+      {reviews.map((r, i) => <ReviewMark key={i} r={r} f={f} />)}
+      {agents.map((ag, a) => <Cursor key={ag.role} a={a} f={f} />)}
     </div>
     <AgentBar f={f} />
   </AbsoluteFill>
