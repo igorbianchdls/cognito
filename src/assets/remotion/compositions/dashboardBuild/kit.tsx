@@ -5,7 +5,7 @@ import type { CSSProperties, ReactNode } from 'react'
 export const ink = '#0b1534', muted = '#5b6478', grid = '#e7ebf3', blue = '#1d6ff2', green = '#16a34a', red = '#dc2626'
 
 export type IconName = 'home' | 'megaphone' | 'layers' | 'image' | 'users' | 'grid' | 'bars' | 'eye' | 'cursor' | 'target' | 'coins' | 'calendar' | 'chevron' | 'arrow' | 'info'
-  | 'dots' | 'down' | 'key' | 'percent' | 'card' | 'monitor' | 'phone' | 'tablet' | 'sparkle' | 'search' | 'screen' | 'chevronRight'
+  | 'dots' | 'down' | 'heart' | 'play' | 'comment' | 'reels' | 'story' | 'female' | 'male' | 'key' | 'percent' | 'card' | 'monitor' | 'phone' | 'tablet' | 'sparkle' | 'search' | 'screen' | 'chevronRight'
 const iconPaths: Record<IconName, string> = {
   home: 'M3 11l9-7 9 7v9a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z',
   megaphone: 'M3 10v4a1 1 0 0 0 1 1h3l7 4V5L7 9H4a1 1 0 0 0-1 1zM7 15l1.5 5M18 8.5a5 5 0 0 1 0 7',
@@ -25,6 +25,13 @@ const iconPaths: Record<IconName, string> = {
   info: 'M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18zM12 11v5M12 8v.5',
   dots: 'M12 5v.5M12 12v.5M12 19v.5',
   down: 'M12 5v14M6 13l6 6 6-6',
+  heart: 'M12 20s-7.5-4.6-9.2-9.4A5 5 0 0 1 12 6.3a5 5 0 0 1 9.2 4.3C19.5 15.4 12 20 12 20z',
+  play: 'M7 4.5l12 7.5-12 7.5z',
+  comment: 'M20 12a8 8 0 0 1-11.6 7.1L4 20l1-4.2A8 8 0 1 1 20 12z',
+  reels: 'M4 4h16v16H4zM4 9h16M9 4l2.5 5M15 4l2.5 5M10.5 12.5v5l4-2.5z',
+  story: 'M12 3a9 9 0 1 1-8.5 6M12 8.5v7M8.5 12h7',
+  female: 'M12 3.5a4.5 4.5 0 1 0 0 9 4.5 4.5 0 0 0 0-9zM12 12.5v8M8.5 17h7',
+  male: 'M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8zM5 21a7 7 0 0 1 14 0',
   key: 'M15 3a6 6 0 1 1-5.2 9L3 18.8V21h3v-2h2v-2h2l1.2-1.2A6 6 0 0 1 15 3zM16.5 7.5v.5',
   percent: 'M19 5L5 19M7 9a2 2 0 1 0 0-4 2 2 0 0 0 0 4zM17 19a2 2 0 1 0 0-4 2 2 0 0 0 0 4z',
   card: 'M3 6h18v12H3zM3 10h18M7 15h4',
@@ -81,3 +88,37 @@ export function MetaLogo({ size = 46 }: { size?: number }) {
       fill="none" stroke="url(#meta-logo)" strokeWidth={7} strokeLinejoin="round" />
   </svg>
 }
+
+export type Scene = 'chair' | 'kitchen' | 'sofa'
+/** Simple made-up product photos: warm interiors drawn with shapes. */
+export function SceneArt({ scene }: { scene: Scene }) {
+  return <svg viewBox="0 0 160 140" preserveAspectRatio="xMidYMid slice" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', display: 'block' }}>
+    <defs><linearGradient id={`wall-${scene}`} x1="0" x2="0" y1="0" y2="1"><stop offset="0" stopColor="#f1e4d3" /><stop offset="1" stopColor="#dcc3a3" /></linearGradient></defs>
+    <rect width={160} height={140} fill={`url(#wall-${scene})`} />
+    <rect y={108} width={160} height={32} fill="#c9a47c" />
+    {scene === 'chair' && <g>
+      <rect x={20} y={20} width={2} height={88} fill="#d8c2a6" />
+      <rect x={52} y={44} width={58} height={44} rx={14} fill="#ead9c3" />
+      <rect x={44} y={70} width={74} height={22} rx={10} fill="#f3e6d4" />
+      <rect x={40} y={60} width={12} height={32} rx={6} fill="#e4d0b6" /><rect x={110} y={60} width={12} height={32} rx={6} fill="#e4d0b6" />
+      <path d="M50 92l-4 18M112 92l4 18" stroke="#8a6a48" strokeWidth={3} strokeLinecap="round" />
+      <rect x={124} y={84} width={20} height={24} rx={3} fill="#a37b52" />
+    </g>}
+    {scene === 'kitchen' && <g>
+      <rect x={0} y={78} width={160} height={30} fill="#b88a5c" />
+      <rect x={0} y={74} width={160} height={6} fill="#efe6da" />
+      {[8, 48, 88, 128].map(x => <rect key={x} x={x} y={84} width={32} height={20} rx={2} fill="#c79a6b" />)}
+      <rect x={10} y={22} width={140} height={22} rx={2} fill="#c49468" />
+      <rect x={14} y={46} width={132} height={3} fill="#ffe7b0" opacity={0.9} />
+      <circle cx={40} cy={64} r={6} fill="#e9dccb" /><rect x={100} y={58} width={10} height={16} rx={2} fill="#8fa77e" />
+    </g>}
+    {scene === 'sofa' && <g>
+      <rect x={24} y={58} width={90} height={30} rx={10} fill="#e2d2bd" />
+      <rect x={18} y={78} width={104} height={24} rx={10} fill="#ecdfcd" />
+      <path d="M28 102l-2 8M112 102l2 8" stroke="#8a6a48" strokeWidth={3} strokeLinecap="round" />
+      <rect x={128} y={88} width={18} height={20} rx={3} fill="#efe6da" />
+      {[[-30, 0], [0, -6], [28, 2], [-14, -14], [16, -16]].map(([r, dy], i) => <ellipse key={i} cx={137} cy={70 + dy} rx={6} ry={18} fill={i % 2 ? '#5f8a4b' : '#77a35d'} transform={`rotate(${r} 137 ${88})`} />)}
+    </g>}
+  </svg>
+}
+
