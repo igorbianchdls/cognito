@@ -263,6 +263,5 @@ export const DashboardBuildAgents = createDashboardBuild({
   // The reviewer starts with the header and the sidebar.
   reviewFirst: [{ x: MAIN - 12, y: 12, w: 680, h: 104 }, { x: 0, y: 0, w: 292, h: 1080 }],
   park: { x: 40, y: 598, gap: 62 },
-  barCenterX: (MAIN + RIGHT) / 2,
   background: BG,
 })
