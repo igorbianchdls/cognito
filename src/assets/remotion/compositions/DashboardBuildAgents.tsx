@@ -1,62 +1,19 @@
-import type { CSSProperties, ReactNode } from 'react'
-import { AbsoluteFill, Easing, interpolate, useCurrentFrame } from 'remotion'
+import type { ReactNode } from 'react'
+import { interpolate } from 'remotion'
+import { clamp, createDashboardBuild, type Box, type Layer, type Role } from './dashboardBuild/engine'
+import { blue, card, cardTitle, green, grid, Icon, type IconName, ink, muted, num, smooth, text } from './dashboardBuild/kit'
 
-// "Criando um Dashboard": an ads dashboard put together live by five AI agents, each with its own job
-// (layout, metrics, charts, table, review). Each agent is a colored cursor with its name; each piece of the screen
-// is a layer that goes outline (with its size) → gray skeleton → real content. The reviewer closes by checking
-// every block. A floating bar shows the agents and counts layers. 1920×1080, 30 fps. All data is made up.
+// "Criando um Dashboard": an ads dashboard put together live by five AI agents (see dashboardBuild/engine).
+// 1920×1080, 30 fps. Brand and data are made up.
 
+export { DASHBOARD_BUILD_DURATION } from './dashboardBuild/engine'
 export const DASHBOARD_BUILD_WIDTH = 1920
 export const DASHBOARD_BUILD_HEIGHT = 1080
-/** Playback speed: the whole build runs 30% faster than the timings below, which are written at 1×. */
-const SPEED = 1.3
-export const DASHBOARD_BUILD_DURATION = Math.round(600 / SPEED)
-
-type Role = 'layout' | 'metricas' | 'graficos' | 'tabela' | 'revisor'
-const agents: { role: Role; name: string; color: string; first: number; step: number }[] = [
-  { role: 'layout', name: 'Agente de Layout', color: '#3b82f6', first: 24, step: 9 },
-  { role: 'metricas', name: 'Agente de Métricas', color: '#22c55e', first: 70, step: 13 },
-  { role: 'graficos', name: 'Agente de Gráficos', color: '#8b5cf6', first: 100, step: 15 },
-  { role: 'tabela', name: 'Agente de Tabela', color: '#f59e0b', first: 120, step: 20 },
-  { role: 'revisor', name: 'Agente Revisor', color: '#ec4899', first: 336, step: 12 },
-]
-const OUTLINE = '#3b82f6'
-const CHECK = '#16a34a'
-
-const ease = Easing.bezier(0.22, 1, 0.36, 1)
-const clamp = { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' } as const
-const prog = (f: number, start: number, len: number) => interpolate(f, [start, start + len], [0, 1], { ...clamp, easing: ease })
 
 // ---------- the dashboard (made-up numbers) ----------
 
-const ink = '#0b1534', muted = '#5b6478', grid = '#e7ebf3', blue = '#1d6ff2', magenta = '#d63fd6', green = '#16a34a'
+const magenta = '#d63fd6'
 const BG = '#f3f5fa'
-
-type IconName = 'home' | 'megaphone' | 'layers' | 'image' | 'users' | 'grid' | 'bars' | 'eye' | 'cursor' | 'target' | 'coins' | 'calendar' | 'chevron' | 'arrow' | 'info' | 'dots' | 'down'
-const iconPaths: Record<IconName, string> = {
-  home: 'M3 11l9-7 9 7v9a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z',
-  megaphone: 'M3 10v4a1 1 0 0 0 1 1h3l7 4V5L7 9H4a1 1 0 0 0-1 1zM7 15l1.5 5M18 8.5a5 5 0 0 1 0 7',
-  layers: 'M12 3l9 5-9 5-9-5zM3 12.5l9 5 9-5M3 17l9 5 9-5',
-  image: 'M4 4h16v16H4zM9 10.5a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3zM4 17l5-5 4 4 3-3 4 4',
-  users: 'M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8zM2 21a7 7 0 0 1 14 0M16 3.5a4 4 0 0 1 0 7.5M18 14a6 6 0 0 1 4 7',
-  grid: 'M4 4h6v6H4zM14 4h6v6h-6zM4 14h6v6H4zM14 14h6v6h-6z',
-  bars: 'M5 20v-6M12 20V8M19 20V4',
-  eye: 'M2 12s4-7 10-7 10 7 10 7-4 7-10 7S2 12 2 12zM12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6z',
-  cursor: 'M5 3l14 7-6 2-2 6z',
-  target: 'M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18zM12 16a4 4 0 1 0 0-8 4 4 0 0 0 0 8zM12 12.5v-1',
-  coins: 'M12 9c4.4 0 8-1.3 8-3s-3.6-3-8-3-8 1.3-8 3 3.6 3 8 3zM4 6v6c0 1.7 3.6 3 8 3s8-1.3 8-3V6M4 12v6c0 1.7 3.6 3 8 3s8-1.3 8-3v-6',
-  calendar: 'M4 6h16v14H4zM4 10h16M8 3v4M16 3v4',
-  chevron: 'M6 9l6 6 6-6',
-  arrow: 'M5 12h14M13 6l6 6-6 6',
-  info: 'M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18zM12 11v5M12 8v.5',
-  dots: 'M12 5v.5M12 12v.5M12 19v.5',
-  down: 'M12 5v14M6 13l6 6 6-6',
-}
-function Icon({ name, size = 24, color = 'currentColor', width = 2 }: { name: IconName; size?: number; color?: string; width?: number }) {
-  return <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth={width} strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0, display: 'block' }}>
-    <path d={iconPaths[name]} />
-  </svg>
-}
 
 const kpis: { label: string; icon: IconName; tint: string; fg: string; value: number; cents?: boolean; money?: boolean; suffix?: string; delta: string; up: boolean; note?: string; weight: number }[] = [
   { label: 'Investimento', icon: 'megaphone', tint: '#e3edff', fg: blue, value: 2625.44, money: true, cents: true, delta: '+12,8%', up: true, note: 'vs. período anterior', weight: 1.35 },
@@ -89,16 +46,8 @@ const nav: { label: string; icon: IconName }[] = [
   { label: 'Públicos', icon: 'users' }, { label: 'Criativos', icon: 'grid' }, { label: 'Relatórios', icon: 'bars' },
 ]
 
-const num = (v: number, cents = false) => v.toLocaleString('pt-BR', { minimumFractionDigits: cents ? 2 : 0, maximumFractionDigits: cents ? 2 : 0 })
 
 // ---------- layers ----------
-
-type Box = { x: number; y: number; w: number; h: number }
-type Layer = Box & { id: string; kind: 'panel' | 'text' | 'block'; radius?: number; render: (p: number) => ReactNode }
-
-const card: CSSProperties = { position: 'absolute', inset: 0, background: '#fff', borderRadius: 20, boxShadow: '0 1px 2px rgb(16 24 40 / .04), 0 10px 30px rgb(16 24 40 / .06), 0 0 0 1px #e9edf5' }
-const text = (style: CSSProperties, children: ReactNode) => <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', whiteSpace: 'nowrap', ...style }}>{children}</div>
-const cardTitle = (t: string, extra?: ReactNode) => text({ gap: 10, color: ink, fontSize: 23, fontWeight: 700, letterSpacing: -0.3 }, <>{t}{extra}</>)
 
 // Layout grid.
 const MAIN = 316, RIGHT = 1896, GAP = 18
@@ -253,17 +202,6 @@ function SceneArt({ scene }: { scene: Scene }) {
   </svg>
 }
 
-/** Smooth line through the points (Catmull-Rom as cubic Béziers). */
-function smooth(pts: (readonly [number, number])[]) {
-  let d = `M${pts[0][0].toFixed(1)},${pts[0][1].toFixed(1)}`
-  for (let i = 0; i < pts.length - 1; i++) {
-    const p0 = pts[i - 1] ?? pts[i], p1 = pts[i], p2 = pts[i + 1], p3 = pts[i + 2] ?? p2
-    const c1 = [p1[0] + (p2[0] - p0[0]) / 6, p1[1] + (p2[1] - p0[1]) / 6], c2 = [p2[0] - (p3[0] - p1[0]) / 6, p2[1] - (p3[1] - p1[1]) / 6]
-    d += ` C${c1[0].toFixed(1)},${c1[1].toFixed(1)} ${c2[0].toFixed(1)},${c2[1].toFixed(1)} ${p2[0].toFixed(1)},${p2[1].toFixed(1)}`
-  }
-  return d
-}
-
 function LeadsChart({ p, w, h }: { p: number; w: number; h: number }) {
   const left = 40, right = 14, top = 10, bottom = 30, max = 50
   const pw = w - left - right, ph = h - top - bottom
@@ -307,154 +245,24 @@ function Donut({ p }: { p: number }) {
   </svg>
 }
 
-// ---------- schedule: which agent builds each layer, and when ----------
+// ---------- who builds what ----------
 
 const layers = buildLayers()
-const N = layers.length
 const PANELS = ['kpi-0', 'kpi-1', 'kpi-2', 'kpi-3', 'kpi-4', 'kpi-5', 'leads', 'camp', 'plat', 'funnel', 'crt']
 const roleOf = (id: string): Role =>
   /^kpi-\d-/.test(id) ? 'metricas'
     : /^(leads|plat|funnel)-/.test(id) ? 'graficos'
       : /^(camp|crt)-/.test(id) ? 'tabela'
         : 'layout'
-// The layout agent lays down the frame and the empty cards first, so the others can start filling them early.
-const layoutOrder = ['sidebar', ...PANELS, 'title', 'subtitle', 'date', 'account', 'logo']
-const orderKey = (id: string) => { const i = layoutOrder.indexOf(id); return i < 0 ? layoutOrder.length : i }
 
-type Stop = { x: number; y: number; w: number; h: number; start: number }
-type Planned = Layer & { start: number; agent: number }
-const plan: Planned[] = []
-agents.forEach((ag, a) => {
-  if (ag.role === 'revisor') return
-  const mine = layers.filter(l => roleOf(l.id) === ag.role)
-  if (ag.role === 'layout') mine.sort((p, q) => orderKey(p.id) - orderKey(q.id))
-  mine.forEach((l, i) => plan.push({ ...l, start: ag.first + i * ag.step, agent: a }))
+export const DashboardBuildAgents = createDashboardBuild({
+  layers,
+  panels: PANELS,
+  roleOf,
+  layoutAfterPanels: ['title', 'subtitle', 'date', 'account', 'logo'],
+  // The reviewer starts with the header and the sidebar.
+  reviewFirst: [{ x: MAIN - 12, y: 12, w: 680, h: 104 }, { x: 0, y: 0, w: 292, h: 1080 }],
+  park: { x: 40, y: 598, gap: 62 },
+  barCenterX: (MAIN + RIGHT) / 2,
+  background: BG,
 })
-
-// The reviewer's pass: header, sidebar and each card, one after the other.
-const REVIEWER = agents.findIndex(ag => ag.role === 'revisor')
-const reviewTargets: Box[] = [
-  { x: MAIN - 12, y: 12, w: 680, h: 104 },
-  { x: 0, y: 0, w: 292, h: 1080 },
-  ...PANELS.map(id => layers.find(l => l.id === id)!),
-]
-const reviews: Stop[] = reviewTargets.map((b, i) => ({ x: b.x, y: b.y, w: b.w, h: b.h, start: agents[REVIEWER].first + i * agents[REVIEWER].step }))
-const DONE = reviews[reviews.length - 1].start + 26
-
-// Where each cursor goes: to a layer's top-left and then drags it to size; the reviewer goes to each card's corner.
-const stopsOf = (a: number) => a === REVIEWER
-  ? reviews.map(r => ({ ax: r.x + r.w - 30, ay: r.y + 22, bx: r.x + r.w - 30, by: r.y + 22, start: r.start }))
-  : plan.filter(l => l.agent === a).map(l => ({ ax: l.x, ay: l.y, bx: l.x + l.w, by: l.y + l.h, start: l.start }))
-const routes = agents.map((_, a) => stopsOf(a))
-const busy = routes.map(r => ({ from: r[0].start - 14, to: r[r.length - 1].start + 34 }))
-
-// ---------- drawing ----------
-
-function LayerView({ l, f }: { l: (typeof plan)[number]; f: number }) {
-  const t = f - l.start
-  if (t < 0) return null
-  const grow = prog(f, l.start, 10)
-  const skeleton = interpolate(t, [8, 14, 22, 32], [0, 1, 1, 0], clamp)
-  const content = prog(f, l.start + 20, 14)
-  const outline = interpolate(t, [0, 2, 30, 44], [0, 1, 1, 0], clamp)
-  const badge = interpolate(t, [6, 10, 30, 38], [0, 1, 1, 0], clamp)
-  const panel = l.kind === 'panel'
-  return <>
-    <div style={{ position: 'absolute', left: l.x, top: l.y, width: l.w, height: l.h, opacity: content }}>{l.render(content)}</div>
-    {skeleton > 0 && <div style={{ position: 'absolute', left: l.x, top: l.y, width: l.w * grow, height: l.h * grow, opacity: skeleton, borderRadius: l.radius ?? 6,
-      background: panel ? 'rgb(222 228 240 / .6)' : 'linear-gradient(90deg, #e2e8f0, #f1f5f9, #e2e8f0)', backgroundSize: '200% 100%', backgroundPosition: `${(t * 6) % 200}% 0` }} />}
-    {outline > 0 && <div style={{ position: 'absolute', left: l.x, top: l.y, width: l.w * grow, height: l.h * grow, opacity: outline, boxShadow: `inset 0 0 0 1.5px ${OUTLINE}`, borderRadius: 2 }}>
-      {[[0, 0], [1, 0], [0, 1], [1, 1]].map(([cx, cy]) => <i key={`${cx}${cy}`} style={{ position: 'absolute', left: `calc(${cx * 100}% - 4px)`, top: `calc(${cy * 100}% - 4px)`, width: 8, height: 8, background: '#fff', border: `1.5px solid ${OUTLINE}` }} />)}
-    </div>}
-    {badge > 0 && <div style={{ position: 'absolute', left: l.x + l.w / 2, top: Math.min(l.y + l.h + 8, 1046), transform: 'translateX(-50%)', opacity: badge, padding: '2px 7px', borderRadius: 5, background: OUTLINE, color: '#fff', fontSize: 13, fontWeight: 600, fontVariantNumeric: 'tabular-nums', whiteSpace: 'nowrap', zIndex: 5 }}>
-      {Math.round(l.w)} × {Math.round(l.h)}
-    </div>}
-  </>
-}
-
-/** The reviewer's mark on a block: a green outline that flashes, and a ✓ that stays. */
-function ReviewMark({ r, f }: { r: Stop; f: number }) {
-  const t = f - r.start
-  if (t < 0) return null
-  const ring = interpolate(t, [0, 4, 12, 22], [0, 1, 1, 0], clamp)
-  const pop = interpolate(t, [3, 9], [0, 1], { ...clamp, easing: Easing.out(Easing.back(2.2)) })
-  const fade = interpolate(f, [DONE + 10, DONE + 28], [1, 0], clamp)
-  return <>
-    {ring > 0 && <div style={{ position: 'absolute', left: r.x - 4, top: r.y - 4, width: r.w + 8, height: r.h + 8, borderRadius: 22, boxShadow: `0 0 0 2.5px ${CHECK}, 0 0 24px rgb(22 163 74 / .35)`, opacity: ring, zIndex: 6 }} />}
-    <div style={{ position: 'absolute', left: r.x + r.w - 44, top: r.y + 8, width: 28, height: 28, borderRadius: '50%', background: CHECK, color: '#fff', display: 'grid', placeItems: 'center',
-      fontSize: 16, fontWeight: 800, transform: `scale(${pop})`, opacity: fade, boxShadow: '0 4px 12px rgb(22 163 74 / .4)', zIndex: 7 }}>✓</div>
-  </>
-}
-
-function Cursor({ a, f }: { a: number; f: number }) {
-  const mine = routes[a]
-  const { color, name } = agents[a]
-  const spawn = { x: 360 + a * 300, y: 1060 }
-  // The stop it is heading to or working on: the last one whose travel already began. Travel takes up to 14 frames,
-  // less when the stops come quickly.
-  const travel = (i: number) => i === 0 ? 14 : Math.max(6, Math.min(14, mine[i].start - mine[i - 1].start - 4))
-  let k = -1
-  for (let i = 0; i < mine.length; i++) if (f >= mine[i].start - travel(i)) k = i
-  if (k < 0) return null
-  const cur = mine[k]
-  const prev = k > 0 ? { x: mine[k - 1].bx, y: mine[k - 1].by } : spawn
-  let x: number, y: number
-  // Once its work is done, the cursor rests in the empty part of the sidebar, under the menu, out of the way.
-  const park = { x: 40, y: 598 + a * 62 }
-  const end = busy[a].to - 14
-  if (f < cur.start) {
-    const p = interpolate(f, [cur.start - travel(k), cur.start], [0, 1], { ...clamp, easing: Easing.inOut(Easing.cubic) })
-    x = prev.x + (cur.ax - prev.x) * p; y = prev.y + (cur.ay - prev.y) * p
-  } else if (k === mine.length - 1 && f >= end && a !== REVIEWER) {
-    const p = interpolate(f, [end, end + 22], [0, 1], { ...clamp, easing: Easing.inOut(Easing.cubic) })
-    x = cur.bx + (park.x - cur.bx) * p; y = cur.by + (park.y - cur.by) * p
-    x += Math.sin((f + a * 13) / 14) * 4; y += Math.cos((f + a * 7) / 16) * 3
-  } else {
-    const g = prog(f, cur.start, 10)
-    x = cur.ax + (cur.bx - cur.ax) * g; y = cur.ay + (cur.by - cur.ay) * g
-    // Small wander while it finishes.
-    x += Math.sin((f + a * 13) / 9) * 6; y += Math.cos((f + a * 7) / 11) * 5
-  }
-  const appear = interpolate(f, [mine[0].start - 14, mine[0].start - 8], [0, 1], clamp)
-  const leave = interpolate(f, [DONE, DONE + 18], [1, 0], clamp)
-  return <div style={{ position: 'absolute', left: x, top: y, opacity: appear * leave, zIndex: 20, pointerEvents: 'none' }}>
-    <svg width={24} height={26} viewBox="0 0 22 24" style={{ display: 'block', filter: 'drop-shadow(0 2px 3px rgb(0 0 0 / .35))' }}>
-      <path d="M2 2 L2 20 L7 15 L10.5 22.5 L13.5 21 L10 14 L17 14 Z" fill={color} stroke="#fff" strokeWidth={1.6} strokeLinejoin="round" />
-    </svg>
-    <span style={{ position: 'absolute', ...(x > 1700 ? { right: 8 } : { left: 18 }), top: 22, padding: '3px 9px', borderRadius: 7, background: color, color: '#fff', fontSize: 14, fontWeight: 700, whiteSpace: 'nowrap', boxShadow: '0 2px 8px rgb(0 0 0 / .25)' }}>{name}</span>
-  </div>
-}
-
-function AgentBar({ f }: { f: number }) {
-  const built = plan.filter(l => f >= l.start + 34).length
-  const done = f >= DONE
-  const show = interpolate(f, [4, 16], [0, 1], clamp)
-  return <div style={{ position: 'absolute', left: (MAIN + RIGHT) / 2, bottom: 22, transform: `translateX(-50%) translateY(${(1 - show) * 30}px)`, opacity: show, zIndex: 30,
-    display: 'flex', alignItems: 'center', gap: 16, padding: '12px 18px', borderRadius: 14, background: 'rgb(17 19 24 / .92)', boxShadow: '0 12px 40px rgb(0 0 0 / .3)', color: '#e5e7eb', fontSize: 16, fontWeight: 500, whiteSpace: 'nowrap' }}>
-    <span style={{ display: 'flex', gap: 14 }}>{agents.map((ag, a) => {
-      const on = f >= busy[a].from && f < busy[a].to
-      return <span key={ag.role} style={{ display: 'flex', alignItems: 'center', gap: 7, fontSize: 14, color: on ? '#fff' : '#6b7280' }}>
-        <i style={{ width: 10, height: 10, borderRadius: '50%', background: ag.color, opacity: on ? 1 : done ? 0.7 : 0.3, boxShadow: on ? `0 0 0 3px ${ag.color}44` : 'none' }} />{ag.name}
-      </span>
-    })}</span>
-    <span style={{ width: 1, height: 18, background: '#374151' }} />
-    {done ? <span><b style={{ color: '#4ade80' }}>✓ Dashboard pronto</b> · {N} camadas · {agents.length} agentes</span>
-      : <span style={{ fontVariantNumeric: 'tabular-nums' }}><b style={{ color: '#fff' }}>{agents.length}</b> agentes · <b style={{ color: '#fff' }}>{built}</b> / {N} camadas</span>}
-    <span style={{ width: 1, height: 18, background: '#374151' }} />
-    <span style={{ color: done ? '#4ade80' : '#f87171', display: 'flex', alignItems: 'center', gap: 6 }}><i style={{ width: 8, height: 8, borderRadius: '50%', background: done ? '#4ade80' : '#f87171', opacity: done ? 1 : 0.5 + 0.5 * Math.abs(Math.sin(f / 8)) }} />{done ? 'Concluído' : 'Ao vivo'}</span>
-    <span style={{ color: '#9ca3af' }}>1×</span>
-  </div>
-}
-
-export function DashboardBuildAgents() {
-  const f = useCurrentFrame() * SPEED
-  const fadeIn = prog(f, 0, 18)
-  return <AbsoluteFill style={{ background: BG, overflow: 'hidden' }}>
-    <div style={{ position: 'absolute', inset: 0, opacity: fadeIn }}>
-      {plan.map(l => <LayerView key={l.id} l={l} f={f} />)}
-      {reviews.map((r, i) => <ReviewMark key={i} r={r} f={f} />)}
-      {agents.map((ag, a) => <Cursor key={ag.role} a={a} f={f} />)}
-    </div>
-    <AgentBar f={f} />
-  </AbsoluteFill>
-}
