@@ -3,8 +3,8 @@ import { AbsoluteFill, Easing, interpolate, useCurrentFrame } from 'remotion'
 
 // The engine behind the "Criando um Dashboard" videos: five AI agents (layout, metrics, charts, table, review) build a
 // dashboard live. Each agent is a colored cursor with its name; each piece of the screen is a layer that goes
-// outline (with its size) → gray skeleton → real content. The reviewer closes by checking every block. A floating bar
-// shows the agents and counts layers. A video only supplies its layers and which agent builds what.
+// outline (with its size) → gray skeleton → real content. The reviewer closes by checking every block. A video only
+// supplies its layers and which agent builds what.
 
 /** The build (until the last check mark fades and the cursors leave) takes 8 s; the finished dashboard then holds for 3 s. */
 const FPS = 30
@@ -40,16 +40,14 @@ export type BuildConfig = {
   /** Layers the layout agent builds after the cards, in this order; the rest follow in their own order. */
   layoutAfterPanels?: string[]
   timing?: Partial<Record<Role, { first?: number; step?: number }>>
-  /** Where finished agents rest (one below the other) and where the agent bar is centered. */
+  /** Where finished agents rest, one below the other. */
   park: { x: number; y: number; gap: number }
-  barCenterX: number
   background: string
 }
 
 export function createDashboardBuild(cfg: BuildConfig) {
   const agents = baseAgents.map(ag => ({ ...ag, ...cfg.timing?.[ag.role] }))
   const { layers } = cfg
-  const N = layers.length
   // The layout agent lays down the frame and the empty cards first, so the others can start filling them early.
   const layoutOrder = [layers[0].id, ...cfg.panels, ...(cfg.layoutAfterPanels ?? [])]
   const orderKey = (id: string) => { const i = layoutOrder.indexOf(id); return i < 0 ? layoutOrder.length : i }
@@ -151,27 +149,6 @@ export function createDashboardBuild(cfg: BuildConfig) {
     </div>
   }
 
-  function AgentBar({ f }: { f: number }) {
-    const built = plan.filter(l => f >= l.start + 34).length
-    const done = f >= DONE
-    const show = interpolate(f, [4, 16], [0, 1], clamp)
-    return <div style={{ position: 'absolute', left: cfg.barCenterX, bottom: 22, transform: `translateX(-50%) translateY(${(1 - show) * 30}px)`, opacity: show, zIndex: 30,
-      display: 'flex', alignItems: 'center', gap: 16, padding: '12px 18px', borderRadius: 14, background: 'rgb(17 19 24 / .92)', boxShadow: '0 12px 40px rgb(0 0 0 / .3)', color: '#e5e7eb', fontSize: 16, fontWeight: 500, whiteSpace: 'nowrap' }}>
-      <span style={{ display: 'flex', gap: 14 }}>{agents.map((ag, a) => {
-        const on = f >= busy[a].from && f < busy[a].to
-        return <span key={ag.role} style={{ display: 'flex', alignItems: 'center', gap: 7, fontSize: 14, color: on ? '#fff' : '#6b7280' }}>
-          <i style={{ width: 10, height: 10, borderRadius: '50%', background: ag.color, opacity: on ? 1 : done ? 0.7 : 0.3, boxShadow: on ? `0 0 0 3px ${ag.color}44` : 'none' }} />{ag.name}
-        </span>
-      })}</span>
-      <span style={{ width: 1, height: 18, background: '#374151' }} />
-      {done ? <span><b style={{ color: '#4ade80' }}>✓ Dashboard pronto</b> · {N} camadas · {agents.length} agentes</span>
-        : <span style={{ fontVariantNumeric: 'tabular-nums' }}><b style={{ color: '#fff' }}>{agents.length}</b> agentes · <b style={{ color: '#fff' }}>{built}</b> / {N} camadas</span>}
-      <span style={{ width: 1, height: 18, background: '#374151' }} />
-      <span style={{ color: done ? '#4ade80' : '#f87171', display: 'flex', alignItems: 'center', gap: 6 }}><i style={{ width: 8, height: 8, borderRadius: '50%', background: done ? '#4ade80' : '#f87171', opacity: done ? 1 : 0.5 + 0.5 * Math.abs(Math.sin(f / 8)) }} />{done ? 'Concluído' : 'Ao vivo'}</span>
-      <span style={{ color: '#9ca3af' }}>1×</span>
-    </div>
-  }
-
   return function DashboardBuild() {
     const f = useCurrentFrame() * SPEED
     const fadeIn = prog(f, 0, 18)
@@ -181,7 +158,6 @@ export function createDashboardBuild(cfg: BuildConfig) {
         {reviews.map((r, i) => <ReviewMark key={i} r={r} f={f} />)}
         {agents.map((ag, a) => <Cursor key={ag.role} a={a} f={f} />)}
       </div>
-      <AgentBar f={f} />
     </AbsoluteFill>
   }
 }
