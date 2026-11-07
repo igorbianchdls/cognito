@@ -3,6 +3,7 @@ import { DASHBOARD_SEARCH_DURATION, DashboardBuildSearch } from './compositions/
 import { DASHBOARD_INSTAGRAM_DURATION, DashboardBuildInstagram } from './compositions/DashboardBuildInstagram'
 import { CLAUDE_REACTOR_DURATION, ClaudeEditingReactor } from './compositions/ClaudeEditingReactor'
 import { OTTO_NFE_CHAT_REEL_DURATION, OttoNfeChatReel } from './compositions/OttoNfeChatReel'
+import { OTTO_NFE_CONTADORES_DURATION, OttoNfeContadoresReel } from './compositions/OttoNfeContadoresReel'
 import { Composition, registerRoot } from 'remotion'
 
 import {
@@ -733,6 +734,7 @@ function RemotionDownloadRoot() {
       <Composition component={DashboardBuildInstagram} durationInFrames={DASHBOARD_INSTAGRAM_DURATION} fps={30} height={1080} id="claude-dashboard-instagram" width={1920} />
       <Composition component={ClaudeEditingReactor} durationInFrames={CLAUDE_REACTOR_DURATION} fps={30} height={1080} id="claude-editing-reactor" width={1920} />
       <Composition component={OttoNfeChatReel} durationInFrames={OTTO_NFE_CHAT_REEL_DURATION} fps={30} height={1920} id="otto-nfe-chat-reel" width={1080} />
+      <Composition component={OttoNfeContadoresReel} durationInFrames={OTTO_NFE_CONTADORES_DURATION} fps={30} height={1920} id="otto-nfe-contadores-reel" width={1080} />
       <Composition component={ExplainerExampleDemo} durationInFrames={EXPLAINER_EXAMPLE_DURATION} fps={30} height={1080} id="explainer-exemplo" width={1920} />
       <Composition component={ExplainerFlowDemo} durationInFrames={FLOW_DIAGRAM_DURATION} fps={30} height={1080} id="explainer-fluxo" width={1920} />
       <Composition component={ExplainerChatDemo} durationInFrames={CHAT_PAPER_DEMO_DURATION} fps={30} height={1080} id="explainer-conversa" width={1920} />
