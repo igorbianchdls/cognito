@@ -1,203 +1,78 @@
 import Image from 'next/image'
 import Link from 'next/link'
 import type { ReactNode } from 'react'
-import { ArrowDownRight, ArrowUpRight, CircleCheck, Landmark, ReceiptText, ShoppingBag } from 'lucide-react'
+import { BadgeCheck, LockKeyhole, Sparkles } from 'lucide-react'
 import loginStyles from './AuthLogin.module.css'
+
+// One layout for every access screen: sign-in, sign-up, codes, onboarding and the Google return. The Otto blue
+// panel on the left changes its message by step; the form sits on the right. On phones only the form shows.
+
+export type AuthLayoutMode = 'onboarding' | 'sign-in' | 'sign-up' | 'callback'
 
 type AuthLayoutProps = {
   children: ReactNode
-  mode: 'onboarding' | 'sign-in' | 'sign-up'
+  mode: AuthLayoutMode
+  /** Replaces the default text under the headline (used by onboarding to show its steps). */
+  aside?: ReactNode
 }
 
-const cashFlowBars = [38, 52, 44, 64, 58, 74, 68, 86, 78, 94, 82, 100]
-
-function OttoBrand() {
-  return (
-    <Link href="/" aria-label="Ir para a página inicial da Otto" className="inline-flex items-center gap-2.5 text-[#181818]">
-      <Image src="/logoOttoIcon.svg" alt="" width={22} height={22} priority className="h-[22px] w-[22px]" />
-      <span className="text-[21px] font-medium leading-none tracking-normal">Otto</span>
-    </Link>
-  )
+const copy: Record<AuthLayoutMode, { lines: string[]; text: ReactNode }> = {
+  'sign-in': { lines: ['Sua empresa.', 'Mais simples.', 'Com Otto.'], text: <>Vendas, estoque e financeiro em um só lugar.<br />Mais controle para você. Mais tempo para crescer.</> },
+  callback: { lines: ['Sua empresa.', 'Mais simples.', 'Com Otto.'], text: <>Vendas, estoque e financeiro em um só lugar.<br />Mais controle para você. Mais tempo para crescer.</> },
+  'sign-up': { lines: ['Comece hoje.', 'Organize tudo.', 'Com Otto.'], text: 'Crie sua conta em poucos minutos e tenha vendas, financeiro, notas e estoque trabalhando juntos.' },
+  onboarding: { lines: ['Vamos deixar', 'tudo pronto.'], text: 'Três passos rápidos para a Otto ficar com a cara da sua empresa.' },
 }
 
-function OperationsPreview() {
+const assurances = [
+  { icon: LockKeyhole, text: 'Seus dados protegidos e criptografados' },
+  { icon: BadgeCheck, text: 'Feito para pequenas empresas brasileiras' },
+  { icon: Sparkles, text: 'Assistente de IA incluso' },
+]
+
+export function AuthLayout({ children, mode, aside }: AuthLayoutProps) {
+  const { lines, text } = copy[mode]
+  const year = new Date().getFullYear()
   return (
-    <div className="mt-9 overflow-hidden rounded-lg border border-black/10 bg-[#181818] text-white shadow-[0_30px_70px_-38px_rgba(24,24,24,0.75)]">
-      <div className="flex h-14 items-center justify-between border-b border-white/10 px-5">
-        <div>
-          <p className="text-[13px] font-medium text-white">Visão geral</p>
-          <p className="mt-0.5 text-[11px] text-white/50">Movimento financeiro</p>
-        </div>
-        <div className="flex items-center gap-2 text-[11px] text-white/65">
-          <span className="h-1.5 w-1.5 rounded-full bg-[#52d273]" />
-          Atualizado agora
-        </div>
-      </div>
-
-      <div className="grid grid-cols-2 border-b border-white/10">
-        <div className="border-r border-white/10 p-5">
-          <div className="flex items-center gap-2 text-[11px] text-white/55">
-            <ArrowUpRight className="h-3.5 w-3.5 text-[#52d273]" />
-            A receber
-          </div>
-          <p className="mt-2 text-[22px] font-medium tracking-normal">R$ 42.580</p>
-          <p className="mt-1 text-[11px] text-[#74de90]">12 títulos em aberto</p>
-        </div>
-        <div className="p-5">
-          <div className="flex items-center gap-2 text-[11px] text-white/55">
-            <ArrowDownRight className="h-3.5 w-3.5 text-[#f6c96f]" />
-            A pagar
-          </div>
-          <p className="mt-2 text-[22px] font-medium tracking-normal">R$ 18.230</p>
-          <p className="mt-1 text-[11px] text-[#f6c96f]">7 títulos nos próximos dias</p>
-        </div>
-      </div>
-
-      <div className="grid grid-cols-[1fr_148px]">
-        <div className="border-r border-white/10 p-5">
-          <div className="flex items-center justify-between">
-            <p className="text-[11px] font-medium text-white/70">Fluxo de caixa</p>
-            <p className="text-[10px] text-white/40">Últimos 12 meses</p>
-          </div>
-          <div className="mt-5 flex h-[82px] items-end gap-2" aria-hidden="true">
-            {cashFlowBars.map((height, index) => (
-              <span
-                key={`${height}-${index}`}
-                className="min-w-0 flex-1 rounded-t-[2px] bg-white/15"
-                style={{ height: `${height}%`, backgroundColor: index >= 8 ? '#52d273' : undefined }}
-              />
+    <main className={loginStyles.layout}>
+      <aside className={loginStyles.brandPanel}>
+        <svg className={loginStyles.pattern} viewBox="0 0 900 1000" preserveAspectRatio="xMidYMid slice" aria-hidden="true" focusable="false">
+          <defs>
+            <filter id="otto-login-grain">
+              <feTurbulence type="fractalNoise" baseFrequency="0.8" numOctaves="3" stitchTiles="stitch" />
+              <feColorMatrix type="saturate" values="0" />
+            </filter>
+          </defs>
+          <g fill="none" stroke="#10176c" strokeWidth="1.5" opacity="0.32">
+            {[0, 1, 2, 3, 4, 5].map((line) => (
+              <path key={line} d={`M -160 ${470 + line * 108} Q 150 ${235 + line * 85} ${510 + line * 56} ${70 + line * 65} Q ${740 + line * 55} ${650 + line * 85} ${40 + line * 78} 1120`} />
             ))}
-          </div>
+          </g>
+          <rect width="900" height="1000" filter="url(#otto-login-grain)" opacity="0.055" />
+        </svg>
+        <Link href="/lp" aria-label="Otto, página inicial" className={loginStyles.brand}>
+          <Image src="/logoOttoIcon.svg" alt="" width={46} height={46} priority />
+          <span>otto</span>
+        </Link>
+        <div className={loginStyles.brandCopy}>
+          <h1>{lines.map((line) => <span key={line}>{line}</span>)}</h1>
+          {aside ?? <p>{text}</p>}
+          {mode !== 'onboarding' ? (
+            <ul className={loginStyles.assurances}>
+              {assurances.map(({ icon: Icon, text: label }) => <li key={label}><Icon aria-hidden="true" />{label}</li>)}
+            </ul>
+          ) : null}
         </div>
-        <div className="grid content-center gap-4 p-4">
-          <div className="flex items-center gap-2.5">
-            <span className="flex h-8 w-8 items-center justify-center rounded-md bg-white/10"><ShoppingBag className="h-4 w-4 text-[#81d4fa]" /></span>
-            <div><p className="text-[11px] text-white/45">Vendas</p><p className="text-xs font-medium">24 este mês</p></div>
-          </div>
-          <div className="flex items-center gap-2.5">
-            <span className="flex h-8 w-8 items-center justify-center rounded-md bg-white/10"><ReceiptText className="h-4 w-4 text-[#f6c96f]" /></span>
-            <div><p className="text-[11px] text-white/45">Cobranças</p><p className="text-xs font-medium">93% em dia</p></div>
-          </div>
+        <p className={loginStyles.brandFooter}>© {year} Otto. Todos os direitos reservados.</p>
+      </aside>
+      <section className={loginStyles.formPanel} aria-label={mode === 'onboarding' ? 'Configuração da sua empresa' : 'Acesse sua conta Otto'}>
+        <div className={loginStyles.topBar}>
+          <Link href="/lp" aria-label="Otto, página inicial" className={loginStyles.formBrand}>otto</Link>
+          {mode === 'sign-in' ? <p className={loginStyles.topLink}>Novo por aqui? <Link href="/sign-up">Criar conta</Link></p> : null}
+          {mode === 'sign-up' ? <p className={loginStyles.topLink}>Já tem conta? <Link href="/sign-in">Entrar</Link></p> : null}
         </div>
-      </div>
-    </div>
-  )
-}
-
-export function AuthLayout({ children, mode }: AuthLayoutProps) {
-  const isSignUp = mode === 'sign-up'
-  const isOnboarding = mode === 'onboarding'
-
-  if (mode === 'sign-in') {
-    return (
-      <main className={loginStyles.layout}>
-        <aside className={loginStyles.brandPanel}>
-          <svg className={loginStyles.pattern} viewBox="0 0 900 1000" preserveAspectRatio="xMidYMid slice" aria-hidden="true" focusable="false">
-            <defs>
-              <filter id="otto-login-grain">
-                <feTurbulence type="fractalNoise" baseFrequency="0.8" numOctaves="3" stitchTiles="stitch" />
-                <feColorMatrix type="saturate" values="0" />
-              </filter>
-            </defs>
-            <g fill="none" stroke="#10176c" strokeWidth="1.5" opacity="0.32">
-              {[0, 1, 2, 3, 4, 5].map((line) => (
-                <path key={line} d={`M -160 ${470 + line * 108} Q 150 ${235 + line * 85} ${510 + line * 56} ${70 + line * 65} Q ${740 + line * 55} ${650 + line * 85} ${40 + line * 78} 1120`} />
-              ))}
-            </g>
-            <rect width="900" height="1000" filter="url(#otto-login-grain)" opacity="0.055" />
-          </svg>
-          <Link href="/lp" aria-label="Otto, página inicial" className={loginStyles.brand}>
-            <Image src="/logoOttoIcon.svg" alt="" width={46} height={46} priority />
-            <span>otto</span>
-          </Link>
-          <div className={loginStyles.brandCopy}>
-            <h1><span>Sua empresa.</span><span>Mais simples.</span><span>Com Otto.</span></h1>
-            <p>Vendas, estoque e financeiro em um só lugar.<br />Mais controle para você. Mais tempo para crescer.</p>
-          </div>
-          <p className={loginStyles.brandFooter}>© {new Date().getFullYear()} Otto. Todos os direitos reservados.</p>
-        </aside>
-        <section className={loginStyles.formPanel} aria-label="Acesse sua conta Otto">
-          <div className={loginStyles.formContent}>
-            <Link href="/lp" aria-label="Otto, página inicial" className={loginStyles.formBrand}>otto</Link>
-            {children}
-          </div>
-          <p className={loginStyles.mobileFooter}>© {new Date().getFullYear()} Otto. Todos os direitos reservados.</p>
-        </section>
-      </main>
-    )
-  }
-
-  if (isSignUp) {
-    return (
-      <main className="flex min-h-dvh items-center justify-center bg-[#f3f5f2] px-4 py-5 text-[#181818] sm:px-6 sm:py-12">
-        <div className="w-full max-w-[430px]">
-          <section className="rounded-lg border border-black/10 bg-white px-5 py-6 shadow-[0_24px_70px_-40px_rgba(24,24,24,0.4)] sm:px-8 sm:py-9">
-            <div className="mb-6 flex justify-center sm:mb-8">
-              <OttoBrand />
-            </div>
-            {children}
-          </section>
-          <p className="mt-5 text-center text-[11px] text-[#858b86]">
-            © {new Date().getFullYear()} Otto. Gestão empresarial simples e segura.
-          </p>
-        </div>
-      </main>
-    )
-  }
-
-  return (
-    <main className="min-h-dvh bg-white text-[#181818]">
-      <div className="grid min-h-dvh lg:grid-cols-[minmax(430px,44%)_1fr]">
-        <aside className="relative hidden overflow-hidden border-r border-black/5 bg-[#eef2ec] p-10 lg:flex lg:min-h-dvh lg:flex-col xl:p-14">
-          <OttoBrand />
-
-          <div className="my-auto w-full max-w-[570px] py-10">
-            <div className="flex items-center gap-2 text-xs font-medium text-[#4e6253]">
-              <CircleCheck className="h-4 w-4 text-[#2d8a48]" />
-              Gestão simples para negócios reais
-            </div>
-            <h1 className="mt-5 max-w-[520px] text-[40px] font-medium leading-[1.12] tracking-normal text-[#181818] xl:text-[46px]">
-              Sua empresa organizada em um só lugar.
-            </h1>
-            <p className="mt-5 max-w-[480px] text-[15px] leading-7 text-[#58615a]">
-              Vendas, compras, financeiro e documentos trabalhando juntos para você decidir com clareza.
-            </p>
-            <OperationsPreview />
-          </div>
-
-          <div className="flex items-center gap-2 text-xs text-[#677168]">
-            <Landmark className="h-4 w-4" />
-            Feito para a rotina das pequenas empresas brasileiras.
-          </div>
-        </aside>
-
-        <section className="flex min-h-dvh flex-col bg-white px-5 py-6 sm:px-8 lg:px-12 lg:py-10">
-          <div className="flex items-center justify-between lg:justify-end">
-            <div className="lg:hidden"><OttoBrand /></div>
-            {isOnboarding ? (
-              <p className="text-sm text-[#777]">Configuração inicial</p>
-            ) : (
-              <p className="text-sm text-[#666]">
-                {isSignUp ? 'Já tem uma conta?' : 'Ainda não tem uma conta?'}{' '}
-                <Link
-                  href={isSignUp ? '/sign-in' : '/sign-up'}
-                  className="font-medium text-[#181818] underline decoration-[#b9b9b9] underline-offset-4 transition-colors hover:decoration-[#181818]"
-                >
-                  {isSignUp ? 'Entrar' : 'Criar conta'}
-                </Link>
-              </p>
-            )}
-          </div>
-
-          <div className="flex flex-1 items-center justify-center py-12 sm:py-16">
-            <div className="w-full max-w-[400px]">{children}</div>
-          </div>
-
-          <div className="flex items-center justify-center text-center text-[11px] text-[#858585] lg:justify-end">
-            © {new Date().getFullYear()} Otto. Gestão empresarial simples e segura.
-          </div>
-        </section>
-      </div>
+        <div className={loginStyles.formContent}>{children}</div>
+        <p className={loginStyles.mobileFooter}>© {year} Otto. Todos os direitos reservados.</p>
+      </section>
     </main>
   )
 }

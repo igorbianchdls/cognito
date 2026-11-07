@@ -2,6 +2,7 @@ import { ClerkLoaded, ClerkLoading } from '@clerk/nextjs'
 
 import { AuthLayout } from '@/products/auth/frontend/components/AuthLayout'
 import { SignUpFlow } from '@/products/auth/frontend/components/SignUpFlow'
+import styles from '@/products/auth/frontend/components/AuthLogin.module.css'
 
 export default function SignUpPage() {
   return (
@@ -13,5 +14,5 @@ export default function SignUpPage() {
 }
 
 function AuthFlowLoading() {
-  return <div className="h-[540px] w-full animate-pulse rounded-md bg-[#f3f3f3]" aria-label="Carregando cadastro" />
+  return <div className={styles.loading} role="status" aria-label="Carregando cadastro"><span /><span /><span /><span /><span /></div>
 }

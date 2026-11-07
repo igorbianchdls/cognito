@@ -299,6 +299,8 @@ async function createInitialTenant(
     clerkOrganization?: ClerkOrganizationPayload | null;
     companyName?: string;
     tenantName?: string;
+    /** Extra facts saved on the company (e.g. segment and start area chosen at onboarding). */
+    extraMetadata?: Record<string, unknown>;
   } = {},
 ): Promise<AuthTenantMembership> {
   const tenantName =
@@ -319,6 +321,7 @@ async function createInitialTenant(
     source: options.clerkOrganization ? "clerk_organization" : "clerk",
     ownerClerkUserId: profile.clerkUserId,
     onboardingCompletedAt: new Date().toISOString(),
+    ...(options.extraMetadata ?? {}),
   };
 
   const tenantResult = options.clerkOrganization
@@ -443,6 +446,7 @@ export async function ensureClerkTenantBootstrap(): Promise<ClerkTenantBootstrap
 
 export async function createClerkOnboardingTenant(
   companyName: string,
+  extraMetadata?: Record<string, unknown>,
 ): Promise<ClerkTenantBootstrapResult | null> {
   const profile = await getCurrentClerkProfile();
   if (!profile) return null;
@@ -488,6 +492,7 @@ export async function createClerkOnboardingTenant(
         await createInitialTenant(client, sharedUserId, profile, {
           clerkOrganization: organization,
           tenantName,
+          extraMetadata,
         }),
       ];
     }

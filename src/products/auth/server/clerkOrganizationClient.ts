@@ -180,6 +180,28 @@ export async function createClerkAccountantInvitation(input: {
     },
   );
 }
+/** Invites someone to the company's team. The webhook records the invitation and, once accepted, the membership. */
+export async function createClerkTeamInvitation(input: {
+  organizationId: string;
+  clerkUserId: string;
+  email: string;
+  role: "admin" | "member";
+  redirectUrl: string;
+}) {
+  return clerkApiRequest<{ id: string; status: string; expires_at?: number }>(
+    `/organizations/${encodeURIComponent(input.organizationId)}/invitations`,
+    {
+      body: {
+        email_address: input.email,
+        inviter_user_id: input.clerkUserId,
+        role: toClerkOrganizationRole(input.role),
+        redirect_url: input.redirectUrl,
+        public_metadata: { appRole: input.role },
+      },
+    },
+  );
+}
+
 export async function revokeClerkInvitation(input: {
   organizationId: string;
   invitationId: string;
