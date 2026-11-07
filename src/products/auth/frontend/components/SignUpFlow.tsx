@@ -1,22 +1,30 @@
 'use client'
 
-import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { useEffect, useMemo, useState, type FormEvent, type InputHTMLAttributes, type ReactNode } from 'react'
+import { useEffect, useMemo, useRef, useState, type FormEvent } from 'react'
 import { useAuth, useSignUp } from '@clerk/nextjs'
-import { ChevronDown, Eye, EyeOff, KeyRound, Mail, Megaphone, Phone, UserRound } from 'lucide-react'
+import { ChevronDown } from 'lucide-react'
 
 import { Checkbox } from '@/components/ui/checkbox'
-import { cn } from '@/lib/utils'
+import { Label } from '@/components/ui/label'
 import {
   AuthAlert,
   AuthBackButton,
+  AuthDivider,
   AuthField,
+  AuthGoogleButton,
+  AuthHeading,
   AuthSubmitButton,
+  AuthTransition,
+  CodeResend,
+  OtpInput,
+  PasswordField,
+  PasswordStrength,
 } from '@/products/auth/frontend/components/AuthFormParts'
 import { getAuthErrorMessage } from '@/products/auth/frontend/components/authErrors'
+import styles from './AuthLogin.module.css'
 
-type SignUpStep = 'start' | 'verify-email'
+type SignUpStep = 'start' | 'verify-email' | 'invite' | 'complete'
 
 const ACQUISITION_SOURCES = [
   'Pesquisa no Google',
@@ -27,6 +35,9 @@ const ACQUISITION_SOURCES = [
   'Outro',
 ]
 
+const submitClassName = 'h-[54px] text-base'
+const inviteTicket = () => { try { return new URLSearchParams(window.location.search).get('__clerk_ticket') || '' } catch { return '' } }
+
 function formatPhone(value: string) {
   const digits = value.replace(/\D/g, '').slice(0, 11)
   if (digits.length <= 2) return digits
@@ -35,35 +46,17 @@ function formatPhone(value: string) {
   return `(${digits.slice(0, 2)}) ${digits.slice(2, 7)}-${digits.slice(7)}`
 }
 
-type GroupedFieldProps = InputHTMLAttributes<HTMLInputElement> & {
-  error?: string
-  icon: ReactNode
-  label: string
-  trailing?: ReactNode
+const splitName = (name: string) => {
+  const parts = name.trim().split(/\s+/).filter(Boolean)
+  return { firstName: parts[0] || undefined, lastName: parts.length > 1 ? parts.slice(1).join(' ') : undefined }
 }
 
-function GroupedField({ error, icon, id, label, trailing, className, ...props }: GroupedFieldProps) {
-  const errorId = error && id ? `${id}-error` : undefined
-
+function TermsCheckbox({ checked, onChange }: { checked: boolean; onChange: (value: boolean) => void }) {
   return (
-    <div className="border-b border-[#e5e8e4] last:border-b-0">
-      <div className="flex min-h-[61px] items-center gap-3 px-4">
-        <span className="flex h-5 w-5 shrink-0 items-center justify-center text-[#7a817b]" aria-hidden="true">{icon}</span>
-        <label htmlFor={id} className="min-w-0 flex-1 cursor-text py-2.5">
-          <span className="block text-[11px] leading-4 text-[#899089]">{label}</span>
-          <input
-            id={id}
-            aria-describedby={errorId}
-            aria-invalid={Boolean(error)}
-            style={{ outline: 'none' }}
-            className={cn('mt-0.5 h-6 w-full border-0 bg-transparent p-0 text-sm text-[#181818] outline-none placeholder:text-[#b0b5b0] focus:outline-none focus-visible:outline-none', className)}
-            {...props}
-          />
-        </label>
-        {trailing}
-      </div>
-      {error ? <p id={errorId} className="px-12 pb-2 text-xs leading-4 text-[#b42318]">{error}</p> : null}
-    </div>
+    <label className="flex cursor-pointer items-start gap-2.5 px-0.5 text-[13px] leading-5 text-[#6b7389]">
+      <Checkbox checked={checked} onCheckedChange={(value) => onChange(value === true)} className="mt-0.5 border-[#aab2c5] data-[state=checked]:border-[#104dff] data-[state=checked]:bg-[#104dff]" />
+      <span>Li e concordo com os <b className="font-semibold text-[#111832]">Termos de uso</b> e a <b className="font-semibold text-[#111832]">Política de privacidade</b> da Otto.</span>
+    </label>
   )
 }
 
@@ -71,7 +64,8 @@ export function SignUpFlow() {
   const router = useRouter()
   const { isLoaded, isSignedIn } = useAuth()
   const { signUp, errors, fetchStatus } = useSignUp()
-  const [step, setStep] = useState<SignUpStep>('start')
+  const [ticket] = useState(inviteTicket)
+  const [step, setStep] = useState<SignUpStep>(() => (ticket ? 'invite' : 'start'))
   const [name, setName] = useState('')
   const [email, setEmail] = useState('')
   const [phone, setPhone] = useState('')
@@ -82,6 +76,7 @@ export function SignUpFlow() {
   const [generalError, setGeneralError] = useState('')
   const [passwordVisible, setPasswordVisible] = useState(false)
   const [resendIn, setResendIn] = useState(0)
+  const [redirecting, setRedirecting] = useState(false)
 
   const loading = fetchStatus === 'fetching'
   const requiresName = signUp.requiredFields.includes('first_name') || signUp.requiredFields.includes('last_name')
@@ -101,6 +96,14 @@ export function SignUpFlow() {
     if (isLoaded && isSignedIn) router.replace('/onboarding')
   }, [isLoaded, isSignedIn, router])
 
+  // Back from Google with something still missing (name, terms): ask only for that, here.
+  const checked = useRef(false)
+  useEffect(() => {
+    if (checked.current) return
+    checked.current = true
+    if (!ticket && signUp.id && signUp.status === 'missing_requirements') setStep('complete')
+  }, [signUp.id, signUp.status, ticket])
+
   useEffect(() => {
     if (resendIn <= 0) return
     const timer = window.setInterval(() => setResendIn((value) => Math.max(0, value - 1)), 1000)
@@ -110,6 +113,7 @@ export function SignUpFlow() {
   async function finishSignUp() {
     const result = await signUp.finalize()
     if (result.error) throw result.error
+    setRedirecting(true)
     router.replace('/onboarding')
     router.refresh()
   }
@@ -125,7 +129,8 @@ export function SignUpFlow() {
       return
     }
     if (signUp.missingFields.length) {
-      throw new Error(`Ainda precisamos destes dados: ${signUp.missingFields.join(', ')}.`)
+      setStep('complete')
+      return
     }
     throw new Error('O cadastro precisa de uma etapa adicional que ainda não está disponível.')
   }
@@ -148,10 +153,7 @@ export function SignUpFlow() {
       return
     }
 
-    const cleanName = name.trim().split(/\s+/)
-    const firstName = cleanName[0] || undefined
-    const lastName = cleanName.length > 1 ? cleanName.slice(1).join(' ') : undefined
-
+    const { firstName, lastName } = splitName(name)
     try {
       const result = await signUp.password({
         emailAddress: email.trim(),
@@ -173,15 +175,70 @@ export function SignUpFlow() {
     }
   }
 
-  async function handleVerifyEmail(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault()
+  async function handleGoogle() {
     setGeneralError('')
     try {
-      const result = await signUp.verifications.verifyEmailCode({ code: code.trim() })
+      setRedirecting(true)
+      const result = await signUp.sso({ strategy: 'oauth_google', redirectUrl: '/sso-callback', redirectCallbackUrl: '/onboarding' })
+      if (result.error) throw result.error
+    } catch (error) {
+      setRedirecting(false)
+      setGeneralError(getAuthErrorMessage(error, 'Não foi possível continuar com o Google.'))
+    }
+  }
+
+  async function handleInvite(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault()
+    setGeneralError('')
+    if (!legalAccepted) {
+      setGeneralError('Você precisa aceitar os termos para entrar na equipe.')
+      return
+    }
+    const { firstName, lastName } = splitName(name)
+    try {
+      const result = await signUp.create({ strategy: 'ticket', ticket, password, firstName, lastName, legalAccepted: true, locale: 'pt-BR' })
       if (result.error) throw result.error
       await continueFromStatus()
     } catch (error) {
-      setGeneralError(getAuthErrorMessage(error, 'Não foi possível validar seu email.'))
+      // The invited email already has an account: accept the invitation by signing in instead.
+      const code = (error as { errors?: Array<{ code?: string }> })?.errors?.[0]?.code
+      if (code === 'form_identifier_exists') {
+        router.replace(`/sign-in?__clerk_ticket=${encodeURIComponent(ticket)}`)
+        return
+      }
+      setGeneralError(getAuthErrorMessage(error, 'Não foi possível aceitar o convite. Peça um novo convite a quem convidou você.'))
+    }
+  }
+
+  async function handleComplete(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault()
+    setGeneralError('')
+    if (signUp.missingFields.includes('legal_accepted') && !legalAccepted) {
+      setGeneralError('Você precisa aceitar os termos para continuar.')
+      return
+    }
+    const { firstName, lastName } = splitName(name)
+    try {
+      const result = await signUp.update({
+        ...(signUp.missingFields.includes('first_name') ? { firstName } : {}),
+        ...(signUp.missingFields.includes('last_name') ? { lastName } : {}),
+        ...(signUp.missingFields.includes('legal_accepted') ? { legalAccepted: true } : {}),
+      })
+      if (result.error) throw result.error
+      await continueFromStatus()
+    } catch (error) {
+      setGeneralError(getAuthErrorMessage(error, 'Não foi possível concluir o cadastro.'))
+    }
+  }
+
+  async function handleVerifyEmail(value = code) {
+    setGeneralError('')
+    try {
+      const result = await signUp.verifications.verifyEmailCode({ code: value.trim() })
+      if (result.error) throw result.error
+      await continueFromStatus()
+    } catch (error) {
+      setGeneralError(getAuthErrorMessage(error, 'Não foi possível validar seu e-mail.'))
     }
   }
 
@@ -204,97 +261,86 @@ export function SignUpFlow() {
     setGeneralError('')
   }
 
+  if (redirecting && !generalError) return <AuthTransition title="Preparando sua conta…" />
+
   if (step === 'verify-email') {
     return (
       <div>
-        <AuthBackButton onClick={() => void goBackToStart()}>Alterar dados do cadastro</AuthBackButton>
-        <div className="mb-7 text-center">
-          <h1 className="text-[28px] font-medium leading-tight tracking-normal text-[#181818]">Confirme seu email</h1>
-          <p className="mt-2 text-sm leading-6 text-[#6c726d]">Digite o código que enviamos para {email}.</p>
-        </div>
+        <AuthBackButton onClick={() => void goBackToStart()}>Trocar e-mail</AuthBackButton>
+        <AuthHeading eyebrow="Último passo" title="Confirme seu e-mail" description={<>Enviamos um código de 6 dígitos para <b className="font-semibold text-[#111832]">{email}</b>.</>} />
         <AuthAlert message={generalError} />
-        <form onSubmit={handleVerifyEmail} className="grid gap-5">
-          <AuthField id="verification-code" label="Código de verificação" value={code} onChange={(event) => setCode(event.target.value)} inputMode="numeric" autoComplete="one-time-code" maxLength={8} required error={fieldErrors.code} className="text-center text-base" />
-          <AuthSubmitButton loading={loading}>Confirmar e continuar</AuthSubmitButton>
+        <form onSubmit={(event) => { event.preventDefault(); void handleVerifyEmail() }} className="grid gap-6">
+          <OtpInput label="Código de verificação" value={code} onChange={setCode} error={fieldErrors.code} autoFocus onComplete={(value) => void handleVerifyEmail(value)} />
+          <AuthSubmitButton loading={loading} disabled={code.length < 6} className={submitClassName}>Confirmar e continuar</AuthSubmitButton>
         </form>
-        <p className="mt-6 text-center text-sm text-[#777]">
-          Não recebeu?{' '}
-          <button type="button" onClick={() => void handleResendCode()} disabled={resendIn > 0} className="font-medium text-[#31553b] underline decoration-[#b9c8bc] underline-offset-4 disabled:cursor-not-allowed disabled:text-[#9a9a9a] disabled:no-underline">
-            {resendIn > 0 ? `Reenviar em ${resendIn}s` : 'Reenviar código'}
-          </button>
-        </p>
+        <CodeResend countdown={resendIn} onResend={handleResendCode} />
+        <p className="mt-2 text-center text-xs text-[#8d95a9]">Confira também a caixa de spam.</p>
+      </div>
+    )
+  }
+
+  if (step === 'invite') {
+    return (
+      <div>
+        <AuthHeading eyebrow="Convite" title="Entre na equipe" description="Você foi convidado para usar a Otto. Crie sua senha para aceitar o convite." />
+        <AuthAlert message={generalError} />
+        <form onSubmit={handleInvite} className={styles.form}>
+          <AuthField id="name" label="Seu nome completo" value={name} onChange={(event) => setName(event.target.value)} autoComplete="name" placeholder="Nome e sobrenome" required autoFocus error={fieldErrors.name} />
+          <PasswordField id="password" label="Crie uma senha" value={password} onChange={(event) => setPassword(event.target.value)} autoComplete="new-password" minLength={8} required visible={passwordVisible} onToggleVisibility={() => setPasswordVisible((value) => !value)} error={fieldErrors.password} hint={<PasswordStrength password={password} />} />
+          <TermsCheckbox checked={legalAccepted} onChange={setLegalAccepted} />
+          <div id="clerk-captcha" />
+          <AuthSubmitButton loading={loading} className={submitClassName}>Aceitar convite</AuthSubmitButton>
+        </form>
+      </div>
+    )
+  }
+
+  if (step === 'complete') {
+    const needsName = signUp.missingFields.includes('first_name') || signUp.missingFields.includes('last_name')
+    const needsLegal = signUp.missingFields.includes('legal_accepted')
+    return (
+      <div>
+        <AuthHeading eyebrow="Quase lá" title="Complete seu cadastro" description="Só precisamos de mais um detalhe para criar sua conta." />
+        <AuthAlert message={generalError} />
+        <form onSubmit={handleComplete} className={styles.form}>
+          {needsName ? <AuthField id="name" label="Seu nome completo" value={name} onChange={(event) => setName(event.target.value)} autoComplete="name" placeholder="Nome e sobrenome" required autoFocus error={fieldErrors.name} /> : null}
+          {needsLegal ? <TermsCheckbox checked={legalAccepted} onChange={setLegalAccepted} /> : null}
+          <AuthSubmitButton loading={loading} className={submitClassName}>Criar minha conta</AuthSubmitButton>
+        </form>
       </div>
     )
   }
 
   return (
     <div>
-      <div className="mb-7 text-center">
-        <h1 className="text-[28px] font-medium leading-tight tracking-normal text-[#181818]">Criar conta</h1>
-        <p className="mt-2 text-sm leading-6 text-[#6c726d]">Informe seus dados para começar a usar a Otto.</p>
-      </div>
+      <AuthHeading title="Crie sua conta" description="Comece a organizar sua empresa em poucos minutos." />
       <AuthAlert message={generalError} />
 
-      <form onSubmit={handleSignUp} className="grid gap-5">
-        <div className="overflow-hidden rounded-md border border-[#dfe3de] bg-white transition-shadow focus-within:shadow-[0_0_0_3px_rgba(45,138,72,0.1)]">
-          <GroupedField id="name" label="Seu nome completo" icon={<UserRound className="h-[17px] w-[17px]" />} value={name} onChange={(event) => setName(event.target.value)} autoComplete="name" placeholder="Nome e sobrenome" required autoFocus error={fieldErrors.name} />
-          <GroupedField id="email" label="Seu endereço de email" icon={<Mail className="h-[17px] w-[17px]" />} type="email" value={email} onChange={(event) => setEmail(event.target.value)} autoComplete="email" placeholder="voce@empresa.com.br" required error={fieldErrors.email} />
-          <GroupedField id="phone" label="Celular" icon={<Phone className="h-[17px] w-[17px]" />} type="tel" inputMode="tel" value={phone} onChange={(event) => setPhone(formatPhone(event.target.value))} autoComplete="tel-national" placeholder="(00) 00000-0000" required />
-          <GroupedField
-            id="password"
-            label="Sua senha"
-            icon={<KeyRound className="h-[17px] w-[17px]" />}
-            type={passwordVisible ? 'text' : 'password'}
-            value={password}
-            onChange={(event) => setPassword(event.target.value)}
-            autoComplete="new-password"
-            placeholder="Mínimo de 8 caracteres"
-            minLength={8}
-            required
-            error={fieldErrors.password}
-            trailing={(
-              <button
-                type="button"
-                onClick={() => setPasswordVisible((value) => !value)}
-                className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md text-[#7a817b] transition-colors hover:bg-[#f0f3ef] hover:text-[#181818] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#2d8a48]/25"
-                aria-label={passwordVisible ? 'Ocultar senha' : 'Mostrar senha'}
-              >
-                {passwordVisible ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-              </button>
-            )}
-          />
-          <div className="flex min-h-[61px] items-center gap-3 px-4">
-            <span className="flex h-5 w-5 shrink-0 items-center justify-center text-[#7a817b]" aria-hidden="true"><Megaphone className="h-[17px] w-[17px]" /></span>
-            <label htmlFor="acquisition-source" className="min-w-0 flex-1 py-2.5">
-              <span className="block text-[11px] leading-4 text-[#899089]">Como conheceu a Otto?</span>
-              <select
-                id="acquisition-source"
-                value={acquisitionSource}
-                onChange={(event) => setAcquisitionSource(event.target.value)}
-                required
-                className="mt-0.5 h-6 w-full appearance-none border-0 bg-transparent p-0 pr-7 text-sm text-[#181818] outline-none invalid:text-[#b0b5b0]"
-              >
-                <option value="" disabled>Selecione uma opção</option>
+      <AuthGoogleButton onClick={() => void handleGoogle()} disabled={loading}>Criar conta com Google</AuthGoogleButton>
+      <AuthDivider>ou com e-mail</AuthDivider>
+
+      <form onSubmit={handleSignUp} className={styles.formCompact}>
+        <AuthField id="name" label="Nome completo" value={name} onChange={(event) => setName(event.target.value)} autoComplete="name" placeholder="Nome e sobrenome" required autoFocus error={fieldErrors.name} />
+        <AuthField id="email" label="E-mail" type="email" value={email} onChange={(event) => setEmail(event.target.value)} autoComplete="email" placeholder="voce@empresa.com.br" required error={fieldErrors.email} />
+        <div className={styles.fieldRow}>
+          <AuthField id="phone" label="Celular" type="tel" inputMode="tel" value={phone} onChange={(event) => setPhone(formatPhone(event.target.value))} autoComplete="tel-national" placeholder="(00) 00000-0000" required />
+          <div className="grid gap-2" data-auth-field>
+            <Label htmlFor="acquisition-source" className="text-[13px] font-medium text-[#151c35]">Como conheceu a Otto?</Label>
+            <div className="relative">
+              <select id="acquisition-source" value={acquisitionSource} onChange={(event) => setAcquisitionSource(event.target.value)} required data-auth-select
+                className="h-11 w-full appearance-none rounded-md border border-[#d3d8e5] bg-white px-3 pr-9 text-sm text-[#111832] outline-none invalid:text-[#8d95a9] focus-visible:border-[#104dff] focus-visible:ring-2 focus-visible:ring-[#104dff]/15">
+                <option value="" disabled>Selecione</option>
                 {ACQUISITION_SOURCES.map((source) => <option key={source} value={source}>{source}</option>)}
               </select>
-            </label>
-            <ChevronDown className="h-4 w-4 shrink-0 text-[#7a817b]" aria-hidden="true" />
+              <ChevronDown className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[#818aa0]" aria-hidden="true" />
+            </div>
           </div>
         </div>
-
-        <label className="flex cursor-pointer items-start gap-2.5 px-0.5 text-xs leading-5 text-[#6c726d]">
-          <Checkbox checked={legalAccepted} onCheckedChange={(value) => setLegalAccepted(value === true)} className="mt-0.5 border-[#aeb5af] data-[state=checked]:border-[#2d8a48] data-[state=checked]:bg-[#2d8a48]" />
-          <span>Li e concordo com os <span className="font-medium text-[#31553b] underline decoration-[#b9c8bc] underline-offset-2">Termos de uso</span> e a <span className="font-medium text-[#31553b] underline decoration-[#b9c8bc] underline-offset-2">Política de privacidade</span> da Otto.</span>
-        </label>
-
+        <PasswordField id="password" label="Senha" value={password} onChange={(event) => setPassword(event.target.value)} autoComplete="new-password" placeholder="Mínimo de 8 caracteres" minLength={8} required visible={passwordVisible} onToggleVisibility={() => setPasswordVisible((value) => !value)} error={fieldErrors.password} hint={password ? <PasswordStrength password={password} /> : undefined} />
+        <TermsCheckbox checked={legalAccepted} onChange={setLegalAccepted} />
         <div id="clerk-captcha" />
-        <AuthSubmitButton loading={loading}>Continuar</AuthSubmitButton>
+        <AuthSubmitButton loading={loading} className={submitClassName}>Criar conta</AuthSubmitButton>
       </form>
-
-      <p className="mt-6 text-center text-sm text-[#777d78]">
-        Já tem uma conta?{' '}
-        <Link href="/sign-in" className="font-medium text-[#31553b] underline decoration-[#b9c8bc] underline-offset-4 transition-colors hover:decoration-[#31553b]">Acesse</Link>
-      </p>
     </div>
   )
 }

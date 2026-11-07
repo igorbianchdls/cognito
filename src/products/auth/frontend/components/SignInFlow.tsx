@@ -1,25 +1,32 @@
 'use client'
 
 import { useRouter } from 'next/navigation'
-import Link from 'next/link'
-import { useEffect, useMemo, useState, type FormEvent } from 'react'
+import { useEffect, useMemo, useRef, useState, type FormEvent } from 'react'
 import { useAuth, useSignIn } from '@clerk/nextjs'
-import { SiGoogle } from '@icons-pack/react-simple-icons'
 
-import { Button } from '@/components/ui/button'
 import {
   AuthAlert,
   AuthBackButton,
   AuthDivider,
   AuthField,
+  AuthGoogleButton,
   AuthHeading,
   AuthSubmitButton,
+  AuthTransition,
+  CodeResend,
+  OtpInput,
   PasswordField,
+  PasswordStrength,
 } from '@/products/auth/frontend/components/AuthFormParts'
 import { getAuthErrorMessage } from '@/products/auth/frontend/components/authErrors'
 import styles from './AuthLogin.module.css'
 
-const submitClassName = 'h-[54px] bg-[#104dff] text-base font-semibold hover:bg-[#0b3ee0] focus-visible:ring-[#104dff]/25'
+const submitClassName = 'h-[54px] text-base'
+/** The last email that signed in on this device, so returning users only type the password. */
+const LAST_EMAIL_KEY = 'otto:last-email'
+const readLastEmail = () => { try { return window.localStorage.getItem(LAST_EMAIL_KEY) || '' } catch { return '' } }
+const saveLastEmail = (value: string) => { try { window.localStorage.setItem(LAST_EMAIL_KEY, value) } catch { /* private mode */ } }
+const inviteTicket = () => { try { return new URLSearchParams(window.location.search).get('__clerk_ticket') || '' } catch { return '' } }
 
 type SignInStep = 'start' | 'recovery-code' | 'new-password' | 'mfa'
 type MfaStrategy = 'email_code' | 'phone_code' | 'totp' | 'backup_code'
@@ -29,7 +36,9 @@ export function SignInFlow() {
   const { isLoaded, isSignedIn } = useAuth()
   const { signIn, errors, fetchStatus } = useSignIn()
   const [step, setStep] = useState<SignInStep>('start')
-  const [email, setEmail] = useState('')
+  const [email, setEmail] = useState(readLastEmail)
+  const [rememberedEmail] = useState(() => Boolean(readLastEmail()))
+  const [redirecting, setRedirecting] = useState(false)
   const [password, setPassword] = useState('')
   const [newPassword, setNewPassword] = useState('')
   const [code, setCode] = useState('')
@@ -50,6 +59,32 @@ export function SignInFlow() {
     if (isLoaded && isSignedIn) router.replace('/onboarding')
   }, [isLoaded, isSignedIn, router])
 
+  // Arriving from an invitation link, or back from Google with a second factor to confirm: continue right away.
+  const resumed = useRef(false)
+  useEffect(() => {
+    if (resumed.current) return
+    resumed.current = true
+    const ticket = inviteTicket()
+    const run = async () => {
+      try {
+        if (ticket) {
+          setRedirecting(true)
+          const result = await signIn.ticket({ ticket })
+          if (result.error) throw result.error
+          await continueFromStatus()
+        } else if (signIn.status === 'needs_second_factor') {
+          await prepareMfa()
+        }
+      } catch (error) {
+        setRedirecting(false)
+        setGeneralError(getAuthErrorMessage(error, 'Não foi possível abrir o convite. Entre com seu e-mail e senha.'))
+      }
+    }
+    void run()
+    // Runs once, when the page opens.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
   useEffect(() => {
     if (resendIn <= 0) return
     const timer = window.setInterval(() => setResendIn((value) => Math.max(0, value - 1)), 1000)
@@ -59,6 +94,8 @@ export function SignInFlow() {
   async function finishSignIn() {
     const result = await signIn.finalize()
     if (result.error) throw result.error
+    if (email.trim()) saveLastEmail(email.trim())
+    setRedirecting(true)
     router.replace('/onboarding')
     router.refresh()
   }
@@ -115,6 +152,7 @@ export function SignInFlow() {
   async function handleGoogleSignIn() {
     setGeneralError('')
     try {
+      setRedirecting(true)
       const result = await signIn.sso({
         strategy: 'oauth_google',
         redirectUrl: '/sso-callback',
@@ -122,6 +160,7 @@ export function SignInFlow() {
       })
       if (result.error) throw result.error
     } catch (error) {
+      setRedirecting(false)
       setGeneralError(getAuthErrorMessage(error, 'Não foi possível continuar com o Google.'))
     }
   }
@@ -224,11 +263,11 @@ export function SignInFlow() {
     return (
       <div>
         <AuthBackButton onClick={() => void goBackToStart()}>Voltar para o login</AuthBackButton>
-        <AuthHeading title="Confira seu email" description={`Enviamos um código de recuperação para ${email}.`} />
+        <AuthHeading title="Confira seu e-mail" description={<>Enviamos um código de 6 dígitos para <b className="font-semibold text-[#111832]">{email}</b>.</>} />
         <AuthAlert message={generalError} />
         <form onSubmit={handleVerifyRecoveryCode} className="grid gap-5">
-          <AuthField id="recovery-code" label="Código de recuperação" value={code} onChange={(event) => setCode(event.target.value)} inputMode="numeric" autoComplete="one-time-code" maxLength={8} required error={fieldErrors.code} className="text-center text-base" />
-          <AuthSubmitButton loading={loading} className={submitClassName}>Validar código</AuthSubmitButton>
+          <OtpInput label="Código de recuperação" value={code} onChange={setCode} error={fieldErrors.code} autoFocus />
+          <AuthSubmitButton loading={loading} disabled={code.length < 6} className={submitClassName}>Validar código</AuthSubmitButton>
         </form>
         <CodeResend countdown={resendIn} onResend={handleResendCode} />
       </div>
@@ -242,8 +281,7 @@ export function SignInFlow() {
         <AuthHeading title="Crie uma nova senha" description="Use uma senha forte e diferente das anteriores." />
         <AuthAlert message={generalError} />
         <form onSubmit={handleNewPassword} className="grid gap-5">
-          <PasswordField id="new-password" label="Nova senha" value={newPassword} onChange={(event) => setNewPassword(event.target.value)} autoComplete="new-password" minLength={8} required visible={newPasswordVisible} onToggleVisibility={() => setNewPasswordVisible((value) => !value)} error={fieldErrors.password} />
-          <p className="-mt-2 text-xs leading-5 text-[#777]">Use pelo menos 8 caracteres.</p>
+          <PasswordField id="new-password" label="Nova senha" value={newPassword} onChange={(event) => setNewPassword(event.target.value)} autoComplete="new-password" minLength={8} required autoFocus visible={newPasswordVisible} onToggleVisibility={() => setNewPasswordVisible((value) => !value)} error={fieldErrors.password} hint={<PasswordStrength password={newPassword} />} />
           <AuthSubmitButton loading={loading} className={submitClassName}>Salvar nova senha</AuthSubmitButton>
         </form>
       </div>
@@ -262,7 +300,9 @@ export function SignInFlow() {
         <AuthHeading title="Verificação de segurança" description={description} />
         <AuthAlert message={generalError} />
         <form onSubmit={handleVerifyMfa} className="grid gap-5">
-          <AuthField id="mfa-code" label={mfaStrategy === 'backup_code' ? 'Código de recuperação' : 'Código de segurança'} value={code} onChange={(event) => setCode(event.target.value)} inputMode={mfaStrategy === 'backup_code' ? 'text' : 'numeric'} autoComplete="one-time-code" required error={fieldErrors.code} className="text-center text-base" />
+          {mfaStrategy === 'backup_code'
+            ? <AuthField id="mfa-code" label="Código de recuperação" value={code} onChange={(event) => setCode(event.target.value)} autoComplete="one-time-code" required autoFocus error={fieldErrors.code} className="text-center text-base" />
+            : <OtpInput label="Código de segurança" value={code} onChange={setCode} error={fieldErrors.code} autoFocus />}
           <AuthSubmitButton loading={loading} className={submitClassName}>Confirmar e entrar</AuthSubmitButton>
         </form>
         {mfaStrategy === 'email_code' || mfaStrategy === 'phone_code' ? <CodeResend countdown={resendIn} onResend={handleResendCode} /> : null}
@@ -270,13 +310,18 @@ export function SignInFlow() {
     )
   }
 
+  if (redirecting && !generalError) return <AuthTransition />
+
   return (
     <div>
-      <AuthHeading title="Bem-vindo de volta" description="Acesse sua conta para continuar." />
+      <AuthHeading title={rememberedEmail ? 'Bem-vindo de volta' : 'Entrar na Otto'} description="Acesse sua conta para continuar." />
       <AuthAlert message={generalError} />
 
+      <AuthGoogleButton onClick={() => void handleGoogleSignIn()} disabled={loading} />
+      <AuthDivider>ou entre com e-mail</AuthDivider>
+
       <form onSubmit={handlePasswordSignIn} className={styles.form}>
-        <AuthField id="email" label="E-mail" type="email" value={email} onChange={(event) => setEmail(event.target.value)} autoComplete="email" placeholder="voce@empresa.com.br" required autoFocus error={fieldErrors.email} />
+        <AuthField id="email" label="E-mail" type="email" value={email} onChange={(event) => setEmail(event.target.value)} autoComplete="email" placeholder="voce@empresa.com.br" required autoFocus={!rememberedEmail} error={fieldErrors.email} />
         <PasswordField
           id="password"
           label="Senha"
@@ -284,33 +329,14 @@ export function SignInFlow() {
           onChange={(event) => setPassword(event.target.value)}
           autoComplete="current-password"
           required
+          autoFocus={rememberedEmail}
           visible={passwordVisible}
           onToggleVisibility={() => setPasswordVisible((value) => !value)}
           error={fieldErrors.password}
+          labelAction={<button type="button" className={styles.inlineLink} onClick={() => void handleStartRecovery()} disabled={loading}>Esqueceu a senha?</button>}
         />
-        <div className={styles.recovery}>
-          <button type="button" onClick={() => void handleStartRecovery()} disabled={loading}>Esqueceu sua senha?</button>
-        </div>
         <AuthSubmitButton loading={loading} className={submitClassName}>Entrar</AuthSubmitButton>
       </form>
-
-      <AuthDivider />
-      <Button type="button" variant="outline" onClick={() => void handleGoogleSignIn()} disabled={loading} className="h-[54px] w-full rounded-md border-[#d3d8e5] bg-white text-base font-semibold text-[#151c35] shadow-none hover:bg-[#f7f8fc]">
-        <SiGoogle size={16} color="default" title="Google" />
-        Continuar com Google
-      </Button>
-      <p className={styles.signup}>Não tem uma conta? <Link href="/sign-up">Criar conta</Link></p>
     </div>
-  )
-}
-
-function CodeResend({ countdown, onResend }: { countdown: number; onResend: () => Promise<void> }) {
-  return (
-    <p className="mt-6 text-center text-sm text-[#777]">
-      Não recebeu?{' '}
-      <button type="button" onClick={() => void onResend()} disabled={countdown > 0} className="font-medium text-[#181818] underline decoration-[#b9b9b9] underline-offset-4 disabled:cursor-not-allowed disabled:text-[#9a9a9a] disabled:no-underline">
-        {countdown > 0 ? `Reenviar em ${countdown}s` : 'Reenviar código'}
-      </button>
-    </p>
   )
 }
