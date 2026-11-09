@@ -2,6 +2,7 @@ import { DASHBOARD_BUILD_DURATION, DashboardBuildAgents } from './compositions/D
 import { DASHBOARD_SEARCH_DURATION, DashboardBuildSearch } from './compositions/DashboardBuildSearch'
 import { DASHBOARD_INSTAGRAM_DURATION, DashboardBuildInstagram } from './compositions/DashboardBuildInstagram'
 import { CLAUDE_REACTOR_DURATION, ClaudeEditingReactor } from './compositions/ClaudeEditingReactor'
+import { ClaudeVideoEditorSwarm, VIDEO_EDITOR_SWARM_DURATION } from './compositions/ClaudeVideoEditorSwarm'
 import { OTTO_NFE_CHAT_REEL_DURATION, OttoNfeChatReel } from './compositions/OttoNfeChatReel'
 import { OTTO_NFE_CONTADORES_DURATION, OttoNfeContadoresReel } from './compositions/OttoNfeContadoresReel'
 import { FINANCAS_CHATGPT, FINANCAS_CONTADORES, NFE_CHATGPT } from './compositions/OttoPresenterReels'
@@ -736,6 +737,7 @@ function RemotionDownloadRoot() {
       <Composition component={ClaudeEditingReactor} durationInFrames={CLAUDE_REACTOR_DURATION} fps={30} height={1080} id="claude-editing-reactor" width={1920} />
       <Composition component={OttoNfeChatReel} durationInFrames={OTTO_NFE_CHAT_REEL_DURATION} fps={30} height={1920} id="otto-nfe-chat-reel" width={1080} />
       <Composition component={OttoNfeContadoresReel} durationInFrames={OTTO_NFE_CONTADORES_DURATION} fps={30} height={1920} id="otto-nfe-contadores-reel" width={1080} />
+      <Composition component={ClaudeVideoEditorSwarm} durationInFrames={VIDEO_EDITOR_SWARM_DURATION} fps={30} height={1080} id="claude-video-editor-agentes" width={1920} />
       <Composition component={NFE_CHATGPT.Reel} durationInFrames={NFE_CHATGPT.duration} fps={30} height={1920} id="otto-nfe-chatgpt-claro-reel" width={1080} />
       <Composition component={FINANCAS_CONTADORES.Reel} durationInFrames={FINANCAS_CONTADORES.duration} fps={30} height={1920} id="otto-financas-contadores-reel" width={1080} />
       <Composition component={FINANCAS_CHATGPT.Reel} durationInFrames={FINANCAS_CHATGPT.duration} fps={30} height={1920} id="otto-financas-chatgpt-reel" width={1080} />
