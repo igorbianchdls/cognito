@@ -242,6 +242,8 @@ import { DASHBOARD_INSTAGRAM_DURATION, DashboardBuildInstagram } from '@/assets/
 import { CLAUDE_REACTOR_DURATION, ClaudeEditingReactor } from '@/assets/remotion/compositions/ClaudeEditingReactor'
 import { ClaudeVideoEditorSwarm, VIDEO_EDITOR_SWARM_DURATION } from '@/assets/remotion/compositions/ClaudeVideoEditorSwarm'
 import { ClaudeInvoiceSwarm, INVOICE_SWARM_DURATION } from '@/assets/remotion/compositions/ClaudeInvoiceSwarm'
+import { NOTA_UNICA_AD_DURATION, OttoNotaUnicaAd } from '@/assets/remotion/compositions/OttoNotaUnicaAd'
+import { NOTAS_LOTE_AD_DURATION, OttoNotasLoteAd } from '@/assets/remotion/compositions/OttoNotasLoteAd'
 import { OTTO_AGORA_CHAT_DURATION, OTTO_AGORA_FACIL_DURATION, OTTO_AGORA_FINANCEIRO_DURATION, OTTO_AGORA_LUCRO_DURATION, OTTO_AGORA_SISTEMA_DURATION, OttoAgoraChatDarkSquareReel, OttoAgoraChatReel, OttoAgoraFacilReel, OttoAgoraFinanceiroDarkReel, OttoAgoraFinanceiroReel, OttoAgoraLucroDarkReel, OttoAgoraLucroReel, OttoAgoraSistemaDarkSquareReel, OttoAgoraSistemaReel } from '@/assets/remotion/compositions/OttoAgoraChatGptReels'
 import { OTTO_COBRANCA_REEL_DURATION, OTTO_FUNCIONARIO_REEL_DURATION, OttoCobrancaReel, OttoFuncionarioReel } from '@/assets/remotion/compositions/OttoCobrancaFuncionarioVideos'
 import { OTTO_NOTA_CHATGPT_BATCH_DURATION, OTTO_NOTA_CHATGPT_SINGLE_DURATION, OttoNotaChatGptBatchReel, OttoNotaChatGptSingleReel } from '@/assets/remotion/compositions/OttoNotaFiscalChatGptVideos'
@@ -2464,6 +2466,32 @@ const catalog: CatalogItem[] = [
     tags: ['Agentes', 'IA', 'Horizontal', 'Nota fiscal', 'NFS-e', 'Financeiro'],
     value: 'claude-notas-agentes',
     width: 1920,
+  },
+  {
+    code: '<OttoNotaUnicaAd />',
+    component: OttoNotaUnicaAd,
+    description: 'Anúncio 9:16: pede a nota no ChatGPT, confirma no card do Otto e a DANFSe (modelo nacional) se preenche em tela cheia, calcula os impostos, gera chave e QR Code, é autorizada e vai pro WhatsApp do cliente.',
+    duration: NOTA_UNICA_AD_DURATION,
+    fps: 30,
+    height: 1920,
+    kind: 'Claude Videos',
+    label: 'Anúncio → Uma nota fiscal pelo ChatGPT (DANFSe realista)',
+    tags: ['Reel', 'Anúncio', 'Nota fiscal', 'NFS-e', 'ChatGPT', 'Otto'],
+    value: 'otto-nota-unica-ad',
+    width: 1080,
+  },
+  {
+    code: '<OttoNotasLoteAd />',
+    component: OttoNotasLoteAd,
+    description: 'Anúncio 9:16: no app do Otto, seleciona as 50 vendas do mês, emite num toque, os status viram "Autorizada" em cascata, as DANFSe se espalham com o contador e os clientes recebem por WhatsApp e e-mail.',
+    duration: NOTAS_LOTE_AD_DURATION,
+    fps: 30,
+    height: 1920,
+    kind: 'Claude Videos',
+    label: 'Anúncio → 50 notas fiscais num toque (app Otto)',
+    tags: ['Reel', 'Anúncio', 'Nota fiscal', 'NFS-e', 'Lote', 'Otto'],
+    value: 'otto-notas-lote-ad',
+    width: 1080,
   },
   {
     code: '<LumenHotelMobileReel />',
