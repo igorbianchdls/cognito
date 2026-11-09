@@ -8,7 +8,7 @@ Implementação preparada em 16/10/2026. Três controles locais estão registrad
 - `actions/`: execução, prévias e confirmação das operações.
 - `schemas/`: validação dos argumentos e resultados.
 
-Autenticação, aprovação, auditoria e transporte comuns continuam no `mcpcore`. ERP, Tables e WhatsApp são domínios; ChatGPT e Claude são integrações que podem expor esses domínios.
+Autenticação, aprovação, auditoria e transporte comuns continuam no `mcpcore`. ERP e WhatsApp são domínios; ChatGPT e Claude são integrações que podem expor esses domínios.
 
 ## MCP oficial encontrado
 

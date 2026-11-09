@@ -114,7 +114,7 @@ async function main(){
     aliquota_iss:5,iss_retido:true,retencoes_federais:{irrf:1.5}};
   let id,draft;
   await check('Cliente MCP oficial conecta ao endpoint do Claude e lista o catálogo e as 8 tools de nota',async()=>{
-    assert.equal(client.getServerVersion()?.name,'cognito-claudeplugin');const {tools}=await client.listTools();const expected=1+load('@/products/mcpcore/tools/catalog').tools.length+load('@/products/mcpcore/actions/catalog').actionTools.length+load('@/products/mcpcore/domains/tables/tools/catalog').tablesTools.length+load('@/products/mcpcore/domains/apps/tools/catalog').appsTools.length;assert(tools.length>=expected,'ERP, Tables and Apps tools are all listed: '+tools.length+' of '+expected);
+    assert.equal(client.getServerVersion()?.name,'cognito-claudeplugin');const {tools}=await client.listTools();const expected=1+load('@/products/mcpcore/tools/catalog').tools.length+load('@/products/mcpcore/actions/catalog').actionTools.length;assert(tools.length>=expected,'ERP tools are all listed: '+tools.length+' of '+expected);
     for(const name of NOTE_TOOLS)assert(tools.some(t=>t.name===name),name);
     for(const t of tools.filter(t=>NOTE_TOOLS.includes(t.name)&&!/^(listar|obter)_/.test(t.name)))assert.equal(t.annotations.destructiveHint,true,t.name);
   });

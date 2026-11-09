@@ -2,8 +2,6 @@ import { localTools as whatsappLocalTools } from '../src/products/mcpcore/domain
 import {preferencesSchema} from '../src/products/mcpcore/application/preferences'
 import {tools as erpTools} from '../src/products/mcpcore/tools/catalog'
 import {actionTools as erpActions} from '../src/products/mcpcore/actions/catalog'
-import {tablesTools} from '../src/products/mcpcore/domains/tables/tools/catalog'
-import {appsTools} from '../src/products/mcpcore/domains/apps/tools/catalog'
 import {serviceInvoiceQueryStubs} from './erp/service-invoice-query-stubs'
 import assert from 'node:assert/strict'
 import { randomUUID } from 'node:crypto'
@@ -107,19 +105,14 @@ async function main() {
     assert.match(byName('meu_acesso').description,/Não é pré-requisito/);assert.match(byName('meu_acesso').description,/COMPANY_REQUIRED/)
     assert.match((byName('listar_vendas').inputSchema.properties.empresa_id as {description:string}).description,/Se desconhecido, omita/)
     // 17 consultas (com meu_acesso), 28 escritas, painel, configuracoes e a tool de mencoes do SDK.
-    assert.equal(listed.length,erpTools.length+erpActions.length+5+tablesTools.length+appsTools.length+whatsappLocalTools.length)
+    assert.equal(listed.length,erpTools.length+erpActions.length+5+whatsappLocalTools.length)
     const writes=['criar_cadastro','editar_cadastro','excluir_cadastro','criar_venda','editar_venda','excluir_venda','converter_orcamento','registrar_devolucao','confirmar_venda','cancelar_venda','atender_venda',
       'criar_compra','editar_compra','excluir_compra','confirmar_compra','cancelar_compra','criar_titulo','editar_titulo','excluir_titulo','efetivar_previsao','registrar_baixa','estornar_pagamento',
       'criar_nota_servico','editar_nota_servico','emitir_nota_servico','consultar_nota_servico','cancelar_nota_servico','excluir_nota_servico']
     const destructive=['excluir_cadastro','excluir_venda','cancelar_venda','excluir_compra','cancelar_compra','excluir_titulo','estornar_pagamento','registrar_devolucao','cancelar_nota_servico','excluir_nota_servico']
     for(const removed of ['preparar_rascunho','preparar_formulario_nativo','renderizar_card','abrir_formulario','obter_rascunho','listar_rascunhos','obter_cliente','listar_orcamentos','listar_contas_financeiras','verificar_fiscal_venda'])
       assert(!listed.some(t=>t.name===removed),removed)
-    for (const tool of listed.filter(t=>t.name.startsWith('apps_'))) {
-      const definition=appsTools.find(t=>t.name===tool.name)!
-      assert.equal(tool.annotations.readOnlyHint,!definition.write&&!definition.control,tool.name);assert.equal(tool.annotations.destructiveHint,definition.destructive,tool.name)
-      if(definition.write){assert.deepEqual(tool.securitySchemes[0].scopes,['erp:read','erp:write']);assert(tool.inputSchema.properties.rascunho_id&&tool.inputSchema.properties.dados,tool.name)}
-    }
-    for (const tool of listed.filter(t=>!t.name.startsWith('tables_')&&!t.name.startsWith('whatsapp_')&&!t.name.startsWith('apps_'))) {
+    for (const tool of listed.filter(t=>!t.name.startsWith('whatsapp_'))) {
       const write=erpActions.some(a=>a.name===tool.name)||Boolean(erpTools.find(candidate=>candidate.name===tool.name)?.write)
       assert.equal(tool.annotations.readOnlyHint,!write&&tool.name!=='atualizar_configuracoes',tool.name)
       assert.equal(tool.annotations.destructiveHint,Boolean(erpActions.find(a=>a.name===tool.name)?.destructive),tool.name)
@@ -139,7 +132,7 @@ async function main() {
     await check(name,async()=>{const {body}=await rpc('tools/call',{name,arguments:args});assert(!body.result?.isError,JSON.stringify(body))})
   }
   await check('Recurso UI registrado e sem dados privados',async()=>{
-    const resources=await rpc('resources/list');assert.equal(resources.body.result.resources.length,5)
+    const resources=await rpc('resources/list');assert.equal(resources.body.result.resources.length,3)
     const cards=await rpc('resources/read',{uri:'ui://chatgptplugin/cards/v2.html'});assert.deepEqual(cards.body.result.contents[0]._meta.ui.csp,{connectDomains:[],resourceDomains:[]});assert(!cards.body.result.contents[0].text.includes(principal.clerkUserId))
     const listed=(await rpc('tools/list')).body.result.tools as {name:string;_meta?:{ui?:{resourceUri?:string}}}[]
     assert(listed.filter(t=>t._meta?.ui?.resourceUri==='ui://chatgptplugin/cards/v2.html').length===erpTools.length+erpActions.length+1,'cards de todas as consultas e ações ERP')
@@ -254,7 +247,7 @@ async function main() {
   await check('401 com descoberta e 429',async () => {
     const unauth=await rpc('tools/list',{},dependencies,{authorization:''});assert.equal(unauth.response.status,401);assert(unauth.response.headers.get('www-authenticate')?.includes(settings.metadataUrl))
     // The widget fetcher reads card templates without a token: those (and only those) open without login.
-    for(const uri of ['ui://chatgptplugin/cards/v2.html','ui://chatgptplugin/tables/v1.html']){const card=await rpc('resources/read',{uri},dependencies,{authorization:''});assert.equal(card.response.status,200,uri);assert.match(card.body.result.contents[0].text,/<!doctype html>/i)}
+    for(const uri of ['ui://chatgptplugin/cards/v2.html']){const card=await rpc('resources/read',{uri},dependencies,{authorization:''});assert.equal(card.response.status,200,uri);assert.match(card.body.result.contents[0].text,/<!doctype html>/i)}
     assert.equal((await rpc('resources/list',{},dependencies,{authorization:''})).response.status,200)
     assert.equal((await rpc('resources/read',{uri:'erp://empresa/1/clientes/5'},dependencies,{authorization:''})).response.status,401,'ERP data still needs login')
     assert.equal((await rpc('tools/call',{name:'meu_acesso',arguments:{}},dependencies,{authorization:''})).response.status,401,'Tools still need login')
@@ -266,7 +259,7 @@ async function main() {
     // Every tool with a card names it in the OpenAI key too, so ChatGPT stores the HTML on refresh.
     const carded=listed.body.result.tools.filter((t:{_meta?:{ui?:{resourceUri?:string}}})=>t._meta?.ui?.resourceUri)
     assert(carded.length>50&&carded.every((t:{_meta:Record<string,unknown>&{ui:{resourceUri:string}}})=>t._meta['openai/outputTemplate']===t._meta.ui.resourceUri),'openai/outputTemplate')
-    for(const uri of ['ui://chatgptplugin/cards/v2.html','ui://chatgptplugin/tables/v1.html','ui://chatgptplugin/apps/v1.html'])assert.equal((await rpc('resources/read',{uri},exhausted)).response.status,200,uri)
+    for(const uri of ['ui://chatgptplugin/cards/v2.html'])assert.equal((await rpc('resources/read',{uri},exhausted)).response.status,200,uri)
   })
   await check('Origem externa batch corpo excessivo e GET stateless',async () => {
     assert.equal((await rpc('tools/list',{},dependencies,{origin:'https://evil.test'})).response.status,403)

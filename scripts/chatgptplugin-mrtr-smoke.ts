@@ -1,6 +1,4 @@
 import { localTools as whatsappLocalTools } from '../src/products/mcpcore/domains/whatsapp/tools/catalog'
-import {tablesTools} from '../src/products/mcpcore/domains/tables/tools/catalog'
-import {appsTools} from '../src/products/mcpcore/domains/apps/tools/catalog'
 import {tools as erpTools} from '../src/products/mcpcore/tools/catalog'
 import {actionTools as erpActions} from '../src/products/mcpcore/actions/catalog'
 import assert from 'node:assert/strict'
@@ -39,7 +37,7 @@ async function main(){
   await check('Respostas modernas incluem o contrato obrigatório de cache dos recursos',async()=>{
     const cacheResult=z.object({resultType:z.literal('complete'),ttlMs:z.number().int().nonnegative(),cacheScope:z.enum(['public','private'])}).passthrough()
     const resourceResult=cacheResult.extend({contents:z.array(z.object({uri:z.string(),mimeType:z.string(),text:z.string()})).min(1)})
-    for(const uri of ['ui://chatgptplugin/cards/v2.html','ui://chatgptplugin/panel/v1.html','ui://chatgptplugin/tables/v1.html','ui://chatgptplugin/apps/v1.html','ui://chatgptplugin/whatsapp/v1.html']) {
+    for(const uri of ['ui://chatgptplugin/cards/v2.html','ui://chatgptplugin/panel/v1.html','ui://chatgptplugin/whatsapp/v1.html']) {
       const response=await rpc('resources/read',{uri},{headers:{authorization:'',accept:'application/json'}})
       assert.equal(response.response.status,200)
       const result=resourceResult.parse(response.body.result)
@@ -55,7 +53,7 @@ async function main(){
     assert.equal(result.resultType,undefined);assert.equal(result.ttlMs,undefined);assert.equal(result.cacheScope,undefined)
   })
   await check('Leitura de card tolerante: sem Mcp-Name ou sem metadados, nunca com nome diferente',async()=>{
-    const uri='ui://chatgptplugin/tables/v1.html',read=(headers:Record<string,string>,params:Record<string,unknown>)=>handlePluginRequest(new Request(config.resource,{method:'POST',headers:{authorization:'Bearer test','content-type':'application/json',accept:'application/json, text/event-stream','mcp-protocol-version':MODERN_VERSION,'mcp-method':'resources/read',...headers},body:JSON.stringify({jsonrpc:'2.0',id:++sequence,method:'resources/read',params})}),deps)
+    const uri='ui://chatgptplugin/whatsapp/v1.html',read=(headers:Record<string,string>,params:Record<string,unknown>)=>handlePluginRequest(new Request(config.resource,{method:'POST',headers:{authorization:'Bearer test','content-type':'application/json',accept:'application/json, text/event-stream','mcp-protocol-version':MODERN_VERSION,'mcp-method':'resources/read',...headers},body:JSON.stringify({jsonrpc:'2.0',id:++sequence,method:'resources/read',params})}),deps)
     const meta={[versionKey]:MODERN_VERSION,[capabilitiesKey]:capabilities}
     for(const [label,response] of [['sem Mcp-Name',await read({},{uri,_meta:meta})],['sem metadados',await read({},{uri})]] as const){const body=await response.json();assert.equal(response.status,200,label+': '+JSON.stringify(body));assert.match(body.result.contents[0].text,/<!doctype html>/i,label)}
     for(const accept of ['application/json','*/*','']) {
@@ -67,7 +65,7 @@ async function main(){
   await check('Discovery e consultas modernas sem initialize',async()=>{
     const discovery=await rpc('server/discover');assert.equal(discovery.body.result.resultType,'complete');assert(discovery.body.result.supportedVersions.includes(MODERN_VERSION));assert(discovery.body.result.capabilities.extensions['openai/settings']);assert.deepEqual(discovery.body.result.capabilities.extensions['io.modelcontextprotocol/ui'],{mimeTypes:['text/html;profile=mcp-app']},'MCP Apps extension declared');assert.deepEqual(discovery.body.result.capabilities.tools,{})
     assert(String(discovery.body.result.instructions).includes('rascunho_id'))
-    const tools=await rpc('tools/list');assert.equal(tools.body.result.tools.length,erpTools.length+erpActions.length+5+tablesTools.length+appsTools.length+whatsappLocalTools.length);assert.equal(tools.body.result.resultType,'complete')
+    const tools=await rpc('tools/list');assert.equal(tools.body.result.tools.length,erpTools.length+erpActions.length+5+whatsappLocalTools.length);assert.equal(tools.body.result.resultType,'complete')
     assert.deepEqual(tools.body.result.tools.find((t:{name:string})=>t.name==='criar_cadastro').securitySchemes[0].scopes,['erp:read','erp:write'])
     const access=await rpc('tools/call',{name:'meu_acesso',arguments:{}});assert.equal(access.body.result.structuredContent.data.empresas[0].id,1)
     const resource=await rpc('resources/read',{uri:'ui://chatgptplugin/panel/v1.html'});assert.equal(resource.body.result.resultType,'complete');assert(resource.body.result.contents[0].text.includes('ui/initialize'))

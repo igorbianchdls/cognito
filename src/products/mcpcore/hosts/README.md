@@ -5,8 +5,8 @@ Os assistentes que usam o Cognito (ChatGPT e Claude) compartilham o mesmo catál
 ```
 hosts/
   shared/            ← igual para todos
-    instructions.ts  instruções do servidor (regras gerais + Tables, Apps e WhatsApp)
-    registerTools.ts registra meu_acesso, ERP, Tables, Apps e WhatsApp
+    instructions.ts  instruções do servidor (regras gerais + WhatsApp)
+    registerTools.ts registra meu_acesso, ERP e WhatsApp
     config.ts        configuração a partir das variáveis de cada host
     writeTools.ts    quais tools alteram dados (exigem erp:write)
     resourceMetadata.ts  metadados OAuth (RFC 9728)
