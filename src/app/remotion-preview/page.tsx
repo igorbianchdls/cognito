@@ -244,6 +244,7 @@ import { ClaudeVideoEditorSwarm, VIDEO_EDITOR_SWARM_DURATION } from '@/assets/re
 import { ClaudeInvoiceSwarm, INVOICE_SWARM_DURATION } from '@/assets/remotion/compositions/ClaudeInvoiceSwarm'
 import { NOTA_UNICA_AD_DURATION, OttoNotaUnicaAd } from '@/assets/remotion/compositions/OttoNotaUnicaAd'
 import { NOTAS_LOTE_AD_DURATION, OttoNotasLoteAd } from '@/assets/remotion/compositions/OttoNotasLoteAd'
+import { EMISSOR_DURATION, OttoEmissorNfseLote, OttoEmissorNfseUma } from '@/assets/remotion/compositions/OttoEmissorNfse'
 import { OTTO_AGORA_CHAT_DURATION, OTTO_AGORA_FACIL_DURATION, OTTO_AGORA_FINANCEIRO_DURATION, OTTO_AGORA_LUCRO_DURATION, OTTO_AGORA_SISTEMA_DURATION, OttoAgoraChatDarkSquareReel, OttoAgoraChatReel, OttoAgoraFacilReel, OttoAgoraFinanceiroDarkReel, OttoAgoraFinanceiroReel, OttoAgoraLucroDarkReel, OttoAgoraLucroReel, OttoAgoraSistemaDarkSquareReel, OttoAgoraSistemaReel } from '@/assets/remotion/compositions/OttoAgoraChatGptReels'
 import { OTTO_COBRANCA_REEL_DURATION, OTTO_FUNCIONARIO_REEL_DURATION, OttoCobrancaReel, OttoFuncionarioReel } from '@/assets/remotion/compositions/OttoCobrancaFuncionarioVideos'
 import { OTTO_NOTA_CHATGPT_BATCH_DURATION, OTTO_NOTA_CHATGPT_SINGLE_DURATION, OttoNotaChatGptBatchReel, OttoNotaChatGptSingleReel } from '@/assets/remotion/compositions/OttoNotaFiscalChatGptVideos'
@@ -2492,6 +2493,32 @@ const catalog: CatalogItem[] = [
     tags: ['Reel', 'Anúncio', 'Nota fiscal', 'NFS-e', 'Lote', 'Otto'],
     value: 'otto-notas-lote-ad',
     width: 1080,
+  },
+  {
+    code: '<OttoEmissorNfseUma />',
+    component: OttoEmissorNfseUma,
+    description: 'O Emissor de NFS-e do Otto (escuro) operado por 7 agentes: a DANFSe realista da Aurora Tecnologia é preenchida campo a campo na pré-visualização, assinada, autorizada e enviada ao cliente, com os cards do mês e os avisos do sistema.',
+    duration: EMISSOR_DURATION,
+    fps: 30,
+    height: 1080,
+    kind: 'Claude Videos',
+    label: 'Emissor de NFS-e com agentes · uma nota',
+    tags: ['Agentes', 'IA', 'Horizontal', 'Nota fiscal', 'NFS-e', 'Sistema'],
+    value: 'otto-emissor-nfse-uma',
+    width: 1920,
+  },
+  {
+    code: '<OttoEmissorNfseLote />',
+    component: OttoEmissorNfseLote,
+    description: 'O Emissor de NFS-e do Otto (escuro) operado por 7 agentes: as 50 vendas de outubro viram notas autorizadas em cascata, com a DANFSe de cada uma na pré-visualização, uma rejeição corrigida e os totais do mês subindo.',
+    duration: EMISSOR_DURATION,
+    fps: 30,
+    height: 1080,
+    kind: 'Claude Videos',
+    label: 'Emissor de NFS-e com agentes · lote de 50',
+    tags: ['Agentes', 'IA', 'Horizontal', 'Nota fiscal', 'NFS-e', 'Lote', 'Sistema'],
+    value: 'otto-emissor-nfse-lote',
+    width: 1920,
   },
   {
     code: '<LumenHotelMobileReel />',
