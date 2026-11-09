@@ -204,7 +204,7 @@ const NOTE_FIELDS = [
   ['ISS (2%)', 'R$ 80,00'],
 ]
 
-function InvoiceConfirmScene({ duration }: { duration: number }) {
+export function InvoiceConfirmScene({ duration }: { duration: number }) {
   const frame = useFrame()
   const confirmed = frame >= 70
   const stamp = spring({ config: { damping: 10, stiffness: 170 }, fps: 30, frame: frame - 100 })

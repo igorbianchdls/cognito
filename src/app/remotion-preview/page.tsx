@@ -240,6 +240,7 @@ import { DASHBOARD_BUILD_DURATION, DashboardBuildAgents } from '@/assets/remotio
 import { DASHBOARD_SEARCH_DURATION, DashboardBuildSearch } from '@/assets/remotion/compositions/DashboardBuildSearch'
 import { DASHBOARD_INSTAGRAM_DURATION, DashboardBuildInstagram } from '@/assets/remotion/compositions/DashboardBuildInstagram'
 import { CLAUDE_REACTOR_DURATION, ClaudeEditingReactor } from '@/assets/remotion/compositions/ClaudeEditingReactor'
+import { ClaudeVideoEditorSwarm, VIDEO_EDITOR_SWARM_DURATION } from '@/assets/remotion/compositions/ClaudeVideoEditorSwarm'
 import { OTTO_AGORA_CHAT_DURATION, OTTO_AGORA_FACIL_DURATION, OTTO_AGORA_FINANCEIRO_DURATION, OTTO_AGORA_LUCRO_DURATION, OTTO_AGORA_SISTEMA_DURATION, OttoAgoraChatDarkSquareReel, OttoAgoraChatReel, OttoAgoraFacilReel, OttoAgoraFinanceiroDarkReel, OttoAgoraFinanceiroReel, OttoAgoraLucroDarkReel, OttoAgoraLucroReel, OttoAgoraSistemaDarkSquareReel, OttoAgoraSistemaReel } from '@/assets/remotion/compositions/OttoAgoraChatGptReels'
 import { OTTO_COBRANCA_REEL_DURATION, OTTO_FUNCIONARIO_REEL_DURATION, OttoCobrancaReel, OttoFuncionarioReel } from '@/assets/remotion/compositions/OttoCobrancaFuncionarioVideos'
 import { OTTO_NOTA_CHATGPT_BATCH_DURATION, OTTO_NOTA_CHATGPT_SINGLE_DURATION, OttoNotaChatGptBatchReel, OttoNotaChatGptSingleReel } from '@/assets/remotion/compositions/OttoNotaFiscalChatGptVideos'
@@ -2435,6 +2436,19 @@ const catalog: CatalogItem[] = [
     label: 'Claude editing agent (100 reels em paralelo)',
     tags: ['Agentes', 'IA', 'Horizontal', 'Reels', 'Edição'],
     value: 'claude-editing-reactor',
+    width: 1920,
+  },
+  {
+    code: '<ClaudeVideoEditorSwarm />',
+    component: ClaudeVideoEditorSwarm,
+    description: 'Um editor de vídeo profissional operado ao vivo por 10 agentes de IA: cursores com nome mexendo ao mesmo tempo, timeline crescendo, legenda trocando de fonte no programa, rodas de cor, scopes, log do enxame e contadores subindo.',
+    duration: VIDEO_EDITOR_SWARM_DURATION,
+    fps: 30,
+    height: 1080,
+    kind: 'Claude Videos',
+    label: 'Editor de vídeo com 10 agentes (ao vivo)',
+    tags: ['Agentes', 'IA', 'Horizontal', 'Edição', 'Timeline', 'Legendas'],
+    value: 'claude-video-editor-agentes',
     width: 1920,
   },
   {

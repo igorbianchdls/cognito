@@ -1,4 +1,4 @@
-# Tables, Apps e os servidores MCP: tipos, lint e smokes em bancos isolados (PGlite).
+# Servidores MCP (ChatGPT e Claude): tipos, lint e smokes em bancos isolados (PGlite).
 # Nenhum teste acessa o banco de produção nem precisa de segredos.
 name: Produtos
 
@@ -27,25 +27,5 @@ jobs:
         run: pnpm typecheck
       - name: Lint dos produtos
         run: pnpm lint:produtos
-      - name: Smokes (Tables, Apps, ChatGPT e Claude)
+      - name: Smokes (ChatGPT e Claude)
         run: pnpm test:produtos
-      - name: Interface (Tables e Apps)
-        env:
-          CHROME_PATH: /usr/bin/google-chrome
-        shell: bash
-        run: |
-          set -o pipefail
-          pnpm test:produtos-ui 2>&1 | tee interface.log
-      # The reason of a failure becomes an annotation, readable on the run page without opening the log.
-      - name: Motivo da falha
-        if: failure()
-        shell: bash
-        run: |
-          for f in interface.log; do [ -f "$f" ] && echo "::error title=Interface::$(grep -E 'Error|Assertion|Timeout|expected|actual|Passed' "$f" | tail -12 | tr '\n' ' ' | cut -c1-1500)"; done; true
-      - name: Capturas da interface
-        if: failure()
-        uses: actions/upload-artifact@v4
-        with:
-          name: capturas-interface
-          path: .cache/**/ui/**
-          if-no-files-found: ignore

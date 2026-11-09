@@ -6,8 +6,6 @@ import { accessSchema, tools } from '../../tools/catalog'
 import { envelope, outputs, profileFields } from '../../tools/outputs'
 import { actionTools } from '../../actions/catalog'
 import { toolDescription } from '../../tools/descriptions'
-import { registerTables } from '../../mcp/registerTables'
-import { registerApps } from '../../mcp/registerApps'
 import { registerWhatsApp } from '../../mcp/registerWhatsApp'
 import type { Host } from './instructions'
 
@@ -22,7 +20,7 @@ export type ToolStyle = {
   afterAccess?: () => void
 }
 
-/** The same catalog in every host: access, ERP reads and writes, Tables, Apps and WhatsApp. */
+/** The same catalog in every host: access, ERP reads and writes and WhatsApp. */
 export async function registerCommonTools(server: McpServer, principal: PluginPrincipal, config: PluginConfig, dependencies: ExecutionDependencies, host: Host, style: ToolStyle) {
   // MCP Apps is negotiated as a capability extension: hosts that follow the spec only treat the ui://
   // resources as cards when the server declares it. Merged with the extensions already registered.
@@ -38,7 +36,5 @@ export async function registerCommonTools(server: McpServer, principal: PluginPr
   for (const tool of tools) server.registerTool(tool.name, { title: tool.title, description: tool.description, inputSchema: tool.schema, outputSchema: envelope(tool.output), annotations: { ...readOnly, readOnlyHint: !tool.write, destructiveHint: Boolean(tool.write && host === 'claude') }, _meta: { ...(tool.write ? style.writeMeta : style.readMeta), ...style.card } }, run(tool.name))
   for (const action of actionTools) server.registerTool(action.name, { title: action.title, description: action.description, inputSchema: action.schema, outputSchema: envelope(outputs.draft),
     annotations: { readOnlyHint: false, destructiveHint: style.destructive(action), idempotentHint: true, openWorldHint: false }, _meta: { ...style.writeMeta, ...style.card } }, run(action.name))
-  registerTables(server, principal, config, dependencies, host)
-  registerApps(server, principal, config, dependencies, host)
   await registerWhatsApp(server, principal, config, dependencies, host)
 }
