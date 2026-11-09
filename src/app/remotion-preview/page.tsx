@@ -241,6 +241,7 @@ import { DASHBOARD_SEARCH_DURATION, DashboardBuildSearch } from '@/assets/remoti
 import { DASHBOARD_INSTAGRAM_DURATION, DashboardBuildInstagram } from '@/assets/remotion/compositions/DashboardBuildInstagram'
 import { CLAUDE_REACTOR_DURATION, ClaudeEditingReactor } from '@/assets/remotion/compositions/ClaudeEditingReactor'
 import { ClaudeVideoEditorSwarm, VIDEO_EDITOR_SWARM_DURATION } from '@/assets/remotion/compositions/ClaudeVideoEditorSwarm'
+import { ClaudeInvoiceSwarm, INVOICE_SWARM_DURATION } from '@/assets/remotion/compositions/ClaudeInvoiceSwarm'
 import { OTTO_AGORA_CHAT_DURATION, OTTO_AGORA_FACIL_DURATION, OTTO_AGORA_FINANCEIRO_DURATION, OTTO_AGORA_LUCRO_DURATION, OTTO_AGORA_SISTEMA_DURATION, OttoAgoraChatDarkSquareReel, OttoAgoraChatReel, OttoAgoraFacilReel, OttoAgoraFinanceiroDarkReel, OttoAgoraFinanceiroReel, OttoAgoraLucroDarkReel, OttoAgoraLucroReel, OttoAgoraSistemaDarkSquareReel, OttoAgoraSistemaReel } from '@/assets/remotion/compositions/OttoAgoraChatGptReels'
 import { OTTO_COBRANCA_REEL_DURATION, OTTO_FUNCIONARIO_REEL_DURATION, OttoCobrancaReel, OttoFuncionarioReel } from '@/assets/remotion/compositions/OttoCobrancaFuncionarioVideos'
 import { OTTO_NOTA_CHATGPT_BATCH_DURATION, OTTO_NOTA_CHATGPT_SINGLE_DURATION, OttoNotaChatGptBatchReel, OttoNotaChatGptSingleReel } from '@/assets/remotion/compositions/OttoNotaFiscalChatGptVideos'
@@ -2449,6 +2450,19 @@ const catalog: CatalogItem[] = [
     label: 'Editor de vídeo com 10 agentes (ao vivo)',
     tags: ['Agentes', 'IA', 'Horizontal', 'Edição', 'Timeline', 'Legendas'],
     value: 'claude-video-editor-agentes',
+    width: 1920,
+  },
+  {
+    code: '<ClaudeInvoiceSwarm />',
+    component: ClaudeInvoiceSwarm,
+    description: 'Uma central de emissão de notas operada ao vivo por 7 agentes de IA: fila de vendas mudando de status, NFS-e se preenchendo e recebendo o carimbo AUTORIZADA, impostos somando, prefeitura online, uma nota rejeitada e corrigida, e 50 notas na esteira.',
+    duration: INVOICE_SWARM_DURATION,
+    fps: 30,
+    height: 1080,
+    kind: 'Claude Videos',
+    label: 'Emissão de 50 notas fiscais com 7 agentes (ao vivo)',
+    tags: ['Agentes', 'IA', 'Horizontal', 'Nota fiscal', 'NFS-e', 'Financeiro'],
+    value: 'claude-notas-agentes',
     width: 1920,
   },
   {
