@@ -2524,7 +2524,7 @@ const catalog: CatalogItem[] = [
   {
     code: '<AdsAgentsCampaignBuild />',
     component: AdsAgentsCampaignBuild,
-    description: 'Um gerenciador de anúncios (claro) operado por agentes de IA: preenchem campanha, conjunto e anúncio com prévia ao vivo, a árvore de campanhas cresce e as tabelas se enchem de rascunhos enquanto "Revisar e publicar" conta até 41.',
+    description: 'Um gerenciador de anúncios (tabela com abas Campanhas, Conjuntos e Anúncios) operado por 8 agentes de IA: criam e duplicam, preenchem o painel de edição com prévia, os rascunhos se acumulam, "Revisar e publicar" conta até 41 e tudo é publicado.',
     duration: ADS_AGENTS_BUILD_DURATION,
     fps: 30,
     height: 1080,
