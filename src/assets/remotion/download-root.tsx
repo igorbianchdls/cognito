@@ -7,6 +7,7 @@ import { ClaudeInvoiceSwarm, INVOICE_SWARM_DURATION } from './compositions/Claud
 import { NOTA_UNICA_AD_DURATION, OttoNotaUnicaAd } from './compositions/OttoNotaUnicaAd'
 import { NOTAS_LOTE_AD_DURATION, OttoNotasLoteAd } from './compositions/OttoNotasLoteAd'
 import { EMISSOR_DURATION, OttoEmissorNfseLote, OttoEmissorNfseUma } from './compositions/OttoEmissorNfse'
+import { AdsAgentsCampaignBuild, ADS_AGENTS_BUILD_DURATION } from './compositions/AdsAgentsCampaignBuild'
 import { OTTO_NFE_CHAT_REEL_DURATION, OttoNfeChatReel } from './compositions/OttoNfeChatReel'
 import { OTTO_NFE_CONTADORES_DURATION, OttoNfeContadoresReel } from './compositions/OttoNfeContadoresReel'
 import { FINANCAS_CHATGPT, FINANCAS_CONTADORES, NFE_CHATGPT } from './compositions/OttoPresenterReels'
@@ -747,6 +748,7 @@ function RemotionDownloadRoot() {
       <Composition component={OttoNotasLoteAd} durationInFrames={NOTAS_LOTE_AD_DURATION} fps={30} height={1920} id="otto-notas-lote-ad" width={1080} />
       <Composition component={OttoEmissorNfseUma} durationInFrames={EMISSOR_DURATION} fps={30} height={1080} id="otto-emissor-nfse-uma" width={1920} />
       <Composition component={OttoEmissorNfseLote} durationInFrames={EMISSOR_DURATION} fps={30} height={1080} id="otto-emissor-nfse-lote" width={1920} />
+      <Composition component={AdsAgentsCampaignBuild} durationInFrames={ADS_AGENTS_BUILD_DURATION} fps={30} height={1080} id="agentes-montando-anuncios" width={1920} />
       <Composition component={NFE_CHATGPT.Reel} durationInFrames={NFE_CHATGPT.duration} fps={30} height={1920} id="otto-nfe-chatgpt-claro-reel" width={1080} />
       <Composition component={FINANCAS_CONTADORES.Reel} durationInFrames={FINANCAS_CONTADORES.duration} fps={30} height={1920} id="otto-financas-contadores-reel" width={1080} />
       <Composition component={FINANCAS_CHATGPT.Reel} durationInFrames={FINANCAS_CHATGPT.duration} fps={30} height={1920} id="otto-financas-chatgpt-reel" width={1080} />
