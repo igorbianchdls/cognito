@@ -10,7 +10,7 @@ import { loadFont as loadRoboto } from '@remotion/google-fonts/Roboto'
 // tables with tags and drafts while "Revisar e publicar (n)" climbs. 1920×1080, 30 fps, 22 s.
 // Account, product and numbers are made up; no third-party logos.
 
-export const ADS_AGENTS_BUILD_DURATION = 720
+export const ADS_AGENTS_BUILD_DURATION = 1050
 const FONT = loadRoboto('normal', { subsets: ['latin'], weights: ['400', '500', '700'] }).fontFamily
 const clamp = { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' } as const
 const ease = (f: number, a: number, b: number) => interpolate(f, [a, b], [0, 1], { ...clamp, easing: Easing.inOut(Easing.cubic) })
@@ -23,8 +23,8 @@ const T = (size: number, color = INK, weight = 400, extra?: CSSProperties): CSSP
 const PH = { campaign: 0, adset: 150, ad: 250, burst: 400, table: 480 } as const
 // Real-time sequence: the "create campaign" dialog, then the editor and the tables (sped up), the review of the
 // draft items and, at the end, the published campaigns with their results.
-const INTRO_END = 70, EDIT_SPEED = 1.3, TBL_START = 440, TBL_SPEED = 1.2
-const REVIEW = { open: 575, publish: 618, results: 640 }
+const INTRO_END = 70, EDIT_SPEED = 0.9, TBL_START = INTRO_END + Math.round(480 / EDIT_SPEED), TBL_SPEED = 0.6
+const REVIEW = { open: 880, publish: 935, results: 962 }
 /** Frame of the build timeline (editor and tables) at real frame f. */
 const buildFrame = (f: number) => f < INTRO_END ? 0 : f < TBL_START ? (f - INTRO_END) * EDIT_SPEED : 480 + (f - TBL_START) * TBL_SPEED
 /** Real frame of a build-timeline frame. */
@@ -451,7 +451,7 @@ function TableCursors({ f, tab, count }: { f: number; tab: number; count: number
   return <>{ROLES.map(([name, color], a) => {
     const [x0, dy] = spots[a % spots.length]
     const onRow = a < 4
-    const x = x0 + Math.sin((f + a * 11) / 9) * (onRow ? 14 : 30), yy = (onRow ? y + dy : y + 60 + dy) + Math.cos((f + a * 7) / 10) * 4
+    const x = x0 + Math.sin((f + a * 11) / 16) * (onRow ? 12 : 24), yy = (onRow ? y + dy : y + 60 + dy) + Math.cos((f + a * 7) / 18) * 4
     return <div key={a} style={{ position: 'absolute', left: x, top: yy - TOP, zIndex: 30 }}>
       <svg width={16} height={18} viewBox="0 0 22 24" style={{ display: 'block', filter: 'drop-shadow(0 1px 2px rgb(0 0 0 / .35))' }}><path d="M2 2 L2 20 L7 15 L10.5 22.5 L13.5 21 L10 14 L17 14 Z" fill="#1c1e21" stroke="#fff" strokeWidth={1.6} strokeLinejoin="round" /></svg>
       <span style={{ position: 'absolute', left: 12, top: 14, padding: '1px 7px', borderRadius: 999, background: color, ...T(10.5, '#fff', 700) }}>{name}</span>
@@ -620,7 +620,7 @@ const EXTRA: [number, number, number][] = [
   // the create dialog
   [960, 300, 10], [700, 270, 16], [620, 640, 30], [640, 690, 36], [900, 520, 44], [1290, 820, 56],
   // review drafts and results
-  [1700, TOP + 28, 566], [600, 520, 584], [900, 560, 596], [700, 600, 606], [1260, 760, 618], [1100, 560, 650], [800, 620, 668], [1300, 520, 690], [500, 700, 706],
+  [1700, TOP + 28, 868], [600, 520, 892], [900, 560, 906], [700, 600, 918], [1260, 760, 935], [1100, 560, 975], [800, 620, 998], [1300, 520, 1020], [500, 700, 1040],
 ]
 const routes: { f: number; x: number; y: number }[][] = ROLES.map(() => [])
 ;[...TARGETS.map(([x, y, fr]) => [x, y, Math.round(realFrame(fr))] as [number, number, number]), ...EXTRA].forEach(([x, y, fr], i) => routes[i % ROLES.length].push({ f: fr, x: x + (random('jx' + i) - 0.5) * 20, y: y + (random('jy' + i) - 0.5) * 6 }))
@@ -632,10 +632,10 @@ function Cursor({ a, f }: { a: number; f: number }) {
   const r = routes[a]
   if (!r.length || f < r[0].f - 12) return null
   let k = 0
-  while (k + 1 < r.length && r[k + 1].f - 10 <= f) k++
+  while (k + 1 < r.length && r[k + 1].f - 18 <= f) k++
   const cur = r[k], next = r[k + 1]
   let x = cur.x, y = cur.y
-  if (next) { const p = ease(f, next.f - 10, next.f); x += (next.x - cur.x) * p; y += (next.y - cur.y) * p }
+  if (next) { const p = ease(f, next.f - 18, next.f); x += (next.x - cur.x) * p; y += (next.y - cur.y) * p }
   x += Math.sin((f + a * 13) / 10) * 2.5; y += Math.cos((f + a * 7) / 12) * 2
   const click = f >= cur.f && f < cur.f + 8 ? 1 - (f - cur.f) / 8 : 0
   const [name, color] = ROLES[a]
