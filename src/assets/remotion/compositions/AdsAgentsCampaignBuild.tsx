@@ -10,7 +10,7 @@ import { loadFont as loadRoboto } from '@remotion/google-fonts/Roboto'
 // tables with tags and drafts while "Revisar e publicar (n)" climbs. 1920×1080, 30 fps, 22 s.
 // Account, product and numbers are made up; no third-party logos.
 
-export const ADS_AGENTS_BUILD_DURATION = 660
+export const ADS_AGENTS_BUILD_DURATION = 720
 const FONT = loadRoboto('normal', { subsets: ['latin'], weights: ['400', '500', '700'] }).fontFamily
 const clamp = { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' } as const
 const ease = (f: number, a: number, b: number) => interpolate(f, [a, b], [0, 1], { ...clamp, easing: Easing.inOut(Easing.cubic) })
@@ -22,6 +22,14 @@ const T = (size: number, color = INK, weight = 400, extra?: CSSProperties): CSSP
 // ---------- timing ----------
 const PH = { campaign: 0, adset: 150, ad: 250, burst: 400, table: 480 } as const
 const TABLE_TAB = { campaigns: 480, adsets: 540, ads: 596 }
+// Real-time sequence: the "create campaign" dialog, then the editor and the tables (sped up), the review of the
+// draft items and, at the end, the published campaigns with their results.
+const INTRO_END = 70, EDIT_SPEED = 1.3, TBL_START = 440, TBL_SPEED = 1.2
+const REVIEW = { open: 575, publish: 618, results: 640 }
+/** Frame of the build timeline (editor and tables) at real frame f. */
+const buildFrame = (f: number) => f < INTRO_END ? 0 : f < TBL_START ? (f - INTRO_END) * EDIT_SPEED : 480 + (f - TBL_START) * TBL_SPEED
+/** Real frame of a build-timeline frame. */
+const realFrame = (b: number) => b < 480 ? INTRO_END + b / EDIT_SPEED : TBL_START + (b - 480) / TBL_SPEED
 
 // ---------- tree (made up) ----------
 type Kind = 'campaign' | 'adset' | 'ad'
@@ -370,24 +378,33 @@ const ADSET_ROWS: { name: string; tag: Tag }[] = [
   ['VISITANTES DO SITE · 30D', TAGS.rt], ['ADICIONOU AO CARRINHO · 14D', TAGS.rt], ['ENVOLVIMENTO IG + FB · 60D', TAGS.rt], ['COMPRADORES · 180D', TAGS.ret],
 ].map(([n, t]) => ({ name: n as string, tag: t as Tag }))
 const AD_ROWS = ['C05 · AMIGOS · DOCE · V3', 'C06 · DIAS CORRIDOS · V1', 'C06 · DIAS CORRIDOS · V2', 'C06 · DIAS CORRIDOS · V3', 'VENCEDOR · 4 BENEFÍCIOS · POST', 'VENCEDOR · TESTE DE SABOR · POST', 'AMPLO · 4 BENEFÍCIOS · V1', 'AMPLO · HISTÓRIA REAL · V2', 'RT · DEPOIMENTO · V1']
+const RESULTS: [string, string, string, string][] = [
+  ['R$ 1.512,40', '38', 'R$ 39,80', '2,31'], ['R$ 14.870,10', '412', 'R$ 36,09', '2,78'], ['R$ 7.210,55', '186', 'R$ 38,77', '2,54'], ['R$ 2.940,30', '121', 'R$ 24,30', '3,92'], ['R$ 1.988,00', '97', 'R$ 20,49', '4,47'],
+]
+const countUp = (v: string, p: number) => {
+  const n = Number(v.replace('R$ ', '').replace(/\./g, '').replace(',', '.'))
+  const x = n * p, money = v.startsWith('R$'), dec = v.includes(',') && !money
+  return money ? `R$ ${x.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` : dec ? x.toFixed(2).replace('.', ',') : String(Math.round(x))
+}
 const reviewCount = (f: number) => f < PH.table ? Math.min(39, TREE.filter(n => f >= n.at).length + 18) : Math.min(41, 39 + Math.floor(interpolate(f, [600, 640], [0, 2.99], clamp)))
 
 const COLS: [string, number, 'l' | 'r'][] = [['Desativ./Ativ.', 96, 'l'], ['Campanha', 520, 'l'], ['Veiculação', 150, 'l'], ['Estratégia de lance', 210, 'l'], ['Orçamento', 160, 'r'], ['Valor usado', 140, 'r'], ['Compras', 120, 'r'], ['Custo por compra', 150, 'r'], ['ROAS de compras', 150, 'r']]
-function Tables({ f }: { f: number }) {
-  const tab = f < TABLE_TAB.adsets ? 0 : f < TABLE_TAB.ads ? 1 : 2
+function Tables({ f, mode = 'build', raw = 0 }: { f: number; mode?: 'empty' | 'build' | 'published'; raw?: number }) {
+  const tab = mode !== 'build' || f < TABLE_TAB.adsets ? 0 : f < TABLE_TAB.ads ? 1 : 2
   const start = [TABLE_TAB.campaigns, TABLE_TAB.adsets, TABLE_TAB.ads][tab]
   const title = ['Campanhas', 'Conjuntos de anúncios', 'Anúncios'][tab]
   const nameCol = ['Campanha', 'Conjunto de anúncios', 'Anúncio'][tab]
-  const rows = tab === 0 ? CAMPAIGN_ROWS.map(r => ({ ...r, thumb: -1 })) : tab === 1 ? ADSET_ROWS.map(r => ({ ...r, bid: 'Usando o lance da campanha', budget: 'Usando orç. da campanha', thumb: -1 })) : AD_ROWS.map((n, i) => ({ name: n, tag: undefined as Tag | undefined, bid: 'Usando lance do conjunto', budget: 'Usando orç. da campanha', thumb: i }))
+  const rows = mode === 'empty' ? [] : tab === 0 ? CAMPAIGN_ROWS.map(r => ({ ...r, thumb: -1 })) : tab === 1 ? ADSET_ROWS.map(r => ({ ...r, bid: 'Usando o lance da campanha', budget: 'Usando orç. da campanha', thumb: -1 })) : AD_ROWS.map((n, i) => ({ name: n, tag: undefined as Tag | undefined, bid: 'Usando lance do conjunto', budget: 'Usando orç. da campanha', thumb: i }))
   const n = reviewCount(f)
-  return <div style={{ position: 'absolute', left: 0, right: 0, top: TOP, bottom: 0, background: BG, opacity: out(f, PH.table, PH.table + 10) }}>
+  const res = mode === 'published' ? out(raw, REVIEW.results + 6, REVIEW.results + 50) : 0
+  return <div style={{ position: 'absolute', left: 0, right: 0, top: TOP, bottom: 0, background: BG, opacity: mode === 'build' ? out(f, PH.table, PH.table + 10) : 1 }}>
     <div style={{ height: 56, background: '#fff', borderBottom: `1px solid ${HAIR}`, display: 'flex', alignItems: 'center', gap: 12, padding: '0 20px' }}>
       <b style={T(20, INK, 700)}>{title}</b>
       <span style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '6px 10px', borderRadius: 6, background: BG, ...T(12.5, INK, 500) }}><i style={{ width: 16, height: 16, borderRadius: '50%', background: 'linear-gradient(135deg, #7ac943, #4e9a2a)' }} />nutri gomas · BR (8124003179) <Icon d={I.down} size={11} /></span>
       <span style={{ display: 'flex', alignItems: 'center', gap: 6, ...T(12.5, INK) }}><i style={{ width: 22, height: 22, borderRadius: '50%', border: `3px solid ${GREEN}`, borderRightColor: HAIR }} />Pontuação de oportunidade</span>
       <span style={{ marginLeft: 'auto', ...T(12.5, MUTED) }}>Atualizado agora</span><Icon d={I.refresh} size={13} />
       <span style={{ ...T(12.5, INK, 500), padding: '6px 12px', borderRadius: 6, border: `1px solid ${LINE}`, background: '#fff' }}>✕ Descartar rascunhos</span>
-      <span style={{ ...T(12.5, '#fff', 700), padding: '7px 14px', borderRadius: 6, background: BRIGHT, transform: `scale(${f % 30 < 4 ? 1.05 : 1})` }}>Revisar e publicar ({n})</span>
+      <span style={{ ...T(12.5, '#fff', 700), padding: '7px 14px', borderRadius: 6, background: BRIGHT, transform: `scale(${mode === 'build' && f % 30 < 4 ? 1.05 : 1})`, opacity: mode === 'build' ? 1 : 0.55 }}>Revisar e publicar{mode === 'build' ? ` (${n})` : ''}</span>
     </div>
     <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '10px 20px' }}>
       {['Todos os anúncios', 'Anúncios ativos', 'Tiveram veiculação', 'Ações'].map((t, i) => <span key={t} style={{ display: 'flex', alignItems: 'center', gap: 6, ...T(12.5, i === 0 ? BRIGHT : INK, 500), padding: '6px 12px', borderRadius: 6, background: i === 0 ? SEL : '#fff', boxShadow: '0 0 0 1px rgb(0 0 0 / .08)' }}>{t}</span>)}
@@ -403,7 +420,7 @@ function Tables({ f }: { f: number }) {
         <span style={{ display: 'flex', alignItems: 'center', gap: 6, ...T(12.5, '#fff', 700), padding: '6px 12px', borderRadius: 6, background: GREEN }}><Icon d={I.plus} size={12} color="#fff" w={2} />Criar</span>
         {[[I.copy, 'Duplicar'], [I.pencil, 'Editar'], [I.chart, 'Analisar'], [I.flask, 'Teste A/B']].map(([d, l]) => <span key={l} style={{ display: 'flex', alignItems: 'center', gap: 6, ...T(12.5, INK, 500), padding: '6px 12px', borderRadius: 6, border: `1px solid ${LINE}` }}><Icon d={d} size={12} />{l}</span>)}
         <span style={T(12.5, MUTED)}>Mais ▾</span>
-        <span style={{ marginLeft: 'auto', ...T(12.5, INK) }}>Hoje: 10 de nov. de 2026 ▾</span>
+        <span style={{ marginLeft: 'auto', ...T(12.5, INK) }}>{mode === 'published' ? 'Últimos 7 dias: 11 – 17 de nov. de 2026 ▾' : 'Hoje: 10 de nov. de 2026 ▾'}</span>
         <span style={{ ...T(12.5, INK, 500), padding: '6px 10px', borderRadius: 6, border: `1px solid ${LINE}` }}>Colunas ▾</span>
         <span style={{ ...T(12.5, INK, 500), padding: '6px 10px', borderRadius: 6, border: `1px solid ${LINE}` }}>Detalhamento ▾</span>
         <span style={{ ...T(12.5, INK, 500), padding: '6px 10px', borderRadius: 6, border: `1px solid ${LINE}` }}>Agrupamento ▾</span>
@@ -413,22 +430,91 @@ function Tables({ f }: { f: number }) {
       </div>
       {rows.map((r, i) => {
         const at = start + 6 + i * 5
-        if (f < at) return null
-        const p = out(f, at, at + 8), fresh = f - at < 12
+        if (mode === 'build' && f < at) return null
+        const p = mode === 'build' ? out(f, at, at + 8) : 1, fresh = mode === 'build' && f - at < 12
+        const live = mode === 'published'
         return <div key={r.name} style={{ display: 'flex', height: 50, alignItems: 'center', borderBottom: `1px solid ${HAIR}`, background: fresh ? '#fff8e1' : '#fff', opacity: p, transform: `translateY(${(1 - p) * -8}px)` }}>
-          <div style={{ width: 96, padding: '0 12px', display: 'flex', alignItems: 'center', gap: 10 }}><i style={{ width: 14, height: 14, borderRadius: 3, border: `1.5px solid ${BRIGHT}`, background: BRIGHT }} /><Toggle on={false} /></div>
+          <div style={{ width: 96, padding: '0 12px', display: 'flex', alignItems: 'center', gap: 10 }}><i style={{ width: 14, height: 14, borderRadius: 3, border: `1.5px solid ${live ? '#bcc0c4' : BRIGHT}`, background: live ? '#fff' : BRIGHT }} /><Toggle on={live} /></div>
           <div style={{ width: 520, padding: '0 12px', display: 'flex', alignItems: 'center', gap: 10, overflow: 'hidden' }}>
             {r.thumb >= 0 && <Creative w={34} h={34} variant={r.thumb} />}
             <span style={{ ...T(13, BLUE, 500), overflow: 'hidden', textOverflow: 'ellipsis' }}>{r.name}</span>
             {r.tag && <span style={{ ...T(11, '#1c1e21', 700), padding: '2px 8px', borderRadius: 999, background: `${r.tag[1]}40`, flex: 'none' }}>{r.tag[0]}</span>}
           </div>
-          <div style={{ width: 150, padding: '0 12px', display: 'flex', alignItems: 'center', gap: 6, ...T(12.5, MUTED) }}><Icon d={I.pencil} size={11} />Em rascunho</div>
+          <div style={{ width: 150, padding: '0 12px', display: 'flex', alignItems: 'center', gap: 6, ...T(12.5, live ? INK : MUTED) }}>{live ? <><i style={{ width: 8, height: 8, borderRadius: '50%', background: GREEN }} />Ativa</> : <><Icon d={I.pencil} size={11} />Em rascunho</>}</div>
           <div style={{ width: 210, padding: '0 12px', ...T(12.5, INK) }}>{r.bid}</div>
           <div style={{ width: 160, padding: '0 12px', textAlign: 'right', ...T(12.5, INK) }}>{r.budget}{tab === 0 && <div style={T(11, MUTED)}>Diário</div>}</div>
-          {['R$ 0,00', '—', '—', '—'].map((v, k) => <div key={k} style={{ width: [140, 120, 150, 150][k], padding: '0 12px', textAlign: 'right', ...T(12.5, MUTED) }}>{v}</div>)}
+          {(live ? RESULTS[i].map(v => countUp(v, res)) : ['R$ 0,00', '—', '—', '—']).map((v, k) => <div key={k} style={{ width: [140, 120, 150, 150][k], padding: '0 12px', textAlign: 'right', ...T(12.5, live ? INK : MUTED, live ? 500 : 400) }}>{v}{live && k === 2 && <div style={T(11, MUTED)}>Por compra</div>}</div>)}
         </div>
       })}
-      <div style={{ display: 'flex', alignItems: 'center', gap: 6, height: 42, padding: '0 108px', ...T(12.5, INK, 700) }}>Resultados de {rows.length} {['campanhas', 'conjuntos de anúncios', 'anúncios'][tab]}<Icon d={I.info} size={12} /></div>
+      <div style={{ display: 'flex', alignItems: 'center', height: 52 }}>
+        <div style={{ width: 96 + 520 + 150 + 210 + 160, display: 'flex', alignItems: 'center', gap: 6, padding: '0 108px', ...T(12.5, INK, 700) }}>Resultados de {rows.length} {['campanhas', 'conjuntos de anúncios', 'anúncios'][tab]}<Icon d={I.info} size={12} /></div>
+        {mode === 'published' && [['R$ 28.521,35', 'Total usado'], ['854', 'Total'], ['R$ 33,40', 'Por compra'], ['2,89', 'Média']].map(([v, l], k) => <div key={l} style={{ width: [140, 120, 150, 150][k], padding: '0 12px', textAlign: 'right' }}><div style={T(13, INK, 700)}>{countUp(v, res)}</div><div style={T(11, MUTED)}>{l}</div></div>)}
+      </div>
+    </div>
+  </div>
+}
+
+// ---------- dialogs ----------
+
+const OBJECTIVES = ['Reconhecimento', 'Tráfego', 'Engajamento', 'Cadastros', 'Promoção do app', 'Vendas']
+function CreateCampaignModal({ f }: { f: number }) {
+  if (f < 6 || f >= INTRO_END + 4) return null
+  const a = out(f, 6, 16) * (1 - ease(f, INTRO_END - 6, INTRO_END + 4))
+  const chosen = f >= 36
+  return <div style={{ position: 'absolute', inset: 0, top: TOP, background: `rgb(0 0 0 / ${0.35 * a})`, zIndex: 40, display: 'grid', placeItems: 'center' }}>
+    <div style={{ width: 760, background: '#fff', borderRadius: 10, boxShadow: '0 20px 60px rgb(0 0 0 / .3)', opacity: a, transform: `scale(${0.96 + a * 0.04})` }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '14px 18px', borderBottom: `1px solid ${HAIR}` }}>
+        <span style={{ ...T(13, BRIGHT, 700), padding: '5px 10px', borderRadius: 6, background: SEL }}>Criar nova campanha</span><span style={{ ...T(13, MUTED, 500), padding: '5px 10px' }}>Novo conjunto ou anúncio</span>
+        <span style={{ marginLeft: 'auto' }}><Icon d={I.x} size={14} /></span>
+      </div>
+      <div style={{ padding: '16px 20px' }}>
+        <Label info>Escolha um tipo de compra</Label>
+        <div style={{ width: 320 }}><Input value="Leilão" f={f} at={14} select /></div>
+        <b style={{ ...T(14, INK, 700), display: 'block', margin: '18px 0 10px' }}>Escolha um objetivo da campanha</b>
+        <div style={{ display: 'flex', gap: 20 }}>
+          <div style={{ width: 300 }}>{OBJECTIVES.map((o, i) => {
+            const on = chosen && i === 5
+            return <div key={o} style={{ display: 'flex', alignItems: 'center', gap: 12, height: 42, padding: '0 10px', borderRadius: 6, background: on ? SEL : 'transparent' }}><Radio on={on} /><span style={{ width: 28, height: 28, borderRadius: 6, background: BG, display: 'grid', placeItems: 'center' }}><Icon d={[I.eye, I.chev, I.people, I.ad, I.grid, I.folder][i]} size={14} /></span><span style={T(13.5, INK, on ? 700 : 400)}>{o}</span></div>
+          })}</div>
+          <div style={{ flex: 1, padding: 14, borderRadius: 8, background: '#fafbfc', opacity: chosen ? 1 : 0.5 }}>
+            {chosen ? <><b style={T(14, INK, 700)}>Vendas</b><div style={{ ...T(12.5, MUTED, 400, { whiteSpace: 'normal', lineHeight: 1.45 }), marginTop: 6 }}>Encontre pessoas com probabilidade de comprar seu produto ou serviço.</div>
+              <b style={{ ...T(12.5, INK, 700), display: 'block', marginTop: 12 }}>Indicado para:</b>
+              {['Conversões', 'Vendas do catálogo', 'Messenger, Instagram e WhatsApp', 'Ligações'].map(x => <div key={x} style={{ ...T(12.5, MUTED), marginTop: 4 }}>{x}</div>)}</>
+              : <div style={T(12.5, MUTED, 400, { whiteSpace: 'normal', lineHeight: 1.45 })}>O objetivo da campanha é o resultado que você quer gerar com os anúncios.</div>}
+          </div>
+        </div>
+      </div>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '12px 20px', borderTop: `1px solid ${HAIR}` }}>
+        <span style={T(12, BRIGHT, 500)}>Sobre os objetivos da campanha</span>
+        <span style={{ marginLeft: 'auto', ...T(13, INK, 500), padding: '6px 14px', borderRadius: 6, border: `1px solid ${LINE}` }}>Cancelar</span>
+        <span style={{ ...T(13, '#fff', 700), padding: '7px 16px', borderRadius: 6, background: chosen ? BRIGHT : '#a4c8f7', transform: `scale(${f >= 54 && f < 60 ? 0.95 : 1})` }}>Continuar</span>
+      </div>
+    </div>
+  </div>
+}
+
+function ReviewDraftsModal({ f }: { f: number }) {
+  if (f < REVIEW.open || f >= REVIEW.results + 6) return null
+  const a = out(f, REVIEW.open, REVIEW.open + 10) * (1 - ease(f, REVIEW.results - 4, REVIEW.results + 6))
+  const publishing = f >= REVIEW.publish
+  return <div style={{ position: 'absolute', inset: 0, top: TOP, background: `rgb(0 0 0 / ${0.35 * a})`, zIndex: 40, display: 'grid', placeItems: 'center' }}>
+    <div style={{ width: 860, background: '#fff', borderRadius: 10, boxShadow: '0 20px 60px rgb(0 0 0 / .3)', opacity: a, transform: `scale(${0.96 + a * 0.04})` }}>
+      <div style={{ display: 'flex', alignItems: 'center', padding: '14px 20px', borderBottom: `1px solid ${HAIR}` }}><b style={T(16, INK, 700)}>Revisar itens de rascunho</b><span style={{ marginLeft: 'auto' }}><Icon d={I.x} size={14} /></span></div>
+      <div style={{ display: 'flex', gap: 6, padding: '12px 20px 0' }}>
+        {[[I.folder, 'Campanhas', 5], [I.grid, 'Conjuntos de anúncios', 14], [I.ad, 'Anúncios', 22]].map(([d, l, n], i) => <span key={l as string} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '6px 12px', borderRadius: 6, background: i === 0 ? SEL : 'transparent', ...T(12.5, i === 0 ? BRIGHT : INK, 500) }}><Icon d={d as string} size={12} color={i === 0 ? BRIGHT : MUTED} />{l as string} · {n as number}</span>)}
+      </div>
+      <div style={{ margin: '12px 20px', border: `1px solid ${HAIR}`, borderRadius: 6 }}>
+        <div style={{ display: 'flex', padding: '8px 12px', background: '#fafbfc', borderBottom: `1px solid ${HAIR}`, ...T(12, INK, 700) }}><span style={{ width: 30 }} /><span style={{ flex: 1 }}>Nome da campanha</span><span style={{ width: 120 }}>Alteração</span><span style={{ width: 80 }}>Erros</span></div>
+        {CAMPAIGN_ROWS.map((r, i) => <div key={r.name} style={{ display: 'flex', alignItems: 'center', padding: '9px 12px', borderBottom: i < 4 ? `1px solid ${HAIR}` : 'none', ...T(12.5, INK) }}>
+          <span style={{ width: 30 }}><i style={{ display: 'grid', placeItems: 'center', width: 14, height: 14, borderRadius: 3, background: BRIGHT, color: '#fff', fontSize: 10 }}>✓</i></span>
+          <span style={{ flex: 1 }}>{r.name}</span><span style={{ width: 120, color: MUTED }}>Novo</span><span style={{ width: 80, color: MUTED }}>—</span>
+        </div>)}
+      </div>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '12px 20px', borderTop: `1px solid ${HAIR}` }}>
+        <span style={{ ...T(11.5, MUTED, 400, { whiteSpace: 'normal', lineHeight: 1.4 }), maxWidth: 520 }}>Ao clicar em Publicar, você confirma que o uso das ferramentas de anúncios segue os Termos e Condições.</span>
+        <span style={{ marginLeft: 'auto', ...T(13, INK, 500), padding: '6px 14px', borderRadius: 6, border: `1px solid ${LINE}` }}>Cancelar</span>
+        <span style={{ ...T(13, '#fff', 700), padding: '7px 18px', borderRadius: 6, background: GREEN, transform: `scale(${f >= REVIEW.publish && f < REVIEW.publish + 6 ? 0.95 : 1})` }}>{publishing ? 'Publicando…' : 'Publicar'}</span>
+      </div>
     </div>
   </div>
 }
@@ -449,8 +535,14 @@ const TARGETS: [number, number, number][] = [
   // tables
   [1700, TOP + 28, 486], [420, TOP + 290, 494], [700, TOP + 340, 506], [560, TOP + 196, 540], [380, TOP + 290, 552], [800, TOP + 390, 566], [900, TOP + 196, 596], [420, TOP + 290, 606], [700, TOP + 430, 620], [1720, TOP + 28, 640], [600, TOP + 520, 650],
 ]
+const EXTRA: [number, number, number][] = [
+  // the create dialog
+  [960, 300, 10], [700, 270, 16], [620, 640, 30], [640, 690, 36], [900, 520, 44], [1290, 820, 56],
+  // review drafts and results
+  [1700, TOP + 28, 566], [600, 520, 584], [900, 560, 596], [700, 600, 606], [1260, 760, 618], [1100, 560, 650], [800, 620, 668], [1300, 520, 690], [500, 700, 706],
+]
 const routes: { f: number; x: number; y: number }[][] = ROLES.map(() => [])
-TARGETS.forEach(([x, y, fr], i) => routes[i % ROLES.length].push({ f: fr, x: x + (random('jx' + i) - 0.5) * 20, y: y + (random('jy' + i) - 0.5) * 6 }))
+;[...TARGETS.map(([x, y, fr]) => [x, y, Math.round(realFrame(fr))] as [number, number, number]), ...EXTRA].forEach(([x, y, fr], i) => routes[i % ROLES.length].push({ f: fr, x: x + (random('jx' + i) - 0.5) * 20, y: y + (random('jy' + i) - 0.5) * 6 }))
 routes.forEach(r => r.sort((a, b) => a.f - b.f))
 
 function Cursor({ a, f }: { a: number; f: number }) {
@@ -473,12 +565,19 @@ function Cursor({ a, f }: { a: number; f: number }) {
 
 export function AdsAgentsCampaignBuild() {
   const f = useCurrentFrame()
-  const toTable = ease(f, PH.table - 6, PH.table + 6)
+  const b = buildFrame(f)
+  const toEditor = ease(f, INTRO_END - 6, INTRO_END + 4)
+  const toTable = ease(b, PH.table - 6, PH.table + 6)
+  const published = f >= REVIEW.results
   return <AbsoluteFill style={{ background: BG, overflow: 'hidden', fontFamily: FONT }}>
     <div style={{ position: 'absolute', inset: 0, opacity: out(f, 0, 8) }}>
       <Browser f={f} />
-      {f < PH.table + 6 && <div style={{ position: 'absolute', inset: 0, opacity: 1 - toTable }}><Editor f={f} /></div>}
-      {f >= PH.table - 6 && <Tables f={f} />}
+      {f < INTRO_END + 4 && <div style={{ position: 'absolute', inset: 0, opacity: 1 - toEditor }}><Tables f={0} mode="empty" /></div>}
+      {f >= INTRO_END - 6 && b < PH.table + 6 && <div style={{ position: 'absolute', inset: 0, opacity: toEditor * (1 - toTable) }}><Editor f={b} /></div>}
+      {b >= PH.table - 6 && !published && <Tables f={Math.min(b, 640)} />}
+      {published && <Tables f={640} mode="published" raw={f} />}
+      <CreateCampaignModal f={f} />
+      <ReviewDraftsModal f={f} />
       {ROLES.map((_, a) => <Cursor key={a} a={a} f={f} />)}
     </div>
   </AbsoluteFill>
