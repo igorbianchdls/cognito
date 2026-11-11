@@ -70,12 +70,35 @@ function Toggle({ on, size = 1 }: { on: boolean; size?: number }) {
 }
 const Radio = ({ on }: { on: boolean }) => <i style={{ width: 20, height: 20, borderRadius: '50%', border: `1.5px solid ${on ? BRIGHT : '#bcc0c4'}`, display: 'grid', placeItems: 'center', flex: 'none', background: '#fff' }}>{on && <i style={{ width: 10, height: 10, borderRadius: '50%', background: BRIGHT }} />}</i>
 
+/** An agent's cursor anchored to the element it works on: it glides in, clicks (or types) and leaves, so it
+ *  scrolls together with the page. */
+function Hand({ f, at, x = 0, y = 0, dur = 14, role }: { f: number; at: number; x?: number; y?: number; dur?: number; role?: number }) {
+  const t = f - at
+  if (t < -18 || t > dur + 14) return null
+  const r = role ?? Math.abs(Math.round(at * 7)) % ROLES.length
+  const [name, color] = ROLES[r]
+  const come = ease(f, at - 18, at), go = ease(f, at + dur, at + dur + 14)
+  const sx = 60 + (r % 3) * 30, sy = 36 + (r % 2) * 24
+  const dx = (1 - come) * -sx + go * sx * 0.8, dy = (1 - come) * sy + go * sy
+  const click = t >= 0 && t < 9 ? 1 - t / 9 : 0
+  const wob = t > 0 && t < dur ? Math.sin((f + r * 13) / 6) * 1.5 : 0
+  return <div style={{ position: 'absolute', left: x + dx + wob, top: y + dy, zIndex: 60, pointerEvents: 'none', opacity: Math.min(1, come * 1.6) * (1 - go) }}>
+    {click > 0 && <div style={{ position: 'absolute', left: -11, top: -11, width: 22, height: 22, borderRadius: '50%', border: `2px solid ${color}`, opacity: click, transform: `scale(${1.7 - click * 0.7})` }} />}
+    <svg width={17} height={19} viewBox="0 0 22 24" style={{ display: 'block', filter: 'drop-shadow(0 1px 2px rgb(0 0 0 / .35))', transform: `scale(${1 - click * 0.12})` }}><path d="M2 2 L2 20 L7 15 L10.5 22.5 L13.5 21 L10 14 L17 14 Z" fill="#1c1e21" stroke="#fff" strokeWidth={1.6} strokeLinejoin="round" /></svg>
+    <span style={{ position: 'absolute', left: 13, top: 15, padding: '1px 7px', borderRadius: 999, background: color, ...T(10.5, '#fff', 700) }}>{name}</span>
+  </div>
+}
+
 function Input({ value, f, at, select, h = 38, multiline, active: forced, placeholder }: { value: string; f: number; at: number; select?: boolean; h?: number; multiline?: boolean; active?: boolean; placeholder?: string }) {
   const v = typed(value, f, at), typing = f >= at && v.length < value.length
   const active = forced ?? typing
-  return <div style={{ minHeight: h, borderRadius: 6, border: `1px solid ${active ? BRIGHT : LINE}`, boxShadow: active ? '0 0 0 2px rgb(24 119 242 / .18)' : 'none', background: '#fff', display: 'flex', alignItems: multiline ? 'flex-start' : 'center', padding: multiline ? '8px 12px' : '0 12px', ...T(14, v ? INK : '#8a8d91', 400, { whiteSpace: multiline ? 'normal' : 'nowrap', lineHeight: 1.4 }) }}>
+  const cps = 1.6, dur = value.length / cps
+  const caret = multiline ? Math.min(v.length % 62, 62) * 7.4 + 14 : Math.min(v.length * 7.6, 470) + 14
+  const line = multiline ? Math.min(2, Math.floor(v.length / 62)) * 20 + 12 : h * 0.5
+  return <div style={{ position: 'relative', minHeight: h, borderRadius: 6, border: `1px solid ${active ? BRIGHT : LINE}`, boxShadow: active ? '0 0 0 2px rgb(24 119 242 / .18)' : 'none', background: '#fff', display: 'flex', alignItems: multiline ? 'flex-start' : 'center', padding: multiline ? '8px 12px' : '0 12px', ...T(14, v ? INK : '#8a8d91', 400, { whiteSpace: multiline ? 'normal' : 'nowrap', lineHeight: 1.4 }) }}>
     <span style={{ flex: 1, overflow: 'hidden' }}>{v || placeholder || ''}{typing && <span style={{ color: BRIGHT }}>|</span>}</span>
     {select && <Icon d={I.down} size={12} />}
+    {value && <Hand f={f} at={at} x={caret} y={line} dur={dur} />}
   </div>
 }
 function Label({ children, info }: { children: ReactNode; info?: boolean }) {
@@ -170,9 +193,11 @@ function Tree({ f, sel }: { f: number; sel: number }) {
       {shown.map(({ n, i }) => {
         const p = out(f, n.at, n.at + 8), on = i === sel
         const depth = n.kind === 'campaign' ? 0 : n.kind === 'adset' ? 1 : 2
-        return <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 10, height: TREE_ROW, paddingLeft: 16 + depth * 18, paddingRight: 12, background: on ? '#e7f0fd' : DRAFT, borderBottom: '1px solid #fff', opacity: p, transform: `translateX(${(1 - p) * -12}px)` }}>
+        return <div key={i} style={{ position: 'relative', display: 'flex', alignItems: 'center', gap: 10, height: TREE_ROW, paddingLeft: 16 + depth * 18, paddingRight: 12, background: on ? '#e7f0fd' : DRAFT, borderBottom: '1px solid #fff', opacity: p, transform: `translateX(${(1 - p) * -12}px)` }}>
           <Icon d={n.kind === 'campaign' ? I.folder : n.kind === 'adset' ? I.grid : I.ad} size={16} color={on ? BRIGHT : INK} w={1.6} />
           <span style={{ ...T(14.5, on ? BRIGHT : INK, 400), overflow: 'hidden', textOverflow: 'ellipsis' }}>{nodeLabel(n, f)}</span>
+          {n.renameAt !== undefined && n.tmp && i % 2 === 0 && <Hand f={f} at={n.renameAt} x={60 + Math.min(n.label.length * 7, 200)} y={TREE_ROW / 2} dur={n.label.length / 2.4} />}
+          {on && f >= PH.burst && <Hand f={f} at={PH.burst + Math.floor((f - PH.burst) / 8) * 8} x={130} y={TREE_ROW / 2} dur={4} role={1} />}
         </div>
       })}
     </div>
@@ -220,7 +245,7 @@ function Footer({ f, kind }: { f: number; kind: Kind }) {
     {kind !== 'campaign' && <span style={{ ...T(15, INK, 500), padding: '8px 16px', borderRadius: 6, border: `1px solid ${LINE}` }}>Voltar</span>}
     {kind === 'ad'
       ? <span style={{ ...T(15, '#fff', 700), padding: '9px 18px', borderRadius: 6, background: '#1a7a45' }}>Publicar</span>
-      : <span style={{ ...T(15, '#fff', 700), padding: '9px 18px', borderRadius: 6, background: BRIGHT }}>Avançar</span>}
+      : <span style={{ position: 'relative', ...T(15, '#fff', 700), padding: '9px 18px', borderRadius: 6, background: BRIGHT }}>Avançar<Hand f={f} at={kind === 'campaign' ? PH.adset - 8 : PH.ad - 8} x={40} y={22} dur={6} role={0} /></span>}
   </div>
 }
 
@@ -261,8 +286,8 @@ const NameRow = ({ value, f, at }: { value: string; f: number; at: number }) => 
   <span style={{ ...T(14.5, INK, 500), padding: '0 16px', height: 38, display: 'grid', placeItems: 'center', borderRadius: 6, border: `1px solid ${LINE}` }}>Criar modelo</span>
 </div>
 const Static = ({ label, value, info }: { label: string; value: string; info?: boolean }) => <div style={{ marginBottom: 12 }}><Label info={info}>{label}</Label><div style={T(13.5, MUTED)}>{value}</div></div>
-const ToggleRow = ({ title, text, on }: { title: string; text: string; on: boolean }) => <SideCardLike>
-  <div style={{ display: 'flex', alignItems: 'center' }}><b style={T(17, INK, 500)}>{title}</b><span style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 10, ...T(14, INK) }}>{on ? 'Ativado' : 'Desativado'}<Toggle on={on} /></span></div>
+const ToggleRow = ({ title, text, on, f, at }: { title: string; text: string; on: boolean; f?: number; at?: number }) => <SideCardLike>
+  <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>{f !== undefined && at !== undefined && <Hand f={f} at={at} x={FORM_W - 56} y={12} role={3} />}<b style={T(17, INK, 500)}>{title}</b><span style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 10, ...T(14, INK) }}>{on ? 'Ativado' : 'Desativado'}<Toggle on={on} /></span></div>
   <div style={{ ...T(14, MUTED, 400, { whiteSpace: 'normal', lineHeight: 1.5 }), marginTop: 10 }}>{text}</div>
 </SideCardLike>
 function SideCardLike({ children }: { children: ReactNode }) {
@@ -290,7 +315,7 @@ function CampaignEditor({ f }: { f: number }) {
           <div style={{ display: 'flex', alignItems: 'center', gap: 6, ...T(15, INK, 500) }}>Estratégia de orçamento<Icon d={I.info} size={13} color={INK} /><span style={{ marginLeft: 'auto' }}><Icon d={I.up} size={14} color={INK} /></span></div>
           <div style={{ background: '#fff', borderRadius: 6, padding: '12px 14px', marginTop: 10 }}>
             {[['Orçamento da campanha', 'Distribua seu orçamento automaticamente para as melhores oportunidades na sua campanha. Também chamado de orçamento de campanha Advantage+. ', 'Sobre o orçamento da campanha', cbo], ['Orçamento do conjunto de anúncios', 'Defina estratégias de lance ou programações de orçamento diferentes para cada conjunto de anúncios.', '', !cbo]].map(([a, b, link, on], i) => <div key={a as string} style={{ display: 'flex', gap: 12, marginTop: i ? 14 : 0 }}>
-              <span style={{ marginTop: 2 }}><Radio on={Boolean(on)} /></span>
+              <span style={{ marginTop: 2, position: 'relative' }}><Radio on={Boolean(on)} />{i === 0 && <Hand f={f} at={34} x={10} y={10} role={2} />}</span>
               <div><div style={T(15, INK, 400)}>{a as string}</div><div style={{ ...T(13, MUTED, 400, { whiteSpace: 'normal', lineHeight: 1.45 }), marginTop: 2 }}>{b as string}{link && <span style={{ color: BRIGHT }}>{link as string}</span>}</div></div>
             </div>)}
           </div>
@@ -305,7 +330,7 @@ function CampaignEditor({ f }: { f: number }) {
         <div style={{ borderTop: `1px solid ${HAIR}`, paddingTop: 12, ...T(14, BRIGHT) }}>Mostrar mais configurações ▾</div>
       </Section>
       <ToggleRow title="Controle da frequência da campanha" on={false} text="Defina uma frequência se houver um número específico de vezes que você deseja que as pessoas vejam seus anúncios durante a campanha. Saiba mais" />
-      <ToggleRow title="Teste A/B" on={t >= 100} text="Para ajudar a melhorar o desempenho do anúncio, compare versões e veja qual funciona melhor. Para maior precisão, cada uma será mostrada a grupos separados do seu público. Sobre os testes A/B" />
+      <ToggleRow f={f} at={100} title="Teste A/B" on={t >= 100} text="Para ajudar a melhorar o desempenho do anúncio, compare versões e veja qual funciona melhor. Para maior precisão, cada uma será mostrada a grupos separados do seu público. Sobre os testes A/B" />
       <Section title="Categorias de anúncio especiais">
         <div style={{ ...T(14, MUTED, 400, { whiteSpace: 'normal', lineHeight: 1.5 }) }}>Declare se seus anúncios são relacionados a produtos e serviços financeiros, emprego, moradia, temas sociais, eleições ou política para ajudar a evitar rejeições.</div>
         <div style={{ marginTop: 12 }}><Label>Categorias</Label><Input value="" placeholder="Declarar categoria se aplicável" f={f} at={9999} select /></div>
@@ -376,7 +401,7 @@ function AdSetEditor({ f }: { f: number }) {
       </Section>
       <Section title="Posicionamentos" link="✦ Advantage+ ativado">
         {[['Posicionamentos Advantage+ (recomendado)', 'Use os posicionamentos Advantage+ para aumentar o orçamento e mostrar os anúncios a mais pessoas.', true], ['Posicionamentos manuais', 'Escolha manualmente onde mostrar o anúncio.', false]].map(([a, b, on]) => <div key={a as string} style={{ display: 'flex', gap: 12, padding: '10px 12px', borderRadius: 6, border: `1px solid ${on && advPlacements ? BRIGHT : LINE}`, marginBottom: 8 }}>
-          <span style={{ marginTop: 2 }}><Radio on={Boolean(on) && advPlacements} /></span><div><div style={T(15, INK)}>{a as string}</div><div style={{ ...T(13, MUTED, 400, { whiteSpace: 'normal', lineHeight: 1.4 }), marginTop: 2 }}>{b as string}</div></div>
+          <span style={{ marginTop: 2, position: 'relative' }}><Radio on={Boolean(on) && advPlacements} />{Boolean(on) && <Hand f={f} at={t0 + 88} x={10} y={10} role={4} />}</span><div><div style={T(15, INK)}>{a as string}</div><div style={{ ...T(13, MUTED, 400, { whiteSpace: 'normal', lineHeight: 1.4 }), marginTop: 2 }}>{b as string}</div></div>
         </div>)}
       </Section>
     </>)}
@@ -417,8 +442,9 @@ function MediaPicker({ f, t0 }: { f: number; t0: number }) {
         <div style={{ display: 'flex', gap: 22, marginTop: 10 }}>{Array.from({ length: 10 }, (_, i) => {
           const idx = row * 10 + i, on = row === 0 && picked(i)
           return <div key={i} style={{ width: 104 }}>
-            <div style={{ position: 'relative', borderRadius: 4, overflow: 'hidden', outline: on ? `3px solid ${BRIGHT}` : 'none' }}>
+            <div style={{ position: 'relative', borderRadius: 4, overflow: 'visible', outline: on ? `3px solid ${BRIGHT}` : 'none' }}>
               <Creative w={104} h={row ? 138 : 104} variant={idx % 3} />
+              {row === 0 && [1, 4, 7].includes(i) && <Hand f={f} at={t0 + [16, 22, 28][[1, 4, 7].indexOf(i)]} x={52} y={50} dur={4} role={5 + [1, 4, 7].indexOf(i)} />}
               {on && <span style={{ position: 'absolute', right: 6, top: 6, width: 20, height: 20, borderRadius: 4, background: BRIGHT, display: 'grid', placeItems: 'center' }}><Icon d={I.check} size={12} color="#fff" w={2.4} /></span>}
             </div>
             <div style={{ ...T(12.5, INK), marginTop: 6, overflow: 'hidden', textOverflow: 'ellipsis' }}>{row ? '' : `nutri_${['sabor', 'kit', 'manha', 'frutas', 'ugc', 'promo', 'familia', 'rotina', 'beneficios', 'oferta'][i]}.jpg`}</div>
@@ -430,7 +456,7 @@ function MediaPicker({ f, t0 }: { f: number; t0: number }) {
     <div style={{ position: 'absolute', left: 0, right: 0, bottom: 0, height: 64, borderTop: `1px solid ${HAIR}`, display: 'flex', alignItems: 'center', gap: 12, padding: '0 20px' }}>
       <span style={T(14, INK)}>{n} selecionada(s)</span>
       <span style={{ marginLeft: 'auto', ...T(15, INK, 500), padding: '8px 16px', borderRadius: 6, border: `1px solid ${LINE}` }}>Cancelar</span>
-      <span style={{ ...T(15, '#fff', 700), padding: '9px 18px', borderRadius: 6, background: n ? BRIGHT : '#a4c8f7' }}>Avançar</span>
+      <span style={{ position: 'relative', ...T(15, '#fff', 700), padding: '9px 18px', borderRadius: 6, background: n ? BRIGHT : '#a4c8f7' }}>Avançar<Hand f={f} at={t0 + 38} x={40} y={22} dur={4} role={0} /></span>
     </div>
   </div>
 }
@@ -457,7 +483,7 @@ function AdEditor({ f, sel }: { f: number; sel: number }) {
       <Section title="Configuração do anúncio">
         <Input value="Criar anúncio" f={f} at={t0 + 10} select />
         <div style={{ marginTop: 12 }}><Label info>Formato</Label><div style={{ ...T(13, MUTED), marginTop: -2, marginBottom: 8 }}>Escolha um layout para o criativo do anúncio.</div></div>
-        {[['Imagem ou vídeo único', true], ['Carrossel', false]].map(([l, on]) => <div key={l as string} style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 10, ...T(15, INK) }}><Radio on={Boolean(on) && f >= t0 + 14} />{l as string}</div>)}
+        {[['Imagem ou vídeo único', true], ['Carrossel', false]].map(([l, on]) => <div key={l as string} style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 10, ...T(15, INK) }}><span style={{ position: 'relative' }}><Radio on={Boolean(on) && f >= t0 + 14} />{Boolean(on) && <Hand f={f} at={t0 + 14} x={10} y={10} role={5} />}</span>{l as string}</div>)}
         <div style={{ display: 'flex', gap: 10, borderTop: `1px solid ${HAIR}`, paddingTop: 12 }}>
           <span style={{ width: 18, height: 18, borderRadius: 3, border: `1.5px solid ${BRIGHT}`, display: 'grid', placeItems: 'center', flex: 'none' }}><Icon d={I.check} size={12} color={BRIGHT} w={2.4} /></span>
           <div><div style={T(15, INK)}>Anúncios com vários anunciantes</div><div style={{ ...T(13, MUTED, 400, { whiteSpace: 'normal', lineHeight: 1.45 }), marginTop: 2 }}>Seu anúncio pode aparecer com outros na mesma unidade de anúncios para ajudar a promover a descoberta.</div></div>
@@ -579,18 +605,48 @@ const EDITS = [
 ]
 /** Where the table rows start, from the top of the screen. */
 const ROWS_TOP = TOP + 352
-function TableCursors({ f, tab, count }: { f: number; tab: number; count: number }) {
-  let active = -1
-  for (let i = 0; i < count; i++) if (f >= rowAt(tab, i)) active = i
-  const y = ROWS_TOP + Math.max(0, active) * 50 + 25
-  const spots: [number, number][] = [[230, 0], [520, 6], [880, 2], [1060, -4], [360, 70], [700, 120], [1000, 90], [1400, 140], [540, 180]]
-  return <>{ROLES.map(([name, color], a) => {
-    const [x0, dy] = spots[a % spots.length]
-    const onRow = a < 4
-    const x = x0 + Math.sin((f + a * 11) / 16) * (onRow ? 12 : 24), yy = (onRow ? y + dy : y + 60 + dy) + Math.cos((f + a * 7) / 18) * 4
-    return <div key={a} style={{ position: 'absolute', left: x, top: yy - TOP, zIndex: 30 }}>
-      <svg width={16} height={18} viewBox="0 0 22 24" style={{ display: 'block', filter: 'drop-shadow(0 1px 2px rgb(0 0 0 / .35))' }}><path d="M2 2 L2 20 L7 15 L10.5 22.5 L13.5 21 L10 14 L17 14 Z" fill="#1c1e21" stroke="#fff" strokeWidth={1.6} strokeLinejoin="round" /></svg>
-      <span style={{ position: 'absolute', left: 12, top: 14, padding: '1px 7px', borderRadius: 999, background: color, ...T(10.5, '#fff', 700) }}>{name}</span>
+function TableCursors({ f, tab, names }: { f: number; tab: number; names: string[] }) {
+  const ROW = 50, y0 = ROWS_TOP - TOP + 25
+  const tabX = (i: number) => 16 + i * 196 + 100, tabY = 64 + 52 + 50 + 10 + 23
+  const vi = VISITS.findIndex(([, a, b]) => f >= a && f < b), visit = VISITS[Math.max(0, vi)], next = VISITS[vi + 1]
+  /** The row being created at frame g, and when it started. */
+  const activeAt = (g: number) => { let k = -1; for (let i = 0; i < names.length; i++) if (g >= rowAt(tab, i)) k = i; return k }
+  const target = (a: number, g: number): [number, number] | null => {
+    const k = activeAt(g), at = k >= 0 ? rowAt(tab, k) : visit[1], y = y0 + Math.max(0, k) * ROW
+    const rowStart = g - at
+    switch (a) {
+      case 0: { // types the name
+        const chars = k < 0 ? 0 : Math.min(names[k].length, Math.max(0, (rowStart - 1) * 3.2))
+        return [130 + 20 + chars * 8.4, y + 4]
+      }
+      case 1: // clicks the level tab when a visit starts, then sets the tag
+        return g - visit[1] < 8 ? [tabX(visit[0]), tabY] : rowStart >= 5 ? [130 + 470 - 70, y + 2] : [130 + 470 - 110, y + ROW * 0.6]
+      case 2: return rowStart >= 7 ? [130 + 470 + 170 + 70, y + 4] : [130 + 470 + 170 + 40, y - ROW * 0.6]
+      case 3: return rowStart >= 9 ? [130 + 470 + 170 + 200 + 110, y + 4] : [130 + 470 + 170 + 200 + 80, y - ROW * 0.6]
+      case 4: { // the reviewer ticks the finished rows
+        if (k < 1) return null
+        const j = Math.floor(g / 14) % k
+        return [52, y0 + j * ROW + 2]
+      }
+      case 5: // heads to the next level's tab near the end of the visit
+        return next && visit[2] - g < 14 ? [tabX(next[0]), tabY] : [130 + 300, y + ROW + 30]
+      default: return null
+    }
+  }
+  return <>{[0, 1, 2, 3, 4, 5].map(a => {
+    // Smooth the path: a weighted average of the recent targets turns every jump into a glide.
+    let x = 0, y = 0, w = 0
+    for (let k = 0; k < 10; k++) { const p = target(a, f - k); if (!p) continue; const wt = 10 - k; x += p[0] * wt; y += p[1] * wt; w += wt }
+    if (!w) return null
+    x /= w; y /= w
+    x += Math.sin((f + a * 11) / 14) * 2; y += Math.cos((f + a * 7) / 16) * 2
+    const [name, color] = ROLES[[1, 0, 3, 2, 8, 4][a]]
+    const clickAt = a === 1 ? visit[1] + 6 : -99
+    const click = f >= clickAt && f < clickAt + 8 ? 1 - (f - clickAt) / 8 : 0
+    return <div key={a} style={{ position: 'absolute', left: x, top: y, zIndex: 30 }}>
+      {click > 0 && <div style={{ position: 'absolute', left: -11, top: -11, width: 22, height: 22, borderRadius: '50%', border: `2px solid ${color}`, opacity: click, transform: `scale(${1.7 - click * 0.7})` }} />}
+      <svg width={17} height={19} viewBox="0 0 22 24" style={{ display: 'block', filter: 'drop-shadow(0 1px 2px rgb(0 0 0 / .35))' }}><path d="M2 2 L2 20 L7 15 L10.5 22.5 L13.5 21 L10 14 L17 14 Z" fill="#1c1e21" stroke="#fff" strokeWidth={1.6} strokeLinejoin="round" /></svg>
+      <span style={{ position: 'absolute', left: 13, top: 15, padding: '1px 7px', borderRadius: 999, background: color, ...T(10.5, '#fff', 700) }}>{name}</span>
     </div>
   })}</>
 }
@@ -677,7 +733,7 @@ function Tables({ f, mode = 'build', raw = 0 }: { f: number; mode?: 'empty' | 'b
         {mode === 'published' && [['R$ 28.521,35', 'Total usado'], ['854', 'Total'], ['R$ 33,40', 'Por compra'], ['2,89', 'Média']].map(([v, l], k) => <div key={l} style={{ width: [150, 120, 160, 150][k], padding: '0 12px', textAlign: 'right' }}><div style={T(13, INK, 700)}>{countUp(v, res)}</div><div style={T(11, MUTED)}>{l}</div></div>)}
       </div>
     </div>
-    {mode === 'build' && f < 640 && <TableCursors f={f} tab={tab} count={rows.length} />}
+    {mode === 'build' && f < 640 && <TableCursors f={f} tab={tab} names={rows.map(r => r.name)} />}
   </div>
 }
 
@@ -797,7 +853,7 @@ routes.forEach(r => r.sort((a, b) => a.f - b.f))
 
 function Cursor({ a, f }: { a: number; f: number }) {
   const b = buildFrame(f)
-  if (b >= 480 && f < REVIEW.open - 14) return null
+  if (f >= INTRO_END + 2 && f < REVIEW.open - 14) return null
   const r = routes[a]
   if (!r.length || f < r[0].f - 12) return null
   let k = 0
