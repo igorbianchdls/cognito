@@ -50,7 +50,7 @@ export function makePresenterReel({ cues, end, fit, scenes, video }: { cues: num
      * with blurred sides, so nothing is cropped by the feed and her burned-in captions stay inside the frame.
      */
     Feed: function PresenterFeed() {
-      const BAND = 470, CROP_TOP = 40, CROP_H = BAND_H - CROP_TOP, k = BAND / CROP_H
+      const BAND = 620, CROP_TOP = 40, CROP_H = BAND_H - CROP_TOP, k = BAND / CROP_H
       const VID_H = 1350 - BAND, sv = VID_H / (1920 - BAND_H)
       return <AbsoluteFill style={{ background: '#f5f4ef', backgroundImage: 'linear-gradient(rgb(20 20 19 / .045) 1px, transparent 1px), linear-gradient(90deg, rgb(20 20 19 / .045) 1px, transparent 1px)', backgroundSize: '48px 48px' }}>
         <div style={{ position: 'absolute', left: 0, top: 0, width: 1080, height: BAND, overflow: 'hidden' }}>
