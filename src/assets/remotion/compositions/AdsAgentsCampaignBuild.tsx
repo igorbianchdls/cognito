@@ -21,7 +21,6 @@ const T = (size: number, color = INK, weight = 400, extra?: CSSProperties): CSSP
 
 // ---------- timing ----------
 const PH = { campaign: 0, adset: 150, ad: 250, burst: 400, table: 480 } as const
-const TABLE_TAB = { campaigns: 480, adsets: 540, ads: 596 }
 // Real-time sequence: the "create campaign" dialog, then the editor and the tables (sped up), the review of the
 // draft items and, at the end, the published campaigns with their results.
 const INTRO_END = 70, EDIT_SPEED = 1.3, TBL_START = 440, TBL_SPEED = 1.2
@@ -422,9 +421,20 @@ const reviewCount = (f: number) => f < PH.table ? Math.min(39, TREE.filter(n => 
 
 /** When row i of a table tab starts being created (build timeline). */
 const ROW_WORK = 13
-function rowAt(tab: number, i: number, start: number) {
-  if (tab === 0) return i === 0 ? start - 20 : start + 2 + (i - 1) * 12
-  return start + 2 + i * (tab === 1 ? 6 : 5)
+// The agents go back and forth between the levels: each visit adds a few rows to that level.
+// [tab, from, to, first row, rows] on the build timeline.
+const VISITS: [number, number, number, number, number][] = [
+  [0, 480, 506, 1, 2], [1, 506, 530, 0, 4], [2, 530, 552, 0, 4], [1, 552, 572, 4, 5], [2, 572, 596, 4, 5], [0, 596, 642, 3, 2],
+]
+const visitAt = (f: number) => VISITS.find(([, a, b]) => f >= a && f < b) ?? VISITS[VISITS.length - 1]
+/** When row i of a level starts being created (build timeline). */
+function rowAt(tab: number, i: number) {
+  if (tab === 0 && i === 0) return 400 // made in the editor
+  for (const [t, a, b, first, n] of VISITS) {
+    if (t !== tab || i < first || i >= first + n) continue
+    return a + 2 + (i - first) * Math.floor((b - a - 4) / n)
+  }
+  return 9999
 }
 const EDITS = [
   ['Advantage+ vendas · ativado', 'Meta de custo · R$ 35', 'Orçamento · R$ 600/dia', 'Público quente · 30D', 'Compradores · 180D'],
@@ -433,9 +443,9 @@ const EDITS = [
 ]
 /** Where the table rows start, from the top of the screen. */
 const ROWS_TOP = TOP + 300
-function TableCursors({ f, tab, start, count }: { f: number; tab: number; start: number; count: number }) {
+function TableCursors({ f, tab, count }: { f: number; tab: number; count: number }) {
   let active = -1
-  for (let i = 0; i < count; i++) if (f >= rowAt(tab, i, start)) active = i
+  for (let i = 0; i < count; i++) if (f >= rowAt(tab, i)) active = i
   const y = ROWS_TOP + Math.max(0, active) * 50 + 25
   const spots: [number, number][] = [[230, 0], [520, 6], [880, 2], [1060, -4], [360, 70], [700, 120], [1000, 90], [1400, 140], [540, 180]]
   return <>{ROLES.map(([name, color], a) => {
@@ -451,8 +461,7 @@ function TableCursors({ f, tab, start, count }: { f: number; tab: number; start:
 
 const COLS: [string, number, 'l' | 'r'][] = [['Desativ./Ativ.', 96, 'l'], ['Campanha', 520, 'l'], ['Veiculação', 150, 'l'], ['Estratégia de lance', 210, 'l'], ['Orçamento', 160, 'r'], ['Valor usado', 140, 'r'], ['Compras', 120, 'r'], ['Custo por compra', 150, 'r'], ['ROAS de compras', 150, 'r']]
 function Tables({ f, mode = 'build', raw = 0 }: { f: number; mode?: 'empty' | 'build' | 'published'; raw?: number }) {
-  const tab = mode !== 'build' || f < TABLE_TAB.adsets ? 0 : f < TABLE_TAB.ads ? 1 : 2
-  const start = [TABLE_TAB.campaigns, TABLE_TAB.adsets, TABLE_TAB.ads][tab]
+  const tab = mode !== 'build' ? 0 : visitAt(f)[0]
   const title = ['Campanhas', 'Conjuntos de anúncios', 'Anúncios'][tab]
   const nameCol = ['Campanha', 'Conjunto de anúncios', 'Anúncio'][tab]
   const rows = mode === 'empty' ? [] : tab === 0 ? CAMPAIGN_ROWS.map(r => ({ ...r, thumb: -1 })) : tab === 1 ? ADSET_ROWS.map(r => ({ ...r, bid: 'Usando o lance da campanha', budget: 'Usando orç. da campanha', thumb: -1 })) : AD_ROWS.map((n, i) => ({ name: n, tag: undefined as Tag | undefined, bid: 'Usando lance do conjunto', budget: 'Usando orç. da campanha', thumb: i }))
@@ -490,7 +499,7 @@ function Tables({ f, mode = 'build', raw = 0 }: { f: number; mode?: 'empty' | 'b
         {COLS.map(([c, w, al], i) => <div key={c} style={{ width: w, flex: 'none', padding: '0 12px', textAlign: al === 'r' ? 'right' : 'left', ...T(12, INK, 700) }}>{i === 1 ? nameCol : c}{i > 0 && <span style={{ color: '#bcc0c4', marginLeft: 4 }}>↕</span>}</div>)}
       </div>
       {rows.map((r, i) => {
-        const at = rowAt(tab, i, start)
+        const at = mode === 'build' ? rowAt(tab, i) : -1
         if (mode === 'build' && f < at) return null
         const p = mode === 'build' ? out(f, at, at + 5) : 1
         const live = mode === 'published'
@@ -519,7 +528,7 @@ function Tables({ f, mode = 'build', raw = 0 }: { f: number; mode?: 'empty' | 'b
         {mode === 'published' && [['R$ 28.521,35', 'Total usado'], ['854', 'Total'], ['R$ 33,40', 'Por compra'], ['2,89', 'Média']].map(([v, l], k) => <div key={l} style={{ width: [140, 120, 150, 150][k], padding: '0 12px', textAlign: 'right' }}><div style={T(13, INK, 700)}>{countUp(v, res)}</div><div style={T(11, MUTED)}>{l}</div></div>)}
       </div>
     </div>
-    {mode === 'build' && f < 640 && <TableCursors f={f} tab={tab} start={start} count={rows.length} />}
+    {mode === 'build' && f < 640 && <TableCursors f={f} tab={tab} count={rows.length} />}
   </div>
 }
 
