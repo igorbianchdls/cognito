@@ -1,3 +1,4 @@
+import { AbsoluteFill, OffthreadVideo, staticFile } from 'remotion'
 import {
   ContadoresHookScene,
   ExpensesScene,
@@ -43,6 +44,27 @@ export function makePresenterReel({ cues, end, fit, scenes, video }: { cues: num
     duration: sceneDuration(timeline),
     Reel: function PresenterReel() {
       return <ReelRoot audio={video} scenes={timeline} split={split} />
+    },
+    /**
+     * Feed version (4:5, 1080×1350): the animated band on top, scaled down, and the presenter below at ~77%,
+     * with blurred sides, so nothing is cropped by the feed and her burned-in captions stay inside the frame.
+     */
+    Feed: function PresenterFeed() {
+      const BAND = 470, CROP_TOP = 40, CROP_H = BAND_H - CROP_TOP, k = BAND / CROP_H
+      const VID_H = 1350 - BAND, sv = VID_H / (1920 - BAND_H)
+      return <AbsoluteFill style={{ background: '#f5f4ef', backgroundImage: 'linear-gradient(rgb(20 20 19 / .045) 1px, transparent 1px), linear-gradient(90deg, rgb(20 20 19 / .045) 1px, transparent 1px)', backgroundSize: '48px 48px' }}>
+        <div style={{ position: 'absolute', left: 0, top: 0, width: 1080, height: BAND, overflow: 'hidden' }}>
+          <div style={{ position: 'absolute', left: (1080 - 1080 * k) / 2, top: -CROP_TOP * k, width: 1080, height: 1920, transform: `scale(${k})`, transformOrigin: '0 0' }}>
+            <ReelRoot audio={video} scenes={timeline} split={split} />
+          </div>
+        </div>
+        <div style={{ position: 'absolute', left: 0, top: BAND, width: 1080, height: VID_H, overflow: 'hidden', background: '#000', boxShadow: '0 -24px 60px rgba(20,20,19,0.14)' }}>
+          <OffthreadVideo muted src={staticFile(video)} style={{ position: 'absolute', left: -60, top: -SOURCE_TOP * sv - 40, width: 1200, height: 1920 * (1200 / 1080), objectFit: 'cover', filter: 'blur(28px) brightness(0.75)' }} />
+          <div style={{ position: 'absolute', left: (1080 - 1080 * sv) / 2, top: 0, width: 1080 * sv, height: VID_H, overflow: 'hidden', boxShadow: '0 0 40px rgb(0 0 0 / .35)' }}>
+            <OffthreadVideo muted src={staticFile(video)} style={{ position: 'absolute', left: 0, top: -SOURCE_TOP * sv, width: 1080 * sv, height: 1920 * sv, objectFit: 'cover' }} />
+          </div>
+        </div>
+      </AbsoluteFill>
     },
     /** The scenes alone on the full 1920 px canvas, used to measure their content. */
     ScenesOnly: function PresenterScenesOnly() {

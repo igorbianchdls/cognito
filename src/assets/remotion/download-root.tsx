@@ -754,6 +754,8 @@ function RemotionDownloadRoot() {
       <Composition component={NFE_CHATGPT.Reel} durationInFrames={NFE_CHATGPT.duration} fps={30} height={1920} id="otto-nfe-chatgpt-claro-reel" width={1080} />
       <Composition component={FINANCAS_CONTADORES.Reel} durationInFrames={FINANCAS_CONTADORES.duration} fps={30} height={1920} id="otto-financas-contadores-reel" width={1080} />
       <Composition component={FINANCAS_CHATGPT.Reel} durationInFrames={FINANCAS_CHATGPT.duration} fps={30} height={1920} id="otto-financas-chatgpt-reel" width={1080} />
+      <Composition component={FINANCAS_CONTADORES.Feed} durationInFrames={FINANCAS_CONTADORES.duration} fps={30} height={1350} id="otto-financas-contadores-feed" width={1080} />
+      <Composition component={FINANCAS_CHATGPT.Feed} durationInFrames={FINANCAS_CHATGPT.duration} fps={30} height={1350} id="otto-financas-chatgpt-feed" width={1080} />
       <Composition component={ExplainerExampleDemo} durationInFrames={EXPLAINER_EXAMPLE_DURATION} fps={30} height={1080} id="explainer-exemplo" width={1920} />
       <Composition component={ExplainerFlowDemo} durationInFrames={FLOW_DIAGRAM_DURATION} fps={30} height={1080} id="explainer-fluxo" width={1920} />
       <Composition component={ExplainerChatDemo} durationInFrames={CHAT_PAPER_DEMO_DURATION} fps={30} height={1080} id="explainer-conversa" width={1920} />
