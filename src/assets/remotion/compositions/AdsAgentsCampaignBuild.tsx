@@ -33,14 +33,22 @@ const realFrame = (b: number) => b < 480 ? INTRO_END + b / EDIT_SPEED : TBL_STAR
 
 // ---------- tree (made up) ----------
 type Kind = 'campaign' | 'adset' | 'ad'
-type Node = { label: string; kind: Kind; at: number }
+type Node = { label: string; kind: Kind; at: number; tmp?: string; renameAt?: number }
 const CONCEPTS = ['C01 · TESTE DE SABOR', 'C02 · 4 BENEFÍCIOS', 'C03 · HISTÓRIA REAL', 'C04 · NA CORRERIA', 'C05 · AMIGOS · DOCE']
 const TREE: Node[] = (() => {
-  const n: Node[] = [{ label: 'TESTE · CBO · CONCEITOS · S45', kind: 'campaign', at: 4 }]
+  // Right after "Continuar": the campaign with a new ad set and a new ad; the agents rename them, duplicate the
+  // structure for every concept and rename each copy while others fill the campaign.
+  const n: Node[] = [{ label: 'TESTE · CBO · CONCEITOS · S45', tmp: 'Nova campanha de vendas', renameAt: 6, kind: 'campaign', at: 0 }]
+  let k = 0
   CONCEPTS.forEach((c, i) => {
-    const base = i === 0 ? 150 : 268 + i * 40
-    n.push({ label: `${c} · AMPLO`, kind: 'adset', at: base })
-    ;['V1', 'V2', 'V3'].forEach((v, k) => n.push({ label: `${c} · ${v}`, kind: 'ad', at: i === 0 ? 250 + k * 30 : base + 8 + k * 8 }))
+    const at = i === 0 ? 0 : 18 + k * 3
+    n.push({ label: `${c} · AMPLO`, tmp: i === 0 ? 'Novo conjunto de anúncios de vendas' : `${n[1]?.label ?? 'C01'} – Cópia`, renameAt: i === 0 ? 14 : at + 10, kind: 'adset', at })
+    k++
+    ;['V1', 'V2', 'V3'].forEach((v, j) => {
+      const at2 = i === 0 && j === 0 ? 0 : 18 + k * 3
+      n.push({ label: `${c} · ${v}`, tmp: i === 0 && j === 0 ? 'Novo anúncio de vendas' : 'Anúncio – Cópia', renameAt: i === 0 && j === 0 ? 22 : at2 + 12, kind: 'ad', at: at2 })
+      k++
+    })
   })
   return n
 })()
@@ -126,6 +134,13 @@ function Rail() {
   </div>
 }
 
+/** A node's name: the default one, then typed over by the agent that renames it. */
+function nodeLabel(n: Node, f: number) {
+  if (n.renameAt === undefined || !n.tmp) return n.label
+  if (f < n.renameAt) return n.tmp
+  const t = typed(n.label, f, n.renameAt, 2.4)
+  return t.length < n.label.length ? t + '|' : n.label
+}
 function Tree({ f, sel }: { f: number; sel: number }) {
   const shown = TREE.map((n, i) => ({ n, i })).filter(({ n }) => f >= n.at)
   const scroll = Math.max(0, shown.length - 26) * 30
@@ -137,7 +152,7 @@ function Tree({ f, sel }: { f: number; sel: number }) {
         const depth = n.kind === 'campaign' ? 0 : n.kind === 'adset' ? 1 : 2
         return <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 8, height: 30, margin: '0 6px', paddingLeft: 8 + depth * 16, paddingRight: 8, borderRadius: 6, background: on ? SEL : 'transparent', opacity: p, transform: `translateX(${(1 - p) * -12}px)` }}>
           <Icon d={n.kind === 'campaign' ? I.folder : n.kind === 'adset' ? I.grid : I.ad} size={13} color={on ? BRIGHT : '#65676b'} />
-          <span style={{ ...T(12, on ? BRIGHT : INK, n.kind === 'campaign' ? 500 : 400), overflow: 'hidden', textOverflow: 'ellipsis' }}>{n.label}</span>
+          <span style={{ ...T(12, on ? BRIGHT : INK, n.kind === 'campaign' ? 500 : 400), overflow: 'hidden', textOverflow: 'ellipsis', fontStyle: n.renameAt !== undefined && f < n.renameAt ? 'italic' : 'normal', color: n.renameAt !== undefined && f < n.renameAt ? MUTED : undefined }}>{nodeLabel(n, f)}</span>
         </div>
       })}
     </div>
@@ -147,11 +162,12 @@ function Tree({ f, sel }: { f: number; sel: number }) {
 function Header({ f, sel }: { f: number; sel: number }) {
   const node = TREE[sel]
   const adset = node.kind === 'ad' ? [...TREE.slice(0, sel)].reverse().find(n => n.kind === 'adset') : node.kind === 'adset' ? node : undefined
-  const crumbs: [string, string][] = [[I.folder, TREE[0].label]]
-  if (adset) crumbs.push([I.grid, adset.label])
-  if (node.kind === 'ad') crumbs.push([I.ad, node.label])
+  const crumbs: [string, string][] = [[I.folder, nodeLabel(TREE[0], f)]]
+  const nSets = TREE.filter(x => x.kind === 'adset' && f >= x.at).length, nAds = TREE.filter(x => x.kind === 'ad' && f >= x.at).length
+  if (adset) crumbs.push([I.grid, adset.label]); else crumbs.push([I.grid, `${nSets} conjuntos de anúncios`])
+  if (node.kind === 'ad') crumbs.push([I.ad, node.label]); else crumbs.push([I.ad, `${nAds} anúncios`])
   return <div style={{ position: 'absolute', left: MAIN_X, right: 0, top: TOP, height: 48, background: '#fff', borderBottom: `1px solid ${HAIR}`, display: 'flex', alignItems: 'center', gap: 8, padding: '0 20px' }}>
-    {crumbs.map(([d, l], i) => <span key={i} style={{ display: 'flex', alignItems: 'center', gap: 6 }}>{i > 0 && <Icon d={I.chev} size={11} />}<span style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '4px 8px', borderRadius: 6, background: i === crumbs.length - 1 ? SEL : 'transparent', ...T(12.5, i === crumbs.length - 1 ? BRIGHT : MUTED, 500) }}><Icon d={d} size={12} color={i === crumbs.length - 1 ? BRIGHT : MUTED} />{l}</span></span>)}
+    {crumbs.map(([d, l], i) => <span key={i} style={{ display: 'flex', alignItems: 'center', gap: 6 }}>{i > 0 && <Icon d={I.chev} size={11} />}<span style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '4px 8px', borderRadius: 6, background: i === crumbs.length - 1 && node.kind !== 'campaign' ? SEL : i === 0 && node.kind === 'campaign' ? SEL : 'transparent', ...T(12.5, (i === crumbs.length - 1 && node.kind !== 'campaign') || (i === 0 && node.kind === 'campaign') ? BRIGHT : MUTED, 500) }}><Icon d={d} size={12} color={MUTED} />{l}</span></span>)}
     <span style={{ marginLeft: 'auto', display: 'flex', gap: 2, padding: 2, borderRadius: 6, background: BG }}>
       <span style={{ display: 'flex', alignItems: 'center', gap: 5, padding: '4px 10px', borderRadius: 5, background: '#fff', boxShadow: '0 1px 2px rgb(0 0 0 / .1)', ...T(12, BRIGHT, 500) }}><Icon d={I.pencil} size={11} color={BRIGHT} />Editar</span>
       <span style={{ display: 'flex', alignItems: 'center', gap: 5, padding: '4px 10px', ...T(12, MUTED, 500) }}><Icon d={I.eye} size={11} />Revisar</span>
@@ -165,7 +181,7 @@ function Header({ f, sel }: { f: number; sel: number }) {
 function Footer({ f }: { f: number }) {
   return <div style={{ position: 'absolute', left: MAIN_X, right: 0, bottom: 0, height: 52, background: '#fff', borderTop: `1px solid ${HAIR}`, display: 'flex', alignItems: 'center', gap: 12, padding: '0 20px' }}>
     <span style={{ ...T(13, INK, 500), padding: '6px 14px', borderRadius: 6, border: `1px solid ${LINE}` }}>Fechar</span>
-    <span style={{ display: 'flex', alignItems: 'center', gap: 6, ...T(12, MUTED) }}><i style={{ width: 10, height: 10, borderRadius: '50%', border: `2px solid ${LINE}`, borderTopColor: MUTED, transform: `rotate(${f * 14}deg)` }} />Salvando…</span>
+    <span style={{ display: 'flex', alignItems: 'center', gap: 6, ...T(12, MUTED) }}><i style={{ width: 10, height: 10, borderRadius: '50%', border: `2px solid ${LINE}`, borderTopColor: MUTED, transform: `rotate(${f * 14}deg)`, opacity: f % 50 < 30 ? 1 : 0 }} />{f % 50 < 30 ? 'Salvando…' : 'Todas as edições foram salvas'}</span>
     <span style={{ marginLeft: 'auto', ...T(13, INK, 500), padding: '6px 14px', borderRadius: 6, border: `1px solid ${LINE}` }}>Descartar rascunho</span>
     <span style={{ ...T(13, '#fff', 700), padding: '7px 18px', borderRadius: 6, background: GREEN }}>Publicar</span>
   </div>
@@ -190,8 +206,10 @@ function CampaignEditor({ f }: { f: number }) {
   const t = f - PH.campaign
   const cbo = t >= 34
   const cards: [string, string, string][] = [['Orçamento da campanha', '6,6% menor custo por resultado', 'Distribui o valor para as melhores oportunidades. 100% do orçamento compartilhado.'], ['Compartilhamento de orçamento', '3,2% menor custo', 'Distribui entre os conjuntos com limite. Até 20% compartilhado.'], ['Orçamento do conjunto', 'Valor fixo por conjunto', 'O valor de cada conjunto fica onde você definir.']]
+  const scroll = interpolate(t, [44, 80], [0, 150], { ...clamp, easing: Easing.inOut(Easing.cubic) })
   return <>
-    <div style={{ position: 'absolute', left: FORM_X, top: CONTENT_TOP + 18, width: FORM_W }}>
+    <div style={{ position: 'absolute', left: MAIN_X, right: 0, top: CONTENT_TOP, bottom: 52, overflow: 'hidden' }}><div style={{ position: 'absolute', left: FORM_X - MAIN_X, top: 18 - scroll, width: FORM_W }}>
+      <Section title="Nome da campanha"><Input value="TESTE · CBO · CONCEITOS · S45" f={f} at={2} /><div style={{ ...T(12, BRIGHT, 500), marginTop: 8 }}>Criar modelo de nome</div></Section>
       <Section title="Detalhes da campanha">
         <div style={{ display: 'flex', gap: 12 }}>
           <div style={{ flex: 1 }}><Label info>Tipo de compra</Label><Input value="Leilão" f={f} at={6} select /></div>
@@ -225,7 +243,7 @@ function CampaignEditor({ f }: { f: number }) {
           <span style={T(12, MUTED)}>{t >= 88 ? 'Ativado' : 'Desativado'}</span><Toggle on={t >= 88} />
         </div>
       </Section>
-    </div>
+    </div></div>
     <div style={{ position: 'absolute', left: SIDE_X, top: CONTENT_TOP + 18, width: SIDE_W }}>
       <Summary title={TREE[0].label} />
       <SideCard><b style={T(13, INK, 700)}>Recomendações da campanha</b><div style={{ ...T(12, BRIGHT, 500), marginTop: 10 }}>+ Campanha de vendas Advantage+</div><div style={{ ...T(11.5, MUTED), marginTop: 6 }}>Use IA para encontrar mais compradores com menos configuração.</div></SideCard>
@@ -237,8 +255,11 @@ function CampaignEditor({ f }: { f: number }) {
 function AdSetEditor({ f }: { f: number }) {
   const t0 = PH.adset
   const g = Math.min(1, Math.max(0, (f - t0 - 60) / 40))
+  const scroll = interpolate(f - t0, [40, 84], [0, 170], { ...clamp, easing: Easing.inOut(Easing.cubic) })
+  const advPlacements = f >= t0 + 88
   return <>
-    <div style={{ position: 'absolute', left: FORM_X, top: CONTENT_TOP + 18, width: FORM_W }}>
+    <div style={{ position: 'absolute', left: MAIN_X, right: 0, top: CONTENT_TOP, bottom: 52, overflow: 'hidden' }}><div style={{ position: 'absolute', left: FORM_X - MAIN_X, top: 18 - scroll, width: FORM_W }}>
+      <Section title="Nome do conjunto de anúncios"><Input value="C01 · TESTE DE SABOR · AMPLO" f={f} at={t0 + 1} /></Section>
       <Section title="Conversão">
         <div style={{ display: 'flex', gap: 12 }}>
           <div style={{ flex: 1 }}><Label info>Local da conversão</Label><Input value="Site" f={f} at={t0 + 4} select /></div>
@@ -262,7 +283,12 @@ function AdSetEditor({ f }: { f: number }) {
         <div style={{ marginTop: 10 }}><Label>Excluir estes públicos personalizados</Label><Input value="Compradores · 180 dias" f={f} at={t0 + 76} placeholder="Pesquisar públicos existentes" /></div>
         <div style={{ ...T(11.5, MUTED, 400, { whiteSpace: 'normal', lineHeight: 1.4 }), marginTop: 6 }}>Podemos alcançar pessoas além dessas configurações quando houver probabilidade de melhorar o desempenho.</div>
       </Section>
-    </div>
+      <Section title="Posicionamentos" link="✦ Advantage+ ativado">
+        {[['Posicionamentos Advantage+ (recomendado)', 'Use os posicionamentos Advantage+ para aumentar o orçamento e mostrar os anúncios a mais pessoas.', true], ['Posicionamentos manuais', 'Escolha manualmente onde mostrar o anúncio.', false]].map(([a, b, on]) => <div key={a as string} style={{ display: 'flex', gap: 10, padding: '8px 10px', borderRadius: 6, border: `1px solid ${on && advPlacements ? BRIGHT : LINE}`, background: on && advPlacements ? '#f5f9ff' : '#fff', marginBottom: 8 }}>
+          <Radio on={Boolean(on) && advPlacements} /><div><b style={T(12.5, INK, 700)}>{a as string}</b><div style={{ ...T(11.5, MUTED, 400, { whiteSpace: 'normal', lineHeight: 1.35 }), marginTop: 2 }}>{b as string}</div></div>
+        </div>)}
+      </Section>
+    </div></div>
     <div style={{ position: 'absolute', left: SIDE_X, top: CONTENT_TOP + 18, width: SIDE_W }}>
       <Summary title={TREE[1].label} />
       <SideCard>
@@ -290,16 +316,22 @@ function AdEditor({ f, sel }: { f: number; sel: number }) {
   const [text, headline, desc] = AD_COPY[k]
   const media = [t0 + 20, t0 + 26, t0 + 32]
   const shown = f >= t0 + 34
+  const scroll = interpolate(f - t0, [36, 110], [0, 330], { ...clamp, easing: Easing.inOut(Easing.cubic) })
   return <>
-    <div style={{ position: 'absolute', left: FORM_X, top: CONTENT_TOP + 18, width: FORM_W }}>
+    <div style={{ position: 'absolute', left: MAIN_X, right: 0, top: CONTENT_TOP, bottom: 52, overflow: 'hidden' }}><div style={{ position: 'absolute', left: FORM_X - MAIN_X, top: 18 - scroll, width: FORM_W }}>
+      <Section title="Nome do anúncio"><Input value={TREE[sel].label} f={f} at={t0 - 1} /><div style={{ ...T(12, BRIGHT, 500), marginTop: 8 }}>Mostrar mais opções ▾</div></Section>
       <Section title="Identidade">
         <div style={{ display: 'flex', gap: 12 }}>
           <div style={{ flex: 1 }}><Label>Página</Label><Input value="nutri gomas" f={f} at={t0 + 2} select /></div>
           <div style={{ flex: 1 }}><Label>Perfil do Instagram</Label><Input value="@nutrigomas" f={f} at={t0 + 8} select /></div>
         </div>
       </Section>
+      <Section title="Configuração do anúncio">
+        <Label>Criar anúncio</Label><Input value="Criar anúncio" f={f} at={t0 + 12} select />
+        <div style={{ marginTop: 10 }}><Label>Formato</Label></div>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>{[['Imagem ou vídeo único', true], ['Carrossel', false]].map(([l, on]) => <span key={l as string} style={{ display: 'flex', alignItems: 'center', gap: 8, ...T(12.5, INK) }}><Radio on={Boolean(on) && f >= t0 + 16} />{l as string}</span>)}</div>
+      </Section>
       <Section title="Criativo do anúncio">
-        <div style={{ display: 'flex', gap: 16, marginBottom: 10 }}>{[['Imagem ou vídeo único', true], ['Carrossel', false]].map(([l, on]) => <span key={l as string} style={{ display: 'flex', alignItems: 'center', gap: 6, ...T(12, INK) }}><Radio on={on as boolean} />{l as string}</span>)}</div>
         <Label>Mídia</Label>
         <div style={{ display: 'flex', gap: 8, alignItems: 'flex-end' }}>
           {media.map((at, i) => <div key={i} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4 }}>
@@ -318,7 +350,7 @@ function AdEditor({ f, sel }: { f: number; sel: number }) {
         <div style={{ marginTop: 10 }}><Label info>Parâmetros de URL</Label><Input value={`utm_source=ads&utm_medium=pago&utm_campaign=c0${(sel % 5) + 1}`} f={f} at={t0 + 116} /></div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 6 }}><span style={T(12, BRIGHT, 500)}>Criar um parâmetro de URL</span><span style={{ marginLeft: 'auto', ...T(10.5, '#8a6d00', 700), padding: '1px 6px', borderRadius: 4, background: '#fff3c4' }}>UTM</span></div>
       </Section>
-    </div>
+    </div></div>
     <div style={{ position: 'absolute', left: SIDE_X, top: CONTENT_TOP + 18, width: SIDE_W }}>
       <SideCard style={{ minHeight: 760 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}><Toggle on /><b style={T(13, INK, 700)}>Prévia do anúncio</b><span style={{ marginLeft: 'auto', ...T(12, BRIGHT, 500), padding: '4px 10px', borderRadius: 6, border: `1px solid ${LINE}` }}>Revisar padrões</span></div>
@@ -388,6 +420,35 @@ const countUp = (v: string, p: number) => {
 }
 const reviewCount = (f: number) => f < PH.table ? Math.min(39, TREE.filter(n => f >= n.at).length + 18) : Math.min(41, 39 + Math.floor(interpolate(f, [600, 640], [0, 2.99], clamp)))
 
+/** When row i of a table tab starts being created (build timeline). */
+const ROW_WORK = 13
+function rowAt(tab: number, i: number, start: number) {
+  if (tab === 0) return i === 0 ? start - 20 : start + 2 + (i - 1) * 12
+  return start + 2 + i * (tab === 1 ? 6 : 5)
+}
+const EDITS = [
+  ['Advantage+ vendas · ativado', 'Meta de custo · R$ 35', 'Orçamento · R$ 600/dia', 'Público quente · 30D', 'Compradores · 180D'],
+  ['Público amplo · 25–54', 'Mulheres · 25–44', 'Visitantes · 30 dias', 'Carrinho · 14 dias', 'Envolvimento · 60 dias', 'Posicionamentos Advantage+'],
+  ['Mídia 9:16 · enviada', 'Título · ok', 'Texto principal · ok', 'UTM · c06', 'ID da publicação · vinculado'],
+]
+/** Where the table rows start, from the top of the screen. */
+const ROWS_TOP = TOP + 300
+function TableCursors({ f, tab, start, count }: { f: number; tab: number; start: number; count: number }) {
+  let active = -1
+  for (let i = 0; i < count; i++) if (f >= rowAt(tab, i, start)) active = i
+  const y = ROWS_TOP + Math.max(0, active) * 50 + 25
+  const spots: [number, number][] = [[230, 0], [520, 6], [880, 2], [1060, -4], [360, 70], [700, 120], [1000, 90], [1400, 140], [540, 180]]
+  return <>{ROLES.map(([name, color], a) => {
+    const [x0, dy] = spots[a % spots.length]
+    const onRow = a < 4
+    const x = x0 + Math.sin((f + a * 11) / 9) * (onRow ? 14 : 30), yy = (onRow ? y + dy : y + 60 + dy) + Math.cos((f + a * 7) / 10) * 4
+    return <div key={a} style={{ position: 'absolute', left: x, top: yy - TOP, zIndex: 30 }}>
+      <svg width={16} height={18} viewBox="0 0 22 24" style={{ display: 'block', filter: 'drop-shadow(0 1px 2px rgb(0 0 0 / .35))' }}><path d="M2 2 L2 20 L7 15 L10.5 22.5 L13.5 21 L10 14 L17 14 Z" fill="#1c1e21" stroke="#fff" strokeWidth={1.6} strokeLinejoin="round" /></svg>
+      <span style={{ position: 'absolute', left: 12, top: 14, padding: '1px 7px', borderRadius: 999, background: color, ...T(10.5, '#fff', 700) }}>{name}</span>
+    </div>
+  })}</>
+}
+
 const COLS: [string, number, 'l' | 'r'][] = [['Desativ./Ativ.', 96, 'l'], ['Campanha', 520, 'l'], ['Veiculação', 150, 'l'], ['Estratégia de lance', 210, 'l'], ['Orçamento', 160, 'r'], ['Valor usado', 140, 'r'], ['Compras', 120, 'r'], ['Custo por compra', 150, 'r'], ['ROAS de compras', 150, 'r']]
 function Tables({ f, mode = 'build', raw = 0 }: { f: number; mode?: 'empty' | 'build' | 'published'; raw?: number }) {
   const tab = mode !== 'build' || f < TABLE_TAB.adsets ? 0 : f < TABLE_TAB.ads ? 1 : 2
@@ -429,20 +490,27 @@ function Tables({ f, mode = 'build', raw = 0 }: { f: number; mode?: 'empty' | 'b
         {COLS.map(([c, w, al], i) => <div key={c} style={{ width: w, flex: 'none', padding: '0 12px', textAlign: al === 'r' ? 'right' : 'left', ...T(12, INK, 700) }}>{i === 1 ? nameCol : c}{i > 0 && <span style={{ color: '#bcc0c4', marginLeft: 4 }}>↕</span>}</div>)}
       </div>
       {rows.map((r, i) => {
-        const at = start + 6 + i * 5
+        const at = rowAt(tab, i, start)
         if (mode === 'build' && f < at) return null
-        const p = mode === 'build' ? out(f, at, at + 8) : 1, fresh = mode === 'build' && f - at < 12
+        const p = mode === 'build' ? out(f, at, at + 5) : 1
         const live = mode === 'published'
-        return <div key={r.name} style={{ display: 'flex', height: 50, alignItems: 'center', borderBottom: `1px solid ${HAIR}`, background: fresh ? '#fff8e1' : '#fff', opacity: p, transform: `translateY(${(1 - p) * -8}px)` }}>
+        // The row being created: it is born at the bottom inside a selection frame, the agents type its name, add
+        // its tag, bid and budget, and an edit bubble shows the setting they are changing.
+        const act = mode === 'build' && f - at < ROW_WORK
+        const name = act ? typed(r.name, f, at + 1, 3.2) : r.name
+        const tagOn = !act || f >= at + 7, bidOn = !act || f >= at + 9, budOn = !act || f >= at + 11
+        const bubble = act && f >= at + 8 ? EDITS[tab][i % EDITS[tab].length] : null
+        return <div key={r.name} style={{ position: 'relative', display: 'flex', height: 50, alignItems: 'center', borderBottom: `1px solid ${HAIR}`, background: act ? '#fdf3f6' : '#fff', boxShadow: act ? 'inset 0 0 0 1.5px #e4405f' : 'none', opacity: p }}>
           <div style={{ width: 96, padding: '0 12px', display: 'flex', alignItems: 'center', gap: 10 }}><i style={{ width: 14, height: 14, borderRadius: 3, border: `1.5px solid ${live ? '#bcc0c4' : BRIGHT}`, background: live ? '#fff' : BRIGHT }} /><Toggle on={live} /></div>
           <div style={{ width: 520, padding: '0 12px', display: 'flex', alignItems: 'center', gap: 10, overflow: 'hidden' }}>
             {r.thumb >= 0 && <Creative w={34} h={34} variant={r.thumb} />}
-            <span style={{ ...T(13, BLUE, 500), overflow: 'hidden', textOverflow: 'ellipsis' }}>{r.name}</span>
-            {r.tag && <span style={{ ...T(11, '#1c1e21', 700), padding: '2px 8px', borderRadius: 999, background: `${r.tag[1]}40`, flex: 'none' }}>{r.tag[0]}</span>}
+            <span style={{ ...T(13, act ? INK : BLUE, 500), overflow: 'hidden', textOverflow: 'ellipsis' }}>{name}{act && name.length < r.name.length && <span style={{ color: BRIGHT }}>|</span>}</span>
+            {r.tag && tagOn && <span style={{ ...T(11, '#fff', 700), padding: '2px 9px', borderRadius: 999, background: r.tag[1], flex: 'none', marginLeft: 'auto', transform: `scale(${act ? out(f, at + 7, at + 10) : 1})` }}>{r.tag[0]}</span>}
           </div>
           <div style={{ width: 150, padding: '0 12px', display: 'flex', alignItems: 'center', gap: 6, ...T(12.5, live ? INK : MUTED) }}>{live ? <><i style={{ width: 8, height: 8, borderRadius: '50%', background: GREEN }} />Ativa</> : <><Icon d={I.pencil} size={11} />Em rascunho</>}</div>
-          <div style={{ width: 210, padding: '0 12px', ...T(12.5, INK) }}>{r.bid}</div>
-          <div style={{ width: 160, padding: '0 12px', textAlign: 'right', ...T(12.5, INK) }}>{r.budget}{tab === 0 && <div style={T(11, MUTED)}>Diário</div>}</div>
+          <div style={{ width: 210, padding: '0 12px', ...T(12.5, INK) }}>{bidOn ? r.bid : ''}</div>
+          <div style={{ width: 160, padding: '0 12px', textAlign: 'right', ...T(12.5, INK) }}>{budOn ? r.budget : ''}{tab === 0 && budOn && <div style={T(11, MUTED)}>Diário</div>}</div>
+          {bubble && <span style={{ position: 'absolute', left: 96 + 520 + 150 - 40, top: -14, padding: '3px 10px', borderRadius: 999, background: '#fff', boxShadow: '0 0 0 1px #cbd2d9, 0 4px 10px rgb(0 0 0 / .12)', ...T(11, INK, 500), opacity: out(f, at + 8, at + 10) * (1 - ease(f, at + ROW_WORK - 3, at + ROW_WORK)) }}>{bubble}</span>}
           {(live ? RESULTS[i].map(v => countUp(v, res)) : ['R$ 0,00', '—', '—', '—']).map((v, k) => <div key={k} style={{ width: [140, 120, 150, 150][k], padding: '0 12px', textAlign: 'right', ...T(12.5, live ? INK : MUTED, live ? 500 : 400) }}>{v}{live && k === 2 && <div style={T(11, MUTED)}>Por compra</div>}</div>)}
         </div>
       })}
@@ -451,6 +519,7 @@ function Tables({ f, mode = 'build', raw = 0 }: { f: number; mode?: 'empty' | 'b
         {mode === 'published' && [['R$ 28.521,35', 'Total usado'], ['854', 'Total'], ['R$ 33,40', 'Por compra'], ['2,89', 'Média']].map(([v, l], k) => <div key={l} style={{ width: [140, 120, 150, 150][k], padding: '0 12px', textAlign: 'right' }}><div style={T(13, INK, 700)}>{countUp(v, res)}</div><div style={T(11, MUTED)}>{l}</div></div>)}
       </div>
     </div>
+    {mode === 'build' && f < 640 && <TableCursors f={f} tab={tab} start={start} count={rows.length} />}
   </div>
 }
 
@@ -521,9 +590,12 @@ function ReviewDraftsModal({ f }: { f: number }) {
 
 // ---------- agents' cursors ----------
 
-const ROLES: [string, string][] = [['Testando', '#f7b928'], ['Escala', '#31a24c'], ['Retargeting', '#5b72f2'], ['Criativo', '#e4405f'], ['Texto', '#a259ff'], ['Orçamento', '#0ea5a4'], ['Público', '#ff7a00'], ['Rastreamento', '#3b82f6']]
+const ROLES: [string, string][] = [['Estrutura', '#5b72f2'], ['Nomes', '#e4405f'], ['Orçamento', '#0ea5a4'], ['Lances', '#f7b928'], ['Público', '#ff7a00'], ['Criativo', '#31a24c'], ['Texto', '#a259ff'], ['Rastreamento', '#3b82f6'], ['Revisor', '#6b7280']]
 const FX = FORM_X, SX = SIDE_X, CY = CONTENT_TOP + 18
+const treeY = (i: number) => TOP + 74 + i * 30
+const TREE_TARGETS: [number, number, number][] = TREE.map((n, i) => [RAIL_W + 90 + (i % 3) * 40, treeY(i), (n.renameAt ?? n.at) - 2] as [number, number, number]).filter(([, , fr]) => fr < 120)
 const TARGETS: [number, number, number][] = [
+  ...TREE_TARGETS,
   // campaign
   [FX + 150, CY + 60, 6], [FX + 470, CY + 60, 12], [FX + 100, CY + 210, 34], [FX + 90, CY + 330, 46], [FX + 380, CY + 330, 52], [FX + 300, CY + 405, 70], [FX + 590, CY + 520, 88], [SX + 200, CY + 160, 96], [150, TOP + 74, 10], [180, TOP + 104, 110], [FX + 200, CY + 220, 120], [SX + 120, CY + 60, 130],
   // ad set
@@ -546,6 +618,8 @@ const routes: { f: number; x: number; y: number }[][] = ROLES.map(() => [])
 routes.forEach(r => r.sort((a, b) => a.f - b.f))
 
 function Cursor({ a, f }: { a: number; f: number }) {
+  const b = buildFrame(f)
+  if (b >= 480 && f < REVIEW.open - 14) return null
   const r = routes[a]
   if (!r.length || f < r[0].f - 12) return null
   let k = 0
