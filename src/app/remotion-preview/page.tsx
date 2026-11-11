@@ -246,6 +246,7 @@ import { NOTA_UNICA_AD_DURATION, OttoNotaUnicaAd } from '@/assets/remotion/compo
 import { NOTAS_LOTE_AD_DURATION, OttoNotasLoteAd } from '@/assets/remotion/compositions/OttoNotasLoteAd'
 import { EMISSOR_DURATION, OttoEmissorNfseLote, OttoEmissorNfseUma } from '@/assets/remotion/compositions/OttoEmissorNfse'
 import { AdsAgentsCampaignBuild, ADS_AGENTS_BUILD_DURATION } from '@/assets/remotion/compositions/AdsAgentsCampaignBuild'
+import { AiWatchingReels, AI_WATCH_DURATION } from '@/assets/remotion/compositions/AiWatchingReels'
 import { OTTO_AGORA_CHAT_DURATION, OTTO_AGORA_FACIL_DURATION, OTTO_AGORA_FINANCEIRO_DURATION, OTTO_AGORA_LUCRO_DURATION, OTTO_AGORA_SISTEMA_DURATION, OttoAgoraChatDarkSquareReel, OttoAgoraChatReel, OttoAgoraFacilReel, OttoAgoraFinanceiroDarkReel, OttoAgoraFinanceiroReel, OttoAgoraLucroDarkReel, OttoAgoraLucroReel, OttoAgoraSistemaDarkSquareReel, OttoAgoraSistemaReel } from '@/assets/remotion/compositions/OttoAgoraChatGptReels'
 import { OTTO_COBRANCA_REEL_DURATION, OTTO_FUNCIONARIO_REEL_DURATION, OttoCobrancaReel, OttoFuncionarioReel } from '@/assets/remotion/compositions/OttoCobrancaFuncionarioVideos'
 import { OTTO_NOTA_CHATGPT_BATCH_DURATION, OTTO_NOTA_CHATGPT_SINGLE_DURATION, OttoNotaChatGptBatchReel, OttoNotaChatGptSingleReel } from '@/assets/remotion/compositions/OttoNotaFiscalChatGptVideos'
@@ -2532,6 +2533,19 @@ const catalog: CatalogItem[] = [
     label: 'Agentes montando anúncios (gerenciador de anúncios)',
     tags: ['Agentes', 'IA', 'Horizontal', 'Anúncios', 'Campanhas', 'Sistema'],
     value: 'agentes-montando-anuncios',
+    width: 1920,
+  },
+  {
+    code: '<AiWatchingReels />',
+    component: AiWatchingReels,
+    description: 'Uma estação de pesquisa escura em que a IA assiste reels um atrás do outro: o celular passando os vídeos, frames extraídos e conferidos, terminal com cada etapa, o JSON de cada reel (gancho, formato, retenção, CTA), o contador até 800 e o resumo dos ganchos que mais retêm.',
+    duration: AI_WATCH_DURATION,
+    fps: 30,
+    height: 1080,
+    kind: 'Claude Videos',
+    label: 'IA assistindo 800 reels (pesquisa de conteúdo)',
+    tags: ['Agentes', 'IA', 'Horizontal', 'Reels', 'Pesquisa', 'Terminal'],
+    value: 'ia-assistindo-reels',
     width: 1920,
   },
   {
