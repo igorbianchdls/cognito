@@ -144,7 +144,7 @@ function JsonPanel({ f }: { f: number }) {
       {fields.map(([key, val, color], i) => {
         const at = 26 + i * 5, shown = local >= at
         const v = shown ? val.slice(0, Math.max(1, Math.floor((local - at) * 3))) : ''
-        return <div key={key} style={{ paddingLeft: 22, opacity: shown ? 1 : 0.15, whiteSpace: 'normal' }}><span style={{ color: BLUE }}>"{key}"</span>: <span style={{ color }}>{v}</span>{i < fields.length - 1 && shown ? ',' : ''}</div>
+        return <div key={key} style={{ paddingLeft: 22, opacity: shown ? 1 : 0.15, whiteSpace: 'normal' }}><span style={{ color: BLUE }}>{`"${key}"`}</span>: <span style={{ color }}>{v}</span>{i < fields.length - 1 && shown ? ',' : ''}</div>
       })}
       <div>{'}'}</div>
     </div>
