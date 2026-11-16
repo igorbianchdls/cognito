@@ -242,6 +242,7 @@ import { DASHBOARD_INSTAGRAM_DURATION, DashboardBuildInstagram } from '@/assets/
 import { CLAUDE_REACTOR_DURATION, ClaudeEditingReactor } from '@/assets/remotion/compositions/ClaudeEditingReactor'
 import { ClaudeVideoEditorSwarm, VIDEO_EDITOR_SWARM_DURATION } from '@/assets/remotion/compositions/ClaudeVideoEditorSwarm'
 import { ClaudeInvoiceSwarm, INVOICE_SWARM_DURATION } from '@/assets/remotion/compositions/ClaudeInvoiceSwarm'
+import { ClaudeExpenseSwarm, EXPENSE_SWARM_DURATION } from '@/assets/remotion/compositions/ClaudeExpenseSwarm'
 import { NOTA_UNICA_AD_DURATION, OttoNotaUnicaAd } from '@/assets/remotion/compositions/OttoNotaUnicaAd'
 import { NOTAS_LOTE_AD_DURATION, OttoNotasLoteAd } from '@/assets/remotion/compositions/OttoNotasLoteAd'
 import { EMISSOR_DURATION, OttoEmissorNfseLote, OttoEmissorNfseUma } from '@/assets/remotion/compositions/OttoEmissorNfse'
@@ -2468,6 +2469,19 @@ const catalog: CatalogItem[] = [
     label: 'Emissão de 50 notas fiscais com 7 agentes (ao vivo)',
     tags: ['Agentes', 'IA', 'Horizontal', 'Nota fiscal', 'NFS-e', 'Financeiro'],
     value: 'claude-notas-agentes',
+    width: 1920,
+  },
+  {
+    code: '<ClaudeExpenseSwarm />',
+    component: ClaudeExpenseSwarm,
+    description: 'Contas a pagar do sistema com 6 agentes de IA classificando as 48 despesas do mês ao vivo: cada linha ganha categoria e grupo do DRE, o painel mostra os sinais e a confiança da despesa em análise, o DRE se monta e o revisor separa uma possível duplicidade.',
+    duration: EXPENSE_SWARM_DURATION,
+    fps: 30,
+    height: 1080,
+    kind: 'Claude Videos',
+    label: 'Contas a pagar: 6 agentes classificando despesas (ao vivo)',
+    tags: ['Agentes', 'IA', 'Horizontal', 'Financeiro', 'Contas a pagar', 'DRE'],
+    value: 'claude-despesas-agentes',
     width: 1920,
   },
   {

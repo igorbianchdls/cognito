@@ -4,6 +4,7 @@ import { DASHBOARD_INSTAGRAM_DURATION, DashboardBuildInstagram } from './composi
 import { CLAUDE_REACTOR_DURATION, ClaudeEditingReactor } from './compositions/ClaudeEditingReactor'
 import { ClaudeVideoEditorSwarm, VIDEO_EDITOR_SWARM_DURATION } from './compositions/ClaudeVideoEditorSwarm'
 import { ClaudeInvoiceSwarm, INVOICE_SWARM_DURATION } from './compositions/ClaudeInvoiceSwarm'
+import { ClaudeExpenseSwarm, EXPENSE_SWARM_DURATION } from './compositions/ClaudeExpenseSwarm'
 import { NOTA_UNICA_AD_DURATION, OttoNotaUnicaAd } from './compositions/OttoNotaUnicaAd'
 import { NOTAS_LOTE_AD_DURATION, OttoNotasLoteAd } from './compositions/OttoNotasLoteAd'
 import { EMISSOR_DURATION, OttoEmissorNfseLote, OttoEmissorNfseUma } from './compositions/OttoEmissorNfse'
@@ -745,6 +746,7 @@ function RemotionDownloadRoot() {
       <Composition component={OttoNfeContadoresReel} durationInFrames={OTTO_NFE_CONTADORES_DURATION} fps={30} height={1920} id="otto-nfe-contadores-reel" width={1080} />
       <Composition component={ClaudeVideoEditorSwarm} durationInFrames={VIDEO_EDITOR_SWARM_DURATION} fps={30} height={1080} id="claude-video-editor-agentes" width={1920} />
       <Composition component={ClaudeInvoiceSwarm} durationInFrames={INVOICE_SWARM_DURATION} fps={30} height={1080} id="claude-notas-agentes" width={1920} />
+      <Composition component={ClaudeExpenseSwarm} durationInFrames={EXPENSE_SWARM_DURATION} fps={30} height={1080} id="claude-despesas-agentes" width={1920} />
       <Composition component={OttoNotaUnicaAd} durationInFrames={NOTA_UNICA_AD_DURATION} fps={30} height={1920} id="otto-nota-unica-ad" width={1080} />
       <Composition component={OttoNotasLoteAd} durationInFrames={NOTAS_LOTE_AD_DURATION} fps={30} height={1920} id="otto-notas-lote-ad" width={1080} />
       <Composition component={OttoEmissorNfseUma} durationInFrames={EMISSOR_DURATION} fps={30} height={1080} id="otto-emissor-nfse-uma" width={1920} />
