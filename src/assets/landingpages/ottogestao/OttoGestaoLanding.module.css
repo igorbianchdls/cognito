@@ -5,7 +5,7 @@
 .logoMark img { width: 22px; height: 22px; }
 
 .headerActions { display: inline-flex; align-items: center; gap: 16px; }
-.signIn { color: #d6d6de; text-decoration: none; font-size: 14px; font-weight: 600; }
+.signIn { display: none; color: #d6d6de; text-decoration: none; font-size: 14px; font-weight: 600; }
 .signIn:hover { color: #fff; }
 
 .modules { margin-top: 44px; display: grid; grid-template-columns: repeat(6, 48px); gap: 12px; justify-content: center; }
@@ -39,7 +39,11 @@
 .enterprise b { color: #fff; }
 
 @media (min-width: 760px) {
+  .signIn { display: inline; }
   .modules { grid-template-columns: repeat(12, 52px); }
   .modules span { width: 52px; height: 52px; }
   .planGrid { grid-template-columns: repeat(3, 1fr); gap: 20px; align-items: start; }
 }
+
+.badgesWrap { flex-wrap: wrap; row-gap: 14px; }
+.headerActions a { white-space: nowrap; }

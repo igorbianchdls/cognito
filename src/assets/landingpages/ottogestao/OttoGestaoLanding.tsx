@@ -159,7 +159,7 @@ export function OttoGestaoLanding() {
     </header>
 
     <section className={base.hero}>
-      <div className={base.badges}>
+      <div className={`${base.badges} ${styles.badgesWrap}`}>
         <Badge top="Funciona no" bottom="ChatGPT e Claude" />
         <Badge top="Feito para" bottom="pequenas empresas" />
         <Badge top="Taxa de" bottom="adesão grátis" />
