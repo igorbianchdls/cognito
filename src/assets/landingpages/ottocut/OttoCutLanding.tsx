@@ -8,6 +8,7 @@ import {
 } from '@tabler/icons-react'
 import { OTTOCUT_OFFER } from './offer'
 import { TypedAssistant } from './TypedAssistant'
+import { OttoLogo } from './OttoLogo'
 import { CircledWord } from './DrawOnView'
 import styles from './OttoCutLanding.module.css'
 
@@ -17,12 +18,7 @@ const brl = (v: number) => v.toLocaleString('pt-BR', { style: 'currency', curren
 const ctaHref = OTTOCUT_OFFER.checkoutUrl || '#oferta'
 
 function Logo() {
-  return <span className={styles.logo}>
-    <span className={styles.logoMark}>
-      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2.4" strokeLinecap="round"><circle cx="6" cy="7" r="3" /><circle cx="6" cy="17" r="3" /><path d="M8.6 8.6L20 18M8.6 15.4L20 6" /></svg>
-    </span>
-    ottocut
-  </span>
+  return <OttoLogo />
 }
 
 function Cta({ children, small }: { children: ReactNode; small?: boolean }) {
@@ -270,7 +266,7 @@ export function OttoCutLanding() {
 
     <footer className={styles.footer}>
       <Logo />
-      <p>© {new Date().getFullYear()} OttoCut. Todos os direitos reservados.</p>
+      <p>© {new Date().getFullYear()} Otto. Todos os direitos reservados.</p>
       <p className={styles.disclaimer}>ChatGPT é marca registrada da OpenAI e Claude é marca registrada da Anthropic. O OttoCut é um produto independente e não é afiliado, patrocinado nem endossado pela OpenAI ou pela Anthropic.</p>
     </footer>
   </div>

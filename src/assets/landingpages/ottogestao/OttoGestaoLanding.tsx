@@ -8,6 +8,7 @@ import {
 } from '@tabler/icons-react'
 import { CircledWord } from '../ottocut/DrawOnView'
 import { TypedAssistant } from '../ottocut/TypedAssistant'
+import { OttoLogo } from '../ottocut/OttoLogo'
 import base from '../ottocut/OttoCutLanding.module.css'
 import styles from './OttoGestaoLanding.module.css'
 
@@ -20,13 +21,7 @@ const SIGN_UP = '/sign-up'
 const brl = (v: number) => v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL', maximumFractionDigits: 0 })
 
 function Logo() {
-  return <span className={base.logo}>
-    <span className={styles.logoMark}>
-      {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img src="/logoOttoIcon.svg" alt="" />
-    </span>
-    ottogestão
-  </span>
+  return <OttoLogo />
 }
 
 function Cta({ children, small, href = SIGN_UP }: { children: ReactNode; small?: boolean; href?: string }) {

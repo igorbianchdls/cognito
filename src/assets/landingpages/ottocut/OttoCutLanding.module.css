@@ -24,12 +24,6 @@
   max-width: 1200px; margin: 0 auto; padding: 18px 16px;
   background: rgb(14 14 16 / .82); backdrop-filter: blur(12px);
 }
-.logo { display: inline-flex; align-items: center; gap: 10px; font-size: 26px; font-weight: 800; letter-spacing: -0.04em; }
-.logoMark {
-  width: 36px; height: 36px; border-radius: 10px; display: grid; place-items: center;
-  background: linear-gradient(135deg, var(--violet), var(--pink));
-  box-shadow: 3px 3px 0 #3b1d99; transform: rotate(-6deg);
-}
 
 /* ---------- buttons ---------- */
 .cta, .ctaSmall {
@@ -194,7 +188,6 @@
 .final { text-align: center; padding: 90px 16px 90px; display: flex; flex-direction: column; align-items: center; gap: 34px; }
 .final h2 { font-size: clamp(36px, 6.4vw, 72px); line-height: 1.04; font-weight: 800; letter-spacing: -0.04em; }
 .footer { border-top: 1px solid var(--line); max-width: 1200px; margin: 0 auto; padding: 32px 16px 48px; display: flex; flex-direction: column; gap: 12px; color: var(--muted); font-size: 14px; }
-.footer .logo { color: #fff; font-size: 22px; }
 .disclaimer { font-size: 12.5px; line-height: 1.5; color: #7d7d89; }
 
 /* ---------- larger screens ---------- */
