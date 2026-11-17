@@ -5,7 +5,7 @@ import { useEffect, useState } from 'react'
 import styles from './OttoCutLanding.module.css'
 
 // The last words of the hero title: types "ChatGPT", holds, erases, swaps the icon and types "Claude", in a loop.
-// Server render and reduced motion show "ChatGPT" fully typed.
+// Server render shows "ChatGPT" fully typed; with reduced motion the words swap every 2.5 s without typing.
 
 const WORDS = [{ text: 'ChatGPT', icon: 'gpt' }, { text: 'Claude', icon: 'claude' }] as const
 const LONGEST = WORDS.reduce((a, w) => (w.text.length > a.length ? w.text : a), '')
@@ -26,7 +26,11 @@ export function TypedAssistant() {
   const [phase, setPhase] = useState<'hold' | 'erase' | 'type'>('hold')
 
   useEffect(() => {
-    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return
+    // Reduced motion: still alternate the two words, just without typing them letter by letter.
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      const t = setTimeout(() => { const next = (word + 1) % WORDS.length; setWord(next); setLen(WORDS[next].text.length) }, 2500)
+      return () => clearTimeout(t)
+    }
     const full = WORDS[word].text.length
     let t: ReturnType<typeof setTimeout>
     if (phase === 'hold') t = setTimeout(() => setPhase('erase'), HOLD_MS)
