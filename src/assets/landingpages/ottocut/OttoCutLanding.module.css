@@ -78,20 +78,34 @@
 .networks span { width: 48px; height: 48px; border-radius: 12px; display: grid; place-items: center; box-shadow: inset 0 0 0 1px rgb(255 255 255 / .08); }
 .networksNote { margin-top: 16px !important; font-size: 14px; color: var(--muted); }
 
-/* ---------- demo ---------- */
-.demoWrap { max-width: 1200px; margin: 0 auto; padding: 20px 16px 40px; }
-.demoCard {
-  position: relative; overflow: hidden; border-radius: 28px;
-  background: radial-gradient(120% 90% at 85% 25%, #8b6dff 0%, #6a35ff 38%, #4d1fd6 70%, #3a17a8 100%);
-  padding: 40px 0 0 28px;
-}
-.demoCard h2 { font-size: clamp(30px, 4.6vw, 52px); line-height: 1.08; font-weight: 800; letter-spacing: -0.035em; margin-bottom: 30px !important; padding-right: 28px; }
-.demoFrame {
-  border-radius: 18px 0 0 0; overflow: hidden; background: #212121;
-  box-shadow: 0 0 0 10px rgb(255 255 255 / .12), 0 30px 80px rgb(0 0 0 / .45);
-  margin-left: 10px;
-}
-.demoFrame video { display: block; width: 150%; max-width: none; margin-left: -31%; height: auto; aspect-ratio: 3 / 2; }
+/* ---------- via ChatGPT / Claude ---------- */
+.via { max-width: 1200px; margin: 0 auto; padding: 40px 16px 30px; }
+.via .sectionTitle { margin-bottom: 40px; }
+.nowrap { white-space: nowrap; }
+.circled { position: relative; display: inline-block; padding: 0 .12em; }
+.circled svg { position: absolute; left: -.18em; top: -.12em; width: calc(100% + .36em); height: calc(100% + .26em); overflow: visible; pointer-events: none; }
+.circled path { fill: none; stroke: #f472d0; stroke-width: 4; stroke-linecap: round; vector-effect: non-scaling-stroke; stroke-dasharray: 1; stroke-dashoffset: 1; }
+.circledOn path { animation: drawCircle .9s .15s cubic-bezier(.6, 0, .3, 1) forwards; }
+@keyframes drawCircle { to { stroke-dashoffset: 0; } }
+@media (prefers-reduced-motion: reduce) { .circled path { stroke-dashoffset: 0; animation: none; } }
+.viaList { display: flex; flex-direction: column; gap: 20px; }
+.viaCard { border-radius: 30px; padding: 22px 22px 34px; }
+.viaFrame { border-radius: 22px; background: #050506; overflow: hidden; padding: 9% 0 0 9%; }
+.viaWindow { border-radius: 14px 0 0 0; overflow: hidden; box-shadow: 0 0 0 1px rgb(255 255 255 / .1); background: #212121; }
+.viaWindow video { display: block; width: 150%; max-width: none; height: auto; aspect-ratio: 3 / 2; }
+.viaTitle { display: flex; align-items: center; gap: 16px; margin-top: 26px !important; font-size: clamp(30px, 4.4vw, 44px); font-weight: 600; letter-spacing: -0.02em; }
+.viaClaude { width: 44px; height: 44px; overflow: hidden; display: inline-block; flex-shrink: 0; }
+.viaClaude img { height: 44px; width: auto; max-width: none; filter: brightness(0) invert(1); }
+.viaText { margin-top: 12px !important; font-size: clamp(18px, 2.3vw, 22px); line-height: 1.5; color: rgb(255 255 255 / .88); max-width: 720px; }
+
+/* ---------- who ---------- */
+.who { max-width: 900px; margin: 0 auto; padding: 70px 16px 20px; }
+.who .sectionTitle { margin-bottom: 30px; }
+.whoList { display: flex; flex-direction: column; gap: 48px; }
+.whoItem { display: flex; flex-direction: column; align-items: center; text-align: center; gap: 14px; }
+.doodle { width: 110px; height: 110px; }
+.whoItem h3 { font-size: 30px; font-weight: 700; letter-spacing: -0.02em; }
+.whoItem p { font-size: 18px; line-height: 1.55; color: var(--muted); max-width: 560px; }
 
 /* ---------- facts marquee ---------- */
 .sectionTitle { text-align: center; font-size: clamp(32px, 5vw, 56px); line-height: 1.08; font-weight: 800; letter-spacing: -0.035em; padding: 0 16px; }
@@ -192,10 +206,11 @@
   .badge b { font-size: 17px; }
   .networks { grid-template-columns: repeat(12, 52px); gap: 12px; }
   .networks span { width: 52px; height: 52px; }
-  .demoCard { padding: 56px 0 0 56px; }
-  .demoCard h2 { margin-bottom: 40px !important; max-width: 760px; }
-  .demoFrame video { width: 100%; margin-left: 0; }
   .featureGrid { grid-template-columns: 1fr 1fr; gap: 20px; }
+  .viaList { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
+  .viaCard { padding: 28px 28px 40px; }
+  .viaWindow video { width: 135%; }
+  .whoList { display: grid; grid-template-columns: repeat(3, 1fr); gap: 32px; }
   .stepGrid { grid-template-columns: repeat(3, 1fr); gap: 20px; }
   .offerCard { padding: 48px 48px; }
   .factViolet, .factPink { width: 360px; }

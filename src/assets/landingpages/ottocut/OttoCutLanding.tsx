@@ -1,13 +1,14 @@
 import { Plus_Jakarta_Sans } from 'next/font/google'
 import type { ReactNode } from 'react'
 import {
-  IconBadgeCc, IconBrandFacebook, IconBrandInstagram, IconBrandLinkedin, IconBrandPinterest,
+  IconBadgeCc, IconBrandFacebook, IconBrandInstagram, IconBrandLinkedin, IconBrandOpenai, IconBrandPinterest,
   IconBrandSnapchat, IconBrandTelegram, IconBrandThreads, IconBrandTiktok, IconBrandVimeo, IconBrandWhatsapp, IconBrandX,
   IconBrandYoutube, IconChevronsRight, IconDownload, IconMessageChatbot, IconMusic, IconPalette, IconScissors,
   IconShieldCheck, IconUpload, IconZoomIn,
 } from '@tabler/icons-react'
 import { OTTOCUT_OFFER } from './offer'
 import { TypedAssistant } from './TypedAssistant'
+import { CircledWord } from './DrawOnView'
 import styles from './OttoCutLanding.module.css'
 
 const jakarta = Plus_Jakarta_Sans({ subsets: ['latin'], weight: ['400', '500', '600', '700', '800'] })
@@ -60,6 +61,51 @@ const NETWORKS = [
   { Icon: IconBrandWhatsapp, bg: '#25d366', label: 'WhatsApp' },
   { Icon: IconBrandTelegram, bg: '#29a9eb', label: 'Telegram' },
   { Icon: IconBrandVimeo, bg: '#1ab7ea', label: 'Vimeo' },
+]
+
+const VIA = [
+  {
+    title: 'Via ChatGPT', video: '/ottocut/chat-demo.mp4', poster: '/ottocut/chat-demo-poster.jpg',
+    bg: 'linear-gradient(160deg, #8b2cf5 0%, #6a16d8 55%, #4c0fa3 100%)',
+    icon: <IconBrandOpenai size={44} stroke={1.5} />,
+    text: 'Mande o vídeo no seu ChatGPT, peça em português e receba o Reel cortado, legendado e pronto para postar.',
+  },
+  {
+    title: 'Via Claude', video: '/ottocut/claude-demo.mp4', poster: '/ottocut/claude-demo-poster.jpg',
+    bg: 'linear-gradient(160deg, #b62aa8 0%, #8c1a84 55%, #5e0f5a 100%)',
+    // eslint-disable-next-line @next/next/no-img-element
+    icon: <span className={styles.viaClaude}><img src="/claudeLogo.svg" alt="" /></span>,
+    text: 'Conecte o OttoCut ao Claude e edite seus Reels na conversa: cortes, legendas, zoom, cor e música.',
+  },
+]
+
+const WHO = [
+  {
+    title: 'Criadores de conteúdo',
+    text: 'Grave e poste todo dia sem passar horas editando. Você fala o que quer e o Reel sai pronto.',
+    doodle: <svg className={styles.doodle} viewBox="0 0 120 120" fill="none" stroke="#f472d0" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+      <path d="M60 8 C 30 6, 8 30, 10 62 C 12 92, 38 114, 66 110 C 96 106, 114 82, 110 52 C 106 24, 84 8, 58 10" />
+      <path d="M42 46 C 42 52, 46 54, 46 48" /><path d="M76 44 C 74 52, 80 54, 80 46" />
+      <path d="M36 70 C 50 76, 72 76, 86 68 C 84 84, 70 92, 58 90 C 46 88, 40 80, 36 70 Z" />
+    </svg>,
+  },
+  {
+    title: 'Social medias e agências',
+    text: 'Entregue mais Reels para mais clientes, no mesmo tempo. Ajustes de legenda e gancho saem num pedido.',
+    doodle: <svg className={styles.doodle} viewBox="0 0 120 120" fill="none" stroke="#a78bfa" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+      <path d="M22 44 C 20 66, 22 90, 26 108 C 50 110, 76 109, 102 106 C 100 84, 100 64, 98 42 C 72 41, 46 42, 22 44 Z" />
+      <path d="M44 42 C 42 26, 48 14, 60 14 C 72 14, 78 26, 76 42" />
+    </svg>,
+  },
+  {
+    title: 'Empresários e profissionais',
+    text: 'Grave o seu próprio conteúdo e publique com cara profissional, sem contratar um editor.',
+    doodle: <svg className={styles.doodle} viewBox="0 0 120 120" fill="none" stroke="#6b8cff" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+      <path d="M12 58 C 30 40, 46 24, 62 10 C 78 26, 94 42, 110 56" />
+      <path d="M24 50 C 24 70, 26 90, 26 110 C 50 112, 74 111, 98 110 C 98 90, 97 70, 98 50" />
+      <path d="M50 110 C 50 96, 50 86, 52 78 C 60 76, 66 77, 72 78 C 72 90, 72 100, 72 110" />
+    </svg>,
+  },
 ]
 
 const FACTS = [
@@ -137,14 +183,31 @@ export function OttoCutLanding() {
       <p className={styles.networksNote}>Exporte pronto para onde você posta</p>
     </section>
 
-    <section className={styles.demoWrap}>
-      <div className={styles.demoCard}>
-        <h2>Edite vídeos conversando com o ChatGPT</h2>
-        <div className={styles.demoFrame}>
-          <video autoPlay muted loop playsInline preload="metadata" poster="/ottocut/chat-demo-poster.jpg" aria-label="Demonstração: o OttoCut editando um Reel dentro do ChatGPT">
-            <source src="/ottocut/chat-demo.mp4" type="video/mp4" />
-          </video>
-        </div>
+    <section className={styles.via}>
+      <h2 className={styles.sectionTitle}>Edite seus vídeos com <span className={styles.nowrap}><CircledWord>IA</CircledWord>,</span> só conversando</h2>
+      <div className={styles.viaList}>
+        {VIA.map(v => <article key={v.title} className={styles.viaCard} style={{ background: v.bg }}>
+          <div className={styles.viaFrame}>
+            <div className={styles.viaWindow}>
+              <video autoPlay muted loop playsInline preload="metadata" poster={v.poster} aria-label={`Demonstração: o OttoCut editando um Reel ${v.title.toLowerCase().replace('via', 'pelo')}`}>
+                <source src={v.video} type="video/mp4" />
+              </video>
+            </div>
+          </div>
+          <h3 className={styles.viaTitle}>{v.icon}{v.title}</h3>
+          <p className={styles.viaText}>{v.text}</p>
+        </article>)}
+      </div>
+    </section>
+
+    <section className={styles.who}>
+      <h2 className={styles.sectionTitle}>Para quem é o OttoCut?</h2>
+      <div className={styles.whoList}>
+        {WHO.map(w => <article key={w.title} className={styles.whoItem}>
+          {w.doodle}
+          <h3>{w.title}</h3>
+          <p>{w.text}</p>
+        </article>)}
       </div>
     </section>
 
