@@ -4,11 +4,12 @@ import type { ReactNode } from 'react'
 import {
   IconArrowsExchange, IconBellRinging, IconBrandOpenai, IconBuildingBank, IconCash, IconChartBar, IconCheck,
   IconChevronsRight, IconFileImport, IconFileInvoice, IconHistory, IconLock, IconPlugConnected, IconReceipt,
-  IconReportMoney, IconShieldLock, IconShoppingCart, IconTags, IconTruck, IconUserPlus, IconUsers,
+  IconShoppingCart, IconTags, IconTruck, IconUserPlus, IconUsers,
 } from '@tabler/icons-react'
 import { CircledWord } from '../ottocut/DrawOnView'
 import { TypedAssistant } from '../ottocut/TypedAssistant'
 import { OttoLogo } from '../ottocut/OttoLogo'
+import { AgentsScreen, DreScreen, PayablesScreen, ReconcileScreen, SecurityScreen, ToolCards, type ToolCard } from '../ottocut/ToolCards'
 import base from '../ottocut/OttoCutLanding.module.css'
 import styles from './OttoGestaoLanding.module.css'
 
@@ -113,11 +114,12 @@ const FACTS = [
   ['Adesão grátis', 'em todos os planos'],
 ]
 
-const FEATURES = [
-  { Icon: IconReceipt, title: 'Contas a pagar e a receber', text: 'Títulos gerados direto das vendas e compras, com vencimentos, baixas parciais e totais, estornos e contas financeiras.' },
-  { Icon: IconArrowsExchange, title: 'Conciliação e classificação', text: 'Compare o extrato com os lançamentos e deixe as despesas classificadas por categoria, com o grupo do DRE certo.' },
-  { Icon: IconReportMoney, title: 'DRE e relatórios', text: 'Resultado do mês, fluxo de caixa e relatórios financeiros completos, prontos sem montar planilha.' },
-  { Icon: IconShieldLock, title: 'Seguro e com histórico', text: 'Dados isolados por empresa, permissões por usuário, confirmação antes de qualquer alteração importante e histórico de quem fez o quê.' },
+const TOOL_CARDS: ToolCard[] = [
+  { tag: 'Agentes de IA', title: 'Cuide do financeiro pelo ChatGPT ou pelo Claude', text: 'Pergunte quanto tem a receber, peça para classificar despesas ou conciliar o extrato. A Otto responde com os dados da sua empresa.', bg: 'linear-gradient(160deg, #8b2cf5 0%, #6a16d8 55%, #4c0fa3 100%)', screen: <AgentsScreen prompt="Classifica as despesas de novembro e me mostra o DRE" />, wide: true },
+  { tag: 'Contas', title: 'Contas a pagar e a receber', text: 'Títulos gerados direto das vendas e compras, com vencimentos, baixas parciais e totais, estornos e contas financeiras.', bg: 'linear-gradient(160deg, #b62aa8 0%, #8c1a84 55%, #5e0f5a 100%)', screen: <PayablesScreen /> },
+  { tag: 'Conciliação', title: 'Extrato e lançamentos batendo', text: 'Compare o extrato com o que foi lançado e deixe as despesas classificadas por categoria, com o grupo do DRE certo.', bg: 'linear-gradient(160deg, #5b3cf0 0%, #3d1fc9 55%, #2a1490 100%)', screen: <ReconcileScreen /> },
+  { tag: 'Relatórios', title: 'DRE e relatórios no automático', text: 'Resultado do mês, fluxo de caixa e relatórios financeiros completos, prontos sem montar planilha.', bg: 'linear-gradient(160deg, #8b2cf5 0%, #6a16d8 55%, #4c0fa3 100%)', screen: <DreScreen /> },
+  { tag: 'Segurança', title: 'Seguro e com histórico', text: 'Permissões por usuário, confirmação antes de qualquer alteração importante e histórico de quem fez o quê.', bg: 'linear-gradient(160deg, #b62aa8 0%, #8c1a84 55%, #5e0f5a 100%)', screen: <SecurityScreen /> },
 ]
 
 const STEPS = [
@@ -201,16 +203,7 @@ export function OttoGestaoLanding() {
       </div>)}
     </section>
 
-    <section className={base.features}>
-      <h2 className={base.sectionTitle}>O que a OttoGestão faz pela sua empresa</h2>
-      <div className={base.featureGrid}>
-        {FEATURES.map(({ Icon, title, text }) => <article key={title} className={base.feature}>
-          <span className={base.featureIcon}><Icon size={22} stroke={1.8} /></span>
-          <h3>{title}</h3>
-          <p>{text}</p>
-        </article>)}
-      </div>
-    </section>
+    <ToolCards title="Tudo o que o financeiro da sua empresa precisa, num só lugar" cards={TOOL_CARDS} />
 
     <section className={base.steps}>
       <h2 className={base.sectionTitle}>Como começar</h2>
