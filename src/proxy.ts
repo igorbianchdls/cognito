@@ -25,6 +25,7 @@ const isPublicRoute = createRouteMatcher([
   '/hotel',
   '/lp-a(.*)',
   '/ottocut(.*)',
+  '/ottogestao(.*)',
   '/emissor-nota-fiscal(.*)',
   '/p/(.*)',
   '/__clerk/:path*',

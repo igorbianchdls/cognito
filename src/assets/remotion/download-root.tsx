@@ -5,6 +5,7 @@ import { CLAUDE_REACTOR_DURATION, ClaudeEditingReactor } from './compositions/Cl
 import { ClaudeVideoEditorSwarm, VIDEO_EDITOR_SWARM_DURATION } from './compositions/ClaudeVideoEditorSwarm'
 import { ClaudeInvoiceSwarm, INVOICE_SWARM_DURATION } from './compositions/ClaudeInvoiceSwarm'
 import { OTTOCUT_CHAT_DURATION, OttoCutChatDemo } from './compositions/OttoCutChatDemo'
+import { OTTOGESTAO_CHAT_DURATION, OttoGestaoChatDemo } from './compositions/OttoGestaoChatDemo'
 import { NOTA_UNICA_AD_DURATION, OttoNotaUnicaAd } from './compositions/OttoNotaUnicaAd'
 import { NOTAS_LOTE_AD_DURATION, OttoNotasLoteAd } from './compositions/OttoNotasLoteAd'
 import { EMISSOR_DURATION, OttoEmissorNfseLote, OttoEmissorNfseUma } from './compositions/OttoEmissorNfse'
@@ -748,6 +749,8 @@ function RemotionDownloadRoot() {
       <Composition component={ClaudeInvoiceSwarm} durationInFrames={INVOICE_SWARM_DURATION} fps={30} height={1080} id="claude-notas-agentes" width={1920} />
       <Composition component={OttoCutChatDemo} durationInFrames={OTTOCUT_CHAT_DURATION} fps={30} height={960} id="ottocut-chat-demo" width={1440} />
       <Composition component={OttoCutChatDemo} defaultProps={{ app: 'claude' as const }} durationInFrames={OTTOCUT_CHAT_DURATION} fps={30} height={960} id="ottocut-claude-demo" width={1440} />
+      <Composition component={OttoGestaoChatDemo} durationInFrames={OTTOGESTAO_CHAT_DURATION} fps={30} height={960} id="ottogestao-chatgpt-demo" width={1440} />
+      <Composition component={OttoGestaoChatDemo} defaultProps={{ app: 'claude' as const }} durationInFrames={OTTOGESTAO_CHAT_DURATION} fps={30} height={960} id="ottogestao-claude-demo" width={1440} />
       <Composition component={OttoNotaUnicaAd} durationInFrames={NOTA_UNICA_AD_DURATION} fps={30} height={1920} id="otto-nota-unica-ad" width={1080} />
       <Composition component={OttoNotasLoteAd} durationInFrames={NOTAS_LOTE_AD_DURATION} fps={30} height={1920} id="otto-notas-lote-ad" width={1080} />
       <Composition component={OttoEmissorNfseUma} durationInFrames={EMISSOR_DURATION} fps={30} height={1080} id="otto-emissor-nfse-uma" width={1920} />
