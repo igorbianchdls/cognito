@@ -60,6 +60,18 @@
   background: #fff; color: #0b0b0d; transform: translateY(.04em);
 }
 .gptIcon svg { width: .66em; height: .66em; }
+.gptWord { justify-content: center; }
+.claudeMark { width: .66em; height: .66em; object-fit: cover; object-position: left center; }
+.typed { display: inline-grid; text-align: left; }
+.typedGhost, .typedText { grid-area: 1 / 1; white-space: nowrap; }
+.typedGhost { visibility: hidden; }
+.caret, .caretBlink { display: inline-block; width: .07em; height: .82em; margin-left: .06em; background: #b89cff; vertical-align: -.06em; border-radius: 2px; }
+.caretBlink { animation: caretBlink 1s steps(1) infinite; }
+@keyframes caretBlink { 50% { opacity: 0; } }
+.gptIcon { animation: iconPop .35s cubic-bezier(.3, 1.6, .5, 1); }
+@keyframes iconPop { from { transform: translateY(.04em) scale(.4); opacity: 0; } to { transform: translateY(.04em) scale(1); opacity: 1; } }
+.srOnly { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0; }
+@media (prefers-reduced-motion: reduce) { .gptIcon, .caretBlink { animation: none; } }
 .lead { margin-top: 28px !important; max-width: 640px; font-size: clamp(18px, 2.4vw, 22px); line-height: 1.5; color: var(--muted); }
 .hero .cta { margin-top: 36px; }
 .networks { margin-top: 44px; display: grid; grid-template-columns: repeat(6, 48px); gap: 12px; justify-content: center; }
