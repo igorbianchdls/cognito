@@ -1,14 +1,15 @@
 import { Plus_Jakarta_Sans } from 'next/font/google'
 import type { ReactNode } from 'react'
 import {
-  IconBadgeCc, IconBrandFacebook, IconBrandInstagram, IconBrandLinkedin, IconBrandOpenai, IconBrandPinterest,
+  IconBrandFacebook, IconBrandInstagram, IconBrandLinkedin, IconBrandOpenai, IconBrandPinterest,
   IconBrandSnapchat, IconBrandTelegram, IconBrandThreads, IconBrandTiktok, IconBrandVimeo, IconBrandWhatsapp, IconBrandX,
-  IconBrandYoutube, IconChevronsRight, IconDownload, IconMessageChatbot, IconMusic, IconPalette, IconScissors,
-  IconShieldCheck, IconUpload, IconZoomIn,
+  IconBrandYoutube, IconChevronsRight, IconDownload, IconMessageChatbot,
+  IconShieldCheck, IconUpload,
 } from '@tabler/icons-react'
 import { OTTOCUT_OFFER } from './offer'
 import { TypedAssistant } from './TypedAssistant'
 import { OttoLogo } from './OttoLogo'
+import { AgentsScreen, CaptionsScreen, CutsScreen, ExportScreen, PolishScreen, ToolCards, type ToolCard } from './ToolCards'
 import { CircledWord } from './DrawOnView'
 import styles from './OttoCutLanding.module.css'
 
@@ -113,24 +114,13 @@ const FACTS = [
   ['1 pedido', 'e o Reel sai cortado, legendado e com música'],
 ]
 
-const FEATURES = [
-  { Icon: IconScissors, title: 'Cortes automáticos', text: 'Pausas, gaguejadas e erros saem sozinhos. O vídeo fica no ritmo que segura a atenção até o fim.', visual: 'cuts' },
-  { Icon: IconBadgeCc, title: 'Legendas que prendem', text: 'Legenda palavra por palavra, no estilo dos Reels que viralizam. Você escolhe cor, fonte e destaque só pedindo.', visual: 'captions' },
-  { Icon: IconZoomIn, title: 'Zoom, cor e música', text: 'Zoom nos momentos fortes, cor e luz corrigidas e uma trilha leve com a sua voz em primeiro plano.', visual: 'chips' },
-  { Icon: IconDownload, title: 'Pronto para postar', text: 'Baixe em 9:16 para Reels, TikTok e Shorts, ou em 4:5 para o Feed. Quer outro gancho? É só pedir.', visual: 'formats' },
-] as const
-
-function FeatureVisual({ kind }: { kind: (typeof FEATURES)[number]['visual'] }) {
-  if (kind === 'cuts') return <div className={styles.vCuts}>
-    {[18, 6, 22, 5, 14, 7, 20, 4, 12].map((w, i) => <i key={i} style={{ flexGrow: w }} className={i % 2 ? styles.cutOut : styles.cutIn} />)}
-    <span>1:12 → 0:38</span>
-  </div>
-  if (kind === 'captions') return <div className={styles.vCaptions}><b>VOCÊ AINDA</b> <b className={styles.hl}>EDITA</b> <b>NA MÃO?</b></div>
-  if (kind === 'chips') return <div className={styles.vChips}>
-    <span><IconZoomIn size={16} /> zoom 112%</span><span><IconPalette size={16} /> cor +12%</span><span><IconMusic size={16} /> trilha leve</span>
-  </div>
-  return <div className={styles.vFormats}><span className={styles.f916}>9:16</span><span className={styles.f45}>4:5</span></div>
-}
+const TOOL_CARDS: ToolCard[] = [
+  { tag: 'Agentes de IA', title: 'Edite conversando com o ChatGPT ou o Claude', text: 'Peça em português, do jeito que você falaria com um editor. O OttoCut faz o resto dentro da conversa.', bg: 'linear-gradient(160deg, #8b2cf5 0%, #6a16d8 55%, #4c0fa3 100%)', screen: <AgentsScreen prompt="Edita esse vídeo pra Reels com legenda amarela" />, wide: true },
+  { tag: 'Cortes', title: 'Cortes automáticos', text: 'Pausas, gaguejadas e erros saem sozinhos. O vídeo fica no ritmo que segura a atenção até o fim.', bg: 'linear-gradient(160deg, #b62aa8 0%, #8c1a84 55%, #5e0f5a 100%)', screen: <CutsScreen /> },
+  { tag: 'Legendas', title: 'Legendas que prendem', text: 'Legenda palavra por palavra, no estilo dos Reels que viralizam. Cor, fonte e destaque, só pedindo.', bg: 'linear-gradient(160deg, #5b3cf0 0%, #3d1fc9 55%, #2a1490 100%)', screen: <CaptionsScreen /> },
+  { tag: 'Acabamento', title: 'Zoom, cor e música', text: 'Zoom nos momentos fortes, cor e luz corrigidas e uma trilha leve com a sua voz em primeiro plano.', bg: 'linear-gradient(160deg, #8b2cf5 0%, #6a16d8 55%, #4c0fa3 100%)', screen: <PolishScreen /> },
+  { tag: 'Exportação', title: 'Pronto para postar', text: 'Baixe em 9:16 para Reels, TikTok e Shorts, ou em 4:5 para o Feed. Quer outro gancho? É só pedir.', bg: 'linear-gradient(160deg, #b62aa8 0%, #8c1a84 55%, #5e0f5a 100%)', screen: <ExportScreen /> },
+]
 
 const STEPS = [
   { Icon: IconMessageChatbot, title: 'Ative o OttoCut no seu ChatGPT ou Claude', text: 'Você recebe o software e a skill, e conecta tudo na sua conta do ChatGPT ou do Claude com o passo a passo.' },
@@ -216,17 +206,7 @@ export function OttoCutLanding() {
       </div>)}
     </section>
 
-    <section className={styles.features}>
-      <h2 className={styles.sectionTitle}>O que o OttoCut faz no seu vídeo</h2>
-      <div className={styles.featureGrid}>
-        {FEATURES.map(({ Icon, title, text, visual }) => <article key={title} className={styles.feature}>
-          <span className={styles.featureIcon}><Icon size={22} stroke={1.8} /></span>
-          <h3>{title}</h3>
-          <p>{text}</p>
-          <FeatureVisual kind={visual} />
-        </article>)}
-      </div>
-    </section>
+    <ToolCards title="Tudo o que você precisa para editar seus Reels, num só lugar" cards={TOOL_CARDS} />
 
     <section className={styles.steps}>
       <h2 className={styles.sectionTitle}>Como funciona</h2>
