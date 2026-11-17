@@ -1,0 +1,43 @@
+.headerActions { display: inline-flex; align-items: center; gap: 16px; }
+.signIn { display: none; color: #d6d6de; text-decoration: none; font-size: 14px; font-weight: 600; }
+.signIn:hover { color: #fff; }
+
+.modules { margin-top: 44px; display: grid; grid-template-columns: repeat(6, 48px); gap: 12px; justify-content: center; }
+.modules span { width: 48px; height: 48px; border-radius: 12px; display: grid; place-items: center; box-shadow: inset 0 0 0 1px rgb(255 255 255 / .1); }
+
+/* ---------- pricing ---------- */
+.pricing { max-width: 1200px; margin: 0 auto; padding: 70px 16px 30px; scroll-margin-top: 80px; }
+.pricingNote { text-align: center; color: #b4b4c0; font-size: 16px; margin: 14px 0 36px !important; }
+.planGrid { display: grid; grid-template-columns: 1fr; gap: 18px; }
+.plan, .planFeatured {
+  position: relative; border-radius: 26px; padding: 30px 24px; display: flex; flex-direction: column; gap: 10px;
+  background: #17171b; border: 1px solid #26262d;
+}
+.planFeatured {
+  background: linear-gradient(#17171b, #17171b) padding-box, linear-gradient(135deg, #8f5bff, #e23aa7) border-box;
+  border: 2px solid transparent; box-shadow: 0 30px 80px rgb(106 53 255 / .25);
+}
+.planTag { position: absolute; top: -13px; left: 24px; padding: 5px 12px; border-radius: 999px; font-size: 12px; font-weight: 700; background: linear-gradient(135deg, #8f5bff, #e23aa7); color: #fff; }
+.plan h3, .planFeatured h3 { font-size: 26px; font-weight: 800; letter-spacing: -0.02em; }
+.planNote { color: #b4b4c0; font-size: 15px; line-height: 1.45; min-height: 2.9em; }
+.planPrice { display: flex; align-items: baseline; gap: 6px; margin-top: 6px; }
+.planPrice b { font-size: 48px; font-weight: 800; letter-spacing: -0.04em; }
+.planPrice span { color: #b4b4c0; font-size: 17px; }
+.planAnnual { color: #b4b4c0; font-size: 14px; margin-bottom: 10px !important; }
+.plan a, .planFeatured a { align-self: stretch; padding: 16px 22px; font-size: 16px; }
+.plan a { background: #26262d; color: #fff; }
+.plan ul, .planFeatured ul { list-style: none; margin: 14px 0 0; padding: 0; display: flex; flex-direction: column; gap: 11px; }
+.plan li, .planFeatured li { display: flex; gap: 10px; align-items: flex-start; font-size: 15.5px; line-height: 1.45; color: #dcdce4; }
+.plan li svg, .planFeatured li svg { color: #3ddc84; flex-shrink: 0; margin-top: 2px; }
+.enterprise { margin-top: 26px !important; display: flex; align-items: center; justify-content: center; gap: 8px; text-align: center; color: #b4b4c0; font-size: 15px; flex-wrap: wrap; }
+.enterprise b { color: #fff; }
+
+@media (min-width: 760px) {
+  .signIn { display: inline; }
+  .modules { grid-template-columns: repeat(12, 52px); }
+  .modules span { width: 52px; height: 52px; }
+  .planGrid { grid-template-columns: repeat(3, 1fr); gap: 20px; align-items: start; }
+}
+
+.badgesWrap { flex-wrap: wrap; row-gap: 14px; }
+.headerActions a { white-space: nowrap; }

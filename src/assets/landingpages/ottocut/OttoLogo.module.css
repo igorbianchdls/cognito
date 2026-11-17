@@ -1,0 +1,11 @@
+.logo { --s: 38px; display: inline-flex; align-items: center; gap: 12px; color: #fff; text-decoration: none; }
+.sm { --s: 32px; }
+.mark { position: relative; width: var(--s); height: var(--s); flex-shrink: 0; }
+.back, .front { position: absolute; inset: 0; border-radius: calc(var(--s) * .22); }
+.back { background: #612bd3; transform: translate(calc(var(--s) * -.12), calc(var(--s) * .12)) rotate(-8deg); }
+.front {
+  background: #fff; color: #0e0e10; display: grid; place-items: center;
+  font-size: calc(var(--s) * .78); line-height: 1; font-weight: 800; letter-spacing: -0.04em;
+  transform: rotate(-8deg); box-shadow: 0 1px 0 rgb(0 0 0 / .15);
+}
+.word { font-size: calc(var(--s) * .9); font-weight: 800; letter-spacing: -0.045em; line-height: 1; transform: translateY(-.04em); }
