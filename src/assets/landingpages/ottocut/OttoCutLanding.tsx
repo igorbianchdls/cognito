@@ -1,12 +1,13 @@
 import { Plus_Jakarta_Sans } from 'next/font/google'
 import type { ReactNode } from 'react'
 import {
-  IconBadgeCc, IconBrandFacebook, IconBrandInstagram, IconBrandLinkedin, IconBrandOpenai, IconBrandPinterest,
+  IconBadgeCc, IconBrandFacebook, IconBrandInstagram, IconBrandLinkedin, IconBrandPinterest,
   IconBrandSnapchat, IconBrandTelegram, IconBrandThreads, IconBrandTiktok, IconBrandVimeo, IconBrandWhatsapp, IconBrandX,
   IconBrandYoutube, IconChevronsRight, IconDownload, IconMessageChatbot, IconMusic, IconPalette, IconScissors,
   IconShieldCheck, IconUpload, IconZoomIn,
 } from '@tabler/icons-react'
 import { OTTOCUT_OFFER } from './offer'
+import { TypedAssistant } from './TypedAssistant'
 import styles from './OttoCutLanding.module.css'
 
 const jakarta = Plus_Jakarta_Sans({ subsets: ['latin'], weight: ['400', '500', '600', '700', '800'] })
@@ -90,17 +91,17 @@ function FeatureVisual({ kind }: { kind: (typeof FEATURES)[number]['visual'] }) 
 }
 
 const STEPS = [
-  { Icon: IconMessageChatbot, title: 'Ative o OttoCut no seu ChatGPT', text: 'Você recebe o software e a skill, e conecta tudo na sua conta do ChatGPT com o passo a passo.' },
+  { Icon: IconMessageChatbot, title: 'Ative o OttoCut no seu ChatGPT ou Claude', text: 'Você recebe o software e a skill, e conecta tudo na sua conta do ChatGPT ou do Claude com o passo a passo.' },
   { Icon: IconUpload, title: 'Mande o vídeo e diga o que quer', text: '“Corta as pausas, legenda amarela e zoom nos destaques.” Do jeito que você falaria com um editor.' },
   { Icon: IconDownload, title: 'Baixe o Reel pronto', text: 'Em 9:16 ou 4:5. Não gostou de algo? Peça o ajuste na mesma conversa.' },
 ]
 
 const FAQ = [
-  ['Preciso saber editar vídeo?', 'Não. Você descreve em português o que quer e o OttoCut faz a edição dentro do ChatGPT: cortes, legendas, zoom, cor e música.'],
-  ['O que eu recebo na compra?', 'O software OttoCut e a skill que coloca o OttoCut dentro do seu ChatGPT, com o passo a passo para ativar.'],
+  ['Preciso saber editar vídeo?', 'Não. Você descreve em português o que quer e o OttoCut faz a edição dentro do ChatGPT ou do Claude: cortes, legendas, zoom, cor e música.'],
+  ['O que eu recebo na compra?', 'O software OttoCut e a skill que coloca o OttoCut dentro do seu ChatGPT ou Claude, com o passo a passo para ativar.'],
   ['Em quais formatos o vídeo sai?', 'Em 9:16, para Reels, Stories, TikTok e Shorts, e em 4:5, para o Feed do Instagram e do Facebook.'],
   ['Posso pedir ajustes depois?', 'Sim. Na mesma conversa você pede outra cor de legenda, outro gancho no começo ou uma versão mais curta.'],
-  ['O OttoCut é da OpenAI?', 'Não. O OttoCut é um produto independente que funciona dentro do ChatGPT. ChatGPT é marca da OpenAI.'],
+  ['O OttoCut é da OpenAI ou da Anthropic?', 'Não. O OttoCut é um produto independente que funciona dentro do ChatGPT e do Claude. ChatGPT é marca da OpenAI e Claude é marca da Anthropic.'],
   ['E se eu não gostar?', `Você tem ${OTTOCUT_OFFER.guaranteeDays} dias de garantia: se não gostar, é só pedir o reembolso dentro do prazo.`],
 ]
 
@@ -123,12 +124,12 @@ export function OttoCutLanding() {
 
     <section className={styles.hero}>
       <div className={styles.badges}>
-        <Badge top="Funciona no" bottom="ChatGPT" />
+        <Badge top="Funciona no" bottom="ChatGPT e Claude" />
         <Badge top="Feito em" bottom="português" />
         <Badge top="Sem saber" bottom="editar" />
       </div>
-      <h1>Crie e edite seus Reels dentro do <span className={styles.gptWord}><span className={styles.gptIcon}><IconBrandOpenai size={42} stroke={1.7} /></span>ChatGPT</span></h1>
-      <p className={styles.lead}>O OttoCut transforma o seu ChatGPT num editor de vídeo: mande a gravação, peça em português e receba o Reel cortado, legendado, com zoom e música.</p>
+      <h1>Crie e edite seus Reels dentro do <TypedAssistant /></h1>
+      <p className={styles.lead}>O OttoCut transforma o seu ChatGPT ou Claude num editor de vídeo: mande a gravação, peça em português e receba o Reel cortado, legendado, com zoom e música.</p>
       <Cta>Quero o OttoCut</Cta>
       <div className={styles.networks} aria-label="Onde você pode postar">
         {NETWORKS.map(({ Icon, bg, label, ...n }) => <span key={label} title={label} style={{ background: bg }}><Icon size={26} stroke={1.8} color={'dark' in n ? '#000' : '#fff'} /></span>)}
@@ -183,10 +184,10 @@ export function OttoCutLanding() {
     <section id="oferta" className={styles.offer}>
       <div className={styles.offerCard}>
         <span className={styles.offerTag}>Acesso ao OttoCut</span>
-        <h2>Tudo para editar seus Reels dentro do ChatGPT</h2>
+        <h2>Tudo para editar seus Reels dentro do ChatGPT ou do Claude</h2>
         <ul>
           <li><IconShieldCheck size={20} /> <span><b>Software OttoCut</b> — o motor que corta, legenda, aplica zoom, cor e música e exporta seus vídeos</span></li>
-          <li><IconShieldCheck size={20} /> <span><b>Skill do OttoCut para o ChatGPT</b> — é ela que faz o seu ChatGPT editar vídeo quando você pede</span></li>
+          <li><IconShieldCheck size={20} /> <span><b>Skill do OttoCut para o ChatGPT e o Claude</b> — é ela que faz o seu assistente editar vídeo quando você pede</span></li>
         </ul>
         <Price />
         {OTTOCUT_OFFER.checkoutUrl ? <Cta>Quero o OttoCut</Cta> : <span className={styles.ctaDisabled}>Em breve</span>}
@@ -207,7 +208,7 @@ export function OttoCutLanding() {
     <footer className={styles.footer}>
       <Logo />
       <p>© {new Date().getFullYear()} OttoCut. Todos os direitos reservados.</p>
-      <p className={styles.disclaimer}>ChatGPT é marca registrada da OpenAI. O OttoCut é um produto independente e não é afiliado, patrocinado nem endossado pela OpenAI.</p>
+      <p className={styles.disclaimer}>ChatGPT é marca registrada da OpenAI e Claude é marca registrada da Anthropic. O OttoCut é um produto independente e não é afiliado, patrocinado nem endossado pela OpenAI ou pela Anthropic.</p>
     </footer>
   </div>
 }
