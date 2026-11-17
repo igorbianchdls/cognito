@@ -747,6 +747,7 @@ function RemotionDownloadRoot() {
       <Composition component={ClaudeVideoEditorSwarm} durationInFrames={VIDEO_EDITOR_SWARM_DURATION} fps={30} height={1080} id="claude-video-editor-agentes" width={1920} />
       <Composition component={ClaudeInvoiceSwarm} durationInFrames={INVOICE_SWARM_DURATION} fps={30} height={1080} id="claude-notas-agentes" width={1920} />
       <Composition component={OttoCutChatDemo} durationInFrames={OTTOCUT_CHAT_DURATION} fps={30} height={960} id="ottocut-chat-demo" width={1440} />
+      <Composition component={OttoCutChatDemo} defaultProps={{ app: 'claude' as const }} durationInFrames={OTTOCUT_CHAT_DURATION} fps={30} height={960} id="ottocut-claude-demo" width={1440} />
       <Composition component={OttoNotaUnicaAd} durationInFrames={NOTA_UNICA_AD_DURATION} fps={30} height={1920} id="otto-nota-unica-ad" width={1080} />
       <Composition component={OttoNotasLoteAd} durationInFrames={NOTAS_LOTE_AD_DURATION} fps={30} height={1920} id="otto-notas-lote-ad" width={1080} />
       <Composition component={OttoEmissorNfseUma} durationInFrames={EMISSOR_DURATION} fps={30} height={1080} id="otto-emissor-nfse-uma" width={1920} />
