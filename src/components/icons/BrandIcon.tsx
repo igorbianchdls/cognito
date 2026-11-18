@@ -13,7 +13,7 @@ import {
 } from '@icons-pack/react-simple-icons'
 
 // Register Simple Icons collection once
-addCollection(simpleIcons as any)
+addCollection(simpleIcons as Parameters<typeof addCollection>[0])
 
 type BrandIconProps = {
   brand: string

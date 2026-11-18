@@ -3,7 +3,10 @@ import { createHash, randomUUID } from 'node:crypto'
 import { tools as queryTools } from '../src/products/mcpcore/tools/catalog'
 import { actionTools } from '../src/products/mcpcore/actions/catalog'
 
-type Row = Record<string, any>
+// Smoke-test values parsed from JSON and database rows; their shape is checked by the asserts.
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type Dynamic = any
+type Row = Record<string, Dynamic>
 type Context = {
   client: { query(sql: string, params?: unknown[]): Promise<{ rows: Row[] }> }
   companyId: number; userId: number; clientId: string; resource: string; token: string

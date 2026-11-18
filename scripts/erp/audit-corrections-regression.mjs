@@ -8,12 +8,12 @@ mkdirSync('.cache/erp-audit',{recursive:true})
 
 function load(path, dependencies) {
   const js=ts.transpileModule(readFileSync(path,'utf8'),{compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2020}}).outputText
-  const module={exports:{}}
+  const loaded={exports:{}}
   vm.runInThisContext('(function(require,module,exports){'+js+'\n})',{filename:path})(name=>{
     if (name in dependencies) return dependencies[name]
     throw new Error('Unexpected dependency '+name)
-  },module,module.exports)
-  return module.exports
+  },loaded,loaded.exports)
+  return loaded.exports
 }
 const reports=load('src/products/erp/server/erpFinancialReports.ts',{
   './erpBusinessDate':{ERP_TODAY_SQL:'CURRENT_DATE'},

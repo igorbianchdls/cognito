@@ -26,7 +26,7 @@ try{
    assert.equal((await listErpCategoryOptions(2,type)).length,categories)
    const summary=await getErpEntitySummary(2,module);assert.equal(summary.metrics.find(m=>m.label==='Categorias')!.value,String(categories))
    const detail=await executeTool(principal,'obter_cadastro',{empresa_id:2,tipo:module,registro_id:Number(page.records[0].id)},settings)
-   assert(!detail.isError);assert.equal((detail.structuredContent!.data as any).record.categoria,page.records[0].categoria)
+   assert(!detail.isError);assert.equal((detail.structuredContent!.data as {record:{categoria:unknown}}).record.categoria,page.records[0].categoria)
    checks.push(module+': lista, opções, indicadores e detalhe MCP')
   }
   const categories=await listErpEntityPage({tenantId:2,entityId:'categorias',page:1,pageSize:100})

@@ -201,7 +201,6 @@ function EntriesDialog({ title, query, onClose }: { title: string; query: string
   useEffect(() => {
     let active = true
     const controller = new AbortController()
-    setEntries(null); setError(null)
     void fetch(`/api/erp/relatorios/dre?${query}`, { cache: 'no-store', signal: controller.signal }).then(response => parseErpResponse<{ records: Entry[] }>(response))
       .then(body => { if (active) setEntries(body.records) })
       .catch(loadError => { if (active) { setEntries([]); setError(loadError instanceof Error ? loadError.message : 'Não foi possível carregar os lançamentos.') } })

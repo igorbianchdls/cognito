@@ -23,7 +23,6 @@ async function execute(name: string, args: Record<string, unknown>): Promise<Res
 }
 const ids = (result: Result) => result.records.map(record => String(record.id))
 async function main() {
-  let selected: Result, all: Result
     await db.exec(`CREATE SCHEMA erp;
       CREATE TABLE erp.entidades(id bigint,empresa_id integer,nome text,PRIMARY KEY(empresa_id,id));
       CREATE TABLE erp.vendas(id bigint PRIMARY KEY,empresa_id integer,cliente_id bigint,numero text,data_venda date,total numeric(15,2),status text,tipo_documento text,situacao text,validade_em date,atendimento_status text,fiscal_status text,excluido_em timestamptz);
@@ -38,7 +37,7 @@ async function main() {
       UPDATE erp.vendas SET excluido_em=now() WHERE id=8;
       INSERT INTO erp.compras(id,empresa_id,fornecedor_id,numero,data_compra,total,status,tipo_movimento) VALUES
         (1,2,1,'COM-001','2026-10-10',10.10,'confirmada','compra'),(2,2,1,'COM-002','2026-10-12',20.20,'cancelada','compra'),(3,2,1,'COM-003','2026-10-13',30.30,'recebida','compra');`)
-    selected = await execute('listar_vendas', { limite: 3, ordenar: '-data', pagina: 99 })
+    const selected: Result = await execute('listar_vendas', { limite: 3, ordenar: '-data', pagina: 99 })
     assert.deepEqual(ids(selected), ['4', '3', '5'])
     assert.equal(selected.total, 3); assert.equal(selected.page, 1); assert.equal(selected.pageSize, 3); assert.equal(selected.hasMore, false)
     assert.deepEqual(selected.selecao, { limite: 3, total_disponivel: 6 })
@@ -56,7 +55,7 @@ async function main() {
     checks.push('filters_apply_before_the_limit_and_empty_short_ascending_and_quote_results_are_correct')
     const purchase = await execute('listar_compras', { limite: 2, ordenar: '-data' })
     assert.deepEqual(ids(purchase), ['3', '2']); assert.equal(Number(purchase.summary.valor_total), 50.50); assert.equal(Number(purchase.summary.valor_confirmado), 30.30)
-    all = await execute('listar_vendas', { ordenar: '-data' })
+    const all: Result = await execute('listar_vendas', { ordenar: '-data' })
     assert.equal(all.selecao, undefined); assert.equal(all.total, 6); assert.equal(Number(all.summary.valor_total), 212.10)
     const schema = tools.find(tool => tool.name === 'listar_vendas')!.schema
     for (const limite of [0, -1, 51, 1.5, '3']) assert.equal(schema.safeParse({ limite }).success, false)

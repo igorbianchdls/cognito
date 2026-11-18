@@ -16,7 +16,7 @@ import {createServiceOrder} from '../../src/products/erp/server/erpProfessionalR
 import {serviceOrderCreateSchema} from '../../src/products/erp/shared/professionalContracts'
 import {signErpDocumentFile} from '../../src/products/erp/server/erpStorage'
 config({path:'.env.local',quiet:true})
-const report:any={checks:[],rolledBack:false,originalRowsUnchanged:false},db=connection(),company=2,user=3
+const report:{checks:unknown[];rolledBack:boolean;originalRowsUnchanged:boolean;[key:string]:unknown}={checks:[],rolledBack:false,originalRowsUnchanged:false},db=connection(),company=2,user=3
 const fixture=installFiscalStorageFixture({buckets:['erp-fiscal','erp-comercial']})
 let tables:string[]=[]
 async function fingerprint(){await db.query('RESET ROLE');const rows=[];for(const table of tables)rows.push([table,(await db.query(`SELECT count(*)::int n,md5(coalesce(string_agg(to_jsonb(t)::text,'|' ORDER BY to_jsonb(t)::text),'')) hash FROM erp."${table}" t`)).rows[0]]);return createHash('sha256').update(JSON.stringify(rows)).digest('hex')}
@@ -29,10 +29,10 @@ async function main(){try{
   const source=(await client.query("SELECT id FROM erp.notas_fiscais WHERE empresa_id=$1 AND status='emitida' AND tipo='nfse' AND modo_operacao='simulacao' AND excluido_em IS NULL ORDER BY id LIMIT 1",[company])).rows[0];assert(source);
   const input=serviceInvoiceInputSchema.parse({...((await getServiceInvoice(company,Number(source.id))).input),venda_id:undefined,data_competencia:erpToday(),observacoes:'Revisao temporaria com rollback'});
   const created=await createServiceInvoice(company,user,input,randomUUID()),id=Number(created.record.id);
-  const oldName=String((created.record.destinatario_snapshot as any).nome),newName='CLIENTE_REVISAO_ATUAL';
+  const oldName=String((created.record.destinatario_snapshot as {nome?:unknown}).nome),newName='CLIENTE_REVISAO_ATUAL';
   await client.query('UPDATE erp.entidades SET nome=$3 WHERE empresa_id=$1 AND id=$2',[company,input.cliente_id,newName]);
   await actOnServiceInvoice(company,user,id,{acao:'emitir',cenario:'sucesso',chave_operacao:randomUUID(),versao:1});
-  const row=(await client.query('SELECT destinatario_snapshot,integracao_snapshot FROM erp.notas_fiscais WHERE empresa_id=$1 AND id=$2',[company,id])).rows[0] as any;
+  const row=(await client.query('SELECT destinatario_snapshot,integracao_snapshot FROM erp.notas_fiscais WHERE empresa_id=$1 AND id=$2',[company,id])).rows[0] as {destinatario_snapshot:{nome?:unknown};integracao_snapshot:{dps:{infDPS:{toma:{xNome:unknown}}}}};
   const pdf=await getServiceInvoicePdf(company,id),xml=await getServiceInvoiceXml(company,id);
   assert.equal(row.destinatario_snapshot.nome,oldName);assert.equal(row.integracao_snapshot.dps.infDPS.toma.xNome,oldName);
   assert(pdf.bytes.includes(Buffer.from(oldName,'latin1')));assert(!pdf.bytes.includes(Buffer.from(newName)));assert(!JSON.stringify(xml).includes(newName));
