@@ -1,5 +1,5 @@
--- Remove os produtos Tables e Apps do banco: os schemas com todos os dados, os papéis de runtime,
--- as prévias desses domínios no plugin e os buckets (se já estiverem vazios).
+-- Remove os produtos Tables e Apps do banco: os schemas com todos os dados, os papéis de runtime
+-- e as prévias desses domínios no plugin. Os buckets de Storage saem pelo Dashboard (ver o fim).
 -- IRREVERSÍVEL: faça um backup antes (Dashboard → Database → Backups, ou pg_dump -n tables -n apps).
 BEGIN;
 SET LOCAL lock_timeout='10s';
@@ -30,9 +30,7 @@ BEGIN
  END LOOP;
 END $$;
 
--- Os arquivos do Storage não podem ser apagados por SQL; os buckets só saem aqui se já estiverem
--- vazios (esvazie tables-anexos e apps-files no Dashboard → Storage e rode de novo este trecho).
-DELETE FROM storage.buckets b WHERE b.id IN ('tables-anexos','apps-files')
- AND NOT EXISTS(SELECT 1 FROM storage.objects o WHERE o.bucket_id=b.id);
+-- Buckets tables-anexos e apps-files: o Supabase bloqueia apagar Storage por SQL (storage.protect_delete).
+-- Esvazie e apague os dois pelo Dashboard → Storage (ou pela API de Storage).
 
 COMMIT;
