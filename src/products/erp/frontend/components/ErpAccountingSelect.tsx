@@ -14,24 +14,26 @@ export function ErpAccountingSelect({ value, selectedLabel, kind = 'analitica', 
 }) {
   const [open,setOpen] = useState(false),[query,setQuery] = useState(''),[page,setPage] = useState(1)
   const search = useDeferredValue(query)
-  const [options,setOptions] = useState<Option[]>([]),[hasMore,setHasMore] = useState(false)
-  const [loading,setLoading] = useState(false),[error,setError] = useState<string | null>(null)
+  // Each search result is stored with the request it answers; while the current request has no answer yet, it is loading.
+  const requestKey = open ? [kind,search,page,exclude ?? '',classification ?? ''].join('|') : null
+  const [result,setResult] = useState<{key:string;options:Option[];hasMore:boolean;error:string|null} | null>(null)
+  const current = result && result.key === requestKey ? result : null
+  const loading = requestKey !== null && current === null
+  const options = current?.options ?? [], hasMore = current?.hasMore ?? false, error = current?.error ?? null
   const [choice,setChoice] = useState<Option | null>(null)
   const chosen = value && value !== 'nenhuma' ? (choice?.value === value ? choice.label : selectedLabel || `Conta selecionada: ${value}`) : 'Sem vínculo'
   useEffect(() => {
-    if (!open) return
+    if (requestKey === null) return
     const controller = new AbortController()
-    setLoading(true); setError(null); setOptions([])
     const params = new URLSearchParams({tipo:kind,q:search,page:String(page)})
     if (exclude) params.set('excluir',exclude)
     if (classification) params.set('classificacao',classification)
     void fetch(`/api/erp/catalogos/contas-contabeis?${params}`,{cache:'no-store',signal:controller.signal})
       .then(response=>parseErpResponse<{options:Option[];hasMore:boolean}>(response))
-      .then(body=>{if(!controller.signal.aborted){setOptions(body.options);setHasMore(body.hasMore)}})
-      .catch(e=>{if(!controller.signal.aborted)setError(e instanceof Error ? e.message : 'Não foi possível buscar as contas.')})
-      .finally(()=>{if(!controller.signal.aborted)setLoading(false)})
+      .then(body=>{if(!controller.signal.aborted)setResult({key:requestKey,options:body.options,hasMore:body.hasMore,error:null})})
+      .catch(e=>{if(!controller.signal.aborted)setResult({key:requestKey,options:[],hasMore:false,error:e instanceof Error ? e.message : 'Não foi possível buscar as contas.'})})
     return ()=>controller.abort()
-  },[open,search,page,kind,exclude,classification])
+  },[requestKey,search,page,kind,exclude,classification])
   return <Popover open={open} onOpenChange={next=>{setOpen(next);if(next){setQuery('');setPage(1)}}}>
     <PopoverTrigger asChild><Button type="button" variant="outline" role="combobox" aria-expanded={open} className="w-full justify-between font-normal">
       <span className="truncate">{chosen}</span><ChevronsUpDown className="ml-2 size-4 shrink-0 text-gray-500" />

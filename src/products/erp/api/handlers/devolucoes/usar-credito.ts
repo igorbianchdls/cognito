@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { z } from 'zod'
-import { useCustomerCredit } from '../../../server/erpReturnsRepository'
+// Server function (not a React hook), aliased so the hooks lint rule does not misread it.
+import { useCustomerCredit as applyCustomerCredit } from '../../../server/erpReturnsRepository'
 import { creditUseSchema } from '../../../shared/commercialPolicyContracts'
 import { readErpIdempotencyKey } from '../../../shared/erpTransport'
 import { ErpDomainError } from '../../../shared/erpErrors'
@@ -16,6 +17,6 @@ async function handlePOST(request: Request, context: Context) {
   if (!Number.isInteger(returnId) || returnId <= 0) throw new ErpDomainError('NOT_FOUND', 'Devolução não encontrada.', 404)
   const key = readErpIdempotencyKey(request.headers, true)!
   const body = await parseErpBody(request, z.object({ values: creditUseSchema }).strict())
-  return NextResponse.json(await useCustomerCredit({ tenantId: access.tenantId, actorId: access.sharedUserId, returnId, idempotencyKey: key, values: body.values }))
+  return NextResponse.json(await applyCustomerCredit({ tenantId: access.tenantId, actorId: access.sharedUserId, returnId, idempotencyKey: key, values: body.values }))
 }
 export const POST = withErpHttp(handlePOST, { operation: 'POST /api/erp/devolucoes/[id]/usar-credito' })

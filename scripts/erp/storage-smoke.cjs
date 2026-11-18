@@ -5,10 +5,10 @@ const { mkdirSync, writeFileSync } = require('node:fs')
 
 async function main() {
   const bundle = await build({ entryPoints: ['src/products/erp/server/erpStorage.ts'], bundle: true, platform: 'node', format: 'cjs', write: false })
-  const module = { exports: {} }
+  const loaded = { exports: {} }
   const environment = {}
-  vm.runInNewContext(bundle.outputFiles[0].text, { module, exports: module.exports, URL, AbortSignal, Buffer, fetch, process: { env: environment } })
-  const { signErpDocumentFile } = module.exports
+  vm.runInNewContext(bundle.outputFiles[0].text, { module: loaded, exports: loaded.exports, URL, AbortSignal, Buffer, fetch, process: { env: environment } })
+  const { signErpDocumentFile } = loaded.exports
   const base = 'https://abcdefghijklmnopqrst.supabase.co'
   const file = { bucket: 'erp-anexos', caminho: 'empresa-1/nota ç.pdf', nome: 'nota.pdf' }
   let requests = 0

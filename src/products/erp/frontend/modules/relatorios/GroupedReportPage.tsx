@@ -1,6 +1,8 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useState, useSyncExternalStore } from 'react'
+
+const subscribeToNothing = () => () => {}
 
 import { ProfessionalReportPage } from './ProfessionalReportPage'
 
@@ -32,12 +34,10 @@ export function isGroupedReport(value?: string): value is GroupedReportId { retu
 
 export function GroupedReportPage({ id }: { id: GroupedReportId }) {
   const variant = variants[id]
-  const [selected, setSelected] = useState<string>(variant.options[0].value)
-  // Endereços antigos chegam com ?lado= ou ?agrupar=.
-  useEffect(() => {
-    const value = new URLSearchParams(window.location.search).get(variant.param)
-    if (value && variant.options.some(option => option.value === value)) setSelected(value)
-  }, [variant])
+  const [picked, setSelected] = useState<string | null>(null)
+  // Endereços antigos chegam com ?lado= ou ?agrupar=; o valor da URL vale até a pessoa escolher outra aba.
+  const fromUrl = useSyncExternalStore(subscribeToNothing, () => new URLSearchParams(window.location.search).get(variant.param), () => null)
+  const selected = picked ?? (fromUrl && variant.options.some(option => option.value === fromUrl) ? fromUrl : variant.options[0].value)
   const option = variant.options.find(item => item.value === selected) || variant.options[0]
   return <div className="flex min-h-full flex-col gap-4">
     <div className="flex flex-wrap items-center gap-2 print:hidden">

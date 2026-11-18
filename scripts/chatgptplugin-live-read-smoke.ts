@@ -18,6 +18,10 @@ import { MODERN_VERSION } from '../src/products/mcpcore/hosts/chatgpt/modernProt
 import type { PluginConfig } from '../src/products/mcpcore/hosts/chatgpt/config'
 import { runReadToolCases } from './chatgptplugin-read-tool-cases'
 
+// Smoke-test values parsed from JSON and database rows; their shape is checked by the asserts.
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type Dynamic = any
+
 // HTTP local -> handler MCP real -> repositorios reais -> Supabase.
 // A autenticacao de teste existe apenas nesta instancia em memoria, em loopback.
 // Nao altera o endpoint da aplicacao nem configura/desativa OAuth em producao.
@@ -25,7 +29,7 @@ import { runReadToolCases } from './chatgptplugin-read-tool-cases'
 loadEnv({ path: '.env.local', quiet: true })
 const client: {
   connect: () => Promise<void>
-  query: (sql: string, params?: unknown[]) => Promise<{ rows: Record<string, any>[] }>
+  query: (sql: string, params?: unknown[]) => Promise<{ rows: Record<string, Dynamic>[] }>
   end: () => Promise<void>
 } = connection()
 const testToken = randomBytes(32).toString('hex')
@@ -187,7 +191,7 @@ async function main() {
   }).sort((a, b) => String(a.vencimento).localeCompare(String(b.vencimento)) || (String(a.id) < String(b.id) ? 1 : String(a.id) > String(b.id) ? -1 : 0))
   report.payableInstallments = expected.length
   // Independent reference queries for the optional realistic demonstration.
-  let demoExpected: any = null
+  let demoExpected: Dynamic = null
   if (demoMode) {
     const counts = (await client.query(`SELECT
       (SELECT count(*)::int FROM erp.vendas WHERE empresa_id=$1 AND tipo_documento IN ('venda','pedido') AND excluido_em IS NULL) sales,
@@ -273,7 +277,7 @@ async function main() {
       assert.equal(result.total, demoExpected.counts.receivables)
       assert(result.records.length > 0)
       for (const row of result.records) {
-        const reference = demoExpected.receivables.find((r: any) => r.id === row.id)
+        const reference = demoExpected.receivables.find((r: Dynamic) => r.id === row.id)
         assert(reference)
         assert.equal(row.cliente, reference.cliente)
         assert.equal(row.descricao, reference.descricao)
@@ -312,7 +316,7 @@ async function main() {
     await check('Demo: estoque por produto e local sem saldo negativo', async () => {
       const result = (await call('consultar_estoque', { empresa_id: companyId, por_pagina: 50 })).data
       assert.equal(result.total, demoExpected.counts.stock)
-      assert(result.records.every((row: any) => Number(row.quantidade_fisica) >= 0))
+      assert(result.records.every((row: Dynamic) => Number(row.quantidade_fisica) >= 0))
     })
     await check('Demo: resumo do ERP reconhece os 30 clientes', async () => {
       const result = (await call('resumo_erp', { empresa_id: companyId })).data
@@ -326,7 +330,7 @@ async function main() {
       resource: settings.resource, token: testToken, rpc, call, check })
     await check('Cobertura: todas as tools de leitura atuais foram chamadas', async () => {
       const result = await rpc('tools/list')
-      const names = result.body.result.tools.filter((tool: any) => tool.annotations?.readOnlyHint).map((tool: any) => tool.name).sort()
+      const names = result.body.result.tools.filter((tool: Dynamic) => tool.annotations?.readOnlyHint).map((tool: Dynamic) => tool.name).sort()
       assert.deepEqual([...calledTools].sort(), names)
       report.readCoverage = { ...facts, readTools: names.length, toolNames: names, writeToolsCalled: 0 }
     })
