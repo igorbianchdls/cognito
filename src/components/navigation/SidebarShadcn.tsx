@@ -19,6 +19,7 @@ import {
   SidebarMenu, SidebarMenuButton, SidebarMenuItem,
 } from "@/components/ui/sidebar"
 import { cn } from "@/lib/utils"
+import "./sidebar-dark.css"
 import { useErpAccess } from "@/products/erp/frontend/hooks/useErpAccess"
 import type { ErpCapability } from "@/products/erp/shared/professionalContracts"
 
