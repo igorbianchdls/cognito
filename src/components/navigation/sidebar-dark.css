@@ -1,0 +1,35 @@
+/* Dark version of the Otto menu, used while the video editor is open (the editor marks its screen with data-editor).
+   Graphite tones of the editor. Plain CSS outside Tailwind's layers, so it wins over the menu's utility classes. */
+body:has([data-editor]) [data-slot="sidebar-container"] {
+  border-color: #212328;
+}
+
+body:has([data-editor]) [data-sidebar="sidebar"] {
+  --sidebar: #0b0c0e;
+  --sidebar-foreground: #b6bac2;
+  --sidebar-accent: #22252a;
+  --sidebar-accent-foreground: #eceef1;
+  --sidebar-border: #212328;
+  --sidebar-ring: #3a3d44;
+  background: #0b0c0e;
+  color: #b6bac2;
+}
+
+/* Logo and search */
+body:has([data-editor]) [data-sidebar="sidebar"] [data-sidebar="header"] img { filter: invert(1); }
+body:has([data-editor]) [data-sidebar="sidebar"] [data-sidebar="header"] span { color: #eceef1; }
+body:has([data-editor]) [data-sidebar="sidebar"] [data-sidebar="header"] button { color: #8b9099; }
+body:has([data-editor]) [data-sidebar="sidebar"] [data-sidebar="header"] button:hover { background: rgb(255 255 255 / 0.05); }
+body:has([data-editor]) [data-sidebar="sidebar"] [data-sidebar="header"] kbd { border-color: #2d3036; background: #17191c; color: #8b9099; }
+
+/* Section labels and items */
+body:has([data-editor]) [data-sidebar="sidebar"] [data-sidebar="group-label"] { color: #6b7079; }
+body:has([data-editor]) [data-sidebar="sidebar"] :is([data-sidebar="menu-button"], [data-sidebar="menu-sub-button"]) { color: #9aa0a8; }
+body:has([data-editor]) [data-sidebar="sidebar"] :is([data-sidebar="menu-button"], [data-sidebar="menu-sub-button"]) svg { color: #767c86; }
+body:has([data-editor]) [data-sidebar="sidebar"] :is([data-sidebar="menu-button"], [data-sidebar="menu-sub-button"]):hover { background: rgb(255 255 255 / 0.05); color: #eceef1; }
+body:has([data-editor]) [data-sidebar="sidebar"] :is([data-sidebar="menu-button"], [data-sidebar="menu-sub-button"])[data-active="true"] { background: rgb(255 255 255 / 0.08); color: #eceef1; }
+body:has([data-editor]) [data-sidebar="sidebar"] [data-sidebar="menu-button"][data-active="true"] svg { color: #eceef1; }
+
+/* Footer (Configurações, Ajuda, account) */
+body:has([data-editor]) [data-sidebar="sidebar"] [data-sidebar="footer"],
+body:has([data-editor]) [data-sidebar="sidebar"] [data-sidebar="footer"] > div { border-color: #212328; }
