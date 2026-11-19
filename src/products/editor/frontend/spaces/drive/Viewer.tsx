@@ -12,7 +12,7 @@ const kindName = { video: 'Vídeo', image: 'Imagem', audio: 'Áudio', text: 'Tex
 
 type Props = {
   files: DFile[]; index: number; onIndex: (i: number) => void; onClose: () => void
-  onDownload: (f: DFile) => void; onPost?: (f: DFile) => void; onEdit: (f: DFile) => void; onFavorite: (f: DFile) => void; onTrash: (f: DFile) => void
+  onDownload: (f: DFile) => void; onPost: (f: DFile) => void; onEdit: (f: DFile) => void; onFavorite: (f: DFile) => void; onTrash: (f: DFile) => void
 }
 
 /** Full-screen preview with arrows to browse the folder, like Drive. */
@@ -37,7 +37,7 @@ export function Viewer({ files, index, onIndex, onClose, ...act }: Props) {
       <span className={d.grow} />
       <button className={d.viewerBtn} onClick={() => act.onFavorite(file)} aria-label={file.favorite ? 'Remover dos favoritos' : 'Favoritar'}><Star size={18} fill={file.favorite ? 'currentColor' : 'none'} /></button>
       <button className={d.viewerBtn} onClick={() => act.onDownload(file)} aria-label="Baixar"><Download size={18} /></button>
-      {act.onPost && file.kind !== 'text' && file.kind !== 'audio' && <button className={d.viewerBtn} onClick={() => act.onPost?.(file)} aria-label="Postar"><Send size={18} /></button>}
+      {file.kind !== 'text' && file.kind !== 'audio' && <button className={d.viewerBtn} onClick={() => act.onPost(file)} aria-label="Postar"><Send size={18} /></button>}
       {file.kind !== 'text' && <button className={d.viewerBtn} onClick={() => act.onEdit(file)} aria-label="Abrir no editor"><Clapperboard size={18} /></button>}
       <button className={d.viewerBtn} onClick={() => act.onTrash(file)} aria-label="Mover para a lixeira"><Trash2 size={18} /></button>
     </header>
