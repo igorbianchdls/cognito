@@ -1,0 +1,50 @@
+/* Base of the Editor product (from Otto Social), scoped to .otto-editor so it never touches the ERP.
+   The tokens of the light "estúdio editorial" look; the editor screen switches to graphite (Direction B). */
+.otto-editor {
+  /* Direction A, "estúdio editorial": warm paper, ink, hairlines and a single vermilion accent.
+     The --blue* names are kept for compatibility: they now carry the accent. */
+  --bg: #f5f1ea; --panel: #fbf9f5; --line: #e9e2d7; --line-strong: #d9d0c2;
+  --ink: #1c1915; --text: #4b453d; --muted: #8e867b; --soft: #f2ede5;
+  --sidebar: #f3eee6; --sidebar-hover: #ebe4d9;
+  --surface: #f1ece4; --surface-hover: #e9e2d7; --subtle: #f6f2ec; --select: #f3c9b9; --select-soft: #fbebe4;
+  --on-ink: #fbf9f5; --ink-hover: #3a332c;
+  --accent: #d9502c; --accent-strong: #bf4220; --accent-soft: #f9e5dc;
+  --blue: var(--accent); --blue-strong: var(--accent-strong); --blue-soft: var(--accent-soft);
+  --green: #3f7d52; --green-soft: #e4eee1; --amber: #a3680f; --amber-soft: #f6ead2; --red: #b93a2b; --red-soft: #f6e0db;
+  --radius: 10px;
+  --shadow: 0 1px 0 rgb(28 25 21 / .03), 0 14px 34px -14px rgb(28 25 21 / .16);
+  --font-sans: var(--font-ui), 'Helvetica Neue', system-ui, sans-serif;
+  --font-serif: var(--font-display), 'Iowan Old Style', Georgia, serif;
+  /* Numbers: the interface sans with even-width digits. The editor switches to mono for timecodes. */
+  --font-num: var(--font-sans);
+  color-scheme: light;
+}
+.otto-editor:has([data-editor]) {
+  --bg: #0b0c0e; --panel: #121316; --line: #212328; --line-strong: #2d3036;
+  --ink: #eceef1; --text: #b6bac2; --muted: #767c86; --soft: #1a1c20;
+  --sidebar: #0b0c0e; --sidebar-hover: #17191c;
+  --surface: #1a1c20; --surface-hover: #22252a; --subtle: #16181b; --select: #5a2a1c; --select-soft: #2a1913;
+  --on-ink: #0b0c0e; --ink-hover: #ffffff;
+  --accent: #ff6b3d; --accent-strong: #ff8459; --accent-soft: rgb(255 107 61 / .14);
+  --green: #4ade80; --green-soft: rgb(74 222 128 / .12); --amber: #fbbf24; --amber-soft: rgb(251 191 36 / .12); --red: #f87171; --red-soft: rgb(248 113 113 / .12);
+  --radius: 8px;
+  --shadow: 0 1px 0 rgb(0 0 0 / .4), 0 16px 40px -12px rgb(0 0 0 / .7);
+  --font-num: var(--font-geist-mono), ui-monospace, monospace;
+  color-scheme: dark;
+}
+.otto-editor {
+  min-height: 100vh;
+  background: var(--bg); color: var(--ink); font-family: var(--font-sans); font-size: 13.5px; line-height: 1.5; letter-spacing: .005em;
+  font-variant-numeric: tabular-nums; -webkit-font-smoothing: antialiased; font-feature-settings: 'ss01', 'cv11';
+}
+/* Element defaults, at the lowest specificity so the component styles always win (Cognito's globals set h1–h6 colors). */
+:where(.otto-editor) ::selection { background: var(--select); color: var(--ink); }
+:where(.otto-editor) a { color: inherit; text-decoration: none; }
+:where(.otto-editor) :is(button, input, select, textarea) { font: inherit; color: inherit; }
+:where(.otto-editor) button { cursor: pointer; border: 0; background: none; padding: 0; }
+:where(.otto-editor) button:disabled { cursor: default; opacity: .5; }
+:where(.otto-editor) :is(h1, h2, h3, h4, h5, h6) { margin: 0; color: inherit; line-height: inherit; letter-spacing: inherit; font-size: inherit; font-weight: inherit; }
+:where(.otto-editor) p { margin: 0; }
+:where(.otto-editor) ul { list-style: none; margin: 0; padding: 0; }
+:where(.otto-editor) :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+:where(.otto-editor) .lucide { stroke-width: 1.75; }
