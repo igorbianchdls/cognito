@@ -4,9 +4,9 @@ import * as React from "react"
 import Image from "next/image"
 import { usePathname, useRouter } from "next/navigation"
 import {
-  IconAddressBook, IconBuildingWarehouse, IconCashBanknote,
-  IconChartBar, IconClipboardList, IconFileInvoice,
-  IconPackage, IconSearch, IconSettings, IconShoppingBag,
+  IconAddressBook, IconBell, IconBuildingWarehouse, IconCalendarTime, IconCashBanknote,
+  IconChartBar, IconClipboardList, IconFileInvoice, IconFolder, IconMovie,
+  IconPackage, IconSearch, IconSend, IconSettings, IconShoppingBag,
 } from "@tabler/icons-react"
 import { CircleHelp } from "lucide-react"
 
@@ -30,6 +30,8 @@ type NavigationItem = {
   activePrefix?: string
   /** Other pages that belong to this item and keep it highlighted. */
   activePaths?: string[]
+  /** Pages under the item's prefix that belong to another item. */
+  excludePaths?: string[]
   /** Pages shown as tabs inside the item: found by the search, not listed in the sidebar. */
   tabs?: { title: string; url: string }[]
   exactActive?: boolean
@@ -37,7 +39,8 @@ type NavigationItem = {
   children?: NavigationItem[]
 }
 
-const navigation: NavigationItem[] = [
+/** Financeiro: the ERP. Each item shows only to profiles with its capability. */
+const financeNavigation: NavigationItem[] = [
   {
     title: "Visão geral", url: "/erp", icon: IconChartBar, exactActive: true, activePaths: ["/erp/relatorios"], capability: "erp.relatorios.visualizar",
     tabs: [
@@ -106,6 +109,15 @@ const navigation: NavigationItem[] = [
   },
 ]
 
+/** Marketing: the video editor and its Spaces, and posting to social networks. Open to every member of the company. */
+const marketingNavigation: NavigationItem[] = [
+  { title: "Editor", url: "/editor", icon: IconMovie, excludePaths: ["/editor/spaces", "/editor/pastas"] },
+  { title: "Spaces", url: "/editor/spaces", icon: IconFolder, activePaths: ["/editor/pastas"] },
+  { title: "Postar", url: "/social/postar", icon: IconSend },
+  { title: "Agendados", url: "/social/posts", icon: IconCalendarTime },
+  { title: "Notificações", url: "/social/notificacoes", icon: IconBell },
+]
+
 function activeItem(item: NavigationItem, pathname: string): SimpleNavigationItem {
   const children = item.children?.map((child) => activeItem(child, pathname))
   const ownActive = item.url
@@ -113,8 +125,9 @@ function activeItem(item: NavigationItem, pathname: string): SimpleNavigationIte
       ? pathname === item.url
       : pathname === item.url || pathname.startsWith(item.activePrefix ?? item.url + "/")
     : false
+  const excluded = Boolean(item.excludePaths?.some((path) => pathname === path || pathname.startsWith(path + "/")))
   const pathActive = Boolean(item.activePaths?.some((path) => pathname === path || pathname.startsWith(path + "/")))
-  return { ...item, children, isActive: ownActive || pathActive || Boolean(children?.some((child) => child.isActive)) }
+  return { ...item, children, isActive: (ownActive && !excluded) || pathActive || Boolean(children?.some((child) => child.isActive)) }
 }
 
 function flatten(items: SimpleNavigationItem[], parent?: string): Array<SimpleNavigationItem & { context?: string }> {
@@ -143,10 +156,11 @@ export function SidebarShadcn({ className, style, ...props }: React.ComponentPro
     return () => window.removeEventListener("keydown", handleShortcut)
   }, [])
 
-  const visibleItems = navigation
+  const visibleItems = financeNavigation
     .filter((item) => !item.capability || access.can(item.capability))
     .map((item) => activeItem(item, pathname))
-  const searchResults = flatten(visibleItems).filter((item) =>
+  const marketingItems = marketingNavigation.map((item) => activeItem(item, pathname))
+  const searchResults = [...flatten(visibleItems, "Financeiro"), ...flatten(marketingItems, "Marketing")].filter((item) =>
     ((item.context ?? "") + " " + item.title).toLocaleLowerCase("pt-BR").includes(query.trim().toLocaleLowerCase("pt-BR")),
   )
 
@@ -195,10 +209,11 @@ export function SidebarShadcn({ className, style, ...props }: React.ComponentPro
               <button type="button" onClick={access.refresh} className="rounded-md border bg-white px-3 py-2 text-[#222] hover:bg-[#f4f4f1]">Tentar novamente</button>
             </div>
           ) : visibleItems.length ? (
-            <NavMainSimple items={visibleItems} iconSizePx={18} />
+            <NavMainSimple label="Financeiro" items={visibleItems} iconSizePx={18} />
           ) : (
             <p role="status" className="px-5 py-3 text-sm text-[#626262]">Seu perfil não possui acesso aos módulos do ERP. Solicite acesso ao administrador da empresa.</p>
           )}
+          <NavMainSimple label="Marketing" items={marketingItems} iconSizePx={18} />
         </SidebarContent>
         <SidebarFooter className="gap-1 border-t border-[#e6e6e2] p-2">
           <SidebarMenu className="gap-0.5">
@@ -219,7 +234,7 @@ export function SidebarShadcn({ className, style, ...props }: React.ComponentPro
 
       <Dialog open={searchOpen} onOpenChange={setSearchOpen}>
         <DialogContent className="top-[18%] max-w-xl translate-y-0 gap-0 overflow-hidden p-0">
-          <DialogHeader className="sr-only"><DialogTitle>Pesquisar no ERP</DialogTitle></DialogHeader>
+          <DialogHeader className="sr-only"><DialogTitle>Pesquisar no Otto</DialogTitle></DialogHeader>
           <div className="flex items-center gap-3 border-b px-4">
             <IconSearch className="size-5 text-[#777]" stroke={1.7} />
             <Input
