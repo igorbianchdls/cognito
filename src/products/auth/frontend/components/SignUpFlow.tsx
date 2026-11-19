@@ -53,9 +53,9 @@ const splitName = (name: string) => {
 
 function TermsCheckbox({ checked, onChange }: { checked: boolean; onChange: (value: boolean) => void }) {
   return (
-    <label className="flex cursor-pointer items-start gap-2.5 px-0.5 text-[13px] leading-5 text-[#6b7389]">
-      <Checkbox checked={checked} onCheckedChange={(value) => onChange(value === true)} className="mt-0.5 border-[#aab2c5] data-[state=checked]:border-[#104dff] data-[state=checked]:bg-[#104dff]" />
-      <span>Li e concordo com os <b className="font-semibold text-[#111832]">Termos de uso</b> e a <b className="font-semibold text-[#111832]">Política de privacidade</b> da Otto.</span>
+    <label className="flex cursor-pointer items-start gap-2.5 px-0.5 text-[13px] leading-5 text-[#8e867b]">
+      <Checkbox checked={checked} onCheckedChange={(value) => onChange(value === true)} className="mt-0.5 border-[#d4d4d8] data-[state=checked]:border-[#1c1915] data-[state=checked]:bg-[#1c1915]" />
+      <span>Li e concordo com os <b className="font-semibold text-[#1c1915]">Termos de uso</b> e a <b className="font-semibold text-[#1c1915]">Política de privacidade</b> da Otto.</span>
     </label>
   )
 }
@@ -267,14 +267,14 @@ export function SignUpFlow() {
     return (
       <div>
         <AuthBackButton onClick={() => void goBackToStart()}>Trocar e-mail</AuthBackButton>
-        <AuthHeading eyebrow="Último passo" title="Confirme seu e-mail" description={<>Enviamos um código de 6 dígitos para <b className="font-semibold text-[#111832]">{email}</b>.</>} />
+        <AuthHeading eyebrow="Último passo" title="Confirme seu e-mail" description={<>Enviamos um código de 6 dígitos para <b className="font-semibold text-[#1c1915]">{email}</b>.</>} />
         <AuthAlert message={generalError} />
         <form onSubmit={(event) => { event.preventDefault(); void handleVerifyEmail() }} className="grid gap-6">
           <OtpInput label="Código de verificação" value={code} onChange={setCode} error={fieldErrors.code} autoFocus onComplete={(value) => void handleVerifyEmail(value)} />
           <AuthSubmitButton loading={loading} disabled={code.length < 6} className={submitClassName}>Confirmar e continuar</AuthSubmitButton>
         </form>
         <CodeResend countdown={resendIn} onResend={handleResendCode} />
-        <p className="mt-2 text-center text-xs text-[#8d95a9]">Confira também a caixa de spam.</p>
+        <p className="mt-2 text-center text-xs text-[#a8a29e]">Confira também a caixa de spam.</p>
       </div>
     )
   }
@@ -325,14 +325,14 @@ export function SignUpFlow() {
         <div className={styles.fieldRow}>
           <AuthField id="phone" label="Celular" type="tel" inputMode="tel" value={phone} onChange={(event) => setPhone(formatPhone(event.target.value))} autoComplete="tel-national" placeholder="(00) 00000-0000" required />
           <div className="grid gap-2" data-auth-field>
-            <Label htmlFor="acquisition-source" className="text-[13px] font-medium text-[#151c35]">Como conheceu a Otto?</Label>
+            <Label htmlFor="acquisition-source" className="text-[13px] font-medium text-[#1c1915]">Como conheceu a Otto?</Label>
             <div className="relative">
               <select id="acquisition-source" value={acquisitionSource} onChange={(event) => setAcquisitionSource(event.target.value)} required data-auth-select
-                className="h-11 w-full appearance-none rounded-md border border-[#d3d8e5] bg-white px-3 pr-9 text-sm text-[#111832] outline-none invalid:text-[#8d95a9] focus-visible:border-[#104dff] focus-visible:ring-2 focus-visible:ring-[#104dff]/15">
+                className="h-11 w-full appearance-none rounded-md border border-[#e4e4e7] bg-white px-3 pr-9 text-sm text-[#1c1915] outline-none invalid:text-[#a8a29e] focus-visible:border-[#1c1915] focus-visible:ring-2 focus-visible:ring-[#1c1915]/15">
                 <option value="" disabled>Selecione</option>
                 {ACQUISITION_SOURCES.map((source) => <option key={source} value={source}>{source}</option>)}
               </select>
-              <ChevronDown className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[#818aa0]" aria-hidden="true" />
+              <ChevronDown className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[#8e867b]" aria-hidden="true" />
             </div>
           </div>
         </div>

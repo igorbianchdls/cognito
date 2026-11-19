@@ -36,7 +36,7 @@ function useStep() {
   return value
 }
 
-/** The three steps on the blue panel, with the current one lit and finished ones checked. */
+/** The three steps on the gray panel, with the current one lit and finished ones checked. */
 export function OnboardingSteps() {
   const { step } = useStep()
   return (
@@ -53,8 +53,8 @@ export function OnboardingSteps() {
 function Progress({ step }: { step: Step }) {
   return (
     <div className="mb-8" aria-hidden="true">
-      <div className="mb-2 flex justify-between text-xs font-medium text-[#6b7389]"><span>Passo {step} de 3</span><span>{STEP_LABELS[step - 1]}</span></div>
-      <div className="grid grid-cols-3 gap-1.5">{[1, 2, 3].map((n) => <span key={n} className={cn('h-1.5 rounded-full transition-colors', n <= step ? 'bg-[#104dff]' : 'bg-[#e6e9f1]')} />)}</div>
+      <div className="mb-2 flex justify-between text-xs font-medium text-[#8e867b]"><span>Passo {step} de 3</span><span>{STEP_LABELS[step - 1]}</span></div>
+      <div className="grid grid-cols-3 gap-1.5">{[1, 2, 3].map((n) => <span key={n} className={cn('h-1.5 rounded-full transition-colors', n <= step ? 'bg-[#1c1915]' : 'bg-[#e4e4e7]')} />)}</div>
     </div>
   )
 }
@@ -146,18 +146,18 @@ export function OnboardingWizard({ email, defaultCompanyName = '', companyName: 
         <AuthHeading title="Conte sobre sua empresa" description="O nome aparece para sua equipe dentro da Otto. Você pode mudar depois." />
         <AuthAlert message={error} />
         <div className="grid gap-7">
-          <AuthField id="company" label="Nome da empresa" value={companyName} onChange={(event) => setCompanyName(event.target.value)} autoComplete="organization" minLength={2} maxLength={120} required autoFocus placeholder="Ex.: Padaria Bom Dia" hint={<>Conta vinculada a <b className="font-semibold text-[#111832]">{email}</b></>} />
+          <AuthField id="company" label="Nome da empresa" value={companyName} onChange={(event) => setCompanyName(event.target.value)} autoComplete="organization" minLength={2} maxLength={120} required autoFocus placeholder="Ex.: Padaria Bom Dia" hint={<>Conta vinculada a <b className="font-semibold text-[#1c1915]">{email}</b></>} />
           <fieldset>
-            <legend className="mb-3 text-[13px] font-medium text-[#151c35]">Qual é o segmento?</legend>
+            <legend className="mb-3 text-[13px] font-medium text-[#1c1915]">Qual é o segmento?</legend>
             <div className="grid grid-cols-2 gap-2.5" role="radiogroup">
               {ONBOARDING_SEGMENTS.map((item) => {
                 const on = segment === item.id
                 return (
                   <button key={item.id} type="button" role="radio" aria-checked={on} onClick={() => setSegment(item.id)}
-                    className={cn('flex min-h-12 items-center justify-between gap-2 rounded-lg border px-3.5 py-2.5 text-left text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#104dff]/30',
-                      on ? 'border-[#104dff] bg-[#f2f5ff] text-[#0f2a99]' : 'border-[#d3d8e5] bg-white text-[#151c35] hover:border-[#aab2c5]')}>
+                    className={cn('flex min-h-12 items-center justify-between gap-2 rounded-lg border px-3.5 py-2.5 text-left text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#1c1915]/30',
+                      on ? 'border-[#1c1915] bg-[#f4f4f5] text-[#1c1915]' : 'border-[#e4e4e7] bg-white text-[#1c1915] hover:border-[#d4d4d8]')}>
                     {item.label}
-                    {on ? <CircleCheck className="h-4 w-4 shrink-0 text-[#104dff]" aria-hidden="true" /> : null}
+                    {on ? <CircleCheck className="h-4 w-4 shrink-0 text-[#1c1915]" aria-hidden="true" /> : null}
                   </button>
                 )
               })}
@@ -182,14 +182,14 @@ export function OnboardingWizard({ email, defaultCompanyName = '', companyName: 
             const on = startArea === area.id
             return (
               <button key={area.id} type="button" role="radio" aria-checked={on} onClick={() => setStartArea(area.id)}
-                className={cn('flex items-center gap-3.5 rounded-lg border px-4 py-3 text-left transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#104dff]/30',
-                  on ? 'border-[#104dff] bg-[#f2f5ff]' : 'border-[#d3d8e5] bg-white hover:border-[#aab2c5]')}>
-                <span className={cn('flex h-10 w-10 shrink-0 items-center justify-center rounded-lg', on ? 'bg-[#104dff] text-white' : 'bg-[#f1f3f8] text-[#4a5470]')}><Icon className="h-5 w-5" aria-hidden="true" /></span>
+                className={cn('flex items-center gap-3.5 rounded-lg border px-4 py-3 text-left transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#1c1915]/30',
+                  on ? 'border-[#1c1915] bg-[#f4f4f5]' : 'border-[#e4e4e7] bg-white hover:border-[#d4d4d8]')}>
+                <span className={cn('flex h-10 w-10 shrink-0 items-center justify-center rounded-lg', on ? 'bg-[#1c1915] text-white' : 'bg-[#f4f4f5] text-[#5c554b]')}><Icon className="h-5 w-5" aria-hidden="true" /></span>
                 <span className="min-w-0 flex-1">
-                  <span className="block text-[15px] font-semibold text-[#111832]">{area.label}</span>
-                  <span className="block text-[13px] text-[#6b7389]">{area.description}</span>
+                  <span className="block text-[15px] font-semibold text-[#1c1915]">{area.label}</span>
+                  <span className="block text-[13px] text-[#8e867b]">{area.description}</span>
                 </span>
-                <span className={cn('flex h-5 w-5 shrink-0 items-center justify-center rounded-full border-2', on ? 'border-[#104dff] bg-[#104dff]' : 'border-[#c5cbd9]')}>{on ? <span className="h-2 w-2 rounded-full bg-white" /> : null}</span>
+                <span className={cn('flex h-5 w-5 shrink-0 items-center justify-center rounded-full border-2', on ? 'border-[#1c1915] bg-[#1c1915]' : 'border-[#d4d4d8]')}>{on ? <span className="h-2 w-2 rounded-full bg-white" /> : null}</span>
               </button>
             )
           })}
@@ -208,8 +208,8 @@ export function OnboardingWizard({ email, defaultCompanyName = '', companyName: 
         <AuthHeading title={sent ? 'Convites enviados' : 'Nenhum convite enviado'} description={sent ? 'Cada pessoa recebe um e-mail para criar a senha e entrar na equipe.' : 'Confira os e-mails abaixo. Você também pode convidar depois, em Configurações → Membros.'} />
         <ul className="mb-7 grid gap-2">
           {results.map((r) => (
-            <li key={r.email} className="flex items-center justify-between gap-3 rounded-lg border border-[#e6e9f1] px-3.5 py-2.5 text-sm">
-              <span className="min-w-0 truncate text-[#111832]">{r.email}</span>
+            <li key={r.email} className="flex items-center justify-between gap-3 rounded-lg border border-[#e4e4e7] px-3.5 py-2.5 text-sm">
+              <span className="min-w-0 truncate text-[#1c1915]">{r.email}</span>
               {r.ok ? <span className="flex shrink-0 items-center gap-1.5 font-medium text-[#1f7a4a]"><CircleCheck className="h-4 w-4" aria-hidden="true" />Enviado</span> : <span className="shrink-0 text-[#b42318]">{r.error}</span>}
             </li>
           ))}
@@ -229,31 +229,31 @@ export function OnboardingWizard({ email, defaultCompanyName = '', companyName: 
           <div key={i} className="flex items-center gap-2">
             <input type="email" value={invite.email} placeholder="nome@empresa.com.br" aria-label={`E-mail da pessoa ${i + 1}`} autoFocus={i === 0}
               onChange={(event) => setInvites((list) => list.map((item, j) => (j === i ? { ...item, email: event.target.value } : item)))}
-              className="h-12 min-w-0 flex-1 rounded-md border border-[#d3d8e5] bg-white px-3.5 text-[15px] text-[#111832] outline-none placeholder:text-[#8d95a9] focus:border-[#104dff] focus:shadow-[0_0_0_3px_rgb(16_77_255_/_0.14)]" />
+              className="h-12 min-w-0 flex-1 rounded-md border border-[#e4e4e7] bg-white px-3.5 text-[15px] text-[#1c1915] outline-none placeholder:text-[#a8a29e] focus:border-[#1c1915] focus:shadow-[0_0_0_3px_rgb(16_77_255_/_0.14)]" />
             <select value={invite.role} aria-label={`Permissão da pessoa ${i + 1}`}
               onChange={(event) => setInvites((list) => list.map((item, j) => (j === i ? { ...item, role: event.target.value as TeamInviteRole } : item)))}
-              className="h-12 w-[124px] rounded-md border border-[#d3d8e5] bg-white px-2.5 text-sm text-[#111832] outline-none focus:border-[#104dff]">
+              className="h-12 w-[124px] rounded-md border border-[#e4e4e7] bg-white px-2.5 text-sm text-[#1c1915] outline-none focus:border-[#1c1915]">
               <option value="member">Membro</option>
               <option value="admin">Administrador</option>
             </select>
             {invites.length > 1 ? (
               <button type="button" aria-label={`Remover pessoa ${i + 1}`} onClick={() => setInvites((list) => list.filter((_, j) => j !== i))}
-                className="flex h-10 w-10 shrink-0 items-center justify-center rounded-md text-[#818aa0] hover:bg-[#f1f3f8] hover:text-[#111832]"><X className="h-4 w-4" /></button>
+                className="flex h-10 w-10 shrink-0 items-center justify-center rounded-md text-[#8e867b] hover:bg-[#f4f4f5] hover:text-[#1c1915]"><X className="h-4 w-4" /></button>
             ) : null}
           </div>
         ))}
       </div>
       {invites.length < TEAM_INVITE_LIMIT ? (
         <button type="button" onClick={() => setInvites((list) => [...list, { email: '', role: 'member' }])}
-          className="mt-3 inline-flex items-center gap-1.5 rounded-md text-sm font-semibold text-[#104dff] hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#104dff]/30">
+          className="mt-3 inline-flex items-center gap-1.5 rounded-md text-sm font-semibold text-[#1c1915] hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#1c1915]/30">
           <Plus className="h-4 w-4" aria-hidden="true" />Adicionar pessoa
         </button>
       ) : null}
-      <p className="mt-4 text-xs leading-5 text-[#6b7389]"><b className="font-semibold text-[#111832]">Administrador</b> pode convidar pessoas e mudar configurações. <b className="font-semibold text-[#111832]">Membro</b> usa o dia a dia da Otto.</p>
+      <p className="mt-4 text-xs leading-5 text-[#8e867b]"><b className="font-semibold text-[#1c1915]">Administrador</b> pode convidar pessoas e mudar configurações. <b className="font-semibold text-[#1c1915]">Membro</b> usa o dia a dia da Otto.</p>
       <div className="mt-7 grid gap-3">
         <AuthSubmitButton loading={busy} className="h-[54px] text-base">Enviar convites</AuthSubmitButton>
         <button type="button" onClick={() => goToApp()} disabled={leaving}
-          className="h-11 rounded-md text-sm font-semibold text-[#4a5470] hover:bg-[#f1f3f8] hover:text-[#111832] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#104dff]/30">
+          className="h-11 rounded-md text-sm font-semibold text-[#5c554b] hover:bg-[#f4f4f5] hover:text-[#1c1915] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#1c1915]/30">
           {leaving ? 'Abrindo a Otto…' : 'Pular por agora'}
         </button>
       </div>
