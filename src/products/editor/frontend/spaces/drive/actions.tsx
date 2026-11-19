@@ -3,7 +3,7 @@
 // Everything you can do to files and folders, shared by the explorer, Recentes, Favoritos and Lixeira.
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { Check, Clapperboard, Copy, Download, Eye, FolderInput, FolderOpen, FolderPlus, FolderUp, Pencil, RotateCcw, Star, StarOff, Trash2, Upload } from 'lucide-react'
+import { Check, Clapperboard, Copy, Download, Eye, FolderInput, FolderOpen, FolderPlus, FolderUp, Pencil, RotateCcw, Send, Star, StarOff, Trash2, Upload } from 'lucide-react'
 import { downloadBlob } from '../blobs'
 import { downloadObject, onRemoteError } from '../remote'
 import { notify } from '@/products/editor/frontend/lib/notify'
@@ -71,6 +71,7 @@ export function useDriveActions(where?: { spaceId: string; folderId: string | nu
     for (const f of list) if (f.uploaded && await (remoteDrive ? !!f.storagePath && downloadObject(f.storagePath, f.name) : downloadBlob(f.id, f.name))) got++
     setToast(got ? `Baixando ${got} ${got === 1 ? 'arquivo' : 'arquivos'}.` : 'Arquivos de exemplo não têm conteúdo para baixar.')
   }
+  const post = (list: DFile[]) => { const ok = list.filter(f => f.kind === 'video' || f.kind === 'image'); if (ok.length) router.push(`/social/postar?arquivos=${ok.map(f => f.id).join(',')}`) }
   const edit = (list: DFile[]) => { const ok = list.filter(f => f.kind !== 'text'); if (ok.length) router.push(`/editor/${newProjectId()}?arquivos=${ok.map(f => f.id).join(',')}`) }
   const trash = (items: Item[]) => { trashItems(items); setToast(`${label(items)} ${items.length === 1 ? 'foi para' : 'foram para'} a lixeira.`) }
   const favorite = (items: Item[]) => { const on = !items.every(isFavorite); setFavorite(items, on); setToast(on ? 'Adicionado aos favoritos.' : 'Removido dos favoritos.') }
@@ -92,6 +93,7 @@ export function useDriveActions(where?: { spaceId: string; folderId: string | nu
     const fav = items.every(isFavorite)
     return [
       ...(one ? [{ label: 'Abrir', icon: one.type === 'folder' ? FolderOpen : Eye, onClick: () => open(one, opts.siblings), shortcut: 'Enter' }] : []),
+      ...(fs.length && fs.length === items.length && fs.some(f => f.kind === 'video' || f.kind === 'image') ? [{ label: fs.length > 1 ? `Postar ${fs.length} arquivos` : 'Postar', icon: Send, onClick: () => post(fs) }] : []),
       ...(fs.length && fs.length === items.length && fs.some(f => f.kind !== 'text') ? [{ label: 'Abrir no editor', icon: Clapperboard, onClick: () => edit(fs) }] : []),
       { label: '', divider: true },
       ...(one ? [{ label: 'Renomear', icon: Pencil, onClick: () => renameItem(one), shortcut: 'F2' }] : []),
@@ -122,7 +124,7 @@ export function useDriveActions(where?: { spaceId: string; folderId: string | nu
     {dialog?.kind === 'move' && <MoveDialog drive={drive} count={dialog.items.length} blocked={dialog.items.flatMap(i => i.type === 'folder' ? [i.folder.id] : [])}
       onMove={(spaceId, folderId) => { const ok = moveItems(dialog.items, spaceId, folderId); setToast(ok ? `${label(dialog.items)} ${dialog.items.length === 1 ? 'movido' : 'movidos'}.` : 'Uma pasta não pode ir para dentro dela mesma.') }} onClose={() => setDialog(null)} />}
     {viewer && <Viewer files={viewer.files} index={viewer.index} onIndex={i => setViewer(v => v && { ...v, index: Math.max(0, Math.min(v.files.length - 1, i)) })} onClose={() => setViewer(null)}
-      onDownload={f => download([f])} onEdit={f => edit([f])}
+      onDownload={f => download([f])} onPost={f => post([f])} onEdit={f => edit([f])}
       onFavorite={f => favorite([{ type: 'file', file: getDrive().files.find(x => x.id === f.id) ?? f }])}
       onTrash={f => { trash([{ type: 'file', file: f }]); setViewer(v => { if (!v) return v; const rest = v.files.filter(x => x.id !== f.id); return rest.length ? { files: rest, index: Math.min(v.index, rest.length - 1) } : null }) }} />}
     {uploading > 0 && <div className={d.toast} role="status"><span className={d.spinner} />Enviando {uploading} {uploading === 1 ? 'arquivo' : 'arquivos'}…</div>}
@@ -131,6 +133,6 @@ export function useDriveActions(where?: { spaceId: string; folderId: string | nu
 
   return {
     ui, busy: !!(menu || dialog || viewer), showMenu, itemMenu, backgroundMenu, open, upload, pickFiles,
-    newFolder, renameItem, move, trash, destroy, clearTrash, favorite, download, edit, setToast,
+    newFolder, renameItem, move, trash, destroy, clearTrash, favorite, download, post, edit, setToast,
   }
 }

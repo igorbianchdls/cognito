@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { AlertTriangle, Check, CheckCircle2, Download, FolderOpen, RotateCcw, X } from 'lucide-react'
+import { AlertTriangle, Check, CheckCircle2, Download, FolderOpen, RotateCcw, Send, X } from 'lucide-react'
 import { formatDuration, formatSize } from '@/products/editor/frontend/lib/format'
 import { useDrive } from '@/products/editor/frontend/spaces/hooks'
 import { childFolders, createFolder, getDrive, uploadFiles } from '@/products/editor/frontend/spaces/store'
@@ -162,6 +162,7 @@ export function ExportDialog({ project, onClose }: { project: Project; onClose: 
         {stage.fileId && <p className={x.hint}>Salvo em {stage.spaceName ?? 'Spaces'} / {FOLDER}.</p>}
         {stage.saveError && <p className={x.blocker}><AlertTriangle size={15} />O download funcionou, mas não deu para salvar no Space. Você pode enviar o arquivo por lá.</p>}
         <div className={x.doneActions}>
+          {stage.fileId && <Link className={x.primary} href={`/social/postar?arquivos=${stage.fileId}`}><Send size={15} />Postar agora</Link>}
           {stage.folderId && <Link className={x.secondary} href={`/editor/pastas/${stage.folderId}`}><FolderOpen size={15} />Ver no Space</Link>}
           <button className={x.secondary} onClick={() => setStage({ kind: 'config' })}><RotateCcw size={15} />Exportar de novo</button>
         </div>
