@@ -17,16 +17,16 @@ type AuthLayoutProps = {
 }
 
 const copy: Record<AuthLayoutMode, { lines: string[]; text: ReactNode }> = {
-  'sign-in': { lines: ['Sua empresa.', 'Mais simples.', 'Com Otto.'], text: <>Vendas, estoque e financeiro em um só lugar.<br />Mais controle para você. Mais tempo para crescer.</> },
-  callback: { lines: ['Sua empresa.', 'Mais simples.', 'Com Otto.'], text: <>Vendas, estoque e financeiro em um só lugar.<br />Mais controle para você. Mais tempo para crescer.</> },
-  'sign-up': { lines: ['Comece hoje.', 'Organize tudo.', 'Com Otto.'], text: 'Crie sua conta em poucos minutos e tenha vendas, financeiro, notas e estoque trabalhando juntos.' },
+  'sign-in': { lines: ['Sua empresa', 'no automático.'], text: 'A Otto cuida das tarefas repetitivas para você focar no que faz a empresa crescer.' },
+  callback: { lines: ['Sua empresa', 'no automático.'], text: 'A Otto cuida das tarefas repetitivas para você focar no que faz a empresa crescer.' },
+  'sign-up': { lines: ['Sua empresa', 'no automático.'], text: 'Crie sua conta em poucos minutos e deixe a Otto cuidar das tarefas repetitivas.' },
   onboarding: { lines: ['Vamos deixar', 'tudo pronto.'], text: 'Três passos rápidos para a Otto ficar com a cara da sua empresa.' },
 }
 
 const assurances = [
-  { icon: LockKeyhole, text: 'Seus dados protegidos e criptografados' },
+  { icon: LockKeyhole, text: 'Seus dados protegidos' },
   { icon: BadgeCheck, text: 'Feito para pequenas empresas brasileiras' },
-  { icon: Sparkles, text: 'Assistente de IA incluso' },
+  { icon: Sparkles, text: 'Funciona também no ChatGPT e no Claude' },
 ]
 
 export function AuthLayout({ children, mode, aside }: AuthLayoutProps) {
