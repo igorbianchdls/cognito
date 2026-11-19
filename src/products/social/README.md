@@ -5,7 +5,7 @@ Posts e agendamento, contas sociais e notificações, vindos do Otto Social. Usa
 ## Onde fica
 
 - Telas: `src/app/social` (`/social/posts`, `/social/postar`, `/social/notificacoes`).
-- Código: `frontend/posts` (posts, composer e contas), `frontend/notifications`, `frontend/settings` (preferências de postagem e de notificações, por enquanto só no navegador) e `frontend/shell` (menu).
+- Código: `frontend/posts` (posts, composer e contas), `frontend/notifications`, `frontend/settings` (preferências de postagem e de notificações, por enquanto só no navegador) e `frontend/shell` (sincroniza a empresa ativa).
 - Banco: schema `social` (`supabase/migrations/20261119150000_social_schema.sql`). `social.post_files` aponta para `editor.files`.
 
 ## Acesso
@@ -14,6 +14,6 @@ Mesmo modelo do Editor (veja `src/products/editor/README.md`): o token do Clerk 
 
 ## Estado atual
 
-Escondido e em modo demonstração, junto com o Editor (mesma chave `NEXT_PUBLIC_EDITOR_REMOTE`). Ainda faltam:
+Na seção Marketing do menu do Otto, em modo demonstração junto com o Editor (mesma chave `NEXT_PUBLIC_EDITOR_REMOTE`). Ainda faltam:
 - Conectar contas (Etapa 5): os links "Ver conectores" e "Conectar" levam a `/social/conectores`, que ainda não existe.
 - A tela do plugin (ChatGPT e Claude), que vem com as ferramentas do Editor e do Social no plugin do Otto.
