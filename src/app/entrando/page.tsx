@@ -41,7 +41,7 @@ export default function EnteringPage() {
         {error ? (
           <>
             <AuthAlert message={error} />
-            <button type="button" onClick={() => void clerk.signOut({ redirectUrl: '/sign-in' })} className="h-11 w-full rounded-md bg-[#104dff] text-sm font-semibold text-white hover:bg-[#0b3ee0]">Sair e entrar de novo</button>
+            <button type="button" onClick={() => void clerk.signOut({ redirectUrl: '/sign-in' })} className="h-11 w-full rounded-md bg-[#1c1915] text-sm font-semibold text-white hover:bg-[#3a332c]">Sair e entrar de novo</button>
           </>
         ) : <AuthTransition />}
       </div>

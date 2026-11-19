@@ -209,8 +209,8 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 
-/* The Editor product (.otto-editor) brings its own type, including the fonts chosen for video text. */
-body *:not(:is(.otto-editor, .otto-editor *)) {
+/* The Editor product (.otto-editor) and the access screens (.otto-auth) bring their own type. */
+body *:not(:is(.otto-editor, .otto-editor *, .otto-auth, .otto-auth *)) {
   font-family: var(--ui-font-family) !important;
 }
 

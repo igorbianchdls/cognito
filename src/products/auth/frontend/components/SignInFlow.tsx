@@ -263,7 +263,7 @@ export function SignInFlow() {
     return (
       <div>
         <AuthBackButton onClick={() => void goBackToStart()}>Voltar para o login</AuthBackButton>
-        <AuthHeading title="Confira seu e-mail" description={<>Enviamos um código de 6 dígitos para <b className="font-semibold text-[#111832]">{email}</b>.</>} />
+        <AuthHeading title="Confira seu e-mail" description={<>Enviamos um código de 6 dígitos para <b className="font-semibold text-[#1c1915]">{email}</b>.</>} />
         <AuthAlert message={generalError} />
         <form onSubmit={handleVerifyRecoveryCode} className="grid gap-5">
           <OtpInput label="Código de recuperação" value={code} onChange={setCode} error={fieldErrors.code} autoFocus />

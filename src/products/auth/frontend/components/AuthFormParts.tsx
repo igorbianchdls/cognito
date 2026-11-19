@@ -12,14 +12,14 @@ import { cn } from '@/lib/utils'
 // Building blocks shared by every access screen (sign-in, sign-up, codes, onboarding). They use the Otto blue and
 // are sized by AuthLogin.module.css inside the shared layout.
 
-export const AUTH_BLUE = '#104dff'
+export const AUTH_BLUE = '#1c1915'
 
 export function AuthHeading({ title, description, eyebrow }: { title: string; description?: ReactNode; eyebrow?: string }) {
   return (
     <div className="mb-8" data-auth-heading>
-      {eyebrow ? <div className="mb-2 text-[13px] font-semibold uppercase tracking-[0.08em] text-[#104dff]">{eyebrow}</div> : null}
-      <h2 className="text-[28px] font-medium leading-tight tracking-normal text-[#111832]">{title}</h2>
-      {description ? <p className="mt-2 text-sm leading-6 text-[#6b7389]">{description}</p> : null}
+      {eyebrow ? <div className="mb-2 text-[13px] font-semibold uppercase tracking-[0.08em] text-[#1c1915]">{eyebrow}</div> : null}
+      <h2 className="text-[28px] font-medium leading-tight tracking-normal text-[#1c1915]">{title}</h2>
+      {description ? <p className="mt-2 text-sm leading-6 text-[#8e867b]">{description}</p> : null}
     </div>
   )
 }
@@ -49,17 +49,17 @@ export function AuthField({ className, error, hint, id, label, labelAction, ...p
   return (
     <div className="grid gap-2" data-auth-field>
       <div className="flex min-h-5 items-center justify-between gap-3">
-        <Label htmlFor={id} className="text-[13px] font-medium text-[#151c35]">{label}</Label>
+        <Label htmlFor={id} className="text-[13px] font-medium text-[#1c1915]">{label}</Label>
         {labelAction}
       </div>
       <Input
         id={id}
         aria-describedby={[errorId, hintId].filter(Boolean).join(' ') || undefined}
         aria-invalid={Boolean(error)}
-        className={cn('h-11 rounded-md border border-[#d3d8e5] bg-white px-3 text-sm shadow-none placeholder:text-[#8d95a9] focus-visible:border-[#104dff] focus-visible:ring-2 focus-visible:ring-[#104dff]/15', className)}
+        className={cn('h-11 rounded-md border border-[#e4e4e7] bg-white px-3 text-sm shadow-none placeholder:text-[#a8a29e] focus-visible:border-[#1c1915] focus-visible:ring-2 focus-visible:ring-[#1c1915]/15', className)}
         {...props}
       />
-      {error ? <p id={errorId} className="text-xs leading-5 text-[#b42318]">{error}</p> : hint ? <div id={hintId} className="text-xs leading-5 text-[#6b7389]">{hint}</div> : null}
+      {error ? <p id={errorId} className="text-xs leading-5 text-[#b42318]">{error}</p> : hint ? <div id={hintId} className="text-xs leading-5 text-[#8e867b]">{hint}</div> : null}
     </div>
   )
 }
@@ -77,7 +77,7 @@ export function PasswordField({ visible, onToggleVisibility, className, ...props
         type="button"
         data-auth-password-toggle
         onClick={onToggleVisibility}
-        className="absolute right-1.5 top-[29px] flex h-8 w-8 items-center justify-center rounded-md text-[#818aa0] transition-colors hover:bg-[#f1f3f8] hover:text-[#111832] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#104dff]/30"
+        className="absolute right-1.5 top-[29px] flex h-8 w-8 items-center justify-center rounded-md text-[#8e867b] transition-colors hover:bg-[#f4f4f5] hover:text-[#1c1915] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#1c1915]/30"
         aria-label={visible ? 'Ocultar senha' : 'Mostrar senha'}
       >
         {visible ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
@@ -100,18 +100,18 @@ export function passwordChecks(password: string) {
 export function PasswordStrength({ password }: { password: string }) {
   const { rules, score } = passwordChecks(password)
   const labels = ['', 'Fraca', 'Razoável', 'Boa', 'Forte']
-  const colors = ['#d3d8e5', '#d64545', '#e8a33d', '#2f8f5b', '#1f7a4a']
+  const colors = ['#e4e4e7', '#d64545', '#e8a33d', '#2f8f5b', '#1f7a4a']
   return (
     <div data-auth-strength className="grid gap-2">
       <div className="flex items-center gap-2">
         <div className="grid flex-1 grid-cols-4 gap-1.5" aria-hidden="true">
-          {[1, 2, 3, 4].map((step) => <span key={step} className="h-1.5 rounded-full transition-colors" style={{ background: score >= step ? colors[score] : '#e6e9f1' }} />)}
+          {[1, 2, 3, 4].map((step) => <span key={step} className="h-1.5 rounded-full transition-colors" style={{ background: score >= step ? colors[score] : '#e4e4e7' }} />)}
         </div>
         <span className="w-16 text-right text-xs font-medium" style={{ color: colors[score] }} aria-live="polite">{labels[score]}</span>
       </div>
       <ul className="grid grid-cols-2 gap-x-3 gap-y-1">
         {rules.map((rule) => (
-          <li key={rule.label} className={cn('flex items-center gap-1.5 text-xs', rule.ok ? 'text-[#1f7a4a]' : 'text-[#8d95a9]')}>
+          <li key={rule.label} className={cn('flex items-center gap-1.5 text-xs', rule.ok ? 'text-[#1f7a4a]' : 'text-[#a8a29e]')}>
             <CircleCheck className={cn('h-3.5 w-3.5 shrink-0', rule.ok ? 'opacity-100' : 'opacity-40')} aria-hidden="true" />
             {rule.label}
           </li>
@@ -155,7 +155,7 @@ export function OtpInput({ value, onChange, length = 6, label, error, autoFocus,
   }
   return (
     <fieldset className="grid gap-2" data-auth-otp>
-      <legend className="mb-2 text-[13px] font-medium text-[#151c35]">{label}</legend>
+      <legend className="mb-2 text-[13px] font-medium text-[#1c1915]">{label}</legend>
       <div className="flex justify-between gap-2">
         {digits.map((digit, i) => (
           <input
@@ -177,8 +177,8 @@ export function OtpInput({ value, onChange, length = 6, label, error, autoFocus,
             aria-label={`${label}, dígito ${i + 1} de ${length}`}
             aria-invalid={Boolean(error)}
             maxLength={length}
-            className={cn('h-14 w-full min-w-0 rounded-lg border bg-white text-center text-2xl font-semibold text-[#111832] outline-none transition-shadow',
-              error ? 'border-[#b42318]' : 'border-[#d3d8e5] focus:border-[#104dff] focus:shadow-[0_0_0_3px_rgb(16_77_255_/_0.14)]')}
+            className={cn('h-14 w-full min-w-0 rounded-lg border bg-white text-center text-2xl font-semibold text-[#1c1915] outline-none transition-shadow',
+              error ? 'border-[#b42318]' : 'border-[#e4e4e7] focus:border-[#1c1915] focus:shadow-[0_0_0_3px_rgb(16_77_255_/_0.14)]')}
           />
         ))}
       </div>
@@ -189,7 +189,7 @@ export function OtpInput({ value, onChange, length = 6, label, error, autoFocus,
 
 export function AuthSubmitButton({ children, loading, className, disabled }: { children: ReactNode; loading: boolean; className?: string; disabled?: boolean }) {
   return (
-    <Button type="submit" disabled={loading || disabled} className={cn('h-11 w-full rounded-md bg-[#104dff] text-sm font-semibold text-white shadow-none hover:bg-[#0b3ee0] focus-visible:ring-[#104dff]/30', className)}>
+    <Button type="submit" disabled={loading || disabled} className={cn('h-11 w-full rounded-md bg-[#1c1915] text-sm font-semibold text-white shadow-none hover:bg-[#3a332c] focus-visible:ring-[#1c1915]/30', className)}>
       {loading ? <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" /> : null}
       <span className="inline-flex items-center gap-2">{children}</span>
     </Button>
@@ -199,7 +199,7 @@ export function AuthSubmitButton({ children, loading, className, disabled }: { c
 export function AuthGoogleButton({ onClick, disabled, children = 'Continuar com Google' }: { onClick: () => void; disabled?: boolean; children?: ReactNode }) {
   return (
     <Button type="button" variant="outline" onClick={onClick} disabled={disabled} data-auth-google
-      className="h-11 w-full rounded-md border-[#d3d8e5] bg-white text-sm font-semibold text-[#151c35] shadow-none hover:border-[#b9c0d3] hover:bg-[#f7f8fc]">
+      className="h-11 w-full rounded-md border-[#e4e4e7] bg-white text-sm font-semibold text-[#1c1915] shadow-none hover:border-[#d4d4d8] hover:bg-[#f4f4f5]">
       <SiGoogle size={16} color="default" title="Google" />
       {children}
     </Button>
@@ -208,7 +208,7 @@ export function AuthGoogleButton({ onClick, disabled, children = 'Continuar com 
 
 export function AuthBackButton({ children, onClick }: { children: ReactNode; onClick: () => void }) {
   return (
-    <button type="button" onClick={onClick} className="mb-6 inline-flex items-center gap-2 rounded-md text-sm font-medium text-[#6b7389] transition-colors hover:text-[#111832] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#104dff]/30">
+    <button type="button" onClick={onClick} className="mb-6 inline-flex items-center gap-2 rounded-md text-sm font-medium text-[#8e867b] transition-colors hover:text-[#1c1915] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#1c1915]/30">
       <ArrowLeft className="h-4 w-4" />
       {children}
     </button>
@@ -218,9 +218,9 @@ export function AuthBackButton({ children, onClick }: { children: ReactNode; onC
 export function AuthDivider({ children = 'ou' }: { children?: ReactNode }) {
   return (
     <div className="my-6 flex items-center gap-3" aria-hidden="true" data-auth-divider>
-      <span className="h-px flex-1 bg-[#e6e9f1]" />
-      <span className="text-xs text-[#8d95a9]">{children}</span>
-      <span className="h-px flex-1 bg-[#e6e9f1]" />
+      <span className="h-px flex-1 bg-[#e4e4e7]" />
+      <span className="text-xs text-[#a8a29e]">{children}</span>
+      <span className="h-px flex-1 bg-[#e4e4e7]" />
     </div>
   )
 }
@@ -228,9 +228,9 @@ export function AuthDivider({ children = 'ou' }: { children?: ReactNode }) {
 /** "Didn't get it? Resend in 30s" under a code field. */
 export function CodeResend({ countdown, onResend, extra }: { countdown: number; onResend: () => Promise<void> | void; extra?: ReactNode }) {
   return (
-    <p className="mt-6 text-center text-sm text-[#6b7389]">
+    <p className="mt-6 text-center text-sm text-[#8e867b]">
       Não recebeu?{' '}
-      <button type="button" onClick={() => void onResend()} disabled={countdown > 0} className="font-semibold text-[#104dff] underline-offset-4 hover:underline disabled:cursor-not-allowed disabled:text-[#9aa1b4] disabled:no-underline">
+      <button type="button" onClick={() => void onResend()} disabled={countdown > 0} className="font-semibold text-[#1c1915] underline-offset-4 hover:underline disabled:cursor-not-allowed disabled:text-[#b5afa5] disabled:no-underline">
         {countdown > 0 ? `Reenviar em ${countdown}s` : 'Reenviar código'}
       </button>
       {extra}
@@ -243,12 +243,12 @@ export function AuthTransition({ title = 'Entrando na sua conta…', description
   return (
     <div className="grid min-h-[360px] place-content-center justify-items-center gap-5 text-center" role="status" aria-live="polite">
       <span className="relative flex h-14 w-14 items-center justify-center">
-        <span className="absolute inset-0 animate-ping rounded-full bg-[#104dff]/15 motion-reduce:animate-none" />
-        <Loader2 className="h-8 w-8 animate-spin text-[#104dff] motion-reduce:animate-none" aria-hidden="true" />
+        <span className="absolute inset-0 animate-ping rounded-full bg-[#1c1915]/15 motion-reduce:animate-none" />
+        <Loader2 className="h-8 w-8 animate-spin text-[#1c1915] motion-reduce:animate-none" aria-hidden="true" />
       </span>
       <div>
-        <p className="text-xl font-medium text-[#111832]">{title}</p>
-        <p className="mt-1.5 text-sm text-[#6b7389]">{description}</p>
+        <p className="text-xl font-medium text-[#1c1915]">{title}</p>
+        <p className="mt-1.5 text-sm text-[#8e867b]">{description}</p>
       </div>
     </div>
   )
