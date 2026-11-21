@@ -35,13 +35,6 @@ import type {
 
 type ActorInput = { tenantId: number; actorId: number };
 
-function id(value: unknown, label: string) {
-  const parsed = Number(value);
-  if (!Number.isInteger(parsed) || parsed <= 0)
-    throw new ErpDomainError("INVALID_ID", `${label} invalido.`, 422);
-  return parsed;
-}
-
 function date(value: unknown) {
   if(value instanceof Date)return value.toISOString().slice(0,10);
   const normalized = String(value || "").slice(0, 10);

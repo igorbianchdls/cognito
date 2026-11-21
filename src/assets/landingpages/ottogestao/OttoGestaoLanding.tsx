@@ -1,4 +1,4 @@
-import { Plus_Jakarta_Sans } from 'next/font/google'
+import localFont from 'next/font/local'
 import Link from 'next/link'
 import type { ReactNode } from 'react'
 import {
@@ -16,7 +16,7 @@ import styles from './OttoGestaoLanding.module.css'
 // OttoGestão: sales page for the ERP that automates a small company's finances, run from the web app or from
 // ChatGPT and Claude. Same visual language as the OttoCut page. Plans, prices and FAQ come from the Otto product.
 
-const jakarta = Plus_Jakarta_Sans({ subsets: ['latin'], weight: ['400', '500', '600', '700', '800'] })
+const jakarta = localFont({ src: [{ path: '../../../fonts/plus-jakarta-sans.woff2', weight: '200 800', style: 'normal' }], display: 'swap' })
 
 const SIGN_UP = '/sign-up'
 const brl = (v: number) => v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL', maximumFractionDigits: 0 })

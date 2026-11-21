@@ -1,18 +1,9 @@
 import localFont from 'next/font/local'
-import { Instrument_Serif, Montserrat } from 'next/font/google'
 import type { CSSProperties } from 'react'
 
-export const instrumentSerif = Instrument_Serif({
-  variable: '--font-instrument-serif',
-  subsets: ['latin'],
-  weight: '400',
-})
+export const instrumentSerif = localFont({ src: [{ path: '../../../fonts/instrument-serif-400.woff2', weight: '400', style: 'normal' }], variable: '--font-instrument-serif', display: 'swap' })
 
-export const montserrat = Montserrat({
-  variable: '--font-montserrat',
-  subsets: ['latin'],
-  weight: ['400', '500', '600', '700', '800'],
-})
+export const montserrat = localFont({ src: [{ path: '../../../fonts/montserrat.woff2', weight: '100 900', style: 'normal' }], variable: '--font-montserrat', display: 'swap' })
 
 export const sfPro = localFont({
   variable: '--font-sf-pro',

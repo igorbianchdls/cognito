@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict'
-import {readFileSync,writeFileSync,mkdirSync} from 'node:fs'
+import {writeFileSync,mkdirSync} from 'node:fs'
 import {sourceLoader} from './accounting-test-runtime.mjs'
 import {config} from 'dotenv'
 import {connection} from './evolution-db.mjs'

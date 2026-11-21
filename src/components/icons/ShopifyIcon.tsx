@@ -3,7 +3,7 @@ interface ShopifyIconProps {
   backgroundColor?: string;
 }
 
-export default function ShopifyIcon({ className = "w-4 h-4", backgroundColor = "#ffffff" }: ShopifyIconProps) {
+export default function ShopifyIcon({ className = "w-4 h-4", backgroundColor: _backgroundColor = "#ffffff" }: ShopifyIconProps) {
   return (
     <svg 
       className={className}

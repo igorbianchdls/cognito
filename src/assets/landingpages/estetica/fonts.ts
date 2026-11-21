@@ -1,7 +1,3 @@
-import { DM_Serif_Display } from 'next/font/google';
+import localFont from 'next/font/local';
 
-export const serif = DM_Serif_Display({
-  variable: '--font-lumiere-serif',
-  subsets: ['latin'],
-  weight: '400',
-});
+export const serif = localFont({ src: [{ path: '../../../fonts/dm-serif-display-400.woff2', weight: '400', style: 'normal' }], variable: '--font-lumiere-serif', display: 'swap' });

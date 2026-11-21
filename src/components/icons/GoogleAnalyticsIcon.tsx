@@ -3,7 +3,7 @@ interface GoogleAnalyticsIconProps {
   backgroundColor?: string;
 }
 
-export default function GoogleAnalyticsIcon({ className = "w-4 h-4", backgroundColor = "#ffffff" }: GoogleAnalyticsIconProps) {
+export default function GoogleAnalyticsIcon({ className = "w-4 h-4", backgroundColor: _backgroundColor = "#ffffff" }: GoogleAnalyticsIconProps) {
   return (
     <svg 
       className={className}
