@@ -10,7 +10,13 @@ Editor de vídeo e Spaces (arquivos e pastas), vindos do Otto Social.
 
 ## Como os dados são protegidos
 
-O navegador fala direto com o Supabase, levando o token de sessão do Clerk. Cada linha tem `workspace_id`, que é o id da organização no Clerk (a mesma empresa do ERP). As políticas do banco só deixam ler e gravar quando o `workspace_id` é a organização ativa no token. Favoritos e recentes também são da pessoa. Nos arquivos, a primeira pasta do caminho no bucket é a empresa.
+O navegador fala direto com o Supabase, levando o token de sessão do Clerk. Cada linha tem `workspace_id`, que é o id da organização no Clerk (a mesma empresa do ERP). As políticas do banco seguem os papéis do ERP (`shared.usuarios_empresas`), pela função `editor.member_role`:
+
+- ler: membro ativo da empresa ativa no token (owner, admin, member ou viewer);
+- alterar: owner, admin ou member (viewer só lê);
+- membro suspenso ou removido, ou empresa desativada, não acessa nada. Os dados ficam guardados, como os do ERP.
+
+Favoritos e recentes também são da pessoa. Nos arquivos, a primeira pasta do caminho no bucket é a empresa (`supabase/migrations/20261121130000_editor_social_roles.sql`).
 
 ## Estado atual
 
