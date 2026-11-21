@@ -4,7 +4,7 @@
 // Signed in, they are rows in editor.projects / editor.project_versions (the whole project goes in `data`), saved a moment
 // after each change. Without Supabase, the offline demo in this browser, with the sample projects.
 import { useSyncExternalStore } from 'react'
-import { db, localStamp as fromIso, must, persist, remoteMode, type WorkspaceContext } from '@/products/editor/frontend/lib/sync'
+import { db, idle, localStamp as fromIso, must, persist, remoteMode, type WorkspaceContext } from '@/products/editor/frontend/lib/sync'
 import { sampleProjects } from './data'
 import { localStamp, type Project } from './types'
 
@@ -65,7 +65,56 @@ export async function loadProject(id: string): Promise<Project | undefined> {
   if (!uuidish(id)) return undefined
   await connected
   const { data } = await db().from('projects').select('id, name, data, updated_at').eq('id', id).maybeSingle()
+  if (data) revs.set(id, (data.data as Project).rev ?? null)
   return data ? toProject(data) : undefined
+}
+
+// ---------- changes made elsewhere (the assistant in ChatGPT or Claude edits the same row) ----------
+
+/** The revision this browser last read or saved, per project; null for a row saved before revisions existed. */
+const revs = new Map<string, string | null>()
+const externalListeners = new Map<string, Set<(p: Project) => void>>()
+/** Calls `listener` with the new project when someone else saves it. */
+export function onExternalChange(id: string, listener: (p: Project) => void) {
+  const set = externalListeners.get(id) ?? new Set()
+  set.add(listener)
+  externalListeners.set(id, set)
+  return () => { set.delete(listener) }
+}
+async function reloadExternal(id: string) {
+  const { data } = await db().from('projects').select('id, name, data, updated_at').eq('id', id).maybeSingle()
+  if (!data) return
+  const p = toProject(data)
+  revs.set(id, p.rev ?? null)
+  setList([...projects.filter(x => x.id !== id), p])
+  externalListeners.get(id)?.forEach(l => l(p))
+}
+/** Looks for a newer save of this project; while this browser has unsaved changes the save itself finds out. */
+export async function checkProject(id: string) {
+  if (!remoteMode || !uuidish(id) || timers.has(id) || !idle() || !revs.has(id)) return
+  const { data } = await db().from('projects').select('rev:data->>rev').eq('id', id).maybeSingle()
+  const rev = (data as { rev: string | null } | null)?.rev ?? null
+  if (data && rev !== revs.get(id) && !timers.has(id) && idle()) await reloadExternal(id)
+}
+
+/**
+ * Saves the whole project with a new revision. An existing row is only replaced if it still has the revision this
+ * browser knows; otherwise someone else saved in between and their version is loaded instead of overwritten.
+ */
+async function writeProject(c: WorkspaceContext, p: Project) {
+  const rev = crypto.randomUUID()
+  const row = { name: p.name, format: p.format, data: { ...p, rev }, updated_at: new Date().toISOString() }
+  const known = revs.get(p.id)
+  if (known === undefined) {
+    await must(db().from('projects').upsert({ id: p.id, workspace_id: c.ws, ...row }))
+  } else {
+    const update = db().from('projects').update(row).eq('id', p.id)
+    const { data, error } = await (known === null ? update.is('data->>rev', null) : update.eq('data->>rev', known)).select('id')
+    if (error) throw error
+    if (!data?.length) { await reloadExternal(p.id); return false }
+  }
+  revs.set(p.id, rev)
+  return true
 }
 
 const timers = new Map<string, ReturnType<typeof setTimeout>>()
@@ -82,7 +131,7 @@ export function storeProject(p: Project) {
   const c = ctx
   timers.set(p.id, setTimeout(() => {
     timers.delete(p.id)
-    void persist(() => must(db().from('projects').upsert({ id: p.id, workspace_id: c.ws, name: p.name, format: p.format, data: p, updated_at: new Date().toISOString() })))
+    void persist(async () => { await writeProject(c, p) })
   }, 800))
 }
 
@@ -90,6 +139,7 @@ export function deleteProject(id: string) {
   setList(projects.filter(p => p.id !== id))
   if (!remoteMode) { const all = readSaved(); delete all[id]; try { localStorage.setItem(STORAGE_KEY, JSON.stringify(all)) } catch { /* blocked */ } return }
   clearTimeout(timers.get(id))
+  revs.delete(id)
   void persist(() => must(db().from('projects').delete().eq('id', id)))
 }
 
@@ -115,8 +165,7 @@ export async function saveVersion(p: Project, label: string): Promise<Version[]>
   // The project row must exist before its version (a new project may still be waiting for its first save).
   clearTimeout(timers.get(p.id)); timers.delete(p.id)
   await persist(async () => {
-    await must(db().from('projects').upsert({ id: p.id, workspace_id: c.ws, name: p.name, format: p.format, data: p, updated_at: new Date().toISOString() }))
-    await must(db().from('project_versions').insert({ project_id: p.id, workspace_id: c.ws, label, data: p }))
+    if (await writeProject(c, p)) await must(db().from('project_versions').insert({ project_id: p.id, workspace_id: c.ws, label, data: p }))
   })
   return listVersions(p.id)
 }

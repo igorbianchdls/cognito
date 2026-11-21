@@ -20,7 +20,7 @@ import e from './editor.module.css'
 import { ExportDialog } from './export/ExportDialog'
 
 export function EditorView({ initial, fileIds }: { initial: Project; fileIds?: string[] }) {
-  const { project, apply, transient, commit, undo, redo, canUndo, canRedo } = useEditor(initial, fileIds?.length ? () => blankProject(initial.id, fileIds) : undefined)
+  const { project, apply, transient, commit, undo, redo, canUndo, canRedo, externalChanges } = useEditor(initial, fileIds?.length ? () => blankProject(initial.id, fileIds) : undefined)
   const [selection, setSelection] = useState<string[]>([])
   const [insertMode, setInsertMode] = useState(false)
   const [loop, setLoop] = useState<{ start: number; end: number } | null>(null)
@@ -175,6 +175,7 @@ export function EditorView({ initial, fileIds }: { initial: Project; fileIds?: s
   }, [toggle, seek, frames, undo, redo, duplicate, split, remove, ripple, copy, paste, allIds, apply, group, ungroup, fullscreen, rate, duration])
 
   useEffect(() => { if (!toast) return; const t = setTimeout(() => setToast(''), 2600); return () => clearTimeout(t) }, [toast])
+  useEffect(() => { if (externalChanges) setToast('O projeto foi alterado pelo assistente. Ctrl+Z desfaz.') }, [externalChanges])
 
   return <div className={e.editor} data-editor>
     <header className={e.top}>

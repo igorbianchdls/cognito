@@ -1,5 +1,5 @@
 // Demonstration of the AI editing the project. Phase 2 swaps this parser for a model that calls the same operations.
-import { defaultBox, filterPresets } from '../project/data'
+import { defaultBox, filterPresets } from '../project/presets'
 import { addClip, cutHead, limitTo, mapClip, projectDuration, removeClip, setSpeed, updateProps } from '../project/ops'
 import { FPS, visualKinds, type CaptionStyle, type Project, type TransitionType } from '../project/types'
 

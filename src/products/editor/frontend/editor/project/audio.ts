@@ -3,8 +3,9 @@ import { media } from './data'
 import { clipEnd } from './ops'
 import type { Clip, Project } from './types'
 
-export const isVoice = (c: Clip) => media(c.props.fileId)?.role === 'voz'
-export const isMusic = (c: Clip) => media(c.props.fileId)?.role === 'musica'
+const roleOf = (c: Clip) => c.props.role ?? media(c.props.fileId)?.role
+export const isVoice = (c: Clip) => roleOf(c) === 'voz'
+export const isMusic = (c: Clip) => roleOf(c) === 'musica'
 
 /** Timeline ranges [start, end) where a voice clip plays. */
 export function voiceRanges(p: Project): [number, number][] {

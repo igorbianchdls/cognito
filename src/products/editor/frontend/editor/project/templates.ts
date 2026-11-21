@@ -1,6 +1,6 @@
 // Starting points for a new project.
 import { FPS, localStamp, type ClipProps, type Format, type Project, type Track } from './types'
-import { defaultBox, stickerProps } from './data'
+import { defaultBox, stickerProps } from './presets'
 
 export type Template = { id: string; label: string; description: string; format: Format; seconds: number }
 
