@@ -53,12 +53,16 @@ export type ClipProps = {
   opacity?: number
   volume?: number
   captionStyle?: CaptionStyle
+  /** Audio: voice or music, for ducking. When missing, the file decides (data.ts). */
+  role?: 'voz' | 'musica'
 }
 
 /** Times are in timeline frames, except trimStart, which is in frames of the media file. speed 2 plays the file twice as fast. */
 export type Clip = { id: string; start: number; duration: number; trimStart: number; speed?: number; group?: string; props: ClipProps }
 export type Track = { id: string; kind: TrackKind; clips: Clip[]; muted?: boolean; hidden?: boolean; locked?: boolean }
-export type Project = { id: string; name: string; format: Format; background: string; tracks: Track[]; updatedAt: string; markers?: number[]; ducking?: Ducking; watermark?: Watermark }
+export type Project = { id: string; name: string; format: Format; background: string; tracks: Track[]; updatedAt: string; markers?: number[]; ducking?: Ducking; watermark?: Watermark
+  /** Changes with every save; tells the open editor that someone else (the assistant) saved this project. */
+  rev?: string }
 
 export const canvasSize: Record<Format, { width: number; height: number }> = {
   '9:16': { width: 1080, height: 1920 },

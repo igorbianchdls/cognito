@@ -1,5 +1,5 @@
-// Pure edits on a project. The timeline, the properties panel and the AI all go through these.
-import { media } from './data'
+// Pure edits on a project. The timeline, the properties panel, the AI and the assistant tools on the server
+// (mcpcore/domains/editor) all go through these.
 import { fitKeyframes } from './keyframes'
 import { FPS, kindRank, localStamp, type Clip, type ClipProps, type Project, type Track, type TrackKind } from './types'
 
@@ -14,11 +14,16 @@ export function findClip(p: Project, id: string | null): { track: Track; clip: C
   return null
 }
 
+/** Seconds of a media file, or undefined when unknown. The browser registers the Spaces lookup (data.ts); the server passes its own. */
+export type DurationOf = (fileId?: string) => number | undefined
+let mediaDuration: DurationOf = () => undefined
+export const setMediaDuration = (fn: DurationOf) => { mediaDuration = fn }
+
 /** Longest a media clip can be, from its trim point to the end of the file. Infinity for text, shapes and images. */
-export function maxDuration(kind: TrackKind, c: Clip) {
+export function maxDuration(kind: TrackKind, c: Clip, durationOf: DurationOf = mediaDuration) {
   if (kind !== 'video' && kind !== 'audio') return Infinity
-  const m = media(c.props.fileId)
-  return m?.duration ? Math.floor((Math.round(m.duration * FPS) - c.trimStart) / (c.speed ?? 1)) : Infinity
+  const seconds = durationOf(c.props.fileId)
+  return seconds ? Math.floor((Math.round(seconds * FPS) - c.trimStart) / (c.speed ?? 1)) : Infinity
 }
 
 const touch = (p: Project): Project => ({ ...p, updatedAt: localStamp() })
@@ -90,11 +95,11 @@ export function trimLeft(p: Project, id: string, newStart: number): Project {
   return mapClip(p, id, c => ({ ...c, start, duration, trimStart: isMedia ? Math.max(0, c.trimStart + Math.round(delta * speed)) : c.trimStart, props: { ...c.props, keyframes: fitKeyframes(c.props.keyframes, delta, duration) } }))
 }
 
-export function trimRight(p: Project, id: string, newEnd: number): Project {
+export function trimRight(p: Project, id: string, newEnd: number, durationOf?: DurationOf): Project {
   const found = findClip(p, id)
   if (!found) return p
   const { clip, track } = found
-  const duration = Math.round(Math.min(maxDuration(track.kind, clip), Math.max(MIN_CLIP, newEnd - clip.start)))
+  const duration = Math.round(Math.min(maxDuration(track.kind, clip, durationOf), Math.max(MIN_CLIP, newEnd - clip.start)))
   return mapClip(p, id, c => ({ ...c, duration }))
 }
 
@@ -170,12 +175,12 @@ export function moveClipsClamped(p: Project, ids: string[], df: number): Project
 export const settleAll = (p: Project, ids: string[]) => ids.reduce((acc, id) => settle(acc, id), p)
 
 /** Changes speed keeping the same part of the file: 2x halves the clip on the timeline. */
-export function setSpeed(p: Project, id: string, speed: number): Project {
+export function setSpeed(p: Project, id: string, speed: number, durationOf?: DurationOf): Project {
   const found = findClip(p, id)
   if (!found) return p
   const old = found.clip.speed ?? 1
   const next = { ...found.clip, speed }
-  const duration = Math.max(MIN_CLIP, Math.min(maxDuration(found.track.kind, next), Math.round(found.clip.duration * old / speed)))
+  const duration = Math.max(MIN_CLIP, Math.min(maxDuration(found.track.kind, next, durationOf), Math.round(found.clip.duration * old / speed)))
   return settle(mapClip(p, id, c => ({ ...c, speed, duration })), id)
 }
 
@@ -225,4 +230,39 @@ export function ungroupClips(p: Project, ids: string[]): Project {
 export function withGroup(p: Project, id: string): string[] {
   const c = findClip(p, id)?.clip
   return c?.group ? p.tracks.flatMap(t => t.clips.filter(x => x.group === c.group).map(x => x.id)) : [id]
+}
+
+/**
+ * Removes the time range [from, to) and pulls everything after it back, on every track that isn't locked
+ * (or only on `trackIds`). Clips crossing the range lose the part inside it.
+ */
+export function cutRange(p: Project, from: number, to: number, trackIds?: string[]): Project {
+  const a = Math.max(0, Math.round(from)), b = Math.round(to), len = b - a
+  if (len <= 0) return p
+  return normalize(touch({ ...p, tracks: p.tracks.map(t => {
+    if (t.locked || (trackIds && !trackIds.includes(t.id))) return t
+    const isMedia = t.kind === 'video' || t.kind === 'audio'
+    return { ...t, clips: t.clips.flatMap(c => {
+      const end = clipEnd(c), speed = c.speed ?? 1
+      if (end <= a) return [c]
+      if (c.start >= b) return [{ ...c, start: c.start - len }]
+      const keepHead = Math.max(0, a - c.start), keepTail = Math.max(0, end - b), skipped = b - c.start
+      const head: Clip = { ...c, duration: keepHead, props: { ...c.props, transOut: undefined, keyframes: fitKeyframes(c.props.keyframes, 0, keepHead) } }
+      const tail: Clip = { ...c, start: a, duration: keepTail, trimStart: isMedia ? c.trimStart + Math.round(skipped * speed) : c.trimStart, props: { ...c.props, transIn: undefined, keyframes: fitKeyframes(c.props.keyframes, skipped, keepTail) } }
+      const hasHead = keepHead >= MIN_CLIP, hasTail = keepTail >= MIN_CLIP
+      // The clip keeps its id on the part that survives first; the second part of a split gets a new one.
+      return hasHead && hasTail ? [head, { ...tail, id: uid() }] : hasHead ? [head] : hasTail ? [tail] : []
+    }) }
+  }) }))
+}
+
+/** Plays the whole video `factor` times faster: every clip starts and lasts 1/factor as long, and media plays faster. */
+export function scaleTime(p: Project, factor: number): Project {
+  if (!(factor > 0) || factor === 1) return p
+  const f = (n: number) => Math.round(n / factor)
+  return normalize(touch({ ...p, markers: p.markers?.map(f), tracks: p.tracks.map(t => ({ ...t, clips: t.clips.map(c => ({
+    ...c, start: f(c.start), duration: Math.max(MIN_CLIP, f(c.duration)),
+    ...(t.kind === 'video' || t.kind === 'audio' ? { speed: Math.round((c.speed ?? 1) * factor * 100) / 100 } : {}),
+    props: { ...c.props, keyframes: c.props.keyframes?.map(k => ({ ...k, frame: f(k.frame) })) },
+  })) })) }))
 }

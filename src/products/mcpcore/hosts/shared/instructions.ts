@@ -1,4 +1,5 @@
 import { WHATSAPP_INSTRUCTIONS } from '../../mcp/registerWhatsApp'
+import { MARKETING_INSTRUCTIONS } from '../../mcp/registerMarketing'
 
 export type Host = 'chatgpt' | 'claude'
 
@@ -22,4 +23,4 @@ const HOST_INSTRUCTIONS: Record<Host, string> = {
   claude: '',
 }
 
-export const serverInstructions = (host: Host) => CORE_INSTRUCTIONS + HOST_INSTRUCTIONS[host] + WHATSAPP_INSTRUCTIONS
+export const serverInstructions = (host: Host) => CORE_INSTRUCTIONS + HOST_INSTRUCTIONS[host] + WHATSAPP_INSTRUCTIONS + MARKETING_INSTRUCTIONS

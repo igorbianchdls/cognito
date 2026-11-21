@@ -1,3 +1,4 @@
+import { marketingTools } from '../src/products/mcpcore/domains/editor/executeTool'
 import { localTools as whatsappLocalTools } from '../src/products/mcpcore/domains/whatsapp/tools/catalog'
 import {tools as erpTools} from '../src/products/mcpcore/tools/catalog'
 import {actionTools as erpActions} from '../src/products/mcpcore/actions/catalog'
@@ -67,9 +68,9 @@ async function main() {
     const {body}=await rpc('tools/list')
     type Listed={name:string;title?:string;description:string;annotations:Record<string,boolean>;outputSchema?:object;_meta?:{ui?:{resourceUri?:string}}}
     const listed=body.result.tools as Listed[]
-    assert.equal(listed.length,erpTools.length+erpActions.length+1+whatsappLocalTools.length)
+    assert.equal(listed.length,erpTools.length+erpActions.length+1+whatsappLocalTools.length+marketingTools.length)
     for (const absent of ['abrir_painel','ler_configuracoes','atualizar_configuracoes','search_mentions']) assert(!listed.some(t=>t.name===absent),absent)
-    for (const tool of listed.filter(t=>!t.name.startsWith('whatsapp_'))) {
+    for (const tool of listed.filter(t=>!/^(whatsapp|video|social)_/.test(t.name))) {
       const write=erpActions.some(a=>a.name===tool.name)||Boolean(erpTools.find(candidate=>candidate.name===tool.name)?.write)
       assert(tool.name.length<=64&&/^[a-z_]+$/.test(tool.name),tool.name)
       assert(tool.title&&tool.title.length>0,`title ${tool.name}`)
@@ -172,7 +173,7 @@ async function main() {
     assert.equal(client.getServerVersion()?.name,'cognito-claudeplugin');assert.match(client.getInstructions()||'',/meu_acesso/)
     assert.deepEqual((client.getServerCapabilities() as {extensions?:Record<string,unknown>})?.extensions?.['io.modelcontextprotocol/ui'],{mimeTypes:['text/html;profile=mcp-app']},'MCP Apps extension declared')
     const listed = await client.listTools()
-    assert.equal(listed.tools.length,erpTools.length+erpActions.length+1+whatsappLocalTools.length)
+    assert.equal(listed.tools.length,erpTools.length+erpActions.length+1+whatsappLocalTools.length+marketingTools.length)
     const access = await client.callTool({ name:'meu_acesso',arguments:{} })
     assert.equal(access.isError,undefined);assert.equal((access.structuredContent as {ok:boolean}).ok,true)
     const card = await client.readResource({ uri:CARDS_URI })

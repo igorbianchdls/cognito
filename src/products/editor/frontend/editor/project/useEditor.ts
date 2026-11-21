@@ -1,8 +1,8 @@
 'use client'
 
-import { useCallback, useEffect, useReducer, useRef, useSyncExternalStore } from 'react'
+import { useCallback, useEffect, useReducer, useRef, useState, useSyncExternalStore } from 'react'
 import type { Project } from './types'
-import { loadProject, storeProject } from './store'
+import { checkProject, loadProject, onExternalChange, storeProject } from './store'
 
 const HISTORY_LIMIT = 100
 
@@ -59,7 +59,20 @@ export function useEditor(initial: Project, rebuild?: () => Project) {
     if (skipSave.current) { skipSave.current = false; return }
     storeProject(state.present)
   }, [state.present])
+  // Someone else (the assistant in ChatGPT or Claude) saved this project: show their version, undoable, without
+  // saving it back. Checked every few seconds while the tab is visible.
+  const [externalChanges, setExternalChanges] = useState(0)
+  useEffect(() => {
+    const off = onExternalChange(initial.id, p => {
+      skipSave.current = true
+      dispatch({ type: 'apply', fn: () => p })
+      setExternalChanges(n => n + 1)
+    })
+    const timer = setInterval(() => { if (document.visibilityState === 'visible' && ready.current) void checkProject(initial.id) }, 4000)
+    return () => { off(); clearInterval(timer) }
+  }, [initial.id])
   return {
+    externalChanges,
     project: state.present,
     canUndo: state.past.length > 0,
     canRedo: state.future.length > 0,
