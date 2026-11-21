@@ -1,20 +1,14 @@
 import type { Metadata } from "next";
 import { ClerkProvider } from "@clerk/nextjs";
-import { Geist, Geist_Mono } from "next/font/google";
+import localFont from "next/font/local";
 import { clerkPtBrLocalization } from "@/products/auth/frontend/components/ClerkAuthShell";
 import "./globals.css";
 import "@/products/erp/frontend/styles/workspace.css";
 import "@/products/erp/frontend/styles/dashboards.css";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
-});
+const geistSans = localFont({ src: [{ path: "../fonts/geist.woff2", weight: "100 900", style: "normal" }], variable: "--font-geist-sans", display: "swap" });
 
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
-});
+const geistMono = localFont({ src: [{ path: "../fonts/geist-mono.woff2", weight: "100 900", style: "normal" }], variable: "--font-geist-mono", display: "swap" });
 
 export const metadata: Metadata = {
   title: "Otto",

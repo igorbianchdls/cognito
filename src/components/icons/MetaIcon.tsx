@@ -3,7 +3,7 @@ interface MetaIconProps {
   backgroundColor?: string;
 }
 
-export default function MetaIcon({ className = "w-4 h-4", backgroundColor = "#ffffff" }: MetaIconProps) {
+export default function MetaIcon({ className = "w-4 h-4", backgroundColor: _backgroundColor = "#ffffff" }: MetaIconProps) {
   return (
     <svg 
       className={className}

@@ -1,6 +1,5 @@
 import {db,restoreCatalog,assert} from './evolution-fixture.mjs';
 import {readFileSync,writeFileSync} from 'node:fs';
-import {createHash} from 'node:crypto';
 const checks=[];
 const evolutionFiles=['03-cadastros-documentos-contratos.sql','04-adiantamentos-renegociacoes.sql'];
 const evolutionSql=evolutionFiles.map(f=>readFileSync('scripts/erp/sql/'+f,'utf8'));

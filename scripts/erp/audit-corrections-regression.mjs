@@ -2,7 +2,6 @@ import { readFileSync, writeFileSync, mkdirSync } from 'node:fs'
 import vm from 'node:vm'
 import ts from 'typescript'
 import assert from 'node:assert/strict'
-import { z } from 'zod'
 import { connection } from './evolution-db.mjs'
 mkdirSync('.cache/erp-audit',{recursive:true})
 

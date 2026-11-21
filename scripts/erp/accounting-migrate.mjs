@@ -1,7 +1,6 @@
 import assert from 'node:assert/strict'
 import {readFileSync,writeFileSync,mkdirSync} from 'node:fs'
 import {createHash} from 'node:crypto'
-import dotenv from 'dotenv'
 import {connection} from './evolution-db.mjs'
 import {catalog} from './evolution-catalog.mjs'
 const folder='.cache/accounting/',apply=process.argv.includes('--apply');assert(process.argv.slice(2).every(a=>a==='--apply'||a==='--check'))

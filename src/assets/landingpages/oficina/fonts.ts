@@ -1,7 +1,3 @@
-import { Plus_Jakarta_Sans } from 'next/font/google';
+import localFont from 'next/font/local';
 
-export const jakarta = Plus_Jakarta_Sans({
-  variable: '--font-torque',
-  subsets: ['latin'],
-  weight: ['400', '500', '600', '700', '800'],
-});
+export const jakarta = localFont({ src: [{ path: '../../../fonts/plus-jakarta-sans.woff2', weight: '200 800', style: 'normal' }], variable: '--font-torque', display: 'swap' });

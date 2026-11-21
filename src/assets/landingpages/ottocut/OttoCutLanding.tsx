@@ -1,4 +1,4 @@
-import { Plus_Jakarta_Sans } from 'next/font/google'
+import localFont from 'next/font/local'
 import type { ReactNode } from 'react'
 import {
   IconBrandFacebook, IconBrandInstagram, IconBrandLinkedin, IconBrandOpenai, IconBrandPinterest,
@@ -13,7 +13,7 @@ import { AgentsScreen, CaptionsScreen, CutsScreen, ExportScreen, PolishScreen, T
 import { CircledWord } from './DrawOnView'
 import styles from './OttoCutLanding.module.css'
 
-const jakarta = Plus_Jakarta_Sans({ subsets: ['latin'], weight: ['400', '500', '600', '700', '800'] })
+const jakarta = localFont({ src: [{ path: '../../../fonts/plus-jakarta-sans.woff2', weight: '200 800', style: 'normal' }], display: 'swap' })
 
 const brl = (v: number) => v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
 const ctaHref = OTTOCUT_OFFER.checkoutUrl || '#oferta'

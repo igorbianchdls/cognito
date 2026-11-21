@@ -1,4 +1,5 @@
-# Produto: tipos, lint (tudo menos o marketing) e smokes dos servidores MCP (ChatGPT e Claude) em bancos isolados (PGlite).
+# Produto: tipos, lint (tudo menos o marketing), smokes dos servidores MCP (ChatGPT e Claude) em bancos isolados (PGlite)
+# e o build de produção, para um erro de build aparecer aqui e não só na Vercel.
 # Nenhum teste acessa o banco de produção nem precisa de segredos.
 name: Produtos
 
@@ -29,3 +30,5 @@ jobs:
         run: pnpm lint:produtos
       - name: Smokes (ChatGPT e Claude)
         run: pnpm test:produtos
+      - name: Build de produção
+        run: pnpm build

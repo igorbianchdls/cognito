@@ -3,7 +3,7 @@ interface GoogleAdsIconProps {
   backgroundColor?: string;
 }
 
-export default function GoogleAdsIcon({ className = "w-4 h-4", backgroundColor = "#ffffff" }: GoogleAdsIconProps) {
+export default function GoogleAdsIcon({ className = "w-4 h-4", backgroundColor: _backgroundColor = "#ffffff" }: GoogleAdsIconProps) {
   return (
     <svg 
       className={className}
