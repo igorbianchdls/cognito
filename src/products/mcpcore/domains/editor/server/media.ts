@@ -151,7 +151,7 @@ export const safeName = (name: string) => name.normalize('NFD').replace(/[̀-ͯ]
 export type StoreDeps = { send?: typeof fetch }
 
 /** Uploads to "<organization>/<file id>/<name>" (the path the storage policies check) and adds the Drive row. */
-export async function storeFile(m: Member, input: { bytes: Buffer; name: string; folderId?: string }, deps: StoreDeps = {}) {
+export async function storeFile(m: Member, input: { bytes: Buffer; name: string; folderId?: string; driveId?: string }, deps: StoreDeps = {}) {
   const info = probe(input.bytes)
   if (!info) throw new PluginError('UNSUPPORTED_FILE', 'Formato não aceito. Use MP4, MOV, WEBM, PNG, JPG, WEBP, GIF, MP3, M4A ou WAV.', 415)
   let driveId: string | undefined, folderId: string | null = null
@@ -159,6 +159,10 @@ export async function storeFile(m: Member, input: { bytes: Buffer; name: string;
     const [folder] = await m.db.query<{ drive_id: string }>('SELECT drive_id FROM drive.folders WHERE id = $1 AND workspace_id = $2 AND trashed_at IS NULL', [input.folderId, m.ws])
     if (!folder) throw new PluginError('NOT_FOUND', 'Pasta não encontrada no Drive desta empresa.', 404)
     driveId = folder.drive_id; folderId = input.folderId
+  } else if (input.driveId) {
+    const [drive] = await m.db.query<{ id: string }>('SELECT id FROM drive.drives WHERE id = $1 AND workspace_id = $2', [input.driveId, m.ws])
+    if (!drive) throw new PluginError('NOT_FOUND', 'Drive não encontrado nesta empresa.', 404)
+    driveId = drive.id
   } else {
     const [drive] = await m.db.query<{ id: string }>('SELECT id FROM drive.drives WHERE workspace_id = $1 ORDER BY created_at LIMIT 1', [m.ws])
     driveId = drive?.id
@@ -181,4 +185,33 @@ export async function storeFile(m: Member, input: { bytes: Buffer; name: string;
     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)`,
   [id, m.ws, driveId, folderId, name, info.kind, info.mime, input.bytes.length, info.duration, info.width, info.height, path, m.userId])
   return { id, name, kind: info.kind, duration: info.duration, width: info.width, height: info.height, size: input.bytes.length }
+}
+
+const objectUrl = (origin: string, path: string) => `${origin}/storage/v1/object/%s/drive/${path.split('/').map(encodeURIComponent).join('/')}`
+
+/** Short-lived link to a file of the drive bucket; with `download`, the browser saves it under that name. */
+export async function signObject(path: string, seconds: number, download?: string, deps: StoreDeps = {}) {
+  const { origin, key } = storageTarget()
+  const response = await (deps.send || fetch)(objectUrl(origin, path).replace('%s', 'sign'), {
+    method: 'POST', headers: { apikey: key, Authorization: `Bearer ${key}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify({ expiresIn: seconds }), signal: AbortSignal.timeout(10000),
+  }).catch(() => null)
+  const body = response?.ok ? await response.json().catch(() => null) as { signedURL?: string } | null : null
+  if (!body?.signedURL?.startsWith('/object/sign/')) throw new PluginError('STORAGE_UNAVAILABLE', 'Não foi possível gerar o link do arquivo.', 503)
+  const url = new URL('/storage/v1' + body.signedURL, origin)
+  if (download) url.searchParams.set('download', download)
+  return url.toString()
+}
+
+/** Deletes objects of the drive bucket (paths under the company's folder only; the caller checks the rows). */
+export async function removeObjects(paths: string[], deps: StoreDeps = {}) {
+  if (!paths.length) return
+  const { origin, key } = storageTarget()
+  for (let i = 0; i < paths.length; i += 100) {
+    const response = await (deps.send || fetch)(`${origin}/storage/v1/object/drive`, {
+      method: 'DELETE', headers: { apikey: key, Authorization: `Bearer ${key}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ prefixes: paths.slice(i, i + 100) }), signal: AbortSignal.timeout(20000),
+    }).catch(() => null)
+    if (!response?.ok) throw new PluginError('STORAGE_UNAVAILABLE', 'Não foi possível apagar os arquivos do armazenamento. Tente de novo.', 503)
+  }
 }

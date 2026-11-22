@@ -1,3 +1,4 @@
+import { workspaceTools } from '../src/products/mcpcore/domains/workspace/executeTool'
 import { localTools as whatsappLocalTools } from '../src/products/mcpcore/domains/whatsapp/tools/catalog'
 import {preferencesSchema} from '../src/products/mcpcore/application/preferences'
 import {tools as erpTools} from '../src/products/mcpcore/tools/catalog'
@@ -105,14 +106,14 @@ async function main() {
     assert.match(byName('meu_acesso').description,/Não é pré-requisito/);assert.match(byName('meu_acesso').description,/COMPANY_REQUIRED/)
     assert.match((byName('listar_vendas').inputSchema.properties.empresa_id as {description:string}).description,/Se desconhecido, omita/)
     // 17 consultas (com meu_acesso), 28 escritas, painel, configuracoes e a tool de mencoes do SDK.
-    assert.equal(listed.length,erpTools.length+erpActions.length+5+whatsappLocalTools.length)
+    assert.equal(listed.length,erpTools.length+erpActions.length+5+whatsappLocalTools.length+workspaceTools.length)
     const writes=['criar_cadastro','editar_cadastro','excluir_cadastro','criar_venda','editar_venda','excluir_venda','converter_orcamento','registrar_devolucao','confirmar_venda','cancelar_venda','atender_venda',
       'criar_compra','editar_compra','excluir_compra','confirmar_compra','cancelar_compra','criar_titulo','editar_titulo','excluir_titulo','efetivar_previsao','registrar_baixa','estornar_pagamento',
       'criar_nota_servico','editar_nota_servico','emitir_nota_servico','consultar_nota_servico','cancelar_nota_servico','excluir_nota_servico']
     const destructive=['excluir_cadastro','excluir_venda','cancelar_venda','excluir_compra','cancelar_compra','excluir_titulo','estornar_pagamento','registrar_devolucao','cancelar_nota_servico','excluir_nota_servico']
     for(const removed of ['preparar_rascunho','preparar_formulario_nativo','renderizar_card','abrir_formulario','obter_rascunho','listar_rascunhos','obter_cliente','listar_orcamentos','listar_contas_financeiras','verificar_fiscal_venda'])
       assert(!listed.some(t=>t.name===removed),removed)
-    for (const tool of listed.filter(t=>!t.name.startsWith('whatsapp_'))) {
+    for (const tool of listed.filter(t=>!/^(whatsapp|drive|analytics)_/.test(t.name))) {
       const write=erpActions.some(a=>a.name===tool.name)||Boolean(erpTools.find(candidate=>candidate.name===tool.name)?.write)
       assert.equal(tool.annotations.readOnlyHint,!write&&tool.name!=='atualizar_configuracoes',tool.name)
       assert.equal(tool.annotations.destructiveHint,Boolean(erpActions.find(a=>a.name===tool.name)?.destructive),tool.name)
