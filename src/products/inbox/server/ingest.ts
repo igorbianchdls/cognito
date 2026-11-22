@@ -4,7 +4,8 @@ import { randomUUID } from 'node:crypto'
 import { safeName } from '@/products/mcpcore/domains/editor/server/media'
 import { previewOf, type ChannelKind } from '../shared/rules'
 import type { Query } from './db'
-import type { InboundMessage, MetaEvent, StatusUpdate } from './meta'
+import type { CommentEvent, InboundMessage, MetaEvent, StatusUpdate } from './meta'
+import { onComment, onInbound } from './flows'
 
 type Channel = { id: string; workspace_id: string; kind: ChannelKind }
 export type StoredMedia = { path: string; mime: string; name: string | null }
@@ -12,6 +13,8 @@ export type IngestDeps = {
   service: Query
   /** Downloads and stores an attachment under the company folder; null when it can't (the message still goes in). */
   storeMedia?: (channel: Channel & { external_id: string }, message: InboundMessage, path: (name: string) => string) => Promise<StoredMedia | null>
+  /** Automations run for each new customer message and comment (false turns them off, e.g. in tests). */
+  automations?: false | { send?: typeof fetch }
 }
 export type IngestResult = { messages: number; statuses: number; ignored: number }
 
@@ -30,6 +33,7 @@ export async function ingest(events: MetaEvent[], deps: IngestDeps): Promise<Ing
     const channel = channels.get(key)
     if (!channel) { result.ignored++; continue }
     if (event.type === 'status') result.statuses += await applyStatus(deps.service, channel, event)
+    else if (event.type === 'comment') { if (await addComment(deps, channel, event)) result.messages++; else result.ignored++ }
     else if (await addMessage(deps, channel, event)) result.messages++
     else result.ignored++
   }
@@ -44,7 +48,7 @@ async function applyStatus(service: Query, channel: Channel, s: StatusUpdate) {
   return rows.length
 }
 
-async function contactFor(service: Query, channel: Channel, m: InboundMessage) {
+async function contactFor(service: Query, channel: Channel, m: { contactId: string; contactName?: string; username?: string }) {
   const [known] = await service<{ contact_id: string; name: string }>(`SELECT i.contact_id, c.name FROM inbox.contact_identities i JOIN inbox.contacts c ON c.id = i.contact_id
     WHERE i.channel_id = $1 AND i.external_id = $2`, [channel.id, m.contactId])
   if (known) {
@@ -76,7 +80,7 @@ async function addMessage(deps: IngestDeps, channel: Channel & { external_id: st
   const contactId = await contactFor(service, channel, m)
   const preview = previewOf(m.kind, m.text)
   const inbound = m.direction === 'entrada'
-  const [conversation] = await service<{ id: string }>(`INSERT INTO inbox.conversations (workspace_id, channel_id, contact_id, last_message_at, last_inbound_at, last_preview, unread)
+  const [conversation] = await service<{ id: string; created: boolean }>(`INSERT INTO inbox.conversations (workspace_id, channel_id, contact_id, last_message_at, last_inbound_at, last_preview, unread)
     VALUES ($1, $2, $3, $4, CASE WHEN $5 THEN $4::timestamptz END, $6, CASE WHEN $5 THEN 1 ELSE 0 END)
     ON CONFLICT (channel_id, contact_id) DO UPDATE SET
       last_message_at = greatest(inbox.conversations.last_message_at, excluded.last_message_at),
@@ -84,7 +88,7 @@ async function addMessage(deps: IngestDeps, channel: Channel & { external_id: st
       last_preview = excluded.last_preview,
       unread = CASE WHEN $5 THEN inbox.conversations.unread + 1 ELSE inbox.conversations.unread END,
       status = CASE WHEN $5 AND inbox.conversations.status = 'fechada' THEN 'aberta' ELSE inbox.conversations.status END
-    RETURNING id`, [channel.workspace_id, channel.id, contactId, m.at, inbound, preview])
+    RETURNING id, (xmax = 0) AS created`, [channel.workspace_id, channel.id, contactId, m.at, inbound, preview])
   let stored: StoredMedia | null = null
   if (m.media && deps.storeMedia) {
     stored = await deps.storeMedia(channel, m, name => `${channel.workspace_id}/inbox/${randomUUID()}/${safeName(name)}`).catch(error => {
@@ -96,5 +100,34 @@ async function addMessage(deps: IngestDeps, channel: Channel & { external_id: st
     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11) ON CONFLICT DO NOTHING RETURNING id`,
   [channel.workspace_id, conversation.id, m.direction, m.kind, m.text, stored?.path ?? null, stored?.mime ?? m.media?.mime ?? null, stored?.name ?? m.media?.name ?? null,
     m.messageId, inbound ? 'recebida' : 'enviada', m.at])
+  if (rows.length && inbound && deps.automations !== false) {
+    await onInbound({ service, send: deps.automations?.send }, { workspaceId: channel.workspace_id, channelId: channel.id, contactId, conversationId: conversation.id,
+      text: m.text ?? '', isNew: conversation.created, ref: m.ref, story: m.story }).catch(error =>
+      console.error(JSON.stringify({ scope: 'inbox', code: 'AUTOMATION_FAILED', message: (error as Error).message })))
+  }
   return rows.length > 0
+}
+
+/**
+ * A comment on a post: kept in the person's conversation (it does not open the 24-hour window) and handed to the
+ * comment automations, which may answer in private.
+ */
+async function addComment(deps: IngestDeps, channel: Channel & { external_id: string }, c: CommentEvent) {
+  const { service } = deps
+  const [seen] = await service(`SELECT 1 FROM inbox.messages x JOIN inbox.conversations k ON k.id = x.conversation_id WHERE k.channel_id = $1 AND x.external_id = $2`, [channel.id, 'comment.' + c.commentId])
+  if (seen) return false
+  const contactId = await contactFor(service, channel, { contactId: c.contactId, username: c.username })
+  const preview = previewOf('outro', `Comentou: ${c.text}`)
+  const [conversation] = await service<{ id: string }>(`INSERT INTO inbox.conversations (workspace_id, channel_id, contact_id, last_message_at, last_preview, unread)
+    VALUES ($1, $2, $3, $4, $5, 1)
+    ON CONFLICT (channel_id, contact_id) DO UPDATE SET last_message_at = greatest(inbox.conversations.last_message_at, excluded.last_message_at), last_preview = excluded.last_preview,
+      unread = inbox.conversations.unread + 1 RETURNING id`, [channel.workspace_id, channel.id, contactId, c.at, preview])
+  await service(`INSERT INTO inbox.messages (workspace_id, conversation_id, direction, kind, body, external_id, status, created_at)
+    VALUES ($1, $2, 'entrada', 'outro', $3, $4, 'recebida', $5) ON CONFLICT DO NOTHING`, [channel.workspace_id, conversation.id, `Comentou no post: "${c.text.slice(0, 1000)}"`, 'comment.' + c.commentId, c.at])
+  if (deps.automations !== false) {
+    await onComment({ service, send: deps.automations?.send }, { workspaceId: channel.workspace_id, channelId: channel.id, channelKind: channel.kind, contactId,
+      conversationId: conversation.id, commentId: c.commentId, postId: c.postId, text: c.text }).catch(error =>
+      console.error(JSON.stringify({ scope: 'inbox', code: 'AUTOMATION_FAILED', message: (error as Error).message })))
+  }
+  return true
 }

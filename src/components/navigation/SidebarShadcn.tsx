@@ -141,6 +141,7 @@ const sections: Section[] = [
     id: "inbox", title: "Inbox", items: [
       { title: "Caixa de entrada", url: "/inbox", icon: IconMessageCircleFilled, exactActive: true },
       { title: "Contatos", url: "/inbox/contatos", icon: IconUserFilled },
+      { title: "Automações", url: "/inbox/automacoes", icon: IconBoltFilled },
       { title: "Canais", url: "/inbox/canais", icon: IconArrowsExchange },
       { title: "Configurações", url: "/inbox/configuracoes", icon: IconAdjustmentsFilled },
     ],
