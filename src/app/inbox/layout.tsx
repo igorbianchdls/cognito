@@ -1,8 +1,8 @@
-import { AnalyticsShell } from '@/products/analytics/frontend/shell/AnalyticsShell'
+import { InboxShell } from '@/products/inbox/frontend/shell/InboxShell'
 
 export const metadata = { title: 'Inbox · Otto' }
 
-/** Inbox product: WhatsApp, Instagram and Messenger conversations in one place. Same light shell as Analytics. */
+/** Inbox product: WhatsApp, Instagram and Messenger conversations in one place. */
 export default function InboxLayout({ children }: { children: React.ReactNode }) {
-  return <AnalyticsShell>{children}</AnalyticsShell>
+  return <InboxShell>{children}</InboxShell>
 }
