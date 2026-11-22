@@ -148,6 +148,16 @@ function storageTarget() {
 
 export const safeName = (name: string) => name.normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^\w.-]+/g, '_').replace(/_+/g, '_').slice(-120) || 'arquivo'
 
+/** Puts bytes at `path` of the drive bucket (no Drive row; for files other products keep, like Inbox attachments). */
+export async function uploadObject(path: string, bytes: Buffer, mime: string, deps: StoreDeps = {}) {
+  const { origin, key } = storageTarget()
+  const response = await (deps.send || fetch)(`${origin}/storage/v1/object/drive/${path.split('/').map(encodeURIComponent).join('/')}`, {
+    method: 'POST', headers: { apikey: key, Authorization: `Bearer ${key}`, 'Content-Type': mime, 'x-upsert': 'false' },
+    body: new Uint8Array(bytes), signal: AbortSignal.timeout(20000),
+  }).catch(() => null)
+  if (!response?.ok) throw new PluginError('STORAGE_UNAVAILABLE', 'Não foi possível guardar o arquivo. Tente de novo.', 503)
+}
+
 export type StoreDeps = { send?: typeof fetch }
 
 /** Uploads to "<organization>/<file id>/<name>" (the path the storage policies check) and adds the Drive row. */
