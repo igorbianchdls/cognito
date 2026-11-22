@@ -4,6 +4,7 @@ import { NextResponse, type NextFetchEvent, type NextRequest } from 'next/server
 const isPublicRoute = createRouteMatcher([
   '/sign-in(.*)',
   '/api/analytics/eventos',
+  '/api/videohosting/v/(.*)',
   '/otto.js',
   '/sign-up(.*)',
   '/sso-callback(.*)',
