@@ -14,7 +14,7 @@ const tones: Record<string, [string, string]> = {
 const clock = (frames: number) => { const sec = Math.floor(frames / FPS); return `${String(Math.floor(sec / 60)).padStart(2, '0')}:${String(sec % 60).padStart(2, '0')}` }
 
 /**
- * The clip's file from Spaces (video or image), sized by fit (fill, fit, fit over blur), crop and flip.
+ * The clip's file from the Drive (video or image), sized by fit (fill, fit, fit over blur), crop and flip.
  * Sample files and files still loading get a stand-in: gradient, name and the file timecode.
  */
 export function MediaBlock({ clip, video }: { clip: Clip; video?: boolean }) {

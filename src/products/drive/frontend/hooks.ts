@@ -1,13 +1,13 @@
 'use client'
 
-// React hooks over the Spaces store and the files' contents.
+// React hooks over the Drives store and the files' contents.
 import { useEffect, useState, useSyncExternalStore } from 'react'
 import { getBlob } from './blobs'
 import { signedUrl } from './remote'
-import { getDrive, getDriveStatus, remoteDrive, seedDrive, subscribeDrive, subscribeDriveStatus, type DFile } from './store'
+import { getDriveState, getDriveStatus, remoteDrive, seedDriveState, subscribeDriveState, subscribeDriveStatus, type DFile } from './store'
 
 /** The server and the first client render see the seed; the saved copy takes over right after. */
-export const useDrive = () => useSyncExternalStore(subscribeDrive, getDrive, seedDrive)
+export const useDriveState = () => useSyncExternalStore(subscribeDriveState, getDriveState, seedDriveState)
 /** 'loading' while the workspace's files come from the database. */
 export const useDriveStatus = () => useSyncExternalStore(subscribeDriveStatus, getDriveStatus, () => remoteDrive ? 'idle' as const : 'ready' as const)
 

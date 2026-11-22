@@ -1,6 +1,6 @@
 # Social
 
-Posts e agendamento, contas sociais e notificações, vindos do Otto Social. Usa o produto Editor: a mídia dos posts vem dos Spaces.
+Posts e agendamento, contas sociais e notificações, vindos do Otto Social. A mídia dos posts vem do produto Drive.
 
 ## Onde fica
 

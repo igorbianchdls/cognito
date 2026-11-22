@@ -7,7 +7,7 @@ import { mediaLibrary, shapePresets, stickerProps, stickers, textPresets, type M
 import { aiExamples } from '../ai/commands'
 import { MEDIA_MIME } from '../timeline/Timeline'
 import { fonts } from '../remotion/animate'
-import { useDrive } from '@/products/editor/frontend/spaces/hooks'
+import { useDriveState } from '@/products/drive/frontend/hooks'
 import type { ClipProps, TrackKind } from '../project/types'
 import e from '../editor.module.css'
 
@@ -27,17 +27,17 @@ const tabs: { id: Tab; label: string; Icon: typeof Film }[] = [
 
 export function LeftPanel({ onAddMedia, onAddPreset, chat, onAsk }: Props) {
   const [tab, setTab] = useState<Tab>('midia')
-  const drive = useDrive()
+  const driveState = useDriveState()
   return <aside className={e.left}>
     <nav className={e.tabs}>{tabs.map(t => <button key={t.id} className={tab === t.id ? e.tabOn : ''} onClick={() => setTab(t.id)} aria-pressed={tab === t.id}><t.Icon size={16} />{t.label}</button>)}</nav>
     <div className={e.panelBody}>
       {tab === 'midia' && <>
-        <p className={e.hint}>Arquivos dos seus Spaces. Arraste para a linha do tempo ou clique em +.</p>
-        <div className={e.mediaGrid}>{mediaLibrary(drive).filter(m => m.kind !== 'audio').map(m => <MediaCard key={m.id} m={m} onAdd={onAddMedia} />)}</div>
+        <p className={e.hint}>Arquivos do seu Drive. Arraste para a linha do tempo ou clique em +.</p>
+        <div className={e.mediaGrid}>{mediaLibrary(driveState).filter(m => m.kind !== 'audio').map(m => <MediaCard key={m.id} m={m} onAdd={onAddMedia} />)}</div>
       </>}
       {tab === 'audio' && <>
         <p className={e.hint}>Trilhas e narrações. Arraste ou clique em +.</p>
-        <div className={e.list}>{mediaLibrary(drive).filter(m => m.kind === 'audio').map(m => <MediaRow key={m.id} m={m} onAdd={onAddMedia} />)}</div>
+        <div className={e.list}>{mediaLibrary(driveState).filter(m => m.kind === 'audio').map(m => <MediaRow key={m.id} m={m} onAdd={onAddMedia} />)}</div>
       </>}
       {tab === 'texto' && <div className={e.presets}>{textPresets.map(t => <button key={t.label} className={e.preset} onClick={() => onAddPreset(t.kind, t.props, t.seconds)}>
         <span className={e.presetSample} style={{ color: t.props.color, background: t.props.bg ?? (t.kind === 'legenda' ? '#111827' : '#1f2937'), fontWeight: t.props.weight, fontFamily: fonts[t.props.font ?? 'geist'].family, fontSize: t.props.font === 'bebas' ? 20 : undefined }}>{t.kind === 'legenda' ? <><b style={{ color: '#facc15' }}>Legenda</b> animada</> : t.label}</span>

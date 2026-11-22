@@ -3,9 +3,9 @@
 // Real content for the editor's clips: a signed link (signed in) or the uploaded copy in this browser (demo).
 // Kept outside React state so every frame of the player can read it synchronously.
 import { useSyncExternalStore } from 'react'
-import { getBlob } from '@/products/editor/frontend/spaces/blobs'
-import { signedUrl } from '@/products/editor/frontend/spaces/remote'
-import { getDrive, remoteDrive } from '@/products/editor/frontend/spaces/store'
+import { getBlob } from '@/products/drive/frontend/blobs'
+import { signedUrl } from '@/products/drive/frontend/remote'
+import { getDriveState, remoteDrive } from '@/products/drive/frontend/store'
 
 const urls = new Map<string, string | null>()
 // Files whose link finished loading, with or without success.
@@ -15,7 +15,7 @@ const subscribe = (l: () => void) => { listeners.add(l); return () => { listener
 
 function load(fileId: string) {
   if (urls.has(fileId) || typeof window === 'undefined') return
-  const f = getDrive().files.find(x => x.id === fileId)
+  const f = getDriveState().files.find(x => x.id === fileId)
   if (!f?.uploaded) return // sample files and the audio library have no content: the block draws a stand-in
   urls.set(fileId, null)
   const done = (u: string | null | undefined) => { urls.set(fileId, u ?? null); settled.add(fileId); listeners.forEach(l => l()) }
@@ -40,7 +40,7 @@ export function preloadMediaUrls(fileIds: string[]) {
   return Promise.all(pending).then(() => undefined)
 }
 
-/** URL of a Spaces file's content, or null while it loads / when there is none. */
+/** URL of a Drive file's content, or null while it loads / when there is none. */
 export function useMediaUrl(fileId: string | undefined) {
   const get = () => (fileId ? urls.get(fileId) ?? null : null)
   const url = useSyncExternalStore(subscribe, get, () => null)

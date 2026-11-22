@@ -1,5 +1,5 @@
 // What each network accepts, and the problems a post would hit before it is published.
-import type { DFile } from '@/products/editor/frontend/spaces/store'
+import type { DFile } from '@/products/drive/frontend/store'
 import { networkLabel, type Network, type PostFormat } from './data'
 import { getAccounts } from './accounts'
 

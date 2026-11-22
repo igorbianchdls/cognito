@@ -13,6 +13,10 @@ const nextConfig: NextConfig = {
   },
   async redirects() {
     return [
+      // Spaces virou Drive (novembro de 2026): links antigos continuam funcionando.
+      { source: '/editor/spaces', destination: '/drive', permanent: true },
+      { source: '/editor/spaces/:path*', destination: '/drive/:path*', permanent: true },
+      { source: '/editor/pastas/:id', destination: '/drive/pastas/:id', permanent: true },
       {
         source: '/modulos',
         destination: '/erp',

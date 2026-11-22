@@ -1,12 +1,12 @@
 # Editor
 
-Editor de vídeo e Spaces (arquivos e pastas), vindos do Otto Social.
+Editor de vídeo, vindo do Otto Social. Os arquivos (vídeos, imagens e áudios) vêm do produto Drive (`src/products/drive`).
 
 ## Onde fica
 
-- Telas: `src/app/editor` (`/editor`, `/editor/[id]`, `/editor/spaces`, `/editor/pastas/[id]`).
-- Código: `frontend/editor` (editor e exportação), `frontend/spaces` (arquivos e pastas), `frontend/shell` (moldura com o menu do Otto, visual base e fontes) e `frontend/lib` (cliente do Supabase e fila de gravação).
-- Banco: schema `editor` e bucket `editor-media` (`supabase/migrations/20261119120000_editor_schema.sql`).
+- Telas: `src/app/editor` (`/editor`, `/editor/[id]`).
+- Código: `frontend/editor` (editor e exportação), `frontend/shell` (moldura com o menu do Otto, visual base e fontes) e `frontend/lib` (cliente do Supabase e fila de gravação).
+- Banco: schema `editor`, só com os projetos e as versões (`supabase/migrations/20261119120000_editor_schema.sql`; os arquivos foram para o schema `drive` em `20261122120000_drive_schema.sql`).
 
 ## Como os dados são protegidos
 

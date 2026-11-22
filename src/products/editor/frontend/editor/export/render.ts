@@ -1,7 +1,7 @@
 'use client'
 
 // Exports an editor project to MP4 in the browser (Remotion's web renderer: WebCodecs + canvas).
-// Nothing goes to a server: the file is made on this computer, then downloaded and, if asked, saved to a Space.
+// Nothing goes to a server: the file is made on this computer, then downloaded and, if asked, saved to the Drive.
 import { canRenderMediaOnWeb, renderMediaOnWeb, type WebRendererQuality } from '@remotion/web-renderer'
 import { EditorComposition } from '../remotion/Composition'
 import { projectDuration } from '../project/ops'

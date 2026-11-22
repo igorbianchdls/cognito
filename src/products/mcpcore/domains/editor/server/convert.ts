@@ -145,7 +145,7 @@ function clipView(c: Clip, t: Track, files: Map<string, FileInfo>) {
   const isMedia = t.kind === 'video' || t.kind === 'audio'
   return drop({
     id: c.id, inicio_s: seconds(c.start), fim_s: seconds(clipEnd(c)), duracao_s: seconds(c.duration),
-    arquivo: fileId ? (file ? { id: file.id, nome: file.name, duracao_s: file.duration ?? undefined } : { id: fileId, nome: 'Arquivo de exemplo (não está nos Spaces)' }) : undefined,
+    arquivo: fileId ? (file ? { id: file.id, nome: file.name, duracao_s: file.duration ?? undefined } : { id: fileId, nome: 'Arquivo de exemplo (não está no Drive)' }) : undefined,
     trecho_do_arquivo_s: isMedia && c.trimStart ? seconds(c.trimStart) : undefined,
     velocidade: c.speed && c.speed !== 1 ? c.speed : undefined, grupo: c.group, ...propsToStyle(props),
   })

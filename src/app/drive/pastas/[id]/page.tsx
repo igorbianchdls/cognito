@@ -1,4 +1,4 @@
-import { DriveView } from '@/products/editor/frontend/spaces/drive/DriveView'
+import { DriveView } from '@/products/drive/frontend/views/DriveView'
 
 export default async function FolderPage({ params, searchParams }: { params: Promise<{ id: string }>; searchParams: Promise<{ arquivo?: string }> }) {
   const { id } = await params

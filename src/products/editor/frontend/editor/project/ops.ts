@@ -14,7 +14,7 @@ export function findClip(p: Project, id: string | null): { track: Track; clip: C
   return null
 }
 
-/** Seconds of a media file, or undefined when unknown. The browser registers the Spaces lookup (data.ts); the server passes its own. */
+/** Seconds of a media file, or undefined when unknown. The browser registers the Drive lookup (data.ts); the server passes its own. */
 export type DurationOf = (fileId?: string) => number | undefined
 let mediaDuration: DurationOf = () => undefined
 export const setMediaDuration = (fn: DurationOf) => { mediaDuration = fn }

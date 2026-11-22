@@ -31,7 +31,7 @@ export function ProjectsView() {
     <h2 className={e.sectionTitle}>Seus projetos</h2>
     <div className={e.projectGrid}>
       <button className={e.newProject} onClick={() => create()}><Plus size={22} />Novo projeto</button>
-      {!projects.length && <p className={s.muted}>Nenhum projeto ainda. Comece por um modelo ou abra vídeos de Spaces no editor.</p>}
+      {!projects.length && <p className={s.muted}>Nenhum projeto ainda. Comece por um modelo ou abra vídeos do Drive no editor.</p>}
       {projects.map(p => {
         const { width, height } = canvasSize[p.format]
         const d = projectDuration(p)

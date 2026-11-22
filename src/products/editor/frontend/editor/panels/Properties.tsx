@@ -7,7 +7,7 @@ import { clipEnd, findClip, maxDuration, mapClip, projectDuration, setSpeed, upd
 import { useFrame, type FrameStore } from '../project/useEditor'
 import { FPS, kindLabel, visualKinds, type Box, type ClipProps, type Crop, type Filter, type Fit, type Format, type Motion, type Project, type Transition, type TransitionType, type Watermark } from '../project/types'
 import { fonts } from '../remotion/animate'
-import { useDrive } from '@/products/editor/frontend/spaces/hooks'
+import { useDriveState } from '@/products/drive/frontend/hooks'
 import { kindIcon, timecode } from '../timeline/Timeline'
 import e from '../editor.module.css'
 
@@ -243,7 +243,7 @@ const corners: { id: Watermark['position']; label: string }[] = [{ id: 'tl', lab
 
 function WatermarkSection({ mark, onChange }: { mark?: Watermark; onChange: (w: Watermark | undefined, key: string) => void }) {
   const m: Watermark = mark ?? { position: 'tr', opacity: 0.8 }
-  const images = mediaLibrary(useDrive()).filter(x => x.kind === 'imagem')
+  const images = mediaLibrary(useDriveState()).filter(x => x.kind === 'imagem')
   return <Section title="Marca d'água">
     <Field label="Texto"><input value={m.text ?? ''} placeholder="@otto.erp" onChange={ev => onChange({ ...m, text: ev.target.value || undefined }, 'wmtext')} /></Field>
     <Field label="Logo"><select value={m.fileId ?? ''} onChange={ev => onChange({ ...m, fileId: ev.target.value || undefined }, 'wmlogo')}><option value="">Sem logo</option>{images.map(i => <option key={i.id} value={i.id}>{i.name}</option>)}</select></Field>

@@ -3,8 +3,8 @@
 // How the post will look on each network: Instagram Reels, Feed, Story and TikTok.
 import { useState } from 'react'
 import { Bookmark, Heart, MessageCircle, MoreHorizontal, Music2, Plus, Send, Share2 } from 'lucide-react'
-import type { DFile } from '@/products/editor/frontend/spaces/store'
-import { Thumb } from '@/products/editor/frontend/spaces/Thumb'
+import type { DFile } from '@/products/drive/frontend/store'
+import { Thumb } from '@/products/drive/frontend/Thumb'
 import { IG_VISIBLE, networksOf } from './rules'
 import { type PostFormat } from './data'
 import { getAccounts } from './accounts'

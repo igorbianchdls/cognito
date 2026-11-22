@@ -1,5 +1,5 @@
-// Brings a file from a public link into the company's Spaces: downloads it (public addresses only, with a size
-// limit), reads its length and size from the file itself, stores it in the editor-media bucket and adds the row.
+// Brings a file from a public link into the company's Drive: downloads it (public addresses only, with a size
+// limit), reads its length and size from the file itself, stores it in the drive bucket and adds the row.
 import { lookup } from 'node:dns/promises'
 import { isIP } from 'node:net'
 import { randomUUID } from 'node:crypto'
@@ -40,7 +40,7 @@ export async function download(link: string, send: typeof fetch = fetch): Promis
     if (!response) throw new PluginError('DOWNLOAD_FAILED', 'Não consegui baixar o arquivo desse link.', 502)
     if (response.status >= 300 && response.status < 400 && response.headers.get('location')) { url = new URL(response.headers.get('location')!, url); continue }
     if (!response.ok || !response.body) throw new PluginError('DOWNLOAD_FAILED', `O link respondeu com erro (${response.status}).`, 502)
-    if (Number(response.headers.get('content-length') || 0) > MAX_UPLOAD_BYTES) throw new PluginError('FILE_TOO_LARGE', 'O arquivo passa de 50 MB. Envie pelo Spaces no Otto.', 413)
+    if (Number(response.headers.get('content-length') || 0) > MAX_UPLOAD_BYTES) throw new PluginError('FILE_TOO_LARGE', 'O arquivo passa de 50 MB. Envie pelo Drive no Otto.', 413)
     const chunks: Buffer[] = []
     let size = 0
     const reader = response.body.getReader()
@@ -48,7 +48,7 @@ export async function download(link: string, send: typeof fetch = fetch): Promis
       const { done, value } = await reader.read()
       if (done) break
       size += value.byteLength
-      if (size > MAX_UPLOAD_BYTES) { await reader.cancel().catch(() => undefined); throw new PluginError('FILE_TOO_LARGE', 'O arquivo passa de 50 MB. Envie pelo Spaces no Otto.', 413) }
+      if (size > MAX_UPLOAD_BYTES) { await reader.cancel().catch(() => undefined); throw new PluginError('FILE_TOO_LARGE', 'O arquivo passa de 50 MB. Envie pelo Drive no Otto.', 413) }
       chunks.push(Buffer.from(value))
     }
     const last = decodeURIComponent(url.pathname.split('/').filter(Boolean).pop() || '')
@@ -140,7 +140,7 @@ export function probe(b: Buffer): Probe | null {
 
 function storageTarget() {
   const base = process.env.NEXT_PUBLIC_SUPABASE_URL, key = process.env.SUPABASE_SERVICE_ROLE_KEY
-  if (!base || !key) throw new PluginError('STORAGE_UNAVAILABLE', 'O armazenamento dos Spaces não está configurado.', 503)
+  if (!base || !key) throw new PluginError('STORAGE_UNAVAILABLE', 'O armazenamento do Drive não está configurado.', 503)
   const origin = new URL(base)
   if (origin.protocol !== 'https:' || !/^[a-z0-9]{20}\.supabase\.co$/.test(origin.hostname)) throw new PluginError('STORAGE_UNAVAILABLE', 'Confira a configuração do armazenamento.', 503)
   return { origin: origin.origin, key }
@@ -150,21 +150,21 @@ export const safeName = (name: string) => name.normalize('NFD').replace(/[̀-ͯ]
 
 export type StoreDeps = { send?: typeof fetch }
 
-/** Uploads to "<organization>/<file id>/<name>" (the path the storage policies check) and adds the Spaces row. */
+/** Uploads to "<organization>/<file id>/<name>" (the path the storage policies check) and adds the Drive row. */
 export async function storeFile(m: Member, input: { bytes: Buffer; name: string; folderId?: string }, deps: StoreDeps = {}) {
   const info = probe(input.bytes)
   if (!info) throw new PluginError('UNSUPPORTED_FILE', 'Formato não aceito. Use MP4, MOV, WEBM, PNG, JPG, WEBP, GIF, MP3, M4A ou WAV.', 415)
-  let spaceId: string | undefined, folderId: string | null = null
+  let driveId: string | undefined, folderId: string | null = null
   if (input.folderId) {
-    const [folder] = await m.db.query<{ space_id: string }>('SELECT space_id FROM editor.folders WHERE id = $1 AND workspace_id = $2 AND trashed_at IS NULL', [input.folderId, m.ws])
-    if (!folder) throw new PluginError('NOT_FOUND', 'Pasta não encontrada nos Spaces desta empresa.', 404)
-    spaceId = folder.space_id; folderId = input.folderId
+    const [folder] = await m.db.query<{ drive_id: string }>('SELECT drive_id FROM drive.folders WHERE id = $1 AND workspace_id = $2 AND trashed_at IS NULL', [input.folderId, m.ws])
+    if (!folder) throw new PluginError('NOT_FOUND', 'Pasta não encontrada no Drive desta empresa.', 404)
+    driveId = folder.drive_id; folderId = input.folderId
   } else {
-    const [space] = await m.db.query<{ id: string }>('SELECT id FROM editor.spaces WHERE workspace_id = $1 ORDER BY created_at LIMIT 1', [m.ws])
-    spaceId = space?.id
-    if (!spaceId) {
-      spaceId = randomUUID()
-      await m.db.query('INSERT INTO editor.spaces (id, workspace_id, name) VALUES ($1, $2, $3)', [spaceId, m.ws, 'Arquivos'])
+    const [drive] = await m.db.query<{ id: string }>('SELECT id FROM drive.drives WHERE workspace_id = $1 ORDER BY created_at LIMIT 1', [m.ws])
+    driveId = drive?.id
+    if (!driveId) {
+      driveId = randomUUID()
+      await m.db.query('INSERT INTO drive.drives (id, workspace_id, name) VALUES ($1, $2, $3)', [driveId, m.ws, 'Arquivos'])
     }
   }
   const id = randomUUID()
@@ -172,13 +172,13 @@ export async function storeFile(m: Member, input: { bytes: Buffer; name: string;
   const name = `${base}.${info.ext}`.slice(-255)
   const path = `${m.ws}/${id}/${safeName(name)}`
   const { origin, key } = storageTarget()
-  const response = await (deps.send || fetch)(`${origin}/storage/v1/object/editor-media/${path.split('/').map(encodeURIComponent).join('/')}`, {
+  const response = await (deps.send || fetch)(`${origin}/storage/v1/object/drive/${path.split('/').map(encodeURIComponent).join('/')}`, {
     method: 'POST', headers: { apikey: key, Authorization: `Bearer ${key}`, 'Content-Type': info.mime, 'x-upsert': 'false' },
     body: new Uint8Array(input.bytes), signal: AbortSignal.timeout(20000),
   }).catch(() => null)
-  if (!response?.ok) throw new PluginError('STORAGE_UNAVAILABLE', 'Não foi possível guardar o arquivo nos Spaces. Tente de novo.', 503)
-  await m.db.query(`INSERT INTO editor.files (id, workspace_id, space_id, folder_id, name, kind, mime, size, duration, width, height, storage_path, created_by)
+  if (!response?.ok) throw new PluginError('STORAGE_UNAVAILABLE', 'Não foi possível guardar o arquivo no Drive. Tente de novo.', 503)
+  await m.db.query(`INSERT INTO drive.files (id, workspace_id, drive_id, folder_id, name, kind, mime, size, duration, width, height, storage_path, created_by)
     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)`,
-  [id, m.ws, spaceId, folderId, name, info.kind, info.mime, input.bytes.length, info.duration, info.width, info.height, path, m.userId])
+  [id, m.ws, driveId, folderId, name, info.kind, info.mime, input.bytes.length, info.duration, info.width, info.height, path, m.userId])
   return { id, name, kind: info.kind, duration: info.duration, width: info.width, height: info.height, size: input.bytes.length }
 }

@@ -1,12 +1,12 @@
-// Spaces in Supabase: rows in spaces/folders/files/favorites/recents, bytes in the private "media" bucket.
+// The Drive in Supabase: rows in drive.drives/folders/files/favorites/recents, bytes in the private "drive" bucket.
 // Pure module (no React). The store calls these; nothing here touches the in-memory state.
-import { supabase } from '@/products/editor/frontend/lib/supabase'
+import { supabase } from './lib/supabase'
 import type { FileKind } from './data'
 import type { WorkspaceContext } from '@/products/editor/frontend/lib/sync'
 
 export type DriveContext = WorkspaceContext
 export type Row = Record<string, unknown>
-const BUCKET = 'editor-media'
+const BUCKET = 'drive'
 
 // ---------- dates: the store keeps local "YYYY-MM-DDTHH:mm" strings ----------
 
@@ -20,26 +20,26 @@ export const toneOf = (id: string) => tones[[...id].reduce((n, c) => (n * 31 + c
 
 export async function fetchDrive(ctx: DriveContext) {
   const sb = supabase()
-  const [spaces, folders, files, favorites, recents] = await Promise.all([
-    sb.from('spaces').select('id, name, created_at').eq('workspace_id', ctx.ws).order('created_at'),
-    sb.from('folders').select('id, space_id, parent_id, name, description, tags, trashed_at, created_at, updated_at').eq('workspace_id', ctx.ws).order('created_at'),
-    sb.from('files').select('id, space_id, folder_id, name, kind, mime, size, duration, width, height, storage_path, thumb_path, tags, trashed_at, created_at, updated_at').eq('workspace_id', ctx.ws).order('created_at'),
+  const [drives, folders, files, favorites, recents] = await Promise.all([
+    sb.from('drives').select('id, name, created_at').eq('workspace_id', ctx.ws).order('created_at'),
+    sb.from('folders').select('id, drive_id, parent_id, name, description, tags, trashed_at, created_at, updated_at').eq('workspace_id', ctx.ws).order('created_at'),
+    sb.from('files').select('id, drive_id, folder_id, name, kind, mime, size, duration, width, height, storage_path, thumb_path, tags, trashed_at, created_at, updated_at').eq('workspace_id', ctx.ws).order('created_at'),
     sb.from('favorites').select('item_type, item_id').eq('workspace_id', ctx.ws).eq('user_id', ctx.user),
     sb.from('recents').select('item_type, item_id, opened_at').eq('workspace_id', ctx.ws).eq('user_id', ctx.user),
   ])
-  const err = spaces.error ?? folders.error ?? files.error ?? favorites.error ?? recents.error
+  const err = drives.error ?? folders.error ?? files.error ?? favorites.error ?? recents.error
   if (err) throw err
   const fav = new Set((favorites.data ?? []).map(f => `${f.item_type}:${f.item_id}`))
   const opened = new Map((recents.data ?? []).map(r => [`${r.item_type}:${r.item_id}`, localStamp(r.opened_at)]))
   return {
-    spaces: (spaces.data ?? []).map(s => ({ id: s.id as string, name: s.name as string })),
+    drives: (drives.data ?? []).map(s => ({ id: s.id as string, name: s.name as string })),
     folders: (folders.data ?? []).map(f => ({
-      id: f.id, spaceId: f.space_id, parentId: f.parent_id, name: f.name, description: f.description, tags: f.tags ?? [],
+      id: f.id, driveId: f.drive_id, parentId: f.parent_id, name: f.name, description: f.description, tags: f.tags ?? [],
       createdAt: localDay(f.created_at), updatedAt: localDay(f.updated_at),
       trashedAt: f.trashed_at ? localStamp(f.trashed_at) : undefined, favorite: fav.has(`folder:${f.id}`), openedAt: opened.get(`folder:${f.id}`),
     })),
     files: (files.data ?? []).map(f => ({
-      id: f.id, spaceId: f.space_id, folderId: f.folder_id, name: f.name, kind: f.kind as FileKind, mime: f.mime, size: Number(f.size),
+      id: f.id, driveId: f.drive_id, folderId: f.folder_id, name: f.name, kind: f.kind as FileKind, mime: f.mime, size: Number(f.size),
       duration: f.duration === null ? undefined : Number(f.duration), width: f.width, height: f.height,
       createdAt: localDay(f.created_at), updatedAt: localStamp(f.updated_at), tone: toneOf(f.id), uploaded: true,
       storagePath: f.storage_path, thumbPath: f.thumb_path ?? undefined, tags: f.tags ?? [],
@@ -50,7 +50,9 @@ export async function fetchDrive(ctx: DriveContext) {
 
 // ---------- writes (shared queue) ----------
 
-export { db, idle, onRemoteError, persist } from '@/products/editor/frontend/lib/sync'
+// Same save queue as the editor and Social; rows go to the drive schema.
+export { idle, onRemoteError, persist } from '@/products/editor/frontend/lib/sync'
+export const db = () => supabase()
 
 // ---------- storage ----------
 

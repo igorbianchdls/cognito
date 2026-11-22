@@ -32,7 +32,7 @@ function reducer(s: State, a: Action): State {
 
 /**
  * Project state with undo/redo, saved after each change (see store.ts).
- * `rebuild` makes the project on the client when it isn't saved yet (it needs the Spaces files, which live on the client).
+ * `rebuild` makes the project on the client when it isn't saved yet (it needs the Drive's files, which live on the client).
  */
 export function useEditor(initial: Project, rebuild?: () => Project) {
   const [state, dispatch] = useReducer(reducer, { past: [], present: initial, future: [] })
