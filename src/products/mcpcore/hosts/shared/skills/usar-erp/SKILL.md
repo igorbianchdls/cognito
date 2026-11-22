@@ -1,6 +1,6 @@
 ---
 name: usar-erp
-description: Consultar e operar o Cognito ERP. Use quando o usuário perguntar sobre vendas, orçamentos, compras, contas a pagar ou a receber, vencimentos, estoque, clientes, fornecedores, produtos, fluxo de caixa ou relatórios da empresa, ou pedir para criar, editar, confirmar, cancelar ou excluir esses registros ou registrar um pagamento.
+description: Consultar e operar o Cognito ERP, o Drive e o Analytics. Use quando o usuário perguntar sobre arquivos do Drive, visitas, campanhas ou eventos do site, ou sobre vendas, orçamentos, compras, contas a pagar ou a receber, vencimentos, estoque, clientes, fornecedores, produtos, fluxo de caixa ou relatórios da empresa, ou pedir para criar, editar, confirmar, cancelar ou excluir esses registros ou registrar um pagamento.
 ---
 
 ## Empresa
@@ -106,3 +106,11 @@ Cobrança (boleto e PIX) e integração bancária ainda não estão disponíveis
 ## WhatsApp Business
 
 Comece por `whatsapp_obter_conexao`. As ferramentas remotas só aparecem após conectar a Meta e validar os contratos; indisponibilidade exige concluir a configuração, sem inventar acesso. Alterações exigem prévia e confirmação explícita. Códigos e PINs são preenchidos na tela protegida. Em resultado indeterminado, consulte `whatsapp_obter_operacao` antes de repetir; cancelar uma prévia não apaga uma mensagem enviada. Uma resposta da Meta pode conter etapas humanas pendentes.
+
+## Drive
+
+Arquivos da empresa (vídeos, imagens, áudios), organizados em drives e pastas. Ache com `drive_buscar` ou navegue com `drive_listar_drives` e `drive_listar_pasta`; `drive_ver_arquivo` dá um link temporário de 1 hora. Organize com `drive_criar_pasta` e `drive_organizar` (mover, renomear, etiquetas e favoritos, vários de uma vez). Arquivos de links públicos entram com `drive_trazer_de_link` (até 50 MB). `drive_lixeira` e `drive_esvaziar_lixeira` só depois de mostrar o que será afetado e a pessoa confirmar (`confirmado: true`); esvaziar a lixeira não tem volta.
+
+## Analytics
+
+Visitas e eventos dos sites que a empresa mede. Comece por `analytics_listar_sites`. Para "como foi", use `analytics_resumo` ou `analytics_comparar`; para perguntas específicas, `analytics_tendencia` (evento, medida, intervalo, divisão e filtros) e `analytics_ranking`; campanhas com `analytics_campanhas` (com uma meta de `analytics_criar_meta`, mostra a conversão). Antes de dividir ou filtrar por propriedade, veja os nomes com `analytics_propriedades_evento`. Para instalar: `analytics_criar_site` devolve o código; `analytics_verificar_instalacao` confere; `analytics_gerar_codigo_eventos` e `analytics_criar_link_campanha` geram código e links com UTM. Se o BigQuery não estiver conectado, diga que ainda não há números, sem estimar.
