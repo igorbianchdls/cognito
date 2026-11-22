@@ -1,4 +1,5 @@
-# Produto: tipos, lint (tudo menos o marketing), smokes dos servidores MCP (ChatGPT e Claude) em bancos isolados (PGlite)
+# Produto: tipos, lint (tudo menos o marketing), smokes dos servidores MCP (ChatGPT e Claude) em bancos isolados (PGlite),
+# as regras de acesso de Drive, Analytics, Video Hosting e Inbox num Postgres de verdade (migrações aplicadas do zero)
 # e o build de produção, para um erro de build aparecer aqui e não só na Vercel.
 # Nenhum teste acessa o banco de produção nem precisa de segredos.
 name: Produtos
@@ -16,6 +17,14 @@ jobs:
   verificar:
     runs-on: ubuntu-latest
     timeout-minutes: 30
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_PASSWORD: postgres
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd "pg_isready -U postgres" --health-interval 5s --health-timeout 5s --health-retries 10
     steps:
       - uses: actions/checkout@v4
       - uses: pnpm/action-setup@v4
@@ -30,5 +39,13 @@ jobs:
         run: pnpm lint:produtos
       - name: Smokes (ChatGPT e Claude)
         run: pnpm test:produtos
+      - name: Banco de teste (stubs do Supabase + migrações)
+        env: { PGHOST: localhost, PGUSER: postgres, PGPASSWORD: postgres }
+        run: scripts/test-db.sh otto_test
+      - name: Regras de acesso no Postgres (Drive, Analytics, Video Hosting, Inbox)
+        env:
+          INBOX_TEST_DB_URL: postgres://postgres:postgres@localhost:5432/otto_test
+          WORKSPACE_TEST_DB_URL: postgres://postgres:postgres@localhost:5432/otto_test
+        run: pnpm inbox:smoke && pnpm workspace:db-smoke
       - name: Build de produção
         run: pnpm build

@@ -76,9 +76,10 @@ export async function simulateCustomer(person: Person, channelId: string, input:
   if (!text) throw new InboxError('EMPTY', 'Escreva a mensagem do cliente.')
   const name = cleanName(input.nome, 'Cliente de exemplo')
   const channel = await deps.db.asPerson(person, async q => {
-    const [row] = await q<{ external_id: string; kind: ChannelKind }>('SELECT external_id, kind FROM inbox.channels WHERE id = $1 AND workspace_id = $2', [channelId, person.orgId])
+    const [row] = await q<{ external_id: string; kind: ChannelKind; status: string }>('SELECT external_id, kind, status FROM inbox.channels WHERE id = $1 AND workspace_id = $2', [channelId, person.orgId])
     if (!row) throw new InboxError('NOT_FOUND', 'Canal não encontrado nesta empresa.', 404)
     if (row.kind !== 'teste') throw new InboxError('NOT_TEST', 'Só o canal de teste aceita mensagens simuladas.', 409)
+    if (row.status === 'desconectado') throw new InboxError('CHANNEL_OFF', 'Este canal de teste está desconectado. Reconecte em Canais.', 409)
     await requireWriter(q, person.orgId)
     return row
   })
@@ -126,4 +127,58 @@ export async function mediaPath(person: Person, messageId: string, db: Db) {
     if (!row?.media_path) throw new InboxError('NOT_FOUND', 'Arquivo não encontrado.', 404)
     return row
   })
+}
+
+export type RemoveMedia = (paths: string[]) => Promise<void>
+
+/** Stops a channel without losing its history: no more sending or receiving, the token is forgotten. */
+export async function setChannelState(person: Person, channelId: string, action: 'desconectar' | 'reconectar', deps: ActionDeps) {
+  const channel = await deps.db.asPerson(person, async q => {
+    const [row] = await q<{ id: string; kind: ChannelKind }>('SELECT id, kind FROM inbox.channels WHERE id = $1 AND workspace_id = $2', [channelId, person.orgId])
+    if (!row) throw new InboxError('NOT_FOUND', 'Canal não encontrado nesta empresa.', 404)
+    await requireWriter(q, person.orgId)
+    return row
+  })
+  if (action === 'reconectar') {
+    if (channel.kind !== 'teste') throw new InboxError('RECONNECT', 'Para reconectar, conecte o número de novo com o token da Meta.', 409)
+    await deps.db.service(`UPDATE inbox.channels SET status = 'conectado', last_error = NULL WHERE id = $1`, [channelId])
+    return { status: 'conectado' as const }
+  }
+  await deps.db.service(`UPDATE inbox.channels SET status = 'desconectado', last_error = NULL WHERE id = $1`, [channelId])
+  await deps.db.service('DELETE FROM inbox_private.channel_credentials WHERE channel_id = $1', [channelId])
+  return { status: 'desconectado' as const }
+}
+
+async function removeFiles(paths: string[], orgId: string, remove: RemoveMedia | undefined) {
+  const mine = paths.filter(p => p.startsWith(orgId + '/inbox/'))
+  if (!mine.length || !remove) return 0
+  // The rows are already gone; a storage failure only leaves files behind, so it is logged, not thrown.
+  await remove(mine).catch(error => console.error(JSON.stringify({ scope: 'inbox', code: 'MEDIA_CLEANUP_FAILED', files: mine.length, message: (error as Error).message })))
+  return mine.length
+}
+
+/** Deletes a channel with its conversations and messages, and the files received through it. */
+export async function deleteChannel(person: Person, channelId: string, deps: ActionDeps & { removeMedia?: RemoveMedia }) {
+  await deps.db.asPerson(person, async q => {
+    const [row] = await q('SELECT id FROM inbox.channels WHERE id = $1 AND workspace_id = $2', [channelId, person.orgId])
+    if (!row) throw new InboxError('NOT_FOUND', 'Canal não encontrado nesta empresa.', 404)
+    await requireWriter(q, person.orgId)
+  })
+  const files = await deps.db.service<{ media_path: string }>(`SELECT m.media_path FROM inbox.messages m JOIN inbox.conversations c ON c.id = m.conversation_id
+    WHERE c.channel_id = $1 AND m.media_path IS NOT NULL`, [channelId])
+  await deps.db.service('DELETE FROM inbox.channels WHERE id = $1 AND workspace_id = $2', [channelId, person.orgId])
+  return { arquivos_apagados: await removeFiles(files.map(f => f.media_path), person.orgId, deps.removeMedia) }
+}
+
+/** Deletes a contact with all their conversations, notes and the files they sent (LGPD: nothing of theirs is left). */
+export async function deleteContact(person: Person, contactId: string, deps: ActionDeps & { removeMedia?: RemoveMedia }) {
+  await deps.db.asPerson(person, async q => {
+    const [row] = await q('SELECT id FROM inbox.contacts WHERE id = $1 AND workspace_id = $2', [contactId, person.orgId])
+    if (!row) throw new InboxError('NOT_FOUND', 'Contato não encontrado nesta empresa.', 404)
+    await requireWriter(q, person.orgId)
+  })
+  const files = await deps.db.service<{ media_path: string }>(`SELECT m.media_path FROM inbox.messages m JOIN inbox.conversations c ON c.id = m.conversation_id
+    WHERE c.contact_id = $1 AND m.media_path IS NOT NULL`, [contactId])
+  await deps.db.service('DELETE FROM inbox.contacts WHERE id = $1 AND workspace_id = $2', [contactId, person.orgId])
+  return { arquivos_apagados: await removeFiles(files.map(f => f.media_path), person.orgId, deps.removeMedia) }
 }

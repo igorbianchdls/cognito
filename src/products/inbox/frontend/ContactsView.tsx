@@ -71,10 +71,11 @@ export function ContactsView() {
     if (!error) { setEditing(null); reload() }
   }
   async function remove(r: Partial<Row>) {
-    if (!r.id || !window.confirm(`Excluir ${r.name}? As conversas com esse contato também serão apagadas.`)) return
-    const { error } = await supabase().from('contacts').delete().eq('id', r.id)
-    setMessage(error ? deniedMessage(error, 'Não foi possível excluir.') : 'Contato excluído.')
-    if (!error) { setEditing(null); reload() }
+    if (!r.id || !window.confirm(`Excluir ${r.name}? As conversas, notas e arquivos enviados por esse contato também serão apagados, sem volta.`)) return
+    const response = await fetch(`/api/inbox/contatos/${r.id}`, { method: 'DELETE' })
+    const data = await response.json().catch(() => ({})) as { erro?: string }
+    setMessage(response.ok ? 'Contato excluído.' : data.erro ?? 'Não foi possível excluir.')
+    if (response.ok) { setEditing(null); reload() }
   }
   async function toggleTag(contactId: string, tagId: string, on: boolean) {
     const { error } = on ? await supabase().from('contact_tags').delete().eq('contact_id', contactId).eq('tag_id', tagId)

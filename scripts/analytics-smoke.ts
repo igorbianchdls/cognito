@@ -76,8 +76,10 @@ async function main() {
     return reply(500, {})
   }) as Fetch
   await ensureEventsTable(config, google)
-  const table = calls.find(c => c.url.endsWith('/tables') && c.method === 'POST')!.body as { timePartitioning: { field: string }; clustering: { fields: string[] }; requirePartitionFilter: boolean; schema: { fields: { name: string }[] } }
+  const table = calls.find(c => c.url.endsWith('/tables') && c.method === 'POST')!.body as { timePartitioning: { field: string; expirationMs: string }; clustering: { fields: string[] }; requirePartitionFilter: boolean; schema: { fields: { name: string }[] } }
   assert.equal(table.timePartitioning.field, 'timestamp'); assert.deepEqual(table.clustering.fields, ['property_id', 'event']); assert.equal(table.requirePartitionFilter, true)
+  assert.equal(table.timePartitioning.expirationMs, String(760 * 86400000), 'eventos com mais de ~25 meses expiram sozinhos')
+  assert.equal(bigQueryConfig({ GCP_SERVICE_ACCOUNT_JSON: JSON.stringify({ client_email: 'a@b', private_key: 'k', project_id: 'p' }), ANALYTICS_RETENTION_DAYS: '5' })!.retentionDays, 30, 'retenção mínima de 30 dias')
   assert(table.schema.fields.some(f => f.name === 'properties') && !table.schema.fields.some(f => /ip/.test(f.name)))
   assert.equal(calls.find(c => c.url.endsWith('/datasets') && c.method === 'POST')!.body!.location, 'southamerica-east1')
   await insertEvents(config, [view, signed], google)

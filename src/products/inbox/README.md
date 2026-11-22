@@ -20,7 +20,9 @@ Atendimento de WhatsApp, Instagram e Messenger num lugar só, com a equipe. Pró
   - `actions.ts`: responder (com a janela de 24 h da Meta), conectar WhatsApp, canal de teste.
   - `crypto.ts`: AES-256-GCM para os tokens.
 - **Rotas:** `GET/POST /api/inbox/webhook/meta` (pública, assinada pela Meta), `POST /api/inbox/canais`, `POST /api/inbox/canais/[id]/simular`, `POST /api/inbox/conversas/[id]/mensagens`, `GET /api/inbox/midia/[id]`.
-- **Anexos recebidos:** copiados para o bucket `drive`, em `<empresa>/inbox/…` (os links da Meta expiram).
+- **Anexos recebidos:** copiados para o bucket `drive`, em `<empresa>/inbox/…` (os links da Meta expiram). Ao excluir um contato ou canal, os arquivos dele são apagados junto (LGPD).
+- **Avisos da Meta não se perdem:** cada webhook é guardado em `inbox_private.webhook_events` antes de responder "recebido" (se não der para guardar, a Meta recebe erro e manda de novo). Falhas ficam pendentes e são reprocessadas no próximo aviso e pela tarefa diária `/api/inbox/internal/webhooks` (vercel.json, com `CRON_SECRET`); depois de 8 tentativas aparece `WEBHOOK_GAVE_UP` nos logs. Processados somem após 7 dias.
+- **Desconectar x excluir:** desconectar para de enviar e receber, esquece o token e guarda o histórico; excluir apaga canal, conversas, mensagens e arquivos (pede para digitar EXCLUIR). Os dois passam pelo servidor (`/api/inbox/canais/[id]`, `/api/inbox/contatos/[id]`).
 
 ## Regras da Meta que o Inbox segue
 
@@ -38,4 +40,4 @@ Enquanto não houver app da Meta, o **canal de teste** permite usar tudo: cria u
 
 ## Testes
 
-`pnpm inbox:smoke` (no CI): webhooks do WhatsApp, Instagram e Messenger, assinatura, tokens cifrados, janela de 24 h e chamadas à Graph API. Com `INBOX_TEST_DB_URL` apontando para um Postgres com os stubs do Supabase e as migrações, testa também o caminho inteiro no banco e as regras de acesso.
+`pnpm inbox:smoke` (no CI): webhooks do WhatsApp, Instagram e Messenger, assinatura, tokens cifrados, janela de 24 h e chamadas à Graph API. Com `INBOX_TEST_DB_URL`, testa também o caminho inteiro no banco e as regras de acesso. O CI monta esse banco do zero com `scripts/test-db.sh` (stubs do Supabase em `supabase/tests/stubs.sql` + migrações).
