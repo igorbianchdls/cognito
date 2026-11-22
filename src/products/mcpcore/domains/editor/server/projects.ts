@@ -22,7 +22,7 @@ export async function getProject(m: Member, id: string, lock = false) {
 export async function filesById(m: Member, ids: string[]): Promise<Map<string, FileInfo>> {
   const valid = ids.filter(id => /^[0-9a-f-]{36}$/i.test(id))
   if (!valid.length) return new Map()
-  const rows = await m.db.query<FileInfo>('SELECT id, name, kind, duration::float8 AS duration, width, height FROM editor.files WHERE workspace_id = $1 AND id = ANY($2::uuid[])', [m.ws, valid])
+  const rows = await m.db.query<FileInfo>('SELECT id, name, kind, duration::float8 AS duration, width, height FROM drive.files WHERE workspace_id = $1 AND id = ANY($2::uuid[])', [m.ws, valid])
   return new Map(rows.map(r => [r.id, r]))
 }
 
@@ -58,8 +58,8 @@ export async function editProject<R>(m: Member, id: string, label: string, edit:
 /** A file of this company that can go on the timeline. */
 export async function mediaFile(m: Member, id: string) {
   const [file] = await m.db.query<FileInfo & { trashed_at: string | null }>(
-    'SELECT id, name, kind, duration::float8 AS duration, width, height, trashed_at FROM editor.files WHERE id = $1 AND workspace_id = $2', [id, m.ws])
-  if (!file || file.trashed_at) throw new PluginError('NOT_FOUND', 'Arquivo não encontrado nos Spaces desta empresa. Use video_buscar_arquivos.', 404)
+    'SELECT id, name, kind, duration::float8 AS duration, width, height, trashed_at FROM drive.files WHERE id = $1 AND workspace_id = $2', [id, m.ws])
+  if (!file || file.trashed_at) throw new PluginError('NOT_FOUND', 'Arquivo não encontrado no Drive desta empresa. Use video_buscar_arquivos.', 404)
   if (file.kind === 'text') throw new PluginError('INVALID_INPUT', 'Esse arquivo é um documento; use vídeo, imagem ou áudio.', 422)
   return file
 }

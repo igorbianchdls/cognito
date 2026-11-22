@@ -4,8 +4,8 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useEffect, useMemo, useState } from 'react'
 import { CalendarDays, CalendarRange, ChevronLeft, ChevronRight, Copy, ExternalLink, Eye, FileEdit, Heart, List, MessageCircle, MoreVertical, Pencil, Plus, Repeat2, Search, Send, Trash2, X } from 'lucide-react'
-import { useDrive } from '@/products/editor/frontend/spaces/hooks'
-import { Thumb } from '@/products/editor/frontend/spaces/Thumb'
+import { useDriveState } from '@/products/drive/frontend/hooks'
+import { Thumb } from '@/products/drive/frontend/Thumb'
 import { formatDateTime } from '@/products/editor/frontend/lib/format'
 import { NetworkIcon, StatusPill } from './badges'
 import { formatLabel, type Post, type PostStatus } from './data'
@@ -22,7 +22,7 @@ const HOURS = Array.from({ length: 18 }, (_, i) => i + 6) // 06h–23h
 const weekdays = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb']
 
 export function PostRow({ post, onDelete, onOpen, onMenu }: { post: Post; onDelete?: () => void; onOpen?: () => void; onMenu?: (ev: React.MouseEvent) => void }) {
-  const f = useDrive().files.find(x => x.id === post.fileIds[0])
+  const f = useDriveState().files.find(x => x.id === post.fileIds[0])
   return <li className={onOpen ? p.clickRow : ''} onClick={onOpen} onContextMenu={onMenu ? ev => { ev.preventDefault(); onMenu(ev) } : undefined}>
     {f && <Thumb file={f} className={s.miniThumb} showKind={false} />}
     <span className={s.rowText}><b>{post.caption || 'Sem legenda'}</b><small>{formatLabel[post.format]}{post.fileIds.length > 1 ? ` · ${post.fileIds.length} arquivos` : ''} · {formatDateTime(post.date)}</small></span>
@@ -184,7 +184,7 @@ export function PostsView({ openPostId }: { openPostId?: string }) {
 }
 
 function DrawerBody({ post }: { post: Post }) {
-  const files = useDrive().files.filter(f => post.fileIds.includes(f.id))
+  const files = useDriveState().files.filter(f => post.fileIds.includes(f.id))
   return <div className={p.drawerBody}>
     <div className={p.drawerMedia}>{files.slice(0, 4).map(f => <Thumb key={f.id} file={f} showKind={false} className={p.drawerThumb} />)}{!files.length && <span className={s.muted}>Arquivo não encontrado.</span>}</div>
     <p className={p.drawerCaption}>{post.caption || <em className={s.muted}>Sem legenda</em>}</p>

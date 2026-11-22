@@ -1,23 +1,23 @@
-// Spaces, folders and files with trash, favorites and recents.
+// Drives, folders and files with trash, favorites and recents.
 // Signed in (Supabase configured), the state mirrors the workspace's rows: every action updates the screen at once
 // and saves in the background; a failed save reloads from the database. Without Supabase it is the offline demo
 // kept in this browser (localStorage + IndexedDB).
 import { supabaseConfigured } from '@/products/editor/frontend/lib/supabase'
-import { files as seedFiles, folders as seedFolders, spaces as seedSpaces, type FileKind, type Folder, type MediaFile, type Space } from './data'
+import { files as seedFiles, folders as seedFolders, drives as seedDrives, type FileKind, type Folder, type MediaFile, type Drive } from './data'
 import { deleteBlob, putBlob, copyBlob } from './blobs'
 import { copyObject, db, fetchDrive, idle, makeThumb, objectPath, onRemoteError, persist, removeObjects, toneOf, uploadObject, type DriveContext } from './remote'
 
 export type DFile = MediaFile & { trashedAt?: string; favorite?: boolean; uploaded?: boolean; mime?: string; openedAt?: string; updatedAt?: string; storagePath?: string; thumbPath?: string; tags?: string[] }
 export type DFolder = Folder & { trashedAt?: string; favorite?: boolean; openedAt?: string }
-export type Drive = { spaces: Space[]; folders: DFolder[]; files: DFile[] }
+export type DriveState = { drives: Drive[]; folders: DFolder[]; files: DFile[] }
 export type Item = { type: 'folder'; folder: DFolder } | { type: 'file'; file: DFile }
 
-/** True when Spaces live in Supabase; false for the offline demo. */
+/** True when Drives live in Supabase; false for the offline demo. */
 export const remoteDrive = supabaseConfigured
-const KEY = 'otto-editor-drive-v1'
-const empty: Drive = { spaces: [], folders: [], files: [] }
-const seed: Drive = remoteDrive ? empty : { spaces: seedSpaces, folders: seedFolders, files: seedFiles }
-let state: Drive = seed
+const KEY = 'otto-editor-driveState-v1'
+const empty: DriveState = { drives: [], folders: [], files: [] }
+const seed: DriveState = remoteDrive ? empty : { drives: seedDrives, folders: seedFolders, files: seedFiles }
+let state: DriveState = seed
 let loaded = false
 const listeners = new Set<() => void>()
 
@@ -27,15 +27,15 @@ function ensure() {
   if (remoteDrive) return
   try { const raw = localStorage.getItem(KEY); if (raw) state = JSON.parse(raw) } catch { /* keeps the seed */ }
 }
-function commit(next: Drive) {
+function commit(next: DriveState) {
   state = next
   if (!remoteDrive) try { localStorage.setItem(KEY, JSON.stringify(next)) } catch { /* storage full or blocked */ }
   listeners.forEach(l => l())
 }
-export const subscribeDrive = (l: () => void) => { listeners.add(l); return () => { listeners.delete(l) } }
+export const subscribeDriveState = (l: () => void) => { listeners.add(l); return () => { listeners.delete(l) } }
 
-export const getDrive = () => { ensure(); return state }
-export const seedDrive = () => seed
+export const getDriveState = () => { ensure(); return state }
+export const seedDriveState = () => seed
 
 // ---------- connection to the workspace (remote mode) ----------
 
@@ -85,7 +85,7 @@ const uid = (p: string) => remoteDrive ? crypto.randomUUID() : p + Date.now().to
 export const itemKey = (i: Item) => i.type === 'folder' ? `d:${i.folder.id}` : `f:${i.file.id}`
 
 /** Ancestors from the root down to (and including) the folder. */
-export function folderPath(d: Drive, folderId: string | null): DFolder[] {
+export function folderPath(d: DriveState, folderId: string | null): DFolder[] {
   const out: DFolder[] = []
   let f = d.folders.find(x => x.id === folderId)
   while (f) { out.unshift(f); f = d.folders.find(x => x.id === f!.parentId) }
@@ -93,34 +93,34 @@ export function folderPath(d: Drive, folderId: string | null): DFolder[] {
 }
 
 /** Trashed itself or inside a trashed folder. */
-export const folderGone = (d: Drive, folderId: string | null) => folderPath(d, folderId).some(f => f.trashedAt)
-export const fileGone = (d: Drive, f: DFile) => !!f.trashedAt || folderGone(d, f.folderId)
+export const folderGone = (d: DriveState, folderId: string | null) => folderPath(d, folderId).some(f => f.trashedAt)
+export const fileGone = (d: DriveState, f: DFile) => !!f.trashedAt || folderGone(d, f.folderId)
 
-export const childFolders = (d: Drive, spaceId: string, parentId: string | null) =>
-  d.folders.filter(f => f.spaceId === spaceId && f.parentId === parentId && !f.trashedAt)
-export const childFiles = (d: Drive, spaceId: string, folderId: string | null) =>
-  d.files.filter(f => f.spaceId === spaceId && f.folderId === folderId && !f.trashedAt)
+export const childFolders = (d: DriveState, driveId: string, parentId: string | null) =>
+  d.folders.filter(f => f.driveId === driveId && f.parentId === parentId && !f.trashedAt)
+export const childFiles = (d: DriveState, driveId: string, folderId: string | null) =>
+  d.files.filter(f => f.driveId === driveId && f.folderId === folderId && !f.trashedAt)
 
 /** Every folder id under `folderId`, including itself. */
-export function descendants(d: Drive, folderId: string): string[] {
+export function descendants(d: DriveState, folderId: string): string[] {
   const out = [folderId]
   for (let i = 0; i < out.length; i++) out.push(...d.folders.filter(f => f.parentId === out[i]).map(f => f.id))
   return out
 }
 
-export const liveFiles = (d: Drive) => d.files.filter(f => !fileGone(d, f))
-export const liveFolders = (d: Drive) => d.folders.filter(f => !folderGone(d, f.id))
-export function folderStats(d: Drive, folderId: string) {
+export const liveFiles = (d: DriveState) => d.files.filter(f => !fileGone(d, f))
+export const liveFolders = (d: DriveState) => d.folders.filter(f => !folderGone(d, f.id))
+export function folderStats(d: DriveState, folderId: string) {
   const ids = new Set(descendants(d, folderId))
   const list = d.files.filter(f => f.folderId && ids.has(f.folderId) && !f.trashedAt)
   return { files: list.length, folders: ids.size - 1, size: list.reduce((v, f) => v + f.size, 0) }
 }
-export function spaceStats(d: Drive, spaceId: string) {
-  const list = liveFiles(d).filter(f => f.spaceId === spaceId)
-  return { files: list.length, folders: liveFolders(d).filter(f => f.spaceId === spaceId).length, size: list.reduce((v, f) => v + f.size, 0) }
+export function driveStats(d: DriveState, driveId: string) {
+  const list = liveFiles(d).filter(f => f.driveId === driveId)
+  return { files: list.length, folders: liveFolders(d).filter(f => f.driveId === driveId).length, size: list.reduce((v, f) => v + f.size, 0) }
 }
 /** Folder name with its path, for pickers: "Reels publicados / Série ChatGPT". */
-export const folderLabel = (d: Drive, folderId: string | null) => folderPath(d, folderId).map(f => f.name).join(' / ')
+export const folderLabel = (d: DriveState, folderId: string | null) => folderPath(d, folderId).map(f => f.name).join(' / ')
 
 export function kindOf(mime: string, name: string): FileKind {
   if (mime.startsWith('video/') || /\.(mp4|mov|webm|m4v)$/i.test(name)) return 'video'
@@ -131,63 +131,63 @@ export function kindOf(mime: string, name: string): FileKind {
 
 // ---------- actions ----------
 
-const touchFolders = (d: Drive, ids: (string | null)[]) => d.folders.map(f => ids.includes(f.id) ? { ...f, updatedAt: today() } : f)
+const touchFolders = (d: DriveState, ids: (string | null)[]) => d.folders.map(f => ids.includes(f.id) ? { ...f, updatedAt: today() } : f)
 
-export function createSpace(name: string) {
-  const d = getDrive(), id = uid('s')
-  commit({ ...d, spaces: [...d.spaces, { id, name }] })
-  void remote(c => db().from('spaces').insert({ id, workspace_id: c.ws, name }))
+export function createDrive(name: string) {
+  const d = getDriveState(), id = uid('s')
+  commit({ ...d, drives: [...d.drives, { id, name }] })
+  void remote(c => db().from('drives').insert({ id, workspace_id: c.ws, name }))
   return id
 }
-export const renameSpace = (id: string, name: string) => {
-  const d = getDrive(); commit({ ...d, spaces: d.spaces.map(s => s.id === id ? { ...s, name } : s) })
-  void remote(() => db().from('spaces').update({ name }).eq('id', id))
+export const renameDrive = (id: string, name: string) => {
+  const d = getDriveState(); commit({ ...d, drives: d.drives.map(s => s.id === id ? { ...s, name } : s) })
+  void remote(() => db().from('drives').update({ name }).eq('id', id))
 }
-/** Only empty spaces can be deleted; everything else goes through the trash. */
-export function deleteSpace(id: string) {
-  const d = getDrive()
-  if (d.folders.some(f => f.spaceId === id) || d.files.some(f => f.spaceId === id)) return false
-  commit({ ...d, spaces: d.spaces.filter(s => s.id !== id) })
-  void remote(() => db().from('spaces').delete().eq('id', id))
+/** Only empty drives can be deleted; everything else goes through the trash. */
+export function deleteDrive(id: string) {
+  const d = getDriveState()
+  if (d.folders.some(f => f.driveId === id) || d.files.some(f => f.driveId === id)) return false
+  commit({ ...d, drives: d.drives.filter(s => s.id !== id) })
+  void remote(() => db().from('drives').delete().eq('id', id))
   return true
 }
 
-export function createFolder(spaceId: string, parentId: string | null, name: string) {
-  const d = getDrive(), id = uid('d')
-  const folder: DFolder = { id, spaceId, parentId, name, description: '', tags: [], createdAt: today(), updatedAt: today() }
+export function createFolder(driveId: string, parentId: string | null, name: string) {
+  const d = getDriveState(), id = uid('d')
+  const folder: DFolder = { id, driveId, parentId, name, description: '', tags: [], createdAt: today(), updatedAt: today() }
   commit({ ...d, folders: [...touchFolders(d, [parentId]), folder] })
-  void remote(c => db().from('folders').insert({ id, workspace_id: c.ws, space_id: spaceId, parent_id: parentId, name }))
+  void remote(c => db().from('folders').insert({ id, workspace_id: c.ws, drive_id: driveId, parent_id: parentId, name }))
   return id
 }
 
 export function rename(item: Item, name: string) {
-  const d = getDrive()
+  const d = getDriveState()
   if (item.type === 'folder') commit({ ...d, folders: d.folders.map(f => f.id === item.folder.id ? { ...f, name, updatedAt: today() } : f) })
   else commit({ ...d, files: d.files.map(f => f.id === item.file.id ? { ...f, name, updatedAt: now() } : f) })
   void remote(() => db().from(item.type === 'folder' ? 'folders' : 'files').update({ name }).eq('id', item.type === 'folder' ? item.folder.id : item.file.id))
 }
 
-/** Moves items into a space root or folder. A folder can't go inside itself or its children. */
-export function moveItems(items: Item[], spaceId: string, folderId: string | null) {
-  const d = getDrive()
+/** Moves items into a drive root or folder. A folder can't go inside itself or its children. */
+export function moveItems(items: Item[], driveId: string, folderId: string | null) {
+  const d = getDriveState()
   const blocked = new Set(items.flatMap(i => i.type === 'folder' ? descendants(d, i.folder.id) : []))
   if (folderId && blocked.has(folderId)) return false
   const folderIds = new Set(items.filter(i => i.type === 'folder').map(i => (i as { folder: DFolder }).folder.id))
   const fileIds = new Set(items.filter(i => i.type === 'file').map(i => (i as { file: DFile }).file.id))
-  // Moving a folder to another space carries its whole subtree and files along.
+  // Moving a folder to another drive carries its whole subtree and files along.
   const subtree = new Set([...folderIds].flatMap(id => descendants(d, id)))
   commit({
     ...d,
-    folders: touchFolders(d, [folderId]).map(f => folderIds.has(f.id) ? { ...f, spaceId, parentId: folderId, updatedAt: today() } : subtree.has(f.id) ? { ...f, spaceId } : f),
-    files: d.files.map(f => fileIds.has(f.id) ? { ...f, spaceId, folderId, updatedAt: now() } : f.folderId && subtree.has(f.folderId) ? { ...f, spaceId } : f),
+    folders: touchFolders(d, [folderId]).map(f => folderIds.has(f.id) ? { ...f, driveId, parentId: folderId, updatedAt: today() } : subtree.has(f.id) ? { ...f, driveId } : f),
+    files: d.files.map(f => fileIds.has(f.id) ? { ...f, driveId, folderId, updatedAt: now() } : f.folderId && subtree.has(f.folderId) ? { ...f, driveId } : f),
   })
   void remote(async () => {
     const sb = db()
     const steps = [
-      folderIds.size && sb.from('folders').update({ space_id: spaceId, parent_id: folderId }).in('id', [...folderIds]),
-      subtree.size && sb.from('folders').update({ space_id: spaceId }).in('id', [...subtree]),
-      fileIds.size && sb.from('files').update({ space_id: spaceId, folder_id: folderId }).in('id', [...fileIds]),
-      subtree.size && sb.from('files').update({ space_id: spaceId }).in('folder_id', [...subtree]),
+      folderIds.size && sb.from('folders').update({ drive_id: driveId, parent_id: folderId }).in('id', [...folderIds]),
+      subtree.size && sb.from('folders').update({ drive_id: driveId }).in('id', [...subtree]),
+      fileIds.size && sb.from('files').update({ drive_id: driveId, folder_id: folderId }).in('id', [...fileIds]),
+      subtree.size && sb.from('files').update({ drive_id: driveId }).in('folder_id', [...subtree]),
     ]
     for (const step of steps) if (step) { const { error } = await step; if (error) throw error }
   })
@@ -195,7 +195,7 @@ export function moveItems(items: Item[], spaceId: string, folderId: string | nul
 }
 
 export function duplicateFiles(ids: string[]) {
-  const d = getDrive()
+  const d = getDriveState()
   const copies = d.files.filter(f => ids.includes(f.id)).map(f => {
     const id = uid('f'), dot = f.name.lastIndexOf('.')
     const name = dot > 0 ? `${f.name.slice(0, dot)} (cópia)${f.name.slice(dot)}` : `${f.name} (cópia)`
@@ -217,7 +217,7 @@ export function duplicateFiles(ids: string[]) {
 }
 
 export function trashItems(items: Item[]) {
-  const d = getDrive(), at = now()
+  const d = getDriveState(), at = now()
   const fo = new Set(items.flatMap(i => i.type === 'folder' ? [i.folder.id] : [])), fi = new Set(items.flatMap(i => i.type === 'file' ? [i.file.id] : []))
   commit({ ...d, folders: d.folders.map(f => fo.has(f.id) ? { ...f, trashedAt: at } : f), files: d.files.map(f => fi.has(f.id) ? { ...f, trashedAt: at } : f) })
   setTrashed(fo, fi, iso())
@@ -230,7 +230,7 @@ function setTrashed(fo: Set<string>, fi: Set<string>, value: string | null) {
 }
 
 export function restoreItems(items: Item[]) {
-  const d = getDrive()
+  const d = getDriveState()
   const fo = new Set(items.flatMap(i => i.type === 'folder' ? [i.folder.id] : [])), fi = new Set(items.flatMap(i => i.type === 'file' ? [i.file.id] : []))
   commit({ ...d, folders: d.folders.map(f => fo.has(f.id) ? { ...f, trashedAt: undefined } : f), files: d.files.map(f => fi.has(f.id) ? { ...f, trashedAt: undefined } : f) })
   setTrashed(fo, fi, null)
@@ -238,7 +238,7 @@ export function restoreItems(items: Item[]) {
 
 /** Removes for good, including subfolders, their files and stored uploads. */
 export function deleteForever(items: Item[]) {
-  const d = getDrive()
+  const d = getDriveState()
   const folderIds = new Set(items.flatMap(i => i.type === 'folder' ? descendants(d, i.folder.id) : []))
   const fileIds = new Set(items.flatMap(i => i.type === 'file' ? [i.file.id] : []))
   const gone = d.files.filter(f => fileIds.has(f.id) || (f.folderId && folderIds.has(f.folderId)))
@@ -257,15 +257,15 @@ export function deleteForever(items: Item[]) {
 }
 
 /** Top-level trashed items: a trashed folder shows once, not each file inside it. */
-export function trashed(d: Drive): Item[] {
+export function trashed(d: DriveState): Item[] {
   const folders = d.folders.filter(f => f.trashedAt && !folderPath(d, f.parentId).some(p => p.trashedAt))
   const files = d.files.filter(f => f.trashedAt && !folderGone(d, f.folderId))
   return [...folders.map(folder => ({ type: 'folder' as const, folder })), ...files.map(file => ({ type: 'file' as const, file }))]
 }
-export const emptyTrash = () => deleteForever(trashed(getDrive()))
+export const emptyTrash = () => deleteForever(trashed(getDriveState()))
 
 export function setFavorite(items: Item[], favorite: boolean) {
-  const d = getDrive()
+  const d = getDriveState()
   const fo = new Set(items.flatMap(i => i.type === 'folder' ? [i.folder.id] : [])), fi = new Set(items.flatMap(i => i.type === 'file' ? [i.file.id] : []))
   commit({ ...d, folders: d.folders.map(f => fo.has(f.id) ? { ...f, favorite } : f), files: d.files.map(f => fi.has(f.id) ? { ...f, favorite } : f) })
   const rows = [...[...fo].map(id => ['folder', id]), ...[...fi].map(id => ['file', id])]
@@ -275,14 +275,14 @@ export function setFavorite(items: Item[], favorite: boolean) {
 }
 
 export function markOpened(item: Item) {
-  const d = getDrive(), at = now()
+  const d = getDriveState(), at = now()
   if (item.type === 'folder') commit({ ...d, folders: d.folders.map(f => f.id === item.folder.id ? { ...f, openedAt: at } : f) })
   else commit({ ...d, files: d.files.map(f => f.id === item.file.id ? { ...f, openedAt: at } : f) })
   void remote(c => db().from('recents').upsert({ user_id: c.user, workspace_id: c.ws, item_type: item.type, item_id: item.type === 'folder' ? item.folder.id : item.file.id, opened_at: iso() }, { onConflict: 'user_id,item_type,item_id' }))
 }
 
 const fileRow = (c: DriveContext, f: DFile) => ({
-  id: f.id, workspace_id: c.ws, space_id: f.spaceId, folder_id: f.folderId, name: f.name, kind: f.kind, mime: f.mime ?? '', size: f.size,
+  id: f.id, workspace_id: c.ws, drive_id: f.driveId, folder_id: f.folderId, name: f.name, kind: f.kind, mime: f.mime ?? '', size: f.size,
   duration: f.duration ?? null, width: f.width, height: f.height, storage_path: f.storagePath ?? '', thumb_path: f.thumbPath ?? null, tags: f.tags ?? [],
 })
 
@@ -320,7 +320,7 @@ function readMeta(file: File, kind: FileKind): Promise<{ duration?: number; widt
  * Signed in, the bytes (and a thumbnail made here) go to the private bucket before the row is saved;
  * in the demo they go to IndexedDB so previews survive a reload.
  */
-export async function uploadFiles(list: File[], spaceId: string, folderId: string | null): Promise<string[]> {
+export async function uploadFiles(list: File[], driveId: string, folderId: string | null): Promise<string[]> {
   if (remoteDrive && !ctx) throw new Error('workspace not loaded')
   const ids: string[] = []
   const folderFor = new Map<string, string | null>([['', folderId]])
@@ -329,8 +329,8 @@ export async function uploadFiles(list: File[], spaceId: string, folderId: strin
     const cut = path.lastIndexOf('/')
     const parent = ensureFolder(cut < 0 ? '' : path.slice(0, cut))
     const name = cut < 0 ? path : path.slice(cut + 1)
-    const existing = childFolders(getDrive(), spaceId, parent).find(f => f.name === name)
-    const id = existing?.id ?? createFolder(spaceId, parent, name)
+    const existing = childFolders(getDriveState(), driveId, parent).find(f => f.name === name)
+    const id = existing?.id ?? createFolder(driveId, parent, name)
     folderFor.set(path, id)
     return id
   }
@@ -352,8 +352,8 @@ export async function uploadFiles(list: File[], spaceId: string, folderId: strin
         try { await uploadObject(path, thumb, 'image/jpeg'); thumbPath = path } catch { /* the file is what matters */ }
       }
     } else await putBlob(id, file)
-    const d = getDrive()
-    const entry: DFile = { id, spaceId, folderId: target, name: file.name, kind, size: file.size, duration: meta.duration, width: meta.width, height: meta.height, createdAt: today(), updatedAt: now(), tone: remoteDrive ? toneOf(id) : tones[d.files.length % tones.length], uploaded: true, mime: file.type, storagePath, thumbPath }
+    const d = getDriveState()
+    const entry: DFile = { id, driveId, folderId: target, name: file.name, kind, size: file.size, duration: meta.duration, width: meta.width, height: meta.height, createdAt: today(), updatedAt: now(), tone: remoteDrive ? toneOf(id) : tones[d.files.length % tones.length], uploaded: true, mime: file.type, storagePath, thumbPath }
     commit({ ...d, folders: touchFolders(d, [target]), files: [...d.files, entry] })
     if (remoteDrive) await remote(c => db().from('files').insert(fileRow(c, entry)))
     ids.push(id)

@@ -1,4 +1,4 @@
-// Saving to Supabase in the background, shared by every store (Spaces, posts, editor, notifications…).
+// Saving to Supabase in the background, shared by every store (Drive, posts, editor, notifications…).
 // Pure module (no React). Writes run one after another, so an insert always lands before its update.
 import { supabase, supabaseConfigured } from './supabase'
 

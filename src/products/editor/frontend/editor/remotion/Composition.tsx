@@ -37,7 +37,7 @@ function Layer({ kind, clip }: { kind: TrackKind; clip: Clip }) {
   </div>
 }
 
-/** Plays an audio file from Spaces, with its trim, speed, fades and ducking. Library tracks have no file yet. */
+/** Plays an audio file from the Drive, with its trim, speed, fades and ducking. Library tracks have no file yet. */
 function AudioClip({ project, clip }: { project: Project; clip: Clip }) {
   const url = useMediaUrl(clip.props.fileId)
   const exporting = useExporting()

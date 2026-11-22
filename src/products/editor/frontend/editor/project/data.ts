@@ -1,6 +1,6 @@
 // Sample projects and media until projects are stored in Supabase (phase 2).
-import { files } from '@/products/editor/frontend/spaces/data'
-import { getDrive, liveFiles, type Drive } from '@/products/editor/frontend/spaces/store'
+import { files } from '@/products/drive/frontend/data'
+import { getDriveState, liveFiles, type DriveState } from '@/products/drive/frontend/store'
 import { FPS, localStamp, type Clip, type ClipProps, type Project, type Track, type TrackKind } from './types'
 import { caption, defaultBox, fullBox, title } from './presets'
 import { setMediaDuration } from './ops'
@@ -15,15 +15,15 @@ export const audioLibrary: MediaItem[] = [
   { id: 'a-narr2', name: 'Narração — tour do hotel.mp3', kind: 'audio', duration: 12, tone: 'green', role: 'voz' },
 ]
 
-/** Files from the Spaces (live, not in the trash) plus the audio library. Rebuilt only when the Spaces change. */
-let cache: { drive: Drive; list: MediaItem[] } | null = null
-export function mediaLibrary(drive: Drive = getDrive()): MediaItem[] {
-  if (cache?.drive === drive) return cache.list
+/** Files from the Drive (live, not in the trash) plus the audio library. Rebuilt only when the Drive changes. */
+let cache: { driveState: DriveState; list: MediaItem[] } | null = null
+export function mediaLibrary(driveState: DriveState = getDriveState()): MediaItem[] {
+  if (cache?.driveState === driveState) return cache.list
   const list = [
-    ...liveFiles(drive).filter(f => f.kind !== 'text').map(f => ({ id: f.id, name: f.name, kind: f.kind === 'video' ? 'video' as const : f.kind === 'audio' ? 'audio' as const : 'imagem' as const, duration: f.duration, tone: f.tone, width: f.width, height: f.height, role: f.kind === 'audio' ? 'voz' as const : undefined })),
+    ...liveFiles(driveState).filter(f => f.kind !== 'text').map(f => ({ id: f.id, name: f.name, kind: f.kind === 'video' ? 'video' as const : f.kind === 'audio' ? 'audio' as const : 'imagem' as const, duration: f.duration, tone: f.tone, width: f.width, height: f.height, role: f.kind === 'audio' ? 'voz' as const : undefined })),
     ...audioLibrary,
   ]
-  cache = { drive, list }
+  cache = { driveState, list }
   return list
 }
 

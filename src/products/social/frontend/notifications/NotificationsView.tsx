@@ -62,7 +62,7 @@ export function NotificationsView() {
 
   return <section className={s.content}>
     <div className={s.pageHead}>
-      <div><h1>Notificações</h1><p>{unread.length ? `${unread.length} não ${unread.length === 1 ? 'lida' : 'lidas'}.` : 'Tudo em dia.'} O que aconteceu nas suas contas, posts e spaces.</p></div>
+      <div><h1>Notificações</h1><p>{unread.length ? `${unread.length} não ${unread.length === 1 ? 'lida' : 'lidas'}.` : 'Tudo em dia.'} O que aconteceu nas suas contas, posts e drives.</p></div>
       <div className={s.row}>
         <button className={s.secondary} disabled={!unread.length} onClick={() => { setRead(unread.map(x => x.id), true); setToast({ text: 'Todas marcadas como lidas.', undo: () => setRead(unread.map(x => x.id), false) }) }}><CheckCheck size={15} />Marcar todas como lidas</button>
       </div>
@@ -85,7 +85,7 @@ export function NotificationsView() {
         <button className={s.iconBtn} aria-label="Mais ações" onClick={ev => { ev.stopPropagation(); setMenu({ x: Math.min(ev.clientX, window.innerWidth - 230), y: ev.clientY, item: x }) }}><MoreVertical size={16} /></button>
       </li> })}</ul>
     </div>)}
-    {!list.length && <div className={n.empty}><Bell size={40} strokeWidth={1.3} /><b>{tab === 'naoLidas' ? 'Nenhuma notificação não lida' : 'Nenhuma notificação aqui'}</b><span>Quando algo acontecer nas suas contas ou spaces, aparece aqui.</span></div>}
+    {!list.length && <div className={n.empty}><Bell size={40} strokeWidth={1.3} /><b>{tab === 'naoLidas' ? 'Nenhuma notificação não lida' : 'Nenhuma notificação aqui'}</b><span>Quando algo acontecer nas suas contas ou no Drive, aparece aqui.</span></div>}
     {hidden > 0 && <p className={n.hiddenNote}><BellOff size={14} />{hidden} {hidden === 1 ? 'notificação escondida' : 'notificações escondidas'} pelas suas preferências.</p>}
 
     {menu && <div className={n.menu} style={{ left: menu.x, top: menu.y }} role="menu" onClick={ev => ev.stopPropagation()}>

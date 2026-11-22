@@ -5,7 +5,7 @@ import { usePathname, useRouter } from "next/navigation"
 import { useOrganization, useOrganizationList } from "@clerk/nextjs"
 import {
   IconArchiveFilled, IconArrowsExchange, IconArticleFilled, IconBasketFilled, IconBellFilled, IconBookFilled, IconBriefcaseFilled,
-  IconCalendarFilled, IconCashBanknoteFilled, IconCheck, IconChevronDown, IconChevronRight, IconClipboardListFilled, IconCoinFilled,
+  IconCalendarFilled, IconCashBanknoteFilled, IconClockFilled, IconStarFilled, IconTrashFilled, IconCheck, IconChevronDown, IconChevronRight, IconClipboardListFilled, IconCoinFilled,
   IconCreditCardFilled, IconEdit, IconFileTextFilled, IconFolderFilled, IconHelpCircleFilled, IconLayoutDashboardFilled, IconLockFilled,
   IconReceiptFilled, IconReportAnalyticsFilled, IconScaleFilled, IconSearch, IconSendFilled, IconSettingsFilled, IconShoppingCartFilled,
   IconTagFilled, IconTruckFilled, IconUserFilled, IconVideoFilled,
@@ -40,7 +40,7 @@ type NavigationItem = {
   capability?: ErpCapability
   children?: NavigationItem[]
 }
-type Section = { id: "vendas" | "financeiro" | "marketing"; title: string; items: NavigationItem[] }
+type Section = { id: "vendas" | "financeiro" | "marketing" | "drive"; title: string; items: NavigationItem[] }
 
 const reports = [
   { title: "DRE", url: "/erp/relatorios/dre" }, { title: "Fluxo de caixa", url: "/erp/relatorios/fluxo-de-caixa" },
@@ -110,10 +110,17 @@ const sections: Section[] = [
   },
   {
     id: "marketing", title: "Marketing", items: [
-      { title: "Editor", url: "/editor", icon: IconVideoFilled, excludePaths: ["/editor/spaces", "/editor/pastas"] },
-      { title: "Spaces", url: "/editor/spaces", icon: IconFolderFilled, activePaths: ["/editor/pastas"] },
+      { title: "Editor", url: "/editor", icon: IconVideoFilled },
       { title: "Postar", url: "/social/postar", icon: IconSendFilled },
       { title: "Agendados", url: "/social/posts", icon: IconCalendarFilled },
+    ],
+  },
+  {
+    id: "drive", title: "Drive", items: [
+      { title: "Início", url: "/drive", icon: IconFolderFilled, excludePaths: ["/drive/recentes", "/drive/favoritos", "/drive/lixeira"] },
+      { title: "Recentes", url: "/drive/recentes", icon: IconClockFilled },
+      { title: "Favoritos", url: "/drive/favoritos", icon: IconStarFilled },
+      { title: "Lixeira", url: "/drive/lixeira", icon: IconTrashFilled },
     ],
   },
 ]

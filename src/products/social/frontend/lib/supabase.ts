@@ -6,7 +6,7 @@ let client: SupabaseClient<any, 'social'> | undefined // eslint-disable-line @ty
 
 /**
  * Browser client on the "social" schema, with the Clerk session token like the editor's client.
- * Whether the app saves at all follows the editor (NEXT_PUBLIC_EDITOR_REMOTE): Social is built on its Spaces.
+ * Whether the app saves at all follows the editor (NEXT_PUBLIC_EDITOR_REMOTE): Social is built on its Drives.
  */
 export function supabase() {
   client ??= createClient(process.env.NEXT_PUBLIC_SUPABASE_URL ?? '', process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ?? '', {

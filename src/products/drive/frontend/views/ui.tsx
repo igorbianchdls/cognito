@@ -3,7 +3,7 @@
 // Small building blocks for the file explorer: context menu and dialogs.
 import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { ChevronRight, Folder, FolderClosed, X } from 'lucide-react'
-import { childFolders, descendants, type Drive } from '../store'
+import { childFolders, descendants, type DriveState } from '../store'
 import d from './drive.module.css'
 
 export type MenuItem = { label: string; icon?: typeof X; onClick?: () => void; danger?: boolean; disabled?: boolean; shortcut?: string; divider?: boolean; checked?: boolean }
@@ -56,7 +56,7 @@ export function NameDialog({ title, initial, confirm, onSubmit, onClose }: { tit
     const el = ref.current
     if (!el) return
     el.focus()
-    // Select the name without the extension, like Drive.
+    // Select the name without the extension, like DriveState.
     const dot = initial.lastIndexOf('.')
     el.setSelectionRange(0, dot > 0 ? dot : initial.length)
   }, [initial])
@@ -76,32 +76,32 @@ export function ConfirmDialog({ title, text, confirm, danger, onConfirm, onClose
   </Modal>
 }
 
-/** Pick a space root or folder. Folders being moved (and what is inside them) can't be picked. */
-export function MoveDialog({ drive, count, blocked, onMove, onClose }: { drive: Drive; count: number; blocked: string[]; onMove: (spaceId: string, folderId: string | null) => void; onClose: () => void }) {
-  const [target, setTarget] = useState<{ spaceId: string; folderId: string | null } | null>(null)
-  const [open, setOpen] = useState<Set<string>>(new Set(drive.spaces.map(s => s.id)))
-  const block = new Set(blocked.flatMap(id => descendants(drive, id)))
+/** Pick a drive root or folder. Folders being moved (and what is inside them) can't be picked. */
+export function MoveDialog({ driveState, count, blocked, onMove, onClose }: { driveState: DriveState; count: number; blocked: string[]; onMove: (driveId: string, folderId: string | null) => void; onClose: () => void }) {
+  const [target, setTarget] = useState<{ driveId: string; folderId: string | null } | null>(null)
+  const [open, setOpen] = useState<Set<string>>(new Set(driveState.drives.map(s => s.id)))
+  const block = new Set(blocked.flatMap(id => descendants(driveState, id)))
   const toggle = (k: string) => setOpen(o => { const n = new Set(o); if (n.has(k)) n.delete(k); else n.add(k); return n })
-  const branch = (spaceId: string, parentId: string | null, depth: number): React.ReactNode =>
-    childFolders(drive, spaceId, parentId).filter(f => !block.has(f.id)).map(f => {
-      const kids = childFolders(drive, spaceId, f.id).filter(x => !block.has(x.id)).length > 0
+  const branch = (driveId: string, parentId: string | null, depth: number): React.ReactNode =>
+    childFolders(driveState, driveId, parentId).filter(f => !block.has(f.id)).map(f => {
+      const kids = childFolders(driveState, driveId, f.id).filter(x => !block.has(x.id)).length > 0
       const on = target?.folderId === f.id
       return <div key={f.id}>
-        <div className={`${d.treeRow} ${on ? d.treeOn : ''}`} style={{ paddingLeft: 10 + depth * 18 }} onClick={() => setTarget({ spaceId, folderId: f.id })} onDoubleClick={() => toggle(f.id)}>
+        <div className={`${d.treeRow} ${on ? d.treeOn : ''}`} style={{ paddingLeft: 10 + depth * 18 }} onClick={() => setTarget({ driveId, folderId: f.id })} onDoubleClick={() => toggle(f.id)}>
           <button className={`${d.treeCaret} ${open.has(f.id) ? d.treeOpen : ''}`} onClick={e => { e.stopPropagation(); toggle(f.id) }} style={{ visibility: kids ? 'visible' : 'hidden' }} aria-label="Expandir"><ChevronRight size={14} /></button>
           <Folder size={16} />{f.name}
         </div>
-        {open.has(f.id) && branch(spaceId, f.id, depth + 1)}
+        {open.has(f.id) && branch(driveId, f.id, depth + 1)}
       </div>
     })
   return <Modal title={`Mover ${count} ${count === 1 ? 'item' : 'itens'}`} onClose={onClose} wide>
-    <div className={d.tree}>{drive.spaces.map(s => <div key={s.id}>
-      <div className={`${d.treeRow} ${d.treeSpace} ${target && target.spaceId === s.id && !target.folderId ? d.treeOn : ''}`} onClick={() => setTarget({ spaceId: s.id, folderId: null })}>
+    <div className={d.tree}>{driveState.drives.map(s => <div key={s.id}>
+      <div className={`${d.treeRow} ${d.treeDrive} ${target && target.driveId === s.id && !target.folderId ? d.treeOn : ''}`} onClick={() => setTarget({ driveId: s.id, folderId: null })}>
         <button className={`${d.treeCaret} ${open.has(s.id) ? d.treeOpen : ''}`} onClick={e => { e.stopPropagation(); toggle(s.id) }} aria-label="Expandir"><ChevronRight size={14} /></button>
         <FolderClosed size={16} />{s.name}
       </div>
       {open.has(s.id) && branch(s.id, null, 1)}
     </div>)}</div>
-    <div className={d.dialogActions}><button className={d.btn} onClick={onClose}>Cancelar</button><button className={d.btnPrimary} disabled={!target} onClick={() => { if (target) { onMove(target.spaceId, target.folderId); onClose() } }}>Mover aqui</button></div>
+    <div className={d.dialogActions}><button className={d.btn} onClick={onClose}>Cancelar</button><button className={d.btnPrimary} disabled={!target} onClick={() => { if (target) { onMove(target.driveId, target.folderId); onClose() } }}>Mover aqui</button></div>
   </Modal>
 }

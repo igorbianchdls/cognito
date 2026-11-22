@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react'
 import { ChevronLeft, ChevronRight, Clapperboard, Download, Send, Star, Trash2, X } from 'lucide-react'
 import { formatDateTime, formatDuration, formatSize } from '@/products/editor/frontend/lib/format'
 import { folderLabel, type DFile } from '../store'
-import { readText, useDrive, useFileUrl } from '../hooks'
+import { readText, useDriveState, useFileUrl } from '../hooks'
 import { Thumb } from '../Thumb'
 import d from './drive.module.css'
 
@@ -15,10 +15,10 @@ type Props = {
   onDownload: (f: DFile) => void; onPost: (f: DFile) => void; onEdit: (f: DFile) => void; onFavorite: (f: DFile) => void; onTrash: (f: DFile) => void
 }
 
-/** Full-screen preview with arrows to browse the folder, like Drive. */
+/** Full-screen preview with arrows to browse the folder, like DriveState. */
 export function Viewer({ files, index, onIndex, onClose, ...act }: Props) {
-  const drive = useDrive()
-  const file = drive.files.find(f => f.id === files[index]?.id) ?? files[index]
+  const driveState = useDriveState()
+  const file = driveState.files.find(f => f.id === files[index]?.id) ?? files[index]
   useEffect(() => {
     const key = (e: KeyboardEvent) => {
       if (e.key === 'Escape') onClose()
@@ -29,7 +29,7 @@ export function Viewer({ files, index, onIndex, onClose, ...act }: Props) {
     return () => window.removeEventListener('keydown', key)
   }, [index, files.length, onIndex, onClose])
   if (!file) return null
-  const space = drive.spaces.find(s => s.id === file.spaceId)
+  const drive = driveState.drives.find(s => s.id === file.driveId)
   return <div className={d.viewer} role="dialog" aria-modal="true" aria-label={file.name}>
     <header className={d.viewerTop}>
       <button className={d.viewerBtn} onClick={onClose} aria-label="Fechar"><X size={20} /></button>
@@ -52,7 +52,7 @@ export function Viewer({ files, index, onIndex, onClose, ...act }: Props) {
           <dt>Tamanho</dt><dd>{formatSize(file.size)}</dd>
           {file.duration !== undefined && <><dt>Duração</dt><dd>{formatDuration(file.duration)}</dd></>}
           {file.width > 0 && <><dt>Dimensões</dt><dd>{file.width}×{file.height}</dd></>}
-          <dt>Local</dt><dd>{[space?.name, folderLabel(drive, file.folderId)].filter(Boolean).join(' / ')}</dd>
+          <dt>Local</dt><dd>{[drive?.name, folderLabel(driveState, file.folderId)].filter(Boolean).join(' / ')}</dd>
           <dt>Modificado</dt><dd>{formatDateTime(file.updatedAt ?? file.createdAt)}</dd>
           {file.openedAt && <><dt>Aberto</dt><dd>{formatDateTime(file.openedAt)}</dd></>}
         </dl>

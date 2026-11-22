@@ -22,7 +22,7 @@ export const seedNotifications: AppNotification[] = [
   { id: 'n5', kind: 'erro', title: 'Não foi possível publicar no TikTok', text: 'A sessão do TikTok expirou. Reconecte a conta e tente de novo.', date: '2026-10-31T21:06', read: false, href: '/social/conectores?aba=redes', action: 'Reconectar' },
   { id: 'n6', kind: 'publicado', title: 'Reel publicado', text: '“ChatGPT matou o Conta Azul” foi publicado no @otto.erp.', date: '2026-10-30T21:31', read: true, href: '/social/posts?post=p4', action: 'Ver post' },
   { id: 'n7', kind: 'comentario', title: 'Você foi mencionado', text: '@contadorbr marcou @otto.erp num comentário: “isso aqui vai mudar meu escritório”.', date: '2026-10-30T20:02', read: true },
-  { id: 'n8', kind: 'arquivos', title: '4 arquivos enviados', text: 'Gravações do apresentador e B-roll chegaram em Vídeos brutos.', date: '2026-10-29T10:15', read: true, href: '/editor/pastas/brutos', action: 'Abrir pasta' },
-  { id: 'n9', kind: 'armazenamento', title: 'Você usou 24% do espaço', text: '1,2 GB de 5 GB. Vídeos brutos ocupam a maior parte.', date: '2026-10-28T09:00', read: true, href: '/editor/spaces', action: 'Ver spaces' },
+  { id: 'n8', kind: 'arquivos', title: '4 arquivos enviados', text: 'Gravações do apresentador e B-roll chegaram em Vídeos brutos.', date: '2026-10-29T10:15', read: true, href: '/drive/pastas/brutos', action: 'Abrir pasta' },
+  { id: 'n9', kind: 'armazenamento', title: 'Você usou 24% do espaço', text: '1,2 GB de 5 GB. Vídeos brutos ocupam a maior parte.', date: '2026-10-28T09:00', read: true, href: '/drive', action: 'Abrir o Drive' },
   { id: 'n10', kind: 'conta', title: 'LinkedIn não está conectado', text: 'Conecte a página da empresa para publicar lá também.', date: '2026-10-26T11:30', read: true, href: '/social/conectores?aba=redes', action: 'Conectar' },
 ]

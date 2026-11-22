@@ -3,7 +3,7 @@ import { EditorAccountSync } from '@/products/editor/frontend/shell/EditorAccoun
 
 export const metadata = { title: 'Editor · Otto' }
 
-/** Editor product: video editor and Spaces, in the Marketing section of the Otto menu. */
+/** Editor product: video editor, in the Marketing section of the Otto menu. */
 export default function EditorLayout({ children }: { children: React.ReactNode }) {
   return <MarketingShell>{children}<EditorAccountSync /></MarketingShell>
 }

@@ -4,9 +4,9 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
 import { AlertTriangle, Check, CircleX, Hash, Lightbulb, Send, Trash2 } from 'lucide-react'
-import { folderLabel, liveFiles, liveFolders } from '@/products/editor/frontend/spaces/store'
-import { useDrive } from '@/products/editor/frontend/spaces/hooks'
-import { Thumb } from '@/products/editor/frontend/spaces/Thumb'
+import { folderLabel, liveFiles, liveFolders } from '@/products/drive/frontend/store'
+import { useDriveState } from '@/products/drive/frontend/hooks'
+import { Thumb } from '@/products/drive/frontend/Thumb'
 import { NetworkIcon } from './badges'
 import { useAccounts } from './accounts'
 import { formatLabel, networkLabel, type Post, type PostFormat, type PostStatus } from './data'
@@ -28,16 +28,16 @@ function nextDefaultTime() {
 
 export function Composer({ initialFiles, editId }: { initialFiles: string[]; editId?: string }) {
   const router = useRouter()
-  const drive = useDrive()
+  const driveState = useDriveState()
   const accountList = useAccounts()
-  const files = liveFiles(drive)
+  const files = liveFiles(driveState)
   const [editing, setEditing] = useState<Post | null>(null)
   const [chosenFolder, setFolderId] = useState<string | null>(null)
   const [pickedRaw, setPicked] = useState<string[]>(initialFiles)
   // Uploaded files only exist in this browser, so the list is checked on every render, not only on the server.
   const picked = pickedRaw.filter(id => files.some(f => f.id === id))
   const pickedFiles = picked.map(id => files.find(f => f.id === id)!)
-  const folderId = chosenFolder ?? files.find(f => f.id === picked[0])?.folderId ?? liveFolders(drive)[0]?.id ?? null
+  const folderId = chosenFolder ?? files.find(f => f.id === picked[0])?.folderId ?? liveFolders(driveState)[0]?.id ?? null
   const [caption, setCaption] = useState('')
   const { posting: postingPrefs } = useSettings()
   // Until the person picks, new posts go to the default accounts from Configurações (or the first connected one).
@@ -94,14 +94,14 @@ export function Composer({ initialFiles, editId }: { initialFiles: string[]; edi
   }
 
   return <section className={s.content}>
-    <div className={s.pageHead}><div><h1>{editing ? (published ? 'Post publicado' : 'Editar post') : 'Postar'}</h1><p>{published ? 'Este post já foi ao ar. Duplique na tela de posts para publicar de novo.' : 'Escolha os arquivos dos seus spaces, escreva a legenda e publique ou agende.'}</p></div>
+    <div className={s.pageHead}><div><h1>{editing ? (published ? 'Post publicado' : 'Editar post') : 'Postar'}</h1><p>{published ? 'Este post já foi ao ar. Duplique na tela de posts para publicar de novo.' : 'Escolha os arquivos do seu Drive, escreva a legenda e publique ou agende.'}</p></div>
       {editing && !published && <button className={s.ghost} onClick={() => { deletePost(editing.id); router.push('/social/posts') }}><Trash2 size={15} />Excluir post</button>}
     </div>
     <div className={s.composer}>
       <fieldset className={p.fieldset} disabled={published}>
         <div className={`${s.card} ${s.step}`}>
           <span className={s.stepTitle}><i>1</i>Mídia</span>
-          <div className={s.row}><select className={s.selectEl} value={folderId ?? ''} onChange={e => setFolderId(e.target.value)} aria-label="Pasta">{liveFolders(drive).map(f => <option key={f.id} value={f.id}>{drive.spaces.find(x => x.id === f.spaceId)?.name} / {folderLabel(drive, f.id)}</option>)}</select><span className={s.muted}>{picked.length ? `${picked.length} selecionado${picked.length > 1 ? 's' : ''}${picked.length > 1 && format === 'feed' ? ' · vira carrossel' : ''}` : 'Selecione um ou mais arquivos'}</span></div>
+          <div className={s.row}><select className={s.selectEl} value={folderId ?? ''} onChange={e => setFolderId(e.target.value)} aria-label="Pasta">{liveFolders(driveState).map(f => <option key={f.id} value={f.id}>{driveState.drives.find(x => x.id === f.driveId)?.name} / {folderLabel(driveState, f.id)}</option>)}</select><span className={s.muted}>{picked.length ? `${picked.length} selecionado${picked.length > 1 ? 's' : ''}${picked.length > 1 && format === 'feed' ? ' · vira carrossel' : ''}` : 'Selecione um ou mais arquivos'}</span></div>
           {pickedFiles.length > 0 && <div className={p.pickedRow}>{pickedFiles.map((f, i) => <span key={f.id} className={p.picked} title={f.name}><Thumb file={f} showKind={false} className={p.pickedThumb} /><i>{i + 1}</i><button onClick={() => setPicked(picked.filter(x => x !== f.id))} aria-label={`Tirar ${f.name}`}>×</button></span>)}</div>}
           <div className={s.pickGrid}>{pool.map(f => { const on = picked.includes(f.id); return <button key={f.id} className={`${s.pick} ${on ? s.pickOn : ''}`} onClick={() => setPicked(toggle(picked, f.id))} aria-pressed={on} title={f.name}>
             <span className={`${s.check} ${on ? s.checkOn : ''}`} style={{ top: 6, left: 6 }}>{on && <Check size={14} strokeWidth={3} />}</span><Thumb file={f} showKind={false} /><span className={s.pickName}>{f.name}</span>

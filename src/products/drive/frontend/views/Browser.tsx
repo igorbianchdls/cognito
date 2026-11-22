@@ -5,7 +5,7 @@ import { useRef } from 'react'
 import { ArrowDown, ArrowUp, Check, FileText, Film, Folder, Image as ImageIcon, MoreVertical, Music, Star } from 'lucide-react'
 import { formatDate, formatSize } from '@/products/editor/frontend/lib/format'
 import { folderLabel, folderStats, itemKey, type DFile, type DFolder, type Item } from '../store'
-import { useDrive } from '../hooks'
+import { useDriveState } from '../hooks'
 import { Thumb } from '../Thumb'
 import d from './drive.module.css'
 
@@ -26,7 +26,7 @@ type Props = {
 }
 
 export function Browser({ folders, files, view, sort, onSort, selection, onSelection, onOpen, onMenu, onDropOn, showLocation, dimmed }: Props) {
-  const drive = useDrive()
+  const driveState = useDriveState()
   const anchor = useRef<string | null>(null)
   const items: Item[] = [...folders.map(folder => ({ type: 'folder' as const, folder })), ...files.map(file => ({ type: 'file' as const, file }))]
   const keys = items.map(itemKey)
@@ -70,9 +70,9 @@ export function Browser({ folders, files, view, sort, onSort, selection, onSelec
     },
   } : {}
   const where = (i: Item) => {
-    const spaceId = i.type === 'file' ? i.file.spaceId : i.folder.spaceId
+    const driveId = i.type === 'file' ? i.file.driveId : i.folder.driveId
     const parent = i.type === 'file' ? i.file.folderId : i.folder.parentId
-    return [drive.spaces.find(s => s.id === spaceId)?.name, folderLabel(drive, parent)].filter(Boolean).join(' / ')
+    return [driveState.drives.find(s => s.id === driveId)?.name, folderLabel(driveState, parent)].filter(Boolean).join(' / ')
   }
   const more = (k: string) => <button className={d.more} onClick={ev => menu(ev, k)} aria-label="Mais ações"><MoreVertical size={16} /></button>
 
@@ -82,7 +82,7 @@ export function Browser({ folders, files, view, sort, onSort, selection, onSelec
       <thead><tr><th className={d.checkCol} />{head('nome', 'Nome')}{showLocation && <th>Local</th>}{head('data', 'Modificado')}{head('tamanho', 'Tamanho', d.num)}<th className={d.moreCol} /></tr></thead>
       <tbody>{items.map(i => {
         const k = itemKey(i), on = picked(k)
-        const size = i.type === 'file' ? i.file.size : folderStats(drive, i.folder.id).size
+        const size = i.type === 'file' ? i.file.size : folderStats(driveState, i.folder.id).size
         return <tr key={k} className={on ? d.rowOn : ''} onClick={ev => click(ev, k)} onDoubleClick={() => onOpen(i)} onContextMenu={ev => menu(ev, k)} draggable onDragStart={ev => dragStart(ev, k)} {...(i.type === 'folder' ? dropProps(i.folder) : {})}>
           <td className={d.checkCol}><button className={`${d.check} ${on ? d.checkOn : ''}`} onClick={ev => check(ev, k)} aria-label="Selecionar" aria-pressed={on}>{on && <Check size={12} />}</button></td>
           <td><span className={d.nameCell}>
@@ -104,7 +104,7 @@ export function Browser({ folders, files, view, sort, onSort, selection, onSelec
       <h3>Pastas</h3>
       <div className={d.folderGrid}>{folders.map(f => {
         const k = `d:${f.id}`, on = picked(k)
-        const stats = folderStats(drive, f.id)
+        const stats = folderStats(driveState, f.id)
         return <div key={k} className={`${d.folderChip} ${on ? d.on : ''}`} onClick={ev => click(ev, k)} onDoubleClick={() => onOpen({ type: 'folder', folder: f })} onContextMenu={ev => menu(ev, k)}
           draggable onDragStart={ev => dragStart(ev, k)} {...dropProps(f)} title={f.name} role="button" tabIndex={0} aria-pressed={on}>
           <Folder size={20} className={d.folderIcon} fill="currentColor" />
