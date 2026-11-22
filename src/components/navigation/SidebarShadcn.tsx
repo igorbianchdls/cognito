@@ -5,7 +5,7 @@ import { usePathname, useRouter } from "next/navigation"
 import { useOrganization, useOrganizationList } from "@clerk/nextjs"
 import {
   IconArchiveFilled, IconArrowsExchange, IconArticleFilled, IconBasketFilled, IconBellFilled, IconBookFilled, IconBriefcaseFilled,
-  IconCalendarFilled, IconCashBanknoteFilled, IconClockFilled, IconStarFilled, IconTrashFilled, IconChartAreaLineFilled, IconBoltFilled, IconWorldFilled, IconPlayerPlayFilled, IconAdjustmentsFilled, IconCheck, IconChevronDown, IconChevronRight, IconClipboardListFilled, IconCoinFilled,
+  IconCalendarFilled, IconCashBanknoteFilled, IconClockFilled, IconStarFilled, IconTrashFilled, IconChartAreaLineFilled, IconBoltFilled, IconWorldFilled, IconPlayerPlayFilled, IconAdjustmentsFilled, IconMessageCircleFilled, IconCheck, IconChevronDown, IconChevronRight, IconClipboardListFilled, IconCoinFilled,
   IconCreditCardFilled, IconEdit, IconFileTextFilled, IconFolderFilled, IconHelpCircleFilled, IconLayoutDashboardFilled, IconLockFilled,
   IconReceiptFilled, IconReportAnalyticsFilled, IconScaleFilled, IconSearch, IconSendFilled, IconSettingsFilled, IconShoppingCartFilled,
   IconTagFilled, IconTruckFilled, IconUserFilled, IconVideoFilled,
@@ -40,7 +40,7 @@ type NavigationItem = {
   capability?: ErpCapability
   children?: NavigationItem[]
 }
-type Section = { id: "vendas" | "financeiro" | "marketing" | "drive" | "analytics" | "videohosting"; title: string; items: NavigationItem[] }
+type Section = { id: "vendas" | "financeiro" | "marketing" | "drive" | "analytics" | "videohosting" | "inbox"; title: string; items: NavigationItem[] }
 
 const reports = [
   { title: "DRE", url: "/erp/relatorios/dre" }, { title: "Fluxo de caixa", url: "/erp/relatorios/fluxo-de-caixa" },
@@ -134,6 +134,14 @@ const sections: Section[] = [
     id: "videohosting", title: "Video Hosting", items: [
       { title: "Vídeos", url: "/videohosting", icon: IconPlayerPlayFilled, excludePaths: ["/videohosting/configuracoes"] },
       { title: "Configurações", url: "/videohosting/configuracoes", icon: IconAdjustmentsFilled },
+    ],
+  },
+  {
+    id: "inbox", title: "Inbox", items: [
+      { title: "Caixa de entrada", url: "/inbox", icon: IconMessageCircleFilled, exactActive: true },
+      { title: "Contatos", url: "/inbox/contatos", icon: IconUserFilled },
+      { title: "Canais", url: "/inbox/canais", icon: IconArrowsExchange },
+      { title: "Configurações", url: "/inbox/configuracoes", icon: IconAdjustmentsFilled },
     ],
   },
 ]
