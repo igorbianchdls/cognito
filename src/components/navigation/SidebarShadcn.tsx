@@ -5,7 +5,7 @@ import { usePathname, useRouter } from "next/navigation"
 import { useOrganization, useOrganizationList } from "@clerk/nextjs"
 import {
   IconArchiveFilled, IconArrowsExchange, IconArticleFilled, IconBasketFilled, IconBellFilled, IconBookFilled, IconBriefcaseFilled,
-  IconCalendarFilled, IconCashBanknoteFilled, IconClockFilled, IconStarFilled, IconTrashFilled, IconCheck, IconChevronDown, IconChevronRight, IconClipboardListFilled, IconCoinFilled,
+  IconCalendarFilled, IconCashBanknoteFilled, IconClockFilled, IconStarFilled, IconTrashFilled, IconChartAreaLineFilled, IconBoltFilled, IconWorldFilled, IconCheck, IconChevronDown, IconChevronRight, IconClipboardListFilled, IconCoinFilled,
   IconCreditCardFilled, IconEdit, IconFileTextFilled, IconFolderFilled, IconHelpCircleFilled, IconLayoutDashboardFilled, IconLockFilled,
   IconReceiptFilled, IconReportAnalyticsFilled, IconScaleFilled, IconSearch, IconSendFilled, IconSettingsFilled, IconShoppingCartFilled,
   IconTagFilled, IconTruckFilled, IconUserFilled, IconVideoFilled,
@@ -40,7 +40,7 @@ type NavigationItem = {
   capability?: ErpCapability
   children?: NavigationItem[]
 }
-type Section = { id: "vendas" | "financeiro" | "marketing" | "drive"; title: string; items: NavigationItem[] }
+type Section = { id: "vendas" | "financeiro" | "marketing" | "drive" | "analytics"; title: string; items: NavigationItem[] }
 
 const reports = [
   { title: "DRE", url: "/erp/relatorios/dre" }, { title: "Fluxo de caixa", url: "/erp/relatorios/fluxo-de-caixa" },
@@ -121,6 +121,13 @@ const sections: Section[] = [
       { title: "Recentes", url: "/drive/recentes", icon: IconClockFilled },
       { title: "Favoritos", url: "/drive/favoritos", icon: IconStarFilled },
       { title: "Lixeira", url: "/drive/lixeira", icon: IconTrashFilled },
+    ],
+  },
+  {
+    id: "analytics", title: "Analytics", items: [
+      { title: "Painéis", url: "/analytics", icon: IconChartAreaLineFilled, exactActive: true },
+      { title: "Eventos", url: "/analytics/eventos", icon: IconBoltFilled },
+      { title: "Sites e apps", url: "/analytics/sites", icon: IconWorldFilled },
     ],
   },
 ]
