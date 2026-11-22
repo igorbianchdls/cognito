@@ -40,7 +40,7 @@ type NavigationItem = {
   capability?: ErpCapability
   children?: NavigationItem[]
 }
-type Section = { id: "vendas" | "financeiro" | "marketing" | "drive" | "analytics" | "videohosting" | "inbox"; title: string; items: NavigationItem[] }
+type Section = { id: "vendas" | "financeiro" | "marketing" | "drive" | "analytics" | "inbox"; title: string; items: NavigationItem[] }
 
 const reports = [
   { title: "DRE", url: "/erp/relatorios/dre" }, { title: "Fluxo de caixa", url: "/erp/relatorios/fluxo-de-caixa" },
@@ -113,6 +113,13 @@ const sections: Section[] = [
       { title: "Editor", url: "/editor", icon: IconVideoFilled },
       { title: "Postar", url: "/social/postar", icon: IconSendFilled },
       { title: "Agendados", url: "/social/posts", icon: IconCalendarFilled },
+      {
+        title: "Video Hosting", url: "/videohosting", icon: IconPlayerPlayFilled, activePaths: ["/videohosting"],
+        children: [
+          { title: "Vídeos", url: "/videohosting", excludePaths: ["/videohosting/configuracoes"] },
+          { title: "Configurações", url: "/videohosting/configuracoes" },
+        ],
+      },
     ],
   },
   {
@@ -128,12 +135,6 @@ const sections: Section[] = [
       { title: "Painéis", url: "/analytics", icon: IconChartAreaLineFilled, exactActive: true },
       { title: "Eventos", url: "/analytics/eventos", icon: IconBoltFilled },
       { title: "Sites e apps", url: "/analytics/sites", icon: IconWorldFilled },
-    ],
-  },
-  {
-    id: "videohosting", title: "Video Hosting", items: [
-      { title: "Vídeos", url: "/videohosting", icon: IconPlayerPlayFilled, excludePaths: ["/videohosting/configuracoes"] },
-      { title: "Configurações", url: "/videohosting/configuracoes", icon: IconAdjustmentsFilled },
     ],
   },
   {
