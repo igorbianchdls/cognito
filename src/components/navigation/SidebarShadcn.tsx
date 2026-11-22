@@ -341,9 +341,9 @@ export function SidebarShadcn({ className, style, ...props }: React.ComponentPro
 
         <SidebarContent className="gap-0 px-3 pb-2">
           {access.loading ? (
-            <p role="status" className="px-3 py-3 text-[14px] text-[#6e6e73]">Carregando menu…</p>
+            <p role="status" className="px-3 py-3 text-[14px] text-[#6e6e73] group-data-[collapsible=icon]:hidden">Carregando menu…</p>
           ) : access.error ? (
-            <div role="alert" className="space-y-3 px-3 py-3 text-[14px] text-[#6e6e73]">
+            <div role="alert" className="space-y-3 px-3 py-3 text-[14px] text-[#6e6e73] group-data-[collapsible=icon]:hidden">
               <p>Não foi possível carregar o menu.</p>
               <p className="text-xs">{access.error}</p>
               <button type="button" onClick={access.refresh} className="rounded-lg border bg-white px-3 py-2 text-[#1d1d1f] hover:bg-[#f7f7f7]">Tentar novamente</button>
