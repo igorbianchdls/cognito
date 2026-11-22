@@ -39,7 +39,8 @@ function getInitials(name: string, email: string) {
   return (parts[0]?.[0] || 'C').concat(parts[1]?.[0] || '').toUpperCase()
 }
 
-export function AuthUserMenu() {
+/** subtitle replaces the e-mail under the name (the sidebar shows the role in the company). */
+export function AuthUserMenu({ subtitle }: { subtitle?: string } = {}) {
   const { signOut } = useClerk()
   const { user } = useUser()
   const [isSettingsOpen, setIsSettingsOpen] = useState(false)
@@ -80,17 +81,20 @@ export function AuthUserMenu() {
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <SidebarMenuButton
-                  className="h-12 w-full justify-start gap-2 px-2 group-data-[collapsible=icon]:mx-auto group-data-[collapsible=icon]:h-8 group-data-[collapsible=icon]:w-8 group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:p-0"
+                  className="h-14 w-full justify-start gap-3 rounded-xl px-2 group-data-[collapsible=icon]:mx-auto group-data-[collapsible=icon]:h-9 group-data-[collapsible=icon]:w-9 group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:p-0"
                 >
-                  <Avatar className="size-8 shrink-0 rounded-md group-data-[collapsible=icon]:size-7">
-                    <AvatarImage alt={displayName} src={avatarUrl} />
-                    <AvatarFallback className="rounded-md bg-sidebar-accent text-xs font-semibold text-sidebar-accent-foreground">
-                      {initials}
-                    </AvatarFallback>
-                  </Avatar>
+                  <span className="relative shrink-0">
+                    <Avatar className="size-10 rounded-full group-data-[collapsible=icon]:size-8">
+                      <AvatarImage alt={displayName} src={avatarUrl} />
+                      <AvatarFallback className="rounded-full bg-[#e4e4e4] text-[13px] font-semibold text-[#333]">
+                        {initials}
+                      </AvatarFallback>
+                    </Avatar>
+                    <span aria-hidden className="absolute -bottom-0.5 -right-0.5 size-3 rounded-full border-2 border-[var(--sidebar)] bg-[#22c55e]" />
+                  </span>
                   <div className="grid min-w-0 flex-1 text-left leading-tight group-data-[collapsible=icon]:hidden">
-                    <span className="truncate text-sm font-medium text-sidebar-accent-foreground">{displayName}</span>
-                    {email ? <span className="truncate text-xs text-sidebar-accent-foreground/70">{email}</span> : null}
+                    <span className="truncate text-[15px] font-semibold text-sidebar-accent-foreground">{displayName}</span>
+                    {subtitle ?? email ? <span className="truncate text-[13px] text-sidebar-accent-foreground/60">{subtitle ?? email}</span> : null}
                   </div>
                 </SidebarMenuButton>
               </DropdownMenuTrigger>

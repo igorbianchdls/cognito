@@ -15,21 +15,20 @@ body:has([data-editor]) [data-sidebar="sidebar"] {
   color: #b6bac2;
 }
 
-/* Logo and search */
-body:has([data-editor]) [data-sidebar="sidebar"] [data-sidebar="header"] img { filter: invert(1); }
-body:has([data-editor]) [data-sidebar="sidebar"] [data-sidebar="header"] span { color: #eceef1; }
-body:has([data-editor]) [data-sidebar="sidebar"] [data-sidebar="header"] button { color: #8b9099; }
-body:has([data-editor]) [data-sidebar="sidebar"] [data-sidebar="header"] button:hover { background: rgb(255 255 255 / 0.05); }
-body:has([data-editor]) [data-sidebar="sidebar"] [data-sidebar="header"] kbd { border-color: #2d3036; background: #17191c; color: #8b9099; }
+/* Company, search and new */
+body:has([data-editor]) [data-sidebar="sidebar"] [data-sidebar="header"] :is(span, svg) { color: #eceef1; }
+body:has([data-editor]) [data-sidebar="sidebar"] [data-sidebar="header"] button { color: #c9ccd2; }
+body:has([data-editor]) [data-sidebar="sidebar"] [data-sidebar="header"] button:hover { background: rgb(255 255 255 / 0.06); }
+body:has([data-editor]) [data-sidebar="sidebar"] [data-sidebar="header"] [data-sidebar="company-logo"] { background: #eceef1; color: #0b0c0e; }
 
 /* Section labels and items */
-body:has([data-editor]) [data-sidebar="sidebar"] [data-sidebar="group-label"] { color: #6b7079; }
+body:has([data-editor]) [data-sidebar="sidebar"] [data-sidebar="group-label"] { color: #7a7f88; }
+body:has([data-editor]) [data-sidebar="sidebar"] [data-sidebar="group-label"]:hover { color: #eceef1; }
 body:has([data-editor]) [data-sidebar="sidebar"] :is([data-sidebar="menu-button"], [data-sidebar="menu-sub-button"]) { color: #9aa0a8; }
 body:has([data-editor]) [data-sidebar="sidebar"] :is([data-sidebar="menu-button"], [data-sidebar="menu-sub-button"]) svg { color: #767c86; }
 body:has([data-editor]) [data-sidebar="sidebar"] :is([data-sidebar="menu-button"], [data-sidebar="menu-sub-button"]):hover { background: rgb(255 255 255 / 0.05); color: #eceef1; }
-body:has([data-editor]) [data-sidebar="sidebar"] :is([data-sidebar="menu-button"], [data-sidebar="menu-sub-button"])[data-active="true"] { background: rgb(255 255 255 / 0.08); color: #eceef1; }
+body:has([data-editor]) [data-sidebar="sidebar"] :is([data-sidebar="menu-button"], [data-sidebar="menu-sub-button"])[data-active="true"] { background: rgb(255 255 255 / 0.09); color: #eceef1; box-shadow: none; }
 body:has([data-editor]) [data-sidebar="sidebar"] [data-sidebar="menu-button"][data-active="true"] svg { color: #eceef1; }
 
-/* Footer (Configurações, Ajuda, account) */
-body:has([data-editor]) [data-sidebar="sidebar"] [data-sidebar="footer"],
-body:has([data-editor]) [data-sidebar="sidebar"] [data-sidebar="footer"] > div { border-color: #212328; }
+/* Footer: unread badge and the online dot's ring */
+body:has([data-editor]) [data-sidebar="sidebar"] [data-sidebar="footer"] [data-sidebar="menu-button"] span.rounded-full { background: rgb(255 255 255 / 0.08); color: #c9ccd2; }
