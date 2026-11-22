@@ -5,6 +5,7 @@ import { useAuth } from '@clerk/nextjs'
 import { Card, Notice, Page } from '@/products/analytics/frontend/ui'
 import { CHANNEL_LABEL } from '../shared/rules'
 import { deniedMessage, post, supabase, type Channel } from './data'
+import { IntegrationsCard } from './IntegrationsCard'
 
 const STATUS: Record<Channel['status'], { label: string; cls: string }> = {
   conectado: { label: 'Conectado', cls: 'bg-[#e8f7ee] text-[#166534]' }, erro: { label: 'Com erro', cls: 'bg-[#fdf2f2] text-[#8a2b2b]' }, desconectado: { label: 'Desconectado', cls: 'bg-[#f3f3f3] text-[#555]' },
@@ -86,6 +87,7 @@ export function ChannelsView() {
           <code className="mt-3 block break-all rounded-lg bg-[#f6f6f6] px-3 py-2 text-[12px]">{origin}/api/inbox/webhook/meta</code>
         </Card>
       </div>
+      <div className="mt-8"><IntegrationsCard /></div>
     </Page>
   )
 }

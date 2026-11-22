@@ -15,7 +15,7 @@ BEGIN
   PERFORM cron.unschedule(jobid) FROM cron.job WHERE jobname = 'inbox-tick';
   PERFORM cron.schedule('inbox-tick', '* * * * *', $job$
     SELECT net.http_post(
-      url := 'https://ottogestao.com.br/api/inbox/internal/tick',
+      url := 'https://cognito-seven.vercel.app/api/inbox/internal/tick',
       headers := jsonb_build_object('content-type', 'application/json',
         'authorization', 'Bearer ' || coalesce((SELECT decrypted_secret FROM vault.decrypted_secrets WHERE name = 'inbox_tick_secret'), '')),
       body := '{}'::jsonb,
