@@ -1,4 +1,4 @@
-// Runs a drive_ or analytics_ tool: checks the connection's scopes and the company, records the call (metadata only)
+// Runs a drive_, analytics_, inbox_ or videohosting_ tool: checks the connection's scopes and the company, records the call (metadata only)
 // and runs it as the person (editor/server/database.ts). Errors come back with a code the assistant can act on.
 import type { CallToolResult } from '@modelcontextprotocol/sdk/types.js'
 import { z } from 'zod'
@@ -9,13 +9,16 @@ import { AnalyticsUnavailable } from '@/products/analytics/server/bigquery'
 import { asMember, type Connect } from '../editor/server/database'
 import { driveTools } from '../drive/tools/catalog'
 import { analyticsTools } from '../analytics/tools/catalog'
+import { inboxTools } from '../inbox/tools/catalog'
+import { videohostingTools } from '../videohosting/tools/catalog'
 import type { ToolContext, WorkspaceTool } from './context'
 
-export const workspaceTools: WorkspaceTool[] = [...driveTools, ...analyticsTools]
-export const isWorkspaceTool = (name: string) => name.startsWith('drive_') || name.startsWith('analytics_')
+export const workspaceTools: WorkspaceTool[] = [...driveTools, ...analyticsTools, ...inboxTools, ...videohostingTools]
+export const WORKSPACE_PREFIXES = ['drive_', 'analytics_', 'inbox_', 'videohosting_']
+export const isWorkspaceTool = (name: string) => WORKSPACE_PREFIXES.some(p => name.startsWith(p))
 export const workspaceWrites = (name: unknown) => workspaceTools.some(t => t.write && t.name === name)
 
-export type WorkspaceDependencies = { connect?: Connect; storage?: ToolContext['storage']; bigquery?: ToolContext['bigquery']; timeoutMs?: number }
+export type WorkspaceDependencies = { connect?: Connect; storage?: ToolContext['storage']; bigquery?: ToolContext['bigquery']; inbox?: ToolContext['inbox']; timeoutMs?: number }
 type Audit = { reserve: typeof reserveExecution; finish: typeof finishExecution }
 
 function publicError(error: unknown): PluginError {
@@ -48,7 +51,7 @@ export async function executeWorkspace(principal: PluginPrincipal, name: string,
     if (tool.write && !principal.scopes.includes('erp:write')) throw new PluginError('INSUFFICIENT_SCOPE', 'A conexão precisa da permissão erp:write para alterar dados.', 403)
     const ctx: ToolContext = {
       as: fn => asMember(principal, company, tool.write, fn, deps.connect),
-      origin: new URL(config.resource).origin, assistant: config.integration === 'claude' ? 'Claude' : 'ChatGPT', storage: deps.storage, bigquery: deps.bigquery,
+      origin: new URL(config.resource).origin, assistant: config.integration === 'claude' ? 'Claude' : 'ChatGPT', storage: deps.storage, bigquery: deps.bigquery, inbox: deps.inbox,
     }
     let timer: ReturnType<typeof setTimeout> | undefined
     const data = await Promise.race([

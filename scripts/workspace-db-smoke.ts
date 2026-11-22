@@ -1,7 +1,7 @@
 // Drive and Analytics tools against a real Postgres with the drive/analytics schemas and their policies.
 //   WORKSPACE_TEST_DB_URL=postgres://postgres:pg@localhost/mkt pnpm workspace:db-smoke
 // The database needs the Supabase stubs and the migrations editor_schema, editor_social_roles, drive_schema,
-// analytics_schema and analytics_goals. Storage, downloads and BigQuery are fakes; nothing external is called.
+// analytics_schema, analytics_goals, videohosting_schema and inbox_schema. Storage, downloads and BigQuery are fakes; nothing external is called.
 import assert from 'node:assert/strict'
 import { generateKeyPairSync } from 'node:crypto'
 import pg from 'pg'
@@ -193,6 +193,97 @@ async function main() {
     await fails('analytics_resumo', { site_id: siteId }, 'ACCESS_DENIED', stranger)
     assert.equal((await ok('analytics_listar_sites', {}, viewer)).sites.length, 1)
     await fails('analytics_editar_site', { site_id: siteId, nome: 'x' }, 'ACCESS_DENIED', viewer)
+  })
+
+  // ---------- Inbox ----------
+  const { makeDb } = await import('../src/products/inbox/server/db')
+  const { createTestChannel } = await import('../src/products/inbox/server/actions')
+  const inboxPool = new pg.Pool({ connectionString: url, max: 3 })
+  const metaCalls: string[] = []
+  const inbox = { db: makeDb(() => inboxPool), send: (async (u: string) => { metaCalls.push(String(u)); return new Response('{}') }) as unknown as typeof fetch }
+  const withInbox = { ...deps, inbox }
+  await admin.query("DELETE FROM inbox.channels WHERE workspace_id = 'org_A'; DELETE FROM inbox.contacts WHERE workspace_id = 'org_A'; DELETE FROM inbox.tags WHERE workspace_id = 'org_A'; DELETE FROM inbox.quick_replies WHERE workspace_id = 'org_A'")
+  let convId = '', contactId = '', channelId = ''
+
+  await check('Inbox: resumo, conversas, ler, simular cliente e responder pelo canal de teste', async () => {
+    channelId = (await createTestChannel({ userId: 'u_owner', orgId: 'org_A' }, 'Teste', { db: inbox.db })).id
+    await ok('inbox_simular_mensagem', { canal_id: channelId, nome_cliente: 'Maria', texto: 'Tem o tênis 38?' }, owner, withInbox)
+    const r = await ok('inbox_resumo', {}, owner, withInbox)
+    assert.deepEqual([r.abertas, r.sem_responsavel, r.com_nao_lidas], [2, 2, 2])
+    const list = (await ok('inbox_listar_conversas', { busca: 'maria' }, owner, withInbox)).conversas
+    assert.equal(list.length, 1); convId = list[0].id; contactId = list[0].contato_id
+    assert.deepEqual([list[0].contato, list[0].pode_responder, list[0].nao_lidas], ['Maria', true, 1])
+    await fails('inbox_responder', { conversa_id: convId, texto: 'Temos!' }, 'INVALID_INPUT', owner, withInbox)
+    const sent = await ok('inbox_responder', { conversa_id: convId, texto: 'Temos sim!', confirmado: true }, owner, withInbox)
+    assert.equal(sent.situacao, 'entregue'); assert.equal(metaCalls.length, 0, 'canal de teste não chama a Meta')
+    const read = await ok('inbox_ler_conversa', { conversa_id: convId }, owner, withInbox)
+    assert.deepEqual(read.mensagens.map((x: { de: string; texto: string }) => [x.de, x.texto]), [['cliente', 'Tem o tênis 38?'], ['empresa', 'Temos sim!']])
+    await fails('inbox_responder', { conversa_id: convId, texto: 'x', confirmado: true }, 'ACCESS_DENIED', viewer, withInbox)
+    await fails('inbox_listar_conversas', {}, 'ACCESS_DENIED', stranger, withInbox)
+  })
+
+  await check('Inbox: janela de 24 h, nota, responsável, situação, contato, etiquetas e respostas rápidas', async () => {
+    await admin.query(`UPDATE inbox.channels SET kind = 'whatsapp', external_id = 'PN-test-' || id WHERE id = $1`, [channelId])
+    await admin.query(`UPDATE inbox.conversations SET last_inbound_at = now() - interval '30 hours' WHERE id = $1`, [convId])
+    const closed = await fails('inbox_responder', { conversa_id: convId, texto: 'oi', confirmado: true }, 'INVALID_STATE', owner, withInbox)
+    assert.match(closed.message!, /24 horas/); assert.equal(metaCalls.length, 0)
+    await ok('inbox_nota', { conversa_id: convId, texto: 'Pediu desconto' }, owner, withInbox)
+    assert.equal((await admin.query('SELECT author FROM inbox.notes WHERE conversation_id = $1', [convId])).rows[0].author, 'u_owner')
+    assert.equal((await ok('inbox_atribuir', { conversa_id: convId, responsavel: 'eu' })).e_voce, true)
+    assert.equal((await ok('inbox_listar_conversas', { responsavel: 'eu' })).conversas.length, 1)
+    await ok('inbox_atribuir', { conversa_id: convId, responsavel: 'u_member' })
+    await ok('inbox_mudar_situacao', { conversa_id: convId, situacao: 'encerrada' })
+    assert.equal((await ok('inbox_listar_conversas', { situacao: 'encerrada' })).conversas[0].nao_lidas, undefined)
+    await ok('inbox_criar_etiqueta', { nome: 'Lead quente', cor: '#ef4444' })
+    await fails('inbox_criar_etiqueta', { nome: 'lead quente' }, 'ALREADY_EXISTS')
+    assert.deepEqual((await ok('inbox_etiquetar', { contato_id: contactId, colocar: ['lead quente'] })).etiquetas, ['Lead quente'])
+    await fails('inbox_etiquetar', { contato_id: contactId, colocar: ['Inexistente'] }, 'NOT_FOUND')
+    await ok('inbox_salvar_contato', { contato_id: contactId, telefone: '11 98888-7777', campos: { cidade: 'Campinas' } })
+    const novo = await ok('inbox_salvar_contato', { nome: 'João', email: 'JOAO@x.com' })
+    const ficha = await ok('inbox_obter_contato', { contato_id: contactId })
+    assert.deepEqual([ficha.telefone, ficha.campos, ficha.etiquetas, ficha.conversas.length], ['+5511988887777', { cidade: 'Campinas' }, ['Lead quente'], 1])
+    assert.equal((await ok('inbox_buscar_contatos', { etiqueta: 'Lead quente' })).contatos.length, 1)
+    assert.equal((await ok('inbox_buscar_contatos', { busca: 'joao@x' })).contatos[0].id, novo.contato_id)
+    await ok('inbox_salvar_resposta_rapida', { atalho: '/pix', texto: 'Chave: CNPJ' }); await ok('inbox_salvar_resposta_rapida', { atalho: 'pix', texto: 'Chave nova' })
+    assert.deepEqual((await ok('inbox_listar_respostas_rapidas', {})).respostas.map((x: { atalho: string; texto: string }) => [x.atalho, x.texto]), [['pix', 'Chave nova']])
+    assert.equal((await ok('inbox_listar_canais', {})).canais[0].tipo, 'WhatsApp')
+    assert.equal((await ok('inbox_listar_etiquetas', {})).etiquetas[0].contatos, 1)
+    await fails('inbox_nota', { conversa_id: convId, texto: 'x' }, 'ACCESS_DENIED', viewer)
+    await fails('inbox_simular_mensagem', { canal_id: channelId, texto: 'x' }, 'INVALID_STATE', owner, withInbox)
+  })
+  await inboxPool.end()
+
+  // ---------- Video Hosting ----------
+  await admin.query("DELETE FROM videohosting.videos WHERE workspace_id = 'org_A'; DELETE FROM videohosting.presets WHERE workspace_id = 'org_A'; DELETE FROM videohosting.domains WHERE workspace_id = 'org_A'")
+  let videoId = '', buttonId = ''
+
+  await check('Video Hosting: publicar do Drive, código, botões, aparência, domínios e tirar do ar', async () => {
+    const vslFile = (await ok('drive_trazer_de_link', { url: 'https://cdn.example.com/vsl.mp4', drive_id: driveId, nome: 'VSL' })).arquivo.id
+    const pub = await ok('videohosting_publicar', { arquivo_id: vslFile, titulo: 'VSL Natal' })
+    videoId = pub.video_id; assert.match(pub.codigo_para_colar, /^<script async src="https:\/\/app\.example\.com\/videohosting\.js" data-video="[0-9a-f]{16}"><\/script>$/)
+    await fails('videohosting_publicar', { arquivo_id: vslFile }, 'ACCESS_DENIED', viewer)
+    buttonId = (await ok('videohosting_botoes', { video_id: videoId, acao: 'adicionar', texto: 'Comprar agora', link: 'https://loja.com/checkout', aparece_em_s: 754 })).botao_id
+    await fails('videohosting_botoes', { video_id: videoId, acao: 'adicionar', texto: 'x' }, 'INVALID_INPUT')
+    await ok('videohosting_botoes', { video_id: videoId, acao: 'alterar', botao_id: buttonId, some_em_s: 900, posicao: 'sobre' })
+    await ok('videohosting_editar', { video_id: videoId, aparencia: { barra: 'normal', controles: { avancar: true } } })
+    await ok('videohosting_padrao_empresa', { aparencia: { cor: '#ff0000', controles: { velocidade: true } } })
+    await ok('videohosting_dominios', { adicionar: ['https://www.Loja.com.br/vendas', 'outra.com'], remover: [] })
+    await fails('videohosting_dominios', { adicionar: ['lixo'] }, 'INVALID_INPUT')
+    await ok('videohosting_dominios', { video_id: videoId, adicionar: ['lp.loja.com.br'] })
+    const v = await ok('videohosting_obter', { video_id: videoId })
+    assert.deepEqual([v.aparencia.cor, v.aparencia.barra, v.aparencia.controles.avancar, v.aparencia.controles.velocidade], ['#ff0000', 'normal', true, true])
+    assert.deepEqual(v.botoes.map((b: { aparece_em_s: number; some_em_s: number; posicao: string }) => [b.aparece_em_s, b.some_em_s, b.posicao]), [[754, 900, 'sobre']])
+    assert.deepEqual(v.toca_em, ['lp.loja.com.br'])
+    assert.deepEqual((await ok('videohosting_configuracoes', {})).dominios, ['outra.com', 'www.loja.com.br'])
+    assert.equal((await ok('videohosting_listar', {})).videos[0].botoes, 1)
+    await ok('videohosting_editar', { video_id: videoId, usar_padrao_da_empresa: true })
+    assert.equal((await ok('videohosting_obter', { video_id: videoId })).aparencia.barra, 'acelerada')
+    await ok('videohosting_botoes', { video_id: videoId, acao: 'remover', botao_id: buttonId })
+    await fails('videohosting_tirar_do_ar', { video_id: videoId }, 'INVALID_INPUT')
+    assert.equal((await ok('videohosting_tirar_do_ar', { video_id: videoId, confirmado: true })).fora_do_ar, true)
+    assert.equal((await ok('videohosting_listar', {})).videos.length, 0)
+    await fails('videohosting_editar', { video_id: videoId, titulo: 'x' }, 'INVALID_STATE')
+    await fails('videohosting_listar', {}, 'ACCESS_DENIED', stranger)
   })
 
   await admin.end()
